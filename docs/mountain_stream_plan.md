@@ -200,7 +200,12 @@ D§2(状態と更新契約、供給量制限、接続位置、ハロの前提)�
   E_i ∝ Q_s (τ*/τ*c − 1)^{−1/2} (1 − Q_s/Q_c)(1 − (u*/w_f)²)^{3/2} は、道具 Q_s と供給比に線形な
   被覆(1 − Q_s/Q_c)の積。ENCflow の形は跳躍の軌跡から来る因子 (τ*/τ*c − 1)^{−1/2}(衝突の頻度と
   強さ)と浮遊の因子を除いたもので、同論文の分類では道具・被覆の放物線型(式 (31)、Whipple & Tucker 2002 の n = 1)に
-  当たる。閾値は q_c が流砂量式の移動限界を持つので入る。)
+  当たる。閾値は q_c が流砂量式の移動限界を持つので入る。同日、Sklar & Dietrich 2004 の本文でも
+  同じ形(式 (24a))を確認。式 (24a) の係数 0.08 R_b g Y/(k_v σ_T²) と対応させると
+  β ≈ 0.08 R_b g ρ_s Y/(k_v σ_T²) (τ*/τ*c − 1)^{−1/2}(k_v ≈ 10¹² は Y・σ_T を MPa で入れたときの値。
+  表 4a の落下試験から逆算して確認)。基準地点(South Fork Eel River。σ_T = 7 MPa、Y = 5 × 10⁴ MPa、
+  τ*/τ*c = 1.7、表 3)で約 4〜5 × 10⁻⁶ /m(式で 4.2e-6、報告の瞬間の下刻 20.5 mm/年からの逆算で
+  5.3e-6)。β ∝ σ_T^{−2}。users guide の解説 sediment.md §7 に目安として記載。)
   2 項の組合せと、ENCflow の水理量での有次元化は**独自**。
 - パラメータ(名称は仮。§8 の判断 3・4・7):
 
@@ -585,8 +590,14 @@ users_guide/sediment.md・massflow.md・geomorph.md、handoff.md 1n・1n2。
   引き継ぐ。本書では Landlab のソースで被覆の形を確認)。
 - Sklar, L. S. and Dietrich, W. E. (2004): A mechanistic model for river incision into
   bedrock by saltating bed load. *Water Resour. Res.*, 40, W06301.
-  doi:10.1029/2003WR002496(D の記録を引き継ぐ。研磨の式の形は 2006 の論文の式 (1) で
-  確認。2004 の本文は未読)。
+  doi:10.1029/2003WR002496(2026-10-29 に利用者が提供した本文で確認: E = V_i I_r F_e(式 (1))、
+  衝突 1 回の侵食体積は衝突の運動エネルギー ÷ 岩の抵抗(式 (3)〜(5)。侵食の閾値エネルギーは 0)、
+  被覆は供給比に線形 F_e = 1 − q_s/q_t(式 (7)。水路実験で支持されるが、滑らかな平らな床では
+  閾値や不安定の可能性を断っている)、容量は Fernandez Luque & van Beek(式 (8))、跳躍の軌跡の
+  経験式(式 (11)〜(14)。τ*c = 0.03)、最終形は式 (24a)。下刻は供給比 0.5 前後と輸送段階
+  τ*/τ*c ≈ 12 で最大で、移動限界・浮遊の限界・全被覆・供給 0 の 4 つの境界で 0。基準地点は代表の
+  流量が年約 22 日流れるとし、瞬間の下刻 20.5 mm/年を年平均約 0.9 mm/年とする(間欠係数と
+  同じ考え。§11.2))。
 - Sklar, L. S. and Dietrich, W. E. (2006): The role of sediment in controlling steady-state
   bedrock channel slope: Implications of the saltation–abrasion incision model.
   *Geomorphology*, 82, 58–83. doi:10.1016/j.geomorph.2005.08.019(2026-10-29 に利用者が

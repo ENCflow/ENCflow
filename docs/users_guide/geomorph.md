@@ -991,7 +991,7 @@ docs/mountain_stream_plan.md(developer.md §89)。
 | rock_kp | 0(= 剥離なし) | 剥離の速度係数 (m/s)。τ_b = 2τ_c での裸岩の下刻速度 |
 | rock_tauc | なし(rock_kp > 0 で必須) | 剥離の閾値 τ_c (Pa) |
 | rock_m | 1.0 | 剥離のべき指数 m |
-| rock_beta | 0(= 研磨なし) | 研磨係数 β (1/m) |
+| rock_beta | 0(= 研磨なし) | 研磨係数 β (1/m)。目安は[解説](sediment.md) §7 の Sklar & Dietrich の模型との対応(岩の引張強さの 2 乗に反比例) |
 | rock_hstar | なし(必須 > 0) | 被覆の長さ H* (m)。岩盤面の起伏の高さの目安。露出率と利用可能率に共用 |
 | fn_rock | "" | 岩盤の侵食性倍率の分布(≥ 0。0 = 侵食しない = 固定床・構造物)。未指定 = 全セル 1 |
 

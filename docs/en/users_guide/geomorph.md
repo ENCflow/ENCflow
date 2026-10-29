@@ -1253,7 +1253,7 @@ state variable is introduced.
 | rock_kp | 0 (= no plucking) | Plucking rate coefficient (m/s): the incision rate of bare rock at τ_b = 2τ_c |
 | rock_tauc | none (required when rock_kp > 0) | Plucking threshold τ_c (Pa) |
 | rock_m | 1.0 | Plucking exponent m |
-| rock_beta | 0 (= no abrasion) | Abrasion coefficient β (1/m) |
+| rock_beta | 0 (= no abrasion) | Abrasion coefficient β (1/m). A guide is the match with the model of Sklar & Dietrich in §7 of the [supplement](sediment.md) (inversely proportional to the square of the rock tensile strength) |
 | rock_hstar | none (required, > 0) | Cover length H* (m): a measure of the relief of the bedrock surface. Shared by the exposure and the availability |
 | fn_rock | "" | Distribution of the erodibility multiplier of the bedrock (≥ 0; 0 = not eroded = fixed bed, structures). Unset = 1 everywhere |
 

@@ -520,10 +520,21 @@ $`F_s = 1 - e^{-H/H_*}`$ を掛けます。一様な容量 $`q_c`$ と一定の�
 の定常では $`F_s = q_s/q_c`$ となり、露出率は $`1 - q_s/q_c`$、つまり供給比で
 書いた被覆[^sklar04][^turowski07]に一致し、研磨による下刻速度は
 $`E = \beta q_s (1 - q_s/q_c)`$ の山形になります($`q_s/q_c = 1/2`$ で最大、
-1 以上で全被覆の 0)。これは Sklar & Dietrich の saltation–abrasion 模型[^sklar06]
+1 以上で全被覆の 0)。これは Sklar & Dietrich の saltation–abrasion 模型[^sklar04][^sklar06]
 (道具 $`Q_s`$ × 供給比に線形な被覆 $`1 - Q_s/Q_c`$)から、跳躍の軌跡から来る因子
 $`(\tau_*/\tau_{*c} - 1)^{-1/2}`$(衝突の頻度と強さ)と浮遊の閾値の因子を除いた形で、同論文の分類の
-「道具と被覆」の放物線型(Whipple & Tucker 2002 の $`n = 1`$)に当たります。被覆を沖積層の厚さと河床の
+「道具と被覆」の放物線型(Whipple & Tucker 2002 の $`n = 1`$)に当たります。同模型の最終形(2004 の
+式 (24a))と対応させると、研磨係数の目安は
+
+```math
+\beta \approx \frac{0.08\,R_b\,g\,\rho_s\,Y}{k_v\,\sigma_T^2}\left(\frac{\tau_*}{\tau_{*c}} - 1\right)^{-1/2}
+```
+
+です($`R_b`$ = 水中比重、$`\rho_s`$ = 土砂の密度、$`Y`$ = 岩の弾性係数、$`\sigma_T`$ = 岩の引張強さ。
+$`k_v \approx 10^{12}`$ は $`Y`$・$`\sigma_T`$ を MPa で入れたときの同論文の値。輸送段階は代表の出水の値で
+評価し、浮遊の因子は省きます)。同論文の基準地点(South Fork Eel River。$`\sigma_T`$ = 7 MPa、
+$`Y`$ = 5 × 10⁴ MPa、$`\tau_*/\tau_{*c}`$ = 1.7)では約 4〜5 × 10⁻⁶ /m で、$`\beta`$ は $`\sigma_T^2`$ に
+反比例します(引張強さ 1 MPa の軟岩なら約 50 倍)。被覆を沖積層の厚さと河床の
 起伏の比で決める考え方[^zhang15]を、露出率と利用可能率に同じ $`H_*`$ を使う
 閉包で書いたもので、この組合せと有次元化は**独自**です
 (docs/mountain_stream_plan.md §4.3)。剥離物が下流で流砂に加わる定常は、
@@ -621,7 +632,7 @@ $`\cos\theta\,C\rho_s D^2 (u/h)^2`$ ÷ 岩の抵抗」に比例させる則を�
 | dissol_lat | 0 | 側方溶食の配分割合 p | **方式** 0 = 床のみ、−1 = 濡れ面の面積比で自動(推奨)。固定値は湛水深/格子幅の比から |
 | rock_kp / rock_tauc | 0(剥離なし)/ なし | 剥離の速度係数 (m/s) / 閾値 (Pa)(§7 の岩盤下刻) | **校正値** 標準値がない。k_p は τ_b = 2τ_c での裸岩の下刻速度 |
 | rock_m | 1 | 剥離のべき指数 | **慣用値** 線形(側岸侵食の berode_m と同じ) |
-| rock_beta | 0(研磨なし) | 研磨係数 β (1/m) | **校正値** 標準値がない。研磨による下刻速度の最大(被覆率 1/2)は β q_c / 4。Inoue ら[^inoue16] は石狩川の現地実験の値 β ≈ 0.001 /m を使い、水路実験の再現には 0.0001 /m を使った |
+| rock_beta | 0(研磨なし) | 研磨係数 β (1/m) | **校正値** 標準値がない。研磨による下刻速度の最大(被覆率 1/2)は β q_c / 4。目安は §7 の Sklar & Dietrich[^sklar04] の模型との対応(同論文の基準地点で約 4〜5 × 10⁻⁶ /m、岩の引張強さの 2 乗に反比例)。Inoue ら[^inoue16] は石狩川の現地実験の値 β ≈ 0.001 /m を使い、水路実験の再現には 0.0001 /m を使った |
 | rock_hstar | なし | 被覆の長さ H* | **与件** 岩盤面の起伏・礫径の目安(数 cm〜数十 cm)。露出率と利用可能率に共用 |
 | rock_kdb / rock_taucdb | 0(土石流の項なし)/ なし | 土石流による岩盤侵食の速度係数 (m/s) / 閾値 (Pa) | **校正値** 標準値がない。k_d は τ_d = 2τ_cd での裸岩の低下速度。1 回の土石流で mm〜cm の低下が目安[^stock05][^mccoy13] |
 | rock_mdb | 1 | 土石流の項のべき指数 | **慣用値** 線形(rock_m と同じ) |
@@ -683,7 +694,7 @@ $`\cos\theta\,C\rho_s D^2 (u/h)^2`$ ÷ 岩の抵抗」に比例させる則を�
 [^gabrovsek09]: Gabrovšek, F. (2009): On concepts and methods for the estimation of dissolutional denudation rates in karst areas. *Geomorphology*, 106, 9–14.
 [^howard83]: Howard, A. D. and Kerby, G. (1983): Channel changes in badlands. *Geol. Soc. Am. Bull.*, 94, 739–752.(岩盤河道の侵食速度を出水時の底面せん断で表す。要旨で確認)
 [^shobe17]: Shobe, C. M., Tucker, G. E. and Barnhart, K. R. (2017): The SPACE 1.0 model. *Geosci. Model Dev.*, 10, 4577–4604. doi:10.5194/gmd-10-4577-2017(被覆の指数形は Landlab のソースで確認)
-[^sklar04]: Sklar, L. S. and Dietrich, W. E. (2004): A mechanistic model for river incision into bedrock by saltating bed load. *Water Resour. Res.*, 40, W06301. doi:10.1029/2003WR002496
+[^sklar04]: Sklar, L. S. and Dietrich, W. E. (2004): A mechanistic model for river incision into bedrock by saltating bed load. *Water Resour. Res.*, 40, W06301. doi:10.1029/2003WR002496(saltation–abrasion 模型 式 (1)・(24a)、被覆の線形仮定 式 (7)、岩の強さの係数 k_v 表 4、基準地点の値 表 3)
 [^sklar06]: Sklar, L. S. and Dietrich, W. E. (2006): The role of sediment in controlling steady-state bedrock channel slope: Implications of the saltation–abrasion incision model. *Geomorphology*, 82, 58–83. doi:10.1016/j.geomorph.2005.08.019(saltation–abrasion 模型 式 (1)、模型の分類 式 (20)・表 2、定常勾配の成分 式 (32)〜(34)、間欠係数 式 (13)〜(19))
 [^turowski07]: Turowski, J. M., Lague, D. and Hovius, N. (2007): Cover effect in bedrock abrasion. *J. Geophys. Res.*, 112, F04006. doi:10.1029/2006JF000697
 [^zhang15]: Zhang, L., Parker, G., Stark, C. P., Inoue, T., Viparelli, E., Fu, X. and Izumi, N. (2015): Macro-roughness model of bedrock–alluvial river morphodynamics. *Earth Surf. Dynam.*, 3, 113–138. doi:10.5194/esurf-3-113-2015(要旨で確認)

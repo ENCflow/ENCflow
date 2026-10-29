@@ -266,8 +266,8 @@
     {
       "source": "docs/users_guide/geomorph.md",
       "target": "docs/en/users_guide/geomorph.md",
-      "source_sha256": "b2468998d044b1ee8606fe74bddf562cf7c2792374e5d0327046007c2c01b142",
-      "target_sha256": "c55db0bd8d07b019ced6bc4446b5e46d7cc76a24243aafe55b984196f8000fc3",
+      "source_sha256": "3978971cef615cd2745577de73694700cf2f454f08e6a426c36727e97d448d81",
+      "target_sha256": "a6e0e63edf258deae3ece8f5b9fa57c5d828aff1859944aac02d0480261eb3af",
       "reviewer": "Claude (Claude Code session; full-text content and lexical review, no model execution)",
       "method": "assistant",
       "reviewed_on": "2026-10-29"
@@ -419,8 +419,8 @@
     {
       "source": "docs/users_guide/sediment.md",
       "target": "docs/en/users_guide/sediment.md",
-      "source_sha256": "addd363561347be53e2ae655f90c35a5bb7016d63a49f1948177d213934beb86",
-      "target_sha256": "124a240ce7687a1fd79a750dd8f9c5910110e3dbea70539d0430d86c9269e29c",
+      "source_sha256": "663b0eb1b97d18b760d73ad02c1ab55d8f0897613c282a6b98501f86b7d17c1f",
+      "target_sha256": "5fa8d32d00d43e36aabd253c792701abeb5430d325a6cd13fe739b149ffbec79",
       "reviewer": "Claude (Claude Code session; full-text content and lexical review, no model execution)",
       "method": "assistant",
       "reviewed_on": "2026-10-29"

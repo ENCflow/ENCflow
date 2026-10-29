@@ -648,11 +648,25 @@ $`q_s`$, $`F_s = q_s/q_c`$, and the exposure is $`1 - q_s/q_c`$, i.e. it
 agrees with the cover written as a supply ratio[^sklar04][^turowski07], and
 the incision rate by abrasion becomes the hump $`E = \beta q_s (1 - q_s/q_c)`$
 (largest at $`q_s/q_c = 1/2`$, and 0 with full cover at 1 and above). This is
-the saltation–abrasion model of Sklar and Dietrich[^sklar06] (tools $`Q_s`$ ×
+the saltation–abrasion model of Sklar and Dietrich[^sklar04][^sklar06] (tools $`Q_s`$ ×
 a cover linear in the supply ratio, $`1 - Q_s/Q_c`$) without the factor
 from the saltation trajectories, $`(\tau_*/\tau_{*c} - 1)^{-1/2}`$ (impact rate
 and energy), and its suspension-threshold factor, which in their classification is the parabolic "tools and cover"
-type (Whipple & Tucker 2002 with $`n = 1`$). The
+type (Whipple & Tucker 2002 with $`n = 1`$). Matching it with the final form
+of that model (eq. (24a) of 2004) gives a guide for the abrasion coefficient,
+
+```math
+\beta \approx \frac{0.08\,R_b\,g\,\rho_s\,Y}{k_v\,\sigma_T^2}\left(\frac{\tau_*}{\tau_{*c}} - 1\right)^{-1/2}
+```
+
+($`R_b`$ = submerged specific gravity, $`\rho_s`$ = sediment density, $`Y`$ = elastic
+modulus of the rock, $`\sigma_T`$ = tensile strength of the rock;
+$`k_v \approx 10^{12}`$ is their value with $`Y`$ and $`\sigma_T`$ in MPa; the transport
+stage is evaluated for the representative flood and the suspension factor is
+dropped). At their reference site (South Fork Eel River; $`\sigma_T`$ = 7 MPa,
+$`Y`$ = 5 × 10⁴ MPa, $`\tau_*/\tau_{*c}`$ = 1.7) it is about 4–5 × 10⁻⁶ /m, and
+$`\beta`$ is inversely proportional to $`\sigma_T^2`$ (about 50 times larger for a soft
+rock with a tensile strength of 1 MPa). The
 idea of setting the cover by the ratio of the alluvial thickness to the bed
 relief[^zhang15] is written as a closure that uses the same $`H_*`$ for the
 exposure and the availability; this combination and the dimensional form are
@@ -772,7 +786,7 @@ The labels in the Basis column are explained in [How to read the basis of a defa
 | dissol_lat | 0 | share p of lateral dissolution | **method** 0 = floor only, −1 = automatic from the wetted-area ratio (recommended). A fixed value follows the ratio of ponding depth to cell size |
 | rock_kp / rock_tauc | 0 (no plucking) / none | plucking rate coefficient (m/s) / threshold (Pa) (bedrock incision of §7) | **calibration value** no standard value. k_p is the incision rate of bare rock at τ_b = 2τ_c |
 | rock_m | 1 | plucking exponent | **conventional value** linear (same as berode_m of bank erosion) |
-| rock_beta | 0 (no abrasion) | abrasion coefficient β (1/m) | **calibration value** no standard value. The largest incision rate by abrasion (cover fraction 1/2) is β q_c / 4. Inoue et al.[^inoue16] used β ≈ 0.001 /m from a field experiment in the Ishikari River and 0.0001 /m to reproduce a flume experiment |
+| rock_beta | 0 (no abrasion) | abrasion coefficient β (1/m) | **calibration value** no standard value. The largest incision rate by abrasion (cover fraction 1/2) is β q_c / 4. A guide is the match with the model of Sklar & Dietrich[^sklar04] in §7 (about 4–5 × 10⁻⁶ /m at their reference site, inversely proportional to the square of the rock tensile strength). Inoue et al.[^inoue16] used β ≈ 0.001 /m from a field experiment in the Ishikari River and 0.0001 /m to reproduce a flume experiment |
 | rock_hstar | none | cover length H* | **given** a measure of the relief of the bedrock surface and the grain size (a few cm to tens of cm). Shared by the exposure and the availability |
 | rock_kdb / rock_taucdb | 0 (no debris-flow term) / none | rate coefficient (m/s) / threshold (Pa) of rock erosion by debris flows | **calibrated** no standard values. k_d is the lowering rate of bare rock at τ_d = 2τ_cd. A lowering of mm to cm per debris flow is a guide[^stock05][^mccoy13] |
 | rock_mdb | 1 | exponent of the debris-flow term | **conventional** linear (same as rock_m) |
@@ -836,7 +850,7 @@ The labels in the Basis column are explained in [How to read the basis of a defa
 [^gabrovsek09]: Gabrovšek, F. (2009): On concepts and methods for the estimation of dissolutional denudation rates in karst areas. *Geomorphology*, 106, 9–14.
 [^howard83]: Howard, A. D. and Kerby, G. (1983): Channel changes in badlands. *Geol. Soc. Am. Bull.*, 94, 739–752. (Erosion rate of bedrock channels expressed by the bed shear stress during floods; checked against the abstract)
 [^shobe17]: Shobe, C. M., Tucker, G. E. and Barnhart, K. R. (2017): The SPACE 1.0 model. *Geosci. Model Dev.*, 10, 4577–4604. doi:10.5194/gmd-10-4577-2017 (the exponential cover form checked in the Landlab source)
-[^sklar04]: Sklar, L. S. and Dietrich, W. E. (2004): A mechanistic model for river incision into bedrock by saltating bed load. *Water Resour. Res.*, 40, W06301. doi:10.1029/2003WR002496
+[^sklar04]: Sklar, L. S. and Dietrich, W. E. (2004): A mechanistic model for river incision into bedrock by saltating bed load. *Water Resour. Res.*, 40, W06301. doi:10.1029/2003WR002496 (saltation–abrasion model eqs. (1) and (24a), linear cover assumption eq. (7), rock strength coefficient k_v Table 4, reference site values Table 3)
 [^sklar06]: Sklar, L. S. and Dietrich, W. E. (2006): The role of sediment in controlling steady-state bedrock channel slope: Implications of the saltation–abrasion incision model. *Geomorphology*, 82, 58–83. doi:10.1016/j.geomorph.2005.08.019 (saltation–abrasion model eq. (1), model classification eq. (20) and Table 2, components of steady-state slope eqs. (32)–(34), intermittency eqs. (13)–(19))
 [^turowski07]: Turowski, J. M., Lague, D. and Hovius, N. (2007): Cover effect in bedrock abrasion. *J. Geophys. Res.*, 112, F04006. doi:10.1029/2006JF000697
 [^zhang15]: Zhang, L., Parker, G., Stark, C. P., Inoue, T., Viparelli, E., Fu, X. and Izumi, N. (2015): Macro-roughness model of bedrock–alluvial river morphodynamics. *Earth Surf. Dynam.*, 3, 113–138. doi:10.5194/esurf-3-113-2015 (checked against the abstract)
