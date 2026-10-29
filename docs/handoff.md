@@ -149,9 +149,11 @@ architecture.md。このメモは「現在進行中・未完了の項目」だ�
      など)に Check_*.py を足し、test/README.md の「検証」列を更新する。
      benchmark 系(examples/benchmark の h-plane・v-shaped・v-valley)の
      環境非依存テストへの昇格(§10)もここに含める。
-   - 一貫性検査の追加候補: List_samples ↔ namelist 宣言の突合せ(params_index
-     と同型)、test/README.md のケース一覧 ↔ test/ ディレクトリの突合せ。
-     どれも i18n.yml の枠(Python 標準ライブラリ・生成なし)で足す。
+   - (済 2026-10-29)一貫性検査: List_samples ↔ namelist 宣言と test/README.md のケース一覧 ↔
+     test/ ディレクトリの突合せを tools/consistency/check.py として i18n.yml に入れた
+     (developer.md §35.1)。導入時に表に載っていなかった bmi_vars・gwbed・sublattice を足した。
+     残る参考情報: どの設定例にも現れないパラメータ 51 個(構造物・境界の配列、`*_c` 版など)。
+     設定例に足すかは任意。
 
 00d. **河口デルタ形成の試行(2026-10-20〜21。docs/delta_plan.md)の残り**
    - 3 コミット(§84.13 定着の冠水減衰・河岸係数、§84.14 台帳の等価修正、

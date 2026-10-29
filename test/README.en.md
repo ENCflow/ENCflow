@@ -40,6 +40,7 @@ analytical-solution or conservation check by Check_*.py.
 | [hillslope/](hillslope/en/README.md) | Comparison of advection schemes for hillslope flow: analytical solution and grid convergence | Shallow water, rainfall | analytic (scripts) |
 | [bendloss/](bendloss/en/README.md) | Isolating the artificial loss at a 90° bend of a one-cell-wide channel | Channels, advection schemes | analytic |
 | [diffusion/](diffusion/en/README.md) | Gaussian-jet benchmark of the momentum diffusion term (analytical solution, grid convergence) | Shallow water f_diffusion_term | analytic |
+| [sublattice/](sublattice/en/README.md) | Decay rate of the diagonal sub-lattice (checkerboard) mode of the momentum-conservative advection: diagonal circulations rotating in opposite senses on the even and odd sub-lattices in a frictionless closed tank, decay measured per scheme (a smooth vortex is kept; §68.36) | Shallow water, advection schemes | self-check |
 | **Non-hydrostatic correction** | | | |
 | [nhwave/](nhwave/en/README.md) | Standing waves in a closed tank: measuring the numerical dispersion of the hydrostatic ENC scheme | Shallow water | ref |
 | [nhwave_nh/](nhwave_nh/en/README.md) | The same tank with the one-layer non-hydrostatic correction | Non-hydrostatic | ref |
@@ -66,6 +67,7 @@ analytical-solution or conservation check by Check_*.py.
 | [frost/](frost/en/README.md) | Linear reduction of infiltration by frozen ground (analytical check) | Groundwater, snow | ref |
 | [conduit/](conduit/en/README.md) | Conduit continuum layer experiment (uniform, analytical equilibrium) | Conduit continuum layer | ref |
 | [sewer_wq/](sewer_wq/en/README.md) | Sanitation risk of sewage eruption (water quality × conduit layer) | Conduit continuum layer, water quality | ref |
+| [gwbed/](gwbed/en/README.md) | Streambed exchange limit: the k_bed replacement of the vertical infiltration capacity of channel cells and the cap on the lateral-flow edge discharge between channel and non-channel cells agree with the analytical values (3 configurations; §16.5) | Groundwater f_gwbed | ref, analytic |
 | **Rainfall, interception, Soil Water Index** | | | |
 | [icevap/](icevap/en/README.md) | Minimal input of each interception and evapotranspiration model and the display of defaults | Interception, evapotranspiration | screen output |
 | [prmap/](prmap/en/README.md) | Time units of rainfall maps (prtype = 2, 3): the numbers dt_mapunit and dt_maplist are in minutes, strings `_c` with a unit are read in that unit (a number without a unit is in minutes) and take precedence, and without either, accumulation over 24 hours for prtype = 2 and over the file interval for prtype = 3. dt_prupdate has no effect with prtype = 3; save and restart in the middle of a frame. Depth on a flat closed domain = accumulated rain | Rainfall | analytic |
@@ -122,6 +124,7 @@ analytical-solution or conservation check by Check_*.py.
 | [nest_twin/](nest_twin/) | Alternating two cases in one process reproduces the standalone runs (basis of multiple instances) | Multiple m_main instances | identity (script) |
 | [nest_identity/](nest_identity/en/README.md) | 1:1 self-nesting identity (child interior == parent; two-way: root == standalone). Restart, conservative correction, groundwater | Nesting fn_nest | identity (driver) |
 | [bmi_nest/](bmi_nest/en/README.md) | Multi-grid BMI exposure (grid ids, qualified names). Identity, re-initialize and same-value set from Python; bmi-tester | BMI, nesting | identity (Python), bmi-tester |
+| [bmi_vars/](bmi_vars/en/README.md) | Acceptance test of the feature-dependent BMI variables (dynamic variable table) and of the set of hg and swe: three configurations (no features, bucket groundwater + snow, Green-Ampt) check the presence of variables, analytical values, same-value set and the rejection of invalid sets (§76) | BMI, groundwater, snow | identity (Python), bmi-tester |
 | **Input and output** | | | |
 | [gtif/](gtif/en/README.md) | Test assets for the GeoTIFF reader (compression and coordinate-system variants) | GeoTIFF | unit test |
 | Scripts/ | Common run engine and comparison scripts | — | — |

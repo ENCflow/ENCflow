@@ -1391,9 +1391,9 @@
     {
       "source": "test/README.md",
       "target": "test/README.en.md",
-      "source_sha256": "4da123b67be7ee7dd64eabae013335a07ac6127a208c20681ed3a4d38f2e88b0",
-      "target_sha256": "dd99cb93064440814342d5abbb81edea14608e9ccea34aa90393938e964e25bf",
-      "reviewer": "Claude (Claude Code session; full-text content and lexical review, no model execution)",
+      "source_sha256": "050a603544c2d29f764c4eb385739780b30b5de29cc9aeb51540decfe8062e8a",
+      "target_sha256": "d0e1dc517a4e8417f0486c58963fe195f2c2d8f828ecff9c2460e5518563a5ce",
+      "reviewer": "Claude (Claude Code session; review of the changed lines against the previously recorded pair: the three added rows (sublattice, gwbed, bmi_vars) say the same in both, with the same verification labels; no model execution)",
       "method": "assistant",
       "reviewed_on": "2026-10-29"
     },
