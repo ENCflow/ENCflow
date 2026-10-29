@@ -1,0 +1,59 @@
+!======================================================================
+! estuary_barrage: 河口堰と塩水くさび・周辺地盤の塩水化(ケース nobarrage_off)
+!   堰なし
+!   河床の塩水交換なし(f_salt_exch=0: 浸透・湧出は暗黙に淡水。比較用)
+!   共通: 3.6 km × 0.96 km、40 m 格子。河道幅 120 m(河床 −3 → −4 m)、
+!   陸 +3 m、帯水層底 −10 m。M2 潮汐 ±0.6 m、河川流量 200 → 20 m3/s。
+!   詳細と結果は README.md。データは make(gen_data.py)が data/ に作る
+!======================================================================
+&list_sysparam
+  dt = 2.0                  ! 時間刻み (s)
+  tt_c = "20d"              ! 計算終了時刻(20 日)
+  dt_disp_c = "6h"          ! 画面表示の間隔
+  dt_file_c = "6h"          ! 分布ファイル出力の間隔
+  fn_geoinfo = '-'
+  fn_initial = '-'
+  fn_salt = '-'
+  fn_enc = 'param_common.txt'       ! 共通設定(浅水流・境界・降雨・地下水)
+  fn_boundary = 'param_common.txt'
+  fn_precip = 'param_common.txt'
+  fn_gwflow = 'param_common.txt'
+  fn_tide = 'data/tide.txt'         ! M2 潮汐(gen_data.py が生成)
+  dir_data = 'data'
+  dir_result = 'result_nobarrage_off'
+  f_check_cfl = 0
+  f_out_e = 1               ! 水位 E
+  f_out_hg = 1              ! 地下貯留 Hg と地下の塩水 Hgs
+/
+
+&list_initial
+  f_htype = 3               ! 初期水位の分布ファイル
+  fn_hinit = 'e0_nobarrage.txt' ! 河道・海は 0 m
+/
+
+&list_geoinfo
+  nx = 90
+  ny = 24
+  dx = 40.0
+  dy = 40.0
+  f_ztype = 1               ! 地盤高ファイル
+  fn_z = 'z_nobarrage.txt'  ! 堰のない地形
+  f_rntype = 0
+  rn0 = 0.025               ! 粗度係数
+  f_masktype = 2            ! 領域マスクを海域マスクから自動生成
+  fn_sw = 'sw.txt'          ! 海域マスク(東端 3 列)
+  f_sdtype = 1              ! 土層厚ファイル
+  fn_sd = 'sd_nobarrage.txt' ! 土層厚 = 地盤高 + 10 m(帯水層底 −10 m)
+  sy0 = 0.2                 ! 比湧水量
+/
+
+!======================================================================
+! 淡塩2層(地表の塩水くさび+帯水層の塩水 zone)
+!======================================================================
+&list_salt
+  f_salt_surf = 1           ! 地表(河道・海)の塩水層
+  f_salt_gw = 1             ! 帯水層の塩水 zone(f_gwlateral=1 が前提)
+  f_salt_exch = 0           ! 交換の淡塩配分なし(2026-10-29 以前の振る舞い = 比較用)
+  fn_salt_hss0 = 'hss0.txt'         ! 計算する海は初期に全層塩水
+  fn_salt_hgs0 = 'hgs0.txt'         ! 海底下の帯水層は初期に全層塩水
+/

@@ -58,9 +58,9 @@
     {
       "source": "docs/comparison.md",
       "target": "docs/en/comparison.md",
-      "source_sha256": "e6dd1dad34bb80003791b3f0b1963673d8d1a0c2d2d8f174808a4f7c9c9da39d",
-      "target_sha256": "1a3787b0697f97dd0401274c4d3acf8bfffdc555a63efb70c6e00d6ef95bda97",
-      "reviewer": "Claude (Claude Code session; full-text content and lexical review, no model execution)",
+      "source_sha256": "14036d156b597c45e45f35470cf128167a979afe83a619b4904c7d071d542636",
+      "target_sha256": "9fedac9b464cc57bc7bdcd6629f20d646160045946afb0aadab39d1726579a6b",
+      "reviewer": "Claude (Claude Code session; reviewed the changed sections of the Japanese source against the English mirror, 2026-10-29)",
       "method": "assistant",
       "reviewed_on": "2026-10-29"
     },
@@ -104,9 +104,9 @@
     {
       "source": "docs/users_guide.md",
       "target": "docs/en/users_guide.md",
-      "source_sha256": "b9008854e5d0d126ba16e982db821bf09237cee1d9d5c1c15a6fbb6424e60f94",
-      "target_sha256": "8a2ab0d3e087250811777fb1eef00c9cee1e147fbb0a11e09be1926a8d7c5ed8",
-      "reviewer": "Claude (Claude Code session; review of the changed lines against the previously recorded pair, no model execution)",
+      "source_sha256": "619feb3a61b2f7efec53531f359bffe496a4b76a5aa4f72f5d950bb6df62e0e5",
+      "target_sha256": "4027d7d21b62c4d3a6fbf1b2f05120ca19bfb654f5fe5eaa9edeee04383b4d50",
+      "reviewer": "Claude (Claude Code session; reviewed the changed sections of the Japanese source against the English mirror, 2026-10-29)",
       "method": "assistant",
       "reviewed_on": "2026-10-29"
     },
@@ -284,11 +284,11 @@
     {
       "source": "docs/users_guide/gwflow.md",
       "target": "docs/en/users_guide/gwflow.md",
-      "source_sha256": "c4e13aaf39eec06893be11b9365094491fcf249d26e03b2c4a15ad8e29741f7d",
-      "target_sha256": "594acf311adefda5f1f27020f450c5cb7f045c9cca7cb74a37e6b944a0858687",
-      "reviewer": "Claude",
+      "source_sha256": "0a7195fa9247c78bf66d3e1106c0de67253a47e296ffadfb9e28abd7da3baf78",
+      "target_sha256": "f21fce37858cc27d940e73b449e7591d68ec6cadbb6fa28ad03a924a3c6690fc",
+      "reviewer": "Claude (Claude Code session; reviewed the changed sections of the Japanese source against the English mirror, 2026-10-29)",
       "method": "assistant",
-      "reviewed_on": "2026-10-25"
+      "reviewed_on": "2026-10-29"
     },
     {
       "source": "docs/users_guide/gwflow_models.md",
@@ -383,9 +383,9 @@
     {
       "source": "docs/users_guide/params_index.md",
       "target": "docs/en/users_guide/params_index.md",
-      "source_sha256": "c6e7cef4fbed2549d4bedd1f403a88384c26f98386579124c938b07348b6f9ff",
-      "target_sha256": "7f11216e63cbfa96d17bd8da36bf0a7e3c085b3a8302a55d9768ee762e465fa4",
-      "reviewer": "Claude (Claude Code session; full-text content and lexical review, no model execution)",
+      "source_sha256": "0211966b9c7cf64ad334463f13620e2d5a621dfd123caa3f19d128c7e2bccb9a",
+      "target_sha256": "2a0994defea8922e38e7519f9b415e4cda734f82d9aac88b902466f6f21f5b0a",
+      "reviewer": "Claude (Claude Code session; reviewed the changed sections of the Japanese source against the English mirror, 2026-10-29)",
       "method": "assistant",
       "reviewed_on": "2026-10-29"
     },
@@ -410,11 +410,11 @@
     {
       "source": "docs/users_guide/salt.md",
       "target": "docs/en/users_guide/salt.md",
-      "source_sha256": "328e380ef3aaafe5d5facfda273d7189ccb22df615f1b48c498ef89e3dd22d9a",
-      "target_sha256": "e692b287a9d0bca09cbeaaf65efe905f76643d0da20373de727731abc555bd1c",
-      "reviewer": "Claude (Claude Code session; full-text content and lexical review, no model execution)",
+      "source_sha256": "5eb08593a8ef81f97040285fde8a1fd0ac2c9eedb68664dd054de0561bd88a57",
+      "target_sha256": "f67e65e6c7cae746c6963d8fa9caa093965c5d95f3356bcf0ce009a25c322b76",
+      "reviewer": "Claude (Claude Code session; reviewed the changed sections of the Japanese source against the English mirror, 2026-10-29)",
       "method": "assistant",
-      "reviewed_on": "2026-10-24"
+      "reviewed_on": "2026-10-29"
     },
     {
       "source": "docs/users_guide/sediment.md",
@@ -482,9 +482,9 @@
     {
       "source": "docs/users_guide/usecases.md",
       "target": "docs/en/users_guide/usecases.md",
-      "source_sha256": "c1a60edb510f83f0a145c6874c7f36ba2539c84dd2a7cb66a67d4b148f0e4cdc",
-      "target_sha256": "c3d1dbf5064b151caef6ddcc29961016a5208c3371db9ca0f7bf3d45aff035f0",
-      "reviewer": "Claude (Claude Code session; review of the changed lines against the previously recorded pair, no model execution)",
+      "source_sha256": "1bea2201d754a636924d27fa72becf1fa0dd1586c236444def4af18093df40b7",
+      "target_sha256": "748ef0ca0f4504b0f637a367f667ae0830f0aa205663bc11705979fe54dc8815",
+      "reviewer": "Claude (Claude Code session; reviewed the changed sections of the Japanese source against the English mirror, 2026-10-29)",
       "method": "assistant",
       "reviewed_on": "2026-10-29"
     },
@@ -707,11 +707,11 @@
     {
       "source": "examples/List_samples/list_salt.txt",
       "target": "examples/List_samples/en/list_salt.txt",
-      "source_sha256": "f057505584146aa540e61005aeb3d4a556df1715b84f6d1f04596a0a829a970e",
-      "target_sha256": "32f3beb999b00543f2108b463a977c4b9207b5369fb030eccd65c505c86cd541",
-      "reviewer": "Claude (Claude Code session; full-text content and lexical review, no model execution)",
+      "source_sha256": "3c3a182b78365162875afe81967cb7360fa1704b2c20fa986113a45f5e98be5d",
+      "target_sha256": "548d8564bff718cc5edefd22040db14d8079c59a8f15f2c7e6dcc8b1b646da42",
+      "reviewer": "Claude (Claude Code session; reviewed the changed sections of the Japanese source against the English mirror, 2026-10-29)",
       "method": "assistant",
-      "reviewed_on": "2026-10-24"
+      "reviewed_on": "2026-10-29"
     },
     {
       "source": "examples/List_samples/list_seawall.txt",
@@ -806,11 +806,11 @@
     {
       "source": "examples/README.md",
       "target": "examples/README.en.md",
-      "source_sha256": "2d8430c4a3f45d06e36cfa3342c1ac4d37147835b505d3cfc4ccaf5d9391ad6d",
-      "target_sha256": "40b730ac798683752b0d1f89c613eb723d4026f416d919a3f39de036ce6302dc",
-      "reviewer": "Claude (Claude Code session; full-text content and lexical review, no model execution)",
+      "source_sha256": "eb563fd220c29e8413abeaf1ab5fcdb1c2e5720faef4175156a2732a933f6b72",
+      "target_sha256": "64b99e9519627468617b4050a36e9662fa9f2e1576f9f7092145095cfc9d30e3",
+      "reviewer": "Claude (Claude Code session; reviewed the changed sections of the Japanese source against the English mirror, 2026-10-29)",
       "method": "assistant",
-      "reviewed_on": "2026-10-28"
+      "reviewed_on": "2026-10-29"
     },
     {
       "source": "examples/ashfall_lahar/README.md",
@@ -953,6 +953,51 @@
       "source_sha256": "ed9f87e5ebafdf924c148fd536b3fbc96cf547720267304e46a5d7d421b3d872",
       "target_sha256": "ef4b1359b84cd630f7ef8817887cd0e8eb6a87f6883954e4f26615abbe0fbe53",
       "reviewer": "Claude (Claude Code session; full-text content and lexical review, no model execution)",
+      "method": "assistant",
+      "reviewed_on": "2026-10-29"
+    },
+    {
+      "source": "examples/estuary_barrage/README.md",
+      "target": "examples/estuary_barrage/en/README.md",
+      "source_sha256": "8f47d1ead382dcdd5ae1eb515e35b3c28ff39bff284990d1d54e1682c530e868",
+      "target_sha256": "675de9d5d439a77e7cfd498dd2feab7dd114d0f7cc965968f6cb67ccfb7259a3",
+      "reviewer": "Claude (Claude Code session; reviewed the Japanese source against the English mirror, figures drawn from the same results with label changes only, 2026-10-29)",
+      "method": "assistant",
+      "reviewed_on": "2026-10-29"
+    },
+    {
+      "source": "examples/estuary_barrage/figs/plan.png",
+      "target": "examples/estuary_barrage/en/figs/plan.png",
+      "source_sha256": "e0a809cb8c2634a71025b005ffac2793e8c52cfe2cb690a9280f7086563cdaa9",
+      "target_sha256": "3ac2986cea526986e75153bd0423b34dd0db2890157e1250ee58b579d0a868ae",
+      "reviewer": "Claude (Claude Code session; reviewed the Japanese source against the English mirror, figures drawn from the same results with label changes only, 2026-10-29)",
+      "method": "assistant",
+      "reviewed_on": "2026-10-29"
+    },
+    {
+      "source": "examples/estuary_barrage/figs/profile.png",
+      "target": "examples/estuary_barrage/en/figs/profile.png",
+      "source_sha256": "46d8760512c62456c7678ab03414aa4abccde6a4eb9b009df789705d7e58e8cf",
+      "target_sha256": "cdacf368dd581f44afc5f1914dec6d17829a7e0a6d6802423dff1dd5bf5bce8f",
+      "reviewer": "Claude (Claude Code session; reviewed the Japanese source against the English mirror, figures drawn from the same results with label changes only, 2026-10-29)",
+      "method": "assistant",
+      "reviewed_on": "2026-10-29"
+    },
+    {
+      "source": "examples/estuary_barrage/figs/series.png",
+      "target": "examples/estuary_barrage/en/figs/series.png",
+      "source_sha256": "3da5304536fa1a03b1bf7eb742dc080505b2c2096a0648c149c6dbdf6bfbe436",
+      "target_sha256": "a0f3eb12d24b7a57f0c2c25f5c13f2074d5b3b7b2ed61260bc283689f42c3118",
+      "reviewer": "Claude (Claude Code session; reviewed the Japanese source against the English mirror, figures drawn from the same results with label changes only, 2026-10-29)",
+      "method": "assistant",
+      "reviewed_on": "2026-10-29"
+    },
+    {
+      "source": "examples/estuary_barrage/figs/setup.png",
+      "target": "examples/estuary_barrage/en/figs/setup.png",
+      "source_sha256": "09b0c60a2ee1db8bc0e3b4d90d0ab553148d9f505e9f0c968abc86b0dbd46efc",
+      "target_sha256": "618e8dad58f6e8a40d90bffb10a4c3507a5ceb1142bad39a6863527bbdeb2092",
+      "reviewer": "Claude (Claude Code session; reviewed the Japanese source against the English mirror, figures drawn from the same results with label changes only, 2026-10-29)",
       "method": "assistant",
       "reviewed_on": "2026-10-29"
     },
@@ -2057,11 +2102,11 @@
     {
       "source": "test/salt/README.md",
       "target": "test/salt/en/README.md",
-      "source_sha256": "3b88bf7d1efcf386f3930817f9b9ff1d93ed93618aa4316d24bd60839d17ef1f",
-      "target_sha256": "2b741edcf33869b3b735094d850c606eaf9ec434a01eb60a6646e53b0464501a",
-      "reviewer": "Claude (Claude Code session; full-text content and lexical review, no model execution)",
+      "source_sha256": "02996269ed947193ef47695bb622b5a120fdc4b2bdb24e37cac805fbfcde537c",
+      "target_sha256": "439ab00c56361aaba950e4533041a2fd0e3dd6751849963ee057ce109942edee",
+      "reviewer": "Claude (Claude Code session; reviewed the changed sections of the Japanese source against the English mirror, 2026-10-29)",
       "method": "assistant",
-      "reviewed_on": "2026-10-24"
+      "reviewed_on": "2026-10-29"
     },
     {
       "source": "test/salt/figs/salt.png",
