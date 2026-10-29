@@ -634,7 +634,7 @@ subroutine gw_salt_zone(sl, g, s, dts)
   type(t_state), intent(inout) :: s
   real, intent(in) :: dts
   integer :: i, j, k, in, jn, jt
-  real :: bc, bn, etac, etan, zetac, zetan, psc, psn, bup, bse
+  real :: bc, bn, etac, etan, zetac, zetan, psc, psn, bup, bse, btc, btn, btup
   real :: gqs, gqb, dh_up, r, dhs, dhb, capc, fx, fs, qcap
   logical :: do_bed
 
@@ -644,7 +644,7 @@ subroutine gw_salt_zone(sl, g, s, dts)
   jt = min(dcp%je + 1, dcp%jeh)
   !$omp parallel do schedule(static) &
   !$omp   private(i, j, k, in, jn, bc, bn, etac, etan, zetac, zetan, psc, psn, &
-  !$omp           bup, bse, gqs, gqb, dh_up, r, qcap)
+  !$omp           bup, bse, btc, btn, btup, gqs, gqb, dh_up, r, qcap)
   do j = dcp%js, jt
     do i = g%wx(1,j), g%wx(2,j)
       if (g%x(i,j) <= 0) cycle
@@ -678,7 +678,24 @@ subroutine gw_salt_zone(sl, g, s, dts)
                   bup = bn
                 end if
                 if (bup > sl%sw%eps) then
-                  bse = min(0.5 * (bc + bn), bup)
+                  ! 界面の塩水飽和帯厚。合計(lateral_core)と塩水が同じ向きに流れる
+                  ! ときは、合計の界面飽和帯厚 h_e(写しの全厚の算術平均を上流側で
+                  ! キャップ = lateral_core と同一)に上流側セルの塩水割合を掛ける =
+                  ! セルから出る水はそのセルの組成(全層塩水のセルからは塩水だけが
+                  ! 出る)。両側の塩水厚の平均を使うと、全層塩水のセルが淡水を含む
+                  ! 隣へ流れるときに塩水の流束が合計より小さくなり、無いはずの淡水の
+                  ! 流出を整合クランプが塩水で埋め合わせて塩水が消えた(§47.7)。
+                  ! 逆向き(海水浸入の先端など、塩水が淡水流に逆らって入る)は両側の
+                  ! 塩水厚の平均を上流側(Φs)でキャップする従来の形
+                  btc = s%hgsnap(i,j) * sl%sw%syinv
+                  btn = s%hgsnap(in,jn) * sl%sw%syinv
+                  if (etac /= etan .and. ((etac > etan) .eqv. (psc > psn))) then
+                    btup = merge(btc, btn, etac > etan)
+                    bse = 0.0
+                    if (btup > 0.0) bse = min(0.5 * (btc + btn), btup) * min(bup / btup, 1.0)
+                  else
+                    bse = min(0.5 * (bc + bn), bup)
+                  end if
                   gqs = sl%sw%ksh * bse * (psc - psn) * sl%sw%rdr(k) * sl%sw%wl(k)
                   gqb = sl%sw%ksh * bse * sl%sw%epsr * (zetac - zetan) * sl%sw%rdr(k) * sl%sw%wl(k)
                   ! 河床交換能による上限: |q_s| <= k_bed(河道側セル)·l_k·b_s,e
