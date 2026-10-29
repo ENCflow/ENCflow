@@ -509,8 +509,8 @@
     {
       "source": "docs/users_guide/wavefield.md",
       "target": "docs/en/users_guide/wavefield.md",
-      "source_sha256": "8976e26dfa1e1c70572ef8a073d90329bc24f382a2b1681d5f9a56e72bfcca4a",
-      "target_sha256": "67d1e8894868797d0859d6696698a08c4b621093062f8bc41110cd4e5f97715c",
+      "source_sha256": "4905c55650ad86c12aceeeb2ce09ace2f261380f3b63d1366b1a02b292ae9575",
+      "target_sha256": "0850c1256ae8ba272b6f6ba0ffd5aec7e2c44a958054191fc687c3b7520447c1",
       "reviewer": "Claude (Claude Code session; full-text content and lexical review, no model execution)",
       "method": "assistant",
       "reviewed_on": "2026-10-29"
@@ -923,11 +923,29 @@
     {
       "source": "examples/delta/README.md",
       "target": "examples/delta/en/README.md",
-      "source_sha256": "ee84bc5d335549e92f2720ca9d70d91cb6af2156690fb03a12b4c919f59d680d",
-      "target_sha256": "5f1f5961b217f2f2230fa51f71cdb28684cb1a035385857c9ab45312c7b99ff8",
+      "source_sha256": "2a0fd290c09987dc5a1c577b6c01197c93c26489a260c5f86cf6aff2ce9efa66",
+      "target_sha256": "64ad1e9ca9a5b04b8edb03b6bd858c7ac1910c69f3e3ffd14036215d8d276136",
       "reviewer": "Claude (Claude Code session; full-text content and lexical review, no model execution)",
       "method": "assistant",
-      "reviewed_on": "2026-10-28"
+      "reviewed_on": "2026-10-29"
+    },
+    {
+      "source": "examples/delta/figs/wfsed_evolution.png",
+      "target": "examples/delta/en/figs/wfsed_evolution.png",
+      "source_sha256": "d4be7eff577aae4ee24d0a4cbeb0fbcd9adc608aa9132b7d5b762e38fb197a98",
+      "target_sha256": "71aa4a483b553eca9137449164279ac198c21ee140f3900535f2b3d916694437",
+      "reviewer": "Claude (Claude Code session; full-text content and lexical review, no model execution)",
+      "method": "assistant",
+      "reviewed_on": "2026-10-29"
+    },
+    {
+      "source": "examples/delta/figs/wfsed_final.png",
+      "target": "examples/delta/en/figs/wfsed_final.png",
+      "source_sha256": "ed9f87e5ebafdf924c148fd536b3fbc96cf547720267304e46a5d7d421b3d872",
+      "target_sha256": "ef4b1359b84cd630f7ef8817887cd0e8eb6a87f6883954e4f26615abbe0fbe53",
+      "reviewer": "Claude (Claude Code session; full-text content and lexical review, no model execution)",
+      "method": "assistant",
+      "reviewed_on": "2026-10-29"
     },
     {
       "source": "examples/karst/README.md",

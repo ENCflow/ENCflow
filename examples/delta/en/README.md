@@ -49,7 +49,7 @@ procedure is in "River-mouth deltas" of
 | fix | param_fix.txt | same | same | same + fixation (c_τ 3, T_fix 100 h, submerged decay T_dec 50 h, bank coefficient 0.5) + bank-erosion law | 4000 h | 1.5 h |
 | baseqb | param_baseqb.txt | same as base | same | constant. Sand as a fixed feed of 0.00715 m³/s (the actual mean of base); the channel within the land is non-erodible | 1500 h | 1 h |
 | wave | param_wave.txt | same | same | baseqb + offshore waves H₀ 0.6 m, T 6 s, direction of travel 150°; shoreline-orientation smoothing length wave_lsm 10 m; river-mouth rule wave_vmax 0.5 m/s | 1500 h | 1 h |
-| wfsed | param_wfsed.txt | same | same | baseqb + coastal wave field (offshore waves H_m0 0.6 m, T 6 s, direction of travel 150°, directional spreading 20°, action of the current on the waves) and process-based sediment transport (f_wfsed). The north and south sides are walls for the flow and lateral Neumann for the waves | 1500 h | about 5 h (2 threads, run alongside other jobs; for reference) |
+| wfsed | param_wfsed.txt | same | same | baseqb + coastal wave field (offshore waves H_m0 0.6 m, T 6 s, direction of travel 150°, directional spreading 20°, action of the current on the waves) and process-based sediment transport (f_wfsed) with swash-zone transport (f_wfswash), background viscosity 0.05 m²/s. The north and south sides are walls for the flow and lateral Neumann for the waves | 1500 h | 50 min |
 
 ## Running
 
@@ -177,38 +177,52 @@ breaking and the shadow of the delta itself, and the change of waves by currents
 gives the blocking of the waves by the river-mouth jet (the counterpart of the rule wave_vmax of wave).
 The wave-driven flow (radiation stress with the roller, GLM and wave–current friction; `wf_flow = 2`)
 drives a northward longshore current, and sand and mud are stirred by the orbital velocity and carried by
-the Eulerian mean velocity and the onshore velocity of wave skewness and asymmetry. The north and south
-sides are lateral Neumann for the waves and walls for the flow (as in wave; when this example was made, a
-lateral Neumann boundary of the flow became unstable at the side where the longshore current enters;
-developer.md §90.16, Japanese. It was fixed in §90.19, but this example has not been rerun).
+the Eulerian mean velocity and the onshore velocity of wave skewness and asymmetry. At the shoreline, the
+swash-zone transport outside the phase-averaged wave field (`f_wfswash = 1`, equilibrium foreshore slope
+`wfswash_tanbe = 0.1`; §90.21) piles sand up to the height the swash reaches where the foreshore is milder
+than the equilibrium slope. The stripes that grow offshore from a grid-scale positive feedback between the
+action of the current on the waves and the wave force on the flow (§90.20) are stopped by a small
+background viscosity (`f_diffusion_term = 2`, `p_diffusion_nu = 0.05` m²/s). The north and south sides are
+lateral Neumann for the waves and walls for the flow (as in wave; when this example was made, a lateral
+Neumann boundary of the flow became unstable at the side where the longshore current enters (§90.16). It
+was fixed in §90.19, but the walls are kept for comparison with wave).
 
-| Landform 1500 h | wfsed (coastal wave field) |
-|---|---|
-| Deposit (bulk) | 147×10³ m³ (sand 64×10³ m³ = nearly all of the feed; mud 83×10³ m³ = 61 % of the supply) |
-| Emerged land (h < 0.05 m) | 4.1×10³ m² |
-| Shallows (h < 0.5 m) | 20.6×10³ m² |
-| Maximum land advance from the river mouth | 142 m |
-| Fraction of the deposit north of the channel axis | 0.55 (sand 0.52) |
+| Landform 1500 h | wfsed (with swash-zone transport and background viscosity) | previous run (without either; 2026-10-28) |
+|---|---|---|
+| Deposit (bulk) | 154×10³ m³ (sand 64×10³ m³ = nearly all of the feed; mud 89×10³ m³ = 66 % of the supply) | 147×10³ m³ (sand 64×10³ m³; mud 83×10³ m³ = 61 %) |
+| Emerged land (h < 0.05 m) | 7.5×10³ m² | 4.1×10³ m² |
+| Mean ground elevation of the land | 0.30 m | 0.08 m |
+| Shallows (h < 0.5 m) | 19.6×10³ m² | 20.6×10³ m² |
+| Maximum land advance from the river mouth | 142 m | 142 m |
+| Fraction of the deposit north of the channel axis | 0.51 (sand 0.49) | 0.55 (sand 0.52) |
 
-(Totals of `python3 plot_results.py wfsed`, with the sand/mud and north/south split computed from the final
-Z, Sf and H. The emerged land and the shallows are the areas of cells seaward of the river mouth.)
+(Totals of `python3 plot_results.py wfsed`, with the sand/mud and north/south split and the ground elevation
+of the land computed from the final Z, Sf and H. The emerged land and the shallows are the areas of cells
+seaward of the river mouth.)
 
 Whereas in wave (CERC) a spit extended downdrift (north) from the mouth bar and the emerged land
 reached 31.6×10³ m², with the process-based transport of the wave field the sand spreads in front of the
-mouth as a shallow arcuate platform about 450 m alongshore and 180 m seaward, and the emerged land stays
-at 4.1×10³ m² (the crests of the bars on both sides of the mouth). The shallows keep spreading with time
-(from 5.5×10³ m² at 900 h of landform time to 20.6×10³ m² at 1500 h), and the skew to the north
-(downdrift) is small. The phase-averaged waves stop short of the shoreline and there is no swash-zone
-transport (the process that builds up beaches and berms), so the sand stays in the shallows and hardly
-becomes land (see "Scope and restrictions on combinations" in [coastal wave
-field](../../../docs/en/users_guide/wavefield.md)). The waves keep the mud from settling: it spreads over the
-whole basin as a thin layer (7 cm on average for x > 500 m), 22 % of the supply is still suspended in the
-water at the end, and the remaining 17 % left through the open east side (in base 97 % of the supply is
-deposited). Whether the shallow platform becomes land depends on swash-zone processes, so read any
-discussion of the shoreline shape together with wave (CERC). The diagonal stripes offshore in the final
-velocity panel are a grid-scale oscillation of the velocity that grows with time (a grid-scale deviation
-of 0.01 m/s at 3.3 h of hydraulic time and a maximum |V| of 0.15 m/s at 15 h; the water level is smooth,
-with grid-scale deviations below 0.1 mm); its cause has not been investigated (docs/handoff.md, Japanese).
+mouth as a shallow arcuate platform about 390 m alongshore and 210 m seaward (450 m and 180 m in the
+previous run). The swash-zone transport piles the sand on the crest of the platform up to the height the
+swash reaches, so the emerged land becomes 7.5×10³ m², 1.8 times the previous run (it appears at 450 h of
+landform time and keeps growing until 1500 h; in the previous run it went from 1.3×10³ m² at 900 h to
+4.1×10³ m²). The land grows on the crest of the platform on both sides of the mouth (larger on the north
+side) as a rise averaging 0.30 m (above the still water level, close to the runup limit), higher than the
+crests of the bars in the previous run (0.08 m on average). The swash zone is about one cell wide, so the
+edges of the land are ragged at the scale of one cell and shallow pools (one cell) remain inside the land.
+By the end, the swash-zone transport moved 2.5×10³ m³ (solid) of sand onto the dry foreshore and
+0.4×10³ m³ off it. The area of the shallows is almost the same as in the previous run, and the skew to the
+north (downdrift) is even smaller. The waves keep the mud from settling: it spreads over the whole basin as
+a thin layer (6 cm on average for x > 500 m), 22 % of the supply is still suspended in the water at the end,
+and the remaining 12 % left through the open east side (in base 97 % of the supply is deposited). The
+amount of emerged land depends on the coefficients of the swash-zone transport and on the equilibrium
+foreshore slope `wfswash_tanbe` (a quantity given from the grain size), so read any discussion of the
+shoreline shape together with wave (CERC) (see "Swash-zone transport" in [coastal wave
+field](../../../docs/en/users_guide/wavefield.md)). The diagonal stripes offshore in the final velocity panel
+of the previous run (a grid-scale oscillation of the velocity that grows with time, from a grid-scale
+positive feedback between the action of the current on the waves and the wave force on the flow;
+developer.md §90.20, Japanese) are stopped by the background viscosity (the grid-scale deviation offshore
+is 1.7×10⁻³ m/s at 15 h of hydraulic time, against 1.4×10⁻² m/s in the previous run).
 
 ![Evolution with the coastal wave field](figs/wfsed_evolution.png)
 ![Final landform with the coastal wave field](figs/wfsed_final.png)
@@ -255,8 +269,10 @@ with grid-scale deviations below 0.1 mm); its cause has not been investigated (d
 - River-to-wave ratio R → `inflow_qb` (fixed feed) and `wave_h0`, `wave_t`. Shoreline-orientation smoothing length → `wave_lsm` (2Δx to 1/4 of the surf-zone width). Incidence angle → `wave_dir`
   (within ±22.5° of head-on to the channel axis is not allowed; 45° is the threshold of the high-angle instability. See the header of param_wave.txt).
 - The coastal wave field case → offshore waves `wf_hm0`, `wf_trep`, `wf_dir`, `wf_spread`; the coefficients of
-  the onshore velocity `wfsed_facsk`, `wfsed_facas`; horizontal mixing by wave breaking `wf_break_visc`
+  the onshore velocity `wfsed_facsk`, `wfsed_facas`; the equilibrium foreshore slope of the swash-zone
+  transport `wfswash_tanbe` (steeper for coarser sand) and its coefficients `wfswash_kc`, `wfswash_kl`; the
+  background viscosity `p_diffusion_nu` (&list_enc); horizontal mixing by wave breaking `wf_break_visc`
   (&list_enc); stirring by breaking turbulence `f_wfsed_turb` ([coastal wave
   field](../../../docs/en/users_guide/wavefield.md)). The north and south sides can also be lateral Neumann for
-  the flow (the instability at the inflow side was fixed in developer.md §90.19, Japanese; param_wfsed.txt was
-  made before that, so its flow sides are walls).
+  the flow (the instability at the inflow side was fixed in developer.md §90.19, Japanese; param_wfsed.txt
+  keeps walls for the flow sides for comparison with wave).

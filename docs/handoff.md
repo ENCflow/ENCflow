@@ -1135,7 +1135,8 @@ architecture.md。このメモは「現在進行中・未完了の項目」だ�
   (&list_geomorph の f_wfsed_turb。§90.14、test/wfsed の turb)を入れた(どちらも既定は無効)。
   **2026-10-29**: 遡上域の輸送(&list_geomorph の f_wfswash。岸沖 Larson ら 2004・沿岸 Larson &
   Wamsley 2007・遡上高 Stockdon ら 2006 の振れ幅。§90.21、test/wfswash)を入れ、沖の格子規模の縞の
-  対策 (a)(背景粘性をユーザーガイドで勧める。§90.20)を採った。
+  対策 (a)(背景粘性をユーザーガイドで勧める。§90.20)を採った。examples/delta の wfsed を両方を入れて
+  計算し直した(陸化が前回の 1.8 倍。途中で見つけた流れありの位相速度の 0 除算は §90.22 で修正)。
   残り(着手順):
   1. W4・W5 の残り(§90.10・§90.17): (a) Ruessink ら(2012)の係数 p2〜p6 を原論文の表と照合する
      (XBeach の公開ソースの値を使っている。2026-10-28 もこの環境のネットワークの方針で原論文・
@@ -1170,9 +1171,6 @@ architecture.md。このメモは「現在進行中・未完了の項目」だ�
      検査体積で求める形にして直し(§90.19)、2026-10-29 に test/wfcurrent・wfsed・wfdoppler の reference を
      更新した。残り(任意): examples/delta の param_wfsed を流れの南北の辺も側方 Neumann にした構成
      (V12 の当初の構成)で計算し直す。
-  8. V12 のデルタの例(examples/delta の wfsed)の沖の格子規模の縞: 2026-10-29 に原因を特定し(§90.20)、
-     対策 (a)(小さな背景粘性をユーザーガイドで勧める)を採った。残り: param_wfsed に入れて計算し直す
-     (遡上域の輸送 §90.21 と一緒に)。
 
 - **山地渓流の地形発達(岩盤下刻・被覆・斜面供給)**(docs/mountain_stream_plan.md。
   developer.md §89): 2026-10-28 に main へ取り込み済み。第 1 段(流水による岩盤下刻 f_rockinc の
