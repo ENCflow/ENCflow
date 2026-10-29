@@ -13,11 +13,11 @@
     {
       "source": "README.ja.md",
       "target": "README.md",
-      "source_sha256": "34e6b2fb3bfb7e4102877049ef219000383a994a7569f2d2d61af84e033e2fce",
-      "target_sha256": "b2235ec605263a6a8f0e1e0ccc55925d85945c6032a09bc115f0b73a2b2d9841",
+      "source_sha256": "5b47e01ef19529b8e8a7372aac1a84d251ab4ee1ec87b7b423898169a5c58948",
+      "target_sha256": "14e05a3eb263e8c410a8c7cc3fcf2bbb0495b4a9aa76b1cafde770823346e0b7",
       "reviewer": "Claude (Claude Code session; full-text content and lexical review, no model execution)",
       "method": "assistant",
-      "reviewed_on": "2026-10-28"
+      "reviewed_on": "2026-10-29"
     },
     {
       "source": "TRADEMARKS.md",

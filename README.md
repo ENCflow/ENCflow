@@ -194,8 +194,9 @@ need to understand all of it. Read only the lines you care about.
   hydraulics.
 
 Any process that is not used consumes no memory and no CPU time at
-all. In its minimal configuration, ENCflow is simply a fast,
-well-behaved 2-D flood model.
+all, and needs no parameter file either.
+In its minimal configuration, ENCflow is simply a fast, well-behaved
+2-D flood model.
 
 To look up the feature combination and key settings from the
 phenomenon you want to compute, see the
