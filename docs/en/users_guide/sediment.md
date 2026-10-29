@@ -137,6 +137,16 @@ adaptation length of bedload is taken as short compared with the grid, so
 the equilibrium transport is used directly (suspended load, with its long
 adaptation length, is handled by a transport equation instead).
 
+The original Ashida–Michiue formula[^ashida72] (eq. (23)) uses the
+effective shear stress $`\tau_{*e}`$ in the leading $`\tau_*^{3/2}`$ (the part
+without the form drag of bedforms; eq. (11) of the original:
+$`U/u_{*e} = 6.0 + 5.75\log_{10}\{R/(d(1+2\tau_*))\}`$) and keeps the total
+$`\tau_*`$ and $`u_*`$ in the two threshold factors. ENCflow uses the form
+with $`\tau_{*e} = \tau_*`$, which corresponds to $`u_{*e} = u_*`$ that the
+original takes for flat beds and antidunes (the upper regime). In the
+regime of ripples and dunes (the lower regime) it overestimates the
+transport (`fluv_taufac` below is a simple substitute with a fixed ratio).
+
 ![Bedload formulas and equilibrium concentration](../../figs/sediment_laws_en.png)
 
 Panel (a) shows the two formulas ($`\tau_{*c}`$ = 0.05); panel (b) is the
@@ -617,7 +627,7 @@ The labels in the Basis column are explained in [How to read the basis of a defa
 | creep_hstar | 0 (conventional linear diffusion) | decay depth $`H_c`$ of depth-dependent creep (m) (§2) | **calibration value** no standard value. Does not affect the result under a thick soil |
 | f_qbform | 1 | bedload formula (§3) | **method** 1: Ashida–Michiue[^ashida72], 2: MPM[^mpm48] |
 | fluv_d50 | 0.01 m | representative grain size of bedload | **empirical** near the geometric mean of sand and gravel beds |
-| fluv_tausc / susp_tausc / wash_tausc | 0.05 | critical dimensionless shear stress (§1) | **literature value** representative value of the Shields curve for coarse sand to gravel[^shields36] |
+| fluv_tausc / susp_tausc / wash_tausc | 0.05 | critical dimensionless shear stress (§1) | **literature value** representative value of the Shields curve for coarse sand to gravel[^shields36]; Ashida–Michiue[^ashida72] also use 0.05 for the mean grain size of a mixed bed (eq. (31)) |
 | fluv_porosity / fluv_sgrav | 0.4 / 1.65 | bed porosity / submerged specific gravity | **customary value** standard values of sand and gravel |
 | fluv_dzmax | 0.05 m | bed change per update (§3) | **numerical** safety valve (Courant condition of bed waves) |
 | fluv_bcfeed | 0 | feeding at open boundaries (§3) | **method** 0: no feeding, 1: capacity feeding (net outflow of the inflow cell times the factor) |
