@@ -959,9 +959,9 @@
     {
       "source": "examples/estuary_barrage/README.md",
       "target": "examples/estuary_barrage/en/README.md",
-      "source_sha256": "8f47d1ead382dcdd5ae1eb515e35b3c28ff39bff284990d1d54e1682c530e868",
-      "target_sha256": "675de9d5d439a77e7cfd498dd2feab7dd114d0f7cc965968f6cb67ccfb7259a3",
-      "reviewer": "Claude (Claude Code session; reviewed the Japanese source against the English mirror, figures drawn from the same results with label changes only, 2026-10-29)",
+      "source_sha256": "46714ba701f9785252281fc3ddc70b21482f636e36642b5db5a58713643005b3",
+      "target_sha256": "23ffa7d34fbe3dd515641f31319e0eb6f776f2b7b938fe3fc18271a9808164ef",
+      "reviewer": "Claude (Claude Code session; reviewed the changed sections of the Japanese source against the English mirror, 2026-10-29)",
       "method": "assistant",
       "reviewed_on": "2026-10-29"
     },

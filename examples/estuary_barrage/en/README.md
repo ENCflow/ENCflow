@@ -129,14 +129,19 @@ columns are computed from the same output.)
   bed upstream of the barrage the salt fraction is 1.7 % (a thin tongue that
   passes under the barrage along the aquifer bottom and reaches about 500 m
   upstream; the subsurface path is not stopped by the barrage).
-- **Coupling between the wedge and the ground**: with the exchange split,
-  infiltration through the bed takes the wedge's salt water into the aquifer,
-  so the bottom salt in the river without a barrage decreases from 524 to
-  66 ×10³ m³, and the wedge tip swings between 0.2 and 1.0 km from the mouth
-  with the tide. This results from the schematic setting that applies the
-  infiltration capacity K_sv = 1e-4 m/s to the river bed as well; in a river
-  with a clogged bed (a small k_bed through the river-bed exchange capacity
-  f_gwbed) the uptake is smaller and the wedge longer.
+- **The shortening of the wedge is a numerical property (caution; found
+  2026-10-29)**: with the exchange split, the bottom salt in the river without
+  a barrage decreases from 524 to 66 ×10³ m³ and the wedge tip shrinks to
+  0.2–1.0 km from the mouth. On examination, most of this is not physics: at the
+  boundary between the river and the banks the head of layer 1 switches by the
+  surface water depth, so the salt-zone flux is evaluated in the opposite
+  direction and the consistency clamp removes salt water (notes below;
+  numerical property 2 of developer.md §47.5). In the prototype of the proposed
+  fix (fresh/salt layers (2a) in docs/handoff.md) this disappears: the wedge
+  without a barrage reaches 2.6–2.9 km, the salt in the aquifer is
+  1,310 ×10³ m³ and the aquifer below the bed becomes salt along the whole
+  river (with the barrage, 269 ×10³ m³, almost unchanged). The numbers in this
+  section will be replaced after the fix.
 - The salt in the aquifer during the first 2 days (flood and heavy rain) comes
   from the aquifer under the sea and near the mouth (the two cases with the
   exchange split have more, by the salt water that stays near the mouth during
