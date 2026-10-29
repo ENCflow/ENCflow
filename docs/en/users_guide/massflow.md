@@ -190,8 +190,17 @@ deposit and runs on by inertia, then deposits as a fan at the slope break.
 growth of avalanches and rock avalanches that pick up the snow or the
 colluvium of their path; the entrainable layer is given by the soil
 thickness $`s_d`$. Only dense cells with $`C \ge c_{\min}`$ entrain (no
-runaway of dilute fringes). **f_dbed = 0** is no exchange (equivalent
-fluid).
+runaway of dilute fringes). The empirical entrainment law of Hungr[^hungr95],
+widely used in debris-flow practice, is $`E = E_r\,h\,|\mathbf{V}|`$ (DAN3D and
+others; $`E_r`$ is the volume growth per metre travelled, estimated from the
+volume $`V_0`$ entering and $`V_f`$ leaving the entrainment zone and its length
+$`L`$ as $`E_r = \ln(V_f/V_0)/L`$[^qiao23]) and has a flow-depth factor. With
+f_dbed = 4 the erosion depth is proportional to the distance travelled
+regardless of the flow depth, whereas with Hungr's law it is proportional to
+the flow depth and the volume grows exponentially with the distance. To give a
+similar entrained amount with f_dbed = 4, $`\delta_e \approx E_r \times`$ (a
+representative flow depth) is a guide. **f_dbed = 0** is no exchange
+(equivalent fluid).
 
 **Stopping (f_dbstop = 1).** In cells with $`|\mathbf{V}| < v_{stop}`$ and
 $`C > C_\infty`$ the excess concentration is transferred to the bed at the
@@ -336,7 +345,14 @@ The labels in the Basis column are explained in [How to read the basis of a defa
 - Voellmy μ and ξ are usually calibrated against the runout and deposit
   shape of past events; the RAMMS calibration compilation[^christen10]
   tabulates them by terrain and size, and practical debris-flow values are
-  collected in Takahashi[^takahashi07].
+  collected in Takahashi[^takahashi07]. As a debris-flow calibration
+  example, the back-analysis of the 2015 Cancia debris flow in the Italian
+  Dolomites (4,400 m³ at the start grew to 28,850 m³ by entrainment along a
+  2.2 km channel with slopes of 27° upstream and 13° downstream) found the
+  same best μ = 0.11 and ξ = 450 m/s² for two models with entrainment (DAN3D
+  and a finite-difference model; E_r ≈ 0.001 /m with Hungr's entrainment law.
+  Without entrainment the whole volume had to be released at the top, and
+  the models produced bank overflows that did not occur)[^qiao23].
 - Move the erosion / deposition coefficients so that the traces of past
   debris flows (scour depth, deposit thickness) are reproduced, checking
   both runout and deposited volume.
@@ -362,6 +378,8 @@ The labels in the Basis column are explained in [How to read the basis of a defa
 [^tn91]: Takahashi, T. and Nakagawa, H. (1991): Prediction of stony debris flow induced by severe rainfall. *J. Jpn. Soc. Erosion Control Eng.*, 44(3), 12–19 (in Japanese).
 [^egashira93]: Egashira, S. (1993): Mechanism of stopping and deposition of debris flow (2). *J. Jpn. Soc. Erosion Control Eng.*, 46(2) (in Japanese). (original form of the constitutive law and yield stress of Egashira et al. 1989)
 [^voellmy55]: Voellmy, A. (1955): Über die Zerstörungskraft von Lawinen. *Schweizerische Bauzeitung*, 73, 159–165, 212–217, 246–249, 280–285.
+[^hungr95]: Hungr, O. (1995): A model for the runout analysis of rapid flow slides, debris flows, and avalanches. *Can. Geotech. J.*, 32, 610–623. doi:10.1139/t95-063 (the form of the entrainment law from eqs. (14) and (15) of Qiao et al. 2023; the paper itself not read)
+[^qiao23]: Qiao, Z., Li, T., Simoni, A., Gregoretti, C., Bernard, M., Wu, S., Shen, W. and Berti, M. (2023): Numerical modelling of an alpine debris flow by considering bed entrainment. *Front. Earth Sci.*, 10, 1059525. doi:10.3389/feart.2022.1059525 (the 2015 Cancia debris flow; calibrated Voellmy μ, ξ and entrainment rate in Tables 2 and 3)
 [^christen10]: Christen, M., Kowalski, J. and Bartelt, P. (2010): RAMMS: Numerical simulation of dense snow avalanches in three-dimensional terrain. *Cold Reg. Sci. Technol.*, 63, 1–14.
 [^fischer12]: Fischer, J.-T., Kowalski, J. and Pudasaini, S. P. (2012): Topographic curvature effects in applied avalanche modeling. *Cold Reg. Sci. Technol.*, 74–75, 21–30.
 [^pitman03]: Pitman, E. B., Nichita, C. C., Patra, A., Bauer, A., Sheridan, M. and Bursik, M. (2003): Computing granular avalanches and landslides. *Phys. Fluids*, 15, 3638–3646. (Titan2D)

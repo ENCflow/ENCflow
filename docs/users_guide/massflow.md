@@ -160,6 +160,12 @@ $`\delta_e\,\dfrac{C_\infty - C}{C_* - C_\infty}\,\dfrac{q_T}{d_L}`$、堆積は
 `f_dbstop` が担う)。雪崩・岩屑なだれが走路の雪や崩積土を取り込んで
 成長する過程の簡易則で、連行可能な層は土層厚 $`s_d`$ で与えます。
 $`C \ge c_{\min}`$ の密な流動体だけが連行します(希薄な裾の暴走防止)。
+土石流の実務で広く使われる Hungr の経験的な連行則[^hungr95]は $`E = E_r\,h\,|\mathbf{V}|`$
+(DAN3D など。$`E_r`$ は 1 m 進むごとの体積の増加率で、連行域に入る体積 $`V_0`$ と出る体積
+$`V_f`$、連行域の長さ $`L`$ から $`E_r = \ln(V_f/V_0)/L`$ と見積もる[^qiao23])で、流動深の
+因子を持ちます。f_dbed = 4 は侵食深が流動深によらず走行距離に比例するのに対し、Hungr の則では
+流動深に比例し、体積が走行距離に対して指数的に増えます。f_dbed = 4 で近い連行量を与えるなら
+$`\delta_e \approx E_r \times`$(代表の流動深)が目安です。
 **f_dbed = 0** は交換なし(等価流体)です。
 
 **停止(f_dbstop = 1)。** $`|\mathbf{V}| < v_{stop}`$ かつ $`C > C_\infty`$ の
@@ -286,6 +292,12 @@ $`v_{stop}`$ = 0.05 m/s。混合体の μ・ξ とは慣性の有無で校正値
 - Voellmy の μ・ξ は到達距離と堆積形状の既往事例に合わせて校正する
   のが通例で、RAMMS の校正値集[^christen10]に地形・規模別の表が
   あります。土石流の実務値は高橋[^takahashi07]にまとまっています。
+  土石流の校正例として、イタリア・ドロミテの Cancia の 2015 年の土石流
+  (初期 4,400 m³ が流下中の連行で 28,850 m³ に。流路 2.2 km、勾配は上流 27°・
+  下流 13°)の逆算では、連行を入れた 2 つのモデル(DAN3D と差分法のモデル)で
+  同じ μ = 0.11、ξ = 450 m/s² が最良でした(Hungr の連行則で E_r ≈ 0.001 /m。
+  連行を入れないと全量を上流から流すことになり、実際にはなかった越流が起きた)
+  [^qiao23]。
 - 侵食・堆積の係数は、既往の土石流の流下痕跡(侵食深・堆積厚)を
   再現するように動かします(到達距離と堆積量の両方を見ること)。
 
@@ -310,6 +322,8 @@ $`v_{stop}`$ = 0.05 m/s。混合体の μ・ξ とは慣性の有無で校正値
 [^tn91]: 高橋保・中川一 (1991): 石礫型土石流の予測法. 新砂防, 44(3), 12–19.
 [^egashira93]: 江頭進治 (1993): 土石流の停止・堆積のメカニズム(2). 新砂防, 46(2).(江頭ら(1989)の構成則と降伏応力の原式)
 [^voellmy55]: Voellmy, A. (1955): Über die Zerstörungskraft von Lawinen. *Schweizerische Bauzeitung*, 73, 159–165, 212–217, 246–249, 280–285.
+[^hungr95]: Hungr, O. (1995): A model for the runout analysis of rapid flow slides, debris flows, and avalanches. *Can. Geotech. J.*, 32, 610–623. doi:10.1139/t95-063(連行則の形は Qiao ら 2023 の式 (14)・(15) による。原論文は未読)
+[^qiao23]: Qiao, Z., Li, T., Simoni, A., Gregoretti, C., Bernard, M., Wu, S., Shen, W. and Berti, M. (2023): Numerical modelling of an alpine debris flow by considering bed entrainment. *Front. Earth Sci.*, 10, 1059525. doi:10.3389/feart.2022.1059525(Cancia 2015 の土石流。Voellmy の μ・ξ と連行率の校正値は表 2・表 3)
 [^christen10]: Christen, M., Kowalski, J. and Bartelt, P. (2010): RAMMS: Numerical simulation of dense snow avalanches in three-dimensional terrain. *Cold Reg. Sci. Technol.*, 63, 1–14.
 [^fischer12]: Fischer, J.-T., Kowalski, J. and Pudasaini, S. P. (2012): Topographic curvature effects in applied avalanche modeling. *Cold Reg. Sci. Technol.*, 74–75, 21–30.
 [^pitman03]: Pitman, E. B., Nichita, C. C., Patra, A., Bauer, A., Sheridan, M. and Bursik, M. (2003): Computing granular avalanches and landslides. *Phys. Fluids*, 15, 3638–3646.(Titan2D)

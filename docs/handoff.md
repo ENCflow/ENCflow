@@ -886,6 +886,14 @@ architecture.md。このメモは「現在進行中・未完了の項目」だ�
    - 解析解・実験ベンチマーク: 斜面等流の平衡濃度、停止距離
      (高橋の実験式)、morfac なし版の検証階段(test/debris は疎通+
      保存則のみ)
+   - (2026-10-29 利用者が Qiao ら 2023 を提供)実事例の候補: イタリア・ドロミテの Cancia の
+     2015 年 7 月 23 日の土石流(Simoni ら 2020 ESPL 45 の事前・事後 DEM と侵食・堆積の分布。
+     初期 4,400 m³ → 28,850 m³、流路 2.2 km)。Qiao ら は DAN3D と差分法のモデルを Voellmy
+     (μ = 0.11、ξ = 450 m/s²)+ Hungr の連行則(E_r ≈ 0.00095 /m)で校正し、浸水域の Jaccard
+     指数 0.38・0.54(連行なしは 0.32・0.39)。ENCflow で再現するには地形データの入手が前提。
+     あわせて、Hungr の連行則 E = E_r h|V|(流動深の因子あり)を f_dbed の選択肢に足すか
+     (現行の f_dbed = 4 は E = δe|V|)が論点(議論が先)。massflow.md §3・§6 と geomorph.md の
+     推奨値の表に校正例と違いを記載した
    - ifx / nvfortran / AOCC でのビルド・検証(gfortran のみ実施済み)
    - S_grnd 表示が h=0 セルの hg を集計しない既存仕様の扱い
      (developer.md §28.4。直すなら m_state_calcstat の cycle 位置の
