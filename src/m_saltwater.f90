@@ -587,12 +587,16 @@ subroutine gw_salt_zone(sl, g, s, dts)
   real, intent(in) :: dts
   integer :: i, j, k, in, jn, jt
   real :: bc, bn, etac, etan, zetac, zetan, psc, psn, bup, bse
-  real :: gqs, gqb, dh_up, r, dhs, dhb, capc, fx, fs
+  real :: gqs, gqb, dh_up, r, dhs, dhb, capc, fx, fs, qcap
+  logical :: do_bed
 
+  ! 河床交換能(f_gwbed。§16.5・§47.5): 河道・非河道間のエッジの塩水 zone 流束にも
+  ! 側方流と同じ形の上限をかける。無効時は分岐に入らない
+  do_bed = allocated(s%kbed)
   jt = min(dcp%je + 1, dcp%jeh)
   !$omp parallel do schedule(static) &
   !$omp   private(i, j, k, in, jn, bc, bn, etac, etan, zetac, zetan, psc, psn, &
-  !$omp           bup, bse, gqs, gqb, dh_up, r)
+  !$omp           bup, bse, gqs, gqb, dh_up, r, qcap)
   do j = dcp%js, jt
     do i = g%wx(1,j), g%wx(2,j)
       if (g%x(i,j) <= 0) cycle
@@ -628,6 +632,23 @@ subroutine gw_salt_zone(sl, g, s, dts)
                   bse = min(0.5 * (bc + bn), bup)
                   gqs = sl%sw%ksh * bse * (psc - psn) * sl%sw%rdr(k) * sl%sw%wl(k)
                   gqb = sl%sw%ksh * bse * sl%sw%epsr * (zetac - zetan) * sl%sw%rdr(k) * sl%sw%wl(k)
+                  ! 河床交換能による上限: |q_s| <= k_bed(河道側セル)·l_k·b_s,e
+                  ! (界面の塩水飽和帯厚 = 塩水を運ぶ面の面積。lateral_core の
+                  ! k_bed·l_k·h_e と同型)。qb にも同率を適用(zone 流束の成分)
+                  if (do_bed) then
+                    if ((g%rw(i,j) > 0) .neqv. (g%rw(in,jn) > 0)) then
+                      if (g%rw(i,j) > 0) then
+                        qcap = s%kbed(i,j) * sl%sw%wl(k) * bse
+                      else
+                        qcap = s%kbed(in,jn) * sl%sw%wl(k) * bse
+                      end if
+                      if (qcap >= 0.0 .and. abs(gqs) > qcap) then
+                        r = qcap / abs(gqs)
+                        gqs = gqs * r
+                        gqb = gqb * r
+                      end if
+                    end if
+                  end if
                   ! 過大流出の抑制(上流側。厚さ単位 = lateral_core と同一)。
                   ! 同率を qb にも適用(zone 流束の成分なので一体で縮小)
                   dh_up = abs(gqs) * dts * sl%sw%ainv * sl%sw%syinv
