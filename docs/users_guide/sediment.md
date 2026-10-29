@@ -237,6 +237,33 @@ $`\tau_{*e}^{3/2}`$ に置き換える(閾値の 2 つの因子は全 $`\tau_*`$
 - **時期**: Nays2DH との比較、砂堆のある砂河川、植生のある氾濫原を扱う段で
   入れます(developer.md §19.8)。
 
+**今後の課題(実装予定): 急勾配礫床の抵抗分割(マクロ粗度)。** 水深が粒径 D84 の
+7〜10 倍より浅い礫・巨礫床の渓流では、巨礫や段の形状抵抗・落水の抵抗が全抵抗の
+大半を占め、全抵抗の $`\tau_*`$ をそのまま流砂量式に入れると流砂量を大きく
+過大に見積もります。Rickenmann & Recking[^rickenmann11] は野外の 2890 測定で、
+粒径から決まる「基準の抵抗」$`1/n_0 = 20.4/D_{84}^{1/6}`$ と全抵抗の比で勾配を
+縮める $`S_0/S = (n_0/n_{\rm tot})^{e}`$($`e`$ = 1.33〜2。Meyer-Peter & Müller[^mpm48]は
+1.5、出水の流砂量からの逆算で 1.2〜1.5)が、急勾配の渓流の流砂量の過大を大きく
+改善すると整理しています。流砂量式に渡す $`\tau_*`$ に $`\min(1, (n_0/n)^{e})`$
+($`e`$ = 1.5)を掛ける選択肢を、既定を変えずに足す予定です。
+
+- **形**: $`n`$ はセルの Manning 係数(流れの全抵抗)、$`n_0`$ は $`D_{84}`$ から
+  決めます($`D_{84}`$ がなければ $`2.2\,D_{50}`$。論文がデータの補完に使った
+  中央値の比)。$`e = 2`$ なら「$`n_0`$ で評価した Manning のせん断」そのものです。
+  水深が D84 に比べて十分深く $`n \approx n_0`$ の所では効果は小さくなります。
+- **効果の大きさ**: 山地渓流の例題の設定(n = 0.04〜0.05、D50 = 10〜100 mm)では
+  $`n_0/n`$ = 0.65〜0.78 で、$`\tau_*`$ は 0.52〜0.69 倍です。流砂量は閾値に近い
+  ほどさらに減ります。
+- **上の有効掃流力との関係**: どちらも「流砂を動かす分」の掃流力を取り出す分離で、
+  対象の領域が違います($`\tau_{*e}`$ は対数則が成り立つ砂床の砂堆、こちらは
+  浅い礫・巨礫床)。両者と `fluv_taufac` は排他にします。巨礫のない高濃度の流れ
+  (シートフロー)に当てると流砂量を不当に小さくする、という但し書きがあります。
+- **流れの側の関連課題**: 粒径相当の一定の Manning n は、浅い礫・巨礫床で流速を
+  大きく過大に予測します(D84 より浅いと中央値で 3〜4.5 倍[^rickenmann11])。相対水深に応じて
+  抵抗を変える Ferguson の式[^ferguson07]を抵抗則の選択肢にすることも候補です。
+  流れ全体に効くので、流砂の分離より議論が重くなります。
+- **時期**: 山地渓流の例題の結果を見てから入れます(docs/mountain_stream_plan.md §6.3)。
+
 ## 4. 浮遊砂(f_suspend)
 
 **輸送。** 濃度 $`C = h_s/h`$ は水の体積あたりの固体体積で、水柱の
@@ -612,6 +639,8 @@ $`\tau_d`$ は定常の等流で抵抗則の底面せん断に等しく、抵抗
 [^johnstone15]: Johnstone, S. A. and Hilley, G. E. (2015): Lithologic control on the form of soil-mantled hillslopes. *Geology*, 43(1), 83–86. doi:10.1130/G36052.1(要旨で確認: 輸送が勾配と土層厚の両方に比例すると、岩質が土層に覆われた斜面の形に現れる。式の形と doi は Landlab の DepthDependentDiffuser の説明による)
 [^ashida72]: 芦田和男・道上正規 (1972): 移動床流れの抵抗と掃流砂量に関する基礎的研究. 土木学会論文報告集, 206, 59–69.
 [^mpm48]: Meyer-Peter, E. and Müller, R. (1948): Formulas for bed-load transport. *Proc. 2nd Meeting IAHSR*, Stockholm, 39–64.
+[^rickenmann11]: Rickenmann, D. and Recking, A. (2011): Evaluation of flow resistance in gravel-bed rivers through a large field data set. *Water Resour. Res.*, 47, W07538. doi:10.1029/2010WR009793(基準の抵抗 式 (23)、抵抗分割と流砂量 式 (32))
+[^ferguson07]: Ferguson, R. (2007): Flow resistance equations for gravel- and boulder-bed streams. *Water Resour. Res.*, 43, W05427. doi:10.1029/2006WR005422(Rickenmann & Recking 2011 の文献表と式 (10a) による。本文は未読)
 [^exner25]: Exner, F. M. (1925): Über die Wechselwirkung zwischen Wasser und Geschiebe in Flüssen. *Sitzungsber. Akad. Wiss. Wien, Math.-Naturwiss. Kl.*, 134, 165–204.
 [^itakura80]: Itakura, T. and Kishi, T. (1980): Open channel flow with suspended sediments. *J. Hydraul. Div. ASCE*, 106(HY8), 1325–1343.(実装の形は iRIC「実践河川水理学」第 4 章の式(3)–(5)による)
 [^rubey33]: Rubey, W. W. (1933): Settling velocities of gravel, sand, and silt particles. *Am. J. Sci.*, 25, 325–338.

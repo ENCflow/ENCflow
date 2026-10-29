@@ -296,6 +296,43 @@ $`\tau_{*e}^{3/2}`$ (the two threshold factors keep the total $`\tau_*`$).
 - **Timing**: it will be added when comparisons with Nays2DH, sand-bed rivers
   with dunes or vegetated floodplains are taken up (developer.md §19.8).
 
+**Future work (planned): flow resistance partitioning on steep gravel beds
+(macroroughness).** In gravel and boulder streams whose depth is less than
+7–10 times the grain size D84, form drag and spill drag of boulders and steps
+take most of the total resistance, and passing the total-resistance
+$`\tau_*`$ to the transport formula overestimates the transport greatly. From 2890 field measurements, Rickenmann &
+Recking[^rickenmann11] summarize that reducing the slope by the ratio of the
+grain-based "base level" resistance $`1/n_0 = 20.4/D_{84}^{1/6}`$ to the total
+resistance, $`S_0/S = (n_0/n_{\rm tot})^{e}`$ ($`e`$ = 1.33–2; 1.5 in
+Meyer-Peter & Müller[^mpm48], 1.2–1.5 back-calculated from flood bed load),
+greatly reduces the overestimation in steep streams. We plan to add, without
+changing the default, an option that multiplies the $`\tau_*`$ passed to the
+transport formula by $`\min(1, (n_0/n)^{e})`$ ($`e`$ = 1.5).
+
+- **Form**: $`n`$ is the cell's Manning coefficient (the total resistance of
+  the flow) and $`n_0`$ is set from $`D_{84}`$ ($`2.2\,D_{50}`$ when $`D_{84}`$ is not
+  given; the median ratio the paper used to fill missing data). With
+  $`e = 2`$ it is exactly "the Manning shear evaluated with $`n_0`$". Where the
+  depth is large compared with D84 and $`n \approx n_0`$, the effect is small.
+- **Size of the effect**: with the settings of the mountain-stream examples
+  (n = 0.04–0.05, D50 = 10–100 mm), $`n_0/n`$ = 0.65–0.78 and $`\tau_*`$ becomes
+  0.52–0.69 times; the transport drops further the closer it is to the
+  threshold.
+- **Relation to the effective shear stress above**: both separate the part of
+  the shear stress that moves sediment, for different regimes
+  ($`\tau_{*e}`$ for dunes on sand beds where the log law holds, this one for
+  shallow gravel and boulder beds). They and `fluv_taufac` will be mutually
+  exclusive. The paper cautions that applied to high-concentration flows
+  without boulders (sheet flow) it makes the transport implausibly small.
+- **Related item on the flow side**: a constant grain-based Manning n
+  overestimates the velocity greatly on shallow gravel and boulder beds
+  (3–4.5 times in the median when shallower than D84[^rickenmann11]). Making Ferguson's
+  equation[^ferguson07], whose resistance follows the relative depth, a
+  resistance-law option is also a candidate; it affects the whole flow, so it
+  needs more discussion than the sediment-side separation.
+- **Timing**: it will be added after the results of the mountain-stream
+  examples are reviewed (docs/mountain_stream_plan.md §6.3).
+
 ## 4. Suspended sediment (f_suspend)
 
 **Transport.** The concentration $`C = h_s/h`$ is the solid volume per
@@ -741,6 +778,8 @@ The labels in the Basis column are explained in [How to read the basis of a defa
 [^johnstone15]: Johnstone, S. A. and Hilley, G. E. (2015): Lithologic control on the form of soil-mantled hillslopes. *Geology*, 43(1), 83–86. doi:10.1130/G36052.1 (checked against the abstract: when transport scales with both slope and soil depth, rock type shows up in the form of soil-mantled hillslopes. The form of the equation and the doi follow the description of Landlab's DepthDependentDiffuser)
 [^ashida72]: Ashida, K. and Michiue, M. (1972): Study on hydraulic resistance and bed-load transport rate in alluvial streams. *Proc. JSCE*, 206, 59–69 (in Japanese).
 [^mpm48]: Meyer-Peter, E. and Müller, R. (1948): Formulas for bed-load transport. *Proc. 2nd Meeting IAHSR*, Stockholm, 39–64.
+[^rickenmann11]: Rickenmann, D. and Recking, A. (2011): Evaluation of flow resistance in gravel-bed rivers through a large field data set. *Water Resour. Res.*, 47, W07538. doi:10.1029/2010WR009793 (base level resistance eq. (23); resistance partitioning and bed load eq. (32))
+[^ferguson07]: Ferguson, R. (2007): Flow resistance equations for gravel- and boulder-bed streams. *Water Resour. Res.*, 43, W05427. doi:10.1029/2006WR005422 (from the reference list and eq. (10a) of Rickenmann & Recking 2011; the paper itself not read)
 [^exner25]: Exner, F. M. (1925): Über die Wechselwirkung zwischen Wasser und Geschiebe in Flüssen. *Sitzungsber. Akad. Wiss. Wien, Math.-Naturwiss. Kl.*, 134, 165–204.
 [^itakura80]: Itakura, T. and Kishi, T. (1980): Open channel flow with suspended sediments. *J. Hydraul. Div. ASCE*, 106(HY8), 1325–1343. (implemented in the form of eqs. (3)–(5) of chapter 4 of the iRIC textbook "Practical river hydraulics")
 [^rubey33]: Rubey, W. W. (1933): Settling velocities of gravel, sand, and silt particles. *Am. J. Sci.*, 25, 325–338.
