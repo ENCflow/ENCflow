@@ -70,7 +70,14 @@ S_total の収支は 2e-11 m、区画の残差は予算の 3e-4 倍。柱の共�
 「rainfall differs within column」で停止(MPI でも全ランクで停止)。保存 → 再開は
 連続計算と完全一致(逐次・MPI)。`-Og -fcheck=all` で逐次と np = 2・4 の全出力
 ファイル(プローブ含む)が一致、release で np = 1・2・4 が逐次 reference に
-ULP=0。reference は解析検定の合格を根拠にした暫定(目視確認待ち)。
+ULP=0。
+
+reference の確定(2026-10-29。利用者の指示): 暫定で置いていた reference を確定した。
+更新は `ULP=0 RTOL=0 FILES="Log.txt vz_zone.csv vz_column.csv" ./Run.sh -u`(逐次
+release)。Log.txt と param.txt は従来の reference とビット一致で、CSV だけが最終桁
+(相対 1e-15 以下。収支残差の列は丸め雑音の 1e-13 m³ 規模)で変わった。理由は
+test/vzcol と同じ(作業ホストの CPU の違いによる `-march=native` の差。コードの変更では
+ない)。新しい reference に対して MPI np = 2・4 が CSV を含めて一致。
 
 基底流(2026-10-27): 累積の基底流は解析積分と相対 2e-14、出口の量 = 排水 + 基底流は
 相対 2e-14、VZ 側の値と vz_column.csv は基底流なしと一致、S_total の収支は 2e-11 m。

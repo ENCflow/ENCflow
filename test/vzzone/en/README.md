@@ -87,9 +87,17 @@ in the area-average mode agrees to 3e-14, and the strict mode stops with
 "rainfall differs within column" (on all ranks under MPI). Save → restart agrees
 exactly with the continuous run (serial and MPI). Under `-Og -fcheck=all` all
 output files (including probes) agree between serial and np = 2 and 4; in
-release, np = 1, 2, 4 match the serial reference at ULP=0. The reference is
-provisional, based on passing the analytical checks (awaiting visual
-confirmation).
+release, np = 1, 2, 4 match the serial reference at ULP=0.
+
+Confirmation of the reference (2026-10-29, at the user's instruction): the
+provisional reference was confirmed. It was updated with
+`ULP=0 RTOL=0 FILES="Log.txt vz_zone.csv vz_column.csv" ./Run.sh -u` (serial
+release). Log.txt and param.txt are bit-identical to the previous reference; only
+the CSV files changed in the last digit (relative 1e-15 or less; in the residual
+column, rounding noise of the order of 1e-13 m³). The reason is the same as in
+test/vzcol (the default `-march=native` on a working host with a different CPU; not
+a code change). MPI np = 2 and 4 agree with the new reference including the CSV
+files.
 
 Baseflow (2026-10-27): the cumulative baseflow agrees with the analytical integral
 to 2e-14 (relative), outlet volume = drainage + baseflow to 2e-14 (relative), the

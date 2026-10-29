@@ -13787,7 +13787,13 @@ docs/vz_plan.md(添付の設計文書 2 点はリポジトリ外。plan が ENCf
   登録(nightly の -Og -fcheck=all 層はランナー上で作り直した reference に
   np = 2 を RTOL = 0 で照合する)。
 - reference(vzcol・vzzone)は解析検定の合格を根拠に暫定で置いた。人間の
-  目視確認で確定する(規律 1)。
+  目視確認で確定する(規律 1)。→ 2026-10-29 に利用者の指示で確定した:
+  `ULP=0 RTOL=0 FILES="Log.txt vz_zone.csv vz_column.csv" ./Run.sh -u`(逐次 release)で
+  更新。Log.txt・param.txt は従来とビット一致、CSV だけが最終桁(相対 1e-15 以下。
+  residual 列は丸め雑音の 1e-12 m³ 規模)で変わった。作業ホストの CPU が作成時と違い
+  既定の -march=native の差による(作成時のコミット 5c5c076 を同じホストでビルドしても
+  同じ CSV = コードの変更ではない。上の「比較範囲は Log.txt」の判断の実例)。新しい
+  reference に MPI np = 2・4 が CSV を含めて一致。
 
 ### 87.4 落とし穴と記録
 
