@@ -112,14 +112,14 @@ CITATION.cff の references へ、非静水圧の再現性記述はリリース�
 側に統一、連絡先は tada@nda.ac.jp と tadadaze@gmail.com、**所属機関の公開承認は
 取得済み**。
 
-残り:
+残り(2026-10-29 に利用者が 1・2・4 の完了を確認):
 
-1. **Nightly の緑の確認**: bmi ジョブに test/bmi_vars を追加した(§3 のローカル
+1. (済)**Nightly の緑の確認**: bmi ジョブに test/bmi_vars を追加した(§3 のローカル
    確認を根拠)。次回の Nightly が緑であることを確認する。
-2. **GitHub の「Cite this repository」表示の確認**: preferred-citation を外した後、
+2. (済)**GitHub の「Cite this repository」表示の確認**: preferred-citation を外した後、
    リポジトリページの表示がソフトウェア引用(ENCflow 3.0.0、両著者、DOI)に
    なっていること。
 3. **Release v3.0.0 の「検証」節への転記**(任意): §3 の表(人間の操作)。
-4. **CSDMS への提出**: アカウント作成、質問票への §2 の記入、ソース公開先
+4. (済)**CSDMS への提出**: アカウント作成、質問票への §2 の記入、ソース公開先
    (GitHub URL・版 DOI)の連絡。
 5. 同梱データの再配布条件は本メモの対象外(整理済みであれば作業不要)。

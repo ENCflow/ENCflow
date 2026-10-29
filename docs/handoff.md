@@ -963,8 +963,8 @@ architecture.md。このメモは「現在進行中・未完了の項目」だ�
   (日英)の再現性記述を Release ノート・§71 側(複数スレッドで非決定)に統一、
   連絡先と所属機関の公開承認済みを確認。bmi_vars 追加後の Nightly は #44〜#46(2026-10-25〜27)が
   全ジョブ緑で、bmi ジョブの bmi_vars も合格(2026-10-29 に確認。#47 の失敗は wfcurrent の reference の
-  CPU 差で、bmi ジョブは合格。§90.18 で対処済み)。残(人間): GitHub の「Cite this repository」表示の
-  確認、CSDMS への提出そのもの。
+  CPU 差で、bmi ジョブは合格。§90.18 で対処済み)。GitHub の「Cite this repository」表示の確認と
+  CSDMS への提出も済(2026-10-29 利用者確認)。残るのは Discussions への告知(任意。下の「ライセンス」)。
 
 - **リリース v3.0.0(2026-10-25 公開済み)**: Release「ENCflow v3.0.0」(タグ
   v3.0.0 = 1aaf1752 = CITATION 3.0.0 / 2026-10-25。Release UI で Target=main
@@ -1000,7 +1000,7 @@ architecture.md。このメモは「現在進行中・未完了の項目」だ�
   v2.0.0 = bc4d462)を 2026-10-05 に公開、Nightly #23 緑。
 
 - **GitHub Organization「ENCflow」作成・移管・URL 確定済み(2026-08-13)**。
-  残: owner の複数化(両研究室の代表を追加)。(Zenodo DOI は
+  owner の複数化も済(2026-10-29 利用者確認)。(Zenodo DOI は
   2026-08-21 付与済み。下記「ライセンス: 完了」)
 - (済)ルート README の英語版: README.md が英語ミラー、README.ja.md が正本(2026-09-13 に
   接尾辞を .ja に統一。docs/multilingual.md)。
@@ -1118,6 +1118,12 @@ architecture.md。このメモは「現在進行中・未完了の項目」だ�
 1k. **土壌雨量指数 m_swi(fn_swi。2026-08-20 実装済み。developer.md §49)の残項目**
    - タンク定数の原典照合(石原・小葉竹1979 / 岡田ほか2001 測候時報68。
      実装値はコード内【要文献照合】マーク付き。文献入手後に確定)
+     (2026-10-29 検索で書誌を確認。本文は未読): 石原・小葉竹 = Ishihara, Y. and Kobatake, S.
+     (1979), Bull. DPRI Kyoto Univ. 29(1), No. 260, 27–43(京大リポジトリに全文 PDF。swi.md の
+     記載と一致)。岡田ほか(2001)は『天気』48(5), 349–356(岡田憲治・牧原康隆・新保明彦・
+     永田和彦・国次雅司・斉藤清「土壌雨量指数」。気象学会のサイトに PDF)が見つかり、swi.md・
+     m_swi.f90・developer.md §49 の「測候時報 68(5), 29–47」は確認できなかった(気象庁の資料は
+     「岡田 2002」も引く)。原典を見て書誌を訂正する
    - 原雨量スナップショット方式への拡張(現状は専用ラン=他モジュール
      排他。スナップショットにすれば物理モデル(hg 飽和度・Fs)との
      同走比較が可能になる — §49.1)
@@ -1248,6 +1254,19 @@ architecture.md。このメモは「現在進行中・未完了の項目」だ�
     Stock & Dietrich (2006)・Hsu ら (2008) の式の形、Berger ら (2011) の論文番号、Frank ら (2015) の
     題名・著者、Inoue ら (2016)・McGuire ら (2023) の共著者、Parker & Izumi (2000) の原文
     (ネットワークの制限で未確認)。
+    (2026-10-29 検索で書誌を確認。本文は未読 = 式の形の照合は残る): Howard (1994) WRR 30(7),
+    2261–2285, doi:10.1029/94WR00757。Sklar & Dietrich (2006) Geomorphology 82(1–2), 58–83,
+    doi:10.1016/j.geomorph.2005.08.019(題名の steady-state の有無は記録により異なる)。
+    Paola, Heller & Angevine (1992) Basin Res. 4, 73–90(間欠係数がこの論文にあるかは未確認)、
+    Parker の e-book は 1D Sediment Transport Morphodynamics with Applications to Rivers and Turbidity
+    Currents の第 3 章(満水流量の特性)で洪水の間欠係数 I_f を定義。Rickenmann & Recking (2011)
+    WRR 47, doi:10.1029/2010WR009793。Nitsche ら (2011) は副題 to account for macro-roughness in
+    steep mountain streams まで、WRR 47, doi:10.1029/2011WR010645。Berger ら (2011) JGR 116(F1),
+    doi:10.1029/2010JF001722(論文番号は未確認のまま)。Frank ら (2015) の題名は副題 examples from
+    the Swiss Alps まで(NHESS 15, 2569–2583。オープンアクセス)。Inoue ら (2016) の共著者は
+    Iwasaki・Parker・Shimizu・Izumi・Stark・Funaki。McGuire ら (2023) の共著者は McCoy・Marc・
+    Struble・Barnhart(オープンアクセス)。Parker & Izumi (2000) JFM 419, 203–238。Inoue ら (2014)
+    の書誌は検索で確定できなかった。users guide・plan の該当記述への反映は 00c の出典の棚卸しで行う。
   - **日英の確認記録**: この作業の記録はすべて AI による確認(method assistant)。
     examples/bedrock_cover の図 4 組も 2026-10-29 に記録した。
 
@@ -1560,6 +1579,10 @@ architecture.md。このメモは「現在進行中・未完了の項目」だ�
   メニューとの対応を記録)。保留(文献確認待ち。新規パラメータゼロ):
   江頭式(係数は江頭ら 1997)、Lane-Kalinske(ppm 換算規約)、
   芦田・道上への有効掃流力 τ*e の導入(挙動変更)。
+  (2026-10-29 検索で書誌を確認。本文は未読): Lane, E. W. and Kalinske, A. A. (1941) Engineering
+  calculations of suspended sediment. Trans. AGU 22(3), 603–, doi:10.1029/TR022i003p00603。
+  江頭・宮本・伊藤 (1997) 水工学論文集 41, 789–794(江頭 2011 の文献表による。和文の題名は未確認)。
+  有効掃流力は芦田・道上 (1972)(sediment.md の参考文献)。
   設計正本は docs/geomorph_plan.md(改訂3)
 - gwflow: RRI 型・鉛直浸透重視型の追加(m_gwflow_bucket を複製して契約に従う)
 - intercept: 初期損失モデルと分布ファイル対応は実装済み(2026-08-06。

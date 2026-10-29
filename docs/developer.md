@@ -4449,8 +4449,9 @@ Cn_max)→ 場の最大値**。
   アクセスは GitHub が自動リダイレクトする(旧名を再利用しない限り)。
 - README・install.md・CITATION.cff の URL は新組織名で確定済み
   (2026-08-13)。リリースには Zenodo で DOI を付与し、引用の永続性を
-  GitHub の URL から切り離す(未実施)。
-- 残: 組織 owner の複数化(両研究室の代表を追加)。将来の組織サイトは
+  GitHub の URL から切り離す(2026-08-21 実施。Concept DOI
+  10.5281/zenodo.22042847。§34.3・§34.4)。
+- 組織 owner の複数化(両研究室の代表を追加)は済(2026-10-29 利用者確認)。将来の組織サイトは
   ENCflow/ENCflow.github.io リポジトリで https://encflow.github.io が
   使える。
 
