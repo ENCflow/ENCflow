@@ -1251,18 +1251,18 @@ architecture.md。このメモは「現在進行中・未完了の項目」だ�
     - examples/debris_bedrock の清水の出水 W の準静的な応力の後処理(plan §12.4)は、対策 1・2 の
       前の計算のまま(README に明記)。
   - **出典の照合待ち**(書誌と式の形を本文で確かめる。plan §9・§12.9、developer.md §89):
-    閾値つきの超過せん断応力型の典拠(Howard 1994 など)、間欠係数の Paola ら 1992・Parker の e-book
-    (同じ考えの Sklar & Dietrich (2006) の F_t は照合済み)、
+    閾値つきの超過せん断応力型の典拠(Howard 1994 など)、間欠係数の Parker の e-book
+    (原型の Paola ら (1992) の I と Sklar & Dietrich (2006) の F_t は照合済み)、
     Inoue ら (2014) の被覆・粗度モデル、Johnstone & Hilley (2015) の本文(深さ依存クリープ)、
     Stock & Dietrich (2006)・Hsu ら (2008) の式の形、Berger ら (2011) の論文番号、Frank ら (2015) の
     題名・著者、Inoue ら (2016)・McGuire ら (2023) の共著者、Parker & Izumi (2000) の原文
     (ネットワークの制限で未確認)。Rickenmann & Recking (2011)・Nitsche ら (2011)・Sklar & Dietrich
-    (2006) は 2026-10-29 に利用者が提供した本文で照合済み(plan §6.3・§4.2・§11)。Sklar & Dietrich
+    (2006)・Paola ら (1992) は 2026-10-29 に利用者が提供した本文で照合済み(plan §6.3・§4.2・§11)。Sklar & Dietrich
     (2004) の研磨の式の形は 2006 の論文の式 (1) で確認(2004 の本文は未読)。
     (2026-10-29 検索で書誌を確認。本文は未読 = 式の形の照合は残る): Howard (1994) WRR 30(7),
     2261–2285, doi:10.1029/94WR00757。Sklar & Dietrich (2006) Geomorphology 82, 58–83,
     doi:10.1016/j.geomorph.2005.08.019(本文で照合済み。題名は steady-state を含む)。
-    Paola, Heller & Angevine (1992) Basin Res. 4, 73–90(間欠係数がこの論文にあるかは未確認)、
+    Paola, Heller & Angevine (1992) Basin Res. 4, 73–90(本文で照合済み: 間欠係数 I は式 (12))、
     Parker の e-book は 1D Sediment Transport Morphodynamics with Applications to Rivers and Turbidity
     Currents の第 3 章(満水流量の特性)で洪水の間欠係数 I_f を定義。Rickenmann & Recking (2011)
     WRR 47, W07538, doi:10.1029/2010WR009793(論文番号も本文で確認)。Nitsche ら (2011) は副題 to account for macro-roughness in

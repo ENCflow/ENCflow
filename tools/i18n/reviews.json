@@ -1220,8 +1220,8 @@
     {
       "source": "examples/mountain_valley/README.md",
       "target": "examples/mountain_valley/en/README.md",
-      "source_sha256": "58e5cec9bcdaa081a4dda5f92d7f12948e4aa310f5bb47fbbf8ccdf454062a87",
-      "target_sha256": "f1a5933a1d4bfbc40b02268adc79427f956227249f92cd4363e5ecf9cb9a10e6",
+      "source_sha256": "6fa820de8a38e22523867250acd73a625742b00192b403f51bb2d715e4e9f20c",
+      "target_sha256": "da86ac50eeee39141efabcddb4ac63800c618f88e4d98de033df89ee5afd6c55",
       "reviewer": "Claude (Claude Code session; full-text content and lexical review, no model execution)",
       "method": "assistant",
       "reviewed_on": "2026-10-29"

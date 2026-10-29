@@ -593,6 +593,9 @@ users_guide/sediment.md・massflow.md・geomorph.md、handoff.md 1n・1n2。
   提供した本文で確認。要点は §4.2・§11.2・§11.3)。
 - Turowski, J. M., Lague, D. and Hovius, N. (2007): Cover effect in bedrock abrasion.
   *J. Geophys. Res.*, 112, F04006. doi:10.1029/2006JF000697(D の記録を引き継ぐ)。
+- Paola, C., Heller, P. L. and Angevine, C. L. (1992): The large-scale dynamics of grain-size
+  variation in alluvial basins, 1: Theory. *Basin Res.*, 4, 73–90(2026-10-29 に利用者が提供した
+  本文で確認。間欠係数 I は式 (12)。§11.2)。
 - Zhang, L., Parker, G., Stark, C. P., Inoue, T., Viparelli, E., Fu, X. and Izumi, N.
   (2015): Macro-roughness model of bedrock–alluvial river morphodynamics.
   *Earth Surf. Dynam.*, 3, 113–138. doi:10.5194/esurf-3-113-2015(要旨で確認: 被覆率を
@@ -766,11 +769,15 @@ users_guide/sediment.md・massflow.md・geomorph.md、handoff.md 1n・1n2。
 (L_h は斜面の長さ)、渓流の被覆の応答は出水中の地形の時間で数十秒〜数分である。
 
 - **代表出水だけを計算する**: 谷頭からの一定の形成流量 Q_f だけを流し、morfac = M で加速する。
-  出水は暦の 1 年のうち割合 i_f(間欠係数)だけ流れるとみなす。Sklar & Dietrich (2006) の
-  間欠係数 F_t(代表の出水が流れる時間の割合。粗い土砂はすべて出水中に運ばれる。式 (13)・
-  (16))と同じ考え。同論文は低流量にも年流出を分け(高流量の割合 F_w。式 (14)〜(19))、
-  流量の記録から F_t を選ぶ(参照地点で F_t = 0.0437 = 年 16 日、F_w = 0.41)。Paola ら
-  1992・Parker の e-book は未照合。暦の時間 = 計算した出水の時間 × M / i_f。
+  出水は暦の 1 年のうち割合 i_f(間欠係数)だけ流れるとみなす。原型は Paola ら (1992) の
+  intermittency I(§2.2「Time averaging」の式 (12)。河道を形成する代表の流れが時間の割合 I
+  だけ起こるとし、長期平均の流量・流砂量は ⟨q⟩ = I q、⟨q_s⟩ = I q_s、出水中だけ非零の量
+  (流速・水深・幅)は平均で不変。出水ごとに条件が同じなので、平均の積の変動項 ⟨β' q_s'⟩ が
+  0 になる簡略化だと同論文は断る。式 (13))。Sklar & Dietrich (2006) の F_t(代表の出水が
+  流れる時間の割合。粗い土砂はすべて出水中に運ばれる。式 (13)・(16))も同じ考えで、同論文は
+  低流量にも年流出を分け(高流量の割合 F_w。式 (14)〜(19))、流量の記録から F_t を選ぶ
+  (参照地点で F_t = 0.0437 = 年 16 日、F_w = 0.41)。Parker の e-book は未照合。暦の時間 =
+  計算した出水の時間 × M / i_f。
 - **連続に働く過程は係数を 1/i_f 倍して与える**: 隆起(uplift0)・風化(wthr_p0)・クリープ
   (creep_d)は率の係数に線形な自律系なので、係数の 1/i_f 倍は、その過程だけを暦の時間で
   進めることと同じになる(developer.md §19 の「プロセス別の実効加速の逃げ道」をこの 3 つに
@@ -921,8 +928,8 @@ np = 1, 2, 4 とリスタート往復を確かめ、文書(日英)・developer.m
 - 谷底は 1 セル幅の水路になり、谷底の幅(氾濫原)や側岸の後退は表さない。側岸侵食
   (f_berode)・安息角(f_repose)は、斜面の放物線形の検定を汚さないよう入れない(後で)。
 - dts の上限は概算(p が閾値の近くで大きくなる)。
-- (2026-10-29)Sklar & Dietrich (2006) は本文で照合済み(間欠係数 F_t も同論文にある)。
-  Paola ら (1992)・Parker の e-book は未照合のまま。
+- (2026-10-29)Sklar & Dietrich (2006)・Paola ら (1992) は本文で照合済み(間欠係数は Paola ら
+  の式 (12) の I が原型、Sklar & Dietrich の F_t も同じ考え。§11.2)。Parker の e-book は未照合。
 
 ---
 
