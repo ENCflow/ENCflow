@@ -239,11 +239,11 @@
     {
       "source": "docs/users_guide/forcing.md",
       "target": "docs/en/users_guide/forcing.md",
-      "source_sha256": "529d54e99f48911403d73ea5848f7f11cb3e4e48a0238dfad56eaa0322bf9b9e",
-      "target_sha256": "0525d0c84410d29fc5a9e1568fae634b8e55df36a7b0e64faaffb873567d1cda",
-      "reviewer": "Claude (Claude Code session; full-text content and lexical review, no model execution)",
+      "source_sha256": "05f0511f79f8102a765aec7b70db7596c292ba9917884e62a01d0cd68636e652",
+      "target_sha256": "8de1dbadc412c4157e38e136f5035eab48886d98c4106974a7b0726c69f8fe01",
+      "reviewer": "Claude (Claude Code session; review of the changed lines against the previously recorded pair, no model execution)",
       "method": "assistant",
-      "reviewed_on": "2026-10-27"
+      "reviewed_on": "2026-10-29"
     },
     {
       "source": "docs/users_guide/forcing_models.md",
@@ -320,11 +320,11 @@
     {
       "source": "docs/users_guide/io.md",
       "target": "docs/en/users_guide/io.md",
-      "source_sha256": "be71b103b55daf1b70c9b4fa6c7a900819a61af19b3c6a1caecddc9274bb3973",
-      "target_sha256": "900f2a8248fb5828b93070af1f6924258cf47b5cd167f8e2c1184be2581cbe5e",
-      "reviewer": "Claude (Claude Code session; full-text content and lexical review, no model execution)",
+      "source_sha256": "4cc0763d7dc7515415f43b2941fd53546cd3488ac60807afc433eca23bb7a0be",
+      "target_sha256": "cc01d10e87b0700714d11f90e897bbb897e4a902fbc2df807698f00f41c4ee44",
+      "reviewer": "Claude (Claude Code session; review of the changed lines against the previously recorded pair, no model execution)",
       "method": "assistant",
-      "reviewed_on": "2026-10-27"
+      "reviewed_on": "2026-10-29"
     },
     {
       "source": "docs/users_guide/lavaflow.md",
@@ -689,11 +689,11 @@
     {
       "source": "examples/List_samples/list_precip.txt",
       "target": "examples/List_samples/en/list_precip.txt",
-      "source_sha256": "6bf8e56f745f0bf41000017f1efc37f70f861d6539ba463a509129aa2f5d8472",
-      "target_sha256": "080990d9d5733f121c0c49fc940cdb194c3367aad2500702d630ecf64f3e9adf",
-      "reviewer": "Claude (Claude Code session; full-text content and lexical review, no model execution)",
+      "source_sha256": "f4395c7db660a5c559fe5e45128317cf3e1db6c7a0b20f3a88cd8e39c22c3d0b",
+      "target_sha256": "3c680b541e9efa839eb37f54ea5edd90f2d3d779c4597a8da7f37ace49ba191c",
+      "reviewer": "Claude (Claude Code session; review of the changed lines against the previously recorded pair, no model execution)",
       "method": "assistant",
-      "reviewed_on": "2026-10-27"
+      "reviewed_on": "2026-10-29"
     },
     {
       "source": "examples/List_samples/list_record.txt",
@@ -1994,11 +1994,11 @@
     {
       "source": "test/prmap/README.md",
       "target": "test/prmap/en/README.md",
-      "source_sha256": "6efa5776b743581173d6b2657d11fc20e02818963a4af52ffd1d56b2792b084c",
-      "target_sha256": "d05d579a8be6dc096662c27b8e5aa3a9c9b8e79c9be746f2c4b793556e6dd71d",
-      "reviewer": "Claude (Claude Code session; full-text content and lexical review, no model execution)",
+      "source_sha256": "29a10f9edde595a7e5b5471477f567913359bb1ca24ff4663f6a1d4941e49030",
+      "target_sha256": "5c55f6847a6a850fbfbb91fa2e61f3561298476c30c97131ada4df1889d04ffe",
+      "reviewer": "Claude (Claude Code session; review of the changed lines against the previously recorded pair, no model execution)",
       "method": "assistant",
-      "reviewed_on": "2026-10-27"
+      "reviewed_on": "2026-10-29"
     },
     {
       "source": "test/pump/README.md",

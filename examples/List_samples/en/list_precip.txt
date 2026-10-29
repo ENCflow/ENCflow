@@ -48,6 +48,12 @@
   prval(:,3) = 1440,  15
   prval(:,4) = 1450,   0
 
+  ! Runoff coefficient (1.0 if omitted)
+  !  A factor on the given precipitation that scales both the precipitation
+  !  passed to the water budget and the output Pr (the same in every
+  !  prtype). Keep it at 1.0 with groundwater computation or interception
+  !runoff_rate = 1.0
+
 /
 
 

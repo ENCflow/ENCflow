@@ -1,29 +1,42 @@
 #!/usr/bin/env python3
-# prmap(降雨分布 prtype = 2・3 の時間の単位)の検定(developer.md §88)
+# prmap(降雨分布 prtype = 2・3 の時間の単位と、流出率・出力 Pr)の検定
+# (developer.md §88)
 #   使い方: Check_prmap.py [tag ...]   (省略時は全構成と restart)
-#   読むもの: result_<tag>/Log.txt と Screen_<tag>.log(Run.sh・Run_MPI.sh が作る)
+#   読むもの: result_<tag>/Log.txt・Pr*.txt と Screen_<tag>.log(Run.sh・Run_MPI.sh が作る)
 #
 #   4 × 8 セルの平坦な閉領域に一様な雨を与えるので、Log の S(領域平均の水深)は
 #   降った雨の積算に等しい。ステップ it(時刻 (it−1)·dt → it·dt)の降水強度は
+#     prtype = 1: 系列の値 (mm/h)(一定)
 #     prtype = 2: 分布の値 × 倍率 / dt_mapunit(倍率は 1 で一定)
 #     prtype = 3: フレーム k = it // n + 1 の値 / dt_mapunit(n = dt_maplist / dt
 #                 ステップ。切替はステップの終わりの時刻で判定するので、最初の
 #                 フレームだけ 1 ステップ短い。リストの後は 0)
-#   で、これを積算した S と Log の S を比べる(相対 1e-9。Log の表示 14 桁の丸めは
-#   最小の S でも 3e-11、単位の取り違えは 24 倍・60 倍の差になる)。同じ指定の
-#   別表現(数値の分・単位付きの文字列・単位を省いた文字列・*_c の優先)の Log が
-#   ビット一致すること、prtype = 3 では dt_prupdate が効かないこと、画面に採用値が
-#   表示されることも確かめる。restart は、prtype = 3 をフレームの途中で保存して
-#   再開した結果(p3_restart)の再開後の Log が連続計算(p3_prupdate)とビット一致する
-#   こと。構成は param_*.txt と対で保守する。
+#   に流出率 runoff_rate を掛けたもので、これを積算した S と Log の S を比べる
+#   (相対 1e-9。Log の表示 14 桁の丸めは最小の S でも 3e-11、単位の取り違えは
+#   24 倍・60 倍の差になる)。同じ指定の別表現(数値の分・単位付きの文字列・単位を
+#   省いた文字列・*_c の優先)の Log がビット一致すること、prtype = 3 では dt_prupdate
+#   が効かないこと、画面に採用値が表示されることも確かめる。流出率を与えた構成
+#   (*_rr)では、出力 Pr(番号 k の時刻 k·dt_file)が同じ降水強度を mm/h で表した
+#   値であることも確かめる(§88.5。prtype = 3 もファイルの値ではなく mm/h)。
+#   restart は、prtype = 3 をフレームの途中で保存して再開した結果(p3_restart)の
+#   再開後の Log が連続計算(p3_prupdate)とビット一致すること。構成は param_*.txt と
+#   対で保守する。
 import os
 import sys
 
 DT, TT = 10.0, 5400.0
+P1 = 4.0                        # param_p1_rr.txt の prval (mm/h)
 MAP2 = 24.0                     # prmap.txt の値 (mm)
 FRAMES = [6.0, 12.0, 0.0]       # f1〜f3.txt の値 (mm)
 RTOL = 1e-9
 T_SAVE = 2700.0                 # param_p3_save.txt の tt (s)
+# 流出率を与えた構成(S と出力 Pr の両方に掛かる)。Pr は dt_file ごとに全 NCELL セルを
+# f12.4 で書くので、許容は表示の丸め
+RR = {"p1_rr": 0.75, "p2_rr": 0.75, "p3_rr": 0.75}
+DT_FILE = 900.0                 # param_p*_rr.txt の dt_file (s)
+NCELL = 4 * 8
+PR_ATOL = 1e-4
+RR_LINE = "precip: runoff_rate = .75000 (applied to the rainfall and Pr)"
 
 # tag: (prtype, dt_mapunit (min), dt_maplist (min), 画面の採用値, ビット一致すべき構成)
 CASES = {
@@ -40,6 +53,10 @@ CASES = {
                                 "precip: dt_mapunit = 60.00000 min"], None),
     "p3_prupdate": (3, 30.0, 30.0, ["precip: dt_maplist = 30.00000 min (180 steps)",
                                     "precip: dt_mapunit = 30.00000 min (default)"], "p3_def"),
+    "p1_rr": (1, None, None, [RR_LINE], None),
+    "p2_rr": (2, 1440.0, None, ["precip: dt_mapunit = 1440.00000 min (default)", RR_LINE], None),
+    "p3_rr": (3, 30.0, 30.0, ["precip: dt_maplist = 30.00000 min (180 steps)",
+                              "precip: dt_mapunit = 30.00000 min (default)", RR_LINE], None),
 }
 
 
@@ -65,19 +82,22 @@ def log_lines(path):
         return {hms(line.split()[0]): line for line in f if not line.startswith("time")}
 
 
-def rate(case, it):
-    # ステップ it の降水強度 (m/s)
-    prtype, unit_min, list_min = case[0], case[1], case[2]
+def rate(tag, it):
+    # ステップ it の降水強度 (m/s)。流出率を含む
+    prtype, unit_min, list_min = CASES[tag][:3]
+    rr = RR.get(tag, 1.0)
+    if prtype == 1:
+        return P1 / 1000.0 / 3600.0 * rr
     if prtype == 2:
         val = MAP2
     else:
         k = it // int(round(list_min * 60 / DT))
         val = FRAMES[k] if k < len(FRAMES) else 0.0
-    return val / 1000.0 / (unit_min * 60.0)
+    return val / 1000.0 / (unit_min * 60.0) * rr
 
 
-def expected(case, t):
-    return sum(rate(case, it) * DT for it in range(1, int(round(t / DT)) + 1))
+def expected(tag, t):
+    return sum(rate(tag, it) * DT for it in range(1, int(round(t / DT)) + 1))
 
 
 def main(tags):
@@ -110,10 +130,31 @@ def main(tags):
             continue
         rows = read_log(log)
         check(abs(rows[-1][0] - TT) < 1e-6, f"Log reaches t = {TT:g} s ({len(rows)} rows)")
-        err = max(abs(s - expected(case, t)) / max(expected(case, t), 1e-30)
+        err = max(abs(s - expected(tag, t)) / max(expected(tag, t), 1e-30)
                   for t, s in rows if t > 0)
-        check(err < RTOL, f"S = accumulated map value / dt_mapunit (max rel err {err:.1e}; "
+        what = "rainfall" if case[0] == 1 else "accumulated map value / dt_mapunit"
+        if tag in RR:
+            what += f" × runoff_rate {RR[tag]:g}"
+        check(err < RTOL, f"S = {what} (max rel err {err:.1e}; "
               f"S(end) = {rows[-1][1] * 1000:.4f} mm)")
+        if tag in RR:
+            # 出力 Pr (mm/h) = その時刻の降水強度(流出率を含む)。番号 k の時刻は
+            # k·dt_file(k = 0 は開始時の makepre = ステップ 0 の規則)
+            nk = int(round(TT / DT_FILE))
+            bad, shown = [], []
+            for k in range(nk + 1):
+                fn = f"result_{tag}/Pr{k:04d}.txt"
+                if not os.path.exists(fn):
+                    bad.append(f"{fn} not found")
+                    continue
+                with open(fn) as f:
+                    vals = [float(v) for line in f for v in line.split()]
+                want = rate(tag, int(round(k * DT_FILE / DT))) * 1000.0 * 3600.0
+                shown.append(f"{want:g}")
+                if len(vals) != NCELL or any(abs(v - want) > PR_ATOL for v in vals):
+                    bad.append(f"{fn}: {sorted(set(vals))} (expected {want:g})")
+            check(not bad, f"Pr0000-Pr{nk:04d} = rainfall intensity × runoff_rate in mm/h "
+                  f"({', '.join(shown)})" + ("" if not bad else ": " + "; ".join(bad)))
         with open(f"Screen_{tag}.log") as f:
             screen = f.read()
         for line in case[3]:

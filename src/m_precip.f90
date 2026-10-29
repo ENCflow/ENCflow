@@ -28,7 +28,7 @@ module m_precip
     real :: dt_mapunit = 0.0            ! 降雨分布ファイルの値の積算時間 (s)
     integer :: idt_maplist = 0          ! 降雨分布ファイル更新時間ステップ数
     integer, allocatable :: un_maplist(:)  ! 降雨分布ファイル装置番号
-    real :: runoff_rate = 0.0           ! 流出率
+    real :: runoff_rate = 0.0           ! 流出率(pre と prh に同率で掛ける。§88.5)
     logical :: initialized = .false.
   end type
 
@@ -75,6 +75,8 @@ subroutine m_precip_init(pr, p, g)
   pr%dt_prupdate = list%dt_prupdate
   pr%idt_prupdate = max(nint(pr%dt_prupdate * 60 / p%dt), 1)
   pr%runoff_rate = max(list%runoff_rate, 0.0)
+  if (pr%runoff_rate /= 1.0) call par_info("precip: runoff_rate = "//rtoa(pr%runoff_rate)// &
+                                           " (applied to the rainfall and Pr)")
 
   ! 分布ファイルの時間(内部は秒。developer.md §88)。数値の dt_maplist・
   ! dt_mapunit は分。文字列の *_c は単位付き(単位を省いた数値は分)で、
@@ -222,6 +224,8 @@ end subroutine m_precip_init
 !   mt: 降水の標高勾配(f_prec_lapse。§45)。更新時に倍率を乗じる
 !   (更新のたび元データから作り直すため二重適用はない)。無効時は
 !   乗算経路に入らず従来とビット同一
+!   流出率 runoff_rate は全 prtype で水収支へ渡す pre (m/s) と出力用の
+!   prh (mm/h) の両方に掛ける。prh は常に pre を mm/h で表した値(§88.5)
 !----------------------------------------------------------------------
 subroutine m_precip_makepre(pr, p, g, s, mt, updated)
   type(t_precip), intent(in) :: pr
@@ -245,14 +249,13 @@ subroutine m_precip_makepre(pr, p, g, s, mt, updated)
   if (pr%prtype == 1) then
     updated = .true.
     call get_prval(teval_cyc(), prval)   ! 現在時間ステップでの降水強度を計算
-    f = 1. / 1000. / 3600.         ! 単位を(mm/h)から(m/s)に換算
+    f = 1. / 1000. / 3600. * pr%runoff_rate   ! 単位を(mm/h)から(m/s)に換算し、流出率を掛ける
     !$omp parallel do
     do j = dcp%js, dcp%je
       do i = g%wx(1,j), g%wx(2,j)
         if (g%x(i,j) <= 0 .or. g%sw(i,j) > 0) cycle
         s%pre(i,j) = prval * f                  ! (m/s)
         s%prh(i,j) = s%pre(i,j) * 3600 * 1000    ! (mm/h)
-        s%prh(i,j) = s%prh(i,j) * pr%runoff_rate
       end do
     end do
     !$omp end parallel do
@@ -261,14 +264,13 @@ subroutine m_precip_makepre(pr, p, g, s, mt, updated)
     updated = .true.
     call get_prval(teval_cyc(), prval)   ! 現在時間ステップでの倍率を計算
     !f = 1. / 1000. / 3600. / 24.   ! 単位を(mm/day)から(m/s)に換算
-    f = 1. / 1000. / pr%dt_mapunit   ! 単位を(m/s)に換算
+    f = 1. / 1000. / pr%dt_mapunit * pr%runoff_rate   ! 単位を(m/s)に換算し、流出率を掛ける
     !$omp parallel do
     do j = dcp%js, dcp%je
       do i = g%wx(1,j), g%wx(2,j)
         if (g%x(i,j) <= 0 .or. g%sw(i,j) > 0) cycle
         s%pre(i,j) = pr%prmap(i,j) * prval * f  ! (m/s)
         s%prh(i,j) = s%pre(i,j) * 3600 * 1000    ! (mm/h)
-        s%prh(i,j) = s%prh(i,j) * pr%runoff_rate
       end do
     end do
     !$omp end parallel do
@@ -288,13 +290,13 @@ subroutine m_precip_makepre(pr, p, g, s, mt, updated)
           real, allocatable :: wk(:,:)
           allocate(wk(1:g%nx, 1:g%ny))
           call fileio_un_read_matrix(un, g%nx, g%ny, wk, p%f_input_mode)
-          s%prh(:,:) = wk(dcp%ish:dcp%ieh, dcp%jsh:dcp%jeh)
+          s%prh(:,:) = wk(dcp%ish:dcp%ieh, dcp%jsh:dcp%jeh)   ! ファイルの値 (mm/dt_mapunit)
         end block
       else
-        s%prh(:,:) = 0.0                         ! (mm/h)
+        s%prh(:,:) = 0.0
       end if
-      !s%pre(:,:) = s%prh(:,:) / 3600. / 1000.    ! (m/s)
       s%pre(:,:) = s%prh(:,:) / pr%dt_mapunit / 1000. * pr%runoff_rate   ! (m/s)
+      s%prh(:,:) = s%pre(:,:) * 3600 * 1000                              ! (mm/h)
     end if
   end if
 
