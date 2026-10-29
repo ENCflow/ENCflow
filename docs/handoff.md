@@ -1263,11 +1263,11 @@ architecture.md。このメモは「現在進行中・未完了の項目」だ�
     閾値つきの超過せん断応力型の典拠(Howard 1994 など)、間欠係数の Parker の e-book
     (原型の Paola ら (1992) の I と Sklar & Dietrich (2006) の F_t は照合済み)、
     Inoue ら (2014) の被覆・粗度モデル、Johnstone & Hilley (2015) の本文(深さ依存クリープ)、
-    Hsu ら (2008) の式の形、Berger ら (2011) の論文番号、Frank ら (2015) の
+    Hsu ら (2008) の式の形、Frank ら (2015) の
     題名・著者、McGuire ら (2023) の共著者、Parker & Izumi (2000) の原文
     (ネットワークの制限で未確認)。Rickenmann & Recking (2011)・Nitsche ら (2011)・Sklar & Dietrich
-    (2006)・Paola ら (1992)・Stock & Dietrich (2006)・Inoue ら (2016) は 2026-10-29 に利用者が提供した
-    本文で照合済み(plan §6.3・§4.2・§11・§12.4 の所見 2 の注・§9)。Inoue ら (2014) の書誌は Inoue ら
+    (2006)・Paola ら (1992)・Stock & Dietrich (2006)・Inoue ら (2016)・Berger ら (2011) は 2026-10-29 に
+    利用者が提供した本文で照合済み(plan §6.3・§4.2・§11・§12.4 の所見 2・6 の注・§9)。Inoue ら (2014) の書誌は Inoue ら
     (2016) の文献表で確定(JGR Earth Surf. 119(10), 2123–2146。本文は未読)。Sklar & Dietrich
     (2004) の研磨の式の形は 2006 の論文の式 (1) で確認(2004 の本文は未読)。
     (2026-10-29 検索で書誌を確認。本文は未読 = 式の形の照合は残る): Howard (1994) WRR 30(7),
@@ -1277,8 +1277,8 @@ architecture.md。このメモは「現在進行中・未完了の項目」だ�
     Parker の e-book は 1D Sediment Transport Morphodynamics with Applications to Rivers and Turbidity
     Currents の第 3 章(満水流量の特性)で洪水の間欠係数 I_f を定義。Rickenmann & Recking (2011)
     WRR 47, W07538, doi:10.1029/2010WR009793(論文番号も本文で確認)。Nitsche ら (2011) は副題 to account for macro-roughness in
-    steep mountain streams まで、WRR 47, W08513, doi:10.1029/2011WR010645(本文で照合済み)。Berger ら (2011) JGR 116(F1),
-    doi:10.1029/2010JF001722(論文番号は未確認のまま)。Frank ら (2015) の題名は副題 examples from
+    steep mountain streams まで、WRR 47, W08513, doi:10.1029/2011WR010645(本文で照合済み)。Berger ら (2011) JGR 116, F01002,
+    doi:10.1029/2010JF001722(本文で照合済み。論文番号 F01002)。Frank ら (2015) の題名は副題 examples from
     the Swiss Alps まで(NHESS 15, 2569–2583。オープンアクセス)。Inoue ら (2016) の共著者は
     Iwasaki・Parker・Shimizu・Izumi・Stark・Funaki。McGuire ら (2023) の共著者は McCoy・Marc・
     Struble・Barnhart(オープンアクセス)。Parker & Izumi (2000) JFM 419, 203–238。Inoue ら (2014)
