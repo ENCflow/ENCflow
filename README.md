@@ -212,10 +212,16 @@ two-dimensional world. The following are out of scope by design and
 belong to specialized models
 ([comparison](docs/en/comparison.md)).
 
-- **Wind waves** — short-period waves such as wind waves, swell and
-  breaking. Storm surge and tsunami are long waves and can be solved,
-  and the non-hydrostatic correction covers the dispersion of long
-  waves, but wave computation is the realm of dedicated wave models.
+- **Wave hindcasting and phase-resolving short waves** — the growth of
+  waves by wind (wave hindcasting) and phase-resolving computation of
+  short-period waves, which follows the rise and fall of the water
+  surface wave by wave, are the realm of dedicated models. Storm surge
+  and tsunami are long waves and can be solved, and the non-hydrostatic
+  correction covers the dispersion of long waves. The coastal waves
+  above are also covered, but as a phase-averaged estimate with one
+  representative period, taking the offshore waves as given at the
+  boundary and without frequency spreading or nonlinear wave–wave
+  interactions.
 - **Pyroclastic surges, eruption plumes, and atmospheric ash
   transport** — compressible, three-dimensional atmospheric phenomena
   outside the shallow-water approximation. The volcanic density flows
@@ -378,7 +384,8 @@ through the standard initialize / update / get_value / set_value calls.
   models across hydrology, geomorphology, oceanography, snow and ice,
   and beyond, for plugging models into one another. It is a door to
   going beyond ENCflow's own limits: physics that ENCflow deliberately
-  leaves out, such as deep three-dimensional groundwater or wind waves,
+  leaves out, such as deep three-dimensional groundwater or the growth
+  of waves by wind,
   can be solved in one connected system by exchanging state with the
   specialist model of that field. And the direction reverses: external
   systems can call on ENCflow's flood hydraulics as an engine. A

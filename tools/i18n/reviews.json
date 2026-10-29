@@ -13,8 +13,8 @@
     {
       "source": "README.ja.md",
       "target": "README.md",
-      "source_sha256": "5b47e01ef19529b8e8a7372aac1a84d251ab4ee1ec87b7b423898169a5c58948",
-      "target_sha256": "14e05a3eb263e8c410a8c7cc3fcf2bbb0495b4a9aa76b1cafde770823346e0b7",
+      "source_sha256": "c4f57b6cd44bab780e08814201efd474a6a9c504d49c0aaa0e28e585a8c6dc21",
+      "target_sha256": "aac6f985d00f97df1b7aaa1c06990f06bac3c692a571900c8e68de4c825fb4e3",
       "reviewer": "Claude (Claude Code session; full-text content and lexical review, no model execution)",
       "method": "assistant",
       "reviewed_on": "2026-10-29"
