@@ -458,9 +458,22 @@ L_mix = H_rms です。軌道の振幅 A と岸向きの速度 u_a、波・流�
   軌道流速が強く、砂は正味で岸へ運ばれます。XBeach と同じく van Thiel de Vries(2009)[^vtdv09]の
   u_a = (f_Sk S_k − f_As A_s) u_rms を使い、S_k・A_s は Ruessink ら(2012)[^ruessink12]の
   Ursell 数 Ur = (3/8)√2 H_rms k/(kh)³ によるパラメータ化で求めます
-  (S_k = B cos ψ、A_s = B sin ψ、B = p₂/(1 + exp((p₃ − log₁₀ Ur)/p₄))、ψ = −90° + 90° tanh(p₅/Ur^{p₆})。
-  係数 p₂〜p₆ は XBeach の公開ソースの値で、原論文の表とは照合していません)。f_Sk・f_As
-  (`wfsed_facsk`・`wfsed_facas`)は校正の係数で、既定 0.1 は XBeach の既定(facua)です。
+  (S_k = B cos ψ、A_s = B sin ψ、B = p₂/(1 + exp((p₃ − log₁₀ Ur)/p₄))、ψ = −90° + 90° tanh(p₅/Ur^{p₆}))。
+  f_Sk・f_As(`wfsed_facsk`・`wfsed_facas`)は校正の係数で、既定 0.1 は XBeach の既定(facua)です。
+
+**Ruessink ら(2012)との照合。** 式の形(論文の式 (6)〜(10))と Ursell 数の定義(a_w = 0.5√2 H_rms、
+k は周期 T = T_m−1,0 の線形理論の波数。本モデルの代表周期の既定の解釈と同じ)は論文と一致します。
+係数は XBeach と同じ値 p₂ = 0.7939・p₃ = −0.6065・p₄ = 0.3539・p₅ = 0.6373・p₆ = 0.5995(XBeach の
+公開ソース morphevolution.F90)を使っていて、論文の最適値 p₂ = 0.857 ± 0.016・p₃ = −0.471 ± 0.025・
+p₄ = 0.297 ± 0.021・p₅ = 0.815 ± 0.055・p₆ = 0.672 ± 0.073(p₁ = 0。± は 95 % 信頼区間)とは違います
+(どれも信頼区間の外)。XBeach のソースの注記の式番号と誤差も出版された論文と合わず、XBeach の値の
+出典は確認できていません。論文の値にすると、u_a は Ur ≈ 0.1〜0.3(砕波帯より沖)で 0.6〜0.8 倍、
+Ur ≈ 1 でほぼ同じ、Ur ≈ 2〜20(砕波帯)で約 1.1 倍になります(f_Sk = f_As のとき)。
+
+論文のパラメータ化は、方向に広がった波の多い現地観測(H_s 0.05〜3.99 m、T 3.1〜13.9 s、水深
+0.25〜11.2 m、Ur 0.004〜24.8、海底勾配はおおむね 1/30 より緩い。遡上域を含まない)に当てはめた
+もので、方向の狭いうねりや一方向の室内実験の波では歪度を過小に見積もる可能性があり、1/30 より急な
+海底では使わないよう勧められています。
 
 **浜の侵食と回復**は、沖向きの戻り流れ u^E と岸向きの u_a の釣り合いで決まります。高波浪では
 戻り流れが勝って砂が沖へ運ばれ(砂州ができる)、低波浪・長周期のうねりでは砕波帯より沖で u_a が
@@ -593,7 +606,7 @@ Stockdon らの振れ幅と組むのは **独自の組み合わせ** です(R �
 | `wf_break_visc`(&list_enc) | 0 | 砕波の渦動粘性の係数 M | **校正量**: 既定 0(混合なし)。M = 1 は XBeach の nuhfac の既定[^xbeach]。式は Battjes 1975[^battjes75] |
 | `f_wf_current` | 0 | 流れの波への作用 | **方式**: 既定は流れの作用なし。式は Bretherton & Garrett(1968)[^bg68] の作用量の平衡で、流れによる屈折の式と使う流速(Lagrangian 平均)は XBeach の wci[^xbeach] と同じ。分散関係を方向ビンごとに直接解く点は独自(XBeach は Eikonal 式で波数を時間発展させる) |
 | `f_wfsed`(&list_geomorph) | 0 | 波浪場による攪拌と輸送 | **方式**: 既定は土砂に作用しない。攪拌は Soulsby(1997)[^soulsby97] の波・流れのせん断の合成(f_w の上限 0.3 は Swart 1974[^swart74])、浮遊砂を Euler 平均流速で運ぶのは Reniers ら(2004)[^reniers04]・XBeach[^xbeach] と同じ。掃流砂の「τ*_max の量 × u_s の速さ」の組み合わせは独自(§8.4) |
-| `wfsed_facsk`・`wfsed_facas`(&list_geomorph) | 0.1 | 岸向きの速度の歪度・非対称の係数 f_Sk・f_As | **校正量**: 既定は XBeach の facua[^xbeach]。式は van Thiel de Vries(2009)[^vtdv09]、S_k・A_s は Ruessink ら(2012)[^ruessink12] のパラメータ化(係数 p₂〜p₆ は XBeach の公開ソースの値で、原論文の表とは照合していない) |
+| `wfsed_facsk`・`wfsed_facas`(&list_geomorph) | 0.1 | 岸向きの速度の歪度・非対称の係数 f_Sk・f_As | **校正量**: 既定は XBeach の facua[^xbeach]。式は van Thiel de Vries(2009)[^vtdv09]、S_k・A_s は Ruessink ら(2012)[^ruessink12] のパラメータ化(係数 p₂〜p₆ は XBeach の公開ソースの値で、論文の式 (9)・(10) の値とは違う。§8.3) |
 | `f_wfsed_turb`(&list_geomorph) | 0 | 砕波の乱れによる攪拌 | **互換**: 既定 0(乱れなし = 乱れを入れる前と同じ結果)。1 は XBeach の `turb` = wave_averaged(Ruessink の波形での XBeach の既定[^xbeach])の形。係数 1.45 は van Thiel de Vries(2009)[^vtdv09] |
 | `f_wfswash`(&list_geomorph) | 0 | 遡上域の輸送 | **方式**: 既定は遡上域の輸送なし。岸沖は Larson ら(2004)[^larson04] 式 (8)、沿岸は Larson & Wamsley(2007)[^lw07] 式 (4)、遡上高は Stockdon ら(2006)[^stockdon06] 式 (19) の振れ幅の部分。露出度、格子への当てはめ(4 近傍の面・沿岸の帯)、R に Stockdon らの振れ幅を使う組み合わせは独自(§9.3・§9.4) |
 | `wfswash_kc`(&list_geomorph) | 1.6×10⁻³ | 岸沖の輸送係数 K_c | **校正量**: Larson ら(2004)の波崎海岸(細砂 0.18 mm)の 4 例の較正の平均(各例 1.0〜2.3×10⁻³。遡上域の海側端の輸送量との回帰では 3×10⁻³)。粒径と遡上の波どうしの干渉に依存する |
@@ -655,7 +668,7 @@ Stockdon らの経験式に従います。ENCflow 固有なのは、8 方向の 
 | Battjes(1975)[^battjes75] | 砕波の渦動粘性、表面の乱れ | 式の形は XBeach の実装による(原論文は未照合) |
 | Soulsby(1997)[^soulsby97]、Swart(1974)[^swart74] | 波の摩擦係数と波・流れのせん断の合成 | — |
 | Reniers ら(2004)[^reniers04] | 浮遊砂を Euler 平均流速で運ぶ | — |
-| van Thiel de Vries(2009)[^vtdv09]、Ruessink ら(2012)[^ruessink12]、Roelvink & Stive(1989)[^rs89] | 岸向きの速度 u_a と歪度・非対称のパラメータ化、乱れの係数 1.45、乱れの底面への減衰 | 係数 p₂〜p₆ は XBeach の公開ソースの値(原論文の表とは照合していない) |
+| van Thiel de Vries(2009)[^vtdv09]、Ruessink ら(2012)[^ruessink12]、Roelvink & Stive(1989)[^rs89] | 岸向きの速度 u_a と歪度・非対称のパラメータ化、乱れの係数 1.45、乱れの底面への減衰 | 係数 p₂〜p₆ は XBeach の公開ソースの値で、論文の最適値とは違う(§8.3) |
 | Larson ら(2004)[^larson04] | 遡上域の岸沖の輸送の式 (8)、K_c・φ_m の値 | 遡上高に Stockdon らの振れ幅を使う(§9.3) |
 | Larson & Wamsley(2007)[^lw07] | 遡上域の沿岸の輸送の式 (4)、K_l ≈ K_c | 汀線の帯に置き、8 方向の面に流す(§9.4) |
 | Stockdon ら(2006)[^stockdon06] | 遡上高の振れ幅の部分 R = 1.1 S/2 | setup は流れが解くので振れ幅だけを使い、露出度を掛ける(§9.3) |
@@ -718,7 +731,7 @@ docs/wavefield_plan.md §11・§12 と developer.md §90 にあります。
 [^reniers04]: Reniers, A. J. H. M., Roelvink, J. A. & Thornton, E. B. (2004) Morphodynamic modeling of an embayed beach under wave group forcing. J. Geophys. Res. 109, C01030.
 [^rs89]: Roelvink, J. A. & Stive, M. J. F. (1989) Bar-generating cross-shore flow mechanisms on a beach. J. Geophys. Res. 94(C4), 4785–4800.(砕波の乱れの底面への指数の減衰。式の形は XBeach の turb の実装による)
 [^ruessink01]: Ruessink, B. G., Miles, J. R., Feddersen, F., Guza, R. T. & Elgar, S. (2001) Modeling the alongshore current on barred beaches. J. Geophys. Res. 106(C10), 22451–22463.
-[^ruessink12]: Ruessink, B. G., Ramaekers, G. & van Rijn, L. C. (2012) On the parameterization of the free-stream non-linear wave orbital motion in nearshore morphodynamic models. Coastal Engineering 65, 56–63.
+[^ruessink12]: Ruessink, B. G., Ramaekers, G. & van Rijn, L. C. (2012) On the parameterization of the free-stream non-linear wave orbital motion in nearshore morphodynamic models. Coastal Engineering 65, 56–63.(式 (6)〜(10)。係数の最適値は p. 58)
 [^shi12]: Shi, F., Kirby, J. T., Harris, J. C., Geiman, J. D. & Grilli, S. T. (2012) A high-order adaptive time-stepping TVD solver for Boussinesq modeling of breaking waves and coastal inundation. Ocean Modelling 43–44, 36–51.
 [^stockdon06]: Stockdon, H. F., Holman, R. A., Howd, P. A. & Sallenger, A. H. Jr. (2006) Empirical parameterization of setup, swash, and runup. Coastal Engineering 53, 573–588. doi:10.1016/j.coastaleng.2005.12.005(式 (9)〜(12)・(19))
 [^snapwave]: Roelvink, D., van Ormondt, M., Reyns, J. & van der Lugt, M. (2025) SnapWave: fast, implicit wave transformation from offshore to nearshore. Geosci. Model Dev. 18, 9469–9495. doi:10.5194/gmd-18-9469-2025(既定値と解法は公開ソースによる)

@@ -338,7 +338,8 @@ the river-mouth jet hardly change (−1%).
 
 With a current, the dispersion relation and the decomposition of the transport are recomputed
 for each cell and bin at every update, and quantities per bin are held. The memory of the wave
-field becomes about three times as large (about 2.4 kB per cell with N_θ = 40). In the unsteady
+field becomes about 3.6 times as large (in double precision, 42 bytes are added to the 16 bytes per
+directional bin per cell: from about 0.64 kB to about 2.3 kB per cell with N_θ = 40). In the unsteady
 mode (`wf_mode = 1`) they are recomputed at every step, which is expensive. Near blocking the
 quasi-steady iteration converges slowly (about 2000 iterations for the river-mouth jet of
 test/wfdoppler and about 7000 for its blocked channel). If a message says that it did not
@@ -571,7 +572,10 @@ approaches 0 as `wf_tol` is reduced. The unsteady imbalance is (change of storag
   becomes land. Dune slumping is the angle-of-repose collapse `f_repose`. There is one
   representative grain size each for bed load and suspended load. The balance between the undertow and the onshore velocity that decides
   between beach erosion and recovery is sensitive to the coefficients f_Sk and f_As
-  (calibration quantities).
+  (calibration quantities). The parameterization of wave skewness and asymmetry behind the onshore
+  velocity (Ruessink et al. 2012) is based on field observations on beaches with bed slopes milder than
+  1/30, and its use on steeper beds is not advised. It may underestimate the skewness for swell that is
+  narrow in direction.
 - **Blocked waves are only removed as wave action**; reflection at the blocking point
   (conversion to short waves) is not represented. With one representative period, blocking
   happens to all the energy at once (real waves are blocked from the short components of the

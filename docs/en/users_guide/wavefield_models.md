@@ -565,10 +565,27 @@ wave direction).
   and the net sand transport is onshore. As in XBeach, u_a = (f_Sk S_k − f_As A_s) u_rms of van
   Thiel de Vries (2009)[^vtdv09] is used, with S_k and A_s from the parameterization of
   Ruessink et al. (2012)[^ruessink12] by the Ursell number Ur = (3/8)√2 H_rms k/(kh)³
-  (S_k = B cos ψ, A_s = B sin ψ, B = p₂/(1 + exp((p₃ − log₁₀ Ur)/p₄)), ψ = −90° + 90° tanh(p₅/Ur^{p₆});
-  the coefficients p₂ to p₆ are the values of the public XBeach source, not checked against the table
-  of the original paper). f_Sk and f_As (`wfsed_facsk`, `wfsed_facas`) are calibration coefficients;
-  the default 0.1 is the default of XBeach (facua).
+  (S_k = B cos ψ, A_s = B sin ψ, B = p₂/(1 + exp((p₃ − log₁₀ Ur)/p₄)), ψ = −90° + 90° tanh(p₅/Ur^{p₆})).
+  f_Sk and f_As (`wfsed_facsk`, `wfsed_facas`) are calibration coefficients; the default 0.1 is the
+  default of XBeach (facua).
+
+**Check against Ruessink et al. (2012).** The forms of the formulas (Eqs. (6)–(10) of the paper) and
+the definition of the Ursell number (a_w = 0.5√2 H_rms, k the linear-theory wavenumber for the period
+T = T_m−1,0, the same as the default interpretation of the representative period in this model) agree
+with the paper. The coefficients are the same values as XBeach, p₂ = 0.7939, p₃ = −0.6065,
+p₄ = 0.3539, p₅ = 0.6373 and p₆ = 0.5995 (public XBeach source morphevolution.F90), which differ from
+the best-fit values of the paper, p₂ = 0.857 ± 0.016, p₃ = −0.471 ± 0.025, p₄ = 0.297 ± 0.021,
+p₅ = 0.815 ± 0.055 and p₆ = 0.672 ± 0.073 (p₁ = 0; ± is the 95% confidence interval), all lying
+outside the confidence intervals. The equation numbers and error ranges noted in the XBeach source
+do not match the published paper either, and the source of the XBeach values has not been
+identified. With the values of the paper, u_a becomes 0.6–0.8 times as large for Ur ≈ 0.1–0.3
+(offshore of the surf zone), about the same for Ur ≈ 1, and about 1.1 times for Ur ≈ 2–20 (surf
+zone) (with f_Sk = f_As).
+
+The parameterization of the paper was fitted to field observations of mostly directionally spread
+waves (H_s 0.05–3.99 m, T 3.1–13.9 s, depth 0.25–11.2 m, Ur 0.004–24.8, bed slopes generally milder
+than 1/30, no swash zone); it may underestimate the skewness for swell that is narrow in direction and
+for unidirectional laboratory waves, and its use on beds steeper than 1/30 is not advised.
 
 **Beach erosion and recovery** are decided by the balance between the offshore undertow u^E and
 the onshore u_a. With high waves the undertow wins and sand is carried offshore (a bar forms);
@@ -726,7 +743,7 @@ The labels in the Basis column are explained in [How to read the basis of a defa
 | `wf_break_visc` (&list_enc) | 0 | coefficient M of the breaking eddy viscosity | **Calibration**: the default 0 (no mixing). M = 1 is the default of nuhfac of XBeach[^xbeach]. The formula is from Battjes 1975[^battjes75] |
 | `f_wf_current` | 0 | action of the current on the waves | **Method**: by default the current does not act. The formulation is the wave action balance of Bretherton & Garrett (1968)[^bg68]; the refraction by currents and the velocity used (Lagrangian mean) are the same as wci of XBeach[^xbeach]. Solving the dispersion relation directly for each directional bin is original (XBeach advances the wavenumber in time with the eikonal equations) |
 | `f_wfsed` (&list_geomorph) | 0 | stirring and transport by the wave field | **Method**: by default there is no action on sediment. The stirring is the wave–current shear stress combination of Soulsby (1997)[^soulsby97] (the upper limit 0.3 of f_w from Swart 1974[^swart74]); carrying suspended load with the Eulerian mean velocity is the same as Reniers et al. (2004)[^reniers04] and XBeach[^xbeach]. The combination for bed load, "the amount of τ*_max times the speed of u_s", is original (§8.4) |
-| `wfsed_facsk`, `wfsed_facas` (&list_geomorph) | 0.1 | skewness and asymmetry coefficients f_Sk, f_As of the onshore velocity | **Calibration**: the default is facua of XBeach[^xbeach]. The formula is van Thiel de Vries (2009)[^vtdv09], with S_k and A_s from the parameterization of Ruessink et al. (2012)[^ruessink12] (the coefficients p₂ to p₆ are the values of the public XBeach source, not checked against the table of the original paper) |
+| `wfsed_facsk`, `wfsed_facas` (&list_geomorph) | 0.1 | skewness and asymmetry coefficients f_Sk, f_As of the onshore velocity | **Calibration**: the default is facua of XBeach[^xbeach]. The formula is van Thiel de Vries (2009)[^vtdv09], with S_k and A_s from the parameterization of Ruessink et al. (2012)[^ruessink12] (the coefficients p₂ to p₆ are the values of the public XBeach source, which differ from the values of Eqs. (9) and (10) of the paper; §8.3) |
 | `f_wfsed_turb` (&list_geomorph) | 0 | stirring by breaking turbulence | **Compatibility**: the default 0 (no turbulence = the same results as before turbulence was added). 1 is the form of `turb` = wave_averaged of XBeach (the XBeach default with the Ruessink waveform[^xbeach]). The coefficient 1.45 is from van Thiel de Vries (2009)[^vtdv09] |
 | `f_wfswash` (&list_geomorph) | 0 | swash-zone transport | **Method**: by default no swash-zone transport. The cross-shore part is Eq. (8) of Larson et al. (2004)[^larson04], the longshore part Eq. (4) of Larson & Wamsley (2007)[^lw07], and the runup height the swash part of Eq. (19) of Stockdon et al. (2006)[^stockdon06]. The exposure, the mapping to the grid (four-neighbour faces, longshore band) and the combination using the swash of Stockdon et al. for R are original (§9.3, §9.4) |
 | `wfswash_kc` (&list_geomorph) | 1.6×10⁻³ | cross-shore transport coefficient K_c | **Calibration**: the mean of the calibrations of Larson et al. (2004) on four runs at Hasaki Beach (fine sand, 0.18 mm) (1.0–2.3×10⁻³ in the individual runs; 3×10⁻³ from the regression on the transport at the seaward end of the swash zone). It depends on the grain size and on the interaction between waves in the swash |
@@ -797,7 +814,7 @@ sediment, with zero overhead when disabled.
 | Battjes (1975)[^battjes75] | the eddy viscosity of breaking, the surface turbulence | the form of the formula follows the XBeach implementation (the original paper has not been checked) |
 | Soulsby (1997)[^soulsby97], Swart (1974)[^swart74] | the wave friction factor and the combination of wave and current shear stresses | — |
 | Reniers et al. (2004)[^reniers04] | carrying suspended load with the Eulerian mean velocity | — |
-| van Thiel de Vries (2009)[^vtdv09], Ruessink et al. (2012)[^ruessink12], Roelvink & Stive (1989)[^rs89] | the onshore velocity u_a and the parameterization of skewness and asymmetry, the turbulence coefficient 1.45, the decay of turbulence towards the bed | the coefficients p₂ to p₆ are the values of the public XBeach source (not checked against the table of the original paper) |
+| van Thiel de Vries (2009)[^vtdv09], Ruessink et al. (2012)[^ruessink12], Roelvink & Stive (1989)[^rs89] | the onshore velocity u_a and the parameterization of skewness and asymmetry, the turbulence coefficient 1.45, the decay of turbulence towards the bed | the coefficients p₂ to p₆ are the values of the public XBeach source, which differ from the best-fit values of the paper (§8.3) |
 | Larson et al. (2004)[^larson04] | Eq. (8) for cross-shore swash transport, the values of K_c and φ_m | the runup height uses the swash of Stockdon et al. (§9.3) |
 | Larson & Wamsley (2007)[^lw07] | Eq. (4) for longshore swash transport, K_l ≈ K_c | placed in a band along the shoreline and passed to the 8-direction faces (§9.4) |
 | Stockdon et al. (2006)[^stockdon06] | the swash part of the runup height R = 1.1 S/2 | the setup is resolved by the flow, so only the swash part is used, multiplied by the exposure (§9.3) |
@@ -861,7 +878,7 @@ against the originals are in docs/wavefield_plan.md §11 and §12 and developer.
 [^reniers04]: Reniers, A. J. H. M., Roelvink, J. A. & Thornton, E. B. (2004) Morphodynamic modeling of an embayed beach under wave group forcing. J. Geophys. Res. 109, C01030.
 [^rs89]: Roelvink, J. A. & Stive, M. J. F. (1989) Bar-generating cross-shore flow mechanisms on a beach. J. Geophys. Res. 94(C4), 4785–4800. (Exponential decay of breaking turbulence towards the bed; the form of the formula follows the turb implementation of XBeach)
 [^ruessink01]: Ruessink, B. G., Miles, J. R., Feddersen, F., Guza, R. T. & Elgar, S. (2001) Modeling the alongshore current on barred beaches. J. Geophys. Res. 106(C10), 22451–22463.
-[^ruessink12]: Ruessink, B. G., Ramaekers, G. & van Rijn, L. C. (2012) On the parameterization of the free-stream non-linear wave orbital motion in nearshore morphodynamic models. Coastal Engineering 65, 56–63.
+[^ruessink12]: Ruessink, B. G., Ramaekers, G. & van Rijn, L. C. (2012) On the parameterization of the free-stream non-linear wave orbital motion in nearshore morphodynamic models. Coastal Engineering 65, 56–63. (Eqs. (6)–(10); the best-fit coefficients on p. 58)
 [^shi12]: Shi, F., Kirby, J. T., Harris, J. C., Geiman, J. D. & Grilli, S. T. (2012) A high-order adaptive time-stepping TVD solver for Boussinesq modeling of breaking waves and coastal inundation. Ocean Modelling 43–44, 36–51.
 [^stockdon06]: Stockdon, H. F., Holman, R. A., Howd, P. A. & Sallenger, A. H. Jr. (2006) Empirical parameterization of setup, swash, and runup. Coastal Engineering 53, 573–588. doi:10.1016/j.coastaleng.2005.12.005 (Eqs. (9)–(12) and (19))
 [^snapwave]: Roelvink, D., van Ormondt, M., Reyns, J. & van der Lugt, M. (2025) SnapWave: fast, implicit wave transformation from offshore to nearshore. Geosci. Model Dev. 18, 9469–9495. doi:10.5194/gmd-18-9469-2025 (defaults and solver from the public source code)

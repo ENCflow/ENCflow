@@ -482,8 +482,8 @@
     {
       "source": "docs/users_guide/usecases.md",
       "target": "docs/en/users_guide/usecases.md",
-      "source_sha256": "feebdaeb8e686ae4b166cbbe0eee80f5a5d1459fc771eb5180fde07cedda1bcb",
-      "target_sha256": "5812b80f357f9fc565bdcbd4fc9b2189e5293ec67c26b1c622fc642b1039890e",
+      "source_sha256": "c1a60edb510f83f0a145c6874c7f36ba2539c84dd2a7cb66a67d4b148f0e4cdc",
+      "target_sha256": "c3d1dbf5064b151caef6ddcc29961016a5208c3371db9ca0f7bf3d45aff035f0",
       "reviewer": "Claude (Claude Code session; review of the changed lines against the previously recorded pair, no model execution)",
       "method": "assistant",
       "reviewed_on": "2026-10-29"
@@ -509,18 +509,18 @@
     {
       "source": "docs/users_guide/wavefield.md",
       "target": "docs/en/users_guide/wavefield.md",
-      "source_sha256": "987a0ff0c5d359a9f111b1b372377e3a0ff611a0006e1357c66c0a1397910a09",
-      "target_sha256": "865d3a9624a0e4d36aaff96afe09f67135e2eecb645eee670d324837d9306d78",
-      "reviewer": "Claude (Claude Code session; full-text content and lexical review, no model execution)",
+      "source_sha256": "db73d2400b540fa7d7e2cdd8914dae0914f813c6df3a7ca6337b0e11b475261d",
+      "target_sha256": "b29bbe1912f9398c8ca9c0bdca2738db8592ef446c379839aa2d565eb96e778a",
+      "reviewer": "Claude (Claude Code session; review of the changed lines against the previously recorded pair, no model execution)",
       "method": "assistant",
       "reviewed_on": "2026-10-29"
     },
     {
       "source": "docs/users_guide/wavefield_models.md",
       "target": "docs/en/users_guide/wavefield_models.md",
-      "source_sha256": "ffe259759700aef3b09083869248f6b7cf42347fb298554acfb59b1d024d3222",
-      "target_sha256": "f6d6ba0c6dd299c035ca7772dda3da6d8cda93ebbc3bd4fd6bb09594c0fb80f8",
-      "reviewer": "Claude (Claude Code session; full-text content and lexical review, no model execution)",
+      "source_sha256": "48bbf1f64a6b178817c3504fb633ea9a5b2384a327d94ce3334a19c7f66bb70b",
+      "target_sha256": "2cfb5f25d97d43414770f35a34a6e28c8c6848f59e407a8b7f3707ee34f4d3df",
+      "reviewer": "Claude (Claude Code session; review of the changed lines against the previously recorded pair, no model execution)",
       "method": "assistant",
       "reviewed_on": "2026-10-29"
     },

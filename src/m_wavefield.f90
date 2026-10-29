@@ -1827,7 +1827,7 @@ end subroutine
 !   van Thiel de Vries(2009)の式(XBeach)。S_k = B cos ψ、A_s = B sin ψ は Ruessink ら(2012)の
 !   Ursell 数 Ur = (3/8)√2 H_rms k/(kh)³ によるパラメータ化:
 !     B = p2/(1 + exp((p3 − log10 Ur)/p4))、ψ = −90° + 90° tanh(p5/Ur^p6)
-!   係数 p2〜p6 は XBeach の公開ソース(morphevolution.F90 の RvR。Ruessink ら 2012 の値)。
+!   係数 p2〜p6 は XBeach の公開ソース(morphevolution.F90 の RvR)の値で、論文の式 (9)(10) の値とは違う(§90.23)。
 !   A_s は前傾した波で負(ψ → −90°)なので、どちらの項も岸(波の進む向き)へ向かう
 !----------------------------------------------------------------------
 pure function asym_velocity(hrms, k, h, urms, fsk, fas) result(ua)
