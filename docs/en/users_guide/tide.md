@@ -45,7 +45,7 @@ How to read the results (fields, ledgers, measurement columns, restart) is summa
 | ti0 | 0 | titype=1: uniform fixed tide level (m; same elevation datum as z). Default 0 = mean sea level |
 | tival | - | titype=2, 3: time series `(time (min), tide level (m) or multiplier)` |
 | fn_timap | "" | titype=3: tide level distribution file (m) |
-| fn_timaplist / dt_timaplist(_c) | "" / 60 | titype=4: list of distribution files and their time interval (min). Frame i is at time (i-1) x interval; outside the range the end values persist |
+| fn_timaplist / dt_timaplist(_c) | "" / 60 | titype=4: list of distribution files and their time interval (min). Frame i is at time (i-1) x interval; outside the range the end values persist. `dt_timaplist_c` takes a string with a unit such as `"1h"` or `"30m"`, and **a number without a unit is in minutes** (the same unit as the number dt_timaplist; the same as `_c` of [precipitation](forcing.md#precipitation-list_precip)). If both are written, `_c` takes precedence. The adopted value is shown, for example `tide: dt_timaplist = 60.00000 min` |
 | dt_tiupdate | 1 | Tide level update interval (min) |
 | hsea0 | 1.0 | Apparent water column thickness of sea cells (m) (see below) |
 

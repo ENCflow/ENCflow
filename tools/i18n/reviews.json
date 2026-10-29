@@ -455,11 +455,11 @@
     {
       "source": "docs/users_guide/tide.md",
       "target": "docs/en/users_guide/tide.md",
-      "source_sha256": "01d1856846d7c0d4b28dde8b9f035b222f9168e62673b983fec0ac2abdb9c5b8",
-      "target_sha256": "70ae78cecf91b55b8dcea14c9383be36f28bfe98e0ac4670b2f871dc375b9881",
-      "reviewer": "Claude (Claude Code session; full-text content and lexical review, no model execution)",
+      "source_sha256": "581b347bd4ee56a3ee70d318a48958ece77bc5f73a24c1beef47251f91ea3b71",
+      "target_sha256": "973c68e304fea4d453ee2e8415f57f97399fc380dfa5b6ef391f18286baf2605",
+      "reviewer": "Claude (Claude Code session; review of the changed lines against the previously recorded pair, no model execution)",
       "method": "assistant",
-      "reviewed_on": "2026-10-24"
+      "reviewed_on": "2026-10-29"
     },
     {
       "source": "docs/users_guide/time.md",
@@ -761,11 +761,11 @@
     {
       "source": "examples/List_samples/list_tide.txt",
       "target": "examples/List_samples/en/list_tide.txt",
-      "source_sha256": "87c72b403d3c72b494b17b05247766ad0bf3725037454e0543e196baaee52d87",
-      "target_sha256": "7391f1c64b072ed421c077f908a6f9b739ad45dd590e857e56a1db3aa507061b",
-      "reviewer": "Claude (Claude Code session; full-text content and lexical review, no model execution)",
+      "source_sha256": "fd58f17476f8d0c5f47967fddb1eed12b14445b20585c78eff836e52d6863bd8",
+      "target_sha256": "191b0679ba7bb6adb3d3b70fd6f2e4b6f85e1ec4b73ebc7383fe8bec980ec48b",
+      "reviewer": "Claude (Claude Code session; review of the changed lines against the previously recorded pair, no model execution)",
       "method": "assistant",
-      "reviewed_on": "2026-10-24"
+      "reviewed_on": "2026-10-29"
     },
     {
       "source": "examples/List_samples/list_vz.txt",
@@ -2264,11 +2264,11 @@
     {
       "source": "test/tide/README.md",
       "target": "test/tide/en/README.md",
-      "source_sha256": "1abd655ddff79e648b5d97ecde0854fee5afbef8d54650eb6e2add76bd18d47d",
-      "target_sha256": "91bfd78e95b23d82aaf3e666c4ea6ea14ef2f1d12c84af0915341d3117585461",
-      "reviewer": "Claude (Claude Code session; full-text content and lexical review, no model execution)",
+      "source_sha256": "64e6efd3d2aa645d9a9b8d0cabe609321ce53d0ae415c0588fe3bbf9b1210dfa",
+      "target_sha256": "f52b0c864607349f283f8e883f5434421cb432ccc469d2b1b4fa7175246e87f9",
+      "reviewer": "Claude (Claude Code session; review of the changed lines against the previously recorded pair, no model execution)",
       "method": "assistant",
-      "reviewed_on": "2026-10-24"
+      "reviewed_on": "2026-10-29"
     },
     {
       "source": "test/tide/figs/map.png",

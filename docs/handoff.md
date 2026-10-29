@@ -128,11 +128,6 @@ architecture.md。このメモは「現在進行中・未完了の項目」だ�
    - 単精度ビルドの Check_*.py は許容が倍精度前提で不合格になる(入力の丸め
      規模。§87.3)。単精度用の許容を設けるかは必要になってから。
 
-00i. **m_precip の時間単位(2026-10-27 修正。developer.md §88、test/prmap)の残り**
-   - list_tide の dt_timaplist_c は単位を省いた数値が秒のまま(数値の dt_timaplist は
-     分)。list_precip の `_c`(単位なし = 分 = 数値と同じ単位)と揃えるかは未判断
-     (str2sec の default_unit = 60 を渡すだけで揃う。挙動変更)。
-
 00c. **方針 13(説明責任。developer.md §0。2026-10-24 制定)の既存部分への遡及**
    - 出典の棚卸し: users guide 第III部のうち「参考文献」節のない章
      (bedmotion・bldgdebris・driftwood・forcing・nonhydrostatic・wq・
