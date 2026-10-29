@@ -80,6 +80,16 @@ architecture.md。このメモは「現在進行中・未完了の項目」だ�
      区間流入面の移流など)ため、英語図を作らず日本語図の共有のまま。README の表の数値も
      同じ古い結果に基づく。原因の切り分け(どのコミットで変わったか)と、日本語図・表を
      現行で再生成するかの判断待ち。
+   - **2026-10-29 の確認記録の作業で判明**: tsunami_fault の probes・profiles と tsunami_coast の
+     probes・snapshots の英語図は、再計算した結果(2026-10-25 のコード)から描かれていて、日本語図
+     (2026-10-06 の結果)とデータが違う(拡大すると水位の時系列の山の形・終端の値、沿岸の遡上の
+     尖りが違う。生成時は「目視で同一」としていた)。この 4 枚は英語図を外して英語 README から
+     日本語図を共有する形に戻した(上の oneway_edge・nh_profile と同じ扱い)。日本語図・表を現行の
+     結果で作り直すかは上と同じ判断待ちで、作り直したら英語図も同じ結果から描く。deformation の
+     2 枚は与件(規定の地盤変位)の図で一致、levee_breach の 3 枚は日本語図と一致(2026-10-24・25 の
+     同じ版の結果)。英語図のうち確認した 28 組(badland・badland_round・bedrock_cover・levee_breach・
+     nest_reflect・tsunami の deformation・test/gwbed)は記録済み。test/gwbed は英語の題 2 つが
+     重なって切れていたので、英語の文字列だけ 2 行に折り返して描き直した。
    - **残(利用者の保存済み結果が要る。再計算は数時間〜十数時間)**: badland_storm・mesa・
      karst・tower_karst。各ケース直下で日本語版と同じ引数に `en` を足して実行し、
      英語 README の図リンクを `../figs/` → `figs/` に切替えて record する。
@@ -545,6 +555,11 @@ architecture.md。このメモは「現在進行中・未完了の項目」だ�
    - test/glacier の Run_MPI.sh は逐次 result と Log.txt を cmp するため、
      既知の Runge 列の逐次/MPI 差で「MISMATCH」が出る(検定自体は PASS)。
      SKIPCOLS 相当の比較に揃えるか警告に格下げする
+     → 2026-10-29 に再確認: 現行の release ビルド(逐次と MPI)で np = 2・4 とも Log.txt を含めて
+     逐次とバイト一致し、MISMATCH は出ない(検定ファイルは 2026-08-16 から不変)。このケースは地表水が
+     なく Runge 列は常に 0 なので、当時の不一致は Runge 列ではなく、逐次と MPI のビルドの最終桁の差
+     (§28.3)だった可能性が高い。Runge 列を外しても直らないので、スクリプトは変えていない。再発したら
+     差の出た列を保全し、Log.txt だけ Compare_ref.sh(ULP=1)で比べる形に変える
    - 環境メモ: root コンテナでの mpirun は OMPI_ALLOW_RUN_AS_ROOT(_CONFIRM)=1
      が必要、OpenMP 併用で物理コア数を超えると著しく遅い(MPI 検証は
      OMP_NUM_THREADS=1。§64.3)
@@ -1030,7 +1045,8 @@ architecture.md。このメモは「現在進行中・未完了の項目」だ�
   unreviewed 119 組(docs/en の users_guide 全章・README・比較・install・windows・ai_guide・
   tutorial・colab、tutorials の README・param・図、List_samples 20 件、bmi・utils・test・examples
   の README、TRADEMARKS.ja)も 2026-10-24 に全文を突き合わせ、訳側の遅れ(欠落した表行・段落・
-  リンク先の英語版化・古い注記)を直して record 済み。**unreviewed は 0**。以後は正本を変えたら
+  リンク先の英語版化・古い注記)を直して record 済み。**unreviewed は 0**(その後に増えた英語図の 32 組も
+  2026-10-29 に確認して 0 に戻した。上の 00g)。以後は正本を変えたら
   同じ作業で訳を更新し、CI(stale 検出)に従う。  **test の README の図と数値(2026-10-24)**: 46 本の Fig.py(と Diag/Landslide/Theory/Solitary 等)に
   `en` 引数を追加し、英語ラベル版 62 枚を test/<case>/en/figs/ に生成して英語 README から参照
   (.gitignore に `!test/*/en/figs/*.png`)。nhbreak の切り分け節の図 2 枚(runup_diag・runup_visc)は
@@ -1229,7 +1245,7 @@ architecture.md。このメモは「現在進行中・未完了の項目」だ�
     題名・著者、Inoue ら (2016)・McGuire ら (2023) の共著者、Parker & Izumi (2000) の原文
     (ネットワークの制限で未確認)。
   - **日英の確認記録**: この作業の記録はすべて AI による確認(method assistant)。
-    examples/bedrock_cover の図 4 組は未記録。
+    examples/bedrock_cover の図 4 組も 2026-10-29 に記録した。
 
 - **鉛直不飽和浸透(VZ)流出モデル**(docs/vz_plan.md。2026-10-26 起案・合意、
   同日 P0〜P3 実装): 谷(2023)の VZ モデル(共有参照柱の 1 次元 Richards+小杉式、

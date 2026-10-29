@@ -68,14 +68,14 @@ ax.plot(lg2[:, 0], lg2[:, names2.index("S_grnd(m)")], "C2s", ms=4, label=T("S_gr
 ax.axhline(sg_gain, color="k", lw=1, label=T(f"解析 (12·(0.2 − 1 ステップ損失) + 6·0.2)/18 = {sg_gain:.11f}", f"analytical (12·(0.2 − per-step loss) + 6·0.2)/18 = {sg_gain:.11f}"))
 ax.axhline(sg_lined, color="k", ls="--", lw=1, label=T(f"解析 12·0.2/18 = {sg_lined:.6f}", f"analytical 12·0.2/18 = {sg_lined:.6f}"))
 ax.set_ylim(0.13, 0.205); ax.set_xlabel("t (s)"); ax.set_ylabel(T("領域平均の地下貯留 S_grnd (m)", "domain-mean groundwater storage S_grnd (m)")); ax.grid(alpha=0.3); ax.legend(fontsize=7, loc="center right")
-ax.set_title(T("構成 1・2: 飽和後の S_grnd は一定(堤内地は毎ステップ補充)", "Configs 1 and 2: S_grnd is constant after saturation (floodplain refilled every step)"), fontsize=9)
+ax.set_title(T("構成 1・2: 飽和後の S_grnd は一定(堤内地は毎ステップ補充)", "Configs 1 and 2: S_grnd is constant after saturation\n(floodplain refilled every step)"), fontsize=9)
 
 ax = axes[2]
 names3, lg3 = read_log("result_vert/Log.txt"); t3 = lg3[:, 0]
 ax.plot(t3, lg3[:, names3.index("S_grnd(m)")], "C3o", ms=4, label=T("計算 S_grnd", "computed S_grnd"))
 ax.plot(t3, 7e-6 * t3, "k-", lw=1, label=T("解析 (12 K_sv + 6 k_bed) t / 18 = 7e-6 t", "analytical (12 K_sv + 6 k_bed) t / 18 = 7e-6 t"))
 ax.set_xlabel("t (s)"); ax.set_ylabel("S_grnd (m)"); ax.grid(alpha=0.3); ax.legend(fontsize=7, loc="upper left")
-ax.set_title(T("構成 3: 河道セルの浸透能 K_sv → k_bed の置き換え(平坦・側方なし)", "Config 3: channel-cell infiltration capacity K_sv → k_bed (flat, no lateral flow)"), fontsize=9)
+ax.set_title(T("構成 3: 河道セルの浸透能 K_sv → k_bed の置き換え(平坦・側方なし)", "Config 3: channel-cell infiltration capacity K_sv → k_bed\n(flat, no lateral flow)"), fontsize=9)
 
 fig.suptitle(T("河床交換能(f_gwbed): 2 × 11 セル、3 セル縦列 [堤内地・河道・堤内地] × 3 組、堤防で地表水を隔離、k_bed = 1e-3 m/s",
                "Streambed exchange limit (f_gwbed): 2 × 11 cells, three [floodplain, channel, floodplain] stacks, levee separating the surface water, k_bed = 1e-3 m/s"), fontsize=10)
