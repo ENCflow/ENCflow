@@ -15906,8 +15906,9 @@ reference 比較を `ULP=${ULP:-1}`・`RTOL=${RTOL:-1e-6}` にし、既定の比
   1300 s まで辺に向かって育ち、その後減衰)、新 0.132 m/s。新は全時刻で 5 行内側の行と同程度
   (1250 s で 0.128 と 0.131)で、北の辺(流出側)は旧・新とも最大 0.107 m/s で変わらない。
 - 地形変化あり(morfac 100): 旧は 1650 s の 0.31 m/s から 1800 s の 0.67、1950 s の 2.2 m/s と辺で
-  育ち、2000 s で Courant 数超過(V_max 13.96 m/s)で停止した。新は少なくとも 6550 s まで Courant 数の超過なく
-  進んだ(作業環境の再起動で計算が中断)。
+  育ち、2000 s で Courant 数超過(V_max 13.96 m/s)で停止した。新は 7200 s まで Courant 数の超過なく
+  走り切り(Cn_max の最大 0.25)、2000 s 以降の南の辺の行の沿岸流は 0.12〜0.15 m/s で、5 行内側の行
+  (0.12〜0.14 m/s)と同程度に保たれた。
 - test/wfcurrent・wfsed・wfdoppler の検定一式(Check_*.py、再開の継続、不正な設定の停止)は新でも
   すべて合格(wfcurrent の flat の岸沿いの一様性は旧 9.59e-5 → 新 3.29e-5 m/s)。
 
@@ -15915,20 +15916,21 @@ reference 比較を `ULP=${ULP:-1}`・`RTOL=${RTOL:-1e-6}` にし、既定の比
 のとき。wfcurrent: Log.txt の S が相対 7.7e-8、E9998・v9998 が印字の最終桁 1 つ(8 セル)、wavefield.csv の
 収支の列(流入 1.55 MW に対し 0.5 W など)。wfsed: S が相対 3.7e-8、wavefield.csv の収支の列、Z9998・Hs9998 は
 一致。wfdoppler: S が相対 1.1e-6、wavefield.csv の収支の列、Wh9998・u9998 は一致)。wfcurrent・wfsed は
-この作業環境では §90.18 の許容(ULP=1・RTOL=1e-6)の中に収まるが、wfdoppler(ULP=0)は nightly で
-落ちる。
+§90.18 の許容(ULP=1・RTOL=1e-6)の中に収まる(この作業環境と、CI の AMD のランナーを想定した
+-march=znver3 のビルドの両方で合格。CI は通る見込み)が、wfdoppler(ULP=0)は nightly で落ちる。
 **reference は更新していない**(規律 1。人間が差を確かめてから、§90.18 の FILES を付けて同じマシンで
 `./Run.sh -u`)。
 
-**検証**(2026-10-28。gfortran 13.3 / Open MPI 4.1.6、release の逐次は 1 スレッド):
+**検証**(2026-10-28〜29。gfortran 13.3 / Open MPI 4.1.6、release の逐次は 1 スレッド):
 - 側方 Neumann の 3 ケース: 検定一式が合格(上の確認)。release の MPI np = 1・2・4 が逐次とバイト一致
-  (wfcurrent・wfsed。wfdoppler は np = 1)。
+  (wfcurrent の基本と 90° 回した格子(np = 2・4)、wfsed、wfdoppler)。
 - -Og -fcheck=all(実数の初期値 NaN、浮動小数の例外の捕捉): wfcurrent(基本の np = 2、90° 回した格子の
   np = 2・4。回した格子では側方 Neumann の辺がランク界面を横切る)、wfsed・wfdoppler(np = 2)、デルタの
   当初の構成(300 s。np = 2・4)が逐次とバイト一致し、実行時検査で止まらない。
 - 側方 Neumann を持たないケース(呼び出しの条件が偽で、移流の経路は変わらない): reference を持つ
-  tracer・chichibu_icmap・nhbore・nhbottom と、reference のない検定 9 件(wave_river・bendsed・berode・
-  fixation・repose・bedfines・sedinflow・creep・dbrock)の出力が、修正前(マージ後)のバイナリの出力と
-  バイト一致。
+  33 ケース(nhbottom を含む)と、reference のない検定 30 件(土砂・スカラー・拡散・斜面・流木・建物の
+  がれき・wave_shore の 7 構成など)の出力が、修正前(マージ後)のバイナリの出力とバイト一致(保存の
+  時刻の行と、vzzone の Run.sh が mktemp で作る一時ファイルの名前を除く)。nhshelf の reference との
+  不一致(Log.txt の 1 箇所・量子 2 つ)は修正前と同じ(この作業環境の既知の差)。
 - 主ツリーのビルドの機械語(.text・.rodata・.data)が、上の確認に使ったバイナリと同一。トップレベルの
   make(utils の追随)、i18n の監査、params の検査を通過。

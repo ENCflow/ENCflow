@@ -1166,8 +1166,9 @@ architecture.md。このメモは「現在進行中・未完了の項目」だ�
      検査体積で求める形にして直した(§90.19)。**残り: test/wfcurrent・wfsed・wfdoppler の reference の
      更新**(結果が丸めの規模で変わる。§90.19 の「reference」の項。人間が差を確かめてから、§90.18 の
      FILES を付けて同じマシンで `./Run.sh -u`)。それまで wfdoppler は nightly で不一致になる
-     (wfcurrent・wfsed はこの作業環境では §90.18 の許容の中)。任意: examples/delta の param_wfsed を
-     流れの南北の辺も側方 Neumann にした構成(V12 の当初の構成)で計算し直す。
+     (wfcurrent・wfsed は §90.18 の許容の中。CI の AMD のランナーを想定したビルドでも合格)。
+     任意: examples/delta の param_wfsed を流れの南北の辺も側方 Neumann にした構成(V12 の当初の構成)で
+     計算し直す。
   8. V12 のデルタの例(examples/delta の wfsed)で、沖の静かな水域の流速に格子規模の振動が時間とともに
      育つ(3×3 の平均からの偏差の rms が水理 1 h まで 1e-4 m/s、2 h で 6e-4 m/s、3.3 h で 0.011 m/s、
      15 h で |V| の最大 0.15 m/s。水位は滑らかで格子規模の偏差は 0.1 mm 未満。§90.15 の修正の前の版でも

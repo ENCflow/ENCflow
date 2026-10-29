@@ -67,11 +67,11 @@
     {
       "source": "docs/developer.md",
       "target": "docs/en/developer.md",
-      "source_sha256": "788e157f1afeb73d7e13aa28b2a36dc9707940b6faa4463135c09c76ee1ccb00",
+      "source_sha256": "b94e6e6f8a96c8dd3b7872dde1ae62c59036785918510aa747653f3b57920899",
       "target_sha256": "82d2abd2032be1a88429c6a9bd3befcaa793451da3396ab0168cee19316cd653",
       "reviewer": "Claude (Claude Code session; full-text content and lexical review, no model execution)",
       "method": "assistant",
-      "reviewed_on": "2026-10-28"
+      "reviewed_on": "2026-10-29"
     },
     {
       "source": "docs/install.md",
