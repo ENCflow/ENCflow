@@ -253,6 +253,7 @@ and the diffusion term is computed when `wf_break_visc > 0` even with
 |---|---|---|
 | smooth the transverse velocity distribution of low or gentle river flow | `f_diffusion_term = 2` (no coefficient) | recommendation by pattern in the [shallow water chapter](swflow.md); the roughness $`n`$ sets the size of $`\nu`$ |
 | circulation in bays and reservoirs | `f_diffusion_term = 2` + `p_diffusion_nu` (a small $`\nu_0`$) | keeps $`\nu`$ from vanishing in quiescent regions |
+| coastal wave field with currents on waves (`f_wf_current = 1`) and waves on the flow (`wf_flow = 2`) | `f_diffusion_term = 2` + `p_diffusion_nu` = 0.05 or so | stops the grid-scale stripes that grow in the quiet water offshore ([coastal wave field](wavefield.md#grid-scale-stripes-offshore-and-background-viscosity-with-wf_flow)) |
 | match a constant viscosity of another model for comparison | `f_diffusion_term = 1` + `p_diffusion_nu` | a grid-dependent calibration quantity; check the bound of §4 |
 | run-up of breaking waves | `nh_break_visc` (§5) | non-hydrostatic chapter |
 | smooth the cross-shore distribution of wave-driven longshore currents | `wf_break_visc = 1` (§5) | [coastal wave field](wavefield.md) chapter; $`M`$ = 1 is the default of nuhfac of XBeach |

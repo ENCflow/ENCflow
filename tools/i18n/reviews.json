@@ -203,11 +203,11 @@
     {
       "source": "docs/users_guide/diffusion.md",
       "target": "docs/en/users_guide/diffusion.md",
-      "source_sha256": "44498b9092c5e6911f79451a4ad9193df317ba7262d328cfef48707a96ed7666",
-      "target_sha256": "d4b768199240f860aad58e28afdf0f4c08be804c788ecbddc763db4eae2f4c6f",
+      "source_sha256": "9b92462cf780c0d3ddde71733eb776841a50e84c1e8a78dbe4faad82cd570f51",
+      "target_sha256": "6ec0f116d2876b459f326ce5c4846165e157b2be02e831db6c1ab88daea1d265",
       "reviewer": "Claude (Claude Code session; full-text content and lexical review, no model execution)",
       "method": "assistant",
-      "reviewed_on": "2026-10-28"
+      "reviewed_on": "2026-10-29"
     },
     {
       "source": "docs/users_guide/driftwood.md",
@@ -509,11 +509,11 @@
     {
       "source": "docs/users_guide/wavefield.md",
       "target": "docs/en/users_guide/wavefield.md",
-      "source_sha256": "5b0ce2886d107b490cc19b210c37b75324e7eb068ee63ddc9d9681b855da6225",
-      "target_sha256": "2d30e2a59b5b6396b7ac87a7709085941e096cf80e3f18c419b4a21efaf35609",
+      "source_sha256": "a46f61fc1b86f249fdfee9971ba523683bd3b8ca0b1d1628e6c817cd184ddff8",
+      "target_sha256": "f9a932d47a37b9c7666c2844a14f1b897b7d947cc0a135fbfd55c1195f9c9d1e",
       "reviewer": "Claude (Claude Code session; full-text content and lexical review, no model execution)",
       "method": "assistant",
-      "reviewed_on": "2026-10-28"
+      "reviewed_on": "2026-10-29"
     },
     {
       "source": "docs/users_guide/wq.md",

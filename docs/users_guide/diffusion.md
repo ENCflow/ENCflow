@@ -215,6 +215,7 @@ $`\nu`$ に加え($`\nu = \nu_{\rm model} + \nu_b + \nu_w`$)、`f_diffusion_term
 |---|---|---|
 | 河川の低水・緩流の横断流速分布を滑らかにする | `f_diffusion_term = 2`(係数指定なし) | [浅水流計算の章](swflow.md)のパターン別推奨。粗度 $`n`$ が $`\nu`$ の大きさを決める |
 | 湾内・貯水池の循環流 | `f_diffusion_term = 2` + `p_diffusion_nu`(小さな $`\nu_0`$) | 静穏域で $`\nu`$ が消えないようにする |
+| 沿岸の波浪場で流れ→波(`f_wf_current = 1`)と波→流れ(`wf_flow = 2`)を組む | `f_diffusion_term = 2` + `p_diffusion_nu = 0.05` 程度 | 沖の静かな水域に育つ格子規模の縞を止める([沿岸の波浪場](wavefield.md#沖の格子規模の縞と背景粘性wf_flow-と組むとき)) |
 | 既往モデルとの比較で定数粘性を合わせる | `f_diffusion_term = 1` + `p_diffusion_nu` | 格子幅に依存する校正量。§4 の上界を確認 |
 | 砕波性の波の遡上 | `nh_break_visc`(§5) | 非静水圧補正の章 |
 | 波による沿岸流の岸沖分布をならす | `wf_break_visc = 1`(§5) | [沿岸の波浪場](wavefield.md)の章。$`M`$ = 1 は XBeach の nuhfac の既定 |

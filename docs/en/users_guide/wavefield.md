@@ -516,6 +516,24 @@ The velocity used is the velocity of the shallow water flow itself (with `wf_flo
 Lagrangian mean velocity u^L; the same as wci of XBeach[^xbeach]). The roller (`wf_flow` ≥ 1) is
 also carried by the current (velocity c ê + U, c = σ̄/k̄).
 
+### Grid-scale stripes offshore and background viscosity (with wf_flow)
+
+The refraction speed by currents takes the current gradients by central differences, so it
+responds most strongly to current stripes about four cells long. Combined with the wave-driven
+flow (`wf_flow = 2`), stripes in the current refract the waves, stripes in the wave height make
+stripes in the force, and those strengthen the current stripes: by this positive feedback,
+oblique stripes three to four cells long can grow with time in the quiet water offshore (they
+grow even without bed change). The wave action balance is an equation for a medium (depth and
+current) that varies slowly compared with the wavelength, and letting grid-scale current
+variations shorter than the wavelength act on the waves is outside that premise.
+
+A small background viscosity stops them: add a background viscosity to the zero-equation model
+of the [diffusion term](diffusion.md) (`f_diffusion_term = 2` and `p_diffusion_nu` = 0.05 m²/s
+or so in `&list_enc`). In wfsed of examples/delta (depth 2 m, period 6 s, Δx = 5 m) the stripes
+of the offshore velocity (rms of the deviation from the 3×3 mean), which more than double in
+3 hours, stay constant with ν0 = 0.05, while the velocity near the shoreline and the maximum of
+the river-mouth jet hardly change (−1%; developer.md §90.20, in Japanese).
+
 ### Cost and convergence
 
 With a current, the dispersion relation and the decomposition of the transport are recomputed
