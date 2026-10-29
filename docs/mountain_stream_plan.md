@@ -623,7 +623,7 @@ users_guide/sediment.md・massflow.md・geomorph.md、handoff.md 1n・1n2。
   Evaluation of bedload transport predictions using flow resistance equations to account for
   macro-roughness in steep mountain streams. *Water Resour. Res.*, 47, W08513.
   doi:10.1029/2011WR010645(2026-10-29 に利用者が提供した本文で確認。要点は §6.3)。
-- Stock & Dietrich (2006)(土石流による谷の侵食)は §12.9 で要旨の水準で確認した。
+- Stock & Dietrich (2006)(土石流による谷の侵食)は §12.9 に記載(2026-10-29 に本文で照合済み)。
 
 **本書の導出**: §4.3 の定常での被覆率と下刻速度、§4.4 の厳密伝播子の加法性と研磨の
 積分(固定した水理での局所の常微分方程式の解。結合系の厳密解ではない)。
@@ -986,7 +986,7 @@ np = 1, 2, 4 とリスタート往復を確かめ、文書(日英)・developer.m
 |---|---|---|---|
 | L1 | 抵抗則の底面せん断 τ_r = ρ_m h_t × (抵抗則の減速度)。f_dbres ごとに異なる | k (τ_r/τ_c − 1)^m | §6.1 の (i)。流水の剥離則(§4.2)の τ_b を混合体に置き換えたもの |
 | L2 | 準静的な駆動応力 τ_d = ρ_m g_e h_t tanθ(g_e = g cos²θ のとき ρ_m g h_t sinθ cosθ。定常の等流では抵抗に等しい) | k (τ_d/τ_c − 1)^m | Landlab MassWastingRunout の準静的の選択肢(対象は土層)、McGuire ら(2023)の流動深と勾配の則 |
-| L3 | 粒子の慣性応力 σ_i = ρ_s C (d \|V\|/h_t)² cosθ(Bagnold 型) | k σ_i^a(a = 1・0.5) | §6.1 の (ii)。Stock & Dietrich(2006)・Hsu ら(2008)の慣性応力の仮説、MassWastingRunout の既定(grain_shear) |
+| L3 | 粒子の慣性応力 σ_i = ρ_s C (d \|V\|/h_t)² cosθ(Bagnold 型) | k σ_i^a(a = 1・0.5) | §6.1 の (ii)。Stock & Dietrich(2006)・Hsu ら(2008)の慣性応力の仮説(応力の形は同論文の式 (11)・(15) と同じ。侵食則の形の違いは所見 2 の注)、MassWastingRunout の既定(grain_shear) |
 | L4 | 単位幅の固体流束 q_s = C \|V\| h_t = h_s \|V\| | β q_s | 流水の研磨 β q_b(§4.2)の土石流版(道具の量) |
 
 ### 12.4 単一イベントでの比較(2026-10-27。後処理。コードは変えていない)
@@ -1040,6 +1040,16 @@ np = 1, 2, 4 とリスタート往復を確かめ、文書(日英)・developer.m
    同じ係数で抵抗則を替えると急な区間が 2.1 → 40.9 cm(14 倍)になる。Stock & Dietrich(2006)・
    Hsu ら(2008)の衝突の機構が働く巨礫の前縁を、単層混合体は分離して表さない。そのため、
    (V/h)² が拾うのは数値の薄い層になる。
+   (2026-10-29 Stock & Dietrich 2006 の本文で確認: 同論文の則は長期の低下速度
+   −∂z/∂t ∝ f · L · [cosθ ν_s ρ_p D_e² (u_s/h)^w]^n ÷ 岩の抵抗(式 (14)・(15)。f は土石流の頻度、
+   L は粗い前縁の長さ、解析は n = 1・w = 2)で、1 回の低下量は L × σ_i に比例する。前縁が流速
+   u_s で通過する点でこれを時間積分の速度に直すと E ∝ u_s σ_i ∝ |V|³/h_t² になり、L3(E ∝ σ_i)
+   より速度に強く依存する(抵抗則の選び方で流速が変わる影響が大きくなる)ので、L3 を採らない
+   結論は変わらない(試算はしていない)。前縁(長さ L)の衝突が
+   侵食の担い手という同論文と Hsu ら 2008 の見方は、所見 6 の単層混合体の限界と同じ論点。
+   同論文の野外の推定では、前縁のバルクの静的垂直応力は数十 kPa、慣性応力はその 1〜2 桁
+   小さく、どちらも無傷の岩の引張強さより 10〜1000 倍小さい。岩塊の除去は巨礫の点荷重
+   (0.1〜10 MPa)による、と仮定して慣性応力を代理量に使う。)
 3. **L4 も滑らかで薄層に鈍い**(8〜11 %)。ただし閾値と陽な勾配を持たず、クーロン + Manning では
    急な区間に偏る(閾値なしの L2 の 2 倍)。流速を通して抵抗則に依存する。
 4. **閾値(1 kPa)の効き**: 侵食が勾配 0.2 以上の区間にほぼ限られ、0.1 以下はほぼ 0 になる。
@@ -1182,9 +1192,12 @@ np = 1, 2, 4 とリスタート往復を確かめ、文書(日英)・developer.m
   topographic signature. *Water Resour. Res.*, 39(4), 1089. doi:10.1029/2001WR001057
   (要旨で確認: 勾配–面積の逆べき則は勾配 0.03〜0.10 より急な所にはほとんど延びない)。
 - Stock, J. D. and Dietrich, W. E. (2006): Erosion of steepland valleys by debris flows.
-  *Geol. Soc. Am. Bull.*, 118(9/10), 1125–1148(要旨と二次的な紹介で確認: 低下速度を、
-  流れに沿った粒子衝突の固体の慣性垂直応力の積分と、上流の土石流の発生源の数に結びつける。
-  土石流の力学のパラメータ化は粗く、検証されていないと著者自身が述べる。式の形は未照合)。
+  *Geol. Soc. Am. Bull.*, 118(9/10), 1125–1148. doi:10.1130/B25902.1(2026-10-29 に利用者が
+  提供した本文で確認: 低下速度を、粗い前縁に沿った粒子衝突の固体の慣性垂直応力の積分
+  (式 (11)・(14)・(15))と、上流の土石流の発生源の数(谷の頻度 N_t/t_r。式 (17)・(18))に
+  結びつける。土石流の力学のパラメータ化は粗く、検証された則には遠いと著者自身が述べる。
+  合流点の下流で谷の勾配と岩の風化が急に下がるという観察(土石流を通す支流 = 合流角 60〜70°
+  未満)も同論文。§12.4 の所見 2 の注)。
 - Stock, J. D., Montgomery, D. R., Collins, B. D., Dietrich, W. E. and Sklar, L. S. (2005):
   Field measurements of incision rates following bedrock exposure: Implications for process
   controls on the long profiles of valleys cut by rivers and debris flows. *Geol. Soc. Am.
