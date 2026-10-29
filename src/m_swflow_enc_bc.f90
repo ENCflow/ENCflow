@@ -1175,9 +1175,9 @@ end function
 !----------------------------------------------------------------------
 ! 枠内セル (i, j) が区間流入の法線面を持つ外縁セルか(外縁の行・列にあり、
 ! その辺のセル別面型が e_bc_inflow。角セルは両辺を見る)。
-! 運動量保存形移流(adv_prepare_mc)がこのセルに接するエッジを移流の対象から
-! 外すために使う(§68.40)。bt_cell は全ランクが同じ list から構築するので
-! 判定は全ランク同値(ハロ行のセルも含む)。
+! 運動量保存形移流(adv_prepare_mc)が、このセルから区間の内側へ向かうエッジ
+! (bc_inflow_inward)を移流の対象から外すために使う(§68.40)。bt_cell は
+! 全ランクが同じ list から構築するので判定は全ランク同値(ハロ行のセルも含む)。
 ! 閉じた流入面(受け口係数 0 の角セル)も面型は e_bc_inflow のまま=真
 !----------------------------------------------------------------------
 module function bc_inflow_cell(i, j) result(r)
@@ -1188,6 +1188,39 @@ module function bc_inflow_cell(i, j) result(r)
   if (i == dcp%nx_g .and. bc_face_type(e_side_e, j) == e_bc_inflow) r = .true.
   if (j == 1        .and. bc_face_type(e_side_n, i) == e_bc_inflow) r = .true.
   if (j == dcp%ny_g .and. bc_face_type(e_side_s, i) == e_bc_inflow) r = .true.
+end function
+
+
+!----------------------------------------------------------------------
+! 枠内セル同士のエッジ (i, j)-(in, jn) が区間流入の外縁セルから区間の内側へ
+! 向かうか(§68.40 の改定。2026-10-29)。片方だけが区間流入の外縁セル c で、
+! c の流入面のどれかの辺について、もう片方 n をその辺へ射影した位置(西・
+! 東辺なら n の行、北・南辺なら n の列)の面が流入面のとき真 = 流入面から
+! 内側への法線エッジと、区間の幅の中の斜めエッジ。面に沿うエッジ(両端とも
+! 流入セル)と、区間の両端から区間の外へ出る軸・斜めエッジは偽。
+! 運動量保存形移流(adv_prepare_mc)がこのエッジだけ移流項を 0 にするために
+! 使う。bt_cell だけを読むので判定は全ランク同値(ハロ行のセルも含む)
+!----------------------------------------------------------------------
+module function bc_inflow_inward(i, j, in, jn) result(r)
+  integer, intent(in) :: i, j, in, jn
+  logical :: r
+  integer :: ic, jc, kn, ln
+
+  r = .false.
+  if (bc_inflow_cell(i, j) .eqv. bc_inflow_cell(in, jn)) return
+  if (bc_inflow_cell(i, j)) then
+    ic = i;  jc = j;  kn = in; ln = jn
+  else
+    ic = in; jc = jn; kn = i;  ln = j
+  end if
+  if (ic == 1 .and. bc_face_type(e_side_w, jc) == e_bc_inflow) &
+    r = r .or. bc_face_type(e_side_w, ln) == e_bc_inflow
+  if (ic == dcp%nx_g .and. bc_face_type(e_side_e, jc) == e_bc_inflow) &
+    r = r .or. bc_face_type(e_side_e, ln) == e_bc_inflow
+  if (jc == 1 .and. bc_face_type(e_side_n, ic) == e_bc_inflow) &
+    r = r .or. bc_face_type(e_side_n, kn) == e_bc_inflow
+  if (jc == dcp%ny_g .and. bc_face_type(e_side_s, ic) == e_bc_inflow) &
+    r = r .or. bc_face_type(e_side_s, kn) == e_bc_inflow
 end function
 
 

@@ -1,0 +1,59 @@
+!======================================================================
+! inflowadv: 流入区間の端の横溢(固定床。developer.md §68.40)
+!   西端の区間流入(列 1、行 4〜8、5 m3/s。inflow_dist = 2)の主水路は東辺へ自由流出。
+!   流入区間の南端の隣から、境界の列 i = 1 に沿って主水路より 0.5 m 低い側溝(南へ勾配
+!   0.05)が南辺の自由流出まで続く。面に沿うエッジや区間の外へ出るエッジの移流項を 0 に
+!   すると、側溝の最初のセルのエネルギー水頭が流入区間より高くなる(エネルギーを作る)
+!======================================================================
+&list_sysparam
+  f_gridsystem = 0
+  f_govequation = 0
+  dt = 0.05
+  t0 = 0
+  tt = 600
+  dt_disp = 600
+  dt_file = 60
+  dt_recrd = 60
+  fn_geoinfo = '-'
+  fn_initial = '-'
+  fn_enc = '-'
+  fn_boundary = '-'
+  dir_result = 'result_side'
+  f_state_save = 0
+  f_check_cfl = 1
+  f_out_vv = 1
+/
+
+&list_enc
+/
+
+&list_initial
+  f_htype = 1
+  fn_hinit = 'h_side.txt'
+/
+
+&list_geoinfo
+  nx = 16
+  ny = 20
+  dx = 2.0
+  dy = 2.0
+  f_ztype = 1
+  fn_z = 'z_side.txt'
+  f_rntype = 0
+  rn0 = 0.03
+/
+
+&list_bound_edge
+  f_bc_e = 1                ! 東辺(主水路の出口)は自由流出
+  f_bc_s = 1                ! 南辺(側溝の出口)は自由流出
+/
+&list_bound_inflow
+  inflow_cell(1:2,1,1) = 1, 4
+  inflow_cell(1:2,2,1) = 1, 5
+  inflow_cell(1:2,3,1) = 1, 6
+  inflow_cell(1:2,4,1) = 1, 7
+  inflow_cell(1:2,5,1) = 1, 8
+  inflow_val(1:2,1,1) = 0, 5.0
+  inflow_val(1:2,2,1) = 9999, 5.0
+  inflow_dist(1) = 2
+/

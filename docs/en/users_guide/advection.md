@@ -354,20 +354,36 @@ on outflow $`u_e`$ (no contribution).
   different from the offshore depth, the velocity on the sea-land edges
   grew to several times the land-side velocity and diverged by positive
   feedback).
-- **Edges touching an outer cell with a segment-inflow face get no
-  advection term either.** A cell with a normal face of
+- **Edges from an outer cell with a segment-inflow face into the section
+  get no advection term either.** A cell with a normal face of
   [segment inflow](boundary.md#segment-inflow-list_bound_inflow) (closed
   corner cells included) passes the whole segment discharge through a
   normal face of passing width 0.414 dx (the unit-width discharge is 2.4
   times the cell mean) and lacks the diagonal links outside the frame, so
   its cell-mean discharge is not consistent as the face flux of a control
-  volume. As for sea cells, the edges touching such a cell get a zero
-  advection term (developer.md §68.40; fix of a real behaviour in which,
-  in a straight channel of odd width between walls, the inflow
-  concentrated at the centre by the closure of the corner cells coupled
-  with the advection terms of the boundary row and self-excited a
-  discharge oscillation of 5-minute period. Only the inflow row is
-  affected, so uniform-flow and flood-wave results hardly change).
+  volume. The edges from such a cell into the section (the normal edges
+  from the inflow face inwards and the diagonal edges within the width of
+  the section) get a zero advection term (developer.md §68.40; fix of a
+  real behaviour in which, in a straight channel of odd width between
+  walls, the inflow concentrated at the centre by the closure of the
+  corner cells coupled with the advection terms of the boundary row and
+  self-excited a discharge oscillation of 5-minute period). The edges
+  along the inflow face (both ends inflow cells) and the edges that leave
+  the section at its two ends keep their advection term: on an edge
+  without it the velocity tends to the balance of surface gradient and
+  friction, so flow falling from the end of the section into a lower
+  cell beside it would exceed the velocity that energy conservation
+  allows (from 2026-10-24 to 29 all edges touching the inflow cells had a
+  zero advection term, and param_feed of examples/meander, whose capacity
+  feed fixes the bed of the inflow cells, stopped through scour of the
+  outer cell beside the section feeding a jet;
+  [test/inflowadv](../../../test/inflowadv/en/README.md)). With a uniform
+  inflow through a straight face the velocity on the edges along the face
+  is zero, so uniform-flow and flood-wave results hardly change. The
+  inflow, however, has no momentum on the first edge into the section and
+  spreads sideways more easily (in the mobile-bed meander example the
+  channel widens in the upstream reach); keep the reach of interest away
+  from the inflow section.
 - **The far donor of MUSCL.** If the cell beyond the $`u_\mathrm{upup}`$ edge
   is outside the domain or invalid, that face degrades to first-order
   upwind (reading 0 would give $`r \gg 1 \to \psi = 2`$, anti-diffusion, and

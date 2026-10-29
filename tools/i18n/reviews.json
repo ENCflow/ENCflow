@@ -113,9 +113,9 @@
     {
       "source": "docs/users_guide/advection.md",
       "target": "docs/en/users_guide/advection.md",
-      "source_sha256": "649c9f418f5886bbb9b9eed8aaf27a2e20af720564341aa11b6bfc0a19e98901",
-      "target_sha256": "09ab3d9aaf766cfbc89de79b305ce4b38d674c5f92bc16190629a630aff30cab",
-      "reviewer": "Claude (Claude Code session; compared the passages changed for f_opening_dynamic = 3 in the source and the translation line by line; rest unchanged since the previous record)",
+      "source_sha256": "62026665389b6442512a97892e39f628ae1516f30e0ae9c84bb7d909c3b7c406",
+      "target_sha256": "10ec5e362bea9e9dbdcc96b544d92d617d43cd0f01ada54a1e6af9a28096b97e",
+      "reviewer": "Claude (Claude Code session; compared the passage rewritten for the inflow-edge advection rule (§68.40 revision) in the source and the translation line by line; rest unchanged since the previous record)",
       "method": "assistant",
       "reviewed_on": "2026-10-29"
     },
@@ -1121,11 +1121,11 @@
     {
       "source": "test/README.md",
       "target": "test/README.en.md",
-      "source_sha256": "be8e52b4050d490141a8e4f9f7a6ab9ebcf8d7b0b2661c19768eceaac1a27a50",
-      "target_sha256": "a97384b7c3419d7f8668ec2f1373ffb3491c7ec4e0453531cc3c3bc4af956ebc",
-      "reviewer": "Claude (Claude Code session; full-text content and lexical review, no model execution)",
+      "source_sha256": "a65e8c435c27b2dfaf00973169721e1153f55e33c779cd81557af7196b526bcf",
+      "target_sha256": "5519ea691d49345ab80c74246d85139b29ae3c1fcda05eaa01dcaefda54b3339",
+      "reviewer": "Claude (Claude Code session; compared the added test/inflowadv row in the source and the translation; rest unchanged since the previous record)",
       "method": "assistant",
-      "reviewed_on": "2026-10-28"
+      "reviewed_on": "2026-10-29"
     },
     {
       "source": "test/avalanche/README.md",
@@ -1729,6 +1729,15 @@
       "reviewer": "Claude (Claude Code session; full-text content and lexical review, no model execution)",
       "method": "assistant",
       "reviewed_on": "2026-10-23"
+    },
+    {
+      "source": "test/inflowadv/README.md",
+      "target": "test/inflowadv/en/README.md",
+      "source_sha256": "29db4a841184b0cd90cb8c7159bd118dc105abb756d94dd7000470d9802dc947",
+      "target_sha256": "3126a2a04df4b09a21574d728c0a0787cf8788115ad2cf4104da0566cc1e7848",
+      "reviewer": "Claude (Claude Code session; wrote both files and compared the whole text, tables and values line by line)",
+      "method": "assistant",
+      "reviewed_on": "2026-10-29"
     },
     {
       "source": "test/kdpart/README.md",
