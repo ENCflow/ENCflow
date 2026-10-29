@@ -3013,7 +3013,7 @@ subroutine diagnose_cur(wf, p, g, s)
           s%wvex(i,j) = ex / en
           s%wvey(i,j) = -ey / en
         end if
-        s%wvae(i,j) = sqrt(2.0) * s%wvub(i,j) / sbar
+        if (sbar > 0.0) s%wvae(i,j) = sqrt(2.0) * s%wvub(i,j) / sbar   ! 極小のエネルギーの σ̄ = 0(§90.22)
         if (s%wv_asym) s%wvua(i,j) = asym_velocity(hrms, kbar, s%h(i,j), s%wvub(i,j), &
                                                    s%wv_facsk, s%wv_facas)
       end if
@@ -3071,7 +3071,8 @@ subroutine mean_dir_speed_cur(wf, g)
         ew = ew + em
       end do
       if (ex /= 0.0 .or. ey /= 0.0) wf%thm(i,j) = atan2(ey, ex)
-      if (ew > 0.0) then
+      ! 極小のエネルギーでは E_m k_m が FTZ(-Ofast)で 0 になり、Σ E_m > 0 でも k̄ = 0 になる(§90.22)
+      if (ew > 0.0 .and. kbar > 0.0) then
         wf%cph(i,j) = sbar / kbar
       else
         wf%cph(i,j) = wf%om / wf%kw(i,j)
