@@ -1478,6 +1478,13 @@ np=2 クリーン、release np=1,2,4 が逐次 reference と全列ビット一�
 誘引を確認。wave・chichibu・conduit・salt 全回帰 PASS(無効時
 ビット一致)。reference は解析解との一致を根拠に暫定コミット
 (2026-08-24 目視承認済み = 確定)。
+解析検定 test/pump/Check_pump.py(2026-10-29。handoff 00c): Run.sh・
+Run_MPI.sh が reference 比較の後段で呼び、全行の S_total = h0 − (Q1+Q2)t/A
+(相対 1e-9)と S_surf = max(h0 − Ks t, 0)(絶対 1e-12)、3600 s の Hg 分布
+(中央以外 h0 − Q1 t/A、中央はさらに Q2 t/Δx²。分布出力 f12.4 の丸め
+= 半量子 5e-5 の範囲)、画面の井戸ごとの需要 = 実取水 = Q t を照合する。
+CI(ci.yml の逐次・np=2、nightly の逐次・np=1,2,4・-Og -fcheck=all)で
+毎回走る。値をずらした結果で不合格になることを確認。
 
 ### 16.4 凍土による浸透抑制 m_gwflow_frost(f_gwfrost。2026-08-18 実装)
 
@@ -1520,6 +1527,12 @@ S_grnd(3600) = K·dt·(7200 − 7201/2) = 0.0179975 に**全 14 桁一致**
 release np=1,2,4 が逐次 reference と全列ビット一致、wave・chichibu・
 conduit・salt・pump 全回帰 PASS(無効時ビット一致)。reference は
 解析解一致を根拠に暫定コミット(2026-08-24 目視承認済み = 確定)。
+解析検定 test/frost/Check_frost.py(2026-10-29。handoff 00c): 離散解
+S_grnd(t_n) = K·dt·(n − n(n+1)/2N)(N = fro_fifull/ΔFI = 7200)を Log の
+全行で相対 1e-9(実測 1.2e-12 = 表示 14 桁の丸め)、S_surf = h0 − S_grnd・
+S_total = h0、Ff 分布(0・1800・3600 s で一様に 1・0.5・0)と 3600 s の Hg
+分布を f12.4 の丸めの範囲で照合する。Run.sh・Run_MPI.sh の後段で、CI でも
+毎回走る。
 
 ### 16.5 河床交換能 m_gwflow_bed(f_gwbed。2026-10-25 設計合意・実装)
 
@@ -5375,6 +5388,14 @@ CFPM2 型の閾値切替則(Darcy⇄Darcy-Weisbach)は f_gwc_fluxlaw=3 として
 - test/conduit の reference は暫定としてコミット済み(解析平衡との
   全桁一致が根拠)。規律1の趣旨により人間の目視確認をもって確定とする
   (2026-08-24 目視承認済み = 確定)。
+- **検定スクリプト**(2026-10-29。handoff 00c): test/conduit/Check_conduit.py。
+  A(Run.sh・Run_MPI.sh の後段。CI でも毎回走る): 全行の S_total = h0、
+  S_surf・S_grnd の単調な接近と平衡の行き過ぎなし(eq_inflow)、最終時刻の
+  h_eq・hgc_eq との表示全桁(絶対 1e-13)の一致、H・Hgc 分布の一様性。
+  B(Run_lat.sh・Run_lat_MPI.sh の後段): S_total = h0、Hgc・H 分布の点対称・
+  転置対称が表示桁で差 0、中心の被圧(Hgc > cap)。B の所要は現行の
+  逐次ビルドで 1 秒未満(README の「約 2.5 分」を訂正)、np=1,2,4 の全出力が
+  逐次とバイト一致。
 
 ### 46.5 拡張方針の決定(2026-08-23。実証実験 examples/qanat・examples/sewer_hybrid)
 
@@ -10860,6 +10881,13 @@ test/nhcurrent の構成(水路 200 m × 8 m、U0 = 0.5 m/s、静水圧)で切�
   水面形は厳密解に重なる。np = 2, 4 は逐次 reference と全有効桁の S 列
   3 行の最終桁(1e-15。総和の順序)以外一致。-fcheck=all の np=2(規定隆起・
   海底地滑りとも)でエラーなし。
+  (2026-10-29 追記)先頭波の現行値は ENC/理論 = 静水圧 1.038・NH 加速度項
+  なし 1.010・あり 1.009(その後の改定で変わり、README は 2026-10-24 に現行値へ
+  更新済み)。検定 test/nhbottom/Check_nhbottom.py(Run_theory.sh が 3 ケースを
+  実行して呼ぶ。numpy。handoff 00c)で、ENC/理論 NH 1 ± 0.02・静水圧 1 ± 0.05、
+  時刻差 ±0.6 s(実測 0.3〜0.4 s 早い = 振幅 2% の非線形性)、加速度項の
+  効果(あり / なしの η_max の比)が理論の比 0.8985 に ±1%(実測 0.8974)を
+  判定する。加速度項を外した結果を「あり」に置くと 2 項目が不合格になる。
 - **海底地滑り(f_bedslide との結合)**: examples/landslide_tsunami C の
   設定。加速度項の効果は近地で大きい(汀線直後の引き波 −3.0 → −2.3 m、
   斜面下端の押し波 2.0 → 1.0 m。土塊前面 1〜2 セルの底面変位を Kajiura

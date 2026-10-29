@@ -1391,9 +1391,9 @@
     {
       "source": "test/README.md",
       "target": "test/README.en.md",
-      "source_sha256": "050a603544c2d29f764c4eb385739780b30b5de29cc9aeb51540decfe8062e8a",
-      "target_sha256": "d0e1dc517a4e8417f0486c58963fe195f2c2d8f828ecff9c2460e5518563a5ce",
-      "reviewer": "Claude (Claude Code session; review of the changed lines against the previously recorded pair: the three added rows (sublattice, gwbed, bmi_vars) say the same in both, with the same verification labels; no model execution)",
+      "source_sha256": "5a65d242d83b2f77614ac586c45220c81cd7d5e7f7e572adfe94af6edf2349bd",
+      "target_sha256": "ee5ddf85a58ec6a75a22ebcfe57cecde94dd8c12ca6dcce8eb7dadea96662393",
+      "reviewer": "Claude (Claude Code session; full-text content and lexical review, no model execution)",
       "method": "assistant",
       "reviewed_on": "2026-10-29"
     },
@@ -1616,11 +1616,11 @@
     {
       "source": "test/conduit/README.md",
       "target": "test/conduit/en/README.md",
-      "source_sha256": "ce3e16573429250d119c0b7101a8af0c8e6ef9978966dfd1cc884619f7e74bc5",
-      "target_sha256": "37c52b7d0301da221ae4029435cb397f254787ad5abf87ed41d33e464a845bcd",
+      "source_sha256": "966c192f90a6db2fd4c8117f19d9b8cf3f20a93177c87d675d5e9d56da62565f",
+      "target_sha256": "3b434b74efe65b37f724bb3b8fc42de74a2b84f3c8599318242579b0546d6293",
       "reviewer": "Claude (Claude Code session; full-text content and lexical review, no model execution)",
       "method": "assistant",
-      "reviewed_on": "2026-10-24"
+      "reviewed_on": "2026-10-29"
     },
     {
       "source": "test/conduit/figs/equilibrium.png",
@@ -1850,11 +1850,11 @@
     {
       "source": "test/frost/README.md",
       "target": "test/frost/en/README.md",
-      "source_sha256": "df4d3379d1701a0a9d6ca608716bb16b5f564a271916813b2f3958a98f0b859e",
-      "target_sha256": "fd53717c8ad4f87fde77738bae47404732424afe81fd35c6ca5f9bbdbd5f3322",
+      "source_sha256": "bcbafbbd960a7f86c271c9497b32f138bd1e0ac2d5a05e7345eb381411da3b00",
+      "target_sha256": "771a67e77174e17b6f69e99a68da837410d3fc0f4a9203e2a49dbacb86c89bb1",
       "reviewer": "Claude (Claude Code session; full-text content and lexical review, no model execution)",
       "method": "assistant",
-      "reviewed_on": "2026-10-24"
+      "reviewed_on": "2026-10-29"
     },
     {
       "source": "test/frost/figs/frost.png",
@@ -2084,11 +2084,11 @@
     {
       "source": "test/nhbottom/README.md",
       "target": "test/nhbottom/en/README.md",
-      "source_sha256": "7b8c2a275dc4bf5e0885a488dcc9982e8147f7cfe5348997daf4a3c56e8b6212",
-      "target_sha256": "fe58310b092a4cb6fe816d4879041e202237d44f1e5101226e251d827679b3eb",
+      "source_sha256": "f2e25a4bcc1f7659afe0c1e27e4e738df66e62bab5a17dbfc1411a479ed1cc20",
+      "target_sha256": "9d27132b0b2a15736861b228568890cdb1cee7a70fbaf9e3e207f5244de15334",
       "reviewer": "Claude (Claude Code session; full-text content and lexical review, no model execution)",
       "method": "assistant",
-      "reviewed_on": "2026-10-24"
+      "reviewed_on": "2026-10-29"
     },
     {
       "source": "test/nhbottom/figs/landslide.png",
@@ -2255,11 +2255,11 @@
     {
       "source": "test/pump/README.md",
       "target": "test/pump/en/README.md",
-      "source_sha256": "f708d5c6f9c6e98056de0cb839005bbc5a52341e6c49c193f3d86669b0c345eb",
-      "target_sha256": "c6edd1943d2a64c586ee57b507dcad354bfc70b9c49e0272bc5211faba1e86dc",
+      "source_sha256": "ab2f783dd158b8b6e98bd6c789ccdb464b6cbd63548bd7c58dc00a232bad8609",
+      "target_sha256": "cd9c504598e3806f4264331570ef9733b1043add077b7dba4d801f18925ae10f",
       "reviewer": "Claude (Claude Code session; full-text content and lexical review, no model execution)",
       "method": "assistant",
-      "reviewed_on": "2026-10-24"
+      "reviewed_on": "2026-10-29"
     },
     {
       "source": "test/pump/figs/map.png",

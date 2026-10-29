@@ -144,11 +144,13 @@ architecture.md。このメモは「現在進行中・未完了の項目」だ�
      structure・channel・tide・boundary など)で、モデル・式・既定値の出典を
      plan 文書・developer.md から引き写すか、独自定式ならその旨を明記する
      (日英。list_*.f90 の既定値コメントとも整合させる)。
-   - 検定スクリプトの整備: 解析解があるのに reference 比較だけのケース
-     (pump・frost の線形解、conduit の解析平衡、nhbottom の規定隆起厳密解
-     など)に Check_*.py を足し、test/README.md の「検証」列を更新する。
-     benchmark 系(examples/benchmark の h-plane・v-shaped・v-valley)の
-     環境非依存テストへの昇格(§10)もここに含める。
+   - 検定スクリプトの整備: (済 2026-10-29)pump・frost・conduit・nhbottom に
+     Check_*.py を足し、test/README.md の「検証」列を ref・解析 にした(developer.md
+     §16.3・§16.4・§46.4・§69.10)。pump・frost・conduit A は Run.sh・Run_MPI.sh の
+     後段で走る(CI・nightly でも毎回。-Og -fcheck=all のビルドでも合格を確認)、
+     conduit B は Run_lat.sh、nhbottom は Run_theory.sh(3 ケース約 1.5 分。numpy)。
+     残り: benchmark 系(examples/benchmark の h-plane・v-shaped・v-valley)の
+     環境非依存テストへの昇格(§10)。
    - (済 2026-10-29)一貫性検査: List_samples ↔ namelist 宣言と test/README.md のケース一覧 ↔
      test/ ディレクトリの突合せを tools/consistency/check.py として i18n.yml に入れた
      (developer.md §35.1)。導入時に表に載っていなかった bmi_vars・gwbed・sublattice を足した。
