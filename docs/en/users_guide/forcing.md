@@ -86,7 +86,7 @@ Select how rainfall is given with `prtype`.
 | fn_maplist | "" | List of distribution file names (one file per line; prtype=3). **Paths inside the list are also relative to dir_data** (not relative to the list file) |
 | dt_maplist(_c) | 60 | Time interval of the distribution files (min) (prtype=3). `_c` takes a string with a unit (below) |
 | dt_mapunit(_c) | 0 | Specifies over how many minutes the values in the distribution files are accumulated rainfall (mm) (prtype=2, 3). With 0 (default), prtype=2 assumes one day (= mm/day) and prtype=3 assumes the file interval (accumulated mm between dt_maplist frames; with a 1-hour interval this equals mm/h). `_c` takes a string with a unit (below) |
-| runoff_rate | 1.0 | Runoff coefficient. Its target differs between prtype modes in the current implementation; see below. Use 1.0 with groundwater computation |
+| runoff_rate | 1.0 | Runoff coefficient. A factor on the given precipitation that scales both the precipitation passed to the water budget and the output Pr (the same in every prtype; below). Use 1.0 with groundwater computation or interception |
 
 **Time units**: the numbers `dt_prupdate`, `dt_maplist` and `dt_mapunit`
 are in minutes. `dt_maplist_c` and `dt_mapunit_c` take strings with a unit
@@ -108,13 +108,17 @@ checked there.
 /
 ```
 
-**Current `runoff_rate` behaviour**: with `prtype=1,2`, it scales the
-output rainfall field `prh`, but not the precipitation intensity `pre`
-passed to the water budget. With `prtype=3`, it scales `pre` when the map
-values are converted using `dt_mapunit`. It therefore cannot be treated
-as an identical reduction of actual precipitation in every mode. For
-the coupled chain shown here, keep the default `1.0` and adjust the input
-values when a change in precipitation itself is intended.
+**Runoff coefficient `runoff_rate`**: a constant factor on the given
+precipitation (prval or the map values converted to an intensity). In every
+prtype it scales both the precipitation intensity passed to the water budget
+and the output Pr in the same way. It is a simple treatment that subtracts the
+losses before the water reaches the ground all at once, so combined with
+models of infiltration, groundwater, interception and the like it counts the
+losses twice. For the coupled chain shown here, keep the default `1.0`. A value
+other than 1 is shown on the screen, for example
+`precip: runoff_rate = .50000 (applied to the rainfall and Pr)`. Before
+2026-10-29 it scaled only the output Pr with prtype = 1, 2 and only the water
+budget with prtype = 3 (developer.md §88.5).
 
 ```
 &list_precip                ! example: uniform 15 mm/h from minute 10 for 24 hours
@@ -129,7 +133,7 @@ values when a change in precipitation itself is intended.
 Worked examples of the format for all four types are in
 [examples/List_samples/list_precip.txt](../../../examples/List_samples/en/list_precip.txt).
 The rainfall intensity distribution can be output as `Pr0001` with
-`f_out_pre = 1`.
+`f_out_pre = 1` (in mm/h for every prtype).
 
 **Rainfall type guides** (rainfall is given data; as a starting point.
 Values vary by about a factor of 2 with region and return period)
@@ -143,7 +147,7 @@ Values vary by about a factor of 2 with region and return period)
 | Inundation mapping (maximum assumed scale) | 100+ (peak) | several hours | 300-1000 | prtype=1 hyetograph |
 | Snowmelt runoff | 0 (no rain) to 10 | daily | - | air temperature 5-10 degC via fn_meteo + fn_snow |
 
-**Outputs for this section**: the rainfall intensity field `Pr0001...` (`f_out_pre=1`; given precipitation × runoff rate). The total entering the domain is Σ(Pr × dt / 1000 × A), to be compared with the increase of S in the log ([Output and monitoring](#output-and-monitoring)).
+**Outputs for this section**: the rainfall intensity field `Pr0001...` (`f_out_pre=1`; mm/h; the liquid precipitation reaching the ground, that is, the given precipitation × runoff rate after the elevation correction, interception and the rain/snow split). The total entering the domain is Σ(Pr × dt / 1000 × A), to be compared with the increase of S in the log ([Output and monitoring](#output-and-monitoring)).
 
 ## Rainfall interception (&list_intercept)
 
@@ -184,7 +188,7 @@ model group). The equations and the basis of the defaults are in
 | Grassland / cropland | 0.05-0.1 | 0.3-0.5 |
 | Urban (initial loss as depression storage) | - | 1-2.5 (depression storage of impervious surfaces; SWMM convention) |
 
-**Outputs for this section**: no field or ledger of interception. `Pr0001...` is the value before interception, so the loss follows by difference: total precipitation − increase of S_total − evaporation. The canopy storage of the initial-loss model is saved in `intercept_initloss.dat` ([Output and monitoring](#output-and-monitoring)).
+**Outputs for this section**: no field or ledger of interception. `Pr0001...` is the value after interception (the part reaching the ground), so without snow the interception is the difference between the given precipitation (after the runoff rate and the elevation correction) and Pr. In a closed domain it also follows by difference: total given precipitation − increase of S_total − evaporation from other than the canopy (`ev_total_m3` − `ev_canopy_m3` of evap.csv). The canopy storage of the initial-loss model is saved in `intercept_initloss.dat` ([Output and monitoring](#output-and-monitoring)).
 
 ## Meteorological forcing field (&list_meteo)
 
@@ -317,7 +321,7 @@ The three ways a field gets written (automatic / flag / riding on a flag) and th
 
 | File | How | Contents |
 |---|---|---|
-| Pr0001... | f_out_pre = 1 | rainfall intensity (mm/h) = given precipitation × runoff_rate; before interception and the rain/snow split |
+| Pr0001... | f_out_pre = 1 | intensity of the liquid precipitation reaching the ground (mm/h): the given precipitation × runoff_rate after the elevation correction, interception and the rain/snow split (the liquid part); the same quantity as the precipitation entering the water budget |
 | Sw0001... | automatic (fn_snow) | snow water equivalent SWE (mm of water; geometric area basis) |
 
 Temperature, interception and evapotranspiration are not written as fields.
@@ -349,18 +353,21 @@ Temperature, interception and evapotranspiration are not written as fields.
 
 **How to read and check**
 
-- Precipitation check: water entering the domain = Σ(Pr × dt / 1000 × A).
-  In a closed domain it equals the increase of S_total × number of valid
-  cells × A plus `ev_total_m3` of evap.csv, apart from the interception
-  loss, which is the difference.
+- Precipitation check: liquid water reaching the ground = Σ(Pr × dt / 1000 × A)
+  (Pr is the value after interception and the rain/snow split). In a closed
+  domain without snow it equals the increase of S_total × number of valid
+  cells × A plus `ev_total_m3` − `ev_canopy_m3` of evap.csv (evaporation from
+  other than the canopy). The interception is the difference between the given
+  precipitation (after the runoff rate and the elevation correction) and Pr.
 - None of precipitation, interception, evapotranspiration or snow acts on
   the cells of the sea mask (fn_sw) (Pr is 0 over the sea, SWE stays 0,
   and no sea-surface evaporation is computed). The number of valid cells
   in the check above also excludes the sea cells ([Tide](tide.md)).
 - Check the rain/snow split by placing Sw next to Pr (between the
-  thresholds snow_t_snow / snow_t_rain the precipitation is split). Read
-  snowmelt as the decrease of Sw matched by the increase of S_surf; the
-  meltwater runs off as surface water.
+  thresholds snow_t_snow / snow_t_rain the precipitation is split; the part
+  that turns into snow is not in Pr and is added to Sw). Read snowmelt as the
+  decrease of Sw matched by the increase of S_surf; the meltwater runs off as
+  surface water (it does not appear in Pr).
 
 ## Summary of combination requirements
 

@@ -40,7 +40,7 @@ ENCエッジ計算で求めます**。この流量によって陸側の水深が
 | ti0 | 0 | titype=1: 一様固定潮位 (m。z と同じ標高基準)。既定 0 = 平均潮位 |
 | tival | — | titype=2, 3: 時系列 `(時刻(min), 潮位(m) または倍率)` |
 | fn_timap | "" | titype=3: 潮位分布ファイル (m) |
-| fn_timaplist / dt_timaplist(_c) | "" / 60 | titype=4: 分布ファイルリストと時間間隔 (min)。フレーム i の時刻は (i−1)×間隔、範囲外は端値保持 |
+| fn_timaplist / dt_timaplist(_c) | "" / 60 | titype=4: 分布ファイルリストと時間間隔 (min)。フレーム i の時刻は (i−1)×間隔、範囲外は端値保持。`dt_timaplist_c` は `"1h"`・`"30m"` のような単位付きの文字列で、**単位を省いた数値は分**(数値の dt_timaplist と同じ単位。[降水](forcing.md#降水list_precip)の `_c` と同じ)。両方を書くと `_c` が優先。採用値は `tide: dt_timaplist = 60.00000 min` のように表示 |
 | dt_tiupdate | 1 | 潮位の更新間隔 (min) |
 | hsea0 | 1.0 | 海セルの見かけ水柱厚 (m)(下記) |
 

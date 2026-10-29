@@ -14328,6 +14328,97 @@ handoff 00i(2026-10-26 発見)の修正。利用者の決定(2026-10-27): 降雨
   逐次・np = 2 とも reference と一致(prtype = 3 の分岐の中だけの変更)。prtype = 3 を
   使う既存のテスト・例題はない。
 
+### 88.5 流出率の適用先・prtype = 3 の出力 Pr の単位・潮位の dt_timaplist_c の単位(2026-10-29 決定・修正)
+
+handoff 00i の残り 2 件。利用者の決定(2026-10-29。提示した推奨案どおり):
+
+1. **流出率 runoff_rate は全 prtype で水収支と出力の両方に掛ける**。makepre が作る
+   降水強度 pre (m/s) と出力用の prh (mm/h) に同率で掛け、prh は常に pre を mm/h で
+   表した値(prh = pre × 3600 × 1000)にする。従来は prtype = 1・2 では prh だけ
+   (水収支には掛からない)、prtype = 3 では pre だけ(出力はファイルの値そのまま)に
+   掛かり、同じ係数がモードで別の意味になっていた(forcing.md に「現行実装」として
+   注記していた)。代案は (b) 出力だけに掛ける(prtype = 1・2 の旧挙動に揃える。係数が
+   水収支に効かず名前と合わない)、(c) 廃止(書いてある入力が停止する)。(a) を採った
+   理由: 名前どおり降水のうち流出に回る割合として水収支に効き、出力 Pr と水収支に入る
+   降水が常に一致する(Pr から降水量を検算できる)。
+   - 実装: prtype = 1・2 は換算係数 f に runoff_rate を掛けて(f = 1/1000/3600 ×
+     runoff_rate、1/1000/dt_mapunit × runoff_rate)pre = 値 × f、prh = pre × 3600 × 1000。
+     prtype = 3 は pre の式をそのまま(ファイルの値 / dt_mapunit / 1000 × runoff_rate)に
+     して prh = pre × 3600 × 1000 を足した。runoff_rate = 1(既定)では pre の演算に
+     1 を掛けるだけなので従来とビット一致する(乗算の順序によらず x × 1 = x)。
+   - 遮断・積雪・標高補正は従来どおり pre と prh に同率で作用するので、出力 Pr は
+     「地表に届く液体の降水 (mm/h)」(§31 の意味論)= 水収支に入る降水そのもの。
+     users guide(forcing.md・io.md)の「Pr は遮断・雨雪判定の前の値」は実装と合って
+     いなかった(実装は後の値)ので、この作業で直した。図 forcing_chain(日英)の
+     「モードごとの適用の違いは本文参照」も直して描き直した(docs/figs/make_guide_figs.py
+     forcing。Noto Sans CJK JP。字形は前回の作成環境と細部が違う)。
+   - 1 以外の値は画面に `precip: runoff_rate = .75000 (applied to the rainfall and Pr)` と
+     表示する(既定の 1 では出さない。挙動が変わった既存の入力に気づけるように)。
+     負値は従来どおり 0 に切り上げる。BMI の外部供給(§56)は従来どおり runoff_rate を
+     通らない(素の降水強度を与える契約)。
+   - s%pre を読む下流(地表流・VZ の浸透・遮断・積雪・SWI・水質の湿性沈着・地形の
+     雨滴侵食・面状侵食・溶食)は、どの prtype でも流出率の掛かった降水を見る
+     (prtype = 3 では従来から)。
+2. **prtype = 3 の出力 Pr は mm/h**(1. の帰結)。従来はファイルの値そのもの
+   (mm/dt_mapunit)で、dt_mapunit が 1 時間でないと mm/h にならなかった。
+3. **潮位の dt_timaplist_c の単位を省いた数値は分**(str2sec の default_unit = 60。
+   list_precip の `_c` と同じ「数値パラメータと同じ単位」の規約。§88.1)。従来は秒で、
+   `dt_timaplist_c = '1'` が 1 秒になっていた。採用値を `tide: dt_timaplist =
+   60.00000 min` のように表示する。
+
+互換性:
+
+- runoff_rate を書かない(= 1)構成は従来とビット一致。runoff_rate ≠ 1 の構成は、
+  prtype = 1・2 で水収支が runoff_rate 倍になり(従来は Pr だけ)、prtype = 3 で Pr が
+  mm/h の runoff_rate 倍になる(水収支は従来どおり)。prtype = 3 で f_out_pre = 1 の
+  構成は、runoff_rate = 1 でも dt_mapunit が 60 分でなければ Pr の値が変わる。
+- dt_timaplist_c に単位を省いた数値を書いた構成は、間隔が 60 倍になる。単位付きの
+  文字列と数値の dt_timaplist は変わらない。
+- リポジトリのテスト・例題・教材に runoff_rate ≠ 1、prtype = 3 の Pr 出力、titype = 4 の
+  構成はなかった。
+
+検定:
+
+- test/prmap に p1_rr・p2_rr・p3_rr(runoff_rate = 0.75、f_out_pre = 1、dt_file = 15 分)を
+  追加。S = 降水 × 流出率の積算(相対 1e-9)、Pr0000〜Pr0006 の全セル = その時刻の降水
+  強度 × 流出率 (mm/h。f12.4 の表示の丸めの範囲)、表示を確かめる。流出率は 0.75 に
+  した(0.5 だと p3_rr の Pr が 0.5 × 12 mm/h = ファイルの値 6 と偶然一致し、旧挙動と
+  区別できない)。変更前のコードでは 6 項目が不合格(p1_rr・p2_rr の S が 6.0・1.5 mm
+  = 流出率が水収支に掛からない、p3_rr の Pr がファイルの値の 6・12、表示 3 件)、
+  変更後は全項目が合格。既存の 9 構成と再開の Log は変更の前後でビット一致。
+- test/tide に構成 3・3'・3''(titype = 4。一様な分布 0・1・2 m を 1 分間隔に並べ、
+  構成 1 の系列 0 → 2 m と同じ折れ線にする。間隔は数値の 1 分・'1'・'60s')を追加。
+  3 つの結果がバイト一致、採用値の表示、構成 1 との S の一致(相対 1e-9。作成した環境
+  では Log.txt がビット一致)を確かめる。変更前のコードでは '1' が 1 秒になり構成 3' が
+  一致しない。titype = 4 を使う初めての検定(フレームの時刻 (i−1)·dt_timaplist と
+  隣接 2 枚の補間の検定を兼ねる)。
+
+確認(2026-10-29。変更前(HEAD)と変更後をどちらもクリーンビルドした release、
+gfortran 13.3 / Open MPI 4.1、-march=native = graniterapids):
+
+- reference を持つ全 36 ケースを逐次で回し、35 ケースが reference と一致。nhshelf は
+  §88.3 と同じ既知の作成環境との差で reference と最終桁がずれるが、変更の前後で出力が
+  バイト一致する(下)。
+- 降水を使う reference なしの検定 17 ケース(bendloss・bldgdebris・bmi_vars・debris・
+  driftwood・glacier・hillslope・icevap・nest_identity・nest_twin・rockfall・slide・
+  splashlc・splashslide・swi・wash・wetlw)と nhshelf を変更の前後のバイナリで回し、全出力
+  ファイルがバイト一致(保存の save_info.txt の保存時刻の行だけが違う)。bmi_vars・
+  nest_identity・nest_twin・nhshelf と hillslope(Run.sh がないので各 param を tt = 900 s
+  に縮めた)は、test の写しでは回らない(bmi/ や src のスタンプを参照する)ので木全体の
+  写しで回した。
+- MPI: test/prmap は np = 1・2・4 で全項目が合格し、Log.txt は全構成で逐次とバイト一致
+  (流出率の構成の Pr の出力も np = 4 と逐次でバイト一致)。test/tide は構成 1 が
+  np = 2・4 で reference と一致し、構成 3・3' は np = 2・4 で結果のディレクトリが逐次と
+  バイト一致。vzcol・vzzone は np = 2・4 で reference と一致。
+- -Og -fcheck=all のビルドで tide の構成 1・3・3' と prmap の流出率の 3 構成を逐次と
+  np = 2 で回し、範囲外アクセスなしで両者がバイト一致(構成 3 と構成 1 の Log.txt は
+  デバッグ版でもビット一致)。
+- トップレベルの make(utils のリンク)が通る。tools/params_index/check.py は 0 件。
+- 途中、作業ツリーの src に以前の検証で -march=cascadelake で作ったオブジェクトが
+  残っていて、差分ビルドの実行ファイルが混成になっていた(§87.4 の「FFLAGS だけの
+  変更は再ビルドを起こさない」の実例)。上の確認はすべてクリーンビルドでやり直した
+  もの。
+
 ## 89. 山地渓流の地形発達: 流水による岩盤下刻 f_rockinc(第 1 段)と深さ依存クリープ(第 2 段)(2026-10-27 合意・実装)
 
 作業ブランチでは §88 として書き、main への取り込み(2026-10-28)で §89 に付け替えた(main に先に

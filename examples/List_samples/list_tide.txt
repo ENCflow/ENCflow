@@ -42,5 +42,5 @@
   ! titype=4: 潮位分布ファイルリスト(1行1ファイル名)と時間間隔
   !fn_timaplist = 'tide_maps.txt'
   !dt_timaplist = 60        ! (min)
-  !dt_timaplist_c = '1h'    ! 文字列指定(h, m, s)。指定時はこちらが優先
+  !dt_timaplist_c = '1h'    ! 文字列指定(d, h, m, s。単位を省いた数値は分)。指定時はこちらが優先
 /
