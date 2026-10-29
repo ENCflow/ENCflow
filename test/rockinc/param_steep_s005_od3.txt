@@ -1,0 +1,61 @@
+!======================================================================
+! rockinc: 急勾配の等流と Manning 閉じの τ_b(構成 steep_s005_od3。docs/mountain_stream_plan.md T9)
+!   幅 5 セルの直線水路(両岸は乾いた +2 m の地盤)に勾配 0.05 の等流(Manning の等流水深
+!   0.3 m、n = 0.04)を置き、セル値の τ_b = ρ g n² V² / h^{1/3}(岩盤下刻・掃流砂と同じ閉じ)を
+!   等流の釣り合い ρ g h tanθ・ρ g h sinθ cosθ と比べる(Check_rockinc.py steep。記録)。
+!   地形変化は計算しない(水理だけ)。動的振り替えは f_opening_dynamic = 3(塞がりを局所の
+!   平面からの盛り上がりで測る。developer.md §68.41)で、比が 1 ± 0.5 % なら合格。
+!======================================================================
+&list_sysparam
+  f_gridsystem = 0
+  f_govequation = 0
+  dt = 0.02
+  t0 = 0
+  tt = 200
+  dt_disp = 50
+  dt_file = 200
+  dt_recrd = 200
+  fn_geoinfo = '-'
+  fn_initial = '-'
+  fn_enc = '-'
+  fn_boundary = '-'
+  dir_result = 'result_steep_s005_od3'
+  f_check_cfl = 1
+  f_output_mode = 2         ! bil(単精度)
+  f_out_vv = 1
+/
+
+&list_enc
+  f_opening_dynamic = 3     ! 塞がりを局所の平面からの盛り上がりで測る(既定 2 との差 = §68.41 の補正)
+/
+
+&list_initial
+  f_htype = 1
+  fn_hinit = 'hsteep.txt'
+  v0 = 2.505181             ! Manning の等流流速(make_init.py qsteep 0.05)
+/
+
+&list_geoinfo
+  lx = 7.0
+  ly = 60.0
+  nx = 7
+  ny = 60
+  f_ztype = 1
+  fn_z = 'zsteep_s005.txt'
+  f_rntype = 0
+  rn0 = 0.04
+/
+
+&list_bound_edge
+  f_bc_s = 1                ! 南辺は自由流出
+/
+&list_bound_inflow
+  inflow_cell(1:2,1,1) = 2, 1
+  inflow_cell(1:2,2,1) = 3, 1
+  inflow_cell(1:2,3,1) = 4, 1
+  inflow_cell(1:2,4,1) = 5, 1
+  inflow_cell(1:2,5,1) = 6, 1
+  inflow_val(1:2,1,1) = 0, 3.757772
+  inflow_val(1:2,2,1) = 9999, 3.757772
+  inflow_dist(1) = 0
+/

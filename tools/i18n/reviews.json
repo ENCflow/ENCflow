@@ -113,11 +113,11 @@
     {
       "source": "docs/users_guide/advection.md",
       "target": "docs/en/users_guide/advection.md",
-      "source_sha256": "ac7f3156be8b4bc58f0925cf65e50b08be26af45f54b745202c392e2c86b3a8f",
-      "target_sha256": "41c9284ad2940cd84ef2ce0e5806a17005a46db4fbfbda7d750719dee0e3753b",
-      "reviewer": "Claude (Claude Code session; full-text content and lexical review, no model execution)",
+      "source_sha256": "649c9f418f5886bbb9b9eed8aaf27a2e20af720564341aa11b6bfc0a19e98901",
+      "target_sha256": "09ab3d9aaf766cfbc89de79b305ce4b38d674c5f92bc16190629a630aff30cab",
+      "reviewer": "Claude (Claude Code session; compared the passages changed for f_opening_dynamic = 3 in the source and the translation line by line; rest unchanged since the previous record)",
       "method": "assistant",
-      "reviewed_on": "2026-10-24"
+      "reviewed_on": "2026-10-29"
     },
     {
       "source": "docs/users_guide/bedmotion.md",
@@ -266,11 +266,11 @@
     {
       "source": "docs/users_guide/geomorph.md",
       "target": "docs/en/users_guide/geomorph.md",
-      "source_sha256": "467d03fb637a3d4954621fcaa356dbf488d7cf688dcc54aa3c8fe9789d00cde7",
-      "target_sha256": "1be2c81688227763f27f669425afeae6fa323e3bffdc7cf65a6eed9ef21ff9a3",
-      "reviewer": "Claude (Claude Code session; full-text content and lexical review, no model execution)",
+      "source_sha256": "43fddf4805a179e92cc285ed15d8ee47f42d73139b19b1a3c41d601fcb8c72e2",
+      "target_sha256": "ad54e0cf38d87133ae6582e44ee1730a4cc3ad18777017a2f57dce942497367a",
+      "reviewer": "Claude (Claude Code session; compared the passages changed for f_opening_dynamic = 3 in the source and the translation line by line; rest unchanged since the previous record)",
       "method": "assistant",
-      "reviewed_on": "2026-10-28"
+      "reviewed_on": "2026-10-29"
     },
     {
       "source": "docs/users_guide/glacier.md",
@@ -437,11 +437,11 @@
     {
       "source": "docs/users_guide/swflow.md",
       "target": "docs/en/users_guide/swflow.md",
-      "source_sha256": "4984cc766d45359c9e4b3d0f1b50efe55279536f97f158ff7616fadfbe334c65",
-      "target_sha256": "e7338f34d8443db8be976998749875dc02160e8db7869a1c4e118116d683ee33",
-      "reviewer": "Claude (Claude Code session; full-text content and lexical review, no model execution)",
+      "source_sha256": "3abe9347c55ce4b8acd64629f4e075aef8d4ce688d0b8be4902d5c686b438bb0",
+      "target_sha256": "3f3244f36bfb2ba62f7f1f14c72d774dfb0bf1ecda5df79493f29de45cc69a52",
+      "reviewer": "Claude (Claude Code session; compared the passages changed for f_opening_dynamic = 3 in the source and the translation line by line; rest unchanged since the previous record)",
       "method": "assistant",
-      "reviewed_on": "2026-10-28"
+      "reviewed_on": "2026-10-29"
     },
     {
       "source": "docs/users_guide/swi.md",
@@ -590,11 +590,11 @@
     {
       "source": "examples/List_samples/list_enc.txt",
       "target": "examples/List_samples/en/list_enc.txt",
-      "source_sha256": "0dc6b4a6a087c01862249b0a4520f934a3c8d8bc37708855c6b43cc223b8135c",
-      "target_sha256": "1f7fe43bcadb3e24685f5f48ce5b5166f15d6499c50052f6222cd7dac2cd1687",
-      "reviewer": "Claude (Claude Code session; full-text content and lexical review, no model execution)",
+      "source_sha256": "ee450d4887d6c86f18b51e941a829de4bc443e3c882d860d7fdbd5668d36bfb8",
+      "target_sha256": "5960397304c46b3b12862feeea0ac363653a08a969bcf4be79b586d1a71ac87e",
+      "reviewer": "Claude (Claude Code session; compared the passages changed for f_opening_dynamic = 3 in the source and the translation line by line; rest unchanged since the previous record)",
       "method": "assistant",
-      "reviewed_on": "2026-10-28"
+      "reviewed_on": "2026-10-29"
     },
     {
       "source": "examples/List_samples/list_evap.txt",
@@ -2021,11 +2021,11 @@
     {
       "source": "test/rockinc/README.md",
       "target": "test/rockinc/en/README.md",
-      "source_sha256": "ced1a269e9e85881aa6e7bda0b857fd6b578e072280c4702629b9572be4d5967",
-      "target_sha256": "64fd4f637de9e12c58c56884ba08bf78d1279965744e1e0ed54220b9bab75a11",
-      "reviewer": "Claude (Claude Code session; mechanical renumbering of the developer.md section references §88 -> §89 in both files, checked by script that the lines differ only in those numbers and that both files carry the same references; rest unchanged since the previous record)",
+      "source_sha256": "06db4bc83f8bfbc8f56d0b50536a76ea102eb21511e906c869b1bcbbab4a7071",
+      "target_sha256": "0fb29dfd4e897d5565bda6258cb86a124f9c093890f2129f19dbfb079760e422",
+      "reviewer": "Claude (Claude Code session; compared the passages changed for f_opening_dynamic = 3 in the source and the translation line by line; rest unchanged since the previous record)",
       "method": "assistant",
-      "reviewed_on": "2026-10-28"
+      "reviewed_on": "2026-10-29"
     },
     {
       "source": "test/salt/README.md",
@@ -2282,11 +2282,11 @@
     {
       "source": "test/uniflow/README.md",
       "target": "test/uniflow/en/README.md",
-      "source_sha256": "d35e2a30e263fa704f419a916783589cf88c393ea8f8367039ee596218479186",
-      "target_sha256": "06f4705e658a7017ff0218b384f331f34dc6e4a71f8a1eb6f1a8d4a48091ff89",
-      "reviewer": "Claude (Claude Code session; mechanical renumbering of the developer.md section references §88 -> §89 in both files, checked by script that the lines differ only in those numbers and that both files carry the same references; rest unchanged since the previous record)",
+      "source_sha256": "2a963eb15c6960585805d0ab815b5cbe7ddaf2a9c90c43dbb47dda1bdd72952f",
+      "target_sha256": "cee513f34bb55dbc5eec6587992996ab94dbd0b7a71230eff4e6ee76d223e654",
+      "reviewer": "Claude (Claude Code session; compared the passages changed for f_opening_dynamic = 3 in the source and the translation line by line; rest unchanged since the previous record)",
       "method": "assistant",
-      "reviewed_on": "2026-10-28"
+      "reviewed_on": "2026-10-29"
     },
     {
       "source": "test/volcano/README.md",

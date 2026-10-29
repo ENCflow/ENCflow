@@ -454,7 +454,9 @@ listed in the [shallow water chapter](swflow.md).
   diagonal passage widths make the axis edge velocity about 2.4 times the
   cell velocity, which amplifies the acceleration and deceleration by the
   advection term (scheme 3 in particular). Reassigning the blocked shares to
-  the open edges removes this.
+  the open edges removes this. In steep, shallow flows the default 2 also
+  counts the upslope ground of a uniform slope as blocking and makes the flow
+  too fast; use 3 (blockage measured above the local plane) there.
 - `f_dry_head_cap`: the pressure term stops water from climbing onto dry
   ground above the water surface, but where the advection term wins, water
   can leak over at bore fronts and in incised channels. Capping the edge

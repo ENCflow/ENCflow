@@ -7,16 +7,19 @@
 # cover_rt1 → rt2(全域で土層 0 の save の復元と往復。f_rockinc なしの rt2_off は
 # 従来どおり停止)、uplift(T8 隆起下の定常縦断形)、box(T4 閉じた箱の保存)、
 # t11_*(T11 谷頭の給砂の下の定常縦断形と土砂収支)を
-# Check_rockinc.py で検定し、steep_*(T9 急勾配の等流の τ_b。記録のみ)を表にする。
+# Check_rockinc.py で検定し、steep_*(T9 急勾配の等流の τ_b。f_opening_dynamic = 2・0 は記録、
+# 3 の steep_*_od3 は合否つき)と sheet_*(T10 面状流の τ_b の向き。記録のみ)を表にする。
 # reference は持たない(解析解・保存則・バイト一致で判定)。
-# 実行後の save_*/ は save_*_serial/ にも複製する(Run_MPI.sh のバイト比較用)
+# 実行後の save_*/ は save_*_serial/ に、result_steep_s020_od3・result_sheet_d45_od3 は
+# result_*_serial/ にも複製する(Run_MPI.sh のバイト比較用)
 sdir=$(dirname "$(readlink -f "$0")")
 ../Scripts/Check_mode.sh serial || exit 1
 
 cfgs1="cover cover_dtg cover_mf cover_rt1"
 cfgs2="cover_rt2 pluck pluck_mf5 pluck_mf20 pluck_rt1 pluck_rt2 hump_r02 hump_r05 hump_r08 hump_r12 uplift box"
 cfgs3="t11_r02 t11_r05 t11_r08 t11_r05a"
-steep="steep_s001 steep_s005 steep_s010 steep_s020 steep_s020_od0"
+steep="steep_s001 steep_s005 steep_s010 steep_s020 steep_s020_od0 steep_s001_od3 steep_s005_od3 steep_s010_od3 steep_s020_od3"
+sheet="sheet_d00 sheet_d45 sheet_d00_od3 sheet_d45_od3"
 set -o pipefail
 for c in $cfgs1; do
     ./encflow param_$c.txt | tee Screen_$c.log || exit 1
@@ -34,7 +37,7 @@ else
     rc=1
 fi
 set -o pipefail
-for c in $cfgs2 $cfgs3 $steep; do
+for c in $cfgs2 $cfgs3 $steep $sheet; do
     ./encflow param_$c.txt | tee Screen_$c.log || exit 1
 done
 set +o pipefail
@@ -47,6 +50,7 @@ python3 "$sdir/Check_rockinc.py" uplift || rc=1
 python3 "$sdir/Check_rockinc.py" t11 || rc=1
 python3 "$sdir/Check_rockinc.py" box Screen_box.log || rc=1
 python3 "$sdir/Check_rockinc.py" steep || rc=1
+python3 "$sdir/Check_rockinc.py" sheet || rc=1
 
 # リスタート往復(T5): 通し(save_pluck・save_cover)と分割(save_pluck_rt・save_cover_rt。
 # 後者は全域で土層 0 の save からの継続)
@@ -70,6 +74,9 @@ fi
 for d in save_cover save_cover_dtg save_cover_mf save_pluck save_pluck_mf5 save_pluck_mf20 \
          save_hump_r02 save_hump_r05 save_hump_r08 save_hump_r12 save_uplift save_box \
          save_t11_r02 save_t11_r05 save_t11_r08 save_t11_r05a; do
+    rm -rf ${d}_serial && cp -r $d ${d}_serial
+done
+for d in result_steep_s020_od3 result_sheet_d45_od3; do
     rm -rf ${d}_serial && cp -r $d ${d}_serial
 done
 

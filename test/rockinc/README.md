@@ -28,13 +28,14 @@ j 方向の帯界面を横切る)、勾配 0.01、n = 0.04、等流水深 0.3 m(
 | T8 隆起下の定常縦断形 | `param_uplift.txt` | U = 1e-5 m/s の一様隆起、出口のセルだけ隆起も侵食もしない(`upmap.txt`・`rockmap_up.txt` = 0 = 基準面の固定)。裸岩から剥離だけ(k_p = 6e-6 m/s、H* = 5 cm)、morfac = 50(地形の時間 7.5e4 s) | j = 15〜58 で、定常性 max\|dz/dt\| < 0.02 U、局所の釣り合い B_p/(U dts) = 1 ± 0.02、勾配が等流の準解析解(E_p0(S)(1 − q_j/q_c(S)) = U、q_j = (1 − λ) U Δy j)と 5 % 以内、下流ほど急になる傾きが 2 % 以内 |
 | T11 谷頭の給砂の下の定常縦断形(C1) | `param_t11_r02.txt`・`r05`・`r08`・`r05a` | T8 に、北端の流入セルへの一定の給砂 q_in = r q_c0(`inflow_qb`。r = 0.2・0.5・0.8、q_c0 = 1.81e-3 m²/s は勾配 0.01 の等流の容量の概算)を加える。r05a は研磨(β = 0.005 1/m)も入れる。地形の時間 1.5e5 s | j = 15〜58 で、定常性 max\|dz/dt\| < 0.02 U、勾配が等流の準解析解((E_p0(S) + β q_j)(1 − q_j/q_c(S)) = U、q_j = q_{j−1} + (1 − λ)Δy E_p0(S)(1 − q_j/q_c(S))、q_0 = q_in)と 5 % 以内、土砂収支 Σ(z − z0)A = 隆起 − 研磨 + (給砂 − 開境界の流出)/(1 − λ) が相対 1e-8(流出は developer.md §89.12 の台帳) |
 | T5 リスタート往復 | `param_pluck_rt1.txt` → `param_pluck_rt2.txt` | pluck を裸岩から 150 s で保存し 300 s まで継続 | 通し計算と state.dat・geomorph_rockinc.dat がバイト一致 |
-| T9 急勾配の等流(記録) | `param_steep_s001.txt` … `param_steep_s020.txt`、`param_steep_s020_od0.txt` | 幅 5 セルの水路で勾配 0.01〜0.2 の等流(地形変化なし)。od0 は動的振り替えなし | セル値の τ_b = ρ g n² V²/h^{1/3} と等流の釣り合いの比を表にする(合否なし) |
+| T9 急勾配の等流 | `param_steep_s001.txt` … `param_steep_s020.txt`、`param_steep_s020_od0.txt`、`param_steep_s001_od3.txt` … `param_steep_s020_od3.txt` | 幅 5 セルの水路で勾配 0.01〜0.2 の等流(地形変化なし)。od0 は動的振り替えなし、od3 は f_opening_dynamic = 3(塞がりを局所の平面から測る。developer.md §68.41) | セル値の τ_b = ρ g n² V²/h^{1/3} と等流の釣り合いの比。既定の 2 と od0 は記録、od3 は水路中央・壁際の列とも 1 ± 0.5 % |
+| T10 面状流の向き(記録) | `param_sheet_d00.txt`・`param_sheet_d45.txt` と `_od3` | 勾配 0.05 の平面(`z_sheet_d00.txt`・`z_sheet_d45.txt`)に一様な降雨 100 mm/h の面状流。0°(60 × 12、流れが格子の軸に沿う)と 45°(60 × 60、対角に沿う)、f_opening_dynamic = 2 と 3 | 流下距離 L = 10〜50 m の τ_b を、等流の面状流(q = r L)と局所の釣り合い ρ g h S と比べて表にする(合否なし) |
 
 | ファイル | 内容 |
 |---|---|
-| `make_init.py` | 地形・初期水深・裸岩の分布・急勾配の水路・侵食性倍率の生成(定数は `param*.txt`・`Check_rockinc.py` と対で保守) |
-| `Check_rockinc.py cover / pluck / hump / uplift / box LOG / t11 / steep` | 上の判定。水理は bil(単精度)、H = sd・z・Ri は save(倍精度)から読む |
-| `Run.sh` / `Run_MPI.sh N` | 全構成の実行と検定。MPI は逐次の save(`save_*_serial`)とバイト比較 |
+| `make_init.py` | 地形・初期水深・裸岩の分布・急勾配の水路・面状流の平面・侵食性倍率の生成(定数は `param*.txt`・`Check_rockinc.py` と対で保守) |
+| `Check_rockinc.py cover / pluck / hump / uplift / box LOG / t11 / steep / sheet` | 上の判定。水理は bil(単精度)、H = sd・z・Ri は save(倍精度)から読む |
+| `Run.sh` / `Run_MPI.sh N` | 全構成の実行と検定。MPI は逐次の save(`save_*_serial`)と、f_opening_dynamic = 3 の steep_s020_od3・sheet_d45_od3 の出力(`result_*_serial`)とバイト比較 |
 
 ## 実行
 
@@ -84,6 +85,14 @@ python3 make_init.py z > zinit.txt   # 入力の再生成(同梱。変更した�
   (ただし壁際の列の比は 0.66 に落ちる = 通水能の低下)。ずれは粗度・フルード数によらず勾配(格子幅 ×
   勾配 / 水深)で決まり、塞がり率が一様斜面の上流側の地盤を部分的な壁と数えるため
   (developer.md §89.4)。
+- T9 の f_opening_dynamic = 3(2026-10-29 追加。developer.md §68.41): 水路中央は 1.0000〜1.0001、
+  壁際の列は 0.9999、中央の V / V_Manning(h) は 1.0000(勾配 0.01〜0.2。水深は等流水深 0.300 m)で
+  合格。
+- T10(記録): 面状流の τ_b / 等流の τ(q = r L)と τ_b / ρ g h S は、L = 10〜50 m で
+  0° が 2 では 1.25〜1.27・1.34〜1.38、3 では 0.99〜1.00・0.96〜0.99、45° が 2 では 1.13〜1.18・
+  1.29〜1.34、3 では 0.91〜0.95・0.95〜0.99。3 では向きによらず局所の釣り合いに近い。45° の
+  τ_b / 等流の τ が 1 より小さいのは、H・V から求めた単位幅流量が r L の 0.91〜0.93 倍になる
+  向きの性質による(2 でも同じ。未調査)。
 
 ## 所見
 

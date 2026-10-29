@@ -10,6 +10,8 @@
 #     (5) 射流の区間流入(構成 w1_sc。勾配 S_SC、developer.md §89.25): (1)(2) に加えて、
 #         流入セルの水深・流速が等流区間の平均と ±TOL_IN で一致(流入面の水深の床が
 #         流れの水深を超えない)
+#     (6) f_opening_dynamic = 3(塞がりを局所の平面から測る。developer.md §68.41。構成
+#         w{1,5}_on3)も (1)(2) と、Manning に全行で 1 ± TOL_MAN で一致(河道の性質を保つ)
 import sys, os, math
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 from make_init import NX, NY, DX, S, N, H0, Q_UNIT, X1, X2, rows, S_SC, H_SC
@@ -71,5 +73,16 @@ print("(2) W=1 sc  断面流量 Σ V h dy / Q = %.5f (±%.0e) : %s" % (qsum / Q_
 print("(5) W=1 sc  射流の区間流入(Fr = %.2f、h/h_n = %.4f): 流入セルの h/h_u = %.4f、V/V_u = %.4f (±%.0f%%) : %s"
       % (fr, hrow[0] / H_SC, h1 / hrow[0], v1 / vrow[0], 100 * TOL_IN, "PASS" if g5 else "FAIL"))
 ok = ok and g1 and g2 and g5
+# (6) f_opening_dynamic = 3
+for W in (1, 5):
+    hrow, vrow, slope, qsum, _, _ = section(W, "on3")
+    g1 = abs(slope / S - 1.0) < TOL_SLOPE
+    g2 = abs(qsum / (Q_UNIT * W) - 1.0) < TOL_Q
+    hr = max(abs(x / HN - 1.0) for x in hrow); vr = max(abs(x / VN - 1.0) for x in vrow)
+    g6 = hr < TOL_MAN and vr < TOL_MAN
+    print("(6) W=%d on3 水面勾配 %.5f、断面流量比 %.5f、Manning 一致: max|h/h_n − 1| = %.4f, "
+          "max|V/V_n − 1| = %.4f (tol %.3f) : %s" % (W, slope, qsum / (Q_UNIT * W), hr, vr, TOL_MAN,
+                                                     "PASS" if g1 and g2 and g6 else "FAIL"))
+    ok = ok and g1 and g2 and g6
 print("=== uniflow checks %s ===" % ("PASS" if ok else "FAIL"))
 sys.exit(0 if ok else 1)

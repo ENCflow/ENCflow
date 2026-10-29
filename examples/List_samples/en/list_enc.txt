@@ -79,13 +79,17 @@
   !f_opening_dynamic = 2    ! dynamic reassignment of blocked openings
                             !   (0: off, 1: edges between channel cells only
                             !   (inactive without fn_rw), 2: all edges =
-                            !   default).
+                            !   default, 3: all edges, with the blockage
+                            !   measured above the local plane).
                             !   Passage-width shares that cannot be used
                             !   because the diagonal neighbour's ground is
                             !   above the water surface are reassigned to
                             !   the open edges every step (fixes the reduced
                             !   conveyance of 1-cell channels / wall-side rows
-                            !   and the amplified damping of scheme 3)
+                            !   and the amplified damping of scheme 3). 2 also
+                            !   counts the upslope ground of a uniform slope as
+                            !   blocking, so use 3 for steep mountain streams
+                            !   and sheet flow on hillslopes (developer.md §68.41)
   !p_adv_upwind_index = 0.5 ! upwinding index of the advection term (0-1.
                             !   0: central difference, 1: first-order upwind)
   !f_diffusion_term = 0     ! diffusion term (0: none, 1: constant viscosity,
