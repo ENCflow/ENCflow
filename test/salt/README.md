@@ -4,7 +4,7 @@
 
 淡水・塩水を密度の違う 2 つの層として扱う塩水モジュール(`fn_salt`、
 [ユーザーガイドの塩水の章](../../docs/users_guide/salt.md)、developer.md §47)の
-検定です。5 つの模式実験からなります。
+検定です。7 つの模式実験からなります。
 
 1. **模式実験 A**(`param.txt`、reference あり): 一様水深 1 m の閉じた
    プールの左 10 列を塩水(厚さ 1 m)にして仕切りを外す「ロック交換」。
@@ -27,6 +27,12 @@
 5. **模式実験 C3**(`param_exch_dtg.txt`、`Run_exch.sh`): C2 を地下水の更新間隔
    `dt_gwflow = 2 s`(4 ステップに 1 回)で。地下の塩水の処理が側方流と同じ
    ステップ・同じ刻みで同期することの確認(§47.7)。
+6. **模式実験 D1・D2**(`param_wall_bank.txt`・`param_wall_sea.txt`、`Run_wall.sh`):
+   地表の底層重力流と仮想壁。西の陸(z = 0)の水は全層塩水(界面 +1.2 m)、東の
+   河道・海側(z = −3 m)は淡水で、水面は水平(1.2 m)、壁の天端は +2 m(D1 = 堤防
+   bank0、D2 = 海岸堤防 seawall0)。塩水を動かしうるのは重力流だけで、界面が天端より
+   低いので壁を越えない(§47.8)。解析的な終状態: 陸 Hss = 1.2、河道・海側 Hss = 0、
+   H は不変(2026-10-29 以前は重力流が壁を見ず、約 98 % の塩水が壁を越えた)。
 
 ## 構成
 
@@ -46,8 +52,9 @@
 
 | ファイル | 内容 |
 |---|---|
-| `Run.sh` / `Run_MPI.sh N` | A の回帰テスト(Log.txt、ULP = 0)。`Run.sh` は続けて `Run_exch.sh`(C1〜C3)も実行する |
+| `Run.sh` / `Run_MPI.sh N` | A の回帰テスト(Log.txt、ULP = 0)。`Run.sh` は続けて `Run_exch.sh`(C1〜C3)と `Run_wall.sh`(D1・D2)も実行する |
 | `Run_sea.sh` | B の実行(result_sea/) |
+| `Run_wall.sh` / `Check_wall.py` | D1・D2 の実行と検定(倍精度の保存状態 save_wall_*/ を読む) |
 | `Run_exch.sh` / `Check_exch.py` | C1〜C3 の実行と検定(倍精度の保存状態 save_exch_*/ を読む) |
 | `Fig.py` | 下の図 `figs/salt.png` |
 
@@ -55,10 +62,11 @@
 
 ```bash
 make
-./Run.sh          # A: reference と比較(続けて C1〜C3 の検定)
+./Run.sh          # A: reference と比較(続けて C1〜C3・D1・D2 の検定)
 ./Run_MPI.sh 4
 ./Run_sea.sh      # B(数秒)
 ./Run_exch.sh     # C1〜C3 の実行と Check_exch.py の検定(数秒)
+./Run_wall.sh     # D1・D2 の実行と Check_wall.py の検定(数秒)
 python3 Fig.py    # figs/salt.png(引数 en で英語版を en/figs/ に)
 ```
 
@@ -86,6 +94,7 @@ python3 Fig.py    # figs/salt.png(引数 en で英語版を en/figs/ に)
 | C2: 窪地の地表水の Hss/H | 0.999(f_salt_exch=0 では 0) | Check_exch PASS(≥ 0.99) |
 | C2: 塩水体積 | 2 時間で 0.02 % 減 | Check_exch PASS(\|比 − 1\| < 1e-3) |
 | C3: 同上(dt_gwflow = 2 s) | Hss/H 0.998、塩水体積 0.03 % 減 | Check_exch PASS |
+| D1・D2: 陸 / 河道・海側の Hss、H | 1.2 / 0 を全桁、H 不変(修正前は陸 0.001〜0.028・河道 1.18) | Check_wall PASS |
 
 - 塩水 zone の乾燥判定・過大流出抑制は側方流動と同じ飽和帯厚単位
   (b = hgs/sy)で書かれています(柱状量単位だと sy 倍保守的になり
@@ -98,8 +107,8 @@ python3 Fig.py    # figs/salt.png(引数 en で英語版を en/figs/ に)
   いました(dt を小さくしてもほとんど減らない)。修正後は B の Hgs が全セルで
   Hg = 0.5000 に一致し、C2 の減少は 0.02 % です。
 - MPI np = 1, 2, 4 の Log はバイト一致、リスタート往復(saltwater.dat)も
-  一致します(§47.3)。C1〜C3 も np = 1, 2, 4 が逐次と Log.txt・保存状態まで
-  バイト一致します(§47.5・§47.7)。井戸揚水による海水の誘引は developer.md §16.3 の
+  一致します(§47.3)。C1〜C3・D1・D2 も np = 1, 2, 4 が逐次と Log.txt・保存状態まで
+  バイト一致します(§47.5・§47.7・§47.8)。井戸揚水による海水の誘引は developer.md §16.3 の
   派生実験に記録があります。
 
 ## 関連文書

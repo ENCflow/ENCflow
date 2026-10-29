@@ -7,7 +7,7 @@
 Checks of the salt-water module, which treats fresh water and salt water as
 two layers of different density (`fn_salt`; [the salt-water chapter of the
 users guide](../../../docs/en/users_guide/salt.md), developer.md §47). It
-consists of five schematic experiments.
+consists of seven schematic experiments.
 
 1. **Schematic experiment A** (`param.txt`, with a reference): a "lock
    exchange" in which the 10 leftmost columns of a closed pool of uniform
@@ -40,6 +40,16 @@ consists of five schematic experiments.
    the groundwater update interval `dt_gwflow = 2 s` (once every 4 steps). It
    checks that the subsurface salt processing is synchronised with the lateral
    flow at the same steps and with the same time step (§47.7).
+6. **Schematic experiments D1 and D2** (`param_wall_bank.txt`,
+   `param_wall_sea.txt`, `Run_wall.sh`): the bottom gravity current of the
+   surface salt layer and virtual walls. The water on the western land
+   (z = 0) is entirely salt (interface +1.2 m), the eastern river / sea side
+   (z = −3 m) is fresh, the water surface is level (1.2 m) and the wall crest
+   is +2 m (D1 = levee bank0, D2 = seawall seawall0). Only the gravity current
+   could move the salt water, and since the interface is below the crest it
+   does not cross the wall (§47.8). Analytical final state: land Hss = 1.2,
+   river / sea side Hss = 0, H unchanged (before 2026-10-29 the gravity current
+   ignored the walls and about 98 % of the salt water crossed).
 
 ## Configuration
 
@@ -59,8 +69,9 @@ consists of five schematic experiments.
 
 | File | Contents |
 |---|---|
-| `Run.sh` / `Run_MPI.sh N` | Regression test of A (Log.txt, ULP = 0). `Run.sh` then also runs `Run_exch.sh` (C1–C3) |
+| `Run.sh` / `Run_MPI.sh N` | Regression test of A (Log.txt, ULP = 0). `Run.sh` then also runs `Run_exch.sh` (C1–C3) and `Run_wall.sh` (D1, D2) |
 | `Run_sea.sh` | Run of B (result_sea/) |
+| `Run_wall.sh` / `Check_wall.py` | Run and check of D1 and D2 (reads the double-precision saved states save_wall_*/) |
 | `Run_exch.sh` / `Check_exch.py` | Run and check of C1–C3 (reads the double-precision saved states save_exch_*/) |
 | `Fig.py` | The figure `en/figs/salt.png` below (`python3 Fig.py en`; `figs/salt.png` is the Japanese version) |
 
@@ -68,10 +79,11 @@ consists of five schematic experiments.
 
 ```bash
 make
-./Run.sh          # A: compare with the reference (then the C1–C3 checks)
+./Run.sh          # A: compare with the reference (then the C1–C3, D1 and D2 checks)
 ./Run_MPI.sh 4
 ./Run_sea.sh      # B (a few seconds)
 ./Run_exch.sh     # C1–C3 with the Check_exch.py check (a few seconds)
+./Run_wall.sh     # D1 and D2 with the Check_wall.py check (a few seconds)
 python3 Fig.py en # en/figs/salt.png
 ```
 
@@ -103,6 +115,7 @@ with the sea it is 0.5000 m in every cell, agreeing with the analytical value
 | C2: Hss/H of the surface water in the hollow | 0.999 (0 with f_salt_exch=0) | Check_exch PASS (≥ 0.99) |
 | C2: salt-water volume | 0.02 % decrease in 2 hours | Check_exch PASS (\|ratio − 1\| < 1e-3) |
 | C3: the same (dt_gwflow = 2 s) | Hss/H 0.998, salt-water volume 0.03 % decrease | Check_exch PASS |
+| D1, D2: Hss on land / river or sea side, H | 1.2 / 0 to all digits, H unchanged (before the fix: land 0.001–0.028, river 1.18) | Check_wall PASS |
 
 - The dry-cell test and the excess-outflow reduction of the salt zone are
   written in the same saturated-thickness unit (b = hgs/sy) as the lateral
@@ -120,9 +133,9 @@ with the sea it is 0.5000 m in every cell, agreeing with the analytical value
   helped). After the fix Hgs in B equals Hg = 0.5000 in every cell, and the
   decrease in C2 is 0.02 %.
 - The Logs of MPI np = 1, 2, 4 are byte-identical, and the restart round
-  trip (saltwater.dat) also agrees (§47.3). C1–C3 at np = 1, 2, 4 are
-  also byte-identical to the serial run down to Log.txt and the saved states
-  (§47.5, §47.7). Pumping-induced seawater
+  trip (saltwater.dat) also agrees (§47.3). C1–C3, D1 and D2 at np = 1, 2, 4
+  are also byte-identical to the serial run down to Log.txt and the saved
+  states (§47.5, §47.7, §47.8). Pumping-induced seawater
   intrusion is recorded in the derivative experiment of developer.md §16.3.
 
 ## Related documents

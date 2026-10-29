@@ -21,7 +21,9 @@ module m_saltwater
   !   なり 2 zone の式に厳密一致)。地表は SWE が合計を動かし、塩水層は
   !     (c) swflow_enc のスカラー移流フック(分担率 α)による輸送
   !     (d) 底層重力流(Manning 型・駆動水頭 Φs = η + εζ の拡散型
-  !         1 方程式。摩擦支配の近似。方針 §0 の「SWE+1方程式拡散」の内側)
+  !         1 方程式。摩擦支配の近似。方針 §0 の「SWE+1方程式拡散」の内側)。
+  !         各エッジの敷居(両セルの高い方の河床、堤防・海岸堤防の仮想壁の
+  !         天端)より上の塩水だけが越える(§47.8)
   !   で動く((d) は交換流なので h には触れない)。
   !
   ! 【毎ステップの処理(run_main で gwflow の後・wq の前)】
@@ -72,7 +74,7 @@ module m_saltwater
   !  restore 時に自ファイルが無ければ par_stop(契約5)
   ! =====================================================================
   use m_sysparam, only : t_sysparam
-  use m_geoinfo, only : t_geoinfo
+  use m_geoinfo, only : t_geoinfo, zbank_min
   use m_state, only : t_state
   use m_gwflow_lateral, only : t_gwlat, t_latlayer, gwflow_lateral_geom_init, &
                                gwflow_lateral_geom_get, gwflow_lateral_layer1_get
@@ -444,7 +446,14 @@ subroutine surf_gravity_current(sl, g, s, dts)
   integer :: i, j, k, in, jn, jt, isub, nsub
   real :: hmax(1), sum_fac, dcoef, dt_lim, dtsub
   real :: pc, pn, zc, zn, hup, hse, dp, gq, dh_up, dh_rcv, cap_rcv, dhg
+  real :: zsill, zbup
+  logical :: have_bank, have_swall
   character(len=256) :: msg
+
+  ! 仮想壁の天端(堤防: 河道セル持ちの g%zbank、海岸堤防: 陸側セル持ちの
+  ! g%zswall。どちらも帯+ハロ。§47.8)。確保されていなければ壁なし
+  have_bank = allocated(g%zbank)
+  have_swall = allocated(g%zswall)
 
   ! --- 分割数(全ランク同一。hss=0 なら何もしない) ---
   hmax(1) = 0.0
@@ -481,7 +490,8 @@ subroutine surf_gravity_current(sl, g, s, dts)
     ! --- ループ1: エッジ流量(書き手はハロ行 je+1 まで冗長計算) ---
     jt = min(dcp%je + 1, dcp%jeh)
     !$omp parallel do schedule(static) &
-    !$omp   private(i, j, k, in, jn, pc, pn, zc, zn, hup, hse, dp, gq, dh_up, dh_rcv, cap_rcv)
+    !$omp   private(i, j, k, in, jn, pc, pn, zc, zn, hup, hse, dp, gq, dh_up, dh_rcv, cap_rcv, &
+    !$omp           zsill, zbup)
     do j = dcp%js, jt
       do i = g%wx(1,j), g%wx(2,j)
         if (g%x(i,j) <= 0) cycle
@@ -499,9 +509,32 @@ subroutine surf_gravity_current(sl, g, s, dts)
                 if (pc /= pn) then
                   if (pc > pn) then
                     hup = s%hss(i,j)
+                    zbup = s%z(i,j)
                   else
                     hup = s%hss(in,jn)
+                    zbup = s%z(in,jn)
                   end if
+                  ! エッジの敷居 = 両セルの高い方の河床。河道と堤内地の境は堤防の
+                  ! 天端、海側と陸の境は海岸堤防の天端でも上げる(浅水流の壁と同じ
+                  ! セル対の取り方)。越えられるのは上流側の塩水層のうち敷居より
+                  ! 上の部分だけ(§47.8)。敷居が上流側の河床より高いときだけ
+                  ! 削るので、平坦・下り勾配のエッジは従来と同値
+                  zsill = max(s%z(i,j), s%z(in,jn))
+                  if (have_bank) then
+                    if (g%rw(i,j) > 0 .and. g%rw(in,jn) <= 0) then
+                      if (g%zbank(i,j) > zbank_min) zsill = max(zsill, g%zbank(i,j))
+                    else if (g%rw(in,jn) > 0 .and. g%rw(i,j) <= 0) then
+                      if (g%zbank(in,jn) > zbank_min) zsill = max(zsill, g%zbank(in,jn))
+                    end if
+                  end if
+                  if (have_swall) then
+                    if (g%ssw(i,j) > 0 .and. g%ssw(in,jn) <= 0) then
+                      if (g%zswall(in,jn) > zbank_min) zsill = max(zsill, g%zswall(in,jn))
+                    else if (g%ssw(in,jn) > 0 .and. g%ssw(i,j) <= 0) then
+                      if (g%zswall(i,j) > zbank_min) zsill = max(zsill, g%zswall(i,j))
+                    end if
+                  end if
+                  if (zsill > zbup) hup = max(hup - (zsill - zbup), 0.0)
                   if (hup > sl%sw%eps) then
                     hse = min(0.5 * (s%hss(i,j) + s%hss(in,jn)), hup)
                     dp = pc - pn

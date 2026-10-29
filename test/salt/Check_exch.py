@@ -51,42 +51,47 @@ def relerr(a, v):
     return max(abs(x - v) for x in a) / v
 
 
-ok = True
+def main():
+    ok = True
 
-# --- C1: 浸透の淡塩配分(解析終状態) ---
-s = load("save_exch_in")
-expect = {"h": 0.7, "hss": 0.1, "hg": 0.3, "hgs": 0.3}
-for k, v in expect.items():
-    err = relerr(s[k], v)
+    # --- C1: 浸透の淡塩配分(解析終状態) ---
+    s = load("save_exch_in")
+    expect = {"h": 0.7, "hss": 0.1, "hg": 0.3, "hgs": 0.3}
+    for k, v in expect.items():
+        err = relerr(s[k], v)
+        good = err < 1e-12
+        ok &= good
+        print(f"C1 {k:4s}: min {min(s[k]):.15f} max {max(s[k]):.15f} (analytical {v})"
+              f"  rel.err {err:.1e}  {'PASS' if good else 'FAIL'}")
+    tot = [a + b for a, b in zip(s["hss"], s["hgs"])]
+    err = relerr(tot, 0.4)
     good = err < 1e-12
     ok &= good
-    print(f"C1 {k:4s}: min {min(s[k]):.15f} max {max(s[k]):.15f} (analytical {v})"
-          f"  rel.err {err:.1e}  {'PASS' if good else 'FAIL'}")
-tot = [a + b for a, b in zip(s["hss"], s["hgs"])]
-err = relerr(tot, 0.4)
-good = err < 1e-12
-ok &= good
-print(f"C1 salt volume Hss+Hgs = {max(tot):.15f} (initial 0.4)  rel.err {err:.1e}  {'PASS' if good else 'FAIL'}")
+    print(f"C1 salt volume Hss+Hgs = {max(tot):.15f} (initial 0.4)  rel.err {err:.1e}  {'PASS' if good else 'FAIL'}")
 
-# --- C2・C3: 湧出の淡塩配分(窪地の水の塩水割合と塩水体積の保存) ---
-with open("data_salt/hgs0_slope.txt") as f:
-    hgs0 = [float(x) for x in f.read().split()]
-for tag, savedir in (("C2", "save_exch_out"), ("C3", "save_exch_dtg")):
-    s = load(savedir)
-    pond = [i for i, z in enumerate(s["z"]) if z < -0.25]      # 窪地(z = −0.5)
-    hp = sum(s["h"][i] for i in pond)
-    sp = sum(s["hss"][i] for i in pond)
-    frac = sp / hp
-    good = frac >= 0.99
-    ok &= good
-    print(f"{tag} pond: H {hp / len(pond):.4f} m, Hss {sp / len(pond):.4f} m, "
-          f"Hss/H = {frac:.4f} (>= 0.99; 0 without f_salt_exch)  {'PASS' if good else 'FAIL'}")
-    v0 = sum(hgs0)
-    v1 = sum(s["hss"]) + sum(s["hgs"])
-    good = abs(v1 / v0 - 1.0) < 1e-3
-    ok &= good
-    print(f"{tag} salt volume: initial {v0:.6f}, final {v1:.6f} (ratio {v1 / v0:.6f}; "
-          f"|ratio - 1| < 1e-3)  {'PASS' if good else 'FAIL'}")
+    # --- C2・C3: 湧出の淡塩配分(窪地の水の塩水割合と塩水体積の保存) ---
+    with open("data_salt/hgs0_slope.txt") as f:
+        hgs0 = [float(x) for x in f.read().split()]
+    for tag, savedir in (("C2", "save_exch_out"), ("C3", "save_exch_dtg")):
+        s = load(savedir)
+        pond = [i for i, z in enumerate(s["z"]) if z < -0.25]      # 窪地(z = −0.5)
+        hp = sum(s["h"][i] for i in pond)
+        sp = sum(s["hss"][i] for i in pond)
+        frac = sp / hp
+        good = frac >= 0.99
+        ok &= good
+        print(f"{tag} pond: H {hp / len(pond):.4f} m, Hss {sp / len(pond):.4f} m, "
+              f"Hss/H = {frac:.4f} (>= 0.99; 0 without f_salt_exch)  {'PASS' if good else 'FAIL'}")
+        v0 = sum(hgs0)
+        v1 = sum(s["hss"]) + sum(s["hgs"])
+        good = abs(v1 / v0 - 1.0) < 1e-3
+        ok &= good
+        print(f"{tag} salt volume: initial {v0:.6f}, final {v1:.6f} (ratio {v1 / v0:.6f}; "
+              f"|ratio - 1| < 1e-3)  {'PASS' if good else 'FAIL'}")
 
-print("=== Check_exch PASS ===" if ok else "=== Check_exch FAIL ===")
-sys.exit(0 if ok else 1)
+    print("=== Check_exch PASS ===" if ok else "=== Check_exch FAIL ===")
+    sys.exit(0 if ok else 1)
+
+
+if __name__ == "__main__":
+    main()

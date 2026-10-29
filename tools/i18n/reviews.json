@@ -2102,9 +2102,9 @@
     {
       "source": "test/salt/README.md",
       "target": "test/salt/en/README.md",
-      "source_sha256": "72cd10ac92b59beaa60fc7a35e29ac09576daec977f8a2fe64fbf8c96c6dc547",
-      "target_sha256": "86e683f0f8240db8e62eb255fef3d056f055d65ee29123cb1eff407e261d8d14",
-      "reviewer": "Claude (Claude Code session; reviewed the changed sections of the Japanese source against the English mirror; figures from the same results with label changes only, 2026-10-29)",
+      "source_sha256": "d545824df8cfdb3b9b6626484118a4ee9cb80fc3f495392f2162acccd9ba7368",
+      "target_sha256": "b2b2839daeb99b0773efd96e31d90a5e3146d4464d1d00ad98140888a0b1438f",
+      "reviewer": "Claude (Claude Code session; reviewed the changed sections of the Japanese source against the English mirror, 2026-10-29)",
       "method": "assistant",
       "reviewed_on": "2026-10-29"
     },
