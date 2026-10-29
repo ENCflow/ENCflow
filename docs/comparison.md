@@ -16,7 +16,7 @@ buildup-washoff+積雪+長期地形変動+流木+家屋破壊・瓦礫+非静水
 |---|---|---|---|---|
 | **ENCflow** | (本プロジェクト) | 無償 | 全公開 | 基本方針は developer.md §0。AI エージェント向け整備を同梱(§3)。CSDMS BMI 2.0 対応(bmi-tester 合格。optional アダプタで本体は依存ゼロのまま。2026-08-29) |
 | RRI | ICHARM/土研 | 無償 | 公開(独自条件) | 著作権表示義務・商用は許可制。iRIC 版ソルバも公開 |
-| iRIC (Nays2DFlood 等) | iRIC 団体 | 無償 | 主要ソルバ公開 | GUI+ソルバ群の基盤 |
+| iRIC (Nays2DFlood・Nays2DH 等) | iRIC 団体 | 無償 | 主要ソルバ公開 | GUI+ソルバ群の基盤 |
 | Morpho2DH | 竹林(京大防災研)/iRIC | 無償 | 非公開(iRIC 経由配布) | Morpho2D(平面2次元河床変動)+土石流・泥流。砂防堰堤等の構造物考慮 |
 | HEC-RAS 2D | 米陸軍 USACE | 無償 | 非公開 | 実務標準の一つ。流域水文は HEC-HMS が分担 |
 | LISFLOOD-FP 8 | Bristol 大 | 無償 | 公開(GPL) | サブグリッド河道・GPU |
@@ -24,6 +24,7 @@ buildup-washoff+積雪+長期地形変動+流木+家屋破壊・瓦礫+非静水
 | SFINCS | Deltares | 無償 | 公開(GPLv3。GitHub Deltares/SFINCS。Fortran) | 複合洪水(高潮・波・降雨・河川)向けの簡約浅水モデル。局所慣性方程式(移流項は任意)+サブグリッド地形+四分木格子、GPU(OpenACC)。HydroMT-SFINCS で入力を自動構築、Delft Dashboard・FloodAdapt と連携。Leijnse ら(2021)、van Ormondt ら(2025) |
 | TELEMAC-2D (+GAIA) | EDF 主導 | 無償 | 公開(GPLv3) | 非構造 FE/FV。土砂は GAIA。流域水文なし |
 | Delft3D FM | Deltares | カーネル無償 | カーネル公開(GPLv3) | GUI は無償配布だがライセンス管理あり。土砂 MOR・水質 WAQ を含む |
+| Delft3D 4(Delft3D-FLOW・WAVE ほか) | Deltares | カーネル無償 | カーネル公開(2011 年から。GPLv3) | 構造格子(曲線直交)の系統で、後継が Delft3D FM。2011 年に FLOW・MOR・WAVE のソースを公開(WAQ は後から)。WAVE の計算部は SWAN。GUI は別途入手(販売元 Deltares Systems)。Lesser ら(2004) |
 | MIKE 21 / MIKE SHE | DHI | 有償 | 非公開 | 統合水文(SHE)は積雪含め最も網羅的。水質は ECO Lab |
 | TUFLOW | BMT | 有償 | 非公開 | 無償デモは 10 万セル・10 分制限 |
 | Iber | UPC/GEAMA 等 | 無償 | 非公開(EULA・再配布禁止) | 水質・生息場・流木(IberWood)・GPU 版 |
@@ -44,10 +45,17 @@ buildup-washoff+積雪+長期地形変動+流木+家屋破壊・瓦礫+非静水
 | COMCOT | Cornell 大(Liu)ほか | 無償 | 開発者経由配布 | 津波の発生〜遡上(ネスト格子)。Okada 変形・時間依存変形 |
 | JAGURS | JAMSTEC・馬場ほか | 無償 | 公開(GitHub) | 津波(分散・地球の弾性応答)。並列。時間依存の海底変形 |
 | TUNAMI | 東北大 | 無償 | 開発者経由配布 | 津波の伝播・遡上の標準コードの一つ。初期水位方式 |
+| MOST(ComMIT) | NOAA PMEL(NCTR) | 無償 | 条件付き配布(ComMIT 経由。PMEL の書面許可なしの再配布は不可) | 米国の津波予報の現業モデル(Titov & Synolakis 1998)。A/B/C の 3 段の入れ子格子(一方向) |
 | SWASH | TU Delft | 無償 | 公開(GPL) | 多層非静水圧の波浪・津波・沿岸 |
 | FUNWAVE-TVD | Delaware 大 | 無償 | 公開(GitHub) | Boussinesq 型波浪(ソリトン分裂・砕波) |
 | NHWAVE | Delaware 大 | 無償 | 公開(GitHub) | σ座標の 3D 非静水圧。地滑り津波の発生に実績 |
 | NEOWAVE | Hawaii 大 | — | 非公開 | 1 層非静水圧の津波モデル(ENCflow と同じ 1 層近似) |
+| XBeach | Deltares・UNESCO-IHE(現 IHE Delft)・TU Delft・Miami 大(USACE の資金) | 無償 | 公開(CSDMS の登録では LGPL) | 嵐による砂浜・砂丘・砂州島の変形(Roelvink ら 2009)。定常・サーフビート(波群)・非静水圧の 3 モードで、波・流れ・漂砂・地形変化を一体に解く |
+| SWAN | TU Delft | 無償 | 公開(GPL) | 第 3 世代のスペクトル波浪モデル(風による発達・白波砕波・非線形相互作用。Booij ら 1999)。Delft3D-WAVE の計算部で、ADCIRC とも密結合する(SWAN+ADCIRC) |
+| HISWA | TU Delft | — | 未確認 | 定常・浅海の短峰波の波浪推算モデル(流れのある場を含む。Holthuijsen ら 1989)。現在の配布は確認できず |
+| SnapWave | Roelvink ら(IHE Delft・Deltares) | 無償 | 公開(GitHub。ライセンス未確認) | 定常・陰解法の高速な波浪変形(屈折・浅水変形、砕波と底面摩擦の散逸。Roelvink ら 2025)。SFINCS と結合し、XBeach の定常解法・Delft3D FM・ShorelineS でも使われる |
+| CMS(CMS-Flow・CMS-Wave) | USACE ERDC(CHL) | 無償 | 公開(GitHub erdc/cms2d。ERDC 独自の許諾) | 入り江・航路向けの沿岸モデル。CMS-Flow(浅水の流れ・土砂・地形変化)と CMS-Wave(スペクトル波浪変形)。USACE の沿岸の推奨モデルの一つ |
+| ADCIRC | Luettich(UNC)・Westerink(Notre Dame 大)ほか | 無償 | 公開(LGPLv3。GitHub) | 非構造三角格子の有限要素法による 2D/3D の循環モデル。米国の高潮評価で広く使われる。SWAN と密結合(SWAN+ADCIRC) |
 | VolcFlow | Clermont-Ferrand 大(Kelfoun) | 無償 | 開発者経由配布 | 火山質量流(岩屑なだれ・火砕流・溶岩)。二層版で地滑り津波 |
 | SOBEK | Deltares | 有償 | 非公開 | 1D-2D 水理+構造物(Delft3D FM Suite へ統合) |
 | SWMM | 米 EPA | 無償 | 公開(パブリックドメイン) | 都市排水の管路網(1D)。2D 地表との結合は各社製品が担う |
@@ -55,11 +63,16 @@ buildup-washoff+積雪+長期地形変動+流木+家屋破壊・瓦礫+非静水
 | MODFLOW(+SWI2 / SEAWAT) | USGS | 無償 | 公開 | 3D 地下水の標準。SWI2 で鋭利界面、SEAWAT で変密度 |
 | SUTRA | USGS | 無償 | 公開 | 変密度・変飽和の地下水流動・輸送 |
 | FEFLOW | DHI | 有償 | 非公開 | 3D 地下水・熱・物質輸送(変密度) |
+| HYDRUS-1D | Šimůnek(UC Riverside)・PC-Progress ほか | 無償 | 一部公開(2009 年版の計算部のソースだけ。最新版は非公開) | 鉛直 1 次元の変飽和の水分移動(Richards)・溶質・熱の輸送(Šimůnek ら 2013)。パブリックドメインとして配布。2D/3D 版(HYDRUS 2D/3D)は有償 |
 | MOLASSES / Q-LavHA | USF / VUB | 無償 | 公開 | 溶岩流のセルオートマトン・確率論系 |
 | MAGFLOW / LavaSIM | INGV / 日本(日高ほか) | — | 非公開(要確認) | 温度結合の溶岩流モデル |
 | LAHARZ | USGS | 無償 | 公開 | ラハールの到達範囲の経験則(GIS) |
 | Badlands / FastScape | Sydney 大 / GFZ | 無償 | 公開 | プロセス則の景観発達モデル(Landlab は CSDMS の行) |
+| DeltaRCM(pyDeltaRCM) | Liang・Voller・Paola(Minnesota 大。原版は MATLAB)/ Moodie ら(Python 版) | 無償 | 公開(pyDeltaRCM は MIT) | 簡約の河口デルタモデル(Liang ら 2015)。水と土砂の小包を重み付きのランダムウォークで運ぶ。pyDeltaRCM は Moodie ら(2021) |
+| CEM | Ashton(WHOI)・Murray(Duke 大) | 無償 | 公開(CSDMS。MIT) | 一線汀線モデル(Ashton ら 2001、Ashton & Murray 2006)。高角度の波による汀線の不安定(砂嘴・カスプ・岬) |
 | PISM / Elmer/Ice / OGGM | UAF・PIK / CSC / Innsbruck 大ほか | 無償 | 公開 | 氷床・氷河力学の専用モデル |
+| ROMS(ROMS-AGRIF → CROCO) | Rutgers 大・UCLA / IRD・Inria・CNRS・Ifremer・SHOM | 無償 | 公開(ROMS は MIT/X 型。CROCO 固有の入れ子部分は CeCILL-C) | 地形に沿う座標の 3 次元海洋循環モデル(Shchepetkin & McWilliams 2005)。ROMS-AGRIF は AGRIF による二方向の入れ子(Debreu ら 2012)を持ち、CROCO に引き継がれた |
+| WRF | NCAR・NOAA ほか | 無償 | 公開(パブリックドメイン。GitHub) | 研究・現業予報のメソ気象モデル。一方向・二方向の入れ子 |
 
 出典(2026-08-10 確認):
 [RRI](https://www.pwri.go.jp/icharm/research/rri/index.html) /
@@ -79,8 +92,8 @@ buildup-washoff+積雪+長期地形変動+流木+家屋破壊・瓦礫+非静水
 (2026-08-26 確認) /
 [CSDMS 論文](https://gmd.copernicus.org/articles/15/1413/2022/)
 (2026-08-26 確認)。
-GeoClaw 以降の行(COMCOT〜PISM)は §2 で言及するモデルを網羅する目的で
-2026-10-06 に追加したもので、配布形態は一般的な知識によるもの。
+GeoClaw 以降の行(COMCOT〜PISM。下記の 2026-10-29 の追加分を除く)は §2 で言及する
+モデルを網羅する目的で 2026-10-06 に追加したもので、配布形態は一般的な知識によるもの。
 引用前に各公式サイトで要確認。
 
 ネスティングの出典(2026-10-10 確認):
@@ -100,6 +113,30 @@ SFINCS の出典: [SFINCS documentation](https://sfincs.readthedocs.io/en/latest
 [GitHub Deltares/SFINCS](https://github.com/Deltares/SFINCS)(2026-10-20 追加。
 作業環境から両サイトに到達できなかったため、内容は Leijnse ら 2021(Coastal
 Engineering)・van Ormondt ら 2025(GMD)の知識によるもの。引用前に要確認)。
+
+2026-10-29 の追加(§2 で言及するモデルを網羅するため): Delft3D 4・MOST・XBeach・SWAN・
+HISWA・SnapWave・CMS・ADCIRC・HYDRUS-1D・DeltaRCM・CEM・ROMS・WRF の行と、iRIC の行の
+Nays2DH。配布形態は同日の Web 検索の結果による(作業環境のネットワークの方針で各サイトの
+本文は読めず、検索結果の要約で確認した。引用前に要確認):
+[SWAN のライセンス](https://swanmodel.sourceforge.io/support/license.htm) /
+[XBeach(CSDMS)](https://csdms.colorado.edu/wiki/Model:XBeach) /
+[HYDRUS(Wikipedia)](https://en.wikipedia.org/wiki/Hydrus_%28software%29)・
+[2009 年版ソース(HydroShare)](https://www.hydroshare.org/resource/d24921ba081d431e80685bf177a0840f/) /
+[pyDeltaRCM(JOSS 2021)](https://doi.org/10.21105/joss.03398) /
+[CEM(CSDMS)](https://csdms.colorado.edu/wiki/Model:CEM)・
+[conda-forge の登録](https://github.com/conda-forge/cem-feedstock) /
+[CMS の許諾](https://cirpwiki.info/wiki/CMS_License) /
+[ADCIRC のソース](https://wiki.adcirc.org/Source_code) /
+[SnapWave(GMD 2025)](https://gmd.copernicus.org/articles/18/9469/2025/) /
+[ComMIT・MOST の免責と再配布の条件](https://nctr.pmel.noaa.gov/license-disclaimer.html) /
+[ROMS のライセンス](https://www.myroms.org/projects/src/wiki/License_ROMS) /
+[WRF(GitHub)](https://github.com/wrf-model/WRF)。
+ライセンスのうち Delft3D 4 の GPLv3・XBeach の LGPL・CEM と pyDeltaRCM の MIT・HYDRUS-1D の
+パブリックドメイン・CROCO の CeCILL-C は二次情報(HPC 施設の案内、CSDMS・conda・PyPI の
+登録、Wikipedia、ソースの冒頭の記述)により、SnapWave のライセンスと HISWA の現在の配布は
+確認できなかった。§2 の研究モデル(Asahi ら 2013、Sklar & Dietrich 2004 など論文で示された
+手法)と一般的な手法(被害関数の後処理、DEM・粒子法の瓦礫追跡)は配布ソフトではないので、
+本表に載せない。
 
 ## 2. プロセスカバレッジの比較(ENCflow 現況との対比)
 
@@ -208,16 +245,17 @@ users_guide の各章にある(本表には書かない)。
   スタック前提)。教育利用(ノート PC)からベクトル機・スパコンまで
   同一ソースという間口は、TUFLOW デモ制限や商用 GUI 前提と対照的。
 - **導入のしやすさ(独習可能性)**: 利用者向けの整備として、
-  ユーザーガイド 26 章+全パラメータ索引(583 項目)、
+  全機能を章ごとに説明するユーザーガイド+全パラメータ索引、
   全機能の注釈付き namelist 見本(examples/List_samples)、実行して
-  学ぶチュートリアル 2 件(最小例 wave・実地形 chichibu。実データの
+  学ぶチュートリアル(最小例 wave・実地形 chichibu。実データの
   落とし穴 = 窪地除去・平坦区間由来の流量振動から、ParaView での
-  3D 可視化までを教材化)、前後処理ユーティリティ群(utils/: 窪地
-  除去 rmdepress_river・集水域 calc_catchmentarea・土地利用→マスク
-  lu2mask・VTK 変換 out2vtk 等)を同梱する。導入コストの比較でも
-  公開勢の上位に入る。利用者向け文書は日英ミラー
-  (docs/en/・tutorials の en/)を整備済みで、英語弱点は開発者文書
-  (developer.md 等は日本語のみ)に残るのみ。
+  3D 可視化までを教材化。外部連携向けに Python から BMI で操る bmi も)、
+  前後処理ユーティリティ群(utils/: 窪地除去 rmdepress_river・集水域
+  calc_catchmentarea・土地利用→マスク lu2mask・VTK 変換 out2vtk 等)を
+  同梱する。導入コストの比較でも公開勢の上位に入る。利用者向け文書は
+  日英ミラー(docs/en/、tutorials・test・examples の en/ ほか)を整備済みで、
+  英語弱点は開発者文書(developer.md 等は日本語のみ。§0 の基本方針だけ
+  英語の部分ミラーがある)に残るのみ。
 - **AI エージェント指向**: 入出力が完全テキスト
   (GUI 非依存)であることに加え、「現象 → 機能 → パラメータ」を
   機械的に引ける文書体系(用途集・全パラメータ索引・注釈付き見本)と、

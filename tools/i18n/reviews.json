@@ -13,11 +13,11 @@
     {
       "source": "README.ja.md",
       "target": "README.md",
-      "source_sha256": "34e6b2fb3bfb7e4102877049ef219000383a994a7569f2d2d61af84e033e2fce",
-      "target_sha256": "b2235ec605263a6a8f0e1e0ccc55925d85945c6032a09bc115f0b73a2b2d9841",
+      "source_sha256": "c4f57b6cd44bab780e08814201efd474a6a9c504d49c0aaa0e28e585a8c6dc21",
+      "target_sha256": "aac6f985d00f97df1b7aaa1c06990f06bac3c692a571900c8e68de4c825fb4e3",
       "reviewer": "Claude (Claude Code session; full-text content and lexical review, no model execution)",
       "method": "assistant",
-      "reviewed_on": "2026-10-28"
+      "reviewed_on": "2026-10-29"
     },
     {
       "source": "TRADEMARKS.md",
@@ -58,8 +58,8 @@
     {
       "source": "docs/comparison.md",
       "target": "docs/en/comparison.md",
-      "source_sha256": "f309c0787c732f212ec4dcb157063acd21df42854fb8cf5b84dd23c1767a8936",
-      "target_sha256": "306453fe7663a054f236dfac5e98aeb92682bfd9a7d91a394915ab98e51f7a67",
+      "source_sha256": "e6dd1dad34bb80003791b3f0b1963673d8d1a0c2d2d8f174808a4f7c9c9da39d",
+      "target_sha256": "1a3787b0697f97dd0401274c4d3acf8bfffdc555a63efb70c6e00d6ef95bda97",
       "reviewer": "Claude (Claude Code session; full-text content and lexical review, no model execution)",
       "method": "assistant",
       "reviewed_on": "2026-10-29"
@@ -482,8 +482,8 @@
     {
       "source": "docs/users_guide/usecases.md",
       "target": "docs/en/users_guide/usecases.md",
-      "source_sha256": "b0b30d046e763d977d6cc33ae03011a20339a061014bbf1ca5940851b2406192",
-      "target_sha256": "29fd861f7e3e00730489661a32ca56c225b61e131bd941f7fd60ce43146f2d8b",
+      "source_sha256": "31a15a568ddae85d228cb5a0083ba1fced4e53bf0c0378153a6eb0cb3a7425ad",
+      "target_sha256": "6ab02791c27902bdb6b1934f02d1896800ed14804243d02cd50939f4b1c96977",
       "reviewer": "Claude (Claude Code session; full-text content and lexical review, no model execution)",
       "method": "assistant",
       "reviewed_on": "2026-10-29"
