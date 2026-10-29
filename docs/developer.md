@@ -15918,8 +15918,14 @@ reference 比較を `ULP=${ULP:-1}`・`RTOL=${RTOL:-1e-6}` にし、既定の比
 一致。wfdoppler: S が相対 1.1e-6、wavefield.csv の収支の列、Wh9998・u9998 は一致)。wfcurrent・wfsed は
 §90.18 の許容(ULP=1・RTOL=1e-6)の中に収まる(この作業環境と、CI の AMD のランナーを想定した
 -march=znver3 のビルドの両方で合格。CI は通る見込み)が、wfdoppler(ULP=0)は nightly で落ちる。
-**reference は更新していない**(規律 1。人間が差を確かめてから、§90.18 の FILES を付けて同じマシンで
-`./Run.sh -u`)。
+**reference の更新**(2026-10-29): 利用者が上の差を確かめて更新を指示し、修正後のバイナリ(逐次 release、
+1 スレッド)で wfcurrent・wfsed は §90.18 の完全な FILES(wavefield.csv を含む)を付けて、wfdoppler は既定の
+FILES で `./Run.sh -u` を実行した。変わったのは上に挙げたファイルと env の記録(と wfdoppler の
+reference/param.txt のコメントの § 番号)だけ。更新後の確認: 3 ケースの検定一式が合格し、Run_MPI.sh の
+np = 2 が新しい reference と ULP=0(wavefield.csv を含む完全な FILES)で一致(np = 1・2・4 が逐次と
+バイト一致することは下の検証のとおり)。-march=znver3(CI の AMD のランナーの想定)のビルドでは、
+wfcurrent・wfsed が §90.18 の許容の中で合格し、wfdoppler は ULP=0 で reference と一致(CI・nightly は
+通る見込み)。
 
 **検証**(2026-10-28〜29。gfortran 13.3 / Open MPI 4.1.6、release の逐次は 1 スレッド):
 - 側方 Neumann の 3 ケース: 検定一式が合格(上の確認)。release の MPI np = 1・2・4 が逐次とバイト一致

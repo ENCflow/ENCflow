@@ -87,3 +87,8 @@ np = 1 とバイト一致、再開も MPI で)。
 岸側、沿岸漂砂は基本の 1.019 倍、行の総量の差 1.6e-5。release で np = 1・2・4 が逐次 reference に
 ULP=0 で砕波の乱れは np = 1 とバイト一致、`-Og -fcheck=all` で逐次と np = 2 が一致、1530 s で
 保存した再開の継続は通し計算とバイト一致。
+
+側方 Neumann の境界面の移流項の修正(2026-10-29 追記。developer.md §90.19)で結果が丸めの規模で変わり
+(Log.txt の S が相対 3.7e-8、wavefield.csv の収支の列。Z9998・Hs9998 は不変)、reference を更新した。
+検定一式は合格(海浜の沿岸漂砂の行の総量の差 8.2e-6、地形変化の行の差 2.5e-7 m)、release で
+np = 1・2・4 が逐次 reference に ULP=0、`-Og -fcheck=all` で逐次と np = 2 が一致。

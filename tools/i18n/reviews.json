@@ -67,7 +67,7 @@
     {
       "source": "docs/developer.md",
       "target": "docs/en/developer.md",
-      "source_sha256": "b94e6e6f8a96c8dd3b7872dde1ae62c59036785918510aa747653f3b57920899",
+      "source_sha256": "7037e4bd2fd55dee0e7242a734822ba660fd09f4741ca2cff3e32507b6187dc2",
       "target_sha256": "82d2abd2032be1a88429c6a9bd3befcaa793451da3396ab0168cee19316cd653",
       "reviewer": "Claude (Claude Code session; full-text content and lexical review, no model execution)",
       "method": "assistant",
@@ -2461,29 +2461,29 @@
     {
       "source": "test/wfcurrent/README.md",
       "target": "test/wfcurrent/en/README.md",
-      "source_sha256": "d4cdeddc4c40481f60c1f9bd4d1ef6567c3aa146d81cc4a8603d43fe19038aa3",
-      "target_sha256": "0a1ae6cbb078a064fc0056b97215270ae8ab40a8fe21bc29d529e585a22b6971",
+      "source_sha256": "ea38e1e1a91efde0dac36e1c1e1a2fdeacc3457526c4865eb6ba5310a4c50a31",
+      "target_sha256": "17c5a1fbc0d41b91c13bf76ee5052df0b8d21798d3108d2a63528464bd1c25a2",
       "reviewer": "Claude (Claude Code session; full-text content and lexical review, no model execution)",
       "method": "assistant",
-      "reviewed_on": "2026-10-28"
+      "reviewed_on": "2026-10-29"
     },
     {
       "source": "test/wfdoppler/README.md",
       "target": "test/wfdoppler/en/README.md",
-      "source_sha256": "94d1a005e55f40458ca8e9333b78e3f7abb1994301e1e42067e9219dacd81b9a",
-      "target_sha256": "617e4eae302118a6791de5e39553043ff8f7f53b3c8190daa00f7a9b56adbf4d",
+      "source_sha256": "7139d2dc2ccb05bd4d3030c75bf14442e0ce1192b94ee059a810e394945f4ebd",
+      "target_sha256": "1ff0755968cb8b921737cad61d634dfc57e7f80f4d937d783b4198a0e51d9130",
       "reviewer": "Claude (Claude Code session; full-text content and lexical review, no model execution)",
       "method": "assistant",
-      "reviewed_on": "2026-10-28"
+      "reviewed_on": "2026-10-29"
     },
     {
       "source": "test/wfsed/README.md",
       "target": "test/wfsed/en/README.md",
-      "source_sha256": "2ef304644114f3ec0556fa5210b8d2467cd5a0628ec47d40023c4204314a72a6",
-      "target_sha256": "152cba6647020e847fd4e1f22d20451bda3bc649d3fe880b2b9b286bf8977a5b",
+      "source_sha256": "4388d57f56e2bbef2a8e4c284e8bc75a2c28ad1897de58009d3d56002591a39d",
+      "target_sha256": "6df33c508ad51baf117787e1af861b23f4e41676b345759b2dc39c331f1dbc03",
       "reviewer": "Claude (Claude Code session; full-text content and lexical review, no model execution)",
       "method": "assistant",
-      "reviewed_on": "2026-10-28"
+      "reviewed_on": "2026-10-29"
     },
     {
       "source": "test/wfshadow/README.md",
