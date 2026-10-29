@@ -266,8 +266,8 @@
     {
       "source": "docs/users_guide/geomorph.md",
       "target": "docs/en/users_guide/geomorph.md",
-      "source_sha256": "51b6e2bb77609c5b6c7023f5b83fff167b92f47fbf7220542869ffb31380e377",
-      "target_sha256": "5633798fce876534a5e5a057718d4964de99b2989dafca7a9692c2fec1f4a20e",
+      "source_sha256": "b2468998d044b1ee8606fe74bddf562cf7c2792374e5d0327046007c2c01b142",
+      "target_sha256": "c55db0bd8d07b019ced6bc4446b5e46d7cc76a24243aafe55b984196f8000fc3",
       "reviewer": "Claude (Claude Code session; full-text content and lexical review, no model execution)",
       "method": "assistant",
       "reviewed_on": "2026-10-29"
@@ -419,8 +419,8 @@
     {
       "source": "docs/users_guide/sediment.md",
       "target": "docs/en/users_guide/sediment.md",
-      "source_sha256": "72e361eef26c5bebe719417d6db0ef0cf1b13ebec7d48dfa8c447b381342707a",
-      "target_sha256": "4090422d30515b6edd2623472955ffd58929cfc2d3ac544792142a2017303e24",
+      "source_sha256": "9c64f86c9c6aed180f6d7e606f51c909f026a34a6cd6a5288b2a32f665a4b9b6",
+      "target_sha256": "c585416170b3f130c43a997079098c5317bcd657419203c4a66f1073cd9ba7b4",
       "reviewer": "Claude (Claude Code session; full-text content and lexical review, no model execution)",
       "method": "assistant",
       "reviewed_on": "2026-10-29"
@@ -995,11 +995,11 @@
     {
       "source": "examples/bedrock_cover/README.md",
       "target": "examples/bedrock_cover/en/README.md",
-      "source_sha256": "4a79cedcee3d498698112ff7cca9c8988af37da1a0acd5c8b1ddaa5e24f17c28",
-      "target_sha256": "ee69ad6ba3ed8bdeb928c0101db3410ef77f5bbb1746c1ddc15b7b756de70709",
-      "reviewer": "Claude (Claude Code session; mechanical renumbering of the developer.md section references §88 -> §89 in both files, checked by script that the lines differ only in those numbers and that both files carry the same references; rest unchanged since the previous record)",
+      "source_sha256": "a520801068c97a3848d08bffaed3aaf901ada220186025123daa77269c701572",
+      "target_sha256": "8804645666c8c794a55756fe6dc4eef1a1ed2c7ad09ae458fba2aeaa9aea2767",
+      "reviewer": "Claude (Claude Code session; full-text content and lexical review, no model execution)",
       "method": "assistant",
-      "reviewed_on": "2026-10-28"
+      "reviewed_on": "2026-10-29"
     },
     {
       "source": "examples/bedrock_cover/figs/cover.png",

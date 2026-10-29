@@ -1264,10 +1264,11 @@ architecture.md。このメモは「現在進行中・未完了の項目」だ�
     (原型の Paola ら (1992) の I と Sklar & Dietrich (2006) の F_t は照合済み)、
     Inoue ら (2014) の被覆・粗度モデル、Johnstone & Hilley (2015) の本文(深さ依存クリープ)、
     Hsu ら (2008) の式の形、Berger ら (2011) の論文番号、Frank ら (2015) の
-    題名・著者、Inoue ら (2016)・McGuire ら (2023) の共著者、Parker & Izumi (2000) の原文
+    題名・著者、McGuire ら (2023) の共著者、Parker & Izumi (2000) の原文
     (ネットワークの制限で未確認)。Rickenmann & Recking (2011)・Nitsche ら (2011)・Sklar & Dietrich
-    (2006)・Paola ら (1992)・Stock & Dietrich (2006) は 2026-10-29 に利用者が提供した本文で照合済み
-    (plan §6.3・§4.2・§11・§12.4 の所見 2 の注)。Sklar & Dietrich
+    (2006)・Paola ら (1992)・Stock & Dietrich (2006)・Inoue ら (2016) は 2026-10-29 に利用者が提供した
+    本文で照合済み(plan §6.3・§4.2・§11・§12.4 の所見 2 の注・§9)。Inoue ら (2014) の書誌は Inoue ら
+    (2016) の文献表で確定(JGR Earth Surf. 119(10), 2123–2146。本文は未読)。Sklar & Dietrich
     (2004) の研磨の式の形は 2006 の論文の式 (1) で確認(2004 の本文は未読)。
     (2026-10-29 検索で書誌を確認。本文は未読 = 式の形の照合は残る): Howard (1994) WRR 30(7),
     2261–2285, doi:10.1029/94WR00757。Sklar & Dietrich (2006) Geomorphology 82, 58–83,
@@ -1281,7 +1282,8 @@ architecture.md。このメモは「現在進行中・未完了の項目」だ�
     the Swiss Alps まで(NHESS 15, 2569–2583。オープンアクセス)。Inoue ら (2016) の共著者は
     Iwasaki・Parker・Shimizu・Izumi・Stark・Funaki。McGuire ら (2023) の共著者は McCoy・Marc・
     Struble・Barnhart(オープンアクセス)。Parker & Izumi (2000) JFM 419, 203–238。Inoue ら (2014)
-    の書誌は検索で確定できなかった。users guide・plan の該当記述への反映は 00c の出典の棚卸しで行う。
+    の書誌は検索では確定できず、後に Inoue ら (2016) の文献表で確定した(上)。users guide・plan の該当
+    記述への反映は 00c の出典の棚卸しで行う。
   - **日英の確認記録**: この作業の記録はすべて AI による確認(method assistant)。
     examples/bedrock_cover の図 4 組も 2026-10-29 に記録した。
 

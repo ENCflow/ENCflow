@@ -600,13 +600,25 @@ users_guide/sediment.md・massflow.md・geomorph.md、handoff.md 1n・1n2。
   (2015): Macro-roughness model of bedrock–alluvial river morphodynamics.
   *Earth Surf. Dynam.*, 3, 113–138. doi:10.5194/esurf-3-113-2015(要旨で確認: 被覆率を
   供給比でなく沖積層厚とマクロ粗度の比で決める)。
-- Inoue, T. ほか (2016): Numerical simulation of effects of sediment supply on bedrock
-  channel morphology. *J. Hydraul. Eng.*, 142(7). doi:10.1061/(ASCE)HY.1943-7900.0001124
-  (機関リポジトリの書誌と要旨で確認: 供給が容量に近いと交互砂州、かなり小さいと岩盤に
-  溝。共著者の一覧は未照合)。
+- Inoue, T., Iwasaki, T., Parker, G., Shimizu, Y., Izumi, N., Stark, C. P. and Funaki, J. (2016):
+  Numerical simulation of effects of sediment supply on bedrock channel morphology.
+  *J. Hydraul. Eng.*, 142(7), 04016014. doi:10.1061/(ASCE)HY.1943-7900.0001124(2026-10-29 に
+  利用者が提供した本文で確認)。定常流の 2 次元浅水流(Manning、k_s = 2.5d)に、Luu ら (2004) の
+  掃流砂の体積 V_b の保存(岩盤上は V_b < V_bc の throughput で q_b = (V_b/V_bc) q_bc)、
+  Fernandez Luque & van Beek (1976) の容量 5.7 (τ* − τ*c)^1.5(τ*c = 0.03)、長谷川型の横断方向の
+  流砂(μs = μk = 0.7、N* = 7.0)、Sklar & Dietrich (2004) の跳躍速度を組み、岩盤の下刻は
+  Chatanantavet & Parker (2009) の E = β|q_b|(1 − P_c)(β はせん断応力によらない)、被覆率は
+  Tanaka & Izumi (2013) の P_c = η_a/L_a(L_a = 2.5d)。石狩川(勾配 0.0025、d = 50 mm、
+  Q = 800 m³/s、幅 100 m)で β ≈ 0.001 /m(Inoue ら 2014 の現地実験)。給砂比 1.0 では交互砂州状の
+  被覆が下流へ移りながら岩盤を「紙やすり」のように一様に削り(横断方向に対称で両岸寄りが深い)、
+  0.2 では岩盤に幅約 5 m の縦溝が複数刻まれて被覆は溝の底に溜まり、0.7 はその中間。ENCflow の
+  研磨項(β × 実際の流砂量 × 露出率)は同じ則で、被覆の関数形(指数)が違う。
 - Mishra, J. and Inoue, T. (2020): Alluvial cover on bedrock channels: applicability of
   existing models. *Earth Surf. Dynam.*, 8, 695–716. doi:10.5194/esurf-8-695-2020
-  (要旨で確認)。同論文が引く Inoue ら(2014)の被覆・粗度モデルは本文未照合。
+  (要旨で確認)。同論文が引く Inoue ら(2014)の被覆・粗度モデルは本文未照合(書誌は Inoue ら 2016
+  の文献表で確認: Inoue, T., Izumi, N., Shimizu, Y. and Parker, G. (2014): Interaction among alluvial
+  cover, bed roughness, and incision rate in purely bedrock and alluvial-bedrock channel. *J. Geophys.
+  Res. Earth Surf.*, 119(10), 2123–2146)。
 - Howard, A. D. and Kerby, G. (1983): Channel changes in badlands. *Geol. Soc. Am. Bull.*,
   94, 739–752(要旨で確認: 岩盤河道の侵食速度は出水時の底面せん断に比例する)。
   閾値つきの超過せん断応力型の典拠(Howard 1994 など)は照合待ち。

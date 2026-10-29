@@ -632,7 +632,13 @@ same 1:1 conversion as weathering; **our own simplification**). In the
 abrasion term, $`q_c`$ is the bedload capacity of the cell (solid transport
 rate per unit width), and $`q_c F_s`$ is the bedload leaving the cell, taken
 as the amount of gravel striking the bed (the same form as "abrasion = β ×
-transport rate × exposure" of GravelBedrockEroder). The abraded material
+transport rate × exposure" of GravelBedrockEroder). Making abrasion
+proportional to the actual transport rate × exposure with a $`\beta`$ that does
+not depend on the shear stress is also the same as the law of Chatanantavet &
+Parker (2009), $`E = \beta|\mathbf{q}_b|(1 - P_c)`$, used in the two-dimensional
+bedrock–alluvial channel model of Inoue et al.[^inoue16]; the difference is the
+form of the cover fraction (linear in the alluvial thickness,
+$`P_c = \eta_a/L_a`$, in that model; exponential in ENCflow). The abraded material
 leaves the system as fines ($`z`$ is lowered) and is not added to the cover.
 
 **Thin-layer transport.** The edge flux of bedload is multiplied by the
@@ -764,7 +770,7 @@ The labels in the Basis column are explained in [How to read the basis of a defa
 | dissol_lat | 0 | share p of lateral dissolution | **method** 0 = floor only, −1 = automatic from the wetted-area ratio (recommended). A fixed value follows the ratio of ponding depth to cell size |
 | rock_kp / rock_tauc | 0 (no plucking) / none | plucking rate coefficient (m/s) / threshold (Pa) (bedrock incision of §7) | **calibration value** no standard value. k_p is the incision rate of bare rock at τ_b = 2τ_c |
 | rock_m | 1 | plucking exponent | **conventional value** linear (same as berode_m of bank erosion) |
-| rock_beta | 0 (no abrasion) | abrasion coefficient β (1/m) | **calibration value** no standard value. The largest incision rate by abrasion (cover fraction 1/2) is β q_c / 4 |
+| rock_beta | 0 (no abrasion) | abrasion coefficient β (1/m) | **calibration value** no standard value. The largest incision rate by abrasion (cover fraction 1/2) is β q_c / 4. Inoue et al.[^inoue16] used β ≈ 0.001 /m from a field experiment in the Ishikari River and 0.0001 /m to reproduce a flume experiment |
 | rock_hstar | none | cover length H* | **given** a measure of the relief of the bedrock surface and the grain size (a few cm to tens of cm). Shared by the exposure and the availability |
 | rock_kdb / rock_taucdb | 0 (no debris-flow term) / none | rate coefficient (m/s) / threshold (Pa) of rock erosion by debris flows | **calibrated** no standard values. k_d is the lowering rate of bare rock at τ_d = 2τ_cd. A lowering of mm to cm per debris flow is a guide[^stock05][^mccoy13] |
 | rock_mdb | 1 | exponent of the debris-flow term | **conventional** linear (same as rock_m) |
@@ -832,6 +838,7 @@ The labels in the Basis column are explained in [How to read the basis of a defa
 [^sklar06]: Sklar, L. S. and Dietrich, W. E. (2006): The role of sediment in controlling steady-state bedrock channel slope: Implications of the saltation–abrasion incision model. *Geomorphology*, 82, 58–83. doi:10.1016/j.geomorph.2005.08.019 (saltation–abrasion model eq. (1), model classification eq. (20) and Table 2, components of steady-state slope eqs. (32)–(34), intermittency eqs. (13)–(19))
 [^turowski07]: Turowski, J. M., Lague, D. and Hovius, N. (2007): Cover effect in bedrock abrasion. *J. Geophys. Res.*, 112, F04006. doi:10.1029/2006JF000697
 [^zhang15]: Zhang, L., Parker, G., Stark, C. P., Inoue, T., Viparelli, E., Fu, X. and Izumi, N. (2015): Macro-roughness model of bedrock–alluvial river morphodynamics. *Earth Surf. Dynam.*, 3, 113–138. doi:10.5194/esurf-3-113-2015 (checked against the abstract)
+[^inoue16]: Inoue, T., Iwasaki, T., Parker, G., Shimizu, Y., Izumi, N., Stark, C. P. and Funaki, J. (2016): Numerical simulation of effects of sediment supply on bedrock channel morphology. *J. Hydraul. Eng.*, 142(7), 04016014. doi:10.1061/(ASCE)HY.1943-7900.0001124 (abrasion law eq. (16), cover fraction eq. (17), transverse bedload eq. (12))
 [^stock03]: Stock, J. D. and Dietrich, W. E. (2003): Valley incision by debris flows: Evidence of a topographic signature. *Water Resour. Res.*, 39(4), 1089. doi:10.1029/2001WR001057 (checked against the abstract: the inverse power law between slope and area rarely extends to slopes steeper than 0.03 to 0.10)
 [^stock05]: Stock, J. D., Montgomery, D. R., Collins, B. D., Dietrich, W. E. and Sklar, L. S. (2005): Field measurements of incision rates following bedrock exposure: Implications for process controls on the long profiles of valleys cut by rivers and debris flows. *Geol. Soc. Am. Bull.*, 117(1–2), 174–194. doi:10.1130/B25560.1 (checked against the abstract: erosion pins in valleys of weak rock show up to cm/yr; in debris-flow valleys the episodic debris flows are the main agent)
 [^stock06]: Stock, J. D. and Dietrich, W. E. (2006): Erosion of steepland valleys by debris flows. *Geol. Soc. Am. Bull.*, 118(9/10), 1125–1148. doi:10.1130/B25902.1 (inertial normal stress eqs. (5) and (11); erosion law eqs. (14), (15) and (18))

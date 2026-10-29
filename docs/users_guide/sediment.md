@@ -509,7 +509,10 @@ $`k_p = k_e \tau_c^m`$ と置いた比形で、$`k_p`$ は「$`\tau_b = 2\tau_c`
 吸収します(風化と同じ 1:1 の換算。**独自の簡略化**)。研磨項の $`q_c`$ はセルの
 掃流砂容量(単位幅の固体流砂量)、$`q_c F_s`$ はそのセルから出る掃流砂で、これを
 床を叩く礫の量とみなします(GravelBedrockEroder の「研磨 = β × 流砂量 × 露出率」と
-同じ形)。研磨で削れた分は細粒分として系外へ出し($`z`$ が下がる)、被覆には
+同じ形)。せん断応力によらない $`\beta`$ で研磨を実際の流砂量 × 露出率に比例させる形は、
+Inoue ら[^inoue16] の 2 次元の岩盤–沖積河道モデルが使う Chatanantavet & Parker(2009)の則
+$`E = \beta|\mathbf{q}_b|(1 - P_c)`$ とも同じで、違うのは被覆率の関数形です(同モデルは
+沖積層厚に線形な $`P_c = \eta_a/L_a`$、ENCflow は指数)。研磨で削れた分は細粒分として系外へ出し($`z`$ が下がる)、被覆には
 加えません。
 
 **薄層の輸送。** 掃流砂のエッジ流量に、供給側セルの利用可能率
@@ -616,7 +619,7 @@ $`\cos\theta\,C\rho_s D^2 (u/h)^2`$ ÷ 岩の抵抗」に比例させる則を�
 | dissol_lat | 0 | 側方溶食の配分割合 p | **方式** 0 = 床のみ、−1 = 濡れ面の面積比で自動(推奨)。固定値は湛水深/格子幅の比から |
 | rock_kp / rock_tauc | 0(剥離なし)/ なし | 剥離の速度係数 (m/s) / 閾値 (Pa)(§7 の岩盤下刻) | **校正値** 標準値がない。k_p は τ_b = 2τ_c での裸岩の下刻速度 |
 | rock_m | 1 | 剥離のべき指数 | **慣用値** 線形(側岸侵食の berode_m と同じ) |
-| rock_beta | 0(研磨なし) | 研磨係数 β (1/m) | **校正値** 標準値がない。研磨による下刻速度の最大(被覆率 1/2)は β q_c / 4 |
+| rock_beta | 0(研磨なし) | 研磨係数 β (1/m) | **校正値** 標準値がない。研磨による下刻速度の最大(被覆率 1/2)は β q_c / 4。Inoue ら[^inoue16] は石狩川の現地実験の値 β ≈ 0.001 /m を使い、水路実験の再現には 0.0001 /m を使った |
 | rock_hstar | なし | 被覆の長さ H* | **与件** 岩盤面の起伏・礫径の目安(数 cm〜数十 cm)。露出率と利用可能率に共用 |
 | rock_kdb / rock_taucdb | 0(土石流の項なし)/ なし | 土石流による岩盤侵食の速度係数 (m/s) / 閾値 (Pa) | **校正値** 標準値がない。k_d は τ_d = 2τ_cd での裸岩の低下速度。1 回の土石流で mm〜cm の低下が目安[^stock05][^mccoy13] |
 | rock_mdb | 1 | 土石流の項のべき指数 | **慣用値** 線形(rock_m と同じ) |
@@ -682,6 +685,7 @@ $`\cos\theta\,C\rho_s D^2 (u/h)^2`$ ÷ 岩の抵抗」に比例させる則を�
 [^sklar06]: Sklar, L. S. and Dietrich, W. E. (2006): The role of sediment in controlling steady-state bedrock channel slope: Implications of the saltation–abrasion incision model. *Geomorphology*, 82, 58–83. doi:10.1016/j.geomorph.2005.08.019(saltation–abrasion 模型 式 (1)、模型の分類 式 (20)・表 2、定常勾配の成分 式 (32)〜(34)、間欠係数 式 (13)〜(19))
 [^turowski07]: Turowski, J. M., Lague, D. and Hovius, N. (2007): Cover effect in bedrock abrasion. *J. Geophys. Res.*, 112, F04006. doi:10.1029/2006JF000697
 [^zhang15]: Zhang, L., Parker, G., Stark, C. P., Inoue, T., Viparelli, E., Fu, X. and Izumi, N. (2015): Macro-roughness model of bedrock–alluvial river morphodynamics. *Earth Surf. Dynam.*, 3, 113–138. doi:10.5194/esurf-3-113-2015(要旨で確認)
+[^inoue16]: Inoue, T., Iwasaki, T., Parker, G., Shimizu, Y., Izumi, N., Stark, C. P. and Funaki, J. (2016): Numerical simulation of effects of sediment supply on bedrock channel morphology. *J. Hydraul. Eng.*, 142(7), 04016014. doi:10.1061/(ASCE)HY.1943-7900.0001124(研磨則 式 (16)、被覆率 式 (17)、横断方向の流砂 式 (12))
 [^stock03]: Stock, J. D. and Dietrich, W. E. (2003): Valley incision by debris flows: Evidence of a topographic signature. *Water Resour. Res.*, 39(4), 1089. doi:10.1029/2001WR001057(要旨で確認: 勾配–面積の逆べき則は勾配 0.03〜0.10 より急な所にほとんど延びない)
 [^stock05]: Stock, J. D., Montgomery, D. R., Collins, B. D., Dietrich, W. E. and Sklar, L. S. (2005): Field measurements of incision rates following bedrock exposure: Implications for process controls on the long profiles of valleys cut by rivers and debris flows. *Geol. Soc. Am. Bull.*, 117(1–2), 174–194. doi:10.1130/B25560.1(要旨で確認: 弱い岩の谷の侵食ピンで最大 cm/年。土石流の谷では間欠的な土石流が主な担い手)
 [^stock06]: Stock, J. D. and Dietrich, W. E. (2006): Erosion of steepland valleys by debris flows. *Geol. Soc. Am. Bull.*, 118(9/10), 1125–1148. doi:10.1130/B25902.1(慣性垂直応力 式 (5)・(11)、侵食則 式 (14)・(15)・(18))

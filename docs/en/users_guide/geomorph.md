@@ -188,7 +188,7 @@ Riverbed erosion and deposition by a bedload transport formula.
 | fluv_diagratio | 2/(2+sqrt(2)) | Diagonal partitioning (normally no need to change) |
 | fluv_taufac | 1.0 | Effective shear-stress ratio f_τ (the τ* passed to the transport formula = f_τ × τ* of the total resistance; a simple separation of form drag by dunes or vegetation. 1 = no separation) |
 | fluv_slope | 0 | Bed-slope correction of the bed-load direction. 1: Hasegawa type (q⃗ = q_b(t̂ − γ∇z), γ = √(τ*c/(μs μk τ*))) |
-| fluv_mus / fluv_muk | 1.0 / 0.45 | Static and kinetic friction coefficients μs, μk. **Literature values** (Asahi et al. 2013 eq. (22), after Hasegawa 1984; Hasegawa 1989 uses μk = 0.7 as an estimate). See the note below |
+| fluv_mus / fluv_muk | 1.0 / 0.45 | Static and kinetic friction coefficients μs, μk. **Literature values** (Asahi et al. 2013 eq. (22), after Hasegawa 1984; Hasegawa 1989 uses μk = 0.7 as an estimate; the bedrock–alluvial model of Inoue et al. 2016 uses μs = μk = 0.7, whose product 0.49 gives nearly the same γ as the defaults). See the note below |
 | f_secflow | 0 | Secondary-flow correction of the bed-load direction. 1: equilibrium type (near-bed transverse velocity ratio r = N* h κ, κ = streamline curvature of the velocity field) |
 | sec_nstar | 7.0 | N*. **Literature value** (Engelund 1974; Asahi et al. 2013 eq. (18). The de Vriend coefficient 2/κ²(1 − √g/(κC)) is about 10 for C = 50). See the note below |
 | sec_rmax | 1.0 | Upper bound of |r| (cuts the h/R proportionality in sharp bends; 1 = 45°) |
