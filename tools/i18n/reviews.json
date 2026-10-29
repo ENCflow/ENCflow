@@ -95,18 +95,18 @@
     {
       "source": "docs/tutorial.md",
       "target": "docs/en/tutorial.md",
-      "source_sha256": "b6e92b2da6007ef928f7874bf6d42021fd227051e5adcc42f14debe81ecc33e6",
-      "target_sha256": "cfffab3392014110abf0b325d28f113df633c233fcb2c34ac8dbdc8e99ffdf79",
-      "reviewer": "Claude (assistant)",
+      "source_sha256": "fc54fdd930513a2aa93924348614ae3d5b31d67925eb0a2812d95b1ebe9dae58",
+      "target_sha256": "524b2284747fb4adca58027554968418de5be085b582fd608110f5d097be7c63",
+      "reviewer": "Claude (Claude Code session; review of the changed lines against the previously recorded pair, no model execution)",
       "method": "assistant",
-      "reviewed_on": "2026-10-24"
+      "reviewed_on": "2026-10-29"
     },
     {
       "source": "docs/users_guide.md",
       "target": "docs/en/users_guide.md",
-      "source_sha256": "ba7ceeb4112d0f809c1e696b9033c9a2bd2f4c9120f3d721741b28720c7d75a0",
-      "target_sha256": "b0d516e76690b118c16da10c9a30e2a824ad195882d416a63f8d52c7aa8748ae",
-      "reviewer": "Claude (Claude Code session; full-text content and lexical review, no model execution)",
+      "source_sha256": "b9008854e5d0d126ba16e982db821bf09237cee1d9d5c1c15a6fbb6424e60f94",
+      "target_sha256": "8a2ab0d3e087250811777fb1eef00c9cee1e147fbb0a11e09be1926a8d7c5ed8",
+      "reviewer": "Claude (Claude Code session; review of the changed lines against the previously recorded pair, no model execution)",
       "method": "assistant",
       "reviewed_on": "2026-10-29"
     },
@@ -266,9 +266,9 @@
     {
       "source": "docs/users_guide/geomorph.md",
       "target": "docs/en/users_guide/geomorph.md",
-      "source_sha256": "7d3a78cf4a4af3103f8b6ecfd67a3d2df9bd6634a54a2b48976dcddb0c3537e6",
-      "target_sha256": "a2db90d1bcfa155bdd9e142bf252af9a578d75ef7f8b9637e36b91fa072e6e4f",
-      "reviewer": "Claude (Claude Code session; full-text content and lexical review, no model execution)",
+      "source_sha256": "cc5fce05d4b86ea98472e0306e2b40afdb89971bf9ce59445182279ea78c6834",
+      "target_sha256": "89ef0be45a6fbb04eb3bfe8efe6f2a14037e0f45c73c274204eddb067fbdc5ac",
+      "reviewer": "Claude (Claude Code session; review of the changed lines against the previously recorded pair, no model execution)",
       "method": "assistant",
       "reviewed_on": "2026-10-29"
     },
@@ -482,9 +482,9 @@
     {
       "source": "docs/users_guide/usecases.md",
       "target": "docs/en/users_guide/usecases.md",
-      "source_sha256": "31a15a568ddae85d228cb5a0083ba1fced4e53bf0c0378153a6eb0cb3a7425ad",
-      "target_sha256": "6ab02791c27902bdb6b1934f02d1896800ed14804243d02cd50939f4b1c96977",
-      "reviewer": "Claude (Claude Code session; full-text content and lexical review, no model execution)",
+      "source_sha256": "feebdaeb8e686ae4b166cbbe0eee80f5a5d1459fc771eb5180fde07cedda1bcb",
+      "target_sha256": "5812b80f357f9fc565bdcbd4fc9b2189e5293ec67c26b1c622fc642b1039890e",
+      "reviewer": "Claude (Claude Code session; review of the changed lines against the previously recorded pair, no model execution)",
       "method": "assistant",
       "reviewed_on": "2026-10-29"
     },
@@ -509,8 +509,17 @@
     {
       "source": "docs/users_guide/wavefield.md",
       "target": "docs/en/users_guide/wavefield.md",
-      "source_sha256": "ffbd452a2c37aa838fb5f34e22f587930bf85b5dff554e8364e550d78a3f838c",
-      "target_sha256": "960b9898d1c0c8a4eeaecb0adf10e6a3b7dacb54c6d37e7db51791d8be119e6e",
+      "source_sha256": "987a0ff0c5d359a9f111b1b372377e3a0ff611a0006e1357c66c0a1397910a09",
+      "target_sha256": "865d3a9624a0e4d36aaff96afe09f67135e2eecb645eee670d324837d9306d78",
+      "reviewer": "Claude (Claude Code session; full-text content and lexical review, no model execution)",
+      "method": "assistant",
+      "reviewed_on": "2026-10-29"
+    },
+    {
+      "source": "docs/users_guide/wavefield_models.md",
+      "target": "docs/en/users_guide/wavefield_models.md",
+      "source_sha256": "ffe259759700aef3b09083869248f6b7cf42347fb298554acfb59b1d024d3222",
+      "target_sha256": "f6d6ba0c6dd299c035ca7772dda3da6d8cda93ebbc3bd4fd6bb09594c0fb80f8",
       "reviewer": "Claude (Claude Code session; full-text content and lexical review, no model execution)",
       "method": "assistant",
       "reviewed_on": "2026-10-29"

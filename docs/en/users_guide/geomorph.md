@@ -1153,10 +1153,10 @@ Eulerian mean velocity of the wave-driven flow (longshore current, undertow) and
 by the onshore velocity of wave skewness and asymmetry. Because the waves are
 solved, the shoreline orientation, exposure and river-mouth rule (the
 simplifications of fn_wave above) are not needed; refraction, breakwater shadows
-and blocking by river-mouth flow come from the wave field. For the formulas,
-coefficients, output and verification see
-[action on sediment](wavefield.md#action-on-sediment-f_wfsed-stages-w4-and-w5) in
-the coastal wave field chapter.
+and blocking by river-mouth flow come from the wave field. For the use, output and
+verification see [action on sediment](wavefield.md#action-on-sediment-f_wfsed) in the
+coastal wave field chapter; the formulas and the basis of the coefficients are in
+[Coastal wave field explained](wavefield_models.md#8-action-on-sediment-f_wfsed).
 
 | Parameter | Default | Meaning |
 |---|---|---|
@@ -1178,9 +1178,11 @@ The phase-averaged wave field stops before the shoreline, so the swash-zone tran
 that piles up the sand of the shallows above the shoreline (to the height the swash
 reaches) is added with empirical formulas by `f_wfswash = 1` (it acts on the shoreline
 faces only; it piles up if the foreshore is milder than the equilibrium slope and cuts
-back if steeper). The formulas, coefficients and the mapping to the grid are in
+back if steeper). Its use is described in
 [swash-zone transport](wavefield.md#swash-zone-transport-f_wfswash) of the coastal wave
-field chapter. It cannot be combined with bedrock incision (`f_rockinc`).
+field chapter, and the formulas, coefficients and the mapping to the grid in
+[Coastal wave field explained](wavefield_models.md#9-swash-zone-transport-f_wfswash). It
+cannot be combined with bedrock incision (`f_rockinc`).
 
 ## Long-term landform evolution (f_wthr / f_uplift)
 

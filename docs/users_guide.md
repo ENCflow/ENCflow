@@ -47,7 +47,8 @@ ENCflow の設定と実行のリファレンスです。初めての方はまず
 - [初期条件](users_guide/initial.md)(&list_initial)— 水深・水位・窪地充填
 - [境界条件](users_guide/boundary.md)(&list_bound_edge/source/stage/inflow)— 辺境界・ソース・水位規定・区間流入
 - [潮位・海面](users_guide/tide.md)(&list_tide)— 高潮・上げ潮浸水・排水
-- [沿岸の波浪場](users_guide/wavefield.md)(&list_wavefield)— 沖の波の浅水変形・屈折・砕波・防波堤の陰(位相平均・代表周期・方向ビン。段 W1 は流れ・地形に作用しない)
+- [沿岸の波浪場](users_guide/wavefield.md)(&list_wavefield)— 沖の波の浅水変形・屈折・砕波・防波堤の陰、波によるセットアップ・沿岸流、流れによる波の変化、波による漂砂と遡上域の輸送(位相平均・代表周期・方向ビン)
+  - [沿岸の波浪場の解説](users_guide/wavefield_models.md) — 作用量平衡と 2 リンク分解の風上法・砕波と摩擦・放射応力とローラー・GLM・ドップラー効果と阻止・攪拌と輸送速度・遡上域の経験式の式と既定値の根拠、参考にした他モデルと ENCflow 独自の部分(沿岸の波浪場の補足)
 - [内部水理構造物](users_guide/structure.md)(&list_struct_pump/culvert/diversion/dam)— ポンプ・カルバート・分水・ダム・湖沼
   - [構造物と境界の水理則の解説](users_guide/hydraulics.md) — 本間公式・カルバートの 3 レジーム・ダム運転則・自由流出と放射境界・区間流入の配分の式と係数の根拠(構造物・境界条件・河道の補足)
 - [河道](users_guide/channel.md)(&list_channel)— 堤防・河道幅・断面形・破堤
