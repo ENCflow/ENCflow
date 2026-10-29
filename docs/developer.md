@@ -14382,6 +14382,7 @@ test/rockinc(reference は持たない。解析解・保存則・バイト一致
   トップレベルの make(utils の追随)も通る。
 - **残り**: 土層生成 f_wthr と組んだ定常斜面(土層厚 H_ss と放物線形)は、クリープの出口
   (斜面脚部の渓流)が要るので連成実験(plan §5.3)で確かめる。
+  → §89.15(C2。test/hillsoil)で確かめた。
 
 ### 89.9 例題 examples/bedrock_cover(第 1 段の仕上げ)
 

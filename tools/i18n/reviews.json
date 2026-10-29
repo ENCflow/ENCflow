@@ -67,11 +67,12 @@
     {
       "source": "docs/developer.md",
       "target": "docs/en/developer.md",
-      "source_sha256": "7037e4bd2fd55dee0e7242a734822ba660fd09f4741ca2cff3e32507b6187dc2",
+      "source_sha256": "74d28ebfc6a906d3ec553802c0417cb55ea9723e68d0549babb6f448f8499331",
       "target_sha256": "82d2abd2032be1a88429c6a9bd3befcaa793451da3396ab0168cee19316cd653",
-      "reviewer": "Claude (Claude Code session; full-text content and lexical review, no model execution)",
+      "reviewer": "Claude (Claude Code session; restored the section-scoped record of the §0 partial mirror per multilingual.md: since the last section record (54d5425) the Japanese §0 and the English mirror each changed only by the same renumbering of one reference, §88 -> §90)",
       "method": "assistant",
-      "reviewed_on": "2026-10-29"
+      "reviewed_on": "2026-10-28",
+      "source_section": "## 0."
     },
     {
       "source": "docs/install.md",
