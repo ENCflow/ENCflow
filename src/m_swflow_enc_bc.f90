@@ -42,6 +42,7 @@ module subroutine bc_init(p, g, b)
   ! 辺境界条件を写す(ホットループでの間接参照回避)
   bcs%f_bc_side = b%edge%btype
   bcs%have_open_bc = any(bcs%f_bc_side /= e_bc_wall) .or. (b%ninflow > 0)
+  bcs%have_inflow = (b%ninflow > 0)
   bcs%have_neumann = any(bcs%f_bc_side == e_bc_neumann)
   bcs%adv_neumann_we = (bcs%f_bc_side(e_side_w) == e_bc_neumann .or. bcs%f_bc_side(e_side_e) == e_bc_neumann) &
                        .and. opt%f_advection_term > 0 .and. opt%f_advection_scheme >= 2

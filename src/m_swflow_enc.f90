@@ -159,6 +159,9 @@ module m_swflow_enc
                                             !   nvfortran は submodule のホスト結合を
                                             !   use 結合扱いし書き込みを拒否する。§13)
     integer :: f_bc_side(1:4) = e_bc_wall     ! 外縁4辺の境界条件型(W,E,N,S)
+    logical :: have_inflow = .false.          ! 区間流入があるか(bc_init が設定。区間流入の
+                                            !   外縁セルに接するエッジの判定を、区間流入のない
+                                            !   計算で丸ごと飛ばす。§68.40)
     logical :: have_neumann = .false.         ! 側方 Neumann の辺があるか(bc_init が設定。§90)
     logical :: adv_neumann_we = .false.       ! W・E の側方 Neumann の面が一つ内側の面の移流項を
                                             !   写すか(ランク界面の行の移流項の補完が要る。bc_init)

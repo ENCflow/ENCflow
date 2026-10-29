@@ -186,8 +186,8 @@ subroutine adv_prepare_mc(p, g, s, sx, tx)
         ! 流入セルの横の外縁セルが掘れると、掘れと境界に沿う噴流の正帰還になり
         ! examples/meander の param_feed が 1:10:47 に Courant 数 1 を超えた
         ! (§68.40 の改定。2026-10-29)。
-        ! 区間流入のない計算は have_open_bc が偽で判定ごと通らない
-        if (bcs%have_open_bc) then
+        ! 区間流入のない計算は have_inflow が偽で判定ごと通らない
+        if (bcs%have_inflow) then
           if (bc_inflow_inward(i, j, in, jn)) cycle
         end if
         hc = s%h(i,j)
