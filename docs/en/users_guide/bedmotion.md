@@ -324,10 +324,11 @@ not needed.
    shows the discharge dropping.
 
 The complete example is
-[examples/levee_breach](../../../examples/levee_breach/en/README.md) (a
-straight channel with a 20 m wide, 3 m high resolved levee, with a
-comparison case giving the same schedule to a virtual wall through
-`&list_channel_breach`).
+[examples/levee_breach](../../../examples/levee_breach/en/README.md)
+(overtopping at a low section of the crest of a 4 m high resolved levee,
+with the opening widening to 150 m; its supplement gives the same
+schedule for a 20 m wide, 3 m high resolved levee to a virtual wall
+through `&list_channel_breach` for comparison).
 
 Notes:
 
@@ -471,12 +472,13 @@ The three ways a field gets written (automatic / flag / riding on a flag) and th
   fault at the bay mouth (0.8 m uplift of the cape). The disturbance from
   the coastal deformation reaches the shore 10 minutes before the offshore
   tsunami, and the subsided plain at the bay head floods earlier.
-- [examples/levee_breach](../../../examples/levee_breach/en/README.md): a
-  straight channel with a 20 m wide, 3 m high resolved levee. At the flood
-  peak, 5 rows × 2 columns of levee cells are lowered to the floodplain
-  ground over 20 minutes (the centre deepens first, then widens). With a
-  comparison case giving the same schedule to a virtual wall through
-  &list_channel_breach.
+- [examples/levee_breach](../../../examples/levee_breach/en/README.md):
+  overtopping at a low section of the crest breaches a resolved levee (the
+  centre deepens first, then the opening widens to 150 m in an hour),
+  leading to flooding of the landside and houses swept away near the
+  breach. Four cases: overtopping only, breach, breach one hour later,
+  breach + secondary levee. Its supplement gives the same breach schedule
+  to a virtual wall through &list_channel_breach for comparison.
 
 ## References
 

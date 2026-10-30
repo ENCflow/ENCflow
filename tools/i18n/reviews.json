@@ -122,20 +122,20 @@
     {
       "source": "docs/users_guide/bedmotion.md",
       "target": "docs/en/users_guide/bedmotion.md",
-      "source_sha256": "b43842d911ccb8f957bdc136f43657e072fa4578039dcbf89a7f62542b7e6d4a",
-      "target_sha256": "3111eb58c23871d173b8772f15a9fb4a36bb0057e55dedbc2285820c47799d71",
-      "reviewer": "Claude (Claude Code session; reviewed the changed sections (added reference sections, footnotes and citation markers) of the Japanese source against the English mirror, 2026-10-30)",
+      "source_sha256": "62bfad6f378e27b72f0c530cb3ffe92b91f91c031606f1eff57e7d334a710a0d",
+      "target_sha256": "6a015ef91f54687fdfdbc67716b2297c257bec5b36b6e82368012b05dfc53a3c",
+      "reviewer": "Claude (Claude Code session; reviewed the Japanese source against the English mirror; figures from the same results and drawing code with label changes only, 2026-10-30)",
       "method": "assistant",
       "reviewed_on": "2026-10-30"
     },
     {
       "source": "docs/users_guide/bedmotion_models.md",
       "target": "docs/en/users_guide/bedmotion_models.md",
-      "source_sha256": "c25ed589381a2e4c18cea33c60d9c4e423de5473039f5bada0bbbc657bf62ecc",
-      "target_sha256": "2a2f037b5a5a7aef0bd3a48928082386f86bbe86659489c201831d8120ff8f42",
-      "reviewer": "Claude (Claude Code session; full-text content and lexical review, no model execution)",
+      "source_sha256": "e49dc819c6d57a75f4b081a038903b38f692c27c909cf54c08fd15eaf0c01730",
+      "target_sha256": "49681786496f2dab3222d25c8d141f99ff39ed031080e848cc81ce113f7c808b",
+      "reviewer": "Claude (Claude Code session; reviewed the Japanese source against the English mirror; figures from the same results and drawing code with label changes only, 2026-10-30)",
       "method": "assistant",
-      "reviewed_on": "2026-10-24"
+      "reviewed_on": "2026-10-30"
     },
     {
       "source": "docs/users_guide/bldgdebris.md",
@@ -167,20 +167,20 @@
     {
       "source": "docs/users_guide/channel.md",
       "target": "docs/en/users_guide/channel.md",
-      "source_sha256": "0a97a0b668a34c32e3ce752d5555bc5b360c5e7417848adae53d0e1db33ebf9e",
-      "target_sha256": "3dca93bd1382bde3a67f41589527ab95c163e7ec6090f34ab8479abfcd937941",
-      "reviewer": "Claude (Claude Code session; reviewed the changed sections (added reference sections, footnotes and citation markers) of the Japanese source against the English mirror, 2026-10-30)",
+      "source_sha256": "f53147e08871982e524891a5a625ccf521f6c253b18f9f0e08a06f48d49f40e8",
+      "target_sha256": "75a7ed6abb5c1e74acea55e9c20630b51d96c7df5f824bd250da87dc80b5aa72",
+      "reviewer": "Claude (Claude Code session; reviewed the Japanese source against the English mirror; figures from the same results and drawing code with label changes only, 2026-10-30)",
       "method": "assistant",
       "reviewed_on": "2026-10-30"
     },
     {
       "source": "docs/users_guide/channel_models.md",
       "target": "docs/en/users_guide/channel_models.md",
-      "source_sha256": "ea773333e6cb1b3d140f82cbcdc496a7375a26a03b51f6c37bc592739d8c5d6f",
-      "target_sha256": "b629b810db31c5b54871509357e63982d14249a777fb9fe8e0d8f451f01d1e01",
-      "reviewer": "Claude (Claude Code session; full-text content and lexical review, no model execution)",
+      "source_sha256": "bee7bf0d49917f60e87f337d99d8830d703e849c24fe421d855d551f9002a219",
+      "target_sha256": "aa9860a5b475005f361ac97b85e786ef9182e12c6b127cd720d6abe79c493f8d",
+      "reviewer": "Claude (Claude Code session; reviewed the Japanese source against the English mirror; figures from the same results and drawing code with label changes only, 2026-10-30)",
       "method": "assistant",
-      "reviewed_on": "2026-10-24"
+      "reviewed_on": "2026-10-30"
     },
     {
       "source": "docs/users_guide/coordinates.md",
@@ -482,9 +482,9 @@
     {
       "source": "docs/users_guide/usecases.md",
       "target": "docs/en/users_guide/usecases.md",
-      "source_sha256": "0dd47142db437f8da95ff2cc93292a23795f2ea734cb465e79d037e4688d0573",
-      "target_sha256": "2273adb70b434e56138eebf9262d430f9e74b055103e1a7fdddf11709347697d",
-      "reviewer": "Claude (Claude Code session; reviewed the Japanese source against the English mirror after merging main; figures from the same results and drawing code with label changes only, 2026-10-30)",
+      "source_sha256": "ed5d85d90a0276d1dabf8a9443a3ded87c99788f6c81c425e0b00338a04b9fe2",
+      "target_sha256": "1fef51a0dc78321c2563df8c468fa4f985387c0839924a0791eeffa1dd732b0e",
+      "reviewer": "Claude (Claude Code session; reviewed the Japanese source against the English mirror; figures from the same results and drawing code with label changes only, 2026-10-30)",
       "method": "assistant",
       "reviewed_on": "2026-10-30"
     },
@@ -806,9 +806,9 @@
     {
       "source": "examples/README.md",
       "target": "examples/README.en.md",
-      "source_sha256": "15edc3d6f7171a0ecc82a31ebc8b8d51eee5a5f5d7ef5320b3e843fc43002c46",
-      "target_sha256": "12f974b6c5632bdb43ca5f5dadebdedd08edc5ac76bd64cc73e28c8ca7cbe7af",
-      "reviewer": "Claude (Claude Code session; reviewed the Japanese source against the English mirror after merging main; figures from the same results and drawing code with label changes only, 2026-10-30)",
+      "source_sha256": "f6a8e6db3648c3566624a29a5882cf76044f66891c9059667ad78b50b0de0dd8",
+      "target_sha256": "9a27b4ff457efc2d43968e56a8dc4e485db3b4c27ef25192e85cbf8ff7a90f2f",
+      "reviewer": "Claude (Claude Code session; reviewed the Japanese source against the English mirror; figures from the same results and drawing code with label changes only, 2026-10-30)",
       "method": "assistant",
       "reviewed_on": "2026-10-30"
     },
@@ -1283,38 +1283,74 @@
     {
       "source": "examples/levee_breach/README.md",
       "target": "examples/levee_breach/en/README.md",
-      "source_sha256": "751931d2370db5fe64eab161e789f8e7c1a329fa70f63bd68b6e0aa659ba2deb",
-      "target_sha256": "44ac02ef6eadf7d07a3ffade0a7274a81d2f3d3f4a88e4c2b3b89a0d0a1c4aa1",
-      "reviewer": "Claude (Claude Code session; English README figure links switched to en/figs, English-label figures generated from regenerated results and compared with the committed Japanese figures)",
+      "source_sha256": "eaca19d397880416eef36dbafe4ed634a90f30ca47074060bb1577a3c76a276a",
+      "target_sha256": "71589a4325bbeb47b8957221e09a0ea8fa53ad2a9a04c07325b786d70312f056",
+      "reviewer": "Claude (Claude Code session; reviewed the Japanese source against the English mirror; figures from the same results and drawing code with label changes only, 2026-10-30)",
       "method": "assistant",
-      "reviewed_on": "2026-10-25"
+      "reviewed_on": "2026-10-30"
     },
     {
-      "source": "examples/levee_breach/figs/inundation.png",
-      "target": "examples/levee_breach/en/figs/inundation.png",
-      "source_sha256": "3fab62f41502cdfe61af3ae2c8b7d72bd46cecc36e1dec87f5dfbe8bf3b9f0ed",
-      "target_sha256": "f02d78f625143cf090bbfeeabf26782d25602b734a8695e46cccac307dbeeaa6",
-      "reviewer": "Claude (Claude Code session; compared the Japanese and English figure images side by side: same plotted data and layout, labels translated (some compressed but faithful); provenance per the commits that drew the English figures: same saved results as the Japanese figures; no model execution)",
+      "source": "examples/levee_breach/figs/maps.png",
+      "target": "examples/levee_breach/en/figs/maps.png",
+      "source_sha256": "97d9610f2810cc35d3a45c1c722acedd54c5a4227c999d6bfbc9f8654fb49781",
+      "target_sha256": "af2725d3e4f0676c82fc21c1eb317b83413f098d934d7a18c37aebecf8bb19f4",
+      "reviewer": "Claude (Claude Code session; reviewed the Japanese source against the English mirror; figures from the same results and drawing code with label changes only, 2026-10-30)",
       "method": "assistant",
-      "reviewed_on": "2026-10-29"
+      "reviewed_on": "2026-10-30"
+    },
+    {
+      "source": "examples/levee_breach/figs/mechanism.png",
+      "target": "examples/levee_breach/en/figs/mechanism.png",
+      "source_sha256": "fc0e241608e457f44f0b815583c11ee5fbb52d48c93da1449b94155c9d584133",
+      "target_sha256": "0614f1e0f2f10db7d3e4e811f8bf62cffa7f97fd2bffda144fe48d917e816bc5",
+      "reviewer": "Claude (Claude Code session; reviewed the Japanese source against the English mirror; figures from the same results and drawing code with label changes only, 2026-10-30)",
+      "method": "assistant",
+      "reviewed_on": "2026-10-30"
+    },
+    {
+      "source": "examples/levee_breach/figs/series.png",
+      "target": "examples/levee_breach/en/figs/series.png",
+      "source_sha256": "3f08e12afc5f72d7fba1c0dbdcda4b15f126561fe5ee348203376b41ba6c1a72",
+      "target_sha256": "26b9033fdb12728e73fab21e34fcd75516ceee9eb836ed20f1e54f830b43f710",
+      "reviewer": "Claude (Claude Code session; reviewed the Japanese source against the English mirror; figures from the same results and drawing code with label changes only, 2026-10-30)",
+      "method": "assistant",
+      "reviewed_on": "2026-10-30"
     },
     {
       "source": "examples/levee_breach/figs/setup.png",
       "target": "examples/levee_breach/en/figs/setup.png",
-      "source_sha256": "91673f95677bd9c07580a99bde1e9172371ea2c7dac5d5ac16728a0f01885840",
-      "target_sha256": "b8810f09597b6e1fed2322e62cf2a87506de7c000bdfc9c78a7f6af24f11ed29",
-      "reviewer": "Claude (Claude Code session; compared the Japanese and English figure images side by side: same plotted data and layout, labels translated (some compressed but faithful); provenance per the commits that drew the English figures: same saved results as the Japanese figures; no model execution)",
+      "source_sha256": "3ac0d74b472c66535416782dd710afc2881fe712a65b00d40b08bdba7e5145db",
+      "target_sha256": "e0d03a0c1a941409012f2ae5b5cc37b26bd81bacd5e696ed4d99777a2447f8e4",
+      "reviewer": "Claude (Claude Code session; reviewed the Japanese source against the English mirror; figures from the same results and drawing code with label changes only, 2026-10-30)",
       "method": "assistant",
-      "reviewed_on": "2026-10-29"
+      "reviewed_on": "2026-10-30"
     },
     {
-      "source": "examples/levee_breach/figs/timeseries.png",
-      "target": "examples/levee_breach/en/figs/timeseries.png",
-      "source_sha256": "318e65c8d25442ae034f4fb28d00146bb600e2408f887cc148a95b64fa77f9c2",
-      "target_sha256": "3af20032b45ef532f401ff2e8d67c29fc2cff2e3ed0396574ec849e1b6fa8381",
-      "reviewer": "Claude (Claude Code session; compared the Japanese and English figure images side by side: same plotted data and layout, labels translated (some compressed but faithful); provenance per the commits that drew the English figures: same saved results as the Japanese figures; no model execution)",
+      "source": "examples/levee_breach/figs/supp_inundation.png",
+      "target": "examples/levee_breach/en/figs/supp_inundation.png",
+      "source_sha256": "04798ff2e754c88873a0c6401d7e9fe481ad2a24594722b7feecc7309bc8c7bf",
+      "target_sha256": "f02d78f625143cf090bbfeeabf26782d25602b734a8695e46cccac307dbeeaa6",
+      "reviewer": "Claude (Claude Code session; reviewed the Japanese source against the English mirror; figures from the same results and drawing code with label changes only, 2026-10-30)",
       "method": "assistant",
-      "reviewed_on": "2026-10-29"
+      "reviewed_on": "2026-10-30"
+    },
+    {
+      "source": "examples/levee_breach/figs/supp_setup.png",
+      "target": "examples/levee_breach/en/figs/supp_setup.png",
+      "source_sha256": "91673f95677bd9c07580a99bde1e9172371ea2c7dac5d5ac16728a0f01885840",
+      "target_sha256": "b8810f09597b6e1fed2322e62cf2a87506de7c000bdfc9c78a7f6af24f11ed29",
+      "reviewer": "Claude (Claude Code session; reviewed the Japanese source against the English mirror; figures from the same results and drawing code with label changes only, 2026-10-30)",
+      "method": "assistant",
+      "reviewed_on": "2026-10-30"
+    },
+    {
+      "source": "examples/levee_breach/figs/supp_timeseries.png",
+      "target": "examples/levee_breach/en/figs/supp_timeseries.png",
+      "source_sha256": "26a9e857cf2302239ce7820b5f671cd1fda21867b4647862b9156536c7c297a9",
+      "target_sha256": "dad3a7b8773132c83d2692cb04a24a221f022cdd9a079f4c9899e6d6be4ff25a",
+      "reviewer": "Claude (Claude Code session; reviewed the Japanese source against the English mirror; figures from the same results and drawing code with label changes only, 2026-10-30)",
+      "method": "assistant",
+      "reviewed_on": "2026-10-30"
     },
     {
       "source": "examples/meander/README.md",

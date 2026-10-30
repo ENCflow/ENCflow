@@ -20,6 +20,7 @@
   dt_recrd_c = '6h'         ! 計測出力間隔
   fn_geoinfo = '-'
   fn_enc = '-'
+  fn_initial = '-'          ! 初期条件(&list_initial。地表は乾いた状態から)
   fn_precip = '-'           ! 涵養(上端の帯の雨。すべて地下へしみ込む)
   fn_gwflow = '-'
   fn_record = '-'
