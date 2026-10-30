@@ -1227,9 +1227,10 @@ architecture.md。このメモは「現在進行中・未完了の項目」だ�
   - **確認の残り**:
     - **例題の回し直し(§68.40 の 2 回の改定と §89.25 の流入面の床の修正の後。2026-10-29〜)**:
       内側へ向かうエッジの流速の上限(§68.40 の改定 2)は区間流入のあるすべての計算の流入口付近を
-      変えるので、区間流入を持つ例題をすべて回し直して README を更新する(meander 11 構成・
-      meander_cutoff 6・delta 8 と、levee_breach・bedrock_cover・mountain_valley・debris_bedrock など。
-      1 回目の改定の後に F で回した分は使わない)。§89.25 の床の新旧を計測用の実行ファイルで比べる全期間の
+      変えるので、区間流入を持つ例題をすべて回し直して README を更新する。2026-10-30 に levee_breach・
+      bedrock_cover・debris_bedrock・mountain_valley は数表が変わらないことを確かめ、meander(11 構成)の
+      README(日英)と図を更新した(developer.md §68.40 の改定 2 の検証)。残りは meander_cutoff(6 構成)と
+      delta(8 構成。param_mud は逐次で約 17 時間)。§89.25 の床の新旧を計測用の実行ファイルで比べる全期間の
       確認は、この回し直しで置き換えて打ち切った(食い違ったのは meander の容量給砂の fixfeed・
       fixsuspfeed・fixsuspfines。meander の param・param_cohesive・param_fixrec・param_varq と
       meander_cutoff の param・param_slump は食い違いなし)。

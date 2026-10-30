@@ -80,11 +80,11 @@ make                          # link to ../../bin/encflow and the inputs (z.txt,
 python3 plot_results.py       # figs/*.png and tables
 ```
 
-## Results (recomputed 2026-10-19: gfortran 13.3, -Ofast, 1 thread; advection is the default scheme 3 (including the two-sided condition of one-sided faces, §68.39), f_opening_dynamic = 2; the first values of 2026-10-17 to 18 remain in developer.md §84 as history)
+## Results (recomputed 2026-10-30: gfortran 13.3, -Ofast, 1 thread; advection is the default scheme 3, f_opening_dynamic = 2, including the velocity cap on the edges into a segment inflow (developer.md §68.40, second revision); the values of the recomputation of 2026-10-19 remain in developer.md §68.40 and the first values of 2026-10-17 to 18 in §84 as history)
 
 ![Planform](../figs/planform.png)
 
-Top: initial channel. Lower 6 panels: bed change z − z0 after 200 h of
+Top: initial channel. Lower 7 panels: bed change z − z0 after 200 h of
 morphological time (blue = scour, red = deposition). Black lines are the
 initial banks, coloured lines the banks at the end (contour of 0.05 m water
 depth; the two discharge-variation configurations end in a low-flow period, so
@@ -96,8 +96,8 @@ versions. In the two constant-discharge configurations the outer banks of the
 downstream bends (x > 450 m) retreat 20–30 m and the loops swell, while the
 inner-bank bars (+0.5 to +0.9 m) remain below the water surface, so **loop
 expansion and widening proceed together** (non-cohesive: width 20 → 37 m,
-avalanched sediment 21,900 m³; cohesive: 33 m, 3,120 m³ by the bank-erosion
-law + 24,800 m³ avalanched). In the upstream bends (x < 450 m) the bed is
+angle-of-repose avalanching 5,760 m³; cohesive: 31 m, 660 m³ by the
+bank-erosion law + 3,120 m³ avalanched). In the upstream bends (x < 450 m) the bed is
 lowered by the degradation wave of the unfed bed, the banks become relatively
 higher, and the movement is small.
 
@@ -107,7 +107,7 @@ Fixation degree a (top) and water depth at the end (low-flow period) (bottom)
 for the discharge variation + fixation configuration. The floodplain stays
 dry, so a = 1. Inside the initial channel, the bars on the inner side of each
 bend grew to the flood water surface, were exposed during low flow and became
-fixed (a > 0.5 in 555 cells = 2220 m²), and **the inner bank advanced as
+fixed (a > 0.5 in 492 cells = 1968 m²), and **the inner bank advanced as
 land**. The outer bank retreats 10–20 m in the downstream bends, and the
 low-flow stream collects in the pools along the outer bank. Of the four
 configurations this is the closest to "lateral migration at constant width".
@@ -123,19 +123,20 @@ side deepens, the bank face retreats while staying at the angle of repose
 
 | Case | 100 h: channel width / max. centre shift / max. amplitude of the wet belt (m) | 150 h (flood) | 200 h | Deepest scour (m) | Fixed bar cells (inside the initial channel, 200 h) |
 |---|---|---|---|---|---|
-| Non-cohesive (constant Q) | 30.8 / 15.0 / 35 | 34.4 / 20.9 / 39 | 36.8 / 25.8 / 45 | -2.17 | — |
-| Cohesive (constant Q) | 29.0 / 17.6 / 31 | 31.5 / 20.9 / 37 | 33.2 / 24.5 / 39 | -2.48 | — |
-| Cohesive + slump blocks | 30.1 / 15.0 / 31 | 33.1 / 22.4 / 41 | 35.6 / 26.6 / 47 | -2.36 | — |
-| Discharge variation only | 22.9 / 8.0 / 23 | 25.9 / 7.0 / 25 | 26.1 / 20.0 / 29 | -1.99 | — |
-| Discharge variation + fixation | 22.2 / 11.0 / 27 | 24.9 / 17.5 / 31 | 26.3 / 22.5 / 35 | -2.31 | 629 (2516 m²) |
+| Non-cohesive (constant Q) | 30.8 / 15.0 / 35 | 34.6 / 23.1 / 41 | 36.9 / 26.1 / 47 | -2.32 | — |
+| Cohesive (constant Q) | 27.8 / 13.9 / 25 | 29.2 / 13.0 / 25 | 30.5 / 18.6 / 29 | -2.39 | — |
+| Cohesive + slump blocks | 30.0 / 16.0 / 31 | 32.7 / 17.0 / 35 | 34.7 / 23.2 / 39 | -2.22 | — |
+| Discharge variation only | 22.7 / 7.7 / 23 | 26.7 / 9.0 / 27 | 26.8 / 21.0 / 33 | -2.11 | — |
+| Discharge variation + fixation | 22.4 / 12.7 / 27 | 24.6 / 15.2 / 31 | 25.4 / 19.0 / 35 | -2.31 | 492 (1968 m²) |
+| Non-cohesive + capacity feed | 33.9 / 17.0 / 39 | 39.8 / 37.9 / 55 | 54.3 / 38.9 / 69 | -1.84 | — |
 
 (x = 150–650 m. The channel width is the column average of wet cells
 (h > 0.1 m); the centre shift is the maximum deviation of the centroid of the
 wet cells from its initial position; the maximum amplitude of the wet belt is
 the maximum distance of the outer edge of the wet cells from the centre axis
-(initially 19 m). For the two discharge-variation configurations the 100 h and
-200 h outputs fall in low-flow periods, so 150 h in a flood period is also
-shown.)
+(initially 19 m); the deepest scour is the minimum of z − z0 over the same
+range. For the two discharge-variation configurations the 100 h and 200 h
+outputs fall in low-flow periods, so 150 h in a flood period is also shown.)
 
 ### Discharge variation + fixation configurations with sediment feed (2026-10-18)
 
@@ -147,16 +148,17 @@ bars inside the initial channel (a > 0.5).
 
 | Configuration | Fixed cells at 200 h (inside the initial channel) | Of which z − z0 > 1.0 m (floodplain height) | Max. z − z0 of the bar tops | Channel bed change x = 50–150 / 150–300 / 300–500 m | Floodplain deposition > 0.1 m | Feed (bedload, solid) |
 |---|---|---|---|---|---|---|
-| Discharge variation + fixation (no feed) | 629 | 0 | 0.84 m | −0.86 / −0.57 / −0.54 m | 0 | — |
-| Discharge variation + fixation + suspended sediment (no feed, param_fixsusp.txt) | 1,104 | 0 | 0.82 m | −0.51 / −0.55 / −0.62 m | 145 | — |
-| Discharge variation + fixation + capacity feed | 897 | 1 | 1.00 m | −0.22 / −0.08 / −0.41 m | 0 | 3,930 m³ |
-| Discharge variation + fixation + suspended sediment + feed (factor 1.0) | 1,552 | 832 | 1.94 m | −0.61 / −0.51 / −0.20 m | 2,845 | 4,420 m³ |
-| Same, suspended-sediment feed factor 0.5 | 466 | 0 | 0.71 m | −2.02 / −1.54 / −1.26 m | 97 | 130 m³ |
-| Same (factor 0.5) + ledger of fines in the bed (param_fixsuspfines.txt) | 1,249 | 303 | 1.12 m | −0.45 / −0.24 / −0.48 m | 6 | 2,230 m³ |
+| Discharge variation + fixation (no feed) | 492 | 0 | 0.87 m | −0.87 / −0.58 / −0.42 m | 0 | — |
+| Discharge variation + fixation + suspended sediment (no feed, param_fixsusp.txt) | 907 | 0 | 0.81 m | −0.49 / −0.53 / −0.66 m | 165 | — |
+| Discharge variation + fixation + capacity feed | 788 | 8 | 1.04 m | −0.24 / −0.08 / −0.26 m | 0 | 3,870 m³ |
+| Discharge variation + fixation + suspended sediment + feed (factor 1.0) | 1,135 | 0 | 0.87 m | −0.62 / −0.59 / −0.54 m | 558 | 2,480 m³ |
+| Same, suspended-sediment feed factor 0.5 (a trial with the 2026-10-19 version) | 466 | 0 | 0.71 m | −2.02 / −1.54 / −1.26 m | 97 | 130 m³ |
+| Same (factor 0.5) + ledger of fines in the bed (param_fixsuspfines.txt) | 1,474 | 296 | 1.25 m | −0.10 / −0.04 / −0.39 m | 154 | 2,600 m³ |
 
 (The channel bed change is the average over wet cells (h > 0.05 m). The rows
 for suspended sediment (no feed) and factor 0.5 are not in the figure; only
-the numbers are recorded.)
+the numbers are recorded. The factor 0.5 row is a trial without a parameter
+file and was not rerun.)
 
 ## Findings
 
@@ -176,10 +178,10 @@ the numbers are recorded.)
   expansion**: the outer bank retreats, but the inner-bank bar deposits only
   up to the water surface of the supplying cell (§84.2) and does not become
   land, so the channel bulges outward while widening (wet-belt amplitude
-  19 → 45 m, width 37 m).
+  19 → 47 m, width 37 m).
 - **With discharge variation + fixation the inner bank becomes land**: bars
   exposed during low flow become fixed and are not eroded during floods, and
-  629 cells (2516 m²) inside the initial channel remain as land with a > 0.5.
+  492 cells (1968 m²) inside the initial channel remain as land with a > 0.5.
   In the discharge-variation configuration without fixation the same bars are
   eroded by the next flood. The outer bank retreats 10–20 m in the downstream
   bends (wet-belt amplitude 35 m). The mechanisms of lateral meander
@@ -190,18 +192,21 @@ the numbers are recorded.)
 - **Slump blocks (param_cohesive_slump.txt; 2026-10-23) shift the main agent
   of retreat from the bank-erosion law to collapse at the critical height**:
   when pool scour makes the bank face exceed H_c = 1.5 m (initial bank 1.0 m
-  + scour 0.5 m) it fails in blocks (1,450 m³ collapsed), the blocks cover the
-  toe and the contribution of the bank-erosion law drops from 3,120 to
-  690 m³ (shielding). Even so, the width of 36 m and amplitude of 47 m at
-  200 h exceed the cohesive case (33 m, 39 m): the collapse itself makes the
-  outer bank retreat. Angle-of-repose avalanching drops greatly, from 24,800
-  to 2,400 m³ (the collapse handles the talus first). The advantage is that
+  + scour 0.5 m) it fails in blocks (1,440 m³ collapsed) and the blocks cover
+  the toe. In the current version the contribution of the bank-erosion law is
+  small even in the cohesive configuration without blocks (660 m³) and about
+  the same with blocks (680 m³), so no shielding effect is visible (in the
+  2026-10-23 version it dropped from 3,120 to 690 m³). The width of 35 m and
+  amplitude of 39 m at 200 h exceed the cohesive case (31 m, 29 m): the
+  collapse itself makes the outer bank retreat. Angle-of-repose avalanching
+  drops from 3,120 to 1,960 m³ (the collapse handles the talus first). The advantage is that
   the retreat rate is set by structural quantities, the critical height H_c
   of the bank material and the block size h_cover, without relying on a
   calibration of K_b; in exchange, the choice of H_c (bank height + pool
   scour depth) dominates the result.
 - **Decay of fixation while submerged (§84.13 on main; a trial with
-  fix_tdec = 10 h and fix_ctau_bank = 0.5; no figure or parameter file)**:
+  fix_tdec = 10 h and fix_ctau_bank = 0.5; no figure or parameter file; the
+  numbers are from the version of the trial on 2026-10-21)**:
   with discharge variation + fixation the fixed cells at 200 h drop from 629
   to 291, fixed cells submerged during floods go to 0 (die-back), the channel
   width and amplitude are almost unchanged (26 m, 33 m versus 26 m, 35 m),
@@ -221,17 +226,17 @@ the numbers are recorded.)
   the apex column (figs/metrics.png) therefore come out small.
 - **Suspended sediment + roughness (param_fixsusp.txt) speeds up the advance
   of the inner bank, but the bars do not exceed the flood level**: the fixed
-  cells increase to 1,104 at 200 h (629 for the bedload-only fixation
-  configuration) and the low-flow channel width narrows to 18 m (fines
+  cells increase to 907 at 200 h (492 for the bedload-only fixation
+  configuration) and the low-flow channel width narrows to 17 m (fines
   accumulate at the edges of the fixed bars and widen them). But the bar tops
-  stay at a maximum of 0.82 m, the same height as with bedload only (0.84 m),
+  stay at a maximum of 0.81 m, the same height as with bedload only (0.87 m),
   and most bars are dry even during floods (in the flood output at 150 h only
-  289 of 1,051 cells are submerged, at 200 h 135 of 1,104). This is because
-  the channel itself degrades further by suspension and the flood level
-  falls (channel bed change at 100 h −0.55 m versus −0.30 m with bedload
-  only), so the fines do not reach the tops of the bars, and outer-bank
-  retreat also stops (wet-belt amplitude 23 m versus 35 m; the fines settle
-  in the outer-bank pools). With a feed concentration of 0.001 the channel
+  202 of 855 cells are submerged, at 200 h 102 of 907). This is because the
+  channel itself degrades further by suspension and the flood level falls
+  (channel bed change at 100 h −0.49 m versus −0.31 m with bedload only;
+  x = 150–650 m), so the fines do not reach the tops of the bars, and
+  outer-bank retreat also stops (wet-belt amplitude 21 m versus 35 m; the
+  fines settle in the outer-bank pools). With a feed concentration of 0.001 the channel
   degrades even more (−0.9 m; a trial with the 2026-10-18 version). Growing
   the bars above the flood level requires a stable channel bed = equilibrium
   feed of both bedload and suspended sediment (stage 5). The vegetation effect
@@ -241,66 +246,70 @@ the numbers are recorded.)
   (param_feed.txt): with a mobile bed up to the upstream end and
   `fluv_bcfeed = 1` (supply = net outflow of the inflow cell), the bed at the
   inlet is fixed and the bed change in the upstream reach x = 50–150 m goes
-  from −0.92 m to −0.19 m at 200 h (feed 5,420 m³). The whole channel is
-  nearly in equilibrium at −0.1 to −0.2 m and widens to 40 m (37 m unfed).
+  from −0.92 m to −0.06 m at 200 h (feed 6,210 m³). The whole channel is
+  nearly in equilibrium at −0.1 to −0.2 m and widens to 54 m (37 m unfed).
   The mechanisms of outer-bank pool, inner-bank bar and outer-bank retreat
-  are the same, and the upstream bends move as well. The capacity feed before
+  are the same, and the upstream bends move as well. As the bed does not
+  degrade, the inflow spreads more easily beyond the section (the edges into
+  a segment inflow have no advection term; developer.md §68.40), and the
+  channel is wider than in the 2026-10-19 version (40 m). The capacity feed before
   2026-10-18 (evaluated with the τ* of the inflow cell itself) overfed this
   example and the channel spilled onto the floodplain (§84.9).
 - **Adding capacity feed to discharge variation + fixation speeds up the
   conversion of the inner bank into land** (param_fixfeed.txt): the channel
-  bed degradation eases from −0.5 to −0.9 m to −0.1 to −0.4 m, and the
-  upstream bends move too. The fixed cells at 200 h are 897 (629 unfed), the
-  wet-belt amplitude 41 m (35 m), and the bar tops reach a maximum of 1.00 m,
-  just touching the floodplain height (+1.0 m) (1 cell). With bedload alone a
+  bed degradation eases from −0.4 to −0.9 m to −0.1 to −0.3 m, and the
+  upstream bends move too. The fixed cells at 200 h are 788 (492 unfed), the
+  wet-belt amplitude 47 m (35 m), and the bar tops reach a maximum of 1.04 m,
+  just touching the floodplain height (+1.0 m) (8 cells). With bedload alone a
   bar accumulates only up to the water surface of the supplying cell (the
   flood level), so the flood level sets the upper limit of the bar tops.
-- **Adding suspended sediment with equilibrium-concentration feed lets the
-  bars grow above the flood level to the floodplain height, but the result is
-  extremely sensitive to the feed concentration: factor 1.0 overfeeds and
-  factor 0.5 degrades the channel deeply** (param_fixsuspfeed.txt): with
-  factor 1.0 the fines accumulate on the fixed bars and in the slack water
-  along the banks, and at 200 h 832 cells inside the initial channel exceed
-  the floodplain height (tops 1.94 m). This is exactly the intended process
-  (deposition during floods → exposure → fixation → bars assimilated into the
-  floodplain), but at the same time, by 50 h fines have accumulated at the
-  channel margins and in the slack water along the banks so that floods
-  spill widely onto the floodplain (at the 50 h output 18,400 wet cells,
-  floodplain deposition in 3,030 cells), and by 200 h a new course bypassing
-  the channel (avulsion) has formed. The overfeeding arises because the
-  equilibrium concentration of the inflow cell is evaluated in the narrow
-  inlet section and exceeds the transport capacity of the widened channel
-  downstream; with a feed factor of 0.5 the channel instead degrades by
-  1.3–2 m and the bars do not grow (suspended-sediment erosion entrains the
-  bed soil sd as fines — the bed has no grain-size composition, so the
-  bedload bed (1 mm) is eroded at the speed of 0.2 mm fines). A balance could
-  be found with an intermediate factor, but that would merely be a tuning
-  that compensates for the weakness of a single-grain-size bed through the
-  feed, so this example records the factor 1.0 result as "the process is
-  reproduced but overfed". In response, the ledger of fines in the bed
-  `f_bedfines` (§84.10) was implemented (next item).
+- **Even with suspended sediment and equilibrium-concentration feed
+  (factor 1.0), the bars do not exceed the flood level in the current
+  version** (param_fixsuspfeed.txt): at 200 h there are 1,135 fixed cells,
+  the bar tops stay at a maximum of 0.87 m, the same height as in the
+  bedload-only fixation configuration, and no cell exceeds the floodplain
+  height. The channel degrades by 0.5–0.6 m so that the flood level falls,
+  and in the first floods fines settle on the floodplain margins along the
+  banks near the inlet (585 cells by the 25 h output, 558 at 200 h; floods do
+  not spill widely onto the floodplain). The capacity feed is 2,480 m³. In
+  the 2026-10-19 version (before the velocity cap on the edges into a
+  segment inflow) the fines accumulated on the fixed bars and in the slack
+  water along the banks, 832 cells inside the initial channel exceeded the
+  floodplain height at 200 h (tops 1.94 m), floods spilled widely onto the
+  floodplain by 50 h (18,400 wet cells, floodplain deposition in 3,030
+  cells), and by 200 h a new course bypassing the channel (avulsion) had
+  formed (capacity feed 4,420 m³). The current assessment of this
+  configuration is that the feed evaluated with the τ* of the inflow cell
+  (capacity feed and equilibrium concentration) is sensitive to the flow in
+  the narrow inlet section, so whether it overfeeds changes with details of
+  the treatment of the inlet. With a feed factor of 0.5 (no ledger; a trial
+  with the 2026-10-19 version) the channel degraded by 1.3–2 m and the bars
+  did not grow (suspended-sediment erosion entrains the bed soil sd as fines
+  — the bed has no grain-size composition, so the bedload bed (1 mm) is
+  eroded at the speed of 0.2 mm fines). In response, the ledger of fines in
+  the bed `f_bedfines` (§84.10) was implemented (next item).
 - **With the ledger of fines in the bed, the channel stays in equilibrium at
   feed factor 0.5 and the bars grow to the floodplain height**
   (param_fixsuspfines.txt; the lower 2 rows of figs/feed.png): with a
   coarse-only bed (`fines_frac0 = 0`) only deposited fines can be
   resuspended, so even at factor 0.5 the channel stays at a gentle
-  degradation of −0.2 to −0.5 m (−1.3 to −2 m without the ledger). The fines
-  accumulate on the fixed bars; at 100 h bars along the inner banks on both
-  sides exceed +1.0 m (124 cells), and at 200 h 303 cells (tops 1.12 m) with
-  1,249 fixed cells. Floodplain deposition stays at 6 cells (2,845 without
-  the ledger at factor 1.0). The intended process (deposition during floods →
-  exposure → fixation → assimilation into the floodplain) appears without
-  tuning the feed concentration. At 150–200 h the outer bank of the first
-  bend (x = 150–200 m) scours deeply (deepest −2.9 m) and the loop widens. In
-  the first version of 2026-10-18, floods from 125 h onward spilled a thin
-  water film onto the floodplain from the upstream reach where the bars had
-  reached the floodplain height and the low-flow channel had narrowed, and it
-  remained in the low-flow output at 200 h (14,519 wet cells), but in the
-  recomputation with the two-sided-condition version of §68.39 there is no
-  spill (5,072 wet cells at 200 h). Whether it spills is thus marginal enough
-  to change with a detail of advection, the treatment of one-sided faces, and
-  the assessment of course shifting (avulsion) after the bars assimilate into
-  the floodplain is a task for the next stage. Returning the feed factor to
+  degradation of 0 to −0.4 m (−1.3 to −2 m without the ledger at factor 0.5).
+  The fines accumulate on the fixed bars; at 100 h bars along the inner banks
+  on both sides exceed +1.0 m (128 cells), and at 200 h 296 cells (tops
+  1.25 m) with 1,474 fixed cells. The intended process (deposition during
+  floods → exposure → fixation → assimilation into the floodplain) appears
+  without tuning the feed concentration. At 150–200 h the outer banks of the
+  upstream bends (x = 50–200 m) scour deeply (deepest −2.5 m) and the loops
+  widen, and in the low-flow output at 200 h a thin water film spills onto the
+  floodplain from the upstream reach where the bars have reached the
+  floodplain height and the low-flow channel has narrowed (13,976 wet cells,
+  floodplain deposition in 154 cells). The first version of 2026-10-18 also
+  spilled in the same way from 125 h onward (14,519 wet cells), but the
+  2026-10-19 version (the two-sided condition of §68.39) did not (5,072).
+  Whether it spills is thus marginal enough to change with details of
+  advection and of the treatment of the inlet, and the assessment of course
+  shifting (avulsion) after the bars assimilate into the floodplain is a task
+  for the next stage. Returning the feed factor to
   1.0 with the ledger (not in the figure; a trial with the 2026-10-18
   version) overfeeds the channel by +0.2 to 0.9 m and it spills widely onto
   the floodplain from 50 h (at 200 h 25,119 wet cells, floodplain deposition
@@ -310,9 +319,9 @@ the numbers are recorded.)
   ledger.
 - **With a gentle recession the bars do not grow as high** (param_fixrec.txt:
   rise to 15 m³/s in 2 min, hold for 10 min, linear recession to 1.5 m³/s
-  over 20 min, low flow for 10 min; the same 42-minute period): at 200 h 409
-  fixed cells (629 for the square wave), a maximum z − z0 of the fixed bar
-  tops of 0.76 m (0.84 m), channel width 25 m (26 m). Bedload deposition is
+  over 20 min, low flow for 10 min; the same 42-minute period): at 200 h 457
+  fixed cells (492 for the square wave), a maximum z − z0 of the fixed bar
+  tops of 0.78 m (0.87 m), channel width 25 m (25 m). Bedload deposition is
   capped at the water surface of the supplying cell, so the highest
   deposition occurs during the peak stage, and deposition during the
   recession only fills the channel margins at lower stages. Lengthening the
@@ -368,8 +377,8 @@ the numbers are recorded.)
 8. **Course shifting after the bars assimilate into the floodplain**: floods
    spill onto the floodplain from the upstream reach where the low-flow
    channel has narrowed, and a thin water film remains
-   (param_fixsuspfines.txt in the 2026-10-18 version from 125 h onward; no
-   spill in the recomputed version). Assessing the process in which flow over
+   (param_fixsuspfines.txt at 200 h; the first version of 2026-10-18 also
+   spilled from 125 h onward, the 2026-10-19 version did not). Assessing the process in which flow over
    the floodplain carves a new course (avulsion) is a task for the next stage.
 
 ## Related documents

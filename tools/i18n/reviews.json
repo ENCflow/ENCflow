@@ -959,11 +959,11 @@
     {
       "source": "examples/meander/README.md",
       "target": "examples/meander/en/README.md",
-      "source_sha256": "e231c4fa10117012385a173f76e4f361f4c5829467f41237ed01bbf3401db36d",
-      "target_sha256": "04dda6c372d02d5d6cf1d175481440832289fd46b9c8263d99c467fc9d22736f",
-      "reviewer": "Claude (Claude Code session; full-text content and lexical review, no model execution)",
+      "source_sha256": "2b593f45bce7585950731ef28007c40fde30ce5623a80b21a216a3913369bc47",
+      "target_sha256": "f79fb35952f52eed9aaa086628857a940c28e70de60f52b07bd2108520836224",
+      "reviewer": "Claude (Claude Code session; compared the updated results heading, planform and fixation paragraphs, the metrics and feed tables with their notes, and the rewritten findings on slump blocks, fixation decay, suspended sediment, capacity feed, equilibrium-concentration feed, the fines ledger and the gentle recession, plus limitation 8, in the source and the translation; rest unchanged since the previous record)",
       "method": "assistant",
-      "reviewed_on": "2026-10-23"
+      "reviewed_on": "2026-10-30"
     },
     {
       "source": "examples/meander_cutoff/README.md",
