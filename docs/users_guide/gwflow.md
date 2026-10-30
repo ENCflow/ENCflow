@@ -503,7 +503,7 @@ gw_ksv_mmh・gw_psif・sy0 の目安。耕起・圧密・植生で 1 桁動き�
 - [test/gwbed](../../test/gwbed/): 河床交換能による得水の律速・k_bed = 0 の遮断・鉛直浸透能の置き換えを解析値と比較。
 - [test/gwlateral](../../test/gwlateral/): 側方流動を線形化した Boussinesq 方程式の解(ガウス形の小山の広がり 4D)と比較し、壁沿いの通水能(内部の 0.71 倍)を記録。
 - [examples/sewer_hybrid](../../examples/sewer_hybrid/): 幹線と枝管網を同じ管路層で表す設定・入力生成の例。
-- [examples/qanat](../../examples/qanat/): 管路層と層2を組み合わせ、地下横坑の集水・導水・出口湧出を表す例。
+- [examples/qanat](../../examples/qanat/): 管路層と層2を組み合わせ、扇状地の地下水を集めるカナート(横坑)の集水・導水・出口湧出と、近くの揚水井による湧出の減少・枯渇を比べる例。
 
 ## 参考文献
 
