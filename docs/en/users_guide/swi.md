@@ -203,7 +203,7 @@ user, but they are listed here to show where the values come from.
 | Parameter | Default | Meaning | Basis |
 |---|---:|---|---|
 | swi0(1:3) | 0, 0, 0 mm | initial storage of the three tanks | **given** effect of antecedent rainfall; 0 to start dry |
-| outlet heights L (fixed) | 15, 60 / 15 / 15 mm | two outlets of tank 1 / tank 2 / tank 3 | **literature value** nationwide constants of the Japan Meteorological Agency[^okada01] (appendix; of the five geology types of Ishihara & Kobatake, the values for strata rich in granite are used nationwide). In tank 1, α = 0.1 belongs to the 15 mm outlet and α = 0.15 to the 60 mm outlet |
+| outlet heights L (fixed) | 15, 60 / 15 / 15 mm | two outlets of tank 1 / tank 2 / tank 3 | **literature value** nationwide constants of the Japan Meteorological Agency[^okada01] (appendix). The values are the granite row of the values that Ishihara & Kobatake[^ishihara79] classified into four geology types (volcanic rock, granite, Palaeozoic, Tertiary and Quaternary; Table 5), identified for computing flood runoff from small mountain sub-basins with an average area of 15–18 km². In tank 1, α = 0.1 belongs to the 15 mm outlet and α = 0.15 to the 60 mm outlet |
 | outflow coefficients α (fixed) | 0.1, 0.15 / 0.05 / 0.01 /h | lateral outflow | **literature value** same[^okada01] |
 | percolation coefficients β (fixed) | 0.12 / 0.05 / 0.01 /h | bottom percolation | **literature value** same[^okada01] |
 | dt (&list_sysparam) | ≤ 600 s | time step of the run | **method** the JMA computation interval of 10 min or less is required (the run stops otherwise) |
@@ -226,5 +226,5 @@ user, but they are listed here to show where the values come from.
 
 ## References
 
-[^ishihara79]: Ishihara, Y. and Kobatake, S. (1979): Runoff model for flood forecasting. *Bull. Disaster Prev. Res. Inst., Kyoto Univ.*, 29, 27–43. (the serial three-tank model)
+[^ishihara79]: Ishihara, Y. and Kobatake, S. (1979): Runoff model for flood forecasting. *Bull. Disaster Prev. Res. Inst., Kyoto Univ.*, 29(1), No. 260, 27–43. (the serial three-tank model Fig. 8; values identified for five basins Table 1; values by geology Table 5)
 [^okada01]: Okada, K., Makihara, Y., Shimpo, A., Nagata, K., Kunitsugu, M. and Saitoh, K. (2001): Soil Water Index (SWI) (in Japanese). *Tenki*, 48(5), 349–356. (JMA's operation; the appendix gives the tank model's structure, computation and constants)
