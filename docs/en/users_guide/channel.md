@@ -336,3 +336,7 @@ written as fields.
   (section, invert elevation, gate), use the culverts of the
   [structures chapter](structure.md) (the check valve of f_bank_mode=1
   is the shortcut).
+
+## References
+
+The sources of the models, formulas and default values used in this chapter are collected in the references of [Channels explained](channel_models.md#references) and [Hydraulics of structures and boundaries](hydraulics.md#references).

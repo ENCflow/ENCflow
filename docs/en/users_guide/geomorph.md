@@ -188,9 +188,9 @@ Riverbed erosion and deposition by a bedload transport formula.
 | fluv_diagratio | 2/(2+sqrt(2)) | Diagonal partitioning (normally no need to change) |
 | fluv_taufac | 1.0 | Effective shear-stress ratio f_τ (the τ* passed to the transport formula = f_τ × τ* of the total resistance; a simple separation of form drag by dunes or vegetation. 1 = no separation) |
 | fluv_slope | 0 | Bed-slope correction of the bed-load direction. 1: Hasegawa type (q⃗ = q_b(t̂ − γ∇z), γ = √(τ*c/(μs μk τ*))) |
-| fluv_mus / fluv_muk | 1.0 / 0.45 | Static and kinetic friction coefficients μs, μk. **Literature values** (Asahi et al. 2013 eq. (22), after Hasegawa 1984; Hasegawa 1989 uses μk = 0.7 as an estimate; the bedrock–alluvial model of Inoue et al. 2016 uses μs = μk = 0.7, whose product 0.49 gives nearly the same γ as the defaults). See the note below |
+| fluv_mus / fluv_muk | 1.0 / 0.45 | Static and kinetic friction coefficients μs, μk. **Literature values** (Asahi et al. 2013[^asahi13] eq. (22), after Hasegawa 1984; Hasegawa 1989[^hasegawa89] uses μk = 0.7 as an estimate; the bedrock–alluvial model of Inoue et al. 2016 uses μs = μk = 0.7, whose product 0.49 gives nearly the same γ as the defaults). See the note below |
 | f_secflow | 0 | Secondary-flow correction of the bed-load direction. 1: equilibrium type (near-bed transverse velocity ratio r = N* h κ, κ = streamline curvature of the velocity field) |
-| sec_nstar | 7.0 | N*. **Literature value** (Engelund 1974; Asahi et al. 2013 eq. (18). The de Vriend coefficient 2/κ²(1 − √g/(κC)) is about 10 for C = 50). See the note below |
+| sec_nstar | 7.0 | N*. **Literature value** (Engelund 1974[^engelund74]; Asahi et al. 2013 eq. (18). The de Vriend coefficient 2/κ²(1 − √g/(κC))[^struiksma85] is about 10 for C = 50). See the note below |
 | sec_rmax | 1.0 | Upper bound of |r| (cuts the h/R proportionality in sharp bends; 1 = 45°) |
 | sec_vmin | 0.01 | Minimum velocity (m/s) for evaluating the curvature |
 | f_berode | 0 | Bank erosion. 1: a neighbouring cell whose ground is above the water surface of a wet cell (a bank face) retreats under the shear stress of the toe cell, and the eroded volume is moved to the toe (requires f_fluvial = 1) |
@@ -258,7 +258,7 @@ same retreat again through `berode_kb`. Verification:
 **Self-protection of the bank by slump blocks.** A cohesive bank fails in
 blocks once pool scour makes the bank face higher than a critical height, and
 the fallen blocks cover the toe and stop bank erosion until the flow has
-carried them away (Asahi et al. 2013; Parker et al. 2011). This is represented
+carried them away (Asahi et al. 2013; Parker et al. 2011[^parker11]). This is represented
 by the **bank mode** `rf_bank = 1` of [rockfall and talus](#rockfall-and-talus-f_rockfall)
 `f_rockfall` together with `berode_hcover` (developer.md §84.17): the part of a
 bank face (a step above the water surface of the receiving cell; submerged steps,
@@ -1063,7 +1063,7 @@ phi0) in `fn_wave` (&list_wave) and every landform update does the following.
    to a hundred updates).
 4. The deep-water CERC formula Q_s = K2 H0^{12/5} T^{1/5} cos^{6/5}(alpha)
    sin(alpha) (alpha = angle between the wave direction and the onshore normal;
-   Ashton & Murray 2006, K2 = 0.34) is divided by the surf-zone width to give a
+   Ashton & Murray 2006[^am06], K2 = 0.34) is divided by the surf-zone width to give a
    shore-parallel flux, applied to the bed as edge fluxes exactly like bed load
    (supply limiter, dzmax and conservation are shared; nothing is carried onto
    dry cells, so the retreat of a dry beach is the task of `f_repose`).
@@ -1088,7 +1088,7 @@ bed-load path). Represent the sea as ordinary cells + an initial water level
 ("River-mouth deltas" above). Low-angle waves (|alpha| < 45 deg) smooth the
 shoreline (diffusion), high-angle waves grow the bulges (spits, asymmetric
 cusps). For a delta the shape follows the ratio of the river supply to Q_s;
-R = Q_r/Q_w < 1 tends to a cuspate delta (Nienhuis et al. 2015). Storms go in
+R = Q_r/Q_w < 1 tends to a cuspate delta (Nienhuis et al. 2015[^nienhuis15]). Storms go in
 `wave_val`, a wave climate in the constants.
 
 **Limits**: shadowing is the simple exposure field (no diffraction);
@@ -1598,3 +1598,24 @@ concentration and velocity gates, conservation in a closed box, input errors) an
 the example [examples/debris_bedrock](../../../examples/debris_bedrock/en/README.md)
 (the longitudinal distribution of the erosion by one debris flow, the effects of
 the cover and the threshold, and a comparison with a clear-water flood).
+
+## References
+
+The sources of the formulas and default values are collected in the reference lists of the
+explanation pages: bed load, suspended load, hillslope and long-term processes and bedrock
+incision in [Sediment transport, hillslope and long-term processes](sediment.md#references);
+debris flows, slope failure and moving bed layers (Takahashi and Nakagawa 1991, Egashira 1993
+etc.) in [Debris flow, slope failure and moving bed layer](massflow.md#references); stirring
+and transport by the coastal wave field (Soulsby 1997, Larson et al. 2004, Larson & Wamsley
+2007, Stockdon et al. 2006) in [Coastal wave field explained](wavefield_models.md#references).
+The Egashira–Ashida formula of `f_dbed = 2` is used through the Morpho2DH manual; the original
+(Egashira and Ashida 1992) has not been checked. The works cited directly in the tables and the
+text of this chapter are the following.
+
+[^asahi13]: Asahi, K., Shimizu, Y., Nelson, J. and Parker, G. (2013): Numerical simulation of river meandering with self-evolving banks. *J. Geophys. Res. Earth Surf.*, 118(4), 2208–2229. (Eq. (22) attributes the μs, μk of the transverse-slope correction to Hasegawa (1984), and the notation table states μs = 1.0, μk = 0.45; eq. (18) states N* = 7.0 [Engelund 1974]. Cells that become land are removed from the computation (§2.4, eq. (33)). Checked in developer.md §84.12)
+[^hasegawa89]: Hasegawa, K. (1989): Universal bank erosion coefficient for meandering rivers. *J. Hydraul. Eng.*, 115(6), 744–765. (Eq. (6) has the same form as the transverse-slope correction; μs = 1.0, μk = 0.7 for the order-of-magnitude estimate. §84.12)
+[^engelund74]: Engelund, F. (1974): Flow and bed topography in channel bends. *J. Hydraul. Div. ASCE*, 100(HY11), 1631–1648. (Cited by Asahi et al. (2013) as the source of the secondary-flow coefficient N* = 7.0; the paper itself not checked)
+[^struiksma85]: Struiksma, N., Olesen, K. W., Flokstra, C. and de Vriend, H. J. (1985): Bed deformation in curved alluvial channels. *J. Hydraul. Res.*, 23(1), 57–79. doi:10.1080/00221688509499377 (the spiral-flow coefficient A = (2/κ²)(1 − √g/(κC)) of eq. (12). Checked in §84.12)
+[^parker11]: Parker, G., Shimizu, Y., Wilkerson, G. V., Eke, E. C., Abad, J. D., Lauer, J. W., Paola, C., Dietrich, W. E. and Voller, V. R. (2011): A new framework for modeling the migration of meandering rivers. *Earth Surf. Process. Landforms*, 36(1), 70–86. (A framework that treats the migration of the eroding bank and of the depositing bank with separate relations; checked against the abstract)
+[^am06]: Ashton, A. D. and Murray, A. B. (2006): High-angle wave instability and emergent shoreline shapes: 1. Modeling of sand waves, flying spits, and capes. *J. Geophys. Res.*, 111, F04011. doi:10.1029/2005JF000422 (the CERC formula written with deep-water waves (eq. (2)) and the linear theory of perturbations of a straight shoreline. developer.md §84.15)
+[^nienhuis15]: Nienhuis, J. H., Ashton, A. D. and Giosan, L. (2015): What makes a delta wave-dominated? *Geology*, 43(6), 511–514. doi:10.1130/G36518.1 (classification of wave-dominated deltas by the ratio R of the fluvial sediment supply to the capacity of the waves to carry it away)

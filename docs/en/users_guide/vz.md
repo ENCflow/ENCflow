@@ -225,7 +225,7 @@ channel cells at the valley outlets and leave the rest to the shallow water flow
 ### Baseflow
 
 Tani (2023) separated the baseflow from the observed hydrograph by a straight line
-(joining the start and the end of the runoff; the method of Kadoya (1979) cited in
+(joining the start and the end of the runoff; the method of Kadoya (1979)[^kadoya1979] cited in
 the paper) and added the separated baseflow rate to the runoff rate calculated by
 the VZ model before comparing with the observations[^tani2023]. The VZ columns
 represent the component responding to rain, not the baseflow from deeper
@@ -484,7 +484,7 @@ S_e for ψ = −1 cm to −100 m, and the largest ratio of K where K_r ≥ 10⁻
 | clay | 2.0 | 0.38 | 0.068 | −2760 | 3.16 | 0.18 / ×400 |
 
 - The original values are not fits to measured retention curves. They are class
-  means of values estimated by a regression (Rawls and Brakensiek 1985) from the
+  means of values estimated by a regression (Rawls and Brakensiek 1985[^rawls1985]) from the
   sand and clay fractions and the bulk density in US soil survey reports (42
   states) (agricultural soils; the clay class is limited to less than 60 % clay).
 - The coefficient of variation of Ks within a class is large, 52 to 453 % (Table 4
@@ -545,3 +545,5 @@ S_e for ψ = −1 cm to −100 m, and the largest ratio of K where K_r ≥ 10⁻
 [^kosugi1996]: Kosugi, K. (1996): Lognormal distribution model for unsaturated soil hydraulic properties. *Water Resources Research*, 32(9), 2697–2703. doi:10.1029/96WR01776 (equations (7), (8), (12) to (14), (20) and (24) to (26); checked against the original paper on 2026-10-26)
 [^carsel1988]: Carsel, R. F. and Parrish, R. S. (1988): Developing joint probability distributions of soil water retention characteristics. *Water Resources Research*, 24(5), 755–769. doi:10.1029/WR024i005p00755 (means of the van Genuchten parameters and Ks by soil texture class: Tables 2 to 5; checked against the original paper on 2026-10-27)
 [^celia1990]: Celia, M. A., Bouloutas, E. T. and Zarba, R. L. (1990): A general mass-conservative numerical solution for the unsaturated flow equation. *Water Resources Research*, 26(7), 1483–1496. doi:10.1029/WR026i007p01483
+[^kadoya1979]: Kadoya (1979). Cited by Tani (2023) for the straight-line baseflow separation; for the bibliographic details see the reference list of Tani (2023) (not checked in this guide).
+[^rawls1985]: Rawls, W. J. and Brakensiek, D. L. (1985): Prediction of soil water properties for hydrologic modeling. In: Jones, E. B. and Ward, T. J. (eds.), *Watershed Management in the Eighties*, ASCE, 293–299. (The regression used by Carsel and Parrish (1988) to estimate the values of the texture classes. Bibliographic details from secondary sources; the paper itself not checked)

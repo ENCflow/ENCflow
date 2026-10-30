@@ -603,3 +603,7 @@ see [the rainfall and meteorology chapter](forcing.md).
 - [test/gwbed](../../../test/gwbed/en/README.md): throttled gaining flow, the k_bed = 0 cut-off and the replacement of the vertical infiltration capacity by the streambed exchange limit, compared with analytical values.
 - [examples/sewer_hybrid](../../../examples/sewer_hybrid/en/README.md): example settings and input generation that represent a trunk and a branch network in the same conduit layer.
 - [examples/qanat](../../../examples/qanat/en/README.md): an example combining the conduit layer with layer 2 to represent collection, conveyance and outlet seepage of an underground gallery.
+
+## References
+
+The sources of the models, formulas and default values used in this chapter are collected in the references of [Groundwater models](gwflow_models.md#references).

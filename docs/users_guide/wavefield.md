@@ -518,3 +518,7 @@ T = 8 s、20°)では CERC(Komar & Inman 1970)の 1.6 倍程度で、桁が合�
 - 書式の実例: [examples/List_samples/list_wavefield.txt](../../examples/List_samples/list_wavefield.txt)
 - いずれも MPI の np = 1・2・4 で逐次とビット一致します。各ケースで確かめていることの詳細は
   [解説](wavefield_models.md#11-検証ケース)にあります。
+
+## 参考文献
+
+この章で使うモデル・式・既定値の出典は、[沿岸の波浪場の解説](wavefield_models.md#参考文献)の参考文献にまとめています。

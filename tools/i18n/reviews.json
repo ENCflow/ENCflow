@@ -122,11 +122,11 @@
     {
       "source": "docs/users_guide/bedmotion.md",
       "target": "docs/en/users_guide/bedmotion.md",
-      "source_sha256": "d295daf5f98b8ecc8732bfb48f6f95ffe6af02c1f8bf327d10441fc6f177f16d",
-      "target_sha256": "c7beb70615b83b7fdbdbb2fe63e304a494ff6bc2384feead7f87c45d1aa74c4a",
-      "reviewer": "Claude (Claude Code session; full-text content and lexical review, no model execution)",
+      "source_sha256": "b43842d911ccb8f957bdc136f43657e072fa4578039dcbf89a7f62542b7e6d4a",
+      "target_sha256": "3111eb58c23871d173b8772f15a9fb4a36bb0057e55dedbc2285820c47799d71",
+      "reviewer": "Claude (Claude Code session; reviewed the changed sections (added reference sections, footnotes and citation markers) of the Japanese source against the English mirror, 2026-10-30)",
       "method": "assistant",
-      "reviewed_on": "2026-10-24"
+      "reviewed_on": "2026-10-30"
     },
     {
       "source": "docs/users_guide/bedmotion_models.md",
@@ -140,11 +140,11 @@
     {
       "source": "docs/users_guide/bldgdebris.md",
       "target": "docs/en/users_guide/bldgdebris.md",
-      "source_sha256": "eeb111af8740fefc9106e58cbeb67d223e3aff04965677870fccfd481ad76b15",
-      "target_sha256": "247e0f3ba691395691f042af5ecfd03f9afc65cea6e21dd7af00bc1d543da1f2",
-      "reviewer": "Claude (Claude Code session; full-text content and lexical review, no model execution)",
+      "source_sha256": "ac24ff89d2f5ec97380a0a2c866da5d579b7d515e589802b824047257eb1ff1f",
+      "target_sha256": "ad102687ddc7f9aab620cd0ef8b021096a25b3feb945a07015af053ac18cc760",
+      "reviewer": "Claude (Claude Code session; reviewed the changed sections (added reference sections, footnotes and citation markers) of the Japanese source against the English mirror, 2026-10-30)",
       "method": "assistant",
-      "reviewed_on": "2026-10-24"
+      "reviewed_on": "2026-10-30"
     },
     {
       "source": "docs/users_guide/bldgdebris_models.md",
@@ -158,20 +158,20 @@
     {
       "source": "docs/users_guide/boundary.md",
       "target": "docs/en/users_guide/boundary.md",
-      "source_sha256": "d1fa55dc717cc489e2ecb5bad1fe7f157b6cf403e7098615e9736a28673f86ca",
-      "target_sha256": "3c3eae3865b112c2b32d51d3d24770b34e6430055474b08296641771ac77180a",
-      "reviewer": "Claude (Claude Code session; full-text content and lexical review, no model execution)",
+      "source_sha256": "7298f062b0d51cf2b5b842f34f0a1b42160892292fc448ac6e5e342606e238ca",
+      "target_sha256": "399406e09ee958bdf63d3944cb1db208f0c449b479fe365f00fe649d5d48699d",
+      "reviewer": "Claude (Claude Code session; reviewed the changed sections (added reference sections, footnotes and citation markers) of the Japanese source against the English mirror, 2026-10-30)",
       "method": "assistant",
-      "reviewed_on": "2026-10-28"
+      "reviewed_on": "2026-10-30"
     },
     {
       "source": "docs/users_guide/channel.md",
       "target": "docs/en/users_guide/channel.md",
-      "source_sha256": "394bffa5f086f5a2e01cb65ffb353d237b16178c4cd75c4e6e8516b32c0d0280",
-      "target_sha256": "b9e8c6fbbcf2e492efaef31066d78cf73fa7cb54b49384f2d27c9ecfabfe633b",
-      "reviewer": "Claude (Claude Code session; full-text content and lexical review, no model execution)",
+      "source_sha256": "0a97a0b668a34c32e3ce752d5555bc5b360c5e7417848adae53d0e1db33ebf9e",
+      "target_sha256": "3dca93bd1382bde3a67f41589527ab95c163e7ec6090f34ab8479abfcd937941",
+      "reviewer": "Claude (Claude Code session; reviewed the changed sections (added reference sections, footnotes and citation markers) of the Japanese source against the English mirror, 2026-10-30)",
       "method": "assistant",
-      "reviewed_on": "2026-10-24"
+      "reviewed_on": "2026-10-30"
     },
     {
       "source": "docs/users_guide/channel_models.md",
@@ -185,11 +185,11 @@
     {
       "source": "docs/users_guide/coordinates.md",
       "target": "docs/en/users_guide/coordinates.md",
-      "source_sha256": "967e237e32f688c5a094f88d6d7b4093cb0dbe1d3815daf99939cb14b7d8593f",
-      "target_sha256": "e1708b172a56179690fb5ff325e6126a141ac4ab82013215a3558e2c36347b18",
-      "reviewer": "Claude (Claude Code session; full-text content and lexical review, no model execution)",
+      "source_sha256": "e0cef2ef4a4b554da0c893b52e7cbb92694635a5cc6a74448e8dce5186dd1d26",
+      "target_sha256": "dd90ebfd27f564ead796deb3f0ad023d4e04a381093b79453d4416467dfc6888",
+      "reviewer": "Claude (Claude Code session; reviewed the changed sections (added reference sections, footnotes and citation markers) of the Japanese source against the English mirror, 2026-10-30)",
       "method": "assistant",
-      "reviewed_on": "2026-10-24"
+      "reviewed_on": "2026-10-30"
     },
     {
       "source": "docs/users_guide/courant.md",
@@ -212,11 +212,11 @@
     {
       "source": "docs/users_guide/driftwood.md",
       "target": "docs/en/users_guide/driftwood.md",
-      "source_sha256": "7319177fbcb2498e4a1996ff5cad7f9f631a8599edabc21e872002bd063ad8fa",
-      "target_sha256": "53a151e074f05a1b5aa2e222c6b8830821aa436b675e2d0f313d55a18022aa3c",
-      "reviewer": "Claude (Claude Code session; full-text content and lexical review, no model execution)",
+      "source_sha256": "c18b8f84ae8bc7e78660411c8b82e6dead1c692f035cbe054a72bca50855eb6f",
+      "target_sha256": "809dc49098884a0e57c084d2f2e4b87106dc71cda8c2dfe520a5121e87ff0efc",
+      "reviewer": "Claude (Claude Code session; reviewed the changed sections (added reference sections, footnotes and citation markers) of the Japanese source against the English mirror, 2026-10-30)",
       "method": "assistant",
-      "reviewed_on": "2026-10-24"
+      "reviewed_on": "2026-10-30"
     },
     {
       "source": "docs/users_guide/driftwood_models.md",
@@ -239,11 +239,11 @@
     {
       "source": "docs/users_guide/forcing.md",
       "target": "docs/en/users_guide/forcing.md",
-      "source_sha256": "05f0511f79f8102a765aec7b70db7596c292ba9917884e62a01d0cd68636e652",
-      "target_sha256": "8de1dbadc412c4157e38e136f5035eab48886d98c4106974a7b0726c69f8fe01",
-      "reviewer": "Claude (Claude Code session; review of the changed lines against the previously recorded pair, no model execution)",
+      "source_sha256": "392633abab0ab6e795aed8bfd9551ac0f2478d73421634e50a9dd3de5bb855ac",
+      "target_sha256": "b3672cb954bff394b84417bc7ccb5dfffd7f0ba7ed148a7c15f4148cfefbef7f",
+      "reviewer": "Claude (Claude Code session; reviewed the changed sections (added reference sections, footnotes and citation markers) of the Japanese source against the English mirror, 2026-10-30)",
       "method": "assistant",
-      "reviewed_on": "2026-10-29"
+      "reviewed_on": "2026-10-30"
     },
     {
       "source": "docs/users_guide/forcing_models.md",
@@ -266,11 +266,11 @@
     {
       "source": "docs/users_guide/geomorph.md",
       "target": "docs/en/users_guide/geomorph.md",
-      "source_sha256": "3978971cef615cd2745577de73694700cf2f454f08e6a426c36727e97d448d81",
-      "target_sha256": "a6e0e63edf258deae3ece8f5b9fa57c5d828aff1859944aac02d0480261eb3af",
-      "reviewer": "Claude (Claude Code session; full-text content and lexical review, no model execution)",
+      "source_sha256": "94cde61ff300c11fa0657409046eda69e30779832dee49c219236c1484d52550",
+      "target_sha256": "e34d1b3880053b2d12cbd44ee988d8e9479bfbd7ffc69f2cc89a316c38c19ec8",
+      "reviewer": "Claude (Claude Code session; reviewed the changed sections (added reference sections, footnotes and citation markers) of the Japanese source against the English mirror, 2026-10-30)",
       "method": "assistant",
-      "reviewed_on": "2026-10-29"
+      "reviewed_on": "2026-10-30"
     },
     {
       "source": "docs/users_guide/glacier.md",
@@ -284,11 +284,11 @@
     {
       "source": "docs/users_guide/gwflow.md",
       "target": "docs/en/users_guide/gwflow.md",
-      "source_sha256": "0a7195fa9247c78bf66d3e1106c0de67253a47e296ffadfb9e28abd7da3baf78",
-      "target_sha256": "f21fce37858cc27d940e73b449e7591d68ec6cadbb6fa28ad03a924a3c6690fc",
-      "reviewer": "Claude (Claude Code session; reviewed the changed sections of the Japanese source against the English mirror, 2026-10-29)",
+      "source_sha256": "eb5c8c8dbbd479083814869a8b7bb7f7260726238e411227d19b06303dd7f709",
+      "target_sha256": "d74b62f3566b20664708e2f5408bd337f807d703a755446fd0b625acf2ce77d4",
+      "reviewer": "Claude (Claude Code session; reviewed the changed sections (added reference sections, footnotes and citation markers) of the Japanese source against the English mirror, 2026-10-30)",
       "method": "assistant",
-      "reviewed_on": "2026-10-29"
+      "reviewed_on": "2026-10-30"
     },
     {
       "source": "docs/users_guide/gwflow_models.md",
@@ -311,11 +311,11 @@
     {
       "source": "docs/users_guide/initial.md",
       "target": "docs/en/users_guide/initial.md",
-      "source_sha256": "4230fb4fc2e44315de1689d9ae278678230aaa03d5bcedabfdd0ec79fd13c73a",
-      "target_sha256": "41b42b339a5ea80fe9ea8025628ff0a3d2ce68da4788cc0fc2d704e6470cdcaf",
-      "reviewer": "Claude (Claude Code session; full-text content and lexical review, no model execution)",
+      "source_sha256": "632146956a1d5f92399872cc079620a4fa05ff44f509a2183fa15aa4f65c6a1a",
+      "target_sha256": "38f9d06580e1a43b0423a2aa3f42b1225e4a4b3b3cacfdf03351aeb1ab2fbb09",
+      "reviewer": "Claude (Claude Code session; reviewed the changed sections (added reference sections, footnotes and citation markers) of the Japanese source against the English mirror, 2026-10-30)",
       "method": "assistant",
-      "reviewed_on": "2026-10-24"
+      "reviewed_on": "2026-10-30"
     },
     {
       "source": "docs/users_guide/io.md",
@@ -347,11 +347,11 @@
     {
       "source": "docs/users_guide/nest.md",
       "target": "docs/en/users_guide/nest.md",
-      "source_sha256": "b2d16fbdd37ee076571f7208339a591edea563b638c551fa2f9747c22eb51eed",
-      "target_sha256": "1e653c8691cc278019559ac82ab5a9854ecfb540e3618519e44eccd0116e94ae",
-      "reviewer": "Claude (Claude Code session; full-text content and lexical review, no model execution)",
+      "source_sha256": "ed5f583418cb6e0752ef16d0b80f64cc3e228bc7dd64670ab48184741347f989",
+      "target_sha256": "19f1c71320baf81dc7b84f271ec150025f97b43e1246a7288c3dd118a5528f87",
+      "reviewer": "Claude (Claude Code session; reviewed the changed sections (added reference sections, footnotes and citation markers) of the Japanese source against the English mirror, 2026-10-30)",
       "method": "assistant",
-      "reviewed_on": "2026-10-24"
+      "reviewed_on": "2026-10-30"
     },
     {
       "source": "docs/users_guide/nest_models.md",
@@ -392,11 +392,11 @@
     {
       "source": "docs/users_guide/record.md",
       "target": "docs/en/users_guide/record.md",
-      "source_sha256": "a3635eb576772662b0df86d055dc15f324ce5f16d11eeec867743e571e997894",
-      "target_sha256": "dfd7ee6fd92f75ce89a21dfeb75e691f48502fa1d11e1afc784860b436f511e7",
-      "reviewer": "Claude (Claude Code session; full-text content and lexical review, no model execution)",
+      "source_sha256": "3141f8e68a28a7aeead45f953881bd8356f49a4bfc2ce5c4ec6921c6f2493eca",
+      "target_sha256": "3d81172aa8692a1ee8810237764372fa747703a312c336731c1f2b37f7db8842",
+      "reviewer": "Claude (Claude Code session; reviewed the changed sections (added reference sections, footnotes and citation markers) of the Japanese source against the English mirror, 2026-10-30)",
       "method": "assistant",
-      "reviewed_on": "2026-10-24"
+      "reviewed_on": "2026-10-30"
     },
     {
       "source": "docs/users_guide/restart.md",
@@ -419,29 +419,29 @@
     {
       "source": "docs/users_guide/sediment.md",
       "target": "docs/en/users_guide/sediment.md",
-      "source_sha256": "663b0eb1b97d18b760d73ad02c1ab55d8f0897613c282a6b98501f86b7d17c1f",
-      "target_sha256": "5fa8d32d00d43e36aabd253c792701abeb5430d325a6cd13fe739b149ffbec79",
-      "reviewer": "Claude (Claude Code session; full-text content and lexical review, no model execution)",
+      "source_sha256": "467b331fdd5c9f18e9451793572c85b2aa0ae0fbeb46fe60cd3af432cea86108",
+      "target_sha256": "3cd45575aa069466407eaeff78615f0f760400a11d74b771df3c8b434827c0f9",
+      "reviewer": "Claude (Claude Code session; reviewed the changed sections (added reference sections, footnotes and citation markers) of the Japanese source against the English mirror, 2026-10-30)",
       "method": "assistant",
-      "reviewed_on": "2026-10-29"
+      "reviewed_on": "2026-10-30"
     },
     {
       "source": "docs/users_guide/structure.md",
       "target": "docs/en/users_guide/structure.md",
-      "source_sha256": "c9c84219f758c16f162f8e826000cb6a8860649726a64157792ed36ad68a1d81",
-      "target_sha256": "cb283359a10b171117bf33c19a8f476d5fce15a81f127f1de93afe4b5c400164",
-      "reviewer": "Claude (Claude Code session; full-text content and lexical review, no model execution)",
+      "source_sha256": "70dd411d0155c046ee88b3cddc266dd3ca8272818bb66c5ed1bfdff98fad4ef2",
+      "target_sha256": "e548143f44b6416328b60fb0ab750b9867071b8d292edf19337e36e89b740e76",
+      "reviewer": "Claude (Claude Code session; reviewed the changed sections (added reference sections, footnotes and citation markers) of the Japanese source against the English mirror, 2026-10-30)",
       "method": "assistant",
-      "reviewed_on": "2026-10-24"
+      "reviewed_on": "2026-10-30"
     },
     {
       "source": "docs/users_guide/swflow.md",
       "target": "docs/en/users_guide/swflow.md",
-      "source_sha256": "4984cc766d45359c9e4b3d0f1b50efe55279536f97f158ff7616fadfbe334c65",
-      "target_sha256": "e7338f34d8443db8be976998749875dc02160e8db7869a1c4e118116d683ee33",
-      "reviewer": "Claude (Claude Code session; full-text content and lexical review, no model execution)",
+      "source_sha256": "ca87d1fbedd99081a1d24196b3a0a565fa605626b23b8437600d22ec2b3e6a9f",
+      "target_sha256": "a0f103065537a3af2cca2958f61a957eb20e76bafb426381e0723d886a122880",
+      "reviewer": "Claude (Claude Code session; reviewed the changed sections (added reference sections, footnotes and citation markers) of the Japanese source against the English mirror, 2026-10-30)",
       "method": "assistant",
-      "reviewed_on": "2026-10-28"
+      "reviewed_on": "2026-10-30"
     },
     {
       "source": "docs/users_guide/swi.md",
@@ -455,11 +455,11 @@
     {
       "source": "docs/users_guide/tide.md",
       "target": "docs/en/users_guide/tide.md",
-      "source_sha256": "581b347bd4ee56a3ee70d318a48958ece77bc5f73a24c1beef47251f91ea3b71",
-      "target_sha256": "973c68e304fea4d453ee2e8415f57f97399fc380dfa5b6ef391f18286baf2605",
-      "reviewer": "Claude (Claude Code session; review of the changed lines against the previously recorded pair, no model execution)",
+      "source_sha256": "da5a542974cefd95cb083cfe6cba18e472491d6a230029fd13974b93d438bb65",
+      "target_sha256": "c714a9c87863eceecd7423d86393f069bfb99776b1cadcd445497c7749e3c636",
+      "reviewer": "Claude (Claude Code session; reviewed the changed sections (added reference sections, footnotes and citation markers) of the Japanese source against the English mirror, 2026-10-30)",
       "method": "assistant",
-      "reviewed_on": "2026-10-29"
+      "reviewed_on": "2026-10-30"
     },
     {
       "source": "docs/users_guide/time.md",
@@ -500,38 +500,38 @@
     {
       "source": "docs/users_guide/vz.md",
       "target": "docs/en/users_guide/vz.md",
-      "source_sha256": "21dda74a25f78994149e55b86e9676eb0512c6d42bf76ab341d24b9eb7372107",
-      "target_sha256": "387f829431b5ad015bf2fb9e7e9c74e42a53e2d731db9040fd6efc8a609d7784",
-      "reviewer": "Claude (Claude Code session; full-text content and lexical review, no model execution)",
+      "source_sha256": "032e0fc7b650ddd924c4a36942fa7621f810e85f988077ecec1fe565368205da",
+      "target_sha256": "7d082e2c4f41c6d8cc377f0d302a8c56865ca5f7eca039dfb954b34315bf7b06",
+      "reviewer": "Claude (Claude Code session; reviewed the changed sections (added reference sections, footnotes and citation markers) of the Japanese source against the English mirror, 2026-10-30)",
       "method": "assistant",
-      "reviewed_on": "2026-10-27"
+      "reviewed_on": "2026-10-30"
     },
     {
       "source": "docs/users_guide/wavefield.md",
       "target": "docs/en/users_guide/wavefield.md",
-      "source_sha256": "db73d2400b540fa7d7e2cdd8914dae0914f813c6df3a7ca6337b0e11b475261d",
-      "target_sha256": "b29bbe1912f9398c8ca9c0bdca2738db8592ef446c379839aa2d565eb96e778a",
-      "reviewer": "Claude (Claude Code session; review of the changed lines against the previously recorded pair, no model execution)",
+      "source_sha256": "a0b326d96278cdc8e199ce6b7377f34c6b975e1b7b3899ae17c8b8b742999873",
+      "target_sha256": "b7ba4990b4f493bdc0efec8b51b95130cd3c6933c084d01abde9d3d88d05eff3",
+      "reviewer": "Claude (Claude Code session; reviewed the changed sections (added reference sections, footnotes and citation markers) of the Japanese source against the English mirror, 2026-10-30)",
       "method": "assistant",
-      "reviewed_on": "2026-10-29"
+      "reviewed_on": "2026-10-30"
     },
     {
       "source": "docs/users_guide/wavefield_models.md",
       "target": "docs/en/users_guide/wavefield_models.md",
-      "source_sha256": "48bbf1f64a6b178817c3504fb633ea9a5b2384a327d94ce3334a19c7f66bb70b",
-      "target_sha256": "2cfb5f25d97d43414770f35a34a6e28c8c6848f59e407a8b7f3707ee34f4d3df",
-      "reviewer": "Claude (Claude Code session; review of the changed lines against the previously recorded pair, no model execution)",
+      "source_sha256": "5b396850b8a56fb0f9d668d357700f14b3d0383a2fdeeffd41d1671f9a624e01",
+      "target_sha256": "0e57b007bf8cf7401d8109b458af653f1069695ea8951a9c52a80c94aad4dcb5",
+      "reviewer": "Claude (Claude Code session; reviewed the changed sections (added reference sections, footnotes and citation markers) of the Japanese source against the English mirror, 2026-10-30)",
       "method": "assistant",
-      "reviewed_on": "2026-10-29"
+      "reviewed_on": "2026-10-30"
     },
     {
       "source": "docs/users_guide/wq.md",
       "target": "docs/en/users_guide/wq.md",
-      "source_sha256": "8322ddf56e2872d8f69d8ccb9fb10f731cbc2b041b514752df08787bb1c6e388",
-      "target_sha256": "5a14ff92c41727a462db42eed71a8c1daba4aedae60d5f91b5948949664fd550",
-      "reviewer": "Claude (Claude Code session; full-text content and lexical review, no model execution)",
+      "source_sha256": "deb4df29f9f0b45461293dab25a042e1a05315c57b0cbd4c504a43e9c1b834af",
+      "target_sha256": "527694f5537cfc588d6154bbb9dc1c03cc382a07ca18eaeccd7923b36fc2c50b",
+      "reviewer": "Claude (Claude Code session; reviewed the changed sections (added reference sections, footnotes and citation markers) of the Japanese source against the English mirror, 2026-10-30)",
       "method": "assistant",
-      "reviewed_on": "2026-10-24"
+      "reviewed_on": "2026-10-30"
     },
     {
       "source": "docs/users_guide/wq_models.md",

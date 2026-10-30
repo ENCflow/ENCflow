@@ -102,7 +102,7 @@ dt is the proper remedy. The effect of the threshold is demonstrated in
 
 | Parameter | Default | Meaning (details in the § of [the explanation](encgrid.md)) |
 |---|---|---|
-| f_gravity_correction | 1 | effective gravity g cos²θ on steep slopes (Ni et al. 2019); no effect on gentle slopes (§5) |
+| f_gravity_correction | 1 | effective gravity g cos²θ on steep slopes (Ni et al. 2019[^ni19]); no effect on gentle slopes (§5) |
 | f_exflux_reduction | 1 | suppression of excessive outflow. Prevents negative depths at fronts advancing over dry ground (keep on in computations with dry beds) (§5) |
 | f_hcap_upwind | 1 | edge depth. 0: mean of both cells, 1: the mean capped by the upwind depth (default), 2: the upwind depth itself (removes the spike at a bore front; required in non-hydrostatic cases with breaking or bores. It increases the outflow onto dry ground, so check ex_flux in inundation runs) (§3, [advection](advection.md) §5) |
 | f_friction_fastmath | 0 | table approximation of h^(-4/3) in the friction term. 0: exact (default), 1-5: coarser and faster (relative error 2e-4 to 6%) (§8) |
@@ -168,7 +168,7 @@ the coefficient follows from the flow and the roughness).
 | f_diffusion_term | 0 | diffusion term. 0: none (default), 2: zero-equation model ν = ν0 + α·u*·h (recommended), 1: constant viscosity ([diffusion](diffusion.md) §2) |
 | p_diffusion_nu | -- | ν0 (m²/s). For model 1 a positive value must be given explicitly (unset is an error stop); for model 2 an optional background viscosity (§2) |
 | p_diffusion_alpha | 0.41/6 | coefficient α of the zero-equation model (default is the Elder type; calibrate within 0.15–0.6 for stronger transverse mixing) (§2) |
-| wf_break_visc | 0 | coefficient M of the horizontal mixing by wave breaking of the coastal wave field (0: none; 1 = the default of nuhfac of XBeach). Adds ν_w = M h (D/ρ)^(1/3) (Battjes 1975; D is the roller dissipation) to ν of the diffusion term. Requires fn_wavefield ([diffusion term](diffusion.md) §5, [coastal wave field](wavefield.md)) |
+| wf_break_visc | 0 | coefficient M of the horizontal mixing by wave breaking of the coastal wave field (0: none; 1 = the default of nuhfac of XBeach). Adds ν_w = M h (D/ρ)^(1/3) (Battjes 1975[^battjes75]; D is the roller dissipation) to ν of the diffusion term. Requires fn_wavefield ([diffusion term](diffusion.md) §5, [coastal wave field](wavefield.md)) |
 
 **Others**
 
@@ -336,3 +336,5 @@ results obtained with modified settings against your own baseline.
 ## References
 
 [^tada26]: Tada, T. (2026): An eight-neighborhood connected collocated grid scheme for overland flow simulation. *Hydrological Research Letters*, 20(2), 113–118. doi:10.3178/hrl.25-00052. (the original paper of the ENC grid: the eight-neighborhood connected collocated grid and the passage-width allocation)
+[^ni19]: Ni, Y., Cao, Z. and Liu, Q. (2019): Mathematical modeling of shallow-water flows on steep slopes. *J. Hydrol. Hydromech.*, 67(3), 252–259. doi:10.2478/johh-2019-0012. (effective gravity $`g\cos^2\theta`$ on steep slopes)
+[^battjes75]: Battjes, J. A. (1975) Modeling of turbulence in the surf zone. Proc. Symposium on Modeling Techniques, ASCE, San Francisco, 1050–1061. (Eddy viscosity of wave breaking ν = M h (D/ρ)^{1/3}; the form of the formula follows the nuhfac implementation of XBeach; the original paper has not been checked)

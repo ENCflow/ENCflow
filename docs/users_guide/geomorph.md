@@ -167,9 +167,9 @@ H_ss = sd* ln(W0/U)、斜面の横断の曲率が −U/D_eff(D_eff = D (1 − e^
 | fluv_diagratio | 2/(2+√2) | 斜め方向の配分(通常変更不要) |
 | fluv_taufac | 1.0 | 有効掃流力の比 f_τ(流砂量式に渡す τ* = f_τ × 全抵抗の τ*。砂堆・植生の形状抵抗を除く簡略分離。1 = 分離なし) |
 | fluv_slope | 0 | 河床勾配による流砂方向補正。1: 長谷川型(q⃗ = q_b(t̂ − γ∇z)、γ = √(τ*c/(μs μk τ*))) |
-| fluv_mus / fluv_muk | 1.0 / 0.45 | 静止・動摩擦係数 μs・μk。**文献値**(Asahi ら 2013 式 (22)、Hasegawa 1984。Hasegawa 1989 は概算に μk = 0.7。岩盤–沖積河道の Inoue ら 2016 は μs = μk = 0.7 で、積 0.49 の γ は既定とほぼ同じ)。下の注意 |
+| fluv_mus / fluv_muk | 1.0 / 0.45 | 静止・動摩擦係数 μs・μk。**文献値**(Asahi ら 2013[^asahi13] 式 (22)、Hasegawa 1984。Hasegawa 1989[^hasegawa89] は概算に μk = 0.7。岩盤–沖積河道の Inoue ら 2016 は μs = μk = 0.7 で、積 0.49 の γ は既定とほぼ同じ)。下の注意 |
 | f_secflow | 0 | 二次流による流砂方向補正。1: 平衡型(河床近傍の横断流速比 r = N* h κ、κ は流速場の流線曲率) |
-| sec_nstar | 7.0 | N*。**文献値**(Engelund 1974、Asahi ら 2013 式 (18)。de Vriend 型の係数 2/κ²(1 − √g/(κC)) は C = 50 で約 10)。下の注意 |
+| sec_nstar | 7.0 | N*。**文献値**(Engelund 1974[^engelund74]、Asahi ら 2013 式 (18)。de Vriend 型の係数 2/κ²(1 − √g/(κC))[^struiksma85] は C = 50 で約 10)。下の注意 |
 | sec_rmax | 1.0 | |r| の上限(急湾曲での h/R 比例則の打ち切り。1 = 45°) |
 | sec_vmin | 0.01 | 曲率を評価する最小流速 (m/s) |
 | f_berode | 0 | 側岸侵食。1: 湿潤セルの水面より高い隣接セル(河岸面)を脚部の掃流力で後退させ、削った土砂を脚部へ移す(f_fluvial = 1 が必須) |
@@ -225,7 +225,7 @@ H_ss = sd* ln(W0/U)、斜面の横断の曲率が −U/D_eff(D_eff = D (1 − e^
 
 **崩落土塊(slump block)による河岸の自己保護。** 粘着性の河岸は、淵の洗掘で
 河岸面の高さが限界を超えると塊で崩れ、落ちた土塊が脚部を覆って、流れが土塊を
-運び去るまで河岸の侵食を止めます(Asahi ら 2013、Parker ら 2011)。これは
+運び去るまで河岸の侵食を止めます(Asahi ら 2013、Parker ら 2011[^parker11])。これは
 [崩落と崖錐](#崩落と崖錐f_rockfall) `f_rockfall` の**河岸モード** `rf_bank = 1` と
 `berode_hcover` で表します(developer.md §84.17): 河岸面(受け手の水面より高い段。
 水面下の段 = 淵の壁は対象外)が限界高さ `rf_hc` を超えた分が崩れて脚部の崖錐 ht に
@@ -840,7 +840,7 @@ bs_eps_s を大きく(0.02 → 0.05)するのが第一の対処です(仕組み�
    (乾いたセルで途切れる)。デルタの陰・入り江・河道の内部には波が入らない
    (回折は扱わない。向きが変わると再収束に数十〜百更新かかる)。
 4. 沖波で書いた CERC 式 Q_s = K₂ H₀^{12/5} T^{1/5} cos^{6/5}α sin α(α = 波の進行方向と
-   岸向き法線のなす角。Ashton & Murray 2006、K₂ = 0.34)を砕波帯の幅で割って
+   岸向き法線のなす角。Ashton & Murray 2006[^am06]、K₂ = 0.34)を砕波帯の幅で割って
    岸平行の流束にし、掃流砂と同じエッジ流束として河床に適用する(供給量制限・
    dzmax・保存則は掃流砂と共通。乾いたセルへは運ばない = 乾いた浜の後退は安息角
    崩落 `f_repose` が担う)。
@@ -864,7 +864,7 @@ bs_eps_s を大きく(0.02 → 0.05)するのが第一の対処です(仕組み�
 通常セル+初期水位で表す(「河口デルタ」の項)。低角の波(|α| < 45°)は汀線の
 凹凸を均し(拡散)、高角の波は凸部を育てる(砂嘴・カスプの非対称)。デルタでは
 河川の供給と Q_s の比で形が決まり、R = Q_r/Q_w < 1 でカスプ状に近づく
-(Nienhuis ら 2015)。嵐の時系列は `wave_val` で、波候は固定値で与えます。
+(Nienhuis ら 2015[^nienhuis15])。嵐の時系列は `wave_val` で、波候は固定値で与えます。
 
 **限界**: 波の遮蔽は露出度の簡易扱い(回折なし)、岸沖輸送(前浜・バリア・砂丘)、
 波のセットアップと離岸流、砕波帯内の岸沖分布、多方向スペクトルは扱いません。
@@ -1267,3 +1267,21 @@ docs/karst_plan.md(developer.md §86)。
 自己被覆の解析解、更新間隔の不変、濃度・速度の門、閉じた箱の保存、入力の誤り)と例題
 [examples/debris_bedrock](../../examples/debris_bedrock/)(1 回の土石流の侵食の縦断分布、
 被覆・閾値の効き、清水の出水との比較)。
+
+## 参考文献
+
+式と既定値の根拠は解説ページの参考文献にまとめています。掃流砂・浮遊砂・斜面と長期の過程・
+岩盤下刻は[土砂輸送と斜面・長期地形過程の解説](sediment.md#参考文献)、土石流・斜面崩壊・
+動く底層(高橋・中川 1991、江頭 1993 など)は[土石流・斜面崩壊・動く底層の解説](massflow.md#参考文献)、
+沿岸の波浪場による攪拌と輸送(Soulsby 1997、Larson ら 2004、Larson & Wamsley 2007、Stockdon ら
+2006)は[沿岸の波浪場の解説](wavefield_models.md#参考文献)にあります。`f_dbed = 2` の江頭・芦田の
+式は Morpho2DH のマニュアル経由で使っており、原典(江頭・芦田 1992)は照合していません。この章の
+表と本文で直接引いた文献は次のとおりです。
+
+[^asahi13]: Asahi, K., Shimizu, Y., Nelson, J. and Parker, G. (2013): Numerical simulation of river meandering with self-evolving banks. *J. Geophys. Res. Earth Surf.*, 118(4), 2208–2229.(式 (22) の横断勾配の補正の μs・μk を Hasegawa (1984) に帰属させ、記法表で μs = 1.0・μk = 0.45、式 (18) で N* = 7.0 [Engelund 1974] と明記。陸地化したセルを計算から外す扱い(§2.4 式 (33))。developer.md §84.12 で照合)
+[^hasegawa89]: Hasegawa, K. (1989): Universal bank erosion coefficient for meandering rivers. *J. Hydraul. Eng.*, 115(6), 744–765.(式 (6) が横断勾配の補正と同形。桁の見積りに μs = 1.0・μk = 0.7。§84.12)
+[^engelund74]: Engelund, F. (1974): Flow and bed topography in channel bends. *J. Hydraul. Div. ASCE*, 100(HY11), 1631–1648.(平衡二次流の係数 N* = 7.0 の出典として Asahi ら (2013) が引く。本文は未照合)
+[^struiksma85]: Struiksma, N., Olesen, K. W., Flokstra, C. and de Vriend, H. J. (1985): Bed deformation in curved alluvial channels. *J. Hydraul. Res.*, 23(1), 57–79. doi:10.1080/00221688509499377(式 (12) の螺旋流の係数 A = (2/κ²)(1 − √g/(κC))。§84.12 で照合)
+[^parker11]: Parker, G., Shimizu, Y., Wilkerson, G. V., Eke, E. C., Abad, J. D., Lauer, J. W., Paola, C., Dietrich, W. E. and Voller, V. R. (2011): A new framework for modeling the migration of meandering rivers. *Earth Surf. Process. Landforms*, 36(1), 70–86.(侵食する河岸と堆積する河岸の移動を別の関係で扱う枠組み。要旨で確認)
+[^am06]: Ashton, A. D. and Murray, A. B. (2006): High-angle wave instability and emergent shoreline shapes: 1. Modeling of sand waves, flying spits, and capes. *J. Geophys. Res.*, 111, F04011. doi:10.1029/2005JF000422(沖波で書いた CERC 式(式 (2))と、直線汀線の擾乱の線形理論。developer.md §84.15)
+[^nienhuis15]: Nienhuis, J. H., Ashton, A. D. and Giosan, L. (2015): What makes a delta wave-dominated? *Geology*, 43(6), 511–514. doi:10.1130/G36518.1(河川の給砂と波の運び去る力の比 R による波浪卓越型デルタの分類)

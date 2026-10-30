@@ -87,7 +87,7 @@ y 方向の単位幅流量 N は南北面(菱形)に置きます。出力用の�
 
 | パラメータ | 既定値 | 意味(詳細は[解説](encgrid.md)の §) |
 |---|---|---|
-| f_gravity_correction | 1 | 急勾配の有効重力 g cos²θ(Ni et al. 2019)。緩勾配では無効果(§5) |
+| f_gravity_correction | 1 | 急勾配の有効重力 g cos²θ(Ni et al. 2019[^ni19])。緩勾配では無効果(§5) |
 | f_exflux_reduction | 1 | 過大な流出の抑制。乾いた地表を進む前縁の負水深を防ぐ(乾床のある計算では on のまま)(§5) |
 | f_hcap_upwind | 1 | エッジ水深。0: 両側平均、1: 平均を上流側水深で頭打ち(既定)、2: 上流側水深そのもの(段波先端のスパイク防止。砕波・段波を含む非静水圧ケースでは必須。乾いた地表への流出が増えるので氾濫では ex_flux を確認)(§3、[移流項](advection.md) §5) |
 | f_friction_fastmath | 0 | 摩擦項 h^(−4/3) の表近似。0: 厳密(既定)、1〜5: 粗く速い(相対誤差 2e-4〜6%)(§8) |
@@ -146,7 +146,7 @@ y 方向の単位幅流量 N は南北面(菱形)に置きます。出力用の�
 | f_diffusion_term | 0 | 拡散項。0: なし(既定)、2: ゼロ方程式モデル ν = ν0 + α·u*·h(推奨)、1: 定数粘性([拡散項](diffusion.md) §2) |
 | p_diffusion_nu | — | ν0 (m²/s)。モデル 1 では正値の明示が必須(未指定はエラー停止)。モデル 2 では省略可のバックグラウンド粘性(§2) |
 | p_diffusion_alpha | 0.41/6 | ゼロ方程式の係数 α(既定は Elder 型。横断混合を強めるなら 0.15〜0.6 で校正)(§2) |
-| wf_break_visc | 0 | 沿岸の波浪場の砕波による水平混合の係数 M(0: なし。1 = XBeach の nuhfac の既定)。ν_w = M h (D/ρ)^(1/3)(Battjes 1975。D はローラーの散逸)を拡散項の ν に足す。fn_wavefield が必須([拡散項](diffusion.md) §5、[沿岸の波浪場](wavefield.md)) |
+| wf_break_visc | 0 | 沿岸の波浪場の砕波による水平混合の係数 M(0: なし。1 = XBeach の nuhfac の既定)。ν_w = M h (D/ρ)^(1/3)(Battjes 1975[^battjes75]。D はローラーの散逸)を拡散項の ν に足す。fn_wavefield が必須([拡散項](diffusion.md) §5、[沿岸の波浪場](wavefield.md)) |
 
 **その他**
 
@@ -298,3 +298,5 @@ y 方向の単位幅流量 N は南北面(菱形)に置きます。出力用の�
 ## 参考文献
 
 [^tada26]: Tada, T. (2026): An eight-neighborhood connected collocated grid scheme for overland flow simulation. *Hydrological Research Letters*, 20(2), 113–118. doi:10.3178/hrl.25-00052.(ENC 格子の原論文: 八近傍連結コロケート格子と通過幅の配分)
+[^ni19]: Ni, Y., Cao, Z. and Liu, Q. (2019): Mathematical modeling of shallow-water flows on steep slopes. *J. Hydrol. Hydromech.*, 67(3), 252–259. doi:10.2478/johh-2019-0012.(急斜面の有効重力 $`g\cos^2\theta`$)
+[^battjes75]: Battjes, J. A. (1975) Modeling of turbulence in the surf zone. Proc. Symposium on Modeling Techniques, ASCE, San Francisco, 1050–1061.(砕波の渦動粘性 ν = M h (D/ρ)^{1/3}。式の形は XBeach の nuhfac の実装による。原論文は未照合)

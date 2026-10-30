@@ -209,3 +209,10 @@ hsea0 は限界水深 dd の数十倍以上(標準 1 m)から始めてくださ�
   書式の実例: [examples/List_samples/list_tide.txt](../../examples/List_samples/list_tide.txt)。
 - 管路層の海域吐口・排水機場と潮位の結合: [test/coastal_drain](../../test/coastal_drain/)。
 - 高潮による材木の流入・堆積の設定例: [examples/timberyard](../../examples/timberyard/)。
+
+## 参考文献
+
+潮位の与え方(固定値・時系列・分布)は、与えたデータを補間して海セルに置くだけで、拠った文献は
+ありません。海セルを見かけの水柱 `hsea0` で表し、その水面を潮位に合わせる扱いは ENCflow 独自の
+簡略化です(developer.md §23)。辺の境界の水理則(自由流出・放射)の出典は
+[構造物と境界の水理則の解説](hydraulics.md#参考文献)にあります。

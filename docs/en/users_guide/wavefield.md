@@ -632,3 +632,7 @@ approaches 0 as `wf_tol` is reduced. The unsteady imbalance is (change of storag
 - Format examples: [examples/List_samples/en/list_wavefield.txt](../../../examples/List_samples/en/list_wavefield.txt)
 - All are bit-identical to the serial run with MPI np = 1, 2 and 4. The details of what each case
   checks are in the [explanation](wavefield_models.md#11-verification-cases).
+
+## References
+
+The sources of the models, formulas and default values used in this chapter are collected in the references of [Coastal wave field explained](wavefield_models.md#references).

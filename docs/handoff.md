@@ -147,13 +147,24 @@ architecture.md。このメモは「現在進行中・未完了の項目」だ�
      規模。§87.3)。単精度用の許容を設けるかは必要になってから。
 
 00c. **方針 13(説明責任。developer.md §0。2026-10-24 制定)の既存部分への遡及**
-   - 出典の棚卸し: users guide 第III部のうち「参考文献」節のない章
-     (bedmotion・bldgdebris・driftwood・forcing・nonhydrostatic・wq・
-     structure・channel・tide・boundary など)で、モデル・式・既定値の出典を
-     plan 文書・developer.md から引き写すか、独自定式ならその旨を明記する
-     (日英。list_*.f90 の既定値コメントとも整合させる)。中期の道標「山地渓流の
-     地形発達」の出典の段落で書誌を確かめた文献の、users guide・plan への反映も
-     この作業で行う。
+   - 出典の棚卸し(済 2026-10-30。日英): 本文で引いた文献が参考文献の節にない箇所を機械的に
+     突き合わせて埋めた(sediment: Asahi ら 2013・Hasegawa 1989・Engelund 1974・Chatanantavet &
+     Parker 2009・Whipple & Tucker 2002、swflow: Ni ら 2019・Battjes 1975、vz: Rawls & Brakensiek
+     1985・角屋 1979、wavefield_models: Hunt 1959・Mayer & Kriebel 1994・Wang ら 2002)。geomorph.md に
+     参考文献の節を新設(解説ページへの案内と、表で直接引いた Asahi ら 2013・Hasegawa 1989・
+     Engelund 1974・Struiksma ら 1985・Parker ら 2011・Ashton & Murray 2006・Nienhuis ら 2015)。
+     解説ページを持つ 11 章(bedmotion・bldgdebris・boundary・structure・channel・driftwood・forcing・
+     gwflow・nest・wavefield・wq)に参考文献への案内の節、tide・initial・record に独自の扱いである
+     ことの明記(initial は同系統の Planchon & Darboux 2001 も)、coordinates に度→m の概算の
+     出どころを足した。nonhydrostatic は既に節があり変更なし。山地渓流で確かめた書誌は
+     sediment.md(McGuire ら 2023 の共著者)と mountain_stream_plan.md(Howard 1994、Frank ら 2015 の
+     副題、McGuire ら 2023、Parker の e-book)に反映。書誌は検索で確かめ、本文を読んでいないものは
+     各脚注に「本文は未照合」と書いた。残り: Hasegawa (1984・1981) の原典と書誌(Asahi ら 2013・
+     Hasegawa 1989 が帰属先として挙げるだけ)、角屋 (1979) の書誌(谷 2023 の文献表で確かめる)、
+     Mayer & Kriebel (1994) の著者の名と頁、Wang ら (2002) が Larson & Wamsley (2007) の引く論文と
+     同じかの確認、江頭・芦田 (1992) の原典(f_dbed = 2 は Morpho2DH のマニュアル経由)。この
+     作業環境では icce-ojs-tamu.tdl.org と esurf.copernicus.org に接続できなかった(検索の結果で確認)。
+     第II部の io・time・restart・parallel・user_routines はモデル・式を含まないので対象外とした
    - 検定スクリプト: pump・frost・conduit・nhbottom は 2026-10-29 に整備済み
      (developer.md §16.3・§16.4・§46.4・§69.10)。残り: benchmark 系(examples/benchmark の
      h-plane・v-shaped・v-valley)の環境非依存テストへの昇格(§10)。解析解のある候補は
@@ -778,8 +789,8 @@ architecture.md。このメモは「現在進行中・未完了の項目」だ�
     Barnhart)は書誌の確認で済んだ(どちらもオープンアクセス)。2026-10-29 に利用者が
     提供した本文で照合済み: Rickenmann & Recking (2011)・Nitsche ら (2011)・Sklar &
     Dietrich (2004・2006)・Paola ら (1992)・Stock & Dietrich (2006)・Inoue ら (2016)・
-    Berger ら (2011)(所見は plan §6.3・§4.2・§11・§12.4・§9)。users guide・plan の該当
-    記述への反映は 00c の出典の棚卸しで行う。
+    Berger ら (2011)(所見は plan §6.3・§4.2・§11・§12.4・§9)。確かめた書誌の users guide・plan
+    への反映は 2026-10-30 に済(00c)。
   - **日英の確認記録**: この作業の記録はすべて AI による確認(method assistant)。
     examples/bedrock_cover の図 4 組も 2026-10-29 に記録した。
 

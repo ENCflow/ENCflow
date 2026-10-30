@@ -169,3 +169,11 @@ depth, velocity, or other state variables, so it does not reproduce the
 complete in-run measurement CSV. For a time series, measure each
 distribution separately and associate the results with the original output
 times.
+
+## References
+
+Probes record the cell values as they are, and a flux line on the ENC grid sums the edge flows
+along the line (the edge-flow method; developer.md §24.2). The way the measurements are defined,
+including the choice of the cells of a line (the cells a straight line passes through, by DDA) and
+the division into segments with real coordinates, is original to ENCflow; no publication was drawn
+on.

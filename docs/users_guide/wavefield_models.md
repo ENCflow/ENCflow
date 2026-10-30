@@ -538,7 +538,7 @@ u_o = u_s\sqrt{1 - z/R},\quad \frac{t_o}{T} = \sqrt{1 - z/R},\quad v_o = v_s
 
 (Larson & Wamsley 2007[^lw07] 式 (4)・(6)・(7))を遡上域の幅 R/tanβ で積分した量を汀線に沿って
 運びます。K_l の既定は K_c と同じ値です(Larson & Wamsley の仮定。移動床の大型平面水槽 LSTF の
-実験(Wang ら 2002)の遡上域の沿岸漂砂と合うことが示されています)。平均波向が汀線の法線から 80° 以上
+実験(Wang ら 2002[^wang02])の遡上域の沿岸漂砂と合うことが示されています)。平均波向が汀線の法線から 80° 以上
 なら沿岸の輸送はありません。
 
 ### 9.3 遡上高と露出度
@@ -553,7 +553,7 @@ L0 = gT²/2π(T は代表周期 `wf_trep` か `wf_val` の周期の列)、β は
 1 で頭打ち)を H0 に掛けます(**独自**)。開けた海浜の汀線では波高が水深で飽和して E = 1 です。
 近くに波浪セルがなければ遡上はありません。
 
-Larson らは R を Mayer & Kriebel(1994)・Hunt(1959)の式(有義波高)で求めて K_c を較正しており、
+Larson らは R を Mayer & Kriebel(1994)[^mk94]・Hunt(1959)[^hunt59] の式(有義波高)で求めて K_c を較正しており、
 Stockdon らの振れ幅と組むのは **独自の組み合わせ** です(R の定義の違いの分、K_c の値の意味は
 ずれ得ます)。
 
@@ -746,3 +746,6 @@ docs/wavefield_plan.md §11・§12 と developer.md §90 にあります。
 [^walstra00]: Walstra, D. J. R., Roelvink, J. A. & Groeneweg, J. (2000) Calculation of wave-driven currents in a 3D mean flow model. Proc. 27th ICCE, 1050–1063.
 [^xbeach]: Roelvink, D., Reniers, A., van Dongeren, A., van Thiel de Vries, J., McCall, R. & Lescinski, J. (2009) Modelling storm impacts on beaches, dunes and barrier islands. Coastal Engineering 56, 1133–1152. 定式と既定値は XBeach マニュアル(xbeach.readthedocs.io)と公開ソース(params.F90)による。
 [^zijlema11]: Zijlema, M., Stelling, G. and Smit, P. (2011) SWASH: An operational public domain code for simulating wave fields and rapidly varied flows in coastal waters. Coastal Engineering 58, 992–1012.
+[^hunt59]: Hunt, I. A. (1959) Design of seawalls and breakwaters. J. Waterways and Harbors Div. ASCE 85(3), 123–152.(遡上高の Hunt の式。Larson ら (2004) の引用による。本文は未照合)
+[^mk94]: Mayer and Kriebel (1994) Wave runup on composite-slope and concave beaches. Proc. 24th Int. Conf. Coastal Eng.(Coastal Engineering Proceedings 1(24))。Larson ら (2004) の引用による。会議録の目録で題名を確認(著者の名と頁、本文は未照合)
+[^wang02]: Wang, P., Smith, E. R. & Ebersole, B. A. (2002) Large-scale laboratory measurements of longshore sediment transport under spilling and plunging breakers. J. Coastal Res. 18(1), 118–135.(LSTF の実験。崩れ波で沿岸漂砂の最大が遡上域に出る。Larson & Wamsley (2007) の文献表との突き合わせは未了)

@@ -663,7 +663,7 @@ u_o = u_s\sqrt{1 - z/R},\quad \frac{t_o}{T} = \sqrt{1 - z/R},\quad v_o = v_s
 (Larson & Wamsley 2007[^lw07], Eqs. (4), (6) and (7)) integrated over the swash width R/tanβ is
 carried along the shoreline. The default K_l equals K_c (the assumption of Larson & Wamsley, shown to
 agree with the longshore transport in the swash of movable-bed experiments in the large basin LSTF
-(Wang et al. 2002)). There is no longshore transport if the mean wave direction is 80° or more from
+(Wang et al. 2002[^wang02])). There is no longshore transport if the mean wave direction is 80° or more from
 the shoreline normal.
 
 ### 9.3 Runup height and exposure
@@ -682,7 +682,7 @@ wave height to the saturated height min(H_inc, γ_s h) (γ_s = √2 `wf_gammax` 
 height at the shoreline is saturated by the depth and E = 1. Without wave cells nearby there is no
 swash.
 
-Larson et al. calibrated K_c with R from the formulas of Mayer & Kriebel (1994) and Hunt (1959)
+Larson et al. calibrated K_c with R from the formulas of Mayer & Kriebel (1994)[^mk94] and Hunt (1959)[^hunt59]
 (significant wave height); combining it with the swash of Stockdon et al. is an **original
 combination** (the meaning of the K_c value can shift by the difference in the definition of R).
 
@@ -893,3 +893,6 @@ against the originals are in docs/wavefield_plan.md §11 and §12 and developer.
 [^walstra00]: Walstra, D. J. R., Roelvink, J. A. & Groeneweg, J. (2000) Calculation of wave-driven currents in a 3D mean flow model. Proc. 27th ICCE, 1050–1063.
 [^xbeach]: Roelvink, D., Reniers, A., van Dongeren, A., van Thiel de Vries, J., McCall, R. & Lescinski, J. (2009) Modelling storm impacts on beaches, dunes and barrier islands. Coastal Engineering 56, 1133–1152. Formulations and defaults are from the XBeach manual (xbeach.readthedocs.io) and the public source code (params.F90).
 [^zijlema11]: Zijlema, M., Stelling, G. and Smit, P. (2011) SWASH: An operational public domain code for simulating wave fields and rapidly varied flows in coastal waters. Coastal Engineering 58, 992–1012.
+[^hunt59]: Hunt, I. A. (1959) Design of seawalls and breakwaters. J. Waterways and Harbors Div. ASCE 85(3), 123–152. (Hunt's runup formula; cited by Larson et al. (2004); the paper itself not checked)
+[^mk94]: Mayer and Kriebel (1994) Wave runup on composite-slope and concave beaches. Proc. 24th Int. Conf. Coastal Eng. (Coastal Engineering Proceedings 1(24)). Cited by Larson et al. (2004); the title checked in the proceedings index (the authors' initials, the pages and the paper itself not checked)
+[^wang02]: Wang, P., Smith, E. R. & Ebersole, B. A. (2002) Large-scale laboratory measurements of longshore sediment transport under spilling and plunging breakers. J. Coastal Res. 18(1), 118–135. (LSTF experiments; under spilling breakers the longshore transport peaks in the swash zone. Not yet matched against the reference list of Larson & Wamsley (2007))

@@ -632,7 +632,9 @@ users_guide/sediment.md・massflow.md・geomorph.md、handoff.md 1n・1n2。
   Res. Earth Surf.*, 119(10), 2123–2146)。
 - Howard, A. D. and Kerby, G. (1983): Channel changes in badlands. *Geol. Soc. Am. Bull.*,
   94, 739–752(要旨で確認: 岩盤河道の侵食速度は出水時の底面せん断に比例する)。
-  閾値つきの超過せん断応力型の典拠(Howard 1994 など)は照合待ち。
+  閾値つきの超過せん断応力型の典拠は Howard (1994)(Howard, A. D. (1994): A detachment-limited
+  model of drainage basin evolution. *Water Resour. Res.*, 30(7), 2261–2285. doi:10.1029/94WR00757。
+  書誌は 2026-10-29 に検索で確認、本文は未照合)など。
 - Johnstone, S. and Hilley, G. (2015): Lithologic control on the form of
   soil-mantled hillslopes. *Geology*, 43(1), 83–86. doi:10.1130/G36052.1(Landlab の
   docstring から)。
@@ -799,7 +801,7 @@ users_guide/sediment.md・massflow.md・geomorph.md、handoff.md 1n・1n2。
   0 になる簡略化だと同論文は断る。式 (13))。Sklar & Dietrich (2006) の F_t(代表の出水が
   流れる時間の割合。粗い土砂はすべて出水中に運ばれる。式 (13)・(16))も同じ考えで、同論文は
   低流量にも年流出を分け(高流量の割合 F_w。式 (14)〜(19))、流量の記録から F_t を選ぶ
-  (参照地点で F_t = 0.0437 = 年 16 日、F_w = 0.41)。Parker の e-book は未照合。暦の時間 =
+  (参照地点で F_t = 0.0437 = 年 16 日、F_w = 0.41)。Parker の e-book(1D Sediment Transport Morphodynamics with Applications to Rivers and Turbidity Currents の第 3 章(満水流量の特性)で洪水の間欠係数 I_f を定義。書誌は 2026-10-29 に検索で確認)は本文未照合。暦の時間 =
   計算した出水の時間 × M / i_f。
 - **連続に働く過程は係数を 1/i_f 倍して与える**: 隆起(uplift0)・風化(wthr_p0)・クリープ
   (creep_d)は率の係数に線形な自律系なので、係数の 1/i_f 倍は、その過程だけを暦の時間で
@@ -952,7 +954,7 @@ np = 1, 2, 4 とリスタート往復を確かめ、文書(日英)・developer.m
   (f_berode)・安息角(f_repose)は、斜面の放物線形の検定を汚さないよう入れない(後で)。
 - dts の上限は概算(p が閾値の近くで大きくなる)。
 - (2026-10-29)Sklar & Dietrich (2006)・Paola ら (1992) は本文で照合済み(間欠係数は Paola ら
-  の式 (12) の I が原型、Sklar & Dietrich の F_t も同じ考え。§11.2)。Parker の e-book は未照合。
+  の式 (12) の I が原型、Sklar & Dietrich の F_t も同じ考え。§11.2)。Parker の e-book(1D Sediment Transport Morphodynamics with Applications to Rivers and Turbidity Currents の第 3 章(満水流量の特性)で洪水の間欠係数 I_f を定義。書誌は 2026-10-29 に検索で確認)は本文未照合。
 
 ---
 
@@ -1248,13 +1250,15 @@ np = 1, 2, 4 とリスタート往復を確かめ、文書(日英)・developer.m
   以内に段階的に起き、流動深と応力が最大になる前に始まる。要点は §12.4 の所見 6 の注。
   以前の記録にあった「流動深が侵食の分布と量を左右する」は本文に見当たらないので外した)。
 - Frank, F., McArdell, B. W., Huggel, C. and Vieli, A. (2015): The importance of entrainment and
-  bulking on debris flow runout modeling. *Nat. Hazards Earth Syst. Sci.*, 15, 2569–2583.
+  bulking on debris flow runout modeling: examples from the Swiss Alps. *Nat. Hazards Earth Syst. Sci.*, 15, 2569–2583.
   doi:10.5194/nhess-15-2569-2015(紹介で確認: RAMMS の取り込みモデル。最大侵食深を、閾値を
-  超えた底面せん断に比例させる。対象は堆積物の床。題名・著者は記憶によるので照合待ち)。
-- McGuire, L. A. ほか (2023): Steady-state forms of channel profiles shaped by debris flow and
-  fluvial processes. *Earth Surf. Dynam.*, 11, 1117–1143. doi:10.5194/esurf-11-1117-2023
+  超えた底面せん断に比例させる。対象は堆積物の床。題名(副題まで)・著者・巻頁は 2026-10-29 に
+  検索で確認。オープンアクセス)。
+- McGuire, L. A., McCoy, S. W., Marc, O., Struble, W. and Barnhart, K. R. (2023): Steady-state
+  forms of channel profiles shaped by debris flow and fluvial processes. *Earth Surf. Dynam.*,
+  11(6), 1117–1143. doi:10.5194/esurf-11-1117-2023
   (要旨で確認: 流動深と勾配の関数の侵食則の族を試し、勾配の 1 より大きいべき・流動深に
-  ほぼ線形のとき縦断形が観測と整合。共著者の一覧は未照合)。
+  ほぼ線形のとき縦断形が観測と整合。共著者は 2026-10-29 に検索で確認)。
 - 高橋保・中川一 (1991)、江頭進治・芦田和男 (1992) ほか: 土石流の抵抗則・E-D の既存の
   出典(users_guide/massflow.md・debris_plan.md)。
 

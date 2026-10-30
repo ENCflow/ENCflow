@@ -243,3 +243,11 @@ The labels in the Basis column are explained in [How to read the basis of a defa
   [examples/List_samples/list_tide.txt](../../../examples/List_samples/en/list_tide.txt).
 - Coupling tide with a conduit outfall and pumping station: [test/coastal_drain](../../../test/coastal_drain/en/README.md).
 - Storm-surge timber transport and deposition setup: [examples/timberyard](../../../examples/timberyard/en/README.md).
+
+## References
+
+The ways of giving the tide (a fixed value, a time series, distributions) only interpolate the given
+data and place it on the sea cells; no publication was drawn on. Representing the sea cells by an
+apparent water column `hsea0` whose surface follows the tide is a simplification original to
+ENCflow (developer.md §23). The sources of the hydraulic laws at the edges (free outflow, radiation)
+are in [Hydraulics of structures and boundaries](hydraulics.md#references).

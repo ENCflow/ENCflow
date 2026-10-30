@@ -506,3 +506,7 @@ The three ways a field gets written (automatic / flag / riding on a flag) and th
 - Combined with groundwater, infiltration entrainment and the
   subsurface pool can be tracked
   ([the groundwater chapter](gwflow.md)).
+
+## References
+
+The sources of the models, formulas and default values used in this chapter are collected in the references of [Water-quality models](wq_models.md#references).

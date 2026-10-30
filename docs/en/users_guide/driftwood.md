@@ -256,3 +256,7 @@ map (the source of the formula and the recipe are in
 [the explanation](driftwood_models.md) §4 and the example README). Use
 F9999 (= u²h) for the fluid force of the water itself. Implementation
 details: developer.md §50 (Japanese).
+
+## References
+
+The sources of the models, formulas and default values used in this chapter are collected in the references of [Driftwood models explained](driftwood_models.md#references).
