@@ -25,7 +25,9 @@ developer.md §84.5)。河道中心線のつなぎ替えや「三日月湖を作
   際限なく深くなるのを抑える)、安息角崩落 40°(河岸 1.6 m / 2 m = 38.7° で
   安定)。側岸侵食則・浮遊砂は使わない(浮遊砂 0.2 mm を無給砂で併用すると
   河床が懸濁で急速に低下するため)。移流項は既定のスキーム 3、塞がれた開口の
-  動的振り替えは全エッジ(`f_opening_dynamic = 2`。§84.7)、dt = 0.1 s。
+  動的振り替えは全エッジ(`f_opening_dynamic = 2`。§84.7)、区間流入の外縁セルに
+  接するエッジは examples/meander と同じ `f_inflow_edge = 2`(developer.md §68.40)、
+  dt = 0.1 s。
 
 ## 実行方法
 
@@ -36,7 +38,7 @@ make                      # 入力の生成(10 秒)と実行ファイルへの�
 python3 plot_results.py   # figs/*.png と数表
 ```
 
-## 結果(2026-10-30 に再計算。gfortran 13.3、-Ofast、1 スレッド。移流は既定のスキーム 3、f_opening_dynamic = 2、区間流入の内側エッジの流速の上限(developer.md §68.40 の改定 2)を含む。2026-10-19 の再計算の値は developer.md §68.40 に履歴として残る)
+## 結果(2026-10-30 に再計算。gfortran 13.3、-Ofast、1 スレッド。移流は既定のスキーム 3、f_opening_dynamic = 2、f_inflow_edge = 2(developer.md §68.40)。2026-10-19 の再計算の値は developer.md §68.40 に履歴として残る)
 
 ![経過](figs/sequence.png)
 

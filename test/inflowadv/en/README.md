@@ -4,7 +4,8 @@
 
 [日本語](../README.md)
 
-The momentum-conserving advection (schemes 2 and 3) sets the advection term to zero on the edges
+With `f_inflow_edge = 2` (&list_enc; the default is 0; users_guide/advection.md section 4.4) the
+momentum-conserving advection (schemes 2 and 3) sets the advection term to zero on the edges
 that run from an outer cell with the normal face of a segment inflow (an inflow cell) into the
 section (the normal edges from the inflow face inwards and the diagonal edges within the width of
 the section). The edges along the inflow face (both ends inflow cells) and the edges that leave
@@ -13,7 +14,9 @@ no advection term, the velocity is capped at the speed allowed by the energy hea
 cell, √(2g·max(E_up − η_down, 0)) (E = η + V²/2g; for an inflow cell on a steep slope, where the
 uniform flow is supercritical, V also counts the supply speed, the face discharge per cell width
 and depth). This is developer.md §68.40 and its two revisions (in Japanese). This case checks that
-the rule avoids each of the opposite failures.
+the rule avoids each of the opposite failures (all five configurations set `f_inflow_edge = 2`;
+the default 0 is the rule of 2026-10-24, which zeroes the advection term on all edges touching the
+inflow cells without a cap, and does not pass checks 2 and 3 below).
 
 ## Setup
 

@@ -59,7 +59,11 @@ subgrid-coupling fix of §68.36 no checkerboard appears. Versions before
 2026-10-17 used scheme 1). Dynamic reassignment of blocked openings on all
 edges (`f_opening_dynamic = 2`; in an excavated channel without a channel mask
 the default 1 is ineffective and the discharge of the rows at the bank toe
-falls short by 20 %. §84.7, test/uniflow). Landform update every 1 s,
+falls short by 20 %. §84.7, test/uniflow). The edges touching the outer cells
+of the segment inflow use `f_inflow_edge = 2` (zero advection only on the edges
+into the section, and their velocity capped by the energy head of the inflow
+cell; with the default 0 the runs with capacity feed stop through scour beside
+the inflow feeding a jet; developer.md §68.40). Landform update every 1 s,
 morfac = 50 (4 h hydraulic = 200 h morphological time).
 
 ## Running
@@ -80,7 +84,7 @@ make                          # link to ../../bin/encflow and the inputs (z.txt,
 python3 plot_results.py       # figs/*.png and tables
 ```
 
-## Results (recomputed 2026-10-30: gfortran 13.3, -Ofast, 1 thread; advection is the default scheme 3, f_opening_dynamic = 2, including the velocity cap on the edges into a segment inflow (developer.md §68.40, second revision); the values of the recomputation of 2026-10-19 remain in developer.md §68.40 and the first values of 2026-10-17 to 18 in §84 as history)
+## Results (recomputed 2026-10-30: gfortran 13.3, -Ofast, 1 thread; advection is the default scheme 3, f_opening_dynamic = 2, f_inflow_edge = 2 (developer.md §68.40); the values of the recomputation of 2026-10-19 remain in developer.md §68.40 and the first values of 2026-10-17 to 18 in §84 as history)
 
 ![Planform](../figs/planform.png)
 

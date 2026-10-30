@@ -90,6 +90,10 @@ module m_swflow_enc
     integer :: f_advection_donor              ! 運動量保存形移流の風上供給元の制限 (0:湿潤セル
                                             !   すべて, 1:河道セル間のエッジでは河道セルのみ。
                                             !   §68.18)
+    integer :: f_inflow_edge                  ! 区間流入の外縁セルに接するエッジの扱い (0:接する
+                                            !   エッジすべての移流項 0, 1:区間の内側へ向かうエッジ
+                                            !   だけ移流項 0, 2:1 + そのエッジの流速のエネルギー
+                                            !   上限。§68.40)
     integer :: f_dry_head_cap                 ! 乾燥セルへ向かうエッジ水深をエネルギー頭
                                             !   η + u_n²/2g − z_受け手 で頭打ち (0:なし, 1:有効。
                                             !   §68.16。水面+速度水頭より高い乾いた地盤へは
@@ -834,6 +838,7 @@ subroutine m_swflow_enc_init(p, g, b, s)
   opt%f_opening_dynamic = list%f_opening_dynamic
   opt%f_dry_head_cap = list%f_dry_head_cap
   opt%f_advection_donor = list%f_advection_donor
+  opt%f_inflow_edge = list%f_inflow_edge
   opt%f_scalar_scheme = list%f_scalar_scheme
   select case (opt%f_advection_scheme)
     case (1)      ! セル中心勾配(v1。既定)
@@ -964,6 +969,13 @@ subroutine m_swflow_enc_init(p, g, b, s)
   end if
   if (opt%f_dry_head_cap < 0 .or. opt%f_dry_head_cap > 1) then
     call par_stop("list_enc: f_dry_head_cap must be 0(off) or 1(cap edge depth toward dry cells by energy head)")
+  end if
+  if (opt%f_inflow_edge < 0 .or. opt%f_inflow_edge > 2) then
+    call par_stop("list_enc: f_inflow_edge must be 0(no advection on edges touching inflow cells), " &
+                  //"1(only on edges into the inflow section) or 2(1 + energy cap on those edges)")
+  end if
+  if (opt%f_inflow_edge > 0) then
+    call par_info("swflow_enc: f_inflow_edge = "//itoa(opt%f_inflow_edge)//" (edges into the inflow section)")
   end if
   ! 河道限定(1。既定)は河道マスクがなければ対象エッジが存在しないので無効化
   ! (fwd を確保せず、メモリ・CPU とも追加なし。全エッジに効かせたい氾濫・
@@ -1781,8 +1793,8 @@ subroutine calc_kth_momentum(p, g, s, sx, i, j, k, have_exflux, have_runge, have
     end if
   end if
 
-  ! 区間流入の内側へ向かうエッジの流速のエネルギー上限(§68.40 の改定 2)
-  if (bcs%have_inflow) then
+  ! 区間流入の内側へ向かうエッジの流速のエネルギー上限(f_inflow_edge = 2。§68.40 の改定 2)
+  if (bcs%have_inflow .and. opt%f_inflow_edge == 2) then
     if (bc_inflow_inward(i, j, in, jn)) call inflow_energy_cap
   end if
 

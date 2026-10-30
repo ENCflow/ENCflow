@@ -36,7 +36,9 @@ oxbow lake" are used. No code changes (settings only).
   nor suspended sediment is used (combining 0.2 mm suspended sediment without
   sediment feed lowers the bed rapidly by suspension). Advection uses the default
   scheme 3, dynamic reassignment of blocked openings on all edges
-  (`f_opening_dynamic = 2`; §84.7), dt = 0.1 s.
+  (`f_opening_dynamic = 2`; §84.7), the edges touching the outer cells of the
+  segment inflow use `f_inflow_edge = 2` as in examples/meander (developer.md
+  §68.40), dt = 0.1 s.
 
 ## Running
 
@@ -47,7 +49,7 @@ make                      # generates the inputs (10 s) and links the executable
 python3 plot_results.py   # figs/*.png and tables
 ```
 
-## Results (recomputed 2026-10-30: gfortran 13.3, -Ofast, 1 thread; advection is the default scheme 3, f_opening_dynamic = 2, including the velocity cap on the edges into a segment inflow (developer.md §68.40, second revision); the values of the recomputation of 2026-10-19 remain in developer.md §68.40 as history)
+## Results (recomputed 2026-10-30: gfortran 13.3, -Ofast, 1 thread; advection is the default scheme 3, f_opening_dynamic = 2, f_inflow_edge = 2 (developer.md §68.40); the values of the recomputation of 2026-10-19 remain in developer.md §68.40 as history)
 
 ![Sequence](../figs/sequence.png)
 

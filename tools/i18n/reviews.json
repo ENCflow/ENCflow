@@ -104,20 +104,20 @@
     {
       "source": "docs/users_guide.md",
       "target": "docs/en/users_guide.md",
-      "source_sha256": "619feb3a61b2f7efec53531f359bffe496a4b76a5aa4f72f5d950bb6df62e0e5",
-      "target_sha256": "4027d7d21b62c4d3a6fbf1b2f05120ca19bfb654f5fe5eaa9edeee04383b4d50",
-      "reviewer": "Claude (Claude Code session; reviewed the changed sections of the Japanese source against the English mirror, 2026-10-29)",
+      "source_sha256": "c01c67cf8c5132ba44515478cbf68e6fd2c2383771e4e549f0e60288a2e65dbe",
+      "target_sha256": "83dc92572f7afbc1f2f0d73558f018d565aec412e33cf5770402734842ee68bd",
+      "reviewer": "Claude (Claude Code session; the new f_inflow_edge setting (default 0 = the rule of 2026-10-24, 1 = only the edges into the section, 2 = 1 plus the energy cap) was written in the source and the translation together, and the changed parts were compared; rest unchanged since the previous record)",
       "method": "assistant",
-      "reviewed_on": "2026-10-29"
+      "reviewed_on": "2026-10-30"
     },
     {
       "source": "docs/users_guide/advection.md",
       "target": "docs/en/users_guide/advection.md",
-      "source_sha256": "097c0312cdf26954b936f58f6d0834d1c55aecd0d458e091569177d1155eb4f7",
-      "target_sha256": "9c71bc086dc1b587d4270e26cad1cae3ef690894dbac2abb6f1de8e841940898",
-      "reviewer": "Claude (Claude Code session; compared the new §4.4 bullet on the velocity cap of the edges into an inflow section, including the note on inflow cells without a supply, and the shortened previous bullet in the source and the translation; rest unchanged since the previous record)",
+      "source_sha256": "1d375ae54fafda24db529832212cdfd588e8c1cbc6acf793c52271adaf6eac07",
+      "target_sha256": "6b5c03c1ad877338517b471ee9751ea5cd2e41402fcced3f239c4d1616073d0e",
+      "reviewer": "Claude (Claude Code session; the new f_inflow_edge setting (default 0 = the rule of 2026-10-24, 1 = only the edges into the section, 2 = 1 plus the energy cap) was written in the source and the translation together, and the changed parts were compared; rest unchanged since the previous record)",
       "method": "assistant",
-      "reviewed_on": "2026-10-29"
+      "reviewed_on": "2026-10-30"
     },
     {
       "source": "docs/users_guide/bedmotion.md",
@@ -383,11 +383,11 @@
     {
       "source": "docs/users_guide/params_index.md",
       "target": "docs/en/users_guide/params_index.md",
-      "source_sha256": "0211966b9c7cf64ad334463f13620e2d5a621dfd123caa3f19d128c7e2bccb9a",
-      "target_sha256": "2a0994defea8922e38e7519f9b415e4cda734f82d9aac88b902466f6f21f5b0a",
-      "reviewer": "Claude (Claude Code session; reviewed the changed sections of the Japanese source against the English mirror, 2026-10-29)",
+      "source_sha256": "0168292510a4fa288aad9653782df70a60399996d3a04b206b83f56e499d1cb0",
+      "target_sha256": "ef4b33c92798a0051133390bb3ac954a918f623a6758b2d2d4b8ff4a26a480fc",
+      "reviewer": "Claude (Claude Code session; the new f_inflow_edge setting (default 0 = the rule of 2026-10-24, 1 = only the edges into the section, 2 = 1 plus the energy cap) was written in the source and the translation together, and the changed parts were compared; rest unchanged since the previous record)",
       "method": "assistant",
-      "reviewed_on": "2026-10-29"
+      "reviewed_on": "2026-10-30"
     },
     {
       "source": "docs/users_guide/record.md",
@@ -437,9 +437,9 @@
     {
       "source": "docs/users_guide/swflow.md",
       "target": "docs/en/users_guide/swflow.md",
-      "source_sha256": "949272090d604700c75d3af19b3ecc136e7b983d4406a13b3721736d042e6f16",
-      "target_sha256": "068931f6c72e0e771427b74b63dc3aaae01afbbdf833dcc25f1c16aa22414e5c",
-      "reviewer": "Claude (Claude Code session; merge of main into the branch: both sides' changes to this pair, each recorded on its own side, were merged automatically or by hand, and the merged source and translation were compared for the changed parts; rest unchanged since the previous records)",
+      "source_sha256": "acc7dda67aab3e757956c274c07972422d57dcb5d531b416f975342c3d9ae5d2",
+      "target_sha256": "a15651179258c89d42ef00ef136b77c6008d2153bb815dd6f93b24252425ff9f",
+      "reviewer": "Claude (Claude Code session; the new f_inflow_edge setting (default 0 = the rule of 2026-10-24, 1 = only the edges into the section, 2 = 1 plus the energy cap) was written in the source and the translation together, and the changed parts were compared; rest unchanged since the previous record)",
       "method": "assistant",
       "reviewed_on": "2026-10-30"
     },
@@ -599,11 +599,11 @@
     {
       "source": "examples/List_samples/list_enc.txt",
       "target": "examples/List_samples/en/list_enc.txt",
-      "source_sha256": "ee450d4887d6c86f18b51e941a829de4bc443e3c882d860d7fdbd5668d36bfb8",
-      "target_sha256": "5960397304c46b3b12862feeea0ac363653a08a969bcf4be79b586d1a71ac87e",
-      "reviewer": "Claude (Claude Code session; compared the passages changed for f_opening_dynamic = 3 in the source and the translation line by line; rest unchanged since the previous record)",
+      "source_sha256": "9aba1b79fe924313cd17fc8847bbb32ffacff2ac4eb28a50c485ed64fefedad3",
+      "target_sha256": "364ef7408fe261e97114a6e76354f4de17da71c42c49e9885eb99913df20d7d5",
+      "reviewer": "Claude (Claude Code session; the new f_inflow_edge setting (default 0 = the rule of 2026-10-24, 1 = only the edges into the section, 2 = 1 plus the energy cap) was written in the source and the translation together, and the changed parts were compared; rest unchanged since the previous record)",
       "method": "assistant",
-      "reviewed_on": "2026-10-29"
+      "reviewed_on": "2026-10-30"
     },
     {
       "source": "examples/List_samples/list_evap.txt",
@@ -1319,18 +1319,18 @@
     {
       "source": "examples/meander/README.md",
       "target": "examples/meander/en/README.md",
-      "source_sha256": "2b593f45bce7585950731ef28007c40fde30ce5623a80b21a216a3913369bc47",
-      "target_sha256": "f79fb35952f52eed9aaa086628857a940c28e70de60f52b07bd2108520836224",
-      "reviewer": "Claude (Claude Code session; compared the updated results heading, planform and fixation paragraphs, the metrics and feed tables with their notes, and the rewritten findings on slump blocks, fixation decay, suspended sediment, capacity feed, equilibrium-concentration feed, the fines ledger and the gentle recession, plus limitation 8, in the source and the translation; rest unchanged since the previous record)",
+      "source_sha256": "cde90e787dd6f021eb1792e49ffa535da742ae33397fed6126bd8a8cb86511ec",
+      "target_sha256": "82cc6205cf6dc89ca80416edcc789f403975ca30064cfb6c260804cdb030e285",
+      "reviewer": "Claude (Claude Code session; the new f_inflow_edge setting (default 0 = the rule of 2026-10-24, 1 = only the edges into the section, 2 = 1 plus the energy cap) was written in the source and the translation together, and the changed parts were compared; rest unchanged since the previous record)",
       "method": "assistant",
       "reviewed_on": "2026-10-30"
     },
     {
       "source": "examples/meander_cutoff/README.md",
       "target": "examples/meander_cutoff/en/README.md",
-      "source_sha256": "995364aedb6f3c18811c54a382e35c859796e29e2ff1b7bf9c1bcda0dbb9f06a",
-      "target_sha256": "3fe75c20197db6797df44be22c38d9a2a5ceb804a3c27518e8fe742a3ca3cf79",
-      "reviewer": "Claude (Claude Code session; compared the updated results heading, the results table, the cutoff finding, the note on which configurations were recomputed and the slump-block comparison with a flood in the source and the translation; rest unchanged since the previous record)",
+      "source_sha256": "c20d215d6c950a954a845c57919899a4eeaf0f0379fda5eeb6b223a23321185b",
+      "target_sha256": "942c2a96de32047491049791b74edcf81008f3084fc5d46051d4e9487d64ef12",
+      "reviewer": "Claude (Claude Code session; the new f_inflow_edge setting (default 0 = the rule of 2026-10-24, 1 = only the edges into the section, 2 = 1 plus the energy cap) was written in the source and the translation together, and the changed parts were compared; rest unchanged since the previous record)",
       "method": "assistant",
       "reviewed_on": "2026-10-30"
     },
@@ -1562,9 +1562,9 @@
     {
       "source": "test/README.md",
       "target": "test/README.en.md",
-      "source_sha256": "16987bb469daca2715f57fb9fb62456975835579e4dbf99c391292503ec3c91f",
-      "target_sha256": "1f5c20ce14e4e9063a278217bea3f3057cac1c72cbbff328edc3dc1acdd43574",
-      "reviewer": "Claude (Claude Code session; merge of main into the branch: both sides' changes to this pair, each recorded on its own side, were merged automatically or by hand, and the merged source and translation were compared for the changed parts; rest unchanged since the previous records)",
+      "source_sha256": "34a8f0759aaaaac542faba44c27157d225270c31146bf8769f33e21243df88f1",
+      "target_sha256": "af9d7cb47491b8663e82802123f59030f1de0dfed6166f2a3ca91d9d3d82bf22",
+      "reviewer": "Claude (Claude Code session; the new f_inflow_edge setting (default 0 = the rule of 2026-10-24, 1 = only the edges into the section, 2 = 1 plus the energy cap) was written in the source and the translation together, and the changed parts were compared; rest unchanged since the previous record)",
       "method": "assistant",
       "reviewed_on": "2026-10-30"
     },
@@ -2201,11 +2201,11 @@
     {
       "source": "test/inflowadv/README.md",
       "target": "test/inflowadv/en/README.md",
-      "source_sha256": "38dd81e13d4c2bba1c48a9b4ba8a4e3cb5655caa5d3db39b6e484a54661005c4",
-      "target_sha256": "a113f41686e1b276f681d2f6d5c9afe276c93b282e93d8a684efbb283b2ac51b",
-      "reviewer": "Claude (Claude Code session; compared the whole source and translation: introduction, setup table with jet3 and steep including the corner-cell note, checks 1-4, the table of rules and the usage)",
+      "source_sha256": "395b6ad38a8b4ad8280012072732cce95c18230ba6359f2307d2494ccd552cb5",
+      "target_sha256": "289906f528e0917cc55c710dc7969010ca91adef6ce8d949ffd624332f18e10a",
+      "reviewer": "Claude (Claude Code session; the new f_inflow_edge setting (default 0 = the rule of 2026-10-24, 1 = only the edges into the section, 2 = 1 plus the energy cap) was written in the source and the translation together, and the changed parts were compared; rest unchanged since the previous record)",
       "method": "assistant",
-      "reviewed_on": "2026-10-29"
+      "reviewed_on": "2026-10-30"
     },
     {
       "source": "test/kdpart/README.md",

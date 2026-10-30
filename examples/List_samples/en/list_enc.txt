@@ -90,6 +90,15 @@
                             !   counts the upslope ground of a uniform slope as
                             !   blocking, so use 3 for steep mountain streams
                             !   and sheet flow on hillslopes (developer.md §68.41)
+  !f_inflow_edge = 0        ! treatment of the edges touching the outer cells
+                            !   of a segment inflow (0: zero advection on all
+                            !   of them = default, 1: zero advection only on
+                            !   the edges into the inflow section, 2: as 1,
+                            !   and the velocity of those edges is capped by
+                            !   the energy head of the inflow cell). Use 2 when
+                            !   the bed beside or below the inflow moves and
+                            !   for narrow inflows (users_guide/advection.md
+                            !   section 4.4)
   !p_adv_upwind_index = 0.5 ! upwinding index of the advection term (0-1.
                             !   0: central difference, 1: first-order upwind)
   !f_diffusion_term = 0     ! diffusion term (0: none, 1: constant viscosity,

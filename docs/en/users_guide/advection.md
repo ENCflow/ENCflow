@@ -354,55 +354,63 @@ on outflow $`u_e`$ (no contribution).
   different from the offshore depth, the velocity on the sea-land edges
   grew to several times the land-side velocity and diverged by positive
   feedback).
-- **Edges from an outer cell with a segment-inflow face into the section
-  get no advection term either.** A cell with a normal face of
+- **Edges touching an outer cell with a segment-inflow face get no
+  advection term either.** A cell with a normal face of
   [segment inflow](boundary.md#segment-inflow-list_bound_inflow) (closed
   corner cells included) passes the whole segment discharge through a
   normal face of passing width 0.414 dx (the unit-width discharge is 2.4
   times the cell mean) and lacks the diagonal links outside the frame, so
   its cell-mean discharge is not consistent as the face flux of a control
-  volume. The edges from such a cell into the section (the normal edges
-  from the inflow face inwards and the diagonal edges within the width of
-  the section) get a zero advection term (developer.md §68.40; fix of a
-  real behaviour in which, in a straight channel of odd width between
-  walls, the inflow concentrated at the centre by the closure of the
-  corner cells coupled with the advection terms of the boundary row and
-  self-excited a discharge oscillation of 5-minute period). The edges
-  along the inflow face (both ends inflow cells) and the edges that leave
-  the section at its two ends keep their advection term: on an edge
-  without it the velocity tends to the balance of surface gradient and
-  friction, so flow falling from the end of the section into a lower
-  cell beside it would exceed the velocity that energy conservation
-  allows (from 2026-10-24 to 29 all edges touching the inflow cells had a
-  zero advection term, and param_feed of examples/meander, whose capacity
-  feed fixes the bed of the inflow cells, stopped through scour of the
-  outer cell beside the section feeding a jet;
-  [test/inflowadv](../../../test/inflowadv/en/README.md)). With a uniform
-  inflow through a straight face the velocity on the edges along the face
-  is zero, so uniform-flow and flood-wave results hardly change.
-- **The velocity on the edges into the section is capped by the energy
-  head.** On these edges, which have no advection term, the velocity may
-  not exceed the speed allowed by the energy head of the upstream cell,
-  $`\sqrt{2g\max(E_\mathrm{up} - \eta_\mathrm{dn}, 0)}`$ with
-  $`E_\mathrm{up} = \eta + V^2/2g`$ ($`V`$ is the speed of the upstream
-  cell and $`\eta`$ the water level, $`z + h + h_s`$ for debris flows), and
-  the discharge is scaled by the same ratio (a Bernoulli bound without
-  losses; developer.md §68.40, second revision, in Japanese). Without it a
-  supercritical jet forms right below the inflow in a channel of mild slope
-  and creates energy head (in a 3-column channel between walls, 1.0 to 1.3 m
-  deep at 13 m/s, where uniform flow is 4.7 m at 3.0 m/s). For an inflow
-  cell on a steep slope, where the uniform flow of the face discharge is
-  supercritical (the Manning normal depth is below the critical depth), the
-  supply speed (the face discharge per cell width and depth) also counts as
-  the upstream speed, so a supercritical inflow is hardly throttled. Inflow
-  cells without a supply (cells closed because they touch nodata or a wall
-  corner) are capped by the cell speed alone, so near a steep inflow the
-  depth can come out about 10 % larger. The cap is active almost all the
-  time near the inflow, so results near the inflow of any run with a
-  segment inflow depend on this rule. The inflow still has no
-  momentum on the first edge into the section and tends to spread sideways;
-  keep the reach of interest away from the inflow section
-  ([test/inflowadv](../../../test/inflowadv/en/README.md)).
+  volume. As for sea cells, the edges touching such a cell get a zero
+  advection term (developer.md §68.40; fix of a real behaviour in which,
+  in a straight channel of odd width between walls, the inflow
+  concentrated at the centre by the closure of the corner cells coupled
+  with the advection terms of the boundary row and self-excited a
+  discharge oscillation of 5-minute period. Only the inflow row is
+  affected, so uniform-flow and flood-wave results hardly change).
+  This is the default (`f_inflow_edge = 0`); two alternatives can be
+  chosen ([test/inflowadv](../../../test/inflowadv/en/README.md)).
+  - `f_inflow_edge = 1`: only the edges from an inflow cell into the
+    section (the normal edges from the inflow face inwards and the diagonal
+    edges within the width of the section) get a zero advection term. The
+    edges along the inflow face (both ends inflow cells) and the edges that
+    leave the section at its two ends keep their advection term. On an
+    edge without it the velocity tends to the balance of surface gradient
+    and friction, so with the default a flow falling from the end of the
+    section into a lower cell beside it can exceed the velocity that energy
+    conservation allows (with the default, param_feed of examples/meander,
+    whose capacity feed fixes the bed of the inflow cells, stops through
+    scour of the outer cell beside the section feeding a jet).
+  - `f_inflow_edge = 2`: as 1, and the velocity on the edges into the
+    section is capped by the speed allowed by the energy head of the
+    upstream cell, $`\sqrt{2g\max(E_\mathrm{up} - \eta_\mathrm{dn}, 0)}`$
+    with $`E_\mathrm{up} = \eta + V^2/2g`$ ($`V`$ is the speed of the
+    upstream cell and $`\eta`$ the water level, $`z + h + h_s`$ for debris
+    flows); the discharge is scaled by the same ratio (a Bernoulli bound
+    without losses; developer.md §68.40, second revision, in Japanese). On
+    the edges into the section, which have no advection term, a
+    supercritical jet can form right below the inflow in a channel of mild
+    slope and create energy head (in a 3-column channel between walls, 1.0
+    to 1.3 m deep at 13 m/s, where uniform flow is 4.7 m at 3.0 m/s; it
+    appears with the default and with 1). For an inflow cell on a steep
+    slope, where the uniform flow of the face discharge is supercritical
+    (the Manning normal depth is below the critical depth), the supply
+    speed (the face discharge per cell width and depth) also counts as the
+    upstream speed, so a supercritical inflow is hardly throttled. Inflow
+    cells without a supply (cells closed because they touch nodata or a
+    wall corner) are capped by the cell speed alone, so near a steep inflow
+    the depth can come out about 10 % larger.
+  - Which to use: use 2 for landform-evolution runs in which the bed right
+    beside or below the inflow moves, and for narrow inflows (channels a
+    few columns wide between walls). The cap of 2 acts almost all the time
+    near the inflow: with a subcritical uniform inflow the discharge can
+    keep wavering slightly at the threshold of the cap (0.02 % in the
+    configuration of test/fluxline), and in a flood the level of the inflow
+    cells can rise and leave a step to the next cell downstream (0.2 to
+    0.3 m at 200 m³/s in examples/estuary_barrage). With 1 and 2 the inflow
+    has no momentum on the first edge into the section and tends to spread
+    sideways. Results near the inflow depend on the chosen rule, so keep the
+    reach of interest away from the inflow section.
 - **The far donor of MUSCL.** If the cell beyond the $`u_\mathrm{upup}`$ edge
   is outside the domain or invalid, that face degrades to first-order
   upwind (reading 0 would give $`r \gg 1 \to \psi = 2`$, anti-diffusion, and
