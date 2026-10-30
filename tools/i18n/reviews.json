@@ -284,8 +284,8 @@
     {
       "source": "docs/users_guide/gwflow.md",
       "target": "docs/en/users_guide/gwflow.md",
-      "source_sha256": "c84ce16cf89356c270966a36327959c77924221590d3a3805be72066bc214a9b",
-      "target_sha256": "99c3d57773169c1282c418a51893e859544ab1f05cb6e4a8edc497172963f3e3",
+      "source_sha256": "99334c2b4b5280e3459ac2a88ee21687624ac2bc182347e1f09a39110b816832",
+      "target_sha256": "cd5a753e23b02a16cbc9d2ef5de563bebe408a1b96ff8d8cbf096a32c9676a0a",
       "reviewer": "Claude (Claude Code session; full-text content and lexical review, no model execution)",
       "method": "assistant",
       "reviewed_on": "2026-10-30"
@@ -293,8 +293,8 @@
     {
       "source": "docs/users_guide/gwflow_models.md",
       "target": "docs/en/users_guide/gwflow_models.md",
-      "source_sha256": "e2b8b60d15ba81db5b45a5cc12f4e0658761c799a428da1c65a13fdcedc0e716",
-      "target_sha256": "58627c9dfd4d157dbbd8b8cc279cf8b1f9c4e89ba37d16fb3e62c271196ce9b0",
+      "source_sha256": "8b7d8f6c769b32f6bc4dae3a002ba8f6d7edc969111c220e2c2081ea88801ad4",
+      "target_sha256": "b287ab8265aa28bda2b6c8cb9b6b6c521b64b419b9a6a8a086e1ff66e1de23fc",
       "reviewer": "Claude (Claude Code session; full-text content and lexical review, no model execution)",
       "method": "assistant",
       "reviewed_on": "2026-10-30"
@@ -1598,9 +1598,9 @@
     {
       "source": "test/README.md",
       "target": "test/README.en.md",
-      "source_sha256": "3c66c77468fa32d69abcc6c74aee0af3f4e69cbc6ac6c41ce821ea44fda1bf20",
-      "target_sha256": "fa55d4be0d4aa710e9d88d7fe47f578c31a4b50c3fd2a0c34401c2abbf3d6c20",
-      "reviewer": "Claude (Claude Code session; merge of main into the branch: both sides' changes to this pair, each recorded on its own side, were merged (the parameter count is now 759 with f_gw_opening and f_inflow_edge), and the merged source and translation were compared for the changed parts; rest unchanged since the previous records)",
+      "source_sha256": "93bdb96a8acb0eddae34327329c9faad3cff759702ec90e13cbd62d38295b6be",
+      "target_sha256": "dd6e9087cbed00ea01ddc32bff3aecf57fa102e6297f7ece33e9e7932d67cf69",
+      "reviewer": "Claude (Claude Code session; merge of main into the branch: main's gwtani row and the branch's inflowadv row are both present in the source and the translation; rest unchanged since the previous records)",
       "method": "assistant",
       "reviewed_on": "2026-10-30"
     },
@@ -2176,6 +2176,24 @@
       "target": "test/gwseep/en/figs/gwseep.png",
       "source_sha256": "cc82c15922df26a96d4c484c3ffa6f5e13b4b002e73e295eeed2143b01cd2f7b",
       "target_sha256": "134be267628777fbba8a95d87a338f026529eee323c7083e533b2ed4efa1e520",
+      "reviewer": "Claude (Claude Code session; English figure drawn by the same script with the en switch; visual check)",
+      "method": "assistant",
+      "reviewed_on": "2026-10-30"
+    },
+    {
+      "source": "test/gwtani/README.md",
+      "target": "test/gwtani/en/README.md",
+      "source_sha256": "0ee859c038470fdca19b71764c96b9ece136d1bea5bcae4d7c87fd449429daf0",
+      "target_sha256": "3a14a7c7253837e612637bde538603fadc98d2d6d01a48dc600857fdb17032f3",
+      "reviewer": "Claude (Claude Code session; full-text content and lexical review, no model execution)",
+      "method": "assistant",
+      "reviewed_on": "2026-10-30"
+    },
+    {
+      "source": "test/gwtani/figs/gwtani.png",
+      "target": "test/gwtani/en/figs/gwtani.png",
+      "source_sha256": "f8b008ac30bec70e6ad07c97fe72ceabd178b7f4a67b672c8004775f1e388461",
+      "target_sha256": "02a70d93efcc694a68d8d3193572f6034fe8587c0e4ec81f405883059475a0b5",
       "reviewer": "Claude (Claude Code session; English figure drawn by the same script with the en switch; visual check)",
       "method": "assistant",
       "reviewed_on": "2026-10-30"

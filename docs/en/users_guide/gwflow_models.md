@@ -36,7 +36,8 @@ thickness $`s_d(x)`$ sets the vertical arrival time $`T_v = s_d\,n_e/K_s`$,
 and places with a thin soil saturate first and govern the timing of the
 runoff response. A uniform thickness gives lateral-flow control
 (TOPMODEL-like), a sharply thinning one gives vertical-infiltration control
-(Tani type).
+(Tani type; [test/gwtani](../../../test/gwtani/en/README.md) checks this with a
+scenario on a steep slope).
 
 ## 2. Bucket model (f_gwvertical = 1)
 

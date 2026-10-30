@@ -1,0 +1,94 @@
+!======================================================================
+! gwtani 構成 R1: 側方流を有効にしたリスタート往復の前半(0 → 30006 s で保存)
+!   構成 3(thin_toe)の斜面に、層2(風化基岩層)の側方流・水質の同伴輸送(fn_wq)・更新の
+!   間引き(dt_gwflow = 10 s)を重ねる。0 → 30006 s で保存し(R1)、復元して 60000 s まで
+!   回した結果(R2)が、通し計算(R0)と保存状態・出力・Log でバイト一致することを
+!   Check_gwtani.py restart が確かめる(側方流は私有状態を持たず、振り替えの表は初期化で作り直す。
+!   分割の時刻は dt_gwflow の周期の途中 = 再開後もステップ番号が継続することの確認)
+!======================================================================
+&list_sysparam
+  f_gridsystem = 0
+  f_govequation = 0
+  dt = 2.0
+  t0 = 0
+  tt = 30006
+  dt_disp = 3600
+  dt_file = 3000
+  fn_geoinfo = '-'
+  fn_initial = '-'
+  fn_boundary = '-'
+  fn_precip = '-'
+  fn_gwflow = '-'
+  fn_wq = '-'
+  dir_data = 'data_gwtani'
+  dir_result = 'result_rt1'
+  dir_save = 'save_rt'
+  f_state_save = 1
+  f_output_mode = 2         ! bil(float32): 地下貯留を表示の丸めなしで読む
+  f_out_hg = 1
+  f_out_h = 1
+  f_disp_debug = 1          ! S 列を全有効桁で表示
+  f_check_cfl = 1
+/
+
+&list_enc
+/
+
+&list_initial
+  f_htype = 1               ! 初期水深の分布: 渓流のセルだけ 0.5 m(最初のステップで土層を満たす)
+  fn_hinit = 'h_init.txt'
+/
+
+&list_geoinfo
+  nx = 1
+  ny = 41                   ! 斜面 40 行 + 渓流 1 行
+  dx = 5.0
+  dy = 5.0
+  f_ztype = 1
+  fn_z = 'z_thin_toe.txt'   ! 地表 = 一様勾配 0.5 の基盤 + 土層厚(make_data.py)
+  f_rntype = 0
+  rn0 = 0.1
+  f_sdtype = 1
+  fn_sd = 'sd_thin_toe.txt'
+  sy0 = 0.2
+/
+
+&list_bound
+/
+
+&list_bound_edge
+  f_bc_s = 1                ! 南辺(渓流のセルの下流)は地表水の自由流出。地下水の側方流は四周とも無流束
+/
+
+&list_precip
+  prtype = 1
+  prval(:,1) = 0, 10.0      ! 一定の雨 10 mm/h
+/
+
+&list_gwflow
+  f_gwvertical = 2          ! Green-Ampt(psif = 0 で一定の浸透能)
+  f_gwlateral = 1           ! 非線形 Boussinesq 側方流動
+  f_gwlayer2 = 1            ! 風化基岩層(層2の側方流つき)
+  dt_gwflow = 10.0          ! 5 ステップごとに更新(分割の時刻 30006 s はこの周期の途中)
+/
+
+&list_gwflow_greenampt
+  gw_ksv_mmh = 3.6e6        ! 1 m/s: 浸透 = min(K_sv dt, h, 空き容量)。飽和するまで雨は全量浸透する
+  gw_psif = 0.0
+/
+
+&list_gwflow_lateral
+  gw_ksh_mmh = 3600.0       ! K_sh = 1e-3 m/s(マクロポア・パイプ流の多い森林斜面の上寄り)
+/
+
+&list_gwflow_layer2
+  gw2_depth = 3.0
+  gw2_sy = 0.05
+  gw2_infil_mmh = 1.0
+  gw2_ksh_mmh = 360.0       ! 層2の側方流(層1と同じ幾何と振り替えの表を使う)
+  gw2_sat0 = 0.5            ! 半分満たした状態から(層2の側方流が最初から動く)
+/
+
+&list_wq
+  wq_c0 = 100.0             ! 渓流の初期水の濃度。浸透・側方流・湧出で地下へも運ばれる(同伴輸送)
+/
