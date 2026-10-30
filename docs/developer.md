@@ -1614,7 +1614,7 @@ gwbed np=1,2,4 が逐次 reference に ULP=0(Runge 列除外)かつ解析検定 
 np=2 が逐次 reference に ULP=0(全 PASS。CI と同じ対象)。
 reference は解析解一致を根拠に暫定コミット(2026-10-25 目視承認済み = 確定)。
 
-### 16.6 側方流動の解析検定と壁沿いの通水能の欠け(2026-10-30 記録。挙動は未変更・要議論)
+### 16.6 側方流動の解析検定と壁沿いの通水能の欠け(2026-10-30 記録。振り替え f_gw_opening を実装・既定 0。既定の変更は要議論)
 
 test/gwlateral(新設。reference を持たない検定型。Check_gwlateral.py)で、線形化した
 Boussinesq 方程式 ∂η/∂t = D∇²η(D = K_sh h̄/sy、h̄ = 飽和帯厚)と比べた。平坦・四周
@@ -1646,10 +1646,10 @@ min(K_sv dt, h, 空き容量))。分布は bil(float32)で読み、背景 0.2 �
 - **地表流との違い**: 浅水流は f_opening_dynamic(既定 2。§68.14・§68.38)が領域外・
   無効セルを壁(s = 1)として、塞がれた斜めの配分を軸エッジへ振り替える(堤防壁は
   f_bank_opening が静的に振り替える。§18)。地下水の側方流(§16.1)は 8 方向の配分を
-  ENC と同じ規約で持つが、振り替えは持たない。影響は、尾根の領域外マスクで幅 1〜2 セルに
+  ENC と同じ規約で持つが、振り替えは持たなかった(下の f_gw_opening を入れるまで)。影響は、尾根の領域外マスクで幅 1〜2 セルに
   切られた谷の帯水層や、領域の縁に沿う流れで、壁沿いの流下が少なめに出ること
   (1 セル幅で 0.41 倍)。広い領域の内部と、壁に直交する向きの交換には効かない。
-- **選択肢(要議論。挙動の変更なので実装していない)**:
+- **選択肢(2026-10-30 に (b) を既定 0 のフラグで入れることで合意。下の実装)**:
   (a) 現状維持+文書化(users guide の解説 gwflow_models.md §4 に係数を書いた。2026-10-30)。
   (b) 静的な振り替え: 領域外・海セルで塞がれた斜めの配分を軸エッジへ移す。規則は §18 と
       同形(成分 2: (lpx + nb·ldx)/lpx、成分 4: (lpy + nb·ldy)/lpy。nb はエッジ両端の
@@ -1662,6 +1662,42 @@ min(K_sv dt, h, 空き容量))。分布は bil(float32)で読み、背景 0.2 �
   推奨は (b) を &list_gwflow_lateral の新しいフラグ(既定 0 = 現状。無効時はビット一致)
   として入れ、test/gwlateral 構成 2 の減衰率が D k² に戻ることで確かめたうえで、既定を
   変えるかを側方流を使う reference(gwseep・gwbed・salt)の変化を見て決めること。
+- **実装(f_gw_opening。2026-10-30)**: `&list_gwflow_lateral` の `f_gw_opening`
+  (0 = なし・既定、1 = 振り替え)。1 のとき init(geom_init の後)が通過幅の表
+  `glt%wlo(1:4, ish-1:ieh, jsh-1:jeh)` を作る。配置は流束と同じエッジ規約
+  (セル (i,j) の成分 k を (i+die(k), j+dje(k)) に置く)で、書くループも lateral_core と
+  同じ j = js..min(je+1, jeh)・行の窓 wx(1,j)..wx(2,j)(冗長なハロ行計算を含め、どの
+  ランクでも同じ値になる)。塞がり(lat_blocked)は x ≤ 0 または sw > 0(sw は x > 0 の
+  ときだけ読む。g%x は 0:nx+1 で領域の外は 0)。両端が塞がれていない軸エッジだけを
+  直し、成分 2 は nb = (i±1, j−1)・(i±1, j) の塞がり数 × 0.5 で幅 (lpx + nb·ldx)·Δx、
+  成分 4 は nb = (i−1, j±1)・(i, j±1) で (lpy + nb·ldy)·Δy、nb = 0 のエッジと斜めは
+  通常の幅 wl(k) のまま。lateral_core は wle = wlo(k, …)(表がなければ wl(k))を
+  Darcy 流束と k_bed の上限(qcap)に使う。地下塩水(m_saltwater gw_salt_zone)は
+  gwflow_lateral_open_get で同じ表の写しを受け取り、塩水流束と上限に同じ幅を使う
+  (合計の流束と塩水の流束の整合クランプが同じ幅を前提にするため)。海との交換
+  (gw_sea_exchange)と導水(conduit)は界面の幅を使わないので変えない。安定条件の
+  Σ L_k/Δs_k は、振り替えた幅の合計がセルの内部の値を超えない(壁際で塞がれた斜めの
+  分を軸へ移すだけ)ので変わらない。無効時は表を確保せず(メモリ 0)、ホットパスの
+  追加は do_open の分岐 1 つ。
+- **検証(2026-10-30)**: test/gwlateral に構成 3(param_strip_open.txt: 構成 2 +
+  f_gw_opening = 1)と構成 4(param_line_open.txt: 1 × 40 の帯、両側が領域の縁)を
+  追加し、Check_gwlateral.py strip_open・line_open で減衰率と D k² の比を検定する
+  (許容 0.5 %)。減衰率は 3.08273e-4(比 0.99951)と 3.08272e-4(比 0.99950)で、
+  振り替えなしの 0.804 倍・0.414 倍が D k² に戻った。残りの差は格子上のコサインの
+  固有値の離散化(相対 k²Δx²/12 = 0.051 %)の程度で、構成 2 の比 0.99945 も同じ理由。
+  無効時は reference を持つ全ケース(逐次)がビット一致。MPI は np = 1, 2, 4 が逐次と
+  Hg・Log でバイト一致。gfortran -fcheck=all の np = 2 で構成 3・4 と gwbed(有効化した
+  写し)を回し、範囲外参照なし。
+- **既定を 1 にした場合の影響(評価。reference は未変更)**: 側方流を使う reference
+  ケースの写しで f_gw_opening = 1 にして Log を比べた。gwseep: S_grnd の差は最大
+  8.8e-5 m(相対 0.87 %)、h_max 1.2 %、V_max 2.3 %、Check_gwseep closure は合格。
+  gwbed: S_grnd 3.4 %、h_max 21 %、S_total は 1e-13 で保存。Check_gwbed gain は
+  不合格になる(期待値が振り替えなしの通過幅で組んであり、堤防際の地下水位
+  0.19986 m に対し期待値 0.199896 m)。salt: exch_in・wall_bank・wall_sea・param.txt は
+  不変(一様または側方流なし)、exch_out・exch_dtg は S_surf が相対 4 %、mix1・mix2 は
+  S_grnd 1.2 %、S_total は 1e-14 で保存、Check_exch は合格。どれも物理的に妥当な
+  向き(壁沿いの流下が増える)だが、reference の更新と gwbed の期待値の書き換えを
+  伴うので、既定は 0 のまま利用者の判断を待つ(handoff 1c)。
 - **CI**: ci.yml の高速ケース(逐次・MPI np = 2)に gwlateral を追加(15 ケース。逐次で
   約 7 s)。nightly の REF_CASES は reference を持つケースの一覧なので入れない(prmap・
   wfswash と同じ)。

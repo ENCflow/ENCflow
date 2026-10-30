@@ -77,7 +77,8 @@ module m_saltwater
   use m_geoinfo, only : t_geoinfo, zbank_min
   use m_state, only : t_state
   use m_gwflow_lateral, only : t_gwlat, t_latlayer, gwflow_lateral_geom_init, &
-                               gwflow_lateral_geom_get, gwflow_lateral_layer1_get
+                               gwflow_lateral_geom_get, gwflow_lateral_layer1_get, &
+                               gwflow_lateral_open_get
   use m_fileio, only : fileio_read_matrix
   use m_restart, only : restart_write_cell, restart_read_cell
   use m_sysdep_util, only : sysdep_mkdir
@@ -106,6 +107,9 @@ module m_saltwater
     real :: rdr(1:8) = 0.0           ! 幾何(gwflow_lateral_geom_get)
     real :: wl(1:8) = 0.0
     real :: ainv = 0.0
+    real, allocatable :: wlo(:,:,:)  ! 側方流の振り替え込みの有効通過幅(f_gw_opening = 1 の
+                                     !   ときだけ。gwflow_lateral_open_get。地下の塩水 zone 流束が
+                                     !   側方流と同じ幅を使う。§16.6)
     real, allocatable :: qs(:,:,:)   ! エッジ流量4成分。一時作業領域(共用)
     real, allocatable :: qb(:,:,:)   ! 同(バロクリニック成分。gw のみ)
     logical :: initialized = .false.
@@ -242,6 +246,7 @@ subroutine m_saltwater_init(sl, p, g, s, lat, lay1)
   ! --- 幾何(gwflow の側方系と共有・冪等)とエッジ作業領域 ---
   call gwflow_lateral_geom_init(lat, g, salt_diagratio, 1.0e-3)
   call gwflow_lateral_geom_get(lat, sl%sw%rdr, sl%sw%wl, sl%sw%ainv)
+  if (sl%sw%gw) call gwflow_lateral_open_get(lat, sl%sw%wlo)
   allocate(sl%sw%qs(1:4, dcp%ish-1:dcp%ieh, dcp%jsh-1:dcp%jeh), source = 0.0)
   if (sl%sw%gw) allocate(sl%sw%qb(1:4, dcp%ish-1:dcp%ieh, dcp%jsh-1:dcp%jeh), source = 0.0)
 
@@ -642,16 +647,18 @@ subroutine gw_salt_zone(sl, g, s, dts)
   real, intent(in) :: dts
   integer :: i, j, k, in, jn, jt
   real :: bc, bn, etac, etan, zetac, zetan, psc, psn, bup, bse, btc, btn, btup
-  real :: gqs, gqb, dh_up, r, dhs, dhb, capc, fx, fs, qcap
-  logical :: do_bed
+  real :: gqs, gqb, dh_up, r, dhs, dhb, capc, fx, fs, qcap, wle
+  logical :: do_bed, do_open
 
   ! 河床交換能(f_gwbed。§16.5・§47.5): 河道・非河道間のエッジの塩水 zone 流束にも
   ! 側方流と同じ形の上限をかける。無効時は分岐に入らない
   do_bed = allocated(s%kbed)
+  ! 側方流の振り替え(f_gw_opening = 1。§16.6): 合計(lateral_core)と同じ有効通過幅を使う
+  do_open = allocated(sl%sw%wlo)
   jt = min(dcp%je + 1, dcp%jeh)
   !$omp parallel do schedule(static) &
   !$omp   private(i, j, k, in, jn, bc, bn, etac, etan, zetac, zetan, psc, psn, &
-  !$omp           bup, bse, btc, btn, btup, gqs, gqb, dh_up, r, qcap)
+  !$omp           bup, bse, btc, btn, btup, gqs, gqb, dh_up, r, qcap, wle)
   do j = dcp%js, jt
     do i = g%wx(1,j), g%wx(2,j)
       if (g%x(i,j) <= 0) cycle
@@ -703,17 +710,19 @@ subroutine gw_salt_zone(sl, g, s, dts)
                   else
                     bse = min(0.5 * (bc + bn), bup)
                   end if
-                  gqs = sl%sw%ksh * bse * (psc - psn) * sl%sw%rdr(k) * sl%sw%wl(k)
-                  gqb = sl%sw%ksh * bse * sl%sw%epsr * (zetac - zetan) * sl%sw%rdr(k) * sl%sw%wl(k)
+                  wle = sl%sw%wl(k)
+                  if (do_open) wle = sl%sw%wlo(k, i+die(k), j+dje(k))
+                  gqs = sl%sw%ksh * bse * (psc - psn) * sl%sw%rdr(k) * wle
+                  gqb = sl%sw%ksh * bse * sl%sw%epsr * (zetac - zetan) * sl%sw%rdr(k) * wle
                   ! 河床交換能による上限: |q_s| <= k_bed(河道側セル)·l_k·b_s,e
                   ! (界面の塩水飽和帯厚 = 塩水を運ぶ面の面積。lateral_core の
                   ! k_bed·l_k·h_e と同型)。qb にも同率を適用(zone 流束の成分)
                   if (do_bed) then
                     if ((g%rw(i,j) > 0) .neqv. (g%rw(in,jn) > 0)) then
                       if (g%rw(i,j) > 0) then
-                        qcap = s%kbed(i,j) * sl%sw%wl(k) * bse
+                        qcap = s%kbed(i,j) * wle * bse
                       else
-                        qcap = s%kbed(in,jn) * sl%sw%wl(k) * bse
+                        qcap = s%kbed(in,jn) * wle * bse
                       end if
                       if (qcap >= 0.0 .and. abs(gqs) > qcap) then
                         r = qcap / abs(gqs)
@@ -925,6 +934,7 @@ subroutine m_saltwater_dispose(sl, p, g, s)
   if (p%f_state_save > 0) call save_state(p, g, s)
   if (allocated(sl%sw%qs)) deallocate(sl%sw%qs)
   if (allocated(sl%sw%qb)) deallocate(sl%sw%qb)
+  if (allocated(sl%sw%wlo)) deallocate(sl%sw%wlo)
   sl%sw%initialized = .false.
   sl%enabled = .false.
   sl%initialized = .false.

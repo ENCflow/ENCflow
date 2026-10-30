@@ -104,11 +104,11 @@
     {
       "source": "docs/users_guide.md",
       "target": "docs/en/users_guide.md",
-      "source_sha256": "619feb3a61b2f7efec53531f359bffe496a4b76a5aa4f72f5d950bb6df62e0e5",
-      "target_sha256": "4027d7d21b62c4d3a6fbf1b2f05120ca19bfb654f5fe5eaa9edeee04383b4d50",
-      "reviewer": "Claude (Claude Code session; reviewed the changed sections of the Japanese source against the English mirror, 2026-10-29)",
+      "source_sha256": "c01c67cf8c5132ba44515478cbf68e6fd2c2383771e4e549f0e60288a2e65dbe",
+      "target_sha256": "83dc92572f7afbc1f2f0d73558f018d565aec412e33cf5770402734842ee68bd",
+      "reviewer": "Claude (Claude Code session; full-text content and lexical review, no model execution)",
       "method": "assistant",
-      "reviewed_on": "2026-10-29"
+      "reviewed_on": "2026-10-30"
     },
     {
       "source": "docs/users_guide/advection.md",
@@ -284,18 +284,18 @@
     {
       "source": "docs/users_guide/gwflow.md",
       "target": "docs/en/users_guide/gwflow.md",
-      "source_sha256": "2458fe76d7c3974c33a83b17fc76ad3c7d118b391337b12dc31af6e99230f1e4",
-      "target_sha256": "368fab117dd08b6f0d12f3a9bdf12f37a16ec4cf18d162604fe5c81e447d21b7",
-      "reviewer": "Claude (Claude Code session; after merging main, reviewed the merged pair: the main-side qanat lines and the branch-side test/gwlateral entry and wall-conductance note, Japanese source against the English mirror, 2026-10-30)",
+      "source_sha256": "cc255ef66ea13de98b2a7b6d6e34360e678adcb4b851a02c363201aa411609da",
+      "target_sha256": "a74d0f009f2404e4d62705e29151d7f3624731e04ce93b8590ab1cfc3c9838ce",
+      "reviewer": "Claude (Claude Code session; full-text content and lexical review, no model execution)",
       "method": "assistant",
       "reviewed_on": "2026-10-30"
     },
     {
       "source": "docs/users_guide/gwflow_models.md",
       "target": "docs/en/users_guide/gwflow_models.md",
-      "source_sha256": "12977146830ac59616aedbbbd32c3fcd7cc718d3164751a78c886214b7a5279d",
-      "target_sha256": "e5f6411cbea12fa3023a1b8cb409628ba47e189973dd9be25bfd80736f4ecaf1",
-      "reviewer": "Claude (Claude Code session; after merging main, reviewed the merged pair: the main-side qanat lines and the branch-side test/gwlateral entry and wall-conductance note, Japanese source against the English mirror, 2026-10-30)",
+      "source_sha256": "1be3081844faf808474dfbe548509ee7144dff9fc13e1250b783c1b1ac133811",
+      "target_sha256": "0bc09601f94d03606c5777a2acd5a60a71e6f2b0b5b6ee06e448a96a775515cd",
+      "reviewer": "Claude (Claude Code session; full-text content and lexical review, no model execution)",
       "method": "assistant",
       "reviewed_on": "2026-10-30"
     },
@@ -383,11 +383,11 @@
     {
       "source": "docs/users_guide/params_index.md",
       "target": "docs/en/users_guide/params_index.md",
-      "source_sha256": "0211966b9c7cf64ad334463f13620e2d5a621dfd123caa3f19d128c7e2bccb9a",
-      "target_sha256": "2a0994defea8922e38e7519f9b415e4cda734f82d9aac88b902466f6f21f5b0a",
-      "reviewer": "Claude (Claude Code session; reviewed the changed sections of the Japanese source against the English mirror, 2026-10-29)",
+      "source_sha256": "ab7dcd1e6462404f966ecc42ac37465f964fa52ba2ccea856ba60f7ca5f16b86",
+      "target_sha256": "bf71591096b508a45e154961c7ea802afedff85066e1ba78b3936f9ce2c8f909",
+      "reviewer": "Claude (Claude Code session; full-text content and lexical review, no model execution)",
       "method": "assistant",
-      "reviewed_on": "2026-10-29"
+      "reviewed_on": "2026-10-30"
     },
     {
       "source": "docs/users_guide/record.md",
@@ -644,11 +644,11 @@
     {
       "source": "examples/List_samples/list_gwflow.txt",
       "target": "examples/List_samples/en/list_gwflow.txt",
-      "source_sha256": "00e6c11c97cc8b46180198eca2cb6f69953247f5cbe541a738d74ccfca44546b",
-      "target_sha256": "922dc9d6649453977141000f5be2abb2ccd5580ec30d9e6cb928e91f7b5f7037",
-      "reviewer": "Claude",
+      "source_sha256": "af45f48333579365e8238d7e1d337b8e859486316ad19ac3e1f2e63e5ca2016c",
+      "target_sha256": "0f766b0fbf8879ca4d314ef6530e7ab44faee81baa71b0d982da12e7da0c42c0",
+      "reviewer": "Claude (Claude Code session; full-text content and lexical review, no model execution)",
       "method": "assistant",
-      "reviewed_on": "2026-10-25"
+      "reviewed_on": "2026-10-30"
     },
     {
       "source": "examples/List_samples/list_initial.txt",
@@ -1562,9 +1562,9 @@
     {
       "source": "test/README.md",
       "target": "test/README.en.md",
-      "source_sha256": "de2d58029c9a8d92780643e257bce8eefed9351baed7007077c8b582358385fd",
-      "target_sha256": "4e047b71cfa7e19cc348acb440c375a7d202c0cf8f6af91bbe91fe6d0d6e8e25",
-      "reviewer": "Claude (Claude Code session; reviewed the changed sections (test/debris configuration 7 and the note on the open-boundary row) of the Japanese source against the English mirror, 2026-10-30)",
+      "source_sha256": "8cd42aec8390b18ccb1e0b1a52353855384f2c651df0f4bd6413a1f42503f3ee",
+      "target_sha256": "dd08068eabc5b155b7dfb45f97a9958bcdc2c8e2e36e773938b9fb6332a56c50",
+      "reviewer": "Claude (Claude Code session; full-text content and lexical review, no model execution)",
       "method": "assistant",
       "reviewed_on": "2026-10-30"
     },
@@ -2120,9 +2120,9 @@
     {
       "source": "test/gwlateral/README.md",
       "target": "test/gwlateral/en/README.md",
-      "source_sha256": "97a44e8a94bcb30834f1bad9233e9be0bc5ccd2f289ae154e88f954220f5f7d8",
-      "target_sha256": "482afb1bb775c96181111d60e026c838a1808ec31ddc39dfb6c84df9f0334bbb",
-      "reviewer": "Claude (Claude Code session; full-text content and lexical review of a new mirror written in the same session, no model execution)",
+      "source_sha256": "6efce67eec39330bd8fa2539286931349026888c845ac286ebeb7014d494dab7",
+      "target_sha256": "c3a74fe831cd4566f6f7a5c3a54e32d887b3483a432ac997e44aa0a0f9eac936",
+      "reviewer": "Claude (Claude Code session; full-text content and lexical review, no model execution)",
       "method": "assistant",
       "reviewed_on": "2026-10-30"
     },
