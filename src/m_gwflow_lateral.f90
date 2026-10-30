@@ -402,24 +402,16 @@ end subroutine
 
 
 !----------------------------------------------------------------------
-! Boussinesq 側方流の初期化(層1=土層。固有グループを自分で読む)。
-! g%sd は m_gwflow_init が m_geoinfo_require_sd で確保済み。
-! dts は実効時間刻み(安定条件の静的検査に使う)
+! &list_gwflow_lateral を読み、層によらない幾何の項目(gw_eps・gw_diagratio・
+! f_gw_opening)を検査する(読むだけと検査。gw_ksh_mmh の既定値の採用と検査は
+! 層1の init。§12)
 !----------------------------------------------------------------------
-subroutine gwflow_lateral_init(glt, lay1, p, g, s, dts)
-  type(t_gwlat), intent(inout) :: glt
-  type(t_latlayer), intent(inout) :: lay1
+subroutine read_lateral_list(p, gw_ksh_mmh, gw_eps, gw_diagratio, f_gw_opening)
   type(t_sysparam), intent(in) :: p
-  type(t_geoinfo), intent(in) :: g
-  type(t_state), intent(inout) :: s
-  real, intent(in) :: dts
-  integer :: un, ios, i, j
-  real :: gw_ksh_mmh, gw_eps, gw_diagratio
-  integer :: f_gw_opening
-  real :: sdmax(1)
+  real, intent(out) :: gw_ksh_mmh, gw_eps, gw_diagratio
+  integer, intent(out) :: f_gw_opening
+  integer :: un, ios
   namelist /list_gwflow_lateral/ gw_ksh_mmh, gw_eps, gw_diagratio, f_gw_opening
-
-  if (s%initialized) continue  ! 引数未使用の警告を抑制
 
   gw_ksh_mmh = 0.0
   gw_eps = 1.0e-3
@@ -433,9 +425,6 @@ subroutine gwflow_lateral_init(glt, lay1, p, g, s, dts)
   if (ios /= 0) call par_stop("list_gwflow_lateral: cannot read namelist")
   close(un)
 
-  ! 既定値(未指定 = 0 なら採用し、採用値を表示。developer.md §64)
-  gw_ksh_mmh = param_default("gwflow", "gw_ksh_mmh", gw_ksh_mmh, 360.0, " mm/h")
-  if (gw_ksh_mmh <= 0.0) call par_stop("list_gwflow_lateral: gw_ksh_mmh must be > 0")
   if (gw_eps <= 0.0) call par_stop("list_gwflow_lateral: gw_eps must be > 0")
   if (gw_diagratio < 0.0 .or. gw_diagratio > 1.0) then
     call par_stop("list_gwflow_lateral: gw_diagratio must be in [0,1]")
@@ -443,6 +432,33 @@ subroutine gwflow_lateral_init(glt, lay1, p, g, s, dts)
   if (f_gw_opening /= 0 .and. f_gw_opening /= 1) then
     call par_stop("list_gwflow_lateral: f_gw_opening must be 0(none) or 1(transfer blocked diagonal shares)")
   end if
+end subroutine
+
+
+!----------------------------------------------------------------------
+! Boussinesq 側方流の初期化(層1=土層。固有グループを自分で読む)。
+! g%sd は m_gwflow_init が m_geoinfo_require_sd で確保済み。
+! dts は実効時間刻み(安定条件の静的検査に使う)
+!----------------------------------------------------------------------
+subroutine gwflow_lateral_init(glt, lay1, p, g, s, dts)
+  type(t_gwlat), intent(inout) :: glt
+  type(t_latlayer), intent(inout) :: lay1
+  type(t_sysparam), intent(in) :: p
+  type(t_geoinfo), intent(in) :: g
+  type(t_state), intent(inout) :: s
+  real, intent(in) :: dts
+  integer :: i, j
+  real :: gw_ksh_mmh, gw_eps, gw_diagratio
+  integer :: f_gw_opening
+  real :: sdmax(1)
+
+  if (s%initialized) continue  ! 引数未使用の警告を抑制
+
+  call read_lateral_list(p, gw_ksh_mmh, gw_eps, gw_diagratio, f_gw_opening)
+
+  ! 既定値(未指定 = 0 なら採用し、採用値を表示。developer.md §64)
+  gw_ksh_mmh = param_default("gwflow", "gw_ksh_mmh", gw_ksh_mmh, 360.0, " mm/h")
+  if (gw_ksh_mmh <= 0.0) call par_stop("list_gwflow_lateral: gw_ksh_mmh must be > 0")
   if (g%sy0 <= 0.0 .or. g%sy0 > 1.0) then
     call par_stop("list_geoinfo: sy0 must be in (0,1] for gwflow lateral")
   end if
