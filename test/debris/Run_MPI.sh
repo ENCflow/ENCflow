@@ -114,4 +114,19 @@ if [ -d save_gw_serial ]; then
         echo "警告: save_gw/state.dat が逐次ビルドと不一致(同上)" >&2
     fi
 fi
+
+# 構成7: 斜面等流の平衡濃度(水路は 300 行。developer.md §28.15)
+python3 "$sdir/make_eq.py" z > z_eq.txt || exit 1
+python3 "$sdir/make_eq.py" h > h_eq.txt || exit 1
+rm -rf result_eq save_eq
+mpirun -np "$NP" $MPIRUN_OPTS ./encflow_mpi param_eq.txt > Screen_eq.log 2>&1 \
+    || { echo "ERROR: param_eq.txt (np=$NP) run failed" >&2; exit 1; }
+python3 "$sdir/Check_debris_eq.py" save_eq || rc=1
+if [ -d save_eq_serial ]; then
+    if cmp -s save_eq/state.dat save_eq_serial/state.dat; then
+        echo "=== 斜面等流の平衡濃度: state.dat は逐次結果とビット一致 ==="
+    else
+        echo "警告: save_eq/state.dat が逐次ビルドと不一致(同上)" >&2
+    fi
+fi
 exit $rc

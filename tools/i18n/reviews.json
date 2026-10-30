@@ -338,9 +338,9 @@
     {
       "source": "docs/users_guide/massflow.md",
       "target": "docs/en/users_guide/massflow.md",
-      "source_sha256": "5afebc09457aeaf647b7a7137a8f36a8aae5787f181eabccba62e703ba643729",
-      "target_sha256": "37f6992bc4b32c246203da468cca14f771fa6658e8afb659788498ab8c404903",
-      "reviewer": "Claude (Claude Code session; reviewed the Japanese source against the English mirror after merging main; figures from the same results and drawing code with label changes only, 2026-10-30)",
+      "source_sha256": "6450a81f2c05019beffe961f8944ecb1f79f377250ed30026c77bed1db5dbb07",
+      "target_sha256": "a2791aa926f5e205edacee3ebfba9d27f3784234215a37dcae10242132a68f05",
+      "reviewer": "Claude (Claude Code session; reviewed the changed sections (test/debris configuration 7 and the note on the open-boundary row) of the Japanese source against the English mirror, 2026-10-30)",
       "method": "assistant",
       "reviewed_on": "2026-10-30"
     },
@@ -1517,9 +1517,9 @@
     {
       "source": "test/README.md",
       "target": "test/README.en.md",
-      "source_sha256": "60fc07956880e806fb5ca5363983cf7e0e15bca67a3321b5d478368549831677",
-      "target_sha256": "212e2b15aa4e5e1f0b99aab25b3aa42301b5ffeb52085a3df872d604c57e294f",
-      "reviewer": "Claude (Claude Code session; reviewed the changed sections (test/fluxline entry and the note on transect ends) of the Japanese source against the English mirror, 2026-10-30)",
+      "source_sha256": "de2d58029c9a8d92780643e257bce8eefed9351baed7007077c8b582358385fd",
+      "target_sha256": "4e047b71cfa7e19cc348acb440c375a7d202c0cf8f6af91bbe91fe6d0d6e8e25",
+      "reviewer": "Claude (Claude Code session; reviewed the changed sections (test/debris configuration 7 and the note on the open-boundary row) of the Japanese source against the English mirror, 2026-10-30)",
       "method": "assistant",
       "reviewed_on": "2026-10-30"
     },
@@ -1877,9 +1877,9 @@
     {
       "source": "test/debris/README.md",
       "target": "test/debris/en/README.md",
-      "source_sha256": "52395aa857cc7ae2618ac862c28ddea7fc7e11f96097a1907407f2f6a9c7092e",
-      "target_sha256": "3cbef30075e9f1bacbad0d90220e586d17784f4871430eeb90d024fc7e76e41b",
-      "reviewer": "Claude (Claude Code session; reviewed the Japanese source against the English mirror after merging main; figures from the same results and drawing code with label changes only, 2026-10-30)",
+      "source_sha256": "65ca85eff6e5a513cfbb21318832db4ae1bf3cb339d8162d77e5a745aabd4f47",
+      "target_sha256": "601d12a992d4da144a6fb83340a2ebbbc2f0703ddecff0dc40bb64733827b2ac",
+      "reviewer": "Claude (Claude Code session; reviewed the changed sections (test/debris configuration 7 and the note on the open-boundary row) of the Japanese source against the English mirror, 2026-10-30)",
       "method": "assistant",
       "reviewed_on": "2026-10-30"
     },

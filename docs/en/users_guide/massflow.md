@@ -160,6 +160,15 @@ against the originals is a remaining item of debris_plan.md §1).
 $`\delta_e`$ (`db_delte`, default 0.0007) is Takahashi's general value and
 $`\delta_d`$ (`db_deltd`, default 0.05) the customary value of the Kanako
 family; both are **calibration coefficients of the run-out distance**.
+Configuration 7 of [test/debris](../../../test/debris/en/README.md) checks that the
+concentration of uniform flow on a slope converges to $`C_\infty`$ in all four
+regimes. In the row on an open edge (free outflow, long-wave radiation), the
+steepest descent does not look at neighbours outside the domain, so the slope
+becomes 0 and the flow drops its sediment as if $`C_\infty = 0`$ (an artificial
+deposit forms in the edge row; f_dbed = 2 and 3 use the slope on the available
+side and do not have this gap). Where a debris flow reaches an edge, keep the
+edge away from the area of interest (how to handle this is under discussion;
+developer.md §28.15).
 
 **f_dbed = 2: Egashira–Ashida.** Erosion and deposition are one continuous
 formula (eqs. (5)–(7) of Morpho2DH[^morpho2dh]) with no extra parameter:
@@ -407,7 +416,7 @@ The labels in the Basis column are explained in [How to read the basis of a defa
 
 | Case | Content | Point |
 |---|---|---|
-| [test/debris](../../../test/debris/en/README.md) | four constitutive configurations (simple, Egashira, Takahashi–Nakagawa, pore water) | total solid 1e-13, np = 1, 2, 4 agree |
+| [test/debris](../../../test/debris/en/README.md) | four constitutive configurations (simple, Egashira, Takahashi–Nakagawa, pore water); equilibrium concentration of uniform flow on a slope | total solid 1e-13, np = 1, 2, 4 agree; equilibrium concentration within 1e-11 of the Takahashi-type C∞ |
 | [test/slide](../../../test/slide/en/README.md) | fluidisation and stability test | self-checks of conservation and water budget |
 | [test/volcano](../../../test/volcano/en/README.md) | Voellmy uniform flow and τ_y run-out | uniform depth within 0.04% of the analytical solution (four neighbours) |
 | [test/curvature](../../../test/curvature/en/README.md) | steady one-dimensional test of the curvature term | thickening on the arc 1.03 times the ODE |

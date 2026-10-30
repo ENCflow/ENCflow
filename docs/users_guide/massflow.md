@@ -135,6 +135,12 @@ i = \delta_d\,\frac{C_\infty - C}{C_*}\,|\mathbf{V}|\ (C > C_\infty)
 (原典照合は debris_plan.md §1 の残作業)。$`\delta_e`$(`db_delte`、既定
 0.0007)は Takahashi の一般値、$`\delta_d`$(`db_deltd`、既定 0.05)は
 Kanako 系の慣用値で、どちらも**到達距離の校正係数**です。
+[test/debris](../../test/debris/README.md) の構成 7 が、斜面等流の濃度が 4 つの領域の
+$`C_\infty`$ に収束することを検定しています。開いた辺(自由流出・長波放射)の行では、
+最急降下が領域の外の近傍を見ないので勾配が 0 になり、$`C_\infty = 0`$ として流れの
+土砂を落とします(辺の行に人工的な堆積ができる。f_dbed = 2・3 は使える側の勾配を
+使うので、この欠けはありません)。土石流が辺へ届く構成では、辺を見たい範囲から離して
+ください(扱いは検討中。developer.md §28.15)。
 
 **f_dbed = 2: 江頭・芦田。** 侵食と堆積が 1 本の式で連続します
 (Morpho2DH の式(5)–(7)[^morpho2dh])。追加パラメータはありません。
@@ -338,7 +344,7 @@ $`v_{stop}`$ = 0.05 m/s。混合体の μ・ξ とは慣性の有無で校正値
 
 | ケース | 内容 | 要点 |
 |---|---|---|
-| [test/debris](../../test/debris/README.md) | 4 つの構成則(簡易・江頭・高橋中川・間隙水) | 固体総量 1e-13、np=1,2,4 一致 |
+| [test/debris](../../test/debris/README.md) | 4 つの構成則(簡易・江頭・高橋中川・間隙水)、斜面等流の平衡濃度 | 固体総量 1e-13、np=1,2,4 一致、平衡濃度が高橋型の C∞ に 1e-11 以内 |
 | [test/slide](../../test/slide/README.md) | 瞬時流動化と安定判定 | 保存則・水収支の自己検定 |
 | [test/volcano](../../test/volcano/README.md) | Voellmy 定常等流と τ_y ランアウト | 等流深の解析解に 0.04%(4 近傍) |
 | [test/curvature](../../test/curvature/README.md) | 曲率項の定常 1 次元検定 | 円弧上の厚化が ODE の 1.03 倍 |

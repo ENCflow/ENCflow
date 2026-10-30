@@ -1,7 +1,8 @@
 #!/bin/bash
 # debris: 土石流(浸食起動型)の疎通・保存則検定(逐次実行)
 #   ./Run.sh
-# 合否は Check_debris.py(固体保存・共動更新恒等・侵食/堆積の活性)。
+# 合否は Check_debris.py(固体保存・共動更新恒等・侵食/堆積の活性)と、構成 7 の
+# Check_debris_eq.py(斜面等流の平衡濃度)。
 # 実行後の save/ は save_serial/ にも複製する(Run_MPI.sh のバイト比較用)
 
 sdir=$(dirname "$(readlink -f "$0")")
@@ -56,6 +57,14 @@ set +o pipefail
 echo ""
 python3 "$sdir/Check_debris.py" save_gw gw || rc=1
 rm -rf save_gw_serial && cp -r save_gw save_gw_serial
+
+# 構成7: 斜面等流の平衡濃度(勾配の違う 6 本の水路。高橋型の C∞ との突合。developer.md §28.15)
+python3 "$sdir/make_eq.py" z > z_eq.txt || exit 1
+python3 "$sdir/make_eq.py" h > h_eq.txt || exit 1
+rm -rf result_eq save_eq
+./encflow param_eq.txt > Screen_eq.log 2>&1 || { echo "ERROR: param_eq.txt run failed" >&2; exit 1; }
+python3 "$sdir/Check_debris_eq.py" save_eq || rc=1
+rm -rf save_eq_serial && cp -r save_eq save_eq_serial
 
 if [ $rc -eq 0 ]; then
     echo "=== debris verification PASS ==="
