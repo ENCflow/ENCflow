@@ -82,6 +82,8 @@ examples/badland_storm/result_*
 examples/badland_storm/sw_*.txt
 examples/badland_round/z.txt
 examples/karst/z.txt
+examples/estuary_barrage/data/
+examples/estuary_barrage/Screen*.log
 examples/karst/sol.txt
 examples/karst/Screen*.log
 examples/karst/analysis*.txt

@@ -463,8 +463,10 @@ It acts in two places.
   saturated thickness. The cap is the same in both directions, so a
   gaining river, where surrounding groundwater enters the channel and
   exfiltrates, is also throttled by k_bed. Edges between two channel cells
-  are treated as aquifer continuity and are not capped; layer 2, the
-  conduit layer and the fresh/salt layers are not affected.
+  are treated as aquifer continuity and are not capped; layer 2 and the
+  conduit layer are not affected. The salt-zone flux of the
+  [fresh and salt water layers](salt.md) is capped in the same form
+  (capacity x passage width x saturated salt thickness).
 
 | Parameter | Default | Meaning |
 |---|---|---|
