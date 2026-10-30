@@ -167,8 +167,8 @@ architecture.md。このメモは「現在進行中・未完了の項目」だ�
      第II部の io・time・restart・parallel・user_routines はモデル・式を含まないので対象外とした
    - 検定スクリプト: pump・frost・conduit・nhbottom は 2026-10-29 に整備済み
      (developer.md §16.3・§16.4・§46.4・§69.10)。残り: benchmark 系(examples/benchmark の
-     h-plane・v-shaped・v-valley)の環境非依存テストへの昇格(§10)。1c(Boussinesq)は
-     2026-10-30 に test/gwlateral で整備(§16.6)。解析解のある候補はほかに
+     h-plane・v-shaped・v-valley)の環境非依存テストへの昇格(§10)。旧 1c(Boussinesq)は
+     2026-10-30 に test/gwlateral・test/gwtani で整備(§16.6・§16.7)。解析解のある候補はほかに
      中期の淡塩 2 層 (3)(Glover のくさび・淡水レンズ)、
      中期の geomorph(平衡勾配。巻き上げと沈降の釣り合いは 2026-10-30 に test/suspend
      構成 3・4 で整備。§19.11)、中期の蛇行 (ii)(横断勾配の平衡値)。1h(測線の角度掃引)は
@@ -350,21 +350,6 @@ architecture.md。このメモは「現在進行中・未完了の項目」だ�
      吐口の到達遅れ、時系列との併用(運転スケジュール・ゲートの時刻
      開閉)、内部状態を持つ種別(ダム貯留・ゲート開閉速度。save 対応と
      併せて)、円形断面カルバート、開度→面積の非線形
-
-1c. **gwflow 第3弾(側方流動 Boussinesq)の残検証**
-   (実装と gfortran 検証は 2026-08-05 完了。決定は developer.md §16.1、
-    進捗と検証内容は handoff_gwflow_tani.md §9 の 2〜5。ifx は 0c)
-   - 解析解との定量比較は 2026-10-30 に test/gwlateral で整備(developer.md §16.6。
-     線形化 Boussinesq のガウス形の小山の 2 次モーメントの伸び 4D に比 1.00007。
-     reference を持たない検定型で CI に登録)。壁(領域の縁・領域外・海セル)に接する
-     セルで壁沿いの通水能が内部の 0.707 倍、1 セル幅の帯で 0.414 倍になる問題は、
-     2026-10-30 に静的な振り替え `f_gw_opening`(&list_gwflow_lateral)で解消した
-     (test/gwlateral 構成 3・4 で D k² に比 0.9995)。同日、利用者の判断で既定を 1 にし、
-     利用者の許可を得て gwbed・gwseep の reference を更新した(Check_gwbed.py の期待値も
-     振り替え込みの通過幅に組み直し。salt・estuary_barrage の数値の見直しを含め §16.6)
-   - 側方有効時のリスタート往復ビット一致の確認(私有状態なしの想定の
-     実証。s%hg は m_state 経由)
-   - 谷型シナリオテスト(§9 の 6)はこれから
 
 1f. **再開時刻の継続化(2026-08-08 実装。仕様は developer.md §7)の残検証**
    - 保存 → 再開の継続を通し計算とバイト比較する恒常テスト(2026-10-30 に確認): MPI は
