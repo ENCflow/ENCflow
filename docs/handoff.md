@@ -167,8 +167,9 @@ architecture.md。このメモは「現在進行中・未完了の項目」だ�
      第II部の io・time・restart・parallel・user_routines はモデル・式を含まないので対象外とした
    - 検定スクリプト: pump・frost・conduit・nhbottom は 2026-10-29 に整備済み
      (developer.md §16.3・§16.4・§46.4・§69.10)。残り: benchmark 系(examples/benchmark の
-     h-plane・v-shaped・v-valley)の環境非依存テストへの昇格(§10)。解析解のある候補は
-     ほかに 1c(1 次元 Boussinesq)、中期の淡塩 2 層 (3)(Glover のくさび・淡水レンズ)、
+     h-plane・v-shaped・v-valley)の環境非依存テストへの昇格(§10)。1c(Boussinesq)は
+     2026-10-30 に test/gwlateral で整備(§16.6)。解析解のある候補はほかに
+     中期の淡塩 2 層 (3)(Glover のくさび・淡水レンズ)、
      中期の geomorph(平衡勾配・巻き上げと沈降の釣り合い)、1j(斜面等流の平衡濃度)、
      1h(測線の角度掃引)、中期の蛇行 (ii)(横断勾配の平衡値)。
    - 一貫性検査 tools/consistency/check.py(§35.1)の参考情報: どの設定例にも現れない
@@ -351,10 +352,12 @@ architecture.md。このメモは「現在進行中・未完了の項目」だ�
 1c. **gwflow 第3弾(側方流動 Boussinesq)の残検証**
    (実装と gfortran 検証は 2026-08-05 完了。決定は developer.md §16.1、
     進捗と検証内容は handoff_gwflow_tani.md §9 の 2〜5。ifx は 0c)
-   - **解析解のある Boussinesq 拡散問題との定量比較(1Dベンチマーク)は
-     未実施**(§9 の 2 の残)。恒常テストケースは test/gwseep(側方+湧出の
-     台帳閉合)と test/gwdefault 構成 b(Green-Ampt+側方+層2 の既定値
-     同値検定。2026-10-01)があるが、解析解検定のケースはまだない
+   - 解析解との定量比較は 2026-10-30 に test/gwlateral で整備(developer.md §16.6。
+     線形化 Boussinesq のガウス形の小山の 2 次モーメントの伸び 4D に比 1.00007。
+     reference を持たない検定型で CI に登録)。**要議論**: 壁(領域の縁・領域外・
+     海セル)に接するセルで壁沿いの通水能が内部の 0.707 倍、1 セル幅の帯で 0.414 倍に
+     なる(地表流の f_opening_dynamic に当たる振り替えがない)。選択肢と推奨(静的な
+     振り替えを既定 0 のフラグで入れ、既定の変更は reference の変化を見て決める)は §16.6
    - 側方有効時のリスタート往復ビット一致の確認(私有状態なしの想定の
      実証。s%hg は m_state 経由)
    - 谷型シナリオテスト(§9 の 6)はこれから

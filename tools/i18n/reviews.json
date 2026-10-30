@@ -284,20 +284,20 @@
     {
       "source": "docs/users_guide/gwflow.md",
       "target": "docs/en/users_guide/gwflow.md",
-      "source_sha256": "eb5c8c8dbbd479083814869a8b7bb7f7260726238e411227d19b06303dd7f709",
-      "target_sha256": "d74b62f3566b20664708e2f5408bd337f807d703a755446fd0b625acf2ce77d4",
-      "reviewer": "Claude (Claude Code session; reviewed the changed sections (added reference sections, footnotes and citation markers) of the Japanese source against the English mirror, 2026-10-30)",
+      "source_sha256": "f8210ee636e0c6bf88c0e5cb2cc2dcf1b0fbba91f116bf269f0bb9f1864fdfb8",
+      "target_sha256": "9984528ea33334e9cbaa91c1b5df2b02ca47797c4dd70988158b758b18711e16",
+      "reviewer": "Claude (Claude Code session; reviewed the changed sections (test/gwlateral entry and the note on the conductance along walls) of the Japanese source against the English mirror, 2026-10-30)",
       "method": "assistant",
       "reviewed_on": "2026-10-30"
     },
     {
       "source": "docs/users_guide/gwflow_models.md",
       "target": "docs/en/users_guide/gwflow_models.md",
-      "source_sha256": "2847e2382c0cd49070bf0611304e10f19b8de6890ff5adad3aecab6697513ee6",
-      "target_sha256": "2973640acecf95dc3283a670eb03a561be81e296202543ec431ef0090283b1cf",
-      "reviewer": "Claude",
+      "source_sha256": "5fe4c3ca39bd4eaf50a94322c5cdcaff4e924b134f4f29c4e16e3fd4175ce4e9",
+      "target_sha256": "4621b154e5239b8a9a3b49d3bca24e6c8fd721e97ce18e863e3962117e63f260",
+      "reviewer": "Claude (Claude Code session; reviewed the changed sections (test/gwlateral entry and the note on the conductance along walls) of the Japanese source against the English mirror, 2026-10-30)",
       "method": "assistant",
-      "reviewed_on": "2026-10-25"
+      "reviewed_on": "2026-10-30"
     },
     {
       "source": "docs/users_guide/hydraulics.md",
@@ -1517,11 +1517,11 @@
     {
       "source": "test/README.md",
       "target": "test/README.en.md",
-      "source_sha256": "5a65d242d83b2f77614ac586c45220c81cd7d5e7f7e572adfe94af6edf2349bd",
-      "target_sha256": "ee5ddf85a58ec6a75a22ebcfe57cecde94dd8c12ca6dcce8eb7dadea96662393",
-      "reviewer": "Claude (Claude Code session; full-text content and lexical review, no model execution)",
+      "source_sha256": "35b9af7aca37301a055a7efd09b89db0f0091feec73598190b73b4d18e4a8a7b",
+      "target_sha256": "608d7dc9b93d586ce2d5bf84c2469c458d5a34933d195d7fc0f13da816bcc741",
+      "reviewer": "Claude (Claude Code session; reviewed the changed sections (test/gwlateral entry and the note on the conductance along walls) of the Japanese source against the English mirror, 2026-10-30)",
       "method": "assistant",
-      "reviewed_on": "2026-10-29"
+      "reviewed_on": "2026-10-30"
     },
     {
       "source": "test/avalanche/README.md",
@@ -2062,6 +2062,15 @@
       "reviewer": "Claude (Claude Code session; full-text content and lexical review, no model execution)",
       "method": "assistant",
       "reviewed_on": "2026-10-24"
+    },
+    {
+      "source": "test/gwlateral/README.md",
+      "target": "test/gwlateral/en/README.md",
+      "source_sha256": "97a44e8a94bcb30834f1bad9233e9be0bc5ccd2f289ae154e88f954220f5f7d8",
+      "target_sha256": "482afb1bb775c96181111d60e026c838a1808ec31ddc39dfb6c84df9f0334bbb",
+      "reviewer": "Claude (Claude Code session; full-text content and lexical review of a new mirror written in the same session, no model execution)",
+      "method": "assistant",
+      "reviewed_on": "2026-10-30"
     },
     {
       "source": "test/gwseep/README.md",

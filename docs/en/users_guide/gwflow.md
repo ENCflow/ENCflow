@@ -601,6 +601,7 @@ see [the rainfall and meteorology chapter](forcing.md).
 - [test/pump](../../../test/pump/en/README.md) and [test/frost](../../../test/frost/en/README.md): analytical checks of storage loss by well pumping and infiltration suppression by the freezing index.
 - [test/gwseep](../../../test/gwseep/en/README.md): infiltration, lateral groundwater transport and exfiltration, checked together with water-quality mass balances.
 - [test/gwbed](../../../test/gwbed/en/README.md): throttled gaining flow, the k_bed = 0 cut-off and the replacement of the vertical infiltration capacity by the streambed exchange limit, compared with analytical values.
+- [test/gwlateral](../../../test/gwlateral/en/README.md): lateral flow compared with the linearised Boussinesq equation (spreading of a Gaussian mound at 4D), with a record of the conductance along walls (0.71 times the interior).
 - [examples/sewer_hybrid](../../../examples/sewer_hybrid/en/README.md): example settings and input generation that represent a trunk and a branch network in the same conduit layer.
 - [examples/qanat](../../../examples/qanat/en/README.md): an example combining the conduit layer with layer 2 to represent collection, conveyance and outlet seepage of an underground gallery.
 

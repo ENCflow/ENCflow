@@ -1,7 +1,7 @@
 # ENCflow CI: ビルド+回帰テスト(基準 Log とのビット/ULP 照合)
-#   高速な 14 ケースを毎 push で回す(chichibu は実行時間の都合で対象外。
-#   ローカルで test/chichibu/Run.sh を実行すること)。wfswash は reference を持たない
-#   検定型(Check_wfswash.py・再開と並列のバイト比較。Run.sh の終了コードで判定)
+#   高速な 15 ケースを毎 push で回す(chichibu は実行時間の都合で対象外。
+#   ローカルで test/chichibu/Run.sh を実行すること)。prmap・wfswash・gwlateral は
+#   reference を持たない検定型(Check_*.py・再開と並列のバイト比較。Run.sh の終了コードで判定)
 #   フル回帰・MPI np=1,2,4・-fcheck=all・BMI 適合性は夜間の nightly.yml で回す
 name: CI
 
@@ -25,7 +25,7 @@ jobs:
       - name: Regression tests
         run: |
           set -e
-          for c in wave dambreak frost pump conduit salt vzcol vzzone prmap wfshoal wfshadow wfcurrent wfsed wfswash; do
+          for c in wave dambreak frost pump conduit salt vzcol vzzone prmap wfshoal wfshadow wfcurrent wfsed wfswash gwlateral; do
             echo "===== test/$c ====="
             (cd "test/$c" && ./Run.sh)
           done
@@ -44,7 +44,7 @@ jobs:
         run: |
           set -e
           export OMP_NUM_THREADS=1
-          for c in wave dambreak frost pump conduit salt vzcol vzzone prmap wfshoal wfshadow wfcurrent wfsed wfswash; do
+          for c in wave dambreak frost pump conduit salt vzcol vzzone prmap wfshoal wfshadow wfcurrent wfsed wfswash gwlateral; do
             echo "===== test/$c (np=2) ====="
             (cd "test/$c" && ./Run_MPI.sh 2)
           done

@@ -129,6 +129,20 @@ when it is exceeded. The dry test and the excess-outflow reduction are the
 same mechanisms as in the shallow water solver (regularisation thickness
 `gw_eps`).
 
+**Conductance along walls.** In the interior the eight-direction shares
+add up to isotropic diffusion (diffusivity $`K_{sh}h_{gw}/s_y`$) whatever
+the value of `gw_diagratio` ([test/gwlateral](../../../test/gwlateral/en/README.md)
+checks this with the spreading of a Gaussian mound). A cell next to the
+domain edge, an outside cell or a sea cell has no outward diagonal links,
+so its conductance along the wall is $`1 - d/2`$ times the interior value
+(0.71 times with the default $`d`$ = `gw_diagratio` = 2/(2+√2)), and a strip
+one cell wide with walls on both sides gets $`1 - d`$ times (0.41 times).
+The shallow water solver moves the blocked diagonal shares to the axis
+directions (`f_opening_dynamic`); the lateral flow has no such transfer. In
+a valley aquifer cut to one or two cells wide by an outside mask along the
+ridges, the groundwater flow down the valley comes out smaller (how to
+handle this is under discussion; developer.md §16.6).
+
 **Basis of the default.** $`K_{sh}`$ = 360 mm/h (1e-4 m/s) is ten times the
 matrix $`K_s`$ (sandy loam 1e-5 m/s), after the observations that the
 effective lateral conductivity of hillslopes through macropores and pipe

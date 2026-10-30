@@ -501,6 +501,7 @@ gw_ksv_mmh・gw_psif・sy0 の目安。耕起・圧密・植生で 1 桁動き�
 - [test/pump](../../test/pump/)・[test/frost](../../test/frost/): 井戸揚水の貯留減少、凍結指数に応じた浸透抑制をそれぞれ解析値と比較。
 - [test/gwseep](../../test/gwseep/): 浸透・地下側方輸送・湧出還元を、水質の質量収支とともに確認。
 - [test/gwbed](../../test/gwbed/): 河床交換能による得水の律速・k_bed = 0 の遮断・鉛直浸透能の置き換えを解析値と比較。
+- [test/gwlateral](../../test/gwlateral/): 側方流動を線形化した Boussinesq 方程式の解(ガウス形の小山の広がり 4D)と比較し、壁沿いの通水能(内部の 0.71 倍)を記録。
 - [examples/sewer_hybrid](../../examples/sewer_hybrid/): 幹線と枝管網を同じ管路層で表す設定・入力生成の例。
 - [examples/qanat](../../examples/qanat/): 管路層と層2を組み合わせ、地下横坑の集水・導水・出口湧出を表す例。
 
