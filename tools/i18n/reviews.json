@@ -410,11 +410,11 @@
     {
       "source": "docs/users_guide/salt.md",
       "target": "docs/en/users_guide/salt.md",
-      "source_sha256": "ae84cc7caf4195a986ef87ea0bdedd352653b98bd3149a06f1ead492a1c31130",
-      "target_sha256": "fcc3362cfdd2e9bcf663b15a33f6450fee124507af23392dce9c7b58af80b9ba",
-      "reviewer": "Claude (Claude Code session; reviewed the Japanese source against the English mirror; figures from the same results or drawing code with label changes only, 2026-10-29)",
+      "source_sha256": "df303255c1733db515ebd189e8ef743d3f953548f8486c4a4acbc05757810f8c",
+      "target_sha256": "92eb98c9d31dffc3877a3e8ac78249bc1f32e70fc3b30bbcc9de187aa23bfa15",
+      "reviewer": "Claude (Claude Code session; reviewed the Japanese source against the English mirror; figures from the same results or drawing code with label changes only, 2026-10-30)",
       "method": "assistant",
-      "reviewed_on": "2026-10-29"
+      "reviewed_on": "2026-10-30"
     },
     {
       "source": "docs/users_guide/sediment.md",
@@ -482,11 +482,11 @@
     {
       "source": "docs/users_guide/usecases.md",
       "target": "docs/en/users_guide/usecases.md",
-      "source_sha256": "34fb308c1f5734a2372860481ff70644801f14990d39a7dbae554082aa7221f9",
-      "target_sha256": "8c35a8723e0b928e1f037da23cb809fd4156c7a2a397c770414623d384b97f97",
-      "reviewer": "Claude (Claude Code session; reviewed the changed sections of the Japanese source against the English mirror; figures from the same results with label changes only, 2026-10-29)",
+      "source_sha256": "8da8febcda22f48a15a97e7eb3bb9784a4046999d403e29e8a84e6ddfeb6e4f7",
+      "target_sha256": "fb3b13b8d71f6e024599f549ab7049becd8491de91ed7b7997d4e5ffa469fc90",
+      "reviewer": "Claude (Claude Code session; reviewed the Japanese source against the English mirror; figures from the same results or drawing code with label changes only, 2026-10-30)",
       "method": "assistant",
-      "reviewed_on": "2026-10-29"
+      "reviewed_on": "2026-10-30"
     },
     {
       "source": "docs/users_guide/user_routines.md",
@@ -806,11 +806,11 @@
     {
       "source": "examples/README.md",
       "target": "examples/README.en.md",
-      "source_sha256": "eb563fd220c29e8413abeaf1ab5fcdb1c2e5720faef4175156a2732a933f6b72",
-      "target_sha256": "64b99e9519627468617b4050a36e9662fa9f2e1576f9f7092145095cfc9d30e3",
-      "reviewer": "Claude (Claude Code session; reviewed the changed sections of the Japanese source against the English mirror, 2026-10-29)",
+      "source_sha256": "fc9175b29fea2a77e34d66273c152f5b39a666a0fb344c6c82b32e7d57728ce7",
+      "target_sha256": "a36189b5f054c14b83cec8efa2b509726ac0ae7c66fca9a6b405de327329e564",
+      "reviewer": "Claude (Claude Code session; reviewed the Japanese source against the English mirror; figures from the same results or drawing code with label changes only, 2026-10-30)",
       "method": "assistant",
-      "reviewed_on": "2026-10-29"
+      "reviewed_on": "2026-10-30"
     },
     {
       "source": "examples/ashfall_lahar/README.md",
@@ -959,11 +959,20 @@
     {
       "source": "examples/estuary_barrage/README.md",
       "target": "examples/estuary_barrage/en/README.md",
-      "source_sha256": "8f67a255bb509230521f3159483fb3047e063127ab96e30bcd1319c36e6f9af2",
-      "target_sha256": "c77b2cba27d4ac9bf85bcf442b4b177caceeaea3c02c71c9a1c00148f453889f",
-      "reviewer": "Claude (Claude Code session; reviewed the Japanese source against the English mirror; figures from the same results or drawing code with label changes only, 2026-10-29)",
+      "source_sha256": "16041fa961f7405cde4cde8b70fa40cdeb5a7c7227652bb833b354d782b28874",
+      "target_sha256": "c966f79976bf564a6eb671a9f8a4039de54616ca8f3a5a0155df290ab17f1d9c",
+      "reviewer": "Claude (Claude Code session; reviewed the Japanese source against the English mirror; figures from the same results or drawing code with label changes only, 2026-10-30)",
       "method": "assistant",
-      "reviewed_on": "2026-10-29"
+      "reviewed_on": "2026-10-30"
+    },
+    {
+      "source": "examples/estuary_barrage/figs/cross.png",
+      "target": "examples/estuary_barrage/en/figs/cross.png",
+      "source_sha256": "63903371f42febbec347e34e0b76c32d59fea352ef0aa94ea15753f75bd8033c",
+      "target_sha256": "5df697bb5bc25e9c169677dd8bcb11d0c020d36bb65cb29a53159b2289302d87",
+      "reviewer": "Claude (Claude Code session; reviewed the Japanese source against the English mirror; figures from the same results or drawing code with label changes only, 2026-10-30)",
+      "method": "assistant",
+      "reviewed_on": "2026-10-30"
     },
     {
       "source": "examples/estuary_barrage/figs/mechanism.png",
@@ -977,11 +986,11 @@
     {
       "source": "examples/estuary_barrage/figs/plan.png",
       "target": "examples/estuary_barrage/en/figs/plan.png",
-      "source_sha256": "52e5a66b7b6efe35f824a7371cd16865126d2874c981152bf2dcd30722bb2072",
-      "target_sha256": "8ae978ed7c6ac0b25fb142957e032d5f8645a389e52234be79c0373bb5069cd6",
-      "reviewer": "Claude (Claude Code session; reviewed the Japanese source against the English mirror; figures from the same results or drawing code with label changes only, 2026-10-29)",
+      "source_sha256": "ec4ba24a112b3fd3bcb4493cbc7c89eab6f5e1ef6dcb6bbdc29b1fb5837289fb",
+      "target_sha256": "affd580710bc5d4a357c75ecafb8255d7dab54282eabcb89eb99782211c2891e",
+      "reviewer": "Claude (Claude Code session; reviewed the Japanese source against the English mirror; figures from the same results or drawing code with label changes only, 2026-10-30)",
       "method": "assistant",
-      "reviewed_on": "2026-10-29"
+      "reviewed_on": "2026-10-30"
     },
     {
       "source": "examples/estuary_barrage/figs/profile.png",
@@ -995,11 +1004,11 @@
     {
       "source": "examples/estuary_barrage/figs/series.png",
       "target": "examples/estuary_barrage/en/figs/series.png",
-      "source_sha256": "f6bb358cff3d2b42db21764983eac9b2ec2274a1a14e0e1ee3b37144bcebe62c",
-      "target_sha256": "e48caaa6d878eb81a912d8cbfd36565289c7677ea1b7581f8fb090e021e3e022",
-      "reviewer": "Claude (Claude Code session; reviewed the Japanese source against the English mirror; figures from the same results or drawing code with label changes only, 2026-10-29)",
+      "source_sha256": "4ebf42851856eaaabf62d97ac90970c428fa5121555340da2c201b9b62642897",
+      "target_sha256": "8b1e8a3adb7d1d77fb8b8e81cf743b3bdeb85ca41a18396737c18601c1914d63",
+      "reviewer": "Claude (Claude Code session; reviewed the Japanese source against the English mirror; figures from the same results or drawing code with label changes only, 2026-10-30)",
       "method": "assistant",
-      "reviewed_on": "2026-10-29"
+      "reviewed_on": "2026-10-30"
     },
     {
       "source": "examples/estuary_barrage/figs/setup.png",

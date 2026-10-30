@@ -3,9 +3,10 @@
 
   figs/mechanism.png 塩水くさびと地盤の塩水化の機構の模式図(データを使わない)
   figs/setup.png    地形(平面)と河道中心の縦断(堰・帯水層底・潮位の幅)
-  figs/plan.png     20 日後の平面: 帯水層に占める塩水の割合と河道の底層塩水(4 ケース)
+  figs/plan.png     20 日後の平面: 帯水層に占める塩水の割合と河道の底層塩水(堰なし・あり × 出入りなし・あり・目詰まり)
   figs/profile.png  20 日後の河道中心の縦断(河床の塩水交換あり、堰なし・あり)
-  figs/series.png   帯水層の塩水量(混合比の感度ケースを含む 6 ケース)と塩水くさびの先端位置の時間変化
+  figs/cross.png    河道を横切る断面の帯水層の塩水(堰なし: 河床が開いている場合と目詰まりした場合)
+  figs/series.png   帯水層の塩水量(8 ケース)と塩水くさびの先端位置の時間変化
 引数 en で英語ラベル版を en/figs/ に描く(データと描画処理は共通)。
 """
 import glob
@@ -39,11 +40,14 @@ CASES = [("nobarrage_off", T("堰なし", "No barrage"), T("河床の塩水の�
 # 下限側の感度ケース(f_salt_exch=2: 湧出を混合比で配分)
 MIXCASES = [("nobarrage_mix", T("堰なし", "No barrage"), T("湧出を混合比で(下限側)", "seepage by mixing ratio (lower bound)")),
             ("barrage_mix", T("堰あり", "Barrage"), T("湧出を混合比で(下限側)", "seepage by mixing ratio (lower bound)"))]
+# 目詰まりした河床(河床交換能 k_bed = 1e-6 m/s。河床の塩水の出入りあり)
+CLOGCASES = [("nobarrage_clog", T("堰なし", "No barrage"), T("目詰まりした河床", "clogged river bed")),
+             ("barrage_clog", T("堰あり", "Barrage"), T("目詰まりした河床", "clogged river bed"))]
 
 
 def base(case):
     """ケース名から地形の名前(nobarrage / barrage)を返す。"""
-    return case.replace("_off", "").replace("_mix", "")
+    return case.replace("_off", "").replace("_mix", "").replace("_clog", "")
 X_MOUTH = I_COAST * DX / 1000.0
 XK = (np.arange(NX) + 0.5) * DX / 1000.0
 EXT = [0, NX * DX / 1000, NY * DX / 1000, 0]
@@ -232,8 +236,9 @@ def setup():
 
 
 def plan(k):
-    fig, axs = plt.subplots(2, 2, figsize=(13, 5.6), constrained_layout=True)
-    order = [CASES[0], CASES[1], CASES[2], CASES[3]]
+    # 行 = 堰なし・堰あり、列 = 出入りなし・出入りあり・目詰まりした河床
+    fig, axs = plt.subplots(2, 3, figsize=(19, 5.6), constrained_layout=True)
+    order = [CASES[0], CASES[1], CLOGCASES[0], CASES[2], CASES[3], CLOGCASES[1]]
     for ax, (case, lb, lx) in zip(axs.flat, order):
         name = base(case)
         _, sd = geo(name)
@@ -251,8 +256,8 @@ def plan(k):
             ax.plot([(I_WEIR - 0.5) * DX / 1000] * 2, [(JC - 1.5) * DX / 1000, (JC + 1.5) * DX / 1000],
                     color="lime", lw=3)
         vol = (hgs[:, :I_COAST] * DX * DX).sum() / 1e3
-        ax.set_title(f"{lb} / {lx}  " + T(f"(陸側帯水層の塩水 {vol:.0f} 千 m³)",
-                                          f"(salt in landward aquifer {vol:.0f}×10³ m³)"), fontsize=10)
+        ax.set_title(f"{lb} / {lx}\n" + T(f"(陸側帯水層の塩水 {vol:.0f} 千 m³)",
+                                           f"(salt in landward aquifer {vol:.0f}×10³ m³)"), fontsize=10)
         ax.set_xlabel(T("x (km)  ← 上流   海 →", "x (km)  ← upstream   sea →"))
         ax.set_ylabel("y (km)")
     cb = fig.colorbar(im, ax=axs, shrink=0.8)
@@ -295,34 +300,68 @@ def profile(k):
     plt.close(fig)
 
 
+def cross(k, xkm=1.5):
+    """河道を横切る断面(堰なし)の帯水層の塩水: 河床が開いている場合と目詰まりした場合。"""
+    i = int(xkm * 1000 / DX)
+    yk = (np.arange(NY) + 0.5) * DX / 1000.0
+    fig, axs = plt.subplots(1, 2, figsize=(13, 3.6), sharey=True, constrained_layout=True)
+    for ax, case, title in ((axs[0], "nobarrage", T("河床の塩水の出入りあり", "with bed salt exchange")),
+                            (axs[1], "nobarrage_clog", T("目詰まりした河床", "clogged river bed"))):
+        z, sd = geo("nobarrage")
+        z, sd = z[:, i], sd[:, i]
+        e = load(case, "E", k)[:, i]
+        hss = load(case, "Hss", k)[:, i]
+        hgs = load(case, "Hgs", k)[:, i]
+        base_ = z - sd
+        ax.fill_between(yk, base_, z, step="mid", color="#e8d9b5", label=T("帯水層", "aquifer"))
+        ax.fill_between(yk, base_, base_ + hgs / SY, step="mid", color="#c0392b", alpha=0.6,
+                        label=T("帯水層の塩水", "salt water in the aquifer"))
+        wet = e > z + 1e-3
+        ax.fill_between(yk, z, z + hss, where=wet, step="mid", color="#1f4e9c", alpha=0.7,
+                        label=T("河道の底層塩水", "bottom salt layer in the river"))
+        ax.fill_between(yk, z + hss, e, where=wet, step="mid", color="#9ecae1", alpha=0.6,
+                        label=T("河道の淡水", "fresh water in the river"))
+        ax.step(yk, z, "k-", where="mid", lw=1)
+        ax.set_xlabel(T("y (km)  河道を横切る方向", "y (km)  across the river"))
+        ax.set_title(T(f"堰なし / {title}(x = {xkm} km、20 日後)", f"No barrage / {title} (x = {xkm} km, day 20)"),
+                     fontsize=10)
+        ax.set_ylim(-10.5, 3.5)
+    axs[0].set_ylabel(T("標高 (m)", "elevation (m)"))
+    axs[1].legend(fontsize=8, loc="lower right")
+    fig.savefig(f"{FIGDIR}/cross.png", dpi=110)
+    plt.close(fig)
+
+
 def series():
-    fig, axs = plt.subplots(1, 2, figsize=(13, 4.2), constrained_layout=True)
+    fig, axs = plt.subplots(1, 2, figsize=(13, 5.4), constrained_layout=True)
     col = {"nobarrage": "#c0392b", "barrage": "#2c7fb8"}
-    for case, lb, lx in CASES + MIXCASES:
+    for case, lb, lx in CASES + MIXCASES + CLOGCASES:
         if not frames(case, "Hgs"):
             continue
         name = base(case)
-        sty = "--" if case.endswith("_off") else (":" if case.endswith("_mix") else "-")
+        sty = ("--" if case.endswith("_off") else ":" if case.endswith("_mix")
+               else "-." if case.endswith("_clog") else "-")
         fs = frames(case, "Hgs")
         t = np.arange(len(fs)) * DT_FILE_H / 24
         v = [(np.loadtxt(f)[:, :I_COAST] * DX * DX).sum() / 1e3 for f in fs]
         axs[0].plot(t, v, sty, color=col[name], label=f"{lb} / {lx}")
-        if case in ("nobarrage", "barrage"):
+        if case in ("nobarrage", "barrage", "nobarrage_clog"):
             tips = [tip_km(np.loadtxt(f)) for f in frames(case, "Hss")]
-            axs[1].plot(t, tips, "-", color=col[name], marker=".", ms=3, label=lb)
+            lab = lb if case in ("nobarrage", "barrage") else f"{lb} / {lx}"
+            axs[1].plot(t, tips, sty, color=col[name], marker=".", ms=3, label=lab)
     for ax in axs:
         ax.axvspan(0, 2, color="0.9")
         ax.grid(alpha=0.3)
         ax.set_xlabel(T("経過日数", "days"))
     axs[0].set_ylabel(T("陸側帯水層の塩水量 (千 m³)", "salt in landward aquifer (10³ m³)"))
-    axs[0].legend(fontsize=8, loc="center right", bbox_to_anchor=(0.99, 0.48))
+    axs[0].legend(fontsize=8, loc="upper center", bbox_to_anchor=(0.5, -0.14), ncol=2)
     axs[0].text(1.0, axs[0].get_ylim()[1] * 0.5, T("出水+強雨", "flood + rain"), fontsize=8, ha="center",
                 rotation=90)
     axs[1].axhline(X_MOUTH - (I_WEIR - 1) * DX / 1000, color="k", ls=":", lw=1)
     axs[1].text(19.8, X_MOUTH - (I_WEIR - 1) * DX / 1000 + 0.05, T("堰の位置", "barrage"), ha="right", fontsize=8)
     axs[1].set_ylabel(T("塩水くさびの先端の河口からの距離 (km)", "salt-wedge tip distance from mouth (km)"))
     axs[1].set_ylim(0, 3.1)
-    axs[1].legend(fontsize=8)
+    axs[1].legend(fontsize=8, loc="upper center", bbox_to_anchor=(0.5, -0.14), ncol=3)
     fig.savefig(f"{FIGDIR}/series.png", dpi=110)
     plt.close(fig)
 
@@ -330,7 +369,7 @@ def series():
 def table(k):
     print(T("ケース, 陸側帯水層の塩水量(千 m³), 河床下の塩水の前線(割合 0.5)の河口からの距離 km, 堰位置より上流の河床下帯水層の塩水割合, 岸から 80 m 以内の塩水割合(同区間), くさび先端(最終 2 日の範囲 km), 河道の底層塩水量(最終 2 日の平均、千 m³)",
             "case, salt in landward aquifer (10^3 m3), distance of salt front below bed (fraction 0.5) from mouth km, salt fraction below bed upstream of barrage site, salt fraction within 80 m of banks (same reach), wedge tip range in last 2 days (km), bottom salt in river (mean over last 2 days, 10^3 m3)"))
-    for case, lb, lx in CASES + MIXCASES:
+    for case, lb, lx in CASES + MIXCASES + CLOGCASES:
         if not frames(case, "Hgs"):
             continue
         name = base(case)
@@ -350,10 +389,11 @@ def table(k):
 
 
 if __name__ == "__main__":
-    kl = min(int(frames(c, "Hgs")[-1][-8:-4]) for c, _, _ in CASES)
+    kl = min(int(frames(c, "Hgs")[-1][-8:-4]) for c, _, _ in CASES + CLOGCASES)
     mechanism()
     setup()
     plan(kl)
     profile(kl)
+    cross(kl)
     series()
     table(kl)
