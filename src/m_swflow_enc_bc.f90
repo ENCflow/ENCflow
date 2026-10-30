@@ -1053,7 +1053,7 @@ end subroutine
 ! 辺の型(f_bc_side)に落ちる=従来どおり両辺 open が条件(壁の水密性)。
 ! 枠内の x=0(無効セル)への面は常に閉(偽を返す)
 !----------------------------------------------------------------------
-module function bc_open_face(in, jn) result(op)
+pure module function bc_open_face(in, jn) result(op)
   integer, intent(in) :: in, jn
   logical :: op
   op = (in < 1 .or. in > dcp%nx_g .or. jn < 1 .or. jn > dcp%ny_g)

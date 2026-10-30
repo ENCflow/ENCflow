@@ -680,7 +680,7 @@ module m_swflow_enc
       type(t_state), intent(in) :: s
       type(t_enc_status), intent(inout) :: sx
     end subroutine
-    module function bc_open_face(in, jn) result(op)
+    pure module function bc_open_face(in, jn) result(op)
       integer, intent(in) :: in, jn
       logical :: op
     end function
