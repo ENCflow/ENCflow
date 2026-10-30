@@ -151,3 +151,12 @@ momentum ratio of 1.004, and a peak longshore current lower by 3.3% (0.2287 → 
 profile spread larger by 3.8%. With release builds np = 1, 2 and 4 are ULP=0 against the serial
 reference and the mixing is byte-identical to np = 1; with `-Og -fcheck=all` the serial run and
 np = 2 agree; the restart continuation saved at 90 s is byte-identical to the straight run.
+
+The fix of the advection term of the lateral Neumann boundary faces (added 2026-10-29; developer.md
+§90.19: the control volume of a boundary face is computed reading the mirror outside the grid) changes
+the results at the rounding level (S in Log.txt of param.txt by a relative 7.7e-8, E9998 and v9998 by
+one unit of the last printed digit), and the reference was updated. The row difference of the
+uniform-depth case drops from 9.59e-5 to 3.29e-5 m/s; on the beach the row differences are 6.0e-5 m/s
+without the roller, 3.4e-5 m/s with it and 3.0e-5 m/s with the two-way coupling. All checks pass;
+with release builds np = 1, 2 and 4 are ULP=0 against the serial reference, and with `-Og
+-fcheck=all` the serial run and np = 2 agree (np = 2 and 4 for the grid rotated by 90°).

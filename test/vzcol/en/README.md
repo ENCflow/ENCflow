@@ -101,5 +101,15 @@ mode. Under `-Og -fcheck=all` all output files agree between serial and np = 2
 and 4; in release, np = 1, 2, 4 match the serial reference at ULP=0 (on the host
 that made it, including the CSV files). In a build for Zen3 (`-march=znver3`)
 Log.txt agrees bit by bit with the reference and the CSV files differ only in the
-last digit (relative 1e-15). The reference is provisional, based on passing the
-analytical checks (awaiting visual confirmation).
+last digit (relative 1e-15).
+
+Confirmation of the reference (2026-10-29, at the user's instruction): the
+provisional reference was confirmed. It was updated with
+`ULP=0 RTOL=0 FILES="Log.txt vz_zone.csv vz_column.csv" ./Run.sh -u` (serial
+release). Log.txt and param.txt are bit-identical to the previous reference; only
+the CSV files changed in the last digit (relative 1e-15 or less; in the residual
+column, rounding noise of the order of 1e-12 m³). The working host has a different
+CPU from the one that made the reference, and the difference comes from the default
+`-march=native` (building the commit that made the reference on the same host gives
+the same CSV files; not a code change). MPI np = 2 and 4 agree with the new
+reference including the CSV files.

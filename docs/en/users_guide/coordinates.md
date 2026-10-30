@@ -117,7 +117,10 @@ and for attaching georeferencing to outputs:
 - **Explicit specification of `dx, dy` (in meters) is mandatory**
   (unspecified stops the run).
 - The specified values are checked against approximate values derived
-  from the degree spacing; a specification that differs greatly stops
+  from the degree spacing (a standard series approximation of the arc
+  length per degree of latitude and longitude on WGS84, used only for
+  this check and the display; its source has not been identified); a
+  specification that differs greatly stops
   the run, while a customary approximation (e.g. specifying 100 m for
   a grid whose true size is 100.2 m) is accepted and both values are
   displayed.

@@ -1,0 +1,3 @@
+# make_eq.py が Run.sh・Run_MPI.sh の頭で書く地形と初期水深(生成物)
+zinit_eq.txt
+hinit_eq.txt

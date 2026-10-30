@@ -55,5 +55,5 @@
   ! and its time interval
   !fn_timaplist = 'tide_maps.txt'
   !dt_timaplist = 60        ! (min)
-  !dt_timaplist_c = '1h'    ! string form (h, m, s). Takes precedence if given
+  !dt_timaplist_c = '1h'    ! string form (d, h, m, s; a number without a unit is in minutes). Takes precedence if given
 /

@@ -477,3 +477,7 @@ The three ways a field gets written (automatic / flag / riding on a flag) and th
   ground over 20 minutes (the centre deepens first, then widens). With a
   comparison case giving the same schedule to a virtual wall through
   &list_channel_breach.
+
+## References
+
+The sources of the models, formulas and default values used in this chapter are collected in the references of [Prescribed bed motion explained](bedmotion_models.md#references).

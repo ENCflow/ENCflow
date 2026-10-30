@@ -49,6 +49,15 @@ How to read the results (fields, ledgers, measurement columns, restart) is summa
 - **Storm-surge / tsunami run-up and where the seawater goes**: the
   run-up seawater flows over land as salt water (riding on the
   shallow-water advection).
+- **Salt water entering the aquifer from rivers and the land surface, and
+  seeping back out**: when both the surface and subsurface salt layers are
+  enabled (the default of f_salt_exch), infiltration through the river bed or
+  ground takes the bottom salt water first and seepage from the aquifer
+  releases the upper fresh water first, so the exchange is split into fresh
+  and salt water. This represents a salt wedge that has travelled up a tidal
+  river entering the aquifer through the bed, and run-up seawater infiltrating
+  farmland (salt damage) ([Exchange of salt water between the surface and the
+  aquifer](#exchange-of-salt-water-between-the-surface-and-the-aquifer-f_salt_exch)).
 - **Pumping-induced seawater intrusion**: well pumping (f_gwpump in
   [Groundwater](gwflow.md)) takes fresh water first and draws whatever
   the fresh thickness cannot supply from the saltwater zone (salt
@@ -80,6 +89,7 @@ the lateral K and specific yield are shared).
 |---|---|---|
 | f_salt_surf | 1 | 1: surface salt layer (advection + bottom gravity current) |
 | f_salt_gw | 1 | 1: subsurface (soil layer) salt zone. **Requires f_gwlateral=1** |
+| f_salt_exch | 1 if both are enabled | 1: split the surface–subsurface exchange (infiltration, saturation-excess seepage) into fresh and salt water (seepage takes fresh water first). 2: the same, but seepage is mixed in the salt fraction before seepage (lower-bound sensitivity case). 1 and 2 require f_salt_surf=1 and f_salt_gw=1. 0 disables the split (water infiltrating and seeping out treated as fresh; for comparison with salinization via the river turned off) |
 | salt_rhof / salt_rhos | 1000 / 1025 | Fresh / salt densities (kg/m3); they set eps |
 | salt_alpha | 1.0 | Barotropic advection share of the salt layer, alpha (the bottom layer carries less of the flow; 1 = concentration-proportional) |
 | salt_ni | 0.025 | Interfacial Manning roughness of the bottom gravity current |
@@ -100,8 +110,9 @@ quantities).
 |---|---|---|---|---|---|
 | Coastal aquifer salt wedge (Ghyben-Herzberg) | 0 / 1 | 1025 | fn_salt_hgs0 with the existing salt-water surface along the coast, or start fresh and wait for intrusion | f_gwlateral=1, K_sh 3600-36000 mm/h (sandy aquifer 1e-3 to 1e-2 m/s), sy0 0.2-0.3, sd0 = aquifer thickness 5-20 m | With recharge (rainfall + Green-Ampt) a freshwater lens appears |
 | Estuary / tidal-river salt wedge | 1 / 0 | 1025 (brackish inner bay 1005-1015) | 0 | fn_tide + segment inflow (river discharge) | Calibrate the wedge position with salt_ni 0.02-0.03 and salt_alpha 0.5-1 |
+| Estuary barrage and salinization of the surrounding ground | 1 / 1 (f_salt_exch at its default 1) | 1025 | fn_salt_hgs0 for the aquifer under the sea | fn_tide + segment inflow + Green-Ampt + f_gwlateral=1. The barrage is a step in the terrain (crest above high water) | Example [examples/estuary_barrage](../../../examples/estuary_barrage/en/README.md). The land aquifer starts empty, so put a preliminary stage that fills it with fresh water from a flood and rainfall |
 | Where storm-surge / tsunami seawater goes | 1 / 0 | 1025 | 0 | Tide (surge) or boundary incidence (tsunami) + seawalls | Mixing is not solved = extent of the salt-water run-up and where it drains |
-| Salinization of reclaimed lowland (intrusion and drainage) | 1 / 1 | 1025 | fn_salt_hgs0 with the existing salt-water surface | Drainage pumps ([structures](structure.md)) | At present the surface and subsurface salt water are not connected (both infiltration and seepage are treated as fresh; see constraints). Usable as far as tracking the run-up salt water on the surface and the existing subsurface salt-water surface separately |
+| Salinization of reclaimed lowland (intrusion and drainage) | 1 / 1 | 1025 | fn_salt_hgs0 with the existing salt-water surface | Drainage pumps ([structures](structure.md)) | Run-up or ponded seawater enters the aquifer by infiltration, and groundwater containing salt water returns to the surface by seepage (f_salt_exch; section below). Concentration by evaporation is not represented |
 | Stratified brackish lake / reservoir (halocline position) | 1 / 0 | 1010-1020 | salt_hss0 = lower-layer thickness | - | Sharp interface: no mixed layer or entrainment |
 
 ## Connection to the sea
@@ -118,6 +129,55 @@ become an "all salt, water level = tide level" boundary:
   the sea disappears). The salt layer of the sea cells is aligned from the
   initial state with the water column hsea0 after the tide is applied, and
   is always entirely salt water.
+
+## Exchange of salt water between the surface and the aquifer (f_salt_exch)
+
+For the water exchanged between the surface (river channels, ponded water)
+and the aquifer of the soil layer — vertical infiltration (Green-Ampt and
+bucket in [Groundwater](gwflow.md), including the replacement by the river-bed
+exchange capacity f_gwbed) and saturation-excess seepage — the groundwater
+calculation moves the total amount and this module splits it into fresh and
+salt water following the sharp-interface picture (own simplification;
+developer.md sec. 47.5).
+
+- **Infiltration takes the bottom salt water first**: the surface salt layer
+  is always at the bottom and it is the salt water that touches the river bed
+  or the ground, so infiltrating water is taken from the salt layer first
+  (fresh water follows only when more infiltrates than the salt layer holds).
+  Salt water that enters the ground is placed at the bottom of the aquifer
+  (immediate overturn).
+- **Seepage releases the upper fresh water first**: water overflowing from the
+  aquifer comes from the upper fresh water, and only what the fresh water cannot
+  supply leaves as salt water into the bottom of the surface layer. If the
+  aquifer is entirely salt, the seeping water is salt water.
+
+This represents the path by which a salt wedge in a tidal river enters the
+aquifer through the bed and spreads into the banks, and the salt-damage path
+by which run-up seawater infiltrates farmland. It is enabled by default
+(f_salt_exch=1) when both the surface and subsurface salt layers are used.
+Setting 0 treats water infiltrating and seeping out as fresh (the infiltrated
+share of salt water disappears at the surface through the consistency clamp,
+and seeping salt water disappears too), which allows a comparison with the
+river pathway of salinization "switched off".
+
+Notes for reading the results:
+
+- **Salinization right below the river bed is on the high side
+  (f_salt_exch=1)**: combined with the immediate overturn, the exchange becomes
+  one-directional — salt water enters from the bed at high tide and the upper
+  fresh water of the aquifer leaves at low tide (in reality part of the
+  infiltrated salt water returns before it sinks). The aquifer under a bed
+  covered by the wedge can become entirely salt within days to tens of days.
+- **Lower-bound sensitivity case (f_salt_exch=2)**: seeping water is released
+  mixed in the aquifer's salt fraction Hgs/Hg before seepage (the limit in which
+  infiltrated salt water mixes and returns before it sinks; infiltration is split
+  as in 1). Computing both 1 and 2 shows the magnitude of salinization via the
+  river as a range ([examples/estuary_barrage](../../../examples/estuary_barrage/en/README.md)).
+- The exchange split conserves the salt-water volume (relative 1e-13 in the
+  closed-domain checks, schematic experiments C1–C4 of
+  [test/salt](../../../test/salt/en/README.md)).
+- Evapotranspiration, percolation into layer 2 (f_gwlayer2) and exchange with
+  the conduit layer are outside the scope and remain implicitly fresh.
 
 ## Output and monitoring
 
@@ -160,19 +220,41 @@ The three ways a field gets written (automatic / flag / riding on a flag) and th
 - f_salt_gw=1 requires the lateral flow of the soil layer
   (f_gwlateral=1 in [Groundwater](gwflow.md)); K_sh and the specific
   yield are shared.
-- The saltwater zone follows only the lateral flow of layer 1, the
-  sea-side boundary and pumping. Evapotranspiration, infiltration,
-  percolation into layer 2 (f_gwlayer2), infiltration water into the
-  conduit layer (gwc_leak_layer=1) and saturation-excess seepage are
-  implicitly treated as fresh, and the subsurface salt water does not reach
-  the surface through seepage (the "salt damage" path where infiltrating
-  seawater contaminates the aquifer is a future extension). When the fresh
-  water is exhausted and Hg < Hgs, the consistency clamp (Hgs ≤ Hg)
-  reduces the salt water, so the salt-water volume is not a conserved
-  quantity.
-- At rapidly advancing intrusion fronts, a small partition error
-  between the total and the salt (proportional to dt) can arise from
-  time splitting; reducing dt reduces it (see developer.md sec. 47.2).
+- The saltwater zone follows the lateral flow of layer 1, the sea-side
+  boundary, pumping, and — with f_salt_exch=1 — infiltration and
+  saturation-excess seepage (section above). Evapotranspiration, percolation
+  into layer 2 (f_gwlayer2) and infiltration water into the conduit layer
+  (gwc_leak_layer=1) are implicitly treated as fresh (and so are infiltration
+  and seepage with f_salt_exch=0). When the fresh water is exhausted and
+  Hg < Hgs, the consistency clamp (Hgs ≤ Hg) reduces the salt water, so the
+  salt-water volume is not a conserved quantity.
+- The cap of the [river-bed exchange capacity](gwflow.md) (f_gwbed) also
+  applies to the salt-zone flux at the boundary between river and non-river
+  cells, in the same form (capacity × passage width × saturated salt
+  thickness).
+- The gravity current of the surface salt layer (salt water spreading along
+  the bottom) lets only the salt water above the **sill** of each cell boundary
+  cross. The sill is the higher of the two ground elevations, or the crest of a
+  [channel](channel.md) levee (fn_bank / bank0) or seawall (fn_seawall) virtual
+  wall if there is one (even with salt and fresh water on the two sides of a
+  wall, salt water does not cross while the interface is below the crest). The
+  shallow-water advection (salt carried by overtopping and tidal flow) also
+  respects the walls. The time-dependent
+  lowering of the crest by a breach (&list_channel_breach) is not followed by
+  the gravity current (salt carried by the water through the breach still passes
+  by advection; only the part creeping along the bottom is stopped). Give the
+  crest of an estuary barrage or sluice across the river as terrain (a step in
+  ground elevation), not as a virtual wall
+  ([examples/estuary_barrage](../../../examples/estuary_barrage/en/README.md)).
+- The flux of the subsurface salt zone is evaluated on the state just before
+  the lateral flow of layer 1, and when flowing in the same direction as the
+  total, the composition of the water leaving a cell is aligned with the salt
+  fraction of the upwind cell (the fluxes of the total and of the salt do not
+  disagree, so the salt-water volume is kept at intrusion fronts and seepage
+  faces too; developer.md sec. 47.7).
+  When the groundwater update interval dt_gwflow is longer than dt, the
+  subsurface salt processing runs at the same interval with the same
+  effective time step.
 
 ## Parameters and the basis of their defaults
 
@@ -181,6 +263,7 @@ The labels in the Basis column are explained in [How to read the basis of a defa
 | Parameter | Default | Meaning | Basis |
 |---|---:|---|---|
 | f_salt_surf / f_salt_gw | 1 / 1 | enable the surface and subsurface salt layers | **method** both by default; combinations by use are in "Recommended values by pattern" |
+| f_salt_exch | 1 if both are enabled | fresh/salt split of the surface–subsurface exchange | **method** in the sharp-interface picture the bottom salt water touches the river bed and the upper aquifer is fresh (own simplification; developer.md sec. 47.5). With both layers enabled the physically consistent side is the default; 2 is the lower-bound sensitivity case (sec. 47.9), 0 is for comparison |
 | salt_rhof / salt_rhos | 1000 / 1025 kg/m³ | fresh and sea water densities (density difference $`\varepsilon`$ = 2.5 %) | **customary value** standard seawater (salinity 35); Ghyben–Herzberg 1/ε ≈ 40[^bear79] |
 | salt_alpha | 1.0 | barotropic advection share of the salt layer | **empirical** 1 = proportional to the layer thickness; calibrate within 0.5–1 for the bottom layer carrying less of the flow |
 | salt_ni | 0.025 | interfacial Manning roughness of the gravity current | **empirical** placeholder of the order of a bed roughness; calibrate on observed salt-wedge positions |
@@ -203,7 +286,12 @@ The labels in the Basis column are explained in [How to read the basis of a defa
 
 ## Tests and examples
 
-- [test/salt](../../../test/salt/en/README.md): the pool-partition experiment (approach to a stable stratification) and seawater intrusion with analytic checks.
+- [test/salt](../../../test/salt/en/README.md): the pool-partition experiment (approach to a stable stratification) and seawater intrusion with analytic checks,
+  the fresh/salt split of the surface–subsurface exchange (model experiment C1: analytical end state of infiltration; C2, C3: seepage from an entirely salt
+  aquifer and synchronisation with dt_gwflow; C4: seepage from a partly salt aquifer with f_salt_exch=1 and 2), and the gravity current and virtual walls
+  (D1: levee, D2: seawall).
+- [examples/estuary_barrage](../../../examples/estuary_barrage/en/README.md): how the presence of an estuary barrage affects the salt wedge travelling up a river and
+  the intrusion of salt water into the surrounding aquifer (eight cases: with/without barrage × no / with / mixing-ratio exchange split / clogged river bed).
 - Worked example of the format: [examples/List_samples/en/list_salt.txt](../../../examples/List_samples/en/list_salt.txt).
 
 ## References

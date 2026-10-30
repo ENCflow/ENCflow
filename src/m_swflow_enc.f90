@@ -163,8 +163,8 @@ module m_swflow_enc
                                             !   外縁セルに接するエッジの判定を、区間流入のない
                                             !   計算で丸ごと飛ばす。§68.40)
     logical :: have_neumann = .false.         ! 側方 Neumann の辺があるか(bc_init が設定。§90)
-    logical :: adv_neumann_we = .false.       ! W・E の側方 Neumann の面が一つ内側の面の移流項を
-                                            !   写すか(ランク界面の行の移流項の補完が要る。bc_init)
+    logical :: adv_neumann = .false.          ! 側方 Neumann の境界面の移流項を adv_neumann で求めるか
+                                            !   (側方 Neumann の辺があり運動量保存形の移流のとき。bc_init)
     integer, allocatable :: bt_cell(:,:)      ! 外縁面の型(セル別。(j,W/E)・(i,N/S)。
                                             !   辺の型を初期値とし流入区間が上書き)
     real, allocatable :: bc_eta_cell(:,:)     ! 放射境界の基準水位(セル別)
@@ -586,6 +586,12 @@ module m_swflow_enc
       integer, intent(in) :: i, j, k, in, jn, ie, je
       real :: ta
     end function
+    module subroutine adv_neumann(p, g, s, sx)
+      type(t_sysparam), intent(in) :: p
+      type(t_geoinfo), intent(in) :: g
+      type(t_state), intent(in) :: s
+      type(t_enc_status), intent(in) :: sx
+    end subroutine
     module subroutine adv_dispose()
     end subroutine
   end interface
@@ -1145,9 +1151,9 @@ subroutine m_swflow_enc_calc(p, g, b, s, ierror)
 
   ! 移流項を計算する
   call adv_prepare(p, g, s, sx_mod)
-  ! W・E の側方 Neumann の境界面は一つ内側の面の移流項を写す(put_neumann_face)。界面行の
-  ! 他ランク所有の面の値を補完しておく(N・S の写し元は自帯の中。§90)
-  if (bcs%adv_neumann_we) call par_edge_merge(tx_mod%tae, esync_s, esync_n)
+  ! 側方 Neumann の境界面の移流項を、枠外を鏡像で読む検査体積で求める(put_neumann_face が
+  ! 読む。§90.19)
+  if (bcs%adv_neumann) call adv_neumann(p, g, s, sx_mod)
 
   ! 拡散項を計算する
   call diff_prepare(p, g, s)

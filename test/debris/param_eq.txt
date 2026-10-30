@@ -1,0 +1,100 @@
+!======================================================================
+! debris 構成 7: 斜面等流の平衡濃度(高橋型 f_dbed = 1。developer.md §28.15)
+!   南北に長い幅 1 セルの水路 6 本(長さ 300 m、Δy = 1 m。make_eq.py が書く)に、勾配
+!   tanθ = 0.60・0.25・0.15・0.10・0.05・0.02 を与え、北端の区間流入から水と土砂を流す
+!   (南辺は自由流出)。流入の濃度は平衡濃度 C∞(θ) の 0.95 倍(0.02 の水路は C∞ = 0 なので
+!   inflow_cs = 0.01)で、流下につれて河床との交換(侵食・堆積)で C∞ に近づく。
+!   Check_debris_eq.py が、流入点と出口から離れた区間(100〜220 m)の混合体濃度
+!   C = hs/(h + hs) を、その場の最急降下勾配から求めた高橋型の平衡濃度
+!     tanθ > 0.138       : C∞ = tanθ / (s (tanφ − tanθ))(石礫型)
+!     0.03 < tanθ ≤ 0.138 : C∞ = 6.7 C∞d²(未成熟)
+!     tanθ ≤ 0.03         : C∞ = 0(掃流域)。上限 C∞ ≤ 0.9 C*
+!   と比べる(6 本で上限・石礫型 2 本・未成熟 2 本・掃流域を通る)。抵抗はマニングのみ
+!   (f_dbres = 0。クーロン+マニングでは C = C∞ で降伏が重力と釣り合い、等流が続かない)、
+!   δe は既定の 30 倍(0.02)にして、初期の水が平衡へ近づく時間(数秒)を短くする。
+!   inflow_cs は水の体積あたりの土砂の体積 hs/h なので、混合体濃度は cs/(1 + cs)
+!======================================================================
+&list_sysparam
+  f_gridsystem = 0
+  f_govequation = 0
+  dt = 0.02
+  t0 = 0
+  tt = 120
+  dt_disp = 20
+  dt_file = 120
+  dt_recrd = 120
+  fn_geoinfo = '-'
+  fn_initial = '-'
+  fn_enc = '-'
+  fn_boundary = '-'
+  fn_geomorph = '-'
+  dir_result = 'result_eq'
+  dir_save = 'save_eq'
+  f_state_save = 1          ! 検定は save_eq/state.dat の h・hs・z(倍精度)を読む
+  f_check_cfl = 1
+/
+&list_enc
+  f_gravity_correction = 1
+/
+&list_initial
+  f_htype = 1
+  fn_hinit = 'h_eq.txt'     ! 水路だけ 0.05 m(土砂なし)
+/
+&list_geoinfo
+  lx = 13.0
+  ly = 300.0
+  nx = 13
+  ny = 300
+  f_ztype = 1
+  fn_z = 'z_eq.txt'
+  f_rntype = 0
+  rn0 = 0.05
+  sd0 = 5.0                 ! 可動層厚(侵食で使い切らない厚さ)
+/
+&list_bound_edge
+  f_bc_s = 1                ! 南辺は自由流出
+/
+&list_bound_inflow          ! 水路 k = 1〜6(列 2k)の北端。Q はマニングの等流水深 0.05 m 相当
+  inflow_cell(1:2,1,1) = 2, 1
+  inflow_val(1:2,1,1) = 0, 0.105129
+  inflow_val(1:2,2,1) = 9999, 0.105129
+  inflow_cs(1:2,1,1) = 0, 0.950000
+  inflow_cs(1:2,2,1) = 9999, 0.950000
+  inflow_cell(1:2,1,2) = 4, 1
+  inflow_val(1:2,1,2) = 0, 0.067860
+  inflow_val(1:2,2,2) = 9999, 0.067860
+  inflow_cs(1:2,1,2) = 0, 0.481898
+  inflow_cs(1:2,2,2) = 9999, 0.481898
+  inflow_cell(1:2,1,3) = 6, 1
+  inflow_val(1:2,1,3) = 0, 0.052564
+  inflow_val(1:2,2,3) = 9999, 0.052564
+  inflow_cs(1:2,1,3) = 0, 0.188034
+  inflow_cs(1:2,2,3) = 9999, 0.188034
+  inflow_cell(1:2,1,4) = 8, 1
+  inflow_val(1:2,1,4) = 0, 0.042919
+  inflow_val(1:2,2,4) = 9999, 0.042919
+  inflow_cs(1:2,1,4) = 0, 0.069656
+  inflow_cs(1:2,2,4) = 9999, 0.069656
+  inflow_cell(1:2,1,5) = 10, 1
+  inflow_val(1:2,1,5) = 0, 0.030348
+  inflow_val(1:2,2,5) = 9999, 0.030348
+  inflow_cs(1:2,1,5) = 0, 0.014029
+  inflow_cs(1:2,2,5) = 9999, 0.014029
+  inflow_cell(1:2,1,6) = 12, 1
+  inflow_val(1:2,1,6) = 0, 0.019194
+  inflow_val(1:2,2,6) = 9999, 0.019194
+  inflow_cs(1:2,1,6) = 0, 0.010000
+  inflow_cs(1:2,2,6) = 9999, 0.010000
+/
+&list_geomorph
+  dt_geomorph = 0.0
+  morfac = 1.0              ! f_debris は 1 必須
+  f_debris = 1
+  f_dbed = 1                ! 高橋型の平衡濃度への緩和
+  f_dbres = 0               ! マニングのみ
+  f_dbstop = 0
+  db_phi = 35.0             ! tanφ = 0.7002
+  db_delte = 0.02           ! 侵食係数 δe(既定 0.0007 の約 30 倍。検定用)
+  db_deltd = 0.05
+  fluv_porosity = 0.4       ! C* = 0.6、上限 0.9 C* = 0.54
+/

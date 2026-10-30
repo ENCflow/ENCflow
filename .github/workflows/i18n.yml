@@ -1,6 +1,6 @@
-# ENCflow 文書の多言語化検査(docs/multilingual.md §7–§8)
-#   合格条件は「検査ツールの単体テスト」と「確認記録済みの組に更新漏れ・リンク切れがない」
-#   ことだけ。未翻訳・未確認の既存文書は失敗条件にしない。
+# ENCflow 文書の多言語化検査(docs/multilingual.md §7–§8)と文書・コードの一貫性検査
+#   合格条件は「検査ツールの単体テスト」「namelist と索引・設定例・検証ケース一覧の一致」と
+#   「確認記録済みの組に更新漏れ・リンク切れがない」ことだけ。未翻訳・未確認の既存文書は失敗条件にしない。
 #   Python 標準ライブラリのみ(計算本体への依存追加なし)。
 name: i18n
 
@@ -22,6 +22,7 @@ on:
       - 'LICENSE'
       - 'tools/i18n/**'
       - 'tools/params_index/**'
+      - 'tools/consistency/**'
       - 'src/*.f90'
       - '.github/workflows/i18n.yml'
   pull_request:
@@ -40,6 +41,7 @@ on:
       - 'LICENSE'
       - 'tools/i18n/**'
       - 'tools/params_index/**'
+      - 'tools/consistency/**'
       - 'src/*.f90'
       - '.github/workflows/i18n.yml'
   workflow_dispatch:
@@ -55,8 +57,11 @@ jobs:
         run: |
           PYTHONDONTWRITEBYTECODE=1 python3 -m unittest discover -s tools/i18n -p 'test_*.py'
           PYTHONDONTWRITEBYTECODE=1 python3 -m unittest discover -s tools/params_index -p 'test_*.py'
+          PYTHONDONTWRITEBYTECODE=1 python3 -m unittest discover -s tools/consistency -p 'test_*.py'
       - name: Parameter index (ja/en) must match the namelist declarations
         run: python3 tools/params_index/check.py
+      - name: Settings examples and the test case list must match the code and the directories
+        run: python3 tools/consistency/check.py
       - name: Recorded pairs must be current and their links valid
         run: python3 tools/i18n/check.py audit --recorded-only --strict-recorded --links
       - name: Inventory (informational; does not fail the job)

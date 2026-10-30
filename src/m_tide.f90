@@ -197,13 +197,18 @@ contains
     if (len_trim(list%fn_timaplist) == 0) then
       call par_stop("list_tide: titype=4 requires fn_timaplist")
     end if
+    ! 数値の dt_timaplist は分。文字列 dt_timaplist_c は単位付き(単位を省いた
+    ! 数値は分 = 数値と同じ単位。list_precip の *_c と同じ。§88.5)で、両方あれば
+    ! *_c が優先。採用値は画面に表示する
     ti%dt_timap = list%dt_timaplist * 60             ! 分を秒に換算
     if (len_trim(list%dt_timaplist_c) > 0) then
-      ti%dt_timap = str2sec(list%dt_timaplist_c, "list_tide: bad time format in dt_timaplist_c")
+      ti%dt_timap = str2sec(list%dt_timaplist_c, "list_tide: bad time format in dt_timaplist_c", &
+                            default_unit=60.0)
     end if
     if (ti%dt_timap <= 0.0) then
       call par_stop("list_tide: dt_timaplist must be a positive interval")
     end if
+    call par_info("tide: dt_timaplist = "//rtoa(ti%dt_timap / 60)//" min")
 
     fname = trim(p%dir_data)//"/"//trim(list%fn_timaplist)
     call par_info(" reading tide map list "//fname)

@@ -52,7 +52,8 @@ phenomenon-specific setups. Individual chapters also link to relevant cases.
 - [Initial conditions](users_guide/initial.md) (&list_initial) -- depth, water level, depression filling
 - [Boundary conditions](users_guide/boundary.md) (&list_bound_edge/source/stage/inflow) -- edge boundaries, sources, prescribed stages, reach inflow
 - [Tide and sea surface](users_guide/tide.md) (&list_tide) -- storm surge, rising-tide inundation, drainage
-- [Coastal wave field](users_guide/wavefield.md) (&list_wavefield) -- shoaling, refraction, breaking and breakwater shadows of offshore waves (phase-averaged, one representative period, directional bins; stage W1 does not act on the flow or the bed)
+- [Coastal wave field](users_guide/wavefield.md) (&list_wavefield) -- shoaling, refraction, breaking and breakwater shadows of offshore waves, wave setup and longshore currents, change of waves by currents, sediment transport by waves and swash-zone transport (phase-averaged, one representative period, directional bins)
+  - [Coastal wave field explained](users_guide/wavefield_models.md) -- wave action balance and two-link upwind decomposition, breaking and friction, radiation stress and roller, GLM, Doppler shift and blocking, stirring and transport velocity, empirical swash formulas, with equations and the basis of the defaults; the models it drew on and the parts original to ENCflow (supplement to the coastal wave field chapter)
 - [Internal hydraulic structures](users_guide/structure.md) (&list_struct_pump/culvert/diversion/dam) -- pumps, culverts, diversions, dams and lakes
   - [Hydraulics of structures and boundaries](users_guide/hydraulics.md) -- Honma weir formula, the three culvert regimes, dam operation rules, free-outflow and radiation boundaries, inflow distribution, with equations and the basis of the coefficients (supplement)
 - [Channels](users_guide/channel.md) (&list_channel) -- levees, channel width, cross-section shape, breach
@@ -81,7 +82,7 @@ phenomenon-specific setups. Individual chapters also link to relevant cases.
 - [Use cases](users_guide/usecases.md) -- lookup from phenomenon names to feature combinations (unsupported phenomena are listed too)
 
 **Appendix**
-- [Full parameter index](users_guide/params_index.md) -- reverse lookup from all 751 parameter names to their chapters
+- [Full parameter index](users_guide/params_index.md) -- reverse lookup from all 757 parameter names to their chapters
 
 ---
 

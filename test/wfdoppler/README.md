@@ -84,3 +84,8 @@ U = 0.365 → 0.655 m/s で σ/ω = 0.932 → 0.859、最大の相対差 1.05e-4
 継続は通し計算とバイト一致。`-Og -fcheck=all` で逐次と np = 2 が一致(範囲外アクセスなし)、
 release で np = 1・2・4 が逐次 reference に ULP=0、河口の噴流は np = 1 とバイト一致、再開の
 継続も MPI で一致。
+
+側方 Neumann の境界面の移流項の修正(2026-10-29 追記。developer.md §90.19)で結果が丸めの規模で変わり
+(Log.txt の S が相対 1.1e-6、wavefield.csv の収支の列。Wh9998・u9998 は不変)、reference を更新した。
+検定一式は合格し、release で np = 1・2・4 が逐次 reference に ULP=0、`-Og -fcheck=all` で逐次と
+np = 2 が一致。

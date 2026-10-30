@@ -171,5 +171,9 @@ same).
 - docs/mountain_stream_plan.md (design study; the steady solution of §4.3 and the example plan of §4.9) and developer.md §89 (in Japanese)
 - Sklar, L. S. and Dietrich, W. E. (2004): A mechanistic model for river incision into bedrock by
   saltating bed load. *Water Resour. Res.*, 40, W06301. doi:10.1029/2003WR002496
-- Inoue, T. et al. (2016): Numerical simulation of effects of sediment supply on bedrock channel
-  morphology. *J. Hydraul. Eng.*, 142(7). doi:10.1061/(ASCE)HY.1943-7900.0001124 (checked against the abstract)
+- Inoue, T., Iwasaki, T., Parker, G., Shimizu, Y., Izumi, N., Stark, C. P. and Funaki, J. (2016):
+  Numerical simulation of effects of sediment supply on bedrock channel morphology. *J. Hydraul.
+  Eng.*, 142(7), 04016014. doi:10.1061/(ASCE)HY.1943-7900.0001124 (checked against the full text:
+  with a supply close to capacity, cover shaped like alternate bars migrates downstream and erodes
+  the bedrock uniformly; at 0.2 times capacity, several longitudinal grooves are cut into the
+  bedrock and the cover collects in them)

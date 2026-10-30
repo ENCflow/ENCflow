@@ -116,3 +116,10 @@ is 1.019 times the base case and the row totals differ by 1.6e-5. With release b
 4 are ULP=0 against the serial reference and the turbulence case is byte-identical to np = 1; with
 `-Og -fcheck=all` the serial run and np = 2 agree; the restart continuation saved at 1530 s is
 byte-identical to the straight run.
+
+The fix of the advection term of the lateral Neumann boundary faces (added 2026-10-29; developer.md
+§90.19) changes the results at the rounding level (S in Log.txt by a relative 3.7e-8 and the budget
+columns of wavefield.csv; Z9998 and Hs9998 are unchanged), and the reference was updated. All checks
+pass (on the beach the row totals of the longshore transport differ by 8.2e-6 and the bed change by
+2.5e-7 m); with release builds np = 1, 2 and 4 are ULP=0 against the serial reference, and with `-Og
+-fcheck=all` the serial run and np = 2 agree.

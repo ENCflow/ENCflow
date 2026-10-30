@@ -293,6 +293,7 @@ subroutine m_gwflow_init(gw, p, g, s)
     gw%idt_gwflow = 1
   end if
   gw%dts = p%dt * gw%idt_gwflow
+  s%gw_dts = gw%dts                ! 淡塩2層の地下の処理が同じ刻みで追従する(§47.7)
 
   ! 土層厚を要するモデルの遅延確保口(モデル init より前に。§16)。
   ! 確保後、動的共有状態 s%sd へ初期値を転記する(以後のカーネルは

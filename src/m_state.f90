@@ -175,6 +175,13 @@ module m_state
     logical :: wv_turb = .false.        ! 砕波の乱れによる攪拌の要求
     real, allocatable :: wvub0(:,:)     ! 底面軌道流速 u_rms(乱れを含まない。m/s)
     real, allocatable :: wvkb(:,:)      ! 底面の乱れのエネルギー k_b (m2/s2)
+    ! 遡上域の輸送(geomorph の f_wfswash = 1 のときだけ。要求 wv_swash は m_geomorph_init が立てる)。
+    ! m_wavefield が入射波の波高・周期を毎ステップその時刻の与件から求め(準定常の更新の間も
+    ! 時刻の関数 = 再開でも通し計算と同じ値)、波高 wvh のハロも更新ごとに埋める(§90.21)
+    logical :: wv_swash = .false.       ! 遡上域の輸送の要求
+    real :: wv_hinc = 0.0               ! 入射波高 (m。境界の与件。不規則波は H_m0、規則波は H)
+    real :: wv_tinc = 0.0               ! 入射波の周期 (s。境界の与件の代表周期)
+    real :: wv_hsat = 0.0               ! 飽和した波高と水深の比(不規則波 √2 γmax、規則波 γ。wvh と同じ波高の定義)
     real, allocatable :: sqbx(:,:)      ! 掃流砂の輸送量の推定 x 成分 (m2/s。固体体積)
     real, allocatable :: sqby(:,:)      ! 同 y 成分
     real, allocatable :: sqsx(:,:)      ! 浮遊砂の輸送量 hs·u_s の x 成分(u_s = u^E + u_a ê_θ。m2/s。固体体積)
@@ -209,6 +216,12 @@ module m_state
                                         ! swflow_enc がステップ内で s%hss を移流する)
     real :: salt_alpha = 1.0            ! 塩水層のバロトロピック移流分担率 α
                                         ! (m_saltwater_init が設定。§47)
+    real :: gw_dts = 0.0                ! 地下水の実効時間刻み (s。p%dt × 更新間隔。
+                                        ! m_gwflow_init が設定。m_saltwater が地下の
+                                        ! 塩水の処理と安定条件に使う。§47.7)
+    logical :: gw_lat_done = .false.    ! このステップで層1の側方流が走った(写し
+                                        ! hgsnap/hsnap を取った)。gwflow_lateral_calc が
+                                        ! 立て、m_saltwater が読んで下ろす(§47.7)
     real, allocatable :: swe(:,:)       ! 積雪水量 SWE (m 水柱。幾何面積基底。
                                         ! m_snow が確保・更新・保存する。
                                         ! fn_snow 未指定なら未確保。§31)
@@ -305,6 +318,17 @@ module m_state
                                         ! 書き、m_wq が読んで地表 cq へ還元しゼロ戻し。
                                         ! fxg と同型の契約。確保は m_wq_init
                                         ! (f_wq_infil=1 のみ)。§30 W3)
+    real, allocatable :: fxsli(:,:)     ! 地表→層1 の浸透量の記録 (m。h 基底。淡塩2層の
+                                        ! 配分用。gwflow の鉛直モデルが書き、m_saltwater が
+                                        ! 読んでゼロ戻し。fxg と同型の契約。確保は
+                                        ! m_saltwater_init(f_salt_exch=1 のみ)。§47.5)
+    real, allocatable :: fxslo(:,:)     ! 層1→地表 の飽和湧出量の記録 (m。同上の契約。
+                                        ! m_gwflow_lateral が書く。§47.5)
+    real, allocatable :: hgsnap(:,:)    ! 層1の側方流の直前の hg・h の写し(帯+ハロ。
+    real, allocatable :: hsnap(:,:)     ! gwflow_lateral_calc がハロ交換の直後に写し、
+                                        ! m_saltwater の塩水 zone が合計と同じ状態で
+                                        ! 水頭を評価するのに使う。確保は m_saltwater_init
+                                        ! (f_salt_gw=1 のみ)。§47.7)
     real, allocatable :: frofac(:,:)    ! 凍土の浸透低減係数 [fro_fmin,1](m_gwflow_frost
                                         ! が書き、鉛直浸透モデルが浸透能に乗じる。
                                         ! 確保は gwflow_frost_init(f_gwfrost=1 のみ)。§16.4)
@@ -990,6 +1014,10 @@ subroutine m_state_dispose(s, p)
   if (allocated(s%wdmax)) deallocate(s%wdmax)
   if (allocated(s%fxg)) deallocate(s%fxg)
   if (allocated(s%fxs)) deallocate(s%fxs)
+  if (allocated(s%fxsli)) deallocate(s%fxsli)
+  if (allocated(s%fxslo)) deallocate(s%fxslo)
+  if (allocated(s%hgsnap)) deallocate(s%hgsnap)
+  if (allocated(s%hsnap)) deallocate(s%hsnap)
   if (allocated(s%crs)) deallocate(s%crs)
   if (allocated(s%fxr)) deallocate(s%fxr)
   if (allocated(s%fxci)) deallocate(s%fxci)

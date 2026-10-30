@@ -1,0 +1,2 @@
+# make_z.py が Run.sh・Run_MPI.sh の頭で書く地形(生成物)
+z_*.txt

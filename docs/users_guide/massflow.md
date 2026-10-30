@@ -135,6 +135,12 @@ i = \delta_d\,\frac{C_\infty - C}{C_*}\,|\mathbf{V}|\ (C > C_\infty)
 (原典照合は debris_plan.md §1 の残作業)。$`\delta_e`$(`db_delte`、既定
 0.0007)は Takahashi の一般値、$`\delta_d`$(`db_deltd`、既定 0.05)は
 Kanako 系の慣用値で、どちらも**到達距離の校正係数**です。
+[test/debris](../../test/debris/README.md) の構成 7 が、斜面等流の濃度が 4 つの領域の
+$`C_\infty`$ に収束することを検定しています。開いた辺(自由流出・長波放射)の行では、
+最急降下が領域の外の近傍を見ないので勾配が 0 になり、$`C_\infty = 0`$ として流れの
+土砂を落とします(辺の行に人工的な堆積ができる。f_dbed = 2・3 は使える側の勾配を
+使うので、この欠けはありません)。土石流が辺へ届く構成では、辺を見たい範囲から離して
+ください(扱いは検討中。developer.md §28.15)。
 
 **f_dbed = 2: 江頭・芦田。** 侵食と堆積が 1 本の式で連続します
 (Morpho2DH の式(5)–(7)[^morpho2dh])。追加パラメータはありません。
@@ -160,6 +166,12 @@ $`\delta_e\,\dfrac{C_\infty - C}{C_* - C_\infty}\,\dfrac{q_T}{d_L}`$、堆積は
 `f_dbstop` が担う)。雪崩・岩屑なだれが走路の雪や崩積土を取り込んで
 成長する過程の簡易則で、連行可能な層は土層厚 $`s_d`$ で与えます。
 $`C \ge c_{\min}`$ の密な流動体だけが連行します(希薄な裾の暴走防止)。
+土石流の実務で広く使われる Hungr の経験的な連行則[^hungr95]は $`E = E_r\,h\,|\mathbf{V}|`$
+(DAN3D など。$`E_r`$ は 1 m 進むごとの体積の増加率で、連行域に入る体積 $`V_0`$ と出る体積
+$`V_f`$、連行域の長さ $`L`$ から $`E_r = \ln(V_f/V_0)/L`$ と見積もる[^qiao23])で、流動深の
+因子を持ちます。f_dbed = 4 は侵食深が流動深によらず走行距離に比例するのに対し、Hungr の則では
+流動深に比例し、体積が走行距離に対して指数的に増えます。f_dbed = 4 で近い連行量を与えるなら
+$`\delta_e \approx E_r \times`$(代表の流動深)が目安です。
 **f_dbed = 0** は交換なし(等価流体)です。
 
 **停止(f_dbstop = 1)。** $`|\mathbf{V}| < v_{stop}`$ かつ $`C > C_\infty`$ の
@@ -172,6 +184,39 @@ $`h \mathrel{+}= \lambda\,s_b|\Delta z|`$、堆積で $`h \mathrel{-}= \lambda\,
 ($`s_b`$ = `db_satbed`、堆積層の飽和度)。高橋・中川の全容積連続式の
 源泉項[^tn91]に相当し、侵食卓越の渓床で正味の増水(bulking)を与える
 一次効果です。地下水計算とは排他です。
+
+**地下水計算と併用する間隙水(f_dbwet = 2)。** 地下水計算(`fn_gwflow`)では
+河床の間隙水は地下貯留 $`h_g`$(容量 $`s_d\,s_y`$)として扱われます。
+`f_dbwet = 2` は河床の変化に合わせて地表水と地下貯留の間で水を移します。堆積
+($`\Delta z > 0`$)では増えた容量をその場の地表水で直ちに満たし
+($`\Delta h = \min(s_y\,\Delta z,\ s_d s_y - h_g,\ h)`$ を $`h`$ から $`h_g`$ へ。
+流れの下に積もった土砂は飽和する)、侵食($`\Delta z < 0`$)では削られた層の
+間隙水 $`\min(s_y|\Delta z|,\ h_g)`$ を $`h_g`$ から $`h`$ へ戻します(地下貯留は
+上から満たされるので、削られるのは濡れた上部から)。どちらも独自の簡略化で、
+水の総量は保存され、堆積と侵食が入れ替わっても往復で水が偏りません。
+`f_dbwet = 0` のまま地下水計算と併用すると、堆積物の間隙は空のまま地形が上がるので、
+水たまりの中の堆積はその間隙の分だけ水を押し出します。
+
+**今後の課題(実装予定): Hungr の連行則。** 上の f_dbed = 4 の段落で触れた Hungr の
+経験的な連行則[^hungr95] $`E = E_r\,h_t\,|\mathbf{V}|`$ を、既定を変えずに f_dbed の選択肢として
+足す予定です。
+
+- **効果**: DAN3D など欧州・北米の実務で使われるモデルと同じ形になり、既往の校正値
+  (Cancia 2015 の $`E_r \approx 0.001`$ /m など[^qiao23])をそのまま使えます。連行率 $`E_r`$ は
+  連行域に入る体積と出る体積、連行域の長さから $`E_r = \ln(V_f/V_0)/L`$ と見積もれるので、
+  事前・事後の地形測量や堆積量の調査で校正できます。厚い流れほど深く削り、流れの体積が
+  走行距離に対して指数的に増える形です(f_dbed = 4 は侵食深が流動深によらないので、体積の
+  増え方は流れが覆う面積で決まります)。追加するパラメータは $`E_r`$(1/m)の 1 個です(無次元の
+  $`\delta_e`$ とは単位が違うので共用しません)。
+- **実装で備えること**: 連行だけで堆積は `f_dbstop` が担う、連行できる層は土層厚 $`s_d`$
+  (連行域は $`s_d`$ の分布で与える)、$`C \ge c_{\min}`$ の密な流動体だけが連行する、という
+  扱いは f_dbed = 4 と同じにします。流動深には混合流動深 $`h_t = h + h_s`$ を使います。Hungr の
+  定義では取り込んだ土砂が間隙水ごと(かさ体積で)流れに加わるので、体積の増え方をそれに
+  合わせるには間隙水の連行(`f_dbwet = 1`、飽和度 1)と組みます。検定ケースは、一様な斜面を
+  一定の速さで進む流れの体積が走行距離 $`x`$ に対して $`V_0\,e^{E_r x}`$ で増えること(固体の
+  台帳の閉合と合わせて)です。
+- **時期**: 欧州の実務のモデルとの比較や、連行の大きい土石流の実事例(Cancia 2015 など。
+  地形データの入手が前提)を扱う段で入れます(developer.md §28.8)。
 
 ## 4. 発生条件
 
@@ -270,7 +315,7 @@ $`v_{stop}`$ = 0.05 m/s。混合体の μ・ξ とは慣性の有無で校正値
 | f_dbed | 1 | 侵食・堆積則(§3) | **方式** 1: 高橋型緩和、2: 江頭・芦田、3: 高橋・中川、4: 速度比例、0: なし |
 | db_delte / db_deltd | 0.0007 / 0.05 | 侵食・堆積の速度係数 | **校正量** Takahashi の一般値 / Kanako 系の慣用値 |
 | f_dbstop / db_vstop / db_wstop | 0 / 0.05 m/s / 0.05 m/s | 低速凝集の停止条件 | **数値設定** vstop は降伏判定の閾値も兼ねる |
-| f_dbwet / db_satbed | 0 / 1.0 | 間隙水の連行 / 堆積層の飽和度 | **方式** 高橋・中川の全容積連続式[^tn91] |
+| f_dbwet / db_satbed | 0 / 1.0 | 間隙水の連行 / 堆積層の飽和度(1: 連行、2: 地下水計算と併用) | **方式** 高橋・中川の全容積連続式[^tn91](1)。2 は地表水と地下貯留の間の間隙水の授受(独自) |
 | db_reltime / db_relsat | 0 / 1.0 | 流動化の時刻 / 土塊の飽和度(§4) | **与件** |
 | slide_c / slide_phi / slide_gamma | 0 / 30° / 18 kN/m³ | 安定解析の強度定数(§4) | **慣用値** 表層崩壊の慣用値。c' = 0 は保守側 |
 | bs_rho | 2000 kg/m³ | 土塊のかさ密度(§5) | **慣用値** 飽和土塊・岩屑の代表値 |
@@ -286,6 +331,12 @@ $`v_{stop}`$ = 0.05 m/s。混合体の μ・ξ とは慣性の有無で校正値
 - Voellmy の μ・ξ は到達距離と堆積形状の既往事例に合わせて校正する
   のが通例で、RAMMS の校正値集[^christen10]に地形・規模別の表が
   あります。土石流の実務値は高橋[^takahashi07]にまとまっています。
+  土石流の校正例として、イタリア・ドロミテの Cancia の 2015 年の土石流
+  (初期 4,400 m³ が流下中の連行で 28,850 m³ に。流路 2.2 km、勾配は上流 27°・
+  下流 13°)の逆算では、連行を入れた 2 つのモデル(DAN3D と差分法のモデル)で
+  同じ μ = 0.11、ξ = 450 m/s² が最良でした(Hungr の連行則で E_r ≈ 0.001 /m。
+  連行を入れないと全量を上流から流すことになり、実際にはなかった越流が起きた)
+  [^qiao23]。
 - 侵食・堆積の係数は、既往の土石流の流下痕跡(侵食深・堆積厚)を
   再現するように動かします(到達距離と堆積量の両方を見ること)。
 
@@ -293,14 +344,14 @@ $`v_{stop}`$ = 0.05 m/s。混合体の μ・ξ とは慣性の有無で校正値
 
 | ケース | 内容 | 要点 |
 |---|---|---|
-| [test/debris](../../test/debris/README.md) | 4 つの構成則(簡易・江頭・高橋中川・間隙水) | 固体総量 1e-13、np=1,2,4 一致 |
+| [test/debris](../../test/debris/README.md) | 4 つの構成則(簡易・江頭・高橋中川・間隙水)、斜面等流の平衡濃度 | 固体総量 1e-13、np=1,2,4 一致、平衡濃度が高橋型の C∞ に 1e-11 以内 |
 | [test/slide](../../test/slide/README.md) | 瞬時流動化と安定判定 | 保存則・水収支の自己検定 |
 | [test/volcano](../../test/volcano/README.md) | Voellmy 定常等流と τ_y ランアウト | 等流深の解析解に 0.04%(4 近傍) |
 | [test/curvature](../../test/curvature/README.md) | 曲率項の定常 1 次元検定 | 円弧上の厚化が ODE の 1.03 倍 |
 | [test/avalanche](../../test/avalanche/README.md) | 雪崩(Voellmy + 速度比例連行) | 連行で 1.5 倍に成長して停止。台帳は機械精度 |
 | [test/bedslide](../../test/bedslide/README.md) | 底層の速度の解析値、45° 斜面、湖への突入 | 内部セルの $`V`$ が解析値に 0.5% |
 | [examples/landslide_tsunami](../../examples/landslide_tsunami/) | 岩屑なだれ・引き渡し・海底地滑り | 4 パターンの比較 |
-| [examples/ashfall_lahar](../../examples/ashfall_lahar/) | 降灰 → 降雨 → 泥流 | ラハールの設定の型 |
+| [examples/ashfall_lahar](../../examples/ashfall_lahar/) | 降灰 → 降雨 → 泥流、砂防堰堤 | ラハールの設定の型(浸透能・f_dbwet=2) |
 
 ## 参考文献
 
@@ -310,6 +361,8 @@ $`v_{stop}`$ = 0.05 m/s。混合体の μ・ξ とは慣性の有無で校正値
 [^tn91]: 高橋保・中川一 (1991): 石礫型土石流の予測法. 新砂防, 44(3), 12–19.
 [^egashira93]: 江頭進治 (1993): 土石流の停止・堆積のメカニズム(2). 新砂防, 46(2).(江頭ら(1989)の構成則と降伏応力の原式)
 [^voellmy55]: Voellmy, A. (1955): Über die Zerstörungskraft von Lawinen. *Schweizerische Bauzeitung*, 73, 159–165, 212–217, 246–249, 280–285.
+[^hungr95]: Hungr, O. (1995): A model for the runout analysis of rapid flow slides, debris flows, and avalanches. *Can. Geotech. J.*, 32, 610–623. doi:10.1139/t95-063(連行則の形は Qiao ら 2023 の式 (14)・(15) による。原論文は未読)
+[^qiao23]: Qiao, Z., Li, T., Simoni, A., Gregoretti, C., Bernard, M., Wu, S., Shen, W. and Berti, M. (2023): Numerical modelling of an alpine debris flow by considering bed entrainment. *Front. Earth Sci.*, 10, 1059525. doi:10.3389/feart.2022.1059525(Cancia 2015 の土石流。Voellmy の μ・ξ と連行率の校正値は表 2・表 3)
 [^christen10]: Christen, M., Kowalski, J. and Bartelt, P. (2010): RAMMS: Numerical simulation of dense snow avalanches in three-dimensional terrain. *Cold Reg. Sci. Technol.*, 63, 1–14.
 [^fischer12]: Fischer, J.-T., Kowalski, J. and Pudasaini, S. P. (2012): Topographic curvature effects in applied avalanche modeling. *Cold Reg. Sci. Technol.*, 74–75, 21–30.
 [^pitman03]: Pitman, E. B., Nichita, C. C., Patra, A., Bauer, A., Sheridan, M. and Bursik, M. (2003): Computing granular avalanches and landslides. *Phys. Fluids*, 15, 3638–3646.(Titan2D)

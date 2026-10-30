@@ -64,6 +64,7 @@ the basis of the defaults, detailed settings).
 | [Structures](users_guide/structure.md), [Boundary conditions](users_guide/boundary.md), [Channels](users_guide/channel.md) | [Hydraulic laws of structures and boundaries](users_guide/hydraulics.md) |
 | [Groundwater](users_guide/gwflow.md) | [Groundwater models](users_guide/gwflow_models.md) |
 | [Sediment and landform change](users_guide/geomorph.md) | [Sediment transport, hillslope and long-term processes](users_guide/sediment.md), [Debris flow, slope failure and moving bed layer](users_guide/massflow.md) |
+| [Coastal wave field](users_guide/wavefield.md) | [Coastal wave field explained](users_guide/wavefield_models.md) |
 | [Water quality](users_guide/wq.md) | [Water-quality models](users_guide/wq_models.md) |
 | [Rainfall and meteorology](users_guide/forcing.md) | [Rainfall and meteorology models](users_guide/forcing_models.md) |
 | [Channels](users_guide/channel.md) | [Channels explained](users_guide/channel_models.md) |

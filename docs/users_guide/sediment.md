@@ -111,6 +111,14 @@ $`\tau_* \le \tau_{*c}`$ で 0 です。エッジ流砂量は流向のエッジ�
 格子スケールで平衡が成り立つとみなし(浮遊砂は輸送方程式で扱う、
 という分担)、平衡流砂量を直接使います。
 
+芦田・道上の原式[^ashida72](式 (23))は、先頭の $`\tau_*^{3/2}`$ に有効掃流力
+$`\tau_{*e}`$(河床波の形状抵抗を除いた分。原典の式 (11):
+$`U/u_{*e} = 6.0 + 5.75\log_{10}\{R/(d(1+2\tau_*))\}`$)を使い、閾値の 2 つの
+因子には全掃流力 $`\tau_*`$・$`u_*`$ をそのまま使います。ENCflow は
+$`\tau_{*e} = \tau_*`$ とした形で、原典が平坦河床・反砂堆の領域(Upper Regime)で
+とる $`u_{*e} = u_*`$ に当たります。砂漣・砂堆のある領域(Lower Regime)では
+流砂量を大きめに見積もります(下の `fluv_taufac` は比を一定とする簡略な代替)。
+
 ![流砂量式と平衡濃度](../figs/sediment_laws.png)
 
 図 (a) が 2 つの流砂量式($`\tau_{*c}`$ = 0.05)、図 (b) は
@@ -151,13 +159,13 @@ r = N_* h\,\kappa
 となります。$`\hat{\mathbf n}`$ は流向の左法線、$`\kappa`$ は水深平均流速場の
 流線曲率(左曲がり正。$`\kappa\hat{\mathbf n}`$ は曲率中心向きなので
 $`r\hat{\mathbf n}`$ は常に湾曲内側)、$`\gamma\nabla z`$ は斜面を下る向きの
-流砂(長谷川 1981 型。Nays2DH の河床勾配補正と同形)、$`r\hat{\mathbf n}`$ は
+流砂(長谷川 1981 型[^hasegawa89]。Nays2DH の河床勾配補正と同形)、$`r\hat{\mathbf n}`$ は
 河床近傍の二次流が湾曲内側へ向く効果(Engelund 型の平衡二次流)です。
 二次流が内岸へ運び、形成された横断斜面を勾配項が下へ戻す釣合いで、
 横断勾配 $`\partial z/\partial n \approx r/\gamma`$ の外岸深・内岸浅の断面が
 できます。曲率は 4 近傍がすべて湿潤のセルでだけ評価し(河岸沿い・境界列は
-$`r = 0`$)、河岸面の段差は $`\nabla z`$ に入れません。係数の既定は $`\mu_s = 1.0, \mu_k = 0.45`$(Asahi ら 2013 式 (22)、Hasegawa
-1984)、$`N_* = 7.0`$(Engelund 1974)です(文献照合 §84.12)。`fluv_taufac` は
+$`r = 0`$)、河岸面の段差は $`\nabla z`$ に入れません。係数の既定は $`\mu_s = 1.0, \mu_k = 0.45`$(Asahi ら 2013[^asahi13] 式 (22)、Hasegawa
+1984)、$`N_* = 7.0`$(Engelund 1974[^engelund74])です(文献照合 §84.12)。`fluv_taufac` は
 流砂量式に渡す $`\tau_*`$ を全抵抗の $`\tau_*`$ の一定比にする簡略な
 有効掃流力の分離です。検証: [test/bendsed](../../test/bendsed/README.md)。
 
@@ -202,6 +210,72 @@ $`\tau_*`$ は元の n で評価。標高・体積には触れない)。検証:
 [test/fluvial](../../test/fluvial/README.md)(固体総量 4.6e-16、共動更新
 1.2e-14)、[test/sedinflow](../../test/sedinflow/README.md)(境界からの
 土砂供給の台帳閉合)。
+
+**今後の課題(実装予定): 有効掃流力 $`\tau_{*e}`$。** 上に書いたとおり、現行の
+芦田・道上式は先頭の項にも全掃流力 $`\tau_*`$ を使うので、Manning の n に
+河床波・砂州・植生などの形状抵抗が含まれると流砂量を大きめに見積もります。
+原典の式 (11) で $`u_{*e}`$ を求め、先頭の $`\tau_*^{3/2}`$ だけを
+$`\tau_{*e}^{3/2}`$ に置き換える(閾値の 2 つの因子は全 $`\tau_*`$ のまま)
+選択肢を、既定を変えずに足す予定です。
+
+- **効果**: 原式と Nays2DH の形に合い、係数 17 を実験値に合わせたときと同じ使い方に
+  なります。$`\tau_{*e}`$ は流速と水深だけで決まるので、粗度の分布(土地利用
+  など)で n を上げたセルでは同じ流速でも $`\tau_*`$ が大きくなる(流砂が増える)
+  という現行の性質がなくなります(定着の `fix_cn` は流砂の $`\tau_*`$ を元の n で
+  評価するので、もともと対象外です)。形状抵抗の分は流速・水深・$`\tau_*`$ に
+  応じてセルごと・時刻ごとに決まり、一定の比を掛ける `fluv_taufac`(閾値の
+  因子まで縮める)より原式に近い分け方です。新しいパラメータは要りません。
+- **効果の大きさ**(等流での試算): n が粒子粗度の約 2 倍の砂床(例題 meander・
+  delta の設定)で流砂量は現行の 0.1〜0.25 倍、礫床で 0.4〜0.65 倍になります。
+  既存の例題は $`\tau_{*e}`$ なしで地形変化の速さを調整しているので、既定には
+  しません(無効のときは従来とビット一致)。
+- **実装で備えること**: $`\tau_{*e} \le \tau_*`$ の頭打ち(平坦な砂床では式 (11)
+  の値が $`\tau_*`$ を超えます)。対数則の適用範囲外の保護(径深と相当粗度の
+  比が数以下の浅い流れ・渓流。比が 0.09 を下回ると式 (11) の分母が 0 に
+  なります)。`fluv_taufac` との排他。式 (11) の検定ケース。対象は芦田・道上式
+  だけです(MPM には別の補正であるリップル係数があります)。
+- **時期**: Nays2DH との比較、砂堆のある砂河川、植生のある氾濫原を扱う段で
+  入れます(developer.md §19.8)。
+
+**今後の課題(実装予定): 急勾配礫床の抵抗分割(マクロ粗度)。** 水深が粒径 D84 の
+7〜10 倍より浅い礫・巨礫床の渓流では、巨礫や段の形状抵抗・落水の抵抗が全抵抗の
+大半を占めます。全抵抗の $`\tau_*`$ をそのまま使う従来の流砂量式は、急勾配の渓流で
+流砂量を桁違いに(最大で 2〜3 桁)過大に見積もることが知られています[^nitsche11]。
+Rickenmann & Recking[^rickenmann11] は野外の 2890 測定から、小規模粗度の基準の
+抵抗 $`\sqrt{8/f_0} = 6.5\,(h/D_{84})^{1/6}`$ と、相対水深が小さいほど増える全抵抗
+(Ferguson の式[^ferguson07]
+$`\sqrt{8/f_{\rm tot}} = a_1 a_2 (h/D_{84})/\sqrt{a_1^2 + a_2^2 (h/D_{84})^{5/3}}`$、
+$`a_1 = 6.5`$、$`a_2 = 2.5`$)の比で勾配を縮める分割
+$`S_{\rm red}/S = (f_0/f_{\rm tot})^{e/2}`$ を示しました。Nitsche ら[^nitsche11] は
+スイスの渓流 13 本(勾配 2〜19 %)で 5 つの抵抗分割の方法を比べ、この方法
+($`e`$ = 1.5)が、補正なしでは最大 2 桁過大だった流砂量を全渓流の中央値で実測の
+1.0 倍(88 % の事象が 3 倍以内)にして最もよく、詳しい粗度の情報がないときの
+実用的な方法だと報告しています。流砂量式に渡す $`\tau_*`$ にこの係数を掛ける
+選択肢を、既定を変えずに足す予定です。
+
+- **形**: 係数 $`(f_0/f_{\rm tot})^{e/2}`$($`e`$ = 1.5)は相対水深 $`h/D_{84}`$ だけで
+  決まり、エッジごとの水深から計算できます(利用者の Manning n には依りません)。
+  $`h/D_{84}`$ = 0.5・1・2・5・10・20 で 0.10・0.22・0.43・0.75・0.90・0.97 です。
+  閾値 $`\tau_{*c}`$ は粒子の値のままです。$`D_{84}`$ がなければ $`2.2\,D_{50}`$
+  (Rickenmann & Recking がデータの補完に使った中央値の比)。基準の抵抗と
+  Manning n の比で縮める形 $`(n_0/n)^{e}`$($`1/n_0 = 20.4/D_{84}^{1/6}`$)もありますが、
+  n が一定の流れでは相対水深による変化が出ず、結果が n の選び方に引きずられるので
+  採りません。
+- **効果の大きさ**: 例題 bedrock_cover(水深 0.3 m、D84 ≈ 22 mm、h/D84 ≈ 14)では
+  0.94 倍でほとんど変わりません。巨礫床の浅い流れ(h/D84 = 1〜3)では 0.2〜0.6 倍に
+  なり、流砂量は閾値に近いほどさらに減ります。勾配を縮める効果の比は流砂量式に
+  よらずほぼ同じ(超過掃流力で決まるため)と Nitsche らは述べているので、芦田・道上式・
+  MPM 式のどちらにも掛けられます。
+- **上の有効掃流力との関係**: どちらも「流砂を動かす分」の掃流力を取り出す分離で、
+  対象の領域が違います($`\tau_{*e}`$ は対数則が成り立つ砂床の砂堆、こちらは
+  浅い礫・巨礫床)。両者と `fluv_taufac` は排他にします。巨礫のない高濃度の流れ
+  (シートフロー)に当てると流砂量を不当に小さくする、という但し書きがあります
+  [^rickenmann11]。
+- **流れの側の関連課題**: 粒径相当の一定の Manning n は、浅い礫・巨礫床で流速を
+  大きく過大に予測します(D84 より浅いと中央値で 3〜4.5 倍[^rickenmann11])。相対水深に応じて
+  抵抗を変える Ferguson の式[^ferguson07]を抵抗則の選択肢にすることも候補です。
+  流れ全体に効くので、流砂の分離より議論が重くなります。
+- **時期**: 山地渓流の例題の結果を見てから入れます(docs/mountain_stream_plan.md §6.3)。
 
 ## 4. 浮遊砂(f_suspend)
 
@@ -435,7 +509,10 @@ $`k_p = k_e \tau_c^m`$ と置いた比形で、$`k_p`$ は「$`\tau_b = 2\tau_c`
 吸収します(風化と同じ 1:1 の換算。**独自の簡略化**)。研磨項の $`q_c`$ はセルの
 掃流砂容量(単位幅の固体流砂量)、$`q_c F_s`$ はそのセルから出る掃流砂で、これを
 床を叩く礫の量とみなします(GravelBedrockEroder の「研磨 = β × 流砂量 × 露出率」と
-同じ形)。研磨で削れた分は細粒分として系外へ出し($`z`$ が下がる)、被覆には
+同じ形)。せん断応力によらない $`\beta`$ で研磨を実際の流砂量 × 露出率に比例させる形は、
+Inoue ら[^inoue16] の 2 次元の岩盤–沖積河道モデルが使う Chatanantavet & Parker(2009)[^chatanantavet09] の則
+$`E = \beta|\mathbf{q}_b|(1 - P_c)`$ とも同じで、違うのは被覆率の関数形です(同モデルは
+沖積層厚に線形な $`P_c = \eta_a/L_a`$、ENCflow は指数)。研磨で削れた分は細粒分として系外へ出し($`z`$ が下がる)、被覆には
 加えません。
 
 **薄層の輸送。** 掃流砂のエッジ流量に、供給側セルの利用可能率
@@ -443,7 +520,21 @@ $`F_s = 1 - e^{-H/H_*}`$ を掛けます。一様な容量 $`q_c`$ と一定の�
 の定常では $`F_s = q_s/q_c`$ となり、露出率は $`1 - q_s/q_c`$、つまり供給比で
 書いた被覆[^sklar04][^turowski07]に一致し、研磨による下刻速度は
 $`E = \beta q_s (1 - q_s/q_c)`$ の山形になります($`q_s/q_c = 1/2`$ で最大、
-1 以上で全被覆の 0。Sklar & Dietrich の saltation–abrasion 模型の線形化と同じ形)。被覆を沖積層の厚さと河床の
+1 以上で全被覆の 0)。これは Sklar & Dietrich の saltation–abrasion 模型[^sklar04][^sklar06]
+(道具 $`Q_s`$ × 供給比に線形な被覆 $`1 - Q_s/Q_c`$)から、跳躍の軌跡から来る因子
+$`(\tau_*/\tau_{*c} - 1)^{-1/2}`$(衝突の頻度と強さ)と浮遊の閾値の因子を除いた形で、同論文の分類の
+「道具と被覆」の放物線型(Whipple & Tucker 2002[^whipple02] の $`n = 1`$)に当たります。同模型の最終形(2004 の
+式 (24a))と対応させると、研磨係数の目安は
+
+```math
+\beta \approx \frac{0.08\,R_b\,g\,\rho_s\,Y}{k_v\,\sigma_T^2}\left(\frac{\tau_*}{\tau_{*c}} - 1\right)^{-1/2}
+```
+
+です($`R_b`$ = 水中比重、$`\rho_s`$ = 土砂の密度、$`Y`$ = 岩の弾性係数、$`\sigma_T`$ = 岩の引張強さ。
+$`k_v \approx 10^{12}`$ は $`Y`$・$`\sigma_T`$ を MPa で入れたときの同論文の値。輸送段階は代表の出水の値で
+評価し、浮遊の因子は省きます)。同論文の基準地点(South Fork Eel River。$`\sigma_T`$ = 7 MPa、
+$`Y`$ = 5 × 10⁴ MPa、$`\tau_*/\tau_{*c}`$ = 1.7)では約 4〜5 × 10⁻⁶ /m で、$`\beta`$ は $`\sigma_T^2`$ に
+反比例します(引張強さ 1 MPa の軟岩なら約 50 倍)。被覆を沖積層の厚さと河床の
 起伏の比で決める考え方[^zhang15]を、露出率と利用可能率に同じ $`H_*`$ を使う
 閉包で書いたもので、この組合せと有次元化は**独自**です
 (docs/mountain_stream_plan.md §4.3)。剥離物が下流で流砂に加わる定常は、
@@ -483,10 +574,19 @@ $`\tau_d`$ は定常の等流で抵抗則の底面せん断に等しく、抵抗
 使います。
 
 土石流が急勾配の谷の岩盤を削る主な担い手であることは、勾配–面積関係[^stock03]と侵食ピンの
-観測[^stock05]から示されています。機構は粒子の衝突とされ、慣性応力に基づく則[^stock06]や
-回転ドラムの実験[^hsu08]があります。単層混合体は衝突が集中する巨礫の前縁を分けて表さないため、
+観測[^stock05]から示されています。機構は粒子の衝突とされ、Stock & Dietrich[^stock06] は、
+岩盤の低下が主に巨礫の衝突による割れ目沿いの岩塊の除去であるという野外の観察から、1 回の
+土石流の低下量を「粗い前縁の長さ $`L`$ × 粒子衝突の固体の慣性垂直応力
+$`\cos\theta\,C\rho_s D^2 (u/h)^2`$ ÷ 岩の抵抗」に比例させる則を仮説として示しました
+(長期の低下速度はこれに土石流の頻度を掛けたもの。土石流の力学の表し方が粗く、検証された則には
+遠いと著者自身が述べています)。回転ドラムの実験[^hsu08]も慣性応力と前縁の衝突を支持します。
+スイスの Illgraben の扇状地の水路に埋めた侵食センサーの観測でも、堆積物の床の侵食は前縁の到達から
+20 s 以内に段階的に起き、流動深と応力が最大になる前に始まりました[^berger11]。
+単層混合体は衝突が集中する巨礫の前縁を分けて表さないため、
 単一イベントの比較(docs/mountain_stream_plan.md §12.4)で頑健だった準静的応力の超過形を
-採りました。流動深と勾配の関数の侵食則[^mcguire23]と同じ種類で、形と係数の組合せは**独自**です。
+採りました。慣性応力の則は、1 回の低下量が前縁の長さ × 応力に比例する形をイベント計算の速度に
+直すと流速の 3 乗と流動深の 2 乗の逆数に比例し、同じ比較で薄い層と抵抗則の選び方に最も敏感
+だった案(慣性応力そのものに比例させる形)より、流速にさらに強く依存します。流動深と勾配の関数の侵食則[^mcguire23]と同じ種類で、形と係数の組合せは**独自**です。
 同じ比較では、閾値 1 kPa で侵食がほぼ勾配 0.2 以上の区間に集まりました。厚さ約 5 cm の堆積物が
 衝突から床を守るという観測[^mccoy13]は、$`H_*`$ の目安になります。
 
@@ -501,7 +601,7 @@ $`\tau_d`$ は定常の等流で抵抗則の底面せん断に等しく、抵抗
 | creep_hstar | 0(従来の線形拡散) | 深さ依存クリープの減衰厚 $`H_c`$ (m)(§2) | **校正値** 標準値がない。厚い土層では結果によらない |
 | f_qbform | 1 | 流砂量式(§3) | **方式** 1: 芦田・道上[^ashida72]、2: MPM[^mpm48] |
 | fluv_d50 | 0.01 m | 掃流砂の代表粒径 | **経験値** 砂床〜礫床の幾何平均付近 |
-| fluv_tausc / susp_tausc / wash_tausc | 0.05 | 限界無次元掃流力(§1) | **文献値** Shields 曲線の粗砂〜礫の代表値[^shields36] |
+| fluv_tausc / susp_tausc / wash_tausc | 0.05 | 限界無次元掃流力(§1) | **文献値** Shields 曲線の粗砂〜礫の代表値[^shields36]。芦田・道上[^ashida72]も混合砂礫の平均粒径の値として 0.05 を使う(式 (31)) |
 | fluv_porosity / fluv_sgrav | 0.4 / 1.65 | 河床の空隙率 / 水中比重 | **慣用値** 砂礫の標準値 |
 | fluv_dzmax | 0.05 m | 1 更新の河床変動上限(§3) | **数値設定** 安全弁(地形波のクーラン条件相当) |
 | fluv_bcfeed | 0 | 開境界の給砂(§3) | **方式** 0: 無給砂、1: 容量給砂(流入セルの正味流出 × 倍率) |
@@ -532,7 +632,7 @@ $`\tau_d`$ は定常の等流で抵抗則の底面せん断に等しく、抵抗
 | dissol_lat | 0 | 側方溶食の配分割合 p | **方式** 0 = 床のみ、−1 = 濡れ面の面積比で自動(推奨)。固定値は湛水深/格子幅の比から |
 | rock_kp / rock_tauc | 0(剥離なし)/ なし | 剥離の速度係数 (m/s) / 閾値 (Pa)(§7 の岩盤下刻) | **校正値** 標準値がない。k_p は τ_b = 2τ_c での裸岩の下刻速度 |
 | rock_m | 1 | 剥離のべき指数 | **慣用値** 線形(側岸侵食の berode_m と同じ) |
-| rock_beta | 0(研磨なし) | 研磨係数 β (1/m) | **校正値** 標準値がない。研磨による下刻速度の最大(被覆率 1/2)は β q_c / 4 |
+| rock_beta | 0(研磨なし) | 研磨係数 β (1/m) | **校正値** 標準値がない。研磨による下刻速度の最大(被覆率 1/2)は β q_c / 4。目安は §7 の Sklar & Dietrich[^sklar04] の模型との対応(同論文の基準地点で約 4〜5 × 10⁻⁶ /m、岩の引張強さの 2 乗に反比例)。Inoue ら[^inoue16] は石狩川の現地実験の値 β ≈ 0.001 /m を使い、水路実験の再現には 0.0001 /m を使った |
 | rock_hstar | なし | 被覆の長さ H* | **与件** 岩盤面の起伏・礫径の目安(数 cm〜数十 cm)。露出率と利用可能率に共用 |
 | rock_kdb / rock_taucdb | 0(土石流の項なし)/ なし | 土石流による岩盤侵食の速度係数 (m/s) / 閾値 (Pa) | **校正値** 標準値がない。k_d は τ_d = 2τ_cd での裸岩の低下速度。1 回の土石流で mm〜cm の低下が目安[^stock05][^mccoy13] |
 | rock_mdb | 1 | 土石流の項のべき指数 | **慣用値** 線形(rock_m と同じ) |
@@ -558,7 +658,7 @@ $`\tau_d`$ は定常の等流で抵抗則の底面せん断に等しく、抵抗
 |---|---|---|
 | [test/creep](../../test/creep/README.md) | ガウス丘の拡散 | 解析解に最大誤差 7.8e-5 m、morfac 等価性。深さ依存クリープの岩盤面の不変・土層の保存・裸岩で不変 |
 | [test/fluvial](../../test/fluvial/README.md) | 閉領域の段波と河床変動 | 固体総量・共動更新が機械精度 |
-| [test/suspend](../../test/suspend/README.md) | 2 つの平衡濃度式 | 固体総量 2.2e-15 |
+| [test/suspend](../../test/suspend/README.md) | 2 つの平衡濃度式、等流の水路の平衡と適応 | 固体総量 2.2e-15、平衡濃度が式の値と 1.5e-6、適応の減衰率が離散の予測と 1.4e-5 |
 | [test/sedinflow](../../test/sedinflow/README.md) | 境界からの土砂供給 | 流入総量の台帳閉合 ~1e-16 |
 | [test/wash](../../test/wash/README.md) | 降雨 + 段波の斜面浸食 | 固体総量 1.7e-13 |
 | [test/splash](../../test/splash/README.md) | 遷緩点斜面の乾式侵食 | 解析形に全桁一致、排出台帳一致 |
@@ -578,6 +678,9 @@ $`\tau_d`$ は定常の等流で抵抗則の底面せん断に等しく、抵抗
 [^johnstone15]: Johnstone, S. A. and Hilley, G. E. (2015): Lithologic control on the form of soil-mantled hillslopes. *Geology*, 43(1), 83–86. doi:10.1130/G36052.1(要旨で確認: 輸送が勾配と土層厚の両方に比例すると、岩質が土層に覆われた斜面の形に現れる。式の形と doi は Landlab の DepthDependentDiffuser の説明による)
 [^ashida72]: 芦田和男・道上正規 (1972): 移動床流れの抵抗と掃流砂量に関する基礎的研究. 土木学会論文報告集, 206, 59–69.
 [^mpm48]: Meyer-Peter, E. and Müller, R. (1948): Formulas for bed-load transport. *Proc. 2nd Meeting IAHSR*, Stockholm, 39–64.
+[^rickenmann11]: Rickenmann, D. and Recking, A. (2011): Evaluation of flow resistance in gravel-bed rivers through a large field data set. *Water Resour. Res.*, 47, W07538. doi:10.1029/2010WR009793(基準の抵抗 式 (23)、抵抗分割と流砂量 式 (32))
+[^ferguson07]: Ferguson, R. (2007): Flow resistance equations for gravel- and boulder-bed streams. *Water Resour. Res.*, 43, W05427. doi:10.1029/2006WR005422(Rickenmann & Recking 2011 の文献表と式 (10a) による。本文は未読)
+[^nitsche11]: Nitsche, M., Rickenmann, D., Turowski, J. M., Badoux, A. and Kirchner, J. W. (2011): Evaluation of bedload transport predictions using flow resistance equations to account for macro-roughness in steep mountain streams. *Water Resour. Res.*, 47, W08513. doi:10.1029/2011WR010645(5 つの抵抗分割の比較。Rickenmann & Recking の方法は式 (15)〜(18)、勾配の縮小は式 (26)、e = 1.5)
 [^exner25]: Exner, F. M. (1925): Über die Wechselwirkung zwischen Wasser und Geschiebe in Flüssen. *Sitzungsber. Akad. Wiss. Wien, Math.-Naturwiss. Kl.*, 134, 165–204.
 [^itakura80]: Itakura, T. and Kishi, T. (1980): Open channel flow with suspended sediments. *J. Hydraul. Div. ASCE*, 106(HY8), 1325–1343.(実装の形は iRIC「実践河川水理学」第 4 章の式(3)–(5)による)
 [^rubey33]: Rubey, W. W. (1933): Settling velocities of gravel, sand, and silt particles. *Am. J. Sci.*, 25, 325–338.
@@ -591,12 +694,20 @@ $`\tau_d`$ は定常の等流で抵抗則の底面せん断に等しく、抵抗
 [^gabrovsek09]: Gabrovšek, F. (2009): On concepts and methods for the estimation of dissolutional denudation rates in karst areas. *Geomorphology*, 106, 9–14.
 [^howard83]: Howard, A. D. and Kerby, G. (1983): Channel changes in badlands. *Geol. Soc. Am. Bull.*, 94, 739–752.(岩盤河道の侵食速度を出水時の底面せん断で表す。要旨で確認)
 [^shobe17]: Shobe, C. M., Tucker, G. E. and Barnhart, K. R. (2017): The SPACE 1.0 model. *Geosci. Model Dev.*, 10, 4577–4604. doi:10.5194/gmd-10-4577-2017(被覆の指数形は Landlab のソースで確認)
-[^sklar04]: Sklar, L. S. and Dietrich, W. E. (2004): A mechanistic model for river incision into bedrock by saltating bed load. *Water Resour. Res.*, 40, W06301. doi:10.1029/2003WR002496
+[^sklar04]: Sklar, L. S. and Dietrich, W. E. (2004): A mechanistic model for river incision into bedrock by saltating bed load. *Water Resour. Res.*, 40, W06301. doi:10.1029/2003WR002496(saltation–abrasion 模型 式 (1)・(24a)、被覆の線形仮定 式 (7)、岩の強さの係数 k_v 表 4、基準地点の値 表 3)
+[^sklar06]: Sklar, L. S. and Dietrich, W. E. (2006): The role of sediment in controlling steady-state bedrock channel slope: Implications of the saltation–abrasion incision model. *Geomorphology*, 82, 58–83. doi:10.1016/j.geomorph.2005.08.019(saltation–abrasion 模型 式 (1)、模型の分類 式 (20)・表 2、定常勾配の成分 式 (32)〜(34)、間欠係数 式 (13)〜(19))
 [^turowski07]: Turowski, J. M., Lague, D. and Hovius, N. (2007): Cover effect in bedrock abrasion. *J. Geophys. Res.*, 112, F04006. doi:10.1029/2006JF000697
 [^zhang15]: Zhang, L., Parker, G., Stark, C. P., Inoue, T., Viparelli, E., Fu, X. and Izumi, N. (2015): Macro-roughness model of bedrock–alluvial river morphodynamics. *Earth Surf. Dynam.*, 3, 113–138. doi:10.5194/esurf-3-113-2015(要旨で確認)
+[^inoue16]: Inoue, T., Iwasaki, T., Parker, G., Shimizu, Y., Izumi, N., Stark, C. P. and Funaki, J. (2016): Numerical simulation of effects of sediment supply on bedrock channel morphology. *J. Hydraul. Eng.*, 142(7), 04016014. doi:10.1061/(ASCE)HY.1943-7900.0001124(研磨則 式 (16)、被覆率 式 (17)、横断方向の流砂 式 (12))
 [^stock03]: Stock, J. D. and Dietrich, W. E. (2003): Valley incision by debris flows: Evidence of a topographic signature. *Water Resour. Res.*, 39(4), 1089. doi:10.1029/2001WR001057(要旨で確認: 勾配–面積の逆べき則は勾配 0.03〜0.10 より急な所にほとんど延びない)
 [^stock05]: Stock, J. D., Montgomery, D. R., Collins, B. D., Dietrich, W. E. and Sklar, L. S. (2005): Field measurements of incision rates following bedrock exposure: Implications for process controls on the long profiles of valleys cut by rivers and debris flows. *Geol. Soc. Am. Bull.*, 117(1–2), 174–194. doi:10.1130/B25560.1(要旨で確認: 弱い岩の谷の侵食ピンで最大 cm/年。土石流の谷では間欠的な土石流が主な担い手)
-[^stock06]: Stock, J. D. and Dietrich, W. E. (2006): Erosion of steepland valleys by debris flows. *Geol. Soc. Am. Bull.*, 118(9/10), 1125–1148.(要旨と紹介で確認: 粒子衝突の慣性垂直応力に基づく侵食則。式の形は未照合)
+[^stock06]: Stock, J. D. and Dietrich, W. E. (2006): Erosion of steepland valleys by debris flows. *Geol. Soc. Am. Bull.*, 118(9/10), 1125–1148. doi:10.1130/B25902.1(慣性垂直応力 式 (5)・(11)、侵食則 式 (14)・(15)・(18))
 [^hsu08]: Hsu, L., Dietrich, W. E. and Sklar, L. S. (2008): Experimental study of bedrock erosion by granular flows. *J. Geophys. Res.*, 113, F02001. doi:10.1029/2007JF000778(要旨と紹介で確認)
+[^berger11]: Berger, C., McArdell, B. W. and Schlunegger, F. (2011): Direct measurement of channel erosion by debris flows, Illgraben, Switzerland. *J. Geophys. Res.*, 116, F01002. doi:10.1029/2010JF001722(堆積物の床の侵食の時刻と深さの直接測定)
 [^mccoy13]: McCoy, S. W., Tucker, G. E., Kean, J. W. and Coe, J. A. (2013): Field measurement of basal forces generated by erosive debris flows. *J. Geophys. Res. Earth Surf.*, 118, 589–602. doi:10.1002/jgrf.20041(要旨で確認: 岩盤の床が観測期間に 36〜64 mm 低下。厚さ約 5 cm の堆積物が衝突から床を守る)
-[^mcguire23]: McGuire, L. A. ほか (2023): Steady-state forms of channel profiles shaped by debris flow and fluvial processes. *Earth Surf. Dynam.*, 11, 1117–1143. doi:10.5194/esurf-11-1117-2023(要旨で確認: 流動深と勾配の関数の侵食則の族。共著者の一覧は未照合)
+[^mcguire23]: McGuire, L. A., McCoy, S. W., Marc, O., Struble, W. and Barnhart, K. R. (2023): Steady-state forms of channel profiles shaped by debris flow and fluvial processes. *Earth Surf. Dynam.*, 11(6), 1117–1143. doi:10.5194/esurf-11-1117-2023(要旨で確認: 流動深と勾配の関数の侵食則の族)
+[^asahi13]: Asahi, K., Shimizu, Y., Nelson, J. and Parker, G. (2013): Numerical simulation of river meandering with self-evolving banks. *J. Geophys. Res. Earth Surf.*, 118(4), 2208–2229.(式 (22) の横断勾配の補正の μs・μk を Hasegawa (1984) に帰属させ、記法表で μs = 1.0・μk = 0.45、式 (18) で N* = 7.0 [Engelund 1974] と明記。developer.md §84.12 で照合)
+[^hasegawa89]: Hasegawa, K. (1989): Universal bank erosion coefficient for meandering rivers. *J. Hydraul. Eng.*, 115(6), 744–765.(式 (6) の T = √(τ*c/(μs μk τ*0)) が横断勾配の補正 γ と同形。同論文は式を Hasegawa (1981) に帰属させ、桁の見積りに μs = 1.0・μk = 0.7 を用いる。§84.12)
+[^engelund74]: Engelund, F. (1974): Flow and bed topography in channel bends. *J. Hydraul. Div. ASCE*, 100(HY11), 1631–1648.(平衡二次流の係数 N* = 7.0 の出典として Asahi ら (2013) が引く。本文は未照合)
+[^chatanantavet09]: Chatanantavet, P. and Parker, G. (2009): Physically based modeling of bedrock incision by abrasion, plucking, and macroabrasion. *J. Geophys. Res.*, 114, F04018. doi:10.1029/2008JF001044(Inoue ら (2016) が使う研磨則の出典。本文は未照合)
+[^whipple02]: Whipple, K. X. and Tucker, G. E. (2002): Implications of sediment-flux-dependent river incision models for landscape evolution. *J. Geophys. Res.*, 107. doi:10.1029/2000JB000044(Sklar & Dietrich (2004) の分類での引用。本文は未照合)

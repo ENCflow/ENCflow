@@ -25,7 +25,7 @@ site before citing.
 |---|---|---|---|---|
 | **ENCflow** | (this project) | Free | Fully open | Basic policy is developer.md Sec. 0. Ships agent-oriented groundwork (Sec. 3). Implements CSDMS BMI 2.0 (passes bmi-tester; optional adapter, core stays dependency-free; 2026-08-29) |
 | RRI | ICHARM/PWRI | Free | Open (own terms) | Copyright-notice obligation; commercial use by permission. iRIC-version solver also published |
-| iRIC (Nays2DFlood etc.) | iRIC organization | Free | Main solvers open | Platform of GUI + solver suite |
+| iRIC (Nays2DFlood, Nays2DH etc.) | iRIC organization | Free | Main solvers open | Platform of GUI + solver suite |
 | Morpho2DH | Takebayashi (DPRI, Kyoto Univ.) / iRIC | Free | Closed (distributed via iRIC) | Morpho2D (2D bed deformation) + debris/mud flow. Considers structures such as sabo dams |
 | HEC-RAS 2D | USACE (US Army) | Free | Closed | One of the de facto standards in practice. Catchment hydrology is delegated to HEC-HMS |
 | LISFLOOD-FP 8 | University of Bristol | Free | Open (GPL) | Subgrid channels, GPU |
@@ -33,6 +33,7 @@ site before citing.
 | SFINCS | Deltares | Free | Open (GPLv3; GitHub Deltares/SFINCS; Fortran) | Reduced-complexity shallow-water model for compound flooding (storm surge, waves, rainfall, rivers). Local inertia equations (advection term optional) + subgrid topography + quadtree grid, GPU (OpenACC). HydroMT-SFINCS builds the inputs automatically; links with Delft Dashboard and FloodAdapt. Leijnse et al. (2021), van Ormondt et al. (2025) |
 | TELEMAC-2D (+GAIA) | EDF-led | Free | Open (GPLv3) | Unstructured FE/FV. Sediment via GAIA. No catchment hydrology |
 | Delft3D FM | Deltares | Kernel free | Kernel open (GPLv3) | GUI distributed free but under license management. Includes sediment (MOR) and water quality (WAQ) |
+| Delft3D 4 (Delft3D-FLOW, WAVE etc.) | Deltares | Kernel free | Kernel open (since 2011; GPLv3) | The structured (curvilinear orthogonal) line, succeeded by Delft3D FM. Sources of FLOW, MOR and WAVE opened in 2011 (WAQ later). The WAVE computation is SWAN. The GUI is obtained separately (from the reseller Deltares Systems). Lesser et al. (2004) |
 | MIKE 21 / MIKE SHE | DHI | Commercial | Closed | Integrated hydrology (SHE) is the most comprehensive, snow included. Water quality is ECO Lab |
 | TUFLOW | BMT | Commercial | Closed | Free demo limited to 100,000 cells / 10 minutes |
 | Iber | UPC/GEAMA et al. | Free | Closed (EULA, no redistribution) | Water quality, habitat, driftwood (IberWood), GPU version |
@@ -53,10 +54,17 @@ site before citing.
 | COMCOT | Cornell University (Liu) et al. | Free | Distributed by the developers | Tsunami generation to run-up (nested grids). Okada deformation, time-dependent deformation |
 | JAGURS | JAMSTEC, Baba et al. | Free | Open (GitHub) | Tsunami (dispersion, elastic response of the Earth). Parallel. Time-dependent seafloor deformation |
 | TUNAMI | Tohoku University | Free | Distributed by the developers | One of the standard tsunami propagation/run-up codes. Initial-surface approach |
+| MOST (ComMIT) | NOAA PMEL (NCTR) | Free | Distributed with conditions (via ComMIT; no redistribution without written permission from PMEL) | The operational tsunami forecast model of the US (Titov & Synolakis 1998). Three nested grids A/B/C (one-way) |
 | SWASH | TU Delft | Free | Open (GPL) | Multi-layer non-hydrostatic waves, tsunamis and coasts |
 | FUNWAVE-TVD | University of Delaware | Free | Open (GitHub) | Boussinesq-type waves (soliton fission, breaking) |
 | NHWAVE | University of Delaware | Free | Open (GitHub) | Sigma-coordinate 3-D non-hydrostatic. Track record in landslide tsunami generation |
 | NEOWAVE | University of Hawaii | — | Closed | One-layer non-hydrostatic tsunami model (the same one-layer approximation as ENCflow) |
+| XBeach | Deltares, UNESCO-IHE (now IHE Delft), TU Delft, University of Miami (funded by USACE) | Free | Open (LGPL according to the CSDMS entry) | Storm impacts on beaches, dunes and barrier islands (Roelvink et al. 2009). Three modes, stationary, surf beat (wave groups) and non-hydrostatic, solving waves, flow, sediment transport and morphology together |
+| SWAN | TU Delft | Free | Open (GPL) | Third-generation spectral wave model (wind growth, whitecapping, nonlinear interactions; Booij et al. 1999). The computation of Delft3D-WAVE, and tightly coupled with ADCIRC as well (SWAN+ADCIRC) |
+| HISWA | TU Delft | — | Not confirmed | Stationary shallow-water hindcast model of short-crested waves, including ambient currents (Holthuijsen et al. 1989). No current distribution could be confirmed |
+| SnapWave | Roelvink et al. (IHE Delft, Deltares) | Free | Open (GitHub; license not confirmed) | Fast stationary implicit wave transformation (refraction, shoaling, dissipation by breaking and bottom friction; Roelvink et al. 2025). Coupled with SFINCS, and also used as the stationary solver of XBeach, in Delft3D FM and in ShorelineS |
+| CMS (CMS-Flow, CMS-Wave) | USACE ERDC (CHL) | Free | Open (GitHub erdc/cms2d; ERDC's own terms) | Coastal model for inlets and navigation projects: CMS-Flow (shallow-water flow, sediment, morphology) and CMS-Wave (spectral wave transformation). One of the USACE preferred models for coastal studies |
+| ADCIRC | Luettich (UNC), Westerink (University of Notre Dame) et al. | Free | Open (LGPLv3; GitHub) | 2-D/3-D circulation model by finite elements on unstructured triangular meshes. Widely used for storm-surge assessment in the US. Tightly coupled with SWAN (SWAN+ADCIRC) |
 | VolcFlow | Université Clermont Auvergne (Kelfoun) | Free | Distributed by the developers | Volcanic mass flows (debris avalanches, pyroclastic flows, lava). Two-layer version for landslide tsunamis |
 | SOBEK | Deltares | Commercial | Closed | 1D-2D hydraulics with structures (being merged into the Delft3D FM Suite) |
 | SWMM | US EPA | Free | Open (public domain) | Urban drainage pipe networks (1-D). Coupling with 2-D surface models is done by vendor products |
@@ -64,11 +72,16 @@ site before citing.
 | MODFLOW (+SWI2 / SEAWAT) | USGS | Free | Open | The standard for 3-D groundwater. SWI2 for sharp interfaces, SEAWAT for variable density |
 | SUTRA | USGS | Free | Open | Variable-density, variably saturated groundwater flow and transport |
 | FEFLOW | DHI | Commercial | Closed | 3-D groundwater, heat and mass transport (variable density) |
+| HYDRUS-1D | Šimůnek (UC Riverside), PC-Progress et al. | Free | Partly open (only the 2009 source of the computational module; the latest is closed) | 1-D vertical variably saturated water flow (Richards), solute and heat transport (Šimůnek et al. 2013). Distributed as public-domain software. The 2-D/3-D version (HYDRUS 2D/3D) is commercial |
 | MOLASSES / Q-LavHA | USF / VUB | Free | Open | Cellular-automaton and probabilistic lava-flow models |
 | MAGFLOW / LavaSIM | INGV / Japan (Hidaka et al.) | — | Closed (to be confirmed) | Thermally coupled lava-flow models |
 | LAHARZ | USGS | Free | Open | Empirical lahar inundation extent (GIS) |
 | Badlands / FastScape | University of Sydney / GFZ | Free | Open | Process-law landscape evolution models (Landlab is in the CSDMS row) |
+| DeltaRCM (pyDeltaRCM) | Liang, Voller, Paola (University of Minnesota; the original is in MATLAB) / Moodie et al. (Python version) | Free | Open (pyDeltaRCM under MIT) | Reduced-complexity river-delta model (Liang et al. 2015). Water and sediment parcels are routed by weighted random walks. pyDeltaRCM is Moodie et al. (2021) |
+| CEM | Ashton (WHOI), Murray (Duke University) | Free | Open (CSDMS; MIT) | One-line shoreline model (Ashton et al. 2001; Ashton & Murray 2006). Shoreline instability under high-angle waves (spits, cusps, capes) |
 | PISM / Elmer/Ice / OGGM | UAF and PIK / CSC / University of Innsbruck et al. | Free | Open | Dedicated ice-sheet and glacier dynamics models |
+| ROMS (ROMS-AGRIF → CROCO) | Rutgers University, UCLA / IRD, Inria, CNRS, Ifremer, SHOM | Free | Open (ROMS under an MIT/X-style license; CROCO's own nesting routines under CeCILL-C) | 3-D terrain-following ocean circulation model (Shchepetkin & McWilliams 2005). ROMS-AGRIF has two-way nesting by AGRIF (Debreu et al. 2012), carried over into CROCO |
+| WRF | NCAR, NOAA et al. | Free | Open (public domain; GitHub) | Mesoscale weather model for research and operational forecasting. One-way and two-way nesting |
 
 Sources (confirmed 2026-08-10):
 [RRI](https://www.pwri.go.jp/icharm/research/rri/index.html) /
@@ -89,10 +102,10 @@ Sources (confirmed 2026-08-10):
 (checked 2026-08-26) /
 [CSDMS paper](https://gmd.copernicus.org/articles/15/1413/2022/)
 (checked 2026-08-26).
-The rows after GeoClaw (COMCOT to PISM) were added on 2026-10-06 so
-that every model named in Sec. 2 appears here; their distribution
-forms are from general knowledge and should be confirmed on each
-official site before citing.
+The rows after GeoClaw (COMCOT to PISM, except the 2026-10-29 additions
+below) were added on 2026-10-06 so that every model named in Sec. 2
+appears here; their distribution forms are from general knowledge and
+should be confirmed on each official site before citing.
 
 Nesting sources (confirmed 2026-10-10):
 [Dispersive, nested and parallel JAGURS (PAGEOPH 2015)](https://link.springer.com/doi/10.1007/s00024-015-1049-2) /
@@ -114,6 +127,34 @@ Neither site could be reached from the working environment, so the content is
 from knowledge of Leijnse et al. 2021 (Coastal Engineering) and van Ormondt et
 al. 2025 (GMD); confirm before citing).
 
+Additions of 2026-10-29 (so that every model named in Sec. 2 appears here): the rows of
+Delft3D 4, MOST, XBeach, SWAN, HISWA, SnapWave, CMS, ADCIRC, HYDRUS-1D, DeltaRCM, CEM,
+ROMS and WRF, and Nays2DH in the iRIC row. The distribution forms come from web searches
+on that day (the network policy of the working environment did not allow reading the
+sites themselves, so they were checked against the summaries in the search results;
+confirm before citing):
+[SWAN license](https://swanmodel.sourceforge.io/support/license.htm) /
+[XBeach (CSDMS)](https://csdms.colorado.edu/wiki/Model:XBeach) /
+[HYDRUS (Wikipedia)](https://en.wikipedia.org/wiki/Hydrus_%28software%29),
+[2009 source (HydroShare)](https://www.hydroshare.org/resource/d24921ba081d431e80685bf177a0840f/) /
+[pyDeltaRCM (JOSS 2021)](https://doi.org/10.21105/joss.03398) /
+[CEM (CSDMS)](https://csdms.colorado.edu/wiki/Model:CEM),
+[conda-forge entry](https://github.com/conda-forge/cem-feedstock) /
+[CMS terms](https://cirpwiki.info/wiki/CMS_License) /
+[ADCIRC source](https://wiki.adcirc.org/Source_code) /
+[SnapWave (GMD 2025)](https://gmd.copernicus.org/articles/18/9469/2025/) /
+[ComMIT and MOST disclaimer and redistribution terms](https://nctr.pmel.noaa.gov/license-disclaimer.html) /
+[ROMS license](https://www.myroms.org/projects/src/wiki/License_ROMS) /
+[WRF (GitHub)](https://github.com/wrf-model/WRF).
+Of the licenses, GPLv3 for Delft3D 4, LGPL for XBeach, MIT for CEM and pyDeltaRCM, public
+domain for HYDRUS-1D and CeCILL-C for CROCO come from secondary information (an HPC
+facility's guide, the CSDMS, conda and PyPI entries, Wikipedia, the headers of the
+sources); the license of SnapWave and the current distribution of HISWA could not be
+confirmed. Research models in Sec. 2 (methods presented in papers, such as Asahi et
+al. 2013 and Sklar & Dietrich 2004) and generic methods (post-processing with damage
+functions, DEM/particle tracking of debris) are not distributed software and are not
+listed in this table.
+
 ## 2. Comparison of process coverage (against ENCflow's current state)
 
 | Process | ENCflow | Representatives with equal or better coverage | Notes |
@@ -128,7 +169,7 @@ al. 2025 (GMD); confirm before citing).
 | Rainfall runoff, interception, evapotranspiration | Yes: canopy, Hamon/Thornthwaite, lapse rate | RRI, GSSHA, MIKE SHE, SHETRAN | The hydraulics-specialized camp does not have these (SFINCS goes as far as rain-on-grid + infiltration (constant, CN, Green-Ampt, Horton); no interception, evapotranspiration or groundwater) |
 | Groundwater | Yes: two layers (soil + weathered bedrock) + well pumping sinks + streambed exchange limit (the capped form of MODFLOW RIV) | MIKE SHE, SHETRAN, GSSHA, ParFlow | Two layers in a plan-view 2-D model is a minority position. Pumping combined with the fresh/salt layers also covers pumping-induced seawater intrusion. River-aquifer exchange is represented on the channel-mask cells themselves, without a separate river package |
 | Vertical unsaturated flow (Richards) | Partial: one-dimensional Richards (Kosugi model) on shared reference columns, read out at the soil depth of the zones and drained directly to outlets (the VZ runoff model of Tani 2023) | HYDRUS-1D (dedicated vertical 1-D), MIKE SHE, SHETRAN, ParFlow | No vertical grid per cell; a few reference columns represent the zones (state = columns × layers). A rough estimate that does not solve the lateral delay. In the first version it cannot be combined with the groundwater (two layers) at the same place |
-| Seawater intrusion / fresh-salt two-layer | Partial: sharp interface (SWI2-type) + surface salt layer | MODFLOW+SWI2/SEAWAT, SUTRA, FEFLOW | Variable-density transport that resolves mixing and dispersion is a dedicated domain. Following run-up seawater to its destination in a single time evolution with surface inundation and tide is the original point |
+| Seawater intrusion / fresh-salt two-layer | Partial: sharp interface (SWI2-type) + surface salt layer + fresh/salt split of the surface–subsurface exchange | MODFLOW+SWI2/SEAWAT, SUTRA, FEFLOW | Variable-density transport that resolves mixing and dispersion is a dedicated domain. Following run-up seawater to its destination in a single time evolution with surface inundation and tide, and handling in the same calculation the path by which a salt wedge travelling up a river enters the aquifer through the bed (comparison with and without an estuary barrage), is the original point |
 | Urban drainage / conduit networks | Partial: conduit continuum layer (equivalent confined continuum, 8-direction conveyance, surcharge) | SWMM + 2-D couplings (TUFLOW, InfoWorks ICM, xpswmm) | The world standard couples a 2-D surface model with a 1-D pipe network. ENCflow homogenizes the network into a continuum; control structures and trunk-dominated systems are ceded to network models |
 | Sediment and landform change (bedload, suspension, collapse, debris flow) | Yes, with MORFAC. Also cliff rockfall and talus (f_rockfall; windowed free-face height, export into the sea for sea cliffs) | GAIA, Delft3D-MOR, BASEMENT, CAESAR-Lisflood, Morpho2DH | Differs in placing debris flows alongside catchment hydrology and floods |
 | Formation of a river-mouth delta (bifurcation at the mouth bar, lobe growth, channel switching; fan versus bird-foot by the sand/mud ratio; stabilisation of distributaries by discharge variation and fixation) | Yes, settings only (sea as ordinary cells + initial water level, capacity feed + suspended mud + bed-fines ledger + slope correction + angle of repose + fixation) | DeltaRCM (reduced complexity, random walks), Delft3D (physics-based 2D/3D; Edmonds & Slingerland), CAESAR-Lisflood (local inertia + lateral erosion) | The effect of the sand/mud ratio (more mud, fewer and longer distributaries) has the same sign as in all three. Symmetry breaking by the instability of the bifurcation rather than by random numbers. Solving backwater and the jet with momentum-conserving flow, coupled on the same grid with discharge variation, tide and catchment hydrology, is the distinctive part. Waves, tidal currents and plume buoyancy are not implemented. docs/delta_plan.md (Japanese) |
@@ -144,7 +185,7 @@ al. 2025 (GMD); confirm before citing).
 | Coastal wave field (shoaling, refraction, breaking, breakwater shadows) | Partial: stage W1, a phase-averaged energy balance with one representative period and directional bins (two-link upwind decomposition, unsteady/quasi-steady). On a fixed bed; does not act on the bed | XBeach stationary mode, SnapWave (coupled with SFINCS), HISWA, SWAN, CMS-Wave | Does not compete with the specialised models in accuracy; it runs on the same grid and in the same time evolution as catchments, rivers, floods, tsunamis and sediment. Process-based sediment transport comes in stages (docs/wavefield_plan.md, developer.md §90; Japanese). No diffraction or wind growth |
 | Wave-driven flow (setup, longshore currents, undertow) | Partial: stage W2, radiation-stress forcing (waves + roller), depth-averaged GLM Stokes drift, wave-current bed friction (1.16 u_rms) and a lateral Neumann flow boundary (wf_flow). Horizontal mixing by wave breaking (an eddy viscosity of the Battjes 1975 type, wf_break_visc; off by default) | XBeach (GLM, roller), Delft3D-FLOW+WAVE, SFINCS+SnapWave, ADCIRC+SWAN | The same family of formulations as the XBeach stationary mode (roller, GLM, friction) is added directly to the momentum equation of the shallow-water flow used for rivers, floods and tsunamis. Checked against Bowen's setup and the alongshore momentum balance (test/wfcurrent; developer.md §90.5, Japanese) |
 | Change of waves by currents (Doppler shift, refraction by currents, blocking) | Partial: stage W3, the Doppler-shifted dispersion relation per directional bin, the wave action balance (transport by c_g + U, refraction by current gradients) and blocking (f_wf_current). One representative period; no reflection at the blocking point | XBeach (wci), SWAN, HISWA, Delft3D-WAVE | The shallow-water flow (rivers, tidal currents, tsunamis, wave-driven longshore currents) acts directly on the waves, coupled both ways with the wave-driven flow. A river-mouth jet stops waves from propagating up the river as blocking by the dispersion relation (without a cut-off like wave_vmax of fn_wave; test/wfdoppler, developer.md §90, Japanese) |
-| Wave-driven sediment transport (stirring, longshore transport, beach erosion and recovery) | Partial: stages W4 and W5, stirring of bed load and suspended load by the wave–current shear stress of Soulsby (1997), transport by the Eulerian mean velocity and the onshore velocity u_a of wave skewness and asymmetry (Ruessink et al. 2012) (f_wfsed). Stirring by breaking turbulence (the form of turb of XBeach, f_wfsed_turb; off by default). No swash-zone transport | XBeach, Delft3D (FLOW+WAVE+MOR), MIKE 21 ST, CMS | Adds wave-driven longshore and cross-shore transport on the same grid and in the same time evolution as the sediment supply from catchments and rivers (deltas, river mouths, beach change). The longshore transport on a straight coast is of the same order as CERC (test/wfsed, developer.md §90, Japanese) |
+| Wave-driven sediment transport (stirring, longshore transport, beach erosion and recovery) | Partial: stages W4 and W5, stirring of bed load and suspended load by the wave–current shear stress of Soulsby (1997), transport by the Eulerian mean velocity and the onshore velocity u_a of wave skewness and asymmetry (Ruessink et al. 2012) (f_wfsed). Stirring by breaking turbulence (the form of turb of XBeach, f_wfsed_turb; off by default). Swash-zone transport by empirical formulas on the shoreline faces (cross-shore Larson et al. 2004, longshore Larson & Wamsley 2007, runup Stockdon et al. 2006; f_wfswash; off by default; the swash itself is not resolved) | XBeach, Delft3D (FLOW+WAVE+MOR), MIKE 21 ST, CMS | Adds wave-driven longshore and cross-shore transport on the same grid and in the same time evolution as the sediment supply from catchments and rivers (deltas, river mouths, beach change). The longshore transport on a straight coast is of the same order as CERC (test/wfsed, developer.md §90, Japanese) |
 | Wave-driven longshore transport (shoreline smoothing, spits, arcuate deltas) | Partial: no wave propagation, a CERC-type estimate in the shoreline band (f_wave_longshore; offshore H0, T and direction as inputs, smoothed shoreline orientation, local-slope term, river-mouth velocity rule; stirring and sheltering refinements are planned) | Delft3D-MOR+WAVE (SWAN), XBeach, CEM (the one-line coastline model of Ashton & Murray) | Running the CERC rule of one-line models on top of 2-D landform change is the distinctive point (the wave case of examples/delta; developer.md §84.15, Japanese). Wave propagation is the coastal wave field in the row above (being implemented in stages) |
 | Long-term landform evolution | Yes: weathering, uplift, periodic forcing, limestone dissolution (recharge-proportional chemical denudation plus a sink-inflow term for dolines) | CAESAR-Lisflood, Landlab, Badlands, FastScape | On a par with CAESAR-Lisflood among hydraulics-driven models; the others are process-law LEMs. Dissolution runs in the same run as the conduit continuum layer (karst hydrology) as a first-order estimate; cave-network geometry (speleogenesis models) is out of scope |
 | Bedrock incision in mountain streams (plucking, abrasion, cover by the mobile layer, base level) and soil supply from the slopes | Yes: excess-shear plucking + abrasion by the transported gravel; cover as the exposed fraction for the mobile-layer thickness and as the availability of bedload; distributed uplift. Depth-dependent creep that moves only the soil layer (creep_hstar). Rock erosion by debris flows (the excess form of the quasi-static driving stress of the mixture, only in cells where a dense mixture flows). Mixed grain sizes are not adopted (decision of developer.md §84.10) | Landlab (SPACE = stream power + cover, DepthDependentDiffuser, MassWastingRunout = runout of landslide material and erosion of the soil, not of the rock), research models (the saltation–abrasion model of Sklar & Dietrich 2004, the macro-roughness model of Zhang et al. 2015, the two-dimensional bedrock–alluvial channels of Inoue et al. 2016, the inertial-stress law for debris flows of Stock & Dietrich 2006, the flow-depth and slope laws of McGuire et al. 2023) | Most LEMs use stream power and do not solve the flow. Coupling tools and cover in two dimensions through the shallow-water bed shear stress and the bedload capacity, in the same time evolution as floods and catchment hydrology, is distinctive. Rock erosion by debris flows also links the cover and the entrainment of the product to the erosion–deposition formula within single-layer mixture event runs (the bouldery front is not resolved separately). The excess of τ_b in steep uniform flow (developer.md §89.4, item 1) is removed by f_opening_dynamic = 3 (§68.41; the default stays 2); the tendency of the flow to gather to the grid width in a 5-cell channel (§89.4, item 3) is an open issue (examples/bedrock_cover, examples/mountain_valley = hillslope weathering and creep coupled with the stream, test/dbrock, examples/debris_bedrock = rock erosion by one debris flow and the steady slope by frequency from runs chained with floods, docs/mountain_stream_plan.md) |
@@ -256,22 +297,24 @@ user's guide chapters, not in this table.
   to vector machines and supercomputers contrasts with TUFLOW's demo
   limits and the commercial GUI-first products.
 - **Ease of adoption (self-teachability)**: as user-facing
-  groundwork, it ships a
-  26-chapter user's guide plus a full parameter index (583 entries),
+  groundwork, it ships a user's guide that explains every feature
+  chapter by chapter plus a full parameter index,
   annotated namelist samples for every feature
-  (examples/List_samples), and 2 hands-on tutorials (minimal example
+  (examples/List_samples), and hands-on tutorials (minimal example
   wave, real terrain chichibu; from the pitfalls of real data --
   depression removal and discharge oscillations from flat reaches --
   up to 3D visualization with ParaView, all turned into teaching
-  material). Pre/post-processing utilities are also bundled (utils/:
-  depression removal rmdepress_river, catchment delineation
-  calc_catchmentarea, land-use-to-mask lu2mask, VTK conversion
-  out2vtk, and more). In the comparison of adoption cost it also
-  ranks high among the open players.
+  material; plus bmi, driving ENCflow from Python through BMI, for
+  coupling with other programs). Pre/post-processing utilities are
+  also bundled (utils/: depression removal rmdepress_river, catchment
+  delineation calc_catchmentarea, land-use-to-mask lu2mask, VTK
+  conversion out2vtk, and more). In the comparison of adoption cost
+  it also ranks high among the open players.
   User-facing documentation now has a full Japanese-English mirror
-  (docs/en/ and the tutorials' en/); the remaining English gap is
-  only in the developer documentation (developer.md etc. are
-  Japanese-only).
+  (docs/en/, the en/ of tutorials, test and examples, and more); the
+  remaining English gap is only in the developer documentation
+  (developer.md etc. are Japanese-only, except for an English partial
+  mirror of the basic policy in Sec. 0).
 - **AI-agent orientation**: on top of the fully
   text-based input and output (no GUI dependency), ENCflow ships a
   documentation system that lets "phenomenon -> features -> parameters"

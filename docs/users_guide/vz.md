@@ -192,7 +192,7 @@ VZ セルに降った雨は、浅水流が通常どおりいったん地表に�
 ### 基底流
 
 谷(2023)は、観測のハイドログラフから基底流を直線で分離し(流出の立ち上がりと
-終わりを結ぶ。論文が引く角屋(1979)の方法)、その基底流出強度を VZ の計算流出強度に
+終わりを結ぶ。論文が引く角屋(1979)[^kadoya1979] の方法)、その基底流出強度を VZ の計算流出強度に
 加えて観測と比べました[^tani2023]。VZ の柱は降雨に応答する成分を表し、より深い
 地下水からの基底流は表しません。同じ扱いをするときは、区画ごとに基底流の時系列を
 与えます(省略可)。
@@ -415,7 +415,7 @@ K_r ≥ 10⁻³ の範囲での K の最大の比です。
 | 埴土(clay) | 2.0 | 0.38 | 0.068 | −2760 | 3.16 | 0.18 / 400 倍 |
 
 - 元の値は保水曲線の測定値の当てはめではありません。米国の土壌調査報告(42 州)の
-  砂・粘土の割合とかさ密度から、回帰式(Rawls and Brakensiek 1985)で推定した値の
+  砂・粘土の割合とかさ密度から、回帰式(Rawls and Brakensiek 1985[^rawls1985])で推定した値の
   土性クラス平均です(農地の土壌。埴土は粘土分 60 % 未満)。
 - Ks のクラス内の変動係数は 52〜453 % と大きく(同論文の表 4)、平均値は典型的な
   値(中央値)より大きめです。
@@ -460,3 +460,5 @@ K_r ≥ 10⁻³ の範囲での K の最大の比です。
 [^kosugi1996]: Kosugi, K. (1996): Lognormal distribution model for unsaturated soil hydraulic properties. *Water Resources Research*, 32(9), 2697–2703. doi:10.1029/96WR01776(式 (7)・(8)・(12)〜(14)・(20)・(24)〜(26)。2026-10-26 に原論文で照合)
 [^carsel1988]: Carsel, R. F. and Parrish, R. S. (1988): Developing joint probability distributions of soil water retention characteristics. *Water Resources Research*, 24(5), 755–769. doi:10.1029/WR024i005p00755(土性クラス別の van Genuchten 式のパラメータと Ks の平均値: 表 2〜5。2026-10-27 に原論文で照合)
 [^celia1990]: Celia, M. A., Bouloutas, E. T. and Zarba, R. L. (1990): A general mass-conservative numerical solution for the unsaturated flow equation. *Water Resources Research*, 26(7), 1483–1496. doi:10.1029/WR026i007p01483
+[^kadoya1979]: 角屋 (1979)。谷 (2023) が基底流の直線分離の方法として引く文献で、書誌は谷 (2023) の文献表による(本ガイドでは未照合)。
+[^rawls1985]: Rawls, W. J. and Brakensiek, D. L. (1985): Prediction of soil water properties for hydrologic modeling. In: Jones, E. B. and Ward, T. J. (eds.), *Watershed Management in the Eighties*, ASCE, 293–299.(Carsel and Parrish (1988) が土性クラスの値の推定に使った回帰式。書誌は二次文献による。本文は未照合)

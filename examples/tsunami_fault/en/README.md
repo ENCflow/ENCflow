@@ -39,9 +39,9 @@ Computation time: hydrostatic 8 s, non-hydrostatic 22 s (gfortran, 4 threads; dt
 
 ![Ground displacement](figs/deformation.png)
 
-![Water surface along the central row](figs/profiles.png)
+![Water surface along the central row](../figs/profiles.png)
 
-![Probes](figs/probes.png)
+![Probes](../figs/probes.png)
 
 | Probe | Hydrostatic (30 s rise) max (m) / arrival (s) / min (m) | Hydrostatic (instantaneous displacement) max (m) / arrival (s) / min (m) | Non-hydrostatic + acceleration term max (m) / arrival (s) / min (m) |
 |---|---:|---:|---:|

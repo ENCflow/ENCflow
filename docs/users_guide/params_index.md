@@ -2,7 +2,7 @@
 
 [ユーザーガイド目次へ](../users_guide.md)
 
-namelist パラメータ名から章を引く索引です(アルファベット順、全 751 項目)。
+namelist パラメータ名から章を引く索引です(アルファベット順、全 757 項目)。
 この索引は list_*.f90 の namelist 宣言から機械抽出で生成されています
 (developer.md §35.1)。
 
@@ -282,6 +282,7 @@ namelist パラメータ名から章を引く索引です(アルファベット�
 | f_rntype | &list_geoinfo | [地理情報](geoinfo.md) |
 | f_rockfall | &list_geomorph | [土砂・地形変化](geomorph.md) |
 | f_rockinc | &list_geomorph | [土砂・地形変化](geomorph.md) |
+| f_salt_exch | &list_salt | [淡塩2層](salt.md) |
 | f_salt_gw | &list_salt | [淡塩2層](salt.md) |
 | f_salt_surf | &list_salt | [淡塩2層](salt.md) |
 | f_scalar_scheme | &list_enc | [浅水流計算](swflow.md) |
@@ -316,6 +317,7 @@ namelist パラメータ名から章を引く索引です(アルファベット�
 | f_wf_roller | &list_wavefield | [沿岸の波浪場](wavefield.md) |
 | f_wfsed | &list_geomorph | [沿岸の波浪場](wavefield.md) |
 | f_wfsed_turb | &list_geomorph | [沿岸の波浪場](wavefield.md) |
+| f_wfswash | &list_geomorph | [沿岸の波浪場](wavefield.md) |
 | f_wq | &list_wq | [水質](wq.md) |
 | f_wq_gwc_in | &list_wq | [水質](wq.md) |
 | f_wq_infil | &list_wq | [水質](wq.md) |
@@ -732,6 +734,10 @@ namelist パラメータ名から章を引く索引です(アルファベット�
 | wf_wavetype | &list_wavefield | [沿岸の波浪場](wavefield.md) |
 | wfsed_facas | &list_geomorph | [沿岸の波浪場](wavefield.md) |
 | wfsed_facsk | &list_geomorph | [沿岸の波浪場](wavefield.md) |
+| wfswash_kc | &list_geomorph | [沿岸の波浪場](wavefield.md) |
+| wfswash_kl | &list_geomorph | [沿岸の波浪場](wavefield.md) |
+| wfswash_phim | &list_geomorph | [沿岸の波浪場](wavefield.md) |
+| wfswash_tanbe | &list_geomorph | [沿岸の波浪場](wavefield.md) |
 | wq_ar_cell | &list_wq | [水質](wq.md) |
 | wq_ar_load | &list_wq | [水質](wq.md) |
 | wq_ar_series | &list_wq | [水質](wq.md) |

@@ -45,7 +45,7 @@ How to read the results (fields, ledgers, measurement columns, restart) is summa
 | ti0 | 0 | titype=1: uniform fixed tide level (m; same elevation datum as z). Default 0 = mean sea level |
 | tival | - | titype=2, 3: time series `(time (min), tide level (m) or multiplier)` |
 | fn_timap | "" | titype=3: tide level distribution file (m) |
-| fn_timaplist / dt_timaplist(_c) | "" / 60 | titype=4: list of distribution files and their time interval (min). Frame i is at time (i-1) x interval; outside the range the end values persist |
+| fn_timaplist / dt_timaplist(_c) | "" / 60 | titype=4: list of distribution files and their time interval (min). Frame i is at time (i-1) x interval; outside the range the end values persist. `dt_timaplist_c` takes a string with a unit such as `"1h"` or `"30m"`, and **a number without a unit is in minutes** (the same unit as the number dt_timaplist; the same as `_c` of [precipitation](forcing.md#precipitation-list_precip)). If both are written, `_c` takes precedence. The adopted value is shown, for example `tide: dt_timaplist = 60.00000 min` |
 | dt_tiupdate | 1 | Tide level update interval (min) |
 | hsea0 | 1.0 | Apparent water column thickness of sea cells (m) (see below) |
 
@@ -243,3 +243,11 @@ The labels in the Basis column are explained in [How to read the basis of a defa
   [examples/List_samples/list_tide.txt](../../../examples/List_samples/en/list_tide.txt).
 - Coupling tide with a conduit outfall and pumping station: [test/coastal_drain](../../../test/coastal_drain/en/README.md).
 - Storm-surge timber transport and deposition setup: [examples/timberyard](../../../examples/timberyard/en/README.md).
+
+## References
+
+The ways of giving the tide (a fixed value, a time series, distributions) only interpolate the given
+data and place it on the sea cells; no publication was drawn on. Representing the sea cells by an
+apparent water column `hsea0` whose surface follows the tide is a simplification original to
+ENCflow (developer.md §23). The sources of the hydraulic laws at the edges (free outflow, radiation)
+are in [Hydraulics of structures and boundaries](hydraulics.md#references).

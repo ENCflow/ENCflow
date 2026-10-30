@@ -41,6 +41,7 @@ make                                  # uplift のビルド(src の libencflow.a
 ./uplift param_n.txt uplift.txt       # NH、加速度項なし
 python3 Theory.py                     # 線形理論の数表
 python3 Fig.py                        # figs/uplift.png と数表(引数 en で英語版を en/figs/ に)
+./Run_theory.sh                       # 上の 3 ケースを実行して Check_nhbottom.py で線形理論と照合(約 1.5 分)
 ```
 
 ![区間隆起](figs/uplift.png)
@@ -57,7 +58,14 @@ python3 Fig.py                        # figs/uplift.png と数表(引数 en で�
 
 - ENCflow は 3 モデルとも自分の線形理論に一致する(NH は ±1.0%、静水圧は
   箱型のパルスで +3.8%・0.4 s 早い)。加速度項の実装が定式
-  どおりであることの確認。
+  どおりであることの確認。差は主に振幅 ζ₀/H = 2% の非線形性(先頭波が
+  わずかに速く高い)と時間離散化による。
+- 検定スクリプト `Check_nhbottom.py`(`./Run_theory.sh` が 3 ケースの実行の
+  あとに呼ぶ。numpy を使う)がこの表を合否判定する: ENC/理論が NH で
+  1 ± 0.02、静水圧で 1 ± 0.05、先頭波の時刻の差が ±0.6 s 以内(モデル間の
+  到達の差は 3 s)。加速度項の効果(あり / なしの η_max の比。共通の離散化と
+  非線形性の差が打ち消し合う)は理論の比 0.8985 に ±1% で一致すること
+  (実測 0.8974)。加速度項が働かなければ比は 1 になり 11% 外れる。
 - 加速度項によって、先頭波高の厳密解との差が +16% → +3.9% に縮まる
   (静水圧 +40%)。t = 1 s の断面で、隆起直上の水面が箱型(静水圧)から
   丸まった形(NH + 加速度項。厳密解に重なる)になるのがフィルタの効果。
@@ -142,8 +150,9 @@ python3 Landslide.py          # figs/landslide.png と数表(引数 en で英語
 `./Run.sh` / `./Run_MPI.sh N` は構成 1 の param.txt(NH + 加速度項)を
 uplift ドライバで実行して reference/Log.txt と比較する(列 4 = Runge は
 除外)。np = 2, 4 は逐次 reference と、全有効桁の S 列が 3 行で最終桁 1 だけ
-異なる(総和の順序。nhwave_nh と同じ)ほかは一致。構成 2 は比較用(reference なし。
-test/bedslide が bedslide 本体の検定)。
+異なる(総和の順序。nhwave_nh と同じ)ほかは一致。線形理論との検定は
+`./Run_theory.sh`(構成 1 の 3 ケース + `Check_nhbottom.py`)。構成 2 は比較用
+(reference なし。test/bedslide が bedslide 本体の検定)。
 
 ## 構成 3: fn_bedmotion(規定底面運動の本体機能)で同じ隆起を与える
 

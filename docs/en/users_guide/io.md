@@ -325,7 +325,7 @@ come from `FILENUMBER.csv`.
 | Inundation duration / arrival time | computed | — (the H series) | duration = number of frames above a threshold (e.g. 0.01 m) × dt_file; arrival = time of the first frame above it. Use a fine dt_file |
 | Inundated area / extent | computed | — (H, X0000, A0000) | Σ A0000 × cell area over cells with X0000 = 1 and H > threshold (cell count × cell area without A0000). Maximum extent: the same test on H9999 |
 | Froude / Courant number | flag | Fr (f_out_fr), Cn (f_out_cn) | sub/supercritical regime, time-step check |
-| Rainfall intensity | flag | Pr (f_out_pre) | given precipitation × runoff_rate (mm/h), before interception and snow processing |
+| Rainfall intensity | flag | Pr (f_out_pre) | intensity of the liquid precipitation reaching the ground (mm/h): the given precipitation × runoff_rate after the elevation correction, interception and the rain/snow split (the same quantity as the precipitation entering the water budget; [Rainfall and meteorology](forcing.md#output-and-monitoring)) |
 | Ground elevation / morphological change | flag (Z0000 always) | Z (f_out_z) | erosion/deposition thickness = Z(time) − Z0000 (negative = erosion); volume = × f_w × A (on channel-width cells the change of the channel bed), with [Sediment and Morphodynamics](geomorph.md) enabled |
 | Subsurface storage / water table | flag | Hg (f_out_hg; also Hg2 / Hgc / Hgs / Cg) | Hg is a column-equivalent depth (m). Saturated thickness = Hg / sy0; water table ≈ ground − soil thickness + Hg / sy0 (lateral / Green-Ampt configurations; see the figure in [Groundwater](gwflow.md)) |
 | Soil thickness | automatic | Sd | only when a model that uses sd is enabled |

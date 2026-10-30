@@ -50,6 +50,7 @@ make                                  # build uplift (from libencflow.a in src)
 ./uplift param_n.txt uplift.txt       # NH, no acceleration term
 python3 Theory.py                     # tables of the linear theory
 python3 Fig.py en                     # en/figs/uplift.png and tables (figs/uplift.png without en: Japanese version)
+./Run_theory.sh                       # run the 3 cases above and check them against the linear theory with Check_nhbottom.py (about 1.5 min)
 ```
 
 ![Uplift of a section](figs/uplift.png)
@@ -67,7 +68,18 @@ Bottom right: surface time series at x = x_c + 200 m.
 
 - ENCflow agrees with its own linear theory for all three models (NH within
   ±1.0%; hydrostatic +3.8% and 0.4 s early for the box-shaped pulse). This confirms that the acceleration term
-  is implemented as formulated.
+  is implemented as formulated. The differences come mainly from the
+  nonlinearity of the amplitude ζ₀/H = 2% (the leading wave is slightly
+  faster and higher) and from the time discretization.
+- The check script `Check_nhbottom.py` (called by `./Run_theory.sh` after
+  running the 3 cases; it uses numpy) turns this table into a pass/fail
+  check: ENC/theory within 1 ± 0.02 for NH and 1 ± 0.05 for hydrostatic, and
+  the time of the leading wave within ±0.6 s (the arrival times of the models
+  differ by 3 s). The effect of the acceleration term (the ratio of η_max with
+  / without it, in which the common discretization and nonlinearity
+  differences cancel) must agree with the theoretical ratio 0.8985 within
+  ±1% (measured 0.8974). If the acceleration term did not act, the ratio
+  would be 1, off by 11%.
 - With the acceleration term the difference of the leading wave height from
   the exact solution shrinks from +16% to +3.9% (hydrostatic +40%). In the
   profile at t = 1 s, the surface directly above the uplift changes from
@@ -173,9 +185,10 @@ python3 Landslide.py en       # en/figs/landslide.png and tables (figs/landslide
 acceleration term) with the uplift driver and compare with
 reference/Log.txt (column 4 = Runge is excluded). np = 2, 4 agree with the
 serial reference except that the full-precision S column differs in the
-last digit on 3 lines (summation order; the same as nhwave_nh).
-Configuration 2 is for comparison (no reference; test/bedslide is the check
-of bedslide itself).
+last digit on 3 lines (summation order; the same as nhwave_nh). The check
+against the linear theory is `./Run_theory.sh` (the 3 cases of
+configuration 1 + `Check_nhbottom.py`). Configuration 2 is for comparison
+(no reference; test/bedslide is the check of bedslide itself).
 
 ## Configuration 3: the same uplift given with fn_bedmotion (the built-in prescribed bed motion)
 

@@ -463,8 +463,10 @@ It acts in two places.
   saturated thickness. The cap is the same in both directions, so a
   gaining river, where surrounding groundwater enters the channel and
   exfiltrates, is also throttled by k_bed. Edges between two channel cells
-  are treated as aquifer continuity and are not capped; layer 2, the
-  conduit layer and the fresh/salt layers are not affected.
+  are treated as aquifer continuity and are not capped; layer 2 and the
+  conduit layer are not affected. The salt-zone flux of the
+  [fresh and salt water layers](salt.md) is capped in the same form
+  (capacity x passage width x saturated salt thickness).
 
 | Parameter | Default | Meaning |
 |---|---|---|
@@ -599,5 +601,10 @@ see [the rainfall and meteorology chapter](forcing.md).
 - [test/pump](../../../test/pump/en/README.md) and [test/frost](../../../test/frost/en/README.md): analytical checks of storage loss by well pumping and infiltration suppression by the freezing index.
 - [test/gwseep](../../../test/gwseep/en/README.md): infiltration, lateral groundwater transport and exfiltration, checked together with water-quality mass balances.
 - [test/gwbed](../../../test/gwbed/en/README.md): throttled gaining flow, the k_bed = 0 cut-off and the replacement of the vertical infiltration capacity by the streambed exchange limit, compared with analytical values.
+- [test/gwlateral](../../../test/gwlateral/en/README.md): lateral flow compared with the linearised Boussinesq equation (spreading of a Gaussian mound at 4D), with a record of the conductance along walls (0.71 times the interior).
 - [examples/sewer_hybrid](../../../examples/sewer_hybrid/en/README.md): example settings and input generation that represent a trunk and a branch network in the same conduit layer.
-- [examples/qanat](../../../examples/qanat/en/README.md): an example combining the conduit layer with layer 2 to represent collection, conveyance and outlet seepage of an underground gallery.
+- [examples/qanat](../../../examples/qanat/en/README.md): an example combining the conduit layer with layer 2 to represent the collection, conveyance and outlet flow of a qanat (tunnel) that collects the groundwater of a fan, and to compare how a nearby pumping well reduces and dries up the flow.
+
+## References
+
+The sources of the models, formulas and default values used in this chapter are collected in the references of [Groundwater models](gwflow_models.md#references).

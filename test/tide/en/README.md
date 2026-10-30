@@ -1,4 +1,4 @@
-# test/tide — connectivity of the tide boundary (m_tide) and equivalence check of the defaults
+# test/tide — connectivity of the tide boundary (m_tide) and equivalence checks of the defaults and the map list
 
 > English mirror of test/tide/README.md. The Japanese file is the master copy.
 
@@ -14,7 +14,11 @@ surface at 1.5 m the land is inundated (S increases); the connectivity in both
 directions, drainage and inundation, is confirmed within 4 minutes. In
 addition, the configuration of defaults with an empty `&list_tide` and the
 configuration with the defaults written explicitly are checked to be
-bit-identical (developer.md §67).
+bit-identical (developer.md §67). Furthermore, a configuration that gives the
+same tide level by a list of distribution files (`titype = 4`) is checked to
+agree with configuration 1, and the three configurations that give the interval
+of the list as a number in minutes, as a string without a unit (minutes) and as
+a string with a unit are checked to be bit-identical (developer.md §88.5).
 
 ## Configuration
 
@@ -37,6 +41,9 @@ the ordinary shallow-water computation.
 | `param.txt` | Configuration 1 (above; with a reference) |
 | `param_min.txt` | Configuration 2: `&list_tide` left empty (defaults = uniform fixed tide level 0 m, hsea0 = 1 m) |
 | `param_minx.txt` | Configuration 2': the defaults written explicitly (`titype = 1`, `ti0 = 0`, `hsea0 = 1`) |
+| `param_map.txt` | Configuration 3: the same tide level as configuration 1 given by a list of distribution files (`titype = 4`; uniform distributions of 0, 1 and 2 m at 1-minute intervals). `dt_timaplist = 1` (min) |
+| `param_mapc.txt` / `param_maps.txt` | Configurations 3' and 3'': the interval given as a string (`dt_timaplist_c = '1'` = a number without a unit is in minutes, and `'60s'`) |
+| `data_map/` | Distributions of configuration 3 (`t0.txt`–`t2.txt`) and the list (`timaplist.txt`; the paths in the list are also relative to dir_data) |
 | `sw.txt` | Sea mask (the westernmost column is 1) |
 | `Fig.py` | Draws the figures `en/figs/*.png` below (`python3 Fig.py en`; `figs/*.png` are the Japanese versions) |
 
@@ -45,7 +52,8 @@ the ordinary shallow-water computation.
 ```bash
 make
 ./Run.sh          # compare configuration 1 with the reference → run configurations 2 and 2' and check that result_min and result_minx
-                  # are byte-identical (diff -r) and that "(default)" is printed. PASS when both pass
+                  # are byte-identical (diff -r) and that "(default)" is printed → run configurations 3, 3' and 3'' and check that the three
+                  # are byte-identical, that the adopted value is printed and that S agrees with configuration 1 (relative 1e-9). PASS when all pass
 ./Run_MPI.sh 4    # MPI with 4 ranks (configuration 1)
 python3 Fig.py en # en/figs/storage.png, en/figs/map.png
 ```
@@ -80,6 +88,7 @@ domain is level with the tide level of 2 m.
 | Minimum of S | 0.3762 m (t = 90 s; the time when the tide level = the land water surface 1.5 m) |
 | S(t = 240 s) | 1.4209 m (the whole domain approaches the water surface of 2 m) |
 | Configurations 2 and 2' | result_min and result_minx byte-identical; `titype = 1 (default)` printed on the screen |
+| Configurations 3, 3' and 3'' | result_map, result_mapc and result_maps byte-identical; `tide: dt_timaplist = 1.00000 min` printed on the screen. S differs from configuration 1 by less than a relative 1e-9 (in the environment where this was made, Log.txt is bit-identical) |
 
 - It is confirmed that the switch from drainage to inundation occurs at the
   time dictated by the relation between the tide level and the land water
@@ -88,6 +97,11 @@ domain is level with the tide level of 2 m.
 - The equivalence check of the defaults guarantees the simplest usage, "just
   writing `&list_tide` gives a sea with a fixed tide level of 0 m" (drainage at
   low tide, the outlet of a catchment to the sea) (§67).
+- Configuration 3 also checks the frame times (i−1) × interval of the list of
+  distribution files (titype = 4) and the linear interpolation between two
+  adjacent frames (added on 2026-10-29; until then no check used titype = 4).
+  With the code before the change, `dt_timaplist_c = '1'` was read as 1 second
+  and configuration 3' did not agree with configuration 3 (§88.5).
 - The verification of a coastal levee (crest height) placed on the tide
   boundary (the land unchanged below the crest, inundation after overtopping,
   flap gates) is in the verification record of developer.md §17.

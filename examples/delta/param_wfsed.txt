@@ -1,17 +1,18 @@
 !======================================================================
-! delta — 波浪場の過程の漂砂(param_wave.txt の fn_wave を沿岸の波浪場に置き換える。
-!   docs/wavefield_plan.md の V12、developer.md §90)
+! delta — 沿岸の波浪場による漂砂(param_wave.txt の CERC 型の沿岸漂砂 fn_wave を、波を解く
+!   沿岸の波浪場 fn_wavefield に置き換える。ユーザーガイド「沿岸の波浪場」)
 !   param_wave と同じ河川・海盆・給砂・波(東南東から進行方向 150°、有義波高 0.6 m、
-!   周期 6 s)を、CERC 型の沿岸漂砂(fn_wave)でなく、波を解く沿岸の波浪場(fn_wavefield)と
-!   過程の漂砂(f_wfsed: 波の軌道流速による攪拌、波による流れ = 沿岸流・戻り流れの Euler 平均
-!   流速と岸向きの速度 u_a による輸送)で与える。波は沖(東辺)から入射し、屈折・砕波・
-!   デルタ自身の陰を波浪場が求め、河口の噴流による阻止(f_wf_current = 1)で波は河道に
-!   入らない(fn_wave の wave_vmax の役割)。波による流れ(wf_flow = 2、ローラー)が沿岸流を
-!   起こす。海岸に交わる南北の辺は、波を側方 Neumann(外にも同じ海岸が続く)、流れを
-!   param_wave と同じ壁にする(沿岸流は南の壁から立ち上がり、北の壁で沖へ折り返す)。流れの
-!   側方 Neumann は、沿岸流が流入する南の辺で、河口・デルタの近くや地形の変化で非一様に
-!   なった流れが正帰還で発散するので使わない(developer.md §90.16)。
-!   比較: 同じ給砂・同じ波の param_wave(CERC 経路)と、波のない param_baseqb。
+!   周期 6 s)を、波を解く沿岸の波浪場と過程の漂砂(f_wfsed: 波の軌道流速による攪拌、波による
+!   流れ = 沿岸流・戻り流れの Euler 平均流速と岸向きの速度 u_a による輸送)で与える。波は沖
+!   (東辺)から入射し、屈折・砕波・デルタ自身の陰を波浪場が求め、河口の噴流による阻止
+!   (f_wf_current = 1)で波は河道に入らない(fn_wave の wave_vmax の役割)。波による流れ
+!   (wf_flow = 2、ローラー)が沿岸流を起こす。汀線では遡上域の輸送(f_wfswash = 1)が、浅瀬の
+!   砂を遡上の届く高さまで積み上げる。流れ→波の作用と波→流れの外力を組むと沖に格子規模の
+!   流速の縞が育つので、小さな背景粘性(f_diffusion_term = 2、p_diffusion_nu = 0.05 m²/s)で
+!   止める(ユーザーガイド「沖の格子規模の縞と背景粘性」)。海岸に交わる南北の辺は、波を側方
+!   Neumann(外にも同じ海岸が続く)、流れを param_wave と同じ壁にする(沿岸流は南の壁から
+!   立ち上がり、北の壁で沖へ折り返す。流れも側方 Neumann(f_bc_n・f_bc_s = 3)にできる)。
+!   比較: 同じ給砂・同じ波の param_wave(CERC 型)と、波のない param_baseqb。
 !   実行: ./encflow param_wfsed.txt。図化: python3 plot_results.py wfsed
 !======================================================================
 &list_sysparam
@@ -40,6 +41,8 @@
 &list_enc
   f_advection_scheme = 3    ! 運動量保存形(既定)
   f_opening_dynamic = 2     ! 河道マスクのない掘り込み河道で壁際の通水能を確保(meander と同じ)
+  f_diffusion_term = 2      ! ゼロ方程式の渦動粘性 + 背景粘性(沖の格子規模の縞を止める)
+  p_diffusion_nu = 0.05     ! 背景粘性 ν0 (m²/s)
 /
 
 &list_initial
@@ -92,12 +95,15 @@
   fines_la = 0.05           ! 交換層厚 (m)
   fines_frac0 = 0.0         ! 初期の河床は砂のみ
   f_wfsed = 1               ! 波浪場による攪拌と輸送(段 W4・W5。u_a の係数は既定 0.1)
+  f_wfswash = 1             ! 遡上域の輸送(Larson ら 2004・Larson & Wamsley 2007。0 で切ると陸化が小さい)
+  wfswash_tanbe = 0.1       ! 前浜の平衡勾配(例題の目安。中砂 0.5 mm。細砂 0.18 mm の波崎では
+                            !   0.035〜0.057 = Larson ら 2004 の表 1。粒径が大きいほど前浜は急)
 /
 
 &list_bound_edge
   f_bc_e = 2                ! 東辺: 長波放射(基準水位は e0 = 0 から自動導出 = 海面固定)
-  f_bc_n = 0                ! 北・南辺は壁(param_wave と同じ。流れの側方 Neumann は流入側が
-  f_bc_s = 0                !   不安定になる = developer.md §90.16。波は側方 Neumann)
+  f_bc_n = 0                ! 北・南辺は壁(param_wave と同じ。3 で側方 Neumann にもできる。
+  f_bc_s = 0                !   波は &list_wavefield の wf_bc_side で側方 Neumann)
   f_bc_w = 0                ! 西辺は壁(陸)
 /
 
