@@ -312,7 +312,7 @@ $`v_{stop}`$ = 0.05 m/s。混合体の μ・ξ とは慣性の有無で校正値
 | [test/avalanche](../../test/avalanche/README.md) | 雪崩(Voellmy + 速度比例連行) | 連行で 1.5 倍に成長して停止。台帳は機械精度 |
 | [test/bedslide](../../test/bedslide/README.md) | 底層の速度の解析値、45° 斜面、湖への突入 | 内部セルの $`V`$ が解析値に 0.5% |
 | [examples/landslide_tsunami](../../examples/landslide_tsunami/) | 岩屑なだれ・引き渡し・海底地滑り | 4 パターンの比較 |
-| [examples/ashfall_lahar](../../examples/ashfall_lahar/) | 降灰 → 降雨 → 泥流 | ラハールの設定の型 |
+| [examples/ashfall_lahar](../../examples/ashfall_lahar/) | 降灰 → 降雨 → 泥流、砂防堰堤 | ラハールの設定の型(浸透能・f_dbwet=2) |
 
 ## 参考文献
 

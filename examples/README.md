@@ -27,7 +27,7 @@ python3 plot_results.py   # 図化(用意されている例題のみ)
 | [mesa/](mesa/) | メサ・ビュートの形成: キャップロック(spl_strata)で平らな頂と垂直な崖の平行後退、台地の縮小 → 孤立丘 → 尖塔。層理なし・中間硬層・増幅の飽和・崩落と崖錐(窓版・支え方式 = 垂直な崖 + 段)の対照 | f_splash(spl_strata・spl_ksat)+ f_creep + f_rockfall(rf_rc・rf_fface)、Green-Ampt |
 | [karst/](karst/) | 石灰岩台地のドリーネ群の形成: 代表豪雨の反復で、浸透水が面的に溶かし、窪みに集まった水が吸込穴から地下へ消える場所が選択的に深まる(カルスト地形の自己組織化と内陸排水) | 石灰岩の溶食 f_dissol、管路連続体層(吸込穴)、Green-Ampt、周期強制 t_cycle_c |
 | [tower_karst/](tower_karst/) | 平野に残る裸岩の塔(タワーカルスト): 塔の雨が裾の平野で浸透して平野と裾だけが溶け、側方溶食と岩盤の崩落で壁が後退し、岩屑の裾野と堀ができる。取水が浸透能で頭打ちなので morfac を大きく取れる | 石灰岩の溶食 f_dissol(dissol_lat)、岩盤の崩落 f_rockfall、Green-Ampt の浸透能マップ、周期強制 |
-| [ashfall_lahar/](ashfall_lahar/) | 降灰 → 降雨 → 灰層の侵食による泥流(ラハール)の発生と堆積 | 土石流 f_debris、降雨 |
+| [ashfall_lahar/](ashfall_lahar/) | 降灰で浸透能が下がった斜面の雨が灰を削って泥流(ラハール)になり、扇状地に堆積する。噴火前・清水の対照・砂防堰堤との比較の 4 ケースと、谷を格子に 45° 傾けた 8 近傍・4 近傍の比較(補足) | 土石流 f_debris(地下水計算と併用する間隙水 f_dbwet=2)、Green-Ampt の浸透能、降雨、砂防堰堤(地形)、4 近傍化 p_diagratio |
 | [landslide_tsunami/](landslide_tsunami/) | 地滑り・土石流の水域突入と津波。陸上崩壊と海底地滑りの 4 パターンと非静水圧版 | 動く底層 f_bedslide、非静水圧補正 |
 | [tsunami_fault/](tsunami_fault/) | 断層パラメータから津波を発生させる。静水圧・瞬時変位・非静水圧の比較と座標指定の各パターン | 規定底面運動 fn_bedmotion、utils/fault2disp |
 | [tsunami_coast/](tsunami_coast/) | 沿岸の沈降・隆起と沖の断層津波の時間差。沈降した湾奥平野の浸水 | 規定底面運動 fn_bedmotion |
@@ -51,7 +51,7 @@ ENCflow の特徴である「複数プロセスを 1 つの計算で連鎖させ
 見本です(章を読んだ後の参考に)。
 
 - 津波 → 家屋破壊 → 瓦礫: [tsunami_town/](tsunami_town/)。高潮 → 流木 → 市街地: [timberyard/](timberyard/)。
-- 降灰 → 降雨 → 泥流: [ashfall_lahar/](ashfall_lahar/)。降雨 → 乾式侵食 → 地形発達: [badland/](badland/)。豪雨時だけ表面流が加わる崖: [badland_storm/](badland_storm/)。クリープで丸くなる丘: [badland_round/](badland_round/)。キャップロックのメサ → ビュート: [mesa/](mesa/)。豪雨 → 湛水 → 吸込穴 → 溶食 → ドリーネ: [karst/](karst/)。裸岩の塔 → 裾の溶食 → 崩落 → 塔の後退: [tower_karst/](tower_karst/)。給砂 → 被覆と道具 → 岩盤の下刻: [bedrock_cover/](bedrock_cover/)。隆起 → 風化 → クリープ → 渓流の被覆と下刻 → 定常の谷: [mountain_valley/](mountain_valley/)。土石流 → 堆積層の剥離 → 岩盤の侵食 → 頻度ごとの定常勾配: [debris_bedrock/](debris_bedrock/)。
+- 降灰 → 浸透能の低下 → 降雨 → 泥流 → 扇状地の堆積(砂防堰堤で捕捉): [ashfall_lahar/](ashfall_lahar/)。降雨 → 乾式侵食 → 地形発達: [badland/](badland/)。豪雨時だけ表面流が加わる崖: [badland_storm/](badland_storm/)。クリープで丸くなる丘: [badland_round/](badland_round/)。キャップロックのメサ → ビュート: [mesa/](mesa/)。豪雨 → 湛水 → 吸込穴 → 溶食 → ドリーネ: [karst/](karst/)。裸岩の塔 → 裾の溶食 → 崩落 → 塔の後退: [tower_karst/](tower_karst/)。給砂 → 被覆と道具 → 岩盤の下刻: [bedrock_cover/](bedrock_cover/)。隆起 → 風化 → クリープ → 渓流の被覆と下刻 → 定常の谷: [mountain_valley/](mountain_valley/)。土石流 → 堆積層の剥離 → 岩盤の侵食 → 頻度ごとの定常勾配: [debris_bedrock/](debris_bedrock/)。
 - 断層 → 津波 → 浸水: [tsunami_fault/](tsunami_fault/)、[tsunami_coast/](tsunami_coast/)。斜面崩壊 → 水域突入 → 津波: [landslide_tsunami/](landslide_tsunami/)。
 - 洪水 → 破堤 → 氾濫: [levee_breach/](levee_breach/)。
 - 潮汐 → 塩水くさびの遡上 → 河床からの浸透 → 岸の地盤の塩水化(河口堰で遮断): [estuary_barrage/](estuary_barrage/)。

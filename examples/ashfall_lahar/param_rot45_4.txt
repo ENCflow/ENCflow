@@ -1,0 +1,96 @@
+!======================================================================
+! ashfall_lahar 補足実験(谷の向きと格子): ケース rot45_4
+!   ケース ash と同じ谷(堰堤なし)を、格子に対して 45° 傾けて置く。
+!   4 近傍(p_diagratio = 0。斜めのエッジの通過幅を 0 にする)
+!   谷の外は領域外、谷の下流端の外側は海域マスク(水位 0 m の吸い込み)。
+!   入力は make rotated(make_rotated.py)が data_rot45/ に作る。README の補足の節
+!======================================================================
+&list_sysparam
+  f_gridsystem = 0
+  f_govequation = 0
+  dt = 0.1                  ! 時間刻み (s)。dx=5 m、流速 ~10 m/s で CFL ≈ 0.3
+  t0 = 0
+  tt = 5400                 ! 90 分(無降雨 10 分 + 降雨 60 分 + 減水 20 分)
+  dt_disp = 600
+  dt_file = 120             ! 分布出力 2 分おき
+  dt_recrd = 10             ! (このケースでは計測なし)
+  fn_geoinfo = '-'
+  fn_initial = '-'
+  fn_enc = '-'
+  fn_precip = '-'
+  fn_gwflow = '-'           ! 浸透(Green-Ampt の定数浸透能)
+  fn_geomorph = '-'
+  fn_boundary = ''          ! 辺はすべて壁(流出は下流端の海へ)
+  dir_result = 'result_rot45_4'
+  dir_data = 'data_rot45'
+  f_out_z = 1               ! 地盤高 Z(侵食・堆積の時間発展)
+  f_out_hs = 1              ! 土砂柱状量 Hs(濃度の可視化)
+  f_check_cfl = 0
+  dd = 0.0002                ! 移動限界水深 (m)。斜面のシート流(深さ 1 mm 前後)を解くため
+                            ! 既定の 1 mm から下げる(既定のままだと格子スケールの縞が出る)
+/
+
+&list_enc
+  f_gravity_correction = 1  ! 急勾配の重力補正(土石流ケースの標準)
+  p_diagratio = 0.0         ! 4 近傍(斜めのエッジの通過幅 0)
+/
+
+&list_initial
+  f_htype = 0
+  h0 = 0.0                  ! 乾いた地表(水は降雨で供給)
+/
+
+&list_geoinfo
+  lx = 555.0
+  ly = 555.0
+  nx = 111
+  ny = 111
+  f_ztype = 1
+  fn_z = 'z.txt'            ! 降灰後の地表(元地形 + 降灰厚)
+  f_masktype = 1
+  fn_mask = 'mask.txt'      ! 谷の長方形と下流端の海
+  fn_sw = 'sw.txt'          ! 下流端の海(水位 0 m の吸い込み)
+  f_rntype = 0
+  rn0 = 0.05                ! 降灰面の粗度(清水域のマニング)
+  f_sdtype = 1
+  fn_sd = 'ash.txt'         ! 降灰厚 = 侵食できる土層
+  sy0 = 0.5                 ! 灰の間隙率(しみ込んだ水を貯める容量 = sd × sy0)
+/
+
+&list_precip
+  prtype = 1                ! 一様分布の時系列(時刻 min, 強度 mm/h)
+  prval(1:2,1) =  0,  0     ! 値は時刻の間で線形補間される。同じ時刻を
+  prval(1:2,2) = 10,  0     !   2 回書くと階段(矩形の雨)になる
+  prval(1:2,3) = 10, 30     ! 10 分から 30 mm/h
+  prval(1:2,4) = 70, 30
+  prval(1:2,5) = 70,  0     ! 70 分で止む
+/
+
+&list_gwflow
+  f_gwvertical = 2          ! Green-Ampt(gw_psif = 0 で定数浸透能)
+/
+
+&list_gwflow_greenampt
+  gw_ksv_mmh = 5.0          ! 皮膜のできた細粒の灰の浸透能 (mm/h)。噴火前の 100 mm/h の 1/20
+  gw_psif = 0.0
+/
+
+&list_geomorph
+  dt_geomorph = 0.0         ! 毎ステップ更新
+  morfac = 1.0              ! f_debris は 1 必須
+  f_debris = 1
+  f_dbed = 1                ! 高橋型の平衡濃度緩和(δe・δd で速度を校正)
+  db_deltd = 0.01           ! 堆積係数(既定 0.05。小さいほど扇状地の奥まで運ばれる)
+  f_dbres = 4               ! Voellmy(細粒・高間隙水圧のラハールは見かけ摩擦が小さい)
+  db_mu = 0.05              ! 見かけ摩擦係数(扇状地勾配 0.08 を流下できる)
+  db_xi = 500.0             ! 乱流係数 (m/s²)
+  db_phi = 30.0             ! 火山灰の内部摩擦角 (deg)
+  db_d50 = 0.001            ! 灰の代表粒径 (m)。細粒
+  db_erest = 0.85           ! 粒子の反発係数
+  fluv_porosity = 0.5       ! 新鮮な降灰層の空隙率(C* = 0.5)
+  f_dbstop = 1              ! 停止した土砂を地形に固定(堆積の形が残る)
+  db_vstop = 0.05
+  db_wstop = 0.05
+  f_dbwet = 2               ! 地下水計算と併用する間隙水: 侵食された灰にしみ込んでいた水は
+                            !   地表へ戻り、積もった土砂の間隙はその場の地表水で満たされる
+/
