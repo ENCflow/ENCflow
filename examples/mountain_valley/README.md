@@ -16,7 +16,10 @@
 
 渓流が土砂を運び岩盤を削るのは出水のときだけで、斜面の風化・クリープ・隆起は一年中働きます。
 ここでは代表出水(一定の形成流量)だけを計算し、出水は暦の 1 年のうち F = 300 s(5 分。
-間欠係数 i_f = F / 1 年 = 9.5e-6)だけ流れるとみなします。連続に働く過程の係数は 1/i_f 倍して
+間欠係数 i_f = F / 1 年 = 9.5e-6)だけ流れるとみなします(河道を形成する代表の流れが
+時間の割合 I だけ起こるとし、長期平均の流砂量を I × 出水中の流砂量とする Paola ら 1992 の
+間欠係数の考え。粗い土砂はすべて代表の出水が運ぶとする Sklar & Dietrich 2006 の F_t も同じで、
+同論文の参照地点では F_t = 0.0437 = 年 16 日)。連続に働く過程の係数は 1/i_f 倍して
 与えます(隆起 `uplift0`・土層生成 `wthr_p0`・クリープ `creep_d`。係数に線形な過程なので、
 その過程だけを暦の時間で進めることと同じになります。developer.md §89.11 の 2)。暦の時間 =
 出水の時間 / F × 1 年です。出水ごとの順序(無出水期に斜面の脚部へ溜まった土砂を出水の始めに
@@ -200,7 +203,8 @@ V_b の 20 万年の台帳では、出口から出た掃流砂 1.79e5 m³(かさ
 
 - [ユーザーガイド: 地形変化](../../docs/users_guide/geomorph.md)、[解説](../../docs/users_guide/sediment.md)
   (土層生成関数 Heimsath ら 1997、クリープの係数 Fernandes & Dietrich 1997、被覆と道具
-  Sklar & Dietrich 2004)
+  Sklar & Dietrich 2004、定常勾配 Sklar & Dietrich 2006、間欠係数 Paola ら 1992・
+  Sklar & Dietrich 2006)
 - [test/hillsoil](../../test/hillsoil/README.md)(C2: 斜面だけの定常)、
   [test/rockinc](../../test/rockinc/README.md)(T11 = C1: 谷頭の給砂の下の渓流の定常勾配)、
   [examples/bedrock_cover](../../examples/bedrock_cover/README.md)(岩盤河道の被覆効果)

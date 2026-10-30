@@ -137,6 +137,16 @@ adaptation length of bedload is taken as short compared with the grid, so
 the equilibrium transport is used directly (suspended load, with its long
 adaptation length, is handled by a transport equation instead).
 
+The original Ashida–Michiue formula[^ashida72] (eq. (23)) uses the
+effective shear stress $`\tau_{*e}`$ in the leading $`\tau_*^{3/2}`$ (the part
+without the form drag of bedforms; eq. (11) of the original:
+$`U/u_{*e} = 6.0 + 5.75\log_{10}\{R/(d(1+2\tau_*))\}`$) and keeps the total
+$`\tau_*`$ and $`u_*`$ in the two threshold factors. ENCflow uses the form
+with $`\tau_{*e} = \tau_*`$, which corresponds to $`u_{*e} = u_*`$ that the
+original takes for flat beds and antidunes (the upper regime). In the
+regime of ripples and dunes (the lower regime) it overestimates the
+transport (`fluv_taufac` below is a simple substitute with a fixed ratio).
+
 ![Bedload formulas and equilibrium concentration](../../figs/sediment_laws_en.png)
 
 Panel (a) shows the two formulas ($`\tau_{*c}`$ = 0.05); panel (b) is the
@@ -250,6 +260,96 @@ sand and gravel. Verification: [test/fluvial](../../../test/fluvial/en/README.md
 (total solid 4.6e-16, co-moving update 1.2e-14),
 [test/sedinflow](../../../test/sedinflow/en/README.md) (closure of the
 sediment supplied through the boundary).
+
+**Future work (planned): the effective shear stress $`\tau_{*e}`$.** As
+noted above, the current Ashida–Michiue formula also uses the total shear
+stress $`\tau_*`$ in the leading term, so it overestimates the transport
+when Manning's n includes form drag of bedforms, bars or vegetation. We plan
+to add, without changing the default, an option that obtains $`u_{*e}`$ from
+eq. (11) of the original and replaces only the leading $`\tau_*^{3/2}`$ with
+$`\tau_{*e}^{3/2}`$ (the two threshold factors keep the total $`\tau_*`$).
+
+- **Effect**: the formula then matches the original and Nays2DH and is used
+  the way the coefficient 17 was fitted. Since $`\tau_{*e}`$ depends only on
+  the velocity and the depth, the current behaviour that a cell with a higher
+  n from a roughness distribution (land use, for example) has a larger
+  $`\tau_*`$ (more transport) at the same velocity disappears (the `fix_cn` of
+  fixation evaluates the transport $`\tau_*`$ with the original n, so it is
+  not affected in the first place). The form-drag part follows the velocity,
+  depth and $`\tau_*`$ in each cell and at each time, a separation closer to
+  the original than `fluv_taufac` with its fixed ratio (which also shrinks
+  the threshold factors). No new parameter is needed.
+- **Size of the effect** (trial calculation for uniform flow): on a sand bed
+  with n about twice the grain roughness (the settings of the meander and
+  delta examples) the transport becomes 0.1–0.25 times the current value,
+  on a gravel bed 0.4–0.65 times. The existing examples were tuned for the
+  speed of morphological change without $`\tau_{*e}`$, so it will not be the
+  default (bit-identical to the current results when disabled).
+- **To be prepared in the implementation**: a cap $`\tau_{*e} \le \tau_*`$
+  (on a flat sand bed the value of eq. (11) exceeds $`\tau_*`$); protection
+  outside the range of the log law (shallow flows and mountain streams with a
+  ratio of hydraulic radius to equivalent roughness of a few or less; below
+  0.09 the denominator of eq. (11) becomes zero); exclusion with
+  `fluv_taufac`; and a check case for eq. (11). It applies only to the
+  Ashida–Michiue formula (MPM has a different correction, the ripple
+  factor).
+- **Timing**: it will be added when comparisons with Nays2DH, sand-bed rivers
+  with dunes or vegetated floodplains are taken up (developer.md §19.8).
+
+**Future work (planned): flow resistance partitioning on steep gravel beds
+(macroroughness).** In gravel and boulder streams whose depth is less than
+7–10 times the grain size D84, form drag and spill drag of boulders and steps
+take most of the total resistance. Conventional transport formulas that use
+the total-resistance $`\tau_*`$ are known to overestimate the transport in steep
+streams by orders of magnitude (up to two to three)[^nitsche11]. From 2890
+field measurements, Rickenmann & Recking[^rickenmann11] proposed a
+partitioning that reduces the slope by the ratio of the small-scale-roughness
+base level resistance $`\sqrt{8/f_0} = 6.5\,(h/D_{84})^{1/6}`$ to the total
+resistance that grows as the relative depth decreases (Ferguson's
+equation[^ferguson07]
+$`\sqrt{8/f_{\rm tot}} = a_1 a_2 (h/D_{84})/\sqrt{a_1^2 + a_2^2 (h/D_{84})^{5/3}}`$,
+$`a_1 = 6.5`$, $`a_2 = 2.5`$): $`S_{\rm red}/S = (f_0/f_{\rm tot})^{e/2}`$. Nitsche et
+al.[^nitsche11] compared five partitioning approaches in 13 Swiss streams
+(slopes 2–19 %) and report that this one ($`e`$ = 1.5) performed best: the
+transport, overestimated by up to two orders of magnitude without correction,
+came to 1.0 times the measurement in the median over all streams (88 % of
+the events within a factor of 3), and they recommend it as a practical method
+when no detailed roughness information is available. We plan to add, without
+changing the default, an option that multiplies the $`\tau_*`$ passed to the
+transport formula by this factor.
+
+- **Form**: the factor $`(f_0/f_{\rm tot})^{e/2}`$ ($`e`$ = 1.5) depends only on the
+  relative depth $`h/D_{84}`$ and can be computed from the depth at each edge
+  (it does not depend on the user's Manning n). For $`h/D_{84}`$ = 0.5, 1, 2, 5,
+  10 and 20 it is 0.10, 0.22, 0.43, 0.75, 0.90 and 0.97. The threshold
+  $`\tau_{*c}`$ keeps the grain value. Without $`D_{84}`$, $`2.2\,D_{50}`$ is used (the
+  median ratio Rickenmann & Recking used to fill missing data). A form that
+  reduces by the ratio of the base level resistance to the Manning n,
+  $`(n_0/n)^{e}`$ ($`1/n_0 = 20.4/D_{84}^{1/6}`$), also exists, but with a constant n
+  it does not change with the relative depth and the result follows the
+  choice of n, so it is not adopted.
+- **Size of the effect**: in the bedrock_cover example (depth 0.3 m,
+  D84 ≈ 22 mm, h/D84 ≈ 14) the factor is 0.94 and little changes. In shallow
+  flows over boulder beds (h/D84 = 1–3) it is 0.2–0.6, and the transport drops
+  further the closer it is to the threshold. Nitsche et al. note that the
+  ratio by which reducing the slope lowers the transport is nearly the same
+  for different transport formulas (they depend on the excess shear stress),
+  so it can be applied to both the Ashida–Michiue and the MPM formula.
+- **Relation to the effective shear stress above**: both separate the part of
+  the shear stress that moves sediment, for different regimes
+  ($`\tau_{*e}`$ for dunes on sand beds where the log law holds, this one for
+  shallow gravel and boulder beds). They and `fluv_taufac` will be mutually
+  exclusive. Rickenmann & Recking caution that applied to high-concentration
+  flows without boulders (sheet flow) it makes the transport implausibly
+  small[^rickenmann11].
+- **Related item on the flow side**: a constant grain-based Manning n
+  overestimates the velocity greatly on shallow gravel and boulder beds
+  (3–4.5 times in the median when shallower than D84[^rickenmann11]). Making
+  Ferguson's equation[^ferguson07], whose resistance follows the relative
+  depth, a resistance-law option is also a candidate; it affects the whole
+  flow, so it needs more discussion than the sediment-side separation.
+- **Timing**: it will be added after the results of the mountain-stream
+  examples are reviewed (docs/mountain_stream_plan.md §6.3).
 
 ## 4. Suspended sediment (f_suspend)
 
@@ -532,7 +632,13 @@ same 1:1 conversion as weathering; **our own simplification**). In the
 abrasion term, $`q_c`$ is the bedload capacity of the cell (solid transport
 rate per unit width), and $`q_c F_s`$ is the bedload leaving the cell, taken
 as the amount of gravel striking the bed (the same form as "abrasion = β ×
-transport rate × exposure" of GravelBedrockEroder). The abraded material
+transport rate × exposure" of GravelBedrockEroder). Making abrasion
+proportional to the actual transport rate × exposure with a $`\beta`$ that does
+not depend on the shear stress is also the same as the law of Chatanantavet &
+Parker (2009), $`E = \beta|\mathbf{q}_b|(1 - P_c)`$, used in the two-dimensional
+bedrock–alluvial channel model of Inoue et al.[^inoue16]; the difference is the
+form of the cover fraction (linear in the alluvial thickness,
+$`P_c = \eta_a/L_a`$, in that model; exponential in ENCflow). The abraded material
 leaves the system as fines ($`z`$ is lowered) and is not added to the cover.
 
 **Thin-layer transport.** The edge flux of bedload is multiplied by the
@@ -541,9 +647,26 @@ state with a uniform capacity $`q_c`$ and a constant transport rate
 $`q_s`$, $`F_s = q_s/q_c`$, and the exposure is $`1 - q_s/q_c`$, i.e. it
 agrees with the cover written as a supply ratio[^sklar04][^turowski07], and
 the incision rate by abrasion becomes the hump $`E = \beta q_s (1 - q_s/q_c)`$
-(largest at $`q_s/q_c = 1/2`$, and 0 with full cover at 1 and above; the same
-form as the linearization of the saltation–abrasion model of Sklar and
-Dietrich). The
+(largest at $`q_s/q_c = 1/2`$, and 0 with full cover at 1 and above). This is
+the saltation–abrasion model of Sklar and Dietrich[^sklar04][^sklar06] (tools $`Q_s`$ ×
+a cover linear in the supply ratio, $`1 - Q_s/Q_c`$) without the factor
+from the saltation trajectories, $`(\tau_*/\tau_{*c} - 1)^{-1/2}`$ (impact rate
+and energy), and its suspension-threshold factor, which in their classification is the parabolic "tools and cover"
+type (Whipple & Tucker 2002 with $`n = 1`$). Matching it with the final form
+of that model (eq. (24a) of 2004) gives a guide for the abrasion coefficient,
+
+```math
+\beta \approx \frac{0.08\,R_b\,g\,\rho_s\,Y}{k_v\,\sigma_T^2}\left(\frac{\tau_*}{\tau_{*c}} - 1\right)^{-1/2}
+```
+
+($`R_b`$ = submerged specific gravity, $`\rho_s`$ = sediment density, $`Y`$ = elastic
+modulus of the rock, $`\sigma_T`$ = tensile strength of the rock;
+$`k_v \approx 10^{12}`$ is their value with $`Y`$ and $`\sigma_T`$ in MPa; the transport
+stage is evaluated for the representative flood and the suspension factor is
+dropped). At their reference site (South Fork Eel River; $`\sigma_T`$ = 7 MPa,
+$`Y`$ = 5 × 10⁴ MPa, $`\tau_*/\tau_{*c}`$ = 1.7) it is about 4–5 × 10⁻⁶ /m, and
+$`\beta`$ is inversely proportional to $`\sigma_T^2`$ (about 50 times larger for a soft
+rock with a tensile strength of 1 MPa). The
 idea of setting the cover by the ratio of the alluvial thickness to the bed
 relief[^zhang15] is written as a closure that uses the same $`H_*`$ for the
 exposure and the availability; this combination and the dimensional form are
@@ -595,11 +718,26 @@ same propagator as plucking, with $`H`$ after the erosion–deposition step.
 
 That debris flows are the main agent of bedrock lowering in steep valleys is shown
 by the slope–area relation[^stock03] and erosion-pin measurements[^stock05]. The
-mechanism is thought to be particle impacts; there are a law based on inertial
-stresses[^stock06] and rotating-drum experiments[^hsu08]. The single-layer mixture
-does not resolve the bouldery front where the impacts concentrate, so the excess
-form of the quasi-static stress, which was robust in the single-event comparison
-(docs/mountain_stream_plan.md §12.4, in Japanese), was adopted. It belongs to the
+mechanism is thought to be particle impacts. From field observations that the
+rock is lowered mainly by the removal of fracture-bounded blocks by boulder
+impacts, Stock & Dietrich[^stock06] proposed, as a hypothesis, a law that makes
+the lowering by one debris flow proportional to "the length $`L`$ of the coarse
+front × the solid inertial normal stress of particle impacts
+$`\cos\theta\,C\rho_s D^2 (u/h)^2`$ ÷ the rock resistance" (the long-term lowering
+rate is this times the debris-flow frequency; the authors themselves state that
+the debris-flow dynamics are parameterized crudely and that a validated law is far
+off). Rotating-drum experiments[^hsu08] also support inertial stresses and impacts
+at the front. Erosion sensors buried in a fan channel of the Illgraben,
+Switzerland, also showed that the sediment bed was eroded stepwise within 20 s of
+the front's arrival, starting before the flow depth and the stresses peaked[^berger11]. The single-layer mixture does not resolve the bouldery front where
+the impacts concentrate, so the excess form of the quasi-static stress, which was
+robust in the single-event comparison (docs/mountain_stream_plan.md §12.4, in
+Japanese), was adopted. Turned into a rate for event runs, the inertial-stress law,
+whose lowering per event is proportional to the front length × the stress, scales
+with the cube of the velocity and the inverse square of the flow depth, so it
+depends on the velocity even more strongly than the option that was most sensitive
+to thin layers and to the choice of the resistance law in that comparison (a rate
+proportional to the inertial stress itself). It belongs to the
 family of erosion laws in flow depth and slope[^mcguire23]; the form and the
 combination of coefficients are **our own**. In the same comparison, a threshold of
 1 kPa concentrated the erosion in the reaches steeper than about 0.2. The
@@ -617,7 +755,7 @@ The labels in the Basis column are explained in [How to read the basis of a defa
 | creep_hstar | 0 (conventional linear diffusion) | decay depth $`H_c`$ of depth-dependent creep (m) (§2) | **calibration value** no standard value. Does not affect the result under a thick soil |
 | f_qbform | 1 | bedload formula (§3) | **method** 1: Ashida–Michiue[^ashida72], 2: MPM[^mpm48] |
 | fluv_d50 | 0.01 m | representative grain size of bedload | **empirical** near the geometric mean of sand and gravel beds |
-| fluv_tausc / susp_tausc / wash_tausc | 0.05 | critical dimensionless shear stress (§1) | **literature value** representative value of the Shields curve for coarse sand to gravel[^shields36] |
+| fluv_tausc / susp_tausc / wash_tausc | 0.05 | critical dimensionless shear stress (§1) | **literature value** representative value of the Shields curve for coarse sand to gravel[^shields36]; Ashida–Michiue[^ashida72] also use 0.05 for the mean grain size of a mixed bed (eq. (31)) |
 | fluv_porosity / fluv_sgrav | 0.4 / 1.65 | bed porosity / submerged specific gravity | **customary value** standard values of sand and gravel |
 | fluv_dzmax | 0.05 m | bed change per update (§3) | **numerical** safety valve (Courant condition of bed waves) |
 | fluv_bcfeed | 0 | feeding at open boundaries (§3) | **method** 0: no feeding, 1: capacity feeding (net outflow of the inflow cell times the factor) |
@@ -648,7 +786,7 @@ The labels in the Basis column are explained in [How to read the basis of a defa
 | dissol_lat | 0 | share p of lateral dissolution | **method** 0 = floor only, −1 = automatic from the wetted-area ratio (recommended). A fixed value follows the ratio of ponding depth to cell size |
 | rock_kp / rock_tauc | 0 (no plucking) / none | plucking rate coefficient (m/s) / threshold (Pa) (bedrock incision of §7) | **calibration value** no standard value. k_p is the incision rate of bare rock at τ_b = 2τ_c |
 | rock_m | 1 | plucking exponent | **conventional value** linear (same as berode_m of bank erosion) |
-| rock_beta | 0 (no abrasion) | abrasion coefficient β (1/m) | **calibration value** no standard value. The largest incision rate by abrasion (cover fraction 1/2) is β q_c / 4 |
+| rock_beta | 0 (no abrasion) | abrasion coefficient β (1/m) | **calibration value** no standard value. The largest incision rate by abrasion (cover fraction 1/2) is β q_c / 4. A guide is the match with the model of Sklar & Dietrich[^sklar04] in §7 (about 4–5 × 10⁻⁶ /m at their reference site, inversely proportional to the square of the rock tensile strength). Inoue et al.[^inoue16] used β ≈ 0.001 /m from a field experiment in the Ishikari River and 0.0001 /m to reproduce a flume experiment |
 | rock_hstar | none | cover length H* | **given** a measure of the relief of the bedrock surface and the grain size (a few cm to tens of cm). Shared by the exposure and the availability |
 | rock_kdb / rock_taucdb | 0 (no debris-flow term) / none | rate coefficient (m/s) / threshold (Pa) of rock erosion by debris flows | **calibrated** no standard values. k_d is the lowering rate of bare rock at τ_d = 2τ_cd. A lowering of mm to cm per debris flow is a guide[^stock05][^mccoy13] |
 | rock_mdb | 1 | exponent of the debris-flow term | **conventional** linear (same as rock_m) |
@@ -696,6 +834,9 @@ The labels in the Basis column are explained in [How to read the basis of a defa
 [^johnstone15]: Johnstone, S. A. and Hilley, G. E. (2015): Lithologic control on the form of soil-mantled hillslopes. *Geology*, 43(1), 83–86. doi:10.1130/G36052.1 (checked against the abstract: when transport scales with both slope and soil depth, rock type shows up in the form of soil-mantled hillslopes. The form of the equation and the doi follow the description of Landlab's DepthDependentDiffuser)
 [^ashida72]: Ashida, K. and Michiue, M. (1972): Study on hydraulic resistance and bed-load transport rate in alluvial streams. *Proc. JSCE*, 206, 59–69 (in Japanese).
 [^mpm48]: Meyer-Peter, E. and Müller, R. (1948): Formulas for bed-load transport. *Proc. 2nd Meeting IAHSR*, Stockholm, 39–64.
+[^rickenmann11]: Rickenmann, D. and Recking, A. (2011): Evaluation of flow resistance in gravel-bed rivers through a large field data set. *Water Resour. Res.*, 47, W07538. doi:10.1029/2010WR009793 (base level resistance eq. (23); resistance partitioning and bed load eq. (32))
+[^ferguson07]: Ferguson, R. (2007): Flow resistance equations for gravel- and boulder-bed streams. *Water Resour. Res.*, 43, W05427. doi:10.1029/2006WR005422 (from the reference list and eq. (10a) of Rickenmann & Recking 2011; the paper itself not read)
+[^nitsche11]: Nitsche, M., Rickenmann, D., Turowski, J. M., Badoux, A. and Kirchner, J. W. (2011): Evaluation of bedload transport predictions using flow resistance equations to account for macro-roughness in steep mountain streams. *Water Resour. Res.*, 47, W08513. doi:10.1029/2011WR010645 (comparison of five partitioning approaches; the Rickenmann & Recking approach is eqs. (15)–(18), the slope reduction eq. (26), e = 1.5)
 [^exner25]: Exner, F. M. (1925): Über die Wechselwirkung zwischen Wasser und Geschiebe in Flüssen. *Sitzungsber. Akad. Wiss. Wien, Math.-Naturwiss. Kl.*, 134, 165–204.
 [^itakura80]: Itakura, T. and Kishi, T. (1980): Open channel flow with suspended sediments. *J. Hydraul. Div. ASCE*, 106(HY8), 1325–1343. (implemented in the form of eqs. (3)–(5) of chapter 4 of the iRIC textbook "Practical river hydraulics")
 [^rubey33]: Rubey, W. W. (1933): Settling velocities of gravel, sand, and silt particles. *Am. J. Sci.*, 25, 325–338.
@@ -709,12 +850,15 @@ The labels in the Basis column are explained in [How to read the basis of a defa
 [^gabrovsek09]: Gabrovšek, F. (2009): On concepts and methods for the estimation of dissolutional denudation rates in karst areas. *Geomorphology*, 106, 9–14.
 [^howard83]: Howard, A. D. and Kerby, G. (1983): Channel changes in badlands. *Geol. Soc. Am. Bull.*, 94, 739–752. (Erosion rate of bedrock channels expressed by the bed shear stress during floods; checked against the abstract)
 [^shobe17]: Shobe, C. M., Tucker, G. E. and Barnhart, K. R. (2017): The SPACE 1.0 model. *Geosci. Model Dev.*, 10, 4577–4604. doi:10.5194/gmd-10-4577-2017 (the exponential cover form checked in the Landlab source)
-[^sklar04]: Sklar, L. S. and Dietrich, W. E. (2004): A mechanistic model for river incision into bedrock by saltating bed load. *Water Resour. Res.*, 40, W06301. doi:10.1029/2003WR002496
+[^sklar04]: Sklar, L. S. and Dietrich, W. E. (2004): A mechanistic model for river incision into bedrock by saltating bed load. *Water Resour. Res.*, 40, W06301. doi:10.1029/2003WR002496 (saltation–abrasion model eqs. (1) and (24a), linear cover assumption eq. (7), rock strength coefficient k_v Table 4, reference site values Table 3)
+[^sklar06]: Sklar, L. S. and Dietrich, W. E. (2006): The role of sediment in controlling steady-state bedrock channel slope: Implications of the saltation–abrasion incision model. *Geomorphology*, 82, 58–83. doi:10.1016/j.geomorph.2005.08.019 (saltation–abrasion model eq. (1), model classification eq. (20) and Table 2, components of steady-state slope eqs. (32)–(34), intermittency eqs. (13)–(19))
 [^turowski07]: Turowski, J. M., Lague, D. and Hovius, N. (2007): Cover effect in bedrock abrasion. *J. Geophys. Res.*, 112, F04006. doi:10.1029/2006JF000697
 [^zhang15]: Zhang, L., Parker, G., Stark, C. P., Inoue, T., Viparelli, E., Fu, X. and Izumi, N. (2015): Macro-roughness model of bedrock–alluvial river morphodynamics. *Earth Surf. Dynam.*, 3, 113–138. doi:10.5194/esurf-3-113-2015 (checked against the abstract)
+[^inoue16]: Inoue, T., Iwasaki, T., Parker, G., Shimizu, Y., Izumi, N., Stark, C. P. and Funaki, J. (2016): Numerical simulation of effects of sediment supply on bedrock channel morphology. *J. Hydraul. Eng.*, 142(7), 04016014. doi:10.1061/(ASCE)HY.1943-7900.0001124 (abrasion law eq. (16), cover fraction eq. (17), transverse bedload eq. (12))
 [^stock03]: Stock, J. D. and Dietrich, W. E. (2003): Valley incision by debris flows: Evidence of a topographic signature. *Water Resour. Res.*, 39(4), 1089. doi:10.1029/2001WR001057 (checked against the abstract: the inverse power law between slope and area rarely extends to slopes steeper than 0.03 to 0.10)
 [^stock05]: Stock, J. D., Montgomery, D. R., Collins, B. D., Dietrich, W. E. and Sklar, L. S. (2005): Field measurements of incision rates following bedrock exposure: Implications for process controls on the long profiles of valleys cut by rivers and debris flows. *Geol. Soc. Am. Bull.*, 117(1–2), 174–194. doi:10.1130/B25560.1 (checked against the abstract: erosion pins in valleys of weak rock show up to cm/yr; in debris-flow valleys the episodic debris flows are the main agent)
-[^stock06]: Stock, J. D. and Dietrich, W. E. (2006): Erosion of steepland valleys by debris flows. *Geol. Soc. Am. Bull.*, 118(9/10), 1125–1148. (checked against the abstract and secondary accounts: an erosion law based on the inertial normal stress of particle impacts; the form of the equation not yet checked)
+[^stock06]: Stock, J. D. and Dietrich, W. E. (2006): Erosion of steepland valleys by debris flows. *Geol. Soc. Am. Bull.*, 118(9/10), 1125–1148. doi:10.1130/B25902.1 (inertial normal stress eqs. (5) and (11); erosion law eqs. (14), (15) and (18))
 [^hsu08]: Hsu, L., Dietrich, W. E. and Sklar, L. S. (2008): Experimental study of bedrock erosion by granular flows. *J. Geophys. Res.*, 113, F02001. doi:10.1029/2007JF000778 (checked against the abstract and secondary accounts)
+[^berger11]: Berger, C., McArdell, B. W. and Schlunegger, F. (2011): Direct measurement of channel erosion by debris flows, Illgraben, Switzerland. *J. Geophys. Res.*, 116, F01002. doi:10.1029/2010JF001722 (direct measurement of the timing and depth of erosion of a sediment bed)
 [^mccoy13]: McCoy, S. W., Tucker, G. E., Kean, J. W. and Coe, J. A. (2013): Field measurement of basal forces generated by erosive debris flows. *J. Geophys. Res. Earth Surf.*, 118, 589–602. doi:10.1002/jgrf.20041 (checked against the abstract: the bedrock floor was lowered by 36 to 64 mm over the observation period; a deposit about 5 cm thick shields the bed from impacts)
 [^mcguire23]: McGuire, L. A. et al. (2023): Steady-state forms of channel profiles shaped by debris flow and fluvial processes. *Earth Surf. Dynam.*, 11, 1117–1143. doi:10.5194/esurf-11-1117-2023 (checked against the abstract: a family of erosion laws in flow depth and slope; the list of co-authors not yet checked)

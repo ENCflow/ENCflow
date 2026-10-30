@@ -135,5 +135,8 @@ Fr 0.65 で、以前は流入面の流速が 0.74 倍に抑えられていまし
 - docs/mountain_stream_plan.md(設計の検討。§4.3 の定常解、§4.9 の例題の構想)、developer.md §89
 - Sklar, L. S. and Dietrich, W. E. (2004): A mechanistic model for river incision into bedrock by
   saltating bed load. *Water Resour. Res.*, 40, W06301. doi:10.1029/2003WR002496
-- Inoue, T. ほか (2016): Numerical simulation of effects of sediment supply on bedrock channel
-  morphology. *J. Hydraul. Eng.*, 142(7). doi:10.1061/(ASCE)HY.1943-7900.0001124(要旨で確認)
+- Inoue, T., Iwasaki, T., Parker, G., Shimizu, Y., Izumi, N., Stark, C. P. and Funaki, J. (2016):
+  Numerical simulation of effects of sediment supply on bedrock channel morphology. *J. Hydraul.
+  Eng.*, 142(7), 04016014. doi:10.1061/(ASCE)HY.1943-7900.0001124(本文で確認: 給砂が容量に近いと
+  交互砂州状の被覆が下流へ移りながら岩盤を一様に削り、容量の 0.2 倍では岩盤に複数の縦溝が
+  刻まれて被覆は溝に溜まる)

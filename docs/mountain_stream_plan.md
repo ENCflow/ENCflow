@@ -196,6 +196,16 @@ D§2(状態と更新契約、供給量制限、接続位置、ハロの前提)�
   意味になる。f_berode の K_b (τ*/τ*c,b − 1)^m と同じ形。
   研磨項は、Sklar & Dietrich(2004)の線形化 E ∝ q_s(1 − q_s/q_c) を層厚の閉包で
   書いたもの(GravelBedrockEroder の「研磨 = β × 流砂量 × 露出率」と同じ形)。
+  (2026-10-29 Sklar & Dietrich 2006 の本文で確認: 同論文の式 (1) の saltation–abrasion 模型
+  E_i ∝ Q_s (τ*/τ*c − 1)^{−1/2} (1 − Q_s/Q_c)(1 − (u*/w_f)²)^{3/2} は、道具 Q_s と供給比に線形な
+  被覆(1 − Q_s/Q_c)の積。ENCflow の形は跳躍の軌跡から来る因子 (τ*/τ*c − 1)^{−1/2}(衝突の頻度と
+  強さ)と浮遊の因子を除いたもので、同論文の分類では道具・被覆の放物線型(式 (31)、Whipple & Tucker 2002 の n = 1)に
+  当たる。閾値は q_c が流砂量式の移動限界を持つので入る。同日、Sklar & Dietrich 2004 の本文でも
+  同じ形(式 (24a))を確認。式 (24a) の係数 0.08 R_b g Y/(k_v σ_T²) と対応させると
+  β ≈ 0.08 R_b g ρ_s Y/(k_v σ_T²) (τ*/τ*c − 1)^{−1/2}(k_v ≈ 10¹² は Y・σ_T を MPa で入れたときの値。
+  表 4a の落下試験から逆算して確認)。基準地点(South Fork Eel River。σ_T = 7 MPa、Y = 5 × 10⁴ MPa、
+  τ*/τ*c = 1.7、表 3)で約 4〜5 × 10⁻⁶ /m(式で 4.2e-6、報告の瞬間の下刻 20.5 mm/年からの逆算で
+  5.3e-6)。β ∝ σ_T^{−2}。users guide の解説 sediment.md §7 に目安として記載。)
   2 項の組合せと、ENCflow の水理量での有次元化は**独自**。
 - パラメータ(名称は仮。§8 の判断 3・4・7):
 
@@ -420,7 +430,49 @@ splash_plan.md §8 の Phase 3(容量式の堆積)と §2.6(飛散長 L_h の保
   見積もることが知られている(巨礫や段の形状抵抗)。被覆の動態は容量 q_c に直結
   するので、第 1 段の結果を解釈するうえで最も大きな不確かさになる。
 - 現行の手段は fluv_taufac(一定比)だけ。相対水深に依存する分離(Rickenmann &
-  Recking 2011、Nitsche ら 2011 など。照合待ち)は、例題の結果を見てから候補にする。
+  Recking 2011、Nitsche ら 2011 など)は、例題の結果を見てから候補にする。
+- **Rickenmann & Recking (2011) の照合(2026-10-29。利用者が提供した本文)**: 野外の
+  2890 測定(勾配 ≤ 24 %、D84 = 0.3〜1350 mm)で、粒径から n を決める Manning–Strickler
+  式(n = D90^{1/6}/26)と Keulegan 式は、相対水深 d/D84 < 10 で流速を大きく過大に
+  予測する(d/D84 < 1 で中央値 3〜4.5 倍(Manning–Strickler)・約 3 倍(Keulegan)。図 3)。最良は Ferguson (2007) の VPE
+  (8/f)^{1/2} = a1 a2 (d/D84)/√(a1² + a2² (d/D84)^{5/3})(a1 = 6.5、a2 = 2.5。式 (10a))。
+  抵抗は d/D84 < 7〜10(中規模・大規模粗度)で小規模粗度の延長より大きく増える
+  (図 9)。流砂量については、基準の抵抗 1/n0 = 20.4/D84^{1/6}(式 (23)。D90 なら
+  21.1/D90^{1/6})と全抵抗 n_tot の比で勾配を縮める S0/S = (n0/n_tot)^e(式 (32)。
+  e = 1.33〜2、Meyer-Peter & Müller は 1.5、2005 年の出水の逆算で 1.2〜1.5)が、急勾配の
+  渓流の流砂量の過大を大きく改善すると整理している(Rickenmann ら 2006、Chiari ら 2010、
+  Chiari & Rickenmann 2011 ほか)。但し書き: 高濃度で巨礫のない水路実験(Smart & Jäggi
+  1983 など)に当てると、流砂量を不当に小さくする。
+- **Nitsche ら (2011) の照合(2026-10-29。利用者が提供した本文)**: スイスの渓流 13 本
+  (勾配 2〜19 %、流域 0.5〜170 km²。6 本は長期の流砂量、7 本は 2000・2005 年の出水の
+  堆積量)で、Rickenmann (2001) の流砂量式に 5 つの抵抗分割(Pagliara & Chiavaccini 2006、
+  Whittaker ら 1988、Egashira & Ashida 1991、Yager 2006、Rickenmann & Recking 2011)を
+  組み合わせ、勾配を S_red = S (n0/n_tot)^e = S (f0/f_tot)^{e/2}(e = 1.5 固定。式 (26))で
+  縮めて比べた。補正なしは流砂量を最大 2 桁過大(序論では従来式の過大を最大 3 桁と引く)。
+  Rickenmann & Recking の方法(f0 は式 (15) の 6.5 (r_h/D84)^{1/6}、f_tot は Ferguson の
+  VPE。(f0/f_tot)^{1/2} = v_tot/v0 は r_h/D84 だけの関数。式 (15)〜(18))が全渓流の中央値
+  V_pred/V_meas = 1.0、88 % の事象が 3 倍以内で最良で、詳しい粗度の情報がないときの
+  実用的な方法として推奨。Yager (2006) は巨礫の多い渓流でよい(93 % が 3 倍以内)が、
+  巨礫の諸元の現地測定が要る。Egashira & Ashida は補正が強すぎて過小。勾配を縮める効果の
+  比は流砂量式によらずほぼ同じ(超過掃流力で決まる。§5.1)。
+- **ENCflow での候補(必要になったら。方針の議論が先)**:
+  (a) 掃流砂: Nitsche らの最良の方法と同じ相対水深の形を第一候補にする。流砂量式に渡す
+  τ* に (f0/f_tot)^{e/2}(e = 1.5)を掛け、(f0/f_tot)^{1/2} = VPE(h/D84)/(6.5 (h/D84)^{1/6})
+  をエッジの水深から求める(利用者の n に依らない。閾値 τ*c は粒子の値のまま)。
+  h/D84 = 0.5・1・2・5・10・20 で係数 0.10・0.22・0.43・0.75・0.90・0.97。D84 がなければ
+  2.2·D50(Rickenmann & Recking がデータの補完に使った中央値の比)。n の比 (n0/n)^e の
+  形(n0 = D84^{1/6}/20.4)は、n が一定の流れでは相対水深による変化が出ず、結果が n の
+  選び方に引きずられるので採らない(例: bedrock_cover は h/D84 ≈ 14 で相対水深の形なら
+  0.94 倍だが、n = 0.04 のため n の比の形では 0.52 倍になる)。芦田・道上の有効掃流力 τ*e
+  (sediment.md §3 の今後の課題。対数則の適用範囲の砂床の砂堆)と同じ「流砂を動かす分」の
+  分離で、対象の領域が違う(こちらは d/D84 < 7〜10 の礫・巨礫床)。τ*e・fluv_taufac とは
+  排他にする。巨礫床の浅い流れ(h/D84 = 1〜3)では τ* が 0.2〜0.6 倍、流砂量は閾値に
+  近いほどさらに減る。
+  (b) 流れ: 一定の Manning n は d/D84 が小さい浅い流れの抵抗の増加を表せない(粒径相当の
+  n では流速を過大に予測する)。VPE で n を相対水深に応じて変える抵抗則の選択肢。流れ
+  全体に効く変更なので、(a) より議論が重い。
+  (2026-10-29 利用者の指示で、(a)(b) を users guide の解説 sediment.md §3(日英)の
+  今後の課題に記載した。)
 
 ### 6.4 被覆と粗度(滑らかな岩盤)
 
@@ -538,21 +590,46 @@ users_guide/sediment.md・massflow.md・geomorph.md、handoff.md 1n・1n2。
   引き継ぐ。本書では Landlab のソースで被覆の形を確認)。
 - Sklar, L. S. and Dietrich, W. E. (2004): A mechanistic model for river incision into
   bedrock by saltating bed load. *Water Resour. Res.*, 40, W06301.
-  doi:10.1029/2003WR002496(D の記録を引き継ぐ。研磨の線形化 q_s(1 − q_s/q_c) の式の
-  形は照合待ち)。
+  doi:10.1029/2003WR002496(2026-10-29 に利用者が提供した本文で確認: E = V_i I_r F_e(式 (1))、
+  衝突 1 回の侵食体積は衝突の運動エネルギー ÷ 岩の抵抗(式 (3)〜(5)。侵食の閾値エネルギーは 0)、
+  被覆は供給比に線形 F_e = 1 − q_s/q_t(式 (7)。水路実験で支持されるが、滑らかな平らな床では
+  閾値や不安定の可能性を断っている)、容量は Fernandez Luque & van Beek(式 (8))、跳躍の軌跡の
+  経験式(式 (11)〜(14)。τ*c = 0.03)、最終形は式 (24a)。下刻は供給比 0.5 前後と輸送段階
+  τ*/τ*c ≈ 12 で最大で、移動限界・浮遊の限界・全被覆・供給 0 の 4 つの境界で 0。基準地点は代表の
+  流量が年約 22 日流れるとし、瞬間の下刻 20.5 mm/年を年平均約 0.9 mm/年とする(間欠係数と
+  同じ考え。§11.2))。
+- Sklar, L. S. and Dietrich, W. E. (2006): The role of sediment in controlling steady-state
+  bedrock channel slope: Implications of the saltation–abrasion incision model.
+  *Geomorphology*, 82, 58–83. doi:10.1016/j.geomorph.2005.08.019(2026-10-29 に利用者が
+  提供した本文で確認。要点は §4.2・§11.2・§11.3)。
 - Turowski, J. M., Lague, D. and Hovius, N. (2007): Cover effect in bedrock abrasion.
   *J. Geophys. Res.*, 112, F04006. doi:10.1029/2006JF000697(D の記録を引き継ぐ)。
+- Paola, C., Heller, P. L. and Angevine, C. L. (1992): The large-scale dynamics of grain-size
+  variation in alluvial basins, 1: Theory. *Basin Res.*, 4, 73–90(2026-10-29 に利用者が提供した
+  本文で確認。間欠係数 I は式 (12)。§11.2)。
 - Zhang, L., Parker, G., Stark, C. P., Inoue, T., Viparelli, E., Fu, X. and Izumi, N.
   (2015): Macro-roughness model of bedrock–alluvial river morphodynamics.
   *Earth Surf. Dynam.*, 3, 113–138. doi:10.5194/esurf-3-113-2015(要旨で確認: 被覆率を
   供給比でなく沖積層厚とマクロ粗度の比で決める)。
-- Inoue, T. ほか (2016): Numerical simulation of effects of sediment supply on bedrock
-  channel morphology. *J. Hydraul. Eng.*, 142(7). doi:10.1061/(ASCE)HY.1943-7900.0001124
-  (機関リポジトリの書誌と要旨で確認: 供給が容量に近いと交互砂州、かなり小さいと岩盤に
-  溝。共著者の一覧は未照合)。
+- Inoue, T., Iwasaki, T., Parker, G., Shimizu, Y., Izumi, N., Stark, C. P. and Funaki, J. (2016):
+  Numerical simulation of effects of sediment supply on bedrock channel morphology.
+  *J. Hydraul. Eng.*, 142(7), 04016014. doi:10.1061/(ASCE)HY.1943-7900.0001124(2026-10-29 に
+  利用者が提供した本文で確認)。定常流の 2 次元浅水流(Manning、k_s = 2.5d)に、Luu ら (2004) の
+  掃流砂の体積 V_b の保存(岩盤上は V_b < V_bc の throughput で q_b = (V_b/V_bc) q_bc)、
+  Fernandez Luque & van Beek (1976) の容量 5.7 (τ* − τ*c)^1.5(τ*c = 0.03)、長谷川型の横断方向の
+  流砂(μs = μk = 0.7、N* = 7.0)、Sklar & Dietrich (2004) の跳躍速度を組み、岩盤の下刻は
+  Chatanantavet & Parker (2009) の E = β|q_b|(1 − P_c)(β はせん断応力によらない)、被覆率は
+  Tanaka & Izumi (2013) の P_c = η_a/L_a(L_a = 2.5d)。石狩川(勾配 0.0025、d = 50 mm、
+  Q = 800 m³/s、幅 100 m)で β ≈ 0.001 /m(Inoue ら 2014 の現地実験)。給砂比 1.0 では交互砂州状の
+  被覆が下流へ移りながら岩盤を「紙やすり」のように一様に削り(横断方向に対称で両岸寄りが深い)、
+  0.2 では岩盤に幅約 5 m の縦溝が複数刻まれて被覆は溝の底に溜まり、0.7 はその中間。ENCflow の
+  研磨項(β × 実際の流砂量 × 露出率)は同じ則で、被覆の関数形(指数)が違う。
 - Mishra, J. and Inoue, T. (2020): Alluvial cover on bedrock channels: applicability of
   existing models. *Earth Surf. Dynam.*, 8, 695–716. doi:10.5194/esurf-8-695-2020
-  (要旨で確認)。同論文が引く Inoue ら(2014)の被覆・粗度モデルは本文未照合。
+  (要旨で確認)。同論文が引く Inoue ら(2014)の被覆・粗度モデルは本文未照合(書誌は Inoue ら 2016
+  の文献表で確認: Inoue, T., Izumi, N., Shimizu, Y. and Parker, G. (2014): Interaction among alluvial
+  cover, bed roughness, and incision rate in purely bedrock and alluvial-bedrock channel. *J. Geophys.
+  Res. Earth Surf.*, 119(10), 2123–2146)。
 - Howard, A. D. and Kerby, G. (1983): Channel changes in badlands. *Geol. Soc. Am. Bull.*,
   94, 739–752(要旨で確認: 岩盤河道の侵食速度は出水時の底面せん断に比例する)。
   閾値つきの超過せん断応力型の典拠(Howard 1994 など)は照合待ち。
@@ -562,9 +639,14 @@ users_guide/sediment.md・massflow.md・geomorph.md、handoff.md 1n・1n2。
 - Heimsath, A. M. ほか (1997)(土層生成関数。sediment.md の既存の出典)。
 - Lague, D. (2014)、McGuire, L. A. ほか (2023)、Wilcock, P. R. and Crowe, J. C. (2003)、
   Coulthard, T. J. ほか (2013): R・D の記録を引き継ぐ。
-- 照合待ちの候補(書誌は記憶による。採用の前に確認する): Rickenmann & Recking (2011)
-  と Nitsche ら (2011)(急勾配礫床の抵抗と流砂量)。Stock & Dietrich (2006)(土石流による
-  谷の侵食)は §12.9 で要旨の水準で確認した。
+- Rickenmann, D. and Recking, A. (2011): Evaluation of flow resistance in gravel-bed rivers
+  through a large field data set. *Water Resour. Res.*, 47, W07538. doi:10.1029/2010WR009793
+  (2026-10-29 に利用者が提供した本文で確認。要点は §6.3)。
+- Nitsche, M., Rickenmann, D., Turowski, J. M., Badoux, A. and Kirchner, J. W. (2011):
+  Evaluation of bedload transport predictions using flow resistance equations to account for
+  macro-roughness in steep mountain streams. *Water Resour. Res.*, 47, W08513.
+  doi:10.1029/2011WR010645(2026-10-29 に利用者が提供した本文で確認。要点は §6.3)。
+- Stock & Dietrich (2006)(土石流による谷の侵食)は §12.9 に記載(2026-10-29 に本文で照合済み)。
 
 **本書の導出**: §4.3 の定常での被覆率と下刻速度、§4.4 の厳密伝播子の加法性と研磨の
 積分(固定した水理での局所の常微分方程式の解。結合系の厳密解ではない)。
@@ -710,8 +792,15 @@ users_guide/sediment.md・massflow.md・geomorph.md、handoff.md 1n・1n2。
 (L_h は斜面の長さ)、渓流の被覆の応答は出水中の地形の時間で数十秒〜数分である。
 
 - **代表出水だけを計算する**: 谷頭からの一定の形成流量 Q_f だけを流し、morfac = M で加速する。
-  出水は暦の 1 年のうち割合 i_f(間欠係数。Paola ら 1992・Parker の e-book の考え方。書誌は
-  照合待ち)だけ流れるとみなす。暦の時間 = 計算した出水の時間 × M / i_f。
+  出水は暦の 1 年のうち割合 i_f(間欠係数)だけ流れるとみなす。原型は Paola ら (1992) の
+  intermittency I(§2.2「Time averaging」の式 (12)。河道を形成する代表の流れが時間の割合 I
+  だけ起こるとし、長期平均の流量・流砂量は ⟨q⟩ = I q、⟨q_s⟩ = I q_s、出水中だけ非零の量
+  (流速・水深・幅)は平均で不変。出水ごとに条件が同じなので、平均の積の変動項 ⟨β' q_s'⟩ が
+  0 になる簡略化だと同論文は断る。式 (13))。Sklar & Dietrich (2006) の F_t(代表の出水が
+  流れる時間の割合。粗い土砂はすべて出水中に運ばれる。式 (13)・(16))も同じ考えで、同論文は
+  低流量にも年流出を分け(高流量の割合 F_w。式 (14)〜(19))、流量の記録から F_t を選ぶ
+  (参照地点で F_t = 0.0437 = 年 16 日、F_w = 0.41)。Parker の e-book は未照合。暦の時間 =
+  計算した出水の時間 × M / i_f。
 - **連続に働く過程は係数を 1/i_f 倍して与える**: 隆起(uplift0)・風化(wthr_p0)・クリープ
   (creep_d)は率の係数に線形な自律系なので、係数の 1/i_f 倍は、その過程だけを暦の時間で
   進めることと同じになる(developer.md §19 の「プロセス別の実効加速の逃げ道」をこの 3 つに
@@ -754,8 +843,9 @@ dts = 50 s(暦の 20 万年が逐次 6〜7 分)、Δx = 2 m で dts = 20 s(4 ラ
   谷頭から一定の給砂 q_in を与える。定常の勾配は各セルで
   E_p0(S)(1 − q/q_c(S)) + β q (1 − q/q_c(S)) = U を解いた準解析解(T8 の拡張。q は谷頭の
   給砂と上流のセルの剥離物の和で、研磨の細粒分は系外へ出る)。q_in = 0 が (a)。q_in を
-  振って、斜面供給が渓流の定常勾配を変える度合い(Sklar & Dietrich 2006 の問い。書誌は
-  照合待ち)を見る。数分の計算。
+  振って、斜面供給が渓流の定常勾配を変える度合い(Sklar & Dietrich 2006 の §4 の問い。同論文
+  では定常勾配 = 移動限界の勾配 S_D + 給砂を運ぶ増分 ΔS_Qs + 下刻の増分 ΔS_E(式 (32)〜(34))
+  で、粒径が最も効き、給砂が次、下刻そのものは硬い岩や速い隆起でだけ効く)を見る。数分の計算。
 - **C2 斜面だけ**: 新しい test/hillslope(仮称)。中央の 1 列を、隆起しない固定床
   (fn_uplift = 0、岩盤下刻なし、風化なし)の渓流にして、両側の斜面(東西の端は分水界 = 壁)
   からクリープで来た土層を流し去る(クリープは領域の端を壁として扱うので、吸い込みは渓流で
@@ -861,7 +951,8 @@ np = 1, 2, 4 とリスタート往復を確かめ、文書(日英)・developer.m
 - 谷底は 1 セル幅の水路になり、谷底の幅(氾濫原)や側岸の後退は表さない。側岸侵食
   (f_berode)・安息角(f_repose)は、斜面の放物線形の検定を汚さないよう入れない(後で)。
 - dts の上限は概算(p が閾値の近くで大きくなる)。
-- 間欠係数・Sklar & Dietrich (2006) の書誌は記憶からで、採用の前に照合する。
+- (2026-10-29)Sklar & Dietrich (2006)・Paola ら (1992) は本文で照合済み(間欠係数は Paola ら
+  の式 (12) の I が原型、Sklar & Dietrich の F_t も同じ考え。§11.2)。Parker の e-book は未照合。
 
 ---
 
@@ -918,7 +1009,7 @@ np = 1, 2, 4 とリスタート往復を確かめ、文書(日英)・developer.m
 |---|---|---|---|
 | L1 | 抵抗則の底面せん断 τ_r = ρ_m h_t × (抵抗則の減速度)。f_dbres ごとに異なる | k (τ_r/τ_c − 1)^m | §6.1 の (i)。流水の剥離則(§4.2)の τ_b を混合体に置き換えたもの |
 | L2 | 準静的な駆動応力 τ_d = ρ_m g_e h_t tanθ(g_e = g cos²θ のとき ρ_m g h_t sinθ cosθ。定常の等流では抵抗に等しい) | k (τ_d/τ_c − 1)^m | Landlab MassWastingRunout の準静的の選択肢(対象は土層)、McGuire ら(2023)の流動深と勾配の則 |
-| L3 | 粒子の慣性応力 σ_i = ρ_s C (d \|V\|/h_t)² cosθ(Bagnold 型) | k σ_i^a(a = 1・0.5) | §6.1 の (ii)。Stock & Dietrich(2006)・Hsu ら(2008)の慣性応力の仮説、MassWastingRunout の既定(grain_shear) |
+| L3 | 粒子の慣性応力 σ_i = ρ_s C (d \|V\|/h_t)² cosθ(Bagnold 型) | k σ_i^a(a = 1・0.5) | §6.1 の (ii)。Stock & Dietrich(2006)・Hsu ら(2008)の慣性応力の仮説(応力の形は同論文の式 (11)・(15) と同じ。侵食則の形の違いは所見 2 の注)、MassWastingRunout の既定(grain_shear) |
 | L4 | 単位幅の固体流束 q_s = C \|V\| h_t = h_s \|V\| | β q_s | 流水の研磨 β q_b(§4.2)の土石流版(道具の量) |
 
 ### 12.4 単一イベントでの比較(2026-10-27。後処理。コードは変えていない)
@@ -972,6 +1063,16 @@ np = 1, 2, 4 とリスタート往復を確かめ、文書(日英)・developer.m
    同じ係数で抵抗則を替えると急な区間が 2.1 → 40.9 cm(14 倍)になる。Stock & Dietrich(2006)・
    Hsu ら(2008)の衝突の機構が働く巨礫の前縁を、単層混合体は分離して表さない。そのため、
    (V/h)² が拾うのは数値の薄い層になる。
+   (2026-10-29 Stock & Dietrich 2006 の本文で確認: 同論文の則は長期の低下速度
+   −∂z/∂t ∝ f · L · [cosθ ν_s ρ_p D_e² (u_s/h)^w]^n ÷ 岩の抵抗(式 (14)・(15)。f は土石流の頻度、
+   L は粗い前縁の長さ、解析は n = 1・w = 2)で、1 回の低下量は L × σ_i に比例する。前縁が流速
+   u_s で通過する点でこれを時間積分の速度に直すと E ∝ u_s σ_i ∝ |V|³/h_t² になり、L3(E ∝ σ_i)
+   より速度に強く依存する(抵抗則の選び方で流速が変わる影響が大きくなる)ので、L3 を採らない
+   結論は変わらない(試算はしていない)。前縁(長さ L)の衝突が
+   侵食の担い手という同論文と Hsu ら 2008 の見方は、所見 6 の単層混合体の限界と同じ論点。
+   同論文の野外の推定では、前縁のバルクの静的垂直応力は数十 kPa、慣性応力はその 1〜2 桁
+   小さく、どちらも無傷の岩の引張強さより 10〜1000 倍小さい。岩塊の除去は巨礫の点荷重
+   (0.1〜10 MPa)による、と仮定して慣性応力を代理量に使う。)
 3. **L4 も滑らかで薄層に鈍い**(8〜11 %)。ただし閾値と陽な勾配を持たず、クーロン + Manning では
    急な区間に偏る(閾値なしの L2 の 2 倍)。流速を通して抵抗則に依存する。
 4. **閾値(1 kPa)の効き**: 侵食が勾配 0.2 以上の区間にほぼ限られ、0.1 以下はほぼ 0 になる。
@@ -985,6 +1086,14 @@ np = 1, 2, 4 とリスタート往復を確かめ、文書(日英)・developer.m
 6. **前縁の集中は、どの則でも表れない**(5 s で 5〜13 %、10 s で 9〜25 %)。Illgraben の観測では
    侵食の大半が粗い前縁の通過中に起きる(Berger ら 2011)。これは単層混合体の共通の限界として
    記録する。
+   (2026-10-29 Berger ら 2011 の本文で確認: 扇状地の勾配 5° の水路に埋めた侵食センサーで、
+   2008 年 7 月 1 日の最大の土石流は前縁の到達から 20 s 以内に段階的に最大 0.5〜0.55 m を削り
+   (最大の速さ 0.8 m/s)、侵食は流動深・全垂直応力・せん断応力が最大になる 10〜15 s 前に
+   始まった。始まりの時刻の値は流動深 1.5 m、垂直応力 30.4 kPa、せん断応力 1.9 kPa。侵食は
+   側壁の圧力の平均と変動(粒子の衝突)が最大の時期と重なり、Stock & Dietrich 2006 の見方と
+   整合する。8 月 31 日も前縁から 7 s で始まり、6 月 16 日は前縁から 44.5 分後の洪水のような
+   尾部で段階的に 0.15 m。後続の堆積が 0.2 m あり、河床は事前・事後の測量の差より深く
+   掘り返されている。対象は扇状地の堆積物の床で、岩盤ではない。)
 7. **大きさ**: L2c で渓流の平均を 1 イベント 1 cm にする係数は k_d = 1.8e-4 m/s(τ_d = 2τ_c での
    低下速度)。文献に標準値はなく、土石流の渓流の岩盤の低下は 1 回あたり mm〜cm の程度
    (Stock ら 2005、McCoy ら 2013)。したがって校正値として扱い、既定を置かない。
@@ -1114,9 +1223,12 @@ np = 1, 2, 4 とリスタート往復を確かめ、文書(日英)・developer.m
   topographic signature. *Water Resour. Res.*, 39(4), 1089. doi:10.1029/2001WR001057
   (要旨で確認: 勾配–面積の逆べき則は勾配 0.03〜0.10 より急な所にはほとんど延びない)。
 - Stock, J. D. and Dietrich, W. E. (2006): Erosion of steepland valleys by debris flows.
-  *Geol. Soc. Am. Bull.*, 118(9/10), 1125–1148(要旨と二次的な紹介で確認: 低下速度を、
-  流れに沿った粒子衝突の固体の慣性垂直応力の積分と、上流の土石流の発生源の数に結びつける。
-  土石流の力学のパラメータ化は粗く、検証されていないと著者自身が述べる。式の形は未照合)。
+  *Geol. Soc. Am. Bull.*, 118(9/10), 1125–1148. doi:10.1130/B25902.1(2026-10-29 に利用者が
+  提供した本文で確認: 低下速度を、粗い前縁に沿った粒子衝突の固体の慣性垂直応力の積分
+  (式 (11)・(14)・(15))と、上流の土石流の発生源の数(谷の頻度 N_t/t_r。式 (17)・(18))に
+  結びつける。土石流の力学のパラメータ化は粗く、検証された則には遠いと著者自身が述べる。
+  合流点の下流で谷の勾配と岩の風化が急に下がるという観察(土石流を通す支流 = 合流角 60〜70°
+  未満)も同論文。§12.4 の所見 2 の注)。
 - Stock, J. D., Montgomery, D. R., Collins, B. D., Dietrich, W. E. and Sklar, L. S. (2005):
   Field measurements of incision rates following bedrock exposure: Implications for process
   controls on the long profiles of valleys cut by rivers and debris flows. *Geol. Soc. Am.
@@ -1131,9 +1243,10 @@ np = 1, 2, 4 とリスタート往復を確かめ、文書(日英)・developer.m
   doi:10.1002/jgrf.20041(要旨で確認: 岩盤の床が観測期間に 36〜64 mm 低下。底面力の変動は
   平均の約 50 倍で、粒子の衝突による。厚さ約 5 cm の堆積物が床を衝突から守る)。
 - Berger, C., McArdell, B. W. and Schlunegger, F. (2011): Direct measurement of channel erosion
-  by debris flows, Illgraben, Switzerland. *J. Geophys. Res.*, 116(F1).
-  doi:10.1029/2010JF001722(書誌と、引用する論文の紹介で確認: 侵食の大半が粗い前縁の通過中に
-  起き、流動深が侵食の分布と量を左右する。論文番号は未照合)。
+  by debris flows, Illgraben, Switzerland. *J. Geophys. Res.*, 116, F01002.
+  doi:10.1029/2010JF001722(2026-10-29 に利用者が提供した本文で確認: 侵食は前縁の到達から 20 s
+  以内に段階的に起き、流動深と応力が最大になる前に始まる。要点は §12.4 の所見 6 の注。
+  以前の記録にあった「流動深が侵食の分布と量を左右する」は本文に見当たらないので外した)。
 - Frank, F., McArdell, B. W., Huggel, C. and Vieli, A. (2015): The importance of entrainment and
   bulking on debris flow runout modeling. *Nat. Hazards Earth Syst. Sci.*, 15, 2569–2583.
   doi:10.5194/nhess-15-2569-2015(紹介で確認: RAMMS の取り込みモデル。最大侵食深を、閾値を

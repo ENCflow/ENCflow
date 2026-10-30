@@ -188,7 +188,7 @@ Riverbed erosion and deposition by a bedload transport formula.
 | fluv_diagratio | 2/(2+sqrt(2)) | Diagonal partitioning (normally no need to change) |
 | fluv_taufac | 1.0 | Effective shear-stress ratio f_τ (the τ* passed to the transport formula = f_τ × τ* of the total resistance; a simple separation of form drag by dunes or vegetation. 1 = no separation) |
 | fluv_slope | 0 | Bed-slope correction of the bed-load direction. 1: Hasegawa type (q⃗ = q_b(t̂ − γ∇z), γ = √(τ*c/(μs μk τ*))) |
-| fluv_mus / fluv_muk | 1.0 / 0.45 | Static and kinetic friction coefficients μs, μk. **Literature values** (Asahi et al. 2013 eq. (22), after Hasegawa 1984; Hasegawa 1989 uses μk = 0.7 as an estimate). See the note below |
+| fluv_mus / fluv_muk | 1.0 / 0.45 | Static and kinetic friction coefficients μs, μk. **Literature values** (Asahi et al. 2013 eq. (22), after Hasegawa 1984; Hasegawa 1989 uses μk = 0.7 as an estimate; the bedrock–alluvial model of Inoue et al. 2016 uses μs = μk = 0.7, whose product 0.49 gives nearly the same γ as the defaults). See the note below |
 | f_secflow | 0 | Secondary-flow correction of the bed-load direction. 1: equilibrium type (near-bed transverse velocity ratio r = N* h κ, κ = streamline curvature of the velocity field) |
 | sec_nstar | 7.0 | N*. **Literature value** (Engelund 1974; Asahi et al. 2013 eq. (18). The de Vriend coefficient 2/κ²(1 − √g/(κC)) is about 10 for C = 50). See the note below |
 | sec_rmax | 1.0 | Upper bound of |r| (cuts the h/R proportionality in sharp bends; 1 = 45°) |
@@ -1267,7 +1267,7 @@ state variable is introduced.
 | rock_kp | 0 (= no plucking) | Plucking rate coefficient (m/s): the incision rate of bare rock at τ_b = 2τ_c |
 | rock_tauc | none (required when rock_kp > 0) | Plucking threshold τ_c (Pa) |
 | rock_m | 1.0 | Plucking exponent m |
-| rock_beta | 0 (= no abrasion) | Abrasion coefficient β (1/m) |
+| rock_beta | 0 (= no abrasion) | Abrasion coefficient β (1/m). A guide is the match with the model of Sklar & Dietrich in §7 of the [supplement](sediment.md) (inversely proportional to the square of the rock tensile strength) |
 | rock_hstar | none (required, > 0) | Cover length H* (m): a measure of the relief of the bedrock surface. Shared by the exposure and the availability |
 | fn_rock | "" | Distribution of the erodibility multiplier of the bedrock (≥ 0; 0 = not eroded = fixed bed, structures). Unset = 1 everywhere |
 
@@ -1566,6 +1566,7 @@ When the type of phenomenon is known, start from the following
 | Debris avalanche (sector collapse) | f_dbed=0 or 4 + f_dbres=4 | 0.05-0.15 | 200-500 | - | - | - | The apparent friction H/L falls with volume → give it directly through mu |
 | Dense pyroclastic flow | f_dbed=0 + f_dbres=5 | - | - | 5-50 | - | - | VolcFlow-type applications |
 | Stony debris flow (Japanese type) | f_dbed=3 + f_dbres=3 | - | - | - | 0.05-0.3 | 35 | Takahashi-Nakagawa 1991. Grain size = representative boulders of the front |
+| Debris flow (Voellmy type, with entrainment) | f_dbed=4 + f_dbres=4 | 0.11 | 450 | - | - | - | Back-analysis of one event (Cancia 2015, Qiao et al. 2023; [debris-flow supplement](massflow.md) §6). Hungr's E_r h\|V\| is the standard entrainment law in practice; with f_dbed=4, delta_e ≈ E_r × a representative flow depth (massflow.md §3) |
 | Mudflow, fine sediment flow | f_dbed=2 + f_dbres=2 | - | - | - | 0.001-0.01 | 30-35 | Egashira constitutive law. e ≈ 0.85 |
 | Lahar (volcanic mudflow) | f_dbed=1 or 2 + f_dbres=4 (fine) / 1; 3+3 when boulder-dominated | 0.05-0.1 | 500-1000 | - | 0.001-0.01 | 30-35 | Initiated by erosion of the ash layer (sd), a sediment-laden segment inflow or a breach chain. f_dbwet=1 recommended (2 with infiltration). Set dd to about 0.2 mm when starting from sheet flow on slopes. The Egashira laminar law is not usable for fine material. See the "Lahars" paragraph above and [examples/ashfall_lahar](../../../examples/ashfall_lahar/en/README.md) |
 | Simple debris flow (calibration-driven) | f_dbed=1 + f_dbres=1 | - | - | - | - | 30-35 | Calibrate the runout with delta_e and delta_d |

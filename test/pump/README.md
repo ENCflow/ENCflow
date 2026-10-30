@@ -9,6 +9,8 @@
 地下へ入れたうえで、全セル等分配の井戸と中央 1 セルの井戸の 2 本で
 汲み上げます。需要と実取水が厳密に一致し、全体の貯留が解析値どおり
 直線的に減ることを確かめます(developer.md §16.3 の検証記録)。
+Run.sh・Run_MPI.sh は reference 比較のあと、検定スクリプト `Check_pump.py`
+で解析値と照合します。
 
 ## 構成
 
@@ -30,13 +32,15 @@ S_total(3600 s) = 0.029551020408163 m が解析値です。
 |---|---|
 | `param.txt` | 上記(reference あり) |
 | `data_pump/wells.txt` | 井戸 1 のセルリスト(全セル) |
+| `Run.sh` / `Run_MPI.sh N` | Log.txt を reference と比較(ULP = 0、Runge 列を除く)したあと、`Check_pump.py` で解析値と照合 |
+| `Check_pump.py` | 解析検定: 全行の S_total = h₀ − Q t / A(相対 1e-9)と S_surf = max(h₀ − K_s t, 0)(K_s = 1e-4 m/s)、最終時刻の Hg の分布(中央以外 h₀ − Q₁ t / A、中央はさらに Q₂ t / Δx² 低い。分布出力の表示 4 桁の丸めの範囲)、画面の井戸ごとの需要 = 実取水 = Q t |
 | `Fig.py` | 下の図 `figs/*.png` を描く |
 
 ## 実行
 
 ```bash
 make
-./Run.sh          # Log.txt を reference と比較(ULP = 1、Runge 列を除く)
+./Run.sh          # Log.txt を reference と比較(ULP = 0、Runge 列を除く)→ Check_pump.py
 ./Run_MPI.sh 4
 python3 Fig.py    # figs/storage.png, figs/map.png(引数 en で英語版を en/figs/ に)
 ```
@@ -71,8 +75,8 @@ python3 Fig.py    # figs/storage.png, figs/map.png(引数 en で英語版を en/
 - 需要が貯留を超える場合は初期貯留全量で頭打ちになり負値は出ません
   (§16.3: 需要 1 m³/s の過大ケースで 88.2 m³ 全量)。揚水による海水の
   誘引(test/salt 派生)も同節に記録があります。
-- 回帰テストの規律: Log.txt が reference に一致、MPI np = 1, 2, 4 も同一
-  であること。
+- 合否: Log.txt が reference に一致し(MPI np = 1, 2, 4 も同一)、
+  `Check_pump.py` の解析検定が通ること。
 
 ## 関連文書
 

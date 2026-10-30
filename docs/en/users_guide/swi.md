@@ -99,9 +99,18 @@ storage and the old tank-2 and tank-3 storages, then updates explicitly
 - `S2_new = S2 + (b1 − q2 − b2) Δt_h`
 - `S3_new = S3 + (b2 − q3 − b3) Δt_h`
 
-The sum after the update is the output SWI. This discretization differs
-from evaluating tank-1 discharge before adding rainfall; matching the
-official constants and grid alone does not guarantee identical values.
+The sum after the update is the output SWI. The JMA computation (the
+appendix of Okada et al.[^okada01]) uses Δt = 20 min (the hourly rainfall is
+split into three equal parts), evaluates discharge and percolation from the
+storage S(t) before the rainfall is added, and then adds the rainfall. The
+discretization differs from ENCflow's, so matching the official constants
+and grid alone does not guarantee identical values. In a trial calculation
+(three rainfall shapes: constant, triangular and a short intense burst), the
+period-maximum SWI of ENCflow is 2–4 % smaller than with the appendix's
+method at dt = 600 s and still 0–2 % smaller at dt ≤ 60 s. As dt decreases,
+ENCflow approaches the continuous-time solution (within 0.2 % at dt = 60 s);
+the remaining difference is the discretization error of the appendix's
+20-min step itself (larger for short intense rain).
 
 ## Contract (dedicated runs)
 
@@ -194,7 +203,7 @@ user, but they are listed here to show where the values come from.
 | Parameter | Default | Meaning | Basis |
 |---|---:|---|---|
 | swi0(1:3) | 0, 0, 0 mm | initial storage of the three tanks | **given** effect of antecedent rainfall; 0 to start dry |
-| outlet heights L (fixed) | 15, 60 / 15 / 15 mm | two outlets of tank 1 / tank 2 / tank 3 | **literature value** nationwide constants of the Japan Meteorological Agency[^okada01] |
+| outlet heights L (fixed) | 15, 60 / 15 / 15 mm | two outlets of tank 1 / tank 2 / tank 3 | **literature value** nationwide constants of the Japan Meteorological Agency[^okada01] (appendix). The values are the granite row of the values that Ishihara & Kobatake[^ishihara79] classified into four geology types (volcanic rock, granite, Palaeozoic, Tertiary and Quaternary; Table 5), identified for computing flood runoff from small mountain sub-basins with an average area of 15–18 km². In tank 1, α = 0.1 belongs to the 15 mm outlet and α = 0.15 to the 60 mm outlet |
 | outflow coefficients α (fixed) | 0.1, 0.15 / 0.05 / 0.01 /h | lateral outflow | **literature value** same[^okada01] |
 | percolation coefficients β (fixed) | 0.12 / 0.05 / 0.01 /h | bottom percolation | **literature value** same[^okada01] |
 | dt (&list_sysparam) | ≤ 600 s | time step of the run | **method** the JMA computation interval of 10 min or less is required (the run stops otherwise) |
@@ -204,7 +213,9 @@ user, but they are listed here to show where the values come from.
 - For initial storages that reflect antecedent rainfall, run the model on
   official rainfall from 2–3 weeks before the target date and give the
   three per-tank storages to swi0 (the total SWI alone does not fix the
-  split between tanks).
+  split between tanks). Okada et al.[^okada01] require starting the
+  computation at least two weeks earlier to reproduce the steady state in
+  which antecedent rainfall drains from tank 3.
 - The constants and the model origin are in Ishihara & Kobatake[^ishihara79]
   and Okada et al.[^okada01]; the official definition is on the
   [JMA "Soil Water Index" page](https://www.jma.go.jp/jma/kishou/know/bosai/dojoshisu.html) (in Japanese).
@@ -215,5 +226,5 @@ user, but they are listed here to show where the values come from.
 
 ## References
 
-[^ishihara79]: Ishihara, Y. and Kobatake, S. (1979): Runoff model for flood forecasting. *Bull. Disaster Prev. Res. Inst., Kyoto Univ.*, 29, 27–43. (the serial three-tank model)
-[^okada01]: Okada, K. et al. (2001): Soil water index (title translated; in Japanese). *Sokkō-Jihō*, 68(5), 29–47. (JMA's standard constants and operation)
+[^ishihara79]: Ishihara, Y. and Kobatake, S. (1979): Runoff model for flood forecasting. *Bull. Disaster Prev. Res. Inst., Kyoto Univ.*, 29(1), No. 260, 27–43. (the serial three-tank model Fig. 8; values identified for five basins Table 1; values by geology Table 5)
+[^okada01]: Okada, K., Makihara, Y., Shimpo, A., Nagata, K., Kunitsugu, M. and Saitoh, K. (2001): Soil Water Index (SWI) (in Japanese). *Tenki*, 48(5), 349–356. (JMA's operation; the appendix gives the tank model's structure, computation and constants)

@@ -27,7 +27,12 @@ The stream carries sediment and wears the bedrock only during floods, while
 weathering, creep and uplift on the hillslopes work all year. Here only a
 representative flood (a constant formative discharge) is computed, and the
 flood is taken to flow for F = 300 s (5 minutes; intermittency factor
-i_f = F / 1 year = 9.5e-6) of each calendar year. The coefficients of the
+i_f = F / 1 year = 9.5e-6) of each calendar year (the intermittency idea of
+Paola et al. 1992, in which the representative channel-forming flow occurs a
+fraction I of the time and the long-term sediment flux is I times the flux
+during the flood; the F_t of Sklar & Dietrich 2006, in which all coarse
+sediment is carried by the representative flood, is the same idea, with
+F_t = 0.0437 = 16 days per year at their reference site). The coefficients of the
 continuous processes are given multiplied by 1/i_f (uplift `uplift0`, soil
 production `wthr_p0`, creep `creep_d`; these processes are linear in their
 coefficients, so this is the same as running only those processes on the
@@ -267,7 +272,9 @@ in Japanese; no hillslopes, replaced by a supply at the head).
 - [Users guide: landform change](../../../docs/en/users_guide/geomorph.md),
   [supplement](../../../docs/en/users_guide/sediment.md) (the soil production
   function of Heimsath et al. 1997, the creep coefficient of Fernandes &
-  Dietrich 1997, cover and tools of Sklar & Dietrich 2004)
+  Dietrich 1997, cover and tools of Sklar & Dietrich 2004, steady-state slope
+  of Sklar & Dietrich 2006, intermittency of Paola et al. 1992 and Sklar &
+  Dietrich 2006)
 - [test/hillsoil](../../../test/hillsoil/en/README.md) (C2: the hillslopes
   alone in the steady state),
   [test/rockinc](../../../test/rockinc/en/README.md) (T11 = C1: the steady slope

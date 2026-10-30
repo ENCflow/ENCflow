@@ -80,6 +80,16 @@ architecture.md。このメモは「現在進行中・未完了の項目」だ�
      区間流入面の移流など)ため、英語図を作らず日本語図の共有のまま。README の表の数値も
      同じ古い結果に基づく。原因の切り分け(どのコミットで変わったか)と、日本語図・表を
      現行で再生成するかの判断待ち。
+   - **2026-10-29 の確認記録の作業で判明**: tsunami_fault の probes・profiles と tsunami_coast の
+     probes・snapshots の英語図は、再計算した結果(2026-10-25 のコード)から描かれていて、日本語図
+     (2026-10-06 の結果)とデータが違う(拡大すると水位の時系列の山の形・終端の値、沿岸の遡上の
+     尖りが違う。生成時は「目視で同一」としていた)。この 4 枚は英語図を外して英語 README から
+     日本語図を共有する形に戻した(上の oneway_edge・nh_profile と同じ扱い)。日本語図・表を現行の
+     結果で作り直すかは上と同じ判断待ちで、作り直したら英語図も同じ結果から描く。deformation の
+     2 枚は与件(規定の地盤変位)の図で一致、levee_breach の 3 枚は日本語図と一致(2026-10-24・25 の
+     同じ版の結果)。英語図のうち確認した 28 組(badland・badland_round・bedrock_cover・levee_breach・
+     nest_reflect・tsunami の deformation・test/gwbed)は記録済み。test/gwbed は英語の題 2 つが
+     重なって切れていたので、英語の文字列だけ 2 行に折り返して描き直した。
    - **残(利用者の保存済み結果が要る。再計算は数時間〜十数時間)**: badland_storm・mesa・
      karst・tower_karst。各ケース直下で日本語版と同じ引数に `en` を足して実行し、
      英語 README の図リンクを `../figs/` → `figs/` に切替えて record する。
@@ -134,14 +144,18 @@ architecture.md。このメモは「現在進行中・未完了の項目」だ�
      structure・channel・tide・boundary など)で、モデル・式・既定値の出典を
      plan 文書・developer.md から引き写すか、独自定式ならその旨を明記する
      (日英。list_*.f90 の既定値コメントとも整合させる)。
-   - 検定スクリプトの整備: 解析解があるのに reference 比較だけのケース
-     (pump・frost の線形解、conduit の解析平衡、nhbottom の規定隆起厳密解
-     など)に Check_*.py を足し、test/README.md の「検証」列を更新する。
-     benchmark 系(examples/benchmark の h-plane・v-shaped・v-valley)の
-     環境非依存テストへの昇格(§10)もここに含める。
-   - 一貫性検査の追加候補: List_samples ↔ namelist 宣言の突合せ(params_index
-     と同型)、test/README.md のケース一覧 ↔ test/ ディレクトリの突合せ。
-     どれも i18n.yml の枠(Python 標準ライブラリ・生成なし)で足す。
+   - 検定スクリプトの整備: (済 2026-10-29)pump・frost・conduit・nhbottom に
+     Check_*.py を足し、test/README.md の「検証」列を ref・解析 にした(developer.md
+     §16.3・§16.4・§46.4・§69.10)。pump・frost・conduit A は Run.sh・Run_MPI.sh の
+     後段で走る(CI・nightly でも毎回。-Og -fcheck=all のビルドでも合格を確認)、
+     conduit B は Run_lat.sh、nhbottom は Run_theory.sh(3 ケース約 1.5 分。numpy)。
+     残り: benchmark 系(examples/benchmark の h-plane・v-shaped・v-valley)の
+     環境非依存テストへの昇格(§10)。
+   - (済 2026-10-29)一貫性検査: List_samples ↔ namelist 宣言と test/README.md のケース一覧 ↔
+     test/ ディレクトリの突合せを tools/consistency/check.py として i18n.yml に入れた
+     (developer.md §35.1)。導入時に表に載っていなかった bmi_vars・gwbed・sublattice を足した。
+     残る参考情報: どの設定例にも現れないパラメータ 51 個(構造物・境界の配列、`*_c` 版など)。
+     設定例に足すかは任意。
 
 00d. **河口デルタ形成の試行(2026-10-20〜21。docs/delta_plan.md)の残り**
    - 3 コミット(§84.13 定着の冠水減衰・河岸係数、§84.14 台帳の等価修正、
@@ -545,6 +559,11 @@ architecture.md。このメモは「現在進行中・未完了の項目」だ�
    - test/glacier の Run_MPI.sh は逐次 result と Log.txt を cmp するため、
      既知の Runge 列の逐次/MPI 差で「MISMATCH」が出る(検定自体は PASS)。
      SKIPCOLS 相当の比較に揃えるか警告に格下げする
+     → 2026-10-29 に再確認: 現行の release ビルド(逐次と MPI)で np = 2・4 とも Log.txt を含めて
+     逐次とバイト一致し、MISMATCH は出ない(検定ファイルは 2026-08-16 から不変)。このケースは地表水が
+     なく Runge 列は常に 0 なので、当時の不一致は Runge 列ではなく、逐次と MPI のビルドの最終桁の差
+     (§28.3)だった可能性が高い。Runge 列を外しても直らないので、スクリプトは変えていない。再発したら
+     差の出た列を保全し、Log.txt だけ Compare_ref.sh(ULP=1)で比べる形に変える
    - 環境メモ: root コンテナでの mpirun は OMPI_ALLOW_RUN_AS_ROOT(_CONFIRM)=1
      が必要、OpenMP 併用で物理コア数を超えると著しく遅い(MPI 検証は
      OMP_NUM_THREADS=1。§64.3)
@@ -560,7 +579,7 @@ architecture.md。このメモは「現在進行中・未完了の項目」だ�
      3 つの機械比較を回す**こと。このうち「日英の見出し数・表の行数」と
      「List_samples 日英のパラメータ集合」は 2026-10-23 に tools/i18n/check.py
      (構成の WARN、コメント除去後の完全一致の ERROR)として常設した。namelist と
-     索引の突合は未スクリプト化(下記「国際化」)
+     索引の突合も 2026-10-24 に tools/params_index/check.py として常設した(下記「国際化」(d))
 
 1. **gwflow 導入コミットの検証(直近の宿題)**
    - fn_gwflow 未指定で全ケース既存 reference とビット一致(逐次・np=1,2,4)
@@ -671,7 +690,10 @@ architecture.md。このメモは「現在進行中・未完了の項目」だ�
 1f. **再開時刻の継続化(2026-08-08 実装。仕様は developer.md §7)の残検証**
    - gfortran 逐次で確認済み: フレッシュラン全8ケース reference と一致、
      wave t=4 分割の往復ビット一致(Log・E/H 出力)、tt<=t1 の par_stop
-   - 残: MPI(np=2)での往復ビット一致、ifx での同確認
+   - MPI の往復ビット一致は恒常化済み: test/prmap・wfcurrent・wfsed・wfdoppler・wfshoal・wfswash・
+     icevap・gwdefault・vzzone・bedfines・fixation・dbrock・hillsoil・rockinc の Run_MPI.sh が、保存 →
+     再開の継続を同じ並列数の通し計算とバイト比較する(2026-10-29 に確認)
+   - 残: ifx での同確認
    - 既知の制限(save 対象外のため再開で連続しない。要否は今後判断):
      最大値統計 hmax 系・qcum(意図的仕様。§7)、m_intercept の内部状態
      (貯留型遮断の途中状態)、prtype=3 で再開時に読み直すフレームの
@@ -683,7 +705,10 @@ architecture.md。このメモは「現在進行中・未完了の項目」だ�
      潮位有効時のリスタート往復ビット一致(更新位相の途中 t=121 で分割し
      Log・E/H 出力が中断なしランと一致)
    - test/tide の reference は目視承認済み(2026-08-24)= 確定
-   - 残: titype=3/4(分布系)の疎通、ifx・PREC=single、実地形ケースでの
+   - titype=4(分布ファイルのリスト)は 2026-10-29 に test/tide 構成 3 で検定した(構成 1 の系列と
+     同じ潮位を与えて S が一致、時間間隔の 3 つの書き方がバイト一致、np = 2・4 と -fcheck=all でも一致。
+     developer.md §88.5)
+   - 残: titype=3(分布 1 枚 × 倍率)の疎通、ifx・PREC=single、実地形ケースでの
      hsea0 感度(浸水方向の流量が hsea0 に依存する度合いの定量化)
    - 関連する将来課題: 海への段落ち(f_rivermouth_drop)の境界条件への
      移管、集水域外縁排水の「海」代用をやめて領域内 x=0 境界の排水条件を
@@ -710,7 +735,8 @@ architecture.md。このメモは「現在進行中・未完了の項目」だ�
 
 2. (消し込み 2026-10-01)developer.md の gwflow/geomorph の項は §16・§19・
    §62・§64 と CLAUDE.md「新しい物理モジュールの追加様式」に記載済み
-3. developer.md の日付プレースホルダ(2026-xx)の実日付化(残があれば)
+3. (消し込み 2026-10-29)developer.md の日付プレースホルダ(2026-xx)11 箇所は git の履歴の実装
+   コミットの日付に置き換えた(並列化 2026-07-15〜07-30。計測の 2 件は記録した日)
 4. **降雨遮断モジュール(m_intercept)の残検証**
    (無効時ビット一致と wave 疎通((1-α) 倍・np=1,2,4 ULP=0)は確認済み
     2026-08-04)
@@ -860,6 +886,15 @@ architecture.md。このメモは「現在進行中・未完了の項目」だ�
    - 解析解・実験ベンチマーク: 斜面等流の平衡濃度、停止距離
      (高橋の実験式)、morfac なし版の検証階段(test/debris は疎通+
      保存則のみ)
+   - (2026-10-29 利用者が Qiao ら 2023 を提供)実事例の候補: イタリア・ドロミテの Cancia の
+     2015 年 7 月 23 日の土石流(Simoni ら 2020 ESPL 45 の事前・事後 DEM と侵食・堆積の分布。
+     初期 4,400 m³ → 28,850 m³、流路 2.2 km)。Qiao ら は DAN3D と差分法のモデルを Voellmy
+     (μ = 0.11、ξ = 450 m/s²)+ Hungr の連行則(E_r ≈ 0.00095 /m)で校正し、浸水域の Jaccard
+     指数 0.38・0.54(連行なしは 0.32・0.39)。ENCflow で再現するには地形データの入手が前提。
+     あわせて、Hungr の連行則 E = E_r h|V|(流動深の因子あり)を f_dbed の選択肢に足す件は、
+     既定を変えない選択肢として入れる方針で users guide の解説 massflow.md §3 に今後の課題として
+     記載した(2026-10-29。developer.md §28.8)。massflow.md §6 と geomorph.md の推奨値の表に
+     校正例を記載した
    - ifx / nvfortran / AOCC でのビルド・検証(gfortran のみ実施済み)
    - S_grnd 表示が h=0 セルの hg を集計しない既存仕様の扱い
      (developer.md §28.4。直すなら m_state_calcstat の cycle 位置の
@@ -935,13 +970,16 @@ architecture.md。このメモは「現在進行中・未完了の項目」だ�
   (10.5281/zenodo.23635011)を CITATION.cff の identifiers に記載、HRL 論文を
   preferred-citation から references へ移動、users_guide/nonhydrostatic.md・parallel.md
   (日英)の再現性記述を Release ノート・§71 側(複数スレッドで非決定)に統一、
-  連絡先と所属機関の公開承認済みを確認。残(人間): 次回 Nightly(bmi_vars 追加後)の
-  緑の確認、GitHub の「Cite this repository」表示の確認、CSDMS への提出そのもの。
+  連絡先と所属機関の公開承認済みを確認。bmi_vars 追加後の Nightly は #44〜#46(2026-10-25〜27)が
+  全ジョブ緑で、bmi ジョブの bmi_vars も合格(2026-10-29 に確認。#47 の失敗は wfcurrent の reference の
+  CPU 差で、bmi ジョブは合格。§90.18 で対処済み)。GitHub の「Cite this repository」表示の確認と
+  CSDMS への提出も済(2026-10-29 利用者確認)。残るのは Discussions への告知(任意。下の「ライセンス」)。
 
 - **リリース v3.0.0(2026-10-25 公開済み)**: Release「ENCflow v3.0.0」(タグ
   v3.0.0 = 1aaf1752 = CITATION 3.0.0 / 2026-10-25。Release UI で Target=main
   のタグ作成、軽量)。Nightly #43(9d677abb)全ジョブ緑を確認後に公開。
-  残: Zenodo DOI の付与確認のみ。以下は当時の準備記録。
+  Zenodo の版 DOI は付与済み(10.5281/zenodo.23635011。CITATION.cff の identifiers)。以下は当時の
+  準備記録。
   v2.1.0(1a846e0)以降 722 コミット
   (マージ以外 600)。**MAJOR の根拠(§34.4、v2.0.0 の前例と同じ「既定の昇格
   による既存入力の結果変化」)**: f_opening_dynamic 1→2(§68.38。reference
@@ -971,10 +1009,10 @@ architecture.md。このメモは「現在進行中・未完了の項目」だ�
   v2.0.0 = bc4d462)を 2026-10-05 に公開、Nightly #23 緑。
 
 - **GitHub Organization「ENCflow」作成・移管・URL 確定済み(2026-08-13)**。
-  残: owner の複数化(両研究室の代表を追加)。(Zenodo DOI は
+  owner の複数化も済(2026-10-29 利用者確認)。(Zenodo DOI は
   2026-08-21 付与済み。下記「ライセンス: 完了」)
-- **README.en.md の作成**(公開の節目。機械翻訳+レビュー、
-  冒頭に「English mirror of README.md」刻印)。
+- (済)ルート README の英語版: README.md が英語ミラー、README.ja.md が正本(2026-09-13 に
+  接尾辞を .ja に統一。docs/multilingual.md)。
 - **実行時メッセージの英語化収斂**(触ったファイルから順に。
   Log 比較対象の文字列に触れる場合は reference への影響に注意)。
 - **CI 二層化(2026-09-15 実施)**: nightly.yml を追加(フル回帰 13 ケース
@@ -1010,9 +1048,9 @@ architecture.md。このメモは「現在進行中・未完了の項目」だ�
   list_sysparam・list_gwflow・list_wq・list_geomorph の例、list_bedmotion の英語版
   未作成)は同日に解消し、6 件とも英語版全文を正本と突き合わせて record 済み
   (method=assistant。人間の確認ではない)。
-  (b) 表の行数が日英で違う未確認ミラー(内容の追随漏れの疑い。`audit` の WARN):
-  comparison.md、users_guide の geomorph・params_index・structure・usecases。
-  `--git-dates` で正本の方が新しい組も同様に順次確認する。
+  (b) 表の行数が日英で違う未確認ミラー(comparison.md、users_guide の geomorph・params_index・
+  structure・usecases)は、下の (c) の 2026-10-24 の全文の突き合わせで解消した(audit の構成の WARN は
+  0。2026-10-29 に確認)。
   (c) examples の README 19 件は 2026-10-23 に §34.2 を改定して対象化し、英訳・全文の
   内容確認・record 済み(method=assistant)。test/ の README 71 件(wave・wave_river を
   除く全ケース + chichibu の data_chichibu*/README 3 件 + nhwave/Dispersion_result.md)も
@@ -1020,7 +1058,8 @@ architecture.md。このメモは「現在進行中・未完了の項目」だ�
   unreviewed 119 組(docs/en の users_guide 全章・README・比較・install・windows・ai_guide・
   tutorial・colab、tutorials の README・param・図、List_samples 20 件、bmi・utils・test・examples
   の README、TRADEMARKS.ja)も 2026-10-24 に全文を突き合わせ、訳側の遅れ(欠落した表行・段落・
-  リンク先の英語版化・古い注記)を直して record 済み。**unreviewed は 0**。以後は正本を変えたら
+  リンク先の英語版化・古い注記)を直して record 済み。**unreviewed は 0**(その後に増えた英語図の 32 組も
+  2026-10-29 に確認して 0 に戻した。上の 00g)。以後は正本を変えたら
   同じ作業で訳を更新し、CI(stale 検出)に従う。  **test の README の図と数値(2026-10-24)**: 46 本の Fig.py(と Diag/Landslide/Theory/Solitary 等)に
   `en` 引数を追加し、英語ラベル版 62 枚を test/<case>/en/figs/ に生成して英語 README から参照
   (.gitignore に `!test/*/en/figs/*.png`)。nhbreak の切り分け節の図 2 枚(runup_diag・runup_visc)は
@@ -1086,8 +1125,15 @@ architecture.md。このメモは「現在進行中・未完了の項目」だ�
   Fig_chichibu.sh。流量振動の説明は §39.3 が典拠)。
 
 1k. **土壌雨量指数 m_swi(fn_swi。2026-08-20 実装済み。developer.md §49)の残項目**
-   - タンク定数の原典照合(石原・小葉竹1979 / 岡田ほか2001 測候時報68。
-     実装値はコード内【要文献照合】マーク付き。文献入手後に確定)
+   - (済 2026-10-29)タンク定数の原典照合: 利用者が提供した岡田ほか(2001)『天気』48(5),
+     349–356 の付録で、定数と孔の組・構造・SWI の定義が m_swi と一致(developer.md §49)。
+     書誌の「測候時報 68(5), 29–47」は誤りだったので swi.md(日英)・m_swi.f90 のコメント・
+     §49 を訂正し、【要文献照合】を外した。石原・小葉竹(1979)の原典でも照合した(2026-10-30。
+     利用者が提供した本文): 11 個の定数が表 5(地質別の値)の花崗岩の行と一致(§49)
+   - (決定 2026-10-29)付録の計算法(Δt = 20 分・1 時間雨量の 3 等分・降雨を加える前の S から
+     流出と浸透)に合わせるモードは設けない(現状維持。§49)。差(期間最大 SWI が dt = 600 s で
+     2〜4 %、dt ≤ 60 s で 0〜2 % 小さい)は swi.md に明記済み。現行の気象庁の 10 分間隔の
+     計算法の資料が得られたら再検討する
    - 原雨量スナップショット方式への拡張(現状は専用ラン=他モジュール
      排他。スナップショットにすれば物理モデル(hg 飽和度・Fs)との
      同走比較が可能になる — §49.1)
@@ -1197,7 +1243,10 @@ architecture.md。このメモは「現在進行中・未完了の項目」だ�
     - 谷底の幅・側岸の後退(まず基岩の崩落 rf_bedrock、足りなければ岩壁向けの側岸侵食。plan §6.6)、
       斜面の面状流と崩壊の連成。
     - 急勾配礫床の抵抗と有効掃流力(第 1 段の結果の最大の不確かさ。現行の手段は fluv_taufac だけ。
-      plan §6.3)、被覆に応じた粗度(滑らかな岩盤の正帰還。plan §6.4)、粒径(方針の議論が先。
+      plan §6.3。Rickenmann & Recking (2011)・Nitsche ら (2011) の照合で候補の形が決まった: 流砂量式の
+      τ* に相対水深 h/D84 だけで決まる係数 (f0/f_tot)^{e/2}(e = 1.5。Nitsche らで最良の方法)を掛ける
+      分離と、流れの抵抗を相対水深で変える Ferguson の VPE。どちらも方針の議論が先。users guide の
+      解説 sediment.md §3 に今後の課題として記載済み)、被覆に応じた粗度(滑らかな岩盤の正帰還。plan §6.4)、粒径(方針の議論が先。
       plan §6.2)、時間尺度(出水の間に進む背景の過程。plan §6.5)。
   - **確認の残り**:
     - 区間流入の流入面の床の修正(§89.25)の例題への影響: delta は 2 構成を計算時間の 73 % まで
@@ -1211,15 +1260,32 @@ architecture.md。このメモは「現在進行中・未完了の項目」だ�
     - examples/debris_bedrock の清水の出水 W の準静的な応力の後処理(plan §12.4)は、対策 1・2 の
       前の計算のまま(README に明記)。
   - **出典の照合待ち**(書誌と式の形を本文で確かめる。plan §9・§12.9、developer.md §89):
-    閾値つきの超過せん断応力型の典拠(Howard 1994 など)、Sklar & Dietrich (2004) の研磨の線形化の
-    式の形、間欠係数(Paola ら 1992・Parker の e-book)と Sklar & Dietrich (2006) の書誌、
-    Rickenmann & Recking (2011)・Nitsche ら (2011)、
+    閾値つきの超過せん断応力型の典拠(Howard 1994 など)、間欠係数の Parker の e-book
+    (原型の Paola ら (1992) の I と Sklar & Dietrich (2006) の F_t は照合済み)、
     Inoue ら (2014) の被覆・粗度モデル、Johnstone & Hilley (2015) の本文(深さ依存クリープ)、
-    Stock & Dietrich (2006)・Hsu ら (2008) の式の形、Berger ら (2011) の論文番号、Frank ら (2015) の
-    題名・著者、Inoue ら (2016)・McGuire ら (2023) の共著者、Parker & Izumi (2000) の原文
-    (ネットワークの制限で未確認)。
+    Hsu ら (2008) の式の形、Frank ら (2015) の
+    題名・著者、McGuire ら (2023) の共著者、Parker & Izumi (2000) の原文
+    (ネットワークの制限で未確認)。Rickenmann & Recking (2011)・Nitsche ら (2011)・Sklar & Dietrich
+    (2006)・Paola ら (1992)・Stock & Dietrich (2006)・Inoue ら (2016)・Berger ら (2011) は 2026-10-29 に
+    利用者が提供した本文で照合済み(plan §6.3・§4.2・§11・§12.4 の所見 2・6 の注・§9)。Inoue ら (2014) の書誌は Inoue ら
+    (2016) の文献表で確定(JGR Earth Surf. 119(10), 2123–2146。本文は未読)。Sklar & Dietrich
+    (2004) も 2026-10-29 に本文で照合済み(式 (24a)。研磨係数 β の目安を sediment.md §7 に記載。plan §4.2・§9)。
+    (2026-10-29 検索で書誌を確認。本文は未読 = 式の形の照合は残る): Howard (1994) WRR 30(7),
+    2261–2285, doi:10.1029/94WR00757。Sklar & Dietrich (2006) Geomorphology 82, 58–83,
+    doi:10.1016/j.geomorph.2005.08.019(本文で照合済み。題名は steady-state を含む)。
+    Paola, Heller & Angevine (1992) Basin Res. 4, 73–90(本文で照合済み: 間欠係数 I は式 (12))、
+    Parker の e-book は 1D Sediment Transport Morphodynamics with Applications to Rivers and Turbidity
+    Currents の第 3 章(満水流量の特性)で洪水の間欠係数 I_f を定義。Rickenmann & Recking (2011)
+    WRR 47, W07538, doi:10.1029/2010WR009793(論文番号も本文で確認)。Nitsche ら (2011) は副題 to account for macro-roughness in
+    steep mountain streams まで、WRR 47, W08513, doi:10.1029/2011WR010645(本文で照合済み)。Berger ら (2011) JGR 116, F01002,
+    doi:10.1029/2010JF001722(本文で照合済み。論文番号 F01002)。Frank ら (2015) の題名は副題 examples from
+    the Swiss Alps まで(NHESS 15, 2569–2583。オープンアクセス)。Inoue ら (2016) の共著者は
+    Iwasaki・Parker・Shimizu・Izumi・Stark・Funaki。McGuire ら (2023) の共著者は McCoy・Marc・
+    Struble・Barnhart(オープンアクセス)。Parker & Izumi (2000) JFM 419, 203–238。Inoue ら (2014)
+    の書誌は検索では確定できず、後に Inoue ら (2016) の文献表で確定した(上)。users guide・plan の該当
+    記述への反映は 00c の出典の棚卸しで行う。
   - **日英の確認記録**: この作業の記録はすべて AI による確認(method assistant)。
-    examples/bedrock_cover の図 4 組は未記録。
+    examples/bedrock_cover の図 4 組も 2026-10-29 に記録した。
 
 - **鉛直不飽和浸透(VZ)流出モデル**(docs/vz_plan.md。2026-10-26 起案・合意、
   同日 P0〜P3 実装): 谷(2023)の VZ モデル(共有参照柱の 1 次元 Richards+小杉式、
@@ -1550,6 +1616,14 @@ architecture.md。このメモは「現在進行中・未完了の項目」だ�
   メニューとの対応を記録)。保留(文献確認待ち。新規パラメータゼロ):
   江頭式(係数は江頭ら 1997)、Lane-Kalinske(ppm 換算規約)、
   芦田・道上への有効掃流力 τ*e の導入(挙動変更)。
+  (2026-10-29 検索で書誌を確認。本文は未読): Lane, E. W. and Kalinske, A. A. (1941) Engineering
+  calculations of suspended sediment. Trans. AGU 22(3), 603–, doi:10.1029/TR022i003p00603。
+  江頭・宮本・伊藤 (1997) 水工学論文集 41, 789–794(江頭 2011 の文献表による。和文の題名は未確認)。
+  有効掃流力は芦田・道上 (1972) の本文で式の形を照合済み(2026-10-29。§19.8): 式 (11)
+  U/u*e = 6.0 + 5.75 log10{R/(d(1+2τ*))}、式 (23) は閾値の 2 因子に全 τ*・u* を残す。
+  f_qbform = 1 は u*e = u*(Upper Regime)の形として原典と一致。導入は挙動変更のため
+  保留のまま。users guide の解説 sediment.md §3 に「今後の課題(実装予定)」として記載
+  (2026-10-29。既定を変えない選択肢で入れる方針。§19.8)。
   設計正本は docs/geomorph_plan.md(改訂3)
 - gwflow: RRI 型・鉛直浸透重視型の追加(m_gwflow_bucket を複製して契約に従う)
 - intercept: 初期損失モデルと分布ファイル対応は実装済み(2026-08-06。
