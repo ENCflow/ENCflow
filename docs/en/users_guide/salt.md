@@ -291,7 +291,7 @@ The labels in the Basis column are explained in [How to read the basis of a defa
   aquifer and synchronisation with dt_gwflow; C4: seepage from a partly salt aquifer with f_salt_exch=1 and 2), and the gravity current and virtual walls
   (D1: levee, D2: seawall).
 - [examples/estuary_barrage](../../../examples/estuary_barrage/en/README.md): how the presence of an estuary barrage affects the salt wedge travelling up a river and
-  the intrusion of salt water into the surrounding aquifer (four cases: with/without barrage × with/without the exchange split).
+  the intrusion of salt water into the surrounding aquifer (eight cases: with/without barrage × no / with / mixing-ratio exchange split / clogged river bed).
 - Worked example of the format: [examples/List_samples/en/list_salt.txt](../../../examples/List_samples/en/list_salt.txt).
 
 ## References

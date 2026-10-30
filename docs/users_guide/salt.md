@@ -233,7 +233,8 @@ f_gwlateral=1([地下水の章](gwflow.md)。側方 K と比湧水量を共有)�
   dt_gwflow での同期、C4: 一部が塩水の帯水層からの湧出の f_salt_exch=1・2)、重力流と仮想壁
   (D1: 堤防、D2: 海岸堤防)。
 - [examples/estuary_barrage](../../examples/estuary_barrage/): 河口堰の有無が、河川を遡上する
-  塩水くさびと周辺の帯水層への塩水の侵入に与える影響(堰あり・なし × 交換の配分あり・なしの 4 ケース)。
+  塩水くさびと周辺の帯水層への塩水の侵入に与える影響(堰あり・なし × 交換の配分なし・あり・混合比・
+  目詰まりした河床の 8 ケース)。
 - 書式の実例: [examples/List_samples/list_salt.txt](../../examples/List_samples/list_salt.txt)。
 
 ## 参考文献

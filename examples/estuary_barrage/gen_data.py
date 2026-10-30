@@ -8,6 +8,7 @@
 帯水層(層1)の底は全域 −10 m(土層厚 sd = z + 10)。海底下の帯水層は初期に
 全層塩水(fn_salt_hgs0 = sd·sy)、陸の帯水層は空で始め、最初の出水と強雨で
 淡水を満たす(初期の地下貯留を直接与える入力はないため。gwflow の章)。
+河道マスク rw.txt(河道 3 行 × 75 列)は目詰まりした河床のケースの河床交換能に使う。
 堰あり: 河口から 500 m(i = 63)の河道 3 セルを天端 +1.0 m にした地形
 (ゲートを閉じて越流させている平常時の河口堰。満潮位 +0.6 m より高い)。
 潮位 tide.txt は M2 分潮(周期 12.42 h)振幅 0.6 m の正弦を 30 分刻みで
@@ -52,6 +53,10 @@ def main(out="data"):
         np.savetxt(os.path.join(out, f"sd_{name}.txt"), zz - Z_BOT, fmt="%.4f")
         np.savetxt(os.path.join(out, f"e0_{name}.txt"), ee, fmt="%.2f")
     np.savetxt(os.path.join(out, "sw.txt"), sw, fmt="%d")
+    rw = np.zeros((NY, NX), dtype=int)
+    for j in J_RIVER:
+        rw[j - 1, :I_COAST] = 1                  # 河道マスク(目詰まりした河床のケースが使う)
+    np.savetxt(os.path.join(out, "rw.txt"), rw, fmt="%d")
     np.savetxt(os.path.join(out, "hss0.txt"), hss0, fmt="%.1f")
     np.savetxt(os.path.join(out, "hgs0.txt"), hgs0, fmt="%.2f")
 

@@ -1,0 +1,26 @@
+!======================================================================
+! estuary_barrage: 目詰まりした河床のケースの地下水設定(単独では実行しない)
+!   param_common.txt の地下水と同じ値に、河床交換能(f_gwbed)を加える。
+!   河床交換能は河道セル(fn_rw)と地下水の間の出入りの上限で、河床からの
+!   浸透能を置き換え、河道と岸の間の帯水層の流れも同じ上限で絞る
+!   (users guide「地下水」の河床交換能)。
+!======================================================================
+&list_gwflow
+  f_gwvertical = 2          ! Green-Ampt
+  f_gwlateral = 1           ! 非線形 Boussinesq
+  f_gwbed = 1               ! 河床交換能(河道マスク fn_rw が必要)
+/
+
+&list_gwflow_greenampt
+  gw_ksv_mmh = 360.0        ! 鉛直飽和透水係数 (mm/h) = 1e-4 m/s(陸。河道は下の k_bed に置き換わる)
+  gw_psif = 0.0             ! 毛管圧力水頭 0 = 一定浸透能
+/
+
+&list_gwflow_lateral
+  gw_ksh_mmh = 36000.0      ! 側方飽和透水係数 (mm/h) = 1e-2 m/s(param_common.txt と同じ)
+/
+
+&list_gwflow_bed
+  gwbed_k_mmh = 3.6         ! 河床交換能 (mm/h) = 1e-6 m/s。細粒分で目詰まりした河床
+                            ! (周囲の浸透能 1e-4 m/s の 2 桁下。模式値)
+/
