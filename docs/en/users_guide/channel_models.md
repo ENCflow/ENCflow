@@ -213,7 +213,7 @@ l, or whose landside cell is l and whose channel cell is a 4-neighbour of
 c (the diagonals on both sides of a normal site, including those leading
 outward at the two ends of the opening). The passing width per breached
 cell then becomes 0.414 (normal) + 2 × 0.293 (diagonals) = one cell width.
-Measured in examples/levee_breach (10 m cells, 1.5–1.7 m of head, the
+Measured in the supplement of examples/levee_breach (10 m cells, 1.5–1.7 m of head, the
 default advection scheme 3):
 
 | Breach width (cells) | Resolved levee Q (m³/s) | f_br_diag = 0 Q / ratio | f_br_diag = 1 Q / ratio |

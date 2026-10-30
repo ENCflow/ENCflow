@@ -111,7 +111,7 @@ utils/fault2disp は、断層の位置・走向・傾斜・すべり角・長さ
 Σ(z − z0) = Σ d(底層の内部移転は総和 0)が出力精度の範囲で成り立ちます。
 - [examples/tsunami_fault](../../examples/tsunami_fault/README.md): 静水圧 / 瞬時変位 / 非静水圧 + 加速度項の比較。
 - [examples/tsunami_coast](../../examples/tsunami_coast/README.md): 沿岸の沈降・隆起と沖の津波の時間差。
-- [examples/levee_breach](../../examples/levee_breach/README.md): 解像堤防の破堤(仮想壁面の &list_channel_breach との比較)。
+- [examples/levee_breach](../../examples/levee_breach/README.md): 越水による解像堤防の破堤と、堤内地の氾濫・家屋の流失(補足に仮想壁面の &list_channel_breach との比較)。
 
 ## 参考文献
 

@@ -34,9 +34,10 @@ def read_probe(path):
     return a[:, 1] * 60.0, a[:, 3], a[:, 8]          # t (s), h, hg
 
 
-# 解析値(param.txt と同じ係数。l_k は側方流の 8 方向幾何)
+# 解析値(param.txt と同じ係数。l_k は側方流の 8 方向幾何。l_ax は塞がれた斜めの配分の
+# 振り替え f_gw_opening = 1(既定。§16.6)込みで、領域外へ向かう斜め 1 本ぶん r/2 が足される)
 dx = dy = 2.0; A = dx * dy; sd = 1.0; sy = 0.2
-r = 2 / (2 + math.sqrt(2)); l_ax = (1 - r) * dy; l_diag = math.sqrt(2 * ((r / 2) * dx) ** 2)
+r = 2 / (2 + math.sqrt(2)); l_ax = (1 - r / 2) * dy; l_diag = math.sqrt(2 * ((r / 2) * dx) ** 2)
 k = 1e-3
 rate_bank = -k * sd * (l_ax + l_diag) / A
 rate_chan = 2 * k * sd * (l_ax + l_diag) / A

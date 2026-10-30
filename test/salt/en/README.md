@@ -120,10 +120,10 @@ with the sea it is 0.5000 m in every cell, agreeing with the analytical value
 | B: groundwater level Hg and salt Hgs | Hg = Hgs = 0.5000 m (all land cells; analytical 0.5) | — |
 | C1: final H / Hss / Hg / Hgs | 0.7 / 0.1 / 0.3 / 0.3 (within relative 6e-16 in double precision; Hgs and Hg bit-identical) | Check_exch PASS |
 | C1: salt-water volume Hss + Hgs | 0.4 conserved to all digits | Check_exch PASS |
-| C2: Hss/H of the surface water in the hollow | 0.999 (0 with f_salt_exch=0) | Check_exch PASS (≥ 0.99) |
-| C2: salt-water volume | 0.02 % decrease in 2 hours | Check_exch PASS (\|ratio − 1\| < 1e-3) |
+| C2: Hss/H of the surface water in the hollow | 0.9998 (0 with f_salt_exch=0) | Check_exch PASS (≥ 0.99) |
+| C2: salt-water volume | 0.004 % decrease in 2 hours | Check_exch PASS (\|ratio − 1\| < 1e-3) |
 | C3: the same (dt_gwflow = 2 s) | Hss/H 0.998, salt-water volume 0.03 % decrease | Check_exch PASS |
-| C4a, C4b: salt-water volume, Hss/H of the water in the hollow | both conserved to relative 7e-14; Hss/H 0.051 (fresh first) < 0.075 (mixing ratio) | Check_exch PASS |
+| C4a, C4b: salt-water volume, Hss/H of the water in the hollow | both conserved to relative 7e-14; Hss/H 0.019 (fresh first) < 0.070 (mixing ratio) | Check_exch PASS |
 | D1, D2: Hss on land / river or sea side, H | 1.2 / 0 to all digits, H unchanged (before the fix: land 0.001–0.028, river 1.18) | Check_wall PASS |
 
 - The dry-cell test and the excess-outflow reduction of the salt zone are
@@ -140,11 +140,18 @@ with the sea it is 0.5000 m in every cell, agreeing with the analytical value
   saturated cell with surface water and an unsaturated cell, where the head
   switches by the surface water depth), 16 % in 2 hours (reducing dt hardly
   helped). After the fix Hgs in B equals Hg = 0.5000 in every cell, and the
-  decrease in C2 is 0.02 %. In addition, the interface thickness of the salt
+  decrease in C2 became 0.02 %. In addition, the interface thickness of the salt
   zone is aligned with the interface saturated thickness of the total times the
   salt fraction of the upwind cell (when flowing in the same direction as the
   total), which removes the inconsistency of fresh water leaving an entirely
   salt cell (C4a: 9.5 % → 7e-14).
+- The values of C2–C4 in the table include the transfer of blocked diagonal
+  shares of the lateral groundwater flow (`f_gw_opening`; the default became 1
+  on 2026-10-30; developer.md §16.6). Without the transfer (0) they were
+  Hss/H 0.999 and a 0.02 % decrease of the salt-water volume in C2, the same
+  digits in C3, and Hss/H 0.051 and 0.075 in C4. The conductance of the
+  aquifer along the walls (domain edges) becomes the same as the interior, so
+  the composition of the water seeping out into the hollow changes.
 - The Logs of MPI np = 1, 2, 4 are byte-identical, and the restart round
   trip (saltwater.dat) also agrees (§47.3). C1–C4, D1 and D2 at np = 1, 2, 4
   are also byte-identical to the serial run down to Log.txt and the saved

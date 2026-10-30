@@ -31,7 +31,7 @@ python3 plot_results.py   # 図化(用意されている例題のみ)
 | [landslide_tsunami/](landslide_tsunami/) | 地滑り・土石流の水域突入と津波。陸上崩壊と海底地滑りの 4 パターンと非静水圧版 | 動く底層 f_bedslide、非静水圧補正 |
 | [tsunami_fault/](tsunami_fault/) | 断層パラメータから津波を発生させる。静水圧・瞬時変位・非静水圧の比較と座標指定の各パターン | 規定底面運動 fn_bedmotion、utils/fault2disp |
 | [tsunami_coast/](tsunami_coast/) | 沿岸の沈降・隆起と沖の断層津波の時間差。沈降した湾奥平野の浸水 | 規定底面運動 fn_bedmotion |
-| [levee_breach/](levee_breach/) | 高解像度 DEM の堤防(解像堤防)を規定底面運動で破堤させる。仮想壁面の &list_channel_breach との比較 | 規定底面運動 fn_bedmotion、河道の破堤 |
+| [levee_breach/](levee_breach/) | 洪水が堤防の低い所から越水して破堤し、堤内地が氾濫して破堤口近くの家屋が押し流される。越水だけ・破堤・破堤が 1 時間遅れる・破堤+二線堤の 4 ケースと、仮想壁面の破堤との比較(補足) | 規定底面運動 fn_bedmotion(解像堤防の破堤)、家屋破壊 fn_bldgdebris(流体力判定)、建物空隙率 fn_gv、河道の破堤 &list_channel_breach(補足) |
 | [estuary_barrage/](estuary_barrage/) | 河口堰の有無が、感潮河川を遡上する塩水くさびと、河床から周辺の帯水層への塩水の侵入に与える影響(堰あり・なし × 河床の塩水の出入りなし・あり・混合比・目詰まりした河床の 8 ケース) | 淡塩2層 fn_salt(地表の塩水層・地下の塩水 zone・交換の淡塩配分 f_salt_exch)、潮位、Green-Ampt、地下水の側方流、河床交換能 f_gwbed |
 | [nest_reflect/](nest_reflect/) | 比 3・5 の双方向ネスト格子の界面を横切るガウス波。一様細格子との誤差・反射率 | ネスティング fn_nest(docs/users_guide/nest.md) |
 | [tsunami_town/](tsunami_town/) | 津波の市街地遡上による木造家屋の破壊と瓦礫の流動・堆積 | 家屋破壊・瓦礫 fn_bldgdebris、潮位 |
@@ -53,7 +53,7 @@ ENCflow の特徴である「複数プロセスを 1 つの計算で連鎖させ
 - 津波 → 家屋破壊 → 瓦礫: [tsunami_town/](tsunami_town/)。高潮 → 流木 → 市街地: [timberyard/](timberyard/)。
 - 降灰 → 浸透能の低下 → 降雨 → 泥流 → 扇状地の堆積(砂防堰堤で捕捉): [ashfall_lahar/](ashfall_lahar/)。降雨 → 乾式侵食 → 地形発達: [badland/](badland/)。豪雨時だけ表面流が加わる崖: [badland_storm/](badland_storm/)。クリープで丸くなる丘: [badland_round/](badland_round/)。キャップロックのメサ → ビュート: [mesa/](mesa/)。豪雨 → 湛水 → 吸込穴 → 溶食 → ドリーネ: [karst/](karst/)。裸岩の塔 → 裾の溶食 → 崩落 → 塔の後退: [tower_karst/](tower_karst/)。給砂 → 被覆と道具 → 岩盤の下刻: [bedrock_cover/](bedrock_cover/)。隆起 → 風化 → クリープ → 渓流の被覆と下刻 → 定常の谷: [mountain_valley/](mountain_valley/)。土石流 → 堆積層の剥離 → 岩盤の侵食 → 頻度ごとの定常勾配: [debris_bedrock/](debris_bedrock/)。
 - 断層 → 津波 → 浸水: [tsunami_fault/](tsunami_fault/)、[tsunami_coast/](tsunami_coast/)。斜面崩壊 → 水域突入 → 津波: [landslide_tsunami/](landslide_tsunami/)。
-- 洪水 → 破堤 → 氾濫: [levee_breach/](levee_breach/)。
+- 洪水 → 越水 → 破堤 → 氾濫 → 家屋の流失(二線堤で止める): [levee_breach/](levee_breach/)。
 - 潮汐 → 塩水くさびの遡上 → 河床からの浸透 → 岸の地盤の塩水化(河口堰で遮断): [estuary_barrage/](estuary_barrage/)。
 - 降雨 → 下水道(管路)→ 噴出・排水: [sewer_hybrid/](sewer_hybrid/)。山からの涵養 → 扇状地の地下水 → カナートの集水・湧出(揚水井で細る): [qanat/](qanat/)。
 - 1 機能だけの解析解ベンチマーク: [benchmark/](benchmark/)。格子の精緻化(ネスティング): [nest_reflect/](nest_reflect/)。

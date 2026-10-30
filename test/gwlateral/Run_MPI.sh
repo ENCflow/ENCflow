@@ -2,7 +2,7 @@
 # gwlateral: MPI 実行 + 検定(地下水の側方流 f_gwlateral = 1。developer.md §16.1・§16.6)
 #   ./Run_MPI.sh [ランク数]
 # 逐次(Run.sh)と同じ検定を同じ並列数で回し、同じバイナリの np = 1 と分布出力(Hg*.bil)と
-# Log.txt(Runge 列を除く)をバイト比較する。構成 2 は 40 行なので 2 行/ランクの制約から np <= 20
+# Log.txt(Runge 列を除く)をバイト比較する。構成 2〜4 は 40 行なので 2 行/ランクの制約から np <= 20
 sdir=$(dirname "$(readlink -f "$0")")
 "$sdir/../Scripts/Check_mode.sh" mpi || exit 1
 export MPIRUN_OPTS=${MPIRUN_OPTS:-"--bind-to none"}
@@ -31,14 +31,20 @@ same_as_np1() {   # same_as_np1 <param> <dir_result>: np = 1 で回し直して�
     rm -rf "$2_np1"
 }
 
-rm -rf result result_strip
+rm -rf result result_strip result_strip_open result_line_open
 run "$np" param.txt Screen.log
-run "$np" param_strip.txt Screen_strip.log
+for tag in strip strip_open line_open; do
+    run "$np" param_$tag.txt Screen_$tag.log
+done
 python3 Check_gwlateral.py gauss result || exit 1
-python3 Check_gwlateral.py strip result_strip || exit 1
+for tag in strip strip_open line_open; do
+    python3 Check_gwlateral.py $tag result_$tag || exit 1
+done
 if [ "$np" != 1 ]; then
     same_as_np1 param.txt result
-    same_as_np1 param_strip.txt result_strip
+    for tag in strip strip_open line_open; do
+        same_as_np1 param_$tag.txt result_$tag
+    done
 fi
 
 echo "=== gwlateral MPI verification PASS (np=$np) ==="

@@ -1,7 +1,9 @@
 #!/usr/bin/env python3
 # gwlateral(地下水の側方流 f_gwlateral = 1)の検定(developer.md §16.1・§16.6)
-#   使い方: Check_gwlateral.py gauss [resdir]   (既定 result。構成 1 = param.txt)
-#           Check_gwlateral.py strip [resdir]   (既定 result_strip。構成 2 = param_strip.txt)
+#   使い方: Check_gwlateral.py gauss [resdir]       (既定 result。構成 1 = param.txt)
+#           Check_gwlateral.py strip [resdir]       (既定 result_strip。構成 2 = param_strip.txt)
+#           Check_gwlateral.py strip_open [resdir]  (既定 result_strip_open。構成 3)
+#           Check_gwlateral.py line_open [resdir]   (既定 result_line_open。構成 4)
 #   読むもの: resdir/Log.txt と、分布出力 Hg0001.bil 以降(float32・BIL・リトルエンディアン)
 #             と FILENUMBER.csv(番号と時刻の対応)
 #
@@ -15,6 +17,9 @@
 #     東西の縁の列の通水能の欠け(外へ向かう斜めのリンクがなく、南北方向が内部の
 #     1 − diagratio/2 倍)を含む離散の予測 λ = D k² · (2 (1 − diagratio/2) + (nx − 2)) / nx と
 #     比べる。許容 0.5 %。
+#   strip_open・line_open: 塞がれた斜めの配分を軸エッジへ振り替える(f_gw_opening = 1)と、
+#     3 × 40 の帯(構成 3)でも幅 1 セルの帯(構成 4。斜めはすべて塞がれる)でも壁沿いの
+#     通水能が内部と同じになり、減衰率が λ = D k² に戻る。許容 0.5 %。
 #   どちらも Log の S_grnd が初期の水量(最初のステップで全量浸透)のまま不変で、地表水が
 #   残らないことも確かめる。構成は param*.txt・make_init.py と対で保守する。
 import math
@@ -28,7 +33,8 @@ KSH, SY = 0.01, 0.2                                    # gw_ksh_mmh = 36000、sy
 D = KSH * (H0 / SY) / SY                               # 0.05 m²/s
 DIAGRATIO = 2.0 / (2.0 + math.sqrt(2.0))               # gw_diagratio の既定(p_diagratio と同値)
 ATOL_LOG = 1e-13
-CASES = {"gauss": ("result", 121, 121), "strip": ("result_strip", 3, 40)}
+CASES = {"gauss": ("result", 121, 121), "strip": ("result_strip", 3, 40),
+         "strip_open": ("result_strip_open", 3, 40), "line_open": ("result_line_open", 1, 40)}
 
 
 def hms(s):
@@ -68,7 +74,7 @@ def read_log(resdir):
 
 def main(case="gauss", resdir=None):
     if case not in CASES:
-        print("usage: %s gauss|strip [resdir]" % os.path.basename(sys.argv[0]), file=sys.stderr)
+        print("usage: %s gauss|strip|strip_open|line_open [resdir]" % os.path.basename(sys.argv[0]), file=sys.stderr)
         return 2
     resdir = resdir or CASES[case][0]
     nx, ny = CASES[case][1:]
@@ -116,9 +122,12 @@ def main(case="gauss", resdir=None):
         check(resid <= 1e-3 * (r2s[-1] - r2s[0]),
               f"<r^2> grows linearly in time (max deviation from the fitted line {resid:.2e} m^2)")
     else:
-        print("== gwlateral strip: decay of a cosine mode along a 3 x 40 strip with the wall columns")
+        opening = case.endswith("_open")
+        print("== gwlateral %s: decay of a cosine mode along a %d x %d strip %s" % (
+            case, nx, ny, "with the blocked diagonal shares transferred (f_gw_opening = 1)" if opening
+            else "with the wall columns"))
         kk = math.pi / (ny * 1.0)
-        fwall = (2 * (1 - DIAGRATIO / 2) + (nx - 2)) / nx
+        fwall = 1.0 if opening else (2 * (1 - DIAGRATIO / 2) + (nx - 2)) / nx
         amps = []
         for k, t in fr:
             a = read_bil(resdir, k, nx, ny)
@@ -128,7 +137,8 @@ def main(case="gauss", resdir=None):
         lam = math.log(a1 / a2) / (t2 - t1)
         lam_int, lam_d = D * kk * kk, D * kk * kk * fwall
         check(abs(lam / lam_d - 1) <= 0.005,
-              f"decay rate {lam:.5e} 1/s over {t1:g}-{t2:g} s, discrete prediction with the wall columns "
+              f"decay rate {lam:.5e} 1/s over {t1:g}-{t2:g} s, discrete prediction "
+              f"{'with the transfer (no wall deficit)' if opening else 'with the wall columns'} "
               f"D k^2 x {fwall:.4f} = {lam_d:.5e} (ratio {lam / lam_d:.5f}, limit 1 +- 0.005; "
               f"interior theory D k^2 = {lam_int:.5e}, ratio {lam / lam_int:.4f})")
         rates = [math.log(amps[n][1] / amps[n + 1][1]) / (amps[n + 1][0] - amps[n][0]) for n in range(len(amps) - 1)]

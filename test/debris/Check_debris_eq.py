@@ -3,13 +3,18 @@
 #   使い方: Check_debris_eq.py [savedir]   (既定 save_eq)
 #   savedir/state.dat(ゼロ抑制 RLE。h, z, hrs, hg, sd, hs の倍精度)を読み、水路 k(列 2k)の
 #   流入点と出口から離れた区間 J1〜J2 で、混合体濃度 C = hs/(h + hs) を、最終の z から求めた
-#   最急降下勾配(8 近傍への下り勾配の最大。領域内の近傍だけ)の高橋型の平衡濃度
+#   最急降下勾配(8 近傍への下り勾配の最大。開いた南辺の外の近傍は、コードの slope8 と同じく
+#   辺の法線方向に内側 2 セルから線形外挿した標高 2 z(i, NY) − z(i, NY − 1) で補う)の高橋型の平衡濃度
 #     tanθ ≥ tanφ        : C∞ = 0.9 C*(上限)
 #     tanθ > 0.138       : C∞ = min(tanθ / (s (tanφ − tanθ)), 0.9 C*)(石礫型)
 #     0.03 < tanθ ≤ 0.138 : C∞ = min(6.7 C∞d², 0.9 C*)(未成熟)
 #     tanθ ≤ 0.03         : C∞ = 0(掃流域)
 #   と比べる(C∞ > 0 は |C/C∞ − 1| ≤ 1e-9、C∞ = 0 は C ≤ 1e-12)。各水路の勾配が狙いの領域に
-#   入っていることも確かめる。出口の行(開いた境界)の堆積は記録として表示する(§28.15)。
+#   入っていることも確かめる。出口側(J2 + 1 〜 NY。開いた境界の行を含む)は、出口の近くで
+#   河床の局所勾配がわずかに変わり、上流から運ばれる濃度との間に緩和の遅れが残るので
+#   |C/C∞ − 1| ≤ 1e-3 とし、出口の行の河床変化が区間 J1〜J2 の平均の河床変化(初期の清水が
+#   C∞ まで土砂を取り込む一様な低下)と 1 mm 以内でそろうこと(開いた境界の行に人工的な堆積が
+#   ないこと。§28.15)も確かめる。
 #   水路・係数は make_eq.py・param_eq.txt と対で保守する
 import math
 import struct
@@ -21,6 +26,7 @@ NX, NY, Z0 = 2 * len(TAN) + 1, 300, 200.0
 SGRAV, TANPHI, CSTAR = 1.65, math.tan(math.radians(35.0)), 0.6
 J1, J2 = 100, 220
 TOL_C, TOL_ZERO = 1.0e-9, 1.0e-12
+TOL_OUT, TOL_DZ = 1.0e-3, 1.0e-3
 
 
 def cinf(t):
@@ -64,12 +70,15 @@ def main(savedir="save_eq"):
         h, z, hrs, hg, sd, hs = [read_rle(f, NX * NY) for _ in range(6)]
     at = lambda a, i, j: a[(j - 1) * NX + i - 1]
 
+    def zat(i, j):   # 開いた南辺の外(j = NY + 1)は法線方向の線形外挿(コードの slope8 と同じ)
+        return 2.0 * at(z, i, NY) - at(z, i, NY - 1) if j == NY + 1 else at(z, i, j)
+
     def slope8(i, j):
         best = 0.0
         for di in (-1, 0, 1):
             for dj in (-1, 0, 1):
-                if (di or dj) and 1 <= i + di <= NX and 1 <= j + dj <= NY:
-                    best = max(best, (at(z, i, j) - at(z, i + di, j + dj)) / math.hypot(di, dj))
+                if (di or dj) and 1 <= i + di <= NX and 1 <= j + dj <= NY + 1:
+                    best = max(best, (at(z, i, j) - zat(i + di, j + dj)) / math.hypot(di, dj))
         return best
 
     nfail = 0
@@ -98,9 +107,22 @@ def main(savedir="save_eq"):
         check(ok_reg and worst <= tol,
               f"channel {k} tan(theta) = {t:.2f} ({REGIME[k - 1]}, Cinf = {ce0:.6f}): max {what} = {worst:.1e} "
               f"(limit {tol:.0e}; local slope {min(tans):.9f}-{max(tans):.9f}, regime {'/'.join(sorted(regimes))})")
-    dzo = [at(z, 2 * k, NY) - (Z0 - t * (NY - 0.5)) for k, t in enumerate(TAN, 1)]
-    print("  info outlet row (open boundary, no downslope neighbour inside the domain -> Cinf = 0): "
-          "bed change " + ", ".join("%+.3f" % d for d in dzo) + " m (channels 1-6; developer.md §28.15)")
+    print("== outlet reach %d-%d m (the outlet row is on the open south edge; developer.md §28.15)" % (J2 + 1, NY))
+    for k, t in enumerate(TAN, 1):
+        i = 2 * k
+        ce0 = cinf(t)[0]
+        worst = 0.0
+        for j in range(J2 + 1, NY + 1):
+            c = at(hs, i, j) / (at(h, i, j) + at(hs, i, j))
+            ce = cinf(slope8(i, j))[0]
+            worst = max(worst, abs(c / ce - 1.0) if ce > 0.0 else abs(c))
+        dz = lambda j: at(z, i, j) - (Z0 - t * (j - 0.5))
+        dzm = sum(dz(j) for j in range(J1, J2 + 1)) / (J2 - J1 + 1)
+        tol = TOL_OUT if ce0 > 0.0 else TOL_ZERO
+        what = "|C/Cinf - 1|" if ce0 > 0.0 else "C"
+        check(worst <= tol and abs(dz(NY) - dzm) <= TOL_DZ,
+              f"channel {k}: max {what} = {worst:.1e} (limit {tol:.0e}); outlet-row bed change {dz(NY):+.6f} m "
+              f"vs {dzm:+.6f} m in {J1}-{J2} m (difference {dz(NY) - dzm:+.1e}, limit {TOL_DZ:.0e} m)")
 
     print(f"=== debris eq check {'PASS' if nfail == 0 else f'FAIL ({nfail})'} ===")
     return 1 if nfail else 0

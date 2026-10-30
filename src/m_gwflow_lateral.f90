@@ -109,6 +109,22 @@ module m_gwflow_lateral
   !   河道同士のエッジ・層2・管路層は対象外。無効時は分岐に入らない
   !   (do_bed = .false.)= 従来とビット一致
   !
+  ! 【塞がれた斜めの配分の振り替え(f_gw_opening。§16.6。2026-10-30)】
+  !   壁(領域外 x <= 0・海セル sw > 0。側方流の無流束境界)に接するセルには
+  !   外へ向かう斜めのリンクがなく、壁沿いの通水能が内部の 1 − d/2 倍
+  !   (1 セル幅の帯で 1 − d 倍。d = gw_diagratio)になる。f_gw_opening = 1 では、
+  !   塞がれた斜めの通過幅のシェアを同じ界面を通る軸エッジへ振り替える
+  !   (m_swflow_enc の開口補正と同じ規則。§18): 軸エッジの通過幅 =
+  !   (lp + nb·ld)·(面長)、nb はエッジ両端のセルそれぞれの「その界面を
+  !   横切る斜め 2 本のうち塞がれた本数」の平均(0〜2)。塞がりはマスクだけで
+  !   決まる静的量なので、init で有効通過幅の表 wlo(q と同形状・同格納規約)を
+  !   作る。乾いたセルによる塞がり(動かす水がない)は振り替えない。セルの
+  !   通水能の和 Σ l_k/dr_k は内部の値を超えないので、安定条件の静的検査は
+  !   そのまま有効。層2(lateral_core)と淡塩2層の塩水 zone 流束
+  !   (m_saltwater。gwflow_lateral_open_get で表を受ける)も同じ幅を使う。
+  !   管路層(conduit_core。エッジ別の通水係数)は対象外。既定は 1(2026-10-30 に
+  !   0 から変更)。0 では表を確保せず、変更前と同じ式を通る(ビット一致)
+  !
   ! 【地表流との結合】
   !   側方流入で飽和容量を超えたセルは、超過分を上位(層1は s%h、層2は
   !   s%hg)へ渡す(反対称適用。m_gwflow_bucket 契約(1)(2)と同型。
@@ -141,6 +157,7 @@ module m_gwflow_lateral
   public :: gwflow_conduit_dtcheck
   public :: gwflow_lateral_geom_get
   public :: gwflow_lateral_layer1_get
+  public :: gwflow_lateral_open_get
 
   ! 8近傍の規約(m_swflow_enc と同一。din/djn=近傍、die/dje/ke/sign_e=
   ! エッジ成分の格納位置と向き。k=1..4 が所有成分、k=5..8 は近傍の所有)
@@ -183,6 +200,10 @@ module m_gwflow_lateral
     real :: ainv = 0.0               ! 1 / (dx*dy)
     real :: rdr(1:8) = 0.0           ! 1 / 近傍セル中心間距離
     real :: wl(1:8) = 0.0            ! k軸方向フラックスの通過幅 (m)
+    real :: lpx = 0.0, lpy = 0.0     ! 軸エッジの通過幅のシェア(y 向きエッジは lpx·dx、
+    real :: ldx = 0.0, ldy = 0.0     !   x 向きは lpy·dy)と斜めのシェア(geom_init が設定)
+    real, allocatable :: wlo(:,:,:)  ! 振り替え込みの有効通過幅 (m。所有4成分。q と同形状・
+                                     !   同格納規約。f_gw_opening = 1 のときだけ確保。§16.6)
     real, allocatable :: q(:,:,:)    ! エッジ流量4成分 (m3/s)。一時作業領域
     real, allocatable :: qm(:,:,:)   ! 質量エッジフラックス4成分 (g/s = 水流量 q ×
                                      !   風上体積濃度 cg/hg。q と同形状・同格納規約。
@@ -229,6 +250,10 @@ subroutine gwflow_lateral_geom_init(glt, g, diagratio, eps)
   l8y(1:8) = [ ldy, 0.0, ldy, lpy, lpy, ldy, 0.0, ldy ]
   l8x(1:8) = [ ldx, lpx, ldx, 0.0, 0.0, ldx, lpx, ldx ]
   forall(k=1:8) glt%wl(k) = sqrt((l8y(k) * g%dy)**2 + (l8x(k) * g%dx)**2)
+  glt%lpx = lpx
+  glt%lpy = lpy
+  glt%ldx = ldx
+  glt%ldy = ldy
 
   ! エッジ流量4成分(一時作業領域)。j 範囲はセル j を挟むエッジが
   ! j-1 と j にあるため下限 jsh-1(m_swflow_enc の uv/mn と同形)。
@@ -253,6 +278,81 @@ subroutine gwflow_lateral_geom_get(glt, rdr, wl, ainv)
   wl(1:8) = glt%wl(1:8)
   ainv = glt%ainv
 end subroutine
+
+
+!----------------------------------------------------------------------
+! 振り替え込みの有効通過幅の表(f_gw_opening = 1。§16.6)の公開口。淡塩2層の
+! 塩水 zone 流束(m_saltwater)が側方流と同じ幅を使うため。表がなければ
+! wlo は未確保のまま返す(呼び手は allocated で有効判定する)
+!----------------------------------------------------------------------
+subroutine gwflow_lateral_open_get(glt, wlo)
+  type(t_gwlat), intent(in) :: glt
+  real, allocatable, intent(out) :: wlo(:,:,:)
+  if (allocated(glt%wlo)) allocate(wlo, source = glt%wlo)
+end subroutine
+
+
+!----------------------------------------------------------------------
+! 塞がれた斜めの配分を軸エッジへ振り替えた有効通過幅の表を作る
+! (f_gw_opening = 1。§16.6。ヘッダ参照)。塞がり = 領域外(x <= 0)か
+! 海セル(sw > 0)。書き手ループ(lateral_core のループ1)と同じ範囲・格納
+! 規約。マスクは全域配列なので、ハロ行 je+1 の書き手が読む行 je+2 も読める
+!----------------------------------------------------------------------
+subroutine build_opening(glt, g)
+  type(t_gwlat), intent(inout) :: glt
+  type(t_geoinfo), intent(in) :: g
+  integer :: i, j, k, in, jn, jt
+  real :: nb
+
+  allocate(glt%wlo(1:4, dcp%ish-1:dcp%ieh, dcp%jsh-1:dcp%jeh), source = 0.0)
+  jt = min(dcp%je + 1, dcp%jeh)
+  do j = dcp%js, jt
+    do i = g%wx(1,j), g%wx(2,j)
+      if (lat_blocked(g, i, j)) cycle
+      do k = 1, 4
+        in = i + din(k)
+        jn = j + djn(k)
+        if (lat_blocked(g, in, jn)) cycle
+        select case (k)
+        case (2)
+          ! 北の軸エッジ(c → (i, j−1)): 界面(行 j−1 と j の間)を横切る斜めは
+          ! c の北西・北東と、n の南西・南東
+          nb = 0.5 * real(count([lat_blocked(g, i-1, j-1), lat_blocked(g, i+1, j-1), &
+                                 lat_blocked(g, i-1, j), lat_blocked(g, i+1, j)]))
+          if (nb > 0.0) then
+            glt%wlo(k, i+die(k), j+dje(k)) = (glt%lpx + nb * glt%ldx) * g%dx
+          else
+            glt%wlo(k, i+die(k), j+dje(k)) = glt%wl(k)
+          end if
+        case (4)
+          ! 西の軸エッジ(c → (i−1, j)): 界面(列 i−1 と i の間)を横切る斜めは
+          ! c の北西・南西と、n の北東・南東
+          nb = 0.5 * real(count([lat_blocked(g, i-1, j-1), lat_blocked(g, i-1, j+1), &
+                                 lat_blocked(g, i, j-1), lat_blocked(g, i, j+1)]))
+          if (nb > 0.0) then
+            glt%wlo(k, i+die(k), j+dje(k)) = (glt%lpy + nb * glt%ldy) * g%dy
+          else
+            glt%wlo(k, i+die(k), j+dje(k)) = glt%wl(k)
+          end if
+        case default
+          glt%wlo(k, i+die(k), j+dje(k)) = glt%wl(k)       ! 斜めは不変
+        end select
+      end do
+    end do
+  end do
+end subroutine
+
+
+!----------------------------------------------------------------------
+! 側方流の無流束セル(領域外 x <= 0 か海セル sw > 0)の判定。sw は全域
+! (1:nx, 1:ny)なので、x > 0 のときだけ読む(x は 0:nx+1 の枠つき)
+!----------------------------------------------------------------------
+pure logical function lat_blocked(g, ii, jj)
+  type(t_geoinfo), intent(in) :: g
+  integer, intent(in) :: ii, jj
+  lat_blocked = .true.
+  if (g%x(ii,jj) > 0) lat_blocked = (g%sw(ii,jj) > 0)
+end function
 
 
 !----------------------------------------------------------------------
@@ -315,14 +415,16 @@ subroutine gwflow_lateral_init(glt, lay1, p, g, s, dts)
   real, intent(in) :: dts
   integer :: un, ios, i, j
   real :: gw_ksh_mmh, gw_eps, gw_diagratio
+  integer :: f_gw_opening
   real :: sdmax(1)
-  namelist /list_gwflow_lateral/ gw_ksh_mmh, gw_eps, gw_diagratio
+  namelist /list_gwflow_lateral/ gw_ksh_mmh, gw_eps, gw_diagratio, f_gw_opening
 
   if (s%initialized) continue  ! 引数未使用の警告を抑制
 
   gw_ksh_mmh = 0.0
   gw_eps = 1.0e-3
   gw_diagratio = 2.0 / (2.0 + sqrt(2.0))   ! m_swflow_enc の p_diagratio と同値
+  f_gw_opening = 1                         ! 塞がれた斜めの配分の振り替え(1: あり = 既定、0: なし。§16.6)
 
   call par_info("reading list_gwflow_lateral in " // trim(p%fn_gwflow))
   open(newunit=un, file=trim(p%fn_gwflow), status='old', action='read', iostat=ios)
@@ -338,6 +440,9 @@ subroutine gwflow_lateral_init(glt, lay1, p, g, s, dts)
   if (gw_diagratio < 0.0 .or. gw_diagratio > 1.0) then
     call par_stop("list_gwflow_lateral: gw_diagratio must be in [0,1]")
   end if
+  if (f_gw_opening /= 0 .and. f_gw_opening /= 1) then
+    call par_stop("list_gwflow_lateral: f_gw_opening must be 0(none) or 1(transfer blocked diagonal shares)")
+  end if
   if (g%sy0 <= 0.0 .or. g%sy0 > 1.0) then
     call par_stop("list_geoinfo: sy0 must be in (0,1] for gwflow lateral")
   end if
@@ -352,6 +457,10 @@ subroutine gwflow_lateral_init(glt, lay1, p, g, s, dts)
   lay1%to_surface = .true.
 
   call gwflow_lateral_geom_init(glt, g, gw_diagratio, gw_eps)
+  if (f_gw_opening == 1 .and. .not. allocated(glt%wlo)) then
+    call build_opening(glt, g)
+    call par_info("gwflow_lateral: blocked diagonal shares are transferred to the axis edges (f_gw_opening = 1)")
+  end if
 
   ! 水質の同伴輸送(§30 W3): s%cg があるときだけ質量エッジ配列を確保する
   ! (m_wq_init は本 init より先に走る。未確保なら経路は完全に従来どおり)
@@ -434,8 +543,8 @@ subroutine lateral_core(glt, g, s, hg, lay, dts, cg, rginv)
   real, intent(in), optional :: rginv                ! 移流分担率 1/R(省略時 1.0)
   integer :: i, j, k, in, jn, jt
   real :: hgwc, hgwn, hc0, hn0, hgw_up, hgw_e, gq, dh_up, dhg, capc, capn, fx
-  real :: qmv, dcm, wm, rgi, qcap
-  logical :: do_cg, do_bed
+  real :: qmv, dcm, wm, rgi, qcap, wle
+  logical :: do_cg, do_bed, do_open
 
   do_cg = present(cg)
   rgi = 1.0
@@ -443,13 +552,15 @@ subroutine lateral_core(glt, g, s, hg, lay, dts, cg, rginv)
   ! 河床交換能(§16.5): 層1のみ。河道セルと非河道セルの間のエッジ流量を
   ! |q| <= k_bed·l_k·h_e に抑える(両向き同じ上限)。無効時は分岐に入らない
   do_bed = lay%to_surface .and. allocated(s%kbed)
+  ! 塞がれた斜めの配分の振り替え(f_gw_opening = 1。§16.6): 表があれば有効通過幅を使う
+  do_open = allocated(glt%wlo)
 
   ! --- ループ1: エッジ流量(各成分の書き手は一意なので競合しない) ---
   !   帯界面のエッジ成分 k=1..3(行 je)はハロ行 je+1 の書き手が担う
   !   (冗長計算。全域端では行が存在せず対象外)
   jt = min(dcp%je + 1, dcp%jeh)
   !$omp parallel do schedule(static) &
-  !$omp   private(i, j, k, in, jn, hgwc, hgwn, hc0, hn0, hgw_up, hgw_e, gq, dh_up, capc, capn, qmv, qcap)
+  !$omp   private(i, j, k, in, jn, hgwc, hgwn, hc0, hn0, hgw_up, hgw_e, gq, dh_up, capc, capn, qmv, qcap, wle)
   do j = dcp%js, jt
     do i = g%wx(1,j), g%wx(2,j)
       if (g%x(i,j) <= 0) cycle
@@ -484,16 +595,19 @@ subroutine lateral_core(glt, g, s, hg, lay, dts, cg, rginv)
                 if (hgw_up > glt%eps) then                  ! 上流側乾燥なら 0
                   ! 界面飽和帯厚: 算術平均を上流側でキャップ(correct_he 相当)
                   hgw_e = min(0.5 * (hgwc + hgwn), hgw_up)
+                  ! 通過幅(振り替えが有効なら表の有効通過幅)
+                  wle = glt%wl(k)
+                  if (do_open) wle = glt%wlo(k, i+die(k), j+dje(k))
                   ! エッジ流量(書き手 c から k 近傍 n に向かい正)
-                  gq = lay%ksh * hgw_e * (hc0 - hn0) * glt%rdr(k) * glt%wl(k)
+                  gq = lay%ksh * hgw_e * (hc0 - hn0) * glt%rdr(k) * wle
                   ! 河床交換能による上限(§16.5): 河道・非河道間のエッジだけ。
                   ! 上限は河道側セルの k_bed × 界面面積(通過幅 × 界面飽和帯厚)
                   if (do_bed) then
                     if ((g%rw(i,j) > 0) .neqv. (g%rw(in,jn) > 0)) then
                       if (g%rw(i,j) > 0) then
-                        qcap = s%kbed(i,j) * glt%wl(k) * hgw_e
+                        qcap = s%kbed(i,j) * wle * hgw_e
                       else
-                        qcap = s%kbed(in,jn) * glt%wl(k) * hgw_e
+                        qcap = s%kbed(in,jn) * wle * hgw_e
                       end if
                       ! (番兵の負値は「上限なし」。マップ構築が河道セルを >= 0 に
                       !  保つため通常は到達しない)
@@ -839,6 +953,7 @@ subroutine gwflow_lateral_dispose(glt, lay1, p)
   if (p%initialized) continue  ! 引数未使用の警告を抑制
   if (allocated(glt%q)) deallocate(glt%q)
   if (allocated(glt%qm)) deallocate(glt%qm)
+  if (allocated(glt%wlo)) deallocate(glt%wlo)
   glt%geom_ready = .false.
   glt%initialized = .false.
 end subroutine

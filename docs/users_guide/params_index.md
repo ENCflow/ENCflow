@@ -2,7 +2,7 @@
 
 [ユーザーガイド目次へ](../users_guide.md)
 
-namelist パラメータ名から章を引く索引です(アルファベット順、全 758 項目)。
+namelist パラメータ名から章を引く索引です(アルファベット順、全 759 項目)。
 この索引は list_*.f90 の namelist 宣言から機械抽出で生成されています
 (developer.md §35.1)。
 
@@ -217,6 +217,7 @@ namelist パラメータ名から章を引く索引です(アルファベット�
 | f_govequation | &list_sysparam | [浅水流計算](swflow.md) |
 | f_gravity_correction | &list_enc | [浅水流計算](swflow.md) |
 | f_gridsystem | &list_sysparam | [浅水流計算](swflow.md) |
+| f_gw_opening | &list_gwflow_lateral | [地下水](gwflow.md) |
 | f_gwbed | &list_gwflow | [地下水](gwflow.md) |
 | f_gwc_fluxlaw | &list_gwflow_conduit | [地下水](gwflow.md) |
 | f_gwconduit | &list_gwflow | [地下水](gwflow.md) |
