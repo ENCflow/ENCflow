@@ -341,7 +341,7 @@ $`k_{bed}`$ に $`\Delta h / M`$ を掛ければ後から移行できます)。
 | [test/frost](../../test/frost/README.md) | 凍土の浸透抑制 | 解析値に全 14 桁一致 |
 | [test/gwbed](../../test/gwbed/README.md) | 河床交換能の律速・遮断・置き換え | 堤内地の 1 ステップ損失が S_grnd に全 14 桁一致、得水の増分が解析値 |
 | [examples/sewer_hybrid](../../examples/sewer_hybrid/) | 幹線 + 枝管網の換算 | セル別 sy マップの実演 |
-| [examples/qanat](../../examples/qanat/) | 管路層 + 層 2 | 横坑の集水・導水・出口湧出 |
+| [examples/qanat](../../examples/qanat/) | 管路層 + 層 2 + 井戸揚水 | 横坑の集水・導水・出口湧出、揚水井による湧出の減少 |
 
 ## 参考文献
 

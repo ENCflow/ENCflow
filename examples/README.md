@@ -37,7 +37,7 @@ python3 plot_results.py   # 図化(用意されている例題のみ)
 | [tsunami_town/](tsunami_town/) | 津波の市街地遡上による木造家屋の破壊と瓦礫の流動・堆積 | 家屋破壊・瓦礫 fn_bldgdebris、潮位 |
 | [timberyard/](timberyard/) | 高潮による貯木場からの材木流入(伊勢湾台風型) | 流木 fn_driftwood、潮位 |
 | [sewer_hybrid/](sewer_hybrid/) | 幹線 1 本と枝管網を同じ管路連続体層で表す都市排水の模式実験 | 管路連続体層 f_gwconduit |
-| [qanat/](qanat/) | カナート(横坑集水)の理想化ケース | 管路連続体層、地下水 |
+| [qanat/](qanat/) | 山麓の扇状地の地下水を集めるカナート(横坑)の湧出と、近くの揚水井で湧出が細り枯れること(カナートだけ・揚水井 2 L/s・5 L/s の 3 ケース) | 管路連続体層 f_gwconduit(交換能のマップ fn_gwc_leak・開放の吐口 fn_gwc_outfall)、層2 f_gwlayer2、井戸揚水 f_gwpump |
 | [meander/](meander/) | 氾濫原の中の正弦波状の河道の蛇行発達。外岸の後退と内岸砂州の成長、出水・低水の繰り返しによる砂州の定着、給砂による砂州の氾濫原化の 9 構成 | 掃流砂の方向補正 fluv_slope・f_secflow、側岸侵食 f_berode、安息角崩落 f_repose、定着 f_fixation、給砂 |
 | [meander_cutoff/](meander_cutoff/) | 頸部の狭い蛇行ループが出水で短絡し、旧河道が滞水域になって出入口が埋まり始める | 同上 + 区間流入の時系列 |
 | [delta/](delta/) | 給砂河川が静水の海盆に突入して作る河口デルタ。河口砂州 → 分岐 → ローブ成長 → 流路の乗り換え。砂泥比による扇状と鳥趾状、流量変動と定着(冠水減衰・河岸係数)による分流路の安定化の 5 構成(docs/delta_plan.md) | 海は通常セル+初期水位、容量給砂 fluv_bcfeed、浮遊泥 inflow_cs + f_bedfines、fluv_slope、f_repose、f_fixation(fix_tdec・fix_ctau_bank)、辺の長波放射 |
@@ -55,7 +55,7 @@ ENCflow の特徴である「複数プロセスを 1 つの計算で連鎖させ
 - 断層 → 津波 → 浸水: [tsunami_fault/](tsunami_fault/)、[tsunami_coast/](tsunami_coast/)。斜面崩壊 → 水域突入 → 津波: [landslide_tsunami/](landslide_tsunami/)。
 - 洪水 → 破堤 → 氾濫: [levee_breach/](levee_breach/)。
 - 潮汐 → 塩水くさびの遡上 → 河床からの浸透 → 岸の地盤の塩水化(河口堰で遮断): [estuary_barrage/](estuary_barrage/)。
-- 降雨 → 下水道(管路)→ 噴出・排水: [sewer_hybrid/](sewer_hybrid/)。地下水 → 横坑集水: [qanat/](qanat/)。
+- 降雨 → 下水道(管路)→ 噴出・排水: [sewer_hybrid/](sewer_hybrid/)。山からの涵養 → 扇状地の地下水 → カナートの集水・湧出(揚水井で細る): [qanat/](qanat/)。
 - 1 機能だけの解析解ベンチマーク: [benchmark/](benchmark/)。格子の精緻化(ネスティング): [nest_reflect/](nest_reflect/)。
 
 計算したい現象から機能の組み合わせを引くには
