@@ -47,7 +47,7 @@ make                      # generates the inputs (10 s) and links the executable
 python3 plot_results.py   # figs/*.png and tables
 ```
 
-## Results (recomputed on 2026-10-19; gfortran 13.3, -Ofast; advection with the default scheme 3 (after the §68.36 fix, including the two-sided condition of a one-sided face of §68.39), f_opening_dynamic = 2)
+## Results (recomputed 2026-10-30: gfortran 13.3, -Ofast, 1 thread; advection is the default scheme 3, f_opening_dynamic = 2, including the velocity cap on the edges into a segment inflow (developer.md §68.40, second revision); the values of the recomputation of 2026-10-19 remain in developer.md §68.40 as history)
 
 ![Sequence](../figs/sequence.png)
 
@@ -64,12 +64,12 @@ inside the loop.
 
 | t (min) | Morphological time (h) | Q (m³/s) | Flowing cells in the loop (\|V\| > 0.3 m/s) | Flowing cells in the neck zone | Wet outside the initial channel | Deepest scour (m) |
 |---|---|---|---|---|---|---|
-| 30 | 5 | 15 | 2262 | 76 | 95 | −1.88 |
-| 60 | 10 | 40 | 1659 | 323 | 4369 | −2.48 |
-| 90 | 15 | 40 | 1686 | 234 | 3400 | −4.13 |
-| 120 | 20 | 15 | 965 | 148 | 2582 | −3.63 |
-| 150 | 25 | 15 | 868 | 163 | 2478 | −3.61 |
-| 180 | 30 | 15 | 774 | 153 | 2437 | −3.66 |
+| 30 | 5 | 15 | 2262 | 78 | 96 | −1.88 |
+| 60 | 10 | 40 | 1683 | 338 | 4341 | −2.56 |
+| 90 | 15 | 40 | 1721 | 247 | 3353 | −4.14 |
+| 120 | 20 | 15 | 981 | 149 | 2554 | −3.31 |
+| 150 | 25 | 15 | 878 | 151 | 2404 | −3.75 |
+| 180 | 30 | 15 | 827 | 155 | 2354 | −3.60 |
 
 ## Findings
 
@@ -78,10 +78,10 @@ inside the loop.
   bank retreat alone (angle-of-repose avalanching, or slump blocks of a cohesive
   bank) cuts the neck at 100–120 h ("Slump blocks and cutoff without a flood"
   below). Before the flood almost no flow crosses
-  the neck (76 flowing cells in the neck zone); the flow overtopping it during
-  the flood (323 cells) carves a channel through the neck, and the new channel
-  remains after the flood (153 cells). The flowing cells in the loop decrease
-  from 2262 to 774, and most of the old channel has become slack water.
+  the neck (78 flowing cells in the neck zone); the flow overtopping it during
+  the flood (338 cells) carves a channel through the neck, and the new channel
+  remains after the flood (155 cells). The flowing cells in the loop decrease
+  from 2262 to 827, and most of the old channel has become slack water.
 - **The opening of the new channel and the plugging of the old channel are
   separate stages** (plan §3.5). After 30 h of morphological time, deposition
   has only begun at the ends of the loop, and complete separation (an oxbow
@@ -103,7 +103,12 @@ inside the loop.
 With the bank mode of the rockfall-and-talus model `f_rockfall` from main
 (`rf_bank = 1`; developer.md §84.17) added, four configurations with and
 without a flood were compared (`./encflow param_<name>.txt`; figures with
-`python3 plot_results.py result_<name> 7`).
+`python3 plot_results.py result_<name> 7`). The numbers of param_slump.txt
+(with a flood) are from the recomputation of 2026-10-30 (the same version as
+"Results" above); the numbers and figures of the three configurations without
+a flood and of the fines configuration below are still those of 2026-10-23 and
+24 (before the two revisions of developer.md §68.40; the rerun is suspended,
+docs/handoff.md).
 
 | Parameter file | Inflow | Banks | Morphological time |
 |---|---|---|---|
@@ -113,7 +118,7 @@ without a flood were compared (`./encflow param_<name>.txt`; figures with
 | param_slump_cohesive.txt | Same as above | **Cohesive**: repose angle 60° (a bank of 1.6 m / 2 m = 38.7° does not avalanche) + retreat by slump blocks only | 180 h |
 
 With a flood the cutoff is hardly changed by the slump blocks (flowing cells
-in the loop at 30 h 846 vs 774, new channel 139 vs 153, collapse 490 m³):
+in the loop at 30 h 702 vs 827, new channel 140 vs 155, collapse 500 m³):
 slump blocks play no part in a cutoff carved by overtopping. In the three
 configurations without a flood, the flowing cells in the loop and in the
 neck zone evolved as follows (every 20 h of morphological time).

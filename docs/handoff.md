@@ -1229,8 +1229,14 @@ architecture.md。このメモは「現在進行中・未完了の項目」だ�
       内側へ向かうエッジの流速の上限(§68.40 の改定 2)は区間流入のあるすべての計算の流入口付近を
       変えるので、区間流入を持つ例題をすべて回し直して README を更新する。2026-10-30 に levee_breach・
       bedrock_cover・debris_bedrock・mountain_valley は数表が変わらないことを確かめ、meander(11 構成)の
-      README(日英)と図を更新した(developer.md §68.40 の改定 2 の検証)。残りは meander_cutoff(6 構成)と
-      delta(8 構成。param_mud は逐次で約 17 時間)。§89.25 の床の新旧を計測用の実行ファイルで比べる全期間の
+      README(日英)と図を更新した(developer.md §68.40 の改定 2 の検証)。meander_cutoff は出水ありの
+      param・param_slump の数値と図を更新し、出水なしの 4 構成(noflood・slump_noflood・slump_cohesive・
+      slump_fines。逐次で各 2.5〜4 時間)は回し直しの途中で中断した(README の該当の節は 2026-10-23・24 の
+      値のままで、その旨を明記)。delta(8 構成。1 スレッドの 4 本並行で合計約 16 時間)は利用者の指示で
+      2026-10-30 に中断した(README は回し直し前の値)。delta の README の汀線半径・分流路数・南北の非対称と
+      比較の図(sandmud・fixation・wave_cmp)はリポジトリにない解析で作られているので、回し直す時は指標の
+      定義を決めて解析スクリプトを置く必要がある。meander_cutoff の出入口ゾーンは「ループのうち頸部ゾーン
+      から 12 m 以内の初期河道」(482 セル。初期地形から復元)。§89.25 の床の新旧を計測用の実行ファイルで比べる全期間の
       確認は、この回し直しで置き換えて打ち切った(食い違ったのは meander の容量給砂の fixfeed・
       fixsuspfeed・fixsuspfines。meander の param・param_cohesive・param_fixrec・param_varq と
       meander_cutoff の param・param_slump は食い違いなし)。

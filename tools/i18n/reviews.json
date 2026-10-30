@@ -968,11 +968,11 @@
     {
       "source": "examples/meander_cutoff/README.md",
       "target": "examples/meander_cutoff/en/README.md",
-      "source_sha256": "c690bced6dbd276a0127f241607ca3d4afb750ceb23231a99d54cd5c92c8dec0",
-      "target_sha256": "1a72a7f00a0e193523c520e1fd805a7641eb08742fb14925a715013acfaa6a81",
-      "reviewer": "Claude (Claude Code session; content and lexical review, no model execution)",
+      "source_sha256": "995364aedb6f3c18811c54a382e35c859796e29e2ff1b7bf9c1bcda0dbb9f06a",
+      "target_sha256": "3fe75c20197db6797df44be22c38d9a2a5ceb804a3c27518e8fe742a3ca3cf79",
+      "reviewer": "Claude (Claude Code session; compared the updated results heading, the results table, the cutoff finding, the note on which configurations were recomputed and the slump-block comparison with a flood in the source and the translation; rest unchanged since the previous record)",
       "method": "assistant",
-      "reviewed_on": "2026-10-24"
+      "reviewed_on": "2026-10-30"
     },
     {
       "source": "examples/mesa/README.md",
