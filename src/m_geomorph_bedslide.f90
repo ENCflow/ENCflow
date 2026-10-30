@@ -37,7 +37,8 @@
 !   でも引き渡す。初期に乾いたセルは対象外)、水柱に混ざる固体 hs をかさ体積
 !   Δ = hs/(1−λ) に換算して hb・z・sd へ移す(hs → 0)。表面 z+h+hs は
 !   固体分だけ保存され、間隙分は f_dbwet=1 なら水柱から埋没(h −= λ·s_b·Δ。
-!   残量でクランプ)、f_dbwet=0 なら表面が間隙分だけ上がる(乾燥セルの
+!   残量でクランプ)、f_dbwet=2(gwflow 併用)なら増えた容量 sy0·Δ を水柱から
+!   地下貯留 hg へ移し、f_dbwet=0 なら表面が間隙分だけ上がる(乾燥セルの
 !   全量繰り入れと同じ規約)。混合体の運動量は失われる(底層は慣性なし)。
 !   セル局所(近傍参照なし)。陸上を混合体で流下した土石流が滞水域に
 !   入った瞬間に底層へ変わり、水中を走る — landslide_tsunami_plan.md §4.7
@@ -525,7 +526,8 @@ end subroutine
 !----------------------------------------------------------------------
 ! 混合体(hs)から底層(hb)への引き渡し(プランジ。ヘッダ参照)
 !   Δ = hs·poroi(かさ体積)。hs → 0、hb・z・sd += Δ。間隙水は f_dbwet=1 の
-!   ときだけ水柱から埋没(h −= λ·s_b·Δ、残量でクランプ)。e の回復は
+!   とき水柱から埋没(h −= λ·s_b·Δ、残量でクランプ)、f_dbwet=2(gwflow 併用)の
+!   とき増えた容量 sy0·Δ を水柱から地下貯留 hg へ移す(空き容量・残量でクランプ)。e の回復は
 !   m_geomorph_calc の末尾(本モジュールの契約)
 !----------------------------------------------------------------------
 subroutine plunge_cells(gm, g, s)
@@ -533,13 +535,13 @@ subroutine plunge_cells(gm, g, s)
   type(t_geoinfo), intent(in) :: g
   type(t_state), intent(inout) :: s
   integer :: i, j, k, in, jn
-  real :: dd, dhw, vsum, psum1, psum2, hbq, hw, phic, phin, dphi, sl, smax, bb, sy, vb
+  real :: dd, dhw, vsum, psum1, psum2, hbq, hw, phic, phin, dphi, sl, smax, bb, sy, vb, cap
 
   vsum = 0.0
   psum1 = 0.0
   psum2 = 0.0
   !$omp parallel do schedule(static) reduction(+: vsum, psum1, psum2) &
-  !$omp   private(i, j, k, in, jn, dd, dhw, hbq, hw, phic, phin, dphi, sl, smax, bb, sy, vb)
+  !$omp   private(i, j, k, in, jn, dd, dhw, hbq, hw, phic, phin, dphi, sl, smax, bb, sy, vb, cap)
   do j = dcp%js, dcp%je
     do i = g%wx(1,j), g%wx(2,j)
       if (g%x(i,j) <= 0) cycle
@@ -597,6 +599,12 @@ subroutine plunge_cells(gm, g, s)
         dhw = -gm%db_lamsb * dd
         dhw = max(dhw, -max(s%h(i,j), 0.0))
         s%h(i,j) = s%h(i,j) + dhw
+      end if
+      if (gm%f_dbwet == 2 .and. s%gw_active) then
+        cap = s%sd(i,j) * g%sy0
+        dhw = min(max(cap - s%hg(i,j), 0.0), g%sy0 * dd, max(s%h(i,j), 0.0))
+        s%h(i,j) = s%h(i,j) - dhw
+        s%hg(i,j) = s%hg(i,j) + dhw
       end if
       vsum = vsum + dd
     end do

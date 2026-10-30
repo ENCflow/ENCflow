@@ -586,7 +586,7 @@ recommend `f_gravity_correction = 1` in &list_enc.
 | db_cmin | 0.02 | Lower concentration limit for applying the Egashira laminar law (f_dbres=2); below it the Manning law is used (a numerical switch, since the laminar law diverges as C->0; 0 < db_cmin < C*). The default 2% matches the mud-flow criterion of Takahashi and Nakagawa (1991) |
 | db_mu / db_xi | 0.2 / 1000 | Voellmy mu and xi (m/s²). Used by f_dbres=4. The defaults are mid-range RAMMS values (snow avalanches). Debris avalanches are smaller, mu 0.1 and xi 200-500 (recommendations below) |
 | db_tauy | 10000 | Constant retarding stress tau_y (Pa). Used by f_dbres=5. The lower side of the 5-50 kPa pyroclastic-flow applications |
-| f_dbwet / db_satbed | 0 / 1.0 | Pore-water entrainment (exchange of bed pore water with surface water on erosion/deposition; a first-order bulking effect where erosion dominates. Mutually exclusive with the groundwater computation) |
+| f_dbwet / db_satbed | 0 / 1.0 | Pore-water entrainment (exchange of bed pore water with surface water on erosion/deposition; a first-order bulking effect where erosion dominates). 1 is mutually exclusive with the groundwater computation. With the groundwater computation use 2 (the capacity added by deposition is filled from the local surface water, and the pore water of the eroded layer returns from subsurface storage to the surface) |
 
 The minimal input to "just run a debris flow" is `f_debris = 1` + `sd0`
 (the movable layer = erodible soil) + a source. The source is one of:
@@ -635,19 +635,29 @@ pays off).
   more). For boulder-dominated flows (sector-collapse origin, stony type
   descending a torrent) use `f_dbed = 3` + `f_dbres = 3`
   (Takahashi-Nakagawa). `f_dbwet = 1` (uptake of path pore water) is
-  recommended as the first-order bulking effect. Working example:
-  [examples/ashfall_lahar](../../../examples/ashfall_lahar/en/README.md) (ash-thickness
-  distribution → rainfall → mudflow → fan deposition).
+  recommended as the first-order bulking effect. With infiltration
+  (`fn_gwflow`) use `f_dbwet = 2` (the water that had soaked into the eroded
+  layer returns to the surface, and the capacity added by deposition is filled
+  from the local surface water). Working
+  example: [examples/ashfall_lahar](../../../examples/ashfall_lahar/en/README.md)
+  (infiltration lowered by the ash → rainfall → mudflow → fan deposition, compared
+  with before the eruption and with a check dam).
 - **How to initiate**: an **erosion-triggered** start, in which the ash
   layer is given as an erodible soil layer sd and the rain runoff raises the
-  concentration by erosion (no source needs to be specified;
-  examples/ashfall_lahar), a **sediment-laden segment inflow** at the
+  concentration by erosion (no source needs to be specified; give the drop in
+  infiltration caused by the ash directly as the infiltration capacity of
+  [Groundwater](gwflow.md); examples/ashfall_lahar), a **sediment-laden segment inflow** at the
   upstream end (the supply hydrograph; inflow_cs of
   [Boundary conditions](boundary.md)), or a **chain** in which deposits
   from an earlier stage form a natural dam and breach (deposits fixed by
   f_dbstop=1 → overtopping breach → entrainment of downstream deposits).
   The collapse-depth distribution fn_dbinit is for sector-collapse
-  origins.
+  origins. When an erosion-triggered start works on sheet flow on slopes
+  (about 1 mm deep), make the movement threshold depth `dd`
+  ([Shallow water flow computation](swflow.md)) well below the flow depth (about 0.2 mm).
+  When it is comparable with the flow depth (the default 1 mm), cells switch
+  between flowing and stopped, and grid-scale stripes of erosion and deposit
+  grow.
 - **Limits**: the thermal interaction of hot pyroclasts with snow and
   ice (the melt volume) is out of scope; give the meltwater as an inflow
   hydrograph. Dilute systems (pyroclastic surges) are out of scope
@@ -784,7 +794,10 @@ numerical noise.
 - **Closed-type check dam**: add the dam body to the terrain z and set
   the soil depth there to sd=0 (non-erodible). The time evolution of
   sedimentation -> filling -> crest overflow emerges automatically
-  (the same framework as landslide-dam formation and overtopping). To
+  (the same framework as landslide-dam formation and overtopping). Example:
+  [examples/ashfall_lahar](../../../examples/ashfall_lahar/en/README.md) (a 5 m dam just
+  upstream of the valley outlet; with terrain in which the slope water reaches the
+  valley floor upstream of the dam, all the upstream flow passes the dam). To
   represent the body as a wall thinner than a cell, the channel levee
   (bank; [Channels](channel.md)) can be used - on overtopping the
   sediment (hs) crosses together with the water as a real flux.
@@ -1023,7 +1036,8 @@ debris-flow model).
   ponded depth h >= bs_hplunge, convert hs to bulk volume hs/(1-lambda)
   and move it to the bed layer hb (the surface height conserves the
   solids; the pore fraction is buried from the water column with
-  f_dbwet=1, or raises the surface with 0). The mixture's momentum is
+  f_dbwet=1, moves from the water column to subsurface storage with 2, or
+  raises the surface with 0). The mixture's momentum is
   lost (the layer has no inertia). Right after plunging, the water of
   the shoreline zone is pushed offshore and dewaters temporarily, and
   the layer stalls. With bs_tstop=0 it is fixed there and a lobe is left
@@ -1554,7 +1568,7 @@ When the type of phenomenon is known, start from the following
 | Stony debris flow (Japanese type) | f_dbed=3 + f_dbres=3 | - | - | - | 0.05-0.3 | 35 | Takahashi-Nakagawa 1991. Grain size = representative boulders of the front |
 | Debris flow (Voellmy type, with entrainment) | f_dbed=4 + f_dbres=4 | 0.11 | 450 | - | - | - | Back-analysis of one event (Cancia 2015, Qiao et al. 2023; [debris-flow supplement](massflow.md) §6). Hungr's E_r h\|V\| is the standard entrainment law in practice; with f_dbed=4, delta_e ≈ E_r × a representative flow depth (massflow.md §3) |
 | Mudflow, fine sediment flow | f_dbed=2 + f_dbres=2 | - | - | - | 0.001-0.01 | 30-35 | Egashira constitutive law. e ≈ 0.85 |
-| Lahar (volcanic mudflow) | f_dbed=1 or 2 + f_dbres=4 (fine) / 1; 3+3 when boulder-dominated | 0.05-0.1 | 500-1000 | - | 0.001-0.01 | 30-35 | Initiated by erosion of the ash layer (sd), a sediment-laden segment inflow or a breach chain. f_dbwet=1 recommended. The Egashira laminar law is not usable for fine material. See the "Lahars" paragraph above and [examples/ashfall_lahar](../../../examples/ashfall_lahar/en/README.md) |
+| Lahar (volcanic mudflow) | f_dbed=1 or 2 + f_dbres=4 (fine) / 1; 3+3 when boulder-dominated | 0.05-0.1 | 500-1000 | - | 0.001-0.01 | 30-35 | Initiated by erosion of the ash layer (sd), a sediment-laden segment inflow or a breach chain. f_dbwet=1 recommended (2 with infiltration). Set dd to about 0.2 mm when starting from sheet flow on slopes. The Egashira laminar law is not usable for fine material. See the "Lahars" paragraph above and [examples/ashfall_lahar](../../../examples/ashfall_lahar/en/README.md) |
 | Simple debris flow (calibration-driven) | f_dbed=1 + f_dbres=1 | - | - | - | - | 30-35 | Calibrate the runout with delta_e and delta_d |
 | Bed change of a sand-bed river | f_fluvial (+ f_suspend) | - | - | - | 0.0003-0.001 | - | Large contribution of suspended load |
 | River-mouth delta | f_fluvial (capacity feed) + f_suspend (inflow concentration) + f_bedfines + fluv_slope + f_repose (+ f_fixation) | - | - | - | sand 0.0005; mud via susp_wf = 1e-3 m/s | 30 | Sea as ordinary cells + initial water level. A mud concentration of 0.0002-0.001 separates fan and bird-foot. morfac 100-200. docs/delta_plan.md |

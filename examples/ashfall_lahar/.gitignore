@@ -4,5 +4,9 @@ encflow
 encflow_mpi
 z.txt
 z_noash.txt
+z_dam.txt
 ash.txt
+ash_dam.txt
+data_rot0/
+data_rot45/
 __pycache__/

@@ -315,9 +315,13 @@
                            !   Takahashi-Nakagawa 1991 eq. (5). A first-order
                            !   bulking effect where erosion dominates.
                            !   Exclusive with gwflow (double counting with the
-                           !   hg ledger))
+                           !   hg ledger), 2: pore water with gwflow - fill the
+                           !   capacity sy0.dz added by deposition from the
+                           !   local surface water, and return the pore water
+                           !   sy0.|dz| of the eroded layer from hg to the
+                           !   surface. Needs gwflow)
   db_satbed = 1.0          ! saturation of the deposit layer s_b (0-1. Used with
-                           !   f_dbwet=1. Horadani values: 0.8 on slopes above
+                           !   f_dbwet=1 (not with 2). Horadani values: 0.8 on slopes above
                            !   21 deg, 1.0 below)
   db_mu = 0.0              ! Voellmy friction coefficient mu (dimensionless).
                            !   Used by f_dbres=4. 0 = default 0.2 (avalanches

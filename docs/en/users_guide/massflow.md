@@ -216,6 +216,22 @@ continuity equation of Takahashi–Nakagawa[^tn91] and is the first-order
 effect that gives a net bulking in erosion-dominated channels. It is
 exclusive with the groundwater computation.
 
+**Pore water with the groundwater computation (f_dbwet = 2).** With the
+groundwater computation (`fn_gwflow`) the pore water of the bed is held as
+subsurface storage $`h_g`$ (capacity $`s_d\,s_y`$). `f_dbwet = 2` moves water
+between the surface water and the subsurface storage with the bed change. On
+deposition ($`\Delta z > 0`$) the added capacity is filled immediately from the
+local surface water ($`\Delta h = \min(s_y\,\Delta z,\ s_d s_y - h_g,\ h)`$ moves
+from $`h`$ to $`h_g`$; sediment deposited under a flow is saturated), and on
+erosion ($`\Delta z < 0`$) the pore water of the eroded layer
+$`\min(s_y|\Delta z|,\ h_g)`$ returns from $`h_g`$ to $`h`$ (the subsurface storage
+fills from the top, so erosion removes the wet upper part first). Both are our
+own simplifications; the total amount of water is conserved, and alternating
+deposition and erosion does not shift water in one direction. With
+`f_dbwet = 0` and the groundwater computation the pores of the deposit stay
+empty while the ground rises, so deposition in a pond pushes out water equal to
+those pores.
+
 **Future work (planned): Hungr's entrainment law.** We plan to add, without
 changing the default, Hungr's empirical entrainment law[^hungr95]
 $`E = E_r\,h_t\,|\mathbf{V}|`$, mentioned in the f_dbed = 4 paragraph above, as an
@@ -358,7 +374,7 @@ The labels in the Basis column are explained in [How to read the basis of a defa
 | f_dbed | 1 | erosion/deposition law (§3) | **method** 1: Takahashi relaxation, 2: Egashira–Ashida, 3: Takahashi–Nakagawa, 4: velocity-proportional, 0: none |
 | db_delte / db_deltd | 0.0007 / 0.05 | erosion / deposition rate coefficients | **calibration** Takahashi's general value / Kanako customary value |
 | f_dbstop / db_vstop / db_wstop | 0 / 0.05 m/s / 0.05 m/s | low-speed stopping | **numerical** vstop also serves the yield test |
-| f_dbwet / db_satbed | 0 / 1.0 | pore-water entrainment / deposit saturation | **method** total-volume continuity of Takahashi–Nakagawa[^tn91] |
+| f_dbwet / db_satbed | 0 / 1.0 | pore-water entrainment / deposit saturation (1: entrainment, 2: with the groundwater computation) | **method** total-volume continuity of Takahashi–Nakagawa[^tn91] (1). 2 exchanges pore water between the surface water and subsurface storage (own) |
 | db_reltime / db_relsat | 0 / 1.0 | release time / saturation of the failed mass (§4) | **given** |
 | slide_c / slide_phi / slide_gamma | 0 / 30° / 18 kN/m³ | strength constants of the stability test (§4) | **customary value** shallow-landslide values; c' = 0 is on the safe side |
 | bs_rho | 2000 kg/m³ | bulk density of the mass (§5) | **customary value** representative of saturated soil and rock debris |
@@ -398,7 +414,7 @@ The labels in the Basis column are explained in [How to read the basis of a defa
 | [test/avalanche](../../../test/avalanche/en/README.md) | avalanche (Voellmy + velocity-proportional entrainment) | grows 1.5 times by entrainment and stops; ledger to machine precision |
 | [test/bedslide](../../../test/bedslide/en/README.md) | analytical speed of the layer, 45° slope, entry into a lake | $`V`$ of interior cells within 0.5% of the analytical value |
 | [examples/landslide_tsunami](../../../examples/landslide_tsunami/en/README.md) | rock avalanche, hand-over, submarine landslide | four patterns compared |
-| [examples/ashfall_lahar](../../../examples/ashfall_lahar/en/README.md) | ash fall → rain → lahar | the lahar setting pattern |
+| [examples/ashfall_lahar](../../../examples/ashfall_lahar/en/README.md) | ash fall → rain → lahar, check dam | the lahar setting pattern (infiltration capacity, f_dbwet=2) |
 
 ## References
 

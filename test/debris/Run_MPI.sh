@@ -100,4 +100,18 @@ if [ -d save_fluv_serial ]; then
         echo "警告: save_fluv/state.dat が逐次ビルドと不一致(同上)" >&2
     fi
 fi
+
+# 構成6: 構成1 + 地下水計算と併用する間隙水(f_dbwet=2)
+set -o pipefail
+mpirun -np "$NP" $MPIRUN_OPTS ./encflow_mpi param_gw.txt | tee -a Screen.log || exit 1
+set +o pipefail
+echo ""
+python3 "$sdir/Check_debris.py" save_gw gw || rc=1
+if [ -d save_gw_serial ]; then
+    if cmp -s save_gw/state.dat save_gw_serial/state.dat; then
+        echo "=== 地下水計算と併用する間隙水: state.dat は逐次結果とビット一致 ==="
+    else
+        echo "警告: save_gw/state.dat が逐次ビルドと不一致(同上)" >&2
+    fi
+fi
 exit $rc
