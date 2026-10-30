@@ -266,11 +266,11 @@
     {
       "source": "docs/users_guide/geomorph.md",
       "target": "docs/en/users_guide/geomorph.md",
-      "source_sha256": "cc5fce05d4b86ea98472e0306e2b40afdb89971bf9ce59445182279ea78c6834",
-      "target_sha256": "031937ebbd9cc44792edec1e8714d5ade3f2733851cb191e8a132f8af79d61b9",
-      "reviewer": "Claude (Claude Code session; review of the changed lines against the previously recorded pair, no model execution)",
+      "source_sha256": "3b048238ce74b9b1d6ae9ba60e35aa394a6d6eb7eb9920c949d40a387ac3806f",
+      "target_sha256": "8b3184768bdf4063abb744c2c192ec6e4642bbdede058b47db1483c267943a28",
+      "reviewer": "Claude (Claude Code session; reviewed the Japanese source against the English mirror, 2026-10-30)",
       "method": "assistant",
-      "reviewed_on": "2026-10-29"
+      "reviewed_on": "2026-10-30"
     },
     {
       "source": "docs/users_guide/glacier.md",
@@ -338,11 +338,11 @@
     {
       "source": "docs/users_guide/massflow.md",
       "target": "docs/en/users_guide/massflow.md",
-      "source_sha256": "dbeed63ef01449330b730177ebbce310ba90a48298e2342526c39d4f0cd63afd",
-      "target_sha256": "80ba59fd56500c0653f57ba6a3f72d447166704b459b9a16160a240ab59886cd",
-      "reviewer": "Claude (Claude Code session; mechanical renumbering of the developer.md section references §88 -> §89 in both files, checked by script that the lines differ only in those numbers and that both files carry the same references; rest unchanged since the previous record)",
+      "source_sha256": "33c90795d787707e7ad5be43acf3bdd43bf85440f2d436f7a9aae34d8d1b88e8",
+      "target_sha256": "61ca3b4c2b2af6aaad02f91f401cc6fa14b18c90515b62e55f024645e16f1c6c",
+      "reviewer": "Claude (Claude Code session; reviewed the Japanese source against the English mirror, 2026-10-30)",
       "method": "assistant",
-      "reviewed_on": "2026-10-28"
+      "reviewed_on": "2026-10-30"
     },
     {
       "source": "docs/users_guide/nest.md",
@@ -626,11 +626,11 @@
     {
       "source": "examples/List_samples/list_geomorph.txt",
       "target": "examples/List_samples/en/list_geomorph.txt",
-      "source_sha256": "fbd0a9a0f88acc2d8bb607fff8cc70ec6d2100766c4de9ff51ae1e062e5ea878",
-      "target_sha256": "0a8e85e22ca1d67f9d0ad4bafb23c7a784904ad169be1f1cb6558ca85b134233",
-      "reviewer": "Claude (Claude Code session; full-text content and lexical review, no model execution)",
+      "source_sha256": "9fe76e8d11e3a5b47181b2852207807a38d5f83e4a855c3265a20f086cd3c0ea",
+      "target_sha256": "df0b4679c206611a8948e7647e5846869dbdc0566edffecabd75b096af983d60",
+      "reviewer": "Claude (Claude Code session; reviewed the Japanese source against the English mirror, 2026-10-30)",
       "method": "assistant",
-      "reviewed_on": "2026-10-29"
+      "reviewed_on": "2026-10-30"
     },
     {
       "source": "examples/List_samples/list_glacier.txt",
@@ -1571,11 +1571,11 @@
     {
       "source": "test/debris/README.md",
       "target": "test/debris/en/README.md",
-      "source_sha256": "5fed65675e1f40a7ebba95cb91822cc46cc5144e7c26cecb54c4f9e1b085ee35",
-      "target_sha256": "7a8665b07631e852e8a835840873f2bdf61760e4f0b35ae0b6f7cd1fcea2e446",
-      "reviewer": "Claude (Claude Code session; mechanical renumbering of the developer.md section references §88 -> §89 in both files, checked by script that the lines differ only in those numbers and that both files carry the same references; rest unchanged since the previous record)",
+      "source_sha256": "52395aa857cc7ae2618ac862c28ddea7fc7e11f96097a1907407f2f6a9c7092e",
+      "target_sha256": "3cbef30075e9f1bacbad0d90220e586d17784f4871430eeb90d024fc7e76e41b",
+      "reviewer": "Claude (Claude Code session; reviewed the Japanese source against the English mirror, 2026-10-30)",
       "method": "assistant",
-      "reviewed_on": "2026-10-28"
+      "reviewed_on": "2026-10-30"
     },
     {
       "source": "test/debris/figs/map.png",
