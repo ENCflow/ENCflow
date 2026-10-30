@@ -658,7 +658,7 @@ $`\cos\theta\,C\rho_s D^2 (u/h)^2`$ ÷ 岩の抵抗」に比例させる則を�
 |---|---|---|
 | [test/creep](../../test/creep/README.md) | ガウス丘の拡散 | 解析解に最大誤差 7.8e-5 m、morfac 等価性。深さ依存クリープの岩盤面の不変・土層の保存・裸岩で不変 |
 | [test/fluvial](../../test/fluvial/README.md) | 閉領域の段波と河床変動 | 固体総量・共動更新が機械精度 |
-| [test/suspend](../../test/suspend/README.md) | 2 つの平衡濃度式 | 固体総量 2.2e-15 |
+| [test/suspend](../../test/suspend/README.md) | 2 つの平衡濃度式、等流の水路の平衡と適応 | 固体総量 2.2e-15、平衡濃度が式の値と 1.5e-6、適応の減衰率が離散の予測と 1.4e-5 |
 | [test/sedinflow](../../test/sedinflow/README.md) | 境界からの土砂供給 | 流入総量の台帳閉合 ~1e-16 |
 | [test/wash](../../test/wash/README.md) | 降雨 + 段波の斜面浸食 | 固体総量 1.7e-13 |
 | [test/splash](../../test/splash/README.md) | 遷緩点斜面の乾式侵食 | 解析形に全桁一致、排出台帳一致 |

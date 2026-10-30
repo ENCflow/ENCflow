@@ -89,7 +89,7 @@ reference の更新(`-u`)は結果の妥当性を人間が確認してから行�
 | [wave_shore/](wave_shore/) | 波浪による沿岸漂砂。直線汀線の正弦波状の擾乱が低角の波で線形理論(Ashton & Murray 2006)の減衰率で消え、高角の波で理論の成長率で育つ(物理長の平滑化 wave_lsm。従来核では格子スケールの砂州が育つことも記録)。保存、無効時ビット一致 | 掃流砂 fn_wave f_wave_longshore wave_lsm | 解析・自己検証 |
 | [wave_river/](wave_river/) | 河口の規則 wave_vmax。河道の淵が波の源になって早瀬に沿岸漂砂が働く問題の再現と、規則による河道の不変(海側では波が働く) | 掃流砂 fn_wave wave_vmax | 自己検証 |
 | [uniflow/](uniflow/) | 乾いた地盤に挟まれた幅 1・5 セルの直線水路の等流。f_opening_dynamic = 2 で Manning に一致、振り替えなしでは河岸行の流量不足(既知の性質を記録) | ENC の通水能、f_opening_dynamic | 解析 |
-| [suspend/](suspend/) | 浮遊砂(移流+浸食・沈降)の疎通・保存則 | 土砂 f_suspend | 解析 |
+| [suspend/](suspend/) | 浮遊砂(移流+浸食・沈降)の疎通・保存則と、等流の水路の巻き上げと沈降の釣り合い(平衡濃度 C_eq/β と、清水の流入からの適応の減衰率が離散の予測に一致。平衡濃度式 2 種と Rubey の沈降速度) | 土砂 f_suspend | 解析 |
 | [wash/](wash/) | 斜面浸食(雨滴+面状)の疎通・保存則 | 土砂 f_wash | 保存則(Log) |
 | [wetlw/](wetlw/) | 湿潤侵食の剥離深の横方向拡散 wet_lw: 固体総量の保存、格子規模の凹凸の減少、MPI 一致 | 土砂 wet_lw | 自己検証 |
 | [splash/](splash/) | 乾式斜面侵食の解析検証 | 土砂 f_splash | ref |

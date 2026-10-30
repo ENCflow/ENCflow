@@ -419,9 +419,9 @@
     {
       "source": "docs/users_guide/sediment.md",
       "target": "docs/en/users_guide/sediment.md",
-      "source_sha256": "467b331fdd5c9f18e9451793572c85b2aa0ae0fbeb46fe60cd3af432cea86108",
-      "target_sha256": "3cd45575aa069466407eaeff78615f0f760400a11d74b771df3c8b434827c0f9",
-      "reviewer": "Claude (Claude Code session; reviewed the changed sections (added reference sections, footnotes and citation markers) of the Japanese source against the English mirror, 2026-10-30)",
+      "source_sha256": "213f5ed7373d260a977722b0398475dbf1b6763aa010b76a27da0a1e55f7a0c6",
+      "target_sha256": "91e61aad8da022609124c62c9af77e51c2aeea8c7c6f621a810087b5bc1e8d7a",
+      "reviewer": "Claude (Claude Code session; reviewed the changed sections (test/suspend configurations 3 and 4) of the Japanese source against the English mirror, 2026-10-30)",
       "method": "assistant",
       "reviewed_on": "2026-10-30"
     },
@@ -1517,9 +1517,9 @@
     {
       "source": "test/README.md",
       "target": "test/README.en.md",
-      "source_sha256": "35b9af7aca37301a055a7efd09b89db0f0091feec73598190b73b4d18e4a8a7b",
-      "target_sha256": "608d7dc9b93d586ce2d5bf84c2469c458d5a34933d195d7fc0f13da816bcc741",
-      "reviewer": "Claude (Claude Code session; reviewed the changed sections (test/gwlateral entry and the note on the conductance along walls) of the Japanese source against the English mirror, 2026-10-30)",
+      "source_sha256": "c1de202c7f65e51da35d143893ef8ee107c3c12fbf5efca81a28e50d6e91fcb9",
+      "target_sha256": "aa78c03e1368e971c3063768848b0001d6c7221e66f9de81c0b539f463224b2e",
+      "reviewer": "Claude (Claude Code session; reviewed the changed sections (test/suspend configurations 3 and 4) of the Japanese source against the English mirror, 2026-10-30)",
       "method": "assistant",
       "reviewed_on": "2026-10-30"
     },
@@ -2615,11 +2615,11 @@
     {
       "source": "test/suspend/README.md",
       "target": "test/suspend/en/README.md",
-      "source_sha256": "b0b30ea87fc4b7140a2ebba9f799c002734b223a61dae9816b4687a8d0e6b3ac",
-      "target_sha256": "0a12f1054462ff9afe7d1e124a16b1adf08d1011a0a5dc50254d2189df834a5e",
-      "reviewer": "Claude (Claude Code session; full-text content and lexical review, no model execution)",
+      "source_sha256": "bb9d788543e48faf35ec0051513bbf6201013c7f8607a75e90faf5e1d6ff99fc",
+      "target_sha256": "962732e38ebecb35a90e0bbb5cddaee7ac6d761df6c6ab4863bc39ff7418311f",
+      "reviewer": "Claude (Claude Code session; reviewed the changed sections (test/suspend configurations 3 and 4) of the Japanese source against the English mirror, 2026-10-30)",
       "method": "assistant",
-      "reviewed_on": "2026-10-24"
+      "reviewed_on": "2026-10-30"
     },
     {
       "source": "test/suspend/figs/suspend.png",
