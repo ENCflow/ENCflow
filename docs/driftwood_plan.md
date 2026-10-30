@@ -158,7 +158,7 @@ developer.md §50.5):
 - **(a) 水理的流失**: wst > 0 かつ h+hs > dw_hrec かつ vv > dw_vrec の
   セルで、wst → hd をレート dw_wrec (m3/m2/s) で移す
   (fx = min(wst, dw_wrec・dt)。レート式は数値的閉包【独自】、
-  閾値は【要文献照合】)。判定水深を h+hs(混合流動深)とするのは
+  閾値は校正パラメータ = developer.md §50.5 の文献照合で確定)。判定水深を h+hs(混合流動深)とするのは
   f_out_dmax と同じ理由(土石流では h のみだと過小)。
 - **(b) 侵食連行**: ecum = max(zref − z, 0)(累積侵食深)が
   dw_droot(根系深)を超えたセルで wst 全量 → hd。z の低下という
