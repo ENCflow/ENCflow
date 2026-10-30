@@ -1,0 +1,7 @@
+result_*/
+data/
+data_supp/
+Screen_*.log
+encflow
+encflow_mpi
+__pycache__/
