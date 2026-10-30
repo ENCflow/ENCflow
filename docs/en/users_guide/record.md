@@ -91,6 +91,15 @@ cells must differ.**
   yielding twice the discharge. Use a horizontal or vertical transect for
   this configuration. ENC cell-index integration avoids this duplication
   by counting each crossing edge once.
+- **With ENC cell indices, put the ends of a transect in cells without
+  water.** When an end lies in flowing water, the end part is read short.
+  In uniform flow, a transect that advances by rows reads about 0.6 cell
+  widths less (the diagonal edges through the end corners are not counted).
+  A transect that advances by columns is extended by half a cell along its
+  long direction (columns) only, so even drawn from wall to wall it misses
+  the half cells of the end rows (one row along the wall in total). The
+  real-coordinate method does not have this property
+  ([test/fluxline](../../../test/fluxline/en/README.md)).
 
 ### Real coordinates (flxytype=1)
 
@@ -151,6 +160,7 @@ Annotated list of all parameters:
 
 - [test/chichibu](../../../test/chichibu/en/README.md): discharge and depth records from multiple main-channel transects and probes; `record_reach.txt` provides a 12-transect longitudinal setup.
 - [test/bendloss](../../../test/bendloss/en/README.md): transect records in straight, zigzag and diagonal channels, including flood-wave attenuation comparisons.
+- [test/fluxline](../../../test/fluxline/en/README.md): transects at angles from 0 to 85° (cell indices and real coordinates) in a uniform channel, compared with the theoretical discharge.
 
 ## Post-hoc measurement from distributed output (utils/rerecord)
 

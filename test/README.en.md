@@ -128,6 +128,7 @@ analytical-solution or conservation check by Check_*.py.
 | [bmi_vars/](bmi_vars/en/README.md) | Acceptance test of the feature-dependent BMI variables (dynamic variable table) and of the set of hg and swe: three configurations (no features, bucket groundwater + snow, Green-Ampt) check the presence of variables, analytical values, same-value set and the rejection of invalid sets (§76) | BMI, groundwater, snow | identity (Python), bmi-tester |
 | **Input and output** | | | |
 | [gtif/](gtif/en/README.md) | Test assets for the GeoTIFF reader (compression and coordinate-system variants) | GeoTIFF | unit test |
+| [fluxline/](fluxline/en/README.md) | Angle sweep of flux transects. In a uniform channel, transects across the full width match the total discharge (real coordinates at every angle from 0 to 85°; cell indices for transects advancing by rows, below 45°, while a transect advancing by columns leaves out one row along the wall by convention), interior segments match F·n̂·L (real coordinates) or read about 0.585 rows less for the diagonal edges at the ends (cell indices), and parallel transects read 0 (§24.3) | Transects of fn_record | analytic |
 | Scripts/ | Common run engine and comparison scripts | — | — |
 
 For the MPI rule (np = 1, 2, 4 must match the serial run) and the

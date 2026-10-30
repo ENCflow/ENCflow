@@ -1,0 +1,5 @@
+# make_init.py が Run.sh・Run_MPI.sh の頭で書く地形・初期水深・測線(生成物)
+zinit.txt
+hinit.txt
+record_stair.txt
+record_xy.txt

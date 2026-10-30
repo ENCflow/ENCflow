@@ -1,0 +1,80 @@
+!======================================================================
+! fluxline 構成 1: 流量測線の角度掃引(セル番号指定 flxytype = 0。developer.md §24.3)
+!   東西に長い直線水路(500 × 21 セル、Δx = 1 m、勾配 0.002、n = 0.03。南北の縁は領域の
+!   壁。make_init.py が書く)の西の辺の全幅から Q = 9.860442 m³/s(Manning の等流水深
+!   0.5 m の単位幅流量 0.469545 m²/s × 21 m)を流し、東の辺は自由流出。定常の流れに
+!   いろいろな角度の測線を置いて、Check_fluxline.py stair が
+!     - 壁から壁まで横切る測線: 流れに直交する向きから 45° 未満(行方向に進む = y 長手)は
+!       保存則から Q に一致する。45° 以上(列方向に進む = x 長手)は長手方向にだけ半セル
+!       延長する規約(§24 (2b))で、北端の踏面セルの下流へ抜ける流量(壁沿いの行の
+!       1 行分)を含まない
+!     - 内部の行だけを横切る測線: y 長手は端の角を通る斜めエッジを数えないため、踏面の
+!       数 n より約 0.58 行(d = 2/(2+√2) に近い)少ない n − δ 行分、x 長手は中心間の
+!       行差 |Δj| 行分を読む。流れに平行な測線は 0
+!   を確かめる。構成 2(param_xy.txt)は同じ流れを実座標指定の測線で測る
+!======================================================================
+&list_sysparam
+  f_gridsystem = 0
+  f_govequation = 0
+  dt = 0.2
+  t0 = 0
+  tt = 2400
+  dt_disp = 600
+  dt_file = 2400
+  dt_recrd = 300            ! 測線の CSV(最後の 2 行で定常を確かめる)
+  fn_geoinfo = '-'
+  fn_initial = '-'
+  fn_enc = '-'
+  fn_boundary = '-'
+  fn_record = 'record_stair.txt'
+  dir_result = 'result_stair'
+  f_output_mode = 2         ! bil(float32): 検定が水深と流速の分布を読む
+  f_check_cfl = 1
+  f_out_z = 0
+  f_out_vv = 1
+/
+&list_enc
+/
+&list_initial
+  f_htype = 1
+  fn_hinit = 'hinit.txt'
+/
+&list_geoinfo
+  lx = 500.0
+  ly = 21.0
+  nx = 500
+  ny = 21
+  f_ztype = 1
+  fn_z = 'zinit.txt'
+  f_rntype = 0
+  rn0 = 0.03
+/
+&list_bound_edge
+  f_bc_e = 1                ! 東の辺は自由流出
+/
+&list_bound_inflow          ! 西の辺の全幅(21 セル)から一定流量
+  inflow_cell(1:2,1,1) = 1, 1
+  inflow_cell(1:2,2,1) = 1, 2
+  inflow_cell(1:2,3,1) = 1, 3
+  inflow_cell(1:2,4,1) = 1, 4
+  inflow_cell(1:2,5,1) = 1, 5
+  inflow_cell(1:2,6,1) = 1, 6
+  inflow_cell(1:2,7,1) = 1, 7
+  inflow_cell(1:2,8,1) = 1, 8
+  inflow_cell(1:2,9,1) = 1, 9
+  inflow_cell(1:2,10,1) = 1, 10
+  inflow_cell(1:2,11,1) = 1, 11
+  inflow_cell(1:2,12,1) = 1, 12
+  inflow_cell(1:2,13,1) = 1, 13
+  inflow_cell(1:2,14,1) = 1, 14
+  inflow_cell(1:2,15,1) = 1, 15
+  inflow_cell(1:2,16,1) = 1, 16
+  inflow_cell(1:2,17,1) = 1, 17
+  inflow_cell(1:2,18,1) = 1, 18
+  inflow_cell(1:2,19,1) = 1, 19
+  inflow_cell(1:2,20,1) = 1, 20
+  inflow_cell(1:2,21,1) = 1, 21
+  inflow_val(1:2,1,1) = 0, 9.860442        ! (時刻 (min), 総流量 (m3/s))
+  inflow_val(1:2,2,1) = 9999, 9.860442
+  inflow_dist(1) = 0
+/

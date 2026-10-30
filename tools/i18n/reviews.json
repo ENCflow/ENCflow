@@ -392,9 +392,9 @@
     {
       "source": "docs/users_guide/record.md",
       "target": "docs/en/users_guide/record.md",
-      "source_sha256": "3141f8e68a28a7aeead45f953881bd8356f49a4bfc2ce5c4ec6921c6f2493eca",
-      "target_sha256": "3d81172aa8692a1ee8810237764372fa747703a312c336731c1f2b37f7db8842",
-      "reviewer": "Claude (Claude Code session; reviewed the changed sections (added reference sections, footnotes and citation markers) of the Japanese source against the English mirror, 2026-10-30)",
+      "source_sha256": "77acdc67671cb2028dc8d05f435a5e0061c4d30d5edc8dbe5346b80eb6f93866",
+      "target_sha256": "8abefcb78a60109003849a849a23d0d321ab856d5a2f36157e7819ad5adff70c",
+      "reviewer": "Claude (Claude Code session; reviewed the changed sections (test/fluxline entry and the note on transect ends) of the Japanese source against the English mirror, 2026-10-30)",
       "method": "assistant",
       "reviewed_on": "2026-10-30"
     },
@@ -1517,9 +1517,9 @@
     {
       "source": "test/README.md",
       "target": "test/README.en.md",
-      "source_sha256": "c1de202c7f65e51da35d143893ef8ee107c3c12fbf5efca81a28e50d6e91fcb9",
-      "target_sha256": "aa78c03e1368e971c3063768848b0001d6c7221e66f9de81c0b539f463224b2e",
-      "reviewer": "Claude (Claude Code session; reviewed the changed sections (test/suspend configurations 3 and 4) of the Japanese source against the English mirror, 2026-10-30)",
+      "source_sha256": "60fc07956880e806fb5ca5363983cf7e0e15bca67a3321b5d478368549831677",
+      "target_sha256": "212e2b15aa4e5e1f0b99aab25b3aa42301b5ffeb52085a3df872d604c57e294f",
+      "reviewer": "Claude (Claude Code session; reviewed the changed sections (test/fluxline entry and the note on transect ends) of the Japanese source against the English mirror, 2026-10-30)",
       "method": "assistant",
       "reviewed_on": "2026-10-30"
     },
@@ -1972,6 +1972,15 @@
       "reviewer": "Claude (Claude Code session; English figure drawn by the same script with the en switch; visual check)",
       "method": "assistant",
       "reviewed_on": "2026-10-24"
+    },
+    {
+      "source": "test/fluxline/README.md",
+      "target": "test/fluxline/en/README.md",
+      "source_sha256": "492f3461413364a140f4be35315cae99ca331d6005f3bd514db8dd8ab953a92f",
+      "target_sha256": "d635569ad59a9fb58b07030c6098751f443d19397f75b4a558d6687be81e3ff2",
+      "reviewer": "Claude (Claude Code session; full-text content and lexical review of a new mirror written in the same session, no model execution)",
+      "method": "assistant",
+      "reviewed_on": "2026-10-30"
     },
     {
       "source": "test/frost/README.md",
