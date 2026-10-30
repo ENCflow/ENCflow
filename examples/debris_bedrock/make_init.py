@@ -94,7 +94,8 @@ def param(name):
                "  dir_save = 'save_%s'\n  f_state_save = 1\n  f_check_cfl = 1\n"
                "  f_output_mode = 2         ! bil(単精度)\n  f_out_z = 1\n  f_out_vv = 1\n%s/\n"
                % (DT, TT, DTF, TT, name, name, "" if model == "W" else "  f_out_hs = 1\n"))
-    out.append("&list_enc\n  f_gravity_correction = 1\n/\n")
+    out.append("&list_enc\n  f_gravity_correction = 1\n"
+               "  f_opening_dynamic = 3     ! 塞がりを局所の平面から測る(急勾配の渓流。developer.md §68.41)\n/\n")
     out.append("&list_initial\n  f_htype = 0\n  h0 = 0.0\n/\n")
     out.append("&list_geoinfo\n  lx = %.1f\n  ly = %.1f\n  nx = %d\n  ny = %d\n  f_ztype = 1\n"
                "  fn_z = 'z.txt'\n  f_rntype = 0\n  rn0 = 0.05\n  f_sdtype = 1\n  fn_sd = '%s'\n"

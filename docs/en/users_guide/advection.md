@@ -368,6 +368,49 @@ on outflow $`u_e`$ (no contribution).
   with the advection terms of the boundary row and self-excited a
   discharge oscillation of 5-minute period. Only the inflow row is
   affected, so uniform-flow and flood-wave results hardly change).
+  This is the default (`f_inflow_edge = 0`); two alternatives can be
+  chosen ([test/inflowadv](../../../test/inflowadv/en/README.md)).
+  - `f_inflow_edge = 1`: only the edges from an inflow cell into the
+    section (the normal edges from the inflow face inwards and the diagonal
+    edges within the width of the section) get a zero advection term. The
+    edges along the inflow face (both ends inflow cells) and the edges that
+    leave the section at its two ends keep their advection term. On an
+    edge without it the velocity tends to the balance of surface gradient
+    and friction, so with the default a flow falling from the end of the
+    section into a lower cell beside it can exceed the velocity that energy
+    conservation allows (with the default, param_feed of examples/meander,
+    whose capacity feed fixes the bed of the inflow cells, stops through
+    scour of the outer cell beside the section feeding a jet).
+  - `f_inflow_edge = 2`: as 1, and the velocity on the edges into the
+    section is capped by the speed allowed by the energy head of the
+    upstream cell, $`\sqrt{2g\max(E_\mathrm{up} - \eta_\mathrm{dn}, 0)}`$
+    with $`E_\mathrm{up} = \eta + V^2/2g`$ ($`V`$ is the speed of the
+    upstream cell and $`\eta`$ the water level, $`z + h + h_s`$ for debris
+    flows); the discharge is scaled by the same ratio (a Bernoulli bound
+    without losses; developer.md §68.40, second revision, in Japanese). On
+    the edges into the section, which have no advection term, a
+    supercritical jet can form right below the inflow in a channel of mild
+    slope and create energy head (in a 3-column channel between walls, 1.0
+    to 1.3 m deep at 13 m/s, where uniform flow is 4.7 m at 3.0 m/s; it
+    appears with the default and with 1). For an inflow cell on a steep
+    slope, where the uniform flow of the face discharge is supercritical
+    (the Manning normal depth is below the critical depth), the supply
+    speed (the face discharge per cell width and depth) also counts as the
+    upstream speed, so a supercritical inflow is hardly throttled. Inflow
+    cells without a supply (cells closed because they touch nodata or a
+    wall corner) are capped by the cell speed alone, so near a steep inflow
+    the depth can come out about 10 % larger.
+  - Which to use: use 2 for landform-evolution runs in which the bed right
+    beside or below the inflow moves, and for narrow inflows (channels a
+    few columns wide between walls). The cap of 2 acts almost all the time
+    near the inflow: with a subcritical uniform inflow the discharge can
+    keep wavering slightly at the threshold of the cap (0.02 % in the
+    configuration of test/fluxline), and in a flood the level of the inflow
+    cells can rise and leave a step to the next cell downstream (0.2 to
+    0.3 m at 200 m³/s in examples/estuary_barrage). With 1 and 2 the inflow
+    has no momentum on the first edge into the section and tends to spread
+    sideways. Results near the inflow depend on the chosen rule, so keep the
+    reach of interest away from the inflow section.
 - **The far donor of MUSCL.** If the cell beyond the $`u_\mathrm{upup}`$ edge
   is outside the domain or invalid, that face degrades to first-order
   upwind (reading 0 would give $`r \gg 1 \to \psi = 2`$, anti-diffusion, and
@@ -454,7 +497,9 @@ listed in the [shallow water chapter](swflow.md).
   diagonal passage widths make the axis edge velocity about 2.4 times the
   cell velocity, which amplifies the acceleration and deceleration by the
   advection term (scheme 3 in particular). Reassigning the blocked shares to
-  the open edges removes this.
+  the open edges removes this. In steep, shallow flows the default 2 also
+  counts the upslope ground of a uniform slope as blocking and makes the flow
+  too fast; use 3 (blockage measured above the local plane) there.
 - `f_dry_head_cap`: the pressure term stops water from climbing onto dry
   ground above the water surface, but where the advection term wins, water
   can leak over at bore fronts and in incised channels. Capping the edge

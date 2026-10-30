@@ -45,7 +45,7 @@ x = (np.arange(NX) + 0.5) * DX
 z0 = np.where(x < XB, ST * (XB - x), 0.0)
 cases = [("save", T("構成 1: 簡易 E-D(高橋型平衡濃度)+ クーロン・マニング合成、30 s", "Configuration 1: simple E-D (Takahashi-type equilibrium concentration) + Coulomb–Manning combined, 30 s"), "C0"),
          ("save_eg", T("構成 2: 江頭・芦田 E-D + 江頭構成則、30 s", "Configuration 2: Egashira–Ashida E-D + Egashira constitutive law, 30 s"), "C1"),
-         ("save_tk", T("構成 3: 高橋・中川 (1991) E-D + 石礫型抵抗、60 s", "Configuration 3: Takahashi–Nakagawa (1991) E-D + stony-type resistance, 60 s"), "C2"),
+         ("save_tk", T("構成 3: 高橋・中川 (1991) E-D + 石礫型抵抗、120 s", "Configuration 3: Takahashi–Nakagawa (1991) E-D + stony-type resistance, 120 s"), "C2"),
          ("save_tkwet", T("構成 4: 構成 3 + 間隙水連行 f_dbwet、60 s", "Configuration 4: configuration 3 + pore-water entrainment f_dbwet, 60 s"), "C3")]
 fig, axes = plt.subplots(3, 1, figsize=(9, 8.5), sharex=True)
 axes[0].plot(x, z0, "k", lw=1.5); axes[0].set_ylabel("z₀ (m)")
@@ -63,7 +63,9 @@ for d, lab, c in cases:
         d, (st["z"] - z0).min(), (st["z"] - z0).max(), st["hs"].max(), st["h"].sum(), st["hs"].sum(),
         st["hs"].sum() + 0.6 * (st["z"] - z0).sum()))
 for ax in axes[1:]:
-    ax.axvline(XB, color="0.5", ls=":"); ax.grid(alpha=0.3); ax.legend(fontsize=8)
+    ax.axvline(XB, color="0.5", ls=":"); ax.grid(alpha=0.3)
+# 凡例は上段の空いた右上に 1 つだけ(下 2 段では遷緩点直下のピークに重なる)
+axes[0].legend(*axes[1].get_legend_handles_labels(), fontsize=8, loc="upper right")
 axes[1].set_ylabel(T("地形変化 dz (cm、全行平均)", "Terrain change dz (cm, row mean)"))
 axes[2].set_ylabel(T("流動中の土砂 hs (cm、全行平均)", "Sediment in motion hs (cm, row mean)"))
 axes[2].set_xlabel("x (m)")

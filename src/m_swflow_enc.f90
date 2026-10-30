@@ -84,11 +84,16 @@ module m_swflow_enc
                                             !   2: 運動量保存形・1次風上, 3: 同+MUSCL。§68)
     integer :: f_rivermouth_drop              ! 河口から海へ段落ち強制
     integer :: f_opening_dynamic              ! 塞がれた開口の動的振り替え (0:なし, 1:河道
-                                            !   セル間のエッジのみ, 2:全エッジ。§68.14)
+                                            !   セル間のエッジのみ, 2:全エッジ, 3:全エッジで
+                                            !   塞がりを局所の平面から測る。§68.14・§68.41)
     integer :: f_scalar_scheme                ! スカラー輸送の移流スキーム (1: 1 次風上, 3: MUSCL。§78)
     integer :: f_advection_donor              ! 運動量保存形移流の風上供給元の制限 (0:湿潤セル
                                             !   すべて, 1:河道セル間のエッジでは河道セルのみ。
                                             !   §68.18)
+    integer :: f_inflow_edge                  ! 区間流入の外縁セルに接するエッジの扱い (0:接する
+                                            !   エッジすべての移流項 0, 1:区間の内側へ向かうエッジ
+                                            !   だけ移流項 0, 2:1 + そのエッジの流速のエネルギー
+                                            !   上限。§68.40)
     integer :: f_dry_head_cap                 ! 乾燥セルへ向かうエッジ水深をエネルギー頭
                                             !   η + u_n²/2g − z_受け手 で頭打ち (0:なし, 1:有効。
                                             !   §68.16。水面+速度水頭より高い乾いた地盤へは
@@ -158,6 +163,9 @@ module m_swflow_enc
                                             !   nvfortran は submodule のホスト結合を
                                             !   use 結合扱いし書き込みを拒否する。§13)
     integer :: f_bc_side(1:4) = e_bc_wall     ! 外縁4辺の境界条件型(W,E,N,S)
+    logical :: have_inflow = .false.          ! 区間流入があるか(bc_init が設定。区間流入の
+                                            !   外縁セルに接するエッジの判定を、区間流入のない
+                                            !   計算で丸ごと飛ばす。§68.40)
     logical :: have_neumann = .false.         ! 側方 Neumann の辺があるか(bc_init が設定。§90)
     logical :: adv_neumann = .false.          ! 側方 Neumann の境界面の移流項を adv_neumann で求めるか
                                             !   (側方 Neumann の辺があり運動量保存形の移流のとき。bc_init)
@@ -704,6 +712,18 @@ module m_swflow_enc
       integer, intent(in) :: i, j
       logical :: r
     end function
+    module function bc_inflow_inward(i, j, in, jn) result(r)
+      integer, intent(in) :: i, j, in, jn
+      logical :: r
+    end function
+    module function bc_inflow_supply_speed(p, g, s, sx, i, j) result(v)
+      type(t_sysparam), intent(in) :: p
+      type(t_geoinfo), intent(in) :: g
+      type(t_state), intent(in) :: s
+      type(t_enc_status), intent(in) :: sx
+      integer, intent(in) :: i, j
+      real :: v
+    end function
     module subroutine bc_dispose()
     end subroutine
   end interface
@@ -818,6 +838,7 @@ subroutine m_swflow_enc_init(p, g, b, s)
   opt%f_opening_dynamic = list%f_opening_dynamic
   opt%f_dry_head_cap = list%f_dry_head_cap
   opt%f_advection_donor = list%f_advection_donor
+  opt%f_inflow_edge = list%f_inflow_edge
   opt%f_scalar_scheme = list%f_scalar_scheme
   select case (opt%f_advection_scheme)
     case (1)      ! セル中心勾配(v1。既定)
@@ -929,8 +950,9 @@ subroutine m_swflow_enc_init(p, g, b, s)
   chn%have_frw = chn%have_bopen .or. chn%have_width
   ! 塞がれた開口の動的振り替え(§68.14)。有効判定は namelist 由来で
   ! 全ランク同一。河道限定(1)は河道マスク(rw)が必須
-  if (opt%f_opening_dynamic < 0 .or. opt%f_opening_dynamic > 2) then
-    call par_stop("list_enc: f_opening_dynamic must be 0(off), 1(channel edges) or 2(all edges)")
+  if (opt%f_opening_dynamic < 0 .or. opt%f_opening_dynamic > 3) then
+    call par_stop("list_enc: f_opening_dynamic must be 0(off), 1(channel edges), 2(all edges) " &
+                  //"or 3(all edges, blockage above the local plane)")
   end if
   chn%have_fwd = opt%f_opening_dynamic > 0
   if (opt%f_scalar_scheme /= 1 .and. opt%f_scalar_scheme /= 3) then
@@ -947,6 +969,13 @@ subroutine m_swflow_enc_init(p, g, b, s)
   end if
   if (opt%f_dry_head_cap < 0 .or. opt%f_dry_head_cap > 1) then
     call par_stop("list_enc: f_dry_head_cap must be 0(off) or 1(cap edge depth toward dry cells by energy head)")
+  end if
+  if (opt%f_inflow_edge < 0 .or. opt%f_inflow_edge > 2) then
+    call par_stop("list_enc: f_inflow_edge must be 0(no advection on edges touching inflow cells), " &
+                  //"1(only on edges into the inflow section) or 2(1 + energy cap on those edges)")
+  end if
+  if (opt%f_inflow_edge > 0) then
+    call par_info("swflow_enc: f_inflow_edge = "//itoa(opt%f_inflow_edge)//" (edges into the inflow section)")
   end if
   ! 河道限定(1。既定)は河道マスクがなければ対象エッジが存在しないので無効化
   ! (fwd を確保せず、メモリ・CPU とも追加なし。全エッジに効かせたい氾濫・
@@ -1764,6 +1793,11 @@ subroutine calc_kth_momentum(p, g, s, sx, i, j, k, have_exflux, have_runge, have
     end if
   end if
 
+  ! 区間流入の内側へ向かうエッジの流速のエネルギー上限(f_inflow_edge = 2。§68.40 の改定 2)
+  if (bcs%have_inflow .and. opt%f_inflow_edge == 2) then
+    if (bc_inflow_inward(i, j, in, jn)) call inflow_energy_cap
+  end if
+
   ! 発散チェック
   if (abs(uve1) > 250.) then
     have_error = .true.
@@ -1837,6 +1871,61 @@ subroutine calc_kth_momentum(p, g, s, sx, i, j, k, have_exflux, have_runge, have
   sx%mn1(k,ie,je) = mne1
 
 contains
+  !--------------------------------------------------------------------
+  ! 区間流入の内側へ向かうエッジの流速のエネルギー上限(§68.40 の改定 2。
+  ! 2026-10-29)
+  !   移流項を持たない内側エッジ(adv_prepare_mc)の流速は水面勾配と摩擦の
+  !   釣り合いに向かい、上流側セルのエネルギー水頭から許される速さを超える
+  !   (緩勾配の河道で流入直下に射流のジェットが立ってエネルギー水頭を作る。
+  !   流入セルの横の外縁セルが掘れると噴流になって発散する)。Bernoulli の
+  !   上限 |u_e| <= √(2g·max(E_up − η_dn, 0))、E_up = η_up + V_up²/2g で頭打ち
+  !   し、流量も同じ比で縮める(§68.16 の乾いたセルへのエッジ水深の頭打ちと
+  !   同じ考え方。損失を入れない上限で、独自の簡略化)。η は圧力項と同じ
+  !   水面(土石流では z + h + hs)、V_up は上流側セルの前ステップの速さ
+  !   (upstream_speed)。上流側は流速の符号で決める
+  !--------------------------------------------------------------------
+  subroutine inflow_energy_cap
+    real :: hsc, hsn, eu, ed, umax, r
+    hsc = 0.0
+    hsn = 0.0
+    if (s%debris_active) then
+      hsc = max(s%hs(i,j), 0.0)
+      hsn = max(s%hs(in,jn), 0.0)
+    end if
+    if (uve1 >= 0.0) then
+      eu = s%z(i,j) + s%h(i,j) + hsc + upstream_speed(i, j)**2 / (2 * p%gg)
+      ed = s%z(in,jn) + s%h(in,jn) + hsn
+    else
+      eu = s%z(in,jn) + s%h(in,jn) + hsn + upstream_speed(in, jn)**2 / (2 * p%gg)
+      ed = s%z(i,j) + s%h(i,j) + hsc
+    end if
+    umax = sqrt(2 * p%gg * max(eu - ed, 0.0))
+    if (abs(uve1) > umax) then
+      r = umax / abs(uve1)
+      uve1 = uve1 * r
+      mne1 = mne1 * r
+    end if
+  end subroutine
+
+  !--------------------------------------------------------------------
+  ! エネルギー上限の基準に使う上流側セル (iu, ju) の速さ(前ステップ)。
+  !   セルの速さ vv が基本。流入セルでは、等流が射流になる急勾配の流入セルの
+  !   供給流速(bc_inflow_supply_speed。緩勾配のセルは 0)との大きい方を使う:
+  !   急勾配の射流流入はエネルギーが上流で決まり、上限で絞られるとセルの
+  !   速さも下がるため、セルの速さだけでは流入セルが深く出る(45° 斜面の
+  !   土石流で流入セルの流動深 +18 %)。緩勾配で供給流速を数えると、流入
+  !   セルが浅くなるほど上限が緩んで流入直下のジェットが自己維持する。
+  !   急勾配かは流れの状態でなく流量・勾配・粗度で決める(流入セルの今の
+  !   フルード数で決めると、射流のジェットの状態から始めたときにジェットが
+  !   残る。§68.40)
+  !--------------------------------------------------------------------
+  function upstream_speed(iu, ju) result(v)
+    integer, intent(in) :: iu, ju
+    real :: v
+    v = s%vv(iu,ju)
+    if (bc_inflow_cell(iu, ju)) v = max(v, bc_inflow_supply_speed(p, g, s, sx, iu, ju))
+  end function
+
   !--------------------------------------------------------------------
   ! 河口から海への段落ち強制
   subroutine rivermouth_drop
@@ -2879,6 +2968,8 @@ end subroutine
 ! 塞がれた開口の動的振り替え表 fwd の構築(developer.md §68.14)
 !   静的 build_channel_frw(堤防壁)と同じ振り替え規則を、塞がり率
 !   s = clamp((z_n − z_c)/h_c, 0, 1) の実数版で毎ステップ適用する。
+!   f_opening_dynamic = 3 は z_n − z_c を局所の平面からの盛り上がりで頭打ちにする
+!   (sblk の io, jo, kap。一様な斜面の上流側の地盤を壁と数えない。§68.41)。
 !   エッジの格納: 成分4 (i,j)-(i+1,j)、成分2 (i,j)-(i,j+1)、
 !   成分1 (i,j)-(i+1,j+1)、成分3 (i,j+1)-(i+1,j)。
 !   読み手(連続式・運動量の仮水深・再構成)は帯セル js..je とその
@@ -2893,14 +2984,17 @@ subroutine build_fwd(p, g, s)
   type(t_geoinfo), intent(in) :: g
   type(t_state), intent(in) :: s
   integer :: i, j, jlo, jhi
-  real :: nb, sh, s1d
-  logical :: ok_c, ok_n
+  real :: nb, sh, s1d, ka, kb
+  logical :: ok_c, ok_n, plane
 
   if (p%initialized) continue  ! 引数未使用の警告を抑制
   ! 斜めの振り替え量: 斜め先 1 つあたり (自然幅 − l8_d)/2(静的規則と同形)
   s1d = (g%dx * g%dy / sqrt(g%dx**2 + g%dy**2) - geo%l8(1)) / 2
   jlo = max(dcp%js - 2, 1)
   jhi = min(dcp%je + 1, g%ny)
+  plane = opt%f_opening_dynamic == 3
+  ka = huge(1.0)
+  kb = huge(1.0)
 
   ! 走査はセル行 jlo..jhi の x 窓 g%wx に限る。書き込みスロット (k,i,j) は
   ! すべて fwd_cell(i,j) または fwd_cell(i+1,j)(成分3)が真のときだけで、
@@ -2908,7 +3002,7 @@ subroutine build_fwd(p, g, s)
   ! スロットは書き手がなく確保時の 1.0 のままなので、毎ステップの全域
   ! 初期化は不要: 走査する各スロットを計算の直前に 1.0 へ戻す(書き手は
   ! 行 j のループだけなので OpenMP の競合もない。§79)
-  !$omp parallel do schedule(dynamic) private(i, j, nb, sh, ok_c, ok_n)
+  !$omp parallel do schedule(dynamic) private(i, j, nb, sh, ok_c, ok_n) firstprivate(ka, kb)
   do j = jlo, jhi
     do i = g%wx(1,j), g%wx(2,j)
       chn%fwd(:, i, j) = 1.0
@@ -2920,8 +3014,13 @@ subroutine build_fwd(p, g, s)
       if (i < g%nx .and. j >= dcp%js - 1) then
         ok_n = fwd_cell(g, i+1, j)
         if (ok_c .and. ok_n .and. fwd_pair(g, i, j, i+1, j)) then
-          nb = (sblk(g, s, i, j, i+1, j-1) + sblk(g, s, i, j, i+1, j+1) &
-              + sblk(g, s, i+1, j, i, j-1) + sblk(g, s, i+1, j, i, j+1)) / 2
+          ! 3: 斜め先は相手の端の横のセル。κ は相手の端の横断(j 方向)の 2 階差分
+          if (plane) then
+            ka = kap_lat(g, s, i+1, j, 0, 1)
+            kb = kap_lat(g, s, i, j, 0, 1)
+          end if
+          nb = (sblk(g, s, i, j, i+1, j-1, i+1, j, ka) + sblk(g, s, i, j, i+1, j+1, i+1, j, ka) &
+              + sblk(g, s, i+1, j, i, j-1, i, j, kb) + sblk(g, s, i+1, j, i, j+1, i, j, kb)) / 2
           if (nb > 0) chn%fwd(4,i,j) = (geo%lpy + nb * geo%ldy) / geo%lpy
         end if
       end if
@@ -2929,21 +3028,28 @@ subroutine build_fwd(p, g, s)
         ! 成分2: (i,j)-(i,j+1)。斜め先は (i±1,j+1) と (i±1,j)
         ok_n = fwd_cell(g, i, j+1)
         if (ok_c .and. ok_n .and. fwd_pair(g, i, j, i, j+1)) then
-          nb = (sblk(g, s, i, j, i-1, j+1) + sblk(g, s, i, j, i+1, j+1) &
-              + sblk(g, s, i, j+1, i-1, j) + sblk(g, s, i, j+1, i+1, j)) / 2
+          if (plane) then
+            ka = kap_lat(g, s, i, j+1, 1, 0)
+            kb = kap_lat(g, s, i, j, 1, 0)
+          end if
+          nb = (sblk(g, s, i, j, i-1, j+1, i, j+1, ka) + sblk(g, s, i, j, i+1, j+1, i, j+1, ka) &
+              + sblk(g, s, i, j+1, i-1, j, i, j, kb) + sblk(g, s, i, j+1, i+1, j, i, j, kb)) / 2
           if (nb > 0) chn%fwd(2,i,j) = (geo%lpx + nb * geo%ldx) / geo%lpx
         end if
         if (i < g%nx) then
           ! 成分1: (i,j)-(i+1,j+1)。両端が共有する側方セル (i+1,j), (i,j+1)
           if (ok_c .and. fwd_cell(g, i+1, j+1) .and. fwd_pair(g, i, j, i+1, j+1)) then
-            sh = (sblk(g, s, i, j, i+1, j) + sblk(g, s, i, j, i, j+1) &
-                + sblk(g, s, i+1, j+1, i+1, j) + sblk(g, s, i+1, j+1, i, j+1)) / 2 * s1d
+            ! 3: κ は両端と側方セルの組の 2 階差分(側方セルの和 − 両端の和)
+            if (plane) ka = kap_diag(g, s, i+1, j, i, j+1, i, j, i+1, j+1)
+            sh = (sblk(g, s, i, j, i+1, j, i+1, j+1, ka) + sblk(g, s, i, j, i, j+1, i+1, j+1, ka) &
+                + sblk(g, s, i+1, j+1, i+1, j, i, j, ka) + sblk(g, s, i+1, j+1, i, j+1, i, j, ka)) / 2 * s1d
             if (sh > 0 .and. geo%l8(1) > 0) chn%fwd(1,i,j) = 1.0 + sh / geo%l8(1)
           end if
           ! 成分3: (i,j+1)-(i+1,j)。共有する側方セル (i+1,j+1), (i,j)
           if (ok_n .and. fwd_cell(g, i+1, j) .and. fwd_pair(g, i, j+1, i+1, j)) then
-            sh = (sblk(g, s, i, j+1, i+1, j+1) + sblk(g, s, i, j+1, i, j) &
-                + sblk(g, s, i+1, j, i+1, j+1) + sblk(g, s, i+1, j, i, j)) / 2 * s1d
+            if (plane) ka = kap_diag(g, s, i+1, j+1, i, j, i, j+1, i+1, j)
+            sh = (sblk(g, s, i, j+1, i+1, j+1, i+1, j, ka) + sblk(g, s, i, j+1, i, j, i+1, j, ka) &
+                + sblk(g, s, i+1, j, i+1, j+1, i, j+1, ka) + sblk(g, s, i+1, j, i, j, i, j+1, ka)) / 2 * s1d
             if (sh > 0 .and. geo%l8(3) > 0) chn%fwd(3,i,j) = 1.0 + sh / geo%l8(3)
           end if
         end if
@@ -2991,12 +3097,19 @@ end function
 !   領域外・無効セル = 壁(1)。海セル = 開水面(0)。堤防壁で静的に
 !   振り替え済みの堤内地セル(have_bopen)は数えない(0)。それ以外は
 !   s = clamp((z_d − z_c)/h_c, 0, 1): 水面が斜め先の地盤より低ければ 1、
-!   地盤を越えた分は斜めが運ぶので地盤より下の水柱の割合だけ塞がる
+!   地盤を越えた分は斜めが運ぶので地盤より下の水柱の割合だけ塞がる。
+!   f_opening_dynamic = 3 では z_d − z_c を、面のもう一方の端 (io,jo) との差
+!   z_d − z_o(縦断の勾配を含まない)と、面の両側の 2 階差分 kap(局所の平面からの
+!   盛り上がり。平面の上で 0)で頭打ちにする(§68.41)。両岸が高い河道では
+!   河岸の高さで決まり、2 とほぼ同じ値になる(差は河床の縦断の勾配の分)。
+!   io, jo, kap は build_fwd だけが渡す
 !----------------------------------------------------------------------
-function sblk(g, s, ic, jc, id, jd) result(res)
+function sblk(g, s, ic, jc, id, jd, io, jo, kap) result(res)
   type(t_geoinfo), intent(in) :: g
   type(t_state), intent(in) :: s
   integer, intent(in) :: ic, jc, id, jd
+  integer, intent(in), optional :: io, jo
+  real, intent(in), optional :: kap
   real :: res
   real :: dz, hc
   integer :: ii, jj
@@ -3019,6 +3132,7 @@ function sblk(g, s, ic, jc, id, jd) result(res)
     if (g%rw(ii,jj) <= 0 .and. is_wall(g%zbank(ic,jc), s%z(ic,jc), s%z(ii,jj))) return
   end if
   dz = s%z(ii,jj) - s%z(ic,jc)
+  if (opt%f_opening_dynamic == 3 .and. present(kap)) dz = min(dz, s%z(ii,jj) - s%z(io,jo), kap)
   if (dz <= 0.0) return
   hc = s%h(ic,jc)
   if (hc <= dz) then
@@ -3026,6 +3140,45 @@ function sblk(g, s, ic, jc, id, jd) result(res)
   else
     res = dz / hc
   end if
+end function
+
+
+!----------------------------------------------------------------------
+! f_opening_dynamic = 3 の頭打ち κ(§68.41)。kap_lat: セル (i,j) の (di,dj) 方向の
+! 2 階差分 z(i+di,j+dj) + z(i−di,j−dj) − 2 z(i,j)。kap_diag: 斜めのエッジ
+! (ia,ja)-(ib,jb) と両側のセル (i1,j1), (i2,j2) の z1 + z2 − za − zb。どちらも
+! 使うセルが領域外・無効・海なら huge(頭打ちなし = 2 と同じ判定)。読むセルは
+! エッジの両端とその横のセルだけで、build_fwd の行範囲ではハロ幅 2 に収まる
+!----------------------------------------------------------------------
+function kap_lat(g, s, i, j, di, dj) result(res)
+  type(t_geoinfo), intent(in) :: g
+  type(t_state), intent(in) :: s
+  integer, intent(in) :: i, j, di, dj
+  real :: res
+  res = huge(1.0)
+  if (.not. (kap_cell(g, i+di, j+dj) .and. kap_cell(g, i-di, j-dj))) return
+  res = s%z(i+di,j+dj) + s%z(i-di,j-dj) - 2 * s%z(i,j)
+end function
+
+function kap_diag(g, s, i1, j1, i2, j2, ia, ja, ib, jb) result(res)
+  type(t_geoinfo), intent(in) :: g
+  type(t_state), intent(in) :: s
+  integer, intent(in) :: i1, j1, i2, j2, ia, ja, ib, jb
+  real :: res
+  res = huge(1.0)
+  if (.not. (kap_cell(g, i1, j1) .and. kap_cell(g, i2, j2))) return
+  res = s%z(i1,j1) + s%z(i2,j2) - s%z(ia,ja) - s%z(ib,jb)
+end function
+
+! κ に使えるセルか(領域内の有効な陸セル。x の読みは範囲の検査の内側)
+function kap_cell(g, i, j) result(res)
+  type(t_geoinfo), intent(in) :: g
+  integer, intent(in) :: i, j
+  logical :: res
+  res = .false.
+  if (i < 1 .or. i > g%nx .or. j < 1 .or. j > g%ny) return
+  if (g%x(i,j) <= 0) return
+  res = g%sw(i,j) == 0
 end function
 
 
