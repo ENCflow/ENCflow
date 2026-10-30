@@ -1,5 +1,7 @@
 #!/usr/bin/env python3
-# examples/levee_breach の入力生成(z.txt / z_vwall.txt / rn.txt / rw.txt)
+# examples/levee_breach の補足(仮想壁面の破堤との比較)の入力生成。data_supp/ に
+#   z.txt / z_vwall.txt / rn.txt / rw.txt を書く(破堤のスケジュール bm/ は Makefile が
+#   make_breach.py で作る)。
 #   直線河道 + 解像堤防 + 堤内地(氾濫原)の理想化地形。dx = dy = 10 m、
 #   120 列 × 80 行(1,200 m × 800 m)。北から南へ 1/1000 で下る。西から順に:
 #     i=1..15    : 山付き(z = 堤内地 + 4 m。河道の西岸。氾濫はしない)
@@ -10,6 +12,7 @@
 #   地盤高に置き換えたもの(堤防は &list_channel の bank0 で立てる)。
 #   rw.txt は河道マスク(仮想壁面ケースで堤防を立てるのに必要)、
 #   rn.txt は粗度(河道 0.03、それ以外 0.05)。
+import os
 import numpy as np
 
 NX, NY, DX = 120, 80, 10.0
@@ -36,10 +39,12 @@ for j in range(1, NY + 1):
         z[j-1, i-1] = zc
         zv[j-1, i-1] = zfp if I_LEV1 <= i <= I_LEV2 else zc
 
-np.savetxt('z.txt', z, fmt='%.4f')
-np.savetxt('z_vwall.txt', zv, fmt='%.4f')
-np.savetxt('rn.txt', rn, fmt='%.3f')
-np.savetxt('rw.txt', rw, fmt='%d')
-print('written: z.txt z_vwall.txt rn.txt rw.txt (%d x %d, dx = %g m)' % (NX, NY, DX))
+d = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'data_supp')
+os.makedirs(d, exist_ok=True)
+np.savetxt(os.path.join(d, 'z.txt'), z, fmt='%.4f')
+np.savetxt(os.path.join(d, 'z_vwall.txt'), zv, fmt='%.4f')
+np.savetxt(os.path.join(d, 'rn.txt'), rn, fmt='%.3f')
+np.savetxt(os.path.join(d, 'rw.txt'), rw, fmt='%d')
+print('written: data_supp/z.txt z_vwall.txt rn.txt rw.txt (%d x %d, dx = %g m)' % (NX, NY, DX))
 print('levee crest at the breach row j=50: z = %.3f m, floodplain toe (i=%d): %.3f m, river bed: %.3f m'
       % (z[49, I_LEV1-1], I_LEV2+1, z[49, I_LEV2], z[49, I_RIV1-1]))

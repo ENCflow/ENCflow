@@ -1,17 +1,12 @@
 !======================================================================
-! levee_breach: 解像堤防(DEM の標高で表した堤防)を規定底面運動で破堤させる
+! levee_breach 補足: 解像堤防(DEM の標高で表した堤防)を規定底面運動で破堤させる
 !   直線河道(幅 50 m)+ 幅 20 m・高さ 3 m の堤防 + 堤内地の理想化地形に
 !   洪水流量(100 → 700 m3/s)を流し、水位がピークに達した 70 分から 90 分に
 !   かけて堤防セル 5 行 × 2 列を堤内地の地盤高まで下げる(中央の行が 10 分で
-!   堤底に達し、両側へ拡幅)。破堤のスケジュールは make_breach.py が
-!   fn_bedmotion の入力(窓付きの累積変位ファイルとスナップショット表)に
-!   変換する。組み方の理由・結果の図表は README.md(機能の説明は
-!   users_guide/bedmotion.md)。
-!
-!   実行:  make && ./encflow param.txt
-!          ./encflow param_vwall.txt     (比較: 仮想壁面 + &list_channel_breach)
-!          python3 plot_results.py       → figs/*.png と数表
-!   見どころ(result/):
+!   堤底に達し、両側へ拡幅)。同じ破堤を仮想壁面で与える param_supp_vwall.txt と
+!   比べる(README.md の「補足」)。入力は make_supp.py と make_breach.py が
+!   data_supp/ に作る(make supp)。
+!   見どころ(result_supp/):
 !     - probes/probe0003.csv の z 列  破堤セルの地盤高の時刻歴(堤防が下がる)
 !     - fluxes/flux0001.csv           破堤口を通る流量
 !     - H9999                         堤内地の最大浸水深
@@ -30,7 +25,8 @@
   fn_boundary = '-'
   fn_record = '-'
   fn_bedmotion = '-'        ! 規定底面運動 = 破堤モデル
-  dir_result = 'result'
+  dir_data = 'data_supp'
+  dir_result = 'result_supp'
   f_out_h = 1
   f_out_z = 1               ! 破堤後の地形 Z0001…
   f_out_hmax = 1
@@ -40,8 +36,6 @@
 
 &list_enc
   f_exflux_reduction = 1    ! 乾床前縁(堤内地への浸水先端)の定石
-                            ! 移流は既定(f_advection_scheme = 3)。2026-10-18 以前のコードは
-                            !   この河道で 5 分周期の流量振動を自励したため 1 にしていた(README「注意」)
 /
 
 !======================================================================
