@@ -10,9 +10,9 @@ the surrounding aquifer** through the river bed differ with and without an
 estuary barrage. It combines the
 [fresh and salt water layers](../../../docs/en/users_guide/salt.md) (fn_salt),
 [groundwater](../../../docs/en/users_guide/gwflow.md) (fn_gwflow) and the
-[tide](../../../docs/en/users_guide/tide.md) (fn_tide). The values are
-schematic, chosen to make the phenomena visible, and are not representative of
-a real river.
+[tide](../../../docs/en/users_guide/tide.md) (fn_tide). A comparison with a
+clogged river bed is included. The values are schematic, chosen to make the
+phenomena visible, and are not representative of a real river.
 
 ## What happens in a real estuary
 
@@ -27,6 +27,11 @@ a real river.
 - **Salt damage**: salt water that has travelled upstream makes irrigation and
   water-supply intakes unusable. Salt water seeping through the bed and banks
   also salinizes the groundwater along the river.
+- **Clogging of the river bed**: fine particles deposited on the river bed
+  often clog it, forming a layer that passes water less easily than the gravel
+  below (hydraulic conductivity 1 to 3 orders of magnitude lower). The degree of
+  clogging changes how much water and salt water are exchanged between the
+  river and the groundwater.
 - **Estuary barrage**: a barrage near the mouth stops the salt water from
   travelling upstream and turns the upstream reach into a fresh-water pool (in
   normal operation the gates are closed and water overflows them; during floods
@@ -61,6 +66,7 @@ The mechanisms at work in this example and the settings that carry them:
 | Infiltrated salt water spreads in the ground | Salt water in the aquifer is at the bottom (denser, it sinks) and flows sideways driven by the density difference and the groundwater gradient | `f_salt_gw = 1`, `f_gwlateral = 1` |
 | Seawater intrudes underground from the coast | The aquifer under the sea is filled with salt water and flows landward from below the sea floor | `fn_salt_hgs0` |
 | Subsurface salt water passes under the barrage | The aquifer is continuous at the barrage too (no special setting needed) | — |
+| Clogging of the river bed (comparison cases) | River-bed exchange capacity: the infiltration capacity of river cells is replaced by k_bed, and the aquifer flow between the river and the banks is throttled by the same cap (salt water too) | `f_gwbed = 1`, `fn_rw` (river mask) |
 
 Turning off the exchange between the bed and the ground (row 4;
 `f_salt_exch = 0`) treats water infiltrating through the bed and water seeping
@@ -115,17 +121,21 @@ is east.
 | Barrage, no exchange | param_barrage_off.txt | yes | 0 |
 | No barrage, seepage by mixing ratio | param_nobarrage_mix.txt | none | 2 (seeping water mixed in the aquifer's salt fraction = lower-bound estimate) |
 | Barrage, seepage by mixing ratio | param_barrage_mix.txt | yes | 2 |
+| No barrage, clogged river bed | param_nobarrage_clog.txt | none | 1, with river-bed exchange capacity k_bed = 1e-6 m/s (two orders below the surrounding infiltration capacity 1e-4 m/s) |
+| Barrage, clogged river bed | param_barrage_clog.txt | yes | 1, the same |
 
 The common settings (shallow water, boundaries, rain, groundwater) are
 collected in param_common.txt, and each param points to the same file with
-fn_enc, fn_boundary, fn_precip and fn_gwflow.
+fn_enc, fn_boundary, fn_precip and fn_gwflow. The two clogged-bed cases read
+the groundwater settings from param_gwflow_clog.txt (the same values plus the
+river-bed exchange capacity) and use the river mask data/rw.txt.
 
 ## How to run
 
 ```
 cd examples/estuary_barrage
 make                       # links and data/ (gen_data.py)
-make run                   # the six cases in turn (about 15 minutes each)
+make run                   # the eight cases in turn (about 15 minutes each)
 python3 plot_results.py en # en/figs/*.png and the table (without en: figs/, Japanese labels)
 ```
 
@@ -133,9 +143,10 @@ python3 plot_results.py en # en/figs/*.png and the table (without en: figs/, Jap
 
 ![Plan view](figs/plan.png)
 
-Plan view after 20 days. Warm colours = salt fraction of the aquifer thickness
-Hgs/(sd·sy), blue = bottom salt layer in the river (Hss > 0.05 m), green line =
-barrage.
+Plan view after 20 days. From left: no bed salt exchange, with exchange,
+clogged river bed. Warm colours = salt fraction of the aquifer thickness
+Hgs/(sd·sy), blue = bottom salt layer in the river (Hss > 0.05 m; it hides the
+aquifer below), green line = barrage.
 
 ![Longitudinal section](figs/profile.png)
 
@@ -143,10 +154,17 @@ Longitudinal section along the river centre after 20 days
 (f_salt_exch = 1). Red = salt water in the aquifer, dark blue = bottom salt
 layer in the river, light blue = fresh water in the river.
 
+![Cross-section](figs/cross.png)
+
+Cross-section across the river after 20 days (no barrage, 1.5 km from the
+mouth). With an open bed the salt water spreads along the bottom of the bank
+aquifer; with a clogged bed it stays right below the river.
+
 ![Time series](figs/series.png)
 
 Left: salt in the aquifer landward of the mouth (x < 3 km) (dotted = the
-lower-bound estimate with seepage split by mixing ratio). Right: distance of
+lower-bound estimate with seepage split by mixing ratio, dash-dot = clogged
+river bed). Right: distance of
 the salt-wedge tip (the most upstream cell on the river centre line with
 Hss > 0.05 m) from the mouth. Values every 6 hours; they swing with the tidal
 phase. Grey = the preliminary flood-and-rain stage.
@@ -159,6 +177,8 @@ phase. Grey = the preliminary flood-and-rain stage.
 | Barrage, no exchange | 84 | — (coast only) | 0.001 | 0.000 | 0.48 (barrage) | 148 |
 | Barrage | 305 | 0.48 (barrage) | 0.026 | 0.013 | 0.48 (barrage) | 158 |
 | Barrage, seepage by mixing ratio | 268 | 0.48 (barrage) | 0.015 | 0.007 | 0.48 (barrage) | 155 |
+| No barrage, clogged river bed | 477 | 2.76 | 0.891 | 0.001 | 2.56–2.92 | 572 |
+| Barrage, clogged river bed | 129 | 0.48 (barrage) | 0.014 | 0.000 | 0.48 (barrage) | 156 |
 
 (The table is printed by `python3 plot_results.py`.)
 
@@ -193,6 +213,17 @@ phase. Grey = the preliminary flood-and-rain stage.
   by the wedge in the first place, so the result hardly depends on this
   treatment. The effect of the barrage (a quarter to a fifth of the no-barrage
   case) is the same at both ends of the range.
+- **Clogged river bed**: with the river-bed exchange capacity two orders below
+  the surrounding infiltration capacity (1e-6 m/s), the salt in the aquifer
+  falls from 1,373 to 477 ×10³ m³ without the barrage and from 305 to
+  129 ×10³ m³ with it. Salt water still enters the aquifer right below the river
+  (salt fraction below the bed upstream of the barrage site 0.89) but hardly
+  spreads into the bank aquifer (0.001 within 80 m of the banks). Both the
+  infiltration through the bed and the flow from below the river into the banks
+  are throttled by the same cap, so within 20 days the ground along the river
+  stays fresh. The salt wedge itself is hardly affected by the clogging
+  (2.6–2.9 km). The effect of the barrage points the same way with a clogged bed
+  (477 → 129 ×10³ m³), and the tongue under the barrage shortens to 0.3 km.
 - The salt in the aquifer during the first 2 days (flood and heavy rain) comes
   from the aquifer under the sea and near the mouth (the cases with the exchange
   have more, by the salt water that stays near the mouth during the flood and
@@ -216,11 +247,12 @@ phase. Grey = the preliminary flood-and-rain stage.
 - **Compressed time**: the lateral hydraulic conductivity of 1e-2 m/s is a value
   for seeing the change within 20 days. In typical aquifers (1e-4 to
   1e-3 m/s) the same spreading takes years.
-- **Clogging of the river bed**: the river bed is given the same infiltration
-  capacity of 1e-4 m/s as the land. Real river beds are often clogged by fine
-  sediment and seep less (a small value can be given through the river-bed
-  exchange capacity f_gwbed of [groundwater](../../../docs/en/users_guide/gwflow.md));
-  then salinization via the river is smaller and slower.
+- **The river-bed exchange capacity is a given value**: the degree of clogging
+  (k_bed) is a given to be determined from permeability tests of the bed or
+  from observations of the water-level difference and flow between the river
+  and the groundwater; 1e-6 m/s in this example is a schematic value. Changes of
+  the clogging layer over time (scouring by floods, redeposition of fines) are
+  not represented.
 - **Gate operation**: the crest is fixed; opening the gates during floods is not
   represented.
 
