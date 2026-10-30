@@ -162,13 +162,15 @@ $`\delta_d`$ (`db_deltd`, default 0.05) the customary value of the Kanako
 family; both are **calibration coefficients of the run-out distance**.
 Configuration 7 of [test/debris](../../../test/debris/en/README.md) checks that the
 concentration of uniform flow on a slope converges to $`C_\infty`$ in all four
-regimes. In the row on an open edge (free outflow, long-wave radiation), the
-steepest descent does not look at neighbours outside the domain, so the slope
-becomes 0 and the flow drops its sediment as if $`C_\infty = 0`$ (an artificial
-deposit forms in the edge row; f_dbed = 2 and 3 use the slope on the available
-side and do not have this gap). Where a debris flow reaches an edge, keep the
-edge away from the area of interest (how to handle this is under discussion;
-developer.md §28.15).
+regimes, including the row on the free-outflow edge. The steepest-descent
+slope supplies the elevation of a neighbour outside an open edge (free
+outflow, long-wave radiation, section inflow, etc.) by linear extrapolation
+from the two inner cells along the normal of the edge, so the edge row gets
+the same slope as the interior (fixed on 2026-10-30; before that the
+neighbours outside were left out, the slope in the edge row became 0 and an
+artificial deposit formed as if $`C_\infty = 0`$; developer.md §28.15).
+Directions towards a closed edge, cells outside the domain or the sea are
+left out as before.
 
 **f_dbed = 2: Egashira–Ashida.** Erosion and deposition are one continuous
 formula (eqs. (5)–(7) of Morpho2DH[^morpho2dh]) with no extra parameter:

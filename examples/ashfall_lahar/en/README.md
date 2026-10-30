@@ -140,8 +140,8 @@ Right: sediment that passed the valley outlet to the fan and sediment trapped be
 |---|---:|---:|---:|---:|---:|---:|---:|
 | Before the eruption | 2,700 m³ (100 % of the rain) | — | — | — | — | 0 | 0 |
 | Ash, clear-water control | 540 m³ (20 %) | — | — | — | — | water 0.26 m³/s | 1,295 m³ |
-| Ash (lahar) | 1,422 m³ (53 %) | 2,104 m³ (27 %) | 1,077 m³ | — | 1,069 m³ / 2.7 m | water 0.30, water + sediment 0.54 m³/s | 471 m³ |
-| Ash + check dam | 1,413 m³ (52 %) | 2,080 m³ (26 %) | 302 m³ | 1,616 m³ | 294 m³ / 0.6 m | (as above) | 481 m³ |
+| Ash (lahar) | 1,332 m³ (49 %) | 2,104 m³ (27 %) | 1,077 m³ | — | 1,069 m³ / 2.7 m | water 0.30, water + sediment 0.54 m³/s | 471 m³ |
+| Ash + check dam | 1,323 m³ (49 %) | 2,080 m³ (26 %) | 302 m³ | 1,616 m³ | 294 m³ / 0.6 m | (as above) | 481 m³ |
 
 The rain totals 2,700 m³ from 10 to 70 minutes. The water into the ground is the sum of the
 rain that soaked in and the water that went into the pores of the deposits.
@@ -270,8 +270,14 @@ Cross-sections of the flow depth averaged over 30–60 minutes. Left: in the val
 - **The ash on the fan moves too**: the ash on the fan (0.03 m) is also eroded by the rain on
   the fan and deposits thinly at the slope break where the valley walls fade out
   (x = 400 m). The sediment from the valley is counted as "sediment passing the valley outlet
-  to the fan" (the sediment budget upstream of the valley outlet). The thin deposit in the
-  easternmost column comes from the treatment of the free-outflow boundary.
+  to the fan" (the sediment budget upstream of the valley outlet).
+- **The free-outflow east edge**: in the easternmost column, too, the equilibrium
+  concentration of the flow uses the same slope as the interior (the terrain beyond the edge is
+  extended at its slope). Before the fix of 2026-10-30 (developer.md §28.15) the slope in the
+  easternmost column became 0, and an artificial deposit formed in the easternmost few
+  columns (at most 0.2 m in the easternmost column, about 160 m³ in all). Because of the water that
+  was in its pores, the "water into the ground" in the table is now about 90 m³ less than
+  before the fix (the other values are unchanged).
 
 ## Choosing the settings (resistance and erosion laws)
 

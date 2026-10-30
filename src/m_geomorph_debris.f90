@@ -42,7 +42,7 @@
 !======================================================================
 submodule(m_geomorph) m_geomorph_debris
   use m_parallel, only : par_stop, dcp, par_halo_cell
-  use m_swflow_enc, only : m_swflow_enc_set_debris, opt
+  use m_swflow_enc, only : m_swflow_enc_set_debris, opt, bcs, bc_open_face
   use m_fileio, only : fileio_read_matrix
   implicit none
 
@@ -771,6 +771,15 @@ end subroutine
 
 !----------------------------------------------------------------------
 ! 8近傍への最急降下勾配 tanθ(下限 0。領域外・海近傍は対象外)
+!   開いた辺(格子枠の辺のうち不透過でない面。自由流出・長波放射・区間流入など)の
+!   外の近傍だけは、その位置の標高を辺の法線方向に内側の 2 セルから線形外挿して
+!   補う(z_外 = 2 z_a − z_b。a は辺の法線方向に枠内へ寄せたセル、b はその一つ内側。
+!   角の外は両方向に寄せる)。内側が 1 セルしかなければ z_a のまま(勾配 0 で延長)、
+!   a が領域外・海なら対象外。辺の行に下流の近傍がないために勾配が 0 になり、
+!   C∞ = 0 として流れの土砂を落とす人工的な堆積を防ぐ(developer.md §28.15。
+!   slope_flow の片側差分と同じ考え方)。自セルの反対側の近傍で外挿しないのは、
+!   斜めの向きで谷壁・堤の上り勾配が外向きの急な下りに化けるため。枠内の x = 0
+!   (無効セル)と不透過の辺の外は従来どおり対象外
 !----------------------------------------------------------------------
 pure function slope8(gm, g, s, i, j) result(tanth)
   type(t_geomorph), intent(in) :: gm
@@ -778,15 +787,30 @@ pure function slope8(gm, g, s, i, j) result(tanth)
   type(t_state), intent(in) :: s
   integer, intent(in) :: i, j
   real :: tanth
-  integer :: k, in, jn
-  real :: sl
+  integer :: k, in, jn, ia, ja, ib, jb
+  real :: sl, zn
   tanth = 0.0
   do k = 1, 8
     in = i + din(k)
     jn = j + djn(k)
-    if (g%x(in,jn) <= 0) cycle
-    if (g%sw(in,jn) > 0) cycle
-    sl = (s%z(i,j) - s%z(in,jn)) / gm%dbr%dist8(k)
+    if (g%x(in,jn) > 0) then
+      if (g%sw(in,jn) > 0) cycle
+      zn = s%z(in,jn)
+    else
+      if (.not. bcs%have_open_bc) cycle
+      if (.not. bc_open_face(in, jn)) cycle
+      ia = min(max(in, 1), g%nx)
+      ja = min(max(jn, 1), g%ny)
+      if (g%x(ia,ja) <= 0) cycle
+      if (g%sw(ia,ja) > 0) cycle
+      zn = s%z(ia,ja)
+      ib = 2 * ia - in
+      jb = 2 * ja - jn
+      if (g%x(ib,jb) > 0) then
+        if (g%sw(ib,jb) <= 0) zn = 2.0 * s%z(ia,ja) - s%z(ib,jb)
+      end if
+    end if
+    sl = (s%z(i,j) - zn) / gm%dbr%dist8(k)
     if (sl > tanth) tanth = sl
   end do
 end function

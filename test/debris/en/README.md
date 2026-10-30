@@ -69,7 +69,13 @@ The inflow concentration is 0.95 times the equilibrium concentration C∞(θ)
 (`inflow_cs = 0.01` for tanθ = 0.02, where C∞ = 0), and erosion and
 deposition bring it towards C∞ downstream. Over 100–220 m, away from the
 inflow point and the outlet, the mixture concentration C = hs/(h + hs) is
-compared with C∞ of the steepest-descent slope computed from the final bed:
+compared with C∞ of the steepest-descent slope computed from the final bed.
+Over 221–300 m on the outlet side (including the row on the open boundary)
+the check also confirms that the concentration settles at C∞ and that no
+artificial deposit forms in the outlet row (the steepest-descent slope
+supplies the elevation of a neighbour outside an open edge by linear
+extrapolation from the two inner cells along the normal of the edge;
+§28.15):
 
 - tanθ > 0.138: C∞ = tanθ / (s (tanφ − tanθ)) (stony type; 0.25, 0.15)
 - 0.03 < tanθ ≤ 0.138: C∞ = 6.7 C∞d² (immature; 0.10, 0.05)
@@ -98,7 +104,7 @@ are filled with surface water).
 | File | Contents |
 |---|---|
 | `Check_debris.py <save> [eg\|wet\|fluv\|gw]` | The checks above (reads `save*/state.dat`; fluv runs (1)–(3) with the terrain of configuration 5 and sd₀ = 2 mm, gw runs (1)–(5) with the movable layer of configuration 6) |
-| `Check_debris_eq.py [save_eq]` | The check of configuration 7: \|C/C∞ − 1\| ≤ 1e-9 over 100–220 m in the six channels (C ≤ 1e-12 in the channel with C∞ = 0), and the local slopes lie in the intended regimes. The bed change in the outlet row is shown as a record |
+| `Check_debris_eq.py [save_eq]` | The check of configuration 7: \|C/C∞ − 1\| ≤ 1e-9 over 100–220 m in the six channels (C ≤ 1e-12 in the channel with C∞ = 0), and the local slopes lie in the intended regimes. \|C/C∞ − 1\| ≤ 1e-3 over 221–300 m on the outlet side, and the bed change in the outlet row agrees with the mean over 100–220 m within 1 mm |
 | `make_eq.py` | Writes the terrain `z_eq.txt` and the initial depth `h_eq.txt` of configuration 7 (Run.sh and Run_MPI.sh call it) |
 | `sd_gw.txt` | The movable layer of configuration 6 (5 m on the slope, 0 on the flat; kept in pairs with the gw mode of `Check_debris.py`) |
 | `make_fluv.py` | Generates the terrain `z_fluv.txt` of configuration 5 (bundled; the constants are kept in pairs with the fluv mode of `Check_debris.py`) |
@@ -170,25 +176,33 @@ slope break, and a thin water film on the flat are seen.
   debris-flow regime, the deposition formula for the bedload-like regime,
   etc.).
 
-| Channel of configuration 7 | tanθ | Regime | C∞ | \|C/C∞ − 1\| over 100–220 m |
-|---|---|---|---|---|
-| 1 | 0.60 | upper limit | 0.540000 | 7e-16 |
-| 2 | 0.25 | stony | 0.336545 | 7e-12 |
-| 3 | 0.15 | stony | 0.165227 | 5e-13 |
-| 4 | 0.10 | immature | 0.068313 | 6e-13 |
-| 5 | 0.05 | immature | 0.014553 | 9e-13 |
-| 6 | 0.02 | bedload | 0 | C = 7e-166 |
+| Channel of configuration 7 | tanθ | Regime | C∞ | \|C/C∞ − 1\| over 100–220 m | \|C/C∞ − 1\| over 221–300 m | Bed change in the outlet row − mean over 100–220 m |
+|---|---|---|---|---|---|---|
+| 1 | 0.60 | upper limit | 0.540000 | 7e-16 | 1e-15 | −5e-5 m |
+| 2 | 0.25 | stony | 0.336545 | 7e-12 | 2e-6 | +5e-5 m |
+| 3 | 0.15 | stony | 0.165227 | 5e-13 | 1e-5 | −5e-5 m |
+| 4 | 0.10 | immature | 0.068313 | 6e-13 | 6e-5 | −5e-5 m |
+| 5 | 0.05 | immature | 0.014553 | 9e-13 | 2e-4 | −2e-5 m |
+| 6 | 0.02 | bedload | 0 | C = 7e-166 | C = 8e-226 | 0 |
 
 - The concentrations of configuration 7 match the equilibrium-concentration
   formulas assembled in the check script within 1e-11 (the fixed point of the
   relaxation to C∞, computed from the local slope of the bed lowered by
   erosion).
-- In the row on the open boundary (south edge), the steepest-descent slope
-  does not look at neighbours outside the domain, so the downhill slope is 0
-  and the flow drops its sediment as if C∞ = 0. In 120 s the bed rises by
-  +3.58, +1.11, +0.39, +0.15 and +0.03 m in channels 1–5, and the effect
-  extends upstream (how to handle this is under discussion; developer.md
-  §28.15). The checked reach is at least 80 m from the outlet.
+- The bed is lowered uniformly by the sediment the initial clear water picks
+  up to reach C∞ (0.098 m in channel 1), and the outlet row agrees with that
+  mean within 5e-5 m. The small departure of the concentration on the outlet
+  side (at most 2e-4) arises because the local bed slope changes slightly
+  near the outlet (0.050007 in the outlet row of channel 5) and the
+  relaxation lags between its C∞ and the concentration carried from
+  upstream.
+- Before the fix of 2026-10-30 (developer.md §28.15), the steepest-descent
+  slope left out neighbours outside the domain, so the downhill slope in the
+  row on the open boundary (south edge) was 0 and the flow dropped its
+  sediment as if C∞ = 0. In 120 s the bed in the outlet row rose by +3.58,
+  +1.11, +0.39, +0.15 and +0.03 m in channels 1–5, and the effect extended
+  upstream (with the output from before the fix, the outlet-side check fails
+  in all five channels).
 - Instantaneous mobilization (f_release) and the slope-stability judgement
   (f_slide) are checked in [test/slide](../../slide/en/README.md), and the
   equivalent-fluid mode (no exchange) in [test/volcano](../../volcano/en/README.md).
