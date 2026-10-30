@@ -264,10 +264,18 @@ module subroutine init_debris(gm, p, g, list)
       if (len_trim(p%fn_gwflow) > 0) then
         call par_stop("list_geomorph: f_dbwet=1 は gwflow と併用できません" &
                       // "(侵食時の間隙水放出が容量引き渡しと二重計上になります。" &
-                      // " fn_gwflow の指定を外してください)")
+                      // " fn_gwflow の指定を外してください。gwflow と併用するなら f_dbwet=2)")
+      end if
+    case (2)
+      ! gwflow 併用の間隙水(developer.md §28.7): 堆積で増えた層の容量を地表水で
+      ! 満たし、侵食で削られた層の間隙水を地下貯留から戻す。hg を使うので gwflow が要る
+      if (len_trim(p%fn_gwflow) == 0) then
+        call par_stop("list_geomorph: f_dbwet=2 は gwflow(fn_gwflow)が必要です" &
+                      // "(gwflow なしで間隙水を扱うなら f_dbwet=1)")
       end if
     case default
-      call par_stop("list_geomorph: f_dbwet must be 0(ignore) or 1(saturated-bed entrainment)")
+      call par_stop("list_geomorph: f_dbwet must be 0(ignore), 1(saturated-bed entrainment) " &
+                    // "or 2(pore water with gwflow)")
   end select
   gm%f_dbwet = list%f_dbwet
   gm%db_lamsb = (1.0 - gm%db_cstar) * list%db_satbed    ! λ・s_b(λ = 1−C*)
@@ -555,6 +563,24 @@ module subroutine calc_debris(gm, p, g, s, dtw)
           dhw = -gm%db_lamsb * dzb
           if (dhw < 0.0) dhw = max(dhw, -max(s%h(i,j), 0.0))
           s%h(i,j) = s%h(i,j) + dhw
+        end if
+        ! gwflow 併用の間隙水(f_dbwet=2。developer.md §28.7):
+        !   堆積(Δz>0): 増えた層の容量 sy0・Δz を、その場の地表水で直ちに満たす
+        !     (流れの下に積もった土砂は飽和する。空き容量・地表水でクランプ)
+        !   侵食(Δz<0): 削られた層の間隙水 sy0・|Δz| を地下貯留から地表へ戻す
+        !     (地下貯留は上から満たされる = 削られるのは濡れた上部から。hg で
+        !      クランプ)。堆積と侵食が入れ替わっても往復で水を汲み上げない
+        !     (容量超過だけを戻す規則だと、不飽和の層で堆積のたびに地表水が
+        !      地下へ移るだけの片方向の汲み上げになる)。水の総量は保存
+        if (gm%f_dbwet == 2 .and. s%gw_active) then
+          if (dzb > 0.0) then
+            cap = s%sd(i,j) * g%sy0
+            dhw = min(max(cap - s%hg(i,j), 0.0), g%sy0 * dzb, max(s%h(i,j), 0.0))
+          else
+            dhw = -min(-g%sy0 * dzb, max(s%hg(i,j), 0.0))
+          end if
+          s%h(i,j) = s%h(i,j) - dhw
+          s%hg(i,j) = s%hg(i,j) + dhw
         end if
         ! 浸食で地下水容量が現在の貯留を下回ったら、超過分を地表水へ渡す
         ! (calc_suspend と同じ整合。反対称適用)

@@ -49,6 +49,14 @@ echo ""
 python3 "$sdir/Check_debris.py" save_fluv fluv || rc=1
 rm -rf save_fluv_serial && cp -r save_fluv save_fluv_serial
 
+# 構成6: 構成1 + 地下水計算と併用する間隙水(f_dbwet=2。developer.md §28.7)
+set -o pipefail
+./encflow param_gw.txt | tee -a Screen.log || exit 1
+set +o pipefail
+echo ""
+python3 "$sdir/Check_debris.py" save_gw gw || rc=1
+rm -rf save_gw_serial && cp -r save_gw save_gw_serial
+
 if [ $rc -eq 0 ]; then
     echo "=== debris verification PASS ==="
 else
