@@ -1614,7 +1614,7 @@ gwbed np=1,2,4 が逐次 reference に ULP=0(Runge 列除外)かつ解析検定 
 np=2 が逐次 reference に ULP=0(全 PASS。CI と同じ対象)。
 reference は解析解一致を根拠に暫定コミット(2026-10-25 目視承認済み = 確定)。
 
-### 16.6 側方流動の解析検定と壁沿いの通水能の欠け(2026-10-30 記録。振り替え f_gw_opening を実装・既定 0。既定の変更は要議論)
+### 16.6 側方流動の解析検定と壁沿いの通水能の欠け(2026-10-30 記録。振り替え f_gw_opening を実装し、同日に既定を 1 に変更)
 
 test/gwlateral(新設。reference を持たない検定型。Check_gwlateral.py)で、線形化した
 Boussinesq 方程式 ∂η/∂t = D∇²η(D = K_sh h̄/sy、h̄ = 飽和帯厚)と比べた。平坦・四周
@@ -1663,8 +1663,8 @@ min(K_sv dt, h, 空き容量))。分布は bil(float32)で読み、背景 0.2 �
   として入れ、test/gwlateral 構成 2 の減衰率が D k² に戻ることで確かめたうえで、既定を
   変えるかを側方流を使う reference(gwseep・gwbed・salt)の変化を見て決めること。
 - **実装(f_gw_opening。2026-10-30)**: `&list_gwflow_lateral` の `f_gw_opening`
-  (0 = なし・既定、1 = 振り替え)。1 のとき init(geom_init の後)が通過幅の表
-  `glt%wlo(1:4, ish-1:ieh, jsh-1:jeh)` を作る。配置は流束と同じエッジ規約
+  (1 = 振り替え、0 = なし。既定は当初 0 で、同日に 1 へ変えた。下の「既定の変更」)。
+  1 のとき init(geom_init の後)が通過幅の表 `glt%wlo(1:4, ish-1:ieh, jsh-1:jeh)` を作る。配置は流束と同じエッジ規約
   (セル (i,j) の成分 k を (i+die(k), j+dje(k)) に置く)で、書くループも lateral_core と
   同じ j = js..min(je+1, jeh)・行の窓 wx(1,j)..wx(2,j)(冗長なハロ行計算を含め、どの
   ランクでも同じ値になる)。塞がり(lat_blocked)は x ≤ 0 または sw > 0(sw は x > 0 の
@@ -1688,7 +1688,7 @@ min(K_sv dt, h, 空き容量))。分布は bil(float32)で読み、背景 0.2 �
   無効時は reference を持つ全ケース(逐次)がビット一致。MPI は np = 1, 2, 4 が逐次と
   Hg・Log でバイト一致。gfortran -fcheck=all の np = 2 で構成 3・4 と gwbed(有効化した
   写し)を回し、範囲外参照なし。
-- **既定を 1 にした場合の影響(評価。reference は未変更)**: 側方流を使う reference
+- **既定を 1 にした場合の影響(評価。この時点では reference は未変更)**: 側方流を使う reference
   ケースの写しで f_gw_opening = 1 にして Log を比べた。gwseep: S_grnd の差は最大
   8.8e-5 m(相対 0.87 %)、h_max 1.2 %、V_max 2.3 %、Check_gwseep closure は合格。
   gwbed: S_grnd 3.4 %、h_max 21 %、S_total は 1e-13 で保存。Check_gwbed gain は
@@ -1697,7 +1697,35 @@ min(K_sv dt, h, 空き容量))。分布は bil(float32)で読み、背景 0.2 �
   不変(一様または側方流なし)、exch_out・exch_dtg は S_surf が相対 4 %、mix1・mix2 は
   S_grnd 1.2 %、S_total は 1e-14 で保存、Check_exch は合格。どれも物理的に妥当な
   向き(壁沿いの流下が増える)だが、reference の更新と gwbed の期待値の書き換えを
-  伴うので、既定は 0 のまま利用者の判断を待つ(handoff 1c)。
+  伴うので、利用者の判断を仰いだ(→ 次の「既定の変更」)。
+- **既定の変更(2026-10-30。利用者の判断と reference 更新の許可による)**: `f_gw_opening` の
+  既定を 1 にした(m_gwflow_lateral の既定値の 1 行。0 を書けば変更前と同じ式を通り
+  ビット一致)。理由: 壁沿いの通水能の欠けは 8 方向配分の格子の副作用で物理的な根拠が
+  なく、振り替えで内部と同じ等方な拡散に戻る(構成 3・4)。浅水流の既定
+  (f_opening_dynamic = 2 が塞がれた斜めを振り替える)とも揃う。users guide の根拠欄の
+  分類は **方式**(gwflow_models.md §10)。
+  - reference: gwbed(構成 1 の Log.txt)と gwseep(Log.txt・wq.csv)を ./Run.sh -u で
+    更新した。reference を持つほかのケースは側方流を使わず、逐次でビット一致。
+  - gwbed: Check_gwbed.py は param の f_gw_opening を読み、河道—堤内地の軸エッジの通過幅を
+    l_ax = (lp + nb·ld)Δy で組む(このケースでは両端のセルで領域外へ向かう斜めが 1 本ずつ
+    塞がれて nb = 1、(1 − r/2)Δy = 1.414214 m。振り替えなしの (1 − r)Δy = 0.828427 m から
+    増える)。堤内地の Hg が期待値 0.199859834957 に出力桁で、S_grnd 0.19990655663804 が
+    全 14 桁で一致し、河道・堤内地の dh/dt は +1.121e-3・−5.607e-4 m/s(変更前
+    +8.284e-4・−4.142e-4)。README・図(日英)を更新。
+  - gwseep: to_gw − seep = 5144.574 − 4560.714 = 583.860 g = mass_gw(変更前
+    5116.210 − 4525.575 = 590.634)、合計 4000.0000 g、湿潤セルの濃度 99.9971〜99.9974 mg/L。
+    README・図(日英)を更新し、あわせて README 冒頭と図の題の計算時間「3 時間」を実際の
+    1.5 h に直した(開発時の検証 §30.5 が 3 h だった名残)。
+  - salt: 模式実験 C2 の Hss/H 0.999 → 0.9998・塩水体積の減少 0.02 % → 0.004 %、C4 の
+    Hss/H 0.051・0.075 → 0.019・0.070(Check_exch はすべて合格)。README(日英)の表を更新し、
+    振り替えなしの値を併記した。模式実験 B は Hg = Hgs = 0.5000 のまま(Run_sea.sh)。
+    gwdefault は最小入力と明示の対照がともに既定 1 を使うので合格のまま。
+  - test/gwlateral: 構成 2(param_strip.txt)は振り替えなしの欠けを確かめる構成なので
+    f_gw_opening = 0 を明示した。4 構成とも合格。
+  - MPI: gwseep・gwbed・salt(模式実験 A)の np = 1, 2, 4 が更新後の reference(逐次)に
+    ULP = 0。salt の模式実験 C1〜C4(5 構成)と gwlateral の 4 構成も np = 1, 2, 4 が逐次と
+    Log(Runge 列を除く)でバイト一致(gwlateral は分布出力 Hg も)、np = 4 の出力で
+    Check_exch 合格。
 - **CI**: ci.yml の高速ケース(逐次・MPI np = 2)に gwlateral を追加(15 ケース。逐次で
   約 7 s)。nightly の REF_CASES は reference を持つケースの一覧なので入れない(prmap・
   wfswash と同じ)。

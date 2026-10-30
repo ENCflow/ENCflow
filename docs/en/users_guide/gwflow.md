@@ -176,7 +176,7 @@ Storage above saturation capacity exfiltrates to the surface
 | gw_ksh_mmh | 360 | Lateral saturated hydraulic conductivity (mm/h). 1e-4 m/s = 10 x the matrix value (effective value with macropore / pipe flow) |
 | gw_eps | 1e-3 | Regularization thickness for the dry test and suppression of excessive outflow (m) |
 | gw_diagratio | 2/(2+sqrt(2)) | Diagonal partitioning (normally no need to change; 0 is equivalent to 4 neighbors) |
-| f_gw_opening | 0 | Transfer of blocked diagonal shares (0: none; 1: the passage width of diagonals blocked by outside or sea cells goes to the axis edges, so the conductance along walls equals the interior value; [supplement](gwflow_models.md#4-lateral-flow-f_gwlateral--1)) |
+| f_gw_opening | 1 | Transfer of blocked diagonal shares (1: the passage width of diagonals blocked by outside or sea cells goes to the axis edges, so the conductance along walls equals the interior value; 0: none = the default before 2026-10-30; [supplement](gwflow_models.md#4-lateral-flow-f_gwlateral--1)) |
 
 The stability condition of the explicit scheme is checked at
 initialization; if dt exceeds the limit, the limit value is printed

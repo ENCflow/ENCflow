@@ -61,5 +61,5 @@
 
 &list_gwflow_lateral
   gw_ksh_mmh = 36000.0      ! K_sh = 0.01 m/s → D = K_sh h̄ / sy = 0.05 m²/s
-  f_gw_opening = 1          ! 塞がれた斜めの配分を軸エッジへ振り替える
+  f_gw_opening = 1          ! 塞がれた斜めの配分を軸エッジへ振り替える(既定と同じ値を明示)
 /

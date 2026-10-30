@@ -122,8 +122,8 @@ module m_gwflow_lateral
   !   通水能の和 Σ l_k/dr_k は内部の値を超えないので、安定条件の静的検査は
   !   そのまま有効。層2(lateral_core)と淡塩2層の塩水 zone 流束
   !   (m_saltwater。gwflow_lateral_open_get で表を受ける)も同じ幅を使う。
-  !   管路層(conduit_core。エッジ別の通水係数)は対象外。無効時は表を確保
-  !   せず、従来と同じ式を通る(ビット一致)
+  !   管路層(conduit_core。エッジ別の通水係数)は対象外。既定は 1(2026-10-30 に
+  !   0 から変更)。0 では表を確保せず、変更前と同じ式を通る(ビット一致)
   !
   ! 【地表流との結合】
   !   側方流入で飽和容量を超えたセルは、超過分を上位(層1は s%h、層2は
@@ -424,7 +424,7 @@ subroutine gwflow_lateral_init(glt, lay1, p, g, s, dts)
   gw_ksh_mmh = 0.0
   gw_eps = 1.0e-3
   gw_diagratio = 2.0 / (2.0 + sqrt(2.0))   ! m_swflow_enc の p_diagratio と同値
-  f_gw_opening = 0                         ! 塞がれた斜めの配分の振り替え(0: なし。§16.6)
+  f_gw_opening = 1                         ! 塞がれた斜めの配分の振り替え(1: あり = 既定、0: なし。§16.6)
 
   call par_info("reading list_gwflow_lateral in " // trim(p%fn_gwflow))
   open(newunit=un, file=trim(p%fn_gwflow), status='old', action='read', iostat=ios)

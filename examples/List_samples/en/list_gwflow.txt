@@ -173,10 +173,10 @@
   ! 0 is equivalent to 4 neighbors)
   !gw_diagratio = 0.5857864
 
-  ! Transfer of blocked diagonal shares (0: none = default, 1: the passage
-  ! width of diagonals blocked by outside or sea cells goes to the axis
-  ! edges, so the conductance along walls equals the interior value)
-  !f_gw_opening = 1
+  ! Transfer of blocked diagonal shares (1: the passage width of diagonals
+  ! blocked by outside or sea cells goes to the axis edges, so the
+  ! conductance along walls equals the interior value = default, 0: none)
+  !f_gw_opening = 0
 
 /
 

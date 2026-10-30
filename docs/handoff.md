@@ -358,12 +358,10 @@ architecture.md。このメモは「現在進行中・未完了の項目」だ�
      線形化 Boussinesq のガウス形の小山の 2 次モーメントの伸び 4D に比 1.00007。
      reference を持たない検定型で CI に登録)。壁(領域の縁・領域外・海セル)に接する
      セルで壁沿いの通水能が内部の 0.707 倍、1 セル幅の帯で 0.414 倍になる問題は、
-     2026-10-30 に静的な振り替え `f_gw_opening`(&list_gwflow_lateral、既定 0)で
-     対処できるようにした(test/gwlateral 構成 3・4 で D k² に比 0.9995)。
-     **要判断**: 既定を 1 にするか。1 にすると gwseep・gwbed・salt(exch 系)の reference が
-     変わり(Log の差は S_grnd で 0.9〜3.4 %、gwbed の h_max 21 %)、gwbed の解析検定
-     (Check_gwbed.py gain)の期待値を振り替え込みの通過幅に書き換える必要がある
-     (評価の数値は §16.6)。reference の更新は人間の目視確認の後
+     2026-10-30 に静的な振り替え `f_gw_opening`(&list_gwflow_lateral)で解消した
+     (test/gwlateral 構成 3・4 で D k² に比 0.9995)。同日、利用者の判断で既定を 1 にし、
+     利用者の許可を得て gwbed・gwseep の reference を更新した(Check_gwbed.py の期待値も
+     振り替え込みの通過幅に組み直し。salt・estuary_barrage の数値の見直しを含め §16.6)
    - 側方有効時のリスタート往復ビット一致の確認(私有状態なしの想定の
      実証。s%hg は m_state 経由)
    - 谷型シナリオテスト(§9 の 6)はこれから

@@ -9,6 +9,10 @@
 #             - プローブ h の 100 s あたり増分: 河道 +2λ'·100、堤内地 −λ'·100
 #               (λ' = k_bed·sd·(l_ax + l_diag)/A。プローブは 5 桁出力なので
 #               絶対 2e-5 の許容)、河道 Hg = 0.2、堤内地 Hg = 0.1999
+#           l_ax は塞がれた斜めの配分の振り替え(f_gw_opening。既定 1。§16.6)込みの
+#           軸エッジの通過幅。この形(2 列 × 3 行の組を領域外の行で区切る)では、
+#           堤内地と河道の間の軸エッジの両端のセルで、界面を横切る斜め 2 本のうち
+#           1 本ずつが領域外へ向かうので nb = 1 で (lp + ld)·Δy(f_gw_opening = 0 なら lp·Δy)
 #   lined : 構成 2(param_lined.txt)。k_bed = 0 の遮断。河道の Hg = 0、
 #           h = 1.2 が全時間で不変、S_grnd = 12×0.2/18 (t >= 300 s)
 #   vert  : 構成 3(param_vert.txt)。鉛直浸透能の置き換え。
@@ -18,6 +22,7 @@
 import glob
 import math
 import os
+import re
 import sys
 
 mode, rdir = sys.argv[1], sys.argv[2]
@@ -30,7 +35,15 @@ sd, sy = 1.0, 0.2
 cap = sd * sy
 r = 2.0 / (2.0 + math.sqrt(2.0))          # gw_diagratio(既定)
 lp, ld = 1.0 - r, r / 2.0
-l_ax = math.sqrt((lp * dy) ** 2)           # 軸方向の通過幅
+# 振り替え f_gw_opening(既定 1)は、結果に複写された設定ファイルで 0 の明示を探す
+opening = 1
+for pf in glob.glob(os.path.join(rdir, "param*.txt")):
+    for line in open(pf):
+        m = re.match(r"\s*f_gw_opening\s*=\s*(\d+)", line)
+        if m:
+            opening = int(m.group(1))
+nb = 1.0 if opening == 1 else 0.0          # 堤内地と河道の間の軸エッジの両端の塞がれた斜めの平均本数
+l_ax = (lp + nb * ld) * dy                 # 軸方向の通過幅(振り替え込み)
 l_diag = math.sqrt((ld * dy) ** 2 + (ld * dx) ** 2)   # 対角方向の通過幅
 n_bank, n_chan, n_act = 12, 6, 18          # 堤内地・河道・有効セル数
 
@@ -70,7 +83,8 @@ def chk(label, a, b, tol, scale=None):
 
 
 log = read_log(os.path.join(rdir, "Log.txt"))
-print(f"Check_gwbed {mode}: {rdir} ({len(log)} log rows, t_end = {log[-1][0]:.0f} s)")
+print(f"Check_gwbed {mode}: {rdir} ({len(log)} log rows, t_end = {log[-1][0]:.0f} s, "
+      f"f_gw_opening = {opening}, l_ax = {l_ax:.6f} m)")
 
 if mode in ("gain", "lined"):
     k = (3600.0 if mode == "gain" else 0.0) / 1000.0 / 3600.0     # k_bed (m/s)
