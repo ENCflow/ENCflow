@@ -146,8 +146,9 @@ each end cell of the edge, count how many of the two diagonals crossing the
 interface are blocked, and add the mean number of diagonals). The
 conductance along walls then equals the interior value, and in a strip one
 cell wide the axis edges get the full cell width. Only outside and sea
-cells block (a dry cell does not cause a transfer), and the flux of the
-subsurface saltwater zone of the sharp-interface two-layer model uses the
+cells block (a dry cell does not cause a transfer), and the lateral flow in
+layer 2 (also without lateral flow in the soil layer) and the flux of the
+subsurface saltwater zone of the sharp-interface two-layer model use the
 same widths. Without the transfer, in a valley aquifer cut to one or two
 cells wide by an outside mask along the ridges, the groundwater flow down
 the valley comes out smaller (the default was changed from 0 to 1 on
@@ -172,7 +173,11 @@ H_2 = (z - s_d - d_2) + \frac{h_{g2}}{s_{y2}}
 The infiltration from layer 1 to 2 has the constant capacity $`K_{v2}`$
 (`gw2_infil_mmh`); the lateral flow in layer 2 calls the kernel of §4 with
 the layer-2 coefficients (`gw2_ksh_mmh`; 0 means capacity only), without
-the coupling to the ponded water. The excess of layer 2 returns to layer 1
+the coupling to the ponded water (the eight-direction partitioning and the
+transfer of blocked diagonal shares are shared with §4 and, even without
+lateral flow in the soil layer, follow the geometry items of
+`&list_gwflow_lateral`, or the defaults when it is absent). The excess of
+layer 2 returns to layer 1
 and the excess of layer 1 exfiltrates, in a chain within one step.
 **Basis of the defaults.** Observations of the weathered zone of granitic
 headwaters[^kosugi06][^katsura08]: a few metres thick, an effective

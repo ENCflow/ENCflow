@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 # gwtani(谷(Tani)型のシナリオ: 急勾配・薄い土層の斜面の地下水)の検定(developer.md §16.7)
 #   使い方: Check_gwtani.py uni_thin|uni_thick|thin_toe|thin_toe_k2 [resdir]
+#           Check_gwtani.py l2only        (構成 5: 層2だけの側方流)
 #           Check_gwtani.py kcompare      (構成 3 と 4 の飽和の時刻を比べる)
 #           Check_gwtani.py restart       (構成 R0 の通し計算と R1 → R2 の分割の一致)
 #   読むもの: result_<構成>/ の分布出力 Hg*.bil(float32・BIL・リトルエンディアン)・FILENUMBER.csv・
@@ -28,6 +29,12 @@
 #       (飽和域の上端のセルは、出ていく量を毎ステップの雨が補い、容量のすぐ下で揺れる)。
 #       セル 40 は渓流へ抜ける浸出面で地下水位が下がるので比べない。
 #   (4) uni_thick: 厚い土層はどの時刻も飽和しない(側方流が雨をすべて運ぶ)。
+#   l2only: 構成 5(土層の側方流なし、層2の側方流だけ。層2の底は基盤から 3 m 下の同じ勾配の
+#       平面、sy2 = 0.2、K2 = 1e-3 m/s)。土層に入った雨は毎ステップすべて層2へ移るので、層2の
+#       地下貯留 hg2 に (1)(3) が同じ形で成り立つ: 12000 s にセル 25〜34 で hg2 = r t、定常の
+#       飽和帯厚 h2 = hg2/sy2 が g·i·Δ(セル 1〜33)、層2はどのセルも満ちない。斜面は幅 1 セルで
+#       斜めのリンクがすべて塞がれるので、振り替え(f_gw_opening の既定 1)が層2に効かなければ
+#       軸の通過幅が (1 − d)Δ になり h2 は 2.45 倍になる(d = gw_diagratio の既定)。
 #   kcompare: 構成 3 と 4(K を半分)で、両方の (2) の対象のセルの t_sat の差が 1.5 % 以内
 #       (飽和の時刻は鉛直浸透で決まる)、定常の飽和域は構成 4 の方が広い(側方流で決まる)。
 #   restart: 保存状態のファイル(save_info.txt は保存日時の行を除く)と、共通の時刻の分布出力
@@ -143,6 +150,38 @@ def main_case(case, resdir):
     return nfail
 
 
+def main_l2only(resdir):
+    resdir = resdir or "result_l2only"
+    sy2, k2, d2, diag = 0.2, 1e-3, 3.0, 2.0 / (2.0 + math.sqrt(2.0))
+    g = (SB - math.sqrt(SB * SB - 4.0 * R / k2)) / 2.0
+    g_none = (SB - math.sqrt(SB * SB - 4.0 * R / (k2 * (1.0 - diag)))) / 2.0
+    data = [(t, read_bil(os.path.join(resdir, "Hg2%04d.bil" % k))) for k, t in frames(resdir) if 0 < k < 9000]
+    nfail = 0
+
+    def check(ok, msg):
+        nonlocal nfail
+        print(("  ok   " if ok else "  FAIL ") + msg)
+        if not ok:
+            nfail += 1
+
+    print("== gwtani l2only: lateral flow in layer 2 only (f_gwlateral = 0), K2 = %.1e m/s, g = %.7f "
+          "(without the transfer the axis width is (1 - d) dx and g = %.7f)" % (k2, g, g_none))
+    a = [v for t, v in data if abs(t - T_EARLY) < 1e-6][0]
+    dev = max(abs(a[i - 1] - R * T_EARLY) for i in CELLS_EARLY)
+    check(dev <= ATOL_EARLY, "t = %.0f s: hg2 = r t = %.8f m uniformly in cells %d-%d (max |dev| %.1e m)"
+          % (T_EARLY, R * T_EARLY, CELLS_EARLY[0], CELLS_EARLY[-1], dev))
+    t_end, a = data[-1]
+    devs = [(i, a[i - 1] / (sy2 * g * i * DY) - 1.0) for i in range(1, NY - 6)]
+    worst = max(devs, key=lambda x: abs(x[1]))
+    check(abs(worst[1]) <= TOL_STEADY,
+          "t = %.0f s: layer-2 saturated thickness in cells 1-%d follows h2 = g i dx with the full axis width "
+          "(worst cell %d: %+.1e; the transfer of blocked diagonal shares applies to layer 2)"
+          % (t_end, NY - 7, worst[0], worst[1]))
+    full = [i for t, v in data for i in range(1, NY) if v[i - 1] >= d2 * sy2 - R * DT]
+    check(not full, "layer 2 never fills in cells 1-39%s" % ((": full %s" % sorted(set(full))) if full else ""))
+    return nfail
+
+
 def main_kcompare():
     print("== gwtani kcompare: thin_toe vs thin_toe_k2 (K halved)")
     r3, r4 = analyse("thin_toe", "result_thin_toe"), analyse("thin_toe_k2", "result_thin_toe_k2")
@@ -223,11 +262,13 @@ def main_restart():
 
 def main(argv):
     if len(argv) < 2:
-        print("usage: %s uni_thin|uni_thick|thin_toe|thin_toe_k2|kcompare|restart [resdir]" % os.path.basename(argv[0]), file=sys.stderr)
+        print("usage: %s uni_thin|uni_thick|thin_toe|thin_toe_k2|l2only|kcompare|restart [resdir]" % os.path.basename(argv[0]), file=sys.stderr)
         return 2
     case = argv[1]
     if case in CASES:
         nfail = main_case(case, argv[2] if len(argv) > 2 else None)
+    elif case == "l2only":
+        nfail = main_l2only(argv[2] if len(argv) > 2 else None)
     elif case == "kcompare":
         nfail = main_kcompare()
     elif case == "restart":

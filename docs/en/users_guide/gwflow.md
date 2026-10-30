@@ -182,6 +182,13 @@ The stability condition of the explicit scheme is checked at
 initialization; if dt exceeds the limit, the limit value is printed
 and the run stops (lower dt or thin the updates with dt_gwflow).
 
+gw_eps, gw_diagratio and f_gw_opening are the geometry items of lateral flow,
+and the lateral flow in layer 2 (next section) uses the same values. When
+layer-2 lateral flow is used without lateral flow in the soil layer
+(f_gwlateral = 0), the three geometry items are still read from this group if
+it exists (gw_ksh_mmh is not used), and the defaults apply otherwise (the
+transfer is on by default).
+
 When [water quality](wq.md) (fn_wq; f_wq_infil=1 is the default) is
 enabled, dissolved substances in the groundwater move with the lateral
 flow and return to the surface water where seepage occurs, at the
@@ -210,7 +217,7 @@ exfiltrates to the surface.
 | gw2_depth | 3 | Layer thickness (m). Representative weathered zone of a granitic headwater |
 | gw2_sy | 0.05 | Specific yield (effective porosity). A few percent in weathered rock |
 | gw2_infil_mmh | 1 | Infiltration capacity from layer 1 to layer 2 (mm/h). Upper side of the saturated conductivity of weathered rock |
-| gw2_ksh_mmh | - | Lateral saturated hydraulic conductivity of layer 2 (mm/h). 0 disables lateral flow (a capacity buffer) |
+| gw2_ksh_mmh | - | Lateral saturated hydraulic conductivity of layer 2 (mm/h). 0 disables lateral flow (a capacity buffer). The eight-direction partitioning and the transfer of blocked diagonal shares follow the geometry items of &list_gwflow_lateral (previous section) |
 | gw2_sat0 | 0 | Initial saturation [0,1]. In event runs, a calibration parameter that sets the baseflow discharge |
 
 - **Cannot be combined with the bucket vertical model.**

@@ -34,7 +34,7 @@ module m_gwflow_layer2
   use m_sysparam, only : t_sysparam
   use m_geoinfo, only : t_geoinfo
   use m_state, only : t_state
-  use m_gwflow_lateral, only : t_latlayer, t_gwlat, gwflow_lateral_geom_init, &
+  use m_gwflow_lateral, only : t_latlayer, t_gwlat, gwflow_lateral_geom_init_layer2, &
                                gwflow_lateral_dtcheck, lateral_core
   use m_restart, only : restart_write_cell, restart_read_cell
   use m_sysdep_util, only : sysdep_mkdir
@@ -136,9 +136,10 @@ subroutine gwflow_layer2_init(gl2, lat, p, g, s, dts)
     gl2%lay%dbot = gw2_depth
     gl2%lay%cap_const = gl2%cap
     gl2%lay%to_surface = .false.
-    ! 層1側方が有効ならその diagratio/eps が既に設定済み(冪等口が勝つ)。
-    ! 層2のみ有効の場合は既定値(m_swflow_enc の p_diagratio と同値)
-    call gwflow_lateral_geom_init(lat, g, 2.0 / (2.0 + sqrt(2.0)), 1.0e-3)
+    ! 土層の側方流が有効ならその幾何と振り替えの表が既にある(冪等口が勝つ)。
+    ! 層2の側方流だけのときは &list_gwflow_lateral の幾何の項目(なければ既定値)で
+    ! 作り、塞がれた斜めの配分の振り替え(f_gw_opening。既定 1)も効かせる(§16.6)
+    call gwflow_lateral_geom_init_layer2(lat, p, g)
     call gwflow_lateral_dtcheck(lat, g, "gwflow_layer2", gl2%lay%ksh, gl2%lay%sy, &
                                 gl2%d2, dts)
   end if

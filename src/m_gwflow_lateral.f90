@@ -122,6 +122,8 @@ module m_gwflow_lateral
   !   通水能の和 Σ l_k/dr_k は内部の値を超えないので、安定条件の静的検査は
   !   そのまま有効。層2(lateral_core)と淡塩2層の塩水 zone 流束
   !   (m_saltwater。gwflow_lateral_open_get で表を受ける)も同じ幅を使う。
+  !   土層の側方流を使わず層2の側方流だけを使う構成では、層2の init が
+  !   gwflow_lateral_geom_init_layer2 で幾何と表を作る(2026-10-30)。
   !   管路層(conduit_core。エッジ別の通水係数)は対象外。既定は 1(2026-10-30 に
   !   0 から変更)。0 では表を確保せず、変更前と同じ式を通る(ビット一致)
   !
@@ -148,6 +150,7 @@ module m_gwflow_lateral
   public :: t_latlayer
   public :: t_gwlat
   public :: gwflow_lateral_geom_init
+  public :: gwflow_lateral_geom_init_layer2
   public :: gwflow_lateral_dtcheck
   public :: lateral_core
   public :: t_conduitlayer
@@ -406,10 +409,11 @@ end subroutine
 ! f_gw_opening)を検査する(読むだけと検査。gw_ksh_mmh の既定値の採用と検査は
 ! 層1の init。§12)
 !----------------------------------------------------------------------
-subroutine read_lateral_list(p, gw_ksh_mmh, gw_eps, gw_diagratio, f_gw_opening)
+subroutine read_lateral_list(p, gw_ksh_mmh, gw_eps, gw_diagratio, f_gw_opening, found)
   type(t_sysparam), intent(in) :: p
   real, intent(out) :: gw_ksh_mmh, gw_eps, gw_diagratio
   integer, intent(out) :: f_gw_opening
+  logical, intent(out), optional :: found    ! 与えればグループは任意(なければ既定値のまま .false.)
   integer :: un, ios
   namelist /list_gwflow_lateral/ gw_ksh_mmh, gw_eps, gw_diagratio, f_gw_opening
 
@@ -422,7 +426,12 @@ subroutine read_lateral_list(p, gw_ksh_mmh, gw_eps, gw_diagratio, f_gw_opening)
   open(newunit=un, file=trim(p%fn_gwflow), status='old', action='read', iostat=ios)
   if (ios /= 0) call par_stop("list_gwflow_lateral: cannot open " // trim(p%fn_gwflow))
   read(un, nml=list_gwflow_lateral, iostat=ios)
-  if (ios /= 0) call par_stop("list_gwflow_lateral: cannot read namelist")
+  if (present(found)) then
+    found = (ios == 0)
+    if (ios > 0) call par_stop("list_gwflow_lateral: cannot read namelist")
+  else
+    if (ios /= 0) call par_stop("list_gwflow_lateral: cannot read namelist")
+  end if
   close(un)
 
   if (gw_eps <= 0.0) call par_stop("list_gwflow_lateral: gw_eps must be > 0")
@@ -431,6 +440,32 @@ subroutine read_lateral_list(p, gw_ksh_mmh, gw_eps, gw_diagratio, f_gw_opening)
   end if
   if (f_gw_opening /= 0 .and. f_gw_opening /= 1) then
     call par_stop("list_gwflow_lateral: f_gw_opening must be 0(none) or 1(transfer blocked diagonal shares)")
+  end if
+end subroutine
+
+
+!----------------------------------------------------------------------
+! 層2の側方流の幾何と振り替えの表の初期化(層2の init から呼ぶ。§16.6)。
+! 冪等: 土層の側方流が先に幾何と表を作っていれば何もしない。土層の側方流が
+! 無効なら &list_gwflow_lateral を任意で読み(なければ既定値。gw_ksh_mmh は
+! 土層の量なので使わない)、gw_eps・gw_diagratio で幾何を作り、f_gw_opening = 1
+! なら振り替えの表を作る
+!----------------------------------------------------------------------
+subroutine gwflow_lateral_geom_init_layer2(glt, p, g)
+  type(t_gwlat), intent(inout) :: glt
+  type(t_sysparam), intent(in) :: p
+  type(t_geoinfo), intent(in) :: g
+  real :: gw_ksh_mmh, gw_eps, gw_diagratio
+  integer :: f_gw_opening
+  logical :: found
+
+  if (glt%geom_ready) return
+  call read_lateral_list(p, gw_ksh_mmh, gw_eps, gw_diagratio, f_gw_opening, found)
+  if (.not. found) call par_info("list_gwflow_lateral not found: layer-2 lateral flow uses the default geometry")
+  call gwflow_lateral_geom_init(glt, g, gw_diagratio, gw_eps)
+  if (f_gw_opening == 1 .and. .not. allocated(glt%wlo)) then
+    call build_opening(glt, g)
+    call par_info("gwflow_lateral: blocked diagonal shares are transferred to the axis edges (f_gw_opening = 1)")
   end if
 end subroutine
 

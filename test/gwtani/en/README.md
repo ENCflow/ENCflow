@@ -32,6 +32,7 @@ enabled is also checked. There is no reference; `Check_gwtani.py` decides pass o
 | 2 | `param_uni_thick.txt` | 2.0 m uniform (thick) | none |
 | 3 | `param_thin_toe.txt` | thins linearly from 3.0 m at the divide to 0.3 m at the toe (Tani type) | cells 32–39 |
 | 4 | `param_thin_toe_k2.txt` | as case 3, K halved (1800 mm/h) | cells 25–39 |
+| 5 | `param_l2only.txt` | as case 2 (2.0 m uniform), with lateral flow in the soil layer switched off and only lateral flow in layer 2 (bottom 3 m below the bedrock, sy2 = 0.2, K2 = 3600 mm/h) | none (layer 2 does not fill either) |
 | R0–R2 | `param_rt0.txt`, `rt1`, `rt2` | case 3 plus lateral flow in layer 2 (weathered bedrock), transport of water quality with the groundwater, and a thinned update interval (dt_gwflow = 10 s) | — |
 
 R0 is a straight run over 0–60000 s, R1 runs 0–30006 s and saves, and R2 restores it and runs to
@@ -41,8 +42,8 @@ continues after the restart.
 | File | Content |
 |---|---|
 | `make_data.py` | Writes the terrain and soil depth (data_gwtani/z_*.txt, sd_*.txt) and the initial water depth of the stream (h_init.txt); Run.sh and Run_MPI.sh call it first |
-| `Run.sh` | Runs the seven configurations serially and checks them with `Check_gwtani.py` |
-| `Run_MPI.sh N` | Runs the same checks on N ranks and compares the distribution outputs and Log.txt (without the Runge column) of cases 1–4 and R0 byte by byte with np = 1 of the same binary. 41 rows, so N ≤ 20 |
+| `Run.sh` | Runs the eight configurations serially and checks them with `Check_gwtani.py` |
+| `Run_MPI.sh N` | Runs the same checks on N ranks and compares the distribution outputs and Log.txt (without the Runge column) of cases 1–5 and R0 byte by byte with np = 1 of the same binary. 41 rows, so N ≤ 20 |
 | `Check_gwtani.py` | Comparison with the predictions below (per case), comparison of cases 3 and 4 (`kcompare`), restart round trip (`restart`) |
 | `Fig.py` | The figure below, `figs/gwtani.png` |
 
@@ -65,6 +66,12 @@ check's own).
   g = (S_b − √(S_b² − 4r/K))/2 (the kinematic r/(K S_b) plus a 1 % correction for the water-table
   gradient). Cells whose contributing recharge r·i·Δ exceeds the lateral transmissivity
   (g·i·Δ ≥ d) saturate, and rain falling on them runs off over the surface.
+- **Lateral flow in layer 2 only (case 5)**: the infiltration capacity into layer 2 (100 mm/h)
+  exceeds the rain, so the rain entering the soil layer moves entirely into layer 2 at every step,
+  and the same predictions (uniform rise early in the rain, the steady straight line h2 = g·i·Δ) hold
+  for the subsurface storage of layer 2. The slope is one cell wide and all its diagonal links are
+  blocked, so if the transfer of blocked diagonal shares (f_gw_opening, default 1) did not apply to
+  layer 2 the axis passage width would be 0.414 times and the saturated thickness 2.45 times.
 - **Which one controls**: comparing the time at which a cell reaches its steady state,
   t_ss = sy·g·i·Δ/r, with T_v, cells with short T_v (thin soil) fill by vertical infiltration, and
   cells with long T_v reach the steady state set by lateral flow first. With a uniform soil depth,
@@ -104,6 +111,7 @@ the stream, where the water table drops. Right: fraction of saturated cells over
 | Time of saturation with K halved (cases 3 and 4, cells 35–38) | difference within 0.79 % | PASS |
 | Steady water table (unsaturated cells) | within 9.9e-4 of the prediction h = g·i·Δ (divide cell) | PASS |
 | Cells saturated at steady state | case 1: 14–39, 2: none, 3: 32–39, 4: 25–39 (match the prediction) | PASS |
+| Steady state with lateral flow in layer 2 only (case 5, cells 1–33) | within 9.9e-4 of the full-width prediction h2 = g·i·Δ (the transfer applies to layer 2; before the change of 2026-10-30 it was 2.45 times, matching the no-transfer prediction within 0.04 %) | PASS |
 | Restart round trip (R0 vs R1 → R2) | 5 saved-state files, 66 distribution outputs and 8 Log rows byte-identical | PASS |
 
 - The time of saturation is extrapolated at rate r from the last output before saturation. Cells

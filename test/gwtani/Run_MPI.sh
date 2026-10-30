@@ -32,17 +32,17 @@ same_as_np1() {   # same_as_np1 <param> <dir_result>: np = 1 で回し直して�
 }
 
 rm -rf save_rt0 save_rt
-for c in uni_thin uni_thick thin_toe thin_toe_k2 rt0 rt1 rt2; do
+for c in uni_thin uni_thick thin_toe thin_toe_k2 l2only rt0 rt1 rt2; do
     rm -rf result_$c
     run "$np" param_$c.txt Screen_$c.log
 done
 rc=0
-for c in uni_thin uni_thick thin_toe thin_toe_k2 kcompare restart; do
+for c in uni_thin uni_thick thin_toe thin_toe_k2 l2only kcompare restart; do
     python3 "$sdir/Check_gwtani.py" $c || rc=1
 done
 [ $rc -eq 0 ] || { echo "=== gwtani MPI verification FAIL (np=$np) ===" >&2; exit 1; }
 if [ "$np" != 1 ]; then
-    for c in uni_thin uni_thick thin_toe thin_toe_k2 rt0; do
+    for c in uni_thin uni_thick thin_toe thin_toe_k2 l2only rt0; do
         same_as_np1 param_$c.txt result_$c
     done
 fi
