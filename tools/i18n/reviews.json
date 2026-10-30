@@ -2021,9 +2021,9 @@
     {
       "source": "test/fluxline/README.md",
       "target": "test/fluxline/en/README.md",
-      "source_sha256": "492f3461413364a140f4be35315cae99ca331d6005f3bd514db8dd8ab953a92f",
-      "target_sha256": "d635569ad59a9fb58b07030c6098751f443d19397f75b4a558d6687be81e3ff2",
-      "reviewer": "Claude (Claude Code session; full-text content and lexical review of a new mirror written in the same session, no model execution)",
+      "source_sha256": "a730c81c90b2753ef9010b70dd03592a4d828b3fd29fa677e2fa3681e740a318",
+      "target_sha256": "2ff7d548dccc00f0b609f4675f7d44aa4fcae25fc67103f7f2382ec139ae62b4",
+      "reviewer": "Claude (Claude Code session; reviewed the changed sentence (decision to keep the end conventions) of the Japanese source against the English mirror, 2026-10-30)",
       "method": "assistant",
       "reviewed_on": "2026-10-30"
     },

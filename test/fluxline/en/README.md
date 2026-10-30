@@ -57,7 +57,8 @@ advances by rows matches Q by conservation. Two conventions govern the ends:
   reads δ ≈ d = 0.586 rows less.
 
 Neither matters when the ends of the transect are placed in cells without
-water (how to handle this is under discussion; developer.md §24.3).
+water (these conventions are kept, with a note in the measurement chapter of
+the users guide; developer.md §24.3).
 
 | File | Contents |
 |---|---|
