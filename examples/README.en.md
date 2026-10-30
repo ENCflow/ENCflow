@@ -38,7 +38,7 @@ python3 plot_results.py   # plotting (where provided)
 | [tsunami_town/](tsunami_town/en/README.md) | Destruction of wooden houses and the transport and deposition of debris as a tsunami runs up through a town | Building destruction and debris fn_bldgdebris, tide |
 | [timberyard/](timberyard/en/README.md) | Timber influx from a log yard into a town by a storm surge (Isewan typhoon type) | Driftwood fn_driftwood, tide |
 | [sewer_hybrid/](sewer_hybrid/en/README.md) | Urban drainage with a trunk main and a branch network in the same conduit continuum layer | Conduit continuum layer f_gwconduit |
-| [qanat/](qanat/en/README.md) | An idealised qanat (groundwater-collecting gallery) | Conduit continuum layer, groundwater |
+| [qanat/](qanat/en/README.md) | The flow of a qanat (tunnel) that collects the groundwater of a mountain-foot fan, and how a nearby pumping well makes it dwindle and dry up (three cases: qanat only, well 2 L/s, well 5 L/s) | Conduit continuum layer f_gwconduit (exchange-capacity map fn_gwc_leak, open outfall fn_gwc_outfall), layer 2 f_gwlayer2, well pumping f_gwpump |
 | [meander/](meander/en/README.md) | Meander development of a sinusoidal channel in a floodplain: outer-bank retreat and inner-bank bar growth, fixation of the bars by alternating floods and low flows, and conversion of the bars into floodplain by sediment feed; nine configurations | Bed-load direction correction fluv_slope, f_secflow, bank erosion f_berode, angle-of-repose avalanching f_repose, fixation f_fixation, sediment feed |
 | [meander_cutoff/](meander_cutoff/en/README.md) | A meander loop with a narrow neck is cut off by a flood; the old loop becomes slack water and its ends start to fill | same + inflow time series |
 | [delta/](delta/en/README.md) | A river-mouth delta built by a sediment-laden river entering a still basin: mouth bar, bifurcation, lobe growth and channel switching. Five configurations: fan versus bird-foot by the sand/mud ratio, and the stabilisation of distributaries by discharge variation and fixation (decay while submerged, bank coefficient). Record: docs/delta_plan.md (Japanese) | sea as ordinary cells + initial water level, capacity feed fluv_bcfeed, suspended mud inflow_cs + f_bedfines, fluv_slope, f_repose, f_fixation (fix_tdec, fix_ctau_bank), long-wave radiation edge |
@@ -56,7 +56,7 @@ one run" (for reference after reading the chapters).
 - Fault → tsunami → inundation: [tsunami_fault/](tsunami_fault/en/README.md), [tsunami_coast/](tsunami_coast/en/README.md). Slope failure → entry into water → tsunami: [landslide_tsunami/](landslide_tsunami/en/README.md).
 - Flood → levee breach → inundation: [levee_breach/](levee_breach/en/README.md).
 - Tide → salt wedge travelling upstream → infiltration through the bed → salinization of the banks (blocked by an estuary barrage): [estuary_barrage/](estuary_barrage/en/README.md).
-- Rainfall → sewer (conduits) → surcharge and drainage: [sewer_hybrid/](sewer_hybrid/en/README.md). Groundwater → qanat collection: [qanat/](qanat/en/README.md).
+- Rainfall → sewer (conduits) → surcharge and drainage: [sewer_hybrid/](sewer_hybrid/en/README.md). Recharge from the mountains → fan groundwater → qanat collection and outflow (dwindling with a pumping well): [qanat/](qanat/en/README.md).
 - Single-feature analytical benchmarks: [benchmark/](benchmark/). Grid refinement (nesting): [nest_reflect/](nest_reflect/en/README.md).
 
 To find the feature combination for a phenomenon, see the

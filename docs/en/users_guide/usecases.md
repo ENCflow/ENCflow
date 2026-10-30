@@ -70,7 +70,7 @@ accuracy caveats (blank = nothing special).
 | Baseflow / low-flow recession | Weathered bedrock layer in [Groundwater](gwflow.md) | f_gwlayer2=1 + spin-up via [Suspend and restart](restart.md) | In event runs the initial saturation gw2_sat0 is the practical calibration point |
 | Catchment water balance / recharge estimates | [Rainfall and weather](forcing.md) (evapotranspiration) + [Groundwater](gwflow.md) | Track S_surf/S_grnd/S_total over a long run | The S columns are domain-mean storage depths (m); their differences give the net balance |
 | Farmland tile drainage | Conduit continuum layer | The tile-drain preset with gwc_leak_layer=1 (exchange with the soil layer) | |
-| Well pumping / groundwater drawdown | Pumping sink in [Groundwater](gwflow.md) | f_gwpump=1 + well cells + rate (gwp_cell / gwp_q0 / gwp_val) | Withdrawal is capped by the cell's storage (check dry wells in the demand-vs-pumped summary printed at the end). Borehole-scale hydraulics (well radius, skin, etc.) are not represented |
+| Well pumping / groundwater drawdown | Pumping sink in [Groundwater](gwflow.md) | f_gwpump=1 + well cells + rate (gwp_cell / gwp_q0 / gwp_val) | Withdrawal is capped by the cell's storage (check dry wells in the demand-vs-pumped summary printed at the end). Borehole-scale hydraulics (well radius, skin, etc.) are not represented. Example [examples/qanat](../../../examples/qanat/en/README.md) (a pumping well reduces the flow of a qanat) |
 
 ## Sediment, slopes, and volcanoes
 

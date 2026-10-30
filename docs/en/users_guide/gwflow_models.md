@@ -400,7 +400,7 @@ The labels in the Basis column are explained in [How to read the basis of a defa
 | [test/frost](../../../test/frost/en/README.md) | infiltration suppression by frost | all 14 digits of the analytical value |
 | [test/gwbed](../../../test/gwbed/en/README.md) | throttling, cut-off and replacement by the streambed exchange limit | the per-step loss of the floodplain cells matches S_grnd to all 14 digits; gaining increments match the analytical rate |
 | [examples/sewer_hybrid](../../../examples/sewer_hybrid/en/README.md) | trunk + branch network conversion | cell-wise sy map |
-| [examples/qanat](../../../examples/qanat/en/README.md) | conduit layer + layer 2 | collection, conveyance and outlet of a gallery |
+| [examples/qanat](../../../examples/qanat/en/README.md) | conduit layer + layer 2 + well pumping | collection, conveyance and outlet of a gallery; reduction of its flow by a pumping well |
 
 ## References
 

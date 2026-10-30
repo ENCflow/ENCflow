@@ -284,20 +284,20 @@
     {
       "source": "docs/users_guide/gwflow.md",
       "target": "docs/en/users_guide/gwflow.md",
-      "source_sha256": "eb5c8c8dbbd479083814869a8b7bb7f7260726238e411227d19b06303dd7f709",
-      "target_sha256": "d74b62f3566b20664708e2f5408bd337f807d703a755446fd0b625acf2ce77d4",
-      "reviewer": "Claude (Claude Code session; reviewed the changed sections (added reference sections, footnotes and citation markers) of the Japanese source against the English mirror, 2026-10-30)",
+      "source_sha256": "a0e9897685b98818f9bcb00c6f746cdad7f3489d12b39f7cae37f165860d062e",
+      "target_sha256": "12643e29bee90a5d921aae23642276c92057e31bf17ee5c8c8087a9f1a2e4b23",
+      "reviewer": "Claude (Claude Code session; reviewed the Japanese source against the English mirror after merging main; figures from the same results and drawing code with label changes only, 2026-10-30)",
       "method": "assistant",
       "reviewed_on": "2026-10-30"
     },
     {
       "source": "docs/users_guide/gwflow_models.md",
       "target": "docs/en/users_guide/gwflow_models.md",
-      "source_sha256": "2847e2382c0cd49070bf0611304e10f19b8de6890ff5adad3aecab6697513ee6",
-      "target_sha256": "2973640acecf95dc3283a670eb03a561be81e296202543ec431ef0090283b1cf",
-      "reviewer": "Claude",
+      "source_sha256": "357066fa9c866e478791f5a3c3bb5d6df94a51d550086cc8ab8d49cb04b948aa",
+      "target_sha256": "98cf05258a2669957977339a3d8d6659644e7a3c3f3cb736e88e5f8efe3ce2d7",
+      "reviewer": "Claude (Claude Code session; reviewed the Japanese source against the English mirror after merging main; figures from the same results and drawing code with label changes only, 2026-10-30)",
       "method": "assistant",
-      "reviewed_on": "2026-10-25"
+      "reviewed_on": "2026-10-30"
     },
     {
       "source": "docs/users_guide/hydraulics.md",
@@ -482,8 +482,8 @@
     {
       "source": "docs/users_guide/usecases.md",
       "target": "docs/en/users_guide/usecases.md",
-      "source_sha256": "32176f74f90733ac29cb55cb3bf2bc075eb3ebca6b44606821cfb211a5eac811",
-      "target_sha256": "00c0999f251f5c715b69c3c21ace3e259c9461e611342478c4601912ddd7636e",
+      "source_sha256": "0dd47142db437f8da95ff2cc93292a23795f2ea734cb465e79d037e4688d0573",
+      "target_sha256": "2273adb70b434e56138eebf9262d430f9e74b055103e1a7fdddf11709347697d",
       "reviewer": "Claude (Claude Code session; reviewed the Japanese source against the English mirror after merging main; figures from the same results and drawing code with label changes only, 2026-10-30)",
       "method": "assistant",
       "reviewed_on": "2026-10-30"
@@ -806,8 +806,8 @@
     {
       "source": "examples/README.md",
       "target": "examples/README.en.md",
-      "source_sha256": "380373477ce630665bf9fcbcb4a7497a83734cd833acb4de16869a07e42bb5c8",
-      "target_sha256": "528ba4ff8b04b82617c22c5f6dbe7612d299a57c307723c39edb7a5dd1bcbaf0",
+      "source_sha256": "15edc3d6f7171a0ecc82a31ebc8b8d51eee5a5f5d7ef5320b3e843fc43002c46",
+      "target_sha256": "12f974b6c5632bdb43ca5f5dadebdedd08edc5ac76bd64cc73e28c8ca7cbe7af",
       "reviewer": "Claude (Claude Code session; reviewed the Japanese source against the English mirror after merging main; figures from the same results and drawing code with label changes only, 2026-10-30)",
       "method": "assistant",
       "reviewed_on": "2026-10-30"
@@ -1418,11 +1418,56 @@
     {
       "source": "examples/qanat/README.md",
       "target": "examples/qanat/en/README.md",
-      "source_sha256": "bafc7cd7f8751c7f08b5d6c63319c5d6ba1fc03eb15f177fddc705c9ea30c3fe",
-      "target_sha256": "8e6ffab090c21687ad90a75c65b91b9db9af225e9fe810033a26986b4e178314",
-      "reviewer": "Claude (Claude Code session; full-text content and lexical review, no model execution)",
+      "source_sha256": "201b5876f2501711f11a59d27675993a53842a3b315bbe6b7b699e842d3c6fc6",
+      "target_sha256": "60395707ceb5704f034f2d7860e2558c9546d22e353019ecd6525fc2a7ed8c41",
+      "reviewer": "Claude (Claude Code session; reviewed the Japanese source against the English mirror after merging main; figures from the same results and drawing code with label changes only, 2026-10-30)",
       "method": "assistant",
-      "reviewed_on": "2026-10-23"
+      "reviewed_on": "2026-10-30"
+    },
+    {
+      "source": "examples/qanat/figs/mechanism.png",
+      "target": "examples/qanat/en/figs/mechanism.png",
+      "source_sha256": "943f0a1657806ff28b4f32787485ec3c3d0d06f2e61087c6346a1fb0b963f8f5",
+      "target_sha256": "6fa2be4941b897e6a3cf637d33bbb0ae2e54430989bb1c799d76555903bac4c6",
+      "reviewer": "Claude (Claude Code session; reviewed the Japanese source against the English mirror after merging main; figures from the same results and drawing code with label changes only, 2026-10-30)",
+      "method": "assistant",
+      "reviewed_on": "2026-10-30"
+    },
+    {
+      "source": "examples/qanat/figs/plan.png",
+      "target": "examples/qanat/en/figs/plan.png",
+      "source_sha256": "d05ab99c98716cb562a4b962f73f53cc3e078756a337b303b66625ea0a698d7a",
+      "target_sha256": "ffae94678efa4ee51965f28629d92c5b8898a8ad48bc9247f323ef0b0b75210c",
+      "reviewer": "Claude (Claude Code session; reviewed the Japanese source against the English mirror after merging main; figures from the same results and drawing code with label changes only, 2026-10-30)",
+      "method": "assistant",
+      "reviewed_on": "2026-10-30"
+    },
+    {
+      "source": "examples/qanat/figs/profile.png",
+      "target": "examples/qanat/en/figs/profile.png",
+      "source_sha256": "e1db87b7e199fe53c6b666152f238723da307f10e139dc0231b04d2fcd37783c",
+      "target_sha256": "804bf8d4c03141b06a796d2449fe36a45b93e2bf311a27f0fe9753a897a2620d",
+      "reviewer": "Claude (Claude Code session; reviewed the Japanese source against the English mirror after merging main; figures from the same results and drawing code with label changes only, 2026-10-30)",
+      "method": "assistant",
+      "reviewed_on": "2026-10-30"
+    },
+    {
+      "source": "examples/qanat/figs/series.png",
+      "target": "examples/qanat/en/figs/series.png",
+      "source_sha256": "8823f7e3cc8a64603c754723cf2bb3cd27843b0643e921d9ef7b64df350a6723",
+      "target_sha256": "304097452d9876a1bb3c824b72c71b92394e11a817c9c48c6a55b1e7e34c069a",
+      "reviewer": "Claude (Claude Code session; reviewed the Japanese source against the English mirror after merging main; figures from the same results and drawing code with label changes only, 2026-10-30)",
+      "method": "assistant",
+      "reviewed_on": "2026-10-30"
+    },
+    {
+      "source": "examples/qanat/figs/setup.png",
+      "target": "examples/qanat/en/figs/setup.png",
+      "source_sha256": "a774ebb7766f5ecbf07b19115b9051a53a80e8507a7df07d475ea899f9ba8435",
+      "target_sha256": "4e1ea1950966bfb4a4363d365df3ba676cc1e06bc1f5cb1cd648d058de49a76f",
+      "reviewer": "Claude (Claude Code session; reviewed the Japanese source against the English mirror after merging main; figures from the same results and drawing code with label changes only, 2026-10-30)",
+      "method": "assistant",
+      "reviewed_on": "2026-10-30"
     },
     {
       "source": "examples/sewer_hybrid/README.md",
