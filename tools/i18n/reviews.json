@@ -1202,18 +1202,18 @@
     {
       "source": "examples/estuary_barrage/README.md",
       "target": "examples/estuary_barrage/en/README.md",
-      "source_sha256": "16041fa961f7405cde4cde8b70fa40cdeb5a7c7227652bb833b354d782b28874",
-      "target_sha256": "c966f79976bf564a6eb671a9f8a4039de54616ca8f3a5a0155df290ab17f1d9c",
-      "reviewer": "Claude (Claude Code session; reviewed the Japanese source against the English mirror; figures from the same results or drawing code with label changes only, 2026-10-30)",
+      "source_sha256": "a4b0474c2db847efdc142f0baf17a065b3a603bcf898dafd7c45c324d3e8002f",
+      "target_sha256": "bb3291ddc2bdbad2d51382cd45f03e537dc41fcd91c8d890aa7a57a9bb3fa667",
+      "reviewer": "Claude (Claude Code session; full-text content and lexical review, no model execution)",
       "method": "assistant",
       "reviewed_on": "2026-10-30"
     },
     {
       "source": "examples/estuary_barrage/figs/cross.png",
       "target": "examples/estuary_barrage/en/figs/cross.png",
-      "source_sha256": "63903371f42febbec347e34e0b76c32d59fea352ef0aa94ea15753f75bd8033c",
-      "target_sha256": "5df697bb5bc25e9c169677dd8bcb11d0c020d36bb65cb29a53159b2289302d87",
-      "reviewer": "Claude (Claude Code session; reviewed the Japanese source against the English mirror; figures from the same results or drawing code with label changes only, 2026-10-30)",
+      "source_sha256": "8a4c993f1e7fd1ac190c49c18a0901dd984bb3a002255ba213a4da474268d8c6",
+      "target_sha256": "db354388baadc2f8c8818cf44aa9de3f9152eced84bbdeaef1a5a76aa97b2e10",
+      "reviewer": "Claude (Claude Code session; English figure drawn by the same script with the en switch; visual check)",
       "method": "assistant",
       "reviewed_on": "2026-10-30"
     },
@@ -1229,27 +1229,27 @@
     {
       "source": "examples/estuary_barrage/figs/plan.png",
       "target": "examples/estuary_barrage/en/figs/plan.png",
-      "source_sha256": "ec4ba24a112b3fd3bcb4493cbc7c89eab6f5e1ef6dcb6bbdc29b1fb5837289fb",
-      "target_sha256": "affd580710bc5d4a357c75ecafb8255d7dab54282eabcb89eb99782211c2891e",
-      "reviewer": "Claude (Claude Code session; reviewed the Japanese source against the English mirror; figures from the same results or drawing code with label changes only, 2026-10-30)",
+      "source_sha256": "81d85a4d42f6eb257daad3bef080e738646ff70fbc41221e2c1f9527d4c49c96",
+      "target_sha256": "6d899e2d89056f624c2f7236c365897f98245effe2007a1e4e4872085363ff09",
+      "reviewer": "Claude (Claude Code session; English figure drawn by the same script with the en switch; visual check)",
       "method": "assistant",
       "reviewed_on": "2026-10-30"
     },
     {
       "source": "examples/estuary_barrage/figs/profile.png",
       "target": "examples/estuary_barrage/en/figs/profile.png",
-      "source_sha256": "8f320bd6840dec4404323bb9a9c2d424c5117d9addb72da2cc750a8518c5fe6a",
-      "target_sha256": "7f85539ef1b2eb536d239c7d4c2fe706201ba7a5e32cc13941c5c38102958221",
-      "reviewer": "Claude (Claude Code session; reviewed the Japanese source against the English mirror; figures from the same results or drawing code with label changes only, 2026-10-29)",
+      "source_sha256": "2364270e5e73de4e1910a1b2456b95453c7cbc82fbdfb1d6460ae565fbfcd5f9",
+      "target_sha256": "8c84285c6041a60658581f1861f538f9144383e9e167adbdef5e4b356b10f64c",
+      "reviewer": "Claude (Claude Code session; English figure drawn by the same script with the en switch; visual check)",
       "method": "assistant",
-      "reviewed_on": "2026-10-29"
+      "reviewed_on": "2026-10-30"
     },
     {
       "source": "examples/estuary_barrage/figs/series.png",
       "target": "examples/estuary_barrage/en/figs/series.png",
-      "source_sha256": "4ebf42851856eaaabf62d97ac90970c428fa5121555340da2c201b9b62642897",
-      "target_sha256": "8b1e8a3adb7d1d77fb8b8e81cf743b3bdeb85ca41a18396737c18601c1914d63",
-      "reviewer": "Claude (Claude Code session; reviewed the Japanese source against the English mirror; figures from the same results or drawing code with label changes only, 2026-10-30)",
+      "source_sha256": "13aa00f6cc7186c91148f1ccd93a97307201bab099569c89c2d88ff71ae95dac",
+      "target_sha256": "3f5dc5d783cc92794166071519f18e8fdd02479aa7b5d80072b3982e8e91d7d3",
+      "reviewer": "Claude (Claude Code session; English figure drawn by the same script with the en switch; visual check)",
       "method": "assistant",
       "reviewed_on": "2026-10-30"
     },
