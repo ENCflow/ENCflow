@@ -1,287 +1,272 @@
-# tsunami_town — house destruction, debris flow and deposition by a tsunami running up into a town (idealized case)
+# tsunami_town — wooden houses destroyed by a tsunami, and where the debris goes
 
 > English mirror of examples/tsunami_town/README.md. The Japanese file is the master copy.
 
 [日本語](../README.md)
 
-A tsunami runs up into a low-lying coastal town, destroys wooden houses,
-carries the debris inland and deposits it. This phenomenon is estimated
-with the combination of the **building destruction and debris module
-fn_bldgdebris**
-([docs/users_guide/bldgdebris.md](../../../docs/en/users_guide/bldgdebris.md),
-developer.md §63) and the **tide forcing fn_tide** (the tsunami waveform),
-plus, in the comparison cases, the **driftwood module fn_driftwood** (§50).
-Four things can be compared side by side on the same terrain with the same
-waveform: the damage-function type destruction criterion, the raster
-transport of debris, the effect of the void-ratio change caused by
-destruction feeding back to the flow, and the increase of destructive
-force by driftwood. No code change (settings only). One main case plus
-three comparison cases.
+When a tsunami overtops a seawall and flows into a town, deeply flooded wooden houses break
+and are swept away, becoming debris carried by the flow. The debris is carried inland and
+deposited, and part of it goes out to sea with the backwash. This example solves the tsunami
+run-up, the destruction of houses by inundation depth, and the transport and deposition of
+debris in a single run, and compares how the damage and the fate of the debris change with the
+tsunami height, the seawall height and whether the opening in the seawall (a land lock or sluice
+gate) is closed. The values are schematic, chosen to make the phenomena easy to see; the
+example does not reproduce any particular tsunami.
 
-## Geometry and setup
+## What happens in a real tsunami
 
-![Setup](../figs/setup.png)
+- **Damage to wooden houses rises sharply around 2 m of inundation**: in the correspondence
+  between tsunami intensity and damage, wooden houses are partly destroyed at about 1 m of
+  inundation and totally destroyed above 2 m (Shuto 1993). Fragility functions compiled from the
+  damage of the 2011 Great East Japan Earthquake also show the share of wooden houses destroyed
+  or washed away rising sharply around 2 m (Suppasri et al. 2013). Reinforced concrete and steel
+  buildings were reported to be damaged beyond reuse at a low rate (MLIT 2011-2012).
+- **Destroyed houses become debris that is carried away, part of it staying on land and part
+  going to sea**: in the Great East Japan Earthquake, the disaster waste left on land along the
+  coasts of Iwate, Miyagi and Fukushima was estimated at about 16 million t, and the tsunami
+  deposits at about 10 million t (Cabinet Office 2013). About 5 million t was estimated to have
+  flowed into the sea from the same three prefectures, about 30 % of which became drifting
+  debris (Ministry of the Environment 2012).
+- **Closing the openings in a seawall is life-threatening work**: seawalls have openings
+  (land locks and sluice gates) for roads and rivers, and if they are not closed the tsunami
+  enters through them. In the Great East Japan Earthquake 254 volunteer firefighters died or
+  went missing (Fire and Disaster Management Agency 2012); in response to the loss of people
+  operating sluice gates and land locks, the government revised its guidelines to put the safety
+  of the operators first and to promote automation and remote operation (MLIT 2013).
 
-Left: terrain, the coastal dike (black) and the opening (dashed). Center:
-destructible building stock (wooden fraction included; 100 % on the sea
-side → 40 % inland). Right: the tsunami waveform (idealized leading wave
-only).
+## Mechanisms needed for the reproduction
 
-1,200 m × 600 m, dx = dy = 10 m (120 × 60 cells). From the west:
+![Schematic of the mechanisms](figs/mechanism.png)
+
+(a) The tsunami overtops the seawall; deeply flooded houses near the shore break into debris,
+which is carried inland and returns to sea with the backwash. (b) In this model, house
+destruction starts once the inundation depth exceeds 1 m and is fastest at 3 m (the multiplier
+of the destruction rate; the dashed line is a schematic of the shape of a fragility curve).
+
+| Real phenomenon | How ENCflow represents it | Settings |
+|---|---|---|
+| A tsunami arrives from offshore | A time series of the offshore water level is given to the westmost column of the domain (sea mask). The generation and propagation of the tsunami are not treated | `fn_tide` (`tival`) |
+| A seawall and its opening | A step in the terrain (crest +2 m, opening +0.5 m) | `fn_z` |
+| Buildings obstruct the flow | Building porosity (buildings occupy 40 % of the area) | `fn_gv` |
+| Wooden houses break where the inundation is deep | The house stock starts to turn into debris once the inundation depth exceeds 1 m, fastest above 3 m (an approximation of the width of a fragility curve) | `fn_bldgdebris`, `f_bdcrit = 1`, `bd_hcrit`, `bd_hcrit2` |
+| Reinforced concrete buildings become more common inland | The wooden share is folded into the house stock (100 % on the seaward side → 40 % inland) | `fn_bdstock`, `fn_bdfrac` |
+| The sites of destroyed houses let the flow through | The building porosity rises with the destroyed fraction | `f_bdgv = 1` |
+| Debris rides the flow and settles where it is shallow or the flow stops | The debris is carried with the same flow as the water and settles where it is shallow (below its draft) or the flow is slow | `bd_wstop`, `bd_vstop` |
+| The backwash carries debris to sea | The sea and the beach are ordinary cells too (a solved sea), so that debris can pass through the sea and leave the domain at the west end | `fn_sw` (only the westmost column is sea) |
+
+## Geometry and settings
+
+![Settings](figs/setup.png)
+
+Left: terrain and seawall (black; the dashed part in the middle is the opening). Centre:
+destructible house stock (wooden share included) and the three zones used for the totals.
+Right: tsunami waveforms (offshore level) and seawall crests.
+
+1,200 m × 600 m, dx = dy = 10 m (120 × 60 cells). From west to east:
 
 | x (m) | Cell index i | Terrain | Role |
 |---|---|---|---|
-| 0–10 | 1 | z = −5 m, sea mask | Entrance of the tide forcing (tsunami waveform) |
-| 10–150 | 2–15 | z = −5 m | Sea (ordinary cells + initial water level = a solved sea) |
-| 150–250 | 16–25 | z = −2 → 0 m | Beach and log yard. In the driftwood case, timber stock 1.0 m³/m² (60,000 m³ in total) |
-| 250–270 | 26–27 | z = +2.0 m | Coastal dike. The center y = 240–360 m (j = 25–36) is an **opening at z = +0.5 m** |
-| 270–1,200 | 28–120 | Gentle slope z = +0.5 → +3.0 m | Town. Building void ratio **gv = 0.6**. Building stock 0.3 m³/m² × wooden fraction (100 % → 40 %) = **117,180 m³ in total**. Destructible share fn_bdfrac = wooden fraction |
+| 0-10 | 1 | z = −5 m, sea mask | column that receives the tsunami level |
+| 10-150 | 2-15 | z = −5 m | sea (ordinary cells + initial water level) |
+| 150-250 | 16-25 | z = −2 → 0 m | beach |
+| 250-270 | 26-27 | z = +2.0 m | seawall. The central y = 240-360 m (j = 25-36) is an **opening at z = +0.5 m** (where a land lock, sluice gate or road gap is open) |
+| 270-1,200 | 28-120 | z = +0.5 → +3.0 m | town. Building porosity 0.6 (buildings occupy 40 %). House stock 0.3 m³/m² × wooden share (100 % seaward → 40 % inland) = 117,180 m³ in total |
 
-The initial water level is a uniform T.P. 0 m (f_htype=2). The tsunami is
-given as a uniform time series on the sea cells of the westernmost column:
-starting 5 minutes in, it reaches **+4.0 m** in 10 minutes, holds for
-10 minutes, and returns to 0 m in 10 minutes (leading wave only; it
-overtops the dike crest of +2.0 m by 2 m). The east, north and south edges
-are the default walls. dt = 0.5 s, 1 hour. The computation takes a little
-over 1 minute per case.
+- **Tsunami**: the offshore level rises from 5 minutes to +4 m (or +3 m) in 10 minutes, stays
+  for 10 minutes and returns in 10 minutes (a single idealised wave). The initial water level is
+  0 m, so the sea and the beach are under water and the land is dry. The east, north and south
+  edges are closed (the town is a closed lowland).
+- **House destruction**: houses start to break once the inundation exceeds 1 m and break fastest
+  above 3 m (a rate at which 0.3 m³/m² of house stock is fully destroyed in 10 minutes). 30 % of
+  the destroyed amount settles on the spot (tiles, foundations and so on) and 70 % rides the flow
+  as debris. The debris has a representative size of 0.3 m and an apparent specific gravity of
+  0.5 (draft 0.15 m), and it settles where the water is shallower than its draft or the flow is
+  slower than 0.05 m/s.
+- The run is 1 hour, dt = 0.5 s.
 
-Debris has a representative size of 0.3 m and an apparent specific gravity
-of 0.5 (draft 0.15 m). The destruction criterion of the main case is the
-inundation depth (f_bdcrit=1), a linear ramp from the threshold 1.0 m to
-3.0 m (an approximation of the width of the damage function of wooden
-houses in the Tohoku tsunami), destruction rate 5.0e-4 m/s (0.3 m³/m²
-fully destroyed in 10 minutes), sinking fraction 0.3, velocity threshold
-of slow-flow deposition 0.05 m/s, and feedback to the void ratio on
-(f_bdgv=1).
-
-| Case | Parameter file | Criterion | Feedback | Driftwood | Purpose |
-|---|---|---|---|---|---|
-| Main | param.txt | Inundation depth 1.0–3.0 m | Yes | — | Damage-function type destruction criterion + feedback |
-| One-way | param_oneway.txt | Ditto | **No** | — | Control for the effect of the feedback |
-| Load | param_load.txt | Load 1.0–4.0 m³/s² | Yes | — | Fluid-force based criterion |
-| Load + driftwood | param_load_dw.txt | Ditto | Yes | **Yes** | Increase of destructive force by driftwood |
-
-## Key points of the setup (reasons for the settings)
-
-1. **Do not put the sea, the beach and the town in the sea mask.** Debris
-   and driftwood cannot be placed on sea cells and advection does not act
-   there, so the whole range in which inundation and transport are solved
-   is represented by ordinary cells + initial water level, and the sea
-   mask + tide forcing is limited to the westernmost column (the same
-   style as examples/timberyard). The tsunami is received as an offshore
-   water-level time series (generation and propagation are external).
-2. **Fold the wooden fraction into the building stock fn_bdstock.** The
-   volume that can become debris is 0.3 m³/m² × wooden fraction, assuming
-   more RC and tsunami-resistant structures further inland.
-   **fn_bdfrac (= wooden fraction)** sets the upper bound of the
-   void-ratio feedback: the RC structures keep occupying their footprint
-   even after total destruction, so gv rises only to gv0 + (1 − gv0)·fw.
-3. **The inundation-depth criterion is a reinterpretation of the damage
-   function.** A linear ramp in which destruction starts at threshold 1
-   (1.0 m) and the destructible rate reaches 1 at threshold 2 (3.0 m).
-   Read the median of the damage function as the midpoint of the two
-   thresholds and its width as the ramp width. The destruction rate is
-   set from "time to total destruction = stock ÷ rate" (here 10 minutes =
-   the holding time of the incoming wave).
-4. **The thresholds of the load criterion (f_bdcrit=2) are in the unit of
-   F9999** (m³/s², freshwater-normalized). Look at the distribution of the
-   water-only maximum fluid force F9999 and place the two values "total
-   destruction up to here, no damage beyond here" at thresholds 1 and 2.
-   The driftwood and debris terms are included in the load Fd9999 (see
-   the reading below).
-5. **In the driftwood case the recruitment threshold dw_hrec is set above
-   the normal water depth on the beach** (3.0 m). The timber is washed
-   out only once the tsunami raises the water level (the same style as
-   timberyard).
-6. **The feedback to the void ratio f_bdgv** is compared by switching 0/1
-   in the same case (the one-way case). With the feedback, the water of
-   destroyed cells spreads over a larger area, the water level falls, and
-   the destruction inland decreases.
+| Case | Settings file | Tsunami | Seawall crest | Opening |
+|---|---|---|---|---|
+| Tsunami +4 m, seawall +2 m | param.txt | +4 m | +2 m | open (+0.5 m) |
+| Tsunami +3 m, seawall +2 m | param_t3.txt | +3 m | +2 m | open |
+| Seawall +3 m, opening open | param_wall3.txt | +4 m | +3 m | open |
+| Seawall +3 m, opening closed | param_wall3c.txt | +4 m | +3 m | closed (+3 m) |
 
 ## How to run
 
 ```
 cd examples/tsunami_town
-make                                   # link to ../../bin/encflow
-python3 make_terrain.py                # the z sw gv bdstock bdfrac dwstock .txt files
-./encflow param.txt                    # main case (about 1 minute)
-./encflow param_oneway.txt             # no feedback
-./encflow param_load.txt               # load criterion
-./encflow param_load_dw.txt            # load criterion + driftwood
-python3 plot_results.py                # figs/*.png and tables (draws only the result_* that exist)
+make                    # links and inputs (make_terrain.py)
+make run                # run the 4 cases in turn (about 20 seconds per case on 4 threads)
+make supp               # the 3 supplement cases (optional)
+python3 plot_results.py # figs/*.png and the table (with the argument en, the English version goes to en/figs/)
 ```
 
-Output (result/): frames of H and V every 5 minutes, **Bf (moving debris),
-Bd (deposited debris), Bs (destruction ratio of houses)**, run maxima
-(H9999, V9999, F9999, **Bd9999 = maximum reach of the debris**,
-**Fd9999 = maximum fluid force including driftwood and debris**), and
-bldgdebris.csv (the volume ledger, every minute). The driftwood case also
-writes Hd, Wd and driftwood.csv.
+## Results
 
-## Results (2026-10-17; gfortran, dt = 0.5 s, f_advection_scheme = 3)
+![Maximum depth, houses destroyed and deposited debris](figs/maps.png)
 
-![Volume ledger](../figs/ledger.png)
+Top: maximum inundation depth; middle: houses destroyed at 60 minutes (the fraction turned into
+debris); bottom: debris deposited at 60 minutes (column amount). Black = seawall, dashed = open
+opening.
 
-Left: remaining building stock (4 cases) and the tsunami waveform. Right:
-moving debris (solid) and deposited debris (dashed). Destruction begins
-around 10 minutes, when the dike is overtopped, and proceeds during the
-holding period of the incoming wave (15–25 minutes). The main case with
-feedback (blue) stops at 96 %, while the case without feedback (gray) is
-totally destroyed. The load criterion (green, orange) gives 59 %, nearly
-identical with and without driftwood.
+![Progress of destruction and fate of the debris](figs/series.png)
 
-![Inundation depth and moving debris](../figs/frames.png)
+Left: share of houses destroyed over time (blue band = the 10 minutes of peak inflow, grey band =
+backwash). Right: where the debris is at 60 minutes (1000 m³).
 
-Time evolution of inundation depth H (top) and moving debris Bf (bottom)
-in the main case. 10 min: inundation starts through the opening, and
-debris generation appears behind the dike. 15–20 min: the whole dike is
-overtopped, the town is flooded up to +4 m, and the debris moves inland
-with the front (x ≈ 900 m). 26 min: debris peak (66,595 m³ floating).
-30 min: the debris begins to return seaward with the drawdown.
+| Case | Max inundation depth in the town (max / mean) | Area flooded ≥ 2 m | Houses destroyed (all / seaward / middle / inland) | Deposited in the town | Deposited on the beach and sea | Carried offshore |
+|---|---:|---:|---:|---:|---:|---:|
+| Tsunami +4 m, seawall +2 m | 4.83 / 3.62 m | 100 % | 96 / 100 / 100 / 88 % | 88,547 m³ | 7,029 m³ | 16,672 m³ |
+| Tsunami +3 m, seawall +2 m | 2.82 / 1.76 m | 35 % | 49 / 94 / 48 / 6 % | 29,387 m³ | 4,047 m³ | 23,419 m³ |
+| Seawall +3 m, opening open | 3.87 / 2.72 m | 84 % | 90 / 100 / 100 / 70 % | 49,683 m³ | 2,390 m³ | 50,076 m³ |
+| Seawall +3 m, opening closed | 2.96 / 1.87 m | 42 % | 71 / 100 / 97 / 13 % (60 / 100 / 68 / 10 % at 35 min) | 83,131 m³ | 0 | 0 |
 
-![Destruction ratio](../figs/damage.png)
+Seaward = x 270-500 m, middle = 500-800 m, inland = 800-1,200 m. "Houses destroyed" is the
+fraction of the house stock turned into debris by 60 minutes. Debris is in the same units as
+the house stock (m³); the amount still floating at 60 minutes (hundreds to thousands of m³) is
+left out of the table.
 
-Final destruction ratio Bs. With the inundation-depth criterion (top row)
-almost the entire town is totally destroyed, but with feedback (left) the
-destruction ratio inland (x > 900 m) stays at 0.83 on average (minimum
-0.71). The load criterion (bottom row) gives total destruction in the jet
-region behind the opening, high values on the overtopped parts of the
-dike (stripes in the y direction), and a linear decrease inland. The
-difference with and without driftwood (left and right) is invisible.
+- **With a +4 m tsunami almost the whole town is destroyed**: the tsunami overtops the seawall
+  by 2 m and the whole town is flooded 2 m or more. Houses on the seaward side and in the middle
+  are all destroyed, and even inland, where reinforced concrete buildings are more common, 88 %
+  of the wooden houses break. Most of the destroyed houses (89 thousand m³) settle in the town,
+  and 17 thousand m³ (15 % of the destroyed amount) goes offshore with the backwash.
+- **A tsunami 1 m lower destroys half as many houses**: with a +3 m tsunami, only 35 % of the
+  town, mainly on the seaward side, is flooded 2 m or more. The seaward side is 94 % destroyed,
+  but the middle falls to 48 % and inland to 6 %. Because damage rises sharply around 2 m of
+  inundation, a small difference in tsunami height changes the extent of the damage a lot. The
+  destroyed houses are close to the sea, so 40 % of the debris (23 thousand m³) goes offshore
+  with the backwash.
+- **Raising the seawall does little while the opening is open**: even with the crest raised to
+  +3 m, the tsunami enters through the 120 m opening, 84 % of the town is flooded 2 m or more and
+  90 % of the houses break. The backwash also gathers at the opening and flows out fast, carrying
+  half of the debris (50 thousand m³) offshore.
+- **Closing the opening as well protects the inland area**: only the water overtopping the
+  seawall by 1 m enters, and the inland destruction falls to 13 %. All the debris stays behind
+  the seawall and none goes offshore. However, the water that entered stays behind the closed
+  seawall (1.3 m on average over the town at 60 minutes), and in this model houses keep breaking
+  while they stay flooded. The destruction at 35 minutes, when the backwash ends, is 60 % (68 %
+  in the middle), and it grows to 71 % (97 % in the middle) during the standing water that
+  follows. Houses standing in still water are rarely swept away in reality, so this increase is
+  an overestimate (see "What this model cannot represent" below).
 
-![Reach, deposition and fluid force](../figs/deposit.png)
+## What this model cannot represent (differences from real phenomena)
 
-Maximum reach of debris Bd9999 (top left), final deposition (top right),
-maximum fluid force including driftwood and debris Fd9999 (bottom left),
-and water-only F9999 (bottom right) in the main case. The debris reaches
-the whole town (reach x ≈ 1,195 m = the eastern edge), and the final
-deposition concentrates along the axis of the jet from the opening and in
-the stagnant areas inland. The debris that went out to sea with the
-drawdown (coloring on the beach and sea) is also visible.
+- **Houses also break with time under water**: in this model house destruction progresses with
+  time at a rate set by the inundation depth (fully destroyed in 10 minutes at 3 m). Real
+  fragility functions relate the maximum inundation depth to the damage and do not include the
+  time under water. The difference is small while the tsunami flows in, but where water stays,
+  as behind the closed seawall, houses keep breaking even in still water. With a criterion based
+  on the force of the flow (the load hV² criterion in the supplement), houses do not break in
+  standing water.
+- **Debris moves at the speed of the water**: the motion of individual houses or pieces of
+  debris, their impact on buildings and damming by snagging are not represented. The impact
+  force of debris is obtained by post-processing from the maximum velocity and the size of the
+  debris (the impact formulas of FEMA P-646 and NILIM Technical Note 905).
+- **Deposited debris does not become terrain**: deposited debris does not raise the ground and
+  does not block the sites of destroyed houses again.
+- **Only one wave**: a real tsunami arrives in several waves, and later waves carry the debris
+  made by earlier ones.
+- **The seawall does not fail**: erosion of the ground on the landward side of the seawall by
+  overtopping, which can make the seawall fail, and ground subsidence are not treated.
+- **Scale**: the domain is 1.2 km × 0.6 km, and the town is a closed lowland. The values are
+  schematic.
 
-![Profiles](../figs/profile.png)
+## Notes
 
-Profiles along the row through the opening (y = 295 m). Top: time
-evolution of the water surface (solid = with feedback, dotted = without).
-At 25 minutes the water surface without feedback piles up to more than
-+5 m (water is forced into the narrow storage of void ratio 0.6), whereas
-with feedback it is around +4 m (the void ratio of totally destroyed cells
-becomes 1 and the same water spreads over a larger area). Bottom:
-destruction ratio (4 cases) and maximum reach of debris (main case,
-normalized by 0.3).
+- **Do not put the sea and the beach under the sea mask**: sea-mask cells cannot hold debris and
+  do not carry it, so the whole area where inundation and debris transport are solved (sea,
+  beach and town) is made of ordinary cells, and the sea is filled by the initial water level.
+  The sea mask is only the westmost column that receives the tsunami level.
+- **Fold the wooden share into the house stock**: the destructible amount is 0.3 m³/m² × wooden
+  share. `fn_bdfrac` (wooden share) sets the upper limit to which the porosity can rise even when
+  everything is destroyed (reinforced concrete buildings remain, so the porosity does not reach 1).
+- **"How far it reached" and "where it remained"**: Bd9999 is the maximum amount including where
+  debris only passed (the reach), and Bd in the last frame is what settled and remained. The
+  volume is the column amount × porosity × cell area. The porosity changes as houses break, so
+  use the ledger (bldgdebris.csv, converted with the porosity at each time) for the totals.
+- **Debris carried offshore**: the total house stock minus the remaining houses, the floating
+  debris and the deposited debris; it is what left the domain through the westmost column.
 
-| Case | Destroyed volume | Destruction ratio | Final deposition | Floating remainder | Outflow from the system (to sea) | Maximum depth in the town |
-|---|---|---|---|---|---|---|
-| Main (depth, with feedback) | **113,005 m³** | **96.4 %** | 86,574 | 1,173 | 25,258 | 4.81 m |
-| One-way (no feedback) | 117,180 | 100.0 % | 81,816 | 387 | 34,977 | 5.65 m |
-| Load criterion | 69,647 | 59.4 % | 48,295 | 379 | 20,973 | 4.80 m |
-| Load criterion + driftwood | 69,981 | 59.7 % | 48,510 | 385 | 21,087 | 4.81 m |
+## Starting points for sensitivity tests
 
-Breakdown of the main case (x 270–500 / 500–800 / 800–1,200 m):
-38,430 / 40,793 / 33,782 m³ (total / total / 89 %). The outflow from the
-system is the ledger residual total stock − (remaining stock + floating +
-deposited), the part that went out to the sea cells on the drawdown. Of
-the 60,000 m³ of timber in the driftwood case, 35,795 m³ was washed out,
-16,917 m³ deposited and 18,589 m³ returned to the sea.
+- `tival` (tsunami height and duration): the area flooded more than 2 m deep sets the extent of
+  the damage.
+- The seawall crest and the rows of the opening in make_terrain.py: how much water enters, and the
+  path of the backwash.
+- `bd_hcrit`, `bd_hcrit2` (the depth at which houses start to break and at which they break
+  fastest) and `bd_wdes` (how fast they break): the position and width of the fragility curve and
+  how much the time under water matters.
+- `fn_bdstock`, `fn_bdfrac` (wooden share): scenarios with more reinforced concrete buildings.
+- `bd_fsink` (share that settles on the spot) and `bd_vstop` (velocity below which debris settles):
+  where the debris remains and how much goes offshore.
 
-## How to read the results
+## Supplement: the destruction criterion, driftwood and porosity feedback
 
-- **The last frame of Bs (destruction ratio) is the damage-ratio map.**
-  Conversion to numbers of houses or monetary values is post-processing
-  (stock × Bs × gv × area for the debris volume, a building register for
-  the number of houses).
-- **Bd9999 shows "how far it reaches", the last frame of Bd "where it
-  remains"** (the same distinction as Wd9999 / Wd9998 for driftwood). The
-  conversion to volume is columnar amount × gv × cell area; since gv
-  changes with the feedback, **use the values of the ledger CSV** (the CSV
-  is already converted with the current gv. In a closed domain the sum
-  equals the total stock to machine precision; in this case it decreases
-  only by the outflow to the sea cells).
-- **The difference between Fd9999 and F9999 is the contribution of the
-  floating material.** In this case the difference is at most 6 % (in the
-  jet region behind the opening), and the effect on the destruction ratio
-  is 0.3 points. 60,000 m³ of timber spread over the 70 ha of inundated
-  area amounts to only about 0.1 m³/m² of columnar amount, and the added
-  mass against a 3–5 m water column stays at a few %. The effect of
-  driftwood **concentrating** by jamming or catching on houses is not
-  represented in a raster (the application limits in
-  [users_guide/driftwood.md](../../../docs/en/users_guide/driftwood.md)),
-  so read the driftwood term of this module as "the average increase of
-  load in a flow with dilute floating material". The impact load of
-  individual pieces is post-processed from V9999 and the representative
-  diameter as before (NILIM Technical Note 905 §4.3, FEMA P-646).
-- **The effect of the feedback appears in both water level and
-  destruction ratio.** Without feedback the town is filled as "a narrow
-  container of void ratio 0.6", the water level is high, and everything
-  is destroyed. With feedback, the void space of the totally destroyed
-  seaward cells opens, the water spreads, the inundation depth inland
-  falls and the destruction ratio decreases (96 % vs 100 %). At the same
-  time the debris returning to the sea on the drawdown decreases by 30 %
-  (25,258 vs 34,977 m³) and the debris remaining inland increases (86,574
-  vs 81,816 m³). Which is closer to reality depends on whether a
-  destroyed lot becomes "cleared ground that passes the flow" or "stays
-  blocked by debris". This module takes the former (deposited debris does
-  not re-close the void space); the latter is out of scope.
+With the same tsunami and terrain as the main case (tsunami +4 m, seawall +2 m), three cases
+change how house destruction is decided.
 
-## Properties to know (reasons for the settings)
+| Case | Settings file | What changes |
+|---|---|---|
+| Porosity not raised by destruction | param_oneway.txt | `f_bdgv = 0` (the sites of destroyed houses keep obstructing the flow) |
+| Load hV² criterion | param_load.txt | `f_bdcrit = 2`, destruction starts at hV² = 1.0 m³/s² and is fastest at 4.0 m³/s² |
+| Load criterion + driftwood | param_load_dw.txt | as above, plus 60,000 m³ of timber (1.0 m³/m²) on the beach whose weight is added to the load once it floats (`fn_driftwood`) |
 
+![Supplement: houses destroyed](figs/supp_damage.png)
 
-- **The inundation-depth criterion is decided by "the inundation depth
-  alone"**, so the chain including driftwood and debris appears only in
-  the load criterion (f_bdcrit=2). Use the depth criterion when connecting
-  directly to practical damage functions, and the load criterion to see
-  the chain. To fit both thresholds from the same damage records, the
-  practical way is to compare the water-only F9999 and H9999 distributions
-  with the damage ratio.
-- **The load thresholds 1.0–4.0 m³/s² are calibration values placed from
-  the F9999 distribution of this case** (median 5–9, 4–5 inland), not
-  practical values. Raising the thresholds concentrates the destruction
-  on the sea side and makes the driftwood and debris contribution (a
-  few %) matter in the cells near the threshold, but the size of the
-  contribution itself does not change.
-- **The destruction rate trades off against the exposure time.** A larger
-  bd_wdes destroys almost everything the moment the threshold is exceeded
-  (approaching the "instantaneous judgement" of a damage function); a
-  smaller one lets the duration of the incoming wave matter (houses
-  survive a short tsunami).
-- **The sinking fraction bd_fsink is the lower bound of "the debris that
-  stays in place".** With 0.3, 30 % of the stock deposits on the spot and
-  the remaining 70 % floats and is carried inland or to sea. Use 0 for an
-  upper-bound assessment of the reach.
-- **The debris returns to the sea on the drawdown.** Since the domain is
-  not closed, the ledger residual becomes the outflow from the system.
-  The ratio of the debris remaining in the town after the drawdown (final
-  Bd) to the debris that went to sea (a problem for harbors and channels
-  as floating objects) is sensitive to the slow-flow deposition threshold
-  of dw/bd (bd_vstop) and refloating (bd_wfloat, off by default).
-- **The east, north and south edges are walls (default).** The town fills
-  as a closed lowland. For a town with a drainage outlet behind it, give
-  the boundaries of
-  [users_guide/boundary.md](../../../docs/en/users_guide/boundary.md).
+![Supplement: remaining houses and floating debris](figs/supp_ledger.png)
 
-## Starting points for sensitivity experiments
+| Case | Houses destroyed (all / seaward / middle / inland) | Max inundation depth in the town (max / mean) | Debris carried offshore |
+|---|---:|---:|---:|
+| Main (depth criterion) | 96 / 100 / 100 / 88 % | 4.83 / 3.62 m | 16,672 m³ |
+| Porosity not raised by destruction | 100 / 100 / 100 / 100 % | 5.65 / 4.40 m | 33,745 m³ |
+| Load hV² criterion | 60 / 83 / 67 / 31 % | 4.63 / 3.66 m | 18,585 m³ |
+| Load criterion + driftwood | 61 / 83 / 67 / 31 % | 4.63 / 3.66 m | 18,663 m³ |
 
-- Peak level and duration of the tsunami (tival): the destruction ratio
-  of the depth criterion is sensitive to the water level, and the load
-  criterion to the velocity (the drop of the overtopping flow, the jet
-  through the opening).
-- Dike crest and width of the opening (make_terrain.py): determine the
-  spatial pattern of the load criterion.
-- fn_bdfrac (wooden fraction) and fn_gv: scenarios of tsunami-proofing
-  and urbanization. Replace the stock and fw together (item 2 of "Key
-  points of the setup" in this README).
-- bd_hcrit / bd_hcrit2, bd_fcrit / bd_fcrit2: median and width of the
-  damage function.
-- bd_wdes, bd_fsink, bd_vstop, bd_wfloat: see "Properties to know" above.
-- Amount and placement of driftwood (dwstock.txt): the contribution of
-  the driftwood term is determined by "the columnar amount of timber
-  relative to the water column". A concentrated log yard (timberyard
-  type) placed right in front of the opening increases the contribution.
+- **Porosity feedback**: when the sites of destroyed houses let the flow through, the water
+  spreads over a larger area, the level falls and inland destruction decreases (100 % → 96 %).
+  Without the feedback the town fills as a "narrow container with 0.6 porosity" and the maximum
+  inundation depth reaches 5.65 m. The debris going offshore with the backwash is also halved with
+  the feedback. Which is closer to a real disaster area depends on whether the sites of destroyed
+  houses become "open ground that lets the flow through" or stay "blocked by debris" (this model
+  assumes the former).
+- **Destruction criterion**: with the load hV² criterion, destruction concentrates where the flow
+  is strong (the path of the flow entering through the opening, where water falls over the
+  seawall) and decreases inland (60 % in all). Houses do not break in standing water. The
+  thresholds of 1.0-4.0 m³/s² are calibration values set from the water-only maximum load of this
+  example (F9999; median 8.6 m³/s² over the town, 5.8 inland), not practical values. The depth
+  criterion links directly to the fragility functions used in practice; the load criterion is for
+  looking at the force of the flow and the chain with driftwood and debris.
+- **Driftwood adds a few percent**: 36,000 of the 60,000 m³ of timber on the beach floats away,
+  but the maximum load including driftwood (Fd9999) is only up to 5 % (3 % on average) larger
+  than the water-only load (F9999), and the houses destroyed increase by only 0.3 points. Spread
+  over the flooded area (about 56 ha), the timber is only about 0.06 m³/m² as a column, a few
+  percent of the weight of 3-5 m of water. Driftwood gathering by snagging on buildings is not
+  represented (a limit stated in the driftwood chapter).
 
-## Related
+## References
 
-- Description of the feature and parameter table: [docs/users_guide/bldgdebris.md](../../../docs/en/users_guide/bldgdebris.md); driftwood: [users_guide/driftwood.md](../../../docs/en/users_guide/driftwood.md); tide: [users_guide/tide.md](../../../docs/en/users_guide/tide.md)
-- List of applications: [docs/users_guide/usecases.md](../../../docs/en/users_guide/usecases.md)
-- Design, verification and literature cross-check: docs/developer.md §63 (the building destruction and debris module and the void ratio as a state variable; in Japanese)
-- Self-verification tests: [test/bldgdebris](../../../test/bldgdebris/en/README.md) (conservation laws, one-way coupling, volume conservation under feedback, restart) and [test/gvchange](../../../test/gvchange/en/README.md) (unit check of void-ratio changes) (in Japanese)
-- Example of the same type: [examples/timberyard](../../timberyard/en/README.md) (timber influx from a log yard by a storm surge)
+- Ministry of the Environment (2012): Estimate of the total amount of disaster waste that flowed
+  into the sea in the Great East Japan Earthquake (in Japanese).
+  https://www.env.go.jp/press/14948.html
+- MLIT (2011-2012): Results of the survey of damage in the Great East Japan Earthquake (1st and
+  2nd reports) (in Japanese). https://www.mlit.go.jp/toshi/toshi-hukkou-arkaibu.html
+- MLIT (2013): Guidelines for the management systems of sluice gates and land locks for tsunami
+  and storm surge measures (revised) (in Japanese).
+  https://www.mlit.go.jp/report/press/port07_hh_000040.html
+- Cabinet Office (2013): White Paper on Disaster Management 2013 (disaster waste and tsunami
+  deposits of the Great East Japan Earthquake) (in Japanese).
+  https://www.bousai.go.jp/kaigirep/hakusho/h25/honbun/1b_1s_02_02.htm
+- Fire and Disaster Management Agency (2012): Interim report of the study group on volunteer
+  fire corps activities in large-scale disasters after the Great East Japan Earthquake (in
+  Japanese).
+- Shuto, N. (1993): Tsunami intensity and disasters. In: Tinti, S. (ed.), Tsunamis in the World,
+  Kluwer, 197–216.
+- Suppasri, A., Mas, E., Charvet, I., Gunasekera, R., Imai, K., Fukutani, Y., Abe, Y. and
+  Imamura, F. (2013): Building damage characteristics based on surveyed data and fragility
+  curves of the 2011 Great East Japan tsunami. Natural Hazards, 66(2), 319–341.
+- FEMA (2012): Guidelines for Design of Structures for Vertical Evacuation from Tsunamis,
+  Second Edition. FEMA P-646.
+- National Institute for Land and Infrastructure Management (2016): Commentary on the technical
+  guideline for the design of debris flow and driftwood countermeasures. NILIM Technical Note
+  No. 905 (in Japanese).

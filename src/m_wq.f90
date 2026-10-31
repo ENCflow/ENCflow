@@ -80,7 +80,7 @@ module m_wq
   use m_parallel, only : dcp, is_root, par_info, par_stop, par_abort, par_sum_rows, &
                          par_gather_to, par_scatter_cell, par_allreduce_max, &
                          par_allreduce_maxi, par_allreduce_sumr
-  use m_util, only : itoa
+  use m_util, only : itoa, es_out
   implicit none
   private
   public :: t_wq
@@ -1426,10 +1426,10 @@ subroutine m_wq_record(wq, p, g, s)
   end do
 
   if (is_root .and. wq%un /= 0) then
-    write(wq%un, '(f0.2,20(",",es15.7))') s%t, v(1), v(2), v(7), v(8), v(11), v(9), &
+    write(wq%un, '(f0.2,20(",",es15.7))') s%t, es_out([v(1), v(2), v(7), v(8), v(11), v(9), &
                                           v(10), v(3), v(13), v(12), v(4), v(14), v(15), &
                                           v(5) + wq%dam_decay, v(6), &
-                                          msur, mgw, mpool, mdam, mrs
+                                          msur, mgw, mpool, mdam, mrs])
     flush(wq%un)
   end if
 end subroutine

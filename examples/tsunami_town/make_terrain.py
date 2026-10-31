@@ -1,12 +1,15 @@
 #!/usr/bin/env python3
-# 津波の市街地遡上・家屋破壊・瓦礫デモの入力生成
-#   (z.txt / sw.txt / gv.txt / bdstock.txt / bdfrac.txt / dwstock.txt)
+# examples/tsunami_town の入力生成(引数なしで全ファイルを書く。make が呼ぶ)
+#   z.txt / sw.txt / gv.txt / bdstock.txt / bdfrac.txt / dwstock.txt と、防潮堤を
+#   かさ上げした地形 z_wall3.txt(天端 +3.0 m、開口部は +0.5 m のまま)・
+#   z_wall3c.txt(天端 +3.0 m、開口部も +3.0 m = 閉じる)
 #   海岸の低平な市街地に津波(先行波のみの理想化波形。fn_tide の時系列)が
 #   遡上し、木造家屋を破壊して瓦礫を内陸へ運ぶ理想化実験。西から順に:
 #     i=1        : 海域マスク列(潮位強制 = 津波波形の入口)
 #     i=2..15    : 海(z=-5 m。通常セル+初期水位で湛水 = 解く海)
 #     i=16..25   : 浜・貯木場(z=-2 → 0 m。i=16..25 に流木ストック = 流木ケース用)
-#     i=26..27   : 海岸堤防(z=+2.0 m。中央 j=25..36 は開口部 z=+0.5 m)
+#     i=26..27   : 海岸堤防(z=+2.0 m。中央 j=25..36 は開口部 z=+0.5 m = 陸閘・
+#                  水門・道路の切れ目が開いている所)
 #     i=28..120  : 市街地(z=+0.5 → +3.0 m の緩勾配。建物空隙率 gv=0.6。
 #                  家屋ストック 0.3 m3/m2。木造率は内陸ほど低い(海側 100 % →
 #                  内陸 40 %: 耐津波構造・RC 造の割合が増える想定)で、
@@ -55,6 +58,12 @@ np.savetxt('gv.txt', gv, fmt='%.2f')
 np.savetxt('bdstock.txt', bdstock, fmt='%.4f')
 np.savetxt('bdfrac.txt', bdfrac, fmt='%.3f')
 np.savetxt('dwstock.txt', dwstock, fmt='%.3f')
-print('written: z.txt sw.txt gv.txt bdstock.txt bdfrac.txt dwstock.txt (%d x %d)' % (nx, ny))
+# 防潮堤のかさ上げ(天端 +3.0 m)。開口部は開いたまま / 閉じる
+for name, z_open in (('z_wall3.txt', 0.5), ('z_wall3c.txt', 3.0)):
+    zw = z.copy()
+    zw[:, 25:27] = 3.0
+    zw[24:36, 25:27] = z_open
+    np.savetxt(name, zw, fmt='%.4f')
+print('written: z.txt sw.txt gv.txt bdstock.txt bdfrac.txt dwstock.txt z_wall3.txt z_wall3c.txt (%d x %d)' % (nx, ny))
 print('building stock total = %.0f m3, timber stock total = %.0f m3'
       % (bdstock.sum() * 100.0, dwstock.sum() * 100.0))

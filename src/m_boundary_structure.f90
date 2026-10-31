@@ -20,7 +20,7 @@ submodule (m_boundary) m_boundary_structure
                          par_allreduce_sumr, par_allreduce_maxi, par_sum_rows
   use m_gwflow_conduit, only : t_gwcond, gwflow_conduit_ready, gwflow_conduit_head_of, &
                                gwflow_conduit_cap_of
-  use m_util, only : itoa
+  use m_util, only : itoa, es_out
   use m_sysdep_util, only : sysdep_mkdir
   use m_fileio, only : fileio_read_matrix
   use list_structure, only : t_list_structure, list_structure_read, &
@@ -1487,7 +1487,7 @@ subroutine init_dam(b, p, g, list, ofs, ndam)
       write(un, '("# lake =,",i3)') b%struct(ist)%lref - ofs   ! 参照先湖沼の番号
     end if
     write(un, '("# Vmin(m3) =,",es14.6,", Vmax(m3) =,",es14.6)') &
-          b%struct(ist)%geom(1), b%struct(ist)%geom(2)
+          es_out(b%struct(ist)%geom(1)), es_out(b%struct(ist)%geom(2))
     write(un, '("# t(hour), t(min), H(m), V(m3), Qin(m3/s), Qout(m3/s), Qspill(m3/s), Qgw(m3/s)")')
     b%struct(ist)%un = un
   end do
@@ -1828,7 +1828,7 @@ module subroutine m_boundary_dam_record(b, p, s)
     un = b%struct(ist)%un
     if (un == 0) cycle           ! 0 = 未開設(newunit は負値を返す)
     write(un, '(f13.4,",",f13.4,",",f13.4,",",es15.7,4(",",f13.4))') &
-          s%t / 3600, s%t / 60, b%struct(ist)%dh, b%struct(ist)%dv, &
+          s%t / 3600, s%t / 60, b%struct(ist)%dh, es_out(b%struct(ist)%dv), &
           b%struct(ist)%dqin, b%struct(ist)%dqout, b%struct(ist)%dqsp, &
           b%struct(ist)%dqgw
   end do

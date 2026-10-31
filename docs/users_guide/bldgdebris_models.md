@@ -130,7 +130,7 @@ Q = \sum_{i,j} A\left[w_{bs,ij} + f_{ij}\,(h_{bd,ij} + w_{bd,ij})\right]
 
 - [test/bldgdebris](../../test/bldgdebris/): 材積保存、流木との片方向結合、空隙率帰還時の水体積保存、分割継続。
 - [test/gvchange](../../test/gvchange/): 空隙率を変更する手続き単体の検定。
-- [examples/tsunami_town](../../examples/tsunami_town/): 津波の市街地遡上(流木なし/あり、浸水深判定/荷重判定、空隙率帰還あり/なしの比較)。
+- [examples/tsunami_town](../../examples/tsunami_town/): 津波の市街地遡上(津波の高さ・防潮堤のかさ上げ・開口部の閉鎖による被害と瓦礫の行き先。補足に流木なし/あり、浸水深判定/荷重判定、空隙率帰還あり/なしの比較)。
 
 ## 参考文献
 
