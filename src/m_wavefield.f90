@@ -71,7 +71,7 @@ module m_wavefield
   use list_wavefield, only : t_list_wavefield, list_wavefield_read, wf_nvalmax
   use m_restart, only : restart_write_cell, restart_read_cell
   use m_sysdep_util, only : sysdep_mkdir
-  use m_util, only : param_default, itoa, rtoa
+  use m_util, only : param_default, itoa, rtoa, es_out
   use m_parallel, only : par_info, par_warn, par_stop, dcp, is_root, par_halo_cell, par_allreduce_max, &
                          par_allreduce_sumi, par_sum_rows
   implicit none
@@ -3359,12 +3359,12 @@ subroutine write_steady(wf, g, s)
   if (is_root .and. wf%un /= 0) then
     if (wf%current) then
       write(wf%un, '(f0.2,",",i0,",",i0,",",es12.5,3(",",f0.4),11(",",es15.7))') s%t, s%it, wf%niter, &
-        wf%res, wf%hbc, wf%tbc, wf%dbc, v(l_in), v(l_out), v(l_abs), v(l_brk), v(l_fric), v(l_lim), &
-        v(l_dry), v(l_neg), imb, st, vb
+        es_out(wf%res), wf%hbc, wf%tbc, wf%dbc, es_out([v(l_in), v(l_out), v(l_abs), v(l_brk), v(l_fric), &
+        v(l_lim), v(l_dry), v(l_neg), imb, st, vb])
     else
       write(wf%un, '(f0.2,",",i0,",",i0,",",es12.5,3(",",f0.4),10(",",es15.7))') s%t, s%it, wf%niter, &
-        wf%res, wf%hbc, wf%tbc, wf%dbc, v(l_in), v(l_out), v(l_abs), v(l_brk), v(l_fric), v(l_lim), &
-        v(l_dry), v(l_neg), imb, st
+        es_out(wf%res), wf%hbc, wf%tbc, wf%dbc, es_out([v(l_in), v(l_out), v(l_abs), v(l_brk), v(l_fric), &
+        v(l_lim), v(l_dry), v(l_neg), imb, st])
     end if
     flush(wf%un)
   end if
@@ -3395,12 +3395,12 @@ subroutine write_unsteady(wf, g, s)
   if (is_root .and. wf%un /= 0) then
     if (wf%current) then
       write(wf%un, '(f0.2,",",i0,",",i0,3(",",f0.4),12(",",es15.7))') s%t, s%it, wf%nsub, wf%hbc, &
-        wf%tbc, wf%dbc, v(l_in), v(l_out), v(l_abs), v(l_brk), v(l_fric), v(l_lim), v(l_dry), v(l_neg), &
-        st, wf%store0, imb, vb
+        wf%tbc, wf%dbc, es_out([v(l_in), v(l_out), v(l_abs), v(l_brk), v(l_fric), v(l_lim), v(l_dry), &
+        v(l_neg), st, wf%store0, imb, vb])
     else
       write(wf%un, '(f0.2,",",i0,",",i0,3(",",f0.4),11(",",es15.7))') s%t, s%it, wf%nsub, wf%hbc, &
-        wf%tbc, wf%dbc, v(l_in), v(l_out), v(l_abs), v(l_brk), v(l_fric), v(l_lim), v(l_dry), v(l_neg), &
-        st, wf%store0, imb
+        wf%tbc, wf%dbc, es_out([v(l_in), v(l_out), v(l_abs), v(l_brk), v(l_fric), v(l_lim), v(l_dry), &
+        v(l_neg), st, wf%store0, imb])
     end if
     flush(wf%un)
   end if

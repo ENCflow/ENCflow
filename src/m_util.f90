@@ -1,4 +1,5 @@
 module m_util
+  use iso_fortran_env, only : real32, real64
   use m_parallel, only : par_stop, par_info
   implicit none
   private
@@ -10,6 +11,12 @@ module m_util
   public :: ymd_to_jdn
   public :: jdn_to_ymd
   public :: parse_datetime
+  public :: es_out
+
+  ! ES 書式で書く値の前処理(developer.md §4.3)。単精度・倍精度の両方を受ける
+  interface es_out
+    module procedure es_out_r4, es_out_r8
+  end interface
 
 contains
 !=======================================================================
@@ -166,6 +173,29 @@ pure function rtoa(r) result(s)
   write(buf,'(f0.5)') r
   s = trim(buf)
 end function rtoa
+
+
+!-----------------------------------------------------------------------
+! ES 書式で書く値の前処理(developer.md §4.3): 絶対値が 1e-99 より小さい
+! 値を 0 にする。指数の桁数を指定しない ES 書式(es15.7 など)は、指数の
+! 絶対値が 99 を超えると E を省いた 3 桁の指数(1.6125214-103)を書き、
+! CSV として読めなくなる。倍精度の計算で、運ばれる量の数値拡散の裾が
+! 合計・累積に入ったときに起きる(物理的には 0)。0・負のゼロ・NaN は
+! そのまま返す。単精度の最小値(約 1e-45)は 2 桁の指数で書けるので、
+! 単精度版は値を変えない
+!-----------------------------------------------------------------------
+elemental function es_out_r8(x) result(y)
+  real(real64), intent(in) :: x
+  real(real64) :: y
+  y = x
+  if (x /= 0.0_real64 .and. abs(x) < 1.0e-99_real64) y = 0.0_real64
+end function es_out_r8
+
+elemental function es_out_r4(x) result(y)
+  real(real32), intent(in) :: x
+  real(real32) :: y
+  y = x
+end function es_out_r4
 
 
 !----------------------------------------------------------------------
