@@ -187,9 +187,10 @@ pipe below the river surface does not empty).
 
 Summarizing where the water goes (out of the total rainfall of 61.0 mm):
 in E, 38.6 mm goes from the cliff into the river and 22.4 mm remains in
-the pipes; in F, 55.9 mm goes **from the outfall into the river**, 3.8 mm
+the pipes; in F, 56.2 mm goes **from the outfall into the river**, 3.5 mm
 from the cliff into the river, and 1.3 mm remains in the pipes (recomputed
-on 2026-10-22). The trunk of F carries more than 90 % of the rain,
+on 2026-10-22, and on 2026-10-31 with the default f_opening_dynamic = 3, which changes
+only the outfall 55.9 → 56.2 mm and the cliff 3.8 → 3.5 mm; developer.md §68.41). The trunk of F carries more than 90 % of the rain,
 consistent with the estimate pipe-full capacity 1.70 m³/s ≳ runoff
 1.40 m³/s.
 
@@ -202,7 +203,7 @@ consistent with the estimate pipe-full capacity 1.70 m³/s ≳ runoff
 | C | 21.6 | 39.4 | 61.0 | No trunk |
 | D | 36.4 | 24.6 | 61.0 | Consistent storage coefficients |
 | E | 0.0 (land) | 22.4 | 22.4 | With river. 38.6 mm from the cliff into the river |
-| F | 0.1 (land) | 1.2 | 1.3 | River + outfall. 55.9 mm (4459 m³) from the outfall into the river, 3.8 mm from the cliff |
+| F | 0.1 (land) | 1.2 | 1.3 | River + outfall. 56.2 mm (4489 m³) from the outfall into the river, 3.5 mm from the cliff |
 
 - In the closed runs A–D, S_total = the total rainfall of 61.0 mm is
   conserved to a rounding of 1e-13. The S columns of the Log in E and F are

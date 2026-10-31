@@ -78,13 +78,19 @@ result_A_nh / result_C_nh0 / result_C_nh: Hb (bed-layer thickness), Vb
 E (water level = z+h; the free surface of mixture cells is E + Hs) and the
 time series in probes/.
 
-## Results: the four hydrostatic patterns (recomputed 2026-10-06; gfortran, dt = 0.05 s)
+## Results: the four hydrostatic patterns (recomputed 2026-10-06 and, with the default f_opening_dynamic = 3, on 2026-10-31; gfortran, dt = 0.05 s)
 
 Recomputed after the fix of a real bug in the advection scheme (developer.md
 §69.9; out-of-domain reference of the "further upwind" cell in MUSCL) since
 the first version of 2026-09-30. The bed-layer-only A and C are unchanged;
 B and B0, which use the mixture, changed in the deposition in the shoreline
 zone and in the leading wave.
+Recomputed on 2026-10-31 with the default f_opening_dynamic = 3 (developer.md §68.41): A and
+C, which use only the bed layer, are nearly the same (the stopped and moving volumes of the bed
+layer move by a few %), while B and B0, whose mixture flows down the land, change in the
+deposition in the shoreline zone and in the leading wave (shoreline zone of B 1,164 → 883 m³,
+leading wave +1.0 → +1.2 m; reach of B0 242 → 232 m, leading wave +0.5 → +0.8 m). The tables and
+figures show the recomputed values.
 
 ![Profiles](../figs/profiles.png)
 
@@ -107,21 +113,21 @@ of the flat lake bottom (x ≈ 300 m); in B0 (mixture only) it piles up within
 | Case | Deposition in the shoreline zone (x 200–275 m) | Lake bottom (275–350 m) | Runout | Leading wave x=298 m | x=548 m |
 |---|---|---|---|---|---|
 | A debris avalanche | 213 m³ | 18,820 m³ | 332 m | +1.37 m (13 s) | +0.76 m (25 s) |
-| B debris flow → handover | 1,164 m³ | 16,665 m³ | 332 m | +1.02 m (20 s) | +0.53 m (33 s) |
-| B0 mixture only | 9,605 m³ | 0 m³ | 242 m | +0.54 m (22 s) | +0.26 m (34 s) |
-| C submarine landslide | 1 m³ | 17,516 m³ | 348 m | +1.58 m (2 s) / −1.20 m | +0.70 m (15 s) / −0.53 m |
+| B debris flow → handover | 883 m³ | 17,351 m³ | 332 m | +1.17 m (21 s) | +0.58 m (33 s) |
+| B0 mixture only | 9,482 m³ | 0 m³ | 232 m | +0.77 m (21 s) | +0.41 m (34 s) |
+| C submarine landslide | 1 m³ | 17,514 m³ | 348 m | +1.58 m (2 s) / −1.20 m | +0.70 m (15 s) / −0.54 m |
 
 Interpretation:
 
 - **A and B have almost the same underwater runout** (332 m). A moves at the
   terminal velocity from right after release, so it reaches the shoreline
   early (8 s); B flows down the land as a mixture with inertia and hands
-  over after plunging (16 s). B leaves 1,200 m³ in the shoreline zone before
-  the handover, and its leading wave is +1.0 m against +1.4 m for A.
+  over after plunging (15 s). B leaves 880 m³ in the shoreline zone before
+  the handover, and its leading wave is +1.2 m against +1.4 m for A.
 - **B0 does not run underwater.** The mixture loses its driving once the
   water surface becomes flat, so a wave from the increase in column height
-  right after plunging (+0.5 m) appears but the sediment stays at the
-  shoreline (the "free surface" of 3.2 m at x = 212 m is not water but a
+  right after plunging (+0.8 m) appears but the sediment stays at the
+  shoreline (the "free surface" of 3.4 m at x = 212 m is not water but a
   piled-up sediment column). To use the terrain results (position and
   thickness of the deposit), use B or A.
 - **In C the trough leads.** The bottom drops at the scar (x 220–290 m) and
@@ -129,12 +135,12 @@ Interpretation:
   +1.6 m from the uplift of the deposition front right after release,
   followed by −1.2 m from the scar.
 - The "plunge speeds" in the Log of B are the volume-weighted means of the
-  mixture velocity at handover (3.7 m/s) and the terminal velocity of the bed
+  mixture velocity at handover (3.1 m/s) and the terminal velocity of the bed
   layer (7.2 m/s). The mixture has mixed with the water column and
   decelerated before reaching the plunge cells, so in this case the handover
   loses no momentum (see the item on the bias below).
 
-## Results: comparison with the non-hydrostatic versions (2026-10-06)
+## Results: comparison with the non-hydrostatic versions (2026-10-06; recomputed 2026-10-31 with the default f_opening_dynamic = 3)
 
 ![Non-hydrostatic](../figs/nonhydro.png)
 
@@ -146,26 +152,26 @@ acceleration term, blue/green = non-hydrostatic + acceleration term).
 
 | Case | x=212 m | x=298 m | x=398 m | x=548 m | Underwater bed layer: stopped / moving (m³) |
 |---|---|---|---|---|---|
-| A hydrostatic | +1.53@8s / -1.08 | +1.37@13s / -0.36 | +0.99@18s / -0.25 | +0.76@25s / -0.24 | 18,400 / 710 |
-| A non-hydrostatic (no acceleration term) | +1.58@8s / -1.07 | +1.65@15s / -1.38 | +0.71@20s / -0.64 | +0.38@27s / -0.36 | 18,416 / 694 |
-| A non-hydrostatic + acceleration term | +1.53@8s / -1.06 | +1.06@15s / -0.71 | +0.64@20s / -0.53 | +0.35@26s / -0.29 | 15,264 / 3,846 |
-| C hydrostatic | +1.80@13s / -2.74 | +1.58@2s / -1.20 | +1.16@7s / -0.64 | +0.70@15s / -0.53 | 19,099 / 11 |
-| C non-hydrostatic (no acceleration term) | +2.19@10s / -3.00 | +1.95@2s / -2.08 | +0.65@18s / -0.90 | +0.43@25s / -0.49 | 19,048 / 62 |
-| C non-hydrostatic + acceleration term | +1.86@12s / -2.32 | +1.04@12s / -1.29 | +0.56@17s / -0.78 | +0.36@25s / -0.43 | 16,163 / 2,947 |
+| A hydrostatic | +1.53@8s / -1.08 | +1.37@13s / -0.36 | +0.99@18s / -0.25 | +0.76@25s / -0.24 | 18,372 / 738 |
+| A non-hydrostatic (no acceleration term) | +1.58@8s / -1.07 | +1.62@15s / -1.36 | +0.71@20s / -0.65 | +0.39@27s / -0.37 | 18,265 / 845 |
+| A non-hydrostatic + acceleration term | +1.53@8s / -1.06 | +1.06@15s / -0.71 | +0.64@20s / -0.53 | +0.36@26s / -0.30 | 15,350 / 3,760 |
+| C hydrostatic | +1.79@13s / -2.71 | +1.58@2s / -1.20 | +1.15@7s / -0.64 | +0.70@15s / -0.54 | 19,099 / 11 |
+| C non-hydrostatic (no acceleration term) | +1.93@14s / -2.95 | +1.95@2s / -2.09 | +0.65@18s / -0.91 | +0.44@25s / -0.50 | 19,076 / 34 |
+| C non-hydrostatic + acceleration term | +1.90@12s / -2.34 | +1.04@12s / -1.28 | +0.56@17s / -0.77 | +0.37@25s / -0.44 | 15,721 / 3,389 |
 
 Each entry is maximum@time / minimum (m). The bed-layer column gives the
 stopped and moving volumes at 120 s.
 
 - **Dispersion halves the far-field leading wave.** At the lake center
   (x = 398) 0.99 → 0.64–0.71 m, on the far-shore side (548) 0.76 →
-  0.35–0.38 m (A). The ratio of the slide length (70 m) to the water depth
+  0.36–0.39 m (A). The ratio of the slide length (70 m) to the water depth
   (40 m) is small (kH ≈ 1–3), in the range where the waves split and decay
   under the dispersion relation of the one-layer NH,
   ω² = gHk²/(1 + k²H²/4). The hydrostatic version (no dispersion) is on the
   side of overestimating the far-field wave height by about a factor of 2.
 - **The acceleration term acts in the near field (directly above the
   deposition zone).** The leading wave at the slope foot (x = 298) is
-  1.65 / 1.95 m without the acceleration term (higher than hydrostatic: the
+  1.62 / 1.95 m without the acceleration term (higher than hydrostatic: the
   bottom displacement of the 1–2 cells at the front of the slide is mapped to
   the surface without attenuation) and 1.06 / 1.04 m with it (the Kajiura
   filter removes the short waves). The effect on the far field is within
@@ -177,7 +183,7 @@ stopped and moving volumes at 120 s.
   ω → √(4g/H) (T = 6.3 s) and the group velocity becomes 0, so the short
   waves excited by the front of the slide stay where they were generated and
   shake the driving head Φ = z + r·h of the bed layer, and part of the bed
-  layer (A 3,800 m³, C 2,900 m³) never meets the stopping criterion and
+  layer (A 3,800 m³, C 3,400 m³) never meets the stopping criterion and
   keeps moving. Without the acceleration term it is about ±0.1 m. **This
   oscillation is superimposed on the water level directly above the
   deposition zone and on the stopped volume**, so for the near-field wave

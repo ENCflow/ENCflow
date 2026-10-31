@@ -815,74 +815,74 @@
     {
       "source": "examples/ashfall_lahar/README.md",
       "target": "examples/ashfall_lahar/en/README.md",
-      "source_sha256": "ca46fe339b5e76467e5db4e80d5483de303570174cd93bc7c6fe384139beea3b",
-      "target_sha256": "d5ac17cc476bd9a5a8f8178152c91253278e4148cea256d3e50b3313eceaf214",
-      "reviewer": "Claude (Claude Code session; full-text content and lexical review, no model execution)",
+      "source_sha256": "72ec83bb05846d28092d343331340ccf13fe39613579d8b7be54d0502a3c3e51",
+      "target_sha256": "491cabc153cdc995bf34eac6e245ab86de0549afb8469dfd54201190450d1e18",
+      "reviewer": "Claude (Claude Code session; example reruns with f_opening_dynamic default 3)",
       "method": "assistant",
-      "reviewed_on": "2026-10-30"
+      "reviewed_on": "2026-10-31"
     },
     {
       "source": "examples/ashfall_lahar/figs/maps.png",
       "target": "examples/ashfall_lahar/en/figs/maps.png",
-      "source_sha256": "9ea6e6ed5d7d748129ed670e437805d5cd5281d10a9f35f500a8883c8cabdc87",
-      "target_sha256": "4162f33476b3e160473f92723724f79041422d7a39ae377cccb067072960075c",
-      "reviewer": "Claude (Claude Code session; English figure drawn by the same script with the en switch; visual check)",
+      "source_sha256": "cea0054aeb28dc32682b6f7828c662514e79719681cba4a82f345bdc5394078e",
+      "target_sha256": "27bec10fc95cbf60e8b33534db859d0200573407b8c503d90558b5b56cd7eefb",
+      "reviewer": "Claude (Claude Code session; example reruns with f_opening_dynamic default 3)",
       "method": "assistant",
-      "reviewed_on": "2026-10-30"
+      "reviewed_on": "2026-10-31"
     },
     {
       "source": "examples/ashfall_lahar/figs/mechanism.png",
       "target": "examples/ashfall_lahar/en/figs/mechanism.png",
-      "source_sha256": "d14fb76b632913adbee67981c5038293970d45397e0d081d2c59c3250636d52a",
-      "target_sha256": "671b433c15a76015d76eba28eeb2eea2b6cb6953d26a88561c1874dc6631712a",
-      "reviewer": "Claude (Claude Code session; reviewed the Japanese source against the English mirror after merging main; figures from the same results and drawing code with label changes only, 2026-10-30)",
+      "source_sha256": "5cc0512619279743da4fe471f664e44a423f293c331e32345cb687be41bc3985",
+      "target_sha256": "fbf6f1e94da2a4ef8460f2c1f9bfd40b3d28f542ff8f09113d73cf03c7d28b72",
+      "reviewer": "Claude (Claude Code session; example reruns with f_opening_dynamic default 3)",
       "method": "assistant",
-      "reviewed_on": "2026-10-30"
+      "reviewed_on": "2026-10-31"
     },
     {
       "source": "examples/ashfall_lahar/figs/profile.png",
       "target": "examples/ashfall_lahar/en/figs/profile.png",
-      "source_sha256": "3fe27df94222d971d3aaaf36e209467c32e85077c145b28dd19398bbe752bffd",
-      "target_sha256": "b86a2726c77645483da74fcf5a69fa7b820f34e6d102828d7b282ce04909ea58",
-      "reviewer": "Claude (Claude Code session; English figure drawn by the same script with the en switch; visual check)",
+      "source_sha256": "c801f08e30813f3b0bf7ee125145d7d2a3a9925660d23bbcaf321501e7077517",
+      "target_sha256": "1210c78af6d913929e73f26f60af5cc759107caf3c372d7ec4d9f8d6b71827a2",
+      "reviewer": "Claude (Claude Code session; example reruns with f_opening_dynamic default 3)",
       "method": "assistant",
-      "reviewed_on": "2026-10-30"
+      "reviewed_on": "2026-10-31"
     },
     {
       "source": "examples/ashfall_lahar/figs/rotated.png",
       "target": "examples/ashfall_lahar/en/figs/rotated.png",
-      "source_sha256": "fe7e6f5ae541cc2a2e2ade8be3dfae2e77ac91666f88fd0d0bce9c4effd95e26",
-      "target_sha256": "68f2854adebd466f4edd2c37c5a7843813271a401c7d079fa1ae081d2cd5a765",
-      "reviewer": "Claude (Claude Code session; reviewed the Japanese source against the English mirror after merging main; figures from the same results and drawing code with label changes only, 2026-10-30)",
+      "source_sha256": "57a4fd5ed8994aaf0c8f9346f01436601abd28ff06c50927df2078b37ceb9e48",
+      "target_sha256": "9803402c3342a9ced6379050def72ee1146a326a55dd19d31fa818db881c2485",
+      "reviewer": "Claude (Claude Code session; example reruns with f_opening_dynamic default 3)",
       "method": "assistant",
-      "reviewed_on": "2026-10-30"
+      "reviewed_on": "2026-10-31"
     },
     {
       "source": "examples/ashfall_lahar/figs/rotated_profile.png",
       "target": "examples/ashfall_lahar/en/figs/rotated_profile.png",
-      "source_sha256": "4c408f4e389d8f6012e3879fb1161cd398e27c0c77f90f46823b9146ca9c2159",
-      "target_sha256": "a414ae5b8489807f2b06e0d3a84b75b0a3b83f7d675f63b6543da3930c82578b",
-      "reviewer": "Claude (Claude Code session; reviewed the Japanese source against the English mirror after merging main; figures from the same results and drawing code with label changes only, 2026-10-30)",
+      "source_sha256": "585d3f086ae7f7c38a2650465db696c8de1c86002fb413ce6c3fec963ebff7ae",
+      "target_sha256": "49e406cad8c4cd1386d5bb24c2cd385ea0fab6a2ffefd38fa4cda3b6f9ab8e0f",
+      "reviewer": "Claude (Claude Code session; example reruns with f_opening_dynamic default 3)",
       "method": "assistant",
-      "reviewed_on": "2026-10-30"
+      "reviewed_on": "2026-10-31"
     },
     {
       "source": "examples/ashfall_lahar/figs/series.png",
       "target": "examples/ashfall_lahar/en/figs/series.png",
-      "source_sha256": "b8ea9fad6e5d6f7900aa4ca0b40e57aab6ed725a510d04acad57531bcb9afad6",
-      "target_sha256": "24600dfbe85c2ed017821606abb808ce1ff0933960e2af922adb3ad1e156dfd7",
-      "reviewer": "Claude (Claude Code session; reviewed the Japanese source against the English mirror after merging main; figures from the same results and drawing code with label changes only, 2026-10-30)",
+      "source_sha256": "32b2466256238634542ae659030f5d72850ad951027068715e71f3b53d0ed369",
+      "target_sha256": "2a252909a8095d15e594c7cede96c4f9b70cc62ac59383a5288abd3906d1c221",
+      "reviewer": "Claude (Claude Code session; example reruns with f_opening_dynamic default 3)",
       "method": "assistant",
-      "reviewed_on": "2026-10-30"
+      "reviewed_on": "2026-10-31"
     },
     {
       "source": "examples/ashfall_lahar/figs/setup.png",
       "target": "examples/ashfall_lahar/en/figs/setup.png",
-      "source_sha256": "279110a912bada5ffe700d53c2efbd2e73431ebb221a812d77bdfa738c30133c",
-      "target_sha256": "9472ae40e96fa56e55b8598248e1b9b0f0a8a3aba25e7ea90c6fbc9f491494a2",
-      "reviewer": "Claude (Claude Code session; reviewed the Japanese source against the English mirror after merging main; figures from the same results and drawing code with label changes only, 2026-10-30)",
+      "source_sha256": "51fe7ff4e412b530f91e86bffc3447b14702853a7a4a9603933e2c5ac2b3c116",
+      "target_sha256": "4ea3e972ab124316f87875ab69b34f0f253031947cad71a1d3ef81661358a109",
+      "reviewer": "Claude (Claude Code session; example reruns with f_opening_dynamic default 3)",
       "method": "assistant",
-      "reviewed_on": "2026-10-30"
+      "reviewed_on": "2026-10-31"
     },
     {
       "source": "examples/badland/README.md",
@@ -1274,11 +1274,11 @@
     {
       "source": "examples/landslide_tsunami/README.md",
       "target": "examples/landslide_tsunami/en/README.md",
-      "source_sha256": "7b4c75c9285657bdf60d294cc3bfbeba5194e342e12e92b6c89b4a361b052fbf",
-      "target_sha256": "fa6ef254c09deb56802024d1077fec9ad15f1c9aa566dd2acc8b908c52f72b68",
-      "reviewer": "Claude (Claude Code session; full-text content and lexical review, no model execution)",
+      "source_sha256": "92aab28b2fce70f2bec52bd389d51e96c67a03dbe5dac6d3390d790607e7943c",
+      "target_sha256": "97245dc8b95c303d66f81ffb86aacc1bdac3d38e53a3e76ccb2cf4007c6c0d81",
+      "reviewer": "Claude (Claude Code session; example reruns with f_opening_dynamic default 3)",
       "method": "assistant",
-      "reviewed_on": "2026-10-23"
+      "reviewed_on": "2026-10-31"
     },
     {
       "source": "examples/levee_breach/README.md",
@@ -1508,63 +1508,63 @@
     {
       "source": "examples/sewer_hybrid/README.md",
       "target": "examples/sewer_hybrid/en/README.md",
-      "source_sha256": "81bbe2c30f6cc75bb8150f58728b107db3510e07402f3df43e2ee9feadef979a",
-      "target_sha256": "bf1557eae5c8ffb872414b66cb793d1f8ca26098349e81cefbde43ce7ff8df53",
-      "reviewer": "Claude (Claude Code session; English README figure links switched to en/figs; regenerated Japanese figures are byte-identical to the committed ones)",
+      "source_sha256": "9b64ee997a0852da02a308164800f623a65b7bdc2ef18ead70e8184929261fcd",
+      "target_sha256": "841e24c540f877f488f7af7ea121ef944c1a0deb2fbf1998d9b0d918c77216ca",
+      "reviewer": "Claude (Claude Code session; example reruns with f_opening_dynamic default 3)",
       "method": "assistant",
-      "reviewed_on": "2026-10-25"
+      "reviewed_on": "2026-10-31"
     },
     {
       "source": "examples/timberyard/README.md",
       "target": "examples/timberyard/en/README.md",
-      "source_sha256": "5d1296d94bf608f9eb33685bd212b85cd5afafb431abcafaaf7b3932a1a19000",
-      "target_sha256": "92fd26a9a0952acdfc662ddc75a209e2cee5854f58056de8e8d837ca927060f7",
-      "reviewer": "Claude (Claude Code session; reviewed the Japanese source against the English mirror; figures from the same results and drawing code with label changes only, 2026-10-31)",
+      "source_sha256": "8d935aac9a088473a3f878b3a8cd5f729449593e0ad48988a5bb4997bd57e272",
+      "target_sha256": "ebe1aec5166fc6d15c17c16116e7ba13a647baf7126ed789a40ffebe2e6aa168",
+      "reviewer": "Claude (Claude Code session; example reruns with f_opening_dynamic default 3)",
       "method": "assistant",
       "reviewed_on": "2026-10-31"
     },
     {
       "source": "examples/timberyard/figs/maps.png",
       "target": "examples/timberyard/en/figs/maps.png",
-      "source_sha256": "c898f65288827d697c0637977675d20384540967e2d51b61730be6357cd14f9a",
-      "target_sha256": "d26b2ca76a307516d0a9f9fed41061f7c15e709a80acbc2dd20b0b8bba5dba78",
-      "reviewer": "Claude (Claude Code session; reviewed the Japanese source against the English mirror; figures from the same results and drawing code with label changes only, 2026-10-31)",
+      "source_sha256": "c287011dd408ae5edea73a7014a6e31b95bb1efea062a4cc3ea4ed09c37656b1",
+      "target_sha256": "58585211210747f090db93bdf1e2073bc8484a47fae95e69841d45a1d1f5cfdd",
+      "reviewer": "Claude (Claude Code session; example reruns with f_opening_dynamic default 3)",
       "method": "assistant",
       "reviewed_on": "2026-10-31"
     },
     {
       "source": "examples/timberyard/figs/mechanism.png",
       "target": "examples/timberyard/en/figs/mechanism.png",
-      "source_sha256": "bf7e12675464da5c7f6429e6eb7e78419208e5c7392eaf0fcba23bfb7aa35f63",
-      "target_sha256": "b2258f312a4e99a0844c333d3899170847e0071ce30263322bc3a64a5ccbf9f2",
-      "reviewer": "Claude (Claude Code session; reviewed the Japanese source against the English mirror; figures from the same results and drawing code with label changes only, 2026-10-31)",
+      "source_sha256": "bdeca8d6276ff0410b53ea1c0b339ecd4a0b54db08f86d9416a5f1f4e86fdeec",
+      "target_sha256": "398091bb5d02b479020cd48e9ca3f3447bc7750bdb1bc82977216aaca53fdf46",
+      "reviewer": "Claude (Claude Code session; example reruns with f_opening_dynamic default 3)",
       "method": "assistant",
       "reviewed_on": "2026-10-31"
     },
     {
       "source": "examples/timberyard/figs/series.png",
       "target": "examples/timberyard/en/figs/series.png",
-      "source_sha256": "c66493dab47d7d844e7c17987508331e245eff19cf332d4b591b5371d26cef4a",
-      "target_sha256": "34b92782c317a7c22faf685505290f0ed732cde1cfa46f6333bc1d380cb7a6f0",
-      "reviewer": "Claude (Claude Code session; reviewed the Japanese source against the English mirror; figures from the same results and drawing code with label changes only, 2026-10-31)",
+      "source_sha256": "cbbfef4db9f3f0185c4edf5a054287fcb54bcc9f712c2abd396c2361e250126b",
+      "target_sha256": "cd866c39da436f0a60043a5b5cb9e73e0cc04f275e162494f55e417549d812aa",
+      "reviewer": "Claude (Claude Code session; example reruns with f_opening_dynamic default 3)",
       "method": "assistant",
       "reviewed_on": "2026-10-31"
     },
     {
       "source": "examples/timberyard/figs/setup.png",
       "target": "examples/timberyard/en/figs/setup.png",
-      "source_sha256": "b0e4f82d392aa5ee09e9e6467c6d8e76f3dd92e4f87c6784e0cc72e729f29619",
-      "target_sha256": "05ac292a60d3f004e5ded85cbda0bd7e10b47f35bf990c83624ff77a829673ff",
-      "reviewer": "Claude (Claude Code session; reviewed the Japanese source against the English mirror; figures from the same results and drawing code with label changes only, 2026-10-31)",
+      "source_sha256": "856cfb9e1dac44e0428bcdc1b9844c9c7e4fd0d86960e149064dddc625ad6075",
+      "target_sha256": "95bae175664ac00b8005b19360d420396a7f04a945b880085e195874aeaad8e0",
+      "reviewer": "Claude (Claude Code session; example reruns with f_opening_dynamic default 3)",
       "method": "assistant",
       "reviewed_on": "2026-10-31"
     },
     {
       "source": "examples/timberyard/figs/supp.png",
       "target": "examples/timberyard/en/figs/supp.png",
-      "source_sha256": "47511ec8fe59428546c5ad7254b04e433b05e413e957179fee673c621b4a4110",
-      "target_sha256": "20c62dd84b844e71c8f6e056bc9e40243d7ee009684e6e04c09501d622524ba8",
-      "reviewer": "Claude (Claude Code session; reviewed the Japanese source against the English mirror; figures from the same results and drawing code with label changes only, 2026-10-31)",
+      "source_sha256": "c3b105a79fe62a911ea5be2442594faccd6396d2a20e5a742b7bb930d9c15c34",
+      "target_sha256": "21f07222c8eb0d1e1997ae5139f76b3bdf2ead522d7744ae21b82c5f24194daa",
+      "reviewer": "Claude (Claude Code session; example reruns with f_opening_dynamic default 3)",
       "method": "assistant",
       "reviewed_on": "2026-10-31"
     },
@@ -1580,99 +1580,99 @@
     {
       "source": "examples/tsunami_coast/README.md",
       "target": "examples/tsunami_coast/en/README.md",
-      "source_sha256": "72df1ef10f2d66844f9bf05e366a534bfe0487e9112b94975781bb5b9e72511f",
-      "target_sha256": "1bd48a3d2d2250d42db9058bc18ddaec80a9e53f9aadc6964882806e9c827def",
-      "reviewer": "Claude (Claude Code session; review of the changed lines against the previously recorded pair: the English README now shares the Japanese figures for the probes and the profiles/snapshots, because their English versions had been drawn from re-run results that differ from the Japanese figures; no model execution)",
+      "source_sha256": "8e862176f58f98a88e237c9ef72df8b47a4989a7da23382eecd29058ab105de6",
+      "target_sha256": "e5dc66d4f52df4616f97096dbbbda379a63161f8700f2ebefad05914f62d970c",
+      "reviewer": "Claude (Claude Code session; example reruns with f_opening_dynamic default 3)",
       "method": "assistant",
-      "reviewed_on": "2026-10-29"
+      "reviewed_on": "2026-10-31"
     },
     {
       "source": "examples/tsunami_coast/figs/deformation.png",
       "target": "examples/tsunami_coast/en/figs/deformation.png",
-      "source_sha256": "3a95739dd9b81e7c5873da6ca14bd851fcc8018c6d0d602e679d054f0ea9a0c8",
-      "target_sha256": "25b8384d713395a38bb39d38a965411cb5206f50beaca7e93f2c65cdb46c025c",
-      "reviewer": "Claude (Claude Code session; compared the Japanese and English figure images side by side: same plotted data and layout, labels translated (some compressed but faithful); provenance per the commits that drew the English figures: same saved results as the Japanese figures; no model execution)",
+      "source_sha256": "dbd20977bc4cc4a1350104f2550e534bc9f062056f0e6596e343c1c8a0b34cea",
+      "target_sha256": "098dc8a317a9bf414890bdeef8f4e0b631d47dd2091667b87315c6ef77d9aa81",
+      "reviewer": "Claude (Claude Code session; example reruns with f_opening_dynamic default 3)",
       "method": "assistant",
-      "reviewed_on": "2026-10-29"
+      "reviewed_on": "2026-10-31"
     },
     {
       "source": "examples/tsunami_fault/README.md",
       "target": "examples/tsunami_fault/en/README.md",
-      "source_sha256": "fc4ede329b445e469b158e255704872531bc6ffcbad7d908061455ccee6f214b",
-      "target_sha256": "c04ee8c37357703c7e74d90683c2b24604fa8865d525ea8dd207bbb9dbd2933a",
-      "reviewer": "Claude (Claude Code session; review of the changed lines against the previously recorded pair: the English README now shares the Japanese figures for the probes and the profiles/snapshots, because their English versions had been drawn from re-run results that differ from the Japanese figures; no model execution)",
+      "source_sha256": "08d067a4244bac53f9f184d36fbebc072caf43a20866d9b0f16d3bfdeecb4492",
+      "target_sha256": "c142fc4da6796f4e720941b6dc2121c1241e5a89dbf0dbc637210af10f630e30",
+      "reviewer": "Claude (Claude Code session; example reruns with f_opening_dynamic default 3)",
       "method": "assistant",
-      "reviewed_on": "2026-10-29"
+      "reviewed_on": "2026-10-31"
     },
     {
       "source": "examples/tsunami_fault/figs/deformation.png",
       "target": "examples/tsunami_fault/en/figs/deformation.png",
-      "source_sha256": "d6a3bdc58abbb8fe6b89d81ff4be5281f50be899858ccb3bd3cb28f6c62800e0",
-      "target_sha256": "2bbc64cc9fd2d336d97275520b992605aa71224ceaebd02367c624a5b2c5dcf2",
-      "reviewer": "Claude (Claude Code session; compared the Japanese and English figure images side by side: same plotted data and layout, labels translated (some compressed but faithful); provenance per the commits that drew the English figures: same saved results as the Japanese figures; no model execution)",
+      "source_sha256": "3bc89d43d2b5d3152a89f06e512382f5dd1b0b01dfbb73b3ca6527377fae6da4",
+      "target_sha256": "8efd5136296e80c01c96a9cc9da4ea8582e928616efbaa85bd75e944168163dd",
+      "reviewer": "Claude (Claude Code session; example reruns with f_opening_dynamic default 3)",
       "method": "assistant",
-      "reviewed_on": "2026-10-29"
+      "reviewed_on": "2026-10-31"
     },
     {
       "source": "examples/tsunami_town/README.md",
       "target": "examples/tsunami_town/en/README.md",
-      "source_sha256": "70af3538aacb5e4780b01f35d161ed0d8ac0769eebdedf4c8527ce938a635a41",
-      "target_sha256": "e98a9eb611546b0a4b17e59a2743337e2c9fb8a3d448682444134096e8ad6878",
-      "reviewer": "Claude (Claude Code session; reviewed the Japanese source against the English mirror; figures from the same results and drawing code with label changes only, 2026-10-31)",
+      "source_sha256": "a559b068a6291b2e814083c9d1cc414ec3b6be13a43b297085da53caaae16de1",
+      "target_sha256": "23f982398bc319923181deb94ce77b73f448743dc75efaf5538dcb76fb760602",
+      "reviewer": "Claude (Claude Code session; example reruns with f_opening_dynamic default 3)",
       "method": "assistant",
       "reviewed_on": "2026-10-31"
     },
     {
       "source": "examples/tsunami_town/figs/maps.png",
       "target": "examples/tsunami_town/en/figs/maps.png",
-      "source_sha256": "87727a80d24966e91ee0ff6625c84a9841c526eb213f3740e166f2b6838bb79a",
-      "target_sha256": "544be6df3b07b2574ed4381d219e7840754148152f2453c6d6e5a4db2ba9ff00",
-      "reviewer": "Claude (Claude Code session; reviewed the Japanese source against the English mirror; figures from the same results and drawing code with label changes only, 2026-10-31)",
+      "source_sha256": "c6a0aa9396cb1260189ddab273059fce3555766f5adbb244c3b3f830f5ae5694",
+      "target_sha256": "0bd177f40fe62c8f0e0268eea9cd4a6fa05b6ff128c896c4ad777fe93a90795e",
+      "reviewer": "Claude (Claude Code session; example reruns with f_opening_dynamic default 3)",
       "method": "assistant",
       "reviewed_on": "2026-10-31"
     },
     {
       "source": "examples/tsunami_town/figs/mechanism.png",
       "target": "examples/tsunami_town/en/figs/mechanism.png",
-      "source_sha256": "2694268b8ecbaf7151dae542087625eebbfb660e8943bb79e3dbfef0bda8cea1",
-      "target_sha256": "5b0857994845ec3da15f4660789cee144b037e19becadd0d9bf26e059d9e4649",
-      "reviewer": "Claude (Claude Code session; reviewed the Japanese source against the English mirror; figures from the same results and drawing code with label changes only, 2026-10-31)",
+      "source_sha256": "e1b3ae4902edf3d61df372a87bea8811684c90f981dbdf3d81dd93c8db38e36c",
+      "target_sha256": "bb5d9af3960c8668308e551a45184afbbe80a084e6980575b7160ef9bcc6de86",
+      "reviewer": "Claude (Claude Code session; example reruns with f_opening_dynamic default 3)",
       "method": "assistant",
       "reviewed_on": "2026-10-31"
     },
     {
       "source": "examples/tsunami_town/figs/series.png",
       "target": "examples/tsunami_town/en/figs/series.png",
-      "source_sha256": "0e90a60665c49f3529b95b7dddb6cc92b7d49943f1ddd5467696b1986c73d019",
-      "target_sha256": "47d2e223aa794b581c130abdc9edcaec1be54394e031b592dc9f2b192dcf0e6e",
-      "reviewer": "Claude (Claude Code session; reviewed the Japanese source against the English mirror; figures from the same results and drawing code with label changes only, 2026-10-31)",
+      "source_sha256": "c02f90403da3216cbad1a86dbfb150e687ca9490b710702de54d350562d9bf5f",
+      "target_sha256": "5991919f81ba2087f58cf097c757b420076568955636a27cf86e9f0043ceacbf",
+      "reviewer": "Claude (Claude Code session; example reruns with f_opening_dynamic default 3)",
       "method": "assistant",
       "reviewed_on": "2026-10-31"
     },
     {
       "source": "examples/tsunami_town/figs/setup.png",
       "target": "examples/tsunami_town/en/figs/setup.png",
-      "source_sha256": "a1419616c4c44017460844a396119f1eccab3c4449070a3562680bb6f8d8a653",
-      "target_sha256": "bc9d6d74a5685fc4e6c596d5f659b4f6b9e2c8841a75a385d99253bcbf06cdf2",
-      "reviewer": "Claude (Claude Code session; reviewed the Japanese source against the English mirror; figures from the same results and drawing code with label changes only, 2026-10-31)",
+      "source_sha256": "45b4014bc5a4dbc8573fc0a37c7d33b879a69813ffaa2de82e2b0b9ee7ff92b7",
+      "target_sha256": "a63bb5909c562f53988e1412f67c5b1f2b1967625dfcf818c6cfaf8bc0ddc64d",
+      "reviewer": "Claude (Claude Code session; example reruns with f_opening_dynamic default 3)",
       "method": "assistant",
       "reviewed_on": "2026-10-31"
     },
     {
       "source": "examples/tsunami_town/figs/supp_damage.png",
       "target": "examples/tsunami_town/en/figs/supp_damage.png",
-      "source_sha256": "493dd37e479231ea1d83dec9053256c497f59b47599945736767836ce077e2e1",
-      "target_sha256": "3c93890571360c8e7e30817ecfd2b0666254e4aa804f09c36d75f20c3c7115d1",
-      "reviewer": "Claude (Claude Code session; reviewed the Japanese source against the English mirror; figures from the same results and drawing code with label changes only, 2026-10-31)",
+      "source_sha256": "f11e471f1e2df84f41f822d45c1bde8d3ab55102799ffe21ca6e2d70606b4494",
+      "target_sha256": "6a770bba18fee11e264408cb97f8e0c085ca86bfce60e53ccbaef44a8eff6347",
+      "reviewer": "Claude (Claude Code session; example reruns with f_opening_dynamic default 3)",
       "method": "assistant",
       "reviewed_on": "2026-10-31"
     },
     {
       "source": "examples/tsunami_town/figs/supp_ledger.png",
       "target": "examples/tsunami_town/en/figs/supp_ledger.png",
-      "source_sha256": "cb7163e07adeaaf1de2bc7aefeacfe9a615eff4cf5d5612afe72b830414ed8b3",
-      "target_sha256": "1b2ef2e970d10edc69ba4fca416ab530da0529ab76a9ae585e02b62acdd7a294",
-      "reviewer": "Claude (Claude Code session; reviewed the Japanese source against the English mirror; figures from the same results and drawing code with label changes only, 2026-10-31)",
+      "source_sha256": "9a1ed149ee1416540184ec9e0fadd5534a741ae36dd2ed2ca2e38dc1c4c7c131",
+      "target_sha256": "ed64e9a55cc8d23b9eadf247b4a3c47766dea03afe6ea54b4f1ea9640266be26",
+      "reviewer": "Claude (Claude Code session; example reruns with f_opening_dynamic default 3)",
       "method": "assistant",
       "reviewed_on": "2026-10-31"
     },

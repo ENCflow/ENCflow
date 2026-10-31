@@ -116,26 +116,27 @@ backwash). Right: where the debris is at 60 minutes (1000 m³).
 
 | Case | Max inundation depth in the town (max / mean) | Area flooded ≥ 2 m | Houses destroyed (all / seaward / middle / inland) | Deposited in the town | Deposited on the beach and sea | Carried offshore |
 |---|---:|---:|---:|---:|---:|---:|
-| Tsunami +4 m, seawall +2 m | 4.83 / 3.62 m | 100 % | 96 / 100 / 100 / 88 % | 88,547 m³ | 7,029 m³ | 16,672 m³ |
-| Tsunami +3 m, seawall +2 m | 2.82 / 1.76 m | 35 % | 49 / 94 / 48 / 6 % | 29,387 m³ | 4,047 m³ | 23,419 m³ |
-| Seawall +3 m, opening open | 3.87 / 2.72 m | 84 % | 90 / 100 / 100 / 70 % | 49,683 m³ | 2,390 m³ | 50,076 m³ |
-| Seawall +3 m, opening closed | 2.96 / 1.87 m | 42 % | 71 / 100 / 97 / 13 % (60 / 100 / 68 / 10 % at 35 min) | 83,131 m³ | 0 | 0 |
+| Tsunami +4 m, seawall +2 m | 4.82 / 3.62 m | 100 % | 96 / 100 / 100 / 89 % | 79,424 m³ | 10,049 m³ | 22,784 m³ |
+| Tsunami +3 m, seawall +2 m | 2.80 / 1.76 m | 36 % | 50 / 94 / 48 / 6 % | 28,221 m³ | 4,135 m³ | 24,814 m³ |
+| Seawall +3 m, opening open | 3.86 / 2.71 m | 84 % | 90 / 100 / 100 / 70 % | 49,270 m³ | 2,734 m³ | 50,352 m³ |
+| Seawall +3 m, opening closed | 2.96 / 1.85 m | 41 % | 71 / 100 / 97 / 13 % (60 / 100 / 68 / 10 % at 35 min) | 83,071 m³ | 0 | 0 |
 
 Seaward = x 270-500 m, middle = 500-800 m, inland = 800-1,200 m. "Houses destroyed" is the
 fraction of the house stock turned into debris by 60 minutes. Debris is in the same units as
 the house stock (m³); the amount still floating at 60 minutes (hundreds to thousands of m³) is
-left out of the table.
+left out of the table. The tables and figures show the values recomputed on 2026-10-31
+with the default f_opening_dynamic = 3 (developer.md §68.41).
 
 - **With a +4 m tsunami almost the whole town is destroyed**: the tsunami overtops the seawall
   by 2 m and the whole town is flooded 2 m or more. Houses on the seaward side and in the middle
-  are all destroyed, and even inland, where reinforced concrete buildings are more common, 88 %
-  of the wooden houses break. Most of the destroyed houses (89 thousand m³) settle in the town,
-  and 17 thousand m³ (15 % of the destroyed amount) goes offshore with the backwash.
-- **A tsunami 1 m lower destroys half as many houses**: with a +3 m tsunami, only 35 % of the
+  are all destroyed, and even inland, where reinforced concrete buildings are more common, 89 %
+  of the wooden houses break. Most of the destroyed houses (79 thousand m³) settle in the town,
+  and 23 thousand m³ (20 % of the destroyed amount) goes offshore with the backwash.
+- **A tsunami 1 m lower destroys half as many houses**: with a +3 m tsunami, only 36 % of the
   town, mainly on the seaward side, is flooded 2 m or more. The seaward side is 94 % destroyed,
   but the middle falls to 48 % and inland to 6 %. Because damage rises sharply around 2 m of
   inundation, a small difference in tsunami height changes the extent of the damage a lot. The
-  destroyed houses are close to the sea, so 40 % of the debris (23 thousand m³) goes offshore
+  destroyed houses are close to the sea, so 40 % of the debris (25 thousand m³) goes offshore
   with the backwash.
 - **Raising the seawall does little while the opening is open**: even with the crest raised to
   +3 m, the tsunami enters through the 120 m opening, 84 % of the town is flooded 2 m or more and
@@ -218,10 +219,10 @@ change how house destruction is decided.
 
 | Case | Houses destroyed (all / seaward / middle / inland) | Max inundation depth in the town (max / mean) | Debris carried offshore |
 |---|---:|---:|---:|
-| Main (depth criterion) | 96 / 100 / 100 / 88 % | 4.83 / 3.62 m | 16,672 m³ |
-| Porosity not raised by destruction | 100 / 100 / 100 / 100 % | 5.65 / 4.40 m | 33,745 m³ |
-| Load hV² criterion | 60 / 83 / 67 / 31 % | 4.63 / 3.66 m | 18,585 m³ |
-| Load criterion + driftwood | 61 / 83 / 67 / 31 % | 4.63 / 3.66 m | 18,663 m³ |
+| Main (depth criterion) | 96 / 100 / 100 / 89 % | 4.82 / 3.62 m | 22,784 m³ |
+| Porosity not raised by destruction | 100 / 100 / 100 / 100 % | 5.66 / 4.44 m | 34,872 m³ |
+| Load hV² criterion | 60 / 82 / 66 / 30 % | 4.64 / 3.66 m | 19,440 m³ |
+| Load criterion + driftwood | 60 / 83 / 66 / 30 % | 4.63 / 3.65 m | 19,516 m³ |
 
 - **Porosity feedback**: when the sites of destroyed houses let the flow through, the water
   spreads over a larger area, the level falls and inland destruction decreases (100 % → 96 %).
@@ -239,7 +240,7 @@ change how house destruction is decided.
   looking at the force of the flow and the chain with driftwood and debris.
 - **Driftwood adds a few percent**: 36,000 of the 60,000 m³ of timber on the beach floats away,
   but the maximum load including driftwood (Fd9999) is only up to 5 % (3 % on average) larger
-  than the water-only load (F9999), and the houses destroyed increase by only 0.3 points. Spread
+  than the water-only load (F9999), and the houses destroyed increase by less than 1 point. Spread
   over the flooded area (about 56 ha), the timber is only about 0.06 m³/m² as a column, a few
   percent of the weight of 3-5 m of water. Driftwood gathering by snagging on buildings is not
   represented (a limit stated in the driftwood chapter).

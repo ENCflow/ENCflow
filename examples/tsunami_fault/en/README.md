@@ -47,9 +47,9 @@ Computation time: hydrostatic 8 s, non-hydrostatic 22 s (gfortran, 4 threads; dt
 |---|---:|---:|---:|
 | Directly above the upper edge x = 120.5 km (depth 2000 m) | 1.768 / 30 / -0.912 | 2.022 / 6 / -0.922 | 1.732 / 30 / -0.882 |
 | Foot of the slope x = 60.5 km | 0.896 / 450 / -0.509 | 0.918 / 432 / -0.513 | 0.712 / 462 / -0.536 |
-| Coast x = 10.5 km (depth 268 m) | 1.220 / 972 / -0.898 | 1.248 / 960 / -0.906 | 0.924 / 990 / -1.003 |
-| East x = 180.5 km | 0.781 / 426 / -0.411 | 0.791 / 414 / -0.418 | 0.679 / 402 / -0.527 |
-| South y = 30.5 km (beyond the end of the fault) | 0.322 / 138 / -0.145 | 0.325 / 126 / -0.148 | 0.311 / 150 / -0.127 |
+| Coast x = 10.5 km (depth 268 m) | 1.220 / 972 / -0.898 | 1.248 / 960 / -0.907 | 0.924 / 990 / -1.003 |
+| East x = 180.5 km | 0.782 / 426 / -0.410 | 0.792 / 414 / -0.417 | 0.679 / 402 / -0.527 |
+| South y = 30.5 km (beyond the end of the fault) | 0.322 / 138 / -0.146 | 0.325 / 126 / -0.148 | 0.311 / 150 / -0.128 |
 
 - **The effect of the rise time** is small. With 30 s (shorter than the time
   for the wave to cross the fault width, 30 km / 140 m/s ≈ 210 s), apart from
