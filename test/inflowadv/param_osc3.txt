@@ -1,0 +1,68 @@
+!======================================================================
+! inflowadv: 壁に挟まれた幅 3 列の河道だけの領域(developer.md §68.40)
+!   北辺の区間流入 420 m3/s(幅 5 列の構成と同じ単位幅流量。inflow_dist = 2)、南辺の
+!   水位 0.9 m。流入区間の両端の角セルが閉じて流入が中央 1 列に集まる。流入セルから
+!   内側へ向かうエッジの移流項を 0 にしないと、j = 30 の流量に限界周期振動が出る。
+!   内側エッジの流速にエネルギー上限がないと、流入直下に射流のジェット(13 m/s)が立つ
+!   (§68.40 の改定 2)
+!======================================================================
+&list_sysparam
+  f_gridsystem = 0
+  f_govequation = 0
+  dt = 0.5
+  t0 = 0
+  tt = 7200
+  dt_disp = 1800
+  dt_file = 7200
+  dt_recrd = 60
+  fn_geoinfo = '-'
+  fn_initial = '-'
+  fn_enc = '-'
+  fn_boundary = '-'
+  fn_record = '-'
+  dir_result = 'result_osc3'
+  f_state_save = 0
+  f_check_cfl = 1
+  f_out_vv = 1
+/
+
+&list_enc
+  f_inflow_edge = 2         ! 区間の内側へ向かうエッジだけ移流項 0 + そのエッジの流速のエネルギー上限(この検定の対象)
+/
+
+&list_initial
+  f_htype = 1
+  fn_hinit = 'h_osc3.txt'
+/
+
+&list_geoinfo
+  nx = 3
+  ny = 80
+  dx = 10.0
+  dy = 10.0
+  f_ztype = 1
+  fn_z = 'z_osc3.txt'
+  f_rntype = 0
+  rn0 = 0.03
+/
+
+&list_bound_stage
+  stage_cell(1:2,1,1) = 1, 80
+  stage_cell(1:2,2,1) = 2, 80
+  stage_cell(1:2,3,1) = 3, 80
+  stage_val(1:2,1,1) = 0, 0.9
+  stage_val(1:2,2,1) = 9999, 0.9
+/
+&list_bound_inflow
+  inflow_cell(1:2,1,1) = 1, 1
+  inflow_cell(1:2,2,1) = 2, 1
+  inflow_cell(1:2,3,1) = 3, 1
+  inflow_val(1:2,1,1) = 0, 420.0
+  inflow_val(1:2,2,1) = 9999, 420.0
+  inflow_dist(1) = 2
+/
+
+&list_record
+  flxytype = 0
+  flxy(:,1) = 1, 30, 3, 30
+/

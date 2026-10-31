@@ -277,3 +277,7 @@ B・C・D のセル集合と時系列は namelist に直接記入するほか、
 - 全パラメータの注釈付き実例: [examples/List_samples/list_boundary.txt](../../examples/List_samples/list_boundary.txt)
 - 辺境界(放射): [tutorials/wave](../../tutorials/wave/) Step 3
 - 排水ポンプ・樋門などの構造物は fn_structure 側です([構造物の章](structure.md))。
+
+## 参考文献
+
+この章で使うモデル・式・既定値の出典は、[構造物と境界の水理則の解説](hydraulics.md#参考文献)の参考文献にまとめています。

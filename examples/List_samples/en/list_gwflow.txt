@@ -159,6 +159,12 @@
 !   displayed and the run stops.
 !======================================================================
 &list_gwflow_lateral
+  ! gw_eps, gw_diagratio and f_gw_opening are the geometry of lateral flow;
+  ! the lateral flow in layer 2 uses the same values. When only layer-2
+  ! lateral flow is used (f_gwlateral = 0), the three geometry items are
+  ! still read from this group if it exists (gw_ksh_mmh is not used);
+  ! otherwise the defaults apply
+
   ! Lateral saturated hydraulic conductivity (mm/h). Must be greater
   ! than 0 (default 360 = 1e-4 m/s; the effective value including
   ! macropore / pipe flow is 1-2 orders above the matrix)
@@ -172,6 +178,11 @@
   ! value as p_diagratio of the ENC core. Normally no need to change.
   ! 0 is equivalent to 4 neighbors)
   !gw_diagratio = 0.5857864
+
+  ! Transfer of blocked diagonal shares (1: the passage width of diagonals
+  ! blocked by outside or sea cells goes to the axis edges, so the
+  ! conductance along walls equals the interior value = default, 0: none)
+  !f_gw_opening = 0
 
 /
 

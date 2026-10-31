@@ -1,0 +1,77 @@
+!======================================================================
+! suspend 構成 3: 等流の水路での巻き上げと沈降の釣り合い(平衡濃度式 1 = 線形)
+!   南北に長い幅 1 セルの直線水路(長さ 1000 m、Δy = 1 m、勾配 0.002、n = 0.03。両側は
+!   河床 +2 m の乾いた地盤。make_eq.py が書く)に、北端の区間流入で Manning の等流
+!   (水深 0.5 m、単位幅流量 q = 0.469545 m²/s)を流し、南辺は自由流出。流入は清水。
+!   浮遊砂は E − D = w_f (C_eq − β C) で河床と交換し、流下につれて平衡濃度 C_eq/β へ
+!   近づく。Check_suspend.py eq が
+!     (1) 平衡: 適応を終えた区間(250〜350 m)の C = hs/h が、その場の流速と水深で
+!         求めた C_eq(τ*)/β に一致する
+!     (2) 適応: 平衡からの不足が流下方向に一定の比で減り、その比が MUSCL(既定の
+!         スカラー輸送)と時間の分割を含む離散の予測 (1 − k)/(1 + k)、
+!         k = b / (2c (1 − b))(b = w_f β Δt/h、c = q Δt/(h Δy))に一致する
+!   を確かめる(連続の解は exp(−w_f β Δy/q) のセルあたりの比)。河床の変化が流れを
+!   変えないよう morfac を非常に小さくする(水柱側の交換は水理時間で進む。§19.3)
+!======================================================================
+&list_sysparam
+  f_gridsystem = 0
+  f_govequation = 0
+  dt = 0.2
+  t0 = 0
+  tt = 3600
+  dt_disp = 600
+  dt_file = 1200            ! 1200・2400・3600 s(定常の確認に 2 フレームを比べる)
+  dt_recrd = 1200
+  fn_geoinfo = '-'
+  fn_initial = '-'
+  fn_enc = '-'
+  fn_boundary = '-'
+  fn_geomorph = '-'
+  dir_result = 'result_eq'
+  dir_save = 'save_eq'
+  f_state_save = 1          ! 検定は save_eq/state.dat の h・hs(倍精度)を読む
+  f_output_mode = 2         ! bil(float32)
+  f_check_cfl = 1
+  f_out_z = 0
+  f_out_vv = 1              ! 流速(τ* の評価に使う)
+  f_out_hs = 1
+/
+&list_enc
+  f_scalar_scheme = 3       ! MUSCL(既定。検定の離散の予測はこのスキームの式)
+/
+&list_initial
+  f_htype = 1
+  fn_hinit = 'hinit_eq.txt'
+/
+&list_geoinfo
+  lx = 3.0
+  ly = 1000.0
+  nx = 3
+  ny = 1000
+  f_ztype = 1
+  fn_z = 'zinit_eq.txt'
+  f_rntype = 0
+  rn0 = 0.03
+  sd0 = 10.0
+/
+&list_bound_edge
+  f_bc_s = 1                ! 南辺は自由流出
+/
+&list_bound_inflow
+  inflow_cell(1:2,1,1) = 2, 1
+  inflow_val(1:2,1,1) = 0, 0.469545       ! (時刻 (min), 総流量 (m3/s)) = q·Δx
+  inflow_val(1:2,2,1) = 9999, 0.469545
+  inflow_dist(1) = 0
+/
+&list_geomorph
+  dt_geomorph = 0.0
+  morfac = 1.0e-8           ! 河床の変化を無視できる大きさにする
+  f_suspend = 1
+  f_esform = 1              ! 平衡濃度式 1: C_eq = esa (τ*/τ*c − 1)
+  susp_d50 = 0.0002
+  susp_tausc = 0.05
+  susp_esa = 1.0e-4
+  susp_beta = 1.5           ! 底面濃度係数(平衡 C_eq/β と適応の速さ w_f β の両方に効く)
+  susp_wf = 0.02            ! 沈降速度を直接与える
+  fluv_porosity = 0.4
+/

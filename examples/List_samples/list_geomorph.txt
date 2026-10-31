@@ -123,6 +123,13 @@
   !f_wfsed_turb = 0         ! 砕波の乱れによる攪拌(0: なし = 既定, 1: 底面の乱れ k_b を
                             !   √(u_rms² + 1.45 k_b) で攪拌の軌道流速に足す。XBeach の turb =
                             !   wave_averaged の形。f_wfsed = 1 が必須)
+  !f_wfswash = 1            ! 遡上域(swash)の輸送(汀線の面の岸沖・沿岸の正味の輸送。
+                            !   Larson ら 2004・Larson & Wamsley 2007、遡上高は Stockdon ら 2006。
+                            !   f_wfsed = 1・f_fluvial = 1 が必須)
+  !wfswash_tanbe = 0.1      ! 前浜の平衡勾配 tanβ_e(f_wfswash = 1 で必須。0 < tanβ_e < tan φ_m)
+  !wfswash_kc = 1.6e-3      ! 岸沖の輸送係数 K_c(既定 1.6e-3 = 細砂の代表値)
+  !wfswash_kl = 1.6e-3      ! 沿岸の輸送係数 K_l(既定 = K_c。0 で沿岸の輸送なし)
+  !wfswash_phim = 30.0      ! 動く粒子の摩擦角 φ_m (度)(既定 30)
 
   ! ---- 斜面浸食(雨滴+面状。f_suspend が必須)----
   !f_wash = 1
@@ -212,8 +219,11 @@
                            !   堆積: h −= λ・s_b・Δz(h 残量でクランプ)。
                            !   高橋・中川1991 式(5)の i{c*+(1-c*)s_b} と同じ台帳。
                            !   侵食卓越では正味の増水(bulking)となる一次効果。
-                           !   gwflow とは排他(hg 台帳と二重計上のため))
-  db_satbed = 1.0          ! 堆積層の飽和度 s_b(0〜1。f_dbwet=1 で使用。
+                           !   gwflow とは排他(hg 台帳と二重計上のため)、
+                           !   2:gwflow と併用する間隙水 — 堆積で増えた層の容量
+                           !   sy0・Δz をその場の地表水で満たし、侵食で削られた層の
+                           !   間隙水 sy0・|Δz| を hg から地表へ戻す。gwflow が必要)
+  db_satbed = 1.0          ! 堆積層の飽和度 s_b(0〜1。f_dbwet=1 で使用(2 では使わない)。
                            !   洞谷適用値は勾配 21°以上で 0.8、以下で 1.0)
   db_mu = 0.0              ! Voellmy 摩擦係数 μ(無次元)。f_dbres=4 で使用。0 = 既定 0.2
                            !   (雪崩 0.1〜0.3。大規模崩壊の見かけ摩擦低下

@@ -1,0 +1,74 @@
+!======================================================================
+! wfswash: 不正な設定(停止すること): 平衡勾配 wfswash_tanbe がない
+!======================================================================
+&list_sysparam
+  f_gridsystem = 0
+  dt = 0.25                 ! Courant 数に余裕を持たせる(0.5 s では地形の更新が汀線で作る小さな長波が
+                            !   沖の境界で育って止まった。README)
+  t0 = 0
+  tt = 5
+  dt_disp = 5
+  dt_file = 5
+  dt_recrd = 5
+  fn_geoinfo = '-'
+  fn_initial = '-'
+  fn_enc = '-'
+  fn_boundary = '-'
+  fn_geomorph = '-'
+  fn_wavefield = '-'
+  dir_result = 'result_bad'
+  f_check_cfl = 1
+  f_output_mode = 3
+  f_out_z = 1
+  f_out_h = 1
+  f_state_save = 1
+  dir_save = 'save_bad'
+/
+
+&list_enc
+/
+
+&list_initial
+  f_htype = 2
+  e0 = 0.0
+/
+
+&list_geoinfo
+  nx = 60
+  ny = 8
+  dx = 5.0
+  dy = 5.0
+  f_ztype = 1
+  fn_z = 'z_mild.txt'
+  f_rntype = 0
+  rn0 = 0.025
+  sd0 = 10.0
+/
+
+&list_bound_edge
+  f_bc_w = 2                ! 沖は長波放射(流れはないが既定の壁を避ける)
+  f_bc_n = 3                ! 南北は側方 Neumann
+  f_bc_s = 3
+/
+
+&list_geomorph
+  dt_geomorph = 5.0
+  f_fluvial = 1
+  f_qbform = 2              ! MPM
+  fluv_d50 = 0.0002
+  fluv_tausc = 100.0        ! 掃流砂を止める(遡上域の輸送だけを見る)
+  fluv_porosity = 0.4
+  f_wfsed = 1               ! 波浪場による攪拌と輸送(遡上域の輸送の前提)
+  f_wfswash = 1             ! 遡上域の輸送
+/
+
+&list_wavefield
+  wf_bc_side = 1, 0, 2, 2   ! 入射(1)・吸収(0)・側方 Neumann(2)の順に W, E, N, S
+  wf_hm0 = 1.0
+  wf_trep = 8.0
+  wf_dir = 0.0
+  wf_spread = 0.0            ! 0 = 単一方向
+  dt_wave = 60
+  wf_tol = 1.0e-7
+  f_wf_outdiag = 1          ! 平均波向 Wa の出力(検定が読む)
+/

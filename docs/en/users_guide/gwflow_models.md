@@ -36,7 +36,8 @@ thickness $`s_d(x)`$ sets the vertical arrival time $`T_v = s_d\,n_e/K_s`$,
 and places with a thin soil saturate first and govern the timing of the
 runoff response. A uniform thickness gives lateral-flow control
 (TOPMODEL-like), a sharply thinning one gives vertical-infiltration control
-(Tani type).
+(Tani type; [test/gwtani](../../../test/gwtani/en/README.md) checks this with a
+scenario on a steep slope).
 
 ## 2. Bucket model (f_gwvertical = 1)
 
@@ -129,6 +130,30 @@ when it is exceeded. The dry test and the excess-outflow reduction are the
 same mechanisms as in the shallow water solver (regularisation thickness
 `gw_eps`).
 
+**Conductance along walls.** In the interior the eight-direction shares
+add up to isotropic diffusion (diffusivity $`K_{sh}h_{gw}/s_y`$) whatever
+the value of `gw_diagratio` ([test/gwlateral](../../../test/gwlateral/en/README.md)
+checks this with the spreading of a Gaussian mound). A cell next to the
+domain edge, an outside cell or a sea cell has no outward diagonal links,
+so on its own its conductance along the wall is $`1 - d/2`$ times the interior value
+(0.71 times with the default $`d`$ = `gw_diagratio` = 2/(2+√2)), and a strip
+one cell wide with walls on both sides gets $`1 - d`$ times (0.41 times).
+The shallow water solver moves the blocked diagonal shares to the axis
+directions (`f_opening_dynamic`). The lateral flow makes the same transfer
+by default (`f_gw_opening = 1`; 0 = no transfer): the passage width of the
+blocked diagonals crossing the same interface is added to the axis edge (at
+each end cell of the edge, count how many of the two diagonals crossing the
+interface are blocked, and add the mean number of diagonals). The
+conductance along walls then equals the interior value, and in a strip one
+cell wide the axis edges get the full cell width. Only outside and sea
+cells block (a dry cell does not cause a transfer), and the lateral flow in
+layer 2 (also without lateral flow in the soil layer) and the flux of the
+subsurface saltwater zone of the sharp-interface two-layer model use the
+same widths. Without the transfer, in a valley aquifer cut to one or two
+cells wide by an outside mask along the ridges, the groundwater flow down
+the valley comes out smaller (the default was changed from 0 to 1 on
+2026-10-30; developer.md §16.6).
+
 **Basis of the default.** $`K_{sh}`$ = 360 mm/h (1e-4 m/s) is ten times the
 matrix $`K_s`$ (sandy loam 1e-5 m/s), after the observations that the
 effective lateral conductivity of hillslopes through macropores and pipe
@@ -148,7 +173,11 @@ H_2 = (z - s_d - d_2) + \frac{h_{g2}}{s_{y2}}
 The infiltration from layer 1 to 2 has the constant capacity $`K_{v2}`$
 (`gw2_infil_mmh`); the lateral flow in layer 2 calls the kernel of §4 with
 the layer-2 coefficients (`gw2_ksh_mmh`; 0 means capacity only), without
-the coupling to the ponded water. The excess of layer 2 returns to layer 1
+the coupling to the ponded water (the eight-direction partitioning and the
+transfer of blocked diagonal shares are shared with §4 and, even without
+lateral flow in the soil layer, follow the geometry items of
+`&list_gwflow_lateral`, or the defaults when it is absent). The excess of
+layer 2 returns to layer 1
 and the excess of layer 1 exfiltrates, in a chain within one step.
 **Basis of the defaults.** Observations of the weathered zone of granitic
 headwaters[^kosugi06][^katsura08]: a few metres thick, an effective
@@ -360,6 +389,7 @@ The labels in the Basis column are explained in [How to read the basis of a defa
 | gw_ksh_mmh | 360 mm/h | lateral saturated conductivity $`K_{sh}`$ (§4) | **literature value** ten times the matrix = macropores and pipe flow[^beven82][^mosley79] |
 | gw_eps | 1e-3 m | regularisation thickness of the dry test | **numerical** like dd of the shallow water solver |
 | gw_diagratio / gwc_diagratio | 2/(2+√2) | eight-direction share | **derived** same as the ENC core ([ENC grid](encgrid.md) §2) |
+| f_gw_opening | 1 | transfer of blocked diagonal shares (§4) | **method** 1 = the same rule as the opening correction of the ENC core (an original numerical correction) makes the conductance along walls equal to the interior value; 0 = no transfer (the default before 2026-10-30) |
 | gw2_depth / gw2_sy / gw2_infil_mmh | 3 m / 0.05 / 1 mm/h | thickness, specific yield and infiltration capacity of the bedrock layer (§5) | **literature value** upper end of the granitic weathered-zone observations[^kosugi06][^katsura08] |
 | gw2_ksh_mmh / gw2_sat0 | 0 / 0 | lateral $`K`$ / initial saturation of layer 2 | **given** 0 = capacity only / **calibration** spin-up for long runs |
 | f_gwc_fluxlaw | 2 | flux law of the conduit layer (§6) | **method** 2: square-root law of turbulent pipe flow (continuum of CFP Mode 2[^shoemaker08]) |
@@ -400,7 +430,7 @@ The labels in the Basis column are explained in [How to read the basis of a defa
 | [test/frost](../../../test/frost/en/README.md) | infiltration suppression by frost | all 14 digits of the analytical value |
 | [test/gwbed](../../../test/gwbed/en/README.md) | throttling, cut-off and replacement by the streambed exchange limit | the per-step loss of the floodplain cells matches S_grnd to all 14 digits; gaining increments match the analytical rate |
 | [examples/sewer_hybrid](../../../examples/sewer_hybrid/en/README.md) | trunk + branch network conversion | cell-wise sy map |
-| [examples/qanat](../../../examples/qanat/en/README.md) | conduit layer + layer 2 | collection, conveyance and outlet of a gallery |
+| [examples/qanat](../../../examples/qanat/en/README.md) | conduit layer + layer 2 + well pumping | collection, conveyance and outlet of a gallery; reduction of its flow by a pumping well |
 
 ## References
 

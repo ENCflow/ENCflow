@@ -42,6 +42,7 @@ module subroutine bc_init(p, g, b)
   ! 辺境界条件を写す(ホットループでの間接参照回避)
   bcs%f_bc_side = b%edge%btype
   bcs%have_open_bc = any(bcs%f_bc_side /= e_bc_wall) .or. (b%ninflow > 0)
+  bcs%have_inflow = (b%ninflow > 0)
   bcs%have_neumann = any(bcs%f_bc_side == e_bc_neumann)
   bcs%adv_neumann = bcs%have_neumann .and. opt%f_advection_term > 0 .and. opt%f_advection_scheme >= 2
   if (any(bcs%f_bc_side == e_bc_radiation)) then
@@ -1053,7 +1054,7 @@ end subroutine
 ! 辺の型(f_bc_side)に落ちる=従来どおり両辺 open が条件(壁の水密性)。
 ! 枠内の x=0(無効セル)への面は常に閉(偽を返す)
 !----------------------------------------------------------------------
-module function bc_open_face(in, jn) result(op)
+pure module function bc_open_face(in, jn) result(op)
   integer, intent(in) :: in, jn
   logical :: op
   op = (in < 1 .or. in > dcp%nx_g .or. jn < 1 .or. jn > dcp%ny_g)
@@ -1170,9 +1171,9 @@ end function
 !----------------------------------------------------------------------
 ! 枠内セル (i, j) が区間流入の法線面を持つ外縁セルか(外縁の行・列にあり、
 ! その辺のセル別面型が e_bc_inflow。角セルは両辺を見る)。
-! 運動量保存形移流(adv_prepare_mc)がこのセルに接するエッジを移流の対象から
-! 外すために使う(§68.40)。bt_cell は全ランクが同じ list から構築するので
-! 判定は全ランク同値(ハロ行のセルも含む)。
+! 運動量保存形移流(adv_prepare_mc)が、このセルから区間の内側へ向かうエッジ
+! (bc_inflow_inward)を移流の対象から外すために使う(§68.40)。bt_cell は
+! 全ランクが同じ list から構築するので判定は全ランク同値(ハロ行のセルも含む)。
 ! 閉じた流入面(受け口係数 0 の角セル)も面型は e_bc_inflow のまま=真
 !----------------------------------------------------------------------
 module function bc_inflow_cell(i, j) result(r)
@@ -1183,6 +1184,121 @@ module function bc_inflow_cell(i, j) result(r)
   if (i == dcp%nx_g .and. bc_face_type(e_side_e, j) == e_bc_inflow) r = .true.
   if (j == 1        .and. bc_face_type(e_side_n, i) == e_bc_inflow) r = .true.
   if (j == dcp%ny_g .and. bc_face_type(e_side_s, i) == e_bc_inflow) r = .true.
+end function
+
+
+!----------------------------------------------------------------------
+! 枠内セル同士のエッジ (i, j)-(in, jn) が区間流入の外縁セルから区間の内側へ
+! 向かうか(§68.40 の改定。2026-10-29)。片方だけが区間流入の外縁セル c で、
+! c の流入面のどれかの辺について、もう片方 n をその辺へ射影した位置(西・
+! 東辺なら n の行、北・南辺なら n の列)の面が流入面のとき真 = 流入面から
+! 内側への法線エッジと、区間の幅の中の斜めエッジ。面に沿うエッジ(両端とも
+! 流入セル)と、区間の両端から区間の外へ出る軸・斜めエッジは偽。
+! 運動量保存形移流(adv_prepare_mc)がこのエッジだけ移流項を 0 にし、
+! calc_kth_momentum がこのエッジの流速にエネルギー上限を掛ける(§68.40 の
+! 改定 2)ために使う。bt_cell だけを読むので判定は全ランク同値(ハロ行の
+! セルも含む)
+!----------------------------------------------------------------------
+module function bc_inflow_inward(i, j, in, jn) result(r)
+  integer, intent(in) :: i, j, in, jn
+  logical :: r
+  integer :: ic, jc, kn, ln
+
+  r = .false.
+  if (bc_inflow_cell(i, j) .eqv. bc_inflow_cell(in, jn)) return
+  if (bc_inflow_cell(i, j)) then
+    ic = i;  jc = j;  kn = in; ln = jn
+  else
+    ic = in; jc = jn; kn = i;  ln = j
+  end if
+  if (ic == 1 .and. bc_face_type(e_side_w, jc) == e_bc_inflow) &
+    r = r .or. bc_face_type(e_side_w, ln) == e_bc_inflow
+  if (ic == dcp%nx_g .and. bc_face_type(e_side_e, jc) == e_bc_inflow) &
+    r = r .or. bc_face_type(e_side_e, ln) == e_bc_inflow
+  if (jc == 1 .and. bc_face_type(e_side_n, ic) == e_bc_inflow) &
+    r = r .or. bc_face_type(e_side_n, kn) == e_bc_inflow
+  if (jc == dcp%ny_g .and. bc_face_type(e_side_s, ic) == e_bc_inflow) &
+    r = r .or. bc_face_type(e_side_s, kn) == e_bc_inflow
+end function
+
+
+!----------------------------------------------------------------------
+! 区間流入の外縁セル (i, j) の供給流速 (m/s): 流入面から入る流量をセル幅
+! あたりに直した q(前ステップの面流束 mn(通過幅あたり)× 通過幅の割合
+! l8y(4)・l8x(2)。正方セルの法線面では通過幅あたりの q の 0.41 倍で、
+! inflow_hn の qc と同じ換算)の、セルのすべての流入面の和を水深で割った値。
+! ただし、どれかの流入面で、q の内側の近傍への河床勾配での等流が射流になる
+! (急勾配。supercritical_face)セルだけで、緩勾配のセルは 0 を返す。
+! 角セル(辺ごとに複製した 2 面から流入する。m_boundary)は 2 面の和を
+! 数える。calc_kth_momentum の内側エッジのエネルギー上限が上流側の速さに
+! 使う(§68.40 の改定 2)。
+! 読む面の mn は、西・東面が流入セルと同じ行(コミット済みの行 js-1..je)、
+! 北面が行 0、南面が行 ny で、どちらも行 1・ny の所有ランクだけが読む
+! (内側へのエッジを流入セルの行で計算するランク)ので、常に有効
+!----------------------------------------------------------------------
+module function bc_inflow_supply_speed(p, g, s, sx, i, j) result(v)
+  type(t_sysparam), intent(in) :: p
+  type(t_geoinfo), intent(in) :: g
+  type(t_state), intent(in) :: s
+  type(t_enc_status), intent(in) :: sx
+  integer, intent(in) :: i, j
+  real :: v
+  real :: q
+  logical :: inw, ine, inn, ins, steep
+
+  inw = i == 1        .and. bc_face_type(e_side_w, j) == e_bc_inflow
+  ine = i == dcp%nx_g .and. bc_face_type(e_side_e, j) == e_bc_inflow
+  inn = j == 1        .and. bc_face_type(e_side_n, i) == e_bc_inflow
+  ins = j == dcp%ny_g .and. bc_face_type(e_side_s, i) == e_bc_inflow
+  q = 0.0
+  if (inw) q = q + abs(sx%mn(4, 0, j)) * geo%l8y(4)
+  if (ine) q = q + abs(sx%mn(4, i, j)) * geo%l8y(4)
+  if (inn) q = q + abs(sx%mn(2, i, 0)) * geo%l8x(2)
+  if (ins) q = q + abs(sx%mn(2, i, j)) * geo%l8x(2)
+  v = 0.0
+  if (q <= 0.0) return
+  steep = .false.
+  if (inw) steep = steep .or. supercritical_face(p, g, s, i, j, kn_side(e_side_w), q)
+  if (ine) steep = steep .or. supercritical_face(p, g, s, i, j, kn_side(e_side_e), q)
+  if (inn) steep = steep .or. supercritical_face(p, g, s, i, j, kn_side(e_side_n), q)
+  if (ins) steep = steep .or. supercritical_face(p, g, s, i, j, kn_side(e_side_s), q)
+  if (steep) v = q / max(s%h(i,j), p%dd)
+end function
+
+
+!----------------------------------------------------------------------
+! セル幅あたりの流量 q の、流入面 k(外向きの方位)から内側の近傍への等流が
+! 射流か: Manning の等流水深 h_n = (q n / √S)^{3/5} が限界水深 h_c = (q²/g)^{1/3}
+! を下回る(等流のフルード数が 1 を超える急勾配)とき真(bc_inflow_supply_speed)。
+! S・n の取り方は inflow_hn と同じ。流れの状態(今の水深・流速)は見ないので、
+! 判定は流量・河床・粗度だけで決まる。判定は Manning 則で行う(土石流の
+! 抵抗則の計算でも同じ判定を使う。独自の簡略化)。内側の近傍が領域外・海、
+! S <= 0、n <= 0 なら偽(緩勾配と同じ扱い)。近傍マスクの読みは x 番兵
+! ガードの内側で(§12)
+!----------------------------------------------------------------------
+function supercritical_face(p, g, s, i, j, k, q) result(r)
+  type(t_sysparam), intent(in) :: p
+  type(t_geoinfo), intent(in) :: g
+  type(t_state), intent(in) :: s
+  integer, intent(in) :: i, j, k
+  real, intent(in) :: q
+  logical :: r
+  integer :: ii, jj
+  real :: sl, rn
+
+  r = .false.
+  ii = i - din(k)
+  jj = j - djn(k)
+  if (g%x(ii,jj) <= 0) return
+  if (g%sw(ii,jj) > 0) return
+  sl = (s%z(i,j) - s%z(ii,jj)) / geo%w8dr(k)
+  if (allocated(s%rnv)) then
+    rn = s%rnv(i,j)
+  else
+    rn = g%rn(i,j)
+  end if
+  if (sl <= 0.0 .or. rn <= 0.0) return
+  r = (q * rn / sqrt(sl))**0.6 < (q**2 / p%gg)**(1.0 / 3.0)
 end function
 
 

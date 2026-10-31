@@ -1,0 +1,50 @@
+!======================================================================
+! prmap: 流出率 runoff_rate と出力 Pr (mm/h) の検定(developer.md §88.5)
+!
+!   4 × 8 セル(Δx = Δy = 10 m)の平坦な閉領域に一様な雨を 1.5 h 与える。
+!   地表水は動かないので、Log の S(領域平均の水深)は降った雨の積算に等しい。
+!   検定は Check_prmap.py(構成の一覧は README.md)。
+!
+!   この構成: prtype = 1、4 mm/h の一様な雨、runoff_rate = 0.75 → 水収支も
+!   出力 Pr も 0.75 倍(3 mm/h)。1.5 h に 4.5 mm
+!======================================================================
+&list_sysparam
+  f_gridsystem = 0
+  dt = 10.0
+  t0 = 0
+  tt = 5400                 ! 1.5 h
+  dt_disp = 600
+  dt_file = 900             ! Pr を 15 分ごとに出力
+  dt_recrd = 5400
+  fn_geoinfo = '-'
+  fn_initial = '-'
+  fn_precip = '-'
+  dir_data = 'data_prmap'
+  dir_result = 'result_p1_rr'
+  f_disp_debug = 1          ! S を全有効桁で表示
+  f_check_cfl = 0
+  f_out_pre = 1             ! 降雨強度の分布 Pr0000〜Pr0006
+/
+
+&list_initial
+  f_htype = 0
+  h0 = 0.0
+/
+
+&list_geoinfo
+  nx = 4
+  ny = 8                    ! np = 4 でもランクあたり 2 行
+  dx = 10.0
+  dy = 10.0
+  f_ztype = 0
+  z0 = 0.0
+  f_rntype = 0
+  rn0 = 0.03
+/
+
+&list_precip
+  prtype = 1
+  prval(1:2,1) = 0, 4        ! (min, mm/h)。4 mm/h で一定
+  prval(1:2,2) = 9999, 4
+  runoff_rate = 0.75
+/

@@ -269,3 +269,7 @@ representation policy). RC and steel structures are represented as
 "non-destructible occupation" through fn_bdfrac; per-structure-type
 thresholds (multi-class) are a future topic. Implementation details:
 developer.md §63 (Japanese).
+
+## References
+
+The sources of the models, formulas and default values used in this chapter are collected in the references of [Building destruction and debris models explained](bldgdebris_models.md#references).

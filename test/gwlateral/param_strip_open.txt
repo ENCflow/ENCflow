@@ -1,0 +1,65 @@
+!======================================================================
+! gwlateral 構成 3: 構成 2 の帯で、塞がれた斜めの配分の振り替え(f_gw_opening = 1)
+!   構成 2(param_strip.txt)と同じ 3 × 40 の帯・起伏で、領域の縁に接する列の軸エッジに
+!   塞がれた斜めの通過幅のシェアを振り替える(developer.md §16.6)。壁沿いの通水能が内部と
+!   同じになり、起伏の減衰率が内部の理論 λ = D k²(k = π/L)に戻ることを確かめる
+!   (Check_gwlateral.py strip_open)
+!======================================================================
+&list_sysparam
+  f_gridsystem = 0
+  f_govequation = 0
+  dt = 0.25
+  t0 = 0
+  tt = 3600
+  dt_disp = 900
+  dt_file = 600
+  dt_recrd = 600
+  fn_geoinfo = '-'
+  fn_initial = '-'
+  fn_gwflow = '-'
+  dir_data = 'data_gwlateral'
+  dir_result = 'result_strip_open'
+  f_output_mode = 2         ! bil(float32): 起伏の振幅を f12.4 の丸めなしで読む
+  f_out_hg = 1
+  f_disp_debug = 1          ! S 列を全有効桁で表示(地下貯留の保存を Log で読む)
+  f_check_cfl = 1
+/
+
+&list_enc
+/
+
+&list_initial
+  f_htype = 1               ! 初期水深の分布ファイル(最初のステップで全量が浸透する)
+  fn_hinit = 'h_strip.txt'
+/
+
+&list_geoinfo
+  nx = 3
+  ny = 40
+  dx = 1.0
+  dy = 1.0
+  f_ztype = 0               ! 平坦(z0 = 0)
+  f_rntype = 0
+  rn0 = 0.1
+  sd0 = 2.0                 ! 容量 sy0·sd0 = 0.4 m(飽和帯厚 1 m の 2 倍。湧出しない)
+  sy0 = 0.2
+/
+
+&list_bound
+/
+
+&list_gwflow
+  f_gwvertical = 2          ! Green-Ampt(初期の地表水を最初のステップで地下へ移すだけに使う)
+  f_gwlateral = 1           ! 非線形 Boussinesq 側方流動
+  dt_gwflow = 0             ! 毎ステップ更新
+/
+
+&list_gwflow_greenampt
+  gw_ksv_mmh = 3.6e6        ! 1 m/s: 浸透 = min(K_sv dt, h, 空き容量) で 1 ステップに全量
+  gw_psif = 0.0
+/
+
+&list_gwflow_lateral
+  gw_ksh_mmh = 36000.0      ! K_sh = 0.01 m/s → D = K_sh h̄ / sy = 0.05 m²/s
+  f_gw_opening = 1          ! 塞がれた斜めの配分を軸エッジへ振り替える(既定と同じ値を明示)
+/

@@ -27,7 +27,12 @@ The stream carries sediment and wears the bedrock only during floods, while
 weathering, creep and uplift on the hillslopes work all year. Here only a
 representative flood (a constant formative discharge) is computed, and the
 flood is taken to flow for F = 300 s (5 minutes; intermittency factor
-i_f = F / 1 year = 9.5e-6) of each calendar year. The coefficients of the
+i_f = F / 1 year = 9.5e-6) of each calendar year (the intermittency idea of
+Paola et al. 1992, in which the representative channel-forming flow occurs a
+fraction I of the time and the long-term sediment flux is I times the flux
+during the flood; the F_t of Sklar & Dietrich 2006, in which all coarse
+sediment is carried by the representative flood, is the same idea, with
+F_t = 0.0437 = 16 days per year at their reference site). The coefficients of the
 continuous processes are given multiplied by 1/i_f (uplift `uplift0`, soil
 production `wthr_p0`, creep `creep_d`; these processes are linear in their
 coefficients, so this is the same as running only those processes on the
@@ -42,7 +47,7 @@ simultaneous progress.
 |---|---|
 | Valley | 200 m long (north–south) × 44 m wide. Δx = 4 m (11 × 50 cells). The middle column is a stream one cell (4 m) wide, with 20 m (5 cells) of hillslope on each side. The east and west edges are divides (walls) |
 | Initial terrain | A V of bare rock (soil depth 0). Valley-floor slope 0.04, hillslope gradient 0.25 |
-| Hydrology | A constant formative discharge Q = 0.5 m³/s at the stream cell of the valley head (north end; uniform-flow depth 0.11 m). The hillslopes stay dry (no rain). Free outflow at the south edge |
+| Hydrology | A constant formative discharge Q = 0.5 m³/s at the stream cell of the valley head (north end; uniform-flow depth 0.11 m). The hillslopes stay dry (no rain). Free outflow at the south edge. The dynamic reassignment of blocked openings is `f_opening_dynamic = 3` (blockage measured above the local plane; [shallow water chapter](../../../docs/en/users_guide/swflow.md), developer.md §68.41, in Japanese). In a one-cell stream between hillslopes the results are bit-identical to those with the default 2 (checked on 2026-10-29 for V_a, V_b, V_b2 and V_c) |
 | Base level | The outlet row (j = 50) is a base level without uplift, weathering or bedrock incision (multiplier 0 of `fn_uplift`, `fn_wthr` and `fn_rock`) |
 | Stream | d50 = 3 cm, porosity 0.4, cover length H* = 0.2 m. Plucking k_p = 8.9e-8 m/s, τ_c = 10 Pa, m = 1.5, abrasion β = 6.6e-4 1/m (values during floods). The stream cells do not weather (multiplier 0 of `fn_wthr`; developer.md §89.13) |
 | Hillslopes (calendar values) | Uplift U = 0.1 mm/yr, soil production on bare rock W0 = 0.3 mm/yr (decay depth sd* = 0.5 m; Heimsath type), creep D = 0.01 m²/yr (decay depth H_c = 0.3 m) |
@@ -198,7 +203,7 @@ in Japanese; no hillslopes, replaced by a supply at the head).
 
 | Item | Value |
 |---|---|
-| Channels | One cell wide (Δx = 1 m), 60 m long, slope 0.01 at the start, n = 0.04, Q = 0.336 m³/s (uniform-flow depth 0.3 m). Dry ground at +2 m on both banks; 3 channels side by side from west to east (they do not affect each other) |
+| Channels | One cell wide (Δx = 1 m), 60 m long, slope 0.01 at the start, n = 0.04, Q = 0.336 m³/s (uniform-flow depth 0.3 m). Dry ground at +2 m on both banks; 3 channels side by side from west to east (they do not affect each other). The dynamic reassignment is `f_opening_dynamic = 3` (as in the valley above); in one-cell channels with high banks the results are bit-identical to those with 2 (checked on 2026-10-29 for P_a and P_p) |
 | Uplift and base level | Uniform uplift U = 1e-5 m/s (value during floods); the outlet row is neither uplifted nor eroded |
 | Gravel and cover | d50 = 1 cm, porosity 0.4, H* = 5 cm. From bare rock |
 | Incision | `P_p` plucking only (k_p = 6e-6 m/s, τ_c = 10 Pa, m = 1.5); `P_a` abrasion only (β = 0.05 1/m) |
@@ -267,7 +272,9 @@ in Japanese; no hillslopes, replaced by a supply at the head).
 - [Users guide: landform change](../../../docs/en/users_guide/geomorph.md),
   [supplement](../../../docs/en/users_guide/sediment.md) (the soil production
   function of Heimsath et al. 1997, the creep coefficient of Fernandes &
-  Dietrich 1997, cover and tools of Sklar & Dietrich 2004)
+  Dietrich 1997, cover and tools of Sklar & Dietrich 2004, steady-state slope
+  of Sklar & Dietrich 2006, intermittency of Paola et al. 1992 and Sklar &
+  Dietrich 2006)
 - [test/hillsoil](../../../test/hillsoil/en/README.md) (C2: the hillslopes
   alone in the steady state),
   [test/rockinc](../../../test/rockinc/en/README.md) (T11 = C1: the steady slope

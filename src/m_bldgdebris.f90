@@ -14,8 +14,8 @@ module m_bldgdebris
   !   有効化: fn_bldgdebris の指定(&list_bldgdebris。f_bd=0 で一時無効化)。
   !           ENC 格子のみ。無効時はメモリ・CPU ゼロ追加
   !   破壊:   判定量 X が閾値を超えたセルで wbs→hbd(沈下率 bd_fsink の
-  !           分は wbd へ直行)をレート bd_wdes(数値的閉包【独自】・閾値
-  !           【要文献照合】)。X は f_bdcrit=1: 浸水深 h+hs、
+  !           分は wbd へ直行)をレート bd_wdes(数値的閉包【独自】・閾値は
+  !           校正パラメータ。§63.7)。X は f_bdcrit=1: 浸水深 h+hs、
   !           f_bdcrit=2: 荷重 (h + (1+s)hs + sg_log·hd + sg_bd·hbd)·V²
   !           (F9999 の清水規格化と同じ基底。浮遊物を混合密度に足す =
   !           単位面積あたりの運動量流束の加算。個別衝突の衝撃荷重では

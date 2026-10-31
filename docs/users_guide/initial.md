@@ -150,3 +150,13 @@
 - 静水上の水の山を初期場に与える回帰ケース: [test/wave](../../test/wave/)
 - 乾いた地表+降雨から開始する実地形のケース: [test/chichibu](../../test/chichibu/)
 - 海を通常セルとして解き、初期水位を `f_htype=2` で与える例: [examples/tsunami_fault](../../examples/tsunami_fault/)
+
+## 参考文献
+
+窪地充填(`f_fill_depres`)は ENCflow 独自の簡単な反復です。対象のセルに高い水位を置き、
+8 近傍の水位まで下げる操作を、変化がなくなるまで繰り返します(海に接するセルの水は抜け、
+1 mm 未満の水位差は釣り合いとみなします)。いったん水で満たしてから余分を抜く考え方は、
+Planchon and Darboux (2001)[^pd01] の窪地充填と同じ系統です。河道の初期水深の増分 `h0_rw` と、
+充填水を河床の嵩上げに換える `f_fill_depres = 3` も独自の設定です。
+
+[^pd01]: Planchon, O. and Darboux, F. (2001): A fast, simple and versatile algorithm to fill the depressions of digital elevation models. *Catena*, 46(2–3), 159–176.(要旨で確認)

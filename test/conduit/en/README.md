@@ -16,14 +16,16 @@ It consists of two schematic experiments (developer.md §46).
   confined head rises and comes to equilibrium with the surface water level.
   Since there is no lateral flow and every cell follows the same ordinary
   differential equation, **the equilibrium values are determined
-  analytically**, and it is confirmed that S_surf / S_grnd on the screen
-  agree with them to all printed digits. Has a reference.
+  analytically**, and the check script `Check_conduit.py A` confirms that
+  S_surf / S_grnd on the screen (Log) agree with them to all printed digits.
+  Has a reference.
 - **Schematic experiment B** (`param_lat.txt`): the inlets are only in the
   central 3×3 cells, and the lateral spreading by the sqrt turbulent law
   inside the conduit layer, Green-Ampt vertical infiltration and the leakage
   and inflow between the conduits and the soil layer are all enabled, to
   confirm mass conservation through all the coupling paths and 8-direction
-  isotropy (point symmetry and transpose symmetry).
+  isotropy (point symmetry and transpose symmetry) with `Check_conduit.py B`
+  (a self-check without an analytical solution).
 
 ## Configuration
 
@@ -47,17 +49,18 @@ hcrown + (hgc − cap)/slot_sy, and h + hgc = 0.1 m, so
 |---|---|
 | `param.txt` / `param_lat.txt` | Schematic experiment A / B |
 | `data_conduit/inlet.txt` | Inlet density distribution of B (non-zero only in the central 3×3) |
-| `Run.sh` / `Run_MPI.sh N` | Regression test of A (serial / MPI) |
-| `Run_lat.sh` / `Run_lat_MPI.sh N` | Run of B (result_lat/) |
+| `Run.sh` / `Run_MPI.sh N` | Regression test of A (serial / MPI) and the analytical check `Check_conduit.py A` |
+| `Run_lat.sh` / `Run_lat_MPI.sh N` | Run of B (result_lat/) and the self-check `Check_conduit.py B` |
+| `Check_conduit.py` | A: S_total = h₀ at every row, S_surf and S_grnd approach the equilibrium monotonically without overshooting, agreement with h_eq and hgc_eq to all printed digits at the final time, H and Hgc distributions at the final time uniformly h_eq and hgc_eq (within the rounding of the 4 decimals shown in the map output). B: S_total = h₀ at every row, Hgc and H distributions at the final time point-symmetric and transpose-symmetric with zero difference, the centre surcharged above the capacity (Hgc > capacity) |
 | `Fig.py` | Draws the figures below, `en/figs/*.png` (`python3 Fig.py en`; `figs/*.png` are the Japanese versions) |
 
 ## Running
 
 ```bash
 make
-./Run.sh            # A: compares Log.txt with the reference (ULP = 1)
+./Run.sh            # A: compares Log.txt with the reference (ULP = 0) → Check_conduit.py A
 ./Run_MPI.sh 4
-./Run_lat.sh        # B: output to result_lat/ (about 2.5 min)
+./Run_lat.sh        # B: output to result_lat/ (about a second) → Check_conduit.py B
 ./Run_lat_MPI.sh 4  # MPI of B. The rule is bit-identity with the serial run
 python3 Fig.py en   # en/figs/equilibrium.png, en/figs/lateral.png (also prints the tables)
 ```
@@ -94,7 +97,7 @@ relief of 0.094–0.101 m.
 | A: S_grnd (150 s) | 0.05104895104895 m | hgc_eq = 0.05104895104895 m |
 | A: S_total | 0.10000000000000 m, unchanged at all times | 0.1 m |
 | B: S_total | 0.10000000000000 m, unchanged (120 s) | — |
-| B: point and transpose symmetry of Hgc | Maximum deviation 0.0 | — |
+| B: point and transpose symmetry of Hgc and H | Maximum deviation 0.0 | — |
 
 - Schematic experiment A confirms that the basic operation of the conduit
   layer — the inlet inflow law (weir → orifice), the pseudo-slot confined

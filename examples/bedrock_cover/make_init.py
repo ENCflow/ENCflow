@@ -127,6 +127,7 @@ def write_param(name, model, series, tt, dtfile, nx, fn_z, fn_h, fn_sd):
 /
 
 &list_enc
+  f_opening_dynamic = 3     ! 塞がりを局所の平面から測る(急勾配の渓流。developer.md §68.41)
 /
 
 &list_initial

@@ -35,13 +35,14 @@ default) both water and bedload flow along the axis with the full width.
 | T8 steady longitudinal profile under uplift | `param_uplift.txt` | Uniform uplift U = 1e-5 m/s; only the outlet cell is neither uplifted nor eroded (`upmap.txt`, `rockmap_up.txt` = 0 = fixed base level). Plucking only from bare rock (k_p = 6e-6 m/s, H* = 5 cm), morfac = 50 (geomorphic time 7.5e4 s) | For j = 15 to 58: steadiness max\|dz/dt\| < 0.02 U, local balance B_p/(U dts) = 1 ± 0.02, the slope within 5 % of the quasi-analytic solution with uniform-flow hydraulics (E_p0(S)(1 − q_j/q_c(S)) = U, q_j = (1 − λ) U Δy j), and its downstream steepening within 2 % |
 | T11 steady longitudinal profile under head supply (C1) | `param_t11_r02.txt`, `r05`, `r08`, `r05a` | T8 plus a constant supply q_in = r q_c0 at the inflow cell in the north (`inflow_qb`; r = 0.2, 0.5, 0.8; q_c0 = 1.81e-3 m²/s is an estimate of the uniform-flow capacity at slope 0.01). r05a also has abrasion (β = 0.005 1/m). Geomorphic time 1.5e5 s | For j = 15 to 58: steadiness max\|dz/dt\| < 0.02 U, the slope within 5 % of the quasi-analytic solution with uniform-flow hydraulics ((E_p0(S) + β q_j)(1 − q_j/q_c(S)) = U, q_j = q_{j−1} + (1 − λ)Δy E_p0(S)(1 − q_j/q_c(S)), q_0 = q_in), and the sediment budget Σ(z − z0)A = uplift − abrasion + (supply − open-boundary outflow)/(1 − λ) to relative 1e-8 (the outflow is the ledger of developer.md §89.12) |
 | T5 restart round trip | `param_pluck_rt1.txt` → `param_pluck_rt2.txt` | pluck saved at 150 s from bare rock and continued to 300 s | state.dat and geomorph_rockinc.dat are byte-identical to the straight run |
-| T9 steep uniform flow (record) | `param_steep_s001.txt` … `param_steep_s020.txt`, `param_steep_s020_od0.txt` | Uniform flow at slopes 0.01 to 0.2 in a 5-cell channel (no landform change). od0 is without the dynamic reassignment | Tabulates the ratio of the cell τ_b = ρ g n² V²/h^{1/3} to the uniform-flow balance (no pass/fail) |
+| T9 steep uniform flow | `param_steep_s001.txt` … `param_steep_s020.txt`, `param_steep_s020_od0.txt`, `param_steep_s001_od3.txt` … `param_steep_s020_od3.txt` | Uniform flow at slopes 0.01 to 0.2 in a 5-cell channel (no landform change). od0 is without the dynamic reassignment, od3 uses f_opening_dynamic = 3 (blockage measured above the local plane; developer.md §68.41, in Japanese) | Ratio of the cell τ_b = ρ g n² V²/h^{1/3} to the uniform-flow balance. The default 2 and od0 are recorded; od3 must be 1 ± 0.5 % in both the middle of the channel and the column at the wall |
+| T10 orientation of sheet flow (record) | `param_sheet_d00.txt`, `param_sheet_d45.txt` and `_od3` | Sheet flow from uniform rain of 100 mm/h on a plane of slope 0.05 (`z_sheet_d00.txt`, `z_sheet_d45.txt`): 0° (60 × 12, flow along the grid axis) and 45° (60 × 60, along the diagonal), f_opening_dynamic = 2 and 3 | Tabulates τ_b at flow lengths L = 10 to 50 m against uniform sheet flow (q = r L) and the local balance ρ g h S (no pass/fail) |
 
 | File | Content |
 |---|---|
-| `make_init.py` | Generates the terrain, initial depth, bare-rock file, steep channels and erodibility multiplier (constants are kept in step with `param*.txt` and `Check_rockinc.py`) |
-| `Check_rockinc.py cover / pluck / hump / uplift / box LOG / t11 / steep` | The criteria above. The hydraulics are read from bil (single precision), H = sd, z and Ri from the saves (double precision) |
-| `Run.sh` / `Run_MPI.sh N` | Runs and checks all configurations. MPI compares bytes with the serial saves (`save_*_serial`) |
+| `make_init.py` | Generates the terrain, initial depth, bare-rock file, steep channels, sheet-flow planes and erodibility multiplier (constants are kept in step with `param*.txt` and `Check_rockinc.py`) |
+| `Check_rockinc.py cover / pluck / hump / uplift / box LOG / t11 / steep / sheet` | The criteria above. The hydraulics are read from bil (single precision), H = sd, z and Ri from the saves (double precision) |
+| `Run.sh` / `Run_MPI.sh N` | Runs and checks all configurations. MPI compares bytes with the serial saves (`save_*_serial`) and with the outputs of steep_s020_od3 and sheet_d45_od3 with f_opening_dynamic = 3 (`result_*_serial`) |
 
 ## Running
 
@@ -113,6 +114,17 @@ python3 make_init.py z > zinit.txt   # regenerate the inputs (bundled; only when
   depth), not on the roughness or the Froude number, because the blocking
   fraction counts the upslope ground of a uniform slope as a partial wall
   (developer.md §89.4).
+- T9 with f_opening_dynamic = 3 (added on 2026-10-29; developer.md §68.41): the
+  middle of the channel gives 1.0000 to 1.0001, the column at the wall 0.9999,
+  and V / V_Manning(h) in the middle 1.0000 (slopes 0.01 to 0.2; the depth is
+  the uniform-flow depth 0.300 m), all passing.
+- T10 (record): τ_b / τ of uniform sheet flow (q = r L) and τ_b / ρ g h S at
+  L = 10 to 50 m are 1.25 to 1.27 and 1.34 to 1.38 at 0° with 2, 0.99 to 1.00
+  and 0.96 to 0.99 with 3; at 45° they are 1.13 to 1.18 and 1.29 to 1.34 with 2,
+  0.91 to 0.95 and 0.95 to 0.99 with 3. With 3 both orientations are close to
+  the local balance. That τ_b / τ of uniform flow is below 1 at 45° comes from
+  an orientation property: the unit discharge from H and V is 0.91 to 0.93
+  times r L (the same with 2; not investigated).
 
 ## Findings
 

@@ -1,0 +1,68 @@
+!======================================================================
+! gwlateral 構成 1: 地下水の側方流(非線形 Boussinesq)の拡散の検定(内部)
+!   平坦な基盤・四周が無流束の正方形(121 × 121 セル、Δx = 1 m)の中央に、地下
+!   貯留のガウス形の小山 hg = H0 + A exp(−r²/(2σ²))(H0 = 0.2 m、A = 4 mm、σ = 4 m)を
+!   置く。線形化した Boussinesq 方程式(拡散係数 D = K_sh h̄ / sy、h̄ = H0 / sy)では、
+!   小山の 2 次モーメントが初期の形によらず d⟨r²⟩/dt = 4D で伸びる。30 分で小山は
+!   σ ≈ 14 m まで広がるが、縁(中心から 60 m)にはほとんど届かないので、縁の影響を
+!   受けない内部の離散化を確かめられる(Check_gwlateral.py gauss)。初期の地下貯留は、
+!   同じ形の初期水深を浸透能の非常に大きい Green-Ampt(psif = 0)で最初のステップに
+!   全量浸透させて作る。分布は bil(float32)で 300 s ごとに出す。
+!======================================================================
+&list_sysparam
+  f_gridsystem = 0
+  f_govequation = 0
+  dt = 0.5
+  t0 = 0
+  tt = 1800
+  dt_disp = 600
+  dt_file = 300
+  dt_recrd = 300
+  fn_geoinfo = '-'
+  fn_initial = '-'
+  fn_gwflow = '-'
+  dir_data = 'data_gwlateral'
+  dir_result = 'result'
+  f_output_mode = 2         ! bil(float32): 小山の形を f12.4 の丸めなしで読む
+  f_out_hg = 1
+  f_disp_debug = 1          ! S 列を全有効桁で表示(地下貯留の保存を Log で読む)
+  f_check_cfl = 1
+/
+
+&list_enc
+/
+
+&list_initial
+  f_htype = 1               ! 初期水深の分布ファイル(最初のステップで全量が浸透する)
+  fn_hinit = 'h_gauss.txt'
+/
+
+&list_geoinfo
+  nx = 121
+  ny = 121
+  dx = 1.0
+  dy = 1.0
+  f_ztype = 0               ! 平坦(z0 = 0)
+  f_rntype = 0
+  rn0 = 0.1
+  sd0 = 2.0                 ! 容量 sy0·sd0 = 0.4 m(飽和帯厚 1 m の 2 倍。湧出しない)
+  sy0 = 0.2
+/
+
+&list_bound
+/
+
+&list_gwflow
+  f_gwvertical = 2          ! Green-Ampt(初期の地表水を最初のステップで地下へ移すだけに使う)
+  f_gwlateral = 1           ! 非線形 Boussinesq 側方流動
+  dt_gwflow = 0             ! 毎ステップ更新
+/
+
+&list_gwflow_greenampt
+  gw_ksv_mmh = 3.6e6        ! 1 m/s: 浸透 = min(K_sv dt, h, 空き容量) で 1 ステップに全量
+  gw_psif = 0.0
+/
+
+&list_gwflow_lateral
+  gw_ksh_mmh = 36000.0      ! K_sh = 0.01 m/s → D = K_sh h̄ / sy = 0.05 m²/s
+/

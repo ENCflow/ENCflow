@@ -1,0 +1,6 @@
+result_*/
+data_qanat/
+Screen_*.log
+encflow
+encflow_mpi
+__pycache__/

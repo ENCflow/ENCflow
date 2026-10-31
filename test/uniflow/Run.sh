@@ -1,5 +1,5 @@
 #!/bin/bash
-# uniflow: 乾いた地盤に挟まれた直線水路の等流(逐次実行。幅 1・5 × 振り替え off/on と、幅 1 の射流の区間流入)
+# uniflow: 乾いた地盤に挟まれた直線水路の等流(逐次実行。幅 1・5 × 振り替え off/on/on3 と、幅 1 の射流の区間流入)
 #   ./Run.sh
 # 合否は Check_uniflow.py
 
@@ -19,6 +19,8 @@ set -o pipefail
 ./encflow param_w5_off.txt | tee -a Screen.log || exit 1
 ./encflow param_w5_on.txt | tee -a Screen.log || exit 1
 ./encflow param_w1_sc.txt | tee -a Screen.log || exit 1
+./encflow param_w1_on3.txt | tee -a Screen.log || exit 1
+./encflow param_w5_on3.txt | tee -a Screen.log || exit 1
 set +o pipefail
 echo ""
 

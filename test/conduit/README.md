@@ -9,12 +9,13 @@
 
 - **模式実験 A**(`param.txt`): 一様湛水が枡から管路層へ落ち、満管後に
   被圧水頭が立ち上がって地表水位と平衡する。側方流なしで全セルが同じ
-  常微分方程式に従うため、**平衡値が解析的に決まり**、画面の S_surf /
-  S_grnd がそれに表示全桁で一致することを確かめる。reference あり。
+  常微分方程式に従うため、**平衡値が解析的に決まり**、画面(Log)の
+  S_surf / S_grnd がそれに表示全桁で一致することを検定スクリプト
+  `Check_conduit.py A` で確かめる。reference あり。
 - **模式実験 B**(`param_lat.txt`): 枡を中心 3×3 セルだけにし、管路層内の
   sqrt 乱流則の側方拡散、Green-Ampt 鉛直浸透、管路 ⇔ 土層の漏水・浸入水を
   すべて有効にして、全結合経路の質量保存と 8 方向等方性(点対称・転置
-  対称)を確かめる。
+  対称)を `Check_conduit.py B` で確かめる(解析解はない自己検証)。
 
 ## 構成
 
@@ -37,17 +38,18 @@ hcrown + (hgc − cap)/slot_sy に等しく、かつ h + hgc = 0.1 m なので
 |---|---|
 | `param.txt` / `param_lat.txt` | 模式実験 A / B |
 | `data_conduit/inlet.txt` | B の枡密度分布(中心 3×3 のみ非ゼロ) |
-| `Run.sh` / `Run_MPI.sh N` | A の回帰テスト(逐次 / MPI) |
-| `Run_lat.sh` / `Run_lat_MPI.sh N` | B の実行(result_lat/) |
+| `Run.sh` / `Run_MPI.sh N` | A の回帰テスト(逐次 / MPI)と解析検定 `Check_conduit.py A` |
+| `Run_lat.sh` / `Run_lat_MPI.sh N` | B の実行(result_lat/)と自己検定 `Check_conduit.py B` |
+| `Check_conduit.py` | A: 全行の S_total = h₀、S_surf・S_grnd が平衡へ単調に近づき行き過ぎない、最終時刻に h_eq・hgc_eq と表示全桁で一致、最終時刻の H・Hgc の分布が一様に h_eq・hgc_eq(分布出力の表示 4 桁の丸めの範囲)。B: 全行の S_total = h₀、最終時刻の Hgc・H の分布が点対称・転置対称で差 0、中心が満管を超えて被圧(Hgc > 容量) |
 | `Fig.py` | 下の図 `figs/*.png` を描く |
 
 ## 実行
 
 ```bash
 make
-./Run.sh            # A: Log.txt を reference と比較(ULP = 1)
+./Run.sh            # A: Log.txt を reference と比較(ULP = 0)→ Check_conduit.py A
 ./Run_MPI.sh 4
-./Run_lat.sh        # B: result_lat/ に出力(約 2.5 分)
+./Run_lat.sh        # B: result_lat/ に出力(1 秒ほど)→ Check_conduit.py B
 ./Run_lat_MPI.sh 4  # B の MPI。逐次とビット一致するのが規律
 python3 Fig.py      # figs/equilibrium.png, figs/lateral.png(数表も表示。引数 en で英語版を en/figs/ に)
 ```
@@ -79,7 +81,7 @@ sqrt 乱流則の 8 方向コンダクタンスで放射状に広がり、中心
 | A: S_grnd(150 s) | 0.05104895104895 m | hgc_eq = 0.05104895104895 m |
 | A: S_total | 0.10000000000000 m で全時刻不変 | 0.1 m |
 | B: S_total | 0.10000000000000 m で不変(120 s) | — |
-| B: Hgc の点対称・転置対称 | 最大偏差 0.0 | — |
+| B: Hgc・H の点対称・転置対称 | 最大偏差 0.0 | — |
 
 - 模式実験 A は、枡の流入則(堰 → オリフィス)、満管後の疑似スロット
   被圧枝、地表との平衡という管路層の基本動作が、解析平衡に**表示全桁で**

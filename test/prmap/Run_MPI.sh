@@ -8,7 +8,7 @@ sdir=$(dirname "$(readlink -f "$0")")
 ../Scripts/Check_mode.sh mpi || exit 1
 
 export ENCFLOW_EXPECT_NP="$NP"
-tags="p2_def p2_min p2_c1h p2_c60 p2_prio p3_def p3_c30 p3_unit p3_prupdate"
+tags="p2_def p2_min p2_c1h p2_c60 p2_prio p3_def p3_c30 p3_unit p3_prupdate p1_rr p2_rr p3_rr"
 for tag in $tags; do
     rm -rf result_$tag
     mpirun -np "$NP" $MPIRUN_OPTS ./encflow_mpi param_$tag.txt > Screen_$tag.log 2>&1 \

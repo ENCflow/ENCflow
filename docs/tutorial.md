@@ -57,6 +57,7 @@ wave の Step 1 に出てくるクーラン数(`Cn_max` 列)と時間刻み `dt`
 | [内部水理構造物](users_guide/structure.md)・[境界条件](users_guide/boundary.md)・[河道](users_guide/channel.md) | [構造物と境界の水理則](users_guide/hydraulics.md) |
 | [地下水](users_guide/gwflow.md) | [地下水モデル](users_guide/gwflow_models.md) |
 | [土砂・地形変化](users_guide/geomorph.md) | [土砂輸送と斜面・長期地形過程](users_guide/sediment.md)、[土石流・斜面崩壊・動く底層](users_guide/massflow.md) |
+| [沿岸の波浪場](users_guide/wavefield.md) | [沿岸の波浪場の解説](users_guide/wavefield_models.md) |
 | [水質](users_guide/wq.md) | [水質モデル](users_guide/wq_models.md) |
 | [降雨・気象](users_guide/forcing.md) | [降雨・気象のモデル](users_guide/forcing_models.md) |
 | [河道](users_guide/channel.md) | [河道の解説](users_guide/channel_models.md) |

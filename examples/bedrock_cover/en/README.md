@@ -22,7 +22,7 @@ particular river.
 | Item | Value |
 |---|---|
 | Channels | One cell wide (Δx = 1 m), 100 m long, slope 0.01, n = 0.04. Dry ground at +2 m on both banks. 2 to 6 channels side by side from west to east; each channel differs only in its supply or initial soil depth (separated by the banks, they do not affect each other) |
-| Flow | Segment inflow Q = 0.336 m³/s at the north end (uniform-flow depth 0.3 m, V = 1.12 m/s, bed shear stress τ_b = 29.4 Pa); free outflow at the south edge |
+| Flow | Segment inflow Q = 0.336 m³/s at the north end (uniform-flow depth 0.3 m, V = 1.12 m/s, bed shear stress τ_b = 29.4 Pa); free outflow at the south edge. The dynamic reassignment of blocked openings is `f_opening_dynamic = 3` (blockage measured above the local plane; [shallow water chapter](../../../docs/en/users_guide/swflow.md), developer.md §68.41, in Japanese). In a one-cell channel with high banks the results are bit-identical to those with the default 2 (checked on 2026-10-29) |
 | Gravel and cover | d50 = 1 cm (moves with τ* ≈ 0.18), porosity 0.4, cover length H* = 1 cm. Bedload capacity of the uniform flow q_c = 1.83e-3 m²/s (Ashida–Michiue formula) |
 | Bedrock incision | Plucking: k_p = 1e-6 m/s, τ_c = 10 Pa, m = 1.5 (plucking rate of bare rock E_p0 = 2.7e-6 m/s). Abrasion: β = 0.005 1/m (largest incision rate by abrasion β q_c/4 = 2.3e-6 m/s) |
 | Supply | Bedload at the inflow cell, `inflow_qb`. Supply ratio r = q_in/q_c (q_in is r times the estimate 1.81e-3 m²/s of q_c) |
@@ -171,5 +171,9 @@ same).
 - docs/mountain_stream_plan.md (design study; the steady solution of §4.3 and the example plan of §4.9) and developer.md §89 (in Japanese)
 - Sklar, L. S. and Dietrich, W. E. (2004): A mechanistic model for river incision into bedrock by
   saltating bed load. *Water Resour. Res.*, 40, W06301. doi:10.1029/2003WR002496
-- Inoue, T. et al. (2016): Numerical simulation of effects of sediment supply on bedrock channel
-  morphology. *J. Hydraul. Eng.*, 142(7). doi:10.1061/(ASCE)HY.1943-7900.0001124 (checked against the abstract)
+- Inoue, T., Iwasaki, T., Parker, G., Shimizu, Y., Izumi, N., Stark, C. P. and Funaki, J. (2016):
+  Numerical simulation of effects of sediment supply on bedrock channel morphology. *J. Hydraul.
+  Eng.*, 142(7), 04016014. doi:10.1061/(ASCE)HY.1943-7900.0001124 (checked against the full text:
+  with a supply close to capacity, cover shaped like alternate bars migrates downstream and erodes
+  the bedrock uniformly; at 0.2 times capacity, several longitudinal grooves are cut into the
+  bedrock and the cover collects in them)

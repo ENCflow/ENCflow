@@ -12,7 +12,9 @@ underground by Green-Ampt infiltration, and then pumped by two wells: one
 distributed equally over all cells and one in the single central cell. It
 confirms that the demand and the actual withdrawal agree exactly and that
 the total storage decreases linearly as the analytical value (verification
-record in developer.md §16.3).
+record in developer.md §16.3). Run.sh and Run_MPI.sh compare with the
+reference and then check against the analytical values with the check script
+`Check_pump.py`.
 
 ## Configuration
 
@@ -35,13 +37,15 @@ analytical value.
 |---|---|
 | `param.txt` | As above (with a reference) |
 | `data_pump/wells.txt` | Cell list of well 1 (all cells) |
+| `Run.sh` / `Run_MPI.sh N` | Compare Log.txt with the reference (ULP = 0, excluding the Runge column), then check against the analytical values with `Check_pump.py` |
+| `Check_pump.py` | Analytical check: S_total = h₀ − Q t / A (relative 1e-9) and S_surf = max(h₀ − K_s t, 0) (K_s = 1e-4 m/s) at every row, the Hg distribution at the final time (h₀ − Q₁ t / A outside the centre, lower by Q₂ t / Δx² at the centre; within the rounding of the 4 decimals shown in the map output), and demand = pumped = Q t per well on the screen |
 | `Fig.py` | Draws the figures `en/figs/*.png` below (`python3 Fig.py en`; `figs/*.png` are the Japanese versions) |
 
 ## Running
 
 ```bash
 make
-./Run.sh          # compare Log.txt with the reference (ULP = 1, excluding the Runge column)
+./Run.sh          # compare Log.txt with the reference (ULP = 0, excluding the Runge column) → Check_pump.py
 ./Run_MPI.sh 4
 python3 Fig.py en # en/figs/storage.png, en/figs/map.png
 ```
@@ -83,8 +87,8 @@ there is no lateral flow, it does not spread to the neighboring cells.
   excessive case with a demand of 1 m³/s). Pumping-induced seawater
   intrusion (a derivative of test/salt) is also recorded in the same
   section.
-- Regression discipline: Log.txt must match the reference, and MPI
-  np = 1, 2, 4 must be identical.
+- Pass criteria: Log.txt matches the reference (MPI np = 1, 2, 4 are
+  identical as well) and the analytical check of `Check_pump.py` passes.
 
 ## Related documents
 

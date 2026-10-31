@@ -21,7 +21,7 @@ matplotlib.rcParams["axes.unicode_minus"] = False
 if EN:
     matplotlib.rcParams["font.family"] = ["DejaVu Sans"]
 else:
-    for f in ("IPAPGothic", "Noto Sans CJK JP", "WenQuanYi Zen Hei"):   # 日本語ラベル(無ければ既定フォント)
+    for f in ("IPAPGothic", "IPAGothic", "Noto Sans CJK JP", "WenQuanYi Zen Hei"):   # 日本語ラベル(無ければ既定フォント)
         try:
             import matplotlib.font_manager as fm
             if any(x.name == f for x in fm.fontManager.ttflist):

@@ -63,7 +63,7 @@ im = axes[2].imshow(np.where(h > 1e-6, h, np.nan), origin="lower", extent=[0, 40
 axes[2].set_title(T("最終の水深 H (m)(下流端で湧出・湛水)", "Final depth H (m) (ponding at the downstream end)"), fontsize=9); fig.colorbar(im, ax=axes[2], shrink=0.8)
 for ax in axes[1:]:
     ax.set_xlabel("x (m)"); ax.set_ylabel("y (m)")
-fig.suptitle(T("水質の地下経路(gwseep): 閉領域斜面(勾配 0.1)で 初期水 0.05 m・100 mg/L が浸透・側方流動・湧出を循環(3 h)",
-               "Groundwater pathway of water quality (gwseep): initial water 0.05 m at 100 mg/L circulates through infiltration, lateral flow and seepage on a closed slope (gradient 0.1), 3 h"), fontsize=10)
+fig.suptitle(T("水質の地下経路(gwseep): 閉領域斜面(勾配 0.1)で 初期水 0.05 m・100 mg/L が浸透・側方流動・湧出を循環(1.5 h)",
+               "Groundwater pathway of water quality (gwseep): initial water 0.05 m at 100 mg/L circulates through infiltration, lateral flow and seepage on a closed slope (gradient 0.1), 1.5 h"), fontsize=10)
 fig.tight_layout(); fig.savefig(f"{FIGDIR}/gwseep.png", dpi=110); plt.close(fig)
 print("end: to_gw %.4f seep %.4f mass_gw %.4f (to_gw-seep %.4f) total %.4f; C wet min/max %.4f/%.4f" % (w["to_gw_g"][-1], w["seep_g"][-1], w["mass_gw_g"][-1], w["to_gw_g"][-1] - w["seep_g"][-1], w["mass_surface_g"][-1] + w["mass_gw_g"][-1], c[h > 1e-6].min(), c[h > 1e-6].max()))

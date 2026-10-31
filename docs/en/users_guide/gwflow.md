@@ -176,10 +176,18 @@ Storage above saturation capacity exfiltrates to the surface
 | gw_ksh_mmh | 360 | Lateral saturated hydraulic conductivity (mm/h). 1e-4 m/s = 10 x the matrix value (effective value with macropore / pipe flow) |
 | gw_eps | 1e-3 | Regularization thickness for the dry test and suppression of excessive outflow (m) |
 | gw_diagratio | 2/(2+sqrt(2)) | Diagonal partitioning (normally no need to change; 0 is equivalent to 4 neighbors) |
+| f_gw_opening | 1 | Transfer of blocked diagonal shares (1: the passage width of diagonals blocked by outside or sea cells goes to the axis edges, so the conductance along walls equals the interior value; 0: none = the default before 2026-10-30; [supplement](gwflow_models.md#4-lateral-flow-f_gwlateral--1)) |
 
 The stability condition of the explicit scheme is checked at
 initialization; if dt exceeds the limit, the limit value is printed
 and the run stops (lower dt or thin the updates with dt_gwflow).
+
+gw_eps, gw_diagratio and f_gw_opening are the geometry items of lateral flow,
+and the lateral flow in layer 2 (next section) uses the same values. When
+layer-2 lateral flow is used without lateral flow in the soil layer
+(f_gwlateral = 0), the three geometry items are still read from this group if
+it exists (gw_ksh_mmh is not used), and the defaults apply otherwise (the
+transfer is on by default).
 
 When [water quality](wq.md) (fn_wq; f_wq_infil=1 is the default) is
 enabled, dissolved substances in the groundwater move with the lateral
@@ -209,7 +217,7 @@ exfiltrates to the surface.
 | gw2_depth | 3 | Layer thickness (m). Representative weathered zone of a granitic headwater |
 | gw2_sy | 0.05 | Specific yield (effective porosity). A few percent in weathered rock |
 | gw2_infil_mmh | 1 | Infiltration capacity from layer 1 to layer 2 (mm/h). Upper side of the saturated conductivity of weathered rock |
-| gw2_ksh_mmh | - | Lateral saturated hydraulic conductivity of layer 2 (mm/h). 0 disables lateral flow (a capacity buffer) |
+| gw2_ksh_mmh | - | Lateral saturated hydraulic conductivity of layer 2 (mm/h). 0 disables lateral flow (a capacity buffer). The eight-direction partitioning and the transfer of blocked diagonal shares follow the geometry items of &list_gwflow_lateral (previous section) |
 | gw2_sat0 | 0 | Initial saturation [0,1]. In event runs, a calibration parameter that sets the baseflow discharge |
 
 - **Cannot be combined with the bucket vertical model.**
@@ -463,8 +471,10 @@ It acts in two places.
   saturated thickness. The cap is the same in both directions, so a
   gaining river, where surrounding groundwater enters the channel and
   exfiltrates, is also throttled by k_bed. Edges between two channel cells
-  are treated as aquifer continuity and are not capped; layer 2, the
-  conduit layer and the fresh/salt layers are not affected.
+  are treated as aquifer continuity and are not capped; layer 2 and the
+  conduit layer are not affected. The salt-zone flux of the
+  [fresh and salt water layers](salt.md) is capped in the same form
+  (capacity x passage width x saturated salt thickness).
 
 | Parameter | Default | Meaning |
 |---|---|---|
@@ -599,5 +609,11 @@ see [the rainfall and meteorology chapter](forcing.md).
 - [test/pump](../../../test/pump/en/README.md) and [test/frost](../../../test/frost/en/README.md): analytical checks of storage loss by well pumping and infiltration suppression by the freezing index.
 - [test/gwseep](../../../test/gwseep/en/README.md): infiltration, lateral groundwater transport and exfiltration, checked together with water-quality mass balances.
 - [test/gwbed](../../../test/gwbed/en/README.md): throttled gaining flow, the k_bed = 0 cut-off and the replacement of the vertical infiltration capacity by the streambed exchange limit, compared with analytical values.
+- [test/gwlateral](../../../test/gwlateral/en/README.md): lateral flow compared with the linearised Boussinesq equation (spreading of a Gaussian mound at 4D), confirming that the transfer of blocked diagonal shares (the default) makes the conductance along walls equal to the interior value (0.71 times without the transfer).
+- [test/gwtani](../../../test/gwtani/en/README.md): constant rain on a steep slope with a thin soil layer; the time of saturation is set by the vertical arrival time (vertical infiltration dominates) and the steady saturated extent by the contributing recharge and the lateral transmissivity (lateral flow dominates), compared with kinematic predictions. A restart round trip with lateral flow enabled is also checked.
 - [examples/sewer_hybrid](../../../examples/sewer_hybrid/en/README.md): example settings and input generation that represent a trunk and a branch network in the same conduit layer.
-- [examples/qanat](../../../examples/qanat/en/README.md): an example combining the conduit layer with layer 2 to represent collection, conveyance and outlet seepage of an underground gallery.
+- [examples/qanat](../../../examples/qanat/en/README.md): an example combining the conduit layer with layer 2 to represent the collection, conveyance and outlet flow of a qanat (tunnel) that collects the groundwater of a fan, and to compare how a nearby pumping well reduces and dries up the flow.
+
+## References
+
+The sources of the models, formulas and default values used in this chapter are collected in the references of [Groundwater models](gwflow_models.md#references).

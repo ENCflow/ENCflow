@@ -10,8 +10,9 @@ runoff (meltwater flowing over frozen ground). A degree-day freezing index
 FI (℃·day) is accumulated, and the reduction factor
 Ff = max(fro_fmin, 1 − FI/fro_fifull) multiplies the infiltration capacity.
 With a constant air temperature designed so that FI grows linearly, the time
-evolution of the subsurface storage is determined analytically, and agreement
-to all digits is confirmed by comparison with the reference.
+evolution of the subsurface storage is determined analytically. In addition
+to the comparison with the reference, the check script `Check_frost.py`
+confirms agreement with the analytical solution to all digits.
 
 ## Configuration
 
@@ -24,12 +25,14 @@ to all digits is confirmed by comparison with the reference.
 | Time | dt = 0.5 s, 3600 s. Reduction factor Ff output every 1800 s |
 
 Since Ff(t) = 1 − t/T (T = 3600 s), the subsurface storage is
-S_grnd(t) = K t (1 − t/2T); in discrete form
-S_grnd(3600) = K·dt·(7200 − 7201/2) = 0.0179975 m.
+S_grnd(t) = K t (1 − t/2T); in discrete form the reduction factor of step n
+(t = n·dt) is Ff_n = 1 − n/N (N = 7200), so S_grnd(t) = K·dt·(n − n(n+1)/2N)
+and S_grnd(3600) = K·dt·(7200 − 7201/2) = 0.0179975 m.
 
 | File | Contents |
 |---|---|
-| `Run.sh` / `Run_MPI.sh N` | Compare Log.txt with the reference (ULP = 0) |
+| `Run.sh` / `Run_MPI.sh N` | Compare Log.txt with the reference (ULP = 0), then check against the analytical values with `Check_frost.py` |
+| `Check_frost.py` | Analytical check: S_grnd = K·dt·(n − n(n+1)/2N) (relative 1e-9), S_surf = h₀ − S_grnd and S_total = h₀ at every row; the Ff distribution (uniformly 1, 0.5 and 0 at 0, 1800 and 3600 s) and the Hg distribution at 3600 s (uniformly S_grnd(3600)) within the rounding of the 4 decimals shown in the map output |
 | `Fig.py` | The figure `en/figs/frost.png` below (`python3 Fig.py en`; `figs/frost.png` is the Japanese version) |
 
 ## Running
@@ -58,7 +61,9 @@ t = 1800 s and uniformly 0 (fully frozen) at t = 3600 s.
 | S_grnd(3600 s) | 0.01799750000000 m | 0.0179975 m (all 14 digits agree) |
 | Ff(1800 s) / Ff(3600 s) | 0.5000 / 0.0000 | 0.5 / 0 |
 
-- All intermediate times also agree exactly (reference PASS).
+- All intermediate times also agree exactly (`Check_frost.py` checks every
+  row of the Log; the largest relative difference is 1.2e-12, the rounding of
+  the 14 digits shown in the Log).
 - The verification record in §16.4 also shows that thawing (fi0 = 0.36,
   Ta = +8.64, ct = 0.5) gives Ff(1800) = 0.25 and Ff(3600) = 0.5 exactly, that
   snow insulation (swe = 0.1 m) gives Ff(3600) = 1 − e⁻¹ = 0.6321 exactly, and

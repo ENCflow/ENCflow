@@ -160,6 +160,17 @@ against the originals is a remaining item of debris_plan.md §1).
 $`\delta_e`$ (`db_delte`, default 0.0007) is Takahashi's general value and
 $`\delta_d`$ (`db_deltd`, default 0.05) the customary value of the Kanako
 family; both are **calibration coefficients of the run-out distance**.
+Configuration 7 of [test/debris](../../../test/debris/en/README.md) checks that the
+concentration of uniform flow on a slope converges to $`C_\infty`$ in all four
+regimes, including the row on the free-outflow edge. The steepest-descent
+slope supplies the elevation of a neighbour outside an open edge (free
+outflow, long-wave radiation, section inflow, etc.) by linear extrapolation
+from the two inner cells along the normal of the edge, so the edge row gets
+the same slope as the interior (fixed on 2026-10-30; before that the
+neighbours outside were left out, the slope in the edge row became 0 and an
+artificial deposit formed as if $`C_\infty = 0`$; developer.md §28.15).
+Directions towards a closed edge, cells outside the domain or the sea are
+left out as before.
 
 **f_dbed = 2: Egashira–Ashida.** Erosion and deposition are one continuous
 formula (eqs. (5)–(7) of Morpho2DH[^morpho2dh]) with no extra parameter:
@@ -190,8 +201,17 @@ deposit and runs on by inertia, then deposits as a fan at the slope break.
 growth of avalanches and rock avalanches that pick up the snow or the
 colluvium of their path; the entrainable layer is given by the soil
 thickness $`s_d`$. Only dense cells with $`C \ge c_{\min}`$ entrain (no
-runaway of dilute fringes). **f_dbed = 0** is no exchange (equivalent
-fluid).
+runaway of dilute fringes). The empirical entrainment law of Hungr[^hungr95],
+widely used in debris-flow practice, is $`E = E_r\,h\,|\mathbf{V}|`$ (DAN3D and
+others; $`E_r`$ is the volume growth per metre travelled, estimated from the
+volume $`V_0`$ entering and $`V_f`$ leaving the entrainment zone and its length
+$`L`$ as $`E_r = \ln(V_f/V_0)/L`$[^qiao23]) and has a flow-depth factor. With
+f_dbed = 4 the erosion depth is proportional to the distance travelled
+regardless of the flow depth, whereas with Hungr's law it is proportional to
+the flow depth and the volume grows exponentially with the distance. To give a
+similar entrained amount with f_dbed = 4, $`\delta_e \approx E_r \times`$ (a
+representative flow depth) is a guide. **f_dbed = 0** is no exchange
+(equivalent fluid).
 
 **Stopping (f_dbstop = 1).** In cells with $`|\mathbf{V}| < v_{stop}`$ and
 $`C > C_\infty`$ the excess concentration is transferred to the bed at the
@@ -206,6 +226,52 @@ the deposit). This corresponds to the source term of the total-volume
 continuity equation of Takahashi–Nakagawa[^tn91] and is the first-order
 effect that gives a net bulking in erosion-dominated channels. It is
 exclusive with the groundwater computation.
+
+**Pore water with the groundwater computation (f_dbwet = 2).** With the
+groundwater computation (`fn_gwflow`) the pore water of the bed is held as
+subsurface storage $`h_g`$ (capacity $`s_d\,s_y`$). `f_dbwet = 2` moves water
+between the surface water and the subsurface storage with the bed change. On
+deposition ($`\Delta z > 0`$) the added capacity is filled immediately from the
+local surface water ($`\Delta h = \min(s_y\,\Delta z,\ s_d s_y - h_g,\ h)`$ moves
+from $`h`$ to $`h_g`$; sediment deposited under a flow is saturated), and on
+erosion ($`\Delta z < 0`$) the pore water of the eroded layer
+$`\min(s_y|\Delta z|,\ h_g)`$ returns from $`h_g`$ to $`h`$ (the subsurface storage
+fills from the top, so erosion removes the wet upper part first). Both are our
+own simplifications; the total amount of water is conserved, and alternating
+deposition and erosion does not shift water in one direction. With
+`f_dbwet = 0` and the groundwater computation the pores of the deposit stay
+empty while the ground rises, so deposition in a pond pushes out water equal to
+those pores.
+
+**Future work (planned): Hungr's entrainment law.** We plan to add, without
+changing the default, Hungr's empirical entrainment law[^hungr95]
+$`E = E_r\,h_t\,|\mathbf{V}|`$, mentioned in the f_dbed = 4 paragraph above, as an
+f_dbed option.
+
+- **Effect**: the form then matches models used in European and North American
+  practice such as DAN3D, so earlier calibrated values (for example
+  $`E_r \approx 0.001`$ /m for Cancia 2015[^qiao23]) can be used as they are. The
+  entrainment rate $`E_r`$ can be estimated from the volumes entering and leaving
+  the entrainment zone and its length as $`E_r = \ln(V_f/V_0)/L`$, so it can be
+  calibrated with pre- and post-event surveys or deposit volumes. Thicker flows
+  erode deeper, and the flow volume grows exponentially with the distance
+  travelled (with f_dbed = 4 the erosion depth does not depend on the flow depth,
+  so the volume growth is set by the area the flow covers). The one added
+  parameter is $`E_r`$ (1/m); it is not shared with the dimensionless
+  $`\delta_e`$ because the units differ.
+- **To be prepared in the implementation**: as with f_dbed = 4, entrainment only
+  with deposition left to `f_dbstop`, the entrainable layer given by the soil
+  thickness $`s_d`$ (the entrainment zone given by the distribution of $`s_d`$),
+  and entrainment only by dense cells with $`C \ge c_{\min}`$. The flow depth is
+  the mixture depth $`h_t = h + h_s`$. In Hungr's definition the entrained
+  material joins the flow with its pore water (as bulk volume), so to match that
+  volume growth it is combined with pore-water entrainment (`f_dbwet = 1`,
+  saturation 1). The check case is that the volume of a flow moving at a
+  constant speed down a uniform slope grows as $`V_0\,e^{E_r x}`$ with the distance
+  travelled $`x`$ (together with the closure of the solid ledger).
+- **Timing**: it will be added when comparisons with European practice models or
+  real debris flows with large entrainment (Cancia 2015 and others; obtaining the
+  topographic data is a prerequisite) are taken up (developer.md §28.8).
 
 ## 4. Triggering
 
@@ -319,7 +385,7 @@ The labels in the Basis column are explained in [How to read the basis of a defa
 | f_dbed | 1 | erosion/deposition law (§3) | **method** 1: Takahashi relaxation, 2: Egashira–Ashida, 3: Takahashi–Nakagawa, 4: velocity-proportional, 0: none |
 | db_delte / db_deltd | 0.0007 / 0.05 | erosion / deposition rate coefficients | **calibration** Takahashi's general value / Kanako customary value |
 | f_dbstop / db_vstop / db_wstop | 0 / 0.05 m/s / 0.05 m/s | low-speed stopping | **numerical** vstop also serves the yield test |
-| f_dbwet / db_satbed | 0 / 1.0 | pore-water entrainment / deposit saturation | **method** total-volume continuity of Takahashi–Nakagawa[^tn91] |
+| f_dbwet / db_satbed | 0 / 1.0 | pore-water entrainment / deposit saturation (1: entrainment, 2: with the groundwater computation) | **method** total-volume continuity of Takahashi–Nakagawa[^tn91] (1). 2 exchanges pore water between the surface water and subsurface storage (own) |
 | db_reltime / db_relsat | 0 / 1.0 | release time / saturation of the failed mass (§4) | **given** |
 | slide_c / slide_phi / slide_gamma | 0 / 30° / 18 kN/m³ | strength constants of the stability test (§4) | **customary value** shallow-landslide values; c' = 0 is on the safe side |
 | bs_rho | 2000 kg/m³ | bulk density of the mass (§5) | **customary value** representative of saturated soil and rock debris |
@@ -336,7 +402,14 @@ The labels in the Basis column are explained in [How to read the basis of a defa
 - Voellmy μ and ξ are usually calibrated against the runout and deposit
   shape of past events; the RAMMS calibration compilation[^christen10]
   tabulates them by terrain and size, and practical debris-flow values are
-  collected in Takahashi[^takahashi07].
+  collected in Takahashi[^takahashi07]. As a debris-flow calibration
+  example, the back-analysis of the 2015 Cancia debris flow in the Italian
+  Dolomites (4,400 m³ at the start grew to 28,850 m³ by entrainment along a
+  2.2 km channel with slopes of 27° upstream and 13° downstream) found the
+  same best μ = 0.11 and ξ = 450 m/s² for two models with entrainment (DAN3D
+  and a finite-difference model; E_r ≈ 0.001 /m with Hungr's entrainment law.
+  Without entrainment the whole volume had to be released at the top, and
+  the models produced bank overflows that did not occur)[^qiao23].
 - Move the erosion / deposition coefficients so that the traces of past
   debris flows (scour depth, deposit thickness) are reproduced, checking
   both runout and deposited volume.
@@ -345,14 +418,14 @@ The labels in the Basis column are explained in [How to read the basis of a defa
 
 | Case | Content | Point |
 |---|---|---|
-| [test/debris](../../../test/debris/en/README.md) | four constitutive configurations (simple, Egashira, Takahashi–Nakagawa, pore water) | total solid 1e-13, np = 1, 2, 4 agree |
+| [test/debris](../../../test/debris/en/README.md) | four constitutive configurations (simple, Egashira, Takahashi–Nakagawa, pore water); equilibrium concentration of uniform flow on a slope | total solid 1e-13, np = 1, 2, 4 agree; equilibrium concentration within 1e-11 of the Takahashi-type C∞ |
 | [test/slide](../../../test/slide/en/README.md) | fluidisation and stability test | self-checks of conservation and water budget |
 | [test/volcano](../../../test/volcano/en/README.md) | Voellmy uniform flow and τ_y run-out | uniform depth within 0.04% of the analytical solution (four neighbours) |
 | [test/curvature](../../../test/curvature/en/README.md) | steady one-dimensional test of the curvature term | thickening on the arc 1.03 times the ODE |
 | [test/avalanche](../../../test/avalanche/en/README.md) | avalanche (Voellmy + velocity-proportional entrainment) | grows 1.5 times by entrainment and stops; ledger to machine precision |
 | [test/bedslide](../../../test/bedslide/en/README.md) | analytical speed of the layer, 45° slope, entry into a lake | $`V`$ of interior cells within 0.5% of the analytical value |
 | [examples/landslide_tsunami](../../../examples/landslide_tsunami/en/README.md) | rock avalanche, hand-over, submarine landslide | four patterns compared |
-| [examples/ashfall_lahar](../../../examples/ashfall_lahar/en/README.md) | ash fall → rain → lahar | the lahar setting pattern |
+| [examples/ashfall_lahar](../../../examples/ashfall_lahar/en/README.md) | ash fall → rain → lahar, check dam | the lahar setting pattern (infiltration capacity, f_dbwet=2) |
 
 ## References
 
@@ -362,6 +435,8 @@ The labels in the Basis column are explained in [How to read the basis of a defa
 [^tn91]: Takahashi, T. and Nakagawa, H. (1991): Prediction of stony debris flow induced by severe rainfall. *J. Jpn. Soc. Erosion Control Eng.*, 44(3), 12–19 (in Japanese).
 [^egashira93]: Egashira, S. (1993): Mechanism of stopping and deposition of debris flow (2). *J. Jpn. Soc. Erosion Control Eng.*, 46(2) (in Japanese). (original form of the constitutive law and yield stress of Egashira et al. 1989)
 [^voellmy55]: Voellmy, A. (1955): Über die Zerstörungskraft von Lawinen. *Schweizerische Bauzeitung*, 73, 159–165, 212–217, 246–249, 280–285.
+[^hungr95]: Hungr, O. (1995): A model for the runout analysis of rapid flow slides, debris flows, and avalanches. *Can. Geotech. J.*, 32, 610–623. doi:10.1139/t95-063 (the form of the entrainment law from eqs. (14) and (15) of Qiao et al. 2023; the paper itself not read)
+[^qiao23]: Qiao, Z., Li, T., Simoni, A., Gregoretti, C., Bernard, M., Wu, S., Shen, W. and Berti, M. (2023): Numerical modelling of an alpine debris flow by considering bed entrainment. *Front. Earth Sci.*, 10, 1059525. doi:10.3389/feart.2022.1059525 (the 2015 Cancia debris flow; calibrated Voellmy μ, ξ and entrainment rate in Tables 2 and 3)
 [^christen10]: Christen, M., Kowalski, J. and Bartelt, P. (2010): RAMMS: Numerical simulation of dense snow avalanches in three-dimensional terrain. *Cold Reg. Sci. Technol.*, 63, 1–14.
 [^fischer12]: Fischer, J.-T., Kowalski, J. and Pudasaini, S. P. (2012): Topographic curvature effects in applied avalanche modeling. *Cold Reg. Sci. Technol.*, 74–75, 21–30.
 [^pitman03]: Pitman, E. B., Nichita, C. C., Patra, A., Bauer, A., Sheridan, M. and Bursik, M. (2003): Computing granular avalanches and landslides. *Phys. Fluids*, 15, 3638–3646. (Titan2D)

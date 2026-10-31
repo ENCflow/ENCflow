@@ -207,3 +207,7 @@ object 部に `~grid<k>` を付けます(`surface_water~grid1__depth` = 格子 1
 - [test/nest_identity](../../test/nest_identity/): 比 1:1 の自己ネストの恒等テスト(帯の置換・双方向・Flather・非静水圧の各構成)。
 - [test/bmi_nest](../../test/bmi_nest/): BMI からのネスト系の受け入れ試験。
 - [examples/nest_reflect](../../examples/nest_reflect/): 比 3・5 の双方向ネストで界面を横切る波の検証(一様細格子との比較。README に図)。
+
+## 参考文献
+
+この章で使うモデル・式・既定値の出典は、[ネスティングの解説](nest_models.md#参考文献)の参考文献にまとめています。

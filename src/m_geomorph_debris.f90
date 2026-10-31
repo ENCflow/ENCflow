@@ -42,7 +42,7 @@
 !======================================================================
 submodule(m_geomorph) m_geomorph_debris
   use m_parallel, only : par_stop, dcp, par_halo_cell
-  use m_swflow_enc, only : m_swflow_enc_set_debris, opt
+  use m_swflow_enc, only : m_swflow_enc_set_debris, opt, bcs, bc_open_face
   use m_fileio, only : fileio_read_matrix
   implicit none
 
@@ -264,10 +264,18 @@ module subroutine init_debris(gm, p, g, list)
       if (len_trim(p%fn_gwflow) > 0) then
         call par_stop("list_geomorph: f_dbwet=1 は gwflow と併用できません" &
                       // "(侵食時の間隙水放出が容量引き渡しと二重計上になります。" &
-                      // " fn_gwflow の指定を外してください)")
+                      // " fn_gwflow の指定を外してください。gwflow と併用するなら f_dbwet=2)")
+      end if
+    case (2)
+      ! gwflow 併用の間隙水(developer.md §28.7): 堆積で増えた層の容量を地表水で
+      ! 満たし、侵食で削られた層の間隙水を地下貯留から戻す。hg を使うので gwflow が要る
+      if (len_trim(p%fn_gwflow) == 0) then
+        call par_stop("list_geomorph: f_dbwet=2 は gwflow(fn_gwflow)が必要です" &
+                      // "(gwflow なしで間隙水を扱うなら f_dbwet=1)")
       end if
     case default
-      call par_stop("list_geomorph: f_dbwet must be 0(ignore) or 1(saturated-bed entrainment)")
+      call par_stop("list_geomorph: f_dbwet must be 0(ignore), 1(saturated-bed entrainment) " &
+                    // "or 2(pore water with gwflow)")
   end select
   gm%f_dbwet = list%f_dbwet
   gm%db_lamsb = (1.0 - gm%db_cstar) * list%db_satbed    ! λ・s_b(λ = 1−C*)
@@ -556,6 +564,24 @@ module subroutine calc_debris(gm, p, g, s, dtw)
           if (dhw < 0.0) dhw = max(dhw, -max(s%h(i,j), 0.0))
           s%h(i,j) = s%h(i,j) + dhw
         end if
+        ! gwflow 併用の間隙水(f_dbwet=2。developer.md §28.7):
+        !   堆積(Δz>0): 増えた層の容量 sy0・Δz を、その場の地表水で直ちに満たす
+        !     (流れの下に積もった土砂は飽和する。空き容量・地表水でクランプ)
+        !   侵食(Δz<0): 削られた層の間隙水 sy0・|Δz| を地下貯留から地表へ戻す
+        !     (地下貯留は上から満たされる = 削られるのは濡れた上部から。hg で
+        !      クランプ)。堆積と侵食が入れ替わっても往復で水を汲み上げない
+        !     (容量超過だけを戻す規則だと、不飽和の層で堆積のたびに地表水が
+        !      地下へ移るだけの片方向の汲み上げになる)。水の総量は保存
+        if (gm%f_dbwet == 2 .and. s%gw_active) then
+          if (dzb > 0.0) then
+            cap = s%sd(i,j) * g%sy0
+            dhw = min(max(cap - s%hg(i,j), 0.0), g%sy0 * dzb, max(s%h(i,j), 0.0))
+          else
+            dhw = -min(-g%sy0 * dzb, max(s%hg(i,j), 0.0))
+          end if
+          s%h(i,j) = s%h(i,j) - dhw
+          s%hg(i,j) = s%hg(i,j) + dhw
+        end if
         ! 浸食で地下水容量が現在の貯留を下回ったら、超過分を地表水へ渡す
         ! (calc_suspend と同じ整合。反対称適用)
         if (s%gw_active) then
@@ -745,6 +771,15 @@ end subroutine
 
 !----------------------------------------------------------------------
 ! 8近傍への最急降下勾配 tanθ(下限 0。領域外・海近傍は対象外)
+!   開いた辺(格子枠の辺のうち不透過でない面。自由流出・長波放射・区間流入など)の
+!   外の近傍だけは、その位置の標高を辺の法線方向に内側の 2 セルから線形外挿して
+!   補う(z_外 = 2 z_a − z_b。a は辺の法線方向に枠内へ寄せたセル、b はその一つ内側。
+!   角の外は両方向に寄せる)。内側が 1 セルしかなければ z_a のまま(勾配 0 で延長)、
+!   a が領域外・海なら対象外。辺の行に下流の近傍がないために勾配が 0 になり、
+!   C∞ = 0 として流れの土砂を落とす人工的な堆積を防ぐ(developer.md §28.15。
+!   slope_flow の片側差分と同じ考え方)。自セルの反対側の近傍で外挿しないのは、
+!   斜めの向きで谷壁・堤の上り勾配が外向きの急な下りに化けるため。枠内の x = 0
+!   (無効セル)と不透過の辺の外は従来どおり対象外
 !----------------------------------------------------------------------
 pure function slope8(gm, g, s, i, j) result(tanth)
   type(t_geomorph), intent(in) :: gm
@@ -752,15 +787,30 @@ pure function slope8(gm, g, s, i, j) result(tanth)
   type(t_state), intent(in) :: s
   integer, intent(in) :: i, j
   real :: tanth
-  integer :: k, in, jn
-  real :: sl
+  integer :: k, in, jn, ia, ja, ib, jb
+  real :: sl, zn
   tanth = 0.0
   do k = 1, 8
     in = i + din(k)
     jn = j + djn(k)
-    if (g%x(in,jn) <= 0) cycle
-    if (g%sw(in,jn) > 0) cycle
-    sl = (s%z(i,j) - s%z(in,jn)) / gm%dbr%dist8(k)
+    if (g%x(in,jn) > 0) then
+      if (g%sw(in,jn) > 0) cycle
+      zn = s%z(in,jn)
+    else
+      if (.not. bcs%have_open_bc) cycle
+      if (.not. bc_open_face(in, jn)) cycle
+      ia = min(max(in, 1), g%nx)
+      ja = min(max(jn, 1), g%ny)
+      if (g%x(ia,ja) <= 0) cycle
+      if (g%sw(ia,ja) > 0) cycle
+      zn = s%z(ia,ja)
+      ib = 2 * ia - in
+      jb = 2 * ja - jn
+      if (g%x(ib,jb) > 0) then
+        if (g%sw(ib,jb) <= 0) zn = 2.0 * s%z(ia,ja) - s%z(ib,jb)
+      end if
+    end if
+    sl = (s%z(i,j) - zn) / gm%dbr%dist8(k)
     if (sl > tanth) tanth = sl
   end do
 end function
@@ -827,8 +877,9 @@ end function
 !----------------------------------------------------------------------
 ! 流速ベクトル方向の流動面勾配 tanθ(高橋・中川1991 式(26)):
 !   tanθ = (u sinθ'x + v sinθ'y) / √(u²cos²θ'x + v²cos²θ'y)
-!   θ' は流動面(z + h + hs)の傾斜角(中央差分・片側フォールバック。
-!   近傍マスクの読みは x 番兵ガードのネスト内側 — §12/§28 の規約)。
+!   θ' は流動面(z + h + hs)の傾斜角で、slope_flow と同じ流向の下流側の
+!   片側差分(drop_axis_surf)。中央差分は 2 セル周期の凹凸を見ず、侵食の
+!   領域で凹凸を育てた(developer.md §89.27・§89.28)。
 !   |V| = 0 は呼び出し側で除外済み
 !----------------------------------------------------------------------
 pure function slope_flow_surf(g, s, i, j) result(tanth)
@@ -836,42 +887,48 @@ pure function slope_flow_surf(g, s, i, j) result(tanth)
   type(t_state), intent(in) :: s
   integer, intent(in) :: i, j
   real :: tanth
-  real :: el, er, dl, thx, thy, sx_, cx_, sy_, cy_, den
+  real :: thx, thy, sx_, cx_, sy_, cy_, den
 
-  ! x 方向の流動面勾配角 θ'x(下り正)
-  el = surf(s, i, j); er = el; dl = 0.0
-  if (g%x(i-1,j) > 0) then
-    if (g%sw(i-1,j) <= 0) then
-      el = surf(s, i-1, j); dl = dl + g%dx
-    end if
-  end if
-  if (g%x(i+1,j) > 0) then
-    if (g%sw(i+1,j) <= 0) then
-      er = surf(s, i+1, j); dl = dl + g%dx
-    end if
-  end if
-  thx = 0.0
-  if (dl > 0.0) thx = atan((el - er) / dl)
-  ! y 方向の流動面勾配角 θ'y(下り正)
-  el = surf(s, i, j); er = el; dl = 0.0
-  if (g%x(i,j-1) > 0) then
-    if (g%sw(i,j-1) <= 0) then
-      el = surf(s, i, j-1); dl = dl + g%dy
-    end if
-  end if
-  if (g%x(i,j+1) > 0) then
-    if (g%sw(i,j+1) <= 0) then
-      er = surf(s, i, j+1); dl = dl + g%dy
-    end if
-  end if
-  thy = 0.0
-  if (dl > 0.0) thy = atan((el - er) / dl)
+  ! x 方向(u >= 0 なら東が下流)と y 方向(v >= 0 なら j+1 が下流)の流動面勾配角 θ'(下り正)
+  thx = atan(drop_axis_surf(g, s, i, j, 1, 0, g%dx, s%u(i,j) >= 0.0))
+  thy = atan(drop_axis_surf(g, s, i, j, 0, 1, g%dy, s%v(i,j) >= 0.0))
 
   sx_ = sin(thx); cx_ = cos(thx)
   sy_ = sin(thy); cy_ = cos(thy)
   den = sqrt((s%u(i,j) * cx_)**2 + (s%v(i,j) * cy_)**2)
   tanth = 0.0
   if (den > 0.0) tanth = (s%u(i,j) * sx_ + s%v(i,j) * sy_) / den
+end function
+
+
+!----------------------------------------------------------------------
+! slope_flow_surf の 1 軸分: drop_axis と同じ近傍の選び方(fwd なら +側 = 下流、
+! なければ −側。どちらも領域外・海なら 0)で、流動面 surf の下り勾配を求める。
+! 近傍の選び方を変えるときは drop_axis と揃える
+!----------------------------------------------------------------------
+pure function drop_axis_surf(g, s, i, j, di, dj, dl, fwd) result(sl)
+  type(t_geoinfo), intent(in) :: g
+  type(t_state), intent(in) :: s
+  integer, intent(in) :: i, j, di, dj
+  real, intent(in) :: dl
+  logical, intent(in) :: fwd
+  real :: sl
+  logical :: okp, okm
+
+  okp = .false.
+  if (g%x(i+di,j+dj) > 0) then
+    if (g%sw(i+di,j+dj) <= 0) okp = .true.
+  end if
+  okm = .false.
+  if (g%x(i-di,j-dj) > 0) then
+    if (g%sw(i-di,j-dj) <= 0) okm = .true.
+  end if
+  sl = 0.0
+  if (okp .and. (fwd .or. .not. okm)) then
+    sl = (surf(s, i, j) - surf(s, i+di, j+dj)) / dl
+  else if (okm) then
+    sl = (surf(s, i-di, j-dj) - surf(s, i, j)) / dl
+  end if
 end function
 
 

@@ -319,3 +319,7 @@ The three ways a field gets written (automatic / flag / riding on a flag) and th
 - Annotated example of all parameters: [examples/List_samples/list_boundary.txt](../../../examples/List_samples/en/list_boundary.txt)
 - Edge boundary (radiation): [tutorials/wave](../../../tutorials/wave/en/README.md) Step 3
 - Structures such as drainage pumps and sluice gates are on the fn_structure side ([structures chapter](structure.md)).
+
+## References
+
+The sources of the models, formulas and default values used in this chapter are collected in the references of [Hydraulics of structures and boundaries](hydraulics.md#references).

@@ -39,14 +39,17 @@ surface. The floodplain-to-channel head difference stays above 0.9 m, so the
 Darcy discharge exceeds the cap by far and every edge discharge equals the
 cap k_bed·l_k·sd exactly. Each floodplain cell is connected to the channel
 by one axial and one diagonal edge and each channel cell by four edges
-(l_ax = (1 − r)Δy, l_diag = (r/2)√(Δx² + Δy²), r = 2/(2 + √2)), hence for
-t ≥ 300 s
+(l_ax = (1 − r/2)Δy, l_diag = (r/2)√(Δx² + Δy²), r = 2/(2 + √2); l_ax is the
+passage width of the axial edge including the transfer of blocked diagonal
+shares (`f_gw_opening = 1`, the default), which adds r/2 for the one diagonal
+of each cell that points out of the domain; without the transfer it is
+(1 − r)Δy), hence for t ≥ 300 s
 
-- floodplain surface depth: dh/dt = −k_bed·sd·(l_ax + l_diag)/A = −4.142e-4 m/s
-- channel surface depth: dh/dt = +2 k_bed·sd·(l_ax + l_diag)/A = +8.284e-4 m/s
-- floodplain Hg = 0.2 − k_bed·sd·(l_ax + l_diag)·dt/A = 0.2 − 1.03553e-4 (constant),
+- floodplain surface depth: dh/dt = −k_bed·sd·(l_ax + l_diag)/A = −5.607e-4 m/s
+- channel surface depth: dh/dt = +2 k_bed·sd·(l_ax + l_diag)/A = +1.121e-3 m/s
+- floodplain Hg = 0.2 − k_bed·sd·(l_ax + l_diag)·dt/A = 0.2 − 1.40165e-4 (constant),
   channel Hg = 0.2
-- S_grnd = (12 × 0.19989644660940 + 6 × 0.2)/18 = 0.19993096440627 (constant),
+- S_grnd = (12 × 0.19985983495706 + 6 × 0.2)/18 = 0.19990655663804 (constant),
   S_total = 1.2 unchanged
 
 **Configuration 2.** The channel cells neither infiltrate nor exchange
@@ -82,20 +85,20 @@ python3 Fig.py en   # en/figs/gwbed.png (without the argument: Japanese version 
 ![Streambed exchange limit](figs/gwbed.png)
 
 Left: probes of configuration 1. After saturation the channel depth (●)
-grows at the analytical rate +8.284e-4 m/s (solid line) and the floodplain
-(■) decreases at −4.142e-4 m/s (dashed line). With k_bed = 0 (green) the
+grows at the analytical rate +1.121e-3 m/s (solid line) and the floodplain
+(■) decreases at −5.607e-4 m/s (dashed line). With k_bed = 0 (green) the
 channel depth stays at 1.2 m. Middle: S_grnd is constant after saturation,
-0.19993096441 in configuration 1 (each of the 12 floodplain cells is short
-by one step's loss of 1.03553e-4 m) and 12 × 0.2/18 in configuration 2.
+0.19990655664 in configuration 1 (each of the 12 floodplain cells is short
+by one step's loss of 1.40165e-4 m) and 12 × 0.2/18 in configuration 2.
 Right: S_grnd of configuration 3 lies on 7e-6 t.
 
 ## Findings
 
 | Check | Computed | Result |
 |---|---|---|
-| Config 1 S_grnd (t ≥ 300 s) | 0.19993096440627 (all 14 digits of the analytical value) | PASS |
-| Config 1 channel / floodplain dh per 100 s | +0.08284 / −0.04142 (analytical ±2e-5) | PASS |
-| Config 1 Hg (channel / floodplain) | 0.20000 / 0.19990 | PASS |
+| Config 1 S_grnd (t ≥ 300 s) | 0.19990655663804 (all 14 digits of the analytical value) | PASS |
+| Config 1 channel / floodplain dh per 100 s | +0.11213 / −0.05607 (analytical ±2e-5) | PASS |
+| Config 1 Hg (channel / floodplain) | 0.20000 / 0.19986 | PASS |
 | Config 2 channel Hg, h and S_grnd | 0 / 1.2 unchanged, 0.13333333333333 | PASS |
 | Config 3 S_grnd(3600) | 0.0252 = 7e-6 × 3600 (all digits) | PASS |
 | Regression | Log.txt of configuration 1 matches the reference with ULP = 0 (serial, np = 1, 2, 4) | PASS |

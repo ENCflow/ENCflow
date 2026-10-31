@@ -102,7 +102,7 @@ dt is the proper remedy. The effect of the threshold is demonstrated in
 
 | Parameter | Default | Meaning (details in the § of [the explanation](encgrid.md)) |
 |---|---|---|
-| f_gravity_correction | 1 | effective gravity g cos²θ on steep slopes (Ni et al. 2019); no effect on gentle slopes (§5) |
+| f_gravity_correction | 1 | effective gravity g cos²θ on steep slopes (Ni et al. 2019[^ni19]); no effect on gentle slopes (§5) |
 | f_exflux_reduction | 1 | suppression of excessive outflow. Prevents negative depths at fronts advancing over dry ground (keep on in computations with dry beds) (§5) |
 | f_hcap_upwind | 1 | edge depth. 0: mean of both cells, 1: the mean capped by the upwind depth (default), 2: the upwind depth itself (removes the spike at a bore front; required in non-hydrostatic cases with breaking or bores. It increases the outflow onto dry ground, so check ex_flux in inundation runs) (§3, [advection](advection.md) §5) |
 | f_friction_fastmath | 0 | table approximation of h^(-4/3) in the friction term. 0: exact (default), 1-5: coarser and faster (relative error 2e-4 to 6%) (§8) |
@@ -163,12 +163,13 @@ the coefficient follows from the flow and the roughness).
 | f_advection_donor | 0 | 1: on edges between channel cells, limit the upwind donor in the flow direction to channel cells (against the artificial loss at bends and confluences; requires the channel mask fn_rw; judge against observations) (§4.4) |
 | f_scalar_scheme | 3 | advection scheme of the scalar transport (suspended sediment, water quality, salt layer, driftwood, debris). 3: link-wise MUSCL (default), 1: first-order upwind (former default; numerical diffusion 3–5 times longitudinally and 14 times laterally; kept for comparison) ([Advection](advection.md) §7) |
 | f_dry_head_cap | 1 | cap the edge depth toward a dry cell by the energy head (water does not climb onto dry ground above the water surface; prevents leaks and blow-ups at bore fronts and in incised channels; inactive at ordinary wet/dry fronts, identical to 0 there) (§5) |
-| f_opening_dynamic | 2 | dynamic reassignment of blocked diagonal openings. 2: all edges (default; changed from 1 on 2026-10-18), 1: edges between channel cells only (inactive without the channel mask), 0: off. Corrects the excessive edge velocity of the ENC grid in one-cell channels and along walls (§5) |
+| f_opening_dynamic | 2 | dynamic reassignment of blocked diagonal openings. 2: all edges (default; changed from 1 on 2026-10-18), 1: edges between channel cells only (inactive without the channel mask), 0: off, 3: all edges, with the blockage measured above the local plane (the upslope ground of a uniform slope is not counted as a wall; removes the excessive velocity and τ_b of steep, shallow flows; nearly the same as 2 in channels with high banks; developer.md §68.41, in Japanese). Corrects the excessive edge velocity of the ENC grid in one-cell channels and along walls (§5) |
+| f_inflow_edge | 0 | treatment of the edges touching the outer cells of a segment inflow. 0: zero advection on all of them (default), 1: zero advection only on the edges into the inflow section (a flow falling sideways from the end of the section creates no energy), 2: as 1, and the velocity of those edges is capped by the energy head of the inflow cell (suppresses a supercritical jet right below the inflow; the cap acts almost always near the inflow). Use 2 when the bed beside or below the inflow moves and for narrow inflows ([Advection](advection.md) §4.4) |
 | p_adv_upwind_index | 0.5 | upwinding index of scheme 1 only (0: central difference, 1: first-order upwind) (§3) |
 | f_diffusion_term | 0 | diffusion term. 0: none (default), 2: zero-equation model ν = ν0 + α·u*·h (recommended), 1: constant viscosity ([diffusion](diffusion.md) §2) |
 | p_diffusion_nu | -- | ν0 (m²/s). For model 1 a positive value must be given explicitly (unset is an error stop); for model 2 an optional background viscosity (§2) |
 | p_diffusion_alpha | 0.41/6 | coefficient α of the zero-equation model (default is the Elder type; calibrate within 0.15–0.6 for stronger transverse mixing) (§2) |
-| wf_break_visc | 0 | coefficient M of the horizontal mixing by wave breaking of the coastal wave field (0: none; 1 = the default of nuhfac of XBeach). Adds ν_w = M h (D/ρ)^(1/3) (Battjes 1975; D is the roller dissipation) to ν of the diffusion term. Requires fn_wavefield ([diffusion term](diffusion.md) §5, [coastal wave field](wavefield.md)) |
+| wf_break_visc | 0 | coefficient M of the horizontal mixing by wave breaking of the coastal wave field (0: none; 1 = the default of nuhfac of XBeach). Adds ν_w = M h (D/ρ)^(1/3) (Battjes 1975[^battjes75]; D is the roller dissipation) to ν of the diffusion term. Requires fn_wavefield ([diffusion term](diffusion.md) §5, [coastal wave field](wavefield.md)) |
 
 **Others**
 
@@ -268,6 +269,7 @@ flat-bed one-layer model).
 | Wide-area / long runs (cost first) | p_adprunge_thresh 2-3, f_friction_fastmath 3-5, f_govequation=1 (diffusive wave) if needed | Cuts the recomputation rate and the friction cost. The diffusive wave ignores inertia, so not for inundation fronts or tsunamis |
 | Accuracy checks, numerical experiments | p_adprunge_thresh 1.1, f_friction_fastmath 0, dt such that Cn_max stays below about 0.5 | High-accuracy side; a few tens of percent more cost. Reducing dt is more reliable than lowering the threshold (the threshold cannot close the gap between dt 0.01 and 0.05; tutorials/wave Step 2) |
 | Bores, hydraulic jumps, tsunami run-up (flows with discontinuities) | default (f_advection_scheme 3) | Momentum-conservative advection: correct bore speed and no oscillations behind the bore. The former default 1 lags the bore and oscillates behind it |
+| Steep mountain streams and sheet flow on hillslopes (velocity and bed shear stress as in uniform flow) | f_opening_dynamic 3 | the default 2 also counts the upslope ground of a uniform slope as a partial wall, and τ_b comes out 29 % too large at slope 0.2 with a 1 m grid and 0.3 m depth (T9 of test/rockinc). 3 agrees with uniform flow within 1 ± 0.5 % and is nearly the same as 2 in channels with high banks |
 | Reassignment restricted to the channel mask | f_opening_dynamic 1 | the default until 2026-10-18; the default 2 corrects the conveyance along walls and in incised channels on every edge |
 | Reproducing cases calibrated with older versions | f_advection_scheme 1, f_opening_dynamic 0, f_dry_head_cap 0 | the defaults before 2026-10-03. Moving to scheme 3 needs a roughness recalibration (the momentum-conservative form resolves the jump losses and the momentum exchange with the valley floor, so it is slower and lower) |
 
@@ -336,3 +338,5 @@ results obtained with modified settings against your own baseline.
 ## References
 
 [^tada26]: Tada, T. (2026): An eight-neighborhood connected collocated grid scheme for overland flow simulation. *Hydrological Research Letters*, 20(2), 113–118. doi:10.3178/hrl.25-00052. (the original paper of the ENC grid: the eight-neighborhood connected collocated grid and the passage-width allocation)
+[^ni19]: Ni, Y., Cao, Z. and Liu, Q. (2019): Mathematical modeling of shallow-water flows on steep slopes. *J. Hydrol. Hydromech.*, 67(3), 252–259. doi:10.2478/johh-2019-0012. (effective gravity $`g\cos^2\theta`$ on steep slopes)
+[^battjes75]: Battjes, J. A. (1975) Modeling of turbulence in the surf zone. Proc. Symposium on Modeling Techniques, ASCE, San Francisco, 1050–1061. (Eddy viscosity of wave breaking ν = M h (D/ρ)^{1/3}; the form of the formula follows the nuhfac implementation of XBeach; the original paper has not been checked)

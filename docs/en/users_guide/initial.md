@@ -163,3 +163,15 @@ The three ways a field gets written (automatic / flag / riding on a flag) and th
 - Regression case with an initial water hump over still water: [test/wave](../../../test/wave/en/README.md)
 - Real-terrain case starting from dry ground with rainfall: [test/chichibu](../../../test/chichibu/en/README.md)
 - Example treating the sea as normal cells with an initial water level specified by `f_htype=2`: [examples/tsunami_fault](../../../examples/tsunami_fault/en/README.md)
+
+## References
+
+Depression filling (`f_fill_depres`) is a simple iteration original to ENCflow. A high water level
+is placed in the target cells and lowered to the water level of the eight neighbours, repeated until
+nothing changes (the water of cells next to the sea drains away, and water-level differences below
+1 mm are taken as balanced). The idea of first filling with water and then removing the excess
+belongs to the same family as the depression filling of Planchon and Darboux (2001)[^pd01]. The
+initial depth increment of the channel `h0_rw` and `f_fill_depres = 3`, which turns the filling
+water into raising the bed, are also ENCflow's own settings.
+
+[^pd01]: Planchon, O. and Darboux, F. (2001): A fast, simple and versatile algorithm to fill the depressions of digital elevation models. *Catena*, 46(2–3), 159–176. (checked against the abstract)

@@ -295,9 +295,24 @@ subroutine m_wavefield_init(wf, p, g, s, multi)
     allocate(s%wvub0(dcp%ish:dcp%ieh, dcp%jsh:dcp%jeh), source = 0.0)
     allocate(s%wvkb(dcp%ish:dcp%ieh, dcp%jsh:dcp%jeh), source = 0.0)
   end if
+  ! 遡上域の輸送(geomorph の f_wfswash = 1 の要求 s%wv_swash。§90.21): 飽和した波高と水深の比
+  ! (露出度の基準。wvh と同じ波高の定義)を渡す。入射波の波高・周期は swash_incident が毎ステップ
+  ! 渡し、波高 wvh のハロは sed_export_halo が更新ごとに埋める
+  if (s%wv_swash) then
+    if (wf%wtype == 1) then
+      s%wv_hsat = sqrt(2.0) * wf%gamx
+    else
+      s%wv_hsat = wf%gam
+    end if
+    if (wf%flow == 0) then
+      call par_warn("wavefield: f_wfswash with wf_flow = 0: the flow does not resolve the wave setup," &
+                    // " so the runup limit of the swash misses the setup")
+    end if
+  end if
 
   ! 開始時の波浪場: 復元、準定常解、または静穏
   call boundary_now(wf, p, s)
+  if (s%wv_swash) call swash_incident(wf, s)
   call update_props(wf, p, g, s)
   if (wf%current) call update_current(wf, p, g, s)
   call check_incident_cells(wf, g)
@@ -358,6 +373,8 @@ subroutine m_wavefield_calc(wf, p, g, s, it)
   ! 外力の立ち上げの係数(このステップの浅水流が使う。時間軸の it から決まるので
   ! 再開(f_state_restore = 1)でも続きの値になり、保存は要らない)
   if (wf%flow >= 1) s%wv_ramp = ramp_factor(wf, p, it)
+  ! 遡上域の輸送へ渡す入射波(このステップの地形変化が使う。時刻の関数なので保存は要らない)
+  if (s%wv_swash) call swash_incident(wf, s)
   if (wf%mode == 2) then
     if (mod(it, wf%idt) /= 0) then
       if (wf%flow >= 2) call friction_speed(g, s)
@@ -1670,6 +1687,50 @@ subroutine sed_export_halo(s)
   call par_halo_cell(s%wvey)
   call par_halo_cell(s%wvae)
   if (allocated(s%wvua)) call par_halo_cell(s%wvua)
+  if (s%wv_swash) call par_halo_cell(s%wvh)       ! 遡上域の露出度が汀線の ±2 セルの波高を読む(§90.21)
+end subroutine
+
+
+!----------------------------------------------------------------------
+! 遡上域の輸送(geomorph の f_wfswash。§90.21)へ渡す入射波の波高・周期。boundary_now と同じ
+!   時刻・時計・補間で、境界の与件の現在値を求める。毎ステップ呼ぶ(準定常の更新の間も時刻の
+!   関数になり、再開でも通し計算と同じ値になる)。全ランクが同じ値を持つ
+!----------------------------------------------------------------------
+subroutine swash_incident(wf, s)
+  type(t_wavefield), intent(in) :: wf
+  type(t_state), intent(inout) :: s
+  real :: t, w
+  integer :: k, m2
+
+  if (wf%nval > 0) then
+    t = s%t
+    if (wf%clock == 1 .and. s%geo_morfac > 0.0) t = s%t * s%geo_morfac
+    if (t <= wf%val(1,1)) then
+      k = 1
+      w = 0.0
+    else if (t >= wf%val(1,wf%nval)) then
+      k = max(1, wf%nval - 1)
+      w = 1.0
+      if (wf%nval == 1) w = 0.0
+    else
+      k = 1
+      do while (wf%val(1,k+1) < t)
+        k = k + 1
+      end do
+      if (wf%val(1,k+1) > wf%val(1,k)) then
+        w = (t - wf%val(1,k)) / (wf%val(1,k+1) - wf%val(1,k))
+      else
+        w = 1.0
+      end if
+    end if
+    m2 = min(k + 1, wf%nval)
+    s%wv_hinc = (1.0 - w) * wf%val(2,k) + w * wf%val(2,m2)
+    s%wv_tinc = (1.0 - w) * wf%val(3,k) + w * wf%val(3,m2)
+    if (s%wv_hinc > 0.0 .and. s%wv_tinc <= 0.0) s%wv_hinc = 0.0     ! 周期 0 の行の補間端
+  else
+    s%wv_hinc = wf%hfix
+    s%wv_tinc = wf%tfix
+  end if
 end subroutine
 
 
@@ -1766,7 +1827,7 @@ end subroutine
 !   van Thiel de Vries(2009)の式(XBeach)。S_k = B cos ψ、A_s = B sin ψ は Ruessink ら(2012)の
 !   Ursell 数 Ur = (3/8)√2 H_rms k/(kh)³ によるパラメータ化:
 !     B = p2/(1 + exp((p3 − log10 Ur)/p4))、ψ = −90° + 90° tanh(p5/Ur^p6)
-!   係数 p2〜p6 は XBeach の公開ソース(morphevolution.F90 の RvR。Ruessink ら 2012 の値)。
+!   係数 p2〜p6 は XBeach の公開ソース(morphevolution.F90 の RvR)の値で、論文の式 (9)(10) の値とは違う(§90.23)。
 !   A_s は前傾した波で負(ψ → −90°)なので、どちらの項も岸(波の進む向き)へ向かう
 !----------------------------------------------------------------------
 pure function asym_velocity(hrms, k, h, urms, fsk, fas) result(ua)
@@ -2952,7 +3013,7 @@ subroutine diagnose_cur(wf, p, g, s)
           s%wvex(i,j) = ex / en
           s%wvey(i,j) = -ey / en
         end if
-        s%wvae(i,j) = sqrt(2.0) * s%wvub(i,j) / sbar
+        if (sbar > 0.0) s%wvae(i,j) = sqrt(2.0) * s%wvub(i,j) / sbar   ! 極小のエネルギーの σ̄ = 0(§90.22)
         if (s%wv_asym) s%wvua(i,j) = asym_velocity(hrms, kbar, s%h(i,j), s%wvub(i,j), &
                                                    s%wv_facsk, s%wv_facas)
       end if
@@ -3010,7 +3071,8 @@ subroutine mean_dir_speed_cur(wf, g)
         ew = ew + em
       end do
       if (ex /= 0.0 .or. ey /= 0.0) wf%thm(i,j) = atan2(ey, ex)
-      if (ew > 0.0) then
+      ! 極小のエネルギーでは E_m k_m が FTZ(-Ofast)で 0 になり、Σ E_m > 0 でも k̄ = 0 になる(§90.22)
+      if (ew > 0.0 .and. kbar > 0.0) then
         wf%cph(i,j) = sbar / kbar
       else
         wf%cph(i,j) = wf%om / wf%kw(i,j)

@@ -1,0 +1,84 @@
+!======================================================================
+! gwtani 構成 5: 層2(風化基岩層)だけの側方流 — 振り替え(既定)が層2にも効くことの確認
+!   構成 2 と同じ斜面(土層 2 m 一様)で、土層の側方流を切り(f_gwlateral = 0)、層2の
+!   側方流だけを使う。土層に浸透した雨は、層2への浸透能(100 mm/h)が雨より大きいので
+!   毎ステップすべて層2へ移り、層2の中を斜面方向に流れる。層2の底は基盤から d2 = 3 m 下の
+!   一様勾配 0.5 の平面で、定常の飽和帯厚は構成 2 と同じ直線 h2 = g·i·Δ になる。斜面は
+!   幅 1 セルなので、塞がれた斜めの配分の振り替えがなければ軸の通過幅が 0.414 倍になり、
+!   飽和帯厚は 2.4 倍になる(f_gw_opening の既定 1 は層2だけの構成でも効く。developer.md §16.6)。
+!   Check_gwtani.py l2only が雨の初期の一様な上昇と定常の飽和帯厚を確かめる
+!======================================================================
+&list_sysparam
+  f_gridsystem = 0
+  f_govequation = 0
+  dt = 2.0
+  t0 = 0
+  tt = 240000
+  dt_disp = 3600
+  dt_file = 600
+  fn_geoinfo = '-'
+  fn_initial = '-'
+  fn_boundary = '-'
+  fn_precip = '-'
+  fn_gwflow = '-'
+  dir_data = 'data_gwtani'
+  dir_result = 'result_l2only'
+  f_output_mode = 2         ! bil(float32): 地下貯留を表示の丸めなしで読む
+  f_out_hg = 1
+  f_disp_debug = 1          ! S 列を全有効桁で表示
+  f_check_cfl = 1
+/
+
+&list_enc
+/
+
+&list_initial
+  f_htype = 1               ! 初期水深の分布: 渓流のセルだけ 0.5 m(最初のステップで土層を満たす)
+  fn_hinit = 'h_init.txt'
+/
+
+&list_geoinfo
+  nx = 1
+  ny = 41                   ! 斜面 40 行 + 渓流 1 行
+  dx = 5.0
+  dy = 5.0
+  f_ztype = 1
+  fn_z = 'z_uni_thick.txt'   ! 地表 = 一様勾配 0.5 の基盤 + 土層厚(make_data.py)
+  f_rntype = 0
+  rn0 = 0.1
+  f_sdtype = 1
+  fn_sd = 'sd_uni_thick.txt'
+  sy0 = 0.2
+/
+
+&list_bound
+/
+
+&list_bound_edge
+  f_bc_s = 1                ! 南辺(渓流のセルの下流)は地表水の自由流出。地下水の側方流は四周とも無流束
+/
+
+&list_precip
+  prtype = 1
+  prval(:,1) = 0, 10.0      ! 一定の雨 10 mm/h
+/
+
+&list_gwflow
+  f_gwvertical = 2          ! Green-Ampt(psif = 0 で一定の浸透能)
+  f_gwlateral = 0           ! 土層の側方流なし(土層は浸透した雨を層2へ渡すだけ)
+  f_gwlayer2 = 1            ! 風化基岩層(層2の側方流だけを使う)
+  dt_gwflow = 0             ! 毎ステップ更新
+/
+
+&list_gwflow_greenampt
+  gw_ksv_mmh = 3.6e6        ! 1 m/s: 浸透 = min(K_sv dt, h, 空き容量)。飽和するまで雨は全量浸透する
+  gw_psif = 0.0
+/
+
+&list_gwflow_layer2
+  gw2_depth = 3.0
+  gw2_sy = 0.2
+  gw2_infil_mmh = 100.0     ! 雨(10 mm/h)より大きい = 土層に入った雨は毎ステップすべて層2へ
+  gw2_ksh_mmh = 3600.0      ! 層2の側方の透水係数(構成 2 の土層と同じ 1e-3 m/s)
+  gw2_sat0 = 0.0
+/

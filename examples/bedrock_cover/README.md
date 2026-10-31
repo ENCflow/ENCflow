@@ -15,7 +15,7 @@
 | 項目 | 値 |
 |---|---|
 | 水路 | 幅 1 セル(Δx = 1 m)、長さ 100 m、勾配 0.01、n = 0.04。両岸は +2 m の乾いた地盤。水路を東西に 2〜6 本並べ、水路ごとに給砂か初期の土層厚だけを変える(岸で隔てられ、互いに影響しない) |
-| 流れ | 北端の区間流入 Q = 0.336 m³/s(等流水深 0.3 m、V = 1.12 m/s、底面せん断 τ_b = 29.4 Pa)、南辺は自由流出 |
+| 流れ | 北端の区間流入 Q = 0.336 m³/s(等流水深 0.3 m、V = 1.12 m/s、底面せん断 τ_b = 29.4 Pa)、南辺は自由流出。塞がれた開口の動的振り替えは `f_opening_dynamic = 3`(塞がりを局所の平面から測る。[浅水流の章](../../docs/users_guide/swflow.md)、developer.md §68.41)。両岸が高い 1 セル幅の水路なので、結果は既定の 2 とバイト一致する(2026-10-29 に確認) |
 | 礫と被覆 | d50 = 1 cm(τ* ≈ 0.18 で動く)、空隙率 0.4、被覆の長さ H* = 1 cm。等流の掃流砂の容量 q_c = 1.83e-3 m²/s(芦田・道上の式) |
 | 岩盤下刻 | 剥離: k_p = 1e-6 m/s、τ_c = 10 Pa、m = 1.5(裸岩の剥離速度 E_p0 = 2.7e-6 m/s)。研磨: β = 0.005 1/m(研磨による下刻速度の最大 β q_c/4 = 2.3e-6 m/s) |
 | 給砂 | 流入セルの掃流砂 `inflow_qb`。給砂比 r = q_in/q_c(q_in は q_c の概算 1.81e-3 m²/s の r 倍) |
@@ -135,5 +135,8 @@ Fr 0.65 で、以前は流入面の流速が 0.74 倍に抑えられていまし
 - docs/mountain_stream_plan.md(設計の検討。§4.3 の定常解、§4.9 の例題の構想)、developer.md §89
 - Sklar, L. S. and Dietrich, W. E. (2004): A mechanistic model for river incision into bedrock by
   saltating bed load. *Water Resour. Res.*, 40, W06301. doi:10.1029/2003WR002496
-- Inoue, T. ほか (2016): Numerical simulation of effects of sediment supply on bedrock channel
-  morphology. *J. Hydraul. Eng.*, 142(7). doi:10.1061/(ASCE)HY.1943-7900.0001124(要旨で確認)
+- Inoue, T., Iwasaki, T., Parker, G., Shimizu, Y., Izumi, N., Stark, C. P. and Funaki, J. (2016):
+  Numerical simulation of effects of sediment supply on bedrock channel morphology. *J. Hydraul.
+  Eng.*, 142(7), 04016014. doi:10.1061/(ASCE)HY.1943-7900.0001124(本文で確認: 給砂が容量に近いと
+  交互砂州状の被覆が下流へ移りながら岩盤を一様に削り、容量の 0.2 倍では岩盤に複数の縦溝が
+  刻まれて被覆は溝に溜まる)

@@ -247,3 +247,7 @@ the same conditions. The acceptance test is [test/bmi_nest](../../../test/bmi_ne
 - [test/nest_identity](../../../test/nest_identity/en/README.md): identity tests of 1:1 self-nesting (band replacement, two-way, Flather and non-hydrostatic configurations).
 - [test/bmi_nest](../../../test/bmi_nest/en/README.md): acceptance test of a nested system driven through BMI.
 - [examples/nest_reflect](../../../examples/nest_reflect/en/README.md): waves crossing the interface of two-way nests with ratios 3 and 5, compared with a uniform fine grid (figures in the README).
+
+## References
+
+The sources of the models, formulas and default values used in this chapter are collected in the references of [Nesting explained](nest_models.md#references).

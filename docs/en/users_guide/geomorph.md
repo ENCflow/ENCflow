@@ -188,9 +188,9 @@ Riverbed erosion and deposition by a bedload transport formula.
 | fluv_diagratio | 2/(2+sqrt(2)) | Diagonal partitioning (normally no need to change) |
 | fluv_taufac | 1.0 | Effective shear-stress ratio f_τ (the τ* passed to the transport formula = f_τ × τ* of the total resistance; a simple separation of form drag by dunes or vegetation. 1 = no separation) |
 | fluv_slope | 0 | Bed-slope correction of the bed-load direction. 1: Hasegawa type (q⃗ = q_b(t̂ − γ∇z), γ = √(τ*c/(μs μk τ*))) |
-| fluv_mus / fluv_muk | 1.0 / 0.45 | Static and kinetic friction coefficients μs, μk. **Literature values** (Asahi et al. 2013 eq. (22), after Hasegawa 1984; Hasegawa 1989 uses μk = 0.7 as an estimate). See the note below |
+| fluv_mus / fluv_muk | 1.0 / 0.45 | Static and kinetic friction coefficients μs, μk. **Literature values** (Asahi et al. 2013[^asahi13] eq. (22), after Hasegawa 1984; Hasegawa 1989[^hasegawa89] uses μk = 0.7 as an estimate; the bedrock–alluvial model of Inoue et al. 2016 uses μs = μk = 0.7, whose product 0.49 gives nearly the same γ as the defaults). See the note below |
 | f_secflow | 0 | Secondary-flow correction of the bed-load direction. 1: equilibrium type (near-bed transverse velocity ratio r = N* h κ, κ = streamline curvature of the velocity field) |
-| sec_nstar | 7.0 | N*. **Literature value** (Engelund 1974; Asahi et al. 2013 eq. (18). The de Vriend coefficient 2/κ²(1 − √g/(κC)) is about 10 for C = 50). See the note below |
+| sec_nstar | 7.0 | N*. **Literature value** (Engelund 1974[^engelund74]; Asahi et al. 2013 eq. (18). The de Vriend coefficient 2/κ²(1 − √g/(κC))[^struiksma85] is about 10 for C = 50). See the note below |
 | sec_rmax | 1.0 | Upper bound of |r| (cuts the h/R proportionality in sharp bends; 1 = 45°) |
 | sec_vmin | 0.01 | Minimum velocity (m/s) for evaluating the curvature |
 | f_berode | 0 | Bank erosion. 1: a neighbouring cell whose ground is above the water surface of a wet cell (a bank face) retreats under the shear stress of the toe cell, and the eroded volume is moved to the toe (requires f_fluvial = 1) |
@@ -258,8 +258,8 @@ same retreat again through `berode_kb`. Verification:
 **Self-protection of the bank by slump blocks.** A cohesive bank fails in
 blocks once pool scour makes the bank face higher than a critical height, and
 the fallen blocks cover the toe and stop bank erosion until the flow has
-carried them away (Asahi et al. 2013; Parker et al. 2011). This is represented
-by the **bank mode** `rf_bank = 1` of [cliff collapse and talus](#cliff-collapse-and-talus-f_rockfall)
+carried them away (Asahi et al. 2013; Parker et al. 2011[^parker11]). This is represented
+by the **bank mode** `rf_bank = 1` of [rockfall and talus](#rockfall-and-talus-f_rockfall)
 `f_rockfall` together with `berode_hcover` (developer.md §84.17): the part of a
 bank face (a step above the water surface of the receiving cell; submerged steps,
 i.e. pool walls, are excluded) that exceeds the critical height `rf_hc` collapses
@@ -586,7 +586,7 @@ recommend `f_gravity_correction = 1` in &list_enc.
 | db_cmin | 0.02 | Lower concentration limit for applying the Egashira laminar law (f_dbres=2); below it the Manning law is used (a numerical switch, since the laminar law diverges as C->0; 0 < db_cmin < C*). The default 2% matches the mud-flow criterion of Takahashi and Nakagawa (1991) |
 | db_mu / db_xi | 0.2 / 1000 | Voellmy mu and xi (m/s²). Used by f_dbres=4. The defaults are mid-range RAMMS values (snow avalanches). Debris avalanches are smaller, mu 0.1 and xi 200-500 (recommendations below) |
 | db_tauy | 10000 | Constant retarding stress tau_y (Pa). Used by f_dbres=5. The lower side of the 5-50 kPa pyroclastic-flow applications |
-| f_dbwet / db_satbed | 0 / 1.0 | Pore-water entrainment (exchange of bed pore water with surface water on erosion/deposition; a first-order bulking effect where erosion dominates. Mutually exclusive with the groundwater computation) |
+| f_dbwet / db_satbed | 0 / 1.0 | Pore-water entrainment (exchange of bed pore water with surface water on erosion/deposition; a first-order bulking effect where erosion dominates). 1 is mutually exclusive with the groundwater computation. With the groundwater computation use 2 (the capacity added by deposition is filled from the local surface water, and the pore water of the eroded layer returns from subsurface storage to the surface) |
 
 The minimal input to "just run a debris flow" is `f_debris = 1` + `sd0`
 (the movable layer = erodible soil) + a source. The source is one of:
@@ -635,19 +635,29 @@ pays off).
   more). For boulder-dominated flows (sector-collapse origin, stony type
   descending a torrent) use `f_dbed = 3` + `f_dbres = 3`
   (Takahashi-Nakagawa). `f_dbwet = 1` (uptake of path pore water) is
-  recommended as the first-order bulking effect. Working example:
-  [examples/ashfall_lahar](../../../examples/ashfall_lahar/en/README.md) (ash-thickness
-  distribution → rainfall → mudflow → fan deposition).
+  recommended as the first-order bulking effect. With infiltration
+  (`fn_gwflow`) use `f_dbwet = 2` (the water that had soaked into the eroded
+  layer returns to the surface, and the capacity added by deposition is filled
+  from the local surface water). Working
+  example: [examples/ashfall_lahar](../../../examples/ashfall_lahar/en/README.md)
+  (infiltration lowered by the ash → rainfall → mudflow → fan deposition, compared
+  with before the eruption and with a check dam).
 - **How to initiate**: an **erosion-triggered** start, in which the ash
   layer is given as an erodible soil layer sd and the rain runoff raises the
-  concentration by erosion (no source needs to be specified;
-  examples/ashfall_lahar), a **sediment-laden segment inflow** at the
+  concentration by erosion (no source needs to be specified; give the drop in
+  infiltration caused by the ash directly as the infiltration capacity of
+  [Groundwater](gwflow.md); examples/ashfall_lahar), a **sediment-laden segment inflow** at the
   upstream end (the supply hydrograph; inflow_cs of
   [Boundary conditions](boundary.md)), or a **chain** in which deposits
   from an earlier stage form a natural dam and breach (deposits fixed by
   f_dbstop=1 → overtopping breach → entrainment of downstream deposits).
   The collapse-depth distribution fn_dbinit is for sector-collapse
-  origins.
+  origins. When an erosion-triggered start works on sheet flow on slopes
+  (about 1 mm deep), make the movement threshold depth `dd`
+  ([Shallow water flow computation](swflow.md)) well below the flow depth (about 0.2 mm).
+  When it is comparable with the flow depth (the default 1 mm), cells switch
+  between flowing and stopped, and grid-scale stripes of erosion and deposit
+  grow.
 - **Limits**: the thermal interaction of hot pyroclasts with snow and
   ice (the melt volume) is out of scope; give the meltwater as an inflow
   hydrograph. Dilute systems (pyroclastic surges) are out of scope
@@ -784,7 +794,10 @@ numerical noise.
 - **Closed-type check dam**: add the dam body to the terrain z and set
   the soil depth there to sd=0 (non-erodible). The time evolution of
   sedimentation -> filling -> crest overflow emerges automatically
-  (the same framework as landslide-dam formation and overtopping). To
+  (the same framework as landslide-dam formation and overtopping). Example:
+  [examples/ashfall_lahar](../../../examples/ashfall_lahar/en/README.md) (a 5 m dam just
+  upstream of the valley outlet; with terrain in which the slope water reaches the
+  valley floor upstream of the dam, all the upstream flow passes the dam). To
   represent the body as a wall thinner than a cell, the channel levee
   (bank; [Channels](channel.md)) can be used - on overtopping the
   sediment (hs) crosses together with the water as a real flux.
@@ -1023,7 +1036,8 @@ debris-flow model).
   ponded depth h >= bs_hplunge, convert hs to bulk volume hs/(1-lambda)
   and move it to the bed layer hb (the surface height conserves the
   solids; the pore fraction is buried from the water column with
-  f_dbwet=1, or raises the surface with 0). The mixture's momentum is
+  f_dbwet=1, moves from the water column to subsurface storage with 2, or
+  raises the surface with 0). The mixture's momentum is
   lost (the layer has no inertia). Right after plunging, the water of
   the shoreline zone is pushed offshore and dewaters temporarily, and
   the layer stalls. With bs_tstop=0 it is fixed there and a lobe is left
@@ -1063,7 +1077,7 @@ phi0) in `fn_wave` (&list_wave) and every landform update does the following.
    to a hundred updates).
 4. The deep-water CERC formula Q_s = K2 H0^{12/5} T^{1/5} cos^{6/5}(alpha)
    sin(alpha) (alpha = angle between the wave direction and the onshore normal;
-   Ashton & Murray 2006, K2 = 0.34) is divided by the surf-zone width to give a
+   Ashton & Murray 2006[^am06], K2 = 0.34) is divided by the surf-zone width to give a
    shore-parallel flux, applied to the bed as edge fluxes exactly like bed load
    (supply limiter, dzmax and conservation are shared; nothing is carried onto
    dry cells, so the retreat of a dry beach is the task of `f_repose`).
@@ -1088,7 +1102,7 @@ bed-load path). Represent the sea as ordinary cells + an initial water level
 ("River-mouth deltas" above). Low-angle waves (|alpha| < 45 deg) smooth the
 shoreline (diffusion), high-angle waves grow the bulges (spits, asymmetric
 cusps). For a delta the shape follows the ratio of the river supply to Q_s;
-R = Q_r/Q_w < 1 tends to a cuspate delta (Nienhuis et al. 2015). Storms go in
+R = Q_r/Q_w < 1 tends to a cuspate delta (Nienhuis et al. 2015[^nienhuis15]). Storms go in
 `wave_val`, a wave climate in the constants.
 
 **Limits**: shadowing is the simple exposure field (no diffraction);
@@ -1153,10 +1167,10 @@ Eulerian mean velocity of the wave-driven flow (longshore current, undertow) and
 by the onshore velocity of wave skewness and asymmetry. Because the waves are
 solved, the shoreline orientation, exposure and river-mouth rule (the
 simplifications of fn_wave above) are not needed; refraction, breakwater shadows
-and blocking by river-mouth flow come from the wave field. For the formulas,
-coefficients, output and verification see
-[action on sediment](wavefield.md#action-on-sediment-f_wfsed-stages-w4-and-w5) in
-the coastal wave field chapter.
+and blocking by river-mouth flow come from the wave field. For the use, output and
+verification see [action on sediment](wavefield.md#action-on-sediment-f_wfsed) in the
+coastal wave field chapter; the formulas and the basis of the coefficients are in
+[Coastal wave field explained](wavefield_models.md#8-action-on-sediment-f_wfsed).
 
 | Parameter | Default | Meaning |
 |---|---|---|
@@ -1164,10 +1178,25 @@ the coastal wave field chapter.
 | wfsed_facsk | 0.1 | Coefficient f_Sk of the onshore transport velocity of wave skewness (calibration; 0 removes the skewness term) |
 | wfsed_facas | 0.1 | Coefficient f_As of asymmetry (calibration; 0 removes the asymmetry term) |
 | f_wfsed_turb | 0 | 1: stirring by the turbulence of wave breaking (adds the near-bed turbulence k_b to the stirring orbital velocity as √(u_rms² + 1.45 k_b); the form of turb = wave_averaged of XBeach; requires `f_wfsed = 1`) |
+| f_wfswash | 0 | 1: swash-zone transport (net cross-shore and longshore transport on the shoreline faces; Larson et al. 2004, Larson & Wamsley 2007, runup from Stockdon et al. 2006; requires `f_wfsed = 1` and `f_fluvial = 1`) |
+| wfswash_tanbe | (required) | equilibrium foreshore slope tanβ_e (0 < tanβ_e < tan φ_m) |
+| wfswash_kc | 1.6e-3 | cross-shore transport coefficient K_c (calibration; the representative value for fine sand of Larson et al. 2004) |
+| wfswash_kl | = K_c | longshore transport coefficient K_l (calibration; 0 = no longshore transport) |
+| wfswash_phim | 30 | friction angle of a moving grain φ_m (deg) |
 
 It cannot be used together with the longshore transport of fn_wave
 (`f_wave_longshore = 1`; the run stops at the start so that the same transport is
 not counted twice), nor with debris flow (`f_debris`).
+
+The phase-averaged wave field stops before the shoreline, so the swash-zone transport
+that piles up the sand of the shallows above the shoreline (to the height the swash
+reaches) is added with empirical formulas by `f_wfswash = 1` (it acts on the shoreline
+faces only; it piles up if the foreshore is milder than the equilibrium slope and cuts
+back if steeper). Its use is described in
+[swash-zone transport](wavefield.md#swash-zone-transport-f_wfswash) of the coastal wave
+field chapter, and the formulas, coefficients and the mapping to the grid in
+[Coastal wave field explained](wavefield_models.md#9-swash-zone-transport-f_wfswash). It
+cannot be combined with bedrock incision (`f_rockinc`).
 
 ## Long-term landform evolution (f_wthr / f_uplift)
 
@@ -1238,7 +1267,7 @@ state variable is introduced.
 | rock_kp | 0 (= no plucking) | Plucking rate coefficient (m/s): the incision rate of bare rock at τ_b = 2τ_c |
 | rock_tauc | none (required when rock_kp > 0) | Plucking threshold τ_c (Pa) |
 | rock_m | 1.0 | Plucking exponent m |
-| rock_beta | 0 (= no abrasion) | Abrasion coefficient β (1/m) |
+| rock_beta | 0 (= no abrasion) | Abrasion coefficient β (1/m). A guide is the match with the model of Sklar & Dietrich in §7 of the [supplement](sediment.md) (inversely proportional to the square of the rock tensile strength) |
 | rock_hstar | none (required, > 0) | Cover length H* (m): a measure of the relief of the bedrock surface. Shared by the exposure and the availability |
 | fn_rock | "" | Distribution of the erodibility multiplier of the bedrock (≥ 0; 0 = not eroded = fixed bed, structures). Unset = 1 everywhere |
 
@@ -1282,8 +1311,11 @@ cell velocity exceeded the uniform-flow balance ρ g h tanθ by 1 % at slope
 The dynamic reassignment of blocked openings (`f_opening_dynamic = 2`, the
 default) counts the upslope ground of a uniform slope as a partial wall and
 speeds up the flow; the effect grows with grid spacing × slope relative to
-the depth. For steep mountain streams, calibrate `rock_kp` and `rock_tauc`
-(and the transport rate) including this bias.
+the depth. With `f_opening_dynamic = 3` (blockage measured above the local
+plane) this bias disappears, and τ_b agrees with the uniform-flow balance
+within 1 ± 0.5 % at slopes 0.01 to 0.2 (T9; nearly the same as 2 in channels
+with high banks). Use 3 for steep mountain streams; if you keep 2, calibrate
+`rock_kp` and `rock_tauc` (and the transport rate) including this bias.
 
 **Outputs for this section**: cumulative incision `Ri0001...` (total plucked
 and abraded thickness, m; uplift and weathering are not included). The bedrock
@@ -1537,8 +1569,9 @@ When the type of phenomenon is known, start from the following
 | Debris avalanche (sector collapse) | f_dbed=0 or 4 + f_dbres=4 | 0.05-0.15 | 200-500 | - | - | - | The apparent friction H/L falls with volume → give it directly through mu |
 | Dense pyroclastic flow | f_dbed=0 + f_dbres=5 | - | - | 5-50 | - | - | VolcFlow-type applications |
 | Stony debris flow (Japanese type) | f_dbed=3 + f_dbres=3 | - | - | - | 0.05-0.3 | 35 | Takahashi-Nakagawa 1991. Grain size = representative boulders of the front |
+| Debris flow (Voellmy type, with entrainment) | f_dbed=4 + f_dbres=4 | 0.11 | 450 | - | - | - | Back-analysis of one event (Cancia 2015, Qiao et al. 2023; [debris-flow supplement](massflow.md) §6). Hungr's E_r h\|V\| is the standard entrainment law in practice; with f_dbed=4, delta_e ≈ E_r × a representative flow depth (massflow.md §3) |
 | Mudflow, fine sediment flow | f_dbed=2 + f_dbres=2 | - | - | - | 0.001-0.01 | 30-35 | Egashira constitutive law. e ≈ 0.85 |
-| Lahar (volcanic mudflow) | f_dbed=1 or 2 + f_dbres=4 (fine) / 1; 3+3 when boulder-dominated | 0.05-0.1 | 500-1000 | - | 0.001-0.01 | 30-35 | Initiated by erosion of the ash layer (sd), a sediment-laden segment inflow or a breach chain. f_dbwet=1 recommended. The Egashira laminar law is not usable for fine material. See the "Lahars" paragraph above and [examples/ashfall_lahar](../../../examples/ashfall_lahar/en/README.md) |
+| Lahar (volcanic mudflow) | f_dbed=1 or 2 + f_dbres=4 (fine) / 1; 3+3 when boulder-dominated | 0.05-0.1 | 500-1000 | - | 0.001-0.01 | 30-35 | Initiated by erosion of the ash layer (sd), a sediment-laden segment inflow or a breach chain. f_dbwet=1 recommended (2 with infiltration). Set dd to about 0.2 mm when starting from sheet flow on slopes. The Egashira laminar law is not usable for fine material. See the "Lahars" paragraph above and [examples/ashfall_lahar](../../../examples/ashfall_lahar/en/README.md) |
 | Simple debris flow (calibration-driven) | f_dbed=1 + f_dbres=1 | - | - | - | - | 30-35 | Calibrate the runout with delta_e and delta_d |
 | Bed change of a sand-bed river | f_fluvial (+ f_suspend) | - | - | - | 0.0003-0.001 | - | Large contribution of suspended load |
 | River-mouth delta | f_fluvial (capacity feed) + f_suspend (inflow concentration) + f_bedfines + fluv_slope + f_repose (+ f_fixation) | - | - | - | sand 0.0005; mud via susp_wf = 1e-3 m/s | 30 | Sea as ordinary cells + initial water level. A mud concentration of 0.0002-0.001 separates fan and bird-foot. morfac 100-200. docs/delta_plan.md |
@@ -1582,3 +1615,24 @@ concentration and velocity gates, conservation in a closed box, input errors) an
 the example [examples/debris_bedrock](../../../examples/debris_bedrock/en/README.md)
 (the longitudinal distribution of the erosion by one debris flow, the effects of
 the cover and the threshold, and a comparison with a clear-water flood).
+
+## References
+
+The sources of the formulas and default values are collected in the reference lists of the
+explanation pages: bed load, suspended load, hillslope and long-term processes and bedrock
+incision in [Sediment transport, hillslope and long-term processes](sediment.md#references);
+debris flows, slope failure and moving bed layers (Takahashi and Nakagawa 1991, Egashira 1993
+etc.) in [Debris flow, slope failure and moving bed layer](massflow.md#references); stirring
+and transport by the coastal wave field (Soulsby 1997, Larson et al. 2004, Larson & Wamsley
+2007, Stockdon et al. 2006) in [Coastal wave field explained](wavefield_models.md#references).
+The Egashira–Ashida formula of `f_dbed = 2` is used through the Morpho2DH manual; the original
+(Egashira and Ashida 1992) has not been checked. The works cited directly in the tables and the
+text of this chapter are the following.
+
+[^asahi13]: Asahi, K., Shimizu, Y., Nelson, J. and Parker, G. (2013): Numerical simulation of river meandering with self-evolving banks. *J. Geophys. Res. Earth Surf.*, 118(4), 2208–2229. (Eq. (22) attributes the μs, μk of the transverse-slope correction to Hasegawa (1984), and the notation table states μs = 1.0, μk = 0.45; eq. (18) states N* = 7.0 [Engelund 1974]. Cells that become land are removed from the computation (§2.4, eq. (33)). Checked in developer.md §84.12)
+[^hasegawa89]: Hasegawa, K. (1989): Universal bank erosion coefficient for meandering rivers. *J. Hydraul. Eng.*, 115(6), 744–765. (Eq. (6) has the same form as the transverse-slope correction; μs = 1.0, μk = 0.7 for the order-of-magnitude estimate. §84.12)
+[^engelund74]: Engelund, F. (1974): Flow and bed topography in channel bends. *J. Hydraul. Div. ASCE*, 100(HY11), 1631–1648. (Cited by Asahi et al. (2013) as the source of the secondary-flow coefficient N* = 7.0; the paper itself not checked)
+[^struiksma85]: Struiksma, N., Olesen, K. W., Flokstra, C. and de Vriend, H. J. (1985): Bed deformation in curved alluvial channels. *J. Hydraul. Res.*, 23(1), 57–79. doi:10.1080/00221688509499377 (the spiral-flow coefficient A = (2/κ²)(1 − √g/(κC)) of eq. (12). Checked in §84.12)
+[^parker11]: Parker, G., Shimizu, Y., Wilkerson, G. V., Eke, E. C., Abad, J. D., Lauer, J. W., Paola, C., Dietrich, W. E. and Voller, V. R. (2011): A new framework for modeling the migration of meandering rivers. *Earth Surf. Process. Landforms*, 36(1), 70–86. (A framework that treats the migration of the eroding bank and of the depositing bank with separate relations; checked against the abstract)
+[^am06]: Ashton, A. D. and Murray, A. B. (2006): High-angle wave instability and emergent shoreline shapes: 1. Modeling of sand waves, flying spits, and capes. *J. Geophys. Res.*, 111, F04011. doi:10.1029/2005JF000422 (the CERC formula written with deep-water waves (eq. (2)) and the linear theory of perturbations of a straight shoreline. developer.md §84.15)
+[^nienhuis15]: Nienhuis, J. H., Ashton, A. D. and Giosan, L. (2015): What makes a delta wave-dominated? *Geology*, 43(6), 511–514. doi:10.1130/G36518.1 (classification of wave-dominated deltas by the ratio R of the fluvial sediment supply to the capacity of the waves to carry it away)

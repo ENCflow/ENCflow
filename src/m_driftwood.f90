@@ -13,8 +13,8 @@ module m_driftwood
   !   有効化: fn_driftwood の指定(&list_driftwood。f_dw=0 で一時無効化)。
   !           ENC 格子のみ。無効時はメモリ・CPU ゼロ追加
   !   発生:   (a) 水理的流失 — wst>0 かつ h+hs>dw_hrec かつ vv>dw_vrec で
-  !           wst→hd をレート dw_wrec(数値的閉包【独自】・閾値
-  !           【要文献照合】)。(b) 侵食連行 — 累積侵食深 zref−z が根系深
+  !           wst→hd をレート dw_wrec(数値的閉包【独自】・閾値は
+  !           校正パラメータ。§50.5)。(b) 侵食連行 — 累積侵食深 zref−z が根系深
   !           dw_droot を超えたセルの wst 全量→hd(zref は init 時 z の
   !           私有写し。z 低下の事実だけを見るため f_fluvial/f_debris/
   !           f_slide/f_release のどの侵食・崩壊とも自動連動)
@@ -464,7 +464,7 @@ subroutine m_driftwood_calc(dw, p, g, s, it)
       end if
 
       ! (2) 水理的流失: 浸水深・流速の閾値超過でレート流失
-      !     (レート式は数値的閉包【独自】、閾値は【要文献照合】。§50)
+      !     (レート式は数値的閉包【独自】、閾値は校正パラメータ。§50.5)
       if (dw%have_hyd .and. dw%wst(i,j) > 0.0) then
         if (hh > dw%hrec .and. s%vv(i,j) > dw%vrec) then
           w = min(dw%wst(i,j), dw%wrec * p%dt)

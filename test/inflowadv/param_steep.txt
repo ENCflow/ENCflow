@@ -1,0 +1,64 @@
+!======================================================================
+! inflowadv: 射流の区間流入(developer.md §68.40 の改定 2)
+!   壁に挟まれた勾配 1/20 の河道(60 列 × 8 行、Δx = 2 m、n = 0.03、p_diagratio = 0 の
+!   4 近傍)の西端の全 8 行に区間流入 16 m3/s(単位幅 1 m2/s、等流のフルード数 1.95)、
+!   東辺は自由流出。内側エッジのエネルギー上限が射流の流入を絞らない(流入セルの
+!   供給流速を数える)ことと、下流の等流を見る。区間は MPI の帯境界(np = 2・4)を
+!   またぐ
+!======================================================================
+&list_sysparam
+  f_gridsystem = 0
+  f_govequation = 0
+  dt = 0.05
+  t0 = 0
+  tt = 600
+  dt_disp = 600
+  dt_file = 600
+  dt_recrd = 60
+  fn_geoinfo = '-'
+  fn_initial = '-'
+  fn_enc = '-'
+  fn_boundary = '-'
+  dir_result = 'result_steep'
+  f_state_save = 0
+  f_check_cfl = 1
+  f_out_vv = 1
+/
+
+&list_enc
+  f_inflow_edge = 2         ! 区間の内側へ向かうエッジだけ移流項 0 + そのエッジの流速のエネルギー上限(この検定の対象)
+  p_diagratio = 0.0         ! 4 近傍(流入セルの内側エッジが法線 1 本になる)
+/
+
+&list_initial
+  f_htype = 1
+  fn_hinit = 'h_steep.txt'
+/
+
+&list_geoinfo
+  nx = 60
+  ny = 8
+  dx = 2.0
+  dy = 2.0
+  f_ztype = 1
+  fn_z = 'z_steep.txt'
+  f_rntype = 0
+  rn0 = 0.03
+/
+
+&list_bound_edge
+  f_bc_e = 1                ! 東辺は自由流出
+/
+&list_bound_inflow
+  inflow_cell(1:2,1,1) = 1, 1
+  inflow_cell(1:2,2,1) = 1, 2
+  inflow_cell(1:2,3,1) = 1, 3
+  inflow_cell(1:2,4,1) = 1, 4
+  inflow_cell(1:2,5,1) = 1, 5
+  inflow_cell(1:2,6,1) = 1, 6
+  inflow_cell(1:2,7,1) = 1, 7
+  inflow_cell(1:2,8,1) = 1, 8
+  inflow_val(1:2,1,1) = 0, 16.0
+  inflow_val(1:2,2,1) = 9999, 16.0
+  inflow_dist(1) = 2
+/
