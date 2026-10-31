@@ -1,0 +1,12 @@
+result_*/
+save/
+Screen*.log
+encflow
+encflow_mpi
+z.txt
+z_wall4.txt
+sw.txt
+gv.txt
+stock.txt
+stock_far.txt
+__pycache__/

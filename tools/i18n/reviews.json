@@ -212,17 +212,17 @@
     {
       "source": "docs/users_guide/driftwood.md",
       "target": "docs/en/users_guide/driftwood.md",
-      "source_sha256": "c18b8f84ae8bc7e78660411c8b82e6dead1c692f035cbe054a72bca50855eb6f",
-      "target_sha256": "809dc49098884a0e57c084d2f2e4b87106dc71cda8c2dfe520a5121e87ff0efc",
-      "reviewer": "Claude (Claude Code session; reviewed the changed sections (added reference sections, footnotes and citation markers) of the Japanese source against the English mirror, 2026-10-30)",
+      "source_sha256": "b92b301e77e0f82013217a152fd20c6ece49c5915c4d95e410f419070a91f5c4",
+      "target_sha256": "8cd768839793c441a351975b4dc5728b73637ca158bff5439d9563df05f776fd",
+      "reviewer": "Claude (Claude Code session; reviewed the Japanese source against the English mirror; figures from the same results and drawing code with label changes only, 2026-10-31)",
       "method": "assistant",
-      "reviewed_on": "2026-10-30"
+      "reviewed_on": "2026-10-31"
     },
     {
       "source": "docs/users_guide/driftwood_models.md",
       "target": "docs/en/users_guide/driftwood_models.md",
-      "source_sha256": "8dd16e17c18250071d7600a6fe4463d5d13b2e0df60d89456a6614d1edf6a3a6",
-      "target_sha256": "a2325887e885752775bbdf619e33cd34c8320d0da5bb1b46d2db12c83b4a74b8",
+      "source_sha256": "184c3a3d7e1ca9e056a280d94810853200986a1fd3c1ea08f8255b4111451b0d",
+      "target_sha256": "e258176c91290c60f6cfa02665b79aaf265d1a50e216b4effc68d7dce929b8ab",
       "reviewer": "Claude (Claude Code session; reviewed the Japanese source against the English mirror; figures from the same results and drawing code with label changes only, 2026-10-31)",
       "method": "assistant",
       "reviewed_on": "2026-10-31"
@@ -482,8 +482,8 @@
     {
       "source": "docs/users_guide/usecases.md",
       "target": "docs/en/users_guide/usecases.md",
-      "source_sha256": "8c34fd059a894f79972d3519b2591f946a4f33746de49198729a474be529a9a4",
-      "target_sha256": "089d962c4d9d73755794d8ea24c631d3aa26db795803928f5e7d8c8d23709a7f",
+      "source_sha256": "419d5eccb199f2707ce3f8c6d109d48061f5bdb36746a7246ca574ba3935a2fe",
+      "target_sha256": "f83d6aaa7bf17a600cbe95ce11d8dbd234b9b499033a45388e6497917b70ea42",
       "reviewer": "Claude (Claude Code session; reviewed the Japanese source against the English mirror; figures from the same results and drawing code with label changes only, 2026-10-31)",
       "method": "assistant",
       "reviewed_on": "2026-10-31"
@@ -806,8 +806,8 @@
     {
       "source": "examples/README.md",
       "target": "examples/README.en.md",
-      "source_sha256": "cf2a601b7a94bfc3eabec8b3c1030f50936ac14d71b376efa3dec879c46f02ab",
-      "target_sha256": "7d8474f699285857e241752a00c126a4a04cea8561c789e1dcb710a08ad13166",
+      "source_sha256": "5e850f9651dd6414d532062ce38fe4563f94f1680e0fc54e61f9d507fcd785e7",
+      "target_sha256": "88c3707d3f22db334f806c4be94999ca99d3c928f5078f3116dc17ecb01bafee",
       "reviewer": "Claude (Claude Code session; reviewed the Japanese source against the English mirror; figures from the same results and drawing code with label changes only, 2026-10-31)",
       "method": "assistant",
       "reviewed_on": "2026-10-31"
@@ -1517,11 +1517,56 @@
     {
       "source": "examples/timberyard/README.md",
       "target": "examples/timberyard/en/README.md",
-      "source_sha256": "a38313d0a5c62f0718229c6f31623d83fc80d7016f2e216393df57126726bdca",
-      "target_sha256": "b7677004714c3d60cf17e62dbff29eb8d4280e3cdca1d3c1ff17bcdaa0e942fa",
-      "reviewer": "Claude (Claude Code session; full-text content and lexical review, no model execution)",
+      "source_sha256": "5d1296d94bf608f9eb33685bd212b85cd5afafb431abcafaaf7b3932a1a19000",
+      "target_sha256": "92fd26a9a0952acdfc662ddc75a209e2cee5854f58056de8e8d837ca927060f7",
+      "reviewer": "Claude (Claude Code session; reviewed the Japanese source against the English mirror; figures from the same results and drawing code with label changes only, 2026-10-31)",
       "method": "assistant",
-      "reviewed_on": "2026-10-23"
+      "reviewed_on": "2026-10-31"
+    },
+    {
+      "source": "examples/timberyard/figs/maps.png",
+      "target": "examples/timberyard/en/figs/maps.png",
+      "source_sha256": "c898f65288827d697c0637977675d20384540967e2d51b61730be6357cd14f9a",
+      "target_sha256": "d26b2ca76a307516d0a9f9fed41061f7c15e709a80acbc2dd20b0b8bba5dba78",
+      "reviewer": "Claude (Claude Code session; reviewed the Japanese source against the English mirror; figures from the same results and drawing code with label changes only, 2026-10-31)",
+      "method": "assistant",
+      "reviewed_on": "2026-10-31"
+    },
+    {
+      "source": "examples/timberyard/figs/mechanism.png",
+      "target": "examples/timberyard/en/figs/mechanism.png",
+      "source_sha256": "bf7e12675464da5c7f6429e6eb7e78419208e5c7392eaf0fcba23bfb7aa35f63",
+      "target_sha256": "b2258f312a4e99a0844c333d3899170847e0071ce30263322bc3a64a5ccbf9f2",
+      "reviewer": "Claude (Claude Code session; reviewed the Japanese source against the English mirror; figures from the same results and drawing code with label changes only, 2026-10-31)",
+      "method": "assistant",
+      "reviewed_on": "2026-10-31"
+    },
+    {
+      "source": "examples/timberyard/figs/series.png",
+      "target": "examples/timberyard/en/figs/series.png",
+      "source_sha256": "c66493dab47d7d844e7c17987508331e245eff19cf332d4b591b5371d26cef4a",
+      "target_sha256": "34b92782c317a7c22faf685505290f0ed732cde1cfa46f6333bc1d380cb7a6f0",
+      "reviewer": "Claude (Claude Code session; reviewed the Japanese source against the English mirror; figures from the same results and drawing code with label changes only, 2026-10-31)",
+      "method": "assistant",
+      "reviewed_on": "2026-10-31"
+    },
+    {
+      "source": "examples/timberyard/figs/setup.png",
+      "target": "examples/timberyard/en/figs/setup.png",
+      "source_sha256": "b0e4f82d392aa5ee09e9e6467c6d8e76f3dd92e4f87c6784e0cc72e729f29619",
+      "target_sha256": "05ac292a60d3f004e5ded85cbda0bd7e10b47f35bf990c83624ff77a829673ff",
+      "reviewer": "Claude (Claude Code session; reviewed the Japanese source against the English mirror; figures from the same results and drawing code with label changes only, 2026-10-31)",
+      "method": "assistant",
+      "reviewed_on": "2026-10-31"
+    },
+    {
+      "source": "examples/timberyard/figs/supp.png",
+      "target": "examples/timberyard/en/figs/supp.png",
+      "source_sha256": "47511ec8fe59428546c5ad7254b04e433b05e413e957179fee673c621b4a4110",
+      "target_sha256": "20c62dd84b844e71c8f6e056bc9e40243d7ee009684e6e04c09501d622524ba8",
+      "reviewer": "Claude (Claude Code session; reviewed the Japanese source against the English mirror; figures from the same results and drawing code with label changes only, 2026-10-31)",
+      "method": "assistant",
+      "reviewed_on": "2026-10-31"
     },
     {
       "source": "examples/tower_karst/README.md",

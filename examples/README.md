@@ -35,7 +35,7 @@ python3 plot_results.py   # 図化(用意されている例題のみ)
 | [estuary_barrage/](estuary_barrage/) | 河口堰の有無が、感潮河川を遡上する塩水くさびと、河床から周辺の帯水層への塩水の侵入に与える影響(堰あり・なし × 河床の塩水の出入りなし・あり・混合比・目詰まりした河床の 8 ケース) | 淡塩2層 fn_salt(地表の塩水層・地下の塩水 zone・交換の淡塩配分 f_salt_exch)、潮位、Green-Ampt、地下水の側方流、河床交換能 f_gwbed |
 | [nest_reflect/](nest_reflect/) | 比 3・5 の双方向ネスト格子の界面を横切るガウス波。一様細格子との誤差・反射率 | ネスティング fn_nest(docs/users_guide/nest.md) |
 | [tsunami_town/](tsunami_town/) | 津波で木造家屋が壊れ、瓦礫が内陸へ運ばれて積もり、引き波で海へ出る。津波 +4 m・+3 m、防潮堤のかさ上げ(開口部あり・閉じる)の 4 ケースと、判定の方法・流木・空隙率への帰還の比較(補足) | 家屋破壊・瓦礫 fn_bldgdebris(浸水深判定・空隙率への帰還)、建物空隙率 fn_gv、潮位 fn_tide、流木 fn_driftwood(補足) |
-| [timberyard/](timberyard/) | 高潮による貯木場からの材木流入(伊勢湾台風型) | 流木 fn_driftwood、潮位 |
+| [timberyard/](timberyard/) | 高潮で貯木場の材木が流れ出し、防潮壁を越えて市街地へ入る(伊勢湾台風型)。材木の流出を遅らせる・貯木場を離す・防潮壁を高くする(陸閘は開いたまま)対策の 4 ケースと、材木がどこに残るかの比較(補足) | 流木 fn_driftwood(水理的流失・堆積・再流動)、建物空隙率 fn_gv、潮位 fn_tide |
 | [sewer_hybrid/](sewer_hybrid/) | 幹線 1 本と枝管網を同じ管路連続体層で表す都市排水の模式実験 | 管路連続体層 f_gwconduit |
 | [qanat/](qanat/) | 山麓の扇状地の地下水を集めるカナート(横坑)の湧出と、近くの揚水井で湧出が細り枯れること(カナートだけ・揚水井 2 L/s・5 L/s の 3 ケース) | 管路連続体層 f_gwconduit(交換能のマップ fn_gwc_leak・開放の吐口 fn_gwc_outfall)、層2 f_gwlayer2、井戸揚水 f_gwpump |
 | [meander/](meander/) | 氾濫原の中の正弦波状の河道の蛇行発達。外岸の後退と内岸砂州の成長、出水・低水の繰り返しによる砂州の定着、給砂による砂州の氾濫原化の 9 構成 | 掃流砂の方向補正 fluv_slope・f_secflow、側岸侵食 f_berode、安息角崩落 f_repose、定着 f_fixation、給砂 |
@@ -50,7 +50,7 @@ python3 plot_results.py   # 図化(用意されている例題のみ)
 ENCflow の特徴である「複数プロセスを 1 つの計算で連鎖させる」設定の
 見本です(章を読んだ後の参考に)。
 
-- 津波 → 家屋破壊 → 瓦礫の運搬・堆積 → 引き波で海へ(防潮堤・開口部の閉鎖で変わる): [tsunami_town/](tsunami_town/)。高潮 → 流木 → 市街地: [timberyard/](timberyard/)。
+- 津波 → 家屋破壊 → 瓦礫の運搬・堆積 → 引き波で海へ(防潮堤・開口部の閉鎖で変わる): [tsunami_town/](tsunami_town/)。高潮 → 貯木場の材木の流出 → 市街地への流入・堆積(対策で変わる): [timberyard/](timberyard/)。
 - 降灰 → 浸透能の低下 → 降雨 → 泥流 → 扇状地の堆積(砂防堰堤で捕捉): [ashfall_lahar/](ashfall_lahar/)。降雨 → 乾式侵食 → 地形発達: [badland/](badland/)。豪雨時だけ表面流が加わる崖: [badland_storm/](badland_storm/)。クリープで丸くなる丘: [badland_round/](badland_round/)。キャップロックのメサ → ビュート: [mesa/](mesa/)。豪雨 → 湛水 → 吸込穴 → 溶食 → ドリーネ: [karst/](karst/)。裸岩の塔 → 裾の溶食 → 崩落 → 塔の後退: [tower_karst/](tower_karst/)。給砂 → 被覆と道具 → 岩盤の下刻: [bedrock_cover/](bedrock_cover/)。隆起 → 風化 → クリープ → 渓流の被覆と下刻 → 定常の谷: [mountain_valley/](mountain_valley/)。土石流 → 堆積層の剥離 → 岩盤の侵食 → 頻度ごとの定常勾配: [debris_bedrock/](debris_bedrock/)。
 - 断層 → 津波 → 浸水: [tsunami_fault/](tsunami_fault/)、[tsunami_coast/](tsunami_coast/)。斜面崩壊 → 水域突入 → 津波: [landslide_tsunami/](landslide_tsunami/)。
 - 洪水 → 越水 → 破堤 → 氾濫 → 家屋の流失(二線堤で止める): [levee_breach/](levee_breach/)。

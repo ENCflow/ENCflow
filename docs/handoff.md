@@ -526,6 +526,12 @@ architecture.md。このメモは「現在進行中・未完了の項目」だ�
    - 例題化は examples/timberyard(高潮の貯木場)・examples/tsunami_town
      (津波・家屋破壊との連鎖)で実施済み。残: 実流域ケースでの感度解析例と
      遊砂地あり/なしの流木捕捉比較の例題
+   - **台帳 CSV の指数の書式(2026-10-31 発見。未修正)**: driftwood.csv・bldgdebris.csv は
+     `es15.7` で書くため、絶対値が 1e-99 より小さい値は E の落ちた 3 桁指数
+     (例 `1.6125214-103`)になり、CSV として読めない(examples/timberyard の試算で、
+     流れている材木の量が 1.6e-103 m³ まで減ったときに発生)。`es15.7e3` にするか、
+     極小値を 0 に丸める修正が要る(出力書式の変更なので、これらの CSV を reference と
+     比べる test/driftwood・test/bldgdebris への影響を確かめてから)
 
 1i. **ダム・湖沼(&list_struct_dam。族の第四号。§22「ダム・湖沼への一般化」、
     lake_plan.md)の残検証・第2弾**
