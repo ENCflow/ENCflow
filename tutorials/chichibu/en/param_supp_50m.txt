@@ -26,6 +26,8 @@
 
   dir_data = "../../test/chichibu/data_chichibu_50m"   ! input data directory
 
+  fn_enc = "-"               ! ENC settings file (the &list_enc below is read from this file)
+
   f_input_mode = 1           ! matrix input format (1: text, 2: bil, 4: geotiff)
   f_output_mode = 1          ! matrix output format (1: text, 2: bil, 4: geotiff)
 
@@ -85,4 +87,14 @@
   flxy(:,2) =  427,  412,   427,  397
   flxy(:,3) =  587,  420,   587,  405
   flxy(:,4) =  863,  172,   863,  145
+/
+
+! Dynamic reassignment of blocked diagonal openings. Every param of this tutorial sets the default 2
+! of 2026-10-18 to 31 explicitly. With the default 3 (since 2026-10-31), the configurations of Steps 1-5
+! and of the supplement, which close the basin outlet and pool water deeply, develop a flow faster than
+! 18 m/s on the valley floor of the pool after about 5 hours, the Courant number exceeds 1 and the run
+! stops (2 does not stop; under investigation, developer.md §68.41). The numbers and figures of the
+! tutorial text were made with 2.
+&list_enc
+  f_opening_dynamic = 2
 /

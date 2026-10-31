@@ -91,6 +91,15 @@ time, progress, S(m), Runge, ex_flux, Cn_max, h_max(m), V_max(m/s)
 main: program terminated normally
 ```
 
+> **Note (2026-10-31)**: every `param_*.txt` of this tutorial sets `fn_enc = "-"` and
+> `f_opening_dynamic = 2` in `&list_enc` explicitly (the default of 2026-10-18 to 31; dynamic
+> reassignment of blocked diagonal openings). With the 3 that became the default on that day, the
+> configurations of Steps 1-5 and of the supplement, which close the basin outlet and pool water
+> deeply, develop a flow faster than 18 m/s on the valley floor of the pool after about 5 hours, the
+> Courant number exceeds 1 and the run stops (Step 5 at 5:14 h, the 12-hour comparison runs at
+> 10:30 h; Step 6, which has an outlet, does not stop). Until the cause is found, 2 is set explicitly
+> and the numbers and figures of the text stay those of 2 (developer.md §68.41).
+
 The contents of `en/param_step1.txt` (the full file, apart from the
 title comment at the top) are shown below. It is structured almost
 identically to Step 1 of wave; the only differences are that

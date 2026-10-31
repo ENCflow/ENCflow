@@ -3,8 +3,8 @@
 #   使い方: ./Fig_supp.sh   (要 gnuplot。実行ファイルは make で用意)
 # Fig_chichibu.sh とは別にしてある: 50 m 格子(1120×600、dt 1.5 s)のケースを
 # 2 本含むため(dt 0.75 s)、4 コアのノート PC で 1 時間前後かかる。
-# param_supp_{200m,100m,50m}.txt を ENC(そのまま)と 4 近傍(fn_enc を足して
-# p_diagratio = 0.0)で実行し、結果を result_supp_<解像度>[_4nb] に退避してから
+# param_supp_{200m,100m,50m}.txt を ENC(そのまま)と 4 近傍(param の &list_enc に
+# p_diagratio = 0.0 を足して)で実行し、結果を result_supp_<解像度>[_4nb] に退避してから
 # Fig_supp.plt で描画する。河道幅を 50 m に揃えた 200 m・100 m のケース
 # (result_supp_*_w50)も実行する。計算済みの result_supp_* があれば計算を飛ばす
 # (全て計算し直す場合は rm -rf result_supp_* してから実行)。
@@ -23,8 +23,7 @@ for r in 200m 100m 50m; do
   fi
   # --- 4 近傍(対角成分ゼロ) ---
   if [ ! -d "result_supp_${r}_4nb" ]; then
-    sed -e '/dir_data/i\  fn_enc     = "-"           ! ENC条件設定ファイル' "param_supp_$r.txt" > "wrk_supp_param_${r}_4nb.txt"
-    printf '\n&list_enc\n  p_diagratio = 0.0        ! 対角成分ゼロ = 4近傍相当\n/\n' >> "wrk_supp_param_${r}_4nb.txt"
+    sed -e '/^&list_enc/a\  p_diagratio = 0.0        ! 対角成分ゼロ = 4近傍相当' "param_supp_$r.txt" > "wrk_supp_param_${r}_4nb.txt"
     rm -rf result
     ./encflow "wrk_supp_param_${r}_4nb.txt"
     mv result "result_supp_${r}_4nb"
@@ -57,15 +56,13 @@ done
 #     Courant 数 1 を超える)ので dt = 0.4 s にする ---
 for r in 200m 100m 50m; do
   if [ ! -d "result_supp_${r}_s1" ]; then
-    sed -e '/dir_data/i\  fn_enc     = "-"           ! ENC条件設定ファイル' "param_supp_$r.txt" > "wrk_supp_param_${r}_s1.txt"
-    printf '\n&list_enc\n  f_advection_scheme = 1   ! 旧移流スキーム(非保存形・風上重み)\n/\n' >> "wrk_supp_param_${r}_s1.txt"
+    sed -e '/^&list_enc/a\  f_advection_scheme = 1   ! 旧移流スキーム(非保存形・風上重み)' "param_supp_$r.txt" > "wrk_supp_param_${r}_s1.txt"
     rm -rf result
     ./encflow "wrk_supp_param_${r}_s1.txt"
     mv result "result_supp_${r}_s1"
   fi
   if [ ! -d "result_supp_${r}_s1u" ]; then      # スキーム 1 + 風上化指数 0.1(test/chichibu と同じ値)
-    sed -e '/dir_data/i\  fn_enc     = "-"           ! ENC条件設定ファイル' "param_supp_$r.txt" > "wrk_supp_param_${r}_s1u.txt"
-    printf '\n&list_enc\n  f_advection_scheme = 1   ! 旧移流スキーム\n  p_adv_upwind_index = 0.1 ! 風上化指数(既定 0.5 より弱い風上化)\n/\n' >> "wrk_supp_param_${r}_s1u.txt"
+    sed -e '/^&list_enc/a\  f_advection_scheme = 1   ! 旧移流スキーム\n  p_adv_upwind_index = 0.1 ! 風上化指数(既定 0.5 より弱い風上化)' "param_supp_$r.txt" > "wrk_supp_param_${r}_s1u.txt"
     # 風上化 0.1 は数値粘性が小さく、100 m は dt 1.5 s だと 4.6 h(減水期。流出口の湛水 33 m)で
     # Courant 数 1 を超えて停止するので、100 m は dt 1.0 s、50 m は 0.5 s にする
     case $r in
@@ -80,8 +77,7 @@ for r in 200m 100m 50m; do
     mv result "result_supp_${r}_s1u"
   fi
   if [ ! -d "result_supp_${r}_s1f" ]; then      # スキーム 1 + 風上化指数 1.0(完全風上。上限値)
-    sed -e '/dir_data/i\  fn_enc     = "-"           ! ENC条件設定ファイル' "param_supp_$r.txt" > "wrk_supp_param_${r}_s1f.txt"
-    printf '\n&list_enc\n  f_advection_scheme = 1   ! 旧移流スキーム\n  p_adv_upwind_index = 1.0 ! 風上化指数(完全風上。既定 0.5 より強い風上化)\n/\n' >> "wrk_supp_param_${r}_s1f.txt"
+    sed -e '/^&list_enc/a\  f_advection_scheme = 1   ! 旧移流スキーム\n  p_adv_upwind_index = 1.0 ! 風上化指数(完全風上。既定 0.5 より強い風上化)' "param_supp_$r.txt" > "wrk_supp_param_${r}_s1f.txt"
     rm -rf result
     ./encflow "wrk_supp_param_${r}_s1f.txt"
     mv result "result_supp_${r}_s1f"
