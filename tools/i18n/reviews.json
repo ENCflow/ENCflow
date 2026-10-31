@@ -1049,11 +1049,11 @@
     {
       "source": "examples/badland_storm/README.md",
       "target": "examples/badland_storm/en/README.md",
-      "source_sha256": "21f7286ac2ab7559f875acc3544cb8df59f9b7f695c738bc68a36865e7f6fb9f",
-      "target_sha256": "c970e498afcb9fb8d213afbf7b14c4d985f36b17bd95df251516de7ac6ba6f99",
-      "reviewer": "Claude (Claude Code session; full-text content and lexical review, no model execution)",
+      "source_sha256": "4e9e18c2a46785223e0d30ac9243f6a1130eb6060c6eeeef3382f6b42ed6c85e",
+      "target_sha256": "4669125de7f198c61aef1903597be369734ef304919be8b975ae0f0e5fc94bee",
+      "reviewer": "Claude (Claude Code session; example reruns with f_opening_dynamic default 3)",
       "method": "assistant",
-      "reviewed_on": "2026-10-23"
+      "reviewed_on": "2026-10-31"
     },
     {
       "source": "examples/bedrock_cover/README.md",
@@ -1265,11 +1265,11 @@
     {
       "source": "examples/karst/README.md",
       "target": "examples/karst/en/README.md",
-      "source_sha256": "ec85c81b8cc7878cbe4f83b3a9fa1cd3cf31202df045e3977ac76dfd9890c157",
-      "target_sha256": "61679d6736fb5a8422a5395063e142060815fc135683a8275cac205ddfaa6c96",
-      "reviewer": "Claude (Claude Code session; full-text content and lexical review, no model execution)",
+      "source_sha256": "dcde4bc417397a40c58e524fdfb58fec91afb732518db0967479c3bbac643836",
+      "target_sha256": "214682d5cda25283e8b759136eb2e0cc8ed3b7d66a328101aa5d4dfed45a8484",
+      "reviewer": "Claude (Claude Code session; example reruns with f_opening_dynamic default 3)",
       "method": "assistant",
-      "reviewed_on": "2026-10-23"
+      "reviewed_on": "2026-10-31"
     },
     {
       "source": "examples/landslide_tsunami/README.md",
@@ -1571,11 +1571,11 @@
     {
       "source": "examples/tower_karst/README.md",
       "target": "examples/tower_karst/en/README.md",
-      "source_sha256": "07a07584f63abcf9bd3e5b6d67908a6ea47e5aceeb881050f2fadb0ae725851b",
-      "target_sha256": "d95b10dcbdf7436ccf2029e1b02155c8630adc399ccaf2aef8419c469631fafb",
-      "reviewer": "Claude (Claude Code session; full-text content and lexical review, no model execution)",
+      "source_sha256": "3c54176e673de74adc019be1694701eac84f3559e3d6ca1e96aa7e8b56748a30",
+      "target_sha256": "cec91e4cf78608e6b0522ffecb7451e92859d9f2996e46f97ab3999ffddaaca7",
+      "reviewer": "Claude (Claude Code session; example reruns with f_opening_dynamic default 3)",
       "method": "assistant",
-      "reviewed_on": "2026-10-23"
+      "reviewed_on": "2026-10-31"
     },
     {
       "source": "examples/tsunami_coast/README.md",

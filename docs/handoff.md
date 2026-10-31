@@ -785,6 +785,14 @@ architecture.md。このメモは「現在進行中・未完了の項目」だ�
       山地渓流の例題は 3 で回し直した(§89.29)。全検定・全例題の A/B(docs/opening_plan.md §8)を
       見て、2026-10-31 に既定を 3 に切り替えた(§68.41。reference 14 件の更新、test/debris の構成 5 の
       閾値)。残りは、f_opening_dynamic を明示しない例題・教材の回し直し(00 の項目)。
+      回し直しの状況(2026-10-31): 済 = landslide_tsunami・tsunami_coast・tsunami_fault・tsunami_town・
+      timberyard・ashfall_lahar・sewer_hybrid・levee_breach・qanat・estuary_barrage・教材 bmi(README と図を
+      更新)、教材 chichibu(全 param に 2 を明示。本文は不変)。不変 = nest_reflect(平坦。粗格子で 2 と 3 の
+      Log が一致)・vz_tani2023(平坦で VZ のみ。論文の PDF がなく計算不能)・教材 wave(出力一致)・
+      badland/badland_round/mesa(水の流れなし)・benchmark(README なし)。**未了 = badland_storm・karst・
+      tower_karst**(この環境では 1 ケース 2〜30 時間かかり終えられなかった。README の数値は既定 2 のままで、
+      その旨を README(日英)に注記。回し方は各 README のとおりで、plot スクリプトの数表と README を比べて
+      更新する。badland_storm は結果 5 の wet_lw の 3 構成と result_wet2 の手計算も要る)。
       切り替え後に test/wfcurrent の海浜の沿岸流の運動量の検定が 3 で通らないと分かり(積分の比 0.95。
       Δx 20/10/5 m で 0.899/0.953/0.976 と一次で収束、2 は 0.993/1.000/0.999)、海浜の構成は 2 を明示した。
       **斜面に沿う流れで開いた斜めの開口が持つ一次の摩擦の偏りの原因の特定と対策は未着手**(§68.41)。

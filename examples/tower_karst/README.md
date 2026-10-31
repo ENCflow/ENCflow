@@ -61,6 +61,12 @@ python3 plot_results.py | tee analysis.txt # figs/*.png + 数表
 
 ## 結果
 
+> **注意(2026-10-31)**: この例題の数値と図は 2026-10-18〜31 の既定 f_opening_dynamic = 2 で計算したもので、
+> 2026-10-31 からの既定 3(developer.md §68.41)ではまだ再計算していません(この例題は計算が長く、
+> 切り替えの作業では回し切れなかった)。既定 3 では表面流の経路が変わるので値は変わります。README の
+> 値を再現するには、param の `&list_sysparam` に `fn_enc = "-"`、`&list_enc` に `f_opening_dynamic = 2` を
+> 書きます。
+
 ![maps](figs/maps.png)
 
 ![sections](figs/sections.png)

@@ -76,6 +76,12 @@ converted at 50 per year):
 
 ## Results
 
+> **Note (2026-10-31)**: the numbers and figures of this example were computed with the default
+> f_opening_dynamic = 2 of 2026-10-18 to 31 and have not yet been recomputed with the default 3 of
+> 2026-10-31 (developer.md §68.41; the runs are long and could not be finished in the switch work).
+> With 3 the surface-flow paths change, so the values change. To reproduce the README values, write
+> `fn_enc = "-"` in `&list_sysparam` and `f_opening_dynamic = 2` in `&list_enc` of the param files.
+
 ![maps](../figs/maps.png)
 
 ![sections](../figs/sections.png)
