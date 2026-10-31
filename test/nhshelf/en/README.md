@@ -25,12 +25,12 @@ hydrostatic; the terrain is schematic). Bottom: the NH (V2) water surface
 every 20 s. After crossing the slope (grey band) it splits into a leading
 soliton and a trailing train. Generated in `en/figs/fission.png` by `./Fig.py en` (`figs/fission.png` is the Japanese version, `./Fig.py`).
 
-## Findings (2026-10-12)
+## Findings (2026-10-12; recomputed on 2026-10-31 with the default f_opening_dynamic = 3: the leading peak of V1 goes from 0.176 to 0.175, the rest is unchanged)
 
 | Configuration | Number of crests on the shelf | Leading η/H₂ | Second η/H₂ |
 |---|---:|---:|---:|
 | NH, with bottom-slope terms (param.txt) | 3 | 0.172 | 0.089 |
-| NH, without slope terms (V1) | 3 | 0.176 | 0.089 |
+| NH, without slope terms (V1) | 3 | 0.175 | 0.089 |
 | Hydrostatic | 1 (bore) | 0.114 | — |
 
 NH reproduces the fission into a leading soliton and a trailing train; the

@@ -160,3 +160,19 @@ uniform-depth case drops from 9.59e-5 to 3.29e-5 m/s; on the beach the row diffe
 without the roller, 3.4e-5 m/s with it and 3.0e-5 m/s with the two-way coupling. All checks pass;
 with release builds np = 1, 2 and 4 are ULP=0 against the serial reference, and with `-Og
 -fcheck=all` the serial run and np = 2 agree (np = 2 and 4 for the grid rotated by 90°).
+
+With the switch of the default of f_opening_dynamic from 2 to 3 (added 2026-10-31; developer.md §68.41)
+the momentum checks of the longshore current on the beach (uniform slope 1/80, Δx = 10 m) fail with 3:
+without the roller the difference from the closed form is 6.3% and the integral ratio Σ τ_y/Σ F_y is
+0.953, with the roller 7.7% and 0.948, with the two-way coupling 7.7% and 0.948, the ratio with the
+diffusion term is 0.947 and with the horizontal mixing 0.953 (the uniform-depth case, the setup, the
+agreement of the rotated grid, the roller budget and the wave ledger pass as with 2). On a uniform slope
+3 opens every diagonal opening (the same result as 0, no reassignment). Comparing Δx = 20, 10 and 5 m
+(dt = 1, 0.5 and 0.25 s, no roller), the integral ratio with 3 is 0.899, 0.953 and 0.976 (difference
+from the closed form 16.8, 6.3 and 3.3%), approaching 1 at first order in Δx, while 2 gives 0.993, 1.000
+and 0.999 (4.8, 3.2 and 1.8%). For a flow along a slope the open diagonal openings carry a friction bias
+of first order in Δz/h, which the blocking of the upslope openings by 2 (s = Δz/h) cancelled. To keep
+the checks, the beach configurations (all but param_flat.txt) set f_opening_dynamic = 2 explicitly and
+the reference stays that of 2 (byte-identical to the one before the switch; with the release build np = 2 is
+ULP=0 against the serial reference and the whole set of Run_MPI.sh checks passes). The cause of the bias of
+the open diagonal openings itself, and its remedy, are left for later work (developer.md §68.41).

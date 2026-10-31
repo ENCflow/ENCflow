@@ -131,14 +131,19 @@ the coefficient follows from the flow and the roughness).
 **Practical points** (details in [§5 of the advection page](advection.md#5-properties-and-choice) and [§6 of the diffusion page](diffusion.md#6-where-to-use-it-and-cautions))
 
 - **Leave the advection term at the defaults** (scheme 3 +
-  `f_opening_dynamic = 2` + `f_dry_head_cap = 1`). Only to reproduce cases
+  `f_opening_dynamic = 3` + `f_dry_head_cap = 1`). Only to reproduce cases
   calibrated with older versions use `f_advection_scheme = 1`,
   `f_opening_dynamic = 0`, `f_dry_head_cap = 0` (the defaults before
   2026-10-03; moving to scheme 3 needs a roughness recalibration). The
   default until 2026-10-18, `f_opening_dynamic = 1` (edges of the channel
   mask only), was inactive in incised channels and along walls without a
   mask, so 2 (all edges) became the default (a one-cell channel then
-  matches Manning; test/uniflow).
+  matches Manning; test/uniflow); on 2026-10-31 the default became 3, which
+  does not count the upslope ground of a uniform slope as a wall (the
+  velocity and bed shear stress of steep, shallow flows then match uniform
+  flow; in channels with high banks it is the same as 2. Cases calibrated
+  with the default 2 of 2026-10-18 to 31 are reproduced by setting 2
+  explicitly).
 - **If real-terrain results are later and smaller than observed** (with a
   channel mask) try `f_advection_donor = 1`.
 - **The diffusion term is for** the transverse velocity distribution of
@@ -163,7 +168,7 @@ the coefficient follows from the flow and the roughness).
 | f_advection_donor | 0 | 1: on edges between channel cells, limit the upwind donor in the flow direction to channel cells (against the artificial loss at bends and confluences; requires the channel mask fn_rw; judge against observations) (§4.4) |
 | f_scalar_scheme | 3 | advection scheme of the scalar transport (suspended sediment, water quality, salt layer, driftwood, debris). 3: link-wise MUSCL (default), 1: first-order upwind (former default; numerical diffusion 3–5 times longitudinally and 14 times laterally; kept for comparison) ([Advection](advection.md) §7) |
 | f_dry_head_cap | 1 | cap the edge depth toward a dry cell by the energy head (water does not climb onto dry ground above the water surface; prevents leaks and blow-ups at bore fronts and in incised channels; inactive at ordinary wet/dry fronts, identical to 0 there) (§5) |
-| f_opening_dynamic | 2 | dynamic reassignment of blocked diagonal openings. 2: all edges (default; changed from 1 on 2026-10-18), 1: edges between channel cells only (inactive without the channel mask), 0: off, 3: all edges, with the blockage measured above the local plane (the upslope ground of a uniform slope is not counted as a wall; removes the excessive velocity and τ_b of steep, shallow flows; nearly the same as 2 in channels with high banks; developer.md §68.41, in Japanese). Corrects the excessive edge velocity of the ENC grid in one-cell channels and along walls (§5) |
+| f_opening_dynamic | 3 | dynamic reassignment of blocked diagonal openings. 3: all edges, with the blockage measured above the local plane (default; changed from 2 on 2026-10-31; the upslope ground of a uniform slope is not counted as a wall; removes the excessive velocity and τ_b of steep, shallow flows; developer.md §68.41, in Japanese), 2: all edges, counting a diagonal neighbour as blocking whenever its ground is above the cell (the default from 2026-10-18 to 31; the same as 3 in channels with high banks), 1: edges between channel cells only (inactive without the channel mask; the default until 2026-10-18), 0: off. Corrects the excessive edge velocity of the ENC grid in one-cell channels and along walls (§5) |
 | f_inflow_edge | 0 | treatment of the edges touching the outer cells of a segment inflow. 0: zero advection on all of them (default), 1: zero advection only on the edges into the inflow section (a flow falling sideways from the end of the section creates no energy), 2: as 1, and the velocity of those edges is capped by the energy head of the inflow cell (suppresses a supercritical jet right below the inflow; the cap acts almost always near the inflow). Use 2 when the bed beside or below the inflow moves and for narrow inflows ([Advection](advection.md) §4.4) |
 | p_adv_upwind_index | 0.5 | upwinding index of scheme 1 only (0: central difference, 1: first-order upwind) (§3) |
 | f_diffusion_term | 0 | diffusion term. 0: none (default), 2: zero-equation model ν = ν0 + α·u*·h (recommended), 1: constant viscosity ([diffusion](diffusion.md) §2) |
@@ -269,8 +274,10 @@ flat-bed one-layer model).
 | Wide-area / long runs (cost first) | p_adprunge_thresh 2-3, f_friction_fastmath 3-5, f_govequation=1 (diffusive wave) if needed | Cuts the recomputation rate and the friction cost. The diffusive wave ignores inertia, so not for inundation fronts or tsunamis |
 | Accuracy checks, numerical experiments | p_adprunge_thresh 1.1, f_friction_fastmath 0, dt such that Cn_max stays below about 0.5 | High-accuracy side; a few tens of percent more cost. Reducing dt is more reliable than lowering the threshold (the threshold cannot close the gap between dt 0.01 and 0.05; tutorials/wave Step 2) |
 | Bores, hydraulic jumps, tsunami run-up (flows with discontinuities) | default (f_advection_scheme 3) | Momentum-conservative advection: correct bore speed and no oscillations behind the bore. The former default 1 lags the bore and oscillates behind it |
-| Steep mountain streams and sheet flow on hillslopes (velocity and bed shear stress as in uniform flow) | f_opening_dynamic 3 | the default 2 also counts the upslope ground of a uniform slope as a partial wall, and τ_b comes out 29 % too large at slope 0.2 with a 1 m grid and 0.3 m depth (T9 of test/rockinc). 3 agrees with uniform flow within 1 ± 0.5 % and is nearly the same as 2 in channels with high banks |
-| Reassignment restricted to the channel mask | f_opening_dynamic 1 | the default until 2026-10-18; the default 2 corrects the conveyance along walls and in incised channels on every edge |
+| Steep mountain streams and sheet flow on hillslopes (velocity and bed shear stress as in uniform flow) | the default (f_opening_dynamic 3) | the default 2 of 2026-10-18 to 31 also counted the upslope ground of a uniform slope as a partial wall, and τ_b came out 29 % too large at slope 0.2 with a 1 m grid and 0.3 m depth (T9 of test/rockinc). 3 agrees with uniform flow within 1 ± 0.5 % and is nearly the same as 2 in channels with high banks. Sediment running down steep slopes (landslides, debris flows) travels less far than with 2 |
+| Reproducing cases calibrated with the default of 2026-10-18 to 31 | f_opening_dynamic 2 | the former test, which counts a diagonal neighbour as blocking whenever its ground is above the cell. The same as 3 on flat ground, in deep flows and in channels with high banks |
+| Longshore currents along a beach of uniform slope (wave- or wind-driven) | f_opening_dynamic 2 | for a flow along a slope the open diagonal openings carry a friction bias of first order in Δz/h (the longshore current is 5 % weaker at slope 1/80 with Δx = 10 m; README of test/wfcurrent), which the blocking of the upslope openings by 2 cancels |
+| Reassignment restricted to the channel mask | f_opening_dynamic 1 | the default until 2026-10-18; 2 and 3 correct the conveyance along walls and in incised channels on every edge |
 | Reproducing cases calibrated with older versions | f_advection_scheme 1, f_opening_dynamic 0, f_dry_head_cap 0 | the defaults before 2026-10-03. Moving to scheme 3 needs a roughness recalibration (the momentum-conservative form resolves the jump losses and the momentum exchange with the valley floor, so it is slower and lower) |
 
 ## Output and monitoring

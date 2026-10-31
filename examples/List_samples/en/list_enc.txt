@@ -76,11 +76,12 @@
                             !   onto dry ground above the water surface plus
                             !   velocity head (fixes leaks at bore fronts and
                             !   in 1-2 cell wide incised channels)
-  !f_opening_dynamic = 2    ! dynamic reassignment of blocked openings
+  !f_opening_dynamic = 3    ! dynamic reassignment of blocked openings
                             !   (0: off, 1: edges between channel cells only
-                            !   (inactive without fn_rw), 2: all edges =
-                            !   default, 3: all edges, with the blockage
-                            !   measured above the local plane).
+                            !   (inactive without fn_rw), 2: all edges (the
+                            !   default from 2026-10-18 to 31), 3: all edges,
+                            !   with the blockage measured above the local
+                            !   plane = default).
                             !   Passage-width shares that cannot be used
                             !   because the diagonal neighbour's ground is
                             !   above the water surface are reassigned to
@@ -88,8 +89,9 @@
                             !   conveyance of 1-cell channels / wall-side rows
                             !   and the amplified damping of scheme 3). 2 also
                             !   counts the upslope ground of a uniform slope as
-                            !   blocking, so use 3 for steep mountain streams
-                            !   and sheet flow on hillslopes (developer.md §68.41)
+                            !   blocking and speeds up steep, shallow flows
+                            !   (developer.md §68.41); set 2 explicitly to
+                            !   reproduce cases calibrated with it
   !f_inflow_edge = 0        ! treatment of the edges touching the outer cells
                             !   of a segment inflow (0: zero advection on all
                             !   of them = default, 1: zero advection only on

@@ -50,7 +50,7 @@ Left: the ledger of wq.csv. About 14 minutes after the start of the rainfall the
 conduits become full and the surcharge begins (in_gwc); by the end of
 the 30-minute rainfall 1.7e7 units (= 1.7e13 CFU), and by about 40 min when
 the surcharge subsides 2.0e7 units (= 2e13 CFU), have come out onto the
-surface. Recapture by the inlets (to_gwc) is 0.21% of the surcharge, and
+surface. Recapture by the inlets (to_gwc) is 0.24% of the surcharge, and
 die-off is 5.6% in 1 hour; the rest remains on the surface. The closure
 residual (dotted line) is zero. Center: the surcharge of the conduits at the
 end of the rainfall (in-pipe head hgc − capacity cap). The trunk main holds
@@ -63,11 +63,11 @@ final water depth. The erupted water flows east down the slope and ponds to
 
 | Quantity | Computed (t = 1 h) |
 |---|---|
-| Surcharge and outfall in_gwc | 2.0009e7 |
-| Recaptured by inlets to_gwc | 4.219e4 |
-| Die-off decay | 1.119e6 |
-| Remaining on the surface mass_surface | 1.885e7 |
-| Closure in − to − decay − surface | −0.41 (relative 2.0e-8 = rounding of the 8 displayed digits) |
+| Surcharge and outfall in_gwc | 2.0008e7 |
+| Recaptured by inlets to_gwc | 4.884e4 |
+| Die-off decay | 1.118e6 |
+| Remaining on the surface mass_surface | 1.884e7 |
+| Closure in − to − decay − surface | +0.64 (relative 3.2e-8 = rounding of the 8 displayed digits) |
 | Water budget S_total(1 h) | Cumulative rainfall 51.67 mm (closed boundaries) |
 | Regression | Log.txt and wq.csv match the reference | 
 

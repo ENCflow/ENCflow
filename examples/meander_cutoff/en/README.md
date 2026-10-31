@@ -36,7 +36,9 @@ oxbow lake" are used. No code changes (settings only).
   nor suspended sediment is used (combining 0.2 mm suspended sediment without
   sediment feed lowers the bed rapidly by suspension). Advection uses the default
   scheme 3, dynamic reassignment of blocked openings on all edges
-  (`f_opening_dynamic = 2`; §84.7), the edges touching the outer cells of the
+  (`f_opening_dynamic = 2`; §84.7; nearly the same as the default 3 since
+  2026-10-31 in this channel with high banks, set explicitly to reproduce the
+  results), the edges touching the outer cells of the
   segment inflow use `f_inflow_edge = 2` as in examples/meander (developer.md
   §68.40), dt = 0.1 s.
 

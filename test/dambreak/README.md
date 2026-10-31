@@ -29,7 +29,7 @@
 | `param.txt` | 基準ケース(reference あり)。`&list_enc` は重力補正・超過流出抑制・hcap = 1、風上係数 0.5、適応 RK 閾値 1.5 を明示。移流スキームは書いていないので**現行の既定(3: 運動量保存形 + MUSCL)** |
 | `param_scheme1.txt` | `f_advection_scheme = 1`(旧既定のセル中心勾配スキーム。非保存形)。比較用 |
 | `param_scheme3.txt` | `f_advection_scheme = 3` を明示したもの。既定が 3 になったため `param.txt` と同じ結果 |
-| `param_dyn_s1.txt` / `param_dyn_s3.txt` | スキーム 1 / 3 に `f_opening_dynamic = 2`(塞がれた開口の動的振り替えを全エッジに)を加えたもの(2026-10-18 に 2 が既定になったため、現在は無印と同じ結果。比較には `f_opening_dynamic = 0` を明示する)。広い水路では壁沿い以外に効果はない |
+| `param_dyn_s1.txt` / `param_dyn_s3.txt` | スキーム 1 / 3 に `f_opening_dynamic = 2`(塞がれた開口の動的振り替えを全エッジに)を加えたもの(2026-10-18 に 2 が既定になり、2026-10-31 からの既定 3 もこの水路では 2 と同じ結果なので、現在は無印と同じ結果。比較には `f_opening_dynamic = 0` を明示する)。広い水路では壁沿い以外に効果はない |
 | `Check_stoker.py` | 中央行を 1 次元プロファイルとして解析解と比較し、段波位置・hm・um の誤差、段波背後の越え高さ、L1 誤差、行間偏差を表示。`stoker.csv` を書く(合否判定なし。回帰は Log.txt) |
 | `Make_incised.py` | 1 セル幅・2 セル幅水路のダム破壊(§68.15)の地形・マスク・パラメータを生成 |
 | `Plot_dambreak.plt` / `Plot_dambreak.py` | 対話表示・簡易図化(従来のスクリプト) |

@@ -29,7 +29,7 @@
 /
 &list_enc
   f_advection_scheme = 3
-  f_opening_dynamic = 2
+  f_opening_dynamic = 2     ! 2026-10-31 からの既定 3 と両岸が高い河道ではほぼ同じ。結果の再現のため 2 を明示
 /
 &list_initial
   f_htype = 2               ! 水位固定で初期化(海面 0 m)

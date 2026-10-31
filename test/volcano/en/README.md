@@ -88,9 +88,9 @@ released amount (99.9% has been fixed to the bed).
 | Configuration 1 (1) water ledger Σh − Q tt | −6.4e-12 m·cell | PASS (machine precision) |
 | Configuration 1 (2) solid ledger Σhs + (1 − λ)Σdz − cs Q tt | −4.5e-12 m·cell | PASS |
 | Configuration 1 (3) <h_t> versus the analytical solution | 0.3434 / 0.3434 m (0.0%), CV 0.000, C 0.444 (theory 0.444) | PASS |
-| Configuration 2 (1) solid ledger | 1.2e-11 m·cell | PASS |
-| Configuration 2 (2) activity | release area min dz = −1.71 m, flat max dz = 0.646 m | PASS |
-| Configuration 2 (3) stopping | remaining Σhs / released solids = 0.001 (< 0.3) | PASS |
+| Configuration 2 (1) solid ledger | 1.6e-11 m·cell | PASS |
+| Configuration 2 (2) activity | release area min dz = −1.57 m, flat max dz = 0.185 m | PASS |
+| Configuration 2 (3) stopping | remaining Σhs / released solids = 0.005 (< 0.3) | PASS |
 
 - The Voellmy uniform flow agrees with the analytical solution to 4 digits, and
   the water and solid ledgers close at machine precision. These are the
@@ -103,7 +103,10 @@ released amount (99.9% has been fixed to the bed).
   [test/curvature](../../curvature/en/README.md) is a check that adds the
   curvature term to the same uniform flow.
 
-- The deposit crossing the slope break in configuration 2 is due to the change
+- With the default 2 of 2026-10-18 to 31 the deposit of configuration 2 crossed the
+  slope break and reached 0.646 m on the flat; with the default 3 since 2026-10-31
+  it is 0.185 m, close to the former default 1 (2 sped up the flow on steep slopes;
+  §68.41). The deposit crossing the slope break with 2 was due to the change
   of the default on 2026-10-18 (f_opening_dynamic = 2; developer.md §68.38).
   With the former default 1 written explicitly, the values of 10-12 (release
   area −1.56 m, flat part 0.06 m, remaining 0.005 = stops on the slope) are

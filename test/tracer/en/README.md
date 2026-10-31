@@ -57,7 +57,7 @@ python3 Fig.py en # en/figs/tracer.png
 | param.txt | 10 | 1 | 1.00 | 0.10 | 4.7 | 4.5 | 1.04 | 0.8 | 0.16 |
 | param_a10dt2.txt | 10 | 2 | 1.00 | 0.20 | 4.2 | 4.0 | 1.05 | 0.3 | 0.07 |
 | param_a20.txt | 20 | 2 | 1.00 | 0.10 | 9.4 | 9.0 | 1.05 | 1.7 | 0.18 |
-| param_b.txt (lateral) | 10 | 1 | 1.00 | — | 2.7 | 2.9 (0.293·u·dy) | 0.94 | 0.19 | 0.07 |
+| param_b.txt (lateral) | 10 | 1 | 1.00 | — | 2.7 | 2.9 (0.293·u·dy) | 0.93 | 0.19 | 0.07 |
 
 (Values for t = 30–90 min. Check_tracer.py verifies that first-order upwind
 is within a relative difference of 20 % from the theoretical value at each

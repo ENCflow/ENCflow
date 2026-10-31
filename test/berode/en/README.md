@@ -58,14 +58,14 @@ make
 
 | Check | slump (h_cover = 0.1 m) | slump0 (no shielding) |
 |---|---|---|
-| Rockfall ledger (bulk) | 30.6 m³ | 30.4 m³ |
-| Bank-erosion ledger | 0.002 m³ | 0.299 m³ (kb1 alone gives a bank loss of 0.367 m·cell) |
-| Final talus Σht | 18.8 m³ | — |
+| Rockfall ledger (bulk) | 30.5 m³ | 30.4 m³ |
+| Bank-erosion ledger | 0.002 m³ | 0.291 m³ (kb1 alone gives a bank loss of 0.367 m·cell) |
+| Final talus Σht | 19.7 m³ | — |
 
 - Since the 2 m bank exceeds H_c = 1.5 m it collapses immediately, and talus of 0.25 m
   covers the toe (the rows at both edges of the channel). With shielding, at toes where
   the talus is ≥ h_cover the shear stress does not reach the bank face, and bank erosion
-  is 0.007 times. The talus decreases by 12 m³ in 60 s through the outflow of bedload
+  is 0.007 times. The talus decreases by 11 m³ in 60 s through the outflow of bedload
   (removal).
 - MPI np = 2, 4: state.dat and geomorph_rockfall.dat are byte-identical to the serial run.
 

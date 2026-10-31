@@ -26,6 +26,7 @@
 /
 
 &list_enc
+  f_opening_dynamic = 2     ! 一様勾配の海浜に沿う流れの検定のため 2026-10-18〜31 の既定を明示(3 では沿岸流が Δx に一次で弱まる。README の 2026-10-31 の追記)
   f_diffusion_term = 1      ! 定数の渦動粘性
   p_diffusion_nu = 0.5      ! ν (m²/s)
 /

@@ -89,3 +89,9 @@ release で np = 1・2・4 が逐次 reference に ULP=0、河口の噴流は np
 (Log.txt の S が相対 1.1e-6、wavefield.csv の収支の列。Wh9998・u9998 は不変)、reference を更新した。
 検定一式は合格し、release で np = 1・2・4 が逐次 reference に ULP=0、`-Og -fcheck=all` で逐次と
 np = 2 が一致。
+
+f_opening_dynamic の既定の 2 から 3 への切り替え(2026-10-31 追記。developer.md §68.41)で流れの場が変わり
+(逆流の阻止の台帳は流入 30.11 W・流出 1.93 W・砕波 27.25 W・阻止 0.92 W で残差は流入の 3.4e-8、河口の噴流の
+上の波高 0.374 m(作用なし 0.200 m)・台帳の阻止 118 W。順流・逆流の作用量の流束の保存、非定常の一致、流れが 0 の
+一致は不変)、reference を更新した。検定一式は合格し、release で np = 2 が逐次 reference に ULP=0 で Run_MPI.sh の
+検定一式も合格。

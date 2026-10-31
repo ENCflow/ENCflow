@@ -29,7 +29,7 @@ in Japanese).
 | Debris flow | A triangular hydrograph of the mixture from the 5 cells at the head (peak 40 m³/s at 10 s, ending at 70 s). Concentration C = 0.35 (26 m³/s of water and 14 m³/s of solids; 490 m³ of solids in total) |
 | Resistance and erosion-deposition | Takahashi–Nakagawa (`f_dbres = 3`, `f_dbed = 3`; d_L = 0.1 m, δe = 1e-4, δd = 0.5) and Coulomb + Manning (`f_dbres = 1`, `f_dbed = 1`; δe = 7e-4, δd = 0.05). Common: φ = 35°, λ = 0.4, low-velocity settling `f_dbstop = 1` (`db_vstop` = `db_wstop` = 0.05 m/s), slope correction `f_gravity_correction = 1`, dynamic reassignment of blocked openings `f_opening_dynamic = 3` (blockage measured above the local plane; [shallow water chapter](../../../docs/en/users_guide/swflow.md), developer.md §68.41, in Japanese) |
 | Bed | Bare rock (sd = 0) and a deposit 0.3 m thick |
-| Rock erosion | k_d = 1.8e-4 m/s, τ_cd = 1 kPa, m_d = 1, H* = 0.05 m. k_d was chosen in §12.4 so that the mean over the stream (0–360 m) for Takahashi–Nakagawa on bare rock is 1 cm per event (with the hydraulics of the default `f_opening_dynamic = 2`; 1.09 cm in the present calculation with 3) |
+| Rock erosion | k_d = 1.8e-4 m/s, τ_cd = 1 kPa, m_d = 1, H* = 0.05 m. k_d was chosen in §12.4 so that the mean over the stream (0–360 m) for Takahashi–Nakagawa on bare rock is 1 cm per event (with the hydraulics of `f_opening_dynamic = 2`, the default from 2026-10-18 to 31; 1.09 cm in the present calculation with 3, the default since 2026-10-31) |
 | Time | 300 s with dt = 0.02 s. The landform is updated every step (`dt_geomorph = 0`, `morfac = 1`). Output every 10 s |
 
 | Configuration | Contents |
@@ -121,7 +121,7 @@ is that of the fluvial plucking law, the Manning closure of the cell velocity
 τ_b = ρ g n² V²/h^{1/3}. With `f_opening_dynamic = 3` this closure agrees with the balance
 ρ g h tanθ even in steep uniform flow (in steady uniform flow with the same width, grid and
 discharge as the reach with slope 0.35 of this stream, the ratio is 1.000 in the central column;
-with the default 2 it came out larger, 1.41; developer.md §89.4, item 1, and §68.41). The
+with 2, the default from 2026-10-18 to 31, it came out larger, 1.41; developer.md §89.4, item 1, and §68.41). The
 quasi-static stress of the debris-flow term, ρ g_e h tanθ, includes the slope correction
 g_e = g cos²θ (0.89 times at slope 0.35), so evaluated with it the same flow erodes less, 0.21 cm
 and 0.015 cm (7 % of T_b as the mean over the stream; post-processing of the output every 1 s;
@@ -294,7 +294,7 @@ The only steady slope that changed is that of size 0.1 m once in 10 years, 0.175
   erosion, so nothing stops the positive feedback of gathering flow and the channel narrows to the grid
   width (as in developer.md §89.4, item 3). For a question about the long profile we use a one-cell
   channel whose cross-section cannot change. Floods in one cell have a depth close to the uniform-flow
-  value and pluck less than the middle column of 5 cells (with the default `f_opening_dynamic = 2`
+  value and pluck less than the middle column of 5 cells (with `f_opening_dynamic = 2`, the default at the time,
   shallow and fast because of the bias of §89.4, item 1), so k_p was re-tuned to give a steady slope of
   about 0.355 with floods only. The checks above with 5 cells were made with 2 (in a channel one cell
   across the diagonal neighbours are outside the domain, so 2 and 3 give the same results).

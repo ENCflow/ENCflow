@@ -94,7 +94,9 @@ Checks (configurations 1–6): (1) conservation of the total solids |Σhs + (1 �
 co-moving update max|(sd − sd₀) − (z − z₀)| < 1e-10 (z and the soil depth sd
 move by the same amount), (3) activity: slope erosion min dz < −1e-3 m and
 arrival of sediment on the flat (configurations 1 and 5: deposition below the
-slope break, max dz; eg mode: max hs), (4) wet mode only, the water ledger
+slope break, max dz > 1e-3 m, or 0.5e-3 m for configuration 5 with sd₀ = 2 mm,
+changed on 2026-10-31 when f_opening_dynamic = 3 became the default; eg mode:
+max hs > 1e-4 m), (4) wet mode only, the water ledger
 |Σh − total rainfall + λ s_b Σdz| < 1e-9 (the surface water increases by the
 entrained pore water). The gw mode checks (4) the water ledger
 |Σh + Σhg − total rainfall| < 1e-9 (the hand-over conserves water) and (5)
@@ -125,18 +127,19 @@ python3 Fig.py en # en/figs/profile.png, en/figs/map.png
 
 Top: terrain. Middle: terrain change dz (average over all rows, cm). In every
 configuration the whole slope is thinly eroded (0.3 cm in configurations 1 and
-2, 1.3 cm in configuration 3 over 120 s, 2.5 cm in configuration 4), erosion
-intensifies just before the slope break, deposition (+0.5 cm) appears directly
-below the slope break in configuration 1, and deposition (+5.4 cm) appears in
+2, 1.4 cm in configuration 3 over 120 s, 2.6 cm in configuration 4), erosion
+intensifies just before the slope break, deposition (+0.25 cm) appears directly
+below the slope break in configuration 1, and deposition (+3.1 cm) appears in
 the first cell of the flat below the slope break in configuration 3. Bottom:
 sediment in motion hs (cm). It is carried at a constant concentration on the
 slope and drops sharply on the flat beyond the slope break
 (in a dilute sheet flow θ_e ≈ 0, so deposition on the flat is slow, and in a
 short check the arrival of hs is taken as the evidence of activity). The
 pore-water entrainment of configuration 4 adds the pore water of the eroded bed
-to the flow, so the surface water increases (Σh 4.0 → 9.2 m·cell compared with
+to the flow, so the surface water increases (Σh 4.0 → 7.7 m·cell compared with
 configuration 3 at the same 60 s), and a positive feedback in which the velocity
-and erosion increase further is seen (erosion −0.51 → −3.6 cm).
+and erosion increase further is seen (erosion −2.6 cm at 60 s against −1.4 cm of
+configuration 3 at 120 s).
 
 ![Distributions of configuration 1](figs/map.png)
 
@@ -148,12 +151,12 @@ slope break, and a thin water film on the flat are seen.
 
 | Configuration | Total solids Σhs + (1 − λ)Σdz | Co-moving update | Activity (min dz / arrival) | Water ledger |
 |---|---|---|---|---|
-| 1 | −4.3e-14 | 4e-14 | −0.33 cm / deposition below the slope break +0.55 cm | — |
-| 2 Egashira | −5.0e-13 | 3e-14 | −0.33 cm / max hs 0.05 cm | — |
-| 3 Takahashi–Nakagawa (120 s) | −1.0e-13 | 1.2e-13 | −1.5 cm / max hs 1.1 cm | — |
-| 4 + pore-water entrainment | 2.9e-13 | 7e-14 | −3.6 cm / max hs 2.6 cm | 1.8e-13 |
-| 5 + bed load | −4.4e-13 | 4e-14 | −0.20 cm / deposition below the slope break +0.15 cm | — |
-| 6 + pore water with the groundwater computation | −2.4e-13 | 4e-14 | −0.30 cm / deposition below the slope break +0.59 cm | 5.4e-14 (Σh + Σhg) |
+| 1 | 9.2e-14 | 3.6e-14 | −0.32 cm / deposition below the slope break +0.25 cm | — |
+| 2 Egashira | 5.1e-13 | 3.7e-14 | −0.27 cm / max hs 0.03 cm | — |
+| 3 Takahashi–Nakagawa (120 s) | −2.1e-13 | 1.2e-13 | −1.4 cm / max hs 1.3 cm | — |
+| 4 + pore-water entrainment | 1.5e-13 | 7.7e-14 | −2.6 cm / max hs 0.86 cm | 6.6e-14 |
+| 5 + bed load | 1.4e-12 | 8.8e-14 | −0.20 cm / deposition below the slope break +0.07 cm | — |
+| 6 + pore water with the groundwater computation | −2.8e-14 | 4.3e-14 | −0.28 cm / deposition below the slope break +0.27 cm | 5.7e-14 (Σh + Σhg) |
 
 - The total solids and the co-moving update hold at machine precision in all
   6 configurations. The E-D exchange amounts are obtained from the field at
@@ -178,7 +181,7 @@ slope break, and a thin water film on the flat are seen.
   the duration of configuration 3 was therefore extended from 60 s to 120 s
   (before: −0.50 cm / max hs 0.15 cm at 60 s; configuration 4 was −3.0 cm /
   max hs 2.6 cm).
-- In the deposits on the flat of configuration 6, max|hg − sy0·sd| = 2.7e-20 m (the
+- In the deposits on the flat of configuration 6, max|hg − sy0·sd| = 0.0 m (the
   pores are filled with surface water). Back with `f_dbwet = 0` it becomes 2.4e-4 m
   and (5) fails.
 - Configurations 1–6 are checks of **connectivity and conservation laws**. The

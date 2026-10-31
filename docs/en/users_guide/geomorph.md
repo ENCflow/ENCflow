@@ -1309,12 +1309,13 @@ involved, so a double-precision build is recommended.
 cell velocity exceeded the uniform-flow balance ρ g h tanθ by 1 % at slope
 0.01, 14 % at 0.1 and 29 % at 0.2 (5 cells wide, Δx = 1 m, depth 0.3 m).
 The dynamic reassignment of blocked openings (`f_opening_dynamic = 2`, the
-default) counts the upslope ground of a uniform slope as a partial wall and
-speeds up the flow; the effect grows with grid spacing × slope relative to
-the depth. With `f_opening_dynamic = 3` (blockage measured above the local
-plane) this bias disappears, and τ_b agrees with the uniform-flow balance
-within 1 ± 0.5 % at slopes 0.01 to 0.2 (T9; nearly the same as 2 in channels
-with high banks). Use 3 for steep mountain streams; if you keep 2, calibrate
+default from 2026-10-18 to 31) counts the upslope ground of a uniform slope
+as a partial wall and speeds up the flow; the effect grows with grid spacing
+× slope relative to the depth. With `f_opening_dynamic = 3` (blockage
+measured above the local plane; the default since 2026-10-31) this bias
+disappears, and τ_b agrees with the uniform-flow balance within 1 ± 0.5 % at
+slopes 0.01 to 0.2 (T9; nearly the same as 2 in channels with high banks).
+If you set 2 explicitly, calibrate
 `rock_kp` and `rock_tauc` (and the transport rate) including this bias.
 
 **Outputs for this section**: cumulative incision `Ri0001...` (total plucked

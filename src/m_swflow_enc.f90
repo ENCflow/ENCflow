@@ -85,7 +85,7 @@ module m_swflow_enc
     integer :: f_rivermouth_drop              ! 河口から海へ段落ち強制
     integer :: f_opening_dynamic              ! 塞がれた開口の動的振り替え (0:なし, 1:河道
                                             !   セル間のエッジのみ, 2:全エッジ, 3:全エッジで
-                                            !   塞がりを局所の平面から測る。§68.14・§68.41)
+                                            !   塞がりを局所の平面から測る(既定)。§68.14・§68.41)
     integer :: f_scalar_scheme                ! スカラー輸送の移流スキーム (1: 1 次風上, 3: MUSCL。§78)
     integer :: f_advection_donor              ! 運動量保存形移流の風上供給元の制限 (0:湿潤セル
                                             !   すべて, 1:河道セル間のエッジでは河道セルのみ。

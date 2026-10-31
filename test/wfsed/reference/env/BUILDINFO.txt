@@ -1,8 +1,8 @@
-date      : 2026-10-29 00:13:13
+date      : 2026-10-31 12:24:34
 host      : vm
 user      : 
 pwd       : /home/user/ENCflow/test/wfsed
 exe       : /home/user/ENCflow/bin/encflow
 mode      : serial__double
 modules   : (no modules)
-lib       : 	libgfortran.so.5 => /lib/x86_64-linux-gnu/libgfortran.so.5 (0x00007ff3aee00000)
+lib       : 	libgfortran.so.5 => /lib/x86_64-linux-gnu/libgfortran.so.5 (0x00007fbab7000000)

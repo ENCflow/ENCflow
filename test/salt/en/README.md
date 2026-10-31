@@ -123,7 +123,7 @@ with the sea it is 0.5000 m in every cell, agreeing with the analytical value
 | C2: Hss/H of the surface water in the hollow | 0.9998 (0 with f_salt_exch=0) | Check_exch PASS (≥ 0.99) |
 | C2: salt-water volume | 0.004 % decrease in 2 hours | Check_exch PASS (\|ratio − 1\| < 1e-3) |
 | C3: the same (dt_gwflow = 2 s) | Hss/H 0.998, salt-water volume 0.03 % decrease | Check_exch PASS |
-| C4a, C4b: salt-water volume, Hss/H of the water in the hollow | both conserved to relative 7e-14; Hss/H 0.019 (fresh first) < 0.070 (mixing ratio) | Check_exch PASS |
+| C4a, C4b: salt-water volume, Hss/H of the water in the hollow | both conserved to relative 7e-14; Hss/H 0.007 (fresh first) < 0.018 (mixing ratio) | Check_exch PASS |
 | D1, D2: Hss on land / river or sea side, H | 1.2 / 0 to all digits, H unchanged (before the fix: land 0.001–0.028, river 1.18) | Check_wall PASS |
 
 - The dry-cell test and the excess-outflow reduction of the salt zone are

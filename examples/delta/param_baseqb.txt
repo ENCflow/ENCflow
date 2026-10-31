@@ -30,7 +30,8 @@
 
 &list_enc
   f_advection_scheme = 3    ! 運動量保存形(既定)
-  f_opening_dynamic = 2     ! 河道マスクのない掘り込み河道で壁際の通水能を確保(meander と同じ)
+  f_opening_dynamic = 2     ! 河道マスクのない掘り込み河道で壁際の通水能を確保(meander と同じ。
+                            !   2026-10-31 からの既定 3 と両岸が高い河道ではほぼ同じ。結果の再現のため 2 を明示)
 /
 
 &list_initial

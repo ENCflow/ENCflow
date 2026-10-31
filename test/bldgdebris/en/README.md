@@ -67,11 +67,11 @@ without feedback.
 
 | Configuration | Volume conservation | Destruction / deposition (m·cell) | Arrival on the flat part | Result |
 |---|---|---|---|---|
-| 1 depth criterion | 3.2e-14 | 0.026 / 0.0077 | 0.42 mm | PASS |
-| 2 driftwood + debris (load criterion) | 6.9e-14 | 0.125 / 0.078 | 0.87 mm | PASS. state.dat and driftwood.dat byte-identical to 2′ |
+| 1 depth criterion | 2.7e-14 | 0.023 / 0.0070 | 0.41 mm | PASS |
+| 2 driftwood + debris (load criterion) | 2.8e-14 | 0.086 / 0.042 | 0.63 mm | PASS. state.dat and driftwood.dat byte-identical to 2′ |
 | 3 restart | bldgdebris.dat and state.dat byte-identical to the continuous run | | | PASS |
-| 4 void-ratio feedback | 7.1e-14 | 0.087 / 0.077 | 0.93 mm | PASS. S(t) agrees with 4′ |
-| 5 defaults | −1.0e-11 | 15.3 / 8.8 | 0.11 m | PASS. Byte-identical to 5′ |
+| 4 void-ratio feedback | 6.6e-14 | 0.085 / 0.076 | 0.91 mm | PASS. S(t) agrees with 4′ |
+| 5 defaults | −1.0e-11 | 15.3 / 6.6 | 0.12 m | PASS. Byte-identical to 5′ |
 
 - The volume, weighted by gv, is conserved to machine precision, and it is
   also confirmed that the change of the void ratio conserves water volume
@@ -83,11 +83,13 @@ without feedback.
   (comparisons of without / with driftwood, criterion 1 / 2, feedback
   0 / 1).
 
-- The destruction / deposition of configuration 2 (0.125 / 0.078) being larger
-  than the earlier record (0.083 / 0.039) is due to the change of the default on
-  2026-10-18 (f_opening_dynamic = 2; developer.md §68.38); with the former
-  default 1 written explicitly the earlier values are reproduced (confirmed
-  2026-10-24).
+- The destruction / deposition of configuration 2 was 0.125 / 0.078 with the
+  default 2 of 2026-10-18 to 31, larger than the earlier record (0.083 / 0.039)
+  because of the change of the default on 2026-10-18 (f_opening_dynamic = 2;
+  developer.md §68.38; with the former default 1 written explicitly the earlier
+  values are reproduced; confirmed 2026-10-24). With the default 3 since
+  2026-10-31 it is 0.086 / 0.042, close to the former default 1 (2 sped up the
+  flow on steep slopes; §68.41).
 
 ## Related documents
 

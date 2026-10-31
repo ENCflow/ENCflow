@@ -102,10 +102,10 @@ handover it stops near the shoreline and does not reach the lake bed
 | Configuration 1: cross-section passage speed | 7.519 m/s (−2.9% = agrees with the boundary layer 2·ld/ny of the 2 wall rows) | PASS |
 | Configuration 2: interior Vb | 7.736–7.746 m/s (0.14%) | PASS |
 | Configuration 2: cross-section passage speed | 7.175 m/s (−7.4%; wall ends + staircase cross-section) | PASS |
-| Configuration 3: ledger / Σh | Σdz −8.6e-13, max\|Δ(z − sd)\| 8e-13 / Σh unchanged (−2.2e-3 m·cell) | PASS |
-| Configuration 3: lake-bed deposition / wave generation | flat lake bed max dz 5.27 m / water-surface maximum 0.59 m (flat part of the lake bed) | PASS |
-| Configuration 3: release ledger | released 19,110 = stopped 16,636 + moving 2,474 m³ | PASS |
-| Configuration 4: handover | 18,319 m³, lake-bed max dz 5.17 m; control 0.00 m | PASS |
+| Configuration 3: ledger / Σh | Σdz −1.1e-11, max\|Δ(z − sd)\| 9e-13 / Σh unchanged (+1.6e-3 m·cell) | PASS |
+| Configuration 3: lake-bed deposition / wave generation | flat lake bed max dz 5.20 m / water-surface maximum 0.51 m (flat part of the lake bed) | PASS |
+| Configuration 3: release ledger | released 19,110 = stopped 16,650 + moving 2,460 m³ | PASS |
+| Configuration 4: handover | 17,750 m³, lake-bed max dz 5.14 m; control 0.00 m | PASS |
 
 - The 45°-rotated benchmark is a detector for a wrong normalization of the
   8-direction distribution, which makes the passage speed come out √2 times

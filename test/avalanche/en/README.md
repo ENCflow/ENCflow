@@ -61,13 +61,13 @@ nearly zero.
 
 | Check | Computed | Result |
 |---|---|---|
-| (1) Solid ledger | −2.5e-14 m·cell | PASS |
-| (2) Co-update | 1.0e-14 m | PASS |
+| (1) Solid ledger | −1.2e-13 m·cell | PASS |
+| (2) Co-update | 1.8e-14 m | PASS |
 | (3) Entrainment activity | path min(sd − sd₀) = −0.500 m (full depth) | PASS |
-| (4) Growth | entrained solid 54.3 / released solid 21.6 = 2.51 times | PASS |
-| (5) Stopping | remaining Σhs / (released + entrained) = 0.017 | PASS |
+| (4) Growth | entrained solid 48.0 / released solid 21.6 = 2.22 times | PASS |
+| (5) Stopping | remaining Σhs / (released + entrained) = 0.015 | PASS |
 
-- By entrainment the avalanche grows to about 3.5 times the released amount,
+- By entrainment the avalanche grows to about 3.2 times the released amount,
   and 98.3% stops and deposits below the slope break. The ledger and the
   co-update are at machine precision.
 - The entrainable layer is given by reinterpreting the existing soil depth
@@ -79,10 +79,11 @@ nearly zero.
   scenario (prescribed fracture depth), and impact pressures are converted
   with the snow density — are stated explicitly in the user's guide.
 
-- The growth ratio (entrained / released) 2.51 reflects the changes of
-  2026-10-18: with the former default f_opening_dynamic = 1 written explicitly
-  it is 2.96 (2.78 when recorded; the remaining difference comes from the
-  advection fixes of §68.37 and §68.39) (confirmed 2026-10-24).
+- The growth ratio (entrained / released) was 2.51 with the default 2 of
+  2026-10-18 to 31 (reflecting the changes of 2026-10-18: with the former default
+  f_opening_dynamic = 1 written explicitly it is 2.96; 2.78 when recorded, the
+  remaining difference coming from the advection fixes of §68.37 and §68.39;
+  confirmed 2026-10-24) and is 2.22 with the default 3 since 2026-10-31 (§68.41).
 
 ## Related documents
 

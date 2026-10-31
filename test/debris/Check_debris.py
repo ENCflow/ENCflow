@@ -35,6 +35,8 @@ DX = 1.0
 ST, XB = 0.4, 30.0          # slope_break のパラメータ(user_geoinfo と対)
 TOL_SUM, TOL_SD = 1.0e-9, 1.0e-10
 MIN_ERO, MIN_DEP = 1.0e-3, 1.0e-3
+MIN_DEP_FLUV = 0.5e-3       # 構成 5(fluv。sd0 = 2 mm)の遷緩点下の堆積の閾値。f_opening_dynamic = 3 が
+                            #   既定になった 2026-10-31 に 1e-3 から改めた(2 の 1.5 mm が 3 では 0.7 mm)
 RAIN = NX * NY * (200.0 / 1000.0 / 3600.0) * 60.0   # 降雨総量 (m*cell)。param_tkwet と対
 SATBED = 1.0                                        # db_satbed(wet モード)
 RAIN_GW = NX * NY * (200.0 / 1000.0 / 3600.0) * 30.0  # 降雨総量 (m*cell)。param_gw と対
@@ -120,7 +122,7 @@ ok2 = max_ident < TOL_SD
 if mode in ("eg", "wet"):
     ok3 = ero < -MIN_ERO and arr > 1.0e-4
 else:
-    ok3 = ero < -MIN_ERO and dep > MIN_DEP
+    ok3 = ero < -MIN_ERO and dep > (MIN_DEP_FLUV if mode == "fluv" else MIN_DEP)
 print("(1) 固体総量保存: sum(hs)+(1-λ)sum(dz) = %.3e m*cell (tol %.0e) : %s"
       % (solids, TOL_SUM, "PASS" if ok1 else "FAIL"))
 print("(2) 共動更新    : max|(sd-sd0)-(z-z0)| = %.3e m (tol %.0e) : %s"

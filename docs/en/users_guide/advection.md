@@ -477,13 +477,13 @@ has the figures, tables and the list of derived cases).
 - Bores, hydraulic jumps, tsunami run-up and other flows with
   discontinuities: the default (3).
 - Rainfall runoff on a real DEM with a channel mask: 3 +
-  `f_opening_dynamic = 2` + `f_dry_head_cap = 1` (the defaults). If the
+  `f_opening_dynamic = 3` + `f_dry_head_cap = 1` (the defaults). If the
   result is later and smaller than observed, try `f_advection_donor = 1`.
   Roughness calibrated with scheme 1 needs recalibration.
 - Inundation, incised terrain and dam breaks without a channel mask: the
-  defaults (3 + `f_opening_dynamic = 2`; until 2026-10-18 the 2 had to be
-  set explicitly). Use `f_hcap_upwind = 2` only when a sharp bore front on
-  a wet bed is wanted.
+  defaults (3 + `f_opening_dynamic = 3`; until 2026-10-18 the 2 had to be
+  set explicitly, and from 2026-10-18 to 31 the default was 2). Use
+  `f_hcap_upwind = 2` only when a sharp bore front on a wet bed is wanted.
 - Smooth hillslope flow, kinematic waves, coarse grids (≥ 500 m): 1 and 3
   agree within a few percent. Use 3 for consistency.
 - Reproducing cases calibrated with older versions:
@@ -497,7 +497,7 @@ listed in the [shallow water chapter](swflow.md).
   diagonal passage widths make the axis edge velocity about 2.4 times the
   cell velocity, which amplifies the acceleration and deceleration by the
   advection term (scheme 3 in particular). Reassigning the blocked shares to
-  the open edges removes this. In steep, shallow flows the default 2 also
+  the open edges removes this. In steep, shallow flows the default 2 of 2026-10-18 to 31 also
   counts the upslope ground of a uniform slope as blocking and makes the flow
   too fast; use 3 (blockage measured above the local plane) there.
 - `f_dry_head_cap`: the pressure term stops water from climbing onto dry

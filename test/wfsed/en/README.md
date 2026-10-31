@@ -123,3 +123,15 @@ columns of wavefield.csv; Z9998 and Hs9998 are unchanged), and the reference was
 pass (on the beach the row totals of the longshore transport differ by 8.2e-6 and the bed change by
 2.5e-7 m); with release builds np = 1, 2 and 4 are ULP=0 against the serial reference, and with `-Og
 -fcheck=all` the serial run and np = 2 agree.
+
+The switch of the default of f_opening_dynamic from 2 to 3 (added 2026-10-31; developer.md §68.41)
+changes the beach results (the total longshore transport 4.47e-2 → 4.32e-2 m³/s (bed load 1.56e-3,
+suspended 4.16e-2), 1.56 times CERC; the row totals differ by 7.5e-7 and the bed change by 1.2e-7 m;
+the sum of the cross-shore transport in the surf zone is −1.27e-3 m²/s; the largest deposition 0.0015 m
+is at i = 91 and the largest erosion −0.0058 m at i = 102 (at the shoreline cell i = 109 with 2); the
+longshore transport with the breaking turbulence is 4.40e-2 m³/s (1.019 times the base); the solid in
+the closed basin is conserved to 2.8e-14 of the total. The values of the stirring, bed-load, asymmetry
+and cross-shore-direction checks are unchanged), and the reference was updated. The longshore current
+is 3% weaker than with 2 because of the first-order bias of the open diagonal openings for a flow along
+a slope (note of 2026-10-31 in the README of test/wfcurrent). All checks pass; with the release build np = 2 is
+ULP=0 against the serial reference and the whole set of Run_MPI.sh checks passes.

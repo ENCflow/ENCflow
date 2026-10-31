@@ -116,3 +116,12 @@ The fix of the advection term of the lateral Neumann boundary faces (added 2026-
 columns of wavefield.csv; Wh9998 and u9998 are unchanged), and the reference was updated. All checks
 pass; with release builds np = 1, 2 and 4 are ULP=0 against the serial reference, and with `-Og
 -fcheck=all` the serial run and np = 2 agree.
+
+The switch of the default of f_opening_dynamic from 2 to 3 (added 2026-10-31; developer.md §68.41)
+changes the flow field (the ledger of the blocking on the opposing current has an inflow of 30.11 W,
+an outflow of 1.93 W, breaking of 27.25 W and blocking of 0.92 W, with a residual of 3.4e-8 of the
+inflow; the wave height on the jet of the river mouth is 0.374 m (0.200 m without the current effect)
+and the blocking in the ledger is 118 W. The conservation of the action flux on the following and
+opposing currents, the agreement of the unsteady run and the agreement with zero current are
+unchanged), and the reference was updated. All checks pass; with the release build np = 2 is ULP=0 against the
+serial reference and the whole set of Run_MPI.sh checks passes.

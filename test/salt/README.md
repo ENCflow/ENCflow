@@ -99,7 +99,7 @@ python3 Fig.py    # figs/salt.png(引数 en で英語版を en/figs/ に)
 | C2: 窪地の地表水の Hss/H | 0.9998(f_salt_exch=0 では 0) | Check_exch PASS(≥ 0.99) |
 | C2: 塩水体積 | 2 時間で 0.004 % 減 | Check_exch PASS(\|比 − 1\| < 1e-3) |
 | C3: 同上(dt_gwflow = 2 s) | Hss/H 0.998、塩水体積 0.03 % 減 | Check_exch PASS |
-| C4a・C4b: 塩水体積、窪地の水の Hss/H | どちらも相対 7e-14 で保存、Hss/H 0.019(淡水から先)< 0.070(混合比) | Check_exch PASS |
+| C4a・C4b: 塩水体積、窪地の水の Hss/H | どちらも相対 7e-14 で保存、Hss/H 0.007(淡水から先)< 0.018(混合比) | Check_exch PASS |
 | D1・D2: 陸 / 河道・海側の Hss、H | 1.2 / 0 を全桁、H 不変(修正前は陸 0.001〜0.028・河道 1.18) | Check_wall PASS |
 
 - 塩水 zone の乾燥判定・過大流出抑制は側方流動と同じ飽和帯厚単位

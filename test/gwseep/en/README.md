@@ -50,11 +50,11 @@ infiltration in the first 10 minutes, then increases as seepage returns it
 to the surface, and the subsurface mass decreases from 803 g. The cumulative
 infiltration to_gw and seepage seep both keep increasing beyond the initial
 mass (1.3 times the initial mass passes through the ground by circulation),
-and their difference, 583.86 g, agrees to all output digits with the
-subsurface mass 583.86 g. The total remains 4000.0000 g. With
+and their difference, 589.79 g, agrees to all output digits with the
+subsurface mass 589.79 g. The total remains 4000.0000 g. With
 immobilization (dash-dotted line) the subsurface mass keeps increasing,
 equal to to_gw. Center: final concentration. The wet cells at the downstream
-end, where seepage and ponding occur, are at 99.9971–99.9974 mg/L; the
+end, where seepage and ponding occur, are at 99.9968–99.9975 mg/L; the
 concentration is preserved along the whole pathway infiltration → seepage.
 Right: final depth (ponding at the downstream end).
 
@@ -62,9 +62,9 @@ Right: final depth (ponding at the downstream end).
 
 | Check | Computed | Result |
 |---|---|---|
-| to_gw − seep = mass_gw | 5144.574 − 4560.714 = 583.860 g (mass_gw 583.860) | PASS |
+| to_gw − seep = mass_gw | 5167.340 − 4577.553 = 589.787 g (mass_gw 589.787) | PASS |
 | Total mass mass_surface + mass_gw | 4000.0000 g | PASS |
-| Continuity of concentration | wet cells 99.9971–99.9974 mg/L (initial 100) | — |
+| Continuity of concentration | wet cells 99.9968–99.9975 mg/L (initial 100) | — |
 | Immobilization (wq_rg = 1e12) | seep ≈ 0, mass_gw = to_gw agree to all digits | PASS |
 | Regression | Log.txt and wq.csv at ULP = 0 to the reference | PASS |
 

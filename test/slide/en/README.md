@@ -56,8 +56,8 @@ python3 Fig.py en # en/figs/release.png, en/figs/fslide.png
 
 Configuration 1. Left: the collapse area with collapse depth D = 1 m.
 Center: the terrain change after 10 s. The collapse area is lowered by
-about 0.96 m (part of the released 1 m is redeposited immediately), and
-deposition of up to 0.61 m has begun downstream of the slope break.
+about 0.90 m (part of the released 1 m is redeposited immediately), and
+deposition of up to 0.24 m has begun downstream of the slope break.
 Right: the flow depth h + hs. The released mass spreads from the collapse
 area over the slope break onto the flat part as a fan.
 
@@ -78,7 +78,7 @@ judge-only mode).
 
 | Configuration | Total solid | Co-moving update | Water budget / activity | Result |
 |---|---|---|---|---|
-| 1 release | 1e-13 | 3e-14 | Σh = 52.8000 (expected λ relsat ΣD = 52.8000) / collapse area min dz −0.96 m, deposition outside the area +0.61 m | PASS |
+| 1 release | 1e-13 | 3e-14 | Σh = 52.8000 (expected λ relsat ΣD = 52.8000) / collapse area min dz −0.90 m, deposition outside the area +0.24 m | PASS |
 | 2 fslide | 8e-12 (tolerance 1e-8: rounding accumulated over about 20 000 cell conversions) | 9e-14 | slope min sd = 0 (260 cells failed) / min Fs9999 0.455, D9999 ≥ H9999 | PASS |
 | 3 fsdiag | — | — | z, sd and hs unchanged; min Fs 0.943 < 1 detected (600 cells evaluated) | PASS |
 
@@ -96,9 +96,10 @@ judge-only mode).
   has been confirmed to become ρm/ρw ≈ 2 times larger in the τ_y case
   (§28.9).
 
-- The increase of the deposition outside the area from +0.22 to +0.61 m is due to
-  the change of the default on 2026-10-18 (f_opening_dynamic = 2; developer.md
-  §68.38); with the former default 1 written explicitly, −0.90 / +0.22 m are
+- The deposition outside the area was +0.61 m with the default 2 of 2026-10-18 to 31
+  (the change of the default on 2026-10-18, f_opening_dynamic = 2; developer.md
+  §68.38) and is +0.24 m with the default 3 since 2026-10-31 (2 sped up the flow on
+  steep slopes; §68.41); with the former default 1 written explicitly, −0.90 / +0.22 m are
   reproduced (confirmed 2026-10-24).
 
 ## Related documents

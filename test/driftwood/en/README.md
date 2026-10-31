@@ -50,7 +50,7 @@ exceeds the rooting depth of 2 mm, and the standing trees over the whole
 slope become driftwood (right). At 30 s there is almost no moving driftwood (left);
 all of it has deposited on the slope and just upstream of the slope break
 (center; grounded in the low-speed consolidation zone of the mixture). Only a
-little (3.0 mm) reaches the flat part.
+little (1.9 mm) reaches the flat part.
 Bottom row (configuration 2): hydraulic recruitment. The standing trees on
 the lower half of the slope are washed out (right), moving driftwood gathers
 at the edge of the ponding just above the slope break (left), and it
@@ -61,8 +61,8 @@ of the flat part (center).
 
 | Configuration | Volume conservation | Recruitment / deposition (m·cell) | Arrival on the flat part max(hd + wd) | Result |
 |---|---|---|---|---|
-| 1 debris flow + erosion entrainment | 0.0 | 5.42 / 5.41 (almost all deposited) | 3.0 mm | PASS |
-| 2 hydraulic recruitment by flood | 2.8e-13 | 0.170 / 0.099 | 1.08 mm | PASS |
+| 1 debris flow + erosion entrainment | 0.0 | 5.60 / 5.60 (almost all deposited) | 1.9 mm | PASS |
+| 2 hydraulic recruitment by flood | 3.0e-13 | 0.186 / 0.101 | 0.97 mm | PASS |
 | 3 split continuation by restart | driftwood.dat and state.dat byte-identical to the continuous run | | | PASS |
 | 4 equivalence of defaults | save_min and save_minx byte-identical ((1)–(3) also PASS with stock₀ = 0.001) | | | PASS |
 

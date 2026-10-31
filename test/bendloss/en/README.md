@@ -13,7 +13,7 @@ a straight channel (developer.md §68.8–68.32). There is no regression
 comparison with a reference; each experiment is judged by its check
 script (`Check_bendloss.py`, `Check_lateral.py`) and analytical values. It
 is also the record of the experiments that gave the basis for adopting the
-default scheme (f_advection_scheme = 3, f_opening_dynamic = 1; the latter was changed to 2 on 2026-10-18, §68.38) (the table
+default scheme (f_advection_scheme = 3, f_opening_dynamic = 1; the latter was changed to 2 on 2026-10-18 and to 3 on 2026-10-31, §68.38, §68.41) (the table
 of §68.19).
 
 ## Configuration (base case)

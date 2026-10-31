@@ -59,13 +59,15 @@ For side and steep the inflow section crosses a band boundary at MPI np = 2 and 
 
 | Rule | 1 (5 / 3 columns) | 2 (difference of energy head) | 3 (osc5 / osc3 / jet3) | 4 (inflow-column depth / uniform-flow depth) |
 |---|---|---|---|---|
-| Zero advection only on the edges into the section + velocity cap (current rule) | 0.000 / 0.000 % | +0.004 m | +0.048 / −0.269 / −0.404 m | 1.030 |
+| Zero advection only on the edges into the section + velocity cap (current rule; f_opening_dynamic = 3) | 0.000 / 0.000 % | −0.024 m | +0.047 / −0.270 / −0.405 m | 1.030 |
 | No cap (first revision of 2026-10-29) | 0.000 / 0.000 % | +0.002 m | +0.227 / +5.198 m / stopped at 39 s | 1.030 |
 | Zero advection on all edges touching the inflow cells (2026-10-24 to 29) | 0.000 / 0.000 % | +1.218 m | +0.092 / +5.198 m / stopped at 39 s | 1.014 |
 | As above, but keeping the edges that leave the section (option compared on 2026-10-29) | 0.000 / 0.000 % | +0.258 m | +0.092 / +5.198 m / stopped at 39 s | 1.014 |
 | No zero advection (before 2026-10-24) | 6.315 / 15.502 % | +0.030 m | +1.398 / +6.664 m / stopped at 4 minutes | 0.967 |
 | Cap referenced to the speed of the upstream cell only (option compared) | 0.000 / 0.000 % | +0.004 m | same as the current rule | 1.061 |
 | Cap also counting the supply speed when the inflow cell is supercritical (option compared) | 0.000 / 0.000 % | +0.004 m | +0.048 / −0.269 / +2.397 m | 1.030 |
+
+The row of the current rule gives the values with the default f_opening_dynamic = 3 since 2026-10-31; the other rows are the records compared on 2026-10-29 with the default 2 of that time (the current rule with 2 gives +0.004 m and +0.048 / −0.269 / −0.404 m).
 
 With the rule of 2026-10-24 to 29, in param_feed of examples/meander (the capacity feed fixes the
 bed of the inflow cells while the outer cells beside them are scoured), the flow falling into the

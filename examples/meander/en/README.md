@@ -57,9 +57,11 @@ with the literature (developer.md §84.3). The advection term is the default
 momentum-conservative form (`f_advection_scheme = 3`; after the
 subgrid-coupling fix of §68.36 no checkerboard appears. Versions before
 2026-10-17 used scheme 1). Dynamic reassignment of blocked openings on all
-edges (`f_opening_dynamic = 2`; in an excavated channel without a channel mask
-the default 1 is ineffective and the discharge of the rows at the bank toe
-falls short by 20 %. §84.7, test/uniflow). The edges touching the outer cells
+edges (`f_opening_dynamic = 2`; the default 1 until 2026-10-18 is ineffective
+in an excavated channel without a channel mask, and the discharge of the rows
+at the bank toe falls short by 20 %. §84.7, test/uniflow. The default 3 since
+2026-10-31 is nearly the same as 2 in this channel with high banks; 2 is set
+explicitly so that the results of this README are reproduced). The edges touching the outer cells
 of the segment inflow use `f_inflow_edge = 2` (zero advection only on the edges
 into the section, and their velocity capped by the energy head of the inflow
 cell; with the default 0 the runs with capacity feed stop through scour beside
