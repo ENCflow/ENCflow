@@ -119,21 +119,23 @@ downstream of the breach. Right: inundation depth at houses B.
 
 | Case | Water into the landside | Peak flow | Minimum river discharge downstream | Inundated ≥ 0.5 m | Maximum depth | Houses swept away A / B / C | Maximum depth B / C | B reaches 0.5 m |
 |---|---:|---:|---:|---:|---:|---:|---:|---:|
-| Overtopping only | 0.18 million m³ | 22 m³/s | 1,136 m³/s | 0 ha | 0.34 m | 0 / 0 / 0 % | 0.16 / 0.13 m | — |
-| Breach by overtopping | 4.83 million m³ | 638 m³/s | 796 m³/s | 252 ha | 1.88 m | 51 / 0 / 0 % | 0.82 / 0.66 m | 222 min |
-| Breach 1 hour later | 2.62 million m³ | 484 m³/s | 796 m³/s | 179 ha | 1.80 m | 34 / 0 / 0 % | 0.70 / 0.55 m | 282 min |
-| Breach + secondary levee | 4.45 million m³ | 640 m³/s | 802 m³/s | 268 ha | 2.63 m | 51 / 0 / 0 % | 2.03 / 0.26 m | 222 min |
+| Overtopping only | 0.17 million m³ | 21 m³/s | 1,136 m³/s | 0 ha | 0.33 m | 0 / 0 / 0 % | 0.16 / 0.13 m | — |
+| Breach by overtopping | 4.79 million m³ | 637 m³/s | 797 m³/s | 251 ha | 1.90 m | 51 / 0 / 0 % | 0.82 / 0.66 m | 223 min |
+| Breach 1 hour later | 2.59 million m³ | 481 m³/s | 796 m³/s | 177 ha | 1.79 m | 33 / 0 / 0 % | 0.70 / 0.55 m | 283 min |
+| Breach + secondary levee | 4.42 million m³ | 638 m³/s | 802 m³/s | 268 ha | 2.63 m | 51 / 0 / 0 % | 2.03 / 0.25 m | 222 min |
+
+(The tables and figures show the values recomputed on 2026-10-31 with the default f_opening_dynamic = 3; developer.md §68.41.)
 
 The upstream discharge peaks at 1,600 m³/s. "Houses swept away" is the fraction of the house
 stock of each area destroyed into debris.
 
 - **Overtopping alone does little damage**: water flowing over the low section 0.1-0.2 m
-  deep peaks at 22 m³/s, and 0.18 million m³ enters the landside. The inundation stays
+  deep peaks at 21 m³/s, and 0.17 million m³ enters the landside. The inundation stays
   below about 0.3 m, and no houses break.
-- **A breach makes the flood 27 times larger**: as the opening widens, the flow into the
-  landside peaks at 638 m³/s (40 % of the river discharge) and 4.83 million m³ enters. The
-  river discharge downstream of the breach falls from 1,600 to 796 m³/s. Inundation of
-  0.5 m or more spreads over 252 ha, and houses B and C are flooded 0.6-0.8 m deep.
+- **A breach makes the flood 28 times larger**: as the opening widens, the flow into the
+  landside peaks at 637 m³/s (40 % of the river discharge) and 4.79 million m³ enters. The
+  river discharge downstream of the breach falls from 1,600 to 797 m³/s. Inundation of
+  0.5 m or more spreads over 251 ha, and houses B and C are flooded 0.6-0.8 m deep.
 - **Houses are swept away only right behind the breach**: the flow out of the breach is
   fast (up to 4.8 m/s), and half of the houses in area A are swept away. The load hV² at
   which houses start to break (2 m³/s²) is exceeded only within about 200 m of the breach,
@@ -141,14 +143,14 @@ stock of each area destroyed into debris.
   "zone of house collapse by flood flow" as a strip along the levee.
 - **A breach one hour later halves the flood and gives more time to evacuate**: when the
   breach starts at 240 minutes, the flood peak is nearly over; the water entering the
-  landside falls from 4.83 to 2.62 million m³ (46 % less), and the houses swept away in A
-  from 51 to 34 %. Houses B reach 0.5 m, the depth at which evacuation becomes difficult,
-  at 282 instead of 222 minutes, exactly one hour later. This is the effect of a levee that
+  landside falls from 4.79 to 2.59 million m³ (46 % less), and the houses swept away in A
+  from 51 to 33 %. Houses B reach 0.5 m, the depth at which evacuation becomes difficult,
+  at 283 instead of 223 minutes, exactly one hour later. This is the effect of a levee that
   lengthens the time to failure even when overtopped.
 - **The secondary levee deepens the flood in front and protects what is behind**: houses B
   in front of the secondary levee are flooded deeper, from 0.82 to 2.03 m, and houses C
-  behind it shallower, from 0.66 to 0.26 m. The water leaving downstream through the south
-  edge falls from 4.59 to 1.73 million m³. Water held in front of the secondary levee flows
+  behind it shallower, from 0.66 to 0.25 m. The water leaving downstream through the south
+  edge falls from 4.55 to 1.69 million m³. Water held in front of the secondary levee flows
   back into the river through the breach when the river falls (the negative flow after
   420 minutes in the left panel).
 
@@ -276,8 +278,8 @@ band marks the breach in progress (70-90 minutes).
 
 | Case | Peak discharge through the opening (m³/s) / time (min) | Flood volume (10⁴ m³) | Inundated area (ha; h > 0.01 m) | Maximum inundation depth (m) | Start of inundation at the toe (min) |
 |---|---:|---:|---:|---:|---:|
-| Resolved levee + prescribed bed motion | 152 / 120 | 40.2 | 71.8 | 1.10 | 76 |
-| Virtual wall + &list_channel_breach (f_br_diag = 1) | 150 / 120 | 41.4 | 71.0 | 0.98 | 76 |
+| Resolved levee + prescribed bed motion | 153 / 120 | 40.1 | 71.7 | 1.12 | 76 |
+| Virtual wall + &list_channel_breach (f_br_diag = 1) | 150 / 121 | 41.3 | 70.9 | 0.98 | 76 |
 
 - With the resolved levee, once the levee cells drop to the floor the opening becomes
   ordinary cells and the shallow-water equations solve the flow directly (all links of the
@@ -294,7 +296,8 @@ band marks the breach in progress (70-90 minutes).
   bed motion when the levee is represented with cells.
 
 **Breach width and discharge** (same terrain with different breach widths, failing all at
-once at 70-80 minutes; steady discharge at 100 minutes compared):
+once at 70-80 minutes; steady discharge at 100 minutes compared; this table was computed with
+the default f_opening_dynamic = 2 of 2026-10-18 to 31):
 
 | Width (cells / sites) | Resolved levee Q (m³/s) | Broad-crested weir 1.7·B·H^1.5 (m³/s) | Virtual wall f_br_diag = 0 Q / ratio to resolved | f_br_diag = 1 Q / ratio to resolved |
 |---:|---:|---:|---:|---:|

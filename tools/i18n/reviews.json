@@ -1283,74 +1283,74 @@
     {
       "source": "examples/levee_breach/README.md",
       "target": "examples/levee_breach/en/README.md",
-      "source_sha256": "eaca19d397880416eef36dbafe4ed634a90f30ca47074060bb1577a3c76a276a",
-      "target_sha256": "71589a4325bbeb47b8957221e09a0ea8fa53ad2a9a04c07325b786d70312f056",
-      "reviewer": "Claude (Claude Code session; reviewed the Japanese source against the English mirror; figures from the same results and drawing code with label changes only, 2026-10-30)",
+      "source_sha256": "16d06424cda77b811b17d9b8a99b661f8e8e4b7d926c718c0aa8dc8749a609c1",
+      "target_sha256": "ae1084ec8833f2530d284f1ef18fdd52f9ddabb5a3da556bce922458dd035b0f",
+      "reviewer": "Claude (Claude Code session; example reruns with f_opening_dynamic default 3)",
       "method": "assistant",
-      "reviewed_on": "2026-10-30"
+      "reviewed_on": "2026-10-31"
     },
     {
       "source": "examples/levee_breach/figs/maps.png",
       "target": "examples/levee_breach/en/figs/maps.png",
-      "source_sha256": "97d9610f2810cc35d3a45c1c722acedd54c5a4227c999d6bfbc9f8654fb49781",
-      "target_sha256": "af2725d3e4f0676c82fc21c1eb317b83413f098d934d7a18c37aebecf8bb19f4",
-      "reviewer": "Claude (Claude Code session; reviewed the Japanese source against the English mirror; figures from the same results and drawing code with label changes only, 2026-10-30)",
+      "source_sha256": "4cafd7f381979407da11fe4fcb093fb208058970dc21c862c8f75531b2f6dd7d",
+      "target_sha256": "0081db69230c49bd67c54e4bab093b431828c917d642d456ec0395ef8636fdcd",
+      "reviewer": "Claude (Claude Code session; example reruns with f_opening_dynamic default 3)",
       "method": "assistant",
-      "reviewed_on": "2026-10-30"
+      "reviewed_on": "2026-10-31"
     },
     {
       "source": "examples/levee_breach/figs/mechanism.png",
       "target": "examples/levee_breach/en/figs/mechanism.png",
-      "source_sha256": "fc0e241608e457f44f0b815583c11ee5fbb52d48c93da1449b94155c9d584133",
-      "target_sha256": "0614f1e0f2f10db7d3e4e811f8bf62cffa7f97fd2bffda144fe48d917e816bc5",
-      "reviewer": "Claude (Claude Code session; reviewed the Japanese source against the English mirror; figures from the same results and drawing code with label changes only, 2026-10-30)",
+      "source_sha256": "fd35fe5874db6bcc9cb6509ea7fac3062f938da33002e8d910090364e0b4dad7",
+      "target_sha256": "022d7947470547b3e6ddea65f8044d2d922745a8629ec88fa985f882c045b804",
+      "reviewer": "Claude (Claude Code session; example reruns with f_opening_dynamic default 3)",
       "method": "assistant",
-      "reviewed_on": "2026-10-30"
+      "reviewed_on": "2026-10-31"
     },
     {
       "source": "examples/levee_breach/figs/series.png",
       "target": "examples/levee_breach/en/figs/series.png",
-      "source_sha256": "3f08e12afc5f72d7fba1c0dbdcda4b15f126561fe5ee348203376b41ba6c1a72",
-      "target_sha256": "26b9033fdb12728e73fab21e34fcd75516ceee9eb836ed20f1e54f830b43f710",
-      "reviewer": "Claude (Claude Code session; reviewed the Japanese source against the English mirror; figures from the same results and drawing code with label changes only, 2026-10-30)",
+      "source_sha256": "20f0c87dacbec42348edd9d5323eb4d2693fe598eb2acfccc7cffdec6be21f58",
+      "target_sha256": "b8b6635108abda269511b3258086e4b7819bc16bc386a74efb31348755a841b4",
+      "reviewer": "Claude (Claude Code session; example reruns with f_opening_dynamic default 3)",
       "method": "assistant",
-      "reviewed_on": "2026-10-30"
+      "reviewed_on": "2026-10-31"
     },
     {
       "source": "examples/levee_breach/figs/setup.png",
       "target": "examples/levee_breach/en/figs/setup.png",
-      "source_sha256": "3ac0d74b472c66535416782dd710afc2881fe712a65b00d40b08bdba7e5145db",
-      "target_sha256": "e0d03a0c1a941409012f2ae5b5cc37b26bd81bacd5e696ed4d99777a2447f8e4",
-      "reviewer": "Claude (Claude Code session; reviewed the Japanese source against the English mirror; figures from the same results and drawing code with label changes only, 2026-10-30)",
+      "source_sha256": "43f6976c5a039ed893a59f93a8468cd2d8e8277e6af322e05a7e6835590de8e9",
+      "target_sha256": "465e155a5a0e21f9f7ac1fad6bd2ecd058c91fa8ac16ec7ec5b75b6c9b9320dd",
+      "reviewer": "Claude (Claude Code session; example reruns with f_opening_dynamic default 3)",
       "method": "assistant",
-      "reviewed_on": "2026-10-30"
+      "reviewed_on": "2026-10-31"
     },
     {
       "source": "examples/levee_breach/figs/supp_inundation.png",
       "target": "examples/levee_breach/en/figs/supp_inundation.png",
-      "source_sha256": "04798ff2e754c88873a0c6401d7e9fe481ad2a24594722b7feecc7309bc8c7bf",
-      "target_sha256": "f02d78f625143cf090bbfeeabf26782d25602b734a8695e46cccac307dbeeaa6",
-      "reviewer": "Claude (Claude Code session; reviewed the Japanese source against the English mirror; figures from the same results and drawing code with label changes only, 2026-10-30)",
+      "source_sha256": "c4104b95be0e46ec5b3ac1b7bbfc00141c9cc0a0df4d663347a42a18cead3be6",
+      "target_sha256": "370cc572552ce964e87a3423f0bb71ea78edb05a01d632059f7cf493b4344ba1",
+      "reviewer": "Claude (Claude Code session; example reruns with f_opening_dynamic default 3)",
       "method": "assistant",
-      "reviewed_on": "2026-10-30"
+      "reviewed_on": "2026-10-31"
     },
     {
       "source": "examples/levee_breach/figs/supp_setup.png",
       "target": "examples/levee_breach/en/figs/supp_setup.png",
-      "source_sha256": "91673f95677bd9c07580a99bde1e9172371ea2c7dac5d5ac16728a0f01885840",
-      "target_sha256": "b8810f09597b6e1fed2322e62cf2a87506de7c000bdfc9c78a7f6af24f11ed29",
-      "reviewer": "Claude (Claude Code session; reviewed the Japanese source against the English mirror; figures from the same results and drawing code with label changes only, 2026-10-30)",
+      "source_sha256": "6bede034b1d2e9c6ebc8ec344f1593af1d6988d9ee316db755849a6d94c32d4e",
+      "target_sha256": "257c88fde1a50c21761f7d598e4a5874c783180df10ad994082099ef8bb830be",
+      "reviewer": "Claude (Claude Code session; example reruns with f_opening_dynamic default 3)",
       "method": "assistant",
-      "reviewed_on": "2026-10-30"
+      "reviewed_on": "2026-10-31"
     },
     {
       "source": "examples/levee_breach/figs/supp_timeseries.png",
       "target": "examples/levee_breach/en/figs/supp_timeseries.png",
-      "source_sha256": "26a9e857cf2302239ce7820b5f671cd1fda21867b4647862b9156536c7c297a9",
-      "target_sha256": "dad3a7b8773132c83d2692cb04a24a221f022cdd9a079f4c9899e6d6be4ff25a",
-      "reviewer": "Claude (Claude Code session; reviewed the Japanese source against the English mirror; figures from the same results and drawing code with label changes only, 2026-10-30)",
+      "source_sha256": "14500e1a9c78ebb49e52454450ddb4f539dd467643ef11123be9143799f24df3",
+      "target_sha256": "ca2b7d9213883092b662a37f377966d1f92dfa06239b1f6c36ed5e46fc19d563",
+      "reviewer": "Claude (Claude Code session; example reruns with f_opening_dynamic default 3)",
       "method": "assistant",
-      "reviewed_on": "2026-10-30"
+      "reviewed_on": "2026-10-31"
     },
     {
       "source": "examples/meander/README.md",
