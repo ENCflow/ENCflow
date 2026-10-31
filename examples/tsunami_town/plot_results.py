@@ -11,6 +11,7 @@
 """
 import glob
 import os
+import re
 import sys
 import numpy as np
 import matplotlib
@@ -73,8 +74,14 @@ def k_at(case, tmin):
 
 
 def ledger(case):
-    """bldgdebris.csv: 時刻(分)、破壊した量、残る家屋、流れている瓦礫、積もった瓦礫 (m3)。"""
-    d = np.loadtxt(f"result_{case}/bldgdebris.csv", delimiter=",", skiprows=1)
+    """bldgdebris.csv: 時刻(分)、破壊した量、残る家屋、流れている瓦礫、積もった瓦礫 (m3)。
+    3 桁の指数で E が落ちた値(1.6-103 など)も読めるように補う。"""
+    rows = []
+    for line in open(f"result_{case}/bldgdebris.csv"):
+        if line.startswith("time"):
+            continue
+        rows.append([float(re.sub(r"(\d)([+-]\d{3})$", r"\1E\2", v.strip())) for v in line.split(",")])
+    d = np.array(rows)
     return d[:, 0] / 60.0, d[:, 1] + d[:, 2], d[:, 6], d[:, 7], d[:, 8]
 
 
