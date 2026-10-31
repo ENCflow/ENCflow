@@ -58,7 +58,7 @@ module m_bldgdebris
   use m_sysdep_util, only : sysdep_mkdir
   use m_parallel, only : dcp, is_root, par_info, par_stop, par_abort, par_sum_rows, &
                          par_gather_to, par_scatter_cell, par_halo_cell, par_allreduce_sumi
-  use m_util, only : itoa, param_default
+  use m_util, only : itoa, param_default, es_out
   implicit none
   private
   public :: t_bldgdebris
@@ -663,8 +663,7 @@ subroutine m_bldgdebris_record(bd, p, g, s)
   call par_sum_rows(rows3, vdep)
 
   if (is_root .and. bd%un /= 0) then
-    write(bd%un, '(f0.2,8(",",es15.7))') s%t, v(1), v(2), v(3), v(4), v(5), &
-                                          vstk, vflt, vdep
+    write(bd%un, '(f0.2,8(",",es15.7))') s%t, es_out([v(1:5), vstk, vflt, vdep])
     flush(bd%un)
   end if
 end subroutine

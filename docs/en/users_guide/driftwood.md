@@ -231,16 +231,19 @@ An idealized experiment of the Isewan-typhoon type — timber floating in
 a coastal log storage yard is released by the storm-surge water-level
 rise and carried into an urban area by the overtopping flow — is
 included in [examples/timberyard](../../../examples/timberyard/)
-(`python3 make_terrain.py && ./encflow param.txt`; about one minute).
+(`make && make run` for the four cases; about one minute each). It
+compares the Isewan-typhoon layout with three countermeasures: delaying
+the release of the timber, moving the log yard away from the town, and
+raising the seawall (with its gate left open).
 Its [README](../../../examples/timberyard/en/README.md) explains
 the key points of the setup (no sea mask for the log yard and harbor,
 timber stock only in the yard cells via `fn_dwstock`, hydraulic
 recruitment used as "mooring loss by the surge" with `dw_hrec` above
 the normal yard depth, seawall and opening as terrain, buildings as
-`fn_gv`), the results with figures and tables, how to use Wd9999 (the
-per-cell period maximum of hd+wd) versus the final frame Wd9998, sensitivity
-cases on the deposition parameters (`dw_vstop`, `dw_wfloat`), and the
-postprocessing recipe for timber impact forces.
+`fn_gv`), how to use Wd9999 (the per-cell period maximum of hd+wd)
+versus the final frame Wd9998, a comparison of the deposition parameters
+(`dw_vstop`, `dw_wfloat`; supplement), and the postprocessing recipe for
+timber impact forces.
 
 ## What is not modeled
 

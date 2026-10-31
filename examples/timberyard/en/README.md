@@ -1,305 +1,235 @@
-# timberyard — timber influx from a log yard by storm surge (idealized Isewan-typhoon-type case)
+# timberyard — timber washed from a timber yard into a town by a storm surge (Ise Bay typhoon type)
 
 > English mirror of examples/timberyard/README.md. The Japanese file is the master copy.
 
 [日本語](../README.md)
 
-Logs floating in a coastal log yard lose their moorings as the storm surge
-raises the water level, drift out, ride the inundation flow over the seawall
-and enter and deposit in the town. This case estimates that phenomenon with the
-combination of the **driftwood module fn_driftwood** (docs/users_guide/driftwood.md,
-developer.md §50) and **tide forcing fn_tide** (users_guide/tide.md).
-The aim is to show the "pattern" for setting up, in practice, the type of event
-in which raw logs washed out of the log yards of Nagoya Port by the 1959 Isewan
-typhoon struck the town; no code change is involved (settings only).
-One main case plus three sensitivity cases that show what the settings mean.
+When a typhoon storm surge raises the sea, logs floating in a port's timber yard rise, float away
+and flow into the town with the water that overtops the seawall. In the Ise Bay Typhoon of 1959,
+logs washed out of the timber yards of Nagoya Port destroyed wooden houses and made the damage
+much worse. This example solves the surge inundation and the release, transport and deposition
+of the timber in a single run, and compares the Ise Bay type layout with three countermeasures:
+delaying the release of the timber, moving the timber yard away from the town, and raising the
+seawall (but with its gate left open). The values are schematic, chosen to make the phenomena
+easy to see; the example does not reproduce the Ise Bay Typhoon.
+
+## What happens in a real storm surge
+
+- **The storm surge of the Ise Bay Typhoon**: in the Ise Bay Typhoon of September 1959, the tide
+  level at Nagoya Port reached 3.89 m (Nagoya Local Meteorological Office), and 5,098 people died
+  or went missing, mainly around Ise Bay (Cabinet Office 2008).
+- **Logs from the timber yards struck the town**: the timber yards of Nagoya Port held about
+  1 million koku (1 koku ≈ 0.28 m³) at the time, and about 420,000 koku (about 120,000 m³) of it
+  flowed into the surrounding town with the sea water that overtopped the dikes. The logs were
+  up to about 1 m in diameter, about 5 m long and several tonnes in weight, and they destroyed
+  wooden houses and other buildings. The concentration of a large amount of timber in a place at
+  risk of storm surges was also named as a factor that made the disaster severe (Cabinet Office
+  2008).
+- **Countermeasures afterwards**: at Nagoya Port, a storm-surge breakwater 8,250 m long was
+  built in 1962-1964 (Chubu Regional Development Bureau, MLIT 2013), and, in response to the
+  outflow of timber, a timber port for handling timber was established (Nagoya Port materials).
+  Seawalls and coastal dikes have openings (gates) for roads, which must be closed before a
+  storm surge.
+
+## Mechanisms needed for the reproduction
+
+![Schematic of the mechanisms](figs/mechanism.png)
+
+(a) As the surge raises the water, timber in the yard floats free, crosses the seawall and
+enters the town. (b)-(d) The three countermeasures compared.
+
+| Real phenomenon | How ENCflow represents it | Settings |
+|---|---|---|
+| A storm surge raises the sea | A time series of the offshore water level is given to the westmost column of the domain (sea mask; waves are not treated) | `fn_tide` (`tival`) |
+| A seawall and its opening (gate) | A step in the terrain (crest +1.5 m, opening +0.5 m) | `fn_z` |
+| As the water rises, the moorings fail and the timber floats away | When the depth in the timber yard exceeds a threshold (normal depth + margin), the timber stock turns into floating timber | `fn_driftwood`, `dw_hrec`, `dw_wrec` |
+| The timber is carried by the flow | The floating timber is carried with the same flow as the water | (automatic) |
+| Timber stops where it is shallow or the flow stops | Floating timber turns into stopped timber where the water is shallower than its draft or the flow is slow | `dw_wstop`, `dw_vstop` |
+| Buildings obstruct the flow | Building porosity (buildings occupy 40 % of the area) | `fn_gv` |
 
 ## Geometry and settings
 
-![Setup](../figs/setup.png)
+![Settings](figs/setup.png)
 
-Left: terrain, timber stock (brown frame), seawall (black) and opening (dashed).
-Right: the storm-surge hydrograph with the crest levels of the opening and the
-seawall and the water level at which timber release starts.
+Left: terrain with the timber yard (brown frame), the offshore yard (the "moved" case; brown
+dashed frame), the seawall (black) and its opening. Right: storm surge, the crests of the
+seawall and the opening, and the levels at which timber starts to float away.
 
 1,200 m × 600 m, dx = dy = 10 m (120 × 60 cells). From west to east:
 
-| x (m) | cell index i | terrain | role |
+| x (m) | Cell index i | Terrain | Role |
 |---|---|---|---|
-| 0–10 | 1 | z = −3 m, sea mask | inlet of the tide forcing (storm-surge hydrograph) |
-| 10–150 | 2–15 | z = −3 m | harbour water (normal cells + initial water level) |
-| 150–350 | 16–35 | z = −2 m | **log yard**. Timber stock 0.5 m³/m² × 200 m × 600 m = **60,000 m³** |
-| 350–370 | 36–37 | z = +1.5 m | quay and seawall. The central y = 240–360 m (j = 25–36) is an **opening at z = +0.5 m** |
-| 370–1,200 | 38–120 | gentle slope z = +0.5 → +2.0 m | town. Buildings are represented by a void fraction **gv = 0.6** (40 % building coverage) |
+| 0-10 | 1 | z = −3 m, sea mask | column that receives the surge level |
+| 10-150 | 2-15 | z = −3 m | harbour (ordinary cells + initial water level) |
+| 150-350 | 16-35 | z = −2 m | **timber yard**. Timber 0.5 m³/m² × 200 m × 600 m = **60,000 m³** |
+| 350-370 | 36-37 | z = +1.5 m | quay and seawall. The central y = 240-360 m (j = 25-36) is an **opening at z = +0.5 m** (where a gate is open) |
+| 370-1,200 | 38-120 | z = +0.5 → +2.0 m | town. Building porosity 0.6 (buildings occupy 40 %) |
 
-The initial water level is a uniform T.P. 0 m (f_htype=2; the harbour and log
-yard are flooded, the land is dry). The tide is given as a uniform time series
-on the single column of sea cells at the west edge: 0 → +1.0 m (60 min;
-astronomical tide) → **+3.5 m (150 min; peak)** → held for 30 min → +0.5 m
-(240 min). The east, north and south edges are the default walls (a closed
-lowland = the below-sea-level zone behind the seawall). dt = 0.5 s, 4 hours
-(Cn_max ≈ 0.42). The run takes a little under 1 minute.
+- **Storm surge**: the offshore level rises to +1.0 m in 60 minutes (astronomical tide) and to
+  +3.5 m at 150 minutes (peak), stays for 30 minutes and falls to +0.5 m at 240 minutes. The
+  initial water level is 0 m, so the harbour and the timber yard are under water and the land is
+  dry. The east, north and south edges are closed (a closed lowland behind the seawall).
+- **Timber**: lauan logs (diameter 0.6 m, specific gravity 0.5 → draft 0.3 m). Timber starts to
+  float away when the depth in the yard exceeds 3.0 m (normal depth 2.0 m + 1.0 m; water level
+  +1.0 m), at a rate that releases 0.5 m³/m² in 42 minutes. Floating timber stops where the
+  water is shallower than its draft or the flow is slower than 0.02 m/s.
+- The run is 4 hours, dt = 0.5 s.
 
-The timber is of lauan-log class (representative diameter dw_dlog = 0.6 m, wood
-specific gravity dw_sglog = 0.5 → draft 0.3 m, derived automatically from the
-buoyancy balance). The driftwood parameters are as follows (param.txt).
-
-```
-&list_driftwood
-  fn_dwstock = 'stock.txt'  ! 0.5 m3/m2 on the log-yard cells only (60,000 m3 in total)
-  dw_dlog = 0.6             ! representative diameter (m)
-  dw_sglog = 0.5            ! wood specific gravity -> draft 0.3 m
-  dw_wrec = 2.0e-4          ! release rate (m/s). 0.5 m3/m2 is released in 42 min
-  dw_hrec = 3.0             ! depth threshold of release = normal depth 2.0 m + 1.0 m
-  dw_vrec = 0.0             ! no velocity threshold (released as soon as it floats)
-  dw_wstop = 0.005          ! grounding deposition rate (m/s)
-  dw_vstop = 0.02           ! velocity threshold of slow-flow deposition (m/s; deposit once stalled in the town)
-/
-```
-
-## Key points of the setup (reasons for the settings)
-
-1. **Do not make the log yard and harbour water a sea mask**. Sea cells cannot
-   hold a timber stock and driftwood advection does not act on them. Represent
-   the whole region where inundation and timber transport are solved as normal
-   cells + initial water level (f_htype=2), and restrict the sea mask + tide
-   forcing (fn_tide) to the offshore boundary column (here the single west-edge
-   column). This is the same practice as for tsunami sediment
-   (users_guide/geomorph.md, "The sea mask and the fate of sediment").
-   hsea0 = 2.0 m is the apparent water column thickness of the sea cells (the
-   value that provides the dry test, boundary depth and friction in inundation
-   where the sea is the supply side; users_guide/tide.md).
-2. **Give the timber stock only on the log-yard cells** with fn_dwstock
-   (make_terrain.py writes stock.txt). A uniform value dw_stock0 would turn the
-   standing trees of the town into "driftwood" as well.
-3. **Use hydraulic recruitment as "mooring loss and floating-off by the surge"**.
-   Setting dw_hrec to 3.0 m, above the normal depth of the log yard (2.0 m),
-   makes the release start only when the water level exceeds +1.0 m (t = 60 min),
-   so that the generation is synchronized with the surge. dw_vrec = 0 (released
-   as soon as it floats); dw_wrec is the rate at which the whole stock is
-   released within the duration of the surge (0.5 m³/m² ÷ 2.0e-4 m/s = 2,500 s
-   ≈ 42 min → release complete at 105 min). Erosion entrainment (dw_droot) and
-   the sediment / landform-change modules are not needed.
-4. **Represent the seawall and the opening by the terrain**. A wall with crest
-   +1.5 m and a low opening at +0.5 m (openings of land-lock gates and sluices,
-   deteriorated sections, etc.). This surge overtops the wall by 2 m, so the
-   role of the opening becomes "the place where inflow concentrates during the
-   rising stage of the surge" ("Properties to know" below).
-5. **Represent the buildings of the town by the void fraction fn_gv** (0.6).
-   The conversion to timber volume is column quantity × gv × cell area (the
-   column quantity in m³/m² is the amount per unit area of the void part).
-6. **Deposition takes 2 paths**. Grounding (depth < draft 0.3 m) via dw_wstop,
-   and slow-flow stalling via dw_vstop (velocity < 0.02 m/s). At the surge peak
-   the town is flooded like a pond and the flow stops, so most of the deposition
-   in the town occurs through dw_vstop. Refloating is the default dw_wfloat = 0
-   (deposited timber never moves again = the upper-bound view of what remains
-   in the town). These two are the calibration parameters that decide "where
-   it remains" (sensitivity cases a and b).
+| Case | Settings file | Timber yard | Water level at which timber floats away | Seawall crest | Opening |
+|---|---|---|---|---|---|
+| Ise Bay typhoon type | param.txt | in front of the seawall (x 150-350 m) | +1.0 m | +1.5 m | open |
+| Release delayed | param_hold.txt | in front of the seawall | +2.5 m (held by mooring or fences; schematic) | +1.5 m | open |
+| Timber yard moved away | param_far.txt | the same 60,000 m³ on the offshore side of the harbour (x 10-140 m) | +1.0 m | +1.5 m | open |
+| Seawall +4 m, gate left open | param_wall4.txt | in front of the seawall | +1.0 m | +4.0 m (not overtopped by the surge) | open |
 
 ## How to run
 
 ```
 cd examples/timberyard
-make                                   # link to ../../bin/encflow
-python3 make_terrain.py                # z.txt sw.txt gv.txt stock.txt
-./encflow param.txt                    # main case (about 1 minute)
-python3 plot_results.py                # figs/*.png and the tables
-
-# Sensitivity cases (optional; output in result_*; plot_results.py adds comparison rows to the tables)
-./encflow param_vstop0.txt             # a: dw_vstop = 0 (no slow-flow deposition)
-./encflow param_refloat.txt            # b: with refloating (dw_wfloat = 0.005, dw_vfloat = 0.05)
-python3 make_terrain.py 4.0            # terrain z_wall4.txt for c (seawall crest +4.0 m)
-./encflow param_wall4.txt              # c: the seawall is not overtopped by the surge (inflow through the opening only)
+make                    # links and inputs (make_terrain.py)
+make run                # run the 4 cases in turn (about 1 minute per case on 4 threads)
+make supp               # the 2 supplement cases (optional)
+python3 plot_results.py # figs/*.png and the table (with the argument en, the English version goes to en/figs/)
 ```
 
-Output (result/): frames every 30 min of H (depth), V (velocity), **Hd (column
-quantity of moving timber)** and **Wd (deposited timber)**, the final frame
-(9998), the run maxima (H9999, V9999, **Wd9999 = maximum arrival
-max(moving + deposited)** and F9999 = maximum fluid force u²h), and
-driftwood.csv (the volume ledger, every 5 min).
+## Results
 
-## Results (2026-10-17; gfortran, dt = 0.5 s, f_advection_scheme = 3)
+![Reach of the timber and timber remaining](figs/maps.png)
 
-![Volume ledger](../figs/ledger.png)
+Top: reach of the timber (maximum over the run of floating plus stopped timber; Wd9999).
+Bottom: timber remaining after 4 hours (Wd9998). Black = seawall, dashed = opening.
 
-The volume ledger (driftwood.csv). The sum of the three ledgers — remaining
-stock in the yard, moving and deposited — is always 60,000 m³ (conserved to
-machine precision because the domain is closed). Release starts at 60 min, when
-the water level exceeds +1.0 m, and is complete at 105 min (peak of moving
-timber 51,090 m³). Deposition has two stages: a gradual part inside the log yard
-right after release (~9,000 m³), and **a sudden part when the flow in the town
-stops during the held peak of the surge (150–160 min)**.
+![Timber in the town and its fate](figs/series.png)
 
-![Moving timber](../figs/frames.png)
+Left: timber in the town (floating + stopped; every 10 minutes) and the surge (light blue).
+Right: where the timber is after 4 hours (1000 m³).
 
-Time evolution of the moving timber Hd (the blue line is the inundation edge).
-t = 1.0 h: inundation of the town through the opening leads (the timber is still
-in the yard). 1.5 h: the released timber enters the town behind the opening.
-2.0 h: the seawall is overtopped along its full length (water level +2.67 m)
-and timber crosses the whole length of the wall into the back of the town
-(x ≈ 900 m). 2.5 h: the town is flooded to +3.5 m, the flow stops and
-deposition proceeds. 3.0 h: almost all is deposited.
+| Case | Timber floats away | Timber starts entering the town | Maximum timber in the town | Reach (share of the town / farthest point) | Left in the town after 4 hours | Left in the yard area and harbour | Carried offshore |
+|---|---:|---:|---:|---:|---:|---:|---:|
+| Ise Bay typhoon type | 65-105 min | 70 min | 44,658 m³ | 87 % / x 1,125 m | 44,658 m³ | 14,206 m³ | 0 |
+| Release delayed | 115-160 min | 120 min | 8,302 m³ | 29 % / x 785 m | 8,302 m³ | 50,447 m³ | 0 |
+| Timber yard moved away | 65-125 min | 120 min | 7,703 m³ | 27 % / x 905 m | 7,703 m³ | 51,049 m³ | 432 m³ |
+| Seawall +4 m, gate left open | 65-105 min | 70 min | 39,055 m³ | 88 % / x 1,125 m | 20,165 m³ | 24,263 m³ | 15,099 m³ |
 
-![Arrival, deposition, velocity and fluid force](../figs/deposit.png)
+There is 60,000 m³ of timber in total. The rest is on the seawall (100-1,300 m³) and still
+floating (368 m³ with the +4 m seawall).
 
-Top left Wd9999 (maximum arrival = hazard map), top right Wd9998 (final
-deposition), bottom left V9999 (maximum velocity), bottom right F9999 (maximum
-fluid force). Velocity and fluid force concentrate at the opening (1.8 m/s),
-but the final timber deposition is nearly uniform in y, with an arc-shaped ridge
-of deposition at the back of the town, x ≈ 900–950 m (the front of the moving
-timber at the moment it stalled).
+- **In the Ise Bay type, three quarters of the timber enters the town and stays**: timber starts
+  to float away at 65 minutes, when the water exceeds +1.0 m, and is all released by 105 minutes.
+  Water flows into the town through the opening while the surge rises, and over the whole length
+  of the seawall from 78 minutes; timber enters the town from 70 minutes. At the surge peak
+  (+3.5 m) the town fills and the flow stops, and the timber stops there. 45,000 m³ (74 %) stays
+  in the town, and the timber reaches 87 % of the town, as far as x = 1,125 m near the east end.
+- **Delaying the release cuts the timber entering the town to a fifth**: if the timber is held
+  until the water exceeds +2.5 m, it floats away at 115-160 minutes. By then the town is already
+  deep under water and little water flows in, so only 8,000 m³ of timber enters the town and it
+  reaches 29 % of the town. The rest stops in the yard area. Even without the rule that stops
+  timber in slow flow (the same setting as "does not stop in slow flow" in the supplement), the
+  maximum timber in the town is 13,000 m³, less than a quarter of the 56,000 m³ of the Ise Bay
+  type with the same setting.
+- **Moving the timber yard away also cuts the timber entering the town to a fifth**: timber
+  starts to float away at the same 65 minutes, but it takes time to cross the harbour and reach
+  the seawall, and it starts entering the town only at 120 minutes. 8,000 m³ (13 %) enters the
+  town, and most of the timber stops in the water in front of the seawall.
+- **Raising the seawall does not keep the timber out if the gate is left open**: the surge does
+  not overtop the +4 m seawall, but the town floods through the 120 m opening (maximum depth
+  3.11 m), and the timber rides the fast flow through the opening (up to 2.1 m/s) to reach 88 %
+  of the town. The load at the opening (up to 4.5 m³/s²) is three times that of the Ise Bay type
+  (1.5 m³/s²). The ebb flow also gathers at the opening and leaves fast, carrying part of the
+  timber (15,000 m³) offshore, so 20,000 m³ stays in the town after 4 hours. With the opening
+  closed as well, this surge (+3.5 m) does not enter the town.
 
-![Profiles](../figs/profile.png)
+## What this model cannot represent (differences from real phenomena)
 
-Profiles along the row through the opening (y = 295 m) and a row across the
-seawall (y = 95 m). Top: time evolution of the water surface; bottom: maximum
-arrival (light brown), final deposition (dark brown) and moving timber at
-t = 2.0 h (orange).
+- **Timber moves at the speed of the water**: the lag due to the weight of the timber, the
+  orientation and rotation of each log, impacts on and snagging against houses, and damming are
+  not represented. The force of timber hitting a house is obtained by post-processing from the
+  maximum velocity (V9999) and the size of the timber (the impact formula of NILIM Technical
+  Note 905, FEMA P-646).
+- **How the timber floats away is set by a depth threshold**: the strength of moorings and the
+  structure of fences are not represented. "Release delayed" is a schematic that only raises the
+  depth at which timber starts to float away.
+- **House destruction is not computed**: this example looks only at where the timber goes. An
+  example combining it with house destruction is the supplement of
+  [tsunami_town](../../tsunami_town/en/README.md).
+- **Waves and wind are not treated**: the storm surge is given only as the rise of the offshore
+  level.
+- **Scale**: the domain is 1.2 km × 0.6 km and the timber 60,000 m³ (about half of what flowed
+  into the town in the Ise Bay Typhoon). The values are schematic.
 
-| Zone | Final deposition (Wd9998 × gv × area) | Share | Max. column quantity |
-|---|---|---|---|
-| Harbour (x 10–150 m) | 0 m³ | 0 % | — |
-| Log yard (150–350 m) | 12,814 m³ | 21.4 % | 0.97 m³/m² |
-| Quay and seawall (350–370 m) | 855 m³ | 1.4 % | 0.39 m³/m² |
-| Town (370–1,200 m) | **46,330 m³** | **77.2 %** | 0.95 m³/m² |
-| Total | 60,000 m³ | 100 % | |
+## Notes
 
-Breakdown within the town (x 370–500 / 500–700 / 700–900 / 900–1,200 m): 4,438 /
-16,177 / 12,476 / 13,239 m³. The deposition in the 12 rows behind the opening
-(y 240–360 m; 20 % of the 60 rows) is 9,569 m³ (21 % of the town), so there is
-no concentration in y. The timber reaches (Wd9999 > 0.01 m³/m²) 4,358 of the
-4,980 town cells (88 %), farthest at x ≈ 1,125 m (near the east edge). Maximum
-depth in the town 3.11 m, maximum velocity 1.10 m/s (1.80 m/s at the opening).
+- **Do not put the harbour and the timber yard under the sea mask**: sea-mask cells cannot hold
+  timber and do not carry it, so the whole area where inundation and timber transport are solved
+  (harbour, yard and town) is made of ordinary cells, and the harbour and the yard are filled by
+  the initial water level. The sea mask is only the westmost column that receives the surge level.
+- **Set the release depth above the normal depth**: if `dw_hrec` equals the normal depth of the
+  yard (2.0 m), the timber floats away as soon as the run starts. With the normal depth plus a
+  margin, the time of release is set by the surge level. `dw_wrec` is set from the time the
+  release takes (stock ÷ rate).
+- **"How far it reached" and "where it remained"**: Wd9999 is the maximum amount over the run,
+  including where timber only passed (the reach; for hazard maps), and Wd9998 is what remained at
+  the end. The volume is the column amount × porosity × cell area. In the ledger (driftwood.csv),
+  the sum of the remaining stock, floating timber and stopped timber falls from the initial
+  60,000 m³ by the amount carried offshore (out of the domain through the westmost column).
+- **The town is a closed lowland**: the east, north and south edges are closed, so the town fills
+  at the surge peak and the flow stops, and most of the timber stops there (the supplement shows
+  how the stopping rules matter).
 
-| Time | Tide level | Event |
+## Starting points for sensitivity tests
+
+- `tival` (surge height and duration): how much overtops the seawall, and how long the flow in
+  the town stops.
+- The seawall crest and the rows of the opening in make_terrain.py: where the water flows in and
+  how fast the flow through the opening is.
+- `dw_hrec`, `dw_wrec`: the water level at which timber starts to float away, and how long the
+  release takes.
+- `dw_vstop`, `dw_wfloat`, `dw_vfloat`: where the timber remains (supplement).
+- `dw_dlog`, `dw_sglog`: the draft (the depth below which timber stops).
+- `fn_gv`: the share of buildings. A lower porosity gives a larger column amount for the same
+  timber and a faster flow.
+
+## Supplement: where the timber remains
+
+Two cases with different rules for stopping timber are compared with the Ise Bay type.
+
+| Case | Settings file | What changes |
 |---|---|---|
-| 30 min | +0.5 m | inundation of the town starts over the opening |
-| 60 min | +1.0 m | the depth in the log yard exceeds dw_hrec = 3.0 m and timber release starts |
-| 78 min | +1.5 m | the seawall is overtopped along its full length |
-| 105 min | +2.25 m | release complete; peak of moving timber 51,090 m³ |
-| 150–180 min | +3.5 m | surge peak; the town is flooded, the flow stops and most of the timber deposits |
-| 195 min | +2.75 m | moving timber down to 140 m³ (almost all deposited; the rest by 230 min) |
-| 240 min | +0.5 m | ebb; the town is draining through the opening (water level +1.55 m) |
+| Does not stop in slow flow | param_vstop0.txt | `dw_vstop = 0` (timber stops only where the water is shallower than its draft) |
+| Stopped timber floats off again | param_refloat.txt | `dw_wfloat = 0.005`, `dw_vfloat = 0.05` (stopped timber floats off again in a flow faster than 0.05 m/s) |
 
-### Sensitivity cases
+![Supplement: timber remaining at the end](figs/supp.png)
 
-| Case | Setting | Arrival in the town Σ Wd9999 | Final deposition: town | Log yard | Still floating | Outflow from the system |
-|---|---|---|---|---|---|---|
-| main | param.txt | 63,806 m³ | **46,330** | 12,814 | 0 | 0 |
-| a | dw_vstop = 0 (no slow-flow deposition) | 74,787 | 272 | 0 | 45,046 | 9,250 |
-| b | with refloating (dw_wfloat = 0.005, dw_vfloat = 0.05) | 84,062 | 117 | 7,514 | 35,747 | 10,152 |
-| c | seawall crest +4.0 m (inflow through the opening only) | 58,289 | 20,637 | 20,804 | 495 | 16,862 |
+| Case | Maximum timber in the town | Reach (share of the town) | Left in the town after 4 hours (stopped + floating) | Afloat in the harbour and yard area | Carried offshore |
+|---|---:|---:|---:|---:|---:|
+| Main (Ise Bay type) | 44,658 m³ | 87 % | 44,658 m³ | 0 | 0 |
+| Does not stop in slow flow | 56,359 m³ | 98 % | 947 m³ | 46,293 m³ | 7,115 m³ |
+| Stopped timber floats off again | 58,067 m³ | 96 % | 510 m³ | 35,677 m³ | 7,744 m³ |
 
-"Arrival" is the sum of Wd9999 over the town cells (an envelope of the run
-maximum, so it can exceed 60,000 m³). The outflow from the system is the ledger
-difference 60,000 − (stock + moving + deposited) (the part that left into the
-sea cells at the west edge).
+- **The reach does not depend on the stopping rules**: in every case, 45,000-58,000 m³ is in the
+  town at some point, and the timber reaches about 90 % of the town.
+- **Where the timber remains depends strongly on the stopping rules**: if timber does not stop in
+  slow flow, it stays afloat through the surge peak and returns to the harbour and the yard area
+  with the ebb, leaving less than 1,000 m³ in the town. The same happens when stopped timber
+  floats off again. In reality, after the water recedes, some timber remains in the town and some
+  returns to the sea. Showing the range with the main case (more timber left in the town) and the
+  supplement (less) is practical.
 
-## How to read the results
+## References
 
-- **Wd9999 is "how far it reaches", Wd9998 is "where it remains"**. Wd9999 is
-  the envelope of the run-maximum arrival max(moving + deposited), and cells
-  that timber merely passed through keep a value (= for hazard maps). Use the
-  final frame Wd9998 for the final deposition distribution and the mass
-  accounting. The conversion to timber volume is column quantity × gv × cell
-  area (the tables of plot_results.py). Because the domain is closed, the sum
-  of the ledgers equals the initial stock 60,000 m³ to machine precision (this
-  can be checked on every row of driftwood.csv).
-- **Indicator of house damage**: the fluid force of the water itself is F9999
-  (= u²h; clear water, so identical to the u²h of engineering practice; × ρw
-  gives the force per unit width in N/m). In this case it concentrates at the
-  opening (maximum 13 m³/s²) and behind it at x ≈ 370–500 m (maximum inside
-  the town 1.1 m³/s²).
-- **The impact force of timber on houses** is not computed inside the model
-  (individual impacts are beyond its applicability), but all inputs of the
-  impact-force formulas are available from the outputs. The practical standard
-  (NILIM Technical Note No. 905 §4.3) is a post-processing method that computes
-  the impact force of driftwood "by applying the impact-force formula for
-  boulders, with the velocity of the flow and the maximum diameter of the
-  driftwood", so giving ENCflow's maximum velocity V9999 (or the velocity
-  frames) and the properties of the representative log (dw_dlog) to that
-  formula (or to the driftwood impact formula of FEMA P-646) yields an
-  impact-force map consistent with the guideline. Which groups of houses the
-  timber reaches is judged from Wd9999 and Hd.
-
-## Properties to know (reasons for the settings)
-
-
-- **Synchronize the timing of release with the surge through dw_hrec**. If the
-  threshold is set to the normal depth, release starts at the beginning of the
-  run and the timber scatters into the harbour before the surge. Setting it to
-  the normal depth + a margin (here +1.0 m) lets the tide level specify the
-  time at which "the water rises and the moorings come loose". dw_wrec is set
-  from the time needed for release (stock ÷ rate).
-- **The role of the opening changes with the stage**. During the rising stage
-  of the surge (30–78 min) inflow comes only through the opening, and the first
-  timber (1.5 h) enters behind the opening. At the peak the surge overtops the
-  wall by 2 m, so timber crosses the whole length of the wall and the final
-  deposition becomes nearly uniform in y. Velocity and fluid force (V9999,
-  F9999) remain concentrated at the opening, so "the inflow concentrates at the
-  opening" shows in the distribution of fluid force but not in the deposition
-  distribution. Even in sensitivity case c, where the wall is not overtopped
-  (crest +4.0 m), the town is flooded to +3.5 m within 30 min through the
-  120 m wide opening, and the jet from the opening (2.2 m/s) carries the timber
-  farther in (13,432 m³ at x 900–1,200 m). Seeing the effect of the seawall
-  requires scenario comparisons such as narrowing the opening or keeping the
-  peak level below the crest.
-- **Most of the deposition in the town occurs by "stalling"** (dw_vstop). The
-  town is a lowland closed by walls on the east, north and south, flooded at the
-  surge peak so that the flow stops (V < 0.02 m/s). The moving timber then
-  deposits where it is, and the front at the moment of stalling becomes the
-  arc-shaped ridge at x ≈ 900–950 m. **With dw_vstop = 0 (sensitivity a) the
-  timber stays afloat as long as the depth exceeds the draft, and returns to
-  the harbour and sea through the opening on the ebb** (final deposition in
-  the town 1,041 m³, still floating 39,238 m³, outflow from the system
-  14,318 m³). The reach (Wd9999) is nearly the same as in the main case
-  (89 % → 100 %), so **"how far it reaches" is insensitive to the deposition
-  parameters, while "where it remains" is sensitive**. Use the main case for
-  the upper-bound view of what remains in the town, and case a to allow for
-  the part that returns on the ebb.
-- **The 25 % remaining in the log yard** is released timber that immediately
-  redeposited through dw_vstop in the still water of the yard (V < 0.02 m/s).
-  In reality this part is moved by waves and harbour currents; with
-  dw_vstop = 0 (sensitivity a) the remainder is 0. Use that case for the
-  upper-bound estimate of the influx into the town.
-- **Enabling refloating lets the ebb sweep the town** (sensitivity b). With
-  dw_wfloat > 0, the timber deposited during the stalling stage floats again in
-  the ebb flow (V > dw_vfloat) (cumulative deposition 700,000 m³ and refloating
-  690,000 m³ = 11 round trips of exchange), and only 449 m³ finally remains in
-  the town. In practice, show the range with the two cases: the main case
-  (upper bound of the remainder) and b (lower bound).
-- **Timber is advected at the same speed as the water (no inertia, no
-  individual logs)**. At t = 1.5 h the timber front (x ≈ 600 m) lags behind the
-  inundation edge (x ≈ 1,000 m) because release starts 30 min after the
-  inundation, not because of any independent motion of the timber. The
-  trajectory, orientation and rotation of individual logs and jamming against
-  houses and bridge piers are out of scope (users_guide/driftwood.md, "What is
-  not modeled").
-- **The east, north and south edges are walls (default)**. The town is flooded
-  to +3.5 m as a closed lowland (the pattern of southern Nagoya in the Isewan
-  typhoon). For a town with a drainage outlet behind it, give a boundary from
-  users_guide/boundary.md.
-
-## Entry points for sensitivity experiments
-
-- Peak level and duration of the surge (tival): overtopping volume and the
-  length of the stalling stage → reach and deposited amount. Keeping the peak
-  below the crest (+1.5 m) restricts the inflow to the opening.
-- Seawall crest (argument of make_terrain.py), width and crest of the opening
-  (the row range corresponding to J_OPEN and z in make_terrain.py):
-  concentration of the inflow and the jet velocity → F9999 and reach.
-- dw_vstop, dw_wfloat, dw_vfloat: decide "where it remains", as above.
-- dw_dlog, dw_sglog: draft (the depth of grounding deposition). With specific
-  gravity 0.5 the draft is half the diameter. Dry softwood (0.4) sits
-  shallower; water-logged hardwood (0.8 or more) deeper.
-- fn_gv: building coverage. Lowering the void fraction raises the column
-  quantity for the same timber volume and also raises the velocity.
-- dw_hrec, dw_wrec: start time and duration of release (synchronization with
-  the surge).
-
-## Related
-
-- Feature description and parameter table: docs/users_guide/driftwood.md; tide: users_guide/tide.md
-- List of application cases: docs/users_guide/usecases.md ("Timber influx from coastal log yards by storm surge")
-- Design and verification: docs/developer.md §50 (driftwood module)
-- Self-check test: test/driftwood
+- Cabinet Office (2008): Report of the Expert Panel on the Inheritance of Disaster Lessons: the
+  1959 Ise Bay Typhoon (in Japanese).
+  https://www.bousai.go.jp/kyoiku/kyokun/kyoukunnokeishou/rep/1959_isewan_typhoon/
+- Nagoya Local Meteorological Office: The Ise Bay Typhoon (Typhoon No. 15 of 1959) (in Japanese).
+  https://www.data.jma.go.jp/nagoya/shosai/info/kakojirei/isewantaihu.pdf
+- Nagoya Port Office, Chubu Regional Development Bureau, MLIT (2013): The Nagoya Port storm-surge
+  breakwater (in Japanese).
+  https://www.pa.cbr.mlit.go.jp/file/topics/20130704-bouhatei_nagoyakou.pdf
+- Nagoya Port materials (building the storm-surge breakwater and the timber port after the Ise Bay
+  Typhoon) (in Japanese).
+  https://www.n-jcp.jp/wp-content/uploads/2019/12/6babad77b4d2d66e76bcd09c0c2258f5.pdf
+- National Institute for Land and Infrastructure Management (2016): Commentary on the technical
+  guideline for the design of debris flow and driftwood countermeasures. NILIM Technical Note
+  No. 905 (in Japanese).
+- FEMA (2012): Guidelines for Design of Structures for Vertical Evacuation from Tsunamis, Second
+  Edition. FEMA P-646.

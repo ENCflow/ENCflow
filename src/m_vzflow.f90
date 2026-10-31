@@ -72,7 +72,7 @@ module m_vzflow
                               vzcol_dispose, vzcol_steady_psi, vz_ok, vz_fail_time, vz_fail_ponding
   use m_fileio, only : fileio_read_matrix
   use m_sysdep_util, only : sysdep_mkdir
-  use m_util, only : param_default, itoa
+  use m_util, only : param_default, itoa, es_out
   use m_parallel, only : par_info, par_stop, dcp, is_root, par_gather_to, par_bcast_cell, &
                          par_bcast_cell_i, par_allreduce_max, par_allreduce_sumi, par_sum_rows
   implicit none
@@ -277,9 +277,9 @@ subroutine m_vzflow_record(vz, s)
     associate (zz => vz%zones(z))
       ! 区画の収支残差 = 貯留変化 − (入力 − 排水) − 補正(非線形残差の集積と丸め)
       res = zz%vstore - zz%vstore0 - zz%vin + zz%vdrain - zz%vcorr
-      write(vz%un_zone, '(f0.2,",",i0,",",i0,8(",",es23.15))', advance='no') s%t, z, zz%col, zz%area, &
-            zz%vin, zz%vstore, zz%vdrain, zz%vint, zz%vext, zz%vcorr, res
-      if (vz%have_base) write(vz%un_zone, '(",",es23.15)', advance='no') zz%vbase
+      write(vz%un_zone, '(f0.2,",",i0,",",i0,8(",",es23.15))', advance='no') s%t, z, zz%col, &
+            es_out([zz%area, zz%vin, zz%vstore, zz%vdrain, zz%vint, zz%vext, zz%vcorr, res])
+      if (vz%have_base) write(vz%un_zone, '(",",es23.15)', advance='no') es_out(zz%vbase)
       write(vz%un_zone, '(a)') ""
     end associate
   end do
@@ -291,8 +291,8 @@ subroutine m_vzflow_record(vz, s)
       do k = 1, geo%nz
         bsum(k) = bsum(k-1) + col%th(k) * geo%dzl(k)
       end do
-      write(vz%un_col, '(f0.2,",",i0,3(",",es23.15))', advance='no') s%t, c, vz%rlast(c), &
-            vz%fcum(0, c), vz%fcum(geo%nz, c)
+      write(vz%un_col, '(f0.2,",",i0,3(",",es23.15))', advance='no') s%t, c, &
+            es_out([vz%rlast(c), vz%fcum(0, c), vz%fcum(geo%nz, c)])
       do k = 1, vz%ndep
         call depth_index(geo, vz%odep(k), jf, alpha)
         if (jf < geo%nz) then
@@ -302,9 +302,9 @@ subroutine m_vzflow_record(vz, s)
           dcum = vz%fcum(geo%nz, c)
           sto = bsum(geo%nz)
         end if
-        write(vz%un_col, '(2(",",es23.15))', advance='no') dcum, sto
+        write(vz%un_col, '(2(",",es23.15))', advance='no') es_out([dcum, sto])
       end do
-      write(vz%un_col, '(3(",",i0),",",es12.4)') col%nacc, col%nrej, col%nit, col%dtlast
+      write(vz%un_col, '(3(",",i0),",",es12.4)') col%nacc, col%nrej, col%nit, es_out(col%dtlast)
       deallocate(bsum)
     end associate
   end do
@@ -334,8 +334,8 @@ subroutine m_vzflow_outprof(vz, p, ifn)
     write(un, '(a)') "z(m),psi(m),theta,K(m/s),zbottom(m),Fbottom(m)"
     do k = 1, vz%cols(c)%geo%nz
       call vzcol_props(vz%cols(c)%geo, vz%cols(c)%psi(k), th, cap, kk)
-      write(un, '(es23.15,5(",",es23.15))') vz%cols(c)%geo%zc(k), vz%cols(c)%psi(k), th, kk, &
-            vz%cols(c)%geo%zf(k), vz%fcum(k, c)
+      write(un, '(es23.15,5(",",es23.15))') es_out([vz%cols(c)%geo%zc(k), vz%cols(c)%psi(k), th, kk, &
+            vz%cols(c)%geo%zf(k), vz%fcum(k, c)])
     end do
     close(un)
   end do

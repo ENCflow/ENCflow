@@ -119,8 +119,8 @@ Q = \sum_{i,j} A\left[w_{st,ij} + f_{ij}\,(h_{d,ij} + w_{d,ij})\right]
 ## 6. 検証ケース
 
 - [test/driftwood](../../test/driftwood/): 侵食連行・水理的流失の両経路について材積保存・輸送・堆積を検定し、分割継続と通し計算の保存状態も比較。
-- [examples/timberyard](../../examples/timberyard/): 高潮による貯木場からの材木流入(堆積パラメータの感度と衝突力の後処理)。
-- [examples/tsunami_town](../../examples/tsunami_town/): 津波の海岸林・貯木場と家屋破壊との連鎖。
+- [examples/timberyard](../../examples/timberyard/): 高潮による貯木場からの材木流入(材木の流出を遅らせる・貯木場を離す・防潮壁を高くする対策の比較、補足に堆積パラメータの比較、衝突力の後処理)。
+- [examples/tsunami_town](../../examples/tsunami_town/): 津波の海岸林・貯木場と家屋破壊との連鎖(補足)。
 
 ## 参考文献
 

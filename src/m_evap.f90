@@ -31,7 +31,7 @@ module m_evap
   use m_meteo, only : t_meteo, meteo_temp_set, meteo_temp_cell, meteo_temp_mean
   use list_evap, only : t_list_evap, list_evap_read
   use m_parallel, only : dcp, is_root, par_info, par_stop, par_sum_rows
-  use m_util, only : itoa, jdn_to_ymd, ymd_to_jdn, param_default
+  use m_util, only : itoa, jdn_to_ymd, ymd_to_jdn, param_default, es_out
   implicit none
   private
   public :: t_evap
@@ -359,7 +359,7 @@ subroutine m_evap_record(ev, p, s)
   vtotal = v(1) + v(2) + v(3) + v(4)
   if (is_root .and. ev%un /= 0) then
     write(ev%un, '(f0.2,",",f0.4,5(",",es15.7))') &
-          s%t, ev%petref, v(1), v(2), v(3), v(4), vtotal
+          s%t, ev%petref, es_out([v(1:4), vtotal])
     flush(ev%un)
   end if
 end subroutine
