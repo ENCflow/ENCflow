@@ -17,15 +17,20 @@
 #                                 q_j = q_{j−1} + (1 − λ) Δy E_p0(S)(1 − q_j/q_c(S))(q_0 = q_in)を
 #                                 等流の水理で解いた準解析解と勾配を比べ、隆起・研磨・給砂・開境界の
 #                                 流出の台帳で土砂収支を閉じる
-#   Check_rockinc.py steep    T9: 急勾配の等流で、セル値の Manning 閉じの τ_b と等流の釣り合いの比を
-#                                 記録する(合否なし。動的振り替えの影響の記録。README の所見)
+#   Check_rockinc.py steep    T9: 急勾配の等流で、セル値の Manning 閉じの τ_b と等流の釣り合いの比。
+#                                 f_opening_dynamic = 2(既定)・0 は記録、3(塞がりを局所の平面から
+#                                 測る。developer.md §68.41)は水路中央・壁際の列とも 1 ± TOL_ST で合格
+#   Check_rockinc.py sheet    T10: 勾配 SH_S の平面の面状流(0°・45°)で、セル値の τ_b を等流の面状流
+#                                 (q = r L)と局所の釣り合い ρ g h S と比べる(記録。合否なし)
 # 水理(h、|V|、v)は最終時刻の分布出力(bil = 単精度)、H = sd・z・Ri は save(倍精度)から読む。
 # 定数は param*.txt・make_init.py と対で保守する。
 import sys, os, math, struct, re
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 from make_init import NX, NY, DX, I1, I2, S, N, Q_UNIT, NX_ST, I1_ST, I2_ST, SLOPES_ST, BX_NX, BX_NY, fr_box, z_of
+from make_init import SH_S, SH_RAIN, SH_GRID
 
 RHO, G = 1000.0, 9.8                 # m_geomorph_rockinc の rhow、既定の重力加速度
+TOL_ST = 0.005                       # T9 の f_opening_dynamic = 3 の τ_b / ρ g h tanθ の許容
 DD, DVIRT = 0.001, 0.001             # list_sysparam の dd・dv(既定)
 LAM, SGRAV, TAUSC = 0.4, 1.65, 0.05  # fluv_porosity・fluv_sgrav・fluv_tausc
 # 構成 cover(T2)
@@ -414,12 +419,13 @@ def check_box(logfile):
 
 
 def check_steep():
-    """T9(記録): 等流の中央部(j = 20〜40)のセル値の τ_b と釣り合いの比。合否は出力の有無だけ"""
+    """T9: 等流の中央部(j = 20〜40)のセル値の τ_b と釣り合いの比。2・0 は記録、3 は 1 ± TOL_ST で合格"""
     ok = True
-    rows = [("steep_s%03d" % round(s * 100), s) for s in SLOPES_ST] + [("steep_s020_od0", 0.2)]
-    print("(T9) 急勾配の等流: τ_b = ρ g n² V²/h^(1/3) と等流の釣り合いの比(j = 20〜40 の平均。記録)")
-    print("      構成            勾配   水路中央 τ_b/ρghtanθ  τ_b/ρgh sinθcosθ   壁際 τ_b/ρghtanθ   中央 V/V_Manning(h)")
-    for tag, s in rows:
+    rows = ([("steep_s%03d" % round(s * 100), s, False) for s in SLOPES_ST] + [("steep_s020_od0", 0.2, False)]
+            + [("steep_s%03d_od3" % round(s * 100), s, True) for s in SLOPES_ST])
+    print("(T9) 急勾配の等流: τ_b = ρ g n² V²/h^(1/3) と等流の釣り合いの比(j = 20〜40 の平均)")
+    print("      構成                勾配   水路中央 τ_b/ρghtanθ  τ_b/ρgh sinθcosθ   壁際 τ_b/ρghtanθ   中央 V/V_Manning(h)")
+    for tag, s, judged in rows:
         try:
             hh = load_bil("result_" + tag, "H", 1, NX_ST, NY)
             vv = load_bil("result_" + tag, "V", 1, NX_ST, NY)
@@ -442,10 +448,58 @@ def check_steep():
         vals = [sum(x) / len(x) for x in (rc, rs, rw, rv)]
         if not all(math.isfinite(x) for x in vals):
             ok = False
-        print("      %-15s %5.2f   %8.4f            %8.4f            %8.4f            %8.4f" % ((tag, s) + tuple(vals)))
-    print("(T9) 記録のみ(合否なし): %s" % ("出力あり" if ok else "出力なし"))
+        mark = ""
+        if judged:
+            g = abs(vals[0] - 1.0) < TOL_ST and abs(vals[2] - 1.0) < TOL_ST
+            ok = ok and g
+            mark = "  %s" % ("PASS" if g else "FAIL")
+        print("      %-19s %5.2f   %8.4f            %8.4f            %8.4f            %8.4f%s"
+              % ((tag, s) + tuple(vals) + (mark,)))
+    print("(T9) f_opening_dynamic = 2・0 は記録、3 は水路中央・壁際の列とも 1 ± %.3f : %s"
+          % (TOL_ST, "PASS" if ok else "FAIL"))
     return ok
 
+
+def check_sheet():
+    """T10(記録): 面状流の τ_b を、等流の面状流(q = r L)と局所の釣り合い ρ g h S と比べる"""
+    ok = True
+    r = SH_RAIN * 1.0e-3 / 3600.0
+    print("(T10) 面状流(勾配 %.2f、降雨 %.0f mm/h、%d s 後)の τ_b / 等流の τ と τ_b / ρ g h S(記録)"
+          % (SH_S, SH_RAIN, 1800))
+    for case in ("d00", "d45"):
+        nx, ny = SH_GRID[case]
+        for tag in ("sheet_" + case, "sheet_" + case + "_od3"):
+            try:
+                hh = load_bil("result_" + tag, "H", 1, nx, ny)
+                vv = load_bil("result_" + tag, "V", 1, nx, ny)
+            except OSError:
+                print("FAIL: result_%s not found" % tag)
+                ok = False
+                continue
+            out = []
+            for L in (10, 20, 30, 40, 50):
+                if case == "d00":
+                    # 流れは格子の軸(東)向き。セル中心 x = k + 0.5、南北の壁の行を除いた平均
+                    k = L
+                    cells = [(j, k, k + 0.5) for j in range(3, ny - 3)]
+                else:
+                    # 対角(南東)向き。対角のセル (k, k) の分水界からの距離 (2k + 1)/√2
+                    k = int(round(L * math.sqrt(2.0) / 2.0))
+                    cells = [(k, k, (2 * k + 1) / math.sqrt(2.0))]
+                ru, rb = [], []
+                for j, i, lk in cells:
+                    h, v = hh[j][i], vv[j][i]
+                    hu = (r * lk * N / math.sqrt(SH_S)) ** 0.6
+                    tb = taub(v, h)
+                    ru.append(tb / (RHO * G * hu * SH_S))
+                    rb.append(tb / (RHO * G * h * SH_S))
+                a, b = sum(ru) / len(ru), sum(rb) / len(rb)
+                if not (math.isfinite(a) and math.isfinite(b)):
+                    ok = False
+                out.append("L=%2d m: %.3f・%.3f" % (L, a, b))
+            print("      %-15s %s" % (tag, "  ".join(out)))
+    print("(T10) 記録のみ(合否なし): %s" % ("出力あり" if ok else "出力なし"))
+    return ok
 
 if __name__ == "__main__":
     what = sys.argv[1]
@@ -463,6 +517,8 @@ if __name__ == "__main__":
         ok = check_t11()
     elif what == "steep":
         ok = check_steep()
+    elif what == "sheet":
+        ok = check_sheet()
     else:
-        sys.exit("usage: Check_rockinc.py cover|pluck|hump|uplift|box LOG|t11|steep")
+        sys.exit("usage: Check_rockinc.py cover|pluck|hump|uplift|box LOG|t11|steep|sheet")
     sys.exit(0 if ok else 1)

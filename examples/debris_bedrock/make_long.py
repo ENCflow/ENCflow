@@ -74,7 +74,7 @@ def common(z, dt, tt, restore):
             "  dt_recrd = %.1f\n  fn_geoinfo = '-'\n  fn_initial = '-'\n  fn_enc = '-'\n"
             "  fn_geomorph = '-'\n  fn_boundary = '-'\n  dir_result = 'result'\n  dir_save = 'save_chain'\n"
             "  f_state_save = 1\n%s  f_check_cfl = 1\n  f_output_mode = 2\n/\n"
-            "&list_enc\n  f_gravity_correction = 1\n/\n&list_initial\n  f_htype = 0\n  h0 = 0.0\n/\n"
+            "&list_enc\n  f_gravity_correction = 1\n  f_opening_dynamic = 3\n/\n&list_initial\n  f_htype = 0\n  h0 = 0.0\n/\n"
             "&list_geoinfo\n  lx = %.1f\n  ly = %.1f\n  nx = %d\n  ny = %d\n  f_ztype = 1\n  fn_z = '../%s'\n"
             "  f_rntype = 0\n  rn0 = 0.05\n  f_sdtype = 1\n  fn_sd = '../sd0.txt'\n  sy0 = 0.2\n/\n"
             % (dt, tt, tt, tt, tt, "  f_state_restore = 2       ! 前の段の save を初期条件にする\n" if restore else "",

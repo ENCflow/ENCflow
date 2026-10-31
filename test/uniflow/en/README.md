@@ -14,8 +14,10 @@ Length 1000 m, Δx = 1 m, slope 0.002, n = 0.03. Channels of width W = 1 and
 5 cells with dry ground at bed +2 m on both sides. Segment inflow Q = q·W at
 the west end (q = 0.4695 m²/s corresponds to a uniform-flow depth of 0.5 m);
 free outflow at the east edge. Measurements are taken at x = 400–700 m to
-avoid the drawdown backwater at the downstream end (about 250 m). Two
-settings of `f_opening_dynamic`: 0 (no reassignment) and 2 (all edges).
+avoid the drawdown backwater at the downstream end (about 250 m). Three
+settings of `f_opening_dynamic`: 0 (no reassignment), 2 (all edges) and 3
+(all edges, with the blockage measured above the local plane; added on
+2026-10-29, developer.md §68.41, in Japanese).
 
 Supercritical segment inflow (configuration w1_sc): the same q flows into a
 channel one cell wide with slope 0.05 (reassignment 2; Manning uniform-flow
@@ -43,11 +45,16 @@ depth of the flow, the inflow cell flows slower than the uniform flow
    (equal to the four digits printed); with the executable before the change,
    the velocity was 0.71 times and the depth 0.96 times (the floor of the
    inflow face was the critical depth).
+6. `f_opening_dynamic = 3` (configurations w1_on3 and w5_on3; checks 1 and 2
+   are also applied): as in check 3, h/h_n and V/V_n are 1 ± 0.5 % in all
+   rows. Both banks are high, so the blockage is counted nearly as with 2 and the
+   agreement with Manning is kept (on 2026-10-29 the differences were 1e-4 in
+   depth and 2e-4 in velocity at width 1, and 2e-4 and 2e-4 at width 5).
 
 ## Usage
 
 ```
 make
-./Run.sh            # serial (5 runs, about 4 minutes)
+./Run.sh            # serial (7 runs, about 6 minutes)
 ./Run_MPI.sh 2      # MPI
 ```

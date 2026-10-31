@@ -27,9 +27,9 @@ in Japanese).
 |---|---|
 | Stream | 10 m wide (5 cells, Δx = 2 m, walls on both banks), 400 m long. The slope from the head is 0.35 (0–120 m) → 0.20 (to 220 m) → 0.10 (to 300 m) → 0.04 (to 360 m) → 0.01 (to 400 m). Free outflow at the south end, n = 0.05 |
 | Debris flow | A triangular hydrograph of the mixture from the 5 cells at the head (peak 40 m³/s at 10 s, ending at 70 s). Concentration C = 0.35 (26 m³/s of water and 14 m³/s of solids; 490 m³ of solids in total) |
-| Resistance and erosion-deposition | Takahashi–Nakagawa (`f_dbres = 3`, `f_dbed = 3`; d_L = 0.1 m, δe = 1e-4, δd = 0.5) and Coulomb + Manning (`f_dbres = 1`, `f_dbed = 1`; δe = 7e-4, δd = 0.05). Common: φ = 35°, λ = 0.4, low-velocity settling `f_dbstop = 1` (`db_vstop` = `db_wstop` = 0.05 m/s), slope correction `f_gravity_correction = 1` |
+| Resistance and erosion-deposition | Takahashi–Nakagawa (`f_dbres = 3`, `f_dbed = 3`; d_L = 0.1 m, δe = 1e-4, δd = 0.5) and Coulomb + Manning (`f_dbres = 1`, `f_dbed = 1`; δe = 7e-4, δd = 0.05). Common: φ = 35°, λ = 0.4, low-velocity settling `f_dbstop = 1` (`db_vstop` = `db_wstop` = 0.05 m/s), slope correction `f_gravity_correction = 1`, dynamic reassignment of blocked openings `f_opening_dynamic = 3` (blockage measured above the local plane; [shallow water chapter](../../../docs/en/users_guide/swflow.md), developer.md §68.41, in Japanese) |
 | Bed | Bare rock (sd = 0) and a deposit 0.3 m thick |
-| Rock erosion | k_d = 1.8e-4 m/s, τ_cd = 1 kPa, m_d = 1, H* = 0.05 m. k_d was chosen in §12.4 so that the mean over the stream (0–360 m) for Takahashi–Nakagawa on bare rock is 1 cm per event |
+| Rock erosion | k_d = 1.8e-4 m/s, τ_cd = 1 kPa, m_d = 1, H* = 0.05 m. k_d was chosen in §12.4 so that the mean over the stream (0–360 m) for Takahashi–Nakagawa on bare rock is 1 cm per event (with the hydraulics of the default `f_opening_dynamic = 2`; 1.09 cm in the present calculation with 3) |
 | Time | 300 s with dt = 0.02 s. The landform is updated every step (`dt_geomorph = 0`, `morfac = 1`). Output every 10 s |
 
 | Configuration | Contents |
@@ -65,69 +65,81 @@ python3 plot_results.py | tee analysis.txt    # figures and tables (python3 plot
 
 Rock erosion per event in each reach (cm; mean of the cells of the reach) and the bulk volume of
 eroded rock (the end-of-run line "rock erosion by debris flows: eroded"; for W, "rock incision:
-plucked"). The values are from the rerun on 2026-10-28 after the fixes of the flow-direction slope
-(developer.md §89.24, in Japanese) and of the depth floor of the segment-inflow face (§89.25); they
-differ from those before the fixes by 2 % or less.
+plucked"). The values are from the rerun on 2026-10-29 after the dynamic reassignment of blocked
+openings was set to `f_opening_dynamic = 3` (developer.md §68.41, in Japanese) and the slope of the
+flow surface of Takahashi–Nakagawa became a one-sided difference to the downstream neighbour
+(§89.28). The default 2 counts the upslope ground of a uniform slope as a wall and made the flow in
+the steep reaches faster and shallower; with 3 the flow is deeper and slower, and the erosion in the
+reach with slope 0.35 became 1.17 times larger for Takahashi–Nakagawa, 2.19 times larger for
+Coulomb + Manning, and 0.57 times for the clear-water flood (the change of the flow-surface slope
+alters it by 1 % or less).
 
 | Configuration | Slope 0.35 | 0.20 | 0.10 | 0.04 | 0.01 | Ledger (m³) |
 |---|---|---|---|---|---|---|
-| T_b Takahashi–Nakagawa, bare rock | 1.94 | 0.88 | 0.013 | 0 | 0 | 32.1 |
-| C_b Coulomb + Manning, bare rock | 1.08 | 0.38 | 0 | 0 | 0 | 16.7 |
-| T_c Takahashi–Nakagawa, deposit | 0.51 | 0.003 | 0 | 0 | 0 | 6.1 |
-| C_c Coulomb + Manning, deposit | 0.33 | 0.001 | 0 | 0 | 0 | 3.9 |
-| T_b05 threshold 0.5 kPa | 5.78 | 2.87 | 0.27 | 0.001 | 0 | 100.2 |
-| T_b20 threshold 2 kPa | 0.39 | 0.063 | 0 | 0 | 0 | 5.3 |
-| W clear water, same discharge (fluvial plucking) | 0.56 | 0.11 | 0 | 0 | 0 | 7.8 |
+| T_b Takahashi–Nakagawa, bare rock | 2.27 | 1.19 | 0.008 | 0 | 0 | 39.2 |
+| C_b Coulomb + Manning, bare rock | 2.36 | 0.45 | 0 | 0 | 0 | 32.8 |
+| T_c Takahashi–Nakagawa, deposit | 0.59 | 0.005 | 0 | 0 | 0 | 7.1 |
+| C_c Coulomb + Manning, deposit | 0.59 | 0 | 0 | 0 | 0 | 7.1 |
+| T_b05 threshold 0.5 kPa | 6.71 | 3.39 | 0.32 | 0 | 0 | 117.1 |
+| T_b20 threshold 2 kPa | 0.51 | 0.15 | 0 | 0 | 0 | 7.6 |
+| W clear water, same discharge (fluvial plucking) | 0.32 | 0.030 | 0 | 0 | 0 | 4.1 |
 
 - **The erosion is concentrated in the steep reaches.** The driving stress
   τ_d = ρ(1 + sC) g_e h_t tanθ exceeds the threshold of 1 kPa only in the thick flow of the
   reaches with slopes of 0.2 or more. At slopes of 0.10 or less even bare rock hardly erodes.
-- **Difference between the resistance laws**: in the reach with slope 0.35, Coulomb + Manning
-  erodes 0.56 times as much as Takahashi–Nakagawa. Its flow is thinner and faster in the steep
-  reach (largest flow depth 0.87 m against 1.26 m in the comparison of §12.4), so τ_d, which is
-  proportional to the depth, is smaller.
-- **Peak upstream of a slope break**: the deposit in the reach with slope 0.10 backs the flow up,
-  and the mixture becomes thick and slow at the end of the reach with slope 0.20. In the cell of
-  C_b 205 m from the head, h_t ≈ 1.3 m and |V| ≈ 0.5 m/s from 70 to 120 s, which gave the
-  largest erosion of that reach (1.54 cm). Split with output every 1 s, 54 % of the erosion of C_b
-  in the reach with slope 0.20 (12 % of the whole of C_b) came from flow with |V| < 1 m/s (1 % in
-  the same reach for Takahashi–Nakagawa). The quasi-static driving stress does not depend on the
-  velocity, so as long as the flow moves above the gate (|V| ≥ `db_vstop` = 0.05 m/s), a slow and
-  thick flow erodes until the cover becomes thick. This is a property of the adopted law (§12.5),
-  not a behaviour confirmed by observations.
+- **Difference between the resistance laws**: from 0 to 100 m in the reach with slope 0.35,
+  Coulomb + Manning erodes 0.76 times as much as Takahashi–Nakagawa (1.73 cm against 2.28 cm). Its
+  flow is thinner in the steep reach (largest flow depth 0.80 to 0.83 m against 0.96 to 1.10 m from
+  21 to 61 m from the head), so τ_d, which is proportional to the depth, is smaller. The means over
+  the reach (2.36 cm and 2.27 cm) include the peak upstream of the slope break described next.
+- **Peak upstream of a slope break**: with Coulomb + Manning, a deposit about 1 m thick forms at
+  the slope break 120 m from the head (0.35 → 0.20), and the mixture ponds upstream of it. In the
+  cell 111 m from the head, h_t becomes 1.4 to 1.8 m from 60 s on, and the rock keeps eroding while
+  |V| drops from 1.4 m/s to 0.1 m/s, reaching 8.7 cm (5 times the mean from 0 to 100 m). With the
+  default 2 the same deposit formed, but the mixture did not stop and passed through (1.0 cm in the
+  same cell). The peak at the end of the reach with slope 0.20 (upstream of the slope break at
+  220 m) became smaller than with 2 (largest 0.99 cm for C_b; 1.54 cm with 2). Split with output
+  every 1 s, 34 % of the erosion of C_b (70 % from 100 to 120 m in the reach with slope 0.35 and
+  68 % in the reach with slope 0.20) came from flow with |V| < 1 m/s (4 % of the whole for
+  Takahashi–Nakagawa). The quasi-static driving stress does not depend on the velocity, so as long
+  as the flow moves above the gate (|V| ≥ `db_vstop` = 0.05 m/s), a slow and thick flow erodes until
+  the cover becomes thick. This is a property of the adopted law (§12.5), not a behaviour confirmed
+  by observations.
 - **Mobile layer at the end**: the steep reach is almost swept clean (0 for T_b), and the
-  sediment deposits at the slope breaks (1.4 m for T_b and 1.1 m for C_b at 220 m from the head).
-  The eroded rock enters the mobile layer 1:1, and the erosion-deposition equation decides whether
-  the flow takes it up or leaves it as cover.
-- **Rock-derived sediment**: the solids of the eroded rock are 19.3 m³ for T_b (3.9 % of the
-  490 m³ of solids that entered), 2.0 % for C_b, 0.8 % for T_c and 0.5 % for C_c. Almost all of
-  the sediment of one debris flow comes from the head.
+  sediment deposits at the slope breaks (1.4 m for T_b at the slope break at 220 m; 0.96 m for C_b
+  at the slope break at 120 m and 0.52 m at 220 m). The eroded rock enters the mobile layer 1:1,
+  and the erosion-deposition equation decides whether the flow takes it up or leaves it as cover.
+- **Rock-derived sediment**: the solids of the eroded rock are 23.5 m³ for T_b (4.8 % of the
+  490 m³ of solids that entered), 4.0 % for C_b, and 0.9 % for T_c and C_c. Almost all of the
+  sediment of one debris flow comes from the head.
 
 ### Comparison with a clear-water flood
 
-The clear-water flood with the same discharge (W) eroded 0.56 cm in the reach with slope 0.35 and
-0.11 cm in the reach with slope 0.20 (29 % and 12 % of T_b; 24 % in the ledgers). The stress of W,
-however, is that of the fluvial plucking law, the Manning closure of the cell velocity
-τ_b = ρ g n² V²/h^{1/3}. This closure comes out larger than the balance in steep uniform flow
-(developer.md §89.4, item 1; in steady uniform flow with the same width, grid and discharge as the
-reach with slope 0.35 of this stream, τ_b / ρ g h tanθ = 1.41 in the central column). Evaluated
-with the same quasi-static stress as the debris-flow term, the same flow erodes 0.20 cm and
-0.01 cm (7 % of T_b as the mean over the stream; post-processing of §12.4, computed before the
-fixes of the flow-direction slope and of the inflow floor). The definition of the stress changes
-the result threefold, but in both cases the debris flow erodes more (4.1 times in the ledgers,
-and 14 times as the mean over the stream between quasi-static stresses).
+The clear-water flood with the same discharge (W) eroded 0.32 cm in the reach with slope 0.35 and
+0.030 cm in the reach with slope 0.20 (14 % and 3 % of T_b; 11 % in the ledgers). The stress of W
+is that of the fluvial plucking law, the Manning closure of the cell velocity
+τ_b = ρ g n² V²/h^{1/3}. With `f_opening_dynamic = 3` this closure agrees with the balance
+ρ g h tanθ even in steep uniform flow (in steady uniform flow with the same width, grid and
+discharge as the reach with slope 0.35 of this stream, the ratio is 1.000 in the central column;
+with the default 2 it came out larger, 1.41; developer.md §89.4, item 1, and §68.41). The
+quasi-static stress of the debris-flow term, ρ g_e h tanθ, includes the slope correction
+g_e = g cos²θ (0.89 times at slope 0.35), so evaluated with it the same flow erodes less, 0.21 cm
+and 0.015 cm (7 % of T_b as the mean over the stream; post-processing of the output every 1 s;
+with g instead of g_e it gives 0.33 cm, nearly the same as the Manning closure). In both cases the
+debris flow erodes more (9.5 times in the ledgers, and 14 times as the mean over the stream between
+quasi-static stresses).
 
 ### Effect of the cover
 
 ![Mobile layer and rock erosion over time with the deposit](figs/cover.png)
 
 - With a deposit 0.3 m thick, the erosion in the reach with slope 0.35 drops to 26 %
-  (Takahashi–Nakagawa) and 30 % (Coulomb + Manning) of that on bare rock, and is almost 0 at
+  (Takahashi–Nakagawa) and 25 % (Coulomb + Manning) of that on bare rock, and is almost 0 at
   slopes of 0.20 or less.
 - The rock starts to erode only after the flow has stripped the deposit down to a few cm (a few
   times H*). At 21 m from the head with Takahashi–Nakagawa, the deposit is stripped completely from
-  40 to 60 s, and 0.80 cm of rock is eroded (1.96 cm on bare rock). At 101 m the deposit only
-  thins to 2.5 cm, and the erosion is 0.22 cm. In the reach with slope 0.20 the deposit is not
+  40 to 50 s, and 0.95 cm of rock is eroded (2.27 cm on bare rock). At 101 m the deposit only
+  thins to 2.5 cm, and the erosion is 0.23 cm. In the reach with slope 0.20 the deposit is not
   stripped; it remains or thickens.
 - The H* = 0.05 m of the exposure exp(−sd/H*) follows the observation that a deposit about 5 cm
   thick protects the bed from impacts (McCoy et al. 2013; references in sediment.md).
@@ -137,12 +149,12 @@ and 14 times as the mean over the stream between quasi-static stresses).
 ![Rock erosion with different thresholds](figs/threshold.png)
 
 - Halving the threshold (0.5 kPa) makes the erosion in the reach with slope 0.35 3.0 times larger
-  (5.78 cm), and the erosion extends into the reach with slope 0.10. Doubling it (2 kPa) gives
-  0.20 times (0.39 cm). The threshold sets both the magnitude of the erosion and the range of
+  (6.71 cm), and the erosion extends into the reach with slope 0.10. Doubling it (2 kPa) gives
+  0.22 times (0.51 cm). The threshold sets both the magnitude of the erosion and the range of
   slopes that it reaches.
 - With a low threshold, the long tail of the falling limb also erodes. Downstream, where the
   recession is slower, the rock erodes for longer, so with 0.5 kPa the erosion grows downstream
-  even within the steep reach (from 5.2 cm at 5 m from the head to 6.6 cm at the end of the reach,
+  even within the steep reach (from 5.8 cm at 5 m from the head to 7.8 cm at the end of the reach,
   115 m).
 
 ## Long term: steady slope of a stream with debris flows (second half)
@@ -187,6 +199,12 @@ python3 plot_long.py | tee analysis_long.txt  # figures and tables (python3 plot
 
 ### Long-term lowering and the sum of separate runs
 
+The values are from the rerun on 2026-10-29 after the slope of the flow surface of
+Takahashi–Nakagawa became a one-sided difference to the downstream neighbour (developer.md §89.28,
+in Japanese). As in the first half, `f_opening_dynamic = 3` is set explicitly, but in a channel one
+cell across the diagonal neighbours are outside the domain, so the results are the same as with 2.
+The only steady slope that changed is that of size 0.1 m once in 10 years, 0.175 → 0.174.
+
 ![Long-term lowering at fixed slopes](figs/long_rate.png)
 
 - **Sediment size 0.1 m**: at every slope and frequency the lowering rate is the same in every cycle
@@ -196,11 +214,11 @@ python3 plot_long.py | tee analysis_long.txt  # figures and tables (python3 plot
 - At slope 0.25 the debris flows make up 24 % of the lowering rate at once in 100 years, 52 % at once in
   30 years and 78 % at once in 10 years.
 - **Sediment size 0.4 m (boulders)**: from slope 0.30 up the rates are nearly those of 0.1 m. At slope
-  0.25 and below they fall short of the sum (0.94 times at slope 0.25, once in 10 years). At slope 0.20
+  0.25 and below they fall short of the sum (0.93 times at slope 0.25, once in 10 years). At slope 0.20
   once in 30 or 10 years, and at slope 0.15, deposits remain and the surface rises ("Boulder deposits"
   below).
 - In each stage the increment of cumulative incision ΣΔRi·A agrees with the end-of-run lines (plucking
-  and debris-flow erosion) within a relative 2.3e-8.
+  and debris-flow erosion) within a relative 2.6e-8.
 
 ### Steady slope and debris-flow frequency
 
@@ -208,13 +226,13 @@ python3 plot_long.py | tee analysis_long.txt  # figures and tables (python3 plot
 
 | Steady slope (uplift 1 mm/yr) | Floods only | Once in 100 yr | Once in 30 yr | Once in 10 yr |
 |---|---|---|---|---|
-| Chained runs, size 0.1 m | 0.354 | 0.311 | 0.251 | 0.175 |
-| Sum of separate runs, size 0.1 m | 0.356 | 0.311 | 0.252 | 0.175 |
+| Chained runs, size 0.1 m | 0.354 | 0.311 | 0.251 | 0.174 |
+| Sum of separate runs, size 0.1 m | 0.356 | 0.311 | 0.252 | 0.174 |
 | Chained runs, size 0.4 m | 0.355 | 0.312 | 0.257 | 0.245 |
 
 - The more frequent the debris flows, the gentler the slope that balances the uplift. With size 0.1 m the
   steady slopes of the chained runs and of the sum differ by at most 0.002.
-- 0.175 at once in 10 years is gentler than the debris-flow equilibrium slope 0.256 (the slope where the
+- 0.174 at once in 10 years is gentler than the debris-flow equilibrium slope 0.256 (the slope where the
   Takahashi–Nakagawa equilibrium concentration equals the inflow concentration 0.35). The debris flows
   deposit on every passage, but the floods carry deposits of 0.1 m away, so the rock keeps eroding.
 - **With size 0.4 m the steady slope stays near the debris-flow equilibrium slope (0.245 at once in 10
@@ -227,9 +245,9 @@ python3 plot_long.py | tee analysis_long.txt  # figures and tables (python3 plot
 
 - At slope 0.15 the debris-flow deposits keep growing by about 29 cm per cycle whatever the frequency
   (the floods cannot move the boulders).
-- At slope 0.20, once in 30 years, the growth slows and reaches 36 cm after 10 cycles (approaching the
+- At slope 0.20, once in 30 years, the growth slows and reaches 33 cm after 10 cycles (approaching the
   thickness where what the floods carry balances what the debris flows leave). Once in 10 years the
-  deposit grows to 86 cm and is still growing. Once in 100 years the floods carry it away (0.5 cm).
+  deposit grows to 81 cm and is still growing. Once in 100 years the floods carry it away (0.5 cm).
 - From slope 0.25 up no deposit remains (0.1 cm).
 
 ### Check with uplift
@@ -239,7 +257,7 @@ python3 plot_long.py | tee analysis_long.txt  # figures and tables (python3 plot
 - The steep channel (0.28) becomes gentler and the gentle one (0.22) steeper; both head for the steady
   slope 0.251 found at fixed slopes. The adjustment travels upstream from the base level.
 - The runs (solid) agree well with the 1-D prediction (dashed). After 4530 years the mean slope over the
-  60 m above the base level is 0.260 (predicted 0.261) and 0.237 (predicted 0.235). The rms difference
+  60 m above the base level is 0.260 (predicted 0.261) and 0.236 (predicted 0.235). The rms difference
   of the slope profile from the prediction over the whole channel (from the head to the base level) is
   0.003 and 0.004.
 - The adjustment is slow: in 4530 years it reaches only about 40 m above the base level (front speed
@@ -276,8 +294,10 @@ python3 plot_long.py | tee analysis_long.txt  # figures and tables (python3 plot
   erosion, so nothing stops the positive feedback of gathering flow and the channel narrows to the grid
   width (as in developer.md §89.4, item 3). For a question about the long profile we use a one-cell
   channel whose cross-section cannot change. Floods in one cell have a depth close to the uniform-flow
-  value and pluck less than the middle column of 5 cells (shallow and fast because of the bias of §89.4,
-  item 1), so k_p was re-tuned to give a steady slope of about 0.355 with floods only.
+  value and pluck less than the middle column of 5 cells (with the default `f_opening_dynamic = 2`
+  shallow and fast because of the bias of §89.4, item 1), so k_p was re-tuned to give a steady slope of
+  about 0.355 with floods only. The checks above with 5 cells were made with 2 (in a channel one cell
+  across the diagonal neighbours are outside the domain, so 2 and 3 give the same results).
 - **Outfall**: the cell at a free-outflow boundary has slightly deeper and slower flow (5 % at slope 0.30)
   and is plucked 17 % less, so the last cell of the channel became a sill that trapped the sediment
   carried by the floods, and the deposit grew upstream (with size 0.4 m even at slope 0.40). With an
@@ -301,8 +321,9 @@ python3 plot_long.py | tee analysis_long.txt  # figures and tables (python3 plot
   and the floods a constant discharge; the frequency distribution of magnitudes is not represented.
 - The channel of the second half is one cell across, so changes of channel width and cross-section are
   not represented (with 5 cells the flow gathers to the grid width; "Why one cell across and an
-  outfall"). Near the head and the base level, steps with a period of two cells grow over thousands of
-  years of chained runs ("Check with uplift" above; causes in developer.md §89.23).
+  outfall"). The steps with a period of two cells that grew near the head and the base level before
+  the fixes of 2026-10-28 no longer appear after them, even in the 4530-year chains ("Check with
+  uplift" above).
 
 ## Related documents
 

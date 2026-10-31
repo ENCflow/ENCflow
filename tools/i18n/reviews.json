@@ -58,11 +58,11 @@
     {
       "source": "docs/comparison.md",
       "target": "docs/en/comparison.md",
-      "source_sha256": "14036d156b597c45e45f35470cf128167a979afe83a619b4904c7d071d542636",
-      "target_sha256": "9fedac9b464cc57bc7bdcd6629f20d646160045946afb0aadab39d1726579a6b",
-      "reviewer": "Claude (Claude Code session; reviewed the changed sections of the Japanese source against the English mirror, 2026-10-29)",
+      "source_sha256": "44e193422cf6b72f93c17711409ab14aeea7378d11f75b098ee95f844656b6a0",
+      "target_sha256": "9bb79a957a47f546fd58da1a89105254b47026218e18daeb0268899e27994a48",
+      "reviewer": "Claude (Claude Code session; merge of main into the branch: both sides' changes to this pair, each recorded on its own side, were merged automatically or by hand, and the merged source and translation were compared for the changed parts; rest unchanged since the previous records)",
       "method": "assistant",
-      "reviewed_on": "2026-10-29"
+      "reviewed_on": "2026-10-30"
     },
     {
       "source": "docs/developer.md",
@@ -104,20 +104,20 @@
     {
       "source": "docs/users_guide.md",
       "target": "docs/en/users_guide.md",
-      "source_sha256": "c01c67cf8c5132ba44515478cbf68e6fd2c2383771e4e549f0e60288a2e65dbe",
-      "target_sha256": "83dc92572f7afbc1f2f0d73558f018d565aec412e33cf5770402734842ee68bd",
-      "reviewer": "Claude (Claude Code session; full-text content and lexical review, no model execution)",
+      "source_sha256": "8c3632bd707b09c4a0a5f68a29cc23b4c720140aa8a77ffeb26f5d47062cb89f",
+      "target_sha256": "804073c9b86d3bc6a1bf9f127c6da6ff0cc3a3bdd1508ca8dc1d4970df66dab9",
+      "reviewer": "Claude (Claude Code session; merge of main into the branch: both sides' changes to this pair, each recorded on its own side, were merged (the parameter count is now 759 with f_gw_opening and f_inflow_edge), and the merged source and translation were compared for the changed parts; rest unchanged since the previous records)",
       "method": "assistant",
       "reviewed_on": "2026-10-30"
     },
     {
       "source": "docs/users_guide/advection.md",
       "target": "docs/en/users_guide/advection.md",
-      "source_sha256": "ac7f3156be8b4bc58f0925cf65e50b08be26af45f54b745202c392e2c86b3a8f",
-      "target_sha256": "41c9284ad2940cd84ef2ce0e5806a17005a46db4fbfbda7d750719dee0e3753b",
-      "reviewer": "Claude (Claude Code session; full-text content and lexical review, no model execution)",
+      "source_sha256": "1d375ae54fafda24db529832212cdfd588e8c1cbc6acf793c52271adaf6eac07",
+      "target_sha256": "6b5c03c1ad877338517b471ee9751ea5cd2e41402fcced3f239c4d1616073d0e",
+      "reviewer": "Claude (Claude Code session; the new f_inflow_edge setting (default 0 = the rule of 2026-10-24, 1 = only the edges into the section, 2 = 1 plus the energy cap) was written in the source and the translation together, and the changed parts were compared; rest unchanged since the previous record)",
       "method": "assistant",
-      "reviewed_on": "2026-10-24"
+      "reviewed_on": "2026-10-30"
     },
     {
       "source": "docs/users_guide/bedmotion.md",
@@ -266,9 +266,9 @@
     {
       "source": "docs/users_guide/geomorph.md",
       "target": "docs/en/users_guide/geomorph.md",
-      "source_sha256": "de53171a875ac103b7e6abf1276e12b895bed4150e0c2575f35dbf02ff2a5728",
-      "target_sha256": "031aeca6df02802ac536e6aca4eeb25c424b96c3eceeccfb7def6e837a05b196",
-      "reviewer": "Claude (Claude Code session; after merging main, reviewed the merged Japanese source against the English mirror: the main-side f_dbwet = 2 and ashfall_lahar changes and the branch-side reference section and citation markers are both mirrored, 2026-10-30)",
+      "source_sha256": "58db4ce715d1140a8e966a7b53a65a99142d2c3bc070c9c2339d2c7d19f6efaa",
+      "target_sha256": "e27836863496ec6c5130c0a34d299a86c06bb5b2ee3a109a7eaf8104a98cb03c",
+      "reviewer": "Claude (Claude Code session; merge of main into the branch: both sides' changes to this pair, each recorded on its own side, were merged automatically or by hand, and the merged source and translation were compared for the changed parts; rest unchanged since the previous records)",
       "method": "assistant",
       "reviewed_on": "2026-10-30"
     },
@@ -383,9 +383,9 @@
     {
       "source": "docs/users_guide/params_index.md",
       "target": "docs/en/users_guide/params_index.md",
-      "source_sha256": "ab7dcd1e6462404f966ecc42ac37465f964fa52ba2ccea856ba60f7ca5f16b86",
-      "target_sha256": "bf71591096b508a45e154961c7ea802afedff85066e1ba78b3936f9ce2c8f909",
-      "reviewer": "Claude (Claude Code session; full-text content and lexical review, no model execution)",
+      "source_sha256": "260db616d78bc4116c03f03abe5a801d57b7e587599b929ca750927a1c8c5f73",
+      "target_sha256": "55621834b99049b3464f6cc9784a64bec54adecfb512d3f104516bdda4be7099",
+      "reviewer": "Claude (Claude Code session; merge of main into the branch: both sides' changes to this pair, each recorded on its own side, were merged (the parameter count is now 759 with f_gw_opening and f_inflow_edge), and the merged source and translation were compared for the changed parts; rest unchanged since the previous records)",
       "method": "assistant",
       "reviewed_on": "2026-10-30"
     },
@@ -437,9 +437,9 @@
     {
       "source": "docs/users_guide/swflow.md",
       "target": "docs/en/users_guide/swflow.md",
-      "source_sha256": "ca87d1fbedd99081a1d24196b3a0a565fa605626b23b8437600d22ec2b3e6a9f",
-      "target_sha256": "a0f103065537a3af2cca2958f61a957eb20e76bafb426381e0723d886a122880",
-      "reviewer": "Claude (Claude Code session; reviewed the changed sections (added reference sections, footnotes and citation markers) of the Japanese source against the English mirror, 2026-10-30)",
+      "source_sha256": "acc7dda67aab3e757956c274c07972422d57dcb5d531b416f975342c3d9ae5d2",
+      "target_sha256": "a15651179258c89d42ef00ef136b77c6008d2153bb815dd6f93b24252425ff9f",
+      "reviewer": "Claude (Claude Code session; the new f_inflow_edge setting (default 0 = the rule of 2026-10-24, 1 = only the edges into the section, 2 = 1 plus the energy cap) was written in the source and the translation together, and the changed parts were compared; rest unchanged since the previous record)",
       "method": "assistant",
       "reviewed_on": "2026-10-30"
     },
@@ -599,11 +599,11 @@
     {
       "source": "examples/List_samples/list_enc.txt",
       "target": "examples/List_samples/en/list_enc.txt",
-      "source_sha256": "0dc6b4a6a087c01862249b0a4520f934a3c8d8bc37708855c6b43cc223b8135c",
-      "target_sha256": "1f7fe43bcadb3e24685f5f48ce5b5166f15d6499c50052f6222cd7dac2cd1687",
-      "reviewer": "Claude (Claude Code session; full-text content and lexical review, no model execution)",
+      "source_sha256": "9aba1b79fe924313cd17fc8847bbb32ffacff2ac4eb28a50c485ed64fefedad3",
+      "target_sha256": "364ef7408fe261e97114a6e76354f4de17da71c42c49e9885eb99913df20d7d5",
+      "reviewer": "Claude (Claude Code session; the new f_inflow_edge setting (default 0 = the rule of 2026-10-24, 1 = only the edges into the section, 2 = 1 plus the energy cap) was written in the source and the translation together, and the changed parts were compared; rest unchanged since the previous record)",
       "method": "assistant",
-      "reviewed_on": "2026-10-28"
+      "reviewed_on": "2026-10-30"
     },
     {
       "source": "examples/List_samples/list_evap.txt",
@@ -1058,11 +1058,11 @@
     {
       "source": "examples/bedrock_cover/README.md",
       "target": "examples/bedrock_cover/en/README.md",
-      "source_sha256": "a520801068c97a3848d08bffaed3aaf901ada220186025123daa77269c701572",
-      "target_sha256": "8804645666c8c794a55756fe6dc4eef1a1ed2c7ad09ae458fba2aeaa9aea2767",
-      "reviewer": "Claude (Claude Code session; full-text content and lexical review, no model execution)",
+      "source_sha256": "a314685e5d794f857cfeeeb9d06a8859243205a4d60df5df02bc21f717e4284f",
+      "target_sha256": "4b18f66488a61d072ea2381d050714df0b28aadc827e21712c963ee2b754afab",
+      "reviewer": "Claude (Claude Code session; merge of main into the branch: both sides' changes to this pair, each recorded on its own side, were merged automatically or by hand, and the merged source and translation were compared for the changed parts; rest unchanged since the previous records)",
       "method": "assistant",
-      "reviewed_on": "2026-10-29"
+      "reviewed_on": "2026-10-30"
     },
     {
       "source": "examples/bedrock_cover/figs/cover.png",
@@ -1103,74 +1103,74 @@
     {
       "source": "examples/debris_bedrock/README.md",
       "target": "examples/debris_bedrock/en/README.md",
-      "source_sha256": "180d22de107ce31eba6277117d40a778f9a70156e3e9f782c2605299d9934854",
-      "target_sha256": "5a30ce95fa00870935735083295e6b31392de8dbeb61f898e2e3d1d3aa699f07",
-      "reviewer": "Claude (Claude Code session; mechanical renumbering of the developer.md section references §88 -> §89 in both files, checked by script that the lines differ only in those numbers and that both files carry the same references; rest unchanged since the previous record)",
+      "source_sha256": "0438aedb1516794c1cd51584782d8de2138c03d05fc5d3feb8724b53468c76b2",
+      "target_sha256": "370a5fcc4535e6372ce62fcdb846a115537176961535137b94d408cc15f43a50",
+      "reviewer": "Claude (Claude Code session; compared the passages rewritten for the rerun with f_opening_dynamic = 3 and the one-sided flow-surface slope in the source and the translation line by line; rest unchanged since the previous record)",
       "method": "assistant",
-      "reviewed_on": "2026-10-28"
+      "reviewed_on": "2026-10-29"
     },
     {
       "source": "examples/debris_bedrock/figs/cover.png",
       "target": "examples/debris_bedrock/en/figs/cover.png",
-      "source_sha256": "877c7f63bc1d47be88c91d2aaf7460be76bec2a619d5c678447401004a510ff9",
-      "target_sha256": "7fb54b4407eb87f398ea3429ba7ffa29006ed0da95bd98653f91b4fe96f1e1e4",
-      "reviewer": "Claude (Claude Code session; English figure drawn by the same script with the en switch from the same saved results; visual check of both rendered figures: same layout, values and geometry, labels translated)",
+      "source_sha256": "207faa66b5d5a64ed6827994e8614dc3b2b89d1c3e648f5b5bdf3d98935510bf",
+      "target_sha256": "c84814d4afd23d29e15de1f2173809969ee6d1cbb7a0fd34d51f45cf340d4877",
+      "reviewer": "Claude (Claude Code session; both figures generated by the same plotting script from the same runs; viewed both images: same curves and layout, labels translated)",
       "method": "assistant",
-      "reviewed_on": "2026-10-28"
+      "reviewed_on": "2026-10-29"
     },
     {
       "source": "examples/debris_bedrock/figs/erosion.png",
       "target": "examples/debris_bedrock/en/figs/erosion.png",
-      "source_sha256": "53e4c59a6e6bdbf5fc15ba2bde3bf5443a57cbf84ff4df2965294cea16512ba6",
-      "target_sha256": "c320f707debf15db22c10b96ab50217428f1624deb585b51de6349e7b22d2bdb",
-      "reviewer": "Claude (Claude Code session; English figure drawn by the same script with the en switch from the same saved results; visual check of both rendered figures: same layout, values and geometry, labels translated)",
+      "source_sha256": "2eb8900adc25bf152a77e80c2d3612198b7a7b7fafdb452319dd3c19de63fdf3",
+      "target_sha256": "a92e63e8d9aea22844c722d72c0b416564fcc7378b37673ce15d6216f4d00476",
+      "reviewer": "Claude (Claude Code session; both figures generated by the same plotting script from the same runs; viewed both images: same curves and layout, labels translated)",
       "method": "assistant",
-      "reviewed_on": "2026-10-28"
+      "reviewed_on": "2026-10-29"
     },
     {
       "source": "examples/debris_bedrock/figs/long_cover.png",
       "target": "examples/debris_bedrock/en/figs/long_cover.png",
-      "source_sha256": "c42a110dea0e4c2e12eb4af5d6bd4750679b195d4510a86e29a02bdbb479726b",
-      "target_sha256": "a6887e04281ded1b01a05d0b2dcea3f950895307e2552b74a29ce2a54287a783",
-      "reviewer": "Claude (Claude Code session; English figure drawn by the same script with the en switch from the same saved results; visual check of both rendered figures: same layout, values and geometry, labels translated)",
+      "source_sha256": "69c1e5750483e088a175bc09c940344af27792705dff17eac16b9a70dba107e2",
+      "target_sha256": "22eead374a2b5dc174466ddf63180fa9ad403d00856af2f220999ad4d56da0f9",
+      "reviewer": "Claude (Claude Code session; both figures generated by the same plotting script from the same runs; viewed both images: same curves and layout, labels translated)",
       "method": "assistant",
-      "reviewed_on": "2026-10-28"
+      "reviewed_on": "2026-10-29"
     },
     {
       "source": "examples/debris_bedrock/figs/long_rate.png",
       "target": "examples/debris_bedrock/en/figs/long_rate.png",
-      "source_sha256": "b69ed91d76eaa8d7db7a404e7cb3714cc56dca0c1484314e0eb045e700663591",
-      "target_sha256": "a14a35ff1c72b2d0bed7e45e557ffa9f44d6f3dc22e0ce6e4f9f25ed1f355a80",
-      "reviewer": "Claude (Claude Code session; English figure drawn by the same script with the en switch from the same saved results; visual check of both rendered figures: same layout, values and geometry, labels translated)",
+      "source_sha256": "fa5c27bcb176f1e5eab096fb6b6514ad17ce3e97b058354a47fd160a732b4037",
+      "target_sha256": "532dbbf61ad1eebe5378ccb3a90977c4828246d81adc49a85495a76a2d03acb1",
+      "reviewer": "Claude (Claude Code session; both figures generated by the same plotting script from the same runs; viewed both images: same curves and layout, labels translated)",
       "method": "assistant",
-      "reviewed_on": "2026-10-28"
+      "reviewed_on": "2026-10-29"
     },
     {
       "source": "examples/debris_bedrock/figs/long_slope.png",
       "target": "examples/debris_bedrock/en/figs/long_slope.png",
-      "source_sha256": "5c4862531a6a3a80a7c7b3f598810fe5ceb54aa6b7afcd1a37777b8df6b8fcb4",
-      "target_sha256": "a96cabee0035d7d9e91246ede4a5100d7882dfe102eecdb664396b977f22ad2b",
-      "reviewer": "Claude (Claude Code session; English figure drawn by the same script with the en switch from the same saved results; visual check of both rendered figures: same layout, values and geometry, labels translated)",
+      "source_sha256": "ecb98eef06846d2362b4b0d92c11238c4486b1f12b44aa322e42d19dbde55fc2",
+      "target_sha256": "a0f195f621f05353ee03861c1c37b8a5f1f3e084ba36d3a8c1e678f79a8a5b68",
+      "reviewer": "Claude (Claude Code session; both figures generated by the same plotting script from the same runs; viewed both images: same curves and layout, labels translated)",
       "method": "assistant",
-      "reviewed_on": "2026-10-28"
+      "reviewed_on": "2026-10-29"
     },
     {
       "source": "examples/debris_bedrock/figs/long_uplift.png",
       "target": "examples/debris_bedrock/en/figs/long_uplift.png",
-      "source_sha256": "a0ed078c0269a410406d1a88d5e39e6d07a1f96bfacc16ca17e2821152356959",
-      "target_sha256": "afb49d51cb3dbcab1fc222dc820eaf6625fadda9aed7184d4c556ec5d420e15a",
-      "reviewer": "Claude (Claude Code session; English figure drawn by the same script with the en switch from the same saved results; visual check of both rendered figures: same layout, values and geometry, labels translated)",
+      "source_sha256": "e7b95dac3c12af318ed6be715d3ec84f032156105bedd9d8de5e1b3e2a6264f9",
+      "target_sha256": "c94c4bc3eddcc33442e1500d6e672402c4f2ca4784f612dc7a8df89ae15fa729",
+      "reviewer": "Claude (Claude Code session; both figures generated by the same plotting script from the same runs; viewed both images: same curves and layout, labels translated)",
       "method": "assistant",
-      "reviewed_on": "2026-10-28"
+      "reviewed_on": "2026-10-29"
     },
     {
       "source": "examples/debris_bedrock/figs/threshold.png",
       "target": "examples/debris_bedrock/en/figs/threshold.png",
-      "source_sha256": "4b0ab5ebc540864f2320933996ecaa59ef86604ed9fa0decc4f67e7a45a82b62",
-      "target_sha256": "5e7ffe8572d30097c8737da7f4a1f9b29f01c32ba180af01b31d374b527aaf9f",
-      "reviewer": "Claude (Claude Code session; English figure drawn by the same script with the en switch from the same saved results; visual check of both rendered figures: same layout, values and geometry, labels translated)",
+      "source_sha256": "50c6bbff4402276dc8f859e5bba6094c475bd035b3bd8f493369ad284606f7cd",
+      "target_sha256": "ef04c8a06f601dbc9c319e18c11f6323995daea2a436d4717e7c237b92a1f81a",
+      "reviewer": "Claude (Claude Code session; both figures generated by the same plotting script from the same runs; viewed both images: same curves and layout, labels translated)",
       "method": "assistant",
-      "reviewed_on": "2026-10-28"
+      "reviewed_on": "2026-10-29"
     },
     {
       "source": "examples/delta/README.md",
@@ -1355,20 +1355,20 @@
     {
       "source": "examples/meander/README.md",
       "target": "examples/meander/en/README.md",
-      "source_sha256": "e231c4fa10117012385a173f76e4f361f4c5829467f41237ed01bbf3401db36d",
-      "target_sha256": "04dda6c372d02d5d6cf1d175481440832289fd46b9c8263d99c467fc9d22736f",
-      "reviewer": "Claude (Claude Code session; full-text content and lexical review, no model execution)",
+      "source_sha256": "cde90e787dd6f021eb1792e49ffa535da742ae33397fed6126bd8a8cb86511ec",
+      "target_sha256": "82cc6205cf6dc89ca80416edcc789f403975ca30064cfb6c260804cdb030e285",
+      "reviewer": "Claude (Claude Code session; the new f_inflow_edge setting (default 0 = the rule of 2026-10-24, 1 = only the edges into the section, 2 = 1 plus the energy cap) was written in the source and the translation together, and the changed parts were compared; rest unchanged since the previous record)",
       "method": "assistant",
-      "reviewed_on": "2026-10-23"
+      "reviewed_on": "2026-10-30"
     },
     {
       "source": "examples/meander_cutoff/README.md",
       "target": "examples/meander_cutoff/en/README.md",
-      "source_sha256": "c690bced6dbd276a0127f241607ca3d4afb750ceb23231a99d54cd5c92c8dec0",
-      "target_sha256": "1a72a7f00a0e193523c520e1fd805a7641eb08742fb14925a715013acfaa6a81",
-      "reviewer": "Claude (Claude Code session; content and lexical review, no model execution)",
+      "source_sha256": "c20d215d6c950a954a845c57919899a4eeaf0f0379fda5eeb6b223a23321185b",
+      "target_sha256": "942c2a96de32047491049791b74edcf81008f3084fc5d46051d4e9487d64ef12",
+      "reviewer": "Claude (Claude Code session; the new f_inflow_edge setting (default 0 = the rule of 2026-10-24, 1 = only the edges into the section, 2 = 1 plus the energy cap) was written in the source and the translation together, and the changed parts were compared; rest unchanged since the previous record)",
       "method": "assistant",
-      "reviewed_on": "2026-10-24"
+      "reviewed_on": "2026-10-30"
     },
     {
       "source": "examples/mesa/README.md",
@@ -1382,11 +1382,11 @@
     {
       "source": "examples/mountain_valley/README.md",
       "target": "examples/mountain_valley/en/README.md",
-      "source_sha256": "6fa820de8a38e22523867250acd73a625742b00192b403f51bb2d715e4e9f20c",
-      "target_sha256": "da86ac50eeee39141efabcddb4ac63800c618f88e4d98de033df89ee5afd6c55",
-      "reviewer": "Claude (Claude Code session; full-text content and lexical review, no model execution)",
+      "source_sha256": "724ee24e85a976250c8945d5a0a6300367871a8b8a72ed82ae81262f6f8312b8",
+      "target_sha256": "02cb453d74b007639b082a7971693ffe49b1c4f5d79e481f5eb521afda8544c5",
+      "reviewer": "Claude (Claude Code session; merge of main into the branch: both sides' changes to this pair, each recorded on its own side, were merged automatically or by hand, and the merged source and translation were compared for the changed parts; rest unchanged since the previous records)",
       "method": "assistant",
-      "reviewed_on": "2026-10-29"
+      "reviewed_on": "2026-10-30"
     },
     {
       "source": "examples/mountain_valley/figs/channel.png",
@@ -1598,11 +1598,11 @@
     {
       "source": "test/README.md",
       "target": "test/README.en.md",
-      "source_sha256": "b043308d71e0b04ad0713e0f79311db3d2faec7cac6b2de88f2d1c758a71c65e",
-      "target_sha256": "759bcbfb13bd200b548afffdc094725ec70c8aebb0b4f73f275e6ccb11c62b20",
-      "reviewer": "Claude (Claude Code session; full-text content and lexical review, no model execution)",
+      "source_sha256": "c151806b40067dc29dc01b41f030f0b695b3cb239b4302cde36da4e6facc0dbf",
+      "target_sha256": "75d5d773d371b00a401acd247a7e7187c04f52ac41518884a870ed040a805cbe",
+      "reviewer": "Claude (Claude Code session; merge of main into the branch: main's inflowadv row and the branch's gwtani row are both present in the source and the translation; rest unchanged since the previous records)",
       "method": "assistant",
-      "reviewed_on": "2026-10-30"
+      "reviewed_on": "2026-10-31"
     },
     {
       "source": "test/avalanche/README.md",
@@ -1958,9 +1958,9 @@
     {
       "source": "test/debris/README.md",
       "target": "test/debris/en/README.md",
-      "source_sha256": "4fc92cf7d4c97dcc27ec88386bc66928ffd809aa84fd467d365c6a42b8004451",
-      "target_sha256": "be6b3fca9005fd34f52c443996b9deeed3805ff98680816889904b0dc809f8df",
-      "reviewer": "Claude (Claude Code session; full-text content and lexical review, no model execution)",
+      "source_sha256": "587f1f7dd8bc75906a9e19318d9648f535778e140eae645b349ce30808defac2",
+      "target_sha256": "1121f3931240ba338f0ea15a323fd4649215fa82cd9256409d581ae18aca8afb",
+      "reviewer": "Claude (Claude Code session; merge of main into the branch: both sides' changes to this pair, each recorded on its own side, were merged (the parameter count is now 759 with f_gw_opening and f_inflow_edge), and the merged source and translation were compared for the changed parts; rest unchanged since the previous records)",
       "method": "assistant",
       "reviewed_on": "2026-10-30"
     },
@@ -1976,11 +1976,11 @@
     {
       "source": "test/debris/figs/profile.png",
       "target": "test/debris/en/figs/profile.png",
-      "source_sha256": "6a529343881ac05658384a45a3bf55bf91236f1787e3fdb6f22ae1518924f7ed",
-      "target_sha256": "82bf8ebc8ad51efedeaa976da14989db2c3df8c4e8257503a106060517578e03",
-      "reviewer": "Claude (Claude Code session; English figure drawn by the same script with the en switch; visual check)",
+      "source_sha256": "f8ff61db2679c768171e53ed8bf2eeb16b394892a835ade2bfc79f83d255681a",
+      "target_sha256": "d15178559b88c1d1b600c3e669d80cd6c465abd2a50e050f7225ff300731e49b",
+      "reviewer": "Claude (Claude Code session; both figures generated by the same Fig.py from the same runs; viewed both images: same curves, axes and legend placement, labels translated)",
       "method": "assistant",
-      "reviewed_on": "2026-10-24"
+      "reviewed_on": "2026-10-29"
     },
     {
       "source": "test/diffusion/README.md",
@@ -2251,6 +2251,15 @@
       "reviewer": "Claude (Claude Code session; full-text content and lexical review, no model execution)",
       "method": "assistant",
       "reviewed_on": "2026-10-23"
+    },
+    {
+      "source": "test/inflowadv/README.md",
+      "target": "test/inflowadv/en/README.md",
+      "source_sha256": "395b6ad38a8b4ad8280012072732cce95c18230ba6359f2307d2494ccd552cb5",
+      "target_sha256": "289906f528e0917cc55c710dc7969010ca91adef6ce8d949ffd624332f18e10a",
+      "reviewer": "Claude (Claude Code session; the new f_inflow_edge setting (default 0 = the rule of 2026-10-24, 1 = only the edges into the section, 2 = 1 plus the energy cap) was written in the source and the translation together, and the changed parts were compared; rest unchanged since the previous record)",
+      "method": "assistant",
+      "reviewed_on": "2026-10-30"
     },
     {
       "source": "test/kdpart/README.md",
@@ -2543,11 +2552,11 @@
     {
       "source": "test/rockinc/README.md",
       "target": "test/rockinc/en/README.md",
-      "source_sha256": "ced1a269e9e85881aa6e7bda0b857fd6b578e072280c4702629b9572be4d5967",
-      "target_sha256": "64fd4f637de9e12c58c56884ba08bf78d1279965744e1e0ed54220b9bab75a11",
-      "reviewer": "Claude (Claude Code session; mechanical renumbering of the developer.md section references §88 -> §89 in both files, checked by script that the lines differ only in those numbers and that both files carry the same references; rest unchanged since the previous record)",
+      "source_sha256": "06db4bc83f8bfbc8f56d0b50536a76ea102eb21511e906c869b1bcbbab4a7071",
+      "target_sha256": "0fb29dfd4e897d5565bda6258cb86a124f9c093890f2129f19dbfb079760e422",
+      "reviewer": "Claude (Claude Code session; compared the passages changed for f_opening_dynamic = 3 in the source and the translation line by line; rest unchanged since the previous record)",
       "method": "assistant",
-      "reviewed_on": "2026-10-28"
+      "reviewed_on": "2026-10-29"
     },
     {
       "source": "test/salt/README.md",
@@ -2804,11 +2813,11 @@
     {
       "source": "test/uniflow/README.md",
       "target": "test/uniflow/en/README.md",
-      "source_sha256": "d35e2a30e263fa704f419a916783589cf88c393ea8f8367039ee596218479186",
-      "target_sha256": "06f4705e658a7017ff0218b384f331f34dc6e4a71f8a1eb6f1a8d4a48091ff89",
-      "reviewer": "Claude (Claude Code session; mechanical renumbering of the developer.md section references §88 -> §89 in both files, checked by script that the lines differ only in those numbers and that both files carry the same references; rest unchanged since the previous record)",
+      "source_sha256": "2a963eb15c6960585805d0ab815b5cbe7ddaf2a9c90c43dbb47dda1bdd72952f",
+      "target_sha256": "cee513f34bb55dbc5eec6587992996ab94dbd0b7a71230eff4e6ee76d223e654",
+      "reviewer": "Claude (Claude Code session; compared the passages changed for f_opening_dynamic = 3 in the source and the translation line by line; rest unchanged since the previous record)",
       "method": "assistant",
-      "reviewed_on": "2026-10-28"
+      "reviewed_on": "2026-10-29"
     },
     {
       "source": "test/volcano/README.md",

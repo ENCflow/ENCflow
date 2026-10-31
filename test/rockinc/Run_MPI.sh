@@ -2,7 +2,9 @@
 # rockinc: MPI 実行(N ランク)+ 同じ検定 + 逐次とのバイト一致(T6)
 #   ./Run_MPI.sh [N](既定 2)
 # 水路は南北向き(流れが j 方向の帯界面を横切る)、箱は放射状の流れ。逐次の Run.sh の
-# 後に実行すると、save_*/ の state.dat・geomorph_rockinc.dat を save_*_serial/ と比べる
+# 後に実行すると、save_*/ の state.dat・geomorph_rockinc.dat を save_*_serial/ と比べる。
+# f_opening_dynamic = 3 の steep_s020_od3・sheet_d45_od3(帯界面を斜めに横切る面状流)は
+# 出力 *.bil を result_*_serial/ と比べる
 export MPIRUN_OPTS=${MPIRUN_OPTS:---bind-to none}
 
 NP=${1:-2}
@@ -28,7 +30,7 @@ else
     rc=1
 fi
 set -o pipefail
-for c in $cfgs2 $cfgs3; do
+for c in $cfgs2 $cfgs3 steep_s020_od3 sheet_d45_od3; do
     mpirun -np "$NP" $MPIRUN_OPTS ./encflow_mpi param_$c.txt | tee Screen_$c.log || exit 1
 done
 set +o pipefail
@@ -66,6 +68,18 @@ for d in save_cover save_cover_dtg save_cover_mf save_pluck save_pluck_mf5 save_
                 echo "=== $d/$f is bit-identical to the serial result ==="
             else
                 echo "MISMATCH: $d/$f != ${d}_serial/$f" >&2
+                rc=1
+            fi
+        done
+    fi
+done
+for d in result_steep_s020_od3 result_sheet_d45_od3; do
+    if [ -d ${d}_serial ]; then
+        for f in ${d}_serial/*.bil; do
+            if cmp -s $f $d/$(basename $f); then
+                echo "=== $d/$(basename $f) is bit-identical to the serial result ==="
+            else
+                echo "MISMATCH: $d/$(basename $f) != $f" >&2
                 rc=1
             fi
         done

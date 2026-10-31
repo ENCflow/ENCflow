@@ -877,8 +877,9 @@ end function
 !----------------------------------------------------------------------
 ! 流速ベクトル方向の流動面勾配 tanθ(高橋・中川1991 式(26)):
 !   tanθ = (u sinθ'x + v sinθ'y) / √(u²cos²θ'x + v²cos²θ'y)
-!   θ' は流動面(z + h + hs)の傾斜角(中央差分・片側フォールバック。
-!   近傍マスクの読みは x 番兵ガードのネスト内側 — §12/§28 の規約)。
+!   θ' は流動面(z + h + hs)の傾斜角で、slope_flow と同じ流向の下流側の
+!   片側差分(drop_axis_surf)。中央差分は 2 セル周期の凹凸を見ず、侵食の
+!   領域で凹凸を育てた(developer.md §89.27・§89.28)。
 !   |V| = 0 は呼び出し側で除外済み
 !----------------------------------------------------------------------
 pure function slope_flow_surf(g, s, i, j) result(tanth)
@@ -886,42 +887,48 @@ pure function slope_flow_surf(g, s, i, j) result(tanth)
   type(t_state), intent(in) :: s
   integer, intent(in) :: i, j
   real :: tanth
-  real :: el, er, dl, thx, thy, sx_, cx_, sy_, cy_, den
+  real :: thx, thy, sx_, cx_, sy_, cy_, den
 
-  ! x 方向の流動面勾配角 θ'x(下り正)
-  el = surf(s, i, j); er = el; dl = 0.0
-  if (g%x(i-1,j) > 0) then
-    if (g%sw(i-1,j) <= 0) then
-      el = surf(s, i-1, j); dl = dl + g%dx
-    end if
-  end if
-  if (g%x(i+1,j) > 0) then
-    if (g%sw(i+1,j) <= 0) then
-      er = surf(s, i+1, j); dl = dl + g%dx
-    end if
-  end if
-  thx = 0.0
-  if (dl > 0.0) thx = atan((el - er) / dl)
-  ! y 方向の流動面勾配角 θ'y(下り正)
-  el = surf(s, i, j); er = el; dl = 0.0
-  if (g%x(i,j-1) > 0) then
-    if (g%sw(i,j-1) <= 0) then
-      el = surf(s, i, j-1); dl = dl + g%dy
-    end if
-  end if
-  if (g%x(i,j+1) > 0) then
-    if (g%sw(i,j+1) <= 0) then
-      er = surf(s, i, j+1); dl = dl + g%dy
-    end if
-  end if
-  thy = 0.0
-  if (dl > 0.0) thy = atan((el - er) / dl)
+  ! x 方向(u >= 0 なら東が下流)と y 方向(v >= 0 なら j+1 が下流)の流動面勾配角 θ'(下り正)
+  thx = atan(drop_axis_surf(g, s, i, j, 1, 0, g%dx, s%u(i,j) >= 0.0))
+  thy = atan(drop_axis_surf(g, s, i, j, 0, 1, g%dy, s%v(i,j) >= 0.0))
 
   sx_ = sin(thx); cx_ = cos(thx)
   sy_ = sin(thy); cy_ = cos(thy)
   den = sqrt((s%u(i,j) * cx_)**2 + (s%v(i,j) * cy_)**2)
   tanth = 0.0
   if (den > 0.0) tanth = (s%u(i,j) * sx_ + s%v(i,j) * sy_) / den
+end function
+
+
+!----------------------------------------------------------------------
+! slope_flow_surf の 1 軸分: drop_axis と同じ近傍の選び方(fwd なら +側 = 下流、
+! なければ −側。どちらも領域外・海なら 0)で、流動面 surf の下り勾配を求める。
+! 近傍の選び方を変えるときは drop_axis と揃える
+!----------------------------------------------------------------------
+pure function drop_axis_surf(g, s, i, j, di, dj, dl, fwd) result(sl)
+  type(t_geoinfo), intent(in) :: g
+  type(t_state), intent(in) :: s
+  integer, intent(in) :: i, j, di, dj
+  real, intent(in) :: dl
+  logical, intent(in) :: fwd
+  real :: sl
+  logical :: okp, okm
+
+  okp = .false.
+  if (g%x(i+di,j+dj) > 0) then
+    if (g%sw(i+di,j+dj) <= 0) okp = .true.
+  end if
+  okm = .false.
+  if (g%x(i-di,j-dj) > 0) then
+    if (g%sw(i-di,j-dj) <= 0) okm = .true.
+  end if
+  sl = 0.0
+  if (okp .and. (fwd .or. .not. okm)) then
+    sl = (surf(s, i, j) - surf(s, i+di, j+dj)) / dl
+  else if (okm) then
+    sl = (surf(s, i-di, j-dj) - surf(s, i, j)) / dl
+  end if
 end function
 
 

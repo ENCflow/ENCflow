@@ -134,6 +134,7 @@ def write_param(name):
 /
 
 &list_enc
+  f_opening_dynamic = 3     ! 塞がりを局所の平面から測る(急勾配の渓流。developer.md §68.41)
 /
 
 &list_initial
@@ -297,6 +298,7 @@ def write_param_p(name):
 /
 
 &list_enc
+  f_opening_dynamic = 3     ! 塞がりを局所の平面から測る(急勾配の渓流。developer.md §68.41)
 /
 
 &list_initial
