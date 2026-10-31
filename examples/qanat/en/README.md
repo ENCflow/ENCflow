@@ -116,12 +116,14 @@ dot = pumping well.
 
 | Case (period) | Qanat flow | Pumping | Groundwater seeping into the drain | Storage loss | Tunnel below the water table |
 |---|---:|---:|---:|---:|---:|
-| Before pumping (days 130-150) | 3.54 L/s | — | 6.46 L/s | 0.00 L/s | 150 m |
-| Well 2 L/s (days 280-300) | 1.70 L/s | 2.00 L/s | 6.30 L/s | 0.00 L/s | 140 m |
+| Before pumping (days 130-150) | 3.50 L/s | — | 6.50 L/s | 0.00 L/s | 150 m |
+| Well 2 L/s (days 280-300) | 1.72 L/s | 2.00 L/s | 6.28 L/s | 0.00 L/s | 140 m |
 | Well 5 L/s (days 280-300) | 0 | 5.00 L/s | 5.07 L/s | 0.07 L/s | 70 m |
 
+(The table and figures show the values recomputed on 2026-10-31 with the default f_opening_dynamic = 3; only the thin surface water changes, and the groundwater and qanat values agree with the default 2 of 2026-10-18 to 31 within 0.1 L/s. developer.md §68.41)
+
 The values are 20-day means. The qanat-only case stays almost the same as before pumping up
-to day 300 (qanat flow 3.56 L/s over days 280-300). The groundwater seeping into the drain is
+to day 300 (qanat flow 3.50 L/s over days 280-300). The groundwater seeping into the drain is
 what remains of the recharge after subtracting the qanat flow and the pumping and adding the
 storage loss (it agrees within 0.2 L/s with the mean of the east-edge transect; the flow over
 the plain pulsates, so the transect is read as a 20-day mean).
@@ -135,8 +137,8 @@ the plain pulsates, so the transect is read as a 20-day mean).
   water in the tunnel is up to 6 cm deep in the collection section and 4.3 cm deep in the
   conveyance section.
 - **Most of the pumped water comes out of the qanat flow**: when pumping at 2 L/s starts, the
-  qanat flow falls from 3.5 to 1.7 L/s in about 20 days. The 1.84 L/s lost is 92 % of the
-  pumping rate; the groundwater flowing to the drain falls by only 0.16 L/s. While the tunnel
+  qanat flow falls from 3.5 to 1.7 L/s in about 20 days. The 1.78 L/s lost is 89 % of the
+  pumping rate; the groundwater flowing to the drain falls by only 0.22 L/s. While the tunnel
   is collecting groundwater, the water in the tunnel holds up the surrounding water table, so
   the water table falls mainly on the well's (north) side (on the north-south line through the
   well, 0.23 m at the north edge against 0.04 m at the south edge). The well pumps groundwater

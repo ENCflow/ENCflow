@@ -322,24 +322,24 @@ variables you can get:
 elevation: 92 .. 2449 m
 probe cell (i=147, j=104) -> h[46, 146],  z = 400.7 m
  time(s)   h_probe(m)   h_max(m)   wet cells
-    1800       0.517      1.618       15861
-    3600       1.403      8.352        8255
-    5400       4.759      8.141        3373
-    7200       4.048      7.966        2387
-    9000       3.561      8.361        1943
-   10800       2.210      8.883        1696
-   12600       1.843      8.927        1527
-   14400       1.596      8.305        1412
-   16200       1.396      6.685        1328
-   18000       1.224      4.956        1245
-   19800       1.108      4.287        1182
-   21600       1.017      3.809        1137
+    1800       0.494      1.522       16687
+    3600       1.397      8.240        8901
+    5400       4.761      8.103        3531
+    7200       4.104      7.989        2478
+    9000       3.525      8.320        2006
+   10800       2.483      8.841        1748
+   12600       1.862      8.966        1563
+   14400       1.613      7.895        1436
+   16200       1.386      6.972        1343
+   18000       1.239      5.096        1268
+   19800       1.115      4.353        1196
+   21600       1.023      3.851        1150
 ```
-(ENCflow's own lines every 30 minutes are omitted)
+(ENCflow's own lines every 30 minutes are omitted. The values were recomputed on 2026-10-31 with the default f_opening_dynamic = 3; so were the values and figures of Steps 6 and 7)
 
-During the rain (up to 3600 s) the number of wet cells reaches 15,861
+During the rain (up to 3600 s) the number of wet cells reaches 16,687
 (nearly every cell of the catchment); once the rain stops it drops quickly
-and the water gathers in the channels (about 1,100 cells). At the cell in
+and the water gathers in the channels (about 1,150 cells). At the cell in
 the middle main stem the depth peaks at 4.8 m 30 minutes after the rain
 stops (5400 s) and then recedes slowly.
 
@@ -540,7 +540,7 @@ run A: rain from param.txt
 run B: rain supplied from Python (uniform)
    max |h_B - h_A| = 5.329e-15 m
 run C: rain only on the western half
-   max h: A = 3.81 m,  C = 3.20 m
+   max h: A = 3.85 m,  C = 3.22 m
 ```
 
 Three runs are executed in sequence (ENCflow holds one model per process,
@@ -612,9 +612,9 @@ python3 step7_roughness.py          # with B--D (venv / conda / OS packages)
 ```
 probe cell (i=147, j=104)
  n factor   peak h (m)   time of peak
-    1.0        4.791         86 min
-    1.5        5.019         95 min
-    2.0        5.275        106 min
+    1.0        4.787         87 min
+    1.5        5.010         95 min
+    2.0        5.261        107 min
 ```
 
 - `get2d(VAR_MANNING_N)` returns the roughness field currently in effect
