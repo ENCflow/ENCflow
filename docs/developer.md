@@ -687,6 +687,27 @@ ENCflow は各分野の専用モデルと精度を競うものではなく、次
   効いていなかった。既存ケースは全て ULP=0・RTOL=0 なので合否は不変)。
   reference の BUILDINFO.txt の mode 行は src の直近ビルドのスタンプで
   あり、実行したビナリのモードではない(誤読注意)。
+- **ビルド差による reference 11 件の更新(2026-10-31。利用者の指示)**:
+  reference を持つ 36 件を現行ソースの release 逐次で回すと全件 PASS だが、
+  11 件(dambreak・kdpart・sewer_wq と nhwave・nhwave_nh・nhsolitary・
+  nhcurrent・nhshelf・nhbore・nhbreak・nhbottom)がビット一致でなく許容差内
+  だった(比較外の Runge 列、ULP=1 の最終桁、sewer_wq の RTOL=1e-5)。
+  原因は次の 2 段で切り分けた。(1) reference を作った時点のソース
+  (c71a578・5aa1e71)を同じ環境で release ビルドすると、nhshelf 以外の 10 件の
+  reference がバイト単位で再現する = 環境は同じ。(2) make.inc の FFLAGS を -O2
+  (fast-math・-march=native・LTO なし)に置き換え、作成時点と現行のソースを
+  比べると 11 件とも出力がバイト一致する = 計算は不変。差は無関係な変更に
+  よる -Ofast/-flto のコード配置のずれ(上の sewer_wq の項と同型)。作成時点の
+  ソースは git worktree で取り出す。確認のうえ ./Run.sh -u で更新した。10 件の
+  新しい reference は更新前の実行(別のプロセス)の出力とバイト一致する。
+  nhshelf だけは事情が違う。NH ソルバの 4 スレッドの実行間非決定(§71・§81)で
+  実行のたびに最終桁と Runge 列が揺れるうえ、2026-10-24 の reference は別の
+  環境で作られていて、この環境では 1 スレッドでも 1 要素が 2 量子ずれる
+  (ULP=1 で不合格)。そこで nhshelf の reference は **OMP_NUM_THREADS=1 で**
+  作り直した(1 スレッドの再実行で identical。4 スレッドの既定の実行は
+  ULP=1 の範囲で揺れる)。更新後の 11 件は MPI np=1, 2, 4 でも PASS。
+  Runge 列(比較外)だけのずれや許容差内の差は不一致ではなく、更新するかは
+  人間が決める(規律1)。
 
 ## 11. MPI 化の設計原則(分割実装の基準)
 
