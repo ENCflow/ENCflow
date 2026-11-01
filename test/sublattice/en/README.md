@@ -51,10 +51,14 @@ e-folding time τ.
 
 | Configuration | Scheme 3 (before the fix) | Scheme 3 (after the fix) | Scheme 2 (after the fix) | Scheme 1 |
 |---|---|---|---|---|
-| alternating: after 5 min / 60 min | 0.57 / 0.33 (τ 4570 s) | 0.18 / 0.07 (τ 2240 s) | 0.18 / 0.07 (τ 2200 s) | 0.40 / 0.10 (τ 1940 s) |
-| mixed: τ of the sub-lattice mode | 1094 s (still present after 60 min, changing sign) | **88 s** (0.03 at 5 min) | 87 s | 364 s |
-| mixed: remaining background gyre (60 min) | 0.72 | 0.90 | 0.89 | 0.92 |
-| smooth: remaining gyre (60 min) | 0.96 | 0.97 | 0.97 | 0.99 |
+| alternating: after 5 min / 60 min | 0.57 / 0.33 (τ 4570 s) | 0.18 / 0.04 (τ 1610 s) | 0.18 / 0.07 (τ 2200 s) | 0.40 / 0.10 (τ 1940 s) |
+| mixed: τ of the sub-lattice mode | 1094 s (still present after 60 min, changing sign) | **87 s** (0.03 at 5 min) | 87 s | 364 s |
+| mixed: remaining background gyre (60 min) | 0.72 | 0.92 | 0.89 | 0.92 |
+| smooth: remaining gyre (60 min) | 0.96 | 0.98 | 0.97 | 0.99 |
+
+The column "Scheme 3 (after the fix)" holds the values of 2026-11-01, after the lateral face flux of
+the axis edges was changed to the real discharge of the crossing links (developer.md §68.42): the
+alternating mode after 60 min went from 0.07 to 0.04 and τ from 2240 to 1610 s (faster damping).
 
 - In the configuration with the sub-lattice mode alone (alternating), the
   damping by the advection term is proportional to the flux |q_t|, and since

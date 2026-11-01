@@ -801,7 +801,11 @@ architecture.md。このメモは「現在進行中・未完了の項目」だ�
       3 でも止まらないが、12 時間に延ばした比較計算は 10:30 h に止まる)。教材の param すべてに 2 を
       明示して回避した。→ 原因は f_opening_dynamic ではなく運動量保存形移流の側方面の質量流束の
       不整合(斜めリンクが塞がれた面で実流量の 2.4 倍)で、同日に特定・修正した(§68.42。reference の
-      更新は承認済み)。教材 chichibu の 2 の明示の解除と再生成は §68.42 の作業の続き。
+      更新は承認済み)。教材 chichibu は 2 の明示を解除して既定で再生成した(2026-11-01)。
+      **§68.42 の修正は壁沿い・池の縁の流れを変えるので、上の「済」の例題・教材 bmi の README の数値は
+      修正前の既定 3 の値のまま**(landslide_tsunami・tsunami_coast・tsunami_fault・tsunami_town・timberyard・
+      ashfall_lahar・sewer_hybrid・levee_breach・qanat・estuary_barrage・教材 bmi。差は検定の例で 1〜10 %)。
+      回し直しは未了の 3 例題と同じ扱い(各 README の手順で再計算し数表と README を更新)。
     - fluv_diagratio ≠ p_diagratio: 掃流砂の軸エッジに水の振り替えの表 fwd が掛かるため、
       fluv_diagratio = 0 の 1 セル幅水路で容量が 2.41 倍になる(§89.4)。利用者ガイドに注意を
       書くか、振り替えの設計を直すかを決める。

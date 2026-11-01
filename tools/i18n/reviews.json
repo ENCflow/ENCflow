@@ -1850,11 +1850,11 @@
     {
       "source": "test/chichibu/README.md",
       "target": "test/chichibu/en/README.md",
-      "source_sha256": "a925f9c7e7bc1f33b6a8ed063320dd5f97e003cc38bd5f5820c5b8bc6b150f22",
-      "target_sha256": "d140e4e161ab0ddab5c608ae16bc78cd113907526870f98888be8e98534b7570",
-      "reviewer": "Claude (Claude Code session; f_opening_dynamic default switch)",
+      "source_sha256": "6ac1d087d43ccd00db771698b37ac52ee1e6bb4db43c35da19da3fefe806b794",
+      "target_sha256": "a06d581c8688b41ff9f46a86933b2b12ebd1acaf6f59a6c697bd48a4dd9b1aaf",
+      "reviewer": "Claude (Claude Code session; lateral-flux fix of the momentum-conservative advection, §68.42)",
       "method": "assistant",
-      "reviewed_on": "2026-10-31"
+      "reviewed_on": "2026-11-01"
     },
     {
       "source": "test/chichibu/data_chichibu/README.md",
@@ -1886,11 +1886,11 @@
     {
       "source": "test/chichibu/figs/chichibu.png",
       "target": "test/chichibu/en/figs/chichibu.png",
-      "source_sha256": "1099276cf9ebf132174fc2c5ddfc0de74f23b57a661959ad75def20bb420129a",
-      "target_sha256": "4ce575422f5f704bd6988c81e9b06f3caa18f195dd74b8a62228db8ec27e0c12",
-      "reviewer": "Claude (Claude Code session; f_opening_dynamic default switch)",
+      "source_sha256": "8874f89f1c9cc387c1a28e0d3016a10535381dfc10f0d5e78d2b3f490667980a",
+      "target_sha256": "3b2347e42fa192680813c8161048b174f73b0d5caea734c7bc5b54087fec82e2",
+      "reviewer": "Claude (Claude Code session; lateral-flux fix of the momentum-conservative advection, §68.42)",
       "method": "assistant",
-      "reviewed_on": "2026-10-31"
+      "reviewed_on": "2026-11-01"
     },
     {
       "source": "test/chichibu_icmap/README.md",
@@ -2354,11 +2354,11 @@
     {
       "source": "test/inflowadv/README.md",
       "target": "test/inflowadv/en/README.md",
-      "source_sha256": "de1f7240e8eb98edfcb4fd44c8352cfbdc5735386ea74c4b6225e47e932aa01b",
-      "target_sha256": "682f39386fff9eed4d0462da54d9264278cc3036efbeb28e4f708b6cc7dd89ab",
-      "reviewer": "Claude (Claude Code session; f_opening_dynamic default switch)",
+      "source_sha256": "f7869e77353fdca03aae41e3593d6f096f75a8099e744e0868c6df16d4c57df3",
+      "target_sha256": "c5a4beb58a1d132766dc261faf9ad3467358b5f9a3fd9ab6279aafc12cd0f6a8",
+      "reviewer": "Claude (Claude Code session; lateral-flux fix of the momentum-conservative advection, §68.42)",
       "method": "assistant",
-      "reviewed_on": "2026-10-31"
+      "reviewed_on": "2026-11-01"
     },
     {
       "source": "test/kdpart/README.md",
@@ -2822,11 +2822,11 @@
     {
       "source": "test/sublattice/README.md",
       "target": "test/sublattice/en/README.md",
-      "source_sha256": "d6b9814c9de0b491e03fc5c2c045f2ac1fe4ed63f33905d5ca64b8b507c21c28",
-      "target_sha256": "ff12b5d72c1b3ea14655ea74727d24f93e8b1220daceb72bac41f7bd073bcc53",
-      "reviewer": "Claude (Claude Code session; full-text content and lexical review, no model execution)",
+      "source_sha256": "3c74294f395b9ad671bf7b8146688011b345d1fec7d87b2e08a10c8c8c819ac0",
+      "target_sha256": "bd7793764532e7ea256dd98c3b608689de021dfe2790d38bc95e123ac2716d14",
+      "reviewer": "Claude (Claude Code session; lateral-flux fix of the momentum-conservative advection, §68.42)",
       "method": "assistant",
-      "reviewed_on": "2026-10-24"
+      "reviewed_on": "2026-11-01"
     },
     {
       "source": "test/suspend/README.md",
