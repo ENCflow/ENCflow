@@ -82,23 +82,22 @@ main: real precision: 64 bit
 main: number of valid cells: 17885
 time, progress, S(m), Runge, ex_flux, Cn_max, h_max(m), V_max(m/s)
   0:00:00.00   0.0%    0.0000   0.0%      0    0.0000    0.0000    0.0000
-  0:30:00.00   8.3%    0.0487  97.7%      0    0.2137    1.4893    4.4243
-  1:00:00.00  16.7%    0.1000   1.1%      0    0.3522    5.2118    8.7554
-  1:30:00.00  25.0%    0.1000   0.5%      0    0.4353    7.8360    9.3230
-  2:00:00.00  33.3%    0.1000   0.2%      0    0.4250    7.7974    9.1465
+  0:30:00.00   8.3%    0.0487  97.7%      0    0.2017    1.3950    4.2425
+  1:00:00.00  16.7%    0.1000   5.3%      0    0.3493    5.0962    8.4896
+  1:30:00.00  25.0%    0.1000   2.9%      0    0.4282    7.8049    9.0360
+  2:00:00.00  33.3%    0.1000   0.8%      0    0.4204    7.9216    8.6543
   ...
-  6:00:00.00 100.0%    0.1000   0.3%     28    0.5145   29.7972    4.1589
+  6:00:00.00 100.0%    0.1000   0.6%     38    0.5136   29.6988    4.1797
 main: program terminated normally
 ```
 
-> **Note (2026-10-31)**: every `param_*.txt` of this tutorial sets `fn_enc = "-"` and
-> `f_opening_dynamic = 2` in `&list_enc` explicitly (the default of 2026-10-18 to 31; dynamic
-> reassignment of blocked diagonal openings). With the 3 that became the default on that day, the
-> configurations of Steps 1-5 and of the supplement, which close the basin outlet and pool water
-> deeply, develop a flow faster than 18 m/s on the valley floor of the pool after about 5 hours, the
-> Courant number exceeds 1 and the run stops (Step 5 at 5:14 h, the 12-hour comparison runs at
-> 10:30 h; Step 6, which has an outlet, does not stop). Until the cause is found, 2 is set explicitly
-> and the numbers and figures of the text stay those of 2 (developer.md §68.41).
+> **Note (2026-10-31)**: on the day f_opening_dynamic 3 became the default, Step 5, which closes the
+> basin outlet and pools water deeply, was found to stop at the edge of the pool at 5:14 h, and the
+> `param_*.txt` of this tutorial temporarily set 2 explicitly. The cause was not the treatment of the
+> openings but a mass inconsistency of the lateral face flux of the momentum-conservative advection,
+> which assumed 2.4 times the real flux on faces whose diagonal openings are blocked (2 only delays the
+> same growth); it was fixed the same day (developer.md §68.42). The parameter files now keep the
+> defaults, and the numbers and figures of the text were regenerated with the corrected defaults.
 
 The contents of `en/param_step1.txt` (the full file, apart from the
 title comment at the top) are shown below. It is structured almost
@@ -511,11 +510,11 @@ changes from one column to **three columns**.
 ```
 time, progress, S_surf(m), S_grnd(m), S_total(m), Runge, ex_flux, Cn_max, h_max(m), V_max(m/s)
   0:00:00.00   0.0%    0.0000     0.0000     0.0000    0.0%      0    0.0000    0.0000    0.0000
-  0:30:00.00   8.3%    0.0365     0.0024     0.0389   97.7%      0    0.2938    1.1180    7.5788
-  1:00:00.00  16.7%    0.0751     0.0049     0.0800    1.1%      0    0.5061    5.8260   13.9790
-  1:30:00.00  25.0%    0.0729     0.0071     0.0800    1.0%      0    0.5441    7.2383   14.1280
+  0:30:00.00   8.3%    0.0365     0.0024     0.0389   97.7%      0    0.2786    1.0676    7.1391
+  1:00:00.00  16.7%    0.0751     0.0049     0.0800    5.0%      0    0.4828    5.5794   13.4281
+  1:30:00.00  25.0%    0.0728     0.0072     0.0800    2.4%      0    0.5364    7.2886   13.7003
   ...
-  6:00:00.00 100.0%    0.0698     0.0102     0.0800    0.0%      1    0.5215   29.9379    5.4326
+  6:00:00.00 100.0%    0.0695     0.0105     0.0800    0.0%      0    0.5054   28.7804    5.3746
 ```
 
 - `S_surf` is surface water, `S_grnd` is subsurface storage, and
@@ -529,8 +528,8 @@ time, progress, S_surf(m), S_grnd(m), S_total(m), Runge, ex_flux, Cn_max, h_max(
 
 ![Step 5: effect of interception and infiltration](figs/step5_hydro.png)
 
-In the hydrograph the peak discharge drops by about a quarter (5,510
-to 4,260 m^3/s). Interception cuts the total by 20%, and infiltration keeps
+In the hydrograph the peak discharge drops by about a quarter (5,425
+to 4,128 m^3/s). Interception cuts the total by 20%, and infiltration keeps
 sucking up the thinly spread hillslope water, so both the rising limb
 and the recession drop.
 
@@ -573,8 +572,8 @@ immediately). Running it gives:
 ```
 time, progress, S_surf(m), S_grnd(m), S_total(m), Runge, ex_flux, Cn_max, h_max(m), V_max(m/s)
   ...
-  3:00:00.00  50.0%    0.0605     0.0089     0.0694    0.1%      4    0.5159    7.1280   13.3623
-  6:00:00.00 100.0%    0.0227     0.0102     0.0329    0.0%      0    0.3185    3.7107    6.9177
+  3:00:00.00  50.0%    0.0611     0.0091     0.0702    0.1%      0    0.5050    6.8181   13.9795
+  6:00:00.00 100.0%    0.0228     0.0104     0.0333    0.0%      0    0.3162    3.7106    6.8473
 ```
 
 - S_total now decreases -- that is the water that left the system

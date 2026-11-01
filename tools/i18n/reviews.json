@@ -437,11 +437,11 @@
     {
       "source": "docs/users_guide/swflow.md",
       "target": "docs/en/users_guide/swflow.md",
-      "source_sha256": "1cdbe86490364d4ec955e8b5155c1fc75028a09ec1fe48a0e6bd069092bd8497",
-      "target_sha256": "2bc9c95ba979179fcfa8dc94f6443574ef381420789b4efb250bffdd1340b472",
-      "reviewer": "Claude (Claude Code session; chichibu tutorial pinned to f_opening_dynamic 2)",
+      "source_sha256": "f0d3762b4f19d582520584e8c2a3ac7c7d59c5eee226a04ae56d88b9afc94be0",
+      "target_sha256": "cf9f94745a3ead02b1107a6be98b8c0c7de55e3e0be4a5fa9baa4321b6e3ad38",
+      "reviewer": "Claude (Claude Code session; lateral-flux fix of the momentum-conservative advection, §68.42)",
       "method": "assistant",
-      "reviewed_on": "2026-10-31"
+      "reviewed_on": "2026-11-01"
     },
     {
       "source": "docs/users_guide/swi.md",
@@ -3200,20 +3200,20 @@
     {
       "source": "tutorials/chichibu/README.md",
       "target": "tutorials/chichibu/en/README.md",
-      "source_sha256": "1a8e63dd7872c567d25ea6c81d0bfc291f57b0afdb5c63e5f172a4c43a08cc05",
-      "target_sha256": "c9dc9138c8bdfc3a8e8fd4b14f6b9fb5054ffe33dbf1189d010e717bc1cad1e2",
-      "reviewer": "Claude (Claude Code session; chichibu tutorial pinned to f_opening_dynamic 2)",
+      "source_sha256": "4d3fa288aa7205c62bd6c28e98868da70d32960ea05ecda2ccf9869ee12c4ba1",
+      "target_sha256": "4448300e08bd038f37895594010b73c496362e2c3327d071ec231a2b94c27490",
+      "reviewer": "Claude (Claude Code session; lateral-flux fix of the momentum-conservative advection, §68.42)",
       "method": "assistant",
-      "reviewed_on": "2026-10-31"
+      "reviewed_on": "2026-11-01"
     },
     {
       "source": "tutorials/chichibu/figs/step1_hend.png",
       "target": "tutorials/chichibu/en/figs/step1_hend.png",
-      "source_sha256": "895a5cd05f4731fd261fc1281a39ed46f405603e1eee28ee10d0cc6e40bb51c5",
-      "target_sha256": "0978877fe25b1896dd4d0ba4a6254aa3ed00b89bc096d7389b1b93a5bbb6977c",
-      "reviewer": "Claude (Claude Code session; visual comparison of both figures: same plot content, English labels)",
+      "source_sha256": "510f1bc5f8d0e235d649fe567354c5ac0c699644dc8aceb98c24fe37eab40ddb",
+      "target_sha256": "9e439a5306e24b02ba5754827339c67b37254e54cb2785f8c7729f15f62e67ef",
+      "reviewer": "Claude (Claude Code session; lateral-flux fix of the momentum-conservative advection, §68.42)",
       "method": "assistant",
-      "reviewed_on": "2026-10-24"
+      "reviewed_on": "2026-11-01"
     },
     {
       "source": "tutorials/chichibu/figs/step1_hend_4nb.png",
@@ -3227,20 +3227,20 @@
     {
       "source": "tutorials/chichibu/figs/step1_hend_filled.png",
       "target": "tutorials/chichibu/en/figs/step1_hend_filled.png",
-      "source_sha256": "f536f390b7dd4f3f46b2a566d9f0561f0e678abeb7a8e31e81709d870a58993b",
-      "target_sha256": "20f9534c88a3300fa54c6c17b26118ef138a95d84681e1a63f5950b86da7c89f",
-      "reviewer": "Claude (Claude Code session; visual comparison of both figures: same plot content, English labels)",
+      "source_sha256": "4cb913724b08c88396347d50f7d795039894bde3ee7fe1d1a7a3b4ef3723c7f4",
+      "target_sha256": "e2e9119c703fca7ff3de892d255841b7d36c5fdd7b43635fb5d08b89f284309f",
+      "reviewer": "Claude (Claude Code session; lateral-flux fix of the momentum-conservative advection, §68.42)",
       "method": "assistant",
-      "reviewed_on": "2026-10-24"
+      "reviewed_on": "2026-11-01"
     },
     {
       "source": "tutorials/chichibu/figs/step1_hend_raw.png",
       "target": "tutorials/chichibu/en/figs/step1_hend_raw.png",
-      "source_sha256": "708acbc1dedd4bb16b2edd80d8bb257966fe37361bff0088cb3ebba39e28cf1c",
-      "target_sha256": "cbcd27d89bf8e0146ab84acfee9863e59f3702092f72f8f88b59c5aaaa6f1faf",
-      "reviewer": "Claude (Claude Code session; visual comparison of both figures: same plot content, English labels)",
+      "source_sha256": "4d89fb91f8a22b5d7bc012e4edcc348be6eb3abb3fb6e05594c96e5f953edb78",
+      "target_sha256": "738e0aa2fdc11b862d7ea180b72bba55c2244ee3f5d1974bfc5426e10ad60273",
+      "reviewer": "Claude (Claude Code session; lateral-flux fix of the momentum-conservative advection, §68.42)",
       "method": "assistant",
-      "reviewed_on": "2026-10-24"
+      "reviewed_on": "2026-11-01"
     },
     {
       "source": "tutorials/chichibu/figs/step1_z.png",
@@ -3281,65 +3281,65 @@
     {
       "source": "tutorials/chichibu/figs/step3_transects.png",
       "target": "tutorials/chichibu/en/figs/step3_transects.png",
-      "source_sha256": "10b90e1fd348a907553ceeb4bb77403f8dbbc23a9c33f66d2bed461b84cfbfa2",
-      "target_sha256": "9fc9759d0033e274bfa61d5f8234a5e36e7b685ccee22e54a8d9404940066292",
-      "reviewer": "Claude (Claude Code session; visual comparison of both figures: same plot content, English labels)",
+      "source_sha256": "de261a490626369acee6c1b12462426cc65ca884324ba2c8936bf459fcc5a539",
+      "target_sha256": "4cffde3c0a821ae919644c5e1ab008bd33460ab1d681cf1fbeb22afa144a3024",
+      "reviewer": "Claude (Claude Code session; lateral-flux fix of the momentum-conservative advection, §68.42)",
       "method": "assistant",
-      "reviewed_on": "2026-10-24"
+      "reviewed_on": "2026-11-01"
     },
     {
       "source": "tutorials/chichibu/figs/step4_hydro.png",
       "target": "tutorials/chichibu/en/figs/step4_hydro.png",
-      "source_sha256": "57908719502899352a36b5958d3c26ac32ee4fd75a8d2fbea5239a7b91110f39",
-      "target_sha256": "06bf943527a53a159a81b152a654db8b1977e1dfe17daac5d47f4ca68aeed334",
-      "reviewer": "Claude (Claude Code session; visual comparison of both figures: same plot content, English labels)",
+      "source_sha256": "ab9a4d68e1b261d96039012b2996ef429e1fa08fdab9123902cf0987d185789f",
+      "target_sha256": "5e10d90927864ca7109eb4d5ed25dee8469ee8df723f5018a996e4304731abd1",
+      "reviewer": "Claude (Claude Code session; lateral-flux fix of the momentum-conservative advection, §68.42)",
       "method": "assistant",
-      "reviewed_on": "2026-10-24"
+      "reviewed_on": "2026-11-01"
     },
     {
       "source": "tutorials/chichibu/figs/step5_hydro.png",
       "target": "tutorials/chichibu/en/figs/step5_hydro.png",
-      "source_sha256": "e672ea9edef3b232f6a8d551c61a5d46bf840514227525e9df41c0e49a6d8111",
-      "target_sha256": "62f0c0dd8a429904a1fedf586afdaf95cbd1c0557da2cf1ff5475da6dd7bd0ef",
-      "reviewer": "Claude (Claude Code session; visual comparison of both figures: same plot content, English labels)",
+      "source_sha256": "3058f400569685c50520fedb0f759e316d535ab4a98d8fb280eb248571e10f18",
+      "target_sha256": "486294f4283d7c1c3d9adb29c44b5e7d6fecc688c92a58ec76717baf8f4f58cd",
+      "reviewer": "Claude (Claude Code session; lateral-flux fix of the momentum-conservative advection, §68.42)",
       "method": "assistant",
-      "reviewed_on": "2026-10-24"
+      "reviewed_on": "2026-11-01"
     },
     {
       "source": "tutorials/chichibu/figs/step6_hend.png",
       "target": "tutorials/chichibu/en/figs/step6_hend.png",
-      "source_sha256": "83caa48da6ea5246249ad2f8518781d25a6c0bad3206468f2ae5c3583cd73210",
-      "target_sha256": "db0ba37cdba19a504af7014f03f0b712569950b56e1af809e2dd82cfde70f5c7",
-      "reviewer": "Claude (Claude Code session; visual comparison of both figures: same plot content, English labels)",
+      "source_sha256": "1f03a38a4e86cf1dbcbb7f7bcd33ac63f516c9cc7d0895c5ead604c11f0a4cf6",
+      "target_sha256": "95d2a6a56c72c5277d55ed37d46a3922d2bb3c120720d7b51d5165d4a3be16ec",
+      "reviewer": "Claude (Claude Code session; lateral-flux fix of the momentum-conservative advection, §68.42)",
       "method": "assistant",
-      "reviewed_on": "2026-10-24"
+      "reviewed_on": "2026-11-01"
     },
     {
       "source": "tutorials/chichibu/figs/step6_hend_step5.png",
       "target": "tutorials/chichibu/en/figs/step6_hend_step5.png",
-      "source_sha256": "2a7b75282b0d0a6aa6b615010bfbaa9bf7ed657848656030fd446fce333cef58",
-      "target_sha256": "664d0ca03a1befd1dab827aa38a0673cb1aa7dbca609e40b2c9e63a773858c9a",
-      "reviewer": "Claude (Claude Code session; visual comparison of both figures: same plot content, English labels)",
+      "source_sha256": "510c458b1ec7225d7f2c009df33f896a5a31937b7ae361b54a6d2b3c3690148e",
+      "target_sha256": "c9f7baeabeca4ce9b6c314362c91e22e7fe93ad48083a37e9d0cefea3a0253ef",
+      "reviewer": "Claude (Claude Code session; lateral-flux fix of the momentum-conservative advection, §68.42)",
       "method": "assistant",
-      "reviewed_on": "2026-10-24"
+      "reviewed_on": "2026-11-01"
     },
     {
       "source": "tutorials/chichibu/figs/step6_osc.png",
       "target": "tutorials/chichibu/en/figs/step6_osc.png",
-      "source_sha256": "b2089148e1568c71045dda2f8ff8408fb870a3c58bb14372002362e32e0317b1",
-      "target_sha256": "7900637ee31fd2aaa403cf28a43e1686ca3a9584f25c454e913113f403f2c658",
-      "reviewer": "Claude (Claude Code session; visual comparison of both figures: same plot content, English labels)",
+      "source_sha256": "8102fdf620eb13610b45ac1ed4cae0c64bc37588b286ec96d0ce14bbb49acf7b",
+      "target_sha256": "67d1aca0ce6b779dc955670b0fac548e8c75a1c92912dd247a6e2b5443530227",
+      "reviewer": "Claude (Claude Code session; lateral-flux fix of the momentum-conservative advection, §68.42)",
       "method": "assistant",
-      "reviewed_on": "2026-10-24"
+      "reviewed_on": "2026-11-01"
     },
     {
       "source": "tutorials/chichibu/figs/step6_osc_zoom.png",
       "target": "tutorials/chichibu/en/figs/step6_osc_zoom.png",
-      "source_sha256": "986a76e05e2aa359b12f94a34d56117758741aeb8780dbfb79d09a1dfe0abdee",
-      "target_sha256": "6788293958bcc0f5c0565dd720b6de0a1c257d8ea85de2c65290ea7efc9c955a",
-      "reviewer": "Claude (Claude Code session; visual comparison of both figures: same plot content, English labels)",
+      "source_sha256": "c0213e12e8e40f4b6650f8b681ee7024de1923804a7259778965b7c2a70922f3",
+      "target_sha256": "8fdca885c3bd67fd2e23d0320eeb9c0c2a85806a602e5da3c12fe66320d83b26",
+      "reviewer": "Claude (Claude Code session; lateral-flux fix of the momentum-conservative advection, §68.42)",
       "method": "assistant",
-      "reviewed_on": "2026-10-24"
+      "reviewed_on": "2026-11-01"
     },
     {
       "source": "tutorials/chichibu/figs/step7_3d.png",
@@ -3407,92 +3407,92 @@
     {
       "source": "tutorials/chichibu/param_step1.txt",
       "target": "tutorials/chichibu/en/param_step1.txt",
-      "source_sha256": "00291d48711e932913d1f32f626cc0356308f203591078b7784739a8ef8a5bd8",
-      "target_sha256": "7c83afd69c2cb5cf9e1ffcdd760a4131e38c3ab979758e516e06c5b05b286942",
-      "reviewer": "Claude (Claude Code session; chichibu tutorial pinned to f_opening_dynamic 2)",
+      "source_sha256": "63a400d12631cd241375daa1575f7117c8705c5adca47a38ca8d1efd38f46101",
+      "target_sha256": "f7b682588b8cad2dc2a83d698175c41a8932081bbe6418929f6b0c9e3fced6c3",
+      "reviewer": "Claude (Claude Code session; lateral-flux fix of the momentum-conservative advection, §68.42)",
       "method": "assistant",
-      "reviewed_on": "2026-10-31"
+      "reviewed_on": "2026-11-01"
     },
     {
       "source": "tutorials/chichibu/param_step2.txt",
       "target": "tutorials/chichibu/en/param_step2.txt",
-      "source_sha256": "cc6b9883f426e4b37c1b5ca4a325b36251ac99b7c2a51a85a7af722fab6c689a",
-      "target_sha256": "2e7c55fec18029b7bde47f1ae3309b4e375a4b0f98f55be7f853b022a3d17bb4",
-      "reviewer": "Claude (Claude Code session; chichibu tutorial pinned to f_opening_dynamic 2)",
+      "source_sha256": "3c25e5841ec863425d33e3a8814583f29c9a8ad7682b976836223a3bf7cb963c",
+      "target_sha256": "581b7877e828251b6a2ef411f23dde3667d0b083178b96a283de2ee0700d30a1",
+      "reviewer": "Claude (Claude Code session; lateral-flux fix of the momentum-conservative advection, §68.42)",
       "method": "assistant",
-      "reviewed_on": "2026-10-31"
+      "reviewed_on": "2026-11-01"
     },
     {
       "source": "tutorials/chichibu/param_step3.txt",
       "target": "tutorials/chichibu/en/param_step3.txt",
-      "source_sha256": "d3b4b35aee7e47ac74d06af568bed89336a5cd7d744dcb0d1be8dd14c00c3fa9",
-      "target_sha256": "8c28bb631031a26ef3b603188a4e091997c33024dd2299fcdb9c0925218a3611",
-      "reviewer": "Claude (Claude Code session; chichibu tutorial pinned to f_opening_dynamic 2)",
+      "source_sha256": "1939e0a1112e0efaf0200e7ab69e5ac50d49bea96cb930fe8d2e13b72bf2e91f",
+      "target_sha256": "87ddb5f23d9e9e4bbd1028efebe51877a09da74882cee25132093f303a1f91ff",
+      "reviewer": "Claude (Claude Code session; lateral-flux fix of the momentum-conservative advection, §68.42)",
       "method": "assistant",
-      "reviewed_on": "2026-10-31"
+      "reviewed_on": "2026-11-01"
     },
     {
       "source": "tutorials/chichibu/param_step4.txt",
       "target": "tutorials/chichibu/en/param_step4.txt",
-      "source_sha256": "e3eb60b7ef85791a48ea42aa2dfd4d46119f0bca72339b79de1c51e2add532b1",
-      "target_sha256": "bfcd77735aaa323c957980188e61f983a8581eee32cabc3a6b31ab4a185e6e40",
-      "reviewer": "Claude (Claude Code session; chichibu tutorial pinned to f_opening_dynamic 2)",
+      "source_sha256": "e85d6143a65cb86414dafbaad2f9ff1c2cc9e0048614eaaa1be5298a7d40c1e4",
+      "target_sha256": "cabb9ae705b9ff2ab65c49b2ce32ca01e88d828635a34458498d6abacf531a3e",
+      "reviewer": "Claude (Claude Code session; lateral-flux fix of the momentum-conservative advection, §68.42)",
       "method": "assistant",
-      "reviewed_on": "2026-10-31"
+      "reviewed_on": "2026-11-01"
     },
     {
       "source": "tutorials/chichibu/param_step5.txt",
       "target": "tutorials/chichibu/en/param_step5.txt",
-      "source_sha256": "d06e85a6ebd43c19b680087aa20f849d23cd66253fbac940525e5ee6cab2776a",
-      "target_sha256": "af50a5bbd7264a9beb92c75dc0db8bca5fa77ccc11bf1a51994aa209ade0a56c",
-      "reviewer": "Claude (Claude Code session; chichibu tutorial pinned to f_opening_dynamic 2)",
+      "source_sha256": "6f2c6ba88310f4cb926aceb3f5a3747659a8f8e8862abf2304ed1070f65c9a69",
+      "target_sha256": "888c50fcd32667d99902d9dce175e629ad776e835e1bd3f47f875fe92f8e08d5",
+      "reviewer": "Claude (Claude Code session; lateral-flux fix of the momentum-conservative advection, §68.42)",
       "method": "assistant",
-      "reviewed_on": "2026-10-31"
+      "reviewed_on": "2026-11-01"
     },
     {
       "source": "tutorials/chichibu/param_step6.txt",
       "target": "tutorials/chichibu/en/param_step6.txt",
-      "source_sha256": "b83a2b4fd4ed518a23ee1b4529211240452c3bfcff4418fe1dbd169a92a045fb",
-      "target_sha256": "aefdb434b0a01ffa168d7408d68b9a85939d368960ae200e4b9d3f99a4252001",
-      "reviewer": "Claude (Claude Code session; chichibu tutorial pinned to f_opening_dynamic 2)",
+      "source_sha256": "903ac083183cdcc99043a2373b04058d1f80faaa1272345ffb39ac7ebd24da0a",
+      "target_sha256": "467735f2964693287e3e92d8c38fe68830e0fa25919aea43730bbb98ea3315f9",
+      "reviewer": "Claude (Claude Code session; lateral-flux fix of the momentum-conservative advection, §68.42)",
       "method": "assistant",
-      "reviewed_on": "2026-10-31"
+      "reviewed_on": "2026-11-01"
     },
     {
       "source": "tutorials/chichibu/param_step7.txt",
       "target": "tutorials/chichibu/en/param_step7.txt",
-      "source_sha256": "7567ecaa4ff196c767afc55aaf83bed170906b018eb7fca0cc90ef62e9155baa",
-      "target_sha256": "08ab4339b6e4bcb08b14fdf9893da738373fa9c971e5ebe93865a5424d8d2fd4",
-      "reviewer": "Claude (Claude Code session; chichibu tutorial pinned to f_opening_dynamic 2)",
+      "source_sha256": "8a36d375aabc5e4361042d0e61a8de68e0bf3451eb1e624e2097d897fa197a21",
+      "target_sha256": "686f3143617fb52efad5d1b36275a1602acbd72774037368bd62c9309abfc179",
+      "reviewer": "Claude (Claude Code session; lateral-flux fix of the momentum-conservative advection, §68.42)",
       "method": "assistant",
-      "reviewed_on": "2026-10-31"
+      "reviewed_on": "2026-11-01"
     },
     {
       "source": "tutorials/chichibu/param_supp_100m.txt",
       "target": "tutorials/chichibu/en/param_supp_100m.txt",
-      "source_sha256": "aac0c047aad2a57e4bd27cd1ee2f17ee8d3e9f2ef684fa65237366848e9f8d73",
-      "target_sha256": "38894cdf2ed2b72b4844d1a96e820612037f8bc86f2c1f1d1377db3f5f86b415",
-      "reviewer": "Claude (Claude Code session; chichibu tutorial pinned to f_opening_dynamic 2)",
+      "source_sha256": "cc6558e6a09d7cef1172eaef97e5fb0a6b783f008646fea6b562bc57a8dc6518",
+      "target_sha256": "46123f760b0365b189d4c13eaf5c064e38da11a3d2c875ed973cd5befd9de705",
+      "reviewer": "Claude (Claude Code session; lateral-flux fix of the momentum-conservative advection, §68.42)",
       "method": "assistant",
-      "reviewed_on": "2026-10-31"
+      "reviewed_on": "2026-11-01"
     },
     {
       "source": "tutorials/chichibu/param_supp_200m.txt",
       "target": "tutorials/chichibu/en/param_supp_200m.txt",
-      "source_sha256": "f8c6e640b5519ca282dbf131926030a078d482a42b3e6ebe2ced5c13c33f77fd",
-      "target_sha256": "438447ca0dd605f3709527d9dc3d9389b304394dc8623b46622b9b44866da508",
-      "reviewer": "Claude (Claude Code session; chichibu tutorial pinned to f_opening_dynamic 2)",
+      "source_sha256": "31cb4d116bf4bb413757dddff6dad936116a8f78e364c5e55e96629784060a14",
+      "target_sha256": "bc3ec4c5b7d95b10542f25c847b7ce6c4cbede71b1a66b010e2086f91841e30f",
+      "reviewer": "Claude (Claude Code session; lateral-flux fix of the momentum-conservative advection, §68.42)",
       "method": "assistant",
-      "reviewed_on": "2026-10-31"
+      "reviewed_on": "2026-11-01"
     },
     {
       "source": "tutorials/chichibu/param_supp_50m.txt",
       "target": "tutorials/chichibu/en/param_supp_50m.txt",
-      "source_sha256": "c38c38802c7a2549da84789f4bbf848d985d8381e0573dc70d922acd855868fd",
-      "target_sha256": "e5d63f0311b208e43e730126f19d93b7a50e8cfad2b86a56f77943108a24365e",
-      "reviewer": "Claude (Claude Code session; chichibu tutorial pinned to f_opening_dynamic 2)",
+      "source_sha256": "d17d9721e2acd8bacc03574e903693b9943aa01dcce621e64f197d3697699ba4",
+      "target_sha256": "5cab1ff51f4b345461b5b6e93c3bdea1948223422acb3681f8944ed68a88c74e",
+      "reviewer": "Claude (Claude Code session; lateral-flux fix of the momentum-conservative advection, §68.42)",
       "method": "assistant",
-      "reviewed_on": "2026-10-31"
+      "reviewed_on": "2026-11-01"
     },
     {
       "source": "tutorials/wave/README.md",

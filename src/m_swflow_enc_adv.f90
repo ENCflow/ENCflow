@@ -15,6 +15,13 @@ submodule(m_swflow_enc) m_swflow_enc_adv
   real, parameter :: sgn8(1:8) = [ 1., 1., 1., 1., -1., -1., -1., -1. ]
   integer, parameter :: kkp(1:4) = [ 3, 5, 8, 2 ]   ! +t 側に隣接するセルの 8 近傍番号
   integer, parameter :: kkm(1:4) = [ 6, 4, 1, 7 ]   ! -t 側
+  ! 軸エッジ k の ±t 側方面を横切る斜めリンク(c 側: (±t, +k) 方向、n 側: (±t, −k) 方向)
+  ! の 8 近傍番号。k = 5, 7(adv_neumann_mc の逆向き)は 9 − k の面の c, n を入れ替えたもの。
+  ! 斜めエッジ(1, 3, 6, 8)は使わない(0)
+  integer, parameter :: kdp_c(1:8) = [ 0, 3, 0, 1, 8, 0, 6, 0 ]   ! +t 面、c 側
+  integer, parameter :: kdp_n(1:8) = [ 0, 8, 0, 3, 6, 0, 1, 0 ]   ! +t 面、n 側
+  integer, parameter :: kdm_c(1:8) = [ 0, 1, 0, 6, 3, 0, 8, 0 ]   ! −t 面、c 側
+  integer, parameter :: kdm_n(1:8) = [ 0, 6, 0, 8, 1, 0, 3, 0 ]   ! −t 面、n 側
   integer, parameter :: dti(1:4) = [ 1, 1, 1, 0 ]
   integer, parameter :: dtj(1:4) = [ -1, 0, 1, -1 ]
 
@@ -273,8 +280,27 @@ subroutine adv_prepare_mc(p, g, s, sx, tx)
         ! 与えると、面の向こうのセルが地形で遮られて実際には水が通らない場合
         ! でも非ゼロになり、薄い検査体積(h̄ ≈ dd)で 1/h̄ 倍に増幅された移流項が
         ! 深い池に接する薄いエッジに生じて発散する(§68.21。2026-10-03 修正)
-        qtp = 0.5 * (mnk(i, j, kkp(k)) + mnk(in, jn, kkp(k)))
-        qtm = 0.5 * (mnk(i, j, kkm(k)) + mnk(in, jn, kkm(k)))
+        ! 軸エッジの側方面の流束は、面を横切るリンクの実流量(連続式が水深変化に換算する
+        ! mn·l8·fw)の和を面の長さ w8dr で割る: c, n の ±t 軸リンク(通過幅 lp の帯は面の
+        ! 半分ずつ)と、c の (±t, +k)・n の (±t, −k) の斜めリンク(帯の全幅)。一様流では
+        ! 軸 0.414 + 斜め 2×0.293 = 1 で従来の ½(mn_c + mn_n)·w8dr と厳密に一致し、斜め
+        ! リンクが地形・壁で塞がれる面では軸リンクの実流量だけになる。単位幅流量 mn に面の
+        ! 全長を掛けていた 2026-10-31 までは、斜めが塞がれた面で実流量の 1/lp = 2.4 倍
+        ! (動的振り替え fwd で 1.4〜1.7 倍)の水が横切る扱いになり、質量と整合しない
+        ! 運動量の注入が深い湛水の縁(段々の棚と溝が壁に挟まれた支谷の口)のヘルムホルツ型
+        ! の振動を反減衰にして有限時間で発散した(tutorials/chichibu Step 5 の 5:14 h、
+        ! 出口湛水 12 h の 10:42 h。f_opening_dynamic 2 では fwd の分だけ遅いだけ。§68.42)。
+        ! 斜めエッジの側方面は従来のまま(一様流で厳密。斜めが塞がれた面では過小 =
+        ! 散逸側。軸が塞がれ斜めだけ開く面の過大評価は §68.42 の残件)
+        if (k == 2 .or. k == 4) then
+          qtp = (0.5 * (qlk(i, j, kkp(k)) + qlk(in, jn, kkp(k))) &
+                 + qlk(i, j, kdp_c(k)) + qlk(in, jn, kdp_n(k))) / geo%w8dr(k)
+          qtm = (0.5 * (qlk(i, j, kkm(k)) + qlk(in, jn, kkm(k))) &
+                 + qlk(i, j, kdm_c(k)) + qlk(in, jn, kdm_n(k))) / geo%w8dr(k)
+        else
+          qtp = 0.5 * (mnk(i, j, kkp(k)) + mnk(in, jn, kkp(k)))
+          qtm = 0.5 * (mnk(i, j, kkm(k)) + mnk(in, jn, kkm(k)))
+        end if
         ! 側方面も同様: 平行な隣接エッジの両セルが有効・湿潤のときだけ
         ! その流速を流入値に使う(壁・乾床側からは ū = u_e)
         if (qtp >= 0) then
@@ -490,6 +516,25 @@ contains
     end if
   end function
 
+  ! セル (ci, cj) からその kk 近傍へ向かう ENC エッジの実流量 [m³/s](時刻 n。流出が正。
+  ! 連続式が水深変化に換算する mn·l8·frw·fwd と同じ = m_swflow_enc_edge_flux の定義。
+  ! 確保範囲外は 0)。軸エッジの側方面の流束に使う
+  pure function qlk(ci, cj, kk) result(q)
+    integer, intent(in) :: ci, cj, kk
+    real :: q, fw
+    integer :: ei, ej
+    ei = ci + die(kk)
+    ej = cj + dje(kk)
+    if (ei < 0 .or. ei > ubound(sx%mn, 2) .or. ej < dcp%jsh - 1 .or. ej > dcp%jeh) then
+      q = 0.0
+    else
+      fw = 1.0
+      if (chn%have_frw) fw = chn%frw(ke8(kk), ei, ej)
+      if (chn%have_fwd) fw = fw * chn%fwd(ke8(kk), ei, ej)
+      q = sgn8(kk) * sx%mn(ke8(kk), ei, ej) * geo%l8(kk) * fw
+    end if
+  end function
+
   ! 面値の再構成: 風上側 up、風下側 dn、さらに風上側 upup
   !   スキーム2: 1 次風上(up)
   !   スキーム3: MUSCL  up + ψ(r)/2·(dn - up)、r = (up - upup)/(dn - up)、
@@ -674,8 +719,16 @@ contains
         kp = kkm(9 - k)
         km = kkp(9 - k)
       end if
-      qtp = 0.5 * (mnk8(ci, cj, kp) + mnk8(in, jn, kp))
-      qtm = 0.5 * (mnk8(ci, cj, km) + mnk8(in, jn, km))
+      ! 軸の面は横切るリンクの実流量の和(adv_prepare_mc と同じ。枠外は鏡像で読む)
+      if (k == 2 .or. k == 4 .or. k == 5 .or. k == 7) then
+        qtp = (0.5 * (qlk8(ci, cj, kp) + qlk8(in, jn, kp)) &
+               + qlk8(ci, cj, kdp_c(k)) + qlk8(in, jn, kdp_n(k))) / geo%w8dr(k)
+        qtm = (0.5 * (qlk8(ci, cj, km) + qlk8(in, jn, km)) &
+               + qlk8(ci, cj, kdm_c(k)) + qlk8(in, jn, kdm_n(k))) / geo%w8dr(k)
+      else
+        qtp = 0.5 * (mnk8(ci, cj, kp) + mnk8(in, jn, kp))
+        qtm = 0.5 * (mnk8(ci, cj, km) + mnk8(in, jn, km))
+      end if
       if (qtp >= 0) then
         ubtp = ue
       else
@@ -746,6 +799,29 @@ contains
       q = 0.0
     else
       q = sgn8(kk) * sx%mn(ke8(kk),ei,ej)
+    end if
+  end function
+
+  ! セル (ci, cj) からその kk 近傍へ向かう ENC エッジの実流量 mn·l8·frw·fwd(枠外の扱いは
+  ! mnk8 と同じ。adv_prepare_mc の qlk と同じ定義)
+  pure function qlk8(ci, cj, kk) result(q)
+    integer, intent(in) :: ci, cj, kk
+    real :: q, fw
+    integer :: ei, ej, mi, mj
+    mi = ci
+    mj = cj
+    ei = ci + din(kk)
+    ej = cj + djn(kk)
+    if (ei < 1 .or. ei > g%nx .or. ej < 1 .or. ej > dcp%ny_g) call mirror_cell(ci, cj, mi, mj)
+    ei = mi + die(kk)
+    ej = mj + dje(kk)
+    if (ei < lbound(sx%mn, 2) .or. ei > ubound(sx%mn, 2) .or. ej < dcp%jsh - 1 .or. ej > dcp%jeh) then
+      q = 0.0
+    else
+      fw = 1.0
+      if (chn%have_frw) fw = chn%frw(ke8(kk), ei, ej)
+      if (chn%have_fwd) fw = fw * chn%fwd(ke8(kk), ei, ej)
+      q = sgn8(kk) * sx%mn(ke8(kk),ei,ej) * geo%l8(kk) * fw
     end if
   end function
 

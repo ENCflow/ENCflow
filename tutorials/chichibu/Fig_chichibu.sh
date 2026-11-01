@@ -29,7 +29,9 @@ for c in filled raw 4nb; do
     sed -e 's/tt_c = "6 hour"/tt_c = "12 hour"/' param_step2.txt > "wrk_param_$c.txt"
     case $c in
       raw) sed -i -e 's/Chichibu_200m_filled.tif/Chichibu_200m_raw.tif/' "wrk_param_$c.txt" ;;
-      4nb) sed -i -e '/^&list_enc/a\  p_diagratio = 0.0        ! 対角成分ゼロ = 4近傍相当' "wrk_param_$c.txt" ;;
+      4nb) sed -i -e '/dir_data/i\  fn_enc     = "-"           ! ENC条件設定ファイル' "wrk_param_$c.txt"
+           printf '\n&%s\n  p_diagratio = 0.0        ! 対角成分ゼロ = 4近傍相当\n/\n' \
+               list_enc >> "wrk_param_$c.txt" ;;
     esac
     rm -rf result
     ./encflow "wrk_param_$c.txt"
