@@ -108,7 +108,7 @@ properties of scheme 1 (§3) follow from this fact.
 
 ![Advection stencils and control volumes](../../figs/advection_cv_en.png)
 
-**Figure: advection stencils and control volumes.** (a) Cell-centre gradients and projection to the edge for scheme 1; (b)(c) axis and diagonal edges for schemes 2 and 3. Orange areas are momentum control volumes and orange markers are the updated edges. Arrows indicate positive flux directions: c → n on the streamwise faces, outward on the lateral faces. Dotted lines are the two ENC edges averaged for a lateral flux; green markers are parallel edges supplying the inflow velocity. For square cells, the control-volume areas are one and two cell areas, respectively.
+**Figure: advection stencils and control volumes.** (a) Cell-centre gradients and projection to the edge for scheme 1; (b)(c) axis and diagonal edges for schemes 2 and 3. Orange areas are momentum control volumes and orange markers are the updated edges. Arrows indicate positive flux directions: c → n on the streamwise faces, outward on the lateral faces. Dotted lines are the two ENC edges used for a lateral flux (for axis edges the two diagonal links crossing the face are added; see the text); green markers are parallel edges supplying the inflow velocity. For square cells, the control-volume areas are one and two cell areas, respectively.
 
 **(a)** is the stencil of scheme 1. It is computed in three steps.
 
@@ -256,10 +256,21 @@ unit width $`q`$ times the length of the face).
   This is exactly the cell-average flux the ENC continuity equation sees,
   and in one dimension it equals the "mean of the two edges on the line" of
   S&D.
-- **Lateral faces $`\pm t`$** (parallel to line $`k`$): the mean $`q_{t\pm}`$ of
-  the actual fluxes $`mn`$ of the two ENC edges that cross the face (c → c+δ
-  and n → n+δ, the dotted lines in figure (c)), positive outward;
-  $`Q = q_{t\pm}\,L_k`$. The upwind velocity $`\bar u_{t\pm}`$ of an inflow face
+- **Lateral faces $`\pm t`$** (parallel to line $`k`$): the sum of the
+  actual fluxes of the ENC links that cross the face, divided by the face
+  length, $`q_{t\pm}`$ (positive outward); $`Q = q_{t\pm}\,L_k`$. For
+  diagonal edges this is the mean of the unit-width fluxes $`mn`$ of the two
+  ENC edges that cross the face (c → c+δ and n → n+δ, the dotted lines in
+  figure (c)). For axis edges it uses the discharge the continuity equation
+  passes through each link (unit-width flux $`mn`$ × passing width ×
+  reassignment factor of blocked diagonal openings; see the
+  [ENC grid chapter](encgrid.md) and `f_opening_dynamic`): half of each
+  parallel axis link of c and n (the dotted lines in figure (b)) plus the
+  full diagonal links (±t, +k) of c and (±t, −k) of n. In uniform flow this
+  equals the averaged form, and a link blocked by terrain or a wall
+  contributes zero (on faces where only the axis link is open the averaged
+  form assumed 2.4 times the actual flux and blew up at the edge of a pool;
+  developer.md §68.42). The upwind velocity $`\bar u_{t\pm}`$ of an inflow face
   is the value of the parallel neighbouring edge for axis edges, and for
   diagonal edges the mean of the two parallel links of the opposite parity
   that lie on either end of the face (a face with only one such link is

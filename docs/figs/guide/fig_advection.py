@@ -48,7 +48,7 @@ CV = {'ja': {
  'axis_dim':'L = Δx、W = Δy', 'diag_dim':'L = Δr、W = 2ΔxΔy/Δr',
  'local':'矢印は流束の正方向。c → n が線kの正方向、側方面は外向きが正。正方セルの例。',
  'flow':'流向面：q_c、q_n = セル流量(m, n)のk方向投影。',
- 'side':'側方面：点線の2本のENCエッジ流量を平均。\n流入時の流速は平行な隣接エッジ u_t±（1次風上）。',
+ 'side':'側方面：面を横切るリンクの実流量の和（対角エッジは点線の2本の平均、\n軸エッジは点線の2本の半分ずつ＋面を横切る斜めリンク2本）。\n流入時の流速は平行な隣接エッジ u_t±（1次風上）。',
  'area':'橙：運動量検査体積（面積 L×W）。正方セルでは軸が1セル分、対角が2セル分。',
  'legend':'● セル中心：h, z, u, v, m, n    ■／◇ エッジ：uv, mn    橙の印：更新対象 u_e',
 }, 'en': {
@@ -62,7 +62,7 @@ CV = {'ja': {
  'axis_dim':'L = Δx, W = Δy', 'diag_dim':'L = Δr, W = 2ΔxΔy/Δr',
  'local':'Arrows show positive flux directions: c → n along k; outward on lateral faces. Square-cell examples.',
  'flow':'Streamwise faces: q_c, q_n project cell flux (m, n) onto k.',
- 'side':'Lateral faces: mean of two dotted ENC-edge fluxes.\nInflow uses the parallel edge u_t± (first-order upwind).',
+ 'side':'Lateral faces: sum of the link fluxes crossing the face. Diagonal edge:\nmean of the two dotted edges; axis edge: half of each dotted edge plus\nthe two crossing diagonal links. Inflow uses parallel edge u_t± (upwind).',
  'area':'Orange: momentum control volume, area L×W. One cell area for axis edges, two for diagonal edges.',
  'legend':'● Cell centres: h, z, u, v, m, n    ■ / ◇ Edges: uv, mn    Orange marker: target u_e',
 }}

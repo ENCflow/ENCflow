@@ -113,11 +113,11 @@
     {
       "source": "docs/users_guide/advection.md",
       "target": "docs/en/users_guide/advection.md",
-      "source_sha256": "c05dffbe1303e332a11e98948f6b3e7896c7d463ab41e0c12e32e646fa11e3a6",
-      "target_sha256": "cba15a95160b3e60d564771deff79621277517af0d0685acf0042a0cb5646a9c",
-      "reviewer": "Claude (Claude Code session; the default of f_opening_dynamic changed from 2 to 3 on 2026-10-31: the statements of the default and the notes on 2 were updated in the source and the translation together, and the changed parts were compared; rest unchanged since the previous record)",
+      "source_sha256": "9a917d754a8999730c6966774e3a2e28f234083098f898215482b437f14486c2",
+      "target_sha256": "235b85c1038bce8ee14d8a034e5cd9b60672397d65c8b17e17987b85c4c97cde",
+      "reviewer": "Claude (assistant)",
       "method": "assistant",
-      "reviewed_on": "2026-10-31"
+      "reviewed_on": "2026-11-01"
     },
     {
       "source": "docs/users_guide/bedmotion.md",
