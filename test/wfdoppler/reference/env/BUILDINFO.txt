@@ -1,8 +1,8 @@
-date      : 2026-10-31 12:14:42
+date      : 2026-11-01 04:02:21
 host      : vm
 user      : 
 pwd       : /home/user/ENCflow/test/wfdoppler
 exe       : /home/user/ENCflow/bin/encflow
 mode      : serial__double
 modules   : (no modules)
-lib       : 	libgfortran.so.5 => /lib/x86_64-linux-gnu/libgfortran.so.5 (0x00007f9238c00000)
+lib       : 	libgfortran.so.5 => /lib/x86_64-linux-gnu/libgfortran.so.5 (0x00007fba85e00000)
