@@ -115,7 +115,7 @@ do for [s=1:5] {
   do for [t=1:2] {
     set title sprintf("%s: %s", SLBA[s], TLBA[t]) noenhanced
     set xrange [0:(t == 1 ? 150 : 360)]
-    set yrange [0:(t == 1 ? 1800 : (s == 1 ? 20000 : 8000))]   # 移流項なしの下流だけ縦軸の範囲が違う
+    set yrange [0:(t == 1 ? 1800 : (s == 1 ? 20000 : 10000))]  # 移流項なしの下流だけ縦軸の範囲が違う(2 倍)
     plot for [r=1:3] sprintf("result_supp_%s%s/fluxes/flux000%d.csv", RESA[r], SFXA[s], TRNA[t]) \
          using 2:3 with lines lw 1.5 title RLBA[r]
   }

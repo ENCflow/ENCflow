@@ -3191,11 +3191,11 @@
     {
       "source": "tutorials/chichibu/Fig_supp.plt",
       "target": "tutorials/chichibu/en/Fig_supp.plt",
-      "source_sha256": "5c7a347adebd49286d3d63a231c7586427af089b91644cd29d31597c51d48638",
-      "target_sha256": "bbf3f2e42f6f09594553b3600f00e7e452d611ea6e374502dc6b896397e25953",
-      "reviewer": "Claude (Claude Code session; full-text content and lexical review, no model execution)",
+      "source_sha256": "04941d83bc7fd9d0b56929acac1e1ce4e586df2068b2b8405fab78b7731f4f25",
+      "target_sha256": "1c7cb04dd5d4d818d87f6d31389f686cc0b05e4854048b8fbdff8270955eb9c5",
+      "reviewer": "Claude (assistant)",
       "method": "assistant",
-      "reviewed_on": "2026-10-24"
+      "reviewed_on": "2026-11-01"
     },
     {
       "source": "tutorials/chichibu/README.md",
