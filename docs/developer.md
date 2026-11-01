@@ -11764,8 +11764,16 @@ S&D-MUSCL 移流 ½ + 側方面による 1 次風上移流 ½」の形で、現�
 
 **検証(2026-11-01)**: dambreak は reference と Log 同一(全開の面では φ = 1 で厳密に不変)。秩父
 Step 5(3)は 6 h 完走(h_max 28.7804 m、6 h の V_max 5.37 m/s)、12 h の池は完走(h_max 34.3767 m、
-V_max 2.83 m/s。いずれも §68.42 の値と同等)。全検定の逐次回帰・MPI np=1, 2, 4・-fcheck=all np=2 は
-実行中(完了後に追記。reference の更新は結果を見てから)。
+V_max 2.83 m/s。いずれも §68.42 の値と同等)。全検定の逐次回帰(test/ の Run.sh を持つ全 86 ケース、
+2 スレッド): reference を持つ 36 ケースは全て PASS で、30 ケースは Log 等が同一、nh 系 6 ケースは §68.42 の
+掃引と同じ ULP=1 の許容内。reference を持たない 50 ケースの自己検定も全て PASS(bendloss は §68.42 の
+バイナリと Check の出力・Log とも同一)。**reference の更新は不要**(φ が 1 を離れるのは対角セルが
+cell_ok でない面だけで、検定ケースには現れない)。Step 5 の Log も §68.42 の値と表示桁で同一。
+-fcheck=all(debug ビルド、np=2): Step 5 は 6 h 完走(h_max 28.7803 m、V_max 4.9946 m/s)、12 h の池も
+完走(h_max 34.3767 m、V_max 2.8254 m/s)で §68.42 の記録と同一、実行時エラー・クーラン数超過なし。
+MPI(Run_MPI.sh を np=1, 2, 4 で実行): dambreak は np=1, 2, 4 とも reference と同一、sublattice は
+np=1, 2, 4 とも逐次結果とビット一致、uniflow は np=1, 2 で PASS(np=4 と tide・culvert・chichibu・
+sedfeed・gwseep・wave・coastal_drain・inflowadv は実行中。完了後に追記)。
 
 ## 69. 非静水圧(1 層 NH)拡張の設計決定(2026-10-05 合意。実装は段階的)
 
