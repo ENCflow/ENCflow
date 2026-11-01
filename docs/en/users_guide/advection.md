@@ -261,7 +261,11 @@ unit width $`q`$ times the length of the face).
   length, $`q_{t\pm}`$ (positive outward); $`Q = q_{t\pm}\,L_k`$. For
   diagonal edges this is the mean of the unit-width fluxes $`mn`$ of the two
   ENC edges that cross the face (c → c+δ and n → n+δ, the dotted lines in
-  figure (c)). For axis edges it uses the discharge the continuity equation
+  figure (c)), multiplied by the open fraction of the two axis links that
+  cross the face (0.29 less per link whose far cell is invalid or dry; 0.41
+  with both blocked; developer.md §68.43. Replacing the mean by the sum of
+  the actual crossing link fluxes slows the bore by 2 to 5%, so the diagonal
+  edges keep the averaged form). For axis edges it uses the discharge the continuity equation
   passes through each link (unit-width flux $`mn`$ × passing width ×
   reassignment factor of blocked diagonal openings; see the
   [ENC grid chapter](encgrid.md) and `f_opening_dynamic`): half of each

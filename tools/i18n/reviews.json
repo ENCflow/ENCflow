@@ -113,8 +113,8 @@
     {
       "source": "docs/users_guide/advection.md",
       "target": "docs/en/users_guide/advection.md",
-      "source_sha256": "9a917d754a8999730c6966774e3a2e28f234083098f898215482b437f14486c2",
-      "target_sha256": "235b85c1038bce8ee14d8a034e5cd9b60672397d65c8b17e17987b85c4c97cde",
+      "source_sha256": "756eaf1f07bb88aa149a17f24902fcc88a2c31188f88bc4f7cf928c58cd1076c",
+      "target_sha256": "e26fd4c3e002ab79c2b3af4e09d7e20be90fa335757b8276e1341b04e503820f",
       "reviewer": "Claude (assistant)",
       "method": "assistant",
       "reviewed_on": "2026-11-01"

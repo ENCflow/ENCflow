@@ -425,6 +425,8 @@ module m_swflow_enc
     ! 他エッジの uv を momentum 内で読んではならない。§7・§8)
     real, allocatable :: tae(:,:,:)
     real :: w8lt(1:4) = 0.0          ! k 方向エッジの運動量検査体積の横断幅
+    real :: cwd = 0.0                ! 斜めエッジの側方面を横切る軸リンク 1 本が面の流束に占める割合
+                                     ! (方向平均。正方セルで p_diagratio/2 = 0.293。§68.43 の開口率)
   end type
   type(t_enc_adv), allocatable :: tx_mod    ! 移流項の私有状態(実装は submodule m_swflow_enc_adv)
 

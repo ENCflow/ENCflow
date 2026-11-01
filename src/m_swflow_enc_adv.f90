@@ -22,6 +22,13 @@ submodule(m_swflow_enc) m_swflow_enc_adv
   integer, parameter :: kdp_n(1:8) = [ 0, 8, 0, 3, 6, 0, 1, 0 ]   ! +t 面、n 側
   integer, parameter :: kdm_c(1:8) = [ 0, 1, 0, 6, 3, 0, 8, 0 ]   ! −t 面、c 側
   integer, parameter :: kdm_n(1:8) = [ 0, 6, 0, 8, 1, 0, 3, 0 ]   ! −t 面、n 側
+  ! 斜めエッジ k(1, 3。側方 Neumann の逆向きは 6, 8)の ±t 側方面を横切る軸リンクの 8 近傍番号
+  ! (c 側は c から面を前方へ横切る軸リンク、n 側は n から後方へ横切る軸リンク。斜めエッジの
+  ! 側方面の開口率に使う。§68.43)。軸エッジ(2, 4, 5, 7)は使わない(0)
+  integer, parameter :: pax_c(1:8) = [ 2, 0, 5, 0, 0, 4, 0, 7 ]   ! +t 面、c 側
+  integer, parameter :: pax_n(1:8) = [ 5, 0, 7, 0, 0, 2, 0, 4 ]   ! +t 面、n 側
+  integer, parameter :: nax_c(1:8) = [ 4, 0, 2, 0, 0, 7, 0, 5 ]   ! −t 面、c 側
+  integer, parameter :: nax_n(1:8) = [ 7, 0, 4, 0, 0, 5, 0, 2 ]   ! −t 面、n 側
   integer, parameter :: dti(1:4) = [ 1, 1, 1, 0 ]
   integer, parameter :: dtj(1:4) = [ -1, 0, 1, -1 ]
 
@@ -45,6 +52,9 @@ module subroutine adv_init(p, g)
     !   循環に移流項が作用しなかった(§68.36。test/sublattice)
     dr = sqrt(g%dx**2 + g%dy**2)
     tx_mod%w8lt(1:4) = [ g%dx * g%dy / dr, g%dx, g%dx * g%dy / dr, g%dy ]
+    ! 斜めエッジの側方面を横切る軸リンク 1 本が面の流束に占める割合(流向の方向平均。
+    ! 正方セルで ldx = ldy = p_diagratio/2 = 0.293。§68.43 の開口率)
+    tx_mod%cwd = 0.5 * (geo%ldx + geo%ldy)
     return
   end if
   allocate(tx_mod%taxy(1:2, dcp%ish:dcp%ieh, dcp%jsh:dcp%jeh), source = 0.0)
@@ -290,16 +300,21 @@ subroutine adv_prepare_mc(p, g, s, sx, tx)
         ! 運動量の注入が深い湛水の縁(段々の棚と溝が壁に挟まれた支谷の口)のヘルムホルツ型
         ! の振動を反減衰にして有限時間で発散した(tutorials/chichibu Step 5 の 5:14 h、
         ! 出口湛水 12 h の 10:42 h。f_opening_dynamic 2 では fwd の分だけ遅いだけ。§68.42)。
-        ! 斜めエッジの側方面は従来のまま(一様流で厳密。斜めが塞がれた面では過小 =
-        ! 散逸側。軸が塞がれ斜めだけ開く面の過大評価は §68.42 の残件)
+        ! 斜めエッジの側方面は従来の ½(mn_c + mn_n)·w8dr(直交する斜めリンク = 同じ族の
+        ! 流量で標本。一様流で厳密。斜めが塞がれた面では過小 = 散逸側)に、面を横切る軸リンク
+        ! の開口率 φ = 1 − cwd × (壁・乾床で塞がれた横切り軸リンクの本数。c 側・n 側の各 1 本)を
+        ! 掛ける。両方塞がれば 0.414 で、斜めリンクだけが開く面の過大評価(従来 2.4 倍)が消える。
+        ! 横切るリンクの実流量の和に置き換える案(軸エッジと同じ式)は、どの定式でも dambreak の
+        ! 段波を 1.5〜5 % 遅らせる(斜めリンクの族の運動量流入が軸リンクの位置で評価されて
+        ! 族ごとに流速が分かれる)ので採らない(§68.43)
         if (k == 2 .or. k == 4) then
           qtp = (0.5 * (qlk(i, j, kkp(k)) + qlk(in, jn, kkp(k))) &
                  + qlk(i, j, kdp_c(k)) + qlk(in, jn, kdp_n(k))) / geo%w8dr(k)
           qtm = (0.5 * (qlk(i, j, kkm(k)) + qlk(in, jn, kkm(k))) &
                  + qlk(i, j, kdm_c(k)) + qlk(in, jn, kdm_n(k))) / geo%w8dr(k)
         else
-          qtp = 0.5 * (mnk(i, j, kkp(k)) + mnk(in, jn, kkp(k)))
-          qtm = 0.5 * (mnk(i, j, kkm(k)) + mnk(in, jn, kkm(k)))
+          qtp = axis_open(i, j, k, 1) * 0.5 * (mnk(i, j, kkp(k)) + mnk(in, jn, kkp(k)))
+          qtm = axis_open(i, j, k, -1) * 0.5 * (mnk(i, j, kkm(k)) + mnk(in, jn, kkm(k)))
         end if
         ! 側方面も同様: 平行な隣接エッジの両セルが有効・湿潤のときだけ
         ! その流速を流入値に使う(壁・乾床側からは ū = u_e)
@@ -516,6 +531,26 @@ contains
     end if
   end function
 
+  ! 斜めエッジ kk(1, 3)の sgn = ±1 側の側方面の開口率 φ(§68.43): 面を横切る軸リンク
+  ! (c 側 1 本、n 側 1 本)の向こうのセルが有効・海でない・湿潤(cell_ok)でなければ、その
+  ! リンクが面の流束に占める割合 cwd(正方セルで 0.293)を 1 から引く。全開で 1、両方塞がれば
+  ! 1 − 2 cwd = 0.414(斜めリンクの帯だけ)
+  pure function axis_open(ci, cj, kk, sgn) result(phi)
+    integer, intent(in) :: ci, cj, kk, sgn
+    real :: phi
+    integer :: kc, kn
+    if (sgn > 0) then
+      kc = pax_c(kk)
+      kn = pax_n(kk)
+    else
+      kc = nax_c(kk)
+      kn = nax_n(kk)
+    end if
+    phi = 1.0
+    if (.not. cell_ok(ci + din(kc), cj + djn(kc))) phi = phi - tx%cwd
+    if (.not. cell_ok(ci + din(kk) + din(kn), cj + djn(kk) + djn(kn))) phi = phi - tx%cwd
+  end function
+
   ! セル (ci, cj) からその kk 近傍へ向かう ENC エッジの実流量 [m³/s](時刻 n。流出が正。
   ! 連続式が水深変化に換算する mn·l8·frw·fwd と同じ = m_swflow_enc_edge_flux の定義。
   ! 確保範囲外は 0)。軸エッジの側方面の流束に使う
@@ -726,8 +761,10 @@ contains
         qtm = (0.5 * (qlk8(ci, cj, km) + qlk8(in, jn, km)) &
                + qlk8(ci, cj, kdm_c(k)) + qlk8(in, jn, kdm_n(k))) / geo%w8dr(k)
       else
-        qtp = 0.5 * (mnk8(ci, cj, kp) + mnk8(in, jn, kp))
-        qtm = 0.5 * (mnk8(ci, cj, km) + mnk8(in, jn, km))
+        ! 斜めの面は従来式 × 横切る軸リンクの開口率(adv_prepare_mc と同じ。§68.43。
+        ! 逆向きの k = 6, 8 の表は pax_*・nax_* に含む)
+        qtp = axis_open8(ci, cj, k, 1) * 0.5 * (mnk8(ci, cj, kp) + mnk8(in, jn, kp))
+        qtm = axis_open8(ci, cj, k, -1) * 0.5 * (mnk8(ci, cj, km) + mnk8(in, jn, km))
       end if
       if (qtp >= 0) then
         ubtp = ue
@@ -881,6 +918,24 @@ contains
       call mirror_cell(ci, cj, mi, mj)
       ok = g%rw(mi,mj) > 0
     end if
+  end function
+
+  ! 斜めエッジ kk(1, 3, 6, 8)の sgn 側の側方面の開口率(adv_prepare_mc の axis_open と同じ。
+  ! 枠外のセルは cell_ok が鏡像で判定する)
+  pure function axis_open8(ci, cj, kk, sgn) result(phi)
+    integer, intent(in) :: ci, cj, kk, sgn
+    real :: phi
+    integer :: kc, kn
+    if (sgn > 0) then
+      kc = pax_c(kk)
+      kn = pax_n(kk)
+    else
+      kc = nax_c(kk)
+      kn = nax_n(kk)
+    end if
+    phi = 1.0
+    if (.not. cell_ok(ci + din(kc), cj + djn(kc))) phi = phi - tx%cwd
+    if (.not. cell_ok(ci + din(kk) + din(kn), cj + djn(kk) + djn(kn))) phi = phi - tx%cwd
   end function
 
   ! 側方面(sgn = ±1 の t 側)の流入流速(adv_prepare_mc の lateral_u を 8 方向に広げたもの)
