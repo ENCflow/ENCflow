@@ -53,7 +53,7 @@ done
 # --- 旧移流スキーム(f_advection_scheme = 1)と、移流項なしの拡散波(局所慣性
 #     方程式。f_govequation = 1)。解像度依存の比較(補足の「結果 3」)。
 #     200 m → 100 m → 50 m の順(50 m は 1 本 40〜70 分)。移流項なしの 50 m は
-#     dt 0.75 s では 43 分で発散する(慣性の制限がなく段差で流速が 60 m/s に達して
+#     dt 0.75 s では 42 分で発散する(慣性の制限がなく段差で流速が 62 m/s に達して
 #     Courant 数 1 を超える)ので dt = 0.4 s にする ---
 for r in 200m 100m 50m; do
   if [ ! -d "result_supp_${r}_s1" ]; then
@@ -66,7 +66,7 @@ for r in 200m 100m 50m; do
   if [ ! -d "result_supp_${r}_s1u" ]; then      # スキーム 1 + 風上化指数 0.1(test/chichibu と同じ値)
     sed -e '/dir_data/i\  fn_enc     = "-"           ! ENC条件設定ファイル' "param_supp_$r.txt" > "wrk_supp_param_${r}_s1u.txt"
     printf '\n&list_enc\n  f_advection_scheme = 1   ! 旧移流スキーム\n  p_adv_upwind_index = 0.1 ! 風上化指数(既定 0.5 より弱い風上化)\n/\n' >> "wrk_supp_param_${r}_s1u.txt"
-    # 風上化 0.1 は数値粘性が小さく、100 m は dt 1.5 s だと 4.6 h(減水期。流出口の湛水 33 m)で
+    # 風上化 0.1 は数値粘性が小さく、100 m は dt 1.5 s だと 4.0 h(減水期。流出口の湛水 33 m)で
     # Courant 数 1 を超えて停止するので、100 m は dt 1.0 s、50 m は 0.5 s にする
     case $r in
       100m) sed -i 's/^  dt = 1.5 /  dt = 1.0 /' "wrk_supp_param_${r}_s1u.txt"; grep -q 'dt = 1.0' "wrk_supp_param_${r}_s1u.txt" ;;

@@ -3200,9 +3200,9 @@
     {
       "source": "tutorials/chichibu/README.md",
       "target": "tutorials/chichibu/en/README.md",
-      "source_sha256": "4d3fa288aa7205c62bd6c28e98868da70d32960ea05ecda2ccf9869ee12c4ba1",
-      "target_sha256": "4448300e08bd038f37895594010b73c496362e2c3327d071ec231a2b94c27490",
-      "reviewer": "Claude (Claude Code session; lateral-flux fix of the momentum-conservative advection, §68.42)",
+      "source_sha256": "d800fcd5491bd09dae91137ee7a5e525e0cc79fe37ff4e226ff78dd031b27b6f",
+      "target_sha256": "f6edb686dadc19289f8091a7e072bff00bdd7680d18df80dd9aa2c0ae64b752c",
+      "reviewer": "Claude (assistant)",
       "method": "assistant",
       "reviewed_on": "2026-11-01"
     },
@@ -3362,38 +3362,38 @@
     {
       "source": "tutorials/chichibu/figs/supp_hend.png",
       "target": "tutorials/chichibu/en/figs/supp_hend.png",
-      "source_sha256": "5e5e1c0d0af9c8c50e587e6b9f675439004109afdf966ac293e22affed1bc121",
-      "target_sha256": "f40e837ae3caf0a448f101f61e6a4d8c11cc163fc835515990c98424a5e1c2bb",
-      "reviewer": "Claude (Claude Code session; visual comparison of both figures: same plot content, English labels)",
+      "source_sha256": "68ed7af6ecf4b18063f5a69e63d77269c8ecf2d2b45607674ff146edac7d331f",
+      "target_sha256": "c431cc5c4a0bd068dfc52d817e850dbd56c7106fcaaf271b3670a183f4d391cc",
+      "reviewer": "Claude (assistant)",
       "method": "assistant",
-      "reviewed_on": "2026-10-24"
+      "reviewed_on": "2026-11-01"
     },
     {
       "source": "tutorials/chichibu/figs/supp_hydro.png",
       "target": "tutorials/chichibu/en/figs/supp_hydro.png",
-      "source_sha256": "610270c1e1bc8a79ce171a3c44486e2fe1284027751a4146a38ede9b8885be96",
-      "target_sha256": "5ebb43c843a7e2776fd824c8e6d12e18893f1ef7c0f26ca3cd76cfc4afec41bc",
-      "reviewer": "Claude (Claude Code session; visual comparison of both figures: same plot content, English labels)",
+      "source_sha256": "b206400fe1a6b9a84d651fc8932aadcd5ef1bfd6258a32ec4ea557ac44e9fcac",
+      "target_sha256": "24a56cc0da6e3985882e7d402908b631a0b7384a6fce0bb945796b903fb2f594",
+      "reviewer": "Claude (assistant)",
       "method": "assistant",
-      "reviewed_on": "2026-10-24"
+      "reviewed_on": "2026-11-01"
     },
     {
       "source": "tutorials/chichibu/figs/supp_hydro_adv.png",
       "target": "tutorials/chichibu/en/figs/supp_hydro_adv.png",
-      "source_sha256": "e2c84e00fba764557a950a6eae30bf396a93a4c00c06b993ac525ceab5ea4e33",
-      "target_sha256": "751d4db88d2add54fd1135ee793cde00e3b72bd2f096012d0d00c67e1207665f",
-      "reviewer": "Claude (Claude Code session; visual comparison of both figures: same plot content, English labels)",
+      "source_sha256": "9b76f09415caa97cdc5704492ebfde980afde46ae14863b0dca3df119ab91820",
+      "target_sha256": "f2adb644dd3a8ebb06621222d018b47440b3ac30c75ebc2f984b63c62e5482c2",
+      "reviewer": "Claude (assistant)",
       "method": "assistant",
-      "reviewed_on": "2026-10-24"
+      "reviewed_on": "2026-11-01"
     },
     {
       "source": "tutorials/chichibu/figs/supp_hydro_w50.png",
       "target": "tutorials/chichibu/en/figs/supp_hydro_w50.png",
-      "source_sha256": "c27722efcdb2d2482d9b7e8e83a55cfeb12cb5dc7a9ffde685fbefe59bceff23",
-      "target_sha256": "02c50f39c95a7fbd20725f50f8067421997397d780767e49276929be0bb8cee4",
-      "reviewer": "Claude (Claude Code session; visual comparison of both figures: same plot content, English labels)",
+      "source_sha256": "6b1b3303a1074e5ae3f23f2a09c72e5ec77de2f03b2ba8dac655c875bc4fe859",
+      "target_sha256": "f1646674b721f4f6dd5aa85bcb53277c68f04505344e21328ce966679cdf35fc",
+      "reviewer": "Claude (assistant)",
       "method": "assistant",
-      "reviewed_on": "2026-10-24"
+      "reviewed_on": "2026-11-01"
     },
     {
       "source": "tutorials/chichibu/figs/supp_transects.png",
