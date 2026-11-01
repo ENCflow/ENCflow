@@ -11654,13 +11654,43 @@ q_t = [½(qlk_c(±t) + qlk_n(±t)) + qlk_c(±t,+k) + qlk_n(±t,−k)] / w8dr。�
   L1 h 0.0063 / u 0.0210。列間ばらつき 1.95 → 1.98 m)、bendloss は Log 同一、uniflow 7 構成 PASS
   (1 列水路の 4 構成は Log 同一、5 列は壁際の行が動く)、sublattice PASS(市松の減衰時定数は
   alternating 87 s で不変、mixed 2246 → 1609 s)、inflowadv PASS、sedfeed の台帳 6.000000000 で
-  PASS(開境界の掃流砂の流出 77.1 → 75.8 m³)、wave は 4 回対称を出力精度で維持し h_max の列が
+  PASS(開境界の掃流砂の流出 77.1 → 75.8 m³)、wave は 4 回対称を出力精度で維持し V_max の列が
   reference と 2.5e-3。test/chichibu(100 m)は瞬時最大の列で 11 % 動く(Q_max 51.8 → 45.9 m²/s)。
 - reference と MPI・-fcheck の結果は本節末尾の記録のとおり。
 
 **残件**: (1) 斜めエッジの側方面は、軸リンクが塞がれて斜めだけが開く面(壁を斜めに横切る河道など)
 で同じ過大評価(最大 1/l8_d·½ = 3.4 倍)を残す。壁沿いの斜め検査体積の帯の掛かり方を含めた
 整合化は別途。(2) 例題の README の数値は本修正前の既定 3 で生成したものが残る(handoff)。
+
+**記録**(reference・MPI・-fcheck。2026-11-01。gfortran 13.3 / OpenMPI 4.1.6):
+- 逐次回帰(test/ の全 87 ケース、2 スレッド): reference を持つ 36 ケースのうち 20 は同一または
+  許容内、16 は Log が変わったので承認のうえ更新した(下表。「不一致」は Compare_ref の既定許容
+  ULP=1・RTOL=1e-6 を超えた要素数と最大相対差、矢印は旧 → 新)。reference を持たない 51 ケースの
+  自己検定は全て PASS。
+  | ケース | Log.txt の不一致 | 他のファイル |
+  |---|---|---|
+  | chichibu | 141 / 1.1e-1(Q_max 51.79 → 45.94 m²/s) | — |
+  | chichibu_icmap | 19 / 4.2e-2(Q_max 16.98 → 16.27) | — |
+  | coastal_drain | 83 / 9.7e-3(V_max の末尾桁) | — |
+  | culvert | 279 / 1.9e-2(V_max 0.0465 → 0.0456) | — |
+  | dambreak | 88 / 7.0e-3(Q_max 35.87 → 36.12) | — |
+  | damwq | 12 / 2.0e-1(退水時の V_max 0.0140 → 0.0175 m/s) | wq.csv 12 / 8.7e-7 |
+  | gwseep | 23 / 9.7e-1(退水時の V_max 0.0957 → 0.0024 m/s) | wq.csv 36 / 1.1e-2 |
+  | kdpart | 13 / 6.5e-4(V_max) | wq.csv 35 / 6.4e-5 |
+  | nhbreak | 69 / 1.0(ex_flux の件数 0 → 4 など整数列) | — |
+  | nhcurrent | 118 / 5.2e-4(V_max) | — |
+  | sewer_wq | 5 / 5.0e-2(V_max 0.0040 → 0.0038) | wq.csv 44 / 1.1e-2 |
+  | tide | 70 / 1.4e-2(V_max 1.645 → 1.668) | — |
+  | wave | 13 / 2.5e-3(V_max 0.6027 → 0.6042) | — |
+  | wfcurrent | 2 / 1.3e-3(V_max) | v9998.txt 128 / 1.7e-2(E9998 は許容内) |
+  | wfdoppler | 6 / 1.2e-9(S) | wavefield.csv 28 / 6.4e-1(1e-6 台の残差列。Wh9998・u9998 は同一) |
+  | wfsed | 2 / 9.0e-4(V_max) | Z9998・Hs9998 は同一 |
+- -fcheck=all(debug ビルド、np=2): Step 5(3)は 6 h 完走(h_max 28.7803 m、V_max 4.9946 m/s)、
+  12 h の池も完走(h_max 34.3767 m、V_max 2.8254 m/s)。実行時エラー・クーラン数超過なし。
+- MPI(Run_MPI.sh を np=1, 2, 4 で実行し、逐次 reference または逐次結果と比較): dambreak は
+  np=1, 2, 4 とも reference と同一、sublattice は np=1, 2, 4 とも逐次結果とビット一致、uniflow は
+  np=1, 2 の 7 構成 PASS(uniflow np=4 と tide・culvert・chichibu・sedfeed・gwseep・wave・coastal_drain・
+  inflowadv は実行中。完了後に追記)。
 
 ## 69. 非静水圧(1 層 NH)拡張の設計決定(2026-10-05 合意。実装は段階的)
 
