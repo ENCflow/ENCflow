@@ -426,9 +426,10 @@ place it offshore of the area of interest.
 **River-mouth deltas** - the process in which a river entering still water
 builds a mouth bar, bifurcates, grows lobes and switches channels can be
 computed with settings alone, representing the sea as ordinary cells + an
-initial water level as above and supplying both sand and mud (the record of
-the trials and the expected results are in [docs/delta_plan.md](../../delta_plan.md),
-Japanese). Minimal set-up: a flat basin of ordinary cells 1.5-2 m deep
+initial water level as above and supplying both sand and mud (see the example
+[examples/delta](../../../examples/delta/en/README.md), which also explains which mechanisms each
+type of delta needs and gives the expected results). Minimal set-up: a flat
+basin of ordinary cells 1.5-2 m deep
 (f_htype=2, e0 = sea level), the far edge as a long-wave radiation boundary
 (f_bc=2), a dug channel between dry non-erodible land (sd=0) with a section
 inflow Q and a mud concentration inflow_cs (volume concentration
@@ -1142,7 +1143,7 @@ holes shorter than σ also shadow weakly (developer.md §84.15).
 **`wave_vmax` is required at river mouths with a mobile bed**: once the
 river's flow depth exceeds h_b the channel itself becomes a wave source,
 longshore transport acts on bars and riffles inside the channel and the run
-diverges (examples/delta/README.md, "waves"). With `wave_vmax` set, cells
+diverges ("Notes" in examples/delta/README.md). With `wave_vmax` set, cells
 whose speed exceeds it are neither a source nor surf zone, so waves do not
 enter the channel. Put the value between the river's flow speed and the speed
 on the shoreline band (check the V output; e.g. 0.5 for 0.8 m/s in the channel
@@ -1575,7 +1576,7 @@ When the type of phenomenon is known, start from the following
 | Lahar (volcanic mudflow) | f_dbed=1 or 2 + f_dbres=4 (fine) / 1; 3+3 when boulder-dominated | 0.05-0.1 | 500-1000 | - | 0.001-0.01 | 30-35 | Initiated by erosion of the ash layer (sd), a sediment-laden segment inflow or a breach chain. f_dbwet=1 recommended (2 with infiltration). Set dd to about 0.2 mm when starting from sheet flow on slopes. The Egashira laminar law is not usable for fine material. See the "Lahars" paragraph above and [examples/ashfall_lahar](../../../examples/ashfall_lahar/en/README.md) |
 | Simple debris flow (calibration-driven) | f_dbed=1 + f_dbres=1 | - | - | - | - | 30-35 | Calibrate the runout with delta_e and delta_d |
 | Bed change of a sand-bed river | f_fluvial (+ f_suspend) | - | - | - | 0.0003-0.001 | - | Large contribution of suspended load |
-| River-mouth delta | f_fluvial (capacity feed) + f_suspend (inflow concentration) + f_bedfines + fluv_slope + f_repose (+ f_fixation) | - | - | - | sand 0.0005; mud via susp_wf = 1e-3 m/s | 30 | Sea as ordinary cells + initial water level. A mud concentration of 0.0002-0.001 separates fan and bird-foot. morfac 100-200. docs/delta_plan.md |
+| River-mouth delta | f_fluvial (capacity feed) + f_suspend (inflow concentration) + f_bedfines + fluv_slope + f_repose (+ f_fixation) | - | - | - | sand 0.0005; mud via susp_wf = 1e-3 m/s | 30 | Sea as ordinary cells + initial water level. A mud concentration of 0.0002-0.001 separates fan and bird-foot. morfac 100-200. examples/delta |
 | Bed change of a gravel-bed river | f_fluvial | - | - | - | 0.02-0.1 | - | Bedload dominates |
 | Long-term landform evolution | f_creep + f_wthr + f_uplift | - | - | - | - | - | creep_d 0.001-0.05 m²/yr, p0 10-100 mm/kyr, uplift 0.1-5 mm/yr. Together with morfac |
 | Bedrock incision in mountain streams | f_fluvial + f_rockinc (+ f_wthr + f_uplift + f_creep) | - | - | - | 0.01-0.1 | - | H* from the grain size to the bed relief (a few cm to tens of cm). Calibrate k_p and τ_c (mind the bias of τ_b on steep slopes). Bare rock via a zero soil-thickness file. Soil supply from the slopes by creep with creep_hstar > 0 (calibrate H_c). docs/mountain_stream_plan.md |

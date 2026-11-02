@@ -469,7 +469,7 @@ The formulas, coefficients and mapping to the grid are in the
 - The amounts moved are printed at the end (solid volume moved onto the dry foreshore, volume
   moved off it, and the sum of the absolute volumes the longshore flux passed through faces; per
   rank).
-- Example: wfsed of [examples/delta](../../../examples/delta/en/README.md) ("Coastal wave field" in its
+- Example: wfsed of [examples/delta](../../../examples/delta/en/README.md) ("Stage 5" in its
   README). The swash-zone transport makes the emerged land about 1.4 times larger and piles the
   land up to the height the swash reaches (the edges of the land are ragged at the scale of one
   cell).
