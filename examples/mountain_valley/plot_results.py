@@ -202,6 +202,8 @@ def channel_cases():
 def fig_channel():
     fig, ax = plt.subplots(1, 2, figsize=(10, 4))
     for case, col, lab, lat in channel_cases():
+        if case.endswith("_tp"):
+            continue                            # 補足構成(渓流が埋まる)は図に入れない(数表のみ。README)
         g = vgrid(case)
         xs, ss, hs = channel(case, vk(case, T_RUN))
         prof = c1_profile(g, lat, tp=case.endswith("_tp"))

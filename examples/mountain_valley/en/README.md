@@ -60,6 +60,7 @@ simultaneous progress.
 | `param_V_b.txt` | Weathering and depth-dependent creep on the hillslopes (full coupling) |
 | `param_V_c.txt` | Continuation of V_b (200,000 to 300,000 calendar years). The outlet row is lowered at the uplift rate U (base-level fall; multiplier −1 in `up_drop.txt`) |
 | `param_V_b2.txt` | V_b with Δx = 2 m (21 × 100 cells; the stream is also 2 m wide; resolution check) |
+| `param_V_a_tp.txt` | Supplement: V_a plus the resistance partitioning on steep gravel beds (f_taupart = 1, D84 = 2.2 d50), starting from an initial stream slope of 0.15 (`z_init_tp.txt`; see the supplement below) |
 
 | File | Contents |
 |---|---|
@@ -76,6 +77,7 @@ python3 make_init.py                   # writes the inputs and param_*.txt (iden
 cp -r save_V_b save_V_c                       # V_c restarts from the save of V_b
 ./encflow param_V_c.txt > Screen_V_c.log      # about 3 minutes
 mpirun -np 4 ./encflow_mpi param_V_b2.txt > Screen_V_b2.log   # Δx = 2 m (about 30 minutes with 4 ranks)
+./encflow param_V_a_tp.txt > Screen_V_a_tp.log   # supplement (about 10 minutes)
 python3 plot_results.py en | tee analysis.txt # figures and tables (python3 plot_results.py for the Japanese figures)
 ```
 
@@ -146,6 +148,33 @@ Recomputed on 2026-11-02 with the default after the correction of the lateral fa
   (developer.md §89.25), a step pattern decaying downstream formed below the
   head through the effect of the inflow cell, and the comparison was made more
   than about 40 m below the head (§89.6).
+
+### Supplement: with the resistance partitioning on steep gravel beds (V_a_tp)
+
+V_a_tp adds `f_taupart = 1` to V_a (the partitioning that multiplies the τ* passed to
+the transport formula by the relative-depth factor of h/D84; D84 = 2.2 d50 = 6.6 cm;
+[explanation](../../../docs/en/users_guide/sediment.md) §3, developer.md §89.30), and
+only the initial slope of the valley floor is set to 0.15, close to the C1 prediction
+(0.13–0.18) (`z_init_tp.txt`). The flood of this stream (0.125 m²/s per unit width,
+uniform depth 7–11 cm) has h/D84 ≈ 1.1–1.7, so the factor is 0.24–0.36.
+
+| Configuration | Stream slope (excluding the head row) | Prediction (C1) | Cover | Plucking (200 kyr) | Bed load at the outlet |
+|---|---|---|---|---|---|
+| V_a_tp with partitioning, initial slope 0.15 | 0.124 to 2.70 (a step just above the outlet row) | 0.134 to 0.178 | 1.2 to 1.8 m | 1,853 m³ (12 % of V_a) | 9 m³ (0.1 % of V_a) |
+
+- With the partitioning this stream cannot carry its plucked rock. The τ* with the
+  factor stays near the threshold (0.054 against 0.05) at a slope of 0.15 and hardly
+  grows with the slope (in uniform flow τ* ∝ S^0.7, but the factor falls as the flow
+  gets shallower, and for h < D84, φ τ* ∝ S^0.33). The cover grows thicker than 1 m,
+  plucking stops, and a step forms between the valley floor lifted by the uplift and
+  the fixed outlet row. Starting from the topography of V_a (slope 0.04) gives the
+  same (cover 1.0–1.4 m, plucking 828 m³); the steady root of the C1 equation
+  (0.13–0.18) is not reached (there is no way back from a thick cover).
+- So the steady slope of 0.029 and the result "incision is mostly plucking" of this
+  example rest on evaluating the transport with the total-resistance τ*. With the
+  partitioning, the combination of flood discharge, grain size and slope has to be
+  reconsidered. This is recorded as the largest uncertainty of stage 1 in
+  docs/mountain_stream_plan.md §6.3 and §14 (not included in the figure).
 
 ### Resolution (Δx = 2 m)
 
