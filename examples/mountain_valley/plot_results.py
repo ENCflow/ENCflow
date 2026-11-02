@@ -11,7 +11,7 @@
 #   C4: 研磨だけの定常は β q (1 − q/q_c(S)) = U(準定常のパルスは給砂中の半分の時間だけ)
 import sys, os, math, struct, re
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
-from make_init import (Grid, CASES, T_RUN, T_OUT, T_DROP, F_FLOOD, YR, S0, QF, N, D50, LAM, HSTAR, KP, TAUC,
+from make_init import (Grid, CASES, CASE_S0, T_RUN, T_OUT, T_DROP, F_FLOOD, YR, S0, QF, N, D50, LAM, HSTAR, KP, TAUC,
                        PM, BETA, UPLIFT0, WTHR_P0, CREEP_D, SDSTAR, HC, HILL_L,
                        P_CASES, P_NX, P_NY, P_DX, P_N, P_D50, P_HSTAR, P_U, P_KP, P_TAUC, P_PM, P_BETA,
                        P_QC0, P_RM, P_SHORT, P_LONG, P_TGEO, P_DTG, P_Q)
@@ -51,7 +51,7 @@ def bil(case, name, k, nx, ny):
 
 
 def vgrid(case):
-    return Grid(CASES[case][1])
+    return Grid(CASES[case][1], s0=CASE_S0.get(case, S0), tag=("_tp" if case in CASE_S0 else ""))
 
 
 def vbil(case, name, k):

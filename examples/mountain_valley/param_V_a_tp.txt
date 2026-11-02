@@ -1,5 +1,5 @@
 !======================================================================
-! examples/mountain_valley 構成 V_a_tp: V_a に急勾配礫床の抵抗分割を加える(f_taupart = 1、D84 = 2.2 d50。補足)
+! examples/mountain_valley 構成 V_a_tp: V_a に急勾配礫床の抵抗分割を加え、初期の谷底の勾配を C1 の予測に近い 0.15 にする(f_taupart = 1、D84 = 2.2 d50。補足)
 !   make_init.py が生成(定数は make_init.py・plot_results.py と対で保守)。暦の時間 0〜200000 年
 !   (出水の時間 = 暦の時間 × 300 s/年、流れの時間 = 出水の時間 / morfac)
 !======================================================================
@@ -30,8 +30,8 @@
 
 &list_initial
   f_htype = 1
-  fn_hinit = 'h_init.txt'   ! 渓流は初期勾配の等流水深
-  v0 = 1.143263             ! 等流流速(南向き = j の増える向き)
+  fn_hinit = 'h_init_tp.txt'   ! 渓流は初期勾配の等流水深
+  v0 = 1.699634             ! 等流流速(南向き = j の増える向き)
 /
 
 &list_geoinfo
@@ -40,11 +40,11 @@
   nx = 11
   ny = 50
   f_ztype = 1
-  fn_z = 'z_init.txt'       ! 裸岩の V 字(谷底の勾配 0.04、斜面の勾配 0.25)
+  fn_z = 'z_init_tp.txt'       ! 裸岩の V 字(谷底の勾配 0.15、斜面の勾配 0.25)
   f_rntype = 0
   rn0 = 0.04
   f_sdtype = 1
-  fn_sd = 'sd_zero.txt'     ! 裸岩から
+  fn_sd = 'sd_zero_tp.txt'     ! 裸岩から
   sy0 = 0.2
 /
 
@@ -65,11 +65,11 @@
   rock_m = 1.5
   rock_beta = 6.60e-04       ! 研磨係数 (1/m)
   rock_hstar = 0.2          ! 被覆の長さ H* (m)
-  fn_rock = 'rock_base.txt' ! 出口の行は侵食しない(基準面)
+  fn_rock = 'rock_base_tp.txt' ! 出口の行は侵食しない(基準面)
   ! 斜面の風化・クリープなし(構成 V_a)
   f_uplift = 1
   uplift0 = 10519.2000       ! 隆起 (mm/yr) = 0.1 mm/yr / i_f
-  fn_uplift = 'up_base.txt'
+  fn_uplift = 'up_base_tp.txt'
 /
 
 &list_bound_edge

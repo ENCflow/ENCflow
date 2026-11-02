@@ -36,14 +36,15 @@ GRIDS = {"4m": (4.0, 0.5, 100.0), "2m": (2.0, 0.25, 80.0)}
 
 
 class Grid:
-    def __init__(self, key):
+    def __init__(self, key, s0=S0, tag=""):
         self.key = key
+        self.s0 = s0                                # 初期の谷底の勾配(補足構成 V_a_tp は CASE_S0)
         self.dx, self.dt, self.morfac = GRIDS[key]
         self.lh = int(round(HILL_L / self.dx))     # 片側の斜面のセル数
         self.nx = 2 * self.lh + 1
         self.ny = int(round(VAL_LEN / self.dx))
         self.ic = self.lh + 1                       # 渓流の列
-        self.sfx = "" if key == "4m" else "_" + key
+        self.sfx = ("" if key == "4m" else "_" + key) + tag
 
     def q_unit(self):
         return QF / self.dx
@@ -53,7 +54,7 @@ class Grid:
         return h, self.q_unit() / h
 
     def zch(self, j):
-        return Z0 + S0 * (self.ny - j + 0.5) * self.dx
+        return Z0 + self.s0 * (self.ny - j + 0.5) * self.dx
 
     def z_init(self, i, j):
         return self.zch(j) + SH * self.dx * abs(i - self.ic)
@@ -71,7 +72,7 @@ class Grid:
         g = self
         return {
             "z_init%s.txt" % g.sfx: (g.z_init, "%.6f"),
-            "h_init%s.txt" % g.sfx: (lambda i, j: g.uniform(S0)[0] if i == g.ic else 0.0, "%.6f"),
+            "h_init%s.txt" % g.sfx: (lambda i, j: g.uniform(g.s0)[0] if i == g.ic else 0.0, "%.6f"),
             "sd_zero%s.txt" % g.sfx: (lambda i, j: 0.0, "%.1f"),
             # 隆起の倍率: 出口の行は 0(基準面)/ 構成 V_c は出口の行が −1(基準面の低下)
             "up_base%s.txt" % g.sfx: (lambda i, j: 0.0 if j == g.ny else 1.0, "%.1f"),
@@ -89,14 +90,17 @@ CASES = {
     "V_b": ("斜面の風化・深さ依存クリープあり(完全連成)", "4m", True, "up_base", 0.0, T_RUN, False),
     "V_c": ("V_b の続き。出口の行を隆起の速さで下げる(基準面の低下)", "4m", True, "up_drop", T_RUN, T_RUN + T_DROP, True),
     "V_b2": ("V_b を Δx = 2 m で(解像度の確認。渓流の幅も 2 m)", "2m", True, "up_base", 0.0, T_RUN, False),
-    "V_a_tp": ("V_a に急勾配礫床の抵抗分割を加える(f_taupart = 1、D84 = 2.2 d50。補足)", "4m", False, "up_base", 0.0, T_RUN, False),
+    "V_a_tp": ("V_a に急勾配礫床の抵抗分割を加え、初期の谷底の勾配を C1 の予測に近い 0.15 にする(f_taupart = 1、D84 = 2.2 d50。補足)", "4m", False, "up_base", 0.0, T_RUN, False),
 }
+# 補足構成の初期の谷底の勾配(入力の地形 z_init_tp.txt 等を別に書く)。V_a の地形(0.04)から始めると、分割で
+# 容量が小さく被覆が 1 m 以上に厚くなって剥離が止まり、20 万年では定常に達しない(developer.md §89.30)
+CASE_S0 = {"V_a_tp": 0.15}
 
 
 def write_param(name):
     desc, gkey, hill, upmap, t0, t1, restart = CASES[name]
-    g = Grid(gkey)
-    h0, v0 = g.uniform(S0)
+    g = Grid(gkey, s0=CASE_S0.get(name, S0), tag=("_tp" if name in CASE_S0 else ""))
+    h0, v0 = g.uniform(g.s0)
     hill_lines = """  f_creep = 1
   creep_d = {cd:.6e}       ! クリープ D (m2/s) = {dc} m2/yr / {ff:g} s(出水の時間/年)
   creep_hstar = {hc}         ! 深さ依存クリープの減衰厚 H_c (m)
@@ -192,7 +196,7 @@ def write_param(name):
 /
 """.format(name=name, desc=desc, t0=t0, t1=t1, ff=F_FLOOD, dt=g.dt, ft1=g.flow_time(t1),
            fout=g.flow_time(T_OUT), rst=rst, v0=v0, lx=g.nx * g.dx, ly=g.ny * g.dx, nx=g.nx, ny=g.ny,
-           s0=S0, sh=SH, n=N, mf=g.morfac, dts=g.dt * g.morfac, d50=D50, lam=LAM, kp=KP, tauc=TAUC, pm=PM,
+           s0=g.s0, sh=SH, n=N, mf=g.morfac, dts=g.dt * g.morfac, d50=D50, lam=LAM, kp=KP, tauc=TAUC, pm=PM,
            beta=BETA, hs=HSTAR, hill=hill_lines, up=UPLIFT0, uc=U_CAL, upmap=upmap, sfx=g.sfx, ic=g.ic, qf=QF,
            tp=("  f_taupart = 1             ! 急勾配礫床の抵抗分割(developer.md §89.30。D84 = 2.2 × fluv_d50)\n" if name.endswith("_tp") else ""))
     open("param_%s.txt" % name, "w").write(txt)
@@ -358,6 +362,10 @@ def write_param_p(name):
 if __name__ == "__main__":
     for gkey in GRIDS:
         g = Grid(gkey)
+        for fn, (f, fmt) in g.maps().items():
+            g.write(fn, f, fmt)
+    for name, s0 in CASE_S0.items():
+        g = Grid(CASES[name][1], s0=s0, tag="_tp")
         for fn, (f, fmt) in g.maps().items():
             g.write(fn, f, fmt)
     for name in CASES:
