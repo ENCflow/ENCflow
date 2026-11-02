@@ -73,7 +73,7 @@ for name, rr in rows.items():
     ax[2].plot(TS, [r["mean_inc"] for r in rr], "o-", ms=3, label=name + T(" 崖面帯の平均低下", " mean lowering of the cliff-face belt"))
     ax[2].plot(TS, [r["max_inc"] for r in rr], "s--", ms=3, label=name + T(" 最大下刻", " maximum incision"))
     ax[3].plot(TS, [r["xhead"] for r in rr], "o-", ms=3, label=name)
-ax[0].set_ylabel(T("崖面帯の y 方向起伏 (m)", "y-direction relief of the cliff-face belt (m)")); ax[1].set_ylabel("(m)"); ax[2].set_ylabel("(m)"); ax[3].set_ylabel(T("谷頭の位置 x (m)(台地縁 60 m)", "valley-head position x (m) (plateau edge at 60 m)"))
+ax[0].set_ylabel(T("崖面帯の y 方向起伏 (m)", "y-direction relief of the cliff-face belt (m)")); ax[1].set_ylabel("(m)"); ax[2].set_ylabel("(m)"); ax[3].set_ylabel(T("谷頭の位置 x (m)(台地縁 60 m)", "valley-head position x (m)\n(plateau edge at 60 m)"))
 for a in ax:
     a.set_xlabel("T_geo (s)"); a.legend(fontsize=7)
 fig.tight_layout(); fig.savefig(f"{FIGDIR}/series%s.png" % SUF, dpi=110); plt.close(fig)
