@@ -450,7 +450,10 @@ combine alternating floods and low flows with `f_fixation=1`, set `fix_tdec`
 (decay while submerged) to about the duration of a flood and `fix_ctau_bank`
 below the bed c_tau (without the decay an exposed bar becomes permanent and the
 distributaries collapse to grid-width channels). Resolve the distributaries
-with at least width/5 cells.
+with at least width/5 cells. To add a tide, place a strip of sea mask along the offshore side and give
+the [tide level](tide.md) (fn_tide), and lower morfac so that the landform
+change in one tidal cycle stays small (the example uses 5 tidal cycles with
+morfac 24). Make the sides crossing the coast lateral Neumann (f_bc = 3).
 
 **Outputs for this section**: sediment in transport in `Hs0001...` (`f_out_hs=1`), volume concentration Hs / (H + Hs), deposition in `Z0001...`. Point time series in the probe column `hs`; maximum flow depth and fluid force in `D9999` and `F9999` ([Output and monitoring](#output-and-monitoring)).
 

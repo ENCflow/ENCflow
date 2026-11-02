@@ -40,7 +40,7 @@ python3 plot_results.py   # 図化(用意されている例題のみ)
 | [qanat/](qanat/) | 山麓の扇状地の地下水を集めるカナート(横坑)の湧出と、近くの揚水井でそれが細り枯れる過程を見る | 管路連続体層 f_gwconduit(交換能のマップ fn_gwc_leak・開放の吐口 fn_gwc_outfall)、層2 f_gwlayer2、井戸揚水 f_gwpump |
 | [meander/](meander/) | 氾濫原の正弦波状の河道が蛇行を発達させる過程。外岸の後退、内岸砂州の成長・定着と氾濫原化を見る | 掃流砂の方向補正 fluv_slope・f_secflow、側岸侵食 f_berode、安息角崩落 f_repose、定着 f_fixation、給砂 |
 | [meander_cutoff/](meander_cutoff/) | 頸部の狭い蛇行ループが出水で短絡(ショートカット)し、旧河道が滞水域になって出入口が埋まり始める過程を見る | 同上 + 区間流入の時系列 |
-| [delta/](delta/) | 給砂河川が海盆に突入して作る河口デルタ。波のない河口から始めて、砂泥比・出水と植生・斜めの波・波浪場を一つずつ加え、デルタの型ごとに要る機構と形の違いを見る | 海は通常セル+初期水位、容量給砂 fluv_bcfeed、浮遊泥 inflow_cs + f_bedfines、fluv_slope、f_repose、f_fixation(fix_tdec・fix_ctau_bank)、沿岸漂砂 fn_wave、沿岸の波浪場 fn_wavefield(f_wfsed・f_wfswash) |
+| [delta/](delta/) | 給砂河川が海盆に突入して作る河口デルタ。波のない河口から始めて、砂泥比・出水と植生・斜めの波・波浪場・潮汐を一つずつ加え、デルタの型ごとに要る機構と形の違いを見る | 海は通常セル+初期水位、容量給砂 fluv_bcfeed、浮遊泥 inflow_cs + f_bedfines、fluv_slope、f_repose、f_fixation(fix_tdec・fix_ctau_bank)、沿岸漂砂 fn_wave、沿岸の波浪場 fn_wavefield(f_wfsed・f_wfswash)、潮位 fn_tide |
 | [bedrock_cover/](bedrock_cover/) | 山地渓流の岩盤河道で、給砂の量・時期・初期の被覆が下刻を促すか妨げるか(道具と被覆の効果)を見る | 流水による岩盤下刻 f_rockinc(剥離・被覆・研磨)、掃流砂 f_fluvial、区間流入の給砂 inflow_qb |
 | [mountain_valley/](mountain_valley/) | 隆起する山地の V 字谷で、風化・クリープの斜面と岩盤下刻の渓流を同時に動かし、定常の谷の形を見る | 風化 f_wthr(fn_wthr)、深さ依存クリープ creep_hstar、流水による岩盤下刻 f_rockinc、掃流砂 f_fluvial、分布隆起 fn_uplift |
 | [debris_bedrock/](debris_bedrock/) | 渓流に流した土石流が岩盤をどこでどれだけ削るか、土石流の頻度が渓流の定常勾配をどう変えるかを見る | 土石流 f_debris(高橋・中川、クーロン + Manning)、土石流による岩盤侵食 f_rockinc の rock_kdb |
@@ -66,7 +66,7 @@ ENCflow の特徴である「複数プロセスを 1 つの計算で連鎖させ
 - 斜面崩壊 → 水域突入 → 津波: [landslide_tsunami/](landslide_tsunami/)。
 - 洪水 → 越水 → 破堤 → 氾濫 → 家屋の流失(二線堤で止める): [levee_breach/](levee_breach/)。
 - 潮汐 → 塩水くさびの遡上 → 河床からの浸透 → 岸の地盤の塩水化(河口堰で遮断): [estuary_barrage/](estuary_barrage/)。
-- 給砂 → 河口砂州 → 分岐 → ローブ → 植生の定着・波の沿岸漂砂でデルタの形が変わる: [delta/](delta/)。
+- 給砂 → 河口砂州 → 分岐 → ローブ → 植生の定着・波の沿岸漂砂・潮汐でデルタの形が変わる: [delta/](delta/)。
 - 降雨 → 下水道(管路)→ 噴出・排水: [sewer_hybrid/](sewer_hybrid/)。
 - 山からの涵養 → 扇状地の地下水 → カナートの集水・湧出(揚水井で細る): [qanat/](qanat/)。
 - 1 機能だけの解析解ベンチマーク: [benchmark/](benchmark/)。

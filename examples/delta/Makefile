@@ -1,5 +1,5 @@
 # ENCflow/examples/delta/Makefile
-#   make        ../../bin/ の実行ファイルへのリンクを作り、入力(z_*.txt, sd_*.txt)を生成する
+#   make        ../../bin/ の実行ファイルへのリンクを作り、入力(z_*.txt, sd_*.txt, sw_tide.txt, tide_m2.txt)を生成する
 #   make clean  リンクと生成物を削除する
 
 TOPDIR	= ../..
@@ -9,13 +9,19 @@ CASES	= base sand mud varq fix wave baseqb
 
 all: links inputs
 
-inputs: $(foreach c,$(CASES),z_$(c).txt sd_$(c).txt)
+inputs: $(foreach c,$(CASES),z_$(c).txt sd_$(c).txt) sw_tide.txt tide_m2.txt
 
 z_%.txt: make_init.py
 	@python3 make_init.py $* z > $@
 
 sd_%.txt: make_init.py
 	@python3 make_init.py $* sd > $@
+
+sw_tide.txt: make_init.py
+	@python3 make_init.py tide sw > $@
+
+tide_m2.txt: make_init.py
+	@python3 make_init.py tide tide > $@
 
 links:
 	@if [ ! -e $(BINDIR)/encflow ] && [ ! -e $(BINDIR)/encflow_mpi ]; then \
@@ -30,6 +36,6 @@ install: all
 
 clean:
 	rm -rf result_* save_*
-	rm -f encflow encflow_mpi a.out Screen*.log z_*.txt sd_*.txt timeseries_*.csv
+	rm -f encflow encflow_mpi a.out Screen*.log z_*.txt sd_*.txt sw_tide.txt tide_m2.txt timeseries_*.csv
 
 .PHONY: all links inputs install clean

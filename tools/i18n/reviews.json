@@ -58,9 +58,9 @@
     {
       "source": "docs/comparison.md",
       "target": "docs/en/comparison.md",
-      "source_sha256": "b42b1808eba109b547ac21ecd203dc9607ec2b298e90220ae24fa7b5a31bd2d0",
-      "target_sha256": "d88aa22fc539454bb7a5f08fc0a78c42e0e5abf4e8aa2ccbfd923112275aaa9c",
-      "reviewer": "Claude (Claude Code session; the changed delta references (example link, renamed README sections) compared in both languages; the rest is unchanged from the recorded version)",
+      "source_sha256": "e18a9e58912edbefbd361fcea1e2f9d6cdc6550c96c5dd0506166bb526dffdf3",
+      "target_sha256": "87d42407790466dc634c4065a4b4095aaa0c0349f246381aee9b6ca9d1a050e7",
+      "reviewer": "Claude (Claude Code session; the delta/tide sentences changed in both languages compared; the rest is unchanged from the recorded version)",
       "method": "assistant",
       "reviewed_on": "2026-11-02"
     },
@@ -266,9 +266,9 @@
     {
       "source": "docs/users_guide/geomorph.md",
       "target": "docs/en/users_guide/geomorph.md",
-      "source_sha256": "ed72e59727f958ee88a5fa35862565e2ff314e61fb1d9dbae5eb2b279a694a49",
-      "target_sha256": "d21c03fc72f38e81309c50aff06e1f5f8c683a778691b4260087e808d439b2cb",
-      "reviewer": "Claude (Claude Code session; the changed delta references (example link, renamed README sections) compared in both languages; the rest is unchanged from the recorded version)",
+      "source_sha256": "3a5820ae4628d60eb1c7c485eb5bd13b7f873a96c5c3d05812a9f2a821e598ed",
+      "target_sha256": "53c22d4c67178decd0fca6592768aeb0ce32ad4e476f745c0f16b3577068bb55",
+      "reviewer": "Claude (Claude Code session; the delta/tide sentences changed in both languages compared; the rest is unchanged from the recorded version)",
       "method": "assistant",
       "reviewed_on": "2026-11-02"
     },
@@ -482,9 +482,9 @@
     {
       "source": "docs/users_guide/usecases.md",
       "target": "docs/en/users_guide/usecases.md",
-      "source_sha256": "e0d4bb580287eb9b93d8db88d34e35d33caafab5bb6698b0a09dca52a87f6af9",
-      "target_sha256": "a464e34d3a58b77af13ad9e406143dcae6f27b3453f2eaba7cbbe7c4bda2013a",
-      "reviewer": "Claude (Claude Code session; the changed delta references (example link, renamed README sections) compared in both languages; the rest is unchanged from the recorded version)",
+      "source_sha256": "f65590625da0a19da76c7304d2e25daac1083f7779ae14806635d00ce55124c6",
+      "target_sha256": "deb76fc2c430a5eebefb98c92b6f0b1037a53ee10c4d3282149e719217eed1dc",
+      "reviewer": "Claude (Claude Code session; the delta/tide sentences changed in both languages compared; the rest is unchanged from the recorded version)",
       "method": "assistant",
       "reviewed_on": "2026-11-02"
     },
@@ -806,9 +806,9 @@
     {
       "source": "examples/README.md",
       "target": "examples/README.en.md",
-      "source_sha256": "d8ebe96b19ed976e30e75899157d913c4341915a0b584ea6a43ae0978982ac11",
-      "target_sha256": "dc0ce164690958768993e28f1958b30fa0769b33e64ca3d8d62870e58a09df7d",
-      "reviewer": "Claude (Claude Code session; the changed delta references (example link, renamed README sections) compared in both languages; the rest is unchanged from the recorded version)",
+      "source_sha256": "ea63ec0f5e9d327ebb73290778d3e53e38f0caaf9abedd61a2cad61ed5551ad3",
+      "target_sha256": "63a47892dd3cc76c4b560dd647cc751e6b11699c9e62ad3ec7e68eb8cc6a6a5b",
+      "reviewer": "Claude (Claude Code session; the delta/tide sentences changed in both languages compared; the rest is unchanged from the recorded version)",
       "method": "assistant",
       "reviewed_on": "2026-11-02"
     },
@@ -1310,27 +1310,27 @@
     {
       "source": "examples/delta/README.md",
       "target": "examples/delta/en/README.md",
-      "source_sha256": "882c05bb0152a9dcad64b04b081263f8f8d5f06eb6dec9e9360c644ad571b0cf",
-      "target_sha256": "7a8fce3b2907639394f0bb614e9bf10d47fc17b3eb7f0ff485663ae835093c7e",
-      "reviewer": "Claude (Claude Code session; README rewritten in both languages to the estuary_barrage/levee_breach structure and compared section by section, tables, numbers and links checked; no model execution)",
+      "source_sha256": "0c220bc751cbf7dc921479f96d309861c82c31b69724223d4c420c4ac1cc3801",
+      "target_sha256": "e47deb45628c5dadd2bd469f1d28b7e07f11132122222aa20f3a7f5fe21c2630",
+      "reviewer": "Claude (Claude Code session; stage 6-7 (tide) tables, settings, run steps, notes, sensitivity and references added in both languages and compared; the results sections of stages 6-7 are not written yet (runs in progress); no model output used)",
       "method": "assistant",
       "reviewed_on": "2026-11-02"
     },
     {
       "source": "examples/delta/figs/mechanism.png",
       "target": "examples/delta/en/figs/mechanism.png",
-      "source_sha256": "c9bc3ea200a4bec52e48d3ba2d93d9c97c33effa2273e681ec5a85408414bd45",
-      "target_sha256": "5626e7b251f99cc507e019722bac1aadfa5e60eb27b3c051aa7f6dda86e011da",
-      "reviewer": "Claude (Claude Code session; schematic and set-up figures drawn by the same plot_results.py code with only the labels switched by the en argument; images compared visually; no model execution)",
+      "source_sha256": "4cf0c9d44181ef1ea661699c5749bd7de35d7ec3d24a71443a18b4ad815a93d9",
+      "target_sha256": "b596bf1ed704fd951ba6a3f7648bdb2484f2360e679e494846b19eff7f6c2b9d",
+      "reviewer": "Claude (Claude Code session; schematic and set-up figures regenerated by the same plot_results.py code with only the labels switched by the en argument (tidal panel retitled, tidal strip marked); images compared visually)",
       "method": "assistant",
       "reviewed_on": "2026-11-02"
     },
     {
       "source": "examples/delta/figs/setup.png",
       "target": "examples/delta/en/figs/setup.png",
-      "source_sha256": "e3360ded594b1a1daf026a251b6bf7ff3d5c53ab48a3c2ae94c2691c0c7556df",
-      "target_sha256": "1dadc0b897d98f313ce202d801cf6558f1b0f336b4a5fe73b6174cf4ee468c9c",
-      "reviewer": "Claude (Claude Code session; schematic and set-up figures drawn by the same plot_results.py code with only the labels switched by the en argument; images compared visually; no model execution)",
+      "source_sha256": "dee0d33458e3cf39ff95d9b565ebcfd634562c757cd774655b98c125e4e12566",
+      "target_sha256": "819bd2dbe6cfbd54b90420ec5b038d6ba9748973cbcd844e70b14fa1b337f35a",
+      "reviewer": "Claude (Claude Code session; schematic and set-up figures regenerated by the same plot_results.py code with only the labels switched by the en argument (tidal panel retitled, tidal strip marked); images compared visually)",
       "method": "assistant",
       "reviewed_on": "2026-11-02"
     },

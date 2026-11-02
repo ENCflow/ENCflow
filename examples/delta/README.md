@@ -6,7 +6,7 @@
 砂州の両脇へ分かれ、分かれた流路の先にまた砂州ができます。これを繰り返して河口デルタが育ちます。
 デルタの形は、川が運ぶ土砂の量と粒の大きさ、流量の変動や植生、そして波や潮汐がその土砂を
 どう配り直すかで決まります。この例題は、波のない静かな海に川が流れ込む最も簡単な構成から
-始めて、砂と泥の割合、出水と植生、斜めから来る波、波を解く沿岸の波浪場の順に機構を一つずつ
+始めて、砂と泥の割合、出水と植生、斜めから来る波、波を解く沿岸の波浪場、潮汐の順に機構を一つずつ
 加え、デルタの形の変わり方を比べます。再現したいデルタに ENCflow のどの機構が要るかを選ぶ
 手引きとして使ってください。値は現象を見やすくするための模式値で、特定のデルタの再現では
 ありません。
@@ -44,10 +44,11 @@
 ![機構の模式図](figs/mechanism.png)
 
 模式図(縮尺は誇張。平面は上が北)。(a)(b) 波のない河口で起きること。(c)〜(f) 砂泥比・植生・
-波で変わるデルタの形。(g) 潮汐の影響(この例題では計算していない)。括弧内は対応するケース。
+波で変わるデルタの形。(g) 潮汐の影響(段 6・7)。括弧内は対応するケース。
 
 **再現したいデルタと、加える機構**: 波のない河口(段 1)から始めて、機構を一つずつ加えます。
-各段は前の段の機構を含みます(段 5 は、段 4 の沿岸漂砂を沿岸の波浪場に置き換えます)。
+段 2 以降はどれも段 1 の機構を土台にして、その段の機構を加えます(段 5 は段 4 の沿岸漂砂を沿岸の
+波浪場に置き換え、段 7 は段 6 の川を小さくします)。
 
 | 段 | 再現したい現象・デルタ | 加える機構 | 主な設定 | ケース |
 |---|---|---|---|---|
@@ -56,7 +57,8 @@
 | 3 | 出水と植生で安定した分流路 | 流量の時系列、植生の定着(冠水で弱まる)、側岸侵食 | `inflow_val`、`f_fixation`(`fix_tdec`・`fix_ctau_bank`)、`f_berode` | varq・fix |
 | 4 | 波の影響を受けたデルタ(弧状の前縁・砂嘴・風下への偏り) | 斜めの波による沿岸漂砂(波を解かない概算)。砂の供給は量を決めて与える | `fn_wave`(`wave_lsm`・`wave_vmax`)、`inflow_qb`・`fluv_bcfeed = 0` | baseqb・wave |
 | 5 | 段 4 に加えて、波の屈折・デルタの陰・波による流れ・泥のかき混ぜ・遡上による砂の打ち上げ | 沿岸の波浪場、波による攪拌と輸送、遡上域の輸送(段 4 の沿岸漂砂の代わり) | `fn_wavefield`(`wf_flow = 2`・`f_wf_current = 1`)、`f_wfsed`、`f_wfswash`、背景粘性 `p_diffusion_nu` | wfsed |
-| — | 潮汐卓越型(往復流・流れに沿う砂州・漏斗状の河口) | 潮位の時系列で潮の往復流を起こす(沖の辺に海域マスクの帯を置く) | `fn_tide` | この例題にはない(確かめていない) |
+| 6 | 潮汐の影響を受けたデルタ(干満で冠水・干出する干潟、潮で変わる河口の流れ) | 沖の辺に潮位の時系列を与える(海域マスクの帯)。潮の 1 周期の地形変化が小さくなるよう morfac を下げ、海岸に交わる辺は外にも海岸が続く扱いにする | `fn_sw`・`fn_tide`(`titype = 2`)、`morfac`、`f_bc_n`・`f_bc_s = 3` | notide・tide |
+| 7 | 潮汐卓越型(干潟を出入りする潮の流れが川の流れより強い) | 段 6 と同じ機構で、川の流量と土砂を小さくする(潮の出入りを相対的に大きくする) | `inflow_val`・`inflow_qb`(川の流量と土砂)、`morfac` | smallq・tidedom |
 
 **現象と機構の対応**:
 
@@ -71,6 +73,7 @@
 | 流れが河岸を削って後退させる | 側岸侵食(水面より高い隣のセルを、河岸の脚部の掃流力で崩す) | `f_berode = 1` |
 | 斜めの波が砕波帯で砂を岸沿いに運ぶ | 沖波から求めた沿岸漂砂(CERC 式)を、砕波帯の掃流砂として運ぶ。汀線の向きは水深の勾配から取る。流れの速い河道のセルは波から外す | `fn_wave`、`wave_lsm`、`wave_vmax` |
 | 波が屈折・砕波してデルタの陰ができ、沿岸流が起こる。波が砂と泥をかき混ぜ、遡上が砂を打ち上げる | 沿岸の波浪場(波の向きと高さを解く。河口の流れが波を止める)、波による流れ、波と流れによる攪拌と輸送、遡上域の輸送 | `fn_wavefield`、`wf_flow = 2`、`f_wf_current = 1`、`f_wfsed = 1`、`f_wfswash = 1` |
+| 潮の満ち引きで海面が上下し、干潟が冠水・干出し、流れが往復する | 沖の辺の数列を海域マスクにして潮位の時系列を与え、その内側の海と河口は浅水流で解く。地形の加速は、潮の 1 周期の地形変化が小さい範囲にとどめる | `fn_sw`、`fn_tide`、`morfac` |
 | 地形の変化は流れよりずっと遅い | 地形の変化量を morfac 倍して時間を縮める | `morfac` |
 
 二次流(蛇行の外岸を深くする流れ、`f_secflow`)は使いません。デルタの大きな形は河口砂州での
@@ -78,7 +81,8 @@
 拾いやすいためです。各機構の設定は、ユーザーガイドの[掃流砂](../../docs/users_guide/geomorph.md#掃流砂f_fluvial)
 (容量給砂・勾配の補正・定着・側岸侵食)、[浮遊砂](../../docs/users_guide/geomorph.md#浮遊砂f_suspend)
 (細粒分の帳簿)、[波浪による沿岸漂砂](../../docs/users_guide/geomorph.md#波浪による沿岸漂砂fn_wave)、
-[沿岸の波浪場](../../docs/users_guide/wavefield.md)、[潮位](../../docs/users_guide/tide.md)にあります。
+[沿岸の波浪場](../../docs/users_guide/wavefield.md)、[潮位](../../docs/users_guide/tide.md)、
+[境界条件](../../docs/users_guide/boundary.md)(長波放射・側方 Neumann)にあります。
 
 ## 幾何と設定
 
@@ -94,12 +98,17 @@
   削れない水路にして、砂は河口に出てから動きます)。
 - **海**: 海盆の水深は 2 m(base・baseqb・wave・wfsed)または 1.5 m(sand・mud・varq・fix)。海は
   海域マスクを使わず、通常のセルに初期水位 0 m を与えて表します。東の辺は長波放射で海面を 0 m に
-  保ち、北・南・西の辺は壁です。
+  保ち、北・南・西の辺は壁です(段 6・7 の南北の辺は側方 Neumann)。
 - **川**: 西の辺の河道 6 セルから流量 30 m³/s を入れます(varq・fix は出水 30 m³/s と低水 6 m³/s を
   20 分ずつ繰り返す)。砂(粒径 0.5 mm)は容量給砂(入口の河床を固定し、流れが運べるだけの砂を
   上流から入れる)、泥は体積濃度 `inflow_cs` で流入させ、沈降速度 1 mm/s で沈みます。
+- **潮汐(段 6・7)**: 東端 3 列(15 m)を海域マスクの帯にし、M2 分潮(周期 12.42 時間)、潮差 2 m
+  (振幅 1 m)の潮位を与えます。初期水位 0 m(平均潮位)から上げ潮で始まります。潮差は海盆の水深と
+  同じ大きさで、干潮で海盆の水深は 1 m、満潮で 3 m になります。南北の辺は、外にも同じ海岸が続く
+  側方 Neumann にします。
 - **時間**: 地形の変化を morfac 倍(100 または 200)して、水理 15〜24 時間の計算で地形 1500〜4000
-  時間分の変化を見ます。以下の時間はすべて地形時間です。
+  時間分の変化を見ます(潮汐のケースは、潮の 1 周期の地形変化を小さく保つため morfac を下げ、潮
+  5 周期 = 水理 62.1 時間を解きます)。以下の時間はすべて地形時間です。
 - 格子間隔は 5 m、入力は make_init.py が作ります(`make`)。
 
 | 段 | ケース | 設定ファイル | 領域・海盆の水深 | 川の流量・泥の濃度 | 加える機構 | 地形時間 | 所要(4 スレッド) |
@@ -112,6 +121,10 @@
 | 4 | baseqb | param_baseqb.txt | base と同じ | base と同じ。砂は固定給砂 0.00715 m³/s(base の平均) | 波なしの基準(砂の量を決めて与える) | 1500 h | 1 時間 |
 | 4 | wave | param_wave.txt | 同上 | 同上 | 沖波(有義波高 0.6 m、周期 6 s、東南東から入射角 30°)の沿岸漂砂 | 1500 h | 1 時間 |
 | 5 | wfsed | param_wfsed.txt | 同上 | 同上 | wave と同じ波(方向分散 20°)を、沿岸の波浪場と、波による攪拌・輸送、遡上域の輸送で | 1500 h | 50 分 |
+| 6 | notide | param_notide.txt | base と同じ(南北の辺は側方 Neumann) | baseqb と同じ | 潮汐なしの基準 | 1490 h(morfac 100) | 40 分 |
+| 6 | tide | param_tide.txt | 同上(東端 3 列は潮位の帯) | 同上 | M2 潮汐(潮差 2 m) | 1490 h(morfac 24、潮 5 周期) | 2 時間 |
+| 7 | smallq | param_smallq.txt | notide と同じ | 3 m³/s(1/10)、泥 0.0005、砂は固定給砂 0.000715 m³/s(1/10) | 潮汐なしの基準(川を 1/10 に) | 14900 h(morfac 1000) | 40 分 |
+| 7 | tidedom | param_tidedom.txt | tide と同じ | smallq と同じ | M2 潮汐(潮差 2 m) | 14900 h(morfac 240、潮 5 周期) | 2 時間 |
 
 c_τ は定着しきったときの侵食の閾値の増分比(粗度の増分比も同じ形)、T_fix は定着が進む時間、T_dec は
 冠水中に定着が弱まる時間です。
@@ -120,16 +133,19 @@ c_τ は定着しきったときの侵食の閾値の増分比(粗度の増分�
 
 ```bash
 cd examples/delta
-make                                # 実行ファイルへのリンクと入力(z_*.txt・sd_*.txt)
+make                                # 実行ファイルへのリンクと入力(z_*.txt・sd_*.txt、潮汐の sw_tide.txt・tide_m2.txt)
 ./encflow param.txt                 # base(ほかは ./encflow param_sand.txt など)
 python3 plot_results.py base        # fig_base_evolution.png・fig_base_final.png・fig_base_timeseries.png・timeseries_base.csv
 python3 plot_results.py mechanism   # 機構の模式図 figs/mechanism.png(計算結果を使わない)
 python3 plot_results.py setup       # 設定の図 figs/setup.png
+python3 plot_results.py tide        # 潮汐のケースは fig_tide_phases.png(最後の 1 周期の流れ)・fig_tide_series.png(水位・河口の流量)も
+python3 plot_results.py tidecmp     # 潮汐なしとの比較図 figs/tide_cmp.png・figs/tidedom_cmp.png と数表(4 ケースの計算の後)
 ```
 
 図化には Python 3 と NumPy・matplotlib が要ります。引数に `en` を足すと、英語ラベルの図を
 en/figs/ に書きます。plot_results.py が描くのは 1 ケースの堆積厚の時間発展・最終地形・時系列で、
-figs/ の `<ケース>_evolution.png`・`<ケース>_final.png` はこれと同じ形式の図です。ケースを並べた
+figs/ の `<ケース>_evolution.png`・`<ケース>_final.png`・`<ケース>_phases.png`・`<ケース>_series.png` は
+これと同じ形式の図です。ケースを並べた
 比較の図(sandmud・sandmud_timeseries・fixation・wave_cmp・ensemble)と、汀線半径・分流路の本数の
 集計のスクリプトは、この例題に含まれていません。
 
@@ -348,6 +364,19 @@ wfsed の地形 1500 h(並びは base の最終地形の図と同じ)。
 - **wfsed の背景粘性**: 流れによる波の変化と、波による流れを組むと、沖の静かな水域に格子規模の流速の
   縞が育つので、小さな背景粘性(`f_diffusion_term = 2`、`p_diffusion_nu = 0.05` m²/s)で止めています
   (ユーザーガイドの[沖の格子規模の縞と背景粘性](../../docs/users_guide/wavefield.md#沖の格子規模の縞と背景粘性wf_flow-と組むとき))。
+- **潮汐と地形の加速**: morfac は、地形の変化が流れの変化よりずっと遅いことを使って時間を縮める
+  近似で、潮汐のように周期のある外力では、潮の 1 周期の地形の変化が小さい範囲でしか使えません
+  (Roelvink 2006)。この例の潮汐のケースは morfac を 24(tidedom は土砂が 1/10 なので 240)に下げ、
+  潮 5 周期を解いています(潮の 1 周期で入る砂は、最後のデルタの砂の 2 割)。潮汐なしの基準は流れが
+  定常なので、計算の軽い morfac 100(smallq は 1000)で同じ地形時間を見ています。
+- **潮汐のケースの比べ方**: 出力は潮の 1/4 周期ごとです(平均潮位の上げ・満潮・平均潮位の下げ・
+  干潮)。陸地の広さは潮位で変わるので、堆積・陸化などは平均潮位(上げ)のフレームで比べます。
+- **潮位の帯**: 潮位は東端 3 列の海域マスクの帯で与えます。帯に出た浮遊砂は系外へ出て、掃流砂は帯の
+  縁で止まります(帯はデルタから 600 m 以上離してある)。帯の見かけの水柱厚 `hsea0` は海盆の水深
+  (2 m)にそろえています(make_init.py が作る tide_m2.txt)。
+- **海岸に交わる辺**: 潮汐のケースでは干潮のたびに川の流れが海岸沿いに回り込み、堆積が海岸沿いに
+  広がるので、南北の辺を側方 Neumann(`f_bc_n`・`f_bc_s = 3`。外にも同じ海岸が続く)にしています。
+  壁のままだと堆積が壁に当たります。比べる基準(notide・smallq)も同じ辺にそろえています。
 
 ![実現ごとの違い](figs/ensemble.png)
 
@@ -372,7 +401,9 @@ base と同じ構成の地形 1200 h。上段と下段左 2 枚: 地盤高に擾
   ために壁)。
 - 海面の変化・地盤の沈下 → 沖の辺に海域マスクの帯を置いて `fn_tide` で海面の時系列を、地盤の沈下は
   `fn_bedmotion` で与える。
-- 潮汐 → 同じく `fn_tide` に潮汐の時系列を与える(この例題では確かめていない)。
+- 潮汐 → 潮差と周期は make_init.py の `ATIDE`・`TM2`(tide_m2.txt を作り直す)。川に対する潮の強さは
+  川の流量と土砂(`inflow_val`・`inflow_qb`)で変える(段 7)。潮の 1 周期の地形変化を小さく保つよう
+  `morfac` も合わせて変える。
 
 ## 参考文献
 
@@ -394,15 +425,20 @@ base と同じ構成の地形 1200 h。上段と下段左 2 枚: 地盤高に擾
 - Galloway, W. E. (1975): Process framework for describing the morphologic and stratigraphic evolution
   of deltaic depositional systems. In Broussard, M. L. (ed.), *Deltas: Models for Exploration*, Houston
   Geological Society, 87–98.
+- Hoitink, A. J. F., Wang, Z. B., Vermeulen, B., Huismans, Y. and Kästner, K. (2017): Tidal controls on
+  river delta morphology. *Nature Geosci.*, 10, 637–645.
 - Hoyal, D. C. J. D. and Sheets, B. A. (2009): Morphodynamic evolution of experimental cohesive deltas.
   *J. Geophys. Res.*, 114, F02009.
 - Lauzon, R. and Murray, A. B. (2018): Comparing the cohesive effects of mud and vegetation on delta
   evolution. *Geophys. Res. Lett.*, 45, 10437–10445.
+- Leonardi, N., Canestrelli, A., Sun, T. and Fagherazzi, S. (2013): Effect of tides on mouth bar
+  morphology and hydrodynamics. *J. Geophys. Res. Oceans*, 118, 4169–4183.
 - Liang, M., Voller, V. R. and Paola, C. (2015): A reduced-complexity model for river delta formation –
   Part 1: Modeling deltas with channel dynamics. *Earth Surf. Dynam.*, 3, 67–86.
 - Nienhuis, J. H., Ashton, A. D. and Giosan, L. (2015): What makes a delta wave-dominated? *Geology*,
   43(6), 511–514.
 - Orton, G. J. and Reading, H. G. (1993): Variability of deltaic processes in terms of sediment supply,
   with particular emphasis on grain size. *Sedimentology*, 40, 475–512.
+- Roelvink, J. A. (2006): Coastal morphodynamic evolution techniques. *Coastal Eng.*, 53, 277–287.
 - Wright, L. D. (1977): Sediment transport and deposition at river mouths: a synthesis. *Geol. Soc. Am.
   Bull.*, 88, 857–868.
