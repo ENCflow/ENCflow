@@ -1,0 +1,140 @@
+!======================================================================
+! delta — 段 7 tidedom: 潮の出入りが川を上回る(param_tide.txt の川の流量と土砂を 1/10 にする。README「段 7」)
+!   川の流量 3 m³/s、泥の濃度は同じ(泥の量も 1/10)、砂の固定給砂 0.000715 m³/s。潮汐・海盆・地形は
+!   tide と同じ(M2、潮差 2 m)。デルタの干潟を出入りする潮の流量に対して川の流量を小さくする(潮の
+!   出入りは川の 1.6 倍になり、デルタの上は干潟と下げ潮の水路になる。上げ潮の流れは砂を動かさない)。
+!   土砂が 1/10 なので morfac を 10 倍(240)にし、潮 5 周期(水理 62.1 h)で地形 14900 h を見る(潮の
+!   1 周期に入る土砂は tide と同じ)。南北の辺から出る砂の量と沖へ伸びる溝は morfac に強く依る
+!   (morfac 120 との比較は README 段 7「morfac を半分にした確かめ」)。
+!   南北の辺は tide と同じ側方 Neumann。比較の基準は同じ川で潮汐のない param_smallq.txt。
+!   入力: make(z_base.txt, sd_baseqb.txt, sw_tide.txt, tide_m2.txt)。4 スレッドで約 2 時間。
+!   実行: ./encflow param_tidedom.txt。図化: python3 plot_results.py tidedom
+!======================================================================
+&list_sysparam
+  f_gridsystem = 0          ! ENC 配置格子
+  f_govequation = 0         ! 力学波(既定)
+  dt = 0.345                ! 満潮時の水深 3 m の長波速度 5.4 m/s + 流速 1.2 m/s で CFL ≈ 0.46
+                            !   (潮の 1/4 周期 11178 s がちょうど 32400 ステップ)
+  t0 = 0
+  tt = 223560               ! 水理 62.1 h = 潮 5 周期(地形 14900 h ≈ 1.7 年)
+  dt_disp = 1800            ! 画面表示間隔 (s)
+  dt_file = 11178           ! 分布出力間隔 (s)= 潮の 1/4 周期(平均潮位の上げ・満潮・平均潮位の下げ・干潮)
+  dt_recrd = 600            ! 観測点・測線の記録間隔 (s)
+  fn_geoinfo = '-'          ! 以下 '-' は本ファイル内の各 namelist を読む
+  fn_initial = '-'
+  fn_enc = '-'
+  fn_geomorph = '-'
+  fn_boundary = '-'
+  fn_record = '-'           ! 観測点・測線(本ファイル末尾の &list_record)
+  fn_tide = 'tide_m2.txt'   ! 潮位(make_init.py tide tide が生成する &list_tide。潮位は毎ステップ更新し、
+                            !   潮位表は 4.5 分ごと。海盆の固有振動を起こさないため。README「注意」)
+  dir_result = 'result_tidedom'
+  f_state_save = 0
+  f_check_cfl = 1           ! CFL 監視
+  f_out_z = 1               ! 地盤高 Z を出力(Z − Z0000 = 堆積厚)
+  f_out_vv = 1              ! 流速絶対値
+  f_out_hs = 1              ! 運搬中の浮遊砂柱状量
+  f_out_u = 1               ! 流速の x 成分(上げ潮・下げ潮の流れの向き)
+  f_out_v = 1               ! 流速の y 成分
+  f_out_e = 1               ! 水位
+/
+
+&list_enc
+  f_advection_scheme = 3    ! 運動量保存形(既定)
+  f_opening_dynamic = 2     ! 塞がれた斜めの開口の振り替え(河道マスクのない掘り込み河道で壁際の通水能を保つ)。
+                            !   README の結果はこの値で計算した(既定の 3 とは、両岸の高い河道ではほぼ同じ)
+/
+
+&list_initial
+  f_htype = 2               ! 水位固定で初期化: h = max(e0 − z, 0)
+  e0 = 0.0                  ! 海面 0 m(河道内は水深 1 m、陸地は乾燥、海盆は 2 m)
+/
+
+&list_geoinfo
+  lx = 1000.0
+  ly = 600.0
+  nx = 200
+  ny = 120                  ! dx = dy = 5 m
+  f_ztype = 1
+  fn_z = 'z_base.txt'            ! 地盤高(make_init.py base z)
+  f_rntype = 0
+  rn0 = 0.025               ! マニング粗度(砂床)
+  f_sdtype = 1
+  fn_sd = 'sd_baseqb.txt'        ! 土層厚(make_init.py baseqb sd。全域 0 = 非侵食。河道は固い水路)
+  fn_sw = 'sw_tide.txt'          ! 海域マスク(東端 3 列。make_init.py tide sw)
+  sy0 = 0.2
+/
+
+&list_geomorph
+  dt_geomorph = 1.035       ! 地形更新(水理 3 ステップに 1 回)
+  morfac = 240.0            ! 地形時間の加速(土砂が 1/10 なので tide の 10 倍。潮の 1 周期に入る土砂は tide と同じ)
+  f_fluvial = 1             ! 掃流砂 Exner(砂)
+  f_qbform = 1              ! 芦田・道上式
+  fluv_d50 = 0.0005         ! 砂 0.5 mm
+  fluv_tausc = 0.05
+  fluv_porosity = 0.4
+  fluv_sgrav = 1.65
+  fluv_dzmax = 0.05         ! 1 更新の河床変動上限 (m)
+  fluv_bcfeed = 0           ! 固定給砂(inflow_qb。wave との比較用。base は容量給砂)
+  fluv_bcfeed_fac = 1.0
+  fluv_slope = 1            ! 河床勾配による流砂方向補正(砂州の側面へ砂を広げる)
+  fluv_mus = 1.0            ! examples/meander と同じ値(文献値との照合はしていない)
+  fluv_muk = 0.45
+  f_secflow = 0             ! 二次流は使わない(README「再現に必要な機構」)
+  f_berode = 0              ! 側岸侵食則なし
+  f_repose = 1              ! 安息角崩落(水中の砂 30°)
+  repose_phi = 30.0
+  repose_relax = 0.5
+  f_fixation = 0            ! 定着なし(定着は param_fix.txt)
+  f_suspend = 1             ! 浮遊砂(泥)
+  f_esform = 1              ! 超過掃流力線形(Partheniades 型の読み替え)
+  susp_d50 = 0.0001         ! 名目粒径(沈降速度は下で直接与える)
+  susp_wf = 0.001           ! フロックの実効沈降速度 1 mm/s
+  susp_tausc = 0.1          ! 泥の再浮上の限界無次元掃流力(校正値)
+  susp_esa = 1.0e-4         ! 侵食速度係数(校正値)
+  f_bedfines = 1            ! 河床の細粒分の帳簿(堆積した泥だけが再浮上する)
+  fines_la = 0.05           ! 交換層厚 (m)
+  fines_frac0 = 0.0         ! 初期の河床は砂のみ
+/
+
+&list_bound_edge
+  f_bc_e = 0                ! 東辺は海域マスクの帯(潮位が水位を決める。辺境界は海セルに働かない)
+  f_bc_n = 3                ! 北・南辺は側方 Neumann(外にも同じ海岸が続く。海岸沿いに広がる堆積を壁で止めない)
+  f_bc_s = 3
+  f_bc_w = 0                ! 西辺は壁(陸)
+/
+
+!======================================================================
+! 区間流入: 西辺の河道 6 セル(j = 58..63)に Q = 3 m³/s 一定(baseqb の 1/10)、泥の体積濃度 0.0005
+!   (≈ 1.3 g/L。入った土砂の約 7 割が泥)。砂は inflow_qb の固定給砂で入る
+!======================================================================
+&list_bound_inflow
+  inflow_cell(1:2,1,1) = 1, 58
+  inflow_cell(1:2,2,1) = 1, 59
+  inflow_cell(1:2,3,1) = 1, 60
+  inflow_cell(1:2,4,1) = 1, 61
+  inflow_cell(1:2,5,1) = 1, 62
+  inflow_cell(1:2,6,1) = 1, 63
+  inflow_val(1:2,1,1) = 0, 3.0
+  inflow_val(1:2,2,1) = 9999, 3.0
+  inflow_cs(1:2,1,1) = 0, 0.0005
+  inflow_cs(1:2,2,1) = 9999, 0.0005
+  inflow_qb(1:2,1,1) = 0, 0.000715     ! 掃流砂の固定給砂 (m³/s 固体) = baseqb の 1/10
+  inflow_qb(1:2,2,1) = 9999, 0.000715
+  inflow_dist(1) = 0
+/
+
+!======================================================================
+! 計測: 観測点(1 河口の手前の河道、2 河口の前 100 m、3 海盆の中央)と測線(東向きが正)。
+!   測線 1 は河口を横切る(列 30 の行 55〜66 = 河道 6 セルと両岸の陸。正 = 海へ流れ出る向き)。
+!   測線 2 は潮位の帯の手前で海盆を横切る(列 195 の全行。正 = 下げ潮。潮の出入りの流量)
+!======================================================================
+&list_record
+  pbxytype = 0
+  pbxy(:,1) = 28, 60
+  pbxy(:,2) = 50, 60
+  pbxy(:,3) = 150, 60
+  flxytype = 0
+  flxy(:,1) = 30, 66, 30, 55
+  flxy(:,2) = 195, 120, 195, 1
+/

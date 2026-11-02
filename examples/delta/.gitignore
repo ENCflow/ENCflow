@@ -3,3 +3,5 @@ sd_*.txt
 result_*/
 save_*/
 timeseries_*.csv
+sw_tide.txt
+tide_m2.txt

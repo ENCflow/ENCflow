@@ -11,7 +11,7 @@ delta is set by the amount and grain size of the sediment the river carries, by 
 the discharge and by vegetation, and by how waves and tides redistribute that sediment. This
 example starts from the simplest configuration, a river flowing into a calm sea without waves,
 adds the mechanisms one at a time in the order sand/mud ratio, floods and vegetation, oblique
-waves, and the coastal wave field that resolves the waves, and compares how the shape of the
+waves, the coastal wave field that resolves the waves, and tides, and compares how the shape of the
 delta changes. Use it as a guide to choosing which ENCflow mechanisms the delta you want to
 reproduce needs. The values are schematic, chosen to make the phenomena visible, and do not
 reproduce any particular delta. The schematic, the set-up figure and the figures of wfsed have
@@ -57,12 +57,13 @@ English labels; the other result figures have Japanese labels (shared with the J
 
 Schematic (scales exaggerated; plan views have north up). (a)(b) What happens at a river mouth
 without waves. (c)–(f) The shape of the delta as changed by the sand/mud ratio, vegetation and
-waves. (g) The influence of tides (not computed in this example). The names in parentheses are
-the corresponding cases.
+waves. (g) The influence of tides (stages 6 and 7). The names in parentheses are the corresponding
+cases.
 
 **The delta to reproduce, and the mechanisms to add**: starting from a river mouth without waves
-(stage 1), the mechanisms are added one at a time. Each stage includes the mechanisms of the
-previous stage (stage 5 replaces the longshore transport of stage 4 with the coastal wave field).
+(stage 1), the mechanisms are added one at a time. Every stage from 2 on builds on the mechanisms
+of stage 1 and adds its own (stage 5 replaces the longshore transport of stage 4 with the coastal
+wave field, and stage 7 makes the river of stage 6 smaller).
 
 | Stage | Phenomenon or delta to reproduce | Mechanisms to add | Main settings | Cases |
 |---|---|---|---|---|
@@ -71,7 +72,8 @@ previous stage (stage 5 replaces the longshore transport of stage 4 with the coa
 | 3 | Distributaries stabilized by floods and vegetation | Time series of the discharge, fixation by vegetation (weakened when submerged), bank erosion | `inflow_val`; `f_fixation` (`fix_tdec`, `fix_ctau_bank`); `f_berode` | varq, fix |
 | 4 | A wave-influenced delta (arcuate front, spit, skew to the downdrift side) | Longshore transport by oblique waves (an estimate without resolving the waves). The sand supply is given as a fixed amount | `fn_wave` (`wave_lsm`, `wave_vmax`); `inflow_qb`, `fluv_bcfeed = 0` | baseqb, wave |
 | 5 | Stage 4 plus wave refraction, the shadow of the delta, wave-driven flow, stirring of mud, and sand pushed up by the swash | The coastal wave field, stirring and transport by waves, swash-zone transport (in place of the longshore transport of stage 4) | `fn_wavefield` (`wf_flow = 2`, `f_wf_current = 1`); `f_wfsed`; `f_wfswash`; background viscosity `p_diffusion_nu` | wfsed |
-| — | Tide-dominated (reversing flow, bars along the flow, funnel-shaped mouth) | Reversing tidal flow from a time series of the tide level (a strip of sea mask along the offshore side) | `fn_tide` | Not in this example (not checked) |
+| 6 | A tide-influenced delta (flats flooded and exposed by the tide, flow at the mouth changing with the tide) | A time series of the tide level on the offshore side (a strip of sea mask). morfac lowered below that of the cases without tide (in this example the landform change in one tidal cycle cannot be called small); the sides crossing the coast treated as if the coast continued outside | `fn_sw`, `fn_tide` (`titype = 2`), `morfac`, `f_bc_n`, `f_bc_s = 3` | notide, tide |
+| 7 | Towards the tide-dominated side: a delta where the tidal exchange exceeds the river (flats on top of the delta and ebb channels; the shapes made by tidal currents moving sand back and forth do not appear at the scale of this example) | The same mechanisms as stage 6, with a smaller river discharge and sediment supply (making the tidal exchange relatively larger) | `inflow_val`, `inflow_qb` (river discharge and sediment), `morfac` | smallq, tidedom |
 
 **Phenomena and mechanisms**:
 
@@ -86,6 +88,7 @@ previous stage (stage 5 replaces the longshore transport of stage 4 with the coa
 | The flow erodes banks and makes them retreat | Bank erosion (a neighbouring cell higher than the water surface is collapsed by the shear on the bank toe) | `f_berode = 1` |
 | Oblique waves carry sand along the shore in the surf zone | Longshore transport computed from the offshore waves (CERC formula) is moved as bedload in the surf zone. The shoreline orientation is taken from the depth gradient. Fast-flowing channel cells are excluded from the waves | `fn_wave`, `wave_lsm`, `wave_vmax` |
 | Waves refract and break, the delta casts a shadow, and a longshore current develops. Waves stir sand and mud, and the swash pushes sand up | The coastal wave field (resolves the direction and height of the waves; the river-mouth current stops the waves), wave-driven flow, stirring and transport by waves and currents, swash-zone transport | `fn_wavefield`, `wf_flow = 2`, `f_wf_current = 1`, `f_wfsed = 1`, `f_wfswash = 1` |
+| The tide rises and falls, flats are flooded and exposed, and the flow reverses | A time series of the tide level is given on a strip of sea mask a few columns wide along the offshore side; the sea inside it and the river mouth are solved by the shallow-water flow. The landform acceleration can be used only while the landform change in one tidal cycle is small ("Tides and landform acceleration" under "Notes") | `fn_sw`, `fn_tide`, `morfac` |
 | Landform change is much slower than the flow | The amount of landform change is multiplied by morfac to shorten the time | `morfac` |
 
 Secondary flow (the flow that deepens the outer bank of a meander, `f_secflow`) is not used. The
@@ -96,8 +99,9 @@ curvature that does not exist in reality. The settings of each mechanism are in 
 correction, fixation, bank erosion), [suspended
 sediment](../../../docs/en/users_guide/geomorph.md#suspended-sediment-f_suspend) (ledger of fines),
 [wave-driven longshore transport](../../../docs/en/users_guide/geomorph.md#wave-driven-longshore-transport-fn_wave),
-[coastal wave field](../../../docs/en/users_guide/wavefield.md) and
-[tide level](../../../docs/en/users_guide/tide.md).
+[coastal wave field](../../../docs/en/users_guide/wavefield.md),
+[tide level](../../../docs/en/users_guide/tide.md) and
+[boundary conditions](../../../docs/en/users_guide/boundary.md) (long-wave radiation, lateral Neumann).
 
 ## Geometry and settings
 
@@ -115,13 +119,20 @@ Right: size of the domain of each case (origin at the river mouth).
 - **Sea**: the basin is 2 m deep (base, baseqb, wave, wfsed) or 1.5 m deep (sand, mud, varq, fix).
   The sea is represented not by a sea mask but by ordinary cells with an initial water level of
   0 m. The east side holds the sea level at 0 m with long-wave radiation; the north, south and west
-  sides are walls.
+  sides are walls (in stages 6 and 7 the north and south sides are lateral Neumann).
 - **River**: 30 m³/s flows in through the 6 channel cells on the west side (varq and fix alternate
   floods of 30 m³/s and low flows of 6 m³/s, 20 min each). Sand (grain size 0.5 mm) comes from the
   capacity feed (the bed at the inlet is fixed and as much sand as the flow can carry enters from
   upstream); mud enters with the volume concentration `inflow_cs` and settles at 1 mm/s.
+- **Tide (stages 6 and 7)**: the easternmost 3 columns (15 m) are a strip of sea mask, given the M2
+  tide (period 12.42 hours) with a range of 2 m (amplitude 1 m). The run starts from the initial
+  level 0 m (mean tide) on a rising tide. The tidal range is as large as the basin depth: the basin is
+  1 m deep at low tide and 3 m at high tide. The north and south sides are lateral Neumann, as if the
+  same coast continued outside.
 - **Time**: the landform change is multiplied by morfac (100 or 200), so 15–24 hours of hydraulic
-  computation show 1500–4000 hours of landform change. All times below are landform times.
+  computation show 1500–4000 hours of landform change (the tidal cases lower morfac and solve 5 tidal
+  cycles = 62.1 hours of hydraulic time; for the limits of this lowering see "Tides and landform
+  acceleration" under "Notes"). All times below are landform times.
 - The grid spacing is 5 m, and make_init.py creates the inputs (`make`).
 
 | Stage | Case | Parameter file | Domain, basin depth | River discharge, mud concentration | Mechanisms added | Landform time | Run time (4 threads) |
@@ -134,6 +145,10 @@ Right: size of the domain of each case (origin at the river mouth).
 | 4 | baseqb | param_baseqb.txt | same as base | same as base; sand as a fixed feed of 0.00715 m³/s (the mean of base) | reference without waves (sand given as a fixed amount) | 1500 h | 1 h |
 | 4 | wave | param_wave.txt | same | same | longshore transport by offshore waves (significant wave height 0.6 m, period 6 s, from the east-southeast at an incidence angle of 30°) | 1500 h | 1 h |
 | 5 | wfsed | param_wfsed.txt | same | same | the same waves as wave (directional spreading 20°) through the coastal wave field, stirring and transport by waves, and swash-zone transport | 1500 h | 50 min |
+| 6 | notide | param_notide.txt | same as base (north and south sides lateral Neumann) | same as baseqb | reference without tide | 1490 h (morfac 100) | 40 min |
+| 6 | tide | param_tide.txt | same (easternmost 3 columns = tidal strip) | same | M2 tide (range 2 m) | 1490 h (morfac 24, 5 tidal cycles) | 2 h |
+| 7 | smallq | param_smallq.txt | same as notide | 3 m³/s (1/10), mud 0.0005, sand as a fixed feed of 0.000715 m³/s (1/10) | reference without tide (river reduced to 1/10) | 14900 h (morfac 1000) | 40 min |
+| 7 | tidedom | param_tidedom.txt | same as tide | same as smallq | M2 tide (range 2 m) | 14900 h (morfac 240, 5 tidal cycles) | 2 h |
 
 c_τ is the ratio by which the erosion threshold increases at full fixation (the roughness
 increment ratio has the same form), T_fix is the time over which fixation progresses, and T_dec is
@@ -143,17 +158,19 @@ the time over which fixation weakens while submerged.
 
 ```bash
 cd examples/delta
-make                                # links to the executables and the inputs (z_*.txt, sd_*.txt)
+make                                # links to the executables and the inputs (z_*.txt, sd_*.txt; for the tide, sw_tide.txt, tide_m2.txt)
 ./encflow param.txt                 # base (the others: ./encflow param_sand.txt etc.)
 python3 plot_results.py base        # fig_base_evolution.png, fig_base_final.png, fig_base_timeseries.png, timeseries_base.csv
 python3 plot_results.py mechanism   # schematic of the mechanisms, figs/mechanism.png (uses no results)
 python3 plot_results.py setup       # set-up figure, figs/setup.png
+python3 plot_results.py tide        # for the tidal cases also fig_tide_phases.png (flow in the last cycle), fig_tide_series.png (water level, discharge at the mouth)
+python3 plot_results.py tidecmp     # comparison with no tide, figs/tide_cmp.png and figs/tidedom_cmp.png, with the totals (after the four runs)
 ```
 
 Plotting needs Python 3 with NumPy and matplotlib. Adding `en` to the arguments writes figures with
 English labels to en/figs/. plot_results.py draws the time evolution of the deposit thickness, the
-final landform and the time series of one case; `<case>_evolution.png` and `<case>_final.png` in
-figs/ are figures of the same form. The scripts for the figures that set cases side by side
+final landform and the time series of one case; `<case>_evolution.png`, `<case>_final.png`,
+`<case>_phases.png` and `<case>_series.png` in figs/ are figures of the same form. The scripts for the figures that set cases side by side
 (sandmud, sandmud_timeseries, fixation, wave_cmp, ensemble) and for the totals of the shoreline
 radius and of the number of distributaries are not included in this example.
 
@@ -166,7 +183,7 @@ to the farthest land; and the number of distributaries is the number of channels
 radius 0.5 R and 0.8 R centred on the mouth. All figures have north up; the colour is the change in
 ground elevation (deposit thickness) and the black line is the shoreline.
 
-The tables and figures were computed with the version of 20–29 October 2026. Because the shape of
+The tables and figures were computed with the version of 20–29 October 2026 (stages 6 and 7 with that of 2 November). Because the shape of
 the delta differs between realizations (see "The shape differs between realizations" in the
 notes), recomputing with the same settings changes the positions of the lobes and the number of
 distributaries, and the deposit, emerged land and maximum radius can change within a few %.
@@ -346,12 +363,192 @@ column is a run with `f_wfswash` set to 0 in param_wfsed.txt.)
 
 wfsed at 1500 h (the panels are arranged as in the final landform of base).
 
+### Stage 6: tides — a river mouth with rise and fall (notide, tide)
+
+![Without and with tide](figs/tide_cmp.png)
+
+Landform 1490 h (tide at the rising mean tide). Top: deposit thickness and shoreline. Bottom: classes
+of bed elevation (at or below the low-tide level −1 m, intertidal height −1 to +1 m, at or above the
+high-tide level +1 m). Left: without tide (notide); right: with tide (tide).
+
+tide adds an M2 tide with a range of 2 m to the same river (30 m³/s) and sediment as notide, the
+reference without tide. notide is baseqb with the north and south sides lateral Neumann as in tide;
+the two differ only in the tide and in the landform acceleration (morfac 100 in notide, 24 in tide).
+
+| Landform 1490 h | notide (without tide) | tide (with tide) |
+|---|---|---|
+| Deposit (bulk) | 170×10³ m³ (sand 64×10³ m³ = all of the sand fed, mud 106×10³ m³ = 79 % of the supply) | 134×10³ m³ (sand 50×10³ m³ = 78 % of the sand fed, mud 84×10³ m³ = 63 % of the supply) |
+| Sediment carried out by bedload through the north and south sides (solid) | 0 | 16×10³ m³ (sand amounting to 22 % of the feed, and mud moving with the sand) |
+| Extent of the sand body (sand 0.3 m or thicker): along the coast × offshore | 300 m × 212 m | 600 m (the full width of the domain) × 132 m |
+| Emerged land (depth below 0.05 m at mean tide) | 17.2×10³ m² | 6.9×10³ m² (the island of the mouth bar; top at +0.66 m) |
+| Flats (dry at low tide, flooded at high tide) | — | 36.7×10³ m² |
+| Discharge at the mouth (last cycle) | 30 m³/s | 29.2–30.7 m³/s (never reversed) |
+| Tidal discharge in and out of the flats πP/T (P = water volume over the flats at high tide) | — | 4.1 m³/s (14 % of the river) |
+
+(Totals of `python3 plot_results.py tidecmp` and the ledger at the end of the run (sediment that left
+through the north and south sides). The split into sand and mud is from the final bed elevation Z and
+the mud thickness Sf. πP/T is the amplitude of the discharge in and out of the flats approximated by a
+sine, a measure for this example.)
+
+- **The outlet of the river changes between high and low tide**: at high tide the jet from the mouth
+  goes straight offshore. As the tide falls, the mouth bar in front of the mouth (top at +0.66 m)
+  emerges as an island; the river flow splits on both sides of it and runs north and south along a
+  trough at the foot of the coast (bed around −1.1 m), at 0.7–0.8 m/s at low tide.
+- **The deposit spreads along the coast**: the flow running along the coast at every low tide carries
+  sand, so the sand body spreads over the full width of the domain, and a little over 20 % of the sand
+  fed leaves through the north and south sides (treated as if the same coast continued outside). This
+  sand left around the low tides of the 4th and 5th tidal cycles (almost none before that), and the check
+  in stage 7 (a run with half the morfac) suggests that the amount depends on morfac. The offshore
+  extent is 60 % of that of notide. At mean tide only the island of the mouth bar is land, but at low
+  tide 36.7×10³ m² of flats appear.
+- **Still river-dominated**: the channel is narrow and its banks are higher than high tide, so little
+  water is stored by the tide upstream of the mouth, and the discharge at the mouth stays at
+  29–31 m³/s without reversing. The tidal discharge in and out of the flats is also 14 % of the
+  river. Even on the rising tide, only 6 % of the cells of the channels that carry the river water at
+  low tide flow landward, and the tidal current in the basin is about 0.05 m/s (0.14 m/s at most),
+  short of the speed at which sand starts to move (about 0.25–0.3 m/s for depths of 1–2 m, from the
+  critical dimensionless shear stress 0.05). tide is a tide-influenced, river-dominated delta: the tide
+  changes the shape through the rise and fall of the water level (by moving the outlet of the river
+  and changing the strength of the backwater) more than through tidal currents.
+- **The channel at low tide**: even when the sea falls to −1 m at low tide, the water level of the
+  channel just inside the mouth stays at −0.57 m (set by the water level of the flow paths beyond the
+  mouth), and the flow at the mouth speeds up to 1.4 m/s. The sand that settles in the channel near
+  the mouth under the backwater of high tide (about 9 cm thick) is washed out by the fast flow at low
+  tide.
+- **The trough at the foot of the coast**: the trough through which the river flows at low tide
+  results from the coast of this example being a vertical step that cannot be eroded (land at +1.5 m,
+  bed −1.2 m in front of it). Real tidal coasts are gently sloping flats, and the river reaches the
+  sea through channels cut into the flats (no comparison with a gently sloping coast has been made).
+
+![Flow in the last cycle](figs/tide_phases.png)
+
+Flow in the last tidal cycle of tide (landform 1192–1490 h). From the top left: flood (mean tide),
+high tide, ebb (mean tide), low tide. Colour is the speed, arrows the direction of the flow, and tan
+the dry areas.
+
+![Water level and discharge at the mouth](figs/tide_series.png)
+
+Top: water level in the channel just inside the mouth, 100 m off the mouth and in the middle of the
+basin, with the imposed tide (the line 100 m off the mouth is horizontal at the bed elevation while
+that point is dry). Bottom: discharge through the mouth.
+
+### Stage 7: tidal exchange larger than the river — flats and ebb channels (smallq, tidedom)
+
+![Without and with tide (river 1/10)](figs/tidedom_cmp.png)
+
+Landform 14900 h (tidedom at the rising mean tide). The panels are arranged as in the figure of
+stage 6. Left: without tide (smallq); right: with tide (tidedom).
+
+tidedom is tide with the river discharge and sediment reduced to 1/10 (3 m³/s; the mud concentration
+is the same, so the amount of mud is also 1/10); the tide, basin and landform are the same as in tide.
+Because the sediment is 1/10, morfac is raised tenfold to 240, and 5 tidal cycles cover 14900 h of
+landform time (the sediment entering in one tidal cycle is the same as in tide). smallq is the
+reference with the same river and no tide (morfac 1000).
+
+| Landform 14900 h | smallq (without tide) | tidedom (with tide) |
+|---|---|---|
+| Deposit (bulk) | 173×10³ m³ (sand 61×10³ m³ = 95 % of the sand fed, mud 112×10³ m³ = 84 % of the supply) | 156×10³ m³ (sand 44×10³ m³ = 69 % of the sand fed, mud 111×10³ m³ = 83 % of the supply) |
+| Sediment carried out by bedload through the north and south sides (solid) | 3.6×10³ m³ | 15×10³ m³ (sand amounting to 31 % of the feed, and mud moving with the sand) |
+| Extent of the sand body (sand 0.3 m or thicker): along the coast × offshore | 450 m × 138 m | 600 m (the full width of the domain) × 228 m |
+| Emerged land (depth below 0.05 m at mean tide) | 55.0×10³ m² | 28.4×10³ m² |
+| Land even at high tide (bed elevation +1 m or higher) | — | 4.1×10³ m² (near the mouth; mostly +1.0 to 1.05 m) |
+| Flats (dry at low tide, flooded at high tide) | — | 54.9×10³ m² |
+| Discharge at the mouth (last cycle) | 3 m³/s | 2.8–3.1 m³/s (never reversed) |
+| Tidal discharge in and out of the flats πP/T | — | 4.9 m³/s (1.6 times the river) |
+
+(Totals computed as in the table of stage 6. The sand body and the emerged land of tidedom exclude the
+channel stretching offshore and its levees described below; including them gives 412 m offshore and
+30.2×10³ m² of emerged land. The amount of sediment leaving through the north and south sides depends
+strongly on morfac; see "Check with half the morfac" below.)
+
+- **The tidal exchange exceeds the river**: the tidal discharge in and out of the flats on top of the
+  delta (πP/T, the same measure as in stage 6) is 4.9 m³/s, 1.6 times the river (3 m³/s); in tide it
+  is 0.14 times. By this measure the tide exceeds the river.
+- **The top of the delta becomes flats**: whereas in smallq land at the height of the sea surface
+  spreads out (55×10³ m²; median bed elevation of the area with 0.3 m or more of deposit +0.02 m),
+  the top of the delta in tidedom becomes flats at intertidal height (54.9×10³ m²; the same median
+  −0.50 m), and only 4.1×10³ m² near the mouth is land even at high tide (at about the water level of
+  the channel at high tide). 83 % of the mud supplied settles (about the same as in smallq), and the
+  deposit on the flats averages 0.56 m of sand and 1.23 m of mud.
+- **Channels at ebb and low tide**: at ebb and low tide the river water and the water draining from
+  the flats gather in channels cut along the foot of the coast and into the flats (at the falling mean
+  tide the median speed in the channels is 0.48 m/s, at most 1.0 m/s) and leave mainly through the
+  north side (7.6 m³/s at low tide, 2.5 times the river). About 30 % of the sand fed left through
+  the north and south sides with this flow, but this amount depends strongly on morfac (see "Check
+  with half the morfac" below).
+- **The flood does not move sand**: on the rising tide (at mean tide) the water in the channels hardly
+  moves (median speed 0.02 m/s), and the sea spreads slowly over the flats from offshore (the speed over
+  the flats is 0.07 m/s or less in 90 % of the cells, and exceeds 0.25 m/s in less than 1 %). Sand moves
+  only with the river and the ebb; at every low tide the fast flow towards the low sea carries sand,
+  so the sand body spreads further than in smallq both along the coast and offshore. The shapes made by
+  sand moving back and forth with the flood and the ebb (bars elongated along the tidal currents, a
+  funnel-shaped mouth) do not appear. tidedom is a delta whose tidal exchange exceeds the river and
+  whose top has become flats and ebb channels, but the shapes of a tide-dominated delta cannot be made
+  at this scale.
+- **Why the tidal current is weak**: by continuity, the speed of the tidal current at a point is
+  roughly proportional to the length L of the water body landward of that point that the tide fills
+  (u ≈ L × rate of rise of the tide ÷ depth). In this example the tide rises at most at
+  1.4×10⁻⁴ m/s and the depth is about 2 m, so even at the offshore end of the basin (L = 835 m) the
+  current is 0.06 m/s; reaching 0.3 m/s, at which sand starts to move, needs L of about 4 km (about the
+  tidal excursion; a measure for this example). The front of the delta lies just off the coast, so the
+  water body landward of it is even smaller and almost no tidal current arises. In real tide-dominated
+  deltas the tide travels far up the distributaries, and mouths widening seaward and wide intertidal
+  areas produce a large tidal exchange (Dalrymple & Choi 2007).
+- **The channel stretching straight offshore**: the channel one cell (5 m) wide and the levees on
+  both sides of it that stretch along y = 300 m from x = 300 to 565 m in the figure (a deposit of
+  8.8×10³ m³, excluded from the values of the table) formed during the ebb (from high to low tide) of
+  the third tidal cycle, when the river flow leaving offshore over the shallow mouth bar gathered into
+  a channel one cell wide; in the last cycle there is hardly any flow in it. The channel is as wide as
+  the grid spacing: when a channel narrows to the grid spacing it aligns with the grid directions
+  ("Resolving the distributaries" under "Notes"; the same holds for the lines of channels along the
+  coast), and with morfac 240 half a tidal cycle of ebb corresponds to 1500 h of landform time, during
+  which the channel and levees grow fully (in tidedom the limit `fluv_dzmax` on one landform update
+  acted on 11,440 edges; in tide it never acted). This channel is not a bar elongated by tidal
+  currents. With morfac 120 this channel does not form (next item).
+- **Check with half the morfac**: a run with morfac 120 (`morfac` 120 and `tt` 268272 in
+  param_tidedom.txt: 6 tidal cycles, 8942 h of landform time; the length limit of the tide table does not
+  allow reaching 14900 h) was compared with tidedom at the same landform time (3 tidal cycles). The
+  flats on top of the delta (45.0×10³ m²; 35.9×10³ m² in tidedom), the weak flow on the rising tide (the
+  speed over the flats is 0.03 m/s or less in 90 % of the cells) and the fast channels at ebb and low
+  tide (at most 1.2 m/s) appear in the same way, and the tidal discharge in and out of the flats is
+  1.5 times the river (1.2 times in tidedom). On the other hand, the channel stretching offshore and its
+  levees do not form (on the rows along the extension of the channel, the bed rises by less than 0.1 m
+  offshore of x = 450 m), and the sand leaving through the north and south sides is 5 % of the sand fed
+  (27 % in tidedom). Of the sand that left tidedom through the sides by 8942 h, 80 % left in a single
+  event in the second half of the ebb of the third tidal cycle (the quarter cycle from the falling
+  mean tide to low tide, 745 h of landform time): sand cut from the river channel and the channels along
+  the coast was carried by a channel along the coast to the south side. Three quarters of the 31 % of
+  the table come from this event and one more that carried sand to the north side at the same time of
+  the fifth tidal cycle. Both runs have changes in which the bed is cut by 1.5 to 2 m in a quarter
+  cycle and the sand settles elsewhere; what differs is whether the cut sand leaves through the sides.
+  Read the
+  channel stretching offshore and the amount of sediment leaving through the north and south sides as
+  values that depend strongly on morfac. That flats form, and the difference between the flows on the
+  rising and the falling tide, are the same with half the morfac (the area of the flats differs by
+  25 %). Whether morfac 120 is low enough has not been checked, since there is no run with a still
+  lower morfac.
+
+![Flow in the last cycle](figs/tidedom_phases.png)
+
+Flow in the last tidal cycle of tidedom (landform 11923–14904 h). The panels are arranged as in the
+figure of stage 6.
+
+![Water level and discharge at the mouth](figs/tidedom_series.png)
+
+Arranged as in the figure of stage 6. Except while the river water fills the channel at the start
+(4 h of hydraulic time), the discharge at the mouth stays at 2.8–3.2 m³/s and never reverses.
+
 ## What this model cannot represent (differences from real phenomena)
 
-- **Tides**: this example has no tides. Placing a strip of sea mask along the offshore side and
-  giving a time series of the tide level (`fn_tide`) produces a reversing tidal flow, but whether
-  this can be used for the formation of a tide-dominated delta (bars elongated along the flow, a
-  funnel-shaped mouth) has not been checked.
+- **Shapes of a tide-dominated delta**: stages 6 and 7 impose the rise and fall of the tide through
+  the tide level of the offshore strip and represent the outlet of the river changing between high
+  and low tide, the flats and the ebb channels, but the shapes of a tide-dominated delta (bars
+  elongated along the tidal currents, a funnel-shaped mouth widening seaward) do not form. They are
+  made by tidal currents that move sand on both the flood and the ebb, and for the tidal current to
+  become fast, a body of water about as long as the tidal excursion (several km) is needed landward
+  of that point (stage 7). The domain of this example is 1 km and its channel is narrow; neither the
+  tide travelling up the river nor the tidal wave travelling along the coast is represented. Whether
+  a domain of several km produces the shapes of a tide-dominated delta has not been checked.
 - **Density difference between fresh water and sea water**: the flow is a single depth-averaged
   layer; the buoyancy effect by which fresh water leaving the mouth spreads over the heavier sea
   water and is carried offshore (Wright 1977) is not resolved.
@@ -427,6 +624,41 @@ wfsed at 1500 h (the panels are arranged as in the final landform of base).
   viscosity (`f_diffusion_term = 2`, `p_diffusion_nu = 0.05` m²/s) stops them ("Grid-scale stripes
   offshore and background viscosity" in the [user's
   guide](../../../docs/en/users_guide/wavefield.md#grid-scale-stripes-offshore-and-background-viscosity-with-wf_flow)).
+- **Tides and landform acceleration**: morfac shortens time by using the fact that landform change is
+  much slower than the flow, and with a periodic forcing such as the tide it can be used only while the
+  landform change in one tidal cycle is small (Roelvink 2006). As a compromise with the computing time,
+  the tidal cases of this example keep morfac at 24 (240 in tidedom, whose sediment is 1/10) and solve
+  5 tidal cycles. The sand that enters in one tidal cycle is a quarter of the sand of the final delta of
+  tide, so the landform change in one cycle cannot be called small. In the check of tidedom with
+  morfac 120 (stage 7), the flats and the difference between the flows on the rising and the falling
+  tide appeared in the same way, but the channel stretching offshore did not form, and the sand leaving
+  through the north and south sides fell from 27 % to 5 % of the sand fed at the same landform time of
+  8942 h. Read the details of the landform and the amount of sediment leaving through the north and
+  south sides as values that depend on morfac (the 22 % of tide also left around the low tides of the
+  4th and 5th tidal cycles). The references without tide have a steady flow, so they see the same landform
+  time with the cheaper morfac 100 (1000 in smallq).
+- **How the tidal cases are compared**: the output is every quarter of a tidal cycle (rising mean tide,
+  high tide, falling mean tide, low tide). The extent of land changes with the tide level, so the
+  deposit, emerged land and so on are compared at the frames of the rising mean tide.
+- **The tidal strip**: the tide is given on a strip of sea mask in the easternmost 3 columns. Suspended
+  sediment that reaches the strip leaves the system, and bedload stops at its edge (the strip is kept
+  600 m or more from the delta). The apparent water-column thickness of the strip `hsea0` matches the
+  basin depth (2 m; tide_m2.txt made by make_init.py).
+- **How the tide level is given**: the tide level is updated every step (`dt_tiupdate = 0.005` min =
+  0.3 s, not more than the time step), and the tide table `tival` is given every 4.5 min (tide_m2.txt
+  made by make_init.py). The natural period of this basin is 10–18 min (835 m long, 1–3 m deep); with
+  the default stepwise update every minute and a tide table every 15.5 min, the basin oscillated (a
+  seiche), and a back-and-forth flow twice the tidal current (0.06 m/s) remained in front of the strip
+  (the [tide level](../../../docs/en/users_guide/tide.md#parameters-and-the-basis-of-their-defaults)
+  chapter of the user's guide).
+- **Sides crossing the coast**: in the tidal cases the river flow runs around along the coast at every
+  low tide and the deposit spreads along the coast, so the north and south sides are lateral Neumann
+  (`f_bc_n`, `f_bc_s = 3`; the same coast continues outside). With walls, the deposit would hit the
+  walls. The references (notide, smallq) use the same sides. The lateral Neumann sides let the river water and
+  sediment that ran along the coast leave as they are (in the last cycle of tide most of the river
+  water leaves through the north and south sides), and depending on the time of the tide they also
+  pass part of the tidal exchange. The flow through the sides adds about 0.03 m/s to the basin and
+  moves no sediment.
 
 ![Differences between realizations](../figs/ensemble.png)
 
@@ -457,7 +689,11 @@ deviation between realizations.
 - Sea-level change and subsidence of the ground → place a strip of sea mask along the offshore side
   and give the sea level as a time series with `fn_tide`, and the subsidence of the ground with
   `fn_bedmotion`.
-- Tides → likewise, give a tidal time series to `fn_tide` (not checked in this example).
+- Tides → the tidal range and period are `ATIDE` and `TM2` in make_init.py (remake tide_m2.txt). The
+  strength of the tide relative to the river is changed by the river discharge and sediment
+  (`inflow_val`, `inflow_qb`; stage 7). Change `morfac` along with them so that the landform change in
+  one tidal cycle stays small (as a compromise with the computing time, the morfac of this example does
+  not meet this condition; "Tides and landform acceleration" under "Notes").
 
 ## References
 
@@ -479,15 +715,20 @@ deviation between realizations.
 - Galloway, W. E. (1975): Process framework for describing the morphologic and stratigraphic evolution
   of deltaic depositional systems. In Broussard, M. L. (ed.), *Deltas: Models for Exploration*, Houston
   Geological Society, 87–98.
+- Hoitink, A. J. F., Wang, Z. B., Vermeulen, B., Huismans, Y. and Kästner, K. (2017): Tidal controls on
+  river delta morphology. *Nature Geosci.*, 10, 637–645.
 - Hoyal, D. C. J. D. and Sheets, B. A. (2009): Morphodynamic evolution of experimental cohesive deltas.
   *J. Geophys. Res.*, 114, F02009.
 - Lauzon, R. and Murray, A. B. (2018): Comparing the cohesive effects of mud and vegetation on delta
   evolution. *Geophys. Res. Lett.*, 45, 10437–10445.
+- Leonardi, N., Canestrelli, A., Sun, T. and Fagherazzi, S. (2013): Effect of tides on mouth bar
+  morphology and hydrodynamics. *J. Geophys. Res. Oceans*, 118, 4169–4183.
 - Liang, M., Voller, V. R. and Paola, C. (2015): A reduced-complexity model for river delta formation –
   Part 1: Modeling deltas with channel dynamics. *Earth Surf. Dynam.*, 3, 67–86.
 - Nienhuis, J. H., Ashton, A. D. and Giosan, L. (2015): What makes a delta wave-dominated? *Geology*,
   43(6), 511–514.
 - Orton, G. J. and Reading, H. G. (1993): Variability of deltaic processes in terms of sediment supply,
   with particular emphasis on grain size. *Sedimentology*, 40, 475–512.
+- Roelvink, J. A. (2006): Coastal morphodynamic evolution techniques. *Coastal Eng.*, 53, 277–287.
 - Wright, L. D. (1977): Sediment transport and deposition at river mouths: a synthesis. *Geol. Soc. Am.
   Bull.*, 88, 857–868.

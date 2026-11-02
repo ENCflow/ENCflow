@@ -58,9 +58,9 @@
     {
       "source": "docs/comparison.md",
       "target": "docs/en/comparison.md",
-      "source_sha256": "b42b1808eba109b547ac21ecd203dc9607ec2b298e90220ae24fa7b5a31bd2d0",
-      "target_sha256": "d88aa22fc539454bb7a5f08fc0a78c42e0e5abf4e8aa2ccbfd923112275aaa9c",
-      "reviewer": "Claude (Claude Code session; the changed delta references (example link, renamed README sections) compared in both languages; the rest is unchanged from the recorded version)",
+      "source_sha256": "29cc9664eac58874a7821af81efb2ad2e78c3b2822c375d12aa669ff3a8ff1f5",
+      "target_sha256": "96d6b7b2cd18641404ace53f6f73a187ede82d4f3087a1ef42088e8b4cf00793",
+      "reviewer": "Claude (Claude Code session; Japanese source and English mirror read side by side)",
       "method": "assistant",
       "reviewed_on": "2026-11-02"
     },
@@ -266,9 +266,9 @@
     {
       "source": "docs/users_guide/geomorph.md",
       "target": "docs/en/users_guide/geomorph.md",
-      "source_sha256": "48ff0fc2925b0a8d877c51661579cf6744ffc357c024dbe36ab99e1263b74e04",
-      "target_sha256": "49dd215c528232fc2a4d990fe905d32ea48138968172db5fe7620c75074d5b2b",
-      "reviewer": "Claude (assistant)",
+      "source_sha256": "15acd3505fb56ac9eaa097a9db2bbae746767547289aa727a5dda085ef5efe22",
+      "target_sha256": "4a01043293bef1bb17939782ad42154be2f82e0e91bc97e3acf8876e295d8877",
+      "reviewer": "Claude (Claude Code session; merge of main's f_taupart rows and example references with the delta tide sentence, both languages compared)",
       "method": "assistant",
       "reviewed_on": "2026-11-02"
     },
@@ -455,11 +455,11 @@
     {
       "source": "docs/users_guide/tide.md",
       "target": "docs/en/users_guide/tide.md",
-      "source_sha256": "da5a542974cefd95cb083cfe6cba18e472491d6a230029fd13974b93d438bb65",
-      "target_sha256": "c714a9c87863eceecd7423d86393f069bfb99776b1cadcd445497c7749e3c636",
-      "reviewer": "Claude (Claude Code session; reviewed the changed sections (added reference sections, footnotes and citation markers) of the Japanese source against the English mirror, 2026-10-30)",
+      "source_sha256": "c6c1ffa5ed85af92dced0cedccf193b51b199e3d421509da5d65afab5729cdde",
+      "target_sha256": "ffbff1f3f16d0868facb331e768f4656ac5c806d624f1777613ab89c75b74968",
+      "reviewer": "Claude (Claude Code session; note on water bodies with short natural periods updated with the numbers of all tidal cycles in both languages and compared)",
       "method": "assistant",
-      "reviewed_on": "2026-10-30"
+      "reviewed_on": "2026-11-02"
     },
     {
       "source": "docs/users_guide/time.md",
@@ -482,9 +482,9 @@
     {
       "source": "docs/users_guide/usecases.md",
       "target": "docs/en/users_guide/usecases.md",
-      "source_sha256": "e0d4bb580287eb9b93d8db88d34e35d33caafab5bb6698b0a09dca52a87f6af9",
-      "target_sha256": "a464e34d3a58b77af13ad9e406143dcae6f27b3453f2eaba7cbbe7c4bda2013a",
-      "reviewer": "Claude (Claude Code session; the changed delta references (example link, renamed README sections) compared in both languages; the rest is unchanged from the recorded version)",
+      "source_sha256": "ab5c9d93ec67544ab2668da70fabe7b6c3cf0dfea25e32d8c72e4203f2cbe301",
+      "target_sha256": "8c2b978d6b894c45301279c183110b11b82394386f31e3386ce2df6473f20958",
+      "reviewer": "Claude (Claude Code session; Japanese source and English mirror read side by side)",
       "method": "assistant",
       "reviewed_on": "2026-11-02"
     },
@@ -806,9 +806,9 @@
     {
       "source": "examples/README.md",
       "target": "examples/README.en.md",
-      "source_sha256": "d8ebe96b19ed976e30e75899157d913c4341915a0b584ea6a43ae0978982ac11",
-      "target_sha256": "dc0ce164690958768993e28f1958b30fa0769b33e64ca3d8d62870e58a09df7d",
-      "reviewer": "Claude (Claude Code session; the changed delta references (example link, renamed README sections) compared in both languages; the rest is unchanged from the recorded version)",
+      "source_sha256": "ea63ec0f5e9d327ebb73290778d3e53e38f0caaf9abedd61a2cad61ed5551ad3",
+      "target_sha256": "63a47892dd3cc76c4b560dd647cc751e6b11699c9e62ad3ec7e68eb8cc6a6a5b",
+      "reviewer": "Claude (Claude Code session; the delta/tide sentences changed in both languages compared; the rest is unchanged from the recorded version)",
       "method": "assistant",
       "reviewed_on": "2026-11-02"
     },
@@ -1310,27 +1310,54 @@
     {
       "source": "examples/delta/README.md",
       "target": "examples/delta/en/README.md",
-      "source_sha256": "882c05bb0152a9dcad64b04b081263f8f8d5f06eb6dec9e9360c644ad571b0cf",
-      "target_sha256": "7a8fce3b2907639394f0bb614e9bf10d47fc17b3eb7f0ff485663ae835093c7e",
-      "reviewer": "Claude (Claude Code session; README rewritten in both languages to the estuary_barrage/levee_breach structure and compared section by section, tables, numbers and links checked; no model execution)",
+      "source_sha256": "5e246f2aa8bdf2736e999c32d228326b4115a8e20a4d06c8aa8f205586e5a695",
+      "target_sha256": "557370797804963751cbe1270e4548281449ebeb4a8750b128d350e5b6f46e91",
+      "reviewer": "Claude (Claude Code session; stage 7 morfac check and the morfac caveats added in both languages and compared side by side)",
       "method": "assistant",
       "reviewed_on": "2026-11-02"
     },
     {
       "source": "examples/delta/figs/mechanism.png",
       "target": "examples/delta/en/figs/mechanism.png",
-      "source_sha256": "c9bc3ea200a4bec52e48d3ba2d93d9c97c33effa2273e681ec5a85408414bd45",
-      "target_sha256": "5626e7b251f99cc507e019722bac1aadfa5e60eb27b3c051aa7f6dda86e011da",
-      "reviewer": "Claude (Claude Code session; schematic and set-up figures drawn by the same plot_results.py code with only the labels switched by the en argument; images compared visually; no model execution)",
+      "source_sha256": "e2833e83b1f419610a569dfd76342dea485c5ee9bec8af07fe16cda750ab6a7b",
+      "target_sha256": "3a4141268a9b66d7b3f358f423d0f59da53cdde11b738a7199aaef13bc87634c",
+      "reviewer": "Claude (Claude Code session; schematic regenerated by the same plot_results.py code with only the labels switched by the en argument (tidal panel redrawn to the processes of stages 6 and 7); images compared visually)",
       "method": "assistant",
       "reviewed_on": "2026-11-02"
     },
     {
       "source": "examples/delta/figs/setup.png",
       "target": "examples/delta/en/figs/setup.png",
-      "source_sha256": "e3360ded594b1a1daf026a251b6bf7ff3d5c53ab48a3c2ae94c2691c0c7556df",
-      "target_sha256": "1dadc0b897d98f313ce202d801cf6558f1b0f336b4a5fe73b6174cf4ee468c9c",
-      "reviewer": "Claude (Claude Code session; schematic and set-up figures drawn by the same plot_results.py code with only the labels switched by the en argument; images compared visually; no model execution)",
+      "source_sha256": "dee0d33458e3cf39ff95d9b565ebcfd634562c757cd774655b98c125e4e12566",
+      "target_sha256": "819bd2dbe6cfbd54b90420ec5b038d6ba9748973cbcd844e70b14fa1b337f35a",
+      "reviewer": "Claude (Claude Code session; schematic and set-up figures regenerated by the same plot_results.py code with only the labels switched by the en argument (tidal panel retitled, tidal strip marked); images compared visually)",
+      "method": "assistant",
+      "reviewed_on": "2026-11-02"
+    },
+    {
+      "source": "examples/delta/figs/tidedom_cmp.png",
+      "target": "examples/delta/en/figs/tidedom_cmp.png",
+      "source_sha256": "fe3ab930744dc87d62accb321bb09963c54df16366621dcc12b1fed0e4532899",
+      "target_sha256": "175611ff7716786d6af3eb5f5f63fc7af24c666129e9ed47fc9c73d7a26ecb42",
+      "reviewer": "Claude (Claude Code session; figures drawn by the same plot_results.py from the same saved results with only the labels switched by the en argument; images compared visually)",
+      "method": "assistant",
+      "reviewed_on": "2026-11-02"
+    },
+    {
+      "source": "examples/delta/figs/tidedom_phases.png",
+      "target": "examples/delta/en/figs/tidedom_phases.png",
+      "source_sha256": "590de24952c09bfbbd9d6889107a3e33924e2ac1fa727a4ff5ee28651855f74e",
+      "target_sha256": "2b5aa20c51e32e4d06d9d9ad580750fb3f804bff6cfc3bf9f81e3673fa375193",
+      "reviewer": "Claude (Claude Code session; figures drawn by the same plot_results.py from the same saved results with only the labels switched by the en argument; images compared visually)",
+      "method": "assistant",
+      "reviewed_on": "2026-11-02"
+    },
+    {
+      "source": "examples/delta/figs/tidedom_series.png",
+      "target": "examples/delta/en/figs/tidedom_series.png",
+      "source_sha256": "d11bce512f82f87c676592d00f59a41585c7a75fe5d8ebeafca966eab332a8a8",
+      "target_sha256": "241da03adb8166fff8167c5e3bdab346e5993da64ff2284ac92d49283be6eb91",
+      "reviewer": "Claude (Claude Code session; figures drawn by the same plot_results.py from the same saved results with only the labels switched by the en argument; images compared visually)",
       "method": "assistant",
       "reviewed_on": "2026-11-02"
     },
