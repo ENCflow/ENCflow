@@ -777,6 +777,8 @@ users_guide/sediment.md・massflow.md・geomorph.md、handoff.md 1n・1n2。
   係数 φ(h) = (1 + 6.76 (h/D84)^(−5/3))^(−e/2) を掛ける(掃流砂の容量を使う所すべて。剥離・土石流には
   掛けない)。test/taupart(急勾配 1 セル水路の等流で、東辺を通った掃流砂の台帳が係数を通した流砂量式に
   ±0.5 % で一致。無効でビット一致、MPI np = 2・4 が逐次とバイト一致)。developer.md §89.30。
+- 2026-11-02 例題 3 件(bedrock_cover・mountain_valley・debris_bedrock)の README(日英)を利用者向けの構成に
+  組み直した(実際の現象 → 機構 → 設定 → 結果 → 表せないこと → 注意 → 参考文献。計算は不変)。developer.md §89.31。
 
 ## 11. 第 2 段の連成実験の方針(2026-10-27 起案・同日合意)
 

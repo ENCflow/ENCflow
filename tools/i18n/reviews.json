@@ -266,8 +266,8 @@
     {
       "source": "docs/users_guide/geomorph.md",
       "target": "docs/en/users_guide/geomorph.md",
-      "source_sha256": "8c650610d41d6f7b2dfcb69829e76c1b99b8cc5bbd7fde4028a45e286ceee743",
-      "target_sha256": "223e1489132bffddec74c2a4416fede1ad82d93a5316a646b4dadf1d05b6bb58",
+      "source_sha256": "48ff0fc2925b0a8d877c51661579cf6744ffc357c024dbe36ab99e1263b74e04",
+      "target_sha256": "49dd215c528232fc2a4d990fe905d32ea48138968172db5fe7620c75074d5b2b",
       "reviewer": "Claude (assistant)",
       "method": "assistant",
       "reviewed_on": "2026-11-02"

@@ -16741,6 +16741,32 @@ V_a の地形(勾配 0.04)から始めると被覆が 1.0〜1.4 m に厚くな�
 図には入れない(段で軸が潰れる)。この例題の「定常勾配 0.029・剥離が主」という結果が全抵抗の τ* の仮定に
 依ることを示す、第 1 段の最大の不確かさの実例。
 
+### 89.31 山地渓流の 3 例題の説明の組み直し(2026-11-02)
+
+examples/bedrock_cover・mountain_valley・debris_bedrock の README(日英)を、levee_breach・
+estuary_barrage・ashfall_lahar・badland と同じ利用者向けの構成(実際の現象 → 再現に必要な機構
+(現象と機構の対応表)→ 幾何と設定 → 実行方法 → 結果 → 補足 → 表せないこと → 注意 →
+(設定の選び方)→ 感度実験の入口 → 参考文献)に組み直した(§48 冒頭の注記の 6 例題と同じ方針)。
+利用者の依頼。
+
+- 除いたもの: 開発の経緯(回し直しの日付と理由、既定 f_opening_dynamic の 2 と 3 の比較・ビット一致の
+  記録、2 セル周期の段差の修正の経緯、plan の節番号、C1〜C4・T11・P1〜P4 の番号)。結果の数表の
+  直後に、現行の既定で確かめた日付の 1 行(§68.41〜§68.43 への参照)だけを残した。設計の経緯は
+  「注意」の末尾で docs/mountain_stream_plan.md を指す(節番号なし)。
+- 残したもの・移したもの: ケース・param・入力・結果の図と数表は不変(make_init.py の再実行で
+  param_*.txt は同一)。mountain_valley の抵抗分割(V_a_tp)と給砂の時期(P_p・P_a)、debris_bedrock の
+  長期の連鎖は「補足」の節。debris_bedrock の「横断 1 セルと落ち口にした理由」は「設定の選び方
+  (水路の形と抵抗則)」に(ashfall_lahar の「設定の選び方」と同じ位置)。定常の予測の式と間欠係数の
+  換算は「再現に必要な機構」の表の後に置いた。
+- 足したもの: 「実際の現象」の節は sediment.md の脚注と plan §9・§12.9 で確認の範囲を記録した文献だけを
+  引き、確認の水準(本文・要旨)を参考文献に付けた。機構の模式図 figs/mechanism.png と設定の図
+  figs/setup.png は、計算結果を使わない各例題の plot_setup.py で描く(`en` で en/figs/)。Makefile に
+  make inputs・make run(mountain_valley は run-2m・run-supp、debris_bedrock は long も)を足し、画面
+  出力は `2>&1 | tee` で Screen_*.log に残す(plot スクリプトが台帳をログから読む)。
+- 他文書の追随: users guide geomorph.md(日英)の「examples/debris_bedrock の後半」を「補足(長期の
+  連鎖)」に改めた。examples/README の表と連鎖の一覧は節名を含まないので不変。翻訳は 3 組とも
+  記録(assistant)。
+
 ## 90. 沿岸の波浪場モデル m_wavefield(fn_wavefield。2026-10-27 設計合意)
 
 作業ブランチでは §88 として書き、main への取り込み(2026-10-28)で §90 に付け替えた(main に先に

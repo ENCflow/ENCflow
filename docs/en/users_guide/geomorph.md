@@ -1339,7 +1339,8 @@ compared in incised channels one cell wide placed side by side) and
 stream of a rising V-shaped valley: the steady valley and the response to a
 base-level fall; a model for converting time by giving the coefficients of the
 continuous processes multiplied by the inverse of the intermittency factor; the
-second part compares constant supply and pulses with the same mean).
+supplements cover the resistance partitioning on steep gravel beds and the
+comparison of constant supply and pulses with the same mean).
 
 ### Rock erosion by debris flows (rock_kdb)
 
@@ -1396,7 +1397,7 @@ h_s = 0; the solid ledger is unchanged; there are no fines, so they count as
 coarse). The deposited solid volume is printed as "the restored flow carried solids
 (hs) ... deposited ... m3 (solid)". Configurations without landform change (no
 `fn_geomorph`) behave as before, and h_s stays in the flow. A worked example of the
-alternating runs is the second half of
+alternating runs is the supplement (long-term chain) of
 [examples/debris_bedrock](../../../examples/debris_bedrock/en/README.md) (`Run_chain.sh`
 alternates floods and debris flows and writes values from the save after each stage;
 the steady slope by debris-flow frequency).

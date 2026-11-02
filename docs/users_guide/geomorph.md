@@ -1055,7 +1055,8 @@ dts の最大が表示されます。リスタートは `geomorph_rockinc.dat`(�
 被覆、段差の後退を、幅 1 セルの掘り込み水路を並べて比べる)、
 [examples/mountain_valley](../../examples/mountain_valley/)(隆起する V 字谷で斜面の風化・
 クリープと渓流の岩盤下刻を連成し、定常の谷と基準面の低下への応答を見る。連続に働く過程の
-係数を間欠係数の逆数倍して与える時間の換算の見本。後半は同じ平均の一定給砂とパルスの比較)。
+係数を間欠係数の逆数倍して与える時間の換算の見本。補足は急勾配礫床の抵抗分割と、同じ平均の
+一定給砂とパルスの比較)。
 
 ### 土石流による岩盤侵食(rock_kdb)
 
@@ -1099,7 +1100,7 @@ docs/mountain_stream_plan.md §12(developer.md §89.18)。
 細粒分は持たないので粗粒として扱う)。堆積させた固体の体積は「the restored flow carried solids
 (hs) … deposited … m3 (solid)」と表示されます。地形変化を使わない構成(`fn_geomorph` なし)では
 従来どおりで、h_s は流れに残ります。交互計算の見本は
-[examples/debris_bedrock](../../examples/debris_bedrock/) の後半です(`Run_chain.sh` が出水と土石流を
+[examples/debris_bedrock](../../examples/debris_bedrock/) の補足(長期の連鎖)です(`Run_chain.sh` が出水と土石流を
 交互に回し、各段の後に save から値を書き出す。土石流の頻度ごとの定常勾配)。
 
 **この節に関係する出力**: 累積下刻 `Ri0001…` に土石流の分も加わります。終了時に
