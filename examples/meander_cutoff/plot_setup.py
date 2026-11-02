@@ -152,12 +152,16 @@ def mechanism():
 
 
 # ---------------------------------------------------------------- 設定の図
+# 出水で流れが横切る 3 つの陸の範囲 ((x0, x1), (y0, y1)) m: ループ 1 の脚の間、2 つのループの間、
+# ループ 2 の脚の間(plot_results.py の数表と同じ。初期の陸のセルだけを数える)
+LANDS_XY = [((100, 120), (55, 90)), ((150, 175), (90, 140)), ((205, 225), (100, 145))]
+
+
 def zones(z0, h0):
-    """plot_results.py と同じ定義の領域: ループ(初期河道の y > 70 m)、低い河岸のゾーン
-    (make_init.py が +0.95 m にした陸)、ループ頂部のゾーン(ループのうち低い河岸のゾーンから 12 m 以内)。"""
+    """plot_results.py と同じ定義の領域: ループ(初期河道の y > 70 m)と、低い河岸のゾーン
+    (make_init.py が河床 + 0.95 m にした陸。初期地形から復元する)。"""
     DX = mi.DX
     y = (np.arange(z0.shape[0]) + 0.5) * DX
-    x = (np.arange(z0.shape[1]) + 0.5) * DX
     loop = (h0 > 0) & (y[:, None] > 70.0)
     zb = np.where(h0 > 0, z0, -1e9)
     mx = zb.copy()
@@ -167,12 +171,7 @@ def zones(z0, h0):
             if di * di + dj * dj <= r * r:
                 mx = np.maximum(mx, np.roll(np.roll(zb, dj, 0), di, 1))
     neck = (h0 == 0) & (mx > -1e8) & (z0 - mx < 1.2)
-    nj, ni = np.where(neck)
-    lj, li = np.where(loop)
-    d2 = (x[li][:, None] - x[ni][None, :]) ** 2 + (y[lj][:, None] - y[nj][None, :]) ** 2
-    ent = np.zeros_like(loop)
-    ent[lj[d2.min(axis=1) <= 12.0 ** 2], li[d2.min(axis=1) <= 12.0 ** 2]] = True
-    return loop, neck, ent, mx
+    return loop, neck
 
 
 def setup():
@@ -180,7 +179,7 @@ def setup():
     NY, NX = z0.shape
     DX = mi.DX
     x = (np.arange(NX) + 0.5) * DX; y = (np.arange(NY) + 0.5) * DX
-    loop, neck, ent, mx = zones(z0, h0)
+    _, neck = zones(z0, h0)
     P = np.array([(p[0], p[1] - mi.XMIN, p[2] - mi.YMIN) for p in mi.pts])
     # 各セルの最寄りの中心線の点(河床は路長 s に沿って Z0 − S0 s)。総当たりを行の塊ごとに
     XX, YY = np.meshgrid(x, y)
@@ -199,12 +198,16 @@ def setup():
     ax.imshow(np.where(h0 > 0, 1.0, np.nan), origin="lower", extent=[0, NX * DX, 0, NY * DX], cmap="Blues", vmin=0, vmax=1.6)
     ax.contour(x, y, h0 > 0, levels=[0.5], colors="k", linewidths=0.6)
     ax.contour(x, y, neck, levels=[0.5], colors=C_NECK, linewidths=1.2)
-    ax.contour(x, y, ent, levels=[0.5], colors="#6a3d9a", linewidths=0.9)
     ax.axhline(70.0, color="0.3", ls=":", lw=0.9)
     ax.text(343, 72, "y = 70 m", fontsize=7.5, color="0.2", ha="right")
     for (xa, ya) in ((112, 76), (163, 130), (214, 76)):
         ax.plot([xa - 11, xa + 11], [ya, ya], color=C_ERODE, lw=2.0)
     ax.text(163, 196, T("赤線 = ループの脚の間の最も狭い陸(幅 22 m)", "red = narrowest land between loop limbs (22 m)"), fontsize=7.5, color=C_ERODE, ha="center")
+    for (xa, xb), (ya, yb) in LANDS_XY:
+        ax.plot([xa, xb, xb, xa, xa], [ya, ya, yb, yb, ya], color="0.25", lw=0.8, ls="--")
+    for xa, ya, lab in ((112, 132, T("ループ 1", "loop 1")), (214, 89, T("ループ 2", "loop 2"))):
+        ax.text(xa, ya, lab, fontsize=8, ha="center", va="center", color="0.1",
+                bbox=dict(boxstyle="round,pad=0.15", fc="white", ec="none", alpha=0.8))
     ax.annotate(T("+2.4 m(注意を参照)", "+2.4 m (see notes)"), xy=(335, 62), xytext=(300, 92), fontsize=7, color="0.2",
                 arrowprops=dict(arrowstyle="-", color="0.3", lw=0.7))
     _arrow(ax, -14, 40, 2, 40, C_Q, lw=2.0, ms=12)
@@ -217,8 +220,7 @@ def setup():
     ax.text(mi.XFIX_UP / 2, NY * DX + 2, T("非侵食", "fixed"), ha="center", fontsize=7, va="bottom")
     ax.text(NX * DX - mi.XFIX_DN / 2, NY * DX + 2, T("非侵食", "fixed"), ha="center", fontsize=7, va="bottom")
     ax.plot([], [], color=C_NECK, lw=1.2, label=T("低い河岸のゾーン(+0.95 m。409 セル)", "low-bank zone (+0.95 m, 409 cells)"))
-    ax.plot([], [], color="#6a3d9a", lw=0.9, label=T("ループ頂部のゾーン(ループのうち低い河岸のゾーンから 12 m 以内。482 セル)",
-                                                      "loop-top zone (loop cells within 12 m of the low-bank zone, 482 cells)"))
+    ax.plot([], [], color="0.25", lw=0.8, ls="--", label=T("出水で流れが横切る 3 つの陸(結果の数表)", "the three lands the flood flow crosses (result tables)"))
     ax.legend(fontsize=7, loc="upper center", framealpha=0.95, bbox_to_anchor=(0.5, -0.1), ncol=1)
     ax.set_xlim(-16, NX * DX + 16); ax.set_ylim(0, NY * DX + 10)
     ax.set_xlabel("x (m)", fontsize=8.5); ax.set_ylabel("y (m)", fontsize=8.5); ax.tick_params(labelsize=7.5)
