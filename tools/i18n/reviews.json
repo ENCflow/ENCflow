@@ -1283,20 +1283,20 @@
     {
       "source": "examples/levee_breach/README.md",
       "target": "examples/levee_breach/en/README.md",
-      "source_sha256": "16d06424cda77b811b17d9b8a99b661f8e8e4b7d926c718c0aa8dc8749a609c1",
-      "target_sha256": "ae1084ec8833f2530d284f1ef18fdd52f9ddabb5a3da556bce922458dd035b0f",
-      "reviewer": "Claude (Claude Code session; example reruns with f_opening_dynamic default 3)",
+      "source_sha256": "d11e64e7cb22e9bddaacae5a827e6a7c423597e995e95e5ecc4cf0e64a08c092",
+      "target_sha256": "73ea39db671788f98f4e370119d103e94ca4bcfdfe17cc5d8ae5378440b91923",
+      "reviewer": "Claude (assistant)",
       "method": "assistant",
-      "reviewed_on": "2026-10-31"
+      "reviewed_on": "2026-11-02"
     },
     {
       "source": "examples/levee_breach/figs/maps.png",
       "target": "examples/levee_breach/en/figs/maps.png",
-      "source_sha256": "4cafd7f381979407da11fe4fcb093fb208058970dc21c862c8f75531b2f6dd7d",
-      "target_sha256": "0081db69230c49bd67c54e4bab093b431828c917d642d456ec0395ef8636fdcd",
-      "reviewer": "Claude (Claude Code session; example reruns with f_opening_dynamic default 3)",
+      "source_sha256": "b12eb3b86212c17dbbd168cc07ea0551760927b269f4cd99205b007d0c0eba54",
+      "target_sha256": "0730818e91a3cedb1b8f6f5bdd0c571d2bdc8eb2cd8fa22fdca6faa0410cb8db",
+      "reviewer": "Claude (assistant)",
       "method": "assistant",
-      "reviewed_on": "2026-10-31"
+      "reviewed_on": "2026-11-02"
     },
     {
       "source": "examples/levee_breach/figs/mechanism.png",
@@ -1310,11 +1310,11 @@
     {
       "source": "examples/levee_breach/figs/series.png",
       "target": "examples/levee_breach/en/figs/series.png",
-      "source_sha256": "20f0c87dacbec42348edd9d5323eb4d2693fe598eb2acfccc7cffdec6be21f58",
-      "target_sha256": "b8b6635108abda269511b3258086e4b7819bc16bc386a74efb31348755a841b4",
-      "reviewer": "Claude (Claude Code session; example reruns with f_opening_dynamic default 3)",
+      "source_sha256": "3d188a7d698bbddb88b6d967b8d2d45ea17200075c7c18ff0bfc543551607c8a",
+      "target_sha256": "2db4f210aced05ec264a82cdf95753ae23c4917da43ea2fe2d5d284b7aef3733",
+      "reviewer": "Claude (assistant)",
       "method": "assistant",
-      "reviewed_on": "2026-10-31"
+      "reviewed_on": "2026-11-02"
     },
     {
       "source": "examples/levee_breach/figs/setup.png",
@@ -1328,11 +1328,11 @@
     {
       "source": "examples/levee_breach/figs/supp_inundation.png",
       "target": "examples/levee_breach/en/figs/supp_inundation.png",
-      "source_sha256": "c4104b95be0e46ec5b3ac1b7bbfc00141c9cc0a0df4d663347a42a18cead3be6",
-      "target_sha256": "370cc572552ce964e87a3423f0bb71ea78edb05a01d632059f7cf493b4344ba1",
-      "reviewer": "Claude (Claude Code session; example reruns with f_opening_dynamic default 3)",
+      "source_sha256": "57824e6700e9b3275761dff849f0db8d2ea0711596dc8ead0876215cec216634",
+      "target_sha256": "9986fd3ff7019416c2c09b2ebec3154dfb7f7d883c8bb213c062504c1a717b38",
+      "reviewer": "Claude (assistant)",
       "method": "assistant",
-      "reviewed_on": "2026-10-31"
+      "reviewed_on": "2026-11-02"
     },
     {
       "source": "examples/levee_breach/figs/supp_setup.png",
@@ -1346,11 +1346,11 @@
     {
       "source": "examples/levee_breach/figs/supp_timeseries.png",
       "target": "examples/levee_breach/en/figs/supp_timeseries.png",
-      "source_sha256": "14500e1a9c78ebb49e52454450ddb4f539dd467643ef11123be9143799f24df3",
-      "target_sha256": "ca2b7d9213883092b662a37f377966d1f92dfa06239b1f6c36ed5e46fc19d563",
-      "reviewer": "Claude (Claude Code session; example reruns with f_opening_dynamic default 3)",
+      "source_sha256": "17929b9c02df5ea5a0e80233c838bb2f8b05f2f843f838ee5fa81af2931b4947",
+      "target_sha256": "37c3622e9027646456b1754b21aa8f189209257d6906fe199ca504656af09b06",
+      "reviewer": "Claude (assistant)",
       "method": "assistant",
-      "reviewed_on": "2026-10-31"
+      "reviewed_on": "2026-11-02"
     },
     {
       "source": "examples/meander/README.md",
