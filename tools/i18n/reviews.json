@@ -455,9 +455,9 @@
     {
       "source": "docs/users_guide/tide.md",
       "target": "docs/en/users_guide/tide.md",
-      "source_sha256": "c572e70abde3812f063e52957315eee46a401639d5d684d3ccb38e879026143c",
-      "target_sha256": "1c77f30a69b7203d8a787cff1e11804a5278b7d1c3e55800c90c4e8fe6e249ff",
-      "reviewer": "Claude (Claude Code session; added the note on water bodies with short natural periods and the dt_tiupdate rationale in both languages and compared; numbers from the examples/delta runs)",
+      "source_sha256": "c6c1ffa5ed85af92dced0cedccf193b51b199e3d421509da5d65afab5729cdde",
+      "target_sha256": "ffbff1f3f16d0868facb331e768f4656ac5c806d624f1777613ab89c75b74968",
+      "reviewer": "Claude (Claude Code session; note on water bodies with short natural periods updated with the numbers of all tidal cycles in both languages and compared)",
       "method": "assistant",
       "reviewed_on": "2026-11-02"
     },
@@ -1310,9 +1310,9 @@
     {
       "source": "examples/delta/README.md",
       "target": "examples/delta/en/README.md",
-      "source_sha256": "1cdb9e30fe376f52a500d86d13c4ecfbbbcc42f1788d07affef0bc1279edceaf",
-      "target_sha256": "9289b58d564d373573fa9c1425a7c89a7aab9c29d9d4c7f7e4ddcc056706d49e",
-      "reviewer": "Claude (Claude Code session; added the note on how the tide level is given in both languages and compared; the results sections of stages 6-7 are not written yet (runs in progress); no model output used)",
+      "source_sha256": "dd944b7dece09e7cb24e9c957f18a4728211af8147883b8ac521521efc9d73b0",
+      "target_sha256": "75f620fbaaa06769b406e26aef68c793cf491491822a202f849eb442e60b1ebd",
+      "reviewer": "Claude (Claude Code session; stage 6 results section, side-boundary caveat and version note written in both languages and compared; stage 7 results not written yet (run in progress); no model output used)",
       "method": "assistant",
       "reviewed_on": "2026-11-02"
     },

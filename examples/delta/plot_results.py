@@ -513,8 +513,8 @@ def tidecmp():
             ax = axs[0, col]
             im = ax.imshow(z - z0, extent=ex, cmap="RdBu_r", vmin=-2, vmax=2)
             ax.contour(xx, yy, h, levels=[0.05], colors="k", linewidths=0.6)
-            ax.set_title(T("%s: 堆積厚 Δz (m)。黒線 = 汀線(平均潮位)", "%s: deposit thickness Δz (m); black = shoreline (mean tide)") % lab,
-                         fontsize=10)
+            ax.set_title(T("%s: 堆積厚 Δz (m)\n黒線 = 汀線(潮汐のケースは平均潮位)",
+                           "%s: deposit thickness Δz (m)\nblack = shoreline (mean tide in the tidal case)") % lab, fontsize=10)
             ax.set_xlim(0, 700)
             if col == 1: fig.colorbar(im, ax=axs[0, :], shrink=0.8, label="Δz (m)")
             ax = axs[1, col]

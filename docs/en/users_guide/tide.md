@@ -247,10 +247,10 @@ The labels in the Basis column are explained in [How to read the basis of a defa
   the tidal cases of [examples/delta](../../../examples/delta/en/README.md)
   (L = 835 m, h = 1–3 m, natural period 10–18 min), updates every minute
   and tival every 15.5 min kept the basin oscillating (the water level in
-  the middle of the basin fluctuated with a standard deviation of 7 mm, and
-  a back-and-forth flow of up to 0.13 m/s remained in front of the strip,
-  against a tidal current of 0.06 m/s); updating every step with tival
-  every 4.5 min reduced the fluctuation to 0.5 mm.
+  the middle of the basin fluctuated with a standard deviation of 7–8 mm,
+  and a back-and-forth flow of up to 0.13 m/s remained in front of the
+  strip, against a tidal current of 0.06 m/s); updating every step with
+  tival every 4.5 min reduced the fluctuation to about 1 mm.
 
 ## Tests and examples
 

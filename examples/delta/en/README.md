@@ -183,7 +183,7 @@ to the farthest land; and the number of distributaries is the number of channels
 radius 0.5 R and 0.8 R centred on the mouth. All figures have north up; the colour is the change in
 ground elevation (deposit thickness) and the black line is the shoreline.
 
-The tables and figures were computed with the version of 20–29 October 2026. Because the shape of
+The tables and figures were computed with the version of 20–29 October 2026 (stages 6 and 7 with that of 2 November). Because the shape of
 the delta differs between realizations (see "The shape differs between realizations" in the
 notes), recomputing with the same settings changes the positions of the lobes and the number of
 distributaries, and the deposit, emerged land and maximum radius can change within a few %.
@@ -363,6 +363,73 @@ column is a run with `f_wfswash` set to 0 in param_wfsed.txt.)
 
 wfsed at 1500 h (the panels are arranged as in the final landform of base).
 
+### Stage 6: tides — a river mouth with rise and fall (notide, tide)
+
+![Without and with tide](figs/tide_cmp.png)
+
+Landform 1490 h (tide at the rising mean tide). Top: deposit thickness and shoreline. Bottom: classes
+of bed elevation (at or below the low-tide level −1 m, intertidal height −1 to +1 m, at or above the
+high-tide level +1 m). Left: without tide (notide); right: with tide (tide).
+
+tide adds an M2 tide with a range of 2 m to the same river (30 m³/s) and sediment as notide, the
+reference without tide. notide is baseqb with the north and south sides lateral Neumann as in tide;
+the two differ only in the tide and in the landform acceleration (morfac 100 in notide, 24 in tide).
+
+| Landform 1490 h | notide (without tide) | tide (with tide) |
+|---|---|---|
+| Deposit (bulk) | 170×10³ m³ (sand 64×10³ m³ = all of the sand fed, mud 106×10³ m³ = 79 % of the supply) | 134×10³ m³ (sand 50×10³ m³ = 78 % of the sand fed, mud 84×10³ m³ = 63 % of the supply) |
+| Sediment carried out by bedload through the north and south sides (solid) | 0 | 16×10³ m³ (sand amounting to 22 % of the feed, and mud moving with the sand) |
+| Extent of the sand body (sand 0.3 m or thicker): along the coast × offshore | 300 m × 212 m | 600 m (the full width of the domain) × 132 m |
+| Emerged land (depth below 0.05 m at mean tide) | 17.2×10³ m² | 6.9×10³ m² (the island of the mouth bar; top at +0.66 m) |
+| Flats (dry at low tide, flooded at high tide) | — | 36.7×10³ m² |
+| Discharge at the mouth (last cycle) | 30 m³/s | 29.2–30.7 m³/s (never reversed) |
+| Tidal discharge in and out of the flats πP/T (P = water volume over the flats at high tide) | — | 4.1 m³/s (14 % of the river) |
+
+(Totals of `python3 plot_results.py tidecmp` and the ledger at the end of the run (sediment that left
+through the north and south sides). The split into sand and mud is from the final bed elevation Z and
+the mud thickness Sf. πP/T is the amplitude of the discharge in and out of the flats approximated by a
+sine, a measure for this example.)
+
+- **The outlet of the river changes between high and low tide**: at high tide the jet from the mouth
+  goes straight offshore. As the tide falls, the mouth bar in front of the mouth (top at +0.66 m)
+  emerges as an island; the river flow splits on both sides of it and runs north and south along a
+  trough at the foot of the coast (bed around −1.1 m), at 0.7–0.8 m/s at low tide.
+- **The deposit spreads along the coast**: the flow running along the coast at every low tide carries
+  sand, so the sand body spreads over the full width of the domain, and a little over 20 % of the sand
+  fed leaves through the north and south sides (treated as if the same coast continued outside). The
+  offshore extent is 60 % of that of notide. At mean tide only the island of the mouth bar is land,
+  but at low tide 36.7×10³ m² of flats appear.
+- **Still river-dominated**: the channel is narrow and its banks are higher than high tide, so little
+  water is stored by the tide upstream of the mouth, and the discharge at the mouth stays at
+  29–31 m³/s without reversing. The tidal discharge in and out of the flats is also 14 % of the
+  river. Even on the rising tide, only 6 % of the cells of the channels that carry the river water at
+  low tide flow landward, and the tidal current in the basin is about 0.05 m/s (0.14 m/s at most),
+  short of the speed at which sand starts to move (about 0.25–0.3 m/s for depths of 1–2 m, from the
+  critical dimensionless shear stress 0.05). tide is a tide-influenced, river-dominated delta: the tide
+  changes the shape through the rise and fall of the water level (by moving the outlet of the river
+  and changing the strength of the backwater) more than through tidal currents.
+- **The channel at low tide**: even when the sea falls to −1 m at low tide, the water level of the
+  channel just inside the mouth stays at −0.57 m (set by the water level of the flow paths beyond the
+  mouth), and the flow at the mouth speeds up to 1.4 m/s. The sand that settles in the channel near
+  the mouth under the backwater of high tide (about 9 cm thick) is washed out by the fast flow at low
+  tide.
+- **The trough at the foot of the coast**: the trough through which the river flows at low tide
+  results from the coast of this example being a vertical step that cannot be eroded (land at +1.5 m,
+  bed −1.2 m in front of it). Real tidal coasts are gently sloping flats, and the river reaches the
+  sea through channels cut into the flats (no comparison with a gently sloping coast has been made).
+
+![Flow in the last cycle](figs/tide_phases.png)
+
+Flow in the last tidal cycle of tide (landform 1192–1490 h). From the top left: flood (mean tide),
+high tide, ebb (mean tide), low tide. Colour is the speed, arrows the direction of the flow, and tan
+the dry areas.
+
+![Water level and discharge at the mouth](figs/tide_series.png)
+
+Top: water level in the channel just inside the mouth, 100 m off the mouth and in the middle of the
+basin, with the imposed tide (the line 100 m off the mouth is horizontal at the bed elevation while
+that point is dry). Bottom: discharge through the mouth.
+
 ## What this model cannot represent (differences from real phenomena)
 
 - **Tides**: this example has no tides. Placing a strip of sea mask along the offshore side and
@@ -448,7 +515,7 @@ wfsed at 1500 h (the panels are arranged as in the final landform of base).
   much slower than the flow, and with a periodic forcing such as the tide it can be used only while the
   landform change in one tidal cycle is small (Roelvink 2006). The tidal cases of this example lower
   morfac to 24 (240 in tidedom, whose sediment is 1/10) and solve 5 tidal cycles (the sand that enters
-  in one tidal cycle is 20 % of the sand of the final delta). The references without tide have a steady
+  in one tidal cycle is a quarter of the sand of the final delta of tide). The references without tide have a steady
   flow, so they see the same landform time with the cheaper morfac 100 (1000 in smallq).
 - **How the tidal cases are compared**: the output is every quarter of a tidal cycle (rising mean tide,
   high tide, falling mean tide, low tide). The extent of land changes with the tide level, so the
@@ -467,7 +534,11 @@ wfsed at 1500 h (the panels are arranged as in the final landform of base).
 - **Sides crossing the coast**: in the tidal cases the river flow runs around along the coast at every
   low tide and the deposit spreads along the coast, so the north and south sides are lateral Neumann
   (`f_bc_n`, `f_bc_s = 3`; the same coast continues outside). With walls, the deposit would hit the
-  walls. The references (notide, smallq) use the same sides.
+  walls. The references (notide, smallq) use the same sides. The lateral Neumann sides let the river water and
+  sediment that ran along the coast leave as they are (in the last cycle of tide most of the river
+  water leaves through the north and south sides), and depending on the time of the tide they also
+  pass part of the tidal exchange. The flow through the sides adds about 0.03 m/s to the basin and
+  moves no sediment.
 
 ![Differences between realizations](../figs/ensemble.png)
 
