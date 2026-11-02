@@ -1,11 +1,11 @@
 !======================================================================
-! delta — 流量変動+定着(冠水減衰・河岸係数つき。docs/delta_plan.md §2.6、developer.md §84.13)
+! delta — 段 3 fix: 流量変動+植生の定着(冠水減衰・河岸係数つき。README「段 3」)
 !   param_varq.txt と同じ流量変動に、弱い定着 f_fixation(c_τ = 3、T_fix = 100 h)、冠水時の減衰
 !   fix_tdec = 50 h(出水の継続時間程度)、河岸係数 fix_ctau_bank = 0.5、側岸侵食則(K_b = 3e-5 m/s、
 !   τ*c,b = 0.3)を加える。morfac 200 で地形 4000 h(約 1.5 時間)。
 !   期待: 低水期に露出した砂州が定着して分流路が安定し(幅 20〜30 m の滑らかな水路)、汀線の凹凸は
 !   流量変動の構成で最小。冠水減衰がないと露出した砂州が恒久化して分流路が格子幅の水路に落ちる
-!   (delta_plan.md §2.6 の「強い定着」)。実行: ./encflow param_fix.txt。図化: python3 plot_results.py fix
+!   (README「段 3」の参考「冠水で弱まらない強い定着」)。実行: ./encflow param_fix.txt。図化: python3 plot_results.py fix
 !======================================================================
 &list_sysparam
   f_gridsystem = 0
@@ -30,7 +30,8 @@
 /
 &list_enc
   f_advection_scheme = 3
-  f_opening_dynamic = 2     ! 2026-10-31 からの既定 3 と両岸が高い河道ではほぼ同じ。結果の再現のため 2 を明示
+  f_opening_dynamic = 2     ! 塞がれた斜めの開口の振り替え(河道マスクのない掘り込み河道で壁際の通水能を保つ)。
+                            !   README の結果はこの値で計算した(既定の 3 とは、両岸の高い河道ではほぼ同じ)
 /
 &list_initial
   f_htype = 2               ! 水位固定で初期化(海面 0 m)
@@ -68,13 +69,13 @@
   f_repose = 1
   repose_phi = 30.0
   repose_relax = 0.5
-  f_fixation = 1            ! 定着(露出した砂州が再侵食に抵抗。§84.6)
+  f_fixation = 1            ! 定着(露出した砂州が再侵食に抵抗する)
   fix_tfix = 100            ! 定着時間 (h。地形時間)
   fix_ctau = 3
   fix_dzreset = 0.1
   fix_cn = 2
-  fix_tdec = 50             ! 冠水時の減衰時間 T_dec (h。§84.13)
-  fix_ctau_bank = 0.5        ! 河岸に効かせる増分比 c_τ,b(§84.13)
+  fix_tdec = 50             ! 冠水時の減衰時間 T_dec (h。地形時間)
+  fix_ctau_bank = 0.5        ! 河岸に効かせる増分比 c_τ,b
   f_berode = 1              ! 側岸侵食則(水面より高い隣接セルを脚部の掃流力で後退)
   berode_kb = 3e-05
   berode_tausc = 0.3

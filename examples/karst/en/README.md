@@ -126,12 +126,6 @@ and so on).
 
 ## Results
 
-> **Note (2026-11-02)**: the numbers and figures of this example were computed with f_opening_dynamic = 2
-> (recomputed on 2026-11-02 in the documentation branch, whose default was 2). The default of main has been 3
-> since 2026-10-31 (developer.md §68.41 to §68.43); with 3 the surface-flow paths change, so the values change.
-> The recomputation with the default 3 is still pending (handoff). To reproduce the README values, write
-> `fn_enc = "-"` in `&list_sysparam` and `f_opening_dynamic = 2` in `&list_enc` of the param files.
-
 ![Terrain and denudation depth](figs/maps.png)
 
 Upper left: initial terrain, upper right: final terrain (landform time 1500 years; shading and
@@ -164,10 +158,10 @@ Budget check (tables of `plot_results.py`; landform time 1500 years = 60,000 sto
 | Item | Value |
 |---|---|
 | Water balance | final S_surf = 0, S_grnd = S_total = 2.400 m = cumulative rain 40 mm × 60 days (the ponding disappears every day) |
-| Volume of dissolved rock | loss of surface volume Σ(z₀ − z)Δx² = 81736 m³, ÷ (1 − residue 0.1) = 90817 m³ = 90817 m³ of the ledger (all digits agree) |
-| Diffuse denudation | median denudation depth of cells that did not pond 0.025 m = 16.7 mm/kyr (infiltrating rain ≈ 0.4 m/yr × k_d 4×10⁻⁵) |
-| Concentrated denudation | maximum 22.6 m (900 times the diffuse denudation); 52 depressions with denudation depth > 2 m (deepest 22.6 / 20.1 / 19.3 / 18.6 / 18.4 m) |
-| Breakdown of the volume | diffuse ≈ 22000 m³ (27 %), concentrated (dolines and drainage paths) ≈ 60000 m³ (73 %) |
+| Volume of dissolved rock | loss of surface volume Σ(z₀ − z)Δx² = 81690 m³, ÷ (1 − residue 0.1) = 90766 m³ = 90766 m³ of the ledger (all digits agree) |
+| Diffuse denudation | median denudation depth of cells that did not pond 0.025 m = 16.9 mm/kyr (infiltrating rain ≈ 0.4 m/yr × k_d 4×10⁻⁵) |
+| Concentrated denudation | maximum 22.4 m (880 times the diffuse denudation); 52 depressions with denudation depth > 2 m (deepest 22.4 / 20.0 / 19.2 / 18.4 / 18.3 m) |
+| Breakdown of the volume | diffuse ≈ 22000 m³ (27 %), concentrated (dolines and drainage paths) ≈ 59000 m³ (73 %) |
 
 The conversion of the landform time assumes "one daily cycle = one representative storm, 40 a year"
 (1 day × morfac 1000 = 1000 storms = 25 years).
@@ -175,10 +169,10 @@ The conversion of the landform time assumes "one daily cycle = one representativ
 - **Self-organisation of the doline field**: of the initial shallow depressions (closed hollows made
   by the undulation of 1 m standard deviation), those with larger catchments deepen first: 7 at 250
   years, 34 at 500 years, and nearly saturated at 54 to 55 after 1250 years (catchment ≈ 1.5 to 2 ha per
-  depression). The deepest doline is 22.6 m at 1500 years, and its depth grows almost in proportion
+  depression). The deepest doline is 22.4 m at 1500 years, and its depth grows almost in proportion
   to time (with a constant catchment, the inflow is constant).
 - **Order-of-magnitude difference from diffuse denudation**: cells that did not pond are lowered by
-  only 2.5 cm in 1500 years (16.7 mm/kyr). In the logarithmic map of the denudation depth (lower
+  only 2.5 cm in 1500 years (16.9 mm/kyr). In the logarithmic map of the denudation depth (lower
   left), the paths along which water flows into the depressions appear as **a network of shallow
   drainage paths** that dissolved 2 to 5 times faster than diffuse denudation (the inflow into the
   sinks is larger for as long as the ponded water flows). They are the prototype of dry valleys of
@@ -202,11 +196,11 @@ the main case.
 
 | Item | Floor only (param.txt) | With lateral dissolution (param_lat.txt) |
 |---|---|---|
-| Volume of dissolved rock (ledger = difference of surface volume ÷ 0.9) | 90817 m³ | 89510 m³ (a redistribution, so the total is the same; the difference comes from different paths of ponded water) |
+| Volume of dissolved rock (ledger = difference of surface volume ÷ 0.9) | 90766 m³ | 89474 m³ (a redistribution, so the total is the same; the difference comes from different paths of ponded water) |
 | Diffuse denudation (median of cells that did not pond) | 0.025 m | 0.025 m |
-| Deepest doline | 22.6 m | 10.7 m |
-| Mean denudation of the 8 neighbours of the deepest doline | 0.56 m | 2.03 m |
-| Cells with denudation depth > 1 m / > 2 m / > 5 m | 77 / 53 / 38 | 163 / 68 / 22 |
+| Deepest doline | 22.4 m | 10.7 m |
+| Mean denudation of the 8 neighbours of the deepest doline | 0.56 m | 2.01 m |
+| Cells with denudation depth > 1 m / > 2 m / > 5 m | 77 / 53 / 38 | 162 / 68 / 22 |
 | Depressions with denudation depth > 2 m | 52 | 49 |
 
 ![Terrain and denudation depth with lateral dissolution](figs/maps_lat.png)
@@ -234,11 +228,11 @@ each update as talus (ht; also added to the soil sd) (angle of repose of talus 3
 
 | Item | With lateral dissolution | + collapse (H_c = 5 m) |
 |---|---|---|
-| Rock moved by collapse (ledger) | — | 663 m³ (20,000 edge updates; talus up to 2.5 m) |
-| Deepest doline (surface) | 10.7 m | 9.7 m |
-| Soil thickness of the deepest doline | 1.7 m (residue) | 2.8 m (residue + talus 1.1 m) |
-| Mean denudation of the 8 neighbours | 2.03 m | 2.16 m |
-| Cells with denudation depth > 1 m / > 2 m | 163 / 68 | 165 / 70 |
+| Rock moved by collapse (ledger) | — | 639 m³ (19,000 edge updates; talus up to 2.5 m) |
+| Deepest doline (surface) | 10.7 m | 9.6 m |
+| Soil thickness of the deepest doline | 1.7 m (residue) | 2.7 m (residue + talus 1.1 m) |
+| Mean denudation of the 8 neighbours | 2.01 m | 2.14 m |
+| Cells with denudation depth > 1 m / > 2 m | 162 / 68 | 164 / 70 |
 
 ![Sections with collapse](figs/sections_rock.png)
 

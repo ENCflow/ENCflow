@@ -134,17 +134,17 @@ en/figs/ (`python3 plot_setup.py en`, `python3 plot_results.py [series] en`).
 
 ## Results
 
-![Evolution of the terrain](../figs/maps.png)
+![Evolution of the terrain](figs/maps.png)
 
 Top: with cap rock, bottom: no strata. Shaded relief at T_geo = 0, 7.2×10⁶, 1.4×10⁷, 2.2×10⁷ s
 (red line = outline of the top of the cap rock z = 17 m).
 
-![Evolution of the section](../figs/sections.png)
+![Evolution of the section](figs/sections.png)
 
 Evolution of the section through the centres of the two plateaus (y = 50 m) (grey bands = cap rock
 and intermediate hard bed).
 
-![Shrinking of the plateau surface and height of the top](../figs/series.png)
+![Shrinking of the plateau surface and height of the top](figs/series.png)
 
 Left: equivalent radius √(A/π) of the plateau surface (z ≥ 17 m) (a straight line = parallel
 retreat). Right: height of the top.
@@ -181,9 +181,9 @@ volume = sediment that left the domain ÷ 0.6 (both cases).
 | bench2 | z = 5–10 m, factor 0.02 | 32 | 3.5×10⁻⁷ (linear) | 20 |
 | bench3 | z = 5–10 m, factor 0.02 | 0 | 1.9×10⁻⁷ (linear) | 20 |
 
-![Sections with the intermediate hard bed](../figs/sections_bench.png)
+![Sections with the intermediate hard bed](figs/sections_bench.png)
 
-![Terrain with the intermediate hard bed](../figs/maps_bench.png)
+![Terrain with the intermediate hard bed](figs/maps_bench.png)
 
 Radial width (m) occupied by each elevation band on the azimuthally averaged profile (large
 plateau) (T_geo = 4.3×10⁷ s):
@@ -223,9 +223,9 @@ $`\tilde\kappa = \kappa/(1 + \kappa/\kappa_s)`$, was added to the bench2 set-up,
 amplification at 2.6 times (κ_s = 0.05) and 7.4 times (κ_s = 0.2) (over 100 times without
 saturation; no amplification = bench3).
 
-![Sections with saturated amplification](../figs/sections_sat.png)
+![Sections with saturated amplification](figs/sections_sat.png)
 
-![Terrain with saturated amplification](../figs/maps_sat.png)
+![Terrain with saturated amplification](figs/maps_sat.png)
 
 | Case | Cap on amplification | Area within ±0.5 m of the top of the hard bed (m²) (T_geo 4.3×10⁷ / 8.6×10⁷ s) | Mean angle of the upper cliff (1.4×10⁷ / 4.3×10⁷ / 6.5×10⁷ s) | Retreat rate of the large plateau (m/s) |
 |---|---|---|---|---|
@@ -267,13 +267,13 @@ Four cases adding to the bench2 set-up (hard bed 5 to 10 m, factor 0.02, spl_cb 
 collapses the part of the step to the neighbouring cell exceeding H_c = 4 m (the 3 to 4 m steps at
 the edge are the target; with H_c = 18 m or 6 m the steps do not reach it and nothing collapses).
 
-![Sections with the step rule](../figs/sections_rock.png)
+![Sections with the step rule](figs/sections_rock.png)
 
 | Case | Talus erodibility | κ_s | Volume moved by collapse (cumulative m³) | Total talus (m³) | Angle of the upper cliff (1.4×10⁷ / 4.3×10⁷ / 6.5×10⁷ s) | Retreat rate of the large plateau (m/s) |
 |---|---|---|---|---|---|---|
 | bench2 (no collapse) | – | – | – | – | 73° / 73° / 73° | 3.5×10⁻⁷ |
 | rock2 | 0.1 | – | 1314 | 2 | 58° / 58° / 52° | 2.2×10⁻⁷ |
-| rock4 | 0.02 | – | 1285 | 5 | 58° / 58° / 52° | 2.2×10⁻⁷ |
+| rock4 | 0.02 | – | 1285 | 4 | 58° / 58° / 52° | 2.2×10⁻⁷ |
 | rock3 | 0.02 | 0.2 | 184 | 5 | 58° / 52° / 47° | 2.1×10⁻⁷ |
 | rock5 | 0.005 | 0.2 | 99 | 6 | 58° / 52° / 47° | 2.2×10⁻⁷ |
 
@@ -292,20 +292,20 @@ the edge are the target; with H_c = 18 m or 6 m the steps do not reach it and no
 
 The same terrain with Δx = 4 m (8 m steps at the edge), H_c = 6 m and talus erodibility 0.1 / 0.01.
 
-![Sections with Δx = 4 m](../figs/sections_dx4.png)
+![Sections with Δx = 4 m](figs/sections_dx4.png)
 
-![Talus with Δx = 4 m](../figs/talus_dx4.png)
+![Talus with Δx = 4 m](figs/talus_dx4.png)
 
 | Case | Talus erodibility | Volume moved by collapse (m³) | Total talus (m³) (1.4×10⁷ → 8.6×10⁷ s) | Angle of the lower cliff (1.4×10⁷ / 4.3×10⁷ / 6.5×10⁷ s) | Retreat rate (m/s) |
 |---|---|---|---|---|---|
 | dx4 (no collapse) | – | – | – | 65° / 60° / 47° | 1.8×10⁻⁷ |
-| dx4_rock | 0.1 | 14469 | 353 → 211 | 38° / 33° / 30° | 1.7×10⁻⁷ |
-| dx4_rock2 | 0.01 | 14487 | 411 → 393 | 38° / 31° / 30° | 1.7×10⁻⁷ |
+| dx4_rock | 0.1 | 14469 | 5645 → 3373 | 38° / 33° / 30° | 1.7×10⁻⁷ |
+| dx4_rock2 | 0.01 | 14487 | 6577 → 6286 | 38° / 31° / 30° | 1.7×10⁻⁷ |
 
 - **When the cliff becomes a step of the grid, collapse and talus change the form.** The debris
   falling as the edge steps collapse forms a ring of talus 2 to 4 m thick around both plateaus, and
   the lower slope is replaced by a talus slope at the angle of repose (30 to 38°). With a talus
-  erodibility of 0.01 the talus hardly decreases (411 → 393 m³), a state limited by the talus. The
+  erodibility of 0.01 the talus hardly decreases (6577 → 6286 m³), a state limited by the talus. The
   retreat rate of the upper cliff (edge of the cap rock) is the same as without collapse
   (1.7×10⁻⁷ m/s), and the retreat is still carried by dry erosion of the edge.
 - Putting the two grid spacings together: the step rule, "step to the neighbouring cell > H_c", is a
@@ -321,9 +321,9 @@ of radius r_c" (`rf_rc`) and moves the excess of H_w > H_c across edges steeper 
 repose of talus. H_c = 15 m and r_c = 8 m are given for both Δx = 1 m and 4 m, with talus
 erodibility 0.1 and 0.01 (+ κ_s = 0.2).
 
-![Sections with the window version](../figs/sections_rc.png)
+![Sections with the window version](figs/sections_rc.png)
 
-![Talus with the window version](../figs/talus_rc.png)
+![Talus with the window version](figs/talus_rc.png)
 
 | Grid | Case | Collapse rule | Talus erodibility | Volume moved by collapse (m³) | Total talus (m³, final) | Angle of the lower cliff (1.4×10⁷ / 4.3×10⁷ / 6.5×10⁷ s) | Retreat rate (m/s) |
 |---|---|---|---|---|---|---|---|
@@ -332,8 +332,8 @@ erodibility 0.1 and 0.01 (+ κ_s = 0.2).
 | Δx = 1 m | rc | window 8 m, H_w > 15 m | 0.1 | 47120 | 1309 | 47° / 43° / 71°* | 1.9×10⁻⁷ |
 | Δx = 1 m | rc2 | same | 0.01, κ_s 0.2 | 24123 | 2143 | 47° / 38° / 31° | 3.2×10⁻⁷ |
 | Δx = 4 m | dx4 | none | – | – | – | 65° / 60° / 47° | 1.8×10⁻⁷ |
-| Δx = 4 m | dx4_rc | window 8 m, H_w > 15 m | 0.1 | 7151 | 39 | 43° / 38° / 31° | 1.8×10⁻⁷ |
-| Δx = 4 m | dx4_rc2 | same | 0.01, κ_s 0.2 | 6812 | 140 | 43° / 35° / 30° | 1.7×10⁻⁷ |
+| Δx = 4 m | dx4_rc | window 8 m, H_w > 15 m | 0.1 | 7151 | 626 | 43° / 38° / 31° | 1.8×10⁻⁷ |
+| Δx = 4 m | dx4_rc2 | same | 0.01, κ_s 0.2 | 6812 | 2240 | 43° / 35° / 30° | 1.7×10⁻⁷ |
 
 (* The value of rc at 6.5×10⁷ s is taken where the talus band has left the averaging interval.)
 
@@ -342,8 +342,9 @@ erodibility 0.1 and 0.01 (+ κ_s = 0.2).
   of collapse, and talus accumulates as a ring 1 to 3 m thick around the plateaus (1300 to 2100 m³;
   2 m³ with the step rule). The lower slope is replaced by a talus slope of 30 to 40°, the same type as
   the result with Δx = 4 m (lower cliff 30 to 38° on both grids, retreat of the cap edge 1.7 to
-  1.9×10⁻⁷ m/s). The total talus differs between grids (40 to 140 m³ for Δx = 4 m); on the coarse grid
-  the talus band is resolved by only 1 or 2 cells.
+  1.9×10⁻⁷ m/s). The total talus is also of the same size on both grids (with talus erodibility 0.1 /
+  0.01: 626 / 2240 m³ for Δx = 4 m and 1309 / 2143 m³ for Δx = 1 m), but on the coarse grid the talus
+  band is resolved by only 1 or 2 cells.
 - Strengthening the protection by talus (rc2: 0.01 times + κ_s) increases the total talus, but
   collapse keeps relaxing the face to the angle of repose, so the plateau approaches a cone covered by
   talus of 27 to 31° up to the upper cliff, and the cap surface shrinks rather faster (3.2×10⁻⁷ m/s).
@@ -362,23 +363,19 @@ column at a time). Talus erodibility 0.01 / 0.1 / 0.3 (face / face2 / face3) sho
 rate is controlled by the removal of talus. In addition, H_c = 8 m (face4 / face5; the 10 m upper cliff
 above the step is also a target of column collapse) is compared.
 
-![Sections with the support scheme](../figs/sections_face.png)
+![Sections with the support scheme](figs/sections_face.png)
 
-![Sections with the support scheme (H_c = 8 m)](../figs/sections_face8.png)
+![Sections with the support scheme (H_c = 8 m)](figs/sections_face8.png)
 
 | Case | H_c | Talus erodibility | Volume moved by collapse (m³) | Total talus (m³, final) | Area of the step (top of hard bed ±0.5 m) (m², 4.3×10⁷ / 8.6×10⁷ s) | Retreat rate of the edge (m/s) |
 |---|---|---|---|---|---|---|
-| bench2 (no collapse) | – | – | – | – | 72 / 23 | 3.5×10⁻⁷ |
+| bench2 (no collapse) | – | – | – | – | 66 / 23 | 3.5×10⁻⁷ |
 | rc2 (window version) | 15 | 0.01 | 24123 | 2143 | 454 / 448 | 3.2×10⁻⁷ |
 | face | 15 | 0.01 | 33388 | 2846 | 961 / 948 | 3.2×10⁻⁷ |
 | face2 | 15 | 0.1 | 33063 | 1041 | 894 / 683 | 3.1×10⁻⁷ |
 | face3 | 15 | 0.3 | 32433 | 97 | 605 / 372 | 3.1×10⁻⁷ |
 | face4 | 8 | 0.01 | 152774 | 12261 | 657 / 1029 | 2.5×10⁻⁷ |
 | face5 | 8 | 0.1 | 153263 | 7413 | 754 / 942 | 2.9×10⁻⁷ |
-
-(The step area of bench2 at 4.3×10⁷ s is 66 m² in the table of supplement 2 but 72 m² in this table
-and the next, which disagree. The counting is the same, so the analyses appear to come from different
-versions of the runs. Until they are aligned by a re-run, compare values within the same table.)
 
 - **A vertical upper cliff and a wide step coexist (H_c = 15 m).** In the section (y = 50 m), the drop
   of 8 to 9 m from the cap rock to the top of the hard bed (z ≈ 11 to 12 m) fits within a horizontal
@@ -413,11 +410,11 @@ of H_c). The targets are the soft bed (1) below the cap rock (0.05) and the soft
 intermediate hard bed (0.02); steps between soft beds are not targets. Talus erodibility 0.1 / 0.3 / 1
 (uc / uc2 / uc3) shows whether the retreat rate is controlled by the removal of talus.
 
-![Sections with undercutting](../figs/sections_uc.png)
+![Sections with undercutting](figs/sections_uc.png)
 
 | Case | Talus erodibility | Columns fallen by undercutting | Volume moved by collapse (m³) | Total talus (m³, final) | Area of the step (m², 4.3×10⁷ / 8.6×10⁷ s) | Retreat rate of the edge (m/s, R₀ = 30 / 12 m) |
 |---|---|---|---|---|---|---|
-| bench2 (no collapse) | – | – | – | – | 72 / 23 | 3.5×10⁻⁷ / 3.2×10⁻⁷ |
+| bench2 (no collapse) | – | – | – | – | 66 / 23 | 3.5×10⁻⁷ / 3.2×10⁻⁷ |
 | face (no undercutting) | 0.01 | – | 33388 | 2846 | 961 / 948 | 3.2×10⁻⁷ / 2.6×10⁻⁷ |
 | uc | 0.1 | 8038 | 50051 | 846 | 310 / 628 | 1.6×10⁻⁷ / 2.5×10⁻⁷ |
 | uc2 | 0.3 | 14222 | 65931 | 110 | 280 / 307 | 1.8×10⁻⁷ / 2.8×10⁻⁷ |
@@ -449,7 +446,7 @@ vertical and the soft bed below is a debris slope". Option 2 (uc_slow) lowers th
 uc (0.1 times) to 0.03 times and doubles the run (T_geo 1.7×10⁸ s) to see whether a state appears in
 which debris accumulates at the foot and supports the face of the soft bed.
 
-![Sections of the options](../figs/sections_ucx.png)
+![Sections of the options](figs/sections_ucx.png)
 
 | Case | Cap thickness | Talus erodibility | Columns fallen by undercutting | Total talus (m³, final) | Area of the step (m², final) | Retreat rate of the edge (m/s, R₀ = 30 m) |
 |---|---|---|---|---|---|---|

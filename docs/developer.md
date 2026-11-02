@@ -6534,15 +6534,16 @@ docs/splash_plan.md**。
 - **例題の説明の組み直し(2026-11-02)**: badland・badland_round・badland_storm・mesa・karst・
   tower_karst の README(日英)を estuary_barrage と同じ構成(実際の現象 → 再現に必要な機構
   → 幾何と設定 → 実行方法 → 結果 → 表せないこと → 注意 → 感度実験の入口 → 参考文献)に
-  組み直した。ケース・param の値は変えていない(param はコメントだけ直した)。結果の図は
-  利用者の依頼で再計算して描き直した: badland は README の数表が全項目再現(図の差し替えは曲率の
-  題を直した main_features.png のみ)、badland_storm の結果 1〜3 は湿潤侵食のあるケースだけが
-  README 当時から少しずれた。当時のコードと現行を -O2 で作るとバイト一致するので計算の意味は
-  変わっておらず、-Ofast の最適化の差(§10 と同型)が流れの集中の正のフィードバックで数 % に
-  増幅されたもの(handoff 00g。README の「注意」に書いた)。各例題の Makefile に make run 等を足し、画面出力は
-  `2>&1 | tee` で Screen*.log に残す(排出量・上限の回数・崩落量の台帳は par_warn = 標準エラーで、
-  plot スクリプトがログから読むため)。機構の模式図と設定の図は計算結果を使わない各例題の
-  plot_setup.py で描く(plot_results.py は結果を前提にしたモジュール直書きなので分けた)。新島の谷形成の仮説
+  組み直した。ケース・param の値は変えていない(param はコメントだけ直した)。結果の図と数表は
+  利用者の依頼で再計算して合わせた: badland・mesa(表面流なし)は README の値を再現した(mesa の
+  plot_results.py は崖錐の総量・段の面積に Δx² を掛けておらず、Δx = 4 m の系列の値を直した)。
+  badland_storm・karst・tower_karst は main の既定 f_opening_dynamic = 3(§68.41〜§68.43)で計算し
+  直して値を更新した。湿潤侵食のケースは -Ofast の最適化の差(§10 と同型)が流れの集中の正の
+  フィードバックで数 % に増幅される(当時と現行を -O2 で作るとバイト一致。handoff 00g、README の
+  「注意」)。各例題の Makefile に make run 等を足し、画面出力は `2>&1 | tee` で Screen*.log に
+  残す(排出量・上限の回数・崩落量の台帳は par_warn = 標準エラーで、plot スクリプトがログから
+  読むため)。機構の模式図と設定の図は計算結果を使わない各例題の plot_setup.py で描く
+  (plot_results.py は結果を前提にしたモジュール直書きなので分けた)。新島の谷形成の仮説
   (研究の文脈)は README から外し、モデルの中での結論として書いた。他文書が参照する節の名前
   (badland_storm の「結果 4・5」、mesa の「崩落と崖錐」「窓版」「支え方式」「張り出しによる
   崩落」)は残した。組み直しで見つけた数値・図の題の食い違いと再計算の候補は handoff 00g。
