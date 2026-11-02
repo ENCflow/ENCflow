@@ -7,7 +7,8 @@
 #         固定給砂の構成(FIXEDCH)は河道も 0 = 給砂を運ぶ固い水路(河口に出てから動く)
 #   rows: 西端の河道セルの行番号(区間流入の inflow_cell に使う)
 #   sw:   海域マスク(1 = 海)。東端 NSEA 列を潮位を与える海の帯にする(段 6 の tide)
-#   tide: 潮位の &list_tide(M2 分潮。周期 TM2 分、振幅 ATIDE m の正弦を 1/48 周期ごと、NCYC 周期分)
+#   tide: 潮位の &list_tide(M2 分潮。周期 TM2 分、振幅 ATIDE m の正弦を NCYC 周期分、tival の上限 999 点に
+#         収まる細かさで。潮位は毎ステップ更新する。README「注意」の「潮位の与え方」)
 import sys
 import numpy as np
 
@@ -24,6 +25,7 @@ CASES = {
 }
 FIXEDCH = {"wave", "baseqb", "tide"}       # 固定給砂の構成: 陸地内の河道も非侵食(土層 0。給砂はそのまま通過)
 NSEA, TM2, ATIDE, NCYC = 3, 745.2, 1.0, 6  # 海の帯の列数、M2 の周期 (min)、振幅 (m) = 潮差 2 m、周期数
+NPC = (999 - 1) // NCYC                     # 1 周期あたりの tival の点数(166 点 = 4.5 分ごと。上限 999 点)
 W, LRAMP, S0, ZCH0, ZLAND, SDCH = 30.0, 50.0, 0.001, -1.0, 1.5, 3.0
 
 def build(case):
@@ -50,10 +52,13 @@ if __name__ == "__main__":
         sw[:, -NSEA:] = 1
         np.savetxt(sys.stdout, sw, fmt="%d")
     elif kind == "tide":
-        # 初期水位 0 m(平均潮位)から上げ潮で始める。hsea0 は海盆の水深(2 m)と同じにする
-        t = np.arange(48 * NCYC + 1) * TM2 / 48
+        # 初期水位 0 m(平均潮位)から上げ潮で始める。hsea0 は海盆の水深(2 m)と同じにする。
+        #   この海盆の固有周期(4L/√(gh)、奥行き L = 835 m、水深 1〜3 m で 10〜18 分)に比べて、潮位の段差
+        #   (既定の 1 分ごとの更新)と線形補間の折れ点の間隔が粗いと固有振動が起きるので、潮位は毎ステップ
+        #   (dt_tiupdate = 0.005 分 = 0.3 s ≤ dt)更新し、tival は 1/NPC 周期ごとに与える
+        t = np.arange(NPC * NCYC + 1) * TM2 / NPC
         eta = ATIDE * np.sin(2 * np.pi * t / TM2)
-        print("&list_tide\n  titype = 2\n  hsea0 = 2.0\n  dt_tiupdate = 1")
+        print("&list_tide\n  titype = 2\n  hsea0 = 2.0\n  dt_tiupdate = 0.005")
         for k, (a, b) in enumerate(zip(t, eta), 1):
             print("  tival(1:2,%d) = %.4f, %.4f" % (k, a, b))
         print("/")

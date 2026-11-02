@@ -457,6 +457,13 @@ wfsed at 1500 h (the panels are arranged as in the final landform of base).
   sediment that reaches the strip leaves the system, and bedload stops at its edge (the strip is kept
   600 m or more from the delta). The apparent water-column thickness of the strip `hsea0` matches the
   basin depth (2 m; tide_m2.txt made by make_init.py).
+- **How the tide level is given**: the tide level is updated every step (`dt_tiupdate = 0.005` min =
+  0.3 s, not more than the time step), and the tide table `tival` is given every 4.5 min (tide_m2.txt
+  made by make_init.py). The natural period of this basin is 10–18 min (835 m long, 1–3 m deep); with
+  the default stepwise update every minute and a tide table every 15.5 min, the basin oscillated (a
+  seiche), and a back-and-forth flow twice the tidal current (0.06 m/s) remained in front of the strip
+  (the [tide level](../../../docs/en/users_guide/tide.md#parameters-and-the-basis-of-their-defaults)
+  chapter of the user's guide).
 - **Sides crossing the coast**: in the tidal cases the river flow runs around along the coast at every
   low tide and the deposit spreads along the coast, so the north and south sides are lateral Neumann
   (`f_bc_n`, `f_bc_s = 3`; the same coast continues outside). With walls, the deposit would hit the

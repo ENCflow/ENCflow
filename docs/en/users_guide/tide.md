@@ -223,7 +223,7 @@ The labels in the Basis column are explained in [How to read the basis of a defa
 | titype | 1 (when unspecified) | how the tide is given | **method** the simplest default: an empty &list_tide makes the sea a "drain at level 0"; 2–4 for real events |
 | ti0 | 0 m | uniform fixed level | **given** 0 = mean sea level of the elevation datum |
 | tival / fn_timap / fn_timaplist | — | time series / distributions | **given** tide tables, tide-gauge records, storm-surge hindcasts |
-| dt_tiupdate | 1 min | update interval of the tide | **numerical** fine enough for tidal changes (periods of hours); shorter than the time step is meaningless |
+| dt_tiupdate | 1 min | update interval of the tide | **numerical** fine enough for tidal changes (periods of hours); shorter than the time step is meaningless (at or below the time step it is updated every step). Update every step in small water bodies with short natural periods (see below) |
 | dt_timaplist | 60 min | frame interval of the distribution list | **given** match the output interval of the surge model |
 | hsea0 | 1 m | apparent water column of sea cells | **empirical** tens of times the threshold depth dd (default 1 mm) or more, so that the sea-to-land flux becomes insensitive to hsea0; not the real sea depth |
 
@@ -235,6 +235,22 @@ The labels in the Basis column are explained in [How to read the basis of a defa
   the tide level and of the topography.
 - Check the sensitivity to hsea0 by comparing the inundation flux across
   a transect for hsea0 = 0.5, 1 and 2 m under the same tide.
+- Water bodies with short natural periods: the tide level changes in steps
+  every dt_tiupdate, and between the points of tival it follows a broken
+  line (linear interpolation). In a small basin or bay facing the strip of
+  sea mask (natural period ≈ 4L/√(gh), with L the distance from the strip
+  to the far shore and h the depth), steps or break points that are coarse
+  compared with the natural period excite a natural oscillation (seiche),
+  and a back-and-forth flow as large as the tidal current can remain. Set
+  dt_tiupdate at or below the time step so that the tide is updated every
+  step, and make the interval of tival shorter than the natural period. In
+  the tidal cases of [examples/delta](../../../examples/delta/en/README.md)
+  (L = 835 m, h = 1–3 m, natural period 10–18 min), updates every minute
+  and tival every 15.5 min kept the basin oscillating (the water level in
+  the middle of the basin fluctuated with a standard deviation of 7 mm, and
+  a back-and-forth flow of up to 0.13 m/s remained in front of the strip,
+  against a tidal current of 0.06 m/s); updating every step with tival
+  every 4.5 min reduced the fluctuation to 0.5 mm.
 
 ## Tests and examples
 

@@ -5,7 +5,7 @@
 !   往復流がデルタの水路を支配するようにする。土砂が 1/10 なので morfac を 10 倍(240)にし、潮 5 周期
 !   (水理 62.1 h)で地形 14900 h を見る(潮の 1 周期の地形変化は tide と同じ)。
 !   南北の辺は tide と同じ側方 Neumann。比較の基準は同じ川で潮汐のない param_smallq.txt。
-!   入力: make(z_base.txt, sd_baseqb.txt, sw_tide.txt, tide_m2.txt)。4 スレッドで約 3 時間。
+!   入力: make(z_base.txt, sd_baseqb.txt, sw_tide.txt, tide_m2.txt)。4 スレッドで約 2 時間。
 !   実行: ./encflow param_tidedom.txt。図化: python3 plot_results.py tidedom
 !======================================================================
 &list_sysparam
@@ -24,7 +24,8 @@
   fn_geomorph = '-'
   fn_boundary = '-'
   fn_record = '-'           ! 観測点・測線(本ファイル末尾の &list_record)
-  fn_tide = 'tide_m2.txt'   ! 潮位(make_init.py tide tide が生成する &list_tide)
+  fn_tide = 'tide_m2.txt'   ! 潮位(make_init.py tide tide が生成する &list_tide。潮位は毎ステップ更新し、
+                            !   潮位表は 4.5 分ごと。海盆の固有振動を起こさないため。README「注意」)
   dir_result = 'result_tidedom'
   f_state_save = 0
   f_check_cfl = 1           ! CFL 監視
@@ -122,8 +123,9 @@
 /
 
 !======================================================================
-! 計測: 観測点(1 河口の手前の河道、2 河口の前 100 m、3 海盆の中央)と、河口を横切る測線
-!   (列 30 の行 55〜66 = 河道 6 セルと両岸の陸。東向き = 海へ流れ出る向きが正)
+! 計測: 観測点(1 河口の手前の河道、2 河口の前 100 m、3 海盆の中央)と測線(東向きが正)。
+!   測線 1 は河口を横切る(列 30 の行 55〜66 = 河道 6 セルと両岸の陸。正 = 海へ流れ出る向き)。
+!   測線 2 は潮位の帯の手前で海盆を横切る(列 195 の全行。正 = 下げ潮。潮の出入りの流量)
 !======================================================================
 &list_record
   pbxytype = 0
@@ -132,4 +134,5 @@
   pbxy(:,3) = 150, 60
   flxytype = 0
   flxy(:,1) = 30, 66, 30, 55
+  flxy(:,2) = 195, 120, 195, 1
 /
