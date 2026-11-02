@@ -26,7 +26,7 @@ python3 plot_results.py   # 図化(用意されている例題のみ)
 | [badland_round/](badland_round/) | 稜線が丸く、低い丘ほどドーム状になるバッドランド(膨潤粘土型): 移流型の下刻とクリープ(拡散)の比が決める長さ尺度 L で、L より小さい丘から丸くなる(badland の「鋭い稜線」の対照)。水平層理の硬軟互層(spl_strata)で縞と段が出る対照も | f_splash + f_creep(+ spl_strata)、Green-Ampt |
 | [mesa/](mesa/) | メサ・ビュートの形成: キャップロック(spl_strata)で平らな頂と垂直な崖の平行後退、台地の縮小 → 孤立丘 → 尖塔。層理なし・中間硬層・増幅の飽和・崩落と崖錐(窓版・支え方式 = 垂直な崖 + 段)の対照 | f_splash(spl_strata・spl_ksat)+ f_creep + f_rockfall(rf_rc・rf_fface)、Green-Ampt |
 | [karst/](karst/) | 石灰岩台地のドリーネ群の形成: 代表豪雨の反復で、浸透水が面的に溶かし、窪みに集まった水が吸込穴から地下へ消える場所が選択的に深まる(カルスト地形の自己組織化と内陸排水) | 石灰岩の溶食 f_dissol、管路連続体層(吸込穴)、Green-Ampt、周期強制 t_cycle_c |
-| [tower_karst/](tower_karst/) | 平野に残る裸岩の塔(タワーカルスト): 塔の雨が裾の平野で浸透して平野と裾だけが溶け、側方溶食と岩盤の崩落で壁が後退し、岩屑の裾野と堀ができる。取水が浸透能で頭打ちなので morfac を大きく取れる | 石灰岩の溶食 f_dissol(dissol_lat)、岩盤の崩落 f_rockfall、Green-Ampt の浸透能マップ、周期強制 |
+| [tower_karst/](tower_karst/) | 平野に残る裸岩の塔(タワーカルスト): 塔の雨が裾の平野で浸透して平野と裾だけが溶け、塔の比高が増す。裾には堀と穴ができ、側方溶食と岩盤の崩落が裾を切って岩屑が積もる(6000 年では壁の後退はまだ見えない)。取水が浸透能で頭打ちなので morfac を大きく取れる | 石灰岩の溶食 f_dissol(dissol_lat)、岩盤の崩落 f_rockfall、Green-Ampt の浸透能マップ、周期強制 |
 | [ashfall_lahar/](ashfall_lahar/) | 降灰で浸透能が下がった斜面の雨が灰を削って泥流(ラハール)になり、扇状地に堆積する。噴火前・清水の対照・砂防堰堤との比較の 4 ケースと、谷を格子に 45° 傾けた 8 近傍・4 近傍の比較(補足) | 土石流 f_debris(地下水計算と併用する間隙水 f_dbwet=2)、Green-Ampt の浸透能、降雨、砂防堰堤(地形)、4 近傍化 p_diagratio |
 | [landslide_tsunami/](landslide_tsunami/) | 地滑り・土石流の水域突入と津波。陸上崩壊と海底地滑りの 4 パターンと非静水圧版 | 動く底層 f_bedslide、非静水圧補正 |
 | [tsunami_fault/](tsunami_fault/) | 断層パラメータから津波を発生させる。静水圧・瞬時変位・非静水圧の比較と座標指定の各パターン | 規定底面運動 fn_bedmotion、utils/fault2disp |
