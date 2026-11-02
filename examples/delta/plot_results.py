@@ -294,23 +294,36 @@ def _panel_wave(ax):
 
 
 def _panel_tide(ax):
-    _plan(ax, T("(g) 潮汐の影響(tide・tidedom)", "(g) Tidal influence (tide, tidedom)"), river=False, coast=0.0)
-    # 海へ広がる漏斗状の河口
-    xs = np.linspace(0, 10, 100)
-    half = 0.35 + 0.0045 * xs ** 3.1
-    top, bot = np.minimum(half, 5), -np.minimum(half, 5)
-    ax.fill_between(xs, top, 5, color=C_LAND, zorder=1, lw=0)
-    ax.fill_between(xs, -5, bot, color=C_LAND, zorder=1, lw=0)
-    for (cx, cy, rx, ry) in ((4.2, 0.25, 0.9, 0.22), (5.6, -0.55, 1.15, 0.28), (6.0, 0.95, 1.1, 0.25),
-                             (7.4, -1.6, 1.3, 0.3), (7.6, 0.2, 1.4, 0.32), (7.8, 2.0, 1.2, 0.28),
-                             (9.0, -0.7, 1.0, 0.3)):
-        ax.add_patch(Ellipse((cx, cy), 2 * rx, 2 * ry, fc=C_SAND, ec="0.45", lw=0.5, zorder=2))
-    for y0 in (-0.12, 1.45, -1.05):
-        _arrow(ax, 4.6 + 0.3 * abs(y0), y0, 6.3 + 0.3 * abs(y0), y0, C_WAVE, lw=1.4, style="<|-|>", ms=9)
-    _label(ax, 1.0, 3.2, T("海へ広がる\n漏斗状の河口", "funnel-shaped mouth\nwidening seaward"), size=8, color="0.25")
-    _label(ax, 3.3, -3.4, T("上げ潮・下げ潮で\n流れが往復する", "flow reverses with\nflood and ebb tides"), size=8,
-           color=C_WAVE)
-    _label(ax, 6.3, 3.6, T("流れに沿う\n細長い砂州", "bars elongated\nalong the flow"), size=8, color="0.25")
+    """(g) 潮汐の影響: 満潮と干潮で変わる川の出口、干潟、下げ潮の水路、上げ潮の冠水(段 6・7 で表せること)。"""
+    _plan(ax, T("(g) 潮汐の影響(tide・tidedom)", "(g) Tidal influence (tide, tidedom)"))
+    # 干潟(満潮で沈み、干潮で現れる): 河口の前と海岸沿いに広がる堆積
+    ax.add_patch(Rectangle((2.0, -5), 0.75, 10, fc=C_SAND, ec="none", alpha=0.45, zorder=1.5))
+    _blob(ax, 3.2, 0.0, 1.55, 3.3, C_SAND, z=1.5, alpha=0.45, seed=31, amp=0.04)
+    _blob(ax, 3.05, 0.0, 0.4, 0.5, C_SAND, z=3.5, seed=32, amp=0.04, ec="0.35", lw=0.6)   # 河口砂州の島
+    # 干潮の流れ: 島の両脇に分かれ、海岸の足もとを南北へ回る
+    for s in (1, -1):
+        _line(ax, [(2.0, 0.2 * s), (2.55, 0.62 * s), (2.42, 1.6 * s), (2.36, 3.2 * s), (2.32, 4.95 * s)], C_WATER,
+              2.4, z=4)
+        # 下げ潮: 干潟の水が水路に集まる
+        _line(ax, [(4.1, 1.7 * s), (3.3, 1.75 * s), (2.45, 1.95 * s)], C_WATER, 1.0, z=4)
+        _line(ax, [(3.7, 2.75 * s), (3.0, 2.9 * s), (2.4, 3.05 * s)], C_WATER, 1.0, z=4)
+    # 満潮の流れ: 噴流は沖へまっすぐ
+    _arrow(ax, 3.5, 0.0, 6.3, 0.0, C_WATER, lw=1.6, ls="--", ms=11)
+    # 上げ潮: 沖から干潟へゆっくり冠水する
+    for y0 in (1.9, -1.9):
+        _arrow(ax, 6.9, y0, 5.3, y0, C_WAVE, lw=0.9, ms=8)
+    # 潮位の時系列
+    tx = np.linspace(5.4, 9.5, 120)
+    ax.plot(tx, 4.05 + 0.45 * np.sin(2 * np.pi * (tx - 5.4) / 2.05), color=C_WAVE, lw=1.2, zorder=5)
+    _label(ax, 5.95, 4.7, T("満潮", "high"), size=7.5, ha="center", color=C_WAVE)
+    _label(ax, 7.0, 3.37, T("干潮", "low"), size=7.5, ha="center", color=C_WAVE)
+    _label(ax, 4.0, 0.5, T("満潮: 噴流は沖へ", "high tide: jet\ngoes offshore"), size=8, color=C_WATER)
+    _label(ax, 7.05, 1.9, T("上げ潮: 沖から\nゆっくり冠水", "flood: the flats\ncover slowly\nfrom offshore"),
+           size=8, color=C_WAVE)
+    _label(ax, 2.9, -3.75, T("干潮: 川は島の脇から\n海岸沿いへ回る", "low tide: the river\nturns along the coast"),
+           size=8, color=C_WATER)
+    _label(ax, 4.85, -1.15, T("干潟(干潮で現れる)\n下げ潮の水が水路に集まる", "flats (exposed at low tide);\nebb water drains\ninto channels"),
+           size=8, color="0.25")
 
 
 def mechanism():
