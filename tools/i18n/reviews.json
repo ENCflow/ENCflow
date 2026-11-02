@@ -13,11 +13,11 @@
     {
       "source": "README.ja.md",
       "target": "README.md",
-      "source_sha256": "c4f57b6cd44bab780e08814201efd474a6a9c504d49c0aaa0e28e585a8c6dc21",
-      "target_sha256": "aac6f985d00f97df1b7aaa1c06990f06bac3c692a571900c8e68de4c825fb4e3",
-      "reviewer": "Claude (Claude Code session; full-text content and lexical review, no model execution)",
+      "source_sha256": "e4ffa137eaad863b8c64210d07411635b84c534266aa66974daa2c3c0a14f68c",
+      "target_sha256": "d8931537627a6759698c0b5b9b0daacb45a6761a065f5bd1efa5300cf28d1b1d",
+      "reviewer": "Claude (Claude Code session; reviewed the Japanese source against the English mirror after adding the link to the chained-process examples, 2026-11-02)",
       "method": "assistant",
-      "reviewed_on": "2026-10-29"
+      "reviewed_on": "2026-11-02"
     },
     {
       "source": "TRADEMARKS.md",
@@ -419,11 +419,11 @@
     {
       "source": "docs/users_guide/sediment.md",
       "target": "docs/en/users_guide/sediment.md",
-      "source_sha256": "213f5ed7373d260a977722b0398475dbf1b6763aa010b76a27da0a1e55f7a0c6",
-      "target_sha256": "91e61aad8da022609124c62c9af77e51c2aeea8c7c6f621a810087b5bc1e8d7a",
-      "reviewer": "Claude (Claude Code session; reviewed the changed sections (test/suspend configurations 3 and 4) of the Japanese source against the English mirror, 2026-10-30)",
+      "source_sha256": "6ac8291c2f6315d19c322ab7fdc0d6d2e351022edc0cce46ba570f7ebd8e0cb8",
+      "target_sha256": "3822daed779fa607ec4c18db257b92d9ea9e29039c3d7c88024cb4adb97c9dc6",
+      "reviewer": "Claude (Claude Code session; Japanese source and English mirror written together and compared section by section, tables and numbers checked; no model execution)",
       "method": "assistant",
-      "reviewed_on": "2026-10-30"
+      "reviewed_on": "2026-11-02"
     },
     {
       "source": "docs/users_guide/structure.md",
@@ -482,11 +482,11 @@
     {
       "source": "docs/users_guide/usecases.md",
       "target": "docs/en/users_guide/usecases.md",
-      "source_sha256": "419d5eccb199f2707ce3f8c6d109d48061f5bdb36746a7246ca574ba3935a2fe",
-      "target_sha256": "f83d6aaa7bf17a600cbe95ce11d8dbd234b9b499033a45388e6497917b70ea42",
-      "reviewer": "Claude (Claude Code session; reviewed the Japanese source against the English mirror; figures from the same results and drawing code with label changes only, 2026-10-31)",
+      "source_sha256": "e632bf6ba202ef08bd6a630cf58e76d7b8ba8d430219a8dcbac38eb8c65c5dbd",
+      "target_sha256": "3c76e477877d3e46268fde0a6777b898fa5b69866839379da0aeb7af509d5ab4",
+      "reviewer": "Claude (Claude Code session; Japanese source and English mirror written together and compared section by section, tables and numbers checked; no model execution)",
       "method": "assistant",
-      "reviewed_on": "2026-10-31"
+      "reviewed_on": "2026-11-02"
     },
     {
       "source": "docs/users_guide/user_routines.md",
@@ -806,11 +806,11 @@
     {
       "source": "examples/README.md",
       "target": "examples/README.en.md",
-      "source_sha256": "5e850f9651dd6414d532062ce38fe4563f94f1680e0fc54e61f9d507fcd785e7",
-      "target_sha256": "88c3707d3f22db334f806c4be94999ca99d3c928f5078f3116dc17ecb01bafee",
-      "reviewer": "Claude (Claude Code session; reviewed the Japanese source against the English mirror; figures from the same results and drawing code with label changes only, 2026-10-31)",
+      "source_sha256": "44f7c0e195044e590318a7daea9e38c65acc6a1ba799e30ae950e233dec66b56",
+      "target_sha256": "88d6eff7c14080dc0a89225c0eb4ac43de598fb8be2ec309bf15ceab94592ac7",
+      "reviewer": "Claude (Claude Code session; merge of main's shortened table into the documentation branch: the tower_karst row rewritten in both languages (no wall retreat within 6000 years, per the recomputed example) and compared; other rows are main's reviewed text)",
       "method": "assistant",
-      "reviewed_on": "2026-10-31"
+      "reviewed_on": "2026-11-02"
     },
     {
       "source": "examples/ashfall_lahar/README.md",
@@ -887,20 +887,20 @@
     {
       "source": "examples/badland/README.md",
       "target": "examples/badland/en/README.md",
-      "source_sha256": "c4f0efff4a32e2651fd6e7b6a3d11e3d851571dc4f8f490a9a82c007e11ab5b3",
-      "target_sha256": "0569e0792197de584844871c47b82889e05706e19e9c0cd6206f26fa25401f05",
-      "reviewer": "Claude (Claude Code session; English README figure links switched to en/figs; regenerated Japanese figures are byte-identical to the committed ones)",
+      "source_sha256": "6f76109d677ea6ba28d3bed60ff96d27c1bc12363587de781b93fa4b117a58c3",
+      "target_sha256": "107a52e966da99555c42fa7860cea4941168a17aa13927f31010891a2fbadba1",
+      "reviewer": "Claude (Claude Code session; Japanese source and English mirror updated together after recomputing the example: changed captions, table rows and notes compared line by line, numbers checked against the plot_results.py output; model run by the session)",
       "method": "assistant",
-      "reviewed_on": "2026-10-25"
+      "reviewed_on": "2026-11-02"
     },
     {
       "source": "examples/badland/figs/main_features.png",
       "target": "examples/badland/en/figs/main_features.png",
-      "source_sha256": "aaa2f36b3ded342bce1268b6a988c2585eed674d95c208f2ff1ec4d62d7cfa00",
-      "target_sha256": "9659c7511d3281277ad65bf11f15dd4290a5f2525a288d3079355a693d6f8819",
-      "reviewer": "Claude (Claude Code session; compared the Japanese and English figure images side by side: same plotted data and layout, labels translated (some compressed but faithful); provenance per the commits that drew the English figures: same saved results as the Japanese figures; no model execution)",
+      "source_sha256": "e6f99a2f9d153f300f25b3d2895a299f54b01b8f4ec12c7e98e2e8bc8d0b0b12",
+      "target_sha256": "af1f5802e31d03d116417731a8865258541141d087ace579f3019a4ff0bb561c",
+      "reviewer": "Claude (Claude Code session; both images drawn by plot_results.py and plot_results.py en from the same recomputed results of 2026-11-02, compared side by side: same plotted data and layout, labels translated; pixel difference from the previous version is confined to the corrected curvature title)",
       "method": "assistant",
-      "reviewed_on": "2026-10-29"
+      "reviewed_on": "2026-11-02"
     },
     {
       "source": "examples/badland/figs/main_maps.png",
@@ -921,6 +921,24 @@
       "reviewed_on": "2026-10-29"
     },
     {
+      "source": "examples/badland/figs/mechanism.png",
+      "target": "examples/badland/en/figs/mechanism.png",
+      "source_sha256": "492bcfeee1e2bb135505f0463f835896440673f786437533fbdc2a509b80fe03",
+      "target_sha256": "4b8953fc4d248a4f2318548244c7e66000c7c74f47b6b683c417cb922719044c",
+      "reviewer": "Claude (Claude Code session; schematic and setup figure drawn by plot_setup.py from input files only, Japanese and English images compared side by side: same data and layout, labels translated; no model execution)",
+      "method": "assistant",
+      "reviewed_on": "2026-11-02"
+    },
+    {
+      "source": "examples/badland/figs/setup.png",
+      "target": "examples/badland/en/figs/setup.png",
+      "source_sha256": "f65e49d253bd2a76e2d610170113ecd5f15c13220ba6ba2f5f1ef0263ef2bffd",
+      "target_sha256": "16450ae7eeb04dffab26f79397364e4151b980d794b6361d703c2e22dc4bc6a9",
+      "reviewer": "Claude (Claude Code session; schematic and setup figure drawn by plot_setup.py from input files only, Japanese and English images compared side by side: same data and layout, labels translated; no model execution)",
+      "method": "assistant",
+      "reviewed_on": "2026-11-02"
+    },
+    {
       "source": "examples/badland/figs/spacing.png",
       "target": "examples/badland/en/figs/spacing.png",
       "source_sha256": "ac80bfa18a101389b8dfa9430d263e47de1560a9689de332390743496fe388db",
@@ -932,11 +950,11 @@
     {
       "source": "examples/badland_round/README.md",
       "target": "examples/badland_round/en/README.md",
-      "source_sha256": "5388cc4dc748488c9c69d364e18050d0ec7f6f84c84d6cca634c14eeaf28648a",
-      "target_sha256": "9ab161de4bbb8f3a97f7faf44e37735745f20b07aa78500bac8e5c90cc1345b2",
-      "reviewer": "Claude (Claude Code session; English README figure links switched to en/figs; regenerated Japanese figures are byte-identical to the committed ones)",
+      "source_sha256": "7a007b4a3115ef68f962aff2fe34bca87e0a319e15b0aa8ececaed51a23be322",
+      "target_sha256": "1c4d4b63129c89ed88ddedca2a1d19c8552264e89353df21c2983ec17d8a33ca",
+      "reviewer": "Claude (Claude Code session; Japanese source and English mirror written together and compared section by section, tables and numbers checked; no model execution)",
       "method": "assistant",
-      "reviewed_on": "2026-10-25"
+      "reviewed_on": "2026-11-02"
     },
     {
       "source": "examples/badland_round/figs/maps.png",
@@ -964,6 +982,15 @@
       "reviewer": "Claude (Claude Code session; compared the Japanese and English figure images side by side: same plotted data and layout, labels translated (some compressed but faithful); provenance per the commits that drew the English figures: same saved results as the Japanese figures; no model execution)",
       "method": "assistant",
       "reviewed_on": "2026-10-29"
+    },
+    {
+      "source": "examples/badland_round/figs/mechanism.png",
+      "target": "examples/badland_round/en/figs/mechanism.png",
+      "source_sha256": "60a4054a2289b8b7dc402eabfa65f3427b2ddf542b29c3bdce880330621ba5a1",
+      "target_sha256": "06cf5ccb7d0bdb1d038633331f24f61dd6b0851f83871cf57e716d84fa88e90b",
+      "reviewer": "Claude (Claude Code session; schematic and setup figure drawn by plot_setup.py from input files only, Japanese and English images compared side by side: same data and layout, labels translated; no model execution)",
+      "method": "assistant",
+      "reviewed_on": "2026-11-02"
     },
     {
       "source": "examples/badland_round/figs/radial.png",
@@ -1047,13 +1074,121 @@
       "reviewed_on": "2026-10-29"
     },
     {
+      "source": "examples/badland_round/figs/setup.png",
+      "target": "examples/badland_round/en/figs/setup.png",
+      "source_sha256": "98849673d54c37ec3e97ce602294da2808a8cb68aee80e1a1c93ec221a22f0df",
+      "target_sha256": "3510ebebc72a9e4f4dae4a7a84d209f59f1ab742d7a06da8ac6c66489cd49563",
+      "reviewer": "Claude (Claude Code session; schematic and setup figure drawn by plot_setup.py from input files only, Japanese and English images compared side by side: same data and layout, labels translated; no model execution)",
+      "method": "assistant",
+      "reviewed_on": "2026-11-02"
+    },
+    {
       "source": "examples/badland_storm/README.md",
       "target": "examples/badland_storm/en/README.md",
-      "source_sha256": "4e9e18c2a46785223e0d30ac9243f6a1130eb6060c6eeeef3382f6b42ed6c85e",
-      "target_sha256": "4669125de7f198c61aef1903597be369734ef304919be8b975ae0f0e5fc94bee",
-      "reviewer": "Claude (Claude Code session; example reruns with f_opening_dynamic default 3)",
+      "source_sha256": "82b7c3161db2c42806d16c0aaaa815151c5e7e5e12f9e1b8a11eabc0ddaed18f",
+      "target_sha256": "eb6180153bf076ab19f702cbc7bf64f492ca1ca8436b04f259f7caff5e6f3387",
+      "reviewer": "Claude (assistant)",
       "method": "assistant",
-      "reviewed_on": "2026-10-31"
+      "reviewed_on": "2026-11-02"
+    },
+    {
+      "source": "examples/badland_storm/figs/flow.png",
+      "target": "examples/badland_storm/en/figs/flow.png",
+      "source_sha256": "83e7ce5dbd92c815b3cb5fe9c3ac0cde654370e328a1571d9c43ca8dc56da078",
+      "target_sha256": "a160faeff6f9890e608d518417fd7d7fe6d681d72c5bca82c8064607742f7a62",
+      "reviewer": "Claude (Claude Code session; both images drawn by plot_storm.py and plot_storm.py en from the same recomputed results of 2026-11-02, compared side by side: same plotted data and layout, labels translated)",
+      "method": "assistant",
+      "reviewed_on": "2026-11-02"
+    },
+    {
+      "source": "examples/badland_storm/figs/flow_tilt.png",
+      "target": "examples/badland_storm/en/figs/flow_tilt.png",
+      "source_sha256": "ef7605a1418760fb88bfca2dffec7ba82e6e2bf390a9b91e4873dec82e198d18",
+      "target_sha256": "f082cf466c274257111ca534c810a9263ecf6643faad8502100f589077617215",
+      "reviewer": "Claude (Claude Code session; both images drawn by plot_storm.py and plot_storm.py en from the same recomputed results of 2026-11-02, compared side by side: same plotted data and layout, labels translated)",
+      "method": "assistant",
+      "reviewed_on": "2026-11-02"
+    },
+    {
+      "source": "examples/badland_storm/figs/flow_wet.png",
+      "target": "examples/badland_storm/en/figs/flow_wet.png",
+      "source_sha256": "304184f241176fb52ea3bd25c12b99ca56c2c60110f57814069873fcfd979d65",
+      "target_sha256": "a6a9a6ac886bd6a26fc4e8f288bc103c1c2a57d54f44c7a8dca38ac4b6235628",
+      "reviewer": "Claude (Claude Code session; both images drawn by plot_storm.py and plot_storm.py en from the same recomputed results of 2026-11-02, compared side by side: same plotted data and layout, labels translated)",
+      "method": "assistant",
+      "reviewed_on": "2026-11-02"
+    },
+    {
+      "source": "examples/badland_storm/figs/maps.png",
+      "target": "examples/badland_storm/en/figs/maps.png",
+      "source_sha256": "7df734b152746d87a0f19ef90a107566f47992bb4d6b7440fa7be5e253a1828e",
+      "target_sha256": "ee8193c33b76824d3a6c44ddc4adddb542846b30a49678b9c3bfd41b87f637a4",
+      "reviewer": "Claude (Claude Code session; both images drawn by plot_storm.py and plot_storm.py en from the same recomputed results of 2026-11-02, compared side by side: same plotted data and layout, labels translated)",
+      "method": "assistant",
+      "reviewed_on": "2026-11-02"
+    },
+    {
+      "source": "examples/badland_storm/figs/maps_tilt.png",
+      "target": "examples/badland_storm/en/figs/maps_tilt.png",
+      "source_sha256": "34ce8f85e1e421ae28d783aa818aaba17335226f92eb3ec9b7686f1d36640638",
+      "target_sha256": "ec008089c2eb2c6eccc7f4d8bfa68f7d969c5d9fb4c13a435594694ccbdda6ec",
+      "reviewer": "Claude (Claude Code session; both images drawn by plot_storm.py and plot_storm.py en from the same recomputed results of 2026-11-02, compared side by side: same plotted data and layout, labels translated)",
+      "method": "assistant",
+      "reviewed_on": "2026-11-02"
+    },
+    {
+      "source": "examples/badland_storm/figs/maps_wet.png",
+      "target": "examples/badland_storm/en/figs/maps_wet.png",
+      "source_sha256": "bbabef3a5b781187dff599c5f8eb058b181f4dea2522c84ff3db6200ac8851fb",
+      "target_sha256": "51690b6ad11f8dd31e3e81d02709872a6e0ac1fecf8995b3e845062a1927d1bd",
+      "reviewer": "Claude (Claude Code session; both images drawn by plot_storm.py and plot_storm.py en from the same recomputed results of 2026-11-02, compared side by side: same plotted data and layout, labels translated)",
+      "method": "assistant",
+      "reviewed_on": "2026-11-02"
+    },
+    {
+      "source": "examples/badland_storm/figs/mechanism.png",
+      "target": "examples/badland_storm/en/figs/mechanism.png",
+      "source_sha256": "350d1d97947b2a4ed709bdf7bbc051240ef35da26b454b61128cabb8c42b4841",
+      "target_sha256": "3d1f3822daceb7660d35eb8f0ee6d56d2d479c3f6877a74c56a0e016ac6577e4",
+      "reviewer": "Claude (Claude Code session; schematic and setup figure drawn by plot_setup.py from input files only, Japanese and English images compared side by side: same data and layout, labels translated; no model execution)",
+      "method": "assistant",
+      "reviewed_on": "2026-11-02"
+    },
+    {
+      "source": "examples/badland_storm/figs/series.png",
+      "target": "examples/badland_storm/en/figs/series.png",
+      "source_sha256": "195152d5ce968c09fff38fed73d51113d5014159749bd6a97c174bcee9f81e9b",
+      "target_sha256": "993a8e0012b099b9dc6a5d96f1a7c056c6a73ef58c70369d30804d541beab337",
+      "reviewer": "Claude (Claude Code session; both images drawn by plot_storm.py and plot_storm.py en from the same recomputed results of 2026-11-02, compared side by side: same plotted data and layout, labels translated)",
+      "method": "assistant",
+      "reviewed_on": "2026-11-02"
+    },
+    {
+      "source": "examples/badland_storm/figs/series_tilt.png",
+      "target": "examples/badland_storm/en/figs/series_tilt.png",
+      "source_sha256": "20289569b33d07ec0715deb3beef7d8c9e86507a077acf2e774f837b7ead4948",
+      "target_sha256": "795fece3de1d80f5b81d0f27432dda850b3da99f5eb4d2bcdbba68193a4c0454",
+      "reviewer": "Claude (Claude Code session; both images drawn by plot_storm.py and plot_storm.py en from the same recomputed results of 2026-11-02, compared side by side: same plotted data and layout, labels translated)",
+      "method": "assistant",
+      "reviewed_on": "2026-11-02"
+    },
+    {
+      "source": "examples/badland_storm/figs/series_wet.png",
+      "target": "examples/badland_storm/en/figs/series_wet.png",
+      "source_sha256": "d51910f91a3fde47c12b271d0ad6bdc036e33bff7e4e950ef567c81ee1d63fb1",
+      "target_sha256": "b06616f67a66a629df03c73069e0c85f82b9306d2e6a0285ece031a0955ee52a",
+      "reviewer": "Claude (Claude Code session; both images drawn by plot_storm.py and plot_storm.py en from the same recomputed results of 2026-11-02, compared side by side: same plotted data and layout, labels translated)",
+      "method": "assistant",
+      "reviewed_on": "2026-11-02"
+    },
+    {
+      "source": "examples/badland_storm/figs/setup.png",
+      "target": "examples/badland_storm/en/figs/setup.png",
+      "source_sha256": "11be5cafb5ddde3af9622eee02641415b1844324352ca7bf030a85769b961de3",
+      "target_sha256": "e2b4e4405c921fa00c73fc09223dd2cd8bd1cd759c914df0ca525a6355a5f82b",
+      "reviewer": "Claude (Claude Code session; schematic and setup figure drawn by plot_setup.py from input files only, Japanese and English images compared side by side: same data and layout, labels translated; no model execution)",
+      "method": "assistant",
+      "reviewed_on": "2026-11-02"
     },
     {
       "source": "examples/bedrock_cover/README.md",
@@ -1265,11 +1400,101 @@
     {
       "source": "examples/karst/README.md",
       "target": "examples/karst/en/README.md",
-      "source_sha256": "dcde4bc417397a40c58e524fdfb58fec91afb732518db0967479c3bbac643836",
-      "target_sha256": "214682d5cda25283e8b759136eb2e0cc8ed3b7d66a328101aa5d4dfed45a8484",
-      "reviewer": "Claude (Claude Code session; example reruns with f_opening_dynamic default 3)",
+      "source_sha256": "f98990f1b04c81d22cca4db145f9c859c86316c9ffe5665df08e0682df960e3c",
+      "target_sha256": "d75ef9784507aef839357f1c1c99c15e90b8fbd1ab9d5d10c6ecd19eeadd20b9",
+      "reviewer": "Claude (assistant)",
       "method": "assistant",
-      "reviewed_on": "2026-10-31"
+      "reviewed_on": "2026-11-02"
+    },
+    {
+      "source": "examples/karst/figs/evolution.png",
+      "target": "examples/karst/en/figs/evolution.png",
+      "source_sha256": "4ee817af9cb284afd65581586b5ef6859e6892afb266c137d76b6ef346d3a49a",
+      "target_sha256": "e09d9e86af8a4909b5adcc1ef015b5fce4cdb8aea8637e902886092b194221be",
+      "reviewer": "Claude (Claude Code session; both images drawn by plot_results.py and plot_results.py [param_lat.txt] en from the same recomputed results of 2026-11-02, compared side by side: same plotted data and layout, labels translated)",
+      "method": "assistant",
+      "reviewed_on": "2026-11-02"
+    },
+    {
+      "source": "examples/karst/figs/hydrograph.png",
+      "target": "examples/karst/en/figs/hydrograph.png",
+      "source_sha256": "7f6fbdc12de48dbb81d5374ed1882682d4546ece6e9455a81630c433121db12a",
+      "target_sha256": "66c9544080f7716ed1e760737f841e574c111cc00a759999e3b767ea8533a70b",
+      "reviewer": "Claude (Claude Code session; both images drawn by plot_results.py and plot_results.py [param_lat.txt] en from the same recomputed results of 2026-11-02, compared side by side: same plotted data and layout, labels translated)",
+      "method": "assistant",
+      "reviewed_on": "2026-11-02"
+    },
+    {
+      "source": "examples/karst/figs/maps.png",
+      "target": "examples/karst/en/figs/maps.png",
+      "source_sha256": "c3bacbca270608695454f61e588f46c4044c029488c33ca3616d6e2e495dbdb0",
+      "target_sha256": "8f633e53e7e18e0accaa7b3a88e54809ffbbfe6db5f185f10a5b9f5d2abef8ed",
+      "reviewer": "Claude (Claude Code session; both images drawn by plot_results.py and plot_results.py [param_lat.txt] en from the same recomputed results of 2026-11-02, compared side by side: same plotted data and layout, labels translated)",
+      "method": "assistant",
+      "reviewed_on": "2026-11-02"
+    },
+    {
+      "source": "examples/karst/figs/maps_lat.png",
+      "target": "examples/karst/en/figs/maps_lat.png",
+      "source_sha256": "1c664c6a0db1df72d6ec93b9d491ad3b1a85bb4d696e1510383675cf341b485d",
+      "target_sha256": "b7f8bf0b96a786fe9fb64616e0d53654a695dd4926d05ae50765ea131ca13e7d",
+      "reviewer": "Claude (Claude Code session; both images drawn by plot_results.py and plot_results.py [param_lat.txt] en from the same recomputed results of 2026-11-02, compared side by side: same plotted data and layout, labels translated)",
+      "method": "assistant",
+      "reviewed_on": "2026-11-02"
+    },
+    {
+      "source": "examples/karst/figs/mechanism.png",
+      "target": "examples/karst/en/figs/mechanism.png",
+      "source_sha256": "c62aefc15618511a714f9df3fb5c8e5e6b18ee01e6a553569a34ef9eae241e62",
+      "target_sha256": "9647bc3038cdc126f8bed0a6b88b1d050559913492506f91d2be09023f900ad9",
+      "reviewer": "Claude (Claude Code session; schematic and setup figure drawn by plot_setup.py from input files only, Japanese and English images compared side by side: same data and layout, labels translated; no model execution)",
+      "method": "assistant",
+      "reviewed_on": "2026-11-02"
+    },
+    {
+      "source": "examples/karst/figs/sections.png",
+      "target": "examples/karst/en/figs/sections.png",
+      "source_sha256": "13b3e596c9b64ddb2f549b21bd88cfca681bc2be957ca07f67197e789a16372f",
+      "target_sha256": "e6c93de4b75e517f1237c5e01425a1ff5352c9104aa0e1ce544f07d806f2994d",
+      "reviewer": "Claude (Claude Code session; both images drawn by plot_results.py and plot_results.py [param_lat.txt] en from the same recomputed results of 2026-11-02, compared side by side: same plotted data and layout, labels translated)",
+      "method": "assistant",
+      "reviewed_on": "2026-11-02"
+    },
+    {
+      "source": "examples/karst/figs/sections_lat.png",
+      "target": "examples/karst/en/figs/sections_lat.png",
+      "source_sha256": "4944a433ebd8b26c4f9aed0d52c5cf502d566f7f0cf087ee790a588aa5d01831",
+      "target_sha256": "2e0a8f0c6be80e3b24f46bc969dbe389cf4bfe9f9bc726f2d4daf92dd830cfe4",
+      "reviewer": "Claude (Claude Code session; both images drawn by plot_results.py and plot_results.py [param_lat.txt] en from the same recomputed results of 2026-11-02, compared side by side: same plotted data and layout, labels translated)",
+      "method": "assistant",
+      "reviewed_on": "2026-11-02"
+    },
+    {
+      "source": "examples/karst/figs/sections_rock.png",
+      "target": "examples/karst/en/figs/sections_rock.png",
+      "source_sha256": "c79689772bf3afc238cff8cd9ea356532f4ff656deb636de94e2b6a72fb1e2f6",
+      "target_sha256": "cca9c6b7d7c2153d1090333c9dfef6bb1ee8017a9cef14b9f14db4f30f644a71",
+      "reviewer": "Claude (Claude Code session; both images drawn by plot_results.py param_rock.txt [en] from the same recomputed results of 2026-11-02, compared side by side: same plotted data and layout, labels translated)",
+      "method": "assistant",
+      "reviewed_on": "2026-11-02"
+    },
+    {
+      "source": "examples/karst/figs/setup.png",
+      "target": "examples/karst/en/figs/setup.png",
+      "source_sha256": "1d304218ab5266c734e3a5879cf3e9991998086cc17ee5313a04b19227f0615b",
+      "target_sha256": "78b3f1319d0de8ee2c6c3dc336c79bb83d5dfb12ab7f22e1ca939f1b707ed431",
+      "reviewer": "Claude (Claude Code session; schematic and setup figure drawn by plot_setup.py from input files only, Japanese and English images compared side by side: same data and layout, labels translated; no model execution)",
+      "method": "assistant",
+      "reviewed_on": "2026-11-02"
+    },
+    {
+      "source": "examples/karst/figs/stats.png",
+      "target": "examples/karst/en/figs/stats.png",
+      "source_sha256": "8e61555346204ab2e19828517475af30a1c5874ee75bedd80d4c7ce16d1796c5",
+      "target_sha256": "de116336ed4c93b1c5a4a24dd915f63a68c2d4f91701bd26fcfc531758c42320",
+      "reviewer": "Claude (Claude Code session; both images drawn by plot_results.py and plot_results.py [param_lat.txt] en from the same recomputed results of 2026-11-02, compared side by side: same plotted data and layout, labels translated)",
+      "method": "assistant",
+      "reviewed_on": "2026-11-02"
     },
     {
       "source": "examples/landslide_tsunami/README.md",
@@ -1373,11 +1598,29 @@
     {
       "source": "examples/mesa/README.md",
       "target": "examples/mesa/en/README.md",
-      "source_sha256": "ad7f16eb0ead8f8096d1db073573d3b3ae1702648a670bc997ff2afa50ce658c",
-      "target_sha256": "206e45a7db6b60fe01b09fd753a62b4a698ca9e0a2f25fb4ad2d2b9b95f8cfda",
-      "reviewer": "Claude (assistant)",
+      "source_sha256": "ab598e4139c1963816b2654789619538c3c9b3651638369a55eefd57fbb89375",
+      "target_sha256": "6cd7e38a06ca980afa3bc7e196f617a5b4962fe61bfbd8a0eaa40d6f7daff929",
+      "reviewer": "Claude (Claude Code session; Japanese source and English mirror written together and compared section by section, tables and numbers checked; no model execution)",
       "method": "assistant",
-      "reviewed_on": "2026-10-24"
+      "reviewed_on": "2026-11-02"
+    },
+    {
+      "source": "examples/mesa/figs/mechanism.png",
+      "target": "examples/mesa/en/figs/mechanism.png",
+      "source_sha256": "3911ba19d37ecd1ddf9ee0082254116202fb53fb556f4c504acac6e46512d090",
+      "target_sha256": "09d0b43cbdaa1c6d9e49ce6b71e2a5c13111cde76cc9cc4c3ef9cb1c0a2d6b56",
+      "reviewer": "Claude (Claude Code session; schematic and setup figure drawn by plot_setup.py from input files only, Japanese and English images compared side by side: same data and layout, labels translated; no model execution)",
+      "method": "assistant",
+      "reviewed_on": "2026-11-02"
+    },
+    {
+      "source": "examples/mesa/figs/setup.png",
+      "target": "examples/mesa/en/figs/setup.png",
+      "source_sha256": "6ea8cc8328557e479c9153190d4bc8ec47f1a2294a5cf28e9e07ba2959cd5b47",
+      "target_sha256": "1b346cb559f30ba4b53480e47bb60f790b07a2e6783757db5b22ebc3365c4a3a",
+      "reviewer": "Claude (Claude Code session; schematic and setup figure drawn by plot_setup.py from input files only, Japanese and English images compared side by side: same data and layout, labels translated; no model execution)",
+      "method": "assistant",
+      "reviewed_on": "2026-11-02"
     },
     {
       "source": "examples/mountain_valley/README.md",
@@ -1589,11 +1832,65 @@
     {
       "source": "examples/tower_karst/README.md",
       "target": "examples/tower_karst/en/README.md",
-      "source_sha256": "3c54176e673de74adc019be1694701eac84f3559e3d6ca1e96aa7e8b56748a30",
-      "target_sha256": "cec91e4cf78608e6b0522ffecb7451e92859d9f2996e46f97ab3999ffddaaca7",
-      "reviewer": "Claude (Claude Code session; example reruns with f_opening_dynamic default 3)",
+      "source_sha256": "6be8bf1450f79cde55ea436f7854229b9d2320cb756b88178985858b58bb510e",
+      "target_sha256": "4dc114e917024b0506de2228fed7c640175a51ac548b9db2f35571c9c0f6aa5a",
+      "reviewer": "Claude (assistant)",
       "method": "assistant",
-      "reviewed_on": "2026-10-31"
+      "reviewed_on": "2026-11-02"
+    },
+    {
+      "source": "examples/tower_karst/figs/hydrograph.png",
+      "target": "examples/tower_karst/en/figs/hydrograph.png",
+      "source_sha256": "ae91daf16ab6a1f7c8230da958a7a496148901f468c460f5b0bb82d5052837c0",
+      "target_sha256": "7d69500dbc4e9a9ebbf145b4e6d4261b52ee7a7c66e2990721e0a1ba3d1d1b3b",
+      "reviewer": "Claude (Claude Code session; both images drawn by plot_results.py and plot_results.py en from the same recomputed results of 2026-11-02, compared side by side: same plotted data and layout, labels translated)",
+      "method": "assistant",
+      "reviewed_on": "2026-11-02"
+    },
+    {
+      "source": "examples/tower_karst/figs/maps.png",
+      "target": "examples/tower_karst/en/figs/maps.png",
+      "source_sha256": "9a119c2c4b77020feaa9fc8be3f6ca69d30cce333a523cb717587a476a36a9e2",
+      "target_sha256": "46756660f08982512db45e12b2c3293ab4a54d40d3ea2c2975bd62367e4f689b",
+      "reviewer": "Claude (Claude Code session; both images drawn by plot_results.py and plot_results.py en from the same recomputed results of 2026-11-02, compared side by side: same plotted data and layout, labels translated)",
+      "method": "assistant",
+      "reviewed_on": "2026-11-02"
+    },
+    {
+      "source": "examples/tower_karst/figs/mechanism.png",
+      "target": "examples/tower_karst/en/figs/mechanism.png",
+      "source_sha256": "227f18d7e50591c2953f72c821235e26173fc45ed3e1bc59be2641e78f6bc1af",
+      "target_sha256": "e9588ae4d1ea9ed0f4fe3dd03e899317f7517bae2062eff31f2f77a94d76c4a5",
+      "reviewer": "Claude (Claude Code session; schematic and setup figure drawn by plot_setup.py from input files only, Japanese and English images compared side by side: same data and layout, labels translated; no model execution)",
+      "method": "assistant",
+      "reviewed_on": "2026-11-02"
+    },
+    {
+      "source": "examples/tower_karst/figs/sections.png",
+      "target": "examples/tower_karst/en/figs/sections.png",
+      "source_sha256": "e21e4882d97e334d26bf5e6ac7986df06d923b7efe7dbd303b41f7dd88931e22",
+      "target_sha256": "40ff301225e8c428949f32021f02e26acced83b2f571e8b4cc59f6f56aae55e0",
+      "reviewer": "Claude (Claude Code session; both images drawn by plot_results.py and plot_results.py en from the same recomputed results of 2026-11-02, compared side by side: same plotted data and layout, labels translated)",
+      "method": "assistant",
+      "reviewed_on": "2026-11-02"
+    },
+    {
+      "source": "examples/tower_karst/figs/setup.png",
+      "target": "examples/tower_karst/en/figs/setup.png",
+      "source_sha256": "34e0f1c50f3d3c3e0d9cc1604e1ea22a258a200460d7bd12ce8b8692abc04f36",
+      "target_sha256": "1ef6ebd7e1d8ef79ff445bb9f16688e569f985179b37210abb4661ff7bdcf7c1",
+      "reviewer": "Claude (Claude Code session; schematic and setup figure drawn by plot_setup.py from input files only, Japanese and English images compared side by side: same data and layout, labels translated; no model execution)",
+      "method": "assistant",
+      "reviewed_on": "2026-11-02"
+    },
+    {
+      "source": "examples/tower_karst/figs/towers.png",
+      "target": "examples/tower_karst/en/figs/towers.png",
+      "source_sha256": "6968200a7b782dde15793d252eef3ee37b831421eec9a7f870f2ac296740de0b",
+      "target_sha256": "46f0151b59a79acea54c636727231ecd0452b875e9e4bf00f5ce42bea264827b",
+      "reviewer": "Claude (Claude Code session; both images drawn by plot_results.py and plot_results.py en from the same recomputed results of 2026-11-02, compared side by side: same plotted data and layout, labels translated)",
+      "method": "assistant",
+      "reviewed_on": "2026-11-02"
     },
     {
       "source": "examples/tsunami_coast/README.md",

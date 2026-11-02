@@ -1,5 +1,5 @@
 ! バッドランド型の谷形成: 格子の κ(spl_lc = 0)の対照(README「谷の間隔」)。
-!   旧 examples/badland(2026-08)と同じ評価法: 最短波長が最速成長するため
+!   曲率を格子の 5 点ラプラシアンで評価する: 最短波長が最速で育つため
 !   谷間隔が 2〜4 Δx に張り付き、格子を細かくすると谷が増える
 !   実行: python3 make_terrain.py sweep && ./encflow param_grid.txt
 &list_sysparam

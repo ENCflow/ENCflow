@@ -173,7 +173,7 @@ from matplotlib.colors import LogNorm
 im = ax.imshow(np.maximum(d, 1e-3), extent=ext, origin="lower", cmap="magma_r",
                norm=LogNorm(vmin=1e-2, vmax=max(d.max(), 0.1)))
 plt.colorbar(im, ax=ax, label=T("削剥深 z0 − z (m。対数)", "Denudation depth z0 − z (m, log)"))
-ax.set_title(T("削剥深(面的 %.3f m + ドリーネ。縁は不溶)", "Denudation depth (diffuse %.3f m + dolines; rim insoluble)") % dif)
+ax.set_title(T("削剥深(面的 %.3f m + ドリーネ。縁は不溶)", "Denudation depth\n(diffuse %.3f m + dolines; rim insoluble)") % dif)
 ax = axes[1, 1]
 im = ax.imshow(hmax, extent=ext, origin="lower", cmap="Blues", vmin=0, vmax=max(hmax.max(), 0.1))
 plt.colorbar(im, ax=ax, label=T("最大湛水深 (m)", "Maximum ponding depth (m)"))
@@ -234,7 +234,7 @@ if rows:
         ax.set_xlabel(T("水理時間 (日)", "Hydraulic time (days)"))
         ax.set_ylabel(T("湛水 (mm、領域平均)", "Ponding (mm, domain mean)"), color="b")
         ax2.set_ylabel(T("地下貯留 (mm、領域平均)", "Subsurface storage (mm, domain mean)"), color="g")
-        ax.set_title(lab + T(": 豪雨 40 mm × 1 h の後、湛水が吸込穴と土層へ消える", ": after the 40 mm × 1 h storm, ponding vanishes into sinks and soil"))
+        ax.set_title(lab + T(": 豪雨 40 mm × 1 h の後、湛水が吸込穴と土層へ消える", ":\nafter the 40 mm × 1 h storm, ponding vanishes into sinks and soil"))
         ax.grid(alpha=0.3)
     plt.tight_layout()
     plt.savefig("%s/hydrograph%s.png" % (FIGDIR, SUFFIX), dpi=130)
@@ -262,7 +262,7 @@ ax.set_title(T("削剥深の時間発展", "Evolution of denudation depth"))
 ax = axes[2]
 ax.plot(ts[:, 0], ts[:, 4], "m-o", ms=3)
 ax.set_xlabel(T("地形時間 (年。豪雨 40 回/年換算)", "Morphological time (yr; 40 storms/yr)"))
-ax.set_ylabel(T("削剥深 > 1 m の窪みの数", "Number of depressions with denudation depth > 1 m"))
+ax.set_ylabel(T("削剥深 > 1 m の窪みの数", "Number of depressions\nwith denudation depth > 1 m"))
 ax.grid(alpha=0.3)
 ax.set_title(T("ドリーネの数", "Number of dolines"))
 plt.tight_layout()

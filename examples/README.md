@@ -18,45 +18,58 @@ python3 plot_results.py   # 図化(用意されている例題のみ)
 
 | ディレクトリ | 内容 | 主な機能 |
 |---|---|---|
-| [List_samples/](List_samples/) | 全 namelist の注釈付き見本(1 ファイル 1 グループ。en/ に英語版) | 全機能 |
-| [benchmark/](benchmark/) | 解析解のある降雨流出ベンチマーク 3 題。平面斜面 h-plane、V 字流域 v-shaped、V 字谷 v-valley | 浅水流・降雨 |
-| [vz_tani2023/](vz_tani2023/) | 谷(2023)の VZ 流出モデルの再現: 論文の全 7 事例(小斜面の人工降雨 KIEX、ゼロ次谷 MREX・MR1、竜ノ口山 TY1・TY2、桐生 KI1・KI2)を同じ設定で再計算し、論文の計算流出強度・圧力水頭(HYDRUS-1D)と比べる。論文の数値は利用者が入手した PDF の図から取り出す(同梱しない) | 鉛直不飽和浸透(VZ)流出 fn_vz(柱の共有・土層厚の線形分布) |
-| [badland/](badland/) | 台地と急崖への降雨で谷が刻まれるバッドランド型の地形発達。白色雑音からの谷の自己形成、谷間隔の選択則(spl_lc)、格子収束、深い谷と鋭い稜線の長期発達 | 乾式斜面侵食 f_splash(spl_lc・spl_zbase) |
-| [badland_storm/](badland_storm/) | 浸透能を下げて豪雨時だけ表面流が現れる崖: 乾式侵食が止まるか、ガリー網に変わるか(badland の対照実験) | f_splash + f_wash・f_suspend、Green-Ampt、降雨時系列 |
-| [badland_round/](badland_round/) | 稜線が丸く、低い丘ほどドーム状になるバッドランド(膨潤粘土型): 移流型の下刻とクリープ(拡散)の比が決める長さ尺度 L で、L より小さい丘から丸くなる(badland の「鋭い稜線」の対照)。水平層理の硬軟互層(spl_strata)で縞と段が出る対照も | f_splash + f_creep(+ spl_strata)、Green-Ampt |
-| [mesa/](mesa/) | メサ・ビュートの形成: キャップロック(spl_strata)で平らな頂と垂直な崖の平行後退、台地の縮小 → 孤立丘 → 尖塔。層理なし・中間硬層・増幅の飽和・崩落と崖錐(窓版・支え方式 = 垂直な崖 + 段)の対照 | f_splash(spl_strata・spl_ksat)+ f_creep + f_rockfall(rf_rc・rf_fface)、Green-Ampt |
-| [karst/](karst/) | 石灰岩台地のドリーネ群の形成: 代表豪雨の反復で、浸透水が面的に溶かし、窪みに集まった水が吸込穴から地下へ消える場所が選択的に深まる(カルスト地形の自己組織化と内陸排水) | 石灰岩の溶食 f_dissol、管路連続体層(吸込穴)、Green-Ampt、周期強制 t_cycle_c |
-| [tower_karst/](tower_karst/) | 平野に残る裸岩の塔(タワーカルスト): 塔の雨が裾の平野で浸透して平野と裾だけが溶け、側方溶食と岩盤の崩落で壁が後退し、岩屑の裾野と堀ができる。取水が浸透能で頭打ちなので morfac を大きく取れる | 石灰岩の溶食 f_dissol(dissol_lat)、岩盤の崩落 f_rockfall、Green-Ampt の浸透能マップ、周期強制 |
-| [ashfall_lahar/](ashfall_lahar/) | 降灰で浸透能が下がった斜面の雨が灰を削って泥流(ラハール)になり、扇状地に堆積する。噴火前・清水の対照・砂防堰堤との比較の 4 ケースと、谷を格子に 45° 傾けた 8 近傍・4 近傍の比較(補足) | 土石流 f_debris(地下水計算と併用する間隙水 f_dbwet=2)、Green-Ampt の浸透能、降雨、砂防堰堤(地形)、4 近傍化 p_diagratio |
-| [landslide_tsunami/](landslide_tsunami/) | 地滑り・土石流の水域突入と津波。陸上崩壊と海底地滑りの 4 パターンと非静水圧版 | 動く底層 f_bedslide、非静水圧補正 |
-| [tsunami_fault/](tsunami_fault/) | 断層パラメータから津波を発生させる。静水圧・瞬時変位・非静水圧の比較と座標指定の各パターン | 規定底面運動 fn_bedmotion、utils/fault2disp |
-| [tsunami_coast/](tsunami_coast/) | 沿岸の沈降・隆起と沖の断層津波の時間差。沈降した湾奥平野の浸水 | 規定底面運動 fn_bedmotion |
-| [levee_breach/](levee_breach/) | 洪水が堤防の低い所から越水して破堤し、堤内地が氾濫して破堤口近くの家屋が押し流される。越水だけ・破堤・破堤が 1 時間遅れる・破堤+二線堤の 4 ケースと、仮想壁面の破堤との比較(補足) | 規定底面運動 fn_bedmotion(解像堤防の破堤)、家屋破壊 fn_bldgdebris(流体力判定)、建物空隙率 fn_gv、河道の破堤 &list_channel_breach(補足) |
-| [estuary_barrage/](estuary_barrage/) | 河口堰の有無が、感潮河川を遡上する塩水くさびと、河床から周辺の帯水層への塩水の侵入に与える影響(堰あり・なし × 河床の塩水の出入りなし・あり・混合比・目詰まりした河床の 8 ケース) | 淡塩2層 fn_salt(地表の塩水層・地下の塩水 zone・交換の淡塩配分 f_salt_exch)、潮位、Green-Ampt、地下水の側方流、河床交換能 f_gwbed |
-| [nest_reflect/](nest_reflect/) | 比 3・5 の双方向ネスト格子の界面を横切るガウス波。一様細格子との誤差・反射率 | ネスティング fn_nest(docs/users_guide/nest.md) |
-| [tsunami_town/](tsunami_town/) | 津波で木造家屋が壊れ、瓦礫が内陸へ運ばれて積もり、引き波で海へ出る。津波 +4 m・+3 m、防潮堤のかさ上げ(開口部あり・閉じる)の 4 ケースと、判定の方法・流木・空隙率への帰還の比較(補足) | 家屋破壊・瓦礫 fn_bldgdebris(浸水深判定・空隙率への帰還)、建物空隙率 fn_gv、潮位 fn_tide、流木 fn_driftwood(補足) |
-| [timberyard/](timberyard/) | 高潮で貯木場の材木が流れ出し、防潮壁を越えて市街地へ入る(伊勢湾台風型)。材木の流出を遅らせる・貯木場を離す・防潮壁を高くする(陸閘は開いたまま)対策の 4 ケースと、材木がどこに残るかの比較(補足) | 流木 fn_driftwood(水理的流失・堆積・再流動)、建物空隙率 fn_gv、潮位 fn_tide |
-| [sewer_hybrid/](sewer_hybrid/) | 幹線 1 本と枝管網を同じ管路連続体層で表す都市排水の模式実験 | 管路連続体層 f_gwconduit |
-| [qanat/](qanat/) | 山麓の扇状地の地下水を集めるカナート(横坑)の湧出と、近くの揚水井で湧出が細り枯れること(カナートだけ・揚水井 2 L/s・5 L/s の 3 ケース) | 管路連続体層 f_gwconduit(交換能のマップ fn_gwc_leak・開放の吐口 fn_gwc_outfall)、層2 f_gwlayer2、井戸揚水 f_gwpump |
-| [meander/](meander/) | 氾濫原の中の正弦波状の河道の蛇行発達。外岸の後退と内岸砂州の成長、出水・低水の繰り返しによる砂州の定着、給砂による砂州の氾濫原化の 9 構成 | 掃流砂の方向補正 fluv_slope・f_secflow、側岸侵食 f_berode、安息角崩落 f_repose、定着 f_fixation、給砂 |
-| [meander_cutoff/](meander_cutoff/) | 頸部の狭い蛇行ループが出水で短絡し、旧河道が滞水域になって出入口が埋まり始める | 同上 + 区間流入の時系列 |
-| [delta/](delta/) | 給砂河川が静水の海盆に突入して作る河口デルタ。河口砂州 → 分岐 → ローブ成長 → 流路の乗り換え。砂泥比による扇状と鳥趾状、流量変動と定着(冠水減衰・河岸係数)による分流路の安定化の 5 構成(docs/delta_plan.md) | 海は通常セル+初期水位、容量給砂 fluv_bcfeed、浮遊泥 inflow_cs + f_bedfines、fluv_slope、f_repose、f_fixation(fix_tdec・fix_ctau_bank)、辺の長波放射 |
-| [bedrock_cover/](bedrock_cover/) | 山地渓流の岩盤河道の被覆効果(道具と被覆): 給砂の量(定常の下刻速度の山形)、給砂の時期(同じ総量の一定給砂とパルス)、初期の被覆、段差(遷急点)の後退を、幅 1 セルの掘り込み水路を並べて比べる | 流水による岩盤下刻 f_rockinc(剥離・被覆・研磨)、掃流砂 f_fluvial、区間流入の給砂 inflow_qb |
-| [mountain_valley/](mountain_valley/) | 隆起する山地の V 字谷で、斜面(風化による土層の生成・深さ依存クリープ)と渓流(岩盤下刻・被覆)を同時に動かす。定常の斜面と渓流の勾配を斜面だけ・渓流だけの予測と比べ、斜面の供給が渓流を急にし研磨を増やすこと、基準面の低下への渓流と斜面の応答の遅れを見る。後半は同じ平均の給砂を一定とパルスで与えた渓流の定常勾配(研磨が効くとパルスで急になる) | 風化 f_wthr(fn_wthr)、深さ依存クリープ creep_hstar、流水による岩盤下刻 f_rockinc、掃流砂 f_fluvial、分布隆起 fn_uplift |
-| [debris_bedrock/](debris_bedrock/) | 勾配が段々に緩くなる渓流に 1 回の土石流を流し、岩盤がどこでどれだけ削れるかを見る。侵食は急な区間に集まり、堆積層があると剥がれるまで削れない。抵抗則・閾値の効きと、同じ流量の清水の出水との比較。後半は出水と土石流を交互につなぐ長期計算で、隆起する渓流の定常勾配が土石流の頻度でどう緩くなるか、巨礫の堆積物が勾配を土石流の平衡勾配に留めることを見る | 土石流 f_debris(高橋・中川、クーロン + Manning)、土石流による岩盤侵食 f_rockinc の rock_kdb |
+| [List_samples/](List_samples/) | 全 namelist の注釈付き見本(1 ファイル 1 グループ)。設定項目と既定値を引く辞書として使う(en/ に英語版) | 全機能 |
+| [benchmark/](benchmark/) | 平面斜面・V 字流域・V 字谷の降雨流出 3 題を解析解と比べ、浅水流と降雨の基本的な精度を確かめる | 浅水流・降雨 |
+| [vz_tani2023/](vz_tani2023/) | 谷(2023)の VZ 流出モデルの再現。斜面・ゼロ次谷・流域の全 7 事例の流出強度と圧力水頭を論文と比べる | 鉛直不飽和浸透(VZ)流出 fn_vz(柱の共有・土層厚の線形分布) |
+| [badland/](badland/) | 台地と急崖への降雨で谷が刻まれるバッドランドの形成。谷の自己形成と谷間隔の選択則、鋭い稜線の発達を見る | 乾式斜面侵食 f_splash(spl_lc・spl_zbase) |
+| [badland_storm/](badland_storm/) | 浸透能が低く豪雨時だけ表面流が現れる崖で、乾式侵食が止まるか、ガリー網に変わるかを見る(badland の対照) | f_splash + f_wash・f_suspend、Green-Ampt、降雨時系列 |
+| [badland_round/](badland_round/) | 稜線が丸い膨潤粘土型のバッドランド。下刻とクリープの比が決める長さ尺度より低い丘からドーム状になることを見る | f_splash + f_creep(+ spl_strata)、Green-Ampt |
+| [mesa/](mesa/) | キャップロックが平らな頂と垂直な崖を保ち、崖の平行後退で台地がメサ → ビュート → 尖塔へ縮む過程を見る | f_splash(spl_strata・spl_ksat)+ f_creep + f_rockfall(rf_rc・rf_fface)、Green-Ampt |
+| [karst/](karst/) | 石灰岩台地のドリーネ群の形成。窪みに集まり吸込穴から地下へ消える水が、その場所を選択的に深める過程を見る | 石灰岩の溶食 f_dissol、管路連続体層(吸込穴)、Green-Ampt、周期強制 t_cycle_c |
+| [tower_karst/](tower_karst/) | 平野に残る裸岩の塔(タワーカルスト)。平野と裾だけが溶けて塔の比高が増し、裾に堀と穴ができる過程を見る | 石灰岩の溶食 f_dissol(dissol_lat)、岩盤の崩落 f_rockfall、Green-Ampt の浸透能マップ、周期強制 |
+| [ashfall_lahar/](ashfall_lahar/) | 降灰で浸透能が下がった斜面の雨が灰を削って泥流になり、扇状地に堆積する過程と、砂防堰堤の効果を見る | 土石流 f_debris(地下水計算と併用する間隙水 f_dbwet=2)、Green-Ampt の浸透能、降雨、砂防堰堤(地形)、4 近傍化 p_diagratio |
+| [landslide_tsunami/](landslide_tsunami/) | 陸上崩壊・海底地滑り・土石流が水域に突入して起こす津波の発生と伝播を、4 パターンと非静水圧版で比べる | 動く底層 f_bedslide、非静水圧補正 |
+| [tsunami_fault/](tsunami_fault/) | 断層パラメータから海底変位を作って津波を起こし、静水圧・瞬時変位・非静水圧の違いと座標指定を比べる | 規定底面運動 fn_bedmotion、utils/fault2disp |
+| [tsunami_coast/](tsunami_coast/) | 断層運動による沿岸の沈降・隆起と沖からの津波の到達の時間差が、沈降した湾奥平野の浸水をどう変えるかを見る | 規定底面運動 fn_bedmotion |
+| [levee_breach/](levee_breach/) | 洪水が堤防の低い所を越水して破堤し、堤内地の氾濫で家屋が押し流される過程と、二線堤の効果を見る | 規定底面運動 fn_bedmotion(解像堤防の破堤)、家屋破壊 fn_bldgdebris(流体力判定)、建物空隙率 fn_gv、河道の破堤 &list_channel_breach(補足) |
+| [estuary_barrage/](estuary_barrage/) | 感潮河川を遡上する塩水くさびと、河床から周辺の帯水層への塩水侵入に、河口堰の有無が与える影響を見る | 淡塩2層 fn_salt(地表の塩水層・地下の塩水 zone・交換の淡塩配分 f_salt_exch)、潮位、Green-Ampt、地下水の側方流、河床交換能 f_gwbed |
+| [nest_reflect/](nest_reflect/) | 比 3・5 の双方向ネスト格子の界面をガウス波が横切るときの誤差と反射率を、一様細格子と比べて確かめる | ネスティング fn_nest(docs/users_guide/nest.md) |
+| [tsunami_town/](tsunami_town/) | 津波で木造家屋が壊れ、瓦礫が内陸へ運ばれて積もり、引き波で海へ出る過程と、防潮堤かさ上げの効果を見る | 家屋破壊・瓦礫 fn_bldgdebris(浸水深判定・空隙率への帰還)、建物空隙率 fn_gv、潮位 fn_tide、流木 fn_driftwood(補足) |
+| [timberyard/](timberyard/) | 高潮で貯木場の材木が流れ出し、防潮壁を越えて市街地へ入る過程(伊勢湾台風型)と、流出対策の効果を見る | 流木 fn_driftwood(水理的流失・堆積・再流動)、建物空隙率 fn_gv、潮位 fn_tide |
+| [sewer_hybrid/](sewer_hybrid/) | 幹線 1 本と枝管網を同じ管路連続体層で表し、都市の雨水が下水道を流れて噴出・排水される様子を見る模式実験 | 管路連続体層 f_gwconduit |
+| [qanat/](qanat/) | 山麓の扇状地の地下水を集めるカナート(横坑)の湧出と、近くの揚水井でそれが細り枯れる過程を見る | 管路連続体層 f_gwconduit(交換能のマップ fn_gwc_leak・開放の吐口 fn_gwc_outfall)、層2 f_gwlayer2、井戸揚水 f_gwpump |
+| [meander/](meander/) | 氾濫原の正弦波状の河道が蛇行を発達させる過程。外岸の後退、内岸砂州の成長・定着と氾濫原化を見る | 掃流砂の方向補正 fluv_slope・f_secflow、側岸侵食 f_berode、安息角崩落 f_repose、定着 f_fixation、給砂 |
+| [meander_cutoff/](meander_cutoff/) | 頸部の狭い蛇行ループが出水で短絡(ショートカット)し、旧河道が滞水域になって出入口が埋まり始める過程を見る | 同上 + 区間流入の時系列 |
+| [delta/](delta/) | 給砂河川が静水の海盆に突入して作る河口デルタ。河口砂州・分岐・ローブ成長・流路の乗り換えと形の違いを見る | 海は通常セル+初期水位、容量給砂 fluv_bcfeed、浮遊泥 inflow_cs + f_bedfines、fluv_slope、f_repose、f_fixation(fix_tdec・fix_ctau_bank)、辺の長波放射 |
+| [bedrock_cover/](bedrock_cover/) | 山地渓流の岩盤河道で、給砂の量・時期・初期の被覆が下刻を促すか妨げるか(道具と被覆の効果)を見る | 流水による岩盤下刻 f_rockinc(剥離・被覆・研磨)、掃流砂 f_fluvial、区間流入の給砂 inflow_qb |
+| [mountain_valley/](mountain_valley/) | 隆起する山地の V 字谷で、風化・クリープの斜面と岩盤下刻の渓流を同時に動かし、定常の谷の形を見る | 風化 f_wthr(fn_wthr)、深さ依存クリープ creep_hstar、流水による岩盤下刻 f_rockinc、掃流砂 f_fluvial、分布隆起 fn_uplift |
+| [debris_bedrock/](debris_bedrock/) | 渓流に流した土石流が岩盤をどこでどれだけ削るか、土石流の頻度が渓流の定常勾配をどう変えるかを見る | 土石流 f_debris(高橋・中川、クーロン + Manning)、土石流による岩盤侵食 f_rockinc の rock_kdb |
 
 ## 複数プロセスの連鎖の例
 
 ENCflow の特徴である「複数プロセスを 1 つの計算で連鎖させる」設定の
 見本です(章を読んだ後の参考に)。
 
-- 津波 → 家屋破壊 → 瓦礫の運搬・堆積 → 引き波で海へ(防潮堤・開口部の閉鎖で変わる): [tsunami_town/](tsunami_town/)。高潮 → 貯木場の材木の流出 → 市街地への流入・堆積(対策で変わる): [timberyard/](timberyard/)。
-- 降灰 → 浸透能の低下 → 降雨 → 泥流 → 扇状地の堆積(砂防堰堤で捕捉): [ashfall_lahar/](ashfall_lahar/)。降雨 → 乾式侵食 → 地形発達: [badland/](badland/)。豪雨時だけ表面流が加わる崖: [badland_storm/](badland_storm/)。クリープで丸くなる丘: [badland_round/](badland_round/)。キャップロックのメサ → ビュート: [mesa/](mesa/)。豪雨 → 湛水 → 吸込穴 → 溶食 → ドリーネ: [karst/](karst/)。裸岩の塔 → 裾の溶食 → 崩落 → 塔の後退: [tower_karst/](tower_karst/)。給砂 → 被覆と道具 → 岩盤の下刻: [bedrock_cover/](bedrock_cover/)。隆起 → 風化 → クリープ → 渓流の被覆と下刻 → 定常の谷: [mountain_valley/](mountain_valley/)。土石流 → 堆積層の剥離 → 岩盤の侵食 → 頻度ごとの定常勾配: [debris_bedrock/](debris_bedrock/)。
-- 断層 → 津波 → 浸水: [tsunami_fault/](tsunami_fault/)、[tsunami_coast/](tsunami_coast/)。斜面崩壊 → 水域突入 → 津波: [landslide_tsunami/](landslide_tsunami/)。
+- 津波 → 家屋破壊 → 瓦礫の運搬・堆積 → 引き波で海へ(防潮堤・開口部の閉鎖で変わる): [tsunami_town/](tsunami_town/)。
+- 高潮 → 貯木場の材木の流出 → 市街地への流入・堆積(対策で変わる): [timberyard/](timberyard/)。
+- 降灰 → 浸透能の低下 → 降雨 → 泥流 → 扇状地の堆積(砂防堰堤で捕捉): [ashfall_lahar/](ashfall_lahar/)。
+- 降雨 → 乾式侵食 → 地形発達: [badland/](badland/)。
+- 豪雨 → 浸透能を超えた表面流 → 崖の乾式侵食とガリー侵食の競合: [badland_storm/](badland_storm/)。
+- 降雨 → 下刻とクリープの競合 → 丸い稜線・ドーム状の丘: [badland_round/](badland_round/)。
+- 降雨 → 軟層の侵食 → キャップロックの崖の後退 → メサ → ビュート: [mesa/](mesa/)。
+- 豪雨 → 湛水 → 吸込穴 → 溶食 → ドリーネ: [karst/](karst/)。
+- 裸岩の塔 → 裾の溶食 → 崩落 → 塔の後退: [tower_karst/](tower_karst/)。
+- 給砂 → 被覆と道具 → 岩盤の下刻: [bedrock_cover/](bedrock_cover/)。
+- 隆起 → 風化 → クリープ → 渓流の被覆と下刻 → 定常の谷: [mountain_valley/](mountain_valley/)。
+- 土石流 → 堆積層の剥離 → 岩盤の侵食 → 頻度ごとの定常勾配: [debris_bedrock/](debris_bedrock/)。
+- 断層 → 津波 → 浸水: [tsunami_fault/](tsunami_fault/)、[tsunami_coast/](tsunami_coast/)。
+- 斜面崩壊 → 水域突入 → 津波: [landslide_tsunami/](landslide_tsunami/)。
 - 洪水 → 越水 → 破堤 → 氾濫 → 家屋の流失(二線堤で止める): [levee_breach/](levee_breach/)。
 - 潮汐 → 塩水くさびの遡上 → 河床からの浸透 → 岸の地盤の塩水化(河口堰で遮断): [estuary_barrage/](estuary_barrage/)。
-- 降雨 → 下水道(管路)→ 噴出・排水: [sewer_hybrid/](sewer_hybrid/)。山からの涵養 → 扇状地の地下水 → カナートの集水・湧出(揚水井で細る): [qanat/](qanat/)。
-- 1 機能だけの解析解ベンチマーク: [benchmark/](benchmark/)。格子の精緻化(ネスティング): [nest_reflect/](nest_reflect/)。
+- 降雨 → 下水道(管路)→ 噴出・排水: [sewer_hybrid/](sewer_hybrid/)。
+- 山からの涵養 → 扇状地の地下水 → カナートの集水・湧出(揚水井で細る): [qanat/](qanat/)。
+- 1 機能だけの解析解ベンチマーク: [benchmark/](benchmark/)。
+- 格子の精緻化(ネスティング): [nest_reflect/](nest_reflect/)。
 
 計算したい現象から機能の組み合わせを引くには
 [用途集](../docs/users_guide/usecases.md)、各機能の設定は
