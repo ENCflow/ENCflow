@@ -785,9 +785,10 @@ architecture.md。このメモは「現在進行中・未完了の項目」だ�
       山地渓流の例題は 3 で回し直した(§89.29)。全検定・全例題の A/B(docs/opening_plan.md §8)を
       見て、2026-10-31 に既定を 3 に切り替えた(§68.41。reference 14 件の更新、test/debris の構成 5 の
       閾値)。残りは、f_opening_dynamic を明示しない例題・教材の回し直し(00 の項目)。
-      回し直しの状況(2026-10-31): 済 = landslide_tsunami・tsunami_coast・tsunami_fault・tsunami_town・
-      timberyard・ashfall_lahar・sewer_hybrid・levee_breach・qanat・estuary_barrage・教材 bmi(README と図を
-      更新)、教材 chichibu(全 param に 2 を明示。本文は不変)。不変 = nest_reflect(平坦。粗格子で 2 と 3 の
+      回し直しの状況(2026-11-02): 済 = landslide_tsunami・tsunami_coast・tsunami_fault・tsunami_town・
+      timberyard・ashfall_lahar・sewer_hybrid・levee_breach・qanat・estuary_barrage・教材 bmi(§68.42・§68.43 後の
+      既定で 2026-11-02 に再計算し README(日英)と図を更新)、教材 chichibu(2 の明示を解除し 2026-11-01 に
+      既定で再生成)。不変 = nest_reflect(平坦。粗格子で 2 と 3 の
       Log が一致)・vz_tani2023(平坦で VZ のみ。論文の PDF がなく計算不能)・教材 wave(出力一致)・
       badland/badland_round/mesa(水の流れなし)・benchmark(README なし)。**未了 = badland_storm・karst・
       tower_karst**(この環境では 1 ケース 2〜30 時間かかり終えられなかった。README の数値は既定 2 のままで、
@@ -802,15 +803,16 @@ architecture.md。このメモは「現在進行中・未完了の項目」だ�
       明示して回避した。→ 原因は f_opening_dynamic ではなく運動量保存形移流の側方面の質量流束の
       不整合(斜めリンクが塞がれた面で実流量の 2.4 倍)で、同日に特定・修正した(§68.42。reference の
       更新は承認済み)。教材 chichibu は 2 の明示を解除して既定で再生成した(2026-11-01)。
-      **§68.42 の修正は壁沿い・池の縁の流れを変えるので、上の「済」の例題・教材 bmi の README の数値は
-      修正前の既定 3 の値のまま**(landslide_tsunami・tsunami_coast・tsunami_fault・tsunami_town・timberyard・
-      ashfall_lahar・sewer_hybrid・levee_breach・qanat・estuary_barrage・教材 bmi。差は検定の例で 1〜10 %)。
-      回し直しは未了の 3 例題と同じ扱い(各 README の手順で再計算し数表と README を更新)。
+      §68.42・§68.43 の修正は壁沿い・池の縁の流れを変えるので、上の「済」の例題・教材 bmi は §68.43 後の
+      既定で 2026-11-02 に回し直し、数表・本文・図を更新した(2026-10-31 の値との差は、建物や構造物のある
+      例題で数 %〜2 割: timberyard の市街地に入る材木 9 %、levee_breach の越水だけの構成の氾濫量 18 %、
+      tsunami_town の浸水量・堆積 1 % 程度、estuary_barrage の河道の底層塩水量 11 %。tsunami_fault・
+      sewer_hybrid・ashfall_lahar は表示桁で同じ、qanat は 20 日平均の 2 桁目が 0.02 L/s 動く程度)。
       斜めエッジの側方面(§68.42 の残件)は、リンク実流量化がどの定式でも dambreak の段波を 1.5〜5 %
       遅らせる(斜めリンクの族の運動量流入が軸リンクの位置で評価されて族の流速が分かれる)ため採らず、
       従来式に横切る軸リンクの開口率を掛ける案を入れた(§68.43。2026-11-01)。未実装の候補: 現行の値を
       リンク推定で見張る案(符号が逆なら 0、k ≥ 3 倍超で切る)と、塞がれた斜めリンクの mn を同じ側の
-      軸リンク 2 本から補う案。例題の回し直しは §68.43 後の既定で行う。
+      軸リンク 2 本から補う案。例題の回し直しは §68.43 後の既定で行った(2026-11-02。上記)。
     - fluv_diagratio ≠ p_diagratio: 掃流砂の軸エッジに水の振り替えの表 fwd が掛かるため、
       fluv_diagratio = 0 の 1 セル幅水路で容量が 2.41 倍になる(§89.4)。利用者ガイドに注意を
       書くか、振り替えの設計を直すかを決める。
