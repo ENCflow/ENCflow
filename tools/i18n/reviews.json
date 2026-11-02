@@ -1193,8 +1193,8 @@
     {
       "source": "examples/bedrock_cover/README.md",
       "target": "examples/bedrock_cover/en/README.md",
-      "source_sha256": "ed5eb011d8af4849068169733491abfb43e21df749d80a596f82c88c616db389",
-      "target_sha256": "161c0f7acd403c9de27a69057c8d26450adf816ee7203e5a5b45417ed1110755",
+      "source_sha256": "969f6f1fc89d2922f804896ccd76dbff79a0b2e4f045b5007b07eaf9642cb696",
+      "target_sha256": "918aea14e56a1d245fae127e29257538a237b7b18a4759398e577913e8c85b4a",
       "reviewer": "Claude (assistant)",
       "method": "assistant",
       "reviewed_on": "2026-11-02"
