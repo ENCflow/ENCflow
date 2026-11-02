@@ -203,7 +203,9 @@ phenomenon you want to compute, see the
 [use-case gallery](docs/en/users_guide/usecases.md). And
 [with an AI agent](docs/en/ai_guide.md) you can start from a model
 case described in the words of the phenomenon, without looking
-anything up yourself.
+anything up yourself. Set-ups that chain several processes in one run
+are collected in
+[examples: Examples of chained processes](examples/README.en.md#examples-of-chained-processes).
 
 ## What it deliberately does not do
 
