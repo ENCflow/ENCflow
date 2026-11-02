@@ -806,11 +806,11 @@
     {
       "source": "examples/README.md",
       "target": "examples/README.en.md",
-      "source_sha256": "5e850f9651dd6414d532062ce38fe4563f94f1680e0fc54e61f9d507fcd785e7",
-      "target_sha256": "88c3707d3f22db334f806c4be94999ca99d3c928f5078f3116dc17ecb01bafee",
-      "reviewer": "Claude (Claude Code session; reviewed the Japanese source against the English mirror; figures from the same results and drawing code with label changes only, 2026-10-31)",
+      "source_sha256": "9e6afc8e7dc80b38d00733be5cc8d9f3b5cab7a165a5cb44d6232da51c732b0a",
+      "target_sha256": "2aa15bcc8211b4915a65a72a41464b464864951b16b085ba93e79ce9a8a2cf56",
+      "reviewer": "Claude (Claude Code session; reviewed the Japanese source against the English mirror after shortening the table descriptions and splitting the chain list, 2026-11-02)",
       "method": "assistant",
-      "reviewed_on": "2026-10-31"
+      "reviewed_on": "2026-11-02"
     },
     {
       "source": "examples/ashfall_lahar/README.md",
