@@ -110,12 +110,6 @@ With the argument `en` the figures are drawn with English labels into en/figs/
 
 ## Results
 
-> **Note (2026-11-02)**: the numbers and figures of this example were computed with f_opening_dynamic = 2
-> (recomputed on 2026-11-02 in the documentation branch, whose default was 2). The default of main has been 3
-> since 2026-10-31 (developer.md §68.41 to §68.43); with 3 the surface-flow paths change, so the values change.
-> The recomputation with the default 3 is still pending (handoff). To reproduce the README values, write
-> `fn_enc = "-"` in `&list_sysparam` and `f_opening_dynamic = 2` in `&list_enc` of the param files.
-
 ![Terrain, denudation depth and soil thickness](figs/maps.png)
 
 Upper left: initial terrain (contours every 5 m), upper right: final terrain (landform time 6000
@@ -142,18 +136,18 @@ Budget check (tables of `plot_results.py`; landform time 6000 years = 300,000 st
 | Item | Value |
 |---|---|
 | Water balance | final S_total = 2.400 m = cumulative rain 40 mm × 60 days (mass conserved; near the end part of the ponding remains until the next day) |
-| Dissolved rock (ledger) | 1 465 947 m³ |
-| Rock moved by collapse (ledger; bulk) | 2 493 m³ (44,000 edge updates). Final talus Σht Δx² = 2 172 m³ (up to 3.7 m) |
-| Loss of surface volume | Σ(z₀ − z)Δx² = 1 319 352 m³ = dissolution × (1 − 0.1) = 1 319 352 m³ (all digits agree; collapse conserves volume and does not contribute) |
+| Dissolved rock (ledger) | 1 465 678 m³ |
+| Rock moved by collapse (ledger; bulk) | 2 480 m³ (44,000 edge updates). Final talus Σht Δx² = 2 177 m³ (up to 3.5 m) |
+| Loss of surface volume | Σ(z₀ − z)Δx² = 1 319 110 m³ = dissolution × (1 − 0.1) = 1 319 110 m³ (all digits agree; collapse conserves volume and does not contribute) |
 | Denudation of the plain (cells that did not pond) | median 1.30 m = 216 mm/kyr |
-| Denudation of the feet (261 plain cells that ponded) | median 2.8 m, maximum 12.1 m |
-| Soil (debris and residue) | plain 1.14 m (initially 1 m), bare-rock area 0.04 m (initially 0.001 m), up to 6.2 m (talus at the feet) |
+| Denudation of the feet (258 plain cells that ponded) | median 2.7 m, maximum 12.1 m |
+| Soil (debris and residue) | plain 1.14 m (initially 1 m), bare-rock area 0.04 m (initially 0.001 m), up to 5.9 m (talus at the feet) |
 
 | Landform time (years) | Plain (m) | Top height of towers 1–4 (m) | Relative height of towers 1–4 (m) | Relative height of small hills 5, 6 (m) | Maximum slope angle of the bedrock surface |
 |---|---|---|---|---|---|
 | 0 | 0.0 | 39.3–40.3 | 39.3–40.4 | 19.4–19.6 | 29–35° |
-| 3000 | −0.67 | 39.1–40.1 | 39.8–40.8 | 19.9–20.1 | 36–39° |
-| 6000 | −1.32 | 39.0–40.0 | 40.3–41.3 | 20.4–20.6 | 37–49° |
+| 3000 | −0.67 | 39.1–40.2 | 39.8–40.8 | 19.9–20.1 | 36–39° |
+| 6000 | −1.32 | 39.0–40.0 | 40.3–41.3 | 20.4–20.6 | 37–48° |
 
 (The slope angles are the range over the six hills in the right panel of towers.png.)
 
@@ -167,14 +161,14 @@ Budget check (tables of `plot_results.py`; landform time 6000 years = 300,000 st
   along the valley lines of the plain undulation are paths along which water flowed and soaked in).
   They correspond to "sinks and foot caves at the base of towers" of real karst.
 - **Steepening of the feet and collapse**: as the feet go down, the lower slopes steepen (maximum slope
-  angle of the bedrock surface 35° → 37 to 49°). Collapse occurs only where the exposed face exceeds
+  angle of the bedrock surface 35° → 37 to 48°). Collapse occurs only where the exposed face exceeds
   H_c = 10 m (walls of cells where the holes at the feet reached about 10 m); the moved rock is 0.2 % of
-  the dissolution (2.5 thousand m³), and talus accumulates up to 3.7 m in the holes. The tower walls have
+  the dissolution (2.5 thousand m³), and talus accumulates up to 3.5 m in the holes. The tower walls have
   not retreated yet (in 6000 years the undercut at the feet is a few metres, and most of the walls are
   below H_c). With a smaller H_c or a longer landform time, the stage in which the walls collapse and
   retreat begins.
 - **Ponding**: at first, the ponding just after each storm (3.5 mm domain mean) soaks in and disappears
-  within a few hours. Near the end the ponding no longer disappears within a day, and about 6.6 mm
+  within a few hours. Near the end the ponding no longer disappears within a day, and about 7 mm
   (domain mean) remains before the next storm (apparently because the water in the deep holes at the
   feet cannot soak in within a day at an infiltration capacity of 40 mm/h).
 - **The small hills** (20 m high) do not disappear in 6000 years either. The disappearance of towers and

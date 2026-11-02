@@ -1832,27 +1832,27 @@
     {
       "source": "examples/tower_karst/README.md",
       "target": "examples/tower_karst/en/README.md",
-      "source_sha256": "6be8bf1450f79cde55ea436f7854229b9d2320cb756b88178985858b58bb510e",
-      "target_sha256": "4dc114e917024b0506de2228fed7c640175a51ac548b9db2f35571c9c0f6aa5a",
-      "reviewer": "Claude (assistant)",
+      "source_sha256": "dd15ad5c4ff1a04130cb8adc740d7cfde5c6910118e394ce2e2368ace881af35",
+      "target_sha256": "d787e4fd9b7fe23baae0b33abca11ecf02d8ae746a3ed245f504687672ca532c",
+      "reviewer": "Claude (Claude Code session; Japanese source and English mirror updated together after recomputing with the main default f_opening_dynamic = 3: changed table values and text compared line by line, values checked against the plot_results.py output and the log; model run by the session)",
       "method": "assistant",
       "reviewed_on": "2026-11-02"
     },
     {
       "source": "examples/tower_karst/figs/hydrograph.png",
       "target": "examples/tower_karst/en/figs/hydrograph.png",
-      "source_sha256": "ae91daf16ab6a1f7c8230da958a7a496148901f468c460f5b0bb82d5052837c0",
-      "target_sha256": "7d69500dbc4e9a9ebbf145b4e6d4261b52ee7a7c66e2990721e0a1ba3d1d1b3b",
-      "reviewer": "Claude (Claude Code session; both images drawn by plot_results.py and plot_results.py en from the same recomputed results of 2026-11-02, compared side by side: same plotted data and layout, labels translated)",
+      "source_sha256": "3cbb99780468efea921aaac5b1a7bf7b8e293116ee59ea2f316e30dd1dfb4acb",
+      "target_sha256": "f0b214c6b49865ac12501e758d622f4362f7cb75c7a6024bb73a7649afa6b075",
+      "reviewer": "Claude (Claude Code session; both images drawn by plot_results.py and plot_results.py en from the same results recomputed with f_opening_dynamic = 3 on 2026-11-02, compared side by side: same plotted data and layout, labels translated)",
       "method": "assistant",
       "reviewed_on": "2026-11-02"
     },
     {
       "source": "examples/tower_karst/figs/maps.png",
       "target": "examples/tower_karst/en/figs/maps.png",
-      "source_sha256": "9a119c2c4b77020feaa9fc8be3f6ca69d30cce333a523cb717587a476a36a9e2",
-      "target_sha256": "46756660f08982512db45e12b2c3293ab4a54d40d3ea2c2975bd62367e4f689b",
-      "reviewer": "Claude (Claude Code session; both images drawn by plot_results.py and plot_results.py en from the same recomputed results of 2026-11-02, compared side by side: same plotted data and layout, labels translated)",
+      "source_sha256": "9e1f25d51c1a0a700671e0c2eb497ae47fec1d97cf5d2b5ea25be039677e6897",
+      "target_sha256": "7b73b320fc1a0fc77616da6f3dc520806411d10a7b47a88d99ed405da7f4570c",
+      "reviewer": "Claude (Claude Code session; both images drawn by plot_results.py and plot_results.py en from the same results recomputed with f_opening_dynamic = 3 on 2026-11-02, compared side by side: same plotted data and layout, labels translated)",
       "method": "assistant",
       "reviewed_on": "2026-11-02"
     },
@@ -1868,9 +1868,9 @@
     {
       "source": "examples/tower_karst/figs/sections.png",
       "target": "examples/tower_karst/en/figs/sections.png",
-      "source_sha256": "e21e4882d97e334d26bf5e6ac7986df06d923b7efe7dbd303b41f7dd88931e22",
-      "target_sha256": "40ff301225e8c428949f32021f02e26acced83b2f571e8b4cc59f6f56aae55e0",
-      "reviewer": "Claude (Claude Code session; both images drawn by plot_results.py and plot_results.py en from the same recomputed results of 2026-11-02, compared side by side: same plotted data and layout, labels translated)",
+      "source_sha256": "c1c359764338a194427267180922938b3d999ddca215f4aa77719b2e52c7f60c",
+      "target_sha256": "0c5539af21fdd59d952b45251b2688f59665164ba4a5f078518d3616908a2523",
+      "reviewer": "Claude (Claude Code session; both images drawn by plot_results.py and plot_results.py en from the same results recomputed with f_opening_dynamic = 3 on 2026-11-02, compared side by side: same plotted data and layout, labels translated)",
       "method": "assistant",
       "reviewed_on": "2026-11-02"
     },
@@ -1886,9 +1886,9 @@
     {
       "source": "examples/tower_karst/figs/towers.png",
       "target": "examples/tower_karst/en/figs/towers.png",
-      "source_sha256": "6968200a7b782dde15793d252eef3ee37b831421eec9a7f870f2ac296740de0b",
-      "target_sha256": "46f0151b59a79acea54c636727231ecd0452b875e9e4bf00f5ce42bea264827b",
-      "reviewer": "Claude (Claude Code session; both images drawn by plot_results.py and plot_results.py en from the same recomputed results of 2026-11-02, compared side by side: same plotted data and layout, labels translated)",
+      "source_sha256": "47c04e8a028e84ccd5f9fe066fbb07bfb47694989e19218bc2a1c0fc330f2697",
+      "target_sha256": "c4266d65b36fe5900d385f98f9e9c47b1f4431717d22eb44f89d802294f2ec8d",
+      "reviewer": "Claude (Claude Code session; both images drawn by plot_results.py and plot_results.py en from the same results recomputed with f_opening_dynamic = 3 on 2026-11-02, compared side by side: same plotted data and layout, labels translated)",
       "method": "assistant",
       "reviewed_on": "2026-11-02"
     },
