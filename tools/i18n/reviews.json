@@ -1454,11 +1454,11 @@
     {
       "source": "examples/qanat/README.md",
       "target": "examples/qanat/en/README.md",
-      "source_sha256": "b646dbaf593c499af2fe6c88b83d467fd0cf2eb89d9003895fa9cceb3001d194",
-      "target_sha256": "1bb7fca3493dedbac2fa9630db03e47310d4621eda13ede3960f97853ca62d7a",
-      "reviewer": "Claude (Claude Code session; example reruns with f_opening_dynamic default 3)",
+      "source_sha256": "a2daac19dca374e7cc6bf5eb8a132b81f72b98b984060c54698fbb32d2a7014a",
+      "target_sha256": "b875bc1588f895af7ff2b86fab56ef4474caed52a889870fc84a0e15f3bd0469",
+      "reviewer": "Claude (assistant)",
       "method": "assistant",
-      "reviewed_on": "2026-10-31"
+      "reviewed_on": "2026-11-02"
     },
     {
       "source": "examples/qanat/figs/mechanism.png",
@@ -1481,20 +1481,20 @@
     {
       "source": "examples/qanat/figs/profile.png",
       "target": "examples/qanat/en/figs/profile.png",
-      "source_sha256": "ed90658125ed54fc2726fb5d764e71908b9c839c7e971fff35606fa29b658448",
-      "target_sha256": "0fa9047eeb1a73887c80b0ce08510ed014596091640d9c2fa6c899e5c7ce88d8",
-      "reviewer": "Claude (Claude Code session; example reruns with f_opening_dynamic default 3)",
+      "source_sha256": "3720e2011b21457e374bd37c75fa58b1451ee6de61eafef81f46b841068d2b6a",
+      "target_sha256": "6ff9516b54503f65b479ac6c84b61782439b69cc705ee22be3fa4b03f3eeeabd",
+      "reviewer": "Claude (assistant)",
       "method": "assistant",
-      "reviewed_on": "2026-10-31"
+      "reviewed_on": "2026-11-02"
     },
     {
       "source": "examples/qanat/figs/series.png",
       "target": "examples/qanat/en/figs/series.png",
-      "source_sha256": "17a83f71c8d98959e1ed65ce47df83434975bedd9cdcd4415de17c063288892a",
-      "target_sha256": "84be585f6a56f828a2eadbb38e92395e6596b85cd24333f0f17165c2578474a8",
-      "reviewer": "Claude (Claude Code session; example reruns with f_opening_dynamic default 3)",
+      "source_sha256": "c21dbf40b2633c3fd2e8edce63c3638d631efa251d2c8022b75b72d46ffb3ab3",
+      "target_sha256": "5cd79f1ce2359b462b8503a561e52e3c334b9f79d2fc7e6963996c77e0ed2c43",
+      "reviewer": "Claude (assistant)",
       "method": "assistant",
-      "reviewed_on": "2026-10-31"
+      "reviewed_on": "2026-11-02"
     },
     {
       "source": "examples/qanat/figs/setup.png",
