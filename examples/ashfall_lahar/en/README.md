@@ -143,7 +143,9 @@ Right: sediment that passed the valley outlet to the fan and sediment trapped be
 | Ash (lahar) | 1,341 m³ (50 %) | 2,093 m³ (27 %) | 1,099 m³ | — | 1,091 m³ / 2.8 m | water 0.31, water + sediment 0.55 m³/s | 477 m³ |
 | Ash + check dam | 1,332 m³ (49 %) | 2,071 m³ (26 %) | 302 m³ | 1,656 m³ | 293 m³ / 0.6 m | (as above) | 487 m³ |
 
-(The tables and figures show the values recomputed on 2026-10-31 with the default f_opening_dynamic = 3; developer.md §68.41.)
+(The tables and figures show the values recomputed on 2026-10-31 with the default f_opening_dynamic = 3; developer.md §68.41.
+Recomputing on 2026-11-02 with the default after the correction of the lateral faces of the momentum-conserving advection
+leaves the table values unchanged; the figures are from that recomputation; §68.42, §68.43.)
 
 The rain totals 2,700 m³ from 10 to 70 minutes. The water into the ground is the sum of the
 rain that soaked in and the water that went into the pores of the deposits.

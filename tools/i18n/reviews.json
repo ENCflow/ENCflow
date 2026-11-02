@@ -815,20 +815,20 @@
     {
       "source": "examples/ashfall_lahar/README.md",
       "target": "examples/ashfall_lahar/en/README.md",
-      "source_sha256": "72ec83bb05846d28092d343331340ccf13fe39613579d8b7be54d0502a3c3e51",
-      "target_sha256": "491cabc153cdc995bf34eac6e245ab86de0549afb8469dfd54201190450d1e18",
-      "reviewer": "Claude (Claude Code session; example reruns with f_opening_dynamic default 3)",
+      "source_sha256": "4cf1e1f04782e0c5ce7618a57a8850cacdbc52ea857e3c69e9f4f3c4fac0c20e",
+      "target_sha256": "b38027b30c3438144fbb209d56a47525aa24f33c65274be1a1c8d8d413c32865",
+      "reviewer": "Claude (assistant)",
       "method": "assistant",
-      "reviewed_on": "2026-10-31"
+      "reviewed_on": "2026-11-02"
     },
     {
       "source": "examples/ashfall_lahar/figs/maps.png",
       "target": "examples/ashfall_lahar/en/figs/maps.png",
-      "source_sha256": "cea0054aeb28dc32682b6f7828c662514e79719681cba4a82f345bdc5394078e",
-      "target_sha256": "27bec10fc95cbf60e8b33534db859d0200573407b8c503d90558b5b56cd7eefb",
-      "reviewer": "Claude (Claude Code session; example reruns with f_opening_dynamic default 3)",
+      "source_sha256": "ae0106aabc844f127064a767eccb7050c467f7b1cff9a5fec15aafb2c39e1fda",
+      "target_sha256": "7bd44e81012146ff825abb257cd1e6d9736bc408c0b81c5b39e83b44171747fc",
+      "reviewer": "Claude (assistant)",
       "method": "assistant",
-      "reviewed_on": "2026-10-31"
+      "reviewed_on": "2026-11-02"
     },
     {
       "source": "examples/ashfall_lahar/figs/mechanism.png",
@@ -842,38 +842,38 @@
     {
       "source": "examples/ashfall_lahar/figs/profile.png",
       "target": "examples/ashfall_lahar/en/figs/profile.png",
-      "source_sha256": "c801f08e30813f3b0bf7ee125145d7d2a3a9925660d23bbcaf321501e7077517",
-      "target_sha256": "1210c78af6d913929e73f26f60af5cc759107caf3c372d7ec4d9f8d6b71827a2",
-      "reviewer": "Claude (Claude Code session; example reruns with f_opening_dynamic default 3)",
+      "source_sha256": "d5486c57a5a50322a03e8b729c7af24610cad9ed55837f37b3e239db2a5b8d89",
+      "target_sha256": "d38ad8e15a4f8a845635d6b3d836e5140d4ffc04d7e78a0088d13fb308025b73",
+      "reviewer": "Claude (assistant)",
       "method": "assistant",
-      "reviewed_on": "2026-10-31"
+      "reviewed_on": "2026-11-02"
     },
     {
       "source": "examples/ashfall_lahar/figs/rotated.png",
       "target": "examples/ashfall_lahar/en/figs/rotated.png",
-      "source_sha256": "57a4fd5ed8994aaf0c8f9346f01436601abd28ff06c50927df2078b37ceb9e48",
-      "target_sha256": "9803402c3342a9ced6379050def72ee1146a326a55dd19d31fa818db881c2485",
-      "reviewer": "Claude (Claude Code session; example reruns with f_opening_dynamic default 3)",
+      "source_sha256": "c3a8bdde239263a9c4d9ffbf8a368d6cfc773ca8410f5d85d1d7205c3a8dbfed",
+      "target_sha256": "3539e5834e3b67508f43f66c1f110e1221849962a5ac6059b070e58007d63278",
+      "reviewer": "Claude (assistant)",
       "method": "assistant",
-      "reviewed_on": "2026-10-31"
+      "reviewed_on": "2026-11-02"
     },
     {
       "source": "examples/ashfall_lahar/figs/rotated_profile.png",
       "target": "examples/ashfall_lahar/en/figs/rotated_profile.png",
-      "source_sha256": "585d3f086ae7f7c38a2650465db696c8de1c86002fb413ce6c3fec963ebff7ae",
-      "target_sha256": "49e406cad8c4cd1386d5bb24c2cd385ea0fab6a2ffefd38fa4cda3b6f9ab8e0f",
-      "reviewer": "Claude (Claude Code session; example reruns with f_opening_dynamic default 3)",
+      "source_sha256": "d4a4ccf8a28e28815387416fc6c79fc1c0edbaf4015a85e94e69c84a5c58e294",
+      "target_sha256": "67beec257c9690649bad599af78ba16d86744729e2d3ca43d9ee8eadd3d60ee8",
+      "reviewer": "Claude (assistant)",
       "method": "assistant",
-      "reviewed_on": "2026-10-31"
+      "reviewed_on": "2026-11-02"
     },
     {
       "source": "examples/ashfall_lahar/figs/series.png",
       "target": "examples/ashfall_lahar/en/figs/series.png",
-      "source_sha256": "32b2466256238634542ae659030f5d72850ad951027068715e71f3b53d0ed369",
-      "target_sha256": "2a252909a8095d15e594c7cede96c4f9b70cc62ac59383a5288abd3906d1c221",
-      "reviewer": "Claude (Claude Code session; example reruns with f_opening_dynamic default 3)",
+      "source_sha256": "e39a61c6bfbaadcc937f89a85cec11352c535d6c488dca00529cb93652df5158",
+      "target_sha256": "faa55a3a84a34c535bf35461fd6f0140f2b9e2c496f54d8416ef0fe0da1c3468",
+      "reviewer": "Claude (assistant)",
       "method": "assistant",
-      "reviewed_on": "2026-10-31"
+      "reviewed_on": "2026-11-02"
     },
     {
       "source": "examples/ashfall_lahar/figs/setup.png",
@@ -1508,11 +1508,29 @@
     {
       "source": "examples/sewer_hybrid/README.md",
       "target": "examples/sewer_hybrid/en/README.md",
-      "source_sha256": "9b64ee997a0852da02a308164800f623a65b7bdc2ef18ead70e8184929261fcd",
-      "target_sha256": "841e24c540f877f488f7af7ea121ef944c1a0deb2fbf1998d9b0d918c77216ca",
-      "reviewer": "Claude (Claude Code session; example reruns with f_opening_dynamic default 3)",
+      "source_sha256": "4e772a7675e316dad7cb5580e6827c6a1fbc2f2eccca8d53653173c1c2f098d0",
+      "target_sha256": "654cb13b6f63a0979cc3e38034e22c4ff3ebc63bbfdc4dee8cbffa88ed060fae",
+      "reviewer": "Claude (assistant)",
       "method": "assistant",
-      "reviewed_on": "2026-10-31"
+      "reviewed_on": "2026-11-02"
+    },
+    {
+      "source": "examples/sewer_hybrid/sewer_hybrid_outfall.png",
+      "target": "examples/sewer_hybrid/en/figs/sewer_hybrid_outfall.png",
+      "source_sha256": "47b72b34f9d64db5eaba8b18252d7cdc149783d505e402c45b9ffb1149ebf808",
+      "target_sha256": "ff47959159e65e142713ac37816216afcc0bbed12bf6bc05396d0524f4ac550c",
+      "reviewer": "Claude (assistant)",
+      "method": "assistant",
+      "reviewed_on": "2026-11-02"
+    },
+    {
+      "source": "examples/sewer_hybrid/sewer_hybrid_result.png",
+      "target": "examples/sewer_hybrid/en/figs/sewer_hybrid_result.png",
+      "source_sha256": "fd98f08ef12a4bf2886ab6824bc29484ad6f3079f5135fd350fbdbb0da4c7185",
+      "target_sha256": "0700138655452a3e5d589f3d8d55bf97966764bcd2e29da56b3cb6947c89f85a",
+      "reviewer": "Claude (assistant)",
+      "method": "assistant",
+      "reviewed_on": "2026-11-02"
     },
     {
       "source": "examples/timberyard/README.md",

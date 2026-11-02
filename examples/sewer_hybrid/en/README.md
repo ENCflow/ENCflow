@@ -190,7 +190,9 @@ in E, 38.6 mm goes from the cliff into the river and 22.4 mm remains in
 the pipes; in F, 56.2 mm goes **from the outfall into the river**, 3.5 mm
 from the cliff into the river, and 1.3 mm remains in the pipes (recomputed
 on 2026-10-22, and on 2026-10-31 with the default f_opening_dynamic = 3, which changes
-only the outfall 55.9 → 56.2 mm and the cliff 3.8 → 3.5 mm; developer.md §68.41). The trunk of F carries more than 90 % of the rain,
+only the outfall 55.9 → 56.2 mm and the cliff 3.8 → 3.5 mm; developer.md §68.41; recomputed again on 2026-11-02
+with the default after the correction of the lateral faces of the momentum-conserving advection, which leaves
+the printed values unchanged; the figures are from that recomputation; §68.42, §68.43). The trunk of F carries more than 90 % of the rain,
 consistent with the estimate pipe-full capacity 1.70 m³/s ≳ runoff
 1.40 m³/s.
 
