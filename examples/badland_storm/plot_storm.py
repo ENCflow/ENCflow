@@ -73,30 +73,32 @@ for name, rr in rows.items():
     ax[2].plot(TS, [r["mean_inc"] for r in rr], "o-", ms=3, label=name + T(" 崖面帯の平均低下", " mean lowering of the cliff-face belt"))
     ax[2].plot(TS, [r["max_inc"] for r in rr], "s--", ms=3, label=name + T(" 最大下刻", " maximum incision"))
     ax[3].plot(TS, [r["xhead"] for r in rr], "o-", ms=3, label=name)
-ax[0].set_ylabel(T("崖面帯の y 方向起伏 (m)", "y-direction relief of the cliff-face belt (m)")); ax[1].set_ylabel("(m)"); ax[2].set_ylabel("(m)"); ax[3].set_ylabel(T("谷頭の位置 x (m)(台地縁 60 m)", "valley-head position x (m) (plateau edge at 60 m)"))
+ax[0].set_ylabel(T("崖面帯の y 方向起伏 (m)", "y-direction relief of the cliff-face belt (m)")); ax[1].set_ylabel("(m)"); ax[2].set_ylabel("(m)"); ax[3].set_ylabel(T("谷頭の位置 x (m)(台地縁 60 m)", "valley-head position x (m)\n(plateau edge at 60 m)"))
 for a in ax:
     a.set_xlabel("T_geo (s)"); a.legend(fontsize=7)
 fig.tight_layout(); fig.savefig(f"{FIGDIR}/series%s.png" % SUF, dpi=110); plt.close(fig)
 
 # ---- 地図 ----
 names = [n for n in ("dry", "storm") if n in cases]
-picks_t = [1.8e6, 4.5e6, 9.0e6]
-fig, axes = plt.subplots(len(names) + 1, len(picks_t), figsize=(4.6 * len(picks_t), 4.2 * (len(names) + 1)))
+tend = min(cases[n]["snaps"][-1][0] for n in names)
+picks_t = [tend / 5, tend * 2 / 5, tend]   # 25 周期なら 5・10・25 周期目(T_geo 9e5・1.8e6・4.5e6 s)
+fig, axes = plt.subplots(len(names) + 1, len(picks_t), figsize=(4.6 * len(picks_t), 4.6 * (len(names) + 1)))
 axes = np.atleast_2d(axes)
 for r, name in enumerate(names):
     c = cases[name]
     for k, tt in enumerate(picks_t):
         tg, n, z = c["snaps"][int(np.argmin([abs(t - tt) for t, _, _ in c["snaps"]]))]
         im = axes[r, k].imshow(z, origin="lower", extent=ext, cmap="terrain", vmin=0, vmax=HP)
-        axes[r, k].set_xlim(20, 100); axes[r, k].set_title(T("%s: T_geo = %.1e s(%d 周期)", "%s: T_geo = %.1e s (%d cycles)") % (T("全量浸透(対照)", "complete infiltration (control)") if name == "dry" else T("豪雨時に表面流", "surface flow during storms"), tg, n), fontsize=9)
+        axes[r, k].set_xlim(20, 100); axes[r, k].set_title(T("%s\nT_geo = %.1e s(%d 周期)", "%s\nT_geo = %.1e s (%d cycles)") % (T("全量浸透(対照)", "complete infiltration (control)") if name == "dry" else T("豪雨時に表面流", "surface flow during storms"), tg, n), fontsize=9)
     fig.colorbar(im, ax=axes[r, :].tolist(), shrink=0.7, label="z (m)")
 if len(names) == 2:
     for k, tt in enumerate(picks_t):
         zs = cases["storm"]["snaps"][int(np.argmin([abs(t - tt) for t, _, _ in cases["storm"]["snaps"]]))][2]
         zd = cases["dry"]["snaps"][int(np.argmin([abs(t - tt) for t, _, _ in cases["dry"]["snaps"]]))][2]
         im = axes[2, k].imshow(zs - zd, origin="lower", extent=ext, cmap="RdBu", vmin=-15, vmax=15)
-        axes[2, k].set_xlim(20, 100); axes[2, k].set_title(T("差 z(表面流) − z(対照)(青: 表面流で余計に削れた)", "Difference z(surface flow) − z(control) (blue: eroded deeper with surface flow)"), fontsize=9)
-    fig.colorbar(im, ax=axes[2, :].tolist(), shrink=0.7, label="Δz (m)")
+        tg = cases["storm"]["snaps"][int(np.argmin([abs(t - tt) for t, _, _ in cases["storm"]["snaps"]]))][0]
+        axes[2, k].set_xlim(20, 100); axes[2, k].set_title(T("差 z(表面流) − z(対照)\nT_geo = %.1e s", "z(surface flow) − z(control)\nT_geo = %.1e s") % tg, fontsize=9)
+    fig.colorbar(im, ax=axes[2, :].tolist(), shrink=0.7, label=T("Δz (m)(青: 対照の方が深く削れた)", "Δz (m) (blue: eroded deeper in the control)"))
 fig.savefig(f"{FIGDIR}/maps%s.png" % SUF, dpi=110, bbox_inches="tight"); plt.close(fig)
 
 # ---- 流れ ----

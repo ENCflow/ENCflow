@@ -1,163 +1,230 @@
-# examples/tower_karst — Formation experiment of bare-rock towers left standing on a plain (tower karst)
+# tower_karst — bare-rock towers left on a plain (tower karst: differential dissolution and collapse at the feet)
 
 > English mirror of examples/tower_karst/README.md. The Japanese file is the master copy.
 
 [日本語](../README.md)
 
-This example looks at the process by which limestone towers (fenglin) are left
-standing above a plain in a humid tropical karst, as the superposition of
-**dissolution f_dissol** (diffuse dissolution proportional to the infiltration
-+ lateral dissolution of rock walls in contact with ponded water) and
-**rockfall and talus f_rockfall** (bedrock mode `rf_bedrock = 1`). The inputs
-are only `param.txt` in this directory and the generated inputs `z.txt`,
-`sd.txt` and `ksv.txt` (developer.md §86, §48.7; docs/karst_plan.md §2.5,
-§2.6). For the formation of doline fields see
-[examples/karst](../../karst/en/README.md).
+This example looks at how limestone towers (peak forest, fenglin) remain standing on a plain in
+humid tropical karst, by superposing
+[limestone dissolution](../../../docs/en/users_guide/geomorph.md#limestone-dissolution-f_dissol)
+(f_dissol: diffuse dissolution by infiltrating water, dissolution of rock faces by runoff on bare
+rock, and lateral dissolution of walls in contact with ponded water) and
+[rockfall and talus](../../../docs/en/users_guide/geomorph.md#rockfall-and-talus-f_rockfall)
+(f_rockfall; bedrock without soil also collapses). With only the difference that rain runs off
+the bare-rock towers at once while the plain is covered by soil into which rain soaks, it looks
+at whether the plain and the feet of the towers dissolve faster and the towers rise relative to
+the plain. For the formation of a doline field see [karst](../../karst/en/README.md). The values
+are schematic, chosen to show the style of formation, and do not reproduce the rates or forms of
+real landforms. The figures of the results have Japanese labels (shared with the Japanese
+version).
 
-## Causation (cause and effect inside the model)
+## What happens in real tower karst
 
-- The towers are bare rock with a small infiltration capacity (1 mm/h), so
-  almost all the rain runs off as surface flow down to the foot. The plain is
-  covered by soil (1 m) with a large infiltration capacity (40 mm/h), so it
-  infiltrates its own rain and the water arriving from the towers.
-  Dissolution is proportional to the infiltration (aggressive water that has
-  passed through soil CO₂), and on bare rock 0.3 times the runoff generated
-  there also dissolves the rock face, so **the plain and the tower feet are
-  lowered quickly and the towers at about one third of that rate**.
-- The cells at the foot receive the water collected from the towers and
-  infiltrate especially much, so they are lowered into a moat. Rock walls in
-  contact with the ponded water at the foot are cut into notches by lateral
-  dissolution (distributed by the wetted-area ratio).
-- When the rock wall exposed by the lowering of the foot (the drop to the
-  lowest point within a window of 1 cell) exceeds the critical height
-  H_c = 10 m, the excess collapses and accumulates at the foot as talus (ht;
-  also added to the soil sd). The towers are bedrock without soil, so
-  `rf_bedrock = 1` is used to collapse them. As the talus buries the foot the
-  exposed face becomes lower and collapse stops.
-- Since no sinks are used, the water uptake is capped by the infiltration
-  capacity and the positive feedback within a storm does not run away.
-  However, the hole where the water collecting at the tower foot infiltrates
-  can be deepened by tens of centimetres in a single storm, so morfac is kept
-  at 5×10³ (at 10⁴ the flow diverged at a step of 9 m in the hole).
+- **Towers standing on a plain**: in humid tropical limestone regions, towers with steep walls
+  stand in rows on a flat plain (Guilin in southern China is the classic example). It is thought
+  that they often develop from peak clusters joined at their bases (fengcong) into peak forests
+  isolated on a plain (fenglin) (Waltham 2008).
+- **The plain and the feet dissolve fast**: the plain is covered by soil and alluvium, and
+  aggressive water that has taken up carbon dioxide in the soil dissolves the plain and the feet
+  of the towers. On bare-rock towers the rain runs off at once, and the rock faces dissolve little.
+  The denudation rate is proportional to the amount of infiltrating water and how much it can
+  dissolve, so it is large in the humid tropics, with much rain and abundant soil carbon dioxide
+  (White 1984).
+- **Notches at the feet and collapse**: the feet of the towers are dissolved near the water level
+  of the plain into notches (foot caves), and the walls that lose their support collapse. Through
+  repeated collapse the towers become thinner and lower while keeping steep walls (Ford and
+  Williams 2007; Waltham 2008). The collapsed debris accumulates at the feet.
 
-## Setup
+## Mechanisms needed for the reproduction
 
-| Item | Value |
-|---|---|
-| Domain and grid | 1000 × 1000 m, Δx = 10 m (100 × 100 cells), walls on all four sides |
-| Initial terrain | Plain (z ≈ 0; undulation with correlation length ≈ 30 m and standard deviation 0.3 m) with 4 bell-shaped hills (height 40 m, radius 90 m) and 2 small hills (20 m, 60 m). z > 5 m is bare rock |
-| Soil and infiltration | Plain: soil 1 m (sy 0.2), Green-Ampt 40 mm/h; bare rock: soil 1e-3 m, 1 mm/h (`sd.txt`, `ksv.txt`). Soil water drains to the conduit layer (the receiver of the fracture network) at 20 mm/h. No sinks |
-| Rainfall | Representative storm 40 mm/h × 1 h, repeated with a 1-day period |
-| Dissolution | c_eq = 300 mg/L (below the soil in the humid tropics), ρ_r = 2500 → k_d = 1.2×10⁻⁴; infiltration + runoff on bare rock × 0.3 (dissol_src = 3); residue fraction 0.1; lateral dissolution dissol_lat = −1 (automatic distribution) |
-| Rockfall | rf_hc = 10 m (half of the 20 m tower wall), window rf_rc = 10 m, talus repose angle 35°, relax = 0.5, bedrock mode rf_bedrock = 1, cap of 1 m per edge and update |
-| Time | dt = 2 s, landform update every 10 min × morfac 5×10³ (1 day = 5×10³ storms = 100 years at 50 per year). 60 days = 6 kyr of morphological time. Output every 10 days. About 1–2 hours (4 threads) |
+![Schematic of the mechanisms](figs/mechanism.png)
+
+Schematic (vertical exaggeration). (a) Section of a tower and the plain: on a bare-rock tower,
+almost all the rain runs off and gathers at the foot, and the rock face dissolves with only part
+of the runoff. On the plain, water infiltrating through the soil dissolves the rock, and the foot,
+where the tower water gathers, dissolves deeply into moats and holes. Water ponded at the foot
+dissolves the rock wall (notch), and exposed walls above the critical height collapse into talus.
+(b) The plain lowers fast and the tower tops lower slowly, so the relative height of the towers
+grows.
+
+| Real phenomenon | Mechanism in the model | Setting |
+|---|---|---|
+| Rain soaks in on the plain and runs off the bare-rock towers | Distribution of infiltration capacity (plain 40 mm/h, bare rock 1 mm/h) and of soil thickness (plain 1 m, bare rock 0.001 m) | `fn_gw_ksv = 'ksv.txt'`, `fn_sd = 'sd.txt'` |
+| Infiltrating water dissolves limestone | Dissolution proportional to infiltration (c_eq = 300 mg/L → k_d = 1.2×10⁻⁴) | `f_dissol = 1`, `dissol_ceq` |
+| Bare rock faces also dissolve a little | Dissolution by 0.3 × the runoff generated on bare rock (water flowing in from upstream is treated as saturated and not counted) | `dissol_src = 3`, `dissol_fsurf = 0.3`, `dissol_sdsurf` |
+| The tower water gathers at the foot and dissolves it deeply | Water gathered at the foot by shallow-water flow soaks in and dissolves accordingly | (shallow-water flow and Green-Ampt) |
+| Water ponded at the foot dissolves the wall (notch) | Lateral dissolution: the dissolving power of the pond is also distributed to wetted walls | `dissol_lat = -1` |
+| Undercut walls collapse into talus | Rockfall and talus: the part of the drop to the lowest point within a window above H_c collapses, and bedrock without soil also collapses | `f_rockfall`, `rf_hc = 10`, `rf_rc = 10`, `rf_bedrock = 1` |
+| Water disappearing underground (fracture networks) | Soil water drains at 20 mm/h to the conduit layer (a receptacle). No sinks | `gwc_leak_layer = 1`, `gwc_leak_mmh = 20`, `gwc_inlet = 0` |
+| Residue remains as soil | 10 % of the dissolved rock volume stays in the soil | `dissol_fres = 0.1` |
+| A long time | A representative storm is repeated on a daily cycle and only the landform change is accelerated by morfac | `t_cycle_c = "1d"`, `morfac = 5000` |
+
+Without sinks, the intake of water is capped by the infiltration capacity, so the positive feedback
+of [karst](../../karst/en/README.md), in which "water gathers into a depression and runs away within
+a storm", is less likely. Still, the holes at the tower feet, where the gathered water soaks in, can
+deepen by tens of centimetres in one storm, so morfac is kept at 5×10³ (see the notes).
+
+## Geometry and settings
+
+![Settings](figs/setup.png)
+
+Left: initial terrain and tower numbers (inside the black line = bare rock; dashed = position of the
+section). Upper middle: section through towers 1 and 2 (brown = soil). Lower middle: rain of one day
+and infiltration capacities. Right: summary of the settings.
+
+1000 m × 1000 m, Δx = 10 m (100 × 100 cells), closed walls on all four sides.
+
+- **Terrain**: on a plain (z ≈ 0; undulation with a correlation length of ≈ 30 m and a standard
+  deviation of 0.3 m), four bell-shaped hills (towers 1 to 4: 40 m high, radius 90 m) and two small
+  hills (towers 5 and 6: 20 m high, radius 60 m) are placed. Cells with z > 5 m are bare rock.
+- **Soil and infiltration**: the plain has soil 1 m (specific yield 0.2) and Green-Ampt 40 mm/h; bare
+  rock has soil 0.001 m and 1 mm/h (`sd.txt`, `ksv.txt`). Soil water drains at 20 mm/h to the conduit
+  layer (receptacle of the fracture network). There are no sinks.
+- **Rain**: a representative storm of 40 mm/h × 1 hour, repeated on a daily cycle for 60 days.
+- **Dissolution**: c_eq = 300 mg/L (water below the soil in the humid tropics), ρ_r = 2500 kg/m³ →
+  k_d = 1.2×10⁻⁴. Infiltration + 0.3 × runoff on bare rock (`dissol_src = 3`), residue 0.1, automatic
+  lateral dissolution (`dissol_lat = -1`).
+- **Collapse**: critical height H_c = 10 m (half of a 20 m tower wall), window radius 10 m, angle of
+  repose of talus 35°, half of the excess relaxed per update, bedrock also collapses
+  (`rf_bedrock = 1`), cap of 1 m per edge and update.
+- **Time**: dt = 2 s; the landform is updated every 10 minutes with morfac = 5×10³ (1 day = 5000
+  storms; at 50 a year, 100 years). 60 days = landform time 6000 years. Output every 10 days. The run
+  takes 1 to 2 hours (4 threads).
+
+| Case | Settings file | Content | Run time (approx.) |
+|---|---|---|---|
+| Main case | param.txt | the settings above (dissolution + lateral dissolution + collapse) | 1 to 2 hours (4 threads) |
+
+## How to run
 
 ```
-make                                       # link to ../../bin/encflow
-python3 make_terrain.py                    # z.txt, sd.txt, ksv.txt
-./encflow param.txt > Screen.log           # about 1-2 hours
-python3 plot_results.py | tee analysis.txt # figs/*.png + tables
+cd examples/tower_karst
+make                                        # link to the executable and inputs (make_terrain.py writes z.txt, sd.txt, ksv.txt)
+make run                                    # main case (1 to 2 hours)
+python3 plot_setup.py                       # figs/mechanism.png, setup.png (does not use the results)
+python3 plot_results.py | tee analysis.txt  # figs/maps, sections, towers, hydrograph.png and the tables
 ```
 
-## Checks
-
-Tables from `plot_results.py` (morphological time 6000 years = 300000 storms
-converted at 50 per year):
-
-| Item | Value |
-|---|---|
-| Water balance | Final S_total = 2.400 m = cumulative rainfall 40 mm × 60 days (mass conservation; the ponded water disappears by infiltration every day) |
-| Dissolved rock (ledger) | 1 465 945 m³ |
-| Rock moved by collapse (ledger; bulk) | 2 493 m³ (44 thousand edge updates). Final talus Σht Δx² = 2 172 m³ (maximum 3.7 m) |
-| Volume loss of the ground surface | Σ(z₀ − z)Δx² = 1 319 350 m³ = dissolution × (1 − 0.1) = 1 319 350 m³ (agreement to all digits; collapse is conservative and does not contribute) |
-| Denudation of the plain (cells never ponded) | Median 1.30 m = 216 mm/kyr |
-| Denudation of the foot (261 ponded plain cells) | Median 2.8 m, maximum 12.1 m |
-| Soil (debris + residue) | Plain 1.14 m (initially 1 m), bare-rock area 0.04 m (initially 0.001 m), maximum 6.2 m (talus at the foot) |
+With the argument `en` the figures are drawn with English labels into en/figs/
+(`python3 plot_setup.py en`, `python3 plot_results.py en`).
 
 ## Results
 
-![maps](../figs/maps.png)
+![Terrain, denudation depth and soil thickness](figs/maps.png)
 
-![sections](../figs/sections.png)
+Upper left: initial terrain (contours every 5 m), upper right: final terrain (landform time 6000
+years). Lower left: denudation depth z₀ − z (logarithmic; 1.3 m on the plain, deeper at the feet).
+Lower right: final soil thickness (debris apron and residue).
 
-![towers](../figs/towers.png)
+![Sections through tower 1](figs/sections.png)
 
-| Morphological time (yr) | Plain (m) | Summit height of towers 1–4 (m) | Relative height of towers 1–4 (m) | Relative height of small hills 5 and 6 (m) | Max. slope angle of the bedrock surface at the foot |
+Evolution of the x and y sections through the centre of tower 1 (dashed = final bedrock surface
+z − sd).
+
+![Measures for each tower](figs/towers.png)
+
+Left: height relative to the plain, middle: equivalent radius of the part higher than the plain +
+5 m, right: maximum slope angle of the bedrock surface (each tower).
+
+![Ponding and groundwater storage](figs/hydrograph.png)
+
+Domain-mean ponding (blue) and groundwater storage (green) over the first 3 days (left) and the last
+3 days (right).
+
+Budget check (tables of `plot_results.py`; landform time 6000 years = 300,000 storms at 50 a year):
+
+| Item | Value |
+|---|---|
+| Water balance | final S_total = 2.400 m = cumulative rain 40 mm × 60 days (mass conserved; near the end part of the ponding remains until the next day) |
+| Dissolved rock (ledger) | 1 465 947 m³ |
+| Rock moved by collapse (ledger; bulk) | 2 493 m³ (44,000 edge updates). Final talus Σht Δx² = 2 172 m³ (up to 3.7 m) |
+| Loss of surface volume | Σ(z₀ − z)Δx² = 1 319 352 m³ = dissolution × (1 − 0.1) = 1 319 352 m³ (all digits agree; collapse conserves volume and does not contribute) |
+| Denudation of the plain (cells that did not pond) | median 1.30 m = 216 mm/kyr |
+| Denudation of the feet (261 plain cells that ponded) | median 2.8 m, maximum 12.1 m |
+| Soil (debris and residue) | plain 1.14 m (initially 1 m), bare-rock area 0.04 m (initially 0.001 m), up to 6.2 m (talus at the feet) |
+
+| Landform time (years) | Plain (m) | Top height of towers 1–4 (m) | Relative height of towers 1–4 (m) | Relative height of small hills 5, 6 (m) | Maximum slope angle of the bedrock surface |
 |---|---|---|---|---|---|
 | 0 | 0.0 | 39.3–40.3 | 39.3–40.4 | 19.4–19.6 | 29–35° |
-| 3000 | −0.67 | 39.1–40.1 | 39.8–40.8 | 19.9–20.1 | 35–38° |
-| 6000 | −1.32 | 39.0–40.0 | 40.3–41.3 | 20.4–20.6 | 38–48° |
+| 3000 | −0.67 | 39.1–40.1 | 39.8–40.8 | 19.9–20.1 | 36–39° |
+| 6000 | −1.32 | 39.0–40.0 | 40.3–41.3 | 20.4–20.6 | 37–49° |
 
-- **Differential dissolution increases the relative height.** The plain is
-  lowered uniformly at 216 mm/kyr, while the tower summits are lowered only
-  50 mm/kyr (0.3 m in 6 kyr) by the surface source on bare rock
-  (runoff × 0.3), so the relative height increases by the difference, 1.0 m.
-  The equivalent radius is almost unchanged; the change in shape is
-  concentrated at the foot.
-- **Moats and holes at the foot.** The rain on the towers collects in the
-  lowest cells at the foot and infiltrates there, so the ring at the foot is
-  lowered twice as much as the plain (3 m), and the few cells that collect
-  the most water are lowered on the order of 10 m (the black dots around the
-  towers in the denudation-depth map; the streaks along the valley lines of
-  the plain's undulation are the paths along which water flowed and
-  infiltrated). These correspond to the "swallow holes and foot caves at the
-  base of the towers" of real karst.
-- **Steepening of the foot and collapse.** As the foot is lowered the lower
-  slope steepens (maximum slope angle of the bedrock surface 35° → 37–49°).
-  Collapse occurs only where the exposed face exceeds H_c = 10 m (the walls
-  of cells whose foot holes have reached the order of 10 m); the rock moved
-  is 0.2 % of the dissolution (2.5 thousand m³), and the talus accumulates up
-  to 3.7 m inside the holes. The tower walls have not retreated yet (in 6 kyr
-  the incision at the foot is a few metres and most of the wall is below
-  H_c). Reducing H_c or extending the morphological time enters the stage in
-  which the walls collapse and retreat.
-- **The small hills** (height 20 m) do not disappear in 6 kyr either. The
-  disappearance of towers and the transition from fengcong to fenglin need
-  tens of kyr of morphological time, until the lowering of the plain reaches
-  the tower height (at morfac 5×10³ one day = 100 years, so 600 days = 60 kyr
-  in a restart chain).
+(The slope angles are the range over the six hills in the right panel of towers.png.)
 
-## Notes on interpretation
+- **Differential dissolution increases the relative height**: the plain is lowered uniformly at
+  216 mm/kyr, while the tower tops are lowered by dissolution with runoff on bare rock (0.3 × runoff)
+  at only 50 mm/kyr (0.3 m in 6000 years), so the relative height grows by the difference of 1.0 m.
+  The equivalent radius hardly changes, and the changes of form concentrate at the feet.
+- **Moats and holes at the feet**: the tower rain gathers into the lowest cells at the feet and soaks
+  in, so the ring at the feet goes down twice as much as the plain (3 m), and a few cells with much
+  inflow go down by 10 m or so (the black dots around the towers in the denudation map; the streaks
+  along the valley lines of the plain undulation are paths along which water flowed and soaked in).
+  They correspond to "sinks and foot caves at the base of towers" of real karst.
+- **Steepening of the feet and collapse**: as the feet go down, the lower slopes steepen (maximum slope
+  angle of the bedrock surface 35° → 37 to 49°). Collapse occurs only where the exposed face exceeds
+  H_c = 10 m (walls of cells where the holes at the feet reached about 10 m); the moved rock is 0.2 % of
+  the dissolution (2.5 thousand m³), and talus accumulates up to 3.7 m in the holes. The tower walls have
+  not retreated yet (in 6000 years the undercut at the feet is a few metres, and most of the walls are
+  below H_c). With a smaller H_c or a longer landform time, the stage in which the walls collapse and
+  retreat begins.
+- **Ponding**: at first, the ponding just after each storm (3.5 mm domain mean) soaks in and disappears
+  within a few hours. Near the end the ponding no longer disappears within a day, and about 6.6 mm
+  (domain mean) remains before the next storm (apparently because the water in the deep holes at the
+  feet cannot soak in within a day at an infiltration capacity of 40 mm/h).
+- **The small hills** (20 m high) do not disappear in 6000 years either. The disappearance of towers and
+  the transition from fengcong to fenglin need a landform time of tens of thousands of years, until the
+  lowering of the plain reaches the tower heights (with morfac 5×10³, 1 day = 100 years, so chained
+  restarts of 600 days = 60,000 years).
 
-- The coefficients are not calibrated values. c_eq = 300 mg/L is toward the
-  upper end for recharge water below the soil in the humid tropics, and a
-  plain denudation of about 240 mm/kyr is at the upper end of the literature
-  range for tropical karst (tens to hundreds of mm/kyr). The morphological
-  time is a conversion with "one 1-day cycle = one representative storm,
-  50 per year".
-- Collapse is an instantaneous relaxation set by the critical height `rf_hc`
-  (not a rate law) and spreads at the talus repose angle `rf_phi`. The debris
-  stays at the foot as talus ht and soil sd and, apart from the talus repose
-  angle, does not move unless creep or bedload is enabled (this example does
-  not move it). The towers are bedrock without soil, so `rf_bedrock = 1` is
-  required (with the default 0, cells with sd ≤ 0 do not collapse).
-- Dissolution of the tower rock faces is the surface source
-  (`dissol_src = 3`), which spends 0.3 times the dissolution capacity of the
-  runoff generated on the tower on that rock face. Water arriving from
-  upstream is regarded as saturated and not counted, so concentration of
-  dissolution along flow paths (karren) is not represented.
-- The notches at the foot act only while the foot is ponded immediately after
-  a storm, because lateral dissolution works on "walls in contact with ponded
-  water". In this 6 kyr run no wall retreat is visible; the holes and debris
-  at the foot are the main changes. To see tower retreat, extend the
-  morphological time by a factor of 10 or more.
-- The upper limit of morfac is looser than with sinks but not unlimited. The
-  holes at the foot can be deepened by tens of centimetres in a single storm
-  (infiltration 40 mm/h × duration of ponding), so at 10⁴ the flow diverged
-  once the step of the hole reached 9 m (stable at 5×10³).
-- All four sides are walls, and the water on the plain disappears only by
-  infiltration. To represent a plain that drains quickly (lateral groundwater
-  flow or rivers), add lateral flow or an outlet.
+## What this model cannot represent (differences from the real phenomenon)
 
-## Related
+- **Collapse is an instantaneous relaxation**: collapse is an instantaneous relaxation set by the
+  critical height `rf_hc` (not a rate law), and the talus spreads at the angle of repose `rf_phi`. The
+  debris remains at the feet as talus and soil and does not move except by the angle of repose of the
+  talus unless creep or bedload is switched on (not in this example).
+- **Dissolution along flow paths is not represented**: dissolution of the tower rock faces uses only 0.3
+  times the dissolving power of the runoff generated on that face. Water flowing in from upstream is
+  treated as saturated and not counted, so the concentration of dissolution along flow paths (solution
+  runnels, karren) is not represented.
+- **Wall retreat is not yet visible**: the notches at the feet act only while the feet are ponded just
+  after storms, because lateral dissolution acts on "walls in contact with ponded water". In this
+  6000-year run no wall retreat is seen; the holes at the feet and the debris are the main changes. To
+  see the towers retreat, extend the landform time by 10 times or more.
+- **Caves have no shape**: the conduit layer is a receptacle for water that disappeared underground; the
+  shapes of foot caves and underground drainage are not treated.
+- **The coefficients are not calibrated**: c_eq = 300 mg/L is on the high side for water below the soil
+  in the humid tropics, and the denudation of the plain (216 mm/kyr) is on the large side for tropical
+  karst. The landform time uses the conversion "one daily cycle = one representative storm, 50 a year".
 
-- [examples/karst](../../karst/en/README.md) — doline fields, the upper limit
-  of morfac, comparison of lateral dissolution and collapse
-- [docs/users_guide/geomorph.md](../../../docs/en/users_guide/geomorph.md)
-  "Limestone dissolution" and "Rockfall and talus",
-  [sediment.md](../../../docs/en/users_guide/sediment.md) — equations and the
-  basis of the defaults
-- [test/dissol](../../../test/dissol/en/README.md),
-  [test/rockfall](../../../test/rockfall/en/README.md) — analytical
-  verification; [docs/karst_plan.md](../../../docs/karst_plan.md) (in
-  Japanese) — design and limitations
+## Notes
+
+- **Upper limit of morfac**: looser than with sinks ([karst](../../karst/en/README.md)) but not unlimited.
+  The holes at the feet deepen by tens of centimetres in one storm (infiltration at 40 mm/h × duration of
+  ponding), so with 10⁴ the flow broke down once the steps of the holes reached 9 m (stable with 5×10³).
+- **Collapse of bedrock**: the towers are bedrock without soil, so `rf_bedrock = 1` is needed (with the
+  default 0, cells with soil of 0 or less do not collapse).
+- **Closed walls**: water on the plain disappears only by infiltration. For a plain that drains quickly
+  (lateral groundwater flow or rivers), add lateral flow or outfalls.
+- Verification: [test/dissol](../../../test/dissol/en/README.md) (comparison of dissolution with the
+  analytical solution), [test/rockfall](../../../test/rockfall/en/README.md) (rockfall and talus,
+  including the bedrock version).
+
+## Starting points for sensitivity experiments
+
+- `rf_hc` (critical height) and `rf_rc` (window): how the walls collapse. A smaller H_c brings on the
+  stage in which the walls collapse and retreat sooner.
+- `dissol_ceq`: rate of dissolution. `dissol_fsurf`: rate at which the tower tops go down (how fast the
+  relative height grows).
+- `KSV_PLAIN`, `KSV_ROCK`, `SD_PLAIN` in make_terrain.py, which writes ksv.txt and sd.txt: how water is
+  divided between the plain and the towers.
+- `tt_c` and chained restarts: landform time (tens of thousands of years for tower retreat and
+  disappearance).
+
+## References
+
+- Ford, D. and Williams, P. (2007): *Karst Hydrogeology and Geomorphology*. John Wiley & Sons,
+  Chichester.
+- Waltham, T. (2008): Fengcong, fenglin, cone karst and tower karst. *Cave and Karst Science*, 35(3),
+  77–88. (checked against the abstract)
+- White, W. B. (1984): Rate processes: chemical kinetics and karst landform development. In: La Fleur,
+  R. G. (ed.) *Groundwater as a Geomorphic Agent*, Allen & Unwin, 227–248.

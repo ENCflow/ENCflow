@@ -157,8 +157,8 @@ ax.set_title(T("最終地形(地形時間 %.0f 年)", "Final terrain (morphologi
 ax = axes[1, 0]
 im = ax.imshow(np.maximum(d, 1e-3), extent=ext, origin="lower", cmap="magma_r",
                norm=LogNorm(vmin=0.1, vmax=max(d.max(), 1.0)))
-plt.colorbar(im, ax=ax, label=T("削剥深 z0 − z (m。対数。負 = 岩屑の堆積は 0 で表示)", "Denudation depth z0 − z (m, log; negative = debris deposition shown as 0)"))
-ax.set_title(T("削剥深(平野 %.1f m、裾はより深い)", "Denudation depth (plain %.1f m, deeper at the foot)") % dp)
+plt.colorbar(im, ax=ax, label=T("削剥深 z0 − z (m。対数。負 = 岩屑の堆積は 0 で表示)", "Denudation depth z0 − z (m, log;\nnegative = debris deposition, shown as 0)"))
+ax.set_title(T("削剥深(平野 %.1f m、裾はより深い)", "Denudation depth\n(plain %.1f m, deeper at the foot)") % dp)
 ax = axes[1, 1]
 im = ax.imshow(sdf, extent=ext, origin="lower", cmap="YlOrBr", vmin=0, vmax=max(sdf.max(), 1.0))
 plt.colorbar(im, ax=ax, label=T("土層厚 sd (m)", "Soil thickness sd (m)"))

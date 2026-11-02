@@ -451,7 +451,12 @@ value independent of discharge.
 
 Valley formation on highly permeable slopes without surface flow
 (badlands, cliffs of pyroclastic cones) is parameterised as a sub-grid
-process acting on dry ($`h \le d_d`$) cells outside channels:
+process acting on dry ($`h \le d_d`$) cells outside channels. This erosion
+law (including the hollow amplification and the correlation length of the
+curvature) is an **original formulation** by the ENCflow developer and has
+not been published as a paper. The papers cited below are sources for the
+phenomena the law aims to represent and for the theory it is compared with;
+the form of the equation and its coefficients were not derived from them.
 
 ```math
 E = P\left[k_r\,(1 + c_a\,\kappa) + k_t\,(1 + c_b\,\kappa)\,S^{h}\right],

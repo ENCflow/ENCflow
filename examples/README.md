@@ -26,7 +26,7 @@ python3 plot_results.py   # 図化(用意されている例題のみ)
 | [badland_round/](badland_round/) | 稜線が丸い膨潤粘土型のバッドランド。下刻とクリープの比が決める長さ尺度より低い丘からドーム状になることを見る | f_splash + f_creep(+ spl_strata)、Green-Ampt |
 | [mesa/](mesa/) | キャップロックが平らな頂と垂直な崖を保ち、崖の平行後退で台地がメサ → ビュート → 尖塔へ縮む過程を見る | f_splash(spl_strata・spl_ksat)+ f_creep + f_rockfall(rf_rc・rf_fface)、Green-Ampt |
 | [karst/](karst/) | 石灰岩台地のドリーネ群の形成。窪みに集まり吸込穴から地下へ消える水が、その場所を選択的に深める過程を見る | 石灰岩の溶食 f_dissol、管路連続体層(吸込穴)、Green-Ampt、周期強制 t_cycle_c |
-| [tower_karst/](tower_karst/) | 平野に残る裸岩の塔(タワーカルスト)。裾だけが溶け、側方溶食と崩落で壁が後退して岩屑の裾野と堀ができる過程 | 石灰岩の溶食 f_dissol(dissol_lat)、岩盤の崩落 f_rockfall、Green-Ampt の浸透能マップ、周期強制 |
+| [tower_karst/](tower_karst/) | 平野に残る裸岩の塔(タワーカルスト)。平野と裾だけが溶けて塔の比高が増し、裾に堀と穴ができる過程を見る | 石灰岩の溶食 f_dissol(dissol_lat)、岩盤の崩落 f_rockfall、Green-Ampt の浸透能マップ、周期強制 |
 | [ashfall_lahar/](ashfall_lahar/) | 降灰で浸透能が下がった斜面の雨が灰を削って泥流になり、扇状地に堆積する過程と、砂防堰堤の効果を見る | 土石流 f_debris(地下水計算と併用する間隙水 f_dbwet=2)、Green-Ampt の浸透能、降雨、砂防堰堤(地形)、4 近傍化 p_diagratio |
 | [landslide_tsunami/](landslide_tsunami/) | 陸上崩壊・海底地滑り・土石流が水域に突入して起こす津波の発生と伝播を、4 パターンと非静水圧版で比べる | 動く底層 f_bedslide、非静水圧補正 |
 | [tsunami_fault/](tsunami_fault/) | 断層パラメータから海底変位を作って津波を起こし、静水圧・瞬時変位・非静水圧の違いと座標指定を比べる | 規定底面運動 fn_bedmotion、utils/fault2disp |
