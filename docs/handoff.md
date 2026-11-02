@@ -132,6 +132,11 @@ architecture.md。このメモは「現在進行中・未完了の項目」だ�
      同一バイナリならスレッド数によらずビット一致(§8)を storm・mesa・karst の短い計算で確かめた)。
      数表を README と照合し、plot スクリプトを日本語・`en` の両方で実行して英語 README の図を
      en/figs に切り替える。
+     **f_opening_dynamic の既定(利用者の判断 2026-11-02)**: この branch は文書の刷新が目的なので、
+     再計算はこの branch の既定 f_opening_dynamic = 2 のまま行う(param では指定していない)。main は
+     既定を 3 に変えたので、取り込んだ後は表面流のある badland_storm・karst・tower_karst の数値と図が
+     変わりうる(取り込み後に再計算して README を合わせる)。badland・badland_round・mesa は雨が
+     全量しみ込み(10 mm/h < 浸透能 36 mm/h)表面流がないので影響しない。
    - **解決(2026-11-02。利用者の依頼で badland を再計算)**: 全 8 ケース(主ケース・格子の曲率・
      相関長 3・格子収束 2・崩落)を現行 main の release ビルド(gfortran 13.3、4 スレッド、約 5 分)で
      計算し直した。README の数表は全項目が再現し、main_maps・main_series・spacing の図は
