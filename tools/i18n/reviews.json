@@ -266,9 +266,9 @@
     {
       "source": "docs/users_guide/geomorph.md",
       "target": "docs/en/users_guide/geomorph.md",
-      "source_sha256": "3a5820ae4628d60eb1c7c485eb5bd13b7f873a96c5c3d05812a9f2a821e598ed",
-      "target_sha256": "53c22d4c67178decd0fca6592768aeb0ce32ad4e476f745c0f16b3577068bb55",
-      "reviewer": "Claude (Claude Code session; the delta/tide sentences changed in both languages compared; the rest is unchanged from the recorded version)",
+      "source_sha256": "b2d8091fb3b3783a2adcc8fab1be6f6d69b81ef558549f47c2bcbb60c94ebabf",
+      "target_sha256": "52c4390eef992343aed4f36d84b62201f33a7bcc2a99b5494baa6ba5f60df4b4",
+      "reviewer": "Claude (Claude Code session; tide-update pointer added to the delta paragraph in both languages and compared)",
       "method": "assistant",
       "reviewed_on": "2026-11-02"
     },
