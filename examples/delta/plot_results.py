@@ -8,7 +8,7 @@
 #   (make_init.py の初期地形から)を書く。どちらも計算結果を使わない。en を足すと en/figs/ に英語版を書く。
 #   段 6・7(潮汐): python3 plot_results.py tide(tidedom)は上の 3 図に加えて fig_<case>_phases.png(最後の 1 周期の
 #   流れ)と fig_<case>_series.png(水位・河口の流量)を書く。3 図は平均潮位(上げ)のフレームで描く。
-#   python3 plot_results.py tidecmp は潮汐なしの基準との比較図 figs/tide_cmp.png(baseqb と tide)・
+#   python3 plot_results.py tidecmp は潮汐なしの基準との比較図 figs/tide_cmp.png(notide と tide)・
 #   figs/tidedom_cmp.png(smallq と tidedom)(en は en/figs/)と数表を書く。
 import sys, os, csv, glob, re
 import numpy as np
@@ -421,7 +421,7 @@ def setup():
     plt.close(fig)
 
 # ---------------------------------------------------------------- 段 6(潮汐)の図と集計
-#   tide・notide は潮の 1/4 周期ごとに出力する(4 枚で 1 周期: 平均潮位の上げ・満潮・平均潮位の下げ・干潮)。
+#   tide・tidedom は潮の 1/4 周期ごとに出力する(4 枚で 1 周期: 平均潮位の上げ・満潮・平均潮位の下げ・干潮)。
 #   堆積・陸化などは平均潮位(上げ)のフレーム(番号が 4 の倍数)で比べる。
 TIDE_T = 44712.0                     # M2 の周期 (s)
 TIDE_A = 1.0                         # 潮の振幅 (m)
@@ -482,15 +482,22 @@ def tide_metrics(rdir, pfile_, lch=150.0, mouth_q=30.0):
     return m
 
 
+def finished(c):
+    """計算が最後の出力まで進んだか(tt / dt_file 番の Z があるか)。"""
+    ptxt_ = open({"base": "param.txt"}.get(c, "param_%s.txt" % c)).read()
+    g = lambda k: float(re.search(r"^\s*%s\s*=\s*([0-9.eE+-]+)" % k, ptxt_, re.M).group(1))
+    return os.path.exists(os.path.join("result_%s" % c, "Z%04d.txt" % round(g("tt") / g("dt_file"))))
+
+
 def tidecmp():
-    """潮汐なしの基準と潮汐のケースの最終の堆積厚と地盤高の区分(段 6: baseqb と tide、段 7: smallq と tidedom)。"""
+    """潮汐なしの基準と潮汐のケースの最終の堆積厚と地盤高の区分(段 6: notide と tide、段 7: smallq と tidedom)。"""
     from matplotlib.colors import ListedColormap
-    pairs = (("tide_cmp.png", (("baseqb", T("潮汐なし(baseqb)", "no tide (baseqb)")), ("tide", T("潮汐あり(tide)", "with tide (tide)")))),
+    pairs = (("tide_cmp.png", (("notide", T("潮汐なし(notide)", "no tide (notide)")), ("tide", T("潮汐あり(tide)", "with tide (tide)")))),
              ("tidedom_cmp.png", (("smallq", T("潮汐なし(smallq)", "no tide (smallq)")),
                                   ("tidedom", T("潮汐あり(tidedom)", "with tide (tidedom)")))))
     for fname, cases in pairs:
-        if not all(os.path.isdir("result_%s" % c) for c, _ in cases):
-            print("skip %s (results missing)" % fname)
+        if not all(finished(c) for c, _ in cases):
+            print("skip %s (results missing or still running)" % fname)
             continue
         fig, axs = plt.subplots(2, 2, figsize=(13, 8.6), constrained_layout=True)
         for col, (c, lab) in enumerate(cases):
@@ -624,7 +631,7 @@ if not frames:   # FILENUMBER.csv は終了時に書かれる。途中なら Z �
               for f in sorted(glob.glob(os.path.join(d, "Z[0-9][0-9][0-9][0-9].txt")))
               if int(os.path.basename(f)[1:5]) < 9000]
 frames_all = list(frames)
-if case in ("tide", "notide", "tidedom"):   # 潮の 1/4 周期ごとの出力: 平均潮位(上げ)のフレームだけで比べる
+if case in ("tide", "tidedom"):   # 潮の 1/4 周期ごとの出力: 平均潮位(上げ)のフレームだけで比べる
     frames = [(n, t) for n, t in frames if n % TIDE_PH == 0]
 z0 = np.loadtxt(os.path.join(d, "Z0000.txt"))
 ny, nx = z0.shape
