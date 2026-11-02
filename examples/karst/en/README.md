@@ -126,29 +126,29 @@ and so on).
 
 ## Results
 
-![Terrain and denudation depth](../figs/maps.png)
+![Terrain and denudation depth](figs/maps.png)
 
 Upper left: initial terrain, upper right: final terrain (landform time 1500 years; shading and
 contours). Lower left: denudation depth z₀ − z (logarithmic; diffuse dissolution is 0.025 m, the
 black dots are dolines; the edge does not dissolve). Lower right: maximum ponding depth over the
 period.
 
-![Evolution of the denudation depth](../figs/evolution.png)
+![Evolution of the denudation depth](figs/evolution.png)
 
 Terrain (shading) and denudation depth (coloured dots) at landform times of 250, 750, 1000 and 1500
 years (the maximum denudation depth is in each title).
 
-![Sections through the deepest doline](../figs/sections.png)
+![Sections through the deepest doline](figs/sections.png)
 
 Evolution of the x and y sections through the deepest doline.
 
-![Distribution and evolution of the denudation depth](../figs/stats.png)
+![Distribution and evolution of the denudation depth](figs/stats.png)
 
 Left: distribution of the denudation depth (interior cells). Middle: evolution of the maximum, mean
 and median (diffuse) denudation depth. Right: number of depressions with denudation depth over 1 m
 (dolines).
 
-![Ponding and groundwater storage](../figs/hydrograph.png)
+![Ponding and groundwater storage](figs/hydrograph.png)
 
 Domain-mean ponding (blue) and groundwater storage (green) over the first 3 days (left) and the last
 3 days (right).
@@ -168,7 +168,7 @@ The conversion of the landform time assumes "one daily cycle = one representativ
 
 - **Self-organisation of the doline field**: of the initial shallow depressions (closed hollows made
   by the undulation of 1 m standard deviation), those with larger catchments deepen first: 7 at 250
-  years, 34 at 500 years, and nearly saturated at 55 after 1250 years (catchment ≈ 1.5 to 2 ha per
+  years, 34 at 500 years, and nearly saturated at 54 to 55 after 1250 years (catchment ≈ 1.5 to 2 ha per
   depression). The deepest doline is 22.6 m at 1500 years, and its depth grows almost in proportion
   to time (with a constant catchment, the inflow is constant).
 - **Order-of-magnitude difference from diffuse denudation**: cells that did not pond are lowered by
@@ -203,11 +203,11 @@ the main case.
 | Cells with denudation depth > 1 m / > 2 m / > 5 m | 77 / 53 / 38 | 163 / 68 / 22 |
 | Depressions with denudation depth > 2 m | 52 | 49 |
 
-![Terrain and denudation depth with lateral dissolution](../figs/maps_lat.png)
+![Terrain and denudation depth with lateral dissolution](figs/maps_lat.png)
 
 Same layout as the figure of the main case (maps.png), with lateral dissolution.
 
-![Sections with lateral dissolution](../figs/sections_lat.png)
+![Sections with lateral dissolution](figs/sections_lat.png)
 
 - With the distribution to the walls, the excavation of the deepest part is halved and the
   neighbouring cells go down 4 times as much, doubling the area deeper than 1 m. The number of

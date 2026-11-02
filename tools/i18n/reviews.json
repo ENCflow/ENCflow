@@ -1400,9 +1400,45 @@
     {
       "source": "examples/karst/README.md",
       "target": "examples/karst/en/README.md",
-      "source_sha256": "b92897883d15c979da5f6395fe1c5ad0c5f6249a5f09ccc4ec39edff72c332b8",
-      "target_sha256": "bd977812c02ea94c1934eb350c18992cc040396a39170f6028da8262713d9489",
-      "reviewer": "Claude (Claude Code session; Japanese source and English mirror written together and compared section by section, tables and numbers checked; no model execution)",
+      "source_sha256": "4f47130c66ec57b642db67e77d9c1f42fa76a0fa4832a41c047511659d2398d5",
+      "target_sha256": "ef7d723be7f64a45320f5767ab73afd717afdd1cb43446511647101ad6cadae0",
+      "reviewer": "Claude (Claude Code session; Japanese source and English mirror updated together after recomputing the example: changed wording and figure links compared, values checked against the plot_results.py output and an analysis script; model run by the session)",
+      "method": "assistant",
+      "reviewed_on": "2026-11-02"
+    },
+    {
+      "source": "examples/karst/figs/evolution.png",
+      "target": "examples/karst/en/figs/evolution.png",
+      "source_sha256": "4ee817af9cb284afd65581586b5ef6859e6892afb266c137d76b6ef346d3a49a",
+      "target_sha256": "e09d9e86af8a4909b5adcc1ef015b5fce4cdb8aea8637e902886092b194221be",
+      "reviewer": "Claude (Claude Code session; both images drawn by plot_results.py and plot_results.py [param_lat.txt] en from the same recomputed results of 2026-11-02, compared side by side: same plotted data and layout, labels translated)",
+      "method": "assistant",
+      "reviewed_on": "2026-11-02"
+    },
+    {
+      "source": "examples/karst/figs/hydrograph.png",
+      "target": "examples/karst/en/figs/hydrograph.png",
+      "source_sha256": "7f6fbdc12de48dbb81d5374ed1882682d4546ece6e9455a81630c433121db12a",
+      "target_sha256": "66c9544080f7716ed1e760737f841e574c111cc00a759999e3b767ea8533a70b",
+      "reviewer": "Claude (Claude Code session; both images drawn by plot_results.py and plot_results.py [param_lat.txt] en from the same recomputed results of 2026-11-02, compared side by side: same plotted data and layout, labels translated)",
+      "method": "assistant",
+      "reviewed_on": "2026-11-02"
+    },
+    {
+      "source": "examples/karst/figs/maps.png",
+      "target": "examples/karst/en/figs/maps.png",
+      "source_sha256": "c3bacbca270608695454f61e588f46c4044c029488c33ca3616d6e2e495dbdb0",
+      "target_sha256": "8f633e53e7e18e0accaa7b3a88e54809ffbbfe6db5f185f10a5b9f5d2abef8ed",
+      "reviewer": "Claude (Claude Code session; both images drawn by plot_results.py and plot_results.py [param_lat.txt] en from the same recomputed results of 2026-11-02, compared side by side: same plotted data and layout, labels translated)",
+      "method": "assistant",
+      "reviewed_on": "2026-11-02"
+    },
+    {
+      "source": "examples/karst/figs/maps_lat.png",
+      "target": "examples/karst/en/figs/maps_lat.png",
+      "source_sha256": "1c664c6a0db1df72d6ec93b9d491ad3b1a85bb4d696e1510383675cf341b485d",
+      "target_sha256": "b7f8bf0b96a786fe9fb64616e0d53654a695dd4926d05ae50765ea131ca13e7d",
+      "reviewer": "Claude (Claude Code session; both images drawn by plot_results.py and plot_results.py [param_lat.txt] en from the same recomputed results of 2026-11-02, compared side by side: same plotted data and layout, labels translated)",
       "method": "assistant",
       "reviewed_on": "2026-11-02"
     },
@@ -1416,11 +1452,38 @@
       "reviewed_on": "2026-11-02"
     },
     {
+      "source": "examples/karst/figs/sections.png",
+      "target": "examples/karst/en/figs/sections.png",
+      "source_sha256": "13b3e596c9b64ddb2f549b21bd88cfca681bc2be957ca07f67197e789a16372f",
+      "target_sha256": "e6c93de4b75e517f1237c5e01425a1ff5352c9104aa0e1ce544f07d806f2994d",
+      "reviewer": "Claude (Claude Code session; both images drawn by plot_results.py and plot_results.py [param_lat.txt] en from the same recomputed results of 2026-11-02, compared side by side: same plotted data and layout, labels translated)",
+      "method": "assistant",
+      "reviewed_on": "2026-11-02"
+    },
+    {
+      "source": "examples/karst/figs/sections_lat.png",
+      "target": "examples/karst/en/figs/sections_lat.png",
+      "source_sha256": "4944a433ebd8b26c4f9aed0d52c5cf502d566f7f0cf087ee790a588aa5d01831",
+      "target_sha256": "2e0a8f0c6be80e3b24f46bc969dbe389cf4bfe9f9bc726f2d4daf92dd830cfe4",
+      "reviewer": "Claude (Claude Code session; both images drawn by plot_results.py and plot_results.py [param_lat.txt] en from the same recomputed results of 2026-11-02, compared side by side: same plotted data and layout, labels translated)",
+      "method": "assistant",
+      "reviewed_on": "2026-11-02"
+    },
+    {
       "source": "examples/karst/figs/setup.png",
       "target": "examples/karst/en/figs/setup.png",
       "source_sha256": "1d304218ab5266c734e3a5879cf3e9991998086cc17ee5313a04b19227f0615b",
       "target_sha256": "78b3f1319d0de8ee2c6c3dc336c79bb83d5dfb12ab7f22e1ca939f1b707ed431",
       "reviewer": "Claude (Claude Code session; schematic and setup figure drawn by plot_setup.py from input files only, Japanese and English images compared side by side: same data and layout, labels translated; no model execution)",
+      "method": "assistant",
+      "reviewed_on": "2026-11-02"
+    },
+    {
+      "source": "examples/karst/figs/stats.png",
+      "target": "examples/karst/en/figs/stats.png",
+      "source_sha256": "8e61555346204ab2e19828517475af30a1c5874ee75bedd80d4c7ce16d1796c5",
+      "target_sha256": "de116336ed4c93b1c5a4a24dd915f63a68c2d4f91701bd26fcfc531758c42320",
+      "reviewer": "Claude (Claude Code session; both images drawn by plot_results.py and plot_results.py [param_lat.txt] en from the same recomputed results of 2026-11-02, compared side by side: same plotted data and layout, labels translated)",
       "method": "assistant",
       "reviewed_on": "2026-11-02"
     },
