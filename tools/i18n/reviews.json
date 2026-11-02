@@ -13,11 +13,11 @@
     {
       "source": "README.ja.md",
       "target": "README.md",
-      "source_sha256": "c4f57b6cd44bab780e08814201efd474a6a9c504d49c0aaa0e28e585a8c6dc21",
-      "target_sha256": "aac6f985d00f97df1b7aaa1c06990f06bac3c692a571900c8e68de4c825fb4e3",
-      "reviewer": "Claude (Claude Code session; full-text content and lexical review, no model execution)",
+      "source_sha256": "e4ffa137eaad863b8c64210d07411635b84c534266aa66974daa2c3c0a14f68c",
+      "target_sha256": "d8931537627a6759698c0b5b9b0daacb45a6761a065f5bd1efa5300cf28d1b1d",
+      "reviewer": "Claude (Claude Code session; reviewed the Japanese source against the English mirror after adding the link to the chained-process examples, 2026-11-02)",
       "method": "assistant",
-      "reviewed_on": "2026-10-29"
+      "reviewed_on": "2026-11-02"
     },
     {
       "source": "TRADEMARKS.md",
@@ -806,9 +806,9 @@
     {
       "source": "examples/README.md",
       "target": "examples/README.en.md",
-      "source_sha256": "5dd4205a5e648dafc215cbdaa9a40049c96dead220de927f54039b716acd9acd",
-      "target_sha256": "435b5d3eb571c87c06221dda1fe4fdb911dfe2b114f8e2876f282e37de0b4900",
-      "reviewer": "Claude (Claude Code session; Japanese source and English mirror written together and compared section by section, tables and numbers checked; no model execution)",
+      "source_sha256": "44f7c0e195044e590318a7daea9e38c65acc6a1ba799e30ae950e233dec66b56",
+      "target_sha256": "88d6eff7c14080dc0a89225c0eb4ac43de598fb8be2ec309bf15ceab94592ac7",
+      "reviewer": "Claude (Claude Code session; merge of main's shortened table into the documentation branch: the tower_karst row rewritten in both languages (no wall retreat within 6000 years, per the recomputed example) and compared; other rows are main's reviewed text)",
       "method": "assistant",
       "reviewed_on": "2026-11-02"
     },
