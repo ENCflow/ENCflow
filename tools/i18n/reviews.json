@@ -1787,8 +1787,8 @@
     {
       "source": "examples/mountain_valley/README.md",
       "target": "examples/mountain_valley/en/README.md",
-      "source_sha256": "ed210409071ec4dc7944d317c7924c566d0b5e428ece3617147d975f62679306",
-      "target_sha256": "f0cd7243116d9cd1106232ef30fe818b4be2e19906c954d750f0146cf8810593",
+      "source_sha256": "c35e5cf7e77507b741c775a74b94ac94e1318688076540d4f460e8f1407b6dcb",
+      "target_sha256": "96441709463c187139dfc258ec87d72ebf65bd52795650c6c4f7b2d56de46c9a",
       "reviewer": "Claude (assistant)",
       "method": "assistant",
       "reviewed_on": "2026-11-02"
