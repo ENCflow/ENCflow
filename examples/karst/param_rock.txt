@@ -4,7 +4,7 @@
 !   土層のない基岩なので rf_bedrock = 1 で崩し、1 セルの窓(rf_rc = 10 m)の中の最低点との
 !   落差が H_c = 5 m を超えた分の半分を、1 更新ごとに崖錐(ht。土層 sd にも入る)として
 !   穴へ落とす(崖錐の安息角 35°)。壁の露出面は H_c 付近に保たれ、形はほとんど変わらない(README)。
-! 実行: make supp(または ./encflow param_rock.txt | tee Screen_rock.log。約 1 時間)
+! 実行: make supp(または ./encflow param_rock.txt 2>&1 | tee Screen_rock.log。約 1 時間)
 !       python3 plot_results.py param_rock.txt | tee analysis_rock.txt
 !======================================================================
 &list_sysparam

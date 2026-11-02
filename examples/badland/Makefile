@@ -34,13 +34,14 @@ z_sweep05.txt: make_terrain.py
 z_sweep2.txt: make_terrain.py
 	python3 make_terrain.py sweep --dx 2
 
-# 主ケースの画面出力は Screen.log(plot_results.py が排出量・上限の回数を読む)
+# 画面出力は Screen.log / Screen_<ケース>.log(plot_results.py が排出量・上限の回数・崩落の台帳を読む。
+# これらは標準エラーに出る警告の行なので 2>&1 で合わせて記録する)
 run: all
-	./encflow param.txt | tee Screen.log
-	@for c in $(SERIES); do ./encflow param_$$c.txt | tee Screen_$$c.log; done
+	./encflow param.txt 2>&1 | tee Screen.log
+	@for c in $(SERIES); do ./encflow param_$$c.txt 2>&1 | tee Screen_$$c.log; done
 
 supp: all
-	./encflow param_rockfall.txt | tee Screen_rockfall.log
+	./encflow param_rockfall.txt 2>&1 | tee Screen_rockfall.log
 
 install: all
 

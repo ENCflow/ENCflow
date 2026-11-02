@@ -3,7 +3,7 @@
 !   param.txt と同じ設定に dissol_lat = −1(濡れ面の面積比による自動配分)を加える。
 !   湛水の溶解能のうち、壁の濡れ面 hΣL と床 Δx² の比の分を、水面より床が高い隣の
 !   セル(岩の壁)に配る。最も深いドリーネは浅く広くなるが、穴の形は残る(README)。
-! 実行: make supp(または ./encflow param_lat.txt | tee Screen_lat.log。約 1 時間)
+! 実行: make supp(または ./encflow param_lat.txt 2>&1 | tee Screen_lat.log。約 1 時間)
 !       python3 plot_results.py param_lat.txt | tee analysis_lat.txt
 !======================================================================
 &list_sysparam

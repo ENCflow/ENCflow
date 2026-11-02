@@ -39,13 +39,13 @@ z_main05_tilt.txt: make_terrain.py
 	python3 make_terrain.py main --tilt 0.02 --dx 0.5 --ly 120
 
 run: all
-	@for c in $(CASES); do ./encflow param_$$c.txt | tee Screen_$$c.log; done
+	@for c in $(CASES); do ./encflow param_$$c.txt 2>&1 | tee Screen_$$c.log; done
 
 wet: all
-	./encflow param_storm_wet.txt | tee Screen_storm_wet.log
+	./encflow param_storm_wet.txt 2>&1 | tee Screen_storm_wet.log
 
 conv: all
-	@for c in $(CONV); do ./encflow param_$$c.txt | tee Screen_$$c.log; done
+	@for c in $(CONV); do ./encflow param_$$c.txt 2>&1 | tee Screen_$$c.log; done
 
 install: all
 

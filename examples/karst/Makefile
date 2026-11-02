@@ -3,7 +3,8 @@
 #   make run    主ケース(param.txt)を計算する(約 1 時間。4 スレッド)
 #   make supp   補足の 2 ケース(側方溶食 param_lat.txt、+ 崩落 param_rock.txt)を計算する(各約 1 時間)
 #   make clean  リンクと生成物を削除する
-#   画面出力は Screen.log / Screen_lat.log / Screen_rock.log(plot_results.py が湛水の時系列と台帳を読む)
+#   画面出力は Screen.log / Screen_lat.log / Screen_rock.log(plot_results.py が湛水の時系列と台帳を読む。
+#   警告の行は標準エラーに出るので 2>&1 で合わせて記録する)
 
 TOPDIR	= ../..
 BINDIR	= $(TOPDIR)/bin
@@ -26,11 +27,11 @@ z.txt: make_terrain.py
 	python3 make_terrain.py
 
 run: all
-	./encflow param.txt | tee Screen.log
+	./encflow param.txt 2>&1 | tee Screen.log
 
 supp: all
-	./encflow param_lat.txt | tee Screen_lat.log
-	./encflow param_rock.txt | tee Screen_rock.log
+	./encflow param_lat.txt 2>&1 | tee Screen_lat.log
+	./encflow param_rock.txt 2>&1 | tee Screen_rock.log
 
 install: all
 

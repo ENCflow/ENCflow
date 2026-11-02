@@ -3,7 +3,7 @@
 #   make run     クリープの 4 ケース(D = 0 / 3e-7 / 1e-6 / 3e-6)を順に計算する(1 ケース 2〜4 分)
 #   make strata  互層の 5 ケース(層厚 1.5 m: D = 0 / 1e-6、層厚 3 m: D = 0 / 3e-7 / 1e-6)を順に計算する
 #   make clean   リンクと生成物を削除する
-#   画面出力は Screen_<ケース>.log(plot_results.py が排出量を読む)
+#   画面出力は Screen_<ケース>.log(plot_results.py が排出量を読む。標準エラーの行なので 2>&1 で合わせて記録する)
 
 TOPDIR	= ../..
 BINDIR	= $(TOPDIR)/bin
@@ -28,10 +28,10 @@ z.txt: make_terrain.py
 	python3 make_terrain.py
 
 run: all
-	@for c in $(CASES); do ./encflow param_$$c.txt | tee Screen_$$c.log; done
+	@for c in $(CASES); do ./encflow param_$$c.txt 2>&1 | tee Screen_$$c.log; done
 
 strata: all
-	@for c in $(STRATA); do ./encflow param_$$c.txt | tee Screen_$$c.log; done
+	@for c in $(STRATA); do ./encflow param_$$c.txt 2>&1 | tee Screen_$$c.log; done
 
 install: all
 

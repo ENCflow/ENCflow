@@ -24,7 +24,7 @@
 !   堀(moat)ができる。裾の急化 → 崩落 → 壁の後退 → 岩屑の裾野。塔の
 !   頂はほぼ残り、比高が増す。小丘は先に消える(fengcong → fenglin)。
 ! 時間: dt = 2 s、地形更新 10 分毎。約 1〜2 時間(4 スレッド)。
-! 実行: make && make run(または ./encflow param.txt | tee Screen.log)
+! 実行: make && make run(または ./encflow param.txt 2>&1 | tee Screen.log)
 !======================================================================
 &list_sysparam
   f_gridsystem = 0          ! 格子システム(0: ENC)

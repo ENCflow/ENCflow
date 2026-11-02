@@ -9,7 +9,8 @@
 #   make face   補足 3: 支え方式(face〜face5。図は rc2 と比べる)
 #   make uc     補足 3: 張り出しと両立の案(uc〜uc3・uc_cap・uc_slow。uc_slow は約 16 分)
 #   make clean  リンクと生成物を削除する(z_dx4.txt は入力として残す)
-#   画面出力は Screen_<ケース>.log(plot_results.py が崩落・排出の台帳を読む)。図の比較の相手は
+#   画面出力は Screen_<ケース>.log(plot_results.py が崩落・排出の台帳を読む。標準エラーの行なので 2>&1 で
+#   合わせて記録する)。図の比較の相手は
 #   その系列より前のターゲットで計算する(例: make bench のあとに make sat)
 
 TOPDIR	= ../..
@@ -23,7 +24,7 @@ DX4	= dx4 dx4_rock dx4_rock2 dx4_rc dx4_rc2
 RC	= rc rc2
 FACE	= face face2 face3 face4 face5
 UC	= uc uc2 uc3 uc_cap uc_slow
-RUN	= @for c in $(1); do ./encflow param_$$c.txt | tee Screen_$$c.log; done
+RUN	= @for c in $(1); do ./encflow param_$$c.txt 2>&1 | tee Screen_$$c.log; done
 
 all: links inputs
 

@@ -22,7 +22,7 @@
 !   1 回の豪雨の中で暴走する(morfac = 1e4 で発散。1e3 で安定)。
 !   更新あたりの Δz ≪ 湛水深 となる morfac を選ぶ。
 ! 時間: dt = 2 s、地形更新 10 分毎。約 1 時間(4 スレッド)。
-! 実行: make && make run(または ./encflow param.txt | tee Screen.log)
+! 実行: make && make run(または ./encflow param.txt 2>&1 | tee Screen.log)
 !======================================================================
 &list_sysparam
   f_gridsystem = 0          ! 格子システム(0: ENC)

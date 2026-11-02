@@ -2,7 +2,8 @@
 #   make        ../../bin/ の実行ファイルへのリンクと入力(make_terrain.py が z.txt・sd.txt・ksv.txt を作る)
 #   make run    主ケース(param.txt)を計算する(1〜2 時間。4 スレッド)
 #   make clean  リンクと生成物を削除する
-#   画面出力は Screen.log(plot_results.py が湛水の時系列と台帳を読む)
+#   画面出力は Screen.log(plot_results.py が湛水の時系列と台帳を読む。崩落の台帳は標準エラーに出るので
+#   2>&1 で合わせて記録する)
 
 TOPDIR	= ../..
 BINDIR	= $(TOPDIR)/bin
@@ -25,7 +26,7 @@ z.txt: make_terrain.py
 	python3 make_terrain.py
 
 run: all
-	./encflow param.txt | tee Screen.log
+	./encflow param.txt 2>&1 | tee Screen.log
 
 install: all
 
