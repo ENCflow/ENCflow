@@ -296,8 +296,8 @@ $`\tau_{*e}^{3/2}`$ (the two threshold factors keep the total $`\tau_*`$).
 - **Timing**: it will be added when comparisons with Nays2DH, sand-bed rivers
   with dunes or vegetated floodplains are taken up (developer.md §19.8).
 
-**Future work (planned): flow resistance partitioning on steep gravel beds
-(macroroughness).** In gravel and boulder streams whose depth is less than
+**Flow resistance partitioning on steep gravel beds (macro-roughness;
+`f_taupart` = 1).** In gravel and boulder streams whose depth is less than
 7–10 times the grain size D84, form drag and spill drag of boulders and steps
 take most of the total resistance. Conventional transport formulas that use
 the total-resistance $`\tau_*`$ are known to overestimate the transport in steep
@@ -314,42 +314,62 @@ al.[^nitsche11] compared five partitioning approaches in 13 Swiss streams
 transport, overestimated by up to two orders of magnitude without correction,
 came to 1.0 times the measurement in the median over all streams (88 % of
 the events within a factor of 3), and they recommend it as a practical method
-when no detailed roughness information is available. We plan to add, without
-changing the default, an option that multiplies the $`\tau_*`$ passed to the
-transport formula by this factor.
+when no detailed roughness information is available. `f_taupart = 1`
+multiplies the $`\tau_*`$ passed to the transport formula by this factor
+(implemented on 2026-11-02; developer.md §89.30, docs/mountain_stream_plan.md §14).
 
-- **Form**: the factor $`(f_0/f_{\rm tot})^{e/2}`$ ($`e`$ = 1.5) depends only on the
-  relative depth $`h/D_{84}`$ and can be computed from the depth at each edge
-  (it does not depend on the user's Manning n). For $`h/D_{84}`$ = 0.5, 1, 2, 5,
-  10 and 20 it is 0.10, 0.22, 0.43, 0.75, 0.90 and 0.97. The threshold
-  $`\tau_{*c}`$ keeps the grain value. Without $`D_{84}`$, $`2.2\,D_{50}`$ is used (the
-  median ratio Rickenmann & Recking used to fill missing data). A form that
-  reduces by the ratio of the base level resistance to the Manning n,
-  $`(n_0/n)^{e}`$ ($`1/n_0 = 20.4/D_{84}^{1/6}`$), also exists, but with a constant n
-  it does not change with the relative depth and the result follows the
-  choice of n, so it is not adopted.
+- **Form**: the factor is $`\varphi(h) = (f_0/f_{\rm tot})^{e/2}
+  = \{1 + (a_1/a_2)^2 (h/D_{84})^{-5/3}\}^{-e/2}`$; it depends only on the
+  relative depth $`h/D_{84}`$ (not on the user's Manning n). It is computed from
+  the depth at each edge (the depth of the cell for open-boundary faces and for
+  the cover capacity of bedrock incision). For $`h/D_{84}`$ = 0.5, 1, 2, 5, 10 and
+  20 it is 0.10, 0.22, 0.43, 0.75, 0.90 and 0.97. The threshold $`\tau_{*c}`$
+  keeps the grain value, and the factor is applied to both the Ashida–Michiue
+  and the MPM formula (Nitsche et al. note that the ratio by which reducing the
+  slope lowers the transport is nearly the same for different formulas).
+  $`D_{84}`$ is given by `fluv_d84` (m); 0 (default) uses $`2.2\,D_{50}`$ (the median
+  ratio Rickenmann & Recking used to fill missing data). The exponent $`e`$ is
+  `taupart_e` (default 1.5, the value of Nitsche et al.; Rickenmann & Recking
+  give 1.33–2). The form that reduces by the ratio of the base level resistance
+  to the Manning n, $`(n_0/n)^{e}`$ ($`1/n_0 = 20.4/D_{84}^{1/6}`$), is not used:
+  with a constant n it does not change with the relative depth and the result
+  follows the choice of n.
+- **Where it applies**: everywhere the bed-load capacity is used: all paths of
+  the bed-load Exner module (internal edges, open-boundary faces, capacity
+  feed), the $`\tau_*`$ of the toe cell in bank erosion (`f_berode`), and the cover
+  capacity of bedrock incision (`f_rockinc`; the driver of abrasion and the
+  drainage rate of the thin layer). It is not applied to the plucking stress
+  $`\tau_b`$ (the `rock_kp` law) nor to the stress of bedrock erosion by debris
+  flows: the partitioning was validated for bed-load predictions, a bare rock
+  surface has no gravel-bed macro-roughness, and $`k_p`$ is calibrated with the
+  total shear stress.
 - **Size of the effect**: in the bedrock_cover example (depth 0.3 m,
   D84 ≈ 22 mm, h/D84 ≈ 14) the factor is 0.94 and little changes. In shallow
   flows over boulder beds (h/D84 = 1–3) it is 0.2–0.6, and the transport drops
-  further the closer it is to the threshold. Nitsche et al. note that the
-  ratio by which reducing the slope lowers the transport is nearly the same
-  for different transport formulas (they depend on the excess shear stress),
-  so it can be applied to both the Ashida–Michiue and the MPM formula.
-- **Relation to the effective shear stress above**: both separate the part of
-  the shear stress that moves sediment, for different regimes
-  ($`\tau_{*e}`$ for dunes on sand beds where the log law holds, this one for
-  shallow gravel and boulder beds). They and `fluv_taufac` will be mutually
-  exclusive. Rickenmann & Recking caution that applied to high-concentration
-  flows without boulders (sheet flow) it makes the transport implausibly
-  small[^rickenmann11].
+  further the closer it is to the threshold.
+- **Exclusivity and caveats**: combining it with `fluv_taufac` ≠ 1 stops the
+  run (to prevent a double separation); it will also be exclusive with the
+  effective shear stress $`\tau_{*e}`$ above (future work). Rickenmann & Recking
+  caution that applied to high-concentration flows without boulders (sheet
+  flow) it makes the transport implausibly small[^rickenmann11]. In thin flows
+  (h/D84 < 0.5) the factor drops below 0.1 and bed load almost stops, so
+  configurations that use bed load for sheet flow on hillslopes change a lot
+  with and without the partitioning. The default is off (bit-identical to the
+  previous behaviour when off).
+- **Verification**: [test/taupart](../../../test/taupart/en/README.md). In uniform
+  flow in a steep (0.05) channel one cell wide, the steady bed-load rate
+  obtained from the ledger of bed load that left through the open eastern
+  boundary agrees within ±0.5 % with the capacity evaluated from the depth and
+  velocity of the outlet cell with the transport formula including the factor
+  (h/D84 = 8.6, 4.3, 1.0 and 0.25 below the threshold; Ashida–Michiue and MPM).
+  When off it is bit-identical, and MPI with np = 2 and 4 is byte-identical to
+  the serial run.
 - **Related item on the flow side**: a constant grain-based Manning n
   overestimates the velocity greatly on shallow gravel and boulder beds
   (3–4.5 times in the median when shallower than D84[^rickenmann11]). Making
   Ferguson's equation[^ferguson07], whose resistance follows the relative
-  depth, a resistance-law option is also a candidate; it affects the whole
-  flow, so it needs more discussion than the sediment-side separation.
-- **Timing**: it will be added after the results of the mountain-stream
-  examples are reviewed (docs/mountain_stream_plan.md §6.3).
+  depth, a resistance-law option is a candidate, but it affects the whole flow
+  and is deferred as a separate item (docs/mountain_stream_plan.md §14.6, item 8).
 
 ## 4. Suspended sediment (f_suspend)
 

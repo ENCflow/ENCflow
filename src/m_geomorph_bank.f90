@@ -150,7 +150,7 @@ module subroutine bank_edge_pass(gm, p, g, s, dts)
         hw = s%h(iw,jw)
         hhe = max(hw, p%dv)
         ! 脚部セルの無次元掃流力(calc_fluvial と同じマニング閉じ・有効掃流力比)
-        taus = gm%flv%taufac * g%rn(iw,jw)**2 * s%vv(iw,jw)**2 &
+        taus = taufac_h(gm%flv, hhe) * g%rn(iw,jw)**2 * s%vv(iw,jw)**2 &
                / (gm%sgrav * gm%d50 * hhe**(1.0/3.0))
         ! 崩落土塊による遮蔽(§84.17): 脚部の崖錐 ht の分だけ河岸面に届く掃流力を減らす
         ! (Asahi ら 2013 式 (27)〜(28) の K = 1 − A_chunk/(D_chunk B) の格子版)

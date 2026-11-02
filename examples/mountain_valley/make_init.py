@@ -89,6 +89,7 @@ CASES = {
     "V_b": ("斜面の風化・深さ依存クリープあり(完全連成)", "4m", True, "up_base", 0.0, T_RUN, False),
     "V_c": ("V_b の続き。出口の行を隆起の速さで下げる(基準面の低下)", "4m", True, "up_drop", T_RUN, T_RUN + T_DROP, True),
     "V_b2": ("V_b を Δx = 2 m で(解像度の確認。渓流の幅も 2 m)", "2m", True, "up_base", 0.0, T_RUN, False),
+    "V_a_tp": ("V_a に急勾配礫床の抵抗分割を加える(f_taupart = 1、D84 = 2.2 d50。補足)", "4m", False, "up_base", 0.0, T_RUN, False),
 }
 
 
@@ -167,7 +168,7 @@ def write_param(name):
   fluv_porosity = {lam}
   fluv_sgrav = 1.65
   fluv_dzmax = 0.05
-  f_rockinc = 1
+{tp}  f_rockinc = 1
   rock_kp = {kp:.2e}          ! 剥離の速度係数 (m/s。出水中の値)
   rock_tauc = {tauc}
   rock_m = {pm}
@@ -192,7 +193,8 @@ def write_param(name):
 """.format(name=name, desc=desc, t0=t0, t1=t1, ff=F_FLOOD, dt=g.dt, ft1=g.flow_time(t1),
            fout=g.flow_time(T_OUT), rst=rst, v0=v0, lx=g.nx * g.dx, ly=g.ny * g.dx, nx=g.nx, ny=g.ny,
            s0=S0, sh=SH, n=N, mf=g.morfac, dts=g.dt * g.morfac, d50=D50, lam=LAM, kp=KP, tauc=TAUC, pm=PM,
-           beta=BETA, hs=HSTAR, hill=hill_lines, up=UPLIFT0, uc=U_CAL, upmap=upmap, sfx=g.sfx, ic=g.ic, qf=QF)
+           beta=BETA, hs=HSTAR, hill=hill_lines, up=UPLIFT0, uc=U_CAL, upmap=upmap, sfx=g.sfx, ic=g.ic, qf=QF,
+           tp=("  f_taupart = 1             ! 急勾配礫床の抵抗分割(developer.md §89.30。D84 = 2.2 × fluv_d50)\n" if name.endswith("_tp") else ""))
     open("param_%s.txt" % name, "w").write(txt)
 
 

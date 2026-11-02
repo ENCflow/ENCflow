@@ -40,6 +40,12 @@ module list_geomorph
     real :: fluv_taufac = 1.0        ! 有効掃流力の比 f_τ(流砂量式に渡す τ* =
                                      ! f_τ × 全抵抗の τ*。砂堆・植生の形状抵抗を
                                      ! 除く簡略分離。1 = 分離なし。§84.3)
+    integer :: f_taupart = 0         ! 急勾配礫床の抵抗分割(0: なし、1: 相対水深 h/D84 の係数
+                                     ! φ = (1 + 6.76 (h/D84)^(−5/3))^(−e/2) を流砂量式に渡す τ* に
+                                     ! 掛ける。Rickenmann & Recking 2011、Nitsche ら 2011。
+                                     ! fluv_taufac(≠ 1)とは排他。§89.30)
+    real :: fluv_d84 = 0.0           ! 抵抗分割の D84 (m)。0 = 2.2 × fluv_d50
+    real :: taupart_e = 1.5          ! 抵抗分割の指数 e(Nitsche ら 2011 の 1.5)
     integer :: fluv_slope = 0        ! 河床勾配による流砂方向補正(0:なし, 1:長谷川型
                                      ! q⃗ = q_b(t̂ − γ∇z)、γ = √(τ*c/(μs μk τ*))。§84.3)
     real :: fluv_mus = 1.0           ! 静止摩擦係数 μs(既定 1.0 = Asahi ら 2013 式 (22)、
@@ -414,6 +420,8 @@ subroutine list_geomorph_read(p, list)
   integer :: fluv_bcfeed
   real :: fluv_bcfeed_fac
   real :: fluv_taufac, fluv_mus, fluv_muk, sec_nstar, sec_rmax, sec_vmin
+  integer :: f_taupart
+  real :: fluv_d84, taupart_e
   integer :: fluv_slope, f_secflow
   integer :: f_berode, f_repose
   real :: berode_kb, berode_tausc, berode_m, berode_hcover, repose_phi, repose_relax
@@ -492,7 +500,7 @@ subroutine list_geomorph_read(p, list)
   namelist /list_geomorph/ dt_geomorph, morfac, f_creep, creep_d, creep_hstar, &
                            f_fluvial, f_qbform, fluv_d50, fluv_tausc, &
                            fluv_porosity, fluv_sgrav, fluv_dzmax, fluv_diagratio, &
-                           fluv_bcfeed, fluv_bcfeed_fac, fluv_taufac, fluv_slope, fluv_mus, fluv_muk, &
+                           fluv_bcfeed, fluv_bcfeed_fac, fluv_taufac, f_taupart, fluv_d84, taupart_e, fluv_slope, fluv_mus, fluv_muk, &
                            f_secflow, sec_nstar, sec_rmax, sec_vmin, &
                            f_berode, berode_kb, berode_tausc, berode_m, berode_hcover, &
                            f_repose, repose_phi, repose_relax, &
@@ -537,6 +545,9 @@ subroutine list_geomorph_read(p, list)
   fluv_bcfeed = list%fluv_bcfeed
   fluv_bcfeed_fac = list%fluv_bcfeed_fac
   fluv_taufac = list%fluv_taufac
+  f_taupart = list%f_taupart
+  fluv_d84 = list%fluv_d84
+  taupart_e = list%taupart_e
   fluv_slope = list%fluv_slope
   fluv_mus = list%fluv_mus
   fluv_muk = list%fluv_muk
@@ -700,6 +711,9 @@ subroutine list_geomorph_read(p, list)
   list%fluv_bcfeed = fluv_bcfeed
   list%fluv_bcfeed_fac = fluv_bcfeed_fac
   list%fluv_taufac = fluv_taufac
+  list%f_taupart = f_taupart
+  list%fluv_d84 = fluv_d84
+  list%taupart_e = taupart_e
   list%fluv_slope = fluv_slope
   list%fluv_mus = fluv_mus
   list%fluv_muk = fluv_muk

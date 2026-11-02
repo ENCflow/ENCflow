@@ -87,16 +87,18 @@ def ep0(qw, s, kp=KP, tauc=TAUC, pm=PM, n=N):
     return kp * (tb / tauc - 1.0) ** pm if tb > tauc else 0.0
 
 
-def qcap(qw, s, d50=D50, n=N):
+def qcap(qw, s, d50=D50, n=N, tp=False):
     h, v = uniform(qw, s, n)
     taus = n ** 2 * v ** 2 / (SGRAV * d50 * h ** (1.0 / 3.0))
+    if tp:                                  # 急勾配礫床の抵抗分割(f_taupart = 1、D84 = 2.2 d50。developer.md §89.30)
+        taus *= (1.0 + (6.5 / 2.5) ** 2 * (h / (2.2 * d50)) ** (-5.0 / 3.0)) ** (-0.75)
     if taus <= TAUSC:
         return 0.0
     qbs = 17.0 * taus ** 1.5 * (1.0 - TAUSC / taus) * (1.0 - math.sqrt(TAUSC / taus))
     return qbs * math.sqrt(SGRAV * G * d50 ** 3)
 
 
-def c1_profile(g, lat, u=U):
+def c1_profile(g, lat, u=U, tp=False):
     """C1 の準解析解: 谷頭から各セル j の勾配 S_j と被覆の比 q_j/q_c(S_j)(lat = 横からの供給、
     かさ体積 m2/s。剥離物は 1:1 で可動層に入り、研磨の細粒分は系外へ出る)"""
     qw = QF / g.dx
@@ -105,7 +107,7 @@ def c1_profile(g, lat, u=U):
         qprev = q
 
         def resid(s):
-            e, c = ep0(qw, s), qcap(qw, s)
+            e, c = ep0(qw, s), qcap(qw, s, tp=tp)
             if c <= 0.0:
                 return -u, qprev
             a = (1.0 - LAM) * g.dx * e
@@ -123,7 +125,7 @@ def c1_profile(g, lat, u=U):
                 lo = mid
         s = math.sqrt(lo * hi)
         q = resid(s)[1]
-        out.append((s, q / qcap(qw, s)))
+        out.append((s, q / qcap(qw, s, tp=tp)))
     return out
 
 
@@ -192,6 +194,8 @@ def channel_cases():
            ("V_b", C2C, T("斜面の供給あり(V_b)", "with hillslope supply (V_b)"), 2.0 * U * HILL_L)]
     if have("V_b2"):
         out.append(("V_b2", C3C, T("V_b、Δx = 2 m(V_b2)", "V_b with Δx = 2 m (V_b2)"), 2.0 * U * HILL_L))
+    if have("V_a_tp"):
+        out.append(("V_a_tp", "#7b4ea3", T("V_a + 抵抗分割(V_a_tp。補足)", "V_a + resistance partitioning (V_a_tp, supplement)"), 0.0))
     return out
 
 
@@ -200,7 +204,7 @@ def fig_channel():
     for case, col, lab, lat in channel_cases():
         g = vgrid(case)
         xs, ss, hs = channel(case, vk(case, T_RUN))
-        prof = c1_profile(g, lat)
+        prof = c1_profile(g, lat, tp=case.endswith("_tp"))
         xp = [(j + 0.5) * g.dx for j in range(1, g.ny - 1)]
         ax[0].plot(xs, ss, color=col, lw=2, label=lab)
         ax[0].plot(xp, [prof[j][0] for j in range(1, g.ny - 1)], color=col, lw=1.2, ls="--")
@@ -396,7 +400,7 @@ def tables():
     for case, _, lab, lat in channel_cases():
         g = vgrid(case)
         xs, ss, hs = channel(case, vk(case, T_RUN))
-        prof = c1_profile(g, lat)
+        prof = c1_profile(g, lat, tp=case.endswith("_tp"))
         j1 = 1                                  # 谷頭の行(流入セル)だけを除く(developer.md §89.25 の後は直下から一致)
         diffs = [abs(ss[j - 1] / prof[j][0] - 1.0) for j in range(j1, g.ny - 1)]
         vp, va, vout = ledgers(case)

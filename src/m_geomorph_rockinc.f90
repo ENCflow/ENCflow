@@ -203,7 +203,7 @@ module subroutine calc_rockinc(gm, p, g, s, dts)
       ! セルの掃流砂容量(単位幅の固体流砂量。流砂量式・有効掃流力の比は calc_fluvial と同じ)。
       ! 研磨の駆動量と薄層の排出率の診断に使う
       qc = 0.0
-      taus = gm%flv%taufac * rn2 * vv2 / (gm%sgrav * gm%d50 * hh**(1.0/3.0))
+      taus = taufac_h(gm%flv, hh) * rn2 * vv2 / (gm%sgrav * gm%d50 * hh**(1.0/3.0))
       if (taus > gm%tausc) then
         qc = qbs_rock(gm%f_qbform, taus, gm%tausc) * gm%flv%qbcoef
         lmax = max(lmax, qc * lcoef * dts)

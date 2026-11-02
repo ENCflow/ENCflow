@@ -1,0 +1,8 @@
+date      : 2026-11-02 09:13:27
+host      : vm
+user      : 
+pwd       : /home/user/ENCflow/test/taupart
+exe       : /tmp/claude-0/-home-user-ENCflow/c8d6de58-c3a0-5dcc-abb5-378acdef8e65/scratchpad/oldbin/encflow_old
+mode      : serial__double
+modules   : (no modules)
+lib       : 	libgfortran.so.5 => /lib/x86_64-linux-gnu/libgfortran.so.5 (0x00007fa0d9600000)

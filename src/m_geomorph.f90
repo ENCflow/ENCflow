@@ -63,6 +63,7 @@ module m_geomorph
   ! gm_param は submodule の init が呼ぶ。private のままだと gfortran(LTO)が
   ! シンボルを局所化しリンク不能(§22 の実バグと同型。swflow の sect_* と同じ対処)
   public :: gm_param
+  public :: taufac_h                ! 有効掃流力の比(submodule から呼ぶため public。§89.30)
   ! wfsed_taumax・wfsed_cphi も submodule(fluvial・suspend)が呼ぶので public(gm_param と同じ理由)
   public :: wfsed_taumax, wfsed_cphi
   public :: m_geomorph_init
@@ -145,6 +146,10 @@ module m_geomorph
     real :: rdist(1:8) = 0.0         ! 1 / 近傍セル中心間距離 (1/m)(河床勾配項)
     real :: qbcoef = 0.0             ! 流砂量の次元化係数 sqrt(s g d50^3)
     real :: taufac = 1.0             ! 有効掃流力の比 f_τ(§84.3)
+    logical :: taupart = .false.     ! 急勾配礫床の抵抗分割(§89.30。taufac_h が参照)
+    real :: d84inv = 0.0             ! 1/D84 (1/m)
+    real :: tpe = 0.75               ! 指数 e/2
+    real :: tpc = 6.76               ! (a1/a2)^2 = (6.5/2.5)^2(Ferguson の VPE の係数の比)
     logical :: f_dir = .false.       ! 流砂方向補正あり(f_slope か f_sec)
     logical :: f_slope = .false.     ! 河床勾配項(長谷川型)
     real :: gcoef = 0.0              ! 1/√(μs μk)(γ = gcoef·√(τ*c/τ*))
@@ -863,6 +868,25 @@ end function
 !   τ*_max = √((τ*_m + τ*_w |cos φ|)² + (τ*_w sin φ)²)(波の周期内の最大)。
 !   波がなければ(u_w ≤ 0 か A ≤ 0)τ*_max = τ*_c(呼び出し側の値をそのまま返す)
 !----------------------------------------------------------------------
+!----------------------------------------------------------------------
+! 流砂量式に渡す τ* に掛ける有効掃流力の比(f_fluvial・f_berode・f_rockinc の容量が共用)
+!   抵抗分割なし: fluv_taufac(既定 1.0。1.0 の乗算は厳密に不変)
+!   抵抗分割あり(f_taupart = 1): φ(h) = (1 + (a1/a2)² (h/D84)^(−5/3))^(−e/2)。
+!   Ferguson (2007) の VPE √(8/f_tot) = a1 a2 x/√(a1² + a2² x^(5/3)) と基準の抵抗
+!   √(8/f0) = a1 x^(1/6)(a1 = 6.5、a2 = 2.5、x = h/D84)の比 (f0/f_tot)^(e/2)
+!   (Rickenmann & Recking 2011 式 (32)、Nitsche ら 2011 式 (26)。developer.md §89.30)
+!----------------------------------------------------------------------
+pure function taufac_h(flv, hh) result(f)
+  type(t_fluvial), intent(in) :: flv
+  real, intent(in) :: hh
+  real :: f
+  if (flv%taupart) then
+    f = (1.0 + flv%tpc * (hh * flv%d84inv)**(-5.0/3.0))**(-flv%tpe)
+  else
+    f = flv%taufac
+  end if
+end function
+
 pure function wfsed_taumax(tauc, uw, aw, cphi, z0, twc) result(tmax)
   real, intent(in) :: tauc               ! 流れの τ*_c
   real, intent(in) :: uw                 ! 底面の軌道流速の振幅 u_w = √2 u_rms (m/s)

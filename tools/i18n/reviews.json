@@ -104,11 +104,11 @@
     {
       "source": "docs/users_guide.md",
       "target": "docs/en/users_guide.md",
-      "source_sha256": "8c3632bd707b09c4a0a5f68a29cc23b4c720140aa8a77ffeb26f5d47062cb89f",
-      "target_sha256": "804073c9b86d3bc6a1bf9f127c6da6ff0cc3a3bdd1508ca8dc1d4970df66dab9",
-      "reviewer": "Claude (Claude Code session; merge of main into the branch: both sides' changes to this pair, each recorded on its own side, were merged (the parameter count is now 759 with f_gw_opening and f_inflow_edge), and the merged source and translation were compared for the changed parts; rest unchanged since the previous records)",
+      "source_sha256": "e1c0358f6c8c351364895198ddf96ea47575537c7d9ba833cded21df902b0615",
+      "target_sha256": "54725e462e0b9e007dbf13d83b8d8cdcb497b5e2a10012ca7f9166678be2d5d4",
+      "reviewer": "Claude (assistant)",
       "method": "assistant",
-      "reviewed_on": "2026-10-30"
+      "reviewed_on": "2026-11-02"
     },
     {
       "source": "docs/users_guide/advection.md",
@@ -266,11 +266,11 @@
     {
       "source": "docs/users_guide/geomorph.md",
       "target": "docs/en/users_guide/geomorph.md",
-      "source_sha256": "4cf8afdb178186ba49eea756dc312590e36dd501dbb1fbe462301dd425a8201e",
-      "target_sha256": "c5e9850fdfa96ee043b53d3dd508f754298a38b6ec883d2511d8abfa04139c3b",
-      "reviewer": "Claude (Claude Code session; the default of f_opening_dynamic changed from 2 to 3 on 2026-10-31: the statements of the default and the notes on 2 were updated in the source and the translation together, and the changed parts were compared; rest unchanged since the previous record)",
+      "source_sha256": "63425b87b9a68629fa85544879069bc01a81a81ed510455f78e0ae5b28b4919e",
+      "target_sha256": "900f63119e3e593ce8deb95c562de9b651cbe8f94dff02cea84e0bcfd88d3607",
+      "reviewer": "Claude (assistant)",
       "method": "assistant",
-      "reviewed_on": "2026-10-31"
+      "reviewed_on": "2026-11-02"
     },
     {
       "source": "docs/users_guide/glacier.md",
@@ -383,11 +383,11 @@
     {
       "source": "docs/users_guide/params_index.md",
       "target": "docs/en/users_guide/params_index.md",
-      "source_sha256": "260db616d78bc4116c03f03abe5a801d57b7e587599b929ca750927a1c8c5f73",
-      "target_sha256": "55621834b99049b3464f6cc9784a64bec54adecfb512d3f104516bdda4be7099",
-      "reviewer": "Claude (Claude Code session; merge of main into the branch: both sides' changes to this pair, each recorded on its own side, were merged (the parameter count is now 759 with f_gw_opening and f_inflow_edge), and the merged source and translation were compared for the changed parts; rest unchanged since the previous records)",
+      "source_sha256": "7a5a09b64897b262df34416d9d8f12cf99138960ff0046dbe3d158df90a6f16a",
+      "target_sha256": "3aa4227e7e7cdc0b8b9381f16e5bb66bc718be15996798d8f840de5726b91a01",
+      "reviewer": "Claude (assistant)",
       "method": "assistant",
-      "reviewed_on": "2026-10-30"
+      "reviewed_on": "2026-11-02"
     },
     {
       "source": "docs/users_guide/record.md",
@@ -419,9 +419,9 @@
     {
       "source": "docs/users_guide/sediment.md",
       "target": "docs/en/users_guide/sediment.md",
-      "source_sha256": "6ac8291c2f6315d19c322ab7fdc0d6d2e351022edc0cce46ba570f7ebd8e0cb8",
-      "target_sha256": "3822daed779fa607ec4c18db257b92d9ea9e29039c3d7c88024cb4adb97c9dc6",
-      "reviewer": "Claude (Claude Code session; Japanese source and English mirror written together and compared section by section, tables and numbers checked; no model execution)",
+      "source_sha256": "b06b7de29832c4a0f1147fc0530ebdf86b298448735bef948601add27cf07ae8",
+      "target_sha256": "5d1cdec42bd70a87c0abadf828dd8048517adc8cf5bed249ce6d23dc8842d741",
+      "reviewer": "Claude (assistant)",
       "method": "assistant",
       "reviewed_on": "2026-11-02"
     },
@@ -626,11 +626,11 @@
     {
       "source": "examples/List_samples/list_geomorph.txt",
       "target": "examples/List_samples/en/list_geomorph.txt",
-      "source_sha256": "9fe76e8d11e3a5b47181b2852207807a38d5f83e4a855c3265a20f086cd3c0ea",
-      "target_sha256": "df0b4679c206611a8948e7647e5846869dbdc0566edffecabd75b096af983d60",
-      "reviewer": "Claude (Claude Code session; reviewed the Japanese source against the English mirror after merging main; figures from the same results and drawing code with label changes only, 2026-10-30)",
+      "source_sha256": "d7a777da8ee80e9da114ad054ee8a728044b4cac6620fd6a1ed8f38e98442643",
+      "target_sha256": "9cb66fe2fc1d1060510858cf562ea56f9c9519197976b741a812d82529a6f772",
+      "reviewer": "Claude (assistant)",
       "method": "assistant",
-      "reviewed_on": "2026-10-30"
+      "reviewed_on": "2026-11-02"
     },
     {
       "source": "examples/List_samples/list_glacier.txt",
@@ -1193,11 +1193,11 @@
     {
       "source": "examples/bedrock_cover/README.md",
       "target": "examples/bedrock_cover/en/README.md",
-      "source_sha256": "2ac707abe6a769af97a541af73b4a2dd00ce905290e27bfb911fda0c5d182772",
-      "target_sha256": "26a72c6639b0d77351332f069485f254434955cdf6491dd5f714009c647262f1",
-      "reviewer": "Claude (Claude Code session; the default of f_opening_dynamic changed from 2 to 3 on 2026-10-31: the statements of the default and the notes on 2 were updated in the source and the translation together, and the changed parts were compared; rest unchanged since the previous record)",
+      "source_sha256": "ed5eb011d8af4849068169733491abfb43e21df749d80a596f82c88c616db389",
+      "target_sha256": "161c0f7acd403c9de27a69057c8d26450adf816ee7203e5a5b45417ed1110755",
+      "reviewer": "Claude (assistant)",
       "method": "assistant",
-      "reviewed_on": "2026-10-31"
+      "reviewed_on": "2026-11-02"
     },
     {
       "source": "examples/bedrock_cover/figs/cover.png",
@@ -1238,11 +1238,11 @@
     {
       "source": "examples/debris_bedrock/README.md",
       "target": "examples/debris_bedrock/en/README.md",
-      "source_sha256": "5736c99a7ba4970808342baccfef3d786b1602ab7a0b953af025e7391813b67a",
-      "target_sha256": "2a702b96d816fa17844a2f5781b3c6efc7e6df7a0f5656d0e5ba936efc1bd43c",
-      "reviewer": "Claude (Claude Code session; the default of f_opening_dynamic changed from 2 to 3 on 2026-10-31: the statements of the default and the notes on 2 were updated in the source and the translation together, and the changed parts were compared; rest unchanged since the previous record)",
+      "source_sha256": "c18dd9f89de55b3073d428afc2d9eaab0353729ecac3e0467e87645038f14f6a",
+      "target_sha256": "9b45f255823030db7956dd96a6951881c1d67ccbf8aae47a401b8872b864b82c",
+      "reviewer": "Claude (assistant)",
       "method": "assistant",
-      "reviewed_on": "2026-10-31"
+      "reviewed_on": "2026-11-02"
     },
     {
       "source": "examples/debris_bedrock/figs/cover.png",
@@ -1625,11 +1625,11 @@
     {
       "source": "examples/mountain_valley/README.md",
       "target": "examples/mountain_valley/en/README.md",
-      "source_sha256": "88755f27f85d901f58255570425f58728115f4ab2df1aab8dcd617ef57f7f83b",
-      "target_sha256": "1bb032e1c361a8ded2fe74e5a95d10467eb72e26dc4f1efe3c81bbf854b02d01",
-      "reviewer": "Claude (Claude Code session; the default of f_opening_dynamic changed from 2 to 3 on 2026-10-31: the statements of the default and the notes on 2 were updated in the source and the translation together, and the changed parts were compared; rest unchanged since the previous record)",
+      "source_sha256": "ae1685141f402a8e56b865943583018442f6e225b78e576bf5d1fcf73c271146",
+      "target_sha256": "350b969215d321f93ce54f5324316fff8efa0d2db6eb6efed0d343217f9f0020",
+      "reviewer": "Claude (assistant)",
       "method": "assistant",
-      "reviewed_on": "2026-10-31"
+      "reviewed_on": "2026-11-02"
     },
     {
       "source": "examples/mountain_valley/figs/channel.png",
@@ -2012,11 +2012,11 @@
     {
       "source": "test/README.md",
       "target": "test/README.en.md",
-      "source_sha256": "a940ec42e5d77b3c066f9c320d1ca77e7e94a5a3657feb85490d513cfff8df20",
-      "target_sha256": "b5ea9770a6c78bfc6365c3f5c6d2754be87bf940c125acf60b0ee454f7282995",
-      "reviewer": "Claude (Claude Code session; f_opening_dynamic default switch)",
+      "source_sha256": "bd2d2beca4356869969e3b915000a7bf35b14865553df63622715b077589af08",
+      "target_sha256": "382c4631ca4616114b18991e60f21f6dbf2c39e1a58fceb5a3eff8f46661c5b9",
+      "reviewer": "Claude (assistant)",
       "method": "assistant",
-      "reviewed_on": "2026-10-31"
+      "reviewed_on": "2026-11-02"
     },
     {
       "source": "test/avalanche/README.md",
@@ -3178,6 +3178,15 @@
       "reviewer": "Claude (Claude Code session; English figure drawn by the same script with the en switch; visual check)",
       "method": "assistant",
       "reviewed_on": "2026-10-24"
+    },
+    {
+      "source": "test/taupart/README.md",
+      "target": "test/taupart/en/README.md",
+      "source_sha256": "164ec2bbff0eed06144403b79ca44bcf2cdbb8a794054e523ee8ef02a3b2e6ae",
+      "target_sha256": "dc935afe8d7cd2551082673b6e58e4630e3e73b0009a2bea380fd1782bc447ff",
+      "reviewer": "Claude (assistant)",
+      "method": "assistant",
+      "reviewed_on": "2026-11-02"
     },
     {
       "source": "test/tide/README.md",

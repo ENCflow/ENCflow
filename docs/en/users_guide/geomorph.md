@@ -187,6 +187,9 @@ Riverbed erosion and deposition by a bedload transport formula.
 | fluv_bcfeed_fac | 1.0 | Factor of the capacity feed. 0 = no feed, 1 = fixed inlet. Values between reduce the inlet degradation but not proportionally (give a partial supply with inflow_qb) |
 | fluv_diagratio | 2/(2+sqrt(2)) | Diagonal partitioning (normally no need to change) |
 | fluv_taufac | 1.0 | Effective shear-stress ratio f_τ (the τ* passed to the transport formula = f_τ × τ* of the total resistance; a simple separation of form drag by dunes or vegetation. 1 = no separation) |
+| f_taupart | 0 | Flow resistance partitioning on steep gravel beds. 1: multiply the τ* passed to the transport formula by the relative-depth factor φ(h) = {1 + 6.76 (h/D84)^(−5/3)}^(−e/2) (Rickenmann & Recking 2011, Nitsche et al. 2011; [explanation](sediment.md) §3). It applies everywhere the bed-load capacity is used (including the toe of bank erosion and the cover capacity of bedrock incision), not to the plucking stress τ_b. Exclusive with fluv_taufac ≠ 1 (the run stops) |
+| fluv_d84 | 0.0 | D84 of the partitioning (m). 0 = 2.2 × fluv_d50 |
+| taupart_e | 1.5 | Exponent e of the partitioning. **Literature value** (1.5 of Nitsche et al. 2011; Rickenmann & Recking 2011 give 1.33–2) |
 | fluv_slope | 0 | Bed-slope correction of the bed-load direction. 1: Hasegawa type (q⃗ = q_b(t̂ − γ∇z), γ = √(τ*c/(μs μk τ*))) |
 | fluv_mus / fluv_muk | 1.0 / 0.45 | Static and kinetic friction coefficients μs, μk. **Literature values** (Asahi et al. 2013[^asahi13] eq. (22), after Hasegawa 1984; Hasegawa 1989[^hasegawa89] uses μk = 0.7 as an estimate; the bedrock–alluvial model of Inoue et al. 2016 uses μs = μk = 0.7, whose product 0.49 gives nearly the same γ as the defaults). See the note below |
 | f_secflow | 0 | Secondary-flow correction of the bed-load direction. 1: equilibrium type (near-bed transverse velocity ratio r = N* h κ, κ = streamline curvature of the velocity field) |

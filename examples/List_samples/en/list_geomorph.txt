@@ -63,6 +63,12 @@
   !fluv_taufac = 1.0        ! effective shear-stress ratio f_tau (tau* passed to the
                             !   transport formula = f_tau x tau* of the total
                             !   resistance. 1 = no separation)
+  !f_taupart = 1            ! resistance partitioning on steep gravel beds (1: multiply
+                            !   the tau* of the transport formula by the relative-depth
+                            !   factor of h/D84. Rickenmann & Recking 2011, Nitsche et al.
+                            !   2011. Exclusive with fluv_taufac /= 1)
+  !fluv_d84 = 0.0           ! D84 of the partitioning (m). 0 = 2.2 x fluv_d50
+  !taupart_e = 1.5          ! exponent e of the partitioning (default 1.5. Nitsche et al. 2011)
   !fluv_slope = 1           ! bed-slope correction of the bed-load direction
                             !   (1: Hasegawa type gamma*grad z)
   !fluv_mus = 1.0           ! static friction coefficient mu_s (default 1.0;

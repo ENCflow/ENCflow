@@ -22,6 +22,7 @@ module subroutine init_fluvial(gm, p, g, list)
   type(t_list_geomorph), intent(in) :: list
   real :: lpx, lpy, ldx, ldy, dr
   real :: d50                          ! 既定適用後の有効値(§62)
+  real :: d84                          ! 抵抗分割の D84(§89.30)
 
   ! --- パラメータ検証 ---
   d50 = gm_param("fluv_d50", list%fluv_d50, 0.01, " m")   ! 砂礫床の中庸(§62)
@@ -55,6 +56,23 @@ module subroutine init_fluvial(gm, p, g, list)
     call par_stop("list_geomorph: fluv_taufac must be in (0,1]")
   end if
   gm%flv%taufac = list%fluv_taufac
+  ! --- 急勾配礫床の抵抗分割(§89.30。mountain_stream_plan.md §14) ---
+  if (list%f_taupart < 0 .or. list%f_taupart > 1) call par_stop("list_geomorph: f_taupart must be 0 or 1")
+  gm%flv%taupart = (list%f_taupart == 1)
+  if (gm%flv%taupart) then
+    if (list%fluv_taufac /= 1.0) then
+      call par_stop("list_geomorph: f_taupart = 1 requires fluv_taufac = 1 (the two partitions are exclusive)")
+    end if
+    if (list%taupart_e <= 0.0 .or. list%taupart_e > 2.0) call par_stop("list_geomorph: taupart_e must be in (0,2]")
+    d84 = list%fluv_d84
+    if (d84 < 0.0) call par_stop("list_geomorph: fluv_d84 must be >= 0 (0 = 2.2 x fluv_d50)")
+    if (d84 == 0.0) d84 = 2.2 * d50
+    gm%flv%d84inv = 1.0 / d84
+    gm%flv%tpe = 0.5 * list%taupart_e
+    gm%flv%tpc = (6.5 / 2.5)**2
+    call par_info("geomorph: resistance partition on: tau* x (1 + 6.76 (h/D84)^(-5/3))^(-e/2), D84 = " &
+                  // rtoa(d84) // " m, e = " // rtoa(list%taupart_e))
+  end if
   if (list%fluv_slope < 0 .or. list%fluv_slope > 1) then
     call par_stop("list_geomorph: fluv_slope must be 0 or 1")
   end if
@@ -223,7 +241,7 @@ module subroutine calc_fluvial(gm, p, g, s, dts)
               rne = (g%rn(i,j) + g%rn(in,jn)) / 2
               ! 無次元掃流力(マニング閉じ。g は分子分母で相殺)。taufac は
               ! 有効掃流力の比(1 = 分離なし。1.0 の乗算は厳密に不変)
-              taus = gm%flv%taufac * rne**2 * vve**2 / (gm%sgrav * gm%d50 * hhe**(1.0/3.0))
+              taus = taufac_h(gm%flv, hhe) * rne**2 * vve**2 / (gm%sgrav * gm%d50 * hhe**(1.0/3.0))
               if (taus > gm%tausc) then
                 ! 流砂方向の射影 dirp = (q⃗_b/q_b)·ê_k。補正なしは水深平均流向
                 ! ue/vve(|dirp| <= 1)。補正ありは q⃗_b/q_b = t̂ + r n̂ − γ∇z
@@ -375,7 +393,7 @@ module subroutine calc_fluvial(gm, p, g, s, dts)
             if (ue > 0.0) then
               hhe = max(hhe, p%dv)
               rne = g%rn(i,j)
-              taus = gm%flv%taufac * rne**2 * vve**2 / (gm%sgrav * gm%d50 * hhe**(1.0/3.0))
+              taus = taufac_h(gm%flv, hhe) * rne**2 * vve**2 / (gm%sgrav * gm%d50 * hhe**(1.0/3.0))
               if (taus > gm%tausc) then
                 if (gm%f_qbform == 1) then       ! 芦田・道上
                   qbs = 17.0 * taus**1.5 * (1.0 - gm%tausc / taus) &
@@ -559,12 +577,12 @@ subroutine calc_fluvial_wfsed(gm, p, g, s, dts)
               rne = (g%rn(i,j) + g%rn(in,jn)) / 2
               ! 無次元掃流力(マニング閉じ。g は分子分母で相殺)。taufac は
               ! 有効掃流力の比(1 = 分離なし。1.0 の乗算は厳密に不変)
-              taus = gm%flv%taufac * rne**2 * vve**2 / (gm%sgrav * gm%d50 * hhe**(1.0/3.0))
+              taus = taufac_h(gm%flv, hhe) * rne**2 * vve**2 / (gm%sgrav * gm%d50 * hhe**(1.0/3.0))
               ! 攪拌(§90): 閾値と流砂量は波・流れ(u^E)の最大のせん断 τ*_max、輸送は u_s。
               ! 流砂量に √(τ*_s/τ*_max) を掛ける(τ*_max の流れが運ぶ掃流の量を u_s の速さで
               ! 運ぶ。τ*_s は上の taus = u_s の速さの Manning のせん断。波がなければ
               ! τ*_max = τ*_s = τ*_c で既存の式に一致)
-              tauc = gm%flv%taufac * rne**2 * vvc**2 / (gm%sgrav * gm%d50 * hhe**(1.0/3.0))
+              tauc = taufac_h(gm%flv, hhe) * rne**2 * vvc**2 / (gm%sgrav * gm%d50 * hhe**(1.0/3.0))
               cphi = wfsed_cphi((uec + uen) / 2, (vec + ven) / 2, (s%wvex(i,j) + s%wvex(in,jn)) / 2, &
                                 (s%wvey(i,j) + s%wvey(in,jn)) / 2)
               tmax = wfsed_taumax(tauc, sqrt(2.0) * (s%wvub(i,j) + s%wvub(in,jn)) / 2, &
@@ -727,8 +745,8 @@ subroutine calc_fluvial_wfsed(gm, p, g, s, dts)
             if (ue > 0.0) then
               hhe = max(hhe, p%dv)
               rne = g%rn(i,j)
-              taus = gm%flv%taufac * rne**2 * vve**2 / (gm%sgrav * gm%d50 * hhe**(1.0/3.0))
-              tauc = gm%flv%taufac * rne**2 * vvc**2 / (gm%sgrav * gm%d50 * hhe**(1.0/3.0))
+              taus = taufac_h(gm%flv, hhe) * rne**2 * vve**2 / (gm%sgrav * gm%d50 * hhe**(1.0/3.0))
+              tauc = taufac_h(gm%flv, hhe) * rne**2 * vvc**2 / (gm%sgrav * gm%d50 * hhe**(1.0/3.0))
               cphi = wfsed_cphi(uec, vec, s%wvex(i,j), s%wvey(i,j))
               tmax = wfsed_taumax(tauc, sqrt(2.0) * s%wvub(i,j), s%wvae(i,j), cphi, &
                                   gm%wfs%z0b, gm%wfs%twb)
@@ -1199,8 +1217,8 @@ subroutine wfsed_bed_diag(gm, p, g, s)
       vs = sqrt(usc * usc + vsc * vsc)
       if (vs <= 0.0) cycle
       hh = max(s%h(i,j), p%dv)
-      tauc = gm%flv%taufac * g%rn(i,j)**2 * vv**2 / (gm%sgrav * gm%d50 * hh**(1.0/3.0))
-      taus = gm%flv%taufac * g%rn(i,j)**2 * vs**2 / (gm%sgrav * gm%d50 * hh**(1.0/3.0))
+      tauc = taufac_h(gm%flv, hh) * g%rn(i,j)**2 * vv**2 / (gm%sgrav * gm%d50 * hh**(1.0/3.0))
+      taus = taufac_h(gm%flv, hh) * g%rn(i,j)**2 * vs**2 / (gm%sgrav * gm%d50 * hh**(1.0/3.0))
       tmax = wfsed_taumax(tauc, sqrt(2.0) * s%wvub(i,j), s%wvae(i,j), &
                           wfsed_cphi(uec, vec, s%wvex(i,j), s%wvey(i,j)), gm%wfs%z0b, gm%wfs%twb)
       if (tmax <= gm%tausc) cycle

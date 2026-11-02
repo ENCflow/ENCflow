@@ -48,6 +48,11 @@
   !fluv_diagratio = 0.5857864376  ! 斜め方向の配分(通常変更不要)
   !fluv_taufac = 1.0        ! 有効掃流力の比 f_τ(流砂量式に渡す τ* = f_τ × 全抵抗の
                             !   τ*。1 = 分離なし)
+  !f_taupart = 1            ! 急勾配礫床の抵抗分割(1: 流砂量式の τ* に相対水深 h/D84 の
+                            !   係数を掛ける。Rickenmann & Recking 2011、Nitsche ら 2011。
+                            !   fluv_taufac ≠ 1 とは排他)
+  !fluv_d84 = 0.0           ! 抵抗分割の D84 (m)。0 = 2.2 × fluv_d50
+  !taupart_e = 1.5          ! 抵抗分割の指数 e(既定 1.5。Nitsche ら 2011)
   !fluv_slope = 1           ! 河床勾配による流砂方向補正(1: 長谷川型 γ∇z)
   !fluv_mus = 1.0           ! 静止摩擦係数 μs(既定 1.0。Asahi ら 2013、Hasegawa 1984)
   !fluv_muk = 0.45          ! 動摩擦係数 μk(既定 0.45。同上)

@@ -1,0 +1,67 @@
+!======================================================================
+! test/taupart: 急勾配礫床の抵抗分割(f_taupart)の検定。構成 d19_mpm(分割あり。Check_taupart.py で判定)
+!   幅 1 セル・勾配 0.05・n = 0.03 の水路(等流水深 0.190 m、Fr 1.8)に掃流砂(芦田・道上、d50 = 0.01 m、
+!   無給砂)。東辺の開境界を通った掃流砂の台帳(画面出力の最後)を Check_taupart.py が読む。
+!   分割ありの構成 param_d*.txt は &list_geomorph に f_taupart・fluv_d84 を足しただけ(README)
+!======================================================================
+&list_sysparam
+  f_gridsystem = 0
+  f_govequation = 0
+  dt = 0.1
+  t0 = 0
+  tt = 3000
+  dt_disp = 300
+  dt_file = 1500
+  dt_recrd = 1500
+  fn_geoinfo = '-'
+  fn_initial = '-'
+  fn_enc = '-'
+  fn_geomorph = '-'
+  fn_boundary = '-'
+  dir_result = 'result_d19_mpm_t2'
+  f_state_save = 0
+  f_check_cfl = 1
+  f_out_z = 1
+  f_out_vv = 1
+/
+&list_enc
+/
+&list_initial
+  f_htype = 1
+  fn_hinit = 'hinit.txt'
+/
+&list_geoinfo
+  lx = 500.0
+  ly = 8.0
+  nx = 500
+  ny = 8
+  f_ztype = 1
+  fn_z = 'zinit.txt'
+  f_rntype = 0
+  rn0 = 0.03
+  sd0 = 2.0                 ! 可動層厚(全域可動)
+  sy0 = 0.2
+/
+&list_geomorph
+  dt_geomorph = 0.0
+  morfac = 1.0
+  f_fluvial = 1
+  f_qbform = 2
+  fluv_d50 = 0.01
+  fluv_tausc = 0.05
+  fluv_porosity = 0.4
+  fluv_sgrav = 1.65
+  fluv_dzmax = 0.005
+  fluv_bcfeed = 0           ! 無給砂(上流端から河床低下波。計測区間には届かない)
+  f_taupart = 1             ! 急勾配礫床の抵抗分割(§89.30)
+  fluv_d84 = 0.19             ! D84 (m)。0 = 2.2 × fluv_d50
+/
+&list_bound_edge
+  f_bc_e = 1                ! 東辺は自由流出(掃流砂は容量で流出。台帳に記録)
+/
+&list_bound_inflow
+  inflow_cell(1:2,1,1) = 1, 4
+  inflow_val(1:2,1,1) = 0, 0.469545
+  inflow_val(1:2,2,1) = 9999, 0.469545
+  inflow_dist(1) = 0
+/
