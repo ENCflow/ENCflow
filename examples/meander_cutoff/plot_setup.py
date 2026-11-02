@@ -7,8 +7,8 @@
   figs/mechanism.png  (a) 出水の越流による短絡(平面の模式)、(b) 河岸の後退による短絡
                       (ループの脚の間の陸を横切る断面の模式)、(c) 短絡の後の旧河道
                       (滞水域と出入口の堆積。三日月湖への途中)
-  figs/setup.png      初期地形(河床からの高さ。低い河岸のゾーン・ループ・ループ頂部のゾーン・
-                      脚の間の最も狭い陸)、中心線に沿う両岸の高さ、流入ハイドログラフ 2 種
+  figs/setup.png      初期地形(河床からの高さ。ループ・脚の間の最も狭い陸・出水で流れが横切る
+                      3 つの陸)、中心線に沿う両岸の高さ、流入ハイドログラフ 2 種
 
 入力は make_init.py が書く z.txt / h.txt / sd.txt(make で作る)と、make_init.py の中心線。
 依存: numpy, matplotlib
@@ -35,7 +35,7 @@ matplotlib.rcParams["axes.unicode_minus"] = False
 os.makedirs(FIGDIR, exist_ok=True)
 
 C_WATER, C_DEEP, C_LAND, C_SOIL, C_STILL = "#9ecae1", "#3182bd", "#d9c89e", "#c9b48a", "#dfe9f0"
-C_FLOOD, C_ERODE, C_NEW, C_PLUG, C_NECK, C_Q = "#6baed6", "#c0392b", "#08519c", "#e6b85c", "#f28e2b", "#2c7fb8"
+C_FLOOD, C_ERODE, C_NEW, C_PLUG, C_Q = "#6baed6", "#c0392b", "#08519c", "#e6b85c", "#2c7fb8"
 MORFAC = 10.0
 
 
@@ -157,21 +157,10 @@ def mechanism():
 LANDS_XY = [((100, 120), (55, 90)), ((150, 175), (90, 140)), ((205, 225), (100, 145))]
 
 
-def zones(z0, h0):
-    """plot_results.py と同じ定義の領域: ループ(初期河道の y > 70 m)と、低い河岸のゾーン
-    (make_init.py が河床 + 0.95 m にした陸。初期地形から復元する)。"""
-    DX = mi.DX
-    y = (np.arange(z0.shape[0]) + 0.5) * DX
-    loop = (h0 > 0) & (y[:, None] > 70.0)
-    zb = np.where(h0 > 0, z0, -1e9)
-    mx = zb.copy()
-    r = int(mi.RFP / DX)
-    for dj in range(-r, r + 1):
-        for di in range(-r, r + 1):
-            if di * di + dj * dj <= r * r:
-                mx = np.maximum(mx, np.roll(np.roll(zb, dj, 0), di, 1))
-    neck = (h0 == 0) & (mx > -1e8) & (z0 - mx < 1.2)
-    return loop, neck
+def loops(h0):
+    """plot_results.py と同じ定義のループ: 初期河道のうち y > 70 m(x = 160 m より西がループ 1、東がループ 2)"""
+    y = (np.arange(h0.shape[0]) + 0.5) * mi.DX
+    return (h0 > 0) & (y[:, None] > 70.0)
 
 
 def setup():
@@ -179,7 +168,6 @@ def setup():
     NY, NX = z0.shape
     DX = mi.DX
     x = (np.arange(NX) + 0.5) * DX; y = (np.arange(NY) + 0.5) * DX
-    _, neck = zones(z0, h0)
     P = np.array([(p[0], p[1] - mi.XMIN, p[2] - mi.YMIN) for p in mi.pts])
     # 各セルの最寄りの中心線の点(河床は路長 s に沿って Z0 − S0 s)。総当たりを行の塊ごとに
     XX, YY = np.meshgrid(x, y)
@@ -197,7 +185,6 @@ def setup():
     im = ax.imshow(hr, origin="lower", extent=[0, NX * DX, 0, NY * DX], cmap=cm, vmin=0.5, vmax=3.0)
     ax.imshow(np.where(h0 > 0, 1.0, np.nan), origin="lower", extent=[0, NX * DX, 0, NY * DX], cmap="Blues", vmin=0, vmax=1.6)
     ax.contour(x, y, h0 > 0, levels=[0.5], colors="k", linewidths=0.6)
-    ax.contour(x, y, neck, levels=[0.5], colors=C_NECK, linewidths=1.2)
     ax.axhline(70.0, color="0.3", ls=":", lw=0.9)
     ax.text(343, 72, "y = 70 m", fontsize=7.5, color="0.2", ha="right")
     for (xa, ya) in ((112, 76), (163, 130), (214, 76)):
@@ -208,8 +195,6 @@ def setup():
     for xa, ya, lab in ((112, 132, T("ループ 1", "loop 1")), (214, 89, T("ループ 2", "loop 2"))):
         ax.text(xa, ya, lab, fontsize=8, ha="center", va="center", color="0.1",
                 bbox=dict(boxstyle="round,pad=0.15", fc="white", ec="none", alpha=0.8))
-    ax.annotate(T("+2.4 m(注意を参照)", "+2.4 m (see notes)"), xy=(335, 62), xytext=(300, 92), fontsize=7, color="0.2",
-                arrowprops=dict(arrowstyle="-", color="0.3", lw=0.7))
     _arrow(ax, -14, 40, 2, 40, C_Q, lw=2.0, ms=12)
     ax.text(4, 52, T("流入", "inflow"), color=C_Q, fontsize=8)
     _arrow(ax, NX * DX - 2, 40, NX * DX + 14, 40, C_Q, lw=2.0, ms=12)
@@ -219,7 +204,6 @@ def setup():
     ax.text(mi.XFIX_UP + mi.LRAMP / 2, NY * DX + 2, T("土層厚のランプ 0 → 5 m", "soil-depth ramp 0 → 5 m"), ha="center", fontsize=7.5, va="bottom")
     ax.text(mi.XFIX_UP / 2, NY * DX + 2, T("非侵食", "fixed"), ha="center", fontsize=7, va="bottom")
     ax.text(NX * DX - mi.XFIX_DN / 2, NY * DX + 2, T("非侵食", "fixed"), ha="center", fontsize=7, va="bottom")
-    ax.plot([], [], color=C_NECK, lw=1.2, label=T("低い河岸のゾーン(+0.95 m。409 セル)", "low-bank zone (+0.95 m, 409 cells)"))
     ax.plot([], [], color="0.25", lw=0.8, ls="--", label=T("出水で流れが横切る 3 つの陸(結果の数表)", "the three lands the flood flow crosses (result tables)"))
     ax.legend(fontsize=7, loc="upper center", framealpha=0.95, bbox_to_anchor=(0.5, -0.1), ncol=1)
     ax.set_xlim(-16, NX * DX + 16); ax.set_ylim(0, NY * DX + 10)
@@ -245,11 +229,10 @@ def setup():
     ax.text(380, 2.75, T("頂部", "apex"), ha="center", fontsize=7)
     ax.text(540, 2.75, T("頂部", "apex"), ha="center", fontsize=7)
     ax.set_xlim(0, s.max()); ax.set_ylim(0, 3.0)
-    ax.text(770, 2.45, "+2.4", fontsize=7, ha="right", color="0.3")
     ax.set_xlabel(T("中心線に沿う距離 s (m)(河床 = 10 − 0.001 s)", "distance along the centreline s (m) (bed = 10 − 0.001 s)"), fontsize=8)
     ax.set_ylabel(T("中心線から 12 m の陸の高さ\n(河床から、m)", "height of the land 12 m off\nthe centreline (above the bed, m)"), fontsize=8)
     ax.tick_params(labelsize=7.5); ax.legend(fontsize=7, loc="lower right", framealpha=0.95)
-    ax.set_title(T("河岸の高さ(1.6 m、頂部の周りは 0.95 m)", "Bank height (1.6 m; 0.95 m around the apexes)"), fontsize=10, loc="left")
+    ax.set_title(T("河岸の高さ(近くの河床の最大値 + 1.6 m)", "Bank height (highest nearby bed + 1.6 m)"), fontsize=10, loc="left")
     # --- 流入 ---
     ax = fig.add_subplot(gs[1, 1])
     tg = np.linspace(0, 30, 601)

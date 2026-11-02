@@ -3,15 +3,14 @@
 #   (生成に 10 秒ほどかかる: 各セルから中心線への最近接距離を総当たりで求める)
 #   中心線の方向角 θ(s) = ω sin(2π s/Λ)(Langbein-Leopold の sine-generated curve。
 #   ω が大きいほど蛇行度が高く、隣り合うループの間の頸部が狭くなる)。
-#   河岸(氾濫原)は河床 + BANK、頸部(2 つの河道区間の両方に近い陸)は河床 +
-#   BANKNECK(低い。出水で越流し短絡の種になる)。
+#   河岸(氾濫原)は近傍の河床の最大値 + BANK で一様(頸部を特別に下げない。短絡は出水で
+#   陸を越える流れや河岸の後退の帰結として現れる。developer.md §84.18)。
 #   z.txt / h.txt / sd.txt、rows(西端の流入セル)、dims
 import sys, math
 
 W, LAM, OMEGA = 20.0, 320.0, 105.0        # 幅、曲線の弧長波長、最大方向角 (deg)
 NLOOP = 2.0                                # 波長の数
-S0, Z0, BANK, BANKNECK, H0, SD = 0.001, 10.0, 1.6, 0.95, 0.8, 5.0
-NECKW = 8.0                                # 頸部とみなす「河岸からの距離」(m)
+S0, Z0, BANK, H0, SD = 0.001, 10.0, 1.6, 0.8, 5.0
 LIN, LOUT = 60.0, 80.0                     # 入口・出口の直線長
 DX = 2.0
 MARGIN = 30.0
@@ -35,29 +34,27 @@ XMIN, XMAX = 0.0, max(xs)
 YMIN, YMAX = min(ys) - MARGIN - W / 2, max(ys) + MARGIN + W / 2
 NX = int(math.ceil((XMAX - XMIN) / DX)); NY = int(math.ceil((YMAX - YMIN) / DX))
 
-import bisect
-# 半ループ(index)ごとの最近接距離を求めるために index で分ける
+# 半ループ(index)ごとに分けて最近接点を探す(探す順は従来どおり。等距離のときの選び方を変えない)
 from collections import defaultdict
 seg = defaultdict(list)
 for p in pts:
     seg[p[3]].append(p)
 
 def nearest(xc, yc):
-    """全体の最近接 (s, 符号付き n) と、半ループごとの最近接距離の辞書"""
-    best = (1e9, None, None); per = {}
+    """全体の最近接点の (路長 s, 符号付き横距離 n, 距離 d)"""
+    best = (1e9, None, None)
     for idx, lst in seg.items():
         bd, bp = 1e9, None
         for p in lst:
             d = math.hypot(xc - p[1], yc - p[2])
             if d < bd: bd, bp = d, p
-        per[idx] = bd
         if bd < best[0]: best = (bd, bp, idx)
     d, p, idx = best
     # 符号付き横距離(左が正): 接線方向との外積
     k = min(len(pts) - 2, max(0, int(p[0] / DS)))
     tx, ty = pts[k + 1][1] - pts[k][1], pts[k + 1][2] - pts[k][2]
     n = ((xc - p[1]) * ty - (yc - p[2]) * tx) / math.hypot(tx, ty)
-    return p[0], -n if d > 0 else 0.0, d, per
+    return p[0], -n if d > 0 else 0.0, d
 
 def cellxy(i, j):
     return XMIN + (i - 0.5) * DX, YMIN + (j - 0.5) * DX
@@ -74,7 +71,7 @@ def in_channel(i, j):
 
 # 氾濫原の高さ: 近く(半径 RFP)にある河道の河床の最大値 + BANK(どの隣接区間の
 # 水面より上にする。路長や谷勾配で決めると蛇行度の高い所で上流の水面より低くなり
-# 出水前から溢れる — 実検出)。頸部(2 つ以上の半ループに近い陸)は + BANKNECK
+# 出水前から溢れる — 実検出)
 RFP = 24.0
 import numpy as _np
 _ZB = None
@@ -84,28 +81,29 @@ def _bed_field():
         zb = _np.full((NY, NX), -1e9)
         for j in range(1, NY + 1):
             for i in range(1, NX + 1):
-                sc, nc, dc, perc = info(i, j)
+                sc, nc, dc = info(i, j)
                 if dc <= W / 2:
                     zb[j - 1, i - 1] = Z0 - S0 * sc
+        # 半径 r セルの円の中の最大値。端は河道のない値で埋めてからずらす(np.roll の折り返しで
+        # 反対側の端の河床を拾わない。2026-11-02 まで東辺の帯が西端の河床で高くなっていた)
         r = int(RFP / DX)
+        pad = _np.pad(zb, r, constant_values=-1e9)
         mx = zb.copy()
         for dj in range(-r, r + 1):
             for di in range(-r, r + 1):
                 if di * di + dj * dj > r * r: continue
-                mx = _np.maximum(mx, _np.roll(_np.roll(zb, dj, 0), di, 1))
+                mx = _np.maximum(mx, pad[r + dj:r + dj + NY, r + di:r + di + NX])
         _ZB = mx
     return _ZB
 
 def z_of(i, j):
-    s, n, d, per = info(i, j)
+    s, n, d = info(i, j)
     if d <= W / 2:
         return Z0 - S0 * s
     zfp = _bed_field()[j - 1, i - 1]
     if zfp < -1e8:
         zfp = Z0 - S0 * s
-    near = sorted(v for v in per.values())
-    neck = len(near) >= 2 and near[1] <= W / 2 + NECKW
-    return zfp + (BANKNECK if neck else BANK)
+    return zfp + BANK
 
 def h_of(i, j):
     return H0 if in_channel(i, j) else 0.0

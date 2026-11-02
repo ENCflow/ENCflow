@@ -9,7 +9,7 @@
   figs/final_slump_fines.png  出水なし・粘着性+崩落土塊+細粒分(result_slump_fines)の終了時と細粒分の厚さ
 
 領域(plot_setup.py と同じ定義): ループ = 初期河道のうち y > 70 m(2,265 セル。x = 160 m より西が
-ループ 1、東がループ 2)、低い河岸のゾーン = make_init.py が河床 + 0.95 m にした陸(409 セル)。
+ループ 1、東がループ 2)。
 「流れている」は h > 0.05 m かつ |V| > 0.3 m/s。3 つの陸 = 出水で流れが横切る初期の陸(ループ 1 の脚の間
 x = 100〜120 m・y = 55〜90 m、2 つのループの間 x = 150〜175 m・y = 90〜140 m、ループ 2 の脚の間
 x = 205〜225 m・y = 100〜145 m)。
@@ -24,7 +24,7 @@ import matplotlib
 matplotlib.use("Agg")
 import matplotlib.pyplot as plt
 import make_init as mi
-from plot_setup import zones, LANDS_XY
+from plot_setup import loops, LANDS_XY
 
 EN = "en" in sys.argv[1:]
 
@@ -45,7 +45,7 @@ DX = mi.DX
 x = (np.arange(NX) + 0.5) * DX
 y = (np.arange(NY) + 0.5) * DX
 ext = [0, NX * DX, 0, NY * DX]
-loop, neck = zones(z0, h0)
+loop = loops(h0)
 # 上流側のループ(ループ 1)と下流側のループ(ループ 2)。x = 160 m は 2 つのループの間の陸
 LOOPS = ((loop & (x[None, :] <= 160.0)), (loop & (x[None, :] > 160.0)))
 # 出水で流れが横切る 3 つの陸(初期の陸のセル): ループ 1 の脚の間、2 つのループの間、ループ 2 の脚の間
@@ -123,8 +123,8 @@ def ledger(log):
 
 
 # ------------------------------------------------------------------ 数表
-print("領域: ループ %d セル(ループ 1 %d、ループ 2 %d)、低い河岸のゾーン %d セル。ループの頂点 x = %.0f m・%.0f m" % (
-    loop.sum(), LOOPS[0].sum(), LOOPS[1].sum(), neck.sum(), APEX_X[0], APEX_X[1]))
+print("領域: ループ %d セル(ループ 1 %d、ループ 2 %d)。ループの頂点 x = %.0f m・%.0f m" % (
+    loop.sum(), LOOPS[0].sum(), LOOPS[1].sum(), APEX_X[0], APEX_X[1]))
 for rdir, pfile, log, _, _ in CASES:
     tm = times(rdir); ks = sorted(tm)
     Q = hydrograph(pfile)
@@ -215,7 +215,6 @@ def states(fname):
             cat = np.where(fl & (h0 == 0), 4, cat)
             ax.imshow(SCOL[cat], origin="lower", extent=ext, interpolation="nearest")
             ax.contour(x, y, loop, levels=[0.5], colors="k", linewidths=0.4)
-            ax.contour(x, y, neck, levels=[0.5], colors="#f28e2b", linewidths=0.7)
             ax.set_title(T("地形 %.0f h、Q = %.0f m³/s。ループで流れている %d", "landform %.0f h, Q = %.0f m³/s; loop flowing %d")
                          % (tm[k] * MORFAC / 3600, Q(tm[k]), (fl & loop).sum()), fontsize=8, loc="left")
             ax.tick_params(labelsize=6)
@@ -224,9 +223,8 @@ def states(fname):
     from matplotlib.patches import Patch
     hd = [Patch(facecolor=SCOL[j], edgecolor="0.5", label=SLAB[j]) for j in range(5)]
     from matplotlib.lines import Line2D
-    hd += [Line2D([], [], color="k", lw=0.8, label=T("ループ(初期河道のうち y > 70 m)", "loop (initial channel, y > 70 m)")),
-           Line2D([], [], color="#f28e2b", lw=1.2, label=T("低い河岸のゾーン", "low-bank zone"))]
-    fig.legend(handles=hd, loc="lower center", ncol=4, fontsize=8, frameon=False)
+    hd += [Line2D([], [], color="k", lw=0.8, label=T("ループ(初期河道のうち y > 70 m)", "loop (initial channel, y > 70 m)"))]
+    fig.legend(handles=hd, loc="lower center", ncol=3, fontsize=8, frameon=False)
     fig.tight_layout(rect=(0, 0.045, 1, 1)); fig.savefig(os.path.join(FIGDIR, fname), dpi=80); plt.close(fig)
 
 
@@ -248,10 +246,8 @@ def final(rdir, fname, fines=False):
         fig.colorbar(im, ax=axes[3], shrink=0.85, pad=0.01)
     for ax in axes:
         ax.contour(x, y, h0 > 0, levels=[0.5], colors="k", linewidths=0.4)
-        ax.contour(x, y, neck, levels=[0.5], colors="#f28e2b", linewidths=0.6)
         ax.set_xlabel("x (m)", fontsize=8); ax.set_ylabel("y (m)", fontsize=8); ax.tick_params(labelsize=7)
-    fig.suptitle(T("%s: 地形 %.0f h(黒 = 初期の河岸、橙 = 低い河岸のゾーン)",
-                   "%s: landform %.0f h (black = initial banks, orange = low-bank zone)")
+    fig.suptitle(T("%s: 地形 %.0f h(黒 = 初期の河岸)", "%s: landform %.0f h (black = initial banks)")
                  % (NAME[rdir], tm[K] * MORFAC / 3600), fontsize=10, x=0.01, ha="left")
     fig.tight_layout(); fig.savefig(os.path.join(FIGDIR, fname), dpi=90); plt.close(fig)
 
