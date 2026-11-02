@@ -482,9 +482,9 @@
     {
       "source": "docs/users_guide/usecases.md",
       "target": "docs/en/users_guide/usecases.md",
-      "source_sha256": "e0d4bb580287eb9b93d8db88d34e35d33caafab5bb6698b0a09dca52a87f6af9",
-      "target_sha256": "a464e34d3a58b77af13ad9e406143dcae6f27b3453f2eaba7cbbe7c4bda2013a",
-      "reviewer": "Claude (Claude Code session; the changed delta references (example link, renamed README sections) compared in both languages; the rest is unchanged from the recorded version)",
+      "source_sha256": "21a88c7e23dd46b87e1d4b91866a156fb4e023ccb36ac1e3a9f4908e94805031",
+      "target_sha256": "338cc4275519f9de08e578892b78ce52c58d7500bc8d73a836cee68fdce79074",
+      "reviewer": "Claude (Claude Code session; the changed meander row (configuration count, literature defaults, f_opening_dynamic) compared in both languages; the rest is unchanged from the recorded version)",
       "method": "assistant",
       "reviewed_on": "2026-11-02"
     },
