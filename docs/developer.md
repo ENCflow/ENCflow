@@ -6535,8 +6535,9 @@ docs/splash_plan.md**。
   tower_karst の README(日英)を estuary_barrage と同じ構成(実際の現象 → 再現に必要な機構
   → 幾何と設定 → 実行方法 → 結果 → 表せないこと → 注意 → 感度実験の入口 → 参考文献)に
   組み直した。ケース・param の値は変えていない(param はコメントだけ直した)。結果の図は
-  badland だけを利用者の依頼で再計算して描き直した(README の数表は全項目が再現。図の差し替えは
-  曲率の題を直した main_features.png のみ)。各例題の Makefile に make run 等を足し、画面出力は
+  利用者の依頼で再計算して描き直した: badland は README の数表が全項目再現(図の差し替えは曲率の
+  題を直した main_features.png のみ)、badland_storm の結果 1〜3 は湿潤侵食のあるケースだけが
+  README 当時のコードから少しずれた(handoff 00g)。各例題の Makefile に make run 等を足し、画面出力は
   `2>&1 | tee` で Screen*.log に残す(排出量・上限の回数・崩落量の台帳は par_warn = 標準エラーで、
   plot スクリプトがログから読むため)。機構の模式図と設定の図は計算結果を使わない各例題の
   plot_setup.py で描く(plot_results.py は結果を前提にしたモジュール直書きなので分けた)。新島の谷形成の仮説

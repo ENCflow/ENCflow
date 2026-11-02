@@ -139,21 +139,20 @@ Japanese). plot_storm.py and conv_dx.py use the analysis functions of plot_resul
 
 ### Result 1: flat plateau
 
-![Evolution of the terrain and difference](../figs/maps.png)
+![Evolution of the terrain and difference](figs/maps.png)
 
 Top row: control (all infiltrates), middle row: with overland flow, bottom row: difference
 z(overland flow) − z(control) (blue = eroded deeper in the control, red = eroded deeper with
-overland flow; the colour key in the figure title is written the wrong way round and will be
-correct when the figure is redrawn). Left: T_geo = 1.8×10⁶ s (10 cycles), middle: 4.5×10⁶ s (25
-cycles = final; the right column is the same time as the middle).
+overland flow). From the left: T_geo = 9×10⁵ s (5 cycles), 1.8×10⁶ s (10 cycles) and
+4.5×10⁶ s (25 cycles = final).
 
-![Time series](../figs/series.png)
+![Time series](figs/series.png)
 
 Time series (storm = with overland flow, dry = control). From the left: relief of the cliff-face
 zone, valley spacing and centroid wavelength of Δz, mean lowering of the cliff-face zone and
 maximum incision, position of the valley head.
 
-![Water depth at the end of a downpour and drainage network](../figs/flow.png)
+![Water depth at the end of a downpour and drainage network](figs/flow.png)
 
 Water depth at the final time (end of a downpour) with overland flow (left), D8 drainage area of
 the final terrain (middle) and distribution of the drainage area (right; with overland flow and
@@ -167,7 +166,7 @@ control).
 | Mean lowering of the cliff-face zone (m): 1.8×10⁶ / 4.5×10⁶ s | 7.1 / 17.4 | 2.8 / 10.1 |
 | Maximum incision (m) (final) | 29.0 | 25.2 |
 | Position x of the valley head (m) (plateau edge 60 m): 1.8×10⁶ / 4.5×10⁶ s | 53.5 / 17.5 | 59.5 / 54.5 |
-| Mean lowering of the plateau edge to interior (cells initially at 30 m) (m) | 12.4 (dissected by the retreat of the valley heads) | 0.76 (the notches at the edge; 8 mm in the interior x < 45 m) |
+| Mean lowering of the plateau edge to interior (cells initially at 30 m) (m) | 12.4 (dissected by the retreat of the valley heads) | 0.76 (the notches at the edge; 0.2 mm in the interior x < 45 m) |
 | 99th percentile of slope, fraction with slope > 1 (final) | 12.2, 0.33 | 9.1, 0.12 |
 | Water depth at the end of a downpour (m): median on land / maximum | – | 0.010 / 0.012 |
 | Sediment that left the domain by dry-slope erosion (m³) | 1.44×10⁵ | 3.5×10⁴ |
@@ -213,20 +212,20 @@ Water ponding on a flat plateau is partly an artefact of the geometry (real plat
 towards the cliff edge), so the same comparison was made with the plateau tilted 2 % towards the
 cliff, so that ponded water drains to the valley heads.
 
-![Evolution of the terrain and difference, tilted plateau](../figs/maps_tilt.png)
+![Evolution of the terrain and difference, tilted plateau](figs/maps_tilt.png)
 
 Same layout as the maps of result 1 (tilted plateau; same colour key in the bottom row).
 
-![Time series, tilted plateau](../figs/series_tilt.png)
+![Time series, tilted plateau](figs/series_tilt.png)
 
 Time series (storm = with overland flow, tilted; dry = control, tilted).
 
 | Quantity | Control (all infiltrates) | Overland flow during downpours | Hydraulics of overland flow only (no wet erosion) |
 |---|---|---|---|
-| Relief of the cliff-face zone (m): maximum / final | 8.03 / 6.09 | 4.34 / 4.34 | 4.39 / 4.39 |
+| Relief of the cliff-face zone (m): maximum / final | 8.03 / 6.09 | 4.39 / 4.39 | 4.39 / 4.39 |
 | Valley spacing (m): T_geo 1.8×10⁶ / 4.5×10⁶ s | 12.7 / 12.0 | 11.7 / 11.3 | 11.8 / 10.7 |
-| Mean lowering of the cliff-face zone (m): 1.8×10⁶ / 4.5×10⁶ s | 7.1 / 17.8 | 2.5 / 8.8 | 2.5 / 10.0 |
-| Maximum incision (m) (final) | 29.0 | 24.0 | 26.2 |
+| Mean lowering of the cliff-face zone (m): 1.8×10⁶ / 4.5×10⁶ s | 7.1 / 17.8 | 2.5 / 9.1 | 2.5 / 10.0 |
+| Maximum incision (m) (final) | 29.0 | 24.1 | 26.2 |
 | Position x of the valley head (m) (plateau edge 60 m): 1.8×10⁶ / 4.5×10⁶ s | 53.5 / 16.5 | 59.5 / 51.5 | 60.5 / 53.5 |
 | Mean lowering of the plateau edge to interior (cells initially at 30 m) (m) | 12.8 | 0.81 | 0.69 (7 mm in the interior x < 45 m) |
 | Water depth at the end of a downpour (m): median on land / 99th percentile | – | 0.002 / 0.008 | – |
@@ -270,38 +269,39 @@ A set-up with the coefficient of the equilibrium concentration of suspended sedi
 default susp_esa = 10⁻⁴ and the sheet-erosion coefficient to wash_kf = 2×10⁻⁹ (100 and 10 times
 those of results 1 and 2) (param_storm_wet.txt; plateau tilted 2 %, morfac 50).
 
-![Evolution of the terrain and difference, strong wet erosion](../figs/maps_wet.png)
+![Evolution of the terrain and difference, strong wet erosion](figs/maps_wet.png)
 
 Same layout as the maps of result 1 (the control in the top row is the tilted plateau with all
 rain infiltrating = result_dry_tilt).
 
-![Time series, strong wet erosion](../figs/series_wet.png)
+![Time series, strong wet erosion](figs/series_wet.png)
 
-![Water depth and drainage network, strong wet erosion](../figs/flow_wet.png)
+![Water depth and drainage network, strong wet erosion](figs/flow_wet.png)
 
 | Quantity (T_geo 4.5×10⁶ s) | Control (all infiltrates) | Overland flow, weak wet erosion (result 2) | Overland flow, strong wet erosion |
 |---|---|---|---|
-| Relief of the cliff-face zone (m): maximum / final | 8.0 / 6.1 | 4.3 / 4.3 | 2.7 / 2.0 |
+| Relief of the cliff-face zone (m): maximum / final | 8.0 / 6.1 | 4.4 / 4.4 | 2.7 / 2.0 |
 | Valley spacing (m) (final) / number | 12.0 / 19 | 11.3 / 20 | **6.5 / 37** |
 | Position x of the valley head (m) (plateau edge 60 m) | 16.5 | 51.5 | **7.5** |
-| Mean lowering of the cliff-face zone (m) | 17.8 | 8.8 | 9.5 |
-| Maximum incision (m) | 29.0 | 24.0 | 22.7 |
-| Slope median / 90th / 99th percentile (final, land) | 0.12 / 6.2 / 12.4 | – / – / 8.7 | 0.65 / 2.5 / 3.5 |
+| Mean lowering of the cliff-face zone (m) | 17.8 | 9.1 | 9.5 |
+| Maximum incision (m) | 29.0 | 24.1 | 22.4 |
+| Slope median / 90th / 99th percentile (final, land) | 0.12 / 6.2 / 12.4 | – / – / 8.6 | 0.65 / 2.5 / 3.5 |
 | Columns at x = 30 / 45 / 60 m: mean elevation (m) | 13.9 / 7.7 / 3.8 | – | 24.6 / 17.7 / 10.6 |
-| Same: y-direction relief (standard deviation) (m) | 10.9 / 6.4 / 4.0 | – | 2.3 / 3.0 / 2.4 |
+| Same: y-direction relief (standard deviation) (m) | 10.9 / 6.4 / 4.0 | – | 2.4 / 2.9 / 2.3 |
 
 **The landform changed completely.** Whereas the control (dry only) is "deep valleys between sharp
 ridges dissecting the plateau like the teeth of a comb", with strong wet erosion:
 
 - The valley spacing is halved (6.5 m, 37 valleys) into a **dense gully network**, and the valley
   heads cut into the plateau from the first cycle and retreat 52 m in 25 cycles (control 43 m,
-  and the control barely moves until 10 cycles).
+  and the control does not move until the 6th cycle).
 - The valleys are shallow (relief 2 to 3 m), and the cliff loses its 56° wall and is smoothed into
   a **gentle slope of gradient 0.5 to 1** (the mean elevation at x = 30 to 60 m is 7 to 11 m
   higher than the control = rather than the cliff retreating, the whole slope is lowered from the
   plateau edge).
 - The water of the downpours gathers in the valley floors (water depth at the end of a downpour:
-  median on land 0, 99th percentile 6 mm, up to 13 cm in valley floors), and the D8 network is a
+  median on land 0.6 mm, 99th percentile 6 mm, maximum 1.8 cm; the maximum depth over the run
+  is 15 cm in valley floors), and the D8 network is a
   dense row of parallel gullies perpendicular to the plateau edge, with less branching than in the
   control.
 
@@ -438,6 +438,13 @@ gentle undulation.
   update, so finer grids keep their stability through the time step of the flow.
 - The export by dry-slope erosion is 1.44×10⁵ m³ in the control and 3.5×10⁴ m³ with overland flow.
   The difference is mostly not transport by wet erosion but the dry erosion that stopped.
+- **Reproducibility of the numbers**: in the cases with wet erosion, small differences are
+  amplified by the positive feedback of flow concentration. Recomputed with the current code on
+  2026-11-02, result 1 and the cases without wet erosion matched in all digits, but the case with
+  overland flow of result 2 (relief 4.34 → 4.39 m, mean lowering 8.8 → 9.1 m) and result 3
+  (maximum incision 22.7 → 22.4 m and others) shifted slightly (in result 2 it starts from a
+  10⁻⁴ m difference of the soil thickness in one cell at the 18th cycle). The tables give the
+  recomputed values; the conclusions do not change.
 
 ## Starting points for sensitivity experiments
 
