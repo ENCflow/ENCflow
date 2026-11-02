@@ -266,9 +266,9 @@
     {
       "source": "docs/users_guide/geomorph.md",
       "target": "docs/en/users_guide/geomorph.md",
-      "source_sha256": "b2d8091fb3b3783a2adcc8fab1be6f6d69b81ef558549f47c2bcbb60c94ebabf",
-      "target_sha256": "52c4390eef992343aed4f36d84b62201f33a7bcc2a99b5494baa6ba5f60df4b4",
-      "reviewer": "Claude (Claude Code session; tide-update pointer added to the delta paragraph in both languages and compared)",
+      "source_sha256": "72befa1eaa47b9b08aa7e08a46f46027a15d74c3a2db6a28ba423da421258e38",
+      "target_sha256": "6c1022988d942fec208a06efff3b32776b2257e9cc029c399af48b223714f54e",
+      "reviewer": "Claude (Claude Code session; morfac caveat of the delta tide sentence updated in both languages and compared)",
       "method": "assistant",
       "reviewed_on": "2026-11-02"
     },
@@ -1310,9 +1310,9 @@
     {
       "source": "examples/delta/README.md",
       "target": "examples/delta/en/README.md",
-      "source_sha256": "367d2f1c0c0ab9fbcb6be2276f867bc926512686e1c7e9389ed8e9be638fa476",
-      "target_sha256": "17792ce24dcbc175a4e9c9a642a666ed785a70dfe9ad510682c0e34649f80805",
-      "reviewer": "Claude (Claude Code session; Japanese source and English mirror read side by side)",
+      "source_sha256": "5e246f2aa8bdf2736e999c32d228326b4115a8e20a4d06c8aa8f205586e5a695",
+      "target_sha256": "557370797804963751cbe1270e4548281449ebeb4a8750b128d350e5b6f46e91",
+      "reviewer": "Claude (Claude Code session; stage 7 morfac check and the morfac caveats added in both languages and compared side by side)",
       "method": "assistant",
       "reviewed_on": "2026-11-02"
     },

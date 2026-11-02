@@ -452,8 +452,11 @@ below the bed c_tau (without the decay an exposed bar becomes permanent and the
 distributaries collapse to grid-width channels). Resolve the distributaries
 with at least width/5 cells. To add a tide, place a strip of sea mask along the offshore side and give
 the [tide level](tide.md) (fn_tide), and lower morfac so that the landform
-change in one tidal cycle stays small (the example uses 5 tidal cycles with
-morfac 24). Make the sides crossing the coast lateral Neumann (f_bc = 3). In a small basin, update the
+change in one tidal cycle stays small (as a compromise with the computing
+time, stages 6 and 7 of the example stop at 5 tidal cycles with morfac 24 and
+240 and do not meet this condition; halving the morfac of stage 7 changed, for
+example, the sand leaving through the north and south sides considerably).
+Make the sides crossing the coast lateral Neumann (f_bc = 3). In a small basin, update the
 tide level every step (`dt_tiupdate` at or below the time step; the default update every minute can
 excite a natural oscillation; "Water bodies with short natural periods" in
 [tide level](tide.md#parameters-and-the-basis-of-their-defaults)).

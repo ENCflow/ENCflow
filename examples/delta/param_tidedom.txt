@@ -4,7 +4,8 @@
 !   tide と同じ(M2、潮差 2 m)。デルタの干潟を出入りする潮の流量に対して川の流量を小さくする(潮の
 !   出入りは川の 1.6 倍になり、デルタの上は干潟と下げ潮の水路になる。上げ潮の流れは砂を動かさない)。
 !   土砂が 1/10 なので morfac を 10 倍(240)にし、潮 5 周期(水理 62.1 h)で地形 14900 h を見る(潮の
-!   1 周期に入る土砂は tide と同じ)。
+!   1 周期に入る土砂は tide と同じ)。南北の辺から出る砂の量と沖へ伸びる溝は morfac に強く依る
+!   (morfac 120 との比較は README 段 7「morfac を半分にした確かめ」)。
 !   南北の辺は tide と同じ側方 Neumann。比較の基準は同じ川で潮汐のない param_smallq.txt。
 !   入力: make(z_base.txt, sd_baseqb.txt, sw_tide.txt, tide_m2.txt)。4 スレッドで約 2 時間。
 !   実行: ./encflow param_tidedom.txt。図化: python3 plot_results.py tidedom

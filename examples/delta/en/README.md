@@ -72,7 +72,7 @@ wave field, and stage 7 makes the river of stage 6 smaller).
 | 3 | Distributaries stabilized by floods and vegetation | Time series of the discharge, fixation by vegetation (weakened when submerged), bank erosion | `inflow_val`; `f_fixation` (`fix_tdec`, `fix_ctau_bank`); `f_berode` | varq, fix |
 | 4 | A wave-influenced delta (arcuate front, spit, skew to the downdrift side) | Longshore transport by oblique waves (an estimate without resolving the waves). The sand supply is given as a fixed amount | `fn_wave` (`wave_lsm`, `wave_vmax`); `inflow_qb`, `fluv_bcfeed = 0` | baseqb, wave |
 | 5 | Stage 4 plus wave refraction, the shadow of the delta, wave-driven flow, stirring of mud, and sand pushed up by the swash | The coastal wave field, stirring and transport by waves, swash-zone transport (in place of the longshore transport of stage 4) | `fn_wavefield` (`wf_flow = 2`, `f_wf_current = 1`); `f_wfsed`; `f_wfswash`; background viscosity `p_diffusion_nu` | wfsed |
-| 6 | A tide-influenced delta (flats flooded and exposed by the tide, flow at the mouth changing with the tide) | A time series of the tide level on the offshore side (a strip of sea mask). morfac lowered so that the landform change in one tidal cycle stays small; the sides crossing the coast treated as if the coast continued outside | `fn_sw`, `fn_tide` (`titype = 2`), `morfac`, `f_bc_n`, `f_bc_s = 3` | notide, tide |
+| 6 | A tide-influenced delta (flats flooded and exposed by the tide, flow at the mouth changing with the tide) | A time series of the tide level on the offshore side (a strip of sea mask). morfac lowered below that of the cases without tide (in this example the landform change in one tidal cycle cannot be called small); the sides crossing the coast treated as if the coast continued outside | `fn_sw`, `fn_tide` (`titype = 2`), `morfac`, `f_bc_n`, `f_bc_s = 3` | notide, tide |
 | 7 | Towards the tide-dominated side: a delta where the tidal exchange exceeds the river (flats on top of the delta and ebb channels; the shapes made by tidal currents moving sand back and forth do not appear at the scale of this example) | The same mechanisms as stage 6, with a smaller river discharge and sediment supply (making the tidal exchange relatively larger) | `inflow_val`, `inflow_qb` (river discharge and sediment), `morfac` | smallq, tidedom |
 
 **Phenomena and mechanisms**:
@@ -88,7 +88,7 @@ wave field, and stage 7 makes the river of stage 6 smaller).
 | The flow erodes banks and makes them retreat | Bank erosion (a neighbouring cell higher than the water surface is collapsed by the shear on the bank toe) | `f_berode = 1` |
 | Oblique waves carry sand along the shore in the surf zone | Longshore transport computed from the offshore waves (CERC formula) is moved as bedload in the surf zone. The shoreline orientation is taken from the depth gradient. Fast-flowing channel cells are excluded from the waves | `fn_wave`, `wave_lsm`, `wave_vmax` |
 | Waves refract and break, the delta casts a shadow, and a longshore current develops. Waves stir sand and mud, and the swash pushes sand up | The coastal wave field (resolves the direction and height of the waves; the river-mouth current stops the waves), wave-driven flow, stirring and transport by waves and currents, swash-zone transport | `fn_wavefield`, `wf_flow = 2`, `f_wf_current = 1`, `f_wfsed = 1`, `f_wfswash = 1` |
-| The tide rises and falls, flats are flooded and exposed, and the flow reverses | A time series of the tide level is given on a strip of sea mask a few columns wide along the offshore side; the sea inside it and the river mouth are solved by the shallow-water flow. The landform acceleration is kept within the range where the landform change in one tidal cycle is small | `fn_sw`, `fn_tide`, `morfac` |
+| The tide rises and falls, flats are flooded and exposed, and the flow reverses | A time series of the tide level is given on a strip of sea mask a few columns wide along the offshore side; the sea inside it and the river mouth are solved by the shallow-water flow. The landform acceleration can be used only while the landform change in one tidal cycle is small ("Tides and landform acceleration" under "Notes") | `fn_sw`, `fn_tide`, `morfac` |
 | Landform change is much slower than the flow | The amount of landform change is multiplied by morfac to shorten the time | `morfac` |
 
 Secondary flow (the flow that deepens the outer bank of a meander, `f_secflow`) is not used. The
@@ -396,9 +396,11 @@ sine, a measure for this example.)
   trough at the foot of the coast (bed around −1.1 m), at 0.7–0.8 m/s at low tide.
 - **The deposit spreads along the coast**: the flow running along the coast at every low tide carries
   sand, so the sand body spreads over the full width of the domain, and a little over 20 % of the sand
-  fed leaves through the north and south sides (treated as if the same coast continued outside). The
-  offshore extent is 60 % of that of notide. At mean tide only the island of the mouth bar is land,
-  but at low tide 36.7×10³ m² of flats appear.
+  fed leaves through the north and south sides (treated as if the same coast continued outside). This
+  sand left around the low tides of the 4th and 5th tidal cycles (almost none before that), and the check
+  in stage 7 (a run with half the morfac) suggests that the amount depends on morfac. The offshore
+  extent is 60 % of that of notide. At mean tide only the island of the mouth bar is land, but at low
+  tide 36.7×10³ m² of flats appear.
 - **Still river-dominated**: the channel is narrow and its banks are higher than high tide, so little
   water is stored by the tide upstream of the mouth, and the discharge at the mouth stays at
   29–31 m³/s without reversing. The tidal discharge in and out of the flats is also 14 % of the
@@ -456,7 +458,8 @@ reference with the same river and no tide (morfac 1000).
 
 (Totals computed as in the table of stage 6. The sand body and the emerged land of tidedom exclude the
 channel stretching offshore and its levees described below; including them gives 412 m offshore and
-30.2×10³ m² of emerged land.)
+30.2×10³ m² of emerged land. The amount of sediment leaving through the north and south sides depends
+strongly on morfac; see "Check with half the morfac" below.)
 
 - **The tidal exchange exceeds the river**: the tidal discharge in and out of the flats on top of the
   delta (πP/T, the same measure as in stage 6) is 4.9 m³/s, 1.6 times the river (3 m³/s); in tide it
@@ -470,8 +473,9 @@ channel stretching offshore and its levees described below; including them gives
 - **Channels at ebb and low tide**: at ebb and low tide the river water and the water draining from
   the flats gather in channels cut along the foot of the coast and into the flats (at the falling mean
   tide the median speed in the channels is 0.48 m/s, at most 1.0 m/s) and leave mainly through the
-  north side (7.6 m³/s at low tide, 2.5 times the river). About 30 % of the sand fed leaves through
-  the north and south sides with this flow.
+  north side (7.6 m³/s at low tide, 2.5 times the river). About 30 % of the sand fed left through
+  the north and south sides with this flow, but this amount depends strongly on morfac (see "Check
+  with half the morfac" below).
 - **The flood does not move sand**: on the rising tide (at mean tide) the water in the channels hardly
   moves (median speed 0.02 m/s), and the sea spreads slowly over the flats from offshore (the speed over
   the flats is 0.07 m/s or less in 90 % of the cells, and exceeds 0.25 m/s in less than 1 %). Sand moves
@@ -500,7 +504,29 @@ channel stretching offshore and its levees described below; including them gives
   coast), and with morfac 240 half a tidal cycle of ebb corresponds to 1500 h of landform time, during
   which the channel and levees grow fully (in tidedom the limit `fluv_dzmax` on one landform update
   acted on 11,440 edges; in tide it never acted). This channel is not a bar elongated by tidal
-  currents.
+  currents. With morfac 120 this channel does not form (next item).
+- **Check with half the morfac**: a run with morfac 120 (`morfac` 120 and `tt` 268272 in
+  param_tidedom.txt: 6 tidal cycles, 8942 h of landform time; the length limit of the tide table does not
+  allow reaching 14900 h) was compared with tidedom at the same landform time (3 tidal cycles). The
+  flats on top of the delta (45.0×10³ m²; 35.9×10³ m² in tidedom), the weak flow on the rising tide (the
+  speed over the flats is 0.03 m/s or less in 90 % of the cells) and the fast channels at ebb and low
+  tide (at most 1.2 m/s) appear in the same way, and the tidal discharge in and out of the flats is
+  1.5 times the river (1.2 times in tidedom). On the other hand, the channel stretching offshore and its
+  levees do not form (on the rows along the extension of the channel, the bed rises by less than 0.1 m
+  offshore of x = 450 m), and the sand leaving through the north and south sides is 5 % of the sand fed
+  (27 % in tidedom). Of the sand that left tidedom through the sides by 8942 h, 80 % left in a single
+  event in the second half of the ebb of the third tidal cycle (the quarter cycle from the falling
+  mean tide to low tide, 745 h of landform time): sand cut from the river channel and the channels along
+  the coast was carried by a channel along the coast to the south side. Three quarters of the 31 % of
+  the table come from this event and one more that carried sand to the north side at the same time of
+  the fifth tidal cycle. Both runs have changes in which the bed is cut by 1.5 to 2 m in a quarter
+  cycle and the sand settles elsewhere; what differs is whether the cut sand leaves through the sides.
+  Read the
+  channel stretching offshore and the amount of sediment leaving through the north and south sides as
+  values that depend strongly on morfac. That flats form, and the difference between the flows on the
+  rising and the falling tide, are the same with half the morfac (the area of the flats differs by
+  25 %). Whether morfac 120 is low enough has not been checked, since there is no run with a still
+  lower morfac.
 
 ![Flow in the last cycle](figs/tidedom_phases.png)
 
@@ -603,9 +629,13 @@ Arranged as in the figure of stage 6. Except while the river water fills the cha
   landform change in one tidal cycle is small (Roelvink 2006). As a compromise with the computing time,
   the tidal cases of this example keep morfac at 24 (240 in tidedom, whose sediment is 1/10) and solve
   5 tidal cycles. The sand that enters in one tidal cycle is a quarter of the sand of the final delta of
-  tide, so the landform change in one cycle cannot be called small. Read the details of places whose
-  landform changes greatly at every low tide (such as the channel stretching offshore in stage 7) as
-  depending on morfac. The references without tide have a steady flow, so they see the same landform
+  tide, so the landform change in one cycle cannot be called small. In the check of tidedom with
+  morfac 120 (stage 7), the flats and the difference between the flows on the rising and the falling
+  tide appeared in the same way, but the channel stretching offshore did not form, and the sand leaving
+  through the north and south sides fell from 27 % to 5 % of the sand fed at the same landform time of
+  8942 h. Read the details of the landform and the amount of sediment leaving through the north and
+  south sides as values that depend on morfac (the 22 % of tide also left around the low tides of the
+  4th and 5th tidal cycles). The references without tide have a steady flow, so they see the same landform
   time with the cheaper morfac 100 (1000 in smallq).
 - **How the tidal cases are compared**: the output is every quarter of a tidal cycle (rising mean tide,
   high tide, falling mean tide, low tide). The extent of land changes with the tide level, so the
@@ -662,7 +692,8 @@ deviation between realizations.
 - Tides → the tidal range and period are `ATIDE` and `TM2` in make_init.py (remake tide_m2.txt). The
   strength of the tide relative to the river is changed by the river discharge and sediment
   (`inflow_val`, `inflow_qb`; stage 7). Change `morfac` along with them so that the landform change in
-  one tidal cycle stays small.
+  one tidal cycle stays small (as a compromise with the computing time, the morfac of this example does
+  not meet this condition; "Tides and landform acceleration" under "Notes").
 
 ## References
 
