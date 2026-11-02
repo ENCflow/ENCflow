@@ -11771,9 +11771,10 @@ V_max 2.83 m/s。いずれも §68.42 の値と同等)。全検定の逐次回�
 cell_ok でない面だけで、検定ケースには現れない)。Step 5 の Log も §68.42 の値と表示桁で同一。
 -fcheck=all(debug ビルド、np=2): Step 5 は 6 h 完走(h_max 28.7803 m、V_max 4.9946 m/s)、12 h の池も
 完走(h_max 34.3767 m、V_max 2.8254 m/s)で §68.42 の記録と同一、実行時エラー・クーラン数超過なし。
-MPI(Run_MPI.sh を np=1, 2, 4 で実行): dambreak は np=1, 2, 4 とも reference と同一、sublattice は
-np=1, 2, 4 とも逐次結果とビット一致、uniflow は np=1, 2 で PASS(np=4 と tide・culvert・chichibu・
-sedfeed・gwseep・wave・coastal_drain・inflowadv は実行中。完了後に追記)。
+MPI(Run_MPI.sh を np=1, 2, 4 で実行。§68.42 と同じ 11 ケース): dambreak・tide・culvert・chichibu・
+gwseep(wq.csv も)・wave・coastal_drain は np=1, 2, 4 とも reference と同一、sublattice は np=1, 2, 4 とも
+逐次結果とビット一致、sedfeed・uniflow・inflowadv は np=1, 2, 4 とも検定 PASS(bendloss には Run_MPI.sh が
+なく逐次のみ)。
 
 ## 69. 非静水圧(1 層 NH)拡張の設計決定(2026-10-05 合意。実装は段階的)
 
