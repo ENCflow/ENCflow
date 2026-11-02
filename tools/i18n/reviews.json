@@ -1616,20 +1616,20 @@
     {
       "source": "examples/tsunami_town/README.md",
       "target": "examples/tsunami_town/en/README.md",
-      "source_sha256": "a559b068a6291b2e814083c9d1cc414ec3b6be13a43b297085da53caaae16de1",
-      "target_sha256": "23f982398bc319923181deb94ce77b73f448743dc75efaf5538dcb76fb760602",
-      "reviewer": "Claude (Claude Code session; example reruns with f_opening_dynamic default 3)",
+      "source_sha256": "1483cee4d40fb76dd5c219fb5b3dc9c6cac2b77aed1ad45d53b935300a7c7eae",
+      "target_sha256": "3b9e4a35ddb0eaaec29a8f6eeee9e80f0483ba766515d9ae1689fe8d6e1f433a",
+      "reviewer": "Claude (assistant)",
       "method": "assistant",
-      "reviewed_on": "2026-10-31"
+      "reviewed_on": "2026-11-02"
     },
     {
       "source": "examples/tsunami_town/figs/maps.png",
       "target": "examples/tsunami_town/en/figs/maps.png",
-      "source_sha256": "c6a0aa9396cb1260189ddab273059fce3555766f5adbb244c3b3f830f5ae5694",
-      "target_sha256": "0bd177f40fe62c8f0e0268eea9cd4a6fa05b6ff128c896c4ad777fe93a90795e",
-      "reviewer": "Claude (Claude Code session; example reruns with f_opening_dynamic default 3)",
+      "source_sha256": "98dd9ce33777fac128f425415f638cd93fe8de83ccfaa186b58a71e92c5d7090",
+      "target_sha256": "be1a4bb93112a9c61b208af621e569e3a4d46cd3fa276db99877dcb6997d6248",
+      "reviewer": "Claude (assistant)",
       "method": "assistant",
-      "reviewed_on": "2026-10-31"
+      "reviewed_on": "2026-11-02"
     },
     {
       "source": "examples/tsunami_town/figs/mechanism.png",
@@ -1643,11 +1643,11 @@
     {
       "source": "examples/tsunami_town/figs/series.png",
       "target": "examples/tsunami_town/en/figs/series.png",
-      "source_sha256": "c02f90403da3216cbad1a86dbfb150e687ca9490b710702de54d350562d9bf5f",
-      "target_sha256": "5991919f81ba2087f58cf097c757b420076568955636a27cf86e9f0043ceacbf",
-      "reviewer": "Claude (Claude Code session; example reruns with f_opening_dynamic default 3)",
+      "source_sha256": "3c4c217c07682eca182cd245aff613475ca14c848574a97b50f490ae4f5367c1",
+      "target_sha256": "bf117eeee3099d85ba4b477e9057c7efcb03a7c3064bd0d057d1dcf5810e8f4b",
+      "reviewer": "Claude (assistant)",
       "method": "assistant",
-      "reviewed_on": "2026-10-31"
+      "reviewed_on": "2026-11-02"
     },
     {
       "source": "examples/tsunami_town/figs/setup.png",
@@ -1661,20 +1661,20 @@
     {
       "source": "examples/tsunami_town/figs/supp_damage.png",
       "target": "examples/tsunami_town/en/figs/supp_damage.png",
-      "source_sha256": "f11e471f1e2df84f41f822d45c1bde8d3ab55102799ffe21ca6e2d70606b4494",
-      "target_sha256": "6a770bba18fee11e264408cb97f8e0c085ca86bfce60e53ccbaef44a8eff6347",
-      "reviewer": "Claude (Claude Code session; example reruns with f_opening_dynamic default 3)",
+      "source_sha256": "a8281c6d162dede660f35556f2c30b50dfd24f0cb5886d61ad54b497b6a9a7ae",
+      "target_sha256": "d4f03625c15f543e5295a9d7ef1163e2a176a4814cc40fcf18df82eb3869ed21",
+      "reviewer": "Claude (assistant)",
       "method": "assistant",
-      "reviewed_on": "2026-10-31"
+      "reviewed_on": "2026-11-02"
     },
     {
       "source": "examples/tsunami_town/figs/supp_ledger.png",
       "target": "examples/tsunami_town/en/figs/supp_ledger.png",
-      "source_sha256": "9a1ed149ee1416540184ec9e0fadd5534a741ae36dd2ed2ca2e38dc1c4c7c131",
-      "target_sha256": "ed64e9a55cc8d23b9eadf247b4a3c47766dea03afe6ea54b4f1ea9640266be26",
-      "reviewer": "Claude (Claude Code session; example reruns with f_opening_dynamic default 3)",
+      "source_sha256": "c2a8e9e3a46aa7f00f7eba3b330afd01a0cd67a0842759a77fd4c0e82d1d4b74",
+      "target_sha256": "4e73881ec2239934862df8302364ce4e83218d18849925f05f20e1b246a99e57",
+      "reviewer": "Claude (assistant)",
       "method": "assistant",
-      "reviewed_on": "2026-10-31"
+      "reviewed_on": "2026-11-02"
     },
     {
       "source": "examples/vz_tani2023/README.md",
