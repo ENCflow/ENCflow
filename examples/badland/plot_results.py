@@ -249,7 +249,7 @@ if main is not None:
     ax[0].hist(Sf[land], bins=bins, histtype="step", color="C3", label=T("最終", "final"), density=True)
     ax[0].set_xlabel(T("勾配 |∇z|", "slope |∇z|")); ax[0].set_ylabel(T("頻度密度", "probability density")); ax[0].legend(fontsize=8); ax[0].set_title(T("勾配の分布(陸)", "Slope distribution (land)"), fontsize=9)
     im = ax[1].imshow(np.clip(Kf, -3, 3), origin="lower", extent=ext, cmap="RdBu", vmin=-3, vmax=3)
-    ax[1].set_xlim(30, 100); ax[1].set_title(T("最終の曲率 ∇²z (1/m)(青: 稜線 = 凸、赤: 谷 = 凹)", "Final curvature ∇²z (1/m) (blue: ridge, red: valley)"), fontsize=9); fig.colorbar(im, ax=ax[1], shrink=0.8)
+    ax[1].set_xlim(30, 100); ax[1].set_title(T("最終の曲率 ∇²z (1/m)(赤: 凸 = 稜線、青: 凹 = 尾根の裾と谷)", "Final curvature ∇²z (1/m) (red: convex = ridge, blue: concave = foot / valley)"), fontsize=9); fig.colorbar(im, ax=ax[1], shrink=0.8)
     im = ax[2].imshow(np.log10(np.maximum(acc, 1)), origin="lower", extent=ext, cmap="Blues")
     ax[2].set_xlim(30, 100); ax[2].set_title(T("最終地形の D8 集水面積 log10(セル数)", "D8 drainage area (final), log10 cells"), fontsize=9); fig.colorbar(im, ax=ax[2], shrink=0.8)
     # 稜線の鋭さ: 崖面帯の列ごとの稜線(局所最大)の曲率
