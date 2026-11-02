@@ -9,6 +9,8 @@
   main_series.png   主ケースの時系列(起伏・卓越波長・下刻・谷頭の後退・排出量)
   main_features.png 主ケースのバッドランド的特徴(勾配の分布・稜線の鋭さ・D8 流域網)
   spacing.png       谷間隔の選択則(spl_lc 系列と格子の κ)と格子収束(Δx = 0.5/1/2)
+数表(標準出力): 主ケース、谷間隔の選択則と格子収束、補足の崖の崩落(param_rockfall.txt。
+  結果があれば。崖面帯の指標は主ケースの時系列と同じ定義)
 
 依存: numpy, matplotlib(scipy は使わない)
 """
@@ -73,9 +75,11 @@ def load_case(param_fn):
     if not snaps or snaps[-1][0] < tgeo_end:
         snaps.append((tgeo_end, zf))
     log = ""
-    for cand in ("Screen.log", os.path.join(res, "Screen.log")):
+    tag = os.path.basename(param_fn)[:-4].replace("param", "", 1).lstrip("_")   # param.txt → "", param_rockfall.txt → rockfall
+    for cand in ("Screen_%s.log" % tag if tag else "Screen.log", os.path.join(res, "Screen.log")):
         if os.path.exists(cand):
             log = open(cand, errors="ignore").read()
+            break
     hp = float(np.loadtxt(os.path.join(res, "Z0000.txt")).max())
     return dict(name=os.path.basename(param_fn)[:-4], p=p, dx=dx, hp=hp, lc=float(p.get("spl_lc", 0)),
                 snaps=snaps, z0=snaps[0][1], zf=zf, log=log)
@@ -353,4 +357,30 @@ if cases:
         ax[1, 2 + k].set_xlim(20, 60); ax[1, 2 + k].set_ylim(0, 120); ax[1, 2 + k].set_title("spl_lc = 2 m, Δx = %g m, T_geo = %.1e s" % (c["dx"], ts), fontsize=9)
     ax[1, 1].set_title(T("格子収束(spl_lc = 2 m)", "Grid convergence (spl_lc = 2 m)"), fontsize=9)
     fig.tight_layout(); fig.savefig(f"{FIGDIR}/spacing.png", dpi=110); plt.close(fig)
+
+# ---------------------------------------------------------------- 補足: 崖の崩落(param_rockfall.txt)
+rf = load_case("param_rockfall.txt")
+if main is not None and rf is not None:
+    def last_float(pat, text):
+        v = re.findall(pat, text)
+        return float(v[-1]) if v else float("nan")
+    rr = []
+    for c in (main, rf):
+        mf = metrics(c["zf"], c["z0"], c["dx"], c["hp"])     # 崖面帯の定義は主ケースの時系列と同じ
+        fht = os.path.join(c["p"]["dir_result"], "Ht9998.txt")
+        talus = float(np.loadtxt(fht).sum()) * c["dx"] ** 2 if os.path.exists(fht) else float("nan")
+        rr.append(dict(vout=last_float(r"exported sediment volume =\s*([\d.Ee+-]+)", c["log"]),
+                       vmove=last_float(r"rockfall moved\s+([\d.Ee+-]+)", c["log"]),
+                       vsea=last_float(r"rockfall exported to sea cells =\s*([\d.Ee+-]+)", c["log"]),
+                       talus=talus, **mf))
+    a, b = rr
+    print("## 補足: 崖の崩落(param_rockfall.txt)")
+    print("| 量(T_geo = %.1e s) | 主ケース | 崩落あり |" % rf["snaps"][-1][0])
+    print("|---|---|---|")
+    print("| 乾式侵食で系外へ出た土砂(固体 m³) | %.0f | %.0f |" % (a["vout"], b["vout"]))
+    print("| 崩落で移した体積(かさ m³、累計)/ うち海へ | – | %.0f / %.0f |" % (b["vmove"], b["vsea"]))
+    print("| 崖錐の総量(m³、最終) | – | %.0f |" % b["talus"])
+    print("| 崖面帯の y 方向の起伏 / 平均低下 (m) | %.2f / %.1f | %.2f / %.1f |" % (a["relief"], a["mean_inc"], b["relief"], b["mean_inc"]))
+    print("| 谷頭の位置 x (m)(台地縁 60 m) | %.1f | %.1f |" % (a["xhead"], b["xhead"]))
+    print()
 print(f"{FIGDIR}/ written")
