@@ -58,11 +58,11 @@
     {
       "source": "docs/comparison.md",
       "target": "docs/en/comparison.md",
-      "source_sha256": "39c060303186a95419c5aadcdb5e5469bb7caf822870a41b822058393f3ac5c3",
-      "target_sha256": "1b202b3cd457b258888d3b3c6f5577bb6524a302fb2d4907e29fb8de1fd17a3c",
-      "reviewer": "Claude (Claude Code session; the default of f_opening_dynamic changed from 2 to 3 on 2026-10-31: the statements of the default and the notes on 2 were updated in the source and the translation together, and the changed parts were compared; rest unchanged since the previous record)",
+      "source_sha256": "b42b1808eba109b547ac21ecd203dc9607ec2b298e90220ae24fa7b5a31bd2d0",
+      "target_sha256": "d88aa22fc539454bb7a5f08fc0a78c42e0e5abf4e8aa2ccbfd923112275aaa9c",
+      "reviewer": "Claude (Claude Code session; the changed delta references (example link, renamed README sections) compared in both languages; the rest is unchanged from the recorded version)",
       "method": "assistant",
-      "reviewed_on": "2026-10-31"
+      "reviewed_on": "2026-11-02"
     },
     {
       "source": "docs/developer.md",
@@ -266,11 +266,11 @@
     {
       "source": "docs/users_guide/geomorph.md",
       "target": "docs/en/users_guide/geomorph.md",
-      "source_sha256": "4cf8afdb178186ba49eea756dc312590e36dd501dbb1fbe462301dd425a8201e",
-      "target_sha256": "c5e9850fdfa96ee043b53d3dd508f754298a38b6ec883d2511d8abfa04139c3b",
-      "reviewer": "Claude (Claude Code session; the default of f_opening_dynamic changed from 2 to 3 on 2026-10-31: the statements of the default and the notes on 2 were updated in the source and the translation together, and the changed parts were compared; rest unchanged since the previous record)",
+      "source_sha256": "ed72e59727f958ee88a5fa35862565e2ff314e61fb1d9dbae5eb2b279a694a49",
+      "target_sha256": "d21c03fc72f38e81309c50aff06e1f5f8c683a778691b4260087e808d439b2cb",
+      "reviewer": "Claude (Claude Code session; the changed delta references (example link, renamed README sections) compared in both languages; the rest is unchanged from the recorded version)",
       "method": "assistant",
-      "reviewed_on": "2026-10-31"
+      "reviewed_on": "2026-11-02"
     },
     {
       "source": "docs/users_guide/glacier.md",
@@ -482,9 +482,9 @@
     {
       "source": "docs/users_guide/usecases.md",
       "target": "docs/en/users_guide/usecases.md",
-      "source_sha256": "e632bf6ba202ef08bd6a630cf58e76d7b8ba8d430219a8dcbac38eb8c65c5dbd",
-      "target_sha256": "3c76e477877d3e46268fde0a6777b898fa5b69866839379da0aeb7af509d5ab4",
-      "reviewer": "Claude (Claude Code session; Japanese source and English mirror written together and compared section by section, tables and numbers checked; no model execution)",
+      "source_sha256": "e0d4bb580287eb9b93d8db88d34e35d33caafab5bb6698b0a09dca52a87f6af9",
+      "target_sha256": "a464e34d3a58b77af13ad9e406143dcae6f27b3453f2eaba7cbbe7c4bda2013a",
+      "reviewer": "Claude (Claude Code session; the changed delta references (example link, renamed README sections) compared in both languages; the rest is unchanged from the recorded version)",
       "method": "assistant",
       "reviewed_on": "2026-11-02"
     },
@@ -509,11 +509,11 @@
     {
       "source": "docs/users_guide/wavefield.md",
       "target": "docs/en/users_guide/wavefield.md",
-      "source_sha256": "a0b326d96278cdc8e199ce6b7377f34c6b975e1b7b3899ae17c8b8b742999873",
-      "target_sha256": "b7ba4990b4f493bdc0efec8b51b95130cd3c6933c084d01abde9d3d88d05eff3",
-      "reviewer": "Claude (Claude Code session; reviewed the changed sections (added reference sections, footnotes and citation markers) of the Japanese source against the English mirror, 2026-10-30)",
+      "source_sha256": "69e11b4a844d1938eca19dd42ed15bc771d5cbffedf199ff18be4fdcfb240c7c",
+      "target_sha256": "d1b51d8673ec2f66983334d0eafb67556c4d195ae7e98c84ae760f8bd7a482d6",
+      "reviewer": "Claude (Claude Code session; the changed delta references (example link, renamed README sections) compared in both languages; the rest is unchanged from the recorded version)",
       "method": "assistant",
-      "reviewed_on": "2026-10-30"
+      "reviewed_on": "2026-11-02"
     },
     {
       "source": "docs/users_guide/wavefield_models.md",
@@ -806,9 +806,9 @@
     {
       "source": "examples/README.md",
       "target": "examples/README.en.md",
-      "source_sha256": "44f7c0e195044e590318a7daea9e38c65acc6a1ba799e30ae950e233dec66b56",
-      "target_sha256": "88d6eff7c14080dc0a89225c0eb4ac43de598fb8be2ec309bf15ceab94592ac7",
-      "reviewer": "Claude (Claude Code session; merge of main's shortened table into the documentation branch: the tower_karst row rewritten in both languages (no wall retreat within 6000 years, per the recomputed example) and compared; other rows are main's reviewed text)",
+      "source_sha256": "d8ebe96b19ed976e30e75899157d913c4341915a0b584ea6a43ae0978982ac11",
+      "target_sha256": "dc0ce164690958768993e28f1958b30fa0769b33e64ca3d8d62870e58a09df7d",
+      "reviewer": "Claude (Claude Code session; the changed delta references (example link, renamed README sections) compared in both languages; the rest is unchanged from the recorded version)",
       "method": "assistant",
       "reviewed_on": "2026-11-02"
     },
@@ -1310,11 +1310,29 @@
     {
       "source": "examples/delta/README.md",
       "target": "examples/delta/en/README.md",
-      "source_sha256": "9d9c1d58d90bf9330dea63f88ddfc2baaebd5bb4a265444e508c3277fac5ad58",
-      "target_sha256": "c6117e1dfc9b4e3305c353a6772c2be1a03892c46a7c8cefed0e0ce86d4f8679",
-      "reviewer": "Claude (Claude Code session; full-text content and lexical review, no model execution)",
+      "source_sha256": "882c05bb0152a9dcad64b04b081263f8f8d5f06eb6dec9e9360c644ad571b0cf",
+      "target_sha256": "7a8fce3b2907639394f0bb614e9bf10d47fc17b3eb7f0ff485663ae835093c7e",
+      "reviewer": "Claude (Claude Code session; README rewritten in both languages to the estuary_barrage/levee_breach structure and compared section by section, tables, numbers and links checked; no model execution)",
       "method": "assistant",
-      "reviewed_on": "2026-10-29"
+      "reviewed_on": "2026-11-02"
+    },
+    {
+      "source": "examples/delta/figs/mechanism.png",
+      "target": "examples/delta/en/figs/mechanism.png",
+      "source_sha256": "c9bc3ea200a4bec52e48d3ba2d93d9c97c33effa2273e681ec5a85408414bd45",
+      "target_sha256": "5626e7b251f99cc507e019722bac1aadfa5e60eb27b3c051aa7f6dda86e011da",
+      "reviewer": "Claude (Claude Code session; schematic and set-up figures drawn by the same plot_results.py code with only the labels switched by the en argument; images compared visually; no model execution)",
+      "method": "assistant",
+      "reviewed_on": "2026-11-02"
+    },
+    {
+      "source": "examples/delta/figs/setup.png",
+      "target": "examples/delta/en/figs/setup.png",
+      "source_sha256": "e3360ded594b1a1daf026a251b6bf7ff3d5c53ab48a3c2ae94c2691c0c7556df",
+      "target_sha256": "1dadc0b897d98f313ce202d801cf6558f1b0f336b4a5fe73b6174cf4ee468c9c",
+      "reviewer": "Claude (Claude Code session; schematic and set-up figures drawn by the same plot_results.py code with only the labels switched by the en argument; images compared visually; no model execution)",
+      "method": "assistant",
+      "reviewed_on": "2026-11-02"
     },
     {
       "source": "examples/delta/figs/wfsed_evolution.png",

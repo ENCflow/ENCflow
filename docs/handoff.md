@@ -112,7 +112,12 @@ architecture.md。このメモは「現在進行中・未完了の項目」だ�
      (plot_results.py は fig_<case>_*.png を描く別物)。生成元を特定するか、
      英語図は保留のまま日本語図を共有し続けるかの判断待ち。2026-10-28 に足した波浪場の
      ケース(wfsed)の図 2 枚は plot_results.py の出力(`python3 plot_results.py wfsed [en]`)で、
-     英語図を en/figs に置いた。
+     英語図を en/figs に置いた。2026-11-02 の README の組み直し(00d)で、機構の模式図 mechanism.png と
+     設定の図 setup.png を plot_results.py の `mechanism`・`setup`(計算結果を使わない。`en` で英語版)で
+     描けるようにし、英語図を en/figs に置いた。figs/ の `<ケース>_evolution.png`・`_final.png` は
+     plot_results.py と同じ形式(wave 系は低い dpi)。比較図 5 枚(sandmud・sandmud_timeseries・
+     fixation・wave_cmp・ensemble)と、汀線半径・分流路の本数・南北の非対称の集計のスクリプトは
+     ないまま(README に明記)。
    - **解決(2026-11-02)**: badland_storm の差分地図の題(スクリプト「青: 表面流で余計に削れた」と
      README「青 = 対照の方が深く削れた」の不一致)は、コード上 z(表面流) − z(対照) を RdBu(正 = 青)で
      描いているので README が正しい。plot_storm.py の題だけを直した(図 maps*.png は描き直すまで
@@ -261,6 +266,24 @@ architecture.md。このメモは「現在進行中・未完了の項目」だ�
      解像度依存、プルーム浮力・波浪・潮汐流・圧密、実デルタ指標との照合)。
    - 区間流入のエッジの扱いは既定(f_inflow_edge = 0)のままなので、§68.40 の改定(2026-10-29〜30)に
      よる回し直しは要らない(00)。
+   - **README の組み直し(2026-11-02、利用者の依頼)**: examples/delta の README(日英)を estuary_barrage・
+     levee_breach と同じ構成(実際のデルタで起きていること → 再現に必要な機構(デルタの型ごとに加える
+     機構の表と、現象と機構の対応表)→ 幾何と設定 → 結果を段 1〜5(波なし → 砂泥比 → 出水と植生 →
+     CERC 型の波 → 波浪場)の順に → 表せないこと → 注意 → 感度実験 → 参考文献)にし、開発の経緯
+     (試行の表・旧設定の発散の記述・節番号)を除いた。param と make_init.py の注釈も同様に整理
+     (注釈を除いた中身と入力は不変を確認)。関連文書(geomorph・wavefield・usecases・comparison・
+     examples/README。日英)の参照を追随。残り:
+     (i) 潮汐卓越型のケースは無い(README の型の表で「確かめていない」)。作るなら沖に海域マスクの帯
+     + fn_tide、morfac と潮汐周期の関係(水理 15〜24 h に数周期を入れる)を先に決める。
+     (ii) 数表と図は 2026-10-20〜29 の版の計算で、§68.42・§68.43(運動量保存形移流の側方面)の後に
+     計算し直していない(f_opening_dynamic = 2 を明示しているので既定の切り替えの回し直しの対象外
+     だったが、側方面の修正は 2 にも効く)。README に版を明記した。計算し直すときは比較図の
+     解析スクリプト(00g)を先に整える。
+     (iii) figs/sandmud.png の題の砂の割合(50 %・13 %)は README の表(57 %・15 %。入った量から)と
+     違う(題は砂の供給を 0.0045 m³/s と置いた概算と一致)。README に注記。図を作り直すときにそろえる。
+     (iv) wave の比較表の「南北の非対称」は定義が記録になく、README から外した(数値は旧 README と
+     developer.md §84.15 に残る)。base の砂:泥「1:1.7」は実績(砂 3.86 万・泥 8.1 万 m³ で約 1:2.1)と
+     合わないので README・param の注釈を実績に直した。
 
 00e. **波浪による沿岸漂砂 fn_wave(2026-10-22。docs/wave_plan.md、§84.15)の残り**
    - 済: 段 1(沖波の CERC 式で砕波帯の沿岸漂砂。test/wave_shore)、河口の流速規則
