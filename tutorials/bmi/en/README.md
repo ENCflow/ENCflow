@@ -238,12 +238,12 @@ python3 step2_time.py               # with B--D (venv / conda / OS packages)
   0:00:00.00   0.0%    0.0001   0.0%      0    0.1097    1.3650    0.0000
 after update():       t = 6 s
 after update_until(): t = 600 s
-  0:30:00.00   8.3%    0.0488  97.6%      8    0.3493    2.0851    9.0955
+  0:30:00.00   8.3%    0.0488  97.6%      8    0.3341    2.0851    8.7379
 t =    2400 s  (11.1%)
-  1:00:00.00  16.7%    0.0999   0.9%      0    0.6065    8.3520   16.2870
+  1:00:00.00  16.7%    0.0999   4.5%      0    0.5899    8.1756   15.6383
 t =    4200 s  (19.4%)
   ...
-  6:00:00.00 100.0%    0.0274   0.3%     82    0.3577    4.2847    7.5987
+  6:00:00.00 100.0%    0.0280   0.5%     80    0.3652    4.4780    7.7747
 t =   21600 s  (100.0%)
 main: program terminated normally
 finished
@@ -322,20 +322,20 @@ variables you can get:
 elevation: 92 .. 2449 m
 probe cell (i=147, j=104) -> h[46, 146],  z = 400.7 m
  time(s)   h_probe(m)   h_max(m)   wet cells
-    1800       0.494      1.522       16687
-    3600       1.397      8.240        8901
-    5400       4.761      8.103        3531
-    7200       4.104      7.989        2478
-    9000       3.525      8.320        2006
-   10800       2.483      8.841        1748
-   12600       1.862      8.966        1563
-   14400       1.613      7.895        1436
-   16200       1.386      6.972        1343
-   18000       1.239      5.096        1268
-   19800       1.115      4.353        1196
-   21600       1.023      3.851        1150
+    1800       0.494      1.515       16687
+    3600       1.380      8.176        8895
+    5400       4.892      8.359        3527
+    7200       4.146      8.174        2476
+    9000       3.573      8.267        2001
+   10800       2.422      8.937        1749
+   12600       1.872      9.146        1559
+   14400       1.629      8.201        1435
+   16200       1.390      7.280        1346
+   18000       1.241      5.280        1269
+   19800       1.116      4.480        1198
+   21600       1.023      3.933        1149
 ```
-(ENCflow's own lines every 30 minutes are omitted. The values were recomputed on 2026-10-31 with the default f_opening_dynamic = 3; so were the values and figures of Steps 6 and 7)
+(ENCflow's own lines every 30 minutes are omitted. The values were recomputed on 2026-11-02 with the default f_opening_dynamic = 3 and the corrected lateral faces of the momentum-conserving advection (developer.md §68.42, §68.43); so were the values and figures of Steps 6 and 7)
 
 During the rain (up to 3600 s) the number of wet cells reaches 16,687
 (nearly every cell of the catchment); once the rain stops it drops quickly
@@ -538,9 +538,9 @@ python3 step6_rain.py               # with B--D (venv / conda / OS packages)
 run A: rain from param.txt
    set(VAR_PRECIP) refused as expected: BMI set_value(atmosphere_water__precipitation_leq-volume_flux) failed (status=1)
 run B: rain supplied from Python (uniform)
-   max |h_B - h_A| = 5.329e-15 m
+   max |h_B - h_A| = 2.665e-15 m
 run C: rain only on the western half
-   max h: A = 3.85 m,  C = 3.22 m
+   max h: A = 3.93 m,  C = 3.27 m
 ```
 
 Three runs are executed in sequence (ENCflow holds one model per process,
@@ -612,9 +612,9 @@ python3 step7_roughness.py          # with B--D (venv / conda / OS packages)
 ```
 probe cell (i=147, j=104)
  n factor   peak h (m)   time of peak
-    1.0        4.787         87 min
-    1.5        5.010         95 min
-    2.0        5.261        107 min
+    1.0        4.898         88 min
+    1.5        5.042         97 min
+    2.0        5.264        108 min
 ```
 
 - `get2d(VAR_MANNING_N)` returns the roughness field currently in effect

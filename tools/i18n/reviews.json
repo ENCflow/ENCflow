@@ -3173,11 +3173,11 @@
     {
       "source": "tutorials/bmi/README.md",
       "target": "tutorials/bmi/en/README.md",
-      "source_sha256": "f7e0743ca99980496bef13939b8c40603dfa0de48f1911d98bd039d55863bed3",
-      "target_sha256": "840cd6d0516379f4347e93364e4fa29e0fa5e0039346e0074e55fb14c3505b79",
-      "reviewer": "Claude (Claude Code session; example reruns with f_opening_dynamic default 3)",
+      "source_sha256": "aa22596dbbf2c3312ab72e7a063e30914196a8be0a4de540e1277f53a214f645",
+      "target_sha256": "3be05d85dc4cf683775c9f63b61132e79dc30f874645e9563d1a8c7b2a5b28df",
+      "reviewer": "Claude (assistant)",
       "method": "assistant",
-      "reviewed_on": "2026-10-31"
+      "reviewed_on": "2026-11-02"
     },
     {
       "source": "tutorials/bmi/param.txt",
