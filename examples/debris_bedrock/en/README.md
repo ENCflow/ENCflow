@@ -205,6 +205,8 @@ in Japanese). As in the first half, `f_opening_dynamic = 3` is set explicitly, b
 cell across the diagonal neighbours are outside the domain, so the results are the same as with 2.
 The only steady slope that changed is that of size 0.1 m once in 10 years, 0.175 → 0.174.
 
+Recomputed on 2026-11-02 with the default after the correction of the lateral faces of the momentum-conserving advection (developer.md §68.42 and §68.43): the first part (5 cells across) changes only in the third decimal of the tables (the same at the displayed precision; C_b 2.357 → 2.358 cm, W 0.320 → 0.319 cm), and the saves and Logs of the long chain (1 cell across) are bit-identical.
+
 ![Long-term lowering at fixed slopes](figs/long_rate.png)
 
 - **Sediment size 0.1 m**: at every slope and frequency the lowering rate is the same in every cycle

@@ -106,6 +106,8 @@ the lateral supply added).
 The values are from the rerun on 2026-10-28 after the fix of the depth floor of the
 segment-inflow face (developer.md §89.25, in Japanese).
 
+Recomputed on 2026-11-02 with the default after the correction of the lateral faces of the momentum-conserving advection (developer.md §68.42 and §68.43): the outputs of V_a, V_b and V_c are identical (the 1-cell-wide stream has no lateral faces of diagonal edges).
+
 ### Hillslopes: steady soil and a parabolic form
 
 ![Cross-slope profile and soil depth of the hillslopes](figs/valley.png)

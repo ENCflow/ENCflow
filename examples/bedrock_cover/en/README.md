@@ -77,6 +77,8 @@ below did not change at the digits shown (the reach measured starts 30 m
 below the inflow end; the figures are from the earlier run and look the
 same).
 
+Recomputed on 2026-11-02 with the default after the correction of the lateral faces of the momentum-conserving advection (developer.md §68.42 and §68.43): the tables are identical (only two output files differ by one byte of rounding; the 1-cell-wide channel between high banks has no lateral faces of diagonal edges).
+
 ### A Amount of supply: tools and cover
 
 ![Supply ratio, incision rate and cover thickness](figs/supply.png)
