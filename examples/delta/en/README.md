@@ -506,8 +506,8 @@ strongly on morfac; see "Check with half the morfac" below.)
   acted on 11,440 edges; in tide it never acted). This channel is not a bar elongated by tidal
   currents. With morfac 120 this channel does not form (next item).
 - **Check with half the morfac**: a run with morfac 120 (`morfac` 120 and `tt` 268272 in
-  param_tidedom.txt: 6 tidal cycles, 8942 h of landform time; the length limit of the tide table does not
-  allow reaching 14900 h) was compared with tidedom at the same landform time (3 tidal cycles). The
+  param_tidedom.txt: 6 tidal cycles, 8942 h of landform time) was compared with tidedom at the same
+  landform time (3 tidal cycles). The
   flats on top of the delta (45.0×10³ m²; 35.9×10³ m² in tidedom), the weak flow on the rising tide (the
   speed over the flats is 0.03 m/s or less in 90 % of the cells) and the fast channels at ebb and low
   tide (at most 1.2 m/s) appear in the same way, and the tidal discharge in and out of the flats is

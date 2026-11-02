@@ -9,7 +9,7 @@ module list_tide
   public :: list_tide_read
 
   integer, parameter :: maxpathlen = 256
-  integer, parameter :: ntimax = 999
+  integer, parameter :: ntimax = 9999   ! tival の最大点数(4.5 分ごとで M2 の約 60 周期。developer.md §67.1)
 
 
   type t_list_tide

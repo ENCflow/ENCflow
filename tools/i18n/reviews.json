@@ -455,9 +455,9 @@
     {
       "source": "docs/users_guide/tide.md",
       "target": "docs/en/users_guide/tide.md",
-      "source_sha256": "c6c1ffa5ed85af92dced0cedccf193b51b199e3d421509da5d65afab5729cdde",
-      "target_sha256": "ffbff1f3f16d0868facb331e768f4656ac5c806d624f1777613ab89c75b74968",
-      "reviewer": "Claude (Claude Code session; note on water bodies with short natural periods updated with the numbers of all tidal cycles in both languages and compared)",
+      "source_sha256": "8f4f8e9cdb9621dd351a535784b7261681281c6d4adb65de101488b78dd8920c",
+      "target_sha256": "68a3567d48cc589efaa01145c2f4c946180aaf03e8305b356b5f47aac40aef93",
+      "reviewer": "Claude (Claude Code session; tival row gained the 9999-point limit in both languages and compared)",
       "method": "assistant",
       "reviewed_on": "2026-11-02"
     },
@@ -1310,9 +1310,9 @@
     {
       "source": "examples/delta/README.md",
       "target": "examples/delta/en/README.md",
-      "source_sha256": "5e246f2aa8bdf2736e999c32d228326b4115a8e20a4d06c8aa8f205586e5a695",
-      "target_sha256": "557370797804963751cbe1270e4548281449ebeb4a8750b128d350e5b6f46e91",
-      "reviewer": "Claude (Claude Code session; stage 7 morfac check and the morfac caveats added in both languages and compared side by side)",
+      "source_sha256": "4a34a2bbc4edbfa5186b629e7293bfc8c2c09d831fc837d2901ea94124534865",
+      "target_sha256": "b1e9e6f30b6e4d665e11608a97e9a18f6aee5deb6fe6711c9738c63cc4e3e9d8",
+      "reviewer": "Claude (Claude Code session; stage 7 check item no longer cites the old tide table limit, both languages compared)",
       "method": "assistant",
       "reviewed_on": "2026-11-02"
     },
