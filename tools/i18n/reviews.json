@@ -1274,11 +1274,11 @@
     {
       "source": "examples/landslide_tsunami/README.md",
       "target": "examples/landslide_tsunami/en/README.md",
-      "source_sha256": "92aab28b2fce70f2bec52bd389d51e96c67a03dbe5dac6d3390d790607e7943c",
-      "target_sha256": "97245dc8b95c303d66f81ffb86aacc1bdac3d38e53a3e76ccb2cf4007c6c0d81",
-      "reviewer": "Claude (Claude Code session; example reruns with f_opening_dynamic default 3)",
+      "source_sha256": "b094bd6883c7258ce7e5b7b0e58c810391bfccd110feb2b1af77eb1c7fb005a1",
+      "target_sha256": "a295158d145f3d47c88485c2c08fb549394aa2007e778191e5e562d054da905c",
+      "reviewer": "Claude (assistant)",
       "method": "assistant",
-      "reviewed_on": "2026-10-31"
+      "reviewed_on": "2026-11-02"
     },
     {
       "source": "examples/levee_breach/README.md",
@@ -1580,11 +1580,11 @@
     {
       "source": "examples/tsunami_coast/README.md",
       "target": "examples/tsunami_coast/en/README.md",
-      "source_sha256": "8e862176f58f98a88e237c9ef72df8b47a4989a7da23382eecd29058ab105de6",
-      "target_sha256": "e5dc66d4f52df4616f97096dbbbda379a63161f8700f2ebefad05914f62d970c",
-      "reviewer": "Claude (Claude Code session; example reruns with f_opening_dynamic default 3)",
+      "source_sha256": "68b1ff485d108ec3134cf2d463d9124375bdb56bcd138662033481be66ad7491",
+      "target_sha256": "8db49c03995cc400fab29a6bcc44c1993f39a2ad8dd0157ecbdac84e4dc9d55b",
+      "reviewer": "Claude (assistant)",
       "method": "assistant",
-      "reviewed_on": "2026-10-31"
+      "reviewed_on": "2026-11-02"
     },
     {
       "source": "examples/tsunami_coast/figs/deformation.png",

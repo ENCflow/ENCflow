@@ -56,7 +56,7 @@ python3 plot_results.py     # figs/*.png and tables
 
 | Probe | With time history: arrival (min) / max / min (m) | Instantaneous displacement: arrival / max / min | Offshore fault only: arrival / max / min |
 |---|---:|---:|---:|
-| Bay head x = 9 km (depth 4 m) | 18.2 / 4.29 / -1.16 | 18.1 / 4.19 / -1.14 | 25.1 / 3.63 / -0.98 |
+| Bay head x = 9 km (depth 4 m) | 18.2 / 4.29 / -1.17 | 18.1 / 4.19 / -1.14 | 25.1 / 3.63 / -0.99 |
 | Bay mouth x = 20 km | 4.0 / 3.78 / -1.96 | 3.8 / 3.05 / -2.11 | 12.0 / 4.12 / -2.01 |
 | Coast outside the bay (north) y = 65 km | 2.7 / 2.58 / -1.89 | 2.6 / 2.61 / -1.79 | 10.1 / 2.46 / -1.15 |
 | Coast of the southern cape y = 15 km (uplifted area) | 0.5 / 2.68 / -1.98 | 0.5 / 2.73 / -1.89 | 10.1 / 2.51 / -1.17 |
@@ -69,7 +69,8 @@ with the bed does not change the depth, so only the waves and the inflow are
 picked up; at the land probe, the start of flooding). The maximum flood depth on
 the land at the bay head is 2.94 m with time history, 3.02 m instantaneous and
 2.12 m offshore only. The flooded land area is 301 / 299 / 266 km² (recomputed on
-2026-10-31 with the default f_opening_dynamic = 3; developer.md §68.41).
+2026-11-02 with the default f_opening_dynamic = 3 and the corrected lateral faces of the
+momentum-conserving advection; developer.md §68.41–§68.43).
 
 - **With the coastal deformation included, the disturbance at the coast starts
   10 minutes earlier.** With the offshore fault only, the arrival at the coast
