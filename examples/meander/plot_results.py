@@ -53,7 +53,6 @@ CASES = [
     ("result_fixsusp", "Screen_fixsusp.log", "流量変動+定着+浮遊砂", "varying Q + fixation + suspended fines", "#b5641e"),
     ("result_feed", "Screen_feed.log", "非粘着性+容量給砂", "non-cohesive + capacity feed", "#6b6b6b"),
     ("result_fixfeed", "Screen_fixfeed.log", "流量変動+定着+容量給砂", "varying Q + fixation + capacity feed", "#1b7837"),
-    ("result_fixsuspfeed", "Screen_fixsuspfeed.log", "流量変動+定着+浮遊砂+給砂", "varying Q + fixation + fines + feed", "#c51b7d"),
     ("result_fixsuspfines", "Screen_fixsuspfines.log", "流量変動+定着+浮遊砂+給砂+細粒分の帳簿",
      "varying Q + fixation + fines + feed + fines ledger", "#542788"),
 ]
@@ -80,7 +79,7 @@ NAME = {c[0]: (c[3] if EN else c[2]) for c in CASES}
 COL = {c[0]: c[4] for c in CASES}
 PLAN = [d for d in ("result", "result_cohesive", "result_cohesive_slump", "result_varq", "result_fix",
                     "result_fixsusp", "result_feed") if d in NAME]
-FEED = [d for d in ("result_fixfeed", "result_fixsuspfeed", "result_fixsuspfines") if d in NAME]
+FEED = [d for d in ("result_fixfeed", "result_fixsuspfines") if d in NAME]
 
 x = (np.arange(NX) + 0.5) * DX
 y = (np.arange(NY) + 0.5) * DX
@@ -284,7 +283,7 @@ if SER:
     fig, axes = plt.subplots(1, 3, figsize=(15, 4.6))
     for rdir, ser in SER.items():
         a = np.array(ser)
-        ls = "--" if rdir in ("result_fixrec", "result_fixsuspfeed", "result_fixsuspfines", "result_fixfeed") else "-"
+        ls = "--" if rdir in ("result_fixrec", "result_fixsuspfines", "result_fixfeed") else "-"
         for n, ax in enumerate(axes):
             ax.plot(a[:, 0], a[:, n + 1], ls, marker="o", ms=2.5, color=COL[rdir], lw=1.2, label=NAME[rdir])
     for ax, t in zip(axes, (T("河幅(湿潤セルの列平均、m)", "channel width (column mean of wet cells, m)"),

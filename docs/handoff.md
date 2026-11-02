@@ -368,8 +368,8 @@ architecture.md。このメモは「現在進行中・未完了の項目」だ�
      examples/meander の容量給砂の構成が 0 では止まる)。
    - **f_inflow_edge = 2 の例題**: examples/meander(11 構成)と examples/meander_cutoff(6 構成)は
      param で f_inflow_edge = 2 を指定する。2026-11-02 に両方の全構成を今の main の版で回し直し、README を
-     組み直した(developer.md §84.18。meander の param_fixsuspfeed は過給砂で地形 35 h に止まる —
-     「既知の壊れている例題」)。旧 README の「頸部ゾーン」「出入口ゾーン」は頸部・出入口ではなかった
+     組み直した(developer.md §84.18。meander の param_fixsuspfeed は過給砂で地形 35 h に止まるので、
+     利用者の判断で外した)。旧 README の「頸部ゾーン」「出入口ゾーン」は頸部・出入口ではなかった
      ので、README では「低い河岸のゾーン」と呼び替え、出入口ゾーンの指標は廃した(§84.18)。
      delta・estuary_barrage・levee_breach・山地渓流の例題などは既定(0)のままなので回し直しは要らない
      (将来既定を変えるなら、delta の README の汀線半径・分流路数・南北の非対称と比較の図はリポジトリに
@@ -785,15 +785,6 @@ architecture.md。このメモは「現在進行中・未完了の項目」だ�
 
 ## 既知の壊れている例題
 
-- **examples/meander の param_fixsuspfeed.txt(流量変動+定着+浮遊砂の平衡濃度給砂(倍率 1.0)+
-  容量給砂)が止まる(2026-11-02)**: main の §68.42・§68.43 の後の再計算で、最初の出水から過給砂に
-  なり(25 h までに河道の河床が上流から +1.0〜+0.25 m 上がって氾濫原へ溢れる)、地形 35 h(水理
-  42 分)に流入セルの隣が 4.4 m 掘れて流速 18 m/s になり、クーラン数超過で止まる(fluv_dzmax の
-  発動 100 万エッジ)。2026-10-30 の版では最後まで回った。設定ファイルの注釈のとおり、倍率 1.0 は
-  以前から過給砂の側にある際どい設定。選択肢: (a) 過給砂の例として残す(README に止まることを
-  明記済み。`make feed` の途中で STOP 1 が出る)、(b) 設定を外す(細粒分の帳簿を入れた
-  param_fixsuspfines が同じ狙いを倍率 0.5 で達成している)、(c) 倍率を下げる(帳簿なしの 0.5 は
-  河道が −1.3〜−2 m 低下する)。人間の判断待ち(developer.md §84.18)。
 - **examples/benchmark/h-plane の hp10x**: 実行中に FPE で停止する
   (-ffpe-trap 検知。f_rntype=2 廃止の等価変換(2026-08-15)以前からの
   既存問題。hp10 は正常)。原因未調査。

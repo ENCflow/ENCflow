@@ -2,7 +2,7 @@
 #   make        ../../bin/ の実行ファイルへのリンクと入力(make_init.py が z.txt・h.txt・sd.txt・sd_feed.txt を作る)
 #   make run    一定流量の 4 構成(非粘着性・粘着性・粘着性+崩落土塊・容量給砂)を順に計算する
 #   make varq   出水と低水を繰り返す 4 構成(流量変動のみ・定着・緩い減水期・定着+浮遊砂)
-#   make feed   給砂と定着を組み合わせた 3 構成(容量給砂・浮遊砂の平衡濃度給砂・河床の細粒分の帳簿)
+#   make feed   給砂と定着を組み合わせた 2 構成(容量給砂、浮遊砂の平衡濃度給砂+河床の細粒分の帳簿)
 #   make clean  リンクと生成物を削除する
 
 TOPDIR	= ../..
@@ -10,7 +10,7 @@ BINDIR	= $(TOPDIR)/bin
 SRCDIR	= $(TOPDIR)/src
 RUN	= cohesive cohesive_slump feed
 VARQ	= varq fix fixrec fixsusp
-FEED	= fixfeed fixsuspfeed fixsuspfines
+FEED	= fixfeed fixsuspfines
 
 all: links inputs
 
