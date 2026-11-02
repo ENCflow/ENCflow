@@ -80,7 +80,8 @@ fig.tight_layout(); fig.savefig(f"{FIGDIR}/series%s.png" % SUF, dpi=110); plt.cl
 
 # ---- 地図 ----
 names = [n for n in ("dry", "storm") if n in cases]
-picks_t = [1.8e6, 4.5e6, 9.0e6]
+tend = min(cases[n]["snaps"][-1][0] for n in names)
+picks_t = [tend / 5, tend * 2 / 5, tend]   # 25 周期なら 5・10・25 周期目(T_geo 9e5・1.8e6・4.5e6 s)
 fig, axes = plt.subplots(len(names) + 1, len(picks_t), figsize=(4.6 * len(picks_t), 4.2 * (len(names) + 1)))
 axes = np.atleast_2d(axes)
 for r, name in enumerate(names):
