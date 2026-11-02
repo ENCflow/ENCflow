@@ -456,7 +456,8 @@ def tide_metrics(rdir, pfile_, lch=150.0, mouth_q=30.0):
     m["land"] = land.sum() * dx * dx
     m["advance"] = ((xx[None, :] * land).max() - lch) if land.any() else 0.0
     built = sea & (dz > 0.05)
-    foot = sea & (dz > 0.5)                                         # 堆積 0.5 m 以上の範囲(デルタの本体)
+    sand_thk = dep - np.minimum(sf, dep)                            # 砂の厚さ(堆積から泥の厚さを除く)
+    foot = sea & (sand_thk > 0.3)                                   # 砂 0.3 m 以上の範囲(デルタの砂の本体)
     if foot.any():
         jj = np.where(foot.any(axis=1))[0]
         m["along"] = (jj.max() - jj.min() + 1) * dx                 # 海岸沿いの長さ
@@ -520,7 +521,7 @@ def tidecmp():
             for a in axs[:, col]:
                 a.set_xlabel("x (m)"); a.set_ylabel("y (m)")
             print("%-8s frame %d: deposit %.0f m3 (sand %.0f, mud %.0f), land(h<0.05) %.0f m2, advance %.0f m, "
-                  "bed>=+1 %.0f m2, -1<bed<+1 %.0f m2, bed>0 %.0f m2, footprint(dz>0.5) along %.0f m x across %.0f m"
+                  "bed>=+1 %.0f m2, -1<bed<+1 %.0f m2, bed>0 %.0f m2, sand body(>0.3 m) along %.0f m x across %.0f m"
                   % (c, nf, mt["deposit"], mt["sand"], mt["mud"], mt["land"], mt["advance"], mt["supra"], mt["inter"],
                      mt["above_msl"], mt.get("along", 0), mt.get("across", 0)))
             if "q_max" in mt:
@@ -574,7 +575,8 @@ def tide_figures(rdir, frames_all, dx, lch=150.0):
             axs[0].plot(a[:, 0], a[:, 2] + a[:, 3], lw=1, label=lab)
     tt_ = np.linspace(0, frames_all[-1][1] / 3600.0, 600)
     axs[0].plot(tt_, TIDE_A * np.sin(2 * np.pi * tt_ * 3600 / TIDE_T), "k:", lw=1, label=T("与えた潮位", "imposed tide"))
-    axs[0].set_ylabel(T("水位 (m)", "water level (m)")); axs[0].legend(fontsize=8, ncol=4); axs[0].grid(alpha=0.3)
+    axs[0].set_ylabel(T("水位 (m)", "water level (m)")); axs[0].legend(fontsize=8, ncol=4, loc="lower center")
+    axs[0].set_ylim(-1.45, 1.15); axs[0].grid(alpha=0.3)
     f = os.path.join(rdir, "fluxes", "flux0001.csv")
     if os.path.exists(f):
         a = read_rec(f)
@@ -582,7 +584,7 @@ def tide_figures(rdir, frames_all, dx, lch=150.0):
     qr = float(re.search(r"inflow_val\(1:2,1,1\)\s*=\s*0\s*,\s*([0-9.eE+-]+)", open("param_%s.txt" % case).read()).group(1))
     axs[1].axhline(qr, color="k", lw=0.8, ls="--", label=T("川の流量 %g m³/s", "river discharge %g m³/s") % qr)
     axs[1].axhline(0.0, color="0.5", lw=0.6)
-    axs[1].set_ylabel(T("流量 (m³/s)", "discharge (m³/s)")); axs[1].legend(fontsize=8); axs[1].grid(alpha=0.3)
+    axs[1].set_ylabel(T("流量 (m³/s)", "discharge (m³/s)")); axs[1].legend(fontsize=8, loc="lower right"); axs[1].grid(alpha=0.3)
     mf = float(re.search(r"^\s*morfac\s*=\s*([0-9.eE+-]+)", open("param_%s.txt" % case).read(), re.M).group(1))
     axs[1].set_xlabel(T("水理時間 (h)(地形時間 = 水理時間 × morfac %g)", "hydraulic time (h) (landform time = hydraulic time × morfac %g)") % mf)
     fig.savefig(out("fig_%s_series.png" % case), dpi=110)
