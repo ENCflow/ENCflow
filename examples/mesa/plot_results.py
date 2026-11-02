@@ -234,11 +234,11 @@ fig.tight_layout(); fig.savefig("%s/sections%s.png" % (FIGDIR, SUF), dpi=110); p
 # ベンチの指標: 大きい台地の方位平均断面で、z = 10〜17 m の軟層区間と中間硬層の上面(z ≈ 10 m)の
 # 幅 — 硬層上面 ±0.5 m にあるセルの数(台地中心から半径 45 m 以内)を時刻ごとに数える
 if MODE in ("bench", "sat", "rock", "rock4", "dx4", "rc", "dx4rc", "face", "face8", "uc", "ucx"):
-    print("\n=== ベンチの指標: 大きい台地(中心 x = 60 m)で中間硬層の上面 ±0.5 m にあるセル数(= 段の面積 m²)===")
+    print("\n=== ベンチの指標: 大きい台地(中心 x = 60 m)で中間硬層の上面 ±0.5 m にあるセルの面積 (m²) = セル数 × Δx² ===")
     for c in cases:
         ztop = 10.0
         win = np.hypot(X - 60.0, Y - 50.0) <= 45.0
-        ns = [int((win & (np.abs(z - ztop) <= 0.5)).sum()) for t, z in c["snaps"]]
+        ns = [int(round((win & (np.abs(z - ztop) <= 0.5)).sum() * DX * DX)) for t, z in c["snaps"]]
         print("%s: %s" % (c["name"], " ".join(str(n) for n in ns)))
     print("\n=== 方位平均断面(大きい台地)で各標高帯が占める半径方向の幅 (m): 17-20 / 10.5-17 / 9.5-10.5(段) / 5-9.5 / 1-5 ===")
     rr = np.hypot(X - 60.0, Y - 50.0)
@@ -265,13 +265,13 @@ if MODE in ("rock", "rock4", "dx4", "rc", "dx4rc", "face", "face8", "uc", "ucx")
     fig.tight_layout(); fig.savefig("%s/talus%s.png" % (FIGDIR, SUF), dpi=110); plt.close(fig)
     print("%s/talus%s.png written" % (FIGDIR, SUF))
     # 崖錐の総量と崩落の台帳の時系列
-    print("\n=== 崖錐の総量 Σht (m³) の時系列(2 スナップ毎)===")
+    print("\n=== 崖錐の総量 Σht Δx² (m³) の時系列(2 スナップ毎)===")
     for c in cases[1:]:
         res = read_param("param_%s.txt" % c["name"])["dir_result"]
         vals = []
         for n in range(0, 13, 2):
             fn = os.path.join(res, "Ht%04d.txt" % n)
             if os.path.exists(fn):
-                vals.append("%.0f" % np.loadtxt(fn).sum())
+                vals.append("%.0f" % (np.loadtxt(fn).sum() * DX * DX))
         print("%s: %s" % (c["name"], " ".join(vals)))
 print("\n%s/maps%s.png, sections%s.png, series%s.png written" % (FIGDIR, SUF, SUF, SUF))
