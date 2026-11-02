@@ -1401,7 +1401,7 @@
       "source": "examples/karst/README.md",
       "target": "examples/karst/en/README.md",
       "source_sha256": "4f47130c66ec57b642db67e77d9c1f42fa76a0fa4832a41c047511659d2398d5",
-      "target_sha256": "ef7d723be7f64a45320f5767ab73afd717afdd1cb43446511647101ad6cadae0",
+      "target_sha256": "6e92ff4e5225cf57b649783bdf184d5d89a6f841750dddedb53165d0b14f4835",
       "reviewer": "Claude (Claude Code session; Japanese source and English mirror updated together after recomputing the example: changed wording and figure links compared, values checked against the plot_results.py output and an analysis script; model run by the session)",
       "method": "assistant",
       "reviewed_on": "2026-11-02"
@@ -1466,6 +1466,15 @@
       "source_sha256": "4944a433ebd8b26c4f9aed0d52c5cf502d566f7f0cf087ee790a588aa5d01831",
       "target_sha256": "2e0a8f0c6be80e3b24f46bc969dbe389cf4bfe9f9bc726f2d4daf92dd830cfe4",
       "reviewer": "Claude (Claude Code session; both images drawn by plot_results.py and plot_results.py [param_lat.txt] en from the same recomputed results of 2026-11-02, compared side by side: same plotted data and layout, labels translated)",
+      "method": "assistant",
+      "reviewed_on": "2026-11-02"
+    },
+    {
+      "source": "examples/karst/figs/sections_rock.png",
+      "target": "examples/karst/en/figs/sections_rock.png",
+      "source_sha256": "c79689772bf3afc238cff8cd9ea356532f4ff656deb636de94e2b6a72fb1e2f6",
+      "target_sha256": "cca9c6b7d7c2153d1090333c9dfef6bb1ee8017a9cef14b9f14db4f30f644a71",
+      "reviewer": "Claude (Claude Code session; both images drawn by plot_results.py param_rock.txt [en] from the same recomputed results of 2026-11-02, compared side by side: same plotted data and layout, labels translated)",
       "method": "assistant",
       "reviewed_on": "2026-11-02"
     },

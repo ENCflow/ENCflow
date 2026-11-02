@@ -234,7 +234,7 @@ each update as talus (ht; also added to the soil sd) (angle of repose of talus 3
 | Mean denudation of the 8 neighbours | 2.03 m | 2.16 m |
 | Cells with denudation depth > 1 m / > 2 m | 163 / 68 | 165 / 70 |
 
-![Sections with collapse](../figs/sections_rock.png)
+![Sections with collapse](figs/sections_rock.png)
 
 - Collapse only keeps the exposed face of the walls near H_c = 5 m, and the surface form hardly
   changes (the denudation of the neighbouring cells increases by 0.1 m and the deepest part becomes
