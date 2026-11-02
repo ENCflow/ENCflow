@@ -13,11 +13,11 @@
     {
       "source": "README.ja.md",
       "target": "README.md",
-      "source_sha256": "c4f57b6cd44bab780e08814201efd474a6a9c504d49c0aaa0e28e585a8c6dc21",
-      "target_sha256": "aac6f985d00f97df1b7aaa1c06990f06bac3c692a571900c8e68de4c825fb4e3",
-      "reviewer": "Claude (Claude Code session; full-text content and lexical review, no model execution)",
+      "source_sha256": "e4ffa137eaad863b8c64210d07411635b84c534266aa66974daa2c3c0a14f68c",
+      "target_sha256": "d8931537627a6759698c0b5b9b0daacb45a6761a065f5bd1efa5300cf28d1b1d",
+      "reviewer": "Claude (Claude Code session; reviewed the Japanese source against the English mirror after adding the link to the chained-process examples, 2026-11-02)",
       "method": "assistant",
-      "reviewed_on": "2026-10-29"
+      "reviewed_on": "2026-11-02"
     },
     {
       "source": "TRADEMARKS.md",
