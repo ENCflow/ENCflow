@@ -1742,9 +1742,27 @@
     {
       "source": "examples/tower_karst/README.md",
       "target": "examples/tower_karst/en/README.md",
-      "source_sha256": "672965ae02e63f473ab9fd505a684222b9c4a5196923e3bd6cdb270a66b0eda7",
-      "target_sha256": "527e4da6eebd0ff361693e1149501a770a888503d879aa86f7e981b97853d08d",
-      "reviewer": "Claude (Claude Code session; Japanese source and English mirror written together and compared section by section, tables and numbers checked; no model execution)",
+      "source_sha256": "875c70d322b7ce2ed780dfd98f17d8b31ba6e52dbd289736aaf1ab03c61c69c5",
+      "target_sha256": "7c3d3cba0f078f1c3d579417f3f1b2120e67dda843675b21794b8e295de7df0f",
+      "reviewer": "Claude (Claude Code session; Japanese source and English mirror updated together after recomputing the example: changed table values and figure links compared, values checked against the plot_results.py output and the log; model run by the session)",
+      "method": "assistant",
+      "reviewed_on": "2026-11-02"
+    },
+    {
+      "source": "examples/tower_karst/figs/hydrograph.png",
+      "target": "examples/tower_karst/en/figs/hydrograph.png",
+      "source_sha256": "ae91daf16ab6a1f7c8230da958a7a496148901f468c460f5b0bb82d5052837c0",
+      "target_sha256": "7d69500dbc4e9a9ebbf145b4e6d4261b52ee7a7c66e2990721e0a1ba3d1d1b3b",
+      "reviewer": "Claude (Claude Code session; both images drawn by plot_results.py and plot_results.py en from the same recomputed results of 2026-11-02, compared side by side: same plotted data and layout, labels translated)",
+      "method": "assistant",
+      "reviewed_on": "2026-11-02"
+    },
+    {
+      "source": "examples/tower_karst/figs/maps.png",
+      "target": "examples/tower_karst/en/figs/maps.png",
+      "source_sha256": "9a119c2c4b77020feaa9fc8be3f6ca69d30cce333a523cb717587a476a36a9e2",
+      "target_sha256": "46756660f08982512db45e12b2c3293ab4a54d40d3ea2c2975bd62367e4f689b",
+      "reviewer": "Claude (Claude Code session; both images drawn by plot_results.py and plot_results.py en from the same recomputed results of 2026-11-02, compared side by side: same plotted data and layout, labels translated)",
       "method": "assistant",
       "reviewed_on": "2026-11-02"
     },
@@ -1758,11 +1776,29 @@
       "reviewed_on": "2026-11-02"
     },
     {
+      "source": "examples/tower_karst/figs/sections.png",
+      "target": "examples/tower_karst/en/figs/sections.png",
+      "source_sha256": "e21e4882d97e334d26bf5e6ac7986df06d923b7efe7dbd303b41f7dd88931e22",
+      "target_sha256": "40ff301225e8c428949f32021f02e26acced83b2f571e8b4cc59f6f56aae55e0",
+      "reviewer": "Claude (Claude Code session; both images drawn by plot_results.py and plot_results.py en from the same recomputed results of 2026-11-02, compared side by side: same plotted data and layout, labels translated)",
+      "method": "assistant",
+      "reviewed_on": "2026-11-02"
+    },
+    {
       "source": "examples/tower_karst/figs/setup.png",
       "target": "examples/tower_karst/en/figs/setup.png",
       "source_sha256": "34e0f1c50f3d3c3e0d9cc1604e1ea22a258a200460d7bd12ce8b8692abc04f36",
       "target_sha256": "1ef6ebd7e1d8ef79ff445bb9f16688e569f985179b37210abb4661ff7bdcf7c1",
       "reviewer": "Claude (Claude Code session; schematic and setup figure drawn by plot_setup.py from input files only, Japanese and English images compared side by side: same data and layout, labels translated; no model execution)",
+      "method": "assistant",
+      "reviewed_on": "2026-11-02"
+    },
+    {
+      "source": "examples/tower_karst/figs/towers.png",
+      "target": "examples/tower_karst/en/figs/towers.png",
+      "source_sha256": "6968200a7b782dde15793d252eef3ee37b831421eec9a7f870f2ac296740de0b",
+      "target_sha256": "46f0151b59a79acea54c636727231ecd0452b875e9e4bf00f5ce42bea264827b",
+      "reviewer": "Claude (Claude Code session; both images drawn by plot_results.py and plot_results.py en from the same recomputed results of 2026-11-02, compared side by side: same plotted data and layout, labels translated)",
       "method": "assistant",
       "reviewed_on": "2026-11-02"
     },

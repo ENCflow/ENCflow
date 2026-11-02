@@ -110,23 +110,23 @@ With the argument `en` the figures are drawn with English labels into en/figs/
 
 ## Results
 
-![Terrain, denudation depth and soil thickness](../figs/maps.png)
+![Terrain, denudation depth and soil thickness](figs/maps.png)
 
 Upper left: initial terrain (contours every 5 m), upper right: final terrain (landform time 6000
 years). Lower left: denudation depth z₀ − z (logarithmic; 1.3 m on the plain, deeper at the feet).
 Lower right: final soil thickness (debris apron and residue).
 
-![Sections through tower 1](../figs/sections.png)
+![Sections through tower 1](figs/sections.png)
 
 Evolution of the x and y sections through the centre of tower 1 (dashed = final bedrock surface
 z − sd).
 
-![Measures for each tower](../figs/towers.png)
+![Measures for each tower](figs/towers.png)
 
 Left: height relative to the plain, middle: equivalent radius of the part higher than the plain +
 5 m, right: maximum slope angle of the bedrock surface (each tower).
 
-![Ponding and groundwater storage](../figs/hydrograph.png)
+![Ponding and groundwater storage](figs/hydrograph.png)
 
 Domain-mean ponding (blue) and groundwater storage (green) over the first 3 days (left) and the last
 3 days (right).
@@ -136,9 +136,9 @@ Budget check (tables of `plot_results.py`; landform time 6000 years = 300,000 st
 | Item | Value |
 |---|---|
 | Water balance | final S_total = 2.400 m = cumulative rain 40 mm × 60 days (mass conserved; near the end part of the ponding remains until the next day) |
-| Dissolved rock (ledger) | 1 465 945 m³ |
+| Dissolved rock (ledger) | 1 465 947 m³ |
 | Rock moved by collapse (ledger; bulk) | 2 493 m³ (44,000 edge updates). Final talus Σht Δx² = 2 172 m³ (up to 3.7 m) |
-| Loss of surface volume | Σ(z₀ − z)Δx² = 1 319 350 m³ = dissolution × (1 − 0.1) = 1 319 350 m³ (all digits agree; collapse conserves volume and does not contribute) |
+| Loss of surface volume | Σ(z₀ − z)Δx² = 1 319 352 m³ = dissolution × (1 − 0.1) = 1 319 352 m³ (all digits agree; collapse conserves volume and does not contribute) |
 | Denudation of the plain (cells that did not pond) | median 1.30 m = 216 mm/kyr |
 | Denudation of the feet (261 plain cells that ponded) | median 2.8 m, maximum 12.1 m |
 | Soil (debris and residue) | plain 1.14 m (initially 1 m), bare-rock area 0.04 m (initially 0.001 m), up to 6.2 m (talus at the feet) |
