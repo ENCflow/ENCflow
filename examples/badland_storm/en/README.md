@@ -438,13 +438,16 @@ gentle undulation.
   update, so finer grids keep their stability through the time step of the flow.
 - The export by dry-slope erosion is 1.44×10⁵ m³ in the control and 3.5×10⁴ m³ with overland flow.
   The difference is mostly not transport by wet erosion but the dry erosion that stopped.
-- **Reproducibility of the numbers**: in the cases with wet erosion, small differences are
-  amplified by the positive feedback of flow concentration. Recomputed with the current code on
-  2026-11-02, result 1 and the cases without wet erosion matched in all digits, but the case with
-  overland flow of result 2 (relief 4.34 → 4.39 m, mean lowering 8.8 → 9.1 m) and result 3
-  (maximum incision 22.7 → 22.4 m and others) shifted slightly (in result 2 it starts from a
-  10⁻⁴ m difference of the soil thickness in one cell at the 18th cycle). The tables give the
-  recomputed values; the conclusions do not change.
+- **Reproducibility of the numbers**: in the cases with wet erosion, differences of the size of
+  rounding errors are amplified by the positive feedback of flow concentration, so the same
+  computation gives slightly different numbers with different builds (optimization). Recomputed
+  with the current code on 2026-11-02, result 1 and the cases without wet erosion matched in all
+  digits, but the case with overland flow of result 2 (relief 4.34 → 4.39 m, mean lowering 8.8 →
+  9.1 m) and result 3 (maximum incision 22.7 → 22.4 m and others) shifted slightly (in result 2 it
+  starts from a 10⁻⁴ m difference of the soil thickness in one cell at the 18th cycle). The
+  computation itself has not changed (built with -O2, the code of that time and the current code
+  give byte-identical results; with -O2 the relief is 4.34 m and the mean lowering 8.8 m). The
+  tables give the values of the current default build (-Ofast); the conclusions do not change.
 
 ## Starting points for sensitivity experiments
 

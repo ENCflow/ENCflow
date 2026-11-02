@@ -1085,9 +1085,9 @@
     {
       "source": "examples/badland_storm/README.md",
       "target": "examples/badland_storm/en/README.md",
-      "source_sha256": "ffa2b41d3a056c45b3b2829362525949ba4e0bfb57f3bb71b283cd164c43aa90",
-      "target_sha256": "5bc3bc20a4d951e25c72ddfb730ebe04de47add0c03ec4618a092f4e43c9f9fe",
-      "reviewer": "Claude (Claude Code session; Japanese source and English mirror updated together after recomputing results 1-3: changed captions, table values and notes compared line by line, values checked against the plot_storm.py output and an analysis script; model run by the session)",
+      "source_sha256": "e78081bbca68961c83ebc1a4c8ba4d5ca75d04d595b000e39153f03334b9300c",
+      "target_sha256": "cd7a31428c0c1d838de18674d890feb4c3f35c65213bbb6243a7f899bd302045",
+      "reviewer": "Claude (Claude Code session; Japanese source and English mirror updated together after recomputing results 1-3 and the -O2 A/B check: changed captions, table values and notes compared line by line, values checked against the plot_storm.py output and an analysis script; model run by the session)",
       "method": "assistant",
       "reviewed_on": "2026-11-02"
     },
