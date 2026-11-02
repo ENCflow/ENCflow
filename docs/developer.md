@@ -16721,6 +16721,10 @@ d76(0.25、φ τ* = 0.024 < τ*c)は台帳 0。分割なし(param.txt)は変更�
   旧版で上書きした(回帰の走行中)。bin/ の実体を確認して本体を build し直し、回帰を最初からやり直した。
   別チェックアウトの bin/ にはリンクではなく実体を置くこと。
 
+**回帰**: 実装後の本体(release、OMP 2 スレッド)で test/ の全 87 ケースの Run.sh を逐次に実行し、全て
+rc = 0。reference を持つケースは全て同一(f_taupart は既定で無効のため既存の結果に触れない)、
+Check_*.py の検定は全て PASS。
+
 **文書**: users guide の解説 sediment.md §3(今後の課題 → 実装の説明。日英)、geomorph.md のパラメータ表
 (日英)、params_index(762 項目)、List_samples(日英)、test/README(日英)、plan §6.3・§14、handoff。
 
