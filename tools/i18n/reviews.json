@@ -1706,8 +1706,8 @@
     {
       "source": "examples/meander_cutoff/figs/setup.png",
       "target": "examples/meander_cutoff/en/figs/setup.png",
-      "source_sha256": "9954941c218151ce64bccba0f6e6a0aa51919cd9de9837f1d117e9984484626d",
-      "target_sha256": "37cf0ec1e8e1dfe302fb983c3697c965d53932782208f1208f53a1d4248fa64c",
+      "source_sha256": "7e893f399e74ad73e5307f1650b8582cde07129038c80694b3ed4ef064973a17",
+      "target_sha256": "37ac700c43514e33122ec227c62221266dc6be297a73018b76611723192778d3",
       "reviewer": "Claude (Claude Code session; schematic and setup figure drawn by plot_setup.py from input files only, Japanese and English images compared side by side: same data and layout, labels translated; no model execution)",
       "method": "assistant",
       "reviewed_on": "2026-11-02"
