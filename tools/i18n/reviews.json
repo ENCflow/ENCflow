@@ -1535,20 +1535,20 @@
     {
       "source": "examples/timberyard/README.md",
       "target": "examples/timberyard/en/README.md",
-      "source_sha256": "8d935aac9a088473a3f878b3a8cd5f729449593e0ad48988a5bb4997bd57e272",
-      "target_sha256": "ebe1aec5166fc6d15c17c16116e7ba13a647baf7126ed789a40ffebe2e6aa168",
-      "reviewer": "Claude (Claude Code session; example reruns with f_opening_dynamic default 3)",
+      "source_sha256": "24d4e2b000e789a5d815dc98ea5fc6a00da0f9d6f7226b93c3559b0045ff0218",
+      "target_sha256": "7b6065f22056cab7ad2da4c96035551ad32414a7175e54e8f35709a3f40a3457",
+      "reviewer": "Claude (assistant)",
       "method": "assistant",
-      "reviewed_on": "2026-10-31"
+      "reviewed_on": "2026-11-02"
     },
     {
       "source": "examples/timberyard/figs/maps.png",
       "target": "examples/timberyard/en/figs/maps.png",
-      "source_sha256": "c287011dd408ae5edea73a7014a6e31b95bb1efea062a4cc3ea4ed09c37656b1",
-      "target_sha256": "58585211210747f090db93bdf1e2073bc8484a47fae95e69841d45a1d1f5cfdd",
-      "reviewer": "Claude (Claude Code session; example reruns with f_opening_dynamic default 3)",
+      "source_sha256": "15e23c5cb45240dd23a67e984665761ea563e82ebf065e54d3a2ef431a7e9ba9",
+      "target_sha256": "e77e1fe82811512bb03c6e20c3570cfca2734556042c32945ec248d0f6484212",
+      "reviewer": "Claude (assistant)",
       "method": "assistant",
-      "reviewed_on": "2026-10-31"
+      "reviewed_on": "2026-11-02"
     },
     {
       "source": "examples/timberyard/figs/mechanism.png",
@@ -1562,11 +1562,11 @@
     {
       "source": "examples/timberyard/figs/series.png",
       "target": "examples/timberyard/en/figs/series.png",
-      "source_sha256": "cbbfef4db9f3f0185c4edf5a054287fcb54bcc9f712c2abd396c2361e250126b",
-      "target_sha256": "cd866c39da436f0a60043a5b5cb9e73e0cc04f275e162494f55e417549d812aa",
-      "reviewer": "Claude (Claude Code session; example reruns with f_opening_dynamic default 3)",
+      "source_sha256": "dfe47ac9d18b6a5dc11c63dcc25d369884fe3a7cb701f11af8ee21ba7b32ce42",
+      "target_sha256": "42b73220da1536ce9fadc4f468f5ca2a80f9880333f64314a4366fba64047798",
+      "reviewer": "Claude (assistant)",
       "method": "assistant",
-      "reviewed_on": "2026-10-31"
+      "reviewed_on": "2026-11-02"
     },
     {
       "source": "examples/timberyard/figs/setup.png",
@@ -1580,11 +1580,11 @@
     {
       "source": "examples/timberyard/figs/supp.png",
       "target": "examples/timberyard/en/figs/supp.png",
-      "source_sha256": "c3b105a79fe62a911ea5be2442594faccd6396d2a20e5a742b7bb930d9c15c34",
-      "target_sha256": "21f07222c8eb0d1e1997ae5139f76b3bdf2ead522d7744ae21b82c5f24194daa",
-      "reviewer": "Claude (Claude Code session; example reruns with f_opening_dynamic default 3)",
+      "source_sha256": "4133011f884eea9a3941cdafe4ed7abf412e69336dcc82b6d6a25c3df12fc9a5",
+      "target_sha256": "f1eed097d262c346ba1c0013b05017b953bf6952a7026607aae10f7115311d96",
+      "reviewer": "Claude (assistant)",
       "method": "assistant",
-      "reviewed_on": "2026-10-31"
+      "reviewed_on": "2026-11-02"
     },
     {
       "source": "examples/tower_karst/README.md",
