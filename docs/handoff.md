@@ -118,27 +118,32 @@ architecture.md。このメモは「現在進行中・未完了の項目」だ�
      描いているので README が正しい。plot_storm.py の題だけを直した(図 maps*.png は描き直すまで
      題が逆のまま。README に注記)。
    - **例題 6 件の説明の組み直し(2026-11-02。badland・badland_round・badland_storm・mesa・karst・
-     tower_karst。developer.md §48 冒頭の注記)で見つけた食い違いと、再計算の候補**。再計算は
-     していない(利用者の指示: 基本的に不要、必要なら提案)。README では読み取れる範囲で直し、
+     tower_karst。developer.md §48 冒頭の注記)で見つけた食い違いと、再計算の候補**。badland 以外は
+     再計算していない(利用者の指示: 基本的に不要、必要なら提案)。README では読み取れる範囲で直し、
      直せないものは注記した:
-     (i) badland の main_features.png の曲率の図の題は色の対応が逆(赤 = 凸 = 稜線が正しい)。
-     plot_results.py の題は直した。主ケース(約 1 分)を計算して描き直せば README の注記を外せる。
-     (ii) badland の崩落の補足の表から「崖面帯の起伏 / 平均低下」の行を外した(主ケースの値 1.68 /
-     13.2 m が主表・時系列図の 5.50 / 18.0 m と合わない。初期の崖面の列で測ったとみられる)。
-     param.txt と param_rockfall.txt を計算し、同じ列の定義で測って戻す。最大起伏「7.5」は
-     main_series.png から読んだ約 7.8 に直した。
-     (iii) badland_storm の maps*.png は右の列が中の列と同じ時刻(picks_t の 9e6 s が計算の終わり
+     (i) badland_storm の maps*.png は右の列が中の列と同じ時刻(picks_t の 9e6 s が計算の終わり
      4.5e6 s を超える)。描き直すときに picks_t を見直す。
-     (iv) mesa の bench2 の段の面積(4.3e7 s)が補足 2 の表で 66 m²、支え方式・張り出しの表で
+     (ii) mesa の bench2 の段の面積(4.3e7 s)が補足 2 の表で 66 m²、支え方式・張り出しの表で
      72 m²(数え方は同じ)。README に注記。bench2 を計算し直してそろえる。
-     (v) tower_karst の基岩面の最大勾配角の表(35〜38° / 38〜48°)が towers.png と合わないので、
+     (iii) tower_karst の基岩面の最大勾配角の表(35〜38° / 38〜48°)が towers.png と合わないので、
      図から読んだ 36〜39° / 37〜49° に直した。検算の「湛水は毎日浸透で消える」は
      hydrograph.png(終わりの方は約 6.6 mm が翌日まで残る)と合わないので直した。
-     (vi) badland_round の「T_geo 4.3e7 s = 10 mm/h の雨 430 m 分」は 120 m の誤り(param の
+     (iv) badland_round の「T_geo 4.3e7 s = 10 mm/h の雨 430 m 分」は 120 m の誤り(param の
      コメントも直した)。
-     再計算の候補(4 スレッドの目安): badland 全 7 ケース + 崩落 ≈ 15 分(i・ii と英語図は既にある)、
-     badland_storm の結果 1〜3 ≈ 2 時間(iii と英語の結果図)、mesa の bench2 ほか ≈ 8 分〜4 時間
-     (iv と英語の結果図)、karst ≈ 3 時間・tower_karst ≈ 2 時間(英語の結果図)。
+     再計算の候補(4 スレッドの目安): badland_storm の結果 1〜3 ≈ 2 時間(i と英語の結果図)、
+     mesa の bench2 ほか ≈ 8 分〜4 時間(ii と英語の結果図)、karst ≈ 3 時間・tower_karst ≈ 2 時間
+     (英語の結果図)。いずれも make run など(Makefile。画面出力は台帳の警告行を含めて
+     Screen*.log に残る)で計算し、plot スクリプトを日本語・`en` の両方で実行する。
+   - **解決(2026-11-02。利用者の依頼で badland を再計算)**: 全 8 ケース(主ケース・格子の曲率・
+     相関長 3・格子収束 2・崩落)を現行 main の release ビルド(gfortran 13.3、4 スレッド、約 5 分)で
+     計算し直した。README の数表は全項目が再現し、main_maps・main_series・spacing の図は
+     バイト一致(日英)。曲率の図の題の色の対応を直した main_features.png に差し替え、README の
+     注記を外した。崩落の補足の表に「崖面帯の起伏 / 平均低下」の行を主表と同じ定義(各ケースの
+     最終地形で選んだ崖面帯)で戻した(主 5.50 / 18.0 m、崩落あり 3.37 / 7.8 m。組み直し前の
+     1.68 / 13.2 m・2.09 / 6.9 m は初期の崖面の 20 列(x = 60〜80 m)で測った値と一致した)。
+     最大起伏は plot_results.py が時系列から出すようにした(T_geo 4.5×10⁶ s の 7.83 m)。
+     台帳の行(排出量・上限の回数・崩落量)は par_warn で標準エラーに出るので、6 例題の Makefile の
+     make run 等を `2>&1 | tee` にした(組み直しで足した時点では標準出力だけを記録していた)。
 
 00h. **鉛直不飽和浸透(VZ)流出モデル fn_vz(2026-10-26。docs/vz_plan.md、§87)の残り**
    - **試算用の既定(2026-10-27)**: 小杉パラメータは 5 つとも未指定なら谷(2023)の

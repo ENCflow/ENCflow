@@ -272,7 +272,8 @@ if main is not None:
     ridge_k = np.array(ridge_k)
     print("## 主ケース(param.txt)")
     print("| 量 | 初期 | 最終(T_geo = %.1e s) |" % mf["t"]); print("|---|---|---|")
-    print("| 崖面帯の y 方向起伏 (m) | %.2f | %.2f |" % (m0["relief"], mf["relief"]))
+    rpk = max(rows, key=lambda r: r["relief"])
+    print("| 崖面帯の y 方向起伏 (m) | %.2f | %.2f(最大は T_geo = %.1e s の %.2f) |" % (m0["relief"], mf["relief"], rpk["t"], rpk["relief"]))
     m2 = [r for r in rows if abs(r["t"] - 1.8e6) < 1][0]; m4 = [r for r in rows if abs(r["t"] - 3.6e6) < 1][0]
     print("| 谷間隔 (m)(Δz の prominence ≥ 1 m) | – | 1.8e6 s: %s ± %s(%s 本)、3.6e6 s: %s ± %s(%s 本)、最終: %s ± %s(%s 本) |" % (
         fmt(m2["spacing"]), fmt(m2["spacing_sd"]), fmt(m2["nvalleys"]), fmt(m4["spacing"]), fmt(m4["spacing_sd"]), fmt(m4["nvalleys"]), fmt(mf["spacing"]), fmt(mf["spacing_sd"]), fmt(mf["nvalleys"])))

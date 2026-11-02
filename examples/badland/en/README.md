@@ -170,14 +170,13 @@ the valley head (plateau edge 60 m).
 
 Left: distribution of the slope on land (grey = initial, red = final). Centre left:
 curvature ∇²z of the final terrain (red = convex = ridge crests, blue = concave = feet of
-the ridges and valleys; the colour key in the figure title is written the wrong way
-round and will be correct when the figure is redrawn). Centre right: D8 drainage area of
-the final terrain. Right: distribution of the y-direction curvature of the ridges (local
-maxima in each column of the cliff-face zone; the more negative, the sharper).
+the ridges and valleys). Centre right: D8 drainage area of the final terrain. Right:
+distribution of the y-direction curvature of the ridges (local maxima in each column of the
+cliff-face zone; the more negative, the sharper).
 
 | Quantity | Initial | Final (T_geo = 9×10⁶ s) |
 |---|---|---|
-| y-direction relief of the cliff-face zone (m) | 0.44 | 5.50 (maximum about 7.8 at T_geo 4.5×10⁶ s) |
+| y-direction relief of the cliff-face zone (m) | 0.44 | 5.50 (maximum 7.83 at T_geo 4.5×10⁶ s) |
 | Valley spacing (m) (prominence of Δz ≥ 1 m) | – | 1.8×10⁶ s: 13.6 ± 8.1 (15 valleys / 240 m), final: 12.2 ± 6.8 (18) |
 | Wavelength of the spectral centroid of Δz (m) | – | 1.8×10⁶ s: 11.5, 3.6×10⁶ s: 14.6, final: 12.4 |
 | Maximum incision / mean lowering of the cliff-face zone (m) | – | 29.0 / 18.0 |
@@ -187,8 +186,7 @@ maxima in each column of the cliff-face zone; the more negative, the sharper).
 | Sediment that left the domain (solid volume, m³) | – | 160,371 (loss of surface volume Σ(z₀ − z)Δx² ≈ 2.7×10⁵ m³ = solid ÷ (1 − porosity 0.4)) |
 | Number of times capped by spl_dzmax (cumulative cell-updates) | – | 3.8×10⁴ |
 
-(The table is printed by `python3 plot_results.py`. The maximum relief is read from the
-time-series figure.)
+(The table is printed by `python3 plot_results.py`.)
 
 - **Valleys form without overland flow**: overland flow stays zero to the end, and the
   valleys grow only through the hollow feedback of dry-slope erosion. The slope
@@ -263,12 +261,20 @@ sea cells" at the end).
 | Sediment that left the domain by dry-slope erosion (solid m³) | 160,371 | 40,495 |
 | Volume moved by collapse (bulk m³, cumulative) / of which into the sea | – | 25,465 / 192 |
 | Total talus (m³, final) | – | 754 |
+| y-direction relief / mean lowering of the cliff-face zone (m) | 5.50 / 18.0 | 3.37 / 7.8 |
 | Position x of the valley head (m) (plateau edge 60 m) | 12.5 | 42.5 |
+
+(The table is printed by `python3 plot_results.py`. The relief and the mean lowering use
+the same definitions as the table of the main case, with the cliff-face zone chosen from
+the final terrain of each case. The total talus is the sum of the final talus thickness
+Ht9998 × Δx².)
 
 - The collapse brings the 56° cliff face (drop within the window > 15 m) down to the angle
   of repose, and the talus covers the face, so the driving force of dry-slope erosion
   (S^1.5 and the hollow amplification) drops: the retreat of the valley head falls from
-  47.5 m to 17.5 m and the export by dry-slope erosion to a quarter.
+  48 m to 18 m (from the initial valley head at 60.5 m), the relief of the cliff-face zone
+  from 5.50 to 3.37 m, its mean lowering from 18.0 to 7.8 m, and the export by dry-slope
+  erosion to a quarter.
 - The collapse into the sea is small (192 m³) because in this terrain the foot of the cliff
   meets the sea cells at sea level (z = 0), so the step facing the sea is small (a vertical
   sea cliff placed directly against the sea cells would make the export to the sea dominant).

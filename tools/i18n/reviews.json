@@ -887,20 +887,20 @@
     {
       "source": "examples/badland/README.md",
       "target": "examples/badland/en/README.md",
-      "source_sha256": "ccf1cdf73ee858bd8abc9841c9e753ca017d8b152c0315f344de0d38fd56a424",
-      "target_sha256": "8e74cfc739291111c30ae38fa9b8aac78fb379292bb8244846570fc8d7e2941d",
-      "reviewer": "Claude (Claude Code session; Japanese source and English mirror written together and compared section by section, tables and numbers checked; no model execution)",
+      "source_sha256": "6f76109d677ea6ba28d3bed60ff96d27c1bc12363587de781b93fa4b117a58c3",
+      "target_sha256": "107a52e966da99555c42fa7860cea4941168a17aa13927f31010891a2fbadba1",
+      "reviewer": "Claude (Claude Code session; Japanese source and English mirror updated together after recomputing the example: changed captions, table rows and notes compared line by line, numbers checked against the plot_results.py output; model run by the session)",
       "method": "assistant",
       "reviewed_on": "2026-11-02"
     },
     {
       "source": "examples/badland/figs/main_features.png",
       "target": "examples/badland/en/figs/main_features.png",
-      "source_sha256": "aaa2f36b3ded342bce1268b6a988c2585eed674d95c208f2ff1ec4d62d7cfa00",
-      "target_sha256": "9659c7511d3281277ad65bf11f15dd4290a5f2525a288d3079355a693d6f8819",
-      "reviewer": "Claude (Claude Code session; compared the Japanese and English figure images side by side: same plotted data and layout, labels translated (some compressed but faithful); provenance per the commits that drew the English figures: same saved results as the Japanese figures; no model execution)",
+      "source_sha256": "e6f99a2f9d153f300f25b3d2895a299f54b01b8f4ec12c7e98e2e8bc8d0b0b12",
+      "target_sha256": "af1f5802e31d03d116417731a8865258541141d087ace579f3019a4ff0bb561c",
+      "reviewer": "Claude (Claude Code session; both images drawn by plot_results.py and plot_results.py en from the same recomputed results of 2026-11-02, compared side by side: same plotted data and layout, labels translated; pixel difference from the previous version is confined to the corrected curvature title)",
       "method": "assistant",
-      "reviewed_on": "2026-10-29"
+      "reviewed_on": "2026-11-02"
     },
     {
       "source": "examples/badland/figs/main_maps.png",
