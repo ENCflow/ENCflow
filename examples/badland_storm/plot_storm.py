@@ -95,7 +95,7 @@ if len(names) == 2:
         zs = cases["storm"]["snaps"][int(np.argmin([abs(t - tt) for t, _, _ in cases["storm"]["snaps"]]))][2]
         zd = cases["dry"]["snaps"][int(np.argmin([abs(t - tt) for t, _, _ in cases["dry"]["snaps"]]))][2]
         im = axes[2, k].imshow(zs - zd, origin="lower", extent=ext, cmap="RdBu", vmin=-15, vmax=15)
-        axes[2, k].set_xlim(20, 100); axes[2, k].set_title(T("差 z(表面流) − z(対照)(青: 表面流で余計に削れた)", "Difference z(surface flow) − z(control) (blue: eroded deeper with surface flow)"), fontsize=9)
+        axes[2, k].set_xlim(20, 100); axes[2, k].set_title(T("差 z(表面流) − z(対照)(青: 対照の方が深く削れた)", "Difference z(surface flow) − z(control) (blue: eroded deeper in the control)"), fontsize=9)
     fig.colorbar(im, ax=axes[2, :].tolist(), shrink=0.7, label="Δz (m)")
 fig.savefig(f"{FIGDIR}/maps%s.png" % SUF, dpi=110, bbox_inches="tight"); plt.close(fig)
 
