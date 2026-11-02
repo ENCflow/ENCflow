@@ -1202,20 +1202,20 @@
     {
       "source": "examples/estuary_barrage/README.md",
       "target": "examples/estuary_barrage/en/README.md",
-      "source_sha256": "ac64a78971b6927b73dc2418e188ee4d187dc367a5de65e55a0432d2dee5aaf1",
-      "target_sha256": "520c24412f0467eee8890c9b55214d9b90d25bb27bd0a5aa5fa2fc951379f8a1",
-      "reviewer": "Claude (Claude Code session; example reruns with f_opening_dynamic default 3)",
+      "source_sha256": "fc565842868a64e8a1dfa1ba2c72e6af1e143051d5f5e53f8f29a4914845fda1",
+      "target_sha256": "1b0cf7620ea10c6f91aa7727d0304d1d1421e33476c10fb1896371a531d43b4c",
+      "reviewer": "Claude (assistant)",
       "method": "assistant",
-      "reviewed_on": "2026-10-31"
+      "reviewed_on": "2026-11-02"
     },
     {
       "source": "examples/estuary_barrage/figs/cross.png",
       "target": "examples/estuary_barrage/en/figs/cross.png",
-      "source_sha256": "6a76425331874e086eec3abc6ef1d47d0297ae304d4b8b43f7806a58249dcf36",
-      "target_sha256": "4f2e7694d3c438dd9ef1a50df4f133f4958bd5ee829a00f93b24894f999fcafc",
-      "reviewer": "Claude (Claude Code session; example reruns with f_opening_dynamic default 3)",
+      "source_sha256": "70291adc1b3a2c29c260dd7c33e78509cb98e95420928e8daf0f4f31a4673bb7",
+      "target_sha256": "94dec5cd0a844fca530ac73be3c442f3edd6b08e869109530409b55b48190736",
+      "reviewer": "Claude (assistant)",
       "method": "assistant",
-      "reviewed_on": "2026-10-31"
+      "reviewed_on": "2026-11-02"
     },
     {
       "source": "examples/estuary_barrage/figs/mechanism.png",
@@ -1229,29 +1229,29 @@
     {
       "source": "examples/estuary_barrage/figs/plan.png",
       "target": "examples/estuary_barrage/en/figs/plan.png",
-      "source_sha256": "afe7d01b985cbd462632bab11c63daff4a1f68d02c51e06a9ecf12b9a921376c",
-      "target_sha256": "c0db797b818b5dc5458106803c5bb8ce82be54a485547ea424e2cd9d078d0647",
-      "reviewer": "Claude (Claude Code session; example reruns with f_opening_dynamic default 3)",
+      "source_sha256": "5da654ec064bfb43f04100a1abe404de37b72d9cfd2948a1909cf629b14e2f38",
+      "target_sha256": "16a425b2ecb324d245ee0b9d2f13d2e64d354fed40534c460d7dc213e233273f",
+      "reviewer": "Claude (assistant)",
       "method": "assistant",
-      "reviewed_on": "2026-10-31"
+      "reviewed_on": "2026-11-02"
     },
     {
       "source": "examples/estuary_barrage/figs/profile.png",
       "target": "examples/estuary_barrage/en/figs/profile.png",
-      "source_sha256": "2ad86c4b815b774afb0522bd2c3125f67ff0056ab575bb289655e1d244ef560b",
-      "target_sha256": "19d3fee6754dce25ed3308bf2ab5cf02f29b8847f1d449acf0e2dc15a36adaa7",
-      "reviewer": "Claude (Claude Code session; example reruns with f_opening_dynamic default 3)",
+      "source_sha256": "71d4e91057b36e6113c42291fe7dfa8649b3c6f73ab25a5d257cbdc646723d18",
+      "target_sha256": "c7b100b02f98544d98af67daf4df7f6abc5fa78bfc1c0073531eaed3142ed948",
+      "reviewer": "Claude (assistant)",
       "method": "assistant",
-      "reviewed_on": "2026-10-31"
+      "reviewed_on": "2026-11-02"
     },
     {
       "source": "examples/estuary_barrage/figs/series.png",
       "target": "examples/estuary_barrage/en/figs/series.png",
-      "source_sha256": "69b6cb6882b6287c169bbd080a1e85234843492394c5070c79abe399c8c61ee2",
-      "target_sha256": "80dca69284d1e71183ae42202ff1d756f2959dc177c7c5f313248cd5177b329f",
-      "reviewer": "Claude (Claude Code session; example reruns with f_opening_dynamic default 3)",
+      "source_sha256": "a27486cb38b0823dfc918c2d5172a82dbbc3f008899afbe62459ca390a0f5627",
+      "target_sha256": "1cb3e12e5cf61616dad36cd2d67a23a4b224f0ab9b7ad307b2ddc9de9c99a536",
+      "reviewer": "Claude (assistant)",
       "method": "assistant",
-      "reviewed_on": "2026-10-31"
+      "reviewed_on": "2026-11-02"
     },
     {
       "source": "examples/estuary_barrage/figs/setup.png",

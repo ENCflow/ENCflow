@@ -171,20 +171,21 @@ phase. Grey = the preliminary flood-and-rain stage.
 
 | Case | Salt in the aquifer (10³ m³) | Distance of the salt front below the bed (fraction 0.5) from the mouth (km) | Salt fraction below the bed upstream of the barrage site | Salt fraction within 80 m of the banks in the same reach | Wedge tip (last 2 days, km from mouth) | Bottom salt in the river (mean over the last 2 days, 10³ m³) |
 |---|---:|---:|---:|---:|---:|---:|
-| No barrage, no exchange | 85 | — (coast only) | 0.001 | 0.001 | 2.20–2.64 | 459 |
-| No barrage | 1,353 | 3.00 (whole river) | 0.981 | 0.481 | 2.44–2.76 | 526 |
-| No barrage, seepage by mixing ratio | 1,340 | 3.00 (whole river) | 0.976 | 0.477 | 2.52–2.88 | 561 |
-| Barrage, no exchange | 79 | — (coast only) | 0.001 | 0.000 | 0.48 (barrage) | 144 |
-| Barrage | 306 | 0.48 (barrage) | 0.027 | 0.013 | 0.48 (barrage) | 154 |
-| Barrage, seepage by mixing ratio | 269 | 0.48 (barrage) | 0.015 | 0.007 | 0.48 (barrage) | 156 |
-| No barrage, clogged river bed | 487 | 2.84 | 0.915 | 0.001 | 2.56–2.88 | 571 |
-| Barrage, clogged river bed | 130 | 0.48 (barrage) | 0.016 | 0.000 | 0.48 (barrage) | 157 |
+| No barrage, no exchange | 91 | — (coast only) | 0.003 | 0.001 | 2.40–2.76 | 511 |
+| No barrage | 1,384 | 3.00 (whole river) | 1.000 | 0.494 | 2.64–2.92 | 586 |
+| No barrage, seepage by mixing ratio | 1,352 | 3.00 (whole river) | 0.981 | 0.482 | 2.60–2.92 | 574 |
+| Barrage, no exchange | 83 | — (coast only) | 0.001 | 0.000 | 0.48 (barrage) | 140 |
+| Barrage | 308 | 0.48 (barrage) | 0.027 | 0.014 | 0.48 (barrage) | 155 |
+| Barrage, seepage by mixing ratio | 270 | 0.48 (barrage) | 0.015 | 0.007 | 0.48 (barrage) | 153 |
+| No barrage, clogged river bed | 491 | 2.88 | 0.924 | 0.001 | 2.64–2.96 | 583 |
+| Barrage, clogged river bed | 130 | 0.48 (barrage) | 0.017 | 0.000 | 0.48 (barrage) | 160 |
 
-(The table and figures show the values recomputed on 2026-10-31 with the default f_opening_dynamic = 3; developer.md §68.41.)
+(The table and figures show the values recomputed on 2026-11-02 with the default f_opening_dynamic = 3
+and the corrected lateral faces of the momentum-conserving advection; developer.md §68.41–§68.43.)
 
 (The table is printed by `python3 plot_results.py`.)
 
-- **Salt wedge**: without a barrage the wedge travels 2.2–2.9 km from the
+- **Salt wedge**: without a barrage the wedge travels 2.4–2.9 km from the
   mouth (almost to the upstream end of the 3 km river) and moves back and forth
   with the tide. With the barrage it stops just downstream of the barrage
   (overflow goes downstream only, and the bottom salt water does not reach the
@@ -192,9 +193,9 @@ phase. Grey = the preliminary flood-and-rain stage.
 - **Salinization not via the river**: with the exchange of salt water between
   the bed / ground surface and the aquifer turned off (no exchange), the salt in
   the aquifer is only what intrudes underground from the coast, and it does not
-  change with the barrage (85 / 79 ×10³ m³).
-- **Salinization via the river**: with the exchange, 1,353 ×10³ m³ without the
-  barrage and 306 ×10³ m³ with it (still increasing on day 20). Without the
+  change with the barrage (91 / 83 ×10³ m³).
+- **Salinization via the river**: with the exchange, 1,384 ×10³ m³ without the
+  barrage and 308 ×10³ m³ with it (still increasing on day 20). Without the
   barrage the aquifer below the bed covered by the wedge becomes entirely salt
   along the whole river, and half of the aquifer within 80 m of the banks
   becomes salt (the salt spreads about 200 m into the banks). This is because at
@@ -210,22 +211,22 @@ phase. Grey = the preliminary flood-and-rain stage.
   enters at high tide therefore does not return at low tide, and salinization
   right below the bed comes out on the high side (upper bound). Computing the
   opposite extreme, where seeping water leaves mixed in the aquifer's salt
-  fraction (f_salt_exch = 2), gives 1,340 ×10³ m³ without the barrage and
-  269 ×10³ m³ with it, 1–12 % lower. Only salt water seeps through a bed covered
+  fraction (f_salt_exch = 2), gives 1,352 ×10³ m³ without the barrage and
+  270 ×10³ m³ with it, 2–12 % lower. Only salt water seeps through a bed covered
   by the wedge in the first place, so the result hardly depends on this
   treatment. The effect of the barrage (a quarter to a fifth of the no-barrage
   case) is the same at both ends of the range.
 - **Clogged river bed**: with the river-bed exchange capacity two orders below
   the surrounding infiltration capacity (1e-6 m/s), the salt in the aquifer
-  falls from 1,353 to 487 ×10³ m³ without the barrage and from 306 to
+  falls from 1,384 to 491 ×10³ m³ without the barrage and from 308 to
   130 ×10³ m³ with it. Salt water still enters the aquifer right below the river
   (salt fraction below the bed upstream of the barrage site 0.92) but hardly
   spreads into the bank aquifer (0.001 within 80 m of the banks). Both the
   infiltration through the bed and the flow from below the river into the banks
   are throttled by the same cap, so within 20 days the ground along the river
   stays fresh. The salt wedge itself is not much affected by the clogging
-  (2.6–2.9 km; 2.4–2.8 km with an open bed). The effect of the barrage points
-  the same way with a clogged bed (487 → 130 ×10³ m³), and the tongue under
+  (2.6–3.0 km; 2.6–2.9 km with an open bed). The effect of the barrage points
+  the same way with a clogged bed (491 → 130 ×10³ m³), and the tongue under
   the barrage shortens to 0.3 km.
 - The salt in the aquifer during the first 2 days (flood and heavy rain) comes
   from the aquifer under the sea and near the mouth (the cases with the exchange
