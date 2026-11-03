@@ -329,9 +329,9 @@
     {
       "source": "docs/users_guide/lavaflow.md",
       "target": "docs/en/users_guide/lavaflow.md",
-      "source_sha256": "90afd6b04a7b949d18f0bce89e63f1fe62a03b8ef98ac43ef64f45d4383a0034",
-      "target_sha256": "becdb1874af0ba0bbf94ccb4d772729f3829659e0e63728e09642b7005430b53",
-      "reviewer": "Claude (Claude Code session; shield_volcano example registration: changed passages compared side by side with the Japanese source, unchanged parts as recorded earlier the same day)",
+      "source_sha256": "6153545f2bf77dbfdea6018a1c75f8d931e98322319598844dcb9fbae42271ad",
+      "target_sha256": "6a0ca64e67dccf73ab51d35e2452bb540be04eb54cc8ddcf419b56f4b316182b",
+      "reviewer": "Claude (Claude Code session; stratovolcano example registration: changed passages compared side by side with the Japanese source, unchanged parts as recorded earlier)",
       "method": "assistant",
       "reviewed_on": "2026-11-03"
     },
@@ -491,9 +491,9 @@
     {
       "source": "docs/users_guide/usecases.md",
       "target": "docs/en/users_guide/usecases.md",
-      "source_sha256": "29a3fb5d8d72c9af09a01e67cf963b91497a302fd8b27139ab285ff137fb0f8b",
-      "target_sha256": "49cd81879014486bf9631abe3cab7b71ce01914f351a9e81dad6d0a0da2966fb",
-      "reviewer": "Claude (Claude Code session; merge of main into the meander update: the rows changed on each side (delta and shield_volcano from main, meander and meander_cutoff from the branch) compared side by side in both languages; the rest unchanged from the recorded versions)",
+      "source_sha256": "be22726114ae933d639b53368c941ed8ce539fecbaca5e208fb19c8988187630",
+      "target_sha256": "5f8296051d123b584dc98e49c52afad269ba907c31ac2c15bdb1c3e8c7e1209b",
+      "reviewer": "Claude (Claude Code session; stratovolcano example registration: changed passages compared side by side with the Japanese source, unchanged parts as recorded earlier)",
       "method": "assistant",
       "reviewed_on": "2026-11-03"
     },
@@ -815,9 +815,9 @@
     {
       "source": "examples/README.md",
       "target": "examples/README.en.md",
-      "source_sha256": "a025efd4ca2d407fae3fd6368cfccdce19260dfc2620f75b39850b509677ceda",
-      "target_sha256": "3969db1aa56166308742db2196b916bff9994dfb39c6d314e251753cf3a6d9f6",
-      "reviewer": "Claude (Claude Code session; merge of the catchment_metal branch into main: the merged examples index keeps main's rows (delta, shield_volcano, meander, meander_cutoff) and adds the catchment_metal row and chain line, compared side by side in both languages, 2026-11-03)",
+      "source_sha256": "16b0e0658d4aac1ef3bb4098f58a4b3e8983da40ff88320f36483e6186c37b8f",
+      "target_sha256": "4849de292104f4175574948af1d2b34144b612d758b96e59c1c83245337571ed",
+      "reviewer": "Claude (Claude Code session; merge of the stratovolcano branch into main: the merged examples index keeps main's catchment_metal row and chain line and adds the stratovolcano row and chain line, compared side by side in both languages)",
       "method": "assistant",
       "reviewed_on": "2026-11-03"
     },
@@ -2203,6 +2203,60 @@
       "target": "examples/shield_volcano/en/figs/shield.png",
       "source_sha256": "6ed703972c8bcfe523c5d42383c4e9f9d0f12493d192ee4812074d8c164457ed",
       "target_sha256": "dad7a0d65b84f42bce077f0de55d5b952369d5c5d4e3873fc0cb749def79a817",
+      "reviewer": "Claude (Claude Code session; English figure drawn by the same script with the en switch; visual check)",
+      "method": "assistant",
+      "reviewed_on": "2026-11-03"
+    },
+    {
+      "source": "examples/stratovolcano/README.md",
+      "target": "examples/stratovolcano/en/README.md",
+      "source_sha256": "4bda5f4804fef68c3ebb97b61162570b194150e02b35c04a4bf2e9c9b5dc8dd9",
+      "target_sha256": "c9664e8f468238dfbf6b797e5aea25d959b49bb8df2c3d23d17237358af77163",
+      "reviewer": "Claude (Claude Code session; full-text review of the new example README against the Japanese source, numbers and structure cross-checked)",
+      "method": "assistant",
+      "reviewed_on": "2026-11-03"
+    },
+    {
+      "source": "examples/stratovolcano/figs/erosion.png",
+      "target": "examples/stratovolcano/en/figs/erosion.png",
+      "source_sha256": "53d3acb7e59e77f4bdf09d0a5c9fe4b07a3d319a18e2e8742592333e66da1a56",
+      "target_sha256": "666316d706e2fe4863ee909b27b75dadae9e546ff0e596807aa44cbeb7c9f759",
+      "reviewer": "Claude (Claude Code session; English figure drawn by the same script with the en switch; visual check)",
+      "method": "assistant",
+      "reviewed_on": "2026-11-03"
+    },
+    {
+      "source": "examples/stratovolcano/figs/mechanism.png",
+      "target": "examples/stratovolcano/en/figs/mechanism.png",
+      "source_sha256": "83a5586833b8688be651796650f136b135cac0e8e08464bb4766e71e066399d5",
+      "target_sha256": "8c3aa0e522234f9a4b2bb6c7da485df740a23e181b368d65ab3144fc42233a66",
+      "reviewer": "Claude (Claude Code session; English figure drawn by the same script with the en switch; visual check)",
+      "method": "assistant",
+      "reviewed_on": "2026-11-03"
+    },
+    {
+      "source": "examples/stratovolcano/figs/section.png",
+      "target": "examples/stratovolcano/en/figs/section.png",
+      "source_sha256": "5ec0e25af97bc3155b6e25f6e5d3c64cd090b45467b2783ec7c17d76a3db857a",
+      "target_sha256": "3c035045fb13e0eade40480f419a2dc3e0c6108685a510524a9264f88e11cf27",
+      "reviewer": "Claude (Claude Code session; English figure drawn by the same script with the en switch; visual check)",
+      "method": "assistant",
+      "reviewed_on": "2026-11-03"
+    },
+    {
+      "source": "examples/stratovolcano/figs/setup.png",
+      "target": "examples/stratovolcano/en/figs/setup.png",
+      "source_sha256": "1522467639bde0698d577841941ca8c3769884a9e9628a17090e73bc56b722ac",
+      "target_sha256": "9845373ef58345fe720e01cc741c4546be7444b6dd25ea25bc34015f5d90a8d1",
+      "reviewer": "Claude (Claude Code session; English figure drawn by the same script with the en switch; visual check)",
+      "method": "assistant",
+      "reviewed_on": "2026-11-03"
+    },
+    {
+      "source": "examples/stratovolcano/figs/volcano.png",
+      "target": "examples/stratovolcano/en/figs/volcano.png",
+      "source_sha256": "43126a1a5a37315d7a9effc982db4017d5a527b15348e76bc515f283977f1cb5",
+      "target_sha256": "f26875c40e433ecb3d5c38b6e6c90151410bb8f16cf57adbcb30a53e2d570588",
       "reviewer": "Claude (Claude Code session; English figure drawn by the same script with the en switch; visual check)",
       "method": "assistant",
       "reviewed_on": "2026-11-03"
