@@ -1,6 +1,6 @@
 # ENCflow/examples/catchment_metal/Makefile
 #   make          ../../bin/ の実行ファイルへのリンクと入力(data/。gen_data.py)を作る
-#   make run      6 ケースを順に計算する(1 ケース 15 分前後。4 スレッド)
+#   make run      6 ケースを順に計算する(4 スレッドで 1 ケース 16〜20 分。計 2 時間前後)
 #   make step3    1 ケースだけ計算する(step1〜step5、step5_notank)
 #   make clean
 TOPDIR	= ../..
