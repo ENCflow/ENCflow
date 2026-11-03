@@ -275,9 +275,9 @@
     {
       "source": "docs/users_guide/glacier.md",
       "target": "docs/en/users_guide/glacier.md",
-      "source_sha256": "2a1e7cda0cf6048c97c61b2f91746623308583c1583abcb9e542803db916cbdb",
-      "target_sha256": "1732d41cdbaaad20dfdcc31d8b9830b35ff3bf62221899d9238ba8481f21f943",
-      "reviewer": "Claude (Claude Code session; glacier SIA isotropy fix: changed passages compared side by side with the Japanese source, unchanged parts as recorded earlier)",
+      "source_sha256": "2e4dcc9fc39537a311ddd148f546bab4f214a427f02485f237c4fe9d0b636052",
+      "target_sha256": "3728fe77c8e517c96845d5a08668966be73604240fe62cd05dfb3ee927fcebe8",
+      "reviewer": "Claude (Claude Code session; glacier avalanche D-infinity change: changed passages compared side by side with the Japanese source, unchanged parts as recorded earlier)",
       "method": "assistant",
       "reviewed_on": "2026-11-03"
     },
@@ -644,11 +644,11 @@
     {
       "source": "examples/List_samples/list_glacier.txt",
       "target": "examples/List_samples/en/list_glacier.txt",
-      "source_sha256": "bfe09fcfb83ac7f609a152ddfdd1796b76f438f2818c50ab09b98dd78f24ee3d",
-      "target_sha256": "b7ad27ead15cb38849cf06c41aca82c9a3e455510da98c6fe8b13e543d69baed",
-      "reviewer": "Claude (Claude Code session; full-text content and lexical review, no model execution)",
+      "source_sha256": "d97324cfe1d884499a2cf4d676224df64688e7e360c37c5037bd39ee072508d9",
+      "target_sha256": "b028f561a2a78f19feefacdcf10e31a128c8068135c69479d6271e51da95cbc4",
+      "reviewer": "Claude (Claude Code session; glacier avalanche D-infinity change: changed passages compared side by side with the Japanese source, unchanged parts as recorded earlier)",
       "method": "assistant",
-      "reviewed_on": "2026-10-24"
+      "reviewed_on": "2026-11-03"
     },
     {
       "source": "examples/List_samples/list_gwflow.txt",
@@ -2849,17 +2849,26 @@
     {
       "source": "test/glacier/README.md",
       "target": "test/glacier/en/README.md",
-      "source_sha256": "3f32378ba7a76f1844930adc1bab1618444f2a1f9f916d6904f77eb3f6aa0dd4",
-      "target_sha256": "13afc1e07d9ca81dc9dca3b839a4193488567029a5af85638c6956f62fd3e4cf",
-      "reviewer": "Claude (Claude Code session; glacier SIA isotropy fix: changed passages compared side by side with the Japanese source, unchanged parts as recorded earlier)",
+      "source_sha256": "2f3fd2c1abe7ee7d31f0e336719eee190d6fccb3387303d9731c27a60ee74110",
+      "target_sha256": "21a5df11231bdf22e487292f7737e26cf2181a890571bcae38bec0fb7bbc6ae2",
+      "reviewer": "Claude (Claude Code session; glacier avalanche D-infinity change: changed passages compared side by side with the Japanese source, unchanged parts as recorded earlier)",
+      "method": "assistant",
+      "reviewed_on": "2026-11-03"
+    },
+    {
+      "source": "test/glacier/figs/avalanche.png",
+      "target": "test/glacier/en/figs/avalanche.png",
+      "source_sha256": "d72be3ff14d9befb0b5f1220349af51f63053d41b22ec2e06afe3628c1bc5261",
+      "target_sha256": "408da54fbf42b11dac4bf9b0642e47e0026c34221273d065c47dce472bab5801",
+      "reviewer": "Claude (Claude Code session; English figure drawn by the same script with the en switch; visual check)",
       "method": "assistant",
       "reviewed_on": "2026-11-03"
     },
     {
       "source": "test/glacier/figs/cirque.png",
       "target": "test/glacier/en/figs/cirque.png",
-      "source_sha256": "f466bf8138a9095ef4cc916176919e3c7f5ffd5eeec48a4d6bb638da7bc09988",
-      "target_sha256": "fd621dc1862ae13c0a1ba838172cbacd3a10e46b065c05b44045b3ae3bc1ec98",
+      "source_sha256": "0a1529056d6eec9be9b2c4f3f2620bbf9ed914469fa200f438f310d95257da8d",
+      "target_sha256": "3fa1e179774ca3f561a72835a09b14c865f7bd7f64f89b24e76b629509da2b7d",
       "reviewer": "Claude (Claude Code session; English figure drawn by the same script with the en switch; visual check)",
       "method": "assistant",
       "reviewed_on": "2026-11-03"

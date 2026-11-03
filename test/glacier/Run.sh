@@ -6,7 +6,9 @@
 #   1) Halfar ドーム(param.txt): SIA 相似解との定量比較+氷体積保存
 #   2) カール形成スモーク(param_cirque.txt): 全プロセス疎通
 #      (氷河形成・氷河下侵食・NaN なし)
-# 判定は Check_halfar.py / Check_cirque.py
+#   4) 雪崩再配分の等方性(param_ava.txt): 円錐の雪が方向によらず再配分される
+#      こと+水当量の保存
+# 判定は Check_halfar.py / Check_cirque.py / Check_ava.py
 
 sdir=$(dirname "$(readlink -f "$0")")
 
@@ -18,12 +20,14 @@ python3 "$sdir/Make_input.py" || exit 1
 set -o pipefail
 ./encflow param.txt | tee Screen.log || exit 1
 ./encflow param_cirque.txt | tee Screen_cirque.log || exit 1
+./encflow param_ava.txt | tee Screen_ava.log || exit 1
 set +o pipefail
 echo ""
 
 rc=0
 python3 "$sdir/Check_halfar.py" result Screen.log || rc=1
 python3 "$sdir/Check_cirque.py" result_cirque || rc=1
+python3 "$sdir/Check_ava.py" result_ava Screen_ava.log || rc=1
 
 # 構成3: 最小入力(既定値)と構成3'(既定値の明示)の同値検定(§65)
 set -o pipefail

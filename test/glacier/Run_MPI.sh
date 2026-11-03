@@ -4,7 +4,8 @@
 # 分布出力(Hi/Z)は rank0 集約方式によりランク数不変(ULP=0)なので、
 # 逐次実行の result*_serial/ が存在すればバイト比較も行う
 # (逐次側を取っておくには: ./Run.sh 後に
-#    mv result result_serial; mv result_cirque result_cirque_serial)
+#    mv result result_serial; mv result_cirque result_cirque_serial;
+#    mv result_ava result_ava_serial)
 
 NP=${1:-2}
 sdir=$(dirname "$(readlink -f "$0")")
@@ -17,14 +18,16 @@ export ENCFLOW_EXPECT_NP="$NP"
 set -o pipefail
 mpirun -np "$NP" $MPIRUN_OPTS ./encflow_mpi param.txt | tee Screen.log || exit 1
 mpirun -np "$NP" $MPIRUN_OPTS ./encflow_mpi param_cirque.txt | tee Screen_cirque.log || exit 1
+mpirun -np "$NP" $MPIRUN_OPTS ./encflow_mpi param_ava.txt | tee Screen_ava.log || exit 1
 set +o pipefail
 echo ""
 
 rc=0
 python3 "$sdir/Check_halfar.py" result Screen.log || rc=1
 python3 "$sdir/Check_cirque.py" result_cirque || rc=1
+python3 "$sdir/Check_ava.py" result_ava Screen_ava.log || rc=1
 
-for pair in "result result_serial" "result_cirque result_cirque_serial"; do
+for pair in "result result_serial" "result_cirque result_cirque_serial" "result_ava result_ava_serial"; do
     set -- $pair
     if [ -d "$2" ]; then
         ok=1

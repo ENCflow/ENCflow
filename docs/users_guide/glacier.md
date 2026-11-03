@@ -173,14 +173,17 @@ Weertman 型の滑動則($`m`$ = 3 固定)[^weertman57]と、滑動速度のべ�
 | gl_ava_tanc | 0.6 | 雪崩の限界勾配 tan θc(0.6 ≈ 31°) |
 
 氷面の最急勾配 $`\tan\theta`$ が閾値を超えるセルの雪の割合
-$`\min(1, (\tan\theta - \tan\theta_c)/\tan\theta_c)`$ を、最も急な下り方向の隣接
-セルへ移します。閾値 0.6(≈ 31°)は乾雪の安息角付近の慣用値です。急崖が雪を保持できず、圏谷(カール)へ雪が集中する
+$`\min(1, (\tan\theta - \tan\theta_c)/\tan\theta_c)`$ を、最も急な下りの向きを挟む
+2 つの隣接セルへ、向きの角度の比で分けて移します(D∞[^tarboton97])。閾値 0.6(≈ 31°)は乾雪の安息角付近の慣用値です。急崖が雪を保持できず、圏谷(カール)へ雪が集中する
 効果の簡便表現です。カール形成実験では有効化を推奨します。
 
-移す先は 8 近傍のうち最も急な 1 方向だけなので、円錐のような滑らかな斜面では
-雪が格子軸と斜めの 8 方向の筋に集まり、氷厚と侵食に放射状の筋が出ます
-(test/glacier のカール形成テスト。雪崩を止めると筋は出ません)。筋の位置は
-格子の向きで決まるので、雪が集まる場所の細部は格子の向きによる誤差を含みます。
+向きと勾配は、セルと隣の 2 セルで作る三角形の面から求めるので、平らな斜面なら
+格子の向きによりません。test/glacier の構成 4(円錐に一様に置いた雪を雪崩だけで
+1 日動かす)では、山頂から同じ距離の円周上の雪の量の変動係数は 0.02〜0.04 です。
+2026-11-03 の変更より前は 8 近傍のうち最も急な 1 セルへ送っていたため、雪が格子軸と
+斜めの 8 方向の筋に集まり(同じ検定で 0.23〜0.35)、氷厚と侵食に放射状の筋が出て
+いました(developer.md §45.2)。1 回の再配分で雪が進むのは隣のセルまでで、雪崩の
+走行距離や速さは表しません。
 
 **この節に関係する出力**: 再配分の結果は `Sw0001…`(急崖で 0、圏谷に集中)と、その後の `Hi0001…` の成長位置に現れます([出力・確認](#出力確認))。
 
@@ -320,7 +323,7 @@ $`\min(1, (\tan\theta - \tan\theta_c)/\tan\theta_c)`$ を、最も急な下り�
 
 ## 検証・例題
 
-- [test/glacier/](../../test/glacier/): SIA 解析解のベンチマーク(格子の向きによらないことの検定を含む)とカール形成テスト(検証用の理想実験)。
+- [test/glacier/](../../test/glacier/): SIA 解析解のベンチマーク(格子の向きによらないことの検定を含む)、カール形成テスト、雪崩再配分の等方性の検定(検証用の理想実験)。
 - 設定書式の実例: [examples/List_samples/list_glacier.txt](../../examples/List_samples/list_glacier.txt)。
 
 ## 参考文献
@@ -332,3 +335,4 @@ $`\min(1, (\tan\theta - \tan\theta_c)/\tan\theta_c)`$ を、最も急な下り�
 [^weertman57]: Weertman, J. (1957): On the sliding of glaciers. *J. Glaciol.*, 3, 33–38.
 [^humphrey94]: Humphrey, N. F. and Raymond, C. F. (1994): Hydrology, erosion and sediment production in a surging glacier: Variegated Glacier, Alaska, 1982–83. *J. Glaciol.*, 40, 539–552.
 [^herman15]: Herman, F., Beyssac, O., Brughelli, M., Lane, S. N., Leprince, S., Adatte, T., Lin, J. Y. Y., Avouac, J.-P. and Cox, S. C. (2015): Erosion by an Alpine glacier. *Science*, 350, 193–195.
+[^tarboton97]: Tarboton, D. G. (1997): A new method for the determination of flow directions and upslope areas in grid digital elevation models. *Water Resour. Res.*, 33, 309–319.(D∞。雪崩再配分の送り先)

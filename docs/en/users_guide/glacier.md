@@ -205,19 +205,24 @@ speed)[^humphrey94]; with $`l`$ = 2[^herman15] a separate calibration gives
 
 On cells whose steepest ice-surface slope $`\tan\theta`$ exceeds the
 threshold, the fraction $`\min(1, (\tan\theta - \tan\theta_c)/\tan\theta_c)`$ of
-the snow is moved to the steepest-descent neighbour. The threshold 0.6
+the snow is moved to the two neighbours on either side of the steepest
+downslope direction, split by the ratio of the angles (D∞[^tarboton97]). The threshold 0.6
 (≈ 31°) is a customary value near the angle of repose of dry snow. This is a simple
 representation of cliffs shedding snow so that accumulation
 concentrates into cirques. Recommended for cirque-formation
 experiments.
 
-The snow goes only to the single steepest of the 8 neighbours, so on smooth
-slopes such as a cone it gathers into streaks along the 8 directions of the
-grid axes and diagonals, and radial streaks appear in the ice thickness and
-the erosion (the cirque-formation test of test/glacier; without avalanches
-there are no streaks). The positions of the streaks are set by the grid
-orientation, so the details of where snow gathers include errors from the
-grid orientation.
+The direction and the slope are found from the triangles formed by the cell
+and two of its neighbours, so on a plane they do not depend on the grid
+orientation. In configuration 4 of test/glacier (snow placed uniformly on a
+cone and moved by avalanches only for one day), the coefficient of variation
+of the snow amount on a circle around the summit is 0.02–0.04. Before the
+change of 2026-11-03 the snow went to the single steepest of the 8
+neighbours, so it gathered into streaks along the 8 directions of the grid
+axes and diagonals (0.23–0.35 in the same check), and radial streaks
+appeared in the ice thickness and the erosion (developer.md Sec. 45.2). One
+redistribution moves snow only to the neighbouring cells; the run-out
+distance and speed of avalanches are not represented.
 
 **Outputs for this section**: the redistribution shows in `Sw0001...` (0 on steep cliffs, concentrated in cirques) and later in where `Hi0001...` grows ([Output and monitoring](#output-and-monitoring)).
 
@@ -371,7 +376,7 @@ The labels in the Basis column are explained in [How to read the basis of a defa
 
 ## Tests and examples
 
-- [test/glacier/](../../../test/glacier/en/README.md): benchmark against the SIA analytical solution (including a check that the result does not depend on the grid orientation) and the cirque-formation test (idealised verification experiments).
+- [test/glacier/](../../../test/glacier/en/README.md): benchmark against the SIA analytical solution (including a check that the result does not depend on the grid orientation), the cirque-formation test, and a check of the isotropy of the avalanche redistribution (idealised verification experiments).
 - Worked example of the format: [examples/List_samples/en/list_glacier.txt](../../../examples/List_samples/en/list_glacier.txt).
 
 ## References
@@ -383,3 +388,4 @@ The labels in the Basis column are explained in [How to read the basis of a defa
 [^weertman57]: Weertman, J. (1957): On the sliding of glaciers. *J. Glaciol.*, 3, 33–38.
 [^humphrey94]: Humphrey, N. F. and Raymond, C. F. (1994): Hydrology, erosion and sediment production in a surging glacier: Variegated Glacier, Alaska, 1982–83. *J. Glaciol.*, 40, 539–552.
 [^herman15]: Herman, F., Beyssac, O., Brughelli, M., Lane, S. N., Leprince, S., Adatte, T., Lin, J. Y. Y., Avouac, J.-P. and Cox, S. C. (2015): Erosion by an Alpine glacier. *Science*, 350, 193–195.
+[^tarboton97]: Tarboton, D. G. (1997): A new method for the determination of flow directions and upslope areas in grid digital elevation models. *Water Resour. Res.*, 33, 309–319. (D∞; destinations of the avalanche redistribution)
