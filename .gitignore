@@ -90,6 +90,7 @@ examples/karst/analysis*.txt
 examples/tower_karst/z.txt
 examples/tower_karst/sd.txt
 examples/tower_karst/ksv.txt
+examples/tower_karst/ksv_steady.txt
 examples/tower_karst/Screen*.log
 examples/tower_karst/analysis*.txt
 examples/badland_round/analysis*.txt

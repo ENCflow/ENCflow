@@ -6,7 +6,11 @@
 平野には相関長 ≈ 30 m・標準偏差 0.3 m の起伏(シード固定)を与える。
 丘と平野の境は z = 5 m(それより高いセルが裸岩)。
   python3 make_terrain.py        # 1000 × 1000 m、Δx = 10 m
+  python3 make_terrain.py --steady   # 準定常強制(param_steady.txt)用の浸透能 ksv_steady.txt も書く:
+                                     #   裸岩の浸透能を年平均の雨 0.228 mm/h の下で豪雨と同じ年浸透率
+                                     #   (1 mm/h × 1 h / 40 mm = 2.5 %)になる 0.0057 mm/h にする
 """
+import sys
 import numpy as np
 
 LX, LY, DX = 1000.0, 1000.0, 10.0
@@ -17,6 +21,9 @@ ANOISE, SIGMA, SEED = 0.3, 3.0, 20261022
 ZROCK = 5.0                                    # これより高いセルは裸岩
 SD_PLAIN, SD_ROCK = 1.0, 1.0e-3                # 土層厚 (m)
 KSV_PLAIN, KSV_ROCK = 40.0, 1.0                # 浸透能 (mm/h)
+RAIN_STORM, DUR_STORM, STORMS_PER_YR = 40.0, 1.0, 50.0   # 代表豪雨 (mm/h, h) と年回数 → 年雨量 2000 mm
+RAIN_STEADY = RAIN_STORM * DUR_STORM * STORMS_PER_YR / (365.25 * 24.0)   # 年平均 0.228 mm/h
+KSV_ROCK_STEADY = RAIN_STEADY * (KSV_ROCK * DUR_STORM) / (RAIN_STORM * DUR_STORM)   # 同じ年浸透率 2.5 %
 
 nx, ny = int(round(LX / DX)), int(round(LY / DX))
 x = (np.arange(nx) + 0.5) * DX
@@ -40,5 +47,9 @@ ksv = np.where(rock, KSV_ROCK, KSV_PLAIN)
 np.savetxt('z.txt', z, fmt='%.4f')
 np.savetxt('sd.txt', sd, fmt='%.4f')
 np.savetxt('ksv.txt', ksv, fmt='%.2f')
+if '--steady' in sys.argv:
+    np.savetxt('ksv_steady.txt', np.where(rock, KSV_ROCK_STEADY, KSV_PLAIN), fmt='%.4f')
+    print('ksv_steady.txt written: rock %.4f mm/h under the steady rain %.3f mm/h (same annual infiltration fraction)'
+          % (KSV_ROCK_STEADY, RAIN_STEADY))
 print('z.txt / sd.txt / ksv.txt written: %d x %d (dx = %g m), z = %.2f .. %.2f m, rock cells = %d (%.1f %%)'
       % (nx, ny, DX, z.min(), z.max(), int(rock.sum()), 100.0 * rock.mean()))

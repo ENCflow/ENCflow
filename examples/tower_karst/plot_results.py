@@ -23,7 +23,8 @@ matplotlib.use("Agg")
 import matplotlib.pyplot as plt
 from matplotlib.colors import LightSource, LogNorm
 EN = "en" in sys.argv[1:]
-ARGS = [a for a in sys.argv[1:] if a != "en"]
+STEADY = "steady" in sys.argv[1:]          # 準定常強制(param_steady.txt): 地形時間 = 水理時間 × morfac
+ARGS = [a for a in sys.argv[1:] if a not in ("en", "steady")]
 
 
 def T(ja, en):
@@ -42,7 +43,9 @@ HILLS = [(300.0, 300.0, 40.0, 90.0), (700.0, 320.0, 40.0, 90.0),
          (320.0, 720.0, 40.0, 90.0), (690.0, 700.0, 40.0, 90.0),
          (500.0, 520.0, 20.0, 60.0), (150.0, 850.0, 20.0, 60.0)]   # make_terrain.py と同じ
 STORMS_PER_YR = 50.0
-YR = 86400.0 * STORMS_PER_YR
+YR = 86400.0 * STORMS_PER_YR               # 豪雨 1 回 = 1 日の周期 → 年 50 回
+if STEADY:
+    YR = 86400.0 * 365.25                   # 定常強制: 1 年 = 365.25 日
 
 
 def read_param(fn):
@@ -107,7 +110,10 @@ htf = np.loadtxt(os.path.join(res, "Ht9998.txt")) if os.path.exists(os.path.join
 print("== 水収支: 最終 S_total = %s m(降雨累計 40 mm × %d 日 = %.3f m)"
       % (rows[-1][4] if rows else "?", int(round(times[9998] / 86400)), 0.04 * times[9998] / 86400))
 vz = -(zf - z0).sum() * dx * dx                  # 地表の体積減少(崩落は z を保存するので寄与しない)
-print("== 体積の検算(地形時間 %.0f 年 = 豪雨 %d 回を年 %d 回で換算)" % (tend, round(tend * STORMS_PER_YR), STORMS_PER_YR))
+if STEADY:
+    print("== 体積の検算(地形時間 %.0f 年 = 水理時間 × morfac。年平均の定常強制)" % tend)
+else:
+    print("== 体積の検算(地形時間 %.0f 年 = 豪雨 %d 回を年 %d 回で換算)" % (tend, round(tend * STORMS_PER_YR), STORMS_PER_YR))
 print("  溶けた岩(台帳)= %.0f m3、崩落で移した岩(台帳。かさ)= %.0f m3、最終の崖錐 Σht Δx² = %.0f m3(最大 %.2f m)"
       % (vled, vrock, htf.sum() * dx * dx, htf.max()))
 print("  地表の体積減少 Σ(z0 − z)Δx² = %.0f m3 ≈ 溶食 × (1 − f_res) = %.0f m3(崩落は保存形で寄与しない)"
@@ -204,7 +210,8 @@ axes[0].set_ylabel(T("平野からの比高 (m)", "Relative height above plain (
 axes[1].set_ylabel(T("平野 + 5 m より高い部分の等価半径 (m)", "Equivalent radius above plain + 5 m (m)"))
 axes[2].set_ylabel(T("基岩面の最大勾配角 (°)", "Max. slope angle of bedrock surface (°)"))
 for ax in axes:
-    ax.set_xlabel(T("地形時間 (年。豪雨 %d 回/年換算)", "Morphological time (yr; %d storms/yr)") % STORMS_PER_YR)
+    ax.set_xlabel(T("地形時間 (年。定常強制)", "Morphological time (yr; steady forcing)") if STEADY else
+                  T("地形時間 (年。豪雨 %d 回/年換算)", "Morphological time (yr; %d storms/yr)") % STORMS_PER_YR)
     ax.grid(alpha=0.3)
 axes[0].legend(fontsize=7)
 plt.tight_layout()
