@@ -97,6 +97,10 @@ examples/tower_karst/gwc_outfall.txt
 examples/tower_karst/uplift.txt
 examples/tower_karst/sol_base.txt
 examples/tower_karst/ksv_base.txt
+examples/stone_forest/z.txt
+examples/stone_forest/joints.txt
+examples/stone_forest/Screen*.log
+examples/stone_forest/analysis*.txt
 examples/tower_karst/Screen*.log
 examples/tower_karst/analysis*.txt
 examples/badland_round/analysis*.txt

@@ -1,0 +1,94 @@
+!======================================================================
+! 石林(stone forest)の形成実験 — 節理に沿った溶解の集中で平らな石灰岩台地が柱と溝に分かれる
+!   平らな石灰岩台地(z = 30 m)に土層 1 m を載せ、年平均の雨(0.228 mm/h)の定常強制で
+!   土層下の溶食(浸透量に比例。c_eq = 300 mg/L)を 20 kyr(morfac 1.2e5 × 60 日)走らせる。
+!   可溶率の地図 joints.txt(make_terrain.py)で直交する 2 組の節理(1 セル幅、間隔 14 m・
+!   18 m)を 6 倍にする = 節理の溶解の集中を前処理で与える。溝が深まり柱が立つと、
+!   限界高さ 8 m を超えた壁は崩落して溝を崖錐で埋め、崖錐は溶ける(§86.7)。
+!   表せないこと: 柱の形は与えた節理の地図で決まる(自発的ではない)。土層の剥ぎ取り
+!   (exhumation)は表さず、土層は溶食で下がる地表に載ったまま溝へ沈む。
+! 実行: python3 make_terrain.py
+!       ./encflow param.txt > Screen.log(30 分程度。4 スレッド)
+!       python3 plot_results.py | tee analysis.txt
+!======================================================================
+&list_sysparam
+  f_gridsystem = 0          ! 格子システム(0: ENC)
+  f_govequation = 0         ! 基礎方程式(0: 動的波)
+  dt = 10.0                 ! 時間刻み (s)(定常の薄い水膜)
+  t0 = 0                    ! 開始時刻 (s)
+  tt_c = "60d"              ! 終了時刻 = 60 日(地形時間 60 d × 1.2e5 = 19.7 kyr)
+  dt_disp_c = "1h"          ! 画面表示間隔
+  dt_file_c = "10d"         ! 分布出力間隔 = 10 日(地形時間 3.3 kyr 毎)
+  dt_recrd_c = "1d"         ! プローブ出力間隔(使わない)
+  fn_geoinfo = '-'          ! 地理情報の namelist は本ファイル内
+  fn_precip = '-'           ! 降雨の namelist は本ファイル内
+  fn_gwflow = '-'           ! 地下水の namelist は本ファイル内
+  fn_geomorph = '-'         ! 地形変化の namelist は本ファイル内
+  fn_enc = '-'              ! ENC 計算条件は本ファイル内(既定)
+  dir_data = '.'            ! 入力データのディレクトリ
+  dir_result = 'result'     ! 結果ディレクトリ
+  f_out_z = 1               ! 時間発展する地盤高 Z0001...
+  f_out_h = 1               ! 湛水深 H0001...
+  f_out_hmax = 1            ! 最大湛水深 H9999
+  f_check_cfl = 0           ! CFL 検査なし(適応 RK に任せる)
+/
+&list_enc
+  f_adaptive_runge = 1      ! 適応的ルンゲクッタ
+/
+&list_geoinfo
+  lx = 200                  ! 領域の x 長 (m)
+  ly = 200                  ! 領域の y 長 (m)
+  nx = 100                  ! x 方向格子数(Δx = 2 m)
+  ny = 100                  ! y 方向格子数(Δy = 2 m)
+  f_ztype = 1               ! 地盤高をファイルから読む
+  fn_z = 'z.txt'            ! 平らな台地(make_terrain.py)
+  f_rntype = 0              ! 粗度は固定値
+  rn0 = 0.05                ! マニング粗度
+  sd0 = 1.0                 ! 土層厚 1 m(一様。被覆カルスト = 土層下の溶食)
+  sy0 = 0.2                 ! 比産出率
+/
+&list_precip
+  prtype = 1                ! 降雨は時系列(一様)
+  dt_prupdate = 1           ! 降雨の更新間隔 (min)
+  prval(1:2,1) = 0, 0.228   ! 年平均の雨 2000 mm / 8766 h = 0.228 mm/h を定常に与える
+  prval(1:2,2) = 9999999, 0.228
+/
+&list_gwflow
+  f_gwvertical = 2          ! 鉛直浸透は Green-Ampt(土層へ。溶食の水量)
+  f_gwlateral = 0           ! 土層の側方流なし
+  f_gwconduit = 1           ! 管路連続体層 = 土層の水の抜け先(岩盤の亀裂網)
+  dt_gwflow = 0             ! 毎ステップ更新
+/
+&list_gwflow_greenampt
+  gw_ksv_mmh = 40.0         ! 飽和透水係数 40 mm/h(雨は全量浸透 = 流出なし)
+/
+&list_gwflow_conduit
+  f_gwc_fluxlaw = 2         ! (側方通水なしのため未使用)
+  gwc_cnd_m2s = 0.0         ! 側方通水なし(各セルの管路層は貯留のみ = 地下へ消える水の受け皿)
+  gwc_cap = 2000.0          ! 貯留容量 (m 柱状)(満管にならない)
+  gwc_depth = 1000.0        ! 水頭底 = z − 1000 m(水頭が地表へ達しない)
+  gwc_sy = 1.0              ! 不圧貯留係数 1
+  gwc_slot_sy = 0.001       ! 疑似スロット(未使用)
+  gwc_inlet = 0.0           ! 吸込穴なし
+  gwc_leak_layer = 1        ! 土層(層 1)と交換: 土層の水が亀裂網へ抜ける
+  gwc_leak_mmh = 20.0       ! 交換能 20 mm/h
+/
+&list_geomorph
+  dt_geomorph = 600.0       ! 地形更新間隔 (s) = 10 分
+  morfac = 1.2e5            ! 地形時間の加速係数(1 日 = 329 年。定常強制で溶食は線形・局所)
+  f_dissol = 1              ! 石灰岩の溶食
+  dissol_ceq = 300.0        ! 有効溶解能 (mg/L CaCO3)(湿潤熱帯の土層下の涵養水)
+  dissol_rho = 2500.0       ! 岩の密度 (kg/m3)
+  dissol_src = 1            ! 浸透量を水量にする(土層下の溶食)
+  dissol_fres = 0.1         ! 不溶性残渣の体積率
+  dissol_lat = -1.0         ! 側方溶食(湛水があれば自動配分。本例題ではほぼ働かない)
+  fn_dissol = 'joints.txt'  ! 可溶率: 節理 6、ほか 1(make_terrain.py)
+  f_rockfall = 1            ! 崩落と崖錐: 溝で露出した柱の壁が限界高さを超えると崩れる
+  rf_bedrock = 1            ! 基岩の崩落(柱は土層の下の基岩)
+  rf_hc = 8.0               ! 自由面の限界高さ H_c (m)
+  rf_rc = 4.0               ! 自由面の高さを測る窓の半径 (m)(2 セル窓)
+  rf_phi = 35.0             ! 崖錐の安息角 (deg)
+  rf_relax = 0.5            ! 1 更新で緩和する超過高さの割合
+  rf_ftalus = 0.3           ! 崖錐に覆われたセルの乾式侵食の倍率(f_splash なしのため不使用)
+  fluv_dzmax = 0.5          ! 1 エッジ・1 更新の崩落の変動上限 (m)
+/

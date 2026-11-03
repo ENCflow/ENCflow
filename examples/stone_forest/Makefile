@@ -1,0 +1,37 @@
+# ENCflow/examples/stone_forest/Makefile
+#   make        ../../bin/ の実行ファイルへのリンクと入力(make_terrain.py が z.txt・joints.txt を作る)
+#   make run    主ケース(param.txt)を計算する(30 分程度。4 スレッド)
+#   make clean  リンクと生成物を削除する
+#   画面出力は Screen.log(plot_results.py が湛水の時系列と台帳を読む。崩落の台帳は標準エラーに出るので
+#   2>&1 で合わせて記録する)
+
+TOPDIR	= ../..
+BINDIR	= $(TOPDIR)/bin
+SRCDIR	= $(TOPDIR)/src
+
+all: links inputs
+
+links:
+	@if [ ! -e $(BINDIR)/encflow ] && [ ! -e $(BINDIR)/encflow_mpi ]; then \
+	    $(MAKE) -C $(SRCDIR) install; \
+	fi
+	@for b in encflow encflow_mpi; do \
+	    if [ -e $(BINDIR)/$$b ]; then ln -sf $(BINDIR)/$$b $$b; \
+	    else rm -f $$b; fi; \
+	done
+
+inputs: z.txt
+
+z.txt: make_terrain.py
+	python3 make_terrain.py
+
+run: all
+	./encflow param.txt 2>&1 | tee Screen.log
+
+install: all
+
+clean:
+	rm -rf result result_* save save_*
+	rm -f encflow encflow_mpi a.out Screen.log Screen*.log analysis*.txt z.txt joints.txt
+
+.PHONY: all links inputs run install clean
