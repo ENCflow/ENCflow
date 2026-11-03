@@ -275,11 +275,11 @@
     {
       "source": "docs/users_guide/glacier.md",
       "target": "docs/en/users_guide/glacier.md",
-      "source_sha256": "2a69b44835ec967fae74ce47717c7cb5c2fa4e71b4d776f504a5f7ada5062a90",
-      "target_sha256": "99409879200ed07eb7f623851070f271f627410908fc462b0c00aeae953a09a3",
-      "reviewer": "Claude (Claude Code session; full-text content and lexical review, no model execution)",
+      "source_sha256": "2a1e7cda0cf6048c97c61b2f91746623308583c1583abcb9e542803db916cbdb",
+      "target_sha256": "1732d41cdbaaad20dfdcc31d8b9830b35ff3bf62221899d9238ba8481f21f943",
+      "reviewer": "Claude (Claude Code session; glacier SIA isotropy fix: changed passages compared side by side with the Japanese source, unchanged parts as recorded earlier)",
       "method": "assistant",
-      "reviewed_on": "2026-10-24"
+      "reviewed_on": "2026-11-03"
     },
     {
       "source": "docs/users_guide/gwflow.md",
@@ -2849,29 +2849,29 @@
     {
       "source": "test/glacier/README.md",
       "target": "test/glacier/en/README.md",
-      "source_sha256": "2dd2ad62195b25f42cba7a932dab72607f2da0d309d6ce4ac757c8ab22212bf2",
-      "target_sha256": "40822758bdc573e15eabb716bfe6ca860e897bfe6658c1f00d57d952f9c41dc8",
-      "reviewer": "Claude (Claude Code session; full-text content and lexical review, no model execution)",
+      "source_sha256": "3f32378ba7a76f1844930adc1bab1618444f2a1f9f916d6904f77eb3f6aa0dd4",
+      "target_sha256": "13afc1e07d9ca81dc9dca3b839a4193488567029a5af85638c6956f62fd3e4cf",
+      "reviewer": "Claude (Claude Code session; glacier SIA isotropy fix: changed passages compared side by side with the Japanese source, unchanged parts as recorded earlier)",
       "method": "assistant",
-      "reviewed_on": "2026-10-24"
+      "reviewed_on": "2026-11-03"
     },
     {
       "source": "test/glacier/figs/cirque.png",
       "target": "test/glacier/en/figs/cirque.png",
-      "source_sha256": "6c17230c00be23bf35a72ecbd72741b34c6c8e27228bcdb72ec61a65363c47e7",
-      "target_sha256": "f385239737f156df817c8c823f965122bc8c675c77e1bc80109a605edc43a6fd",
+      "source_sha256": "f466bf8138a9095ef4cc916176919e3c7f5ffd5eeec48a4d6bb638da7bc09988",
+      "target_sha256": "fd621dc1862ae13c0a1ba838172cbacd3a10e46b065c05b44045b3ae3bc1ec98",
       "reviewer": "Claude (Claude Code session; English figure drawn by the same script with the en switch; visual check)",
       "method": "assistant",
-      "reviewed_on": "2026-10-24"
+      "reviewed_on": "2026-11-03"
     },
     {
       "source": "test/glacier/figs/halfar.png",
       "target": "test/glacier/en/figs/halfar.png",
-      "source_sha256": "f9923071a32b31f1efd782eb1c3696fb99fa5d1e576cdd7bef0bb224845c7716",
-      "target_sha256": "541056f7fb148ec602d872e9d6aeaa24912bcd1a44ef09efb3b7621b3c91ab60",
+      "source_sha256": "3b9b9fa41d742306b364b44d9b68cb3ad5de3f72d58b3990b8f1d9181857c78a",
+      "target_sha256": "1f4759c8bf8786b34caae83bbc6ae17d41514ad42be3529021f75586c62467d4",
       "reviewer": "Claude (Claude Code session; English figure drawn by the same script with the en switch; visual check)",
       "method": "assistant",
-      "reviewed_on": "2026-10-24"
+      "reviewed_on": "2026-11-03"
     },
     {
       "source": "test/gtif/README.md",

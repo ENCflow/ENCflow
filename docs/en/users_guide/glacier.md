@@ -139,6 +139,18 @@ stability condition from the current ice thickness and slope at every
 update and subdivides internally as needed (ice volume is conserved
 exactly).
 
+The computation uses the 4-neighbour grid. The $`|\nabla s|`$ of the
+diffusivity is found from the gradients both across and along the boundary
+with the neighbouring cell, so an ice cap on a flat bed spreads to a shape that
+does not depend on the grid orientation (in the Halfar dome of test/glacier,
+the ratio of the ice volumes in the sectors along the grid axes and the
+diagonals agrees with the analytic ratio to 0.6%). Only cells with ice are
+used for the gradient along the boundary (so that the slope of valley walls
+does not enter the diffusivity). Before the change of 2026-11-03 only the
+gradient across the boundary was used, so ice flowed less readily along the
+diagonals and was biased toward the grid axes (−5.5% in the same check;
+developer.md Sec. 45.1).
+
 No ice is placed on the cells of the sea mask (fn_sw): the sea area of the
 initial ice thickness fn_glacier_hi0 is zeroed, and neither the flow nor
 the avalanche redistribution sends ice to sea cells. Tidewater glaciers
@@ -198,6 +210,14 @@ the snow is moved to the steepest-descent neighbour. The threshold 0.6
 representation of cliffs shedding snow so that accumulation
 concentrates into cirques. Recommended for cirque-formation
 experiments.
+
+The snow goes only to the single steepest of the 8 neighbours, so on smooth
+slopes such as a cone it gathers into streaks along the 8 directions of the
+grid axes and diagonals, and radial streaks appear in the ice thickness and
+the erosion (the cirque-formation test of test/glacier; without avalanches
+there are no streaks). The positions of the streaks are set by the grid
+orientation, so the details of where snow gathers include errors from the
+grid orientation.
 
 **Outputs for this section**: the redistribution shows in `Sw0001...` (0 on steep cliffs, concentrated in cirques) and later in where `Hi0001...` grows ([Output and monitoring](#output-and-monitoring)).
 
@@ -351,7 +371,7 @@ The labels in the Basis column are explained in [How to read the basis of a defa
 
 ## Tests and examples
 
-- [test/glacier/](../../../test/glacier/en/README.md): benchmark against the SIA analytical solution and the cirque-formation test (idealised verification experiments).
+- [test/glacier/](../../../test/glacier/en/README.md): benchmark against the SIA analytical solution (including a check that the result does not depend on the grid orientation) and the cirque-formation test (idealised verification experiments).
 - Worked example of the format: [examples/List_samples/en/list_glacier.txt](../../../examples/List_samples/en/list_glacier.txt).
 
 ## References
