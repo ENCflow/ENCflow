@@ -103,6 +103,9 @@ make                                        # link to the executable and inputs 
 make run                                    # main case (1 to 2 hours)
 python3 plot_setup.py                       # figs/mechanism.png, setup.png (does not use the results)
 python3 plot_results.py | tee analysis.txt  # figs/maps, sections, towers, hydrograph.png and the tables
+python3 make_terrain.py --steady            # infiltration map ksv_steady.txt for the quasi-steady forcing (section "1 Myr" below)
+./encflow param_steady.txt > Screen_steady.log          # 0.99 Myr with quasi-steady forcing (about 1 hour)
+python3 plot_results.py param_steady.txt steady | tee analysis_steady.txt   # figs/*_steady.png
 ```
 
 With the argument `en` the figures are drawn with English labels into en/figs/
@@ -176,6 +179,58 @@ Budget check (tables of `plot_results.py`; landform time 6000 years = 300,000 st
   lowering of the plain reaches the tower heights (with morfac 5×10³, 1 day = 100 years, so chained
   restarts of 600 days = 60,000 years).
 
+## Running 1 Myr with quasi-steady forcing (param_steady.txt)
+
+The towers of Guilin stand 100 to 300 m above the plain; at a plain lowering of 100 to 200 mm/kyr
+that takes of the order of 10⁶ years. In the main case the plain lowers only 1.3 m in 6000 years,
+so as an attempt to extend the landform time by two orders of magnitude, the repeated storm is
+replaced by **the annual mean rain of 2000 mm/yr = 0.228 mm/h given steadily, with morfac = 6×10⁶**
+(60 days = 0.99 Myr). The positive feedback within a storm, where ponded water gathers and digs a
+pit (the reason for the upper limit of morfac), disappears, dissolution becomes linear and local
+again, and a large morfac is allowed. The infiltration capacity of bare rock is set to 0.0057 mm/h,
+which gives the same annual infiltration fraction of 2.5 % under the mean rain as under the storms
+(`make_terrain.py --steady`). What is lost is the ponding at the feet during storms (the notch of
+lateral dissolution); what remains is the concentration of the tower runoff that gathers and
+infiltrates at the feet, the surface source on the tower faces, and collapse. Safety valve
+`dissol_dzmax = 0.3 m` (ten times the 0.027 m per update of the plain).
+
+| Item | Value |
+|---|---|
+| Landform time | 985,626 years (60 days × 6×10⁶) |
+| Lowering of the plain | median 212.8 m = 216 mm/kyr (the same rate as the main case, as it is linear) |
+| Tower tops | 40 → −163 m (163 m lower; not the 70 mm/kyr of the surface source but consumption by collapse) |
+| Height above the plain | 40 → 61 m (164 kyr) → 50 m (1 Myr). Equivalent radius 79 → 56 m, walls 35° → 89° |
+| Foot pits | the surface is only 36 m below the plain, but the bedrock z − sd is at −1,532 m under 1,353 m of talus |
+| Rock moved by collapse | 46.2 million m³ (19 % of the 240 million m³ dissolved). Valve fired in 39,189 cell updates |
+
+![maps_steady](figs/maps_steady.png)
+![sections_steady](figs/sections_steady.png)
+![towers_steady](figs/towers_steady.png)
+
+**What can be read off.** Numerically, a million years runs stably in an hour. The plain keeps
+lowering at 216 mm/kyr, the relative height grows from 40 to 61 m in the first 164 kyr, so the
+mechanism "the lowering plain leaves the towers standing" works. After that, however, the towers
+are **consumed by collapse** and the relative height decreases. The cause is two gaps of the model
+that the steady forcing lays bare, not the coefficients.
+
+1. **Fallen limestone does not dissolve.** Floor dissolution follows the rule "lower z, keep sd",
+   so under the talus (sd, ht) piled at the feet only the bedrock keeps dissolving and the column of
+   talus sinks immortal. In the foot cells where all the tower runoff infiltrates, the bedrock
+   dissolves at the valve's 0.3 m per update and the tower collapses into it, a "conveyor" that
+   took the bedrock surface to 1.5 km depth (dashed line in the sections). Real talus is limestone
+   and dissolves at least as fast as the bedrock: the talus ht should dissolve (spend the water of
+   dissolution on ht first, then on the bedrock).
+2. **No base level (water table) at the feet.** The conduit layer is a sink 1000 m deep with a
+   capacity of 2000 m, so the foot pits have no bottom. The feet of real towers stand at the water
+   table, which is the base level of the rivers; the pits stop at the water surface and dissolution
+   turns sideways into the foot notches and caves. That is the fenglin mechanism itself. Fixing the
+   water table with an outfall head and raising the land against it by uplift (`f_uplift`) would
+   represent it.
+
+In addition, whereas the ponding at the feet spread over 261 cells under the repeated storms, the
+thin steady film gathers all of it into the few lowest cells of each tower, which makes the
+concentration at the feet extreme (a side effect of the steady forcing).
+
 ## What this model cannot represent (differences from the real phenomenon)
 
 - **Collapse is an instantaneous relaxation**: collapse is an instantaneous relaxation set by the
@@ -218,7 +273,7 @@ Budget check (tables of `plot_results.py`; landform time 6000 years = 300,000 st
 - `KSV_PLAIN`, `KSV_ROCK`, `SD_PLAIN` in make_terrain.py, which writes ksv.txt and sd.txt: how water is
   divided between the plain and the towers.
 - `tt_c` and chained restarts: landform time (tens of thousands of years for tower retreat and
-  disappearance).
+  disappearance). For a million years use the quasi-steady forcing (param_steady.txt, section above).
 
 ## References
 

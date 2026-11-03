@@ -107,8 +107,12 @@ m = re.search(r"dissolution removed\s*([0-9.Ee+-]+)\s*m3", log)
 vled = float(m.group(1)) if m else np.nan
 vrock = sum(float(v) for v in re.findall(r"rockfall moved\s*([0-9.Ee+-]+)\s*m3", log)) if log else np.nan
 htf = np.loadtxt(os.path.join(res, "Ht9998.txt")) if os.path.exists(os.path.join(res, "Ht9998.txt")) else np.zeros_like(zf)
-print("== 水収支: 最終 S_total = %s m(降雨累計 40 mm × %d 日 = %.3f m)"
-      % (rows[-1][4] if rows else "?", int(round(times[9998] / 86400)), 0.04 * times[9998] / 86400))
+if STEADY:
+    print("== 水収支: 最終 S_total = %s m(降雨累計 0.228 mm/h × %d 時間 = %.3f m)"
+          % (rows[-1][4] if rows else "?", int(round(times[9998] / 3600)), 0.228e-3 * times[9998] / 3600))
+else:
+    print("== 水収支: 最終 S_total = %s m(降雨累計 40 mm × %d 日 = %.3f m)"
+          % (rows[-1][4] if rows else "?", int(round(times[9998] / 86400)), 0.04 * times[9998] / 86400))
 vz = -(zf - z0).sum() * dx * dx                  # 地表の体積減少(崩落は z を保存するので寄与しない)
 if STEADY:
     print("== 体積の検算(地形時間 %.0f 年 = 水理時間 × morfac。年平均の定常強制)" % tend)
