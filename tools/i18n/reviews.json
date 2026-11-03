@@ -392,9 +392,9 @@
     {
       "source": "docs/users_guide/passage_width.md",
       "target": "docs/en/users_guide/passage_width.md",
-      "source_sha256": "0c9c3f81c1a57b62443ed4413b04166066b95f8d3cf2b60801855fefa5e8cac3",
-      "target_sha256": "b1972d1007304935a6d6babef197bdde95ea77ad4289b0c5e00e0bab9a38e709",
-      "reviewer": "Claude (Claude Code session; reviewed the Japanese source against the English mirror after unifying the term passage width / 通過幅 and noting the original paper's term, 2026-11-03)",
+      "source_sha256": "12a0abaa28884b3394c1d55a5a59f362d10e3e888cbc275502bc6259fbed5f4e",
+      "target_sha256": "8c872aeb9af0b9aff1fb3271168a793a249731851763b55c24e590c40e400914",
+      "reviewer": "Claude (Claude Code session; reviewed the Japanese source against the English mirror after adding the paragraph on representing channels on the raster, 2026-11-03)",
       "method": "assistant",
       "reviewed_on": "2026-11-03"
     },

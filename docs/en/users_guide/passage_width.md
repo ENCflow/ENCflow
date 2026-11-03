@@ -14,7 +14,29 @@ directions has to be handed back to the open directions. This is the
 blocked was revised several times before the default of `f_opening_dynamic`
 settled on 3.
 
-This page summarizes that discussion for users -- why the adjustment is
+This matters particularly in ENCflow because the channels are not solved
+separately with a one-dimensional channel model but are represented on the
+raster as they are. A river narrower than a cell becomes a one-cell-wide
+channel, and since the banks block its diagonal openings, its conveyance is
+decided by how the passage widths are handled (§3.1). Representing channels
+on the raster has advantages. Subgrid channels narrower than a cell
+(`fn_width` in [channels](channel.md)) and resolved channels wider than a
+cell are handled seamlessly by the same formulation, without switching
+models. Geomorphic change in which the position and shape of the channels
+themselves change -- the development of meandering rivers, the formation of
+river deltas -- can also be computed directly, as an outcome of the raster
+terrain and the flow ([examples/meander](../../../examples/meander/en/README.md),
+[examples/delta](../../../examples/delta/en/README.md)). It also has costs. A
+channel network finer than a cell (how confluences and bifurcations connect,
+the separation of channels running close together), which a one-dimensional
+channel model can specify explicitly, cannot be represented exactly (the
+limits of accuracy in §2 of the [channel models page](channel_models.md)).
+And carrying channels correctly on the raster needs situation-specific
+corrections such as the reassignment of passage widths; as the history in
+§5 shows, their rules have been revised each time a problem was found.
+
+This page summarizes the discussion around the passage-width adjustment for
+users -- why the adjustment is
 needed, how blockage is measured, and what was learned. It then takes the
 view that adjusting the passage width per direction is not "extra work that
 a 4-neighbour grid does not need" but "a means of passing terrain smaller
