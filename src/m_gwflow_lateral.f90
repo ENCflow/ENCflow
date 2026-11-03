@@ -139,7 +139,7 @@ module m_gwflow_lateral
   ! =====================================================================
   use m_sysparam, only : t_sysparam
   use m_geoinfo, only : t_geoinfo
-  use m_state, only : t_state
+  use m_state, only : t_state, gw_to_h
   use m_parallel, only : par_info, par_stop, dcp, par_halo_cell, par_allreduce_max
   use m_util, only : param_default
   implicit none
@@ -737,7 +737,8 @@ subroutine lateral_core(glt, g, s, hg, lay, dts, cg, rginv)
           end if
         end if
         if (lay%to_surface) then
-          s%h(i,j) = s%h(i,j) + fx
+          ! 地表は河道幅セルで河道の平面に載る(体積を保つ換算。§26.1)
+          s%h(i,j) = s%h(i,j) + fx * gw_to_h(s, i, j)
           s%e(i,j) = s%z(i,j) + s%h(i,j)
           ! 淡塩2層の配分用の記録(m_saltwater が読んでゼロ戻し。§47.5)
           if (allocated(s%fxslo)) s%fxslo(i,j) = s%fxslo(i,j) + fx
@@ -748,7 +749,7 @@ subroutine lateral_core(glt, g, s, hg, lay, dts, cg, rginv)
           if (s%hg(i,j) > capc) then
             fx = s%hg(i,j) - capc
             s%hg(i,j) = capc
-            s%h(i,j) = s%h(i,j) + fx
+            s%h(i,j) = s%h(i,j) + fx * gw_to_h(s, i, j)
             s%e(i,j) = s%z(i,j) + s%h(i,j)
             if (allocated(s%fxslo)) s%fxslo(i,j) = s%fxslo(i,j) + fx
           end if

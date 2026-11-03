@@ -535,13 +535,13 @@ subroutine plunge_cells(gm, g, s)
   type(t_geoinfo), intent(in) :: g
   type(t_state), intent(inout) :: s
   integer :: i, j, k, in, jn
-  real :: dd, dhw, vsum, psum1, psum2, hbq, hw, phic, phin, dphi, sl, smax, bb, sy, vb, cap
+  real :: dd, dhw, vsum, psum1, psum2, hbq, hw, phic, phin, dphi, sl, smax, bb, sy, vb, cap, fwh
 
   vsum = 0.0
   psum1 = 0.0
   psum2 = 0.0
   !$omp parallel do schedule(static) reduction(+: vsum, psum1, psum2) &
-  !$omp   private(i, j, k, in, jn, dd, dhw, hbq, hw, phic, phin, dphi, sl, smax, bb, sy, vb, cap)
+  !$omp   private(i, j, k, in, jn, dd, dhw, hbq, hw, phic, phin, dphi, sl, smax, bb, sy, vb, cap, fwh)
   do j = dcp%js, dcp%je
     do i = g%wx(1,j), g%wx(2,j)
       if (g%x(i,j) <= 0) cycle
@@ -601,9 +601,12 @@ subroutine plunge_cells(gm, g, s)
         s%h(i,j) = s%h(i,j) + dhw
       end if
       if (gm%f_dbwet == 2 .and. s%gw_active) then
+        ! dhw は地下の水深(層の平面)。地表側は河道幅セルで河道の平面に載るので
+        ! gw_to_h 倍で引く(体積を保つ換算。§26.1)
+        fwh = gw_to_h(s, i, j)
         cap = s%sd(i,j) * g%sy0
-        dhw = min(max(cap - s%hg(i,j), 0.0), g%sy0 * dd, max(s%h(i,j), 0.0))
-        s%h(i,j) = s%h(i,j) - dhw
+        dhw = min(max(cap - s%hg(i,j), 0.0), g%sy0 * dd, max(s%h(i,j), 0.0) / fwh)
+        s%h(i,j) = s%h(i,j) - dhw * fwh
         s%hg(i,j) = s%hg(i,j) + dhw
       end if
       vsum = vsum + dd

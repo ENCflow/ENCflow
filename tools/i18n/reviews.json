@@ -167,9 +167,9 @@
     {
       "source": "docs/users_guide/channel.md",
       "target": "docs/en/users_guide/channel.md",
-      "source_sha256": "d28f681da22a50f933c4f44861abd45ecc1b53dc1f35915d162b30f118cd370c",
-      "target_sha256": "f55178f1b39f9f06ccacfd03a95480fcd7561f0a937c65e092dd01b3c51abd63",
-      "reviewer": "Claude (Claude Code session; reviewed the Japanese source against the English mirror after unifying the term passage width / 通過幅 and noting the original paper's term, 2026-11-03)",
+      "source_sha256": "1c777860452e2d967314de3dd541496b33f9914a402434b8cad86d0054363e60",
+      "target_sha256": "93e5d2dc5b3f18c3709315deb3ad21afec0b53a6f89b22ce60eff81edce7dd78",
+      "reviewer": "Claude (Claude Code session; compared the Japanese master and the English mirror after adding the note on subsurface water exchange for subgrid channel width cells and the section-shape limitation, 2026-11-03)",
       "method": "assistant",
       "reviewed_on": "2026-11-03"
     },
@@ -2210,9 +2210,9 @@
     {
       "source": "test/README.md",
       "target": "test/README.en.md",
-      "source_sha256": "9f72a6a52e5c80b3c2cee48fa1d1ee4e08295cc7e4b0773de00fedf5633bcec7",
-      "target_sha256": "4ad71188f003c07b6539eff42db477d085521afdf5c47a929edb293dd0726d81",
-      "reviewer": "Claude (Claude Code session; reviewed the changed passages on water-level cells as outside water for transported quantities, wq_stage_conc/wq_stage_series and the ledger columns out_stage_g/in_stage_g of the Japanese source against the English mirror, 2026-11-03)",
+      "source_sha256": "1d2a6e79352bb22c03b1b1afb7d55414dc6f2a4cc950a1a08e0977bdae53f834",
+      "target_sha256": "8819c9febbcd0b7864726190d948e095e6b0c960efc988bb9a077077a9bdef70",
+      "reviewer": "Claude (Claude Code session; compared the new gwwidth rows of the test index in Japanese and English, 2026-11-03)",
       "method": "assistant",
       "reviewed_on": "2026-11-03"
     },
@@ -2809,6 +2809,15 @@
       "reviewer": "Claude (Claude Code session; English figure drawn by the same script with the en switch; visual check)",
       "method": "assistant",
       "reviewed_on": "2026-10-30"
+    },
+    {
+      "source": "test/gwwidth/README.md",
+      "target": "test/gwwidth/en/README.md",
+      "source_sha256": "9f643268bc31c46949dc7fcfc44455b3878bacf31064db1ff84df13bf9379961",
+      "target_sha256": "03b31dffd023116fc0dc627dbbd06c0df4dbc64e0e890447b2d99e4289618f81",
+      "reviewer": "Claude (Claude Code session; full-text review of the new test README and its English mirror, 2026-11-03)",
+      "method": "assistant",
+      "reviewed_on": "2026-11-03"
     },
     {
       "source": "test/hillslope/README.md",

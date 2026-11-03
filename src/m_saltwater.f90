@@ -75,7 +75,7 @@ module m_saltwater
   ! =====================================================================
   use m_sysparam, only : t_sysparam
   use m_geoinfo, only : t_geoinfo, zbank_min
-  use m_state, only : t_state
+  use m_state, only : t_state, gw_to_h
   use m_gwflow_lateral, only : t_gwlat, t_latlayer, gwflow_lateral_geom_init, &
                                gwflow_lateral_geom_get, gwflow_lateral_layer1_get, &
                                gwflow_lateral_open_get
@@ -771,7 +771,8 @@ subroutine gw_salt_zone(sl, g, s, dts)
       if (s%hg(i,j) > capc) then
         fx = s%hg(i,j) - capc
         s%hg(i,j) = capc
-        s%h(i,j) = s%h(i,j) + fx
+        ! 地表は河道幅セルで河道の平面に載る(体積を保つ換算。§26.1)
+        s%h(i,j) = s%h(i,j) + fx * gw_to_h(s, i, j)
         s%e(i,j) = s%z(i,j) + s%h(i,j)
       end if
       ! 湧出の淡塩配分(f_salt_exch=1。ヘッダ (3)・§47.5): このステップの湧出
@@ -792,7 +793,7 @@ subroutine gw_salt_zone(sl, g, s, dts)
         end if
         if (fs > 0.0) then
           s%hgs(i,j) = s%hgs(i,j) - fs
-          s%hss(i,j) = s%hss(i,j) + fs
+          s%hss(i,j) = s%hss(i,j) + fs * gw_to_h(s, i, j)   ! 地表の底層も河道の平面(§26.1)
         end if
         s%fxslo(i,j) = 0.0
       end if

@@ -380,7 +380,7 @@ module subroutine apply_splash(gm, g, s)
         if (s%hg(i,j) > cap) then
           fxg = s%hg(i,j) - cap
           s%hg(i,j) = cap
-          s%h(i,j) = s%h(i,j) + fxg
+          s%h(i,j) = s%h(i,j) + fxg * gw_to_h(s, i, j)   ! 河道の平面へ(§26.1)
         end if
       end if
     end do

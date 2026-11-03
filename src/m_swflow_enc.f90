@@ -1046,7 +1046,12 @@ subroutine m_swflow_enc_init(p, g, b, s)
   call bc_init(p, g, b)
 
   if (chn%have_frw) call build_channel_frw(g)
-  if (chn%have_width) call build_wfrac(g)
+  if (chn%have_width) then
+    call build_wfrac(g)
+    ! 地下の貯留から地表水への受け渡しの水深換算(gw_to_h。§26.1)用の写し
+    if (allocated(s%wfr)) deallocate(s%wfr)
+    allocate(s%wfr(dcp%ish:dcp%ieh, dcp%jsh:dcp%jeh), source = chn%wfrac)
+  end if
 
   ! σ の遷移深さ D の構築(zbank/drw は帯配布済み)
   if (sct%have_sect) call build_sdep(g, b, s)

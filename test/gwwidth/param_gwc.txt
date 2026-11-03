@@ -1,0 +1,81 @@
+!======================================================================
+! gwwidth: 管路連続体層と地表のやり取り(サブグリッド河道幅のセル。§26.1)
+!
+!   param.txt と同じ閉じた谷(谷底の列 10 は幅 2 m のサブグリッド河道)。
+!   地表は不浸透で、1 時間の一様降雨 20 mm/h が斜面を流れて谷底へ集まる。
+!   全セルに枡(1 個/セル)があり、管路層(貯留容量 0.01 m、管頂 = 地表)が
+!   地表水を飲み込み、満管になると被圧水頭が立ち上がって地表へ噴き出す。
+!   谷底の最下流の河道セルには陸側吐口(Cd·A = 0.05 m2)を置く。
+!   管路の貯留はセルの平面、谷底の地表水は河道の平面(wfrac = 0.2)に
+!   載るので、流入・噴出・吐口のやり取りは河道幅の割合で換算する。
+!   - 閉領域なので、雨が止んだ後の総水量 S_total(地表+管路)は一定
+!   - 雨と噴出・吐口の水の濃度を 1 mg/L にそろえる。地表の濃度は
+!     どこでも 1 のまま(換算がずれると噴き出した水の濃度が変わる)
+!   Check_gwwidth.py が S_total の保存・濃度の上限・水質の台帳の閉合を検定する。
+!======================================================================
+&list_sysparam
+  dt = 0.5                  ! 時間刻み (s)
+  tt_c = "4h"               ! 計算終了時刻
+  dt_disp_c = "30m"         ! 画面表示の間隔
+  dt_file_c = "1h"          ! 分布ファイル出力の間隔
+  dt_recrd_c = "10m"        ! wq.csv の記録間隔
+  fn_geoinfo = '-'
+  fn_channel = '-'
+  fn_gwflow = '-'
+  fn_precip = '-'
+  fn_wq = '-'
+  dir_data = 'data_gwwidth'
+  dir_result = 'result_gwc'
+  f_check_cfl = 0
+  f_disp_debug = 1          ! 回帰テスト用: S 列を全有効桁で表示
+  f_output_mode = 2         ! 分布は bil(単精度。濃度の検定に桁を残す)
+  f_out_hg = 1              ! 管路の貯留 Hgc
+/
+
+&list_geoinfo
+  nx = 12
+  ny = 8
+  dx = 10.0
+  dy = 10.0
+  f_ztype = 1               ! 地盤高ファイル
+  fn_z = 'z.txt'
+  rn0 = 0.05
+  fn_rw = 'rw.txt'          ! 河道マスク(列 10)
+/
+
+&list_channel
+  fn_width = 'width.txt'    ! サブグリッド河道幅 2 m(wfrac = 0.2)
+/
+
+&list_precip
+  prtype = 1                ! 一様時系列
+  dt_prupdate = 1           ! 更新間隔 (min)
+  prval(:,1) =    0, 20.0   ! (時刻 min, 雨量強度 mm/h)
+  prval(:,2) =   60, 20.0
+  prval(:,3) =   61,  0.0
+  prval(:,4) = 9999,  0.0
+/
+
+&list_gwflow
+  f_gwvertical = 0          ! 鉛直モデルなし(不浸透の地表)
+  f_gwlateral = 0
+  f_gwconduit = 1           ! 管路連続体層
+/
+
+&list_gwflow_conduit
+  f_gwc_fluxlaw = 2         ! sqrt 乱流則(側方通水なしのため未使用)
+  gwc_cnd_m2s = 0.0         ! 側方通水なし(セル独立の貯留・交換)
+  gwc_cap = 0.01            ! 貯留容量 (m 柱状)
+  gwc_depth = 1.0           ! 埋設深: 水頭底 = z - 1 (m)
+  gwc_sy = 0.01             ! 不圧貯留係数(管頂 = 水頭底 + cap/sy = 地表)
+  gwc_slot_sy = 0.001       ! 疑似スロット貯留係数(被圧枝)
+  gwc_inlet = 0.01          ! 枡密度 (個/m2) = 1 個/セル
+  gwc_cw = 2.66             ! 堰係数
+  gwc_co = 0.15             ! オリフィス係数 Cd·A (m2)
+  fn_gwc_outfall = 'outfall.txt'   ! 陸側吐口(谷底の最下流の河道セル)
+/
+
+&list_wq
+  wq_rain_conc = 1.0        ! 雨の濃度 (mg/L)
+  wq_gwc_conc = 1.0         ! 噴出・吐口の水の濃度 (mg/L)。雨とそろえる
+/

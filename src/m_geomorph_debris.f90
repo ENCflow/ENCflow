@@ -367,7 +367,7 @@ module subroutine calc_debris(gm, p, g, s, dtw)
   type(t_state), intent(inout) :: s
   real, intent(in) :: dtw       ! 実効時間刻み(morfac=1 を init で保証済み)
   integer :: i, j
-  real :: tanth, cinf, cc, hm, fx, dzb, cap, fxg, hseq, dhw
+  real :: tanth, cinf, cc, hm, fx, dzb, cap, fxg, hseq, dhw, fwh
   real :: tanthc, sinthc, vcr, fac
   real :: tanf, ge, taud, fr, bd, bdm, area   ! 土石流による岩盤侵食(§89.18)
   real(real64) :: vd
@@ -542,7 +542,7 @@ module subroutine calc_debris(gm, p, g, s, dtw)
   ! --- パス2: 適用(書き込みは自セルに閉じる) ---
   area = g%dx * g%dy
   bdm = 0.0
-  !$omp parallel do schedule(static) private(i, j, fx, dzb, cap, fxg, dhw, bd, vd) &
+  !$omp parallel do schedule(static) private(i, j, fx, dzb, cap, fxg, dhw, fwh, bd, vd) &
   !$omp   reduction(max: bdm)
   do j = dcp%js, dcp%je
     vd = 0.0_real64
@@ -572,14 +572,17 @@ module subroutine calc_debris(gm, p, g, s, dtw)
         !      クランプ)。堆積と侵食が入れ替わっても往復で水を汲み上げない
         !     (容量超過だけを戻す規則だと、不飽和の層で堆積のたびに地表水が
         !      地下へ移るだけの片方向の汲み上げになる)。水の総量は保存
+        !   dhw は地下の水深(層の平面)。地表側は河道幅セルで河道の平面に
+        !   載るので gw_to_h 倍で出し入れする(体積を保つ換算。§26.1)
         if (gm%f_dbwet == 2 .and. s%gw_active) then
+          fwh = gw_to_h(s, i, j)
           if (dzb > 0.0) then
             cap = s%sd(i,j) * g%sy0
-            dhw = min(max(cap - s%hg(i,j), 0.0), g%sy0 * dzb, max(s%h(i,j), 0.0))
+            dhw = min(max(cap - s%hg(i,j), 0.0), g%sy0 * dzb, max(s%h(i,j), 0.0) / fwh)
           else
             dhw = -min(-g%sy0 * dzb, max(s%hg(i,j), 0.0))
           end if
-          s%h(i,j) = s%h(i,j) - dhw
+          s%h(i,j) = s%h(i,j) - dhw * fwh
           s%hg(i,j) = s%hg(i,j) + dhw
         end if
         ! 浸食で地下水容量が現在の貯留を下回ったら、超過分を地表水へ渡す
@@ -589,7 +592,7 @@ module subroutine calc_debris(gm, p, g, s, dtw)
           if (s%hg(i,j) > cap) then
             fxg = s%hg(i,j) - cap
             s%hg(i,j) = cap
-            s%h(i,j) = s%h(i,j) + fxg
+            s%h(i,j) = s%h(i,j) + fxg * gw_to_h(s, i, j)   ! 河道の平面へ(§26.1)
           end if
         end if
       end if
@@ -697,7 +700,7 @@ subroutine slide_pass2(gm, g, s)
         if (s%hg(i,j) > cap) then
           fxg = s%hg(i,j) - cap
           s%hg(i,j) = cap
-          s%h(i,j) = s%h(i,j) + fxg
+          s%h(i,j) = s%h(i,j) + fxg * gw_to_h(s, i, j)   ! 河道の平面へ(§26.1)
         end if
       else
         s%h(i,j) = s%h(i,j) + (1.0 - 1.0 / gm%poroi) * gm%db_relsat * dd
@@ -756,7 +759,7 @@ module subroutine release_debris(gm, p, g, s)
         if (s%hg(i,j) > cap) then
           fxg = s%hg(i,j) - cap
           s%hg(i,j) = cap
-          s%h(i,j) = s%h(i,j) + fxg
+          s%h(i,j) = s%h(i,j) + fxg * gw_to_h(s, i, j)   ! 河道の平面へ(§26.1)
         end if
       else
         ! gwflow 無効: 飽和度 relsat の間隙水をシナリオ的に付与

@@ -21,6 +21,7 @@ module m_state
   public :: m_state_calcstat
   public :: m_state_set_gv
   public :: m_state_printstate
+  public :: gw_to_h
 
 
   ! 画面出力用変数
@@ -73,6 +74,11 @@ module m_state
                                         !   h×af = 真の貯水体積/セル面積 となるよう
                                         !   swflow(complete)が毎ステップ更新する導出量
                                         !   (save 対象外。既定・非河道セルは gv と同値)
+    real, allocatable :: wfr(:,:)       ! 河道幅の平面積率 wfrac の写し(§26.1)。地下の貯留
+                                        !   (hg・hgs・hgc)から地表水 h へ水を移すときの
+                                        !   水深の換算(gw_to_h)に使う。swflow_enc の init が
+                                        !   build_wfrac の直後に埋める静的な導出量(save
+                                        !   対象外)。河道幅が無効なら確保しない(係数 1)
     real, allocatable :: gv(:,:)        ! 家屋の空隙率(時間ループの正本。§63)。初期値は
                                         !   入力 g%gv の帯写しで、g%gv/g%lm の帯は
                                         !   band_shrink で解放される(z と同じ持ち主の移動)。
@@ -965,6 +971,7 @@ subroutine m_state_dispose(s, p)
   if (allocated(s%prh)) deallocate(s%prh)
   if (allocated(s%hrs)) deallocate(s%hrs)
   if (allocated(s%af)) deallocate(s%af)
+  if (allocated(s%wfr)) deallocate(s%wfr)
   if (allocated(s%gv)) deallocate(s%gv)
   if (allocated(s%lm)) deallocate(s%lm)
   if (allocated(s%hg)) deallocate(s%hg)
@@ -1488,5 +1495,21 @@ subroutine check_save_info(p, s)
 
   call par_info("save: resuming from saved state at t="//rtoa(t)//" s (it="//itoa(it)//")")
 end subroutine
+
+!----------------------------------------------------------------------
+! 地下の貯留(層1 hg・地下の塩水 hgs・管路連続体層 hgc)から地表水 h へ
+! 水を移すときの水深の換算係数(§26.1)。地下の水深はセルの平面(gv 基底)、
+! 地表の水深は河道幅セルでは河道の平面(gv×wfrac)に載るので、体積を
+! 保つ換算は 1/wfrac。河道幅が無効なら 1(fx × 1.0 = fx で従来とビット一致)。
+! 逆向き(地表→地下)は浸透と同じ af/gv を掛ける(§26。σ 断面のセルは
+! どちらの向きも近似。§26.1)
+!----------------------------------------------------------------------
+pure real function gw_to_h(s, i, j) result(f)
+  type(t_state), intent(in) :: s
+  integer, intent(in) :: i, j
+  f = 1.0
+  if (allocated(s%wfr)) f = 1.0 / s%wfr(i,j)
+end function
+
 
 end module

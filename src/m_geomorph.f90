@@ -46,7 +46,7 @@ module m_geomorph
   use, intrinsic :: iso_fortran_env, only : real64
   use m_sysparam, only : t_sysparam
   use m_geoinfo, only : t_geoinfo, m_geoinfo_require_sd
-  use m_state, only : t_state
+  use m_state, only : t_state, gw_to_h
   use m_boundary, only : t_boundary        ! 区間流入の掃流砂給砂表 b%qbin(§84.9。読み取り専用)
   use list_geomorph, only : t_list_geomorph, list_geomorph_read
   use list_wave, only : t_list_wave, list_wave_read   ! 波浪条件(沿岸漂砂。§84.15)
