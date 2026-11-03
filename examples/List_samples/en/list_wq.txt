@@ -128,4 +128,13 @@
   !      &list_bound_inflow; mg/L) ----
   !wq_in_conc(1) = 5.0              ! constant concentration
   !wq_in_series(:,1,2) = 0.0, 10.0  ! time series (days elapsed, mg/L)
+
+  ! ---- Boundary concentrations of water-level cells (per group number of
+  !      &list_bound_stage; mg/L) ----
+  !   Water-level cells are outside water for the substance (what flows in
+  !   leaves the system, counted in out_stage_g of the ledger; water entering
+  !   from them carries this concentration, counted in in_stage_g;
+  !   omitted = clean water)
+  !wq_stage_conc(1) = 0.5           ! constant concentration
+  !wq_stage_series(:,1,2) = 0.0, 1.0  ! time series (days elapsed, mg/L)
 /

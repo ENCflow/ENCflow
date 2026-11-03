@@ -195,6 +195,20 @@ inflow volume is not preserved in that cell's budget.
 - A large level difference between prescribed cells and their
   surroundings produces a local dam-break flow. If the initial Cn_max
   is large, review dt.
+- **For transported quantities (water quality, suspended sediment
+  including the solid phase of debris flows, the saltwater layer, driftwood
+  and building debris), prescribed cells are outside water** (the same as the sea cells of the sea mask). A quantity
+  that flows into a prescribed cell leaves the system, and water entering
+  from a prescribed cell carries the boundary concentration. The boundary
+  concentration is clean water (0) by default; only water quality can give
+  it per group with `wq_stage_conc` / `wq_stage_series` ([water
+  quality](wq.md); the exchange is recorded in the `out_stage_g` and
+  `in_stage_g` columns of `wq.csv`). This is done by resetting the column
+  quantity of each prescribed cell to the boundary concentration times the
+  water depth every step (since 2026-11-03; before that, a quantity that
+  flowed into a prescribed cell kept accumulating there and came back into
+  the domain when the flow reversed). To bring saltwater in from the sea,
+  use the sea mask and the [tide](tide.md) instead of prescribed cells.
 
 **Outputs for this section**: a probe on a prescribed cell shows `h` and `z + h` equal to the given level; the water leaving the cells spreads in the surrounding `H0001...` ([Output and monitoring](#output-and-monitoring)).
 

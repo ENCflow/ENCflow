@@ -41,7 +41,7 @@ T = {
                    'wq_ar_cell\nwq_ar_load [kg/ha/day]\n/ wq_ar_series',
                    'fn_wq_map\n× wq_map_factor\nf_wq_map = 0',
                    'wq_rain_conc [mg/L]\n/ wq_rain_series\n× 地表到達雨量',
-                   'wq_in_conc(n) [mg/L]\n/ wq_in_series\n区間流入へ指定',
+                   'wq_in_conc / _series\n(区間流入) [mg/L]\nwq_stage_conc / _series\n(水位規定セル)',
                    'wq_gwc_conc [mg/L]\n× 噴出・陸側吐口水量\n要 f_gwconduit = 1'],
     'no_column':'CSVの独立列なし',
     'surface':'地表水',
@@ -66,7 +66,7 @@ T = {
     'buildup':'表面プールへの蓄積入力  |  in_bldup_g',
     'buildup_body':'wq_bd_rate または fn_wq_map（f_wq_map = 1）\n分布には wq_map_factor を適用。初期量は累積入力と別。',
     'loss':'地表から追跡対象外へ（破線）',
-    'loss_body':'河床への沈降: f_wq_settle = 0 / settle_g\n枡流入: f_wq_gwc_in = 1 / to_gwc_g、水位固定湖沼: to_dam_g\n系外へ流出: 海セル out_sea_g / 開いた辺 out_edge_g',
+    'loss_body':'河床への沈降: f_wq_settle = 0 / settle_g\n枡流入: f_wq_gwc_in = 1 / to_gwc_g、水位固定湖沼: to_dam_g\n系外へ流出: 海セル out_sea_g / 開いた辺 out_edge_g\n水位規定セル(系外の水)out_stage_g',
     'decay':'5つの貯留すべてで一次減衰  |  decay_g',
     'decay_body':'地表・地下・表面プール・ダム・ため池。wq_thalf または wq_k20 を指定（排他）。',
     'b':'(b) 分配と沈降の二つの方式（同時指定不可）',
@@ -80,7 +80,7 @@ T = {
     'ledger':'mass_*_g は現在貯留、入力・移動・減衰は累積量。\n内部移動を系外損失として二重に数えない。',
     'settle_ledger':'settle_g は行き先0・1の両方で計上。\n行き先1のとき、全貯留の合計から差し引かない。',
     'dam_ledger':'to_dam_g は貯留型と水位固定型の捕捉を合算。\n管内の物質輸送は解かず、管路への除去と噴出入力は別。',
-    'boundary_ledger':'系外との出入りは out_sea_g・out_edge_g(流出)と in_edge_g(流入)。\n収支残差の独立列はない。各列を足し引きして閉合を検算する。',
+    'boundary_ledger':'系外との出入り: out_sea_g・out_edge_g・out_stage_g(流出)、\nin_edge_g・in_stage_g(流入)。収支残差の独立列はない。\n各列を足し引きして閉合を検算する。',
     'footer':'模式図。初期量・入力条件・有効な経路をそろえて収支を検算する。v_h は断面形状を考慮した矩形換算水深。',
  },
  'en': {
@@ -92,7 +92,7 @@ T = {
                   'wq_ar_cell\nwq_ar_load [kg/ha/day]\n/ wq_ar_series',
                   'fn_wq_map\n× wq_map_factor\nf_wq_map = 0',
                   'wq_rain_conc [mg/L]\n/ wq_rain_series\n× rain reaching ground',
-                  'wq_in_conc(n) [mg/L]\n/ wq_in_series\non inflow segments',
+                  'wq_in_conc / _series\n(inflow segments) [mg/L]\nwq_stage_conc / _series\n(water-level cells)',
                   'wq_gwc_conc [mg/L]\n× surcharge/outfall water\nneeds f_gwconduit = 1'],
     'no_column':'No separate CSV column',
     'surface':'Surface water',
@@ -117,7 +117,7 @@ T = {
     'buildup':'Input to the buildup pool  |  in_bldup_g',
     'buildup_body':'wq_bd_rate OR fn_wq_map (f_wq_map = 1)\nApply wq_map_factor to the map. Initial mass is separate.',
     'loss':'Removal from surface storage (dashed)',
-    'loss_body':'To bed: f_wq_settle = 0 / settle_g\nInlet removal: f_wq_gwc_in = 1 / to_gwc_g; fixed-level lake: to_dam_g\nOut of the system: sea cells out_sea_g / open edges out_edge_g',
+    'loss_body':'To bed: f_wq_settle = 0 / settle_g\nInlet removal: f_wq_gwc_in = 1 / to_gwc_g; fixed-level lake: to_dam_g\nOut of the system: sea cells out_sea_g / open edges out_edge_g\nWater-level cells (outside water) out_stage_g',
     'decay':'First-order decay in all five stores  |  decay_g',
     'decay_body':'Surface, groundwater, buildup, dams and ponds. Specify either wq_thalf or wq_k20.',
     'b':'(b) Two alternative settling treatments (choose one)',
@@ -131,11 +131,11 @@ T = {
     'ledger':'mass_*_g columns are current stores; other mass columns are cumulative.\nAvoid double-counting internal transfers as system losses.',
     'settle_ledger':'settle_g counts settling for both destinations 0 and 1.\nFor destination 1, do not subtract it from total stored mass.',
     'dam_ledger':'to_dam_g combines captures by storage and fixed-level lakes.\nPipe transport is not solved; removal and surcharge are separate.',
-    'boundary_ledger':'Exchange with the outside: out_sea_g, out_edge_g (out) and in_edge_g (in).\nNo separate residual column; check closure by adding up the columns.',
+    'boundary_ledger':'Exchange with the outside: out_sea_g, out_edge_g, out_stage_g (out)\nand in_edge_g, in_stage_g (in). No separate residual column;\ncheck closure by adding up the columns.',
     'footer':'Schematic. Check budgets with consistent initial mass, inputs and active pathways. v_h is the section-equivalent rectangular water depth.',
  },
 }
-INPUT_LEDGER = ['in_point_g','in_area_g','in_map_g','in_rain_g','in_edge_g','in_gwc_g']
+INPUT_LEDGER = ['in_point_g','in_area_g','in_map_g','in_rain_g','in_edge_g / in_stage_g','in_gwc_g']
 STORE_LEDGER = ['mass_surface_g','mass_pool_g','mass_gw_g','mass_dam_g','mass_rs_g']
 
 

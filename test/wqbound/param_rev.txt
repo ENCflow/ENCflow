@@ -1,0 +1,65 @@
+!======================================================================
+! wqbound (rev): 水位規定セルからの逆流(developer.md §30.9)
+!   水深 1 m・濃度 1 mg/L の水を満たした平らな水路(30 × 1 セル、dx = 10 m)の
+!   西端から清水 0.5 m3/s を 1 時間流して東端の水位規定セル(水位 0 m)へ押し出し、
+!   1〜1.5 時間に規定水位を 0.5 m まで上げて逆流させる。水位規定セルは輸送物質に
+!   とって系外の水で、逆流で入る水の濃度は境界濃度 wq_stage_conc(1) = 0.5 mg/L。
+!   検定: 濃度が初期値 1 mg/L を超えない(規定セルに溜まった質量が戻らない)、
+!   規定セルに接するセルの濃度が逆流後に境界濃度になる、台帳が閉じる
+!======================================================================
+&list_sysparam
+  dt = 0.1
+  t0 = 0
+  tt = 7200
+  dt_disp = 1800
+  dt_file = 600
+  dt_recrd = 300
+  fn_geoinfo = '-'
+  fn_initial = '-'
+  fn_boundary = '-'
+  fn_wq = '-'
+  dir_data = 'data_wqbound'
+  dir_result = 'result_rev'
+  f_disp_debug = 1
+  f_check_cfl = 1
+/
+
+&list_enc
+/
+
+&list_initial
+  f_htype = 0
+  h0 = 1.0                  ! 水深 1 m(水位 0 m)
+/
+
+&list_geoinfo
+  nx = 30
+  ny = 1
+  dx = 10.0
+  dy = 10.0
+  f_ztype = 0
+  z0 = -1.0                 ! 平らな水路(地盤高 −1 m)
+  f_rntype = 0
+  rn0 = 0.03
+/
+
+&list_bound_source
+  src_cell(:,1,1) = 1, 1        ! 西端から清水を 1 時間
+  src_val(:,1,1) =     0, 0.5   ! (時刻 min, 流量 m3/s)
+  src_val(:,2,1) =    60, 0.5
+  src_val(:,3,1) = 60.01, 0.0
+  src_val(:,4,1) =  9999, 0.0
+/
+
+&list_bound_stage
+  stage_cell(:,1,1) = 30, 1     ! 東端の水位規定セル
+  stage_val(:,1,1) =    0, 0.0  ! (時刻 min, 水位 m): 1 時間は 0 m、1〜1.5 時間に
+  stage_val(:,2,1) =   60, 0.0  !   0.5 m まで上げて逆流させる
+  stage_val(:,3,1) =   90, 0.5
+  stage_val(:,4,1) = 9999, 0.5
+/
+
+&list_wq
+  wq_c0 = 1.0                   ! 初期濃度 (mg/L)
+  wq_stage_conc(1) = 0.5        ! 水位規定セル群 1 の境界濃度 (mg/L。in_stage_g)
+/

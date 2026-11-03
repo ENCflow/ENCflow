@@ -2132,8 +2132,8 @@ z
     </g>
    </g>
    <g id="text_17">
-    <!-- wq_in_conc(n) [mg/L] -->
-    <g style="fill: #282c30" transform="translate(510.72 101.090977) scale(0.079 -0.079)">
+    <!-- wq_in_conc / _series -->
+    <g style="fill: #282c30" transform="translate(510.72 101.07925) scale(0.079 -0.079)">
      <use xlink:href="#NotoSansCJKjp-Regular-58"/>
      <use xlink:href="#NotoSansCJKjp-Regular-52" transform="translate(79.796875 0)"/>
      <use xlink:href="#NotoSansCJKjp-Regular-40" transform="translate(141.796875 0)"/>
@@ -2144,36 +2144,19 @@ z
      <use xlink:href="#NotoSansCJKjp-Regular-50" transform="translate(390.703125 0)"/>
      <use xlink:href="#NotoSansCJKjp-Regular-4f" transform="translate(451.296875 0)"/>
      <use xlink:href="#NotoSansCJKjp-Regular-44" transform="translate(512.296875 0)"/>
-     <use xlink:href="#NotoSansCJKjp-Regular-9" transform="translate(563.296875 0)"/>
-     <use xlink:href="#NotoSansCJKjp-Regular-4f" transform="translate(597.09375 0)"/>
-     <use xlink:href="#NotoSansCJKjp-Regular-a" transform="translate(658.09375 0)"/>
-     <use xlink:href="#NotoSansCJKjp-Regular-1" transform="translate(691.890625 0)"/>
-     <use xlink:href="#NotoSansCJKjp-Regular-3c" transform="translate(714.296875 0)"/>
-     <use xlink:href="#NotoSansCJKjp-Regular-4e" transform="translate(748.09375 0)"/>
-     <use xlink:href="#NotoSansCJKjp-Regular-48" transform="translate(840.6875 0)"/>
-     <use xlink:href="#NotoSansCJKjp-Regular-10" transform="translate(902.390625 0)"/>
-     <use xlink:href="#NotoSansCJKjp-Regular-2d" transform="translate(941.59375 0)"/>
-     <use xlink:href="#NotoSansCJKjp-Regular-3e" transform="translate(995.890625 0)"/>
+     <use xlink:href="#NotoSansCJKjp-Regular-1" transform="translate(563.296875 0)"/>
+     <use xlink:href="#NotoSansCJKjp-Regular-10" transform="translate(585.703125 0)"/>
+     <use xlink:href="#NotoSansCJKjp-Regular-1" transform="translate(624.90625 0)"/>
+     <use xlink:href="#NotoSansCJKjp-Regular-40" transform="translate(647.3125 0)"/>
+     <use xlink:href="#NotoSansCJKjp-Regular-54" transform="translate(703.21875 0)"/>
+     <use xlink:href="#NotoSansCJKjp-Regular-46" transform="translate(750.015625 0)"/>
+     <use xlink:href="#NotoSansCJKjp-Regular-53" transform="translate(805.421875 0)"/>
+     <use xlink:href="#NotoSansCJKjp-Regular-4a" transform="translate(844.21875 0)"/>
+     <use xlink:href="#NotoSansCJKjp-Regular-46" transform="translate(871.71875 0)"/>
+     <use xlink:href="#NotoSansCJKjp-Regular-54" transform="translate(927.125 0)"/>
     </g>
-    <!-- / wq_in_series -->
-    <g style="fill: #282c30" transform="translate(510.72 112.53425) scale(0.079 -0.079)">
-     <use xlink:href="#NotoSansCJKjp-Regular-10"/>
-     <use xlink:href="#NotoSansCJKjp-Regular-1" transform="translate(39.203125 0)"/>
-     <use xlink:href="#NotoSansCJKjp-Regular-58" transform="translate(61.609375 0)"/>
-     <use xlink:href="#NotoSansCJKjp-Regular-52" transform="translate(141.40625 0)"/>
-     <use xlink:href="#NotoSansCJKjp-Regular-40" transform="translate(203.40625 0)"/>
-     <use xlink:href="#NotoSansCJKjp-Regular-4a" transform="translate(259.3125 0)"/>
-     <use xlink:href="#NotoSansCJKjp-Regular-4f" transform="translate(286.8125 0)"/>
-     <use xlink:href="#NotoSansCJKjp-Regular-40" transform="translate(347.8125 0)"/>
-     <use xlink:href="#NotoSansCJKjp-Regular-54" transform="translate(403.71875 0)"/>
-     <use xlink:href="#NotoSansCJKjp-Regular-46" transform="translate(450.515625 0)"/>
-     <use xlink:href="#NotoSansCJKjp-Regular-53" transform="translate(505.921875 0)"/>
-     <use xlink:href="#NotoSansCJKjp-Regular-4a" transform="translate(544.71875 0)"/>
-     <use xlink:href="#NotoSansCJKjp-Regular-46" transform="translate(572.21875 0)"/>
-     <use xlink:href="#NotoSansCJKjp-Regular-54" transform="translate(627.625 0)"/>
-    </g>
-    <!-- on inflow segments -->
-    <g style="fill: #282c30" transform="translate(510.72 123.965797) scale(0.079 -0.079)">
+    <!-- (inflow segments) [mg/L] -->
+    <g style="fill: #282c30" transform="translate(510.72 112.545977) scale(0.079 -0.079)">
      <defs>
       <path id="NotoSansCJKjp-Regular-e660" d="M 3290 -83
 C 3443 -83 3539 -58 3622 -32
@@ -2205,27 +2188,90 @@ L 211 3002
 z
 " transform="scale(0.015625)"/>
      </defs>
-     <use xlink:href="#NotoSansCJKjp-Regular-50"/>
-     <use xlink:href="#NotoSansCJKjp-Regular-4f" transform="translate(60.59375 0)"/>
-     <use xlink:href="#NotoSansCJKjp-Regular-1" transform="translate(121.59375 0)"/>
-     <use xlink:href="#NotoSansCJKjp-Regular-4a" transform="translate(144 0)"/>
-     <use xlink:href="#NotoSansCJKjp-Regular-4f" transform="translate(171.5 0)"/>
-     <use xlink:href="#NotoSansCJKjp-Regular-e660" transform="translate(232.5 0)"/>
-     <use xlink:href="#NotoSansCJKjp-Regular-50" transform="translate(293.5 0)"/>
-     <use xlink:href="#NotoSansCJKjp-Regular-58" transform="translate(353.6875 0)"/>
-     <use xlink:href="#NotoSansCJKjp-Regular-1" transform="translate(433.890625 0)"/>
-     <use xlink:href="#NotoSansCJKjp-Regular-54" transform="translate(456.296875 0)"/>
-     <use xlink:href="#NotoSansCJKjp-Regular-46" transform="translate(503.09375 0)"/>
-     <use xlink:href="#NotoSansCJKjp-Regular-48" transform="translate(557.40625 0)"/>
-     <use xlink:href="#NotoSansCJKjp-Regular-4e" transform="translate(613.8125 0)"/>
-     <use xlink:href="#NotoSansCJKjp-Regular-46" transform="translate(706.40625 0)"/>
-     <use xlink:href="#NotoSansCJKjp-Regular-4f" transform="translate(761.8125 0)"/>
-     <use xlink:href="#NotoSansCJKjp-Regular-55" transform="translate(822.8125 0)"/>
-     <use xlink:href="#NotoSansCJKjp-Regular-54" transform="translate(859.421875 0)"/>
+     <use xlink:href="#NotoSansCJKjp-Regular-9"/>
+     <use xlink:href="#NotoSansCJKjp-Regular-4a" transform="translate(33.796875 0)"/>
+     <use xlink:href="#NotoSansCJKjp-Regular-4f" transform="translate(61.296875 0)"/>
+     <use xlink:href="#NotoSansCJKjp-Regular-e660" transform="translate(122.296875 0)"/>
+     <use xlink:href="#NotoSansCJKjp-Regular-50" transform="translate(183.296875 0)"/>
+     <use xlink:href="#NotoSansCJKjp-Regular-58" transform="translate(243.484375 0)"/>
+     <use xlink:href="#NotoSansCJKjp-Regular-1" transform="translate(323.6875 0)"/>
+     <use xlink:href="#NotoSansCJKjp-Regular-54" transform="translate(346.09375 0)"/>
+     <use xlink:href="#NotoSansCJKjp-Regular-46" transform="translate(392.890625 0)"/>
+     <use xlink:href="#NotoSansCJKjp-Regular-48" transform="translate(447.203125 0)"/>
+     <use xlink:href="#NotoSansCJKjp-Regular-4e" transform="translate(503.609375 0)"/>
+     <use xlink:href="#NotoSansCJKjp-Regular-46" transform="translate(596.203125 0)"/>
+     <use xlink:href="#NotoSansCJKjp-Regular-4f" transform="translate(651.609375 0)"/>
+     <use xlink:href="#NotoSansCJKjp-Regular-55" transform="translate(712.609375 0)"/>
+     <use xlink:href="#NotoSansCJKjp-Regular-54" transform="translate(749.21875 0)"/>
+     <use xlink:href="#NotoSansCJKjp-Regular-a" transform="translate(796.015625 0)"/>
+     <use xlink:href="#NotoSansCJKjp-Regular-1" transform="translate(829.8125 0)"/>
+     <use xlink:href="#NotoSansCJKjp-Regular-3c" transform="translate(852.21875 0)"/>
+     <use xlink:href="#NotoSansCJKjp-Regular-4e" transform="translate(886.015625 0)"/>
+     <use xlink:href="#NotoSansCJKjp-Regular-48" transform="translate(978.609375 0)"/>
+     <use xlink:href="#NotoSansCJKjp-Regular-10" transform="translate(1040.3125 0)"/>
+     <use xlink:href="#NotoSansCJKjp-Regular-2d" transform="translate(1079.515625 0)"/>
+     <use xlink:href="#NotoSansCJKjp-Regular-3e" transform="translate(1133.8125 0)"/>
+    </g>
+    <!-- wq_stage_conc / _series -->
+    <g style="fill: #282c30" transform="translate(510.72 123.906547) scale(0.079 -0.079)">
+     <use xlink:href="#NotoSansCJKjp-Regular-58"/>
+     <use xlink:href="#NotoSansCJKjp-Regular-52" transform="translate(79.796875 0)"/>
+     <use xlink:href="#NotoSansCJKjp-Regular-40" transform="translate(141.796875 0)"/>
+     <use xlink:href="#NotoSansCJKjp-Regular-54" transform="translate(197.703125 0)"/>
+     <use xlink:href="#NotoSansCJKjp-Regular-55" transform="translate(242.296875 0)"/>
+     <use xlink:href="#NotoSansCJKjp-Regular-42" transform="translate(277.59375 0)"/>
+     <use xlink:href="#NotoSansCJKjp-Regular-48" transform="translate(333.890625 0)"/>
+     <use xlink:href="#NotoSansCJKjp-Regular-46" transform="translate(388.796875 0)"/>
+     <use xlink:href="#NotoSansCJKjp-Regular-40" transform="translate(444.203125 0)"/>
+     <use xlink:href="#NotoSansCJKjp-Regular-44" transform="translate(500.109375 0)"/>
+     <use xlink:href="#NotoSansCJKjp-Regular-50" transform="translate(548.703125 0)"/>
+     <use xlink:href="#NotoSansCJKjp-Regular-4f" transform="translate(609.296875 0)"/>
+     <use xlink:href="#NotoSansCJKjp-Regular-44" transform="translate(670.296875 0)"/>
+     <use xlink:href="#NotoSansCJKjp-Regular-1" transform="translate(721.296875 0)"/>
+     <use xlink:href="#NotoSansCJKjp-Regular-10" transform="translate(743.703125 0)"/>
+     <use xlink:href="#NotoSansCJKjp-Regular-1" transform="translate(782.90625 0)"/>
+     <use xlink:href="#NotoSansCJKjp-Regular-40" transform="translate(805.3125 0)"/>
+     <use xlink:href="#NotoSansCJKjp-Regular-54" transform="translate(861.21875 0)"/>
+     <use xlink:href="#NotoSansCJKjp-Regular-46" transform="translate(908.015625 0)"/>
+     <use xlink:href="#NotoSansCJKjp-Regular-53" transform="translate(963.421875 0)"/>
+     <use xlink:href="#NotoSansCJKjp-Regular-4a" transform="translate(1002.21875 0)"/>
+     <use xlink:href="#NotoSansCJKjp-Regular-46" transform="translate(1029.71875 0)"/>
+     <use xlink:href="#NotoSansCJKjp-Regular-54" transform="translate(1085.125 0)"/>
+    </g>
+    <!-- (water-level cells) -->
+    <g style="fill: #282c30" transform="translate(510.72 135.669523) scale(0.079 -0.079)">
+     <defs>
+      <path id="NotoSansCJKjp-Regular-e" d="M 294 1568
+L 1933 1568
+L 1933 2016
+L 294 2016
+L 294 1568
+z
+" transform="scale(0.015625)"/>
+     </defs>
+     <use xlink:href="#NotoSansCJKjp-Regular-9"/>
+     <use xlink:href="#NotoSansCJKjp-Regular-58" transform="translate(33.796875 0)"/>
+     <use xlink:href="#NotoSansCJKjp-Regular-42" transform="translate(112.90625 0)"/>
+     <use xlink:href="#NotoSansCJKjp-Regular-55" transform="translate(167.703125 0)"/>
+     <use xlink:href="#NotoSansCJKjp-Regular-46" transform="translate(203.90625 0)"/>
+     <use xlink:href="#NotoSansCJKjp-Regular-53" transform="translate(259.3125 0)"/>
+     <use xlink:href="#NotoSansCJKjp-Regular-e" transform="translate(295.40625 0)"/>
+     <use xlink:href="#NotoSansCJKjp-Regular-4d" transform="translate(330.109375 0)"/>
+     <use xlink:href="#NotoSansCJKjp-Regular-46" transform="translate(358.515625 0)"/>
+     <use xlink:href="#NotoSansCJKjp-Regular-57" transform="translate(414.421875 0)"/>
+     <use xlink:href="#NotoSansCJKjp-Regular-46" transform="translate(466.109375 0)"/>
+     <use xlink:href="#NotoSansCJKjp-Regular-4d" transform="translate(521.515625 0)"/>
+     <use xlink:href="#NotoSansCJKjp-Regular-1" transform="translate(549.921875 0)"/>
+     <use xlink:href="#NotoSansCJKjp-Regular-44" transform="translate(572.328125 0)"/>
+     <use xlink:href="#NotoSansCJKjp-Regular-46" transform="translate(620.921875 0)"/>
+     <use xlink:href="#NotoSansCJKjp-Regular-4d" transform="translate(676.328125 0)"/>
+     <use xlink:href="#NotoSansCJKjp-Regular-4d" transform="translate(704.734375 0)"/>
+     <use xlink:href="#NotoSansCJKjp-Regular-54" transform="translate(733.140625 0)"/>
+     <use xlink:href="#NotoSansCJKjp-Regular-a" transform="translate(779.9375 0)"/>
     </g>
    </g>
    <g id="text_18">
-    <!-- in_edge_g -->
+    <!-- in_edge_g / in_stage_g -->
     <g style="fill: #c45a26" transform="translate(510.72 146.024156) scale(0.078 -0.078)">
      <use xlink:href="#NotoSansCJKjp-Regular-4a"/>
      <use xlink:href="#NotoSansCJKjp-Regular-4f" transform="translate(27.5 0)"/>
@@ -2236,6 +2282,19 @@ z
      <use xlink:href="#NotoSansCJKjp-Regular-46" transform="translate(316.71875 0)"/>
      <use xlink:href="#NotoSansCJKjp-Regular-40" transform="translate(372.125 0)"/>
      <use xlink:href="#NotoSansCJKjp-Regular-48" transform="translate(428.03125 0)"/>
+     <use xlink:href="#NotoSansCJKjp-Regular-1" transform="translate(484.4375 0)"/>
+     <use xlink:href="#NotoSansCJKjp-Regular-10" transform="translate(506.84375 0)"/>
+     <use xlink:href="#NotoSansCJKjp-Regular-1" transform="translate(546.046875 0)"/>
+     <use xlink:href="#NotoSansCJKjp-Regular-4a" transform="translate(568.453125 0)"/>
+     <use xlink:href="#NotoSansCJKjp-Regular-4f" transform="translate(595.953125 0)"/>
+     <use xlink:href="#NotoSansCJKjp-Regular-40" transform="translate(656.953125 0)"/>
+     <use xlink:href="#NotoSansCJKjp-Regular-54" transform="translate(712.859375 0)"/>
+     <use xlink:href="#NotoSansCJKjp-Regular-55" transform="translate(757.453125 0)"/>
+     <use xlink:href="#NotoSansCJKjp-Regular-42" transform="translate(792.75 0)"/>
+     <use xlink:href="#NotoSansCJKjp-Regular-48" transform="translate(849.046875 0)"/>
+     <use xlink:href="#NotoSansCJKjp-Regular-46" transform="translate(903.953125 0)"/>
+     <use xlink:href="#NotoSansCJKjp-Regular-40" transform="translate(959.359375 0)"/>
+     <use xlink:href="#NotoSansCJKjp-Regular-48" transform="translate(1015.265625 0)"/>
     </g>
    </g>
    <g id="text_19">
@@ -3106,13 +3165,6 @@ z
     <!-- R = wq_rg; no layer-2 transport -->
     <g style="fill: #282c30" transform="translate(211.2 458.203344) scale(0.082 -0.082)">
      <defs>
-      <path id="NotoSansCJKjp-Regular-e" d="M 294 1568
-L 1933 1568
-L 1933 2016
-L 294 2016
-L 294 1568
-z
-" transform="scale(0.015625)"/>
       <path id="NotoSansCJKjp-Regular-f6b3" d="M 282 0
 L 3232 0
 L 3232 506
@@ -4365,6 +4417,54 @@ z
      <use xlink:href="#NotoSansCJKjp-Regular-46" transform="translate(2787.640625 0)"/>
      <use xlink:href="#NotoSansCJKjp-Regular-40" transform="translate(2843.046875 0)"/>
      <use xlink:href="#NotoSansCJKjp-Regular-48" transform="translate(2898.953125 0)"/>
+    </g>
+    <!-- Water-level cells (outside water) out_stage_g -->
+    <g style="fill: #282c30" transform="translate(402.24 578.607773) scale(0.081 -0.081)">
+     <use xlink:href="#NotoSansCJKjp-Regular-38"/>
+     <use xlink:href="#NotoSansCJKjp-Regular-42" transform="translate(86 0)"/>
+     <use xlink:href="#NotoSansCJKjp-Regular-55" transform="translate(140.796875 0)"/>
+     <use xlink:href="#NotoSansCJKjp-Regular-46" transform="translate(177 0)"/>
+     <use xlink:href="#NotoSansCJKjp-Regular-53" transform="translate(232.40625 0)"/>
+     <use xlink:href="#NotoSansCJKjp-Regular-e" transform="translate(268.5 0)"/>
+     <use xlink:href="#NotoSansCJKjp-Regular-4d" transform="translate(303.203125 0)"/>
+     <use xlink:href="#NotoSansCJKjp-Regular-46" transform="translate(331.609375 0)"/>
+     <use xlink:href="#NotoSansCJKjp-Regular-57" transform="translate(387.515625 0)"/>
+     <use xlink:href="#NotoSansCJKjp-Regular-46" transform="translate(439.203125 0)"/>
+     <use xlink:href="#NotoSansCJKjp-Regular-4d" transform="translate(494.609375 0)"/>
+     <use xlink:href="#NotoSansCJKjp-Regular-1" transform="translate(523.015625 0)"/>
+     <use xlink:href="#NotoSansCJKjp-Regular-44" transform="translate(545.421875 0)"/>
+     <use xlink:href="#NotoSansCJKjp-Regular-46" transform="translate(594.015625 0)"/>
+     <use xlink:href="#NotoSansCJKjp-Regular-4d" transform="translate(649.421875 0)"/>
+     <use xlink:href="#NotoSansCJKjp-Regular-4d" transform="translate(677.828125 0)"/>
+     <use xlink:href="#NotoSansCJKjp-Regular-54" transform="translate(706.234375 0)"/>
+     <use xlink:href="#NotoSansCJKjp-Regular-1" transform="translate(753.03125 0)"/>
+     <use xlink:href="#NotoSansCJKjp-Regular-9" transform="translate(775.4375 0)"/>
+     <use xlink:href="#NotoSansCJKjp-Regular-50" transform="translate(809.234375 0)"/>
+     <use xlink:href="#NotoSansCJKjp-Regular-56" transform="translate(869.828125 0)"/>
+     <use xlink:href="#NotoSansCJKjp-Regular-55" transform="translate(930.53125 0)"/>
+     <use xlink:href="#NotoSansCJKjp-Regular-54" transform="translate(967.140625 0)"/>
+     <use xlink:href="#NotoSansCJKjp-Regular-4a" transform="translate(1013.9375 0)"/>
+     <use xlink:href="#NotoSansCJKjp-Regular-45" transform="translate(1041.4375 0)"/>
+     <use xlink:href="#NotoSansCJKjp-Regular-46" transform="translate(1103.4375 0)"/>
+     <use xlink:href="#NotoSansCJKjp-Regular-1" transform="translate(1158.84375 0)"/>
+     <use xlink:href="#NotoSansCJKjp-Regular-58" transform="translate(1181.25 0)"/>
+     <use xlink:href="#NotoSansCJKjp-Regular-42" transform="translate(1260.359375 0)"/>
+     <use xlink:href="#NotoSansCJKjp-Regular-55" transform="translate(1315.15625 0)"/>
+     <use xlink:href="#NotoSansCJKjp-Regular-46" transform="translate(1351.359375 0)"/>
+     <use xlink:href="#NotoSansCJKjp-Regular-53" transform="translate(1406.765625 0)"/>
+     <use xlink:href="#NotoSansCJKjp-Regular-a" transform="translate(1445.5625 0)"/>
+     <use xlink:href="#NotoSansCJKjp-Regular-1" transform="translate(1479.359375 0)"/>
+     <use xlink:href="#NotoSansCJKjp-Regular-50" transform="translate(1501.765625 0)"/>
+     <use xlink:href="#NotoSansCJKjp-Regular-56" transform="translate(1562.359375 0)"/>
+     <use xlink:href="#NotoSansCJKjp-Regular-55" transform="translate(1623.0625 0)"/>
+     <use xlink:href="#NotoSansCJKjp-Regular-40" transform="translate(1660.765625 0)"/>
+     <use xlink:href="#NotoSansCJKjp-Regular-54" transform="translate(1716.671875 0)"/>
+     <use xlink:href="#NotoSansCJKjp-Regular-55" transform="translate(1761.265625 0)"/>
+     <use xlink:href="#NotoSansCJKjp-Regular-42" transform="translate(1796.5625 0)"/>
+     <use xlink:href="#NotoSansCJKjp-Regular-48" transform="translate(1852.859375 0)"/>
+     <use xlink:href="#NotoSansCJKjp-Regular-46" transform="translate(1907.765625 0)"/>
+     <use xlink:href="#NotoSansCJKjp-Regular-40" transform="translate(1963.171875 0)"/>
+     <use xlink:href="#NotoSansCJKjp-Regular-48" transform="translate(2019.078125 0)"/>
     </g>
    </g>
    <g id="text_50">
@@ -5902,7 +6002,7 @@ z
     </g>
    </g>
    <g id="text_64">
-    <!-- Exchange with the outside: out_sea_g, out_edge_g (out) and in_edge_g (in). -->
+    <!-- Exchange with the outside: out_sea_g, out_edge_g, out_stage_g (out) -->
     <g style="fill: #282c30" transform="translate(391.2 833.97457) scale(0.083 -0.083)">
      <use xlink:href="#NotoSansCJKjp-Regular-26"/>
      <use xlink:href="#NotoSansCJKjp-Regular-59" transform="translate(55.5 0)"/>
@@ -5952,103 +6052,130 @@ z
      <use xlink:href="#NotoSansCJKjp-Regular-46" transform="translate(2191.203125 0)"/>
      <use xlink:href="#NotoSansCJKjp-Regular-40" transform="translate(2246.609375 0)"/>
      <use xlink:href="#NotoSansCJKjp-Regular-48" transform="translate(2302.515625 0)"/>
-     <use xlink:href="#NotoSansCJKjp-Regular-1" transform="translate(2358.921875 0)"/>
-     <use xlink:href="#NotoSansCJKjp-Regular-9" transform="translate(2381.328125 0)"/>
-     <use xlink:href="#NotoSansCJKjp-Regular-50" transform="translate(2415.125 0)"/>
-     <use xlink:href="#NotoSansCJKjp-Regular-56" transform="translate(2475.71875 0)"/>
-     <use xlink:href="#NotoSansCJKjp-Regular-55" transform="translate(2536.421875 0)"/>
-     <use xlink:href="#NotoSansCJKjp-Regular-a" transform="translate(2574.125 0)"/>
-     <use xlink:href="#NotoSansCJKjp-Regular-1" transform="translate(2607.921875 0)"/>
-     <use xlink:href="#NotoSansCJKjp-Regular-42" transform="translate(2630.328125 0)"/>
-     <use xlink:href="#NotoSansCJKjp-Regular-4f" transform="translate(2686.625 0)"/>
-     <use xlink:href="#NotoSansCJKjp-Regular-45" transform="translate(2747.625 0)"/>
-     <use xlink:href="#NotoSansCJKjp-Regular-1" transform="translate(2809.625 0)"/>
-     <use xlink:href="#NotoSansCJKjp-Regular-4a" transform="translate(2832.03125 0)"/>
-     <use xlink:href="#NotoSansCJKjp-Regular-4f" transform="translate(2859.53125 0)"/>
-     <use xlink:href="#NotoSansCJKjp-Regular-40" transform="translate(2920.53125 0)"/>
-     <use xlink:href="#NotoSansCJKjp-Regular-46" transform="translate(2976.4375 0)"/>
-     <use xlink:href="#NotoSansCJKjp-Regular-45" transform="translate(3031.84375 0)"/>
-     <use xlink:href="#NotoSansCJKjp-Regular-48" transform="translate(3093.84375 0)"/>
-     <use xlink:href="#NotoSansCJKjp-Regular-46" transform="translate(3148.75 0)"/>
-     <use xlink:href="#NotoSansCJKjp-Regular-40" transform="translate(3204.15625 0)"/>
-     <use xlink:href="#NotoSansCJKjp-Regular-48" transform="translate(3260.0625 0)"/>
-     <use xlink:href="#NotoSansCJKjp-Regular-1" transform="translate(3316.46875 0)"/>
-     <use xlink:href="#NotoSansCJKjp-Regular-9" transform="translate(3338.875 0)"/>
-     <use xlink:href="#NotoSansCJKjp-Regular-4a" transform="translate(3372.671875 0)"/>
-     <use xlink:href="#NotoSansCJKjp-Regular-4f" transform="translate(3400.171875 0)"/>
-     <use xlink:href="#NotoSansCJKjp-Regular-a" transform="translate(3461.171875 0)"/>
-     <use xlink:href="#NotoSansCJKjp-Regular-f" transform="translate(3494.96875 0)"/>
+     <use xlink:href="#NotoSansCJKjp-Regular-d" transform="translate(2358.921875 0)"/>
+     <use xlink:href="#NotoSansCJKjp-Regular-1" transform="translate(2386.71875 0)"/>
+     <use xlink:href="#NotoSansCJKjp-Regular-50" transform="translate(2409.125 0)"/>
+     <use xlink:href="#NotoSansCJKjp-Regular-56" transform="translate(2469.71875 0)"/>
+     <use xlink:href="#NotoSansCJKjp-Regular-55" transform="translate(2530.421875 0)"/>
+     <use xlink:href="#NotoSansCJKjp-Regular-40" transform="translate(2568.125 0)"/>
+     <use xlink:href="#NotoSansCJKjp-Regular-54" transform="translate(2624.03125 0)"/>
+     <use xlink:href="#NotoSansCJKjp-Regular-55" transform="translate(2668.625 0)"/>
+     <use xlink:href="#NotoSansCJKjp-Regular-42" transform="translate(2703.921875 0)"/>
+     <use xlink:href="#NotoSansCJKjp-Regular-48" transform="translate(2760.21875 0)"/>
+     <use xlink:href="#NotoSansCJKjp-Regular-46" transform="translate(2815.125 0)"/>
+     <use xlink:href="#NotoSansCJKjp-Regular-40" transform="translate(2870.53125 0)"/>
+     <use xlink:href="#NotoSansCJKjp-Regular-48" transform="translate(2926.4375 0)"/>
+     <use xlink:href="#NotoSansCJKjp-Regular-1" transform="translate(2982.84375 0)"/>
+     <use xlink:href="#NotoSansCJKjp-Regular-9" transform="translate(3005.25 0)"/>
+     <use xlink:href="#NotoSansCJKjp-Regular-50" transform="translate(3039.046875 0)"/>
+     <use xlink:href="#NotoSansCJKjp-Regular-56" transform="translate(3099.640625 0)"/>
+     <use xlink:href="#NotoSansCJKjp-Regular-55" transform="translate(3160.34375 0)"/>
+     <use xlink:href="#NotoSansCJKjp-Regular-a" transform="translate(3198.046875 0)"/>
     </g>
-    <!-- No separate residual column; check closure by adding up the columns. -->
-    <g style="fill: #282c30" transform="translate(391.2 845.918141) scale(0.083 -0.083)">
-     <use xlink:href="#NotoSansCJKjp-Regular-2f"/>
-     <use xlink:href="#NotoSansCJKjp-Regular-50" transform="translate(72.296875 0)"/>
-     <use xlink:href="#NotoSansCJKjp-Regular-1" transform="translate(132.890625 0)"/>
-     <use xlink:href="#NotoSansCJKjp-Regular-54" transform="translate(155.296875 0)"/>
-     <use xlink:href="#NotoSansCJKjp-Regular-46" transform="translate(202.09375 0)"/>
-     <use xlink:href="#NotoSansCJKjp-Regular-51" transform="translate(257.5 0)"/>
-     <use xlink:href="#NotoSansCJKjp-Regular-42" transform="translate(317.90625 0)"/>
-     <use xlink:href="#NotoSansCJKjp-Regular-53" transform="translate(374.203125 0)"/>
-     <use xlink:href="#NotoSansCJKjp-Regular-42" transform="translate(410.296875 0)"/>
-     <use xlink:href="#NotoSansCJKjp-Regular-55" transform="translate(465.09375 0)"/>
-     <use xlink:href="#NotoSansCJKjp-Regular-46" transform="translate(501.296875 0)"/>
-     <use xlink:href="#NotoSansCJKjp-Regular-1" transform="translate(556.703125 0)"/>
-     <use xlink:href="#NotoSansCJKjp-Regular-53" transform="translate(579.109375 0)"/>
-     <use xlink:href="#NotoSansCJKjp-Regular-46" transform="translate(616.8125 0)"/>
-     <use xlink:href="#NotoSansCJKjp-Regular-54" transform="translate(672.21875 0)"/>
-     <use xlink:href="#NotoSansCJKjp-Regular-4a" transform="translate(719.015625 0)"/>
-     <use xlink:href="#NotoSansCJKjp-Regular-45" transform="translate(746.515625 0)"/>
-     <use xlink:href="#NotoSansCJKjp-Regular-56" transform="translate(808.515625 0)"/>
-     <use xlink:href="#NotoSansCJKjp-Regular-42" transform="translate(869.21875 0)"/>
-     <use xlink:href="#NotoSansCJKjp-Regular-4d" transform="translate(925.515625 0)"/>
-     <use xlink:href="#NotoSansCJKjp-Regular-1" transform="translate(953.921875 0)"/>
-     <use xlink:href="#NotoSansCJKjp-Regular-44" transform="translate(976.328125 0)"/>
-     <use xlink:href="#NotoSansCJKjp-Regular-50" transform="translate(1024.921875 0)"/>
-     <use xlink:href="#NotoSansCJKjp-Regular-4d" transform="translate(1085.515625 0)"/>
-     <use xlink:href="#NotoSansCJKjp-Regular-56" transform="translate(1113.921875 0)"/>
-     <use xlink:href="#NotoSansCJKjp-Regular-4e" transform="translate(1174.625 0)"/>
-     <use xlink:href="#NotoSansCJKjp-Regular-4f" transform="translate(1267.21875 0)"/>
-     <use xlink:href="#NotoSansCJKjp-Regular-1c" transform="translate(1328.21875 0)"/>
-     <use xlink:href="#NotoSansCJKjp-Regular-1" transform="translate(1356.015625 0)"/>
-     <use xlink:href="#NotoSansCJKjp-Regular-44" transform="translate(1378.421875 0)"/>
-     <use xlink:href="#NotoSansCJKjp-Regular-49" transform="translate(1429.421875 0)"/>
-     <use xlink:href="#NotoSansCJKjp-Regular-46" transform="translate(1490.125 0)"/>
-     <use xlink:href="#NotoSansCJKjp-Regular-44" transform="translate(1545.53125 0)"/>
-     <use xlink:href="#NotoSansCJKjp-Regular-4c" transform="translate(1596.53125 0)"/>
-     <use xlink:href="#NotoSansCJKjp-Regular-1" transform="translate(1651.734375 0)"/>
-     <use xlink:href="#NotoSansCJKjp-Regular-44" transform="translate(1674.140625 0)"/>
-     <use xlink:href="#NotoSansCJKjp-Regular-4d" transform="translate(1725.140625 0)"/>
-     <use xlink:href="#NotoSansCJKjp-Regular-50" transform="translate(1753.546875 0)"/>
-     <use xlink:href="#NotoSansCJKjp-Regular-54" transform="translate(1814.140625 0)"/>
-     <use xlink:href="#NotoSansCJKjp-Regular-56" transform="translate(1860.9375 0)"/>
-     <use xlink:href="#NotoSansCJKjp-Regular-53" transform="translate(1921.640625 0)"/>
-     <use xlink:href="#NotoSansCJKjp-Regular-46" transform="translate(1959.34375 0)"/>
-     <use xlink:href="#NotoSansCJKjp-Regular-1" transform="translate(2014.75 0)"/>
-     <use xlink:href="#NotoSansCJKjp-Regular-43" transform="translate(2037.15625 0)"/>
-     <use xlink:href="#NotoSansCJKjp-Regular-5a" transform="translate(2098.546875 0)"/>
-     <use xlink:href="#NotoSansCJKjp-Regular-1" transform="translate(2150.640625 0)"/>
-     <use xlink:href="#NotoSansCJKjp-Regular-42" transform="translate(2173.046875 0)"/>
-     <use xlink:href="#NotoSansCJKjp-Regular-45" transform="translate(2229.34375 0)"/>
-     <use xlink:href="#NotoSansCJKjp-Regular-45" transform="translate(2291.34375 0)"/>
-     <use xlink:href="#NotoSansCJKjp-Regular-4a" transform="translate(2353.34375 0)"/>
-     <use xlink:href="#NotoSansCJKjp-Regular-4f" transform="translate(2380.84375 0)"/>
-     <use xlink:href="#NotoSansCJKjp-Regular-48" transform="translate(2441.84375 0)"/>
-     <use xlink:href="#NotoSansCJKjp-Regular-1" transform="translate(2498.25 0)"/>
-     <use xlink:href="#NotoSansCJKjp-Regular-56" transform="translate(2520.65625 0)"/>
-     <use xlink:href="#NotoSansCJKjp-Regular-51" transform="translate(2581.359375 0)"/>
-     <use xlink:href="#NotoSansCJKjp-Regular-1" transform="translate(2643.359375 0)"/>
-     <use xlink:href="#NotoSansCJKjp-Regular-55" transform="translate(2665.765625 0)"/>
-     <use xlink:href="#NotoSansCJKjp-Regular-49" transform="translate(2703.46875 0)"/>
-     <use xlink:href="#NotoSansCJKjp-Regular-46" transform="translate(2764.171875 0)"/>
-     <use xlink:href="#NotoSansCJKjp-Regular-1" transform="translate(2819.578125 0)"/>
-     <use xlink:href="#NotoSansCJKjp-Regular-44" transform="translate(2841.984375 0)"/>
-     <use xlink:href="#NotoSansCJKjp-Regular-50" transform="translate(2890.578125 0)"/>
-     <use xlink:href="#NotoSansCJKjp-Regular-4d" transform="translate(2951.171875 0)"/>
-     <use xlink:href="#NotoSansCJKjp-Regular-56" transform="translate(2979.578125 0)"/>
-     <use xlink:href="#NotoSansCJKjp-Regular-4e" transform="translate(3040.28125 0)"/>
-     <use xlink:href="#NotoSansCJKjp-Regular-4f" transform="translate(3132.875 0)"/>
-     <use xlink:href="#NotoSansCJKjp-Regular-54" transform="translate(3193.875 0)"/>
-     <use xlink:href="#NotoSansCJKjp-Regular-f" transform="translate(3240.671875 0)"/>
+    <!-- and in_edge_g, in_stage_g (in). No separate residual column; -->
+    <g style="fill: #282c30" transform="translate(391.2 846.00957) scale(0.083 -0.083)">
+     <use xlink:href="#NotoSansCJKjp-Regular-42"/>
+     <use xlink:href="#NotoSansCJKjp-Regular-4f" transform="translate(56.296875 0)"/>
+     <use xlink:href="#NotoSansCJKjp-Regular-45" transform="translate(117.296875 0)"/>
+     <use xlink:href="#NotoSansCJKjp-Regular-1" transform="translate(179.296875 0)"/>
+     <use xlink:href="#NotoSansCJKjp-Regular-4a" transform="translate(201.703125 0)"/>
+     <use xlink:href="#NotoSansCJKjp-Regular-4f" transform="translate(229.203125 0)"/>
+     <use xlink:href="#NotoSansCJKjp-Regular-40" transform="translate(290.203125 0)"/>
+     <use xlink:href="#NotoSansCJKjp-Regular-46" transform="translate(346.109375 0)"/>
+     <use xlink:href="#NotoSansCJKjp-Regular-45" transform="translate(401.515625 0)"/>
+     <use xlink:href="#NotoSansCJKjp-Regular-48" transform="translate(463.515625 0)"/>
+     <use xlink:href="#NotoSansCJKjp-Regular-46" transform="translate(518.421875 0)"/>
+     <use xlink:href="#NotoSansCJKjp-Regular-40" transform="translate(573.828125 0)"/>
+     <use xlink:href="#NotoSansCJKjp-Regular-48" transform="translate(629.734375 0)"/>
+     <use xlink:href="#NotoSansCJKjp-Regular-d" transform="translate(686.140625 0)"/>
+     <use xlink:href="#NotoSansCJKjp-Regular-1" transform="translate(713.9375 0)"/>
+     <use xlink:href="#NotoSansCJKjp-Regular-4a" transform="translate(736.34375 0)"/>
+     <use xlink:href="#NotoSansCJKjp-Regular-4f" transform="translate(763.84375 0)"/>
+     <use xlink:href="#NotoSansCJKjp-Regular-40" transform="translate(824.84375 0)"/>
+     <use xlink:href="#NotoSansCJKjp-Regular-54" transform="translate(880.75 0)"/>
+     <use xlink:href="#NotoSansCJKjp-Regular-55" transform="translate(925.34375 0)"/>
+     <use xlink:href="#NotoSansCJKjp-Regular-42" transform="translate(960.640625 0)"/>
+     <use xlink:href="#NotoSansCJKjp-Regular-48" transform="translate(1016.9375 0)"/>
+     <use xlink:href="#NotoSansCJKjp-Regular-46" transform="translate(1071.84375 0)"/>
+     <use xlink:href="#NotoSansCJKjp-Regular-40" transform="translate(1127.25 0)"/>
+     <use xlink:href="#NotoSansCJKjp-Regular-48" transform="translate(1183.15625 0)"/>
+     <use xlink:href="#NotoSansCJKjp-Regular-1" transform="translate(1239.5625 0)"/>
+     <use xlink:href="#NotoSansCJKjp-Regular-9" transform="translate(1261.96875 0)"/>
+     <use xlink:href="#NotoSansCJKjp-Regular-4a" transform="translate(1295.765625 0)"/>
+     <use xlink:href="#NotoSansCJKjp-Regular-4f" transform="translate(1323.265625 0)"/>
+     <use xlink:href="#NotoSansCJKjp-Regular-a" transform="translate(1384.265625 0)"/>
+     <use xlink:href="#NotoSansCJKjp-Regular-f" transform="translate(1418.0625 0)"/>
+     <use xlink:href="#NotoSansCJKjp-Regular-1" transform="translate(1445.859375 0)"/>
+     <use xlink:href="#NotoSansCJKjp-Regular-2f" transform="translate(1468.265625 0)"/>
+     <use xlink:href="#NotoSansCJKjp-Regular-50" transform="translate(1540.5625 0)"/>
+     <use xlink:href="#NotoSansCJKjp-Regular-1" transform="translate(1601.15625 0)"/>
+     <use xlink:href="#NotoSansCJKjp-Regular-54" transform="translate(1623.5625 0)"/>
+     <use xlink:href="#NotoSansCJKjp-Regular-46" transform="translate(1670.359375 0)"/>
+     <use xlink:href="#NotoSansCJKjp-Regular-51" transform="translate(1725.765625 0)"/>
+     <use xlink:href="#NotoSansCJKjp-Regular-42" transform="translate(1786.171875 0)"/>
+     <use xlink:href="#NotoSansCJKjp-Regular-53" transform="translate(1842.46875 0)"/>
+     <use xlink:href="#NotoSansCJKjp-Regular-42" transform="translate(1878.5625 0)"/>
+     <use xlink:href="#NotoSansCJKjp-Regular-55" transform="translate(1933.359375 0)"/>
+     <use xlink:href="#NotoSansCJKjp-Regular-46" transform="translate(1969.5625 0)"/>
+     <use xlink:href="#NotoSansCJKjp-Regular-1" transform="translate(2024.96875 0)"/>
+     <use xlink:href="#NotoSansCJKjp-Regular-53" transform="translate(2047.375 0)"/>
+     <use xlink:href="#NotoSansCJKjp-Regular-46" transform="translate(2085.078125 0)"/>
+     <use xlink:href="#NotoSansCJKjp-Regular-54" transform="translate(2140.484375 0)"/>
+     <use xlink:href="#NotoSansCJKjp-Regular-4a" transform="translate(2187.28125 0)"/>
+     <use xlink:href="#NotoSansCJKjp-Regular-45" transform="translate(2214.78125 0)"/>
+     <use xlink:href="#NotoSansCJKjp-Regular-56" transform="translate(2276.78125 0)"/>
+     <use xlink:href="#NotoSansCJKjp-Regular-42" transform="translate(2337.484375 0)"/>
+     <use xlink:href="#NotoSansCJKjp-Regular-4d" transform="translate(2393.78125 0)"/>
+     <use xlink:href="#NotoSansCJKjp-Regular-1" transform="translate(2422.1875 0)"/>
+     <use xlink:href="#NotoSansCJKjp-Regular-44" transform="translate(2444.59375 0)"/>
+     <use xlink:href="#NotoSansCJKjp-Regular-50" transform="translate(2493.1875 0)"/>
+     <use xlink:href="#NotoSansCJKjp-Regular-4d" transform="translate(2553.78125 0)"/>
+     <use xlink:href="#NotoSansCJKjp-Regular-56" transform="translate(2582.1875 0)"/>
+     <use xlink:href="#NotoSansCJKjp-Regular-4e" transform="translate(2642.890625 0)"/>
+     <use xlink:href="#NotoSansCJKjp-Regular-4f" transform="translate(2735.484375 0)"/>
+     <use xlink:href="#NotoSansCJKjp-Regular-1c" transform="translate(2796.484375 0)"/>
+    </g>
+    <!-- check closure by adding up the columns. -->
+    <g style="fill: #282c30" transform="translate(391.2 857.953141) scale(0.083 -0.083)">
+     <use xlink:href="#NotoSansCJKjp-Regular-44"/>
+     <use xlink:href="#NotoSansCJKjp-Regular-49" transform="translate(51 0)"/>
+     <use xlink:href="#NotoSansCJKjp-Regular-46" transform="translate(111.703125 0)"/>
+     <use xlink:href="#NotoSansCJKjp-Regular-44" transform="translate(167.109375 0)"/>
+     <use xlink:href="#NotoSansCJKjp-Regular-4c" transform="translate(218.109375 0)"/>
+     <use xlink:href="#NotoSansCJKjp-Regular-1" transform="translate(273.3125 0)"/>
+     <use xlink:href="#NotoSansCJKjp-Regular-44" transform="translate(295.71875 0)"/>
+     <use xlink:href="#NotoSansCJKjp-Regular-4d" transform="translate(346.71875 0)"/>
+     <use xlink:href="#NotoSansCJKjp-Regular-50" transform="translate(375.125 0)"/>
+     <use xlink:href="#NotoSansCJKjp-Regular-54" transform="translate(435.71875 0)"/>
+     <use xlink:href="#NotoSansCJKjp-Regular-56" transform="translate(482.515625 0)"/>
+     <use xlink:href="#NotoSansCJKjp-Regular-53" transform="translate(543.21875 0)"/>
+     <use xlink:href="#NotoSansCJKjp-Regular-46" transform="translate(580.921875 0)"/>
+     <use xlink:href="#NotoSansCJKjp-Regular-1" transform="translate(636.328125 0)"/>
+     <use xlink:href="#NotoSansCJKjp-Regular-43" transform="translate(658.734375 0)"/>
+     <use xlink:href="#NotoSansCJKjp-Regular-5a" transform="translate(720.125 0)"/>
+     <use xlink:href="#NotoSansCJKjp-Regular-1" transform="translate(772.21875 0)"/>
+     <use xlink:href="#NotoSansCJKjp-Regular-42" transform="translate(794.625 0)"/>
+     <use xlink:href="#NotoSansCJKjp-Regular-45" transform="translate(850.921875 0)"/>
+     <use xlink:href="#NotoSansCJKjp-Regular-45" transform="translate(912.921875 0)"/>
+     <use xlink:href="#NotoSansCJKjp-Regular-4a" transform="translate(974.921875 0)"/>
+     <use xlink:href="#NotoSansCJKjp-Regular-4f" transform="translate(1002.421875 0)"/>
+     <use xlink:href="#NotoSansCJKjp-Regular-48" transform="translate(1063.421875 0)"/>
+     <use xlink:href="#NotoSansCJKjp-Regular-1" transform="translate(1119.828125 0)"/>
+     <use xlink:href="#NotoSansCJKjp-Regular-56" transform="translate(1142.234375 0)"/>
+     <use xlink:href="#NotoSansCJKjp-Regular-51" transform="translate(1202.9375 0)"/>
+     <use xlink:href="#NotoSansCJKjp-Regular-1" transform="translate(1264.9375 0)"/>
+     <use xlink:href="#NotoSansCJKjp-Regular-55" transform="translate(1287.34375 0)"/>
+     <use xlink:href="#NotoSansCJKjp-Regular-49" transform="translate(1325.046875 0)"/>
+     <use xlink:href="#NotoSansCJKjp-Regular-46" transform="translate(1385.75 0)"/>
+     <use xlink:href="#NotoSansCJKjp-Regular-1" transform="translate(1441.15625 0)"/>
+     <use xlink:href="#NotoSansCJKjp-Regular-44" transform="translate(1463.5625 0)"/>
+     <use xlink:href="#NotoSansCJKjp-Regular-50" transform="translate(1512.15625 0)"/>
+     <use xlink:href="#NotoSansCJKjp-Regular-4d" transform="translate(1572.75 0)"/>
+     <use xlink:href="#NotoSansCJKjp-Regular-56" transform="translate(1601.15625 0)"/>
+     <use xlink:href="#NotoSansCJKjp-Regular-4e" transform="translate(1661.859375 0)"/>
+     <use xlink:href="#NotoSansCJKjp-Regular-4f" transform="translate(1754.453125 0)"/>
+     <use xlink:href="#NotoSansCJKjp-Regular-54" transform="translate(1815.453125 0)"/>
+     <use xlink:href="#NotoSansCJKjp-Regular-f" transform="translate(1862.25 0)"/>
     </g>
    </g>
    <g id="text_65">

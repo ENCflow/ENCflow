@@ -1,0 +1,70 @@
+!======================================================================
+! wqbound: 水質の台帳の系外との出入り(海セル・開いた辺・水位規定セル)の
+!   恒常検定ケース(developer.md §30.9)
+!   東へ下る幅 80 m の平らな水路(40 × 8 セル、dx = 10 m、勾配 1/667)に、
+!   西の辺の区間流入 0.5 m3/s(境界流入濃度 2 mg/L)と点源 0.1 g/s を入れ、
+!   次の 3 つの経路で系外へ出す: 東端 3 列の海セル(海域マスク)、北の辺の
+!   自由流出、南の行の水位規定セル 1 個(η = −999 の排水口)。
+!   台帳 wq.csv の閉合「入力の累積 + in_edge − out_sea − out_edge − out_stage
+!   = 地表の現在質量」と、各経路が働いていることを Check_wqbound.py が検定する
+!======================================================================
+&list_sysparam
+  dt = 0.5
+  t0 = 0
+  tt = 3600
+  dt_disp = 600
+  dt_file = 1800
+  dt_recrd = 300
+  fn_geoinfo = '-'
+  fn_initial = '-'
+  fn_boundary = '-'
+  fn_wq = '-'
+  dir_data = 'data_wqbound'
+  dir_result = 'result'
+  f_disp_debug = 1          ! 回帰テスト用: S 列を全有効桁で表示
+  f_check_cfl = 1
+/
+
+&list_enc
+/
+
+&list_initial
+  f_htype = 0
+  h0 = 0.0                  ! 乾いた水路から始める(初期質量 0)
+/
+
+&list_geoinfo
+  nx = 40
+  ny = 8
+  dx = 10.0
+  dy = 10.0
+  f_ztype = 1
+  fn_z = 'z.txt'            ! 地盤高 0.6 m(西端)から東へ 1/667 で下る。北の行ほど高い
+                            !   横勾配(1 行 0.01 m)
+  f_rntype = 0
+  rn0 = 0.03
+  f_masktype = 2            ! 領域マスクを海域マスクから自動生成
+  fn_sw = 'sw.txt'          ! 海域マスク(東端 3 列。海面 0 m)
+/
+
+&list_bound_edge
+  f_bc_n = 1                ! 北の辺: 自由流出(out_edge_g)
+/
+
+&list_bound_inflow
+  inflow_cell(:,1,1) = 1, 4     ! 西の辺の 2 セルから流入
+  inflow_cell(:,2,1) = 1, 5
+  inflow_val(:,1,1) =   0, 0.5  ! (時刻 min, 総流量 m3/s)
+  inflow_val(:,2,1) = 999, 0.5
+/
+
+&list_bound_stage
+  stage_cell(:,1,1) = 30, 8     ! 南の行の排水口(水位規定セル。out_stage_g)
+  stage_eta(1) = -999.0         ! 河床より低い水位 = 完全排水口
+/
+
+&list_wq
+  wq_in_conc(1) = 2.0           ! 区間流入 1 の境界流入濃度 (mg/L。in_edge_g)
+  wq_pt_cell(:,1,1) = 10, 5     ! 点源 (in_point_g)
+  wq_pt_load(1) = 0.1           ! 一定負荷 (g/s)
+/

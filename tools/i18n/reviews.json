@@ -104,9 +104,9 @@
     {
       "source": "docs/users_guide.md",
       "target": "docs/en/users_guide.md",
-      "source_sha256": "de9b5bdf7056faf53ade51bb22eda6b68c0ee377291564cf56d11a0b5fbfe3ee",
-      "target_sha256": "b76e037c3ba5af0a07dc4114159446a36fd17ec523e943349cd8d74c65cb9fd1",
-      "reviewer": "Claude (Claude Code session; reviewed the Japanese source against the English mirror after unifying the term passage width / 通過幅 and noting the original paper's term, 2026-11-03)",
+      "source_sha256": "beecdecf24c88fb760afdb897c843d3cb123e70f5bbb8ef085ab9a3cb832c340",
+      "target_sha256": "fd951d8337a6a8e20af4b7c32b96c55d9331a98d91b12575ca68ab4677326d70",
+      "reviewer": "Claude (Claude Code session; reviewed the changed passages on water-level cells as outside water for transported quantities, wq_stage_conc/wq_stage_series and the ledger columns out_stage_g/in_stage_g of the Japanese source against the English mirror, 2026-11-03)",
       "method": "assistant",
       "reviewed_on": "2026-11-03"
     },
@@ -158,11 +158,11 @@
     {
       "source": "docs/users_guide/boundary.md",
       "target": "docs/en/users_guide/boundary.md",
-      "source_sha256": "7298f062b0d51cf2b5b842f34f0a1b42160892292fc448ac6e5e342606e238ca",
-      "target_sha256": "399406e09ee958bdf63d3944cb1db208f0c449b479fe365f00fe649d5d48699d",
-      "reviewer": "Claude (Claude Code session; reviewed the changed sections (added reference sections, footnotes and citation markers) of the Japanese source against the English mirror, 2026-10-30)",
+      "source_sha256": "4b07e69a72e54dd34a222d5ebf129311a8fe414c32ae2dd1bfbbb5b968573b91",
+      "target_sha256": "4a68641d979ac90a043956d9baddd84745f068939ff998ad6c45b3a18d733335",
+      "reviewer": "Claude (Claude Code session; reviewed the changed passages on water-level cells as outside water for transported quantities, wq_stage_conc/wq_stage_series and the ledger columns out_stage_g/in_stage_g of the Japanese source against the English mirror, 2026-11-03)",
       "method": "assistant",
-      "reviewed_on": "2026-10-30"
+      "reviewed_on": "2026-11-03"
     },
     {
       "source": "docs/users_guide/channel.md",
@@ -383,11 +383,11 @@
     {
       "source": "docs/users_guide/params_index.md",
       "target": "docs/en/users_guide/params_index.md",
-      "source_sha256": "7a5a09b64897b262df34416d9d8f12cf99138960ff0046dbe3d158df90a6f16a",
-      "target_sha256": "3aa4227e7e7cdc0b8b9381f16e5bb66bc718be15996798d8f840de5726b91a01",
-      "reviewer": "Claude (assistant)",
+      "source_sha256": "94e0c36e81516652d9d0d1082c594d1bd1d6f7a8e07186e2129a57a26f5f8cb0",
+      "target_sha256": "cf557fb56b5f8b58cc3741f51bf26df77de283c72490b40877eb2cb9cd2dabb4",
+      "reviewer": "Claude (Claude Code session; reviewed the changed passages on water-level cells as outside water for transported quantities, wq_stage_conc/wq_stage_series and the ledger columns out_stage_g/in_stage_g of the Japanese source against the English mirror, 2026-11-03)",
       "method": "assistant",
-      "reviewed_on": "2026-11-02"
+      "reviewed_on": "2026-11-03"
     },
     {
       "source": "docs/users_guide/passage_width.md",
@@ -536,18 +536,18 @@
     {
       "source": "docs/users_guide/wq.md",
       "target": "docs/en/users_guide/wq.md",
-      "source_sha256": "25f9987d439e57f89793fa5cf9b062c367b376b0e8e8f1eafe4587e2f65054b0",
-      "target_sha256": "72d86da41c364f8c159b32c7bc8cf8c4ec381a57d816d7c4219458393ba4d8f1",
-      "reviewer": "Claude (Claude Code session; reviewed the changed passages on the system-boundary ledger columns out_sea_g/out_edge_g/in_edge_g of the Japanese source against the English mirror, 2026-11-03)",
+      "source_sha256": "1e006f7859e37bc426b676595afb0504839671efbd29c9dbd4e137eba59e2549",
+      "target_sha256": "fd16a54a7f5eba01d71a8c6fafa656808c47bd3d617456ee6a7e92b16e78b7ce",
+      "reviewer": "Claude (Claude Code session; reviewed the changed passages on water-level cells as outside water for transported quantities, wq_stage_conc/wq_stage_series and the ledger columns out_stage_g/in_stage_g of the Japanese source against the English mirror, 2026-11-03)",
       "method": "assistant",
       "reviewed_on": "2026-11-03"
     },
     {
       "source": "docs/users_guide/wq_models.md",
       "target": "docs/en/users_guide/wq_models.md",
-      "source_sha256": "70362a71073c377f9e13bd2aac09c9463ad75ef6011cd07f124565f039fd13ed",
-      "target_sha256": "ff64c97da34f110fe9408593aa1c2ca045a974640b70e076f0d534da942f7f3b",
-      "reviewer": "Claude (Claude Code session; reviewed the changed passages on the system-boundary ledger columns out_sea_g/out_edge_g/in_edge_g of the Japanese source against the English mirror, 2026-11-03)",
+      "source_sha256": "a95479923bb40c210c93d9f92fd8a5326a3888995eaa2e4c1288e072e3515360",
+      "target_sha256": "97fb7dea495bc0c32141eb89d8a6c9193d8875ba4b070e947dadb0ab1525fffd",
+      "reviewer": "Claude (Claude Code session; reviewed the changed passages on water-level cells as outside water for transported quantities, wq_stage_conc/wq_stage_series and the ledger columns out_stage_g/in_stage_g of the Japanese source against the English mirror, 2026-11-03)",
       "method": "assistant",
       "reviewed_on": "2026-11-03"
     },
@@ -806,11 +806,11 @@
     {
       "source": "examples/List_samples/list_wq.txt",
       "target": "examples/List_samples/en/list_wq.txt",
-      "source_sha256": "462e707f6e8144be78cbf4e816894ba6a3cf1b4e267d980f57bfe182ed04c714",
-      "target_sha256": "3ea5398bbe1c04695b61d34e61cebe8fb0ffaefedd4a2e24ccf3d053f4c2f07c",
-      "reviewer": "Claude (Claude Code session; full-text content and lexical review, no model execution)",
+      "source_sha256": "c4f7240da12bdaf218ac8b547a942663849b6b6a1e16e52659f5e6a9f1883f45",
+      "target_sha256": "7f443ac18b8addfaeeb965187cc91d63b98ee408d8f47d61ea362e409d73c09f",
+      "reviewer": "Claude (Claude Code session; reviewed the changed passages on water-level cells as outside water for transported quantities, wq_stage_conc/wq_stage_series and the ledger columns out_stage_g/in_stage_g of the Japanese source against the English mirror, 2026-11-03)",
       "method": "assistant",
-      "reviewed_on": "2026-10-23"
+      "reviewed_on": "2026-11-03"
     },
     {
       "source": "examples/README.md",
@@ -2210,11 +2210,11 @@
     {
       "source": "test/README.md",
       "target": "test/README.en.md",
-      "source_sha256": "bd2d2beca4356869969e3b915000a7bf35b14865553df63622715b077589af08",
-      "target_sha256": "382c4631ca4616114b18991e60f21f6dbf2c39e1a58fceb5a3eff8f46661c5b9",
-      "reviewer": "Claude (assistant)",
+      "source_sha256": "9f72a6a52e5c80b3c2cee48fa1d1ee4e08295cc7e4b0773de00fedf5633bcec7",
+      "target_sha256": "4ad71188f003c07b6539eff42db477d085521afdf5c47a929edb293dd0726d81",
+      "reviewer": "Claude (Claude Code session; reviewed the changed passages on water-level cells as outside water for transported quantities, wq_stage_conc/wq_stage_series and the ledger columns out_stage_g/in_stage_g of the Japanese source against the English mirror, 2026-11-03)",
       "method": "assistant",
-      "reviewed_on": "2026-11-02"
+      "reviewed_on": "2026-11-03"
     },
     {
       "source": "test/avalanche/README.md",
@@ -3664,6 +3664,24 @@
       "reviewer": "Claude (Claude Code session; full-text content and lexical review, no model execution)",
       "method": "assistant",
       "reviewed_on": "2026-10-29"
+    },
+    {
+      "source": "test/wqbound/README.md",
+      "target": "test/wqbound/en/README.md",
+      "source_sha256": "9365175640c10339d467b7cbcf050ec65eb355b79cfc7889a75eece87b261836",
+      "target_sha256": "b664772392f40ac777c8199924b7ee1e867e2dc267a8670bf09cce994653dae2",
+      "reviewer": "Claude (Claude Code session; full-text review of the new test README and its English mirror, and of the figure drawn by the shared Fig.py with English labels, 2026-11-03)",
+      "method": "assistant",
+      "reviewed_on": "2026-11-03"
+    },
+    {
+      "source": "test/wqbound/figs/wqbound.png",
+      "target": "test/wqbound/en/figs/wqbound.png",
+      "source_sha256": "a5b8dc2cdf93cdabb96af57893115a94276ae4d27e23c2ecb4a82a8a0c44fd2e",
+      "target_sha256": "d4c9357a16f6d9c48e13bcb1a96b205d1a26162f0e95afe590d9edcdef92a15c",
+      "reviewer": "Claude (Claude Code session; full-text review of the new test README and its English mirror, and of the figure drawn by the shared Fig.py with English labels, 2026-11-03)",
+      "method": "assistant",
+      "reviewed_on": "2026-11-03"
     },
     {
       "source": "tutorials/README.md",

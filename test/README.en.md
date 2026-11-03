@@ -121,6 +121,7 @@ analytical-solution or conservation check by Check_*.py.
 | [tracer/](tracer/en/README.md) | Numerical diffusion of the first-order upwind scalar transport: spreading of a clean-water front (longitudinal) and lateral variance of a steady plume, against the modified-equation values | Water quality (scalar advection) | ref, analytic |
 | [gwseep/](gwseep/en/README.md) | Steady-state check of lateral groundwater transport and seepage return | Water quality, groundwater | ref, analytic |
 | [kdpart/](kdpart/en/README.md) | Steady-state check of Kd equilibrium two-phase partitioning | Water quality, suspended sediment | ref, analytic |
+| [wqbound/](wqbound/en/README.md) | Closure of the ledger of the exchange with the outside (sea cells, open edges, water-level cells), and water-level cells treated as outside water (no rise of concentration on reverse flow, boundary concentration wq_stage_conc) | Water quality, boundary conditions | ref, analytic |
 | **Glaciers and lava** | | | |
 | [glacier/](glacier/en/README.md) | Halfar dome of SIA ice flow, cirque formation | Glaciers | analytic |
 | [lava/](lava/en/README.md) | Huppert similarity solution of a Bingham lava flow, minimal input | Lava flow | analytic |
