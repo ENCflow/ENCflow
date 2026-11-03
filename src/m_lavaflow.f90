@@ -35,8 +35,10 @@ module m_lavaflow
   !       勾配の大きさ)の最大が lv_vsol 未満の「停止セル」の hl を
   !       レート lv_wsol で s%z へ転換(数えるのは溶岩が動けるエッジだけ =
   !       送り手〔溶岩面の高い側〕に溶岩のあるエッジ。§51.5)
-  !       (sd は増やさない = 侵食されない岩盤)。e 回復と s%z のハロ交換
-  !       まで済ませる。速度閾値+レートは f_dbstop=1(db_vstop/db_wstop)
+  !       (sd は増やさない = 侵食されない岩盤)。固化したセルの土層は埋める:
+  !       sd(と土層の内数 hb・sf・ht、定着度 fx)を 0 にし、地下水計算が
+  !       有効なら容量を失った地下貯留を地表水へ移す(§51.6)。e 回復と
+  !       s%z(・sd ほか)のハロ交換まで済ませる。速度閾値+レートは f_dbstop=1(db_vstop/db_wstop)
   !       と同じ閉じ方 — Bingham の停止は漸近的(q→0 だが有限時間で 0 に
   !       ならない)ため、厳密なフラックス 0 判定では固化が発火しない。
   !       再流動なし(固化は不可逆)。数値的閉包であり温度による固化は
@@ -105,6 +107,8 @@ module m_lavaflow
     type(t_vent), allocatable :: vent(:)
     real :: vin = 0.0                ! 噴出の累計(自帯セル分の柱状 m 和)
     real :: vsol = 0.0               ! 固化の累計(同上)
+    real :: vbur = 0.0               ! 埋めた土層の累計(同上。§51.6)
+    real :: vgwr = 0.0               ! 埋めた土層から地表へ移した地下水の累計(同上)
     integer :: nsubtot = 0           ! サブサイクル総数(ランク共通。dispose で報告)
     integer :: ntick = 0             ! 更新回数
   end type
@@ -367,7 +371,7 @@ subroutine m_lavaflow_dispose(lv, p, g, s)
   type(t_sysparam), intent(in) :: p
   type(t_geoinfo), intent(in) :: g
   type(t_state), intent(in) :: s
-  real :: vsum(1:3), hsum
+  real :: vsum(1:5), hsum
   integer :: i, j
   character(len=256) :: msg
 
@@ -385,12 +389,21 @@ subroutine m_lavaflow_dispose(lv, p, g, s)
   vsum(1) = lv%lvw%vin * lv%lvw%area
   vsum(2) = lv%lvw%vsol * lv%lvw%area
   vsum(3) = hsum * lv%lvw%area
+  vsum(4) = lv%lvw%vbur * lv%lvw%area
+  vsum(5) = lv%lvw%vgwr * lv%lvw%area
   call par_allreduce_sumr(vsum)
   if (is_root) then
     write(msg,'(a,es12.4,a,es12.4,a,es12.4,a)') &
       " lavaflow: erupted ", vsum(1), " m3, solidified ", vsum(2), &
       " m3, molten ", vsum(3), " m3"
     call par_info(trim(msg))
+    ! 土層があるとき(地形変化・地下水の計算で s%sd を確保)だけ埋没の台帳を出す
+    if (allocated(s%sd)) then
+      write(msg,'(a,es12.4,a,es12.4,a)') &
+        " lavaflow: soil buried under solidified lava ", vsum(4), &
+        " m3, groundwater moved to the surface ", vsum(5), " m3"
+      call par_info(trim(msg))
+    end if
   end if
   if (lv%lvw%ntick > 0) then
     call par_info(" lavaflow: subcycles total = " // itoa(lv%lvw%nsubtot) &
@@ -403,6 +416,8 @@ subroutine m_lavaflow_dispose(lv, p, g, s)
   lv%lvw%nvent = 0
   lv%lvw%vin = 0.0
   lv%lvw%vsol = 0.0
+  lv%lvw%vbur = 0.0
+  lv%lvw%vgwr = 0.0
   lv%lvw%nsubtot = 0
   lv%lvw%ntick = 0
   lv%enabled = .false.
@@ -625,6 +640,12 @@ end subroutine
 !   大きな流速とみなし、いつまでも固化しなかった(2026-11-03 修正。§51.5)。
 !   転換量 w = min(hl, lv_wsol×dtw)。z のみ増加(sd は増やさない =
 !   固化溶岩は侵食されない岩盤)。再流動なし(不可逆)。
+!   土層の埋没(§51.6): 固化したセルに土層 sd があれば、それは溶岩の下に
+!   埋まる。sd を 0 にし(埋まった土は岩盤 z − sd の内側へ。以後の侵食・
+!   浸透の対象外)、土層の内数(動く底層 hb・細粒分 sf・崖錐 ht)と定着度 fx も
+!   0 にする。地下水計算が有効なら、容量 sd × sy0 を失った地下貯留を地表水へ
+!   移す(水の総量は保存。土石流の侵食 f_dbwet=2 と同じ扱い)。土層を確保して
+!   いない計算(地形変化・地下水なし)では何もしない
 !   2パス構造(glacier tick_erosion と同型の競合対策): パス1が時刻 n の
 !   hl・z(近傍参照。ハロは tick_flow 末端の交換で最新)から固化深を
 !   評価し、パス2が適用する。e 回復と s%z のハロ交換まで行う
@@ -637,6 +658,8 @@ subroutine tick_solidify(lv, g, s, dtw)
   real, intent(in) :: dtw
   integer :: i, j, k, in, jn
   real :: w, wcap, vsum, vmax, sc, sn_, ds, ss, gt, sm, h0, hf, he, dd, ue
+  real :: bsum, gsum, cap, xg
+  logical :: soil
 
   wcap = lv%wsol * dtw
 
@@ -684,8 +707,11 @@ subroutine tick_solidify(lv, g, s, dtw)
   !$omp end parallel do
 
   ! --- パス2: 適用(自帯のみ。sdz はパス1で全対象セルに 0 込みで設定済み) ---
+  soil = allocated(s%sd)             ! 全ランク同一(確保は init で全ランク)
   vsum = 0.0
-  !$omp parallel do schedule(static) private(i, j, w) reduction(+: vsum)
+  bsum = 0.0
+  gsum = 0.0
+  !$omp parallel do schedule(static) private(i, j, w, cap, xg) reduction(+: vsum, bsum, gsum)
   do j = dcp%js, dcp%je
     do i = g%wx(1,j), g%wx(2,j)
       if (g%x(i,j) <= 0) cycle
@@ -693,17 +719,49 @@ subroutine tick_solidify(lv, g, s, dtw)
       if (w <= 0.0) cycle
       s%hl(i,j) = s%hl(i,j) - w
       s%z(i,j) = s%z(i,j) + w
+      ! 土層の埋没(§51.6。土層があるセルだけ)
+      if (soil) then
+        if (s%sd(i,j) > 0.0) then
+          bsum = bsum + s%sd(i,j)
+          s%sd(i,j) = 0.0
+          if (allocated(s%hb)) s%hb(i,j) = 0.0
+          if (allocated(s%sf)) s%sf(i,j) = 0.0
+          if (allocated(s%ht)) s%ht(i,j) = 0.0
+          if (allocated(s%fx)) s%fx(i,j) = 0.0
+          ! 容量 sd × sy0 を超えた地下貯留(sd = 0 なので全量)を地表水へ
+          if (s%gw_active) then
+            cap = s%sd(i,j) * g%sy0
+            if (s%hg(i,j) > cap) then
+              xg = s%hg(i,j) - cap
+              s%hg(i,j) = cap
+              s%h(i,j) = s%h(i,j) + xg
+              gsum = gsum + xg
+            end if
+          end if
+        end if
+      end if
       s%e(i,j) = s%z(i,j) + s%h(i,j)
       vsum = vsum + w
     end do
   end do
   !$omp end parallel do
   lv%lvw%vsol = lv%lvw%vsol + vsum
+  lv%lvw%vbur = lv%lvw%vbur + bsum
+  lv%lvw%vgwr = lv%lvw%vgwr + gsum
 
   ! 固化の有無はランク・tick で異なるが、collective の実行判定は
   ! 「lv_wsol > 0 の tick では常に交換」で全ランク同一(§5)。
-  ! hl の帯更新は次 tick 冒頭の交換が配布する(この後 hl を読む者はいない)
+  ! hl の帯更新は次 tick 冒頭の交換が配布する(この後 hl を読む者はいない)。
+  ! 土層と内数は、近傍を読む次の過程(地下水の側方流・地形変化)のために交換する
+  ! (確保の有無は全ランク同一)。h・hg は次ステップの頭で swflow・gwflow が交換する
   call par_halo_cell(s%z)
+  if (soil) then
+    call par_halo_cell(s%sd)
+    if (allocated(s%hb)) call par_halo_cell(s%hb)
+    if (allocated(s%sf)) call par_halo_cell(s%sf)
+    if (allocated(s%ht)) call par_halo_cell(s%ht)
+    if (allocated(s%fx)) call par_halo_cell(s%fx)
+  end if
 end subroutine
 
 

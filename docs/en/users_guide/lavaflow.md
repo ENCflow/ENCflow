@@ -34,7 +34,9 @@ How to read the results (fields, ledgers, measurement columns, restart) is summa
   across which lava can move are counted: an edge whose higher-surface side
   carries no lava (an edge toward dry ground higher than the lava) is not.
   The solidified surface does not add to the soil layer sd: it behaves as
-  non-erodible bedrock.
+  non-erodible bedrock. The soil layer that was in a cell where lava
+  solidifies (the sd used by morphodynamics and groundwater) is buried
+  under the lava, and sd becomes 0.
 - The model is isothermal (cooling and temperature-dependent viscosity
   are a future extension; lava_plan.md Sec. 8). One rheology set per
   run; there is no per-vent viscosity (viscosity differences are really
@@ -142,6 +144,9 @@ The three ways a field gets written (automatic / flag / riding on a flag) and th
 
 - At the end "lavaflow: erupted ... m3, solidified ... m3, molten ... m3"
   (the volume ledger) and "subcycles total = ... over ... updates" are
+  printed. When a soil layer exists, "soil buried under solidified lava
+  ... m3, groundwater moved to the surface ... m3" (the soil buried under
+  the lava and the groundwater moved from it to the surface) is also
   printed.
 - Lava is not included in the S column of the screen and Log.txt (it is
   not a water column).
@@ -207,9 +212,11 @@ The labels in the Basis column are explained in [How to read the basis of a defa
   and the Bingham stopping thickness h∞ against analytic solutions, and
   the shape at rest of lava erupted from one vent on a flat bed until it
   stops, compared with the analytic plastic dome[^blake90] (a check that
-  the shape is the same along the grid axes and the diagonals), and a
-  check that lava ponded against a 10 m step solidifies completely, up to
-  the cells touching the wall.
+  the shape is the same along the grid axes and the diagonals), a check
+  that lava ponded against a 10 m step solidifies completely, up to the
+  cells touching the wall, and a check that the soil layer under
+  solidified lava is buried and the total water is conserved when the
+  water in it moves to the surface.
 
 ## Constraints and interactions
 
@@ -220,9 +227,17 @@ The labels in the Basis column are explained in [How to read the basis of a defa
   topography. There is no thermal lava–water interaction (steam
   explosions, quench fragmentation), and flowing lava does not dam
   water.
-- Roughness and infiltration on the solidified surface keep their
-  existing distributions (consider giving maps such as fn_gw_ksv in
-  preprocessing if needed).
+- Roughness on the solidified surface keeps its existing distribution.
+  **The soil layer under the lava is buried** (sd = 0), so with
+  groundwater models that use the soil layer as their layer (Green-Ampt,
+  lateral flow), rain does not infiltrate in cells where lava has
+  solidified, and the groundwater stored there moves to the surface at
+  solidification (the total water is conserved). Real young lava
+  (especially basaltic) is often fractured and permeable, so infiltration
+  on lava fields is underestimated. Once ash or other deposits form a soil
+  layer, water infiltrates up to its thickness. Because there is a single
+  soil layer, buried soil is treated as bedrock even if erosion later
+  exposes it.
 - No lava enters sea cells (submarine flow is out of scope).
 - **Grid orientation**: the computation uses the 4-neighbour grid. Yield
   and stopping are judged on the gradient magnitude, so the shape at rest

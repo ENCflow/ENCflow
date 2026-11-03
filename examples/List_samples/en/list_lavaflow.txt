@@ -8,8 +8,10 @@
 !   No dependency on other modules (water and weather not required).
 !   The state is the lava thickness s%hl (m). Field output Hl (m);
 !   restart uses the private file lavaflow.dat. Solidified lava appears
-!   as an increase of the bed elevation z (sd unchanged = non-erodible
-!   bedrock). Surface water does not see flowing lava and flows over z.
+!   as an increase of the bed elevation z (sd not increased = non-erodible
+!   bedrock; the soil layer that was in a cell where lava solidifies is
+!   buried under the lava, sd = 0). Surface water does not see flowing lava
+!   and flows over z.
 !   Dynamics: isothermal depth-averaged Bingham viscous gravity current
 !   (lubrication approximation). One rheology set per run (no per-vent
 !   viscosity; a future temperature extension covers that).

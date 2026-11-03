@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 # lava(溶岩流 = Bingham 粘性重力流)検定
-#   使い方: Check_lava.py <savedir> <huppert|bingham|dome|wall>
+#   使い方: Check_lava.py <savedir> <huppert|bingham|dome|wall|bury>
 #
 #   huppert モード(構成1: Newton 極限の相似解。param.txt と対):
 #     (1) 台帳    : |Σhl − V_in/A_cell| < TOL_SUM(注入は厳密加算・
@@ -26,6 +26,11 @@
 #     (2) 全量固化: Σdz / 注入 > FRAC_SOL5
 #     (3) 壁際    : 壁に接する列(i = IW5)の全行で hl = 0 かつ
 #                   dz > FRAC_WALL5 × max dz
+#   bury モード(構成6: 固化した溶岩の下の土層の埋没。param_bury.txt と対):
+#     (1) 台帳    : |Σhl + Σ(z−z0) − V_in/A_cell| < TOL_SUM
+#     (2) 埋没    : dz > 0 の全セルで sd = 0 かつ hg = 0、それ以外の sd = SD06
+#     (3) 水の保存: |Σ(h + hrs + hg) − H06·N| < TOL_W6 × H06·N(しみ込んでいた水は
+#                   地表へ移り、総量は変わらない)
 import sys, struct, math
 
 TOL_SUM = 1.0e-8
@@ -57,6 +62,10 @@ IWALL5, ZWALL5 = 31, 10.0        # 段(壁)の始まりの列と高さ
 IW5 = IWALL5 - 1                 # 壁に接する列
 Q5, TSUP5, DT5, TT5 = 0.2, 300.0, 0.5, 4800.0
 FRAC_SOL5, FRAC_WALL5 = 0.999, 0.5
+# --- 構成6(param_bury.txt と対で保守。地形は構成5 と同じ zwall.txt)---
+SD06, H06 = 1.0, 0.05            # 初期の土層厚 (m)・初期の地表水 (m)
+Q6, TON6, TOFF6, DT6, TT6 = 0.2, 900.0, 1200.0, 0.5, 6000.0
+TOL_W6 = 1.0e-9
 
 
 def read_rec(f):
@@ -97,6 +106,13 @@ def load_z(savedir, nx, ny):
         read_rle_array(f, ntot)     # h
         z = read_rle_array(f, ntot)
     return z
+
+
+def load_state_all(savedir, nx, ny):
+    # state.dat の並び h, z, hrs, hg, sd, hs(m_state の save_state と対)
+    ntot = nx * ny
+    with open(savedir + "/state.dat", "rb") as f:
+        return {k: read_rle_array(f, ntot) for k in ("h", "z", "hrs", "hg", "sd", "hs")}
 
 
 def load_txt(fname, nx, ny):
@@ -210,6 +226,35 @@ elif mode == "wall":
     ok3 = max(hw) <= 0.0 and min(dw) > FRAC_WALL5 * dzmax
     print("(3) 壁際  : 列 i = %d の max hl = %.3e m、min dz = %.3f m(max dz %.3f m の %.0f%% 超) : %s"
           % (IW5, max(hw), min(dw), dzmax, 100 * FRAC_WALL5, "PASS" if ok3 else "FAIL"))
+    ok = ok1 and ok2 and ok3
+elif mode == "bury":
+    hl = load_hl(savedir, NX5, NY5)
+    st = load_state_all(savedir, NX5, NY5)
+    area = DX5 * DX5
+    ntot = NX5 * NY5
+    dz = [zi - (ZWALL5 if idx % NX5 + 1 >= IWALL5 else 0.0) for idx, zi in enumerate(st["z"])]
+    nt = round(TT6 / DT6)
+    vin = sum(Q6 * DT6 for it in range(1, nt + 1) if TON6 <= it * DT6 < TOFF6)
+    # (1) 溶岩の台帳
+    res = (sum(hl) + sum(dz)) * area - vin
+    ok1 = abs(res) < TOL_SUM * vin
+    print("(1) 台帳  : (sum(hl)+sum(dz))*A - V_in = %.3e m3 (V_in = %.2f, tol %.0e 相対) : %s"
+          % (res, vin, TOL_SUM, "PASS" if ok1 else "FAIL"))
+    # (2) 埋没: 溶岩の下の土層と地下水は 0、ほかの土層は初期値のまま
+    foot = [idx for idx in range(ntot) if dz[idx] > 0.0]
+    rest = [idx for idx in range(ntot) if dz[idx] <= 0.0]
+    sdf = max(st["sd"][idx] for idx in foot)
+    hgf = max(st["hg"][idx] for idx in foot)
+    sdr = (min(st["sd"][idx] for idx in rest), max(st["sd"][idx] for idx in rest))
+    ok2 = len(foot) > 0 and sdf == 0.0 and hgf == 0.0 and sdr[0] == SD06 and sdr[1] == SD06
+    print("(2) 埋没  : 溶岩の下 %d セルの max sd = %.3e m・max hg = %.3e m、ほかの sd = %.3f〜%.3f m"
+          "(初期 %.1f m) : %s" % (len(foot), sdf, hgf, sdr[0], sdr[1], SD06, "PASS" if ok2 else "FAIL"))
+    # (3) 水の保存(しみ込んでいた水は地表へ移る)
+    w0 = H06 * ntot * area
+    w1 = (sum(st["h"]) + sum(st["hrs"]) + sum(st["hg"])) * area
+    ok3 = abs(w1 - w0) < TOL_W6 * w0
+    print("(3) 水    : sum(h + hrs + hg)*A = %.10f m3 vs 初期 %.10f m3(差 %.2e、tol %.0e 相対) : %s"
+          % (w1, w0, w1 - w0, TOL_W6, "PASS" if ok3 else "FAIL"))
     ok = ok1 and ok2 and ok3
 else:
     hl = load_hl(savedir, NX2, NY2)

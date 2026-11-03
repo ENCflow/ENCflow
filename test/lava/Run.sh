@@ -5,6 +5,7 @@
 # 構成2: Bingham 停止・固化(h∞ 解析解 + 固化台帳)
 # 構成4: 格子の向きによらない広がり(塑性ドームの静止形の解析解 + 等方性)
 # 構成5: 溶岩より高い壁の前の溶岩だまりの全量固化(台帳 + 壁際の固化)
+# 構成6: 固化した溶岩の下の土層の埋没と地下水の保存(Green-Ampt 併用)
 # 合否は Check_lava.py。save は save*_serial にも複製(Run_MPI 比較用)
 
 sdir=$(dirname "$(readlink -f "$0")")
@@ -61,6 +62,14 @@ set +o pipefail
 echo ""
 python3 "$sdir/Check_lava.py" save_wall wall || rc=1
 rm -rf save_wall_serial && cp -r save_wall save_wall_serial
+
+# 構成6: 固化した溶岩の下の土層の埋没(§51.6)
+set -o pipefail
+./encflow param_bury.txt | tee -a Screen.log || exit 1
+set +o pipefail
+echo ""
+python3 "$sdir/Check_lava.py" save_bury bury || rc=1
+rm -rf save_bury_serial && cp -r save_bury save_bury_serial
 
 if [ $rc -eq 0 ]; then
     echo "=== lava 検定 PASS ==="

@@ -329,9 +329,9 @@
     {
       "source": "docs/users_guide/lavaflow.md",
       "target": "docs/en/users_guide/lavaflow.md",
-      "source_sha256": "06edf0d0902c23b4fa026989e942efa953fba81bd652ea1f3c60ff69af84bb84",
-      "target_sha256": "5280f72ceb1ad67f2a7cc8aa5ac95a8a82d2f618346962adfbfcb5db61421808",
-      "reviewer": "Claude (Claude Code session; lava stop-criterion fix §51.5: changed passages compared side by side with the Japanese source, unchanged parts as recorded earlier the same day)",
+      "source_sha256": "4b020ea1be72757901cbb54719346048b2212729355af02649d7b867fe7b8187",
+      "target_sha256": "daf2e1522b5527a3b6d3903a74ed0d49933c48d331630d51612c06c5dc32963a",
+      "reviewer": "Claude (Claude Code session; lava soil-burial fix §51.6: changed passages compared side by side with the Japanese source, unchanged parts as recorded earlier the same day)",
       "method": "assistant",
       "reviewed_on": "2026-11-03"
     },
@@ -680,11 +680,11 @@
     {
       "source": "examples/List_samples/list_lavaflow.txt",
       "target": "examples/List_samples/en/list_lavaflow.txt",
-      "source_sha256": "2d5abb9d6098280bbb3a94ed36a615e22c642d1a238fd56fb51d2431775378e0",
-      "target_sha256": "bd805812a8cf06e40f6397db890310900c8fe82fe6e15f5054ec1650a4d3eb7e",
-      "reviewer": "Claude (Claude Code session; full-text content and lexical review, no model execution)",
+      "source_sha256": "8d0225da810474faad83264097304cf422f9195c6e59090a90c27dc26b8b604b",
+      "target_sha256": "a2bfe7fee7e31089b77c970f73fe12edfe9523cbcf40c84acdf204f60aeb7670",
+      "reviewer": "Claude (Claude Code session; lava soil-burial fix §51.6: header comment compared with the Japanese source; values, identifiers and enabled state unchanged)",
       "method": "assistant",
-      "reviewed_on": "2026-10-24"
+      "reviewed_on": "2026-11-03"
     },
     {
       "source": "examples/List_samples/list_meteo.txt",
@@ -2894,9 +2894,9 @@
     {
       "source": "test/lava/README.md",
       "target": "test/lava/en/README.md",
-      "source_sha256": "9d29880c67d89bc45116212c09d444c154e20131f63c829b43f590436590a4d7",
-      "target_sha256": "687d9ffa5fa964230609b59112bb12f6a39f704cdfb83b79d38c12ec2567e61a",
-      "reviewer": "Claude (Claude Code session; lava stop-criterion fix §51.5: changed passages compared side by side with the Japanese source, unchanged parts as recorded earlier the same day)",
+      "source_sha256": "0ee9387fa243e2084d7f0f08c14c0681e14aebef991be0c4246f083c7c221345",
+      "target_sha256": "28bda0c791b253a2978a1af2b3fa2530916bb3926fdc6af7deb75bb6ec3cc209",
+      "reviewer": "Claude (Claude Code session; lava soil-burial fix §51.6: changed passages compared side by side with the Japanese source, unchanged parts as recorded earlier the same day)",
       "method": "assistant",
       "reviewed_on": "2026-11-03"
     },
