@@ -67,11 +67,11 @@
     {
       "source": "docs/developer.md",
       "target": "docs/en/developer.md",
-      "source_sha256": "74d28ebfc6a906d3ec553802c0417cb55ea9723e68d0549babb6f448f8499331",
-      "target_sha256": "82d2abd2032be1a88429c6a9bd3befcaa793451da3396ab0168cee19316cd653",
-      "reviewer": "Claude (Claude Code session; restored the section-scoped record of the §0 partial mirror per multilingual.md: since the last section record (54d5425) the Japanese §0 and the English mirror each changed only by the same renumbering of one reference, §88 -> §90)",
+      "source_sha256": "d45961e94bcc07c3bb97c773c7d1d31b020557e5623b7b6a42f1c89737635d05",
+      "target_sha256": "b51acfa530be8df05618d28d6edb77f7bd3fcaaf266647b4c45c1c3a353019af",
+      "reviewer": "Claude (Claude Code session; section-scoped review of §0 after adding the practice 'state the limits' to policy 13 in both files, 2026-11-03)",
       "method": "assistant",
-      "reviewed_on": "2026-10-28",
+      "reviewed_on": "2026-11-03",
       "source_section": "## 0."
     },
     {

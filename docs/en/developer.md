@@ -131,8 +131,8 @@ follows from all three of these purposes.
     lu2mask §40, the removal of f_rntype=2 §41). (Added 2026-08-15)
 13. **Fulfil accountability.** In addition to publishing all source (policy 10), keep
     the state in which users and third parties can trace back and verify "why this
-    result". The following three points are part of every piece of work that adds or
-    changes a feature (added 2026-10-24).
+    result". The following four points are part of every piece of work that adds or
+    changes a feature (added 2026-10-24; stating the limits added 2026-11-03).
     - **State the sources**: write, wherever possible, the source of each model,
       governing equation and parameter (including default and recommended values).
       The origin of equations and formulations goes in the relevant § of developer.md
@@ -161,10 +161,28 @@ follows from all three of these purposes.
       (the scripting of the cross-check in §35.1 is the example). Checks live
       outside the computational core (shell, Python standard library; outside the
       scope of policy 10) and no generation mechanism is built (§35.1).
+    - **State the limits**: state what cannot be done as "cannot be done"
+      (phenomena out of scope, structures and processes that cannot be
+      represented). For what can be done, too, write the limits of accuracy (known
+      biases; dependence on the grid, time step, orientation and settings; the
+      range that has been verified and the range that has not) where users read the
+      results -- the relevant chapter and explanation page of the users guide, the
+      README of each example and test. The more plausible a result looks, the more
+      easily it is over-trusted, precisely because it looks plausible. Being able
+      to chain many processes approximately and easily (purposes 2 and 3, policy 4)
+      also means being able to draw plausible-looking figures for combinations
+      that have not been verified or outside the range of applicability. Limits are
+      written not as a confession of weakness but as information for using the
+      results correctly (examples: "What it deliberately does not do" in the
+      README, "Not yet supported" in the use-case collection, the limits of
+      accuracy in §2 of the channel models page, §7 of the passage-width adjustment
+      page). Just as the absence of a source is not hidden, what cannot be done is
+      not hidden.
 
     Where "wherever possible" draws the line: for sources, analytical solutions and
     checks alike, the rule is not "do not implement because there is none" but "when
     there is none, say so". Retrofitting the existing modules (taking stock of
     chapters without a References section, adding verification scripts to cases that
     have an analytical solution but no script, promoting the benchmark cases to
-    analytical-solution tests §10) proceeds step by step as items in docs/handoff.md.
+    analytical-solution tests §10, taking stock of the statements of limits)
+    proceeds step by step as items in docs/handoff.md.
