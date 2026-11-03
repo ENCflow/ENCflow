@@ -76,6 +76,16 @@ $`p_d = 1`$ a grid with diagonals only. For $`\Delta x \ne \Delta y`$ the
 share $`p_d`$ is applied on the shorter side and scaled by
 $`(\Delta_{\min}/\Delta_{\max})^2`$ on the longer side (`init_weights`).
 
+**Terminology.** This guide calls $`L_k`$ the **passage width** (通過幅 in the
+Japanese version). The original paper[^tada26] regards the cell as a virtual
+octagon with its corners cut off, calls $`L_k`$ the length of its sides (side
+length), and $`L_{k,x}`$, $`L_{k,y}`$ their projections onto the x and y axes
+(the diagonal sides are the cut corners, whose projections are the end parts
+$`(p_d/2)\Delta`$). The passage width is a quantity the grid assigns to the
+fluxes, kept apart from physical widths such as the channel width and the
+water-surface width and from the effective flow width of river engineering
+practice (the physical side uses the terms conveyance and conveyance ratio).
+
 The passage widths are narrowed afterwards by sub-grid channel widths,
 levee walls and building occupancy ([channels](channel.md),
 [geographic information](geoinfo.md)). The weights $`L_k/\Delta s_k`$ of

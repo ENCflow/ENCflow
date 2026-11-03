@@ -29,8 +29,8 @@ landside cells. A breach site is a pair of an adjacent channel cell
 normal edge. With f_br_diag = 1 the four diagonal edges touching the site
 (dotted in the figure: two from the site's channel cell to the neighbours
 of the landside cell, two from the neighbours of the channel cell to the
-landside cell) drop to the same effective crest, so each breached cell
-passes a full cell width. (c) The effective crest is lowered by the
+landside cell) drop to the same effective crest, so the passage width per
+breached cell becomes a full cell width. (c) The effective crest is lowered by the
 remaining fraction of br_series. The formulation of each mechanism and the
 basis of the defaults are in [Channels explained](channel_models.md).
 
@@ -216,7 +216,7 @@ a failure (levees must be enabled).
   breach width is per edge). **f_br_diag = 1 is recommended.** With the
   previous behaviour (f_br_diag = 0) the diagonal links between
   neighbouring sites stay walls, so one site passes only about 0.4 dx of
-  effective width (the passing-width share of a normal edge), 0.4 times
+  effective passage width (the passage-width share of a normal edge), 0.4 times
   the discharge of a resolved levee (a levee present as DEM elevation;
   [prescribed bed motion](bedmotion.md) §5). With f_br_diag = 1 the
   diagonal edges touching the sites open as well, and a breach 3–5 cells

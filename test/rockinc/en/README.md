@@ -134,7 +134,7 @@ python3 make_init.py z > zinit.txt   # regenerate the inputs (bundled; only when
   in the interior prevented a quasi-steady state. With a 1-cell channel the
   problem becomes a 1-D chain with u = 0 and closes with the recursion
   (developer.md §89.4).
-- When the bedload pass width is set to `fluv_diagratio = 0`, the table of the
+- When the bedload passage width is set to `fluv_diagratio = 0`, the table of the
   dynamic reassignment of water is applied to the axial edges and the capacity
   of a 1-cell channel becomes 2.41 times larger (consistent with the default
   fluv_diagratio).
