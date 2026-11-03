@@ -329,9 +329,9 @@
     {
       "source": "docs/users_guide/lavaflow.md",
       "target": "docs/en/users_guide/lavaflow.md",
-      "source_sha256": "4b020ea1be72757901cbb54719346048b2212729355af02649d7b867fe7b8187",
-      "target_sha256": "daf2e1522b5527a3b6d3903a74ed0d49933c48d331630d51612c06c5dc32963a",
-      "reviewer": "Claude (Claude Code session; lava soil-burial fix §51.6: changed passages compared side by side with the Japanese source, unchanged parts as recorded earlier the same day)",
+      "source_sha256": "8f9155f18326d1a01bf025cdeffe4a07320df70a355986ae3c49b92149d194ab",
+      "target_sha256": "930a1d33ade45dfdfc6d216a9075a1d7aecf82c2ac813f673ea05d4d0987bd0b",
+      "reviewer": "Claude (Claude Code session; lava dome applicability revision: changed passages compared side by side with the Japanese source, unchanged parts as recorded earlier the same day)",
       "method": "assistant",
       "reviewed_on": "2026-11-03"
     },

@@ -100,7 +100,7 @@ following (calibration quantities):
 | Basaltic, hot pahoehoe (Hawaiian type) | 1e2-1e3 | 0-500 | Smaller eta means more subcycles |
 | Basaltic aa lava (Etna / Izu-Oshima type; default) | 1e3-1e4 | 1e3-5e3 | Crystallization during flow raises eta by an order of magnitude |
 | Andesitic (Fuji / Asama type) | 1e5-1e7 | 1e4-1e5 | Thick flows; stopping thickness tau_y/(rho g tan) of several m to 10 m |
-| Dacite to rhyolite lava domes | >=1e9 | >=1e5 | Flow nearly stops; outside the scope of this module (lava_plan.md Sec. 2) |
+| Dacite to rhyolite lava domes | >=1e9 | >=1e5 | Up to an estimate of the shape at rest held by the yield stress (plastic dome). Talus, growth from inside and collapse are out of scope ([Constraints](#constraints-and-interactions) below) |
 
 ## Parameters
 
@@ -239,6 +239,20 @@ The labels in the Basis column are explained in [How to read the basis of a defa
   soil layer, buried soil is treated as bedrock even if erosion later
   exposes it.
 - No lava enters sea cells (submarine flow is out of scope).
+- **Lava domes**: lava erupted from one vent until it stops takes the shape
+  at rest held by the yield stress (the plastic dome
+  $`h(r)^2 = (2\tau_y/\rho g)(R - r)`$[^blake90]; it agrees with the
+  analytic solution to 1–2% in test/lava configuration 4). The height to
+  diameter ratio is proportional to the yield stress to the power 0.6 and
+  inversely proportional to the volume to the power 0.2. The steep sides
+  of real domes are often slopes of broken blocks fallen from the cracked
+  surface (talus), and neither growth from inside nor collapse into
+  pyroclastic flows is computed, so what can be computed is an estimate of
+  the shape at rest (a collapse can be given separately with f_release of
+  the debris flow model). The shape at rest does not depend on the
+  viscosity, so to look only at the shape you can lower the viscosity to
+  shorten the run (when using solidification, raise lv_vsol by the same
+  ratio).
 - **Grid orientation**: the computation uses the 4-neighbour grid. Yield
   and stopping are judged on the gradient magnitude, so the shape at rest
   of a dome on a flat bed is the same along the grid axes and the
