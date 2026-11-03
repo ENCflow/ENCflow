@@ -65,8 +65,9 @@
 
   ! ---- Gravitational snow redistribution = avalanching (G4) ----
   !   Moves the SWE of cells whose steepest ice-surface slope (z+hi)
-  !   exceeds the threshold to the steepest-descent neighbor
-  !   (concentrates accumulation from cliffs into cirques)
+  !   exceeds the threshold to the two neighbors on either side of the
+  !   steepest-descent direction (D-infinity; concentrates accumulation
+  !   from cliffs into cirques)
   f_glava = 0               ! 1 to enable
   !gl_ava_tanc = 0.6        ! critical slope tan(theta_c) (0.6 = ~31 deg)
 

@@ -6,6 +6,7 @@
 - figs/halfar.png : Halfar ドーム。初期(t = t0)と最終(地形時間 t0 + 80 日 ≈ 2 t0)の
                     中央行の氷厚と相似解、および氷厚分布の計算 − 解析解
 - figs/cirque.png : カール形成スモークテスト。初期地形(円錐)、最終氷厚 Hi、地形変化 Z9998 − Z0000
+- figs/avalanche.png : 雪崩再配分の等方性(構成 4)。1 日後の SWE と、山頂から同じ距離の円周上の SWE
 """
 import glob, os, sys
 import numpy as np
@@ -85,3 +86,33 @@ if os.path.isdir("result_cirque"):
     fig.savefig(f"{FIGDIR}/cirque.png", dpi=110)
     plt.close(fig)
     print("cirque: max Hi %.1f m, min dz %.3f m, max dz %.3f m, eroded cells %d" % (hi.max(), (z1 - z0).min(), (z1 - z0).max(), ((z1 - z0) < -0.01).sum()))
+
+if os.path.isdir("result_ava"):
+    sw = np.loadtxt("result_ava/Sw9998.txt")
+    c = sw.shape[0] // 2                     # 山頂のセル(0 始まり。81 × 81 の中央)
+    def at(xx, yy):
+        i0, j0 = int(np.floor(xx)), int(np.floor(yy)); fx, fy = xx - i0, yy - j0
+        return (sw[j0, i0] * (1 - fx) * (1 - fy) + sw[j0, i0 + 1] * fx * (1 - fy)
+                + sw[j0 + 1, i0] * (1 - fx) * fy + sw[j0 + 1, i0 + 1] * fx * fy)
+    fig, axes = plt.subplots(1, 2, figsize=(12.5, 4.4), gridspec_kw={"width_ratios": [1, 1.4]})
+    ax = axes[0]
+    im = ax.imshow(sw, origin="lower", cmap="Blues", vmin=0)
+    ax.set_title(T("1 日後の SWE (mm)(初期は一様 1000 mm)", "SWE after 1 day (mm) (uniform 1000 mm at the start)"), fontsize=10)
+    ax.set_xlabel("ix"); ax.set_ylabel("iy")
+    fig.colorbar(im, ax=ax, shrink=0.85)
+    ax = axes[1]
+    az = np.arange(0.0, 360.0, 0.5)
+    for r in (800, 1000, 1200, 1400, 1600):
+        v = [at(c + r / 50.0 * np.cos(np.radians(a)), c + r / 50.0 * np.sin(np.radians(a))) for a in az]
+        ax.plot(az, v, lw=1.0, label=f"r = {r} m")
+    ax.set_xticks(range(0, 361, 45)); ax.set_xlim(0, 360); ax.set_ylim(0, 1100)
+    ax.set_xlabel(T("山頂から見た方位 (°)。0°・90°… が格子軸、45°・135°… が斜め",
+                    "azimuth from the summit (°); grid axes at 0°, 90°, ..., diagonals at 45°, 135°, ..."))
+    ax.set_ylabel("SWE (mm)"); ax.grid(alpha=0.3); ax.legend(fontsize=8, loc="lower right")
+    ax.set_title(T("山頂から同じ距離の円周上の SWE", "SWE on circles around the summit"), fontsize=10)
+    fig.suptitle(T("雪崩再配分の等方性(円錐山体・雪崩だけ・1 日 = 24 回の再配分。送り先は D∞)",
+                    "Isotropy of the avalanche redistribution (conical mountain, avalanches only, 1 day = 24 redistributions; D∞ routing)"), fontsize=10)
+    fig.tight_layout()
+    fig.savefig(f"{FIGDIR}/avalanche.png", dpi=110)
+    plt.close(fig)
+    print("avalanche: SWE min %.1f mm, max %.1f mm" % (sw.min(), sw.max()))

@@ -27,8 +27,9 @@ module m_glacier
   !
   ! 【dt_glacier 間隔の処理(順序が契約)】
   !   (1) s%hi のハロ交換(毎ステップ融解の帯更新を配布)
-  !   (2) 雪崩再配分(f_glava): 氷面 z+hi の最急勾配が tanθc を超えるセルの
-  !       swe を最急降下の8近傍へ移送(2パス。決定的・保存的)
+  !   (2) 雪崩再配分(f_glava): 氷面 z+hi の最急降下の勾配が tanθc を超える
+  !       セルの swe を、最急降下の向きを挟む 2 つの隣へ移送(D∞。Tarboton 1997。
+  !       §45.2。2パス。決定的・保存的)
   !   (3) 氷化(フィルン): swe×(1−exp(−dtw/tfirn)) を氷へ(密度換算)
   !   (4) s%hi のハロ交換(氷化の帯更新を配布)
   !   (5) SIA 流動(f_glflow): 氷面 s = z+hi の非線形拡散
@@ -99,6 +100,11 @@ module m_glacier
   integer, parameter :: dje(1:8) = [ -1, -1, -1,  0,  0,  0,  0,  0]
   integer, parameter :: ke(1:8) = [ 1, 2, 3, 4, 4, 3, 2, 1]
   real, parameter :: sign_e(1:8) = [1., 1., 1., 1., -1., -1., -1., -1.]
+  ! 雪崩の D∞ の 8 つの三角形の面(§45.2)。面 f は自セル・軸方向の隣 fk1(f)・
+  ! 斜めの隣 fk2(f)(上の 8 近傍の番号)で作る。並びは同じ勾配の面が並んだときの
+  ! 選択順(先の面を採る)
+  integer, parameter :: fk1(1:8) = [5, 7, 7, 4, 4, 2, 2, 5]
+  integer, parameter :: fk2(1:8) = [8, 8, 6, 6, 1, 1, 3, 3]
 
   type t_glwork
     real :: cw(1:4) = 0.0            ! エッジ伝導度重み(= 通過幅/距離。4近傍のみ)
@@ -114,8 +120,13 @@ module m_glacier
                                      !   パス2が適用する。1パスのその場更新は
                                      !   勾配の近傍読みと競合する(§28.2 の
                                      !   OpenMP データ競合と同型。実検出)
-    real, allocatable :: am(:,:)     ! 雪崩の移送量 (m 水当量)(1:nx, jsh:jeh)
-    integer, allocatable :: ad(:,:)  ! 雪崩の移送方向 k=1..8(0=なし)(同上)
+    real, allocatable :: am(:,:)     ! 雪崩の移送量(1 つ目の送り先)(m 水当量)(1:nx, jsh:jeh)
+    integer, allocatable :: ad(:,:)  ! 雪崩の 1 つ目の送り先の方向 k=1..8(0=なし)(同上)
+    real, allocatable :: am2(:,:)    ! 雪崩の移送量(2 つ目の送り先。D∞ の斜めの隣)(同上)
+    integer, allocatable :: ad2(:,:) ! 雪崩の 2 つ目の送り先の方向(0=なし)(同上)
+    real :: fd1(1:8) = 0.0           ! D∞ の面 f の軸方向の辺の長さ d1 (m)
+    real :: fd2(1:8) = 0.0           ! D∞ の面 f の直交する辺の長さ d2 (m)
+    real :: fal(1:8) = 0.0           ! D∞ の面 f の開き角 α = atan(d2/d1) (rad)
     real :: vero = 0.0               ! 侵食で系外へ排出した体積 (m3)(ランク局所累計)
     integer :: nsubtot = 0           ! サブサイクル総数(ランク共通。dispose で報告)
     integer :: ntick = 0             ! 更新回数
@@ -172,6 +183,7 @@ subroutine m_glacier_init(gl, p, g, s, mt)
   type(t_meteo), intent(in) :: mt
   type(t_list_glacier) :: list
   real :: dtg
+  integer :: k
   character(len=256) :: msg
 
   if (len_trim(p%fn_glacier) == 0) return
@@ -309,6 +321,19 @@ subroutine m_glacier_init(gl, p, g, s, mt)
   if (gl%f_ava > 0) then
     allocate(gl%glw%am(dcp%ish:dcp%ieh, dcp%jsh:dcp%jeh), source = 0.0)
     allocate(gl%glw%ad(dcp%ish:dcp%ieh, dcp%jsh:dcp%jeh), source = 0)
+    allocate(gl%glw%am2(dcp%ish:dcp%ieh, dcp%jsh:dcp%jeh), source = 0.0)
+    allocate(gl%glw%ad2(dcp%ish:dcp%ieh, dcp%jsh:dcp%jeh), source = 0)
+    ! D∞ の面の形(軸方向の隣が x 方向なら d1 = dx・d2 = dy、y 方向なら逆)
+    do k = 1, 8
+      if (din(fk1(k)) /= 0) then
+        gl%glw%fd1(k) = g%dx
+        gl%glw%fd2(k) = g%dy
+      else
+        gl%glw%fd1(k) = g%dy
+        gl%glw%fd2(k) = g%dx
+      end if
+      gl%glw%fal(k) = atan2(gl%glw%fd2(k), gl%glw%fd1(k))
+    end do
   end if
 
   ! --- リスタート(復元値が hi0 に勝つ) ---
@@ -822,21 +847,23 @@ end subroutine
 
 
 !----------------------------------------------------------------------
-! 雪の重力再配分(雪崩。f_glava)
-!   氷面 z+hi の8近傍最急降下勾配 tanθ が限界 tanθc を超えるセルの swe を
-!   その近傍へ移送する。移送率 = min(1, (tanθ−tanθc)/tanθc)(超過に比例。
-!   限界の2倍勾配で全量)。2パス構造:
+! 雪の重力再配分(雪崩。f_glava。§45.2)
+!   氷面 z+hi の最急降下の勾配 tanθ が限界 tanθc を超えるセルの swe を、
+!   最急降下の向きを挟む 2 つの隣へ移送する(D∞。Tarboton 1997。ava_dir)。
+!   移送率 = min(1, (tanθ−tanθc)/tanθc)(超過に比例。限界の2倍勾配で全量)。
+!   2 つの送り先への分配は和が移送量と厳密に一致するように求める(大きい方を
+!   積で、小さい方を差で。差は Sterbenz の補題で丸めなし)。2パス構造:
 !     パス1: 時刻 n の場から (量, 方向) を決定(ハロ行 js−1/je+1 も冗長
 !            計算 = 帯界面の受け取りをランク数不変にする。§28.2 と同じ理由)
 !     パス2: 自帯のみ、送り出しと8近傍からの受け取りを集計
-!   単一受け手+送り量 ≤ swe なので保存的(領域外・海へは送らない)
+!   送り量 ≤ swe なので保存的(領域外・海へは送らない)
 !----------------------------------------------------------------------
 subroutine tick_avalanche(gl, g, s)
   type(t_glacier), intent(inout) :: gl
   type(t_geoinfo), intent(in) :: g
   type(t_state), intent(inout) :: s
-  integer :: i, j, k, in, jn, jt0, jt1, kbest
-  real :: sc, drop, tanmax, tanth, fr, w
+  integer :: i, j, k, in, jn, jt0, jt1, k1, k2
+  real :: tanb, af, fr, am, a1, a2, w
 
   ! 決定はハロ入力に依存するため swe を最新化(hi は呼び出し側で交換済み)
   call par_halo_cell(s%swe)
@@ -846,59 +873,155 @@ subroutine tick_avalanche(gl, g, s)
   !   ない=窓が空、という領域境界の規約で保護される。calc_creep と同じ)
   jt0 = max(dcp%js - 1, dcp%jsh)
   jt1 = min(dcp%je + 1, dcp%jeh)
-  !$omp parallel do schedule(static) private(i, j, k, in, jn, sc, drop, tanmax, tanth, kbest, fr)
+  !$omp parallel do schedule(static) private(i, j, k1, k2, tanb, af, fr, am, a1, a2)
   do j = jt0, jt1
     do i = g%wx(1,j), g%wx(2,j)
       gl%glw%am(i,j) = 0.0
       gl%glw%ad(i,j) = 0
+      gl%glw%am2(i,j) = 0.0
+      gl%glw%ad2(i,j) = 0
       if (g%x(i,j) <= 0) cycle
       if (g%sw(i,j) > 0) cycle
       if (s%swe(i,j) <= 0.0) cycle
-      sc = s%z(i,j) + s%hi(i,j)
-      tanmax = 0.0
-      kbest = 0
-      do k = 1, 8
-        in = i + din(k)
-        jn = j + djn(k)
-        if (g%x(in,jn) <= 0) cycle
-        if (g%sw(in,jn) > 0) cycle
-        drop = sc - (s%z(in,jn) + s%hi(in,jn))
-        if (drop <= 0.0) cycle
-        tanth = drop / gl%glw%dist8(k)
-        if (tanth > tanmax) then
-          tanmax = tanth
-          kbest = k
-        end if
-      end do
-      if (kbest == 0) cycle
-      if (tanmax <= gl%avatanc) cycle
-      fr = min(1.0, (tanmax - gl%avatanc) / gl%avatanc)
-      gl%glw%am(i,j) = s%swe(i,j) * fr
-      gl%glw%ad(i,j) = kbest
+      call ava_dir(gl, g, s, i, j, k1, k2, af, tanb)
+      if (k1 == 0) cycle
+      if (tanb <= gl%avatanc) cycle
+      fr = min(1.0, (tanb - gl%avatanc) / gl%avatanc)
+      am = s%swe(i,j) * fr
+      ! a1 + a2 = am を厳密に満たす分配(大きい方を積、小さい方を差で。
+      ! 大きい方は am/2 以上 am 以下なので am − 大きい方 は丸めなし)
+      if (af <= 0.5) then
+        a1 = am * (1.0 - af)
+        a2 = am - a1
+      else
+        a2 = am * af
+        a1 = am - a2
+      end if
+      gl%glw%am(i,j) = a1
+      gl%glw%ad(i,j) = k1
+      gl%glw%am2(i,j) = a2
+      gl%glw%ad2(i,j) = k2
     end do
   end do
   !$omp end parallel do
 
   ! --- パス2: 送り出しと受け取りの集計(自帯のみ) ---
-  !   受け取り = 近傍 n の方向が自セルを指す(反対向き 9−k)場合
+  !   受け取り = 近傍 n の送り先が自セルを指す(反対向き 9−k)場合
+  !   (am + am2 は送り量そのもの = 丸めなし)
   !$omp parallel do schedule(static) private(i, j, k, in, jn, w)
   do j = dcp%js, dcp%je
     do i = g%wx(1,j), g%wx(2,j)
       if (g%x(i,j) <= 0) cycle
       if (g%sw(i,j) > 0) cycle
-      w = s%swe(i,j) - gl%glw%am(i,j)
+      w = s%swe(i,j) - (gl%glw%am(i,j) + gl%glw%am2(i,j))
       do k = 1, 8
         in = i + din(k)
         jn = j + djn(k)
         if (jn < jt0 .or. jn > jt1) cycle       ! パス1の計算範囲外(全域端)
         if (g%x(in,jn) <= 0) cycle
         if (gl%glw%ad(in,jn) == 9 - k) w = w + gl%glw%am(in,jn)
+        if (gl%glw%ad2(in,jn) == 9 - k) w = w + gl%glw%am2(in,jn)
       end do
       s%swe(i,j) = w
     end do
   end do
   !$omp end parallel do
 end subroutine
+
+
+!----------------------------------------------------------------------
+! 雪崩の送り先と勾配(D∞。Tarboton 1997。§45.2)
+!   セル (i,j) と、軸方向の隣 fk1(f)・斜めの隣 fk2(f) で作る 8 つの三角形の
+!   面 f について、面の中の最急降下の向き r(軸方向の隣の向きから測る角度)と
+!   勾配を求め、勾配が最大の面を採る:
+!     s1 = (e0 − e1)/d1, s2 = (e1 − e2)/d2, r = atan2(s2, s1)、勾配 √(s1²+s2²)。
+!     r < 0 なら r = 0・勾配 s1、r > α(= atan(d2/d1))なら r = α・勾配
+!     (e0 − e2)/√(d1²+d2²)(面の縁に沿う向き)。
+!   送り先は k1 = fk1(f)・k2 = fk2(f)、k2 への割合 af = r/α(向きの角度の比)。
+!   平面なら向きも勾配も格子の向きによらない。
+!   領域外・海のセルを含む面は使わない。使える下りの面がなければ(領域の端・
+!   海岸)、8 近傍の最急降下の 1 セルへ送る(D8。2026-11-03 までの方式。
+!   k2 = 0・af = 0)。下りの隣がなければ k1 = 0。
+!----------------------------------------------------------------------
+pure subroutine ava_dir(gl, g, s, i, j, k1, k2, af, tanb)
+  type(t_glacier), intent(in) :: gl
+  type(t_geoinfo), intent(in) :: g
+  type(t_state), intent(in) :: s
+  integer, intent(in) :: i, j
+  integer, intent(out) :: k1, k2
+  real, intent(out) :: af, tanb
+  integer :: f, kc, kd, k, in, jn
+  real :: e0, e1, e2, s1, s2, r, sl, rbest, drop, tanth
+
+  k1 = 0
+  k2 = 0
+  af = 0.0
+  tanb = 0.0
+  rbest = 0.0
+  e0 = s%z(i,j) + s%hi(i,j)
+
+  ! --- D∞: 8 つの面のうち最も急な下りの面 ---
+  do f = 1, 8
+    kc = fk1(f)
+    kd = fk2(f)
+    if (.not. ava_cell(g, i + din(kc), j + djn(kc))) cycle
+    if (.not. ava_cell(g, i + din(kd), j + djn(kd))) cycle
+    e1 = s%z(i+din(kc), j+djn(kc)) + s%hi(i+din(kc), j+djn(kc))
+    e2 = s%z(i+din(kd), j+djn(kd)) + s%hi(i+din(kd), j+djn(kd))
+    s1 = (e0 - e1) / gl%glw%fd1(f)
+    s2 = (e1 - e2) / gl%glw%fd2(f)
+    if (s1 == 0.0 .and. s2 == 0.0) cycle      ! 平ら(atan2(0,0) は規格外)
+    r = atan2(s2, s1)
+    if (r < 0.0) then
+      r = 0.0
+      sl = s1
+    else if (r > gl%glw%fal(f)) then
+      r = gl%glw%fal(f)
+      sl = (e0 - e2) / gl%glw%dist8(kd)
+    else
+      sl = sqrt(s1 * s1 + s2 * s2)
+    end if
+    if (sl > tanb) then
+      tanb = sl
+      k1 = kc
+      k2 = kd
+      rbest = r / gl%glw%fal(f)
+    end if
+  end do
+  if (k1 > 0) then
+    af = min(max(rbest, 0.0), 1.0)
+    return
+  end if
+
+  ! --- 使える下りの面がない(領域の端・海岸): 8 近傍の最急降下(D8) ---
+  do k = 1, 8
+    in = i + din(k)
+    jn = j + djn(k)
+    if (.not. ava_cell(g, in, jn)) cycle
+    drop = e0 - (s%z(in,jn) + s%hi(in,jn))
+    if (drop <= 0.0) cycle
+    tanth = drop / gl%glw%dist8(k)
+    if (tanth > tanb) then
+      tanb = tanth
+      k1 = k
+    end if
+  end do
+end subroutine
+
+
+!----------------------------------------------------------------------
+! 雪崩の送り先になれる有効セルか(領域内・海でない)。x を先に見る
+! (g%x は 0:nx+1 の縁付き。sw は x > 0 のセルでだけ読む。§45 の実バグ)
+!----------------------------------------------------------------------
+pure logical function ava_cell(g, i, j)
+  type(t_geoinfo), intent(in) :: g
+  integer, intent(in) :: i, j
+
+  ava_cell = .false.
+  if (g%x(i,j) <= 0) return
+  if (g%sw(i,j) > 0) return
+  ava_cell = .true.
+end function
 
 
 !----------------------------------------------------------------------
