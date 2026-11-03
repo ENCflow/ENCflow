@@ -59,7 +59,7 @@ module m_lavaflow
   ! ==============================================================
   use m_sysparam, only : t_sysparam
   use m_geoinfo, only : t_geoinfo
-  use m_state, only : t_state
+  use m_state, only : t_state, gw_to_h
   use m_boundary, only : interp_series, read_cell_file2, read_val_file2
   use list_lavaflow, only : t_list_lavaflow, list_lavaflow_read, &
                             lvmax, lvcmax, lvvmax, lv_cell, lv_val
@@ -728,13 +728,15 @@ subroutine tick_solidify(lv, g, s, dtw)
           if (allocated(s%sf)) s%sf(i,j) = 0.0
           if (allocated(s%ht)) s%ht(i,j) = 0.0
           if (allocated(s%fx)) s%fx(i,j) = 0.0
-          ! 容量 sd × sy0 を超えた地下貯留(sd = 0 なので全量)を地表水へ
+          ! 容量 sd × sy0 を超えた地下貯留(sd = 0 なので全量)を地表水へ。
+          ! 地表は河道幅セルで河道の平面に載る(体積を保つ換算 gw_to_h。§26.1)。
+          ! 集計 gsum は地下の側の水深(セルの平面)で数える
           if (s%gw_active) then
             cap = s%sd(i,j) * g%sy0
             if (s%hg(i,j) > cap) then
               xg = s%hg(i,j) - cap
               s%hg(i,j) = cap
-              s%h(i,j) = s%h(i,j) + xg
+              s%h(i,j) = s%h(i,j) + xg * gw_to_h(s, i, j)
               gsum = gsum + xg
             end if
           end if
