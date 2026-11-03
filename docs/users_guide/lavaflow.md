@@ -17,13 +17,16 @@ developer.md §51。
 
 - 状態はセル別の溶岩厚 `s%hl`(m)。分布 `Hl0001...` として毎出力時刻に
   書かれます。
-- 溶岩面 $`s = z + h_l`$ のエッジ勾配 $`S`$ と、両セルの平均溶岩厚 $`h_e`$ に
+- 溶岩面 $`s = z + h_l`$ の勾配の大きさ $`S`$ と、両セルの平均溶岩厚 $`h_e`$ に
   対し、基底せん断応力 $`\rho g h_e S`$ が降伏応力 $`\tau_y`$ を超える
   エッジで流動します(下の流動則。$`\tau_y = 0`$ なら Newton 粘性流)。
+  $`S`$ はエッジを横切る方向とエッジに沿う方向の両方の勾配から求めるので、
+  止まった溶岩の形は格子の向きによりません(下の[制約](#制約併用関係))。
 - `lv_wsol > 0` のとき、周囲のエッジ深さ平均流速の最大値が閾値
   `lv_vsol` を下回った「停止セル」の溶岩を、レート `lv_wsol`(m/s)で
-  z へ転換します(固化。不可逆)。固化面は土層厚 sd を増やさない
-  「侵食されない岩盤」です。
+  z へ転換します(固化。不可逆)。流速を見るのは溶岩が動けるエッジだけで、
+  溶岩面の高い側に溶岩がないエッジ(溶岩より高い乾いた地盤へ向かうエッジ)は
+  数えません。固化面は土層厚 sd を増やさない「侵食されない岩盤」です。
 - 等温モデルです(冷却・温度依存粘度は将来拡張。lava_plan.md §8)。
   粘度・降伏応力は**ラン全体で1組**です。噴火口ごとの粘度指定は
   ありません(粘度差の実体は温度・組成であり、温度拡張で扱う設計)。
@@ -37,6 +40,8 @@ q = \frac{\rho g S}{6\eta}\,(h_e - h_0)^2\,(2h_e + h_0),
 h_0 = \frac{\tau_y}{\rho g S}
 ```
 
+エッジを横切る流量は、この $`q`$ にエッジを横切る方向の勾配の割合 $`S_n/S`$ を
+掛けたものです(降伏は勾配の大きさで判定し、向きはエッジへの射影にだけ使います)。
 $`h_e \le h_0`$ のエッジは流れません。$`\tau_y = 0`$ では Newton 流体の
 $`q = \rho g S h_e^3 / 3\eta`$ に戻り、平坦床の定率供給では粘性重力流の
 相似解[^huppert82]に従います([test/lava](../../test/lava/) で検定)。
@@ -139,6 +144,11 @@ $`\tau_y > 0`$ で溶岩面が勾配 $`\tan\theta`$ の一様斜面と平行な�
 - 到達範囲は `Hl > 0` の最終フレーム(9998)で、期間最大の分布はないので
   途中の最大到達が必要なら `dt_file` を細かくします。停止厚は
   前縁の Hl が τ_y/(ρg tanθ) に近いかで確認できます。
+- molten(固化せずに残った溶岩)は、計算終了時にまだ動いている溶岩か、止まり
+  かけで停止判定(`lv_vsol`)に達していない溶岩です。残っている場所は Hl9998 で
+  確認できます。2026-11-03 の変更より前は、溶岩より高い乾いた地盤(谷壁や先に
+  固まった溶岩の縁)に接するセルが止まっても固化しない不具合がありました
+  (developer.md §51.5)。
 
 ## パラメータと既定値の根拠
 
@@ -167,7 +177,10 @@ $`\tau_y > 0`$ で溶岩面が勾配 $`\tan\theta`$ の一様斜面と平行な�
 ## 検証・例題
 
 - 検定ケース: [test/lava](../../test/lava/) — Huppert 相似解
-  (Newton 極限の軸対称拡がり)と Bingham 停止厚 h∞ の解析解検定。
+  (Newton 極限の軸対称拡がり)と Bingham 停止厚 h∞ の解析解検定、平坦床の
+  1 火口から止まるまで噴出した溶岩の静止形と塑性ドームの解析解[^blake90]の比較
+  (格子軸の方向と斜めの方向で同じ形になることの検定)、高さ 10 m の段の前に
+  たまった溶岩が壁に接する列まで全量固化することの検定。
 
 ## 制約・併用関係
 
@@ -179,6 +192,12 @@ $`\tau_y > 0`$ で溶岩面が勾配 $`\tan\theta`$ の一様斜面と平行な�
 - 固化面の粗度・浸透係数は既存分布のままです(必要なら fn_gw_ksv 等の
   マップで別途与える前処理を検討してください)。
 - 海セルへは流入しません(海没は対象外)。
+- **格子の向き**: 4 近傍の格子で計算します。降伏と停止は勾配の大きさで判定するので、
+  平坦床のドームの静止形は格子軸の方向と斜めの方向で同じ形になります(test/lava
+  構成 4 で、扇形ごとの面積等価半径の差が 1.4%、中心厚の解析解との差が 1.2%)。
+  細い流れの縁など、エッジに沿う方向の両隣に溶岩がない所では、エッジを横切る方向の
+  勾配だけで判定します。2026-11-03 の変更より前は横切る方向の勾配だけで判定して
+  いたため、溶岩原が格子軸の方向に伸びたひし形になりました(developer.md §51.4)。
 - STG(f_gridsystem=1)非対応。geomorph の morfac > 1(地形時間加速)
   とは併用できません(溶岩はイベント時間の現象)。
 - **時間刻みの目安**: 拡散係数 ~ρg hl³/3η の陽解法をサブサイクルで
@@ -190,5 +209,6 @@ $`\tau_y > 0`$ で溶岩面が勾配 $`\tan\theta`$ の一様斜面と平行な�
 
 [^liu89]: Liu, K. F. and Mei, C. C. (1989): Slow spreading of a sheet of Bingham fluid on an inclined plane. *J. Fluid Mech.*, 207, 505–529.(Bingham 流体の潤滑近似)
 [^balmforth00]: Balmforth, N. J., Burbidge, A. S., Craster, R. V., Salzig, J. and Shen, A. (2000): Visco-plastic models of isothermal lava domes. *J. Fluid Mech.*, 403, 37–65.(等温の粘塑性溶岩モデル)
+[^blake90]: Blake, S. (1990): Viscoplastic models of lava domes. In: Fink, J. H. (ed.), *Lava Flows and Domes: Emplacement Mechanisms and Hazard Implications*, IAVCEI Proceedings in Volcanology 2, Springer, Berlin.(降伏応力で支えられた溶岩ドームの静止形。test/lava 構成 4 の解析解)
 [^huppert82]: Huppert, H. E. (1982): The propagation of two-dimensional and axisymmetric viscous gravity currents over a rigid horizontal surface. *J. Fluid Mech.*, 121, 43–58.(Newton 極限の相似解。test/lava の検定解)
 [^pinkerton95]: Pinkerton, H. and Norton, G. (1995): Rheological properties of basaltic lavas at sub-liquidus temperatures: laboratory and field measurements on lavas from Mount Etna. *J. Volcanol. Geotherm. Res.*, 68, 307–323.(玄武岩質溶岩の粘度の実測)

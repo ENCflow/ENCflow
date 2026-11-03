@@ -2,6 +2,9 @@
 """test/lava の図を figs/lava.png に描く(事前に ./Run.sh を実行しておく)。引数 en で英語ラベルの図を en/figs/lava.png に描く。
 構成 1(Huppert): 平坦床・中央 1 セルの定率噴出(Newton 極限)。溶岩厚 hl の分布と、面積等価半径 r_A(t) と
 相似解 r_N = 0.715 (g Q³/3ν)^{1/8} √t。構成 2(Bingham): 等勾配斜面の停止厚 h∞ = τ_y/(ρ g tanθ)。
+構成 4(ドーム): 平坦床・中央 1 セルからの噴出が止まった静止形の、格子軸の方向と斜めの方向の断面と、
+塑性ドームの解析解 h² = (2τ_y/ρg)(R − r)、および上から見た溶岩厚。構成 5(壁): 高さ 10 m の段の前に
+たまった溶岩が、壁に接する列まで全量固化した地形の断面。
 """
 import glob, os, struct, sys
 import numpy as np
@@ -51,7 +54,8 @@ G = 9.8
 NX1 = NY1 = 61; DX1 = 1.0; Q = 0.5; RHO = 2600.0; ETA = 2.0e4; NU = ETA / RHO; TT1 = 600.0
 hl = load_hl("save", NX1, NY1)
 frames = sorted(f for f in glob.glob("result/Hl[0-9]*.txt") if not f.endswith("9998.txt") and not f.endswith("9999.txt"))
-fig, axes = plt.subplots(1, 3, figsize=(15, 4.2))
+fig, axs = plt.subplots(2, 3, figsize=(18, 8.4))
+axes = axs.ravel()
 im = axes[0].imshow(np.where(hl > 1e-4, hl, np.nan), origin="lower", extent=[0, 61, 0, 61], cmap="hot_r")
 axes[0].set_title(T("構成 1: 溶岩厚 hl (m)、t = 600 s", "Configuration 1: lava thickness hl (m), t = 600 s"), fontsize=9)
 axes[0].set_xlabel("x (m)"); axes[0].set_ylabel("y (m)"); fig.colorbar(im, ax=axes[0], shrink=0.8)
@@ -86,6 +90,51 @@ ax.set_title(T("構成 2: Bingham 停止・固化(tanθ = 0.2、τ_y = 2000 Pa�
                "Configuration 2: Bingham stopping (tanθ = 0.2, τ_y = 2000 Pa, 300 s → 4800 s)"), fontsize=9)
 win = (x >= 14.5) & (x <= 35.5)      # Check_lava の検定窓 i = 15..35
 print("bingham: <hl+dz> window %.4f (h_inf %.4f, err %.1f%%), solidified fraction %.3f" % ((hl2 + dz).mean(axis=0)[win].mean(), HINF, 100 * ((hl2 + dz).mean(axis=0)[win].mean() / HINF - 1), dz.sum() / (hl2.sum() + dz.sum())))
-fig.suptitle(T("溶岩流(fn_lavaflow): Bingham 粘性重力流の Newton 極限(相似解)と停止厚(解析値)",
-               "Lava flow (fn_lavaflow): Newtonian limit of the Bingham viscous gravity current (similarity solution) and stopping thickness (analytical value)"), fontsize=10)
+# 構成 4
+NX4 = NY4 = 61; DX4 = 1.0; IC4 = JC4 = 31; TAUY4 = 1.0e4
+hl4 = load_hl("save_dome", NX4, NY4)
+V4 = hl4.sum() * DX4 * DX4
+A4 = 2 * TAUY4 / (RHO * G)
+R4 = (V4 / ((8 * np.pi / 15) * np.sqrt(A4))) ** 0.4
+ax = axes[3]
+rr = np.linspace(0, R4, 300)
+ax.plot(rr, np.sqrt(A4 * (R4 - rr)), "k", lw=1.5, label=T("塑性ドームの解析解 h² = (2τ_y/ρg)(R − r)", "plastic dome h² = (2τ_y/ρg)(R − r)"))
+ax.plot(-rr, np.sqrt(A4 * (R4 - rr)), "k", lw=1.5)
+xs = (np.arange(NX4) - (IC4 - 1)) * DX4
+ax.plot(xs, hl4[JC4 - 1, :], "C0o-", ms=3, lw=0.8, label=T("計算: 格子軸の方向", "computed: along a grid axis"))
+kk = np.arange(-(IC4 - 1), NX4 - (IC4 - 1))
+ax.plot(kk * DX4 * np.sqrt(2), hl4[JC4 - 1 + kk, IC4 - 1 + kk], "C3s-", ms=3, lw=0.8, label=T("計算: 斜めの方向(45°)", "computed: along the diagonal (45°)"))
+ax.set_xlim(-25, 25); ax.set_ylim(0, 4.5)
+ax.set_xlabel(T("噴火口からの距離 (m)", "distance from the vent (m)")); ax.set_ylabel(T("溶岩厚 hl (m)", "lava thickness hl (m)"))
+ax.grid(alpha=0.3); ax.legend(fontsize=8, loc="lower center")
+ax.set_title(T("構成 4: 塑性ドームの静止形(平坦床・1 火口、τ_y = 10⁴ Pa、噴出 900 s → 6000 s)",
+               "Configuration 4: plastic dome at rest (flat bed, one vent, τ_y = 10⁴ Pa, 900 s → 6000 s)"), fontsize=9)
+print("dome: h(center) = %.3f m (H = %.3f m), R = %.2f m" % (hl4[JC4 - 1, IC4 - 1], np.sqrt(A4 * R4), R4))
+ax = axes[4]
+im = ax.imshow(np.where(hl4 > 0.01, hl4, np.nan), origin="lower", extent=[-30.5, 30.5, -30.5, 30.5], cmap="hot_r")
+th = np.linspace(0, 2 * np.pi, 200)
+ax.plot(R4 * np.cos(th), R4 * np.sin(th), "b--", lw=1, label=T(f"解析解の半径 R = {R4:.1f} m", f"analytic radius R = {R4:.1f} m"))
+ax.set_xlim(-24, 24); ax.set_ylim(-24, 24); ax.set_aspect("equal")
+ax.set_xlabel("x (m)"); ax.set_ylabel("y (m)"); ax.legend(fontsize=8, loc="lower right")
+fig.colorbar(im, ax=ax, shrink=0.8)
+ax.set_title(T("構成 4: 静止形の溶岩厚 hl (m)(上から見た図)", "Configuration 4: lava thickness hl (m) at rest, plan view"), fontsize=9)
+# 構成 5
+NX5, NY5, DX5, IWALL5, ZWALL5 = 40, 8, 1.0, 31, 10.0
+hl5 = load_hl("save_wall", NX5, NY5)
+with open("save_wall/state.dat", "rb") as f:
+    read_rle(f, NX5 * NY5); z5 = read_rle(f, NX5 * NY5).reshape(NY5, NX5)
+z05 = np.where(np.arange(1, NX5 + 1) >= IWALL5, ZWALL5, 0.0)
+x5 = (np.arange(NX5) + 0.5) * DX5
+ax = axes[5]
+xe = np.arange(NX5 + 1) * DX5
+ax.fill_between(xe, np.r_[z05, z05[-1]], -0.2, step="post", color="0.75", label=T("地盤(高さ 10 m の段 = 壁)", "ground (10 m step = wall)"))
+ax.fill_between(xe, np.r_[z05, z05[-1]], np.r_[z5.mean(axis=0), z5.mean(axis=0)[-1]], step="post", color="C1", alpha=0.8, label=T("固化した溶岩 dz(行平均)", "solidified lava dz (row average)"))
+ax.step(xe, np.r_[(z5 + hl5).mean(axis=0), (z5 + hl5).mean(axis=0)[-1]], where="post", color="C3", lw=1, label=T("溶岩面(残る溶岩 hl 込み)", "lava surface (incl. molten hl)"))
+ax.axvline((IWALL5 - 1) * DX5, color="k", lw=0.8, ls=":")
+ax.set_xlim(15, 35); ax.set_ylim(-0.2, 2.0)
+ax.set_xlabel("x (m)"); ax.set_ylabel(T("標高 (m)", "elevation (m)")); ax.grid(alpha=0.3); ax.legend(fontsize=8, loc="upper left")
+ax.set_title(T("構成 5: 壁の前の溶岩だまり(壁に接する列まで全量固化)", "Configuration 5: lava pond against a wall (all solidified, up to the wall)"), fontsize=9)
+print("wall: solidified fraction %.4f, wall column min dz %.3f m, molten max %.2e m" % ((z5 - z05).sum() / ((z5 - z05).sum() + hl5.sum()), (z5 - z05)[:, IWALL5 - 2].min(), hl5.max()))
+fig.suptitle(T("溶岩流(fn_lavaflow): Newton 極限(相似解)、停止厚(解析値)、塑性ドームの静止形(解析解)、壁の前の溶岩だまりの固化",
+               "Lava flow (fn_lavaflow): Newtonian limit (similarity solution), stopping thickness (analytical value), plastic dome at rest (analytical solution) and solidification of a pond against a wall"), fontsize=10)
 fig.tight_layout(); fig.savefig(f"{FIGDIR}/lava.png", dpi=110); plt.close(fig)

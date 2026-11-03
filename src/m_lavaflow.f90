@@ -10,11 +10,18 @@ module m_lavaflow
   !   リスタートはモデル私有ファイル lavaflow.dat(RLE。契約5)。
   !
   ! 【定式(等温 Bingham 潤滑流。lava_plan.md §3)】
-  !   溶岩面 s = z + hl、面勾配 S = |Δs|/dist、降伏最小厚 h0 = τ_y/(ρgS)。
-  !   エッジ単位幅フラックス(he = エッジ平均厚、hf = he−h0):
-  !     q = (ρgS/6η)・hf²・(2he+h0)   (hf > 0。τ_y=0 で q = ρgS he³/3η)
+  !   溶岩面 s = z + hl、面勾配 S = |∇s|、降伏最小厚 h0 = τ_y/(ρgS)。
+  !   単位幅フラックスの大きさ(he = エッジ平均厚、hf = he−h0):
+  !     |q| = (ρgS/6η)・hf²・(2he+h0)   (hf > 0。τ_y=0 で |q| = ρgS he³/3η)
   !   拡散形 q = D・Δs/dist、D = (ρg/6η) hf² (2he+h0) として glacier の
   !   SIA と同じ保存形2ループ+ドナー律速+適応サブサイクリングに乗せる。
+  !   係数 D(降伏最小厚 h0)はエッジの勾配の大きさ S = √(Sn² + St²) で
+  !   評価し、エッジの向きは線形項 Δs/dist(法線勾配 Sn)の射影にだけ使う
+  !   (真の Mahaffy 化。developer.md §51.4)。接線勾配 St はエッジ両側の
+  !   溶岩のあるセルの、エッジに沿う方向の溶岩面の差分の平均(edge_tslope)。
+  !   法線勾配だけで判定すると斜め方向の勾配が 1/√2 に見えて降伏応力が
+  !   実質 √2 倍になり、ドームや溶岩原が格子軸の方向に伸びたひし形になる
+  !   (2026-11-03 修正)
   !
   ! 【毎 dt_lavaflow tick の処理(順序が契約)】
   !   (1) 噴火口ソース: 噴出率 Q(t)(時系列補間)をセル集合へ均等分配
@@ -24,8 +31,10 @@ module m_lavaflow
   !       dt_sub を決定(全ランク同一 = collective 安全)。エッジ流量は
   !       ドナー律速(1エッジ ≤ ドナー溶岩体積の 1/4)で hl>=0 を構造的に
   !       保証。サブサイクルごとに hl のハロ交換
-  !   (4) 固化(lv_wsol > 0 のとき): エッジ深さ平均速度の最大が lv_vsol
-  !       未満の「停止セル」の hl をレート lv_wsol で s%z へ転換
+  !   (4) 固化(lv_wsol > 0 のとき): エッジ深さ平均流速 D・S/he(S は
+  !       勾配の大きさ)の最大が lv_vsol 未満の「停止セル」の hl を
+  !       レート lv_wsol で s%z へ転換(数えるのは溶岩が動けるエッジだけ =
+  !       送り手〔溶岩面の高い側〕に溶岩のあるエッジ。§51.5)
   !       (sd は増やさない = 侵食されない岩盤)。e 回復と s%z のハロ交換
   !       まで済ませる。速度閾値+レートは f_dbstop=1(db_vstop/db_wstop)
   !       と同じ閉じ方 — Bingham の停止は漸近的(q→0 だが有限時間で 0 に
@@ -442,7 +451,11 @@ end subroutine
 !            帯界面の冗長計算)。ドナー律速で hl>=0 保証
 !     パスC: 発散を取り hl を更新(自帯 js..je のみ)。可動マスクを蓄積
 !            -> hl のハロ交換
-!   エッジ流量の反対称集計により溶岩体積は機械精度で厳密に保存される
+!   エッジ流量の反対称集計により溶岩体積は機械精度で厳密に保存される。
+!   降伏最小厚 h0 はエッジの勾配の大きさ √(Sn² + St²) で評価する
+!   (St = edge_tslope。τ_y = 0 では h0 = 0 で係数が勾配によらないため
+!   求めない。§51.4)。St は東西のエッジ(パスA・B の k=4)で行 j±1 を
+!   読むので、書き手の行 je+1 では je+2 まで読む(ハロ幅 2 の内側)
 !----------------------------------------------------------------------
 subroutine tick_flow(lv, g, s, dtw)
   type(t_lavaflow), intent(inout) :: lv
@@ -451,7 +464,7 @@ subroutine tick_flow(lv, g, s, dtw)
   real, intent(in) :: dtw
   integer :: i, j, k, in, jn, jt, nsub
   real :: trem, dtsub, dmax, dlim
-  real :: sc, sn_, ds, ss, h0, hf, he, dd, gq, qcap, dv
+  real :: sc, sn_, ds, ss, gt, h0, hf, he, dd, gq, qcap, dv
   real :: w1(1)
   logical :: okc, last
 
@@ -470,7 +483,8 @@ subroutine tick_flow(lv, g, s, dtw)
 
     ! --- パスA: 拡散係数の最大値と dt_sub の決定 ---
     dmax = 0.0
-    !$omp parallel do schedule(static) private(i, j, k, in, jn, okc, sc, sn_, ds, ss, h0, hf, he, dd) &
+    !$omp parallel do schedule(static) private(i, j, k, in, jn, okc, sc, sn_, ds, ss, gt, h0, hf, &
+    !$omp                                      he, dd) &
     !$omp reduction(max: dmax)
     do j = dcp%js, jt
       do i = g%wx(1,j), g%wx(2,j)
@@ -490,7 +504,10 @@ subroutine tick_flow(lv, g, s, dtw)
           if (ds == 0.0) cycle
           ss = abs(ds) / lv%lvw%dist(k)
           h0 = 0.0
-          if (lv%tauy > 0.0) h0 = lv%tauy / (lv%rhog * ss)
+          if (lv%tauy > 0.0) then
+            gt = edge_tslope(g, s, i, j, in, jn)
+            h0 = lv%tauy / (lv%rhog * sqrt(ss * ss + gt * gt))
+          end if
           hf = he - h0
           if (hf <= 0.0) cycle
           dd = lv%coef * hf * hf * (2.0 * he + h0)
@@ -519,7 +536,7 @@ subroutine tick_flow(lv, g, s, dtw)
     ! --- パスB: エッジ流量(ドナー律速つき) ---
     !   帯界面のエッジ成分 k=1..3(行 je)はハロ行 je+1 の書き手が担う
     !   (冗長計算。全域端では行が存在せず対象外)
-    !$omp parallel do schedule(static) private(i, j, k, in, jn, okc, sc, sn_, ds, ss, h0, hf, &
+    !$omp parallel do schedule(static) private(i, j, k, in, jn, okc, sc, sn_, ds, ss, gt, h0, hf, &
     !$omp                                      he, dd, gq, qcap)
     do j = dcp%js, jt
       do i = g%wx(1,j), g%wx(2,j)
@@ -540,7 +557,10 @@ subroutine tick_flow(lv, g, s, dtw)
                 if (ds /= 0.0) then
                   ss = abs(ds) / lv%lvw%dist(k)
                   h0 = 0.0
-                  if (lv%tauy > 0.0) h0 = lv%tauy / (lv%rhog * ss)
+                  if (lv%tauy > 0.0) then
+                    gt = edge_tslope(g, s, i, j, in, jn)
+                    h0 = lv%tauy / (lv%rhog * sqrt(ss * ss + gt * gt))
+                  end if
                   hf = he - h0
                   if (hf > 0.0) then
                     dd = lv%coef * hf * hf * (2.0 * he + h0)
@@ -593,9 +613,16 @@ end subroutine
 
 !----------------------------------------------------------------------
 ! 固化(停止セルの hl を s%z へ転換。数値的閉包 — lava_plan.md §5)
-!   停止 = エッジ深さ平均速度 u = q_width/he = D・S/he の最大が lv_vsol
+!   停止 = エッジ深さ平均流速 u = |q|/he = D・S/he の最大が lv_vsol
 !   未満のセル(Bingham の停止は漸近的で厳密なフラックス 0 に達しない
 !   ため速度閾値で閉じる。f_dbstop=1 の db_vstop/db_wstop と同じ構成)。
+!   S は tick_flow と同じエッジの勾配の大きさ √(Sn² + St²)(流速の大きさ。
+!   法線成分だけだと斜め方向の流れが 1/√2 に見えて早く止まる。§51.4)。
+!   数えるのは溶岩が実際に動けるエッジだけ: 隣の溶岩面のほうが高い流れ込みの
+!   エッジは、隣に溶岩がなければ数えない(送り手に溶岩がなく、パスB の
+!   ドナー律速で流量は 0)。数えると、溶岩より高い乾いたセル(谷壁・先に
+!   固まった溶岩の縁)に接するセルが、流れ込むはずのない上り勾配のエッジを
+!   大きな流速とみなし、いつまでも固化しなかった(2026-11-03 修正。§51.5)。
 !   転換量 w = min(hl, lv_wsol×dtw)。z のみ増加(sd は増やさない =
 !   固化溶岩は侵食されない岩盤)。再流動なし(不可逆)。
 !   2パス構造(glacier tick_erosion と同型の競合対策): パス1が時刻 n の
@@ -609,13 +636,13 @@ subroutine tick_solidify(lv, g, s, dtw)
   type(t_state), intent(inout) :: s
   real, intent(in) :: dtw
   integer :: i, j, k, in, jn
-  real :: w, wcap, vsum, vmax, sc, sn_, ds, ss, h0, hf, he, dd, ue
+  real :: w, wcap, vsum, vmax, sc, sn_, ds, ss, gt, sm, h0, hf, he, dd, ue
 
   wcap = lv%wsol * dtw
 
   ! --- パス1: 停止判定と固化深の評価(書き込みは sdz のみ) ---
-  !$omp parallel do schedule(static) private(i, j, k, in, jn, vmax, sc, sn_, ds, ss, h0, hf, &
-  !$omp                                      he, dd, ue)
+  !$omp parallel do schedule(static) private(i, j, k, in, jn, vmax, sc, sn_, ds, ss, gt, sm, &
+  !$omp                                      h0, hf, he, dd, ue)
   do j = dcp%js, dcp%je
     do i = g%wx(1,j), g%wx(2,j)
       lv%lvw%sdz(i,j) = 0.0
@@ -636,13 +663,18 @@ subroutine tick_solidify(lv, g, s, dtw)
         sn_ = s%z(in,jn) + s%hl(in,jn)
         ds = sc - sn_
         if (ds == 0.0) cycle
+        ! 流れ込みのエッジ(隣の溶岩面のほうが高い)は、送り手である隣に溶岩が
+        ! なければ数えない(流量は tick_flow パスB のドナー律速で 0。§51.5)
+        if (ds < 0.0 .and. s%hl(in,jn) <= 0.0) cycle
         ss = abs(ds) / lv%lvw%dist(ke(k))
+        gt = edge_tslope(g, s, i, j, in, jn)
+        sm = sqrt(ss * ss + gt * gt)               ! エッジの勾配の大きさ
         h0 = 0.0
-        if (lv%tauy > 0.0) h0 = lv%tauy / (lv%rhog * ss)
+        if (lv%tauy > 0.0) h0 = lv%tauy / (lv%rhog * sm)
         hf = he - h0
         if (hf <= 0.0) cycle
         dd = lv%coef * hf * hf * (2.0 * he + h0)
-        ue = dd * ss / he
+        ue = dd * sm / he
         vmax = max(vmax, ue)
       end do
       if (vmax >= lv%vsol) cycle
@@ -673,6 +705,94 @@ subroutine tick_solidify(lv, g, s, dtw)
   ! hl の帯更新は次 tick 冒頭の交換が配布する(この後 hl を読む者はいない)
   call par_halo_cell(s%z)
 end subroutine
+
+
+!----------------------------------------------------------------------
+! エッジの接線勾配 St(勾配の大きさ √(Sn² + St²) の接線成分。§51.4)
+!   エッジを挟む 2 セル c = (i,j)・n = (in,jn) のうち溶岩のある(hl > 0)
+!   セルについて、エッジに沿う方向の溶岩面の勾配(cell_tslope)を求めて
+!   平均する(Mahaffy 1976 が角点で両成分から |∇s| を作るのと同じ考えの
+!   4 近傍版)。両セルとも溶岩なしなら 0。4 近傍のエッジ専用で、東西の
+!   エッジ(jn == j。法線が x)なら接線は y、南北のエッジなら x。
+!   c と n を入れ替えても同じ値になる(加算の交換だけ = IEEE で厳密)。
+!   エッジ反対称のフラックスと帯界面の冗長計算がビット一致する条件。
+!   読むのは c・n の接線方向 ±1 のセル
+!----------------------------------------------------------------------
+pure function edge_tslope(g, s, i, j, in, jn) result(gt)
+  type(t_geoinfo), intent(in) :: g
+  type(t_state), intent(in) :: s
+  integer, intent(in) :: i, j, in, jn
+  real :: gt
+  integer :: ti, tj, nl
+  real :: rd
+
+  if (jn == j) then              ! 東西のエッジ: 接線は y
+    ti = 0
+    tj = 1
+    rd = 1.0 / g%dy
+  else                           ! 南北のエッジ: 接線は x
+    ti = 1
+    tj = 0
+    rd = 1.0 / g%dx
+  end if
+  gt = 0.0
+  nl = 0
+  if (s%hl(i,j) > 0.0) then
+    gt = gt + cell_tslope(g, s, i, j, ti, tj, rd)
+    nl = nl + 1
+  end if
+  if (s%hl(in,jn) > 0.0) then
+    gt = gt + cell_tslope(g, s, in, jn, ti, tj, rd)
+    nl = nl + 1
+  end if
+  if (nl == 2) gt = 0.5 * gt
+end function
+
+
+!----------------------------------------------------------------------
+! セル (i,j) の (ti,tj) 方向の溶岩面の勾配(edge_tslope の部品)
+!   その方向の両隣のうち、溶岩のある有効セル(lava_cell)だけを使う:
+!   両方なら中心差分、片方なら片側差分、なしなら 0。乾いたセルの地盤高は
+!   溶岩面ではないので使わない(谷壁に接する溶岩で、壁の勾配が降伏と
+!   停止判定に入らないように)。rd = 1/格子間隔
+!----------------------------------------------------------------------
+pure function cell_tslope(g, s, i, j, ti, tj, rd) result(gd)
+  type(t_geoinfo), intent(in) :: g
+  type(t_state), intent(in) :: s
+  integer, intent(in) :: i, j, ti, tj
+  real, intent(in) :: rd
+  real :: gd
+  logical :: okp, okm
+
+  okp = lava_cell(g, s, i + ti, j + tj)
+  okm = lava_cell(g, s, i - ti, j - tj)
+  if (okp .and. okm) then
+    gd = 0.5 * rd * ((s%z(i+ti,j+tj) + s%hl(i+ti,j+tj)) - (s%z(i-ti,j-tj) + s%hl(i-ti,j-tj)))
+  else if (okp) then
+    gd = rd * ((s%z(i+ti,j+tj) + s%hl(i+ti,j+tj)) - (s%z(i,j) + s%hl(i,j)))
+  else if (okm) then
+    gd = rd * ((s%z(i,j) + s%hl(i,j)) - (s%z(i-ti,j-tj) + s%hl(i-ti,j-tj)))
+  else
+    gd = 0.0
+  end if
+end function
+
+
+!----------------------------------------------------------------------
+! 溶岩のある有効セルか(領域内・海でない・hl > 0)。x を先に見る
+! (g%x は 0:nx+1 の縁付き。sw と状態は x > 0 のセルでだけ読む)
+!----------------------------------------------------------------------
+pure logical function lava_cell(g, s, i, j)
+  type(t_geoinfo), intent(in) :: g
+  type(t_state), intent(in) :: s
+  integer, intent(in) :: i, j
+
+  lava_cell = .false.
+  if (g%x(i,j) <= 0) return
+  if (g%sw(i,j) > 0) return
+  if (s%hl(i,j) <= 0.0) return
+  lava_cell = .true.
+end function
 
 
 !----------------------------------------------------------------------

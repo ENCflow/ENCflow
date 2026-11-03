@@ -23,13 +23,18 @@ How to read the results (fields, ledgers, measurement columns, restart) is summa
   distributed field `Hl0001...` at every output time.
 - Flow occurs across edges where the basal shear stress $`\rho g h_e S`$
   exceeds the yield stress $`\tau_y`$: $`h_e`$ is the mean lava thickness
-  of the two cells and $`S`$ the edge gradient of the lava surface
-  $`s = z + h_l`$ (the flow law below; $`\tau_y = 0`$ gives Newtonian
-  viscous flow).
+  of the two cells and $`S`$ the magnitude of the gradient of the lava
+  surface $`s = z + h_l`$ (the flow law below; $`\tau_y = 0`$ gives Newtonian
+  viscous flow). $`S`$ is made from the gradients both across and along the
+  edge, so the shape of stopped lava does not depend on the grid orientation
+  (see [Constraints](#constraints-and-interactions) below).
 - When `lv_wsol > 0`, lava in "stopped" cells — where the maximum
   depth-averaged speed over the surrounding edges is below `lv_vsol` —
-  is converted to z at the rate `lv_wsol` (m/s; irreversible). The solidified
-  surface does not add to the soil layer sd: it behaves as non-erodible bedrock.
+  is converted to z at the rate `lv_wsol` (m/s; irreversible). Only edges
+  across which lava can move are counted: an edge whose higher-surface side
+  carries no lava (an edge toward dry ground higher than the lava) is not.
+  The solidified surface does not add to the soil layer sd: it behaves as
+  non-erodible bedrock.
 - The model is isothermal (cooling and temperature-dependent viscosity
   are a future extension; lava_plan.md Sec. 8). One rheology set per
   run; there is no per-vent viscosity (viscosity differences are really
@@ -46,6 +51,9 @@ q = \frac{\rho g S}{6\eta}\,(h_e - h_0)^2\,(2h_e + h_0),
 h_0 = \frac{\tau_y}{\rho g S}
 ```
 
+The flow across an edge is this $`q`$ times the fraction $`S_n/S`$ of the
+gradient across the edge (the yield is judged on the gradient magnitude; the
+direction is used only to project the flow onto the edge).
 Edges with $`h_e \le h_0`$ do not flow. For $`\tau_y = 0`$ it reduces to
 the Newtonian $`q = \rho g S h_e^3 / 3\eta`$, and a constant supply on a
 flat bed follows the similarity solution of viscous gravity
@@ -158,6 +166,12 @@ The three ways a field gets written (automatic / flag / riding on a flag) and th
   field, so refine `dt_file` if the maximum reach during the run matters.
   Check the stop thickness by whether the front Hl is close to
   τ_y/(ρg tanθ).
+- molten (lava left unsolidified) is lava still moving at the end of the
+  run, or lava slowing down that has not yet reached the stop criterion
+  (`lv_vsol`). Where it remains can be seen in Hl9998. Before the change of
+  2026-11-03, cells touching dry ground higher than the lava (a valley wall,
+  the edge of earlier solidified lava) did not solidify even when at rest
+  (developer.md Sec. 51.5).
 
 ## Parameters and the basis of their defaults
 
@@ -190,7 +204,12 @@ The labels in the Basis column are explained in [How to read the basis of a defa
 
 - Verification case: [test/lava](../../../test/lava/en/README.md) — the Huppert
   similarity solution (axisymmetric spreading in the Newtonian limit)
-  and the Bingham stopping thickness h∞ against analytic solutions.
+  and the Bingham stopping thickness h∞ against analytic solutions, and
+  the shape at rest of lava erupted from one vent on a flat bed until it
+  stops, compared with the analytic plastic dome[^blake90] (a check that
+  the shape is the same along the grid axes and the diagonals), and a
+  check that lava ponded against a 10 m step solidifies completely, up to
+  the cells touching the wall.
 
 ## Constraints and interactions
 
@@ -205,6 +224,16 @@ The labels in the Basis column are explained in [How to read the basis of a defa
   existing distributions (consider giving maps such as fn_gw_ksv in
   preprocessing if needed).
 - No lava enters sea cells (submarine flow is out of scope).
+- **Grid orientation**: the computation uses the 4-neighbour grid. Yield
+  and stopping are judged on the gradient magnitude, so the shape at rest
+  of a dome on a flat bed is the same along the grid axes and the
+  diagonals (in test/lava configuration 4 the area-equivalent radii of the
+  sectors differ by 1.4% and the centre thickness by 1.2% from the
+  analytic solution). Where neither neighbour along an edge carries lava,
+  as at the margin of a narrow flow, only the gradient across the edge is
+  used. Before the change of 2026-11-03 only the gradient across the edge
+  was used, and lava fields became diamonds elongated along the grid axes
+  (developer.md Sec. 51.4).
 - Not supported with STG (f_gridsystem=1), nor together with geomorph
   morfac > 1 (lava is an event-time process).
 - **Time-step note**: the explicit diffusion (~ρg hl³/3η) is stabilized
@@ -216,5 +245,6 @@ The labels in the Basis column are explained in [How to read the basis of a defa
 
 [^liu89]: Liu, K. F. and Mei, C. C. (1989): Slow spreading of a sheet of Bingham fluid on an inclined plane. *J. Fluid Mech.*, 207, 505–529. (lubrication approximation of a Bingham fluid)
 [^balmforth00]: Balmforth, N. J., Burbidge, A. S., Craster, R. V., Salzig, J. and Shen, A. (2000): Visco-plastic models of isothermal lava domes. *J. Fluid Mech.*, 403, 37–65. (isothermal visco-plastic lava models)
+[^blake90]: Blake, S. (1990): Viscoplastic models of lava domes. In: Fink, J. H. (ed.), *Lava Flows and Domes: Emplacement Mechanisms and Hazard Implications*, IAVCEI Proceedings in Volcanology 2, Springer, Berlin. (shape at rest of a lava dome held by its yield stress; the analytic solution of test/lava configuration 4)
 [^huppert82]: Huppert, H. E. (1982): The propagation of two-dimensional and axisymmetric viscous gravity currents over a rigid horizontal surface. *J. Fluid Mech.*, 121, 43–58. (similarity solution of the Newtonian limit; the check of test/lava)
 [^pinkerton95]: Pinkerton, H. and Norton, G. (1995): Rheological properties of basaltic lavas at sub-liquidus temperatures: laboratory and field measurements on lavas from Mount Etna. *J. Volcanol. Geotherm. Res.*, 68, 307–323. (measured viscosities of basaltic lava)
