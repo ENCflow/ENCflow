@@ -815,11 +815,11 @@
     {
       "source": "examples/README.md",
       "target": "examples/README.en.md",
-      "source_sha256": "ea63ec0f5e9d327ebb73290778d3e53e38f0caaf9abedd61a2cad61ed5551ad3",
-      "target_sha256": "63a47892dd3cc76c4b560dd647cc751e6b11699c9e62ad3ec7e68eb8cc6a6a5b",
-      "reviewer": "Claude (Claude Code session; the delta/tide sentences changed in both languages compared; the rest is unchanged from the recorded version)",
+      "source_sha256": "07a7bb888657cbe6ecf1746e7335e956247ad4b539115d45b1835e5e102c26c6",
+      "target_sha256": "bfa711b2c0eb1831b78d6541726db9206ba2a348a503b2a807cb23a31cf1e2a5",
+      "reviewer": "Claude (Claude Code session; compared the new catchment_metal rows of the examples index in Japanese and English, 2026-11-03)",
       "method": "assistant",
-      "reviewed_on": "2026-11-02"
+      "reviewed_on": "2026-11-03"
     },
     {
       "source": "examples/ashfall_lahar/README.md",
@@ -1243,6 +1243,87 @@
       "reviewer": "Claude (Claude Code session; compared the Japanese and English figure images side by side: same plotted data and layout, labels translated (some compressed but faithful); provenance per the commits that drew the English figures: same saved results as the Japanese figures; no model execution)",
       "method": "assistant",
       "reviewed_on": "2026-10-29"
+    },
+    {
+      "source": "examples/catchment_metal/README.md",
+      "target": "examples/catchment_metal/en/README.md",
+      "source_sha256": "b6bb88598e64b6324d5272f444801bd1b311d15571097008e63fc4a033431e0e",
+      "target_sha256": "21d5b6d5adbd683b8438b23b75b81f4767258f89bc8af4ba5f77c0b6953d0ec0",
+      "reviewer": "Claude (Claude Code session; full-text review of the new example README and its English mirror, 2026-11-03)",
+      "method": "assistant",
+      "reviewed_on": "2026-11-03"
+    },
+    {
+      "source": "examples/catchment_metal/figs/mechanism.png",
+      "target": "examples/catchment_metal/en/figs/mechanism.png",
+      "source_sha256": "e26932ce20f0735dbbfb4d8270b49857aa6574dacd855f129d43121cb5217035",
+      "target_sha256": "40094b2966654776eb4c8d0fd564c89d7412aa174caa0b321445aa784d5f2eaa",
+      "reviewer": "Claude (Claude Code session; compared the figure drawn by the shared plot_results.py with Japanese and English labels, 2026-11-03)",
+      "method": "assistant",
+      "reviewed_on": "2026-11-03"
+    },
+    {
+      "source": "examples/catchment_metal/figs/setup.png",
+      "target": "examples/catchment_metal/en/figs/setup.png",
+      "source_sha256": "b302d58faf48a56b81726e3eeb6cc09112bb29b1759a8d75180ab2b6869056bf",
+      "target_sha256": "5b9c22009d8a5e39f0a13c41c45a9a1f5f896f8f1de4bac031d8463733f95566",
+      "reviewer": "Claude (Claude Code session; compared the figure drawn by the shared plot_results.py with Japanese and English labels, 2026-11-03)",
+      "method": "assistant",
+      "reviewed_on": "2026-11-03"
+    },
+    {
+      "source": "examples/catchment_metal/figs/step1.png",
+      "target": "examples/catchment_metal/en/figs/step1.png",
+      "source_sha256": "419527f61cfff462477681231ecd8dd3899770ad619283f991905831ac3a81a0",
+      "target_sha256": "d29a6e5a75d20c790ff4b51766f610662f9d4ea2c76f1491c76bcb4392eafc09",
+      "reviewer": "Claude (Claude Code session; compared the figure drawn by the shared plot_results.py with Japanese and English labels, 2026-11-03)",
+      "method": "assistant",
+      "reviewed_on": "2026-11-03"
+    },
+    {
+      "source": "examples/catchment_metal/figs/step2.png",
+      "target": "examples/catchment_metal/en/figs/step2.png",
+      "source_sha256": "77beccc6e87020b361f3e496b946699f56dd4c01720c9aca6b804e2ad9fde471",
+      "target_sha256": "4546104b15b750cbd34bff68e6f52eabd213d24e9696a96d8c2c42d67cd327ae",
+      "reviewer": "Claude (Claude Code session; compared the figure drawn by the shared plot_results.py with Japanese and English labels, 2026-11-03)",
+      "method": "assistant",
+      "reviewed_on": "2026-11-03"
+    },
+    {
+      "source": "examples/catchment_metal/figs/step3.png",
+      "target": "examples/catchment_metal/en/figs/step3.png",
+      "source_sha256": "592eec1e060eff778053861aeeaeb5df92a7e337e0d800754aa8bb8ab2ae57af",
+      "target_sha256": "4351949f0a423ce2072d281f3fafc8bd7fe92724e76e0cf3cf48ee18de00b39c",
+      "reviewer": "Claude (Claude Code session; compared the figure drawn by the shared plot_results.py with Japanese and English labels, 2026-11-03)",
+      "method": "assistant",
+      "reviewed_on": "2026-11-03"
+    },
+    {
+      "source": "examples/catchment_metal/figs/step4.png",
+      "target": "examples/catchment_metal/en/figs/step4.png",
+      "source_sha256": "8b765881c1eaaec8a7ff4f8b84047f27bf7b5bc5c547e2b45a73d778bf30b973",
+      "target_sha256": "5d9dc3e6642c5f256f982aaa3ec2d26ce7c1287f4b2b460152e01011e82a32d2",
+      "reviewer": "Claude (Claude Code session; compared the figure drawn by the shared plot_results.py with Japanese and English labels, 2026-11-03)",
+      "method": "assistant",
+      "reviewed_on": "2026-11-03"
+    },
+    {
+      "source": "examples/catchment_metal/figs/step5.png",
+      "target": "examples/catchment_metal/en/figs/step5.png",
+      "source_sha256": "7dadbbfd18d94e49420d0b65c115220a8b1864e4ded6f6e630b70bd76408d0be",
+      "target_sha256": "0814b6c62b2bb1b4d27d0d83902de91732a3cf41e937590e7a2627b69181e952",
+      "reviewer": "Claude (Claude Code session; compared the figure drawn by the shared plot_results.py with Japanese and English labels, 2026-11-03)",
+      "method": "assistant",
+      "reviewed_on": "2026-11-03"
+    },
+    {
+      "source": "examples/catchment_metal/figs/summary.png",
+      "target": "examples/catchment_metal/en/figs/summary.png",
+      "source_sha256": "4908bfc75d15e3fb334e6da8f2a94d16de0f699b0ecefee67b06fd06747cb499",
+      "target_sha256": "b16abbc11a4c92b88143d360c3c2249d31cdfe3c034dc562054508ec8745d939",
+      "reviewer": "Claude (Claude Code session; compared the figure drawn by the shared plot_results.py with Japanese and English labels, 2026-11-03)",
+      "method": "assistant",
+      "reviewed_on": "2026-11-03"
     },
     {
       "source": "examples/debris_bedrock/README.md",
