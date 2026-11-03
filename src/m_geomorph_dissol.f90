@@ -212,8 +212,10 @@ subroutine read_solmap(gm, p, g, fn)
   do j = dcp%js, dcp%je
     do i = g%wx(1,j), g%wx(2,j)
       if (g%x(i,j) <= 0) cycle
-      if (gm%dis%fsol(i,j) < 0.0 .or. gm%dis%fsol(i,j) > 1.0) then
-        call par_stop("list_geomorph: fn_dissol must be in [0, 1]: " // fname)
+      ! 0 = 不溶、1 = 基準、> 1 = 節理や割れ目帯など溶けやすい所の倍率(上限なし。
+      ! 2026-11-03 に上限 1 を外した: 石林型の柱や溝は節理に沿った溶解の集中が起点)
+      if (gm%dis%fsol(i,j) < 0.0) then
+        call par_stop("list_geomorph: fn_dissol must be >= 0 (0 = insoluble, 1 = reference, > 1 = joints): " // fname)
       end if
     end do
   end do
