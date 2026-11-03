@@ -329,9 +329,9 @@
     {
       "source": "docs/users_guide/lavaflow.md",
       "target": "docs/en/users_guide/lavaflow.md",
-      "source_sha256": "d9c515566d3e54ad9b234651d03108ccd1446d13563173fe3ebe9e06f5fd058b",
-      "target_sha256": "ded531123f39126a5339134ba02bccfef4c9dad0117e22a1d44cf2da09b9913c",
-      "reviewer": "Claude (Claude Code session; lava gradient-magnitude fix §51.4: changed passages compared side by side with the Japanese source, unchanged parts as recorded 2026-10-24)",
+      "source_sha256": "06edf0d0902c23b4fa026989e942efa953fba81bd652ea1f3c60ff69af84bb84",
+      "target_sha256": "5280f72ceb1ad67f2a7cc8aa5ac95a8a82d2f618346962adfbfcb5db61421808",
+      "reviewer": "Claude (Claude Code session; lava stop-criterion fix §51.5: changed passages compared side by side with the Japanese source, unchanged parts as recorded earlier the same day)",
       "method": "assistant",
       "reviewed_on": "2026-11-03"
     },
@@ -2894,18 +2894,18 @@
     {
       "source": "test/lava/README.md",
       "target": "test/lava/en/README.md",
-      "source_sha256": "5efb5ad1a2b4de8f293b3d0ee7c0f5ee0fc32e112788e310f0a791bf52646af8",
-      "target_sha256": "c1a218ead1e571846f489f784f8db8df2b66942b3cadd759b64b44d908703982",
-      "reviewer": "Claude (Claude Code session; lava gradient-magnitude fix §51.4: changed passages compared side by side with the Japanese source, unchanged parts as recorded 2026-10-24)",
+      "source_sha256": "9d29880c67d89bc45116212c09d444c154e20131f63c829b43f590436590a4d7",
+      "target_sha256": "687d9ffa5fa964230609b59112bb12f6a39f704cdfb83b79d38c12ec2567e61a",
+      "reviewer": "Claude (Claude Code session; lava stop-criterion fix §51.5: changed passages compared side by side with the Japanese source, unchanged parts as recorded earlier the same day)",
       "method": "assistant",
       "reviewed_on": "2026-11-03"
     },
     {
       "source": "test/lava/figs/lava.png",
       "target": "test/lava/en/figs/lava.png",
-      "source_sha256": "84605dcbf8d8a709f37f6389f7728b17e474860eb3e63f35a1bd82d077b95ea2",
-      "target_sha256": "78093fd81a69e759e04349d1d9ae0c34025cbf8bae15406763f3e3e8b57acad1",
-      "reviewer": "Claude (Claude Code session; both images drawn by Fig.py and Fig.py en from the same test/lava results of 2026-11-03, compared side by side: same plotted data and layout, labels translated)",
+      "source_sha256": "46780ac98e97dba9fff48043c52ec529a2994a5e8725e1fa506d1375eef32a15",
+      "target_sha256": "cadc4b1931d43fa7f0696bdbc044d020fad3ddca1b42b4a3c8afafe075a2dc66",
+      "reviewer": "Claude (Claude Code session; both images drawn by Fig.py and Fig.py en from the same test/lava results of 2026-11-03 (configurations 1-5), compared side by side: same plotted data and layout, labels translated)",
       "method": "assistant",
       "reviewed_on": "2026-11-03"
     },

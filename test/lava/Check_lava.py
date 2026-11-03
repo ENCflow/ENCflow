@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 # lava(溶岩流 = Bingham 粘性重力流)検定
-#   使い方: Check_lava.py <savedir> <huppert|bingham|dome>
+#   使い方: Check_lava.py <savedir> <huppert|bingham|dome|wall>
 #
 #   huppert モード(構成1: Newton 極限の相似解。param.txt と対):
 #     (1) 台帳    : |Σhl − V_in/A_cell| < TOL_SUM(注入は厳密加算・
@@ -21,6 +21,11 @@
 #     (3) 解析解  : h(r)² = a(R − r)(a = 2τ_y/ρg、V = (8π/15)√a R^{5/2})
 #                   に対し、中心厚が H = √(aR) に相対 TOL_H4、面積等価
 #                   半径が R に相対 TOL_R4 以内、r < R の RMS 誤差 < TOL_RMS4·H
+#   wall モード(構成5: 壁の前の溶岩だまりの固化。param_wall.txt と対):
+#     (1) 台帳    : |Σhl + Σ(z−z0) − V_in/A_cell| < TOL_SUM
+#     (2) 全量固化: Σdz / 注入 > FRAC_SOL5
+#     (3) 壁際    : 壁に接する列(i = IW5)の全行で hl = 0 かつ
+#                   dz > FRAC_WALL5 × max dz
 import sys, struct, math
 
 TOL_SUM = 1.0e-8
@@ -46,6 +51,12 @@ Q4, TSUP4, DT4, TT4 = 2.0, 900.0, 1.0, 6000.0
 RHO4, TAUY4 = 2600.0, 1.0e4
 HL_EPS4 = 0.01                   # 広がりの判定厚 (m)
 TOL_ISO, TOL_H4, TOL_R4, TOL_RMS4 = 0.05, 0.05, 0.05, 0.05
+# --- 構成5(param_wall.txt・make_init.py wall と対で保守)---
+NX5, NY5, DX5 = 40, 8, 1.0
+IWALL5, ZWALL5 = 31, 10.0        # 段(壁)の始まりの列と高さ
+IW5 = IWALL5 - 1                 # 壁に接する列
+Q5, TSUP5, DT5, TT5 = 0.2, 300.0, 0.5, 4800.0
+FRAC_SOL5, FRAC_WALL5 = 0.999, 0.5
 
 
 def read_rec(f):
@@ -174,6 +185,31 @@ elif mode == "dome":
           "(err %+.1f%%)、RMS = %.3f m (%.1f%% of H)(tol %.0f%%) : %s"
           % (hc, hh, 100 * eh, ra, rr, 100 * er, rms, 100 * rms / hh, 100 * TOL_H4,
              "PASS" if ok3 else "FAIL"))
+    ok = ok1 and ok2 and ok3
+elif mode == "wall":
+    hl = load_hl(savedir, NX5, NY5)
+    z = load_z(savedir, NX5, NY5)
+    area = DX5 * DX5
+    dz = [zi - (ZWALL5 if idx % NX5 + 1 >= IWALL5 else 0.0) for idx, zi in enumerate(z)]
+    nt = round(TT5 / DT5)
+    vin = sum(Q5 * DT5 for it in range(1, nt + 1) if it * DT5 < TSUP5)
+    # (1) 台帳(固化は hl → z の内部移転)
+    res = (sum(hl) + sum(dz)) * area - vin
+    ok1 = abs(res) < TOL_SUM * vin
+    print("(1) 台帳  : (sum(hl)+sum(dz))*A - V_in = %.3e m3 (V_in = %.2f, tol %.0e 相対) : %s"
+          % (res, vin, TOL_SUM, "PASS" if ok1 else "FAIL"))
+    # (2) 全量の固化
+    frac = sum(dz) * area / vin
+    ok2 = frac > FRAC_SOL5
+    print("(2) 固化  : sum(dz)*A/V_in = %.4f (tol > %.3f)、残る溶岩 max hl = %.3e m : %s"
+          % (frac, FRAC_SOL5, max(hl), "PASS" if ok2 else "FAIL"))
+    # (3) 壁に接する列の全行が固化して地形になった
+    dzmax = max(dz)
+    hw = [hl[(j - 1) * NX5 + (IW5 - 1)] for j in range(1, NY5 + 1)]
+    dw = [dz[(j - 1) * NX5 + (IW5 - 1)] for j in range(1, NY5 + 1)]
+    ok3 = max(hw) <= 0.0 and min(dw) > FRAC_WALL5 * dzmax
+    print("(3) 壁際  : 列 i = %d の max hl = %.3e m、min dz = %.3f m(max dz %.3f m の %.0f%% 超) : %s"
+          % (IW5, max(hw), min(dw), dzmax, 100 * FRAC_WALL5, "PASS" if ok3 else "FAIL"))
     ok = ok1 and ok2 and ok3
 else:
     hl = load_hl(savedir, NX2, NY2)

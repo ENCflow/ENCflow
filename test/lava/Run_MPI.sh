@@ -9,6 +9,7 @@ sdir=$(dirname "$(readlink -f "$0")")
 ../Scripts/Check_mode.sh mpi || exit 1
 
 python3 "$sdir/make_init.py" > zinit.txt
+python3 "$sdir/make_init.py" wall > zwall.txt
 
 export ENCFLOW_EXPECT_NP="$NP"
 rc=0
@@ -58,6 +59,22 @@ if [ -d save_dome_serial ]; then
             echo "=== ドーム: $f は逐次結果とビット一致 ==="
         else
             echo "警告: save_dome/$f が逐次ビルドと不一致(同上)" >&2
+        fi
+    done
+fi
+
+# 構成5: 壁の前の溶岩だまりの固化
+set -o pipefail
+mpirun -np "$NP" $MPIRUN_OPTS ./encflow_mpi param_wall.txt | tee -a Screen.log || exit 1
+set +o pipefail
+echo ""
+python3 "$sdir/Check_lava.py" save_wall wall || rc=1
+if [ -d save_wall_serial ]; then
+    for f in state.dat lavaflow.dat; do
+        if cmp -s save_wall/$f save_wall_serial/$f; then
+            echo "=== 壁: $f は逐次結果とビット一致 ==="
+        else
+            echo "警告: save_wall/$f が逐次ビルドと不一致(同上)" >&2
         fi
     done
 fi

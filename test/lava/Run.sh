@@ -4,12 +4,14 @@
 # 構成1: Huppert 相似解ベンチマーク(Newton 極限 + 台帳)
 # 構成2: Bingham 停止・固化(h∞ 解析解 + 固化台帳)
 # 構成4: 格子の向きによらない広がり(塑性ドームの静止形の解析解 + 等方性)
+# 構成5: 溶岩より高い壁の前の溶岩だまりの全量固化(台帳 + 壁際の固化)
 # 合否は Check_lava.py。save は save*_serial にも複製(Run_MPI 比較用)
 
 sdir=$(dirname "$(readlink -f "$0")")
 ../Scripts/Check_mode.sh serial || exit 1
 
 python3 "$sdir/make_init.py" > zinit.txt
+python3 "$sdir/make_init.py" wall > zwall.txt
 
 rc=0
 
@@ -51,6 +53,14 @@ set +o pipefail
 echo ""
 python3 "$sdir/Check_lava.py" save_dome dome || rc=1
 rm -rf save_dome_serial && cp -r save_dome save_dome_serial
+
+# 構成5: 溶岩より高い壁の前にたまった溶岩の固化(§51.5)
+set -o pipefail
+./encflow param_wall.txt | tee -a Screen.log || exit 1
+set +o pipefail
+echo ""
+python3 "$sdir/Check_lava.py" save_wall wall || rc=1
+rm -rf save_wall_serial && cp -r save_wall save_wall_serial
 
 if [ $rc -eq 0 ]; then
     echo "=== lava 検定 PASS ==="

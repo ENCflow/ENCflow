@@ -30,8 +30,11 @@ How to read the results (fields, ledgers, measurement columns, restart) is summa
   (see [Constraints](#constraints-and-interactions) below).
 - When `lv_wsol > 0`, lava in "stopped" cells — where the maximum
   depth-averaged speed over the surrounding edges is below `lv_vsol` —
-  is converted to z at the rate `lv_wsol` (m/s; irreversible). The solidified
-  surface does not add to the soil layer sd: it behaves as non-erodible bedrock.
+  is converted to z at the rate `lv_wsol` (m/s; irreversible). Only edges
+  across which lava can move are counted: an edge whose higher-surface side
+  carries no lava (an edge toward dry ground higher than the lava) is not.
+  The solidified surface does not add to the soil layer sd: it behaves as
+  non-erodible bedrock.
 - The model is isothermal (cooling and temperature-dependent viscosity
   are a future extension; lava_plan.md Sec. 8). One rheology set per
   run; there is no per-vent viscosity (viscosity differences are really
@@ -163,10 +166,12 @@ The three ways a field gets written (automatic / flag / riding on a flag) and th
   field, so refine `dt_file` if the maximum reach during the run matters.
   Check the stop thickness by whether the front Hl is close to
   τ_y/(ρg tanθ).
-- When molten (lava left unsolidified) is large: cells touching dry ground
-  higher than the lava (a valley wall, the edge of earlier solidified lava)
-  are not judged stopped even when at rest and do not solidify — a known
-  issue (developer.md Sec. 51.4). Where it remains can be seen in Hl9998.
+- molten (lava left unsolidified) is lava still moving at the end of the
+  run, or lava slowing down that has not yet reached the stop criterion
+  (`lv_vsol`). Where it remains can be seen in Hl9998. Before the change of
+  2026-11-03, cells touching dry ground higher than the lava (a valley wall,
+  the edge of earlier solidified lava) did not solidify even when at rest
+  (developer.md Sec. 51.5).
 
 ## Parameters and the basis of their defaults
 
@@ -202,7 +207,9 @@ The labels in the Basis column are explained in [How to read the basis of a defa
   and the Bingham stopping thickness h∞ against analytic solutions, and
   the shape at rest of lava erupted from one vent on a flat bed until it
   stops, compared with the analytic plastic dome[^blake90] (a check that
-  the shape is the same along the grid axes and the diagonals).
+  the shape is the same along the grid axes and the diagonals), and a
+  check that lava ponded against a 10 m step solidifies completely, up to
+  the cells touching the wall.
 
 ## Constraints and interactions
 
