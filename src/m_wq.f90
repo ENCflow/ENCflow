@@ -162,12 +162,14 @@ module m_wq
     real(real64) :: dam_decay = 0.0_real64  ! ダムプールの減衰消失の累積 (g。全ランク
                                             !   同値 = 台帳へは rank0 の出力時に加算)
     ! 診断(行部分和 real64。累積 m3 でなく質量 g)
-    real(real64), allocatable :: vrow(:,:)  ! (js:je, 1:15) 1=点源 2=面源 3=浸透(→cg)
+    real(real64), allocatable :: vrow(:,:)  ! (js:je, 1:18) 1=点源 2=面源 3=浸透(→cg)
                                             !   4=ダム捕捉 5=減衰消失 6=沈降
                                             !   7=分布面源 8=降雨沈着 9=蓄積(→bp)
                                             !   10=洗い出し(bp→cq) 13=湧出還元(cg→cq)
                                             !   14=ダム放流(プール→cq) 15=ため池吸収(→crs)
                                             !   11=管路噴出・吐口の投入 12=枡流入(→管路台帳)
+                                            !   16=海セルへの流出 17=開いた辺からの流出
+                                            !   18=開いた辺からの流入(s%cqx から。§30.9)
     integer :: un = 0                       ! CSV 装置番号(rank0。open(newunit=) は負値。§22)
   end type
 
@@ -330,15 +332,20 @@ subroutine m_wq_init(wq, p, g, b, s)
   ! --- リスタート ---
   if (p%f_state_restore > 0) call restore_state(wq, p, g, s)
 
-  allocate(wq%vrow(dcp%js:dcp%je, 1:15), source = 0.0_real64)
+  allocate(wq%vrow(dcp%js:dcp%je, 1:18), source = 0.0_real64)
+  ! 系外との出入りの記録場(swflow_enc の輸送カーネルが行部分和で書き、
+  ! m_wq_calc が台帳へ移してゼロ戻し。fxg と同型の契約。§30.9)
+  allocate(s%cqx(dcp%js:dcp%je, 1:3), source = 0.0_real64)
 
   ! --- 診断 CSV(rank0。累積はラン先頭からの積算 = restore でリセット) ---
+  !     系外との出入りの列(out_sea_g 以降)は末尾に追加した(§30.9。既存の
+  !     列の位置は変えない)
   if (is_root) then
     open(newunit=wq%un, file=trim(p%dir_result)//"/wq.csv", status='replace')
     write(wq%un, '(a)') "time_s,in_point_g,in_area_g,in_map_g,in_rain_g,in_gwc_g," &
                         //"in_bldup_g,wash_g,to_gw_g,seep_g,to_gwc_g,to_dam_g,rel_dam_g," &
                         //"to_rs_g,decay_g,settle_g,mass_surface_g,mass_gw_g,mass_pool_g," &
-                        //"mass_dam_g,mass_rs_g"
+                        //"mass_dam_g,mass_rs_g,out_sea_g,out_edge_g,in_edge_g"
   end if
 
   s%wq_active = .true.
@@ -866,6 +873,15 @@ subroutine m_wq_calc(wq, p, g, b, s, gwc, it)
 
   acell = real(g%dx, real64) * real(g%dy, real64)
 
+  ! (0) 系外との出入り(このステップの輸送で swflow_enc が s%cqx に記録した
+  !     行部分和 g)を台帳へ移しゼロ戻し(fxg と同型の契約。§30.9)
+  if (allocated(s%cqx)) then
+    do j = dcp%js, dcp%je
+      wq%vrow(j,16:18) = wq%vrow(j,16:18) + s%cqx(j,1:3)
+    end do
+    s%cqx(:,:) = 0.0_real64
+  end if
+
   ! (1) 境界流入濃度テーブル(次ステップの advect_scalar が読む)
   do m = 1, wq%nin
     if (wq%inser(m)%nser > 0) then
@@ -1388,7 +1404,7 @@ subroutine m_wq_record(wq, p, g, s)
   type(t_sysparam), intent(in) :: p
   type(t_geoinfo), intent(in) :: g
   type(t_state), intent(in) :: s
-  real(real64) :: v(1:15), msur, mgw, mpool, mdam, mrs, acell
+  real(real64) :: v(1:18), msur, mgw, mpool, mdam, mrs, acell
   real(real64) :: rows(dcp%js:dcp%je), rows2(dcp%js:dcp%je), rows3(dcp%js:dcp%je)
   real(real64) :: rows4(dcp%js:dcp%je)
   integer :: i, j, k
@@ -1396,7 +1412,7 @@ subroutine m_wq_record(wq, p, g, s)
   if (.not. wq%enabled) return
 
   acell = real(g%dx, real64) * real(g%dy, real64)
-  do k = 1, 15
+  do k = 1, 18
     call par_sum_rows(wq%vrow(:,k), v(k))
   end do
   rows(:) = 0.0_real64
@@ -1426,10 +1442,11 @@ subroutine m_wq_record(wq, p, g, s)
   end do
 
   if (is_root .and. wq%un /= 0) then
-    write(wq%un, '(f0.2,20(",",es15.7))') s%t, es_out([v(1), v(2), v(7), v(8), v(11), v(9), &
+    write(wq%un, '(f0.2,23(",",es15.7))') s%t, es_out([v(1), v(2), v(7), v(8), v(11), v(9), &
                                           v(10), v(3), v(13), v(12), v(4), v(14), v(15), &
                                           v(5) + wq%dam_decay, v(6), &
-                                          msur, mgw, mpool, mdam, mrs])
+                                          msur, mgw, mpool, mdam, mrs, &
+                                          v(16), v(17), v(18)])
     flush(wq%un)
   end if
 end subroutine

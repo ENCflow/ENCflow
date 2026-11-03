@@ -1,4 +1,5 @@
 module m_swflow_enc
+  use iso_fortran_env, only : real64
   use m_sysparam, only : t_sysparam
   use m_geoinfo, only : t_geoinfo, zbank_min
   use m_boundary, only : t_boundary, e_struct_dam, e_bc_wall
@@ -1213,12 +1214,14 @@ subroutine m_swflow_enc_calc(p, g, b, s, ierror)
   end if
 
   ! 輸送物質柱状量を移流する(浮遊砂と同一の保存輸送カーネル。境界流入
-  ! 濃度テーブル cqin は m_wq が毎ステップ更新する。§30)
+  ! 濃度テーブル cqin は m_wq が毎ステップ更新する。§30)。系外との出入り
+  ! (海セル・開いた辺)は記録場 s%cqx(m_wq_init が水質有効時に確保)へ
+  ! 行部分和で記録し、m_wq が台帳へ移す(§30.9)
   if (s%wq_active) then
     if (allocated(b%cqin)) then
-      call advect_scalar(p, g, s, sx_mod, s%cq, sx_mod%cq1, cbin=b%cqin)
+      call advect_scalar(p, g, s, sx_mod, s%cq, sx_mod%cq1, cbin=b%cqin, xrow=s%cqx)
     else
-      call advect_scalar(p, g, s, sx_mod, s%cq, sx_mod%cq1)
+      call advect_scalar(p, g, s, sx_mod, s%cq, sx_mod%cq1, xrow=s%cqx)
     end if
   end if
 
@@ -2710,8 +2713,13 @@ end subroutine
 !       h1 同様に c1 も僅かに負になり得る(f_exflux_reduction=1 で緩和)
 !     - eul = 真(波浪場の浮遊砂。§90)は面流束から h (r u^S − u_a ê_θ) を引く。このときは
 !       一様濃度でもその発散の分だけ濃度が変わる(水と違う速度で動く)
+!     - xrow(任意。水質の台帳。§30.9)を渡すと、系外との出入りを自帯の行
+!       部分和(g)に積む: 1 = 海セルへの流出、2 = 開いた辺から外への流出、
+!       3 = 開いた辺から内への流入。数えるのは c1 の更新と同じ流束 × 供給元
+!       濃度(× セル幾何面積)なので台帳が厳密に閉じる。c1 の更新は変えない
+!       (渡さない呼び出しはビット不変)。行 j の書き手は 1 スレッド = 競合なし
 !----------------------------------------------------------------------
-subroutine advect_scalar(p, g, s, sx, c, c1, cbin, share, eul)
+subroutine advect_scalar(p, g, s, sx, c, c1, cbin, share, eul, xrow)
   type(t_sysparam), intent(in) :: p
   type(t_geoinfo), intent(in) :: g
   type(t_state), intent(in) :: s
@@ -2724,16 +2732,21 @@ subroutine advect_scalar(p, g, s, sx, c, c1, cbin, share, eul)
   logical, intent(in), optional :: eul               ! 真なら Euler 平均流速 u^E = u^L − u^S と
                                                      !   岸向きの速度 u_a で運ぶ(波浪場の浮遊砂。
                                                      !   省略時は偽。§90)
+  real(real64), intent(inout), optional :: xrow(dcp%js:, 1:)  ! 系外との出入りの行部分和
+                                                     !   (g。上の契約。§30.9)
   integer :: i, j, k
   integer :: in, jn, ie, je
   integer :: iu, ju, id, jd, iuu, juu   ! 風上・風下・さらに風上のセル(MUSCL。§78)
   integer :: im, jm, ing, jng           ! 側方 Neumann の辺の鏡像セル
   real :: mne, fw, winv, cdon, sh, cdn, cuu, rs, qsx, qsy, qdx, qdy
-  logical :: has_cbin, muscl, nmn, use_eul, okn, okuu, stk, asym
+  real(real64) :: acell8, dmx
+  logical :: has_cbin, muscl, nmn, use_eul, okn, okuu, stk, asym, has_x
   integer, parameter :: ke(1:8) = [ 1, 2, 3, 4, 4, 3, 2, 1]
   real, parameter :: sign_e(1:8) = [1., 1., 1., 1., -1., -1., -1., -1.]
 
   has_cbin = present(cbin)
+  has_x = present(xrow)
+  acell8 = real(g%dx, real64) * real(g%dy, real64)
   sh = 1.0
   if (present(share)) sh = share
   muscl = opt%f_scalar_scheme == 3
@@ -2745,7 +2758,7 @@ subroutine advect_scalar(p, g, s, sx, c, c1, cbin, share, eul)
 
   !$omp parallel do schedule(dynamic) private(i, j, k, in, jn, ie, je, mne, fw, winv, cdon, &
   !$omp                                      iu, ju, id, jd, iuu, juu, cdn, cuu, im, jm, nmn, qsx, qsy, &
-  !$omp                                      ing, jng, okn, okuu, qdx, qdy)
+  !$omp                                      ing, jng, okn, okuu, qdx, qdy, dmx)
   do j = dcp%js, dcp%je
     do i = g%wx(1,j), g%wx(2,j)
       if (g%sw(i,j) > 0) cycle
@@ -2899,6 +2912,24 @@ subroutine advect_scalar(p, g, s, sx, c, c1, cbin, share, eul)
         fw = 1.0
         if (chn%have_frw) fw = chn%frw(ke(k),ie,je)
         if (chn%have_fwd) fw = fw * chn%fwd(ke(k),ie,je)
+        ! 系外との出入りの記録(xrow を渡した呼び出しだけ。§30.9): この面を
+        ! 通る質量 = 下の c1 の変化 × セル内質量の基底 gv·wfrac·A(winv と gv が
+        ! 約分されて mne·cdon·sh·mn2dh·fw·A)。海セルは受け手にならないので
+        ! 海への流出はそのまま系外へ出る(海からの流入は清水 = cdon = 0 で
+        ! ここに来ない)。開いた辺は流出・流入を分けて数える。近傍が領域外
+        ! (x <= 0)なら sw を読まない(sw・h は全域+帯の範囲しか確保されない)
+        if (has_x) then
+          dmx = real(mne * cdon * sh * geo%mn2dh(k) * fw, real64) * acell8
+          if (g%x(in,jn) <= 0) then
+            if (dmx > 0.0_real64) then
+              xrow(j,2) = xrow(j,2) + dmx
+            else
+              xrow(j,3) = xrow(j,3) - dmx
+            end if
+          else if (g%sw(in,jn) > 0) then
+            xrow(j,1) = xrow(j,1) + dmx
+          end if
+        end if
         c1(i,j) = c1(i,j) - mne * cdon * sh * geo%mn2dh(k) * fw * winv / s%gv(i,j)
       end do
     end do

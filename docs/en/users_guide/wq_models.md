@@ -40,9 +40,14 @@ sources (point g/s, areal and distributed kg/ha/day, rain concentration
 mg/L, boundary inflow concentration) are additive and can be superposed.
 The sea cells of the sea mask (fn_sw) hold no mass (a sea area with the
 initial concentration is zeroed) and the inflow from the sea onto land is
-clean water. Mass that leaves through sea cells or edge boundaries has no
-column in the ledger and is treated as the budget residual (the same
-treatment as suspended sediment; [Sediment and morphology](geomorph.md)).
+clean water. Sea cells are not receivers of the transport, so mass that
+flows into a sea cell leaves the system as it is. The transport kernel counts
+the outflow to sea cells and the exchange through open edges face by face,
+with the same flux times donor concentration that updates the concentration,
+and adds them to the `out_sea_g`, `out_edge_g` and `in_edge_g` columns of the
+ledger (so the ledger closes; other transported quantities such as suspended
+sediment have no such column and treat it as the budget residual;
+[Sediment and morphology](geomorph.md)).
 
 ## 2. First-order decay
 

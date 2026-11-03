@@ -536,20 +536,20 @@
     {
       "source": "docs/users_guide/wq.md",
       "target": "docs/en/users_guide/wq.md",
-      "source_sha256": "deb4df29f9f0b45461293dab25a042e1a05315c57b0cbd4c504a43e9c1b834af",
-      "target_sha256": "527694f5537cfc588d6154bbb9dc1c03cc382a07ca18eaeccd7923b36fc2c50b",
-      "reviewer": "Claude (Claude Code session; reviewed the changed sections (added reference sections, footnotes and citation markers) of the Japanese source against the English mirror, 2026-10-30)",
+      "source_sha256": "25f9987d439e57f89793fa5cf9b062c367b376b0e8e8f1eafe4587e2f65054b0",
+      "target_sha256": "72d86da41c364f8c159b32c7bc8cf8c4ec381a57d816d7c4219458393ba4d8f1",
+      "reviewer": "Claude (Claude Code session; reviewed the changed passages on the system-boundary ledger columns out_sea_g/out_edge_g/in_edge_g of the Japanese source against the English mirror, 2026-11-03)",
       "method": "assistant",
-      "reviewed_on": "2026-10-30"
+      "reviewed_on": "2026-11-03"
     },
     {
       "source": "docs/users_guide/wq_models.md",
       "target": "docs/en/users_guide/wq_models.md",
-      "source_sha256": "7c01192aee5dbe8e66efc0adc7cf8a570246b13f5d456b4dc8796199007015c4",
-      "target_sha256": "c5fb1b12b341c1c3ff11f6afe372930a4f488bdbf4ce59e34fe78c559b3625a2",
-      "reviewer": "Claude (Claude Code session; full-text content and lexical review, no model execution)",
+      "source_sha256": "70362a71073c377f9e13bd2aac09c9463ad75ef6011cd07f124565f039fd13ed",
+      "target_sha256": "ff64c97da34f110fe9408593aa1c2ca045a974640b70e076f0d534da942f7f3b",
+      "reviewer": "Claude (Claude Code session; reviewed the changed passages on the system-boundary ledger columns out_sea_g/out_edge_g/in_edge_g of the Japanese source against the English mirror, 2026-11-03)",
       "method": "assistant",
-      "reviewed_on": "2026-10-24"
+      "reviewed_on": "2026-11-03"
     },
     {
       "source": "docs/windows.md",

@@ -318,6 +318,13 @@ module m_state
                                         ! 書き、m_wq が読んで地表 cq へ還元しゼロ戻し。
                                         ! fxg と同型の契約。確保は m_wq_init
                                         ! (f_wq_infil=1 のみ)。§30 W3)
+    real(real64), allocatable :: cqx(:,:) ! 輸送物質 cq の系外との出入りの記録 (g。行部分和
+                                        ! (js:je, 1:3)。1 = 海セルへの流出、2 = 開いた辺から
+                                        ! 外への流出、3 = 開いた辺から内への流入(区間流入の
+                                        ! 濃度・側方 Neumann の鏡像濃度)。m_swflow_enc の
+                                        ! advect_scalar が更新と同じ流束で書き、m_wq が読んで
+                                        ! 台帳へ移しゼロ戻し。fxg と同型の契約。確保は
+                                        ! m_wq_init(水質有効時)。§30.9)
     real, allocatable :: fxsli(:,:)     ! 地表→層1 の浸透量の記録 (m。h 基底。淡塩2層の
                                         ! 配分用。gwflow の鉛直モデルが書き、m_saltwater が
                                         ! 読んでゼロ戻し。fxg と同型の契約。確保は
@@ -1014,6 +1021,7 @@ subroutine m_state_dispose(s, p)
   if (allocated(s%wdmax)) deallocate(s%wdmax)
   if (allocated(s%fxg)) deallocate(s%fxg)
   if (allocated(s%fxs)) deallocate(s%fxs)
+  if (allocated(s%cqx)) deallocate(s%cqx)
   if (allocated(s%fxsli)) deallocate(s%fxsli)
   if (allocated(s%fxslo)) deallocate(s%fxslo)
   if (allocated(s%hgsnap)) deallocate(s%hgsnap)
