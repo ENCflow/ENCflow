@@ -158,11 +158,11 @@
     {
       "source": "docs/users_guide/boundary.md",
       "target": "docs/en/users_guide/boundary.md",
-      "source_sha256": "7298f062b0d51cf2b5b842f34f0a1b42160892292fc448ac6e5e342606e238ca",
-      "target_sha256": "399406e09ee958bdf63d3944cb1db208f0c449b479fe365f00fe649d5d48699d",
-      "reviewer": "Claude (Claude Code session; reviewed the changed sections (added reference sections, footnotes and citation markers) of the Japanese source against the English mirror, 2026-10-30)",
+      "source_sha256": "42ad81f9aed7197ea61e44f155763f0bfa643a61a5dc0726f6a4d3d6bdff0546",
+      "target_sha256": "b925d4fb63d92d8f6be7e6515aef7fc59012a89b23900d01b52410640168fd42",
+      "reviewer": "Claude (Claude Code session; full-text content and lexical review, no model execution)",
       "method": "assistant",
-      "reviewed_on": "2026-10-30"
+      "reviewed_on": "2026-11-03"
     },
     {
       "source": "docs/users_guide/channel.md",
@@ -266,11 +266,11 @@
     {
       "source": "docs/users_guide/geomorph.md",
       "target": "docs/en/users_guide/geomorph.md",
-      "source_sha256": "15acd3505fb56ac9eaa097a9db2bbae746767547289aa727a5dda085ef5efe22",
-      "target_sha256": "4a01043293bef1bb17939782ad42154be2f82e0e91bc97e3acf8876e295d8877",
-      "reviewer": "Claude (Claude Code session; merge of main's f_taupart rows and example references with the delta tide sentence, both languages compared)",
+      "source_sha256": "2eb4752a2061a4217564099c58e26dd64e9c8cbb6da673bd2e90fcb53cb2a6d0",
+      "target_sha256": "d4360455ca516c691646dcf52d1921355de9039282a41678157375e936ae4920",
+      "reviewer": "Claude (Claude Code session; full-text content and lexical review, no model execution)",
       "method": "assistant",
-      "reviewed_on": "2026-11-02"
+      "reviewed_on": "2026-11-03"
     },
     {
       "source": "docs/users_guide/glacier.md",
@@ -419,11 +419,11 @@
     {
       "source": "docs/users_guide/sediment.md",
       "target": "docs/en/users_guide/sediment.md",
-      "source_sha256": "b06b7de29832c4a0f1147fc0530ebdf86b298448735bef948601add27cf07ae8",
-      "target_sha256": "5d1cdec42bd70a87c0abadf828dd8048517adc8cf5bed249ce6d23dc8842d741",
-      "reviewer": "Claude (assistant)",
+      "source_sha256": "53213820ad1b830f99515ca489a60a6a2900a27c7ecd1a7e9d660423f60c806a",
+      "target_sha256": "e4eef2e8f1b7a2f701c42dd12bfc60ccabfed1fca27c14eb38e9d88c2f725fab",
+      "reviewer": "Claude (Claude Code session; full-text content and lexical review, no model execution)",
       "method": "assistant",
-      "reviewed_on": "2026-11-02"
+      "reviewed_on": "2026-11-03"
     },
     {
       "source": "docs/users_guide/structure.md",
@@ -3182,11 +3182,11 @@
     {
       "source": "test/sedfeed/README.md",
       "target": "test/sedfeed/en/README.md",
-      "source_sha256": "778eae07811055f92041dfa289851070e2bbf2b8e58bc6049850f6d4525f4d99",
-      "target_sha256": "feb6c52c191fadf56f8a43e71ca56b7ec2aaff22c01bb7020eee2b329e4b2eb8",
-      "reviewer": "Claude (Claude Code session; mechanical renumbering of the developer.md section references §88 -> §89 in both files, checked by script that the lines differ only in those numbers and that both files carry the same references; rest unchanged since the previous record)",
+      "source_sha256": "b570189ce2d55eb3ca2ad11ceb49955cac2f1fb3820269180d9cab33ee15d798",
+      "target_sha256": "16ce8f3f29bc9d0e84969809af53909d1ee6a68676c87edc22179564ec257d16",
+      "reviewer": "Claude (Claude Code session; full-text content and lexical review, no model execution)",
       "method": "assistant",
-      "reviewed_on": "2026-10-28"
+      "reviewed_on": "2026-11-03"
     },
     {
       "source": "test/sedinflow/README.md",

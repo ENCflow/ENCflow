@@ -1169,6 +1169,43 @@ end function
 
 
 !----------------------------------------------------------------------
+! 枠内セル (i,j) から枠外近傍 (in,jn) への面が、区間流入が作った面で水が出ていけない
+! 面か(m_geomorph の掃流砂の開境界面が、ここからは流出させない。developer.md §19.12):
+!   - 区間流入の法線面(1 軸だけ枠外で、同じ行(列)のセル別面型が e_bc_inflow)。
+!     水は節 2 の規定流量で入るだけ
+!   - 壁の辺の斜め面で、流入区間の行(列)のゴーストに触れるために開いた面
+!     (bc_open_face が真になるのは bt_cell の上書きのため)。壁の辺は節 1 が面を
+!     書かないので、水の流束は 0
+! 開いた辺(壁でない辺)の斜め面は節 1 の辺の式で水が出入りするので偽。角の斜め面
+! (両軸とも枠外)は辺の型で決まるので偽。bt_cell と f_bc_side だけを読むので、
+! 判定は全ランク同値
+!----------------------------------------------------------------------
+pure module function bc_inflow_nooutflow(i, j, in, jn) result(r)
+  integer, intent(in) :: i, j, in, jn
+  logical :: r
+  logical :: ox, oy
+  integer :: sd, idx
+  r = .false.
+  ox = (in < 1 .or. in > dcp%nx_g)
+  oy = (jn < 1 .or. jn > dcp%ny_g)
+  if (ox .eqv. oy) return                   ! 枠内、または角の斜め面
+  if (ox) then
+    sd = merge(e_side_w, e_side_e, in < 1)
+    idx = jn
+  else
+    sd = merge(e_side_n, e_side_s, jn < 1)
+    idx = in
+  end if
+  if (bc_face_type(sd, idx) /= e_bc_inflow) return
+  if (in == i .or. jn == j) then
+    r = .true.                              ! 法線面
+  else
+    r = (bcs%f_bc_side(sd) == e_bc_wall)    ! 斜め面: 壁の辺なら上書きだけで開いた面
+  end if
+end function
+
+
+!----------------------------------------------------------------------
 ! 枠内セル (i, j) が区間流入の法線面を持つ外縁セルか(外縁の行・列にあり、
 ! その辺のセル別面型が e_bc_inflow。角セルは両辺を見る)。
 ! 運動量保存形移流(adv_prepare_mc)が、このセルから区間の内側へ向かうエッジ
