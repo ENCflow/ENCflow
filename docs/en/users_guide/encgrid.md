@@ -81,7 +81,10 @@ levee walls and building occupancy ([channels](channel.md),
 [geographic information](geoinfo.md)). The weights $`L_k/\Delta s_k`$ of
 the nine-point Laplacian of the diffusion term come from the same widths,
 and [Diffusion term](diffusion.md) §3 shows that they give a consistent
-Laplacian for any $`p_d`$.
+Laplacian for any $`p_d`$. The rules and history of the reassignment that
+hands the passage width of directions blocked by walls, high dry banks and
+the like back to the open directions (`f_opening_dynamic`, `f_bank_opening`)
+are in [Passage-width adjustment](passage_width.md).
 
 ## 3. Continuity equation
 

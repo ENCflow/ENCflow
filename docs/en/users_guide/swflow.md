@@ -143,7 +143,8 @@ the coefficient follows from the flow and the roughness).
   velocity and bed shear stress of steep, shallow flows then match uniform
   flow; in channels with high banks it is the same as 2. Cases calibrated
   with the default 2 of 2026-10-18 to 31 are reproduced by setting 2
-  explicitly).
+  explicitly). The idea of the reassignment, how the default came to be 3,
+  and its limits are summarized in [Passage-width adjustment](passage_width.md).
 - **If real-terrain results are later and smaller than observed** (with a
   channel mask) try `f_advection_donor = 1`.
 - **The diffusion term is for** the transverse velocity distribution of
