@@ -711,13 +711,8 @@ architecture.md。このメモは「現在進行中・未完了の項目」だ�
     out_stage_g・in_stage_g。§30.9)、水位規定セルを輸送物質にとって系外の水にする修正
     (境界濃度 wq_stage_conc/series。§30.9。test/wqbound)は実装済み。既定は置かず
     users_guide/wq.md の「物質別の代表値」表。§66)
-   - **reference の更新待ち(2026-11-03)**: §30.9 で wq.csv の末尾に 5 列を足したため、
-     wq.csv を比較する 5 ケース(tracer・damwq・gwseep・kdpart・sewer_wq)は列が増える
-     分だけ不一致。既存の列と Log が -O2 厳密数学ビルドで不変なことを確認済み
-     (§30.9 の検証記録。tracer の Log は -Ofast の逐次ビルドだけ 1 行が最終桁 1 つ
-     変わる = コード配置のずれ)。新設の test/wqbound の reference は解析的な検定
-     (Check_wqbound.py)を通った最初の実行で作ったもの。どちらも人の確認後に
-     ./Run.sh -u で更新・確定する(絶対規律 1)
+   - (済 2026-11-03)§30.9 の wq.csv の列追加に伴う 5 ケースの reference の更新と
+     test/wqbound の reference の確定は、利用者の確認後に実施した(§30.9 の検証記録)
    - 残: 池内沈降(必要が出たら M の一次沈降係数)、湖沼参照(lref)複数放流工の
      実ケース検証
    - 残(§30.9 の検証で判明、変更前から): 区間流入の境界濃度の表 b%cqin は m_wq_calc が

@@ -4920,6 +4920,11 @@ Phase 0)で、海へ出た総量を台帳から読みたいという利用者の
 - **examples/levee_breach(瓦礫+下流端の水位規定セル)**: param.txt(越水で破堤、8 時間)を
   変更前と最終版の -Ofast で実行し、分布・Log・bldgdebris.csv・測線・プローブの全出力が
   バイト一致(この例題では瓦礫が下流端の規定セルまで流れない)。README の数値は不変。
+- **reference の更新(2026-11-03。利用者の確認後)**: tracer・damwq・gwseep・kdpart・
+  sewer_wq を ./Run.sh -u で更新した。差は wq.csv の末尾 5 列の追加(既存の 21 列は旧
+  reference と文字列として一致)、kdpart の Log の比較対象外の Runge 列(44.7 → 44.6 %)、
+  tracer の Log の 1 行の最終桁 1 つ(上記のコード配置のずれ)と BUILDINFO だけ。更新後の
+  ./Run.sh は 5 ケースとも identical で PASS。test/wqbound の reference も確定した。
 
 ## 31. 積雪・融雪モジュール m_snow(&list_snow。2026-08-10 実装)
 
