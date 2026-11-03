@@ -485,7 +485,9 @@ Bingham なら対角の降伏厚 h0 が √2 倍)。hb と同じ処方で解決�
 - hb で処方を確立(§4.3)→ lavaflow(構造が最も近い)→ glacier →
   creep の順に横展開。lavaflow は 4 近傍のまま係数をエッジの |∇s|
   (法線・接線の両成分)で評価する形を 2026-11-03 に実装(developer.md
-  §51.4。平坦床のドームの等方性を test/lava 構成 4 で検定)。
+  §51.4。平坦床のドームの等方性を test/lava 構成 4 で検定)。glacier の SIA も
+  同日に同じ形で実装(developer.md §45.1。Halfar ドームの等方性を test/glacier の
+  Check_halfar.py で検定)。
 - 各モジュールに *_diagratio を追加し、**既定 0(現状の 4 近傍)で
   導入**すれば既存 reference とビット一致(規律2)。既定を 8 近傍に
   変えるのは挙動変更なので別コミットとし、reference は人間の目視後に

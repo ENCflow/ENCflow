@@ -40,7 +40,7 @@ thickness goes from 200 to 177 m and the radius spreads from 600 to 640 m.
 | File | Contents |
 |---|---|
 | `Make_input.py` | Generates `data/hi0.txt` (Halfar initial ice thickness) and `data/zcone.txt` (conical mountain) |
-| `Check_halfar.py` | Judges the mean, maximum and central errors of the final ice thickness Hi9998 against the similarity solution, and the conservation of S_total (water equivalent of the ice) |
+| `Check_halfar.py` | Judges the mean, maximum and central errors of the final ice thickness Hi9998 against the similarity solution, the ratio of the ice volumes in the sectors along the grid axes and the diagonals (isotropy), and the conservation of S_total (water equivalent of the ice) |
 | `Check_cirque.py` | Judges glacier formation (max Hi > 1 m), subglacial erosion (dz < −0.01 m), no uplift, and no NaN |
 | `Fig.py` | Draws the figures `en/figs/*.png` below (`python3 Fig.py en`; `figs/*.png` are the Japanese versions) |
 
@@ -63,34 +63,47 @@ solution (black). Right: the distribution of the computed ice thickness minus
 the similarity solution. Most of the error is concentrated in the one-cell
 width at the ice margin (the similarity solution has an infinite gradient at
 the margin, so even a half-cell positional offset gives a thickness difference
-of tens of metres). The interior is within ±5 m, and a weak pattern with
-opposite signs in the axial and diagonal directions (a trace of the
-8-direction discretization) is visible.
+of tens of metres). More than two cells inside the margin the error is −0.8 to
++0.4 m, with no difference between the grid axes and the diagonals. Before the
+fix of 2026-11-03 the diffusivity was evaluated with the gradient normal to the
+edge only, and the interior showed a pattern of −8.9 to +6.0 m with opposite
+signs along the grid axes and the diagonals (developer.md §45.1).
 
 ![Cirque-formation smoke test](figs/cirque.png)
 
 Left: the initial conical mountain. Centre: the ice thickness after 1 day
 (1.4 years of landform time). The whole mountain is covered with ice (maximum
-104 m), thicker along the valley lines (the 8 directions of ENC). Right: the
-terrain change. Negative everywhere (erosion only, no uplift), with larger
-erosion along the 8-direction streaks where the ice is thick and fast. This is
-not a quantitative benchmark but a figure for checking the connectivity of the
-whole chain and the soundness of the signs.
+96 m). Right: the terrain change. Negative everywhere (erosion only, no
+uplift). This is not a quantitative benchmark but a figure for checking the
+connectivity of the whole chain and the soundness of the signs. The mountain
+is a cone, so the result should be axisymmetric, but radial streaks appear
+along the 8 directions of the grid axes and diagonals. They come from the
+avalanche redistribution (f_glava), which sends snow to the single steepest of
+the 8 neighbours; the same computation without avalanches has no streaks (on
+a circle 1000 m from the summit, the ice thickness varies by 0.04% and the
+erosion depth by 0.7% with direction). Before the fix of 2026-11-03, the
+distortion of the SIA diffusivity produced strong streaks along the 4 grid
+axes (without avalanches, the ice along the grid axes was 19% thicker than
+along the diagonals and the erosion 42% deeper; developer.md §45.1).
 
 ## Findings
 
 | Check | Computed value | Criterion | Verdict |
 |---|---|---|---|
-| Halfar mean absolute error | 2.35 m (1.2% of H₀) | < 4 m | PASS |
-| Halfar maximum absolute error | 38.6 m (ice margin) | < 45 m (equivalent to a 1.5-cell offset of the margin) | PASS |
-| Halfar central error | 4.7 m | < tolerance (23 m without flow) | PASS |
+| Halfar mean absolute error | 0.32 m (0.16% of H₀) | < 4 m | PASS |
+| Halfar maximum absolute error | 12.5 m (ice margin) | < 45 m (equivalent to a 1.5-cell offset of the margin) | PASS |
+| Halfar central error | 0.13 m | < 6 m (23 m without flow) | PASS |
+| Halfar isotropy (ratio of the ice volumes in the diagonal and axis sectors, relative to the analytic ratio) | +0.59% | < 2% (−5.49% with the code before the fix) | PASS |
 | Relative change of the ice volume S_total | ~1e-15 | Machine precision | PASS |
-| Cirque: max Hi / min dz / max dz | 103.6 m / −0.017 m / 0 | > 1 m / < −0.01 m / ≤ 0 | PASS |
+| Cirque: max Hi / min dz / max dz | 96.1 m / −0.013 m / 0 | > 1 m / < −0.01 m / ≤ 0 | PASS |
 | Equivalence check of the defaults | save and Log byte-identical, 4 "(default)" lines | — | PASS |
 
-- The SIA flow agrees with the similarity solution to 1.2% on average, and the
-  ice volume is conserved at machine precision owing to the antisymmetric flux
-  accounting.
+- The SIA flow agrees with the similarity solution to 0.16% of H₀ on average,
+  and the ice volume is conserved at machine precision owing to the
+  antisymmetric flux accounting. Before the fix of 2026-11-03 (the diffusivity
+  is evaluated with the magnitude of the gradient at the edge; developer.md
+  §45.1), the mean error was 1.2%, the central error 4.7 m and the maximum
+  error 38.6 m, and the diagonal sectors held 5.5% less ice.
 - The cirque formation is a connectivity check that "a glacier forms and the
   upper part of the mountain is eroded"; the eroded material is discharged out
   of the system (the WARNING line on the screen gives its amount;

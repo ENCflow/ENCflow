@@ -33,7 +33,11 @@ module m_glacier
   !   (4) s%hi のハロ交換(氷化の帯更新を配布)
   !   (5) SIA 流動(f_glflow): 氷面 s = z+hi の非線形拡散
   !         ∂H/∂t = ∇・(D∇s), D = Γ H^5 |∇s|^2 + As(ρg)^3 H^4 |∇s|^2
-  !       (Glen n=3、Weertman m=3 固定)。保存形2ループ(calc_creep と同型)、
+  !       (Glen n=3、Weertman m=3 固定)。エッジの D の |∇s|^2 は、法線勾配
+  !       Δs/dist と、氷のあるセルの、エッジに沿う方向の氷面の差分の平均
+  !       (接線勾配。edge_tslope)の 2 乗和(§45.1。法線勾配だけでは斜めの
+  !       方向の D が 1/2 になり、氷が格子軸の方向へ偏る)。エッジの向きは
+  !       線形項 Δs/dist にだけ使う。保存形2ループ(calc_creep と同型)、
   !       陽解法+適応サブサイクリング(D_max の allreduce_max から分割数を
   !       決定 = 全ランク同一の collective 安全)。エッジ流量はドナー律速
   !       (1エッジ ≤ ドナー氷体積の 1/4)で hi>=0 を構造的に保証。
@@ -493,6 +497,9 @@ end subroutine
 !            (全ランク同一 = ループ回数・collective が同期)
 !     パスB: エッジ流量(時刻 n の hi・z から。書き手はハロ行 je+1 まで =
 !            帯界面の冗長計算。calc_creep と同型)。ドナー律速で hi>=0 保証
+!     パスA・B の係数 D の |∇s|^2 は法線勾配と接線勾配(edge_tslope)の
+!     2 乗和(§45.1)。接線勾配は東西のエッジで行 j±1 を読むので、書き手の
+!     行 je+1 では je+2 まで読む(ハロ幅 2 の内側)
 !     パスC: 発散を取り hi を更新(自帯 js..je のみ)-> hi のハロ交換
 !   エッジ流量の反対称集計により氷体積は機械精度で厳密に保存される
 !----------------------------------------------------------------------
@@ -503,7 +510,7 @@ subroutine tick_flow(gl, g, s, dts)
   real, intent(in) :: dts
   integer :: i, j, k, in, jn, jt, nsub
   real :: trem, dtsub, dmax, dlim
-  real :: sc, sn_, ds, gs2, he, dd, gq, qcap, dv
+  real :: sc, sn_, ds, gs2, gt, he, dd, gq, qcap, dv
   real :: w1(1)
   logical :: okc, last
 
@@ -521,8 +528,8 @@ subroutine tick_flow(gl, g, s, dts)
 
     ! --- パスA: 拡散係数の最大値と dt_sub の決定 ---
     dmax = 0.0
-    !$omp parallel do schedule(static) private(i, j, k, in, jn, okc, sc, sn_, ds, gs2, he, dd) &
-    !$omp reduction(max: dmax)
+    !$omp parallel do schedule(static) private(i, j, k, in, jn, okc, sc, sn_, ds, gs2, gt, he, &
+    !$omp                                      dd) reduction(max: dmax)
     do j = dcp%js, jt
       do i = g%wx(1,j), g%wx(2,j)
         if (g%x(i,j) <= 0) cycle
@@ -538,7 +545,8 @@ subroutine tick_flow(gl, g, s, dts)
           sc = s%z(i,j) + s%hi(i,j)
           sn_ = s%z(in,jn) + s%hi(in,jn)
           ds = sc - sn_
-          gs2 = (ds / gl%glw%dist(k))**2
+          gt = edge_tslope(g, s, i, j, in, jn)
+          gs2 = (ds / gl%glw%dist(k))**2 + gt * gt
           dd = gl%gamd * he**5 * gs2 + gl%gams * he**4 * gs2
           dmax = max(dmax, dd)
         end do
@@ -565,7 +573,7 @@ subroutine tick_flow(gl, g, s, dts)
     ! --- パスB: エッジ流量(ドナー律速つき) ---
     !   帯界面のエッジ成分 k=1..3(行 je)はハロ行 je+1 の書き手が担う
     !   (冗長計算。全域端では行が存在せず対象外)
-    !$omp parallel do schedule(static) private(i, j, k, in, jn, okc, sc, sn_, ds, gs2, he, &
+    !$omp parallel do schedule(static) private(i, j, k, in, jn, okc, sc, sn_, ds, gs2, gt, he, &
     !$omp                                      dd, gq, qcap)
     do j = dcp%js, jt
       do i = g%wx(1,j), g%wx(2,j)
@@ -583,7 +591,8 @@ subroutine tick_flow(gl, g, s, dts)
                 sc = s%z(i,j) + s%hi(i,j)
                 sn_ = s%z(in,jn) + s%hi(in,jn)
                 ds = sc - sn_
-                gs2 = (ds / gl%glw%dist(k))**2
+                gt = edge_tslope(g, s, i, j, in, jn)
+                gs2 = (ds / gl%glw%dist(k))**2 + gt * gt
                 dd = gl%gamd * he**5 * gs2 + gl%gams * he**4 * gs2
                 ! エッジ流量(書き手 c から k 近傍 n に向かい正)(m3/s)
                 gq = dd * ds * gl%glw%cw(k)
@@ -628,6 +637,93 @@ subroutine tick_flow(gl, g, s, dts)
 
   gl%glw%nsubtot = gl%glw%nsubtot + nsub
 end subroutine
+
+
+!----------------------------------------------------------------------
+! エッジに沿う方向の氷面の勾配(接線勾配 St。§45.1)
+!   SIA の係数 D をエッジの勾配の大きさ √(Sn² + St²) で評価するための
+!   部品(m_lavaflow の edge_tslope と同じ規約)。エッジ両側のセル
+!   (i,j)・(in,jn) のうち氷のある(hi > 0)セルについて、エッジに沿う方向の
+!   氷面の勾配(cell_tslope)を求めて平均する(氷のあるセルが 1 つなら
+!   その値、なければ 0)。東西のエッジ(jn == j)は y 方向、南北のエッジは
+!   x 方向。符号は 2 乗して使うため不問
+!----------------------------------------------------------------------
+pure function edge_tslope(g, s, i, j, in, jn) result(gt)
+  type(t_geoinfo), intent(in) :: g
+  type(t_state), intent(in) :: s
+  integer, intent(in) :: i, j, in, jn
+  real :: gt
+  integer :: ti, tj, nl
+  real :: rd
+
+  if (jn == j) then              ! 東西のエッジ: 接線は y
+    ti = 0
+    tj = 1
+    rd = 1.0 / g%dy
+  else                           ! 南北のエッジ: 接線は x
+    ti = 1
+    tj = 0
+    rd = 1.0 / g%dx
+  end if
+  gt = 0.0
+  nl = 0
+  if (s%hi(i,j) > 0.0) then
+    gt = gt + cell_tslope(g, s, i, j, ti, tj, rd)
+    nl = nl + 1
+  end if
+  if (s%hi(in,jn) > 0.0) then
+    gt = gt + cell_tslope(g, s, in, jn, ti, tj, rd)
+    nl = nl + 1
+  end if
+  if (nl == 2) gt = 0.5 * gt
+end function
+
+
+!----------------------------------------------------------------------
+! セル (i,j) の (ti,tj) 方向の氷面の勾配(edge_tslope の部品)
+!   その方向の両隣のうち、氷のある有効セル(ice_cell)だけを使う:
+!   両方なら中心差分、片方なら片側差分、なしなら 0。氷のないセルの地盤高は
+!   氷面ではないので使わない(谷壁に接する氷で、壁の勾配が係数に入らない
+!   ように)。rd = 1/格子間隔
+!----------------------------------------------------------------------
+pure function cell_tslope(g, s, i, j, ti, tj, rd) result(gd)
+  type(t_geoinfo), intent(in) :: g
+  type(t_state), intent(in) :: s
+  integer, intent(in) :: i, j, ti, tj
+  real, intent(in) :: rd
+  real :: gd
+  logical :: okp, okm
+
+  okp = ice_cell(g, s, i + ti, j + tj)
+  okm = ice_cell(g, s, i - ti, j - tj)
+  if (okp .and. okm) then
+    gd = 0.5 * rd * ((s%z(i+ti,j+tj) + s%hi(i+ti,j+tj)) - (s%z(i-ti,j-tj) + s%hi(i-ti,j-tj)))
+  else if (okp) then
+    gd = rd * ((s%z(i+ti,j+tj) + s%hi(i+ti,j+tj)) - (s%z(i,j) + s%hi(i,j)))
+  else if (okm) then
+    gd = rd * ((s%z(i,j) + s%hi(i,j)) - (s%z(i-ti,j-tj) + s%hi(i-ti,j-tj)))
+  else
+    gd = 0.0
+  end if
+end function
+
+
+!----------------------------------------------------------------------
+! 氷のある有効セルか(領域内・海でない・hi > 0)。x を先に見る
+! (g%x は 0:nx+1 の縁付き。sw と状態は x > 0 のセルでだけ読む。
+! .and. の短絡評価は言語仕様で保証されない — §45 の実バグ)
+!----------------------------------------------------------------------
+pure logical function ice_cell(g, s, i, j)
+  type(t_geoinfo), intent(in) :: g
+  type(t_state), intent(in) :: s
+  integer, intent(in) :: i, j
+
+  ice_cell = .false.
+  if (g%x(i,j) <= 0) return
+  if (g%sw(i,j) > 0) return
+  if (s%hi(i,j) <= 0.0) return
+  ice_cell = .true.
+end function
 
 
 !----------------------------------------------------------------------

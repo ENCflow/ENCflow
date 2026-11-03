@@ -7,11 +7,16 @@
 #     (1) 最終場の平均絶対誤差 < TOL_MEAN と最大絶対誤差 < TOL_MAX。
 #         最大誤差は氷縁で出る: 解析解は氷縁で勾配が無限大のため、
 #         セル半分の縁位置ずれでも数十 m の厚さ誤差になる(TOL_MAX は
-#         縁 1.5 セルずれ相当。実測は 1 セル未満 ≈ 38 m)
+#         縁 1.5 セルずれ相当。実測 12.5 m。2026-11-03 の §45.1 の修正前は 38.6 m)
 #     (2) 中心セルの誤差 < TOL_CTR(「流れていない/流れ過ぎ」の検出。
-#         流れないと誤差 23 m、正しく流れると ~5 m)
+#         流れないと誤差 23 m、正しく流れると 0.13 m。修正前は 4.7 m)
 #     (3) Screen.log の S_total(氷の水当量)の初値/終値の相対差 < TOL_VOL
 #         (反対称フラックスにより機械精度で保存。実測 ~1e-15)
+#     (4) 等方性: セル中心の方位角で、格子軸の方向(軸から ±22.5° 以内)と
+#         斜めの方向(45° ± 22.5° 以内)の扇形に分け、氷の体積の比(斜め/軸)を
+#         同じ分け方の解析解の比と比べ、差 < TOL_ISO。拡散係数を法線方向の
+#         勾配だけで評価すると斜めの方向の D が 1/2 になり、氷が格子軸の方向へ
+#         偏る(developer.md §45.1。2026-11-03 の修正前のコードで 5.49% 不足、修正後 +0.59%)
 #   使い方: Check_halfar.py <resultdir> <screenlog>
 import sys
 import math
@@ -29,6 +34,7 @@ TOL_MEAN = 4.0                  # (1) 平均絶対誤差 (m)
 TOL_MAX = 45.0                  # (1) 最大絶対誤差 (m。氷縁 1.5 セルずれ相当)
 TOL_CTR = 6.0                   # (2) 中心セル誤差 (m)
 TOL_VOL = 1.0e-7                # (3) 体積保存の相対許容差
+TOL_ISO = 0.02                  # (4) 斜め/軸の体積比の解析解との相対差
 
 resultdir = sys.argv[1] if len(sys.argv) > 1 else "result"
 screenlog = sys.argv[2] if len(sys.argv) > 2 else "Screen.log"
@@ -88,6 +94,36 @@ if maxerr >= TOL_MAX:
     rc = 1
 if ctrerr >= TOL_CTR:
     print("FAIL: center error exceeds tolerance")
+    rc = 1
+
+# ---- (4) 等方性(格子軸の方向と斜めの方向の扇形の氷の体積比)----
+#   方位角がちょうど 22.5° の倍数のセルはどちらにも入れない(この格子では現れない)
+vol = {"axis": 0.0, "diag": 0.0}
+vana = {"axis": 0.0, "diag": 0.0}
+area = {"axis": 0.0, "diag": 0.0}
+for j in range(NY):
+    for i in range(NX):
+        x = (i + 0.5) * DX - xc
+        y = (j + 0.5) * DX - xc
+        if x == 0.0 and y == 0.0:
+            continue
+        th = math.degrees(math.atan2(y, x)) % 90.0
+        if abs(th - 22.5) < 1e-9 or abs(th - 67.5) < 1e-9:
+            continue
+        sec = "axis" if (th < 22.5 or th > 67.5) else "diag"
+        vol[sec] += hi[j][i]
+        vana[sec] += halfar(math.hypot(x, y), TFIN)
+        if hi[j][i] > 0.0:
+            area[sec] += DX * DX
+ratio_c = vol["diag"] / vol["axis"]
+ratio_a = vana["diag"] / vana["axis"]
+dev = ratio_c / ratio_a - 1.0
+req = {sec: math.sqrt(2.0 * area[sec] / math.pi) for sec in area}
+print(f"Halfar: ice volume diagonal/axis sectors = {ratio_c:.4f} "
+      f"(analytic {ratio_a:.4f}, diff {100.0*dev:+.2f}%, tol {100.0*TOL_ISO:.1f}%); "
+      f"area-equivalent radius axis {req['axis']:.1f} m, diagonal {req['diag']:.1f} m")
+if abs(dev) >= TOL_ISO:
+    print("FAIL: the dome is not isotropic (ice biased toward the grid axes or the diagonals)")
     rc = 1
 
 # ---- (3) 体積保存(S_total 列の初値/終値)----
