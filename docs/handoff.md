@@ -394,12 +394,12 @@ architecture.md。このメモは「現在進行中・未完了の項目」だ�
      効かせる)と根の直しの設計、既定を変えるかの判断(全検定・全例題の A/B の後。既定 0 には流入口で
      エネルギーを作る性質が残る: fluxline の流入直後が一様流より約 10 % 速い、狭い流入口のジェット、
      examples/meander の容量給砂の構成が 0 では止まる)。
-   - **f_inflow_edge = 2 の例題の回し直しの残り(2026-10-30)**: examples/meander(11 構成)と
-     examples/meander_cutoff(6 構成)は param で f_inflow_edge = 2 を指定する(README は 2 の計算。
-     meander は全構成、meander_cutoff は出水ありの param・param_slump を 2026-10-30 に回し直した)。
-     meander_cutoff の出水なしの 4 構成(noflood・slump_noflood・slump_cohesive・slump_fines。逐次で各
-     2.5〜4 時間)は 2 での回し直しが残る(README の該当の節は 2026-10-23・24 の値のままで、その旨を明記)。
-     出入口ゾーンは「ループのうち頸部ゾーンから 12 m 以内の初期河道」(482 セル。初期地形から復元)。
+   - **f_inflow_edge = 2 の例題**: examples/meander(10 構成)と examples/meander_cutoff(6 構成)は
+     param で f_inflow_edge = 2 を指定する。2026-11-02〜03 に両方の全構成を今の main の版
+     (f_opening_dynamic は既定の 3)で回し直し、README を組み直した(developer.md §84.18。meander の
+     param_fixsuspfeed は過給砂で地形 35 h に止まるので外した。meander_cutoff の make_init.py の
+     頸部の判定と東西の折り返しを直し、氾濫原を一様の規則にした。旧 README の「頸部ゾーン」
+     「出入口ゾーン」の指標は廃した)。
      delta・estuary_barrage・levee_breach・山地渓流の例題などは既定(0)のままなので回し直しは要らない
      (将来既定を変えるなら、delta の README の汀線半径・分流路数・南北の非対称と比較の図はリポジトリに
      ない解析で作られているので、指標の定義を決めて解析スクリプトを置く必要がある)。§89.25 の流入面の
@@ -1002,11 +1002,11 @@ architecture.md。このメモは「現在進行中・未完了の項目」だ�
   層2(基岩直上の渓流)への適用。必要になるまで有効化しない。
 
 - **蛇行河道の発達と河床変動管理**(docs/meander_plan.md、developer.md §84.1〜§84.14・
-  §84.17): 段 0〜段 3b・5a・5c と段 2b(崩落土塊による河岸の自己保護)、例題
+  §84.17・§84.18): 段 0〜段 3b・5a・5c と段 2b(崩落土塊による河岸の自己保護)、例題
   examples/meander・meander_cutoff は実装済み(test/bankface・bendsed・berode・repose・
   fixation・uniflow・sedfeed・bedfines)。係数 N*・μs・μk は原著で照合して既定へ昇格
-  (§84.12)、河岸脚部の行の通水能不足は f_opening_dynamic = 2 の既定化で解消(§84.7・
-  §68.38)。残り:
+  (§84.12)、河岸脚部の行の通水能不足は f_opening_dynamic ≥ 2(2026-10-18 に 2、10-31 から 3 が
+  既定)で解消(§84.7・§68.38)。例題の再計算と説明の組み直しは §84.18(2026-11-02)。残り:
   - (ii) 横断勾配の平衡値 ∂z/∂n ≈ r/γ の定量ベンチと格子 45° 回転の比較
   - (iii) 段 2 の残(K_b の分布ファイル、repose_phi_wet)
   - 定着: 定着時間・c_τ は文献に標準値なし(Asahi ら 2013 の T_Land は出水回帰時間との

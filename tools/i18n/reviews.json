@@ -491,9 +491,9 @@
     {
       "source": "docs/users_guide/usecases.md",
       "target": "docs/en/users_guide/usecases.md",
-      "source_sha256": "643bf7a3d07f271b29720658874eefb113471d7c258a8ec4183d551a8a2fb362",
-      "target_sha256": "23d10776db22d9a0ccebcb6ee0ed4426158fec14aedfebea83014ec6ffc8778c",
-      "reviewer": "Claude (Claude Code session; shield_volcano example registration: changed passages compared side by side with the Japanese source, unchanged parts as recorded earlier the same day)",
+      "source_sha256": "29a3fb5d8d72c9af09a01e67cf963b91497a302fd8b27139ab285ff137fb0f8b",
+      "target_sha256": "49cd81879014486bf9631abe3cab7b71ce01914f351a9e81dad6d0a0da2966fb",
+      "reviewer": "Claude (Claude Code session; merge of main into the meander update: the rows changed on each side (delta and shield_volcano from main, meander and meander_cutoff from the branch) compared side by side in both languages; the rest unchanged from the recorded versions)",
       "method": "assistant",
       "reviewed_on": "2026-11-03"
     },
@@ -815,9 +815,9 @@
     {
       "source": "examples/README.md",
       "target": "examples/README.en.md",
-      "source_sha256": "ce7502797c5546df10f626be795b455eab5a0d5a287ee6fa449acefbdf831259",
-      "target_sha256": "3afa77056e37c07071704e3496d05113a0736bf3fdb431e00938fb9fd975ce31",
-      "reviewer": "Claude (Claude Code session; shield_volcano example registration: changed passages compared side by side with the Japanese source, unchanged parts as recorded earlier the same day)",
+      "source_sha256": "9aefdc1e3e649049011eb89c83cbfb2bc2cd9d99ca7100fe76d45d8cf217560a",
+      "target_sha256": "667c41be744b63f94eaed611e836141c62a94f128232c008e709e9fcedcfe7c8",
+      "reviewer": "Claude (Claude Code session; merge of main into the meander update: the rows changed on each side (delta and shield_volcano from main, meander and meander_cutoff from the branch) compared side by side in both languages; the rest unchanged from the recorded versions)",
       "method": "assistant",
       "reviewed_on": "2026-11-03"
     },
@@ -1634,20 +1634,128 @@
     {
       "source": "examples/meander/README.md",
       "target": "examples/meander/en/README.md",
-      "source_sha256": "f7f268f48df4797d75e8280407d6e443126c443a8159849e5c528fa6da6011e0",
-      "target_sha256": "0f5bcef966d6ec7dcb453b9c5775d5cfd351774ad50541624911cfea94bc0179",
-      "reviewer": "Claude (Claude Code session; the default of f_opening_dynamic changed from 2 to 3 on 2026-10-31: the statements of the default and the notes on 2 were updated in the source and the translation together, and the changed parts were compared; rest unchanged since the previous record)",
+      "source_sha256": "2dbf46709a0ae869f72f3ea2f01b478ad02606d96318cd1c8213313eb54f8dff",
+      "target_sha256": "3f8bba1ecb70823a521ccaa49a3be76bf6f8cb93f9e7f2b52b8c757206e7eb3b",
+      "reviewer": "Claude (Claude Code session; README results rewritten from the 2026-11-03 recomputation (f_opening_dynamic = 3; meander_cutoff with the fixed terrain): English mirror compared section by section with the Japanese master - headings, tables, numbers, links and figure references match)",
       "method": "assistant",
-      "reviewed_on": "2026-10-31"
+      "reviewed_on": "2026-11-03"
+    },
+    {
+      "source": "examples/meander/figs/feed.png",
+      "target": "examples/meander/en/figs/feed.png",
+      "source_sha256": "17dbe003aa6d028f27a8ff1e5ae4d0739abda6357982bee6085873805e87c4aa",
+      "target_sha256": "91128a8c7d2a2a304f6dc204df1f6bc24e933890f59ed0bd137121656f5bc6b3",
+      "reviewer": "Claude (Claude Code session; result figures drawn by plot_results.py from the 2026-11-03 runs, Japanese and English images compared side by side: same data and layout, labels translated)",
+      "method": "assistant",
+      "reviewed_on": "2026-11-03"
+    },
+    {
+      "source": "examples/meander/figs/fixation.png",
+      "target": "examples/meander/en/figs/fixation.png",
+      "source_sha256": "e58630084110481a342100ae8c2e68f88460527a27ef80674e74133b052b9252",
+      "target_sha256": "7683aac59f641dca382d3c4e9ce6111726734638b1949c452725bb8ca196d915",
+      "reviewer": "Claude (Claude Code session; result figures drawn by plot_results.py from the 2026-11-03 runs, Japanese and English images compared side by side: same data and layout, labels translated)",
+      "method": "assistant",
+      "reviewed_on": "2026-11-03"
+    },
+    {
+      "source": "examples/meander/figs/mechanism.png",
+      "target": "examples/meander/en/figs/mechanism.png",
+      "source_sha256": "af332370ba1936c3670525e023519af7596b82478925739455f7592f392c501d",
+      "target_sha256": "59b096dd99b1abff6da3beeab0781bdd39c912fe4fd5d316011b6faceccb10ba",
+      "reviewer": "Claude (Claude Code session; schematic and setup figure drawn by plot_setup.py from input files only, Japanese and English images compared side by side: same data and layout, labels translated; no model execution)",
+      "method": "assistant",
+      "reviewed_on": "2026-11-02"
+    },
+    {
+      "source": "examples/meander/figs/metrics.png",
+      "target": "examples/meander/en/figs/metrics.png",
+      "source_sha256": "c9d6ff49493eb21086f92469b10529102f2ca960a791b0fa419ffc77c9d38b2e",
+      "target_sha256": "49eafd6d55c9eca200af35af4ab7d149ee8a8900688ab3c1c5978efd429750f1",
+      "reviewer": "Claude (Claude Code session; result figures drawn by plot_results.py from the 2026-11-03 runs, Japanese and English images compared side by side: same data and layout, labels translated)",
+      "method": "assistant",
+      "reviewed_on": "2026-11-03"
+    },
+    {
+      "source": "examples/meander/figs/planform.png",
+      "target": "examples/meander/en/figs/planform.png",
+      "source_sha256": "3f2a6db7fd15601e6d4bdf3f954a477c87e1a73441e88505fa408e5629ea3f4e",
+      "target_sha256": "16cb33f9e21a8d7805bf9d4d172b0fa8b32973a968987431327488af8657aa08",
+      "reviewer": "Claude (Claude Code session; result figures drawn by plot_results.py from the 2026-11-03 runs, Japanese and English images compared side by side: same data and layout, labels translated)",
+      "method": "assistant",
+      "reviewed_on": "2026-11-03"
+    },
+    {
+      "source": "examples/meander/figs/sections.png",
+      "target": "examples/meander/en/figs/sections.png",
+      "source_sha256": "1b057ae9e9d937da272ad18439587bd10c527d11bf60ebf435ca39f7b2436a09",
+      "target_sha256": "6f412a10afe33fc7fad0f764dfa5a5b02792f459d4d91852b9e3816fe2e4092e",
+      "reviewer": "Claude (Claude Code session; result figures drawn by plot_results.py from the 2026-11-03 runs, Japanese and English images compared side by side: same data and layout, labels translated)",
+      "method": "assistant",
+      "reviewed_on": "2026-11-03"
+    },
+    {
+      "source": "examples/meander/figs/setup.png",
+      "target": "examples/meander/en/figs/setup.png",
+      "source_sha256": "eb41e23b302a4a9517caad15bf40ea223fa4afe1c2fdf7a1a943483754767f26",
+      "target_sha256": "207b8802aab95e98434676a930f0cdd7b4181cebcc6410b14973ae061652ff1f",
+      "reviewer": "Claude (Claude Code session; schematic and setup figure drawn by plot_setup.py from input files only, Japanese and English images compared side by side: same data and layout, labels translated; no model execution)",
+      "method": "assistant",
+      "reviewed_on": "2026-11-02"
     },
     {
       "source": "examples/meander_cutoff/README.md",
       "target": "examples/meander_cutoff/en/README.md",
-      "source_sha256": "fa1975c13ca0886421f401cda075fb914969002ac260fd044ec042a68406351e",
-      "target_sha256": "42a977364189fccb57f20da98f60e3f0cb51d2a620ec80c4d1fb5a8b33a668ee",
-      "reviewer": "Claude (Claude Code session; the default of f_opening_dynamic changed from 2 to 3 on 2026-10-31: the statements of the default and the notes on 2 were updated in the source and the translation together, and the changed parts were compared; rest unchanged since the previous record)",
+      "source_sha256": "227368d3a237c451cfdc0ed7e868c93aa8efe7ac5d1581eba2f5da24d7320c20",
+      "target_sha256": "f6386a4198f5b2c2f72fbf161f0513992139786b7d6e8dc0c427981b400af653",
+      "reviewer": "Claude (Claude Code session; README results rewritten from the 2026-11-03 recomputation (f_opening_dynamic = 3; meander_cutoff with the fixed terrain): English mirror compared section by section with the Japanese master - headings, tables, numbers, links and figure references match)",
       "method": "assistant",
-      "reviewed_on": "2026-10-31"
+      "reviewed_on": "2026-11-03"
+    },
+    {
+      "source": "examples/meander_cutoff/figs/final_slump_fines.png",
+      "target": "examples/meander_cutoff/en/figs/final_slump_fines.png",
+      "source_sha256": "ce1247e13f7e47b57c04b1eb1f14323726b7ca5d4ea7e11f3b642408d70d1456",
+      "target_sha256": "5f7f3e2000da9f90ae42d050bdd280ef25eb0b53f3f5f54595a5f2338cf107d2",
+      "reviewer": "Claude (Claude Code session; result figures drawn by plot_results.py from the 2026-11-03 runs, Japanese and English images compared side by side: same data and layout, labels translated)",
+      "method": "assistant",
+      "reviewed_on": "2026-11-03"
+    },
+    {
+      "source": "examples/meander_cutoff/figs/mechanism.png",
+      "target": "examples/meander_cutoff/en/figs/mechanism.png",
+      "source_sha256": "d18d6a9336a12b19634711706191ff1ff40823340a15d68ccccfa8e50e2c1214",
+      "target_sha256": "ffc0d41f11fb26f84aa91f4d84e2bf207bac75fc2c35f831349caf1f0a5822bc",
+      "reviewer": "Claude (Claude Code session; schematic and setup figure drawn by plot_setup.py from input files only, Japanese and English images compared side by side: same data and layout, labels translated; no model execution)",
+      "method": "assistant",
+      "reviewed_on": "2026-11-02"
+    },
+    {
+      "source": "examples/meander_cutoff/figs/sequence.png",
+      "target": "examples/meander_cutoff/en/figs/sequence.png",
+      "source_sha256": "d2d6d12cf01489d225430c4abcd9f082aff322318aec34d4fc7c1808cc1f2e2e",
+      "target_sha256": "39259ab5f67b4a07f5f121cc6bf0c66de84673fa58c83466aed880c0101a7808",
+      "reviewer": "Claude (Claude Code session; result figures drawn by plot_results.py from the 2026-11-03 runs, Japanese and English images compared side by side: same data and layout, labels translated)",
+      "method": "assistant",
+      "reviewed_on": "2026-11-03"
+    },
+    {
+      "source": "examples/meander_cutoff/figs/setup.png",
+      "target": "examples/meander_cutoff/en/figs/setup.png",
+      "source_sha256": "7e893f399e74ad73e5307f1650b8582cde07129038c80694b3ed4ef064973a17",
+      "target_sha256": "37ac700c43514e33122ec227c62221266dc6be297a73018b76611723192778d3",
+      "reviewer": "Claude (Claude Code session; schematic and setup figure drawn by plot_setup.py from input files only, Japanese and English images compared side by side: same data and layout, labels translated; no model execution)",
+      "method": "assistant",
+      "reviewed_on": "2026-11-02"
+    },
+    {
+      "source": "examples/meander_cutoff/figs/states.png",
+      "target": "examples/meander_cutoff/en/figs/states.png",
+      "source_sha256": "ceee1b2c250ce0b9d5c028eaea58cd24027f7c6915ad8ef9882754fb0f2012c7",
+      "target_sha256": "6936aa95f6fbe3ed8b8e399ed2bf8cfa1deaa627f183116cbbfabbbe61d23067",
+      "reviewer": "Claude (Claude Code session; result figures drawn by plot_results.py from the 2026-11-03 runs, Japanese and English images compared side by side: same data and layout, labels translated)",
+      "method": "assistant",
+      "reviewed_on": "2026-11-03"
     },
     {
       "source": "examples/mesa/README.md",
