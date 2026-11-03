@@ -155,6 +155,16 @@ rationale and accuracy limits in [the explanation](channel_models.md) §2).
   network dominates the result, the connectivity ambiguity of the raster
   representation limits the accuracy (refine the cells at suspect
   locations).
+- **Water exchange with the subsurface**: infiltration and seepage of
+  [groundwater](gwflow.md), inflow, spouting and outfalls of the conduit
+  layer, and pore water released when [geomorphic change](geomorph.md)
+  erodes the soil layer are exchanged so that the volumes match, with the
+  subsurface side on the plane of the whole cell and the surface side on
+  the plane of the channel. For example, with 250 m cells and an 8 m wide
+  river, water seeping out of the ground raises the channel depth by about
+  31 times its thickness (fixed on 2026-11-03: seepage and similar
+  hand-overs used to release only the channel-width fraction of the water
+  to the surface and lose the rest; developer.md §26.1).
 
 **Outputs for this section**: `H0001...` on width cells is the depth within the width. Check how the width acts by whether the transect column `B` (= Q / Hmax / Vmax) is close to the given width ([Output and monitoring](#output-and-monitoring)).
 
@@ -180,6 +190,13 @@ sigma alone, without width data, is the simplest configuration, and
 inaccurate widths do not break the model badly (equations, the tracking of
 D on a moving bed and the interpretation of inaccurate widths are in
 [the explanation](channel_models.md) §3).
+
+Combined with [groundwater](gwflow.md), cells with a section shape do not
+exactly conserve the volume of water exchanged by infiltration and seepage
+(an approximation; on infiltration the ground receives somewhat less than
+is taken from the surface). Where the water balance with the groundwater
+matters, check the evolution of the total storage `S_total`, or represent
+the channel with the width alone, without the section shape.
 
 **Outputs for this section**: the section shape shows in the relation between the channel stage E = Z + H and the transect Q (rating curve). H is the storage depth, not the rectangular-equivalent depth ([Output and monitoring](#output-and-monitoring)).
 

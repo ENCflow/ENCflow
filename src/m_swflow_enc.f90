@@ -1,4 +1,5 @@
 module m_swflow_enc
+  use iso_fortran_env, only : real64
   use m_sysparam, only : t_sysparam
   use m_geoinfo, only : t_geoinfo, zbank_min
   use m_boundary, only : t_boundary, e_struct_dam, e_bc_wall
@@ -1045,7 +1046,12 @@ subroutine m_swflow_enc_init(p, g, b, s)
   call bc_init(p, g, b)
 
   if (chn%have_frw) call build_channel_frw(g)
-  if (chn%have_width) call build_wfrac(g)
+  if (chn%have_width) then
+    call build_wfrac(g)
+    ! 地下の貯留から地表水への受け渡しの水深換算(gw_to_h。§26.1)用の写し
+    if (allocated(s%wfr)) deallocate(s%wfr)
+    allocate(s%wfr(dcp%ish:dcp%ieh, dcp%jsh:dcp%jeh), source = chn%wfrac)
+  end if
 
   ! σ の遷移深さ D の構築(zbank/drw は帯配布済み)
   if (sct%have_sect) call build_sdep(g, b, s)
@@ -1150,6 +1156,11 @@ subroutine m_swflow_enc_calc(p, g, b, s, ierror)
   if (s%bd_active) call par_halo_cell(s%hbd)
   ! 地表塩水層厚(同上。§47)
   if (s%salt_active) call par_halo_cell(s%hss)
+  ! 水位規定セルの輸送物質を「系外の水」の値(境界濃度 × 矩形換算水深)に戻す
+  ! (§30.9)。ハロ交換の直後に確保範囲の全行(ハロ行を含む)を同じ式で冗長に
+  ! 置き直すので、advect_scalar が読む供給元濃度は全ランクで境界濃度になる。
+  ! 前ステップ以降に他のモジュールが規定セルへ足した量もここで系外へ出る
+  if (b%nstage > 0) call stage_scalars(s%h, .false., dcp%jsh, dcp%jeh)
 
   ! 破堤サイトの現時刻の実効天端を更新する(サイト数ぶんの時系列補間。
   ! t の純関数なので全ランクが同値を冗長計算する=通信不要)
@@ -1213,12 +1224,14 @@ subroutine m_swflow_enc_calc(p, g, b, s, ierror)
   end if
 
   ! 輸送物質柱状量を移流する(浮遊砂と同一の保存輸送カーネル。境界流入
-  ! 濃度テーブル cqin は m_wq が毎ステップ更新する。§30)
+  ! 濃度テーブル cqin は m_wq が毎ステップ更新する。§30)。系外との出入り
+  ! (海セル・開いた辺)は記録場 s%cqx(m_wq_init が水質有効時に確保)へ
+  ! 行部分和で記録し、m_wq が台帳へ移す(§30.9)
   if (s%wq_active) then
     if (allocated(b%cqin)) then
-      call advect_scalar(p, g, s, sx_mod, s%cq, sx_mod%cq1, cbin=b%cqin)
+      call advect_scalar(p, g, s, sx_mod, s%cq, sx_mod%cq1, cbin=b%cqin, xrow=s%cqx)
     else
-      call advect_scalar(p, g, s, sx_mod, s%cq, sx_mod%cq1)
+      call advect_scalar(p, g, s, sx_mod, s%cq, sx_mod%cq1, xrow=s%cqx)
     end if
   end if
 
@@ -1244,8 +1257,39 @@ subroutine m_swflow_enc_calc(p, g, b, s, ierror)
   ! 水深の境界条件をセットする
   call boundary_h(p, g, b, s, sx_mod)
 
+  ! 水位規定セルの輸送物質を、規定水位に上書きした水深(h1 = 矩形換算水深)の
+  ! 系外の水に戻す(§30.9)。このステップの輸送で規定セルへ流れ込んだ質量を
+  ! 系外へ出し、後続のモジュール(堆積・沈降など)に残さない。自帯の行のみ
+  ! (c1 は自帯でだけ計算される。ハロはステップ頭の交換と置き直しが担う)
+  if (b%nstage > 0) call stage_scalars(sx_mod%h1, .true., dcp%js, dcp%je)
+
   ! 変数を更新して次のタイムステップの準備をする
   call complete(p, g, s, sx_mod)
+
+contains
+
+  ! 有効な輸送物質ごとに水位規定セルを置き直す。水質だけが群ごとの境界濃度
+  ! (b%stage(n)%cq)と台帳の記録場 s%cqx(列 4 = 流出、5 = 流入)を使う。
+  ! 浮遊砂・流木・瓦礫・塩水層は清水(0)
+  subroutine stage_scalars(hh, h_is_vh, jlo, jhi)
+    real, intent(in) :: hh(dcp%ish:, dcp%jsh:)
+    logical, intent(in) :: h_is_vh
+    integer, intent(in) :: jlo, jhi
+    if (h_is_vh) then
+      if (s%sed_active) call stage_scalar_reset(g, b, s%gv, sx_mod%hs1, hh, h_is_vh, jlo, jhi, .false.)
+      if (s%wq_active) call stage_scalar_reset(g, b, s%gv, sx_mod%cq1, hh, h_is_vh, jlo, jhi, .true., &
+                                               s%cqx)
+      if (s%salt_active) call stage_scalar_reset(g, b, s%gv, sx_mod%hss1, hh, h_is_vh, jlo, jhi, .false.)
+      if (s%dw_active) call stage_scalar_reset(g, b, s%gv, sx_mod%hd1, hh, h_is_vh, jlo, jhi, .false.)
+      if (s%bd_active) call stage_scalar_reset(g, b, s%gv, sx_mod%hbd1, hh, h_is_vh, jlo, jhi, .false.)
+    else
+      if (s%sed_active) call stage_scalar_reset(g, b, s%gv, s%hs, hh, h_is_vh, jlo, jhi, .false.)
+      if (s%wq_active) call stage_scalar_reset(g, b, s%gv, s%cq, hh, h_is_vh, jlo, jhi, .true., s%cqx)
+      if (s%salt_active) call stage_scalar_reset(g, b, s%gv, s%hss, hh, h_is_vh, jlo, jhi, .false.)
+      if (s%dw_active) call stage_scalar_reset(g, b, s%gv, s%hd, hh, h_is_vh, jlo, jhi, .false.)
+      if (s%bd_active) call stage_scalar_reset(g, b, s%gv, s%hbd, hh, h_is_vh, jlo, jhi, .false.)
+    end if
+  end subroutine
 end subroutine
 
 
@@ -2693,6 +2737,61 @@ end subroutine
 
 
 !----------------------------------------------------------------------
+! 水位規定セルの輸送物質を「系外の水」の値に戻す(§30.9。2026-11-03)
+!   水位規定セルは水深だけを規定水位で上書きするセルで、輸送物質の受け手のまま
+!   にすると、流れ込んだ質量が溜まり続け(見かけの濃度が上がる)、逆流のときに
+!   その質量が領域へ戻る(実バグ)。海セルと同じく系外の水とみなし、柱状量を
+!   境界濃度 × 矩形換算水深に置き直す。境界濃度は use_cq なら群ごとの
+!   b%stage(n)%cq(水質。m_wq が書く。既定 0)、そうでなければ 0(清水)。
+!   置き直しで出入りした質量(c − c_new)× gv·wfrac·A は、xrow があれば
+!   正を列 4(流出)、負を列 5(流入)へ自帯の行だけ積む(台帳。§30.9)。
+!   hh は use 側の水深: h_is_vh = 真なら矩形換算水深(h1)、偽なら正準水深
+!   (s%h。σ 適用セルは sect_v で換算 = advect_scalar の供給元濃度と同じ定義)。
+!   行 jlo..jhi の規定セルだけを置き直す(ハロ行の冗長計算は呼び出し側が選ぶ)
+!----------------------------------------------------------------------
+subroutine stage_scalar_reset(g, b, gv, c, hh, h_is_vh, jlo, jhi, use_cq, xrow)
+  type(t_geoinfo), intent(in) :: g
+  type(t_boundary), intent(in) :: b
+  real, intent(in) :: gv(dcp%ish:, dcp%jsh:)
+  real, intent(inout) :: c(dcp%ish:, dcp%jsh:)
+  real, intent(in) :: hh(dcp%ish:, dcp%jsh:)
+  logical, intent(in) :: h_is_vh, use_cq
+  integer, intent(in) :: jlo, jhi
+  real(real64), intent(inout), optional :: xrow(dcp%js:, 1:)
+  integer :: n, k, i, j
+  real :: v, cb, cnew, wf
+  real(real64) :: dm
+
+  do n = 1, b%nstage
+    cb = 0.0
+    if (use_cq) cb = b%stage(n)%cq
+    do k = 1, b%stage(n)%ncell
+      i = b%stage(n)%cell(1,k)
+      j = b%stage(n)%cell(2,k)
+      if (j < jlo .or. j > jhi) cycle
+      v = max(hh(i,j), 0.0)
+      if (.not. h_is_vh .and. sct%have_sect) v = sect_v(v, sct%sdep(i,j))
+      cnew = cb * v
+      if (present(xrow)) then
+        if (j >= dcp%js .and. j <= dcp%je) then
+          wf = 1.0
+          if (chn%have_width) wf = chn%wfrac(i,j)
+          dm = real(c(i,j) - cnew, real64) * real(gv(i,j), real64) * real(wf, real64) &
+               * real(g%dx, real64) * real(g%dy, real64)
+          if (dm > 0.0_real64) then
+            xrow(j,4) = xrow(j,4) + dm
+          else
+            xrow(j,5) = xrow(j,5) - dm
+          end if
+        end if
+      end if
+      c(i,j) = cnew
+    end do
+  end do
+end subroutine
+
+
+!----------------------------------------------------------------------
 ! 柱状量スカラーの保存輸送(汎用カーネル。利用者第1号は浮遊砂 s%hs)
 !   連続式(continuous)と同一のエッジ流量 mn1・通過幅係数 fw・
 !   平面積率逆数 winv・空隙率 gv で風上輸送する。係数が完全に一致する
@@ -2710,8 +2809,13 @@ end subroutine
 !       h1 同様に c1 も僅かに負になり得る(f_exflux_reduction=1 で緩和)
 !     - eul = 真(波浪場の浮遊砂。§90)は面流束から h (r u^S − u_a ê_θ) を引く。このときは
 !       一様濃度でもその発散の分だけ濃度が変わる(水と違う速度で動く)
+!     - xrow(任意。水質の台帳。§30.9)を渡すと、系外との出入りを自帯の行
+!       部分和(g)に積む: 1 = 海セルへの流出、2 = 開いた辺から外への流出、
+!       3 = 開いた辺から内への流入。数えるのは c1 の更新と同じ流束 × 供給元
+!       濃度(× セル幾何面積)なので台帳が厳密に閉じる。c1 の更新は変えない
+!       (渡さない呼び出しはビット不変)。行 j の書き手は 1 スレッド = 競合なし
 !----------------------------------------------------------------------
-subroutine advect_scalar(p, g, s, sx, c, c1, cbin, share, eul)
+subroutine advect_scalar(p, g, s, sx, c, c1, cbin, share, eul, xrow)
   type(t_sysparam), intent(in) :: p
   type(t_geoinfo), intent(in) :: g
   type(t_state), intent(in) :: s
@@ -2724,16 +2828,21 @@ subroutine advect_scalar(p, g, s, sx, c, c1, cbin, share, eul)
   logical, intent(in), optional :: eul               ! 真なら Euler 平均流速 u^E = u^L − u^S と
                                                      !   岸向きの速度 u_a で運ぶ(波浪場の浮遊砂。
                                                      !   省略時は偽。§90)
+  real(real64), intent(inout), optional :: xrow(dcp%js:, 1:)  ! 系外との出入りの行部分和
+                                                     !   (g。上の契約。§30.9)
   integer :: i, j, k
   integer :: in, jn, ie, je
   integer :: iu, ju, id, jd, iuu, juu   ! 風上・風下・さらに風上のセル(MUSCL。§78)
   integer :: im, jm, ing, jng           ! 側方 Neumann の辺の鏡像セル
   real :: mne, fw, winv, cdon, sh, cdn, cuu, rs, qsx, qsy, qdx, qdy
-  logical :: has_cbin, muscl, nmn, use_eul, okn, okuu, stk, asym
+  real(real64) :: acell8, dmx
+  logical :: has_cbin, muscl, nmn, use_eul, okn, okuu, stk, asym, has_x
   integer, parameter :: ke(1:8) = [ 1, 2, 3, 4, 4, 3, 2, 1]
   real, parameter :: sign_e(1:8) = [1., 1., 1., 1., -1., -1., -1., -1.]
 
   has_cbin = present(cbin)
+  has_x = present(xrow)
+  acell8 = real(g%dx, real64) * real(g%dy, real64)
   sh = 1.0
   if (present(share)) sh = share
   muscl = opt%f_scalar_scheme == 3
@@ -2745,7 +2854,7 @@ subroutine advect_scalar(p, g, s, sx, c, c1, cbin, share, eul)
 
   !$omp parallel do schedule(dynamic) private(i, j, k, in, jn, ie, je, mne, fw, winv, cdon, &
   !$omp                                      iu, ju, id, jd, iuu, juu, cdn, cuu, im, jm, nmn, qsx, qsy, &
-  !$omp                                      ing, jng, okn, okuu, qdx, qdy)
+  !$omp                                      ing, jng, okn, okuu, qdx, qdy, dmx)
   do j = dcp%js, dcp%je
     do i = g%wx(1,j), g%wx(2,j)
       if (g%sw(i,j) > 0) cycle
@@ -2899,6 +3008,24 @@ subroutine advect_scalar(p, g, s, sx, c, c1, cbin, share, eul)
         fw = 1.0
         if (chn%have_frw) fw = chn%frw(ke(k),ie,je)
         if (chn%have_fwd) fw = fw * chn%fwd(ke(k),ie,je)
+        ! 系外との出入りの記録(xrow を渡した呼び出しだけ。§30.9): この面を
+        ! 通る質量 = 下の c1 の変化 × セル内質量の基底 gv·wfrac·A(winv と gv が
+        ! 約分されて mne·cdon·sh·mn2dh·fw·A)。海セルは受け手にならないので
+        ! 海への流出はそのまま系外へ出る(海からの流入は清水 = cdon = 0 で
+        ! ここに来ない)。開いた辺は流出・流入を分けて数える。近傍が領域外
+        ! (x <= 0)なら sw を読まない(sw・h は全域+帯の範囲しか確保されない)
+        if (has_x) then
+          dmx = real(mne * cdon * sh * geo%mn2dh(k) * fw, real64) * acell8
+          if (g%x(in,jn) <= 0) then
+            if (dmx > 0.0_real64) then
+              xrow(j,2) = xrow(j,2) + dmx
+            else
+              xrow(j,3) = xrow(j,3) - dmx
+            end if
+          else if (g%sw(in,jn) > 0) then
+            xrow(j,1) = xrow(j,1) + dmx
+          end if
+        end if
         c1(i,j) = c1(i,j) - mne * cdon * sh * geo%mn2dh(k) * fw * winv / s%gv(i,j)
       end do
     end do

@@ -58,8 +58,10 @@ double-count internal transfers as losses from the whole system.
 
 The `_g` names are mass columns [g] in `result/wq.csv`. Concentration `C`
 [mg/L] and `mass_surface_g` (current total surface mass [g]) are different
-quantities. The current CSV has no separate columns for boundary inflow,
-boundary outflow or budget residual (see "Output and monitoring").
+quantities. Outflow to sea cells, the exchange through open edges and the
+exchange with water-level cells are recorded in the trailing columns
+`out_sea_g`, `out_edge_g`, `in_edge_g`, `out_stage_g` and `in_stage_g`. There
+is no separate column for the budget residual (see "Output and monitoring").
 
 ## Substance properties
 
@@ -142,7 +144,17 @@ distribution over the whole domain
 [Boundary conditions](boundary.md), `wq_in_conc(n)` (constant) or
 `wq_in_series(:,:,n)` (time series).
 
-**Outputs for this section**: the cumulative input of each route is recorded in the `in_point_g` (point), `in_area_g` (area), `in_map_g` (distributed) and `in_rain_g` (rain concentration) columns of `wq.csv`. Input through boundary inflow concentrations has no separate column, so account for it with the transect load columns (`L`, `Lcum`) when checking the budget. The spreading after input is seen in the concentration field `C0001...` ([Output and monitoring](#output-and-monitoring)).
+**Boundary concentration of water-level cells** - the water-level (stage)
+cells of [Boundary conditions](boundary.md) are outside water for the
+substance (the same as the sea cells of the sea mask). Substance that flows
+into a water-level cell leaves the system, and water entering from a
+water-level cell carries the concentration `wq_stage_conc(n)` (constant) or
+`wq_stage_series(:,:,n)` (time series = days elapsed, mg/L), per number of
+the water-level cell group. When omitted, it is clean water (concentration
+0). Use it to give the concentration of water entering through a backwater
+or tidal boundary (that of a downstream lake or of the sea, for example).
+
+**Outputs for this section**: the cumulative input of each route is recorded in the `in_point_g` (point), `in_area_g` (area), `in_map_g` (distributed) and `in_rain_g` (rain concentration) columns of `wq.csv`. Input through boundary inflow concentrations is recorded in the `in_edge_g` column, together with inflow through side-Neumann edges, and the inflow from water-level cells in the `in_stage_g` column. The spreading after input is seen in the concentration field `C0001...` ([Output and monitoring](#output-and-monitoring)).
 
 ## Single-phase settling (wq_vs)
 
@@ -399,7 +411,8 @@ concentration).
   (surcharge and outfalls), `to_gwc_g` = removed to the conduit side by
   inlets, `decay_g` = mass lost by die-off. Include initial mass, other
   inputs/exchanges and current storage when checking closure. The CSV has
-  no separate residual column; account for boundary transport separately.
+  no separate residual column (the exchange with the sea, open edges and
+  water-level cells is in the five trailing columns from `out_sea_g` on).
 - The concentration column C of the probe CSVs monitors the time series
   at specific points (shelters, wells, ...).
 
@@ -442,10 +455,22 @@ The three ways a field gets written (automatic / flag / riding on a flag) and th
   cumulative (every `dt_recrd`).
 - The screen and Log.txt have no water-quality column (the storage column S
   of the water budget is unchanged).
-- There is no column for the mass that leaves the system through the sea
-  cells of the sea mask (fn_sw) or through the edge boundaries. The outflow
-  to outside the system is obtained as the residual: cumulative inputs −
-  internal transfers − current mass.
+- The exchange with the outside of the system is recorded cumulatively in
+  the five trailing columns: outflow to the sea cells of the sea mask
+  (fn_sw) `out_sea_g`, outflow through open edges (free outflow, long-wave
+  radiation, side Neumann and inflow-segment faces) `out_edge_g`, inflow
+  through the same faces `in_edge_g` (mass entering at the boundary inflow
+  concentration of an inflow segment and at the mirror-cell concentration of
+  a side-Neumann edge), outflow to water-level cells `out_stage_g` and inflow
+  from water-level cells `in_stage_g`. The transport computation counts the
+  mass crossing each face with the same flux that updates the concentration,
+  so the ledger closes (see "How to read and check" below). Water-level cells
+  are outside water: every step their column mass is reset to the boundary
+  concentration times the water depth, and the mass exchanged by the reset
+  is counted (the current content of the water-level cells is included in
+  `mass_surface_g`, which is 0 when the boundary concentration is 0). Groundwater exchanges no water
+  with sea cells ([groundwater](gwflow.md), lateral flow), so there is no
+  path by which subsurface mass leaves directly to the sea.
 - Sea cells hold no mass (a sea area with the initial concentration wq_c0
   is zeroed; sea cells are excluded from decay and from the ledger). Water
   that flows from the sea onto land is clean water (concentration 0). To
@@ -463,6 +488,7 @@ The three ways a field gets written (automatic / flag / riding on a flag) and th
 | decay_g | total cumulative decay in surface water, groundwater, buildup, dams and ponds |
 | settle_g | cumulative surface settling; loss for f_wq_settle=0, internal transfer to the buildup pool for 1 |
 | mass_surface_g, mass_gw_g, mass_pool_g, mass_dam_g, mass_rs_g | current mass in surface water, groundwater, buildup, storage-type dams/lakes and retention ponds |
+| out_sea_g, out_edge_g, in_edge_g, out_stage_g, in_stage_g | cumulative exchange with the outside: outflow to sea cells, outflow through open edges, inflow through open edges, outflow to water-level cells, inflow from water-level cells (appended at the end on 2026-11-03; the positions of the existing columns are unchanged) |
 
 **Measurements** (probe and transect columns)
 
@@ -488,11 +514,17 @@ The three ways a field gets written (automatic / flag / riding on a flag) and th
   Summing concentrations does not give mass. Dry cells write C = 0; check
   residual mass in the ledger.
 - The current mass of the whole system is the sum of the five `mass_*_g`
-  columns. For closure, start from the initial mass plus external inputs
-  and subtract removals and decay; internal transfers cancel. There are no
-  separate columns for boundary inflow, outflow or residual, so with open
-  boundaries or segment inflow include their transport (transect L, Lcum)
-  in the check.
+  columns. The budget closes as "mass of the whole system at the start of
+  the run + cumulative inputs (`in_point_g` to `in_gwc_g`, `in_bldup_g`,
+  `in_edge_g`, `in_stage_g`) − removals from the system (`decay_g`,
+  `settle_g` with `f_wq_settle=0`, `to_gwc_g`, `out_sea_g`, `out_edge_g`,
+  `out_stage_g`, capture by fixed-level lakes) = current mass of the whole
+  system". Internal transfers
+  (`wash_g`, `to_gw_g`, `seep_g`, `rel_dam_g`, `to_rs_g`, `settle_g` to the
+  pool, and `to_dam_g` of storage-type lakes) are not counted twice.
+  `to_dam_g` is the sum of the captures by storage-type and fixed-level
+  lakes, so with a fixed-level lake read its part as a removal from the
+  system. There is no separate residual column.
 - There is no run-maximum concentration field; if needed, refine
   `dt_file` and take the maximum of the C series in post-processing.
 

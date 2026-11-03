@@ -78,7 +78,7 @@ module m_gwflow_conduit
   use, intrinsic :: iso_fortran_env, only : real64
   use m_sysparam, only : t_sysparam
   use m_geoinfo, only : t_geoinfo
-  use m_state, only : t_state
+  use m_state, only : t_state, gw_to_h
   use m_gwflow_lateral, only : t_conduitlayer, t_gwlat, conduit_head, conduit_core, &
                                conduit_build_cnd, gwflow_conduit_dtcheck, &
                                gwflow_lateral_geom_init
@@ -547,7 +547,7 @@ subroutine gwflow_conduit_calc(gwc, lat, p, g, s, it, dts)
   integer, intent(in) :: it
   real, intent(in) :: dts
   integer :: i, j, di2, dj2, isub
-  real :: capc, hcnd, hs, q1, fx, hother, capo
+  real :: capc, hcnd, hs, q1, fx, hother, capo, fwh
   real :: esea, hgt, ca, syic, syis
   logical :: hassea
 
@@ -555,8 +555,13 @@ subroutine gwflow_conduit_calc(gwc, lat, p, g, s, it, dts)
 
   ! (1) 地表交換(枡・吸込穴。堰式流入/オリフィス式噴出。反対称適用。
   !     owner-compute。s%h を変更したら s%e を回復する = 契約(2))
+  !     交換量 fx は管路の貯留(hgc)の単位で、地表水深は fwh 倍で変わる
+  !     (河道幅セルで 1/wfrac = 地表の水が河道の平面に載る。§26.1)。
+  !     等化上限の閉形式は「地表水位が 1:1 で動く」形なので、水位・勾配を
+  !     fwh で割って渡す(1 次式の両辺を fwh で割るのと同じ。fwh = 1 なら
+  !     引数は厳密に従来と同じ)
   if (gwc%surf) then
-    !$omp parallel do schedule(static) private(i, j, capc, hcnd, hs, q1, fx, syic, syis)
+    !$omp parallel do schedule(static) private(i, j, capc, hcnd, hs, q1, fx, syic, syis, fwh)
     do j = dcp%js, dcp%je
       do i = g%wx(1,j), g%wx(2,j)
         if (g%x(i,j) <= 0) cycle
@@ -568,6 +573,7 @@ subroutine gwflow_conduit_calc(gwc, lat, p, g, s, it, dts)
         syis = gwc%cl%syinv_slot(i,j)
         hcnd = conduit_head(s%hgc(i,j), capc, gwc%cl%zbot(i,j), syic, syis)
         hs = s%z(i,j) + s%h(i,j)
+        fwh = gw_to_h(s, i, j)
         if (hs > hcnd .and. s%h(i,j) > 0.0) then
           ! 流入(不圧 = 堰式の自由流入、満管 = オリフィス式の圧力流入)
           if (s%hgc(i,j) >= capc) then
@@ -575,28 +581,29 @@ subroutine gwflow_conduit_calc(gwc, lat, p, g, s, it, dts)
           else
             q1 = gwc%cw * s%h(i,j)**1.5
           end if
-          fx = min(gwc%dinlet(i,j) * q1 * dts, s%h(i,j), &
-                   eq_inflow(capc, gwc%cl%zbot(i,j), s%hgc(i,j), hs, syic, syis))
+          fx = min(gwc%dinlet(i,j) * q1 * dts, s%h(i,j) / fwh, &
+                   eq_inflow(capc, gwc%cl%zbot(i,j) / fwh, s%hgc(i,j), hs / fwh, &
+                             syic / fwh, syis / fwh))
           if (fx > 0.0) then
-            s%h(i,j) = s%h(i,j) - fx
+            s%h(i,j) = max(s%h(i,j) - fx * fwh, 0.0)
             s%hgc(i,j) = s%hgc(i,j) + fx
             s%e(i,j) = s%z(i,j) + s%h(i,j)
-            ! 水質連携: 流入量を記録(fxg と同じ契約。wq が消費・ゼロ戻し)
-            if (allocated(s%fxci)) s%fxci(i,j) = s%fxci(i,j) + fx
+            ! 水質連携: 流入量を地表の水深で記録(fxg と同じ契約。wq が消費・ゼロ戻し)
+            if (allocated(s%fxci)) s%fxci(i,j) = s%fxci(i,j) + fx * fwh
             ! 溶食(geomorph f_dissol の吸込穴項)用の流入量の積算(同じ契約。§86)
-            if (allocated(s%fxdi)) s%fxdi(i,j) = s%fxdi(i,j) + fx
+            if (allocated(s%fxdi)) s%fxdi(i,j) = s%fxdi(i,j) + fx * fwh
           end if
         else if (hcnd > hs .and. s%hgc(i,j) > capc) then
           ! 噴出(被圧時のみ。オリフィス式。被圧分と等化量で制限)
           q1 = gwc%co * sqrt(2.0 * p%gg * (hcnd - hs))
           fx = min(gwc%dinlet(i,j) * q1 * dts, s%hgc(i,j) - capc, &
-                   (hcnd - hs) / (1.0 + syis))
+                   (hcnd - hs) / (fwh + syis))
           if (fx > 0.0) then
             s%hgc(i,j) = s%hgc(i,j) - fx
-            s%h(i,j) = s%h(i,j) + fx
+            s%h(i,j) = s%h(i,j) + fx * fwh
             s%e(i,j) = s%z(i,j) + s%h(i,j)
-            ! 水質連携: 噴出量を記録(wq が固定濃度の質量を同伴させる)
-            if (allocated(s%fxco)) s%fxco(i,j) = s%fxco(i,j) + fx
+            ! 水質連携: 噴出量を地表の水深で記録(wq が固定濃度の質量を同伴させる)
+            if (allocated(s%fxco)) s%fxco(i,j) = s%fxco(i,j) + fx * fwh
           end if
         end if
       end do
@@ -671,7 +678,7 @@ subroutine gwflow_conduit_calc(gwc, lat, p, g, s, it, dts)
   if (gwc%outf) then
     call par_halo_cell(s%e)
     !$omp parallel do schedule(static) &
-    !$omp   private(i, j, di2, dj2, capc, ca, hcnd, esea, hs, hgt, q1, fx, hassea, syic, syis)
+    !$omp   private(i, j, di2, dj2, capc, ca, hcnd, esea, hs, hgt, q1, fx, hassea, syic, syis, fwh)
     do j = dcp%js, dcp%je
       do i = g%wx(1,j), g%wx(2,j)
         if (g%x(i,j) <= 0) cycle
@@ -725,14 +732,18 @@ subroutine gwflow_conduit_calc(gwc, lat, p, g, s, it, dts)
           hs = s%z(i,j) + s%h(i,j)
           if (hcnd <= hs) cycle                ! フラップ: 逆流なし
           q1 = ca * sqrt(2.0 * p%gg * (hcnd - hs))
+          ! 地表水深は fwh 倍で上がる(河道幅セル。§26.1)。等化上限は (1) と同じく
+          ! 水位・勾配を fwh で割って渡す
+          fwh = gw_to_h(s, i, j)
           fx = min(q1 * dts / (g%dx * g%dy), s%hgc(i,j), &
-                   eq_outflow(capc, gwc%cl%zbot(i,j), s%hgc(i,j), hs, syic, syis))
+                   eq_outflow(capc, gwc%cl%zbot(i,j) / fwh, s%hgc(i,j), hs / fwh, &
+                              syic / fwh, syis / fwh))
           if (fx > 0.0) then
             s%hgc(i,j) = s%hgc(i,j) - fx
-            s%h(i,j) = s%h(i,j) + fx
+            s%h(i,j) = s%h(i,j) + fx * fwh
             s%e(i,j) = s%z(i,j) + s%h(i,j)
-            ! 水質連携: 吐口放流量を記録(wq が固定濃度の質量を同伴させる)
-            if (allocated(s%fxco)) s%fxco(i,j) = s%fxco(i,j) + fx
+            ! 水質連携: 吐口放流量を地表の水深で記録(wq が固定濃度の質量を同伴させる)
+            if (allocated(s%fxco)) s%fxco(i,j) = s%fxco(i,j) + fx * fwh
           end if
         end if
       end do

@@ -118,6 +118,10 @@ module m_boundary
     real, allocatable :: val(:,:)          ! 時系列 (1:2, 1:nval) (s, m)。
                                            !   固定値指定は1点時系列に退化
     real :: eta = 0.0                      ! 現時刻の規定水位 (m)
+    real :: cq = 0.0                       ! 現時刻の輸送物質(水質)の境界濃度 (g/m3 = mg/L)。
+                                           !   水位規定セルは輸送物質にとって「系外の水」で、
+                                           !   流入はこの濃度(既定 0 = 清水)。m_wq が
+                                           !   wq_stage_conc/series から書く。§30.9
   end type
 
   type t_bound_inflow                      ! 区間流入1個

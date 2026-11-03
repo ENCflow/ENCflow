@@ -15,7 +15,9 @@ module m_wq
   !           降雨中濃度(湿性沈着 wq_rain_conc/wq_rain_series、mg/L)は
   !           地表到達雨量 s%pre×濃度を全域投入(これも重ね合わせ)。
   !           境界流入濃度(区間流入ごと、mg/L)は b%cqin テーブル経由で
-  !           輸送カーネルに渡す
+  !           輸送カーネルに渡す。水位規定セルは系外の水で、その濃度
+  !           (水位規定セル群ごと、mg/L。既定 0 = 清水)は b%stage(n)%cq 経由で
+  !           swflow_enc の置き直し(§30.9)に渡す
   !   浸透:   f_wq_infil=1(既定)で浸透水に濃度同伴し、地下質量プール
   !           s%cg へ移す。gwflow の鉛直交換が s%fxg に浸透量を記録し、
   !           本モジュールが読んでゼロ戻しする契約。0 で地表に残留
@@ -60,8 +62,9 @@ module m_wq
   !   save:   s%cq と cg をモジュール私有ファイル wq.dat で保存(§7 の
   !           契約C と同型。state.dat の形式は不変。cg の基底変更
   !           (2026-08-26)で save_version を更新済み)
-  !   診断:   result/wq.csv(投入・境界流入・浸透・ダム捕捉・系外流出は
-  !           収支残差として台帳化。rank0、dt_recrd 間隔)。
+  !   診断:   result/wq.csv(投入・浸透・ダム捕捉・減衰など。海セル・開いた辺・
+  !           水位規定セルとの出入りは swflow_enc が記録場 s%cqx に積み、末尾の
+  !           out_*/in_* 列へ。§30.9。rank0、dt_recrd 間隔)。
   !           濃度場 C(m_output)とプローブ・測線負荷列(m_record)は
   !           s%cqc / s%cq を読む
   !   MPI:    発生源はセル局所、台帳集計は par_sum_rows(決定的)
@@ -73,7 +76,7 @@ module m_wq
   use m_boundary, only : t_boundary, e_struct_dam, interp_series, read_cell_file2
   use m_swflow_enc, only : swflow_vh, chn
   use m_gwflow_conduit, only : t_gwcond, gwflow_conduit_ready
-  use list_wq, only : t_list_wq, list_wq_read, nwqgmax, nwqcmax, nwqvmax, nwqfmax
+  use list_wq, only : t_list_wq, list_wq_read, nwqgmax, nwqcmax, nwqvmax, nwqfmax, nwqsmax
   use m_fileio, only : fileio_read_matrix
   use m_restart, only : restart_write_cell, restart_read_cell, restart_write_zero, restart_skip
   use m_sysdep_util, only : sysdep_mkdir
@@ -141,6 +144,10 @@ module m_wq
     integer, allocatable :: inifl(:)                ! 対象の区間流入番号
     real, allocatable :: incval(:)                  ! 一定濃度 (g/m3)
     type(t_wqsrc), allocatable :: inser(:)          ! 時系列(ser のみ使用)
+    integer :: nst = 0                              ! 水位規定セルの境界濃度の指定数(§30.9)
+    integer, allocatable :: stgrp(:)                ! 対象の水位規定セル群の番号
+    real, allocatable :: stval(:)                   ! 一定濃度 (g/m3)
+    type(t_wqsrc), allocatable :: stser(:)          ! 時系列(ser のみ使用)
     real, allocatable :: rmap(:,:)                  ! 分布面源の投入率 (g/s/m2。地理的
                                                     !   面積あたり。帯。未指定なら未確保)
     logical :: have_rain = .false.                  ! 降雨中濃度(湿性沈着)の有効
@@ -162,12 +169,15 @@ module m_wq
     real(real64) :: dam_decay = 0.0_real64  ! ダムプールの減衰消失の累積 (g。全ランク
                                             !   同値 = 台帳へは rank0 の出力時に加算)
     ! 診断(行部分和 real64。累積 m3 でなく質量 g)
-    real(real64), allocatable :: vrow(:,:)  ! (js:je, 1:15) 1=点源 2=面源 3=浸透(→cg)
+    real(real64), allocatable :: vrow(:,:)  ! (js:je, 1:20) 1=点源 2=面源 3=浸透(→cg)
                                             !   4=ダム捕捉 5=減衰消失 6=沈降
                                             !   7=分布面源 8=降雨沈着 9=蓄積(→bp)
                                             !   10=洗い出し(bp→cq) 13=湧出還元(cg→cq)
                                             !   14=ダム放流(プール→cq) 15=ため池吸収(→crs)
                                             !   11=管路噴出・吐口の投入 12=枡流入(→管路台帳)
+                                            !   16=海セルへの流出 17=開いた辺からの流出
+                                            !   18=開いた辺からの流入 19=水位規定セルへの
+                                            !   流出 20=水位規定セルからの流入(s%cqx から。§30.9)
     integer :: un = 0                       ! CSV 装置番号(rank0。open(newunit=) は負値。§22)
   end type
 
@@ -269,6 +279,9 @@ subroutine m_wq_init(wq, p, g, b, s)
   ! --- 境界流入濃度 ---
   call setup_inflow_conc(wq, g, b, list)
 
+  ! --- 水位規定セルの境界濃度(既定 0 = 清水。§30.9)---
+  call setup_stage_conc(wq, b, list)
+
   ! --- ダム捕捉台帳(全ダム・湖沼が対象) ---
   call setup_dams(wq, g, b)
 
@@ -330,15 +343,24 @@ subroutine m_wq_init(wq, p, g, b, s)
   ! --- リスタート ---
   if (p%f_state_restore > 0) call restore_state(wq, p, g, s)
 
-  allocate(wq%vrow(dcp%js:dcp%je, 1:15), source = 0.0_real64)
+  allocate(wq%vrow(dcp%js:dcp%je, 1:20), source = 0.0_real64)
+  ! 系外との出入りの記録場(swflow_enc の輸送カーネルと水位規定セルの置き直しが
+  ! 行部分和で書き、m_wq_calc が台帳へ移してゼロ戻し。fxg と同型の契約。§30.9)
+  allocate(s%cqx(dcp%js:dcp%je, 1:5), source = 0.0_real64)
+  ! 水位規定セルの境界濃度の初期値(最初のステップの置き直しが読む。以後は
+  ! m_wq_calc が毎ステップ更新する。restore 時は復元した時刻の値 = 連続ランと同じ)
+  call update_stage_conc(wq, b, s%t)
 
   ! --- 診断 CSV(rank0。累積はラン先頭からの積算 = restore でリセット) ---
+  !     系外との出入りの列(out_sea_g 以降)は末尾に追加した(§30.9。既存の
+  !     列の位置は変えない)
   if (is_root) then
     open(newunit=wq%un, file=trim(p%dir_result)//"/wq.csv", status='replace')
     write(wq%un, '(a)') "time_s,in_point_g,in_area_g,in_map_g,in_rain_g,in_gwc_g," &
                         //"in_bldup_g,wash_g,to_gw_g,seep_g,to_gwc_g,to_dam_g,rel_dam_g," &
                         //"to_rs_g,decay_g,settle_g,mass_surface_g,mass_gw_g,mass_pool_g," &
-                        //"mass_dam_g,mass_rs_g"
+                        //"mass_dam_g,mass_rs_g,out_sea_g,out_edge_g,in_edge_g,out_stage_g," &
+                        //"in_stage_g"
   end if
 
   s%wq_active = .true.
@@ -542,6 +564,94 @@ subroutine setup_inflow_conc(wq, g, b, list)
   ! 濃度テーブル(mg/L = g/m3。カーネルの風上濃度 cq/h と同じ単位系。
   ! 値の充填は m_wq_calc が毎ステップ行う)
   allocate(b%cqin(dcp%ish:dcp%ieh, dcp%jsh:dcp%jeh), source = 0.0)
+end subroutine
+
+
+!----------------------------------------------------------------------
+! 水位規定セルの境界濃度の解釈(水位規定セル群の番号ごと。§30.9)
+!   水位規定セルは輸送物質にとって系外の水(swflow_enc が毎ステップ柱状量を
+!   境界濃度 × 水深に置き直す)。指定のない群は清水(b%stage(n)%cq = 0 のまま)
+!----------------------------------------------------------------------
+subroutine setup_stage_conc(wq, b, list)
+  type(t_wq), intent(inout) :: wq
+  type(t_boundary), intent(inout) :: b
+  type(t_list_wq), intent(in) :: list
+  integer :: ist, n, k, m
+
+  wq%nst = 0
+  do ist = 1, nwqsmax
+    if (list%wq_stage_conc(ist) > -9998.0 .or. list%wq_stage_series(1,1,ist) > -9998.0) then
+      wq%nst = wq%nst + 1
+    end if
+  end do
+  if (wq%nst == 0) return
+
+  if (b%nstage <= 0) then
+    call par_stop("list_wq: wq_stage_conc/wq_stage_series require water-level cell groups " &
+                  //"in &list_bound_stage")
+  end if
+  allocate(wq%stgrp(1:wq%nst), source = 0)
+  allocate(wq%stval(1:wq%nst), source = 0.0)
+  allocate(wq%stser(1:wq%nst))
+  m = 0
+  do ist = 1, nwqsmax
+    if (list%wq_stage_conc(ist) <= -9998.0 .and. list%wq_stage_series(1,1,ist) <= -9998.0) cycle
+    m = m + 1
+    if (ist > b%nstage) then
+      call par_stop("list_wq: wq_stage_*("//itoa(ist)//") has no matching water-level cell group")
+    end if
+    wq%stgrp(m) = ist
+    n = 0
+    do k = 1, nwqvmax
+      if (list%wq_stage_series(1,k,ist) <= -9998.0) exit
+      n = n + 1
+    end do
+    if (n > 0 .and. list%wq_stage_conc(ist) > -9998.0) then
+      call par_stop("list_wq: specify wq_stage_*("//itoa(ist)//") by either a constant " &
+                    //"or a time series, not both")
+    end if
+    if (n > 0) then
+      do k = 1, n
+        if (list%wq_stage_series(2,k,ist) < 0.0) then
+          call par_stop("list_wq: wq_stage_series("//itoa(ist)//") concentrations must be >= 0")
+        end if
+        if (k > 1) then
+          if (list%wq_stage_series(1,k,ist) <= list%wq_stage_series(1,k-1,ist)) then
+            call par_stop("list_wq: wq_stage_series("//itoa(ist)//") must have monotonically " &
+                          //"increasing times (elapsed days)")
+          end if
+        end if
+      end do
+      allocate(wq%stser(m)%ser(1:2, 1:n))
+      wq%stser(m)%ser(1,1:n) = list%wq_stage_series(1,1:n,ist) * secday
+      wq%stser(m)%ser(2,1:n) = list%wq_stage_series(2,1:n,ist)
+      wq%stser(m)%nser = n
+    else
+      if (list%wq_stage_conc(ist) < 0.0) then
+        call par_stop("list_wq: wq_stage_conc("//itoa(ist)//") must be >= 0")
+      end if
+      wq%stval(m) = list%wq_stage_conc(ist)
+    end if
+  end do
+end subroutine
+
+
+!----------------------------------------------------------------------
+! 水位規定セル群の境界濃度を時刻 t の値にする(mg/L = g/m3。全ランクが同じ値を
+! 冗長に計算する = t の純関数。§30.9)
+!----------------------------------------------------------------------
+subroutine update_stage_conc(wq, b, t)
+  type(t_wq), intent(in) :: wq
+  type(t_boundary), intent(inout) :: b
+  real, intent(in) :: t
+  integer :: m
+  do m = 1, wq%nst
+    if (wq%stser(m)%nser > 0) then
+      b%stage(wq%stgrp(m))%cq = interp_series(wq%stser(m)%ser, wq%stser(m)%nser, t)
+    else
+      b%stage(wq%stgrp(m))%cq = wq%stval(m)
+    end if
+  end do
 end subroutine
 
 
@@ -866,6 +976,15 @@ subroutine m_wq_calc(wq, p, g, b, s, gwc, it)
 
   acell = real(g%dx, real64) * real(g%dy, real64)
 
+  ! (0) 系外との出入り(このステップの輸送で swflow_enc が s%cqx に記録した
+  !     行部分和 g)を台帳へ移しゼロ戻し(fxg と同型の契約。§30.9)
+  if (allocated(s%cqx)) then
+    do j = dcp%js, dcp%je
+      wq%vrow(j,16:20) = wq%vrow(j,16:20) + s%cqx(j,1:5)
+    end do
+    s%cqx(:,:) = 0.0_real64
+  end if
+
   ! (1) 境界流入濃度テーブル(次ステップの advect_scalar が読む)
   do m = 1, wq%nin
     if (wq%inser(m)%nser > 0) then
@@ -875,6 +994,8 @@ subroutine m_wq_calc(wq, p, g, b, s, gwc, it)
     end if
     call fill_inflow_conc(g, b, wq%inifl(m), rate)
   end do
+  ! (1b) 水位規定セルの境界濃度(次ステップの swflow_enc の置き直しが読む。§30.9)
+  call update_stage_conc(wq, b, s%t)
 
   ! (2) 浸透同伴(fxg = このステップの浸透量。柱状量の同率移動なので
   !     面積基底によらず質量保存が厳密。消費後ゼロ戻し)
@@ -1388,7 +1509,7 @@ subroutine m_wq_record(wq, p, g, s)
   type(t_sysparam), intent(in) :: p
   type(t_geoinfo), intent(in) :: g
   type(t_state), intent(in) :: s
-  real(real64) :: v(1:15), msur, mgw, mpool, mdam, mrs, acell
+  real(real64) :: v(1:20), msur, mgw, mpool, mdam, mrs, acell
   real(real64) :: rows(dcp%js:dcp%je), rows2(dcp%js:dcp%je), rows3(dcp%js:dcp%je)
   real(real64) :: rows4(dcp%js:dcp%je)
   integer :: i, j, k
@@ -1396,7 +1517,7 @@ subroutine m_wq_record(wq, p, g, s)
   if (.not. wq%enabled) return
 
   acell = real(g%dx, real64) * real(g%dy, real64)
-  do k = 1, 15
+  do k = 1, 20
     call par_sum_rows(wq%vrow(:,k), v(k))
   end do
   rows(:) = 0.0_real64
@@ -1426,10 +1547,11 @@ subroutine m_wq_record(wq, p, g, s)
   end do
 
   if (is_root .and. wq%un /= 0) then
-    write(wq%un, '(f0.2,20(",",es15.7))') s%t, es_out([v(1), v(2), v(7), v(8), v(11), v(9), &
+    write(wq%un, '(f0.2,25(",",es15.7))') s%t, es_out([v(1), v(2), v(7), v(8), v(11), v(9), &
                                           v(10), v(3), v(13), v(12), v(4), v(14), v(15), &
                                           v(5) + wq%dam_decay, v(6), &
-                                          msur, mgw, mpool, mdam, mrs])
+                                          msur, mgw, mpool, mdam, mrs, &
+                                          v(16), v(17), v(18), v(19), v(20)])
     flush(wq%un)
   end if
 end subroutine
@@ -1560,6 +1682,9 @@ subroutine m_wq_dispose(wq, p, g, s)
   if (allocated(wq%inifl)) deallocate(wq%inifl)
   if (allocated(wq%incval)) deallocate(wq%incval)
   if (allocated(wq%inser)) deallocate(wq%inser)
+  if (allocated(wq%stgrp)) deallocate(wq%stgrp)
+  if (allocated(wq%stval)) deallocate(wq%stval)
+  if (allocated(wq%stser)) deallocate(wq%stser)
   if (allocated(wq%rmap)) deallocate(wq%rmap)
   if (allocated(wq%dam)) deallocate(wq%dam)
   if (allocated(wq%vrow)) deallocate(wq%vrow)

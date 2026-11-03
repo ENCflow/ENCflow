@@ -2,7 +2,7 @@
 
 [ユーザーガイド目次へ](../users_guide.md)
 
-namelist パラメータ名から章を引く索引です(アルファベット順、全 762 項目)。
+namelist パラメータ名から章を引く索引です(アルファベット順、全 764 項目)。
 この索引は list_*.f90 の namelist 宣言から機械抽出で生成されています
 (developer.md §35.1)。
 
@@ -762,6 +762,8 @@ namelist パラメータ名から章を引く索引です(アルファベット�
 | wq_rain_conc | &list_wq | [水質](wq.md) |
 | wq_rain_series | &list_wq | [水質](wq.md) |
 | wq_rg | &list_wq | [水質](wq.md) |
+| wq_stage_conc | &list_wq | [水質](wq.md) |
+| wq_stage_series | &list_wq | [水質](wq.md) |
 | wq_thalf | &list_wq | [水質](wq.md) |
 | wq_vs | &list_wq | [水質](wq.md) |
 | wq_wash_kf | &list_wq | [水質](wq.md) |

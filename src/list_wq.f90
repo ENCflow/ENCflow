@@ -9,13 +9,14 @@ module list_wq
   private
   public :: t_list_wq
   public :: list_wq_read
-  public :: nwqgmax, nwqcmax, nwqvmax, nwqfmax
+  public :: nwqgmax, nwqcmax, nwqvmax, nwqfmax, nwqsmax
 
   integer, parameter :: maxpathlen = 256
   integer, parameter :: nwqgmax = 20     ! 発生源グループの最大数(点源・面源各)
   integer, parameter :: nwqcmax = 400    ! 1グループのセル最大数(inline 指定時)
   integer, parameter :: nwqvmax = 400    ! 負荷・濃度時系列の最大点数
   integer, parameter :: nwqfmax = 40     ! 境界流入区間の最大数
+  integer, parameter :: nwqsmax = 50     ! 水位規定セル群の最大数(&list_bound_stage と同じ)
 
   type t_list_wq
     integer :: f_wq = 1                            ! 0 でファイルを残したまま一時無効化
@@ -71,6 +72,10 @@ module list_wq
     ! ---- 境界流入濃度(list_boundary の区間流入番号ごと。一定か時系列)----
     real :: wq_in_conc(1:nwqfmax) = -9999.0        ! 一定濃度 (mg/L)
     real, allocatable :: wq_in_series(:,:,:)       ! (1:2, 1:nwqvmax, 1:nwqfmax) = (経過日, mg/L)
+    ! ---- 水位規定セルの境界濃度(list_boundary の水位規定セル群の番号ごと。一定か時系列。
+    !      省略 = 清水。水位規定セルは輸送物質にとって系外の水。§30.9)----
+    real :: wq_stage_conc(1:nwqsmax) = -9999.0     ! 一定濃度 (mg/L)
+    real, allocatable :: wq_stage_series(:,:,:)    ! (1:2, 1:nwqvmax, 1:nwqsmax) = (経過日, mg/L)
   end type
 
 contains
@@ -110,6 +115,8 @@ subroutine list_wq_read(p, list)
   real :: wq_rain_series(1:2,1:nwqvmax)
   real :: wq_in_conc(1:nwqfmax)
   real :: wq_in_series(1:2,1:nwqvmax,1:nwqfmax)
+  real :: wq_stage_conc(1:nwqsmax)
+  real :: wq_stage_series(1:2,1:nwqvmax,1:nwqsmax)
   integer :: un
   integer :: ios
   character(len=1024) :: iom
@@ -122,7 +129,8 @@ subroutine list_wq_read(p, list)
                      wq_wash_kr, wq_wash_kf, wq_wash_tauc, f_wq_settle, &
                      wq_gwc_conc, f_wq_gwc_in, &
                      wq_rain_conc, wq_rain_series, &
-                     wq_in_conc, wq_in_series
+                     wq_in_conc, wq_in_series, &
+                     wq_stage_conc, wq_stage_series
 
   f_wq = list%f_wq
   wq_c0 = list%wq_c0
@@ -157,6 +165,8 @@ subroutine list_wq_read(p, list)
   wq_rain_series = -9999.0
   wq_in_conc = list%wq_in_conc
   wq_in_series = -9999.0
+  wq_stage_conc = list%wq_stage_conc
+  wq_stage_series = -9999.0
 
   call par_info("reading list_wq in "//trim(p%fn_wq))
   open(newunit=un, file=trim(p%fn_wq), status='old', iostat=ios, iomsg=iom)
@@ -198,6 +208,8 @@ subroutine list_wq_read(p, list)
   allocate(list%wq_rain_series(1:2,1:nwqvmax), source = wq_rain_series)
   list%wq_in_conc = wq_in_conc
   allocate(list%wq_in_series(1:2,1:nwqvmax,1:nwqfmax), source = wq_in_series)
+  list%wq_stage_conc = wq_stage_conc
+  allocate(list%wq_stage_series(1:2,1:nwqvmax,1:nwqsmax), source = wq_stage_series)
 
 end subroutine
 

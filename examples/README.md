@@ -38,6 +38,7 @@ python3 plot_results.py   # 図化(用意されている例題のみ)
 | [timberyard/](timberyard/) | 高潮で貯木場の材木が流れ出し、防潮壁を越えて市街地へ入る過程(伊勢湾台風型)と、流出対策の効果を見る | 流木 fn_driftwood(水理的流失・堆積・再流動)、建物空隙率 fn_gv、潮位 fn_tide |
 | [sewer_hybrid/](sewer_hybrid/) | 幹線 1 本と枝管網を同じ管路連続体層で表し、都市の雨水が下水道を流れて噴出・排水される様子を見る模式実験 | 管路連続体層 f_gwconduit |
 | [qanat/](qanat/) | 山麓の扇状地の地下水を集めるカナート(横坑)の湧出と、近くの揚水井でそれが細り枯れる過程を見る | 管路連続体層 f_gwconduit(交換能のマップ fn_gwc_leak・開放の吐口 fn_gwc_outfall)、層2 f_gwlayer2、井戸揚水 f_gwpump |
+| [catchment_metal/](catchment_metal/) | 流域の重金属(鉱山の排水と農地の負荷)の行き先と川の濃度を、地表水・地下水の流れ・吸着の遅れ・ため池・粒子態の順に機構を一つずつ加えて比べ、ため池が溶存態と粒子態に効くかを見る | 水質 fn_wq(点源・面源・浸透同伴・遅延化係数 wq_rg・沈降 wq_vs・再懸濁 wq_wash_kf・海への流出の台帳)、Green-Ampt、地下水の側方流、サブグリッド河道幅、海域マスク |
 | [meander/](meander/) | 氾濫原の正弦波状の河道が蛇行を発達させる過程。外岸の後退、内岸砂州の成長・定着と氾濫原化を見る | 掃流砂の方向補正 fluv_slope・f_secflow、側岸侵食 f_berode、安息角崩落 f_repose、定着 f_fixation、給砂 |
 | [meander_cutoff/](meander_cutoff/) | 蛇行ループが、出水で陸を越える流れや河岸の後退だけで短絡(ショートカット)し、旧河道が滞水域になって埋まり始める過程を見る | 同上 + 崩落土塊 f_rockfall、区間流入の時系列 |
 | [delta/](delta/) | 給砂河川が海盆に突入して作る河口デルタ。波のない河口から始めて、砂泥比・出水と植生・斜めの波・波浪場・潮汐を一つずつ加え、デルタの型ごとに要る機構と形の違いを見る | 海は通常セル+初期水位、容量給砂 fluv_bcfeed、浮遊泥 inflow_cs + f_bedfines、fluv_slope、f_repose、f_fixation(fix_tdec・fix_ctau_bank)、沿岸漂砂 fn_wave、沿岸の波浪場 fn_wavefield(f_wfsed・f_wfswash)、潮位 fn_tide |
@@ -71,6 +72,7 @@ ENCflow の特徴である「複数プロセスを 1 つの計算で連鎖させ
 - 給砂 → 河口砂州 → 分岐 → ローブ → 植生の定着・波の沿岸漂砂・潮汐でデルタの形が変わる: [delta/](delta/)。
 - 降雨 → 下水道(管路)→ 噴出・排水: [sewer_hybrid/](sewer_hybrid/)。
 - 山からの涵養 → 扇状地の地下水 → カナートの集水・湧出(揚水井で細る): [qanat/](qanat/)。
+- 雨 → 地表流と浸透 → 地下水の流れ → 湧出(基底流)→ 川の重金属の濃度(吸着の遅れ・ため池・粒子態の沈降で変わる): [catchment_metal/](catchment_metal/)。
 - 1 機能だけの解析解ベンチマーク: [benchmark/](benchmark/)。
 - 格子の精緻化(ネスティング): [nest_reflect/](nest_reflect/)。
 
