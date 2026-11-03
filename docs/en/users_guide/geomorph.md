@@ -1499,6 +1499,15 @@ The minimal input is `f_dissol = 1` with `fn_gwflow` (infiltration), or
 itself (dry valleys, internal drainage, springs) is available without
 dissolution through the inlets and outfalls of the conduit continuum layer.
 
+**Talus dissolves.** When rockfall and talus `f_rockfall` is used as well and a cell carries
+talus ht (limestone debris), the dissolution of that cell first consumes the talus (ht decreases,
+sd and z go down by the amount net of the residue fraction) and the remainder, once the talus is
+exhausted, acts on the bedrock (z down, sd kept). Without talus the rule is unchanged. This
+prevents the "conveyor" in which the debris of a tower that collapsed onto its feet sinks immortal
+while only the bedrock below keeps dissolving (found in the quasi-steady run of
+examples/tower_karst). At the end "dissolution removed talus ... m3" reports the part dissolved as
+talus.
+
 **Outputs for this section**: ground `Z0001...` (lowered by dissolution; nothing appears in `Hs`) and, with a residue fraction > 0, soil thickness `Sd0001...` (grows). At the end the dissolved rock volume (m³) is printed as "dissolution removed ... m3 of rock". Restart in `geomorph_dissol.dat` (the water accumulated within an update interval) ([Output and monitoring](#output-and-monitoring)).
 
 ## Output and monitoring

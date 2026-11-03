@@ -52,9 +52,16 @@ make_init.py --sdzero)で与え、基岩の崩落で崩します。供給量制�
 (sd0 = 20 m)と同じ z に崩れること((8) 厳密数学で 0、-Ofast では最終桁 2e-15)、
 落下物だけが sd になる(sd = 崖錐 ht。(4'))ことを検定します(`bed=save`)。
 
+崖錐の溶食(param_talus0.txt → param_talus1.txt、`f_dissol` と併用。developer.md §86.7):
+第 0 段は基岩版の台地を崩して崖錐を作り保存する(溶食は雨 0 で有効 = 私有 save を作る)。
+第 1 段は再開して崩落を凍結し、一様な雨 100 mm/h の溶食を 600 更新(W = 0.667 m、残渣率 0.2)
+当てる。Check_talus.py が「崖錐が先に溶ける ht₁ = max(ht₀ − W, 0)」「地表は崖錐の有無に
+よらず (1 − f_res) W 下がる」「土層の帳尻 sd₁ = sd₀ − (1 − f_res) min(ht₀, W) + f_res max(W − ht₀, 0)」
+を印字桁で検定し、崖錐が尽きるセルと残るセルの両方があることを確かめます。
+
 ```bash
 make
-./Run.sh            # 逐次 + 検定(save/ を save_serial/ に複製。基岩版・窓版・支え方式・張り出し版・海セル版も)
+./Run.sh            # 逐次 + 検定(save/ を save_serial/ に複製。基岩版・崖錐の溶食・窓版・支え方式・張り出し版・海セル版も)
 ./Run_MPI.sh 2      # MPI + 検定 + save/state.dat の逐次とのビット一致確認(基岩版・窓版・支え方式・張り出し版・海セル版も)
 ./Run_MPI.sh 4
 ```
