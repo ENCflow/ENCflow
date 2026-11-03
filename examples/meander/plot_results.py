@@ -14,6 +14,7 @@
   表 1  100 / 150 / 200 h の河幅・中心の最大移動・湿潤帯の最大振幅、最深の洗掘、定着セル
   表 2  定着と給砂の構成の 200 h の定着セル・砂州の高さ・区間ごとの河床変化・氾濫原の堆積
   表 3  画面出力(Screen_<名>.log)の台帳: 安息角崩落・側岸侵食・崩落土塊・容量給砂・細粒分と fluv_dzmax の発動
+  表 4  非粘着性(result)の 200 h の湾曲ごとの外岸の後退と、横断 x = 420・520 m の後退と内岸の砂州の高さ
 指標の定義は README の「幾何と設定」を参照。終わった計算の結果ディレクトリだけを扱い、地形 200 h に届かずに
 止まった計算は表と図から外して止まった時刻を示す。
 依存: numpy, matplotlib
@@ -211,6 +212,34 @@ print("|---|---|---|---|---|---|---|")
 for c in CASES:
     lg = ledger(c[1])
     print("| %s | %s |" % (NAME[c[0]], " | ".join(f0(lg.get(k)) for k in ("repose", "berode", "rockfall", "cfeed", "fines", "dzclip"))))
+
+# ------------------------------------------------------------------ 表 4: 外岸の後退(非粘着性)
+# 河道の縁 = 氾濫原(列の初期の最高点 = 河床 + 1 m)より 0.5 m 以上低い所の端。初期の河岸からの移動を後退とする。
+# 頂点 x = 350・550 m の湾曲は北へ、450・650 m の湾曲は南へ張り出す(外岸 = 張り出す側)。
+if "result" in NAME:
+    rdir = "result"; K = at(rdir, 200)
+    z = rd(rdir, "Z", K); h = rd(rdir, "H", K)
+    ret = {}                                        # 列 → (北岸の後退, 南岸の後退) m
+    for i in range(NX):
+        jc = np.where(h0[:, i] > 0)[0]; jl = np.where(z[:, i] < z0[:, i].max() - 0.5)[0]
+        if jc.size and jl.size:
+            ret[i] = ((jl.max() - jc.max()) * DX, (jc.min() - jl.min()) * DX)
+    print()
+    print("## 表 4  非粘着性(result)の %.0f h の外岸の後退(m。氾濫原より 0.5 m 以上低い所の縁の、初期の河岸からの移動)"
+          % times(rdir)[K])
+    print("| 湾曲の頂点 x (m) | 外岸 | 頂点から 100 m 下流までの最大の後退 (m) | その位置 x (m) |")
+    print("|---|---|---|---|")
+    for xa, side in ((350, 0), (450, 1), (550, 0), (650, 1)):
+        cols = [i for i in ret if xa <= x[i] < xa + 100]
+        v = max(ret[i][side] for i in cols)
+        xs = [x[i] for i in cols if ret[i][side] == v]
+        print("| %d | %s | %.0f | %.0f〜%.0f |" % (xa, ("北", "南")[side], v, min(xs), max(xs)))
+    for xs, side in ((420, 0), (520, 1)):
+        i = int(xs / DX); jc = np.where(h0[:, i] > 0)[0]
+        inner = jc[: jc.size // 2] if side == 0 else jc[jc.size // 2:]   # 内岸側の半分
+        jb = inner[np.argmax(z[inner, i] - z0[inner, i])]
+        print("横断 x = %d m: 外岸(%s)の後退 %.0f m、内岸の砂州の最大 z − z0 %+.2f m(砂州の上の水深 %.2f m)" % (
+            xs, ("北", "南")[side], ret[i][side], z[jb, i] - z0[jb, i], h[jb, i]))
 
 # ------------------------------------------------------------------ 図 1: 平面
 if PLAN:

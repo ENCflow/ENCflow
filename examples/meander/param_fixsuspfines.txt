@@ -10,8 +10,9 @@
 !   給砂(上流端まで可動、入口の河床を固定)、浮遊砂は流入セルの平衡濃度で給砂
 !   (inflow_cs_eq。§84.9)+ 河床の細粒分の帳簿 f_bedfines(§84.10): 河床は
 !   粗粒だけ(fines_frac0 = 0)で、細粒分は堆積した分しか再浮上しない。
-!   粒径 1 種の河床(param_fixsuspfeed.txt)で給砂濃度に極端に敏感だった結果が
-!   どう変わるかを見る。dir_result = result_fixsuspfines
+!   粒径 1 種の河床で給砂濃度に極端に敏感だった結果(平衡濃度で給砂する旧構成
+!   param_fixsuspfeed。2026-11-02 に外した。developer.md §84.18)がどう変わるかを
+!   見る。dir_result = result_fixsuspfines
 !======================================================================
 &list_sysparam
   f_gridsystem = 0

@@ -12,7 +12,8 @@
 ループ 1、東がループ 2)。
 「流れている」は h > 0.05 m かつ |V| > 0.3 m/s。3 つの陸 = 出水で流れが横切る初期の陸(ループ 1 の脚の間
 x = 100〜120 m・y = 55〜90 m、2 つのループの間 x = 150〜175 m・y = 90〜140 m、ループ 2 の脚の間
-x = 205〜225 m・y = 100〜145 m)。
+x = 205〜225 m・y = 100〜145 m)。下の湾曲 = 2 つのループをつなぐ南へ張り出す湾曲(初期河道のうち
+y <= 70 m・x = 115〜210 m。469 セル)。
 存在する結果ディレクトリだけを扱う。台帳は画面出力 Screen_<名>.log(param.txt は Screen.log)から読む。
 依存: numpy, matplotlib
 """
@@ -55,6 +56,8 @@ LANDS = [(T("ループ 1 の脚の間", "between the limbs of loop 1"),) + LANDS
 LANDM = [(h0 == 0) & (x[None, :] >= xa) & (x[None, :] <= xb) & (y[:, None] >= ya) & (y[:, None] <= yb)
          for _, (xa, xb), (ya, yb) in LANDS]
 LANDALL = LANDM[0] | LANDM[1] | LANDM[2]
+# 下の湾曲: ループ 1 の下流側の脚から南へ回ってループ 2 の上流側の脚へつなぐ湾曲(初期河道のうち y <= 70 m)
+BEND = (h0 > 0) & (y[:, None] <= 70.0) & (x[None, :] > 115.0) & (x[None, :] < 210.0)
 # (結果ディレクトリ, 設定ファイル, 画面出力, 日本語名, 英語名)
 CASES = [("result", "param.txt", "Screen.log", "出水あり(安息角 40°)", "flood (repose 40°)"),
          ("result_slump", "param_slump.txt", "Screen_slump.log", "出水あり+崩落土塊", "flood + slump blocks"),
@@ -123,8 +126,8 @@ def ledger(log):
 
 
 # ------------------------------------------------------------------ 数表
-print("領域: ループ %d セル(ループ 1 %d、ループ 2 %d)。ループの頂点 x = %.0f m・%.0f m" % (
-    loop.sum(), LOOPS[0].sum(), LOOPS[1].sum(), APEX_X[0], APEX_X[1]))
+print("領域: ループ %d セル(ループ 1 %d、ループ 2 %d)、下の湾曲 %d セル。ループの頂点 x = %.0f m・%.0f m" % (
+    loop.sum(), LOOPS[0].sum(), LOOPS[1].sum(), BEND.sum(), APEX_X[0], APEX_X[1]))
 for rdir, pfile, log, _, _ in CASES:
     tm = times(rdir); ks = sorted(tm)
     Q = hydrograph(pfile)
@@ -132,21 +135,30 @@ for rdir, pfile, log, _, _ in CASES:
     print()
     print("## %s(%s)" % (NAME[rdir], rdir))
     print("| t (分) | 地形時間 (h) | Q (m³/s) | ループで流れているセル | 頂部を回る流量の目安 ループ 1 / 2 (m³/s) "
-          "| 3 つの陸で流れているセル(%d セル中) / 陸の河床変化の平均 (m) | 初期河道の外で湿潤 | 最深の洗掘 (m) |" % LANDALL.sum())
-    print("|---|---|---|---|---|---|---|---|")
+          "| 3 つの陸で流れているセル(%d セル中) / 陸の河床変化の平均 (m) | 下の湾曲で流れているセル(%d セル中) "
+          "| 初期河道の外で湿潤 | 最深の洗掘 (m) |" % (LANDALL.sum(), BEND.sum()))
+    print("|---|---|---|---|---|---|---|---|---|")
     # 出水ありは全出力(30 分 = 地形 5 h ごと)、出水なし(地形 180 h)は 20 h ごと
     for k in (ks[1:] if flood else [k for k in ks if k > 0 and k % 4 == 0]):
         h, vv, z, fl = state(rdir, k)
-        print("| %.0f | %.0f | %.0f | %d | %.1f / %.1f | %d / %+.2f | %d | %.2f |" % (
+        print("| %.0f | %.0f | %.0f | %d | %.1f / %.1f | %d / %+.2f | %d | %d | %.2f |" % (
             tm[k] / 60, tm[k] * MORFAC / 3600, Q(tm[k]), (fl & loop).sum(), qtop(h, vv, 0), qtop(h, vv, 1),
-            (fl & LANDALL).sum(), (z - z0)[LANDALL].mean(), ((h > 0.05) & (h0 == 0)).sum(), (z - z0).min()))
+            (fl & LANDALL).sum(), (z - z0)[LANDALL].mean(), (fl & BEND).sum(), ((h > 0.05) & (h0 == 0)).sum(), (z - z0).min()))
     # 短絡の時期: ループで流れているセルが初めてループのセル数の半分を下回った出力(初期の出力 0 は流速 0 なので除く)
-    cut = next((k for k in ks[1:] if (state(rdir, k)[3] & loop).sum() < 0.5 * loop.sum()), None)
+    nloop = {k: (state(rdir, k)[3] & loop).sum() for k in ks[1:]}
+    cut = next((k for k in ks[1:] if nloop[k] < 0.5 * loop.sum()), None)
     K = ks[-1]
     h, vv, z, fl = state(rdir, K); dz = z - z0
-    print("短絡(ループで流れているセル < %d)の時期: %s" % (0.5 * loop.sum(), "なし" if cut is None else
-                                                          "地形時間 %.0f〜%.0f h の間" % (tm[ks[ks.index(cut) - 1]] * MORFAC / 3600,
-                                                                                          tm[cut] * MORFAC / 3600)))
+
+    def interval(k):
+        return "地形時間 %.0f〜%.0f h の間" % (tm[ks[ks.index(k) - 1]] * MORFAC / 3600, tm[k] * MORFAC / 3600)
+    print("短絡(ループで流れているセル < %d)の時期: %s" % (0.5 * loop.sum(), "なし" if cut is None else interval(cut)))
+    if cut is not None:
+        # 短絡の後に流れがループへ戻った時期: ループで流れているセルが 1 出力で 150 以上増えた出力
+        # (出水なしでは、2 つのループの間の陸が切れてループ 1 からループ 2 の上流側の脚へ流れが入る時)
+        back = next((k for k in ks[ks.index(cut) + 1:] if nloop[k] - nloop[ks[ks.index(k) - 1]] >= 150), None)
+        print("短絡の後に流れがループへ戻った(ループで流れているセルが 1 出力で 150 以上増えた)時期: %s" % (
+            "なし" if back is None else interval(back)))
     print("終了時の陸: " + "、".join("%s 流れている %d / %d セル・河床変化の平均 %+.2f m" % (
         LANDS[n][0], (fl & m).sum(), m.sum(), dz[m].mean()) for n, m in enumerate(LANDM)))
     print("終了時: 湿潤セル %d(初期河道の外 %d)、ループで流れているセル %d" % (
@@ -156,9 +168,12 @@ for rdir, pfile, log, _, _ in CASES:
         print("終了時のループ %d の初期河道(%d セル): 流れている %d、滞水 %d、乾いた %d、河床変化の平均 %+.2f m%s" % (
             n + 1, lp.sum(), (fl & lp).sum(), ((h > 0.05) & ~fl & lp).sum(), ((h <= 0.05) & lp).sum(), dz[lp].mean(),
             "" if sf is None else "、細粒分の厚さ Sf の平均 %.2f m・最大 %.2f m" % (sf[lp].mean(), sf[lp].max())))
+    print("終了時の下の湾曲の初期河道(%d セル): 流れている %d、滞水 %d、乾いた %d、河床変化の平均 %+.2f m" % (
+        BEND.sum(), (fl & BEND).sum(), ((h > 0.05) & ~fl & BEND).sum(), ((h <= 0.05) & BEND).sum(), dz[BEND].mean()))
     if sf is not None:
-        print("細粒分の厚さ Sf: 湿潤セルの平均 %.2f m、初期河道の外の湿潤セルの平均 %.2f m" % (
-            sf[h > 0.05].mean(), sf[(h > 0.05) & (h0 == 0)].mean()))
+        jm, im_ = np.unravel_index(sf.argmax(), sf.shape)
+        print("細粒分の厚さ Sf: 湿潤セルの平均 %.2f m、初期河道の外の湿潤セルの平均 %.2f m、最大 %.2f m(x = %.0f m・y = %.0f m)" % (
+            sf[h > 0.05].mean(), sf[(h > 0.05) & (h0 == 0)].mean(), sf.max(), x[im_], y[jm]))
     lg = ledger(log)
     if lg:
         print("台帳: 安息角崩落 %s m³、崩落土塊 %s m³、掃流砂に同伴した細粒分 %s m³、fluv_dzmax の発動 %s エッジ" % tuple(
