@@ -2729,7 +2729,13 @@ Check_gwtani.py)で恒常テスト化した。
 - **影響**: 結果が変わるのは、区間流入の面で ue > 0 かつ τ* > τ*c になったときだけで、
   それ以外は条件が一つ増えただけでビット一致する。流入区間と掃流砂を使う例題
   (examples/delta・meander・meander_cutoff・mountain_valley・bedrock_cover・debris_bedrock)の
-  うち、再計算して結果を確かめたのは delta の段 7 だけ(handoff)。
+  うち、再計算したのは delta の段 7(smallq・tidedom と、tidedom の morfac 120・60 の確かめ。
+  段 6 の tide は再計算中)。終了時の台帳の開境界の正味の流出(固体)は、smallq 3557 → 0 m³、tidedom
+  15041 → 567 m³(地形 14904 h。給砂の 69 % → 99 % が残る)、morfac 60 4874 → 344 m³ で、
+  入口の漏れがなくなった分だけ砂の収支が閉じた。ただし漏れの有無で流れの配分が変わるので、
+  morfac 120 の計算は、修正後に干潮の水路が南の辺に届いて給砂の 40 % を辺から出した
+  (修正前は 5 %。辺から出る量は計算ごとに大きく違う。README 段 7)。他の例題は再計算して
+  いない(handoff)。
 - **検定**: test/sedfeed に qbturn を加えた(qb の流入セルの東隣 (2, 8〜10) を +2 m の乾いた
   地盤にして、流入した水を北の 2 行へ曲げる。Check_sedfeed.py の (8))。修正後は台帳
   (1 − λ) Σ(z − z0) A = ∫Qb dt × morfac が相対 9e-13 で閉じ、開境界の流出はない。修正前の

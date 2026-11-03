@@ -457,9 +457,11 @@ with at least width/5 cells. To add a tide, place a strip of sea mask along the 
 the [tide level](tide.md) (fn_tide), and lower morfac so that the landform
 change in one tidal cycle stays small (as a compromise with the computing
 time, stages 6 and 7 of the example stop at 5 tidal cycles with morfac 24 and
-240 and do not meet this condition; halving the morfac of stage 7 changed, for
-example, the sand leaving through the north and south sides considerably).
-Make the sides crossing the coast lateral Neumann (f_bc = 3). In a small basin, update the
+240 and do not meet this condition; lowering the morfac of stage 7 to 120 and
+60 changed the streaks stretching offshore and the amount of sand leaving
+through the north and south sides considerably). Make the sides crossing the
+coast lateral Neumann (f_bc = 3; when a low-tide channel reaches a side, sand
+leaves together with the river water). In a small basin, update the
 tide level every step (`dt_tiupdate` at or below the time step; the default update every minute can
 excite a natural oscillation; "Water bodies with short natural periods" in
 [tide level](tide.md#parameters-and-the-basis-of-their-defaults)).
