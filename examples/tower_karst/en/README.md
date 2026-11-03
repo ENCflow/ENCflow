@@ -198,10 +198,10 @@ infiltrates at the feet, the surface source on the tower faces, and collapse. Sa
 |---|---|
 | Landform time | 985,626 years (60 days × 6×10⁶) |
 | Lowering of the plain | median 212.8 m = 216 mm/kyr (the same rate as the main case, as it is linear) |
-| Tower tops | 40 → −163 m (163 m lower; not the 70 mm/kyr of the surface source but consumption by collapse) |
-| Height above the plain | 40 → 61 m (164 kyr) → 50 m (1 Myr). Equivalent radius 79 → 56 m, walls 35° → 89° |
-| Foot pits | the surface is only 36 m below the plain, but the bedrock z − sd is at −1,532 m under 1,353 m of talus |
-| Rock moved by collapse | 46.2 million m³ (19 % of the 240 million m³ dissolved). Valve fired in 39,189 cell updates |
+| Tower tops | 40 → −165 m (165 m lower; not the 70 mm/kyr of the surface source but consumption by collapse) |
+| Height above the plain | 40 → 62 m (164 kyr) → 48 m (1 Myr). Equivalent radius 79 → 55 m, walls 35° → 85° |
+| Foot pits | the surface is only 38 m below the plain, but the bedrock z − sd is at −463 m under 215 m of residue |
+| Rock moved by collapse | 46.5 million m³ (19 % of the 240 million m³ dissolved), of which 22.5 million m³ dissolved as talus (almost no talus remains). Valve fired in 28,596 cell updates |
 
 ![maps_steady](figs/maps_steady.png)
 ![sections_steady](figs/sections_steady.png)
@@ -213,19 +213,21 @@ mechanism "the lowering plain leaves the towers standing" works. After that, how
 are **consumed by collapse** and the relative height decreases. The cause is two gaps of the model
 that the steady forcing lays bare, not the coefficients.
 
-1. **Fallen limestone does not dissolve.** Floor dissolution follows the rule "lower z, keep sd",
-   so under the talus (sd, ht) piled at the feet only the bedrock keeps dissolving and the column of
-   talus sinks immortal. In the foot cells where all the tower runoff infiltrates, the bedrock
-   dissolves at the valve's 0.3 m per update and the tower collapses into it, a "conveyor" that
-   took the bedrock surface to 1.5 km depth (dashed line in the sections). Real talus is limestone
-   and dissolves at least as fast as the bedrock: the talus ht should dissolve (spend the water of
-   dissolution on ht first, then on the bedrock).
+1. **Fallen limestone did not dissolve (fixed).** In the first trial floor dissolution still
+   followed the rule "lower z, keep sd", so under the talus (sd, ht) piled at the feet only the
+   bedrock kept dissolving and the column of talus sank immortal to 1.35 km. Limestone debris
+   dissolves as fast as the bedrock, so the water of dissolution is now spent on the talus ht first
+   and then on the bedrock (developer.md §86.7; the table above is the rerun). The talus now
+   dissolves away, but its residue (insoluble, residue fraction 0.1) piles up 215 m in the foot
+   cells and the bedrock below keeps dissolving at the valve's 0.3 m per update, so the "conveyor"
+   into which the tower collapses remains (bedrock surface at −463 m, dashed line in the sections).
+   The root cause is item 2.
 2. **No base level (water table) at the feet.** The conduit layer is a sink 1000 m deep with a
    capacity of 2000 m, so the foot pits have no bottom. The feet of real towers stand at the water
    table, which is the base level of the rivers; the pits stop at the water surface and dissolution
    turns sideways into the foot notches and caves. That is the fenglin mechanism itself. Fixing the
-   water table with an outfall head and raising the land against it by uplift (`f_uplift`) would
-   represent it.
+   water table with an outfall head and raising the land against it by uplift (`f_uplift`) is the
+   configuration param_base.txt (next section).
 
 In addition, whereas the ponding at the feet spread over 261 cells under the repeated storms, the
 thin steady film gathers all of it into the few lowest cells of each tower, which makes the
