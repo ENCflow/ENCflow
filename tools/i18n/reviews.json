@@ -329,9 +329,9 @@
     {
       "source": "docs/users_guide/lavaflow.md",
       "target": "docs/en/users_guide/lavaflow.md",
-      "source_sha256": "8f9155f18326d1a01bf025cdeffe4a07320df70a355986ae3c49b92149d194ab",
-      "target_sha256": "930a1d33ade45dfdfc6d216a9075a1d7aecf82c2ac813f673ea05d4d0987bd0b",
-      "reviewer": "Claude (Claude Code session; lava dome applicability revision: changed passages compared side by side with the Japanese source, unchanged parts as recorded earlier the same day)",
+      "source_sha256": "90afd6b04a7b949d18f0bce89e63f1fe62a03b8ef98ac43ef64f45d4383a0034",
+      "target_sha256": "becdb1874af0ba0bbf94ccb4d772729f3829659e0e63728e09642b7005430b53",
+      "reviewer": "Claude (Claude Code session; shield_volcano example registration: changed passages compared side by side with the Japanese source, unchanged parts as recorded earlier the same day)",
       "method": "assistant",
       "reviewed_on": "2026-11-03"
     },
@@ -491,11 +491,11 @@
     {
       "source": "docs/users_guide/usecases.md",
       "target": "docs/en/users_guide/usecases.md",
-      "source_sha256": "ab5c9d93ec67544ab2668da70fabe7b6c3cf0dfea25e32d8c72e4203f2cbe301",
-      "target_sha256": "8c2b978d6b894c45301279c183110b11b82394386f31e3386ce2df6473f20958",
-      "reviewer": "Claude (Claude Code session; Japanese source and English mirror read side by side)",
+      "source_sha256": "643bf7a3d07f271b29720658874eefb113471d7c258a8ec4183d551a8a2fb362",
+      "target_sha256": "23d10776db22d9a0ccebcb6ee0ed4426158fec14aedfebea83014ec6ffc8778c",
+      "reviewer": "Claude (Claude Code session; shield_volcano example registration: changed passages compared side by side with the Japanese source, unchanged parts as recorded earlier the same day)",
       "method": "assistant",
-      "reviewed_on": "2026-11-02"
+      "reviewed_on": "2026-11-03"
     },
     {
       "source": "docs/users_guide/user_routines.md",
@@ -815,11 +815,11 @@
     {
       "source": "examples/README.md",
       "target": "examples/README.en.md",
-      "source_sha256": "ea63ec0f5e9d327ebb73290778d3e53e38f0caaf9abedd61a2cad61ed5551ad3",
-      "target_sha256": "63a47892dd3cc76c4b560dd647cc751e6b11699c9e62ad3ec7e68eb8cc6a6a5b",
-      "reviewer": "Claude (Claude Code session; the delta/tide sentences changed in both languages compared; the rest is unchanged from the recorded version)",
+      "source_sha256": "ce7502797c5546df10f626be795b455eab5a0d5a287ee6fa449acefbdf831259",
+      "target_sha256": "3afa77056e37c07071704e3496d05113a0736bf3fdb431e00938fb9fd975ce31",
+      "reviewer": "Claude (Claude Code session; shield_volcano example registration: changed passages compared side by side with the Japanese source, unchanged parts as recorded earlier the same day)",
       "method": "assistant",
-      "reviewed_on": "2026-11-02"
+      "reviewed_on": "2026-11-03"
     },
     {
       "source": "examples/ashfall_lahar/README.md",
@@ -1972,6 +1972,51 @@
       "reviewer": "Claude (assistant)",
       "method": "assistant",
       "reviewed_on": "2026-11-02"
+    },
+    {
+      "source": "examples/shield_volcano/README.md",
+      "target": "examples/shield_volcano/en/README.md",
+      "source_sha256": "69a4ba358dbefa3dbf339b5751bf2211019ad8cac4b3644230378b013368b464",
+      "target_sha256": "47fa7549b6803d3d495d7239c24e364debfb5c0bea94f006c52c73024cdc2081",
+      "reviewer": "Claude (Claude Code session; full-text review of the new example README against the Japanese source, numbers and structure cross-checked)",
+      "method": "assistant",
+      "reviewed_on": "2026-11-03"
+    },
+    {
+      "source": "examples/shield_volcano/figs/dome.png",
+      "target": "examples/shield_volcano/en/figs/dome.png",
+      "source_sha256": "60a0fbfc870c24681d38b470b336fd148aadea81de71d22d7eacfc793473db6d",
+      "target_sha256": "477bbe5bb4719fdbe968303b4062eb5831785370d18b560403c4c1c824f45315",
+      "reviewer": "Claude (Claude Code session; English figure drawn by the same script with the en switch; visual check)",
+      "method": "assistant",
+      "reviewed_on": "2026-11-03"
+    },
+    {
+      "source": "examples/shield_volcano/figs/mechanism.png",
+      "target": "examples/shield_volcano/en/figs/mechanism.png",
+      "source_sha256": "ce9a247a7dd7168cf0a8cb2bad0228f1257dc6f88ce6ceb8da556f68d9b53c92",
+      "target_sha256": "0092eef8f39f439d2edecbc952f018306326a7fceafd06a891f2fea7356f5c75",
+      "reviewer": "Claude (Claude Code session; English figure drawn by the same script with the en switch; visual check)",
+      "method": "assistant",
+      "reviewed_on": "2026-11-03"
+    },
+    {
+      "source": "examples/shield_volcano/figs/setup.png",
+      "target": "examples/shield_volcano/en/figs/setup.png",
+      "source_sha256": "8dc044acd9aa4825d5322f16fe2cfcfc29a7cbb4bc6db136a51d81f2fb0c5469",
+      "target_sha256": "9043d1177398734786bc08e102d9dcba1afccc20ea17085aff2246c7f73a6530",
+      "reviewer": "Claude (Claude Code session; English figure drawn by the same script with the en switch; visual check)",
+      "method": "assistant",
+      "reviewed_on": "2026-11-03"
+    },
+    {
+      "source": "examples/shield_volcano/figs/shield.png",
+      "target": "examples/shield_volcano/en/figs/shield.png",
+      "source_sha256": "6ed703972c8bcfe523c5d42383c4e9f9d0f12493d192ee4812074d8c164457ed",
+      "target_sha256": "dad7a0d65b84f42bce077f0de55d5b952369d5c5d4e3873fc0cb749def79a817",
+      "reviewer": "Claude (Claude Code session; English figure drawn by the same script with the en switch; visual check)",
+      "method": "assistant",
+      "reviewed_on": "2026-11-03"
     },
     {
       "source": "examples/timberyard/README.md",

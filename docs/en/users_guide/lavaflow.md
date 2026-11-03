@@ -199,7 +199,17 @@ The labels in the Basis column are explained in [How to read the basis of a defa
   point. Calibrating on the runout, width and front thickness of past
   flows (aerial photographs, DEM differences) gives $`\tau_y`$ from the stop
   thickness $`h_\infty = \tau_y/(\rho g \tan\theta)`$ and $`\eta`$ from the advance
-  speed.
+  speed. Because cooling is not computed, a $`\tau_y`$ found this way is an
+  effective value that includes stopping by cooling (in examples/shield_volcano,
+  2×10³ Pa, within the measured range for basaltic lava, makes the shield volcano
+  flatter than real ones, and 2×10⁴ Pa gives slopes of the same order as real ones).
+- The stop-detection threshold lv_vsol makes the stopped thickness larger
+  than $`h_\infty`$. The excess is roughly the fraction
+  $`\sqrt{2\,v_{sol}\,\eta\,\rho g S}/\tau_y`$ (S is the slope; the formula of
+  lava_plan.md Sec. 5 divided by $`h_\infty`$). A smaller threshold reduces the
+  excess but takes longer to judge the lava stopped. With the same threshold the
+  excess grows with the viscosity, so revisit the threshold when changing the
+  viscosity.
 - The effusion rate is best given as a time series from eruption
   observations (volume growth of the lava field, thermal radiance); when
   only the total is known, give a rectangular pulse and check the
@@ -217,6 +227,12 @@ The labels in the Basis column are explained in [How to read the basis of a defa
   cells touching the wall, and a check that the soil layer under
   solidified lava is buried and the total water is conserved when the
   water in it moves to the surface.
+- Example: [examples/shield_volcano](../../../examples/shield_volcano/en/README.md) — a
+  shield volcano growing as the lava flows of 20 eruptions with shifting vents and volumes
+  pile up (with a comparison at a ten times larger yield stress), and the shape at rest of a
+  lava dome of viscous lava compared with the analytic solution. It also shows that, because
+  cooling is not computed, the yield stress has to be given as an effective value that
+  includes stopping by cooling to approach the slopes of real shield volcanoes.
 
 ## Constraints and interactions
 
@@ -251,8 +267,8 @@ The labels in the Basis column are explained in [How to read the basis of a defa
   the shape at rest (a collapse can be given separately with f_release of
   the debris flow model). The shape at rest does not depend on the
   viscosity, so to look only at the shape you can lower the viscosity to
-  shorten the run (when using solidification, raise lv_vsol by the same
-  ratio).
+  shorten the run (shorten the eruption by the same ratio and, when using
+  solidification, raise lv_vsol and lv_wsol by the same ratio).
 - **Grid orientation**: the computation uses the 4-neighbour grid. Yield
   and stopping are judged on the gradient magnitude, so the shape at rest
   of a dome on a flat bed is the same along the grid axes and the
