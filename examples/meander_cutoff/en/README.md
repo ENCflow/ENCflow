@@ -48,7 +48,7 @@ The mechanisms at work in this example and the settings that carry them:
 | Real phenomenon | Mechanism in the model | Settings |
 |---|---|---|
 | Pools and bars in bends, retreat of the outer banks | bedload, bed-slope term and equilibrium secondary-flow term as in meander, with an upper limit on the deviation angle of the secondary flow so that the pools in the sharp bends do not deepen without bound | `f_fluvial = 1`, `fluv_slope = 1`, `f_secflow = 1`, `sec_rmax = 0.3` |
-| Collapse of sandy banks | angle-of-repose avalanching (40°; the initial bank 1.6 m / 2 m = 38.7° does not collapse) | `f_repose = 1`, `repose_phi = 40` |
+| Collapse of sandy banks | angle-of-repose avalanching (40°; the initial bank, 1.6 m / 2 m = 38.7°, does not collapse; only 42 cells of higher bank whose height is set by the bed upstream (up to 42.6°) collapse a little at the start) | `f_repose = 1`, `repose_phi = 40` |
 | Block failure of cohesive banks and protection of the toe by the blocks | bank mode of [rockfall and talus](../../../docs/en/users_guide/geomorph.md#rockfall-and-talus-f_rockfall) (the part of a bank face above the critical height H_c = 1.8 m fails into talus at the toe, which the bedload carries away). In the cohesive configurations the angle of repose is set to 60° so that the banks retreat by slump blocks only | `f_rockfall = 1`, `rf_bank = 1`, `rf_hc = 1.8`, `repose_phi = 60` |
 | Flood water crossing the land and incision of a new channel | wet/dry judgement and shallow-water flow (flow over the inundated floodplain is solved along the terrain), with erosion of the floodplain soil | inflow time series `inflow_val`, soil depth `sd.txt` |
 | The flow in the old channel stops; the cutoff | no special processing; they emerge from landform change and the wet/dry judgement | — |
@@ -65,12 +65,11 @@ Hasegawa 1989, Asahi et al. 2013, Parker et al. 2011).
 ![Settings](figs/setup.png)
 
 Left: the initial terrain (colour = height above the bed of the nearest centreline point;
-blue = channel). The orange outline is the low-bank zone, and the channel above the dotted line
-y = 70 m is loop 1 and loop 2 (see "Metrics" below). The red lines are the narrowest land between
-the limbs of the loops, and the dashed boxes are the three lands the flood flow crosses (used in
-the result tables). Top right: height of the land 12 m off the centreline on both banks (above
-the bed). Bottom right: inflow (in the no-flood configurations 15 m³/s continues up to 180 h of
-landform time).
+blue = channel). The channel above the dotted line y = 70 m is loop 1 and loop 2 (see "Metrics"
+below). The red lines are the narrowest land between the limbs of the loops, and the dashed boxes
+are the three lands the flood flow crosses (used in the result tables). Top right: height of the
+land 12 m off the centreline on both banks (above the bed). Bottom right: inflow (in the no-flood
+configurations 15 m³/s continues up to 180 h of landform time).
 
 346 m × 206 m, Δx = 2 m (173 × 103 cells). The inputs are made by `make_init.py` (`make`; it
 takes about 10 s because the nearest distance from every cell to the centreline is found by
@@ -82,15 +81,14 @@ brute force).
   exceeds 90°, the two loops bulging upward are Ω-shaped, wider at the top than at the root, and
   the land between the limbs of a loop is 22 m wide at its narrowest (centreline spacing 42 m).
   Width 20 m, bed 10 − 0.001 s (m) along the distance s, initial depth 0.8 m.
-- **Banks**: the floodplain height is "the maximum bed elevation within a radius of 24 m +
-  1.6 m" (so that it is above the water surface of every nearby reach; set from the distance
-  along the channel or the valley slope, the downstream floodplain would lie below the upstream
-  water surface where the sinuosity is high and would be flooded before any flood). make_init.py
-  lowers the land close to two different half-wave reaches to bed + 0.95 m as the "neck", but the
-  boundaries of the reaches lie at the bend apexes and at both ends of the curved reach, so the
-  land that is lowered is around them (10 places, 409 cells in total; orange outline; called
-  the **low-bank zone** in this README), while the narrowest land between the limbs of the
-  loops is + 1.6 m like the floodplain (see the notes).
+- **Banks**: the floodplain height is everywhere "the maximum bed elevation within a radius of
+  24 m + 1.6 m" (so that it is above the water surface of every nearby reach; set from the
+  distance along the channel or the valley slope, the downstream floodplain would lie below the
+  upstream water surface where the sinuosity is high and would be flooded before any flood). The
+  land between the limbs of the loops (the necks) is not lowered either. The land next to the
+  channel is 1.60–1.84 m above the bed (median 1.62 m); the higher values are where the height is
+  set by the bed upstream, such as the land between the limbs (the steps in the top-right
+  panel).
 - **Soil**: the erodible soil is 5 m. The 30 m at the upstream and downstream ends are 0
   (non-erodible), and x = 30–180 m is a ramp 0 → 5 m.
 - **Inflow**: a segment inflow into the 10 channel cells at the west edge. With a flood, 15 m³/s
@@ -100,29 +98,33 @@ brute force).
 - **Time**: dt = 0.1 s (CFL of the deep flow in the pools), the landform is updated every 1 s,
   morfac = 10, output every 30 min (5 h of landform time). Roughness n = 0.03.
 - **Numerical settings of the flow**: as in meander, advection scheme 3,
-  `f_opening_dynamic = 2`, `f_inflow_edge = 2` (see the notes).
+  `f_opening_dynamic = 3` (the default), `f_inflow_edge = 2` (see the notes).
 
 | Case | Parameter file | Inflow | Banks | Landform time | Run time (guide) |
 |---|---|---|---|---|---|
-| Flood | param.txt | 15 → 40 → 15 m³/s | angle-of-repose avalanching 40° | 30 h | about 30 min |
-| Flood + slump blocks | param_slump.txt | same | repose 40° + slump blocks (H_c = 1.8 m, talus 35°) | 30 h | about 30 min |
-| No flood: control | param_noflood.txt | constant 15 m³/s | angle-of-repose avalanching 40° | 180 h | about 2 h |
-| No flood: slump blocks | param_slump_noflood.txt | same | repose 40° + slump blocks | 180 h | about 2 h |
-| No flood: cohesive | param_slump_cohesive.txt | same | **cohesive**: repose 60° (no collapse) + retreat by slump blocks only | 180 h | about 2 h |
-| No flood: cohesive + fines | param_slump_fines.txt | same; fines (0.2 mm) fed at 0.5 × the equilibrium concentration | cohesive + suspended sediment + ledger of fines in the bed (the initial bed is coarse sand only) | 180 h | about 2.5 h |
+| Flood | param.txt | 15 → 40 → 15 m³/s | angle-of-repose avalanching 40° | 30 h | about 50 min |
+| Flood + slump blocks | param_slump.txt | same | repose 40° + slump blocks (H_c = 1.8 m, talus 35°) | 30 h | about 50 min |
+| No flood: control | param_noflood.txt | constant 15 m³/s | angle-of-repose avalanching 40° | 180 h | about 3 h |
+| No flood: slump blocks | param_slump_noflood.txt | same | repose 40° + slump blocks | 180 h | about 3 h |
+| No flood: cohesive | param_slump_cohesive.txt | same | **cohesive**: repose 60° (no collapse) + retreat by slump blocks only | 180 h | about 3 h |
+| No flood: cohesive + fines | param_slump_fines.txt | same; fines (0.2 mm) fed at 0.5 × the equilibrium concentration | cohesive + suspended sediment + ledger of fines in the bed (the initial bed is coarse sand only) | 180 h | about 3.5 h |
 
-The run times are for gfortran 13.3 (-Ofast) on 1 thread with 4 cases running at the same time.
+The run times are for gfortran 13.3 (-Ofast -march=native) on 1 thread of an Intel Xeon (2.8 GHz)
+with 4 cases running at the same time.
 
 **Metrics** (plot_results.py): the **loops** are the part of the initial channel with y > 70 m
 (the limbs and tops of the two loops; 2,265 cells); the part west of x = 160 m is loop 1
 (upstream; 1,133 cells) and the part east of it is loop 2 (downstream; 1,132 cells). **Flowing
 cells** are cells with depth > 0.05 m and speed > 0.3 m/s. The time of the cutoff is the first
-output at which the flowing cells in the loops fall below half the number of loop cells (1,132).
-The **discharge round the top (estimate)** is the sum of h|V| Δx along a north–south line
-(y ≥ 140 m) through the apex of the loop (where the centreline heads east: x = 111 m for loop 1
-and x = 214 m for loop 2). The output holds only the speed, not its direction, so the estimate
+output at which the flowing cells in the loops fall below half the number of loop cells (1,132),
+and the time the flow returned to the loop is the first output after it at which the flowing
+cells in the loops increase by 150 or more in one output. The **lower bend** is the bend that
+swings south from the downstream limb of loop 1 to the upstream limb of loop 2 (the initial
+channel with y ≤ 70 m and x = 115–210 m; 469 cells). The **discharge round the top (estimate)**
+is the sum of h|V| Δx along a north–south line (y ≥ 140 m) through the apex of the loop (where
+the centreline heads east: x = 111 m for loop 1 and x = 214 m for loop 2). The output holds only the speed, not its direction, so the estimate
 is too large where the flow crosses the line obliquely or eddies form (against a discharge of
-15 m³/s it is 15–16 at first and up to 21 once the loop has widened).
+15 m³/s it is 15–16 at first and up to 23 once the loop has widened).
 
 ## How to run
 
@@ -142,9 +144,10 @@ collapse and fines from the screen output (Screen.log, Screen_<configuration>.lo
 
 ## Results
 
-Values from recomputing all configurations on 2026-11-02 with the version after main's fix of
-the lateral faces of the momentum-conservative advection (developer.md §68.42, §68.43) (gfortran
-13.3, -Ofast, 1 thread). The tables are excerpts from the output of plot_results.py.
+Values from recomputing all configurations on 2026-11-03 with the version after main's fix of
+the lateral faces of the momentum-conservative advection (developer.md §68.42, §68.43), with the
+fixed terrain (see the notes) and the default f_opening_dynamic = 3 (gfortran 13.3, -Ofast
+-march=native, 1 thread). The tables are excerpts from the output of plot_results.py.
 
 ![Flow states](figs/states.png)
 
@@ -152,7 +155,7 @@ Flow state in each configuration. Top two rows: with the flood (landform 5 h = b
 15 h = during the flood, 20 h = just after the flood has receded, 30 h = end). Bottom four rows:
 no flood (80, 100, 140 and 180 h). Dark red = flowing inside the initial channel, light red =
 flowing outside the initial channel, light blue = standing water (depth > 0.05 m, speed
-≤ 0.3 m/s), grey = dry initial channel. Black lines = loops, orange = low-bank zone.
+≤ 0.3 m/s), grey = dry initial channel. Black lines = loops.
 
 ### With a flood: overbank flow cuts shortcuts
 
@@ -161,101 +164,111 @@ flowing outside the initial channel, light blue = standing water (depth > 0.05 m
 The flood run (param.txt) every 30 min (5 h of landform time). Left: speed; right: bed change
 (blue = scour, red = deposition; lines = initial banks).
 
-| t (min) | Landform time (h) | Q (m³/s) | Flowing cells in the loops | Discharge round the top (estimate), loop 1 / 2 (m³/s) | Flowing cells on the three lands / mean bed change of the lands (m) | Wet outside the initial channel |
-|---|---|---|---|---|---|---|
-| 30 | 5 | 15 | 2,258 | 15.1 / 15.1 | 1 / −0.02 | 103 |
-| 60 | 10 | 40 | 1,609 | 13.3 / 19.6 | 527 / −0.64 | 2,901 |
-| 90 | 15 | 40 | 1,678 | 5.8 / 12.8 | 597 / −0.93 | 2,944 |
-| 120 | 20 | 15 | 771 | 0.6 / 2.6 | 509 / −1.08 | 2,185 |
-| 150 | 25 | 15 | 690 | 0.2 / 4.3 | 497 / −1.15 | 2,068 |
-| 180 | 30 | 15 | 707 | 0.2 / 5.9 | 487 / −1.19 | 2,035 |
+| t (min) | Landform time (h) | Q (m³/s) | Flowing cells in the loops | Discharge round the top (estimate), loop 1 / 2 (m³/s) | Flowing cells on the three lands / mean bed change of the lands (m) | Flowing cells in the lower bend | Wet outside the initial channel |
+|---|---|---|---|---|---|---|---|
+| 30 | 5 | 15 | 2,265 | 15.1 / 15.0 | 0 / −0.01 | 469 | 11 |
+| 60 | 10 | 40 | 1,556 | 21.6 / 11.5 | 585 / −0.50 | 291 | 5,215 |
+| 90 | 15 | 40 | 1,463 | 4.9 / 11.7 | 600 / −0.92 | 367 | 2,714 |
+| 120 | 20 | 15 | 847 | 1.0 / 5.2 | 480 / −1.06 | 125 | 2,042 |
+| 150 | 25 | 15 | 823 | 0.3 / 9.0 | 481 / −1.10 | 120 | 2,006 |
+| 180 | 30 | 15 | 820 | 0.3 / 8.3 | 466 / −1.13 | 120 | 1,951 |
 
 The three lands are the initial land inside the dashed boxes of the settings figure (between the
 limbs of loop 1: 180, between the two loops: 303, between the limbs of loop 2: 253; 736 cells in
-all).
+all). The lower bend has 469 cells.
 
 - **Before the flood only the bends develop** (5 h): pools on the outer banks and bars on the
-  inner banks begin to form (deepest scour 1.8 m), and no flow crosses the land.
+  inner banks begin to form (deepest scour 1.9 m), and no flow crosses the land.
 - **The flood (40 m³/s) makes overbank flow cut shortcuts** (10–15 h): the floodplain is widely
-  inundated (2,900 wet cells outside the initial channel), and flow heading east over the land
+  inundated (5,215 wet cells outside the initial channel), and flow heading east over the land
   between the limbs of loop 1, the land between the two loops and the land between the limbs of
-  loop 2 incises the land (527–597 flowing cells on the three lands, mean bed change −0.6 to
-  −0.9 m). The discharge round the top of loop 1 falls from 13 to 6 m³/s during the flood. The
-  pools on the outer banks deepen to 4 m during the flood.
-- **When the flood recedes the flow moves to the shortcuts** (from 20 h): the flowing cells in the
-  loops go 2,258 → 771 → 707, the discharge round the top of loop 1 is 0.2–0.6 m³/s, and loop 1
-  becomes an old channel (at the end, of the 1,133 cells of its initial channel 412 hold standing
-  water and 441 are dry). Loop 2 keeps flowing because its downstream limb connects to the
-  shortcuts, and part of the flow still goes round its top (2.6–5.9 m³/s). By the end the land of
-  the shortcuts has been incised by 1.0–1.7 m on average (−1.72 m between the limbs of loop 1,
-  −0.99 m between the two loops, −1.06 m between the limbs of loop 2).
+  loop 2 incises the land (585–600 flowing cells on the three lands, mean bed change −0.5 to
+  −0.9 m). The discharge round the top of loop 1 falls from 22 to 5 m³/s during the flood (the 22
+  at 10 h includes the flow over the inundated floodplain on the line through the apex). The
+  pools on the outer banks deepen to 4.1 m during the flood.
+- **When the flood recedes the flow moves to the shortcuts, and loop 1 and the lower bend become
+  old channels** (from 20 h): the flow leaves the upstream limb of loop 1, crosses the land
+  between the limbs of loop 1 and the land between the two loops diagonally, and enters the
+  upstream limb of loop 2. The flowing cells in the loops go 2,265 → 847 → 820, the discharge round
+  the top of loop 1 is 0.3–1.0 m³/s, and the flowing cells in the lower bend go 469 → 120 (at the
+  end, of the 1,133 cells of the initial channel of loop 1, 399 hold standing water and 417 are
+  dry). Loop 2 keeps flowing: the discharge round its top is 5–9 m³/s (30–60 % of the 15 m³/s),
+  and the rest crosses the land between the limbs of loop 2. By the end the land of the shortcuts
+  has been incised by 0.9–1.7 m on average (−1.73 m between the limbs of loop 1, −1.00 m between
+  the two loops, −0.87 m between the limbs of loop 2).
 - **Slump blocks play no part in the cutoff by overbank flow**: with flood + slump blocks the time
-  of the cutoff (15–20 h) and the shift of the flow are the same (672 against 707 flowing cells in
-  the loops at the end), and the slump blocks are small, 541 m³ (angle-of-repose avalanching
-  1,136 m³). The flowing cells on the land between the limbs of loop 2 are 81 (157 without slump
-  blocks): the shape of the shortcuts changes in detail.
-- **The old channel begins to fill**: at the end the bed of the initial channel has risen by
-  +0.39 m on average in loop 1 and +0.79 m in loop 2. By 30 h the entrances are not closed and no
-  oxbow lake forms.
+  of the cutoff (15–20 h) and the shift of the flow are the same (848 against 820 flowing cells in
+  the loops at the end; discharge round the tops 0.2 / 7.9 against 0.3 / 8.3), and the slump
+  blocks are small, 596 m³ (angle-of-repose avalanching 1,003 m³; 1,428 m³ in the configuration
+  without slump blocks).
+- **The old channels begin to fill**: at the end the bed of the initial channel has risen by
+  +0.44 m on average in loop 1, +0.80 m in the lower bend and +0.77 m in loop 2. By 30 h the
+  entrances are not closed and no oxbow lake forms.
 - **The size of the flood decides the cutoff** (a trial; no parameter file is provided): with a
-  flood peak of 25 m³/s, only 23–35 of the 180 cells of the land between the limbs of loop 1 flow
-  during the flood (155 at 40 m³/s), no shortcut is cut and the loops keep flowing (1,926 flowing
-  cells in the loops at 30 h; discharge round the tops 16.0 / 16.0 m³/s).
+  flood peak of 25 m³/s, only 13–28 of the 180 cells of the land between the limbs of loop 1 flow
+  during the flood (157–159 at 40 m³/s), no shortcut is cut and the loops keep flowing (1,865
+  flowing cells in the loops at 30 h; discharge round the tops 16.1 / 15.8 m³/s).
 
 ### No flood: cut off by bank retreat alone
 
-Flowing cells in the loops / discharge round the top of loop 2 (estimate, m³/s). Bold marks the
-first output after the cutoff.
+Flowing cells in the loops / discharge round the top of loop 2 (estimate, m³/s) / flowing cells
+in the lower bend (of 469). Bold marks the first row after the cutoff.
 
 | Landform time (h) | Control (repose 40°) | Repose 40° + slump blocks | Cohesive + slump blocks | Cohesive + slump blocks + fines |
 |---|---|---|---|---|
-| 20 | 2,202 / 15.4 | 2,206 / 15.1 | 2,192 / 15.7 | 2,186 / 15.7 |
-| 40 | 2,150 / 15.5 | 2,140 / 16.2 | 2,105 / 16.0 | 2,069 / 16.1 |
-| 60 | 2,042 / 16.1 | 2,012 / 16.2 | 2,048 / 16.4 | 1,912 / 17.1 |
-| 80 | 1,915 / 16.6 | 1,879 / 16.2 | 1,857 / 16.7 | 1,793 / 16.8 |
-| 100 | **844 / 0.1** | **832 / 0.1** | **901 / 1.3** | 1,732 / 17.6 |
-| 120 | 816 / 0.0 | 794 / 0.0 | 810 / 0.1 | **819 / 0.8** |
-| 140 | 788 / 0.3 | 1,078 / 3.3 | 817 / 0.0 | 772 / 0.4 |
-| 160 | 1,124 / 3.4 | 1,023 / 2.0 | 790 / 0.0 | 774 / 0.0 |
-| 180 | 1,047 / 2.4 | 1,009 / 1.6 | 1,140 / 3.5 | 1,211 / 5.4 |
-| Time of the cutoff | 90–95 h | 85–90 h | 95–100 h | 115–120 h |
+| 20 | 2,210 / 15.5 / 450 | 2,206 / 15.3 / 464 | 2,204 / 15.8 / 467 | 2,196 / 15.6 / 451 |
+| 40 | 2,189 / 16.1 / 449 | 2,160 / 15.8 / 463 | 2,113 / 15.6 / 452 | 2,131 / 16.1 / 449 |
+| 60 | 2,155 / 15.6 / 440 | 2,071 / 16.1 / 425 | 2,113 / 16.5 / 431 | 2,023 / 16.2 / 413 |
+| 80 | **928 / 0.2 / 249** | **928 / 0.1 / 225** | **1,021 / 0.6 / 236** | 1,853 / 16.8 / 325 |
+| 100 | 883 / 0.2 / 249 | 856 / 0.0 / 241 | 916 / 0.5 / 250 | **812 / 0.4 / 218** |
+| 120 | 1,151 / 3.2 / 125 | 844 / 0.1 / 241 | 831 / 0.1 / 248 | 740 / 0.3 / 219 |
+| 140 | 1,101 / 1.7 / 65 | 1,104 / 3.0 / 89 | 1,020 / 3.3 / 72 | 717 / 0.1 / 181 |
+| 160 | 1,031 / 1.6 / 1 | 1,025 / 2.1 / 53 | 1,052 / 2.7 / 49 | 698 / 0.0 / 153 |
+| 180 | 1,015 / 1.4 / 0 | 984 / 1.9 / 0 | 1,005 / 2.1 / 12 | 853 / 3.0 / 124 |
+| Time of the cutoff | 65–70 h | 75–80 h | 75–80 h | 90–95 h |
+| Time the flow returned to the loop | 100–105 h | 125–130 h | 135–140 h | 175–180 h |
 
-- **Without overbank flow, outer-bank retreat alone cuts off loop 2** (the original form of a neck
-  cutoff). In all four configurations the flowing cells in the loops fall slowly from 2,200 to
-  1,800–1,900 by 80 h (outer-bank retreat and inner-bank deposition shift the flow out of the
-  initial channel), then drop to about 800 at the cutoff, when the discharge round the top of
-  loop 2 falls to almost zero. Loop 1 is not cut off by 180 h.
-- **The cut is at the base of loop 2**: the outer (south) bank of the bend between the two loops
-  (x ≈ 150–200 m) and the outer bank of the bend from loop 2 into the outlet straight retreat
-  towards each other, the land between them is cut, and the flow moves to a diagonal shortcut
-  from x ≈ 190 m, y ≈ 20 m to x ≈ 225 m, y ≈ 45 m (the 100 h panels). This is south of the
-  narrowest land between the limbs (the red line in the settings figure, y ≈ 76 m) and not in the
-  low-bank zone.
+- **Without overbank flow, outer-bank retreat alone cuts the neck of loop 2** (the original form of
+  a neck cutoff): near the root, both limbs of loop 2 are bends whose outer banks face the inside of
+  the loop (the neck). When the outer banks, retreating from both sides, meet at the narrowest land
+  between the limbs (a little south of the red line in the settings figure, y ≈ 55–75 m), the flow
+  passes straight from the lower bend into the downstream limb of loop 2 (the 80 and 100 h panels).
+  In all four configurations the flowing cells in the loops fall slowly from 2,200 to 1,850–2,150
+  before the cutoff (outer-bank retreat and inner-bank deposition shift the flow out of the initial
+  channel), then drop to 800–1,000 at the cutoff, when the discharge round the top of loop 2 falls
+  to almost zero (0.0–0.6 m³/s). Loop 1 is not cut off by 180 h.
+- **Next the land between the two loops is cut and the flow returns to loop 2**: the land between
+  the two loops is eroded from both sides by the downstream limb of loop 1 and the upstream limb of
+  loop 2 (both are the outer banks of the bends round the tops). Once this land is cut, the flow goes
+  from loop 1 straight into the upstream limb of loop 2 and down that limb to the shortcut across
+  the neck. Part of the flow also goes round the top of loop 2 (1.4–3.3 m³/s, 10–20 % of the
+  15 m³/s). Instead, the flow in the lower bend stops: at 180 h the flowing cells in the lower bend
+  are 0–12 (124 with fines, just after the cut), and the bed of the initial channel of the bend has
+  risen by +0.67 to +0.74 m on average. The lower bend becomes the next old channel, a chain of
+  cutoffs (the 140 and 180 h panels).
 - **In the cohesive banks, slump blocks are the only route of retreat**: angle-of-repose
-  avalanching 0 m³, slump blocks 11,434 m³. In the non-cohesive control, angle-of-repose
-  avalanching (11,862 m³) plays the same role, and adding slump blocks only changes the split
-  (4,721 m³ by avalanching + 6,852 m³ by slump blocks). The times of the cutoff of the three
-  configurations differ by 5–10 h, one or two output intervals (5 h); differences in rounding
-  alone can shift them by that much (see the notes).
-- **Adding fines delays the cutoff by about 20 h** (115–120 h against 95–100 h for cohesive +
-  slump blocks). The channel widens a little more slowly: the wet cells outside the initial
-  channel at 60–100 h are 4–7 % fewer than without fines (1,901, 2,360, 2,819 against 2,032,
-  2,526, 2,958).
-- **After the cutoff part of the flow returns to the loop**: 45–70 h after the cutoff (145 h in the
-  control, 135 h with slump blocks, 165 h cohesive, 175 h with fines) the flow comes back along the
-  outer edge of the widened loop 2 (discharge round the top 1.6–5.4 m³/s as an estimate, 10–40 % of
-  the 15 m³/s). The
-  shortcut stays open, and at 180 h 479–540 of the 1,132 cells of the initial channel of loop 2 are
-  dry and 167–232 hold standing water. The bed of the initial channel of loop 2 rises by
-  +0.40 to +0.58 m on average (loop 1: −0.12 to +0.27 m): the old channel begins to fill but is not
-  closed by 180 h.
-- **Fines settle at the margins of the flowing channel rather than in the old channel** (bottom row
-  of the figure; the figure below): the mean thickness of fines Sf is 0.06 m (at most 0.83 m) in the
-  initial channel of loop 2 and 0.16 m (at most 1.23 m) in the flowing loop 1. Little fine sediment
-  reaches the old channel through its weak flow; it settles where the widened channel is shallow
-  and slow at its margins. The fines carried along with the bed load add up to 1.07 × 10⁶ m³: in
-  the channel the fines keep moving with the bed load.
-- The channel widens a lot (3,186–3,345 wet cells outside the initial channel at 180 h; the initial
+  avalanching 0 m³, slump blocks 11,550 m³. In the non-cohesive control, angle-of-repose
+  avalanching (11,234 m³) plays the same role, and adding slump blocks only changes the split
+  (4,779 m³ by avalanching + 7,399 m³ by slump blocks). The two configurations with slump blocks
+  cut off 10 h later and have the flow return 25–35 h later than the control. A 10 h difference in
+  the time of the cutoff (two outputs) is within what differences in rounding alone can cause (see
+  the notes).
+- **Adding fines delays the cutoff by about 15 h and the return of the flow by about 40 h**
+  (90–95 h and 175–180 h against 75–80 h and 135–140 h for cohesive + slump blocks). The channel
+  widens a little more slowly: the wet cells outside the initial channel at 60–100 h are 2–9 %
+  fewer than without fines (1,884, 2,462, 2,660 against 1,969, 2,499, 2,924).
+- **The old channel begins to fill but is not closed**: at 180 h, 540–646 of the 1,132 cells of the
+  initial channel of loop 2 are dry and 136–273 hold standing water, and its bed has risen by
+  +0.36 to +0.66 m on average (loop 1: −0.05 to +0.37 m). By 180 h the entrances are not closed.
+- **Fines settle at the margins of the flowing channel and in standing water before the outlet
+  rather than in the old channel** (bottom row of the figure; the figure below): the mean
+  thickness of fines Sf is 0.06 m (at most 0.66 m) in the initial channel of loop 2 and 0.17 m (at
+  most 1.29 m) in the flowing loop 1. The thickest, 2.0 m, is in the standing water where the outer
+  bank widened just before the outlet straight (x = 315 m, y = 17 m). Little fine sediment reaches
+  the old channel through its weak flow; it settles where the flow is shallow and slow at its
+  margins. The fines carried along with the bed load add up to 9.3 × 10⁵ m³: in the channel the
+  fines keep moving with the bed load.
+- The channel widens a lot (2,857–3,194 wet cells outside the initial channel at 180 h; the initial
   channel has 3,904 cells). Banks with a repose angle of 40° and a critical height of 1.8 m retreat
   widely under a constant discharge, so the time of the cutoff depends strongly on the bank
   strength settings (φ, H_c).
@@ -263,7 +276,7 @@ first output after the cutoff.
 ![End of the no-flood run with cohesive banks, slump blocks and fines](figs/final_slump_fines.png)
 
 No flood, cohesive + slump blocks + fines at 180 h. From the left: depth, speed, bed change and
-thickness of fines Sf. Black = initial banks, orange = low-bank zone.
+thickness of fines Sf. Black = initial banks.
 
 ## What this model cannot represent (differences from the real phenomena)
 
@@ -284,41 +297,32 @@ thickness of fines Sf. Black = initial banks, orange = low-bank zone.
 
 ## Notes
 
-- **The low-bank zone is not the neck**: make_init.py takes land within 8 m of the banks of two
-  half-wavelength segments as a neck and lowers it to bed + 0.95 m (`BANKNECK`, `NECKW`). Adjacent
-  half-wavelength segments meet at the apexes of the bends and at both ends of the curve, so the
-  test picks the land around those points (10 places); the 22 m wide land between the limbs of the
-  loops (the actual necks) is not picked and stays at + 1.6 m like the floodplain. The results in
-  this README are for this terrain. A proposal for fixing the test is in docs/handoff.md (fixing it
-  changes the results).
-- **The strip along the east edge is at bed + 2.4 m**: when make_init.py computes the floodplain
-  height (the highest bed within 24 m + 1.6 m), the array shift (`np.roll`) wraps round between the
-  east and west edges, so the height of 196 land cells at x = 325–345 m, y = 9–71 m on the east
-  edge is set by the bed at the west edge (about 0.8 m higher than at the east edge), giving bed
-  + 2.4 m (settings figure). They lie in the non-erodible reach with zero soil depth, so the terrain
-  does not change there. During the flood the water flowing over the southern floodplain is held
-  back in front of the strip (x ≈ 300–325 m) and leaves through the east edge by way of the
-  channel (the strip stays dry).
+- **The terrain was fixed on 2026-11-02**: before that, make_init.py's test for lowering the neck
+  picked the land around the bend apexes (10 places, 409 cells) and lowered it to bed + 0.95 m, and
+  the array shift wrapped round between the east and west edges and put a strip along the east edge
+  (196 cells) at bed + 2.4 m. The present terrain follows the uniform rule under "Banks" above, so
+  it differs from that of earlier results (developer.md §84.18).
 - **Flow settings**: the parameter files set `f_inflow_edge = 2` (zero advection term on the edges
-  into the inflow section, with their speed capped by the energy head; developer.md §68.40) and
-  `f_opening_dynamic = 2` (the default from 2026-10-18 to 31). For the difference from the default 3
-  used since 2026-10-31, see the [meander notes](../../meander/en/README.md#notes).
+  into the inflow section, with their speed capped by the energy head; developer.md §68.40).
+  `f_opening_dynamic` is written out at its default 3 (a dug channel without a channel mask needs
+  2 or more to keep the conveyance of the rows next to the banks; see the
+  [meander notes](../../meander/en/README.md#notes)).
 - **dt = 0.1 s** keeps the CFL condition in the fast flow over the deep pools (3–4 m) of the sharp
   bends during the flood (0.2 s stopped in the trials when the example was made).
-- **Limit of the bed change per update**: `fluv_dzmax` (0.05 m) fires on 4,551–4,643 edges with
-  the flood and on 43–348 edges without it (ledger). Lowering morfac reduces it.
+- **Limit of the bed change per update**: `fluv_dzmax` (0.05 m) fires on 12,006–13,170 edges with
+  the flood and on 44–399 edges without it (ledger). Lowering morfac reduces it.
 - **Reproducibility**: the same executable gives bit-identical results for any number of threads,
-  but a different compiler or optimisation (this README uses gfortran 13.3 with -Ofast) changes
-  the rounding, which the feedback between bank collapse and flow amplifies; the time of the
-  cutoff can shift by one or two outputs (5–10 h). When comparing, look at how and in what order
-  the cutoff happens rather than at matching numbers.
+  but a different compiler, optimisation or CPU (this README uses gfortran 13.3 with -Ofast
+  -march=native, which uses the instructions of the CPU it is built on) changes the rounding,
+  which the feedback between bank collapse and flow amplifies; the time of the cutoff can shift
+  by one or two outputs (5–10 h). When comparing, look at how and in what order the cutoff
+  happens rather than at matching numbers.
 
 ## Starting points for sensitivity experiments
 
 - The peak discharge of the flood (`inflow_val`): at 40 m³/s overbank flow cuts shortcuts, at
-  25 m³/s there is no cutoff (see the results). The height of the low-bank zone (`BANKNECK` in
-  make_init.py) acts, with the present test, around the apexes of the bends rather than at the
-  necks (see the notes).
+  25 m³/s there is no cutoff (see the results).
+- The bank height (`BANK` in make_init.py): it sets how much flood water crosses the land.
 - `repose_phi`, `rf_hc`: bank strength. They decide when the cutoff occurs.
 - `sec_rmax`: depth of the pools in the sharp bends.
 - `morfac`: acceleration of the landform change. Lowering it makes the per-update limit

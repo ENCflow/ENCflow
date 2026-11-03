@@ -366,11 +366,12 @@ architecture.md。このメモは「現在進行中・未完了の項目」だ�
      効かせる)と根の直しの設計、既定を変えるかの判断(全検定・全例題の A/B の後。既定 0 には流入口で
      エネルギーを作る性質が残る: fluxline の流入直後が一様流より約 10 % 速い、狭い流入口のジェット、
      examples/meander の容量給砂の構成が 0 では止まる)。
-   - **f_inflow_edge = 2 の例題**: examples/meander(11 構成)と examples/meander_cutoff(6 構成)は
-     param で f_inflow_edge = 2 を指定する。2026-11-02 に両方の全構成を今の main の版で回し直し、README を
-     組み直した(developer.md §84.18。meander の param_fixsuspfeed は過給砂で地形 35 h に止まるので、
-     利用者の判断で外した)。旧 README の「頸部ゾーン」「出入口ゾーン」は頸部・出入口ではなかった
-     ので、README では「低い河岸のゾーン」と呼び替え、出入口ゾーンの指標は廃した(§84.18)。
+   - **f_inflow_edge = 2 の例題**: examples/meander(10 構成)と examples/meander_cutoff(6 構成)は
+     param で f_inflow_edge = 2 を指定する。2026-11-02〜03 に両方の全構成を今の main の版
+     (f_opening_dynamic は既定の 3)で回し直し、README を組み直した(developer.md §84.18。meander の
+     param_fixsuspfeed は過給砂で地形 35 h に止まるので外した。meander_cutoff の make_init.py の
+     頸部の判定と東西の折り返しを直し、氾濫原を一様の規則にした。旧 README の「頸部ゾーン」
+     「出入口ゾーン」の指標は廃した)。
      delta・estuary_barrage・levee_breach・山地渓流の例題などは既定(0)のままなので回し直しは要らない
      (将来既定を変えるなら、delta の README の汀線半径・分流路数・南北の非対称と比較の図はリポジトリに
      ない解析で作られているので、指標の定義を決めて解析スクリプトを置く必要がある)。§89.25 の流入面の

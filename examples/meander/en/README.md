@@ -8,7 +8,7 @@ This example follows how a sinusoidal channel placed in a floodplain changes its
 bedload bed evolution, corrections of the bedload direction (transverse bed slope and secondary
 flow), bank collapse and fixation of the inner-bank bars. No processing that rebuilds the
 channel centreline or the grid is used: the shape of the channel is represented only by the
-terrain on a fixed grid and the wet/dry judgement. Eleven configurations compare the nature of
+terrain on a fixed grid and the wet/dry judgement. Ten configurations compare the nature of
 the banks (non-cohesive, cohesive, slump blocks), the way the discharge is given (constant, or
 alternating floods and low flows) together with fixation, and the sediment supply from upstream
 (no feed, capacity feed, equilibrium-concentration feed of suspended sediment, the ledger of
@@ -128,29 +128,29 @@ floodplain (bed + 1 m). The inputs are made by `make_init.py` (`make`).
   15 m³/s (uniform flow of depth ≈ 0.8 m), or alternating floods of 15 m³/s (20 min) and low
   flows of 1.5 m³/s (18 min) joined by 2-min transitions, with a period of 42 min (35 h of
   landform time). The east edge is a free outflow.
-- **Time**: dt = 0.2 s (0.1 s in the three configurations with suspended sediment), the
+- **Time**: dt = 0.2 s (0.1 s in the two configurations with suspended sediment), the
   landform is updated every 1 s, the landform change is accelerated by morfac = 50, and 4 h of
   hydraulics is 200 h of landform time. Roughness n = 0.03.
 - **Numerical settings of the flow**: the advection is the default momentum-conservative form
-  (scheme 3), dynamic reassignment of blocked openings on all edges (`f_opening_dynamic = 2`),
+  (scheme 3), dynamic reassignment of blocked openings at its default `f_opening_dynamic = 3`,
   and `f_inflow_edge = 2` for the edges touching the outer cells of the segment inflow (see the
   notes).
 
 | Case | Parameter file | Inflow | Banks, fixation, feed | Run time (guide) |
 |---|---|---|---|---|
-| Non-cohesive | param.txt | constant 15 m³/s | angle-of-repose avalanching (32°) | about 25 min |
-| Cohesive | param_cohesive.txt | constant | bank-erosion law (K_b = 3×10⁻⁵ m/s, τ*c,b = 0.5) + avalanching (35°) | about 25 min |
-| Cohesive + slump blocks | param_cohesive_slump.txt | constant | cohesive + slump blocks (H_c = 1.5 m, talus 35°) + shielding by the blocks (h_cover = 0.2 m) | about 25 min |
-| Non-cohesive + capacity feed | param_feed.txt | constant | non-cohesive + capacity feed (sd_feed.txt) | about 25 min |
-| Varying discharge only | param_varq.txt | alternating floods and low flows | non-cohesive (no fixation; for comparison) | about 20 min |
-| Varying discharge + fixation | param_fix.txt | same | non-cohesive + fixation (T_fix = 10 h, c_τ = 10) | about 20 min |
-| Same, gentle recession | param_fixrec.txt | raised to 15 m³/s in 2 min, held 10 min, lowered to 1.5 m³/s over 20 min, low flow 10 min (period 42 min) | same as varying discharge + fixation | about 20 min |
-| Varying discharge + fixation + suspended sediment | param_fixsusp.txt | floods and low flows; fines (0.2 mm) fed at a volume concentration of 0.004 during floods | fixation + suspended sediment + roughness of fixed cells (c_n = 2) | about 80 min |
-| Varying discharge + fixation + capacity feed | param_fixfeed.txt | floods and low flows | fixation + capacity feed | about 30 min |
-| Varying discharge + fixation + suspended sediment + feed | param_fixsuspfeed.txt | floods and low flows; fines fed at the equilibrium concentration of the inflow cells (factor 1.0) | fixation + suspended sediment + roughness + capacity feed | stops at 35 h of landform time (see the results) |
-| Same + ledger of fines in the bed | param_fixsuspfines.txt | same; 0.5 × the equilibrium concentration | above + ledger of fines (the initial bed is coarse sand only) | about 65 min |
+| Non-cohesive | param.txt | constant 15 m³/s | angle-of-repose avalanching (32°) | about 45 min |
+| Cohesive | param_cohesive.txt | constant | bank-erosion law (K_b = 3×10⁻⁵ m/s, τ*c,b = 0.5) + avalanching (35°) | about 45 min |
+| Cohesive + slump blocks | param_cohesive_slump.txt | constant | cohesive + slump blocks (H_c = 1.5 m, talus 35°) + shielding by the blocks (h_cover = 0.2 m) | about 40 min |
+| Non-cohesive + capacity feed | param_feed.txt | constant | non-cohesive + capacity feed (sd_feed.txt) | about 45 min |
+| Varying discharge only | param_varq.txt | alternating floods and low flows | non-cohesive (no fixation; for comparison) | about 40 min |
+| Varying discharge + fixation | param_fix.txt | same | non-cohesive + fixation (T_fix = 10 h, c_τ = 10) | about 40 min |
+| Same, gentle recession | param_fixrec.txt | raised to 15 m³/s in 2 min, held 10 min, lowered to 1.5 m³/s over 20 min, low flow 10 min (period 42 min) | same as varying discharge + fixation | about 40 min |
+| Varying discharge + fixation + suspended sediment | param_fixsusp.txt | floods and low flows; fines (0.2 mm) fed at a volume concentration of 0.004 during floods | fixation + suspended sediment + roughness of fixed cells (c_n = 2) | about 2 h 20 min |
+| Varying discharge + fixation + capacity feed | param_fixfeed.txt | floods and low flows | fixation + capacity feed | about 40 min |
+| Varying discharge + fixation + suspended sediment + feed + ledger of fines | param_fixsuspfines.txt | floods and low flows; fines (0.2 mm) fed at 0.5 × the equilibrium concentration of the inflow cells | fixation + suspended sediment + roughness + capacity feed + ledger of fines in the bed (the initial bed is coarse sand only) | about 1 h 50 min |
 
-The run times are for gfortran 13.3 (-Ofast) on 1 thread with 4 cases running at the same time.
+The run times are for gfortran 13.3 (-Ofast -march=native) on 1 thread of an Intel Xeon (2.8 GHz)
+with 4 cases running at the same time.
 
 **Metrics** (plot_results.py; measured over the columns x = 150–650 m): the **channel width** is
 the column mean of the width of the wet cells (depth > 0.1 m), the **maximum shift of the centre**
@@ -168,7 +168,7 @@ cd examples/meander
 make                     # link to the executable and inputs (make_init.py makes z.txt, h.txt, sd.txt, sd_feed.txt)
 make run                 # the 4 constant-discharge configurations (non-cohesive, cohesive, cohesive + slump blocks, capacity feed)
 make varq                # the 4 flood/low-flow configurations (varying discharge only, fixation, gentle recession, fixation + suspended sediment)
-make feed                # the 3 feed + fixation configurations (capacity feed, equilibrium feed of suspended sediment, ledger of fines; the second stops partway)
+make feed                # the 2 feed + fixation configurations (capacity feed; equilibrium feed of suspended sediment + ledger of fines)
 python3 plot_setup.py    # figs/mechanism.png, setup.png (does not use the results)
 python3 plot_results.py  # figs/planform.png, fixation.png, sections.png, metrics.png, feed.png and the tables
 ```
@@ -180,9 +180,10 @@ needs Python 3, NumPy and matplotlib.
 
 ## Results
 
-Values from recomputing all configurations on 2026-11-02 with the version after main's fix of
-the lateral faces of the momentum-conservative advection (developer.md §68.42, §68.43) (gfortran
-13.3, -Ofast, 1 thread). The tables are excerpts from the output of plot_results.py.
+Values from recomputing all configurations on 2026-11-03 with the version after main's fix of
+the lateral faces of the momentum-conservative advection (developer.md §68.42, §68.43), with the
+default f_opening_dynamic = 3 (gfortran 13.3, -Ofast -march=native, 1 thread). The tables are
+excerpts from the output of plot_results.py.
 
 ### Constant discharge: outer-bank retreat and widening
 
@@ -210,16 +211,16 @@ Width / maximum shift of the centre / maximum amplitude of the wet belt (m; init
 
 | Case | 100 h | 150 h (flood period) | 200 h | Deepest scour (m, 200 h) | Fixed bar cells (inside the initial channel, 200 h) |
 |---|---|---|---|---|---|
-| Non-cohesive (constant Q) | 29.7 / 14.0 / 31 | 33.7 / 17.0 / 35 | 36.1 / 23.8 / 43 | −2.10 | – |
-| Cohesive (constant Q) | 28.1 / 12.0 / 25 | 29.8 / 14.0 / 25 | 30.8 / 14.0 / 27 | −2.14 | – |
-| Cohesive + slump blocks | 29.2 / 12.0 / 29 | 31.3 / 15.0 / 29 | 32.4 / 16.0 / 29 | −2.12 | – |
-| Non-cohesive + capacity feed | 33.1 / 15.0 / 33 | 39.6 / 25.1 / 47 | 42.8 / 25.0 / 49 | −2.24 | – |
-| Varying Q only | 22.6 / 9.0 / 23 | 25.3 / 6.0 / 23 | 26.3 / 13.0 / 25 | −2.02 | – |
-| Varying Q + fixation | 21.7 / 8.8 / 23 | 24.0 / 10.6 / 29 | 25.0 / 18.1 / 33 | −2.32 | 615 (2,460 m²) |
-| Same, gentle recession | 21.6 / 7.8 / 23 | 22.7 / 9.5 / 27 | 23.7 / 13.8 / 31 | −2.15 | 385 (1,540 m²) |
-| Varying Q + fixation + suspended fines | 16.7 / 9.0 / 21 | 18.1 / 10.0 / 21 | 17.2 / 8.0 / 21 | −2.03 | 897 (3,588 m²) |
-| Varying Q + fixation + capacity feed | 21.6 / 12.0 / 29 | 24.9 / 13.3 / 31 | 26.9 / 20.0 / 41 | −2.15 | 1,111 (4,444 m²) |
-| Varying Q + fixation + fines + feed + ledger of fines | 18.3 / 13.0 / 27 | 23.2 / 16.1 / 33 | 24.6 / 28.5 / 47 | −2.03 | 979 (3,916 m²) |
+| Non-cohesive (constant Q) | 27.9 / 11.0 / 29 | 31.5 / 14.0 / 33 | 34.5 / 23.3 / 41 | −2.22 | – |
+| Cohesive (constant Q) | 24.6 / 6.0 / 21 | 26.8 / 9.0 / 25 | 29.2 / 13.0 / 29 | −2.52 | – |
+| Cohesive + slump blocks | 26.1 / 9.0 / 23 | 29.1 / 14.0 / 29 | 31.9 / 16.0 / 33 | −2.26 | – |
+| Non-cohesive + capacity feed | 30.5 / 12.0 / 31 | 36.6 / 23.8 / 47 | 38.3 / 29.7 / 49 | −2.36 | – |
+| Varying Q only | 21.7 / 7.8 / 21 | 24.7 / 6.0 / 25 | 25.4 / 15.0 / 27 | −2.08 | – |
+| Varying Q + fixation | 21.4 / 8.0 / 21 | 23.5 / 9.7 / 27 | 24.1 / 16.2 / 35 | −2.30 | 458 (1,832 m²) |
+| Same, gentle recession | 21.0 / 7.0 / 19 | 21.9 / 9.0 / 23 | 22.7 / 10.3 / 23 | −2.18 | 215 (860 m²) |
+| Varying Q + fixation + suspended fines | 14.9 / 9.0 / 23 | 20.1 / 9.0 / 31 | 24.8 / 25.6 / 45 | −2.69 | 1,406 (5,624 m²) |
+| Varying Q + fixation + capacity feed | 20.1 / 14.0 / 23 | 23.8 / 12.6 / 31 | 25.4 / 26.6 / 41 | −2.02 | 791 (3,164 m²) |
+| Varying Q + fixation + fines + feed + ledger of fines | 17.9 / 11.0 / 25 | 22.6 / 17.0 / 41 | 24.8 / 24.5 / 51 | −2.35 | 985 (3,940 m²) |
 
 (150 h is just an intermediate output for the constant-discharge configurations and a
 flood-period output for the varying-flow configurations.)
@@ -228,26 +229,26 @@ flood-period output for the varying-flow configurations.)
   towards the inner bank and the bed-slope term eases the transverse slope, forming pools on the
   outer banks and bars on the inner banks. As a pool deepens the outer bank face collapses, and
   the toe flow carries the collapsed sediment away so that the retreat continues (cross-section
-  figure: the outer bank retreats by about 20 m (x = 420 m) and about 30 m (x = 520 m) in 200 h,
-  and the inner bar rises 0.5–0.6 m above the initial bed but stays below the water surface). The
-  retreat is largest not at the apex of a bend but 50–90 m downstream of it (where the main flow
-  crosses the bend and strikes the outer bank), and it grows towards the downstream bends:
-  48 m at x = 720 m.
+  figure: the outer bank retreats by 18 m (x = 420 m) and 26 m (x = 520 m) in 200 h, and the inner
+  bar rises 0.5–0.7 m above the initial bed but stays below the water surface). The retreat is
+  largest not at the apex of a bend but 60–90 m downstream of it (where the main flow crosses the
+  bend and strikes the outer bank), and it grows towards the downstream bends (22, 28, 38 and 42 m
+  in the bends with apexes at x = 350, 450, 550 and 650 m; table 4 of plot_results.py).
 - **Under a constant discharge lateral migration becomes widening and loop extension**: the inner
   bars do not build above the water surface and do not become land, so outer-bank retreat turns
-  directly into widening (non-cohesive: width 20 → 36 m, amplitude of the wet belt 19 → 43 m,
-  angle-of-repose avalanching 4,992 m³). The upstream bends move little because the bed
-  degradation without feed (−0.93 m at x = 50–150 m) leaves their banks relatively high.
-- **Cohesive banks retreat more slowly**: with the bank-erosion law (824 m³) and collapse at a
-  repose angle of 35° (2,666 m³), the width at 200 h is 30.8 m and the amplitude 27 m (36.1 m and
-  43 m non-cohesive). Adding slump blocks, banks taller than the critical height H_c = 1.5 m
-  collapse in blocks (1,132 m³), giving a slightly larger width of 32.4 m and amplitude of 29 m;
-  the contribution of the bank-erosion law hardly changes (824 → 732 m³: the shielding by the
+  directly into widening (non-cohesive: width 20 → 34.5 m, amplitude of the wet belt 19 → 41 m,
+  angle-of-repose avalanching 4,076 m³). The upstream bends move little because the bed
+  degradation without feed (−0.94 m at x = 50–150 m) leaves their banks relatively high.
+- **Cohesive banks retreat more slowly**: with the bank-erosion law (442 m³) and collapse at a
+  repose angle of 35° (1,497 m³), the width at 200 h is 29.2 m and the amplitude 29 m (34.5 m and
+  41 m non-cohesive). Adding slump blocks, banks taller than the critical height H_c = 1.5 m
+  collapse in blocks (1,188 m³), giving a slightly larger width of 31.9 m and amplitude of 33 m;
+  the contribution of the bank-erosion law does not change (442 → 443 m³: the shielding by the
   blocks has little effect).
 - **Capacity feed stops the bed degradation** (non-cohesive + capacity feed): the bed change of
-  the channel is −0.04 to −0.12 m (−0.49 to −0.93 m without feed), the upstream bends move too,
-  and the channel spreads the most, to a width of 42.8 m and an amplitude of 49 m at 200 h
-  (capacity feed 6,637 m³).
+  the channel is −0.03 to −0.11 m (−0.48 to −0.94 m without feed), the upstream bends move too,
+  and the channel spreads the most, to a width of 38.3 m and an amplitude of 49 m at 200 h
+  (capacity feed 6,079 m³).
 
 ### Varying discharge and fixation: the inner bank becomes land
 
@@ -261,37 +262,41 @@ deposition at 200 h:
 
 | Case | Fixed cells (inside the initial channel) | of which z − z0 > 1.0 m | Maximum z − z0 of fixed bars (m) | Bed change x = 50–150 / 150–300 / 300–500 m | Floodplain deposition > 0.1 m (cells) |
 |---|---|---|---|---|---|
-| Non-cohesive (constant Q) | – | – | – | −0.93 / −0.73 / −0.49 | 0 |
-| Non-cohesive + capacity feed | – | – | – | −0.04 / −0.04 / −0.12 | 0 |
-| Varying Q only | – | – | – | −0.88 / −0.60 / −0.38 | 0 |
-| Varying Q + fixation | 615 | 0 | 0.86 | −0.84 / −0.60 / −0.60 | 0 |
-| Same, gentle recession | 385 | 0 | 0.82 | −0.81 / −0.56 / −0.46 | 0 |
-| Varying Q + fixation + suspended fines | 897 | 0 | 0.80 | −0.56 / −0.59 / −0.53 | 151 |
-| Varying Q + fixation + capacity feed | 1,111 | 96 | 1.10 | −0.30 / −0.26 / −0.39 | 0 |
-| Varying Q + fixation + fines + feed + ledger of fines | 979 | 256 | 1.18 | −0.16 / −0.16 / −0.51 | 121 |
+| Non-cohesive (constant Q) | – | – | – | −0.94 / −0.72 / −0.48 | 0 |
+| Non-cohesive + capacity feed | – | – | – | −0.03 / −0.04 / −0.11 | 0 |
+| Varying Q only | – | – | – | −0.87 / −0.58 / −0.37 | 0 |
+| Varying Q + fixation | 458 | 0 | 0.90 | −0.86 / −0.58 / −0.55 | 0 |
+| Same, gentle recession | 215 | 0 | 0.75 | −0.82 / −0.54 / −0.39 | 0 |
+| Varying Q + fixation + suspended fines | 1,406 | 150 | 1.13 | −0.37 / −0.47 / −0.68 | 131 |
+| Varying Q + fixation + capacity feed | 791 | 53 | 1.04 | −0.13 / −0.10 / −0.42 | 0 |
+| Varying Q + fixation + fines + feed + ledger of fines | 985 | 246 | 1.23 | −0.02 / −0.03 / −0.33 | 159 |
 
 (The floodplain is at the initial bed + 1.0 m. The two cohesive configurations have almost the
 same bed change as the non-cohesive one and are left out of the table.)
 
 - **Varying discharge alone does not turn the inner bank into land**: bars exposed at low flow are
-  eroded by the next flood (width 26.3 m and amplitude 25 m at 200 h; the flood lasts about half
+  eroded by the next flood (width 25.4 m and amplitude 27 m at 200 h; the flood lasts about half
   of the period, so the change is smaller than under a constant discharge).
-- **With fixation the inner bank stays as land**: bars exposed at low flow become fixed (615 cells
-  = 2,460 m² with a > 0.5 inside the initial channel at 200 h) and survive the next flood. The
-  outer banks keep retreating (amplitude 33 m), and at low flow the water gathers in the pools
-  along the outer banks. In the flood period (150 h) 83 of 440 fixed cells are submerged; the top
-  of the fixed bars (at most +0.86 m) stops at the flood water surface and does not reach
+- **With fixation the inner bank stays as land**: bars exposed at low flow become fixed (458 cells
+  = 1,832 m² with a > 0.5 inside the initial channel at 200 h) and survive the next flood. The
+  outer banks keep retreating (amplitude 35 m), and at low flow the water gathers in the pools
+  along the outer banks. In the flood period (150 h) 78 of 295 fixed cells are submerged; the top
+  of the fixed bars (at most +0.90 m) stops at the flood water surface and does not reach
   floodplain level.
-- **A gentle recession gives less fixation** (param_fixrec.txt): 385 fixed cells (615 with the
-  rectangular wave), bar top 0.82 m, width 23.7 m. Bed-load deposition is capped by the water
+- **A gentle recession gives less fixation** (param_fixrec.txt): 215 fixed cells (458 with the
+  rectangular wave), bar top 0.75 m, width 22.7 m. Bed-load deposition is capped by the water
   surface of the supplying cell, so the highest deposition happens during the peak; a longer
   recession shortens the peak and slows everything down.
-- **Suspended fines widen the bars but do not raise them above the flood level**
-  (param_fixsusp.txt): feeding fines during the floods increases the fixed cells to 897 and
-  narrows the low-flow channel to 17.2 m (fines settle at the edges of the fixed bars and extend
-  them). The bar top, however, stays at 0.80 m at most, as with bed load alone, and the outer
-  banks almost stop retreating (amplitude of the wet belt 21 m). Fines settle on the floodplain
-  near the inlet (151 cells).
+- **Suspended fines fill the initial channel with bars, and the flow cuts new bends**
+  (param_fixsusp.txt): feeding fines during the floods lets the fines settle on and around the
+  fixed bars, which grow: the fixed cells increase to 1,406, of which 150 rise above floodplain
+  level (bar top 1.13 m), and the low-flow channel narrows to 14.9 m at 100 h. Once the initial
+  channel is filled, from about 150 h the flow cuts new bends into the floodplain that cross the
+  initial channel (x ≈ 260–480 m; wavelength about 100 m, about half the initial one), and the
+  amplitude of the wet belt grows to 45 m at 200 h. Fines settle on the floodplain near the inlet
+  (131 cells). This configuration is sensitive to the numerical settings of the flow: in the
+  2026-11-02 version computed with f_opening_dynamic = 2, the bar top stopped at 0.80 m and the
+  outer banks almost stopped retreating (developer.md §84.18).
 
 ### Sediment feed: stopping degradation and raising bars to floodplain level
 
@@ -302,46 +307,36 @@ configurations with sediment feed. Black = initial banks, green = water edge, br
 (a > 0.5) inside the initial channel.
 
 - **With capacity feed the fixed bars begin to reach floodplain level** (param_fixfeed.txt): the
-  degradation of the channel eases to −0.26 to −0.39 m (−0.60 to −0.84 m without feed), and of
-  the 1,111 fixed cells at 200 h (615 without feed) 96 rise above floodplain level (+1.0 m; bar
-  top 1.10 m; capacity feed 3,419 m³). The feed configurations have 5 m of soil up to the
-  upstream end (sd_feed.txt), so the south bank near the inlet (x < 100 m) is scoured and widens
-  (409 cells outside the initial channel lowered by 0.3 m or more, deepest −2.3 m).
+  degradation of the channel eases to −0.10 to −0.42 m (−0.55 to −0.86 m without feed), and of
+  the 791 fixed cells at 200 h (458 without feed) 53 rise above floodplain level (+1.0 m; bar
+  top 1.04 m; capacity feed 3,586 m³).
 - **With the ledger of fines in the bed, bars grow to floodplain level at a feed factor of 0.5**
   (param_fixsuspfines.txt): with an initial bed of coarse sand only (`fines_frac0 = 0`), only
-  fines that have been deposited are re-entrained, so the channel degrades only gently (−0.16 to
-  −0.51 m), and 256 of the 979 fixed cells at 200 h rise above floodplain level (bar top 1.18 m).
+  fines that have been deposited are re-entrained, so the channel degrades only gently (−0.02 to
+  −0.33 m), and 246 of the 985 fixed cells at 200 h rise above floodplain level (bar top 1.23 m).
   The intended sequence (deposition during floods → exposure at low flow → fixation →
-  floodplain level) appears without tuning the feed concentration. At 200 h water that spilled
-  over is left on the northern floodplain of the upstream reach (x = 130–260 m; closed green
-  lines in the figure), and floodplain deposition covers 121 cells. Capacity feed is 2,415 m³,
-  and the fines carried along with the bed load by the ledger add up to 5.4 × 10⁵ m³.
-- **The configuration with equilibrium-concentration feed (factor 1.0) and no ledger stops
-  partway with the present version** (param_fixsuspfeed.txt): it is over-supplied from the first
-  flood; by the 25 h output the channel bed has risen by +1.0 m (x < 10 m), +0.6 m
-  (x = 50–150 m) and +0.25 m (x = 300–500 m) from upstream and spills onto the floodplain (6,434
-  wet cells outside the initial channel, 984 cells of floodplain deposition), and at 35 h of
-  landform time (42 min of flow time) the cell next to the inflow cells is scoured by 4.4 m, the
-  speed reaches 18 m/s and the run stops when the Courant number exceeds 1 (the per-update limit
-  of bed change fired on a million edges). The 2026-10-30 version ran to the end. As the comment
-  in the parameter file says, a factor of 1.0 has always been a borderline setting on the
-  over-supplied side; it is left out of the tables and figures. The ledger configuration above
-  (factor 0.5) achieves the same aim.
+  floodplain level) appears without tuning the feed concentration. Where the bars fill the
+  channel, the flow swings out onto the floodplain and cuts new bends near the inlet and at
+  x ≈ 170–220 and 340–420 m (amplitude of the wet belt 51 m at 200 h), and at 200 h shallow water
+  that spilled over in the preceding flood is left across the whole width of the upstream
+  floodplain (x ≈ 40–300 m; green lines in the figure; 17,051 wet cells). Floodplain deposition
+  covers 159 cells, capacity feed is 1,819 m³, and the fines carried along with the bed load by
+  the ledger add up to 4.8 × 10⁵ m³.
 
 ### Ledgers
 
 | Case | Angle-of-repose avalanching | Bank-erosion law | Slump blocks | Capacity feed | Fines carried with bed load | Firings of fluv_dzmax (edges) |
 |---|---|---|---|---|---|---|
-| Non-cohesive (constant Q) | 4,992 | – | – | – | – | 64,475 |
-| Cohesive (constant Q) | 2,666 | 824 | – | – | – | 26,609 |
-| Cohesive + slump blocks | 1,807 | 732 | 1,132 | – | – | 36,306 |
-| Non-cohesive + capacity feed | 3,993 | – | – | 6,637 | – | 152,795 |
-| Varying Q only | 1,782 | – | – | – | – | 2,716 |
-| Varying Q + fixation | 4,478 | – | – | – | – | 3,055 |
-| Same, gentle recession | 3,563 | – | – | – | – | 358 |
-| Varying Q + fixation + suspended fines | 8,642 | – | – | – | – | 466,946 |
-| Varying Q + fixation + capacity feed | 8,847 | – | – | 3,419 | – | 29,867 |
-| Varying Q + fixation + fines + feed + ledger of fines | 8,050 | – | – | 2,415 | 538,161 | 10,448 |
+| Non-cohesive (constant Q) | 4,076 | – | – | – | – | 32,418 |
+| Cohesive (constant Q) | 1,497 | 442 | – | – | – | 7,569 |
+| Cohesive + slump blocks | 1,126 | 443 | 1,188 | – | – | 18,352 |
+| Non-cohesive + capacity feed | 4,363 | – | – | 6,079 | – | 150,246 |
+| Varying Q only | 1,769 | – | – | – | – | 1,011 |
+| Varying Q + fixation | 3,448 | – | – | – | – | 408 |
+| Same, gentle recession | 2,285 | – | – | – | – | 40 |
+| Varying Q + fixation + suspended fines | 16,132 | – | – | – | – | 338,714 |
+| Varying Q + fixation + capacity feed | 5,166 | – | – | 3,586 | – | 16,160 |
+| Varying Q + fixation + fines + feed + ledger of fines | 7,805 | – | – | 1,819 | 477,019 | 7,660 |
 
 (m³. Collapse and erosion are bulk volumes, feed and fines are solid volumes. plot_results.py
 reads them from the ledgers in the screen output.)
@@ -368,7 +363,7 @@ reads them from the ledgers in the screen output.)
   with no mixed-size exchange layer and no vertical stratigraphy (the ledger of fines treats
   buried fines as available for entrainment too).
 - **The speed of meander development is not compared with real rivers**: in 200 h the amplitude of
-  the wet belt grows from 19 m to 21–49 m and the mechanisms of outer-bank retreat, inner-bank
+  the wet belt grows from 19 m to 23–51 m and the mechanisms of outer-bank retreat, inner-bank
   advance and lateral migration of the channel are in place, but under a constant discharge the
   change is mainly widening and loop extension, and the stage at which the growth of the loops or
   the speed of migration could be compared with real rivers is not reached.
@@ -380,24 +375,21 @@ reads them from the ledgers in the screen output.)
   head). With the default 0, the capacity-feed configurations stop through a positive feedback
   between scour beside the inlet and the jet (developer.md §68.40). Results near the inlet depend
   on this rule.
-- **Dynamic reassignment of blocked openings**: all configurations set `f_opening_dynamic = 2` (the
-  default from 2026-10-18 to 31). It keeps the conveyance of the rows next to the banks in an
-  incised channel without a channel mask (the default 1 used up to 2026-10-18 has no effect there;
-  developer.md §84.7, test/uniflow). Running the non-cohesive configuration (param.txt) to 50 h of
-  landform time with the default 3 used since 2026-10-31 (a trial; no parameter file is provided)
-  gives a width of 23.5 m against 24.8 m, a maximum shift of the centre of 6 m against 7 m, the
-  same maximum amplitude of 23 m, deepest scour −1.85 m against −1.75 m, and 328 against 2,081
-  firings of the per-update limit of bed change; the beds differ by 0.15 m rms over the initial
-  channel (1.6 m at most locally). The tendencies are the same but the numbers do not match, so
-  reproducing the numbers of this README needs 2.
-- **Time step**: dt = 0.2 s, and 0.1 s for the three configurations with suspended sediment (the
+- **Dynamic reassignment of blocked openings**: all configurations write out the default
+  `f_opening_dynamic = 3` (the default since 2026-10-31). An incised channel without a channel mask
+  needs 2 or more to keep the conveyance of the rows next to the banks (the default 1 used up to
+  2026-10-18 has no effect there; developer.md §84.7, test/uniflow). Up to 2026-11-02 this example
+  was computed with 2, whose numbers do not match those with 3 (comparison in developer.md
+  §84.18).
+- **Time step**: dt = 0.2 s, and 0.1 s for the two configurations with suspended sediment (the
   configuration with suspended sediment and fixation exceeded the CFL limit at 0.2 s; 2026-10-19).
-- **Limit of the bed change per update**: `fluv_dzmax` (0.05 m) fires on 358–466,946 edges (ledger
-  table), more often in the configurations with suspended sediment and with capacity feed. morfac =
-  50 is large; lowering it reduces this.
+- **Limit of the bed change per update**: `fluv_dzmax` (0.05 m) fires on 40–338,714 edges (ledger
+  table), more often in the varying Q + fixation + suspended fines configuration and the
+  non-cohesive + capacity feed configuration. morfac = 50 is large; lowering it reduces this.
 - **Reproducibility**: the same executable gives bit-identical results for any number of threads,
-  but a different compiler or optimisation (this README uses gfortran 13.3 with -Ofast) changes
-  the rounding, which the feedback between bank collapse and flow amplifies into different numbers.
+  but a different compiler, optimisation or CPU (this README uses gfortran 13.3 with -Ofast
+  -march=native, which uses the instructions of the CPU it is built on) changes the rounding, which
+  the feedback between bank collapse and flow amplifies into different numbers.
   When comparing, look at the direction and size of the differences between configurations rather
   than at matching values of width or amplitude.
 
