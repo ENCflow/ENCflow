@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 # lava(溶岩流 = Bingham 粘性重力流)検定
-#   使い方: Check_lava.py <savedir> <huppert|bingham>
+#   使い方: Check_lava.py <savedir> <huppert|bingham|dome>
 #
 #   huppert モード(構成1: Newton 極限の相似解。param.txt と対):
 #     (1) 台帳    : |Σhl − V_in/A_cell| < TOL_SUM(注入は厳密加算・
@@ -14,7 +14,14 @@
 #     (2) 停止厚  : 検定窓の hl+dz の平均が h∞ = τ_y/(ρg tanθ) に
 #                   相対 TOL_HINF 以内、変動係数 < TOL_CV
 #     (3) 固化    : Σdz / 注入 > FRAC_SOL かつ max dz > MIN_DZ
-import sys, struct
+#   dome モード(構成4: 塑性ドームの静止形。param_dome.txt と対):
+#     (1) 台帳    : |Σhl − V_in/A_cell| < TOL_SUM(固化なし)
+#     (2) 等方性  : 格子軸の方向(±22.5°)と斜めの方向(±22.5°)の扇形の
+#                   面積等価半径の比が 1 に相対 TOL_ISO 以内
+#     (3) 解析解  : h(r)² = a(R − r)(a = 2τ_y/ρg、V = (8π/15)√a R^{5/2})
+#                   に対し、中心厚が H = √(aR) に相対 TOL_H4、面積等価
+#                   半径が R に相対 TOL_R4 以内、r < R の RMS 誤差 < TOL_RMS4·H
+import sys, struct, math
 
 TOL_SUM = 1.0e-8
 GG = 9.8
@@ -32,6 +39,13 @@ RHO2, TAUY2 = 2600.0, 2000.0
 IW1, IW2 = 15, 35                # 検定窓(セル番号 i。噴火口の下流・前縁の後方)
 TOL_HINF, TOL_CV = 0.20, 0.15
 FRAC_SOL, MIN_DZ = 0.7, 0.2
+# --- 構成4(param_dome.txt と対で保守)---
+NX4, NY4, DX4 = 61, 61, 1.0
+IC4, JC4 = 31, 31                # 噴火口のセル(1 始まり)
+Q4, TSUP4, DT4, TT4 = 2.0, 900.0, 1.0, 6000.0
+RHO4, TAUY4 = 2600.0, 1.0e4
+HL_EPS4 = 0.01                   # 広がりの判定厚 (m)
+TOL_ISO, TOL_H4, TOL_R4, TOL_RMS4 = 0.05, 0.05, 0.05, 0.05
 
 
 def read_rec(f):
@@ -115,6 +129,51 @@ if mode == "huppert":
     ok3 = err < TOL_GROW
     print("(3) 成長則: r(tt)/r(tt/2) = %.3f vs √2 (err %.1f%%, tol %.0f%%) : %s"
           % (ratio, 100 * err, 100 * TOL_GROW, "PASS" if ok3 else "FAIL"))
+    ok = ok1 and ok2 and ok3
+elif mode == "dome":
+    hl = load_hl(savedir, NX4, NY4)
+    area = DX4 * DX4
+    # (1) 台帳(注入は t < TSUP4 の tick ごとに Q4*dt の厳密加算。固化なし)
+    nt = round(TT4 / DT4)
+    vin = sum(Q4 * DT4 for it in range(1, nt + 1) if it * DT4 < TSUP4)
+    res = sum(hl) * area - vin
+    ok1 = abs(res) < TOL_SUM * vin
+    print("(1) 台帳  : sum(hl)*A - V_in = %.3e m3 (V_in = %.1f, tol %.0e 相対) : %s"
+          % (res, vin, TOL_SUM, "PASS" if ok1 else "FAIL"))
+    # セルの中心から噴火口までの距離と方位(0〜90°に畳む)
+    cells = []
+    for idx, h in enumerate(hl):
+        i = idx % NX4 + 1
+        j = idx // NX4 + 1
+        dx_ = (i - IC4) * DX4
+        dy_ = (j - JC4) * DX4
+        r = math.hypot(dx_, dy_)
+        th = math.degrees(math.atan2(abs(dy_), abs(dx_)))
+        cells.append((h, r, th))
+    # (2) 等方性: 扇形群(4 扇形 × 45° = π)の面積等価半径 √(2 N A/π)
+    nax = sum(1 for h, r, th in cells if h > HL_EPS4 and r > 0.0 and (th < 22.5 or th > 67.5))
+    ndg = sum(1 for h, r, th in cells if h > HL_EPS4 and 22.5 <= th <= 67.5)
+    rax = (2.0 * nax * area / math.pi) ** 0.5
+    rdg = (2.0 * ndg * area / math.pi) ** 0.5
+    ratio = rdg / rax
+    ok2 = abs(ratio - 1.0) < TOL_ISO
+    print("(2) 等方性: 面積等価半径 斜め %.2f m / 格子軸 %.2f m = %.3f (tol 1±%.2f) : %s"
+          % (rdg, rax, ratio, TOL_ISO, "PASS" if ok2 else "FAIL"))
+    # (3) 塑性ドームの解析解
+    a = 2.0 * TAUY4 / (RHO4 * GG)
+    rr = (vin / ((8.0 * math.pi / 15.0) * a ** 0.5)) ** 0.4
+    hh = (a * rr) ** 0.5
+    hc = hl[(JC4 - 1) * NX4 + (IC4 - 1)]
+    ra = r_area(hl, HL_EPS4, area)
+    sq = [(h - (a * (rr - r)) ** 0.5) ** 2 for h, r, th in cells if r < rr]
+    rms = (sum(sq) / len(sq)) ** 0.5
+    eh = (hc - hh) / hh
+    er = (ra - rr) / rr
+    ok3 = abs(eh) < TOL_H4 and abs(er) < TOL_R4 and rms < TOL_RMS4 * hh
+    print("(3) 解析解: 中心厚 %.3f m vs H = %.3f m (err %+.1f%%)、r_A = %.2f m vs R = %.2f m "
+          "(err %+.1f%%)、RMS = %.3f m (%.1f%% of H)(tol %.0f%%) : %s"
+          % (hc, hh, 100 * eh, ra, rr, 100 * er, rms, 100 * rms / hh, 100 * TOL_H4,
+             "PASS" if ok3 else "FAIL"))
     ok = ok1 and ok2 and ok3
 else:
     hl = load_hl(savedir, NX2, NY2)

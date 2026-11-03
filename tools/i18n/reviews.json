@@ -329,11 +329,11 @@
     {
       "source": "docs/users_guide/lavaflow.md",
       "target": "docs/en/users_guide/lavaflow.md",
-      "source_sha256": "4dbda033d2c348ffcf20c58fb5cdbf4be25d2433b675ee6bf8ae7790d95c4735",
-      "target_sha256": "5fd530a5c4514ec1dce3ab18a6dbe84c0b9dcf27fdeba55388d5b9102287dc18",
-      "reviewer": "Claude (Claude Code session; full-text content and lexical review, no model execution)",
+      "source_sha256": "d9c515566d3e54ad9b234651d03108ccd1446d13563173fe3ebe9e06f5fd058b",
+      "target_sha256": "ded531123f39126a5339134ba02bccfef4c9dad0117e22a1d44cf2da09b9913c",
+      "reviewer": "Claude (Claude Code session; lava gradient-magnitude fix §51.4: changed passages compared side by side with the Japanese source, unchanged parts as recorded 2026-10-24)",
       "method": "assistant",
-      "reviewed_on": "2026-10-24"
+      "reviewed_on": "2026-11-03"
     },
     {
       "source": "docs/users_guide/massflow.md",
@@ -2894,20 +2894,20 @@
     {
       "source": "test/lava/README.md",
       "target": "test/lava/en/README.md",
-      "source_sha256": "014813a7ef409a5523cc27b69bc8ad869ec42e83ba9ba70f0b2878b3a122a79e",
-      "target_sha256": "18d861d13e4fa729a95d94f03b54ac7cfafcf9250cad6b7d5ab443e43ebfc68b",
-      "reviewer": "Claude (Claude Code session; full-text content and lexical review, no model execution)",
+      "source_sha256": "5efb5ad1a2b4de8f293b3d0ee7c0f5ee0fc32e112788e310f0a791bf52646af8",
+      "target_sha256": "c1a218ead1e571846f489f784f8db8df2b66942b3cadd759b64b44d908703982",
+      "reviewer": "Claude (Claude Code session; lava gradient-magnitude fix §51.4: changed passages compared side by side with the Japanese source, unchanged parts as recorded 2026-10-24)",
       "method": "assistant",
-      "reviewed_on": "2026-10-24"
+      "reviewed_on": "2026-11-03"
     },
     {
       "source": "test/lava/figs/lava.png",
       "target": "test/lava/en/figs/lava.png",
-      "source_sha256": "c1ebf6bed63cf3c06a3a01a9d1e81b2f41c032ecc4753b77195319e3f14eb01c",
-      "target_sha256": "828ef381cecffd759a673f3cbb49d3e78d79eec742777b7321a8cd9351c51a68",
-      "reviewer": "Claude (Claude Code session; English figure drawn by the same script with the en switch; visual check)",
+      "source_sha256": "84605dcbf8d8a709f37f6389f7728b17e474860eb3e63f35a1bd82d077b95ea2",
+      "target_sha256": "78093fd81a69e759e04349d1d9ae0c34025cbf8bae15406763f3e3e8b57acad1",
+      "reviewer": "Claude (Claude Code session; both images drawn by Fig.py and Fig.py en from the same test/lava results of 2026-11-03, compared side by side: same plotted data and layout, labels translated)",
       "method": "assistant",
-      "reviewed_on": "2026-10-24"
+      "reviewed_on": "2026-11-03"
     },
     {
       "source": "test/nest_identity/README.md",
