@@ -137,7 +137,11 @@ The settings and equations of each mechanism are in the users guide:
   and the deepest points of tanks 1–3 (P1–P3). Depth and concentration at
   each point (probes) and discharge and load on transects across the
   rivers are recorded every hour.
-- dt = 10 s, 180 days. About 15 minutes per case (gfortran, 4 threads).
+- dt = 10 s, 180 days. With gfortran and 4 threads, step 1 takes 16 minutes
+  and steps 2–5, which include groundwater flow, about 20 minutes per case
+  (measured for steps 1 and 4; about 2 hours for the six cases). The
+  results do not depend on the number of threads (bit-identical with 1 and
+  4 threads).
 
 | Case | Settings file | Groundwater flow | Retardation R | Tanks | Form of the substance |
 |---|---|---|---|---|---|
@@ -158,7 +162,7 @@ substance are mass in g and concentration in mg/L (µg/L in the figures).
 ```bash
 cd examples/catchment_metal
 make                     # links to the executables and the inputs (data/, gen_data.py)
-make run                 # compute the six cases in turn (about 15 minutes each, 4 threads)
+make run                 # compute the six cases in turn (16–20 minutes each with 4 threads; about 2 hours in all)
 make step3               # to compute only one case
 python3 plot_results.py  # figs/*.png and the tables (with the argument en, English figures in en/figs/)
 ```
@@ -317,9 +321,11 @@ day 180, 1–2 kg is in the surface water. The table is printed by
   - Particulate: the tanks trap 97 % of the load at the tributary outlet
     and reduce the export of the whole catchment by a fifth. When looking
     at metals that are mainly particulate (such as lead) or at loads that
-    move with sediment, tanks cannot be ignored. What accumulates on tank
-    beds may move again when they are dredged or dry out (not treated in
-    this example).
+    move with sediment, tanks cannot be ignored. This result holds when the
+    tanks are represented in the terrain and settling in them is solved
+    (see "Applying this to a real catchment" for the representation of
+    tanks smaller than a cell). What accumulates on tank beds may move
+    again when they are dredged or dry out (not treated in this example).
 - **Point and area sources**: the mine effluent keeps flowing on dry days,
   so it sets the river concentration in the dry season. The load from the
   farmland reaches the rivers with surface runoff during floods and, when
@@ -328,7 +334,7 @@ day 180, 1–2 kg is in the surface water. The table is printed by
 ## Applying this to a real catchment
 
 - **Grid and computing time**: this example is 214 km² on a 250 m grid
-  (3,430 cells), about 15 minutes per case for 180 days (4 threads). A
+  (3,430 cells), 16–20 minutes per case for 180 days (4 threads). A
   1,000–1,500 km² catchment on a 250 m grid has around 20 thousand cells,
   and more than 100 thousand on a 100 m grid. Computing time is roughly
   proportional to the number of cells, so use MPI parallelism as well
@@ -337,12 +343,24 @@ day 180, 1–2 kg is in the surface water. The table is printed by
   (fn_width) together with the terrain. Rivers narrower than the grid are
   represented by the subgrid channel width (8–15 m in this example).
 - **Tanks**: tanks large enough to be resolved by the grid are burned into
-  the terrain with their bunds and spillways, as in this example. Where
-  there are many tanks smaller than a cell, they can also be represented by
-  a tank capacity (fn_rscap; spilled water is not absorbed) or by the dam
-  and lake structures (release from a fully mixed pond) (section
+  the terrain with their bunds and spillways, as in this example. With a
+  grid fine enough for the water area of each tank to cover at least one
+  cell, mixing, settling and spilling in the tank are solved by the same
+  mechanisms as in this example (one cell is 6.25 ha on a 250 m grid and
+  1 ha on a 100 m grid). Where there are many tanks smaller than a cell,
+  they can also be represented by a tank capacity (fn_rscap) or by the dam
+  and lake structures, but **neither reproduces the result of step 5
+  (tanks trapping the particulate form by settling)** (section
   "Reservoirs and retention ponds" of
   [water quality](../../../docs/en/users_guide/wq.md)).
+  - fn_rscap absorbs all the water and substance reaching the cell until
+    the tank is full, and lets the spilled water pass afterwards. What is
+    absorbed never returns to the surface, so both forms are trapped
+    completely until the tank is full and not at all afterwards.
+  - The dam and lake structures treat the pond as fully mixed, and settling
+    in the pond is not implemented yet. The particulate form is released
+    without settling in the pond, so the release concentration comes out
+    too high and the trapping too low.
 - **Form of the substance**: real heavy metals are split between dissolved
   and particulate forms. With the partition coefficient Kd (`wq_kd`) they
   can be treated as an equilibrium of two phases, but suspended sediment

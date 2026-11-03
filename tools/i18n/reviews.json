@@ -1247,9 +1247,9 @@
     {
       "source": "examples/catchment_metal/README.md",
       "target": "examples/catchment_metal/en/README.md",
-      "source_sha256": "b6bb88598e64b6324d5272f444801bd1b311d15571097008e63fc4a033431e0e",
-      "target_sha256": "21d5b6d5adbd683b8438b23b75b81f4767258f89bc8af4ba5f77c0b6953d0ec0",
-      "reviewer": "Claude (Claude Code session; full-text review of the new example README and its English mirror, 2026-11-03)",
+      "source_sha256": "1513a056690bb56e9001e6eb3a35abe9c230e23f81b83d3e9386882f319ab1b6",
+      "target_sha256": "6702375bb199f701118e7029f450bf47469dd43b32b5233bc359d7ad2c5c17f6",
+      "reviewer": "Claude (Claude Code session; compared the Japanese master and the English mirror after adding the caveat on tanks smaller than a cell (fn_rscap and dam/lake structures do not reproduce the particulate trapping of step 5) and the measured 4-thread runtime, 2026-11-03)",
       "method": "assistant",
       "reviewed_on": "2026-11-03"
     },
