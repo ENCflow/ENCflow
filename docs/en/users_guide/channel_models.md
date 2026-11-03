@@ -59,7 +59,9 @@ cell width; diagonal: cell area / diagonal path length = 0.707 cell width),
 correcting the under-conveyance of one-cell channels regardless of
 orientation; 0 is for comparison with the old behaviour (checked against
 Manning uniform flow in the straight and diagonal channels of
-[test/bendloss](../../../test/bendloss/en/README.md)).
+[test/bendloss](../../../test/bendloss/en/README.md)). The overall idea,
+including the dynamic reassignment of openings blocked by terrain and water
+level (`f_opening_dynamic`), is in [Passage-width adjustment](passage_width.md).
 
 **Hydraulic mode (f_bank_mode).** 0 is overtopping only (impermeable up to
 the crest in both directions), 1 a sluice gate (check valve; a shortcut

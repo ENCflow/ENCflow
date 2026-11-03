@@ -1230,7 +1230,11 @@ computations should differ much less; checking this is left to the reader
   its 8-direction exchange, so **no 1D channel model or flow-direction
   (D8) data are needed** even on a 200 m grid. That a catchment
   computation works with nothing but a D8-filled DEM and a channel
-  mask rests on this property.
+  mask rests on this property. How the eight-direction passage widths
+  are adjusted so that one-cell-wide channels carry the correct
+  conveyance is summarized in
+  [Passage-width adjustment](../../../docs/en/users_guide/passage_width.md)
+  in the user's guide.
 - **The price of resolution is computation**: halving the grid
   multiplies the cells by 4 and, because dt must shrink with the
   growing velocities, the steps by 2 to 4, so the run time grows 6 to

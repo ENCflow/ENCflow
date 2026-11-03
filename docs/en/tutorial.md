@@ -60,7 +60,7 @@ the basis of the defaults, detailed settings).
 | Field (chapter page) | Explanation pages |
 |---|---|
 | [Time management](users_guide/time.md) | [Courant number and how to choose the time step](users_guide/courant.md) (primer), [Time-step design policy](users_guide/timestep_policy.md) |
-| [Shallow water computation](users_guide/swflow.md) | [ENC grid and time integration](users_guide/encgrid.md), [Advection](users_guide/advection.md), [Diffusion](users_guide/diffusion.md), [Non-hydrostatic correction](users_guide/nonhydrostatic.md) |
+| [Shallow water computation](users_guide/swflow.md) | [ENC grid and time integration](users_guide/encgrid.md), [Passage-width adjustment](users_guide/passage_width.md), [Advection](users_guide/advection.md), [Diffusion](users_guide/diffusion.md), [Non-hydrostatic correction](users_guide/nonhydrostatic.md) |
 | [Structures](users_guide/structure.md), [Boundary conditions](users_guide/boundary.md), [Channels](users_guide/channel.md) | [Hydraulic laws of structures and boundaries](users_guide/hydraulics.md) |
 | [Groundwater](users_guide/gwflow.md) | [Groundwater models](users_guide/gwflow_models.md) |
 | [Sediment and landform change](users_guide/geomorph.md) | [Sediment transport, hillslope and long-term processes](users_guide/sediment.md), [Debris flow, slope failure and moving bed layer](users_guide/massflow.md) |

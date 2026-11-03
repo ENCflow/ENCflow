@@ -95,29 +95,29 @@
     {
       "source": "docs/tutorial.md",
       "target": "docs/en/tutorial.md",
-      "source_sha256": "fc54fdd930513a2aa93924348614ae3d5b31d67925eb0a2812d95b1ebe9dae58",
-      "target_sha256": "524b2284747fb4adca58027554968418de5be085b582fd608110f5d097be7c63",
-      "reviewer": "Claude (Claude Code session; review of the changed lines against the previously recorded pair, no model execution)",
+      "source_sha256": "d1abf5aa122731e721de8e7e3f993b7ac0d6deaebebfb7b8baa2ba6853ef6d96",
+      "target_sha256": "71f298ae86cee1d40a2bc92cc76063dd3527a2c94b549adfbffea6c7185cc14c",
+      "reviewer": "Claude (Claude Code session; reviewed the Japanese source against the English mirror after adding the passage-width page and the links to it, 2026-11-03)",
       "method": "assistant",
-      "reviewed_on": "2026-10-29"
+      "reviewed_on": "2026-11-03"
     },
     {
       "source": "docs/users_guide.md",
       "target": "docs/en/users_guide.md",
-      "source_sha256": "e1c0358f6c8c351364895198ddf96ea47575537c7d9ba833cded21df902b0615",
-      "target_sha256": "54725e462e0b9e007dbf13d83b8d8cdcb497b5e2a10012ca7f9166678be2d5d4",
-      "reviewer": "Claude (assistant)",
+      "source_sha256": "745f7bbe34dee9fd444a8792ae773571c936d17011dca5310b444db2e23f0049",
+      "target_sha256": "ab24530ba4e3bf8c15baa57e471c50095f9b472f31866467d000df49668983a7",
+      "reviewer": "Claude (Claude Code session; reviewed the Japanese source against the English mirror after adding the passage-width page and the links to it, 2026-11-03)",
       "method": "assistant",
-      "reviewed_on": "2026-11-02"
+      "reviewed_on": "2026-11-03"
     },
     {
       "source": "docs/users_guide/advection.md",
       "target": "docs/en/users_guide/advection.md",
-      "source_sha256": "756eaf1f07bb88aa149a17f24902fcc88a2c31188f88bc4f7cf928c58cd1076c",
-      "target_sha256": "e26fd4c3e002ab79c2b3af4e09d7e20be90fa335757b8276e1341b04e503820f",
-      "reviewer": "Claude (assistant)",
+      "source_sha256": "443350a576f550da7927686372343bce3d21c10d9febed89861c14bc58f33d90",
+      "target_sha256": "cc93e241e11b65548c106b31415dd778c4e437ee6c089afdbe9805a3346aa47e",
+      "reviewer": "Claude (Claude Code session; reviewed the Japanese source against the English mirror after adding the passage-width page and the links to it, 2026-11-03)",
       "method": "assistant",
-      "reviewed_on": "2026-11-01"
+      "reviewed_on": "2026-11-03"
     },
     {
       "source": "docs/users_guide/bedmotion.md",
@@ -176,11 +176,11 @@
     {
       "source": "docs/users_guide/channel_models.md",
       "target": "docs/en/users_guide/channel_models.md",
-      "source_sha256": "bee7bf0d49917f60e87f337d99d8830d703e849c24fe421d855d551f9002a219",
-      "target_sha256": "aa9860a5b475005f361ac97b85e786ef9182e12c6b127cd720d6abe79c493f8d",
-      "reviewer": "Claude (Claude Code session; reviewed the Japanese source against the English mirror; figures from the same results and drawing code with label changes only, 2026-10-30)",
+      "source_sha256": "308f63618caf260bc5377631b4e7b57df1f9254f0688a42afe4dbd6cefdb5e07",
+      "target_sha256": "1c2306eae05a383bed48c936e5ce5825edd5655a4a3be7e502ccab48d7c8ce73",
+      "reviewer": "Claude (Claude Code session; reviewed the Japanese source against the English mirror after adding the passage-width page and the links to it, 2026-11-03)",
       "method": "assistant",
-      "reviewed_on": "2026-10-30"
+      "reviewed_on": "2026-11-03"
     },
     {
       "source": "docs/users_guide/coordinates.md",
@@ -230,11 +230,11 @@
     {
       "source": "docs/users_guide/encgrid.md",
       "target": "docs/en/users_guide/encgrid.md",
-      "source_sha256": "6e711bb9cc60faab837b4fbabc90fee332bc879363219c4e8a22001cf19f125f",
-      "target_sha256": "a36cbcdfc4af43a46a22eff6e05ac7c118da29fa0068e70e1d36f73af66e9675",
-      "reviewer": "Claude (Claude Code session; full-text content and lexical review, no model execution)",
+      "source_sha256": "8c4da382b421b0f202b1ab0b4cd16509e40d51a7bd876564188028de7c7607d2",
+      "target_sha256": "b0a842da490e73af341894e1ac4f515271bd3e48050c2249041c41ec738994fb",
+      "reviewer": "Claude (Claude Code session; reviewed the Japanese source against the English mirror after adding the passage-width page and the links to it, 2026-11-03)",
       "method": "assistant",
-      "reviewed_on": "2026-10-24"
+      "reviewed_on": "2026-11-03"
     },
     {
       "source": "docs/users_guide/forcing.md",
@@ -390,6 +390,15 @@
       "reviewed_on": "2026-11-02"
     },
     {
+      "source": "docs/users_guide/passage_width.md",
+      "target": "docs/en/users_guide/passage_width.md",
+      "source_sha256": "eb33367fa80432b20481636b05e523040fed24d33667ba14492024c2d5b12786",
+      "target_sha256": "48b256aa9b645afd4cabfaf1919e2e8829bb41d86c9d1078a2a0f0c1ba0097b1",
+      "reviewer": "Claude (Claude Code session; reviewed the Japanese source against the English mirror after adding the passage-width page and the links to it, 2026-11-03)",
+      "method": "assistant",
+      "reviewed_on": "2026-11-03"
+    },
+    {
       "source": "docs/users_guide/record.md",
       "target": "docs/en/users_guide/record.md",
       "source_sha256": "77acdc67671cb2028dc8d05f435a5e0061c4d30d5edc8dbe5346b80eb6f93866",
@@ -437,11 +446,11 @@
     {
       "source": "docs/users_guide/swflow.md",
       "target": "docs/en/users_guide/swflow.md",
-      "source_sha256": "f0d3762b4f19d582520584e8c2a3ac7c7d59c5eee226a04ae56d88b9afc94be0",
-      "target_sha256": "cf9f94745a3ead02b1107a6be98b8c0c7de55e3e0be4a5fa9baa4321b6e3ad38",
-      "reviewer": "Claude (Claude Code session; lateral-flux fix of the momentum-conservative advection, §68.42)",
+      "source_sha256": "35773a186485e0836b9ccd66d4abbe7c2c8aa4ace99c59bd4c8fb25c310c6dc3",
+      "target_sha256": "6448892a57d0620a3414088da894012397450b875d4720b4d37caecf84c5d4df",
+      "reviewer": "Claude (Claude Code session; reviewed the Japanese source against the English mirror after adding the passage-width page and the links to it, 2026-11-03)",
       "method": "assistant",
-      "reviewed_on": "2026-11-01"
+      "reviewed_on": "2026-11-03"
     },
     {
       "source": "docs/users_guide/swi.md",
@@ -2282,11 +2291,11 @@
     {
       "source": "test/bendloss/README.md",
       "target": "test/bendloss/en/README.md",
-      "source_sha256": "57f35450d309e0c38c1fff74ece11169c12645aee2bb5660740bf2598218025c",
-      "target_sha256": "e9da75c6be70e433dc8103762062e2ff23102ffc639ced3057757d135ea0dab0",
-      "reviewer": "Claude (Claude Code session; the default of f_opening_dynamic changed from 2 to 3 on 2026-10-31: the statements of the default and the notes on 2 were updated in the source and the translation together, and the changed parts were compared; rest unchanged since the previous record)",
+      "source_sha256": "bf8cc40401e094ce914c46f129c062da5c18470e058c50b1d17d67019a2c7758",
+      "target_sha256": "ac50f76f4bab1e2511e31d366b20792c4e53d097ea48d886eee6f590966e445b",
+      "reviewer": "Claude (Claude Code session; reviewed the Japanese source against the English mirror after adding the passage-width page and the links to it, 2026-11-03)",
       "method": "assistant",
-      "reviewed_on": "2026-10-31"
+      "reviewed_on": "2026-11-03"
     },
     {
       "source": "test/bendloss/figs/bendloss.png",
@@ -3713,11 +3722,11 @@
     {
       "source": "tutorials/chichibu/README.md",
       "target": "tutorials/chichibu/en/README.md",
-      "source_sha256": "d800fcd5491bd09dae91137ee7a5e525e0cc79fe37ff4e226ff78dd031b27b6f",
-      "target_sha256": "f6edb686dadc19289f8091a7e072bff00bdd7680d18df80dd9aa2c0ae64b752c",
-      "reviewer": "Claude (assistant)",
+      "source_sha256": "d72ab8ef55b87fa6d7ffd8552c302c2a85c435984675f863bd477d9bb83be09d",
+      "target_sha256": "943a85a083d4982c0a46f941b888a2c4a3edfb2f4e89e4468fa7299554396cbb",
+      "reviewer": "Claude (Claude Code session; reviewed the Japanese source against the English mirror after adding the passage-width page and the links to it, 2026-11-03)",
       "method": "assistant",
-      "reviewed_on": "2026-11-01"
+      "reviewed_on": "2026-11-03"
     },
     {
       "source": "tutorials/chichibu/figs/step1_hend.png",

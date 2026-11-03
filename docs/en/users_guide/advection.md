@@ -514,7 +514,8 @@ listed in the [shallow water chapter](swflow.md).
   advection term (scheme 3 in particular). Reassigning the blocked shares to
   the open edges removes this. In steep, shallow flows the default 2 of 2026-10-18 to 31 also
   counts the upslope ground of a uniform slope as blocking and makes the flow
-  too fast; use 3 (blockage measured above the local plane) there.
+  too fast; use 3 (blockage measured above the local plane) there. The idea
+  and its history are in [Passage-width adjustment](passage_width.md).
 - `f_dry_head_cap`: the pressure term stops water from climbing onto dry
   ground above the water surface, but where the advection term wins, water
   can leak over at bore fronts and in incised channels. Capping the edge

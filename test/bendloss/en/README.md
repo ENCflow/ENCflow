@@ -148,6 +148,13 @@ width (cell area / channel length = dx²/dr = 7.07 m). Results of 2026-10-02
 The conveyance also drops on the diagonal, but less than along the axis
 (with the default p_diagratio the passage widths of all 8 directions are
 equal, 4.14 m, and the natural width of the diagonal is smaller).
+The table above gives the results of 2026-10-02, without reassignment. With
+the current default (`f_opening_dynamic = 3`; the dynamic reassignment gives
+the diagonal channel the diagonal natural width), param_diag.txt gives a
+mean depth of 1.373 m over the path k = 50 to 350 (0.9999 times Manning;
+the same with scheme 3). The values in the table are reproduced by setting
+`f_opening_dynamic = 0` explicitly (1.612 m; added 2026-11-03, developer.md
+§68.44).
 Note: if the inflow section is placed in the corner cell (1,1) of the
 domain, the set of normal + diagonal faces is incomplete and only 63% of
 the total discharge enters (constraint (5) of §18).

@@ -53,7 +53,7 @@ wave の Step 1 に出てくるクーラン数(`Cn_max` 列)と時間刻み `dt`
 | 分野(章ページ) | 詳説ページ |
 |---|---|
 | [時刻の管理](users_guide/time.md) | [クーラン数と時間刻みの決め方](users_guide/courant.md)(入門)、[時間刻みの設計方針](users_guide/timestep_policy.md) |
-| [浅水流計算](users_guide/swflow.md) | [ENC 格子と時間積分](users_guide/encgrid.md)、[移流項](users_guide/advection.md)、[拡散項](users_guide/diffusion.md)、[非静水圧補正](users_guide/nonhydrostatic.md) |
+| [浅水流計算](users_guide/swflow.md) | [ENC 格子と時間積分](users_guide/encgrid.md)、[通過幅の調整](users_guide/passage_width.md)、[移流項](users_guide/advection.md)、[拡散項](users_guide/diffusion.md)、[非静水圧補正](users_guide/nonhydrostatic.md) |
 | [内部水理構造物](users_guide/structure.md)・[境界条件](users_guide/boundary.md)・[河道](users_guide/channel.md) | [構造物と境界の水理則](users_guide/hydraulics.md) |
 | [地下水](users_guide/gwflow.md) | [地下水モデル](users_guide/gwflow_models.md) |
 | [土砂・地形変化](users_guide/geomorph.md) | [土砂輸送と斜面・長期地形過程](users_guide/sediment.md)、[土石流・斜面崩壊・動く底層](users_guide/massflow.md) |
