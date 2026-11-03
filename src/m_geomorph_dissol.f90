@@ -147,6 +147,7 @@ module subroutine init_dissol(gm, p, g, s, list)
   allocate(s%fxd(dcp%ish:dcp%ieh, dcp%jsh:dcp%jeh), source = 0.0)
   if (gm%dis%sink) allocate(s%fxdi(dcp%ish:dcp%ieh, dcp%jsh:dcp%jeh), source = 0.0)
   allocate(gm%dis%vrow(dcp%js:dcp%je), source = 0.0_real64)
+  allocate(gm%dis%vtrow(dcp%js:dcp%je), source = 0.0_real64)
   if (p%f_state_restore > 0) call restore_dissol(gm, p, g, s)
 
   call par_info("geomorph: limestone dissolution on (k_d = " // rtoa(gm%dis%kd) &
@@ -287,7 +288,8 @@ module subroutine calc_dissol(gm, p, g, s)
   type(t_state), intent(inout) :: s
   integer :: i, j, nclip
   real :: fw, w
-  real(real64) :: rsum
+  real(real64) :: rsum, tsum
+  logical :: talus
 
   if (gm%dis%lat) then
     call calc_dissol_lat(gm, p, g, s)
@@ -295,9 +297,11 @@ module subroutine calc_dissol(gm, p, g, s)
   end if
 
   nclip = 0
-  !$omp parallel do schedule(static) reduction(+: nclip) private(i, j, fw, w, rsum)
+  talus = allocated(s%ht)                                ! 崖錐(f_rockfall)があれば先に溶かす
+  !$omp parallel do schedule(static) reduction(+: nclip) private(i, j, fw, w, rsum, tsum)
   do j = dcp%js, dcp%je
     rsum = 0.0_real64
+    tsum = 0.0_real64
     do i = g%wx(1,j), g%wx(2,j)
       if (g%x(i,j) <= 0) cycle
       ! 積算水量は海セルでも消費して捨てる(次の間隔へ持ち越さない)
@@ -311,18 +315,58 @@ module subroutine calc_dissol(gm, p, g, s)
         w = gm%dis%dzmax                                 ! 超過分の溶解能は捨てる(飽和)
         nclip = nclip + 1
       end if
-      if (gm%dis%res) then
-        s%z(i,j) = s%z(i,j) - (1.0 - gm%dis%fres) * w
-        s%sd(i,j) = s%sd(i,j) + gm%dis%fres * w
-      else
-        s%z(i,j) = s%z(i,j) - w
-      end if
+      call apply_dissol(gm, s, i, j, w, talus, tsum)
       rsum = rsum + real(w, real64)
     end do
     gm%dis%vrow(j) = gm%dis%vrow(j) + rsum * g%dx * g%dy
+    gm%dis%vtrow(j) = gm%dis%vtrow(j) + tsum * g%dx * g%dy
   end do
   !$omp end parallel do
   gm%dis%nclip = gm%dis%nclip + nclip
+end subroutine
+
+
+!----------------------------------------------------------------------
+! 1 セルの溶食量 w の適用(床・側方の共通。§86.7):
+!   崖錐 ht(f_rockfall の落下物 = 石灰岩の岩屑)が載っていれば、先に崖錐を溶かす
+!   (ht を減らし、sd・z は残渣率を除いた分だけ下げる = 岩屑の残渣は土層に残る)。
+!   残りは基岩に当てる(z を下げ sd は保つ。残渣は sd に積む = 従来の規則)。
+!   崖錐がなければ(ht 未確保・ht = 0)従来の式そのもの = 既存構成とビット一致。
+!   崖錐を不死身にすると、裾に崩れ込んだ塔の岩屑の下で基岩だけが溶け続ける
+!   「コンベア」になる(examples/tower_karst の準定常強制で実検出)。
+!----------------------------------------------------------------------
+subroutine apply_dissol(gm, s, i, j, w, talus, tsum)
+  type(t_geomorph), intent(in) :: gm
+  type(t_state), intent(inout) :: s
+  integer, intent(in) :: i, j
+  real, intent(in) :: w
+  logical, intent(in) :: talus
+  real(real64), intent(inout) :: tsum
+  real :: wb, dh
+
+  wb = w
+  if (talus) then
+    if (s%ht(i,j) > 0.0) then
+      dh = min(s%ht(i,j), w)
+      s%ht(i,j) = s%ht(i,j) - dh
+      if (gm%dis%res) then
+        s%sd(i,j) = max(s%sd(i,j) - (1.0 - gm%dis%fres) * dh, 0.0)
+        s%z(i,j) = s%z(i,j) - (1.0 - gm%dis%fres) * dh
+      else
+        s%sd(i,j) = max(s%sd(i,j) - dh, 0.0)
+        s%z(i,j) = s%z(i,j) - dh
+      end if
+      tsum = tsum + real(dh, real64)
+      wb = w - dh
+      if (wb <= 0.0) return
+    end if
+  end if
+  if (gm%dis%res) then
+    s%z(i,j) = s%z(i,j) - (1.0 - gm%dis%fres) * wb
+    s%sd(i,j) = s%sd(i,j) + gm%dis%fres * wb
+  else
+    s%z(i,j) = s%z(i,j) - wb
+  end if
 end subroutine
 
 
@@ -338,8 +382,8 @@ subroutine calc_dissol_lat(gm, p, g, s)
   real, parameter :: lk(1:8) = [wdiag, 1.0, wdiag, 1.0, 1.0, wdiag, 1.0, wdiag]
   integer :: i, j, k, in, jn, m, im, jm, nclip
   real :: fw, wcap, ew, sumw, fs, pw
-  logical :: wall
-  real(real64) :: rsum
+  logical :: wall, talus
+  real(real64) :: rsum, tsum
 
   ! 壁判定は時刻 n の z・h で行う(ハロ行を含めて最新化。collective)
   call par_halo_cell(s%z)
@@ -422,9 +466,11 @@ subroutine calc_dissol_lat(gm, p, g, s)
 
   ! (3) 床と壁の量をまとめて適用し、台帳に積む
   nclip = 0
-  !$omp parallel do schedule(static) reduction(+: nclip) private(i, j, fs, rsum)
+  talus = allocated(s%ht)
+  !$omp parallel do schedule(static) reduction(+: nclip) private(i, j, fs, rsum, tsum)
   do j = dcp%js, dcp%je
     rsum = 0.0_real64
+    tsum = 0.0_real64
     do i = g%wx(1,j), g%wx(2,j)
       if (g%x(i,j) <= 0) cycle
       if (g%sw(i,j) > 0) cycle
@@ -436,15 +482,11 @@ subroutine calc_dissol_lat(gm, p, g, s)
         fs = gm%dis%dzmax                                ! 床+壁の合計を頭打ち(超過は飽和として捨てる)
         nclip = nclip + 1
       end if
-      if (gm%dis%res) then
-        s%z(i,j) = s%z(i,j) - (1.0 - gm%dis%fres) * fs
-        s%sd(i,j) = s%sd(i,j) + gm%dis%fres * fs
-      else
-        s%z(i,j) = s%z(i,j) - fs
-      end if
+      call apply_dissol(gm, s, i, j, fs, talus, tsum)
       rsum = rsum + real(fs, real64)
     end do
     gm%dis%vrow(j) = gm%dis%vrow(j) + rsum * g%dx * g%dy
+    gm%dis%vtrow(j) = gm%dis%vtrow(j) + tsum * g%dx * g%dy
   end do
   !$omp end parallel do
   gm%dis%nclip = gm%dis%nclip + nclip
@@ -457,11 +499,15 @@ module subroutine dispose_dissol(gm, p, g, s)
   type(t_sysparam), intent(in) :: p
   type(t_geoinfo), intent(in) :: g
   type(t_state), intent(in) :: s
-  real(real64) :: vtot
+  real(real64) :: vtot, vtal
   if (p%f_state_save > 0) call save_dissol(gm, p, g, s)
   ! 溶けた岩の体積の総括(par_sum_rows = 決定的。collective は全ランクが呼ぶ)
   call par_sum_rows(gm%dis%vrow, vtot)
+  call par_sum_rows(gm%dis%vtrow, vtal)
   call par_info("geomorph: dissolution removed " // rtoa(real(vtot)) // " m3 of rock")
+  if (vtal > 0.0_real64) then
+    call par_info("geomorph: dissolution removed talus (limestone debris) = " // rtoa(real(vtal)) // " m3 of the above")
+  end if
   if (gm%dis%nclip > 0) then
     ! ランク局所の診断(発動は正常動作。多ければ dt_geomorph/morfac/dissol_dzmax の見直し)
     call par_warn("geomorph: dissolution dzmax clip fired in " // itoa(gm%dis%nclip) &

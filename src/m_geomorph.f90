@@ -110,6 +110,7 @@ module m_geomorph
     real, allocatable :: wfl(:,:)    ! 側方溶食: 床向けの溶解能 (m。自帯)
     real, allocatable :: dzl(:,:)    ! 側方溶食: 壁セルが集めた溶解能 (m。自帯)
     real(real64), allocatable :: vrow(:)  ! 溶けた岩の体積の行部分和 (m3。台帳)
+    real(real64), allocatable :: vtrow(:) ! うち崖錐(石灰岩の岩屑 ht)として溶けた体積の行部分和 (m3)
   end type
 
   ! 流水による岩盤下刻(f_rockinc。§89。docs/mountain_stream_plan.md 第 1 段)
@@ -1835,6 +1836,7 @@ subroutine m_geomorph_dispose(gm, p, g, s)
   if (allocated(gm%dis%wfl)) deallocate(gm%dis%wfl)
   if (allocated(gm%dis%dzl)) deallocate(gm%dis%dzl)
   if (allocated(gm%dis%vrow)) deallocate(gm%dis%vrow)
+  if (allocated(gm%dis%vtrow)) deallocate(gm%dis%vtrow)
   if (allocated(gm%rf%zmin)) deallocate(gm%rf%zmin)
   if (allocated(gm%rf%zt)) deallocate(gm%rf%zt)
   if (allocated(gm%rf%col)) deallocate(gm%rf%col)
