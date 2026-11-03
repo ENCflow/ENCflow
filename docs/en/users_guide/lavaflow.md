@@ -233,6 +233,10 @@ The labels in the Basis column are explained in [How to read the basis of a defa
   lava dome of viscous lava compared with the analytic solution. It also shows that, because
   cooling is not computed, the yield stress has to be given as an effective value that
   includes stopping by cooling to approach the slopes of real shield volcanoes.
+- Example: [examples/stratovolcano](../../../examples/stratovolcano/en/README.md) — a
+  stratovolcano built by repeating lava flow → ashfall → storm erosion (a driver chaining one
+  computation per stage). An example of using the burial of the ash under solidified lava (when
+  there is a soil layer) together with ashfall and erosion.
 
 ## Constraints and interactions
 
