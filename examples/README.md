@@ -44,6 +44,7 @@ python3 plot_results.py   # 図化(用意されている例題のみ)
 | [bedrock_cover/](bedrock_cover/) | 山地渓流の岩盤河道で、給砂の量・時期・初期の被覆が下刻を促すか妨げるか(道具と被覆の効果)を見る | 流水による岩盤下刻 f_rockinc(剥離・被覆・研磨)、掃流砂 f_fluvial、区間流入の給砂 inflow_qb |
 | [mountain_valley/](mountain_valley/) | 隆起する山地の V 字谷で、風化・クリープの斜面と岩盤下刻の渓流を同時に動かし、定常の谷の形を見る | 風化 f_wthr(fn_wthr)、深さ依存クリープ creep_hstar、流水による岩盤下刻 f_rockinc、掃流砂 f_fluvial、分布隆起 fn_uplift |
 | [debris_bedrock/](debris_bedrock/) | 渓流に流した土石流が岩盤をどこでどれだけ削るか、土石流の頻度が渓流の定常勾配をどう変えるかを見る | 土石流 f_debris(高橋・中川、クーロン + Manning)、土石流による岩盤侵食 f_rockinc の rock_kdb |
+| [shield_volcano/](shield_volcano/) | 火口の位置と噴出量を変えた断続的な噴火で溶岩流が重なり、楯状火山が育つ過程と、形を決めるのが降伏応力であることを見る。補足に粘い溶岩の溶岩ドームを解析解と比べる | 溶岩流 fn_lavaflow(複数噴火口 lv_cell・lv_val、Bingham 降伏応力 lv_tauy、固化 lv_wsol・lv_vsol) |
 
 ## 複数プロセスの連鎖の例
 
@@ -62,6 +63,7 @@ ENCflow の特徴である「複数プロセスを 1 つの計算で連鎖させ
 - 給砂 → 被覆と道具 → 岩盤の下刻: [bedrock_cover/](bedrock_cover/)。
 - 隆起 → 風化 → クリープ → 渓流の被覆と下刻 → 定常の谷: [mountain_valley/](mountain_valley/)。
 - 土石流 → 堆積層の剥離 → 岩盤の侵食 → 頻度ごとの定常勾配: [debris_bedrock/](debris_bedrock/)。
+- 断続的な噴火 → 溶岩流 → 停止・固化 → 地形の積み重ね → 楯状火山: [shield_volcano/](shield_volcano/)。
 - 断層 → 津波 → 浸水: [tsunami_fault/](tsunami_fault/)、[tsunami_coast/](tsunami_coast/)。
 - 斜面崩壊 → 水域突入 → 津波: [landslide_tsunami/](landslide_tsunami/)。
 - 洪水 → 越水 → 破堤 → 氾濫 → 家屋の流失(二線堤で止める): [levee_breach/](levee_breach/)。

@@ -45,6 +45,7 @@ python3 plot_results.py   # plotting (where provided)
 | [bedrock_cover/](bedrock_cover/en/README.md) | Whether the amount, timing and initial cover of sediment supply speed up or hinder bedrock incision (tools and cover effects) | bedrock incision by flowing water f_rockinc (plucking, cover, abrasion), bedload f_fluvial, sediment feed at a segment inflow inflow_qb |
 | [mountain_valley/](mountain_valley/en/README.md) | A V-shaped valley in rising mountains with weathering and creep on the hillslopes and bedrock incision in the stream, to a steady form | weathering f_wthr (fn_wthr), depth-dependent creep creep_hstar, bedrock incision by flowing water f_rockinc, bedload f_fluvial, distributed uplift fn_uplift |
 | [debris_bedrock/](debris_bedrock/en/README.md) | Where and how much a debris flow erodes bedrock, and how debris-flow frequency changes the steady slope of the stream | debris flows f_debris (Takahashi–Nakagawa, Coulomb + Manning), rock erosion by debris flows rock_kdb of f_rockinc |
+| [shield_volcano/](shield_volcano/en/README.md) | A shield volcano growing as the lava flows of intermittent eruptions with shifting vents and volumes pile up; the yield stress sets the shape. A lava dome of viscous lava compared with the analytic solution as a supplement | Lava flow fn_lavaflow (several vents lv_cell, lv_val, Bingham yield stress lv_tauy, solidification lv_wsol, lv_vsol) |
 
 ## Examples of chained processes
 
@@ -63,6 +64,7 @@ one run" (for reference after reading the chapters).
 - Sediment supply → cover and tools → bedrock incision: [bedrock_cover/](bedrock_cover/en/README.md).
 - Uplift → weathering → creep → cover and incision in the stream → a steady valley: [mountain_valley/](mountain_valley/en/README.md).
 - Debris flow → stripping of the deposit → rock erosion → steady slope by frequency: [debris_bedrock/](debris_bedrock/en/README.md).
+- Intermittent eruptions → lava flows → stopping and solidification → piling up on the terrain → a shield volcano: [shield_volcano/](shield_volcano/en/README.md).
 - Fault → tsunami → inundation: [tsunami_fault/](tsunami_fault/en/README.md), [tsunami_coast/](tsunami_coast/en/README.md).
 - Slope failure → entry into water → tsunami: [landslide_tsunami/](landslide_tsunami/en/README.md).
 - Flood → overtopping → levee breach → inundation → houses swept away (held back by a secondary levee): [levee_breach/](levee_breach/en/README.md).

@@ -1,0 +1,84 @@
+!======================================================================
+! lava 構成6: 固化した溶岩の下の土層の埋没(developer.md §51.6)
+!   構成5 と同じ平坦な床と高さ 10 m の段(zwall.txt)に土層 sd0 = 1 m を
+!   置き、地下水計算(Green-Ampt)を有効にする。初期の地表水 5 cm を土層へ
+!   しみ込ませてから(浸透能 360 mm/h。約 500 s)、15〜20 分に壁から 3 m の
+!   列へ計 0.2 m3/s の溶岩を噴出する。固化した溶岩の下の土層は埋まり
+!   (sd = 0。以後は侵食・浸透の対象外)、その土層にしみ込んでいた水は
+!   地表へ移る(水の総量は保存)。
+!   修正前の固化は z だけを上げて sd を変えなかったので、溶岩の下に埋まる
+!   はずの土層(と地下水)が溶岩の上に残った。
+!   検定(Check_lava.py bury):
+!     (1) 溶岩の台帳 Σhl + Σ(z−z0) = 注入量(機械精度)
+!     (2) 埋没: 固化した溶岩のあるセル(dz > 0)の全セルで sd = 0 かつ hg = 0、
+!         それ以外のセルの sd は初期値のまま(1 m)
+!     (3) 水の保存: Σ(h + hg) = 初期の地表水の総量(相対 1e-10)
+!======================================================================
+&list_sysparam
+  f_gridsystem = 0
+  f_govequation = 0
+  dt = 0.5
+  t0 = 0
+  tt = 6000
+  dt_disp = 1000
+  dt_file = 6000
+  dt_recrd = 6000
+  fn_geoinfo = '-'
+  fn_initial = '-'
+  fn_lavaflow = '-'
+  fn_gwflow = '-'
+  dir_result = 'result_bury'
+  dir_save = 'save_bury'
+  f_state_save = 1
+  f_check_cfl = 0
+/
+
+&list_initial
+  f_htype = 0
+  h0 = 0.05                 ! 初期の地表水 5 cm(土層へしみ込ませる)
+/
+
+&list_geoinfo
+  lx = 40.0
+  ly = 8.0
+  nx = 40
+  ny = 8
+  f_ztype = 1
+  fn_z = 'zwall.txt'        ! 平坦な床と高さ 10 m の段(make_init.py wall)
+  f_rntype = 0
+  rn0 = 0.03
+  f_sdtype = 0
+  sd0 = 1.0                 ! 土層厚 (m)
+  sy0 = 0.2                 ! 比湧水量(土層の容量 = sd0 × sy0 = 0.2 m)
+/
+
+&list_gwflow
+  f_gwvertical = 2          ! Green-Ampt(土層 sd が地下水の層になる)
+  f_gwlateral = 0
+/
+
+&list_gwflow_greenampt
+  gw_ksv_mmh = 360.0        ! 浸透能 360 mm/h(5 cm を約 500 s でしみ込ませる)
+  gw_psif = 0.0             ! 一定浸透能
+/
+
+&list_lavaflow
+  lv_rho = 2600.0
+  lv_visc = 2.0e3           ! 構成5 と同じレオロジー
+  lv_tauy = 2000.0
+  lv_wsol = 0.005
+  lv_vsol = 5.0e-4
+  lv_cell(1:2,1,1) = 28, 1  ! 壁から 3 m の列噴火口
+  lv_cell(1:2,2,1) = 28, 2
+  lv_cell(1:2,3,1) = 28, 3
+  lv_cell(1:2,4,1) = 28, 4
+  lv_cell(1:2,5,1) = 28, 5
+  lv_cell(1:2,6,1) = 28, 6
+  lv_cell(1:2,7,1) = 28, 7
+  lv_cell(1:2,8,1) = 28, 8
+  lv_val(1:2,1,1) = 0, 0.0  ! (時刻(min), 総噴出率(m3/s))
+  lv_val(1:2,2,1) = 15, 0.0
+  lv_val(1:2,3,1) = 15, 0.2 ! 15 分から 20 分まで噴出(重複時刻で階段状)
+  lv_val(1:2,4,1) = 20, 0.2
+  lv_val(1:2,5,1) = 20, 0.0
+/

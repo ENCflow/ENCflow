@@ -1,0 +1,53 @@
+!======================================================================
+! examples/shield_volcano dome: 溶岩ドーム(1 つの火口、降伏応力 10⁵ Pa)
+!   平坦面の中央の 1 セルから 2 m3/s を 10^6 s(約 12 日。計 2×10^6 m3)噴出する。
+!   固化なし。止まった形(降伏応力で支えられた静止形)を塑性ドームの解析解
+!   h(r)^2 = (2τ_y/ρg)(R − r) と比べる。
+!   粘度 1e10 Pa s はデイサイト質のドームの目安(静止形は粘度によらない)。
+!======================================================================
+&list_sysparam
+  f_gridsystem = 0
+  f_govequation = 0
+  dt = 300
+  t0 = 0
+  tt = 6000000             ! 噴出の終わりから 5×10^6 s 後まで
+  dt_disp = 600000
+  dt_file = 1000000
+  dt_recrd = 6000000
+  fn_geoinfo = '-'
+  fn_initial = '-'
+  fn_lavaflow = '-'
+  dir_result = 'result_dome'
+  dir_save = 'save_dome'
+  f_state_save = 1
+  f_check_cfl = 0
+  f_out_z = 1
+/
+
+&list_initial
+  f_htype = 0
+  h0 = 0.0
+/
+
+&list_geoinfo
+  lx = 1010
+  ly = 1010
+  nx = 101
+  ny = 101
+  f_ztype = 0
+  z0 = 0.0
+  f_rntype = 0
+  rn0 = 0.03
+/
+
+&list_lavaflow
+  lv_rho = 2600.0
+  lv_visc = 1.0e10          ! 粘度 (Pa s)。デイサイト質のドームの目安
+  lv_tauy = 1.0e5           ! 降伏応力 (Pa)。a = 2τ_y/(ρg) = 7.85 m
+  lv_wsol = 0.0             ! 固化なし(止まった形を解析解と比べる)
+  lv_nsubmax = 1000000
+  lv_cell(1:2,1,1) = 51, 51 ! 中央の 1 セル
+  lv_val(1:2,1,1) = 0, 2.0  ! (時刻(min), 噴出率(m3/s))
+  lv_val(1:2,2,1) = 16666.667, 2.0
+  lv_val(1:2,3,1) = 16666.667, 0.0 ! 重複時刻 = 約 10^6 s で階段状に停止
+/

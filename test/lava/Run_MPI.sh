@@ -78,4 +78,20 @@ if [ -d save_wall_serial ]; then
         fi
     done
 fi
+
+# 構成6: 固化した溶岩の下の土層の埋没
+set -o pipefail
+mpirun -np "$NP" $MPIRUN_OPTS ./encflow_mpi param_bury.txt | tee -a Screen.log || exit 1
+set +o pipefail
+echo ""
+python3 "$sdir/Check_lava.py" save_bury bury || rc=1
+if [ -d save_bury_serial ]; then
+    for f in state.dat lavaflow.dat; do
+        if cmp -s save_bury/$f save_bury_serial/$f; then
+            echo "=== 埋没: $f は逐次結果とビット一致 ==="
+        else
+            echo "警告: save_bury/$f が逐次ビルドと不一致(同上)" >&2
+        fi
+    done
+fi
 exit $rc

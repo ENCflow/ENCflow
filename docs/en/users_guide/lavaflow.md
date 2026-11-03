@@ -34,7 +34,9 @@ How to read the results (fields, ledgers, measurement columns, restart) is summa
   across which lava can move are counted: an edge whose higher-surface side
   carries no lava (an edge toward dry ground higher than the lava) is not.
   The solidified surface does not add to the soil layer sd: it behaves as
-  non-erodible bedrock.
+  non-erodible bedrock. The soil layer that was in a cell where lava
+  solidifies (the sd used by morphodynamics and groundwater) is buried
+  under the lava, and sd becomes 0.
 - The model is isothermal (cooling and temperature-dependent viscosity
   are a future extension; lava_plan.md Sec. 8). One rheology set per
   run; there is no per-vent viscosity (viscosity differences are really
@@ -98,7 +100,7 @@ following (calibration quantities):
 | Basaltic, hot pahoehoe (Hawaiian type) | 1e2-1e3 | 0-500 | Smaller eta means more subcycles |
 | Basaltic aa lava (Etna / Izu-Oshima type; default) | 1e3-1e4 | 1e3-5e3 | Crystallization during flow raises eta by an order of magnitude |
 | Andesitic (Fuji / Asama type) | 1e5-1e7 | 1e4-1e5 | Thick flows; stopping thickness tau_y/(rho g tan) of several m to 10 m |
-| Dacite to rhyolite lava domes | >=1e9 | >=1e5 | Flow nearly stops; outside the scope of this module (lava_plan.md Sec. 2) |
+| Dacite to rhyolite lava domes | >=1e9 | >=1e5 | Up to an estimate of the shape at rest held by the yield stress (plastic dome). Talus, growth from inside and collapse are out of scope ([Constraints](#constraints-and-interactions) below) |
 
 ## Parameters
 
@@ -142,6 +144,9 @@ The three ways a field gets written (automatic / flag / riding on a flag) and th
 
 - At the end "lavaflow: erupted ... m3, solidified ... m3, molten ... m3"
   (the volume ledger) and "subcycles total = ... over ... updates" are
+  printed. When a soil layer exists, "soil buried under solidified lava
+  ... m3, groundwater moved to the surface ... m3" (the soil buried under
+  the lava and the groundwater moved from it to the surface) is also
   printed.
 - Lava is not included in the S column of the screen and Log.txt (it is
   not a water column).
@@ -194,7 +199,17 @@ The labels in the Basis column are explained in [How to read the basis of a defa
   point. Calibrating on the runout, width and front thickness of past
   flows (aerial photographs, DEM differences) gives $`\tau_y`$ from the stop
   thickness $`h_\infty = \tau_y/(\rho g \tan\theta)`$ and $`\eta`$ from the advance
-  speed.
+  speed. Because cooling is not computed, a $`\tau_y`$ found this way is an
+  effective value that includes stopping by cooling (in examples/shield_volcano,
+  2×10³ Pa, within the measured range for basaltic lava, makes the shield volcano
+  flatter than real ones, and 2×10⁴ Pa gives slopes of the same order as real ones).
+- The stop-detection threshold lv_vsol makes the stopped thickness larger
+  than $`h_\infty`$. The excess is roughly the fraction
+  $`\sqrt{2\,v_{sol}\,\eta\,\rho g S}/\tau_y`$ (S is the slope; the formula of
+  lava_plan.md Sec. 5 divided by $`h_\infty`$). A smaller threshold reduces the
+  excess but takes longer to judge the lava stopped. With the same threshold the
+  excess grows with the viscosity, so revisit the threshold when changing the
+  viscosity.
 - The effusion rate is best given as a time series from eruption
   observations (volume growth of the lava field, thermal radiance); when
   only the total is known, give a rectangular pulse and check the
@@ -207,9 +222,17 @@ The labels in the Basis column are explained in [How to read the basis of a defa
   and the Bingham stopping thickness h∞ against analytic solutions, and
   the shape at rest of lava erupted from one vent on a flat bed until it
   stops, compared with the analytic plastic dome[^blake90] (a check that
-  the shape is the same along the grid axes and the diagonals), and a
-  check that lava ponded against a 10 m step solidifies completely, up to
-  the cells touching the wall.
+  the shape is the same along the grid axes and the diagonals), a check
+  that lava ponded against a 10 m step solidifies completely, up to the
+  cells touching the wall, and a check that the soil layer under
+  solidified lava is buried and the total water is conserved when the
+  water in it moves to the surface.
+- Example: [examples/shield_volcano](../../../examples/shield_volcano/en/README.md) — a
+  shield volcano growing as the lava flows of 20 eruptions with shifting vents and volumes
+  pile up (with a comparison at a ten times larger yield stress), and the shape at rest of a
+  lava dome of viscous lava compared with the analytic solution. It also shows that, because
+  cooling is not computed, the yield stress has to be given as an effective value that
+  includes stopping by cooling to approach the slopes of real shield volcanoes.
 
 ## Constraints and interactions
 
@@ -220,10 +243,32 @@ The labels in the Basis column are explained in [How to read the basis of a defa
   topography. There is no thermal lava–water interaction (steam
   explosions, quench fragmentation), and flowing lava does not dam
   water.
-- Roughness and infiltration on the solidified surface keep their
-  existing distributions (consider giving maps such as fn_gw_ksv in
-  preprocessing if needed).
+- Roughness on the solidified surface keeps its existing distribution.
+  **The soil layer under the lava is buried** (sd = 0), so with
+  groundwater models that use the soil layer as their layer (Green-Ampt,
+  lateral flow), rain does not infiltrate in cells where lava has
+  solidified, and the groundwater stored there moves to the surface at
+  solidification (the total water is conserved). Real young lava
+  (especially basaltic) is often fractured and permeable, so infiltration
+  on lava fields is underestimated. Once ash or other deposits form a soil
+  layer, water infiltrates up to its thickness. Because there is a single
+  soil layer, buried soil is treated as bedrock even if erosion later
+  exposes it.
 - No lava enters sea cells (submarine flow is out of scope).
+- **Lava domes**: lava erupted from one vent until it stops takes the shape
+  at rest held by the yield stress (the plastic dome
+  $`h(r)^2 = (2\tau_y/\rho g)(R - r)`$[^blake90]; it agrees with the
+  analytic solution to 1–2% in test/lava configuration 4). The height to
+  diameter ratio is proportional to the yield stress to the power 0.6 and
+  inversely proportional to the volume to the power 0.2. The steep sides
+  of real domes are often slopes of broken blocks fallen from the cracked
+  surface (talus), and neither growth from inside nor collapse into
+  pyroclastic flows is computed, so what can be computed is an estimate of
+  the shape at rest (a collapse can be given separately with f_release of
+  the debris flow model). The shape at rest does not depend on the
+  viscosity, so to look only at the shape you can lower the viscosity to
+  shorten the run (shorten the eruption by the same ratio and, when using
+  solidification, raise lv_vsol and lv_wsol by the same ratio).
 - **Grid orientation**: the computation uses the 4-neighbour grid. Yield
   and stopping are judged on the gradient magnitude, so the shape at rest
   of a dome on a flat bed is the same along the grid axes and the

@@ -1,4 +1,4 @@
-# test/lava — lava flow (fn_lavaflow): Huppert similarity solution, Bingham stopping thickness, plastic dome and solidification at a wall
+# test/lava — lava flow (fn_lavaflow): Huppert similarity solution, Bingham stopping thickness, plastic dome, solidification at a wall and burial of the soil layer
 
 > English mirror of test/lava/README.md. The Japanese file is the master copy.
 
@@ -31,28 +31,33 @@ same practice as [test/volcano](../../volcano/en/README.md)).
    10 m step (wall) at the end of a flat floor, and the check is that the
    whole amount solidifies, up to the cells touching the wall
    (developer.md §51.5).
+6. **Burial of the soil layer** (`param_bury.txt`): a soil layer and
+   groundwater (Green-Ampt) are added to the topography of configuration 5,
+   and the check is that the soil layer under solidified lava is buried and
+   the total water is conserved when the water in it moves to the surface
+   (developer.md §51.6).
 
 ## Configuration
 
-| Item | Configuration 1 Huppert | Configuration 2 Bingham | Configuration 4 isotropy | Configuration 5 solidification at a wall |
-|---|---|---|---|---|
-| Domain and grid | 61 m × 61 m, Δx = 1 m, flat | 100 m × 8 m, Δx = 1 m, tanθ = 0.2 (`zinit.txt`) | 61 m × 61 m, Δx = 1 m, flat | 40 m × 8 m, Δx = 1 m, flat floor and a 10 m step for i ≥ 31 (`zwall.txt`) |
-| Effusion | Constant 0.5 m³/s at the center (31, 31) | A total of 0.5 m³/s over the 8 cells at the upstream end i = 5 for 300 s (stepwise stop by a duplicated time) | 2 m³/s at the center (31, 31) for 900 s (1798 m³ in total) | A total of 0.2 m³/s over the 8 cells of column i = 28, 3 m from the wall, for 300 s |
-| Fluid | ρ = 2600, η = 2e4 Pa·s, τ_y = 0, no solidification | ρ = 2600, η = 2e3 Pa·s, τ_y = 2000 Pa, solidification rate 0.005 m/s, stop detection 5e-4 m/s | ρ = 2600, η = 1e6 Pa·s, τ_y = 1e4 Pa, no solidification | Same as configuration 2 |
-| Time | dt = 0.5 s, 600 s | dt = 0.5 s, 4800 s | dt = 1 s, 6000 s | dt = 0.5 s, 4800 s |
-| Analytical value | r_N(600 s) = 12.13 m | h∞ = 2000/(2600 × 9.8 × 0.2) = 0.3925 m | R = 17.11 m, center thickness H = √(aR) = 3.665 m (a = 2τ_y/ρg = 0.7849 m) | (conservation and complete solidification) |
+| Item | Configuration 1 Huppert | Configuration 2 Bingham | Configuration 4 isotropy | Configuration 5 solidification at a wall | Configuration 6 burial of the soil layer |
+|---|---|---|---|---|---|
+| Domain and grid | 61 m × 61 m, Δx = 1 m, flat | 100 m × 8 m, Δx = 1 m, tanθ = 0.2 (`zinit.txt`) | 61 m × 61 m, Δx = 1 m, flat | 40 m × 8 m, Δx = 1 m, flat floor and a 10 m step for i ≥ 31 (`zwall.txt`) | Topography of configuration 5 with a soil layer sd0 = 1 m (specific yield 0.2), Green-Ampt groundwater (infiltration capacity 360 mm/h) and 5 cm of initial surface water |
+| Effusion | Constant 0.5 m³/s at the center (31, 31) | A total of 0.5 m³/s over the 8 cells at the upstream end i = 5 for 300 s (stepwise stop by a duplicated time) | 2 m³/s at the center (31, 31) for 900 s (1798 m³ in total) | A total of 0.2 m³/s over the 8 cells of column i = 28, 3 m from the wall, for 300 s | A total of 0.2 m³/s from the vents of configuration 5 at 15–20 min (after the surface water has infiltrated) |
+| Fluid | ρ = 2600, η = 2e4 Pa·s, τ_y = 0, no solidification | ρ = 2600, η = 2e3 Pa·s, τ_y = 2000 Pa, solidification rate 0.005 m/s, stop detection 5e-4 m/s | ρ = 2600, η = 1e6 Pa·s, τ_y = 1e4 Pa, no solidification | Same as configuration 2 | Same as configuration 2 |
+| Time | dt = 0.5 s, 600 s | dt = 0.5 s, 4800 s | dt = 1 s, 6000 s | dt = 0.5 s, 4800 s | dt = 0.5 s, 6000 s |
+| Analytical value | r_N(600 s) = 12.13 m | h∞ = 2000/(2600 × 9.8 × 0.2) = 0.3925 m | R = 17.11 m, center thickness H = √(aR) = 3.665 m (a = 2τ_y/ρg = 0.7849 m) | (conservation and complete solidification) | (conservation; 16 m³ of water in total) |
 
 | File | Contents |
 |---|---|
 | `make_init.py` / `make_init.py wall` | `zinit.txt` (uniform slope) / `zwall.txt` (flat floor and a 10 m step) |
-| `Check_lava.py <save> huppert\|bingham\|dome\|wall` | Configuration 1: (1) ledger Σhl·A = V_in, (2) area-equivalent radius within 10% of r_N, (3) r(tt)/r(tt/2) within 5% of √2. Configuration 2: (1) ledger Σhl + Σdz = V_in (solidification is an internal transfer to z), (2) hl + dz in the check window (i = 15–35) within 20% of h∞ and CV < threshold, (3) solidified fraction > 0.7. Configuration 4: (1) ledger Σhl·A = V_in, (2) the ratio of the area-equivalent radii of the sectors along the grid axes (±22.5°) and along the diagonals (±22.5°) within 5% of 1, (3) center thickness within 5% of H and area-equivalent radius within 5% of R, RMS error of the profile for r < R < 5% of H. Configuration 5: (1) ledger Σhl + Σdz = V_in, (2) solidified fraction > 0.999, (3) in every row of the column touching the wall (i = 30), hl = 0 and dz above half the maximum thickness |
+| `Check_lava.py <save> huppert\|bingham\|dome\|wall\|bury` | Configuration 1: (1) ledger Σhl·A = V_in, (2) area-equivalent radius within 10% of r_N, (3) r(tt)/r(tt/2) within 5% of √2. Configuration 2: (1) ledger Σhl + Σdz = V_in (solidification is an internal transfer to z), (2) hl + dz in the check window (i = 15–35) within 20% of h∞ and CV < threshold, (3) solidified fraction > 0.7. Configuration 4: (1) ledger Σhl·A = V_in, (2) the ratio of the area-equivalent radii of the sectors along the grid axes (±22.5°) and along the diagonals (±22.5°) within 5% of 1, (3) center thickness within 5% of H and area-equivalent radius within 5% of R, RMS error of the profile for r < R < 5% of H. Configuration 5: (1) ledger Σhl + Σdz = V_in, (2) solidified fraction > 0.999, (3) in every row of the column touching the wall (i = 30), hl = 0 and dz above half the maximum thickness. Configuration 6: (1) lava ledger, (2) sd = 0 and hg = 0 in every cell with solidified lava, sd = 1 m in the other cells, (3) Σ(h + hrs + hg) within 1e-9 (relative) of the initial surface water |
 | `Fig.py` | The figure `en/figs/lava.png` below (`python3 Fig.py en`; `figs/lava.png` is the Japanese version) |
 
 ## Running
 
 ```bash
 make
-./Run.sh          # configuration 1 → Check → configuration 2 → Check → equivalence check of configuration 3 → configurations 4 and 5 → Check (about 30 seconds)
+./Run.sh          # configuration 1 → Check → configuration 2 → Check → equivalence check of configuration 3 → configurations 4, 5 and 6 → Check (about 30 seconds)
 ./Run_MPI.sh 4    # MPI. state.dat and lavaflow.dat are byte-identical to the serial run (-O2 strict math)
 python3 Fig.py en # en/figs/lava.png
 ```
@@ -104,6 +109,9 @@ the erupted volume) (developer.md §51.5).
 | Configuration 5 (1) ledger (Σhl + Σdz)·A − V_in | −2.3e-13 m³ (V_in = 59.9 m³) | PASS |
 | Configuration 5 (2) solidified fraction | 1.0000 (no lava left) | PASS |
 | Configuration 5 (3) column touching the wall | hl = 0 in every row, min dz 0.978 m (max dz 1.076 m) | PASS |
+| Configuration 6 (1) lava ledger | −1.8e-13 m³ (V_in = 60 m³) | PASS |
+| Configuration 6 (2) burial of the soil layer | sd = 0 and hg = 0 in the 80 cells under the lava, sd = 1 m elsewhere (soil buried 80 m³, groundwater moved to the surface 5.65 m³) | PASS |
+| Configuration 6 (3) water conservation Σ(h + hrs + hg) − initial | −5.3e-13 m³ (initial 16 m³) | PASS |
 
 - The +7% of the stopping thickness includes the upward bias
   h∞ + √(v_sol h/(coef (2h + h₀) S)) from the cutoff by the stop detection
@@ -131,6 +139,13 @@ the erupted volume) (developer.md §51.5).
   wall, the deposit has the same shape before and after the fix. The saves
   of configurations 1–4 are also byte-identical before and after the fix of
   the stop criterion (§51.5).
+- Configuration 6 is a detector of the burial of the soil layer. Before the
+  fix, solidification only raised z, and sd = 1 m and groundwater storage
+  (up to 0.059 m) remained in the 80 cells under the lava, so it FAILs. The
+  lava deposit (z, hl) is byte-identical with and without the burial (only
+  the soil and the water change). Configurations 1–5 use no soil layer, so
+  their saves are byte-identical before and after the burial fix (§51.6).
+  Configuration 6 is not in the figure.
 - The flux stencil remains 4-neighbor; the 8-neighbor extension remains a
   candidate common to the diffusion-type modules (developer.md §61.4).
 
