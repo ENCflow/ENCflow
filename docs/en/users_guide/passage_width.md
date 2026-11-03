@@ -1,11 +1,11 @@
-# Passage-width adjustment -- why the eight-direction flow widths are adapted to the situation, and what it buys (supplement to the shallow water chapter)
+# Passage-width adjustment -- why the eight-direction passage widths are adapted to the situation, and what it buys (supplement to the shallow water chapter)
 
 > English mirror of docs/users_guide/passage_width.md. The Japanese file is the master copy.
 
 [Back to the shallow water chapter](swflow.md) | [Back to the user's guide index](../users_guide.md) | [ENC grid and time integration](encgrid.md)
 
-The ENC grid sets virtual **passage widths** (flow widths) for four axis edges
-and four diagonal edges on top of a rectangular raster. Where everything
+The ENC grid sets virtual **passage widths** for four axis edges and four
+diagonal edges on top of a rectangular raster. Where everything
 around a cell is open, this split carries the flow correctly as it is; but
 where some directions are blocked -- walls, high dry banks, the edge of the
 computational domain, one-cell-wide channels -- the share of the blocked
@@ -88,6 +88,15 @@ direction normal to the diagonal. In other words, a diagonal passage width
 is not a face that exists in the raster but **a virtual width made by lending
 part of the sides to the diagonal flow**. $`p_d = 0`$ lends nothing to the
 diagonals and corresponds to a 4-neighbour grid.
+
+The original paper[^tada26] regards the cell as a virtual octagon with its
+corners cut off and calls $`L_k`$ the length of its sides (side length). The
+diagonal sides are the cut corners, and their projections onto the x and y
+axes, $`L_{k,x}`$ and $`L_{k,y}`$, are the end parts $`(p_d/2)\Delta`$ above.
+This guide calls the quantity the **passage width** and keeps it apart from
+physical widths such as the channel width and the water-surface width, and
+from the effective flow width of river engineering practice (the terms are
+matched in [ENC grid and time integration](encgrid.md) §2).
 
 The eight widths add up to $`3.31\Delta`$, which differs from the perimeter
 $`4\Delta`$. Still, the weights of the cell-velocity reconstruction sum to 1,

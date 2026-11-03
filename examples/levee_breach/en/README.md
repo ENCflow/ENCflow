@@ -289,7 +289,7 @@ band marks the breach in progress (70-90 minutes).
   printed at the end, −3.00 m, matches "crest − floor".
 - With the virtual wall, the edges made into sites pass water by the Homma formula. With
   `f_br_diag = 1` the diagonal edges touching the sites drop to the same crest, so the
-  passing width per breached cell is one cell width (normal 0.414 + diagonals 2 × 0.293), and
+  passage width per breached cell is one cell width (normal 0.414 + diagonals 2 × 0.293), and
   with 5 cells the discharge is 0.98 times that of the resolved levee. With `f_br_diag = 0`,
   which lowers only the normal edges of the sites, the diagonal links between neighbouring
   sites remain walls and the discharge stays at 0.44 times (table below). Use the
@@ -311,7 +311,7 @@ The resolved levee follows the broad-crested weir estimate (B = cells × dx, H =
 − floor ≈ 1.5-1.7 m), falling below the weir formula as the opening widens because the
 landside water level rises (152 against 162 for 5 cells). The virtual wall with
 f_br_diag = 0 is proportional to the number of sites, with an effective width of 0.38 dx per
-site (the passing-width share of the normal edge is 0.414); f_br_diag = 1 is nearly the same
+site (the passage-width share of the normal edge is 0.414); f_br_diag = 1 is nearly the same
 as the resolved levee for 3-5 cells (1.03 and 0.98 times), and too large for one cell (1.66
 times) by the two diagonals at both ends (0.59 cell widths). The f_br_diag = 1 result agrees
 with a run that adds the diagonal pairs explicitly as sites (largest difference 0.35 m³/s,

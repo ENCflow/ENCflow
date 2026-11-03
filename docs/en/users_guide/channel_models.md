@@ -207,13 +207,13 @@ through a wall edge follows the Honma weir formula.
 
 **Coupling of the diagonal edges (f_br_diag).** With f_br_diag = 0 the
 edges that are not sites (the diagonal links included) remain walls. The
-passing-width share of a normal edge is $`1 - p_{\mathrm{diag}} = 0.414`$,
+passage-width share of a normal edge is $`1 - p_{\mathrm{diag}} = 0.414`$,
 and the measured effective width is 0.38 dx per site. With f_br_diag = 1 a
 diagonal edge (c, l) is lowered to the minimum effective crest of the
 sites whose channel cell is c and whose landside cell is a 4-neighbour of
 l, or whose landside cell is l and whose channel cell is a 4-neighbour of
 c (the diagonals on both sides of a normal site, including those leading
-outward at the two ends of the opening). The passing width per breached
+outward at the two ends of the opening). The passage width per breached
 cell then becomes 0.414 (normal) + 2 × 0.293 (diagonals) = one cell width.
 Measured in the supplement of examples/levee_breach (10 m cells, 1.5–1.7 m of head, the
 default advection scheme 3):

@@ -266,7 +266,7 @@ unit width $`q`$ times the length of the face).
   with both blocked; developer.md §68.43. Replacing the mean by the sum of
   the actual crossing link fluxes slows the bore by 2 to 5%, so the diagonal
   edges keep the averaged form). For axis edges it uses the discharge the continuity equation
-  passes through each link (unit-width flux $`mn`$ × passing width ×
+  passes through each link (unit-width flux $`mn`$ × passage width ×
   reassignment factor of blocked diagonal openings; see the
   [ENC grid chapter](encgrid.md) and `f_opening_dynamic`): half of each
   parallel axis link of c and n (the dotted lines in figure (b)) plus the
@@ -373,7 +373,7 @@ on outflow $`u_e`$ (no contribution).
   advection term either.** A cell with a normal face of
   [segment inflow](boundary.md#segment-inflow-list_bound_inflow) (closed
   corner cells included) passes the whole segment discharge through a
-  normal face of passing width 0.414 dx (the unit-width discharge is 2.4
+  normal face of passage width 0.414 dx (the unit-width discharge is 2.4
   times the cell mean) and lacks the diagonal links outside the frame, so
   its cell-mean discharge is not consistent as the face flux of a control
   volume. As for sea cells, the edges touching such a cell get a zero

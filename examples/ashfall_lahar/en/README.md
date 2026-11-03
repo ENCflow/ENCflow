@@ -184,7 +184,7 @@ The ENC grid of ENCflow exchanges flow with the four diagonal neighbours as well
 axial ones ([Shallow water flow computation](../../../docs/en/users_guide/swflow.md)). To see
 whether the flow behaves the same when the valley is oblique to the grid, the same valley
 (without the dam) is placed along the grid (0°) and turned by 45°. For comparison, a
-four-neighbour grid, in which the passing width of the diagonal edges is 0
+four-neighbour grid, in which the passage width of the diagonal edges is 0
 (`p_diagratio = 0`), is run alongside. The 45° grid is a 555 m square that holds the valley;
 outside the valley is outside the domain, and beyond the downstream end of the valley is a
 sea mask with a water level of 0 m (a sink; the 0° case is treated the same way;

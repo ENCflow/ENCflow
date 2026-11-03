@@ -104,9 +104,9 @@
     {
       "source": "docs/users_guide.md",
       "target": "docs/en/users_guide.md",
-      "source_sha256": "745f7bbe34dee9fd444a8792ae773571c936d17011dca5310b444db2e23f0049",
-      "target_sha256": "ab24530ba4e3bf8c15baa57e471c50095f9b472f31866467d000df49668983a7",
-      "reviewer": "Claude (Claude Code session; reviewed the Japanese source against the English mirror after adding the passage-width page and the links to it, 2026-11-03)",
+      "source_sha256": "de9b5bdf7056faf53ade51bb22eda6b68c0ee377291564cf56d11a0b5fbfe3ee",
+      "target_sha256": "b76e037c3ba5af0a07dc4114159446a36fd17ec523e943349cd8d74c65cb9fd1",
+      "reviewer": "Claude (Claude Code session; reviewed the Japanese source against the English mirror after unifying the term passage width / 通過幅 and noting the original paper's term, 2026-11-03)",
       "method": "assistant",
       "reviewed_on": "2026-11-03"
     },
@@ -114,8 +114,8 @@
       "source": "docs/users_guide/advection.md",
       "target": "docs/en/users_guide/advection.md",
       "source_sha256": "443350a576f550da7927686372343bce3d21c10d9febed89861c14bc58f33d90",
-      "target_sha256": "cc93e241e11b65548c106b31415dd778c4e437ee6c089afdbe9805a3346aa47e",
-      "reviewer": "Claude (Claude Code session; reviewed the Japanese source against the English mirror after adding the passage-width page and the links to it, 2026-11-03)",
+      "target_sha256": "ed4e14383728063156dd2d1d60115c5fa918919d3d31f89d2d09c455d8b41a41",
+      "reviewer": "Claude (Claude Code session; reviewed the Japanese source against the English mirror after unifying the term passage width / 通過幅 and noting the original paper's term, 2026-11-03)",
       "method": "assistant",
       "reviewed_on": "2026-11-03"
     },
@@ -167,18 +167,18 @@
     {
       "source": "docs/users_guide/channel.md",
       "target": "docs/en/users_guide/channel.md",
-      "source_sha256": "f53147e08871982e524891a5a625ccf521f6c253b18f9f0e08a06f48d49f40e8",
-      "target_sha256": "75a7ed6abb5c1e74acea55e9c20630b51d96c7df5f824bd250da87dc80b5aa72",
-      "reviewer": "Claude (Claude Code session; reviewed the Japanese source against the English mirror; figures from the same results and drawing code with label changes only, 2026-10-30)",
+      "source_sha256": "d28f681da22a50f933c4f44861abd45ecc1b53dc1f35915d162b30f118cd370c",
+      "target_sha256": "f55178f1b39f9f06ccacfd03a95480fcd7561f0a937c65e092dd01b3c51abd63",
+      "reviewer": "Claude (Claude Code session; reviewed the Japanese source against the English mirror after unifying the term passage width / 通過幅 and noting the original paper's term, 2026-11-03)",
       "method": "assistant",
-      "reviewed_on": "2026-10-30"
+      "reviewed_on": "2026-11-03"
     },
     {
       "source": "docs/users_guide/channel_models.md",
       "target": "docs/en/users_guide/channel_models.md",
       "source_sha256": "308f63618caf260bc5377631b4e7b57df1f9254f0688a42afe4dbd6cefdb5e07",
-      "target_sha256": "1c2306eae05a383bed48c936e5ce5825edd5655a4a3be7e502ccab48d7c8ce73",
-      "reviewer": "Claude (Claude Code session; reviewed the Japanese source against the English mirror after adding the passage-width page and the links to it, 2026-11-03)",
+      "target_sha256": "d502e2e5842a50198054009c978afdd48e7ab4cb23683cb99674928f8d07ceda",
+      "reviewer": "Claude (Claude Code session; reviewed the Japanese source against the English mirror after unifying the term passage width / 通過幅 and noting the original paper's term, 2026-11-03)",
       "method": "assistant",
       "reviewed_on": "2026-11-03"
     },
@@ -230,9 +230,9 @@
     {
       "source": "docs/users_guide/encgrid.md",
       "target": "docs/en/users_guide/encgrid.md",
-      "source_sha256": "8c4da382b421b0f202b1ab0b4cd16509e40d51a7bd876564188028de7c7607d2",
-      "target_sha256": "b0a842da490e73af341894e1ac4f515271bd3e48050c2249041c41ec738994fb",
-      "reviewer": "Claude (Claude Code session; reviewed the Japanese source against the English mirror after adding the passage-width page and the links to it, 2026-11-03)",
+      "source_sha256": "1472ce2a4116fda434bde242178f013811b966b5e6115e9258e6c61c5e9d078f",
+      "target_sha256": "0b6120df8a76ec068fc3b2bfc68f24d8d31f6a1c0f7642f564f6c0badd36c30c",
+      "reviewer": "Claude (Claude Code session; reviewed the Japanese source against the English mirror after unifying the term passage width / 通過幅 and noting the original paper's term, 2026-11-03)",
       "method": "assistant",
       "reviewed_on": "2026-11-03"
     },
@@ -392,9 +392,9 @@
     {
       "source": "docs/users_guide/passage_width.md",
       "target": "docs/en/users_guide/passage_width.md",
-      "source_sha256": "eb33367fa80432b20481636b05e523040fed24d33667ba14492024c2d5b12786",
-      "target_sha256": "48b256aa9b645afd4cabfaf1919e2e8829bb41d86c9d1078a2a0f0c1ba0097b1",
-      "reviewer": "Claude (Claude Code session; reviewed the Japanese source against the English mirror after adding the passage-width page and the links to it, 2026-11-03)",
+      "source_sha256": "0c9c3f81c1a57b62443ed4413b04166066b95f8d3cf2b60801855fefa5e8cac3",
+      "target_sha256": "b1972d1007304935a6d6babef197bdde95ea77ad4289b0c5e00e0bab9a38e709",
+      "reviewer": "Claude (Claude Code session; reviewed the Japanese source against the English mirror after unifying the term passage width / 通過幅 and noting the original paper's term, 2026-11-03)",
       "method": "assistant",
       "reviewed_on": "2026-11-03"
     },
@@ -825,10 +825,10 @@
       "source": "examples/ashfall_lahar/README.md",
       "target": "examples/ashfall_lahar/en/README.md",
       "source_sha256": "4cf1e1f04782e0c5ce7618a57a8850cacdbc52ea857e3c69e9f4f3c4fac0c20e",
-      "target_sha256": "b38027b30c3438144fbb209d56a47525aa24f33c65274be1a1c8d8d413c32865",
-      "reviewer": "Claude (assistant)",
+      "target_sha256": "a75fa870ebe9a6402210bed3c7e515392197fc40518b62d467ac478fbb0ef2ab",
+      "reviewer": "Claude (Claude Code session; reviewed the Japanese source against the English mirror after unifying the term passage width / 通過幅 and noting the original paper's term, 2026-11-03)",
       "method": "assistant",
-      "reviewed_on": "2026-11-02"
+      "reviewed_on": "2026-11-03"
     },
     {
       "source": "examples/ashfall_lahar/figs/maps.png",
@@ -1563,10 +1563,10 @@
       "source": "examples/levee_breach/README.md",
       "target": "examples/levee_breach/en/README.md",
       "source_sha256": "d11e64e7cb22e9bddaacae5a827e6a7c423597e995e95e5ecc4cf0e64a08c092",
-      "target_sha256": "73ea39db671788f98f4e370119d103e94ca4bcfdfe17cc5d8ae5378440b91923",
-      "reviewer": "Claude (assistant)",
+      "target_sha256": "875aaef8da11b8025e6051503e0de3c462110c7c9f0031873babca4809a2308e",
+      "reviewer": "Claude (Claude Code session; reviewed the Japanese source against the English mirror after unifying the term passage width / 通過幅 and noting the original paper's term, 2026-11-03)",
       "method": "assistant",
-      "reviewed_on": "2026-11-02"
+      "reviewed_on": "2026-11-03"
     },
     {
       "source": "examples/levee_breach/figs/maps.png",
@@ -2291,9 +2291,9 @@
     {
       "source": "test/bendloss/README.md",
       "target": "test/bendloss/en/README.md",
-      "source_sha256": "bf8cc40401e094ce914c46f129c062da5c18470e058c50b1d17d67019a2c7758",
+      "source_sha256": "74544da4e9ba01e3ba215b162106544f21eaa8b4755b758e9573675284c1ba13",
       "target_sha256": "ac50f76f4bab1e2511e31d366b20792c4e53d097ea48d886eee6f590966e445b",
-      "reviewer": "Claude (Claude Code session; reviewed the Japanese source against the English mirror after adding the passage-width page and the links to it, 2026-11-03)",
+      "reviewer": "Claude (Claude Code session; reviewed the Japanese source against the English mirror after unifying the term passage width / 通過幅 and noting the original paper's term, 2026-11-03)",
       "method": "assistant",
       "reviewed_on": "2026-11-03"
     },
@@ -3165,10 +3165,10 @@
       "source": "test/rockinc/README.md",
       "target": "test/rockinc/en/README.md",
       "source_sha256": "e2bd34d4b9ba26ddfa5cab9b7edbe8920b58d4a8445379490e3dae073e654c58",
-      "target_sha256": "3ba5232b096358c7d561ef445af789c6b897ee3bc8df0f6771118b2f12a26a0d",
-      "reviewer": "Claude (Claude Code session; f_opening_dynamic default switch)",
+      "target_sha256": "3900029d19b3a736900a7a1d689c8a965b656f6f56427b7bbe184bde0c409049",
+      "reviewer": "Claude (Claude Code session; reviewed the Japanese source against the English mirror after unifying the term passage width / 通過幅 and noting the original paper's term, 2026-11-03)",
       "method": "assistant",
-      "reviewed_on": "2026-10-31"
+      "reviewed_on": "2026-11-03"
     },
     {
       "source": "test/salt/README.md",
