@@ -12,6 +12,11 @@ module m_evap
   !           推奨する(疎な系列も線形補間・端値保持で機能する)
   !   減算:   樹冠保水(貯留型遮断の draw 口)→ 地表水 h → ため池 hrs →
   !           地下水 hg の順に「あるだけ引く」(供給制限のみ。乾燥抑制なし)。
+  !           地表水は水面の面積の分だけ蒸発し、河道幅のセルの陸の部分と
+  !           σ のセルの水面の外の要求は hrs・hg へ渡す(§27.1)。
+  !           evap_hglim を与えると、地下水の段だけ土の乾き具合で抑える
+  !           (Ks = min(1, hg/evap_hglim)。FAO-56 の水分ストレス係数と同じ
+  !           線形低減。ステップ内で厳密に解く。未指定なら抑制なし。§27.2)。
   !           ダム・湖沼の捕捉帯(hrs)もため池と同様セル面積分ずつ引く
   !           (湛水面積=捕捉セル数×セル面積。湖面をラスタで塗れば実面積。
   !           旧 dam_area の一括評価は 2026-08-20 廃止。§27)。
@@ -50,6 +55,8 @@ module m_evap
     logical :: initialized = .false.
     integer :: model = 0           ! f_evmodel
     real :: kc = 1.0
+    logical :: stress = .false.    ! 地下水の段の抑制の有無(evap_hglim の指定。§27.2)
+    real :: hglim = 0.0            ! 抑制を始める地下の貯留量 (m。stress 時のみ)
     real :: pet0 = 0.0             ! モード1: PET (mm/day)
     real :: pmon(1:12) = 0.0       ! モード2: 月別 PET (mm/day)
     integer :: jdn0 = 0            ! t=0 の日のユリウス通日(p から転記)
@@ -82,6 +89,7 @@ subroutine m_evap_init(ev, p, g, b, s, mt)
   type(t_meteo), intent(in) :: mt
   type(t_list_evap) :: list
   integer :: m
+  character(len=32) :: buf
   if (allocated(b%struct) .or. allocated(s%h)) continue  ! 引数未使用の警告を抑制
 
   if (len_trim(p%fn_evap) == 0) return
@@ -96,6 +104,16 @@ subroutine m_evap_init(ev, p, g, b, s, mt)
   ev%model = list%f_evmodel
   if (list%evap_kc <= 0.0) call par_stop("list_evap: evap_kc must be > 0")
   ev%kc = list%evap_kc
+
+  ! --- 土の乾き具合による地下水の段の抑制(§27.2)。未指定(番兵)なら抑制なし
+  !     (既定値は置かない: 土と植生の与件・校正値) ---
+  if (list%evap_hglim > -9998.0) then
+    if (list%evap_hglim <= 0.0) then
+      call par_stop("list_evap: evap_hglim must be > 0 (m); leave it unset for no suppression")
+    end if
+    ev%stress = .true.
+    ev%hglim = list%evap_hglim
+  end if
 
   ! --- 暦の原点(モード2〜4で必須。正本は &list_sysparam の date0_c。§29) ---
   if (ev%model >= 2) then
@@ -169,6 +187,11 @@ subroutine m_evap_init(ev, p, g, b, s, mt)
   ev%enabled = .true.
   ev%initialized = .true.
   call par_info("evapotranspiration enabled (f_evmodel="//itoa(ev%model)//")")
+  if (ev%stress) then
+    write(buf, '(es12.4)') ev%hglim
+    call par_info("evap: groundwater draw reduced below evap_hglim = "//trim(adjustl(buf)) &
+                  //" m (Ks = min(1, hg/evap_hglim))")
+  end if
 end subroutine
 
 
@@ -186,7 +209,7 @@ subroutine m_evap_calc(ev, p, g, b, s, ic, mt, it)
   type(t_meteo), intent(inout) :: mt
   integer, intent(in) :: it
   integer :: i, j, day
-  real :: dem, w, hb
+  real :: dem, w, hb, dv
   real(real64) :: acell
   logical :: canopy
 
@@ -203,7 +226,7 @@ subroutine m_evap_calc(ev, p, g, b, s, ic, mt, it)
   ! 優先順位付き減算: 樹冠保水 → 地表水 h → hrs → 地下水 hg(§27)。
   ! 体積診断の面積基底: 樹冠 = セル面積(pre と同基底)、h = af(σ・幅・
   ! 空隙を含む実効面積)、hrs / hg = gv 面積(それぞれの貯留の意味論)
-  !$omp parallel do schedule(static) private(i, j, dem, w, hb)
+  !$omp parallel do schedule(static) private(i, j, dem, w, hb, dv)
   do j = dcp%js, dcp%je
     do i = g%wx(1,j), g%wx(2,j)
       if (g%x(i,j) <= 0) cycle
@@ -217,20 +240,25 @@ subroutine m_evap_calc(ev, p, g, b, s, ic, mt, it)
         ev%vrow(j,1) = ev%vrow(j,1) + real(w, real64) * acell
         if (dem <= 0.0) cycle
       end if
-      ! (2) 地表水 h(σ 有効セルは dV = σ(h)dh の関係により、真水深から
-      !     引くこと自体が現在の水面幅に比例した体積減で厳密。§26/§27)
+      ! (2) 地表水 h。水面はその面積の分だけ蒸発する(水深から w を引く。σ 有効
+      !     セルは dV = σ(h)dh の関係により、現在の水面幅に比例した体積減)。
+      !     要求から差し引くのは実際に減った体積の分(セルの gv 面積あたりの水深)
+      !     だけで、残り(河道幅のセルの陸の部分、σ のセルの水面の外の河岸)は
+      !     hrs・hg へ渡す(§27.1。幅も σ もないセルは wfrac = 1 で dem − w のまま)
       if (s%h(i,j) > 0.0) then
         w = min(s%h(i,j), dem)
         hb = s%h(i,j)
         s%h(i,j) = s%h(i,j) - w
         s%e(i,j) = s%z(i,j) + s%h(i,j)
-        dem = dem - w
         if (sect_cell(s, i, j)) then
-          ! σ のセルの台帳は実際に減った体積(矩形換算水深の差)で数える(§26.2。
+          ! σ のセルは実際に減った体積(矩形換算水深の差)で数える(§26.2。
           ! af は水深の平均の湿潤率 v/h を含むので w × af は水面幅の分を過小に数える)
-          ev%vrow(j,2) = ev%vrow(j,2) + real(sect_dvh(s, i, j, hb, s%h(i,j)), real64) &
+          dv = sect_dvh(s, i, j, hb, s%h(i,j))
+          dem = dem - dv * wfr_of(s, i, j)
+          ev%vrow(j,2) = ev%vrow(j,2) + real(dv, real64) &
                          * real(s%gv(i,j), real64) * real(wfr_of(s, i, j), real64) * acell
         else
+          dem = dem - w * wfr_of(s, i, j)
           ev%vrow(j,2) = ev%vrow(j,2) + real(w, real64) * real(s%af(i,j), real64) * acell
         end if
         if (dem <= 0.0) cycle
@@ -243,9 +271,14 @@ subroutine m_evap_calc(ev, p, g, b, s, ic, mt, it)
         ev%vrow(j,3) = ev%vrow(j,3) + real(w, real64) * real(s%gv(i,j), real64) * acell
         if (dem <= 0.0) cycle
       end if
-      ! (4) 地下水 hg(gwflow 無効時は 0 のまま = 何も起きない)
+      ! (4) 地下水 hg(gwflow 無効時は 0 のまま = 何も起きない)。evap_hglim を
+      !     与えたときは土の乾き具合で抑える(§27.2)
       if (s%hg(i,j) > 0.0) then
-        w = min(s%hg(i,j), dem)
+        if (ev%stress) then
+          w = hg_draw(s%hg(i,j), dem, ev%hglim)
+        else
+          w = min(s%hg(i,j), dem)
+        end if
         s%hg(i,j) = s%hg(i,j) - w
         ev%vrow(j,4) = ev%vrow(j,4) + real(w, real64) * real(s%gv(i,j), real64) * acell
       end if
@@ -254,6 +287,40 @@ subroutine m_evap_calc(ev, p, g, b, s, ic, mt, it)
   !$omp end parallel do
 
 end subroutine
+
+
+!----------------------------------------------------------------------
+! 土の乾き具合で抑える地下水の段の取り分(§27.2)
+!   dhg/dt = −E·min(1, hg/hl) を、ステップ内で要求の速さ E を一定として厳密に
+!   解いた hg の減少量(dem = E·dt)。hg ≥ hl の間は速さ E で線形に減り、下回ると
+!   時定数 hl/E で指数的に減る。Ks = min(1, hg/hl) は FAO-56 の水分ストレス係数
+!   Ks = (TAW − Dr)/((1 − p)TAW) で残りの有効水分を hg、(1 − p)TAW を hl と
+!   読んだもの(HBV の LP による低減と同じ形)。結果は hg を超えない
+!----------------------------------------------------------------------
+pure real function hg_draw(hg, dem, hl) result(w)
+  real, intent(in) :: hg, dem, hl
+  real :: lin
+  if (hg - dem >= hl) then
+    w = dem                                   ! ステップの間ずっと抑制なし
+  else
+    lin = max(hg - hl, 0.0)                   ! hl まで線形に引ける分(時間 lin/E)
+    w = lin + (hg - lin) * one_minus_exp((dem - lin) / hl)
+  end if
+end function
+
+
+!----------------------------------------------------------------------
+! 1 − exp(−x)(x ≥ 0)。小さい x で桁落ちしないよう 1e-2 未満は級数で評価する
+! (打ち切り誤差は相対 x^5/720 以下 = 1.4e-13 以下)
+!----------------------------------------------------------------------
+pure real function one_minus_exp(x) result(y)
+  real, intent(in) :: x
+  if (x < 1.0e-2) then
+    y = x * (1.0 - 0.5 * x * (1.0 - x / 3.0 * (1.0 - 0.25 * x * (1.0 - 0.2 * x))))
+  else
+    y = 1.0 - exp(-x)
+  end if
+end function
 
 
 !----------------------------------------------------------------------

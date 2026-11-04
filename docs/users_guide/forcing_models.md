@@ -101,6 +101,50 @@ $`I`$ を作る気候学的な式で、月の値を 30 で割って日割りに�
 渡します。供給制限以外の乾燥抑制や、SWE からの昇華は扱いません。地表流と
 地下水計算の後の状態に作用します。
 
+**地表水の段。** 地表水は水面の面積の分だけ蒸発します(水深から
+$`w = \min(h,\ PET\,\Delta t)`$ を引く)。次の段へ渡す要求は、実際に減った体積
+$`\Delta V_h`$ をセルの面積(空隙率を掛けた $`g_v A`$)で割った水深だけ減らします。
+
+```math
+E_{\mathrm{rest}} = PET\,\Delta t - \frac{\Delta V_h}{g_v A}
+```
+
+河道幅も断面形もないセルでは $`\Delta V_h/(g_v A) = w`$ です。河道幅のセルでは
+$`w \times`$ wfrac(河道の水面だけが地表水から蒸発し、河道の外の陸の部分は
+貯留・地下水から)、断面形 σ のセルでは矩形換算水深の差 × wfrac(今の水面幅の
+外の河岸の分も次の段へ)になります。セルの中の陸の部分と河岸の蒸発散を、
+セルで共有する貯留・地下水から引く独自の簡略化です(developer.md §27.1)。
+
+**土の乾き具合による抑制(evap_hglim)。** `evap_hglim`($`h_{lim}`$)を与えると、
+地下水の段の要求に水分ストレス係数 $`K_s`$ を掛けます。
+
+```math
+E_g = K_s\,E_{\mathrm{rest}},\qquad K_s = \min\left(1,\ \frac{h_g}{h_{lim}}\right)
+```
+
+ステップの中では要求の速さ $`E`$ を一定として $`dh_g/dt = -E\,K_s(h_g)`$ を厳密に
+解きます。$`h_g \ge h_{lim}`$ の間は速さ $`E`$ で線形に減り、下回ると、そこからの
+時間を $`t`$ として $`h_g(t) = h_{lim}\exp(-E\,t/h_{lim})`$ の形で指数的に減ります
+(時定数 $`h_{lim}/E`$)。この形は FAO-56[^allen98] の水分ストレス係数
+$`K_s = (TAW - D_r)/((1-p)\,TAW)`$ で、残りの有効水分 $`TAW - D_r`$ を $`h_g`$、
+$`(1-p)\,TAW`$ を $`h_{lim}`$ と読んだもので、HBV の土壌水分による蒸発散の低減
+(LP)[^bergstrom95] と同じ線形の低減です。`evap_kc` を作物係数 $`K_c`$ と読めば、
+FAO-56 の $`K_s K_c ET_0`$ と同じ組み立てになります。
+
+$`h_{lim}`$ の目安は、根群域の有効水分量 $`TAW = 1000(\theta_{FC} - \theta_{WP})Z_r`$
+(mm。$`\theta_{FC}`$・$`\theta_{WP}`$ は圃場容水量・しおれ点の体積含水率、
+$`Z_r`$ は根の深さ m)と消耗率 $`p`$(多くの作物で 0.5 前後)から
+$`(1-p)\,TAW`$ で作れます[^allen98]。ただし ENCflow の $`h_g`$ は層 1 全体の貯留で
+鉛直の分布を持たないので、$`h_{lim}`$ は根の深さや土の保水性を直接表すものでは
+ありません。雨の直後に表層だけが湿っている状態や、裸地の蒸発と植物の蒸散の違いも
+表せません。乾季の流量の観測などで校正する値として扱ってください(既定値なし。
+未指定なら抑制なし = 従来の供給制限のみ)。
+
+対照として、MODFLOW の EVT パッケージ[^harbaugh05] は地下水面の深さで線形に
+減らします(消散深さ)。ENCflow では Green-Ampt の浸透が $`h_g`$ を「上からしみ込んだ
+水」、側方流が「底からの地下水面」として読むので、深さを使う形は採っていません
+(developer.md §27.2)。
+
 **既定値の根拠。** モード 1 の既定 3 mm/day は、温帯湿潤気候の暖候期の
 基準蒸発散(FAO-56[^allen98] の $`ET_0`$ で 3〜5 mm/day)の下寄りで、日本の
 年平均(2〜2.5 mm/day)より大きく夏季(4〜5)より小さい中庸です。季節を
@@ -146,6 +190,7 @@ $`T \le`$ `snow_t_snow` は全雪、$`T \ge`$ `snow_t_rain` は全雨で、そ�
 | prec_lapse | 0 | 降水の増率 | **与件** 既定は補正なし |
 | evap0 | 3 mm/day | 一定 PET | **文献値** 温帯湿潤の暖候期 $`ET_0`$ 3〜5 の下寄り[^allen98] |
 | evap_kc | 1 | PET の換算係数 | **校正量** パン係数・作物係数に相当 |
+| evap_hglim | なし(未指定で抑制なし) | 土の乾き具合による抑制を始める地下の貯留量 $`h_{lim}`$ | **与件・校正量** $`(1-p)\,TAW`$[^allen98] を目安に、乾季の流量の観測で校正 |
 | snow_t_snow / snow_t_rain | 0 / 2 ℃ | 雨雪判定の閾値 | **慣用値** 湿球温度 1 ℃ 前後で切り替わる観測に基づく慣用の範囲 |
 | snow_t_melt | 0 ℃ | 融雪の閾値 | **慣用値** 度日法の標準 |
 | snow_ddf | 4 mm/℃/day | 度日係数 | **文献値** 雪 2.5〜6 の中央[^hock03]。日本の山地流域の慣用値 3〜5 の中庸 |
@@ -166,6 +211,7 @@ $`T \le`$ `snow_t_snow` は全雪、$`T \ge`$ `snow_t_rain` は全雨で、そ�
 ## 6. 検証ケース
 
 - [test/icevap](../../test/icevap/): 固定遮断率・初期損失・一定蒸発散について、最小入力と既定値を明示した入力の同値を検定。
+- [test/evapdry](../../test/evapdry/): 土の乾き具合による抑制。平らな閉領域で、雨の後の地下の貯留が $`dh_g/dt = -E\min(1, h_g/h_{lim})`$ の解析解に丸めの範囲で一致。
 - [test/frost](../../test/frost/): 一定気温による凍結指数の増加と浸透抑制を解析値と比較。
 - [test/chichibu](../../test/chichibu/): 実地形流域への一様降雨の回帰ケース。
 
@@ -177,3 +223,5 @@ $`T \le`$ `snow_t_snow` は全雪、$`T \ge`$ `snow_t_rain` は全雨で、そ�
 [^thornthwaite48]: Thornthwaite, C. W. (1948): An approach toward a rational classification of climate. *Geogr. Rev.*, 38, 55–94.
 [^allen98]: Allen, R. G., Pereira, L. S., Raes, D. and Smith, M. (1998): Crop Evapotranspiration: Guidelines for Computing Crop Water Requirements. *FAO Irrigation and Drainage Paper*, 56.
 [^hock03]: Hock, R. (2003): Temperature index melt modelling in mountain areas. *J. Hydrol.*, 282, 104–115.
+[^bergstrom95]: Bergström, S. (1995): The HBV model. In: Singh, V. P. (ed.), *Computer Models of Watershed Hydrology*, Water Resources Publications, 443–476.
+[^harbaugh05]: Harbaugh, A. W. (2005): MODFLOW-2005, the U.S. Geological Survey modular ground-water model — the Ground-Water Flow Process. *U.S. Geological Survey Techniques and Methods*, 6-A16.

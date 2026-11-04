@@ -7,6 +7,8 @@
 #   param_nowidth.txt 河道幅なし(σ がセル全幅): 同じ 4 つ
 #   param_gwc.txt     管路層の流入・噴出・吐口: 同じ 4 つ
 #   param_snow.txt    融雪: 総水量(地表 + 積雪)の保存(開始時から)
+#   param_evap.txt / param_evap_nowidth.txt  蒸発散(§27.1。σ + 河道幅 / σ のみ):
+#                     蒸発散 = PET × 面積 × 時間・総水量 + 蒸発散 = 雨・水質の台帳
 sdir=$(dirname "$(readlink -f "$0")")
 export FILES="Log.txt wq.csv"
 export ULP=0
@@ -19,7 +21,7 @@ python3 Check_gwsect.py rain result $AREA || exit 1
 python3 Check_gwsect.py conc result 6 || exit 1
 python3 Check_gwsect.py ledger result || exit 1
 
-rm -rf result_nowidth result_gwc result_snow
+rm -rf result_nowidth result_gwc result_snow result_evap result_evap_nowidth
 ./encflow param_nowidth.txt > Screen_nowidth.log 2>&1 || { echo "ERROR: param_nowidth run failed" >&2; exit 1; }
 python3 Check_gwsect.py conserve result_nowidth || exit 1
 python3 Check_gwsect.py rain result_nowidth $AREA || exit 1
@@ -34,5 +36,13 @@ python3 Check_gwsect.py ledger result_gwc || exit 1
 
 ./encflow param_snow.txt > Screen_snow.log 2>&1 || { echo "ERROR: param_snow run failed" >&2; exit 1; }
 python3 Check_gwsect.py conserve result_snow 0 || exit 1
+
+PET=48                 # param_evap*.txt の evap0 (mm/day)
+for c in evap evap_nowidth; do
+  ./encflow param_$c.txt > Screen_$c.log 2>&1 || { echo "ERROR: param_$c run failed" >&2; exit 1; }
+  python3 Check_gwsect.py evap result_$c $AREA $PET || exit 1
+  python3 Check_gwsect.py evbal result_$c $AREA || exit 1
+  python3 Check_gwsect.py ledger result_$c || exit 1
+done
 
 echo "=== gwsect verification PASS ==="

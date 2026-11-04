@@ -119,6 +119,66 @@ remaining demand passes to the next store. There is no dry-soil
 suppression beyond this supply limit and no sublimation from SWE. It acts
 on the state after the surface-flow and groundwater updates.
 
+**The surface-water stage.** Surface water evaporates over the area of its
+water surface (the depth $`w = \min(h,\ PET\,\Delta t)`$ is subtracted). The
+demand passed on to the next stores is reduced only by the depth of the volume
+$`\Delta V_h`$ actually removed, divided by the cell area (times the void
+ratio, $`g_v A`$):
+
+```math
+E_{\mathrm{rest}} = PET\,\Delta t - \frac{\Delta V_h}{g_v A}
+```
+
+On cells without a channel width or a section shape,
+$`\Delta V_h/(g_v A) = w`$. On channel-width cells it is $`w \times`$ wfrac
+(only the channel's water surface evaporates from the surface water; the land
+part outside the channel evaporates from the storage and the groundwater), and
+on cells with the section shape σ it is the difference of the
+rectangular-equivalent depth × wfrac (the banks outside the current
+water-surface width also pass on to the next stores). Taking the
+evapotranspiration of the land part and the banks within a cell from the
+storage and groundwater the cell shares is our own simplification
+(developer.md §27.1).
+
+**Reduction by the dryness of the soil (evap_hglim).** When `evap_hglim`
+($`h_{lim}`$) is given, the demand of the groundwater stage is multiplied by the
+water stress coefficient $`K_s`$:
+
+```math
+E_g = K_s\,E_{\mathrm{rest}},\qquad K_s = \min\left(1,\ \frac{h_g}{h_{lim}}\right)
+```
+
+Within a step, $`dh_g/dt = -E\,K_s(h_g)`$ is solved exactly with the rate of the
+demand $`E`$ held constant. While $`h_g \ge h_{lim}`$ the storage decreases
+linearly at the rate $`E`$, and below it decreases exponentially as
+$`h_g(t) = h_{lim}\exp(-E\,t/h_{lim})`$ with $`t`$ counted from that moment
+(time constant $`h_{lim}/E`$). This form
+is the water stress coefficient of FAO-56[^allen98],
+$`K_s = (TAW - D_r)/((1-p)\,TAW)`$, read with the remaining available water
+$`TAW - D_r`$ as $`h_g`$ and $`(1-p)\,TAW`$ as $`h_{lim}`$; it is the same linear
+reduction as the soil-moisture reduction of evapotranspiration in HBV
+(LP)[^bergstrom95]. Reading `evap_kc` as the crop coefficient $`K_c`$ gives the
+same construction as $`K_s K_c ET_0`$ of FAO-56.
+
+$`h_{lim}`$ can be estimated as $`(1-p)\,TAW`$ from the total available water of
+the root zone $`TAW = 1000(\theta_{FC} - \theta_{WP})Z_r`$ (mm; $`\theta_{FC}`$ and
+$`\theta_{WP}`$ are the volumetric water contents at field capacity and wilting
+point, $`Z_r`$ the rooting depth in m) and the depletion fraction $`p`$ (around
+0.5 for many crops)[^allen98]. However, $`h_g`$ in ENCflow is the storage of the
+whole layer 1 without a vertical distribution, so $`h_{lim}`$ does not represent
+the rooting depth or the water retention of the soil directly. Nor can it
+represent a state in which only the surface layer is wet just after rain, or
+the difference between evaporation from bare soil and transpiration by plants.
+Treat it as a value to calibrate, for example against observed dry-season
+discharges (no default; without it there is no reduction, i.e. the supply limit
+only, as before).
+
+For contrast, the EVT package of MODFLOW[^harbaugh05] reduces the rate linearly
+with the depth of the water table (the extinction depth). In ENCflow the
+Green-Ampt infiltration reads $`h_g`$ as "water that has soaked in from the
+top" and the lateral flow as "a water table from the bottom", so a form that
+uses depth is not adopted (developer.md §27.2).
+
 **Basis of the default.** The mode-1 default of 3 mm/day is the lower side
 of the warm-season reference evapotranspiration of a humid temperate
 climate (FAO-56[^allen98] $`ET_0`$ of 3–5 mm/day): larger than the annual
@@ -173,6 +233,7 @@ The labels in the Basis column are explained in [How to read the basis of a defa
 | prec_lapse | 0 | precipitation gradient | **given** no correction by default |
 | evap0 | 3 mm/day | constant PET | **literature value** lower side of the warm-season $`ET_0`$ 3–5 of a humid temperate climate[^allen98] |
 | evap_kc | 1 | PET conversion coefficient | **calibration** plays the role of a pan or crop coefficient |
+| evap_hglim | none (no reduction when unspecified) | subsurface storage $`h_{lim}`$ below which the dryness of the soil reduces evapotranspiration | **given and calibration** start from $`(1-p)\,TAW`$[^allen98] and calibrate against observed dry-season discharges |
 | snow_t_snow / snow_t_rain | 0 / 2 °C | rain/snow thresholds | **customary value** range based on the observed transition around a wet-bulb temperature of 1 °C |
 | snow_t_melt | 0 °C | melt threshold | **customary value** standard of the degree-day method |
 | snow_ddf | 4 mm/°C/day | degree-day factor | **literature value** middle of 2.5–6 for snow[^hock03]; middle of the customary 3–5 of Japanese mountain basins |
@@ -194,6 +255,7 @@ The labels in the Basis column are explained in [How to read the basis of a defa
 ## 6. Verification cases
 
 - [test/icevap](../../../test/icevap/en/README.md): equivalence of minimal input and explicitly specified defaults for fixed-rate interception, initial loss and constant evapotranspiration.
+- [test/evapdry](../../../test/evapdry/en/README.md): reduction by the dryness of the soil. In a flat closed domain, the subsurface storage after rain matches the analytical solution of $`dh_g/dt = -E\min(1, h_g/h_{lim})`$ to rounding.
 - [test/frost](../../../test/frost/en/README.md): comparison with analytical values for the freezing index and infiltration suppression under constant air temperature.
 - [test/chichibu](../../../test/chichibu/en/README.md): regression case of uniform rainfall on a real-terrain catchment.
 
@@ -205,3 +267,5 @@ The labels in the Basis column are explained in [How to read the basis of a defa
 [^thornthwaite48]: Thornthwaite, C. W. (1948): An approach toward a rational classification of climate. *Geogr. Rev.*, 38, 55–94.
 [^allen98]: Allen, R. G., Pereira, L. S., Raes, D. and Smith, M. (1998): Crop Evapotranspiration: Guidelines for Computing Crop Water Requirements. *FAO Irrigation and Drainage Paper*, 56.
 [^hock03]: Hock, R. (2003): Temperature index melt modelling in mountain areas. *J. Hydrol.*, 282, 104–115.
+[^bergstrom95]: Bergström, S. (1995): The HBV model. In: Singh, V. P. (ed.), *Computer Models of Watershed Hydrology*, Water Resources Publications, 443–476.
+[^harbaugh05]: Harbaugh, A. W. (2005): MODFLOW-2005, the U.S. Geological Survey modular ground-water model — the Ground-Water Flow Process. *U.S. Geological Survey Techniques and Methods*, 6-A16.

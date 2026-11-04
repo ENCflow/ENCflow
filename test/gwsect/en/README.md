@@ -32,23 +32,33 @@ ground only 1/(m+1) of the volume removed. This test checks that.
 - **param_snow.txt**: an impervious surface (no groundwater); an initial snow
   cover of 20 mm on every cell melts at an air temperature of 10 ℃ with a
   degree-day factor of 20 mm/℃/day (gone in 2.4 hours).
+- **param_evap.txt / param_evap_nowidth.txt**: evapotranspiration on σ cells
+  (developer.md §27.1; with / without the channel width). No lateral
+  groundwater flow; two hours of uniform rain at 50 mm/h fill the soil and
+  the excess rain collects in the valley channel. The potential
+  evapotranspiration PET is a constant 48 mm/day (2 mm/h). Every cell has
+  enough water, so the evapotranspiration should equal PET × area × time. On
+  σ cells, the current water-surface width σ(h) evaporates from the channel
+  water, and the banks outside the water surface (and the land part of
+  channel-width cells) from the groundwater.
 
 ## Configuration
 
-| Item | param.txt | param_nowidth.txt | param_gwc.txt | param_snow.txt |
-|---|---|---|---|---|
-| Terrain | closed valley (`data_gwsect/z.txt`, channel mask `rw.txt`, excavation 0.5 m) | same | same | same |
-| Section shape | σ(h) = (h/D)^0.5, D = 0.5 m | same | same | same |
-| Channel width | 2 m (`width.txt`) | none | 2 m | 2 m |
-| Water | rain 50 mm/h × 1 h (1 mg/L) | same | rain 20 mm/h × 1 h (1 mg/L) | initial snow 20 mm |
-| Subsurface | Green-Ampt + lateral flow (layer 1) | same | conduit layer only (inlets, outfall) | none |
-| Time | dt = 0.5 s, 6 h | same | 4 h | 6 h |
+| Item | param.txt | param_nowidth.txt | param_gwc.txt | param_snow.txt | param_evap.txt | param_evap_nowidth.txt |
+|---|---|---|---|---|---|---|
+| Terrain | closed valley (`data_gwsect/z.txt`, channel mask `rw.txt`, excavation 0.5 m) | same | same | same | same | same |
+| Section shape | σ(h) = (h/D)^0.5, D = 0.5 m | same | same | same | same | same |
+| Channel width | 2 m (`width.txt`) | none | 2 m | 2 m | 2 m | none |
+| Water | rain 50 mm/h × 1 h (1 mg/L) | same | rain 20 mm/h × 1 h (1 mg/L) | initial snow 20 mm | rain 50 mm/h × 2 h (1 mg/L) | same |
+| Subsurface | Green-Ampt + lateral flow (layer 1) | same | conduit layer only (inlets, outfall) | none | Green-Ampt (no lateral flow) | same |
+| Evapotranspiration | none | none | none | none | constant PET 48 mm/day | same |
+| Time | dt = 0.5 s, 6 h | same | 4 h | 6 h | 4 h | 4 h |
 
 | File | Content |
 |---|---|
-| `Run.sh` | compares Log.txt and wq.csv of param.txt with the reference (ULP = 0; the Runge column of the Log is excluded) → checks with `Check_gwsect.py` → runs the other three configurations and checks them |
+| `Run.sh` | compares Log.txt and wq.csv of param.txt with the reference (ULP = 0; the Runge column of the Log is excluded) → checks with `Check_gwsect.py` → runs the other five configurations and checks them |
 | `Run_MPI.sh N` | runs param.txt on N ranks, compares with the serial reference at ULP = 0 and checks it |
-| `Check_gwsect.py conserve\|rain\|conc\|ledger` | total storage S_total constant (after the rain; from the start for the snowmelt; relative 1e-10) / final total storage equal to the rain total (relative 1e-6) / concentration 1 ± 1e-3 mg/L in every cell deeper than 1 mm / closure of the water-quality ledger |
+| `Check_gwsect.py conserve\|rain\|conc\|ledger\|evap\|evbal` | total storage S_total constant (after the rain; from the start for the snowmelt; relative 1e-10) / final total storage equal to the rain total (relative 1e-6) / concentration 1 ± 1e-3 mg/L in every cell deeper than 1 mm / closure of the water-quality ledger / increase of the evapotranspiration after a 30-minute spin-up equal to PET × area × time (relative 1e-6) / final total storage + evapotranspiration = rain total (relative 1e-6) |
 
 ## Running
 
@@ -81,6 +91,20 @@ make
   infiltration over the wetted width) is unchanged. The equalization limit of
   the exchange with the conduit layer is an approximation linearized with the
   water-surface width σ(h) at the current depth (water is conserved).
+- Evapotranspiration (param_evap*.txt; developer.md §27.1):
+
+  | Quantity | After the fix | Before the fix (executable of main on 2026-11-04) |
+  |---|---|---|
+  | Departure of the increase of the evapotranspiration after the 30-minute spin-up from PET × area × time (relative; largest over the records), with the channel width | 6e-8 (output precision) | −7.3 % (short) |
+  | Same, without the channel width | 4e-16 | −6.3 % (short) |
+  | Final total storage + evapotranspiration − rain total (relative) | 3e-9 | 3e-9 |
+
+  Before the fix, the banks outside the water surface of σ cells and the
+  land part of channel-width cells did not evaporate while the channel held
+  water (the drop of the water level was subtracted as is from the demand of
+  the whole cell). In the first few steps of the rain the ground under the
+  channel cells is still empty and cannot meet the demand, so the check uses
+  the increase after a 30-minute spin-up.
 - Pore water of landform change, lava, the VZ outlet, glacier melt water and
   the change of the void ratio use the same function (`sect_add_vh`); this test
   does not run those configurations.

@@ -1,0 +1,67 @@
+!======================================================================
+! evapdry: 土の乾き具合で抑える地下水の段の蒸発散(evap_hglim。§27.2)
+!
+!   平らな閉領域(10 × 10 セル、dx = 10 m、地盤高一様)。バケツ型の浸透
+!   (浸透能 200 mm/h、容量 0.1 m)で 1 時間の一様降雨 50 mm/h をすべて
+!   しみ込ませ、可能蒸発散 PET 一定 48 mm/day(2 mm/h)で地下の貯留 hg から
+!   蒸発させる。地表の流れも地下の流れもないので、雨の後は蒸発散だけが hg を
+!   減らす。evap_hglim = 0.02 m: hg が 0.02 m を上回る間は速さ PET で線形に
+!   減り、下回ると時定数 evap_hglim/PET = 10 時間で指数的に減る
+!   (dhg/dt = −PET·min(1, hg/evap_hglim) の解析解。ステップ内で厳密に
+!   解くので、数値解は丸めの範囲で解析解に一致する)。
+!   雨には濃度 1 mg/L のトレーサを持たせる(水質の台帳から雨の総量を得る)。
+!======================================================================
+&list_sysparam
+  dt = 10.0                 ! 時間刻み (s)
+  tt_c = "30h"              ! 計算終了時刻
+  dt_disp_c = "30m"         ! 画面表示(Log.txt)の間隔
+  dt_file_c = "6h"          ! 分布ファイル出力の間隔
+  dt_recrd_c = "30m"        ! wq.csv・evap.csv の記録間隔
+  fn_geoinfo = '-'
+  fn_gwflow = '-'
+  fn_precip = '-'
+  fn_wq = '-'
+  fn_evap = '-'
+  dir_result = 'result'
+  f_check_cfl = 0
+  f_disp_debug = 1          ! S 列を全有効桁で表示
+  f_output_mode = 2         ! 分布は bil
+/
+
+&list_geoinfo
+  nx = 10
+  ny = 10
+  dx = 10.0
+  dy = 10.0
+  f_ztype = 0               ! 地盤高一様(平ら)
+  z0 = 1.0
+  rn0 = 0.05
+/
+
+&list_precip
+  prtype = 1                ! 一様時系列
+  dt_prupdate = 1           ! 更新間隔 (min)
+  prval(:,1) =    0, 50.0   ! (時刻 min, 雨量強度 mm/h)
+  prval(:,2) =   60, 50.0
+  prval(:,3) =   61,  0.0
+  prval(:,4) = 9999,  0.0
+/
+
+&list_gwflow
+  f_gwvertical = 1          ! バケツ型(側方流なし)
+/
+
+&list_gwflow_bucket
+  gw_infil_mmh = 200.0      ! 浸透能 (mm/h)。雨はすべてしみ込む
+  gw_capacity = 0.1         ! 容量 (m)。雨の総量より大きい
+/
+
+&list_wq
+  wq_rain_conc = 1.0        ! 雨の濃度 (mg/L)
+/
+
+&list_evap
+  f_evmodel = 1             ! 一定速度
+  evap0 = 48.0              ! PET (mm/day) = 2 mm/h
+  evap_hglim = 0.02         ! 抑制を始める地下の貯留量 (m)
+/
