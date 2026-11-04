@@ -333,10 +333,11 @@ water went (depth over the catchment; the inputs are 600 mm of rain and
   510 µg/L, the effluent itself (500 µg/L) slightly concentrated (in step 4
   the baseflow dilutes it to 81 µg/L).
 - **Water stays in the tanks**: the level of the three tanks falls by about
-  0.4 m in the dry season and the concentration of the substance in their
-  water rises by about 10 % (evaporation removes only water). In step 4
-  groundwater from upstream keeps flowing in and replacing the water in the
-  dry season, and the concentration falls to a fifth. The lowest tank never
+  0.4 m in the dry season, but the concentration of the substance in their
+  water is kept and rises by about 10 % in the lower two (evaporation removes
+  only water). In step 4 groundwater from upstream keeps flowing in and
+  replacing the water in the dry season, and the concentration falls to
+  between a half and a fifth. The lowest tank never
   fills and does not spill, so only 0.01 kg passes the outlet of the farm
   tributary (G3) (2.1 kg in step 4).
 - **The substance stays in the ground**: the export to the sea is 17 kg

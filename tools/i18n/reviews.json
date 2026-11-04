@@ -1247,8 +1247,8 @@
     {
       "source": "examples/catchment_metal/README.md",
       "target": "examples/catchment_metal/en/README.md",
-      "source_sha256": "edc1bfec605fa140425c81ff5eec5e166d2262948c6e51a5467a8dbe10363e72",
-      "target_sha256": "21752cf855ae36cec2c8509e67e7992cd7e4795560ac6ff8bd32b4f50ce541f3",
+      "source_sha256": "9172f9e25259ae458f54866abe659e5112c455a2f7da786f3cc642b9d0d9972f",
+      "target_sha256": "f74bd47a54982647e16524cda2e32bfeb7396837269f0cd440c60221203ee138",
       "reviewer": "Claude (Claude Code session; full-text content and lexical review, no model execution)",
       "method": "assistant",
       "reviewed_on": "2026-11-04"
