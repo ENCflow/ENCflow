@@ -15,6 +15,9 @@
 (2)〜(4) は谷の向き 0°・22.5°・45° と 8 近傍・4 近傍のすべてで、重力補正なし・ありの両方を
 判定する(格子の向きによらないことの検定)。出力は f12.4 の印字なので、速さの比較は印字の桁で足りる大きさの許容にしている。
 流速の v は格子の行が増える向き(南)が正なので、向きは atan2(−v, u) で求める。
+  (5) 安全率: 斜面安定判定(_fs の構成。c' = 0・地下水なし)の、壁から FS_MARGIN 以上離れた内部の
+      Fs が tanφs/G に相対 TOL_FS 以内(最急勾配 tanθ = G が向きによらないこと。D∞。§92。
+      8 近傍の最大の勾配では 22.5° で G cos22.5° になり Fs が 8 % 大きく出る)
 """
 import math
 import os
@@ -25,28 +28,65 @@ import make_init as mi
 G = 9.8                      # param の gg(既定)と対
 MARGIN = 18.0                # 壁からの距離 (m)。壁で生じる乱れは T までに 13 m ほど入り込む
 TOL_V, TOL_U, TOL_DEG = 0.015, 0.01, 0.5
+FS_MARGIN = 1.0              # 安全率の内部(閉じた壁の外は勾配の候補にならないので、壁際の 1 列を除く)
+TOL_FS = 1.0e-3
 
 
 def read_txt(path):
     return [[float(v) for v in line.split()] for line in open(path) if line.strip()]
 
 
-def interior(case):
-    """内部セルの (u, v) の一覧(出力の最後の通常フレーム)。"""
-    rdir = f"result_{case}"
-    k = max(int(l.split(",")[0]) for l in open(f"{rdir}/FILENUMBER.csv")
-            if not l.startswith("#") and int(l.split(",")[0]) < 9000)
-    u = read_txt(f"{rdir}/u{k:04d}.txt")[::-1]      # 行 0 が南端
-    v = read_txt(f"{rdir}/v{k:04d}.txt")[::-1]
-    n = len(u)
+def last_frame(rdir):
+    """出力の最後の通常フレームの番号。"""
+    return max(int(l.split(",")[0]) for l in open(f"{rdir}/FILENUMBER.csv")
+               if not l.startswith("#") and int(l.split(",")[0]) < 9000)
+
+
+def inner(a, margin):
+    """壁から margin 以上離れたセルの値の一覧(a は出力の行列。先頭行が北端)。"""
+    a = a[::-1]                                     # 行 0 が南端
+    n = len(a)
     out = []
     for j in range(n):
         y = (j + 0.5) * mi.DX
         for i in range(n):
             x = (i + 0.5) * mi.DX
-            if min(x, y, mi.L - x, mi.L - y) >= MARGIN:
-                out.append((u[j][i], v[j][i]))
+            if min(x, y, mi.L - x, mi.L - y) >= margin:
+                out.append(a[j][i])
     return out
+
+
+def interior(case):
+    """内部セルの (u, v) の一覧(出力の最後の通常フレーム)。"""
+    rdir = f"result_{case}"
+    k = last_frame(rdir)
+    u = inner(read_txt(f"{rdir}/u{k:04d}.txt"), MARGIN)
+    v = inner(read_txt(f"{rdir}/v{k:04d}.txt"), MARGIN)
+    return list(zip(u, v))
+
+
+def check_fs(show):
+    """(5) 斜面安定判定の安全率。"""
+    ok = True
+    rows = []
+    fsref_tan = math.tan(math.radians(mi.FS_PHI))
+    for ratio, theta in mi.CASES_FS:
+        case = mi.fs_name(ratio, theta)
+        rdir = f"result_{case}"
+        fs = inner(read_txt(f"{rdir}/Fs{last_frame(rdir):04d}.txt"), FS_MARGIN)
+        ref = fsref_tan / (ratio * mi.MU)
+        lo, hi = min(fs), max(fs)
+        rows.append((case, ratio, theta, ref, lo, hi))
+        err = max(abs(lo / ref - 1.0), abs(hi / ref - 1.0))
+        if err > TOL_FS:
+            print(f"FAIL (5) {case}: 内部の安全率 {lo:.4f}〜{hi:.4f} が tanφs/G = {ref:.4f} から "
+                  f"{100 * (max(abs(lo - ref), abs(hi - ref)) / ref):.2f} %")
+            ok = False
+    if show or not ok:
+        print("case              G/mu  theta  Fs_ref   Fs_min   Fs_max")
+        for case, ratio, theta, ref, lo, hi in rows:
+            print(f"{case:16s} {ratio:5.2f} {theta:6.1f} {ref:7.4f} {lo:8.4f} {hi:8.4f}")
+    return ok
 
 
 def main():
@@ -88,6 +128,7 @@ def main():
         print("case                 G/mu  theta nb gc   V_ref   V_mean   V_max    V_min   angle")
         for case, ratio, theta, nb, gc, vref, sm, smax, smin, ang in rows:
             print(f"{case:19s} {ratio:5.2f} {theta:6.1f} {nb:2d} {gc:2d} {vref:7.4f} {sm:8.4f} {smax:8.4f} {smin:8.4f} {ang:7.2f}")
+    ok = check_fs(show) and ok
     print("=== dbonset " + ("PASS" if ok else "FAIL") + " ===")
     return 0 if ok else 1
 

@@ -310,7 +310,7 @@ module m_geomorph
   end type
 
   type t_debris
-    real :: dist8(1:8) = 0.0         ! 8近傍セル中心までの距離 (m)(最急降下勾配用)
+    real :: dist8(1:8) = 0.0         ! 8近傍セル中心までの距離 (m)(最急勾配 slope8 用)
     real, allocatable :: fx(:,:)     ! E-D 交換量の作業領域 (1:nx, js:je)。
                                      !   2パス構造用: パス1が時刻 n の z(近傍参照)
                                      !   から fx を計算し、パス2が適用する。
@@ -1481,7 +1481,7 @@ subroutine m_geomorph_calc(gm, p, g, s, b, it)
   ! --- 有効なプロセスを順に適用(それぞれ自帯 js..je を更新) ---
   ! 浮遊砂の E-D は水柱側が水理時間(morfac なし)、河床側が ×morfac の
   ! 台帳分離(MORFAC 方式。geomorph_plan.md §4)のため dtw を別に渡す
-  ! 土石流 E-D は最初に適用する: 最急降下勾配が近傍の s%z を読むため、
+  ! 土石流 E-D は最初に適用する: 最急勾配(slope8)が近傍の s%z を読むため、
   ! 他プロセスが帯内の z を先に動かすとハロ行(時刻 n のまま)との
   ! 不整合でランク数依存になる。先頭なら全セル・ハロとも時刻 n の z で
   ! 一貫する(ハロはステップ頭の swflow 交換で最新)

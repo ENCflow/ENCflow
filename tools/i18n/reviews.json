@@ -338,9 +338,9 @@
     {
       "source": "docs/users_guide/massflow.md",
       "target": "docs/en/users_guide/massflow.md",
-      "source_sha256": "c01af55db766c7df748ecbdab533978630686995208236ac8a37a035b3ace048",
-      "target_sha256": "2119bcade155032efe883300f0836ca5e3a6d7e10da29ea2c4892a060b5f6a0a",
-      "reviewer": "Claude (Claude Code session; the §7 row of test/dbonset extended in both languages to the cases with the gravity correction and compared)",
+      "source_sha256": "90808cae593a61667f136b79ba94a9d80e127de90515c18c7fe33a58b32a80d6",
+      "target_sha256": "23adea31e6f55278c6df908c46db84562d955fae75fdc3c1660ebb819c373eae",
+      "reviewer": "Claude (Claude Code session; the steepest-slope (D∞) paragraph, the f_dbed = 1 and f_slide wording, the Tarboton footnote and the §7 test/dbonset row with the safety-factor cases updated in both languages and compared)",
       "method": "assistant",
       "reviewed_on": "2026-11-04"
     },
@@ -2597,9 +2597,9 @@
     {
       "source": "test/README.md",
       "target": "test/README.en.md",
-      "source_sha256": "f32468348060d4ec055227ab3b8b7264262966314490bf78ecf365d5576beff8",
-      "target_sha256": "10f928b2c5d94568c1762990661d830f4df31f57de75b58af6d27e2cd4bf031e",
-      "reviewer": "Claude (Claude Code session; the test/dbonset row extended in both indexes and compared)",
+      "source_sha256": "1b7882e13344527d923c24ad4d963cc0fde10369b6699de46db3b759d7045c83",
+      "target_sha256": "d73b30286aea026e4e9c81c2c4038a3d88267927873260c73c8290f6db03b5d6",
+      "reviewer": "Claude (Claude Code session; the test/dbonset row extended in both indexes to the safety factor (D∞, §92) and compared)",
       "method": "assistant",
       "reviewed_on": "2026-11-04"
     },
@@ -2948,9 +2948,9 @@
     {
       "source": "test/dbonset/README.md",
       "target": "test/dbonset/en/README.md",
-      "source_sha256": "a05b7ff2418bc46ca57e04d734a3e3364fea158a987bffcaafec6b4adc3ba629",
-      "target_sha256": "25634abbf6b0b2332c4704dee2d82051ea15083c5a8d70e22c851a35d7322e3a",
-      "reviewer": "Claude (Claude Code session; the configuration with the gravity correction (36 cases), its analytic speed, the result tables after and before the fix (values from the release runs of 2026-11-04) and the run time written in both languages and compared)",
+      "source_sha256": "313af9c5fbb8bccf7f1147affdedd206b6e5e5b44d2c09c00e69065f4d3d0fd3",
+      "target_sha256": "1f82982e3bdf2751a926724b3b82b27a808b3f5e60caefeeb8e2b22c62226748",
+      "reviewer": "Claude (Claude Code session; the safety-factor configuration (9 cases), criterion (5), the run count and the Fs result table after and before D∞ added in both languages and compared)",
       "method": "assistant",
       "reviewed_on": "2026-11-04"
     },

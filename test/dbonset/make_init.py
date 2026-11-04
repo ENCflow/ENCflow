@@ -12,6 +12,10 @@
 入れることによる立ち上がりの遅れ(時間刻みに比例)が解析解との比較に効かない小ささにする。
 定数は Check_dbonset.py と対。
 
+同じ斜面(8 近傍)で、斜面安定判定(f_slide = 2。判定のみで流動化しない)の安全率も求める(名前の
+末尾 _fs)。c' = 0・地下水なし(h_w = 0)では Fs = tanφs/tanθ で、tanθ は最急勾配(D∞。
+developer.md §92)。流れは起こさない(初期水深 0、崩壊深なし)。
+
   python3 make_init.py        全ケースの d_<斜面>/(z.txt, dbinit.txt, sd.txt)と p_<case>.txt を書く
   python3 make_init.py list   ケース名を 1 行ずつ出す
 """
@@ -32,6 +36,8 @@ GCS = (0, 1)                 # 急勾配の重力補正 f_gravity_correction(1 �
 DT, TT = 0.0005, 2.0         # 時間刻み・計算時間 (s)。dt = 0.01 s では半陰的な摩擦の立ち上がりの
                              #   遅れで速さが解析解の 0.8 倍、0.002 s で 0.96 倍、0.0005 s で 0.995 倍
 RN = 0.01                    # マニングの粗度(内部の剛体の滑りに効かない小さな値)
+FS_PHI = 30.0                # 斜面安定判定のせん断抵抗角 φs (deg)。c' = 0 で Fs = tanφs/tanθ
+FS_DT, FS_TT = 0.1, 1.0      # 安全率の構成の時間刻み・計算時間 (s)(流れがないので短く)
 
 
 def case_name(ratio, theta, nb, gc=0):
@@ -39,6 +45,11 @@ def case_name(ratio, theta, nb, gc=0):
 
 
 CASES = [(r, t, n, gc) for gc in GCS for r in RATIOS for t in THETAS for n in NBS]
+CASES_FS = [(r, t) for r in RATIOS for t in THETAS]
+
+
+def fs_name(ratio, theta):
+    return f"r{ratio:g}_t{theta:g}_fs".replace(".", "p")
 
 
 def gacc(ratio, gc, gg=9.8):
@@ -136,13 +147,84 @@ def write_case(ratio, theta, nb, gc):
     return name
 
 
+def write_fs(ratio, theta):
+    """斜面安定判定(f_slide = 2)の安全率の構成。地形は降伏の構成(8 近傍)と共通。"""
+    name = fs_name(ratio, theta)
+    n = int(round(L / DX))
+    g = ratio * MU
+    ddir = f"d_{case_name(ratio, theta, 8)}"
+    if not os.path.isdir(ddir):
+        write_case(ratio, theta, 8, 0)
+    with open(f"p_{name}.txt", "w") as f:
+        f.write(f"""!======================================================================
+! dbonset: ケース {name}(make_init.py が生成)
+!   一様な斜面(勾配 {g:.6f}、下り向き {theta:g}°)で、斜面安定判定(f_slide = 2。判定のみ)の安全率を
+!   求め、Fs = tanφs/tanθ(c' = 0、地下水なし)と比べる(Check_dbonset.py の (5))。流れは起こさない
+!======================================================================
+&list_sysparam
+  dt = {FS_DT:g}
+  t0 = 0
+  tt = {FS_TT:g}
+  dt_disp = {FS_TT:g}
+  dt_file = {FS_TT:g}
+  dt_recrd = {FS_TT:g}
+  fn_geoinfo = '-'
+  fn_initial = '-'
+  fn_enc = '-'
+  fn_geomorph = '-'
+  dir_data = '{ddir}'
+  dir_result = 'result_{name}'
+  dir_save = 'save_{name}'
+  f_state_save = 1
+  f_out_fs = 1
+/
+&list_enc
+/
+&list_initial
+  f_htype = 0
+  h0 = 0.0
+/
+&list_geoinfo
+  lx = {n * DX:g}
+  ly = {n * DX:g}
+  nx = {n}
+  ny = {n}
+  f_ztype = 1
+  fn_z = 'z.txt'
+  f_rntype = 0
+  rn0 = {RN:g}
+  f_sdtype = 1
+  fn_sd = 'sd.txt'
+  sy0 = {POROSITY:g}
+/
+&list_geomorph
+  dt_geomorph = 0.0
+  morfac = 1.0
+  f_debris = 1
+  f_dbed = 0
+  f_dbres = 1
+  db_phi = 35.0
+  f_dbstop = 0
+  fluv_porosity = {POROSITY:g}
+  f_slide = 2                ! 判定のみ(流動化しない)
+  slide_c = 0.0              ! 有効粘着力 c' = 0 → Fs = tanφs/tanθ(地下水なし)
+  slide_phi = {FS_PHI:g}
+/
+""")
+    return name
+
+
 def main():
     if sys.argv[1:] == ["list"]:
         for c in CASES:
             print(case_name(*c))
+        for c in CASES_FS:
+            print(fs_name(*c))
         return
     for c in CASES:
         write_case(*c)
+    for c in CASES_FS:
+        write_fs(*c)
 
 
 if __name__ == "__main__":

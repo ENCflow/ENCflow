@@ -695,6 +695,12 @@ architecture.md。このメモは「現在進行中・未完了の項目」だ�
      崩壊深が土層厚に切られ、警告 `instantaneous release depth exceeded soil depth` が出る。例題は
      崩壊域の土層を 5 cm 厚くして避けた(make_init.py の SD_MARGIN)。発火を E-D の前に移すかは
      未検討(挙動変更。test/slide 等の結果が変わりうる)
+   - (2026-11-04)8 方向の勾配の最大(D8)で最急勾配を求める処理の残り: 土石流の slope8(f_slide の
+     安全率・C∞・停止判定)は D∞ に替えた(developer.md §92)。合意の範囲の外として残したのは、
+     f_bedslide のセル勾配 S_c(駆動 S_c − μb と、下りの辺への流出の配分の正規化。D∞ にするなら、
+     配分の総流出が hb V û になる性質(test/bedslide 構成 2 が検出器)を保つ検討が要る)と、f_splash の
+     spl_sgrad = 1 の最急降下の S(§48.4)。どちらも最急勾配の向きが 8 方向の間にある斜面で最大
+     7.6 %(1 − cos 22.5°)小さく出る
    - 地滑り津波(動く底層 f_bedslide。developer.md §61、docs/landslide_tsunami_plan.md、
      test/bedslide、examples/landslide_tsunami)の残作業(§61.4): Bingham 型 f_bsres=2、
      f_slide の発火先選択、擬似静的地震係数による水中斜面の発生判定、水中の抗力

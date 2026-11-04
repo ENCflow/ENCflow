@@ -2,8 +2,9 @@
 # dbonset: 降伏(f_dbres = 1 のクーロン摩擦)による静止と動き出しが格子の向きによらないことの
 # 検定(逐次実行)
 #   ./Run.sh
-# make_init.py が 18 ケース(斜面の勾配 3 × 下り向き 0°・22.5°・45° × 8・4 近傍)の入力と設定を
-# 生成し、全ケースを実行して Check_dbonset.py が剛体の滑りの解析解と比べる。reference は持たない。
+# make_init.py が 45 ケース(降伏 36 = 斜面の勾配 3 × 下り向き 0°・22.5°・45° × 8・4 近傍 × 重力補正
+# なし・あり、斜面安定判定の安全率 9 = 勾配 3 × 下り向き 3)の入力と設定を生成し、全ケースを実行して
+# Check_dbonset.py が剛体の滑りの解析解と Fs = tanφs/tanθ に比べる。reference は持たない。
 # 画面出力は Screen.log にまとめる。実行後の save_<case>/ は save_<case>_serial/ にも複製する
 # (Run_MPI.sh のバイト比較用)
 sdir=$(dirname "$(readlink -f "$0")")

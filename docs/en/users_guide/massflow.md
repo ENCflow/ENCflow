@@ -157,7 +157,7 @@ section (φ = 35°, s = 1.65, C* = 0.6); panel (a) belongs to
 **f_dbed = 1: relaxation to the equilibrium concentration (Takahashi
 type).** Erosion and deposition proceed at a rate proportional to the
 speed towards the equilibrium concentration of the slope $`\theta`$
-(steepest descent over the eight neighbours)[^takahashi07].
+(the steepest slope of the topography; see "Steepest slope" below)[^takahashi07].
 
 ```math
 C_\infty = \frac{\tan\theta}{s(\tan\phi - \tan\theta)}\ (\tan\theta > 0.138),
@@ -185,15 +185,34 @@ $`\delta_d`$ (`db_deltd`, default 0.05) the customary value of the Kanako
 family; both are **calibration coefficients of the run-out distance**.
 Configuration 7 of [test/debris](../../../test/debris/en/README.md) checks that the
 concentration of uniform flow on a slope converges to $`C_\infty`$ in all four
-regimes, including the row on the free-outflow edge. The steepest-descent
-slope supplies the elevation of a neighbour outside an open edge (free
-outflow, long-wave radiation, section inflow, etc.) by linear extrapolation
-from the two inner cells along the normal of the edge, so the edge row gets
-the same slope as the interior (fixed on 2026-10-30; before that the
-neighbours outside were left out, the slope in the edge row became 0 and an
-artificial deposit formed as if $`C_\infty = 0`$; developer.md §28.15).
-Directions towards a closed edge, cells outside the domain or the sea are
-left out as before.
+regimes, including the row on the free-outflow edge.
+
+**Steepest slope.** The $`C_\infty`$ of f_dbed = 1, the $`C_\infty`$ of the
+stopping test of cells at rest under f_dbed = 2 and 3, and the $`\theta`$ of
+the slope-stability test (f_slide) use the steepest slope of the topography
+($`z`$ at the start of the time step), which does not depend on the flow
+direction and is defined even at zero speed. For each of the eight
+triangular facets formed by the cell, one axial neighbour and the adjacent
+diagonal neighbour, the maximum downhill slope within the facet is computed,
+and the largest of them is taken (D∞[^tarboton97]). On a plane this is exact
+whatever the direction of the steepest slope (fixed on 2026-11-04; the
+maximum of the slopes in the eight directions used before came out smaller
+by up to cos 22.5° = 0.92 when the steepest direction lay between two of the
+eight directions, so the safety factor came out 8 % too large and
+$`C_\infty`$ at $`\tan\theta`$ = 0.3 13 % too small; developer.md §92;
+[test/dbonset](../../../test/dbonset/en/README.md) checks the safety factor on
+slopes at 0°, 22.5° and 45°). On curved slopes and at breaks such as the edge
+between a valley floor and its walls, the value is a facet-wise planar
+approximation and does not resolve topography finer than the grid. The
+elevation of a neighbour outside an open edge (free outflow, long-wave
+radiation, section inflow, etc.) is supplied by linear extrapolation from the
+two inner cells along the normal of the edge, so the edge row gets the same
+slope as the interior (fixed on 2026-10-30; before that the neighbours
+outside were left out, the slope in the edge row became 0 and an artificial
+deposit formed as if $`C_\infty = 0`$; developer.md §28.15). Neighbours
+across a closed edge, outside the domain or in the sea are left out (when
+only one neighbour of a facet is left out, the slope towards the remaining
+one is used).
 
 **f_dbed = 2: Egashira–Ashida.** Erosion and deposition are one continuous
 formula (eqs. (5)–(7) of Morpho2DH[^morpho2dh]) with no extra parameter:
@@ -319,9 +338,10 @@ F_s = \frac{c' + (\gamma_t s_d - \gamma_w h_w)\cos^2\theta\,\tan\phi_s}{\gamma_t
 h_w = \min\!\left(\frac{h_g}{s_y},\ s_d\right)
 ```
 
-This is the classical effective-stress formula with slope-parallel seepage,
-with the water table $`h_w`$ taken from the saturated thickness $`h_g`$ of
-the groundwater computation (rain → rising water table → failure → debris
+This is the classical effective-stress formula with slope-parallel seepage;
+$`\theta`$ is the steepest slope of the topography (see "Steepest slope"
+above) and the water table $`h_w`$ is taken from the saturated thickness
+$`h_g`$ of the groundwater computation (rain → rising water table → failure → debris
 flow in one time evolution). The approximations, cells independent of each
 other (no lateral support) and shallow layers only, are at the level of
 distributed stability analyses such as SHALSTAB[^montgomery94]. The
@@ -445,7 +465,7 @@ The labels in the Basis column are explained in [How to read the basis of a defa
 | [test/slide](../../../test/slide/en/README.md) | fluidisation and stability test | self-checks of conservation and water budget |
 | [test/volcano](../../../test/volcano/en/README.md) | Voellmy uniform flow and τ_y run-out | uniform depth within 0.04% of the analytical solution (four neighbours) |
 | [test/curvature](../../../test/curvature/en/README.md) | steady one-dimensional test of the curvature term | thickening on the arc 1.03 times the ODE |
-| [test/dbonset](../../../test/dbonset/en/README.md) | rest and onset of motion under the yield (uniform slope 0.9, 1.1 and 1.3 times the yield slope; slope direction 0°, 22.5° and 45°; eight and four neighbours; without and with the steep-slope gravity correction) | threshold, speed and direction independent of the direction and the stencil, within 0.4% of the analytical solution of a rigid sliding block (g cos²θ with the gravity correction) |
+| [test/dbonset](../../../test/dbonset/en/README.md) | rest and onset of motion under the yield (uniform slope 0.9, 1.1 and 1.3 times the yield slope; slope direction 0°, 22.5° and 45°; eight and four neighbours; without and with the steep-slope gravity correction) and the safety factor of the slope-stability test (same slopes; c' = 0, no groundwater) | threshold, speed and direction independent of the direction and the stencil, within 0.4% of the analytical solution of a rigid sliding block (g cos²θ with the gravity correction); safety factor independent of the direction, within 0.1% of tanφs/tanθ |
 | [test/avalanche](../../../test/avalanche/en/README.md) | avalanche (Voellmy + velocity-proportional entrainment) | grows by entrainment to about 3.4 times the released amount and stops; ledger to machine precision |
 | [test/bedslide](../../../test/bedslide/en/README.md) | analytical speed of the layer, 45° slope, entry into a lake | $`V`$ of interior cells within 0.5% of the analytical value |
 | [examples/landslide_tsunami](../../../examples/landslide_tsunami/en/README.md) | rock avalanche, hand-over, submarine landslide | four patterns compared |
@@ -466,6 +486,7 @@ The labels in the Basis column are explained in [How to read the basis of a defa
 [^fischer12]: Fischer, J.-T., Kowalski, J. and Pudasaini, S. P. (2012): Topographic curvature effects in applied avalanche modeling. *Cold Reg. Sci. Technol.*, 74–75, 21–30.
 [^pitman03]: Pitman, E. B., Nichita, C. C., Patra, A., Bauer, A., Sheridan, M. and Bursik, M. (2003): Computing granular avalanches and landslides. *Phys. Fluids*, 15, 3638–3646. (Titan2D)
 [^kelfoun05]: Kelfoun, K. and Druitt, T. H. (2005): Numerical modeling of the emplacement of Socompa rock avalanche, Chile. *J. Geophys. Res.*, 110, B12202. (VolcFlow)
+[^tarboton97]: Tarboton, D. G. (1997): A new method for the determination of flow directions and upslope areas in grid digital elevation models. *Water Resour. Res.*, 33(2), 309–319. (D∞; the test of the facet direction is an equivalent comparison without atan2; developer.md §92)
 [^montgomery94]: Montgomery, D. R. and Dietrich, W. E. (1994): A physically based model for the topographic control on shallow landsliding. *Water Resour. Res.*, 30, 1153–1171. (SHALSTAB)
 [^tinti06]: Tinti, S., Pagnoni, G. and Zaniboni, F. (2006): The landslides and tsunamis of the 30th of December 2002 in Stromboli analysed through numerical simulations. *Bull. Volcanol.*, 68, 462–479.
 [^harbitz06]: Harbitz, C. B., Løvholt, F., Pedersen, G. and Masson, D. G. (2006): Mechanisms of tsunami generation by submarine landslides: a short review. *Norw. J. Geol.*, 86, 255–264.

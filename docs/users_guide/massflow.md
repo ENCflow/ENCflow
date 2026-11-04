@@ -121,8 +121,8 @@ $`\Delta z = -\Delta h_s/C_*`$ を $`z`$・$`s_d`$ に共動適用します。�
 図 (b) が本節の平衡濃度 $`C_\infty(\tan\theta)`$(φ = 35°、s = 1.65、C* = 0.6)、
 図 (a) は[土砂輸送の解説](sediment.md) §3 の流砂量式です。
 
-**f_dbed = 1: 平衡濃度への緩和(高橋型)。** 勾配 $`\theta`$(8 近傍の
-最急降下)の平衡濃度に向かって、速度に比例する率で侵食・堆積します
+**f_dbed = 1: 平衡濃度への緩和(高橋型)。** 勾配 $`\theta`$(地形の最急
+勾配。下の「最急勾配」)の平衡濃度に向かって、速度に比例する率で侵食・堆積します
 [^takahashi07]。
 
 ```math
@@ -148,12 +148,22 @@ i = \delta_d\,\frac{C_\infty - C}{C_*}\,|\mathbf{V}|\ (C > C_\infty)
 0.0007)は Takahashi の一般値、$`\delta_d`$(`db_deltd`、既定 0.05)は
 Kanako 系の慣用値で、どちらも**到達距離の校正係数**です。
 [test/debris](../../test/debris/README.md) の構成 7 が、斜面等流の濃度が 4 つの領域の
-$`C_\infty`$ に収束することを、自由流出の辺の行まで含めて検定しています。最急降下の
-勾配は、開いた辺(自由流出・長波放射・区間流入など)の外の近傍の標高を、辺の法線方向に
+$`C_\infty`$ に収束することを、自由流出の辺の行まで含めて検定しています。
+
+**最急勾配。** f_dbed = 1 の $`C_\infty`$、f_dbed = 2・3 で速さ 0 のセルの停止の判定に使う
+$`C_\infty`$、斜面安定判定(f_slide)の $`\theta`$ は、地形(時間刻みの頭の $`z`$)の最急勾配で、
+流向によらず速さ 0 でも決まります。自セルと、軸方向の近傍 1 つ・それに隣り合う斜めの近傍 1 つで
+作る 8 つの三角形の面ごとに、面内の下り向きの最大勾配を求め、その最大をとります
+(D∞[^tarboton97])。平面では最急勾配の向きによらず厳密です(2026-11-04 の修正。それまでの
+8 方向の勾配の最大は、最急勾配の向きが 8 方向の間にあると最大で cos 22.5° = 0.92 倍に小さく出て、
+安全率が 8 % 大きく、$`\tan\theta`$ = 0.3 の $`C_\infty`$ が 13 % 小さく出ていました。
+developer.md §92。[test/dbonset](../../test/dbonset/README.md) が 0°・22.5°・45° の斜面の安全率で
+検定)。曲がった斜面や、谷底と谷壁の境のような折れでは面ごとの平面の近似で、格子より細かい
+地形は表しません。開いた辺(自由流出・長波放射・区間流入など)の外の近傍の標高は、辺の法線方向に
 内側の 2 セルから線形外挿して補うので、辺の行でも内部と同じ勾配になります(2026-10-30 の
 修正。それまでは外の近傍を除いたため辺の行で勾配が 0 になり、$`C_\infty = 0`$ として
-人工的な堆積ができていました。developer.md §28.15)。不透過の辺・領域外・海に接する
-向きは、従来どおり除きます。
+人工的な堆積ができていました。developer.md §28.15)。不透過の辺・領域外・海の近傍は除きます
+(面の片方の近傍だけが除かれるときは、残る近傍への勾配を使います)。
 
 **f_dbed = 2: 江頭・芦田。** 侵食と堆積が 1 本の式で連続します
 (Morpho2DH の式(5)–(7)[^morpho2dh])。追加パラメータはありません。
@@ -252,9 +262,9 @@ F_s = \frac{c' + (\gamma_t s_d - \gamma_w h_w)\cos^2\theta\,\tan\phi_s}{\gamma_t
 h_w = \min\!\left(\frac{h_g}{s_y},\ s_d\right)
 ```
 
-有効応力と斜面平行浸透の古典的な式で、地下水位 $`h_w`$ は地下水計算の
-飽和厚 $`h_g`$ から取ります(降雨 → 地下水位上昇 → 崩壊 → 土石流が
-1 つの時間発展でつながる)。セル独立(側方支持なし)・浅層限定の近似は
+有効応力と斜面平行浸透の古典的な式で、$`\theta`$ は地形の最急勾配(上の「最急勾配」)、
+地下水位 $`h_w`$ は地下水計算の飽和厚 $`h_g`$ から取ります(降雨 → 地下水位上昇 → 崩壊 →
+土石流が 1 つの時間発展でつながる)。セル独立(側方支持なし)・浅層限定の近似は
 SHALSTAB[^montgomery94]などの分布型安定解析と同じ水準です。既定
 $`\phi_s`$ = 30°、$`\gamma_t`$ = 18 kN/m³ は表層崩壊の安定解析の慣用値、
 $`c'`$ = 0 は保守側です。
@@ -361,7 +371,7 @@ $`v_{stop}`$ = 0.05 m/s。混合体の μ・ξ とは慣性の有無で校正値
 | [test/slide](../../test/slide/README.md) | 瞬時流動化と安定判定 | 保存則・水収支の自己検定 |
 | [test/volcano](../../test/volcano/README.md) | Voellmy 定常等流と τ_y ランアウト | 等流深の解析解に 0.04%(4 近傍) |
 | [test/curvature](../../test/curvature/README.md) | 曲率項の定常 1 次元検定 | 円弧上の厚化が ODE の 1.03 倍 |
-| [test/dbonset](../../test/dbonset/README.md) | 降伏による静止と動き出し(一様な斜面、勾配が降伏の 0.9・1.1・1.3 倍、斜面の向き 0°・22.5°・45°、8・4 近傍、急勾配の重力補正なし・あり) | 閾値と速さ・向きが向きと近傍によらず、剛体の滑りの解析解(重力補正ありは g cos²θ)に 0.4% 以内 |
+| [test/dbonset](../../test/dbonset/README.md) | 降伏による静止と動き出し(一様な斜面、勾配が降伏の 0.9・1.1・1.3 倍、斜面の向き 0°・22.5°・45°、8・4 近傍、急勾配の重力補正なし・あり)と斜面安定判定の安全率(同じ斜面、c' = 0・地下水なし) | 閾値と速さ・向きが向きと近傍によらず、剛体の滑りの解析解(重力補正ありは g cos²θ)に 0.4% 以内。安全率が向きによらず tanφs/tanθ に 0.1% 以内 |
 | [test/avalanche](../../test/avalanche/README.md) | 雪崩(Voellmy + 速度比例連行) | 連行で放出量の約 3.4 倍に成長して停止。台帳は機械精度 |
 | [test/bedslide](../../test/bedslide/README.md) | 底層の速度の解析値、45° 斜面、湖への突入 | 内部セルの $`V`$ が解析値に 0.5% |
 | [examples/landslide_tsunami](../../examples/landslide_tsunami/) | 岩屑なだれ・引き渡し・海底地滑り | 4 パターンの比較 |
@@ -382,6 +392,7 @@ $`v_{stop}`$ = 0.05 m/s。混合体の μ・ξ とは慣性の有無で校正値
 [^fischer12]: Fischer, J.-T., Kowalski, J. and Pudasaini, S. P. (2012): Topographic curvature effects in applied avalanche modeling. *Cold Reg. Sci. Technol.*, 74–75, 21–30.
 [^pitman03]: Pitman, E. B., Nichita, C. C., Patra, A., Bauer, A., Sheridan, M. and Bursik, M. (2003): Computing granular avalanches and landslides. *Phys. Fluids*, 15, 3638–3646.(Titan2D)
 [^kelfoun05]: Kelfoun, K. and Druitt, T. H. (2005): Numerical modeling of the emplacement of Socompa rock avalanche, Chile. *J. Geophys. Res.*, 110, B12202.(VolcFlow)
+[^tarboton97]: Tarboton, D. G. (1997): A new method for the determination of flow directions and upslope areas in grid digital elevation models. *Water Resour. Res.*, 33(2), 309–319.(D∞。面の向きの判定は atan2 を使わない同値な比較にした。developer.md §92)
 [^montgomery94]: Montgomery, D. R. and Dietrich, W. E. (1994): A physically based model for the topographic control on shallow landsliding. *Water Resour. Res.*, 30, 1153–1171.(SHALSTAB)
 [^tinti06]: Tinti, S., Pagnoni, G. and Zaniboni, F. (2006): The landslides and tsunamis of the 30th of December 2002 in Stromboli analysed through numerical simulations. *Bull. Volcanol.*, 68, 462–479.
 [^harbitz06]: Harbitz, C. B., Løvholt, F., Pedersen, G. and Masson, D. G. (2006): Mechanisms of tsunami generation by submarine landslides: a short review. *Norw. J. Geol.*, 86, 255–264.
