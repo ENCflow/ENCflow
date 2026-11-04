@@ -8,7 +8,9 @@ From vents near the centre of a flat ground surface, the sequence "lava flow →
 storms" is repeated 10 times, and a stratovolcano of alternating lava and ash grows. Two cases that
 change the proportion of lava and ash erupted in each eruption are compared with a control without
 erosion, to see how the shape of the volcano and its internal layering (stratigraphy) change with the
-style of eruption and with erosion. The example chains lava flows
+style of eruption and with erosion. Finally, one lava flow with temperature is run over the uneven
+terrain of the grown volcano, to see how its path is set by the terrain and how the lava stops as it
+cools. The example chains lava flows
 ([lava flow chapter of the users guide](../../../docs/en/users_guide/lavaflow.md)), infiltration
 ([groundwater](../../../docs/en/users_guide/gwflow.md)) and sediment transport by surface flow
 ([sediment and landform change](../../../docs/en/users_guide/geomorph.md)) by connecting one
@@ -48,6 +50,7 @@ Schematic (not computed results). One cycle consists of three stages and is repe
 | Over-steep slopes collapse | the excess over an angle of repose of 33° is removed (it did not act at the slopes of this example) | `f_repose`, `repose_phi` |
 | Eruptions mostly at the summit, sometimes on the flanks | summit vents scattered with a standard deviation of 75 m; 25% of the eruptions after the first are on the flanks (600–1000 m from the summit) | `vents` of `run_cycles.py` |
 | The three processes repeat in turn | one computation per stage; the final bed elevation Z and soil depth Sd become the inputs of the next stage (a Python driver) | `run_cycles.py` |
+| Lava stops as it cools (the final stage only) | a lava flow with temperature: it cools by radiation and convection from its surface; as it cools its viscosity and yield stress rise and it stops, and it solidifies at the solidification temperature | `f_lvtemp` (`run_flow.py`) |
 
 ## Geometry and settings
 
@@ -89,7 +92,9 @@ south-southeast and 710 m southwest of the summit).
 make              # links to the executables in ../../bin/
 make run          # P, L and P0 in turn (about 16 minutes in total, with 4 threads)
 make run-P        # one case only (also run-L, run-P0)
+make run-flow     # final stage: one lava flow with temperature on the final terrain of P (run-P first; about 1 minute)
 python3 plot_results.py      # figures and shape numbers (argument en draws the English figures in en/figs/)
+python3 plot_flow.py         # figures of the final stage (same)
 ```
 
 `run_cycles.py` writes the settings file of each stage (the values and their explanations are in the
@@ -154,6 +159,73 @@ is deposited around them where the slope eases. Right: ash moved in the storm st
 a fraction of the ash that fell in that cycle (4–6 are flank eruptions with little ash; earlier ash
 also moves, so the fraction exceeds 100%).
 
+## Final stage: one lava flow with temperature (run_flow.py)
+
+![One lava flow with temperature](figs/flow.png)
+
+The lava stages of the 10 cycles use the isothermal model: the viscosity is a value that compresses
+time, and the shape at rest is set by the yield stress. In the final stage, a lava flow with temperature
+(`f_lvtemp = 1`;
+[temperature mode in the lava flow chapter of the users guide](../../../docs/en/users_guide/lavaflow.md#temperature-mode-f_lvtemp--1))
+is run once over the uneven terrain built by the main case P. The lava cools by radiation and
+convection from its surface; as it cools its viscosity and yield stress rise and it stops, and it
+solidifies at the solidification temperature. We look at how the path is set by the unevenness of the
+terrain and how the lava stops as it cools.
+
+| Item | Setting |
+|---|---|
+| Terrain | the bed elevation of P after 10 cycles (`result_P/data/z_10.txt`; 5 km square, 50 m grid, 127 m high). The soil layer (ash) is not read |
+| Vents | S: the summit (the highest cell of the final terrain), E: 300 m east of the summit, S4: the summit |
+| Effusion | S and E: 50 m³/s for 6 hours. S4: the same volume at 4 times the rate (200 m³/s for 1.5 hours). The volume is 1.08 million m³ in all three |
+| Lava (illustrative) | viscosity 1×10⁴ Pa·s and yield stress 1×10³ Pa at the eruption temperature 1100 °C, temperature sensitivities 0.03 1/K (10 times after cooling by 77 K), solidification temperature 950 °C, effective emissivity 0.95, convective heat transfer coefficient 70 W/m²/K, specific heat 1150 J/kg/K, air temperature 15 °C |
+| Time | 1 day (time step 10 s; lava thickness, temperature and bed elevation written every hour) |
+
+The lava values are an illustrative set meant for something like a basaltic andesite, not the values
+of a particular lava or of the literature. The temperature computation proceeds in real time, so the
+viscosity is of the size of real lava (time cannot be compressed as in the isothermal stages). With the
+real viscosity of andesite (10⁶ Pa·s or more), the lava would flow a few cells on the 50 m grid and
+stop, and no flow down the slope would be seen.
+
+`run_flow.py` writes the settings files. The results go to `result_P/flow_S/`, `flow_E/` and
+`flow_S4/`, and the ledger to `result_P/flow.csv`. Two checks are printed for each run, and all three
+runs pass them.
+
+- The increase of the bed elevation agrees with the erupted volume (within the rounding of the output
+  digits), and no molten lava remains.
+- The heat ledger closes (the residual is about 1e-15 of the erupted heat).
+
+| | S (summit) | E (300 m east of the summit) | S4 (summit, 4 times the rate) |
+|---|---:|---:|---:|
+| Reach (from the vent, to cells 5 cm thick or more) | 0.71 km | 0.81 km | 0.85 km |
+| Area | 0.17 km² | 0.15 km² | 0.30 km² |
+| Maximum thickness | 17 m | 19 m | 10 m |
+| Time when all lava has solidified | 11 h | 12 h | 5 h |
+| Heat lost by radiation and convection (relative to the erupted heat) | 9.7%, 4.9% | 9.7%, 4.9% | 9.4%, 4.5% |
+
+- **The path is set by the unevenness of the terrain**: the lava from the summit vent (a) splits into two
+  valleys, to the north and to the west. Moving the vent 300 m east (b) gives a single flow along the
+  eastern valley. The rises and valleys made by the lava flows, ashfall and erosion of the 10 cycles
+  decide where the lava goes.
+- **It stops as it cools**: in every run the front advances while the effusion continues and stops
+  within an hour after the effusion ends ((e) in the figure below). The lava stops by cooling from its
+  front, and lava piles up behind it and thickens (19 m near the front of E).
+- **A higher effusion rate flows further and wider**: erupting the same volume at 4 times the rate (c)
+  extends the reach from 0.71 km to 0.85 km and the area 1.8 times, and the maximum thickness becomes 60%.
+  The difference is likely smaller than in the check on a uniform slope (test/lava configuration 9; the
+  reach 2.6 times) because on the volcano the flow splits into valleys and spreads sideways.
+- **Thin, wide flows solidify early**: the amount of molten lava is largest around the end of the
+  effusion (58% of the erupted volume in S, 90% in S4) and then decreases as the lava cools. S4 spreads
+  thinly and has all solidified in 5 hours; S and E take 11–12 hours.
+- The solidified lava becomes ground still holding about 85% of the erupted heat (it solidifies once it
+  has cooled to the solidification temperature 950 °C, and its cooling afterwards is not computed).
+
+![Lava temperature and time series of the flows](figs/flow_temp.png)
+
+(a)–(d) Temperature of the molten lava of the flow from the summit vent (S) (grey = solidified lava).
+Near the vent it is close to the eruption temperature, and the lava cools and solidifies from the front
+and the margins. (e) Distance from the vent to the flow front. (f) Amount of lava not yet solidified
+(fraction of the erupted volume). Dotted lines: end of the effusion.
+
 ## What this model cannot represent (differences from the real phenomena)
 
 - **Dynamics of explosive eruptions**: eruption columns, pyroclastic flows and ballistics are not
@@ -175,6 +247,15 @@ also moves, so the fraction exceeds 100%).
   far more eruptions. On the 50 m grid, the width of valleys is set by the cell size.
 - **Grain size of the ash**: the ash carried has one size (1 mm bedload). The suspension of fine ash
   that is carried far (`f_suspend`) is not used.
+- **Lava of the final stage**: the values are illustrative and not calibrated. Cooling is represented
+  by one effective emissivity, so thick lava ponds cool faster than in reality and the time of
+  solidification is not reliable (limits of the temperature mode in the users guide). The emissivity,
+  convective coefficient and specific heat have no defaults yet, and the example values have not been
+  checked against original sources. On the 50 m grid one flow is 2–4 cells wide, and the reach has a
+  resolution of 50 m. The lava flow of the final stage is run only once and is not fed back into the
+  building of the terrain by the 10 cycles. It differs from the lava flows of the isothermal stages in
+  the treatment of the viscosity (a time-compressing value or a real one) and in the way of solidifying
+  (a speed threshold or temperature), so the two are not compared under the same conditions.
 
 ## Notes
 
@@ -187,8 +268,8 @@ also moves, so the fraction exceeds 100%).
 
 ## Starting points for sensitivity experiments
 
-Only the three cases P, L and P0 have been checked. The expectations below have not been checked in
-this example.
+Only the three cases P, L and P0 and the three runs of the final stage have been checked. The
+expectations below have not been checked in this example.
 
 - **Number of cycles** (`--ncyc`): more cycles are expected to make the volcano higher and steeper
   near the summit (with ashfall alone, the slope near the summit grows in proportion to the number of
@@ -204,6 +285,10 @@ this example.
 - **Lahars right after eruptions**: adding a stage of one lahar storm (`f_debris`, `morfac` = 1)
   before the erosion stage would separate the lahars right after an eruption from the erosion of the
   repose period.
+- **Vents and lava of the final stage** (`RUNS` and `LAVA` of `run_flow.py`): the valley the lava
+  follows changes with the vent position (checked at two places, the summit and 300 m east of it). A
+  lower effective emissivity is expected to make the lava cool more slowly and flow further. On the final
+  terrain of L (`--case L`), the lava is expected to follow the valleys of the lava-rich volcano.
 
 ## References
 

@@ -3,8 +3,10 @@
 #   make run       主ケース P(火砕物の多い噴火 + 侵食)・比較 L(溶岩の多い噴火 + 侵食)・
 #                  対照 P0(P と同じ噴火で侵食なし)を順に計算する(合わせて約 16 分)
 #   make run-P / run-L / run-P0   1 ケースだけ計算する
+#   make run-flow  最後の段: P の最終地形に温度を考慮した 1 回の溶岩流を 3 本流す(先に run-P。約 1 分)
 #   make clean     リンクと計算結果を削除する
-#   時間は 4 スレッドの目安。図は python3 plot_results.py(引数 en で英語版を en/figs/ に)
+#   時間は 4 スレッドの目安。図は python3 plot_results.py と python3 plot_flow.py
+#   (引数 en で英語版を en/figs/ に)
 
 TOPDIR	= ../..
 BINDIR	= $(TOPDIR)/bin
@@ -32,10 +34,13 @@ run-L: all
 run-P0: all
 	python3 run_cycles.py P0 2>&1 | tee Screen_P0.log
 
+run-flow: all
+	python3 run_flow.py 2>&1 | tee Screen_flow.log
+
 install: all
 
 clean:
 	rm -rf result_*
 	rm -f encflow encflow_mpi Screen_*.log
 
-.PHONY: all links run run-P run-L run-P0 install clean
+.PHONY: all links run run-P run-L run-P0 run-flow install clean

@@ -329,9 +329,9 @@
     {
       "source": "docs/users_guide/lavaflow.md",
       "target": "docs/en/users_guide/lavaflow.md",
-      "source_sha256": "fa00d5c9f615d0be62035bc3d87bfd7ad8f5241100182fa08f81852110a761f0",
-      "target_sha256": "81cc52fd12520f210df3c3d053b830732b0729c85d96a2c9df440e6ee37d3962",
-      "reviewer": "Claude (Claude Code session; lava temperature mode f_lvtemp, developer.md Sec. 51.7: changed passages compared side by side with the Japanese source, unchanged parts as recorded earlier)",
+      "source_sha256": "3998e6641be889de4ee5f71c0012111910d45e89d1d9320f4c617bcc31c80cfa",
+      "target_sha256": "eff3fdcb192217727de25a79ac0460e763d76dec3fe571dfd06f4978231fc620",
+      "reviewer": "Claude (Claude Code session; final stage of examples/stratovolcano, a thermal one-event lava flow: changed passages compared side by side with the Japanese source, unchanged parts as recorded earlier)",
       "method": "assistant",
       "reviewed_on": "2026-11-04"
     },
@@ -815,11 +815,11 @@
     {
       "source": "examples/README.md",
       "target": "examples/README.en.md",
-      "source_sha256": "16b0e0658d4aac1ef3bb4098f58a4b3e8983da40ff88320f36483e6186c37b8f",
-      "target_sha256": "4849de292104f4175574948af1d2b34144b612d758b96e59c1c83245337571ed",
-      "reviewer": "Claude (Claude Code session; merge of the stratovolcano branch into main: the merged examples index keeps main's catchment_metal row and chain line and adds the stratovolcano row and chain line, compared side by side in both languages)",
+      "source_sha256": "70d848f10df2946ed4b1c029f91fbdac1ac85c82f09d3e19799baab33e86ac81",
+      "target_sha256": "8ee925942c367255b3736536c7890fc7c965740647eddb65272ce300e487a15a",
+      "reviewer": "Claude (Claude Code session; final stage of examples/stratovolcano, a thermal one-event lava flow: changed passages compared side by side with the Japanese source, unchanged parts as recorded earlier)",
       "method": "assistant",
-      "reviewed_on": "2026-11-03"
+      "reviewed_on": "2026-11-04"
     },
     {
       "source": "examples/ashfall_lahar/README.md",
@@ -2210,11 +2210,11 @@
     {
       "source": "examples/stratovolcano/README.md",
       "target": "examples/stratovolcano/en/README.md",
-      "source_sha256": "4bda5f4804fef68c3ebb97b61162570b194150e02b35c04a4bf2e9c9b5dc8dd9",
-      "target_sha256": "c9664e8f468238dfbf6b797e5aea25d959b49bb8df2c3d23d17237358af77163",
-      "reviewer": "Claude (Claude Code session; full-text review of the new example README against the Japanese source, numbers and structure cross-checked)",
+      "source_sha256": "31b02963a0dae198a5eaf712ff138c8915255db203c5a913f4c9361311863f8e",
+      "target_sha256": "f4efade90d00a304b5f9e6ffd6573d4214d6b53444fd6bed0fa83473cdcb4a0a",
+      "reviewer": "Claude (Claude Code session; final stage of examples/stratovolcano, a thermal one-event lava flow: changed passages compared side by side with the Japanese source, unchanged parts as recorded earlier)",
       "method": "assistant",
-      "reviewed_on": "2026-11-03"
+      "reviewed_on": "2026-11-04"
     },
     {
       "source": "examples/stratovolcano/figs/erosion.png",
@@ -2224,6 +2224,24 @@
       "reviewer": "Claude (Claude Code session; English figure drawn by the same script with the en switch; visual check)",
       "method": "assistant",
       "reviewed_on": "2026-11-03"
+    },
+    {
+      "source": "examples/stratovolcano/figs/flow.png",
+      "target": "examples/stratovolcano/en/figs/flow.png",
+      "source_sha256": "8792e5aea72f55a95c2c6e50f905b5058d67c1a63b165f14ff358f5b02c57fd0",
+      "target_sha256": "e8bbef525f3ba468facaee03f8fed77ec4e574c906e1c85502635fb4c9aed517",
+      "reviewer": "Claude (Claude Code session; both images drawn by plot_flow.py and plot_flow.py en from the same results of run_flow.py (2026-11-04); titles, labels and annotations compared, same data and layout)",
+      "method": "assistant",
+      "reviewed_on": "2026-11-04"
+    },
+    {
+      "source": "examples/stratovolcano/figs/flow_temp.png",
+      "target": "examples/stratovolcano/en/figs/flow_temp.png",
+      "source_sha256": "debc2e8a678c9248512fbfef7a82ca444811d708132f535f038465d3d72b8a47",
+      "target_sha256": "b10c788fb44402b224bbc8c3c382c2c975c1c168850467f3bfb3cbeac147e5a9",
+      "reviewer": "Claude (Claude Code session; both images drawn by plot_flow.py and plot_flow.py en from the same results of run_flow.py (2026-11-04); titles, labels and annotations compared, same data and layout)",
+      "method": "assistant",
+      "reviewed_on": "2026-11-04"
     },
     {
       "source": "examples/stratovolcano/figs/mechanism.png",
