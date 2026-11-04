@@ -2354,9 +2354,9 @@
     {
       "source": "examples/tower_karst/README.md",
       "target": "examples/tower_karst/en/README.md",
-      "source_sha256": "9a29a4c14c56f378c2885891736d3be45f6e28dd322947043f8ec4374d510fec",
-      "target_sha256": "bcacc25bf80ca97e07045ed9c708a3050cc26a046fee6a3cb3613c996cbcabed",
-      "reviewer": "Claude (Claude Code session; compared the Japanese source with the English mirror after adding the base-level section of tower_karst and correcting the water-table statement of dissol_src 4/5, 2026-11-04)",
+      "source_sha256": "c67c1cb953bfb8c7eaf74e3b0086421572a6aa2cd8c99345f12e150f9d25b0d4",
+      "target_sha256": "1fbb5ef859ee6074840271595c71900df5bbb52806aca5ebeba33dcea48d2203",
+      "reviewer": "Claude (Claude Code session; compared the Japanese source with the English mirror after adding the rf_hc = 50 m sensitivity subsection of tower_karst, 2026-11-04)",
       "method": "assistant",
       "reviewed_on": "2026-11-04"
     },
@@ -2388,6 +2388,15 @@
       "reviewed_on": "2026-11-04"
     },
     {
+      "source": "examples/tower_karst/figs/maps_base_hc50.png",
+      "target": "examples/tower_karst/en/figs/maps_base_hc50.png",
+      "source_sha256": "06f81bd4abc9cd7c95251d38d055e35baa0522036bd38f7196ea8aa9fb0fda7a",
+      "target_sha256": "bb7213ce07a2ea019e1c92b1ef196d10ed6d1742c362eafb1e7e3f2a951a8069",
+      "reviewer": "Claude (Claude Code session; compared the Japanese source with the English mirror after adding the rf_hc = 50 m sensitivity subsection of tower_karst, 2026-11-04)",
+      "method": "assistant",
+      "reviewed_on": "2026-11-04"
+    },
+    {
       "source": "examples/tower_karst/figs/mechanism.png",
       "target": "examples/tower_karst/en/figs/mechanism.png",
       "source_sha256": "227f18d7e50591c2953f72c821235e26173fc45ed3e1bc59be2641e78f6bc1af",
@@ -2415,6 +2424,15 @@
       "reviewed_on": "2026-11-04"
     },
     {
+      "source": "examples/tower_karst/figs/sections_base_hc50.png",
+      "target": "examples/tower_karst/en/figs/sections_base_hc50.png",
+      "source_sha256": "e4d1b70407ce356c5408951c950128fda8e85d95bfe77698568bcceb94045a66",
+      "target_sha256": "af6467b3c1930649f14c54316b4c121d09abb4c5ec81120ca5c013d16e543edc",
+      "reviewer": "Claude (Claude Code session; compared the Japanese source with the English mirror after adding the rf_hc = 50 m sensitivity subsection of tower_karst, 2026-11-04)",
+      "method": "assistant",
+      "reviewed_on": "2026-11-04"
+    },
+    {
       "source": "examples/tower_karst/figs/setup.png",
       "target": "examples/tower_karst/en/figs/setup.png",
       "source_sha256": "34e0f1c50f3d3c3e0d9cc1604e1ea22a258a200460d7bd12ce8b8692abc04f36",
@@ -2438,6 +2456,15 @@
       "source_sha256": "78ff76b0339f6f34b26e668e68aec1b62a41180c9085e58c1def714c23e95eef",
       "target_sha256": "53c68962a6fa367f8ccfabe51c36e6bfeca0f1ec300a86144a85cefb13dcdf32",
       "reviewer": "Claude (Claude Code session; compared the Japanese source with the English mirror after adding the base-level section of tower_karst and correcting the water-table statement of dissol_src 4/5, 2026-11-04)",
+      "method": "assistant",
+      "reviewed_on": "2026-11-04"
+    },
+    {
+      "source": "examples/tower_karst/figs/towers_base_hc50.png",
+      "target": "examples/tower_karst/en/figs/towers_base_hc50.png",
+      "source_sha256": "1b540a6edcadc7fcfc0201525a842c5852515d673b56113c8b2ffa02277a400c",
+      "target_sha256": "52a20a150ee6b0c802e71f37cb4088953690f1f13f1c3c466b45f3053492bc56",
+      "reviewer": "Claude (Claude Code session; compared the Japanese source with the English mirror after adding the rf_hc = 50 m sensitivity subsection of tower_karst, 2026-11-04)",
       "method": "assistant",
       "reviewed_on": "2026-11-04"
     },

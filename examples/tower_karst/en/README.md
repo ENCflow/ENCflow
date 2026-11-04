@@ -109,6 +109,8 @@ python3 plot_results.py param_steady.txt steady | tee analysis_steady.txt   # fi
 python3 make_terrain.py --steady --base     # inputs with the base level: z_base, gwc_bot, gwc_outfall, uplift, sol_base, ksv_base.txt (section "base level" below)
 ./encflow param_base.txt > Screen_base.log  # 0.99 Myr with a base level (water table) and uplift (about 3 hours on 4 threads)
 python3 plot_results.py param_base.txt steady | tee analysis_base.txt       # figs/*_base.png
+./encflow param_base_hc50.txt > Screen_base_hc50.log   # sensitivity variant rf_hc = 50 m (shared inputs; about 3 hours)
+python3 plot_results.py param_base_hc50.txt steady | tee analysis_base_hc50.txt   # figs/*_base_hc50.png
 ```
 
 With the argument `en` the figures are drawn with English labels into en/figs/
@@ -276,9 +278,8 @@ cells per update on average) and they go down at the same rate as the plain, col
 at the angle of repose of the talus. There are two stages: relative height grows as "lowering of the
 plain − lowering of the towers", then collapse makes the towers follow the plain. They do not become
 vertical-walled pillars like those of Guilin. The wall form is set by `rf_hc` (critical height 10 m
-= weak rock that fails at a one-cell drop), so with the 50 to 100 m of massive limestone walls that
-stand without failing should appear (not computed; see "Starting points for sensitivity
-experiments").
+= weak rock that fails at a one-cell drop), so with the 50 m of massive limestone the walls stand
+without failing (next subsection).
 
 **What did not work.**
 
@@ -302,6 +303,39 @@ experiments").
 4. **The foot pits are merely filled.** The bedrock pits (−94 m) are filled with 92 m of residue and
    the surface is at the plain level, but the notches of lateral dissolution (ponding at the feet)
    do not form under the thin steady film (as in the previous section).
+
+### Sensitivity: critical height rf_hc = 50 m (massive limestone; param_base_hc50.txt)
+
+A variant of param_base.txt with only `rf_hc` changed from 10 to 50 m (rock that does not fail
+until a one-cell drop of 50 m = 79°); the inputs are shared (`./encflow param_base_hc50.txt`).
+
+| Item | Value |
+|---|---|
+| Plain | dissolution 209 m − uplift 200 m = net lowering 9.4 m (as with rf_hc = 10 m). Residue soil 24 m, water table −5 → −7.4 to −9.5 m |
+| Tower tops | 40 → 231 m (uplift 200 m − lowering 9 m). The small hills 20 → 149 m (capped by collapse after 821 kyr) |
+| Height above the plain | 40 → 240 m (linear growth; small hills 158 m). Equivalent radius 79 → 82 m (unchanged) |
+| Tower shape | flat top and walls of 69 to 75° (maximum bedrock slope 83°), with a step every H_c = 50 m |
+| Rock moved by collapse | 12.5 million m³ (6 % of the 217 million m³ dissolved; 14 % with rf_hc = 10 m), of which 8.3 million m³ dissolved as talus |
+
+![maps_base_hc50](figs/maps_base_hc50.png)
+![sections_base_hc50](figs/sections_base_hc50.png)
+![towers_base_hc50](figs/towers_base_hc50.png)
+
+**What can be read off.** With the critical height of massive limestone the towers stand without
+failing and become pillars 240 m high with 75° walls in a million years (the 100 to 300 m range of
+Guilin). The stage of the previous section in which collapse makes the towers follow the plain
+disappears, and the relative height grows linearly as "uplift − lowering of the tops". The steps on
+the walls are the staircase that the collapse rule (only the excess of a free face over H_c fails)
+produces on a 10 m grid: a model form set by the ratio of H_c to the cell size.
+
+**Caution (a side effect of the model, not of the coefficients).** The tops go down only 9 mm/kyr
+(the 70 mm/kyr of the surface source is not acting) because the residue that accumulates on the top
+(one tenth of the dissolved rock, 0.2 m) exceeds `dissol_sdsurf = 0.1 m`, removes the "bare rock"
+classification and switches the surface source off (the infiltration map is static, so infiltration
+stays at 2.5 % and only the 6 mm/kyr of the recharge source remains). On real bare-rock towers the
+residue is washed away, so this growth of relief (almost the uplift rate) is an overestimate; with
+the surface source still acting it would be about 200 − 76 = 124 mm/kyr. Steep bare rock needs a
+treatment that leaves no residue (or carries it away with the runoff) (handoff.md).
 
 ## What this model cannot represent (differences from the real phenomenon)
 
@@ -346,8 +380,9 @@ experiments").
   divided between the plain and the towers.
 - `tt_c` and chained restarts: landform time (tens of thousands of years for tower retreat and
   disappearance). For a million years use the quasi-steady forcing (param_steady.txt, section above).
-- `rf_hc` of 50 to 100 m (massive limestone) in param_base.txt (base level and uplift): whether walls that
-  stand without failing appear instead of cones at the angle of repose of the talus. `dissol_fres = 0`:
+- `rf_hc` in param_base.txt (base level and uplift): 10 m gives cones at the angle of repose of the talus,
+  50 m pillars with 75° walls (param_base_hc50.txt, section above). Values in between, and a larger
+  `dissol_sdsurf` so that the residue on the tops does not switch the surface source off. `dissol_fres = 0`:
   isolates the side effect of the residue soil lowering the water table. `uplift0`: the balance of uplift
   and the dissolution of the plain (213 mm/kyr).
 
