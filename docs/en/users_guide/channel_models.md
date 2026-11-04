@@ -186,6 +186,32 @@ from the real width nearly vanishes. Refining the width data gradually is
 enough: start with the reaches where the low-flow stage and velocity
 matter.
 
+**Exchange of water with other modules.** Modules that add water to or take
+it from the surface water $`h`$ outside the shallow-water computation
+(infiltration and seepage of groundwater, the salt layer, the conduit layer,
+pore water released or taken up by landform change, soil buried by lava, the
+VZ outlet, melt water of snow and glaciers, and the change of the void ratio
+when buildings are destroyed) add and subtract in $`v_h`$, not in the depth,
+on cells with a section shape. For an amount $`\Delta v`$ (rectangular-
+equivalent depth) the depth becomes
+
+```math
+h' = v_h^{-1}\!\left(v_h(h) + \Delta v\right)
+```
+
+so that the volume changes by exactly $`\Delta v`$ (raising the depth itself by
+$`\Delta v`$ would add only $`\sigma(h)\,\Delta v`$ of volume). Infiltration
+sets its amount by the drop of the water level $`\Delta h`$ (infiltration over the
+wetted width) and hands the ground the volume actually removed,
+$`v_h(h) - v_h(h - \Delta h)`$. The equalization limit of the exchange with the
+conduit layer is an approximation linearized at the current depth, assuming
+that the water level moves by $`1/\sigma(h)`$ times the volume (the volume
+exchanged is exact). The proportional transfer of water quality also uses the
+ratio of volumes. All of this is our own treatment, verified by
+[test/gwsect](../../../test/gwsect/en/README.md) (since 2026-11-04; before that
+water was lost on seepage and melt, and infiltration handed the ground
+$`1/(m+1)`$ of the volume removed).
+
 The shape exponent m is a single domain-uniform value. Mountain streams
 upstream and the large river downstream naturally have different section
 shapes, so an extension to per-cell specification via a distribution file
@@ -268,6 +294,7 @@ The labels in the Basis column are explained in [How to read the basis of a defa
 
 - [test/bendloss](../../../test/bendloss/en/README.md): straight, bent and diagonal channels, subgrid width and opening correction, assessed against Manning uniform flow or a straight-channel comparison.
 - [test/chichibu](../../../test/chichibu/en/README.md): real-terrain examples comparing channel masks, roughness, width and levee settings through flood-wave behaviour.
+- [test/gwsect](../../../test/gwsect/en/README.md): exchange of water between cells with a section shape and groundwater (seepage, infiltration), the conduit layer and snowmelt; checks that the total storage of a closed valley is conserved and that the concentration of a rain tracer stays at 1.
 
 ## References
 

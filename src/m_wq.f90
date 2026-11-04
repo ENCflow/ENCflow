@@ -80,7 +80,7 @@ module m_wq
   use iso_fortran_env, only : real64
   use m_sysparam, only : t_sysparam
   use m_geoinfo, only : t_geoinfo
-  use m_state, only : t_state
+  use m_state, only : t_state, sect_cell, sect_vh
   use m_boundary, only : t_boundary, e_struct_dam, interp_series, read_cell_file2
   use m_swflow_enc, only : swflow_vh, chn
   use m_gwflow_conduit, only : t_gwcond, gwflow_conduit_ready
@@ -1023,8 +1023,13 @@ subroutine m_wq_calc(wq, p, g, b, s, gwc, it)
         if (fx <= 0.0) cycle
         s%fxg(i,j) = 0.0
         if (s%cq(i,j) <= 0.0) cycle
-        ! 移動割合 = fx / 浸透前水深(浸透後の h に fx を足し戻して復元)
-        w = s%cq(i,j) * (fx / max(s%h(i,j) + fx, tiny(fx)))
+        ! 移動割合 = fx / 浸透前水深(浸透後の h に fx を足し戻して復元)。
+        ! 断面形 σ のセルの fx は体積(矩形換算水深)なので、水深も vh で(§26.2)
+        if (sect_cell(s, i, j)) then
+          w = s%cq(i,j) * (fx / max(sect_vh(s, i, j, s%h(i,j)) + fx, tiny(fx)))
+        else
+          w = s%cq(i,j) * (fx / max(s%h(i,j) + fx, tiny(fx)))
+        end if
         ! Kd 分配有効時は溶存分 fd のみが浸透水に同伴する(粒子態は
         ! 土中に濾し取られず地表に残留。K1。§30.6)
         if (wq%kdsi > 0.0) w = w * fd_of(wq, p, i, j, s%h(i,j), s%hs(i,j))
@@ -1118,7 +1123,12 @@ subroutine m_wq_calc(wq, p, g, b, s, gwc, it)
           if (fx <= 0.0) cycle
           s%fxci(i,j) = 0.0
           if (s%cq(i,j) <= 0.0) cycle
-          w = s%cq(i,j) * (fx / max(s%h(i,j) + fx, tiny(fx)))
+          ! 断面形 σ のセルの fx は体積(矩形換算水深)なので、水深も vh で(§26.2)
+          if (sect_cell(s, i, j)) then
+            w = s%cq(i,j) * (fx / max(sect_vh(s, i, j, s%h(i,j)) + fx, tiny(fx)))
+          else
+            w = s%cq(i,j) * (fx / max(s%h(i,j) + fx, tiny(fx)))
+          end if
           s%cq(i,j) = s%cq(i,j) - w
           wq%vrow(j,12) = wq%vrow(j,12) + mass_of(g, s, i, j, w)
         end do

@@ -78,7 +78,7 @@ module m_gwflow_conduit
   use, intrinsic :: iso_fortran_env, only : real64
   use m_sysparam, only : t_sysparam
   use m_geoinfo, only : t_geoinfo
-  use m_state, only : t_state, gw_to_h
+  use m_state, only : t_state, gw_to_h, sect_cell, sect_vh, sect_add_vh, sect_sig
   use m_gwflow_lateral, only : t_conduitlayer, t_gwlat, conduit_head, conduit_core, &
                                conduit_build_cnd, gwflow_conduit_dtcheck, &
                                gwflow_lateral_geom_init
@@ -573,6 +573,12 @@ subroutine gwflow_conduit_calc(gwc, lat, p, g, s, it, dts)
         syis = gwc%cl%syinv_slot(i,j)
         hcnd = conduit_head(s%hgc(i,j), capc, gwc%cl%zbot(i,j), syic, syis)
         hs = s%z(i,j) + s%h(i,j)
+        ! 断面形 σ のセルは体積(矩形換算水深)で受け渡す別手続きへ(§26.2。
+        ! 下の従来の式には手を入れない = σ のないランはビット一致)
+        if (sect_cell(s, i, j)) then
+          call surf_exchange_sect(gwc, p, s, i, j, capc, hcnd, hs, syic, syis, dts)
+          cycle
+        end if
         fwh = gw_to_h(s, i, j)
         if (hs > hcnd .and. s%h(i,j) > 0.0) then
           ! 流入(不圧 = 堰式の自由流入、満管 = オリフィス式の圧力流入)
@@ -730,7 +736,12 @@ subroutine gwflow_conduit_calc(gwc, lat, p, g, s, it, dts)
           end if
         else
           ! 陸側開放吐口(§46.5 (3)。坑口・暗渠の daylight): 受け水頭 =
-          ! 自セルの地表水位。域内転送(s%h へ。s%e 回復 = 契約2)
+          ! 自セルの地表水位。域内転送(s%h へ。s%e 回復 = 契約2)。
+          ! 断面形 σ のセルは体積で足す別手続きへ(§26.2)
+          if (sect_cell(s, i, j)) then
+            call outfall_land_sect(gwc, p, g, s, i, j, ca, capc, hcnd, syic, syis, dts)
+            cycle
+          end if
           hs = s%z(i,j) + s%h(i,j)
           if (hcnd <= hs) cycle                ! フラップ: 逆流なし
           q1 = ca * sqrt(2.0 * p%gg * (hcnd - hs))
@@ -751,6 +762,84 @@ subroutine gwflow_conduit_calc(gwc, lat, p, g, s, it, dts)
       end do
     end do
     !$omp end parallel do
+  end if
+end subroutine
+
+
+!----------------------------------------------------------------------
+! 断面形 σ のセルの地表交換(§26.2)。gwflow_conduit_calc の (1) と同じ式を、
+! 地表の水を体積(矩形換算水深 vh)で受け渡す形にしたもの:
+!   - 流入できるのは地表の体積まで(vh/fwh)。地表の水深は vh を減らして求め直す
+!   - 地表の水位は体積の 1/σ(h) 倍で動くので、等化上限は今の水深の σ で線形化した
+!     係数 fwhe = fwh/σ(h) で解く(近似。受け渡す体積は厳密)
+! 記録 fxci・fxdi・fxco は体積(fx·fwh = 矩形換算水深)で積む。
+! 補助手続きは contained にしない(§13)
+!----------------------------------------------------------------------
+subroutine surf_exchange_sect(gwc, p, s, i, j, capc, hcnd, hs, syic, syis, dts)
+  type(t_gwcond), intent(in) :: gwc
+  type(t_sysparam), intent(in) :: p
+  type(t_state), intent(inout) :: s
+  integer, intent(in) :: i, j
+  real, intent(in) :: capc, hcnd, hs, syic, syis, dts
+  real :: q1, fx, fwh, fwhe
+
+  fwh = gw_to_h(s, i, j)
+  fwhe = fwh / sect_sig(s, i, j, s%h(i,j))
+  if (hs > hcnd .and. s%h(i,j) > 0.0) then
+    if (s%hgc(i,j) >= capc) then
+      q1 = gwc%co * sqrt(2.0 * p%gg * (hs - hcnd))
+    else
+      q1 = gwc%cw * s%h(i,j)**1.5
+    end if
+    fx = min(gwc%dinlet(i,j) * q1 * dts, sect_vh(s, i, j, s%h(i,j)) / fwh, &
+             eq_inflow(capc, gwc%cl%zbot(i,j) / fwhe, s%hgc(i,j), hs / fwhe, &
+                       syic / fwhe, syis / fwhe))
+    if (fx > 0.0) then
+      call sect_add_vh(s, i, j, -fx * fwh)
+      s%hgc(i,j) = s%hgc(i,j) + fx
+      s%e(i,j) = s%z(i,j) + s%h(i,j)
+      if (allocated(s%fxci)) s%fxci(i,j) = s%fxci(i,j) + fx * fwh
+      if (allocated(s%fxdi)) s%fxdi(i,j) = s%fxdi(i,j) + fx * fwh
+    end if
+  else if (hcnd > hs .and. s%hgc(i,j) > capc) then
+    q1 = gwc%co * sqrt(2.0 * p%gg * (hcnd - hs))
+    fx = min(gwc%dinlet(i,j) * q1 * dts, s%hgc(i,j) - capc, (hcnd - hs) / (fwhe + syis))
+    if (fx > 0.0) then
+      s%hgc(i,j) = s%hgc(i,j) - fx
+      call sect_add_vh(s, i, j, fx * fwh)
+      s%e(i,j) = s%z(i,j) + s%h(i,j)
+      if (allocated(s%fxco)) s%fxco(i,j) = s%fxco(i,j) + fx * fwh
+    end if
+  end if
+end subroutine
+
+
+!----------------------------------------------------------------------
+! 断面形 σ のセルの陸側開放吐口(§26.2)。gwflow_conduit_calc の (4) の陸側と
+! 同じ式で、地表へは体積(矩形換算水深)で足し、等化上限は σ(h) で線形化する
+!----------------------------------------------------------------------
+subroutine outfall_land_sect(gwc, p, g, s, i, j, ca, capc, hcnd, syic, syis, dts)
+  type(t_gwcond), intent(in) :: gwc
+  type(t_sysparam), intent(in) :: p
+  type(t_geoinfo), intent(in) :: g
+  type(t_state), intent(inout) :: s
+  integer, intent(in) :: i, j
+  real, intent(in) :: ca, capc, hcnd, syic, syis, dts
+  real :: hs, q1, fx, fwh, fwhe
+
+  hs = s%z(i,j) + s%h(i,j)
+  if (hcnd <= hs) return                 ! フラップ: 逆流なし
+  q1 = ca * sqrt(2.0 * p%gg * (hcnd - hs))
+  fwh = gw_to_h(s, i, j)
+  fwhe = fwh / sect_sig(s, i, j, s%h(i,j))
+  fx = min(q1 * dts / (g%dx * g%dy), s%hgc(i,j), &
+           eq_outflow(capc, gwc%cl%zbot(i,j) / fwhe, s%hgc(i,j), hs / fwhe, &
+                      syic / fwhe, syis / fwhe))
+  if (fx > 0.0) then
+    s%hgc(i,j) = s%hgc(i,j) - fx
+    call sect_add_vh(s, i, j, fx * fwh)
+    s%e(i,j) = s%z(i,j) + s%h(i,j)
+    if (allocated(s%fxco)) s%fxco(i,j) = s%fxco(i,j) + fx * fwh
   end if
 end subroutine
 

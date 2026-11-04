@@ -22,6 +22,7 @@ module m_state
   public :: m_state_set_gv
   public :: m_state_printstate
   public :: gw_to_h
+  public :: sect_cell, sect_vh, sect_h_of, sect_add_vh, sect_dvh, sect_sig, wfr_of   ! σ 断面のセルの体積換算(§26.2)
 
 
   ! 画面出力用変数
@@ -79,6 +80,17 @@ module m_state
                                         !   水深の換算(gw_to_h)に使う。swflow_enc の init が
                                         !   build_wfrac の直後に埋める静的な導出量(save
                                         !   対象外)。河道幅が無効なら確保しない(係数 1)
+    real, allocatable :: sdep(:,:)      ! 断面形 σ の遷移深さ D の写し(§26.2。0 = σ を
+                                        !   使わないセル)。浅水流の外のモジュールが地表水 h
+                                        !   (σ のセルでは水位としての水深)へ体積を足し引き
+                                        !   するときの換算(sect_*)に使う。swflow_enc が
+                                        !   build_sdep の直後と河床変動で D を更新するとき
+                                        !   (m_swflow_enc_sdep_update)に埋める導出量(save
+                                        !   対象外)。σ が無効なら確保しない
+    real :: sect_m = 0.0                ! σ の形状指数の写し m(§26.2。swflow_enc が設定)
+    real :: sect_mp1 = 1.0              ! m+1
+    real :: sect_rmp1 = 1.0             ! 1/(m+1)
+    real :: sect_mfac = 0.0             ! m/(m+1)
     real, allocatable :: gv(:,:)        ! 家屋の空隙率(時間ループの正本。§63)。初期値は
                                         !   入力 g%gv の帯写しで、g%gv/g%lm の帯は
                                         !   band_shrink で解放される(z と同じ持ち主の移動)。
@@ -624,7 +636,13 @@ subroutine m_state_set_gv(p, s, i, j, gvnew)
                   //"(gv_old <= gv_new <= 1)")
   end if
   r = s%gv(i,j) / gvnew
-  s%h(i,j) = s%h(i,j) * r
+  if (sect_cell(s, i, j)) then
+    ! 断面形 σ のセルの h は水位としての水深なので、体積(矩形換算水深)を
+    ! r 倍にして水深を求め直す(§26.2。下の柱状量は元々体積の単位)
+    s%h(i,j) = sect_h_of(s, i, j, sect_vh(s, i, j, s%h(i,j)) * r)
+  else
+    s%h(i,j) = s%h(i,j) * r
+  end if
   s%hs(i,j) = s%hs(i,j) * r
   s%hrs(i,j) = s%hrs(i,j) * r
   if (allocated(s%hd)) s%hd(i,j) = s%hd(i,j) * r
@@ -765,6 +783,22 @@ subroutine m_state_calcstat(s, p, g)
     end do
   end do
   !$omp end parallel do
+
+  ! 断面形 σ のセルの貯水量の補正(§26.2): 上の h × af の af は浅水流の終わりの
+  ! 水深の湿潤率 v/h を含み、その後に地下水などが h を変えると古くなるので、
+  ! σ のセルは体積(矩形換算水深 × gv × wfrac)との差を足して真の体積にする。
+  ! σ が無効なら何もしない(上の和の演算列は従来のまま)
+  if (allocated(s%sdep)) then
+    do j = dcp%js, dcp%je
+      do i = g%wx(1,j), g%wx(2,j)
+        if (g%x(i,j) == 0 .or. g%sw(i,j) > 0) cycle
+        if (.not. sect_cell(s, i, j)) cycle
+        if (s%h(i,j) <= 0) cycle
+        hsum_j(j) = hsum_j(j) + (real(sect_vh(s, i, j, s%h(i,j)), real64) &
+                    * s%gv(i,j) * wfr_of(s, i, j) - real(s%h(i,j), real64) * s%af(i,j))
+      end do
+    end do
+  end if
 
   ! --- 全ランク集約 ---
   ! 総和は「全域窓の行部分和を j 昇順に並べて一括総和」で決定化
@@ -985,6 +1019,7 @@ subroutine m_state_dispose(s, p)
   if (allocated(s%hrs)) deallocate(s%hrs)
   if (allocated(s%af)) deallocate(s%af)
   if (allocated(s%wfr)) deallocate(s%wfr)
+  if (allocated(s%sdep)) deallocate(s%sdep)
   if (allocated(s%gv)) deallocate(s%gv)
   if (allocated(s%lm)) deallocate(s%lm)
   if (allocated(s%hg)) deallocate(s%hg)
@@ -1516,14 +1551,118 @@ end subroutine
 ! 水を移すときの水深の換算係数(§26.1)。地下の水深はセルの平面(gv 基底)、
 ! 地表の水深は河道幅セルでは河道の平面(gv×wfrac)に載るので、体積を
 ! 保つ換算は 1/wfrac。河道幅が無効なら 1(fx × 1.0 = fx で従来とビット一致)。
-! 逆向き(地表→地下)は浸透と同じ af/gv を掛ける(§26。σ 断面のセルは
-! どちらの向きも近似。§26.1)
+! 逆向き(地表→地下)は浸透と同じ af/gv を掛ける(§26)。σ 断面のセルは
+! 下の sect_* で体積のまま受け渡す(§26.2)
 !----------------------------------------------------------------------
 pure real function gw_to_h(s, i, j) result(f)
   type(t_state), intent(in) :: s
   integer, intent(in) :: i, j
   f = 1.0
   if (allocated(s%wfr)) f = 1.0 / s%wfr(i,j)
+end function
+
+
+!----------------------------------------------------------------------
+! 断面形 σ のセルの体積換算(§26.2)
+!   σ のセル(遷移深さ D > 0)では、地表水 h は水位としての水深で、体積は
+!   矩形換算水深 vh = v(h)(m_swflow_enc の sect_v と同じ式)に比例する。
+!   浅水流の外のモジュールが h へ水を足し引きするときは、水深でなく vh で
+!   足し引きしないと体積が保たれない(足すと σ(h) 倍しか増えず、引いた
+!   水深から受け取り側の量を出すと引いた体積とずれる)。
+!   呼び出し側は「sect_cell なら sect_* を使い、そうでなければ従来の式の
+!   まま」の形で書く(σ を使わないセル・ランは従来とビット一致)。
+!   式は m_swflow_enc の sect_v / sect_hinv と同じ(変えるときは両方)
+!----------------------------------------------------------------------
+pure logical function sect_cell(s, i, j) result(f)
+  type(t_state), intent(in) :: s
+  integer, intent(in) :: i, j
+  f = .false.
+  if (.not. allocated(s%sdep)) return
+  f = s%sdep(i,j) > 0.0
+end function
+
+! 水深 h の矩形換算水深 vh(sect_v と同じ式)
+pure real function sect_vh(s, i, j, h) result(v)
+  type(t_state), intent(in) :: s
+  integer, intent(in) :: i, j
+  real, intent(in) :: h
+  real :: d
+  d = s%sdep(i,j)
+  if (d <= 0.0) then
+    v = h
+  else if (h >= d) then
+    v = h - d * s%sect_mfac
+  else if (h <= 0.0) then
+    v = h
+  else
+    v = d * (h / d)**s%sect_mp1 * s%sect_rmp1
+  end if
+end function
+
+! 矩形換算水深 vh に対応する水深(sect_hinv と同じ式)
+pure real function sect_h_of(s, i, j, v) result(h)
+  type(t_state), intent(in) :: s
+  integer, intent(in) :: i, j
+  real, intent(in) :: v
+  real :: d, vd
+  d = s%sdep(i,j)
+  if (d <= 0.0) then
+    h = v
+  else
+    vd = d * s%sect_rmp1
+    if (v >= vd) then
+      h = v + d * s%sect_mfac
+    else if (v <= 0.0) then
+      h = v
+    else
+      h = d * (v * s%sect_mp1 / d)**s%sect_rmp1
+    end if
+  end if
+end function
+
+! 地表水へ矩形換算水深で dv を足す(負なら引く。vh が負にならないよう
+! 0 で止める)。h = v⁻¹(v(h) + dv) で体積が厳密に dv だけ変わる
+subroutine sect_add_vh(s, i, j, dv)
+  type(t_state), intent(inout) :: s
+  integer, intent(in) :: i, j
+  real, intent(in) :: dv
+  s%h(i,j) = sect_h_of(s, i, j, max(sect_vh(s, i, j, s%h(i,j)) + dv, 0.0))
+end subroutine
+
+! 水深 h での水面幅の率 σ(h)(m_swflow_enc の sect_sigma と同じ式・下限 0.01)。
+! 体積の変化に対する水位の変化の線形化(管路層の等化上限)に使う
+pure real function sect_sig(s, i, j, h) result(sg)
+  type(t_state), intent(in) :: s
+  integer, intent(in) :: i, j
+  real, intent(in) :: h
+  real, parameter :: sgmin = 0.01
+  real :: d
+  d = s%sdep(i,j)
+  if (d <= 0.0 .or. h >= d) then
+    sg = 1.0
+  else if (h <= 0.0) then
+    sg = sgmin
+  else
+    sg = max((h / d)**s%sect_m, sgmin)
+  end if
+end function
+
+! 河道幅の平面積率(河道幅が無効なら 1)。地表の矩形換算水深 × wfr_of =
+! セルの平面の水深(地下の貯留と同じ単位)
+pure real function wfr_of(s, i, j) result(f)
+  type(t_state), intent(in) :: s
+  integer, intent(in) :: i, j
+  f = 1.0
+  if (allocated(s%wfr)) f = s%wfr(i,j)
+end function
+
+! 水深が hb から ha へ変わったときの矩形換算水深の差 v(hb) − v(ha)
+! (地表から引いた水の体積。正 = 減った)
+pure real function sect_dvh(s, i, j, hb, ha) result(dv)
+  type(t_state), intent(in) :: s
+  integer, intent(in) :: i, j
+  real, intent(in) :: hb, ha
+  dv = sect_vh(s, i, j, hb) - sect_vh(s, i, j, ha)
 end function
 
 

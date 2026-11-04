@@ -173,7 +173,10 @@ conserved and the number of limited cells is reported at the end),
 the lost volume is reported (normally none). On open boundaries the
 outflow is always at capacity and the inflow is fed when `fluv_bcfeed = 1`
 (the supply through the inflow face equals the net outflow of the inflow
-cell times `fluv_bcfeed_fac`; factor 1 fixes the bed of the inlet). Inflow
+cell times `fluv_bcfeed_fac`; factor 1 fixes the bed of the inlet). The faces
+of an inflow segment (the normal faces of the inflow cells and, on a wall
+edge, the diagonal faces opened for the segment) let no water out, so no bed
+load flows out through them either (developer.md §19.12). Inflow
 segments also take a bed-load discharge series `inflow_qb` (a source to the
 bed) and the equilibrium concentration feed `inflow_cs_eq` of the suspended
 sediment ([boundary conditions](boundary.md)). Bed load rolls on the bed surface: a dry cell never

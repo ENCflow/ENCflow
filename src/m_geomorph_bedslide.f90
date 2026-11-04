@@ -597,16 +597,29 @@ subroutine plunge_cells(gm, g, s)
       if (allocated(s%sf)) s%sf(i,j) = min(s%sf(i,j), s%sd(i,j))   ! 細粒分の帳簿: 粗粒扱い(§84.10)
       if (gm%f_dbwet == 1) then
         dhw = -gm%db_lamsb * dd
-        dhw = max(dhw, -max(s%h(i,j), 0.0))
-        s%h(i,j) = s%h(i,j) + dhw
+        if (sect_cell(s, i, j)) then
+          ! 断面形 σ のセルは体積(矩形換算水深)で埋める(§26.2)
+          dhw = max(dhw, -max(sect_vh(s, i, j, s%h(i,j)), 0.0))
+          call sect_add_vh(s, i, j, dhw)
+        else
+          dhw = max(dhw, -max(s%h(i,j), 0.0))
+          s%h(i,j) = s%h(i,j) + dhw
+        end if
       end if
       if (gm%f_dbwet == 2 .and. s%gw_active) then
         ! dhw は地下の水深(層の平面)。地表側は河道幅セルで河道の平面に載るので
         ! gw_to_h 倍で引く(体積を保つ換算。§26.1)
         fwh = gw_to_h(s, i, j)
         cap = s%sd(i,j) * g%sy0
-        dhw = min(max(cap - s%hg(i,j), 0.0), g%sy0 * dd, max(s%h(i,j), 0.0) / fwh)
-        s%h(i,j) = s%h(i,j) - dhw * fwh
+        if (sect_cell(s, i, j)) then
+          ! 断面形 σ のセルは体積(矩形換算水深)で埋める(§26.2)
+          dhw = min(max(cap - s%hg(i,j), 0.0), g%sy0 * dd, &
+                    max(sect_vh(s, i, j, s%h(i,j)), 0.0) / fwh)
+          call sect_add_vh(s, i, j, -dhw * fwh)
+        else
+          dhw = min(max(cap - s%hg(i,j), 0.0), g%sy0 * dd, max(s%h(i,j), 0.0) / fwh)
+          s%h(i,j) = s%h(i,j) - dhw * fwh
+        end if
         s%hg(i,j) = s%hg(i,j) + dhw
       end if
       vsum = vsum + dd

@@ -40,7 +40,7 @@ module m_gwflow_greenampt
   ! ==============================================================
   use m_sysparam, only : t_sysparam
   use m_geoinfo, only : t_geoinfo
-  use m_state, only : t_state
+  use m_state, only : t_state, sect_cell, sect_dvh, wfr_of
   use m_fileio, only : fileio_read_matrix
   use m_parallel, only : par_info, par_stop, dcp, is_root, par_scatter_cell
   use m_util, only : param_default
@@ -176,12 +176,12 @@ subroutine gwflow_greenampt_calc(ga, p, g, s, it, dts)
   integer, intent(in) :: it
   real, intent(in) :: dts
   integer :: i, j
-  real :: kv, cap, fv, fx
+  real :: kv, cap, fv, fx, hb
 
   if (it < 0) continue  ! 引数未使用の警告を抑制(独自周期を持つモデル用に供給)
   if (p%initialized) continue  ! 引数未使用の警告を抑制
 
-  !$omp parallel do schedule(static) private(i, j, kv, cap, fv, fx)
+  !$omp parallel do schedule(static) private(i, j, kv, cap, fv, fx, hb)
   do j = dcp%js, dcp%je
     do i = g%wx(1,j), g%wx(2,j)
       if (g%x(i,j) <= 0) cycle
@@ -207,10 +207,19 @@ subroutine gwflow_greenampt_calc(ga, p, g, s, it, dts)
       fx = min(fv * dts, s%h(i,j), cap - s%hg(i,j))
       fx = max(fx, 0.0)
       ! 反対称適用(契約1)と水位の回復(契約2)
+      hb = s%h(i,j)
       s%h(i,j) = s%h(i,j) - fx
-      ! 地下側は実効平面積率で体積整合させる(§26。河道幅・断面 σ の
-      ! 有効セルのみ af/gv < 1。無効時は af=gv で係数 1.0 =従来とビット一致)
-      s%hg(i,j) = s%hg(i,j) + fx * (s%af(i,j) / s%gv(i,j))
+      ! 断面形 σ のセルは、水位を fx 下げて実際に減った体積(矩形換算水深の差)を
+      ! 地下へ渡し、記録もその体積で積む(§26.2)。浸透の量そのもの(水位の低下
+      ! = 濡れた幅での浸透)は変えない
+      if (sect_cell(s, i, j)) fx = sect_dvh(s, i, j, hb, s%h(i,j))
+      ! 地下側は実効平面積率で体積整合させる(§26。河道幅の有効セルのみ
+      ! af/gv < 1。無効時は af=gv で係数 1.0 =従来とビット一致)
+      if (sect_cell(s, i, j)) then
+        s%hg(i,j) = s%hg(i,j) + fx * wfr_of(s, i, j)
+      else
+        s%hg(i,j) = s%hg(i,j) + fx * (s%af(i,j) / s%gv(i,j))
+      end if
       ! 浸透フラックスの記録(水質の濃度同伴用。m_wq が読んでゼロ戻し。§30)
       if (allocated(s%fxg)) s%fxg(i,j) = s%fxg(i,j) + fx
       ! 溶食(geomorph f_dissol)用の涵養量の積算(同じ契約。§86)
