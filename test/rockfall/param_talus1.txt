@@ -1,0 +1,70 @@
+!======================================================================
+! rockfall: 崖錐の溶食の検定 第 1 段(崖錐を溶かす。§86.7)
+!   第 0 段(param_talus0.txt)の崖錐を再開し、一様な雨 100 mm/h の溶食(dissol_src = 2)を
+!   600 更新(W = 0.667 m、残渣率 0.2)当てる。地形は一様に (1−f_res) W だけ下がるので
+!   崩落は起きず、崖錐 ht のあるセルでは ht が先に減り、ht が尽きたセルでは残りが基岩に
+!   当たる。第 1 段は崩落を凍結する(rf_hc = 1000 m、rf_relax = 1e-6)。Check_talus.py が result_talus0 → result_talus1 の Z・Sd・Ht を検定する:
+!     ht1 = max(ht0 − W, 0)、z1 = z0 − (1−f_res) W、
+!     sd1 = sd0 − (1−f_res) min(ht0, W) + f_res max(W − ht0, 0)
+!======================================================================
+&list_sysparam
+  f_gridsystem = 0
+  f_govequation = 0
+  dt = 0.1
+  t0 = 0
+  tt = 120                  ! 第 0 段の 60 s から 60 s(600 更新)
+  dt_disp = 10
+  dt_file = 60
+  dt_recrd = 60
+  fn_geoinfo = '-'
+  fn_initial = '-'
+  fn_enc = '-'
+  fn_geomorph = '-'
+  dir_result = 'result_talus1'
+  dir_save = 'save_talus0'  ! 第 0 段の保存から再開(保存はしない)
+  f_state_restore = 1       ! 時刻を継続して再開
+  fn_precip = '-'
+  f_state_save = 0
+  f_check_cfl = 0
+  f_out_z = 1
+/
+&list_enc
+/
+&list_initial
+  f_htype = 0
+  h0 = 0.0                  ! 水なし
+/
+&list_geoinfo
+  lx = 41.0
+  ly = 41.0
+  nx = 41
+  ny = 41
+  f_ztype = 1
+  fn_z = 'zinit.txt'
+  f_rntype = 0
+  rn0 = 0.03
+  f_sdtype = 1              ! 土層厚をファイルで与える(一様値 0 は受け付けないため)
+  fn_sd = 'sd_zero.txt'     ! 土層なし = 全域が基岩(rf_bedrock = 1 で崩れる。make_init.py --sdzero)
+  sy0 = 0.2
+/
+&list_precip
+  prtype = 1
+  prval(1:2,1) = 0, 100     ! 一様な雨 100 mm/h(溶食の水量。毎更新 w = k_d × 100 mm/h × 0.1 s × morfac)
+  prval(1:2,2) = 9999, 100
+/
+&list_geomorph
+  dt_geomorph = 0.0
+  morfac = 1.0e7            ! 600 更新で W = 4e-5 × (0.1/3600 × 0.1) × 1e7 × 600 = 0.667 m
+  f_rockfall = 1            ! 崩落と崖錐のみ(掃流砂・乾式侵食なし)
+  rf_bedrock = 1            ! 基岩の崩落(供給側に sd <= 0 を許し、供給量制限なしの専用適用)
+  rf_hc = 1000.0            ! 第 1 段は崩落を凍結(限界高さを超える面なし)= 溶食だけを検定する
+  rf_phi = 35.0             ! 崖錐の安息角 (deg)
+  rf_relax = 1.0e-6         ! 崖錐の安息角の緩和もほぼ止める(第 0 段の残りの緩和が検定を汚さないように)
+  rf_ftalus = 0.3           ! 崖錐の侵食性の倍率(本テストでは乾式侵食なしのため不使用)
+  fluv_porosity = 0.4
+  fluv_dzmax = 0.5          ! 1 エッジ・1 更新の変動上限 (m)
+  f_dissol = 1              ! 溶食(本段では雨 0 で何もしない。私有 save を作るため有効にしておく)
+  dissol_src = 2            ! 地上降雨量を水量にする
+  dissol_ceq = 100.0        ! k_d = 4e-5 m/m
+  dissol_fres = 0.2         ! 残渣率(次段の sd の検定に使う)
+/

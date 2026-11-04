@@ -43,8 +43,8 @@ document [docs/glacier_plan.md](../../glacier_plan.md) (Japanese).
 
 The minimal input to "just try it" is **an empty &list_glacier in
 fn_glacier** (plus fn_meteo and fn_snow, both of which may be empty
-groups). The degree-day, sliding and erosion coefficients have
-defaults (the "Default" column; basis in [Parameters and the basis of their defaults](#parameters-and-the-basis-of-their-defaults) below); when
+groups). The degree-day, sliding and erosion coefficients and the
+erosion coupling length have defaults (the "Default" column; basis in [Parameters and the basis of their defaults](#parameters-and-the-basis-of-their-defaults) below); when
 unspecified the default is adopted and printed with "(default)". The
 default configuration is "grow from no ice by snowfall, SIA flow on,
 no sliding or erosion". Set gl_morfac and t_cycle, which buy
@@ -167,6 +167,7 @@ melt balances the inflow ([Tide](tide.md)).
 | gl_as | 1e-13 | Weertman sliding coefficient As (m yr⁻¹ Pa⁻³). Read when f_glslide=1. The default gives 100 m/yr at a basal shear stress of 100 kPa (the fast side of mountain glaciers) |
 | gl_kg | 1e-4 | Erosion coefficient Kg. Read when f_glero=1. Coefficient of the erosion law ė = Kg·usˡ with sliding speed us measured in m/yr (dimensionless for l=1; the measured 1e-4 of Humphrey & Raymond 1994) |
 | gl_lexp | 1.0 | Power-law exponent l of the erosion law (1–2) |
+| gl_lc | max(500 m, 2Δx) | Erosion coupling length (m). Read when f_glero=1. The driving stress used for erosion is averaged within the ice-covered cells with a Gaussian kernel of standard deviation gl_lc (see [Erosion coupling length](#erosion-coupling-length-gl_lc) below). The default is 500 m (or twice the grid spacing when that is longer), meant for valley glaciers about 200–300 m thick. Lower it to about twice the ice thickness for thin glaciers such as cirque glaciers. 0 is the local τb |
 
 ```math
 u_s = A_s\,\tau_b^3,
@@ -196,6 +197,98 @@ speed)[^humphrey94]; with $`l`$ = 2[^herman15] a separate calibration gives
   is reported at the end of the run).
 
 **Outputs for this section**: erosion appears as the drop of `Z0001...` (`f_out_z=1`) and `Sd0001...`, and in the end line "eroded volume exported from the system" (per rank under MPI) ([Output and monitoring](#output-and-monitoring)).
+
+### Erosion coupling length (gl_lc)
+
+With the local τb (gl_lc = 0), erosion is proportional to the cube of the ice
+thickness ($`l`$ = 1), so thicker ice erodes faster and the eroded place gets
+thicker ice. The shallow ice approximation has no transfer of force between
+ice columns (the resistance from the valley walls, or pushing and pulling
+along the flow), so nothing stops this positive feedback, and the
+concentration shrinks to the scale of the grid spacing. In trial runs longer
+than a millennium, only the floor cells of a V-shaped valley were dug out as a
+slot, cell-sized pits deepened under a ridge glacier, and the computation
+stopped after 1500–4000 years when the internal iterations exceeded their
+limit (developer.md §45.3). The shape also changes with the grid spacing.
+
+With gl_lc > 0, the driving-stress vector of the ice-covered cells,
+$`\boldsymbol\tau = \rho_i g\,h_i\,\nabla s`$ (the gradient taken from
+ice-covered cells only), is averaged within the ice-covered cells only with a
+Gaussian kernel of standard deviation gl_lc, and its magnitude is used as the
+$`\tau_b`$ of erosion.
+
+```math
+\bar\tau_b = \frac{\left|\,G_{\ell} * (\boldsymbol\tau\,m)\,\right|}{G_{\ell} * m},
+\qquad u_s = A_s\,\bar\tau_b^{\,3},
+\qquad \dot e = K_g\,u_s^{\,l}
+```
+
+($`m`$ is 1 in ice-covered cells and 0 elsewhere; $`G_\ell`$ is the Gaussian
+kernel of standard deviation $`\ell`$ = gl_lc.) Because vectors are averaged,
+the opposite stresses on the two sides of an ice divide cancel. It is used
+only for erosion, not for the flow (the SIA diffusivity).
+
+- **Basis**: Kamb & Echelmeyer[^kamb86] showed that glacier flow follows a
+  weighted average of the ice thickness and the surface slope along the flow,
+  and gave its length (the coupling length) as 1–3 times the ice thickness for
+  valley glaciers, about twice in fits to measurements. Applying the same
+  length across the valley as well, using a Gaussian kernel, and averaging the
+  driving-stress vector are simplifications of this model.
+- **Effect**: in configuration 5 of test/glacier (ice filling a V-shaped
+  valley erodes for 10 years), the erosion across the valley differs by only
+  0.3% (relative) between grids of 200 m and 100 m and spreads over the whole
+  ice width (with gl_lc = 0 it differs by 20% and concentrates on the axis).
+  Trial runs longer than a millennium also completed without slots or pits
+  (developer.md §45.3).
+- **Default**: 500 m (or twice the grid spacing when that is longer). It lies
+  between the coupling lengths of valley glaciers that Kamb & Echelmeyer fitted
+  to measurements (450 m for Blue Glacier and 625 m for Variegated Glacier; the
+  averaging lengths of 1.8 km and 2.5 km in the paper are four times the
+  coupling length), and pairs with the default erosion coefficient gl_kg
+  (measured at Variegated Glacier). gl_kg was determined from measured sliding
+  speeds, and the speeds of a real glacier are smoothed by the transfer of
+  stress, so pairing it with a smoothed τb is more consistent with its source.
+  The floor of twice the grid spacing stops the grid-scale concentration on
+  coarse grids.
+- **It changes the amount of erosion**: gl_lc is not a length for numerical
+  stability only but part of the erosion law. In trial runs (200 m grid), the
+  total erosion relative to gl_lc = 0 was 0.83 for 200 m, 0.68 for 400 m, 0.56
+  for 600 m and 0.42 for 1000 m in a V-shaped valley (ice about 250 m thick,
+  1500 years), and 0.54 for 100 m, 0.39 for 200 m and 0.21 for 400 m under a
+  ridge glacier (ice 30–60 m thick, 3500 years) (developer.md §45.4).
+- **Choosing the value**: 1–3 times the typical ice thickness of the glacier
+  (twice as a guide), and at least twice the grid spacing. The default 500 m is
+  meant for valley glaciers about 200–300 m thick; for cirque and ridge
+  glaciers (ice 100 m thick or less) it is too long and underestimates the
+  erosion by a factor of several. In that case lower gl_lc to about twice the
+  ice thickness and make the grid spacing half of it or less. Make it longer
+  for ice caps (Kamb & Echelmeyer give 4–10 times the thickness for ice
+  sheets). Shorter than twice the grid spacing, it cannot fully stop the
+  grid-scale concentration, so a warning is printed at run time (in the trial
+  runs, a length equal to the grid spacing removed most of the cell-scale
+  roughness, while half the grid spacing left roughness of 40% of the erosion). When the ice is
+  thin and the grid coarse (twice the ice thickness is shorter than twice the
+  grid spacing), gl_lc means a length for numerical stability rather than the
+  physical coupling length.
+- **Cost**: each erosion update repeats the smoothing 4(gl_lc/Δx)² times (with
+  the default 500 m: 25 times on a 200 m grid, 100 times on a 100 m grid, 400
+  times on a 50 m grid).
+- **What it cannot do**: it does not represent the resistance of the valley
+  walls itself. The largest erosion stays at the valley axis, and it does not
+  guarantee that the cross-section becomes U-shaped. Erosion also reaches
+  under the thin ice at margins and termini with the stress averaged from the
+  ice inside (the erosion at margins may be overestimated). In a trial run of a
+  valley glacier over a millennium, refining the grid from 200 m to 100 m left
+  the glacier and the shape of the erosion nearly unchanged but made the
+  erosion at the valley axis about 20% larger (erosion is proportional to the
+  cube of the stress and amplifies small differences; the difference does not
+  grow with time).
+- **Caution for gl_lc = 0**: it uses the local τb (the default behaviour before
+  the default was changed on 2026-11-04). Erosion experiments longer than a
+  millennium grow grid-scale slots and pits. Also, the gradient of a margin
+  cell includes the bed elevation of the ice-free neighbour (an ice cliff), so
+  the margin cell is eroded more deeply than the next cell inside, forming a
+  step (in configuration 5, −0.47 m at the margin and −0.37 m inside).
 
 ## Avalanche redistribution (f_glava)
 
@@ -276,7 +369,7 @@ distance and speed of avalanches are not represented.
 | Temperate glacier (Alps; perennial snow patches to small glaciers in Japan) | 6-10 | 1e-16 | 1e-13 to 1e-12 | 1e-4 | Bed at the melting point, fast sliding. Erosion experiments: f_glslide + f_glero |
 | Cold / polar type (high latitude or altitude) | 4-7 | 1e-17 to 1e-16 | 0 (no sliding = f_glslide=0) | - | Frozen bed; deformation flow only |
 | Glacier hydrology (meltwater runoff) only | 6-10 | - | - | - | f_glflow=0 (a glacier that does not flow) + ice thickness from fn_glacier_hi0 |
-| Cirque / U-shaped valley formation experiments | 8 | 1e-16 | 1e-13 | 1e-4 (l=1) / 1e-7 to 1e-6 (l=2) | Millennia to tens of millennia via gl_morfac × t_cycle. f_glava=1 |
+| Cirque / U-shaped valley formation experiments | 8 | 1e-16 | 1e-13 | 1e-4 (l=1) / 1e-7 to 1e-6 (l=2) | Millennia to tens of millennia via gl_morfac × t_cycle. f_glava=1. gl_lc = about twice the ice thickness (at least twice the grid spacing) |
 
 Long-period climate change (glacial cycles, warming trends) can be
 superimposed on the representative year with `tempofs` (an air
@@ -355,6 +448,7 @@ The labels in the Basis column are explained in [How to read the basis of a defa
 | gl_cfl / gl_nsubmax | 0.4 / 10000 | sub-cycle safety factor and cap | **numerical** |
 | gl_as | 1e-13 m yr⁻¹ Pa⁻³ | Weertman sliding coefficient $`A_s`$ ($`m`$ = 3 fixed[^weertman57]) | **derived** 100 m/yr at a basal shear stress of 100 kPa (typical 50–150 kPa[^cuffey10]) = the fast side of mountain glaciers |
 | gl_kg / gl_lexp | 1e-4 / 1 | erosion coefficient $`K_g`$ and exponent $`l`$ | **literature value** Variegated Glacier measurement, erosion rate ≈ 1e-4 × sliding speed[^humphrey94]; 1e-7–1e-6 for $`l`$ = 2[^herman15] |
+| gl_lc | max(500 m, 2Δx) | erosion coupling length | **literature value** between the measured coupling lengths of valley glaciers, 450–625 m (Blue and Variegated Glaciers)[^kamb86]; Variegated Glacier is also the source of gl_kg. 2Δx when twice the grid spacing is longer (**numerical setting**: the floor that stops the grid-scale concentration). 0 is the local τb |
 | gl_ava_tanc | 0.6 | critical avalanche slope | **customary value** near the angle of repose of dry snow (≈ 31°) |
 | fn_glacier_hi0 | "" | initial ice thickness | **given** grown from no ice by default |
 
@@ -376,7 +470,8 @@ The labels in the Basis column are explained in [How to read the basis of a defa
 
 ## Tests and examples
 
-- [test/glacier/](../../../test/glacier/en/README.md): benchmark against the SIA analytical solution (including a check that the result does not depend on the grid orientation), the cirque-formation test, and a check of the isotropy of the avalanche redistribution (idealised verification experiments).
+- [test/glacier/](../../../test/glacier/en/README.md): benchmark against the SIA analytical solution (including a check that the result does not depend on the grid orientation), the cirque-formation test, a check of the isotropy of the avalanche redistribution, and a check of the erosion coupling length (idealised verification experiments).
+- [examples/glacier_valley/](../../../examples/glacier_valley/en/README.md): an example that grows a glacier in a fluvial V-shaped valley and looks at where 6000 years of erosion concentrate and how fast they proceed. A supplement with ten times the erosion coefficient (60,000 years of erosion) and a lake stage shows closed basins with lakes, the step of a hanging valley and the shortening of the glacier by erosion, and the limit that no U-shaped cross-section forms.
 - Worked example of the format: [examples/List_samples/en/list_glacier.txt](../../../examples/List_samples/en/list_glacier.txt).
 
 ## References
@@ -389,3 +484,4 @@ The labels in the Basis column are explained in [How to read the basis of a defa
 [^humphrey94]: Humphrey, N. F. and Raymond, C. F. (1994): Hydrology, erosion and sediment production in a surging glacier: Variegated Glacier, Alaska, 1982–83. *J. Glaciol.*, 40, 539–552.
 [^herman15]: Herman, F., Beyssac, O., Brughelli, M., Lane, S. N., Leprince, S., Adatte, T., Lin, J. Y. Y., Avouac, J.-P. and Cox, S. C. (2015): Erosion by an Alpine glacier. *Science*, 350, 193–195.
 [^tarboton97]: Tarboton, D. G. (1997): A new method for the determination of flow directions and upslope areas in grid digital elevation models. *Water Resour. Res.*, 33, 309–319. (D∞; destinations of the avalanche redistribution)
+[^kamb86]: Kamb, B. and Echelmeyer, K. A. (1986): Stress-gradient coupling in glacier flow: I. Longitudinal averaging of the influence of ice thickness and surface slope. *J. Glaciol.*, 32, 267–284. (coupling length; guide for the erosion coupling length gl_lc)

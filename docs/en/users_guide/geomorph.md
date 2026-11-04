@@ -1439,7 +1439,7 @@ metre of water the ground is lowered by `dissol_ceq / dissol_rho` (default
 40 mm/kyr, inside the published range of karst denudation rates
 (20 to 100 mm/kyr).
 
-The water amount is one of three sources. `dissol_src = 1` (default) is the
+The water amount is one of five sources. `dissol_src = 1` (default) is the
 **infiltration** of the groundwater module (vertical exchange of the bucket
 or Green-Ampt model) and needs `fn_gwflow`. `dissol_src = 2` is the
 **rainfall on the ground** (after interception), a maximum-denudation model
@@ -1448,7 +1448,21 @@ that works without groundwater (evapotranspiration is not subtracted).
 in cells whose soil is thinner than `dissol_sdsurf`, the runoff (rain minus
 infiltration) also spends `dissol_fsurf` of its capacity on that rock face
 (dissolution of bare slopes and tower faces; water arriving from upstream
-is taken as saturated and not counted).
+is taken as saturated and not counted). `dissol_src = 4` is the **recharge
+to the rock** (the exchange from the soil or layer 2 into the conduit
+continuum layer; requires `f_gwconduit = 1` and `gwc_leak_layer > 0`): where
+the conduit head is above the head of the soil (bedrock surface + soil water /
+specific yield) there is no recharge and dissolution stops. However, where
+rain accumulates in a thick soil so that its head stays above the conduit,
+dissolution continues even when the bedrock surface is below the water table
+(in param_base.txt of examples/tower_karst the bedrock under 24 m of residue
+dissolved to 24 m below the water table). There is no mechanism yet that makes
+the water table the base level of a corrosion plain ("no dissolution in the
+saturated zone"). `dissol_src = 5` adds the runoff on
+bare rock (the same term as 3). Infiltration (1 and 3) counts the water that
+entered the soil, so where the soil keeps thickening (residue of talus, for
+example) the added capacity keeps infiltration going and the pits have no bottom (the
+larger morfac, the more so); use 4 or 5 whenever a conduit layer is present.
 
 Dolines (sinkhole depressions) are represented with `dissol_sink = 1`: the
 water that enters the inlets (sinks) of the
@@ -1464,14 +1478,14 @@ form anywhere".
 |---|---|---|
 | dissol_ceq | 100 | Effective dissolution capacity (mg/L as CaCO3): the mass of rock (g) dissolved by 1 m³ of water. Decide it in preprocessing as the equilibrium solubility minus the concentration of the inflowing water |
 | dissol_rho | 2500 | Rock density (kg/m³) |
-| dissol_src | 1 | Water amount of the diffuse term (1: infiltration, 2: rainfall on the ground, 3: infiltration + runoff generated on bare rock × dissol_fsurf) |
-| dissol_fsurf | 0.3 | Surface source (dissol_src = 3): share of the runoff's capacity spent on its own rock face. Ratio of the capacity of rain on bare rock (50 to 80 mg/L) to that of recharge under soil (100 to 300) |
+| dissol_src | 1 | Water amount of the diffuse term (1: infiltration, 2: rainfall on the ground, 3: infiltration + runoff generated on bare rock × dissol_fsurf, 4: recharge to the rock = exchange from the soil or layer 2 into the conduit layer (stops below the water table), 5: 4 + runoff on bare rock) |
+| dissol_fsurf | 0.3 | Surface source (dissol_src = 3, 5): share of the runoff's capacity spent on its own rock face. Ratio of the capacity of rain on bare rock (50 to 80 mg/L) to that of recharge under soil (100 to 300) |
 | dissol_sdsurf | 0.1 | Soil thickness (m) below which the surface source applies; cells thinner than this count as bare rock with the factor (1 − sd/limit) |
 | dissol_sink | 0 | Sink-inflow term (1 = on; requires the inlets of f_gwconduit) |
 | dissol_fsink | 1.0 | Ratio of the dissolution capacity of the sink inflow (calibration value; surface runoff that bypasses the soil is below 1) |
 | dissol_fres | 0 | Volume fraction of insoluble residue, 0 to 1. Dissolved rock × fraction stays in the soil sd (terra rossa). 0 leaves sd untouched |
 | dissol_lat | 0 | Lateral dissolution: the share (0 to 1) of a ponded cell's dissolution capacity given to the neighbouring cells whose floor is above its water surface (rock walls), in proportion to the contact width; the rest goes to the floor. 0 = floor only. **−1 = automatic per cell from the wetted-area ratio hΣL/(hΣL + Δx²) (recommended)**. A fixed value should follow the ratio of ponding depth to cell size (about 0.8 for h = 5 m, Δx = 10 m) |
-| fn_dissol | "" | Distribution of the soluble fraction 0 to 1 (limestone mask). Unspecified = 1 in every cell |
+| fn_dissol | "" | Distribution of the soluble fraction (>= 0). 0 = insoluble (not limestone), 1 = reference, > 1 = multiplier where dissolution concentrates, such as joints and fracture zones (the seed of stone-forest pillars and clefts). Unspecified = 1 in every cell |
 | dissol_dzmax | 0 | Cap on the dissolution per cell and update (m). 0 = off. The excess capacity is discarded (saturation). A safety valve against the runaway of the positive feedback at sinks within one storm, used to raise morfac (examples/karst). The number of clips is printed at the end |
 
 **Lateral dissolution** (`dissol_lat` = p > 0, or −1 for automatic) spends
@@ -1500,6 +1514,15 @@ The minimal input is `f_dissol = 1` with `fn_gwflow` (infiltration), or
 `f_dissol = 1` with `dissol_src = 2` (rainfall). The hydrology of karst
 itself (dry valleys, internal drainage, springs) is available without
 dissolution through the inlets and outfalls of the conduit continuum layer.
+
+**Talus dissolves.** When rockfall and talus `f_rockfall` is used as well and a cell carries
+talus ht (limestone debris), the dissolution of that cell first consumes the talus (ht decreases,
+sd and z go down by the amount net of the residue fraction) and the remainder, once the talus is
+exhausted, acts on the bedrock (z down, sd kept). Without talus the rule is unchanged. This
+prevents the "conveyor" in which the debris of a tower that collapsed onto its feet sinks immortal
+while only the bedrock below keeps dissolving (found in the quasi-steady run of
+examples/tower_karst). At the end "dissolution removed talus ... m3" reports the part dissolved as
+talus.
 
 **Outputs for this section**: ground `Z0001...` (lowered by dissolution; nothing appears in `Hs`) and, with a residue fraction > 0, soil thickness `Sd0001...` (grows). At the end the dissolved rock volume (m³) is printed as "dissolution removed ... m3 of rock". Restart in `geomorph_dissol.dat` (the water accumulated within an update interval) ([Output and monitoring](#output-and-monitoring)).
 

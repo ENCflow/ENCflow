@@ -45,7 +45,11 @@ module m_glacier
   !       サブサイクルごとに hi のハロ交換。
   !   (6) 氷河侵食(f_glero。f_glslide 必須): 滑動速度 us = As τb^3
   !       (τb = ρi g H |∇s|、セル中心の中央差分勾配)のべき乗則
-  !       edot = Kg・us^l(us は m/yr で評価)で s%z を削る。
+  !       edot = Kg・us^l(us は m/yr で評価)で s%z を削る。侵食の結合長
+  !       gl_lc > 0 なら τb は駆動応力ベクトルを氷の中で標準偏差 gl_lc の
+  !       ガウス核で平均したものの大きさ(smooth_tau。格子規模の侵食の
+  !       集中を止める。流動には使わない。§45.3。既定 max(500 m, 2Δx)。
+  !       0 で局所の τb。§45.4)。
   !       s%sd は同じ Δz で共動減少(sd=0 まで基岩固定、以後は基岩侵食 =
   !       fluvial の z/sd 共動 §19.2 と同じ構造)。侵食物は系外へ排出と
   !       みなす(氷内・融氷水による搬出の抽象化。体積は台帳 vero に記録し
@@ -127,6 +131,16 @@ module m_glacier
     real :: fd1(1:8) = 0.0           ! D∞ の面 f の軸方向の辺の長さ d1 (m)
     real :: fd2(1:8) = 0.0           ! D∞ の面 f の直交する辺の長さ d2 (m)
     real :: fal(1:8) = 0.0           ! D∞ の面 f の開き角 α = atan(d2/d1) (rad)
+    ! 侵食の結合長(gl_lc > 0 のときだけ確保。§45.3)
+    real, allocatable :: tx(:,:)     ! 駆動応力の x 成分 × 氷マスク (Pa)。平滑化の入出力
+                                     !   (ish:ieh, jsh:jeh)
+    real, allocatable :: ty(:,:)     ! 同 y 成分(行順は北→南。符号の向きは全セル共通)
+    real, allocatable :: tm(:,:)     ! 氷マスク(氷のある有効セル 1、他 0)。同じ核で平滑化し
+                                     !   正規化の重みにする
+    real, allocatable :: tw(:,:,:)   ! 平滑化 1 パスの作業領域(1:3 = tx, ty, tm。ish:ieh, js:je)
+    integer :: nsm = 0               ! 平滑化のパス数(0 = 平滑化なし = 局所の τb)
+    real :: wsx = 0.0                ! 平滑化の 5 点核の x 近傍の重み
+    real :: wsy = 0.0                ! 同 y 近傍の重み
     real :: vero = 0.0               ! 侵食で系外へ排出した体積 (m3)(ランク局所累計)
     integer :: nsubtot = 0           ! サブサイクル総数(ランク共通。dispose で報告)
     integer :: ntick = 0             ! 更新回数
@@ -153,6 +167,7 @@ module m_glacier
     integer :: f_ero = 0             ! 氷河侵食 (0:なし, 1:有効)
     real :: kg = 0.0                 ! 侵食係数 Kg(us は m/yr で評価)
     real :: lexp = 1.0               ! 侵食則のべき指数 l
+    real :: lc = 0.0                 ! 侵食の結合長 (m)(0 = 局所の τb。既定 max(500 m, 2Δx)。§45.3・§45.4)
     integer :: f_ava = 0             ! 雪崩再配分 (0:なし, 1:有効)
     real :: avatanc = 0.6            ! 雪崩の限界勾配 tanθc
     logical :: initialized = .false.
@@ -182,7 +197,7 @@ subroutine m_glacier_init(gl, p, g, s, mt)
   type(t_state), intent(inout) :: s
   type(t_meteo), intent(in) :: mt
   type(t_list_glacier) :: list
-  real :: dtg
+  real :: dtg, dmin
   integer :: k
   character(len=256) :: msg
 
@@ -274,6 +289,20 @@ subroutine m_glacier_init(gl, p, g, s, mt)
     if (list%gl_lexp <= 0.0) call par_stop("list_glacier: gl_lexp must be > 0")
     gl%kg = list%gl_kg
     gl%lexp = list%gl_lexp
+    ! 侵食の結合長(f_glero=1 のときだけ読む。未指定 = 番兵 −9999 なら既定
+    ! max(500 m, 2Δx) を採用して表示。500 m は Kamb & Echelmeyer (1986) の谷氷河の
+    ! 結合長の実測 450〜625 m の間、2Δx は格子規模の集中を止める下限。0 は局所の τb
+    ! の明示。§45.4)
+    list%gl_lc = param_default("glacier", "gl_lc", list%gl_lc, &
+                               max(500.0, 2.0 * max(g%dx, g%dy)), " m", unset=-9999.0)
+    if (list%gl_lc < 0.0) call par_stop("list_glacier: gl_lc must be >= 0 (m)")
+    gl%lc = list%gl_lc
+    if (gl%lc > 0.0 .and. gl%lc < 2.0 * max(g%dx, g%dy)) then
+      ! 設定の警告(全ランク同じ内容なので rank 0 だけが出す)
+      if (is_root) call par_warn("glacier: gl_lc = " // rtoa(gl%lc) // " m is shorter than twice " &
+                                 // "the grid spacing (" // rtoa(2.0 * max(g%dx, g%dy)) // " m); " &
+                                 // "grid-scale concentration of erosion may remain (developer.md §45.4)")
+    end if
   end if
 
   ! --- 雪崩再配分(G4) ---
@@ -317,6 +346,22 @@ subroutine m_glacier_init(gl, p, g, s, mt)
   end if
   if (gl%f_ero > 0) then
     allocate(gl%glw%edz(dcp%ish:dcp%ieh, dcp%js:dcp%je), source = 0.0)
+  end if
+  if (gl%f_ero > 0 .and. gl%lc > 0.0) then
+    ! 侵食の結合長: spl_lc(m_geomorph_splash。§48.3)と同じ 5 点核の反復。
+    ! パス数 N = 4(ℓ/Δmin)²、重み w = ℓ²/(2NΔ²)(N パス後の各方向の分散が ℓ²。
+    ! 上限 1/8 = 市松モードを消すための wx + wy ≤ 1/4)
+    dmin = min(g%dx, g%dy)
+    gl%glw%nsm = max(1, nint(4.0 * (gl%lc / dmin)**2))
+    gl%glw%wsx = min(0.125, gl%lc**2 / (2.0 * gl%glw%nsm * g%dx**2))
+    gl%glw%wsy = min(0.125, gl%lc**2 / (2.0 * gl%glw%nsm * g%dy**2))
+    allocate(gl%glw%tx(dcp%ish:dcp%ieh, dcp%jsh:dcp%jeh), source = 0.0)
+    allocate(gl%glw%ty(dcp%ish:dcp%ieh, dcp%jsh:dcp%jeh), source = 0.0)
+    allocate(gl%glw%tm(dcp%ish:dcp%ieh, dcp%jsh:dcp%jeh), source = 0.0)
+    allocate(gl%glw%tw(1:3, dcp%ish:dcp%ieh, dcp%js:dcp%je), source = 0.0)
+    write(msg,'(a,es10.3,a,i0,a)') "glacier: erosion coupling length gl_lc = ", gl%lc, &
+          " m (", gl%glw%nsm, " smoothing passes)"
+    call par_info(trim(msg))
   end if
   if (gl%f_ava > 0) then
     allocate(gl%glw%am(dcp%ish:dcp%ieh, dcp%jsh:dcp%jeh), source = 0.0)
@@ -435,6 +480,11 @@ subroutine m_glacier_dispose(gl, p, g, s)
   if (allocated(gl%glw%edz)) deallocate(gl%glw%edz)
   if (allocated(gl%glw%am)) deallocate(gl%glw%am)
   if (allocated(gl%glw%ad)) deallocate(gl%glw%ad)
+  if (allocated(gl%glw%tx)) deallocate(gl%glw%tx)
+  if (allocated(gl%glw%ty)) deallocate(gl%glw%ty)
+  if (allocated(gl%glw%tm)) deallocate(gl%glw%tm)
+  if (allocated(gl%glw%tw)) deallocate(gl%glw%tw)
+  gl%glw%nsm = 0
   gl%glw%vero = 0.0
   gl%glw%nsubtot = 0
   gl%glw%ntick = 0
@@ -710,11 +760,13 @@ end function
 
 
 !----------------------------------------------------------------------
-! セル (i,j) の (ti,tj) 方向の氷面の勾配(edge_tslope の部品)
+! セル (i,j) の (ti,tj) 方向の氷面の勾配(edge_tslope と smooth_tau の部品)
 !   その方向の両隣のうち、氷のある有効セル(ice_cell)だけを使う:
 !   両方なら中心差分、片方なら片側差分、なしなら 0。氷のないセルの地盤高は
 !   氷面ではないので使わない(谷壁に接する氷で、壁の勾配が係数に入らない
-!   ように)。rd = 1/格子間隔
+!   ように。侵食の結合長では、氷河の縁の「氷の崖」が平均する駆動応力に
+!   入らないように。§45.3)。
+!   符号は (ti,tj) の向きに氷面が上がるとき正。rd = 1/格子間隔
 !----------------------------------------------------------------------
 pure function cell_tslope(g, s, i, j, ti, tj, rd) result(gd)
   type(t_geoinfo), intent(in) :: g
@@ -760,6 +812,10 @@ end function
 ! 氷河侵食(滑動速度べき乗則。1回の呼び出しで地形時間 dts ぶん)
 !   τb = ρi g H |∇s|(セル中心の中央差分勾配。無効近傍は片側/勾配 0 に退化)
 !   us = As τb^3、edot = Kg・(us [m/yr])^l / yr_s [m/s]
+!   侵食の結合長 gl_lc > 0 なら、τb は局所の値でなく、駆動応力ベクトルを
+!   氷の中で標準偏差 gl_lc のガウス核で平均したものの大きさ(smooth_tau。
+!   §45.3。既定 max(500 m, 2Δx)。§45.4)。0 なら局所の τb(上の式)のまま
+!   (2026-11-04 の既定変更より前の既定の挙動とビット一致)
 !   2パス構造(§28.2 の実バグと同型の競合対策): パス1が時刻 n の z+hi
 !   (近傍参照)から侵食深 edz を計算し、パス2が z・sd へ適用する。
 !   1パスのその場更新は勾配の近傍読みとスレッド・帯界面で競合する
@@ -777,6 +833,10 @@ subroutine tick_erosion(gl, g, s, dts)
   real :: gx, gy, cnt, se, sw2, tb, us, dz
   real :: vsum
 
+  ! --- 侵食の結合長(gl_lc > 0): 駆動応力ベクトルを氷の中で平滑化(時刻 n の z+hi。
+  !     collective: パス数は全ランク同一) ---
+  if (gl%glw%nsm > 0) call smooth_tau(gl, g, s)
+
   ! --- パス1: 侵食深の評価(時刻 n の z+hi から。書き込みは edz のみ) ---
   !$omp parallel do schedule(static) private(i, j, gx, gy, cnt, se, sw2, tb, us, dz)
   do j = dcp%js, dcp%je
@@ -785,46 +845,55 @@ subroutine tick_erosion(gl, g, s, dts)
       if (g%x(i,j) <= 0) cycle
       if (g%sw(i,j) > 0) cycle
       if (s%hi(i,j) <= 0.0) cycle
-      ! x 方向の氷面勾配(無効近傍は片側差分に退化。両側無効なら 0)。
-      ! 近傍の g%sw は g%x の内側で検査する(g%x のみ 0 縁取り確保。
-      ! .and. の短絡評価は言語仕様で保証されない — -fcheck 実検出)
-      cnt = 0.0
-      se = s%z(i,j) + s%hi(i,j)
-      sw2 = se
-      if (g%x(i+1,j) > 0) then
-        if (g%sw(i+1,j) <= 0) then
-          se = s%z(i+1,j) + s%hi(i+1,j)
-          cnt = cnt + 1.0
+      if (gl%glw%nsm > 0) then
+        ! 平滑化した駆動応力ベクトルの大きさ ⟨τ m⟩/⟨m⟩(氷のあるセルでは
+        ! ⟨m⟩ ≥ 自セルの重みの累乗 > 0。念のため 0 除算は避ける)
+        tb = 0.0
+        if (gl%glw%tm(i,j) > 0.0) then
+          tb = sqrt(gl%glw%tx(i,j)**2 + gl%glw%ty(i,j)**2) / gl%glw%tm(i,j)
         end if
-      end if
-      if (g%x(i-1,j) > 0) then
-        if (g%sw(i-1,j) <= 0) then
-          sw2 = s%z(i-1,j) + s%hi(i-1,j)
-          cnt = cnt + 1.0
+      else
+        ! x 方向の氷面勾配(無効近傍は片側差分に退化。両側無効なら 0)。
+        ! 近傍の g%sw は g%x の内側で検査する(g%x のみ 0 縁取り確保。
+        ! .and. の短絡評価は言語仕様で保証されない — -fcheck 実検出)
+        cnt = 0.0
+        se = s%z(i,j) + s%hi(i,j)
+        sw2 = se
+        if (g%x(i+1,j) > 0) then
+          if (g%sw(i+1,j) <= 0) then
+            se = s%z(i+1,j) + s%hi(i+1,j)
+            cnt = cnt + 1.0
+          end if
         end if
-      end if
-      gx = 0.0
-      if (cnt > 0.0) gx = (se - sw2) / (cnt * g%dx)
-      ! y 方向(行順は北→南: 符号は勾配の大きさにのみ使うため不問)
-      cnt = 0.0
-      se = s%z(i,j) + s%hi(i,j)
-      sw2 = se
-      if (g%x(i,j+1) > 0) then
-        if (g%sw(i,j+1) <= 0) then
-          se = s%z(i,j+1) + s%hi(i,j+1)
-          cnt = cnt + 1.0
+        if (g%x(i-1,j) > 0) then
+          if (g%sw(i-1,j) <= 0) then
+            sw2 = s%z(i-1,j) + s%hi(i-1,j)
+            cnt = cnt + 1.0
+          end if
         end if
-      end if
-      if (g%x(i,j-1) > 0) then
-        if (g%sw(i,j-1) <= 0) then
-          sw2 = s%z(i,j-1) + s%hi(i,j-1)
-          cnt = cnt + 1.0
+        gx = 0.0
+        if (cnt > 0.0) gx = (se - sw2) / (cnt * g%dx)
+        ! y 方向(行順は北→南: 符号は勾配の大きさにのみ使うため不問)
+        cnt = 0.0
+        se = s%z(i,j) + s%hi(i,j)
+        sw2 = se
+        if (g%x(i,j+1) > 0) then
+          if (g%sw(i,j+1) <= 0) then
+            se = s%z(i,j+1) + s%hi(i,j+1)
+            cnt = cnt + 1.0
+          end if
         end if
-      end if
-      gy = 0.0
-      if (cnt > 0.0) gy = (se - sw2) / (cnt * g%dy)
+        if (g%x(i,j-1) > 0) then
+          if (g%sw(i,j-1) <= 0) then
+            sw2 = s%z(i,j-1) + s%hi(i,j-1)
+            cnt = cnt + 1.0
+          end if
+        end if
+        gy = 0.0
+        if (cnt > 0.0) gy = (se - sw2) / (cnt * g%dy)
 
-      tb = gl%rhogi * s%hi(i,j) * sqrt(gx**2 + gy**2)    ! 底面せん断応力 (Pa)
+        tb = gl%rhogi * s%hi(i,j) * sqrt(gx**2 + gy**2)  ! 底面せん断応力 (Pa)
+      end if
       us = gl%as_si * tb**3                              ! 滑動速度 (m/s)
       if (us <= 0.0) cycle
       dz = gl%kg * (us * yr_s)**gl%lexp / yr_s * dts     ! 侵食深 (m)
@@ -848,6 +917,106 @@ subroutine tick_erosion(gl, g, s, dts)
   end do
   !$omp end parallel do
   gl%glw%vero = gl%glw%vero + vsum * gl%glw%area
+end subroutine
+
+
+!----------------------------------------------------------------------
+! 侵食に使う駆動応力の平滑化(侵食の結合長 gl_lc > 0。§45.3)
+!   氷のある有効セルの駆動応力ベクトル τ = ρi g H ∇s(勾配は cell_tslope =
+!   氷のあるセルだけ。§45.3)を、標準偏差 gl_lc のガウス核で、氷のあるセルの
+!   中だけで平均する(正規化畳み込み: τx·m, τy·m, m(m = 氷のある有効セルで 1、
+!   ほかは 0)を同じ核で平滑化し、比 ⟨τ m⟩/⟨m⟩ を tick_erosion が取る)。
+!   ベクトルで平均するので、氷の分水嶺の両側の逆向きの応力は打ち消し合う
+!   (大きさで平均すると分水嶺で侵食が出てしまう)。
+!   核は spl_lc(m_geomorph_splash の smooth_z。§48.3)と同じ 5 点核
+!   (自セル 1−2wx−2wy、x 近傍 wx、y 近傍 wy)の nsm 回反復。領域外(x <= 0)の
+!   近傍と配列範囲外は自セル値で鏡像。近傍の配列は g%x の内側で読む(g%x は
+!   帯±1 行の縁付き、tx 等は帯±ハロで全域端でクリップ。§45 の実バグと同じ
+!   流儀)。各パスの後に 3 成分のハロを交換する(パス数は namelist 由来の静的量で
+!   全ランク同一 = collective 安全。各ランクは自帯の値だけを書き、帯界面は交換した
+!   値を読むので、ランク数によらずビット一致)
+!----------------------------------------------------------------------
+subroutine smooth_tau(gl, g, s)
+  type(t_glacier), intent(inout) :: gl
+  type(t_geoinfo), intent(in) :: g
+  type(t_state), intent(in) :: s
+  integer :: i, j, n
+  real :: gx, gy, wx, wy, w0
+  real :: cx, cy, cm, ex, ey, em, wwx, wwy, wwm, nx_, ny_, nm, sx, sy, sm
+
+  ! --- 局所の駆動応力 × 氷マスク(自帯の全セルを 0 込みで上書き) ---
+  !$omp parallel do schedule(static) private(i, j, gx, gy)
+  do j = dcp%js, dcp%je
+    gl%glw%tx(:,j) = 0.0
+    gl%glw%ty(:,j) = 0.0
+    gl%glw%tm(:,j) = 0.0
+    do i = g%wx(1,j), g%wx(2,j)
+      if (.not. ice_cell(g, s, i, j)) cycle
+      gx = cell_tslope(g, s, i, j, 1, 0, 1.0 / g%dx)
+      gy = cell_tslope(g, s, i, j, 0, 1, 1.0 / g%dy)
+      gl%glw%tx(i,j) = gl%rhogi * s%hi(i,j) * gx
+      gl%glw%ty(i,j) = gl%rhogi * s%hi(i,j) * gy
+      gl%glw%tm(i,j) = 1.0
+    end do
+  end do
+  !$omp end parallel do
+  call par_halo_cell(gl%glw%tx)
+  call par_halo_cell(gl%glw%ty)
+  call par_halo_cell(gl%glw%tm)
+
+  ! --- 5 点核の nsm 回反復 ---
+  wx = gl%glw%wsx
+  wy = gl%glw%wsy
+  w0 = 1.0 - 2.0 * (wx + wy)
+  do n = 1, gl%glw%nsm
+    !$omp parallel do schedule(static) private(i, j, cx, cy, cm, ex, ey, em, wwx, wwy, wwm, &
+    !$omp                                      nx_, ny_, nm, sx, sy, sm)
+    do j = dcp%js, dcp%je
+      do i = g%wx(1,j), g%wx(2,j)
+        if (g%x(i,j) <= 0) cycle
+        cx = gl%glw%tx(i,j)
+        cy = gl%glw%ty(i,j)
+        cm = gl%glw%tm(i,j)
+        ex = cx;  ey = cy;  em = cm               ! 東 (i+1)
+        wwx = cx; wwy = cy; wwm = cm              ! 西 (i-1)
+        nx_ = cx; ny_ = cy; nm = cm               ! j+1
+        sx = cx;  sy = cy;  sm = cm               ! j-1
+        if (i < g%nx) then
+          if (g%x(i+1,j) > 0) then
+            ex = gl%glw%tx(i+1,j); ey = gl%glw%ty(i+1,j); em = gl%glw%tm(i+1,j)
+          end if
+        end if
+        if (i > 1) then
+          if (g%x(i-1,j) > 0) then
+            wwx = gl%glw%tx(i-1,j); wwy = gl%glw%ty(i-1,j); wwm = gl%glw%tm(i-1,j)
+          end if
+        end if
+        if (g%x(i,j+1) > 0) then
+          nx_ = gl%glw%tx(i,j+1); ny_ = gl%glw%ty(i,j+1); nm = gl%glw%tm(i,j+1)
+        end if
+        if (g%x(i,j-1) > 0) then
+          sx = gl%glw%tx(i,j-1); sy = gl%glw%ty(i,j-1); sm = gl%glw%tm(i,j-1)
+        end if
+        gl%glw%tw(1,i,j) = w0 * cx + wx * (ex + wwx) + wy * (nx_ + sx)
+        gl%glw%tw(2,i,j) = w0 * cy + wx * (ey + wwy) + wy * (ny_ + sy)
+        gl%glw%tw(3,i,j) = w0 * cm + wx * (em + wwm) + wy * (nm + sm)
+      end do
+    end do
+    !$omp end parallel do
+    !$omp parallel do schedule(static) private(i, j)
+    do j = dcp%js, dcp%je
+      do i = g%wx(1,j), g%wx(2,j)
+        if (g%x(i,j) <= 0) cycle
+        gl%glw%tx(i,j) = gl%glw%tw(1,i,j)
+        gl%glw%ty(i,j) = gl%glw%tw(2,i,j)
+        gl%glw%tm(i,j) = gl%glw%tw(3,i,j)
+      end do
+    end do
+    !$omp end parallel do
+    call par_halo_cell(gl%glw%tx)
+    call par_halo_cell(gl%glw%ty)
+    call par_halo_cell(gl%glw%tm)
+  end do
 end subroutine
 
 

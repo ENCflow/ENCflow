@@ -2,7 +2,7 @@
 
 [ユーザーガイド目次へ](../users_guide.md)
 
-namelist パラメータ名から章を引く索引です(アルファベット順、全 774 項目)。
+namelist パラメータ名から章を引く索引です(アルファベット順、全 776 項目)。
 この索引は list_*.f90 の namelist 宣言から機械抽出で生成されています
 (developer.md §35.1)。
 
@@ -158,6 +158,7 @@ namelist パラメータ名から章を引く索引です(アルファベット�
 | et_recrd | &list_sysparam | [時刻の管理](time.md) |
 | et_recrd_c | &list_sysparam | [時刻の管理](time.md) |
 | evap0 | &list_evap | [降雨・気象](forcing.md) |
+| evap_hglim | &list_evap | [降雨・気象](forcing.md) |
 | evap_kc | &list_evap | [降雨・気象](forcing.md) |
 | evap_monthly | &list_evap | [降雨・気象](forcing.md) |
 | f_adaptive_runge | &list_enc | [浅水流計算](swflow.md) |
@@ -473,6 +474,7 @@ namelist パラメータ名から章を引く索引です(アルファベット�
 | gl_ddfi | &list_glacier | [氷河](glacier.md) |
 | gl_dens | &list_glacier | [氷河](glacier.md) |
 | gl_kg | &list_glacier | [氷河](glacier.md) |
+| gl_lc | &list_glacier | [氷河](glacier.md) |
 | gl_lexp | &list_glacier | [氷河](glacier.md) |
 | gl_morfac | &list_glacier | [氷河](glacier.md) |
 | gl_nsubmax | &list_glacier | [氷河](glacier.md) |

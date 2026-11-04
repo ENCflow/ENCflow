@@ -20,6 +20,8 @@ configurations A–G in which the water amount is determined analytically.
 | D lateral dissolution | `param_lat.txt` | Ponded water at level −0.5 m (f_htype = 2) in a −1 m pit occupying only the central 3×3 of a flat 0 m domain (`data_dissol/zpit.txt`). Bucket infiltration gives the 9 pit cells a dissolution capacity W = 4e-4 m, dissol_lat = 0.4 | Floor (1−p)W, walls of the surrounding 16 cells pW·L_k/ΣL (axial 1, diagonal 2/(2+√2); karst_plan §2.5). Total 9W |
 | F surface-flow source | `param_surf.txt` | Uniform rainfall 30 mm/h for 1 hour on bare rock (sd0 = 1e-3 m), bucket infiltration 10 mm/h, dissol_src = 3 (fsurf = 0.3, sdsurf = 0.1). morfac = 1000 | Δz = −k_d (I + fsurf·fb·(P − I)) morfac = −4e-5 × 0.01594 × 1000 = −6.376e-4 m (all cells). The rt1 → rt2 round trip is also checked |
 | G safety valve | `param_clip.txt` | The same infiltration as A (dissolution 2e-5 m per update) with dissol_dzmax = 1e-5 | Δz = −20 × 1e-5 = −2e-4 m (all cells; the excess capacity is discarded) |
+| H solubility multiplier | `param_map2.txt` | The same infiltration as A with a uniform solubility map of 2.0 (`data_dissol/sol2.txt`), no residue | Δz = −2 × 20 × 2e-5 = −8e-4 m (all cells; fn_dissol > 1 is the multiplier of a joint zone) |
+| I recharge to the rock | `param_rech.txt` | Uniform rainfall 30 mm/h enters the soil by Green-Ampt infiltration (36 mm/h); the soil → conduit-layer exchange of 20 mm/h is counted as recharge to the rock (dissol_src = 4) | Δz = −k_d × 20 mm/h × 1 h × 1000 = −8e-4 m (proportional to the exchange, not to the infiltration of 30 mm/h) |
 | E automatic distribution | `param_lata.txt` | The same pit as D, with a tiny uniform rainfall of 0.36 mm/h as the rainfall source giving W = 4e-4 m to every cell, dissol_lat = −1 (wetted-area ratio) | p = hΣL/(hΣL + Δx²) for each pit cell (h = 0.5 m, Δx = 2 m). Dry cells put W on the floor. Total 441W (relative 1e-4) |
 | Restart round trip | `param_rt1.txt` → `param_rt2.txt` | A is saved at 52 s (part way through the 5 s update interval) and continued to 100 s | state.dat, geomorph_dissol.dat and Z9998.bil are byte-identical to the straight-through run (`save_all`, `result`) |
 
@@ -29,7 +31,7 @@ the bil output (float32) is read, `f_output_mode = 3` is required.
 
 | File | Contents |
 |---|---|
-| `param.txt` / `param_sink.txt` / `param_rain.txt` / `param_lat.txt` / `param_lata.txt` / `param_surf.txt` / `param_clip.txt` | Configurations A / B / C / D / E / F / G |
+| `param.txt` / `param_sink.txt` / `param_rain.txt` / `param_lat.txt` / `param_lata.txt` / `param_surf.txt` / `param_clip.txt` / `param_map2.txt` / `param_rech.txt` | Configurations A / B / C / D / E / F / G / H / I |
 | `param_rt1.txt` / `param_rt2.txt` | Restart split of A (first half 0→52 s, second half 52→100 s) |
 | `param_surf_rt1.txt` / `param_surf_rt2.txt` | Restart split of F (saved at 1830 s = part way through the update interval; a check of the private save of the rainfall accumulation frn) |
 | `data_dissol/sol.txt` | Soluble-fraction map of B (central 5×5 = 1, 0 elsewhere) |
@@ -41,8 +43,8 @@ the bil output (float32) is read, `f_output_mode = 3` is required.
 
 ```bash
 make
-./Run.sh            # serial: runs A–G and the round trip with the analytical and round-trip checks. The Log.txt of A is compared with the reference (ULP = 1)
-./Run_MPI.sh 4      # MPI: runs A–G with the analytical checks. Log.txt is ULP = 0 against the serial reference.
+./Run.sh            # serial: runs A–I and the round trip with the analytical and round-trip checks. The Log.txt of A is compared with the reference (ULP = 1)
+./Run_MPI.sh 4      # MPI: runs A–I with the analytical checks. Log.txt is ULP = 0 against the serial reference.
                     # If the serial result* are copied to result*_serial beforehand, the bil files are also compared byte by byte
 ```
 

@@ -1,11 +1,12 @@
 #!/usr/bin/env python3
-"""catchment_metal の図と数表(事前に make run で 7 ケースを計算しておく)。
+"""catchment_metal の図と数表(事前に make run で 8 ケースを計算しておく)。
 
   figs/mechanism.png  各ステップで加える機構の模式図(データを使わない)
   figs/setup.png      流域の地形・河道・ため池・農地・鉱山・観測点と、降雨・負荷の時系列
-  figs/step1.png … figs/step6.png  各ステップの結果(前のステップとの比較。ステップ 6 は
-                      蒸発散なしのステップ 4 と比べ、(c) を水の行き先にする)
-  figs/summary.png    物質の行き先の比較(7 ケース)
+  figs/step1.png … figs/step6.png、figs/step6b.png  各ステップの結果(前のステップとの
+                      比較。ステップ 6 は蒸発散なしのステップ 4、6b は抑制なしのステップ 6 と
+                      比べ、(c) を水の行き先にする)
+  figs/summary.png    物質の行き先の比較(8 ケース)
 引数 en で英語ラベル版を en/figs/ に描く(データと描画処理は共通)。
 数表(README の表)は標準出力に書く。
 """
@@ -40,16 +41,19 @@ STORMS = [3 + 10 * k for k in range(10)]  # 降雨の開始日(各 3 時間、20
 FARM_END = 60                            # 農地の負荷の終了日
 MG2UG = 1000.0                           # mg/L -> µg/L
 
-CASES = ["step1", "step2", "step3", "step4", "step5", "step5_notank", "step6"]
-TANK_CASES = ("step4", "step5", "step6")  # ため池ありの地形
+CASES = ["step1", "step2", "step3", "step4", "step5", "step5_notank", "step6", "step6b"]
+TANK_CASES = ("step4", "step5", "step6", "step6b")  # ため池ありの地形
+ET_CASES = ("step6", "step6b")           # 蒸発散あり((c) を水の行き先にする)
 LABEL = {"step1": T("1 地表水", "1 surface water"),
          "step2": T("2 +地下水流動", "2 +groundwater flow"),
          "step3": T("3 +吸着の遅れ", "3 +sorption delay"),
          "step4": T("4 +ため池", "4 +tanks"),
          "step5": T("5 粒子態+ため池", "5 particulate + tanks"),
          "step5_notank": T("5' 粒子態・ため池なし", "5' particulate, no tanks"),
-         "step6": T("6 +蒸発散(溶存態・ため池)", "6 +evapotranspiration (dissolved, tanks)")}
-PET = 4.0                                # ステップ 6 の可能蒸発散 (mm/day)
+         "step6": T("6 +蒸発散(溶存態・ため池)", "6 +evapotranspiration (dissolved, tanks)"),
+         "step6b": T("6b +土の乾き具合による抑制", "6b +reduction by dry soil")}
+PET = 4.0                                # ステップ 6・6b の可能蒸発散 (mm/day)
+HGLIM = 0.05                             # ステップ 6b の evap_hglim (m)
 AREA = 3430 * DX * DX                    # 流域(陸域)の面積 (m2)
 RAIN_MM = 600.0                          # 雨の総量 (mm)
 # 観測点(プローブ番号 = 測線番号。param_common.txt の並び)
@@ -326,10 +330,12 @@ def setup():
 
 # ---------------------------------------------------------------- 結果の図
 D_WET, D_DRY = 54, 150                   # 地図の日: 雨季(6 回目の雨の翌日)と乾季
-PREV = {"step2": "step1", "step3": "step2", "step4": "step3", "step5": "step5_notank", "step6": "step4"}
+PREV = {"step2": "step1", "step3": "step2", "step4": "step3", "step5": "step5_notank", "step6": "step4",
+        "step6b": "step6"}
 # 前のステップと比べる観測点(ため池の効果は農地の支川の出口 G3 に、蒸発散の効果は
 # 鉱山の下流 G1 と河口近くの G5 の乾季に出る)
-PREV_GAUGE = {"step2": ["G5"], "step3": ["G5"], "step4": ["G3"], "step5": ["G3"], "step6": ["G1", "G5"]}
+PREV_GAUGE = {"step2": ["G5"], "step3": ["G5"], "step4": ["G3"], "step5": ["G3"], "step6": ["G1", "G5"],
+              "step6b": ["G1", "G5"]}
 STORE_NORM = LogNorm(1e-3, 3.0)          # 留まる物質量 (g/m2)
 C_NORM = LogNorm(0.3, 500.0)             # 濃度 (µg/L)
 
@@ -381,6 +387,8 @@ def prev_label(case, g):
         return T(f"{g}(ため池なし 5')", f"{g} (no tanks, 5')")
     if case == "step6":
         return T(f"{g}(蒸発散なし 4)", f"{g} (no evapotranspiration, 4)")
+    if case == "step6b":
+        return T(f"{g}(抑制なし 6)", f"{g} (no reduction, 6)")
     return T(f"{g}(前のステップ)", f"{g} (previous step)")
 
 
@@ -443,6 +451,7 @@ def series_budget(ax, case, prev):
         g = fractions(prev)
         lab = T("海へ流出(ため池なし 5')", "exported (no tanks, 5')") if case == "step5" else \
             T("海へ流出(蒸発散なし 4)", "exported (no evapotranspiration, 4)") if case == "step6" else \
+            T("海へ流出(抑制なし 6)", "exported (no reduction, 6)") if case == "step6b" else \
             T("海へ流出(前のステップ)", "exported (previous step)")
         ax.plot(g["t"], g["sea"] * kg, color="0.4", lw=1.0, ls="--", label=lab)
     ax.set_xlim(0, TEND)
@@ -489,8 +498,11 @@ def series_water(ax, case, prev):
             label=T("流域の貯留(地表 + 地中)", "storage in the catchment (surface + ground)"))
     if prev:
         g = water(prev)
-        ax.plot(g["t"], g["sea"], color="0.4", lw=1.0, ls="--", label=T("海へ流出(蒸発散なし 4)", "outflow (no ET, 4)"))
-        ax.plot(g["ts"], g["store"], color="0.4", lw=1.0, ls=":", label=T("貯留(蒸発散なし 4)", "storage (no ET, 4)"))
+        tag = T("蒸発散なし 4", "no ET, 4") if prev == "step4" else T("抑制なし 6", "no reduction, 6")
+        ax.plot(g["t"], g["sea"], color="0.4", lw=1.0, ls="--", label=T(f"海へ流出({tag})", f"outflow ({tag})"))
+        ax.plot(g["ts"], g["store"], color="0.4", lw=1.0, ls=":", label=T(f"貯留({tag})", f"storage ({tag})"))
+        if prev != "step4":
+            ax.plot(g["t"], g["et"], color=C_ET, lw=1.0, ls="--", label=T(f"蒸発散({tag})", f"evapotranspiration ({tag})"))
     ax.set_xlim(0, TEND)
     ax.set_ylim(0, 650)
     ax.set_xlabel(T("経過日", "day"), fontsize=8)
@@ -511,10 +523,14 @@ def step_figure(case, title):
     conc_map(ax[1], case, D_DRY, T(f"(b) 地表水の濃度 {D_DRY} 日目(乾季)", f"(b) Concentration, day {D_DRY} (dry season)"))
     cb = fig.colorbar(im, ax=ax[:2], shrink=0.85, pad=0.01, aspect=30)
     cb.set_label(T("濃度 (µg/L)", "concentration (µg/L)"))
-    if case == "step6":
+    if case in ET_CASES:
         series_water(ax[2], case, prev)
-        ax[2].set_title(T(f"(c) 水の行き先(PET {PET:g} mm/day)", f"(c) Where the water went (PET {PET:g} mm/day)"),
-                        fontsize=9, loc="left")
+        if case == "step6b":
+            ttl = T(f"(c) 水の行き先(PET {PET:g} mm/day、evap_hglim {HGLIM:g} m)",
+                    f"(c) Where the water went (PET {PET:g} mm/day, evap_hglim {HGLIM:g} m)")
+        else:
+            ttl = T(f"(c) 水の行き先(PET {PET:g} mm/day)", f"(c) Where the water went (PET {PET:g} mm/day)")
+        ax[2].set_title(ttl, fontsize=9, loc="left")
     else:
         im2 = store_map(ax[2], case, TEND, T(f"(c) 地中・地表の堆積に留まる量 {TEND} 日目", f"(c) Metal held in the ground / deposits, day {TEND}"))
         cb2 = fig.colorbar(im2, ax=ax[2], shrink=0.85, pad=0.02)
@@ -640,6 +656,8 @@ def main():
     step_figure("step5", T("ステップ 5: 粒子態+ため池(点線 = ため池なし 5')", "Step 5: particulate + tanks (dashed = no tanks, 5')"))
     step_figure("step6", T(f"ステップ 6: + 蒸発散 PET {PET:g} mm/day(灰色の線 = 蒸発散なしのステップ 4)",
                            f"Step 6: + evapotranspiration, PET {PET:g} mm/day (grey lines = step 4 without it)"))
+    step_figure("step6b", T(f"ステップ 6b: + 土の乾き具合による抑制 evap_hglim {HGLIM:g} m(灰色の線 = 抑制なしのステップ 6)",
+                            f"Step 6b: + reduction by dry soil, evap_hglim {HGLIM:g} m (grey lines = step 6 without it)"))
     summary()
 
 

@@ -85,7 +85,7 @@ module subroutine init_dissol(gm, p, g, s, list)
       end if
     case (2)
       ! 地上降雨量(遮断後の s%pre)。浸透の有無によらない最大削剥速度モデル
-    case (3)
+    case (3, 5)
       ! 浸透量 + 裸岩で発生する流出水の fsurf 倍(表面流源。§86.6)
       if (len_trim(p%fn_gwflow) == 0) then
         call par_stop("list_geomorph: dissol_src=3 (infiltration + surface runoff) requires fn_gwflow; " &
@@ -99,9 +99,19 @@ module subroutine init_dissol(gm, p, g, s, list)
       if (gm%dis%sdsurf <= 0.0) call par_stop("list_geomorph: dissol_sdsurf must be > 0")
       gm%dis%sdsinv = 1.0 / gm%dis%sdsurf
       allocate(gm%dis%frn(dcp%ish:dcp%ieh, dcp%jsh:dcp%jeh), source = 0.0)
+    case (4)
+      ! 岩への涵養(土層/層2 → 管路層の交換量)。管路層の水頭が土層の水頭より高い所(地下水面より
+      ! 下)では涵養がなく溶食が止まる = 基準面。§86.8(5 = 4 + 裸岩の流出水。3 と同じ組)
     case default
-      call par_stop("list_geomorph: dissol_src must be 1 (infiltration), 2 (rainfall) or 3 (infiltration + runoff)")
+      call par_stop("list_geomorph: dissol_src must be 1 (infiltration), 2 (rainfall), 3 (infiltration + runoff), " &
+                    // "4 (recharge to the conduit layer) or 5 (recharge + runoff)")
   end select
+  if (gm%dis%src >= 4) then
+    if (len_trim(p%fn_gwflow) == 0) then
+      call par_stop("list_geomorph: dissol_src=4/5 requires fn_gwflow with f_gwconduit=1 and gwc_leak_layer > 0")
+    end if
+    allocate(s%fxdr(dcp%ish:dcp%ieh, dcp%jsh:dcp%jeh), source = 0.0)
+  end if
 
   select case (list%dissol_sink)
     case (0)
@@ -147,13 +157,14 @@ module subroutine init_dissol(gm, p, g, s, list)
   allocate(s%fxd(dcp%ish:dcp%ieh, dcp%jsh:dcp%jeh), source = 0.0)
   if (gm%dis%sink) allocate(s%fxdi(dcp%ish:dcp%ieh, dcp%jsh:dcp%jeh), source = 0.0)
   allocate(gm%dis%vrow(dcp%js:dcp%je), source = 0.0_real64)
+  allocate(gm%dis%vtrow(dcp%js:dcp%je), source = 0.0_real64)
   if (p%f_state_restore > 0) call restore_dissol(gm, p, g, s)
 
   call par_info("geomorph: limestone dissolution on (k_d = " // rtoa(gm%dis%kd) &
                 // " m/m, source = " // trim(srcname(gm%dis%src)) &
                 // ", sink term = " // trim(merge("on ", "off", gm%dis%sink)) &
                 // ", residue = " // rtoa(gm%dis%fres) // ")")
-  if (gm%dis%src == 3) then
+  if (gm%dis%src == 3 .or. gm%dis%src == 5) then
     call par_info("geomorph: surface-runoff dissolution on bare rock (fsurf = " // rtoa(gm%dis%fsurf) &
                   // ", bare below sd = " // rtoa(gm%dis%sdsurf) // " m)")
   end if
@@ -181,7 +192,9 @@ function srcname(src) result(nm)
   select case (src)
     case (1); nm = "infiltration"
     case (2); nm = "rainfall"
-    case default; nm = "infiltration + runoff"
+    case (3); nm = "infiltration + runoff"
+    case (4); nm = "recharge to conduit"
+    case default; nm = "recharge + runoff"
   end select
 end function
 
@@ -212,8 +225,10 @@ subroutine read_solmap(gm, p, g, fn)
   do j = dcp%js, dcp%je
     do i = g%wx(1,j), g%wx(2,j)
       if (g%x(i,j) <= 0) cycle
-      if (gm%dis%fsol(i,j) < 0.0 .or. gm%dis%fsol(i,j) > 1.0) then
-        call par_stop("list_geomorph: fn_dissol must be in [0, 1]: " // fname)
+      ! 0 = 不溶、1 = 基準、> 1 = 節理や割れ目帯など溶けやすい所の倍率(上限なし。
+      ! 2026-11-03 に上限 1 を外した: 石林型の柱や溝は節理に沿った溶解の集中が起点)
+      if (gm%dis%fsol(i,j) < 0.0) then
+        call par_stop("list_geomorph: fn_dissol must be >= 0 (0 = insoluble, 1 = reference, > 1 = joints): " // fname)
       end if
     end do
   end do
@@ -230,7 +245,7 @@ module subroutine accum_dissol_rain(gm, p, g, s)
   type(t_geoinfo), intent(in) :: g
   type(t_state), intent(inout) :: s
   integer :: i, j
-  if (gm%dis%src == 3) then
+  if (gm%dis%src == 3 .or. gm%dis%src == 5) then
     !$omp parallel do schedule(static) private(i, j)
     do j = dcp%js, dcp%je
       do i = g%wx(1,j), g%wx(2,j)
@@ -262,7 +277,12 @@ function take_water(gm, s, i, j) result(fw)
   real :: fw, fb
   fw = s%fxd(i,j)
   s%fxd(i,j) = 0.0
-  if (gm%dis%src == 3) then
+  if (gm%dis%src >= 4) then
+    ! 岩への涵養(管路層への交換量)を水量にする。浸透量 fxd は読んで捨てる(土層に入っただけの水)
+    fw = s%fxdr(i,j)
+    s%fxdr(i,j) = 0.0
+  end if
+  if (gm%dis%src == 3 .or. gm%dis%src == 5) then
     ! 裸岩で発生した流出水(雨 − 浸透)のうち fsurf をその岩面で使う
     fb = max(0.0, 1.0 - s%sd(i,j) * gm%dis%sdsinv)
     fw = fw + gm%dis%fsurf * fb * max(gm%dis%frn(i,j) - fw, 0.0)
@@ -285,7 +305,8 @@ module subroutine calc_dissol(gm, p, g, s)
   type(t_state), intent(inout) :: s
   integer :: i, j, nclip
   real :: fw, w
-  real(real64) :: rsum
+  real(real64) :: rsum, tsum
+  logical :: talus
 
   if (gm%dis%lat) then
     call calc_dissol_lat(gm, p, g, s)
@@ -293,9 +314,11 @@ module subroutine calc_dissol(gm, p, g, s)
   end if
 
   nclip = 0
-  !$omp parallel do schedule(static) reduction(+: nclip) private(i, j, fw, w, rsum)
+  talus = allocated(s%ht)                                ! 崖錐(f_rockfall)があれば先に溶かす
+  !$omp parallel do schedule(static) reduction(+: nclip) private(i, j, fw, w, rsum, tsum)
   do j = dcp%js, dcp%je
     rsum = 0.0_real64
+    tsum = 0.0_real64
     do i = g%wx(1,j), g%wx(2,j)
       if (g%x(i,j) <= 0) cycle
       ! 積算水量は海セルでも消費して捨てる(次の間隔へ持ち越さない)
@@ -309,18 +332,58 @@ module subroutine calc_dissol(gm, p, g, s)
         w = gm%dis%dzmax                                 ! 超過分の溶解能は捨てる(飽和)
         nclip = nclip + 1
       end if
-      if (gm%dis%res) then
-        s%z(i,j) = s%z(i,j) - (1.0 - gm%dis%fres) * w
-        s%sd(i,j) = s%sd(i,j) + gm%dis%fres * w
-      else
-        s%z(i,j) = s%z(i,j) - w
-      end if
+      call apply_dissol(gm, s, i, j, w, talus, tsum)
       rsum = rsum + real(w, real64)
     end do
     gm%dis%vrow(j) = gm%dis%vrow(j) + rsum * g%dx * g%dy
+    gm%dis%vtrow(j) = gm%dis%vtrow(j) + tsum * g%dx * g%dy
   end do
   !$omp end parallel do
   gm%dis%nclip = gm%dis%nclip + nclip
+end subroutine
+
+
+!----------------------------------------------------------------------
+! 1 セルの溶食量 w の適用(床・側方の共通。§86.7):
+!   崖錐 ht(f_rockfall の落下物 = 石灰岩の岩屑)が載っていれば、先に崖錐を溶かす
+!   (ht を減らし、sd・z は残渣率を除いた分だけ下げる = 岩屑の残渣は土層に残る)。
+!   残りは基岩に当てる(z を下げ sd は保つ。残渣は sd に積む = 従来の規則)。
+!   崖錐がなければ(ht 未確保・ht = 0)従来の式そのもの = 既存構成とビット一致。
+!   崖錐を不死身にすると、裾に崩れ込んだ塔の岩屑の下で基岩だけが溶け続ける
+!   「コンベア」になる(examples/tower_karst の準定常強制で実検出)。
+!----------------------------------------------------------------------
+subroutine apply_dissol(gm, s, i, j, w, talus, tsum)
+  type(t_geomorph), intent(in) :: gm
+  type(t_state), intent(inout) :: s
+  integer, intent(in) :: i, j
+  real, intent(in) :: w
+  logical, intent(in) :: talus
+  real(real64), intent(inout) :: tsum
+  real :: wb, dh
+
+  wb = w
+  if (talus) then
+    if (s%ht(i,j) > 0.0) then
+      dh = min(s%ht(i,j), w)
+      s%ht(i,j) = s%ht(i,j) - dh
+      if (gm%dis%res) then
+        s%sd(i,j) = max(s%sd(i,j) - (1.0 - gm%dis%fres) * dh, 0.0)
+        s%z(i,j) = s%z(i,j) - (1.0 - gm%dis%fres) * dh
+      else
+        s%sd(i,j) = max(s%sd(i,j) - dh, 0.0)
+        s%z(i,j) = s%z(i,j) - dh
+      end if
+      tsum = tsum + real(dh, real64)
+      wb = w - dh
+      if (wb <= 0.0) return
+    end if
+  end if
+  if (gm%dis%res) then
+    s%z(i,j) = s%z(i,j) - (1.0 - gm%dis%fres) * wb
+    s%sd(i,j) = s%sd(i,j) + gm%dis%fres * wb
+  else
+    s%z(i,j) = s%z(i,j) - wb
+  end if
 end subroutine
 
 
@@ -336,8 +399,8 @@ subroutine calc_dissol_lat(gm, p, g, s)
   real, parameter :: lk(1:8) = [wdiag, 1.0, wdiag, 1.0, 1.0, wdiag, 1.0, wdiag]
   integer :: i, j, k, in, jn, m, im, jm, nclip
   real :: fw, wcap, ew, sumw, fs, pw
-  logical :: wall
-  real(real64) :: rsum
+  logical :: wall, talus
+  real(real64) :: rsum, tsum
 
   ! 壁判定は時刻 n の z・h で行う(ハロ行を含めて最新化。collective)
   call par_halo_cell(s%z)
@@ -420,9 +483,11 @@ subroutine calc_dissol_lat(gm, p, g, s)
 
   ! (3) 床と壁の量をまとめて適用し、台帳に積む
   nclip = 0
-  !$omp parallel do schedule(static) reduction(+: nclip) private(i, j, fs, rsum)
+  talus = allocated(s%ht)
+  !$omp parallel do schedule(static) reduction(+: nclip) private(i, j, fs, rsum, tsum)
   do j = dcp%js, dcp%je
     rsum = 0.0_real64
+    tsum = 0.0_real64
     do i = g%wx(1,j), g%wx(2,j)
       if (g%x(i,j) <= 0) cycle
       if (g%sw(i,j) > 0) cycle
@@ -434,15 +499,11 @@ subroutine calc_dissol_lat(gm, p, g, s)
         fs = gm%dis%dzmax                                ! 床+壁の合計を頭打ち(超過は飽和として捨てる)
         nclip = nclip + 1
       end if
-      if (gm%dis%res) then
-        s%z(i,j) = s%z(i,j) - (1.0 - gm%dis%fres) * fs
-        s%sd(i,j) = s%sd(i,j) + gm%dis%fres * fs
-      else
-        s%z(i,j) = s%z(i,j) - fs
-      end if
+      call apply_dissol(gm, s, i, j, fs, talus, tsum)
       rsum = rsum + real(fs, real64)
     end do
     gm%dis%vrow(j) = gm%dis%vrow(j) + rsum * g%dx * g%dy
+    gm%dis%vtrow(j) = gm%dis%vtrow(j) + tsum * g%dx * g%dy
   end do
   !$omp end parallel do
   gm%dis%nclip = gm%dis%nclip + nclip
@@ -455,11 +516,15 @@ module subroutine dispose_dissol(gm, p, g, s)
   type(t_sysparam), intent(in) :: p
   type(t_geoinfo), intent(in) :: g
   type(t_state), intent(in) :: s
-  real(real64) :: vtot
+  real(real64) :: vtot, vtal
   if (p%f_state_save > 0) call save_dissol(gm, p, g, s)
   ! 溶けた岩の体積の総括(par_sum_rows = 決定的。collective は全ランクが呼ぶ)
   call par_sum_rows(gm%dis%vrow, vtot)
+  call par_sum_rows(gm%dis%vtrow, vtal)
   call par_info("geomorph: dissolution removed " // rtoa(real(vtot)) // " m3 of rock")
+  if (vtal > 0.0_real64) then
+    call par_info("geomorph: dissolution removed talus (limestone debris) = " // rtoa(real(vtal)) // " m3 of the above")
+  end if
   if (gm%dis%nclip > 0) then
     ! ランク局所の診断(発動は正常動作。多ければ dt_geomorph/morfac/dissol_dzmax の見直し)
     call par_warn("geomorph: dissolution dzmax clip fired in " // itoa(gm%dis%nclip) &
@@ -487,7 +552,8 @@ subroutine save_dissol(gm, p, g, s)
   end if
   call restart_write_cell(un, s%fxd)
   if (gm%dis%sink) call restart_write_cell(un, s%fxdi)
-  if (gm%dis%src == 3) call restart_write_cell(un, gm%dis%frn)
+  if (gm%dis%src == 3 .or. gm%dis%src == 5) call restart_write_cell(un, gm%dis%frn)
+  if (gm%dis%src >= 4) call restart_write_cell(un, s%fxdr)
   if (is_root) close(un)
 end subroutine
 
@@ -511,7 +577,8 @@ subroutine restore_dissol(gm, p, g, s)
   if (is_root) open(newunit=un, file=fname, form='unformatted', status='old')
   call restart_read_cell(un, s%fxd)
   if (gm%dis%sink) call restart_read_cell(un, s%fxdi)
-  if (gm%dis%src == 3) call restart_read_cell(un, gm%dis%frn)
+  if (gm%dis%src == 3 .or. gm%dis%src == 5) call restart_read_cell(un, gm%dis%frn)
+  if (gm%dis%src >= 4) call restart_read_cell(un, s%fxdr)
   if (is_root) close(un)
 end subroutine
 

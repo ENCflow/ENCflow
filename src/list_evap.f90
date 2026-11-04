@@ -26,6 +26,8 @@ module list_evap
     real :: lat = -9999.0                          ! 代表緯度 (deg。モード3,4で必須)
     real :: temp_normal(1:12) = -9999.0            ! 月平均気温の平年値 (℃。モード4の
                                                    !   熱指数 I の算定用)
+    real :: evap_hglim = -9999.0                   ! 地下水の段の抑制を始める貯留量 (m。
+                                                   !   未指定なら抑制なし。全モード共通。§27.2)
   end type
 
 contains
@@ -43,11 +45,12 @@ subroutine list_evap_read(p, list)
   real :: evap_kc
   real :: lat
   real :: temp_normal(1:12)
+  real :: evap_hglim
   integer :: un
   integer :: ios
   character(len=1024) :: iom
 
-  namelist /list_evap/ f_evmodel, evap0, evap_monthly, evap_kc, lat, temp_normal
+  namelist /list_evap/ f_evmodel, evap0, evap_monthly, evap_kc, lat, temp_normal, evap_hglim
 
   ! ネームリストにありながらファイルに記述のなかった変数は、
   ! 事前に保存されていた値がそのまま保持される
@@ -57,6 +60,7 @@ subroutine list_evap_read(p, list)
   evap_kc = list%evap_kc
   lat = list%lat
   temp_normal = list%temp_normal
+  evap_hglim = list%evap_hglim
 
   call par_info("reading list_evap in "//trim(p%fn_evap))
   open(newunit=un, file=trim(p%fn_evap), status='old', iostat=ios, iomsg=iom)
@@ -74,6 +78,7 @@ subroutine list_evap_read(p, list)
   list%evap_kc = evap_kc
   list%lat = lat
   list%temp_normal = temp_normal
+  list%evap_hglim = evap_hglim
 
 end subroutine
 

@@ -39,6 +39,24 @@ if [ -d save_bed_serial ]; then
         rc=1
     fi
 fi
+# 崖錐の溶食(§86.7)
+set -o pipefail
+mpirun -np "$NP" $MPIRUN_OPTS ./encflow_mpi param_talus0.txt | tee Screen_talus0.log || exit 1
+mpirun -np "$NP" $MPIRUN_OPTS ./encflow_mpi param_talus1.txt | tee Screen_talus1.log || exit 1
+set +o pipefail
+echo ""
+python3 "$sdir/Check_talus.py" result_talus0 result_talus1 0.6666667 0.2 || rc=1
+if [ -d result_talus1_serial ]; then
+    ok=1
+    for f in Z9998.txt Sd9998.txt Ht9998.txt; do
+        cmp -s result_talus1/$f result_talus1_serial/$f || { echo "MISMATCH: result_talus1/$f != result_talus1_serial/$f" >&2; ok=0; }
+    done
+    if [ $ok -eq 1 ]; then
+        echo "=== result_talus1: Z/Sd/Ht are identical to the serial result (result_talus1_serial) ==="
+    else
+        rc=1
+    fi
+fi
 # 窓版(rf_rc = 3 m)
 set -o pipefail
 mpirun -np "$NP" $MPIRUN_OPTS ./encflow_mpi param_rc.txt | tee Screen_rc.log || exit 1

@@ -647,6 +647,7 @@ subroutine gwflow_conduit_calc(gwc, lat, p, g, s, it, dts)
             if (fx > 0.0) then
               s%hg(i,j) = s%hg(i,j) - fx
               s%hgc(i,j) = s%hgc(i,j) + fx
+              if (allocated(s%fxdr)) s%fxdr(i,j) = s%fxdr(i,j) + fx   ! 溶食の涵養源(dissol_src=4,5)
             end if
           else if (hcnd > hother) then
             capo = s%sd(i,j) * g%sy0
@@ -663,6 +664,7 @@ subroutine gwflow_conduit_calc(gwc, lat, p, g, s, it, dts)
             if (fx > 0.0) then
               s%hg2(i,j) = s%hg2(i,j) - fx
               s%hgc(i,j) = s%hgc(i,j) + fx
+              if (allocated(s%fxdr)) s%fxdr(i,j) = s%fxdr(i,j) + fx   ! 溶食の涵養源(dissol_src=4,5)
             end if
           else if (hcnd > hother) then
             fx = min(gwc%kleakc(i,j) * dts, s%hgc(i,j), max(gwc%cap2 - s%hg2(i,j), 0.0))

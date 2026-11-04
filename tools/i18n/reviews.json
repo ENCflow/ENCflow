@@ -104,9 +104,9 @@
     {
       "source": "docs/users_guide.md",
       "target": "docs/en/users_guide.md",
-      "source_sha256": "deadfde300968b89110c250733a1c5bd1177b5e7545278b0805d2902f41100e9",
-      "target_sha256": "385c861a2084dd0ffc62e3efe1aa3d4d775550e9a9e75f588f62049ce52468f6",
-      "reviewer": "Claude (Claude Code session; lava temperature mode: chapter line and parameter count 764 -> 774 changed in both files, compared side by side)",
+      "source_sha256": "4d08d25b8516444433f5e5fe90364b4fa6135a937d5eee3294a84894dd3bd08f",
+      "target_sha256": "fee89ec217233c14c8189b20c632b405fa8df7433eed5d8e74818b86380e707a",
+      "reviewer": "Claude (Claude Code session; merge of claude/ecstatic-edison-e51vrz into main: both sides changed this pair; the merged files differ from main's recorded version only by the branch's passages (gl_lc, glacier_valley, test/glacier row, total count 776), compared side by side in Japanese and English)",
       "method": "assistant",
       "reviewed_on": "2026-11-04"
     },
@@ -239,8 +239,8 @@
     {
       "source": "docs/users_guide/forcing.md",
       "target": "docs/en/users_guide/forcing.md",
-      "source_sha256": "3bba4256aaddc660ced539411a371876f657e41f961291f64f3bf4e86ba5bc13",
-      "target_sha256": "899a3b56ee0dfd9bc687899bf20a7aa7bbac95b804e66bd284d7de52d79cce38",
+      "source_sha256": "a77dc8490cbf1b979b0d388fb7c9c526e913fa9e4e485cb30cf37b1aa7128025",
+      "target_sha256": "2c74ad73a447e852eb0a27a1f478fbfb639b0a08ea258d83e5393c00f47738df",
       "reviewer": "Claude (Claude Code session; full-text content and lexical review, no model execution)",
       "method": "assistant",
       "reviewed_on": "2026-11-04"
@@ -248,8 +248,8 @@
     {
       "source": "docs/users_guide/forcing_models.md",
       "target": "docs/en/users_guide/forcing_models.md",
-      "source_sha256": "9a144aff2972ef0133fa98ffbf58860db652e2bbf85f83c64e8122691dc5e5ac",
-      "target_sha256": "53ea0e7447314aca18d1cb56e859eab502169f199f40cfe8446b58f0dad965fa",
+      "source_sha256": "1ef6a1e0da33191f8b04855444f9e3b918e6fcfab35b3a6909a7c317e8708511",
+      "target_sha256": "cec1f13751bb3497d458f5ecc9b972c5f95474a73fbc22596c23fec8f4026d0d",
       "reviewer": "Claude (Claude Code session; full-text content and lexical review, no model execution)",
       "method": "assistant",
       "reviewed_on": "2026-11-04"
@@ -266,20 +266,20 @@
     {
       "source": "docs/users_guide/geomorph.md",
       "target": "docs/en/users_guide/geomorph.md",
-      "source_sha256": "64e29a82aa27ec2c5c36ec24bc9de11e5be14e50644882ad810d85df678f6d08",
-      "target_sha256": "d31aff0ecd82ac9f86922aa8d6fb7e9cd59d4f6491c4dc92bdb63248ae2916b1",
-      "reviewer": "Claude (Claude Code session; after merging origin/main, confirmed by git diff that ja and en differ from main only by the debris_fan sentences added and reviewed in 0809f86; both sides re-read)",
+      "source_sha256": "d840a85925d5cc5583e097098e962f63ed1445945af07e1a5b7ef1e6f2bb37e7",
+      "target_sha256": "4ffab5e577f0cb8fbacb6b78c9d813aea2ca52f4b0acc1fad60c622d5ade5cb4",
+      "reviewer": "Claude (Claude Code session; merge of main into the branch: main's additions (dissol_src 4/5, talus dissolution, glacier, evapdry, stone_forest, glacier_valley) and the branch's edits (§91/§92 and the debris examples) both present in the two languages, compared)",
       "method": "assistant",
       "reviewed_on": "2026-11-04"
     },
     {
       "source": "docs/users_guide/glacier.md",
       "target": "docs/en/users_guide/glacier.md",
-      "source_sha256": "2e4dcc9fc39537a311ddd148f546bab4f214a427f02485f237c4fe9d0b636052",
-      "target_sha256": "3728fe77c8e517c96845d5a08668966be73604240fe62cd05dfb3ee927fcebe8",
-      "reviewer": "Claude (Claude Code session; glacier avalanche D-infinity change: changed passages compared side by side with the Japanese source, unchanged parts as recorded earlier)",
+      "source_sha256": "73cb30561b968080962ed776bd3df76b6496132e57332e84ca3f4bb54727e811",
+      "target_sha256": "84c44eb98e9e9951958ead8c8431b9fe4f4fcb86d5317ec8c9a3d7ed1bba88f3",
+      "reviewer": "Claude (Claude Code session; glacier_valley example registration: changed passages compared side by side with the Japanese source, unchanged parts as recorded earlier)",
       "method": "assistant",
-      "reviewed_on": "2026-11-03"
+      "reviewed_on": "2026-11-04"
     },
     {
       "source": "docs/users_guide/gwflow.md",
@@ -383,9 +383,9 @@
     {
       "source": "docs/users_guide/params_index.md",
       "target": "docs/en/users_guide/params_index.md",
-      "source_sha256": "234792fa39107e6788f31f01fdf017d089d4f4e3471f99c51b518e4a3d83ca9f",
-      "target_sha256": "3edcc95708b882251c61f032b138070816f7656d0974a29de7c7b9510de722cc",
-      "reviewer": "Claude (Claude Code session; lava temperature mode: the 10 new &list_lavaflow rows inserted at the same positions in both files and the count 774 updated, checked with tools/params_index/check.py)",
+      "source_sha256": "3825c84dba7ec57ec3155e61ddfd014e1524d58bca5aeb526786eef3bed5e2da",
+      "target_sha256": "cbe2cf4fa1d196c1c16f59fdb209f59bf9d70f2936752f1788a18bee9f3d5090",
+      "reviewer": "Claude (Claude Code session; merge of claude/ecstatic-edison-e51vrz into main: both sides changed this pair; the merged files differ from main's recorded version only by the branch's passages (gl_lc, glacier_valley, test/glacier row, total count 776), compared side by side in Japanese and English)",
       "method": "assistant",
       "reviewed_on": "2026-11-04"
     },
@@ -428,9 +428,9 @@
     {
       "source": "docs/users_guide/sediment.md",
       "target": "docs/en/users_guide/sediment.md",
-      "source_sha256": "e3b167a71bf0ec2ff2f1a525ccd13e7a067858ff03e0ae8eb00b999750161332",
-      "target_sha256": "ab0c0bc5da257b997cc1c65a65f23bfe079cd2cc94a284a6d10ff7fe377fc349",
-      "reviewer": "Claude (Claude Code session; the definition of g_e for rock erosion by debris flows (g/(1 + |∇z|²) with the minmod ground slope, §91) updated in both languages and compared)",
+      "source_sha256": "1f78c52eb12b7ecdcc7e936c4f57443b69dd212093bda6ff86aba69bf49be169",
+      "target_sha256": "acf176dd17ad7d0fa533aefbc81bdca70dfd07b6d819ef6a2126e86602b50bc5",
+      "reviewer": "Claude (Claude Code session; merge of main into the branch: main's additions (dissol_src 4/5, talus dissolution, glacier, evapdry, stone_forest, glacier_valley) and the branch's edits (§91/§92 and the debris examples) both present in the two languages, compared)",
       "method": "assistant",
       "reviewed_on": "2026-11-04"
     },
@@ -491,9 +491,9 @@
     {
       "source": "docs/users_guide/usecases.md",
       "target": "docs/en/users_guide/usecases.md",
-      "source_sha256": "ecd827b3503335aa1d86df6ce0da1503d2704f77e8c5795b82defb176bc87387",
-      "target_sha256": "18f77ab193d2dada272f9ccf38a6d6dbce9cd7e56452f39268ced64eda99a785",
-      "reviewer": "Claude (Claude Code session; the row or sentence for the new example examples/debris_fan added in both languages and compared side by side; unchanged parts as recorded earlier)",
+      "source_sha256": "37db2706408324fe22addb7ce1326d7d33d900670a60fb500c1424896ccc4ee8",
+      "target_sha256": "d007dc295d07a82d45a9361e4035232d56871f45f6add02a98acb8d323e99172",
+      "reviewer": "Claude (Claude Code session; merge of main into the branch: main's additions (dissol_src 4/5, talus dissolution, glacier, evapdry, stone_forest, glacier_valley) and the branch's edits (§91/§92 and the debris examples) both present in the two languages, compared)",
       "method": "assistant",
       "reviewed_on": "2026-11-04"
     },
@@ -617,11 +617,11 @@
     {
       "source": "examples/List_samples/list_evap.txt",
       "target": "examples/List_samples/en/list_evap.txt",
-      "source_sha256": "482291c1edc53a6498740d43d409244c761eb90678a48dd1c6f04acb5cf8d9d0",
-      "target_sha256": "8cd74036fe0798840c90b1c692ca65ad2b34e6baf93bc6b595bba5e1a02078a0",
+      "source_sha256": "be9f3e3892f141ed733c2898574600cc9ebf4bf9ff07d10872a27b6fa590fabb",
+      "target_sha256": "241c547367ec830815a50e7c2f4a33c6b30c4a55b2c5e07f2f25aa7a973b6d68",
       "reviewer": "Claude (Claude Code session; full-text content and lexical review, no model execution)",
       "method": "assistant",
-      "reviewed_on": "2026-10-24"
+      "reviewed_on": "2026-11-04"
     },
     {
       "source": "examples/List_samples/list_geoinfo.txt",
@@ -635,20 +635,20 @@
     {
       "source": "examples/List_samples/list_geomorph.txt",
       "target": "examples/List_samples/en/list_geomorph.txt",
-      "source_sha256": "d7a777da8ee80e9da114ad054ee8a728044b4cac6620fd6a1ed8f38e98442643",
-      "target_sha256": "9cb66fe2fc1d1060510858cf562ea56f9c9519197976b741a812d82529a6f772",
-      "reviewer": "Claude (assistant)",
+      "source_sha256": "25170e316548eeda7e3385c76379ef8fca57535fdcbe70bbb2e0865db371c3d7",
+      "target_sha256": "4877d8452da18dea802e4f14c9d52f25c92e3dd35a90b89d5011a115c4e116dd",
+      "reviewer": "Claude (Claude Code session; compared the Japanese source with the English mirror after adding the base-level section of tower_karst and correcting the water-table statement of dissol_src 4/5, 2026-11-04)",
       "method": "assistant",
-      "reviewed_on": "2026-11-02"
+      "reviewed_on": "2026-11-04"
     },
     {
       "source": "examples/List_samples/list_glacier.txt",
       "target": "examples/List_samples/en/list_glacier.txt",
-      "source_sha256": "d97324cfe1d884499a2cf4d676224df64688e7e360c37c5037bd39ee072508d9",
-      "target_sha256": "b028f561a2a78f19feefacdcf10e31a128c8068135c69479d6271e51da95cbc4",
-      "reviewer": "Claude (Claude Code session; glacier avalanche D-infinity change: changed passages compared side by side with the Japanese source, unchanged parts as recorded earlier)",
+      "source_sha256": "6027bf0879bd5a259882cda8051278b3ff8f7bfe682accbf01095950f2694098",
+      "target_sha256": "b89554adff109f22d3f621a98f11aafe1eb46b9c9b623d78bb2a39d9d36e6797",
+      "reviewer": "Claude (Claude Code session; gl_lc default max(500 m, 2dx), §45.4; full-text content and lexical review, no model execution)",
       "method": "assistant",
-      "reviewed_on": "2026-11-03"
+      "reviewed_on": "2026-11-04"
     },
     {
       "source": "examples/List_samples/list_gwflow.txt",
@@ -815,9 +815,9 @@
     {
       "source": "examples/README.md",
       "target": "examples/README.en.md",
-      "source_sha256": "ab8e40786185374acc750ee72eedf36365f769a77ae8ac27d83977137d38e42e",
-      "target_sha256": "e4b5c7161029f9c36114a01c2e213905fd020039ed109ac7986607bd05bd1fb4",
-      "reviewer": "Claude (Claude Code session; after merging origin/main, confirmed by git diff that ja and en differ from main only by the debris_fan table row and index line added and reviewed in 0809f86; both sides re-read)",
+      "source_sha256": "fc842a3bb7f28fbea5a714380eae2930639ce403e8285c79d7d695c773b669f3",
+      "target_sha256": "8ec98fa8d77fa398380b9cefe44d693660b22e06b0546b60403ab80718f046bb",
+      "reviewer": "Claude (Claude Code session; merge of main into the branch: main's additions (dissol_src 4/5, talus dissolution, glacier, evapdry, stone_forest, glacier_valley) and the branch's edits (§91/§92 and the debris examples) both present in the two languages, compared)",
       "method": "assistant",
       "reviewed_on": "2026-11-04"
     },
@@ -1247,8 +1247,8 @@
     {
       "source": "examples/catchment_metal/README.md",
       "target": "examples/catchment_metal/en/README.md",
-      "source_sha256": "9172f9e25259ae458f54866abe659e5112c455a2f7da786f3cc642b9d0d9972f",
-      "target_sha256": "f74bd47a54982647e16524cda2e32bfeb7396837269f0cd440c60221203ee138",
+      "source_sha256": "c5307f6d0e229f37fb69300f51ae34b2bde50fb9d6c71aacb8f7a6b1fd14e360",
+      "target_sha256": "0d3e384910dd4377e84c9551da949dfc677d82f96f11280fd21d87959abf88dc",
       "reviewer": "Claude (Claude Code session; full-text content and lexical review, no model execution)",
       "method": "assistant",
       "reviewed_on": "2026-11-04"
@@ -1326,10 +1326,19 @@
       "reviewed_on": "2026-11-04"
     },
     {
+      "source": "examples/catchment_metal/figs/step6b.png",
+      "target": "examples/catchment_metal/en/figs/step6b.png",
+      "source_sha256": "7331da849501d34ad057dfcb0b572393c06615fa286d5955d5c6e2b555705bc9",
+      "target_sha256": "dad2eb3971a98356e153e412ce6590064b384733024694109e18b29b32054dc5",
+      "reviewer": "Claude (Claude Code session; full-text content and lexical review, no model execution)",
+      "method": "assistant",
+      "reviewed_on": "2026-11-04"
+    },
+    {
       "source": "examples/catchment_metal/figs/summary.png",
       "target": "examples/catchment_metal/en/figs/summary.png",
-      "source_sha256": "b9a5c012a2f6048443baf48619604cc852aa5c2cb8f5c5116e985dda40e6647f",
-      "target_sha256": "a1e4cc4e058639bd380697604246ad6f8d0a810debbed3da92c82839192922a4",
+      "source_sha256": "bce73d309ab9593cec80f1048015624edbe1abbb03a964b7beab754d27791761",
+      "target_sha256": "81376eaef2ddab36b5958c576f254fd8d013bde87c835ac02ae78ef946880481",
       "reviewer": "Claude (Claude Code session; full-text content and lexical review, no model execution)",
       "method": "assistant",
       "reviewed_on": "2026-11-04"
@@ -1614,13 +1623,58 @@
       "reviewed_on": "2026-10-31"
     },
     {
+      "source": "examples/glacier_valley/README.md",
+      "target": "examples/glacier_valley/en/README.md",
+      "source_sha256": "919ade5e0ea9353856c0ff466e68bf51e05ee0a4faeb58d8885a4b2f79905a74",
+      "target_sha256": "ff3a51989d66c9b56a3907ece9781e53ff653e8f11efd0eca0da9fbde73ad994",
+      "reviewer": "Claude (Claude Code session; new example glacier_valley: English mirror written alongside the Japanese source and compared section by section, including numbers, figure captions and references)",
+      "method": "assistant",
+      "reviewed_on": "2026-11-04"
+    },
+    {
+      "source": "examples/glacier_valley/figs/glacier.png",
+      "target": "examples/glacier_valley/en/figs/glacier.png",
+      "source_sha256": "ee9e20b4c98c041dae06204ca4079947bf4c334383d26dd3c17cb59717b3ea6a",
+      "target_sha256": "c90bb35544d1b433400dd9dc1d8dc05315e1c0251e2e94f80c1b9897e6a0a409",
+      "reviewer": "Claude (Claude Code session; English figure drawn by plot_results.py en from the same results as the Japanese figure (2026-11-04); titles, labels and legends compared, same data and layout)",
+      "method": "assistant",
+      "reviewed_on": "2026-11-04"
+    },
+    {
+      "source": "examples/glacier_valley/figs/setup.png",
+      "target": "examples/glacier_valley/en/figs/setup.png",
+      "source_sha256": "f92cf08e91710c45454dc40ded8f49f66090f1d5929b0065548ebda950068a55",
+      "target_sha256": "b7bf42420bee2bc91445dd767b0a815b649377fb4b7795098009f681ec8f350a",
+      "reviewer": "Claude (Claude Code session; English figure drawn by plot_results.py en from the same results as the Japanese figure (2026-11-04); titles, labels and legends compared, same data and layout)",
+      "method": "assistant",
+      "reviewed_on": "2026-11-04"
+    },
+    {
+      "source": "examples/glacier_valley/figs/valley.png",
+      "target": "examples/glacier_valley/en/figs/valley.png",
+      "source_sha256": "bdc513789bf6cc485baf49e54f0be63469a98a8ff8c01b23f1c1890483b341f6",
+      "target_sha256": "f438ef7818061f53d70142737728ae3a01af257d6647ca8f16a2645f2e26dcc6",
+      "reviewer": "Claude (Claude Code session; English figure drawn by plot_results.py en from the same results as the Japanese figure (2026-11-04); titles, labels and legends compared, same data and layout)",
+      "method": "assistant",
+      "reviewed_on": "2026-11-04"
+    },
+    {
+      "source": "examples/glacier_valley/figs/x10.png",
+      "target": "examples/glacier_valley/en/figs/x10.png",
+      "source_sha256": "691e13d7221502248abce3656ef51e42dec93bb768aa5c9c6d3899186bd221d2",
+      "target_sha256": "2985a926020e53b9b8706aee822a2083cf0704e19210bea4bc719e678c52203c",
+      "reviewer": "Claude (Claude Code session; English figure drawn by plot_results.py en from the same results as the Japanese figure (2026-11-04); titles, labels and legends compared, same data and layout)",
+      "method": "assistant",
+      "reviewed_on": "2026-11-04"
+    },
+    {
       "source": "examples/karst/README.md",
       "target": "examples/karst/en/README.md",
-      "source_sha256": "c342afa61da01712f3781d0527fbf24b9afd8de3522fda1382f8d2aacf2f26e9",
-      "target_sha256": "a3fafc9ca96d4f9adb6cd00139abb23f0d6976122bc120d9165897956a17b1db",
-      "reviewer": "Claude (Claude Code session; Japanese source and English mirror updated together after recomputing with the main default f_opening_dynamic = 3: changed table values and text compared line by line, values checked against the plot_results.py output and an analysis script; model run by the session)",
+      "source_sha256": "a6210e993bec0638f4e827f3bbc643772987c6e0dfcac67baa2e94d462cd91ab",
+      "target_sha256": "460082a1a7726762cebbee91e4cc6e1568ef17d5632266b5f310a449f8236cc7",
+      "reviewer": "Claude (Claude Code session; compared the Japanese source with the English mirror after the karst dissolution updates of 2026-11-03/04: talus dissolution, dissol_src 4/5, fn_dissol multiplier, tests H/I/talus, steady and stone-forest examples)",
       "method": "assistant",
-      "reviewed_on": "2026-11-02"
+      "reviewed_on": "2026-11-04"
     },
     {
       "source": "examples/karst/figs/evolution.png",
@@ -2417,29 +2471,47 @@
     {
       "source": "examples/tower_karst/README.md",
       "target": "examples/tower_karst/en/README.md",
-      "source_sha256": "dd15ad5c4ff1a04130cb8adc740d7cfde5c6910118e394ce2e2368ace881af35",
-      "target_sha256": "d787e4fd9b7fe23baae0b33abca11ecf02d8ae746a3ed245f504687672ca532c",
-      "reviewer": "Claude (Claude Code session; Japanese source and English mirror updated together after recomputing with the main default f_opening_dynamic = 3: changed table values and text compared line by line, values checked against the plot_results.py output and the log; model run by the session)",
+      "source_sha256": "c67c1cb953bfb8c7eaf74e3b0086421572a6aa2cd8c99345f12e150f9d25b0d4",
+      "target_sha256": "1fbb5ef859ee6074840271595c71900df5bbb52806aca5ebeba33dcea48d2203",
+      "reviewer": "Claude (Claude Code session; compared the Japanese source with the English mirror after adding the rf_hc = 50 m sensitivity subsection of tower_karst, 2026-11-04)",
       "method": "assistant",
-      "reviewed_on": "2026-11-02"
+      "reviewed_on": "2026-11-04"
     },
     {
       "source": "examples/tower_karst/figs/hydrograph.png",
       "target": "examples/tower_karst/en/figs/hydrograph.png",
-      "source_sha256": "3cbb99780468efea921aaac5b1a7bf7b8e293116ee59ea2f316e30dd1dfb4acb",
-      "target_sha256": "f0b214c6b49865ac12501e758d622f4362f7cb75c7a6024bb73a7649afa6b075",
-      "reviewer": "Claude (Claude Code session; both images drawn by plot_results.py and plot_results.py en from the same results recomputed with f_opening_dynamic = 3 on 2026-11-02, compared side by side: same plotted data and layout, labels translated)",
+      "source_sha256": "2274f8cd61fac2f5d84078201d29c255f3d699e093b236b85be525ef0f753e2e",
+      "target_sha256": "2415b791302ba6063f2b935b7adc744c76765f30102a403db8b071765cdb31a3",
+      "reviewer": "Claude (Claude Code session; compared the Japanese source with the English mirror after the karst dissolution updates of 2026-11-03/04: talus dissolution, dissol_src 4/5, fn_dissol multiplier, tests H/I/talus, steady and stone-forest examples)",
       "method": "assistant",
-      "reviewed_on": "2026-11-02"
+      "reviewed_on": "2026-11-04"
     },
     {
       "source": "examples/tower_karst/figs/maps.png",
       "target": "examples/tower_karst/en/figs/maps.png",
-      "source_sha256": "9e1f25d51c1a0a700671e0c2eb497ae47fec1d97cf5d2b5ea25be039677e6897",
-      "target_sha256": "7b73b320fc1a0fc77616da6f3dc520806411d10a7b47a88d99ed405da7f4570c",
-      "reviewer": "Claude (Claude Code session; both images drawn by plot_results.py and plot_results.py en from the same results recomputed with f_opening_dynamic = 3 on 2026-11-02, compared side by side: same plotted data and layout, labels translated)",
+      "source_sha256": "08262a30c7844f43d936c194fd23327217ee467004cdee0fdb64aae17d8bd9d7",
+      "target_sha256": "a5835d0e4d4419eeab6fc0b31d779d61c8d8539b7f014830f202e0957f369ae4",
+      "reviewer": "Claude (Claude Code session; compared the Japanese source with the English mirror after the karst dissolution updates of 2026-11-03/04: talus dissolution, dissol_src 4/5, fn_dissol multiplier, tests H/I/talus, steady and stone-forest examples)",
       "method": "assistant",
-      "reviewed_on": "2026-11-02"
+      "reviewed_on": "2026-11-04"
+    },
+    {
+      "source": "examples/tower_karst/figs/maps_base.png",
+      "target": "examples/tower_karst/en/figs/maps_base.png",
+      "source_sha256": "08f721c521ba3249151275148c9bf7becdf52f01c6ed6526b03b2177c95176d6",
+      "target_sha256": "d82d3dace0a849c12916b2e67f9baabd215a73dbce3a711f9b96c05c6d01fa65",
+      "reviewer": "Claude (Claude Code session; compared the Japanese source with the English mirror after adding the base-level section of tower_karst and correcting the water-table statement of dissol_src 4/5, 2026-11-04)",
+      "method": "assistant",
+      "reviewed_on": "2026-11-04"
+    },
+    {
+      "source": "examples/tower_karst/figs/maps_base_hc50.png",
+      "target": "examples/tower_karst/en/figs/maps_base_hc50.png",
+      "source_sha256": "06f81bd4abc9cd7c95251d38d055e35baa0522036bd38f7196ea8aa9fb0fda7a",
+      "target_sha256": "bb7213ce07a2ea019e1c92b1ef196d10ed6d1742c362eafb1e7e3f2a951a8069",
+      "reviewer": "Claude (Claude Code session; compared the Japanese source with the English mirror after adding the rf_hc = 50 m sensitivity subsection of tower_karst, 2026-11-04)",
+      "method": "assistant",
+      "reviewed_on": "2026-11-04"
     },
     {
       "source": "examples/tower_karst/figs/mechanism.png",
@@ -2460,6 +2532,24 @@
       "reviewed_on": "2026-11-02"
     },
     {
+      "source": "examples/tower_karst/figs/sections_base.png",
+      "target": "examples/tower_karst/en/figs/sections_base.png",
+      "source_sha256": "3c68a38d5ff3bebdb8fd87da4653da9c89325702267e50228064a73bd85a27ff",
+      "target_sha256": "dfbe1ad2b94c580b2d930002e46c898cd2f8a1ac59971317d868a5e1c8c8fec7",
+      "reviewer": "Claude (Claude Code session; compared the Japanese source with the English mirror after adding the base-level section of tower_karst and correcting the water-table statement of dissol_src 4/5, 2026-11-04)",
+      "method": "assistant",
+      "reviewed_on": "2026-11-04"
+    },
+    {
+      "source": "examples/tower_karst/figs/sections_base_hc50.png",
+      "target": "examples/tower_karst/en/figs/sections_base_hc50.png",
+      "source_sha256": "e4d1b70407ce356c5408951c950128fda8e85d95bfe77698568bcceb94045a66",
+      "target_sha256": "af6467b3c1930649f14c54316b4c121d09abb4c5ec81120ca5c013d16e543edc",
+      "reviewer": "Claude (Claude Code session; compared the Japanese source with the English mirror after adding the rf_hc = 50 m sensitivity subsection of tower_karst, 2026-11-04)",
+      "method": "assistant",
+      "reviewed_on": "2026-11-04"
+    },
+    {
       "source": "examples/tower_karst/figs/setup.png",
       "target": "examples/tower_karst/en/figs/setup.png",
       "source_sha256": "34e0f1c50f3d3c3e0d9cc1604e1ea22a258a200460d7bd12ce8b8692abc04f36",
@@ -2471,11 +2561,29 @@
     {
       "source": "examples/tower_karst/figs/towers.png",
       "target": "examples/tower_karst/en/figs/towers.png",
-      "source_sha256": "47c04e8a028e84ccd5f9fe066fbb07bfb47694989e19218bc2a1c0fc330f2697",
-      "target_sha256": "c4266d65b36fe5900d385f98f9e9c47b1f4431717d22eb44f89d802294f2ec8d",
-      "reviewer": "Claude (Claude Code session; both images drawn by plot_results.py and plot_results.py en from the same results recomputed with f_opening_dynamic = 3 on 2026-11-02, compared side by side: same plotted data and layout, labels translated)",
+      "source_sha256": "d4066c59b5a8a4f82983d4e54aa3840f7e248667e8039518524a1883145989bd",
+      "target_sha256": "8cc797a96e8d92ed60f051ef21530f4d510695aa448f0629056140498ffef778",
+      "reviewer": "Claude (Claude Code session; compared the Japanese source with the English mirror after the karst dissolution updates of 2026-11-03/04: talus dissolution, dissol_src 4/5, fn_dissol multiplier, tests H/I/talus, steady and stone-forest examples)",
       "method": "assistant",
-      "reviewed_on": "2026-11-02"
+      "reviewed_on": "2026-11-04"
+    },
+    {
+      "source": "examples/tower_karst/figs/towers_base.png",
+      "target": "examples/tower_karst/en/figs/towers_base.png",
+      "source_sha256": "78ff76b0339f6f34b26e668e68aec1b62a41180c9085e58c1def714c23e95eef",
+      "target_sha256": "53c68962a6fa367f8ccfabe51c36e6bfeca0f1ec300a86144a85cefb13dcdf32",
+      "reviewer": "Claude (Claude Code session; compared the Japanese source with the English mirror after adding the base-level section of tower_karst and correcting the water-table statement of dissol_src 4/5, 2026-11-04)",
+      "method": "assistant",
+      "reviewed_on": "2026-11-04"
+    },
+    {
+      "source": "examples/tower_karst/figs/towers_base_hc50.png",
+      "target": "examples/tower_karst/en/figs/towers_base_hc50.png",
+      "source_sha256": "1b540a6edcadc7fcfc0201525a842c5852515d673b56113c8b2ffa02277a400c",
+      "target_sha256": "52a20a150ee6b0c802e71f37cb4088953690f1f13f1c3c466b45f3053492bc56",
+      "reviewer": "Claude (Claude Code session; compared the Japanese source with the English mirror after adding the rf_hc = 50 m sensitivity subsection of tower_karst, 2026-11-04)",
+      "method": "assistant",
+      "reviewed_on": "2026-11-04"
     },
     {
       "source": "examples/tsunami_coast/README.md",
@@ -2597,9 +2705,9 @@
     {
       "source": "test/README.md",
       "target": "test/README.en.md",
-      "source_sha256": "1b7882e13344527d923c24ad4d963cc0fde10369b6699de46db3b759d7045c83",
-      "target_sha256": "d73b30286aea026e4e9c81c2c4038a3d88267927873260c73c8290f6db03b5d6",
-      "reviewer": "Claude (Claude Code session; the test/dbonset row extended in both indexes to the safety factor (D∞, §92) and compared)",
+      "source_sha256": "68abc38dfab397e21cc5c9da4bb05029c40171cc5560ea28158187265abc356e",
+      "target_sha256": "ebba504064b850b103dcfc866b8ae67a4ea7d61f18ac2b34a39eb08c6641babb",
+      "reviewer": "Claude (Claude Code session; merge of main into the branch: main's additions (dissol_src 4/5, talus dissolution, glacier, evapdry, stone_forest, glacier_valley) and the branch's edits (§91/§92 and the debris examples) both present in the two languages, compared)",
       "method": "assistant",
       "reviewed_on": "2026-11-04"
     },
@@ -3011,11 +3119,11 @@
     {
       "source": "test/dissol/README.md",
       "target": "test/dissol/en/README.md",
-      "source_sha256": "74b5ee460b9f8614070a15b761eac9d736722c163bda1a93a813e12996ecfa50",
-      "target_sha256": "818976a8629c42c559053831858fc7cd1ecd9386069b9778141cadbeceef77a4",
-      "reviewer": "Claude (Claude Code session; full-text content and lexical review, no model execution)",
+      "source_sha256": "777a5d55c4a3d6a02f5a8a44e503f66752473fc5dd589fd2f590ea9d72c52106",
+      "target_sha256": "02b31a751830c83f70ea6cbbfb23f3e6580ba51fe977a58667b1c085007938bf",
+      "reviewer": "Claude (Claude Code session; compared the Japanese source with the English mirror after the karst dissolution updates of 2026-11-03/04: talus dissolution, dissol_src 4/5, fn_dissol multiplier, tests H/I/talus, steady and stone-forest examples)",
       "method": "assistant",
-      "reviewed_on": "2026-10-24"
+      "reviewed_on": "2026-11-04"
     },
     {
       "source": "test/driftwood/README.md",
@@ -3034,6 +3142,15 @@
       "reviewer": "Claude (Claude Code session; f_opening_dynamic default switch)",
       "method": "assistant",
       "reviewed_on": "2026-10-31"
+    },
+    {
+      "source": "test/evapdry/README.md",
+      "target": "test/evapdry/en/README.md",
+      "source_sha256": "73f6609bdbcefa97e527e5ccbfd8ad0af0b71fa67f8e404f3661f4bb0502ecf9",
+      "target_sha256": "efb6e24917b5ee92ffb68858d1b5cc7522cbbf55260805094ac0d0dcae3550c1",
+      "reviewer": "Claude (Claude Code session; full-text content and lexical review, no model execution)",
+      "method": "assistant",
+      "reviewed_on": "2026-11-04"
     },
     {
       "source": "test/fixation/README.md",
@@ -3092,11 +3209,11 @@
     {
       "source": "test/glacier/README.md",
       "target": "test/glacier/en/README.md",
-      "source_sha256": "2f3fd2c1abe7ee7d31f0e336719eee190d6fccb3387303d9731c27a60ee74110",
-      "target_sha256": "21a5df11231bdf22e487292f7737e26cf2181a890571bcae38bec0fb7bbc6ae2",
-      "reviewer": "Claude (Claude Code session; glacier avalanche D-infinity change: changed passages compared side by side with the Japanese source, unchanged parts as recorded earlier)",
+      "source_sha256": "6fba3dbafb5bfdb9f174e6636a949f6095fec127f5fb373ac019f25b88d259a0",
+      "target_sha256": "9d4c4f1e65f6a5595eb82dceb2f03749a47ebdc86c0989126a05dc11fb574fef",
+      "reviewer": "Claude (Claude Code session; gl_lc default max(500 m, 2dx), §45.4; full-text content and lexical review, no model execution)",
       "method": "assistant",
-      "reviewed_on": "2026-11-03"
+      "reviewed_on": "2026-11-04"
     },
     {
       "source": "test/glacier/figs/avalanche.png",
@@ -3124,6 +3241,15 @@
       "reviewer": "Claude (Claude Code session; English figure drawn by the same script with the en switch; visual check)",
       "method": "assistant",
       "reviewed_on": "2026-11-03"
+    },
+    {
+      "source": "test/glacier/figs/lc.png",
+      "target": "test/glacier/en/figs/lc.png",
+      "source_sha256": "f9cb0260892e12c7b8fcb0800b070fcb25b9fe95b3e0fdcc7b13cc5131e9b924",
+      "target_sha256": "a2f2a65ce19922362ee5968f03b5445a62e0b9e22e228cc3f710d0c493b6afe1",
+      "reviewer": "Claude (Claude Code session; English figure drawn by the same script with the en switch; visual check)",
+      "method": "assistant",
+      "reviewed_on": "2026-11-04"
     },
     {
       "source": "test/gtif/README.md",
@@ -3578,11 +3704,11 @@
     {
       "source": "test/rockfall/README.md",
       "target": "test/rockfall/en/README.md",
-      "source_sha256": "5eaa774c08b3b59bad16f5aa7267745e499650c6e61a012569e1aba811f799fc",
-      "target_sha256": "a2b6434af19af19018f75eff0a7988f5c9c39a876b760eceead557f353f5ebea",
-      "reviewer": "Claude (Claude Code session; full-text content and lexical review, no model execution)",
+      "source_sha256": "e8140eb825c4043e8afaec8bf4dbdeb62e0fd774f93be5511acdffd773143859",
+      "target_sha256": "d3a041d4c7b469eb6c364bf6fc7b5c454b7189932b5fcb4a1695707f9453915f",
+      "reviewer": "Claude (Claude Code session; compared the Japanese source with the English mirror after the karst dissolution updates of 2026-11-03/04: talus dissolution, dissol_src 4/5, fn_dissol multiplier, tests H/I/talus, steady and stone-forest examples)",
       "method": "assistant",
-      "reviewed_on": "2026-10-24"
+      "reviewed_on": "2026-11-04"
     },
     {
       "source": "test/rockinc/README.md",
