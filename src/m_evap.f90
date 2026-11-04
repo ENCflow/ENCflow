@@ -25,7 +25,7 @@ module m_evap
   use iso_fortran_env, only : real64
   use m_sysparam, only : t_sysparam
   use m_geoinfo, only : t_geoinfo
-  use m_state, only : t_state
+  use m_state, only : t_state, sect_cell, sect_dvh, wfr_of
   use m_boundary, only : t_boundary
   use m_intercept, only : t_intercept
   use m_meteo, only : t_meteo, meteo_temp_set, meteo_temp_cell, meteo_temp_mean
@@ -186,7 +186,7 @@ subroutine m_evap_calc(ev, p, g, b, s, ic, mt, it)
   type(t_meteo), intent(inout) :: mt
   integer, intent(in) :: it
   integer :: i, j, day
-  real :: dem, w
+  real :: dem, w, hb
   real(real64) :: acell
   logical :: canopy
 
@@ -203,7 +203,7 @@ subroutine m_evap_calc(ev, p, g, b, s, ic, mt, it)
   ! 優先順位付き減算: 樹冠保水 → 地表水 h → hrs → 地下水 hg(§27)。
   ! 体積診断の面積基底: 樹冠 = セル面積(pre と同基底)、h = af(σ・幅・
   ! 空隙を含む実効面積)、hrs / hg = gv 面積(それぞれの貯留の意味論)
-  !$omp parallel do schedule(static) private(i, j, dem, w)
+  !$omp parallel do schedule(static) private(i, j, dem, w, hb)
   do j = dcp%js, dcp%je
     do i = g%wx(1,j), g%wx(2,j)
       if (g%x(i,j) <= 0) cycle
@@ -221,10 +221,18 @@ subroutine m_evap_calc(ev, p, g, b, s, ic, mt, it)
       !     引くこと自体が現在の水面幅に比例した体積減で厳密。§26/§27)
       if (s%h(i,j) > 0.0) then
         w = min(s%h(i,j), dem)
+        hb = s%h(i,j)
         s%h(i,j) = s%h(i,j) - w
         s%e(i,j) = s%z(i,j) + s%h(i,j)
         dem = dem - w
-        ev%vrow(j,2) = ev%vrow(j,2) + real(w, real64) * real(s%af(i,j), real64) * acell
+        if (sect_cell(s, i, j)) then
+          ! σ のセルの台帳は実際に減った体積(矩形換算水深の差)で数える(§26.2。
+          ! af は水深の平均の湿潤率 v/h を含むので w × af は水面幅の分を過小に数える)
+          ev%vrow(j,2) = ev%vrow(j,2) + real(sect_dvh(s, i, j, hb, s%h(i,j)), real64) &
+                         * real(s%gv(i,j), real64) * real(wfr_of(s, i, j), real64) * acell
+        else
+          ev%vrow(j,2) = ev%vrow(j,2) + real(w, real64) * real(s%af(i,j), real64) * acell
+        end if
         if (dem <= 0.0) cycle
       end if
       ! (3) ため池・ダム/湖沼捕捉帯の貯留 hrs

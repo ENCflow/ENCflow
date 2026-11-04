@@ -586,7 +586,11 @@ subroutine apply_bedrock(gm, g, s, dts)
           if (s%hg(i,j) > cap) then
             fx = s%hg(i,j) - cap
             s%hg(i,j) = cap
-            s%h(i,j) = s%h(i,j) + fx * gw_to_h(s, i, j)   ! 河道の平面へ(§26.1)
+            if (sect_cell(s, i, j)) then
+              call sect_add_vh(s, i, j, fx * gw_to_h(s, i, j))   ! σ は体積で(§26.2)
+            else
+              s%h(i,j) = s%h(i,j) + fx * gw_to_h(s, i, j)   ! 河道の平面へ(§26.1)
+            end if
           end if
         end if
       end if

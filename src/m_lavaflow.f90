@@ -78,7 +78,7 @@ module m_lavaflow
   ! ==============================================================
   use m_sysparam, only : t_sysparam
   use m_geoinfo, only : t_geoinfo
-  use m_state, only : t_state, gw_to_h
+  use m_state, only : t_state, gw_to_h, sect_cell, sect_add_vh
   use m_boundary, only : interp_series, read_cell_file2, read_val_file2
   use m_meteo, only : t_meteo, meteo_temp_set, meteo_temp_cell
   use list_lavaflow, only : t_list_lavaflow, list_lavaflow_read, &
@@ -1150,7 +1150,11 @@ subroutine tick_solidify(lv, g, s, dtw)
             if (s%hg(i,j) > cap) then
               xg = s%hg(i,j) - cap
               s%hg(i,j) = cap
-              s%h(i,j) = s%h(i,j) + xg * gw_to_h(s, i, j)
+              if (sect_cell(s, i, j)) then
+                call sect_add_vh(s, i, j, xg * gw_to_h(s, i, j))   ! σ は体積で(§26.2)
+              else
+                s%h(i,j) = s%h(i,j) + xg * gw_to_h(s, i, j)
+              end if
               gsum = gsum + xg
             end if
           end if

@@ -75,7 +75,7 @@ module m_saltwater
   ! =====================================================================
   use m_sysparam, only : t_sysparam
   use m_geoinfo, only : t_geoinfo, zbank_min
-  use m_state, only : t_state, gw_to_h
+  use m_state, only : t_state, gw_to_h, sect_cell, sect_add_vh, wfr_of
   use m_gwflow_lateral, only : t_gwlat, t_latlayer, gwflow_lateral_geom_init, &
                                gwflow_lateral_geom_get, gwflow_lateral_layer1_get, &
                                gwflow_lateral_open_get
@@ -623,7 +623,13 @@ subroutine infiltration_partition(g, s)
         fs = min(s%fxsli(i,j), s%hss(i,j))
         if (fs > 0.0) then
           s%hss(i,j) = s%hss(i,j) - fs
-          s%hgs(i,j) = s%hgs(i,j) + fs * (s%af(i,j) / s%gv(i,j))
+          ! 断面形 σ のセルの浸透の記録は体積(矩形換算水深)なので、河道幅の
+          ! 係数だけを掛ける(§26.2。鉛直モデルの hg 加算と同じ換算)
+          if (sect_cell(s, i, j)) then
+            s%hgs(i,j) = s%hgs(i,j) + fs * wfr_of(s, i, j)
+          else
+            s%hgs(i,j) = s%hgs(i,j) + fs * (s%af(i,j) / s%gv(i,j))
+          end if
         end if
         s%fxsli(i,j) = 0.0
       end if
@@ -771,8 +777,14 @@ subroutine gw_salt_zone(sl, g, s, dts)
       if (s%hg(i,j) > capc) then
         fx = s%hg(i,j) - capc
         s%hg(i,j) = capc
-        ! 地表は河道幅セルで河道の平面に載る(体積を保つ換算。§26.1)
-        s%h(i,j) = s%h(i,j) + fx * gw_to_h(s, i, j)
+        ! 地表は河道幅セルで河道の平面に載る(体積を保つ換算。§26.1)。
+        ! 断面形 σ のセルは体積(矩形換算水深)で足す(§26.2。底層 hss は
+        ! 元々体積の単位なので下の配分はそのまま)
+        if (sect_cell(s, i, j)) then
+          call sect_add_vh(s, i, j, fx * gw_to_h(s, i, j))
+        else
+          s%h(i,j) = s%h(i,j) + fx * gw_to_h(s, i, j)
+        end if
         s%e(i,j) = s%z(i,j) + s%h(i,j)
       end if
       ! 湧出の淡塩配分(f_salt_exch=1。ヘッダ (3)・§47.5): このステップの湧出

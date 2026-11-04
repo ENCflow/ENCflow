@@ -73,6 +73,6 @@ make
   before and after the fix; it is an existing offset from evaluating the
   proportional transfer of infiltration and inflow with the water depth at
   the end of the step (the tolerance ±1e-3 of the check allows for it).
-- The exchange on cells with a section shape (sigma law) remains an
-  approximation and is outside this test (developer.md §26.1,
+- The exchange on cells with a section shape (sigma law) is checked by
+  [test/gwsect](../../gwsect/en/README.md) (developer.md §26.2,
   [users guide](../../../docs/en/users_guide/channel.md#cross-section-shape-sigma-law)).

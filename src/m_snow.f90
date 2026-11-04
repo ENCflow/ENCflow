@@ -40,7 +40,7 @@ module m_snow
   ! ======================================================================
   use m_sysparam, only : t_sysparam
   use m_geoinfo, only : t_geoinfo
-  use m_state, only : t_state
+  use m_state, only : t_state, sect_cell, sect_add_vh
   use m_meteo, only : t_meteo, meteo_temp_set, meteo_temp_cell
   use m_swflow_enc, only : chn
   use list_snow, only : t_list_snow, list_snow_read
@@ -258,7 +258,12 @@ subroutine m_snow_calc(sn, p, g, s, mt, pr_fresh)
         s%swe(i,j) = s%swe(i,j) - w
         wf = 1.0
         if (chn%have_width) wf = chn%wfrac(i,j)
-        s%h(i,j) = s%h(i,j) + w / s%gv(i,j) / wf
+        ! 断面形 σ のセルは体積(矩形換算水深)で足す(§26.2)
+        if (sect_cell(s, i, j)) then
+          call sect_add_vh(s, i, j, w / s%gv(i,j) / wf)
+        else
+          s%h(i,j) = s%h(i,j) + w / s%gv(i,j) / wf
+        end if
         s%e(i,j) = s%z(i,j) + s%h(i,j)
       end if
     end do

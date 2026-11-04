@@ -63,7 +63,7 @@ module m_vzflow
   use, intrinsic :: iso_fortran_env, only : real64, int64
   use m_sysparam, only : t_sysparam
   use m_geoinfo, only : t_geoinfo, m_geoinfo_require_sd
-  use m_state, only : t_state
+  use m_state, only : t_state, sect_cell, sect_vh, sect_add_vh
   use m_boundary, only : t_boundary, read_val_file2
   use m_swflow_enc, only : chn
   use list_vz, only : t_list_vz, list_vz_read, vz_ncolmax, vz_nzonemax, vz_noutmax, vz_ndepmax, &
@@ -1281,6 +1281,14 @@ subroutine add_to_surface(vz, s, q)
   if (chn%have_width) wf = chn%wfrac(i,j)
   vreq = vz%ovol(q) + vz%ocarry(q)
   fac = vz%dxdy * real(s%gv(i,j), real64) * real(wf, real64)
+  if (sect_cell(s, i, j)) then
+    ! 断面形 σ のセルは体積(矩形換算水深)で足し、繰越も体積の差で数える(§26.2)
+    hold = sect_vh(s, i, j, s%h(i,j))
+    call sect_add_vh(s, i, j, real(vreq / fac))
+    s%e(i,j) = s%z(i,j) + s%h(i,j)
+    vz%ocarry(q) = vreq - real(sect_vh(s, i, j, s%h(i,j)) - hold, real64) * fac
+    return
+  end if
   hold = s%h(i,j)
   s%h(i,j) = s%h(i,j) + real(vreq / fac)
   s%e(i,j) = s%z(i,j) + s%h(i,j)
