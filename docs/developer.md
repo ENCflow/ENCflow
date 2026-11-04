@@ -3993,6 +3993,8 @@ gwfac_of(gv×wfrac)で換算済みで厳密だったため、湧き水の濃度�
     が逐次とバイト一致(-Ofast)。
   - 未指定時: 蒸発散を使う既存の構成(test/icevap の g、test/gwwidth・test/gwsect の
     param_evap*.txt)が、新旧の実行ファイルで全出力ファイルともバイト一致。
+  - 全回帰(test の 92 件。evapdry を含む。-Ofast、4 スレッド。reference は更新しない):
+    全件合格(既知の 4 スレッドの非決定がある nhshelf も今回は合格)。
 - **例題**: examples/catchment_metal のステップ 6b(ステップ 6 + evap_hglim 0.05 m)。
   180 日の蒸発散は 444 → 431 mm(3 % 減)、本川の干上がりは 118〜122 日目 → 126〜128 日目
   (1 週間遅れ)、海への物質の流出は 17 → 77 kg。補給のない土の水が減る時定数
