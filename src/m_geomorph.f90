@@ -1141,7 +1141,7 @@ subroutine m_geomorph_init(gm, p, g, s)
   !   記録場 s%fxd / s%fxdi の確保・分布の読み込み・restore は init_dissol
   gm%f_dissol = list%f_dissol
   if (gm%f_dissol > 0) then
-    if ((list%dissol_fres > 0.0 .or. list%dissol_src == 3) .and. .not. (gm%f_fluvial > 0 &
+    if ((list%dissol_fres > 0.0 .or. list%dissol_src == 3 .or. list%dissol_src == 5) .and. .not. (gm%f_fluvial > 0 &
         .or. gm%f_suspend > 0 .or. gm%f_debris > 0 .or. gm%f_splash > 0 .or. gm%f_bedslide > 0 &
         .or. gm%f_repose > 0 .or. gm%f_wthr > 0 .or. gm%crp%hcinv > 0.0)) then
       call setup_sd(p, g, s)                        ! 残渣の堆積先・裸岩判定として sd を確保・転記
@@ -1473,7 +1473,7 @@ subroutine m_geomorph_calc(gm, p, g, s, b, it)
 
   if (.not. gm%enabled) return
   ! 溶食の降雨源(dissol_src=2)は毎ステップの積算(間欠更新の前。§86)
-  if (gm%f_dissol > 0 .and. gm%dis%src >= 2) call accum_dissol_rain(gm, p, g, s)
+  if (gm%f_dissol > 0 .and. (gm%dis%src == 2 .or. gm%dis%src == 3 .or. gm%dis%src == 5)) call accum_dissol_rain(gm, p, g, s)
   if (mod(it, gm%idt_geomorph) /= 0) return
 
   ! 実効時間刻み(間欠実行 × 加速係数)

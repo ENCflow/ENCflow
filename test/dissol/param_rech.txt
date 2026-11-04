@@ -1,0 +1,96 @@
+!======================================================================
+! dissol: 構成 I = 岩への涵養を水量にする(dissol_src = 4)
+!   平坦 0 m・一様な雨 30 mm/h を 1 h。Green-Ampt 浸透(36 mm/h)で全量が土層に入り、土層から
+!   管路層への交換(20 mm/h。常に土層 → 管路)が岩への涵養。溶食はその交換量に比例:
+!     Δz = −k_d × (20 mm/h × 1 h) × morfac(1000)= −4e-5 × 0.02 × 1000 = −8e-4 m
+!   (最初のステップは交換の前に浸透がないので 1 ステップ分 (dt/T = 2.8e-4) 小さい → rtol 1e-3)
+!   Check_analytic.py が Z9998 を検定する。浸透量(30 mm/h)を数えないことの対照。
+!======================================================================
+&list_sysparam
+  f_gridsystem = 0          ! 格子システム(0:ENC)
+  dt = 1.0                  ! 時間刻み (s)
+  t0 = 0                    ! 計算開始時刻 (s)
+  tt = 3600                 ! 計算終了時刻 (s)
+  dt_disp = 600             ! 画面表示時間刻み (s)
+  dt_file = 3600            ! ファイル出力時間刻み (s)
+  dt_recrd = 600            ! プローブ出力時間刻み (s)
+  fn_geoinfo = '-'
+  fn_initial = '-'
+  fn_enc = '-'
+  fn_precip = '-'
+  fn_geomorph = '-'
+  dir_data = 'data_dissol'
+  dir_result = 'result_rech'
+  fn_gwflow = '-'
+  f_disp_debug = 1
+  f_check_cfl = 0
+  f_output_mode = 3         ! text + bil(解析検証は bil の全精度を読む)
+  f_out_z = 1               ! 地盤高の出力
+/
+
+&list_enc
+/
+
+&list_initial
+  f_htype = 0
+  h0 = 0.0
+/
+
+&list_geoinfo
+  lx = 42.0
+  ly = 42.0
+  nx = 21
+  ny = 21
+  f_ztype = 0
+  f_rntype = 0
+  z0 = 0.0
+  rn0 = 0.05
+  sd0 = 1.0                 ! 土層厚(バケツと管路層の交換の水頭 z − sd + hg/sy に使う)
+  sy0 = 0.2
+/
+
+&list_bound
+/
+
+!======================================================================
+! 降雨設定(一様 30 mm/h)
+!======================================================================
+&list_precip
+  prtype = 1
+  prval(1:2,1) = 0, 30
+  prval(1:2,2) = 9999, 30
+/
+
+!======================================================================
+! 地形変化設定(溶食のみ。降雨源)
+!======================================================================
+&list_geomorph
+  dt_geomorph = 60.0        ! 更新間隔 (s) = 60 ステップ
+  morfac = 1000.0           ! 加速係数
+  f_dissol = 1              ! 石灰岩の溶食
+  dissol_ceq = 100.0        ! 有効溶解能 (mg/L CaCO3)
+  dissol_rho = 2500.0       ! 岩の密度 (kg/m3)
+  dissol_src = 4            ! 岩への涵養(土層 → 管路層の交換量)を水量にする
+/
+&list_gwflow
+  f_gwvertical = 2          ! Green-Ampt 浸透(飽和透水係数 36 mm/h > 雨 30 mm/h = 全量浸透。
+                            !   管路層との交換は土層モデルを要する = バケツは不可)
+  f_gwlateral = 0
+  f_gwconduit = 1           ! 管路連続体層(土層からの交換 = 岩への涵養)
+  dt_gwflow = 0
+/
+&list_gwflow_greenampt
+  gw_ksv_mmh = 36.0         ! 飽和透水係数 (mm/h)
+  gw_psif = 0.0             ! 湿潤前線の吸引水頭 0(浸透能 = ksv で一定)
+/
+&list_gwflow_conduit
+  f_gwc_fluxlaw = 2
+  gwc_cnd_m2s = 0.0         ! 側方通水なし
+  gwc_cap = 2000.0          ! 貯留容量(満管にならない)
+  gwc_depth = 1000.0        ! 水頭底 = z − 1000(水頭は常に土層より低い = 交換は常に土層 → 管路)
+  gwc_sy = 1.0
+  gwc_slot_sy = 0.001
+  gwc_inlet = 0.0           ! 枡なし
+  gwc_leak_layer = 1        ! 土層との交換
+  gwc_leak_mmh = 20.0       ! 交換能 20 mm/h < 浸透 30 mm/h = 交換量は 20 mm/h で一定
+/

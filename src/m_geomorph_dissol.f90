@@ -85,7 +85,7 @@ module subroutine init_dissol(gm, p, g, s, list)
       end if
     case (2)
       ! 地上降雨量(遮断後の s%pre)。浸透の有無によらない最大削剥速度モデル
-    case (3)
+    case (3, 5)
       ! 浸透量 + 裸岩で発生する流出水の fsurf 倍(表面流源。§86.6)
       if (len_trim(p%fn_gwflow) == 0) then
         call par_stop("list_geomorph: dissol_src=3 (infiltration + surface runoff) requires fn_gwflow; " &
@@ -99,9 +99,19 @@ module subroutine init_dissol(gm, p, g, s, list)
       if (gm%dis%sdsurf <= 0.0) call par_stop("list_geomorph: dissol_sdsurf must be > 0")
       gm%dis%sdsinv = 1.0 / gm%dis%sdsurf
       allocate(gm%dis%frn(dcp%ish:dcp%ieh, dcp%jsh:dcp%jeh), source = 0.0)
+    case (4)
+      ! 岩への涵養(土層/層2 → 管路層の交換量)。管路層の水頭が土層の水頭より高い所(地下水面より
+      ! 下)では涵養がなく溶食が止まる = 基準面。§86.8(5 = 4 + 裸岩の流出水。3 と同じ組)
     case default
-      call par_stop("list_geomorph: dissol_src must be 1 (infiltration), 2 (rainfall) or 3 (infiltration + runoff)")
+      call par_stop("list_geomorph: dissol_src must be 1 (infiltration), 2 (rainfall), 3 (infiltration + runoff), " &
+                    // "4 (recharge to the conduit layer) or 5 (recharge + runoff)")
   end select
+  if (gm%dis%src >= 4) then
+    if (len_trim(p%fn_gwflow) == 0) then
+      call par_stop("list_geomorph: dissol_src=4/5 requires fn_gwflow with f_gwconduit=1 and gwc_leak_layer > 0")
+    end if
+    allocate(s%fxdr(dcp%ish:dcp%ieh, dcp%jsh:dcp%jeh), source = 0.0)
+  end if
 
   select case (list%dissol_sink)
     case (0)
@@ -154,7 +164,7 @@ module subroutine init_dissol(gm, p, g, s, list)
                 // " m/m, source = " // trim(srcname(gm%dis%src)) &
                 // ", sink term = " // trim(merge("on ", "off", gm%dis%sink)) &
                 // ", residue = " // rtoa(gm%dis%fres) // ")")
-  if (gm%dis%src == 3) then
+  if (gm%dis%src == 3 .or. gm%dis%src == 5) then
     call par_info("geomorph: surface-runoff dissolution on bare rock (fsurf = " // rtoa(gm%dis%fsurf) &
                   // ", bare below sd = " // rtoa(gm%dis%sdsurf) // " m)")
   end if
@@ -182,7 +192,9 @@ function srcname(src) result(nm)
   select case (src)
     case (1); nm = "infiltration"
     case (2); nm = "rainfall"
-    case default; nm = "infiltration + runoff"
+    case (3); nm = "infiltration + runoff"
+    case (4); nm = "recharge to conduit"
+    case default; nm = "recharge + runoff"
   end select
 end function
 
@@ -233,7 +245,7 @@ module subroutine accum_dissol_rain(gm, p, g, s)
   type(t_geoinfo), intent(in) :: g
   type(t_state), intent(inout) :: s
   integer :: i, j
-  if (gm%dis%src == 3) then
+  if (gm%dis%src == 3 .or. gm%dis%src == 5) then
     !$omp parallel do schedule(static) private(i, j)
     do j = dcp%js, dcp%je
       do i = g%wx(1,j), g%wx(2,j)
@@ -265,7 +277,12 @@ function take_water(gm, s, i, j) result(fw)
   real :: fw, fb
   fw = s%fxd(i,j)
   s%fxd(i,j) = 0.0
-  if (gm%dis%src == 3) then
+  if (gm%dis%src >= 4) then
+    ! 岩への涵養(管路層への交換量)を水量にする。浸透量 fxd は読んで捨てる(土層に入っただけの水)
+    fw = s%fxdr(i,j)
+    s%fxdr(i,j) = 0.0
+  end if
+  if (gm%dis%src == 3 .or. gm%dis%src == 5) then
     ! 裸岩で発生した流出水(雨 − 浸透)のうち fsurf をその岩面で使う
     fb = max(0.0, 1.0 - s%sd(i,j) * gm%dis%sdsinv)
     fw = fw + gm%dis%fsurf * fb * max(gm%dis%frn(i,j) - fw, 0.0)
@@ -535,7 +552,8 @@ subroutine save_dissol(gm, p, g, s)
   end if
   call restart_write_cell(un, s%fxd)
   if (gm%dis%sink) call restart_write_cell(un, s%fxdi)
-  if (gm%dis%src == 3) call restart_write_cell(un, gm%dis%frn)
+  if (gm%dis%src == 3 .or. gm%dis%src == 5) call restart_write_cell(un, gm%dis%frn)
+  if (gm%dis%src >= 4) call restart_write_cell(un, s%fxdr)
   if (is_root) close(un)
 end subroutine
 
@@ -559,7 +577,8 @@ subroutine restore_dissol(gm, p, g, s)
   if (is_root) open(newunit=un, file=fname, form='unformatted', status='old')
   call restart_read_cell(un, s%fxd)
   if (gm%dis%sink) call restart_read_cell(un, s%fxdi)
-  if (gm%dis%src == 3) call restart_read_cell(un, gm%dis%frn)
+  if (gm%dis%src == 3 .or. gm%dis%src == 5) call restart_read_cell(un, gm%dis%frn)
+  if (gm%dis%src >= 4) call restart_read_cell(un, s%fxdr)
   if (is_root) close(un)
 end subroutine
 

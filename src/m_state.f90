@@ -311,6 +311,9 @@ module m_state
                                         ! 更新間隔の途中の値は geomorph_dissol.dat で save。§86)
     real, allocatable :: fxdi(:,:)      ! 溶食用の吸込穴(管路層の枡)流入量の積算 (m。
                                         ! m_gwflow_conduit が書く。同上。dissol_sink=1 のみ確保)
+    real, allocatable :: fxdr(:,:)      ! 溶食用の岩への涵養量の積算 (m。土層/層2 → 管路層の
+                                        ! 交換量。m_gwflow_conduit が書く。同上。dissol_src=4,5
+                                        ! のみ確保 = 地下水面より下では涵養がなく溶食が止まる。§86.8)
     real, allocatable :: crs(:,:)       ! ため池(rscap)の質量プール (g/m2。幾何面積
                                         ! 基底 = cg と同基底。吸収同伴で蓄積・減衰のみの
                                         ! シンク(あふれ水は吸収されないため放出経路
@@ -1041,6 +1044,7 @@ subroutine m_state_dispose(s, p)
   if (allocated(s%fxco)) deallocate(s%fxco)
   if (allocated(s%fxd)) deallocate(s%fxd)
   if (allocated(s%fxdi)) deallocate(s%fxdi)
+  if (allocated(s%fxdr)) deallocate(s%fxdr)
   if (allocated(s%frofac)) deallocate(s%frofac)
   if (allocated(s%kbed)) deallocate(s%kbed)
   if (allocated(s%tide)) deallocate(s%tide)
