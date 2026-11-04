@@ -123,6 +123,7 @@ analytical-solution or conservation check by Check_*.py.
 | [gwseep/](gwseep/en/README.md) | Steady-state check of lateral groundwater transport and seepage return | Water quality, groundwater | ref, analytic |
 | [kdpart/](kdpart/en/README.md) | Steady-state check of Kd equilibrium two-phase partitioning | Water quality, suspended sediment | ref, analytic |
 | [wqbound/](wqbound/en/README.md) | Closure of the ledger of the exchange with the outside (sea cells, open edges, water-level cells), and water-level cells treated as outside water (no rise of concentration on reverse flow, boundary concentration wq_stage_conc) | Water quality, boundary conditions | ref, analytic |
+| [wqstruct/](wqstruct/en/README.md) | Structures and withdrawals carry the water-quality substance with the water. 16 closed compartments joined by pumps (inside and out of the domain, from a pond, from the conduit layer), culverts (forward and reverse flow), diversions, sinks of internal sources and well pumping; water at 1 mg/L stays at 1 wherever it moves, closure of the ledger, out_intake_g = volume of water leaving the system × concentration (§30.10) | Water quality, structures, internal sources, well pumping | ref, analytic |
 | **Glaciers and lava** | | | |
 | [glacier/](glacier/en/README.md) | Halfar dome of SIA ice flow, cirque formation | Glaciers | analytic |
 | [lava/](lava/en/README.md) | Huppert similarity solution of a Bingham lava flow, minimal input | Lava flow | analytic |

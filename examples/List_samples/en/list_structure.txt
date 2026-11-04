@@ -21,6 +21,12 @@
 !     two cell sets (intake side -> outlet side or out of the domain)
 !     + a hydraulic law Q (a pure function of the reference value)
 !     + mass-conservative transfer
+!   Pumps, culverts and diversions carry the water-quality (fn_wq)
+!   substance in the same fraction as the water they take, at the
+!   concentration of the intake cell (only the dissolved part with Kd
+!   partitioning; what leaves the domain goes to out_intake_g of the
+!   ledger wq.csv). Sediment, the salt layer, driftwood and debris are
+!   not carried.
 !   Write the groups of each type in this same file. If a group itself
 !   is not written, that type is disabled (absence is normal).
 !
@@ -133,9 +139,9 @@
 !     culv_ce(n)      : entrance loss coefficient. Default 0.5
 !   Constraints: cannot connect to pond (rscap>0) cells. The downstream
 !   side cannot be omitted (out of the domain) either (for out-of-domain
-!   drainage use the pump pump_q0). The transfer is clear water (carries
-!   no sediment). Flux transects (record) do not measure culvert
-!   discharge.
+!   drainage use the pump pump_q0). The transfer carries no sediment
+!   (only the water and the dissolved water-quality substance). Flux
+!   transects (record) do not measure culvert discharge.
 !   Note (scale requirement): a configuration whose conveyance reaches
 !   the scale of cell area x depth (a section too large for the cell
 !   size) makes the point-source forcing on the receiving side exceed

@@ -158,9 +158,15 @@ module subroutine boundary_h(p, g, b, s, sx)
   type(t_state), intent(inout) :: s
   type(t_enc_status), intent(inout) :: sx
   integer :: i, j, k, isrc, istage, ip, ncs, ncd
-  logical :: fwd
-  real :: qcell, dht, dh
-  real, allocatable :: vst(:)
+  logical :: fwd, cqc
+  real :: qcell, dht, dh, hb, w, mcell, dhd
+  real(r64) :: dm
+  real, allocatable :: vst(:), mst(:), vbuf(:)
+
+  ! 取水で水質の柱状量を水と一緒に運ぶか(§30.10。水質が有効で、次の時刻の
+  ! 柱状量 cq1 と台帳の記録場 cqx が確保済み。浮遊砂・塩水層・流木・瓦礫は
+  ! 運ばない = 取水側に残る)
+  cqc = s%wq_active .and. allocated(sx%cq1) .and. allocated(s%cqx)
 
   !$omp parallel do schedule(dynamic) private(i, j)
   do j = dcp%js, dcp%je
@@ -204,6 +210,7 @@ module subroutine boundary_h(p, g, b, s, sx)
       i = b%src(isrc)%cell(1,k)
       j = b%src(isrc)%cell(2,k)
       if (j < dcp%js .or. j > dcp%je) cycle
+      hb = sx%h1(i,j)
       ! 河道幅有効時は平面積率 wfrac でも除す(体積→水深換算の統一。§18)
       if (chn%have_width) then
         sx%h1(i,j) = sx%h1(i,j) + b%src(isrc)%q / s%gv(i,j) / chn%wfrac(i,j)
@@ -212,6 +219,14 @@ module subroutine boundary_h(p, g, b, s, sx)
       end if
       ! 吸い込み(負の流量)でセルを負水深にしない(不足分は汲めない)
       if (sx%h1(i,j) < 0) sx%h1(i,j) = 0
+      ! 吸い込みは汲んだ水と同じ割合の水質を、取水セルの濃度で系外へ持ち出す
+      ! (台帳 out_intake_g。湧き出しは清水のまま = 負荷は点源で与える。§30.10)
+      if (cqc .and. b%src(isrc)%q < 0.0) then
+        if (hb > sx%h1(i,j)) then
+          call intake_cq(p, g, s, sx, i, j, hb, hb - sx%h1(i,j), dm)
+          s%cqx(j,6) = s%cqx(j,6) + dm
+        end if
+      end if
     end do
   end do
 
@@ -225,8 +240,17 @@ module subroutine boundary_h(p, g, b, s, sx)
   ! 非ゼロ+総和 allreduce」で決定的(§11)。
   ! 順方向で吐口なし(ncout=0)は域外排水(系から除去。ポンプのみ)。
   ! collective は全ランクが同数実行する(nstruct は namelist 由来で全ランク同一)
+  ! 水質(cqc)は汲んだ水と同じ割合の柱状量を取水セルの濃度で運び、構造物ごとの
+  ! 質量 mst を水の体積と一緒に集計して、水と同じセル数等分で送り先へ配る。
+  ! 吐口のない構造物(域外)の分は取水セルの行で台帳 out_intake_g へ。ため池から
+  ! 汲む分はため池プール crs から、管路から汲むポンプの水は管路の水(wq_gwc_conc の
+  ! 濃度)とみなし、送り先の水深の増分を記録場 fxco に積む(§30.10)
   if (b%nstruct > 0) then
     allocate(vst(1:b%nstruct), source = 0.0)
+    ! 水質の質量の集計(cqc のときだけ構造物数ぶん。無効時は大きさ 0 で確保し、
+    ! 触れない = 実質の確保なし。条件付き確保だとコンパイラが未確保の参照を
+    ! 疑う警告を出すため、常に確保する形にした)
+    allocate(mst(1:merge(b%nstruct, 0, cqc)), source = 0.0)
     do ip = 1, b%nstruct
       if (b%struct(ip)%q == 0.0) cycle
       fwd = b%struct(ip)%q > 0.0
@@ -266,21 +290,54 @@ module subroutine boundary_h(p, g, b, s, sx)
         ! 次ステップのため池処理が行う(1ステップ遅れ)。
         ! カルバートはため池セル不許可(init で検証)のため、この分岐は
         ! 順方向(ポンプ)でのみ生きる
+        dm = 0.0_r64
         if (g%rscap(i,j) > 0.0) then
+          hb = s%hrs(i,j)
           dh = min(max(s%hrs(i,j), 0.0), dht)
           s%hrs(i,j) = s%hrs(i,j) - dh
+          ! ため池から汲む水は、ため池プール crs(幾何面積基底)の同じ割合を運ぶ
+          if (cqc .and. allocated(s%crs)) then
+            if (hb > 0.0 .and. dh > 0.0 .and. s%crs(i,j) > 0.0) then
+              w = s%crs(i,j) * min(dh / hb, 1.0)
+              s%crs(i,j) = s%crs(i,j) - w
+              dm = real(w, r64) * real(g%dx, r64) * real(g%dy, r64)
+            end if
+          end if
         else
+          hb = sx%h1(i,j)
           dh = min(max(sx%h1(i,j), 0.0), dht)
           sx%h1(i,j) = sx%h1(i,j) - dh
+          if (cqc) call intake_cq(p, g, s, sx, i, j, hb, dh, dm)
         end if
         if (chn%have_width) then
           vst(ip) = vst(ip) + dh * s%gv(i,j) * chn%wfrac(i,j) * g%dx * g%dy
         else
           vst(ip) = vst(ip) + dh * s%gv(i,j) * g%dx * g%dy
         end if
+        if (cqc) then
+          if (dm > 0.0_r64) then
+            if (fwd .and. b%struct(ip)%ncout <= 0) then
+              s%cqx(j,6) = s%cqx(j,6) + dm          ! 域外へ(台帳 out_intake_g)
+            else
+              mst(ip) = mst(ip) + real(dm)          ! 送り先へ配る分(後段)
+            end if
+          end if
+        end if
       end do
     end do
-    call par_allreduce_sumr(vst)
+    ! 水の体積と水質の質量を 1 回の総和で全ランクに共有する(水質なしは従来の
+    ! 呼び出しのまま。要素ごとの和なので水の体積は従来とビット同一)
+    if (cqc) then
+      allocate(vbuf(1:2*b%nstruct))
+      vbuf(1:b%nstruct) = vst(:)
+      vbuf(b%nstruct+1:2*b%nstruct) = mst(:)
+      call par_allreduce_sumr(vbuf)
+      vst(:) = vbuf(1:b%nstruct)
+      mst(:) = vbuf(b%nstruct+1:2*b%nstruct)
+      deallocate(vbuf)
+    else
+      call par_allreduce_sumr(vst)
+    end if
     do ip = 1, b%nstruct
       if (vst(ip) <= 0.0) cycle
       fwd = b%struct(ip)%q > 0.0
@@ -291,6 +348,8 @@ module subroutine boundary_h(p, g, b, s, sx)
         ncd = b%struct(ip)%ncin
       end if
       qcell = vst(ip) / (ncd * g%dx * g%dy)
+      mcell = 0.0
+      if (cqc) mcell = mst(ip) / real(ncd)
       do k = 1, ncd
         if (fwd) then
           i = b%struct(ip)%cout(1,k)
@@ -305,9 +364,31 @@ module subroutine boundary_h(p, g, b, s, sx)
         else
           sx%h1(i,j) = sx%h1(i,j) + qcell / s%gv(i,j)
         end if
+        if (cqc) then
+          ! 運んだ質量を水と同じセル数等分で、柱状量(gv・wfrac 基底)へ足す
+          if (mcell > 0.0) then
+            if (chn%have_width) then
+              sx%cq1(i,j) = sx%cq1(i,j) + mcell / (s%gv(i,j) * chn%wfrac(i,j) * g%dx * g%dy)
+            else
+              sx%cq1(i,j) = sx%cq1(i,j) + mcell / (s%gv(i,j) * g%dx * g%dy)
+            end if
+          end if
+          ! 管路から汲むポンプの水は管路の水(固定濃度 wq_gwc_conc)とみなす。
+          ! 送り先の水深の増分を記録場 fxco に積み、m_wq が濃度を同伴させる
+          ! (噴出・陸側吐口と同じ契約。台帳 in_gwc_g)
+          if (b%struct(ip)%src == 1 .and. allocated(s%fxco)) then
+            if (chn%have_width) then
+              dhd = qcell / s%gv(i,j) / chn%wfrac(i,j)
+            else
+              dhd = qcell / s%gv(i,j)
+            end if
+            s%fxco(i,j) = s%fxco(i,j) + dhd
+          end if
+        end if
       end do
     end do
     deallocate(vst)
+    deallocate(mst)
   end if
 
   ! 水位規定セル群(流域出口の流出境界、背水・感潮域等)
@@ -330,6 +411,47 @@ module subroutine boundary_h(p, g, b, s, sx)
     end do
   end do
 
+end subroutine
+
+
+!----------------------------------------------------------------------
+! 取水(内部ソースの吸い込み・ポンプ・カルバート・分水)が水深 hb の
+! セルから dh を汲むとき、同じ割合 dh/hb の水質の柱状量(次の時刻の値
+! cq1)を取り出し、その質量 dm (g) を返す(取水セルの濃度で運ぶ。§30.10)。
+! Kd 分配が有効なら溶存分 fd = 1/(1 + Kd·ρs·hs/vh) だけを運び、粒子態は
+! 浮遊砂(取水では運ばない)と一緒に取水側に残す。h1・hs1 はどちらも
+! 次の時刻の値(h1 は σ 有効時に矩形換算水深)で、m_wq の fd_of と同じ式
+! (ρs = (s+1)·ρw。ρw は m_wq の rhow と同じ 1000 kg/m3)。
+! 補助手続きは contained にしない(§13)
+!----------------------------------------------------------------------
+subroutine intake_cq(p, g, s, sx, i, j, hb, dh, dm)
+  type(t_sysparam), intent(in) :: p
+  type(t_geoinfo), intent(in) :: g
+  type(t_state), intent(in) :: s
+  type(t_enc_status), intent(inout) :: sx
+  integer, intent(in) :: i, j
+  real, intent(in) :: hb, dh
+  real(r64), intent(out) :: dm
+  real, parameter :: rhow = 1000.0
+  real :: f, w
+
+  dm = 0.0_r64
+  if (hb <= 0.0 .or. dh <= 0.0) return
+  if (sx%cq1(i,j) <= 0.0) return
+  f = min(dh / hb, 1.0)
+  if (s%cq_kd > 0.0 .and. allocated(sx%hs1)) then
+    if (sx%hs1(i,j) > 0.0 .and. hb > p%dd) then
+      f = f / (1.0 + s%cq_kd * (s%sed_sgrav + 1.0) * rhow * sx%hs1(i,j) / hb)
+    end if
+  end if
+  w = sx%cq1(i,j) * f
+  sx%cq1(i,j) = sx%cq1(i,j) - w
+  if (chn%have_width) then
+    dm = real(w, r64) * real(s%gv(i,j), r64) * real(chn%wfrac(i,j), r64) &
+         * real(g%dx, r64) * real(g%dy, r64)
+  else
+    dm = real(w, r64) * real(s%gv(i,j), r64) * real(g%dx, r64) * real(g%dy, r64)
+  end if
 end subroutine
 
 

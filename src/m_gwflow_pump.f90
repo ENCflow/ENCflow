@@ -18,6 +18,10 @@ module m_gwflow_pump
   !     スクリーン近似: 界面より上から取水)。淡水厚で足りない分だけ
   !     塩水層 s%hgs を減らす(= 塩水の混入)。揚水誘引の海水浸入・
   !     アップコーニングは側方流動と塩水層ダイナミクスが自動で表す
+  !   - 水質(fn_wq の地下質量 s%cg)併用時は、層1から汲んだ水と同じ割合の
+  !     溶存分(遅延化係数 R の 1/R。湧出と同じ)を同伴して系外へ持ち出し、
+  !     記録場 s%cqx の列 6(台帳 out_intake_g)に積む(§30.10)。層2は質量を
+  !     持たないので、層2からの揚水は水だけ
   !   - 注入(負の流量)は非対応(容量超過分の行き先の定義が要るため。
   !     地表への還元・灌漑は &list_bound_source で別途与える)
   !   - 汲み上げは瞬時フラックスで内部状態を持たない → save/restore
@@ -26,6 +30,7 @@ module m_gwflow_pump
   !     なのでハロ交換は不要(契約3。ハロの hg は次の側方 calc 冒頭・
   !     saltwater calc 冒頭で交換される)
   ! ======================================================
+  use, intrinsic :: iso_fortran_env, only : real64
   use m_sysparam, only : t_sysparam
   use m_geoinfo, only : t_geoinfo
   use m_state, only : t_state
@@ -218,7 +223,7 @@ subroutine gwflow_pump_calc(gp, p, g, s, it, dts)
   integer, intent(in) :: it
   real, intent(in) :: dts
   integer :: iw, k, i, j
-  real :: q, dh, hgb, fx, sx
+  real :: q, dh, hgb, fx, sx, wm
 
   if (it < 0) continue  ! 引数未使用の警告を抑制
   if (p%initialized) continue  ! 引数未使用の警告を抑制
@@ -239,6 +244,16 @@ subroutine gwflow_pump_calc(gp, p, g, s, it, dts)
         fx = min(dh, hgb)
         if (fx <= 0.0) cycle
         s%hg(i,j) = hgb - fx
+        ! 水質: 汲んだ水と同じ割合の溶存分(1/R)を系外へ持ち出す(湧出の同伴と
+        ! 同じ形。cg は幾何面積基底 = 質量 cg×A。台帳 out_intake_g。§30.10)
+        if (allocated(s%cg)) then
+          if (s%cg(i,j) > 0.0) then
+            wm = s%cg_rginv * s%cg(i,j) * (fx / hgb)
+            s%cg(i,j) = s%cg(i,j) - wm
+            if (allocated(s%cqx)) s%cqx(j,6) = s%cqx(j,6) &
+                + real(wm, real64) * real(g%dx, real64) * real(g%dy, real64)
+          end if
+        end if
         ! 淡塩2層: 淡水優先(浅井戸スクリーン近似)。淡水厚
         ! hgb - hgs で足りない分だけ塩水層を減らす(fx <= hgb より
         ! sx <= hgs が構造的に成立。max は丸め保護)

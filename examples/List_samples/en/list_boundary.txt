@@ -85,7 +85,11 @@
 !                                  outside the range the end values are
 !                                  held. q < 0 extracts water (the cell
 !                                  depth bottoms out at 0; the deficit
-!                                  cannot be pumped)
+!                                  cannot be pumped). The water-quality
+!                                  (fn_wq) substance leaves the system in
+!                                  the same fraction as the water (ledger
+!                                  out_intake_g). Positive sources are
+!                                  clean water
 !   The discharge is distributed evenly over the source's cell set (the
 !   same volume to each cell; in cells with building void fraction
 !   gv < 1 the depth increment becomes correspondingly larger).

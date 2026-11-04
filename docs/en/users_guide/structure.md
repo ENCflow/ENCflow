@@ -26,6 +26,21 @@ placed on sea-mask (fn_sw) cells** (the run is stopped at initialisation
 with an error). Water discharged to the sea is expressed as drainage
 outside the system with the outlet omitted (removal from the system).
 
+**What a transfer carries**: pumps, culverts and diversions carry the
+same fraction of the [water-quality](wq.md) substance as of the water they
+take, at the concentration of the intake cell (with Kd partitioning only the
+dissolved part; the particulate part stays on the intake side with the
+suspended sediment). Sediment such as suspended load, the salt layer (bottom
+salt water), driftwood and debris are not carried and stay on the intake
+side. A pump drawing from a pond carries the substance of the pond, and a
+pump drawing from the conduit layer (`f_pump_src=1`) carries the fixed
+concentration `wq_gwc_conc` of the conduit water. The substance taken out of
+the system by pumps without an outlet and by out-of-domain diversions goes
+into the `out_intake_g` column of the water-quality ledger `wq.csv` (since
+2026-11-04; before that only the water was moved and the substance stayed on
+the intake side). Releases from dams and lakes carry the completely mixed
+concentration of the lake pool (the dam section of [water quality](wq.md)).
+
 ![The four structure types (pump, culvert, diversion, dam/lake)](../../figs/structure_types_en.png)
 
 Schematic of the four types. (a) A drainage pump forces water from the intake cells to the outlet cells (or out of the domain) by its operation rule Q; (b) a culvert is a B x D box through an embankment, passing flow in either direction by the head difference; (c) a diversion withdraws one-way and passively from the intake cells to outside (or to receiving cells); (d) a dam/lake captures all water arriving at its lake cells, stores it as V(H), and releases to the outlet cells by the operation mode (the extra outlet dam_lake and the groundwater-head forcing dam_gw are also shown).
@@ -162,10 +177,10 @@ full conduit (orifice + conduit friction).
 
 Constraints: cannot connect to pond cells. The downstream side cannot
 be omitted (no out-of-domain drainage; use a pump for that). The
-transfer is clear water (it carries no sediment) and does not register
-on flux transects (record) (this "passes water only" property can be
-used to approximate the outlet of an open-type check dam - see the
-sabo-facilities paragraph in
+transfer carries no sediment (it passes only the water and the dissolved
+water-quality substance) and does not register on flux transects (record)
+(this "passes no sediment" property can be used to approximate the outlet
+of an open-type check dam - see the sabo-facilities paragraph in
 [Sediment and landform change](geomorph.md)). A cross section too large for the cell size
 (conveyance on the order of cell area x depth) makes the receiving side
 diverge -- use realistic dimensions.
@@ -452,11 +467,17 @@ Structures themselves are not written as fields.
 - Pumps, culverts and diversions have no discharge ledger. Pumps draining
   out of the domain and fixed-level lakes remove water from the system, so
   S in Log.txt decreases; transfers inside the domain leave S unchanged.
+- With water quality enabled, the substance taken out by pumps without an
+  outlet and by out-of-domain diversions (together with that of the sinks of
+  internal sources and of well pumping) accumulates in the `out_intake_g`
+  column of `wq.csv` (no breakdown by structure; the ledger in
+  [water quality](wq.md)).
 
 **Measurements** (probe and transect columns)
 
 - **Structure transfers do not cross a transect** (culverts, diversions and
-  pumps move clear water directly between cells). Read the throughput as
+  pumps move water directly between cells, and the water-quality load they
+  carry does not appear in the transect L either). Read the throughput as
   the difference of transect Q upstream and downstream of the structure,
   or for dams as Qout in the CSV.
 
@@ -486,6 +507,7 @@ For levee overtopping and breach and channel conveyance, see the
 
 - [test/coastal_drain](../../../test/coastal_drain/en/README.md): drainage with a pumping station drawing directly from the conduit layer (`f_pump_src=1`) and an outfall into sea cells.
 - [test/damwq](../../../test/damwq/en/README.md): dam capture, constant release and reservoir storage coupled with water quality, checked against mass balances and analytical complete-mixing values.
+- [test/wqstruct](../../../test/wqstruct/en/README.md): checks that pumps (in the domain, out of the domain, from a pond, from the conduit layer), culverts (forward and reverse flow), diversions (in and out of the domain), sinks of internal sources and well pumping carry the water-quality substance with the water (water at 1 mg/L stays at 1 wherever it moves, closure of the ledger, `out_intake_g` = volume of water leaving the system × concentration).
 
 ## References
 
