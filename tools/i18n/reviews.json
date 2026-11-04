@@ -338,9 +338,9 @@
     {
       "source": "docs/users_guide/massflow.md",
       "target": "docs/en/users_guide/massflow.md",
-      "source_sha256": "62d9d51337b0655b976ef3e1fb5364c0292b7dc5ceed6ac95f16dde57b452586",
-      "target_sha256": "1bfecf5cffd35531de5a5ce50074ac4e5af69787b298fac2499afe80d7ccd14e",
-      "reviewer": "Claude (Claude Code session; the §2 paragraph on rest and onset of motion, the edited sentence on the explicit rest and the §7 row of test/dbonset were written in both languages in this session and compared sentence by sentence; numbers checked against the test/dbonset runs)",
+      "source_sha256": "adf093d17bf34369e5912a8440ef5ea9c4201713453e5dd113dd9fbfb4e800c5",
+      "target_sha256": "fdc4066a07189ab889ee1ca669882a8364c3730059265c25b9252e7a0bc99fc5",
+      "reviewer": "Claude (Claude Code session; the §7 row of test/avalanche updated in both languages to the growth of the current code (about 3.4 times; the old 1.5 did not match the test) and compared)",
       "method": "assistant",
       "reviewed_on": "2026-11-04"
     },
@@ -2606,20 +2606,20 @@
     {
       "source": "test/avalanche/README.md",
       "target": "test/avalanche/en/README.md",
-      "source_sha256": "92afa0614b7a0fb412e88293887d8b2d79c5dca767229c3328f9e95118de42a6",
-      "target_sha256": "26d1325b488707ec3a1832f6353e4c0acc9505edcf0c3eca5c15eb20158c62e3",
-      "reviewer": "Claude (Claude Code session; f_opening_dynamic default switch)",
+      "source_sha256": "a843585ce91a31fe503026d906de1d84ef4df7af6b708d19a4b0874178bc5725",
+      "target_sha256": "5c2a5be78cf653617c312ea95960fc9c1dd2a1873226f0fdcf74fcc676e6d98d",
+      "reviewer": "Claude (Claude Code session; caption, table and dated note updated in both languages to the values of the run with the fixed code of 2026-11-04 (Fig.py output) and compared)",
       "method": "assistant",
-      "reviewed_on": "2026-10-31"
+      "reviewed_on": "2026-11-04"
     },
     {
       "source": "test/avalanche/figs/avalanche.png",
       "target": "test/avalanche/en/figs/avalanche.png",
-      "source_sha256": "871235b3bca0b92223b2255dee1e5c305670c3f6536a0aa5353bfbd491816317",
-      "target_sha256": "2266bc04bb553975e88d9f712410fcad733add97bdf85d984c711cd6e78e3b5f",
-      "reviewer": "Claude (Claude Code session; f_opening_dynamic default switch)",
+      "source_sha256": "1a4059795c46e4608d61f0f3a815ebae39fa4291d8945d6a0f0b3e753d5272dd",
+      "target_sha256": "4d66a0e7074dc39141c804a748fe07bf3fe5ca5345477b16bd3c6bcd6fcc7f4f",
+      "reviewer": "Claude (Claude Code session; both images drawn by Fig.py and Fig.py en from the same run of 2026-11-04 and compared side by side: same data and layout, labels translated)",
       "method": "assistant",
-      "reviewed_on": "2026-10-31"
+      "reviewed_on": "2026-11-04"
     },
     {
       "source": "test/bankface/README.md",
@@ -2642,11 +2642,11 @@
     {
       "source": "test/bedslide/README.md",
       "target": "test/bedslide/en/README.md",
-      "source_sha256": "85bd4bf31847a183d64dc4b52d5cbebdc47b4e8571698d4f527bd22304a1fd03",
-      "target_sha256": "b04c1061540c5209c290fc3baceb28dd91c20d7ac6666899b41ef14a77d51fea",
-      "reviewer": "Claude (Claude Code session; f_opening_dynamic default switch)",
+      "source_sha256": "da33240c1d1fbf972b18b2f2431058657230145557235352a38285dbb8c68210",
+      "target_sha256": "1a5ffa07cea9a196b3d892b66d0417393df9fce075dca5e3176415749282377d",
+      "reviewer": "Claude (Claude Code session; caption and table of configuration 4 updated in both languages to the check output of the run with the fixed code of 2026-11-04 and compared)",
       "method": "assistant",
-      "reviewed_on": "2026-10-31"
+      "reviewed_on": "2026-11-04"
     },
     {
       "source": "test/bedslide/figs/bench.png",
@@ -2660,11 +2660,11 @@
     {
       "source": "test/bedslide/figs/plunge.png",
       "target": "test/bedslide/en/figs/plunge.png",
-      "source_sha256": "17d7d4e75b636a1592c97f8f1842c3fb9a0ea6652ed9c49eb11088f37407930b",
-      "target_sha256": "c2343daaa4e1a7ac8edf0bc5a8b87f6080439de28acbbb0b703c2b9fade2b536",
-      "reviewer": "Claude (Claude Code session; f_opening_dynamic default switch)",
+      "source_sha256": "09b097ed24c7eaec39220784d2f90f0ed59af18116ece3ca4cb12f3096158d61",
+      "target_sha256": "0168b96f5438a61d2e93ef6490e97f47272bd59743e2c54ae25c6de021d1ab0f",
+      "reviewer": "Claude (Claude Code session; both images drawn by Fig.py and Fig.py en from the same run of 2026-11-04 and compared side by side: same data and layout, labels translated)",
       "method": "assistant",
-      "reviewed_on": "2026-10-31"
+      "reviewed_on": "2026-11-04"
     },
     {
       "source": "test/bedslide/figs/tsunami.png",
@@ -2957,11 +2957,11 @@
     {
       "source": "test/dbrock/README.md",
       "target": "test/dbrock/en/README.md",
-      "source_sha256": "bd876f1a7ce5d175a97eae9d6bcbc2928b1dcc6e0ae7d5adf033ea1d685c23a3",
-      "target_sha256": "669cf63050940a71b27a29502c6f7abe548c9d1ef4149a7fe9a5bdcd979efa0c",
-      "reviewer": "Claude (Claude Code session; mechanical renumbering of the developer.md section references §88 -> §89 in both files, checked by script that the lines differ only in those numbers and that both files carry the same references; rest unchanged since the previous record)",
+      "source_sha256": "ec62b9b7a366276cd8090dbb8bb8010be24465e6b413cfa0790bba9225cb4e94",
+      "target_sha256": "db5c93f11a534305a436d824b789f51e93855079b59679c30a9268bc354f12cc",
+      "reviewer": "Claude (Claude Code session; dated note on the §28.16 fix added in both languages with values from the runs before and after the fix and compared)",
       "method": "assistant",
-      "reviewed_on": "2026-10-28"
+      "reviewed_on": "2026-11-04"
     },
     {
       "source": "test/debris/README.md",
@@ -3659,29 +3659,29 @@
     {
       "source": "test/slide/README.md",
       "target": "test/slide/en/README.md",
-      "source_sha256": "bc369c20bc7a1e1b41bc9239c4f196a40d1ae5f04aac4458eb2cf5e573915ba4",
-      "target_sha256": "57ad47798b3600bfda31289e4d3282323b04a5890c2db290bd1e3ccfc91f54d2",
-      "reviewer": "Claude (Claude Code session; f_opening_dynamic default switch)",
+      "source_sha256": "c74548958ed2dbd6d5ee765d0406d330b37e673a0985b6cdd0340e898d24766e",
+      "target_sha256": "6cb66d0e0375e437eec40681a8cded6129cd28ad4115f83433fcecece378d1ba",
+      "reviewer": "Claude (Claude Code session; captions, table and dated note updated in both languages to the Fig.py output of the runs before and after the fix of 2026-11-04 and compared)",
       "method": "assistant",
-      "reviewed_on": "2026-10-31"
+      "reviewed_on": "2026-11-04"
     },
     {
       "source": "test/slide/figs/fslide.png",
       "target": "test/slide/en/figs/fslide.png",
-      "source_sha256": "d761b3d6aa8742938b9dad5f679d71d8932359d30830dea77c3218a54592e576",
-      "target_sha256": "42593ded59822999993eb7134f02d93686e871f17b5932378b5f9acd4fc48e4c",
-      "reviewer": "Claude (Claude Code session; f_opening_dynamic default switch)",
+      "source_sha256": "3ddfd72f27185c810afd506d09178e169040ee7d27fc2000208a9d642f266403",
+      "target_sha256": "28d79502cbaebc5934bef4e4b0c3ccde1743446d32ffb49b33c16a502418464d",
+      "reviewer": "Claude (Claude Code session; both images drawn by Fig.py and Fig.py en from the same run of 2026-11-04 and compared side by side: same data and layout, labels translated)",
       "method": "assistant",
-      "reviewed_on": "2026-10-31"
+      "reviewed_on": "2026-11-04"
     },
     {
       "source": "test/slide/figs/release.png",
       "target": "test/slide/en/figs/release.png",
-      "source_sha256": "3407319886316d4f25e2c815c0ad677f9ea9275fd837061c586ab54269859d47",
-      "target_sha256": "a616cccac071f576318e56dee758895c96530f6c53dc697566a4a68fc4bb5c5a",
-      "reviewer": "Claude (Claude Code session; f_opening_dynamic default switch)",
+      "source_sha256": "808935d472c262205d706208b841ede51cffb082ec8f130938a446e1ac883628",
+      "target_sha256": "f8901fbbbb0a6b9350713bd90ce604cfb35108926ebe537251a7dfcc95ce8df6",
+      "reviewer": "Claude (Claude Code session; both images drawn by Fig.py and Fig.py en from the same run of 2026-11-04 and compared side by side: same data and layout, labels translated)",
       "method": "assistant",
-      "reviewed_on": "2026-10-31"
+      "reviewed_on": "2026-11-04"
     },
     {
       "source": "test/splash/README.md",

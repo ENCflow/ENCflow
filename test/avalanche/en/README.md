@@ -51,24 +51,25 @@ Top left: fracture depth D = 0.5 m of the release area. Top right: thickness
 of the entrained snow sd₀ − sd. Along the path from the release area to the
 slope break the snow is scoured through its full depth (0.5 m). Bottom left:
 change of the snow surface z − z₀. The path is negative from scouring, and
-stopped debris deposits up to 0.61 m downstream of the slope break at
-x = 30–45 m. Bottom right: longitudinal profile (average over all rows).
+stopped debris deposits up to 0.81 m around the slope break (x = 30 m) at
+x = 23–40 m. Bottom right: longitudinal profile (average over all rows).
 That the two curves z − z₀ and −(sd₀ − sd) coincide is the co-update
-identity itself (z and sd move by the same amount), and the remaining hs is
-nearly zero.
+identity itself (z and sd move by the same amount), and a little snow that
+is still flowing (remaining hs) is left near the slope break (7 % of the
+total).
 
 ## Findings
 
 | Check | Computed | Result |
 |---|---|---|
-| (1) Solid ledger | −1.2e-13 m·cell | PASS |
-| (2) Co-update | 1.8e-14 m | PASS |
+| (1) Solid ledger | 4.5e-14 m·cell | PASS |
+| (2) Co-update | 9.9e-15 m | PASS |
 | (3) Entrainment activity | path min(sd − sd₀) = −0.500 m (full depth) | PASS |
-| (4) Growth | entrained solid 48.0 / released solid 21.6 = 2.22 times | PASS |
-| (5) Stopping | remaining Σhs / (released + entrained) = 0.015 | PASS |
+| (4) Growth | entrained solid 51.1 / released solid 21.6 = 2.36 times | PASS |
+| (5) Stopping | remaining Σhs / (released + entrained) = 0.067 | PASS |
 
-- By entrainment the avalanche grows to about 3.2 times the released amount,
-  and 98.3% stops and deposits below the slope break. The ledger and the
+- By entrainment the avalanche grows to about 3.4 times the released amount,
+  and 93 % stops and deposits around the slope break. The ledger and the
   co-update are at machine precision.
 - The entrainable layer is given by reinterpreting the existing soil depth
   sd, and the co-update, ledger, clamp and two-pass MPI structure are all
@@ -83,7 +84,11 @@ nearly zero.
   2026-10-18 to 31 (reflecting the changes of 2026-10-18: with the former default
   f_opening_dynamic = 1 written explicitly it is 2.96; 2.78 when recorded, the
   remaining difference coming from the advection fixes of §68.37 and §68.39;
-  confirmed 2026-10-24) and is 2.22 with the default 3 since 2026-10-31 (§68.41).
+  confirmed 2026-10-24) and is 2.22 with the default 3 since 2026-10-31 (§68.41). The code
+  just before the fix of the yield rest check of 2026-11-04 (§28.16) gave 2.41 (remaining 0.054,
+  largest deposit 0.68 m; the difference from the record of 10-31 comes from later changes to
+  the code, not separated out), and the fixed code gives 2.36 (remaining 0.067,
+  largest deposit 0.81 m).
 
 ## Related documents
 

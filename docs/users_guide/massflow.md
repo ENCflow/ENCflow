@@ -362,7 +362,7 @@ $`v_{stop}`$ = 0.05 m/s。混合体の μ・ξ とは慣性の有無で校正値
 | [test/volcano](../../test/volcano/README.md) | Voellmy 定常等流と τ_y ランアウト | 等流深の解析解に 0.04%(4 近傍) |
 | [test/curvature](../../test/curvature/README.md) | 曲率項の定常 1 次元検定 | 円弧上の厚化が ODE の 1.03 倍 |
 | [test/dbonset](../../test/dbonset/README.md) | 降伏による静止と動き出し(一様な斜面、勾配が降伏の 0.9・1.1・1.3 倍、斜面の向き 0°・22.5°・45°、8・4 近傍) | 閾値と速さ・向きが向きと近傍によらず、剛体の滑りの解析解に 0.4% 以内 |
-| [test/avalanche](../../test/avalanche/README.md) | 雪崩(Voellmy + 速度比例連行) | 連行で 1.5 倍に成長して停止。台帳は機械精度 |
+| [test/avalanche](../../test/avalanche/README.md) | 雪崩(Voellmy + 速度比例連行) | 連行で放出量の約 3.4 倍に成長して停止。台帳は機械精度 |
 | [test/bedslide](../../test/bedslide/README.md) | 底層の速度の解析値、45° 斜面、湖への突入 | 内部セルの $`V`$ が解析値に 0.5% |
 | [examples/landslide_tsunami](../../examples/landslide_tsunami/) | 岩屑なだれ・引き渡し・海底地滑り | 4 パターンの比較 |
 | [examples/ashfall_lahar](../../examples/ashfall_lahar/) | 降灰 → 降雨 → 泥流、砂防堰堤 | ラハールの設定の型(浸透能・f_dbwet=2) |

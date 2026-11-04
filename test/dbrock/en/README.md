@@ -91,6 +91,12 @@ python3 make_init.py   # regenerate the inputs (bundled; only when changed)
   the channel with slope 0.2 is supercritical) changed the values of the channel
   configurations slightly (ledgers of DB5: flood 1.21 → 1.23, debris flow
   2.90 → 2.91, flood 0.392 → 0.397 m³; DB2 has no inflow and is unchanged).
+- The fix of the yield rest check (2026-11-04; developer.md §28.16) changed the values of DB2
+  and of the DB5 continuation that restarts from the middle of DB2 (rock eroded by debris flows
+  1.07 m³ and largest Ri 12.7 mm with the code just before the fix, 1.09 m³ and 12.2 mm after it;
+  the difference from the 0.76 m³ and 8.6 mm recorded above comes from later changes to the code,
+  not separated out). DB1, DB3, the alternating runs of DB5 and DB8 are byte-identical before and
+  after the fix, and all configurations pass.
 - MPI (DB4): no run-time errors with -fcheck=all at np = 2. With the -O2 build,
   the state.dat and geomorph_rockinc.dat of np = 1, 2 and 4 are byte-identical to
   the serial run. With the default -Ofast, Run_MPI.sh 2 and 4 are also

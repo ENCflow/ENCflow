@@ -90,7 +90,7 @@ spreading across the lake (maximum 1.0 m) are visible.
 Configuration 4 (left) and the control (right). The mass that flowed over
 land as a debris flow (mixture) becomes, with the handover, a bed layer in
 the cells with a ponded depth of 2 m or more and runs along the lake bed
-(deposit 5.2 m, handover 18,319 m³ = 96% of the release); without the
+(deposit 5.2 m, handover 17,757 m³ = 93 % of the release); without the
 handover it stops near the shoreline and does not reach the lake bed
 (deposit on the flat part 0 m).
 
@@ -105,7 +105,7 @@ handover it stops near the shoreline and does not reach the lake bed
 | Configuration 3: ledger / Σh | Σdz −1.1e-11, max\|Δ(z − sd)\| 9e-13 / Σh unchanged (+1.6e-3 m·cell) | PASS |
 | Configuration 3: lake-bed deposition / wave generation | flat lake bed max dz 5.20 m / water-surface maximum 0.51 m (flat part of the lake bed) | PASS |
 | Configuration 3: release ledger | released 19,110 = stopped 16,650 + moving 2,460 m³ | PASS |
-| Configuration 4: handover | 17,750 m³, lake-bed max dz 5.14 m; control 0.00 m | PASS |
+| Configuration 4: handover | 17,757 m³, lake-bed max dz 5.16 m; control 0.00 m | PASS |
 
 - The 45°-rotated benchmark is a detector for a wrong normalization of the
   8-direction distribution, which makes the passage speed come out √2 times
