@@ -1,0 +1,8 @@
+date      : 2026-11-04 09:01:55
+host      : vm
+user      : 
+pwd       : /home/user/ENCflow/test/evapdry
+exe       : /tmp/claude-0/-home-user-ENCflow/5d2394f5-7247-5eaf-87f2-22dd26dce48f/scratchpad/hgl_build/src/encflow
+mode      : serial__double
+modules   : (no modules)
+lib       : 	libgfortran.so.5 => /lib/x86_64-linux-gnu/libgfortran.so.5 (0x00007fe70da00000)

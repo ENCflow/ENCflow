@@ -249,6 +249,7 @@ Select how potential evapotranspiration (PET) is given with `f_evmodel`.
 | evap0 | 3.0 | Mode 1: PET (mm/day). When unspecified the default is adopted and printed with "(default)" |
 | evap_monthly | - | Mode 2: monthly PET (mm/day). 12 months |
 | evap_kc | 1.0 | Conversion coefficient (pan coefficient / calibration; common to all modes) |
+| evap_hglim | - | Subsurface storage (m) below which the dryness of the soil reduces evapotranspiration (common to all modes). When given, the evapotranspiration taken from groundwater is reduced to the fraction hg/evap_hglim while the subsurface storage hg is smaller than this. No reduction when unspecified |
 | lat | - | Representative latitude (deg). Required for modes 3, 4 |
 | temp_normal | - | Monthly normal mean temperatures (deg C). Required for mode 4 |
 
@@ -270,6 +271,20 @@ for canopy, surface, storage and groundwater, plus their total, are written
 to `evap.csv` in the result directory (accumulated from the start of the
 run; reset on restart). Missing requirements (e.g.
 mode 2 without a calendar) stop initialization.
+
+**Reduction by the dryness of the soil (evap_hglim).** By default, the
+evapotranspiration taken from groundwater stays at the rate of the potential
+evapotranspiration as long as subsurface storage `hg` remains (supply limit
+only). When `evap_hglim` is given, only the groundwater stage is reduced to the
+fraction `hg / evap_hglim` while `hg` is smaller than it (the same linear
+reduction as the water stress coefficient of FAO-56). Without recharge, once
+`hg` falls below `evap_hglim` it decreases exponentially with the time
+constant `evap_hglim / PET` (12.5 days for a PET of 4 mm/day and an
+`evap_hglim` of 0.05 m). Evaporation from the canopy, surface water and water
+surfaces such as ponds is not reduced. The value is given data of the soil and
+vegetation and has no default. How to estimate it from the available water of
+the root zone and the depletion fraction, and its limits, are in
+[the explanation](forcing_models.md) §3.
 
 The mode-1 default of 3 mm/day is the lower side of the warm-season
 reference evapotranspiration of a humid temperate climate (basis in
@@ -395,6 +410,7 @@ list_meteo / list_evap / list_snow in
 
 - [test/chichibu](../../../test/chichibu/en/README.md): uniform rainfall on a real-terrain catchment, with regression checks for runoff collection and flood-wave propagation.
 - [test/icevap](../../../test/icevap/en/README.md): equivalence of minimal input and explicitly specified defaults for fixed-rate interception, initial loss and constant evapotranspiration.
+- [test/evapdry](../../../test/evapdry/en/README.md): reduction by the dryness of the soil (evap_hglim). In a flat closed domain, the subsurface storage after rain matches the analytical solution (linear, then exponential decay).
 - [test/frost](../../../test/frost/en/README.md): comparison with analytical values for the freezing index and infiltration suppression under constant air temperature.
 
 ## References

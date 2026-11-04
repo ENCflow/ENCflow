@@ -17,7 +17,8 @@ and re-suspension) — and compares how the river concentration and the fate
 of the substance change. It answers "can tanks be ignored?" for each form
 of the substance (dissolved and particulate). Finally it adds
 evapotranspiration and looks at how the water quality of the river in the
-dry season changes. The values are schematic, chosen to make the phenomena
+dry season changes (also comparing with and without a mechanism that
+reduces evapotranspiration as the soil dries). The values are schematic, chosen to make the phenomena
 easy to see; they do not reproduce any particular catchment.
 
 ## What happens in a real catchment
@@ -85,6 +86,7 @@ evapotranspiration.
 | 4 | Tanks (three in series, represented in the terrain) | terrain `z_tank`, channels `rw_tank`, infiltration capacity of tank beds `fn_gw_ksv` | the effect of tanks on the dissolved form | step4 |
 | 5 | Particulate form: settling and re-suspension (not carried by infiltrating water) | `f_wq_infil = 0`, `wq_vs`, `f_wq_settle = 1`, `wq_wash_kf`, `wq_wash_tauc` | the effect of tanks on the particulate form (compared with no tanks) | step5, step5_notank |
 | 6 | Evapotranspiration: the potential evapotranspiration is taken, as far as there is water, from surface water (tank and river surfaces) and groundwater; evaporation removes only water and the substance stays | `fn_evap`, `&list_evap` (`f_evmodel = 1`, `evap0 = 4`) | where the water goes, dry-season discharge and concentration, tank level and concentration (compared with step 4) | step6 |
+| 6b | Reduction of evapotranspiration by the dryness of the soil: when the subsurface storage is small, less evapotranspiration is taken from groundwater | `evap_hglim = 0.05` | dry-season discharge and where the substance goes (compared with step 6) | step6b |
 
 **Phenomena and mechanisms**:
 
@@ -99,7 +101,8 @@ evapotranspiration.
 | Tank beds are clogged by sediment and pass little water | lower infiltration capacity in the tank-bed cells | `fn_gw_ksv` |
 | The particulate form settles where the flow is slow and is lifted by floods | single-phase settling (the whole amount settles at the settling velocity), a surface buildup pool holding the settled part, and wash-off by flow shear | `wq_vs`, `f_wq_settle = 1`, `wq_wash_kf`, `wq_wash_tauc` |
 | The particulate form does not infiltrate into the soil | transport with infiltration switched off | `f_wq_infil = 0` |
-| Water evaporates from soil and water surfaces and plants transpire (the substance stays) | evapotranspiration: a constant potential evapotranspiration PET is taken every step, as far as there is water, from surface water and then groundwater (no suppression by the dryness of the soil). On channel-width cells the channel's water surface evaporates from the channel water and the land part from the groundwater | `fn_evap`, `f_evmodel = 1`, `evap0` |
+| Water evaporates from soil and water surfaces and plants transpire (the substance stays) | evapotranspiration: a constant potential evapotranspiration PET is taken every step, as far as there is water, from surface water and then groundwater. On channel-width cells the channel's water surface evaporates from the channel water and the land part from the groundwater | `fn_evap`, `f_evmodel = 1`, `evap0` |
+| As the soil dries, roots take up water less easily and evapotranspiration decreases | the evapotranspiration of the groundwater stage is reduced to the fraction hg/evap_hglim while the subsurface storage hg is smaller than evap_hglim (the form of the FAO-56 water stress coefficient) | `evap_hglim` |
 
 The settings and equations of each mechanism are in the users guide:
 [water quality](../../../docs/en/users_guide/wq.md),
@@ -130,10 +133,13 @@ The settings and equations of each mechanism are in the users guide:
   hydraulic conductivity of groundwater 1e-3 m/s (from step 2; a weathered
   layer with sand and gravel, a value chosen so that hillslope groundwater
   reaches the valleys within 180 days). The run starts from dry soil and an
-  empty aquifer. Evapotranspiration is included only in step 6 (a potential
-  evapotranspiration PET of a constant 4 mm/day over the whole domain and
-  period; a schematic value of a plausible size for the reference
-  evapotranspiration in the tropics).
+  empty aquifer. Evapotranspiration is included only in steps 6 and 6b (a
+  potential evapotranspiration PET of a constant 4 mm/day over the whole
+  domain and period; a schematic value of a plausible size for the reference
+  evapotranspiration in the tropics). Step 6b also adds the reduction by the
+  dryness of the soil with evap_hglim = 0.05 m (a schematic value: the FAO-56
+  estimate (1 − p)·TAW for a soil with a rooting depth of 1 m and available
+  water of 0.1, with a depletion fraction p = 0.5; Allen et al. 1998).
 - **Rain**: ten times every 10 days from day 3, 20 mm/h × 3 hours = 60 mm
   (uniform over the domain; 600 mm in all). From day 100 on it is a dry
   season without rain.
@@ -158,8 +164,8 @@ The settings and equations of each mechanism are in the users guide:
   rivers are recorded every hour.
 - dt = 10 s, 180 days. With gfortran and 4 threads, step 1 takes 16 minutes,
   steps 2–5, which include groundwater flow, about 20 minutes per case, and
-  step 6 15 minutes (measured for steps 1, 4 and 6; about 2 hours 15 minutes
-  for the seven cases). The
+  steps 6 and 6b about 15 minutes (measured for steps 1, 4 and 6; about
+  2 hours 30 minutes for the eight cases). The
   results do not depend on the number of threads (bit-identical with 1 and
   4 threads).
 
@@ -172,6 +178,7 @@ The settings and equations of each mechanism are in the users guide:
 | step5 | param_step5.txt | yes | — (does not enter the ground) | yes | particulate (settling 1 m/day, re-suspension) | no |
 | step5_notank | param_step5_notank.txt | yes | — | no | particulate | no |
 | step6 | param_step6.txt | yes | 100 | yes | dissolved | PET 4 mm/day |
+| step6b | param_step6b.txt | yes | 100 | yes | dissolved | PET 4 mm/day + reduction by dry soil (evap_hglim 0.05 m) |
 
 The common settings (shallow-water flow, internal source, rain,
 monitoring) are collected in param_common.txt, and each param file points
@@ -183,7 +190,7 @@ substance are mass in g and concentration in mg/L (µg/L in the figures).
 ```bash
 cd examples/catchment_metal
 make                     # links to the executables and the inputs (data/, gen_data.py)
-make run                 # compute the seven cases in turn (15–20 minutes each with 4 threads; about 2 hours 15 minutes in all)
+make run                 # compute the eight cases in turn (15–20 minutes each with 4 threads; about 2 hours 30 minutes in all)
 make step3               # to compute only one case
 python3 plot_results.py  # figs/*.png and the tables (with the argument en, English figures in en/figs/)
 ```
@@ -345,15 +352,47 @@ water went (depth over the catchment; the inputs are 600 mm of rain and
   ground. The infiltrated water leaves as evapotranspiration before
   groundwater flow brings it to the valleys, and only the substance stays
   in the soil.
-- **How to read it**: this evapotranspiration has no mechanism that reduces
-  it as the soil dries, and it can take the water of the 4 m soil layer to
-  the end at the rate of the potential evapotranspiration. The dry-season
-  discharge is the low end; read it together with step 4 without
-  evapotranspiration (the high end) as a bracket. The real dry-season
-  discharge lies between them; check it against observed discharges on dry
-  days. At either end the dry-season concentration in the river is set by
-  the amount of diluting water (baseflow), and just below a point source it
-  approaches the concentration of the effluent.
+- **How to read it**: the evapotranspiration of step 6 is set not to
+  decrease as the soil dries (no evap_hglim), so it can take the water of the
+  4 m soil layer to the end at the rate of the potential evapotranspiration.
+  The dry-season discharge is the low end; read it together with step 4
+  without evapotranspiration (the high end) as a bracket. The real
+  dry-season discharge lies between them; check it against observed
+  discharges on dry days. At either end the dry-season concentration in the
+  river is set by the amount of diluting water (baseflow), and just below a
+  point source it approaches the concentration of the effluent.
+
+### Step 6b: + reduction by the dryness of the soil — the drying up comes only a week later
+
+![Step 6b](figs/step6b.png)
+
+The grey lines are step 6 without the reduction. The evapotranspiration
+taken from groundwater is reduced to the fraction hg/0.05 while the
+subsurface storage hg is smaller than evap_hglim = 0.05 m.
+
+- **Evapotranspiration decreases little**: over 180 days the
+  evapotranspiration is 431 mm (444 mm in step 6), only 3 % less. In the wet
+  season it is 3.4 mm per day (3.7 mm), 10 % less, and in the early dry
+  season it is even larger (1.9 mm per day on days 100–140; 1.5 mm), because
+  the water left in the soil in the wet season is taken over a longer time
+  in the dry season. The outflow to the sea is 148 mm (139 mm; 413 mm in
+  step 4).
+- **The drying up comes a week later**: the main river stops flowing on days
+  126–128, only about a week later than in step 6. At G1, 1.5 km below the
+  mine, the dry-season discharge is 0.019 m³/s (0.014) and the concentration
+  is about 505 µg/L; the river in the dry season is the effluent itself.
+- **The export to the sea is four times larger**: because the baseflow
+  continues from the end of the wet season into the early dry season, more
+  substance reaches the sea: 77 kg (13 % of the input; 17 kg in step 6 and
+  315 kg in step 4), and 528 kg remains in the ground.
+- **How to read it**: with evap_hglim = 0.05 m, the time constant with which
+  the soil water decreases without recharge, evap_hglim/PET = 12.5 days, is
+  much shorter than the dry season (80 days), so the soil water runs out
+  within the dry season and the result is close to the low end (step 6). The
+  time constant is proportional to evap_hglim, so the larger evap_hglim is
+  (deep roots, a soil that holds water well), the longer the dry-season
+  baseflow lasts. evap_hglim is given data of the soil and vegetation, to be
+  calibrated against observed dry-season discharges.
 
 ### Summary: where the substance goes, and can tanks be ignored?
 
@@ -371,8 +410,9 @@ farm tributary G3 and amount exported to the sea (logarithmic scale).
 | 5 particulate + tanks | 341.9 (56.4 %) | 0 | 263.5 (99.4) | 2.6 | 5.3 |
 | 5' particulate, no tanks | 429.7 (70.9 %) | 0 | 175.7 (—) | 92.9 | 5.3 |
 | 6 + evapotranspiration (dissolved, tanks) | 16.8 (2.8 %) | 588.2 | 0 | 0.01 | — (the river dries up) |
+| 6b + reduction by dry soil | 77.1 (12.7 %) | 527.8 | 0 | 0.01 | — (dry for most of the dry season) |
 
-The input is 606 kg in all seven cases (mine 389 kg, farmland 217 kg). On
+The input is 606 kg in all eight cases (mine 389 kg, farmland 217 kg). On
 day 180, 1–2 kg is in the surface water. The table is printed by
 `python3 plot_results.py` (the residual of the balance is below 1e-2 g).
 
@@ -399,9 +439,11 @@ day 180, 1–2 kg is in the surface water. The table is printed by
   evapotranspiration, three quarters of the rain return to the atmosphere, the
   dry-season baseflow disappears and the main river dries up (step 6). 97 %
   of the substance stays in the ground and the export to the sea falls from
-  315 kg to 17 kg. To see the amount and quality of river water in the dry
-  season, evapotranspiration and the dryness of the soil that limits it
-  (not in this example) control the result as much as groundwater flow.
+  315 kg to 17 kg. With the reduction by the dryness of the soil (step 6b,
+  evap_hglim 0.05 m) the drying up comes only a week later and the export to
+  the sea is 77 kg. To see the amount and quality of river water in the dry
+  season, evapotranspiration and the amount of soil water that limits it
+  (evap_hglim) control the result as much as groundwater flow.
 - **Point and area sources**: the mine effluent keeps flowing on dry days,
   so it sets the river concentration in the dry season. The load from the
   farmland reaches the rivers with surface runoff during floods and, when
@@ -459,8 +501,10 @@ day 180, 1–2 kg is in the surface water. The table is printed by
   computed from weather observations with the Penman–Monteith equation;
   Allen et al. 1998) with `f_evmodel = 2` of
   [&list_evap](../../../docs/en/users_guide/forcing.md) (it needs the
-  calendar `date0_c`), and calibrate `evap_kc` against observed dry-season
-  discharges.
+  calendar `date0_c`), and calibrate `evap_kc` and `evap_hglim` (how much
+  evapotranspiration decreases as the soil dries; it can be estimated from
+  the available water of the root zone and the depletion fraction) against
+  observed dry-season discharges.
 
 ## What this model cannot represent (differences from real phenomena)
 
@@ -482,14 +526,15 @@ day 180, 1–2 kg is in the surface water. The table is printed by
   domain, and the run covers 180 days. To see accumulation over years or
   repeated wet and dry seasons, use long runs and restarts
   ([restart](../../../docs/en/users_guide/restart.md)).
-- **Evapotranspiration**: there is no mechanism that reduces
-  evapotranspiration as the soil dries (rooting depth, suppression by soil
-  moisture); all the water of the 4 m soil layer can be taken at the rate
-  of the potential evapotranspiration. The dry-season discharge is on the
-  low side, and step 6 is one end of the bracket whose other end is step 4
-  without evapotranspiration. Water surfaces and land use the same PET.
-  Evaporation leaves the substance behind, but there is no upper limit of
-  solubility and no precipitation.
+- **Evapotranspiration**: the only mechanism that reduces
+  evapotranspiration as the soil dries is the linear reduction by the
+  subsurface storage (evap_hglim; step 6b). It does not represent the
+  rooting depth or the vertical distribution of soil water, nor a state in
+  which only the surface layer is wet just after rain. Without evap_hglim
+  (step 6), all the water of the 4 m soil layer can be taken at the rate of
+  the potential evapotranspiration. Water surfaces and land use the same
+  PET. Evaporation leaves the substance behind, but there is no upper limit
+  of solubility and no precipitation.
 - **Values**: terrain, loads and properties are all schematic. Read how the
   results change as mechanisms are added, not the magnitudes of the
   concentrations themselves.
