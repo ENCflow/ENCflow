@@ -3755,6 +3755,17 @@ gwfac_of(gv×wfrac)で換算済みで厳密だったため、湧き水の濃度�
   保たれた
 - **MPI(-Ofast)**: test/gwsect の Run_MPI.sh が np = 1, 2, 4 で逐次 reference と Log.txt・
   wq.csv とも identical。ほかの 3 構成も np = 1, 2, 4 の全出力ファイルが逐次と一致
+- **回帰(-Ofast 逐次。reference を持つ 42 ケースと検定型の 48 ケース、wave_shore を除く
+  全 90 件)**: 89 件が PASS(σ を使う test/bendloss、空隙率の変更の gvchange・bldgdebris、
+  地形変化・氷河・溶岩・VZ・塩水・地下水の各検定を含む)。coastal_drain だけ Log の 1 行
+  (0:35 の S_surf)の最終桁が 1 つ動いた(0.29995782989952 → …951)。このケースは σ を
+  使わず、-O2 の厳密数学ビルドでは変更前(main)と変更後の全出力がバイト一致し、管路層の
+  変更だけを戻した -Ofast ビルドでは reference に一致する = 管路層のファイルに足した
+  σ 用の手続きによる -Ofast/-flto のコード配置のずれ(従来の式を if/else に包む形、別
+  手続きへ送る形、閉形式の写しを使う形のどれでも同じ桁が動いた)。利用者の確認後に
+  ./Run.sh -u で更新し、更新後は identical で PASS
+- **reference の更新(2026-11-04。利用者の確認後)**: coastal_drain(上の 1 行)。
+  test/gwsect の reference は検定を通った最初の実行で作成し、確定した
 
 ## 27. 蒸発散(&list_evap。2026-08-09 実装)
 
