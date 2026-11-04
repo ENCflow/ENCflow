@@ -266,9 +266,9 @@
     {
       "source": "docs/users_guide/geomorph.md",
       "target": "docs/en/users_guide/geomorph.md",
-      "source_sha256": "916247b26b08e4edb798923ff043b56b56c3a31713d7144952566f2a6cb8b424",
-      "target_sha256": "e3bcc8b0cde308a14c1af46da1a0ba315f58a91b2d031d6e26512ff1046d53d9",
-      "reviewer": "Claude (Claude Code session; compared the Japanese source with the English mirror after adding the base-level section of tower_karst and correcting the water-table statement of dissol_src 4/5, 2026-11-04)",
+      "source_sha256": "1ecf57a79d62a06f187b4f010a253fd8ecdf0c4ce8a64a784dc10370e235726b",
+      "target_sha256": "927b50c269115566eb27342b3248b470fc6d4760d8a5cfe31840482e921deaf0",
+      "reviewer": "Claude (Claude Code session; after merging origin/main 57a528b8 into the karst branch, compared the Japanese source with the English mirror where both sides had edited: main's paired edits (fluv_bcfeed, inflow-segment faces §19.12, delta morfac note, gwsect index row) and the branch's dissol_src 4/5 and talus paragraphs, 2026-11-04)",
       "method": "assistant",
       "reviewed_on": "2026-11-04"
     },
@@ -428,9 +428,9 @@
     {
       "source": "docs/users_guide/sediment.md",
       "target": "docs/en/users_guide/sediment.md",
-      "source_sha256": "317ba56aaf95f944acc88013a7e35b41d966d3a392fecc2e2858c43c6b92d228",
-      "target_sha256": "1a49f7370956a9b8c4263bc97569c1dca41b185cf26504c01f6ec0e84e0f6f51",
-      "reviewer": "Claude (Claude Code session; compared the Japanese source with the English mirror after the karst dissolution updates of 2026-11-03/04: talus dissolution, dissol_src 4/5, fn_dissol multiplier, tests H/I/talus, steady and stone-forest examples)",
+      "source_sha256": "b55425eb15a8e8dbe29abf1c4ca7234eb99d426aaff0a5fc6af6533931ea60f1",
+      "target_sha256": "f591113dc871ae3d1df5832d25568740120e2bbaf69b062e21e163c9db6a810c",
+      "reviewer": "Claude (Claude Code session; after merging origin/main 57a528b8 into the karst branch, compared the Japanese source with the English mirror where both sides had edited: main's paired edits (fluv_bcfeed, inflow-segment faces §19.12, delta morfac note, gwsect index row) and the branch's dissol_src 4/5 and talus paragraphs, 2026-11-04)",
       "method": "assistant",
       "reviewed_on": "2026-11-04"
     },
@@ -2361,6 +2361,15 @@
       "reviewed_on": "2026-11-04"
     },
     {
+      "source": "examples/tower_karst/figs/maps_base.png",
+      "target": "examples/tower_karst/en/figs/maps_base.png",
+      "source_sha256": "08f721c521ba3249151275148c9bf7becdf52f01c6ed6526b03b2177c95176d6",
+      "target_sha256": "d82d3dace0a849c12916b2e67f9baabd215a73dbce3a711f9b96c05c6d01fa65",
+      "reviewer": "Claude (Claude Code session; compared the Japanese source with the English mirror after adding the base-level section of tower_karst and correcting the water-table statement of dissol_src 4/5, 2026-11-04)",
+      "method": "assistant",
+      "reviewed_on": "2026-11-04"
+    },
+    {
       "source": "examples/tower_karst/figs/mechanism.png",
       "target": "examples/tower_karst/en/figs/mechanism.png",
       "source_sha256": "227f18d7e50591c2953f72c821235e26173fc45ed3e1bc59be2641e78f6bc1af",
@@ -2379,6 +2388,15 @@
       "reviewed_on": "2026-11-02"
     },
     {
+      "source": "examples/tower_karst/figs/sections_base.png",
+      "target": "examples/tower_karst/en/figs/sections_base.png",
+      "source_sha256": "3c68a38d5ff3bebdb8fd87da4653da9c89325702267e50228064a73bd85a27ff",
+      "target_sha256": "dfbe1ad2b94c580b2d930002e46c898cd2f8a1ac59971317d868a5e1c8c8fec7",
+      "reviewer": "Claude (Claude Code session; compared the Japanese source with the English mirror after adding the base-level section of tower_karst and correcting the water-table statement of dissol_src 4/5, 2026-11-04)",
+      "method": "assistant",
+      "reviewed_on": "2026-11-04"
+    },
+    {
       "source": "examples/tower_karst/figs/setup.png",
       "target": "examples/tower_karst/en/figs/setup.png",
       "source_sha256": "34e0f1c50f3d3c3e0d9cc1604e1ea22a258a200460d7bd12ce8b8692abc04f36",
@@ -2393,6 +2411,15 @@
       "source_sha256": "d4066c59b5a8a4f82983d4e54aa3840f7e248667e8039518524a1883145989bd",
       "target_sha256": "8cc797a96e8d92ed60f051ef21530f4d510695aa448f0629056140498ffef778",
       "reviewer": "Claude (Claude Code session; compared the Japanese source with the English mirror after the karst dissolution updates of 2026-11-03/04: talus dissolution, dissol_src 4/5, fn_dissol multiplier, tests H/I/talus, steady and stone-forest examples)",
+      "method": "assistant",
+      "reviewed_on": "2026-11-04"
+    },
+    {
+      "source": "examples/tower_karst/figs/towers_base.png",
+      "target": "examples/tower_karst/en/figs/towers_base.png",
+      "source_sha256": "78ff76b0339f6f34b26e668e68aec1b62a41180c9085e58c1def714c23e95eef",
+      "target_sha256": "53c68962a6fa367f8ccfabe51c36e6bfeca0f1ec300a86144a85cefb13dcdf32",
+      "reviewer": "Claude (Claude Code session; compared the Japanese source with the English mirror after adding the base-level section of tower_karst and correcting the water-table statement of dissol_src 4/5, 2026-11-04)",
       "method": "assistant",
       "reviewed_on": "2026-11-04"
     },
@@ -2516,9 +2543,9 @@
     {
       "source": "test/README.md",
       "target": "test/README.en.md",
-      "source_sha256": "d63502ccaf8dcd1e2ccb8deb6369d563b13e6c6c676552cb8a86af7e5f9d5072",
-      "target_sha256": "0565719b0897f4897d1d63d517924a00f6f4ce03e8a283461bd7008e1eb9e492",
-      "reviewer": "Claude (Claude Code session; compared the Japanese source with the English mirror after the karst dissolution updates of 2026-11-03/04: talus dissolution, dissol_src 4/5, fn_dissol multiplier, tests H/I/talus, steady and stone-forest examples)",
+      "source_sha256": "ca81608911ed65d39e5546bf3150c051fd7bd86ae1ec5dcc0f055f35f4ae928d",
+      "target_sha256": "59cc6fd747f6ebc02a9c966a495af5facdf9061d1b604683a0b3a2f09752050b",
+      "reviewer": "Claude (Claude Code session; after merging origin/main 57a528b8 into the karst branch, compared the Japanese source with the English mirror where both sides had edited: main's paired edits (fluv_bcfeed, inflow-segment faces §19.12, delta morfac note, gwsect index row) and the branch's dissol_src 4/5 and talus paragraphs, 2026-11-04)",
       "method": "assistant",
       "reviewed_on": "2026-11-04"
     },
@@ -4447,33 +4474,6 @@
       "reviewer": "Claude (Claude Code session; full-text content and lexical review, no model execution)",
       "method": "assistant",
       "reviewed_on": "2026-10-24"
-    },
-    {
-      "source": "examples/tower_karst/figs/maps_base.png",
-      "target": "examples/tower_karst/en/figs/maps_base.png",
-      "source_sha256": "08f721c521ba3249151275148c9bf7becdf52f01c6ed6526b03b2177c95176d6",
-      "target_sha256": "d82d3dace0a849c12916b2e67f9baabd215a73dbce3a711f9b96c05c6d01fa65",
-      "reviewer": "Claude (Claude Code session; compared the Japanese source with the English mirror after adding the base-level section of tower_karst and correcting the water-table statement of dissol_src 4/5, 2026-11-04)",
-      "method": "assistant",
-      "reviewed_on": "2026-11-04"
-    },
-    {
-      "source": "examples/tower_karst/figs/sections_base.png",
-      "target": "examples/tower_karst/en/figs/sections_base.png",
-      "source_sha256": "3c68a38d5ff3bebdb8fd87da4653da9c89325702267e50228064a73bd85a27ff",
-      "target_sha256": "dfbe1ad2b94c580b2d930002e46c898cd2f8a1ac59971317d868a5e1c8c8fec7",
-      "reviewer": "Claude (Claude Code session; compared the Japanese source with the English mirror after adding the base-level section of tower_karst and correcting the water-table statement of dissol_src 4/5, 2026-11-04)",
-      "method": "assistant",
-      "reviewed_on": "2026-11-04"
-    },
-    {
-      "source": "examples/tower_karst/figs/towers_base.png",
-      "target": "examples/tower_karst/en/figs/towers_base.png",
-      "source_sha256": "78ff76b0339f6f34b26e668e68aec1b62a41180c9085e58c1def714c23e95eef",
-      "target_sha256": "53c68962a6fa367f8ccfabe51c36e6bfeca0f1ec300a86144a85cefb13dcdf32",
-      "reviewer": "Claude (Claude Code session; compared the Japanese source with the English mirror after adding the base-level section of tower_karst and correcting the water-table statement of dissol_src 4/5, 2026-11-04)",
-      "method": "assistant",
-      "reviewed_on": "2026-11-04"
     }
   ]
 }
