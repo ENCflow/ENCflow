@@ -756,10 +756,9 @@ architecture.md。このメモは「現在進行中・未完了の項目」だ�
      水と同じ割合の水質の物質を取水セルの濃度で運ぶようにした(ため池から汲むポンプは
      crs から、管路から汲むポンプは wq_gwc_conc。域外への分は wq.csv の末尾 out_intake_g。
      §30.10。test/wqstruct)。浮遊砂・塩水層・流木・瓦礫は運ばない(利用者の選択)
-   - (要確認 2026-11-04)wq.csv を比較する 7 ケース(tracer・damwq・gwseep・kdpart・
-     sewer_wq・wqbound・gwwidth)の reference は out_intake_g の列が増える分だけ不一致
-     (既存の 26 列と Log は不変。§30.10 の検証記録)。更新は利用者の確認後。test/wqstruct の
-     reference は検定を通った最初の実行で作成(人の確認待ち)
+   - (済 2026-11-04)§30.10 の wq.csv の列追加に伴う 7 ケース(tracer・damwq・gwseep・
+     kdpart・sewer_wq・wqbound・gwwidth)の reference の更新と test/wqstruct の reference の
+     確定は、利用者の確認後に実施した(§30.10 の検証記録)
    - 残(§30.10): (1) 構造物で浮遊砂を運ぶ切り替え(構造物ごと。既定は運ばない = 砂防堰堤の
      カルバート近似を保つ)。(2) 構造物の塩水同伴(取水口の高さの考え方 = 地下水の揚水と
      同じ淡水優先・足りない分は塩水、を決めてから。下の「淡塩2層(鋭利界面)モデル」の

@@ -5108,6 +5108,11 @@ examples/catchment_metal(重金属の流域例題)を作った後の見直しで
   ULP=1 で合格。-O2 厳密数学ビルドでも変更前後の全 24 出力ファイルがバイト一致(このケースは
   境界・構造物・水質を使わず、変更した経路は cqc の判定しか通らない)。4 スレッドの判定が
   ULP=1 を超えうる点は handoff(非静水圧の (g))。reference は更新しない。
+- **reference の更新(2026-11-04。利用者の確認後)**: tracer・damwq・gwseep・kdpart・
+  sewer_wq・wqbound・gwwidth を ./Run.sh -u で更新した。差は wq.csv の末尾の out_intake_g の
+  列(全行 0。既存の 26 列は旧 reference と文字列として一致)と BUILDINFO だけで、Log.txt は
+  不変。更新後の ./Run.sh は 7 ケースと test/wqstruct がすべて identical で PASS。
+  test/wqstruct の reference も確定した。
 
 ## 31. 積雪・融雪モジュール m_snow(&list_snow。2026-08-10 実装)
 
