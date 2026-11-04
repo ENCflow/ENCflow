@@ -31,8 +31,10 @@ schematic values chosen to make the phenomena visible, and do not reproduce the 
 - **Four neighbours converge slowly**: with four neighbours the amount indicators catch up with eight
   neighbours on the 2.5 m grid, but the shape of the deposit (lateral spreading) and the arrival time remain
   off the converged result of eight neighbours.
-- The judgment of when material held by the yield starts to move has a bias depending on the grid
-  orientation with both eight and four neighbours ("What remains" in the results).
+- A bias depending on the grid orientation in the check of whether material at rest starts to move
+  (with both eight and four neighbours) was found while making this example and fixed (developer.md
+  §28.16). The direction dependence that remains as the grid is refined is a few % due to the gravity
+  correction on steep slopes ("What remains" in the results).
 
 ## What happens in a real debris-flow disaster
 
@@ -149,6 +151,13 @@ python3 plot_results.py  # figs/*.png and tables (with the argument en, the Engl
 
 ## Results
 
+The tables and figures are the values of all 26 cases recomputed with the code after the fix of the
+yield rest check (2026-11-04; developer.md §28.16). The differences from before the fix are small (in
+the reference case the deposit on the fan 49,133 → 48,941 m³ and the flowing material 19,088 →
+19,280 m³, with the same sediment reaching the fan; the ratio ranges in the table change by 0.04 or
+less, and the values with four neighbours are almost unchanged), and the conclusions do not change.
+Most of the flow in this example is fast, and the rest check acts only as the flow stops.
+
 ### How the debris flow behaves (reference: eight neighbours, 2.5 m, 0°)
 
 ![Deposits on the 5 m grid](figs/maps_5m.png)
@@ -164,7 +173,7 @@ the top, the valley at 0°, 22.5° and 45° (drawn back in the coordinates along
   opposite the scar, up to 15 m thick.
 - **Down the valley (20-45 s)**: the rest of the material (46,000 m³ of solid) runs down the
   valley as a dense debris flow. On the valley floor the maximum velocity is 25 m/s and the
-  maximum flow depth about 7 m; the front reaches the fan apex at 42 s and the edge of the
+  maximum flow depth 9-12 m in the middle of the valley and 6-7 m just above the apex; the front reaches the fan apex at 42 s and the edge of the
   residential area (100 m from the apex) at 51 s. In the steep valley it runs on its inertia
   without depositing, and the only deposit in the valley is the one opposite the scar.
 - **Deposition on the fan (1-10 min)**: it spreads from the apex, slows and leaves a
@@ -240,7 +249,7 @@ maximum flow depth on the fan, mean of 22.5° and 45°; %):
 
 | | 40 m | 20 m | 10 m | 5 m |
 |---|---:|---:|---:|---:|
-| Eight neighbours | 42 / 42 | 20 / 18 | 14 / 13 | 10 / 9 |
+| Eight neighbours | 42 / 42 | 21 / 19 | 14 / 13 | 10 / 9 |
 | Four neighbours | 100 / 81 | 69 / 50 | 36 / 26 | 20 / 15 |
 
 Range of the main indicators relative to the reference (minimum-maximum over the three
@@ -249,13 +258,13 @@ orientations):
 | Indicator | 8 neighbours 40 m | 8 neighbours 20 m | 8 neighbours 10 m | 8 neighbours 5 m | 4 neighbours 40 m | 4 neighbours 20 m | 4 neighbours 10 m | 4 neighbours 5 m |
 |---|---:|---:|---:|---:|---:|---:|---:|---:|
 | Sediment reaching the fan | 0.95-1.13 | 1.00-1.06 | 0.96-0.99 | 0.98-1.02 | 0.01-0.83 | 0.24-0.89 | 0.75-0.90 | 0.87-1.00 |
-| Deposit area (≥ 0.1 m) | 0.96-1.03 | 0.92-0.94 | 0.90-0.95 | 0.97-1.00 | 0.00-0.68 | 0.32-0.76 | 0.77-0.81 | 0.88-0.95 |
-| Runout of the deposit | 0.95-1.02 | 0.95-0.97 | 0.91-0.94 | 0.95-0.97 | 0.00-0.98 | 0.63-0.97 | 0.88-0.92 | 0.95-1.00 |
-| Area of maximum flow depth ≥ 1 m | 0.58-0.84 | 0.94-1.07 | 1.00-1.10 | 0.96-0.98 | 0.06-0.58 | 0.61-0.77 | 0.83-0.90 | 0.83-0.92 |
+| Deposit area (≥ 0.1 m) | 0.96-1.03 | 0.92-0.96 | 0.90-0.95 | 0.97-1.00 | 0.00-0.68 | 0.32-0.76 | 0.77-0.81 | 0.88-0.95 |
+| Runout of the deposit | 0.95-1.02 | 0.95-0.97 | 0.91-0.94 | 0.95-0.97 | 0.00-0.98 | 0.63-0.97 | 0.88-0.91 | 0.95-1.00 |
+| Area of maximum flow depth ≥ 1 m | 0.58-0.84 | 0.97-1.07 | 1.00-1.10 | 0.96-0.98 | 0.06-0.58 | 0.61-0.77 | 0.83-0.90 | 0.83-0.92 |
 | Area of maximum force ≥ 10 | 0.55-0.91 | 0.91-1.14 | 0.89-0.96 | 0.90-1.00 | 0.36-1.00 | 0.16-1.07 | 0.52-0.92 | 0.74-1.05 |
-| Houses with flow depth ≥ 1 m | 0.39-0.70 | 0.85-0.96 | 0.93-1.09 | 0.89-0.96 | 0.00-0.57 | 0.46-0.78 | 0.78-0.87 | 0.78-0.89 |
+| Houses with flow depth ≥ 1 m | 0.39-0.70 | 0.89-0.96 | 0.93-1.09 | 0.89-0.96 | 0.00-0.57 | 0.46-0.78 | 0.78-0.87 | 0.78-0.89 |
 | Arrival at the apex | 1.08-1.53 | 0.96-1.03 | 1.00-1.05 | 1.01-1.04 | 1.77-3.28 | 0.96-1.84 | 0.92-1.27 | 0.92-1.15 |
-| Lateral spreading of the deposit | 0.87-0.97 | 0.94-0.98 | 0.98-1.01 | 0.99-1.00 | 0.92-1.77 | 0.75-0.90 | 0.89-0.97 | 0.90-0.94 |
+| Lateral spreading of the deposit | 0.87-0.97 | 0.93-0.98 | 0.98-1.01 | 0.99-1.01 | 0.91-1.77 | 0.75-0.90 | 0.89-0.97 | 0.90-0.94 |
 
 (The lateral spreading of the deposit is the standard deviation of the direction of the fan deposit seen from the
 apex. For four neighbours at 40 m with 22.5° and 45° there is almost no deposit on the fan, so this ratio has no
@@ -306,7 +315,7 @@ direction of the fan deposit seen from the apex).
 
 | Valley at 0° | 20 m | 10 m | 5 m | 2.5 m |
 |---|---:|---:|---:|---:|
-| Eight neighbours | 34.2° | 35.1° | 35.0° | 34.9° |
+| Eight neighbours | 34.2° | 35.2° | 35.1° | 34.9° |
 | Four neighbours | 26.2° | 31.1° | 31.2° | 31.9° |
 
 - **The spreading with eight neighbours is not numerical diffusion**: numerical diffusion is proportional to the
@@ -316,17 +325,18 @@ direction of the fan deposit seen from the apex).
   removed by link-wise MUSCL (`f_scalar_scheme = 3`, the default; developer.md §78), which is in effect in this
   example too. As a trial, returning to first-order upwind (`f_scalar_scheme = 1`, the former scheme, in which
   the diagonal links produce a cross-flow numerical diffusion Dy ≈ 0.29uΔy) changed the spreading at 5 m and 0°
-  only by 0.6 % (35.04° → 34.82°); what changes is the sharpness of the concentration (the greatest deposit
+  only by 0.8 % (35.11° → 34.83°); what changes is the sharpness of the concentration (the greatest deposit
   thickness drops by 10 %). The advection of momentum is the momentum-conservative MUSCL (the default), and
   neither uses a diffusion term (eddy viscosity) (`f_diffusion_term = 0`).
-- **The narrowness with four neighbours is a bias in how diagonal flow and stopping are represented**: with four
+- **The narrowness with four neighbours is a bias in how diagonal flow is represented**: with four
   neighbours the spreading grows as the grid is refined (from 26° at 20 m to 32° at 2.5 m), but it approaches
   slowly and does not reach that of eight neighbours even at 2.5 m. The time at which the front reaches the apex
   at 0° also stays at 39 seconds with four neighbours on every grid, earlier than the 42 seconds with eight
   neighbours. Without diagonal edges, flow in a diagonal direction is carried split over two axis-direction
-  edges, and in the edge-by-edge yield check the driving force looks 1/√2 as large, so the flow stops more
-  easily (the same type of bias as the one fixed for lava flows in developer.md §51.4); this is our
-  interpretation (not separated out for debris flows). The amount indicators (sediment reaching the fan, area of
+  edges. Even after the bias of the edge-by-edge yield rest check, in which the driving force looked too small,
+  was fixed (developer.md §28.16), the spreading and the arrival time with four neighbours did not change
+  (31.9° and 39 s at 2.5 m), so we take it to be a bias of representing the transport of momentum and the
+  pressure gradient on axis-direction edges only, not of the stopping check (not separated out further). The amount indicators (sediment reaching the fan, area of
   a flow depth of 1 m or more, number of houses) catch up with eight neighbours at 2.5 m even with four
   neighbours.
 - **Which is right**: closer to the solution of this model's equations (depth-integrated shallow water + the
@@ -368,21 +378,23 @@ cells, as a guide.
   each axis projected onto the velocity direction). Since the direction of the slope is not rounded to
   eight directions, it does not depend on the valley orientation.
 - **Stopping under yield**: whether the flow stops under the Coulomb-type yield is judged by the
-  flow speed, not by the component normal to the edge (developer.md §28.11).
+  flow speed, not by the component normal to the edge (developer.md §28.11), and whether material at
+  rest starts to move is judged by the magnitude of the drive combining the normal and tangential
+  directions of the edge (§28.16). The uniform-slope check
+  [test/dbonset](../../../test/dbonset/en/README.md) confirms that the slope at which the material starts
+  to move and the speed and direction of sliding do not depend on the direction of the slope or on the
+  number of neighbours.
 - **What remains**: the deposit opposite the scar and the flow intensity, because the cross-section
   of the valley is not resolved on coarse grids (two cells or fewer across the floor); the shape of the
   corners of the mountain front at the apex (staircases on the grid); and the number of houses (a
   discrete count). All of them shrink as the grid is refined.
-- **Dependence that remains as the grid is refined (start of motion of material held by the yield)**:
-  whether a slow flow is stopped is decided edge by edge by comparing the edge-normal driving force with
-  the yield, so the slope at which material at rest starts to move comes out 1.2-1.4 times the yield and
-  changes with the direction of the slope. In a small test of a mass placed on a uniform slope (not part of
-  this example; grids of 1 m and 0.5 m), four neighbours did not move with the slope at 45° to the grid
-  until the slope exceeded √2 times the yield, and eight neighbours did not move at 1.3 times with the slope
-  at 0° (they move at 1.2 times at 22.5°). This does not change as the grid is refined. In this example
-  most of the flow is fast and this judgment acts only as the flow stops, which is consistent with the
-  results of eight neighbours not depending on the valley orientation. It is the same type of bias as the
-  one fixed for lava flows in developer.md §51.4; the test procedure and numbers are recorded in
+- **Dependence that remains as the grid is refined (gravity correction on steep slopes)**: the gravity
+  correction for steep slopes (`f_gravity_correction = 1`) takes the effective gravity from the ground
+  slope in the normal direction of each edge, so the effective gravity comes out large on edges oblique
+  to the slope. In the speed of sliding on a uniform slope of 0.38-0.45, eight neighbours came out 3-5 %
+  fast (within 2 % between directions) and four neighbours 0-9 % fast (a trial with the correction on in
+  the setup of test/dbonset). The difference is roughly proportional to the square of the slope, so it is
+  smaller on the valley floor of this example (slope 0.18-0.32). Whether to fix it is an issue recorded in
   docs/handoff.md.
 
 ## What this model cannot represent (differences from real phenomena)
