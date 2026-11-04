@@ -191,12 +191,17 @@ inaccurate widths do not break the model badly (equations, the tracking of
 D on a moving bed and the interpretation of inaccurate widths are in
 [the explanation](channel_models.md) §3).
 
-Combined with [groundwater](gwflow.md), cells with a section shape do not
-exactly conserve the volume of water exchanged by infiltration and seepage
-(an approximation; on infiltration the ground receives somewhat less than
-is taken from the surface). Where the water balance with the groundwater
-matters, check the evolution of the total storage `S_total`, or represent
-the channel with the width alone, without the section shape.
+Combined with infiltration and seepage of [groundwater](gwflow.md), the
+conduit layer, pore water released or taken up by landform change, and melt
+water of snow and glaciers, cells with a section shape conserve the volume of
+the water exchanged (since 2026-11-04; before that seeping water stayed on the
+surface only in the proportion of the water-surface width, infiltration
+handed the ground less than was taken from the surface, and water was lost).
+The amount of infiltration itself is set by the drop of the water level
+(infiltration over the wetted width). Only the equalization limit of the
+exchange with the conduit layer is an approximation linearized with the
+water-surface width at the current depth (water is conserved;
+[explanation](channel_models.md) §3).
 
 **Outputs for this section**: the section shape shows in the relation between the channel stage E = Z + H and the transect Q (rating curve). H is the storage depth, not the rectangular-equivalent depth ([Output and monitoring](#output-and-monitoring)).
 

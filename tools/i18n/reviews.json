@@ -167,20 +167,20 @@
     {
       "source": "docs/users_guide/channel.md",
       "target": "docs/en/users_guide/channel.md",
-      "source_sha256": "1c777860452e2d967314de3dd541496b33f9914a402434b8cad86d0054363e60",
-      "target_sha256": "93e5d2dc5b3f18c3709315deb3ad21afec0b53a6f89b22ce60eff81edce7dd78",
-      "reviewer": "Claude (Claude Code session; compared the Japanese master and the English mirror after adding the note on subsurface water exchange for subgrid channel width cells and the section-shape limitation, 2026-11-03)",
+      "source_sha256": "708f97da4e0ea05a301a84e394f82921dadf9ebcc4384b9cfc136897b9f51175",
+      "target_sha256": "67a525eff4eff118365beacdb5e6abc11b19a025cdec21c8f4319162ee6ed4d9",
+      "reviewer": "Claude (Claude Code session; compared the Japanese and English changes for the exact volume exchange on section-shape cells, 2026-11-04)",
       "method": "assistant",
-      "reviewed_on": "2026-11-03"
+      "reviewed_on": "2026-11-04"
     },
     {
       "source": "docs/users_guide/channel_models.md",
       "target": "docs/en/users_guide/channel_models.md",
-      "source_sha256": "308f63618caf260bc5377631b4e7b57df1f9254f0688a42afe4dbd6cefdb5e07",
-      "target_sha256": "d502e2e5842a50198054009c978afdd48e7ab4cb23683cb99674928f8d07ceda",
-      "reviewer": "Claude (Claude Code session; reviewed the Japanese source against the English mirror after unifying the term passage width / 通過幅 and noting the original paper's term, 2026-11-03)",
+      "source_sha256": "67c15dab4947448a8de95779eb2edfcae30725cc9faf5b10be0b4df9de859521",
+      "target_sha256": "603652adb01519b95d8eb7372af9327e27681c3d59ef17f44f0484c76c9beeae",
+      "reviewer": "Claude (Claude Code session; compared the Japanese and English changes for the exact volume exchange on section-shape cells, 2026-11-04)",
       "method": "assistant",
-      "reviewed_on": "2026-11-03"
+      "reviewed_on": "2026-11-04"
     },
     {
       "source": "docs/users_guide/coordinates.md",
@@ -2516,9 +2516,9 @@
     {
       "source": "test/README.md",
       "target": "test/README.en.md",
-      "source_sha256": "2efa46986a9c1ccd56a48ce5ec23222b4341e282b432b9257168dd3faf8544cb",
-      "target_sha256": "3af58a5dcea1da2ae1ea9ce88ca964efc9a3c2f2ee11d574b50fe2753365e1fd",
-      "reviewer": "Claude (Claude Code session; compared the Japanese and English changes for the water-quality substance carried by structures and withdrawals, 2026-11-04)",
+      "source_sha256": "2a073f42fc5588cc8ac043e11a08a7e960bae55d7cd191b2eb363cfac609bb48",
+      "target_sha256": "b2adbe402d5541dcb4be73207e7b68d3e8ea622c1fbd29bb3848151344cf778e",
+      "reviewer": "Claude (Claude Code session; compared the Japanese and English changes for the exact volume exchange on section-shape cells, 2026-11-04)",
       "method": "assistant",
       "reviewed_on": "2026-11-04"
     },
@@ -3090,6 +3090,15 @@
       "reviewed_on": "2026-10-30"
     },
     {
+      "source": "test/gwsect/README.md",
+      "target": "test/gwsect/en/README.md",
+      "source_sha256": "a11f5ab1daeaeaf92370cbd9abbfafd1da3ef4dd8098dc72f700da49c7266595",
+      "target_sha256": "a07742cb96aa7f6ad1bbc9fd58ebf907cccaa4456565facddec2a069d4f4349d",
+      "reviewer": "Claude (Claude Code session; full-text review of the new test README and its English mirror, 2026-11-04)",
+      "method": "assistant",
+      "reviewed_on": "2026-11-04"
+    },
+    {
       "source": "test/gwseep/README.md",
       "target": "test/gwseep/en/README.md",
       "source_sha256": "fc9c92f201138ece88b36c37d926acbf9ba72eb366d2fca4350621cf7b70e4f4",
@@ -3128,11 +3137,11 @@
     {
       "source": "test/gwwidth/README.md",
       "target": "test/gwwidth/en/README.md",
-      "source_sha256": "9f643268bc31c46949dc7fcfc44455b3878bacf31064db1ff84df13bf9379961",
-      "target_sha256": "03b31dffd023116fc0dc627dbbd06c0df4dbc64e0e890447b2d99e4289618f81",
-      "reviewer": "Claude (Claude Code session; full-text review of the new test README and its English mirror, 2026-11-03)",
+      "source_sha256": "3c0a3e44bf52fdeb75214651764b6bde1e1de5e6d32d19d8bc37466a1cb4d8d1",
+      "target_sha256": "0dad9a1be045bab8772ca8490d51e5169cc24776dc7eebbf5423a09adfbbc93e",
+      "reviewer": "Claude (Claude Code session; compared the Japanese and English changes for the exact volume exchange on section-shape cells, 2026-11-04)",
       "method": "assistant",
-      "reviewed_on": "2026-11-03"
+      "reviewed_on": "2026-11-04"
     },
     {
       "source": "test/hillslope/README.md",
