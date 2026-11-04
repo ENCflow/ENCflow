@@ -104,9 +104,9 @@
     {
       "source": "docs/users_guide.md",
       "target": "docs/en/users_guide.md",
-      "source_sha256": "9863b6c37e6c14b209b8f4faa4cc3323733c724246959c2a743cafa2e37c9791",
-      "target_sha256": "35a38c5007dca12306f1b1b92fc3aedd5f336fe6a5d32f1414c9dc8d1080e32f",
-      "reviewer": "Claude (Claude Code session; full-text content and lexical review, no model execution)",
+      "source_sha256": "4d08d25b8516444433f5e5fe90364b4fa6135a937d5eee3294a84894dd3bd08f",
+      "target_sha256": "fee89ec217233c14c8189b20c632b405fa8df7433eed5d8e74818b86380e707a",
+      "reviewer": "Claude (Claude Code session; merge of claude/ecstatic-edison-e51vrz into main: both sides changed this pair; the merged files differ from main's recorded version only by the branch's passages (gl_lc, glacier_valley, test/glacier row, total count 776), compared side by side in Japanese and English)",
       "method": "assistant",
       "reviewed_on": "2026-11-04"
     },
@@ -275,11 +275,11 @@
     {
       "source": "docs/users_guide/glacier.md",
       "target": "docs/en/users_guide/glacier.md",
-      "source_sha256": "2e4dcc9fc39537a311ddd148f546bab4f214a427f02485f237c4fe9d0b636052",
-      "target_sha256": "3728fe77c8e517c96845d5a08668966be73604240fe62cd05dfb3ee927fcebe8",
-      "reviewer": "Claude (Claude Code session; glacier avalanche D-infinity change: changed passages compared side by side with the Japanese source, unchanged parts as recorded earlier)",
+      "source_sha256": "73cb30561b968080962ed776bd3df76b6496132e57332e84ca3f4bb54727e811",
+      "target_sha256": "84c44eb98e9e9951958ead8c8431b9fe4f4fcb86d5317ec8c9a3d7ed1bba88f3",
+      "reviewer": "Claude (Claude Code session; glacier_valley example registration: changed passages compared side by side with the Japanese source, unchanged parts as recorded earlier)",
       "method": "assistant",
-      "reviewed_on": "2026-11-03"
+      "reviewed_on": "2026-11-04"
     },
     {
       "source": "docs/users_guide/gwflow.md",
@@ -383,9 +383,9 @@
     {
       "source": "docs/users_guide/params_index.md",
       "target": "docs/en/users_guide/params_index.md",
-      "source_sha256": "7e65d2c05334c38dcea549d2420b4662f6a126409bad8698826076b05319f079",
-      "target_sha256": "d47c45b90950fadc63b758dd3bd11cf43e30420705c92288b0d998ed52f823ab",
-      "reviewer": "Claude (Claude Code session; full-text content and lexical review, no model execution)",
+      "source_sha256": "3825c84dba7ec57ec3155e61ddfd014e1524d58bca5aeb526786eef3bed5e2da",
+      "target_sha256": "cbe2cf4fa1d196c1c16f59fdb209f59bf9d70f2936752f1788a18bee9f3d5090",
+      "reviewer": "Claude (Claude Code session; merge of claude/ecstatic-edison-e51vrz into main: both sides changed this pair; the merged files differ from main's recorded version only by the branch's passages (gl_lc, glacier_valley, test/glacier row, total count 776), compared side by side in Japanese and English)",
       "method": "assistant",
       "reviewed_on": "2026-11-04"
     },
@@ -491,11 +491,11 @@
     {
       "source": "docs/users_guide/usecases.md",
       "target": "docs/en/users_guide/usecases.md",
-      "source_sha256": "be22726114ae933d639b53368c941ed8ce539fecbaca5e208fb19c8988187630",
-      "target_sha256": "5f8296051d123b584dc98e49c52afad269ba907c31ac2c15bdb1c3e8c7e1209b",
-      "reviewer": "Claude (Claude Code session; stratovolcano example registration: changed passages compared side by side with the Japanese source, unchanged parts as recorded earlier)",
+      "source_sha256": "18098fc96e87faed390b8a1ee88841b0752ff58a1ca9ff15ddf1c692ab1d6c2e",
+      "target_sha256": "49dc2e90df9ac284519083e2bf6435a82888ee75cb277aeb80816db3af968ad2",
+      "reviewer": "Claude (Claude Code session; glacier_valley example registration: changed passages compared side by side with the Japanese source, unchanged parts as recorded earlier)",
       "method": "assistant",
-      "reviewed_on": "2026-11-03"
+      "reviewed_on": "2026-11-04"
     },
     {
       "source": "docs/users_guide/user_routines.md",
@@ -644,11 +644,11 @@
     {
       "source": "examples/List_samples/list_glacier.txt",
       "target": "examples/List_samples/en/list_glacier.txt",
-      "source_sha256": "d97324cfe1d884499a2cf4d676224df64688e7e360c37c5037bd39ee072508d9",
-      "target_sha256": "b028f561a2a78f19feefacdcf10e31a128c8068135c69479d6271e51da95cbc4",
-      "reviewer": "Claude (Claude Code session; glacier avalanche D-infinity change: changed passages compared side by side with the Japanese source, unchanged parts as recorded earlier)",
+      "source_sha256": "6027bf0879bd5a259882cda8051278b3ff8f7bfe682accbf01095950f2694098",
+      "target_sha256": "b89554adff109f22d3f621a98f11aafe1eb46b9c9b623d78bb2a39d9d36e6797",
+      "reviewer": "Claude (Claude Code session; gl_lc default max(500 m, 2dx), §45.4; full-text content and lexical review, no model execution)",
       "method": "assistant",
-      "reviewed_on": "2026-11-03"
+      "reviewed_on": "2026-11-04"
     },
     {
       "source": "examples/List_samples/list_gwflow.txt",
@@ -815,9 +815,9 @@
     {
       "source": "examples/README.md",
       "target": "examples/README.en.md",
-      "source_sha256": "4b99f33f24aac92e9702c87a8ccc41eee2b4b691a80da45ff1edfad0c5f44207",
-      "target_sha256": "13d359846d857fcf30edad01e357ac0a73e51aada0f0050ee1676d72d2ebe79c",
-      "reviewer": "Claude (Claude Code session; after merging origin/main d889f0a2 into the karst branch, compared the Japanese source with the English mirror where both sides had edited the index tables (main: catchment_metal, gwwidth, gwsect, evapdry rows; branch: dissol/rockfall/stone_forest rows), 2026-11-04)",
+      "source_sha256": "a1539e28d7534c61dcbcf9b0d4373b2686ed66f299b1f103dea538aef0516170",
+      "target_sha256": "5bcd7e8aa213849656ef8d840b3fe00a1fa436a7e34ed54bf97a089112bf774b",
+      "reviewer": "Claude (Claude Code session; merge of claude/ecstatic-edison-e51vrz into main: both sides changed this pair; the merged files differ from main's recorded version only by the branch's passages (gl_lc, glacier_valley, test/glacier row, total count 776), compared side by side in Japanese and English)",
       "method": "assistant",
       "reviewed_on": "2026-11-04"
     },
@@ -1549,6 +1549,51 @@
       "reviewer": "Claude (Claude Code session; example reruns with f_opening_dynamic default 3)",
       "method": "assistant",
       "reviewed_on": "2026-10-31"
+    },
+    {
+      "source": "examples/glacier_valley/README.md",
+      "target": "examples/glacier_valley/en/README.md",
+      "source_sha256": "919ade5e0ea9353856c0ff466e68bf51e05ee0a4faeb58d8885a4b2f79905a74",
+      "target_sha256": "ff3a51989d66c9b56a3907ece9781e53ff653e8f11efd0eca0da9fbde73ad994",
+      "reviewer": "Claude (Claude Code session; new example glacier_valley: English mirror written alongside the Japanese source and compared section by section, including numbers, figure captions and references)",
+      "method": "assistant",
+      "reviewed_on": "2026-11-04"
+    },
+    {
+      "source": "examples/glacier_valley/figs/glacier.png",
+      "target": "examples/glacier_valley/en/figs/glacier.png",
+      "source_sha256": "ee9e20b4c98c041dae06204ca4079947bf4c334383d26dd3c17cb59717b3ea6a",
+      "target_sha256": "c90bb35544d1b433400dd9dc1d8dc05315e1c0251e2e94f80c1b9897e6a0a409",
+      "reviewer": "Claude (Claude Code session; English figure drawn by plot_results.py en from the same results as the Japanese figure (2026-11-04); titles, labels and legends compared, same data and layout)",
+      "method": "assistant",
+      "reviewed_on": "2026-11-04"
+    },
+    {
+      "source": "examples/glacier_valley/figs/setup.png",
+      "target": "examples/glacier_valley/en/figs/setup.png",
+      "source_sha256": "f92cf08e91710c45454dc40ded8f49f66090f1d5929b0065548ebda950068a55",
+      "target_sha256": "b7bf42420bee2bc91445dd767b0a815b649377fb4b7795098009f681ec8f350a",
+      "reviewer": "Claude (Claude Code session; English figure drawn by plot_results.py en from the same results as the Japanese figure (2026-11-04); titles, labels and legends compared, same data and layout)",
+      "method": "assistant",
+      "reviewed_on": "2026-11-04"
+    },
+    {
+      "source": "examples/glacier_valley/figs/valley.png",
+      "target": "examples/glacier_valley/en/figs/valley.png",
+      "source_sha256": "bdc513789bf6cc485baf49e54f0be63469a98a8ff8c01b23f1c1890483b341f6",
+      "target_sha256": "f438ef7818061f53d70142737728ae3a01af257d6647ca8f16a2645f2e26dcc6",
+      "reviewer": "Claude (Claude Code session; English figure drawn by plot_results.py en from the same results as the Japanese figure (2026-11-04); titles, labels and legends compared, same data and layout)",
+      "method": "assistant",
+      "reviewed_on": "2026-11-04"
+    },
+    {
+      "source": "examples/glacier_valley/figs/x10.png",
+      "target": "examples/glacier_valley/en/figs/x10.png",
+      "source_sha256": "691e13d7221502248abce3656ef51e42dec93bb768aa5c9c6d3899186bd221d2",
+      "target_sha256": "2985a926020e53b9b8706aee822a2083cf0704e19210bea4bc719e678c52203c",
+      "reviewer": "Claude (Claude Code session; English figure drawn by plot_results.py en from the same results as the Japanese figure (2026-11-04); titles, labels and legends compared, same data and layout)",
+      "method": "assistant",
+      "reviewed_on": "2026-11-04"
     },
     {
       "source": "examples/karst/README.md",
@@ -2588,9 +2633,9 @@
     {
       "source": "test/README.md",
       "target": "test/README.en.md",
-      "source_sha256": "7243f92c20ef9e159d037f8fbf8867946c9800e6002f3ad8789affc14d6c3678",
-      "target_sha256": "9d8f0e8d4266d4675bbb8d919fbcd7c0e6bcb4960e8f14cf42841f44bbdaaedc",
-      "reviewer": "Claude (Claude Code session; after merging origin/main d889f0a2 into the karst branch, compared the Japanese source with the English mirror where both sides had edited the index tables (main: catchment_metal, gwwidth, gwsect, evapdry rows; branch: dissol/rockfall/stone_forest rows), 2026-11-04)",
+      "source_sha256": "f4308b5c174549d89b470142e88a97e4cd4aa6841c36819f370610dc452f7dd2",
+      "target_sha256": "cb76cd67de441a1114e0977e5782860567af2e9e8d7a6bccda65ba2f5d53d31a",
+      "reviewer": "Claude (Claude Code session; merge of claude/ecstatic-edison-e51vrz into main: both sides changed this pair; the merged files differ from main's recorded version only by the branch's passages (gl_lc, glacier_valley, test/glacier row, total count 776), compared side by side in Japanese and English)",
       "method": "assistant",
       "reviewed_on": "2026-11-04"
     },
@@ -3083,11 +3128,11 @@
     {
       "source": "test/glacier/README.md",
       "target": "test/glacier/en/README.md",
-      "source_sha256": "2f3fd2c1abe7ee7d31f0e336719eee190d6fccb3387303d9731c27a60ee74110",
-      "target_sha256": "21a5df11231bdf22e487292f7737e26cf2181a890571bcae38bec0fb7bbc6ae2",
-      "reviewer": "Claude (Claude Code session; glacier avalanche D-infinity change: changed passages compared side by side with the Japanese source, unchanged parts as recorded earlier)",
+      "source_sha256": "6fba3dbafb5bfdb9f174e6636a949f6095fec127f5fb373ac019f25b88d259a0",
+      "target_sha256": "9d4c4f1e65f6a5595eb82dceb2f03749a47ebdc86c0989126a05dc11fb574fef",
+      "reviewer": "Claude (Claude Code session; gl_lc default max(500 m, 2dx), §45.4; full-text content and lexical review, no model execution)",
       "method": "assistant",
-      "reviewed_on": "2026-11-03"
+      "reviewed_on": "2026-11-04"
     },
     {
       "source": "test/glacier/figs/avalanche.png",
@@ -3115,6 +3160,15 @@
       "reviewer": "Claude (Claude Code session; English figure drawn by the same script with the en switch; visual check)",
       "method": "assistant",
       "reviewed_on": "2026-11-03"
+    },
+    {
+      "source": "test/glacier/figs/lc.png",
+      "target": "test/glacier/en/figs/lc.png",
+      "source_sha256": "f9cb0260892e12c7b8fcb0800b070fcb25b9fe95b3e0fdcc7b13cc5131e9b924",
+      "target_sha256": "a2f2a65ce19922362ee5968f03b5445a62e0b9e22e228cc3f710d0c493b6afe1",
+      "reviewer": "Claude (Claude Code session; English figure drawn by the same script with the en switch; visual check)",
+      "method": "assistant",
+      "reviewed_on": "2026-11-04"
     },
     {
       "source": "test/gtif/README.md",

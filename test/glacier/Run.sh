@@ -8,7 +8,10 @@
 #      (氷河形成・氷河下侵食・NaN なし)
 #   4) 雪崩再配分の等方性(param_ava.txt): 円錐の雪が方向によらず再配分される
 #      こと+水当量の保存
-# 判定は Check_halfar.py / Check_cirque.py / Check_ava.py
+#   5) 侵食の結合長 gl_lc(param_lc.txt・param_lc2.txt・param_lc0.txt・
+#      param_lc02.txt): V 字谷の侵食の形が gl_lc > 0 では格子によらず氷の幅に
+#      広がること(gl_lc = 0 との比較)
+# 判定は Check_halfar.py / Check_cirque.py / Check_ava.py / Check_lc.py
 
 sdir=$(dirname "$(readlink -f "$0")")
 
@@ -21,6 +24,9 @@ set -o pipefail
 ./encflow param.txt | tee Screen.log || exit 1
 ./encflow param_cirque.txt | tee Screen_cirque.log || exit 1
 ./encflow param_ava.txt | tee Screen_ava.log || exit 1
+for c in lc lc2 lc0 lc02; do
+    ./encflow param_$c.txt | tee Screen_$c.log || exit 1
+done
 set +o pipefail
 echo ""
 
@@ -28,6 +34,7 @@ rc=0
 python3 "$sdir/Check_halfar.py" result Screen.log || rc=1
 python3 "$sdir/Check_cirque.py" result_cirque || rc=1
 python3 "$sdir/Check_ava.py" result_ava Screen_ava.log || rc=1
+python3 "$sdir/Check_lc.py" || rc=1
 
 # 構成3: 最小入力(既定値)と構成3'(既定値の明示)の同値検定(§65)
 set -o pipefail
@@ -42,7 +49,7 @@ else
     rc=1
 fi
 ndef=$(grep -c "(default)" Screen_min.log)
-[ "$ndef" -eq 4 ] || { echo "FAIL: expected 4 '(default)' lines, got $ndef" >&2; rc=1; }
+[ "$ndef" -eq 5 ] || { echo "FAIL: expected 5 '(default)' lines, got $ndef" >&2; rc=1; }
 
 if [ $rc -eq 0 ]; then
     echo "=== glacier verification PASS ==="
