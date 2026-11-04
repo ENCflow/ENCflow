@@ -11,7 +11,8 @@
 #                                   堆積する(表示と復元した Σh_s A の一致、終了時の h_s = 0。§89.20)。
 #                                   岩盤面 z − sd は岩盤侵食の分だけ下がる(ΔR + ΔRi = 0)
 #   Check_dbrock.py db8        DB8: 2 セル周期の凹凸の上でも各セルで自己被覆の解析解が成り立ち
-#                                   (流向の河床勾配は下流側の片側差分)、凸部ほど削れる(§89.24)
+#                                   (流向の河床勾配は下流側の片側差分、有効重力の地盤の勾配は両隣との
+#                                   差の minmod。§91)、凸部ほど削れる(§89.24)
 # 水深・土砂柱状量・z・sd は save の state.dat(倍精度)、Ri は geomorph_rockinc.dat から読む。
 # 定数は param*.txt・make_init.py と対で保守する。
 import sys, os, math, struct, re
@@ -82,13 +83,23 @@ def report(label, ok, detail):
     return ok
 
 
-def ed0(h, hs, zc, zd, fr):
+def gcell(zu, zc, zd):
+    """セルの地盤の勾配(南北の両隣との差の minmod。m_swflow_enc の zdiff_minmod と同じ。東西は
+    両側の河岸が高く差の符号が逆なので 0)"""
+    dp, dm = zd - zc, zc - zu
+    if dp * dm <= 0.0:
+        return 0.0
+    return (dp if abs(dp) < abs(dm) else dm) / DX
+
+
+def ed0(h, hs, zu, zc, zd, fr):
     """裸岩の低下速度 E_d0(m_geomorph_debris のパス 1 と同じ式。流向 = 南向きの河床勾配を、
-    自セル zc と下流(南)の近傍 zd の片側差分で求める。slope_flow と同じ)"""
+    自セル zc と下流(南)の近傍 zd の片側差分で求める(slope_flow と同じ)。有効重力は運動方程式と
+    同じ g/(1 + |∇z|²) で、|∇z| はセルの地盤の勾配(北 zu・南 zd との差の minmod。§91)"""
     ht = h + max(hs, 0.0)
     c = max(hs, 0.0) / ht
     tan = (zc - zd) / DX
-    ge = G / (1.0 + tan ** 2)
+    ge = G / (1.0 + gcell(zu, zc, zd) ** 2)
     taud = RHO * (1.0 + SGRAV * c) * ge * ht * tan
     return fr * KD * (taud / TAUCD - 1.0) ** MD if taud > TAUCD else 0.0, taud, c
 
@@ -103,7 +114,7 @@ def check_db1():
     taus, cs, nzero, rizero = [], [], 0, 0.0
     for j in range(J1 - 1, J2):
         fr = fr1(IC, j + 1)
-        e, taud, c = ed0(h[j][i], hs[j][i], z[j][i], z[j + 1][i], fr)
+        e, taud, c = ed0(h[j][i], hs[j][i], z[j - 1][i], z[j][i], z[j + 1][i], fr)
         taus.append(taud)
         cs.append(c)
         h0 = sd1(IC, j + 1)
@@ -246,7 +257,7 @@ def check_db8():
     emax, num, den = 0.0, 0.0, 0.0
     taus = []
     for j in range(J1 - 1, J2):
-        e, taud, c = ed0(h[j][i], hs[j][i], z[j][i], z[j + 1][i], 1.0)
+        e, taud, c = ed0(h[j][i], hs[j][i], z[j - 1][i], z[j][i], z[j + 1][i], 1.0)
         taus.append(taud)
         lhs = math.exp(sd[j][i] / HS) - 1.0
         emax = max(emax, abs(lhs / (e * T1 / HS) - 1.0))

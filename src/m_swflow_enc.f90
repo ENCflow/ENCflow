@@ -30,6 +30,8 @@ module m_swflow_enc
                                       !   gfortran の LTO でシンボル未解決になるため公開)
   public :: m_swflow_enc_set_debris   ! 土石流抵抗則の設定口(m_geomorph の
                                       ! init_debris が呼ぶ。swflow init より前)
+  public :: zdiff_minmod              ! 地盤の勾配の minmod 差分(重力補正の gravity_prepare と、
+                                      ! m_geomorph の土石流の岩盤侵食の有効重力が使う。§91)
 
   ! 変数群(§71 0d)。opt/geo は nvfortran の submodule バグ回避(TPR #27323 系)で
   ! 公開(修正され次第 private に戻す)。chn は m_geomorph の掃流砂・m_wq・流木・
@@ -1823,7 +1825,9 @@ end subroutine
 ! 軸方向の地盤の差の minmod(+側の差 z(+) − z と −側の差 z − z(−))。両側が有効セル
 ! (x > 0)なら符号が同じときだけ絶対値の小さい方、違えば(折れの頂部・底部)0。片側
 ! だけ有効ならその差、どちらもなければ 0。x は番兵付き (0:nx+1, 0:ny+1) なので、z は
-! 有効と分かった近傍だけ読む(Fortran の .and. は短絡評価を保証しない)
+! 有効と分かった近傍だけ読む(Fortran の .and. は短絡評価を保証しない)。
+! 重力補正のセルの勾配(gravity_prepare)と、土石流による岩盤侵食の有効重力(m_geomorph_debris
+! の calc_debris)が共用する(有効重力の定義を運動方程式と揃える。developer.md §91)
 !----------------------------------------------------------------------
 pure function zdiff_minmod(g, s, i, j, di, dj) result(d)
   type(t_geoinfo), intent(in) :: g

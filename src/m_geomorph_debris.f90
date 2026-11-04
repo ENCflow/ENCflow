@@ -36,13 +36,15 @@
 !   土石流による岩盤侵食(f_rockinc の rock_kdb > 0。§89.18、plan §12): パス 1 で、濃い混合体
 !   (C >= db_cmin)が流れている(|V| >= db_vstop)湿潤セルの裸岩の低下速度
 !     E_d0 = f_r k_d max(τ_d/τ_cd − 1, 0)^{m_d}、τ_d = ρ_w (1 + sC) g_e h_t tanθ_f
-!   を gm%rk%edb に書く(θ_f は slope_flow の流向の河床勾配(下流側の片側差分)で下りのみ、g_e は運動方程式と同じ
-!   有効重力 g cos²θ_f(f_gravity_correction = 1)か g)。パス 2 は E-D を適用した後の自セルの
+!   を gm%rk%edb に書く(θ_f は slope_flow の流向の河床勾配(下流側の片側差分)で下りのみ。
+!   g_e は運動方程式と同じ有効重力で、f_gravity_correction = 1 なら g cos²θ = g/(1 + |∇z|²)
+!   (θ は地盤の傾斜角、|∇z| はセルの地盤の勾配の大きさ。軸方向の両隣との差の minmod =
+!   zdiff_minmod。developer.md §91)、0 なら g)。パス 2 は E-D を適用した後の自セルの
 !   sd で被覆を厳密に積分し(rock_cover_inc)、生成物を 1:1 で sd に足す(z は不変)。
 !======================================================================
 submodule(m_geomorph) m_geomorph_debris
   use m_parallel, only : par_stop, dcp, par_halo_cell
-  use m_swflow_enc, only : m_swflow_enc_set_debris, opt, bcs, bc_open_face
+  use m_swflow_enc, only : m_swflow_enc_set_debris, opt, bcs, bc_open_face, zdiff_minmod
   use m_fileio, only : fileio_read_matrix
   implicit none
 
@@ -370,6 +372,7 @@ module subroutine calc_debris(gm, p, g, s, dtw)
   real :: tanth, cinf, cc, hm, fx, dzb, cap, fxg, hseq, dhw, fwh
   real :: tanthc, sinthc, vcr, fac
   real :: tanf, ge, taud, fr, bd, bdm, area   ! 土石流による岩盤侵食(§89.18)
+  real :: gzx, gzy                            ! 同上の有効重力の地盤の勾配(§91)
   real(real64) :: vd
   logical :: rkd, gcorr
 
@@ -394,7 +397,7 @@ module subroutine calc_debris(gm, p, g, s, dtw)
 
   ! --- パス1: 交換量の計算(時刻 n の状態のみを読む) ---
   !$omp parallel do schedule(static) private(i, j, tanth, cinf, cc, hm, fx, hseq, &
-  !$omp                                      tanthc, sinthc, vcr, fac, tanf, ge, taud, fr)
+  !$omp                                      tanthc, sinthc, vcr, fac, tanf, ge, taud, fr, gzx, gzy)
   do j = dcp%js, dcp%je
     do i = g%wx(1,j), g%wx(2,j)
       gm%dbr%fx(i,j) = 0.0
@@ -523,8 +526,15 @@ module subroutine calc_debris(gm, p, g, s, dtw)
             if (fr > 0.0) then
               tanf = slope_flow(g, s, i, j)
               if (tanf > 0.0) then
+                ! 有効重力は運動方程式(correct_ge)と同じ g cos²θ = g/(1 + |∇z|²)。θ は地盤の
+                ! 傾斜角で流向によらない(流向の勾配 θ_f で求めると、斜面を斜めに流れるセルで
+                ! g_e を大きく見積もる。§91)
                 ge = p%gg
-                if (gcorr) ge = p%gg / (1.0 + tanf**2)
+                if (gcorr) then
+                  gzx = zdiff_minmod(g, s, i, j, 1, 0) / g%dx
+                  gzy = zdiff_minmod(g, s, i, j, 0, 1) / g%dy
+                  ge = p%gg / (1.0 + gzx**2 + gzy**2)
+                end if
                 taud = rk_rhow * (1.0 + gm%sgrav * cc) * ge * hm * tanf
                 if (taud > gm%rk%taucdb) then
                   gm%rk%edb(i,j) = fr * gm%rk%kdb * (taud / gm%rk%taucdb - 1.0)**gm%rk%mdb

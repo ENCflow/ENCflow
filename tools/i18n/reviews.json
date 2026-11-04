@@ -428,11 +428,11 @@
     {
       "source": "docs/users_guide/sediment.md",
       "target": "docs/en/users_guide/sediment.md",
-      "source_sha256": "53213820ad1b830f99515ca489a60a6a2900a27c7ecd1a7e9d660423f60c806a",
-      "target_sha256": "e4eef2e8f1b7a2f701c42dd12bfc60ccabfed1fca27c14eb38e9d88c2f725fab",
-      "reviewer": "Claude (Claude Code session; full-text content and lexical review, no model execution)",
+      "source_sha256": "e3b167a71bf0ec2ff2f1a525ccd13e7a067858ff03e0ae8eb00b999750161332",
+      "target_sha256": "ab0c0bc5da257b997cc1c65a65f23bfe079cd2cc94a284a6d10ff7fe377fc349",
+      "reviewer": "Claude (Claude Code session; the definition of g_e for rock erosion by debris flows (g/(1 + |∇z|²) with the minmod ground slope, §91) updated in both languages and compared)",
       "method": "assistant",
-      "reviewed_on": "2026-11-03"
+      "reviewed_on": "2026-11-04"
     },
     {
       "source": "docs/users_guide/structure.md",
@@ -2957,9 +2957,9 @@
     {
       "source": "test/dbrock/README.md",
       "target": "test/dbrock/en/README.md",
-      "source_sha256": "ec62b9b7a366276cd8090dbb8bb8010be24465e6b413cfa0790bba9225cb4e94",
-      "target_sha256": "db5c93f11a534305a436d824b789f51e93855079b59679c30a9268bc354f12cc",
-      "reviewer": "Claude (Claude Code session; dated note on the §28.16 fix added in both languages with values from the runs before and after the fix and compared)",
+      "source_sha256": "d40c21ce2922014f262105662ba256bb7e4161060fe51e270a640cc1e0e7c888",
+      "target_sha256": "b0050bc3179a55e901b4ed53b8e1311dd126df4b544c639002ddce7652fb298f",
+      "reviewer": "Claude (Claude Code session; the note on θ and g_e under the erosion law and the DB8 row (minmod ground slope of g_e, §91) updated in both languages and compared)",
       "method": "assistant",
       "reviewed_on": "2026-11-04"
     },
