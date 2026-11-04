@@ -260,6 +260,9 @@ module m_state
                                         ! ため S 台帳には算入しない。m_lavaflow が
                                         ! 確保・更新・保存する。fn_lavaflow 未指定
                                         ! なら未確保。lava_plan.md)
+    real, allocatable :: tl(:,:)        ! 溶岩の深さ平均温度 (°C。溶岩のないセルは 0。
+                                        ! m_lavaflow が f_lvtemp=1 のときだけ確保・
+                                        ! 更新・保存する。lava_plan.md §8)
     real, allocatable :: hd(:,:)        ! 流動流木柱状量 (m3/m2 = m。貯留の意味論は
                                         ! h・hs と同一)。移流は swflow_enc がステップ
                                         ! 内で行い(dw_active)、発生・停止・再流動は
@@ -1013,6 +1016,7 @@ subroutine m_state_dispose(s, p)
   if (allocated(s%swimaxt)) deallocate(s%swimaxt)
   if (allocated(s%hi)) deallocate(s%hi)
   if (allocated(s%hl)) deallocate(s%hl)
+  if (allocated(s%tl)) deallocate(s%tl)
   if (allocated(s%hb)) deallocate(s%hb)
   if (allocated(s%fx)) deallocate(s%fx)
   if (allocated(s%ht)) deallocate(s%ht)

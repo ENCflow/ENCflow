@@ -36,6 +36,18 @@ module list_lavaflow
     real :: lv_q0(1:lvmax) = -9999.0         ! 一定噴出率 (m3/s。時系列の代わり)
     character(len=maxpathlen) :: fn_lv_cell(1:lvmax) = ""  ! セル集合ファイル(i j の行列挙)
     character(len=maxpathlen) :: fn_lv_val(1:lvmax) = ""   ! 噴出率時系列ファイル(分, m3/s)
+    ! --- 温度(段階2。lava_plan.md §8・developer.md §51.7)。f_lvtemp=1 のときだけ読む。
+    !     既定は置かない(溶岩の種類で桁が変わる値と、原典を確かめていない値。番兵 -9999) ---
+    integer :: f_lvtemp = 0                  ! 1: 溶岩の深さ平均温度を計算する(0 = 等温)
+    real :: lv_temp0(1:lvmax) = -9999.0      ! 噴火口ごとの噴出温度 (°C)
+    real :: lv_tref = -9999.0                ! レオロジーの基準温度 T_r (°C。lv_visc・lv_tauy はこの温度の値)
+    real :: lv_bvisc = -9999.0               ! 粘度の温度感度 β_η (1/K)
+    real :: lv_btau = -9999.0                ! 降伏応力の温度感度 β_τ (1/K)
+    real :: lv_tsol = -9999.0                ! 固化温度 T_sol (°C)
+    real :: lv_emis = -9999.0                ! 有効放射率 ε (0-1。表面の殻の断熱を含めた有効値)
+    real :: lv_hconv = -9999.0               ! 対流の熱伝達係数 h_c (W/m2/K)
+    real :: lv_cp = -9999.0                  ! 溶岩の比熱 c_p (J/kg/K。結晶化の潜熱を含めた有効値でよい)
+    real :: lv_tair = -9999.0                ! 気温 (°C。fn_meteo がないときに必須)
   end type
 
 contains
@@ -47,9 +59,10 @@ subroutine list_lavaflow_read(p, list)
   type(t_sysparam), intent(in) :: p
   type(t_list_lavaflow), intent(inout) :: list
 
-  integer :: f_lavaflow, lv_nsubmax
+  integer :: f_lavaflow, lv_nsubmax, f_lvtemp
   real :: lv_rho, lv_visc, lv_tauy, lv_wsol, lv_vsol, lv_cfl
-  real :: lv_q0(1:lvmax)
+  real :: lv_q0(1:lvmax), lv_temp0(1:lvmax)
+  real :: lv_tref, lv_bvisc, lv_btau, lv_tsol, lv_emis, lv_hconv, lv_cp, lv_tair
   character(len=80) :: dt_lavaflow_c
   character(len=maxpathlen) :: fn_lv_cell(1:lvmax), fn_lv_val(1:lvmax)
   integer :: un, ios
@@ -57,7 +70,9 @@ subroutine list_lavaflow_read(p, list)
 
   namelist /list_lavaflow/ f_lavaflow, dt_lavaflow_c, lv_rho, lv_visc, &
                            lv_tauy, lv_wsol, lv_vsol, lv_cfl, lv_nsubmax, &
-                           lv_cell, lv_q0, lv_val, fn_lv_cell, fn_lv_val
+                           lv_cell, lv_q0, lv_val, fn_lv_cell, fn_lv_val, &
+                           f_lvtemp, lv_temp0, lv_tref, lv_bvisc, lv_btau, &
+                           lv_tsol, lv_emis, lv_hconv, lv_cp, lv_tair
 
   ! ネームリストにありながらファイルに記述のなかった変数は、
   ! 事前に保存されていた値がそのまま保持される
@@ -73,6 +88,16 @@ subroutine list_lavaflow_read(p, list)
   lv_q0 = list%lv_q0
   fn_lv_cell = list%fn_lv_cell
   fn_lv_val = list%fn_lv_val
+  f_lvtemp = list%f_lvtemp
+  lv_temp0 = list%lv_temp0
+  lv_tref = list%lv_tref
+  lv_bvisc = list%lv_bvisc
+  lv_btau = list%lv_btau
+  lv_tsol = list%lv_tsol
+  lv_emis = list%lv_emis
+  lv_hconv = list%lv_hconv
+  lv_cp = list%lv_cp
+  lv_tair = list%lv_tair
   lv_cell = -9999
   lv_val = -9999.0
 
@@ -95,6 +120,16 @@ subroutine list_lavaflow_read(p, list)
   list%lv_q0 = lv_q0
   list%fn_lv_cell = fn_lv_cell
   list%fn_lv_val = fn_lv_val
+  list%f_lvtemp = f_lvtemp
+  list%lv_temp0 = lv_temp0
+  list%lv_tref = lv_tref
+  list%lv_bvisc = lv_bvisc
+  list%lv_btau = lv_btau
+  list%lv_tsol = lv_tsol
+  list%lv_emis = lv_emis
+  list%lv_hconv = lv_hconv
+  list%lv_cp = lv_cp
+  list%lv_tair = lv_tair
 
 end subroutine
 

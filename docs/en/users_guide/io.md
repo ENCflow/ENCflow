@@ -217,7 +217,8 @@ so read it with the following grouping in mind.
    and H9999 are on by default. Turning on just the fields you need keeps
    the number of files and the data volume down.
 2. **Fields written automatically once a process is enabled** (C, B, Sw,
-   Swi, Hi, Hl, Hb/Vb, Sd). As soon as the corresponding fn_* is given
+   Swi, Hi, Hl, Tl, Hb/Vb, Sd; Tl in the temperature mode of the lava flow
+   model). As soon as the corresponding fn_* is given
    they are written at every `dt_file` without any flag. There is no
    "off" setting: running a process without looking at its state is not a
    supported workflow.
@@ -340,6 +341,7 @@ come from `FILENUMBER.csv`.
 | Surface / subsurface salt water | flag | Hss (f_out_h), Hgs (f_out_hg) | with [Salt Water](salt.md) enabled |
 | Retention-pond depth | flag | Hrs (f_out_hrs) | — |
 | Glacier / lava thickness | automatic | Hi, Hl | [Glacier](glacier.md), [Lava Flow](lavaflow.md) |
+| Lava temperature | automatic (temperature mode f_lvtemp = 1) | Tl | [Lava Flow](lavaflow.md) |
 | Totals (storage, mass) | ledger rather than computed | S columns of `Log.txt`, the CSV of each process | more reliable than summing rasters (the area-basis differences are already handled) |
 
 ## Screen and log display columns (f_disp_\*)

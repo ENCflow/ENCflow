@@ -5,16 +5,21 @@
 ! Lava flow settings sample (&list_lavaflow; developer.md Sec. 51,
 !   docs/lava_plan.md)
 !   Enabled by fn_lavaflow = "this file" or "-" in the main parameters.
-!   No dependency on other modules (water and weather not required).
+!   The isothermal mode depends on no other module (water and weather not
+!   required). The temperature mode (f_lvtemp = 1) uses the air temperature
+!   of fn_meteo when given.
 !   The state is the lava thickness s%hl (m). Field output Hl (m);
 !   restart uses the private file lavaflow.dat. Solidified lava appears
 !   as an increase of the bed elevation z (sd not increased = non-erodible
 !   bedrock; the soil layer that was in a cell where lava solidifies is
 !   buried under the lava, sd = 0). Surface water does not see flowing lava
 !   and flows over z.
-!   Dynamics: isothermal depth-averaged Bingham viscous gravity current
-!   (lubrication approximation). One rheology set per run (no per-vent
-!   viscosity; a future temperature extension covers that).
+!   Dynamics: depth-averaged Bingham viscous gravity current (lubrication
+!   approximation). Isothermal by default; f_lvtemp = 1 computes the lava
+!   temperature (a flow that stops as it cools; lava_plan.md Sec. 8,
+!   developer.md Sec. 51.7). One rheology set per run (in the temperature
+!   mode, the values at the reference temperature; per-vent differences are
+!   given by the eruption temperatures).
 !======================================================================
 &list_lavaflow
   f_lavaflow = 1            ! 0 disables temporarily while keeping the file
@@ -38,6 +43,27 @@
                             !   read if lv_wsol > 0; default 5e-4; typically
                             !   1e-4-1e-3. Smaller values approach the
                             !   theoretical h-inf but take longer to trigger)
+
+  ! ---- temperature (f_lvtemp = 1; a flow that stops as it cools;
+  !      lava_plan.md Sec. 8) ----
+  !   The temperature-mode values have no defaults (give all of them; a
+  !   missing one stops the run). The values below are an example (the same
+  !   set as test/lava configuration 9), neither defaults nor
+  !   recommendations; set them for the lava of interest (User's Guide, lava
+  !   chapter, "Temperature mode").
+  !   The temperature mode judges solidification on temperature (the column
+  !   moves to z when Tl <= lv_tsol), so set lv_wsol above to 0 (lv_vsol is
+  !   not read)
+  !f_lvtemp = 1             ! 1: compute the temperature (default 0 = isothermal)
+  !lv_temp0(1) = 1150.0     ! eruption temperature of vent 1 (deg C; above lv_tsol)
+  !lv_tref = 1150.0         ! reference temperature (deg C; lv_visc and lv_tauy are the values here)
+  !lv_bvisc = 0.04          ! temperature sensitivity of the viscosity (1/K; ln k/dT if k times after cooling by dT)
+  !lv_btau = 0.04           ! temperature sensitivity of the yield stress (1/K)
+  !lv_tsol = 1000.0         ! solidification temperature (deg C)
+  !lv_emis = 0.95           ! effective emissivity (0-1; includes the insulation by the surface crust)
+  !lv_hconv = 70.0          ! convective heat transfer coefficient (W/m2/K)
+  !lv_cp = 1150.0           ! specific heat (J/kg/K; may include the latent heat of crystallization)
+  !lv_tair = 20.0           ! air temperature (deg C; write only when fn_meteo is not given)
 
   ! ---- subcycling ----
   !lv_cfl = 0.4             ! safety factor of the explicit scheme (0-1)

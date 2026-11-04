@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 # lava(溶岩流 = Bingham 粘性重力流)検定
-#   使い方: Check_lava.py <savedir> <huppert|bingham|dome|wall|bury>
+#   使い方: Check_lava.py <savedir> <huppert|bingham|dome|wall|bury|cool|adv|run|heat> [画面出力のログ ...]
 #
 #   huppert モード(構成1: Newton 極限の相似解。param.txt と対):
 #     (1) 台帳    : |Σhl − V_in/A_cell| < TOL_SUM(注入は厳密加算・
@@ -31,7 +31,33 @@
 #     (2) 埋没    : dz > 0 の全セルで sd = 0 かつ hg = 0、それ以外の sd = SD06
 #     (3) 水の保存: |Σ(h + hrs + hg) − H06·N| < TOL_W6 × H06·N(しみ込んでいた水は
 #                   地表へ移り、総量は変わらない)
-import sys, struct, math
+#   cool モード(構成7: 静止した層の冷却。温度モード。param_cool.txt と対。
+#   第3引数 = 画面出力のログ):
+#     (1) 後退 Euler: 分布出力 Tl の全セルが一様で、冷却の常微分方程式の後退
+#                   Euler(刻み DTW7)の漸化式と TOL_BE7 (°C) 以内(出力は小数 4 桁)
+#     (2) 精度    : 温度の低下 T_v − T が厳密解(RK4、刻み 0.5 s)に相対 TOL_EX7 以内
+#     (3) 固化    : 漸化式で T ≤ T_sol となる更新より前の出力は hl = H7、後の出力と
+#                   最終状態は全セルが hl = 0・dz = H7(・Tl = 0)
+#     (4) 熱の台帳: 画面出力の残差が噴出の相対 TOL_HB 以内、噴出・固化・放射・対流の
+#                   熱量が漸化式の値に相対 TOL_PR(表示 5 桁)以内
+#   adv モード(構成8: 熱の移流。温度モード・冷却なし。param_adv.txt と対。
+#   第3引数 = 画面出力のログ):
+#     (1) 台帳    : |Σhl − V_in/A_cell| < TOL_SUM
+#     (2) 熱の保存: Σhl·Tl·A が Σ_k V_k T_k に相対 TOL_HEAT8 以内、画面出力の残差が
+#                   噴出の相対 TOL_HB 以内
+#     (3) 範囲    : 溶岩のある全セルで T_lo ≤ Tl ≤ T_hi(相対 1e-12 の余裕)、溶岩の
+#                   ないセルは Tl = 0、両方の噴出温度から 1 K 以上離れたセルがある
+#   run モード(構成9: 冷えて止まる流れ。param_run*.txt と対。<savedir> = save_run で、
+#   save_run4・save_runi・save_runi4 も読む。第3・4引数 = 温度モード 2 本の画面出力のログ):
+#     (1) 台帳    : 4 つの計算で |Σhl + Σdz − V_in/A_cell| < TOL_SUM、全量の固化
+#                   (温度モードは hl = 0、等温は Σdz/V_in > FRAC_SOL5)
+#     (2) 熱の台帳: 温度モード 2 本の画面出力の残差が噴出の相対 TOL_HB 以内
+#     (3) 温度モード: 流れの長さ L(4Q)/L(Q) > RATIO_T9(同じ体積。L は噴火口から、
+#                   行平均の堆積厚 > DZ_RUN の最も下流のセルまで)
+#     (4) 等温    : |L(4Q)/L(Q) − 1| ≤ TOL_I9(長さは体積で決まり噴出率によらない)
+#   heat モード(構成9r: リスタートした計算の熱の台帳。<savedir> は使わない。第3引数 = ログ):
+#     (1) 画面出力の残差(開始時 + 噴出 − 放射 − 対流 − 固化 − 残存)が相対 TOL_HB 以内
+import sys, struct, math, re
 
 TOL_SUM = 1.0e-8
 GG = 9.8
@@ -66,6 +92,30 @@ FRAC_SOL5, FRAC_WALL5 = 0.999, 0.5
 SD06, H06 = 1.0, 0.05            # 初期の土層厚 (m)・初期の地表水 (m)
 Q6, TON6, TOFF6, DT6, TT6 = 0.2, 900.0, 1200.0, 0.5, 6000.0
 TOL_W6 = 1.0e-9
+# --- 温度モード共通(m_lavaflow と同じ定数)---
+SIGMA, TK0 = 5.670374419e-8, 273.15
+TOL_HB, TOL_PR = 1.0e-12, 2.0e-4
+# --- 構成7(param_cool.txt・make_init.py cool と対で保守)---
+NX7, NY7, DX7 = 4, 8, 1.0
+Q7, DTW7, DTF7, TT7 = 3.2, 10.0, 600.0, 7200.0   # 総噴出率(最初の更新だけ), 更新・出力の間隔, 計算時間
+RHO7, CP7, EPS7, HC7 = 2600.0, 1150.0, 0.95, 70.0
+TA7, TV7, TSOL7 = 20.0, 1100.0, 800.0
+H7 = Q7 * DTW7 / (NX7 * NY7 * DX7 * DX7)          # 層の厚さ (m) = 1
+RES7 = "result_cool"
+TOL_BE7, TOL_EX7 = 2.0e-4, 0.01
+# --- 構成8(param_adv.txt と対で保守)---
+NX8, NY8, DX8 = 41, 21, 1.0
+Q8, TSUP8, DT8 = 0.5, 600.0, 0.5                 # 噴火口ごとの噴出率・継続・dt
+TV8 = (1150.0, 1050.0)                           # 噴出温度(噴火口1・2)
+TOL_HEAT8 = 1.0e-9
+# --- 構成9(param_run*.txt・make_init.py run と対で保守)---
+NX9, NY9, DX9 = 64, 8, 5.0
+ST9, LX9 = 0.1, 320.0
+IV9 = 3                                          # 噴火口の列
+RUNS9 = {"": (2.0, 2400.0), "4": (8.0, 600.0)}   # 接尾辞: (総噴出率 m3/s, 継続 s)
+DT9 = 1.0
+DZ_RUN = 0.05                                    # 流れの先端の判定厚 (m)
+RATIO_T9, TOL_I9 = 1.5, 0.1
 
 
 def read_rec(f):
@@ -98,6 +148,44 @@ def read_rle_array(f, ntot):
 def load_hl(savedir, nx, ny):
     with open(savedir + "/lavaflow.dat", "rb") as f:
         return read_rle_array(f, nx * ny)
+
+
+def load_tl(savedir, nx, ny):
+    with open(savedir + "/lavaflow_temp.dat", "rb") as f:
+        return read_rle_array(f, nx * ny)
+
+
+def heat_ledger(logname):
+    # 画面出力の熱の台帳(m_lavaflow_dispose)の最後の組を読む
+    txt = open(logname, encoding="utf-8", errors="replace").read()
+    num = r"([-+0-9.Ee]+)"
+    m1 = re.findall(r"heat erupted\s+" + num + r" J, radiated\s+" + num + r" J, convected\s+" + num, txt)
+    m2 = re.findall(r"heat in solidified lava\s+" + num + r" J, in molten lava\s+" + num, txt)
+    m3 = re.findall(r"heat balance residual\s+" + num + r" J \(\s*" + num, txt)
+    assert m1 and m2 and m3, "heat ledger not found in " + logname
+    e = [float(v) for v in m1[-1]]
+    e += [float(v) for v in m2[-1]]
+    return e, float(m3[-1][1])
+
+
+def cool_flux(t, ta, eps, hc):
+    # 表面の熱流束 F = ε σ (T_K⁴ − Ta_K⁴) + h_c (T − Ta) の放射・対流の成分 (W/m2)
+    return eps * SIGMA * ((t + TK0) ** 4 - (ta + TK0) ** 4), hc * (t - ta)
+
+
+def cool_be(t0, h, dtw, rhocp, ta, eps, hc):
+    # m_lavaflow の cool_be と同じ後退 Euler の 1 段(ニュートン法)
+    c = dtw / rhocp
+    t = t0
+    for _ in range(50):
+        tk = t + TK0
+        hv = h * (t - t0) + c * (eps * SIGMA * (tk ** 4 - (ta + TK0) ** 4) + hc * (t - ta))
+        hd = h + c * (4.0 * eps * SIGMA * tk ** 3 + hc)
+        d = hv / hd
+        t = max(t - d, ta)
+        if abs(d) <= 4.0 * 2.220446049250313e-16 * tk:
+            break
+    return min(t, t0)
 
 
 def load_z(savedir, nx, ny):
@@ -202,6 +290,170 @@ elif mode == "dome":
           % (hc, hh, 100 * eh, ra, rr, 100 * er, rms, 100 * rms / hh, 100 * TOL_H4,
              "PASS" if ok3 else "FAIL"))
     ok = ok1 and ok2 and ok3
+elif mode == "cool":
+    logname = sys.argv[3]
+    rhocp = RHO7 * CP7
+    ncell = NX7 * NY7
+    # 後退 Euler の漸化式(1 回目の更新で注入して冷やす。以後は更新ごとに 1 段)。
+    # 台帳用に放射・対流の内訳も m_lavaflow と同じ分け方(新しい温度での比)で足す
+    nmax = round(TT7 / DTW7)
+    tbe = [TV7]
+    erad = econ = 0.0
+    nsol = None
+    for n in range(1, nmax + 1):
+        t0 = tbe[-1]
+        t1 = cool_be(t0, H7, DTW7, rhocp, TA7, EPS7, HC7)
+        dl = H7 * (t0 - t1)
+        fr, fc = cool_flux(t1, TA7, EPS7, HC7)
+        wr = dl * (fr / (fr + fc))
+        erad += wr
+        econ += dl - wr
+        tbe.append(t1)
+        if t1 <= TSOL7:
+            nsol = n
+            break
+    assert nsol is not None, "the layer does not reach T_sol within tt (check the setup)"
+
+    def rk4(tend, h=0.5):
+        t, tt_ = TV7, 0.0
+        f = lambda x: -sum(cool_flux(x, TA7, EPS7, HC7)) / (rhocp * H7)
+        while tt_ < tend - 1e-9:
+            k1 = f(t); k2 = f(t + 0.5 * h * k1); k3 = f(t + 0.5 * h * k2); k4 = f(t + h * k3)
+            t += h * (k1 + 2 * k2 + 2 * k3 + k4) / 6.0
+            tt_ += h
+        return t
+    # (1)(2)(3) 出力の各時刻
+    nfr = round(TT7 / DTF7)
+    ok1 = ok2 = ok3 = True
+    emax1 = emax2 = 0.0
+    for k in range(1, nfr + 1):
+        n = round(k * DTF7 / DTW7)                     # この出力までの更新回数
+        tl = load_txt("%s/Tl%04d.txt" % (RES7, k), NX7, NY7)
+        hl = load_txt("%s/Hl%04d.txt" % (RES7, k), NX7, NY7)
+        if n < nsol:
+            uni = max(tl) - min(tl)
+            e1 = max(abs(v - tbe[n]) for v in tl)
+            emax1 = max(emax1, e1)
+            ok1 = ok1 and uni <= TOL_BE7 and e1 <= TOL_BE7
+            tex = rk4(n * DTW7)
+            e2 = abs((TV7 - tbe[n]) - (TV7 - tex)) / (TV7 - tex)
+            emax2 = max(emax2, e2)
+            ok2 = ok2 and e2 < TOL_EX7
+            ok3 = ok3 and min(hl) == H7 and max(hl) == H7
+            print("    t = %5.0f s: Tl = %.4f °C(漸化式 %.4f、厳密解 %.4f)、hl = %.4f m"
+                  % (k * DTF7, tl[0], tbe[n], tex, hl[0]))
+        else:
+            ok3 = ok3 and max(hl) == 0.0 and max(abs(v) for v in tl) == 0.0
+            print("    t = %5.0f s: 固化済み(max hl = %.4f m、max |Tl| = %.4f)" % (k * DTF7, max(hl), max(abs(v) for v in tl)))
+    print("(1) 後退 Euler: 出力 Tl と漸化式の差の最大 %.1e °C(一様、tol %.0e °C) : %s"
+          % (emax1, TOL_BE7, "PASS" if ok1 else "FAIL"))
+    print("(2) 精度  : 温度の低下の厳密解(RK4)との相対差の最大 %.2e(tol %.0e) : %s"
+          % (emax2, TOL_EX7, "PASS" if ok2 else "FAIL"))
+    hl = load_hl(savedir, NX7, NY7)
+    z = load_z(savedir, NX7, NY7)
+    tl = load_tl(savedir, NX7, NY7)
+    ok3 = ok3 and max(hl) == 0.0 and min(z) == H7 and max(z) == H7 and max(abs(v) for v in tl) == 0.0
+    print("(3) 固化  : 漸化式で更新 %d 回目(t = %.0f s、T = %.2f °C ≤ %.0f °C)に固まる。最終 max hl = %.1e m、"
+          "dz = %.4f〜%.4f m(H = %.1f m) : %s"
+          % (nsol, nsol * DTW7, tbe[nsol], TSOL7, max(hl), min(z), max(z), H7, "PASS" if ok3 else "FAIL"))
+    # (4) 熱の台帳(J。0 °C 基準の顕熱)
+    e, rres = heat_ledger(logname)
+    fac = rhocp * ncell * DX7 * DX7
+    exp_ = [H7 * TV7 * fac, erad * fac, econ * fac, H7 * tbe[nsol] * fac, 0.0]
+    names = ["噴出", "放射", "対流", "固化", "残存"]
+    ok4 = abs(rres) < TOL_HB
+    for nm, v, x in zip(names, e, exp_):
+        good = abs(v - x) <= TOL_PR * max(abs(x), 1.0)
+        ok4 = ok4 and good
+        print("    %s %.4e J(漸化式 %.4e J)%s" % (nm, v, x, "" if good else "  <- ずれ"))
+    print("(4) 熱の台帳: 残差 %.2e(噴出の相対。tol %.0e)、内訳は漸化式に相対 %.0e 以内 : %s"
+          % (rres, TOL_HB, TOL_PR, "PASS" if ok4 else "FAIL"))
+    ok = ok1 and ok2 and ok3 and ok4
+elif mode == "adv":
+    logname = sys.argv[3]
+    hl = load_hl(savedir, NX8, NY8)
+    tl = load_tl(savedir, NX8, NY8)
+    area = DX8 * DX8
+    nt = round(TSUP8 / DT8)
+    v1 = sum(Q8 * DT8 for it in range(1, nt + 1) if it * DT8 < TSUP8)   # 噴火口ごと (m3)
+    vin = v1 * len(TV8)
+    # (1) 溶岩の台帳
+    res = sum(hl) * area - vin
+    ok1 = abs(res) < TOL_SUM * vin
+    print("(1) 台帳  : sum(hl)*A - V_in = %.3e m3 (V_in = %.2f, tol %.0e 相対) : %s"
+          % (res, vin, TOL_SUM, "PASS" if ok1 else "FAIL"))
+    # (2) 熱の保存(冷却なし)
+    ein = sum(v1 * t for t in TV8)
+    eh = sum(h * t for h, t in zip(hl, tl)) * area
+    rel = (eh - ein) / ein
+    e, rres = heat_ledger(logname)
+    ok2 = abs(rel) < TOL_HEAT8 and abs(rres) < TOL_HB
+    print("(2) 熱    : sum(hl*Tl)*A = %.6f vs sum(V_k T_k) = %.6f m3·°C(相対 %.1e、tol %.0e)、"
+          "画面の残差 %.1e(tol %.0e) : %s"
+          % (eh, ein, rel, TOL_HEAT8, rres, TOL_HB, "PASS" if ok2 else "FAIL"))
+    # (3) 範囲と混合
+    tlo, thi = min(TV8), max(TV8)
+    tw = [t for h, t in zip(hl, tl) if h > 0.0]
+    t0 = [t for h, t in zip(hl, tl) if h <= 0.0]
+    nmix = sum(1 for t in tw if tlo + 1.0 < t < thi - 1.0)
+    ok3 = (min(tw) >= tlo * (1.0 - 1e-12) and max(tw) <= thi * (1.0 + 1e-12)
+           and (len(t0) == 0 or max(abs(t) for t in t0) == 0.0) and nmix > 0)
+    print("(3) 範囲  : 溶岩のある %d セルの Tl = %.6f〜%.6f °C(噴出温度 %.0f〜%.0f)、混ざった帯 %d セル、"
+          "溶岩のないセルの max |Tl| = %.1e : %s"
+          % (len(tw), min(tw), max(tw), tlo, thi, nmix, max([abs(t) for t in t0] + [0.0]),
+             "PASS" if ok3 else "FAIL"))
+    ok = ok1 and ok2 and ok3
+elif mode == "run":
+    logs = {"": sys.argv[3], "4": sys.argv[4]}
+    area = DX9 * DX9
+    ntot = NX9 * NY9
+
+    def z0_9(idx):
+        return ST9 * (LX9 - (idx % NX9 + 0.5) * DX9)
+
+    def runout(sd):
+        hl = load_hl(sd, NX9, NY9)
+        z = load_z(sd, NX9, NY9)
+        dz = [zi - z0_9(idx) for idx, zi in enumerate(z)]
+        col = [sum(dz[j * NX9 + i] + hl[j * NX9 + i] for j in range(NY9)) / NY9 for i in range(NX9)]
+        front = max(i + 1 for i in range(NX9) if col[i] > DZ_RUN)
+        return hl, dz, (front - IV9) * DX9, max(col)
+    ok1 = ok2 = True
+    lens = {}
+    for kind in ("", "i"):
+        for suf, (q, tsup) in RUNS9.items():
+            sd = savedir + kind + suf
+            hl, dz, ll, cmax = runout(sd)
+            vin = sum(q * DT9 for it in range(1, round(tsup / DT9) + 1) if it * DT9 < tsup)
+            res = (sum(hl) + sum(dz)) * area - vin
+            frac = sum(dz) * area / vin
+            good = abs(res) < TOL_SUM * vin and (max(hl) == 0.0 if kind == "" else frac > FRAC_SOL5)
+            ok1 = ok1 and good
+            lens[kind + suf] = ll
+            line = ("    %-10s Q = %.0f m3/s × %4.0f s: V_in = %.0f m3、台帳の差 %.1e m3、固化率 %.4f、"
+                    "流れの長さ L = %.0f m(行平均の最大厚 %.2f m)"
+                    % (sd, q, tsup, vin, res, frac, ll, cmax))
+            if kind == "":
+                e, rres = heat_ledger(logs[suf])
+                ok2 = ok2 and abs(rres) < TOL_HB
+                line += "、熱の台帳の残差 %.1e" % rres
+            print(line + ("" if good else "  <- FAIL"))
+    print("(1) 台帳と全量の固化(4 つの計算) : %s" % ("PASS" if ok1 else "FAIL"))
+    print("(2) 熱の台帳(温度モード 2 本。tol %.0e) : %s" % (TOL_HB, "PASS" if ok2 else "FAIL"))
+    rt = lens["4"] / lens[""]
+    ri = lens["i4"] / lens["i"]
+    ok3 = rt > RATIO_T9
+    ok4 = abs(ri - 1.0) <= TOL_I9
+    print("(3) 温度モード: L(4Q)/L(Q) = %.0f/%.0f m = %.2f(tol > %.1f。同じ体積で噴出率の高い流れが長い) : %s"
+          % (lens["4"], lens[""], rt, RATIO_T9, "PASS" if ok3 else "FAIL"))
+    print("(4) 等温    : L(4Q)/L(Q) = %.0f/%.0f m = %.2f(tol 1±%.1f。長さは体積で決まる) : %s"
+          % (lens["i4"], lens["i"], ri, TOL_I9, "PASS" if ok4 else "FAIL"))
+    ok = ok1 and ok2 and ok3 and ok4
+elif mode == "heat":
+    e, rres = heat_ledger(sys.argv[3])
+    ok = abs(rres) < TOL_HB
+    print("(1) 熱の台帳: 残差 %.2e(開始時 + 噴出の相対。tol %.0e) : %s"
+          % (rres, TOL_HB, "PASS" if ok else "FAIL"))
 elif mode == "wall":
     hl = load_hl(savedir, NX5, NY5)
     z = load_z(savedir, NX5, NY5)
