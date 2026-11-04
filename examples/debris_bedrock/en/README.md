@@ -94,7 +94,7 @@ with free outflow at the south end and roughness n = 0.05.
 - **Bed**: bare rock (sd = 0) and a deposit 0.3 m thick.
 - **Rock erosion**: k_d = 1.8×10⁻⁴ m/s, τ_cd = 1 kPa, m_d = 1, H* = 0.05 m. k_d was chosen so
   that the mean over the stream (0–360 m) for Takahashi–Nakagawa on bare rock is about 1 cm per
-  event (1.09 cm with the hydraulics of the current defaults).
+  event (1.10 cm with the hydraulics of the current defaults).
 - **Time**: 300 s with dt = 0.02 s. The landform is updated every step (`dt_geomorph = 0`,
   `morfac = 1`). Output every 10 s.
 
@@ -133,7 +133,13 @@ of the tables (the same at the digits shown), and the outputs of the chain of th
 configurations (C_b, C_c) changed (ledger C_b 32.8 → 38.9 m³, C_c 7.1 → 11.0 m³; while the mixture
 ponds upstream of a slope break, a slow and thick flow erodes for longer). The four
 Takahashi–Nakagawa configurations, the clear-water flood W and the chain of the supplement give
-the same values in the tables, and only the figures erosion and cover were redrawn)
+the same values in the tables, and only the figures erosion and cover were redrawn. Recomputed on
+the same day after the fix of the steep-slope gravity correction and the change that gives rock
+erosion the effective gravity of the momentum equation, g/(1 + |∇z|²) (§91): the values in the
+tables moved by about 1 % (ledger T_b 39.2 → 39.5 m³, T_b05 117.1 → 117.8 m³; the clear-water flood W
+is the same at the digits shown). The chain of the supplement changes only in the third decimal,
+and the steady slopes are the same. The numbers in the tables and text and the figures are from
+this recomputation)
 
 ### Rock erosion by one debris flow
 
@@ -145,26 +151,26 @@ plucked").
 
 | Configuration | Slope 0.35 | 0.20 | 0.10 | 0.04 | 0.01 | Ledger (m³) |
 |---|---|---|---|---|---|---|
-| T_b Takahashi–Nakagawa, bare rock | 2.27 | 1.19 | 0.008 | 0 | 0 | 39.2 |
-| C_b Coulomb + Manning, bare rock | 2.60 | 0.77 | 0 | 0 | 0 | 38.9 |
-| T_c Takahashi–Nakagawa, deposit | 0.59 | 0.005 | 0 | 0 | 0 | 7.1 |
-| C_c Coulomb + Manning, deposit | 0.92 | 0 | 0 | 0 | 0 | 11.0 |
-| T_b05 threshold 0.5 kPa | 6.71 | 3.39 | 0.32 | 0 | 0 | 117.1 |
-| T_b20 threshold 2 kPa | 0.51 | 0.15 | 0 | 0 | 0 | 7.6 |
+| T_b Takahashi–Nakagawa, bare rock | 2.29 | 1.19 | 0.008 | 0 | 0 | 39.5 |
+| C_b Coulomb + Manning, bare rock | 2.59 | 0.78 | 0 | 0 | 0 | 38.8 |
+| T_c Takahashi–Nakagawa, deposit | 0.59 | 0.005 | 0 | 0 | 0 | 7.2 |
+| C_c Coulomb + Manning, deposit | 0.92 | 0 | 0 | 0 | 0 | 11.1 |
+| T_b05 threshold 0.5 kPa | 6.77 | 3.40 | 0.32 | 0 | 0 | 117.8 |
+| T_b20 threshold 2 kPa | 0.52 | 0.15 | 0 | 0 | 0 | 7.7 |
 | W clear water, same discharge (fluvial plucking) | 0.32 | 0.030 | 0 | 0 | 0 | 4.1 |
 
 - **The erosion is concentrated in the steep reaches.** The driving stress
   τ_d = ρ(1 + sC) g_e h_t tanθ exceeds the threshold of 1 kPa only in the thick flow of the
   reaches with slopes of 0.2 or more. At slopes of 0.10 or less even bare rock hardly erodes.
 - **Difference between the resistance laws**: from 0 to 100 m in the reach with slope 0.35,
-  Coulomb + Manning erodes 0.75 times as much as Takahashi–Nakagawa (1.71 cm against 2.28 cm). Its
-  flow is thinner in the steep reach (largest flow depth 0.80 to 0.83 m against 0.93 to 1.10 m at
-  21, 41 and 61 m from the head), so τ_d, which is proportional to the depth, is smaller. The means
-  over the reach (2.60 cm and 2.27 cm) include the peak upstream of the slope break described next.
+  Coulomb + Manning erodes 0.74 times as much as Takahashi–Nakagawa (1.70 cm against 2.30 cm). Its
+  flow is thinner in the upper part of the steep reach (largest flow depth 0.80, 0.82 and 0.84 m
+  against 1.13, 0.96 and 0.82 m at 21, 41 and 61 m from the head), so τ_d, which is proportional to
+  the depth, is smaller. The means over the reach (2.59 cm and 2.29 cm) include the peak upstream of the slope break described next.
 - **Peak upstream of a slope break**: with Coulomb + Manning, a deposit 0.9 m thick forms at the
   slope break 120 m from the head (0.35 → 0.20), and the mixture ponds upstream of it. In the cell
   111 m from the head, h_t becomes 1.4 to 1.8 m from 60 s on; after |V| has dropped from 1.4 m/s to
-  0.1 m/s, a slow flow of 0.2 m/s or less keeps eroding the rock until about 250 s, reaching 11.2 cm
+  0.1 m/s, a slow flow of 0.2 m/s or less keeps eroding the rock until about 250 s, reaching 11.1 cm
   (6.5 times the mean from 0 to 100 m). Split with output every 1 s, 46 % of the erosion of C_b
   (77 % from 100 to 120 m in the reach with slope 0.35 and 89 % in the reach with slope 0.20) came
   from flow with |V| < 1 m/s (4 % of the whole for Takahashi–Nakagawa; each interval assigned by the
@@ -176,14 +182,14 @@ plucked").
   deposits at the slope breaks (1.4 m for T_b at the slope break at 220 m; 0.90 m for C_b at the
   slope break at 120 m and 0.51 m at 220 m). The eroded rock enters the mobile layer 1:1, and the
   erosion–deposition equation decides whether the flow takes it up or leaves it as cover.
-- **Rock-derived sediment**: the solids of the eroded rock are 23.5 m³ for T_b (4.8 % of the
+- **Rock-derived sediment**: the solids of the eroded rock are 23.7 m³ for T_b (4.8 % of the
   490 m³ of solids that entered), 4.8 % for C_b, 0.9 % for T_c and 1.4 % for C_c. Almost all of the
   sediment of one debris flow comes from the head.
 
 ### Comparison with a clear-water flood
 
 The clear-water flood with the same discharge (W) eroded 0.32 cm in the reach with slope 0.35 and
-0.030 cm in the reach with slope 0.20 (14 % and 3 % of T_b; 11 % in the ledgers). The stress of W
+0.030 cm in the reach with slope 0.20 (14 % and 3 % of T_b; 10 % in the ledgers). The stress of W
 is that of the fluvial plucking law, the Manning closure of the cell velocity
 τ_b = ρ g n² V²/h^{1/3}. This closure agrees with the balance ρ g h tanθ even in steep uniform
 flow (in steady uniform flow with the same width, grid and discharge as the reach with slope 0.35
@@ -192,7 +198,7 @@ debris-flow term, ρ g_e h tanθ, includes the slope correction g_e = g cos²θ 
 0.35), so evaluated with it the same flow erodes less, 0.21 cm and 0.015 cm (7 % of T_b as the
 mean over the stream; post-processing of the output every 1 s; with g instead of g_e it gives
 0.33 cm, nearly the same as the Manning closure). In both cases the debris flow erodes more
-(9.5 times in the ledgers, and 14 times as the mean over the stream between quasi-static
+(9.6 times in the ledgers, and 14 times as the mean over the stream between quasi-static
 stresses).
 
 ### Effect of the cover
@@ -200,16 +206,16 @@ stresses).
 ![Mobile layer and rock erosion over time with the deposit](figs/cover.png)
 
 - With a deposit 0.3 m thick, the erosion in the reach with slope 0.35 drops to 26 %
-  (Takahashi–Nakagawa) and 35 % (Coulomb + Manning) of that on bare rock, and is almost 0 at
+  (Takahashi–Nakagawa) and 36 % (Coulomb + Manning) of that on bare rock, and is almost 0 at
   slopes of 0.20 or less.
 - The rock starts to erode only after the flow has stripped the deposit down to a few cm (a few
   times H*). At 21 m from the head with Takahashi–Nakagawa, the deposit is stripped completely from
-  40 to 50 s, and 0.95 cm of rock is eroded (2.27 cm on bare rock). At 101 m the deposit only
-  thins to 2.5 cm, and the erosion is 0.23 cm. In the reach with slope 0.20 the deposit is not
+  40 to 50 s, and 0.96 cm of rock is eroded (2.29 cm on bare rock). At 101 m the deposit only
+  thins to 2.5 cm, and the erosion is 0.24 cm. In the reach with slope 0.20 the deposit is not
   stripped; it remains or thickens.
 - With Coulomb + Manning and the deposit (C_c), the slow and thick flow upstream of the slope break
   lasts long, so the rock keeps eroding without the mobile layer being stripped completely. At 101 m
-  from the head, 13.6 cm of the mobile layer remains (exposure exp(−sd/H*) ≈ 7 %) and 1.65 cm is
+  from the head, 13.6 cm of the mobile layer remains (exposure exp(−sd/H*) ≈ 7 %) and 1.68 cm is
   eroded by 300 s. Upstream at 83 m the layer is stripped completely and 4.6 cm is eroded, the
   largest in the reach.
 - The H* = 0.05 m of the exposure exp(−sd/H*) follows the observation that a deposit about 5 cm
@@ -220,12 +226,12 @@ stresses).
 ![Rock erosion with different thresholds](figs/threshold.png)
 
 - Halving the threshold (0.5 kPa) makes the erosion in the reach with slope 0.35 3.0 times larger
-  (6.71 cm), and the erosion extends into the reach with slope 0.10. Doubling it (2 kPa) gives
-  0.22 times (0.51 cm). The threshold sets both the magnitude of the erosion and the range of
+  (6.77 cm), and the erosion extends into the reach with slope 0.10. Doubling it (2 kPa) gives
+  0.23 times (0.52 cm). The threshold sets both the magnitude of the erosion and the range of
   slopes that it reaches.
 - With a low threshold, the long tail of the falling limb also erodes. Downstream, where the
   recession is slower, the rock erodes for longer, so with 0.5 kPa the erosion grows downstream
-  even within the steep reach (from 5.8 cm at 5 m from the head to 7.8 cm at the end of the reach,
+  even within the steep reach (from 5.8 cm at 5 m from the head to 7.9 cm at the end of the reach,
   115 m).
 
 ## Supplement: steady slope of a stream with debris flows (long-term chain)
@@ -383,8 +389,9 @@ interval between debris flows (once in how many years) is chosen by the user.
   trapped the sediment carried by the floods, and the deposit grew upstream (with size 0.4 m even
   at slope 0.40). With an outfall of slope 0.6 below the channel the sediment leaves without
   stopping.
-- **Resistance law**: Takahashi–Nakagawa gives a thick and slow flow in the steep reach (largest
-  flow depth 0.93 to 1.10 m) and Coulomb + Manning a thin and fast one (0.80 to 0.83 m), and the
+- **Resistance law**: Takahashi–Nakagawa gives a thick and slow flow in the upper part of the steep
+  reach (largest flow depth 1.13, 0.96 and 0.82 m at 21, 41 and 61 m from the head) and Coulomb +
+  Manning a thin and fast one (0.80, 0.82 and 0.84 m), and the
   erosion differs by the driving stress proportional to the depth. Coulomb + Manning deposits
   thickly at the slope breaks and stops the mixture, so a slow and thick flow keeps eroding
   upstream of the breaks.
