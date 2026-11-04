@@ -818,8 +818,8 @@ numerical noise.
   size selectivity ("trap coarse boulders and driftwood, pass fines
   and water") cannot be represented. Giving the dam body
   (non-erodible terrain) an outlet with a culvert
-  ([Structures](structure.md); it transfers clear water only and
-  carries no sediment) yields the approximation "passes water, traps
+  ([Structures](structure.md); it transfers only the water and the
+  dissolved water-quality substance and carries no sediment) yields the approximation "passes water, traps
   all sediment" = an **upper-bound estimate of trapping**. After
   filling, sediment passes downstream by crest overflow. The map-scale
   generation, transport and deposition of driftwood is handled by

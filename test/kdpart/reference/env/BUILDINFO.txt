@@ -1,8 +1,8 @@
-date      : 2026-11-03 06:58:12
+date      : 2026-11-04 02:07:30
 host      : vm
 user      : 
 pwd       : /home/user/ENCflow/test/kdpart
 exe       : /home/user/ENCflow/bin/encflow
 mode      : serial__double
 modules   : (no modules)
-lib       : 	libgfortran.so.5 => /lib/x86_64-linux-gnu/libgfortran.so.5 (0x00007f0132000000)
+lib       : 	libgfortran.so.5 => /lib/x86_64-linux-gnu/libgfortran.so.5 (0x00007f11dbc00000)

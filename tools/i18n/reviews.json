@@ -58,11 +58,11 @@
     {
       "source": "docs/comparison.md",
       "target": "docs/en/comparison.md",
-      "source_sha256": "29cc9664eac58874a7821af81efb2ad2e78c3b2822c375d12aa669ff3a8ff1f5",
-      "target_sha256": "96d6b7b2cd18641404ace53f6f73a187ede82d4f3087a1ef42088e8b4cf00793",
-      "reviewer": "Claude (Claude Code session; Japanese source and English mirror read side by side)",
+      "source_sha256": "2e99fd225111cad7d15e64f0ac930cfb6bfaee046ab1e56b2063ddbb491b1639",
+      "target_sha256": "05345c1934793d0af61e9ccf1163fb111406cf6b783b4e6372cc3cc5a01799ce",
+      "reviewer": "Claude (Claude Code session; lava temperature mode f_lvtemp, developer.md Sec. 51.7: changed passages compared side by side with the Japanese source, unchanged parts as recorded earlier)",
       "method": "assistant",
-      "reviewed_on": "2026-11-02"
+      "reviewed_on": "2026-11-04"
     },
     {
       "source": "docs/developer.md",
@@ -104,11 +104,11 @@
     {
       "source": "docs/users_guide.md",
       "target": "docs/en/users_guide.md",
-      "source_sha256": "beecdecf24c88fb760afdb897c843d3cb123e70f5bbb8ef085ab9a3cb832c340",
-      "target_sha256": "fd951d8337a6a8e20af4b7c32b96c55d9331a98d91b12575ca68ab4677326d70",
-      "reviewer": "Claude (Claude Code session; reviewed the changed passages on water-level cells as outside water for transported quantities, wq_stage_conc/wq_stage_series and the ledger columns out_stage_g/in_stage_g of the Japanese source against the English mirror, 2026-11-03)",
+      "source_sha256": "deadfde300968b89110c250733a1c5bd1177b5e7545278b0805d2902f41100e9",
+      "target_sha256": "385c861a2084dd0ffc62e3efe1aa3d4d775550e9a9e75f588f62049ce52468f6",
+      "reviewer": "Claude (Claude Code session; lava temperature mode: chapter line and parameter count 764 -> 774 changed in both files, compared side by side)",
       "method": "assistant",
-      "reviewed_on": "2026-11-03"
+      "reviewed_on": "2026-11-04"
     },
     {
       "source": "docs/users_guide/advection.md",
@@ -158,11 +158,11 @@
     {
       "source": "docs/users_guide/boundary.md",
       "target": "docs/en/users_guide/boundary.md",
-      "source_sha256": "4b07e69a72e54dd34a222d5ebf129311a8fe414c32ae2dd1bfbbb5b968573b91",
-      "target_sha256": "4a68641d979ac90a043956d9baddd84745f068939ff998ad6c45b3a18d733335",
-      "reviewer": "Claude (Claude Code session; reviewed the changed passages on water-level cells as outside water for transported quantities, wq_stage_conc/wq_stage_series and the ledger columns out_stage_g/in_stage_g of the Japanese source against the English mirror, 2026-11-03)",
+      "source_sha256": "225095a5ce4dd3636d31be98f53b08fda0405522eb07ecfb05870ccbb5b95b31",
+      "target_sha256": "ed29e62f9251aa0a06c34d99f94d7a07bdcabcadc317ac7f7d9d79e4b3c57357",
+      "reviewer": "Claude (Claude Code session; compared the Japanese and English changes for the water-quality substance carried by structures and withdrawals, 2026-11-04)",
       "method": "assistant",
-      "reviewed_on": "2026-11-03"
+      "reviewed_on": "2026-11-04"
     },
     {
       "source": "docs/users_guide/channel.md",
@@ -266,11 +266,11 @@
     {
       "source": "docs/users_guide/geomorph.md",
       "target": "docs/en/users_guide/geomorph.md",
-      "source_sha256": "15acd3505fb56ac9eaa097a9db2bbae746767547289aa727a5dda085ef5efe22",
-      "target_sha256": "4a01043293bef1bb17939782ad42154be2f82e0e91bc97e3acf8876e295d8877",
-      "reviewer": "Claude (Claude Code session; merge of main's f_taupart rows and example references with the delta tide sentence, both languages compared)",
+      "source_sha256": "b17589708d1281e8244cbedba709686aa860f1694dbd9eb997d38cd5053b5c25",
+      "target_sha256": "2bfec23ab96a466c012fb863c2c7605979ecec7d21ad1c94de17ce534fb60332",
+      "reviewer": "Claude (Claude Code session; compared the Japanese and English changes for the water-quality substance carried by structures and withdrawals, 2026-11-04)",
       "method": "assistant",
-      "reviewed_on": "2026-11-02"
+      "reviewed_on": "2026-11-04"
     },
     {
       "source": "docs/users_guide/glacier.md",
@@ -284,11 +284,11 @@
     {
       "source": "docs/users_guide/gwflow.md",
       "target": "docs/en/users_guide/gwflow.md",
-      "source_sha256": "7505e65484cd6d24119b6db7ce04ba66ce56a9da401c69d0a2464f84609f4b3a",
-      "target_sha256": "76ac3697ec25663e4b731e60a758ebd7a6fa9703a3eb83976f815bac736f20f3",
-      "reviewer": "Claude (Claude Code session; full-text content and lexical review, no model execution)",
+      "source_sha256": "c006099071917af7faf4565c0a38b5d7c8deef6f8cacb273d5a7ad1614b678c7",
+      "target_sha256": "9f7732f0b2cd6df5c7327dcf414f05f85eef3ad0c4eaae678d4c89c045ace8ad",
+      "reviewer": "Claude (Claude Code session; compared the Japanese and English changes for the water-quality substance carried by structures and withdrawals, 2026-11-04)",
       "method": "assistant",
-      "reviewed_on": "2026-10-30"
+      "reviewed_on": "2026-11-04"
     },
     {
       "source": "docs/users_guide/gwflow_models.md",
@@ -320,20 +320,20 @@
     {
       "source": "docs/users_guide/io.md",
       "target": "docs/en/users_guide/io.md",
-      "source_sha256": "4cc0763d7dc7515415f43b2941fd53546cd3488ac60807afc433eca23bb7a0be",
-      "target_sha256": "cc01d10e87b0700714d11f90e897bbb897e4a902fbc2df807698f00f41c4ee44",
-      "reviewer": "Claude (Claude Code session; review of the changed lines against the previously recorded pair, no model execution)",
+      "source_sha256": "f66b7ceb4388dcfc3403033fc456e79ee6eb5514d84b7d7b02d8698adb2d5728",
+      "target_sha256": "d81910286154f292d7f9f04f212a038bc7f78be7a4f4d9d232a78c1bcc222cb4",
+      "reviewer": "Claude (Claude Code session; lava temperature mode f_lvtemp, developer.md Sec. 51.7: changed passages compared side by side with the Japanese source, unchanged parts as recorded earlier)",
       "method": "assistant",
-      "reviewed_on": "2026-10-29"
+      "reviewed_on": "2026-11-04"
     },
     {
       "source": "docs/users_guide/lavaflow.md",
       "target": "docs/en/users_guide/lavaflow.md",
-      "source_sha256": "6153545f2bf77dbfdea6018a1c75f8d931e98322319598844dcb9fbae42271ad",
-      "target_sha256": "6a0ca64e67dccf73ab51d35e2452bb540be04eb54cc8ddcf419b56f4b316182b",
-      "reviewer": "Claude (Claude Code session; stratovolcano example registration: changed passages compared side by side with the Japanese source, unchanged parts as recorded earlier)",
+      "source_sha256": "3998e6641be889de4ee5f71c0012111910d45e89d1d9320f4c617bcc31c80cfa",
+      "target_sha256": "eff3fdcb192217727de25a79ac0460e763d76dec3fe571dfd06f4978231fc620",
+      "reviewer": "Claude (Claude Code session; final stage of examples/stratovolcano, a thermal one-event lava flow: changed passages compared side by side with the Japanese source, unchanged parts as recorded earlier)",
       "method": "assistant",
-      "reviewed_on": "2026-11-03"
+      "reviewed_on": "2026-11-04"
     },
     {
       "source": "docs/users_guide/massflow.md",
@@ -383,11 +383,11 @@
     {
       "source": "docs/users_guide/params_index.md",
       "target": "docs/en/users_guide/params_index.md",
-      "source_sha256": "94e0c36e81516652d9d0d1082c594d1bd1d6f7a8e07186e2129a57a26f5f8cb0",
-      "target_sha256": "cf557fb56b5f8b58cc3741f51bf26df77de283c72490b40877eb2cb9cd2dabb4",
-      "reviewer": "Claude (Claude Code session; reviewed the changed passages on water-level cells as outside water for transported quantities, wq_stage_conc/wq_stage_series and the ledger columns out_stage_g/in_stage_g of the Japanese source against the English mirror, 2026-11-03)",
+      "source_sha256": "234792fa39107e6788f31f01fdf017d089d4f4e3471f99c51b518e4a3d83ca9f",
+      "target_sha256": "3edcc95708b882251c61f032b138070816f7656d0974a29de7c7b9510de722cc",
+      "reviewer": "Claude (Claude Code session; lava temperature mode: the 10 new &list_lavaflow rows inserted at the same positions in both files and the count 774 updated, checked with tools/params_index/check.py)",
       "method": "assistant",
-      "reviewed_on": "2026-11-03"
+      "reviewed_on": "2026-11-04"
     },
     {
       "source": "docs/users_guide/passage_width.md",
@@ -437,11 +437,11 @@
     {
       "source": "docs/users_guide/structure.md",
       "target": "docs/en/users_guide/structure.md",
-      "source_sha256": "70dd411d0155c046ee88b3cddc266dd3ca8272818bb66c5ed1bfdff98fad4ef2",
-      "target_sha256": "e548143f44b6416328b60fb0ab750b9867071b8d292edf19337e36e89b740e76",
-      "reviewer": "Claude (Claude Code session; reviewed the changed sections (added reference sections, footnotes and citation markers) of the Japanese source against the English mirror, 2026-10-30)",
+      "source_sha256": "f9cb31e6f15713db5203e689956855f421bc56da6547c91b69f8aa9cdcdc5d9a",
+      "target_sha256": "77c74bd0c8f0d94f7e335861231909880a4b8314662970db3a04229f507807a8",
+      "reviewer": "Claude (Claude Code session; compared the Japanese and English changes for the water-quality substance carried by structures and withdrawals, 2026-11-04)",
       "method": "assistant",
-      "reviewed_on": "2026-10-30"
+      "reviewed_on": "2026-11-04"
     },
     {
       "source": "docs/users_guide/swflow.md",
@@ -536,20 +536,20 @@
     {
       "source": "docs/users_guide/wq.md",
       "target": "docs/en/users_guide/wq.md",
-      "source_sha256": "1e006f7859e37bc426b676595afb0504839671efbd29c9dbd4e137eba59e2549",
-      "target_sha256": "fd16a54a7f5eba01d71a8c6fafa656808c47bd3d617456ee6a7e92b16e78b7ce",
-      "reviewer": "Claude (Claude Code session; reviewed the changed passages on water-level cells as outside water for transported quantities, wq_stage_conc/wq_stage_series and the ledger columns out_stage_g/in_stage_g of the Japanese source against the English mirror, 2026-11-03)",
+      "source_sha256": "d6d5ff7e1c43ecea3951ed2530fba4636cf34c902c6b62274c3adf65d88fa381",
+      "target_sha256": "0afd26b632359a8b21d25331a257420f6153d040a835e652c4faf3989a04b0cb",
+      "reviewer": "Claude (Claude Code session; compared the Japanese and English changes for the water-quality substance carried by structures and withdrawals, 2026-11-04)",
       "method": "assistant",
-      "reviewed_on": "2026-11-03"
+      "reviewed_on": "2026-11-04"
     },
     {
       "source": "docs/users_guide/wq_models.md",
       "target": "docs/en/users_guide/wq_models.md",
-      "source_sha256": "a95479923bb40c210c93d9f92fd8a5326a3888995eaa2e4c1288e072e3515360",
-      "target_sha256": "97fb7dea495bc0c32141eb89d8a6c9193d8875ba4b070e947dadb0ab1525fffd",
-      "reviewer": "Claude (Claude Code session; reviewed the changed passages on water-level cells as outside water for transported quantities, wq_stage_conc/wq_stage_series and the ledger columns out_stage_g/in_stage_g of the Japanese source against the English mirror, 2026-11-03)",
+      "source_sha256": "b9f7a8b95043e88be0cb6ca774625a25d7d877420c8af32d0bb0649e23b7200d",
+      "target_sha256": "292c221767c32ff30a794a6c0816e8de4cf844c2d915d72d71ec6225beb3af3a",
+      "reviewer": "Claude (Claude Code session; compared the Japanese and English changes for the water-quality substance carried by structures and withdrawals, 2026-11-04)",
       "method": "assistant",
-      "reviewed_on": "2026-11-03"
+      "reviewed_on": "2026-11-04"
     },
     {
       "source": "docs/windows.md",
@@ -581,11 +581,11 @@
     {
       "source": "examples/List_samples/list_boundary.txt",
       "target": "examples/List_samples/en/list_boundary.txt",
-      "source_sha256": "80183d21be7193b3d08e6cfdc52ef4079bfd8ed75ef610d82a0c2eeebd6e52c9",
-      "target_sha256": "54e6cfde5d0305e9be63a903f75edaf279dccc5a7764cd5e3c82e0c270aea94d",
-      "reviewer": "Claude (Claude Code session; full-text content and lexical review, no model execution)",
+      "source_sha256": "60f9305e82da21ef6721d2dff6d7f228e629e4de5e99e3cdc3ac7dff090690a0",
+      "target_sha256": "eb0fe5d37b1315356a55365025740ebb3951d260a4c4fb06661cf8690b5890ea",
+      "reviewer": "Claude (Claude Code session; compared the Japanese and English changes for the water-quality substance carried by structures and withdrawals, 2026-11-04)",
       "method": "assistant",
-      "reviewed_on": "2026-10-27"
+      "reviewed_on": "2026-11-04"
     },
     {
       "source": "examples/List_samples/list_channel.txt",
@@ -653,11 +653,11 @@
     {
       "source": "examples/List_samples/list_gwflow.txt",
       "target": "examples/List_samples/en/list_gwflow.txt",
-      "source_sha256": "9835f7104ba56cb9af4d4f8f3fe4c5646bad71d9b4eec094626163a41ee2215e",
-      "target_sha256": "9cb4ee1267ce3954b8cdcf07ffa3b75fcbaabc6e20dd73c09fafd4278297dc72",
-      "reviewer": "Claude (Claude Code session; full-text content and lexical review, no model execution)",
+      "source_sha256": "8d7e0f79ca14debc100f9eae47ae8c83be62ba6f122619e7bc1517cbb5240eba",
+      "target_sha256": "75bd99fa229504189c7a162775e8c3f627463bea672f96b473deb85accc12d24",
+      "reviewer": "Claude (Claude Code session; compared the Japanese and English changes for the water-quality substance carried by structures and withdrawals, 2026-11-04)",
       "method": "assistant",
-      "reviewed_on": "2026-10-30"
+      "reviewed_on": "2026-11-04"
     },
     {
       "source": "examples/List_samples/list_initial.txt",
@@ -680,11 +680,11 @@
     {
       "source": "examples/List_samples/list_lavaflow.txt",
       "target": "examples/List_samples/en/list_lavaflow.txt",
-      "source_sha256": "8d0225da810474faad83264097304cf422f9195c6e59090a90c27dc26b8b604b",
-      "target_sha256": "a2bfe7fee7e31089b77c970f73fe12edfe9523cbcf40c84acdf204f60aeb7670",
-      "reviewer": "Claude (Claude Code session; lava soil-burial fix §51.6: header comment compared with the Japanese source; values, identifiers and enabled state unchanged)",
+      "source_sha256": "34d21a8f34d1dafc69810acb8835bc7ca46eb7b8a788b7e674b25adbde81ec16",
+      "target_sha256": "df194bf9ce2be614aa72bf7353ad3f401ca9d563aa9d1e3c45e84fef74038ef7",
+      "reviewer": "Claude (Claude Code session; lava temperature mode: header and the commented-out temperature block compared line by line with the Japanese source; values, identifiers and comment-out state identical, checked with tools/consistency/check.py samples)",
       "method": "assistant",
-      "reviewed_on": "2026-11-03"
+      "reviewed_on": "2026-11-04"
     },
     {
       "source": "examples/List_samples/list_meteo.txt",
@@ -743,11 +743,11 @@
     {
       "source": "examples/List_samples/list_structure.txt",
       "target": "examples/List_samples/en/list_structure.txt",
-      "source_sha256": "96a180f63d40a269fef67dffea982692e655f1fad478790389650ce3d21f05d6",
-      "target_sha256": "9a8d9e2d4a6e1383e53759ce907e780ea001628f122c9d37be447761aeec606e",
-      "reviewer": "Claude (Claude Code session; full-text content and lexical review, no model execution)",
+      "source_sha256": "b7aca236d3ef671b78164eaff4f07aa7301c22293c5c07ece5c965be7bb0ded3",
+      "target_sha256": "de53dca00a4ff0fa82f70d84102622bae2f911733d0b4490149d612268fcf19f",
+      "reviewer": "Claude (Claude Code session; compared the Japanese and English changes for the water-quality substance carried by structures and withdrawals, 2026-11-04)",
       "method": "assistant",
-      "reviewed_on": "2026-10-24"
+      "reviewed_on": "2026-11-04"
     },
     {
       "source": "examples/List_samples/list_swi.txt",
@@ -815,11 +815,11 @@
     {
       "source": "examples/README.md",
       "target": "examples/README.en.md",
-      "source_sha256": "16b0e0658d4aac1ef3bb4098f58a4b3e8983da40ff88320f36483e6186c37b8f",
-      "target_sha256": "4849de292104f4175574948af1d2b34144b612d758b96e59c1c83245337571ed",
-      "reviewer": "Claude (Claude Code session; merge of the stratovolcano branch into main: the merged examples index keeps main's catchment_metal row and chain line and adds the stratovolcano row and chain line, compared side by side in both languages)",
+      "source_sha256": "70d848f10df2946ed4b1c029f91fbdac1ac85c82f09d3e19799baab33e86ac81",
+      "target_sha256": "8ee925942c367255b3736536c7890fc7c965740647eddb65272ce300e487a15a",
+      "reviewer": "Claude (Claude Code session; final stage of examples/stratovolcano, a thermal one-event lava flow: changed passages compared side by side with the Japanese source, unchanged parts as recorded earlier)",
       "method": "assistant",
-      "reviewed_on": "2026-11-03"
+      "reviewed_on": "2026-11-04"
     },
     {
       "source": "examples/ashfall_lahar/README.md",
@@ -1247,9 +1247,9 @@
     {
       "source": "examples/catchment_metal/README.md",
       "target": "examples/catchment_metal/en/README.md",
-      "source_sha256": "b6bb88598e64b6324d5272f444801bd1b311d15571097008e63fc4a033431e0e",
-      "target_sha256": "21d5b6d5adbd683b8438b23b75b81f4767258f89bc8af4ba5f77c0b6953d0ec0",
-      "reviewer": "Claude (Claude Code session; full-text review of the new example README and its English mirror, 2026-11-03)",
+      "source_sha256": "1513a056690bb56e9001e6eb3a35abe9c230e23f81b83d3e9386882f319ab1b6",
+      "target_sha256": "6702375bb199f701118e7029f450bf47469dd43b32b5233bc359d7ad2c5c17f6",
+      "reviewer": "Claude (Claude Code session; compared the Japanese master and the English mirror after adding the caveat on tanks smaller than a cell (fn_rscap and dam/lake structures do not reproduce the particulate trapping of step 5) and the measured 4-thread runtime, 2026-11-03)",
       "method": "assistant",
       "reviewed_on": "2026-11-03"
     },
@@ -2210,11 +2210,11 @@
     {
       "source": "examples/stratovolcano/README.md",
       "target": "examples/stratovolcano/en/README.md",
-      "source_sha256": "4bda5f4804fef68c3ebb97b61162570b194150e02b35c04a4bf2e9c9b5dc8dd9",
-      "target_sha256": "c9664e8f468238dfbf6b797e5aea25d959b49bb8df2c3d23d17237358af77163",
-      "reviewer": "Claude (Claude Code session; full-text review of the new example README against the Japanese source, numbers and structure cross-checked)",
+      "source_sha256": "31b02963a0dae198a5eaf712ff138c8915255db203c5a913f4c9361311863f8e",
+      "target_sha256": "f4efade90d00a304b5f9e6ffd6573d4214d6b53444fd6bed0fa83473cdcb4a0a",
+      "reviewer": "Claude (Claude Code session; final stage of examples/stratovolcano, a thermal one-event lava flow: changed passages compared side by side with the Japanese source, unchanged parts as recorded earlier)",
       "method": "assistant",
-      "reviewed_on": "2026-11-03"
+      "reviewed_on": "2026-11-04"
     },
     {
       "source": "examples/stratovolcano/figs/erosion.png",
@@ -2224,6 +2224,24 @@
       "reviewer": "Claude (Claude Code session; English figure drawn by the same script with the en switch; visual check)",
       "method": "assistant",
       "reviewed_on": "2026-11-03"
+    },
+    {
+      "source": "examples/stratovolcano/figs/flow.png",
+      "target": "examples/stratovolcano/en/figs/flow.png",
+      "source_sha256": "8792e5aea72f55a95c2c6e50f905b5058d67c1a63b165f14ff358f5b02c57fd0",
+      "target_sha256": "e8bbef525f3ba468facaee03f8fed77ec4e574c906e1c85502635fb4c9aed517",
+      "reviewer": "Claude (Claude Code session; both images drawn by plot_flow.py and plot_flow.py en from the same results of run_flow.py (2026-11-04); titles, labels and annotations compared, same data and layout)",
+      "method": "assistant",
+      "reviewed_on": "2026-11-04"
+    },
+    {
+      "source": "examples/stratovolcano/figs/flow_temp.png",
+      "target": "examples/stratovolcano/en/figs/flow_temp.png",
+      "source_sha256": "debc2e8a678c9248512fbfef7a82ca444811d708132f535f038465d3d72b8a47",
+      "target_sha256": "b10c788fb44402b224bbc8c3c382c2c975c1c168850467f3bfb3cbeac147e5a9",
+      "reviewer": "Claude (Claude Code session; both images drawn by plot_flow.py and plot_flow.py en from the same results of run_flow.py (2026-11-04); titles, labels and annotations compared, same data and layout)",
+      "method": "assistant",
+      "reviewed_on": "2026-11-04"
     },
     {
       "source": "examples/stratovolcano/figs/mechanism.png",
@@ -2255,11 +2273,11 @@
     {
       "source": "examples/stratovolcano/figs/volcano.png",
       "target": "examples/stratovolcano/en/figs/volcano.png",
-      "source_sha256": "43126a1a5a37315d7a9effc982db4017d5a527b15348e76bc515f283977f1cb5",
-      "target_sha256": "f26875c40e433ecb3d5c38b6e6c90151410bb8f16cf57adbcb30a53e2d570588",
-      "reviewer": "Claude (Claude Code session; English figure drawn by the same script with the en switch; visual check)",
+      "source_sha256": "8bc1eb953b335f3260d2c247875ce56d66f938fa87c7f2939366d6970dd16b7a",
+      "target_sha256": "1aaf8f9c4b05c4824a638c9fa135ff1ba9f581d7d2a53c8e0270e1abb0ef130c",
+      "reviewer": "Claude (Claude Code session; contour orientation fix in plot_results.py: both images redrawn by plot_results.py and plot_results.py en from the same results; only the contour lines of panels (a)-(c) changed, now matching the hillshade; the other four figures of each language came out byte-identical)",
       "method": "assistant",
-      "reviewed_on": "2026-11-03"
+      "reviewed_on": "2026-11-04"
     },
     {
       "source": "examples/timberyard/README.md",
@@ -2498,11 +2516,11 @@
     {
       "source": "test/README.md",
       "target": "test/README.en.md",
-      "source_sha256": "1d2a6e79352bb22c03b1b1afb7d55414dc6f2a4cc950a1a08e0977bdae53f834",
-      "target_sha256": "8819c9febbcd0b7864726190d948e095e6b0c960efc988bb9a077077a9bdef70",
-      "reviewer": "Claude (Claude Code session; compared the new gwwidth rows of the test index in Japanese and English, 2026-11-03)",
+      "source_sha256": "2efa46986a9c1ccd56a48ce5ec23222b4341e282b432b9257168dd3faf8544cb",
+      "target_sha256": "3af58a5dcea1da2ae1ea9ce88ca964efc9a3c2f2ee11d574b50fe2753365e1fd",
+      "reviewer": "Claude (Claude Code session; compared the Japanese and English changes for the water-quality substance carried by structures and withdrawals, 2026-11-04)",
       "method": "assistant",
-      "reviewed_on": "2026-11-03"
+      "reviewed_on": "2026-11-04"
     },
     {
       "source": "test/avalanche/README.md",
@@ -3200,11 +3218,11 @@
     {
       "source": "test/lava/README.md",
       "target": "test/lava/en/README.md",
-      "source_sha256": "0ee9387fa243e2084d7f0f08c14c0681e14aebef991be0c4246f083c7c221345",
-      "target_sha256": "28bda0c791b253a2978a1af2b3fa2530916bb3926fdc6af7deb75bb6ec3cc209",
-      "reviewer": "Claude (Claude Code session; lava soil-burial fix §51.6: changed passages compared side by side with the Japanese source, unchanged parts as recorded earlier the same day)",
+      "source_sha256": "a835beb9bbe3e0dc5e75e84736856e3352a1a5b63f08b837693b5c33c3cec004",
+      "target_sha256": "661a84459aedbbd2959bea63aff7368846e4bc6cd897b543bb4f705fc55daee9",
+      "reviewer": "Claude (Claude Code session; lava temperature mode f_lvtemp, developer.md Sec. 51.7: changed passages compared side by side with the Japanese source, unchanged parts as recorded earlier)",
       "method": "assistant",
-      "reviewed_on": "2026-11-03"
+      "reviewed_on": "2026-11-04"
     },
     {
       "source": "test/lava/figs/lava.png",
@@ -3988,6 +4006,24 @@
       "reviewer": "Claude (Claude Code session; full-text review of the new test README and its English mirror, and of the figure drawn by the shared Fig.py with English labels, 2026-11-03)",
       "method": "assistant",
       "reviewed_on": "2026-11-03"
+    },
+    {
+      "source": "test/wqstruct/README.md",
+      "target": "test/wqstruct/en/README.md",
+      "source_sha256": "aec3abf16c2ef14b3dfc613f8fe33a5f899b7cba73ce59007ac32d9ec2ee374b",
+      "target_sha256": "d3f88a44ba1f60fa11d15e9ad6b3028148c3752163b799b9a0bd99c6d9bf3b18",
+      "reviewer": "Claude (Claude Code session; full-text review of the new test README and its English mirror, and of the figure drawn by the shared Fig.py with English labels, 2026-11-04)",
+      "method": "assistant",
+      "reviewed_on": "2026-11-04"
+    },
+    {
+      "source": "test/wqstruct/figs/layout.png",
+      "target": "test/wqstruct/en/figs/layout.png",
+      "source_sha256": "bd043e61c049ce550939ad5c8fb5687253e2987d6a747160b4ce0a20f8aa82a5",
+      "target_sha256": "ad1fd1275f4f0b499f314a9c84a4fe83febd7e7ef48a0e754d715674d55112a1",
+      "reviewer": "Claude (Claude Code session; full-text review of the new test README and its English mirror, and of the figure drawn by the shared Fig.py with English labels, 2026-11-04)",
+      "method": "assistant",
+      "reviewed_on": "2026-11-04"
     },
     {
       "source": "tutorials/README.md",

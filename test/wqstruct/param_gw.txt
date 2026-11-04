@@ -1,0 +1,104 @@
+!======================================================================
+! wqstruct: 地下から汲む取水が運ぶ水質の質量(§30.10)
+!
+!   param.txt と同じ 16 の閉じた区画(make_data.py)。全区画の水に濃度
+!   1 mg/L を持たせ、地表水は Green-Ampt で土層へ浸透する(土層 0.5 m ×
+!   有効間隙率 0.2 = 0.1 m で飽和。浸透は濃度を同伴するので地下の水も
+!   1 mg/L になる)。
+!     W1 井戸(土層 = 層 1)  区画 A (0,0) の 2 セルから計 0.004 m3/s を
+!                           域外へ汲む(地下の質量を汲んだ割合だけ持ち出す)
+!     P1 ポンプ(管路から取水。f_pump_src = 1)  区画 C (0,1) の 1 セルの
+!        管路(容量 0.5 m、初期に満管)→ 区画 B (3,0) の 3 セル(1 セルは
+!        河道幅 2 m)。管路の水は固定濃度 wq_gwc_conc = 1 mg/L とみなす
+!        (噴出・陸側吐口と同じ近似。台帳 in_gwc_g)
+!   空隙率 fn_gv は使わない(gv < 1 のセルの浸透は地下の基底が未整理で、
+!   総水量が 1/gv 倍に見える既存の近似。developer.md §26.1・handoff)。
+!   空隙率の基底は param.txt の地表の取水で検定する。
+!   地表・地下の濃度はどこでも 1 のまま。井戸で域外へ出た分は台帳の
+!   out_intake_g = 汲んだ水の体積(総水量 S_total の減少)× 1 g/m3、
+!   ポンプが管路から送った分は in_gwc_g = 管路の貯留の減少 × 1 g/m3。
+!   Check_wqstruct.py が濃度・台帳の閉合・out_intake_g・in_gwc_g を検定する。
+!======================================================================
+&list_sysparam
+  dt = 0.5                  ! 時間刻み (s)
+  tt_c = "2h"               ! 計算終了時刻
+  dt_disp_c = "10m"         ! 画面表示の間隔
+  dt_file_c = "1h"          ! 分布ファイル出力の間隔
+  dt_recrd_c = "10m"        ! wq.csv の記録間隔
+  fn_geoinfo = '-'
+  fn_initial = '-'
+  fn_channel = '-'
+  fn_gwflow = '-'
+  fn_structure = '-'
+  fn_wq = '-'
+  dir_data = 'data_wqstruct'
+  dir_result = 'result_gw'
+  f_check_cfl = 0
+  f_disp_debug = 1          ! S 列を全有効桁で表示
+  f_output_mode = 2         ! 分布は bil(単精度。濃度の検定に桁を残す)
+  f_out_hg = 1              ! 地下の貯留 Hg・Hgc と地下の質量 Cg
+/
+
+&list_initial
+  f_htype = 1               ! 初期水深ファイル
+  fn_hinit = 'hinit.txt'
+/
+
+&list_geoinfo
+  nx = 17
+  ny = 17
+  dx = 10.0
+  dy = 10.0
+  f_ztype = 1               ! 地盤高ファイル(区画の床 0 m、壁 10 m)
+  fn_z = 'z.txt'
+  rn0 = 0.03
+  fn_rw = 'rw.txt'          ! 河道マスク(河道幅を置く 2 セル)
+  sd0 = 0.5                 ! 土層厚 (m)
+  sy0 = 0.2                 ! 有効間隙率(地下の容量 0.1 m)
+/
+
+&list_channel
+  fn_width = 'width.txt'    ! サブグリッド河道幅 2 m(wfrac = 0.2)
+/
+
+&list_gwflow
+  f_gwvertical = 2          ! Green-Ampt の浸透
+  f_gwlateral = 0           ! 側方流なし(セルごとの貯留)
+  f_gwconduit = 1           ! 管路連続体層(P1 の取水源)
+  f_gwpump = 1              ! 井戸揚水(W1)
+/
+
+&list_gwflow_greenampt
+  gw_ksv_mmh = 360.0        ! 浸透能 (mm/h)
+/
+
+&list_gwflow_conduit
+  f_gwc_fluxlaw = 2         ! sqrt 乱流則(側方通水なしのため未使用)
+  gwc_cnd_m2s = 0.0         ! 側方通水なし(セルごとの貯留)
+  fn_gwc_cap = 'gwc_cap.txt'  ! 貯留容量 0.5 m(区画 C の 1 セルだけ)
+  gwc_sy = 0.5              ! 不圧貯留係数(管高 1 m)
+  gwc_slot_sy = 0.01        ! 疑似スロット貯留係数
+  gwc_sat0 = 1.0            ! 初期に満管(地表との交換なし = 枡を置かない)
+/
+
+&list_gwflow_pump
+  ! W1: 区画 A の 2 セルの土層から計 0.004 m3/s を域外へ
+  gwp_cell(1:2,1,1) = 3, 3
+  gwp_cell(1:2,2,1) = 4, 4
+  gwp_q0(1) = 0.004
+/
+
+&list_struct_pump
+  ! P1: 区画 C の管路 → 区画 B の 3 セル
+  pump_in_cell(:,1,1)  = 7, 3
+  pump_out_cell(:,1,1) = 2, 15
+  pump_out_cell(:,2,1) = 3, 15
+  pump_out_cell(:,3,1) = 4, 16  ! 河道幅 2 m
+  f_pump_src(1) = 1             ! 取水源 = 管路連続体層
+  pump_q0(1) = 0.005
+/
+
+&list_wq
+  wq_c0 = 1.0               ! 初期濃度 (mg/L)。全区画の水
+  wq_gwc_conc = 1.0         ! 管路の水の固定濃度 (mg/L)。地表の水とそろえる
+/

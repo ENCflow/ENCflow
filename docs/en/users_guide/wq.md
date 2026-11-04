@@ -60,8 +60,11 @@ The `_g` names are mass columns [g] in `result/wq.csv`. Concentration `C`
 [mg/L] and `mass_surface_g` (current total surface mass [g]) are different
 quantities. Outflow to sea cells, the exchange through open edges and the
 exchange with water-level cells are recorded in the trailing columns
-`out_sea_g`, `out_edge_g`, `in_edge_g`, `out_stage_g` and `in_stage_g`. There
-is no separate column for the budget residual (see "Output and monitoring").
+`out_sea_g`, `out_edge_g`, `in_edge_g`, `out_stage_g` and `in_stage_g`, and
+the mass taken out of the system by withdrawals (pumps without an outlet,
+out-of-domain diversions, sinks of internal sources and well pumping) in the
+last column `out_intake_g`. There is no separate column for the budget
+residual (see "Output and monitoring").
 
 ## Substance properties
 
@@ -252,9 +255,11 @@ that judgement through R.
   include those terms. `decay_g` combines losses from all stores; it does
   not provide the groundwater component separately.
 - Only the lateral flow and the saturation-excess seepage of layer 1
-  (the soil layer) carry mass. The other pathways by which water leaves
-  layer 1 move water only, and the mass stays in layer 1: percolation into
-  the weathered-bedrock layer (f_gwlayer2), pumping (f_gwpump) and
+  (the soil layer) and pumping (f_gwpump; it takes the same fraction of the
+  dissolved part 1/R as of the water out of the system and records it in the
+  ledger column `out_intake_g`; since 2026-11-04) carry mass. The other
+  pathways by which water leaves layer 1 move water only, and the mass stays
+  in layer 1: percolation into the weathered-bedrock layer (f_gwlayer2) and
   infiltration water into the conduit layer (gwc_leak_layer=1).
   Evapotranspiration also removes pure water only (which is the physically
   correct behavior). Two consequences follow: (a) the layer-1 concentration
@@ -301,6 +306,61 @@ of the ledger closure and the end-to-end preservation of a uniform
 concentration).
 
 **Outputs for this section**: the fully mixed pool of dams/lakes and the retention-pond pool are lumped quantities, so there is no raster output; follow them with the `to_dam_g` (trapped), `rel_dam_g` (released), `mass_dam_g` (current lake pool mass), `to_rs_g` (absorbed by ponds) and `mass_rs_g` (current pond pool mass) columns of `wq.csv`. The concentration of released water is read from a probe C column downstream of the outlet cells ([Output and monitoring](#output-and-monitoring)).
+
+## Transfer by structures and withdrawals
+
+No setting is needed. Pumps, culverts and diversions of
+[structures](structure.md), sinks (negative rates) of internal sources in
+[boundary conditions](boundary.md) and well pumping (f_gwpump) of
+[groundwater](gwflow.md) carry the same fraction of the substance as of the
+water they take, at the concentration of the intake cell (since 2026-11-04;
+before that only the water moved and the substance stayed on the intake side).
+
+- **Transfers with a destination** (pumps with an outlet, culverts in forward
+  and reverse flow, diversions with a delivery side) add the carried mass to
+  the surface water of the destination, split equally over the cells like the
+  water. No ledger column changes (a move inside the surface).
+- The mass taken out by **withdrawals out of the system** (pumps without an
+  outlet, out-of-domain diversions, sinks of internal sources and well
+  pumping) accumulates in `out_intake_g`. Positive internal sources are clean
+  water (give loads with point sources `wq_pt_*`).
+- **Concentration by intake source**: withdrawals from the surface take the
+  concentration of the surface water of the intake cell, pumps drawing from a
+  pond (rscap) that of the pond pool, pumps drawing from the conduit layer
+  (`f_pump_src=1`) the fixed concentration `wq_gwc_conc` of the conduit water
+  (the same approximation as surcharge and land-side outfalls, ledger column
+  `in_gwc_g`; clean water when not given), and wells that of the layer-1
+  groundwater (with a retardation factor R, the mobile dissolved part 1/R).
+- **With Kd partitioning only the dissolved part fd** is carried. The
+  particulate part stays on the intake side with the suspended sediment
+  (structures carry no sediment; [structures](structure.md)). The salt layer,
+  driftwood and debris are not carried either.
+
+**What it cannot do and the limits of accuracy**
+
+- A transfer is instantaneous like the water; travel time, mixing and
+  settling inside the pipe are not represented.
+- Even a pump drawing turbid water sends no particulate substance to the
+  destination, so for substances with a large particulate load (heavy metals
+  with a large Kd and so on) the load downstream of a structure can be
+  underestimated and the deposition on the intake side overestimated.
+- The substance of the water a pond absorbed in the same step moves into the
+  pond pool after the step, so it is not in what is pumped in that step. The
+  concentration of the water pumped from a pond is lower by the relative
+  amount "absorption in one step / storage of the pond", and what remains is
+  higher by the same amount (1e-4 in the configuration of test/wqstruct; mass
+  is conserved). The same holds for the substance of rain (`wq_rain_conc`) in
+  the same step.
+- There is no column per structure (`out_intake_g` is the total of the
+  withdrawals out of the system). The load passing structures does not appear
+  in the transect L either.
+
+Worked example: [test/wqstruct](../../../test/wqstruct/en/README.md) (16 closed
+compartments joined by structures and withdrawals; checks that water at
+1 mg/L stays at 1 wherever it moves, the closure of the ledger and
+`out_intake_g` = volume of water leaving the system × concentration).
+
+**Outputs for this section**: `out_intake_g` of `wq.csv` (cumulative withdrawals out of the system) and the concentration fields `C0001...` and the subsurface `Cg0001...` on the destination and intake sides ([Output and monitoring](#output-and-monitoring)).
 
 ## Surface buildup + washoff (nonlinear L-Q)
 
@@ -471,6 +531,10 @@ The three ways a field gets written (automatic / flag / riding on a flag) and th
   `mass_surface_g`, which is 0 when the boundary concentration is 0). Groundwater exchanges no water
   with sea cells ([groundwater](gwflow.md), lateral flow), so there is no
   path by which subsurface mass leaves directly to the sea.
+- The mass taken out of the system by withdrawals (pumps without an outlet,
+  out-of-domain diversions, sinks of internal sources and well pumping)
+  accumulates in the last column `out_intake_g` (appended at the end on
+  2026-11-04; [transfer by structures and withdrawals](#transfer-by-structures-and-withdrawals)).
 - Sea cells hold no mass (a sea area with the initial concentration wq_c0
   is zeroed; sea cells are excluded from decay and from the ledger). Water
   that flows from the sea onto land is clean water (concentration 0). To
@@ -489,6 +553,7 @@ The three ways a field gets written (automatic / flag / riding on a flag) and th
 | settle_g | cumulative surface settling; loss for f_wq_settle=0, internal transfer to the buildup pool for 1 |
 | mass_surface_g, mass_gw_g, mass_pool_g, mass_dam_g, mass_rs_g | current mass in surface water, groundwater, buildup, storage-type dams/lakes and retention ponds |
 | out_sea_g, out_edge_g, in_edge_g, out_stage_g, in_stage_g | cumulative exchange with the outside: outflow to sea cells, outflow through open edges, inflow through open edges, outflow to water-level cells, inflow from water-level cells (appended at the end on 2026-11-03; the positions of the existing columns are unchanged) |
+| out_intake_g | cumulative mass taken out of the system by withdrawals: pumps without an outlet, out-of-domain diversions, sinks of internal sources and well pumping (appended at the end on 2026-11-04; the positions of the existing columns are unchanged) |
 
 **Measurements** (probe and transect columns)
 
@@ -518,7 +583,7 @@ The three ways a field gets written (automatic / flag / riding on a flag) and th
   the run + cumulative inputs (`in_point_g` to `in_gwc_g`, `in_bldup_g`,
   `in_edge_g`, `in_stage_g`) − removals from the system (`decay_g`,
   `settle_g` with `f_wq_settle=0`, `to_gwc_g`, `out_sea_g`, `out_edge_g`,
-  `out_stage_g`, capture by fixed-level lakes) = current mass of the whole
+  `out_stage_g`, `out_intake_g`, capture by fixed-level lakes) = current mass of the whole
   system". Internal transfers
   (`wash_g`, `to_gw_g`, `seep_g`, `rel_dam_g`, `to_rs_g`, `settle_g` to the
   pool, and `to_dam_g` of storage-type lakes) are not counted twice.
@@ -534,6 +599,7 @@ The three ways a field gets written (automatic / flag / riding on a flag) and th
 - [test/gwseep](../../../test/gwseep/en/README.md): budget check of transport through infiltration and lateral groundwater flow.
 - [test/damwq](../../../test/damwq/en/README.md): steady-state check of completely mixed dam release and pond entrainment.
 - [test/sewer_wq](../../../test/sewer_wq/en/README.md): budget check of sewer surcharge in a town with a conduit network (how the network was built: [examples/sewer_hybrid](../../../examples/sewer_hybrid/)).
+- [test/wqstruct](../../../test/wqstruct/en/README.md): checks that pumps, culverts, diversions, sinks of internal sources and well pumping carry the substance with the water (concentration, closure of the ledger, `out_intake_g`).
 - Worked example of the format: [examples/List_samples/en/list_wq.txt](../../../examples/List_samples/en/list_wq.txt)
 - Combined with groundwater, infiltration entrainment and the
   subsurface pool can be tracked

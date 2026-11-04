@@ -355,7 +355,9 @@
 !   Combined with the fresh/salt layers (f_salt_gw=1), pumping takes
 !   fresh water first (the shortfall becomes salt contamination).
 !   Injection (negative rates) is not supported (return flow to the
-!   surface goes through &list_bound_source).
+!   surface goes through &list_bound_source). The subsurface water-quality
+!   (fn_wq) mass leaves the system with the dissolved part (1/R) in the
+!   same fraction as the water pumped from layer 1 (ledger out_intake_g).
 !======================================================================
 &list_gwflow_pump
   ! Well 1: inline cells and a constant rate

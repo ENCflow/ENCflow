@@ -260,6 +260,9 @@ module m_state
                                         ! ため S 台帳には算入しない。m_lavaflow が
                                         ! 確保・更新・保存する。fn_lavaflow 未指定
                                         ! なら未確保。lava_plan.md)
+    real, allocatable :: tl(:,:)        ! 溶岩の深さ平均温度 (°C。溶岩のないセルは 0。
+                                        ! m_lavaflow が f_lvtemp=1 のときだけ確保・
+                                        ! 更新・保存する。lava_plan.md §8)
     real, allocatable :: hd(:,:)        ! 流動流木柱状量 (m3/m2 = m。貯留の意味論は
                                         ! h・hs と同一)。移流は swflow_enc がステップ
                                         ! 内で行い(dw_active)、発生・停止・再流動は
@@ -328,12 +331,15 @@ module m_state
                                         ! fxg と同型の契約。確保は m_wq_init
                                         ! (f_wq_infil=1 のみ)。§30 W3)
     real(real64), allocatable :: cqx(:,:) ! 輸送物質 cq の系外との出入りの記録 (g。行部分和
-                                        ! (js:je, 1:5)。1 = 海セルへの流出、2 = 開いた辺から
+                                        ! (js:je, 1:6)。1 = 海セルへの流出、2 = 開いた辺から
                                         ! 外への流出、3 = 開いた辺から内への流入(区間流入の
                                         ! 濃度・側方 Neumann の鏡像濃度)、4 = 水位規定セルへの
-                                        ! 流出、5 = 水位規定セルからの流入。m_swflow_enc の
+                                        ! 流出、5 = 水位規定セルからの流入、6 = 取水で系外へ
+                                        ! 持ち出した量(吐口のないポンプ・域外分水・内部ソースの
+                                        ! 吸い込み・井戸揚水。§30.10)。m_swflow_enc の
                                         ! advect_scalar(1〜3。更新と同じ流束)と水位規定セルの
-                                        ! 置き直し stage_scalar_reset(4・5)が書き、m_wq が読んで
+                                        ! 置き直し stage_scalar_reset(4・5)、boundary_h の
+                                        ! 取水と m_gwflow_pump の揚水(6)が書き、m_wq が読んで
                                         ! 台帳へ移しゼロ戻し。fxg と同型の契約。確保は
                                         ! m_wq_init(水質有効時)。§30.9)
     real, allocatable :: fxsli(:,:)     ! 地表→層1 の浸透量の記録 (m。h 基底。淡塩2層の
@@ -360,6 +366,10 @@ module m_state
     real :: cg_rginv = 1.0          ! 地下輸送の移流分担率 1/R(遅延化係数 wq_rg の
                                     ! 逆数。m_wq_init が設定し、m_gwflow_lateral が
                                     ! 側方移流と湧出同伴の実効濃度に乗じる。§30 W3)
+                                    ! m_gwflow_pump の揚水の同伴にも乗じる(§30.10)
+    real :: cq_kd = 0.0             ! 水質の平衡分配係数 Kd (m3/kg。0 = 分配なし)。
+                                    ! m_wq_init が設定し、boundary_h が取水で運ぶ
+                                    ! 溶存分 fd = 1/(1 + Kd·ρs·hs/vh) に使う(§30.10)
     logical :: sed_active = .false. ! 浮遊砂輸送の有効化(m_geomorph_init が設定。
                                     ! swflow_enc がステップ内で s%hs を移流する)
     real :: sed_sgrav = 0.0         ! 土粒子の水中比重 s(m_geomorph_init が
@@ -1016,6 +1026,7 @@ subroutine m_state_dispose(s, p)
   if (allocated(s%swimaxt)) deallocate(s%swimaxt)
   if (allocated(s%hi)) deallocate(s%hi)
   if (allocated(s%hl)) deallocate(s%hl)
+  if (allocated(s%tl)) deallocate(s%tl)
   if (allocated(s%hb)) deallocate(s%hb)
   if (allocated(s%fx)) deallocate(s%fx)
   if (allocated(s%ht)) deallocate(s%ht)

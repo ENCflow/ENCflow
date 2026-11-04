@@ -2,7 +2,7 @@
 
 [ユーザーガイド目次へ](../users_guide.md)
 
-namelist パラメータ名から章を引く索引です(アルファベット順、全 764 項目)。
+namelist パラメータ名から章を引く索引です(アルファベット順、全 774 項目)。
 この索引は list_*.f90 の namelist 宣言から機械抽出で生成されています
 (developer.md §35.1)。
 
@@ -232,6 +232,7 @@ namelist パラメータ名から章を引く索引です(アルファベット�
 | f_inflow_edge | &list_enc | [浅水流計算](swflow.md) |
 | f_input_mode | &list_sysparam | [入出力](io.md) |
 | f_lavaflow | &list_lavaflow | [溶岩流](lavaflow.md) |
+| f_lvtemp | &list_lavaflow | [溶岩流](lavaflow.md) |
 | f_masktype | &list_geoinfo | [地理情報](geoinfo.md) |
 | f_nh_adaptive | &list_enc | [浅水流計算](swflow.md) |
 | f_nh_bottom | &list_enc | [浅水流計算](swflow.md) |
@@ -524,12 +525,21 @@ namelist パラメータ名から章を引く索引です(アルファベット�
 | inflow_val | &list_bound_inflow | [境界条件](boundary.md) |
 | kk | &list_sysparam | [浅水流計算](swflow.md) |
 | lat | &list_evap | [降雨・気象](forcing.md) |
+| lv_btau | &list_lavaflow | [溶岩流](lavaflow.md) |
+| lv_bvisc | &list_lavaflow | [溶岩流](lavaflow.md) |
 | lv_cell | &list_lavaflow | [溶岩流](lavaflow.md) |
 | lv_cfl | &list_lavaflow | [溶岩流](lavaflow.md) |
+| lv_cp | &list_lavaflow | [溶岩流](lavaflow.md) |
+| lv_emis | &list_lavaflow | [溶岩流](lavaflow.md) |
+| lv_hconv | &list_lavaflow | [溶岩流](lavaflow.md) |
 | lv_nsubmax | &list_lavaflow | [溶岩流](lavaflow.md) |
 | lv_q0 | &list_lavaflow | [溶岩流](lavaflow.md) |
 | lv_rho | &list_lavaflow | [溶岩流](lavaflow.md) |
+| lv_tair | &list_lavaflow | [溶岩流](lavaflow.md) |
 | lv_tauy | &list_lavaflow | [溶岩流](lavaflow.md) |
+| lv_temp0 | &list_lavaflow | [溶岩流](lavaflow.md) |
+| lv_tref | &list_lavaflow | [溶岩流](lavaflow.md) |
+| lv_tsol | &list_lavaflow | [溶岩流](lavaflow.md) |
 | lv_val | &list_lavaflow | [溶岩流](lavaflow.md) |
 | lv_visc | &list_lavaflow | [溶岩流](lavaflow.md) |
 | lv_vsol | &list_lavaflow | [溶岩流](lavaflow.md) |

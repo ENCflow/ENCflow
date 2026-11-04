@@ -147,11 +147,12 @@ The expression of $`R`$ is the standard retardation factor of linear
 equilibrium sorption[^freeze79], estimated in pre-processing from the dry
 bulk density $`\rho_b`$ and the effective porosity $`\theta`$ (10²–10⁴ for
 heavy metals and Cs). Decay also acts on the groundwater pool. Only the
-lateral flow and the saturation-excess seepage of layer 1 carry mass;
-percolation into the weathered bedrock layer, pumping and infiltration
-water into the conduit layer move water only and the mass stays in layer 1
-(the layer-1 concentration becomes apparently higher, and the return water
-through layer 2 or the conduits is clean water).
+lateral flow and the saturation-excess seepage of layer 1 and pumping (out of
+the system in the same form as seepage; §6) carry mass; percolation into the
+weathered bedrock layer and infiltration water into the conduit layer move
+water only and the mass stays in layer 1 (the layer-1 concentration becomes
+apparently higher, and the return water through layer 2 or the conduits is
+clean water).
 Verification: [test/gwseep](../../../test/gwseep/en/README.md) (the cycle
 infiltration → lateral flow → seepage → re-infiltration closes the ledger
 to_gw − seep = mass_gw; $`R`$ = 1e12 immobilises the mass).
@@ -210,6 +211,32 @@ the die-off rates of faecal indicators are within the range of standard
 water-quality textbooks[^chapra97]. Verification:
 [test/sewer_wq](../../../test/sewer_wq/en/README.md).
 
+**Structures and withdrawals (proportional transfer).** When a pump, culvert
+or diversion of [structures](structure.md) or the sink of an internal source
+takes $`\Delta h`$ from a cell with depth $`h`$, the same fraction of the
+column mass (only the dissolved part $`f_d`$ with Kd) is taken out, and that
+mass is added to the column mass of the destination, split equally over the
+cells like the water (a withdrawal without a destination leaves the system =
+ledger column `out_intake_g`).
+
+```math
+\Delta c_q = -\,f_d\,c_q\,\frac{\Delta h}{h},
+\qquad m = -\Delta c_q\,g_v\,w\,A
+```
+
+What is pumped from a pond comes from the pond pool, a pump drawing from the
+conduit layer (`f_pump_src = 1`) moves water at the fixed concentration
+`wq_gwc_conc`, and well pumping leaves the system in the same form as the
+seepage of §4, $`\Delta c_g = -(1/R)\,c_g\,f/h_g`$ ($`f`$ is the pumped
+depth). This is our own simplification assuming complete mixing within the
+intake cell (the same proportional transfer as for infiltration); travel
+time, mixing and settling inside the pipe are not represented. The
+particulate part stays on the intake side with the suspended sediment
+(structures carry no sediment). The substance of the water a pond absorbed
+and of the rain that fell in the same step is added after the step, so it is
+not in that step's withdrawal (a relative bias of one step's inflow /
+storage). Verification: [test/wqstruct](../../../test/wqstruct/en/README.md).
+
 ## 7. Parameters and the basis of their defaults
 
 The labels in the Basis column are explained in [How to read the basis of a default](../users_guide.md#how-to-read-the-basis-of-a-default). Water quality has **no defaults for the substance
@@ -257,6 +284,7 @@ representative values.
 | [test/gwseep](../../../test/gwseep/en/README.md) | infiltration → lateral flow → seepage | to_gw − seep = mass_gw; immobile at $`R`$ = 1e12 |
 | [test/sewer_wq](../../../test/sewer_wq/en/README.md) | sanitary risk of sewer surcharge | ledger check of surcharge → inundation → spreading → decay |
 | [test/tracer](../../../test/tracer/en/README.md) | Numerical diffusion of the first-order upwind transport | Spreading of a clean-water front D = u·Δx·(1−Cr)/2 and lateral variance of a steady plume Dy = 0.29·u·Δy, both within 5 % of the theory |
+| [test/wqstruct](../../../test/wqstruct/en/README.md) | Proportional transfer by structures and withdrawals | Water at 1 mg/L stays at 1 in every compartment, closure of the ledger, out_intake_g = volume of water leaving the system × concentration |
 
 ## References
 
