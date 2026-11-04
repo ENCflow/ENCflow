@@ -57,19 +57,19 @@ python3 Fig.py en # en/figs/release.png, en/figs/fslide.png
 Configuration 1. Left: the collapse area with collapse depth D = 1 m.
 Center: the terrain change after 10 s. The collapse area is lowered by
 about 0.98 m (part of the released 1 m is redeposited immediately), and
-deposition of up to 0.32 m has begun downstream of the slope break.
+deposition of up to 0.31 m has begun downstream of the slope break.
 Right: the flow depth h + hs. The released mass spreads from the collapse
 area over the slope break onto the flat part as a fan.
 
 ![Slope stability test](figs/fslide.png)
 
 Configuration 2 (left three panels) and 3 (right). Left: the run minimum
-safety factor Fs9999. Fs < 1 over the whole slope (minimum 0.481), and
+safety factor Fs9999. Fs < 1 over the whole slope (minimum 0.493), and
 only the gentle part near the slope break has Fs > 1. Center left: the
 final soil thickness sd. Many cells on the slope reach sd = 0 (failed and
-bedrock exposed; 470 cells), and stripes of failed sediment that flowed
+bedrock exposed; 434 cells), and stripes of failed sediment that flowed
 down and redeposited are also visible. Center right: the maximum flow
-depth D9999 (maximum 0.46 m). Right: Fs9999 of configuration 3. Since
+depth D9999 (maximum 0.44 m). Right: Fs9999 of configuration 3. Since
 nothing is mobilized, the minimum of Fs stays at 0.943, and only the
 detection of the hazardous range (< 1) takes place (the hazard map of the
 judge-only mode).
@@ -78,8 +78,8 @@ judge-only mode).
 
 | Configuration | Total solid | Co-moving update | Water budget / activity | Result |
 |---|---|---|---|---|
-| 1 release | 1e-13 | 3e-14 | Σh = 52.8000 (expected λ relsat ΣD = 52.8000) / collapse area min dz −0.98 m, deposition outside the area +0.32 m | PASS |
-| 2 fslide | 8e-12 (tolerance 1e-8: rounding accumulated over about 20 000 cell conversions) | 9e-14 | slope min sd = 0 (470 cells failed) / min Fs9999 0.481, D9999 ≥ H9999 | PASS |
+| 1 release | 1e-13 | 3e-14 | Σh = 52.8000 (expected λ relsat ΣD = 52.8000) / collapse area min dz −0.98 m, deposition outside the area +0.31 m | PASS |
+| 2 fslide | 8e-12 (tolerance 1e-8: rounding accumulated over about 20 000 cell conversions) | 9e-14 | slope min sd = 0 (434 cells failed) / min Fs9999 0.493, D9999 ≥ H9999 | PASS |
 | 3 fsdiag | — | — | z, sd and hs unchanged; min Fs 0.943 < 1 detected (600 cells evaluated) | PASS |
 
 - The mobilization fires only once, by a time-crossing test, and does not
@@ -109,6 +109,11 @@ judge-only mode).
   mass hardly went down the slope; the flow of configuration 2 stayed on the slope (the maximum
   flow depth extended only to just above the slope break). After the fix it flows past the slope
   break, and the failed cells increased to 470.
+- After the fix of the steep-slope gravity correction (2026-11-04; developer.md §91) and the
+  D∞ steepest slope (§92), configuration 1 deposits +0.31 m outside the collapse area, and
+  configuration 2 has 434 failed cells, min Fs9999 0.493 and a maximum flow depth of 0.44 m
+  (+0.32 m, 470 cells, 0.481 and 0.46 m right after the fix of §28.16). The table and the
+  figures show these values.
 
 ## Related documents
 

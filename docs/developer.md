@@ -19296,6 +19296,37 @@ wfswash_tanbe = 0.1 を入れた): 途中で不具合が 2 つ見つかった(�
     10 ケースが FAIL(検出器として働く)。補正なしの 18 ケースは修正の前後で同じ値。
   - -fcheck=all(-Og)の逐次と MPI np = 2 で、test/dbonset の補正ありの 18 ケースと test/debris の
     7 構成に範囲外参照がなく、state.dat が逐次とバイト一致(最適化ビルドの検証より先に実行)。
+  - 最終状態(§92 と岩盤侵食の g_e を含む)でも -fcheck=all の逐次と np = 2 を回し、test/dbonset の
+    補正ありと安全率の 27 ケース、test/debris・dbrock・slide に範囲外参照がなく、逐次とバイト一致。
+  - 最適化ビルドの回帰(reference は更新していない。2026-11-04): 参照を持つ 41 ケースのうち 12 ケースが
+    不一致。41 ケースはどれも f_debris・f_slide・rock_kdb を使わないので §92 と岩盤侵食の変更は効かず、
+    差はこの修正による(nhshelf を除く。下記)。
+    - test/chichibu(急な山地の流域): Log.txt の最大単位幅流量 Q_max が出水の立ち上がりで +0.72 %・
+      −0.35 %、h_max が ±0.2 %、V_max が ±0.1 %(貯留 S は全時刻で一致)。chichibu_icmap は h_max で
+      最大 0.16 %。
+    - 緩勾配の水質・地下水のケース(gwwidth・gwseep・gwsect・sewer_wq・damwq): wq.csv の相対差が
+      6e-4 以下。Log.txt では診断の計数(ex_flux。gwwidth で 18 → 14 など)と、流れの終わりの小さな
+      値が動く。
+    - kdpart・tracer・wqbound・wfdoppler: 相対 1e-6 以下。式の計算順が変わった(旧 g dr²/(dr² + Δz²)、
+      新 g/(1 + szn² + szt²))ので、接線成分が 0 の辺でも、勾配のある濡れた辺では最終桁が動く。
+      wfdoppler の wavefield.csv は流れの場の変化が波浪場に伝わったもので、エネルギー収支の項が
+      相対 1e-6、反復回数と丸めの水準の列が動く。
+    - nhshelf は 4 スレッドの非決定性(handoff の非静水圧の (g))による最大 4 量子の差。1 スレッドでは
+      修正の前後の実行ファイルの Log.txt がバイト一致し、reference に ULP = 1 で合格するので、この
+      修正による差はない。
+    - 一致したのは平坦・勾配なしのケースを中心に 29 ケース(nh* の 6 ケースは従来どおり ULP = 1 の
+      許容内)。tracer の最終桁 1 量子の機種差(handoff)は別の問題。
+    - 回帰の途中で、test/nhbottom が補助プログラム(uplift)をビルドするときに src を逐次のモードで
+      作り直し、モードのスタンプが bin/encflow より新しくなって後続の nh* が Check_mode.sh で止まった
+      (MPI の最適化ビルドを最後にしたため)。同じ実行ファイル(バイト一致を確認)で回し直した。両モードを
+      作るときは MPI を先、逐次を後にする。
+  - 土石流系の自己検定の新旧(§91 の前の実行ファイルと最終状態): dbonset・avalanche・bedslide・
+    curvature・dbrock・debris・driftwood・slide・splashslide・volcano がすべて PASS(旧は dbonset の
+    補正ありと安全率、dbrock の DB8 の新しい解析解で FAIL)。値の変わった検定の README(日英)と図を
+    更新した(avalanche の成長比 2.36 → 2.23、volcano の構成 2 の平坦部の堆積 0.200 → 0.053 m、
+    bedslide の構成 3 の 60 s の湖の部分の水面の最大 0.92 → 0.86 m と汀線の角の遡上 1.3 m など)。
+  - MPI(最適化ビルド): dbonset(45 ケース)と debris が np = 1・2・4、ほかの 8 検定が np = 2 で、
+    state.dat が逐次とバイト一致。
 
 ## 92. 斜面の最急勾配 slope8 を D∞(Tarboton 1997)で求める(8 方向の勾配の最大による格子の向きの偏りの修正。2026-11-04 挙動変更)
 
@@ -19356,3 +19387,6 @@ wfswash_tanbe = 0.1 を入れた): 途中で不具合が 2 つ見つかった(�
     一致。検出器として働く)。壁際の 1 列は、閉じた壁の外の近傍が候補にならないので、下り向きが
     壁へ向かう辺で Fs が大きく出る(閉じた境界の扱いとして従来どおり)。降伏の 36 ケースは slope8 を
     呼ばないので値が変わらない(全 45 ケース PASS)。
+  - 参照を持つ 41 ケースは slope8 を呼ばないので、§92 による reference の変化はない(§91 の回帰を参照)。
+    -fcheck=all・MPI・土石流系の自己検定の新旧は §91 の最終状態の検証と同じ実行に含まれる(slope8 を
+    使う slide・debris(f_dbed = 1)・dbonset の安全率が PASS し、MPI で逐次とバイト一致)。

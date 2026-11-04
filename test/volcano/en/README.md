@@ -75,22 +75,22 @@ domain (without exchange the concentration is a conserved quantity).
 ![τ_y runout](figs/tauy.png)
 
 Left: the release area with collapse depth D = 2 m. Centre: the terrain change
-after 90 s. The release area is lowered by up to 1.7 m, and a fan-shaped deposit
-lies from directly below it to just beyond the slope break (with a retarding
-stress of 4000 Pa the flow stops near the slope break). Right: the remaining sediment
-in motion hs is only a thin fringe of about a mm near the slope break, 0.1% of the
-released amount (99.9% has been fixed to the bed).
+after 90 s. The release area is lowered by up to 1.55 m, and a fan-shaped deposit
+lies on the slope from directly below it to the slope break (with a retarding
+stress of 4000 Pa the flow stops on the slope). Right: the remaining sediment
+in motion hs is only a thin fringe of about a mm beyond the slope break, 0.4% of the
+released amount (99.6% has been fixed to the bed).
 
 ## Findings
 
 | Check | Computed value | Verdict |
 |---|---|---|
-| Configuration 1 (1) water ledger Σh − Q tt | −6.4e-12 m·cell | PASS (machine precision) |
-| Configuration 1 (2) solid ledger Σhs + (1 − λ)Σdz − cs Q tt | −4.5e-12 m·cell | PASS |
+| Configuration 1 (1) water ledger Σh − Q tt | −2.4e-12 m·cell | PASS (machine precision) |
+| Configuration 1 (2) solid ledger Σhs + (1 − λ)Σdz − cs Q tt | −3.0e-12 m·cell | PASS |
 | Configuration 1 (3) <h_t> versus the analytical solution | 0.3434 / 0.3434 m (0.0%), CV 0.000, C 0.444 (theory 0.444) | PASS |
 | Configuration 2 (1) solid ledger | 1.6e-11 m·cell | PASS |
-| Configuration 2 (2) activity | release area min dz = −1.57 m, flat max dz = 0.185 m | PASS |
-| Configuration 2 (3) stopping | remaining Σhs / released solids = 0.005 (< 0.3) | PASS |
+| Configuration 2 (2) activity | release area min dz = −1.55 m, flat max dz = 0.053 m | PASS |
+| Configuration 2 (3) stopping | remaining Σhs / released solids = 0.004 (< 0.3) | PASS |
 
 - The Voellmy uniform flow agrees with the analytical solution to 4 digits, and
   the water and solid ledgers close at machine precision. These are the
@@ -110,7 +110,12 @@ released amount (99.9% has been fixed to the bed).
   of the default on 2026-10-18 (f_opening_dynamic = 2; developer.md §68.38).
   With the former default 1 written explicitly, the values of 10-12 (release
   area −1.56 m, flat part 0.06 m, remaining 0.005 = stops on the slope) are
-  reproduced (confirmed 2026-10-24).
+  reproduced (confirmed 2026-10-24). With the code just before the fix of the
+  steep-slope gravity correction of 2026-11-04 (§91) the flat part was 0.200 m; after
+  the fix it is 0.053 m (release area −1.55 m, remaining 0.004), close to the values
+  of 10-12 (the effective gravity, which came out too large on edges oblique to the
+  slope, is now right, and the flow held by the constant yield stress τ_y stops on the
+  slope).
 
 ## Related documents
 

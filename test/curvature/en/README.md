@@ -73,10 +73,10 @@ downstream decay also agrees.
 
 | Check | Computed value | Criterion | Verdict |
 |---|---|---|---|
-| (1) <h_t> of uniform flow A (off / on) | 0.3165 m | Uniform-flow depth 0.3188 m (−0.7%, tolerance 5%) | PASS |
+| (1) <h_t> of uniform flow A (off / on) | 0.3172 m | Uniform-flow depth 0.3188 m (−0.5%, tolerance 5%) | PASS |
 | (2) <h_t> of uniform flow B (off / on) | 0.6375 m | Uniform-flow depth 0.6376 m (−0.02%) | PASS |
 | (2′) on/off difference on the straight parts | 0.00% | < 1% (the curvature term vanishes at z″ = 0) | PASS |
-| (3) <h_t> on the arc (off / on) | 0.3881 / 0.3983 m | ODE 0.3844 / 0.3945 m (+0.9–1.0%, tolerance 10%) | PASS |
+| (3) <h_t> on the arc (off / on) | 0.3878 / 0.3981 m | ODE 0.3844 / 0.3945 m (+0.9%, tolerance 10%) | PASS |
 | (4) Thickening on − off on the arc | 0.0103 m | ODE 0.0100 m (ratio 1.02, tolerance 0.7–1.4) | PASS |
 
 - Although the effect of the curvature term (thickening 1 cm, 3%) is small, it

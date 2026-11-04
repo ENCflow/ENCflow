@@ -101,6 +101,15 @@ python3 make_init.py   # regenerate the inputs (bundled; only when changed)
   the difference from the 0.76 m³ and 8.6 mm recorded above comes from later changes to the code,
   not separated out). DB1, DB3, the alternating runs of DB5 and DB8 are byte-identical before and
   after the fix, and all configurations pass.
+- The fix of the steep-slope gravity correction and the change that gives rock erosion the
+  effective gravity of the momentum equation, g/(1 + |∇z|²) (2026-11-04; developer.md §91),
+  changed the values of DB2 and DB5 (rock eroded by debris flows 1.09 → 1.11 m³, largest Ri
+  12.2 → 14.5 mm; ledgers of DB5: debris flow 2.91 → 2.95, flood 0.397 → 0.396 m³). The
+  analytical solution of DB8 was brought to the new definition (the ground slope of the
+  effective gravity is the minmod of the differences to the two neighbours): largest relative
+  difference 1.3e-15 (τ_d = 634 to 694 Pa), Σ(−1)^j Ri / ΣRi = +0.040 (the old executable fails
+  the new analytical solution by 2.0e-2). DB1 has a uniform slope, so only rounding differences
+  remain (1.6e-15). All configurations pass, and MPI np = 2 is byte-identical to the serial run.
 - MPI (DB4): no run-time errors with -fcheck=all at np = 2. With the -O2 build,
   the state.dat and geomorph_rockinc.dat of np = 1, 2 and 4 are byte-identical to
   the serial run. With the default -Ofast, Run_MPI.sh 2 and 4 are also
