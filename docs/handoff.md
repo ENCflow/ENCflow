@@ -72,11 +72,14 @@ architecture.md。このメモは「現在進行中・未完了の項目」だ�
      下の「例題の再計算の範囲」。
    - 例題の再計算の範囲(2026-11-04 の分類。§91 は濡れた斜面の辺だけに効き、差はおよそ横断方向の勾配の
      2 乗。式の計算順が変わったので、勾配のある濡れた辺では最終桁は必ず動く):
-     - 印字の桁で変わらないかを確かめている(実行中): tsunami_town・timberyard・sewer_hybrid・levee_breach
-       (緩勾配。plot スクリプトの出す表と README を比べる)。
+     - 緩勾配の軽い 4 例題を回して README の表と比べた(2026-11-04): sewer_hybrid・levee_breach は印字の
+       桁で同じ(更新なし)。tsunami_town・timberyard は浸水深などは同じだが、1 m³ の桁まで載せた瓦礫・
+       材木の量が 0.1〜8 % 動いたので更新した(修正前の実行ファイルで README の値が再現することを確かめ、
+       差が §91 によることを確認)。
      - 再計算していない(利用者の判断待ち): badland_storm・tower_karst(急な斜面の豪雨の表面流。薄い
        シート流で摩擦が支配するので差は小さい見込み。計 3〜6 時間)、catchment_metal・estuary_barrage・
-       qanat・karst(緩勾配。計約 8 時間)。
+       qanat・karst(緩勾配。計約 8 時間)。上の 4 例題から、水深・流量のような 3 桁の値は変わりにくく、
+       細かい桁まで載せた量は動くと見込まれる。
      - 再計算しない: delta・meander・meander_cutoff(README に丸めの差で数値が変わると明記してあり、
        回し直しても別の実現値が 1 つ増えるだけ。各 10〜18 時間)。影響なし: 表面流のない badland・
        badland_round・mesa・shield_volcano・vz_tani2023、平坦な床の nest_reflect、f_gravity_correction = 0 の
