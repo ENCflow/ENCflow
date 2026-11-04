@@ -419,7 +419,10 @@ The labels in the Basis column are explained in [How to read the basis of a defa
 - Example: [examples/stratovolcano](../../../examples/stratovolcano/en/README.md) — a
   stratovolcano built by repeating lava flow → ashfall → storm erosion (a driver chaining one
   computation per stage). An example of using the burial of the ash under solidified lava (when
-  there is a soil layer) together with ashfall and erosion.
+  there is a soil layer) together with ashfall and erosion. In its final stage, one lava flow of the
+  temperature mode is run over the uneven terrain of the grown volcano, showing that the valley the lava
+  follows changes with the vent position, that the lava stops by cooling once the effusion ends, and
+  that at a higher effusion rate the same volume flows further and wider.
 
 ## Constraints and interactions
 
