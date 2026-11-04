@@ -106,6 +106,9 @@ python3 plot_results.py | tee analysis.txt  # figs/maps, sections, towers, hydro
 python3 make_terrain.py --steady            # infiltration map ksv_steady.txt for the quasi-steady forcing (section "1 Myr" below)
 ./encflow param_steady.txt > Screen_steady.log          # 0.99 Myr with quasi-steady forcing (about 1 hour)
 python3 plot_results.py param_steady.txt steady | tee analysis_steady.txt   # figs/*_steady.png
+python3 make_terrain.py --steady --base     # inputs with the base level: z_base, gwc_bot, gwc_outfall, uplift, sol_base, ksv_base.txt (section "base level" below)
+./encflow param_base.txt > Screen_base.log  # 0.99 Myr with a base level (water table) and uplift (about 3 hours on 4 threads)
+python3 plot_results.py param_base.txt steady | tee analysis_base.txt       # figs/*_base.png
 ```
 
 With the argument `en` the figures are drawn with English labels into en/figs/
@@ -234,6 +237,72 @@ In addition, whereas the ponding at the feet spread over 261 cells under the rep
 thin steady film gathers all of it into the few lowest cells of each tower, which makes the
 concentration at the feet extreme (a side effect of the steady forcing).
 
+## Base level (water table) and uplift (param_base.txt)
+
+This configuration supplies item 2 of the previous section (no base level at the feet). The
+easternmost column becomes the river of the base level (z = −5 m; insoluble and impermeable, with
+free outflow on the eastern edge), the conduit layer is given lateral conductance (linear law,
+0.05 m²/s) and an outfall in the river column (orifice Cd·A = 0.15 m²), and the bottom of the head
+is a map at the absolute elevation −45 m (`fn_gwc_bot`) so that the initial water table lies at the
+river level of −5 m (`make_terrain.py --steady --base`). The land other than the river is uplifted
+by `f_uplift` at 0.2 mm/yr (200 mm/kyr), and the water of dissolution is the "recharge to the rock"
+`dissol_src = 5` (soil → conduit-layer exchange + 0.3 × the runoff of bare rock; developer.md §86.8),
+because with the infiltration-based source the soil layer thickened by residue takes up morfac times
+the infiltration and the pits have no bottom (the first production run diverged at 120 kyr).
+Everything else is as in param_steady.txt.
+
+| Item | Value |
+|---|---|
+| Landform time | 985,626 years (60 days × 6×10⁶). Uplift 200 m |
+| Plain | dissolution 209.5 m (213 mm/kyr) − uplift 200 m = net lowering 9.5 m (median). Residue soil 1 → 24 m, median bedrock surface −33 m |
+| Tower tops | 40.3 → 57.3 to 59.4 m (uplift 200 m − lowering 181 to 183 m). 80 mm/kyr in the first 164 kyr, then the same rate as the plain |
+| Height above the plain | 40 → 66 to 69 m (reached at 164 kyr, constant afterwards; the small hills 20 → 36 m). Equivalent radius 79 → 82 m (unchanged) |
+| Tower shape | paraboloid hill → cone of 37 to 41° (close to the talus angle of repose 35°). The maximum bedrock slope of 82° is the wall of the foot pits |
+| Foot pits | the surface is at about the plain level (buried in residue; sd up to 92 m); the bedrock surface is at −94 m |
+| Water table | −5 → −7.8 to −9.5 m (outfall discharge 0 m³; the residue soil soaks up the conduit water) |
+| Rock moved by collapse | 32.2 million m³ (14 % of the 226 million m³ dissolved), of which 17.7 million m³ dissolved as talus (5,000 m³ of talus remains). Valve fired in 6.5 million cell updates (750 cells per update on average: the feet and the flow paths) |
+
+![maps_base](figs/maps_base.png)
+![sections_base](figs/sections_base.png)
+![towers_base](figs/towers_base.png)
+
+**What can be read off.** With uplift the towers are not consumed: they survive the million years as
+cones 66 to 69 m high and 82 m in radius (in the previous section the height kept falling to 48 m).
+The plain dissolves at 213 mm/kyr by the recharge under the soil (all of the rain), which almost
+balances the uplift of 200 mm/kyr; the towers go down at the rate of the surface source (80 mm/kyr
+≈ 2.5 % infiltration + 0.3 × runoff) only during the first 164 kyr, gaining relative height, and
+afterwards their feet are cut by the concentrated dissolution at the feet (the valve fires in 750
+cells per update on average) and they go down at the same rate as the plain, collapsing into cones
+at the angle of repose of the talus. There are two stages: relative height grows as "lowering of the
+plain − lowering of the towers", then collapse makes the towers follow the plain. They do not become
+vertical-walled pillars like those of Guilin. The wall form is set by `rf_hc` (critical height 10 m
+= weak rock that fails at a one-cell drop), so with the 50 to 100 m of massive limestone walls that
+stand without failing should appear (not computed; see "Starting points for sensitivity
+experiments").
+
+**What did not work.**
+
+1. **The water table was not held at the river.** The outfall has a flap and discharges only while
+   the conduit head is above the river water surface, so it does nothing unless the head rises above
+   −5 m. In fact one tenth of the dissolved rock becomes residue soil (24 m on the plain, 92 m at the
+   feet), whose storage soaks up the conduit water, and the head fell to −9.5 m. This is a side
+   effect of the quasi-steady acceleration: with morfac the conversion of rock into soil runs 20
+   times faster than the recharge in hydraulic time (the rain cannot fill the storage created by
+   dissolution); it disappears with a residue fraction `dissol_fres = 0` (not computed).
+2. **Dissolution of the plain continues regardless of the water table.** The recharge source is
+   proportional to the soil → conduit-layer exchange and dissolves the bedrock even where its surface
+   is below the water table (24 m below on the plain). There is no mechanism "no dissolution in the
+   saturated zone (the corrosion plain stops at the water table)", and the expectation that the plain
+   clings to the base level is realised only through the balance of uplift and dissolution rate
+   (213 against 200 mm/kyr).
+3. **The residue is not carried away.** On real corrosion plains the rivers remove the residue, but
+   bedload and suspended load are not enabled here, so 24 m pile up on the plain and the surface
+   (−9.5 m) ends below the river (−5 m) (there is no ponding, because the surface water infiltrates
+   into the soil and disappears).
+4. **The foot pits are merely filled.** The bedrock pits (−94 m) are filled with 92 m of residue and
+   the surface is at the plain level, but the notches of lateral dissolution (ponding at the feet)
+   do not form under the thin steady film (as in the previous section).
+
 ## What this model cannot represent (differences from the real phenomenon)
 
 - **Collapse is an instantaneous relaxation**: collapse is an instantaneous relaxation set by the
@@ -277,6 +346,10 @@ concentration at the feet extreme (a side effect of the steady forcing).
   divided between the plain and the towers.
 - `tt_c` and chained restarts: landform time (tens of thousands of years for tower retreat and
   disappearance). For a million years use the quasi-steady forcing (param_steady.txt, section above).
+- `rf_hc` of 50 to 100 m (massive limestone) in param_base.txt (base level and uplift): whether walls that
+  stand without failing appear instead of cones at the angle of repose of the talus. `dissol_fres = 0`:
+  isolates the side effect of the residue soil lowering the water table. `uplift0`: the balance of uplift
+  and the dissolution of the plain (213 mm/kyr).
 
 ## References
 

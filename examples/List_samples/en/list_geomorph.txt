@@ -478,8 +478,8 @@
                             !   runoff generated on bare rock x dissol_fsurf,
                             !   4: recharge to the rock = exchange from the soil
                             !   or layer 2 into the conduit layer (requires
-                            !   f_gwconduit and gwc_leak_layer; stops below the
-                            !   water table = base level), 5: 4 + runoff)
+                            !   f_gwconduit and gwc_leak_layer; 0 where the conduit
+                            !   head is above the soil head), 5: 4 + runoff)
   !dissol_fsurf = 0.3       ! surface source: share of the runoff's capacity
                             !   spent on its own rock face. 0 = default 0.3
   !dissol_sdsurf = 0.1      ! soil thickness below which the surface source

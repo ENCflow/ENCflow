@@ -1449,13 +1449,18 @@ infiltration) also spends `dissol_fsurf` of its capacity on that rock face
 is taken as saturated and not counted). `dissol_src = 4` is the **recharge
 to the rock** (the exchange from the soil or layer 2 into the conduit
 continuum layer; requires `f_gwconduit = 1` and `gwc_leak_layer > 0`): where
-the conduit head is above the soil (below the water table) there is no
-recharge and dissolution stops, so the water table becomes the **base level**
-(param_base.txt of examples/tower_karst). `dissol_src = 5` adds the runoff on
+the conduit head is above the head of the soil (bedrock surface + soil water /
+specific yield) there is no recharge and dissolution stops. However, where
+rain accumulates in a thick soil so that its head stays above the conduit,
+dissolution continues even when the bedrock surface is below the water table
+(in param_base.txt of examples/tower_karst the bedrock under 24 m of residue
+dissolved to 24 m below the water table). There is no mechanism yet that makes
+the water table the base level of a corrosion plain ("no dissolution in the
+saturated zone"). `dissol_src = 5` adds the runoff on
 bare rock (the same term as 3). Infiltration (1 and 3) counts the water that
 entered the soil, so where the soil keeps thickening (residue of talus, for
-example) the added capacity keeps infiltration going and dissolution does not
-stop below the water table; use 4 or 5 with a base level.
+example) the added capacity keeps infiltration going and the pits have no bottom (the
+larger morfac, the more so); use 4 or 5 whenever a conduit layer is present.
 
 Dolines (sinkhole depressions) are represented with `dissol_sink = 1`: the
 water that enters the inlets (sinks) of the
