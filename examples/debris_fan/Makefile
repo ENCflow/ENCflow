@@ -1,6 +1,6 @@
 # ENCflow/examples/debris_fan/Makefile
 #   make          ../../bin/ の実行ファイルへのリンクと、全ケースの入力・設定(make_init.py)を作る
-#   make run      全 27 ケースを計算する(4 スレッドで 1 時間弱。2.5 m の 3 ケースが大半)
+#   make run      全 26 ケースを計算する(4 スレッドで 30 分ほど。2.5 m の 2 ケースが大半)
 #   make quick    40・20・10 m の 8 近傍と 4 近傍の 18 ケースだけ計算する(数分)
 #   make clean    リンクと生成物を削除する
 
@@ -10,7 +10,7 @@ SRCDIR	= $(TOPDIR)/src
 # 計算の順(速い順)。dx5_r0 は param.txt そのもの
 ROT	= r0 r22p5 r45
 QUICK	= $(foreach d,dx40 dx20 dx10,$(foreach r,$(ROT),$(d)_$(r) $(d)_$(r)_4nb))
-CASES	= $(QUICK) $(foreach r,$(ROT),dx5_$(r) dx5_$(r)_4nb) $(foreach r,$(ROT),dx2p5_$(r))
+CASES	= $(QUICK) $(foreach r,$(ROT),dx5_$(r) dx5_$(r)_4nb) dx2p5_r0 dx2p5_r0_4nb
 
 all: links inputs
 

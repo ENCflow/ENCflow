@@ -1629,7 +1629,11 @@ analytical self-cover solution, invariance to the update interval, the
 concentration and velocity gates, conservation in a closed box, input errors) and
 the example [examples/debris_bedrock](../../../examples/debris_bedrock/en/README.md)
 (the longitudinal distribution of the erosion by one debris flow, the effects of
-the cover and the threshold, and a comparison with a clear-water flood).
+the cover and the threshold, and a comparison with a clear-water flood). The grid
+dependence of a debris flow that starts from a slope failure and runs down a valley to a
+residential area on the fan (grid spacings 40-2.5 m, the valley at 0°, 22.5° and 45°, and
+how eight and four neighbours differ on coarse grids) is in the example
+[examples/debris_fan](../../../examples/debris_fan/en/README.md).
 
 ## References
 

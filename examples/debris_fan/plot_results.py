@@ -40,9 +40,10 @@ CSTAR = 1.0 - M.LAMBDA          # 堆積物の固体濃度 C*
 H_FRONT = 0.5                   # 前縁の判定の流動深 (m)
 DEP_THR = (0.1, 0.5, 1.0)       # 土砂の厚さの範囲の閾値 (m)
 F_THR = 10.0                    # 最大流体力の範囲の閾値 (m³/s²。× ρw で 10 kN/m)
-DXS = M.DXS
+DXS = M.DXS                     # 3 つの向きで比べる格子間隔
+DXS_ALL = M.DXS + (M.DX_REF,)   # 収束の確認の 2.5 m(0° だけ)を含む
 THETAS = M.THETAS
-REF_KEY = (2.5, 0.0, 8)         # 比の基準(最も細かい格子・0°・8 近傍)
+REF_KEY = (M.DX_REF, 0.0, 8)    # 比の基準(最も細かい格子・0°・8 近傍)
 COL_TH = {0.0: "#1f5f8b", 22.5: "#d08c00", 45.0: "#2b8a3e"}
 COL_DX = {40.0: "#7b2d8e", 20.0: "#c0392b", 10.0: "#d08c00", 5.0: "#2b8a3e", 2.5: "#1f5f8b"}
 TERRAIN = ListedColormap(plt.get_cmap("gist_earth")(np.linspace(0.35, 0.95, 256)))   # 低地(緑)〜山(茶・白)
@@ -186,21 +187,15 @@ class Case:
         m["t_town"] = self.arrival(M.L_V + M.R_H1)                     # 住宅地の端(扇頂から R_H1)に達した時刻
         m["V_peak"] = self.bil("V", 9999)[self.land & (self.s > 500) & (self.s < M.L_V)
                                           & (np.abs(self.n) < M.WF)].max()   # 谷の中の最大流速
+        ang, v = angle_profile(self)
+        m["ang_std"] = math.sqrt((v * ang ** 2).sum() / v.sum())        # 扇状地の堆積の横への広がり(扇頂から見た角度の標準偏差)
         m["ledger"] = self.ledger()
         return m
 
 
 def load_all():
-    cases = {}
-    for dx in DXS:
-        for th in THETAS:
-            if os.path.exists(f"result_{M.case_name(dx, th)}/D9999.bil"):
-                cases[(dx, th, 8)] = Case(dx, th)
-    for dx in M.DXS_4NB:
-        for th in THETAS:
-            if os.path.exists(f"result_{M.case_name(dx, th, 4)}/D9999.bil"):
-                cases[(dx, th, 4)] = Case(dx, th, 4)
-    return cases
+    keys = [(dx, th, nb) for nb in (8, 4) for dx in DXS for th in THETAS] + [(M.DX_REF, 0.0, 8), (M.DX_REF, 0.0, 4)]
+    return {k: Case(*k) for k in keys if os.path.exists(f"result_{M.case_name(*k)}/D9999.bil")}
 
 
 # 指標: キー、表の見出し(日・英)、小数桁
@@ -221,8 +216,9 @@ KEYS = [("V_scar", "崩壊地に残る", "left in scar", 0),
         ("t_mouth", "扇頂到達 s", "t apex s", 1),
         ("t_town", "住宅地到達 s", "t town s", 1),
         ("V_peak", "谷の最大流速", "peak speed", 1),
+        ("ang_std", "広がり 角度°", "spread deg", 1),
         ("ledger", "固体の台帳", "solid ledger", 3)]
-CMP = ("V_valley", "T_fan", "A_0.1", "A_1", "R_max", "R_mean", "D1_fan", "F10_fan", "n_house_D1", "n_house_T05")
+CMP = ("V_valley", "T_fan", "A_0.1", "A_1", "R_max", "R_mean", "D1_fan", "F10_fan", "n_house_D1", "n_house_T05", "ang_std")
 
 
 def print_table(cases, mets):
@@ -258,18 +254,59 @@ def print_summary(cases, mets):
     print(T("格子の差(谷の向き 0° の各格子の、基準に対する比)", "spacing (ratio to the reference at 0°)"))
     print(f"{'':14s}" + "".join(f"{k:>12s}" for k in CMP))
     for nb in (8, 4):
-        for dx in DXS:
+        for dx in DXS_ALL:
             if (dx, 0.0, nb) in mets:
                 print(f"  {nb}nb {dx:5g} m" + "".join(f"{mets[(dx, 0.0, nb)][k] / ref[k]:12.3f}" for k in CMP))
     for nb in (8, 4):
         for dmax in (10.0, 20.0, 40.0):
-            ks = [k for k in mets if k[2] == nb and k[0] <= dmax]
+            ks = [k for k in mets if k[2] == nb and k[0] <= dmax and k[0] in DXS]
             if not ks:
                 continue
             dmin = min(k[0] for k in ks)
             print(T(f"{nb} 近傍の {dmin:g}〜{dmax:g} m の {len(ks)} ケースの幅((最大 − 最小)/ 基準。%)",
                     f"spread over the {len(ks)} cases of {dmin:g}-{dmax:g} m with {nb} neighbours ((max − min) / reference; %)"))
             print(f"{'':14s}" + "".join(f"{100 * spread([mets[c][k] for c in ks], ref[k]):12.1f}" for k in CMP))
+
+
+RANGE_KEYS = [("T_fan", "扇状地に届いた土砂", "sediment reaching the fan"),
+              ("A_0.1", "堆積の面積(≥ 0.1 m)", "deposit area (≥ 0.1 m)"),
+              ("R_max", "堆積の到達距離", "runout of the deposit"),
+              ("D1_fan", "最大流動深 ≥ 1 m の面積", "area of max flow depth ≥ 1 m"),
+              ("F10_fan", f"最大流体力 ≥ {F_THR:g} の面積", f"area of max force ≥ {F_THR:g}"),
+              ("n_house_D1", "流動深 ≥ 1 m の家屋", "houses with flow depth ≥ 1 m"),
+              ("t_mouth", "扇頂への到達時刻", "arrival at the apex"),
+              ("ang_std", "堆積の横への広がり", "lateral spreading of the deposit")]
+
+
+def print_ranges(mets):
+    """README 用の表(Markdown): 各格子間隔の 3 つの向きの、基準(8 近傍・2.5 m・0°)に対する比の範囲。"""
+    ref = mets.get(REF_KEY)
+    if ref is None:
+        return
+    print()
+    print(T("基準に対する比の範囲(3 つの向きの最小〜最大。Markdown)", "range of the ratio to the reference (min-max over the three orientations; Markdown)"))
+    head = [T("指標", "indicator")] + [f"{nb_label(nb)} {dx:g} m" for nb in (8, 4) for dx in DXS
+                                       if all((dx, th, nb) in mets for th in THETAS)]
+    print("| " + " | ".join(head) + " |")
+    print("|" + "---|" + "---:|" * (len(head) - 1))
+    for key, ja, en in RANGE_KEYS:
+        row = [T(ja, en)]
+        for nb in (8, 4):
+            for dx in DXS:
+                ks = [(dx, th, nb) for th in THETAS]
+                if not all(k in mets for k in ks):
+                    continue
+                v = [mets[k][key] / ref[key] for k in ks]
+                row.append(f"{min(v):.2f}〜{max(v):.2f}" if not EN else f"{min(v):.2f}-{max(v):.2f}")
+        print("| " + " | ".join(row) + " |")
+    print()
+    print(T("扇状地に届いた土砂(堆積 + 流動中。千 m³。0° / 22.5° / 45°)", "sediment reaching the fan (deposit + moving; 1,000 m³; 0° / 22.5° / 45°)"))
+    for dx in DXS_ALL:
+        cells = []
+        for nb in (8, 4):
+            ks = [(dx, th, nb) for th in THETAS if (dx, th, nb) in mets]
+            cells.append(" / ".join(f"{mets[k]['T_fan'] / 1000:.1f}" for k in ks) if ks else "—")
+        print(f"| {dx:g} m | " + " | ".join(cells) + " |")
 
 
 def common_grid(ds=5.0):
@@ -455,9 +492,9 @@ def fig_maps(cases, dx):
     cb = fig.colorbar(pm, ax=axs, shrink=0.5, pad=0.01)
     cb.set_label(T("10 分後の堆積厚 (m)", "deposit thickness at 10 min (m)"))
     fig.suptitle(T(f"格子 {dx:g} m: 堆積厚(色)、最大流動深 1 m の線(青)、10 分後も流れている泥の先(赤紫。かさ厚 0.1 m)、"
-                   "家屋(黒の点)。左: ENC の 8 近傍、右: 4 近傍の対照。破線 = 谷の出口",
+                   "家屋(黒の点)\n左: ENC の 8 近傍、右: 4 近傍の対照。破線 = 谷の出口",
                    f"{dx:g} m grid: deposit (colour), 1 m line of the maximum flow depth (blue), edge of the mud still moving "
-                   "at 10 min (magenta; 0.1 m bulk), houses (black dots). Left: ENC 8 neighbours; right: 4-neighbour control. "
+                   "at 10 min (magenta; 0.1 m bulk), houses (black dots)\nLeft: ENC 8 neighbours; right: 4-neighbour control. "
                    "Dashed = valley mouth"), fontsize=10)
     fig.savefig(f"{FIGDIR}/maps_{dx:g}m.png", dpi=100)
     plt.close(fig)
@@ -472,7 +509,7 @@ def fig_overlay(cases):
     """扇状地の堆積厚 0.5 m と最大流動深 1 m の線を重ねる。上: 8 近傍、下: 4 近傍。
     左 3 列 = 格子 40・20・5 m の 3 つの向き、右端 = 谷の向き 0° の格子間隔。"""
     cols = [(f"{dx:g} m", [(dx, th) for th in THETAS], "th") for dx in (40.0, 20.0, 5.0)]
-    cols.append((T("谷の向き 0°", "valley at 0°"), [(dx, 0.0) for dx in DXS], "dx"))
+    cols.append((T("谷の向き 0°", "valley at 0°"), [(dx, 0.0) for dx in DXS_ALL], "dx"))
     fig, axs = plt.subplots(2, 4, figsize=(19, 9.4), constrained_layout=True)
     hs = M.houses()
     for row, nb in enumerate((8, 4)):
@@ -506,6 +543,8 @@ def fig_overlay(cases):
 
 DEP_KEYS = [("T_fan", "扇状地に届いた土砂(堆積 + 流動中)(m³)", "sediment that reached the fan (deposit + moving) (m³)"),
             ("A_0.1", "扇状地の堆積厚 ≥ 0.1 m の面積 (m²)", "fan area with deposit ≥ 0.1 m (m²)"),
+            ("ang_std", "扇状地の堆積の横への広がり(角度の標準偏差, °)",
+             "lateral spreading of the fan deposit (angle std, °)"),
             ("D1_fan", "扇状地の最大流動深 ≥ 1 m の面積 (m²)", "fan area with maximum flow depth ≥ 1 m (m²)"),
             ("t_mouth", "前縁が扇頂に達した時刻 (s)", "time the front reached the fan apex (s)"),
             ("n_house_D1", "流動深 ≥ 1 m の家屋の数", "houses reached with flow depth ≥ 1 m"),
@@ -513,10 +552,10 @@ DEP_KEYS = [("T_fan", "扇状地に届いた土砂(堆積 + 流動中)(m³)", "s
 
 
 def fig_dependence(cases, mets, l1):
-    """格子間隔に対する、向きによる差と主な指標(8 近傍と 4 近傍)。"""
-    fig, axs = plt.subplots(2, 4, figsize=(19, 8.6), constrained_layout=True)
+    """格子間隔に対する、向きによる差と主な指標(8 近傍と 4 近傍)。2.5 m は谷の向き 0° だけ。"""
+    fig, axs = plt.subplots(2, 4, figsize=(19, 8.8), constrained_layout=True)
     axl = axs.flat
-    xt = list(DXS)[::-1]
+    xt = list(DXS_ALL)[::-1]
     off = {8: 0.94, 4: 1.06}
     mk = {0.0: "o", 22.5: "s", 45.0: "^"}
     nbcol = {8: "#1f5f8b", 4: "#c0392b"}
@@ -531,41 +570,40 @@ def fig_dependence(cases, mets, l1):
     ax.set_ylabel(T("0° との差 (%)(22.5°・45° の平均)", "difference from 0° (%) (mean of 22.5° and 45°)"))
     ax.set_title(T("(a) 谷の向きによる地図の差(L1)", "(a) Map difference due to the valley orientation (L1)"), fontsize=10)
     ax.legend(fontsize=8)
-    # (b)〜(g) 指標
+    # (b)〜(h) 指標
     ref = mets[REF_KEY]
-    for ax, (key, ja, en), tag in zip(axl[1:], DEP_KEYS, "bcdefg"):
+    for ax, (key, ja, en), tag in zip(axl[1:], DEP_KEYS, "bcdefgh"):
         for nb in (8, 4):
             for th in THETAS:
-                xs = [dx for dx in DXS if (dx, th, nb) in mets]
+                xs = [dx for dx in DXS_ALL if (dx, th, nb) in mets]
                 ys = [mets[(dx, th, nb)][key] for dx in xs]
                 ax.plot([x * off[nb] for x in xs], ys, mk[th], color=nbcol[nb], ms=6,
                         mfc=nbcol[nb] if nb == 8 else "none", ls="")
             xs = [dx for dx in DXS if all((dx, th, nb) in mets for th in THETAS)]
             mid = [np.median([mets[(dx, th, nb)][key] for th in THETAS]) for dx in xs]
+            if (M.DX_REF, 0.0, nb) in mets:
+                xs, mid = xs + [M.DX_REF], mid + [mets[(M.DX_REF, 0.0, nb)][key]]
             ax.plot([x * off[nb] for x in xs], mid, "-", color=nbcol[nb], lw=1.0, alpha=0.7)
         ax.axhspan(0.9 * ref[key], 1.1 * ref[key], color="0.88", zorder=0)
         ax.axhline(ref[key], color="k", lw=0.7)
-        ax.set_title(f"({tag}) " + T(ja, en), fontsize=10)
+        ax.set_title(f"({tag}) " + T(ja, en), fontsize=9.5)
         ax.set_ylim(bottom=0)
-    # 凡例と軸
-    for ax in axl[:7]:
+    for ax in axl:
         ax.set_xscale("log")
         ax.set_xticks(xt)
         ax.set_xticklabels([f"{x:g}" for x in xt])
         ax.minorticks_off()
         ax.set_xlabel(T("格子間隔 Δx (m)", "grid spacing Δx (m)"))
         ax.grid(alpha=0.3)
-    ax = axl[7]
-    ax.axis("off")
     handles = [Line2D([], [], color=nbcol[8], marker="o", ls="-", label=T("ENC の 8 近傍(塗り)", "ENC 8 neighbours (filled)")),
                Line2D([], [], color=nbcol[4], marker="o", mfc="none", ls="-", label=T("4 近傍(白抜き)", "4 neighbours (open)"))]
     handles += [Line2D([], [], color="k", marker=mk[th], ls="", mfc="none", label=T(f"谷の向き {th:g}°", f"valley at {th:g}°"))
                 for th in THETAS]
-    handles += [Line2D([], [], color="k", lw=0.7, label=T("8 近傍・2.5 m・0°(基準)", "8 neighbours, 2.5 m, 0° (reference)")),
-                Line2D([], [], color="0.88", lw=8, label=T("基準 ±10 %", "reference ±10 %"))]
-    ax.legend(handles=handles, loc="center", fontsize=10, frameon=False)
-    ax.text(0.5, 0.06, T("線 = 3 つの向きの中央値", "line = median of the three orientations"), ha="center",
-            transform=ax.transAxes, fontsize=9)
+    handles += [Line2D([], [], color="k", lw=0.7, label=T("基準(8 近傍・2.5 m・0°)", "reference (8 neighbours, 2.5 m, 0°)")),
+                Line2D([], [], color="0.88", lw=8, label=T("基準 ±10 %", "reference ±10 %")),
+                Line2D([], [], color="0.5", lw=1.0, label=T("線 = 3 つの向きの中央値(2.5 m は 0°)",
+                                                           "line = median of the three orientations (0° at 2.5 m)"))]
+    fig.legend(handles=handles, loc="outside lower center", ncol=4, fontsize=9, frameon=False)
     fig.savefig(f"{FIGDIR}/dependence.png", dpi=100)
     plt.close(fig)
 
@@ -646,7 +684,7 @@ def fig_series(cases):
         ax.set_xlabel(T("扇頂から見た向き (°)(0 = 谷の軸、正 = 北)", "direction from the apex (°) (0 = valley axis, + = north)"))
         ax.set_ylabel(T("扇状地の堆積 (m³/°)", "deposit on the fan (m³/°)"))
         ax.set_title(T(f"{nb_label(nb)}: 扇状地での堆積の広がり(10 分後)",
-                       f"{nb_label(nb)}: lateral spreading of the deposit on the fan (at 10 min)"), fontsize=10)
+                       f"{nb_label(nb)}: spreading on the fan (at 10 min)"), fontsize=10)
         ax.grid(alpha=0.3)
     for row in range(2):
         ymax = max(axs[0, 1].get_ylim()[1], axs[1, 1].get_ylim()[1])
@@ -669,6 +707,7 @@ def main():
     mets = {k: c.metrics() for k, c in cases.items()}
     print_table(cases, mets)
     print_summary(cases, mets)
+    print_ranges(mets)
     l1 = l1_orientation(cases)
     for dx in (40.0, 20.0, 5.0):
         fig_maps(cases, dx)

@@ -60,8 +60,8 @@ SD_MARGIN = 0.05         # 崩壊域の土層厚の余裕 (m)。同じ更新の�
 R_H1, R_H2, ANG_H, D_H = 100.0, 400.0, 60.0, 30.0
 
 # ---------------------------------------------------------------- ケース
-DXS = (40.0, 20.0, 10.0, 5.0, 2.5)
-DXS_4NB = (40.0, 20.0, 10.0, 5.0)   # 4 近傍の対照(2.5 m は 4 近傍でも十分細かいので省く)
+DXS = (40.0, 20.0, 10.0, 5.0)      # 3 つの向きで比べる格子間隔(8 近傍・4 近傍とも)
+DX_REF = 2.5                        # 収束の確認用の格子(谷の向き 0° だけ。8 近傍が比較の基準)
 THETAS = (0.0, 22.5, 45.0)
 DT_PER_DX = 0.01         # 時間刻み dt = 0.01 Δx(s。Δx = 5 m で 0.05 s。クーラン数が格子によらずそろう)
 
@@ -71,7 +71,8 @@ def case_name(dx, theta, nb=8):
     return s if nb == 8 else s + "_4nb"
 
 
-CASES = [(dx, th, 8) for dx in DXS for th in THETAS] + [(dx, th, 4) for dx in DXS_4NB for th in THETAS]
+CASES = ([(dx, th, nb) for nb in (8, 4) for dx in DXS for th in THETAS]
+         + [(DX_REF, 0.0, 8), (DX_REF, 0.0, 4)])
 BASE = case_name(5.0, 0.0)   # param.txt そのもののケース
 
 

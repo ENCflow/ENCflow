@@ -353,6 +353,7 @@ $`v_{stop}`$ = 0.05 m/s。混合体の μ・ξ とは慣性の有無で校正値
 | [test/bedslide](../../test/bedslide/README.md) | 底層の速度の解析値、45° 斜面、湖への突入 | 内部セルの $`V`$ が解析値に 0.5% |
 | [examples/landslide_tsunami](../../examples/landslide_tsunami/) | 岩屑なだれ・引き渡し・海底地滑り | 4 パターンの比較 |
 | [examples/ashfall_lahar](../../examples/ashfall_lahar/) | 降灰 → 降雨 → 泥流、砂防堰堤 | ラハールの設定の型(浸透能・f_dbwet=2) |
+| [examples/debris_fan](../../examples/debris_fan/) | 斜面崩壊 → 谷 → 扇状地の住宅地(高橋・中川の石礫型)。格子間隔 40〜2.5 m・谷の向き 0°・22.5°・45°、4 近傍の対照 | 格子への依存。8 近傍は谷の向きによる差が 5 m で数 %、谷底より粗い 40 m でも土砂が扇状地に届く。4 近傍は 20 m 以上で斜めの谷に土砂が残る |
 
 ## 参考文献
 
