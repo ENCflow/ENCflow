@@ -1715,11 +1715,11 @@
     {
       "source": "examples/landslide_tsunami/README.md",
       "target": "examples/landslide_tsunami/en/README.md",
-      "source_sha256": "b094bd6883c7258ce7e5b7b0e58c810391bfccd110feb2b1af77eb1c7fb005a1",
-      "target_sha256": "a295158d145f3d47c88485c2c08fb549394aa2007e778191e5e562d054da905c",
-      "reviewer": "Claude (assistant)",
+      "source_sha256": "e9e85697ea6d7bee4893431c160e061af50c86c948f3681a1834f4488e98789b",
+      "target_sha256": "a4d7448fed3a896492cc315fbd3805b421255ccb4367a93eef2637603fbe730c",
+      "reviewer": "Claude (Claude Code session; header, dated note, table rows B and B0 and the 830 m³ sentence updated in both languages to the plot_results.py output of the recomputation of 2026-11-04 and compared; the earlier B/B0 values were reproduced with the executable before the fix)",
       "method": "assistant",
-      "reviewed_on": "2026-11-02"
+      "reviewed_on": "2026-11-04"
     },
     {
       "source": "examples/levee_breach/README.md",

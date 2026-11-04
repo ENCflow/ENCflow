@@ -78,7 +78,7 @@ result_A_nh / result_C_nh0 / result_C_nh: Hb (bed-layer thickness), Vb
 E (water level = z+h; the free surface of mixture cells is E + Hs) and the
 time series in probes/.
 
-## Results: the four hydrostatic patterns (recomputed 2026-10-06 and, with the default f_opening_dynamic = 3 and the corrected advection term, on 2026-11-02; gfortran, dt = 0.05 s)
+## Results: the four hydrostatic patterns (recomputed 2026-10-06, on 2026-11-02 with the default f_opening_dynamic = 3 and the corrected advection term, and on 2026-11-04 after the fix of the yield rest check; gfortran, dt = 0.05 s)
 
 Recomputed after the fix of a real bug in the advection scheme (developer.md
 §69.9; out-of-domain reference of the "further upwind" cell in MUSCL) since
@@ -91,7 +91,12 @@ advection (§68.42, §68.43): A and C, which use only the bed layer, are nearly 
 and moving volumes of the bed layer move by a few %), while B and B0, whose mixture flows down the
 land, change in the deposition in the shoreline zone and in the leading wave (shoreline zone of B
 1,164 → 845 m³, leading wave +1.0 → +1.2 m; reach of B0 242 → 232 m, leading wave +0.5 → +0.8 m).
-The tables and figures show the recomputed values.
+Recomputed on 2026-11-04 after the fix of the yield rest check (developer.md §28.16): the output of A
+and C (bed layer only) is the same, and the deposition in the shoreline zone of B and B0, which use
+the mixture, decreased a little (B 845 → 834 m³, B0 9,765 → 9,350 m³; confirmed by reproducing the
+earlier values with the executable before the fix under the same conditions). Of the leading waves,
+only that of B at x = 298 m changes, +1.17 → +1.16 m. The tables and figures (except the
+non-hydrostatic comparison) show the recomputed values.
 
 ![Profiles](../figs/profiles.png)
 
@@ -114,8 +119,8 @@ of the flat lake bottom (x ≈ 300 m); in B0 (mixture only) it piles up within
 | Case | Deposition in the shoreline zone (x 200–275 m) | Lake bottom (275–350 m) | Runout | Leading wave x=298 m | x=548 m |
 |---|---|---|---|---|---|
 | A debris avalanche | 213 m³ | 18,820 m³ | 332 m | +1.37 m (13 s) | +0.76 m (25 s) |
-| B debris flow → handover | 845 m³ | 17,477 m³ | 338 m | +1.17 m (21 s) | +0.59 m (33 s) |
-| B0 mixture only | 9,765 m³ | 0 m³ | 232 m | +0.79 m (21 s) | +0.41 m (34 s) |
+| B debris flow → handover | 834 m³ | 17,472 m³ | 338 m | +1.16 m (21 s) | +0.59 m (33 s) |
+| B0 mixture only | 9,350 m³ | 0 m³ | 232 m | +0.79 m (21 s) | +0.41 m (34 s) |
 | C submarine landslide | 1 m³ | 17,514 m³ | 348 m | +1.58 m (2 s) / −1.20 m | +0.70 m (15 s) / −0.54 m |
 
 Interpretation:
@@ -123,7 +128,7 @@ Interpretation:
 - **A and B have almost the same underwater runout** (332 / 338 m). A moves at the
   terminal velocity from right after release, so it reaches the shoreline
   early (8 s); B flows down the land as a mixture with inertia and hands
-  over after plunging (15 s). B leaves 850 m³ in the shoreline zone before
+  over after plunging (15 s). B leaves 830 m³ in the shoreline zone before
   the handover, and its leading wave is +1.2 m against +1.4 m for A.
 - **B0 does not run underwater.** The mixture loses its driving once the
   water surface becomes flat, so a wave from the increase in column height
