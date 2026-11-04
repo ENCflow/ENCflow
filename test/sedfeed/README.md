@@ -2,13 +2,14 @@
 
 [English](en/README.md)
 
-掃流砂・浮遊砂の給砂 3 方式(developer.md §84.9、docs/meander_plan.md §3.6a)の検定。
+掃流砂・浮遊砂の給砂 3 方式(developer.md §84.9、docs/meander_plan.md §3.6a)と、区間流入の面から
+掃流砂が出ていかないこと(developer.md §19.12)の検定。
 
 ## 設定
 
 幅 5 セルの直線水路(Δx = 1 m、長さ 300 m、勾配 0.002、n = 0.03、両岸は +2 m の
 乾いた地盤、土層厚 2 m で全域可動、`f_opening_dynamic = 2` で等流は Manning に
-一致)。西端の区間流入 Q = 2.35 m³/s(等流水深 0.5 m)、東辺は自由流出(qb 構成は
+一致)。西端の区間流入 Q = 2.35 m³/s(等流水深 0.5 m)、東辺は自由流出(qb・qbturn 構成は
 壁)。d50 = 3 mm、morfac = 10(cseq は浮遊砂 0.2 mm、morfac = 1)。
 
 | 構成 | 設定 | 役割 |
@@ -17,6 +18,7 @@
 | feed1 | fluv_bcfeed = 1、fluv_bcfeed_fac = 1 | 容量給砂。流入面の供給 = 流入セルの正味流出 → 入口の河床が固定 |
 | feed05 | 倍率 0.5 | 入口の低下が減る(比例はしない。入口に穴ができると正味流出が減り供給も減る) |
 | qb | inflow_qb = 0.0005 m³/s(東辺は壁) | 掃流砂流砂量の源泉。台帳 (1 − λ) Σ(z − z0) A = ∫Qb dt × morfac |
+| qbturn | qb + 流入セルの東隣(i = 2)の行 8〜10 を +2 m の乾いた地盤にする(zturn.txt・hturn.txt) | 流入した水が北の 2 行へ曲がり、流入セルで流れが横に振れる。掃流砂は流入区間の面から出ていかず、台帳は qb と同じく閉じる(2026-11-03 の修正前は給砂の 6.9 % が流入セルの北西の斜め面から出ていた。developer.md §19.12) |
 | cseq | f_suspend = 1、inflow_cs_eq = 1 | 浮遊砂の平衡濃度給砂。流入濃度 = 流入セルの C_eq |
 | nofeed_creep | nofeed + f_creep = 1(creep_d = 1e-30 m²/s) | クリープとの併用の対照。1 回の更新のクリープの変化が z の ULP より小さいので、河床は nofeed とビット一致するはず(developer.md §19.10) |
 
@@ -38,6 +40,9 @@
    feed05)で、終了時の「net bed load out through open boundaries (out - in)」(開境界を
    通った正味の固体体積。容量給砂の流入を差し引く)と河床の変化 (1 − λ) Σ(z − z0) A の和が
    相対 1e-8 で 0。構成ごとの画面出力は `Screen_<構成>.log` に残る。
+8. 流入セルで流れが横に振れる構成(qbturn): 台帳 (1 − λ) Σ(z − z0) A = ∫Qb dt × morfac が
+   相対 1e-9 で閉じ、`Screen_qbturn.log` に開境界の正味の流出(「net bed load out through open
+   boundaries」)が出ない(東辺は壁なので、開いた面は流入区間の面だけ)。
 
 Run_MPI.sh は同じ検定を MPI で行い、save_*_serial とのビット一致を見る
 (厳密フラグで逐次・MPI を作って比較する。§28.3)。
@@ -46,6 +51,6 @@ Run_MPI.sh は同じ検定を MPI で行い、save_*_serial とのビット一�
 
 ```
 make
-./Run.sh            # 逐次(6 本で約 5 分)
+./Run.sh            # 逐次(7 本で約 6 分)
 ./Run_MPI.sh 2      # MPI
 ```

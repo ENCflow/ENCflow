@@ -1,0 +1,76 @@
+!======================================================================
+! gwsect: 断面形 σ のセルでの地表と地下の水の受け渡し(§26.2)
+!
+!   test/gwwidth と同じ閉じた谷(12 × 8 セル、10 m 格子。列 10 は幅 2 m の
+!   サブグリッド河道、wfrac = 0.2)の河道に、断面形 σ(h) = (h/D)^0.5
+!   (遷移深さ D = 掘り込み深さ 0.5 m)を重ねる。1 時間の一様降雨 50 mm/h が
+!   浸透し(Green-Ampt)、地下水の側方流で谷へ集まって、谷底の σ の河道へ
+!   湧き出す。雨に濃度 1 mg/L のトレーサを持たせる。
+!   - σ のセルの h は水位としての水深で、体積は矩形換算水深 v(h) に比例する。
+!     湧出・浸透の受け渡しを v で行わないと、湧き出すたびに σ(h) 倍しか地表の
+!     体積が増えず、浸透では引いた体積の 1/(m+1) しか地下へ入らない
+!     (修正前は 6 時間で 2.5 % が消えた)。閉領域なので雨の後の総水量は一定
+!   Check_gwsect.py が総水量の保存・雨の総量との一致・濃度・水質の台帳を検定する。
+!======================================================================
+&list_sysparam
+  dt = 0.5                  ! 時間刻み (s)
+  tt_c = "6h"               ! 計算終了時刻
+  dt_disp_c = "30m"         ! 画面表示の間隔
+  dt_file_c = "1h"          ! 分布ファイル出力の間隔
+  dt_recrd_c = "10m"        ! wq.csv の記録間隔
+  fn_geoinfo = '-'
+  fn_channel = '-'
+  fn_gwflow = '-'
+  fn_precip = '-'
+  fn_wq = '-'
+  dir_data = 'data_gwsect'
+  dir_result = 'result'
+  f_check_cfl = 0
+  f_disp_debug = 1          ! 回帰テスト用: S 列を全有効桁で表示
+  f_output_mode = 2         ! 分布は bil(単精度。濃度の検定に桁を残す)
+/
+
+&list_geoinfo
+  nx = 12
+  ny = 8
+  dx = 10.0
+  dy = 10.0
+  f_ztype = 1               ! 地盤高ファイル
+  fn_z = 'z.txt'
+  rn0 = 0.05
+  fn_rw = 'rw.txt'          ! 河道マスク(列 10)
+  sd0 = 0.5                 ! 土層厚 (m)
+  sy0 = 0.1                 ! 有効間隙率(地下の容量 0.05 m)
+  depth_rw = 0.5            ! 河道の掘り込み深さ = σ の遷移深さ D (m)
+/
+
+&list_channel
+  fn_width = 'width.txt'    ! サブグリッド河道幅 2 m(wfrac = 0.2)
+  p_sect_m = 0.5            ! 断面形 σ(h) = (h/D)^0.5(放物線的)
+/
+
+&list_precip
+  prtype = 1                ! 一様時系列
+  dt_prupdate = 1           ! 更新間隔 (min)
+  prval(:,1) =    0, 50.0   ! (時刻 min, 雨量強度 mm/h)
+  prval(:,2) =   60, 50.0
+  prval(:,3) =   61,  0.0
+  prval(:,4) = 9999,  0.0
+/
+
+&list_gwflow
+  f_gwvertical = 2          ! Green-Ampt の浸透
+  f_gwlateral = 1           ! 地下水の側方流動(谷底で湧き出す)
+/
+
+&list_gwflow_greenampt
+  gw_ksv_mmh = 200.0        ! 浸透能 (mm/h)。雨はすべて浸透する
+/
+
+&list_gwflow_lateral
+  gw_ksh_mmh = 36000.0      ! 側方透水係数 (mm/h) = 1e-2 m/s(数時間で谷へ集まる)
+/
+
+&list_wq
+  wq_rain_conc = 1.0        ! 雨の濃度 (mg/L)。全経路で 1 のまま保たれるはず
+/

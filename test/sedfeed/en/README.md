@@ -5,7 +5,9 @@
 [日本語](../README.md)
 
 Verification of the three sediment-feed methods for bed load and suspended
-sediment (developer.md §84.9, docs/meander_plan.md §3.6a; both in Japanese).
+sediment (developer.md §84.9, docs/meander_plan.md §3.6a; both in Japanese),
+and of bed load not leaving through the faces of an inflow segment
+(developer.md §19.12).
 
 ## Setup
 
@@ -13,7 +15,8 @@ A straight channel 5 cells wide (Δx = 1 m, length 300 m, slope 0.002,
 n = 0.03, dry ground at +2 m on both banks, soil thickness 2 m so that the
 whole bed is mobile, and `f_opening_dynamic = 2` so that the uniform flow
 matches Manning). Segment inflow Q = 2.35 m³/s at the west end (uniform-flow
-depth 0.5 m); free outflow at the east edge (a wall in the qb configuration).
+depth 0.5 m); free outflow at the east edge (a wall in the qb and qbturn
+configurations).
 d50 = 3 mm, morfac = 10 (cseq: suspended sediment 0.2 mm, morfac = 1).
 
 | Configuration | Settings | Role |
@@ -22,6 +25,7 @@ d50 = 3 mm, morfac = 10 (cseq: suspended sediment 0.2 mm, morfac = 1).
 | feed1 | fluv_bcfeed = 1, fluv_bcfeed_fac = 1 | Capacity feed. Supply through the inflow face = net outflow of the inflow cell → the bed at the inlet is fixed |
 | feed05 | factor 0.5 | The lowering at the inlet is reduced (not proportionally: once a hole forms at the inlet, the net outflow decreases and so does the supply) |
 | qb | inflow_qb = 0.0005 m³/s (the east edge is a wall) | Source of the bed-load transport rate. Ledger (1 − λ) Σ(z − z0) A = ∫Qb dt × morfac |
+| qbturn | qb + rows 8–10 of the column next to the inflow cells (i = 2) raised to dry ground at +2 m (zturn.txt, hturn.txt) | The inflowing water turns into the two northern rows, so the flow in the inflow cells swings sideways. No bed load leaves through the faces of the inflow segment and the ledger closes as in qb (before the fix of 2026-11-03, 6.9 % of the feed left through the north-west diagonal faces of the inflow cells; developer.md §19.12) |
 | cseq | f_suspend = 1, inflow_cs_eq = 1 | Equilibrium-concentration feed of suspended sediment. Inflow concentration = C_eq of the inflow cell |
 | nofeed_creep | nofeed + f_creep = 1 (creep_d = 1e-30 m²/s) | Control for the combination with creep. The change made by creep in one update is smaller than the ULP of z, so the bed should be bit-identical to nofeed (developer.md §19.10) |
 
@@ -49,6 +53,11 @@ d50 = 3 mm, morfac = 10 (cseq: suspended sediment 0.2 mm, morfac = 1).
    capacity feed subtracted) plus the bed change (1 − λ) Σ(z − z0) A is 0 to a
    relative 1e-8. The screen output of each configuration is kept in
    `Screen_<configuration>.log`.
+8. Configuration with the flow swinging sideways in the inflow cells
+   (qbturn): the ledger (1 − λ) Σ(z − z0) A = ∫Qb dt × morfac closes to a
+   relative 1e-9, and `Screen_qbturn.log` reports no net bed load through
+   open boundaries ("net bed load out through open boundaries"; the east
+   edge is a wall, so the only open faces are those of the inflow segment).
 
 Run_MPI.sh performs the same checks under MPI and checks bit identity with
 save_*_serial (serial and MPI are built with the strict flags and compared;
@@ -58,6 +67,6 @@ save_*_serial (serial and MPI are built with the strict flags and compared;
 
 ```
 make
-./Run.sh            # serial (6 runs, about 5 minutes)
+./Run.sh            # serial (7 runs, about 6 minutes)
 ./Run_MPI.sh 2      # MPI
 ```

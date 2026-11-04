@@ -1,0 +1,68 @@
+!======================================================================
+! gwsect: 河道幅なしの σ(param.txt と同じ谷で、σ がセル全幅の断面に掛かる)
+!
+!   河道幅(fn_width)を外し、谷底の列 10 のセル全幅に断面形 σ(h) = (h/D)^0.5
+!   (D = 0.5 m)を掛ける。修正前は 6 時間で 19 % が消えた(河道幅ありより
+!   σ の影響を受ける平面が広い)。検定は param.txt と同じ。
+!======================================================================
+&list_sysparam
+  dt = 0.5                  ! 時間刻み (s)
+  tt_c = "6h"               ! 計算終了時刻
+  dt_disp_c = "30m"         ! 画面表示の間隔
+  dt_file_c = "1h"          ! 分布ファイル出力の間隔
+  dt_recrd_c = "10m"        ! wq.csv の記録間隔
+  fn_geoinfo = '-'
+  fn_channel = '-'
+  fn_gwflow = '-'
+  fn_precip = '-'
+  fn_wq = '-'
+  dir_data = 'data_gwsect'
+  dir_result = 'result_nowidth'
+  f_check_cfl = 0
+  f_disp_debug = 1          ! 回帰テスト用: S 列を全有効桁で表示
+  f_output_mode = 2         ! 分布は bil(単精度。濃度の検定に桁を残す)
+/
+
+&list_geoinfo
+  nx = 12
+  ny = 8
+  dx = 10.0
+  dy = 10.0
+  f_ztype = 1               ! 地盤高ファイル
+  fn_z = 'z.txt'
+  rn0 = 0.05
+  fn_rw = 'rw.txt'          ! 河道マスク(列 10)
+  sd0 = 0.5                 ! 土層厚 (m)
+  sy0 = 0.1                 ! 有効間隙率(地下の容量 0.05 m)
+  depth_rw = 0.5            ! 河道の掘り込み深さ = σ の遷移深さ D (m)
+/
+
+&list_channel
+  p_sect_m = 0.5            ! 断面形 σ(h) = (h/D)^0.5(河道幅なし = セル全幅の断面)
+/
+
+&list_precip
+  prtype = 1                ! 一様時系列
+  dt_prupdate = 1           ! 更新間隔 (min)
+  prval(:,1) =    0, 50.0   ! (時刻 min, 雨量強度 mm/h)
+  prval(:,2) =   60, 50.0
+  prval(:,3) =   61,  0.0
+  prval(:,4) = 9999,  0.0
+/
+
+&list_gwflow
+  f_gwvertical = 2          ! Green-Ampt の浸透
+  f_gwlateral = 1           ! 地下水の側方流動(谷底で湧き出す)
+/
+
+&list_gwflow_greenampt
+  gw_ksv_mmh = 200.0        ! 浸透能 (mm/h)。雨はすべて浸透する
+/
+
+&list_gwflow_lateral
+  gw_ksh_mmh = 36000.0      ! 側方透水係数 (mm/h) = 1e-2 m/s(数時間で谷へ集まる)
+/
+
+&list_wq
+  wq_rain_conc = 1.0        ! 雨の濃度 (mg/L)。全経路で 1 のまま保たれるはず
+/

@@ -8,10 +8,12 @@ sdir=$(dirname "$(readlink -f "$0")")
 
 python3 "$sdir/make_init.py" z > zinit.txt
 python3 "$sdir/make_init.py" h > hinit.txt
+python3 "$sdir/make_init.py" zturn > zturn.txt
+python3 "$sdir/make_init.py" hturn > hturn.txt
 
 export ENCFLOW_EXPECT_NP="$NP"
 set -o pipefail
-for c in nofeed feed1 feed05 qb cseq nofeed_creep; do
+for c in nofeed feed1 feed05 qb qbturn cseq nofeed_creep; do
     mpirun -np "$NP" $MPIRUN_OPTS ./encflow_mpi param_$c.txt 2>&1 | tee Screen_$c.log | tee -a Screen.log || exit 1
 done
 set +o pipefail
@@ -19,7 +21,7 @@ echo ""
 
 rc=0
 python3 "$sdir/Check_sedfeed.py" || rc=1
-for c in nofeed feed1 feed05 qb cseq nofeed_creep; do
+for c in nofeed feed1 feed05 qb qbturn cseq nofeed_creep; do
     if [ -d save_${c}_serial ]; then
         if cmp -s save_$c/state.dat save_${c}_serial/state.dat; then
             echo "=== $c: state.dat is bit-identical to the serial result ==="

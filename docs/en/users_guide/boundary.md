@@ -276,9 +276,10 @@ to reduce concentration of discharge into thin water layers.
 - Bed load can be fed in two ways. `inflow_qb(:,k,n) = t, Qb` (or
   `fn_inflow_qb(n)`; time (min), m3/s solid volume) adds Qb(t), divided
   equally among the inflow cells, as a source to their bed (z and soil
-  thickness rise) and the bed load of the inflow cells carries it on (it
-  piles up when above capacity, like sediment replenishment; use it when
-  the upstream supply is given). The capacity feed is `fluv_bcfeed = 1` on
+  thickness rise) and the bed load of the inflow cells carries it into the
+  domain (nothing flows out through the faces of the segment; it piles up
+  when above capacity, like sediment replenishment; use it when the
+  upstream supply is given). The capacity feed is `fluv_bcfeed = 1` on
   the geomorph side (the supply through the inflow face equals the net
   outflow of the inflow cell times `fluv_bcfeed_fac`; with factor 1 the bed
   of the inlet is fixed) and also acts on inflow-segment faces.

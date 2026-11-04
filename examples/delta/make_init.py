@@ -7,8 +7,8 @@
 #         固定給砂の構成(FIXEDCH)は河道も 0 = 給砂を運ぶ固い水路(河口に出てから動く)
 #   rows: 西端の河道セルの行番号(区間流入の inflow_cell に使う)
 #   sw:   海域マスク(1 = 海)。東端 NSEA 列を潮位を与える海の帯にする(段 6 の tide)
-#   tide: 潮位の &list_tide(M2 分潮。周期 TM2 分、振幅 ATIDE m の正弦を NCYC 周期分、tival の上限 999 点に
-#         収まる細かさで。潮位は毎ステップ更新する。README「注意」の「潮位の与え方」)
+#   tide: 潮位の &list_tide(M2 分潮。周期 TM2 分、振幅 ATIDE m の正弦を NCYC 周期分、1 周期 NPC 点の
+#         細かさで。潮位は毎ステップ更新する。README「注意」の「潮位の与え方」)
 import sys
 import numpy as np
 
@@ -24,8 +24,11 @@ CASES = {
     "tide": (200, 120, 5.0, 150.0, -2.0),   # baseqb + 潮汐(段 6。param_tide.txt・param_notide.txt)
 }
 FIXEDCH = {"wave", "baseqb", "tide"}       # 固定給砂の構成: 陸地内の河道も非侵食(土層 0。給砂はそのまま通過)
-NSEA, TM2, ATIDE, NCYC = 3, 745.2, 1.0, 6  # 海の帯の列数、M2 の周期 (min)、振幅 (m) = 潮差 2 m、周期数
-NPC = (999 - 1) // NCYC                     # 1 周期あたりの tival の点数(166 点 = 4.5 分ごと。上限 999 点)
+NSEA, TM2, ATIDE, NCYC = 3, 745.2, 1.0, 24  # 海の帯の列数、M2 の周期 (min)、振幅 (m) = 潮差 2 m、周期数
+#   (段 6・7 は 5 周期。morfac を下げた確かめに 24 周期まで。範囲外は端値を保持するので、表を長くしても
+#   短い計算の結果は変わらない)
+NPC = 166                                   # 1 周期あたりの tival の点数(4.5 分ごと)
+assert NPC * NCYC + 1 <= 9999               # tival の上限 9999 点(developer.md §67.1)
 W, LRAMP, S0, ZCH0, ZLAND, SDCH = 30.0, 50.0, 0.001, -1.0, 1.5, 3.0
 
 def build(case):

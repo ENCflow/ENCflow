@@ -52,6 +52,8 @@ module m_swflow_enc
   public :: m_swflow_enc_nh_export, m_swflow_enc_nh_import, m_swflow_enc_nh_active   ! ネスティングの帯の φ(§16)
   public :: bcs, bc_open_face                  ! 開境界の面判定(m_geomorph の
                                                ! 開境界土砂フラックスが読む。読み取り専用)
+  public :: bc_inflow_nooutflow                ! 区間流入が作った、水が出ていけない境界面
+                                               ! (m_geomorph の掃流砂の境界面が読む。§19.12)
   public :: bc_neumann_cell                    ! 側方 Neumann の面と鏡像セル(m_geomorph の
                                                ! 掃流砂の境界面が読む。§90)
   ! submodule(m_swflow_enc_bc の側方 Neumann の境界面。§90)からのホスト結合参照のため
@@ -695,6 +697,10 @@ module m_swflow_enc
       integer, intent(in) :: in, jn
       logical :: op
     end function
+    pure module function bc_inflow_nooutflow(i, j, in, jn) result(r)
+      integer, intent(in) :: i, j, in, jn
+      logical :: r
+    end function
     pure module subroutine bc_neumann_cell(id, jd, ok, im, jm)
       integer, intent(in) :: id, jd
       logical, intent(out) :: ok
@@ -1055,6 +1061,16 @@ subroutine m_swflow_enc_init(p, g, b, s)
 
   ! σ の遷移深さ D の構築(zbank/drw は帯配布済み)
   if (sct%have_sect) call build_sdep(g, b, s)
+  ! 浅水流の外のモジュールが地表水へ体積を足し引きするときの換算(sect_*。
+  ! §26.2)用の写し。D は河床変動で m_swflow_enc_sdep_update が更新する
+  if (sct%have_sect) then
+    if (allocated(s%sdep)) deallocate(s%sdep)
+    allocate(s%sdep(dcp%ish:dcp%ieh, dcp%jsh:dcp%jeh), source = sct%sdep)
+    s%sect_m = sct%sect_m
+    s%sect_mp1 = sct%sect_mp1
+    s%sect_rmp1 = sct%sect_rmp1
+    s%sect_mfac = sct%sect_mfac
+  end if
   ! 実効平面積率 af(§25/§26)。restore 後の統計・gwflow が最初のステップ
   ! 前に読むため init でも埋める(既定は m_state_init の gv のまま。
   ! 空隙率が時間変化する機能(s%gv_active。§63.1)も毎ステップ更新の対象)
@@ -3809,6 +3825,7 @@ subroutine m_swflow_enc_sdep_update(p, g, s)
         changed = .true.
       end if
       sct%sdep(i,j) = dnew
+      s%sdep(i,j) = dnew                 ! 写し(§26.2)
     end do
   end do
   !$omp end parallel do

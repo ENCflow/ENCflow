@@ -1,0 +1,74 @@
+!======================================================================
+! gwwidth: 河道幅のセルの蒸発散(§27.1)
+!
+!   param.txt と同じ谷(列 10 は幅 2 m のサブグリッド河道、wfrac = 0.2)。
+!   地下水の側方流はなし。2 時間の一様降雨 50 mm/h のうち、最初の 1 時間で
+!   土層(容量 0.05 m)が満ち、残りは谷の河道に溜まる。PET は一定 48 mm/day
+!   (2 mm/h)。全セルに水が十分あるので、4 時間の蒸発散の総量は
+!   PET × 面積 × 時間 に等しいはず。河道幅のセルでは、河道の水面(セルの
+!   2 割)が河道の水から、残りの 8 割(陸の部分)が地下水から蒸発する
+!   (修正前は河道に水がある間、陸の部分が蒸発せず、総量が 6.7 % 足りなかった)。
+!   雨には濃度 1 mg/L のトレーサを持たせる(蒸発では物質が残る = 台帳は閉じる)。
+!======================================================================
+&list_sysparam
+  dt = 0.5                  ! 時間刻み (s)
+  tt_c = "4h"               ! 計算終了時刻
+  dt_disp_c = "30m"         ! 画面表示の間隔
+  dt_file_c = "1h"          ! 分布ファイル出力の間隔
+  dt_recrd_c = "10m"        ! wq.csv・evap.csv の記録間隔
+  fn_geoinfo = '-'
+  fn_channel = '-'
+  fn_gwflow = '-'
+  fn_precip = '-'
+  fn_wq = '-'
+  fn_evap = '-'
+  dir_data = 'data_gwwidth'
+  dir_result = 'result_evap'
+  f_check_cfl = 0
+  f_disp_debug = 1          ! S 列を全有効桁で表示
+  f_output_mode = 2         ! 分布は bil
+/
+
+&list_geoinfo
+  nx = 12
+  ny = 8
+  dx = 10.0
+  dy = 10.0
+  f_ztype = 1               ! 地盤高ファイル
+  fn_z = 'z.txt'
+  rn0 = 0.05
+  fn_rw = 'rw.txt'          ! 河道マスク(列 10)
+  sd0 = 0.5                 ! 土層厚 (m)
+  sy0 = 0.1                 ! 有効間隙率(地下の容量 0.05 m)
+/
+
+&list_channel
+  fn_width = 'width.txt'    ! サブグリッド河道幅 2 m(wfrac = 0.2)
+/
+
+&list_precip
+  prtype = 1                ! 一様時系列
+  dt_prupdate = 1           ! 更新間隔 (min)
+  prval(:,1) =    0, 50.0   ! (時刻 min, 雨量強度 mm/h)
+  prval(:,2) =  120, 50.0
+  prval(:,3) =  121,  0.0
+  prval(:,4) = 9999,  0.0
+/
+
+&list_gwflow
+  f_gwvertical = 2          ! Green-Ampt の浸透
+  f_gwlateral = 0           ! 側方流なし(地下の水はその場に留まる)
+/
+
+&list_gwflow_greenampt
+  gw_ksv_mmh = 200.0        ! 浸透能 (mm/h)。土層が満ちるまで雨はすべて浸透する
+/
+
+&list_wq
+  wq_rain_conc = 1.0        ! 雨の濃度 (mg/L)
+/
+
+&list_evap
+  f_evmodel = 1             ! 一定速度
+  evap0 = 48.0              ! PET (mm/day) = 2 mm/h
+/

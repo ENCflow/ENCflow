@@ -183,7 +183,7 @@ Riverbed erosion and deposition by a bedload transport formula.
 | fluv_porosity | 0.4 | Riverbed porosity |
 | fluv_sgrav | 1.65 | Submerged specific gravity of sediment grains |
 | fluv_dzmax | 0.05 | Upper limit of bed change per update (m) (stabilization) |
-| fluv_bcfeed | 0 | Sediment feed at open boundaries (inflow-segment faces included). 0: no feed at inflow, 1: capacity feed = the supply through the inflow face equals the net outflow of the inflow cell times fluv_bcfeed_fac (factor 1 fixes the bed of the inlet; outflow is always at transport capacity) |
+| fluv_bcfeed | 0 | Sediment feed at open boundaries (inflow-segment faces included). 0: no feed at inflow, 1: capacity feed = the supply through the inflow face equals the net outflow of the inflow cell times fluv_bcfeed_fac (factor 1 fixes the bed of the inlet; outflow is always at transport capacity, except that nothing flows out through the faces of an inflow segment) |
 | fluv_bcfeed_fac | 1.0 | Factor of the capacity feed. 0 = no feed, 1 = fixed inlet. Values between reduce the inlet degradation but not proportionally (give a partial supply with inflow_qb) |
 | fluv_diagratio | 2/(2+sqrt(2)) | Diagonal partitioning (normally no need to change) |
 | fluv_taufac | 1.0 | Effective shear-stress ratio f_τ (the τ* passed to the transport formula = f_τ × τ* of the total resistance; a simple separation of form drag by dunes or vegetation. 1 = no separation) |
@@ -457,9 +457,11 @@ with at least width/5 cells. To add a tide, place a strip of sea mask along the 
 the [tide level](tide.md) (fn_tide), and lower morfac so that the landform
 change in one tidal cycle stays small (as a compromise with the computing
 time, stages 6 and 7 of the example stop at 5 tidal cycles with morfac 24 and
-240 and do not meet this condition; halving the morfac of stage 7 changed, for
-example, the sand leaving through the north and south sides considerably).
-Make the sides crossing the coast lateral Neumann (f_bc = 3). In a small basin, update the
+240 and do not meet this condition; lowering the morfac of stage 7 to 120 and
+60 changed the streaks stretching offshore and the amount of sand leaving
+through the north and south sides considerably). Make the sides crossing the
+coast lateral Neumann (f_bc = 3; when a low-tide channel reaches a side, sand
+leaves together with the river water). In a small basin, update the
 tide level every step (`dt_tiupdate` at or below the time step; the default update every minute can
 excite a natural oscillation; "Water bodies with short natural periods" in
 [tide level](tide.md#parameters-and-the-basis-of-their-defaults)).

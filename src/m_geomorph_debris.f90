@@ -561,8 +561,14 @@ module subroutine calc_debris(gm, p, g, s, dtw)
         !   堆積(Δz>0): 同量を埋没(地表水の範囲で。不足分は不飽和堆積)
         if (gm%f_dbwet == 1) then
           dhw = -gm%db_lamsb * dzb
-          if (dhw < 0.0) dhw = max(dhw, -max(s%h(i,j), 0.0))
-          s%h(i,j) = s%h(i,j) + dhw
+          if (sect_cell(s, i, j)) then
+            ! 断面形 σ のセルは体積(矩形換算水深)で出し入れする(§26.2)
+            if (dhw < 0.0) dhw = max(dhw, -max(sect_vh(s, i, j, s%h(i,j)), 0.0))
+            call sect_add_vh(s, i, j, dhw)
+          else
+            if (dhw < 0.0) dhw = max(dhw, -max(s%h(i,j), 0.0))
+            s%h(i,j) = s%h(i,j) + dhw
+          end if
         end if
         ! gwflow 併用の間隙水(f_dbwet=2。developer.md §28.7):
         !   堆積(Δz>0): 増えた層の容量 sy0・Δz を、その場の地表水で直ちに満たす
@@ -578,11 +584,21 @@ module subroutine calc_debris(gm, p, g, s, dtw)
           fwh = gw_to_h(s, i, j)
           if (dzb > 0.0) then
             cap = s%sd(i,j) * g%sy0
-            dhw = min(max(cap - s%hg(i,j), 0.0), g%sy0 * dzb, max(s%h(i,j), 0.0) / fwh)
+            if (sect_cell(s, i, j)) then
+              ! 断面形 σ のセルは地表の体積(矩形換算水深)までしか埋められない(§26.2)
+              dhw = min(max(cap - s%hg(i,j), 0.0), g%sy0 * dzb, &
+                        max(sect_vh(s, i, j, s%h(i,j)), 0.0) / fwh)
+            else
+              dhw = min(max(cap - s%hg(i,j), 0.0), g%sy0 * dzb, max(s%h(i,j), 0.0) / fwh)
+            end if
           else
             dhw = -min(-g%sy0 * dzb, max(s%hg(i,j), 0.0))
           end if
-          s%h(i,j) = s%h(i,j) - dhw * fwh
+          if (sect_cell(s, i, j)) then
+            call sect_add_vh(s, i, j, -dhw * fwh)       ! σ は体積で(§26.2)
+          else
+            s%h(i,j) = s%h(i,j) - dhw * fwh
+          end if
           s%hg(i,j) = s%hg(i,j) + dhw
         end if
         ! 浸食で地下水容量が現在の貯留を下回ったら、超過分を地表水へ渡す
@@ -592,7 +608,11 @@ module subroutine calc_debris(gm, p, g, s, dtw)
           if (s%hg(i,j) > cap) then
             fxg = s%hg(i,j) - cap
             s%hg(i,j) = cap
-            s%h(i,j) = s%h(i,j) + fxg * gw_to_h(s, i, j)   ! 河道の平面へ(§26.1)
+            if (sect_cell(s, i, j)) then
+              call sect_add_vh(s, i, j, fxg * gw_to_h(s, i, j))   ! σ は体積で(§26.2)
+            else
+              s%h(i,j) = s%h(i,j) + fxg * gw_to_h(s, i, j)   ! 河道の平面へ(§26.1)
+            end if
           end if
         end if
       end if
@@ -700,10 +720,18 @@ subroutine slide_pass2(gm, g, s)
         if (s%hg(i,j) > cap) then
           fxg = s%hg(i,j) - cap
           s%hg(i,j) = cap
-          s%h(i,j) = s%h(i,j) + fxg * gw_to_h(s, i, j)   ! 河道の平面へ(§26.1)
+          if (sect_cell(s, i, j)) then
+            call sect_add_vh(s, i, j, fxg * gw_to_h(s, i, j))   ! σ は体積で(§26.2)
+          else
+            s%h(i,j) = s%h(i,j) + fxg * gw_to_h(s, i, j)   ! 河道の平面へ(§26.1)
+          end if
         end if
       else
-        s%h(i,j) = s%h(i,j) + (1.0 - 1.0 / gm%poroi) * gm%db_relsat * dd
+        if (sect_cell(s, i, j)) then
+          call sect_add_vh(s, i, j, (1.0 - 1.0 / gm%poroi) * gm%db_relsat * dd)   ! σ は体積で(§26.2)
+        else
+          s%h(i,j) = s%h(i,j) + (1.0 - 1.0 / gm%poroi) * gm%db_relsat * dd
+        end if
       end if
     end do
   end do
@@ -759,11 +787,19 @@ module subroutine release_debris(gm, p, g, s)
         if (s%hg(i,j) > cap) then
           fxg = s%hg(i,j) - cap
           s%hg(i,j) = cap
-          s%h(i,j) = s%h(i,j) + fxg * gw_to_h(s, i, j)   ! 河道の平面へ(§26.1)
+          if (sect_cell(s, i, j)) then
+            call sect_add_vh(s, i, j, fxg * gw_to_h(s, i, j))   ! σ は体積で(§26.2)
+          else
+            s%h(i,j) = s%h(i,j) + fxg * gw_to_h(s, i, j)   ! 河道の平面へ(§26.1)
+          end if
         end if
       else
         ! gwflow 無効: 飽和度 relsat の間隙水をシナリオ的に付与
-        s%h(i,j) = s%h(i,j) + (1.0 - 1.0 / gm%poroi) * gm%db_relsat * dd
+        if (sect_cell(s, i, j)) then
+          call sect_add_vh(s, i, j, (1.0 - 1.0 / gm%poroi) * gm%db_relsat * dd)   ! σ は体積で(§26.2)
+        else
+          s%h(i,j) = s%h(i,j) + (1.0 - 1.0 / gm%poroi) * gm%db_relsat * dd
+        end if
       end if
     end do
   end do
