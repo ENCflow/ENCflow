@@ -112,6 +112,7 @@ analytical-solution or conservation check by Check_*.py.
 | [slide/](slide/en/README.md) | Instantaneous fluidisation (landslide type): smoke test, conservation, stability analysis | Slope failure f_release, f_slide | analytic |
 | [volcano/](volcano/en/README.md) | Voellmy steady uniform-flow benchmark of volcanic flows (debris avalanche, pyroclastic flow) | Equivalent fluid | analytic |
 | [curvature/](curvature/en/README.md) | With and without the curvature (centrifugal) term | Equivalent fluid f_dbcurv | analytic |
+| [dbonset/](dbonset/en/README.md) | Rest and onset of motion under the yield do not depend on the slope direction (0°, 22.5°, 45°) or on eight/four neighbours; analytic solution of a rigid sliding block on a uniform slope (§28.16) | Mixture flow f_dbres | analytic |
 | [avalanche/](avalanche/en/README.md) | Dense-flow snow avalanche (equivalent fluid with velocity-proportional entrainment): smoke test and conservation | Equivalent fluid, snow | analytic |
 | [bedslide/](bedslide/en/README.md) | Moving bed layer: debris avalanche plunging into a lake and its tsunami, a submarine slide, hand-over from a debris flow | Moving bed layer f_bedslide | analytic |
 | **Driftwood and building destruction** | | | |

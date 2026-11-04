@@ -51,8 +51,9 @@ separate sediment layer (within the scope of developer.md §0).
 
 All resistances are merged semi-implicitly as decelerations (a yield term
 independent of the velocity enters the denominator as $`a_y/|\mathbf{V}|`$,
-and a slow cell whose driving force is $`\le a_y`$ is held at rest
-explicitly, so that starting and stopping follow the same equation).
+and a slow edge whose driving force has a magnitude of $`a_y`$ or less is
+held at rest explicitly, so that starting and stopping follow the same
+equation; see "Rest and onset of motion" below).
 $`g_e`$ is the effective gravity $`g\cos^2\theta`$ on steep slopes
 ([ENC grid](encgrid.md) §5).
 
@@ -93,6 +94,28 @@ snow, rock debris and pyroclastic material. The defaults μ = 0.2 and
 and the default yield stress 10 kPa is at the low end of the VolcFlow
 pyroclastic-flow applications 5–50 kPa (values by type are in the
 [recommended values](geomorph.md#recommended-values-by-pattern)).
+
+**Rest and onset of motion.** On a slow edge (the mean speed of the two
+cells is below `db_vstop`) the magnitude of the drive is compared with
+$`a_y`$, and the edge is held at rest if it is $`a_y`$ or less. The
+magnitude combines the drive in the normal direction of the edge
+(advection and gravity) with the gradient of the flow surface (the
+average of the two cells) projected onto the tangent of the edge, so the
+slope at which the flow starts stays $`a_y/g_e`$ even when the slope is
+oblique to the grid. It is verified by
+[test/dbonset](../../../test/dbonset/en/README.md) (on a uniform slope
+the threshold and the speed and direction of sliding agree with the
+analytical solution of a rigid sliding block within 0.4%, regardless of
+the slope direction 0°, 22.5° or 45° and of eight or four neighbours).
+Because the yield term is put in semi-implicitly, the onset of motion from
+rest is delayed in proportion to the time step (on a slope 1.1 times the
+yield slope, the speed after 2 seconds is 0.8 times the analytical value
+with dt = 0.01 s and 0.96 times with 0.002 s). Before 2026-11-04 only the
+drive in the normal direction was compared, so edges oblique to the slope
+were held at rest, the onset was delayed or did not happen (in some
+combinations the flow did not move even on a slope 1.3 times the yield
+slope), and how much depended on the slope direction and the number of
+neighbours (developer.md §28.16).
 
 **Curvature term (f_dbcurv).** The centrifugal acceleration due to the
 terrain curvature is added to the normal stress and scales the yield
@@ -422,6 +445,7 @@ The labels in the Basis column are explained in [How to read the basis of a defa
 | [test/slide](../../../test/slide/en/README.md) | fluidisation and stability test | self-checks of conservation and water budget |
 | [test/volcano](../../../test/volcano/en/README.md) | Voellmy uniform flow and τ_y run-out | uniform depth within 0.04% of the analytical solution (four neighbours) |
 | [test/curvature](../../../test/curvature/en/README.md) | steady one-dimensional test of the curvature term | thickening on the arc 1.03 times the ODE |
+| [test/dbonset](../../../test/dbonset/en/README.md) | rest and onset of motion under the yield (uniform slope 0.9, 1.1 and 1.3 times the yield slope; slope direction 0°, 22.5° and 45°; eight and four neighbours) | threshold, speed and direction independent of the direction and the stencil, within 0.4% of the analytical solution of a rigid sliding block |
 | [test/avalanche](../../../test/avalanche/en/README.md) | avalanche (Voellmy + velocity-proportional entrainment) | grows 1.5 times by entrainment and stops; ledger to machine precision |
 | [test/bedslide](../../../test/bedslide/en/README.md) | analytical speed of the layer, 45° slope, entry into a lake | $`V`$ of interior cells within 0.5% of the analytical value |
 | [examples/landslide_tsunami](../../../examples/landslide_tsunami/en/README.md) | rock avalanche, hand-over, submarine landslide | four patterns compared |

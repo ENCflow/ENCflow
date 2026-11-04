@@ -218,6 +218,8 @@ module m_swflow_enc
     real :: db_tauy = 0.0                     ! 一定停止応力 τ_y (Pa)(db_res=5)
     integer :: db_curv = 0                    ! 曲率項の有無(f_dbcurv)
     real, allocatable :: acv(:,:)             ! セルの遠心加速度 a_c (m/s²)(1:nx, jsh:jeh)
+    real, allocatable :: gsx(:,:), gsy(:,:)   ! セルの流動面の勾配 ∂η/∂x, ∂η/∂y(降伏の静止判定の
+                                              !   接線成分。db_res>=1 のみ確保。§28.16)
   end type
   type(t_enc_debris), allocatable :: dbr
   real, parameter :: db_rhow = 1000.0       ! 清水密度 (kg/m³)(τ_y を加速度に落とす
@@ -944,6 +946,11 @@ subroutine m_swflow_enc_init(p, g, b, s)
   ! 曲率項の作業配列(f_dbcurv=1 のみ。set_debris は geomorph init から
   ! swflow init より前に呼ばれる契約なので db_curv はここで確定済み)
   if (dbr%db_curv > 0) allocate(dbr%acv(dcp%ish:dcp%ieh, dcp%jsh:dcp%jeh), source = 0.0)
+  ! 降伏の静止判定の流動面の勾配(db_res>=1 のみ。§28.16)
+  if (dbr%db_res > 0) then
+    allocate(dbr%gsx(dcp%ish:dcp%ieh, dcp%jsh:dcp%jeh), source = 0.0)
+    allocate(dbr%gsy(dcp%ish:dcp%ieh, dcp%jsh:dcp%jeh), source = 0.0)
+  end if
   if (opt%f_bank_mode < e_bank_weir .or. opt%f_bank_mode > e_bank_pump) then
     call par_stop("list_channel: f_bank_mode must be 0(overtopping only), " &
                   //"1(one-way sluice) or 2(forced drainage)")
@@ -1205,6 +1212,7 @@ subroutine m_swflow_enc_calc(p, g, b, s, ierror)
 
   ! 曲率項の遠心加速度をセルごとに前計算する(f_dbcurv=1。§28.10)
   if (dbr%db_curv > 0) call curv_prepare(g, s)
+  if (allocated(dbr%gsx)) call yield_prepare(p, g, s)
 
   ! 運動方程式を解いて流速を計算する
   call momentum(p, g, s, sx_mod, ierror)
@@ -1691,6 +1699,83 @@ end subroutine
 
 
 !----------------------------------------------------------------------
+! 降伏の静止判定の前計算(db_res>=1。developer.md §28.16)
+!   セルごとに流動面 η の勾配 (∂η/∂x, ∂η/∂y) を求める(η = z + h + hs、圧力項なしは z)。
+!   辺の静止判定は、辺の法線方向の駆動(移流+重力。辺の差分)に、この勾配の両セル平均を
+!   辺の接線へ射影した成分を合わせた駆動の大きさで降伏と比べる(Coulomb 降伏は駆動の
+!   ベクトルの大きさに対する条件。法線成分だけで比べると、斜めの辺が止められて動き出しが
+!   遅れ、その遅れが斜面の向きで変わる)。差分は濡れた(h + hs > dd)有効セルだけを使い、
+!   両隣が濡れていれば中心差分、片方なら片側差分、なしなら 0(乾いたセルの地盤は流動面で
+!   ないので使わない。谷壁の勾配が静止判定に入らないように。溶岩流の §51.4 と同じ)。
+!   z, h, hs はステップ頭で幅 2 交換済みなので、js-1..je+1 の勾配が帯内で閉じて求まる
+!   (辺の両セル平均が js-1 を読む。curv_prepare と同じ)
+!----------------------------------------------------------------------
+subroutine yield_prepare(p, g, s)
+  type(t_sysparam), intent(in) :: p
+  type(t_geoinfo), intent(in) :: g
+  type(t_state), intent(in) :: s
+  integer :: i, j, j1, j2
+  real :: rdx, rdy
+  logical :: okw, oke, oks, okn
+
+  rdx = 1.0 / g%dx
+  rdy = 1.0 / g%dy
+  j1 = max(dcp%js - 1, 1)
+  j2 = min(dcp%je + 1, g%ny)
+  !$omp parallel do schedule(dynamic) private(i, j, okw, oke, oks, okn)
+  do j = j1, j2
+    do i = g%wx(1,j), g%wx(2,j)
+      dbr%gsx(i,j) = 0.0
+      dbr%gsy(i,j) = 0.0
+      if (.not. wet(i, j)) cycle
+      okw = wet(i-1, j)
+      oke = wet(i+1, j)
+      oks = wet(i, j-1)
+      okn = wet(i, j+1)
+      if (okw .and. oke) then
+        dbr%gsx(i,j) = (eta(i+1, j) - eta(i-1, j)) * rdx / 2
+      else if (oke) then
+        dbr%gsx(i,j) = (eta(i+1, j) - eta(i, j)) * rdx
+      else if (okw) then
+        dbr%gsx(i,j) = (eta(i, j) - eta(i-1, j)) * rdx
+      end if
+      if (oks .and. okn) then
+        dbr%gsy(i,j) = (eta(i, j+1) - eta(i, j-1)) * rdy / 2
+      else if (okn) then
+        dbr%gsy(i,j) = (eta(i, j+1) - eta(i, j)) * rdy
+      else if (oks) then
+        dbr%gsy(i,j) = (eta(i, j) - eta(i, j-1)) * rdy
+      end if
+    end do
+  end do
+  !$omp end parallel do
+
+contains
+
+  ! 濡れた有効セルか(領域内・海域でない・h + hs > dd)。x は番兵付き (0:nx+1, 0:ny+1)、
+  ! sw は (1:nx, 1:ny) 確保なので x で先に弾く(Fortran の .and. は短絡評価を保証しない)
+  pure logical function wet(ii, jj)
+    integer, intent(in) :: ii, jj
+    wet = .false.
+    if (g%x(ii,jj) <= 0) return
+    if (g%sw(ii,jj) > 0) return
+    wet = s%h(ii,jj) + max(s%hs(ii,jj), 0.0) > p%dd
+  end function
+
+  ! 流動面(辺の重力・圧力項と同じ定義。圧力項なしは地盤だけ)
+  pure real function eta(ii, jj)
+    integer, intent(in) :: ii, jj
+    if (opt%f_pressure_term > 0) then
+      eta = s%z(ii,jj) + s%h(ii,jj) + max(s%hs(ii,jj), 0.0)
+    else
+      eta = s%z(ii,jj)
+    end if
+  end function
+
+end subroutine
+
+
+!----------------------------------------------------------------------
 ! 曲率項の前計算(f_dbcurv=1。developer.md §28.10)
 !   セルごとに a_c = (u²z_xx + 2uv z_xy + v²z_yy)/√(1+z_x²+z_y²) を求める。
 !   これは地表面の流向法線曲率 κ_n と表面速度 V_s の積 V_s²κ_n を、水平
@@ -2089,6 +2174,7 @@ subroutine calc_kth_flux(p, g, s, sx, uve0, tae0, i, j, k, in, jn, f_runge, uve1
   real :: hte                     ! エッジの混合流動深(時刻 n。層流則用)
   real :: rme                     ! 1 + s・C(混合密度比 ρm/ρ)
   real :: vv0e                    ! 辺の速さ |V|(下限 p%vv 適用前。降伏停止判定用。§28.11)
+  real :: tte                     ! 辺の接線方向の駆動(流動面の勾配の接線成分。降伏停止判定用。§28.16)
   ! 波→流れ(段 W2。s%wv_flow > 0 のときだけ使う。§90)
   real :: wfe                     ! 辺の外力の成分 F_k/ρ (m2/s2。中心から近傍が正)
   real :: use_                    ! 辺の Stokes 輸送の成分 u^S_k (m/s。wv_flow = 2)
@@ -2363,10 +2449,18 @@ subroutine calc_kth_flux(p, g, s, sx, uve0, tae0, i, j, k, in, jn, f_runge, uve1
     !   a_y)が毎ステップ零化され、行間の質量交換が凍結して横断方向に
     !   一様にならない(§28.11 の実バグ)。Coulomb 降伏は速度ベクトルの
     !   大きさに対する条件で、動いている流れの一成分には掛からない
+    !   駆動の大きさは、辺の法線成分(移流+重力。辺の差分)と、流動面の勾配の両セル平均を
+    !   辺の接線へ射影した成分を合わせて求める(§28.16。法線成分だけで比べると、斜めの辺が
+    !   止められて流動の組み立ての速さが小さく出て、動いている辺の降伏摩擦 a_y/|V| が過大に
+    !   なり、動き出しの勾配が a_y の最大 √2 倍に高く出て、その値が斜面の向きで変わった)
     if (aye > 0.0) then
-      if (vv0e < dbr%db_vstop .and. abs(tae + tge) <= aye) then
-        uve1 = 0.0
-        mne1 = 0.0
+      if (vv0e < dbr%db_vstop) then
+        tte = ge * gve * ((dbr%gsx(i,j) + dbr%gsx(in,jn)) * geo%n8y(k) &
+                          - (dbr%gsy(i,j) + dbr%gsy(in,jn)) * geo%n8x(k)) / 2
+        if ((tae + tge)**2 + tte**2 <= aye**2) then
+          uve1 = 0.0
+          mne1 = 0.0
+        end if
       end if
     end if
 

@@ -338,9 +338,9 @@
     {
       "source": "docs/users_guide/massflow.md",
       "target": "docs/en/users_guide/massflow.md",
-      "source_sha256": "f4945857358b3110ae0c1b7b9406ddebfdfdc4ded3c1dca01a3c9cb61c742002",
-      "target_sha256": "39757a99ec22c819f9724d27fd22ae300bcc735859712d94670a2d0b79ceb195",
-      "reviewer": "Claude (Claude Code session; the row or sentence for the new example examples/debris_fan added in both languages and compared side by side; unchanged parts as recorded earlier)",
+      "source_sha256": "62d9d51337b0655b976ef3e1fb5364c0292b7dc5ceed6ac95f16dde57b452586",
+      "target_sha256": "1bfecf5cffd35531de5a5ce50074ac4e5af69787b298fac2499afe80d7ccd14e",
+      "reviewer": "Claude (Claude Code session; the §2 paragraph on rest and onset of motion, the edited sentence on the explicit rest and the §7 row of test/dbonset were written in both languages in this session and compared sentence by sentence; numbers checked against the test/dbonset runs)",
       "method": "assistant",
       "reviewed_on": "2026-11-04"
     },
@@ -2597,9 +2597,9 @@
     {
       "source": "test/README.md",
       "target": "test/README.en.md",
-      "source_sha256": "b1dd924a79040ce0ee02cda7cfb0148657921016921f26ac7f840e014761cdae",
-      "target_sha256": "809cd221e27627dc5db416b3fe5cd2ad5b255c8d38030381b15bb8370cf911ef",
-      "reviewer": "Claude (Claude Code session; full-text content and lexical review, no model execution)",
+      "source_sha256": "2246beff8e9b2023309b543b8d9c5afe25ce78abf9ef102d91d97290931f1946",
+      "target_sha256": "4d6205aa48a9839f72ca8b4789abf3e31484b3a3186831c226122a0bad18b5bd",
+      "reviewer": "Claude (Claude Code session; the test/dbonset row added to both indexes and compared)",
       "method": "assistant",
       "reviewed_on": "2026-11-04"
     },
@@ -2944,6 +2944,15 @@
       "reviewer": "Claude (Claude Code session; f_opening_dynamic default switch)",
       "method": "assistant",
       "reviewed_on": "2026-10-31"
+    },
+    {
+      "source": "test/dbonset/README.md",
+      "target": "test/dbonset/en/README.md",
+      "source_sha256": "139852fb4f02a8bc2ee03170c12a8a383749ae2be624c47e9237fc1e63a53f3e",
+      "target_sha256": "a8ae0e2549ad956c228aff1123b9e3928f59b4c2a26c665a37a7a5ef6311a006",
+      "reviewer": "Claude (Claude Code session; new README written in both languages in this session and compared paragraph by paragraph; tables and numbers checked against the release run of 2026-11-04 (Run.sh), the run of the code before the fix, the MPI np = 1, 2, 4 runs and the measured run time)",
+      "method": "assistant",
+      "reviewed_on": "2026-11-04"
     },
     {
       "source": "test/dbrock/README.md",
