@@ -64,9 +64,18 @@ checks that it collapses to the same z as param.txt (sd0 = 20 m), in which the s
 never acts ((8) 0 in exact arithmetic, 2e-15 in the last digit with -Ofast), and that only the
 fallen material becomes sd (sd = talus ht; (4')) (`bed=save`).
 
+Talus dissolution (param_talus0.txt → param_talus1.txt, combined with `f_dissol`; developer.md §86.7):
+stage 0 collapses the bedrock-variant plateau to build talus and saves it (dissolution is enabled
+with zero rainfall so that its private save is written). Stage 1 restarts, freezes rockfall, and
+applies the dissolution of a uniform rainfall of 100 mm/h for 600 updates (W = 0.667 m, residue
+fraction 0.2). Check_talus.py checks, to the printed digits, that the talus dissolves first
+(ht₁ = max(ht₀ − W, 0)), that the surface drops by (1 − f_res) W whether or not talus is present,
+and the soil-layer balance sd₁ = sd₀ − (1 − f_res) min(ht₀, W) + f_res max(W − ht₀, 0), and that
+there are both cells where the talus is used up and cells where it remains.
+
 ```bash
 make
-./Run.sh            # serial + checks (copies save/ to save_serial/; also the bedrock, windowed, supported-face, undercut and sea-cell variants)
+./Run.sh            # serial + checks (copies save/ to save_serial/; also the bedrock, talus-dissolution, windowed, supported-face, undercut and sea-cell variants)
 ./Run_MPI.sh 2      # MPI + checks + bit-identity check of save/state.dat against the serial run (also the bedrock, windowed, supported-face, undercut and sea-cell variants)
 ./Run_MPI.sh 4
 ```

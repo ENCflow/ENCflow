@@ -22,6 +22,12 @@ python3 "$sdir/make_init.py" --sdzero
 echo ""
 python3 "$sdir/Check_rockfall.py" save_bed result_bed bed=save || rc=1
 rm -rf save_bed_serial && cp -r save_bed save_bed_serial
+# 崖錐の溶食(§86.7): 第 0 段で崖錐を作って保存し、第 1 段で再開して一様な雨で溶かす
+./encflow param_talus0.txt | tee Screen_talus0.log || exit 1
+./encflow param_talus1.txt | tee Screen_talus1.log || exit 1
+echo ""
+python3 "$sdir/Check_talus.py" result_talus0 result_talus1 0.6666667 0.2 || rc=1
+rm -rf result_talus1_serial && cp -r result_talus1 result_talus1_serial
 # 窓版(rf_rc = 3 m)
 ./encflow param_rc.txt | tee Screen_rc.log || exit 1
 echo ""

@@ -28,6 +28,7 @@ python3 plot_results.py   # plotting (where provided)
 | [mesa/](mesa/en/README.md) | A cap rock keeps a flat top and vertical cliffs whose parallel retreat shrinks the plateau to a mesa, a butte and a pinnacle | f_splash (spl_strata, spl_ksat) + f_creep + f_rockfall (rf_rc, rf_fface), Green-Ampt |
 | [karst/](karst/en/README.md) | A doline field on a limestone plateau: water that collects in depressions and sinks underground deepens those spots selectively | limestone dissolution f_dissol, conduit continuum layer (sinks), Green-Ampt, periodic forcing t_cycle_c |
 | [tower_karst/](tower_karst/en/README.md) | Bare-rock towers on a plain (tower karst): only the plain and their feet dissolve, so the towers rise above the plain and moats and holes form at the feet | limestone dissolution f_dissol (dissol_lat), rock-wall collapse f_rockfall, Green-Ampt conductivity map, periodic forcing |
+| [stone_forest/](stone_forest/en/README.md) | Stone forest: a joint map (soluble fraction × 6) splits a flat limestone plateau into pillars and clefts; the clefts deepen, the walls collapse and fill them, the talus dissolves and the pillar height saturates | limestone dissolution f_dissol (multiplier map fn_dissol), bedrock collapse f_rockfall (rf_bedrock), talus dissolution, quasi-steady forcing |
 | [ashfall_lahar/](ashfall_lahar/en/README.md) | Rain on an ash-covered, low-infiltration slope erodes the ash into a lahar that deposits on the fan; effect of a check dam | Debris flow f_debris (pore water with the groundwater computation f_dbwet=2), Green-Ampt infiltration capacity, rainfall, check dam (terrain), four-neighbour grid p_diagratio |
 | [landslide_tsunami/](landslide_tsunami/en/README.md) | Tsunamis from subaerial and submarine landslides and debris flows entering water: four patterns plus non-hydrostatic variants | Moving bed layer f_bedslide, non-hydrostatic correction |
 | [tsunami_fault/](tsunami_fault/en/README.md) | A tsunami generated from fault parameters: hydrostatic, instantaneous and non-hydrostatic runs and coordinate patterns compared | Prescribed bed motion fn_bedmotion, utils/fault2disp |
@@ -62,7 +63,7 @@ one run" (for reference after reading the chapters).
 - Rainfall → incision versus creep → rounded crests and dome-shaped hills: [badland_round/](badland_round/en/README.md).
 - Rainfall → erosion of soft layers → retreat of the cap-rock cliffs → mesa → butte: [mesa/](mesa/en/README.md).
 - Storm → ponding → sinks → dissolution → dolines: [karst/](karst/en/README.md).
-- Bare-rock towers → dissolution at the feet → collapse → tower retreat: [tower_karst/](tower_karst/en/README.md).
+- Bare-rock towers → dissolution at the feet → collapse → tower retreat: [tower_karst/](tower_karst/en/README.md). Dissolution along joints → clefts → pillars → wall collapse: [stone_forest/](stone_forest/en/README.md).
 - Sediment supply → cover and tools → bedrock incision: [bedrock_cover/](bedrock_cover/en/README.md).
 - Uplift → weathering → creep → cover and incision in the stream → a steady valley: [mountain_valley/](mountain_valley/en/README.md).
 - Debris flow → stripping of the deposit → rock erosion → steady slope by frequency: [debris_bedrock/](debris_bedrock/en/README.md).
