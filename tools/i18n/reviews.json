@@ -824,11 +824,11 @@
     {
       "source": "examples/ashfall_lahar/README.md",
       "target": "examples/ashfall_lahar/en/README.md",
-      "source_sha256": "4cf1e1f04782e0c5ce7618a57a8850cacdbc52ea857e3c69e9f4f3c4fac0c20e",
-      "target_sha256": "a75fa870ebe9a6402210bed3c7e515392197fc40518b62d467ac478fbb0ef2ab",
-      "reviewer": "Claude (Claude Code session; reviewed the Japanese source against the English mirror after unifying the term passage width / 通過幅 and noting the original paper's term, 2026-11-03)",
+      "source_sha256": "7644ccd6e53db3ce8305d96b3697e057d797f1e625ec2650ee415b1e5826b625",
+      "target_sha256": "cffac7f321da4ffb2b8e00b96e920a22295c1150cb502e7feb7b47d49ae3628c",
+      "reviewer": "Claude (Claude Code session; dated note on the recomputation after the §28.16 fix added in both languages and compared; values checked against plot_results.py and plot_rotated.py output and byte comparison with the executable before the fix)",
       "method": "assistant",
-      "reviewed_on": "2026-11-03"
+      "reviewed_on": "2026-11-04"
     },
     {
       "source": "examples/ashfall_lahar/figs/maps.png",

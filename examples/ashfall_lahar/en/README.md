@@ -145,7 +145,11 @@ Right: sediment that passed the valley outlet to the fan and sediment trapped be
 
 (The tables and figures show the values recomputed on 2026-10-31 with the default f_opening_dynamic = 3; developer.md §68.41.
 Recomputing on 2026-11-02 with the default after the correction of the lateral faces of the momentum-conserving advection
-leaves the table values unchanged; the figures are from that recomputation; §68.42, §68.43.)
+leaves the table values unchanged; the figures are from that recomputation; §68.42, §68.43. Recomputing on
+2026-11-04 with the code after the fix of the yield rest check (§28.16) leaves the values of this table and of the
+supplement unchanged: the outputs of the mudflow and check-dam cases are byte-identical to those before the fix,
+and the supplementary 45° eight-neighbour case differs only in the last printed digit of the water depth in a few
+cells, so the figures are those of 11-02.)
 
 The rain totals 2,700 m³ from 10 to 70 minutes. The water into the ground is the sum of the
 rain that soaked in and the water that went into the pores of the deposits.
