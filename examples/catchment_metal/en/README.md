@@ -14,10 +14,11 @@ Starting from the simplest setup with only surface water and the substance,
 it adds one mechanism at a time — groundwater flow, the delay of transport
 underground by sorption to soil, tanks, and the particulate form (settling
 and re-suspension) — and compares how the river concentration and the fate
-of the substance change. Finally it answers "can tanks be ignored?" for each
-form of the substance (dissolved and particulate). The values are
-schematic, chosen to make the phenomena easy to see; they do not reproduce
-any particular catchment.
+of the substance change. It answers "can tanks be ignored?" for each form
+of the substance (dissolved and particulate). Finally it adds
+evapotranspiration and looks at how the water quality of the river in the
+dry season changes. The values are schematic, chosen to make the phenomena
+easy to see; they do not reproduce any particular catchment.
 
 ## What happens in a real catchment
 
@@ -51,6 +52,15 @@ any particular catchment.
   one (for example the tank systems of South Asia; Panabokke et al. 2002).
   Tanks store and mix water and spill when full. Because the flow stops in
   them, they trap sediment and the substances attached to it (Brune 1953).
+- **Evapotranspiration**: part of the rain returns to the atmosphere by
+  evaporation from soil and water surfaces and by transpiration of plants
+  (together, evapotranspiration). The amount the atmosphere demands
+  (potential evapotranspiration) is set by temperature, radiation, wind and
+  humidity and reaches a few millimetres per day in the tropics (Allen et
+  al. 1998). In dry regions evapotranspiration takes a large part of the
+  water balance, and in the dry season the soil water decreases and the
+  rivers dwindle. Evaporation removes only water, so the substance in the
+  water left in tanks and similar places becomes more concentrated.
 
 ## Mechanisms needed for the reproduction
 
@@ -63,7 +73,9 @@ each mechanism.
 substance (step 1), one mechanism is added at a time. Steps 2–4 each add
 one mechanism to the previous step. Step 5 replaces the dissolved
 substance with a particulate one and compares the cases with tanks (step5)
-and without tanks (step5_notank).
+and without tanks (step5_notank). Step 6 adds evapotranspiration to step 4
+(dissolved, with tanks) and compares it with step 4 without
+evapotranspiration.
 
 | Step | Mechanism added | Main settings | What to look at | Case |
 |---|---|---|---|---|
@@ -72,6 +84,7 @@ and without tanks (step5_notank).
 | 3 | Delay of transport underground by sorption to soil | `wq_rg = 100` | how much the substance going underground is delayed; how much stays in the ground | step3 |
 | 4 | Tanks (three in series, represented in the terrain) | terrain `z_tank`, channels `rw_tank`, infiltration capacity of tank beds `fn_gw_ksv` | the effect of tanks on the dissolved form | step4 |
 | 5 | Particulate form: settling and re-suspension (not carried by infiltrating water) | `f_wq_infil = 0`, `wq_vs`, `f_wq_settle = 1`, `wq_wash_kf`, `wq_wash_tauc` | the effect of tanks on the particulate form (compared with no tanks) | step5, step5_notank |
+| 6 | Evapotranspiration: the potential evapotranspiration is taken, as far as there is water, from surface water (tank and river surfaces) and groundwater; evaporation removes only water and the substance stays | `fn_evap`, `&list_evap` (`f_evmodel = 1`, `evap0 = 4`) | where the water goes, dry-season discharge and concentration, tank level and concentration (compared with step 4) | step6 |
 
 **Phenomena and mechanisms**:
 
@@ -86,13 +99,16 @@ and without tanks (step5_notank).
 | Tank beds are clogged by sediment and pass little water | lower infiltration capacity in the tank-bed cells | `fn_gw_ksv` |
 | The particulate form settles where the flow is slow and is lifted by floods | single-phase settling (the whole amount settles at the settling velocity), a surface buildup pool holding the settled part, and wash-off by flow shear | `wq_vs`, `f_wq_settle = 1`, `wq_wash_kf`, `wq_wash_tauc` |
 | The particulate form does not infiltrate into the soil | transport with infiltration switched off | `f_wq_infil = 0` |
+| Water evaporates from soil and water surfaces and plants transpire (the substance stays) | evapotranspiration: a constant potential evapotranspiration PET is taken every step, as far as there is water, from surface water and then groundwater (no suppression by the dryness of the soil). On channel-width cells the channel's water surface evaporates from the channel water and the land part from the groundwater | `fn_evap`, `f_evmodel = 1`, `evap0` |
 
 The settings and equations of each mechanism are in the users guide:
 [water quality](../../../docs/en/users_guide/wq.md),
 [water quality models](../../../docs/en/users_guide/wq_models.md),
 [groundwater](../../../docs/en/users_guide/gwflow.md),
-[channels](../../../docs/en/users_guide/channel.md) (subgrid channel width) and
-[geographic information](../../../docs/en/users_guide/geoinfo.md) (sea mask).
+[channels](../../../docs/en/users_guide/channel.md) (subgrid channel width),
+[geographic information](../../../docs/en/users_guide/geoinfo.md) (sea mask) and
+[meteorological forcing](../../../docs/en/users_guide/forcing.md)
+(evapotranspiration).
 
 ## Geometry and settings
 
@@ -114,7 +130,10 @@ The settings and equations of each mechanism are in the users guide:
   hydraulic conductivity of groundwater 1e-3 m/s (from step 2; a weathered
   layer with sand and gravel, a value chosen so that hillslope groundwater
   reaches the valleys within 180 days). The run starts from dry soil and an
-  empty aquifer. No evapotranspiration is included.
+  empty aquifer. Evapotranspiration is included only in step 6 (a potential
+  evapotranspiration PET of a constant 4 mm/day over the whole domain and
+  period; a schematic value of a plausible size for the reference
+  evapotranspiration in the tropics).
 - **Rain**: ten times every 10 days from day 3, 20 mm/h × 3 hours = 60 mm
   (uniform over the domain; 600 mm in all). From day 100 on it is a dry
   season without rain.
@@ -137,20 +156,22 @@ The settings and equations of each mechanism are in the users guide:
   and the deepest points of tanks 1–3 (P1–P3). Depth and concentration at
   each point (probes) and discharge and load on transects across the
   rivers are recorded every hour.
-- dt = 10 s, 180 days. With gfortran and 4 threads, step 1 takes 16 minutes
-  and steps 2–5, which include groundwater flow, about 20 minutes per case
-  (measured for steps 1 and 4; about 2 hours for the six cases). The
+- dt = 10 s, 180 days. With gfortran and 4 threads, step 1 takes 16 minutes,
+  steps 2–5, which include groundwater flow, about 20 minutes per case, and
+  step 6 15 minutes (measured for steps 1, 4 and 6; about 2 hours 15 minutes
+  for the seven cases). The
   results do not depend on the number of threads (bit-identical with 1 and
   4 threads).
 
-| Case | Settings file | Groundwater flow | Retardation R | Tanks | Form of the substance |
-|---|---|---|---|---|---|
-| step1 | param_step1.txt | no | — | no | dissolved |
-| step2 | param_step2.txt | yes | 1 | no | dissolved |
-| step3 | param_step3.txt | yes | 100 | no | dissolved |
-| step4 | param_step4.txt | yes | 100 | yes | dissolved |
-| step5 | param_step5.txt | yes | — (does not enter the ground) | yes | particulate (settling 1 m/day, re-suspension) |
-| step5_notank | param_step5_notank.txt | yes | — | no | particulate |
+| Case | Settings file | Groundwater flow | Retardation R | Tanks | Form of the substance | Evapotranspiration |
+|---|---|---|---|---|---|---|
+| step1 | param_step1.txt | no | — | no | dissolved | no |
+| step2 | param_step2.txt | yes | 1 | no | dissolved | no |
+| step3 | param_step3.txt | yes | 100 | no | dissolved | no |
+| step4 | param_step4.txt | yes | 100 | yes | dissolved | no |
+| step5 | param_step5.txt | yes | — (does not enter the ground) | yes | particulate (settling 1 m/day, re-suspension) | no |
+| step5_notank | param_step5_notank.txt | yes | — | no | particulate | no |
+| step6 | param_step6.txt | yes | 100 | yes | dissolved | PET 4 mm/day |
 
 The common settings (shallow-water flow, internal source, rain,
 monitoring) are collected in param_common.txt, and each param file points
@@ -162,7 +183,7 @@ substance are mass in g and concentration in mg/L (µg/L in the figures).
 ```bash
 cd examples/catchment_metal
 make                     # links to the executables and the inputs (data/, gen_data.py)
-make run                 # compute the six cases in turn (16–20 minutes each with 4 threads; about 2 hours in all)
+make run                 # compute the seven cases in turn (15–20 minutes each with 4 threads; about 2 hours 15 minutes in all)
 make step3               # to compute only one case
 python3 plot_results.py  # figs/*.png and the tables (with the argument en, English figures in en/figs/)
 ```
@@ -287,6 +308,52 @@ The dashed lines are the case without tanks (step5_notank).
 - On the farmland, 104 kg stays deposited on slopes where the flood flow is
   weak (with or without tanks).
 
+### Step 6: + evapotranspiration — the river dries up in the dry season and the substance stays in the ground
+
+![Step 6](figs/step6.png)
+
+The grey lines are step 4 without evapotranspiration. (c) shows where the
+water went (depth over the catchment; the inputs are 600 mm of rain and
+3.6 mm of mine effluent).
+
+- **Three quarters of the rain leave as evapotranspiration**: over 180 days the
+  evapotranspiration is 444 mm (74 % of the rain), the outflow to the sea
+  139 mm (413 mm in step 4) and the storage in the catchment on day 180
+  20 mm (191 mm). 97 % of the evapotranspiration is taken from the
+  groundwater. In the wet season it evaporates at 3.7 mm per day, close to
+  the potential evapotranspiration (4 mm), but in the dry season the soil
+  water runs out and the rate falls to 1.5 mm per day (days 100–140) and
+  0.3 mm per day (days 140–180).
+- **The river dries up in the dry season**: the baseflow disappears and the
+  main river stops flowing about 20 days into the dry season (G5 near the
+  mouth stops on day 118, G2 below the T1 confluence on day 122). On dry
+  days only the mine effluent flows; about 3 km down T1 it has seeped into
+  the bed or evaporated. At G1, 1.5 km below the mine, the discharge is
+  0.014 m³/s (about 30 % of the effluent) and the concentration is about
+  510 µg/L, the effluent itself (500 µg/L) slightly concentrated (in step 4
+  the baseflow dilutes it to 81 µg/L).
+- **Water stays in the tanks**: the level of the three tanks falls by about
+  0.4 m in the dry season and the concentration of the substance in their
+  water rises by about 10 % (evaporation removes only water). In step 4
+  groundwater from upstream keeps flowing in and replacing the water in the
+  dry season, and the concentration falls to a fifth. The lowest tank never
+  fills and does not spill, so only 0.01 kg passes the outlet of the farm
+  tributary (G3) (2.1 kg in step 4).
+- **The substance stays in the ground**: the export to the sea is 17 kg
+  (2.8 % of the input; 315 kg in step 4) and 588 kg (97 %) remains in the
+  ground. The infiltrated water leaves as evapotranspiration before
+  groundwater flow brings it to the valleys, and only the substance stays
+  in the soil.
+- **How to read it**: this evapotranspiration has no mechanism that reduces
+  it as the soil dries, and it can take the water of the 4 m soil layer to
+  the end at the rate of the potential evapotranspiration. The dry-season
+  discharge is the low end; read it together with step 4 without
+  evapotranspiration (the high end) as a bracket. The real dry-season
+  discharge lies between them; check it against observed discharges on dry
+  days. At either end the dry-season concentration in the river is set by
+  the amount of diluting water (baseflow), and just below a point source it
+  approaches the concentration of the effluent.
+
 ### Summary: where the substance goes, and can tanks be ignored?
 
 ![Summary](figs/summary.png)
@@ -302,8 +369,9 @@ farm tributary G3 and amount exported to the sea (logarithmic scale).
 | 4 + tanks | 315.2 (52.0 %) | 289.6 | 0 | 2.1 | 7.3 |
 | 5 particulate + tanks | 341.9 (56.4 %) | 0 | 263.5 (99.4) | 2.6 | 5.3 |
 | 5' particulate, no tanks | 429.7 (70.9 %) | 0 | 175.7 (—) | 92.9 | 5.3 |
+| 6 + evapotranspiration (dissolved, tanks) | 16.8 (2.8 %) | 588.2 | 0 | 0.01 | — (the river dries up) |
 
-The input is 606 kg in all six cases (mine 389 kg, farmland 217 kg). On
+The input is 606 kg in all seven cases (mine 389 kg, farmland 217 kg). On
 day 180, 1–2 kg is in the surface water. The table is printed by
 `python3 plot_results.py` (the residual of the balance is below 1e-2 g).
 
@@ -326,6 +394,13 @@ day 180, 1–2 kg is in the surface water. The table is printed by
     (see "Applying this to a real catchment" for the representation of
     tanks smaller than a cell). What accumulates on tank beds may move
     again when they are dredged or dry out (not treated in this example).
+- **Evapotranspiration sets the river in the dry season**: with
+  evapotranspiration, three quarters of the rain return to the atmosphere, the
+  dry-season baseflow disappears and the main river dries up (step 6). 97 %
+  of the substance stays in the ground and the export to the sea falls from
+  315 kg to 17 kg. To see the amount and quality of river water in the dry
+  season, evapotranspiration and the dryness of the soil that limits it
+  (not in this example) control the result as much as groundwater flow.
 - **Point and area sources**: the mine effluent keeps flowing on dry days,
   so it sets the river concentration in the dry season. The load from the
   farmland reaches the rivers with surface runoff during floods and, when
@@ -376,10 +451,15 @@ day 180, 1–2 kg is in the surface water. The table is printed by
   on dry days and during floods), the ratio of suspended to dissolved
   forms, and soil analyses.
 - **Evapotranspiration**: in dry regions, evaporation from tanks and wet
-  soil strongly controls the water balance and also raises the
-  concentration in tank water. Evapotranspiration can be added with
-  [&list_evap](../../../docs/en/users_guide/forcing.md) (this example does
-  not include it).
+  soil strongly controls the water balance and sets the water quality of
+  the river in the dry season (step 6). The PET of this example is a
+  constant schematic value. In a real catchment, give monthly values from
+  observations (an evaporation pan, or the reference evapotranspiration
+  computed from weather observations with the Penman–Monteith equation;
+  Allen et al. 1998) with `f_evmodel = 2` of
+  [&list_evap](../../../docs/en/users_guide/forcing.md) (it needs the
+  calendar `date0_c`), and calibrate `evap_kc` against observed dry-season
+  discharges.
 
 ## What this model cannot represent (differences from real phenomena)
 
@@ -401,6 +481,14 @@ day 180, 1–2 kg is in the surface water. The table is printed by
   domain, and the run covers 180 days. To see accumulation over years or
   repeated wet and dry seasons, use long runs and restarts
   ([restart](../../../docs/en/users_guide/restart.md)).
+- **Evapotranspiration**: there is no mechanism that reduces
+  evapotranspiration as the soil dries (rooting depth, suppression by soil
+  moisture); all the water of the 4 m soil layer can be taken at the rate
+  of the potential evapotranspiration. The dry-season discharge is on the
+  low side, and step 6 is one end of the bracket whose other end is step 4
+  without evapotranspiration. Water surfaces and land use the same PET.
+  Evaporation leaves the substance behind, but there is no upper limit of
+  solubility and no precipitation.
 - **Values**: terrain, loads and properties are all schematic. Read how the
   results change as mechanisms are added, not the magnitudes of the
   concentrations themselves.
@@ -424,6 +512,9 @@ day 180, 1–2 kg is in the surface water. The table is printed by
 
 ## References
 
+- Allen, R. G., Pereira, L. S., Raes, D. and Smith, M. (1998): *Crop Evapotranspiration:
+  Guidelines for Computing Crop Water Requirements*. FAO Irrigation and Drainage Paper 56,
+  Food and Agriculture Organization of the United Nations.
 - Allison, J. D. and Allison, T. L. (2005): *Partition Coefficients for Metals in Surface
   Water, Soil, and Waste*. EPA/600/R-05/074, U.S. Environmental Protection Agency.
 - Alloway, B. J. (ed.) (2013): *Heavy Metals in Soils: Trace Metals and Metalloids in Soils
