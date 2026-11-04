@@ -19609,6 +19609,13 @@ wfswash_tanbe = 0.1 を入れた): 途中で不具合が 2 つ見つかった(�
       作り直し、モードのスタンプが bin/encflow より新しくなって後続の nh* が Check_mode.sh で止まった
       (MPI の最適化ビルドを最後にしたため)。同じ実行ファイル(バイト一致を確認)で回し直した。両モードを
       作るときは MPI を先、逐次を後にする。
+  - reference の更新(2026-11-04。利用者の確認の上で): main を取り込んだ後のビルドでも、参照を持つ
+    42 ケース(取り込みで test/evapdry が加わり、PASS)のうち不一致は上の 11 ケースと nhshelf で、
+    ファイルごとの不一致の数と最大の差は取り込みの前と同じだった。11 ケースを `./Run.sh -u` で更新し、
+    -u なしで PASS することを確かめた。nhshelf は更新していない。tracer はこの環境で作り直したので、
+    最終桁 1 量子の機種差(handoff)はこの環境では出ず、元の reference を作った機械の側で出うる。
+    取り込んだ検定(dissol・evapdry・glacier・rockfall の解析解の判定)と CI の検定型 4 ケース(prmap・
+    wfswash・gwlateral・gwtani)も、取り込んだ後のビルドで PASS。
   - 土石流系の自己検定の新旧(§91 の前の実行ファイルと最終状態): dbonset・avalanche・bedslide・
     curvature・dbrock・debris・driftwood・slide・splashslide・volcano がすべて PASS(旧は dbonset の
     補正ありと安全率、dbrock の DB8 の新しい解析解で FAIL)。値の変わった検定の README(日英)と図を

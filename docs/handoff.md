@@ -61,11 +61,11 @@ architecture.md。このメモは「現在進行中・未完了の項目」だ�
 ## 未完了・検証待ち
 
 00k. **急勾配の重力補正の修正(developer.md §91)・最急勾配の D∞(§92)・岩盤侵食の有効重力(2026-11-04)の後始末**
-   - reference の更新は利用者の確認待ち(絶対規律 1): §91 で値が変わる 11 ケース(chichibu・chichibu_icmap・
-     damwq・gwsect・gwseep・gwwidth・kdpart・sewer_wq・tracer・wfdoppler・wqbound)。変化の大きさと原因は
-     developer.md §91 の検証(最大は chichibu の Q_max +0.72 %。比較図は利用者に提示済み)。nhshelf の差は
-     4 スレッドの既知の非決定性で、§91 によらない(1 スレッドでは前後でバイト一致)。承認後に各ケースで
-     `./Run.sh -u`(tracer は機種差の 1 量子の扱いも合わせて決める。0 の項)。
+   - (済 2026-11-04)reference の更新: 利用者の確認の上で、§91 で値が変わる 11 ケース(chichibu・
+     chichibu_icmap・damwq・gwsect・gwseep・gwwidth・kdpart・sewer_wq・tracer・wfdoppler・wqbound)を
+     `./Run.sh -u` で更新した。変化の大きさと原因は developer.md §91 の検証(最大は chichibu の Q_max
+     +0.72 %)。nhshelf の差は 4 スレッドの既知の非決定性で §91 によらない(1 スレッドでは前後でバイト一致)
+     ので更新していない。tracer の機種差の 1 量子の扱いは 0 の項に残る。
    - 例題の再計算(2026-11-04): 影響の大きい土石流系(debris_fan・ashfall_lahar・debris_bedrock・
      landslide_tsunami)と stratovolcano(侵食の段)を再計算して README・図を更新した(結果の要点は
      developer.md §91 の検証)。緩勾配・平坦の例題と、急な斜面の表面流でも計算の長い例題の扱いは
@@ -76,13 +76,16 @@ architecture.md。このメモは「現在進行中・未完了の項目」だ�
        桁で同じ(更新なし)。tsunami_town・timberyard は浸水深などは同じだが、1 m³ の桁まで載せた瓦礫・
        材木の量が 0.1〜8 % 動いたので更新した(修正前の実行ファイルで README の値が再現することを確かめ、
        差が §91 によることを確認)。
-     - 再計算していない(利用者の判断待ち): badland_storm・tower_karst(急な斜面の豪雨の表面流。薄い
-       シート流で摩擦が支配するので差は小さい見込み。計 3〜6 時間)、catchment_metal・estuary_barrage・
-       qanat・karst(緩勾配。計約 8 時間)。上の 4 例題から、水深・流量のような 3 桁の値は変わりにくく、
-       細かい桁まで載せた量は動くと見込まれる。
+     - 再計算中(利用者の判断。2026-11-04): badland_storm・tower_karst(急な斜面の豪雨の表面流。薄い
+       シート流で摩擦が支配するので差は小さい見込み)、catchment_metal・estuary_barrage・qanat・karst
+       (緩勾配)と、main から入った glacier_valley。tower_karst は main で加わった 1 Myr の 3 構成
+       (param_steady・param_base・param_base_hc50)を含めて、合計約 21 時間。上の 4 例題から、水深・
+       流量のような 3 桁の値は変わりにくく、細かい桁まで載せた量は動くと見込まれる。終わった例題から
+       README(日英)と図を更新する。
      - 再計算しない: delta・meander・meander_cutoff(README に丸めの差で数値が変わると明記してあり、
        回し直しても別の実現値が 1 つ増えるだけ。各 10〜18 時間)。影響なし: 表面流のない badland・
-       badland_round・mesa・shield_volcano・vz_tani2023、平坦な床の nest_reflect、f_gravity_correction = 0 の
+       badland_round・mesa・shield_volcano・vz_tani2023・stone_forest(雨は全量浸透)、平坦な床の
+       nest_reflect、f_gravity_correction = 0 の
        tsunami_coast・tsunami_fault・benchmark の v-shaped・v-valley(h-plane は README に数値の記載なし)。
 
 00f. **BMI チュートリアル tutorials/bmi(2026-10-24 新設)の残り**
@@ -469,7 +472,8 @@ architecture.md。このメモは「現在進行中・未完了の項目」だ�
      -Ofast)では reference と最終桁の 1 量子違う。降伏の静止判定の修正(§28.16)の前後の実行ファイルとも
      同じ出力で、1 スレッドでも同じなので、reference を作った機械との差と考えられる。tracer は CI の
      REF_CASES に入っていないので、機種差の扱い(ULP=1 にするか)を決める(sewer_wq の RTOL・wfsed の
-     ULP=1 は同種の差を許容で吸収している)
+     ULP=1 は同種の差を許容で吸収している)。2026-11-04 に §91 の更新で reference をこの環境で作り直した
+     ので、この環境では一致し、元の reference を作った機械の側で 1 量子の差が出うる(扱いは未決のまま)
 
 0b. **既定値方針(§62・§64〜§66。2026-10-01 全モジュール展開済み)の残項目**
    - 全ケース回帰ループ中に test/gwdefault が 1 回だけ FAIL(どの構成かは

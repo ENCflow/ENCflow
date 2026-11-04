@@ -1,8 +1,8 @@
-date      : 2026-11-04 02:07:41
+date      : 2026-11-04 21:13:49
 host      : vm
 user      : 
 pwd       : /home/user/ENCflow/test/sewer_wq
 exe       : /home/user/ENCflow/bin/encflow
 mode      : serial__double
 modules   : (no modules)
-lib       : 	libgfortran.so.5 => /lib/x86_64-linux-gnu/libgfortran.so.5 (0x00007ff45cc00000)
+lib       : 	libgfortran.so.5 => /lib/x86_64-linux-gnu/libgfortran.so.5 (0x00007f4085200000)
