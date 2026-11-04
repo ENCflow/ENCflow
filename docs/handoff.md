@@ -60,6 +60,28 @@ architecture.md。このメモは「現在進行中・未完了の項目」だ�
 
 ## 未完了・検証待ち
 
+00k. **急勾配の重力補正の修正(developer.md §91)・最急勾配の D∞(§92)・岩盤侵食の有効重力(2026-11-04)の後始末**
+   - reference の更新は利用者の確認待ち(絶対規律 1): §91 で値が変わる 11 ケース(chichibu・chichibu_icmap・
+     damwq・gwsect・gwseep・gwwidth・kdpart・sewer_wq・tracer・wfdoppler・wqbound)。変化の大きさと原因は
+     developer.md §91 の検証(最大は chichibu の Q_max +0.72 %。比較図は利用者に提示済み)。nhshelf の差は
+     4 スレッドの既知の非決定性で、§91 によらない(1 スレッドでは前後でバイト一致)。承認後に各ケースで
+     `./Run.sh -u`(tracer は機種差の 1 量子の扱いも合わせて決める。0 の項)。
+   - 例題の再計算(2026-11-04): 影響の大きい土石流系(ashfall_lahar・debris_bedrock・landslide_tsunami)と
+     stratovolcano(侵食の段)を再計算して README・図を更新した。debris_fan は全 26 ケースの再計算を
+     終え、README・図の更新が残っている。緩勾配・平坦の例題と、急な斜面の表面流でも計算の長い例題の扱いは
+     下の「例題の再計算の範囲」。
+   - 例題の再計算の範囲(2026-11-04 の分類。§91 は濡れた斜面の辺だけに効き、差はおよそ横断方向の勾配の
+     2 乗。式の計算順が変わったので、勾配のある濡れた辺では最終桁は必ず動く):
+     - 印字の桁で変わらないかを確かめている(実行中): tsunami_town・timberyard・sewer_hybrid・levee_breach
+       (緩勾配。plot スクリプトの出す表と README を比べる)。
+     - 再計算していない(利用者の判断待ち): badland_storm・tower_karst(急な斜面の豪雨の表面流。薄い
+       シート流で摩擦が支配するので差は小さい見込み。計 3〜6 時間)、catchment_metal・estuary_barrage・
+       qanat・karst(緩勾配。計約 8 時間)。
+     - 再計算しない: delta・meander・meander_cutoff(README に丸めの差で数値が変わると明記してあり、
+       回し直しても別の実現値が 1 つ増えるだけ。各 10〜18 時間)。影響なし: 表面流のない badland・
+       badland_round・mesa・shield_volcano・vz_tani2023、平坦な床の nest_reflect、f_gravity_correction = 0 の
+       tsunami_coast・tsunami_fault・benchmark の v-shaped・v-valley(h-plane は README に数値の記載なし)。
+
 00f. **BMI チュートリアル tutorials/bmi(2026-10-24 新設)の残り**
    - 新設: 初学者向けの 7 段(起動と終了 → update → get → 描画 → リアルタイム
      表示 → set(雨)→ set(粗度))。Python 環境は uv を既定(PEP 723 の
