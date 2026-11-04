@@ -1437,7 +1437,7 @@ metre of water the ground is lowered by `dissol_ceq / dissol_rho` (default
 40 mm/kyr, inside the published range of karst denudation rates
 (20 to 100 mm/kyr).
 
-The water amount is one of three sources. `dissol_src = 1` (default) is the
+The water amount is one of five sources. `dissol_src = 1` (default) is the
 **infiltration** of the groundwater module (vertical exchange of the bucket
 or Green-Ampt model) and needs `fn_gwflow`. `dissol_src = 2` is the
 **rainfall on the ground** (after interception), a maximum-denudation model
@@ -1446,7 +1446,16 @@ that works without groundwater (evapotranspiration is not subtracted).
 in cells whose soil is thinner than `dissol_sdsurf`, the runoff (rain minus
 infiltration) also spends `dissol_fsurf` of its capacity on that rock face
 (dissolution of bare slopes and tower faces; water arriving from upstream
-is taken as saturated and not counted).
+is taken as saturated and not counted). `dissol_src = 4` is the **recharge
+to the rock** (the exchange from the soil or layer 2 into the conduit
+continuum layer; requires `f_gwconduit = 1` and `gwc_leak_layer > 0`): where
+the conduit head is above the soil (below the water table) there is no
+recharge and dissolution stops, so the water table becomes the **base level**
+(param_base.txt of examples/tower_karst). `dissol_src = 5` adds the runoff on
+bare rock (the same term as 3). Infiltration (1 and 3) counts the water that
+entered the soil, so where the soil keeps thickening (residue of talus, for
+example) the added capacity keeps infiltration going and dissolution does not
+stop below the water table; use 4 or 5 with a base level.
 
 Dolines (sinkhole depressions) are represented with `dissol_sink = 1`: the
 water that enters the inlets (sinks) of the
@@ -1462,8 +1471,8 @@ form anywhere".
 |---|---|---|
 | dissol_ceq | 100 | Effective dissolution capacity (mg/L as CaCO3): the mass of rock (g) dissolved by 1 m³ of water. Decide it in preprocessing as the equilibrium solubility minus the concentration of the inflowing water |
 | dissol_rho | 2500 | Rock density (kg/m³) |
-| dissol_src | 1 | Water amount of the diffuse term (1: infiltration, 2: rainfall on the ground, 3: infiltration + runoff generated on bare rock × dissol_fsurf) |
-| dissol_fsurf | 0.3 | Surface source (dissol_src = 3): share of the runoff's capacity spent on its own rock face. Ratio of the capacity of rain on bare rock (50 to 80 mg/L) to that of recharge under soil (100 to 300) |
+| dissol_src | 1 | Water amount of the diffuse term (1: infiltration, 2: rainfall on the ground, 3: infiltration + runoff generated on bare rock × dissol_fsurf, 4: recharge to the rock = exchange from the soil or layer 2 into the conduit layer (stops below the water table), 5: 4 + runoff on bare rock) |
+| dissol_fsurf | 0.3 | Surface source (dissol_src = 3, 5): share of the runoff's capacity spent on its own rock face. Ratio of the capacity of rain on bare rock (50 to 80 mg/L) to that of recharge under soil (100 to 300) |
 | dissol_sdsurf | 0.1 | Soil thickness (m) below which the surface source applies; cells thinner than this count as bare rock with the factor (1 − sd/limit) |
 | dissol_sink | 0 | Sink-inflow term (1 = on; requires the inlets of f_gwconduit) |
 | dissol_fsink | 1.0 | Ratio of the dissolution capacity of the sink inflow (calibration value; surface runoff that bypasses the soil is below 1) |
