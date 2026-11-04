@@ -139,12 +139,12 @@ Budget check (tables of `plot_results.py`; landform time 6000 years = 300,000 st
 | Item | Value |
 |---|---|
 | Water balance | final S_total = 2.400 m = cumulative rain 40 mm × 60 days (mass conserved; near the end part of the ponding remains until the next day) |
-| Dissolved rock (ledger) | 1 465 678 m³ |
-| Rock moved by collapse (ledger; bulk) | 2 480 m³ (44,000 edge updates). Final talus Σht Δx² = 2 177 m³ (up to 3.5 m) |
-| Loss of surface volume | Σ(z₀ − z)Δx² = 1 319 110 m³ = dissolution × (1 − 0.1) = 1 319 110 m³ (all digits agree; collapse conserves volume and does not contribute) |
+| Dissolved rock (ledger) | 1 465 645 m³ (of which 2 153 m³ dissolved as talus) |
+| Rock moved by collapse (ledger; bulk) | 2 440 m³ (45,000 edge updates). Final talus Σht Δx² = 30 m³ (up to 0.05 m; talus dissolves, developer.md §86.7) |
+| Loss of surface volume | Σ(z₀ − z)Δx² = 1 319 080 m³ = dissolution × (1 − 0.1) = 1 319 080 m³ (all digits agree; collapse conserves volume and does not contribute) |
 | Denudation of the plain (cells that did not pond) | median 1.30 m = 216 mm/kyr |
 | Denudation of the feet (258 plain cells that ponded) | median 2.7 m, maximum 12.1 m |
-| Soil (debris and residue) | plain 1.14 m (initially 1 m), bare-rock area 0.04 m (initially 0.001 m), up to 5.9 m (talus at the feet) |
+| Soil (debris and residue) | plain 1.14 m (initially 1 m), bare-rock area 0.04 m (initially 0.001 m), up to 2.5 m (residue of the talus at the feet) |
 
 | Landform time (years) | Plain (m) | Top height of towers 1–4 (m) | Relative height of towers 1–4 (m) | Relative height of small hills 5, 6 (m) | Maximum slope angle of the bedrock surface |
 |---|---|---|---|---|---|
@@ -166,7 +166,8 @@ Budget check (tables of `plot_results.py`; landform time 6000 years = 300,000 st
 - **Steepening of the feet and collapse**: as the feet go down, the lower slopes steepen (maximum slope
   angle of the bedrock surface 35° → 37 to 48°). Collapse occurs only where the exposed face exceeds
   H_c = 10 m (walls of cells where the holes at the feet reached about 10 m); the moved rock is 0.2 % of
-  the dissolution (2.5 thousand m³), and talus accumulates up to 3.5 m in the holes. The tower walls have
+  the dissolution (2.4 thousand m³); the talus dissolves in the holes and does not remain (up to 0.05 m),
+  leaving its residue in the soil. The tower walls have
   not retreated yet (in 6000 years the undercut at the feet is a few metres, and most of the walls are
   below H_c). With a smaller H_c or a longer landform time, the stage in which the walls collapse and
   retreat begins.
