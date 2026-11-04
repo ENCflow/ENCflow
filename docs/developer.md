@@ -3875,6 +3875,10 @@ gwfac_of(gv×wfrac)で換算済みで厳密だったため、湧き水の濃度�
   - 既存の回帰: 蒸発散を使う test/icevap の構成 g(河道幅・σ なし)が、修正の前後で
     Log.txt・evap.csv・save の全ファイルともバイト一致(幅も σ もないセルは従来の式の
     まま)。test/gwwidth・test/gwsect の param.txt(蒸発散なし)は reference と ULP = 0。
+  - 全回帰(test の 91 件、-Ofast、4 スレッド。reference は更新しない): 90 件合格。
+    nhshelf は Log の最終桁が 2 量子ずれる箇所が 5 か所で不合格になったが、既知の
+    NH ソルバの 4 スレッドの実行間非決定(handoff の (g))。1 スレッドでは修正の前後で
+    Log.txt がバイト一致し、reference に合格する(ULP = 1)。
 - **例題への影響**: examples/catchment_metal のステップ 6(ステップ 4 + 一定 4 mm/day)を
   修正前の実行ファイルの試算と比べると、180 日の蒸発散は 433 → 444 mm(+2.5 %)だが、
   乾季も本川を河口近くまで流れていた鉱山の排水(G5 で 0.03 m³/s・200 µg/L)が、修正後は
