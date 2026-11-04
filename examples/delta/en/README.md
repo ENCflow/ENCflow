@@ -397,10 +397,12 @@ sine, a measure for this example.)
 - **The deposit spreads along the coast**: the flow running along the coast at every low tide carries
   sand, so the sand body spreads over the full width of the domain, and a little over 20 % of the sand
   fed leaves through the north and south sides (treated as if the same coast continued outside). This
-  sand left around the low tides of the 4th and 5th tidal cycles (almost none before that), and the check
-  in stage 7 (a run with half the morfac) suggests that the amount depends on morfac. The offshore
-  extent is 60 % of that of notide. At mean tide only the island of the mouth bar is land, but at low
-  tide 36.7×10³ m² of flats appear.
+  sand left around the low tides of the 4th and 5th tidal cycles (almost none before that): once the
+  sand spreading along the coast had reached the sides, the water running along the coast at low tide
+  (at most 0.8–1.0 m/s in the rows of the sides) carried it out. The amount leaving through the sides
+  changes greatly from run to run depending on whether a low-tide channel reaches a side ("Sides
+  crossing the coast" under "Notes"). The offshore extent is 60 % of that of notide. At mean tide only
+  the island of the mouth bar is land, but at low tide 36.7×10³ m² of flats appear.
 - **Still river-dominated**: the channel is narrow and its banks are higher than high tide, so little
   water is stored by the tide upstream of the mouth, and the discharge at the mouth stays at
   29–31 m³/s without reversing. The tidal discharge in and out of the flats is also 14 % of the
@@ -412,9 +414,9 @@ sine, a measure for this example.)
   and changing the strength of the backwater) more than through tidal currents.
 - **The channel at low tide**: even when the sea falls to −1 m at low tide, the water level of the
   channel just inside the mouth stays at −0.57 m (set by the water level of the flow paths beyond the
-  mouth), and the flow at the mouth speeds up to 1.4 m/s. The sand that settles in the channel near
-  the mouth under the backwater of high tide (about 9 cm thick) is washed out by the fast flow at low
-  tide.
+  mouth), and the flow there speeds up to 1.8 m/s (0.5 m/s at high tide). The sand that settles in the
+  channel near the mouth under the backwater of high tide (about 9 cm thick) is washed out by the fast
+  flow at low tide.
 - **The trough at the foot of the coast**: the trough through which the river flows at low tide
   results from the coast of this example being a vertical step that cannot be eroded (land at +1.5 m,
   bed −1.2 m in front of it). Real tidal coasts are gently sloping flats, and the river reaches the
@@ -666,10 +668,10 @@ Arranged as in the figure of stage 6. Except while the river water fills the cha
   pass part of the tidal exchange. The flow through the sides adds about 0.03 m/s to the basin and
   moves no sediment. When a low-tide channel reaches a side along the coast, sand leaves together with
   the river water. The amount is set by whether the channel reaches the side and differs greatly from
-  run to run (by landform 8942 h, 1 % of the sand fed in tidedom and in the check with morfac 60, and
-  40 % in the check with morfac 120). The domain of this example extends 300 m north and south of the
-  mouth; widening it to the north and south may reduce the amount leaving through the sides (not
-  checked).
+  run to run (22 % of the sand fed by landform 1490 h in tide of stage 6; by landform 8942 h, 1 % in
+  tidedom of stage 7 and in the check with morfac 60, and 40 % in the check with morfac 120). The
+  domain of this example extends 300 m north and south of the mouth; widening it to the north and
+  south may reduce the amount leaving through the sides (not checked).
 
 ![Differences between realizations](../figs/ensemble.png)
 

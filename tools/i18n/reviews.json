@@ -1310,11 +1310,11 @@
     {
       "source": "examples/delta/README.md",
       "target": "examples/delta/en/README.md",
-      "source_sha256": "69b07af6a67e6ba85d4cb8198d8d1d09fc91c529c6ea82b6b315366539c060ce",
-      "target_sha256": "eb7283448c96e6eac40a08637bc6bb7f8343f19165ab89c61019778ab8cfb77c",
-      "reviewer": "Claude (Claude Code session; stage 7 rewritten from the reruns after the inlet bedload fix and the notes on morfac and on the sides crossing the coast updated, changed parts compared in both languages; stage 6 still awaits the tide rerun in both)",
+      "source_sha256": "4899d8cea4e94fd2332684cbda401db04971599c73feecd79a25a530be7090b3",
+      "target_sha256": "c1d48a3879e52f22163a00277e5430106e9ec0beb7e942ac2e21dc1ad600727d",
+      "reviewer": "Claude (Claude Code session; stage 6 updated after the tide rerun with the inlet bedload fix was found bit-identical: how the sand leaves through the sides, the speed in the channel at low tide (1.4 -> 1.8 m/s at probe 1) and the tide amount in the note on the sides crossing the coast; the three changed passages compared side by side in both languages, rest unchanged since the previous record at a60d67b)",
       "method": "assistant",
-      "reviewed_on": "2026-11-03"
+      "reviewed_on": "2026-11-04"
     },
     {
       "source": "examples/delta/figs/mechanism.png",
