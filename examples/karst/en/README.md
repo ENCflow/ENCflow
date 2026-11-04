@@ -228,9 +228,9 @@ each update as talus (ht; also added to the soil sd) (angle of repose of talus 3
 
 | Item | With lateral dissolution | + collapse (H_c = 5 m) |
 |---|---|---|
-| Rock moved by collapse (ledger) | — | 639 m³ (19,000 edge updates; talus up to 2.5 m) |
+| Rock moved by collapse (ledger) | — | 639 m³ (19,000 edge updates), of which 623 m³ dissolved as talus (final talus up to 0.02 m) |
 | Deepest doline (surface) | 10.7 m | 9.6 m |
-| Soil thickness of the deepest doline | 1.7 m (residue) | 2.7 m (residue + talus 1.1 m) |
+| Soil thickness of the deepest doline | 1.7 m (residue) | 1.7 m (residue; the talus dissolves and does not remain) |
 | Mean denudation of the 8 neighbours | 2.01 m | 2.14 m |
 | Cells with denudation depth > 1 m / > 2 m | 162 / 68 | 164 / 70 |
 
@@ -238,9 +238,9 @@ each update as talus (ht; also added to the soil sd) (angle of repose of talus 3
 
 - Collapse only keeps the exposed face of the walls near H_c = 5 m, and the surface form hardly
   changes (the denudation of the neighbouring cells increases by 0.1 m and the deepest part becomes
-  1 m shallower). Dissolution continues below the talus (dissolution of the floor lowers z and keeps
-  the soil), so the floor of the hole goes down while covered by talus, and the walls follow by
-  collapsing by as much as the drop exceeds H_c.
+  1 m shallower). The fallen talus is limestone and dissolves inside the hole (developer.md §86.7),
+  leaving only its residue in the soil, and the walls follow by collapsing by as much as the drop
+  exceeds H_c.
 - To widen holes 10 m deep into funnels, H_c must be made much smaller (a third of the hole depth or
   less), the window `rf_rc` widened so that whole wall faces are targeted, or the grid made finer
   (with Δx = 10 m the hole is one cell wide, so only the edges of the 8 neighbouring cells collapse).
