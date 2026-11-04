@@ -27,6 +27,7 @@ python3 plot_results.py   # 図化(用意されている例題のみ)
 | [mesa/](mesa/) | キャップロックが平らな頂と垂直な崖を保ち、崖の平行後退で台地がメサ → ビュート → 尖塔へ縮む過程を見る | f_splash(spl_strata・spl_ksat)+ f_creep + f_rockfall(rf_rc・rf_fface)、Green-Ampt |
 | [karst/](karst/) | 石灰岩台地のドリーネ群の形成。窪みに集まり吸込穴から地下へ消える水が、その場所を選択的に深める過程を見る | 石灰岩の溶食 f_dissol、管路連続体層(吸込穴)、Green-Ampt、周期強制 t_cycle_c |
 | [tower_karst/](tower_karst/) | 平野に残る裸岩の塔(タワーカルスト)。平野と裾だけが溶けて塔の比高が増し、裾に堀と穴ができる過程を見る | 石灰岩の溶食 f_dissol(dissol_lat)、岩盤の崩落 f_rockfall、Green-Ampt の浸透能マップ、周期強制 |
+| [stone_forest/](stone_forest/) | 石林: 節理の地図(可溶率 6 倍)で平らな石灰岩台地が柱と溝に分かれる。溝が深まり、壁が崩れて溝を埋め、崖錐が溶けて柱の高さが頭打ちになる | 石灰岩の溶食 f_dissol(fn_dissol の倍率)、基岩の崩落 f_rockfall(rf_bedrock)、崖錐の溶食、準定常強制 |
 | [ashfall_lahar/](ashfall_lahar/) | 降灰で浸透能が下がった斜面の雨が灰を削って泥流になり、扇状地に堆積する過程と、砂防堰堤の効果を見る | 土石流 f_debris(地下水計算と併用する間隙水 f_dbwet=2)、Green-Ampt の浸透能、降雨、砂防堰堤(地形)、4 近傍化 p_diagratio |
 | [landslide_tsunami/](landslide_tsunami/) | 陸上崩壊・海底地滑り・土石流が水域に突入して起こす津波の発生と伝播を、4 パターンと非静水圧版で比べる | 動く底層 f_bedslide、非静水圧補正 |
 | [tsunami_fault/](tsunami_fault/) | 断層パラメータから海底変位を作って津波を起こし、静水圧・瞬時変位・非静水圧の違いと座標指定を比べる | 規定底面運動 fn_bedmotion、utils/fault2disp |
@@ -61,7 +62,7 @@ ENCflow の特徴である「複数プロセスを 1 つの計算で連鎖させ
 - 降雨 → 下刻とクリープの競合 → 丸い稜線・ドーム状の丘: [badland_round/](badland_round/)。
 - 降雨 → 軟層の侵食 → キャップロックの崖の後退 → メサ → ビュート: [mesa/](mesa/)。
 - 豪雨 → 湛水 → 吸込穴 → 溶食 → ドリーネ: [karst/](karst/)。
-- 裸岩の塔 → 裾の溶食 → 崩落 → 塔の後退: [tower_karst/](tower_karst/)。
+- 裸岩の塔 → 裾の溶食 → 崩落 → 塔の後退: [tower_karst/](tower_karst/)。節理に沿った溶解 → 溝 → 柱 → 壁の崩落: [stone_forest/](stone_forest/)。
 - 給砂 → 被覆と道具 → 岩盤の下刻: [bedrock_cover/](bedrock_cover/)。
 - 隆起 → 風化 → クリープ → 渓流の被覆と下刻 → 定常の谷: [mountain_valley/](mountain_valley/)。
 - 土石流 → 堆積層の剥離 → 岩盤の侵食 → 頻度ごとの定常勾配: [debris_bedrock/](debris_bedrock/)。
