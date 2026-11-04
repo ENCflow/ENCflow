@@ -15,6 +15,15 @@
 #                        ずれ 1e-4 程度を許す幅)
 #   ledger DIR         : 水質の台帳が閉じる(閉領域: 入力 − 管路側への除去 = 現在の
 #                        質量。相対 1e-6)
+#   evap DIR AREA PET [T0] : 時刻 T0 時間(既定 0.5)以降の蒸発散の増分(evap.csv の
+#                        ev_total_m3)が PET [mm/day] × AREA × 経過時間 に等しい(相対
+#                        1e-6 = es15.7 の出力精度相当)。param_evap*.txt は助走の後は全セルに
+#                        水が十分ある構成で、要求はすべて満たされるはず(§27.1。修正前は
+#                        河道に水がある間、河道セルの水面の外の部分が蒸発せず、総量が
+#                        足りなかった)。T0 は、雨の降り始めに河道セルの地下がまだ空で
+#                        要求を満たせない数ステップを除くため
+#   evbal DIR AREA     : 最終の総水量 + 蒸発散の総量 = 雨の総量(雨の濃度 1 mg/L
+#                        なので台帳の in_rain_g [g] = 雨の体積 [m3]。相対 1e-6)
 # =====================================================================
 import csv
 import os
@@ -96,9 +105,49 @@ def ledger(d):
         ng(f"{d}: 水質の台帳が閉じない(相対 {worst:.2e})")
 
 
+def evap_rows(d):
+    """evap.csv の (時刻 s, 蒸発散の総量 m3) の並び。"""
+    out = []
+    for r in csv.DictReader(open(os.path.join(d, "evap.csv"))):
+        out.append((float(r["time_s"]), float(r["ev_total_m3"])))
+    return out
+
+
+def evap(d, area, pet, t0):
+    rate = pet * 1e-3 / 86400.0 * area      # m3/s(要求がすべて満たされるときの蒸発散)
+    rows = [r for r in evap_rows(d) if r[0] >= t0 * 3600.0 - 1e-6]
+    if len(rows) < 3:
+        ng(f"{d}: evap.csv に {t0} 時間以降の記録が足りない")
+        return
+    ta, va = rows[0]
+    worst = 0.0
+    for t, v in rows[1:]:
+        expect = rate * (t - ta)
+        worst = max(worst, abs((v - va) - expect) / expect)
+    t, v = rows[-1]
+    print(f"  {d}: ET from {ta/3600:.2f} h to {t/3600:.2f} h = {v - va:.6e} m3 "
+          f"(PET x area x time {rate*(t - ta):.6e}), max relative deviation {worst:.2e} "
+          f"over {len(rows) - 1} records")
+    if worst > 1e-6:
+        ng(f"{d}: 蒸発散が PET × 面積 × 時間 と一致しない(相対 {worst:.2e})")
+
+
+def evbal(d, area):
+    rows = list(csv.reader(open(os.path.join(d, "wq.csv"))))
+    v = dict(zip(rows[0], (float(x) for x in rows[-1])))
+    rain = v["in_rain_g"] / area            # 雨の濃度 1 g/m3 → 体積 m3 → 領域平均の水深 m
+    et = evap_rows(d)[-1][1] / area
+    s = log_rows(d)[-1][1]
+    rel = abs(s + et - rain) / rain
+    print(f"  {d}: final S_total {s:.10f} m + ET {et:.10f} m = {s + et:.10f} m, "
+          f"rain total {rain:.10f} m (relative {rel:.2e})")
+    if rel > 1e-6:
+        ng(f"{d}: 総水量 + 蒸発散 が雨の総量と一致しない(相対 {rel:.2e})")
+
+
 def main(argv):
     if len(argv) < 3:
-        print("usage: Check_gwsect.py conserve|rain|conc|ledger DIR [ARG]")
+        print("usage: Check_gwsect.py conserve|rain|conc|ledger|evap|evbal DIR [ARG...]")
         return 2
     mode, d = argv[1], argv[2]
     if mode == "conserve":
@@ -109,6 +158,10 @@ def main(argv):
         conc(d, int(argv[3]))
     elif mode == "ledger":
         ledger(d)
+    elif mode == "evap":
+        evap(d, float(argv[3]), float(argv[4]), float(argv[5]) if len(argv) > 5 else 0.5)
+    elif mode == "evbal":
+        evbal(d, float(argv[3]))
     else:
         print("unknown mode", mode)
         return 2

@@ -6,6 +6,7 @@
 #   param.txt        総水量の保存・雨の総量との一致・濃度 1 mg/L・水質の台帳
 #   param_nowidth.txt 河道幅なしの対照: 総水量の保存と param.txt との最終総水量の一致
 #   param_gwc.txt    管路層の流入・噴出・吐口: 総水量の保存・雨の総量との一致・濃度・台帳
+#   param_evap.txt   蒸発散(§27.1): 蒸発散 = PET × 面積 × 時間・総水量 + 蒸発散 = 雨・台帳
 sdir=$(dirname "$(readlink -f "$0")")
 export FILES="Log.txt wq.csv"
 export ULP=0
@@ -18,7 +19,7 @@ python3 Check_gwwidth.py rain result $AREA || exit 1
 python3 Check_gwwidth.py conc result 6 || exit 1
 python3 Check_gwwidth.py ledger result || exit 1
 
-rm -rf result_nowidth result_gwc
+rm -rf result_nowidth result_gwc result_evap
 ./encflow param_nowidth.txt > Screen_nowidth.log 2>&1 || { echo "ERROR: param_nowidth run failed" >&2; exit 1; }
 python3 Check_gwwidth.py conserve result_nowidth || exit 1
 python3 Check_gwwidth.py match result result_nowidth || exit 1
@@ -28,5 +29,11 @@ python3 Check_gwwidth.py conserve result_gwc || exit 1
 python3 Check_gwwidth.py rain result_gwc $AREA || exit 1
 python3 Check_gwwidth.py conc result_gwc 4 || exit 1
 python3 Check_gwwidth.py ledger result_gwc || exit 1
+
+PET=48                 # param_evap.txt の evap0 (mm/day)
+./encflow param_evap.txt > Screen_evap.log 2>&1 || { echo "ERROR: param_evap run failed" >&2; exit 1; }
+python3 Check_gwwidth.py evap result_evap $AREA $PET || exit 1
+python3 Check_gwwidth.py evbal result_evap $AREA || exit 1
+python3 Check_gwwidth.py ledger result_evap || exit 1
 
 echo "=== gwwidth verification PASS ==="

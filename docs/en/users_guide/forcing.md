@@ -259,10 +259,16 @@ daylight hours only, without radiation, wind or humidity (equations in
 PET is evaluated daily, scaled by `evap_kc`, and each step withdraws the
 depth `PET × dt` in the order **canopy water (storage interception only)
 → surface water `h` → storage `hrs` (ponds and dam/lake capture cells) →
-groundwater `hg`**, each capped by the available water. Cumulative
-evaporation volumes for canopy, surface, storage and groundwater, plus
-their total, are written to `evap.csv` in the result directory (accumulated
-from the start of the run; reset on restart). Missing requirements (e.g.
+groundwater `hg`**, each capped by the available water. Surface water
+evaporates over the area of its water surface: on channel-width cells
+(`fn_width`) over the channel's water surface, and on section-shape cells
+(`p_sect_m`) over the current water-surface width; the rest of the demand
+(the land part outside the channel and the banks outside the water surface)
+passes on to the storage and the groundwater
+([the explanation](forcing_models.md) §3). Cumulative evaporation volumes
+for canopy, surface, storage and groundwater, plus their total, are written
+to `evap.csv` in the result directory (accumulated from the start of the
+run; reset on restart). Missing requirements (e.g.
 mode 2 without a calendar) stop initialization.
 
 The mode-1 default of 3 mm/day is the lower side of the warm-season

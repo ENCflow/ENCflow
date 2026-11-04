@@ -239,20 +239,20 @@
     {
       "source": "docs/users_guide/forcing.md",
       "target": "docs/en/users_guide/forcing.md",
-      "source_sha256": "392633abab0ab6e795aed8bfd9551ac0f2478d73421634e50a9dd3de5bb855ac",
-      "target_sha256": "b3672cb954bff394b84417bc7ccb5dfffd7f0ba7ed148a7c15f4148cfefbef7f",
-      "reviewer": "Claude (Claude Code session; reviewed the changed sections (added reference sections, footnotes and citation markers) of the Japanese source against the English mirror, 2026-10-30)",
+      "source_sha256": "3bba4256aaddc660ced539411a371876f657e41f961291f64f3bf4e86ba5bc13",
+      "target_sha256": "899a3b56ee0dfd9bc687899bf20a7aa7bbac95b804e66bd284d7de52d79cce38",
+      "reviewer": "Claude (Claude Code session; full-text content and lexical review, no model execution)",
       "method": "assistant",
-      "reviewed_on": "2026-10-30"
+      "reviewed_on": "2026-11-04"
     },
     {
       "source": "docs/users_guide/forcing_models.md",
       "target": "docs/en/users_guide/forcing_models.md",
-      "source_sha256": "71b02f1e72dd47d350d3338b8b68fbda00c0c0512b0025fff44248a2fb8a1307",
-      "target_sha256": "0281edc74618c8376a9c61acaa7e7e5cf01aeb97d2aadd157c633177c1b7f737",
+      "source_sha256": "9a144aff2972ef0133fa98ffbf58860db652e2bbf85f83c64e8122691dc5e5ac",
+      "target_sha256": "53ea0e7447314aca18d1cb56e859eab502169f199f40cfe8446b58f0dad965fa",
       "reviewer": "Claude (Claude Code session; full-text content and lexical review, no model execution)",
       "method": "assistant",
-      "reviewed_on": "2026-10-24"
+      "reviewed_on": "2026-11-04"
     },
     {
       "source": "docs/users_guide/geoinfo.md",
@@ -2516,9 +2516,9 @@
     {
       "source": "test/README.md",
       "target": "test/README.en.md",
-      "source_sha256": "2a073f42fc5588cc8ac043e11a08a7e960bae55d7cd191b2eb363cfac609bb48",
-      "target_sha256": "b2adbe402d5541dcb4be73207e7b68d3e8ea622c1fbd29bb3848151344cf778e",
-      "reviewer": "Claude (Claude Code session; compared the Japanese and English changes for the exact volume exchange on section-shape cells, 2026-11-04)",
+      "source_sha256": "b1dd924a79040ce0ee02cda7cfb0148657921016921f26ac7f840e014761cdae",
+      "target_sha256": "809cd221e27627dc5db416b3fe5cd2ad5b255c8d38030381b15bb8370cf911ef",
+      "reviewer": "Claude (Claude Code session; full-text content and lexical review, no model execution)",
       "method": "assistant",
       "reviewed_on": "2026-11-04"
     },
@@ -3092,9 +3092,9 @@
     {
       "source": "test/gwsect/README.md",
       "target": "test/gwsect/en/README.md",
-      "source_sha256": "a11f5ab1daeaeaf92370cbd9abbfafd1da3ef4dd8098dc72f700da49c7266595",
-      "target_sha256": "a07742cb96aa7f6ad1bbc9fd58ebf907cccaa4456565facddec2a069d4f4349d",
-      "reviewer": "Claude (Claude Code session; full-text review of the new test README and its English mirror, 2026-11-04)",
+      "source_sha256": "bfe0e0c0849c5e796f9e64db2162c8b30ce0e38103bc6fd44ba679d078f58566",
+      "target_sha256": "d6ab72d17ab1d801ceb956e448739aa5a14428e0790ddcb27ce5569491f013bb",
+      "reviewer": "Claude (Claude Code session; full-text content and lexical review, no model execution)",
       "method": "assistant",
       "reviewed_on": "2026-11-04"
     },
@@ -3137,9 +3137,9 @@
     {
       "source": "test/gwwidth/README.md",
       "target": "test/gwwidth/en/README.md",
-      "source_sha256": "3c0a3e44bf52fdeb75214651764b6bde1e1de5e6d32d19d8bc37466a1cb4d8d1",
-      "target_sha256": "0dad9a1be045bab8772ca8490d51e5169cc24776dc7eebbf5423a09adfbbc93e",
-      "reviewer": "Claude (Claude Code session; compared the Japanese and English changes for the exact volume exchange on section-shape cells, 2026-11-04)",
+      "source_sha256": "dbc9519f9517c8d2f773758979b495f1d98b37364ee4ab609eef975bed81cf92",
+      "target_sha256": "23ce72045ccd427c0a38c8a545895cc072e004e7492d635c5b6cbbdc77e0e2a9",
+      "reviewer": "Claude (Claude Code session; full-text content and lexical review, no model execution)",
       "method": "assistant",
       "reviewed_on": "2026-11-04"
     },

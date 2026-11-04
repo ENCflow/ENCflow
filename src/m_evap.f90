@@ -12,6 +12,8 @@ module m_evap
   !           推奨する(疎な系列も線形補間・端値保持で機能する)
   !   減算:   樹冠保水(貯留型遮断の draw 口)→ 地表水 h → ため池 hrs →
   !           地下水 hg の順に「あるだけ引く」(供給制限のみ。乾燥抑制なし)。
+  !           地表水は水面の面積の分だけ蒸発し、河道幅のセルの陸の部分と
+  !           σ のセルの水面の外の要求は hrs・hg へ渡す(§27.1)。
   !           ダム・湖沼の捕捉帯(hrs)もため池と同様セル面積分ずつ引く
   !           (湛水面積=捕捉セル数×セル面積。湖面をラスタで塗れば実面積。
   !           旧 dam_area の一括評価は 2026-08-20 廃止。§27)。
@@ -186,7 +188,7 @@ subroutine m_evap_calc(ev, p, g, b, s, ic, mt, it)
   type(t_meteo), intent(inout) :: mt
   integer, intent(in) :: it
   integer :: i, j, day
-  real :: dem, w, hb
+  real :: dem, w, hb, dv
   real(real64) :: acell
   logical :: canopy
 
@@ -203,7 +205,7 @@ subroutine m_evap_calc(ev, p, g, b, s, ic, mt, it)
   ! 優先順位付き減算: 樹冠保水 → 地表水 h → hrs → 地下水 hg(§27)。
   ! 体積診断の面積基底: 樹冠 = セル面積(pre と同基底)、h = af(σ・幅・
   ! 空隙を含む実効面積)、hrs / hg = gv 面積(それぞれの貯留の意味論)
-  !$omp parallel do schedule(static) private(i, j, dem, w, hb)
+  !$omp parallel do schedule(static) private(i, j, dem, w, hb, dv)
   do j = dcp%js, dcp%je
     do i = g%wx(1,j), g%wx(2,j)
       if (g%x(i,j) <= 0) cycle
@@ -217,20 +219,25 @@ subroutine m_evap_calc(ev, p, g, b, s, ic, mt, it)
         ev%vrow(j,1) = ev%vrow(j,1) + real(w, real64) * acell
         if (dem <= 0.0) cycle
       end if
-      ! (2) 地表水 h(σ 有効セルは dV = σ(h)dh の関係により、真水深から
-      !     引くこと自体が現在の水面幅に比例した体積減で厳密。§26/§27)
+      ! (2) 地表水 h。水面はその面積の分だけ蒸発する(水深から w を引く。σ 有効
+      !     セルは dV = σ(h)dh の関係により、現在の水面幅に比例した体積減)。
+      !     要求から差し引くのは実際に減った体積の分(セルの gv 面積あたりの水深)
+      !     だけで、残り(河道幅のセルの陸の部分、σ のセルの水面の外の河岸)は
+      !     hrs・hg へ渡す(§27.1。幅も σ もないセルは wfrac = 1 で dem − w のまま)
       if (s%h(i,j) > 0.0) then
         w = min(s%h(i,j), dem)
         hb = s%h(i,j)
         s%h(i,j) = s%h(i,j) - w
         s%e(i,j) = s%z(i,j) + s%h(i,j)
-        dem = dem - w
         if (sect_cell(s, i, j)) then
-          ! σ のセルの台帳は実際に減った体積(矩形換算水深の差)で数える(§26.2。
+          ! σ のセルは実際に減った体積(矩形換算水深の差)で数える(§26.2。
           ! af は水深の平均の湿潤率 v/h を含むので w × af は水面幅の分を過小に数える)
-          ev%vrow(j,2) = ev%vrow(j,2) + real(sect_dvh(s, i, j, hb, s%h(i,j)), real64) &
+          dv = sect_dvh(s, i, j, hb, s%h(i,j))
+          dem = dem - dv * wfr_of(s, i, j)
+          ev%vrow(j,2) = ev%vrow(j,2) + real(dv, real64) &
                          * real(s%gv(i,j), real64) * real(wfr_of(s, i, j), real64) * acell
         else
+          dem = dem - w * wfr_of(s, i, j)
           ev%vrow(j,2) = ev%vrow(j,2) + real(w, real64) * real(s%af(i,j), real64) * acell
         end if
         if (dem <= 0.0) cycle
