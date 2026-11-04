@@ -2255,11 +2255,11 @@
     {
       "source": "examples/stratovolcano/figs/volcano.png",
       "target": "examples/stratovolcano/en/figs/volcano.png",
-      "source_sha256": "43126a1a5a37315d7a9effc982db4017d5a527b15348e76bc515f283977f1cb5",
-      "target_sha256": "f26875c40e433ecb3d5c38b6e6c90151410bb8f16cf57adbcb30a53e2d570588",
-      "reviewer": "Claude (Claude Code session; English figure drawn by the same script with the en switch; visual check)",
+      "source_sha256": "8bc1eb953b335f3260d2c247875ce56d66f938fa87c7f2939366d6970dd16b7a",
+      "target_sha256": "1aaf8f9c4b05c4824a638c9fa135ff1ba9f581d7d2a53c8e0270e1abb0ef130c",
+      "reviewer": "Claude (Claude Code session; contour orientation fix in plot_results.py: both images redrawn by plot_results.py and plot_results.py en from the same results; only the contour lines of panels (a)-(c) changed, now matching the hillshade; the other four figures of each language came out byte-identical)",
       "method": "assistant",
-      "reviewed_on": "2026-11-03"
+      "reviewed_on": "2026-11-04"
     },
     {
       "source": "examples/timberyard/README.md",
