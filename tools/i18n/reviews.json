@@ -815,8 +815,8 @@
     {
       "source": "examples/README.md",
       "target": "examples/README.en.md",
-      "source_sha256": "4bd33d5204392da39f42075981d7b1a2ff1e2e49c6fc9c9595b3db96fa96d5b6",
-      "target_sha256": "7ed07103e10f4fa7f36608ad2bb45a931a5876bd82fe7a9dc04bb45d44da4bfb",
+      "source_sha256": "9fbfb75d38c952f17a3766bfd83b7f819d772e1b59ab6cc788108bf572ff5608",
+      "target_sha256": "34c32687c36e1518682ff43a3b0e03affffdbfd7ada0124f051394fe08393dc5",
       "reviewer": "Claude (Claude Code session; full-text content and lexical review, no model execution)",
       "method": "assistant",
       "reviewed_on": "2026-11-04"
@@ -1247,8 +1247,8 @@
     {
       "source": "examples/catchment_metal/README.md",
       "target": "examples/catchment_metal/en/README.md",
-      "source_sha256": "9172f9e25259ae458f54866abe659e5112c455a2f7da786f3cc642b9d0d9972f",
-      "target_sha256": "f74bd47a54982647e16524cda2e32bfeb7396837269f0cd440c60221203ee138",
+      "source_sha256": "c5307f6d0e229f37fb69300f51ae34b2bde50fb9d6c71aacb8f7a6b1fd14e360",
+      "target_sha256": "0d3e384910dd4377e84c9551da949dfc677d82f96f11280fd21d87959abf88dc",
       "reviewer": "Claude (Claude Code session; full-text content and lexical review, no model execution)",
       "method": "assistant",
       "reviewed_on": "2026-11-04"
@@ -1326,10 +1326,19 @@
       "reviewed_on": "2026-11-04"
     },
     {
+      "source": "examples/catchment_metal/figs/step6b.png",
+      "target": "examples/catchment_metal/en/figs/step6b.png",
+      "source_sha256": "7331da849501d34ad057dfcb0b572393c06615fa286d5955d5c6e2b555705bc9",
+      "target_sha256": "dad2eb3971a98356e153e412ce6590064b384733024694109e18b29b32054dc5",
+      "reviewer": "Claude (Claude Code session; full-text content and lexical review, no model execution)",
+      "method": "assistant",
+      "reviewed_on": "2026-11-04"
+    },
+    {
       "source": "examples/catchment_metal/figs/summary.png",
       "target": "examples/catchment_metal/en/figs/summary.png",
-      "source_sha256": "b9a5c012a2f6048443baf48619604cc852aa5c2cb8f5c5116e985dda40e6647f",
-      "target_sha256": "a1e4cc4e058639bd380697604246ad6f8d0a810debbed3da92c82839192922a4",
+      "source_sha256": "bce73d309ab9593cec80f1048015624edbe1abbb03a964b7beab754d27791761",
+      "target_sha256": "81376eaef2ddab36b5958c576f254fd8d013bde87c835ac02ae78ef946880481",
       "reviewer": "Claude (Claude Code session; full-text content and lexical review, no model execution)",
       "method": "assistant",
       "reviewed_on": "2026-11-04"
