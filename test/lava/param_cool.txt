@@ -1,0 +1,73 @@
+!======================================================================
+! lava 構成7: 静止した溶岩の層の冷却(温度モード f_lvtemp=1。lava_plan.md §8.10)
+!   平坦な床(4 m x 8 m)の全セルを噴火口とし(cool_cells.txt)、最初の更新
+!   (t = 10 s)だけ計 3.2 m3/s を注入して厚さ 1 m の一様な層を作る(一様なので
+!   流れない)。層は表面からの放射(有効放射率 0.95)と対流(70 W/m2/K)で
+!   冷え、深さ平均温度が固化温度 800 °C 以下になった更新で柱ごと z へ固まる。
+!   パラメータの値は検定用(既定値ではない。冷却が数千秒で進む組)。
+!   検定(Check_lava.py cool):
+!     (1) 後退 Euler: 分布出力 Tl の全セルが一様で、冷却の常微分方程式
+!         ρ c_p H dT/dt = −ε σ (T_K⁴ − Ta_K⁴) − h_c (T − Ta) の後退 Euler
+!         (刻み dt_lavaflow = 10 s)の漸化式と相対 1e-9 以内で一致
+!     (2) 精度: 温度の低下 T_v − T が厳密解(細かい刻みの RK4)に 1% 以内
+!     (3) 固化: 漸化式で T ≤ T_sol となる更新より前の出力は溶けたまま
+!         (hl = 1 m)、後の出力と最終状態は全セルが固化(hl = 0、dz = 1 m)
+!     (4) 熱の台帳: 噴出 = 放射 + 対流 + 固化 + 残存(画面出力の残差が
+!         噴出の相対 1e-12 以内)
+!   param_coolm.txt は気温を fn_meteo の一様定数(20 °C)から読む同じ計算
+!   (Run.sh が lavaflow_temp.dat・state.dat のバイト一致を確かめる)
+!======================================================================
+&list_sysparam
+  f_gridsystem = 0
+  f_govequation = 0
+  dt = 1.0
+  t0 = 0
+  tt = 7200
+  dt_disp = 1200
+  dt_file = 600
+  dt_recrd = 7200
+  fn_geoinfo = '-'
+  fn_initial = '-'
+  fn_lavaflow = '-'
+  dir_result = 'result_cool'
+  dir_save = 'save_cool'
+  f_state_save = 1
+  f_check_cfl = 0
+/
+
+&list_initial
+  f_htype = 0
+  h0 = 0.0                  ! 水なし(溶岩のみの検定)
+/
+
+&list_geoinfo
+  lx = 4.0
+  ly = 8.0
+  nx = 4
+  ny = 8
+  f_ztype = 0
+  z0 = 0.0                  ! 平坦床
+  f_rntype = 0
+  rn0 = 0.03
+/
+
+&list_lavaflow
+  dt_lavaflow_c = "10 s"    ! 冷却の後退 Euler の刻み
+  lv_rho = 2600.0
+  lv_visc = 1.0e4           ! η (Pa s)(一様な層は流れないので効かない)
+  lv_tauy = 1.0e5           ! 降伏応力 (Pa)(同上。念のため流さない)
+  fn_lv_cell(1) = 'cool_cells.txt'   ! 全 32 セル(make_init.py cool)
+  lv_val(1:2,1,1) = 0, 3.2  ! (時刻(min), 総噴出率(m3/s))
+  lv_val(1:2,2,1) = 0.25, 3.2
+  lv_val(1:2,3,1) = 0.25, 0.0   ! 15 s で停止 = 最初の更新(t = 10 s)だけ注入
+  f_lvtemp = 1              ! 温度を計算する
+  lv_temp0(1) = 1100.0      ! 噴出温度 (°C)
+  lv_tref = 1100.0          ! レオロジーの基準温度 (°C)
+  lv_bvisc = 0.0            ! 温度感度 (1/K)(流れないので 0)
+  lv_btau = 0.0
+  lv_tsol = 800.0           ! 固化温度 (°C)
+  lv_emis = 0.95            ! 有効放射率
+  lv_hconv = 70.0           ! 対流の熱伝達係数 (W/m2/K)
+  lv_cp = 1150.0            ! 比熱 (J/kg/K)
+  lv_tair = 20.0            ! 気温 (°C)
+/

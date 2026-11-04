@@ -72,7 +72,7 @@ phenomenon-specific setups. Individual chapters also link to relevant cases.
 - [Building destruction and debris](users_guide/bldgdebris.md) (&list_bldgdebris) -- destruction of wooden houses by inundation flows and driftwood, debris transport and deposition, feedback to the void ratio (raster-field estimate)
   - [Building destruction and debris models explained](users_guide/bldgdebris_models.md) -- destruction criterion and ramp, destruction rate, void-ratio feedback, volume budget, thresholds versus the literature and the basis of the defaults (supplement to building destruction and debris)
 - [Glaciers](users_guide/glacier.md) (&list_glacier) -- accumulation, melt, ice flow, glacial erosion, avalanche redistribution
-- [Lava flows](users_guide/lavaflow.md) (&list_lavaflow) -- vent effusion, Bingham viscous spreading, stopping and solidification (lava fields as topography)
+- [Lava flows](users_guide/lavaflow.md) (&list_lavaflow) -- vent effusion, Bingham viscous spreading, stopping and solidification (lava fields as topography), and temperature (flows that stop as they cool)
 - [Prescribed bed motion](users_guide/bedmotion.md) (&list_bedmotion) -- forcing z with a time history of ground displacement (tsunami generation from faults, coastal uplift/subsidence, breaching a resolved levee)
   - [Prescribed bed motion explained](users_guide/bedmotion_models.md) -- time interpolation of the displacement, fault displacement field and initial sea surface, relation to the non-hydrostatic correction, restart and MPI contract (supplement to prescribed bed motion)
 - [Water quality](users_guide/wq.md) (&list_wq) -- load input, transport, decay, washoff, Kd two-phase partitioning, groundwater pathway, reservoirs
@@ -83,7 +83,7 @@ phenomenon-specific setups. Individual chapters also link to relevant cases.
 - [Use cases](users_guide/usecases.md) -- lookup from phenomenon names to feature combinations (unsupported phenomena are listed too)
 
 **Appendix**
-- [Full parameter index](users_guide/params_index.md) -- reverse lookup from all 764 parameter names to their chapters
+- [Full parameter index](users_guide/params_index.md) -- reverse lookup from all 774 parameter names to their chapters
 
 ---
 

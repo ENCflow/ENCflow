@@ -324,9 +324,10 @@ subroutine init_instance(fn_param, align)
     call m_glacier_init(gl, p, g, s, mt)    ! glacier を初期化(fn_glacier 指定時のみ有効。
                                             ! 気温と積雪(涵養源)が必須のため
                                             ! meteo・snow より後に。§45)
-    call m_lavaflow_init(lv, p, g, s)       ! lavaflow を初期化(fn_lavaflow 指定時のみ
+    call m_lavaflow_init(lv, p, g, s, mt)   ! lavaflow を初期化(fn_lavaflow 指定時のみ
                                             ! 有効。morfac 検査(s%geo_morfac)のため
-                                            ! geomorph init より後に。lava_plan.md)
+                                            ! geomorph init より後に。温度モードの気温の
+                                            ! ため meteo より後に。lava_plan.md)
     call m_bedmotion_init(bm, p, g, s)      ! bedmotion を初期化(fn_bedmotion 指定時のみ
                                             ! 有効。restore 時刻の変位を d_prev にするため
                                             ! state init より後に。bedmotion_plan.md)
@@ -1311,10 +1312,10 @@ subroutine run_step(p, g, b, pr, ti, ic, s, r, sw, gm, gw, sl, ev, mt, wq, dw, b
   call m_bldgdebris_calc(bd, p, g, s, it)
 
   ! 溶岩流を計算(fn_lavaflow 未指定なら no-op。噴火口ソース →
-  ! Bingham 拡散流動 → 固化。固化時は s%z の更新と e 回復・ハロ交換
-  ! まで済ませる。z 更新プロセスの末尾 = geomorph・driftwood の後。
-  ! lava_plan.md)
-  call m_lavaflow_calc(lv, p, g, s, it)
+  ! Bingham 拡散流動 →(温度モードは冷却)→ 固化。固化時は s%z の更新と
+  ! e 回復・ハロ交換まで済ませる。z 更新プロセスの末尾 = geomorph・
+  ! driftwood の後。温度モードは気温を meteo から読む。lava_plan.md)
+  call m_lavaflow_calc(lv, p, g, s, mt, it)
 
   ! 河床が動くとき σ 断面の遷移深さ D を天端固定で更新する(§26。z を
   ! 更新するプロセスの後、統計・出力の前。σ 無効なら no-op。z が静的な

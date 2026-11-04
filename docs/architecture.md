@@ -45,7 +45,8 @@ main.f90 ─ m_main.f90(組み立て・時間ループ・終了処理。複数�
   │                  破壊判定(浸水深/荷重に流木・瓦礫を算入)・停止・再流動と
   │                  空隙率 s%gv への帰還。移流は advect_scalar。§63)
   │    m_glacier     氷河(加算: 質量収支(常時)/ flow / slide / ero / ava)
-  │    m_lavaflow    溶岩流(噴火口ソース+Bingham 粘性重力流+固化→z。等温)
+  │    m_lavaflow    溶岩流(噴火口ソース+Bingham 粘性重力流+固化→z。等温、または
+  │                  f_lvtemp=1 で深さ平均温度 s%tl(冷却・η(T)・τ_y(T)・温度による固化。§51.7))
   │    m_bedmotion   規定底面運動(地盤変位の時刻歴 → z の増分。断層津波の発生。入力は
   │                  スナップショット表+累積変位ラスタ〔窓付き可〕、私有は前後 2 枚と
   │                  適用済み変位のみ。断層パラメータ→変位は前処理 utils/fault2disp。§70)
@@ -193,8 +194,9 @@ driftwood_calc                流木(発生・停止・再流動・ダム捕捉�
 bldgdebris_calc               家屋破壊・瓦礫(破壊・停止・再流動・ダム捕捉・空隙率の
                                 帰還+gv/lm のハロ交換。← driftwood の後 = 同一ステップの
                                 hd を荷重に見る。移流は swflow_calc 内)
-lavaflow_calc                 溶岩流(噴火口ソース→Bingham 拡散流動→固化。固化時は
-                                s%z 更新と e 回復・ハロ交換まで。z 更新プロセスの末尾)
+lavaflow_calc                 溶岩流(噴火口ソース→Bingham 拡散流動→〔温度モードは冷却〕→
+                                固化。固化時は s%z 更新と e 回復・ハロ交換まで。z 更新
+                                プロセスの末尾。温度モードは気温を meteo から読む)
 calcstat                      統計(S 台帳・max 類。決定的総和)
 表示・ファイル出力・計測      (collective 判定は全ランク同一に)
 エラー判定                    CFL 超過等。全ランクで同一判定・同時 exit

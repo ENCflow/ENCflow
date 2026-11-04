@@ -1,4 +1,4 @@
-# test/lava — lava flow (fn_lavaflow): Huppert similarity solution, Bingham stopping thickness, plastic dome, solidification at a wall and burial of the soil layer
+# test/lava — lava flow (fn_lavaflow): Huppert similarity solution, Bingham stopping thickness, plastic dome, solidification at a wall, burial of the soil layer and temperature (cooling, heat advection, a flow that stops as it cools)
 
 > English mirror of test/lava/README.md. The Japanese file is the master copy.
 
@@ -36,6 +36,29 @@ same practice as [test/volcano](../../volcano/en/README.md)).
    and the check is that the soil layer under solidified lava is buried and
    the total water is conserved when the water in it moves to the surface
    (developer.md §51.6).
+7. **Cooling of a layer at rest** (`param_cool.txt`; temperature mode
+   f_lvtemp = 1): a uniform 1 m layer of lava (which does not flow) on a flat
+   floor; the temperature as it cools by radiation and convection is compared
+   with the backward-Euler recursion of the cooling equation and with its exact
+   solution, and the time of solidification at the solidification temperature
+   and the heat ledger are checked. `param_coolm.txt` (configuration 7m) is the
+   same computation reading the air temperature from fn_meteo, and its save is
+   byte-identical (developer.md §51.7).
+8. **Heat advection** (`param_adv.txt`; temperature mode, no cooling): lava is
+   erupted from two vents with different eruption temperatures, and the
+   conservation of heat and the range of the temperature (between the two
+   eruption temperatures) are checked. `param_adv0.txt` (configuration 8') is
+   the isothermal run of the same input with f_lvtemp = 0, and the lava deposit
+   is byte-identical (with zero temperature sensitivity and no cooling, the
+   flow of the temperature mode is the same as the isothermal one).
+9. **A flow that stops as it cools** (`param_run.txt`, `param_run4.txt`;
+   temperature mode): the same volume is erupted on a uniform slope at effusion
+   rates Q and 4Q, and the check is that the length of the flow that has stopped
+   by cooling increases with the effusion rate (the same direction as Walker
+   1973). `param_runi.txt` and `param_runi4.txt` are the isothermal control
+   without temperature, whose length does not depend on the effusion rate.
+   Configuration 9r checks that configuration 9 saved part way and restarted is
+   byte-identical to the uninterrupted run (Run.sh writes its inputs).
 
 ## Configuration
 
@@ -47,18 +70,29 @@ same practice as [test/volcano](../../volcano/en/README.md)).
 | Time | dt = 0.5 s, 600 s | dt = 0.5 s, 4800 s | dt = 1 s, 6000 s | dt = 0.5 s, 4800 s | dt = 0.5 s, 6000 s |
 | Analytical value | r_N(600 s) = 12.13 m | h∞ = 2000/(2600 × 9.8 × 0.2) = 0.3925 m | R = 17.11 m, center thickness H = √(aR) = 3.665 m (a = 2τ_y/ρg = 0.7849 m) | (conservation and complete solidification) | (conservation; 16 m³ of water in total) |
 
+Temperature mode (configurations 7–9; the values are for the checks, not defaults):
+
+| Item | Configuration 7 cooling of a layer at rest | Configuration 8 heat advection | Configuration 9 a flow that stops as it cools |
+|---|---|---|---|
+| Domain and grid | 4 m × 8 m, Δx = 1 m, flat | 41 m × 21 m, Δx = 1 m, flat | 320 m × 40 m, Δx = 5 m, tanθ = 0.1 (`zrun.txt`) |
+| Effusion | A total of 3.2 m³/s into all 32 cells (`cool_cells.txt`) at the first update only (t = 10 s) = a 1 m layer | 0.5 m³/s each at (11, 11) and (31, 11) for 600 s, eruption temperatures 1150 and 1050 °C | 1150 °C lava over the 8 cells at the upstream end i = 3, a total of 2 m³/s for 40 min (configuration 9) / 8 m³/s for 10 min (9b); the same volume of about 4800 m³ |
+| Fluid | does not flow (uniform layer) | η = 2e4 Pa·s, τ_y = 0, temperature sensitivity 0 | η_r = 1e3 Pa·s, τ_r = 100 Pa (at 1150 °C), temperature sensitivities 0.04 1/K; the isothermal control has η = 1e3, τ_y = 2500 Pa and solidification by a speed threshold |
+| Cooling | ε = 0.95, h_c = 70 W/m²/K, c_p = 1150 J/kg/K, air 20 °C, solidification 800 °C | none (ε = 0, h_c = 0), solidification 700 °C | ε = 0.95, h_c = 70, c_p = 1150, air 20 °C, solidification 1000 °C |
+| Time | dt = 1 s, update 10 s, 7200 s | dt = 0.5 s, 900 s | dt = 1 s, 7200 s |
+| Compared with | the backward-Euler recursion, the exact solution (RK4), the time of solidification (4990 s) | Σ V_k T_k (heat), the range of the temperature, the isothermal run | the ratio of the flow lengths (temperature mode and isothermal control) |
+
 | File | Contents |
 |---|---|
-| `make_init.py` / `make_init.py wall` | `zinit.txt` (uniform slope) / `zwall.txt` (flat floor and a 10 m step) |
-| `Check_lava.py <save> huppert\|bingham\|dome\|wall\|bury` | Configuration 1: (1) ledger Σhl·A = V_in, (2) area-equivalent radius within 10% of r_N, (3) r(tt)/r(tt/2) within 5% of √2. Configuration 2: (1) ledger Σhl + Σdz = V_in (solidification is an internal transfer to z), (2) hl + dz in the check window (i = 15–35) within 20% of h∞ and CV < threshold, (3) solidified fraction > 0.7. Configuration 4: (1) ledger Σhl·A = V_in, (2) the ratio of the area-equivalent radii of the sectors along the grid axes (±22.5°) and along the diagonals (±22.5°) within 5% of 1, (3) center thickness within 5% of H and area-equivalent radius within 5% of R, RMS error of the profile for r < R < 5% of H. Configuration 5: (1) ledger Σhl + Σdz = V_in, (2) solidified fraction > 0.999, (3) in every row of the column touching the wall (i = 30), hl = 0 and dz above half the maximum thickness. Configuration 6: (1) lava ledger, (2) sd = 0 and hg = 0 in every cell with solidified lava, sd = 1 m in the other cells, (3) Σ(h + hrs + hg) within 1e-9 (relative) of the initial surface water |
+| `make_init.py` / `make_init.py wall` / `cool` / `run` | `zinit.txt` (uniform slope) / `zwall.txt` (flat floor and a 10 m step) / `cool_cells.txt` (the vent of all cells of configuration 7) / `zrun.txt` (the slope tanθ = 0.1 of configuration 9) |
+| `Check_lava.py <save> huppert\|bingham\|dome\|wall\|bury\|cool\|adv\|run\|heat` | Configuration 1: (1) ledger Σhl·A = V_in, (2) area-equivalent radius within 10% of r_N, (3) r(tt)/r(tt/2) within 5% of √2. Configuration 2: (1) ledger Σhl + Σdz = V_in (solidification is an internal transfer to z), (2) hl + dz in the check window (i = 15–35) within 20% of h∞ and CV < threshold, (3) solidified fraction > 0.7. Configuration 4: (1) ledger Σhl·A = V_in, (2) the ratio of the area-equivalent radii of the sectors along the grid axes (±22.5°) and along the diagonals (±22.5°) within 5% of 1, (3) center thickness within 5% of H and area-equivalent radius within 5% of R, RMS error of the profile for r < R < 5% of H. Configuration 5: (1) ledger Σhl + Σdz = V_in, (2) solidified fraction > 0.999, (3) in every row of the column touching the wall (i = 30), hl = 0 and dz above half the maximum thickness. Configuration 6: (1) lava ledger, (2) sd = 0 and hg = 0 in every cell with solidified lava, sd = 1 m in the other cells, (3) Σ(h + hrs + hg) within 1e-9 (relative) of the initial surface water. Configuration 7 (`cool`; the third argument is the screen log): (1) the output Tl is uniform over all cells and within 2e-4 °C of the backward-Euler recursion, (2) the temperature drop within 1% (relative) of the exact solution, (3) still molten before the update at which the recursion reaches T ≤ the solidification temperature and all cells solidified after it, (4) the residual of the heat ledger within 1e-12 (relative) and its breakdown matching the recursion. Configuration 8 (`adv`): (1) lava ledger, (2) Σhl·Tl·A within 1e-9 (relative) of Σ V_k T_k and the residual on the screen, (3) 1050 ≤ Tl ≤ 1150 in every cell with lava, and a mixed zone exists. Configuration 9 (`run`; reads the saves of the four runs): (1) ledger and complete solidification, (2) residual of the heat ledger, (3) ratio of the flow lengths of the temperature mode L(4Q)/L(Q) > 1.5, (4) ratio of the isothermal control 1 ± 0.1. Configuration 9r (`heat`): residual of the heat ledger of the restarted run |
 | `Fig.py` | The figure `en/figs/lava.png` below (`python3 Fig.py en`; `figs/lava.png` is the Japanese version) |
 
 ## Running
 
 ```bash
 make
-./Run.sh          # configuration 1 → Check → configuration 2 → Check → equivalence check of configuration 3 → configurations 4, 5 and 6 → Check (about 30 seconds)
-./Run_MPI.sh 4    # MPI. state.dat and lavaflow.dat are byte-identical to the serial run (-O2 strict math)
+./Run.sh          # configuration 1 → Check → configuration 2 → Check → equivalence check of configuration 3 → configurations 4–9 and 9r → Check (about 30 seconds)
+./Run_MPI.sh 4    # MPI. state.dat and lavaflow.dat (and lavaflow_temp.dat) are byte-identical to the serial run (-O2 strict math)
 python3 Fig.py en # en/figs/lava.png
 ```
 
@@ -112,6 +146,19 @@ the erupted volume) (developer.md §51.5).
 | Configuration 6 (1) lava ledger | −1.8e-13 m³ (V_in = 60 m³) | PASS |
 | Configuration 6 (2) burial of the soil layer | sd = 0 and hg = 0 in the 80 cells under the lava, sd = 1 m elsewhere (soil buried 80 m³, groundwater moved to the surface 5.65 m³) | PASS |
 | Configuration 6 (3) water conservation Σ(h + hrs + hg) − initial | −5.3e-13 m³ (initial 16 m³) | PASS |
+| Configuration 7 (1) difference between the output Tl and the backward-Euler recursion | max 4.2e-5 °C (uniform over all cells) | PASS |
+| Configuration 7 (2) difference of the temperature drop from the exact solution | 9.4e-4 relative (tolerance 1%) | PASS |
+| Configuration 7 (3) solidification by temperature | all cells solidify at the 499th update (t = 4990 s, 799.60 °C), dz = 1 m | PASS |
+| Configuration 7 (4) residual of the heat ledger | −2.9e-16 (relative to the erupted heat); erupted 1.0525e11 J = radiated 1.8562e10 + convected 1.0180e10 + solidified 7.6505e10 J | PASS |
+| Configuration 7m air temperature from fn_meteo | save byte-identical to configuration 7 | PASS |
+| Configuration 8 (1) ledger Σhl·A − V_in | −1.1e-13 m³ (V_in = 599.5 m³) | PASS |
+| Configuration 8 (2) conservation of heat | Σhl·Tl·A = Σ V_k T_k to −1.8e-16 relative; residual on the screen 1.2e-16 | PASS |
+| Configuration 8 (3) range of the temperature | 1050.000000–1150.000000 °C, mixed zone of 21 cells | PASS |
+| Configuration 8' agreement with the isothermal run | lavaflow.dat and state.dat byte-identical | PASS |
+| Configuration 9 (1)(2) ledger and heat ledger | machine precision and complete solidification in all four runs, residual of the heat ledger ≤ 1.1e-15 | PASS |
+| Configuration 9 (3) flow length in the temperature mode | 55 m (2 m³/s) → 145 m (8 m³/s), ratio 2.64 (tolerance > 1.5) | PASS |
+| Configuration 9 (4) flow length of the isothermal control | 120 m → 120 m, ratio 1.00 (tolerance 1 ± 0.1) | PASS |
+| Configuration 9r restart round trip | the three save files byte-identical to the uninterrupted run, residual of the heat ledger 1.75e-15 | PASS |
 
 - The +7% of the stopping thickness includes the upward bias
   h∞ + √(v_sol h/(coef (2h + h₀) S)) from the cutoff by the stop detection
@@ -146,10 +193,23 @@ the erupted volume) (developer.md §51.5).
   the soil and the water change). Configurations 1–5 use no soil layer, so
   their saves are byte-identical before and after the burial fix (§51.6).
   Configuration 6 is not in the figure.
+- Configurations 7–9 check the temperature mode (developer.md §51.7). The
+  backward Euler of configuration 7 is first-order accurate; with 10 s steps
+  (the cooling time constant is about 80 minutes) the error of the temperature
+  drop is 0.09%. Configuration 9 shows that in the isothermal mode the flow
+  length is set by the volume and the yield stress and does not depend on the
+  effusion rate (a uniform deposit at the stopping thickness 0.98 m), whereas
+  in the temperature mode the flow at the lower effusion rate cools from its
+  front and stops early, and the lava piles up behind it (up to 3.3 m thick).
+  Configurations 7–9 are not in the figure either.
+- The saves, field outputs and Log.txt of configurations 1–6 are
+  byte-identical before and after the addition of the temperature mode (the
+  isothermal run allocates no temperature arrays and goes through the same
+  code).
 - The flux stencil remains 4-neighbor; the 8-neighbor extension remains a
   candidate common to the diffusion-type modules (developer.md §61.4).
 
 ## Related documents
 
-- [docs/users_guide/lavaflow.md](../../../docs/en/users_guide/lavaflow.md) — `&list_lavaflow` (viscosity, yield stress, solidification, vents)
+- [docs/users_guide/lavaflow.md](../../../docs/en/users_guide/lavaflow.md) — `&list_lavaflow` (viscosity, yield stress, solidification, vents, temperature mode)
 - developer.md §51 (implementation and verification record), §66 (defaults) (in Japanese)

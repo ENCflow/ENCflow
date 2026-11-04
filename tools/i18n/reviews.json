@@ -58,11 +58,11 @@
     {
       "source": "docs/comparison.md",
       "target": "docs/en/comparison.md",
-      "source_sha256": "29cc9664eac58874a7821af81efb2ad2e78c3b2822c375d12aa669ff3a8ff1f5",
-      "target_sha256": "96d6b7b2cd18641404ace53f6f73a187ede82d4f3087a1ef42088e8b4cf00793",
-      "reviewer": "Claude (Claude Code session; Japanese source and English mirror read side by side)",
+      "source_sha256": "2e99fd225111cad7d15e64f0ac930cfb6bfaee046ab1e56b2063ddbb491b1639",
+      "target_sha256": "05345c1934793d0af61e9ccf1163fb111406cf6b783b4e6372cc3cc5a01799ce",
+      "reviewer": "Claude (Claude Code session; lava temperature mode f_lvtemp, developer.md Sec. 51.7: changed passages compared side by side with the Japanese source, unchanged parts as recorded earlier)",
       "method": "assistant",
-      "reviewed_on": "2026-11-02"
+      "reviewed_on": "2026-11-04"
     },
     {
       "source": "docs/developer.md",
@@ -104,11 +104,11 @@
     {
       "source": "docs/users_guide.md",
       "target": "docs/en/users_guide.md",
-      "source_sha256": "beecdecf24c88fb760afdb897c843d3cb123e70f5bbb8ef085ab9a3cb832c340",
-      "target_sha256": "fd951d8337a6a8e20af4b7c32b96c55d9331a98d91b12575ca68ab4677326d70",
-      "reviewer": "Claude (Claude Code session; reviewed the changed passages on water-level cells as outside water for transported quantities, wq_stage_conc/wq_stage_series and the ledger columns out_stage_g/in_stage_g of the Japanese source against the English mirror, 2026-11-03)",
+      "source_sha256": "deadfde300968b89110c250733a1c5bd1177b5e7545278b0805d2902f41100e9",
+      "target_sha256": "385c861a2084dd0ffc62e3efe1aa3d4d775550e9a9e75f588f62049ce52468f6",
+      "reviewer": "Claude (Claude Code session; lava temperature mode: chapter line and parameter count 764 -> 774 changed in both files, compared side by side)",
       "method": "assistant",
-      "reviewed_on": "2026-11-03"
+      "reviewed_on": "2026-11-04"
     },
     {
       "source": "docs/users_guide/advection.md",
@@ -320,20 +320,20 @@
     {
       "source": "docs/users_guide/io.md",
       "target": "docs/en/users_guide/io.md",
-      "source_sha256": "4cc0763d7dc7515415f43b2941fd53546cd3488ac60807afc433eca23bb7a0be",
-      "target_sha256": "cc01d10e87b0700714d11f90e897bbb897e4a902fbc2df807698f00f41c4ee44",
-      "reviewer": "Claude (Claude Code session; review of the changed lines against the previously recorded pair, no model execution)",
+      "source_sha256": "f66b7ceb4388dcfc3403033fc456e79ee6eb5514d84b7d7b02d8698adb2d5728",
+      "target_sha256": "d81910286154f292d7f9f04f212a038bc7f78be7a4f4d9d232a78c1bcc222cb4",
+      "reviewer": "Claude (Claude Code session; lava temperature mode f_lvtemp, developer.md Sec. 51.7: changed passages compared side by side with the Japanese source, unchanged parts as recorded earlier)",
       "method": "assistant",
-      "reviewed_on": "2026-10-29"
+      "reviewed_on": "2026-11-04"
     },
     {
       "source": "docs/users_guide/lavaflow.md",
       "target": "docs/en/users_guide/lavaflow.md",
-      "source_sha256": "6153545f2bf77dbfdea6018a1c75f8d931e98322319598844dcb9fbae42271ad",
-      "target_sha256": "6a0ca64e67dccf73ab51d35e2452bb540be04eb54cc8ddcf419b56f4b316182b",
-      "reviewer": "Claude (Claude Code session; stratovolcano example registration: changed passages compared side by side with the Japanese source, unchanged parts as recorded earlier)",
+      "source_sha256": "fa00d5c9f615d0be62035bc3d87bfd7ad8f5241100182fa08f81852110a761f0",
+      "target_sha256": "81cc52fd12520f210df3c3d053b830732b0729c85d96a2c9df440e6ee37d3962",
+      "reviewer": "Claude (Claude Code session; lava temperature mode f_lvtemp, developer.md Sec. 51.7: changed passages compared side by side with the Japanese source, unchanged parts as recorded earlier)",
       "method": "assistant",
-      "reviewed_on": "2026-11-03"
+      "reviewed_on": "2026-11-04"
     },
     {
       "source": "docs/users_guide/massflow.md",
@@ -383,11 +383,11 @@
     {
       "source": "docs/users_guide/params_index.md",
       "target": "docs/en/users_guide/params_index.md",
-      "source_sha256": "94e0c36e81516652d9d0d1082c594d1bd1d6f7a8e07186e2129a57a26f5f8cb0",
-      "target_sha256": "cf557fb56b5f8b58cc3741f51bf26df77de283c72490b40877eb2cb9cd2dabb4",
-      "reviewer": "Claude (Claude Code session; reviewed the changed passages on water-level cells as outside water for transported quantities, wq_stage_conc/wq_stage_series and the ledger columns out_stage_g/in_stage_g of the Japanese source against the English mirror, 2026-11-03)",
+      "source_sha256": "234792fa39107e6788f31f01fdf017d089d4f4e3471f99c51b518e4a3d83ca9f",
+      "target_sha256": "3edcc95708b882251c61f032b138070816f7656d0974a29de7c7b9510de722cc",
+      "reviewer": "Claude (Claude Code session; lava temperature mode: the 10 new &list_lavaflow rows inserted at the same positions in both files and the count 774 updated, checked with tools/params_index/check.py)",
       "method": "assistant",
-      "reviewed_on": "2026-11-03"
+      "reviewed_on": "2026-11-04"
     },
     {
       "source": "docs/users_guide/passage_width.md",
@@ -680,11 +680,11 @@
     {
       "source": "examples/List_samples/list_lavaflow.txt",
       "target": "examples/List_samples/en/list_lavaflow.txt",
-      "source_sha256": "8d0225da810474faad83264097304cf422f9195c6e59090a90c27dc26b8b604b",
-      "target_sha256": "a2bfe7fee7e31089b77c970f73fe12edfe9523cbcf40c84acdf204f60aeb7670",
-      "reviewer": "Claude (Claude Code session; lava soil-burial fix §51.6: header comment compared with the Japanese source; values, identifiers and enabled state unchanged)",
+      "source_sha256": "34d21a8f34d1dafc69810acb8835bc7ca46eb7b8a788b7e674b25adbde81ec16",
+      "target_sha256": "df194bf9ce2be614aa72bf7353ad3f401ca9d563aa9d1e3c45e84fef74038ef7",
+      "reviewer": "Claude (Claude Code session; lava temperature mode: header and the commented-out temperature block compared line by line with the Japanese source; values, identifiers and comment-out state identical, checked with tools/consistency/check.py samples)",
       "method": "assistant",
-      "reviewed_on": "2026-11-03"
+      "reviewed_on": "2026-11-04"
     },
     {
       "source": "examples/List_samples/list_meteo.txt",
@@ -3200,11 +3200,11 @@
     {
       "source": "test/lava/README.md",
       "target": "test/lava/en/README.md",
-      "source_sha256": "0ee9387fa243e2084d7f0f08c14c0681e14aebef991be0c4246f083c7c221345",
-      "target_sha256": "28bda0c791b253a2978a1af2b3fa2530916bb3926fdc6af7deb75bb6ec3cc209",
-      "reviewer": "Claude (Claude Code session; lava soil-burial fix §51.6: changed passages compared side by side with the Japanese source, unchanged parts as recorded earlier the same day)",
+      "source_sha256": "a835beb9bbe3e0dc5e75e84736856e3352a1a5b63f08b837693b5c33c3cec004",
+      "target_sha256": "661a84459aedbbd2959bea63aff7368846e4bc6cd897b543bb4f705fc55daee9",
+      "reviewer": "Claude (Claude Code session; lava temperature mode f_lvtemp, developer.md Sec. 51.7: changed passages compared side by side with the Japanese source, unchanged parts as recorded earlier)",
       "method": "assistant",
-      "reviewed_on": "2026-11-03"
+      "reviewed_on": "2026-11-04"
     },
     {
       "source": "test/lava/figs/lava.png",

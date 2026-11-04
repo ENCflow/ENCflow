@@ -175,7 +175,7 @@ list_wavefield.o: m_sysparam.o $(PAR_OBJ)
 m_glacier.o: m_sysparam.o m_geoinfo.o m_state.o m_meteo.o m_swflow_enc.o list_glacier.o \
 	m_fileio.o m_sysdep_util.o m_util.o $(PAR_OBJ) m_restart.o
 list_glacier.o: m_sysparam.o $(PAR_OBJ)
-m_lavaflow.o: m_sysparam.o m_geoinfo.o m_state.o m_boundary.o list_lavaflow.o \
+m_lavaflow.o: m_sysparam.o m_geoinfo.o m_state.o m_boundary.o m_meteo.o list_lavaflow.o \
 	m_fileio.o m_sysdep_util.o m_util.o $(PAR_OBJ) m_restart.o
 list_lavaflow.o: m_sysparam.o $(PAR_OBJ)
 m_bedmotion.o: m_sysparam.o m_geoinfo.o m_state.o list_bedmotion.o m_fileio.o m_util.o $(PAR_OBJ)
