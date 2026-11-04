@@ -119,6 +119,27 @@ remaining demand passes to the next store. There is no dry-soil
 suppression beyond this supply limit and no sublimation from SWE. It acts
 on the state after the surface-flow and groundwater updates.
 
+**The surface-water stage.** Surface water evaporates over the area of its
+water surface (the depth $`w = \min(h,\ PET\,\Delta t)`$ is subtracted). The
+demand passed on to the next stores is reduced only by the depth of the volume
+$`\Delta V_h`$ actually removed, divided by the cell area (times the void
+ratio, $`g_v A`$):
+
+```math
+E_{\mathrm{rest}} = PET\,\Delta t - \frac{\Delta V_h}{g_v A}
+```
+
+On cells without a channel width or a section shape,
+$`\Delta V_h/(g_v A) = w`$. On channel-width cells it is $`w \times`$ wfrac
+(only the channel's water surface evaporates from the surface water; the land
+part outside the channel evaporates from the storage and the groundwater), and
+on cells with the section shape σ it is the difference of the
+rectangular-equivalent depth × wfrac (the banks outside the current
+water-surface width also pass on to the next stores). Taking the
+evapotranspiration of the land part and the banks within a cell from the
+storage and groundwater the cell shares is our own simplification
+(developer.md §27.1).
+
 **Basis of the default.** The mode-1 default of 3 mm/day is the lower side
 of the warm-season reference evapotranspiration of a humid temperate
 climate (FAO-56[^allen98] $`ET_0`$ of 3–5 mm/day): larger than the annual

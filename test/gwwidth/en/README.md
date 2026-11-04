@@ -32,21 +32,30 @@ checks the conversion.
   head rises and water spouts back to the surface. The lowest channel cell
   of the valley floor has a land-side outfall (Cd·A = 0.05 m²). The rain and
   the spouted and outfall water have a concentration of 1 mg/L.
+- **param_evap.txt**: evapotranspiration on channel-width cells
+  (developer.md §27.1). The same valley without lateral groundwater flow;
+  two hours of uniform rain at 50 mm/h fill the soil and the excess rain
+  collects in the valley channel. The potential evapotranspiration PET is a
+  constant 48 mm/day (2 mm/h). Every cell has enough water, so the
+  evapotranspiration should equal PET × area × time. On channel-width cells,
+  the channel's water surface (20 % of the cell) evaporates from the channel
+  water and the remaining 80 % (the land part) from the groundwater.
 
 ## Configuration
 
-| Item | param.txt | param_nowidth.txt | param_gwc.txt |
-|---|---|---|---|
-| Terrain | closed valley (`data_gwwidth/z.txt`, channel mask `rw.txt`) | same | same |
-| Channel width | 2 m (`width.txt`; wfrac = 0.2) | none | 2 m |
-| Rain | 50 mm/h × 1 h (concentration 1 mg/L) | same | 20 mm/h × 1 h (concentration 1 mg/L) |
-| Subsurface | Green-Ampt + lateral flow (layer 1) | same | conduit layer only (inlets, outfall) |
-| Time | dt = 0.5 s, 6 h | same | dt = 0.5 s, 4 h |
+| Item | param.txt | param_nowidth.txt | param_gwc.txt | param_evap.txt |
+|---|---|---|---|---|
+| Terrain | closed valley (`data_gwwidth/z.txt`, channel mask `rw.txt`) | same | same | same |
+| Channel width | 2 m (`width.txt`; wfrac = 0.2) | none | 2 m | 2 m |
+| Rain | 50 mm/h × 1 h (concentration 1 mg/L) | same | 20 mm/h × 1 h (concentration 1 mg/L) | 50 mm/h × 2 h (concentration 1 mg/L) |
+| Subsurface | Green-Ampt + lateral flow (layer 1) | same | conduit layer only (inlets, outfall) | Green-Ampt (no lateral flow) |
+| Evapotranspiration | none | none | none | constant PET 48 mm/day |
+| Time | dt = 0.5 s, 6 h | same | dt = 0.5 s, 4 h | dt = 0.5 s, 4 h |
 
 | File | Content |
 |---|---|
-| `Run.sh` | compares Log.txt and wq.csv of param.txt with the reference (ULP = 0; the Runge column of the Log is excluded) → checks with `Check_gwwidth.py` → runs param_nowidth.txt and param_gwc.txt and checks them |
-| `Check_gwwidth.py conserve\|rain\|match\|conc\|ledger` | total storage constant after the rain (relative 1e-10) / final total storage equal to the rain total (relative 1e-6; with the rain at 1 mg/L the ledger's in_rain_g is the rain volume) / final total storage equal to the control without width / concentration 1 ± 1e-3 mg/L in every cell deeper than 1 mm / closure of the water-quality ledger |
+| `Run.sh` | compares Log.txt and wq.csv of param.txt with the reference (ULP = 0; the Runge column of the Log is excluded) → checks with `Check_gwwidth.py` → runs param_nowidth.txt, param_gwc.txt and param_evap.txt and checks them |
+| `Check_gwwidth.py conserve\|rain\|match\|conc\|ledger\|evap\|evbal` | total storage constant after the rain (relative 1e-10) / final total storage equal to the rain total (relative 1e-6; with the rain at 1 mg/L the ledger's in_rain_g is the rain volume) / final total storage equal to the control without width / concentration 1 ± 1e-3 mg/L in every cell deeper than 1 mm / closure of the water-quality ledger / increase of the evapotranspiration after a 30-minute spin-up equal to PET × area × time (relative 1e-6) / final total storage + evapotranspiration = rain total (relative 1e-6) |
 
 ## Running
 
@@ -73,6 +82,18 @@ make
   before and after the fix; it is an existing offset from evaluating the
   proportional transfer of infiltration and inflow with the water depth at
   the end of the step (the tolerance ±1e-3 of the check allows for it).
+- Evapotranspiration (param_evap.txt; developer.md §27.1):
+
+  | Quantity | After the fix | Before the fix (executable of main on 2026-11-04) |
+  |---|---|---|
+  | Departure of the increase of the evapotranspiration after the 30-minute spin-up from PET × area × time (relative; largest over the records) | 4e-16 | −6.9 % (short) |
+  | Final total storage + evapotranspiration − rain total (relative) | 3e-9 | 3e-9 |
+
+  Before the fix, the land part (80 %) of the channel-width cells did not
+  evaporate while the channel held water (the depth removed from the channel
+  was subtracted as is from the demand of the whole cell). Water is
+  conserved and only the evapotranspiration comes out too small, so the
+  storage balance closes both before and after the fix.
 - The exchange on cells with a section shape (sigma law) is checked by
   [test/gwsect](../../gwsect/en/README.md) (developer.md §26.2,
   [users guide](../../../docs/en/users_guide/channel.md#cross-section-shape-sigma-law)).

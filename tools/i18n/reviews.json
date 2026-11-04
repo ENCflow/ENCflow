@@ -239,20 +239,20 @@
     {
       "source": "docs/users_guide/forcing.md",
       "target": "docs/en/users_guide/forcing.md",
-      "source_sha256": "392633abab0ab6e795aed8bfd9551ac0f2478d73421634e50a9dd3de5bb855ac",
-      "target_sha256": "b3672cb954bff394b84417bc7ccb5dfffd7f0ba7ed148a7c15f4148cfefbef7f",
-      "reviewer": "Claude (Claude Code session; reviewed the changed sections (added reference sections, footnotes and citation markers) of the Japanese source against the English mirror, 2026-10-30)",
+      "source_sha256": "3bba4256aaddc660ced539411a371876f657e41f961291f64f3bf4e86ba5bc13",
+      "target_sha256": "899a3b56ee0dfd9bc687899bf20a7aa7bbac95b804e66bd284d7de52d79cce38",
+      "reviewer": "Claude (Claude Code session; full-text content and lexical review, no model execution)",
       "method": "assistant",
-      "reviewed_on": "2026-10-30"
+      "reviewed_on": "2026-11-04"
     },
     {
       "source": "docs/users_guide/forcing_models.md",
       "target": "docs/en/users_guide/forcing_models.md",
-      "source_sha256": "71b02f1e72dd47d350d3338b8b68fbda00c0c0512b0025fff44248a2fb8a1307",
-      "target_sha256": "0281edc74618c8376a9c61acaa7e7e5cf01aeb97d2aadd157c633177c1b7f737",
+      "source_sha256": "9a144aff2972ef0133fa98ffbf58860db652e2bbf85f83c64e8122691dc5e5ac",
+      "target_sha256": "53ea0e7447314aca18d1cb56e859eab502169f199f40cfe8446b58f0dad965fa",
       "reviewer": "Claude (Claude Code session; full-text content and lexical review, no model execution)",
       "method": "assistant",
-      "reviewed_on": "2026-10-24"
+      "reviewed_on": "2026-11-04"
     },
     {
       "source": "docs/users_guide/geoinfo.md",
@@ -815,9 +815,9 @@
     {
       "source": "examples/README.md",
       "target": "examples/README.en.md",
-      "source_sha256": "70d848f10df2946ed4b1c029f91fbdac1ac85c82f09d3e19799baab33e86ac81",
-      "target_sha256": "8ee925942c367255b3736536c7890fc7c965740647eddb65272ce300e487a15a",
-      "reviewer": "Claude (Claude Code session; final stage of examples/stratovolcano, a thermal one-event lava flow: changed passages compared side by side with the Japanese source, unchanged parts as recorded earlier)",
+      "source_sha256": "4bd33d5204392da39f42075981d7b1a2ff1e2e49c6fc9c9595b3db96fa96d5b6",
+      "target_sha256": "7ed07103e10f4fa7f36608ad2bb45a931a5876bd82fe7a9dc04bb45d44da4bfb",
+      "reviewer": "Claude (Claude Code session; full-text content and lexical review, no model execution)",
       "method": "assistant",
       "reviewed_on": "2026-11-04"
     },
@@ -1247,20 +1247,20 @@
     {
       "source": "examples/catchment_metal/README.md",
       "target": "examples/catchment_metal/en/README.md",
-      "source_sha256": "1513a056690bb56e9001e6eb3a35abe9c230e23f81b83d3e9386882f319ab1b6",
-      "target_sha256": "6702375bb199f701118e7029f450bf47469dd43b32b5233bc359d7ad2c5c17f6",
-      "reviewer": "Claude (Claude Code session; compared the Japanese master and the English mirror after adding the caveat on tanks smaller than a cell (fn_rscap and dam/lake structures do not reproduce the particulate trapping of step 5) and the measured 4-thread runtime, 2026-11-03)",
+      "source_sha256": "9172f9e25259ae458f54866abe659e5112c455a2f7da786f3cc642b9d0d9972f",
+      "target_sha256": "f74bd47a54982647e16524cda2e32bfeb7396837269f0cd440c60221203ee138",
+      "reviewer": "Claude (Claude Code session; full-text content and lexical review, no model execution)",
       "method": "assistant",
-      "reviewed_on": "2026-11-03"
+      "reviewed_on": "2026-11-04"
     },
     {
       "source": "examples/catchment_metal/figs/mechanism.png",
       "target": "examples/catchment_metal/en/figs/mechanism.png",
-      "source_sha256": "e26932ce20f0735dbbfb4d8270b49857aa6574dacd855f129d43121cb5217035",
-      "target_sha256": "40094b2966654776eb4c8d0fd564c89d7412aa174caa0b321445aa784d5f2eaa",
-      "reviewer": "Claude (Claude Code session; compared the figure drawn by the shared plot_results.py with Japanese and English labels, 2026-11-03)",
+      "source_sha256": "504234e0552136b5659eed797a96c827fae7baaf1e4ccb632bd94c102402c781",
+      "target_sha256": "feafbe46894c830981d4672be904908c68424450c645a93c764a7e9aec686106",
+      "reviewer": "Claude (Claude Code session; full-text content and lexical review, no model execution)",
       "method": "assistant",
-      "reviewed_on": "2026-11-03"
+      "reviewed_on": "2026-11-04"
     },
     {
       "source": "examples/catchment_metal/figs/setup.png",
@@ -1317,13 +1317,22 @@
       "reviewed_on": "2026-11-03"
     },
     {
+      "source": "examples/catchment_metal/figs/step6.png",
+      "target": "examples/catchment_metal/en/figs/step6.png",
+      "source_sha256": "7eb6ff2912bedf558fbf0a4ffcb3edf8351d4661f2653ec6ef88cfcf83a71126",
+      "target_sha256": "76f79ecd201c8fd445853cfa590fda5e16cd43b2fad89399d6601f86a9c63928",
+      "reviewer": "Claude (Claude Code session; full-text content and lexical review, no model execution)",
+      "method": "assistant",
+      "reviewed_on": "2026-11-04"
+    },
+    {
       "source": "examples/catchment_metal/figs/summary.png",
       "target": "examples/catchment_metal/en/figs/summary.png",
-      "source_sha256": "4908bfc75d15e3fb334e6da8f2a94d16de0f699b0ecefee67b06fd06747cb499",
-      "target_sha256": "b16abbc11a4c92b88143d360c3c2249d31cdfe3c034dc562054508ec8745d939",
-      "reviewer": "Claude (Claude Code session; compared the figure drawn by the shared plot_results.py with Japanese and English labels, 2026-11-03)",
+      "source_sha256": "b9a5c012a2f6048443baf48619604cc852aa5c2cb8f5c5116e985dda40e6647f",
+      "target_sha256": "a1e4cc4e058639bd380697604246ad6f8d0a810debbed3da92c82839192922a4",
+      "reviewer": "Claude (Claude Code session; full-text content and lexical review, no model execution)",
       "method": "assistant",
-      "reviewed_on": "2026-11-03"
+      "reviewed_on": "2026-11-04"
     },
     {
       "source": "examples/debris_bedrock/README.md",
@@ -2516,9 +2525,9 @@
     {
       "source": "test/README.md",
       "target": "test/README.en.md",
-      "source_sha256": "2a073f42fc5588cc8ac043e11a08a7e960bae55d7cd191b2eb363cfac609bb48",
-      "target_sha256": "b2adbe402d5541dcb4be73207e7b68d3e8ea622c1fbd29bb3848151344cf778e",
-      "reviewer": "Claude (Claude Code session; compared the Japanese and English changes for the exact volume exchange on section-shape cells, 2026-11-04)",
+      "source_sha256": "b1dd924a79040ce0ee02cda7cfb0148657921016921f26ac7f840e014761cdae",
+      "target_sha256": "809cd221e27627dc5db416b3fe5cd2ad5b255c8d38030381b15bb8370cf911ef",
+      "reviewer": "Claude (Claude Code session; full-text content and lexical review, no model execution)",
       "method": "assistant",
       "reviewed_on": "2026-11-04"
     },
@@ -3092,9 +3101,9 @@
     {
       "source": "test/gwsect/README.md",
       "target": "test/gwsect/en/README.md",
-      "source_sha256": "a11f5ab1daeaeaf92370cbd9abbfafd1da3ef4dd8098dc72f700da49c7266595",
-      "target_sha256": "a07742cb96aa7f6ad1bbc9fd58ebf907cccaa4456565facddec2a069d4f4349d",
-      "reviewer": "Claude (Claude Code session; full-text review of the new test README and its English mirror, 2026-11-04)",
+      "source_sha256": "bfe0e0c0849c5e796f9e64db2162c8b30ce0e38103bc6fd44ba679d078f58566",
+      "target_sha256": "d6ab72d17ab1d801ceb956e448739aa5a14428e0790ddcb27ce5569491f013bb",
+      "reviewer": "Claude (Claude Code session; full-text content and lexical review, no model execution)",
       "method": "assistant",
       "reviewed_on": "2026-11-04"
     },
@@ -3137,9 +3146,9 @@
     {
       "source": "test/gwwidth/README.md",
       "target": "test/gwwidth/en/README.md",
-      "source_sha256": "3c0a3e44bf52fdeb75214651764b6bde1e1de5e6d32d19d8bc37466a1cb4d8d1",
-      "target_sha256": "0dad9a1be045bab8772ca8490d51e5169cc24776dc7eebbf5423a09adfbbc93e",
-      "reviewer": "Claude (Claude Code session; compared the Japanese and English changes for the exact volume exchange on section-shape cells, 2026-11-04)",
+      "source_sha256": "dbc9519f9517c8d2f773758979b495f1d98b37364ee4ab609eef975bed81cf92",
+      "target_sha256": "23ce72045ccd427c0a38c8a545895cc072e004e7492d635c5b6cbbdc77e0e2a9",
+      "reviewer": "Claude (Claude Code session; full-text content and lexical review, no model execution)",
       "method": "assistant",
       "reviewed_on": "2026-11-04"
     },
