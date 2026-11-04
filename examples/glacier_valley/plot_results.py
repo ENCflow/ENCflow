@@ -1,12 +1,12 @@
 #!/usr/bin/env python3
-"""examples/glacier_valley の図を描く(事前に make run、湖の段は make run-lakes)。
+"""examples/glacier_valley の図を描く(事前に make run。補足の図には make run-x10・run-lakes、対照の線には run-noero)。
 
   python3 plot_results.py        # figs/*.png(引数 en で英語版を en/figs/ に)
 
 - figs/setup.png   : 初期地形(陰影・等高線・平衡線・断面の位置)と初期の横断形
-- figs/glacier.png : 氷期の段の終わりの氷厚、侵食量の分布、氷の体積と最大の侵食の時間変化
-- figs/valley.png  : 谷の横断形(3 か所)と、主谷・支谷の谷底の縦断形(初期と氷期の後)
-- figs/lakes.png   : 湖の段の水深(result_lakes がある場合)
+- figs/glacier.png : 本番の 6000 年後の氷厚、侵食量の分布、氷の体積と最大の侵食・氷河の末端の時間変化
+- figs/valley.png  : 本番の谷の横断形(3 か所)と、主谷・支谷の谷底に沿った侵食量
+- figs/x10.png     : 補足(侵食係数 10 倍)の侵食量と湖、主谷の縦断形、氷河の末端(本番・対照と比べる)
 定数は make_terrain.py・param_*.txt と対で保守する。
 """
 import glob
@@ -38,6 +38,9 @@ YRS_PER_OUT = 1000.0                  # param_glacial.txt の出力間隔(地形
 T_END = 6000.0                        # param_glacial.txt の地形時間の長さ(年。最終時刻の出力 9998)
 XSEC = [6000.0, 12000.0, 18000.0]     # 横断形を描く x (m)
 RES = "result_glacial"
+RES_X10 = "result_glacial_x10"            # 補足(侵食係数 10 倍)
+RES_NOERO = "result_glacial_noero"        # 対照(侵食なし)
+RES_LAKES = "result_lakes"                # 湖の段(補足の最終の地形)
 x = (np.arange(NX) + 0.5) * DX
 y = (np.arange(NY) + 0.5) * DX
 ext = [0, NX * DX / 1000, NY * DX / 1000, 0]
@@ -45,8 +48,8 @@ ls = LightSource(azdeg=315, altdeg=45)
 
 
 def relief(z):
-    """陰影つきの段彩(標高 1500〜4400 m)"""
-    return ls.shade(z, cmap=plt.cm.terrain, vert_exag=1, blend_mode="soft", dx=DX, dy=DX, vmin=1500, vmax=4400)
+    """陰影つきの段彩(色の範囲は 1000〜4400 m。谷底が水の色にならないよう下端を下げる)"""
+    return ls.shade(z, cmap=plt.cm.terrain, vert_exag=1, blend_mode="soft", dx=DX, dy=DX, vmin=1000, vmax=4400)
 JC = [NY // 2 - 1, NY // 2]           # 主谷の谷底の 2 行(0 始まり)
 IT = [int(XT / DX) - 1, int(XT / DX)]  # 支谷の谷底の 2 列
 
@@ -67,6 +70,16 @@ def year(n):
 
 def col(xm):
     return int(xm / DX)
+
+
+def terminus(res):
+    """主谷の氷河の末端 x (km) の時系列(谷の軸の 2 行で氷厚 5 m 以上の東端)"""
+    t, xe = [], []
+    for n in outputs(res):
+        a = ld(f"Hi{n:04d}.txt", res)[JC].mean(axis=0)
+        ice = np.where(a > 5.0)[0]
+        t.append(year(n)); xe.append((ice.max() + 0.5) * DX / 1000 if ice.size else 0.0)
+    return t, xe
 
 
 nums = outputs()
@@ -110,7 +123,7 @@ ax = fig.add_subplot(2, 2, 1)
 ax.imshow(ls.hillshade(z1, vert_exag=1, dx=DX, dy=DX), cmap="gray", extent=ext, vmin=-0.3, vmax=1.3)
 im = ax.imshow(np.ma.masked_less(hi, 1.0), cmap="Blues", alpha=0.85, extent=ext, vmin=0)
 fig.colorbar(im, ax=ax, shrink=0.8, label=T("氷厚 (m)", "ice thickness (m)"))
-ax.set_title(T(f"(a) 氷期の段の終わり({yr_last:.0f} 年)の氷河", f"(a) Glacier at the end of the glacial stage ({yr_last:.0f} years)"), fontsize=10)
+ax.set_title(T(f"(a) 本番の {yr_last:.0f} 年後の氷河(氷厚)", f"(a) Main run: glacier after {yr_last:.0f} years (ice thickness)"), fontsize=10)
 ax.set_xlabel("x (km)"); ax.set_ylabel("y (km)")
 ax = fig.add_subplot(2, 2, 2)
 dz = z1 - z0
@@ -120,12 +133,10 @@ ax.contour(x / 1000, y / 1000, hi, levels=[1.0], colors="C0", linewidths=0.8)
 ax.set_title(T(f"(b) 侵食量(最大 {-dz.min():.0f} m)。青線 = 氷河の範囲", f"(b) Erosion (max {-dz.min():.0f} m). Blue = glacier extent"), fontsize=10)
 ax.set_xlabel("x (km)"); ax.set_ylabel("y (km)")
 ax = fig.add_subplot(2, 2, 3)
-tyr, vol, emax, term = [], [], [], []
+tyr, vol, emax = [], [], []
 for n in nums:
     h = ld(f"Hi{n:04d}.txt"); z = ld(f"Z{n:04d}.txt")
     tyr.append(year(n)); vol.append(h.sum() * DX * DX / 1e9); emax.append(-(z - z0).min())
-    a = h[JC].mean(axis=0); ice = np.where(a > 5.0)[0]
-    term.append((ice.max() + 0.5) * DX / 1000 if ice.size else 0.0)
 ax.plot(tyr, vol, "C0-o", ms=4, label=T("氷の体積 (km³)", "ice volume (km³)"))
 ax.set_xlabel(T("地形時間 (年)", "landform time (years)")); ax.set_ylabel(T("氷の体積 (km³)", "ice volume (km³)"), color="C0")
 ax2 = ax.twinx()
@@ -134,11 +145,13 @@ ax2.set_ylabel(T("最大の侵食 (m)", "maximum erosion (m)"), color="C3")
 ax.set_title(T("(c) 氷の体積と最大の侵食の時間変化", "(c) Ice volume and maximum erosion through time"), fontsize=10)
 ax.grid(alpha=0.3)
 ax = fig.add_subplot(2, 2, 4)
-ax.plot(tyr, term, "k-o", ms=4)
+ax.plot(*terminus(RES), "C3-o", ms=4, label=T("本番(既定の侵食係数)", "main run (default erosion coefficient)"))
+if os.path.isdir(RES_NOERO):
+    ax.plot(*terminus(RES_NOERO), "C0--s", ms=3, label=T("対照(侵食なし)", "control (no erosion)"))
 ax.set_xlabel(T("地形時間 (年)", "landform time (years)")); ax.set_ylabel(T("主谷の氷河の末端 x (km)", "terminus of the main glacier, x (km)"))
 ax.set_ylim(0, NX * DX / 1000)
 ax.set_title(T("(d) 主谷の氷河の末端の位置", "(d) Position of the main glacier terminus"), fontsize=10)
-ax.grid(alpha=0.3)
+ax.legend(fontsize=8, loc="lower right"); ax.grid(alpha=0.3)
 fig.tight_layout()
 fig.savefig(f"{FIGDIR}/glacier.png", dpi=100)
 plt.close(fig)
@@ -194,27 +207,62 @@ fig.tight_layout()
 fig.savefig(f"{FIGDIR}/valley.png", dpi=100)
 plt.close(fig)
 
-# ---------------------------------------------------------------- lakes.png
-if os.path.isdir("result_lakes"):
-    zl = ld("Z0000.txt", "result_lakes")
-    hfiles = sorted(glob.glob("result_lakes/H0*.txt"))
-    hl = np.loadtxt(hfiles[-1])
-    fig, axes = plt.subplots(1, 2, figsize=(15, 4.6), gridspec_kw={"width_ratios": [2.4, 1]})
-    ax = axes[0]
-    ax.imshow(ls.hillshade(zl, vert_exag=1, dx=DX, dy=DX), cmap="gray", extent=ext, vmin=-0.3, vmax=1.3)
-    im = ax.imshow(np.ma.masked_less(hl, 0.5), cmap="Blues", extent=ext, vmin=0, interpolation="nearest")
-    fig.colorbar(im, ax=ax, shrink=0.8, label=T("水深 (m)", "water depth (m)"))
-    ax.set_title(T("氷が消えた後の雨で、深く削られた所に残る水(湖)", "Water left in the deeply eroded places after the ice is gone (lakes)"), fontsize=10)
+# ---------------------------------------------------------------- x10.png(補足)
+if os.path.isdir(RES_X10):
+    zx = ld("Z9998.txt", RES_X10); hx = ld("Hi9998.txt", RES_X10); ex = ld("Z0000.txt", RES_X10) - zx
+    hl = ld("H9998.txt", RES_LAKES) if os.path.isfile(os.path.join(RES_LAKES, "H9998.txt")) else None
+    fig = plt.figure(figsize=(15, 11))
+    ax = fig.add_subplot(3, 2, 1)
+    im = ax.imshow(ex, cmap="Reds", extent=ext, vmin=0, interpolation="nearest")
+    fig.colorbar(im, ax=ax, shrink=0.85, label=T("侵食量 (m)", "erosion (m)"))
+    ax.contour(x / 1000, y / 1000, hx, levels=[1.0], colors="C0", linewidths=0.8)
+    ax.set_title(T(f"(a) 補足: 侵食係数 10 倍の 6000 年後の侵食量(最大 {ex.max():.0f} m)。青線 = 氷河の範囲",
+                   f"(a) Supplement: erosion after 6000 years with 10x erosion (max {ex.max():.0f} m). Blue = glacier"), fontsize=9.5)
     ax.set_xlabel("x (km)"); ax.set_ylabel("y (km)")
-    ax = axes[1]
-    ax.plot(x / 1000, zl[JC].mean(axis=0), "C3-", lw=1.4, label=T("谷底", "valley floor"))
-    w = hl[JC].mean(axis=0)
-    ax.fill_between(x / 1000, zl[JC].mean(axis=0), zl[JC].mean(axis=0) + w, where=w > 0.5, color="C0", alpha=0.6, label=T("湖", "lake"))
+    ax = fig.add_subplot(3, 2, 2)
+    ax.imshow(ls.hillshade(zx, vert_exag=1, dx=DX, dy=DX), cmap="gray", extent=ext, vmin=-0.3, vmax=1.3)
+    if hl is not None:
+        im = ax.imshow(np.ma.masked_less(hl, 0.5), cmap="Blues", extent=ext, vmin=0, interpolation="nearest")
+        fig.colorbar(im, ax=ax, shrink=0.85, label=T("水深 (m)", "water depth (m)"))
+    ax.set_xlim(0, 12); ax.set_ylim(6.5, 1.5)      # 湖のある主谷の上流側を拡大
+    ax.set_title(T("(b) 湖の段: 氷が消えた後の雨で、削られた凹地に残る水(湖。x ≤ 12 km)",
+                   "(b) Lake stage: water left in the eroded basins after the ice is gone (lakes; x ≤ 12 km)"), fontsize=9.5)
+    ax.set_xlabel("x (km)"); ax.set_ylabel("y (km)")
+    ax = fig.add_subplot(3, 1, 2)
+    zf0 = z0[JC].mean(axis=0); zfm = z1[JC].mean(axis=0); zfx = zx[JC].mean(axis=0)
+    ax.plot(x / 1000, zf0, "--", color="0.5", lw=1.0, label=T("初期の谷底", "initial valley floor"))
+    ax.plot(x / 1000, zfm, "C3-", lw=1.4, label=T("本番(既定の侵食係数)の 6000 年後", "main run (default erosion) after 6000 years"))
+    ax.plot(x / 1000, zfx, "k-", lw=1.6, label=T("補足(侵食係数 10 倍)の 6000 年後", "supplement (10x erosion) after 6000 years"))
+    if hl is not None:
+        w = hl[JC].max(axis=0)
+        ax.fill_between(x / 1000, zfx, zfx + w, where=w > 0.5, color="C0", alpha=0.7, label=T("湖(湖の段)", "lakes (lake stage)"))
+    ax.set_xlim(0, 16); ax.set_ylim(1700, 2700)
     ax.set_xlabel("x (km)"); ax.set_ylabel(T("標高 (m)", "elevation (m)"))
-    ax.set_title(T("主谷の縦断形と湖", "Main valley long profile and lakes"), fontsize=10)
+    ax.set_title(T("(c) 主谷の谷底の縦断形(x ≤ 16 km)", "(c) Long profile of the main valley floor (x ≤ 16 km)"), fontsize=9.5)
     ax.legend(fontsize=8); ax.grid(alpha=0.3)
+    ax = fig.add_subplot(3, 2, 5)
+    if os.path.isdir(RES_NOERO):
+        ax.plot(*terminus(RES_NOERO), "C0--s", ms=3, label=T("対照(侵食なし)", "control (no erosion)"))
+    ax.plot(*terminus(RES), "C3-o", ms=3, label=T("本番(既定の侵食係数)", "main run (default erosion)"))
+    ax.plot(*terminus(RES_X10), "k-o", ms=3, label=T("補足(侵食係数 10 倍)", "supplement (10x erosion)"))
+    ax.set_ylim(0, 18)
+    ax.set_xlabel(T("地形時間 (年)", "landform time (years)")); ax.set_ylabel(T("主谷の氷河の末端 x (km)", "terminus of the main glacier, x (km)"))
+    ax.set_title(T("(d) 氷河の末端: 侵食が涵養域を低くして氷河を短くする", "(d) Glacier terminus: erosion lowers the accumulation area and shortens the glacier"), fontsize=9.5)
+    ax.legend(fontsize=8, loc="lower right"); ax.grid(alpha=0.3)
+    ax = fig.add_subplot(3, 2, 6)
+    jt = np.arange(0, JC[0] + 1)
+    xs = XT / 1000 - (JC[0] - jt) * DX / 1000      # 支谷は合流点から北への距離を左向きに
+    for e, c, lab in ((z0 - z1, "C3", T("本番", "main run")), (ex, "k", T("補足", "supplement"))):
+        ax.plot(x / 1000, e[JC].mean(axis=0), "-", color=c, lw=1.5, label=T(f"{lab}: 主谷", f"{lab}: main valley"))
+        ax.plot(xs, e[:, IT].mean(axis=1)[jt], ":", color=c, lw=1.6,
+                label=T(f"{lab}: 支谷(合流点から北を左向きに)", f"{lab}: tributary (north of the confluence, leftwards)"))
+    ax.axvline(XT / 1000, color="k", lw=0.5, ls=":")
+    ax.set_xlim(0, 16)
+    ax.set_xlabel("x (km)"); ax.set_ylabel(T("谷底の侵食量 (m)", "erosion of the valley floor (m)"))
+    ax.set_title(T("(e) 谷底の侵食量(点線の縦線 = 合流点)", "(e) Erosion of the valley floors (dotted vertical line = confluence)"), fontsize=9.5)
+    ax.legend(fontsize=7.5); ax.grid(alpha=0.3)
     fig.tight_layout()
-    fig.savefig(f"{FIGDIR}/lakes.png", dpi=100)
+    fig.savefig(f"{FIGDIR}/x10.png", dpi=100)
     plt.close(fig)
 
 print(f"figures written to {FIGDIR}/ (glacial stage output {last}, {yr_last:.0f} years)")

@@ -395,6 +395,7 @@ $`\min(1, (\tan\theta - \tan\theta_c)/\tan\theta_c)`$ を、最も急な下り�
 ## 検証・例題
 
 - [test/glacier/](../../test/glacier/): SIA 解析解のベンチマーク(格子の向きによらないことの検定を含む)、カール形成テスト、雪崩再配分の等方性の検定、侵食の結合長の検定(検証用の理想実験)。
+- [examples/glacier_valley/](../../examples/glacier_valley/): 川の V 字谷に氷河を育て、6000 年の侵食がどこに集まり、どのくらいの速さで進むかを見る例題。補足に侵食係数 10 倍(6 万年分の侵食)の計算と湖の段を加え、閉じた凹地と湖・懸谷の段・侵食による氷河の短縮と、U 字の横断形ができない限界を示す。
 - 設定書式の実例: [examples/List_samples/list_glacier.txt](../../examples/List_samples/list_glacier.txt)。
 
 ## 参考文献

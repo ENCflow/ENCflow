@@ -471,6 +471,7 @@ The labels in the Basis column are explained in [How to read the basis of a defa
 ## Tests and examples
 
 - [test/glacier/](../../../test/glacier/en/README.md): benchmark against the SIA analytical solution (including a check that the result does not depend on the grid orientation), the cirque-formation test, a check of the isotropy of the avalanche redistribution, and a check of the erosion coupling length (idealised verification experiments).
+- [examples/glacier_valley/](../../../examples/glacier_valley/en/README.md): an example that grows a glacier in a fluvial V-shaped valley and looks at where 6000 years of erosion concentrate and how fast they proceed. A supplement with ten times the erosion coefficient (60,000 years of erosion) and a lake stage shows closed basins with lakes, the step of a hanging valley and the shortening of the glacier by erosion, and the limit that no U-shaped cross-section forms.
 - Worked example of the format: [examples/List_samples/en/list_glacier.txt](../../../examples/List_samples/en/list_glacier.txt).
 
 ## References

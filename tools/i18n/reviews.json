@@ -275,9 +275,9 @@
     {
       "source": "docs/users_guide/glacier.md",
       "target": "docs/en/users_guide/glacier.md",
-      "source_sha256": "0a838536f36bc8e7f3bba85c19d5174ef979b9eb4bcba6ee88e5abcd38dadd6d",
-      "target_sha256": "22838387ddf6a15c3691fe75bed4051a870be3091239a09060cf65c9edf0da9b",
-      "reviewer": "Claude (Claude Code session; gl_lc default max(500 m, 2dx), §45.4; full-text content and lexical review, no model execution)",
+      "source_sha256": "73cb30561b968080962ed776bd3df76b6496132e57332e84ca3f4bb54727e811",
+      "target_sha256": "84c44eb98e9e9951958ead8c8431b9fe4f4fcb86d5317ec8c9a3d7ed1bba88f3",
+      "reviewer": "Claude (Claude Code session; glacier_valley example registration: changed passages compared side by side with the Japanese source, unchanged parts as recorded earlier)",
       "method": "assistant",
       "reviewed_on": "2026-11-04"
     },
@@ -491,11 +491,11 @@
     {
       "source": "docs/users_guide/usecases.md",
       "target": "docs/en/users_guide/usecases.md",
-      "source_sha256": "be22726114ae933d639b53368c941ed8ce539fecbaca5e208fb19c8988187630",
-      "target_sha256": "5f8296051d123b584dc98e49c52afad269ba907c31ac2c15bdb1c3e8c7e1209b",
-      "reviewer": "Claude (Claude Code session; stratovolcano example registration: changed passages compared side by side with the Japanese source, unchanged parts as recorded earlier)",
+      "source_sha256": "18098fc96e87faed390b8a1ee88841b0752ff58a1ca9ff15ddf1c692ab1d6c2e",
+      "target_sha256": "49dc2e90df9ac284519083e2bf6435a82888ee75cb277aeb80816db3af968ad2",
+      "reviewer": "Claude (Claude Code session; glacier_valley example registration: changed passages compared side by side with the Japanese source, unchanged parts as recorded earlier)",
       "method": "assistant",
-      "reviewed_on": "2026-11-03"
+      "reviewed_on": "2026-11-04"
     },
     {
       "source": "docs/users_guide/user_routines.md",
@@ -815,9 +815,9 @@
     {
       "source": "examples/README.md",
       "target": "examples/README.en.md",
-      "source_sha256": "70d848f10df2946ed4b1c029f91fbdac1ac85c82f09d3e19799baab33e86ac81",
-      "target_sha256": "8ee925942c367255b3736536c7890fc7c965740647eddb65272ce300e487a15a",
-      "reviewer": "Claude (Claude Code session; final stage of examples/stratovolcano, a thermal one-event lava flow: changed passages compared side by side with the Japanese source, unchanged parts as recorded earlier)",
+      "source_sha256": "8c79e87045d8aca98454b301b839eca60ef87a25913e3bb9c0d88d607dcd7a83",
+      "target_sha256": "139b29ad24c34292b9cf743afa2d7253d1d1c701472a8853ac66faa9db6261e8",
+      "reviewer": "Claude (Claude Code session; glacier_valley example registration: changed passages compared side by side with the Japanese source, unchanged parts as recorded earlier)",
       "method": "assistant",
       "reviewed_on": "2026-11-04"
     },
@@ -1531,6 +1531,51 @@
       "reviewer": "Claude (Claude Code session; example reruns with f_opening_dynamic default 3)",
       "method": "assistant",
       "reviewed_on": "2026-10-31"
+    },
+    {
+      "source": "examples/glacier_valley/README.md",
+      "target": "examples/glacier_valley/en/README.md",
+      "source_sha256": "919ade5e0ea9353856c0ff466e68bf51e05ee0a4faeb58d8885a4b2f79905a74",
+      "target_sha256": "ff3a51989d66c9b56a3907ece9781e53ff653e8f11efd0eca0da9fbde73ad994",
+      "reviewer": "Claude (Claude Code session; new example glacier_valley: English mirror written alongside the Japanese source and compared section by section, including numbers, figure captions and references)",
+      "method": "assistant",
+      "reviewed_on": "2026-11-04"
+    },
+    {
+      "source": "examples/glacier_valley/figs/glacier.png",
+      "target": "examples/glacier_valley/en/figs/glacier.png",
+      "source_sha256": "ee9e20b4c98c041dae06204ca4079947bf4c334383d26dd3c17cb59717b3ea6a",
+      "target_sha256": "c90bb35544d1b433400dd9dc1d8dc05315e1c0251e2e94f80c1b9897e6a0a409",
+      "reviewer": "Claude (Claude Code session; English figure drawn by plot_results.py en from the same results as the Japanese figure (2026-11-04); titles, labels and legends compared, same data and layout)",
+      "method": "assistant",
+      "reviewed_on": "2026-11-04"
+    },
+    {
+      "source": "examples/glacier_valley/figs/setup.png",
+      "target": "examples/glacier_valley/en/figs/setup.png",
+      "source_sha256": "f92cf08e91710c45454dc40ded8f49f66090f1d5929b0065548ebda950068a55",
+      "target_sha256": "b7bf42420bee2bc91445dd767b0a815b649377fb4b7795098009f681ec8f350a",
+      "reviewer": "Claude (Claude Code session; English figure drawn by plot_results.py en from the same results as the Japanese figure (2026-11-04); titles, labels and legends compared, same data and layout)",
+      "method": "assistant",
+      "reviewed_on": "2026-11-04"
+    },
+    {
+      "source": "examples/glacier_valley/figs/valley.png",
+      "target": "examples/glacier_valley/en/figs/valley.png",
+      "source_sha256": "bdc513789bf6cc485baf49e54f0be63469a98a8ff8c01b23f1c1890483b341f6",
+      "target_sha256": "f438ef7818061f53d70142737728ae3a01af257d6647ca8f16a2645f2e26dcc6",
+      "reviewer": "Claude (Claude Code session; English figure drawn by plot_results.py en from the same results as the Japanese figure (2026-11-04); titles, labels and legends compared, same data and layout)",
+      "method": "assistant",
+      "reviewed_on": "2026-11-04"
+    },
+    {
+      "source": "examples/glacier_valley/figs/x10.png",
+      "target": "examples/glacier_valley/en/figs/x10.png",
+      "source_sha256": "691e13d7221502248abce3656ef51e42dec93bb768aa5c9c6d3899186bd221d2",
+      "target_sha256": "2985a926020e53b9b8706aee822a2083cf0704e19210bea4bc719e678c52203c",
+      "reviewer": "Claude (Claude Code session; English figure drawn by plot_results.py en from the same results as the Japanese figure (2026-11-04); titles, labels and legends compared, same data and layout)",
+      "method": "assistant",
+      "reviewed_on": "2026-11-04"
     },
     {
       "source": "examples/karst/README.md",

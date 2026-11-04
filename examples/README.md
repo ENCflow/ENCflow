@@ -47,6 +47,7 @@ python3 plot_results.py   # 図化(用意されている例題のみ)
 | [debris_bedrock/](debris_bedrock/) | 渓流に流した土石流が岩盤をどこでどれだけ削るか、土石流の頻度が渓流の定常勾配をどう変えるかを見る | 土石流 f_debris(高橋・中川、クーロン + Manning)、土石流による岩盤侵食 f_rockinc の rock_kdb |
 | [shield_volcano/](shield_volcano/) | 火口の位置と噴出量を変えた断続的な噴火で溶岩流が重なり、楯状火山が育つ過程と、形を決めるのが降伏応力であることを見る。補足に粘い溶岩の溶岩ドームを解析解と比べる | 溶岩流 fn_lavaflow(複数噴火口 lv_cell・lv_val、Bingham 降伏応力 lv_tauy、固化 lv_wsol・lv_vsol) |
 | [stratovolcano/](stratovolcano/) | 溶岩流 → 降灰 → 豪雨の侵食 を 10 回繰り返して、溶岩と灰の層が重なった成層火山を作る。噴火の仕方(溶岩と灰の割合)と侵食で、形と内部の層がどう変わるかを見る。最後に、育った山の地形に温度を考慮した 1 回の溶岩流を流し、流路が地形の凹凸で決まる様子と冷えて止まる様子を見る | 溶岩流 fn_lavaflow(固化した溶岩の下の土層を埋める。最後の段は温度モード f_lvtemp)、降灰は前処理、Green-Ampt、掃流砂 f_fluvial + morfac、段ごとの計算をつなぐドライバ |
+| [glacier_valley/](glacier_valley/) | 川の V 字谷と支谷に寒冷な気候で氷河を育て、6000 年の侵食がどこに集まり、どのくらいの速さで進むかを見る(既定の値では谷の形の変化は数十 m)。補足に侵食係数 10 倍(6 万年分の侵食)の計算と湖の段を加え、閉じた凹地と湖・懸谷の段ができる一方で、侵食が涵養域を低くして氷河を短くすることを見る | 氷河 fn_glacier(質量収支・雪崩 f_glava・SIA 流動 f_glflow・滑動 f_glslide・侵食 f_glero と侵食の結合長 gl_lc)、気温減率と降水の標高補正、積雪、時間加速 gl_morfac、段の間で地盤高を渡す前処理 |
 
 ## 複数プロセスの連鎖の例
 
@@ -67,6 +68,7 @@ ENCflow の特徴である「複数プロセスを 1 つの計算で連鎖させ
 - 土石流 → 堆積層の剥離 → 岩盤の侵食 → 頻度ごとの定常勾配: [debris_bedrock/](debris_bedrock/)。
 - 断続的な噴火 → 溶岩流 → 停止・固化 → 地形の積み重ね → 楯状火山: [shield_volcano/](shield_volcano/)。
 - 溶岩流 → 灰の埋没 → 降灰 → 豪雨の侵食 → 麓への再堆積 の繰り返し → 成層火山: [stratovolcano/](stratovolcano/)。
+- 降雪 → 氷化 → 氷河の流動・滑動 → 氷河侵食 → (長い時間では)閉じた凹地と湖・懸谷の段、侵食による氷河の短縮: [glacier_valley/](glacier_valley/)。
 - 断層 → 津波 → 浸水: [tsunami_fault/](tsunami_fault/)、[tsunami_coast/](tsunami_coast/)。
 - 斜面崩壊 → 水域突入 → 津波: [landslide_tsunami/](landslide_tsunami/)。
 - 洪水 → 越水 → 破堤 → 氾濫 → 家屋の流失(二線堤で止める): [levee_breach/](levee_breach/)。
