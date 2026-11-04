@@ -104,9 +104,9 @@
     {
       "source": "docs/users_guide.md",
       "target": "docs/en/users_guide.md",
-      "source_sha256": "deadfde300968b89110c250733a1c5bd1177b5e7545278b0805d2902f41100e9",
-      "target_sha256": "385c861a2084dd0ffc62e3efe1aa3d4d775550e9a9e75f588f62049ce52468f6",
-      "reviewer": "Claude (Claude Code session; lava temperature mode: chapter line and parameter count 764 -> 774 changed in both files, compared side by side)",
+      "source_sha256": "9863b6c37e6c14b209b8f4faa4cc3323733c724246959c2a743cafa2e37c9791",
+      "target_sha256": "35a38c5007dca12306f1b1b92fc3aedd5f336fe6a5d32f1414c9dc8d1080e32f",
+      "reviewer": "Claude (Claude Code session; erosion coupling length gl_lc, §45.3; full-text content and lexical review, no model execution)",
       "method": "assistant",
       "reviewed_on": "2026-11-04"
     },
@@ -275,11 +275,11 @@
     {
       "source": "docs/users_guide/glacier.md",
       "target": "docs/en/users_guide/glacier.md",
-      "source_sha256": "2e4dcc9fc39537a311ddd148f546bab4f214a427f02485f237c4fe9d0b636052",
-      "target_sha256": "3728fe77c8e517c96845d5a08668966be73604240fe62cd05dfb3ee927fcebe8",
-      "reviewer": "Claude (Claude Code session; glacier avalanche D-infinity change: changed passages compared side by side with the Japanese source, unchanged parts as recorded earlier)",
+      "source_sha256": "aff355a23af289aa854b0c19ab1740e0b06918cbf65614eb367ff9d99549ebd3",
+      "target_sha256": "c80de25e200e6c312d05642c1f40f5f01a3ab377fec3b1c6d1ab457e83b30ecc",
+      "reviewer": "Claude (Claude Code session; erosion coupling length gl_lc, §45.3; full-text content and lexical review, no model execution)",
       "method": "assistant",
-      "reviewed_on": "2026-11-03"
+      "reviewed_on": "2026-11-04"
     },
     {
       "source": "docs/users_guide/gwflow.md",
@@ -383,9 +383,9 @@
     {
       "source": "docs/users_guide/params_index.md",
       "target": "docs/en/users_guide/params_index.md",
-      "source_sha256": "234792fa39107e6788f31f01fdf017d089d4f4e3471f99c51b518e4a3d83ca9f",
-      "target_sha256": "3edcc95708b882251c61f032b138070816f7656d0974a29de7c7b9510de722cc",
-      "reviewer": "Claude (Claude Code session; lava temperature mode: the 10 new &list_lavaflow rows inserted at the same positions in both files and the count 774 updated, checked with tools/params_index/check.py)",
+      "source_sha256": "1185ff098d109bb1cb9acfadf8d99df43afc3d538f1a67c073031658f104b9f2",
+      "target_sha256": "05c2b6dc564c90e66feee6bbade6f3f0464cd55ea5e3214db33ac3cf26a15195",
+      "reviewer": "Claude (Claude Code session; erosion coupling length gl_lc, §45.3; full-text content and lexical review, no model execution)",
       "method": "assistant",
       "reviewed_on": "2026-11-04"
     },
@@ -644,11 +644,11 @@
     {
       "source": "examples/List_samples/list_glacier.txt",
       "target": "examples/List_samples/en/list_glacier.txt",
-      "source_sha256": "d97324cfe1d884499a2cf4d676224df64688e7e360c37c5037bd39ee072508d9",
-      "target_sha256": "b028f561a2a78f19feefacdcf10e31a128c8068135c69479d6271e51da95cbc4",
-      "reviewer": "Claude (Claude Code session; glacier avalanche D-infinity change: changed passages compared side by side with the Japanese source, unchanged parts as recorded earlier)",
+      "source_sha256": "59065f5e22a1a29cd8773f668881bccd185ace7378c35d79a9f5fe007bfae030",
+      "target_sha256": "cb5dc678fd34a1607a2d0c20e6f4f7c8ed124bf48d3c771d7e3c156a04712a84",
+      "reviewer": "Claude (Claude Code session; erosion coupling length gl_lc, §45.3; full-text content and lexical review, no model execution)",
       "method": "assistant",
-      "reviewed_on": "2026-11-03"
+      "reviewed_on": "2026-11-04"
     },
     {
       "source": "examples/List_samples/list_gwflow.txt",
@@ -2516,9 +2516,9 @@
     {
       "source": "test/README.md",
       "target": "test/README.en.md",
-      "source_sha256": "2efa46986a9c1ccd56a48ce5ec23222b4341e282b432b9257168dd3faf8544cb",
-      "target_sha256": "3af58a5dcea1da2ae1ea9ce88ca964efc9a3c2f2ee11d574b50fe2753365e1fd",
-      "reviewer": "Claude (Claude Code session; compared the Japanese and English changes for the water-quality substance carried by structures and withdrawals, 2026-11-04)",
+      "source_sha256": "14e43bee3bb94ed2578656fc2da04cb34d8ee48ae4950da8eeb93d970b10f056",
+      "target_sha256": "a2b4259c3eb42c4329820e89acc9ddee079e967559a7f1ed76496ccaffa7efb6",
+      "reviewer": "Claude (Claude Code session; erosion coupling length gl_lc, §45.3; full-text content and lexical review, no model execution)",
       "method": "assistant",
       "reviewed_on": "2026-11-04"
     },
@@ -3002,11 +3002,11 @@
     {
       "source": "test/glacier/README.md",
       "target": "test/glacier/en/README.md",
-      "source_sha256": "2f3fd2c1abe7ee7d31f0e336719eee190d6fccb3387303d9731c27a60ee74110",
-      "target_sha256": "21a5df11231bdf22e487292f7737e26cf2181a890571bcae38bec0fb7bbc6ae2",
-      "reviewer": "Claude (Claude Code session; glacier avalanche D-infinity change: changed passages compared side by side with the Japanese source, unchanged parts as recorded earlier)",
+      "source_sha256": "5ee59454ac1a2b6230215395e07c034de0423035212205655514735950b9f106",
+      "target_sha256": "396a2e3a6d5e0946517af3e0664881eaefe047ca3aeecb7dcc79ce01bdba785c",
+      "reviewer": "Claude (Claude Code session; erosion coupling length gl_lc, §45.3; full-text content and lexical review, no model execution)",
       "method": "assistant",
-      "reviewed_on": "2026-11-03"
+      "reviewed_on": "2026-11-04"
     },
     {
       "source": "test/glacier/figs/avalanche.png",
@@ -3034,6 +3034,15 @@
       "reviewer": "Claude (Claude Code session; English figure drawn by the same script with the en switch; visual check)",
       "method": "assistant",
       "reviewed_on": "2026-11-03"
+    },
+    {
+      "source": "test/glacier/figs/lc.png",
+      "target": "test/glacier/en/figs/lc.png",
+      "source_sha256": "f9cb0260892e12c7b8fcb0800b070fcb25b9fe95b3e0fdcc7b13cc5131e9b924",
+      "target_sha256": "a2f2a65ce19922362ee5968f03b5445a62e0b9e22e228cc3f710d0c493b6afe1",
+      "reviewer": "Claude (Claude Code session; English figure drawn by the same script with the en switch; visual check)",
+      "method": "assistant",
+      "reviewed_on": "2026-11-04"
     },
     {
       "source": "test/gtif/README.md",

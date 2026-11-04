@@ -1,4 +1,4 @@
-# test/glacier — glacier module: Halfar dome similarity solution, cirque-formation smoke test, and isotropy of the avalanche redistribution
+# test/glacier — glacier module: Halfar dome similarity solution, cirque-formation smoke test, isotropy of the avalanche redistribution, and the erosion coupling length
 
 > English mirror of test/glacier/README.md. The Japanese file is the master copy.
 
@@ -6,7 +6,7 @@
 
 This is the verification case of the glacier module (`fn_glacier`,
 [the glacier chapter of the users guide](../../../docs/en/users_guide/glacier.md)).
-It consists of four configurations (docs/glacier_plan.md §7, developer.md §45).
+It consists of five configurations (docs/glacier_plan.md §7, developer.md §45).
 
 1. **Halfar dome** (`param.txt`): an ice cap on a flat bed with zero mass
    balance spreads by shallow-ice-approximation (SIA) flow. A quantitative
@@ -28,6 +28,14 @@ It consists of four configurations (docs/glacier_plan.md §7, developer.md §45)
    the summit does not depend on the direction (no bias from the grid
    orientation) and that the water equivalent is conserved (developer.md
    §45.2).
+5. **Erosion coupling length** (`param_lc.txt` / `param_lc2.txt` /
+   `param_lc0.txt` / `param_lc02.txt`): ice filling a uniformly inclined
+   V-shaped valley to a depth of 250 m flows, slides and erodes for 10 years of
+   landform time. Confirms that when the driving stress used for erosion is
+   averaged over the length gl_lc (developer.md §45.3), the erosion across the
+   valley spreads over the ice width independently of the grid spacing (200 m
+   and 100 m), and that without averaging (gl_lc = 0 = local τb, the default)
+   it concentrates on the valley axis and its shape changes with the grid.
 
 ## Configuration
 
@@ -39,6 +47,21 @@ It consists of four configurations (docs/glacier_plan.md §7, developer.md §45)
 | Flow | SIA, Glen A = 1e-16 Pa⁻³ yr⁻¹ (n = 3) | SIA + Weertman sliding (gl_as = 1e-13) + erosion (gl_kg = 1e-4). The firnification time constant is made tiny for acceleration |
 | Time | dt = 60 s, 1 day. Landform-time factor gl_morfac = 80 → flow for 80 days ≈ 2 t₀ (t₀ = 40.1 days) | dt = 30 s, 1 day × 500 ≈ 1.4 years |
 
+Configuration 5 (erosion coupling length) fills a 6000 m × 4000 m V-shaped
+valley (floor slope 0.03, wall slope 0.4; `data/zv200.txt`, `data/zv100.txt`)
+with ice 250 m deep at the valley axis (ice surface flat across the valley;
+`data/hiv200.txt`, `data/hiv100.txt`), and runs SIA flow + Weertman sliding +
+erosion at −30 ℃ without precipitation (zero mass balance) for 1 day × 3652.5
+= 10 years. The erosion coefficient is 100 times the default (gl_kg = 1e-2) to
+make the shape easy to see.
+
+| Configuration | Δx | gl_lc | Smoothing passes |
+|---|---|---|---|
+| 5 (`param_lc.txt`) | 200 m | 400 m | 16 |
+| 5b (`param_lc2.txt`) | 100 m | 400 m | 64 |
+| 5c (`param_lc0.txt`) | 200 m | 0 (local τb) | — |
+| 5d (`param_lc02.txt`) | 100 m | 0 (local τb) | — |
+
 Halfar similarity solution: H(r, t) = H₀ (t₀/t)^{1/9} [1 − ((t₀/t)^{1/18} r/R₀)^{4/3}]^{3/7},
 t₀ = (1/(18Γ)) (7/4)³ R₀⁴/H₀⁷, Γ = 2A(ρ_i g)³/(n + 2). Advancing 80 days of
 landform time from the initial state (t₀) gives t ≈ 3 t₀, where the central
@@ -46,19 +69,20 @@ thickness goes from 200 to 177 m and the radius spreads from 600 to 640 m.
 
 | File | Contents |
 |---|---|
-| `Make_input.py` | Generates `data/hi0.txt` (Halfar initial ice thickness) and `data/zcone.txt` (conical mountain) |
+| `Make_input.py` | Generates `data/hi0.txt` (Halfar initial ice thickness), `data/zcone.txt` (conical mountain), and `data/zv*.txt` / `data/hiv*.txt` (V-shaped valley and initial ice of configuration 5) |
 | `Check_halfar.py` | Judges the mean, maximum and central errors of the final ice thickness Hi9998 against the similarity solution, the ratio of the ice volumes in the sectors along the grid axes and the diagonals (isotropy), and the conservation of S_total (water equivalent of the ice) |
 | `Check_cirque.py` | Judges glacier formation (max Hi > 1 m), subglacial erosion (dz < −0.01 m), no uplift, and no NaN |
 | `Check_ava.py` | Configuration 4: judges the coefficient of variation of SWE on circles of radius 800–1600 m (< 0.08), the mean SWE on the 400 m circle (below 90% of the initial value, i.e. the redistribution works), and the conservation of the water equivalent |
+| `Check_lc.py` | Configuration 5: for the erosion across the valley (mean over x = 2–4 km), judges that with gl_lc = 400 m the difference between Δx = 200 m and 100 m is below 5% in relative L1; that the erosion spreads over the ice width more than with gl_lc = 0 (the width where erosion exceeds half its maximum at least twice as large, and the mean/maximum within the ice at least 0.15 larger); that it decreases monotonically from the valley axis to the ice margin; that with gl_lc = 0 the same comparison exceeds 5% (the check can detect the grid dependence); that erosion occurs only in ice-covered cells; and no uplift and no NaN |
 | `Fig.py` | Draws the figures `en/figs/*.png` below (`python3 Fig.py en`; `figs/*.png` are the Japanese versions) |
 
 ## Running
 
 ```bash
 make
-./Run.sh          # generate inputs → Halfar → cirque → avalanche → the 3 Checks → equivalence check of the defaults. PASS when all pass
+./Run.sh          # generate inputs → Halfar → cirque → avalanche → erosion coupling length → the 4 Checks → equivalence check of the defaults. PASS when all pass
 ./Run_MPI.sh 4
-python3 Fig.py en # en/figs/halfar.png, en/figs/cirque.png, en/figs/avalanche.png
+python3 Fig.py en # en/figs/halfar.png, en/figs/cirque.png, en/figs/avalanche.png, en/figs/lc.png
 ```
 
 ## Figures
@@ -111,6 +135,25 @@ fix, when the snow went to the single steepest of the 8 neighbours, 1000 mm of
 snow remained along the grid axes and diagonals and the amount fell to 100 mm
 in the directions in between (coefficients of variation 0.230–0.350).
 
+![Erosion coupling length](figs/lc.png)
+
+Configuration 5. Left: the valley cross-section and the initial ice. Right:
+the erosion across the valley after 10 years (mean over x = 2–4 km). With the
+local τb (gl_lc = 0, grey) the erosion concentrates on the valley axis (the
+width where it exceeds half its maximum is 400 m), and refining the grid from
+200 m to 100 m increases the erosion at the axis from 1.53 m to 1.99 m and
+changes the shape (relative L1 difference 0.196). There is also a step where
+the cell at the ice margin is eroded more deeply than the next cell inside
+(at Δx = 200 m, −0.47 m at the margin and −0.37 m inside), because the central
+difference gradient at the margin cell includes the bed elevation of the
+ice-free neighbour (an ice cliff). With gl_lc = 400 m (red) the erosion spreads
+over the whole ice width (the same width is 1200 m) and the shapes on the two
+grids nearly coincide (difference 0.003). The erosion decreases monotonically
+from the valley axis to the ice margin (the gradient for the averaged driving
+stress uses ice-covered cells only). In both cases the largest erosion is at
+the valley axis; whether the cross-section becomes U-shaped cannot be told from
+this 10-year check (for the long-term trial runs see developer.md §45.3).
+
 ## Findings
 
 | Check | Computed value | Criterion | Verdict |
@@ -125,6 +168,11 @@ in the directions in between (coefficients of variation 0.230–0.350).
 | Avalanche: mean SWE on the 400 m circle | 408 mm | < 900 mm (90% of the initial 1000 mm) | PASS |
 | Avalanche: relative change of the water equivalent S_total | 0 (unchanged in all displayed digits) | < 1e-12 | PASS |
 | Equivalence check of the defaults | save and Log byte-identical, 4 "(default)" lines | — | PASS |
+| Coupling length: difference of the erosion across the valley between Δx = 200 m and 100 m (relative L1) | 0.003 with gl_lc = 400 m | < 0.05 | PASS |
+| Coupling length: the same comparison with gl_lc = 0 (detector check) | 0.196 | > 0.05 | PASS |
+| Coupling length: width where erosion exceeds half its maximum / mean/maximum within the ice | 1200 m / 0.82 (400 m / 0.52 with gl_lc = 0) | at least twice / at least 0.15 larger | PASS |
+| Coupling length: erosion decreases monotonically from the valley axis to the ice margin | holds on both grids with gl_lc = 400 m (step at the margin with gl_lc = 0) | holds | PASS |
+| Coupling length: erosion in ice-free cells, uplift, NaN | none | none | PASS |
 
 - The SIA flow agrees with the similarity solution to 0.16% of H₀ on average,
   and the ice volume is conserved at machine precision owing to the
@@ -136,6 +184,14 @@ in the directions in between (coefficients of variation 0.230–0.350).
   upper part of the mountain is eroded"; the eroded material is discharged out
   of the system (the WARNING line on the screen gives its amount;
   glacier_plan.md §7 "known compromises").
+- The erosion coupling length gl_lc defaults to 0 (local τb; bit-identical to
+  the code before 2026-11-04). In long-term erosion experiments with the local
+  τb, the positive feedback in which thicker ice erodes more and the eroded
+  place gets thicker ice shrinks to the scale of the grid spacing, and slots in
+  the valley floor or cell-sized pits can grow until the computation stops
+  (1500–4000 years in the trial runs; developer.md §45.3). Give gl_lc in
+  erosion experiments longer than a millennium (guidelines in
+  [the glacier chapter of the users guide](../../../docs/en/users_guide/glacier.md)).
 - Ice temperature and polythermal structure, calving, subglacial hydrology and
   the like are not included. A long-term case that quantitatively confirms
   cirque formation on the 10⁴-year scale is a candidate for future extension

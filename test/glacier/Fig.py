@@ -7,6 +7,8 @@
                     中央行の氷厚と相似解、および氷厚分布の計算 − 解析解
 - figs/cirque.png : カール形成スモークテスト。初期地形(円錐)、最終氷厚 Hi、地形変化 Z9998 − Z0000
 - figs/avalanche.png : 雪崩再配分の等方性(構成 4)。1 日後の SWE と、山頂から同じ距離の円周上の SWE
+- figs/lc.png : 侵食の結合長 gl_lc(構成 5)。V 字谷の横断面と、谷を横切る侵食の形
+                (gl_lc = 0 と 400 m、Δx = 200 m と 100 m)
 """
 import glob, os, sys
 import numpy as np
@@ -116,3 +118,42 @@ if os.path.isdir("result_ava"):
     fig.savefig(f"{FIGDIR}/avalanche.png", dpi=110)
     plt.close(fig)
     print("avalanche: SWE min %.1f mm, max %.1f mm" % (sw.min(), sw.max()))
+
+if all(os.path.isdir(f"result_{c}") for c in ("lc", "lc2", "lc0", "lc02")):
+    # 構成 5(侵食の結合長 gl_lc)。Check_lc.py と同じく x = 2〜4 km の列で平均した横断形
+    def lc_profile(case, dx):
+        z0 = np.loadtxt(f"result_{case}/Z0000.txt"); z1 = np.loadtxt(f"result_{case}/Z9998.txt")
+        h0 = np.loadtxt(f"result_{case}/Hi0000.txt")
+        xs = (np.arange(z0.shape[1]) + 0.5) * dx
+        sel = (xs >= 2000.0) & (xs <= 4000.0)
+        y = (np.arange(z0.shape[0]) + 0.5) * dx - 2000.0
+        return y, (z1 - z0)[:, sel].mean(axis=1), z0[:, sel].mean(axis=1), h0[:, sel].mean(axis=1)
+    fig, axes = plt.subplots(1, 2, figsize=(12.5, 4.3), gridspec_kw={"width_ratios": [1, 1.3]})
+    ax = axes[0]
+    y, _, zb, h0 = lc_profile("lc2", 100.0)
+    zb = zb - zb.min()
+    ax.fill_between(y, zb, zb + h0, color="C0", alpha=0.25, step="mid", label=T("初期の氷", "initial ice"))
+    ax.plot(y, zb, "k-", lw=1.0, drawstyle="steps-mid", label=T("岩盤(Δx = 100 m)", "bed (Δx = 100 m)"))
+    ax.set_xlim(-1500, 1500); ax.set_ylim(0, 700)
+    ax.set_xlabel(T("谷の軸からの距離 (m)", "distance from the valley axis (m)")); ax.set_ylabel(T("谷底からの高さ (m)", "height above the valley floor (m)"))
+    ax.set_title(T("谷の横断面(谷底の勾配 0.03、谷壁 0.4、氷の深さ 250 m)", "Valley cross-section (floor slope 0.03, walls 0.4, ice 250 m deep)"), fontsize=10)
+    ax.legend(fontsize=8, loc="upper center"); ax.grid(alpha=0.3)
+    ax = axes[1]
+    for case, dx, col, ls, lab in [("lc0", 200.0, "0.45", "--", T("gl_lc = 0(局所)、Δx = 200 m", "gl_lc = 0 (local), Δx = 200 m")),
+                                   ("lc02", 100.0, "0.45", "-", T("gl_lc = 0(局所)、Δx = 100 m", "gl_lc = 0 (local), Δx = 100 m")),
+                                   ("lc", 200.0, "C3", "--", "gl_lc = 400 m, Δx = 200 m"),
+                                   ("lc2", 100.0, "C3", "-", "gl_lc = 400 m, Δx = 100 m")]:
+        y, dz, _, _ = lc_profile(case, dx)
+        ax.plot(y, dz, color=col, ls=ls, lw=1.4, drawstyle="steps-mid", label=lab)
+    ax.set_xlim(-1500, 1500)
+    ax.set_xlabel(T("谷の軸からの距離 (m)", "distance from the valley axis (m)")); ax.set_ylabel(T("10 年の侵食 dz (m)", "erosion in 10 years, dz (m)"))
+    ax.set_title(T("谷を横切る侵食の形(x = 2〜4 km の平均。侵食係数は既定の 100 倍)",
+                   "Erosion across the valley (mean over x = 2–4 km; erosion coefficient 100 × default)"), fontsize=10)
+    ax.legend(fontsize=8, loc="lower right"); ax.grid(alpha=0.3)
+    fig.suptitle(T("侵食の結合長 gl_lc(構成 5): 局所の τb は谷の軸に集中し格子で形が変わる。gl_lc を与えると氷の幅に広がり格子によらない",
+                   "Erosion coupling length gl_lc (configuration 5): the local τb concentrates on the axis and changes with the grid; with gl_lc it spreads over the ice width and is grid-independent"),
+                 fontsize=9.5)
+    fig.tight_layout()
+    fig.savefig(f"{FIGDIR}/lc.png", dpi=110)
+    plt.close(fig)
+    print("lc: figure written")

@@ -31,6 +31,8 @@ module list_glacier
     real :: gl_kg = -9999.0                  ! 侵食係数 Kg(滑動速度べき乗則。f_glero=1 で未指定なら既定 1e-4。
                                              !   gl_lexp=1 なら無次元(us は m/yr で評価))
     real :: gl_lexp = 1.0                    ! 侵食則の滑動速度べき指数 l
+    real :: gl_lc = 0.0                      ! 侵食の結合長 (m)。侵食に使う駆動応力を標準偏差 gl_lc の
+                                             !   ガウス核で氷の中だけ平均する(0 = 局所の τb。§45.3)
     integer :: f_glava = 0                   ! 雪の重力再配分=雪崩 (0:なし, 1:有効)
     real :: gl_ava_tanc = 0.6                ! 雪崩の限界勾配 tan(θc)
     character(len=maxpathlen) :: fn_glacier_hi0 = ""  ! 初期氷厚分布 (m 氷厚。省略時=氷なし)
@@ -47,7 +49,7 @@ subroutine list_glacier_read(p, list)
 
   integer :: f_glacier, f_glflow, f_glslide, f_glero, f_glava, gl_nsubmax
   real :: gl_morfac, gl_dens, gl_tfirn_yr, gl_ddfi, gl_tmelt, gl_afl, gl_cfl
-  real :: gl_as, gl_kg, gl_lexp, gl_ava_tanc
+  real :: gl_as, gl_kg, gl_lexp, gl_lc, gl_ava_tanc
   character(len=80) :: dt_glacier_c
   character(len=maxpathlen) :: fn_glacier_hi0
   integer :: un, ios
@@ -56,7 +58,7 @@ subroutine list_glacier_read(p, list)
   namelist /list_glacier/ f_glacier, dt_glacier_c, gl_morfac, gl_dens, &
                           gl_tfirn_yr, gl_ddfi, gl_tmelt, &
                           f_glflow, gl_afl, gl_cfl, gl_nsubmax, &
-                          f_glslide, gl_as, f_glero, gl_kg, gl_lexp, &
+                          f_glslide, gl_as, f_glero, gl_kg, gl_lexp, gl_lc, &
                           f_glava, gl_ava_tanc, fn_glacier_hi0
 
   ! ネームリストにありながらファイルに記述のなかった変数は、
@@ -77,6 +79,7 @@ subroutine list_glacier_read(p, list)
   f_glero = list%f_glero
   gl_kg = list%gl_kg
   gl_lexp = list%gl_lexp
+  gl_lc = list%gl_lc
   f_glava = list%f_glava
   gl_ava_tanc = list%gl_ava_tanc
   fn_glacier_hi0 = list%fn_glacier_hi0
@@ -104,6 +107,7 @@ subroutine list_glacier_read(p, list)
   list%f_glero = f_glero
   list%gl_kg = gl_kg
   list%gl_lexp = gl_lexp
+  list%gl_lc = gl_lc
   list%f_glava = f_glava
   list%gl_ava_tanc = gl_ava_tanc
   list%fn_glacier_hi0 = fn_glacier_hi0
