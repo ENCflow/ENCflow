@@ -13,9 +13,13 @@ equations in the
 docs/mountain_stream_plan.md §12 and developer.md §89.18, in Japanese). The lowering
 rate of bare rock is the excess form of the quasi-static driving stress
 
-  E_d0 = f_r k_d max(τ_d/τ_cd − 1, 0)^m_d,  τ_d = ρ(1 + sC) g_e h_t tanθ.
+  E_d0 = f_r k_d max(τ_d/τ_cd − 1, 0)^m_d,  τ_d = ρ(1 + sC) g_e h_t tanθ
 
-Only cells with a dense mixture (C ≥ db_cmin) that is moving (|V| ≥ db_vstop)
+(θ is the bed slope in the flow direction and g_e the effective gravity of the
+momentum equation, g/(1 + |∇z|²), where |∇z| is the ground slope of the cell, the
+minmod of the differences to the two neighbours along each axis; developer.md §91,
+in Japanese). Only cells with a dense mixture (C ≥ db_cmin) that is moving
+(|V| ≥ db_vstop)
 erode. The product enters the mobile layer sd 1:1 (z unchanged) and covers the rock
 by the exposure exp(−sd/H*). There is no reference; the case is judged by the
 analytical solution, conservation, bit identity and the messages of the stops.
@@ -42,7 +46,7 @@ erodibility multiplier (0 to 2, shifting with a period of 9 rows) vary by row.
 | DB5 continuation | `param_db5_rt1.txt`, `param_db5_rt2.txt` | db2 saved at t = 10 s (rt1) and restarted (`f_state_restore = 1`) to 20 s (rt2) | state.dat and geomorph_rockinc.dat of save_db5_rt byte-identical to the straight run save_db2 |
 | DB5 alternating runs | `param_db5_f1.txt`, `param_db5_d.txt`, `param_db5_f2.txt` | In the channel of db1, a clear-water flood (`f_fluvial` + fluvial plucking) for 100 s → a debris flow (no exchange, debris-flow term) for 100 s → a flood for 50 s, chained with `f_state_restore = 2`. The save after the debris flow carries h_s in the flow | Σ ΔRi A of each stage within relative 1e-7 of the ledger of that stage, Ri never decreases. The message at the initialization of the third stage (deposited solids) within relative 1e-7 of the restored Σh_s A. h_s = 0 at the end of the third stage. The rock surface R = z − sd satisfies ΔR + ΔRi = 0 in each stage (within 1e-12 m; the deposit enters both z and sd) |
 | DB7 input errors | `param_db7_kp.txt` and 4 others | Fluvial plucking in a debris-flow run / no threshold / db_cmin = 0 / rock_kdb without f_debris / no process that erodes the rock | Each stops at the initialization with its message |
-| DB8 two-cell undulation | `param_db8.txt` | The channel and flow of db1 on bare rock with multiplier 1, with a two-cell undulation of ±5 mm in rows 11 to 50 (the flow-direction bed slope is a one-sided difference to the downstream neighbour; developer.md §89.24, in Japanese) | In each cell e^{H/H*} − 1 = E_d0 T/H* within 1e-9 (relative). Σ(−1)^j Ri / ΣRi > 0 (the bumps erode more and the undulation of the rock surface shrinks) |
+| DB8 two-cell undulation | `param_db8.txt` | The channel and flow of db1 on bare rock with multiplier 1, with a two-cell undulation of ±5 mm in rows 11 to 50 (the flow-direction bed slope is a one-sided difference to the downstream neighbour; developer.md §89.24, in Japanese. The ground slope of the effective gravity is the minmod of the differences to the two neighbours, so on the undulation it is the gentler difference; §91) | In each cell e^{H/H*} − 1 = E_d0 T/H* within 1e-9 (relative). Σ(−1)^j Ri / ΣRi > 0 (the bumps erode more and the undulation of the rock surface shrinks) |
 
 | File | Contents |
 |---|---|
@@ -91,6 +95,21 @@ python3 make_init.py   # regenerate the inputs (bundled; only when changed)
   the channel with slope 0.2 is supercritical) changed the values of the channel
   configurations slightly (ledgers of DB5: flood 1.21 → 1.23, debris flow
   2.90 → 2.91, flood 0.392 → 0.397 m³; DB2 has no inflow and is unchanged).
+- The fix of the yield rest check (2026-11-04; developer.md §28.16) changed the values of DB2
+  and of the DB5 continuation that restarts from the middle of DB2 (rock eroded by debris flows
+  1.07 m³ and largest Ri 12.7 mm with the code just before the fix, 1.09 m³ and 12.2 mm after it;
+  the difference from the 0.76 m³ and 8.6 mm recorded above comes from later changes to the code,
+  not separated out). DB1, DB3, the alternating runs of DB5 and DB8 are byte-identical before and
+  after the fix, and all configurations pass.
+- The fix of the steep-slope gravity correction and the change that gives rock erosion the
+  effective gravity of the momentum equation, g/(1 + |∇z|²) (2026-11-04; developer.md §91),
+  changed the values of DB2 and DB5 (rock eroded by debris flows 1.09 → 1.11 m³, largest Ri
+  12.2 → 14.5 mm; ledgers of DB5: debris flow 2.91 → 2.95, flood 0.397 → 0.396 m³). The
+  analytical solution of DB8 was brought to the new definition (the ground slope of the
+  effective gravity is the minmod of the differences to the two neighbours): largest relative
+  difference 1.3e-15 (τ_d = 634 to 694 Pa), Σ(−1)^j Ri / ΣRi = +0.040 (the old executable fails
+  the new analytical solution by 2.0e-2). DB1 has a uniform slope, so only rounding differences
+  remain (1.6e-15). All configurations pass, and MPI np = 2 is byte-identical to the serial run.
 - MPI (DB4): no run-time errors with -fcheck=all at np = 2. With the -O2 build,
   the state.dat and geomorph_rockinc.dat of np = 1, 2 and 4 are byte-identical to
   the serial run. With the default -Ofast, Run_MPI.sh 2 and 4 are also

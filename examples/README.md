@@ -46,6 +46,7 @@ python3 plot_results.py   # 図化(用意されている例題のみ)
 | [bedrock_cover/](bedrock_cover/) | 山地渓流の岩盤河道で、給砂の量・時期・初期の被覆が下刻を促すか妨げるか(道具と被覆の効果)を見る | 流水による岩盤下刻 f_rockinc(剥離・被覆・研磨)、掃流砂 f_fluvial、区間流入の給砂 inflow_qb |
 | [mountain_valley/](mountain_valley/) | 隆起する山地の V 字谷で、風化・クリープの斜面と岩盤下刻の渓流を同時に動かし、定常の谷の形を見る | 風化 f_wthr(fn_wthr)、深さ依存クリープ creep_hstar、流水による岩盤下刻 f_rockinc、掃流砂 f_fluvial、分布隆起 fn_uplift |
 | [debris_bedrock/](debris_bedrock/) | 渓流に流した土石流が岩盤をどこでどれだけ削るか、土石流の頻度が渓流の定常勾配をどう変えるかを見る | 土石流 f_debris(高橋・中川、クーロン + Manning)、土石流による岩盤侵食 f_rockinc の rock_kdb |
+| [debris_fan/](debris_fan/) | 谷壁の斜面崩壊から始まる土石流が谷を下り、扇状地の住宅地に堆積する過程(1997 年の針原川のような災害の模式)を、格子間隔 40〜2.5 m と谷の向き 0°・22.5°・45° で計算し、格子への依存と、粗い格子(広域の解析)での ENC の 8 近傍と 4 近傍の違いを見る | 土石流 f_debris(高橋・中川 f_dbed=3・f_dbres=3)、瞬時流動化 fn_dbinit、最大流動深 D9999・流体力 F9999、4 近傍の対照 p_diagratio |
 | [shield_volcano/](shield_volcano/) | 火口の位置と噴出量を変えた断続的な噴火で溶岩流が重なり、楯状火山が育つ過程と、形を決めるのが降伏応力であることを見る。補足に粘い溶岩の溶岩ドームを解析解と比べる | 溶岩流 fn_lavaflow(複数噴火口 lv_cell・lv_val、Bingham 降伏応力 lv_tauy、固化 lv_wsol・lv_vsol) |
 | [stratovolcano/](stratovolcano/) | 溶岩流 → 降灰 → 豪雨の侵食 を 10 回繰り返して、溶岩と灰の層が重なった成層火山を作る。噴火の仕方(溶岩と灰の割合)と侵食で、形と内部の層がどう変わるかを見る。最後に、育った山の地形に温度を考慮した 1 回の溶岩流を流し、流路が地形の凹凸で決まる様子と冷えて止まる様子を見る | 溶岩流 fn_lavaflow(固化した溶岩の下の土層を埋める。最後の段は温度モード f_lvtemp)、降灰は前処理、Green-Ampt、掃流砂 f_fluvial + morfac、段ごとの計算をつなぐドライバ |
 | [glacier_valley/](glacier_valley/) | 川の V 字谷と支谷に寒冷な気候で氷河を育て、6000 年の侵食がどこに集まり、どのくらいの速さで進むかを見る(既定の値では谷の形の変化は数十 m)。補足に侵食係数 10 倍(6 万年分の侵食)の計算と湖の段を加え、閉じた凹地と湖・懸谷の段ができる一方で、侵食が涵養域を低くして氷河を短くすることを見る | 氷河 fn_glacier(質量収支・雪崩 f_glava・SIA 流動 f_glflow・滑動 f_glslide・侵食 f_glero と侵食の結合長 gl_lc)、気温減率と降水の標高補正、積雪、時間加速 gl_morfac、段の間で地盤高を渡す前処理 |
@@ -79,6 +80,7 @@ ENCflow の特徴である「複数プロセスを 1 つの計算で連鎖させ
 - 山からの涵養 → 扇状地の地下水 → カナートの集水・湧出(揚水井で細る): [qanat/](qanat/)。
 - 雨 → 地表流と浸透 → 地下水の流れ → 湧出(基底流)→ 川の重金属の濃度(吸着の遅れ・ため池・粒子態の沈降・蒸発散で変わる): [catchment_metal/](catchment_metal/)。
 - 1 機能だけの解析解ベンチマーク: [benchmark/](benchmark/)。
+- 斜面崩壊 → 土石流 → 扇状地の住宅地(格子の大きさ・谷の向きへの依存、粗い格子での 8 近傍と 4 近傍): [debris_fan/](debris_fan/)。
 - 格子の精緻化(ネスティング): [nest_reflect/](nest_reflect/)。
 
 計算したい現象から機能の組み合わせを引くには

@@ -30,6 +30,8 @@ module m_swflow_enc
                                       !   gfortran の LTO でシンボル未解決になるため公開)
   public :: m_swflow_enc_set_debris   ! 土石流抵抗則の設定口(m_geomorph の
                                       ! init_debris が呼ぶ。swflow init より前)
+  public :: zdiff_minmod              ! 地盤の勾配の minmod 差分(重力補正の gravity_prepare と、
+                                      ! m_geomorph の土石流の岩盤侵食の有効重力が使う。§91)
 
   ! 変数群(§71 0d)。opt/geo は nvfortran の submodule バグ回避(TPR #27323 系)で
   ! 公開(修正され次第 private に戻す)。chn は m_geomorph の掃流砂・m_wq・流木・
@@ -218,6 +220,8 @@ module m_swflow_enc
     real :: db_tauy = 0.0                     ! 一定停止応力 τ_y (Pa)(db_res=5)
     integer :: db_curv = 0                    ! 曲率項の有無(f_dbcurv)
     real, allocatable :: acv(:,:)             ! セルの遠心加速度 a_c (m/s²)(1:nx, jsh:jeh)
+    real, allocatable :: gsx(:,:), gsy(:,:)   ! セルの流動面の勾配 ∂η/∂x, ∂η/∂y(降伏の静止判定の
+                                              !   接線成分。db_res>=1 のみ確保。§28.16)
   end type
   type(t_enc_debris), allocatable :: dbr
   real, parameter :: db_rhow = 1000.0       ! 清水密度 (kg/m³)(τ_y を加速度に落とす
@@ -407,6 +411,9 @@ module m_swflow_enc
                                      ! s%dw_active のときだけ確保。§50)
     real, allocatable :: hbd1(:,:)   ! 流動瓦礫柱状量の書き込み先(同上の意味論。
                                      ! s%bd_active のときだけ確保。§63)
+    real, allocatable :: gzx(:,:), gzy(:,:)  ! セルの地盤の勾配 ∂z/∂x, ∂z/∂y(minmod で制限した
+                                     ! 差分。重力補正の cos²θ = 1/(1 + |∇z|²) の接線成分に使う。
+                                     ! f_gravity_correction > 0 のときだけ確保。§91)
     logical :: initialized = .false.
   end type
   type(t_enc_status), allocatable :: sx_mod   ! エッジ状態(同上: init が確保、dispose が解放)
@@ -944,6 +951,11 @@ subroutine m_swflow_enc_init(p, g, b, s)
   ! 曲率項の作業配列(f_dbcurv=1 のみ。set_debris は geomorph init から
   ! swflow init より前に呼ばれる契約なので db_curv はここで確定済み)
   if (dbr%db_curv > 0) allocate(dbr%acv(dcp%ish:dcp%ieh, dcp%jsh:dcp%jeh), source = 0.0)
+  ! 降伏の静止判定の流動面の勾配(db_res>=1 のみ。§28.16)
+  if (dbr%db_res > 0) then
+    allocate(dbr%gsx(dcp%ish:dcp%ieh, dcp%jsh:dcp%jeh), source = 0.0)
+    allocate(dbr%gsy(dcp%ish:dcp%ieh, dcp%jsh:dcp%jeh), source = 0.0)
+  end if
   if (opt%f_bank_mode < e_bank_weir .or. opt%f_bank_mode > e_bank_pump) then
     call par_stop("list_channel: f_bank_mode must be 0(overtopping only), " &
                   //"1(one-way sluice) or 2(forced drainage)")
@@ -1205,6 +1217,9 @@ subroutine m_swflow_enc_calc(p, g, b, s, ierror)
 
   ! 曲率項の遠心加速度をセルごとに前計算する(f_dbcurv=1。§28.10)
   if (dbr%db_curv > 0) call curv_prepare(g, s)
+  if (allocated(dbr%gsx)) call yield_prepare(p, g, s)
+  ! 重力補正のセルの地盤の勾配(f_gravity_correction > 0。§91)
+  if (allocated(sx_mod%gzx)) call gravity_prepare(g, s, sx_mod)
 
   ! 運動方程式を解いて流速を計算する
   call momentum(p, g, s, sx_mod, ierror)
@@ -1513,6 +1528,11 @@ subroutine init_enc_status(p, g, s, sx)
     allocate(sx%hbd1(dcp%ish:dcp%ieh, dcp%jsh:dcp%jeh), source = 0.0)
     sx%hbd1(:,:) = s%hbd(:,:)
   end if
+  ! 重力補正のセルの地盤の勾配(f_gravity_correction > 0 のみ。ステップごとに gravity_prepare が書く。§91)
+  if (opt%f_gravity_correction > 0) then
+    allocate(sx%gzx(dcp%ish:dcp%ieh, dcp%jsh:dcp%jeh), source = 0.0)
+    allocate(sx%gzy(dcp%ish:dcp%ieh, dcp%jsh:dcp%jeh), source = 0.0)
+  end if
 
   ! 流速の初期条件を設定する(uv)。前ステップ流量 mn1 も同時に uv·he で
   ! 整合させる(init 末尾の complete が mn1 → mn にコミットする)。
@@ -1626,6 +1646,8 @@ subroutine del_enc_status(sx)
   if (allocated(sx%cq1)) deallocate(sx%cq1)
   if (allocated(sx%hd1)) deallocate(sx%hd1)
   if (allocated(sx%hbd1)) deallocate(sx%hbd1)
+  if (allocated(sx%gzx)) deallocate(sx%gzx)
+  if (allocated(sx%gzy)) deallocate(sx%gzy)
 end subroutine
 
 
@@ -1688,6 +1710,155 @@ subroutine momentum(p, g, s, sx, ierror)
   end if
 
 end subroutine
+
+
+!----------------------------------------------------------------------
+! 降伏の静止判定の前計算(db_res>=1。developer.md §28.16)
+!   セルごとに流動面 η の勾配 (∂η/∂x, ∂η/∂y) を求める(η = z + h + hs、圧力項なしは z)。
+!   辺の静止判定は、辺の法線方向の駆動(移流+重力。辺の差分)に、この勾配の両セル平均を
+!   辺の接線へ射影した成分を合わせた駆動の大きさで降伏と比べる(Coulomb 降伏は駆動の
+!   ベクトルの大きさに対する条件。法線成分だけで比べると、斜めの辺が止められて動き出しが
+!   遅れ、その遅れが斜面の向きで変わる)。差分は濡れた(h + hs > dd)有効セルだけを使い、
+!   両隣が濡れていれば中心差分、片方なら片側差分、なしなら 0(乾いたセルの地盤は流動面で
+!   ないので使わない。谷壁の勾配が静止判定に入らないように。溶岩流の §51.4 と同じ)。
+!   z, h, hs はステップ頭で幅 2 交換済みなので、js-1..je+1 の勾配が帯内で閉じて求まる
+!   (辺の両セル平均が js-1 を読む。curv_prepare と同じ)
+!----------------------------------------------------------------------
+subroutine yield_prepare(p, g, s)
+  type(t_sysparam), intent(in) :: p
+  type(t_geoinfo), intent(in) :: g
+  type(t_state), intent(in) :: s
+  integer :: i, j, j1, j2
+  real :: rdx, rdy
+  logical :: okw, oke, oks, okn
+
+  rdx = 1.0 / g%dx
+  rdy = 1.0 / g%dy
+  j1 = max(dcp%js - 1, 1)
+  j2 = min(dcp%je + 1, g%ny)
+  !$omp parallel do schedule(dynamic) private(i, j, okw, oke, oks, okn)
+  do j = j1, j2
+    do i = g%wx(1,j), g%wx(2,j)
+      dbr%gsx(i,j) = 0.0
+      dbr%gsy(i,j) = 0.0
+      if (.not. wet(i, j)) cycle
+      okw = wet(i-1, j)
+      oke = wet(i+1, j)
+      oks = wet(i, j-1)
+      okn = wet(i, j+1)
+      if (okw .and. oke) then
+        dbr%gsx(i,j) = (eta(i+1, j) - eta(i-1, j)) * rdx / 2
+      else if (oke) then
+        dbr%gsx(i,j) = (eta(i+1, j) - eta(i, j)) * rdx
+      else if (okw) then
+        dbr%gsx(i,j) = (eta(i, j) - eta(i-1, j)) * rdx
+      end if
+      if (oks .and. okn) then
+        dbr%gsy(i,j) = (eta(i, j+1) - eta(i, j-1)) * rdy / 2
+      else if (okn) then
+        dbr%gsy(i,j) = (eta(i, j+1) - eta(i, j)) * rdy
+      else if (oks) then
+        dbr%gsy(i,j) = (eta(i, j) - eta(i, j-1)) * rdy
+      end if
+    end do
+  end do
+  !$omp end parallel do
+
+contains
+
+  ! 濡れた有効セルか(領域内・海域でない・h + hs > dd)。x は番兵付き (0:nx+1, 0:ny+1)、
+  ! sw は (1:nx, 1:ny) 確保なので x で先に弾く(Fortran の .and. は短絡評価を保証しない)
+  pure logical function wet(ii, jj)
+    integer, intent(in) :: ii, jj
+    wet = .false.
+    if (g%x(ii,jj) <= 0) return
+    if (g%sw(ii,jj) > 0) return
+    wet = s%h(ii,jj) + max(s%hs(ii,jj), 0.0) > p%dd
+  end function
+
+  ! 流動面(辺の重力・圧力項と同じ定義。圧力項なしは地盤だけ)
+  pure real function eta(ii, jj)
+    integer, intent(in) :: ii, jj
+    if (opt%f_pressure_term > 0) then
+      eta = s%z(ii,jj) + s%h(ii,jj) + max(s%hs(ii,jj), 0.0)
+    else
+      eta = s%z(ii,jj)
+    end if
+  end function
+
+end subroutine
+
+
+!----------------------------------------------------------------------
+! 重力補正の前計算(f_gravity_correction > 0。developer.md §91)
+!   セルごとに地盤 z の勾配 (∂z/∂x, ∂z/∂y) を、軸方向の両隣との差の minmod で求める
+!   (両隣が有効セルなら符号が同じときだけ小さい方、違えば 0。片側だけなら片側差分、
+!   なしなら 0)。平面では厳密で、谷底と谷壁・堤の肩のような折れでは緩い側を取るので、
+!   谷壁の勾配が谷底のセルに入らない(中心差分だと、粗い格子の谷底の有効重力が谷壁の
+!   勾配で大きく下がる)。correct_ge が辺の接線成分に使う。海域セルの地盤も含める
+!   (水底は連続)。z はステップ頭で幅 2 交換済みなので、js-1..je+1 の勾配が帯内で
+!   閉じて求まる(辺の両セル平均が js-1・je+1 を読む。yield_prepare と同じ)
+!----------------------------------------------------------------------
+subroutine gravity_prepare(g, s, sx)
+  type(t_geoinfo), intent(in) :: g
+  type(t_state), intent(in) :: s
+  type(t_enc_status), intent(inout) :: sx
+  integer :: i, j, j1, j2
+
+  j1 = max(dcp%js - 1, 1)
+  j2 = min(dcp%je + 1, g%ny)
+  !$omp parallel do schedule(dynamic) private(i, j)
+  do j = j1, j2
+    do i = g%wx(1,j), g%wx(2,j)
+      sx%gzx(i,j) = 0.0
+      sx%gzy(i,j) = 0.0
+      if (g%x(i,j) <= 0) cycle
+      sx%gzx(i,j) = zdiff_minmod(g, s, i, j, 1, 0) / g%dx
+      sx%gzy(i,j) = zdiff_minmod(g, s, i, j, 0, 1) / g%dy
+    end do
+  end do
+  !$omp end parallel do
+end subroutine
+
+
+!----------------------------------------------------------------------
+! 軸方向の地盤の差の minmod(+側の差 z(+) − z と −側の差 z − z(−))。両側が有効セル
+! (x > 0)なら符号が同じときだけ絶対値の小さい方、違えば(折れの頂部・底部)0。片側
+! だけ有効ならその差、どちらもなければ 0。x は番兵付き (0:nx+1, 0:ny+1) なので、z は
+! 有効と分かった近傍だけ読む(Fortran の .and. は短絡評価を保証しない)。
+! 重力補正のセルの勾配(gravity_prepare)と、土石流による岩盤侵食の有効重力(m_geomorph_debris
+! の calc_debris)が共用する(有効重力の定義を運動方程式と揃える。developer.md §91)
+!----------------------------------------------------------------------
+pure function zdiff_minmod(g, s, i, j, di, dj) result(d)
+  type(t_geoinfo), intent(in) :: g
+  type(t_state), intent(in) :: s
+  integer, intent(in) :: i, j, di, dj
+  real :: d
+  real :: dp, dm
+  logical :: okp, okm
+
+  okp = g%x(i+di, j+dj) > 0
+  okm = g%x(i-di, j-dj) > 0
+  dp = 0.0
+  dm = 0.0
+  if (okp) dp = s%z(i+di, j+dj) - s%z(i,j)
+  if (okm) dm = s%z(i,j) - s%z(i-di, j-dj)
+  if (okp .and. okm) then
+    if (dp * dm <= 0.0) then
+      d = 0.0
+    else if (abs(dp) < abs(dm)) then
+      d = dp
+    else
+      d = dm
+    end if
+  else if (okp) then
+    d = dp
+  else if (okm) then
+    d = dm
+  else
+    d = 0.0
+  end if
+end function
 
 
 !----------------------------------------------------------------------
@@ -2089,6 +2260,7 @@ subroutine calc_kth_flux(p, g, s, sx, uve0, tae0, i, j, k, in, jn, f_runge, uve1
   real :: hte                     ! エッジの混合流動深(時刻 n。層流則用)
   real :: rme                     ! 1 + s・C(混合密度比 ρm/ρ)
   real :: vv0e                    ! 辺の速さ |V|(下限 p%vv 適用前。降伏停止判定用。§28.11)
+  real :: tte                     ! 辺の接線方向の駆動(流動面の勾配の接線成分。降伏停止判定用。§28.16)
   ! 波→流れ(段 W2。s%wv_flow > 0 のときだけ使う。§90)
   real :: wfe                     ! 辺の外力の成分 F_k/ρ (m2/s2。中心から近傍が正)
   real :: use_                    ! 辺の Stokes 輸送の成分 u^S_k (m/s。wv_flow = 2)
@@ -2363,10 +2535,18 @@ subroutine calc_kth_flux(p, g, s, sx, uve0, tae0, i, j, k, in, jn, f_runge, uve1
     !   a_y)が毎ステップ零化され、行間の質量交換が凍結して横断方向に
     !   一様にならない(§28.11 の実バグ)。Coulomb 降伏は速度ベクトルの
     !   大きさに対する条件で、動いている流れの一成分には掛からない
+    !   駆動の大きさは、辺の法線成分(移流+重力。辺の差分)と、流動面の勾配の両セル平均を
+    !   辺の接線へ射影した成分を合わせて求める(§28.16。法線成分だけで比べると、斜めの辺が
+    !   止められて流動の組み立ての速さが小さく出て、動いている辺の降伏摩擦 a_y/|V| が過大に
+    !   なり、動き出しの勾配が a_y の最大 √2 倍に高く出て、その値が斜面の向きで変わった)
     if (aye > 0.0) then
-      if (vv0e < dbr%db_vstop .and. abs(tae + tge) <= aye) then
-        uve1 = 0.0
-        mne1 = 0.0
+      if (vv0e < dbr%db_vstop) then
+        tte = ge * gve * ((dbr%gsx(i,j) + dbr%gsx(in,jn)) * geo%n8y(k) &
+                          - (dbr%gsy(i,j) + dbr%gsy(in,jn)) * geo%n8x(k)) / 2
+        if ((tae + tge)**2 + tte**2 <= aye**2) then
+          uve1 = 0.0
+          mne1 = 0.0
+        end if
       end if
     end if
 
@@ -2464,14 +2644,21 @@ subroutine calc_kth_flux(p, g, s, sx, uve0, tae0, i, j, k, in, jn, f_runge, uve1
 
 contains
   !--------------------------------------------------------------------
-  ! 重力加速度を急勾配地形に合わせて調整
+  ! 重力加速度を急勾配地形に合わせて調整: g_e = g cos²θ = g / (1 + |∇z|²)
   !   Ni, Y., Cao, Z., & Liu, Q. (2019). 
   !     Mathematical modeling of shallow-water flows on steep slopes.
   !     Journal of Hydrology and Hydromechanics, 67(3), 252–259. DOI:10.2478/johh-2019-0012
+  !   θ は地盤の傾斜角(地盤の法線と鉛直のなす角。最急勾配の向きの角)で、辺の向きによらない。
+  !   |∇z|² は、辺の法線成分(辺の差分)と、両セルの地盤の勾配(gravity_prepare の minmod)の
+  !   平均を辺の接線へ射影した成分の二乗和(developer.md §91。2026-11-04 まで、辺の法線成分だけで
+  !   求めていたため、斜面に斜めの辺で g_e が大きく出ていた)
   function correct_ge() result(ge_corr)
     real :: ge_corr
+    real :: szn, szt
     if (vve > 0) then
-      ge_corr = ge * geo%w8dr2(k) / (geo%w8dr2(k) + (s%z(in,jn) - s%z(i,j))**2)
+      szn = (s%z(in,jn) - s%z(i,j)) / geo%w8dr(k)
+      szt = ((sx%gzx(i,j) + sx%gzx(in,jn)) * geo%n8y(k) - (sx%gzy(i,j) + sx%gzy(in,jn)) * geo%n8x(k)) / 2
+      ge_corr = ge / (1.0 + szn**2 + szt**2)
     else
       ge_corr = ge
     end if

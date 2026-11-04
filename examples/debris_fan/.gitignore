@@ -1,0 +1,8 @@
+result_*/
+data_*/
+Screen_*.log
+param_dx*.txt
+houses.txt
+encflow
+encflow_mpi
+__pycache__/

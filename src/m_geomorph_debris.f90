@@ -28,7 +28,7 @@
 !        停止土塊が z へ固定され天然ダムの地形になる(数値的閉包で
 !        あり文献式ではない — debris_plan.md §2.2)
 !
-!   勾配は 8 近傍への最急降下勾配(地形勾配。流向非依存 = 速度 0 でも
+!   勾配は最急勾配(地形勾配。D∞ の slope8。流向非依存 = 速度 0 でも
 !   定義される)。時刻 n の s%z(自セル+近傍。ハロはステップ頭交換で
 !   最新)を読むため、本プロセスは m_geomorph_calc の先頭で適用される。
 !   morfac は 1 に限定(init で検証。イベント計算)。
@@ -36,13 +36,15 @@
 !   土石流による岩盤侵食(f_rockinc の rock_kdb > 0。§89.18、plan §12): パス 1 で、濃い混合体
 !   (C >= db_cmin)が流れている(|V| >= db_vstop)湿潤セルの裸岩の低下速度
 !     E_d0 = f_r k_d max(τ_d/τ_cd − 1, 0)^{m_d}、τ_d = ρ_w (1 + sC) g_e h_t tanθ_f
-!   を gm%rk%edb に書く(θ_f は slope_flow の流向の河床勾配(下流側の片側差分)で下りのみ、g_e は運動方程式と同じ
-!   有効重力 g cos²θ_f(f_gravity_correction = 1)か g)。パス 2 は E-D を適用した後の自セルの
+!   を gm%rk%edb に書く(θ_f は slope_flow の流向の河床勾配(下流側の片側差分)で下りのみ。
+!   g_e は運動方程式と同じ有効重力で、f_gravity_correction = 1 なら g cos²θ = g/(1 + |∇z|²)
+!   (θ は地盤の傾斜角、|∇z| はセルの地盤の勾配の大きさ。軸方向の両隣との差の minmod =
+!   zdiff_minmod。developer.md §91)、0 なら g)。パス 2 は E-D を適用した後の自セルの
 !   sd で被覆を厳密に積分し(rock_cover_inc)、生成物を 1:1 で sd に足す(z は不変)。
 !======================================================================
 submodule(m_geomorph) m_geomorph_debris
   use m_parallel, only : par_stop, dcp, par_halo_cell
-  use m_swflow_enc, only : m_swflow_enc_set_debris, opt, bcs, bc_open_face
+  use m_swflow_enc, only : m_swflow_enc_set_debris, opt, bcs, bc_open_face, zdiff_minmod
   use m_fileio, only : fileio_read_matrix
   implicit none
 
@@ -280,7 +282,7 @@ module subroutine init_debris(gm, p, g, list)
   gm%f_dbwet = list%f_dbwet
   gm%db_lamsb = (1.0 - gm%db_cstar) * list%db_satbed    ! λ・s_b(λ = 1−C*)
 
-  ! 8近傍距離テーブル(最急降下勾配用)
+  ! 8近傍距離テーブル(最急勾配 slope8 用)
   do k = 1, 8
     gm%dbr%dist8(k) = sqrt((din(k) * g%dx)**2 + (djn(k) * g%dy)**2)
   end do
@@ -353,7 +355,7 @@ end subroutine
 
 !----------------------------------------------------------------------
 ! 土石流の侵食・堆積(2パス構造)
-!   パス1: 時刻 n の z(自セル+近傍の最急降下勾配)から交換量 fx を
+!   パス1: 時刻 n の z(自セル+近傍の最急勾配)から交換量 fx を
 !          gm%dbr%fx に計算する(s への書き込みなし)
 !   パス2: fx を適用する(書き込みは自セルに閉じる。近傍読みなし)
 !   1パスのその場更新は「slope8 の近傍 z 読み vs 他スレッドの z 書き」の
@@ -370,6 +372,7 @@ module subroutine calc_debris(gm, p, g, s, dtw)
   real :: tanth, cinf, cc, hm, fx, dzb, cap, fxg, hseq, dhw, fwh
   real :: tanthc, sinthc, vcr, fac
   real :: tanf, ge, taud, fr, bd, bdm, area   ! 土石流による岩盤侵食(§89.18)
+  real :: gzx, gzy                            ! 同上の有効重力の地盤の勾配(§91)
   real(real64) :: vd
   logical :: rkd, gcorr
 
@@ -394,7 +397,7 @@ module subroutine calc_debris(gm, p, g, s, dtw)
 
   ! --- パス1: 交換量の計算(時刻 n の状態のみを読む) ---
   !$omp parallel do schedule(static) private(i, j, tanth, cinf, cc, hm, fx, hseq, &
-  !$omp                                      tanthc, sinthc, vcr, fac, tanf, ge, taud, fr)
+  !$omp                                      tanthc, sinthc, vcr, fac, tanf, ge, taud, fr, gzx, gzy)
   do j = dcp%js, dcp%je
     do i = g%wx(1,j), g%wx(2,j)
       gm%dbr%fx(i,j) = 0.0
@@ -489,7 +492,7 @@ module subroutine calc_debris(gm, p, g, s, dtw)
             fx = 0.0
           end if
         else
-          ! 高橋型: 平衡濃度 C∞(θ) への緩和(最急降下勾配。時刻 n の z)
+          ! 高橋型: 平衡濃度 C∞(θ) への緩和(最急勾配 = D∞ の slope8。時刻 n の z)
           tanth = slope8(gm, g, s, i, j)
           cinf = ceq_debris(gm, tanth)
           if (cc < cinf) then
@@ -523,8 +526,15 @@ module subroutine calc_debris(gm, p, g, s, dtw)
             if (fr > 0.0) then
               tanf = slope_flow(g, s, i, j)
               if (tanf > 0.0) then
+                ! 有効重力は運動方程式(correct_ge)と同じ g cos²θ = g/(1 + |∇z|²)。θ は地盤の
+                ! 傾斜角で流向によらない(流向の勾配 θ_f で求めると、斜面を斜めに流れるセルで
+                ! g_e を大きく見積もる。§91)
                 ge = p%gg
-                if (gcorr) ge = p%gg / (1.0 + tanf**2)
+                if (gcorr) then
+                  gzx = zdiff_minmod(g, s, i, j, 1, 0) / g%dx
+                  gzy = zdiff_minmod(g, s, i, j, 0, 1) / g%dy
+                  ge = p%gg / (1.0 + gzx**2 + gzy**2)
+                end if
                 taud = rk_rhow * (1.0 + gm%sgrav * cc) * ge * hm * tanf
                 if (taud > gm%rk%taucdb) then
                   gm%rk%edb(i,j) = fr * gm%rk%kdb * (taud / gm%rk%taucdb - 1.0)**gm%rk%mdb
@@ -809,16 +819,25 @@ end subroutine
 
 
 !----------------------------------------------------------------------
-! 8近傍への最急降下勾配 tanθ(下限 0。領域外・海近傍は対象外)
-!   開いた辺(格子枠の辺のうち不透過でない面。自由流出・長波放射・区間流入など)の
-!   外の近傍だけは、その位置の標高を辺の法線方向に内側の 2 セルから線形外挿して
-!   補う(z_外 = 2 z_a − z_b。a は辺の法線方向に枠内へ寄せたセル、b はその一つ内側。
-!   角の外は両方向に寄せる)。内側が 1 セルしかなければ z_a のまま(勾配 0 で延長)、
-!   a が領域外・海なら対象外。辺の行に下流の近傍がないために勾配が 0 になり、
-!   C∞ = 0 として流れの土砂を落とす人工的な堆積を防ぐ(developer.md §28.15。
-!   slope_flow の片側差分と同じ考え方)。自セルの反対側の近傍で外挿しないのは、
-!   斜めの向きで谷壁・堤の上り勾配が外向きの急な下りに化けるため。枠内の x = 0
-!   (無効セル)と不透過の辺の外は従来どおり対象外
+! 最急勾配 tanθ(D∞。Tarboton 1997。下限 0。領域外・海近傍は対象外)
+!   自セルと、軸方向の近傍 1 つ・それに隣り合う斜めの近傍 1 つで作る 8 つの三角形の面
+!   ごとに、面内の下り向きの最大勾配を求め、その最大を返す(Tarboton, D. G. (1997): A new
+!   method for the determination of flow directions and upslope areas in grid digital
+!   elevation models. Water Resour. Res., 33(2), 309–319。面の勾配 s1・s2 の向き
+!   r = atan(s2/s1) を面の角の範囲 [0, atan(d2/d1)] に制限する同論文の式。向きの判定は
+!   atan2 を使わない同値な比較にした(平らな面の atan2(0, 0) は規格で定まらない)。範囲の
+!   外では 2 辺の向きの勾配の大きい方をとる(どちらも負のときの選び方だけが同論文と異なり、
+!   下限 0 の結果は同じ)。Δx ≠ Δy では d1・d2 を面の向きの格子間隔にした)。平面では
+!   最急勾配の向きによらず厳密で、8 方向の勾配の最大(2026-11-04 までの方式)は、最急
+!   勾配の向きが 8 方向の間にあると最大 cos 22.5° = 0.924 倍に小さく出た(developer.md §92)。
+!   近傍の扱いは従来どおり: 領域外(x = 0)・海は対象外。開いた辺(格子枠の辺のうち不透過で
+!   ない面。自由流出・長波放射・区間流入など)の外の近傍だけは、その位置の標高を辺の法線
+!   方向に内側の 2 セルから線形外挿して補う(z_外 = 2 z_a − z_b。a は辺の法線方向に枠内へ
+!   寄せたセル、b はその一つ内側。角の外は両方向に寄せる)。内側が 1 セルしかなければ
+!   z_a のまま(勾配 0 で延長)、a が領域外・海なら対象外(developer.md §28.15。自セルの
+!   反対側の近傍で外挿しないのは、斜めの向きで谷壁・堤の上り勾配が外向きの急な下りに
+!   化けるため)。面の片方の近傍が対象外なら、残る近傍への勾配だけを候補にする(面の勾配は
+!   面の 2 辺の向きの勾配以上なので、結果は常に 8 方向の勾配の最大以上)
 !----------------------------------------------------------------------
 pure function slope8(gm, g, s, i, j) result(tanth)
   type(t_geomorph), intent(in) :: gm
@@ -826,15 +845,24 @@ pure function slope8(gm, g, s, i, j) result(tanth)
   type(t_state), intent(in) :: s
   integer, intent(in) :: i, j
   real :: tanth
-  integer :: k, in, jn, ia, ja, ib, jb
-  real :: sl, zn
-  tanth = 0.0
+  ! 面 = (軸方向の近傍 k1, 斜めの近傍 k2)。k は din/djn の番号(1:(−1,−1) 2:(0,−1) 3:(1,−1)
+  ! 4:(−1,0) 5:(1,0) 6:(−1,1) 7:(0,1) 8:(1,1))
+  integer, parameter :: fk1(1:8) = [5, 5, 4, 4, 7, 7, 2, 2]
+  integer, parameter :: fk2(1:8) = [8, 3, 6, 1, 8, 6, 3, 1]
+  integer :: k, f, in, jn, ia, ja, ib, jb, k1, k2
+  real :: zn(1:8), s1, s2, d1, d2, dd, sl
+  logical :: ok(1:8)
+
+  ! 8 近傍の標高(対象外は ok = .false.)
   do k = 1, 8
+    ok(k) = .false.
+    zn(k) = 0.0
     in = i + din(k)
     jn = j + djn(k)
     if (g%x(in,jn) > 0) then
       if (g%sw(in,jn) > 0) cycle
-      zn = s%z(in,jn)
+      zn(k) = s%z(in,jn)
+      ok(k) = .true.
     else
       if (.not. bcs%have_open_bc) cycle
       if (.not. bc_open_face(in, jn)) cycle
@@ -842,14 +870,45 @@ pure function slope8(gm, g, s, i, j) result(tanth)
       ja = min(max(jn, 1), g%ny)
       if (g%x(ia,ja) <= 0) cycle
       if (g%sw(ia,ja) > 0) cycle
-      zn = s%z(ia,ja)
+      zn(k) = s%z(ia,ja)
       ib = 2 * ia - in
       jb = 2 * ja - jn
       if (g%x(ib,jb) > 0) then
-        if (g%sw(ib,jb) <= 0) zn = 2.0 * s%z(ia,ja) - s%z(ib,jb)
+        if (g%sw(ib,jb) <= 0) zn(k) = 2.0 * s%z(ia,ja) - s%z(ib,jb)
       end if
+      ok(k) = .true.
     end if
-    sl = (s%z(i,j) - zn) / gm%dbr%dist8(k)
+  end do
+
+  tanth = 0.0
+  do f = 1, 8
+    k1 = fk1(f)
+    k2 = fk2(f)
+    if (din(k1) /= 0) then
+      d1 = g%dx
+      d2 = g%dy
+    else
+      d1 = g%dy
+      d2 = g%dx
+    end if
+    dd = gm%dbr%dist8(k2)
+    if (ok(k1) .and. ok(k2)) then
+      ! 面の下り勾配のベクトル (s1, s2)(s1 は軸方向、s2 はそれに直交する向き)。向きが面の
+      ! 角(0 〜 atan(d2/d1))の内なら面の勾配の大きさ、外なら面の 2 辺の向きの勾配の大きい方
+      s1 = (s%z(i,j) - zn(k1)) / d1
+      s2 = (zn(k1) - zn(k2)) / d2
+      if (s2 >= 0.0 .and. s2 * d1 <= s1 * d2) then
+        sl = sqrt(s1**2 + s2**2)
+      else
+        sl = max(s1, (s%z(i,j) - zn(k2)) / dd)
+      end if
+    else if (ok(k1)) then
+      sl = (s%z(i,j) - zn(k1)) / d1
+    else if (ok(k2)) then
+      sl = (s%z(i,j) - zn(k2)) / dd
+    else
+      cycle
+    end if
     if (sl > tanth) tanth = sl
   end do
 end function

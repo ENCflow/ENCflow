@@ -60,6 +60,34 @@ architecture.md。このメモは「現在進行中・未完了の項目」だ�
 
 ## 未完了・検証待ち
 
+00k. **急勾配の重力補正の修正(developer.md §91)・最急勾配の D∞(§92)・岩盤侵食の有効重力(2026-11-04)の後始末**
+   - (済 2026-11-04)reference の更新: 利用者の確認の上で、§91 で値が変わる 11 ケース(chichibu・
+     chichibu_icmap・damwq・gwsect・gwseep・gwwidth・kdpart・sewer_wq・tracer・wfdoppler・wqbound)を
+     `./Run.sh -u` で更新した。変化の大きさと原因は developer.md §91 の検証(最大は chichibu の Q_max
+     +0.72 %)。nhshelf の差は 4 スレッドの既知の非決定性で §91 によらない(1 スレッドでは前後でバイト一致)
+     ので更新していない。tracer の機種差の 1 量子の扱いは 0 の項に残る。
+   - 例題の再計算(2026-11-04): 影響の大きい土石流系(debris_fan・ashfall_lahar・debris_bedrock・
+     landslide_tsunami)と stratovolcano(侵食の段)を再計算して README・図を更新した(結果の要点は
+     developer.md §91 の検証)。緩勾配・平坦の例題と、急な斜面の表面流でも計算の長い例題の扱いは
+     下の「例題の再計算の範囲」。
+   - 例題の再計算の範囲(2026-11-04 の分類。§91 は濡れた斜面の辺だけに効き、差はおよそ横断方向の勾配の
+     2 乗。式の計算順が変わったので、勾配のある濡れた辺では最終桁は必ず動く):
+     - 緩勾配の軽い 4 例題を回して README の表と比べた(2026-11-04): sewer_hybrid・levee_breach は印字の
+       桁で同じ(更新なし)。tsunami_town・timberyard は浸水深などは同じだが、1 m³ の桁まで載せた瓦礫・
+       材木の量が 0.1〜8 % 動いたので更新した(修正前の実行ファイルで README の値が再現することを確かめ、
+       差が §91 によることを確認)。
+     - 再計算中(利用者の判断。2026-11-04): badland_storm・tower_karst(急な斜面の豪雨の表面流。薄い
+       シート流で摩擦が支配するので差は小さい見込み)、catchment_metal・estuary_barrage・qanat・karst
+       (緩勾配)と、main から入った glacier_valley。tower_karst は main で加わった 1 Myr の 3 構成
+       (param_steady・param_base・param_base_hc50)を含めて、合計約 21 時間。上の 4 例題から、水深・
+       流量のような 3 桁の値は変わりにくく、細かい桁まで載せた量は動くと見込まれる。終わった例題から
+       README(日英)と図を更新する。
+     - 再計算しない: delta・meander・meander_cutoff(README に丸めの差で数値が変わると明記してあり、
+       回し直しても別の実現値が 1 つ増えるだけ。各 10〜18 時間)。影響なし: 表面流のない badland・
+       badland_round・mesa・shield_volcano・vz_tani2023・stone_forest(雨は全量浸透)、平坦な床の
+       nest_reflect、f_gravity_correction = 0 の
+       tsunami_coast・tsunami_fault・benchmark の v-shaped・v-valley(h-plane は README に数値の記載なし)。
+
 00f. **BMI チュートリアル tutorials/bmi(2026-10-24 新設)の残り**
    - 新設: 初学者向けの 7 段(起動と終了 → update → get → 描画 → リアルタイム
      表示 → set(雨)→ set(粗度))。Python 環境は uv を既定(PEP 723 の
@@ -440,6 +468,12 @@ architecture.md。このメモは「現在進行中・未完了の項目」だ�
    - 既存の観察: -Ofast ビルドの最終桁は swflow_enc の変更でコード配置
      依存に動く(sewer_wq の reference を 2026-10-01 に許可の上で更新。
      -O2 では変更前後バイト一致)。ULP=0 のケースはこの性質を前提に扱う。
+   - (2026-11-04 観察)test/tracer の Log の 1 値(行 8 列 3)が、この環境(Intel Xeon、-march=native の
+     -Ofast)では reference と最終桁の 1 量子違う。降伏の静止判定の修正(§28.16)の前後の実行ファイルとも
+     同じ出力で、1 スレッドでも同じなので、reference を作った機械との差と考えられる。tracer は CI の
+     REF_CASES に入っていないので、機種差の扱い(ULP=1 にするか)を決める(sewer_wq の RTOL・wfsed の
+     ULP=1 は同種の差を許容で吸収している)。2026-11-04 に §91 の更新で reference をこの環境で作り直した
+     ので、この環境では一致し、元の reference を作った機械の側で 1 量子の差が出うる(扱いは未決のまま)
 
 0b. **既定値方針(§62・§64〜§66。2026-10-01 全モジュール展開済み)の残項目**
    - 全ケース回帰ループ中に test/gwdefault が 1 回だけ FAIL(どの構成かは
@@ -685,6 +719,17 @@ architecture.md。このメモは「現在進行中・未完了の項目」だ�
      実装済み。§28.9)
    - f_wash と f_debris の併用(現状 wash は f_suspend 必須)、
      斜面崩壊の部分深さ化(現状は全層)、二相・二層モデルは将来
+   - (2026-11-04 examples/debris_fan の作成で観察)瞬時流動化の発火(release_debris)は同じ地形
+     更新の E-D(calc_debris)の後に来るので、崩壊域に初期水深を置くと、発火の前の侵食(数 mm)で
+     崩壊深が土層厚に切られ、警告 `instantaneous release depth exceeded soil depth` が出る。例題は
+     崩壊域の土層を 5 cm 厚くして避けた(make_init.py の SD_MARGIN)。発火を E-D の前に移すかは
+     未検討(挙動変更。test/slide 等の結果が変わりうる)
+   - (2026-11-04)8 方向の勾配の最大(D8)で最急勾配を求める処理の残り: 土石流の slope8(f_slide の
+     安全率・C∞・停止判定)は D∞ に替えた(developer.md §92)。合意の範囲の外として残したのは、
+     f_bedslide のセル勾配 S_c(駆動 S_c − μb と、下りの辺への流出の配分の正規化。D∞ にするなら、
+     配分の総流出が hb V û になる性質(test/bedslide 構成 2 が検出器)を保つ検討が要る)と、f_splash の
+     spl_sgrad = 1 の最急降下の S(§48.4)。どちらも最急勾配の向きが 8 方向の間にある斜面で最大
+     7.6 %(1 − cos 22.5°)小さく出る
    - 地滑り津波(動く底層 f_bedslide。developer.md §61、docs/landslide_tsunami_plan.md、
      test/bedslide、examples/landslide_tsunami)の残作業(§61.4): Bingham 型 f_bsres=2、
      f_slide の発火先選択、擬似静的地震係数による水中斜面の発生判定、水中の抗力
@@ -1189,6 +1234,11 @@ architecture.md。このメモは「現在進行中・未完了の項目」だ�
     超えることがある(変更前の main・変更後とも、それぞれ 5・7 か所)。1 スレッドでは変更の
     前後で全出力がバイト一致し、reference に ULP=1 で合格する(§30.10 の検証記録)。判定を
     1 スレッドに固定する(約 12 分)か、4 スレッドの揺れの幅に合わせて許容を決め直すかは未決
+    (2026-11-04 追記)同じ非決定が、動く底層と組む examples/landslide_tsunami の非静水圧の比較(A・C)
+    では大きく出る: param_rockslide_nh.txt を 4 スレッドで 2 回回すと出力 194 ファイル中 180 が違い、
+    水中の底層の停止 / 移動中が 15,808 / 3,303 m³ と 15,043 / 4,068 m³(5 % 動く。2 スレッドでは
+    15,101 / 4,009 m³)。README の非静水圧の表は 1 回の実行の値なので、この幅を README に書くか、
+    比較を 1 スレッドで作り直すかを決める
 
 - **断層津波の発生機構**(fn_bedmotion + utils/fault2disp。2026-10-06 実装・検証済み。
   developer.md §70、docs/bedmotion_plan.md、users_guide/bedmotion.md 日英、test/nhbottom

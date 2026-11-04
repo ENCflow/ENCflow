@@ -78,19 +78,23 @@ isotropically even on a grid oblique to the slope.
 
 Configuration 3. Top left: longitudinal profile of the centre row. The soil
 mass above the slip surface (dashed) plunges into the lake within 60 s, runs
-to the flat part of the lake bed (−40 m) at x ≥ 300 m and deposits 5.3 m
+to the flat part of the lake bed (−40 m) at x ≥ 300 m and deposits 5.2 m
 (grey is bedrock + bed layer, red is the final terrain). Top right:
 distribution of the terrain change; lowering of the source area (blue) and
 deposition on the lake bed (red). Bottom left and right: water-surface
 displacement. The drawdown behind the plunge point and the leading wave
-spreading across the lake (maximum 1.0 m) are visible.
+spreading across the lake (maximum 0.86 m at 60 s in the lake part x ≥ 250 m)
+are visible. The run-up in the corner of the shoreline and the side wall reaches
+1.3 m at 60 s (before the fix of the steep-slope gravity correction of 2026-11-04,
+developer.md §91, the lake part reached 0.92 m and the run-up in the corner was
+lower than that).
 
 ![Handover from the mixture](figs/plunge.png)
 
 Configuration 4 (left) and the control (right). The mass that flowed over
 land as a debris flow (mixture) becomes, with the handover, a bed layer in
 the cells with a ponded depth of 2 m or more and runs along the lake bed
-(deposit 5.2 m, handover 18,319 m³ = 96% of the release); without the
+(deposit 5.1 m, handover 17,806 m³ = 93 % of the release); without the
 handover it stops near the shoreline and does not reach the lake bed
 (deposit on the flat part 0 m).
 
@@ -103,9 +107,9 @@ handover it stops near the shoreline and does not reach the lake bed
 | Configuration 2: interior Vb | 7.736–7.746 m/s (0.14%) | PASS |
 | Configuration 2: cross-section passage speed | 7.175 m/s (−7.4%; wall ends + staircase cross-section) | PASS |
 | Configuration 3: ledger / Σh | Σdz −1.1e-11, max\|Δ(z − sd)\| 9e-13 / Σh unchanged (+1.6e-3 m·cell) | PASS |
-| Configuration 3: lake-bed deposition / wave generation | flat lake bed max dz 5.20 m / water-surface maximum 0.51 m (flat part of the lake bed) | PASS |
-| Configuration 3: release ledger | released 19,110 = stopped 16,650 + moving 2,460 m³ | PASS |
-| Configuration 4: handover | 17,750 m³, lake-bed max dz 5.14 m; control 0.00 m | PASS |
+| Configuration 3: lake-bed deposition / wave generation | flat lake bed max dz 5.16 m / water-surface maximum 0.51 m (flat part of the lake bed) | PASS |
+| Configuration 3: release ledger | released 19,110 = stopped 16,680 + moving 2,430 m³ | PASS |
+| Configuration 4: handover | 17,806 m³, lake-bed max dz 5.13 m; control 0.00 m | PASS |
 
 - The 45°-rotated benchmark is a detector for a wrong normalization of the
   8-direction distribution, which makes the passage speed come out √2 times

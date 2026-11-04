@@ -121,11 +121,15 @@ slopes.
 | Distance at which the profile falls to 10% of the height | 1.02 km | 0.88 km | 0.93 km |
 | Mean slope (0.1–0.5 km from the summit) | 8.2° | 8.2° | 10.6° |
 | Mean slope (0.5–1.0 km) | 4.1° | 4.7° | 4.8° |
-| Mean slope (1.0–1.5 km) | 1.1° | 0.6° | 0.9° |
+| Mean slope (1.0–1.5 km) | 1.1° | 0.5° | 0.9° |
 | Erupted lava / fallen ash | 4.1 / 10.8 ×10⁷ m³ | 8.2 / 2.0 ×10⁷ m³ | 4.1 / 10.8 ×10⁷ m³ |
 | Ash buried by lava | 3.9×10⁷ m³ | 0.9×10⁷ m³ | 4.5×10⁷ m³ |
 | Ash moved by storms (fraction of the fallen ash) | 1.8×10⁷ m³ (16%) | 1.2×10⁷ m³ (58%) | — |
 | Of which left the domain | 0.5% | 0.03% | — |
+
+The table and figures were recomputed after the fix of the steep-slope gravity correction
+(2026-11-04; developer.md §91, in Japanese). The flanks are gentle (8–11°), so the correction
+changes little; the only change in the table is the slope of L at 1.0–1.5 km (0.6 → 0.5°).
 
 - **A volcano of stacked lava and ash layers forms**: in every case the edifice is concave, steep near
   the summit and gentler toward the foot (slopes of 8–11° at 0.1–0.5 km from the summit and about 1°

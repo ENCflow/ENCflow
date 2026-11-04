@@ -737,8 +737,14 @@ in each cell a one-sided difference to the downstream neighbour in the flow
 direction, because with a central difference a two-cell undulation does not show
 in the slope and the flow, shallower over the bumps, leaves them uneroded so that
 steps grow; developer.md §89.23 and §89.24, in Japanese)
-and $`g_e`$ the effective gravity of the momentum equation ($`g\cos^2\theta_f`$;
-$`g`$ with `f_gravity_correction = 0`). In steady uniform flow $`\tau_d`$ equals
+and $`g_e`$ the effective gravity of the momentum equation
+($`g\cos^2\theta = g/(1 + |\nabla z|^2)`$, where $`\theta`$ is the inclination
+of the ground and $`|\nabla z|`$ the magnitude of the ground slope of the cell,
+the minmod of the differences to the two neighbours along each axis; $`g`$ with
+`f_gravity_correction = 0`; until 2026-11-04 it was $`g\cos^2\theta_f`$ from the
+slope in the flow direction, which overestimated it in cells where the flow
+crosses the slope obliquely; developer.md §91, in Japanese). In steady uniform
+flow $`\tau_d`$ equals
 the basal shear of the resistance law, whichever resistance law is chosen. Only
 cells with a dense mixture ($`C \ge c_{\min}`$ = `db_cmin`) that is moving
 ($`|V| \ge v_{stop}`$ = `db_vstop`) erode, and the product enters the mobile layer

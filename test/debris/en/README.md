@@ -151,12 +151,12 @@ slope break, and a thin water film on the flat are seen.
 
 | Configuration | Total solids Σhs + (1 − λ)Σdz | Co-moving update | Activity (min dz / arrival) | Water ledger |
 |---|---|---|---|---|
-| 1 | 9.2e-14 | 3.6e-14 | −0.32 cm / deposition below the slope break +0.25 cm | — |
-| 2 Egashira | 5.1e-13 | 3.7e-14 | −0.27 cm / max hs 0.03 cm | — |
-| 3 Takahashi–Nakagawa (120 s) | −2.1e-13 | 1.2e-13 | −1.4 cm / max hs 1.3 cm | — |
-| 4 + pore-water entrainment | 1.5e-13 | 7.7e-14 | −2.6 cm / max hs 0.86 cm | 6.6e-14 |
-| 5 + bed load | 1.4e-12 | 8.8e-14 | −0.20 cm / deposition below the slope break +0.07 cm | — |
-| 6 + pore water with the groundwater computation | −2.8e-14 | 4.3e-14 | −0.28 cm / deposition below the slope break +0.27 cm | 5.7e-14 (Σh + Σhg) |
+| 1 | −1.6e-13 | 3.9e-14 | −0.32 cm / deposition below the slope break +0.25 cm | — |
+| 2 Egashira | −1.8e-13 | 3.9e-14 | −0.28 cm / max hs 0.03 cm | — |
+| 3 Takahashi–Nakagawa (120 s) | 2.6e-14 | 1.5e-13 | −1.4 cm / max hs 1.2 cm | — |
+| 4 + pore-water entrainment | 2.2e-13 | 6.8e-14 | −2.5 cm / max hs 0.70 cm | 1.1e-13 |
+| 5 + bed load | −4.4e-13 | 9.8e-14 | −0.20 cm / deposition below the slope break +0.07 cm | — |
+| 6 + pore water with the groundwater computation | 6.5e-14 | 3.6e-14 | −0.28 cm / deposition below the slope break +0.27 cm | 5.7e-14 (Σh + Σhg) |
 
 - The total solids and the co-moving update hold at machine precision in all
   6 configurations. The E-D exchange amounts are obtained from the field at
@@ -181,6 +181,13 @@ slope break, and a thin water film on the flat are seen.
   the duration of configuration 3 was therefore extended from 60 s to 120 s
   (before: −0.50 cm / max hs 0.15 cm at 60 s; configuration 4 was −3.0 cm /
   max hs 2.6 cm).
+- The values in the table are those after the fix of the steep-slope gravity
+  correction (2026-11-04; developer.md §91, in Japanese) and the D∞ steepest slope
+  (§92). Compared with the code just before, min dz of configuration 2 went from
+  −0.30 to −0.28 cm (the earlier record was −0.27 cm), max hs of configuration 3 from
+  1.254 to 1.245 cm (1.3 → 1.2 in the printed digits), and configuration 4 from
+  −2.6 to −2.5 cm and max hs from 0.86 to 0.70 cm; the others are the same in the
+  printed digits (the ledger values move within machine precision).
 - In the deposits on the flat of configuration 6, max|hg − sy0·sd| = 0.0 m (the
   pores are filled with surface water). Back with `f_dbwet = 0` it becomes 2.4e-4 m
   and (5) fails.
