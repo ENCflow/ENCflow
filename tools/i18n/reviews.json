@@ -230,11 +230,11 @@
     {
       "source": "docs/users_guide/encgrid.md",
       "target": "docs/en/users_guide/encgrid.md",
-      "source_sha256": "1472ce2a4116fda434bde242178f013811b966b5e6115e9258e6c61c5e9d078f",
-      "target_sha256": "0b6120df8a76ec068fc3b2bfc68f24d8d31f6a1c0f7642f564f6c0badd36c30c",
-      "reviewer": "Claude (Claude Code session; reviewed the Japanese source against the English mirror after unifying the term passage width / 通過幅 and noting the original paper's term, 2026-11-03)",
+      "source_sha256": "315c297dee55b782d53fc1ec048d310b90b02b7bbb9f1223dcee3425a3943d9a",
+      "target_sha256": "9162def47e50c81999ebfad82f1cad894edb6ce385104580b89418d1dff50ef3",
+      "reviewer": "Claude (Claude Code session; the new effective-gravity formula of §5 (|∇z| with the minmod tangential slope) and the explanation of the fix written in both languages and compared)",
       "method": "assistant",
-      "reviewed_on": "2026-11-03"
+      "reviewed_on": "2026-11-04"
     },
     {
       "source": "docs/users_guide/forcing.md",
@@ -338,9 +338,9 @@
     {
       "source": "docs/users_guide/massflow.md",
       "target": "docs/en/users_guide/massflow.md",
-      "source_sha256": "adf093d17bf34369e5912a8440ef5ea9c4201713453e5dd113dd9fbfb4e800c5",
-      "target_sha256": "fdc4066a07189ab889ee1ca669882a8364c3730059265c25b9252e7a0bc99fc5",
-      "reviewer": "Claude (Claude Code session; the §7 row of test/avalanche updated in both languages to the growth of the current code (about 3.4 times; the old 1.5 did not match the test) and compared)",
+      "source_sha256": "c01af55db766c7df748ecbdab533978630686995208236ac8a37a035b3ace048",
+      "target_sha256": "2119bcade155032efe883300f0836ca5e3a6d7e10da29ea2c4892a060b5f6a0a",
+      "reviewer": "Claude (Claude Code session; the §7 row of test/dbonset extended in both languages to the cases with the gravity correction and compared)",
       "method": "assistant",
       "reviewed_on": "2026-11-04"
     },
@@ -2597,9 +2597,9 @@
     {
       "source": "test/README.md",
       "target": "test/README.en.md",
-      "source_sha256": "2246beff8e9b2023309b543b8d9c5afe25ce78abf9ef102d91d97290931f1946",
-      "target_sha256": "4d6205aa48a9839f72ca8b4789abf3e31484b3a3186831c226122a0bad18b5bd",
-      "reviewer": "Claude (Claude Code session; the test/dbonset row added to both indexes and compared)",
+      "source_sha256": "f32468348060d4ec055227ab3b8b7264262966314490bf78ecf365d5576beff8",
+      "target_sha256": "10f928b2c5d94568c1762990661d830f4df31f57de75b58af6d27e2cd4bf031e",
+      "reviewer": "Claude (Claude Code session; the test/dbonset row extended in both indexes and compared)",
       "method": "assistant",
       "reviewed_on": "2026-11-04"
     },
@@ -2948,9 +2948,9 @@
     {
       "source": "test/dbonset/README.md",
       "target": "test/dbonset/en/README.md",
-      "source_sha256": "139852fb4f02a8bc2ee03170c12a8a383749ae2be624c47e9237fc1e63a53f3e",
-      "target_sha256": "a8ae0e2549ad956c228aff1123b9e3928f59b4c2a26c665a37a7a5ef6311a006",
-      "reviewer": "Claude (Claude Code session; new README written in both languages in this session and compared paragraph by paragraph; tables and numbers checked against the release run of 2026-11-04 (Run.sh), the run of the code before the fix, the MPI np = 1, 2, 4 runs and the measured run time)",
+      "source_sha256": "a05b7ff2418bc46ca57e04d734a3e3364fea158a987bffcaafec6b4adc3ba629",
+      "target_sha256": "25634abbf6b0b2332c4704dee2d82051ea15083c5a8d70e22c851a35d7322e3a",
+      "reviewer": "Claude (Claude Code session; the configuration with the gravity correction (36 cases), its analytic speed, the result tables after and before the fix (values from the release runs of 2026-11-04) and the run time written in both languages and compared)",
       "method": "assistant",
       "reviewed_on": "2026-11-04"
     },

@@ -168,7 +168,9 @@ effective gravity $`g_e`$.
 ```math
 G = -\,g_e\,g_v\,\frac{\eta_n - \eta_c}{\Delta s_k},
 \qquad
-g_e = g\,\frac{\Delta s_k^2}{\Delta s_k^2 + (z_n - z_c)^2} = g\cos^2\theta
+g_e = g\cos^2\theta = \frac{g}{1 + |\nabla z|_k^2},
+\qquad
+|\nabla z|_k^2 = \left(\frac{z_n - z_c}{\Delta s_k}\right)^2 + \left(\overline{\nabla z}\cdot\mathbf{t}_k\right)^2
 ```
 
 The $`\cos^2\theta`$ correction (`f_gravity_correction = 1`, default) is
@@ -176,7 +178,18 @@ the formulation of Ni et al.[^ni19] that removes the over-estimate of the
 driving force by the horizontally projected shallow water equations on
 steep slopes: it reduces the driving force by 3% at a slope angle
 $`\theta`$ of 10° and by 25% at 30°. On gentle slopes $`g_e \approx g`$
-and nothing changes.
+and nothing changes. $`\theta`$ is the inclination of the ground (the angle of
+the steepest slope) and does not depend on the direction of the edge.
+$`|\nabla z|_k^2`$ is taken from the slope in the normal direction of the edge
+(the difference across the edge) and the ground slope of the two cells
+$`\overline{\nabla z}`$ (the mean of the minmod of the differences to the two
+neighbours along each axis) projected onto the tangent $`\mathbf{t}_k`$ of the
+edge. The minmod is exact on a plane and takes the gentler side at a break
+between a valley floor and its walls, so the slope of the walls does not enter
+the cells of the floor (until 2026-11-04 the correction used the slope in the
+normal direction of the edge alone, so $`g_e`$ came out large on edges oblique
+to the slope: +7 % on an edge at 45° and +16 % on an edge across the slope at a
+slope of 0.4; developer.md §91).
 
 **Friction term $`F`$.** The Manning law is treated semi-implicitly.
 

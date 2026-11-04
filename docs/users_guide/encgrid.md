@@ -146,13 +146,21 @@ $`\lambda_m = g_v + (1 - g_v)\,c_m`$ は家屋の付加質量を含めた有効�
 ```math
 G = -\,g_e\,g_v\,\frac{\eta_n - \eta_c}{\Delta s_k},
 \qquad
-g_e = g\,\frac{\Delta s_k^2}{\Delta s_k^2 + (z_n - z_c)^2} = g\cos^2\theta
+g_e = g\cos^2\theta = \frac{g}{1 + |\nabla z|_k^2},
+\qquad
+|\nabla z|_k^2 = \left(\frac{z_n - z_c}{\Delta s_k}\right)^2 + \left(\overline{\nabla z}\cdot\mathbf{t}_k\right)^2
 ```
 
 $`\cos^2\theta`$ の補正(`f_gravity_correction = 1`、既定)は急斜面で
 水平投影の浅水方程式が駆動力を過大評価するのを正す Ni らの定式化[^ni19]
 で、斜面角 $`\theta`$ が 10° で 3%、30° で 25% 駆動力を減らします。
-緩勾配では $`g_e \approx g`$ で結果は変わりません。
+緩勾配では $`g_e \approx g`$ で結果は変わりません。$`\theta`$ は地盤の傾斜角(最急勾配の角)で、
+エッジの向きによりません。$`|\nabla z|_k^2`$ は、エッジの法線方向の勾配(エッジの差分)と、両側の
+セルの地盤の勾配 $`\overline{\nabla z}`$(軸方向の両隣との差の minmod の平均)をエッジの接線
+$`\mathbf{t}_k`$ へ射影した成分から求めます。minmod は、平面では正確で、谷底と谷壁の折れでは
+緩い側を取るので、谷壁の勾配が谷底のセルに入りません(2026-11-04 まではエッジの法線方向の勾配
+だけで求めていたため、斜面に斜めのエッジで $`g_e`$ が大きく出ていました。勾配 0.4 で 45° の
+エッジが +7 %、斜面を横切るエッジが +16 %。developer.md §91)。
 
 **摩擦項 $`F`$。** Manning 則を半陰的に扱います。
 

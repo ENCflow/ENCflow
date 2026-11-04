@@ -3,16 +3,16 @@
 
 一様な斜面(勾配 G、下り向きが格子の x 軸から角度 θ)を 60 m 四方の壁で囲み、全面に厚さ D の
 崩壊深を与えて計算開始と同時に流動化する(fn_dbinit、db_relsat = 1 で混合体の濃度 C = C*)。
-河床との交換なし(f_dbed = 0)・クーロン + マニング合成(f_dbres = 1)。壁から離れた内部は
-一様な層の剛体の滑りになり、降伏減速度 a_y = g tanφ sC/(1 + sC) と斜面の駆動 g G から
-  G < μ なら静止、G > μ なら V(t) = g (G − μ) t(μ = tanφ sC/(1 + sC))
-になる。急勾配の重力補正(f_gravity_correction)は使わない(補正の g_e を辺の法線方向の勾配で
-求めるため、斜面に斜めの辺で g_e が大きく出て、それ自体が向きによる差を生む。この検定は降伏の
-静止判定だけを切り分ける。developer.md §28.16)。時間刻みは、降伏の摩擦を半陰的に入れることに
-よる立ち上がりの遅れ(時間刻みに比例)が解析解との比較に効かない小ささにする。
+河床との交換なし(f_dbed = 0)・クーロン + Manning 合成(f_dbres = 1)。壁から離れた内部は
+一様な層の剛体の滑りになり、降伏減速度 a_y = g_e tanφ sC/(1 + sC) と斜面の駆動 g_e G から
+  G < μ なら静止、G > μ なら V(t) = g_e (G − μ) t(μ = tanφ sC/(1 + sC))
+になる。急勾配の重力補正(f_gravity_correction)なしの構成(g_e = g。降伏の静止判定だけを
+切り分ける。developer.md §28.16)と、ありの構成(名前の末尾 _gc。g_e = g cos²θ = g/(1 + G²)。
+補正の cos²θ が辺の向きによらないこと。§91)を同じ斜面で回す。時間刻みは、降伏の摩擦を半陰的に
+入れることによる立ち上がりの遅れ(時間刻みに比例)が解析解との比較に効かない小ささにする。
 定数は Check_dbonset.py と対。
 
-  python3 make_init.py        全ケースの d_<case>/(z.txt, dbinit.txt, sd.txt)と p_<case>.txt を書く
+  python3 make_init.py        全ケースの d_<斜面>/(z.txt, dbinit.txt, sd.txt)と p_<case>.txt を書く
   python3 make_init.py list   ケース名を 1 行ずつ出す
 """
 import math
@@ -24,28 +24,35 @@ D = 1.0                      # 層の厚さ(崩壊深。かさ)(m)
 TANPHI = math.tan(math.radians(35.0))
 SGRAV, POROSITY = 1.65, 0.4
 CSTAR = 1.0 - POROSITY
-MU = TANPHI * SGRAV * CSTAR / (1.0 + SGRAV * CSTAR)   # a_y/g(C = C*)
+MU = TANPHI * SGRAV * CSTAR / (1.0 + SGRAV * CSTAR)   # a_y/g_e(C = C*)
 RATIOS = (0.9, 1.1, 1.3)     # G/(a_y/g_e)
 THETAS = (0.0, 22.5, 45.0)   # 下り向きの格子の x 軸からの角度 (deg)
 NBS = (8, 4)                 # 近傍の数(4 は p_diagratio = 0)
+GCS = (0, 1)                 # 急勾配の重力補正 f_gravity_correction(1 の構成は名前の末尾に _gc)
 DT, TT = 0.0005, 2.0         # 時間刻み・計算時間 (s)。dt = 0.01 s では半陰的な摩擦の立ち上がりの
                              #   遅れで速さが解析解の 0.8 倍、0.002 s で 0.96 倍、0.0005 s で 0.995 倍
 RN = 0.01                    # マニングの粗度(内部の剛体の滑りに効かない小さな値)
 
 
-def case_name(ratio, theta, nb):
-    return f"r{ratio:g}_t{theta:g}_n{nb}".replace(".", "p")
+def case_name(ratio, theta, nb, gc=0):
+    return f"r{ratio:g}_t{theta:g}_n{nb}".replace(".", "p") + ("_gc" if gc else "")
 
 
-CASES = [(r, t, n) for r in RATIOS for t in THETAS for n in NBS]
+CASES = [(r, t, n, gc) for gc in GCS for r in RATIOS for t in THETAS for n in NBS]
 
 
-def write_case(ratio, theta, nb):
-    name = case_name(ratio, theta, nb)
+def gacc(ratio, gc, gg=9.8):
+    """有効重力 g_e(重力補正ありは g cos²θ = g/(1 + G²)。G は斜面の勾配)。"""
+    g = ratio * MU
+    return gg / (1.0 + g * g) if gc else gg
+
+
+def write_case(ratio, theta, nb, gc):
+    name = case_name(ratio, theta, nb, gc)
     n = int(round(L / DX))
     g = ratio * MU
     th = math.radians(theta)
-    ddir = f"d_{name}"
+    ddir = f"d_{case_name(ratio, theta, nb)}"          # 地形は重力補正の有無で共通
     os.makedirs(ddir, exist_ok=True)
     rows_z, rows_d, rows_s = [], [], []
     for j in reversed(range(n)):                  # 先頭行が北端
@@ -64,6 +71,7 @@ def write_case(ratio, theta, nb):
         with open(os.path.join(ddir, fn), "w") as f:
             f.write("\n".join(rows) + "\n")
     pd = "0.5857864376" if nb == 8 else "0.0"
+    gcnote = "あり(cos²θ が辺の向きによらないこと。§91)" if gc else "なし(降伏の静止判定だけを切り分ける。§28.16)"
     with open(f"p_{name}.txt", "w") as f:
         f.write(f"""!======================================================================
 ! dbonset: ケース {name}(make_init.py が生成)
@@ -90,7 +98,7 @@ def write_case(ratio, theta, nb):
   f_out_v = 1
 /
 &list_enc
-  f_gravity_correction = 0   ! 重力補正なし(make_init.py の説明。降伏の静止判定だけを切り分ける)
+  f_gravity_correction = {gc}   ! 急勾配の重力補正 {gcnote}
   p_diagratio = {pd}       ! 8 近傍(既定)/ 4 近傍(0)
 /
 &list_initial
