@@ -1,0 +1,129 @@
+!======================================================================
+! wqstruct: 構造物・取水が水と一緒に運ぶ水質の質量(§30.10)
+!
+!   17 × 17 セル(10 m 格子)を高さ 10 m の壁で 16 の閉じた区画に分け
+!   (区画の内部は 3 × 3 セル。make_data.py)、全区画の水に濃度 1 mg/L を
+!   持たせる(wq_c0)。区画どうし・区画と域外を構造物と取水でつなぐ:
+!     P1 ポンプ(域内)   A (0,0) → B (3,0)。送り先は空隙率 0.5 + 1 セルは河道幅 2 m
+!     P2 ポンプ(域外)   C (0,1) の河道幅のセルから域外へ
+!     P3 ポンプ(ため池) J (2,0) の中央のため池(限界貯留高 0.5 m)→ K (3,1)
+!     P4 ポンプ(乾いた送り先) Q (3,3) の空隙率 0.7 のセル → 空の区画 O (2,3)
+!     K1 カルバート(順流) D (0,2) 水深 1.5 m → E (1,2) 0.5 m
+!     K2 カルバート(逆流) 上流側 F (0,3) 0.5 m ← 下流側 G (1,3) 1.5 m
+!     V1 分水(域外)     H (1,0) から域外へ
+!     V2 分水(域内)     L (2,1) 1.5 m → M (3,2) 0.5 m
+!     S1 内部ソースの吸い込み  I (1,1) の 2 セルから
+!     N (2,2) は構造物のない対照
+!   取水が汲んだ水と同じ割合の質量を取水セルの濃度で運べば、どの区画の
+!   濃度も 1 のまま変わらない(修正前は清水を送ったので送り先が薄まり、
+!   取水側は水だけが減って濃くなった)。域外へ出た分は台帳の out_intake_g
+!   に入り、出た水の体積(総水量 S_total の減少)× 1 g/m3 に等しい。
+!   Check_wqstruct.py が濃度・台帳の閉合・out_intake_g を検定する。
+!======================================================================
+&list_sysparam
+  dt = 0.5                  ! 時間刻み (s)
+  tt_c = "2h"               ! 計算終了時刻
+  dt_disp_c = "10m"         ! 画面表示の間隔
+  dt_file_c = "1h"          ! 分布ファイル出力の間隔
+  dt_recrd_c = "10m"        ! wq.csv の記録間隔
+  fn_geoinfo = '-'
+  fn_initial = '-'
+  fn_channel = '-'
+  fn_boundary = '-'
+  fn_structure = '-'
+  fn_wq = '-'
+  dir_data = 'data_wqstruct'
+  dir_result = 'result'
+  f_check_cfl = 0
+  f_disp_debug = 1          ! 回帰テスト用: S 列を全有効桁で表示
+  f_output_mode = 2         ! 分布は bil(単精度。濃度の検定に桁を残す)
+  f_out_hrs = 1             ! ため池の貯留 Hrs(ため池の濃度の検定)
+/
+
+&list_initial
+  f_htype = 1               ! 初期水深ファイル
+  fn_hinit = 'hinit.txt'
+/
+
+&list_geoinfo
+  nx = 17
+  ny = 17
+  dx = 10.0
+  dy = 10.0
+  f_ztype = 1               ! 地盤高ファイル(区画の床 0 m、壁 10 m)
+  fn_z = 'z.txt'
+  rn0 = 0.03
+  fn_gv = 'gv.txt'          ! 家屋の空隙率(B 全体 0.5、Q の P4 取水セル 0.7)
+  fn_rw = 'rw.txt'          ! 河道マスク(河道幅を置く 2 セル)
+  fn_rscap = 'rscap.txt'    ! ため池(J の中央セル。限界貯留高 0.5 m)
+/
+
+&list_channel
+  fn_width = 'width.txt'    ! サブグリッド河道幅 2 m(wfrac = 0.2)
+/
+
+&list_bound_edge
+/
+
+&list_bound_source
+  ! S1: 区画 I の 2 セルから計 0.02 m3/s を吸い込む
+  src_cell(:,1,1) = 6, 7
+  src_cell(:,2,1) = 8, 7
+  src_val(:,1,1) =   0, -0.02
+  src_val(:,2,1) = 999, -0.02
+/
+
+&list_struct_pump
+  ! P1: 区画 A の 2 セル → 区画 B の 3 セル(域内。帯をまたぐ)
+  pump_in_cell(:,1,1)  = 3, 3
+  pump_in_cell(:,2,1)  = 4, 4
+  pump_out_cell(:,1,1) = 2, 15
+  pump_out_cell(:,2,1) = 3, 15
+  pump_out_cell(:,3,1) = 4, 16  ! 空隙率 0.5 + 河道幅 2 m
+  pump_q0(1) = 0.05
+  ! P2: 区画 C の河道幅のセル → 域外
+  pump_in_cell(:,1,2) = 7, 3
+  pump_q0(2) = 0.03
+  ! P3: 区画 J のため池 → 区画 K(ため池の貯留 hrs から汲む)
+  pump_in_cell(:,1,3)  = 3, 11
+  pump_out_cell(:,1,3) = 7, 15
+  f_pump_ref(3) = 1             ! 基準 = 水深(ため池では hrs。水位基準は使えない)
+  pump_q0(3) = 0.01
+  ! P4: 区画 Q の空隙率 0.7 のセル → 空の区画 O の 3 セル
+  pump_in_cell(:,1,4)  = 15, 15
+  pump_out_cell(:,1,4) = 14, 11
+  pump_out_cell(:,2,4) = 15, 11
+  pump_out_cell(:,3,4) = 16, 11
+  pump_q0(4) = 0.02
+/
+
+&list_struct_culvert
+  ! K1: D (1.5 m) → E (0.5 m)。上流側が高い = 順流
+  culv_in_cell(:,1,1)  = 11, 4
+  culv_out_cell(:,1,1) = 11, 6
+  culv_width(1)  = 0.3
+  culv_height(1) = 0.3
+  culv_zin(1)  = 0.0
+  culv_zout(1) = 0.0
+  ! K2: 上流側 F (0.5 m)、下流側 G (1.5 m)。下流側が高い = 逆流(G → F)
+  culv_in_cell(:,1,2)  = 15, 4
+  culv_out_cell(:,1,2) = 15, 6
+  culv_width(2)  = 0.3
+  culv_height(2) = 0.3
+  culv_zin(2)  = 0.0
+  culv_zout(2) = 0.0
+/
+
+&list_struct_diversion
+  ! V1: 区画 H → 域外
+  div_in_cell(:,1,1) = 3, 7
+  div_q0(1) = 0.02
+  ! V2: 区画 L (1.5 m) → 区画 M (0.5 m)
+  div_in_cell(:,1,2)  = 7, 11
+  div_out_cell(:,1,2) = 11, 15
+  div_q0(2) = 0.03
+/
+
+&list_wq
+  wq_c0 = 1.0               ! 初期濃度 (mg/L)。全区画の水
+/

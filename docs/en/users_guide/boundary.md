@@ -157,6 +157,11 @@ third subscript is the source number (consecutive from 1).
   redistributed to other cells, so the actual total may be below the request.
 - The injection carries no directionality (momentum). For river inflow,
   use the segment inflow.
+- With [water quality](wq.md) enabled, a sink takes the same fraction of the
+  substance as of the water out of the system, at the concentration of the
+  intake cell (ledger column `out_intake_g` of `wq.csv`; since 2026-11-04).
+  A positive source is clean water (give loads with the water-quality point
+  sources `wq_pt_*`).
 
 **Outputs for this section**: check the input as the increase of S in the log (Σ q × Δt / domain area) and the routing with a downstream transect Q ([Output and monitoring](#output-and-monitoring)).
 

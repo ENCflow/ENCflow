@@ -195,10 +195,11 @@ flow and return to the surface water where seepage occurs, at the
 effective concentration set by wq_rg (at the groundwater concentration
 when R=1; the retardation factor R of sorption is given on the
 water-quality side). Only the lateral flow and the saturation-excess
-seepage of layer 1 carry mass; water that leaves layer 1 by the other
-pathways (percolation into layer 2, pumping, infiltration water into the
-conduits) carries no mass (see the sections below and "Transport through
-groundwater" in [Water quality](wq.md)).
+seepage of layer 1 and well pumping (which takes it out of the system) carry
+mass; water that leaves layer 1 by the other pathways (percolation into
+layer 2, infiltration water into the conduits) carries no mass (see the
+sections below and "Transport through groundwater" in
+[Water quality](wq.md)).
 
 **Outputs for this section**: the shape of the water table from the gradient of `Hg0001...`; seepage (return flow) from wet cells of `H0001...` during rainless periods. There is no seepage column; read it as the decrease of `S_grnd` matched by the increase of `S_surf` ([Output and monitoring](#output-and-monitoring)).
 
@@ -392,10 +393,14 @@ consecutively from 1.
   [Boundary conditions](boundary.md)).
 - A well is a cell-scale sink (borehole-scale hydraulics - well
   radius, skin, partial penetration - are not represented).
-- The subsurface mass of [water quality](wq.md) is not carried by the
-  abstraction (only water leaves to outside the system and the mass stays
-  in layer 1, so the layer-1 concentration Cg/Hg is pushed apparently
-  higher).
+- With [water quality](wq.md) enabled, the same fraction of the subsurface
+  mass as of the water pumped from layer 1 is taken out of the system at the
+  concentration of the well cell (with the retardation factor wq_rg only the
+  mobile dissolved part 1/R, as for seepage; ledger column `out_intake_g` of
+  `wq.csv`; since 2026-11-04 - before that only the water left, the mass
+  stayed in layer 1 and Cg/Hg was pushed apparently higher). Layer 2 (the
+  weathered bedrock layer) holds no mass, so pumping from layer 2 moves
+  water only.
 
 **Outputs for this section**: the drawdown of `Hg0001...` around the well cells (cone of influence) and, at the end, the per-well "demand / pumped / %" line for the achieved abstraction ([Output and monitoring](#output-and-monitoring)).
 
