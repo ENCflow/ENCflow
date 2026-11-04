@@ -266,9 +266,9 @@
     {
       "source": "docs/users_guide/geomorph.md",
       "target": "docs/en/users_guide/geomorph.md",
-      "source_sha256": "904e571a61988a43af364ba3343d4b01d5033efffa877e5ca4ffd5c9a7937dd0",
-      "target_sha256": "c062a6f693e5c7a1a45939c5d18b4f3bc4a8102f2995c3f985e44a060967071e",
-      "reviewer": "Claude (Claude Code session; merge of the delta branch into main 373bc31: the merged Japanese source and English mirror were checked by diff to be exactly main's version plus the branch's tide sentence of the delta procedure (lower-morfac checks); main's culvert sentence (water and dissolved water-quality substance only) and the branch's sentence compared side by side in both languages)",
+      "source_sha256": "64e29a82aa27ec2c5c36ec24bc9de11e5be14e50644882ad810d85df678f6d08",
+      "target_sha256": "d31aff0ecd82ac9f86922aa8d6fb7e9cd59d4f6491c4dc92bdb63248ae2916b1",
+      "reviewer": "Claude (Claude Code session; after merging origin/main, confirmed by git diff that ja and en differ from main only by the debris_fan sentences added and reviewed in 0809f86; both sides re-read)",
       "method": "assistant",
       "reviewed_on": "2026-11-04"
     },
@@ -815,9 +815,9 @@
     {
       "source": "examples/README.md",
       "target": "examples/README.en.md",
-      "source_sha256": "4bd33d5204392da39f42075981d7b1a2ff1e2e49c6fc9c9595b3db96fa96d5b6",
-      "target_sha256": "7ed07103e10f4fa7f36608ad2bb45a931a5876bd82fe7a9dc04bb45d44da4bfb",
-      "reviewer": "Claude (Claude Code session; full-text content and lexical review, no model execution)",
+      "source_sha256": "ab8e40786185374acc750ee72eedf36365f769a77ae8ac27d83977137d38e42e",
+      "target_sha256": "e4b5c7161029f9c36114a01c2e213905fd020039ed109ac7986607bd05bd1fb4",
+      "reviewer": "Claude (Claude Code session; after merging origin/main, confirmed by git diff that ja and en differ from main only by the debris_fan table row and index line added and reviewed in 0809f86; both sides re-read)",
       "method": "assistant",
       "reviewed_on": "2026-11-04"
     },
