@@ -8,7 +8,7 @@
 !======================================================================
 submodule(m_geomorph) m_geomorph_fluvial
   use m_parallel, only : par_info, par_stop, dcp, par_halo_cell
-  use m_swflow_enc, only : chn, bcs, bc_open_face, bc_neumann_cell
+  use m_swflow_enc, only : chn, bcs, bc_open_face, bc_neumann_cell, bc_inflow_nooutflow
   use m_util, only : rtoa
   implicit none
 
@@ -377,7 +377,12 @@ module subroutine calc_fluvial(gm, p, g, s, dts)
       ! 供給はループ 1 の後の feed_pass が「流入セルの正味流出 × 倍率」で
       ! 書く(§84.9。2026-10-18 までの「流入セル自身の τ* による容量供給」は
       ! 河床上昇 → 流速増 → 供給増の正帰還で発散した実検出)。境界面の
-      ! 通過幅補正 frw は未適用(§18 制約(5) の辺開口と同じ扱い)
+      ! 通過幅補正 frw は未適用(§18 制約(5) の辺開口と同じ扱い)。
+      ! 区間流入が作った面(bc_inflow_nooutflow: 流入区間の法線面と、壁の辺で
+      ! 流入区間のために開いた斜め面)からは流出させない。水はそこから出ていけない
+      ! (法線面は規定流量で入るだけ、壁の辺の斜め面は流束 0)のに、流入セルで流れが
+      ! 横に振れるとセル流速の射影が正になり、掃流砂だけが領域の外へ出ていた
+      ! (固定給砂の入口で給砂の 2 割が消えた実バグ。§19.12)
       if (bcs%have_open_bc .and. okc) then
         do k = 1, 8
           in = i + din(k)
@@ -390,7 +395,7 @@ module subroutine calc_fluvial(gm, p, g, s, dts)
           hhe = s%h(i,j)
           if (vve > 0.0 .and. hhe > p%dd) then
             ue = s%u(i,j) * gm%flv%ex(k) + s%v(i,j) * gm%flv%ey(k)   ! 正 = 域外へ
-            if (ue > 0.0) then
+            if (ue > 0.0 .and. .not. bc_inflow_nooutflow(i, j, in, jn)) then
               hhe = max(hhe, p%dv)
               rne = g%rn(i,j)
               taus = taufac_h(gm%flv, hhe) * rne**2 * vve**2 / (gm%sgrav * gm%d50 * hhe**(1.0/3.0))
@@ -716,7 +721,12 @@ subroutine calc_fluvial_wfsed(gm, p, g, s, dts)
       ! 供給はループ 1 の後の feed_pass が「流入セルの正味流出 × 倍率」で
       ! 書く(§84.9。2026-10-18 までの「流入セル自身の τ* による容量供給」は
       ! 河床上昇 → 流速増 → 供給増の正帰還で発散した実検出)。境界面の
-      ! 通過幅補正 frw は未適用(§18 制約(5) の辺開口と同じ扱い)
+      ! 通過幅補正 frw は未適用(§18 制約(5) の辺開口と同じ扱い)。
+      ! 区間流入が作った面(bc_inflow_nooutflow: 流入区間の法線面と、壁の辺で
+      ! 流入区間のために開いた斜め面)からは流出させない。水はそこから出ていけない
+      ! (法線面は規定流量で入るだけ、壁の辺の斜め面は流束 0)のに、流入セルで流れが
+      ! 横に振れるとセル流速の射影が正になり、掃流砂だけが領域の外へ出ていた
+      ! (固定給砂の入口で給砂の 2 割が消えた実バグ。§19.12)
       if (bcs%have_open_bc .and. okc) then
         do k = 1, 8
           in = i + din(k)
@@ -742,7 +752,7 @@ subroutine calc_fluvial_wfsed(gm, p, g, s, dts)
           vve = sqrt(usc * usc + vsc * vsc)
           if (vve > 0.0 .and. hhe > p%dd) then
             ue = usc * gm%flv%ex(k) + vsc * gm%flv%ey(k)   ! 正 = 域外へ
-            if (ue > 0.0) then
+            if (ue > 0.0 .and. .not. bc_inflow_nooutflow(i, j, in, jn)) then
               hhe = max(hhe, p%dv)
               rne = g%rn(i,j)
               taus = taufac_h(gm%flv, hhe) * rne**2 * vve**2 / (gm%sgrav * gm%d50 * hhe**(1.0/3.0))

@@ -397,10 +397,12 @@ sine, a measure for this example.)
 - **The deposit spreads along the coast**: the flow running along the coast at every low tide carries
   sand, so the sand body spreads over the full width of the domain, and a little over 20 % of the sand
   fed leaves through the north and south sides (treated as if the same coast continued outside). This
-  sand left around the low tides of the 4th and 5th tidal cycles (almost none before that), and the check
-  in stage 7 (a run with half the morfac) suggests that the amount depends on morfac. The offshore
-  extent is 60 % of that of notide. At mean tide only the island of the mouth bar is land, but at low
-  tide 36.7×10³ m² of flats appear.
+  sand left around the low tides of the 4th and 5th tidal cycles (almost none before that): once the
+  sand spreading along the coast had reached the sides, the water running along the coast at low tide
+  (at most 0.8–1.0 m/s in the rows of the sides) carried it out. The amount leaving through the sides
+  changes greatly from run to run depending on whether a low-tide channel reaches a side ("Sides
+  crossing the coast" under "Notes"). The offshore extent is 60 % of that of notide. At mean tide only
+  the island of the mouth bar is land, but at low tide 36.7×10³ m² of flats appear.
 - **Still river-dominated**: the channel is narrow and its banks are higher than high tide, so little
   water is stored by the tide upstream of the mouth, and the discharge at the mouth stays at
   29–31 m³/s without reversing. The tidal discharge in and out of the flats is also 14 % of the
@@ -412,9 +414,9 @@ sine, a measure for this example.)
   and changing the strength of the backwater) more than through tidal currents.
 - **The channel at low tide**: even when the sea falls to −1 m at low tide, the water level of the
   channel just inside the mouth stays at −0.57 m (set by the water level of the flow paths beyond the
-  mouth), and the flow at the mouth speeds up to 1.4 m/s. The sand that settles in the channel near
-  the mouth under the backwater of high tide (about 9 cm thick) is washed out by the fast flow at low
-  tide.
+  mouth), and the flow there speeds up to 1.8 m/s (0.5 m/s at high tide). The sand that settles in the
+  channel near the mouth under the backwater of high tide (about 9 cm thick) is washed out by the fast
+  flow at low tide.
 - **The trough at the foot of the coast**: the trough through which the river flows at low tide
   results from the coast of this example being a vertical step that cannot be eroded (land at +1.5 m,
   bed −1.2 m in front of it). Real tidal coasts are gently sloping flats, and the river reaches the
@@ -447,44 +449,47 @@ reference with the same river and no tide (morfac 1000).
 
 | Landform 14900 h | smallq (without tide) | tidedom (with tide) |
 |---|---|---|
-| Deposit (bulk) | 173×10³ m³ (sand 61×10³ m³ = 95 % of the sand fed, mud 112×10³ m³ = 84 % of the supply) | 156×10³ m³ (sand 44×10³ m³ = 69 % of the sand fed, mud 111×10³ m³ = 83 % of the supply) |
-| Sediment carried out by bedload through the north and south sides (solid) | 3.6×10³ m³ | 15×10³ m³ (sand amounting to 31 % of the feed, and mud moving with the sand) |
-| Extent of the sand body (sand 0.3 m or thicker): along the coast × offshore | 450 m × 138 m | 600 m (the full width of the domain) × 228 m |
-| Emerged land (depth below 0.05 m at mean tide) | 55.0×10³ m² | 28.4×10³ m² |
-| Land even at high tide (bed elevation +1 m or higher) | — | 4.1×10³ m² (near the mouth; mostly +1.0 to 1.05 m) |
-| Flats (dry at low tide, flooded at high tide) | — | 54.9×10³ m² |
-| Discharge at the mouth (last cycle) | 3 m³/s | 2.8–3.1 m³/s (never reversed) |
-| Tidal discharge in and out of the flats πP/T | — | 4.9 m³/s (1.6 times the river) |
+| Deposit (bulk) | 192×10³ m³ (sand 64×10³ m³ = all of the sand fed, mud 128×10³ m³ = 95 % of the supply) | 193×10³ m³ (sand 63×10³ m³ = 99 % of the sand fed, mud 130×10³ m³ = 97 % of the supply) |
+| Sediment carried out by bedload through the north and south sides (solid) | 0 | 0.57×10³ m³ (sand amounting to just under 1 % of the feed, and mud moving with the sand) |
+| Extent of the sand body (sand 0.3 m or thicker): along the coast × offshore | 365 m × 188 m | 600 m (the full width of the domain) × 412 m |
+| Emerged land (depth below 0.05 m at mean tide) | 64.7×10³ m² | 34.1×10³ m² |
+| Land even at high tide (bed elevation +1 m or higher) | — | 3.4×10³ m² (along the original coast; mostly +1.0 to 1.05 m) |
+| Flats (dry at low tide, flooded at high tide) | — | 72.0×10³ m² |
+| Discharge at the mouth (last cycle) | 3 m³/s | 2.6–3.1 m³/s (never reversed; 1.2–4.1 m³/s while the river outlet shifts at the start of the cycle) |
+| Tidal discharge in and out of the flats πP/T | — | 7.3 m³/s (2.4 times the river) |
 
-(Totals computed as in the table of stage 6. The sand body and the emerged land of tidedom exclude the
-channel stretching offshore and its levees described below; including them gives 412 m offshore and
-30.2×10³ m² of emerged land. The amount of sediment leaving through the north and south sides depends
-strongly on morfac; see "Check with half the morfac" below.)
+(Totals computed as in the table of stage 6. The offshore extent of tidedom is measured to the tips of
+the streaks stretching offshore described below.)
 
 - **The tidal exchange exceeds the river**: the tidal discharge in and out of the flats on top of the
-  delta (πP/T, the same measure as in stage 6) is 4.9 m³/s, 1.6 times the river (3 m³/s); in tide it
-  is 0.14 times. By this measure the tide exceeds the river.
+  delta (πP/T, the same measure as in stage 6) is 7.3 m³/s, 2.4 times the river (3 m³/s); in tide it
+  is 0.14 times. By this measure the tide exceeds the river. The value grows as the flats grow: at
+  landform 8942 h it is 1.6 times (0.94 times in the run with morfac 120, in which sand left through the
+  south side and the flats were narrower; "Check with a lower morfac" below).
 - **The top of the delta becomes flats**: whereas in smallq land at the height of the sea surface
-  spreads out (55×10³ m²; median bed elevation of the area with 0.3 m or more of deposit +0.02 m),
-  the top of the delta in tidedom becomes flats at intertidal height (54.9×10³ m²; the same median
-  −0.50 m), and only 4.1×10³ m² near the mouth is land even at high tide (at about the water level of
-  the channel at high tide). 83 % of the mud supplied settles (about the same as in smallq), and the
-  deposit on the flats averages 0.56 m of sand and 1.23 m of mud.
+  spreads out (64.7×10³ m²; median bed elevation of the area with 0.3 m or more of deposit +0.02 m),
+  the top of the delta in tidedom becomes flats at intertidal height (72.0×10³ m²; the same median
+  −0.60 m), and only 3.4×10³ m² along the original coast is land even at high tide (at about the water
+  level of high tide). 97 % of the mud supplied settles (95 % in smallq), and the deposit on the flats
+  averages 0.64 m of sand and 1.08 m of mud.
 - **Channels at ebb and low tide**: at ebb and low tide the river water and the water draining from
-  the flats gather in channels cut along the foot of the coast and into the flats (at the falling mean
-  tide the median speed in the channels is 0.48 m/s, at most 1.0 m/s) and leave mainly through the
-  north side (7.6 m³/s at low tide, 2.5 times the river). About 30 % of the sand fed left through
-  the north and south sides with this flow, but this amount depends strongly on morfac (see "Check
-  with half the morfac" below).
-- **The flood does not move sand**: on the rising tide (at mean tide) the water in the channels hardly
-  moves (median speed 0.02 m/s), and the sea spreads slowly over the flats from offshore (the speed over
-  the flats is 0.07 m/s or less in 90 % of the cells, and exceeds 0.25 m/s in less than 1 %). Sand moves
-  only with the river and the ebb; at every low tide the fast flow towards the low sea carries sand,
-  so the sand body spreads further than in smallq both along the coast and offshore. The shapes made by
-  sand moving back and forth with the flood and the ebb (bars elongated along the tidal currents, a
-  funnel-shaped mouth) do not appear. tidedom is a delta whose tidal exchange exceeds the river and
-  whose top has become flats and ebb channels, but the shapes of a tide-dominated delta cannot be made
-  at this scale.
+  the flats gather in channels cut into the flats (at low tide the median speed in the channels is
+  0.5 m/s, at most 1.0 m/s). The route of the channels changes from one tidal cycle to the next. Up to
+  the fourth tidal cycle the river water went out into the eastern basin at low tide, but at the start
+  of the last cycle it shifted to a channel heading for the north side (the panel of the rising tide in
+  the figure is in the middle of this shift), and at low tide 10.7 m³/s (3.6 times the river) leaves
+  through the north side.
+- **The flood does not move sand**: on the rising tide (at mean tide) the sea spreads slowly over the
+  flats from offshore; the speed over the flats is 0.1 m/s or less in 90 % of the cells and exceeds
+  0.25 m/s in less than 1 % of them (rising tides of the second to fifth tidal cycles; on the rising
+  tide of the last cycle, however, 7 % of the cells exceed 0.25 m/s, because the river water runs fast
+  over the flats while the river outlet shifts). Sand moves only with the river and the ebb; at every
+  low tide the fast flow towards the low sea carries sand, so the sand body spreads further along the
+  coast than in smallq, and offshore the traces of the low-tide channels stretch out as streaks ("The
+  streaks stretching straight offshore" below). The shapes made by sand moving back and forth with the
+  flood and the ebb (bars elongated along the tidal currents, a funnel-shaped mouth) do not appear.
+  tidedom is a delta whose tidal exchange exceeds the river and whose top has become flats and ebb
+  channels, but the shapes of a tide-dominated delta cannot be made at this scale.
 - **Why the tidal current is weak**: by continuity, the speed of the tidal current at a point is
   roughly proportional to the length L of the water body landward of that point that the tide fills
   (u ≈ L × rate of rise of the tide ÷ depth). In this example the tide rises at most at
@@ -494,49 +499,53 @@ strongly on morfac; see "Check with half the morfac" below.)
   water body landward of it is even smaller and almost no tidal current arises. In real tide-dominated
   deltas the tide travels far up the distributaries, and mouths widening seaward and wide intertidal
   areas produce a large tidal exchange (Dalrymple & Choi 2007).
-- **The channel stretching straight offshore**: the channel one cell (5 m) wide and the levees on
-  both sides of it that stretch along y = 300 m from x = 300 to 565 m in the figure (a deposit of
-  8.8×10³ m³, excluded from the values of the table) formed during the ebb (from high to low tide) of
-  the third tidal cycle, when the river flow leaving offshore over the shallow mouth bar gathered into
-  a channel one cell wide; in the last cycle there is hardly any flow in it. The channel is as wide as
-  the grid spacing: when a channel narrows to the grid spacing it aligns with the grid directions
-  ("Resolving the distributaries" under "Notes"; the same holds for the lines of channels along the
-  coast), and with morfac 240 half a tidal cycle of ebb corresponds to 1500 h of landform time, during
-  which the channel and levees grow fully (in tidedom the limit `fluv_dzmax` on one landform update
-  acted on 11,440 edges; in tide it never acted). This channel is not a bar elongated by tidal
-  currents. With morfac 120 this channel does not form (next item).
-- **Check with half the morfac**: a run with morfac 120 (`morfac` 120 and `tt` 268272 in
-  param_tidedom.txt: 6 tidal cycles, 8942 h of landform time; the length limit of the tide table does not
-  allow reaching 14900 h) was compared with tidedom at the same landform time (3 tidal cycles). The
-  flats on top of the delta (45.0×10³ m²; 35.9×10³ m² in tidedom), the weak flow on the rising tide (the
-  speed over the flats is 0.03 m/s or less in 90 % of the cells) and the fast channels at ebb and low
-  tide (at most 1.2 m/s) appear in the same way, and the tidal discharge in and out of the flats is
-  1.5 times the river (1.2 times in tidedom). On the other hand, the channel stretching offshore and its
-  levees do not form (on the rows along the extension of the channel, the bed rises by less than 0.1 m
-  offshore of x = 450 m), and the sand leaving through the north and south sides is 5 % of the sand fed
-  (27 % in tidedom). Of the sand that left tidedom through the sides by 8942 h, 80 % left in a single
-  event in the second half of the ebb of the third tidal cycle (the quarter cycle from the falling
-  mean tide to low tide, 745 h of landform time): sand cut from the river channel and the channels along
-  the coast was carried by a channel along the coast to the south side. Three quarters of the 31 % of
-  the table come from this event and one more that carried sand to the north side at the same time of
-  the fifth tidal cycle. Both runs have changes in which the bed is cut by 1.5 to 2 m in a quarter
-  cycle and the sand settles elsewhere; what differs is whether the cut sand leaves through the sides.
-  Read the
-  channel stretching offshore and the amount of sediment leaving through the north and south sides as
-  values that depend strongly on morfac. That flats form, and the difference between the flows on the
-  rising and the falling tide, are the same with half the morfac (the area of the flats differs by
-  25 %). Whether morfac 120 is low enough has not been checked, since there is no run with a still
-  lower morfac.
+- **The streaks stretching straight offshore**: the two streaks that stretch along y = 315 m and
+  435 m to x = 550–570 m in the figure are a channel one cell (5 m) wide (median bed elevation −0.7 to
+  −0.9 m) with levees on both sides (median −0.4 to −0.5 m; the original sea bed is −2.0 m). Both
+  formed in the half cycle around the low tide of the second tidal cycle (from the falling mean tide to
+  the next rising mean tide; 1490 h of landform time); at that low tide the river water split into
+  these two channels and flowed offshore (0.7 m/s). Afterwards there is hardly any flow in the
+  channels and their shape does not change. The bundle of streaks at y = 200–270 m stretching to
+  x = 500–520 m was made by the river water flowing east around the low tide of the fourth tidal cycle.
+  The channels are as wide as the grid spacing: when a channel narrows to the grid spacing it aligns
+  with the grid directions ("Resolving the distributaries" under "Notes"), and with morfac 240 the half
+  cycle around low tide corresponds to 1490 h of landform time, during which the channels and levees
+  grow fully (in tidedom the limit `fluv_dzmax` on one landform update acted on 16,155 edges; in smallq
+  on 425). These streaks are not bars elongated by tidal currents. With a lower morfac the streaks
+  become shorter or do not form (next item).
+- **Check with a lower morfac**: runs with morfac 120 and 60 (`morfac` of param_tidedom.txt set to 120
+  and 60, `tt` to 268272 and 536544, giving 6 and 12 tidal cycles) were compared at landform 8942 h
+  (3 tidal cycles of tidedom). In all three runs the top of the delta becomes flats and ebb channels
+  (flats of 42.3, 32.1 and 46.0×10³ m² for morfac 240, 120 and 60), the flow over the flats is weak on
+  the rising tide (in most rising tides 90 % of the cells are at 0.1 m/s or less), and the channels run
+  fast at low tide (median speed 0.45–0.52 m/s). None of them shows the shapes of a tide-dominated
+  delta. Two things differed. The streaks stretching offshore: the two streaks of morfac 240 (previous
+  item) become a single streak reaching x = 430 m with 120, and do not form with 60, where the delta
+  instead spreads compactly to the south-east as far as x = 460 m. Read the streaks as particular to
+  runs with a large morfac. The other is the sand leaving through the north and south sides. With
+  morfac 120, at the low tides of the 4th to 6th tidal cycles the river water flowed to the south side
+  along a channel following the coast (0.7–0.9 m/s), and 40 % of the sand fed left, mainly through the
+  south side (1 % with 240 and with 60). The flats were narrower accordingly, and the tidal discharge
+  in and out of the flats is 0.94 times the river (1.6 times with 240, 1.5 times with 60). Where the
+  low-tide channels head differs from run to run, as does the split of the flow between distributaries
+  ("The shape differs between realizations" under "Notes"), and these three runs cannot separate the effect of
+  morfac from the difference between realizations. Read the amount of sand leaving through the north
+  and south sides, and the extent of the flats that changes with it, as values that change greatly
+  depending on whether a low-tide channel reaches a side ("Sides crossing the coast" under "Notes").
+  Whether morfac 60 is small enough has not been checked, as there is no run with a still lower
+  morfac.
 
 ![Flow in the last cycle](figs/tidedom_phases.png)
 
 Flow in the last tidal cycle of tidedom (landform 11923–14904 h). The panels are arranged as in the
-figure of stage 6.
+figure of stage 6. The rising tide is at a moment when the river outlet is shifting from the eastern
+basin to the north side, and the river water runs fast over the flats.
 
 ![Water level and discharge at the mouth](figs/tidedom_series.png)
 
 Arranged as in the figure of stage 6. Except while the river water fills the channel at the start
-(4 h of hydraulic time), the discharge at the mouth stays at 2.8–3.2 m³/s and never reverses.
+(4 h of hydraulic time) and while the river outlet shifts at the start of the last cycle (hydraulic
+49.5–52.5 h; 1.2–4.1 m³/s), the discharge at the mouth stays at 2.6–3.2 m³/s and never reverses.
 
 ## What this model cannot represent (differences from real phenomena)
 
@@ -630,13 +639,12 @@ Arranged as in the figure of stage 6. Except while the river water fills the cha
   the tidal cases of this example keep morfac at 24 (240 in tidedom, whose sediment is 1/10) and solve
   5 tidal cycles. The sand that enters in one tidal cycle is a quarter of the sand of the final delta of
   tide, so the landform change in one cycle cannot be called small. In the check of tidedom with
-  morfac 120 (stage 7), the flats and the difference between the flows on the rising and the falling
-  tide appeared in the same way, but the channel stretching offshore did not form, and the sand leaving
-  through the north and south sides fell from 27 % to 5 % of the sand fed at the same landform time of
-  8942 h. Read the details of the landform and the amount of sediment leaving through the north and
-  south sides as values that depend on morfac (the 22 % of tide also left around the low tides of the
-  4th and 5th tidal cycles). The references without tide have a steady flow, so they see the same landform
-  time with the cheaper morfac 100 (1000 in smallq).
+  morfac 120 and 60 (stage 7), the flats and the difference between the flows on the rising and the
+  falling tide appeared in the same way, but the streaks stretching offshore grew long only with
+  morfac 240 and did not form with 60. Read the details of the landform as values that depend on morfac
+  (for the amount of sediment leaving through the north and south sides, see "Sides crossing the
+  coast" below). The references without tide have a steady flow, so they see the same landform time
+  with the cheaper morfac 100 (1000 in smallq).
 - **How the tidal cases are compared**: the output is every quarter of a tidal cycle (rising mean tide,
   high tide, falling mean tide, low tide). The extent of land changes with the tide level, so the
   deposit, emerged land and so on are compared at the frames of the rising mean tide.
@@ -658,7 +666,12 @@ Arranged as in the figure of stage 6. Except while the river water fills the cha
   sediment that ran along the coast leave as they are (in the last cycle of tide most of the river
   water leaves through the north and south sides), and depending on the time of the tide they also
   pass part of the tidal exchange. The flow through the sides adds about 0.03 m/s to the basin and
-  moves no sediment.
+  moves no sediment. When a low-tide channel reaches a side along the coast, sand leaves together with
+  the river water. The amount is set by whether the channel reaches the side and differs greatly from
+  run to run (22 % of the sand fed by landform 1490 h in tide of stage 6; by landform 8942 h, 1 % in
+  tidedom of stage 7 and in the check with morfac 60, and 40 % in the check with morfac 120). The
+  domain of this example extends 300 m north and south of the mouth; widening it to the north and
+  south may reduce the amount leaving through the sides (not checked).
 
 ![Differences between realizations](../figs/ensemble.png)
 

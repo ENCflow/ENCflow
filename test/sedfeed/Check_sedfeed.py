@@ -16,6 +16,12 @@
 #     (7) 開境界の掃流砂の台帳(developer.md §89.12): 給砂なし・容量給砂の構成(nofeed・feed1・
 #         feed05)で (1 − λ) Σ(z − z0) A + 正味の流出(Screen_<構成>.log の
 #         「net bed load out through open boundaries」)= 0 が相対 TOL_NET
+#     (8) 流入セルで流れが横に振れる構成(qbturn。qb の流入セルの東隣を高い地盤でふさぎ、水を
+#         北の 2 行へ曲げる): 掃流砂が流入区間の面から出ていかない(developer.md §19.12)。
+#         台帳 (1 − λ) Σ(z − z0) A = ∫Qb dt × morfac が TOL_LEDGER で閉じ、画面出力に開境界の
+#         正味の流出(「net bed load out through open boundaries」)が出ない(東辺は壁なので、
+#         開いた面は流入区間の面だけ。2026-11-03 の修正前は給砂の 6.9 % が流入セルの北西の
+#         斜め面から出ていた)
 import sys, os, struct, re
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 from make_init import NX, NY, DX, J1, J2, X1, X2, S, N
@@ -132,6 +138,18 @@ g7 = worst < TOL_NET and min(nets) > 0.0
 print("(7) 開境界の掃流砂の台帳: 正味の流出 %s m3、(1−λ)Σ(z−z0)A + 流出 の相対差 max %.1e (< %.0e) : %s"
       % ("・".join("%.4f" % v for v in nets), worst, TOL_NET, "PASS" if g7 else "FAIL"))
 ok = ok and g7
+
+z0t = [[float(v) for v in line.split()] for line in open("zturn.txt")]
+zt = load_state_z("qbturn")
+vol = sum((zt[j][i] - z0t[j][i]) for j in range(NY) for i in range(NX)) * DX * DX * (1.0 - LAMBDA)
+log = open("Screen_qbturn.log", encoding="utf-8", errors="replace").read()
+outs = [float(v) for v in re.findall(r"open boundaries \(out - in\)\s+(\S+) m3", log)]
+g8 = abs(vol / fed - 1.0) < TOL_LEDGER and not outs
+print("(8) 流入セルで流れが横に振れる(qbturn): (1−λ)Σ(z−z0)A = %.9f m3, ∫Qb dt × morfac = %.9f m3, "
+      "相対差 %.1e (< %.0e)、開境界の正味の流出 %s : %s"
+      % (vol, fed, abs(vol / fed - 1.0), TOL_LEDGER, ("%.4e m3" % sum(outs)) if outs else "なし",
+         "PASS" if g8 else "FAIL"))
+ok = ok and g8
 
 print("=== sedfeed checks %s ===" % ("PASS" if ok else "FAIL"))
 sys.exit(0 if ok else 1)

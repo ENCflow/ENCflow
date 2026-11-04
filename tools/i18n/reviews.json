@@ -158,9 +158,9 @@
     {
       "source": "docs/users_guide/boundary.md",
       "target": "docs/en/users_guide/boundary.md",
-      "source_sha256": "225095a5ce4dd3636d31be98f53b08fda0405522eb07ecfb05870ccbb5b95b31",
-      "target_sha256": "ed29e62f9251aa0a06c34d99f94d7a07bdcabcadc317ac7f7d9d79e4b3c57357",
-      "reviewer": "Claude (Claude Code session; compared the Japanese and English changes for the water-quality substance carried by structures and withdrawals, 2026-11-04)",
+      "source_sha256": "ee9875956980a5ea1ded3957052a214f4a097832ad1fce2405ed45288b730670",
+      "target_sha256": "1fee72bc4f08e816ba49d7948f876babd3c69c3d5d058f09d43edb17b8d92773",
+      "reviewer": "Claude (Claude Code session; merge of the delta branch into main 373bc31: the merged Japanese source and English mirror were checked by diff to be exactly main's version plus the branch's clause that no bed load flows out through the faces of an inflow segment; main's passages on prescribed-level cells as outside water and on intakes carrying the water-quality substance, and the branch's clause, compared side by side in both languages)",
       "method": "assistant",
       "reviewed_on": "2026-11-04"
     },
@@ -266,9 +266,9 @@
     {
       "source": "docs/users_guide/geomorph.md",
       "target": "docs/en/users_guide/geomorph.md",
-      "source_sha256": "b17589708d1281e8244cbedba709686aa860f1694dbd9eb997d38cd5053b5c25",
-      "target_sha256": "2bfec23ab96a466c012fb863c2c7605979ecec7d21ad1c94de17ce534fb60332",
-      "reviewer": "Claude (Claude Code session; compared the Japanese and English changes for the water-quality substance carried by structures and withdrawals, 2026-11-04)",
+      "source_sha256": "904e571a61988a43af364ba3343d4b01d5033efffa877e5ca4ffd5c9a7937dd0",
+      "target_sha256": "c062a6f693e5c7a1a45939c5d18b4f3bc4a8102f2995c3f985e44a060967071e",
+      "reviewer": "Claude (Claude Code session; merge of the delta branch into main 373bc31: the merged Japanese source and English mirror were checked by diff to be exactly main's version plus the branch's tide sentence of the delta procedure (lower-morfac checks); main's culvert sentence (water and dissolved water-quality substance only) and the branch's sentence compared side by side in both languages)",
       "method": "assistant",
       "reviewed_on": "2026-11-04"
     },
@@ -428,11 +428,11 @@
     {
       "source": "docs/users_guide/sediment.md",
       "target": "docs/en/users_guide/sediment.md",
-      "source_sha256": "b06b7de29832c4a0f1147fc0530ebdf86b298448735bef948601add27cf07ae8",
-      "target_sha256": "5d1cdec42bd70a87c0abadf828dd8048517adc8cf5bed249ce6d23dc8842d741",
-      "reviewer": "Claude (assistant)",
+      "source_sha256": "53213820ad1b830f99515ca489a60a6a2900a27c7ecd1a7e9d660423f60c806a",
+      "target_sha256": "e4eef2e8f1b7a2f701c42dd12bfc60ccabfed1fca27c14eb38e9d88c2f725fab",
+      "reviewer": "Claude (Claude Code session; full-text content and lexical review, no model execution)",
       "method": "assistant",
-      "reviewed_on": "2026-11-02"
+      "reviewed_on": "2026-11-03"
     },
     {
       "source": "docs/users_guide/structure.md",
@@ -464,9 +464,9 @@
     {
       "source": "docs/users_guide/tide.md",
       "target": "docs/en/users_guide/tide.md",
-      "source_sha256": "c6c1ffa5ed85af92dced0cedccf193b51b199e3d421509da5d65afab5729cdde",
-      "target_sha256": "ffbff1f3f16d0868facb331e768f4656ac5c806d624f1777613ab89c75b74968",
-      "reviewer": "Claude (Claude Code session; note on water bodies with short natural periods updated with the numbers of all tidal cycles in both languages and compared)",
+      "source_sha256": "8f4f8e9cdb9621dd351a535784b7261681281c6d4adb65de101488b78dd8920c",
+      "target_sha256": "68a3567d48cc589efaa01145c2f4c946180aaf03e8305b356b5f47aac40aef93",
+      "reviewer": "Claude (Claude Code session; tival row gained the 9999-point limit in both languages and compared)",
       "method": "assistant",
       "reviewed_on": "2026-11-02"
     },
@@ -1400,11 +1400,11 @@
     {
       "source": "examples/delta/README.md",
       "target": "examples/delta/en/README.md",
-      "source_sha256": "5e246f2aa8bdf2736e999c32d228326b4115a8e20a4d06c8aa8f205586e5a695",
-      "target_sha256": "557370797804963751cbe1270e4548281449ebeb4a8750b128d350e5b6f46e91",
-      "reviewer": "Claude (Claude Code session; stage 7 morfac check and the morfac caveats added in both languages and compared side by side)",
+      "source_sha256": "4899d8cea4e94fd2332684cbda401db04971599c73feecd79a25a530be7090b3",
+      "target_sha256": "c1d48a3879e52f22163a00277e5430106e9ec0beb7e942ac2e21dc1ad600727d",
+      "reviewer": "Claude (Claude Code session; stage 6 updated after the tide rerun with the inlet bedload fix was found bit-identical: how the sand leaves through the sides, the speed in the channel at low tide (1.4 -> 1.8 m/s at probe 1) and the tide amount in the note on the sides crossing the coast; the three changed passages compared side by side in both languages, rest unchanged since the previous record at a60d67b)",
       "method": "assistant",
-      "reviewed_on": "2026-11-02"
+      "reviewed_on": "2026-11-04"
     },
     {
       "source": "examples/delta/figs/mechanism.png",
@@ -1427,29 +1427,29 @@
     {
       "source": "examples/delta/figs/tidedom_cmp.png",
       "target": "examples/delta/en/figs/tidedom_cmp.png",
-      "source_sha256": "fe3ab930744dc87d62accb321bb09963c54df16366621dcc12b1fed0e4532899",
-      "target_sha256": "175611ff7716786d6af3eb5f5f63fc7af24c666129e9ed47fc9c73d7a26ecb42",
-      "reviewer": "Claude (Claude Code session; figures drawn by the same plot_results.py from the same saved results with only the labels switched by the en argument; images compared visually)",
+      "source_sha256": "961584a7c0452faf340a6748038c7083692bf905d0e7ffd6a488b012fbe2cb81",
+      "target_sha256": "590beef628b6534de993dad71387c23f4f0acc1fbfc3689e454ccee889460712",
+      "reviewer": "Claude (Claude Code session; regenerated by the same plot_results.py code from the same runs after the inlet bedload fix, only the labels switched by the en argument; images compared visually)",
       "method": "assistant",
-      "reviewed_on": "2026-11-02"
+      "reviewed_on": "2026-11-03"
     },
     {
       "source": "examples/delta/figs/tidedom_phases.png",
       "target": "examples/delta/en/figs/tidedom_phases.png",
-      "source_sha256": "590de24952c09bfbbd9d6889107a3e33924e2ac1fa727a4ff5ee28651855f74e",
-      "target_sha256": "2b5aa20c51e32e4d06d9d9ad580750fb3f804bff6cfc3bf9f81e3673fa375193",
-      "reviewer": "Claude (Claude Code session; figures drawn by the same plot_results.py from the same saved results with only the labels switched by the en argument; images compared visually)",
+      "source_sha256": "abc8bce881fa747f2c4b0e952c2923219972d1482117ac5862212da1faee1703",
+      "target_sha256": "70c347e10a36728ae7ab60c38bb4cbfea4bf77390f1d16144ad47db01a49a18c",
+      "reviewer": "Claude (Claude Code session; regenerated by the same plot_results.py code from the same runs after the inlet bedload fix, only the labels switched by the en argument; images compared visually)",
       "method": "assistant",
-      "reviewed_on": "2026-11-02"
+      "reviewed_on": "2026-11-03"
     },
     {
       "source": "examples/delta/figs/tidedom_series.png",
       "target": "examples/delta/en/figs/tidedom_series.png",
-      "source_sha256": "d11bce512f82f87c676592d00f59a41585c7a75fe5d8ebeafca966eab332a8a8",
-      "target_sha256": "241da03adb8166fff8167c5e3bdab346e5993da64ff2284ac92d49283be6eb91",
-      "reviewer": "Claude (Claude Code session; figures drawn by the same plot_results.py from the same saved results with only the labels switched by the en argument; images compared visually)",
+      "source_sha256": "a6c17c7c66cef9bb55a19bae8ac0cfd5ba30f588c686aaaeeb5e8cd0a95c52a6",
+      "target_sha256": "30018eaaccf063560f11129052b8e88d0b7db4cb0295b854f2cb211631609e10",
+      "reviewer": "Claude (Claude Code session; regenerated by the same plot_results.py code from the same runs after the inlet bedload fix, only the labels switched by the en argument; images compared visually)",
       "method": "assistant",
-      "reviewed_on": "2026-11-02"
+      "reviewed_on": "2026-11-03"
     },
     {
       "source": "examples/delta/figs/wfsed_evolution.png",
@@ -3524,11 +3524,11 @@
     {
       "source": "test/sedfeed/README.md",
       "target": "test/sedfeed/en/README.md",
-      "source_sha256": "778eae07811055f92041dfa289851070e2bbf2b8e58bc6049850f6d4525f4d99",
-      "target_sha256": "feb6c52c191fadf56f8a43e71ca56b7ec2aaff22c01bb7020eee2b329e4b2eb8",
-      "reviewer": "Claude (Claude Code session; mechanical renumbering of the developer.md section references §88 -> §89 in both files, checked by script that the lines differ only in those numbers and that both files carry the same references; rest unchanged since the previous record)",
+      "source_sha256": "b570189ce2d55eb3ca2ad11ceb49955cac2f1fb3820269180d9cab33ee15d798",
+      "target_sha256": "16ce8f3f29bc9d0e84969809af53909d1ee6a68676c87edc22179564ec257d16",
+      "reviewer": "Claude (Claude Code session; full-text content and lexical review, no model execution)",
       "method": "assistant",
-      "reviewed_on": "2026-10-28"
+      "reviewed_on": "2026-11-03"
     },
     {
       "source": "test/sedinflow/README.md",

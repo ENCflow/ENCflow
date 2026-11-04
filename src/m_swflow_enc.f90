@@ -52,6 +52,8 @@ module m_swflow_enc
   public :: m_swflow_enc_nh_export, m_swflow_enc_nh_import, m_swflow_enc_nh_active   ! ネスティングの帯の φ(§16)
   public :: bcs, bc_open_face                  ! 開境界の面判定(m_geomorph の
                                                ! 開境界土砂フラックスが読む。読み取り専用)
+  public :: bc_inflow_nooutflow                ! 区間流入が作った、水が出ていけない境界面
+                                               ! (m_geomorph の掃流砂の境界面が読む。§19.12)
   public :: bc_neumann_cell                    ! 側方 Neumann の面と鏡像セル(m_geomorph の
                                                ! 掃流砂の境界面が読む。§90)
   ! submodule(m_swflow_enc_bc の側方 Neumann の境界面。§90)からのホスト結合参照のため
@@ -694,6 +696,10 @@ module m_swflow_enc
     pure module function bc_open_face(in, jn) result(op)
       integer, intent(in) :: in, jn
       logical :: op
+    end function
+    pure module function bc_inflow_nooutflow(i, j, in, jn) result(r)
+      integer, intent(in) :: i, j, in, jn
+      logical :: r
     end function
     pure module subroutine bc_neumann_cell(id, jd, ok, im, jm)
       integer, intent(in) :: id, jd
