@@ -5095,6 +5095,19 @@ examples/catchment_metal(重金属の流域例題)を作った後の見直しで
   wq.csv とも identical(np = 4 は帯 4〜5 行。域内ポンプの取水と送り先、カルバートの上下流が
   別のランク)。param.txt の全分布ファイルも逐次と np = 4 で一致、param_gw.txt は np = 1, 2, 4 の
   Log.txt・wq.csv・全分布ファイルが逐次と一致。
+- **reference を持つ 39 ケースの回帰(-Ofast 逐次。wqstruct を除く)**: 31 ケースが PASS。
+  水質の 7 ケース(tracer・damwq・gwseep・kdpart・sewer_wq・wqbound・gwwidth)は wq.csv の
+  末尾に out_intake_g が増える分だけ不一致: 既存の 26 列は全行で reference と文字列として
+  一致、Log.txt は identical、増えた列はどのケースも全行 0(取水がない)。scratchpad の写しで
+  reference の wq.csv に最後の列だけを継ぎ足すと、7 ケースとも比較と各ケースの検定
+  (Check_*.py と追加の構成)が PASS。
+- **nhshelf の不一致(今回の変更と無関係)**: Log の最終桁が 2 量子ずれる行が 7 つあり
+  ULP=1 で不合格。変更前の実行ファイル(main の HEAD を同じ環境で -Ofast ビルド)でも
+  4 スレッドでは不合格(5 行)= §10 の 2026-10-31 の項の NH ソルバの 4 スレッドの実行間
+  非決定。1 スレッドでは変更前と変更後の -Ofast ビルドの全出力がバイト一致し、reference に
+  ULP=1 で合格。-O2 厳密数学ビルドでも変更前後の全 24 出力ファイルがバイト一致(このケースは
+  境界・構造物・水質を使わず、変更した経路は cqc の判定しか通らない)。4 スレッドの判定が
+  ULP=1 を超えうる点は handoff(非静水圧の (g))。reference は更新しない。
 
 ## 31. 積雪・融雪モジュール m_snow(&list_snow。2026-08-10 実装)
 
