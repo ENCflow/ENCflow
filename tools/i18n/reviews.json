@@ -2219,11 +2219,11 @@
     {
       "source": "examples/qanat/README.md",
       "target": "examples/qanat/en/README.md",
-      "source_sha256": "a2daac19dca374e7cc6bf5eb8a132b81f72b98b984060c54698fbb32d2a7014a",
-      "target_sha256": "b875bc1588f895af7ff2b86fab56ef4474caed52a889870fc84a0e15f3bd0469",
-      "reviewer": "Claude (assistant)",
+      "source_sha256": "fb5276d910063bb64351d5ca662cdb3dc59dea571a1b2d3b5372eecc905ebef4",
+      "target_sha256": "9118e28b88d4c7861a69d73d27e569fb41b0ef54b4d1bff59a2110ac4437f2e3",
+      "reviewer": "Claude (Claude Code session; recompute after the steep-slope gravity correction §91: the 2 L/s pumping row of the budget table and the two derived values in the text compared side by side with the Japanese source, rest unchanged since the previous record)",
       "method": "assistant",
-      "reviewed_on": "2026-11-02"
+      "reviewed_on": "2026-11-04"
     },
     {
       "source": "examples/qanat/figs/mechanism.png",
