@@ -230,9 +230,9 @@
     {
       "source": "docs/users_guide/encgrid.md",
       "target": "docs/en/users_guide/encgrid.md",
-      "source_sha256": "315c297dee55b782d53fc1ec048d310b90b02b7bbb9f1223dcee3425a3943d9a",
-      "target_sha256": "9162def47e50c81999ebfad82f1cad894edb6ce385104580b89418d1dff50ef3",
-      "reviewer": "Claude (Claude Code session; the new effective-gravity formula of §5 (|∇z| with the minmod tangential slope) and the explanation of the fix written in both languages and compared)",
+      "source_sha256": "bca8d70c3d943543e719b2d6fccbae4f722706b84d62c0af4afa2be0ed829897",
+      "target_sha256": "05042a25bbabe0e1a80f6f4918a64d63c13f298dd64f77b8f2ffbe3332221e3e",
+      "reviewer": "Claude (Claude Code session; steep-slope design note: the added paragraph in §5 on the cancellation of g_e in uniform flow and the link to docs/steep_slope_design.md compared side by side with the Japanese source, rest unchanged since the previous record)",
       "method": "assistant",
       "reviewed_on": "2026-11-04"
     },

@@ -189,7 +189,15 @@ between a valley floor and its walls, so the slope of the walls does not enter
 the cells of the floor (until 2026-11-04 the correction used the slope in the
 normal direction of the edge alone, so $`g_e`$ came out large on edges oblique
 to the slope: +7 % on an edge at 45° and +16 % on an edge across the slope at a
-slope of 0.4; developer.md §91).
+slope of 0.4; developer.md §91). Because $`g_e`$ also multiplies the friction
+term below, it cancels in uniform flow: the depth and velocity of uniform flow
+are the same as without the correction (the classical horizontally projected
+Manning formula). The correction acts on the unsteady part (acceleration and
+start of motion, wave speed). The formulation, the stencils (which cells' ground
+is used for which edge), a comparison with published models and the limits (the
+difference between horizontal and slope-parallel velocity, deep water over a
+steep bed) are described in [docs/steep_slope_design.md](../../steep_slope_design.md)
+(Japanese).
 
 **Friction term $`F`$.** The Manning law is treated semi-implicitly.
 
