@@ -43,8 +43,8 @@ document [docs/glacier_plan.md](../../glacier_plan.md) (Japanese).
 
 The minimal input to "just try it" is **an empty &list_glacier in
 fn_glacier** (plus fn_meteo and fn_snow, both of which may be empty
-groups). The degree-day, sliding and erosion coefficients have
-defaults (the "Default" column; basis in [Parameters and the basis of their defaults](#parameters-and-the-basis-of-their-defaults) below); when
+groups). The degree-day, sliding and erosion coefficients and the
+erosion coupling length have defaults (the "Default" column; basis in [Parameters and the basis of their defaults](#parameters-and-the-basis-of-their-defaults) below); when
 unspecified the default is adopted and printed with "(default)". The
 default configuration is "grow from no ice by snowfall, SIA flow on,
 no sliding or erosion". Set gl_morfac and t_cycle, which buy
@@ -167,7 +167,7 @@ melt balances the inflow ([Tide](tide.md)).
 | gl_as | 1e-13 | Weertman sliding coefficient As (m yr⁻¹ Pa⁻³). Read when f_glslide=1. The default gives 100 m/yr at a basal shear stress of 100 kPa (the fast side of mountain glaciers) |
 | gl_kg | 1e-4 | Erosion coefficient Kg. Read when f_glero=1. Coefficient of the erosion law ė = Kg·usˡ with sliding speed us measured in m/yr (dimensionless for l=1; the measured 1e-4 of Humphrey & Raymond 1994) |
 | gl_lexp | 1.0 | Power-law exponent l of the erosion law (1–2) |
-| gl_lc | 0 | Erosion coupling length (m). If positive, the driving stress used for erosion is averaged within the ice-covered cells with a Gaussian kernel of standard deviation gl_lc (see [Erosion coupling length](#erosion-coupling-length-gl_lc) below). 0 is the local τb. In erosion experiments longer than a millennium, give 1–3 times the typical ice thickness and at least twice the grid spacing |
+| gl_lc | max(500 m, 2Δx) | Erosion coupling length (m). Read when f_glero=1. The driving stress used for erosion is averaged within the ice-covered cells with a Gaussian kernel of standard deviation gl_lc (see [Erosion coupling length](#erosion-coupling-length-gl_lc) below). The default is 500 m (or twice the grid spacing when that is longer), meant for valley glaciers about 200–300 m thick. Lower it to about twice the ice thickness for thin glaciers such as cirque glaciers. 0 is the local τb |
 
 ```math
 u_s = A_s\,\tau_b^3,
@@ -240,14 +240,39 @@ only for erosion, not for the flow (the SIA diffusivity).
   ice width (with gl_lc = 0 it differs by 20% and concentrates on the axis).
   Trial runs longer than a millennium also completed without slots or pits
   (developer.md §45.3).
+- **Default**: 500 m (or twice the grid spacing when that is longer). It lies
+  between the coupling lengths of valley glaciers that Kamb & Echelmeyer fitted
+  to measurements (450 m for Blue Glacier and 625 m for Variegated Glacier; the
+  averaging lengths of 1.8 km and 2.5 km in the paper are four times the
+  coupling length), and pairs with the default erosion coefficient gl_kg
+  (measured at Variegated Glacier). gl_kg was determined from measured sliding
+  speeds, and the speeds of a real glacier are smoothed by the transfer of
+  stress, so pairing it with a smoothed τb is more consistent with its source.
+  The floor of twice the grid spacing stops the grid-scale concentration on
+  coarse grids.
+- **It changes the amount of erosion**: gl_lc is not a length for numerical
+  stability only but part of the erosion law. In trial runs (200 m grid), the
+  total erosion relative to gl_lc = 0 was 0.83 for 200 m, 0.68 for 400 m, 0.56
+  for 600 m and 0.42 for 1000 m in a V-shaped valley (ice about 250 m thick,
+  1500 years), and 0.54 for 100 m, 0.39 for 200 m and 0.21 for 400 m under a
+  ridge glacier (ice 30–60 m thick, 3500 years) (developer.md §45.4).
 - **Choosing the value**: 1–3 times the typical ice thickness of the glacier
-  (twice as a guide), and at least twice the grid spacing. Shorter than twice
-  the grid spacing, it cannot fully stop the grid-scale concentration. When
-  the ice is thin and the grid coarse (twice the ice thickness is shorter than
-  twice the grid spacing), gl_lc means a length for numerical stability rather
-  than the physical coupling length.
-- **Cost**: each erosion update repeats the smoothing 4(gl_lc/Δx)² times (36
-  times for gl_lc = 600 m on a 200 m grid, 144 times on a 100 m grid).
+  (twice as a guide), and at least twice the grid spacing. The default 500 m is
+  meant for valley glaciers about 200–300 m thick; for cirque and ridge
+  glaciers (ice 100 m thick or less) it is too long and underestimates the
+  erosion by a factor of several. In that case lower gl_lc to about twice the
+  ice thickness and make the grid spacing half of it or less. Make it longer
+  for ice caps (Kamb & Echelmeyer give 4–10 times the thickness for ice
+  sheets). Shorter than twice the grid spacing, it cannot fully stop the
+  grid-scale concentration, so a warning is printed at run time (in the trial
+  runs, a length equal to the grid spacing removed most of the cell-scale
+  roughness, while half the grid spacing left roughness of 40% of the erosion). When the ice is
+  thin and the grid coarse (twice the ice thickness is shorter than twice the
+  grid spacing), gl_lc means a length for numerical stability rather than the
+  physical coupling length.
+- **Cost**: each erosion update repeats the smoothing 4(gl_lc/Δx)² times (with
+  the default 500 m: 25 times on a 200 m grid, 100 times on a 100 m grid, 400
+  times on a 50 m grid).
 - **What it cannot do**: it does not represent the resistance of the valley
   walls itself. The largest erosion stays at the valley axis, and it does not
   guarantee that the cross-section becomes U-shaped. Erosion also reaches
@@ -258,10 +283,12 @@ only for erosion, not for the flow (the SIA diffusivity).
   erosion at the valley axis about 20% larger (erosion is proportional to the
   cube of the stress and amplifies small differences; the difference does not
   grow with time).
-- **Caution for gl_lc = 0**: the gradient of a margin cell includes the bed
-  elevation of the ice-free neighbour (an ice cliff), so the margin cell is
-  eroded more deeply than the next cell inside, forming a step (in
-  configuration 5, −0.47 m at the margin and −0.37 m inside).
+- **Caution for gl_lc = 0**: it uses the local τb (the default behaviour before
+  the default was changed on 2026-11-04). Erosion experiments longer than a
+  millennium grow grid-scale slots and pits. Also, the gradient of a margin
+  cell includes the bed elevation of the ice-free neighbour (an ice cliff), so
+  the margin cell is eroded more deeply than the next cell inside, forming a
+  step (in configuration 5, −0.47 m at the margin and −0.37 m inside).
 
 ## Avalanche redistribution (f_glava)
 
@@ -421,7 +448,7 @@ The labels in the Basis column are explained in [How to read the basis of a defa
 | gl_cfl / gl_nsubmax | 0.4 / 10000 | sub-cycle safety factor and cap | **numerical** |
 | gl_as | 1e-13 m yr⁻¹ Pa⁻³ | Weertman sliding coefficient $`A_s`$ ($`m`$ = 3 fixed[^weertman57]) | **derived** 100 m/yr at a basal shear stress of 100 kPa (typical 50–150 kPa[^cuffey10]) = the fast side of mountain glaciers |
 | gl_kg / gl_lexp | 1e-4 / 1 | erosion coefficient $`K_g`$ and exponent $`l`$ | **literature value** Variegated Glacier measurement, erosion rate ≈ 1e-4 × sliding speed[^humphrey94]; 1e-7–1e-6 for $`l`$ = 2[^herman15] |
-| gl_lc | 0 m | erosion coupling length | **method** 0 = local τb (bit-identical to the code before 2026-11-04). For a positive value, the coupling length of valley glaciers = 1–3 times the ice thickness[^kamb86] (at least twice the grid spacing) |
+| gl_lc | max(500 m, 2Δx) | erosion coupling length | **literature value** between the measured coupling lengths of valley glaciers, 450–625 m (Blue and Variegated Glaciers)[^kamb86]; Variegated Glacier is also the source of gl_kg. 2Δx when twice the grid spacing is longer (**numerical setting**: the floor that stops the grid-scale concentration). 0 is the local τb |
 | gl_ava_tanc | 0.6 | critical avalanche slope | **customary value** near the angle of repose of dry snow (≈ 31°) |
 | fn_glacier_hi0 | "" | initial ice thickness | **given** grown from no ice by default |
 

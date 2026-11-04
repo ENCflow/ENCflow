@@ -49,7 +49,7 @@ else
     rc=1
 fi
 ndef=$(grep -c "(default)" Screen_min.log)
-[ "$ndef" -eq 4 ] || { echo "FAIL: expected 4 '(default)' lines, got $ndef" >&2; rc=1; }
+[ "$ndef" -eq 5 ] || { echo "FAIL: expected 5 '(default)' lines, got $ndef" >&2; rc=1; }
 
 if [ $rc -eq 0 ]; then
     echo "=== glacier verification PASS ==="

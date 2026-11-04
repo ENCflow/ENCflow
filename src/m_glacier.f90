@@ -48,7 +48,8 @@ module m_glacier
   !       edot = Kg・us^l(us は m/yr で評価)で s%z を削る。侵食の結合長
   !       gl_lc > 0 なら τb は駆動応力ベクトルを氷の中で標準偏差 gl_lc の
   !       ガウス核で平均したものの大きさ(smooth_tau。格子規模の侵食の
-  !       集中を止める。流動には使わない。§45.3)。
+  !       集中を止める。流動には使わない。§45.3。既定 max(500 m, 2Δx)。
+  !       0 で局所の τb。§45.4)。
   !       s%sd は同じ Δz で共動減少(sd=0 まで基岩固定、以後は基岩侵食 =
   !       fluvial の z/sd 共動 §19.2 と同じ構造)。侵食物は系外へ排出と
   !       みなす(氷内・融氷水による搬出の抽象化。体積は台帳 vero に記録し
@@ -166,7 +167,7 @@ module m_glacier
     integer :: f_ero = 0             ! 氷河侵食 (0:なし, 1:有効)
     real :: kg = 0.0                 ! 侵食係数 Kg(us は m/yr で評価)
     real :: lexp = 1.0               ! 侵食則のべき指数 l
-    real :: lc = 0.0                 ! 侵食の結合長 (m)(0 = 局所の τb。§45.3)
+    real :: lc = 0.0                 ! 侵食の結合長 (m)(0 = 局所の τb。既定 max(500 m, 2Δx)。§45.3・§45.4)
     integer :: f_ava = 0             ! 雪崩再配分 (0:なし, 1:有効)
     real :: avatanc = 0.6            ! 雪崩の限界勾配 tanθc
     logical :: initialized = .false.
@@ -288,10 +289,20 @@ subroutine m_glacier_init(gl, p, g, s, mt)
     if (list%gl_lexp <= 0.0) call par_stop("list_glacier: gl_lexp must be > 0")
     gl%kg = list%gl_kg
     gl%lexp = list%gl_lexp
-    ! 侵食の結合長(既定 0 = 局所の τb。番兵の既定は置かない: 0 が「平滑化なし」の
-    ! 明示で、lv_wsol と同じ扱い。§66・§45.3)
+    ! 侵食の結合長(f_glero=1 のときだけ読む。未指定 = 番兵 −9999 なら既定
+    ! max(500 m, 2Δx) を採用して表示。500 m は Kamb & Echelmeyer (1986) の谷氷河の
+    ! 結合長の実測 450〜625 m の間、2Δx は格子規模の集中を止める下限。0 は局所の τb
+    ! の明示。§45.4)
+    list%gl_lc = param_default("glacier", "gl_lc", list%gl_lc, &
+                               max(500.0, 2.0 * max(g%dx, g%dy)), " m", unset=-9999.0)
     if (list%gl_lc < 0.0) call par_stop("list_glacier: gl_lc must be >= 0 (m)")
     gl%lc = list%gl_lc
+    if (gl%lc > 0.0 .and. gl%lc < 2.0 * max(g%dx, g%dy)) then
+      ! 設定の警告(全ランク同じ内容なので rank 0 だけが出す)
+      if (is_root) call par_warn("glacier: gl_lc = " // rtoa(gl%lc) // " m is shorter than twice " &
+                                 // "the grid spacing (" // rtoa(2.0 * max(g%dx, g%dy)) // " m); " &
+                                 // "grid-scale concentration of erosion may remain (developer.md §45.4)")
+    end if
   end if
 
   ! --- 雪崩再配分(G4) ---
@@ -798,7 +809,8 @@ end function
 !   us = As τb^3、edot = Kg・(us [m/yr])^l / yr_s [m/s]
 !   侵食の結合長 gl_lc > 0 なら、τb は局所の値でなく、駆動応力ベクトルを
 !   氷の中で標準偏差 gl_lc のガウス核で平均したものの大きさ(smooth_tau。
-!   §45.3)。0 なら局所の τb(上の式)のまま(2026-11-04 以前とビット一致)
+!   §45.3。既定 max(500 m, 2Δx)。§45.4)。0 なら局所の τb(上の式)のまま
+!   (2026-11-04 の既定変更より前の既定の挙動とビット一致)
 !   2パス構造(§28.2 の実バグと同型の競合対策): パス1が時刻 n の z+hi
 !   (近傍参照)から侵食深 edz を計算し、パス2が z・sd へ適用する。
 !   1パスのその場更新は勾配の近傍読みとスレッド・帯界面で競合する

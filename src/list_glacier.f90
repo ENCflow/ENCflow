@@ -31,8 +31,9 @@ module list_glacier
     real :: gl_kg = -9999.0                  ! 侵食係数 Kg(滑動速度べき乗則。f_glero=1 で未指定なら既定 1e-4。
                                              !   gl_lexp=1 なら無次元(us は m/yr で評価))
     real :: gl_lexp = 1.0                    ! 侵食則の滑動速度べき指数 l
-    real :: gl_lc = 0.0                      ! 侵食の結合長 (m)。侵食に使う駆動応力を標準偏差 gl_lc の
-                                             !   ガウス核で氷の中だけ平均する(0 = 局所の τb。§45.3)
+    real :: gl_lc = -9999.0                  ! 侵食の結合長 (m)。侵食に使う駆動応力を標準偏差 gl_lc の
+                                             !   ガウス核で氷の中だけ平均する(0 = 局所の τb。f_glero=1 で
+                                             !   未指定なら既定 max(500 m, 2Δx)。§45.3・§45.4)
     integer :: f_glava = 0                   ! 雪の重力再配分=雪崩 (0:なし, 1:有効)
     real :: gl_ava_tanc = 0.6                ! 雪崩の限界勾配 tan(θc)
     character(len=maxpathlen) :: fn_glacier_hi0 = ""  ! 初期氷厚分布 (m 氷厚。省略時=氷なし)

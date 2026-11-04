@@ -275,9 +275,9 @@
     {
       "source": "docs/users_guide/glacier.md",
       "target": "docs/en/users_guide/glacier.md",
-      "source_sha256": "aff355a23af289aa854b0c19ab1740e0b06918cbf65614eb367ff9d99549ebd3",
-      "target_sha256": "c80de25e200e6c312d05642c1f40f5f01a3ab377fec3b1c6d1ab457e83b30ecc",
-      "reviewer": "Claude (Claude Code session; erosion coupling length gl_lc, §45.3; full-text content and lexical review, no model execution)",
+      "source_sha256": "0a838536f36bc8e7f3bba85c19d5174ef979b9eb4bcba6ee88e5abcd38dadd6d",
+      "target_sha256": "22838387ddf6a15c3691fe75bed4051a870be3091239a09060cf65c9edf0da9b",
+      "reviewer": "Claude (Claude Code session; gl_lc default max(500 m, 2dx), §45.4; full-text content and lexical review, no model execution)",
       "method": "assistant",
       "reviewed_on": "2026-11-04"
     },
@@ -644,9 +644,9 @@
     {
       "source": "examples/List_samples/list_glacier.txt",
       "target": "examples/List_samples/en/list_glacier.txt",
-      "source_sha256": "59065f5e22a1a29cd8773f668881bccd185ace7378c35d79a9f5fe007bfae030",
-      "target_sha256": "cb5dc678fd34a1607a2d0c20e6f4f7c8ed124bf48d3c771d7e3c156a04712a84",
-      "reviewer": "Claude (Claude Code session; erosion coupling length gl_lc, §45.3; full-text content and lexical review, no model execution)",
+      "source_sha256": "6027bf0879bd5a259882cda8051278b3ff8f7bfe682accbf01095950f2694098",
+      "target_sha256": "b89554adff109f22d3f621a98f11aafe1eb46b9c9b623d78bb2a39d9d36e6797",
+      "reviewer": "Claude (Claude Code session; gl_lc default max(500 m, 2dx), §45.4; full-text content and lexical review, no model execution)",
       "method": "assistant",
       "reviewed_on": "2026-11-04"
     },
@@ -3002,9 +3002,9 @@
     {
       "source": "test/glacier/README.md",
       "target": "test/glacier/en/README.md",
-      "source_sha256": "5ee59454ac1a2b6230215395e07c034de0423035212205655514735950b9f106",
-      "target_sha256": "396a2e3a6d5e0946517af3e0664881eaefe047ca3aeecb7dcc79ce01bdba785c",
-      "reviewer": "Claude (Claude Code session; erosion coupling length gl_lc, §45.3; full-text content and lexical review, no model execution)",
+      "source_sha256": "6fba3dbafb5bfdb9f174e6636a949f6095fec127f5fb373ac019f25b88d259a0",
+      "target_sha256": "9d4c4f1e65f6a5595eb82dceb2f03749a47ebdc86c0989126a05dc11fb574fef",
+      "reviewer": "Claude (Claude Code session; gl_lc default max(500 m, 2dx), §45.4; full-text content and lexical review, no model execution)",
       "method": "assistant",
       "reviewed_on": "2026-11-04"
     },

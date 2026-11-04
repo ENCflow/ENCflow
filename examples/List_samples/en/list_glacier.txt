@@ -62,11 +62,12 @@
   !gl_kg = 1.0e-4           ! erosion coefficient Kg (dimensionless for l=1;
                             !   default 1e-4 = measured by Humphrey & Raymond 1994)
   !gl_lexp = 1.0            ! sliding-speed exponent l (1-2)
-  !gl_lc = 600.0            ! erosion coupling length (m). Default 0 = local tau_b. The driving
-                            !   stress used for erosion is averaged within the ice with a Gaussian
-                            !   kernel of standard deviation gl_lc. Long erosion runs with 0 can grow
-                            !   grid-scale slots and pits until they stop (developer.md §45.3).
-                            !   Guide: 1-3 times the ice thickness and at least twice the grid spacing
+  !gl_lc = 500.0            ! erosion coupling length (m). Default max(500 m, 2*dx) (measured coupling
+                            !   length of valley glaciers). The driving stress used for erosion is
+                            !   averaged within the ice with a Gaussian kernel of standard deviation
+                            !   gl_lc. Guide: twice the ice thickness and at least twice the grid
+                            !   spacing (smaller for thin cirque glaciers). 0 = local tau_b (long erosion
+                            !   runs grow grid-scale slots and pits; developer.md §45.3, §45.4)
 
   ! ---- Gravitational snow redistribution = avalanching (G4) ----
   !   Moves the SWE of cells whose steepest ice-surface slope (z+hi)

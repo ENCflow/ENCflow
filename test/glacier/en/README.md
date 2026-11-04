@@ -16,11 +16,15 @@ It consists of five configurations (docs/glacier_plan.md §7, developer.md §45)
    the whole chain snow → avalanche redistribution → firnification → SIA flow
    + Weertman sliding → glacial erosion is enabled, to confirm that "a glacier
    forms and erosion occurs beneath it" and that the conserved quantities are
-   sound.
+   sound. Erosion uses the local τb (gl_lc = 0 written explicitly), so that the
+   configuration also serves as a detector of grid-orientation distortion in
+   the erosion (the default erosion coupling length of 500 m would hide it;
+   developer.md §45.4).
 3. **Equivalence check of the defaults** (`param_min.txt` / `param_minx.txt`):
    the save and the Log of the configuration that omits four material
-   constants and of the configuration that writes them explicitly are
-   byte-identical (§65).
+   constants and the erosion coupling length gl_lc and of the configuration
+   that writes them explicitly are byte-identical (§65, §45.4; the default
+   gl_lc is 500 m, so the erosion differs from configuration 2).
 4. **Isotropy of the avalanche redistribution** (`param_ava.txt`): uniform
    snow (SWE 1000 mm) is placed over the whole conical mountain of
    configuration 2 and only the avalanche redistribution runs for one day
@@ -34,7 +38,7 @@ It consists of five configurations (docs/glacier_plan.md §7, developer.md §45)
    landform time. Confirms that when the driving stress used for erosion is
    averaged over the length gl_lc (developer.md §45.3), the erosion across the
    valley spreads over the ice width independently of the grid spacing (200 m
-   and 100 m), and that without averaging (gl_lc = 0 = local τb, the default)
+   and 100 m), and that without averaging (gl_lc = 0 = local τb, written explicitly)
    it concentrates on the valley axis and its shape changes with the grid.
 
 ## Configuration
@@ -44,7 +48,7 @@ It consists of five configurations (docs/glacier_plan.md §7, developer.md §45)
 | Domain and grid | 1525 m × 1525 m, 61 × 61 cells (Δx = 25 m), flat | 81 × 81 cells, conical mountain (`data/zcone.txt`) |
 | Initial ice thickness | Similarity solution at t = t₀, H(r) = H₀ [1 − (r/R₀)^{4/3}]^{3/7}, H₀ = 200 m, R₀ = 600 m (`data/hi0.txt`) | None (formed from snow by firnification) |
 | Meteorology | Constant temperature −30 ℃ (no melt or precipitation; zero mass balance) | With the temperature lapse rate the summit side receives snow; precipitation is scaled with elevation, more toward the summit |
-| Flow | SIA, Glen A = 1e-16 Pa⁻³ yr⁻¹ (n = 3) | SIA + Weertman sliding (gl_as = 1e-13) + erosion (gl_kg = 1e-4). The firnification time constant is made tiny for acceleration |
+| Flow | SIA, Glen A = 1e-16 Pa⁻³ yr⁻¹ (n = 3) | SIA + Weertman sliding (gl_as = 1e-13) + erosion (gl_kg = 1e-4, local τb = gl_lc = 0). The firnification time constant is made tiny for acceleration |
 | Time | dt = 60 s, 1 day. Landform-time factor gl_morfac = 80 → flow for 80 days ≈ 2 t₀ (t₀ = 40.1 days) | dt = 30 s, 1 day × 500 ≈ 1.4 years |
 
 Configuration 5 (erosion coupling length) fills a 6000 m × 4000 m V-shaped
@@ -167,7 +171,7 @@ this 10-year check (for the long-term trial runs see developer.md §45.3).
 | Avalanche: coefficient of variation of SWE on circles of radius 800–1600 m | 0.017–0.042 | < 0.08 (0.230–0.350 with the code before the fix) | PASS |
 | Avalanche: mean SWE on the 400 m circle | 408 mm | < 900 mm (90% of the initial 1000 mm) | PASS |
 | Avalanche: relative change of the water equivalent S_total | 0 (unchanged in all displayed digits) | < 1e-12 | PASS |
-| Equivalence check of the defaults | save and Log byte-identical, 4 "(default)" lines | — | PASS |
+| Equivalence check of the defaults | save and Log byte-identical, 5 "(default)" lines | — | PASS |
 | Coupling length: difference of the erosion across the valley between Δx = 200 m and 100 m (relative L1) | 0.003 with gl_lc = 400 m | < 0.05 | PASS |
 | Coupling length: the same comparison with gl_lc = 0 (detector check) | 0.196 | > 0.05 | PASS |
 | Coupling length: width where erosion exceeds half its maximum / mean/maximum within the ice | 1200 m / 0.82 (400 m / 0.52 with gl_lc = 0) | at least twice / at least 0.15 larger | PASS |
@@ -184,13 +188,15 @@ this 10-year check (for the long-term trial runs see developer.md §45.3).
   upper part of the mountain is eroded"; the eroded material is discharged out
   of the system (the WARNING line on the screen gives its amount;
   glacier_plan.md §7 "known compromises").
-- The erosion coupling length gl_lc defaults to 0 (local τb; bit-identical to
-  the code before 2026-11-04). In long-term erosion experiments with the local
-  τb, the positive feedback in which thicker ice erodes more and the eroded
-  place gets thicker ice shrinks to the scale of the grid spacing, and slots in
-  the valley floor or cell-sized pits can grow until the computation stops
-  (1500–4000 years in the trial runs; developer.md §45.3). Give gl_lc in
-  erosion experiments longer than a millennium (guidelines in
+- The default erosion coupling length gl_lc is 500 m (or twice the grid
+  spacing when that is longer; changed from 0 on 2026-11-04, developer.md
+  §45.4). In long-term erosion experiments with the local τb (gl_lc = 0), the
+  positive feedback in which thicker ice erodes more and the eroded place gets
+  thicker ice shrinks to the scale of the grid spacing, and slots in the valley
+  floor or cell-sized pits can grow until the computation stops (1500–4000
+  years in the trial runs; developer.md §45.3). The default 500 m is meant for
+  valley glaciers; for thin glaciers such as cirque glaciers lower it to about
+  twice the ice thickness (guidelines in
   [the glacier chapter of the users guide](../../../docs/en/users_guide/glacier.md)).
 - Ice temperature and polythermal structure, calving, subglacial hydrology and
   the like are not included. A long-term case that quantitatively confirms
