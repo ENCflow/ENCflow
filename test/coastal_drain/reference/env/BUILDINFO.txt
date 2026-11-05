@@ -1,8 +1,8 @@
-date      : 2026-11-04 04:09:28
+date      : 2026-11-05 12:25:20
 host      : vm
 user      : 
 pwd       : /home/user/ENCflow/test/coastal_drain
 exe       : /home/user/ENCflow/bin/encflow
 mode      : serial__double
 modules   : (no modules)
-lib       : 	libgfortran.so.5 => /lib/x86_64-linux-gnu/libgfortran.so.5 (0x00007f32c9400000)
+lib       : 	libgfortran.so.5 => /lib/x86_64-linux-gnu/libgfortran.so.5 (0x00007f9dd6800000)
