@@ -173,7 +173,7 @@ g_e = g\cos^2\theta = \frac{g}{1 + |\nabla z|_k^2},
 |\nabla z|_k^2 = \left(\frac{z_n - z_c}{\Delta s_k}\right)^2 + \left(\overline{\nabla z}\cdot\mathbf{t}_k\right)^2
 ```
 
-The $`\cos^2\theta`$ correction (`f_gravity_correction = 1`, default) is
+The $`\cos^2\theta`$ correction (`f_gravity_correction = 1` and 2; the default is 2) is
 the formulation of Ni et al.[^ni19] that removes the over-estimate of the
 driving force by the horizontally projected shallow water equations on
 steep slopes: it reduces the driving force by 3% at a slope angle
@@ -189,8 +189,8 @@ between a valley floor and its walls, so the slope of the walls does not enter
 the cells of the floor (until 2026-11-04 the correction used the slope in the
 normal direction of the edge alone, so $`g_e`$ came out large on edges oblique
 to the slope: +7 % on an edge at 45° and +16 % on an edge across the slope at a
-slope of 0.4; developer.md §91). Because $`g_e`$ also multiplies the friction
-term below, it cancels in uniform flow: the depth and velocity of uniform flow
+slope of 0.4; developer.md §91). With 1, $`g_e`$ also multiplies the friction
+term below, so it cancels in uniform flow: the depth and velocity of uniform flow
 are the same as without the correction (the classical horizontally projected
 Manning formula). The correction acts on the unsteady part (acceleration and
 start of motion, wave speed). The formulation, the stencils (which cells' ground
@@ -199,7 +199,7 @@ difference between horizontal and slope-parallel velocity, deep water over a
 steep bed) are described in [docs/steep_slope_design.md](../../steep_slope_design.md)
 (Japanese).
 
-With `f_gravity_correction = 2` the friction is also made consistent with the
+With `f_gravity_correction = 2` (the default) the friction is also made consistent with the
 along-slope equations. The bed shear stress is evaluated with the Manning law
 from the slope-parallel speed
 $`|\mathbf V_s| = |\mathbf V|\sqrt{1 + (\hat{\mathbf V}\cdot\nabla z)^2}`$ and the bed-normal
@@ -215,13 +215,14 @@ velocity smaller than with 1 (the vertical depth is 1.21 times larger on a 30°
 slope, the size of the error of the classical horizontal-coordinate equations
 shown by Van Emelen et al.[^ve14]). The dimensionless shear stress of sediment
 transport and erosion is evaluated with the same speed and depth
-([sediment transport supplement](sediment.md) §1). Use it on steep slopes when
-Manning's $`n`$ is given from measurements in mild-slope channels (keep 1 for an
-$`n`$ calibrated with a horizontally projected model). On a step of a single edge
-(walls, kerbs, steps in the DEM) the field gradient is nearly zero, so the
-friction and the sediment shear are treated as with 1 there (the hydraulics of a
-step lie outside the shallow-water assumptions). The default is 1 and 2 is
-optional (developer.md §93, test test/slopefric).
+([sediment transport supplement](sediment.md) §1). A Manning's $`n`$ taken from
+measurements in mild-slope channels is a value for slope-parallel quantities, so
+it is used with 2; set 1 when $`n`$ was calibrated with a horizontally projected
+model. On a step of a single edge (walls, kerbs, steps in the DEM) the field
+gradient is nearly zero, so the friction and the sediment shear are treated as
+with 1 there (the hydraulics of a step lie outside the shallow-water
+assumptions). The default was changed from 1 to 2 on 2026-11-05 (developer.md
+§93, test test/slopefric).
 
 **Friction term $`F`$.** The Manning law is treated semi-implicitly.
 
@@ -381,7 +382,7 @@ non-hydrostatic correction or the newer advection schemes.
 | Parameter | Default | Meaning | Basis |
 |---|---:|---|---|
 | p_diagratio | 2/(2+√2) | share $`p_d`$ of the passage width given to the diagonal edges (§2) | **derived** the value that makes the eight widths equal; 0 gives a four-neighbour grid |
-| f_gravity_correction | 1 | effective gravity $`g\cos^2\theta`$ on steep slopes (§5); with 2 the friction and the sediment shear also use the slope-parallel speed and the bed-normal depth | **literature value** Ni et al.[^ni19]; uniform flow of 2 from Chow[^chow59] and Van Emelen et al.[^ve14]; no effect on gentle slopes |
+| f_gravity_correction | 2 | steep-slope correction (§5). 0: none, 1: effective gravity $`g\cos^2\theta`$, 2: 1 plus friction and sediment shear from the slope-parallel speed and the bed-normal depth (the default since 2026-11-05) | **literature value** Ni et al.[^ni19]; uniform flow of 2 from Chow[^chow59] and Van Emelen et al.[^ve14]; no effect on gentle slopes |
 | f_exflux_reduction | 1 | suppression of excessive outflow (§5) | **method** prevents negative depths at dry-bed fronts; keep on with dry beds |
 | f_hcap_upwind | 1 | upwind cap of the edge depth (§3) | **method** 1: mean capped by the upwind depth. 2: the upwind depth itself = continuity of the conservative scheme[^sd03]; use 2 with bores and breaking |
 | f_friction_fastmath | 0 | table approximation of the friction (§8) | **numerical** 0: exact; the regression tests use 0 |

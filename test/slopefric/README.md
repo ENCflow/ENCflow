@@ -4,11 +4,11 @@
 
 急勾配の重力補正(`&list_enc` の `f_gravity_correction`)の、**等流**の検証ケースです。
 
-- `f_gravity_correction = 1`(既定): 有効重力 $`g_e = g\cos^2\theta`$ が勾配と摩擦の両方に掛かって
+- `f_gravity_correction = 1`(2026-11-05 までの既定): 有効重力 $`g_e = g\cos^2\theta`$ が勾配と摩擦の両方に掛かって
   相殺し、等流は古典の水平投影のマニング式 $`h = (n^2q^2/\tan\theta)^{3/10}`$ になります
   ($`h`$ は鉛直の水深、$`q = h|\mathbf V|`$ は水平の単位幅流量。developer.md §91、
   docs/steep_slope_design.md §2.3)。
-- `f_gravity_correction = 2`: 摩擦と流砂のせん断を、斜面に沿う速さと地盤に直角な水深 $`h\cos\theta`$ で
+- `f_gravity_correction = 2`(既定): 摩擦と流砂のせん断を、斜面に沿う速さと地盤に直角な水深 $`h\cos\theta`$ で
   評価します(developer.md §93)。等流は斜面に沿う式の $`h\cos\theta = (n^2q^2/\sin\theta)^{3/10}`$
   (Chow 1959、Van Emelen ら 2014)になります。
 

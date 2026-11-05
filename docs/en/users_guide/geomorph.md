@@ -586,7 +586,9 @@ sediment (flow depth = h + hs). The erosion-deposition (E-D) closure
 and the resistance law are each selectable. **Mutually exclusive with
 f_suspend** (to avoid double-counting the same concentration field),
 and **morfac=1 is required** (event runs). For steep terrain we
-recommend `f_gravity_correction = 1` in &list_enc.
+recommend keeping `f_gravity_correction` of &list_enc above 0 (the default
+is 2; the friction factor of 2 does not apply to the resistance laws of
+debris flows, where the effective gravity is what acts; developer.md §93).
 
 | Parameter | Default | Meaning |
 |---|---|---|
@@ -731,7 +733,7 @@ formulation, not on appearances.
   0.1-0.15) - the mixture model carries a small amount of water as the
   carrier fluid, and that water remains and drains after the avalanche
   stops (a minor artifact if the amount is small). Steep terrain, so
-  `f_gravity_correction = 1` is recommended.
+  keeping `f_gravity_correction` above 0 is recommended (the default is 2).
 - **What it cannot do (honest limits)**: (1) powder-snow
   avalanches are out of scope (an air suspension - outside the
   shallow-water approximation), (2) release is not predicted (the

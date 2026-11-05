@@ -55,14 +55,14 @@ default 1.65):
 representative value of the Shields curve[^shields36] for coarse sand to
 gravel.
 
-With `f_gravity_correction = 2` (&list_enc; [ENC grid](encgrid.md) §5) the
+With `f_gravity_correction = 2` (the default of &list_enc; [ENC grid](encgrid.md) §5) the
 dimensionless shear stress is evaluated from the slope-parallel speed
 $`|\mathbf V_s| = |\mathbf V|\sqrt{1 + (\hat{\mathbf V}\cdot\nabla z)^2}`$ and the bed-normal
 depth $`h\cos\theta`$, $`\tau_* = n^2 |\mathbf V_s|^2/(s\, d\, (h\cos\theta)^{1/3})`$ (bedload,
 suspended load, hillslope erosion, bedrock incision and bank erosion; the same
 bed shear stress as the friction of the momentum equation, and
-$`\tau = \rho g\, h\cos\theta\,\sin\theta`$ in uniform flow on a slope). The default 1
-keeps the horizontal velocity and the vertical depth, which over-estimates the
+$`\tau = \rho g\, h\cos\theta\,\sin\theta`$ in uniform flow on a slope). 1 (the default
+until 2026-11-05) keeps the horizontal velocity and the vertical depth, which over-estimates the
 shear stress of uniform flow on a 30° slope by a factor of 1.11 for the same
 discharge (the difference for which Van Emelen et al. 2014 found the bed-normal
 depth necessary above 10°; developer.md §93).

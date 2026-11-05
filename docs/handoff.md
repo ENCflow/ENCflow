@@ -122,6 +122,12 @@ architecture.md。このメモは「現在進行中・未完了の項目」だ�
    - 利用者の判断(2026-11-05): 最終的に 2 を既定にする。順序は、既定の切り替え(別コミット)→ reference を
      持つ全ケースの回帰で変化の一覧を示し、利用者の目視確認の後に reference を更新 → main へマージ →
      全例題を一度だけ再計算(00k の 1 での再計算の連鎖は estuary_barrage の途中で止めた)。
+   - (済 2026-11-05)コードの既定を 2 にし、利用者ガイド・List_samples・§93 の記述を揃えた。1 を明示した
+     実行は起動時に par_info で知らせる。残り(この順): reference を持つ検定の回帰と利用者の確認・更新、
+     1 を「急勾配の標準」の意味で明示している検定(bldgdebris・driftwood・debris・bedslide・slide・
+     splashslide・volcano・avalanche・nhbottom の ls_*・nest_identity・nest_twin)と例題(ashfall_lahar・
+     debris_bedrock・debris_fan・landslide_tsunami・stratovolcano・benchmark/h-plane)を 2 に揃えて
+     自己検定・再計算、tutorials(既定を使うので結果が変わる。chichibu の数値と図)の確認。
    - 残り: 上の既定の切り替え、混合体流動の抵抗則への適用、案 D〜F、落ち口の扱い(0・1 では落ち口の
      セルが乾き、平屋根に摩擦の見積もりより深い水がたまる。§93「段差の扱い」の所見 (2))。
 

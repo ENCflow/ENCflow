@@ -102,7 +102,7 @@ dt is the proper remedy. The effect of the threshold is demonstrated in
 
 | Parameter | Default | Meaning (details in the § of [the explanation](encgrid.md)) |
 |---|---|---|
-| f_gravity_correction | 1 | effective gravity g cos²θ on steep slopes (Ni et al. 2019[^ni19]); no effect on gentle slopes. 2: friction and sediment shear also from the slope-parallel speed and the bed-normal depth (uniform flow follows the along-slope equations) (§5) |
+| f_gravity_correction | 2 | steep-slope correction. 0: none, 1: effective gravity g cos²θ (Ni et al. 2019[^ni19]), 2: 1 plus friction and sediment shear from the slope-parallel speed and the bed-normal depth (uniform flow follows the along-slope equations; the default since 2026-11-05). No effect on gentle slopes (§5) |
 | f_exflux_reduction | 1 | suppression of excessive outflow. Prevents negative depths at fronts advancing over dry ground (keep on in computations with dry beds) (§5) |
 | f_hcap_upwind | 1 | edge depth. 0: mean of both cells, 1: the mean capped by the upwind depth (default), 2: the upwind depth itself (removes the spike at a bore front; required in non-hydrostatic cases with breaking or bores. It increases the outflow onto dry ground, so check ex_flux in inundation runs) (§3, [advection](advection.md) §5) |
 | f_friction_fastmath | 0 | table approximation of h^(-4/3) in the friction term. 0: exact (default), 1-5: coarser and faster (relative error 2e-4 to 6%) (§8) |
@@ -269,7 +269,7 @@ flat-bed one-layer model).
 | Type | Recommended settings | Why |
 |---|---|---|
 | Tsunami / storm-surge run-up | Defaults (p_adprunge_thresh 1.2-1.5); f_check_cfl=1 to watch Cn. How to give the sea: for a tsunami, a solved sea of ordinary cells (sw=0) with a long-wave radiation boundary on the seaward edge ([boundary conditions](boundary.md)); for a storm surge, a sea mask + tide that forces the sea level ([tide](tide.md), [geographic information](geoinfo.md)) | The default stabilization handles both the front over dry ground and the reflected waves |
-| Steep mountain floods, debris flows | f_gravity_correction=1 (default); dt such that Cn_max stays below about 0.5 | Corrects the slope-direction gravity term. Sediment is in [landform change](geomorph.md) |
+| Steep mountain floods, debris flows | f_gravity_correction=2 (default); dt such that Cn_max stays below about 0.5 | Corrects the slope-direction gravity term and evaluates friction and sediment shear along the slope. Use 1 with a Manning's n calibrated in a horizontally projected model. Sediment is in [landform change](geomorph.md) |
 | River low flow, velocity distribution of gentle flow | f_diffusion_term=2 (no coefficient needed) | Flow-scaled eddy viscosity smooths the transverse velocity distribution |
 | Urban inundation (building clusters) | Defaults + fn_gv/fn_bb ([geographic information](geoinfo.md)); cm/cd/kk at the defaults | Storage loss and drag are expressed on the geographic side |
 | Wide-area / long runs (cost first) | p_adprunge_thresh 2-3, f_friction_fastmath 3-5, f_govequation=1 (diffusive wave) if needed | Cuts the recomputation rate and the friction cost. The diffusive wave ignores inertia, so not for inundation fronts or tsunamis |

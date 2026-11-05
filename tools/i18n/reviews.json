@@ -230,9 +230,9 @@
     {
       "source": "docs/users_guide/encgrid.md",
       "target": "docs/en/users_guide/encgrid.md",
-      "source_sha256": "3c0ca8d44ec1514e7514391f8552dda1a86359a65cc5eb593cae1f1aa06a36ec",
-      "target_sha256": "0827fc58229d9e6c279b086b5eb5f8d4337a7285b370f2c6815e9edca73a705b",
-      "reviewer": "Claude (Claude Code session; step handling E of f_gravity_correction = 2 (developer.md §93): the gradient of the mode-2 friction now described as the field gradient (mean of the minmod gradients of the two cells) and the step sentences replaced (a one-edge step is treated as with 1), compared side by side with the Japanese source, rest unchanged since the previous record)",
+      "source_sha256": "b5c6b39129523827b1151b364a7a7ca095d2971096ecb9fb69d963c9e63cd8b4",
+      "target_sha256": "2781f6d8d8d66e5c3402d0f953c31514d7f507aad172ebf21cdc856e8f80264d",
+      "reviewer": "Claude (Claude Code session; default of f_gravity_correction changed from 1 to 2 (developer.md §93): the changed statements of the default and the recommendations compared side by side with the Japanese source, rest unchanged since the previous record)",
       "method": "assistant",
       "reviewed_on": "2026-11-05"
     },
@@ -266,11 +266,11 @@
     {
       "source": "docs/users_guide/geomorph.md",
       "target": "docs/en/users_guide/geomorph.md",
-      "source_sha256": "d840a85925d5cc5583e097098e962f63ed1445945af07e1a5b7ef1e6f2bb37e7",
-      "target_sha256": "4ffab5e577f0cb8fbacb6b78c9d813aea2ca52f4b0acc1fad60c622d5ade5cb4",
-      "reviewer": "Claude (Claude Code session; merge of main into the branch: main's additions (dissol_src 4/5, talus dissolution, glacier, evapdry, stone_forest, glacier_valley) and the branch's edits (§91/§92 and the debris examples) both present in the two languages, compared)",
+      "source_sha256": "888ca6ce4d4a56253b7484ba630f10e50031add3328123a3ba33e01ec9b38215",
+      "target_sha256": "f81fb7dbde201d2e07bd47e85be20db28604850a2b30d42637e2051e99b2cf82",
+      "reviewer": "Claude (Claude Code session; default of f_gravity_correction changed from 1 to 2 (developer.md §93): the changed statements of the default and the recommendations compared side by side with the Japanese source, rest unchanged since the previous record)",
       "method": "assistant",
-      "reviewed_on": "2026-11-04"
+      "reviewed_on": "2026-11-05"
     },
     {
       "source": "docs/users_guide/glacier.md",
@@ -428,9 +428,9 @@
     {
       "source": "docs/users_guide/sediment.md",
       "target": "docs/en/users_guide/sediment.md",
-      "source_sha256": "b787ec2ecd1f172f3e2e3b1b4ad7e99a443eb6c376384a1bf7b3009a291d2eca",
-      "target_sha256": "9d4d8007870ccc826351bb2ee6b3b87f2db0b1bedbdbdbb1669859c441213a1b",
-      "reviewer": "Claude (Claude Code session; f_gravity_correction = 2 (developer.md §93): the new paragraph on the dimensionless shear stress with the slope-parallel speed and the bed-normal depth, including the factor 1.11 at 30 degrees and the 10-degree statement of Van Emelen et al. 2014 checked against the paper, compared side by side with the Japanese source, rest unchanged since the previous record)",
+      "source_sha256": "c45b0a09c0ae7eb2a2419e4f5fd663df802afed2fdd75f0bdfc7f1e4086c9772",
+      "target_sha256": "fc402c1c5f90e1ca228cfab2a0b03db171424d07f798a8ef8e6e86c6d7a11ad9",
+      "reviewer": "Claude (Claude Code session; default of f_gravity_correction changed from 1 to 2 (developer.md §93): the changed statements of the default and the recommendations compared side by side with the Japanese source, rest unchanged since the previous record)",
       "method": "assistant",
       "reviewed_on": "2026-11-05"
     },
@@ -446,9 +446,9 @@
     {
       "source": "docs/users_guide/swflow.md",
       "target": "docs/en/users_guide/swflow.md",
-      "source_sha256": "0def8b9e121ea114f6b53f94a3df3cbf4dbd9b6d7ad720c11c863556c8ab69e6",
-      "target_sha256": "6985c175339f4016702097a6815ef705fc8481ae27f00384574ee045f2ab5d2e",
-      "reviewer": "Claude (Claude Code session; f_gravity_correction = 2 (developer.md §93): the parameter-table row compared with the Japanese source, rest unchanged since the previous record)",
+      "source_sha256": "d0c8fdd67456d499048d8239aafbbdcd15d1779a928dec791fd94673b94a7624",
+      "target_sha256": "59875ed05647063790d7e95eb687b5eeadf90e353aece9142bbe241771850f0f",
+      "reviewer": "Claude (Claude Code session; default of f_gravity_correction changed from 1 to 2 (developer.md §93): the changed statements of the default and the recommendations compared side by side with the Japanese source, rest unchanged since the previous record)",
       "method": "assistant",
       "reviewed_on": "2026-11-05"
     },
@@ -608,9 +608,9 @@
     {
       "source": "examples/List_samples/list_enc.txt",
       "target": "examples/List_samples/en/list_enc.txt",
-      "source_sha256": "5b856f92146ac61946156a2f9c3d6fb8681529d292aa4db8adb0c12d26298867",
-      "target_sha256": "c3c9dee777ec0e4ca6b9966894184e48b1527736d5f6976958170368db146318",
-      "reviewer": "Claude (Claude Code session; f_gravity_correction = 2 (developer.md §93): the comment of f_gravity_correction (values 0, 1, 2) compared with the Japanese source; value, identifier and commented-out state unchanged, rest unchanged since the previous record)",
+      "source_sha256": "e7092d33889a82eb50149da8e3efadfceaa1db5119ea82c888210104192931f8",
+      "target_sha256": "cefa59ab7847499ed4a480b2f7f26763677fa6a7fdc336bc525fc8f92e06d085",
+      "reviewer": "Claude (Claude Code session; default of f_gravity_correction changed from 1 to 2 (developer.md §93): the commented-out sample line now shows 2 in both files and its comment was compared with the Japanese source; value, identifier and commented-out state identical, rest unchanged since the previous record)",
       "method": "assistant",
       "reviewed_on": "2026-11-05"
     },
@@ -635,11 +635,11 @@
     {
       "source": "examples/List_samples/list_geomorph.txt",
       "target": "examples/List_samples/en/list_geomorph.txt",
-      "source_sha256": "25170e316548eeda7e3385c76379ef8fca57535fdcbe70bbb2e0865db371c3d7",
-      "target_sha256": "4877d8452da18dea802e4f14c9d52f25c92e3dd35a90b89d5011a115c4e116dd",
-      "reviewer": "Claude (Claude Code session; compared the Japanese source with the English mirror after adding the base-level section of tower_karst and correcting the water-table statement of dissol_src 4/5, 2026-11-04)",
+      "source_sha256": "bfba638e45ce0bbd95d0289e41647cc1fa823666dd38f38bc337085eb3704a11",
+      "target_sha256": "2588d8d7528985bc950f610fdfe0b74e86c8e37a7445c96d097b560dd7f75f97",
+      "reviewer": "Claude (Claude Code session; default of f_gravity_correction changed from 1 to 2 (developer.md §93): the recommendation comment of f_debris compared with the Japanese source; values and identifiers unchanged, rest unchanged since the previous record)",
       "method": "assistant",
-      "reviewed_on": "2026-11-04"
+      "reviewed_on": "2026-11-05"
     },
     {
       "source": "examples/List_samples/list_glacier.txt",
@@ -3812,9 +3812,9 @@
     {
       "source": "test/slopefric/README.md",
       "target": "test/slopefric/en/README.md",
-      "source_sha256": "f5a71d41a30f0f1208e1d048bd3bdd1e2e49449e505c1170b177cd9355327917",
-      "target_sha256": "4277c4eb9a155ad17c468d020ee6c4aae4412a4ddad3ac1f9aee0bfeedd12417",
-      "reviewer": "Claude (Claude Code session; step handling E of f_gravity_correction = 2 (developer.md §93): the limit item on steps rewritten (a one-edge step is treated as with 1) compared with the Japanese source, rest unchanged since the previous record)",
+      "source_sha256": "b8ae87c50e647354d50315e7655f20ea03b8e5ef3c4eefdd0da10158a3079d76",
+      "target_sha256": "56c16310c5f736cf38d610a3c512df783d861b5e09cbca9c7c2c55c69ac8ebc1",
+      "reviewer": "Claude (Claude Code session; default of f_gravity_correction changed from 1 to 2 (developer.md §93): the changed statements of the default and the recommendations compared side by side with the Japanese source, rest unchanged since the previous record)",
       "method": "assistant",
       "reviewed_on": "2026-11-05"
     },

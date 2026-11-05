@@ -5,7 +5,7 @@
 降らせ、下りの辺(東と北)から自由流出させる。定常の薄層流では、各セルで水深の勾配と移流が
 勾配に比べて小さく、等流の関係(局所の釣り合い)が成り立つ。
 
-  f_gravity_correction = 1(既定): 摩擦にも g_e が掛かって相殺し、古典の水平投影のマニング式
+  f_gravity_correction = 1(2026-11-05 までの既定): 摩擦にも g_e が掛かって相殺し、古典の水平投影のマニング式
       h = (n² q² / tanθ)^{3/10}(h は鉛直の水深、q = h|V| は水平の単位幅流量)
   f_gravity_correction = 2: 摩擦を斜面に沿う速さと地盤に直角な水深で評価(developer.md §93)。
       斜面に沿う式の等流 h_n = (n² q² / sinθ)^{3/10}、h = h_n / cosθ(Chow 1959、Van Emelen ら 2014)
@@ -129,7 +129,7 @@ def write_case(phi, nb, gc, sed=False):
   f_out_v = 1
 {out_z}/
 &list_enc
-  f_gravity_correction = {gc}   ! 1: 有効重力(既定)/ 2: + 斜面に沿う摩擦(§93)
+  f_gravity_correction = {gc}   ! 1: 有効重力 / 2: + 斜面に沿う摩擦(既定。§93)
   p_diagratio = {pd}       ! 8 近傍(既定)/ 4 近傍(0)
 /
 &list_initial

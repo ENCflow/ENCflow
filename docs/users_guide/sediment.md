@@ -42,13 +42,13 @@ $`d`$ と水中比重 $`s`$(`fluv_sgrav`、既定 1.65)で無次元化した
 を共通に使います(重力加速度は分子分母で相殺)。限界値
 $`\tau_{*c}`$ = 0.05 は Shields 曲線[^shields36]の粗砂〜礫の代表値です。
 
-`f_gravity_correction = 2`(&list_enc。[ENC 格子](encgrid.md) §5)では、斜面に沿う速さ
+`f_gravity_correction = 2`(&list_enc の既定。[ENC 格子](encgrid.md) §5)では、斜面に沿う速さ
 $`|\mathbf V_s| = |\mathbf V|\sqrt{1 + (\hat{\mathbf V}\cdot\nabla z)^2}`$ と地盤に直角な水深 $`h\cos\theta`$ で
 評価した $`\tau_* = n^2 |\mathbf V_s|^2/(s\, d\, (h\cos\theta)^{1/3})`$ を使います(掃流砂・浮遊砂・斜面
 浸食・岩盤下刻・河岸侵食。運動方程式の摩擦と同じ底面せん断で、斜面の等流では
-$`\tau = \rho g\, h\cos\theta\,\sin\theta`$)。既定の 1 は水平流速と鉛直の水深のままで、30° の斜面の
-等流では同じ流量に対して 1.11 倍の過大になります(Van Emelen ら 2014 が 10° を超えると地盤に直角な
-水深での評価が必要とした差。developer.md §93)。
+$`\tau = \rho g\, h\cos\theta\,\sin\theta`$)。1(2026-11-05 までの既定)は水平流速と鉛直の水深のままで、
+30° の斜面の等流では同じ流量に対して 1.11 倍の過大になります(Van Emelen ら 2014 が 10° を超えると
+地盤に直角な水深での評価が必要とした差。developer.md §93)。
 
 **海域マスクとの境界。** 海域マスク(fn_sw)の海セルでは地形を更新せず、
 掃流砂・クリープ・動く底層は海セルとの間のエッジを通過しません(壁)。

@@ -2,7 +2,7 @@
 
 **位置づけ**: [developer.md §91](developer.md) は 2026-11-04 の修正の判断と検証の記録、
 [users_guide/encgrid.md](users_guide/encgrid.md) §5 は利用者向けの要点です。本書はその中間に立ち、
-ENCflow の急勾配の重力補正(`f_gravity_correction = 1`、既定)を、**意図 → 定式化 → 離散化(どの
+ENCflow の急勾配の重力補正(`f_gravity_correction = 1`。2026-11-05 からの既定 2 はこれに斜面に沿う摩擦を加える。§6.3)を、**意図 → 定式化 → 離散化(どの
 ステンシルで勾配を求め、どの辺の式でどの勾配を使うか)→ 検証 → 既往研究での扱い → 限界と今後の
 課題**の順に、一つの筋でまとめます。対象は 2026-11-04 のコード(`src/m_swflow_enc.f90` の
 `gravity_prepare`・`zdiff_minmod`・`calc_kth_flux` 内の `correct_ge`)です。式の導出のうち文献に
@@ -427,7 +427,7 @@ $`g' = g`$)が正しいのに、ENCflow は $`g_e < g`$ で波速を $`\cos\thet
 ### 6.3 今後の課題(議論のための選択肢)
 
 (2026-11-05 追記)B と C は選択式 `f_gravity_correction = 2` として実装した(developer.md §93、検定
-test/slopefric)。既定は 1 のままで、2 を既定にするかは例題への影響を見て議論する。D〜F は未実装。
+test/slopefric)。同日、例題での試算(developer.md §93)を見て、利用者の判断で 2 を既定にした。D〜F は未実装。
 摩擦の倍率も流砂のせん断と同じ場の勾配(両セルの minmod の勾配の平均)で求め、1 辺だけの段(壁・縁石・
 DEM の段)では 1 と同じ扱いにした(developer.md §93「段差の扱い」。模式の街区・壁の越流・badland_storm
 で辺の差分・45° の頭打ちと比べて決めた)。

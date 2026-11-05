@@ -7,13 +7,13 @@
 A verification case for the **uniform flow** of the steep-slope gravity
 correction (`f_gravity_correction` in `&list_enc`).
 
-- `f_gravity_correction = 1` (default): the effective gravity
+- `f_gravity_correction = 1` (the default until 2026-11-05): the effective gravity
   $`g_e = g\cos^2\theta`$ multiplies both the slope term and the friction and
   cancels, so uniform flow follows the classical horizontally projected Manning
   formula $`h = (n^2q^2/\tan\theta)^{3/10}`$ ($`h`$ is the vertical depth and
   $`q = h|\mathbf V|`$ the horizontal unit discharge; developer.md §91,
   docs/steep_slope_design.md §2.3).
-- `f_gravity_correction = 2`: the friction and the sediment shear are evaluated
+- `f_gravity_correction = 2` (default): the friction and the sediment shear are evaluated
   from the slope-parallel speed and the bed-normal depth $`h\cos\theta`$
   (developer.md §93). Uniform flow then follows the along-slope equations,
   $`h\cos\theta = (n^2q^2/\sin\theta)^{3/10}`$ (Chow 1959; Van Emelen et al. 2014).

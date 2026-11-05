@@ -842,10 +842,12 @@ subroutine m_swflow_enc_init(p, g, b, s)
 
   opt%f_gravity_correction = list%f_gravity_correction
   select case (opt%f_gravity_correction)
-    case (0, 1)   ! なし / 有効重力 g_e = g/(1 + |∇z|²)(既定。§91)
-    case (2)      ! + 斜面に沿う速さと地盤に直角な水深の摩擦・流砂のせん断(§93)
-      call par_info("swflow_enc: f_gravity_correction = 2 (effective gravity + friction and " // &
-                    "sediment shear from the slope-parallel speed and the bed-normal depth)")
+    case (0)      ! なし
+    case (1)      ! 有効重力 g_e = g/(1 + |∇z|²) だけ(§91。2026-11-05 までの既定)。摩擦と流砂のせん断は
+                  ! 水平流速・鉛直の水深のまま(水平投影のモデルで校正したマニングの n 向け)
+      call par_info("swflow_enc: f_gravity_correction = 1 (effective gravity only; friction and sediment " // &
+                    "shear in horizontal coordinates. The default 2 also evaluates them along the slope)")
+    case (2)      ! + 斜面に沿う速さと地盤に直角な水深の摩擦・流砂のせん断(既定。§93)
     case default
       call par_stop("list_enc: f_gravity_correction must be 0(none), 1(effective gravity) " // &
                     "or 2(effective gravity + slope-parallel friction)")
