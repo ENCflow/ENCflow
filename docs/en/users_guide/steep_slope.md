@@ -250,8 +250,13 @@ used as it is with 2 (§7).
 
 The steady speed of resistance laws not proportional to $`g_e`$ (the dilatant term
 of Takahashi–Nakagawa, the constitutive law of Egashira, a constant stopping
-stress) changes with $`g_e`$. The friction factor of 2 is not applied to the
-resistance laws of mixture flows (§6.2).
+stress) changes with $`g_e`$. Of the resistance laws of mixture flows, the friction
+factor of 2 is not applied to the yield terms (Coulomb, a constant stopping stress)
+or to the terms that replace Manning (the turbulent term of Voellmy, the laminar law
+of Egashira, the stony type and the bedload-like aggregate flow of
+Takahashi–Nakagawa). It is applied to the Manning term of the laws combined with
+Manning (`f_dbres` = 1, 5) and on edges that fall back to Manning on the dilute side
+(§6.2).
 
 ### 2.4 Shear of sediment transport and erosion
 
@@ -703,8 +708,9 @@ the maximum velocity V9999) with speeds along the slope needs a conversion.
   roof on a 1 m grid, against an estimate of about 4 mm at the centre of the roof from
   friction; developer.md §93).
 - **Resistance laws of mixture flows**: the friction factor of 2 multiplies the
-  Manning friction only, not the laminar law of Egashira, the building drag, the yield
-  or Voellmy. Nor does it multiply the extra term of the wave–current friction
+  Manning friction only (including the Manning term of the laws combined with
+  Manning, `f_dbres` = 1, 5), not the laminar law of Egashira, the building drag, the
+  yield or Voellmy. Nor does it multiply the extra term of the wave–current friction
   (`wv_flow = 2`) (on the beach slopes where wave fields are used the factor is nearly
   1). Mixture flows treat their resistance laws in horizontal coordinates with $`g_e`$.
 - **Speed on curved streamlines**: the $`\hat{\mathbf V}`$ of 2 is the direction of the

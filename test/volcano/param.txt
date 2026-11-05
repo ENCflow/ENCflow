@@ -31,7 +31,7 @@
 /
 
 &list_enc
-  f_gravity_correction = 1
+  f_gravity_correction = 2
   p_diagratio = 0.0         ! 4近傍化(斜めエッジの通過幅ゼロ)。8方向配分では
                             !   斜めエッジの勾配低下×降伏 μ の非線形で実効通水能が
                             !   下がり、1次元解析解と直接比較できないため

@@ -34,7 +34,7 @@
 /
 
 &list_enc
-  f_gravity_correction = 1
+  f_gravity_correction = 2
 /
 
 &list_initial

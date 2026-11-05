@@ -124,28 +124,27 @@ python3 Landslide.py en       # en/figs/landslide.png and tables (figs/landslide
 
 | Probe | Quantity | Hydrostatic | NH (f_nh_slope=1, no acceleration term) | NH + acceleration term (f_nh_bottom=1) |
 |---|---|---:|---:|---:|
-| x = 212 m (just off the shoreline, depth 5 m) | Minimum (m) | -2.706 | -2.953 | -2.342 |
-| x = 212 m (just off the shoreline, depth 5 m) | Maximum (m) | 1.846 | 1.993 | 1.777 |
-| x = 298 m (foot of the slope, depth 39 m) | Minimum (m) | -1.199 | -2.090 | -1.683 |
-| x = 298 m (foot of the slope, depth 39 m) | Maximum (m) | 1.643 | 1.973 | 1.785 |
-| x = 398 m (lake centre) | Minimum (m) | -0.638 | -0.919 | -0.775 |
-| x = 398 m (lake centre) | Maximum (m) | 1.204 | 0.662 | 0.548 |
-| x = 548 m (far-shore side) | Minimum (m) | -0.543 | -0.498 | -0.435 |
-| x = 548 m (far-shore side) | Maximum (m) | 0.792 | 0.440 | 0.368 |
+| x = 212 m (just off the shoreline, depth 5 m) | Minimum (m) | -2.737 | -3.014 | -2.392 |
+| x = 212 m (just off the shoreline, depth 5 m) | Maximum (m) | 1.791 | 1.920 | 1.671 |
+| x = 298 m (foot of the slope, depth 39 m) | Minimum (m) | -1.215 | -2.092 | -1.300 |
+| x = 298 m (foot of the slope, depth 39 m) | Maximum (m) | 1.653 | 1.992 | 1.034 |
+| x = 398 m (lake centre) | Minimum (m) | -0.633 | -0.919 | -0.779 |
+| x = 398 m (lake centre) | Maximum (m) | 1.207 | 0.649 | 0.547 |
+| x = 548 m (far-shore side) | Minimum (m) | -0.535 | -0.499 | -0.436 |
+| x = 548 m (far-shore side) | Maximum (m) | 0.792 | 0.436 | 0.365 |
 
 | Probe | max\|Δη\| with acceleration term, dt 0.05 vs 0.025 (m) | Same, without acceleration term (m) | Effect of the acceleration term max\|η_b − η_n\| (m) |
 |---|---:|---:|---:|
-| x = 212 m (just off the shoreline, depth 5 m) | 0.1097 | 0.0795 | 1.6719 |
-| x = 298 m (foot of the slope, depth 39 m) | 1.0671 | 0.1459 | 1.8128 |
-| x = 398 m (lake centre) | 0.0772 | 0.0861 | 0.2081 |
-| x = 548 m (far-shore side) | 0.0175 | 0.0089 | 0.1390 |
+| x = 212 m (just off the shoreline, depth 5 m) | 0.0600 | 0.0857 | 1.8494 |
+| x = 298 m (foot of the slope, depth 39 m) | 0.1384 | 0.0664 | 1.0365 |
+| x = 398 m (lake centre) | 0.0274 | 0.0113 | 0.2069 |
+| x = 548 m (far-shore side) | 0.0114 | 0.0089 | 0.1434 |
 
 - **The effect of the acceleration term is large in the near field**: just
-  off the shoreline (x = 212) the leading trough goes from −3.0 to −2.3 m,
+  off the shoreline (x = 212) the leading trough goes from −3.0 to −2.4 m,
   and at the foot of the slope (x = 298; directly above the deposition zone
-  of the mass) the trough from −2.1 to −1.7 m and the crest from 2.0 to
-  1.8 m (from 2.0 to 1.2 m with dt = 0.025 s; the crest with dt = 0.05 s
-  comes out large because of the phase of the trapped mode below). The front
+  of the mass) the trough from −2.1 to −1.3 m and the crest from 2.0 to
+  1.0 m (the same with dt = 0.025 s). The front
   of the mass is 1–2 cells (kH ≫ 2), so NH without the acceleration term
   (and hydrostatic) map that bottom displacement to the surface as it is,
   while the acceleration term removes it with the Kajiura filter. From the
@@ -154,25 +153,26 @@ python3 Landslide.py en       # en/figs/landslide.png and tables (figs/landslide
 - **The effect of the one-step lag Δt**, seen as the difference from
   halving dt, is similar in the far field with and without the acceleration
   term (0.01–0.09 m = the sensitivity to dt itself), and larger with the
-  acceleration term in the near field (x = 298) (1.07 m against 0.15 m; 60%
-  of the 1.8 m effect). Most of the near-field difference is the phase
+  acceleration term in the near field (x = 298) (0.14 m against 0.07 m; a little
+  over 10% of the 1.0 m effect). Most of the near-field difference is the phase
   difference of the trapped mode described below.
 - **A mode trapped at the cut-off frequency of the one-layer NH**: at the
   foot of the slope (depth 39 m) an oscillation of period 6 s and amplitude
-  ±0.5 m (±0.15 m without the acceleration term; absent in hydrostatic)
-  remains without decaying until 120 s. The dispersion relation of the
-  one-layer NH, ω² = gHk²/(1 + βk²), saturates for k → ∞ at
-  ω → √(4g/H) = 1.0 rad/s (T = 6.3 s), and all short waves have group
-  velocity 0 at this frequency = they stay where they were generated. The
+  ±0.6 m (t = 20–80 s; still ±0.46 m at 100–120 s; ±0.1 m after 60 s without
+  the acceleration term; absent in hydrostatic) remains until 120 s. The
+  dispersion relation of the one-layer NH, ω² = gHk²/(1 + βk²), saturates
+  for k → ∞ at ω → √(4g/H) = 1.0 rad/s (T = 6.3 s), and all short waves have
+  group velocity 0 at this frequency = they stay where they were generated. The
   front of the mass (grid scale) excites this; it does not exist in
   hydrostatic (grid-scale waves escape at √(gH)). Because this oscillation
   shakes the driving head Φ = z + r·h of the bed layer, part of the bed
   layer (3,100 m³) cannot stay below bs_vstop for 15 s and is still
-  "moving" at 120 s (52 m³ without the acceleration term). The momentum
+  "moving" at 120 s (23 m³ without the acceleration term). The momentum
   diffusion term (param_ls_bd.txt; ν = 0.3 m²/s: e-folding 8 s at the grid
-  scale, 13% in 120 s for a 100 m wavelength) does not damp it (±0.77 m) =
-  it is not a free grid mode but a self-excited oscillation of the coupling
-  with the bed layer. Time relaxation of the bottom velocity (τ = 1 s)
+  scale, 13% in 120 s for a 100 m wavelength) does not damp it (the
+  amplitude in each 20 s agrees with the run without diffusion within
+  0.02 m) = it is not a free grid mode but a self-excited oscillation of
+  the coupling with the bed layer. Time relaxation of the bottom velocity (τ = 1 s)
   amplifies the oscillation through the phase lag (±2.7 m), and τ = 2 s
   removes the oscillation but also removes the effect of the acceleration
   term, so it is not adopted (experiments of plan §16.6; values from the time
@@ -182,8 +182,18 @@ python3 Landslide.py en       # en/figs/landslide.png and tables (figs/landslide
   positive feedback and the run diverged from t ≈ 10 s (surface +14 m,
   bed-layer velocity 20 m/s; +8 m even with dt halved). The Helmholtz
   smoothing (F → 0 at the grid scale) made it stable (plan §16.6).
-- The values in the tables and notes were recomputed on 2026-10-31 with the
-  default f_opening_dynamic = 3 (developer.md §68.41). With the default 2 of
+- The values in the tables and notes were recomputed on 2026-11-05 with the
+  steep-slope gravity correction at the default 2 (developer.md §93). From
+  the values of 2026-10-31 (default f_opening_dynamic = 3; §68.41), at the
+  foot of the slope the trough with the acceleration term went from −1.7 to
+  −1.3 m and the crest from 1.8 to 1.0 m, the sensitivity to dt from 1.07 to
+  0.14 m, the effect of the acceleration term from 1.8 to 1.0 m, and the
+  volume still moving without the acceleration term from 52 to 23 m³. These
+  changes are the same with 1 written explicitly (the largest difference
+  between 1 and 2 is 0.04 m, in the maximum just off the shoreline); they come
+  from the changes in between (the fix of the steep-slope gravity correction
+  §91, the limiter on the total outflow of a cell §94, the upstream side of
+  the edge depth §95 and others). With the default 2 of
   2026-10-18 to 31 the crest at the foot of the slope went from 2.0 to 1.0 m,
   the sensitivity to dt was 0.57 m, the amplitude of the trapped mode ±0.6 m
   and the volume still moving 4,000 m³ instead of 3,100 m³: the motion of the

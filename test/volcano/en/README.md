@@ -85,11 +85,11 @@ released amount (99.6% has been fixed to the bed).
 
 | Check | Computed value | Verdict |
 |---|---|---|
-| Configuration 1 (1) water ledger Σh − Q tt | −2.4e-12 m·cell | PASS (machine precision) |
-| Configuration 1 (2) solid ledger Σhs + (1 − λ)Σdz − cs Q tt | −3.0e-12 m·cell | PASS |
+| Configuration 1 (1) water ledger Σh − Q tt | −1.9e-12 m·cell | PASS (machine precision) |
+| Configuration 1 (2) solid ledger Σhs + (1 − λ)Σdz − cs Q tt | −2.2e-12 m·cell | PASS |
 | Configuration 1 (3) <h_t> versus the analytical solution | 0.3434 / 0.3434 m (0.0%), CV 0.000, C 0.444 (theory 0.444) | PASS |
 | Configuration 2 (1) solid ledger | 1.6e-11 m·cell | PASS |
-| Configuration 2 (2) activity | release area min dz = −1.55 m, flat max dz = 0.053 m | PASS |
+| Configuration 2 (2) activity | release area min dz = −1.55 m, flat max dz = 0.028 m | PASS |
 | Configuration 2 (3) stopping | remaining Σhs / released solids = 0.004 (< 0.3) | PASS |
 
 - The Voellmy uniform flow agrees with the analytical solution to 4 digits, and
@@ -115,7 +115,16 @@ released amount (99.6% has been fixed to the bed).
   the fix it is 0.053 m (release area −1.55 m, remaining 0.004), close to the values
   of 10-12 (the effective gravity, which came out too large on edges oblique to the
   slope, is now right, and the flow held by the constant yield stress τ_y stops on the
-  slope).
+  slope). On 2026-11-05 the steep-slope gravity correction was set to the default 2
+  (friction along the slope; developer.md §93), giving 0.028 m (release area −1.55 m,
+  remaining 0.004). 2 evaluates the Manning term combined with τ_y with the speed
+  along the slope and the depth normal to the ground, so the friction on the slope is
+  stronger and less material reaches the flat (with 1 written explicitly it stays
+  0.053 m). Configuration 1 does not change with 2 (the turbulent term of Voellmy
+  replaces the Manning term). The difference of the ledger values of configuration 1
+  from the former values (−2.4e-12, −3.0e-12) is a machine-precision rounding
+  difference from earlier changes of the flow computation (§94, §95 and others). The
+  values of the table and the text and the figures are from this computation.
 
 ## Related documents
 

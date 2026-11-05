@@ -56,14 +56,14 @@ terrain change after 20 min. On the consolidated cliff the cliff face is
 eroded more deeply in the hollows of the perturbation (deepening of
 valleys); on the unconsolidated cliff the whole cliff collapses and deposits
 at the foot of the slope (red). Right: y-direction relief of the columns in
-the cliff-face band. For the consolidated cliff the amplitude grows × 1.25;
-for the unconsolidated cliff it decays × 0.78.
+the cliff-face band. For the consolidated cliff the amplitude grows × 1.24;
+for the unconsolidated cliff it decays × 0.77.
 
 ## Findings
 
 | Check | Consolidated cliff | Unconsolidated cliff | Result |
 |---|---|---|---|
-| Growth rate of the relief | × 1.25 (≥ 1.15) | × 0.78 (≤ 0.9) | PASS |
+| Growth rate of the relief | × 1.24 (≥ 1.15) | × 0.77 (≤ 0.9) | PASS |
 | Plateau interior \|Δz\| | 0.0 | 0.0 | PASS |
 | Minimum elevation z | 0.00 m | −1.30 m (≥ −1.5) | PASS |
 
@@ -81,7 +81,15 @@ for the unconsolidated cliff it decays × 0.78.
   after the fix np = 1, 2, 4 are byte-identical (§48.1). On 2026-10-19 the
   creep was removed (it has no mechanical basis; §48.3) and the slope
   evaluation was changed to steepest descent (§48.4). The growth rate of the
-  consolidated cliff went from × 1.34 to × 1.25.
+  consolidated cliff went from × 1.34 to × 1.25. On 2026-11-05 the default
+  kernel of the curvature and smoothing was changed to the 9-point one
+  (`spl_diagratio` = 1/3; developer.md §96), giving × 1.24 (the change of the
+  unconsolidated cliff from × 0.78 to × 0.77 comes from another, earlier
+  change). Setting the steep-slope gravity correction `f_gravity_correction`
+  to the default 2 leaves the values of the table the same as with 1 (2 acts
+  on the friction of the water flow and on the Manning term of the resistance
+  law of the debris flow of the unconsolidated cliff, and changes the terrain
+  of individual cells).
 
 ## Related documents
 

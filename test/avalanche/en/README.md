@@ -51,25 +51,25 @@ Top left: fracture depth D = 0.5 m of the release area. Top right: thickness
 of the entrained snow sd₀ − sd. Along the path from the release area to the
 slope break the snow is scoured through its full depth (0.5 m). Bottom left:
 change of the snow surface z − z₀. The path is negative from scouring, and
-stopped debris deposits up to 0.79 m around the slope break (x = 30 m) at
-x = 23–42 m. Bottom right: longitudinal profile (average over all rows).
+stopped debris deposits up to 0.82 m around the slope break (x = 30 m) at
+x = 24–42 m. Bottom right: longitudinal profile (average over all rows).
 That the two curves z − z₀ and −(sd₀ − sd) coincide is the co-update
-identity itself (z and sd move by the same amount), and a little snow that
-is still flowing (remaining hs) is left near the slope break (1.4 % of the
+identity itself (z and sd move by the same amount), and some snow that
+is still flowing (remaining hs) is left near the slope break (7.7 % of the
 total).
 
 ## Findings
 
 | Check | Computed | Result |
 |---|---|---|
-| (1) Solid ledger | −3.2e-15 m·cell | PASS |
-| (2) Co-update | 2.6e-14 m | PASS |
+| (1) Solid ledger | −4.4e-14 m·cell | PASS |
+| (2) Co-update | 5.0e-14 m | PASS |
 | (3) Entrainment activity | path min(sd − sd₀) = −0.500 m (full depth) | PASS |
-| (4) Growth | entrained solid 48.1 / released solid 21.6 = 2.23 times | PASS |
-| (5) Stopping | remaining Σhs / (released + entrained) = 0.014 | PASS |
+| (4) Growth | entrained solid 55.7 / released solid 21.6 = 2.58 times | PASS |
+| (5) Stopping | remaining Σhs / (released + entrained) = 0.077 | PASS |
 
-- By entrainment the avalanche grows to about 3.2 times the released amount,
-  and 99 % stops and deposits around the slope break. The ledger and the
+- By entrainment the avalanche grows to about 3.6 times the released amount,
+  and 92 % stops and deposits around the slope break. The ledger and the
   co-update are at machine precision.
 - The entrainable layer is given by reinterpreting the existing soil depth
   sd, and the co-update, ledger, clamp and two-pass MPI structure are all
@@ -91,7 +91,11 @@ total).
   largest deposit 0.81 m). After the fix of the steep-slope gravity correction (same day;
   §91) it is 2.23 (remaining 0.014, largest deposit 0.79 m; the effective gravity, which came
   out too large on edges oblique to the slope, is now right, so the flow is slightly slower
-  and entrains less).
+  and entrains less). After the suppression of excessive outflow by the cell total and the fix of the
+  upwind side of the edge depth of 2026-11-05 (§94, §95) it is 2.57 (remaining 0.071), and with the
+  steep-slope gravity correction aligned to the default 2 (friction along the slope; §93) it is 2.58
+  (remaining 0.077, largest deposit 0.82 m). The table, the values in the text and the figures are
+  from this computation.
 
 ## Related documents
 

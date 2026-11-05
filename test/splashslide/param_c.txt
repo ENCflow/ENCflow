@@ -27,7 +27,7 @@
   f_check_cfl = 0
 /
 &list_enc
-  f_gravity_correction = 1
+  f_gravity_correction = 2
 /
 &list_geoinfo
   lx = 80.0
