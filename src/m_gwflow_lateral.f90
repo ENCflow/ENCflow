@@ -150,7 +150,9 @@ module m_gwflow_lateral
   public :: t_latlayer
   public :: t_gwlat
   public :: gwflow_lateral_geom_init
+  public :: gwflow_lateral_geom_init_base
   public :: gwflow_lateral_geom_init_layer2
+  public :: lateral_widths
   public :: gwflow_lateral_dtcheck
   public :: lateral_core
   public :: t_conduitlayer
@@ -211,6 +213,7 @@ module m_gwflow_lateral
     real, allocatable :: qm(:,:,:)   ! 質量エッジフラックス4成分 (g/s = 水流量 q ×
                                      !   風上体積濃度 cg/hg。q と同形状・同格納規約。
                                      !   一時作業領域。s%cg 確保時のみ確保。§30 W3)
+    logical :: base_ready = .false.  ! d によらない幾何(距離・面積逆数)と作業領域の初期化済み
     logical :: geom_ready = .false.  ! 幾何・作業領域の初期化済み(冪等口)
     logical :: initialized = .false. ! 層1(土層)側方の有効化
   end type
@@ -227,18 +230,57 @@ subroutine gwflow_lateral_geom_init(glt, g, diagratio, eps)
   type(t_geoinfo), intent(in) :: g
   real, intent(in) :: diagratio
   real, intent(in) :: eps
-  integer :: k
-  real :: lpx, lpy, ldx, ldy, dr
-  real :: l8x(1:8), l8y(1:8), w8dr(1:8)
 
   if (glt%geom_ready) return
+  call gwflow_lateral_geom_init_base(glt, g, eps)
+  call lateral_widths(g, diagratio, glt%wl, glt%lpx, glt%lpy, glt%ldx, glt%ldy)
+  glt%geom_ready = .true.
+end subroutine
+
+
+!----------------------------------------------------------------------
+! 幾何のうち d(diagratio)によらない部分(近傍セル中心間距離・面積逆数)と
+! エッジ作業領域の初期化(冪等。層間共有)。eps は最初の呼び手の値を採用する
+!----------------------------------------------------------------------
+subroutine gwflow_lateral_geom_init_base(glt, g, eps)
+  type(t_gwlat), intent(inout) :: glt
+  type(t_geoinfo), intent(in) :: g
+  real, intent(in) :: eps
+  integer :: k
+  real :: dr
+  real :: w8dr(1:8)
+
+  if (glt%base_ready) return
   glt%eps = eps
   glt%ainv = 1.0 / (g%dx * g%dy)
 
-  ! 8近傍の距離と通過幅(m_swflow_enc の init_weights と同一の配分則)
+  ! 8近傍の距離(m_swflow_enc の init_weights と同一)
   dr = sqrt(g%dx**2 + g%dy**2)
   w8dr(1:8) = [ dr, g%dy, dr, g%dx, g%dx, dr, g%dy, dr ]
   forall(k=1:8) glt%rdr(k) = 1.0 / w8dr(k)
+
+  ! エッジ流量4成分(一時作業領域)。j 範囲はセル j を挟むエッジが
+  ! j-1 と j にあるため下限 jsh-1(m_swflow_enc の uv/mn と同形)。
+  ! 確保時 0: マスク起因で書かれないエッジは恒久 0(無フラックス)
+  allocate(glt%q(1:4, dcp%ish-1:dcp%ieh, dcp%jsh-1:dcp%jeh), source = 0.0)
+  glt%base_ready = .true.
+end subroutine
+
+
+!----------------------------------------------------------------------
+! 8 近傍の通過幅(m_swflow_enc の init_weights と同一の配分則)を斜めの配分比
+! diagratio から求める。wl(k) = k 方向のエッジの通過幅 (m)、lpx・lpy・ldx・ldy は
+! 軸と斜めのシェア(t_gwlat の同名の成分の意味)。Δx ≠ Δy では短い辺を基準に
+! diagratio を適用する
+!----------------------------------------------------------------------
+pure subroutine lateral_widths(g, diagratio, wl, lpx, lpy, ldx, ldy)
+  type(t_geoinfo), intent(in) :: g
+  real, intent(in) :: diagratio
+  real, intent(out) :: wl(1:8)
+  real, intent(out) :: lpx, lpy, ldx, ldy
+  integer :: k
+  real :: l8x(1:8), l8y(1:8)
+
   if (g%dy > g%dx) then
     lpy = 1 - (g%dx / g%dy)**2 * diagratio
     ldy = diagratio / 2 * (g%dx / g%dy)**2
@@ -252,17 +294,7 @@ subroutine gwflow_lateral_geom_init(glt, g, diagratio, eps)
   end if
   l8y(1:8) = [ ldy, 0.0, ldy, lpy, lpy, ldy, 0.0, ldy ]
   l8x(1:8) = [ ldx, lpx, ldx, 0.0, 0.0, ldx, lpx, ldx ]
-  forall(k=1:8) glt%wl(k) = sqrt((l8y(k) * g%dy)**2 + (l8x(k) * g%dx)**2)
-  glt%lpx = lpx
-  glt%lpy = lpy
-  glt%ldx = ldx
-  glt%ldy = ldy
-
-  ! エッジ流量4成分(一時作業領域)。j 範囲はセル j を挟むエッジが
-  ! j-1 と j にあるため下限 jsh-1(m_swflow_enc の uv/mn と同形)。
-  ! 確保時 0: マスク起因で書かれないエッジは恒久 0(無フラックス)
-  allocate(glt%q(1:4, dcp%ish-1:dcp%ieh, dcp%jsh-1:dcp%jeh), source = 0.0)
-  glt%geom_ready = .true.
+  forall(k=1:8) wl(k) = sqrt((l8y(k) * g%dy)**2 + (l8x(k) * g%dx)**2)
 end subroutine
 
 
@@ -1015,6 +1047,7 @@ subroutine gwflow_lateral_dispose(glt, lay1, p)
   if (allocated(glt%q)) deallocate(glt%q)
   if (allocated(glt%qm)) deallocate(glt%qm)
   if (allocated(glt%wlo)) deallocate(glt%wlo)
+  glt%base_ready = .false.
   glt%geom_ready = .false.
   glt%initialized = .false.
 end subroutine
