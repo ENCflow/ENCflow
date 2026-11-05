@@ -2228,11 +2228,11 @@
     {
       "source": "examples/qanat/README.md",
       "target": "examples/qanat/en/README.md",
-      "source_sha256": "fb5276d910063bb64351d5ca662cdb3dc59dea571a1b2d3b5372eecc905ebef4",
-      "target_sha256": "9118e28b88d4c7861a69d73d27e569fb41b0ef54b4d1bff59a2110ac4437f2e3",
-      "reviewer": "Claude (Claude Code session; recompute after the steep-slope gravity correction §91: the 2 L/s pumping row of the budget table and the two derived values in the text compared side by side with the Japanese source, rest unchanged since the previous record)",
+      "source_sha256": "210184ed8935909e8139780f3380eea2618a191c47149bc633d1cdbc6b315df7",
+      "target_sha256": "489314ad7a054ce289c1956ee06a7e698e2eb16bd237bc274537fef9b6ec120d",
+      "reviewer": "Claude (Claude Code session; recomputed 2026-11-05: the 2 L/s row, the recompute note and the values in the text compared with the Japanese source, rest unchanged since the previous record)",
       "method": "assistant",
-      "reviewed_on": "2026-11-04"
+      "reviewed_on": "2026-11-05"
     },
     {
       "source": "examples/qanat/figs/mechanism.png",
