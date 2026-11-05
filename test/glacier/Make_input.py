@@ -7,6 +7,12 @@
 #   (3) data/zv200.txt, data/zv100.txt, data/hiv200.txt, data/hiv100.txt :
 #                        侵食の結合長の検定(構成 5)用の V 字谷と、谷を一定の
 #                        深さまで満たす初期氷厚(Δx = 200 m と 100 m の 2 通り)
+#   (4) data/zch0w1.txt, data/zch45w1.txt, data/zch0w3.txt, data/zch45w3.txt と
+#       data/hich0w1.txt ほか : 8 近傍の谷の流れの検定(構成 7。§96)用の谷と初期氷厚。
+#                        勾配 0.1 の斜面に、0° は行 j = 6(1 セル)・5..7(3 セル)、45° は
+#                        |i − j| = 0(1 本)・≤ 1(3 本)の谷を残して両側を 500 m 高くし、
+#                        谷に沿う座標 s(0°: (i − 0.5)Δx、45°: (i + j − 1)Δx/√2)で
+#                        中心 SC = 700 m・半長 LB = 500 m の cos² の氷の盛り上がり(最大 200 m)を置く
 #   格子・定数は param*.txt / Check_*.py と対で保守する
 import math
 import os
@@ -69,4 +75,30 @@ for DX in (200.0, 100.0):
             fz.write("".join(rz) + "\n")
             fh.write("".join(rh) + "\n")
 
-print("wrote data/hi0.txt, data/zcone.txt and data/zv*.txt, data/hiv*.txt")
+# ---- (4) 8 近傍の谷の流れ(param_ch*.txt。0°: nx=60, ny=11、45°: nx=ny=44、Δx = 50 m)----
+DX, ST, HW, HB, SC, LB = 50.0, 0.1, 500.0, 200.0, 700.0, 500.0
+for tag in ("ch0w1", "ch0w3", "ch45w1", "ch45w3"):
+    m = 0 if tag.endswith("w1") else 1
+    if tag.startswith("ch0"):
+        NX, NY = 60, 11
+        inch = lambda i, j: abs(j - 6) <= m
+        sc = lambda i, j: (i - 0.5) * DX
+        zf = lambda i, j: ST * (NX * DX - sc(i, j))
+    else:
+        NX = NY = 44
+        inch = lambda i, j: abs(i - j) <= m
+        sc = lambda i, j: (i + j - 1) * DX / math.sqrt(2.0)
+        zf = lambda i, j: ST * (2 * NX * DX / math.sqrt(2.0) - sc(i, j))
+    with open(f"data/z{tag}.txt", "w") as fz, open(f"data/hi{tag}.txt", "w") as fh:
+        for j in range(1, NY + 1):
+            rz, rh = [], []
+            for i in range(1, NX + 1):
+                rz.append(f"{zf(i, j) + (0.0 if inch(i, j) else HW):12.4f}")
+                h = 0.0
+                if inch(i, j) and abs(sc(i, j) - SC) < LB:
+                    h = HB * math.cos(math.pi * (sc(i, j) - SC) / (2.0 * LB)) ** 2
+                rh.append(f"{h:12.4f}")
+            fz.write("".join(rz) + "\n")
+            fh.write("".join(rh) + "\n")
+
+print("wrote data/hi0.txt, data/zcone.txt, data/zv*.txt, data/hiv*.txt and data/zch*.txt, data/hich*.txt")

@@ -33,6 +33,8 @@ module list_lavaflow
     real :: lv_vsol = -9999.0                ! 停止判定の速度閾値 (m/s。lv_wsol>0 で未指定なら既定 5e-4)
     real :: lv_cfl = 0.4                     ! 陽解法サブサイクルの安全係数 (0-1)
     integer :: lv_nsubmax = 10000            ! 1回の更新のサブサイクル数上限(暴走ガード)
+    real :: lv_diagratio = 0.0               ! 流動の斜めの配分 d(0 = 4 近傍。> 0 = 8 近傍の 9 点と、
+                                             !   塞がれた配分の動的な振り替え。developer.md §96)
     real :: lv_q0(1:lvmax) = -9999.0         ! 一定噴出率 (m3/s。時系列の代わり)
     character(len=maxpathlen) :: fn_lv_cell(1:lvmax) = ""  ! セル集合ファイル(i j の行列挙)
     character(len=maxpathlen) :: fn_lv_val(1:lvmax) = ""   ! 噴出率時系列ファイル(分, m3/s)
@@ -62,7 +64,7 @@ subroutine list_lavaflow_read(p, list)
   type(t_list_lavaflow), intent(inout) :: list
 
   integer :: f_lavaflow, lv_nsubmax, f_lvtemp, f_lvtemp_scheme
-  real :: lv_rho, lv_visc, lv_tauy, lv_wsol, lv_vsol, lv_cfl
+  real :: lv_rho, lv_visc, lv_tauy, lv_wsol, lv_vsol, lv_cfl, lv_diagratio
   real :: lv_q0(1:lvmax), lv_temp0(1:lvmax)
   real :: lv_tref, lv_bvisc, lv_btau, lv_tsol, lv_emis, lv_hconv, lv_cp, lv_tair
   character(len=80) :: dt_lavaflow_c
@@ -72,7 +74,7 @@ subroutine list_lavaflow_read(p, list)
 
   namelist /list_lavaflow/ f_lavaflow, dt_lavaflow_c, lv_rho, lv_visc, &
                            lv_tauy, lv_wsol, lv_vsol, lv_cfl, lv_nsubmax, &
-                           lv_cell, lv_q0, lv_val, fn_lv_cell, fn_lv_val, &
+                           lv_diagratio, lv_cell, lv_q0, lv_val, fn_lv_cell, fn_lv_val, &
                            f_lvtemp, f_lvtemp_scheme, lv_temp0, lv_tref, &
                            lv_bvisc, lv_btau, lv_tsol, lv_emis, lv_hconv, lv_cp, &
                            lv_tair
@@ -88,6 +90,7 @@ subroutine list_lavaflow_read(p, list)
   lv_vsol = list%lv_vsol
   lv_cfl = list%lv_cfl
   lv_nsubmax = list%lv_nsubmax
+  lv_diagratio = list%lv_diagratio
   lv_q0 = list%lv_q0
   fn_lv_cell = list%fn_lv_cell
   fn_lv_val = list%fn_lv_val
@@ -121,6 +124,7 @@ subroutine list_lavaflow_read(p, list)
   list%lv_vsol = lv_vsol
   list%lv_cfl = lv_cfl
   list%lv_nsubmax = lv_nsubmax
+  list%lv_diagratio = lv_diagratio
   list%lv_q0 = lv_q0
   list%fn_lv_cell = fn_lv_cell
   list%fn_lv_val = fn_lv_val

@@ -1,4 +1,4 @@
-# test/lava — lava flow (fn_lavaflow): Huppert similarity solution, Bingham stopping thickness, plastic dome, solidification at a wall, burial of the soil layer and temperature (cooling, heat advection, a flow that stops as it cools, crosswind numerical diffusion of the heat)
+# test/lava — lava flow (fn_lavaflow): Huppert similarity solution, Bingham stopping thickness, plastic dome, solidification at a wall, burial of the soil layer, temperature (cooling, heat advection, a flow that stops as it cools, crosswind numerical diffusion of the heat) and conveyance of valleys (8 neighbours)
 
 > English mirror of test/lava/README.md. The Japanese file is the master copy.
 
@@ -26,7 +26,9 @@ same practice as [test/volcano](../../volcano/en/README.md)).
    900 s from the single central cell of a flat bed is compared with the
    analytic plastic dome h(r)² = (2τ_y/ρg)(R − r) (Blake 1990), checking
    that it is the same along the grid axes and the diagonals
-   (developer.md §51.4).
+   (developer.md §51.4). `param_dome8.txt` (configuration 4') computes the
+   same input with the 8-neighbour 9-point stencil of the flow
+   (`lv_diagratio = 1/3`; developer.md §96) and must pass the same check.
 5. **Solidification at a wall** (`param_wall.txt`): lava is ponded against a
    10 m step (wall) at the end of a flat floor, and the check is that the
    whole amount solidifies, up to the cells touching the wall
@@ -70,6 +72,18 @@ same practice as [test/volcano](../../volcano/en/README.md)).
     not spread at 0°, that at 45° first-order upwind matches the crosswind
     diffusivity of the modified equation (√2/4)·u·Δx, and that MUSCL gives less
     than 1/4 of it (developer.md §94).
+11. **Dependence of the conveyance of valleys on their orientation**
+    (`param_ch0w1.txt`, `param_ch45w1.txt`, `param_ch0w3.txt`,
+    `param_ch45w3.txt`, `param_ch45w3q.txt`; the 8-neighbour 9-point stencil
+    `lv_diagratio = 1/3`): valleys one and three cells wide at 0° and 45° are
+    cut into a slope of 0.1 (walls 20 m higher on both sides), Newtonian lava
+    flows down them at a constant rate, and the conveyance ratio
+    k = Q/(W(ρg/3η)h³S) (W the valley width) is found from the thickness of the
+    uniform flow in the middle of the valley. The model has no wall drag, so
+    k = 1 is correct. The checks are k = 1 at 0° and for one line at 45°, and
+    1 ± 0.1 for three lines at 45°; the 4-neighbour control (`ch45w3q`,
+    `lv_diagratio = 0`) must give k < 0.8 (the check can detect the
+    difference) (developer.md §96).
 
 ## Configuration
 
@@ -102,17 +116,26 @@ Configuration 10, crosswind numerical diffusion of the heat (temperature mode, n
 | Heat advection | first-order upwind (`x0`) and MUSCL (`x0m`) | first-order upwind (`x45`) and MUSCL (`x45m`) |
 | Compared with | the temperatures on both sides of the boundary (they stay at the eruption temperatures) | the crosswind diffusivity from the spreading of the boundary width σ (0.354·u·Δx for first-order upwind by the modified equation) |
 
+Configuration 11, conveyance of valleys (8-neighbour 9-point stencil; values for the check):
+
+| Item | 0° (`param_ch0w1.txt`, `param_ch0w3.txt`) | 45° (`param_ch45w1.txt`, `param_ch45w3.txt`, `param_ch45w3q.txt`) |
+|---|---|---|
+| Domain and grid | 500 m × 55 m (100 × 11), Δx = 5 m, slope 0.1 in x. Both sides of the valley in row j = 6 (one cell) or 5–7 (three cells) are 20 m higher (`wrk_zch0w*.txt`) | 360 m × 360 m (72 × 72), Δx = 5 m, slope 0.1 in the (1,1) direction. Both sides of the band \|i − j\| = 0 (one line) or ≤ 1 (three lines) are 20 m higher (`wrk_zch45w*.txt`) |
+| Eruption | from the valley cells of column i = 3, the discharge of a uniform flow 1 m thick, Q = W × 0.8493 m²/s (one cell 4.25 m³/s, three cells 12.74 m³/s), for 500 s | likewise from the band cells with i + j = 8 and 9 (W = number of lines × Δx/√2; one line 3.00 m³/s, three lines 9.01 m³/s) |
+| Flow | Newtonian (η = 1e3 Pa·s, τ_y = 0). `lv_diagratio = 1/3` | the same (`ch45w3q` is the control with `lv_diagratio = 0`) |
+| Compared with | k from the mean thickness h of the valley cells of columns i = 40–60 | k from the mean thickness h of the band cells with i + j = 64–80 |
+
 | File | Contents |
 |---|---|
-| `make_init.py` / `make_init.py wall` / `cool` / `run` / `x0`, `x45` / `x0c1`, `x0c2`, `x45c1`, `x45c2` | `zinit.txt` (uniform slope) / `zwall.txt` (flat floor and a 10 m step) / `cool_cells.txt` (the vent of all cells of configuration 7) / `zrun.txt` (the slope tanθ = 0.1 of configuration 9) / `wrk_zx0.txt`, `wrk_zx45.txt` (the slopes of configuration 10) / `wrk_x0c*.txt`, `wrk_x45c*.txt` (the vents of configuration 10; wrk_* files are not tracked by git and are written by Run.sh and Run_MPI.sh) |
-| `Check_lava.py <save> huppert\|bingham\|dome\|wall\|bury\|cool\|adv\|run\|heat\|xdiff` | Configuration 1: (1) ledger Σhl·A = V_in, (2) area-equivalent radius within 10% of r_N, (3) r(tt)/r(tt/2) within 5% of √2. Configuration 2: (1) ledger Σhl + Σdz = V_in (solidification is an internal transfer to z), (2) hl + dz in the check window (i = 15–35) within 20% of h∞ and CV < threshold, (3) solidified fraction > 0.7. Configuration 4: (1) ledger Σhl·A = V_in, (2) the ratio of the area-equivalent radii of the sectors along the grid axes (±22.5°) and along the diagonals (±22.5°) within 5% of 1, (3) center thickness within 5% of H and area-equivalent radius within 5% of R, RMS error of the profile for r < R < 5% of H. Configuration 5: (1) ledger Σhl + Σdz = V_in, (2) solidified fraction > 0.999, (3) in every row of the column touching the wall (i = 30), hl = 0 and dz above half the maximum thickness. Configuration 6: (1) lava ledger, (2) sd = 0 and hg = 0 in every cell with solidified lava, sd = 1 m in the other cells, (3) Σ(h + hrs + hg) within 1e-9 (relative) of the initial surface water. Configuration 7 (`cool`; the third argument is the screen log): (1) the output Tl is uniform over all cells and within 2e-4 °C of the backward-Euler recursion, (2) the temperature drop within 1% (relative) of the exact solution, (3) still molten before the update at which the recursion reaches T ≤ the solidification temperature and all cells solidified after it, (4) the residual of the heat ledger within 1e-12 (relative) and its breakdown matching the recursion. Configuration 8 (`adv`): (1) lava ledger, (2) Σhl·Tl·A within 1e-9 (relative) of Σ V_k T_k and the residual on the screen, (3) 1050 ≤ Tl ≤ 1150 in every cell with lava, and a mixed zone exists. Configuration 9 (`run`; reads the saves of the four runs): (1) ledger and complete solidification, (2) residual of the heat ledger, (3) ratio of the flow lengths of the temperature mode L(4Q)/L(Q) > 1.5, (4) ratio of the isothermal control 1 ± 0.1. Configuration 9r (`heat`): residual of the heat ledger of the restarted run. Configuration 10 (`xdiff`; reads the saves of the four runs): (1) ledgers and conservation of heat of the four runs, (2) every cell of columns i = 10, 20 and 30 at 0° within 1e-9 °C of the eruption temperature of its side (both first-order upwind and MUSCL), (3) at 45° with first-order upwind, the growth of the square of the boundary width σ = √π ∫θ(1 − θ) dn, from the temperature θ on the anti-diagonals i + j = 37, 43, 53 and 63, gives D⊥ = u Δσ²/(2Δs) within 15% (relative) of (√2/4)·u·Δx, (4) D⊥ of MUSCL at 45° below 0.25 times first order, and 1050 ≤ Tl ≤ 1150 in every cell with lava |
+| `make_init.py` / `make_init.py wall` / `cool` / `run` / `x0`, `x45` / `x0c1`, `x0c2`, `x45c1`, `x45c2` / `ch0w1`, `ch0w3`, `ch45w1`, `ch45w3` / `ch0w1c` etc. | `zinit.txt` (uniform slope) / `zwall.txt` (flat floor and a 10 m step) / `cool_cells.txt` (the vent of all cells of configuration 7) / `zrun.txt` (the slope tanθ = 0.1 of configuration 9) / `wrk_zx0.txt`, `wrk_zx45.txt` (the slopes of configuration 10) / `wrk_x0c*.txt`, `wrk_x45c*.txt` (the vents of configuration 10) / `wrk_zch*.txt` (the valleys of configuration 11) / `wrk_ch*c.txt` (the vents of configuration 11; wrk_* files are not tracked by git and are written by Run.sh and Run_MPI.sh) |
+| `Check_lava.py <save> huppert\|bingham\|dome\|wall\|bury\|cool\|adv\|run\|heat\|xdiff\|chan` | Configuration 1: (1) ledger Σhl·A = V_in, (2) area-equivalent radius within 10% of r_N, (3) r(tt)/r(tt/2) within 5% of √2. Configuration 2: (1) ledger Σhl + Σdz = V_in (solidification is an internal transfer to z), (2) hl + dz in the check window (i = 15–35) within 20% of h∞ and CV < threshold, (3) solidified fraction > 0.7. Configuration 4: (1) ledger Σhl·A = V_in, (2) the ratio of the area-equivalent radii of the sectors along the grid axes (±22.5°) and along the diagonals (±22.5°) within 5% of 1, (3) center thickness within 5% of H and area-equivalent radius within 5% of R, RMS error of the profile for r < R < 5% of H. Configuration 5: (1) ledger Σhl + Σdz = V_in, (2) solidified fraction > 0.999, (3) in every row of the column touching the wall (i = 30), hl = 0 and dz above half the maximum thickness. Configuration 6: (1) lava ledger, (2) sd = 0 and hg = 0 in every cell with solidified lava, sd = 1 m in the other cells, (3) Σ(h + hrs + hg) within 1e-9 (relative) of the initial surface water. Configuration 7 (`cool`; the third argument is the screen log): (1) the output Tl is uniform over all cells and within 2e-4 °C of the backward-Euler recursion, (2) the temperature drop within 1% (relative) of the exact solution, (3) still molten before the update at which the recursion reaches T ≤ the solidification temperature and all cells solidified after it, (4) the residual of the heat ledger within 1e-12 (relative) and its breakdown matching the recursion. Configuration 8 (`adv`): (1) lava ledger, (2) Σhl·Tl·A within 1e-9 (relative) of Σ V_k T_k and the residual on the screen, (3) 1050 ≤ Tl ≤ 1150 in every cell with lava, and a mixed zone exists. Configuration 9 (`run`; reads the saves of the four runs): (1) ledger and complete solidification, (2) residual of the heat ledger, (3) ratio of the flow lengths of the temperature mode L(4Q)/L(Q) > 1.5, (4) ratio of the isothermal control 1 ± 0.1. Configuration 9r (`heat`): residual of the heat ledger of the restarted run. Configuration 10 (`xdiff`; reads the saves of the four runs): (1) ledgers and conservation of heat of the four runs, (2) every cell of columns i = 10, 20 and 30 at 0° within 1e-9 °C of the eruption temperature of its side (both first-order upwind and MUSCL), (3) at 45° with first-order upwind, the growth of the square of the boundary width σ = √π ∫θ(1 − θ) dn, from the temperature θ on the anti-diagonals i + j = 37, 43, 53 and 63, gives D⊥ = u Δσ²/(2Δs) within 15% (relative) of (√2/4)·u·Δx, (4) D⊥ of MUSCL at 45° below 0.25 times first order, and 1050 ≤ Tl ≤ 1150 in every cell with lava. Configuration 4' (`dome`): the same as configuration 4. Configuration 11 (`chan`; reads the saves of the five runs): (1) ledgers of the five runs, (2) \|k − 1\| < 0.01 for one and three cells at 0°, (3) \|k − 1\| < 0.02 for one line at 45°, (4) \|k − 1\| < 0.1 for three lines at 45° and k < 0.8 for the 4-neighbour control |
 | `Fig.py` | The figure `en/figs/lava.png` below (`python3 Fig.py en`; `figs/lava.png` is the Japanese version) |
 
 ## Running
 
 ```bash
 make
-./Run.sh          # configuration 1 → Check → configuration 2 → Check → equivalence check of configuration 3 → configurations 4–9, 9r and 10 → Check (about 45 seconds on one thread)
+./Run.sh          # configuration 1 → Check → configuration 2 → Check → equivalence check of configuration 3 → configurations 4, 4', 5–9, 9r, 10 and 11 → Check (about 1 minute on one thread)
 ./Run_MPI.sh 4    # MPI. state.dat and lavaflow.dat (and lavaflow_temp.dat) are byte-identical to the serial run (-O2 strict math)
 python3 Fig.py en # en/figs/lava.png
 ```
@@ -161,6 +184,7 @@ the erupted volume) (developer.md §51.5).
 | Configuration 4 (1) ledger Σhl·A − V_in | −2.3e-13 m³ (V_in = 1798 m³) | PASS |
 | Configuration 4 (2) ratio of the sector area-equivalent radii (diagonal / grid axis) | 16.96 m / 16.74 m = 1.014 (tolerance 1 ± 0.05) | PASS |
 | Configuration 4 (3) analytic plastic dome | center thickness 3.710 m (H 3.665 m, +1.2%), area-equivalent radius 16.86 m (R 17.11 m, −1.5%), profile RMS 0.076 m (2.1% of H) | PASS |
+| Configuration 4' (1)–(3) 8-neighbour 9-point stencil | ledger 0.0 m³, ratio of the area-equivalent radii 17.04/16.74 m = 1.018, center thickness 3.714 m (+1.3%), area-equivalent radius 16.90 m (−1.3%), profile RMS 0.076 m (2.1% of H) | PASS |
 | Configuration 5 (1) ledger (Σhl + Σdz)·A − V_in | −2.3e-13 m³ (V_in = 59.9 m³) | PASS |
 | Configuration 5 (2) solidified fraction | 1.0000 (no lava left) | PASS |
 | Configuration 5 (3) column touching the wall | hl = 0 in every row, min dz 0.978 m (max dz 1.076 m) | PASS |
@@ -184,6 +208,10 @@ the erupted volume) (developer.md §51.5).
 | Configuration 10 (2) boundary at 0° | with both first-order upwind and MUSCL both sides of the boundary stay at the eruption temperatures (difference ≤ 4.5e-13 °C); the MUSCL save is byte-identical to first-order upwind | PASS |
 | Configuration 10 (3) first-order upwind at 45° | σ = 6.85, 11.04, 15.73, 19.37 m (s = 14, 35, 71, 106 m), D⊥ = 0.357·u·Δx (theory 0.354, +1.0%; tolerance 15%) | PASS |
 | Configuration 10 (4) MUSCL at 45° | σ = 3.83, 5.02, 6.06, 6.75 m, D⊥ = 0.034·u·Δx (0.09 times first order; tolerance < 0.25), Tl = 1050–1150 °C | PASS |
+| Configuration 11 (1) ledger | Σhl·A − V_in ≤ 2.7e-12 m³ in all five runs | PASS |
+| Configuration 11 (2) 0° | k = 1.0000 (one cell), 1.0000 (three cells) (tolerance 1 ± 0.01) | PASS |
+| Configuration 11 (3) one line at 45° | k = 1.0000 (tolerance 1 ± 0.02; no flow on 4 neighbours) | PASS |
+| Configuration 11 (4) three lines at 45° | k = 1.0650 (tolerance 1 ± 0.1), 4-neighbour control k = 0.6667 (tolerance < 0.8) | PASS |
 
 - The +7% of the stopping thickness includes the upward bias
   h∞ + √(v_sol h/(coef (2h + h₀) S)) from the cutoff by the stop detection
@@ -252,8 +280,25 @@ the erupted volume) (developer.md §51.5).
   configuration 7 that does not flow, and x0 and x45 of configuration 10, which
   give first-order upwind explicitly, do not change. Configuration 10 is not in
   the figure.
-- The flux stencil remains 4-neighbor; the 8-neighbor extension remains a
-  candidate common to the diffusion-type modules (developer.md §61.4).
+- Configurations 11 and 4' check the 8-neighbour 9-point stencil of the flow
+  (`lv_diagratio`; default 0 = 4 neighbours; developer.md §96). On 4
+  neighbours a diagonal valley one cell wide, whose cells touch only at
+  corners, does not flow (in a trial the lava piled up 19.7 m at the vent
+  and the subcycles exceeded 1.2 million, so it is not in the check). A band
+  of three lines flows only through the zigzag of the axis edges, k = 2/3
+  (`ch45w3q`). With 8 neighbours the blocked diagonal shares are reassigned,
+  according to the lava thickness, to the axis edges, and in a diagonal valley
+  whose axis neighbours are blocked, to the diagonal edges, so a valley at 0°
+  keeps the conveyance of 4 neighbours (k = 1) and one line at 45° also gives
+  k = 1. The +6.5% for three lines at 45° is an excess from the axis edges at
+  the edges of the band receiving the shares of blocked diagonals that cross
+  the valley; for uniform thickness it is 1 + d/6 (+5.6% for d = 1/3; the
+  derivation is in developer.md §96). For a band of five lines (trial) it
+  drops to +4.0%.
+- The saves (except the line with the creation time in save_info.txt), field
+  outputs and Log.txt of configurations 1–10 are byte-identical before and
+  after the addition of the 8 neighbours (default 0; the code of the
+  4-neighbour path is unchanged).
 
 ## Related documents
 

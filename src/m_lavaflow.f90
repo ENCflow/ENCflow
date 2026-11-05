@@ -90,6 +90,7 @@ module m_lavaflow
                          par_halo_cell, par_allreduce_max, par_allreduce_sumr, &
                          par_gather_to, par_scatter_cell
   use m_util, only : itoa, rtoa, str2sec, param_default
+  use m_flow8, only : flow8_weights, flow8_open, flow8_diag_gs2
   implicit none
   private
 
@@ -123,12 +124,18 @@ module m_lavaflow
   end type
 
   type t_lvwork
-    real :: cw(1:4) = 0.0            ! エッジ伝導度重み(= 通過幅/距離。4近傍のみ)
+    real :: cw(1:4) = 0.0            ! エッジ伝導度重み(= 通過幅/距離。lv_diagratio = 0 では 4 近傍のみ)
+    real :: cwd(1:4) = 0.0           ! 8 近傍の振り替えの伝導度の増分(§96)。軸 k = 2・4: 塞がれた斜め
+                                     !   1 本分(ld·面長/距離。nb 倍して足す)、斜め k = 1・3: 斜め先 1 つ分
+                                     !   ((自然幅 − 斜めの通過幅)/2/距離。塞がり率の和の 1/2 倍して足す)
     real :: dist(1:4) = 0.0          ! エッジ法線方向のセル中心間距離 (m)
+    real :: diag = 0.0               ! 流動の斜めの配分 d(lv_diagratio。0 = 4 近傍。§96)
     real :: area = 0.0               ! セル面積 dx*dy (m2)
     real :: ainv = 0.0               ! 1 / (dx*dy)
     real :: rdx2 = 0.0               ! 1/dx^2 + 1/dy^2(安定条件用)
     real, allocatable :: q(:,:,:)    ! エッジ溶岩フラックス4成分 (m3/s)
+    real, allocatable :: ge(:,:,:)   ! エッジの伝導度 G = D·cw·(振り替え) (m2/s)。8 近傍(diag > 0)のみ
+                                     !   確保。q と同形(パスA が書き、dt の決定とパスB が読む。§96)
     real, allocatable :: sdz(:,:)    ! 固化深の作業領域 (m)(1:nx, js:je)。
                                      !   2パス構造用(判定は時刻 n の場、適用は
                                      !   パス2。lv_wsol>0 か温度モードのみ確保)
@@ -262,6 +269,10 @@ subroutine m_lavaflow_init(lv, p, g, s, mt)
   lv%cfl = list%lv_cfl
   if (list%lv_nsubmax < 1) call par_stop("list_lavaflow: lv_nsubmax must be >= 1")
   lv%nsubmax = list%lv_nsubmax
+  if (list%lv_diagratio < 0.0 .or. list%lv_diagratio > 1.0) then
+    call par_stop("list_lavaflow: lv_diagratio must be in [0, 1]")
+  end if
+  lv%lvw%diag = list%lv_diagratio
 
   ! --- 噴火口(セル集合+噴出率。番号は 1 から連続 = pump と同じ規約) ---
   do iv = 1, lvmax
@@ -362,22 +373,28 @@ subroutine m_lavaflow_init(lv, p, g, s, mt)
   allocate(s%hl(dcp%ish:dcp%ieh, dcp%jsh:dcp%jeh), source = 0.0)
   if (lv%thermal) allocate(s%tl(dcp%ish:dcp%ieh, dcp%jsh:dcp%jeh), source = 0.0)
 
-  ! --- 作業領域(calc_creep / m_glacier と同じ4近傍) ---
+  ! --- 作業領域(lv_diagratio = 0 は calc_creep / m_glacier と同じ4近傍) ---
   lv%lvw%area = g%dx * g%dy
   lv%lvw%ainv = 1.0 / lv%lvw%area
   lv%lvw%rdx2 = 1.0 / g%dx**2 + 1.0 / g%dy**2
-  lv%lvw%cw(1) = 0.0             ! 斜め(未使用)
-  lv%lvw%cw(2) = g%dx / g%dy
-  lv%lvw%cw(3) = 0.0
-  lv%lvw%cw(4) = g%dy / g%dx
-  lv%lvw%dist(1) = 0.0
-  lv%lvw%dist(2) = g%dy
-  lv%lvw%dist(3) = 0.0
-  lv%lvw%dist(4) = g%dx
+  if (lv%lvw%diag > 0.0) then
+    ! 8 近傍の 9 点の伝導度と振り替えの増分(m_flow8。§96)
+    call flow8_weights(g, lv%lvw%diag, lv%lvw%cw, lv%lvw%cwd, lv%lvw%dist)
+  else
+    lv%lvw%cw(1) = 0.0             ! 斜め(未使用)
+    lv%lvw%cw(2) = g%dx / g%dy
+    lv%lvw%cw(3) = 0.0
+    lv%lvw%cw(4) = g%dy / g%dx
+    lv%lvw%dist(1) = 0.0
+    lv%lvw%dist(2) = g%dy
+    lv%lvw%dist(3) = 0.0
+    lv%lvw%dist(4) = g%dx
+  end if
   ! j 範囲はセル j を挟むエッジが j-1 と j にあるため下限 jsh-1
   ! (m_glacier の glw%q と同形)。確保時 0: マスク起因で書かれない
   ! エッジは恒久 0(無フラックス)
   allocate(lv%lvw%q(1:4, dcp%ish-1:dcp%ieh, dcp%jsh-1:dcp%jeh), source = 0.0)
+  if (lv%lvw%diag > 0.0) allocate(lv%lvw%ge(1:4, dcp%ish-1:dcp%ieh, dcp%jsh-1:dcp%jeh), source = 0.0)
   if (lv%thermal) then
     allocate(lv%lvw%qt(1:4, dcp%ish-1:dcp%ieh, dcp%jsh-1:dcp%jeh), source = 0.0)
     allocate(lv%lvw%tw(dcp%ish:dcp%ieh, dcp%js:dcp%je), source = 0.0)
@@ -406,6 +423,11 @@ subroutine m_lavaflow_init(lv, p, g, s, mt)
   if (lv%thermal) msg = trim(msg) // ", temperature f_lvtemp=1"
   if (lv%tmuscl) msg = trim(msg) // ", heat advection MUSCL (f_lvtemp_scheme=3)"
   call par_info(trim(msg) // ")")
+  if (lv%lvw%diag > 0.0) then
+    write(msg,'(a,f6.4,a)') "lavaflow: flow on the 8-neighbour 9-point stencil (lv_diagratio = ", &
+                            lv%lvw%diag, ") with dynamic reassignment of blocked diagonal shares"
+    call par_info(trim(msg))
+  end if
 end subroutine
 
 
@@ -541,6 +563,7 @@ subroutine m_lavaflow_dispose(lv, p, g, s)
   end if
 
   if (allocated(lv%lvw%q)) deallocate(lv%lvw%q)
+  if (allocated(lv%lvw%ge)) deallocate(lv%lvw%ge)
   if (allocated(lv%lvw%qt)) deallocate(lv%lvw%qt)
   if (allocated(lv%lvw%tw)) deallocate(lv%lvw%tw)
   if (allocated(lv%lvw%sdz)) deallocate(lv%lvw%sdz)
@@ -719,6 +742,9 @@ end subroutine
 !   温度の凸結合になる(丸めの分を含めてその範囲に収める)。f_lvtemp_scheme = 3
 !   では T* を MUSCL の面値にし(tface_muscl)、範囲に流れ出しの面の反対側の
 !   近傍を加える(§94)。hl・tl をサブサイクルごとにハロ交換する
+!   lv_diagratio > 0 では 8 近傍の 9 点(パスA・B を flow8_coef・flow8_flux に替える。
+!   斜めのエッジと塞がれた配分の動的な振り替え、dt はセルごとの伝導度の和、ドナー律速は
+!   1 エッジ 1/8。パスC は共通。§96)
 !----------------------------------------------------------------------
 subroutine tick_flow(lv, g, s, dtw)
   type(t_lavaflow), intent(inout) :: lv
@@ -747,51 +773,61 @@ subroutine tick_flow(lv, g, s, dtw)
     end if
 
     ! --- パスA: 拡散係数の最大値と dt_sub の決定 ---
-    dmax = 0.0
-    !$omp parallel do schedule(static) private(i, j, k, in, jn, okc, sc, sn_, ds, ss, gt, h0, hf, &
-    !$omp                                      he, dd, cf, ty) &
-    !$omp reduction(max: dmax)
-    do j = dcp%js, jt
-      do i = g%wx(1,j), g%wx(2,j)
-        if (g%x(i,j) <= 0) cycle
-        okc = (g%sw(i,j) <= 0)
-        do k = 2, 4, 2
-          in = i + din(k)
-          jn = j + djn(k)
-          if (.not. okc) cycle
-          if (g%x(in,jn) <= 0) cycle
-          if (g%sw(in,jn) > 0) cycle
-          he = 0.5 * (s%hl(i,j) + s%hl(in,jn))
-          if (he <= 0.0) cycle
-          sc = s%z(i,j) + s%hl(i,j)
-          sn_ = s%z(in,jn) + s%hl(in,jn)
-          ds = sc - sn_
-          if (ds == 0.0) cycle
-          ss = abs(ds) / lv%lvw%dist(k)
-          cf = lv%coef
-          ty = lv%tauy
-          if (lv%thermal) call edge_rheology(lv, s, i, j, in, jn, cf, ty)
-          h0 = 0.0
-          if (ty > 0.0) then
-            gt = edge_tslope(g, s, i, j, in, jn)
-            h0 = ty / (lv%rhog * sqrt(ss * ss + gt * gt))
-          end if
-          hf = he - h0
-          if (hf <= 0.0) cycle
-          dd = cf * hf * hf * (2.0 * he + h0)
-          dmax = max(dmax, dd)
+    !   8 近傍(lv_diagratio > 0。§96)はエッジの伝導度 G を ge に置き、dmax にセルごとの
+    !   伝導度の和 Σ_k G_k の最大を返す(dt はその正値性の条件で決める)
+    if (lv%lvw%diag > 0.0) then
+      call flow8_coef(lv, g, s, jt, dmax)
+    else
+      dmax = 0.0
+      !$omp parallel do schedule(static) private(i, j, k, in, jn, okc, sc, sn_, ds, ss, gt, h0, hf, &
+      !$omp                                      he, dd, cf, ty) &
+      !$omp reduction(max: dmax)
+      do j = dcp%js, jt
+        do i = g%wx(1,j), g%wx(2,j)
+          if (g%x(i,j) <= 0) cycle
+          okc = (g%sw(i,j) <= 0)
+          do k = 2, 4, 2
+            in = i + din(k)
+            jn = j + djn(k)
+            if (.not. okc) cycle
+            if (g%x(in,jn) <= 0) cycle
+            if (g%sw(in,jn) > 0) cycle
+            he = 0.5 * (s%hl(i,j) + s%hl(in,jn))
+            if (he <= 0.0) cycle
+            sc = s%z(i,j) + s%hl(i,j)
+            sn_ = s%z(in,jn) + s%hl(in,jn)
+            ds = sc - sn_
+            if (ds == 0.0) cycle
+            ss = abs(ds) / lv%lvw%dist(k)
+            cf = lv%coef
+            ty = lv%tauy
+            if (lv%thermal) call edge_rheology(lv, s, i, j, in, jn, cf, ty)
+            h0 = 0.0
+            if (ty > 0.0) then
+              gt = edge_tslope(g, s, i, j, in, jn)
+              h0 = ty / (lv%rhog * sqrt(ss * ss + gt * gt))
+            end if
+            hf = he - h0
+            if (hf <= 0.0) cycle
+            dd = cf * hf * hf * (2.0 * he + h0)
+            dmax = max(dmax, dd)
+          end do
         end do
       end do
-    end do
-    !$omp end parallel do
-    w1(1) = dmax
-    call par_allreduce_max(w1)
-    dmax = w1(1)
+      !$omp end parallel do
+      w1(1) = dmax
+      call par_allreduce_max(w1)
+      dmax = w1(1)
+    end if
 
     last = .true.
     dtsub = trem
     if (dmax > 0.0) then
-      dlim = lv%cfl * 0.5 / (dmax * lv%lvw%rdx2)
+      if (lv%lvw%diag > 0.0) then
+        dlim = lv%cfl * lv%lvw%area / dmax     ! 自セルの係数 1 − dt Σ_k G_k / A >= 0(§96)
+      else
+        dlim = lv%cfl * 0.5 / (dmax * lv%lvw%rdx2)
+      end if
       if (dlim < trem) then
         dtsub = dlim
         last = .false.
@@ -804,74 +840,79 @@ subroutine tick_flow(lv, g, s, dtw)
     ! --- パスB: エッジ流量(ドナー律速つき) ---
     !   帯界面のエッジ成分 k=1..3(行 je)はハロ行 je+1 の書き手が担う
     !   (冗長計算。全域端では行が存在せず対象外)
-    !$omp parallel do schedule(static) private(i, j, k, in, jn, okc, sc, sn_, ds, ss, gt, h0, hf, &
-    !$omp                                      he, dd, gq, qcap, cf, ty, gqt, tf)
-    do j = dcp%js, jt
-      do i = g%wx(1,j), g%wx(2,j)
-        if (g%x(i,j) <= 0) cycle
-        okc = (g%sw(i,j) <= 0)
-        do k = 1, 4
-          in = i + din(k)
-          jn = j + djn(k)
-          ! 状態は毎回変わるため、条件を満たさない場合も必ず 0 を代入する
-          gq = 0.0
-          if (lv%lvw%cw(k) > 0.0 .and. okc .and. g%x(in,jn) > 0) then
-            if (g%sw(in,jn) <= 0) then
-              he = 0.5 * (s%hl(i,j) + s%hl(in,jn))
-              if (he > 0.0) then
-                sc = s%z(i,j) + s%hl(i,j)
-                sn_ = s%z(in,jn) + s%hl(in,jn)
-                ds = sc - sn_
-                if (ds /= 0.0) then
-                  ss = abs(ds) / lv%lvw%dist(k)
-                  cf = lv%coef
-                  ty = lv%tauy
-                  if (lv%thermal) call edge_rheology(lv, s, i, j, in, jn, cf, ty)
-                  h0 = 0.0
-                  if (ty > 0.0) then
-                    gt = edge_tslope(g, s, i, j, in, jn)
-                    h0 = ty / (lv%rhog * sqrt(ss * ss + gt * gt))
-                  end if
-                  hf = he - h0
-                  if (hf > 0.0) then
-                    dd = cf * hf * hf * (2.0 * he + h0)
-                    ! エッジ流量(書き手 c から k 近傍 n に向かい正)(m3/s)
-                    gq = dd * ds * lv%lvw%cw(k)
-                    ! ドナー律速: 1エッジの持ち出し ≤ ドナー溶岩体積の 1/4
-                    ! (4エッジ合計 ≤ 全量 → hl >= 0 が構造的に成立)
-                    if (ds > 0.0) then
-                      qcap = 0.25 * s%hl(i,j) * lv%lvw%area / dtsub
-                      gq = min(gq, qcap)
-                    else
-                      qcap = 0.25 * s%hl(in,jn) * lv%lvw%area / dtsub
-                      gq = max(gq, -qcap)
+    !   8 近傍(§96)はパスA の伝導度 ge から(ドナー律速は 1 エッジ 1/8)
+    if (lv%lvw%diag > 0.0) then
+      call flow8_flux(lv, g, s, jt, dtsub)
+    else
+      !$omp parallel do schedule(static) private(i, j, k, in, jn, okc, sc, sn_, ds, ss, gt, h0, hf, &
+      !$omp                                      he, dd, gq, qcap, cf, ty, gqt, tf)
+      do j = dcp%js, jt
+        do i = g%wx(1,j), g%wx(2,j)
+          if (g%x(i,j) <= 0) cycle
+          okc = (g%sw(i,j) <= 0)
+          do k = 1, 4
+            in = i + din(k)
+            jn = j + djn(k)
+            ! 状態は毎回変わるため、条件を満たさない場合も必ず 0 を代入する
+            gq = 0.0
+            if (lv%lvw%cw(k) > 0.0 .and. okc .and. g%x(in,jn) > 0) then
+              if (g%sw(in,jn) <= 0) then
+                he = 0.5 * (s%hl(i,j) + s%hl(in,jn))
+                if (he > 0.0) then
+                  sc = s%z(i,j) + s%hl(i,j)
+                  sn_ = s%z(in,jn) + s%hl(in,jn)
+                  ds = sc - sn_
+                  if (ds /= 0.0) then
+                    ss = abs(ds) / lv%lvw%dist(k)
+                    cf = lv%coef
+                    ty = lv%tauy
+                    if (lv%thermal) call edge_rheology(lv, s, i, j, in, jn, cf, ty)
+                    h0 = 0.0
+                    if (ty > 0.0) then
+                      gt = edge_tslope(g, s, i, j, in, jn)
+                      h0 = ty / (lv%rhog * sqrt(ss * ss + gt * gt))
+                    end if
+                    hf = he - h0
+                    if (hf > 0.0) then
+                      dd = cf * hf * hf * (2.0 * he + h0)
+                      ! エッジ流量(書き手 c から k 近傍 n に向かい正)(m3/s)
+                      gq = dd * ds * lv%lvw%cw(k)
+                      ! ドナー律速: 1エッジの持ち出し ≤ ドナー溶岩体積の 1/4
+                      ! (4エッジ合計 ≤ 全量 → hl >= 0 が構造的に成立)
+                      if (ds > 0.0) then
+                        qcap = 0.25 * s%hl(i,j) * lv%lvw%area / dtsub
+                        gq = min(gq, qcap)
+                      else
+                        qcap = 0.25 * s%hl(in,jn) * lv%lvw%area / dtsub
+                        gq = max(gq, -qcap)
+                      end if
                     end if
                   end if
                 end if
               end if
             end if
-          end if
-          lv%lvw%q(k, i+die(k), j+dje(k)) = gq
-          if (lv%thermal) then
-            ! 熱のエッジ流量 = 溶岩のエッジ流量 × 面の温度。面の温度は送り手(風上)の
-            ! 温度(1 次風上)か、f_lvtemp_scheme = 3 ではエッジの向きに沿った
-            ! 送り手・受け手・送り手のさらに風上の 3 点の MUSCL(tface_muscl。§94)
-            gqt = 0.0
-            if (gq > 0.0) then
-              tf = s%tl(i,j)
-              if (lv%tmuscl) tf = tface_muscl(g, s, i, j, in, jn, i - din(k), j - djn(k))
-              gqt = gq * tf
-            else if (gq < 0.0) then
-              tf = s%tl(in,jn)
-              if (lv%tmuscl) tf = tface_muscl(g, s, in, jn, i, j, in + din(k), jn + djn(k))
-              gqt = gq * tf
+            lv%lvw%q(k, i+die(k), j+dje(k)) = gq
+            if (lv%thermal) then
+              ! 熱のエッジ流量 = 溶岩のエッジ流量 × 面の温度。面の温度は送り手(風上)の
+              ! 温度(1 次風上)か、f_lvtemp_scheme = 3 ではエッジの向きに沿った
+              ! 送り手・受け手・送り手のさらに風上の 3 点の MUSCL(tface_muscl。§94)
+              gqt = 0.0
+              if (gq > 0.0) then
+                tf = s%tl(i,j)
+                if (lv%tmuscl) tf = tface_muscl(g, s, i, j, in, jn, i - din(k), j - djn(k))
+                gqt = gq * tf
+              else if (gq < 0.0) then
+                tf = s%tl(in,jn)
+                if (lv%tmuscl) tf = tface_muscl(g, s, in, jn, i, j, in + din(k), jn + djn(k))
+                gqt = gq * tf
+              end if
+              lv%lvw%qt(k, i+die(k), j+dje(k)) = gqt
             end if
-            lv%lvw%qt(k, i+die(k), j+dje(k)) = gqt
-          end if
+          end do
         end do
       end do
-    end do
-    !$omp end parallel do
+      !$omp end parallel do
+    end if
 
     ! --- パスC: 発散を取り hl を更新 ---
     ! 温度モードは先に熱量 hl·Tl を同じ保存形で更新し、新しい温度を作業領域 tw へ
@@ -963,6 +1004,158 @@ subroutine tick_flow(lv, g, s, dtw)
   end do
 
   lv%lvw%nsubtot = lv%lvw%nsubtot + nsub
+end subroutine
+
+
+!----------------------------------------------------------------------
+! 8 近傍のパスA(lv_diagratio > 0。tick_flow の部品。§96)
+!   エッジの伝導度 G = D·(cw + 振り替え量·cwd) を ge に置き(書き手 js..jt。各スロットの
+!   書き手は 1 つ)、自帯のセルごとの和 Σ_k G_k(8 方向。パスC の集計と同じ)の全域の
+!   最大を smax に返す(allreduce。全ランク同一)。
+!   D は 4 近傍と同じ Bingham の式 cf·hf²(2he + h0)、h0 = τ_y/(ρg|∇s|)。|∇s| は軸のエッジで
+!   √(Sn² + St²)(St = edge_tslope)、斜めのエッジで角点の勾配(m_flow8 の flow8_diag_gs2)。
+!   振り替え量(案 A。m_flow8 の flow8_open)は、水の f_opening_dynamic = 3 と同じ規則を溶岩面に
+!   当てはめた塞がり率の和の 1/2(斜め先の地盤が始点の溶岩面よりどれだけ高いか。局所の平面
+!   からの盛り上がりで頭打ち)。読むのは書き手と近傍のセル、その横 ±1(行 js−1..je+2・列は
+!   行窓 ±1)= ハロ幅 2 の内側
+!----------------------------------------------------------------------
+subroutine flow8_coef(lv, g, s, jt, smax)
+  type(t_lavaflow), intent(inout) :: lv
+  type(t_geoinfo), intent(in) :: g
+  type(t_state), intent(in) :: s
+  integer, intent(in) :: jt
+  real, intent(out) :: smax
+  integer :: i, j, k, in, jn
+  real :: sc, sn_, ds, ss, gt, gs2, h0, hf, he, dd, cf, ty, gg, sb, sm
+  real :: w1(1)
+  logical :: okc
+
+  !$omp parallel do schedule(static) private(i, j, k, in, jn, okc, sc, sn_, ds, ss, gt, gs2, h0, &
+  !$omp                                      hf, he, dd, cf, ty, gg, sb)
+  do j = dcp%js, jt
+    do i = g%wx(1,j), g%wx(2,j)
+      if (g%x(i,j) <= 0) cycle
+      okc = (g%sw(i,j) <= 0)
+      do k = 1, 4
+        in = i + din(k)
+        jn = j + djn(k)
+        ! 状態は毎回変わるため、条件を満たさない場合も必ず 0 を代入する
+        gg = 0.0
+        if (okc .and. g%x(in,jn) > 0) then
+          if (g%sw(in,jn) <= 0) then
+            he = 0.5 * (s%hl(i,j) + s%hl(in,jn))
+            if (he > 0.0) then
+              sc = s%z(i,j) + s%hl(i,j)
+              sn_ = s%z(in,jn) + s%hl(in,jn)
+              ds = sc - sn_
+              if (ds /= 0.0) then
+                cf = lv%coef
+                ty = lv%tauy
+                if (lv%thermal) call edge_rheology(lv, s, i, j, in, jn, cf, ty)
+                h0 = 0.0
+                if (ty > 0.0) then
+                  if (mod(k, 2) == 0) then
+                    ss = abs(ds) / lv%lvw%dist(k)
+                    gt = edge_tslope(g, s, i, j, in, jn)
+                    gs2 = ss * ss + gt * gt
+                  else
+                    gs2 = flow8_diag_gs2(g, s%z, s%hl, k, i, j)
+                  end if
+                  h0 = ty / (lv%rhog * sqrt(gs2))
+                end if
+                hf = he - h0
+                if (hf > 0.0) then
+                  dd = cf * hf * hf * (2.0 * he + h0)
+                  ! 振り替え(案 A。塞がり率の和の 1/2 を cwd に掛けて足す。m_flow8)
+                  sb = flow8_open(g, s%z, s%hl, k, i, j)
+                  gg = dd * (lv%lvw%cw(k) + sb * lv%lvw%cwd(k))
+                end if
+              end if
+            end if
+          end if
+        end if
+        lv%lvw%ge(k, i+die(k), j+dje(k)) = gg
+      end do
+    end do
+  end do
+  !$omp end parallel do
+
+  ! セルごとの伝導度の和(8 方向。パスC と同じ集計)の最大
+  smax = 0.0
+  !$omp parallel do schedule(static) private(i, j, k, sm) reduction(max: smax)
+  do j = dcp%js, dcp%je
+    do i = g%wx(1,j), g%wx(2,j)
+      if (g%x(i,j) <= 0) cycle
+      if (g%sw(i,j) > 0) cycle
+      sm = 0.0
+      do k = 1, 8
+        sm = sm + lv%lvw%ge(ke(k), i+die(k), j+dje(k))
+      end do
+      smax = max(smax, sm)
+    end do
+  end do
+  !$omp end parallel do
+  w1(1) = smax
+  call par_allreduce_max(w1)
+  smax = w1(1)
+end subroutine
+
+
+!----------------------------------------------------------------------
+! 8 近傍のパスB(lv_diagratio > 0。tick_flow の部品。§96)
+!   エッジ流量 = G·(s_c − s_n)(G はパスA の ge)。ドナー律速は 1 エッジの持ち出し ≤ ドナーの
+!   溶岩体積の 1/8(8 エッジの合計 ≤ 全量 → hl >= 0)。熱のエッジ流量は 4 近傍のパスB と同じ
+!   (面の温度は送り手の温度か、f_lvtemp_scheme = 3 ではエッジの向きの 3 点の MUSCL)
+!----------------------------------------------------------------------
+subroutine flow8_flux(lv, g, s, jt, dtsub)
+  type(t_lavaflow), intent(inout) :: lv
+  type(t_geoinfo), intent(in) :: g
+  type(t_state), intent(in) :: s
+  integer, intent(in) :: jt
+  real, intent(in) :: dtsub
+  integer :: i, j, k, in, jn
+  real :: ds, gg, gq, qcap, gqt, tf
+
+  !$omp parallel do schedule(static) private(i, j, k, in, jn, ds, gg, gq, qcap, gqt, tf)
+  do j = dcp%js, jt
+    do i = g%wx(1,j), g%wx(2,j)
+      if (g%x(i,j) <= 0) cycle
+      do k = 1, 4
+        in = i + din(k)
+        jn = j + djn(k)
+        gq = 0.0
+        gg = lv%lvw%ge(k, i+die(k), j+dje(k))
+        if (gg > 0.0) then
+          ds = (s%z(i,j) + s%hl(i,j)) - (s%z(in,jn) + s%hl(in,jn))
+          ! エッジ流量(書き手 c から k 近傍 n に向かい正)(m3/s)
+          gq = gg * ds
+          ! ドナー律速: 1エッジの持ち出し ≤ ドナー溶岩体積の 1/8(8 エッジ)
+          if (ds > 0.0) then
+            qcap = 0.125 * s%hl(i,j) * lv%lvw%area / dtsub
+            gq = min(gq, qcap)
+          else
+            qcap = 0.125 * s%hl(in,jn) * lv%lvw%area / dtsub
+            gq = max(gq, -qcap)
+          end if
+        end if
+        lv%lvw%q(k, i+die(k), j+dje(k)) = gq
+        if (lv%thermal) then
+          gqt = 0.0
+          if (gq > 0.0) then
+            tf = s%tl(i,j)
+            if (lv%tmuscl) tf = tface_muscl(g, s, i, j, in, jn, i - din(k), j - djn(k))
+            gqt = gq * tf
+          else if (gq < 0.0) then
+            tf = s%tl(in,jn)
+            if (lv%tmuscl) tf = tface_muscl(g, s, in, jn, i, j, in + din(k), jn + djn(k))
+            gqt = gq * tf
+          end if
+          lv%lvw%qt(k, i+die(k), j+dje(k)) = gqt
+        end if
+      end do
+    end do
+  end do
+  !$omp end parallel do
 end subroutine
 
 

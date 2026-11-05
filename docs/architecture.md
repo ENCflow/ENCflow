@@ -47,6 +47,8 @@ main.f90 ─ m_main.f90(組み立て・時間ループ・終了処理。複数�
   │    m_glacier     氷河(加算: 質量収支(常時)/ flow / slide / ero / ava)
   │    m_lavaflow    溶岩流(噴火口ソース+Bingham 粘性重力流+固化→z。等温、または
   │                  f_lvtemp=1 で深さ平均温度 s%tl(冷却・η(T)・τ_y(T)・温度による固化。§51.7))
+  │    m_flow8       m_glacier・m_lavaflow の流動の 8 近傍の 9 点の共通部品(通過幅・塞がれた
+  │                  斜めの配分の動的な振り替え・斜めのエッジの勾配。gl_diagratio・lv_diagratio > 0。§96)
   │    m_bedmotion   規定底面運動(地盤変位の時刻歴 → z の増分。断層津波の発生。入力は
   │                  スナップショット表+累積変位ラスタ〔窓付き可〕、私有は前後 2 枚と
   │                  適用済み変位のみ。断層パラメータ→変位は前処理 utils/fault2disp。§70)

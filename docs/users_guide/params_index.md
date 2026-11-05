@@ -2,7 +2,7 @@
 
 [ユーザーガイド目次へ](../users_guide.md)
 
-namelist パラメータ名から章を引く索引です(アルファベット順、全 779 項目)。
+namelist パラメータ名から章を引く索引です(アルファベット順、全 781 項目)。
 この索引は list_*.f90 の namelist 宣言から機械抽出で生成されています
 (developer.md §35.1)。
 
@@ -475,6 +475,7 @@ namelist パラメータ名から章を引く索引です(アルファベット�
 | gl_cfl | &list_glacier | [氷河](glacier.md) |
 | gl_ddfi | &list_glacier | [氷河](glacier.md) |
 | gl_dens | &list_glacier | [氷河](glacier.md) |
+| gl_diagratio | &list_glacier | [氷河](glacier.md) |
 | gl_kg | &list_glacier | [氷河](glacier.md) |
 | gl_lc | &list_glacier | [氷河](glacier.md) |
 | gl_lexp | &list_glacier | [氷河](glacier.md) |
@@ -534,6 +535,7 @@ namelist パラメータ名から章を引く索引です(アルファベット�
 | lv_cell | &list_lavaflow | [溶岩流](lavaflow.md) |
 | lv_cfl | &list_lavaflow | [溶岩流](lavaflow.md) |
 | lv_cp | &list_lavaflow | [溶岩流](lavaflow.md) |
+| lv_diagratio | &list_lavaflow | [溶岩流](lavaflow.md) |
 | lv_emis | &list_lavaflow | [溶岩流](lavaflow.md) |
 | lv_hconv | &list_lavaflow | [溶岩流](lavaflow.md) |
 | lv_nsubmax | &list_lavaflow | [溶岩流](lavaflow.md) |

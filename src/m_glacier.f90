@@ -82,6 +82,7 @@ module m_glacier
                          par_halo_cell, par_allreduce_max, par_gather_to, &
                          par_scatter_cell
   use m_util, only : itoa, rtoa, str2sec, param_default
+  use m_flow8, only : flow8_weights, flow8_open, flow8_diag_gs2
   implicit none
   private
 
@@ -111,13 +112,17 @@ module m_glacier
   integer, parameter :: fk2(1:8) = [8, 8, 6, 6, 1, 1, 3, 3]
 
   type t_glwork
-    real :: cw(1:4) = 0.0            ! エッジ伝導度重み(= 通過幅/距離。4近傍のみ)
+    real :: cw(1:4) = 0.0            ! エッジ伝導度重み(= 通過幅/距離。gl_diagratio = 0 では 4 近傍のみ)
+    real :: cwd(1:4) = 0.0           ! 8 近傍の振り替えの伝導度の増分(m_flow8 の flow8_weights。§96)
     real :: dist(1:4) = 0.0          ! エッジ法線方向のセル中心間距離 (m)
+    real :: diag = 0.0               ! SIA 流動の斜めの配分 d(gl_diagratio。0 = 4 近傍。§96)
     real :: dist8(1:8) = 0.0         ! 8近傍セル中心までの距離 (m)(雪崩の勾配用)
     real :: area = 0.0               ! セル面積 dx*dy (m2)
     real :: ainv = 0.0               ! 1 / (dx*dy)
     real :: rdx2 = 0.0               ! 1/dx^2 + 1/dy^2(安定条件用)
     real, allocatable :: q(:,:,:)    ! エッジ氷フラックス4成分 (m3/s)
+    real, allocatable :: ge(:,:,:)   ! エッジの伝導度 G = D·(cw + 振り替え) (m2/s)。8 近傍(diag > 0)のみ
+                                     !   確保。q と同形(パスA が書き、dt の決定とパスB が読む。§96)
     real, allocatable :: edz(:,:)    ! 侵食深の作業領域 (m)(1:nx, js:je)。
                                      !   2パス構造用: パス1が時刻 n の z+hi
                                      !   (近傍参照)から侵食深を計算し、
@@ -264,6 +269,10 @@ subroutine m_glacier_init(gl, p, g, s, mt)
     gl%cfl = list%gl_cfl
     if (list%gl_nsubmax < 1) call par_stop("list_glacier: gl_nsubmax must be >= 1")
     gl%nsubmax = list%gl_nsubmax
+    if (list%gl_diagratio < 0.0 .or. list%gl_diagratio > 1.0) then
+      call par_stop("list_glacier: gl_diagratio must be in [0, 1]")
+    end if
+    gl%glw%diag = list%gl_diagratio
   end if
 
   ! --- Weertman 滑動(G3) ---
@@ -322,14 +331,19 @@ subroutine m_glacier_init(gl, p, g, s, mt)
   gl%glw%area = g%dx * g%dy
   gl%glw%ainv = 1.0 / gl%glw%area
   gl%glw%rdx2 = 1.0 / g%dx**2 + 1.0 / g%dy**2
-  gl%glw%cw(1) = 0.0             ! 斜め(未使用。calc_creep と同じ4近傍)
-  gl%glw%cw(2) = g%dx / g%dy
-  gl%glw%cw(3) = 0.0
-  gl%glw%cw(4) = g%dy / g%dx
-  gl%glw%dist(1) = 0.0
-  gl%glw%dist(2) = g%dy
-  gl%glw%dist(3) = 0.0
-  gl%glw%dist(4) = g%dx
+  if (gl%glw%diag > 0.0) then
+    ! 8 近傍の 9 点の伝導度と振り替えの増分(m_flow8。§96)
+    call flow8_weights(g, gl%glw%diag, gl%glw%cw, gl%glw%cwd, gl%glw%dist)
+  else
+    gl%glw%cw(1) = 0.0             ! 斜め(未使用。calc_creep と同じ4近傍)
+    gl%glw%cw(2) = g%dx / g%dy
+    gl%glw%cw(3) = 0.0
+    gl%glw%cw(4) = g%dy / g%dx
+    gl%glw%dist(1) = 0.0
+    gl%glw%dist(2) = g%dy
+    gl%glw%dist(3) = 0.0
+    gl%glw%dist(4) = g%dx
+  end if
   gl%glw%dist8(1) = sqrt(g%dx**2 + g%dy**2)
   gl%glw%dist8(2) = g%dy
   gl%glw%dist8(3) = gl%glw%dist8(1)
@@ -343,6 +357,7 @@ subroutine m_glacier_init(gl, p, g, s, mt)
     ! (m_geomorph の wrk%q と同形)。確保時 0: マスク起因で書かれない
     ! エッジは恒久 0(無フラックス)
     allocate(gl%glw%q(1:4, dcp%ish-1:dcp%ieh, dcp%jsh-1:dcp%jeh), source = 0.0)
+    if (gl%glw%diag > 0.0) allocate(gl%glw%ge(1:4, dcp%ish-1:dcp%ieh, dcp%jsh-1:dcp%jeh), source = 0.0)
   end if
   if (gl%f_ero > 0) then
     allocate(gl%glw%edz(dcp%ish:dcp%ieh, dcp%js:dcp%je), source = 0.0)
@@ -389,6 +404,11 @@ subroutine m_glacier_init(gl, p, g, s, mt)
   write(msg,'(a,i0,a,es10.3,a)') "glacier enabled (dt_glacier = ", gl%idt, &
         " steps, morfac = ", gl%morfac, ")"
   call par_info(trim(msg))
+  if (gl%glw%diag > 0.0) then
+    write(msg,'(a,f6.4,a)') "glacier: SIA flow on the 8-neighbour 9-point stencil (gl_diagratio = ", &
+                            gl%glw%diag, ") with dynamic reassignment of blocked diagonal shares"
+    call par_info(trim(msg))
+  end if
 end subroutine
 
 
@@ -477,6 +497,7 @@ subroutine m_glacier_dispose(gl, p, g, s)
                   // " over " // itoa(gl%glw%ntick) // " updates")
   end if
   if (allocated(gl%glw%q)) deallocate(gl%glw%q)
+  if (allocated(gl%glw%ge)) deallocate(gl%glw%ge)
   if (allocated(gl%glw%edz)) deallocate(gl%glw%edz)
   if (allocated(gl%glw%am)) deallocate(gl%glw%am)
   if (allocated(gl%glw%ad)) deallocate(gl%glw%ad)
@@ -582,6 +603,9 @@ end subroutine
 !     行 je+1 では je+2 まで読む(ハロ幅 2 の内側)
 !     パスC: 発散を取り hi を更新(自帯 js..je のみ)-> hi のハロ交換
 !   エッジ流量の反対称集計により氷体積は機械精度で厳密に保存される
+!   gl_diagratio > 0 では 8 近傍の 9 点(パスA・B を flow8_coef・flow8_flux に替える。
+!   斜めのエッジと塞がれた配分の動的な振り替え、dt はセルごとの伝導度の和、ドナー律速は
+!   1 エッジ 1/8。パスC は共通。m_lavaflow と同じ形。§96)
 !----------------------------------------------------------------------
 subroutine tick_flow(gl, g, s, dts)
   type(t_glacier), intent(inout) :: gl
@@ -607,40 +631,50 @@ subroutine tick_flow(gl, g, s, dts)
     end if
 
     ! --- パスA: 拡散係数の最大値と dt_sub の決定 ---
-    dmax = 0.0
-    !$omp parallel do schedule(static) private(i, j, k, in, jn, okc, sc, sn_, ds, gs2, gt, he, &
-    !$omp                                      dd) reduction(max: dmax)
-    do j = dcp%js, jt
-      do i = g%wx(1,j), g%wx(2,j)
-        if (g%x(i,j) <= 0) cycle
-        okc = (g%sw(i,j) <= 0)
-        do k = 2, 4, 2
-          in = i + din(k)
-          jn = j + djn(k)
-          if (.not. okc) cycle
-          if (g%x(in,jn) <= 0) cycle
-          if (g%sw(in,jn) > 0) cycle
-          he = 0.5 * (s%hi(i,j) + s%hi(in,jn))
-          if (he <= 0.0) cycle
-          sc = s%z(i,j) + s%hi(i,j)
-          sn_ = s%z(in,jn) + s%hi(in,jn)
-          ds = sc - sn_
-          gt = edge_tslope(g, s, i, j, in, jn)
-          gs2 = (ds / gl%glw%dist(k))**2 + gt * gt
-          dd = gl%gamd * he**5 * gs2 + gl%gams * he**4 * gs2
-          dmax = max(dmax, dd)
+    !   8 近傍(gl_diagratio > 0。§96)はエッジの伝導度 G を ge に置き、dmax にセルごとの
+    !   伝導度の和 Σ_k G_k の最大を返す(dt はその正値性の条件で決める)
+    if (gl%glw%diag > 0.0) then
+      call flow8_coef(gl, g, s, jt, dmax)
+    else
+      dmax = 0.0
+      !$omp parallel do schedule(static) private(i, j, k, in, jn, okc, sc, sn_, ds, gs2, gt, he, &
+      !$omp                                      dd) reduction(max: dmax)
+      do j = dcp%js, jt
+        do i = g%wx(1,j), g%wx(2,j)
+          if (g%x(i,j) <= 0) cycle
+          okc = (g%sw(i,j) <= 0)
+          do k = 2, 4, 2
+            in = i + din(k)
+            jn = j + djn(k)
+            if (.not. okc) cycle
+            if (g%x(in,jn) <= 0) cycle
+            if (g%sw(in,jn) > 0) cycle
+            he = 0.5 * (s%hi(i,j) + s%hi(in,jn))
+            if (he <= 0.0) cycle
+            sc = s%z(i,j) + s%hi(i,j)
+            sn_ = s%z(in,jn) + s%hi(in,jn)
+            ds = sc - sn_
+            gt = edge_tslope(g, s, i, j, in, jn)
+            gs2 = (ds / gl%glw%dist(k))**2 + gt * gt
+            dd = gl%gamd * he**5 * gs2 + gl%gams * he**4 * gs2
+            dmax = max(dmax, dd)
+          end do
         end do
       end do
-    end do
-    !$omp end parallel do
-    w1(1) = dmax
-    call par_allreduce_max(w1)
-    dmax = w1(1)
+      !$omp end parallel do
+      w1(1) = dmax
+      call par_allreduce_max(w1)
+      dmax = w1(1)
+    end if
 
     last = .true.
     dtsub = trem
     if (dmax > 0.0) then
-      dlim = gl%cfl * 0.5 / (dmax * gl%glw%rdx2)
+      if (gl%glw%diag > 0.0) then
+        dlim = gl%cfl * gl%glw%area / dmax     ! 自セルの係数 1 − dt Σ_k G_k / A >= 0(§96)
+      else
+        dlim = gl%cfl * 0.5 / (dmax * gl%glw%rdx2)
+      end if
       if (dlim < trem) then
         dtsub = dlim
         last = .false.
@@ -653,46 +687,51 @@ subroutine tick_flow(gl, g, s, dts)
     ! --- パスB: エッジ流量(ドナー律速つき) ---
     !   帯界面のエッジ成分 k=1..3(行 je)はハロ行 je+1 の書き手が担う
     !   (冗長計算。全域端では行が存在せず対象外)
-    !$omp parallel do schedule(static) private(i, j, k, in, jn, okc, sc, sn_, ds, gs2, gt, he, &
-    !$omp                                      dd, gq, qcap)
-    do j = dcp%js, jt
-      do i = g%wx(1,j), g%wx(2,j)
-        if (g%x(i,j) <= 0) cycle
-        okc = (g%sw(i,j) <= 0)
-        do k = 1, 4
-          in = i + din(k)
-          jn = j + djn(k)
-          ! 状態は毎回変わるため、条件を満たさない場合も必ず 0 を代入する
-          gq = 0.0
-          if (gl%glw%cw(k) > 0.0 .and. okc .and. g%x(in,jn) > 0) then
-            if (g%sw(in,jn) <= 0) then
-              he = 0.5 * (s%hi(i,j) + s%hi(in,jn))
-              if (he > 0.0) then
-                sc = s%z(i,j) + s%hi(i,j)
-                sn_ = s%z(in,jn) + s%hi(in,jn)
-                ds = sc - sn_
-                gt = edge_tslope(g, s, i, j, in, jn)
-                gs2 = (ds / gl%glw%dist(k))**2 + gt * gt
-                dd = gl%gamd * he**5 * gs2 + gl%gams * he**4 * gs2
-                ! エッジ流量(書き手 c から k 近傍 n に向かい正)(m3/s)
-                gq = dd * ds * gl%glw%cw(k)
-                ! ドナー律速: 1エッジの持ち出し ≤ ドナー氷体積の 1/4
-                ! (4エッジ合計 ≤ 全量 → hi >= 0 が構造的に成立)
-                if (ds > 0.0) then
-                  qcap = 0.25 * s%hi(i,j) * gl%glw%area / dtsub
-                  gq = min(gq, qcap)
-                else
-                  qcap = 0.25 * s%hi(in,jn) * gl%glw%area / dtsub
-                  gq = max(gq, -qcap)
+    !   8 近傍(§96)はパスA の伝導度 ge から(ドナー律速は 1 エッジ 1/8)
+    if (gl%glw%diag > 0.0) then
+      call flow8_flux(gl, g, s, jt, dtsub)
+    else
+      !$omp parallel do schedule(static) private(i, j, k, in, jn, okc, sc, sn_, ds, gs2, gt, he, &
+      !$omp                                      dd, gq, qcap)
+      do j = dcp%js, jt
+        do i = g%wx(1,j), g%wx(2,j)
+          if (g%x(i,j) <= 0) cycle
+          okc = (g%sw(i,j) <= 0)
+          do k = 1, 4
+            in = i + din(k)
+            jn = j + djn(k)
+            ! 状態は毎回変わるため、条件を満たさない場合も必ず 0 を代入する
+            gq = 0.0
+            if (gl%glw%cw(k) > 0.0 .and. okc .and. g%x(in,jn) > 0) then
+              if (g%sw(in,jn) <= 0) then
+                he = 0.5 * (s%hi(i,j) + s%hi(in,jn))
+                if (he > 0.0) then
+                  sc = s%z(i,j) + s%hi(i,j)
+                  sn_ = s%z(in,jn) + s%hi(in,jn)
+                  ds = sc - sn_
+                  gt = edge_tslope(g, s, i, j, in, jn)
+                  gs2 = (ds / gl%glw%dist(k))**2 + gt * gt
+                  dd = gl%gamd * he**5 * gs2 + gl%gams * he**4 * gs2
+                  ! エッジ流量(書き手 c から k 近傍 n に向かい正)(m3/s)
+                  gq = dd * ds * gl%glw%cw(k)
+                  ! ドナー律速: 1エッジの持ち出し ≤ ドナー氷体積の 1/4
+                  ! (4エッジ合計 ≤ 全量 → hi >= 0 が構造的に成立)
+                  if (ds > 0.0) then
+                    qcap = 0.25 * s%hi(i,j) * gl%glw%area / dtsub
+                    gq = min(gq, qcap)
+                  else
+                    qcap = 0.25 * s%hi(in,jn) * gl%glw%area / dtsub
+                    gq = max(gq, -qcap)
+                  end if
                 end if
               end if
             end if
-          end if
-          gl%glw%q(k, i+die(k), j+dje(k)) = gq
+            gl%glw%q(k, i+die(k), j+dje(k)) = gq
+          end do
         end do
       end do
-    end do
-    !$omp end parallel do
+      !$omp end parallel do
+    end if
 
     ! --- パスC: 発散を取り hi を更新 ---
     !$omp parallel do schedule(static) private(i, j, k, dv)
@@ -716,6 +755,128 @@ subroutine tick_flow(gl, g, s, dts)
   end do
 
   gl%glw%nsubtot = gl%glw%nsubtot + nsub
+end subroutine
+
+
+!----------------------------------------------------------------------
+! 8 近傍のパスA(gl_diagratio > 0。tick_flow の部品。§96。m_lavaflow の flow8_coef と同じ形)
+!   エッジの伝導度 G = D·(cw + 振り替え量·cwd) を ge に置き(書き手 js..jt。各スロットの
+!   書き手は 1 つ)、自帯のセルごとの和 Σ_k G_k(8 方向。パスC の集計と同じ)の全域の
+!   最大を smax に返す(allreduce。全ランク同一)。
+!   D は 4 近傍と同じ SIA の式 Γ he⁵|∇s|² + As(ρg)³ he⁴|∇s|²。|∇s|² は軸のエッジで
+!   Sn² + St²(St = edge_tslope)、斜めのエッジで角点の勾配(m_flow8 の flow8_diag_gs2)。
+!   振り替え量(案 A。m_flow8 の flow8_open)は、水の f_opening_dynamic = 3 と同じ規則を氷面に
+!   当てはめた塞がり率の和の 1/2(斜め先の地盤が始点の氷面よりどれだけ高いか。局所の平面
+!   からの盛り上がりで頭打ち)。読むのは書き手と近傍のセル、その横 ±1(行 js−1..je+2・列は
+!   行窓 ±1)= ハロ幅 2 の内側
+!----------------------------------------------------------------------
+subroutine flow8_coef(gl, g, s, jt, smax)
+  type(t_glacier), intent(inout) :: gl
+  type(t_geoinfo), intent(in) :: g
+  type(t_state), intent(in) :: s
+  integer, intent(in) :: jt
+  real, intent(out) :: smax
+  integer :: i, j, k, in, jn
+  real :: ds, gt, gs2, he, dd, gg, sb, sm
+  real :: w1(1)
+  logical :: okc
+
+  !$omp parallel do schedule(static) private(i, j, k, in, jn, okc, ds, gt, gs2, he, dd, gg, sb)
+  do j = dcp%js, jt
+    do i = g%wx(1,j), g%wx(2,j)
+      if (g%x(i,j) <= 0) cycle
+      okc = (g%sw(i,j) <= 0)
+      do k = 1, 4
+        in = i + din(k)
+        jn = j + djn(k)
+        ! 状態は毎回変わるため、条件を満たさない場合も必ず 0 を代入する
+        gg = 0.0
+        if (okc .and. g%x(in,jn) > 0) then
+          if (g%sw(in,jn) <= 0) then
+            he = 0.5 * (s%hi(i,j) + s%hi(in,jn))
+            if (he > 0.0) then
+              if (mod(k, 2) == 0) then
+                ds = (s%z(i,j) + s%hi(i,j)) - (s%z(in,jn) + s%hi(in,jn))
+                gt = edge_tslope(g, s, i, j, in, jn)
+                gs2 = (ds / gl%glw%dist(k))**2 + gt * gt
+              else
+                gs2 = flow8_diag_gs2(g, s%z, s%hi, k, i, j)
+              end if
+              dd = gl%gamd * he**5 * gs2 + gl%gams * he**4 * gs2
+              ! 振り替え(案 A。塞がり率の和の 1/2 を cwd に掛けて足す。m_flow8)
+              sb = flow8_open(g, s%z, s%hi, k, i, j)
+              gg = dd * (gl%glw%cw(k) + sb * gl%glw%cwd(k))
+            end if
+          end if
+        end if
+        gl%glw%ge(k, i+die(k), j+dje(k)) = gg
+      end do
+    end do
+  end do
+  !$omp end parallel do
+
+  ! セルごとの伝導度の和(8 方向。パスC と同じ集計)の最大
+  smax = 0.0
+  !$omp parallel do schedule(static) private(i, j, k, sm) reduction(max: smax)
+  do j = dcp%js, dcp%je
+    do i = g%wx(1,j), g%wx(2,j)
+      if (g%x(i,j) <= 0) cycle
+      if (g%sw(i,j) > 0) cycle
+      sm = 0.0
+      do k = 1, 8
+        sm = sm + gl%glw%ge(ke(k), i+die(k), j+dje(k))
+      end do
+      smax = max(smax, sm)
+    end do
+  end do
+  !$omp end parallel do
+  w1(1) = smax
+  call par_allreduce_max(w1)
+  smax = w1(1)
+end subroutine
+
+
+!----------------------------------------------------------------------
+! 8 近傍のパスB(gl_diagratio > 0。tick_flow の部品。§96)
+!   エッジ流量 = G·(s_c − s_n)(G はパスA の ge)。ドナー律速は 1 エッジの持ち出し ≤ ドナーの
+!   氷体積の 1/8(8 エッジの合計 ≤ 全量 → hi >= 0)
+!----------------------------------------------------------------------
+subroutine flow8_flux(gl, g, s, jt, dtsub)
+  type(t_glacier), intent(inout) :: gl
+  type(t_geoinfo), intent(in) :: g
+  type(t_state), intent(in) :: s
+  integer, intent(in) :: jt
+  real, intent(in) :: dtsub
+  integer :: i, j, k, in, jn
+  real :: ds, gg, gq, qcap
+
+  !$omp parallel do schedule(static) private(i, j, k, in, jn, ds, gg, gq, qcap)
+  do j = dcp%js, jt
+    do i = g%wx(1,j), g%wx(2,j)
+      if (g%x(i,j) <= 0) cycle
+      do k = 1, 4
+        in = i + din(k)
+        jn = j + djn(k)
+        gq = 0.0
+        gg = gl%glw%ge(k, i+die(k), j+dje(k))
+        if (gg > 0.0) then
+          ds = (s%z(i,j) + s%hi(i,j)) - (s%z(in,jn) + s%hi(in,jn))
+          ! エッジ流量(書き手 c から k 近傍 n に向かい正)(m3/s)
+          gq = gg * ds
+          ! ドナー律速: 1エッジの持ち出し ≤ ドナー氷体積の 1/8(8 エッジ)
+          if (ds > 0.0) then
+            qcap = 0.125 * s%hi(i,j) * gl%glw%area / dtsub
+            gq = min(gq, qcap)
+          else
+            qcap = 0.125 * s%hi(in,jn) * gl%glw%area / dtsub
+            gq = max(gq, -qcap)
+          end if
+        end if
+        gl%glw%q(k, i+die(k), j+dje(k)) = gq
+      end do
+    end do
+  end do
+  !$omp end parallel do
 end subroutine
 
 

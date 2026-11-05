@@ -70,8 +70,12 @@ architecture.md。このメモは「現在進行中・未完了の項目」だ�
      reference はなく更新不要。**残り**: examples/stratovolcano の最後の段(run_flow.py の温度モードの溶岩流)の
      README の数値(到達距離・面積・最大の厚さ・固まった時刻・熱の損失、test/lava 構成 9 の「2.6 倍」の引用)と
      図の回し直し(結果を利用者が目視確認してから README を更新する)。
-   - (c) 段 3: 氷河の SIA・溶岩流の流動の 8 近傍化は設計案だけ(landslide_tsunami_plan.md §11.1。塞がれた斜めの
-     振り替えの規則 = 案 A・B、d、既定の扱いを決めてから実装)。
+   - (c) 段 3(実装 2026-11-05。利用者の決定「入れる、A で」。developer.md §96): 氷河の SIA・溶岩流の流動の
+     8 近傍の 9 点を選択式で足した(`gl_diagratio`・`lv_diagratio`。既定 0 = 4 近傍とビット一致、推奨 1/3。塞がれた
+     斜めの配分を流れの厚さに応じて振り替える案 A。test/lava 構成 4'・11、test/glacier 構成 6・7)。**残る判断
+     (利用者の確認待ち)**: 既定を 1/3 にするか(変えると、溶岩・氷河を流す test(test/lava・test/glacier の既存の
+     構成。reference はない)と例題 shield_volcano・stratovolcano(溶岩流)、氷河の例題の結果が変わる。計算時間は
+     1 割余り増)。45° の帯の縁で通水能が多めに出る分(3 本で +6.5 %)を消す、流れの向きを見る振り替えは候補。
    - (d) 湿潤侵食の剥離深の横方向拡散 wet_lw(§84.16)も同じ 5 点の核を使う(合意の範囲外。9 点にするなら
      spl_diagratio と同じ形で足せる)。
    - (e) 地下水の側方流 `gw_diagratio`(と同じ通過幅を使う `salt_diagratio`)の既定を 1/3 にするか(developer.md

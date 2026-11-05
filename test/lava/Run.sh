@@ -15,6 +15,9 @@
 # 構成10: 熱の横断の数値拡散(温度モード・冷却なし。0° と 45° のシート流を 1 次風上と
 #         MUSCL(f_lvtemp_scheme = 3)で。0° は拡散なし、45° の 1 次は修正方程式の 0.354·u·Δx、
 #         MUSCL はその 1/4 未満)
+# 構成4': 構成4 と同じ入力を流動の 8 近傍の 9 点(lv_diagratio = 1/3。§96)で(検定は構成4 と同じ)
+# 構成11: 谷の通水能の向きによる差(8 近傍の 9 点 d = 1/3 と塞がれた配分の振り替え。0° と 45° の
+#         1 セル幅・3 セル幅の谷の Newton 流体の一様流。45° の 3 本は 4 近傍の対照つき。§96)
 # 合否は Check_lava.py。save は save*_serial にも複製(Run_MPI 比較用)
 
 sdir=$(dirname "$(readlink -f "$0")")
@@ -26,8 +29,11 @@ python3 "$sdir/make_init.py" cool > cool_cells.txt
 python3 "$sdir/make_init.py" run > zrun.txt
 python3 "$sdir/make_init.py" x0 > wrk_zx0.txt
 python3 "$sdir/make_init.py" x45 > wrk_zx45.txt
-for k in x0c1 x0c2 x45c1 x45c2; do
+for k in x0c1 x0c2 x45c1 x45c2 ch0w1c ch0w3c ch45w1c ch45w3c; do
     python3 "$sdir/make_init.py" $k > wrk_$k.txt
+done
+for k in ch0w1 ch0w3 ch45w1 ch45w3; do
+    python3 "$sdir/make_init.py" $k > wrk_z$k.txt
 done
 
 rc=0
@@ -70,6 +76,14 @@ set +o pipefail
 echo ""
 python3 "$sdir/Check_lava.py" save_dome dome || rc=1
 rm -rf save_dome_serial && cp -r save_dome save_dome_serial
+
+# 構成4': 構成4 と同じ入力を流動の 8 近傍の 9 点(lv_diagratio = 1/3)で(§96)
+set -o pipefail
+./encflow param_dome8.txt | tee -a Screen.log || exit 1
+set +o pipefail
+echo ""
+python3 "$sdir/Check_lava.py" save_dome8 dome || rc=1
+rm -rf save_dome8_serial && cp -r save_dome8 save_dome8_serial
 
 # 構成5: 溶岩より高い壁の前にたまった溶岩の固化(§51.5)
 set -o pipefail
@@ -176,6 +190,18 @@ set +o pipefail
 echo ""
 python3 "$sdir/Check_lava.py" - xdiff || rc=1
 for c in x0 x0m x45 x45m; do
+    rm -rf save_${c}_serial && cp -r save_$c save_${c}_serial
+done
+
+# 構成11: 谷の通水能の向きによる差(8 近傍の 9 点と塞がれた配分の振り替え。§96)
+set -o pipefail
+for c in ch0w1 ch45w1 ch0w3 ch45w3 ch45w3q; do
+    ./encflow param_$c.txt | tee Screen_$c.log || exit 1
+done
+set +o pipefail
+echo ""
+python3 "$sdir/Check_lava.py" - chan || rc=1
+for c in ch0w1 ch45w1 ch0w3 ch45w3 ch45w3q; do
     rm -rf save_${c}_serial && cp -r save_$c save_${c}_serial
 done
 

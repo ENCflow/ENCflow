@@ -16,6 +16,14 @@
 #               j=11..20)。引数 x0c1 / x0c2
 #   wrk_x45c1.txt / wrk_x45c2.txt : 構成10 の 45° の噴火口(反対角線 i+j=33 の
 #               i=3..16(i<j)と i=17..30(i>j))。引数 x45c1 / x45c2
+#   wrk_zch0w1.txt / wrk_zch0w3.txt : 構成11(8 近傍の谷の通水能)の 0° の谷。勾配 tanθ = 0.1 の
+#               x 方向の斜面(nx=100, ny=11, dx=5。z = ST*(NX - i)*dx)の、行 j = 6(1 セル)・
+#               j = 5..7(3 セル)の谷を残して両側を 20 m 高くした地形。引数 ch0w1 / ch0w3
+#   wrk_zch45w1.txt / wrk_zch45w3.txt : 構成11 の 45° の谷((1,1) 方向の斜面 nx=ny=72、
+#               z = ST*(2*N - (i + j))*dx/√2 の、|i − j| = 0(1 本)・≤ 1(3 本)の帯を残して
+#               両側を 20 m 高くした地形)。引数 ch45w1 / ch45w3
+#   wrk_ch0w1c.txt ほか : 構成11 の噴火口(0°: 列 i = 3 の谷のセル、45°: i + j = 8・9 の帯の
+#               セル)。引数 ch0w1c / ch0w3c / ch45w1c / ch45w3c
 #   (wrk_* は git の対象外。Run.sh・Run_MPI.sh が毎回作る)
 # 構成1(Huppert)・構成4(ドーム)は平坦床 f_ztype=0 のため生成不要。
 # 範囲・定数は param_ty.txt / param_wall.txt / param_cool.txt / param_run*.txt /
@@ -43,6 +51,28 @@ elif kind in ("x45c1", "x45c2"):
     i1, i2 = (3, 16) if kind == "x45c1" else (17, 30)
     for i in range(i1, i2 + 1):
         print("%d %d" % (i, 33 - i))
+elif kind in ("ch0w1", "ch0w3", "ch45w1", "ch45w3"):
+    NC0, MC0, NC45, DXC, STC, HWC = 100, 11, 72, 5.0, 0.1, 20.0
+    m = 0 if kind.endswith("w1") else 1
+    if kind.startswith("ch0"):
+        for j in range(1, MC0 + 1):
+            print(" ".join("%.6f" % (STC * (NC0 - i) * DXC + (0.0 if abs(j - 6) <= m else HWC))
+                           for i in range(1, NC0 + 1)))
+    else:
+        for j in range(1, NC45 + 1):
+            print(" ".join("%.6f" % (STC * (2 * NC45 - (i + j)) * DXC / math.sqrt(2.0)
+                                     + (0.0 if abs(i - j) <= m else HWC))
+                           for i in range(1, NC45 + 1)))
+elif kind in ("ch0w1c", "ch0w3c", "ch45w1c", "ch45w3c"):
+    m = 0 if "w1" in kind else 1
+    if kind.startswith("ch0"):
+        for j in range(6 - m, 6 + m + 1):
+            print("%d %d" % (3, j))
+    else:
+        for i in range(1, 73):
+            for j in range(1, 73):
+                if abs(i - j) <= m and i + j in (8, 9):
+                    print("%d %d" % (i, j))
 elif kind == "run":
     NXR, NYR, DXR, STR = 64, 8, 5.0, 0.1
     LXR = NXR * DXR

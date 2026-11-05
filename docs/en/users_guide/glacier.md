@@ -133,6 +133,7 @@ default $`A`$ = 1e-16 Pa⁻³ yr⁻¹ is the recommended value for temperate ice
 | gl_afl | 1.0e-16 | Glen flow-law coefficient A (Pa⁻³ yr⁻¹); ~1e-16 for temperate ice |
 | gl_cfl | 0.4 | Numerical stability safety factor (normally leave unchanged) |
 | gl_nsubmax | 10000 | Upper bound on internal iterations per update (guards against runaway parameters) |
+| gl_diagratio | 0 | Diagonal share d of the SIA flow (0 = 4-neighbour; above 0, the 8-neighbour 9-point stencil, which reassigns blocked diagonal shares according to the ice thickness; recommended 1/3; see below) |
 
 You do not need to worry about the time step: the model checks the
 stability condition from the current ice thickness and slope at every
@@ -150,6 +151,28 @@ does not enter the diffusivity). Before the change of 2026-11-03 only the
 gradient across the boundary was used, so ice flowed less readily along the
 diagonals and was biased toward the grid axes (−5.5% in the same check;
 developer.md Sec. 45.1).
+
+On the 4-neighbour grid, ice flows less easily down a narrow valley oblique to
+the grid. A diagonal valley one cell wide, whose cells touch only at corners,
+does not flow at all, and in a band of three diagonal lines the ice lags behind
+a valley along a grid axis (test/glacier configuration 7: the centroid of a
+bump of ice placed in the valley moves 0.87 times as far in two years as along
+a grid axis). `gl_diagratio = d > 0` puts the SIA flow on the 8-neighbour
+9-point stencil (with diagonal edges) and, according to the ice thickness,
+returns the shares blocked where the bed of the diagonal neighbour rises above
+the ice surface to the axis edges that cross the same boundary, and, in a
+diagonal valley whose axis neighbours are blocked, the axis shares to the
+diagonal edges (the same rule as the dynamic reassignment of surface water,
+f_opening_dynamic = 3; shared with `lv_diagratio` of lava flows; developer.md
+Sec. 96). With d = 1/3 the ice in a diagonal valley advances 1.00 times as far
+as along a grid axis for one line and 1.02 times for three lines, and the sector
+ratio of the Halfar dome moves closer to the analytic one (+0.6 % → +0.4 %;
+configuration 6). The default is 0 (bit-identical to earlier results). As for
+lava flows, the reassignment rule gives slightly too much conveyance at the
+edges of a diagonal band (+6.5 % for uniform flow in a band of three lines of
+lava), and in a diagonal valley the cells along the valley are √2 times farther
+apart, so the resolution along the valley is coarser ("Constraints and
+interactions" in [Lava flows](lavaflow.md)).
 
 No ice is placed on the cells of the sea mask (fn_sw): the sea area of the
 initial ice thickness fn_glacier_hi0 is zeroed, and neither the flow nor
@@ -446,6 +469,7 @@ The labels in the Basis column are explained in [How to read the basis of a defa
 | gl_tmelt | 0 °C | temperature threshold of ice melt | **customary value** standard of the degree-day method |
 | gl_afl | 1e-16 Pa⁻³ yr⁻¹ | Glen flow-law coefficient $`A`$ | **literature value** recommended value for temperate ice (0 °C)[^cuffey10]; Glen's $`n`$ = 3 fixed[^glen55] |
 | gl_cfl / gl_nsubmax | 0.4 / 10000 | sub-cycle safety factor and cap | **numerical** |
+| gl_diagratio | 0 | diagonal share d of the SIA flow | **method** 0 = 4-neighbour as before (results unchanged). 1/3 for glaciers in narrow valleys oblique to the grid (the 8-neighbour 9-point stencil with reassignment of blocked shares; configuration 7; [Choosing the diagonal ratio d](diagratio.md)). Whether to make 1/3 the default is under consideration |
 | gl_as | 1e-13 m yr⁻¹ Pa⁻³ | Weertman sliding coefficient $`A_s`$ ($`m`$ = 3 fixed[^weertman57]) | **derived** 100 m/yr at a basal shear stress of 100 kPa (typical 50–150 kPa[^cuffey10]) = the fast side of mountain glaciers |
 | gl_kg / gl_lexp | 1e-4 / 1 | erosion coefficient $`K_g`$ and exponent $`l`$ | **literature value** Variegated Glacier measurement, erosion rate ≈ 1e-4 × sliding speed[^humphrey94]; 1e-7–1e-6 for $`l`$ = 2[^herman15] |
 | gl_lc | max(500 m, 2Δx) | erosion coupling length | **literature value** between the measured coupling lengths of valley glaciers, 450–625 m (Blue and Variegated Glaciers)[^kamb86]; Variegated Glacier is also the source of gl_kg. 2Δx when twice the grid spacing is longer (**numerical setting**: the floor that stops the grid-scale concentration). 0 is the local τb |
@@ -470,7 +494,7 @@ The labels in the Basis column are explained in [How to read the basis of a defa
 
 ## Tests and examples
 
-- [test/glacier/](../../../test/glacier/en/README.md): benchmark against the SIA analytical solution (including a check that the result does not depend on the grid orientation), the cirque-formation test, a check of the isotropy of the avalanche redistribution, and a check of the erosion coupling length (idealised verification experiments).
+- [test/glacier/](../../../test/glacier/en/README.md): benchmark against the SIA analytical solution (including a check that the result does not depend on the grid orientation, also with the 8-neighbour 9-point stencil), the cirque-formation test, a check of the isotropy of the avalanche redistribution, a check of the erosion coupling length, and a check of ice flow in valleys at 0° and 45° (independent of the orientation with the 8-neighbour 9-point stencil and reassignment) (idealised verification experiments).
 - [examples/glacier_valley/](../../../examples/glacier_valley/en/README.md): an example that grows a glacier in a fluvial V-shaped valley and looks at where 6000 years of erosion concentrate and how fast they proceed. A supplement with ten times the erosion coefficient (60,000 years of erosion) and a lake stage shows closed basins with lakes, the step of a hanging valley and the shortening of the glacier by erosion, and the limit that no U-shaped cross-section forms.
 - Worked example of the format: [examples/List_samples/en/list_glacier.txt](../../../examples/List_samples/en/list_glacier.txt).
 

@@ -11,7 +11,11 @@
 #   5) 侵食の結合長 gl_lc(param_lc.txt・param_lc2.txt・param_lc0.txt・
 #      param_lc02.txt): V 字谷の侵食の形が gl_lc > 0 では格子によらず氷の幅に
 #      広がること(gl_lc = 0 との比較)
-# 判定は Check_halfar.py / Check_cirque.py / Check_ava.py / Check_lc.py
+#   6) Halfar ドームを SIA 流動の 8 近傍の 9 点(gl_diagratio = 1/3。§96)で
+#      (param_d8.txt。判定は 1) と同じ)
+#   7) 谷の氷の流れの向きによる差(param_ch*.txt。8 近傍の 9 点と塞がれた配分の
+#      振り替え。0° と 45° の 1 セル幅・3 セル幅の谷。45° の 3 本は 4 近傍の対照つき。§96)
+# 判定は Check_halfar.py / Check_cirque.py / Check_ava.py / Check_lc.py / Check_chan.py
 
 sdir=$(dirname "$(readlink -f "$0")")
 
@@ -27,6 +31,10 @@ set -o pipefail
 for c in lc lc2 lc0 lc02; do
     ./encflow param_$c.txt | tee Screen_$c.log || exit 1
 done
+./encflow param_d8.txt | tee Screen_d8.log || exit 1
+for c in ch0w1 ch45w1 ch0w3 ch45w3 ch45w3q; do
+    ./encflow param_$c.txt | tee Screen_$c.log || exit 1
+done
 set +o pipefail
 echo ""
 
@@ -35,6 +43,8 @@ python3 "$sdir/Check_halfar.py" result Screen.log || rc=1
 python3 "$sdir/Check_cirque.py" result_cirque || rc=1
 python3 "$sdir/Check_ava.py" result_ava Screen_ava.log || rc=1
 python3 "$sdir/Check_lc.py" || rc=1
+python3 "$sdir/Check_halfar.py" result_d8 Screen_d8.log || rc=1
+python3 "$sdir/Check_chan.py" || rc=1
 
 # 構成3: 最小入力(既定値)と構成3'(既定値の明示)の同値検定(§65)
 set -o pipefail

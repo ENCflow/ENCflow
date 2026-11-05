@@ -47,6 +47,10 @@
                             !   from D_max)
   !gl_cfl = 0.4             ! subcycling safety factor (0-1)
   !gl_nsubmax = 10000       ! upper bound of subcycles per update (guard)
+  !gl_diagratio = 0.0       ! diagonal share d of the SIA flow (default 0 = 4-neighbour; 1/3 = the
+                            !   8-neighbour 9-point stencil with dynamic reassignment of blocked
+                            !   diagonal shares, for glaciers in narrow valleys oblique to the grid;
+                            !   developer.md Sec. 96)
 
   ! ---- Weertman basal sliding (G3; requires f_glflow) ----
   f_glslide = 0             ! 1 to enable (us = As tau_b^3)

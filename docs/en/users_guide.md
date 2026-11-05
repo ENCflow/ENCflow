@@ -85,7 +85,7 @@ phenomenon-specific setups. Individual chapters also link to relevant cases.
 - [Use cases](users_guide/usecases.md) -- lookup from phenomenon names to feature combinations (unsupported phenomena are listed too)
 
 **Appendix**
-- [Full parameter index](users_guide/params_index.md) -- reverse lookup from all 779 parameter names to their chapters
+- [Full parameter index](users_guide/params_index.md) -- reverse lookup from all 781 parameter names to their chapters
 
 ---
 

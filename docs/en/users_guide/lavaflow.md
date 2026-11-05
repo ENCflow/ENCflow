@@ -124,6 +124,7 @@ following (calibration quantities):
 | lv_vsol | 5e-4 | stop-detection velocity threshold (m/s); typically 10⁻⁴–10⁻³; read only when lv_wsol>0 |
 | lv_cfl | 0.4 | safety factor of the explicit subcycling (0–1) |
 | lv_nsubmax | 10000 | cap on subcycles per update (runaway guard) |
+| lv_diagratio | 0 | diagonal share d of the flow (0 = 4-neighbour; above 0, the 8-neighbour 9-point stencil, which reassigns blocked diagonal shares according to the lava thickness; recommended 1/3; see "Valley orientation" below) |
 | lv_cell(1:2,k,n) | — | cell k (i, j) of vent n; vent numbers n are consecutive from 1 |
 | lv_q0(n) | — | constant effusion rate of vent n (m³/s) |
 | lv_val(1:2,k,n) | — | effusion time series (time (min), m³/s); overrides lv_q0 |
@@ -419,6 +420,7 @@ The labels in the Basis column are explained in [How to read the basis of a defa
 | lv_tauy | 0 | yield stress $`\tau_y`$ | **compatibility** 0 = Newtonian (the form verifiable against the similarity solution[^huppert82]); real lavas take the values of the type table above |
 | lv_wsol / lv_vsol | 0 / 5e-4 m/s | solidification rate / stop-detection velocity | **given** 0 = no solidification / **empirical** stop criterion 10⁻⁴–10⁻³ m/s (advance below 10–100 m per day) |
 | lv_cfl / lv_nsubmax | 0.4 / 10000 | sub-cycle safety factor and cap | **numerical** |
+| lv_diagratio | 0 | diagonal share d of the flow | **method** 0 = 4-neighbour as before (results unchanged). 1/3 for lava flowing down narrow valleys oblique to the grid (the 8-neighbour 9-point stencil with reassignment of blocked shares; configuration 11; [Choosing the diagonal ratio d](diagratio.md)). Whether to make 1/3 the default is under consideration |
 | lv_cell / lv_q0 / lv_val | — | vent cells and effusion rate | **given** eruption scenario (from total volume and duration) |
 | f_lvtemp | 0 | whether to compute the temperature | **method** 0 = isothermal (as before); 1 for flows that stop by cooling |
 | f_lvtemp_scheme | 3 | face temperature of the heat advection | **method** 3 = MUSCL + van Leer. Cuts the crosswind numerical diffusion of a flow oblique to the grid to about 1/10 of first-order upwind (configuration 10) and makes a flow that stops as it cools depend less on the cell size (the comparison of configuration 9 with different cells; developer.md Sec. 94). 1 = first-order upwind (the default before 2026-11-05; for reproducing results from before then) |
@@ -458,7 +460,10 @@ The labels in the Basis column are explained in [How to read the basis of a defa
   and the Bingham stopping thickness h∞ against analytic solutions, and
   the shape at rest of lava erupted from one vent on a flat bed until it
   stops, compared with the analytic plastic dome[^blake90] (a check that
-  the shape is the same along the grid axes and the diagonals), a check
+  the shape is the same along the grid axes and the diagonals, also with the
+  8-neighbour 9-point stencil), the conveyance of valleys one and three cells
+  wide at 0° and 45° (independent of the orientation with the 8-neighbour
+  9-point stencil and reassignment), a check
   that lava ponded against a 10 m step solidifies completely, up to the
   cells touching the wall, and a check that the soil layer under
   solidified lava is buried and the total water is conserved when the
@@ -521,7 +526,7 @@ The labels in the Basis column are explained in [How to read the basis of a defa
   viscosity, so to look only at the shape you can lower the viscosity to
   shorten the run (shorten the eruption by the same ratio and, when using
   solidification, raise lv_vsol and lv_wsol by the same ratio).
-- **Grid orientation**: the computation uses the 4-neighbour grid. Yield
+- **Grid orientation**: by default (`lv_diagratio = 0`) the computation uses the 4-neighbour grid. Yield
   and stopping are judged on the gradient magnitude, so the shape at rest
   of a dome on a flat bed is the same along the grid axes and the
   diagonals (in test/lava configuration 4 the area-equivalent radii of the
@@ -531,6 +536,30 @@ The labels in the Basis column are explained in [How to read the basis of a defa
   used. Before the change of 2026-11-03 only the gradient across the edge
   was used, and lava fields became diamonds elongated along the grid axes
   (developer.md Sec. 51.4).
+- **Valley orientation (lv_diagratio)**: on the 4-neighbour grid, lava flows
+  less easily down a narrow valley oblique to the grid. A diagonal valley one
+  cell wide, whose cells touch only at corners, does not flow at all (the lava
+  piles up at the vent), and a band of three diagonal lines carries 2/3 of the
+  flux of a valley along a grid axis ([test/lava](../../../test/lava/en/README.md)
+  configuration 11; uniform flow of a Newtonian fluid). `lv_diagratio = d > 0`
+  puts the flow on the 8-neighbour 9-point stencil (with diagonal edges) and,
+  according to the lava thickness, returns the shares blocked where the bed of
+  the diagonal neighbour rises above the lava surface to the axis edges that
+  cross the same boundary, and, in a diagonal valley whose axis neighbours are
+  blocked, the axis shares to the diagonal edges (the same rule as the dynamic
+  reassignment of surface water, f_opening_dynamic = 3; developer.md Sec. 96).
+  With d = 1/3 a valley along a grid axis keeps the conveyance of the
+  4-neighbour grid, a diagonal valley one cell wide flows with the same
+  conveyance, and a band of three lines carries +6.5 % (instead of −33 % on
+  the 4-neighbour grid). The shape at rest of a dome on a flat bed differs from
+  the analytic solution about as much as on the 4-neighbour grid (configuration
+  4'). The computation takes a little over 10 % longer. The default is 0
+  (bit-identical to earlier results). At the edges of a diagonal band the
+  reassignment rule gives slightly too much conveyance (+6.5 % for a band of
+  three lines, +4.0 % for five; it decreases as the band widens). In a
+  diagonal valley the cells along the valley are √2 times farther apart, so
+  the resolution along the valley is coarser than along a grid axis (a
+  property of the grid, with or without the 8-neighbour stencil).
 - Not supported with STG (f_gridsystem=1), nor together with geomorph
   morfac > 1 (lava is an event-time process).
 - **Temperature mode**: cannot be combined with solidification by a speed

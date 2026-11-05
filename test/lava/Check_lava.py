@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 # lava(溶岩流 = Bingham 粘性重力流)検定
-#   使い方: Check_lava.py <savedir> <huppert|bingham|dome|wall|bury|cool|adv|run|heat|xdiff> [画面出力のログ ...]
+#   使い方: Check_lava.py <savedir> <huppert|bingham|dome|wall|bury|cool|adv|run|heat|xdiff|chan> [画面出力のログ ...]
 #
 #   huppert モード(構成1: Newton 極限の相似解。param.txt と対):
 #     (1) 台帳    : |Σhl − V_in/A_cell| < TOL_SUM(注入は厳密加算・
@@ -70,6 +70,16 @@
 #                   セルの厚さの平均)
 #     (4) 45° MUSCL: 同じ D⊥ が 1 次の RATIO_M45 倍未満、溶岩のある全セルで
 #                   T_c ≤ Tl ≤ T_h(相対 1e-12 の余裕)
+#   chan モード(構成11: 谷の通水能の向きによる差。8 近傍の 9 点と塞がれた配分の振り替え。
+#   param_ch*.txt と対。<savedir> は使わず、save_ch0w1・ch45w1・ch0w3・ch45w3・ch45w3q を読む):
+#     通水能の比 k = Q/(W·(ρg/3η)·h³·S)(h は谷の中ほどの検定の範囲の溶岩厚の平均、W は谷の幅
+#     = 0° でセル数 × Δx、45° で本数 × Δx/√2。浅い流れの幅あたりの流量 (ρg/3η) h³ S と
+#     比べる。側壁の抵抗はモデルにないので、向きによらず k = 1 が正しい)
+#     (1) 台帳    : 5 つの計算で |Σhl − V_in/A_cell| < TOL_SUM
+#     (2) 0°      : 1 セル・3 セルの谷で |k − 1| < TOL_K0
+#     (3) 45° 1 本: |k − 1| < TOL_K1(4 近傍では斜めの 1 セル幅の谷はつながらず流れない)
+#     (4) 45° 3 本: |k − 1| < TOL_K3(帯の縁の振り替えの規則で通水能が多めに出る分を許す)、
+#                   4 近傍の対照(ch45w3q)は k < KQ3(検定がこの差を検出できること)
 import sys, struct, math, re
 
 TOL_SUM = 1.0e-8
@@ -142,6 +152,13 @@ NWIN45 = 70.0                                    # 横断の積分範囲 |n| (m)
 TOL_T0 = 1.0e-9
 DTH45, TOL_D45 = math.sqrt(2.0) / 4.0, 0.15      # 1 次風上の D⊥/(u Δx) の理論値と許容
 RATIO_M45 = 0.25
+# --- 構成11(param_ch*.txt・make_init.py ch* と対で保守)---
+RHO11, VISC11, ST11, DX11, TT11 = 2600.0, 1.0e3, 0.1, 5.0, 500.0
+C11 = RHO11 * GG / (3.0 * VISC11)                # 幅あたりの流量 = C11·h³·S (m2/s)
+CH11 = {"ch0w1": (100, 11, 1), "ch45w1": (72, 72, 1), "ch0w3": (100, 11, 3),
+        "ch45w3": (72, 72, 3), "ch45w3q": (72, 72, 3)}   # (nx, ny, 谷の幅のセル数・本数)
+J011, IST11, PST11 = 6, (40, 60), (64, 80)       # 0° の谷の中心の行・検定の列、45° の検定の i + j
+TOL_K0, TOL_K1, TOL_K3, KQ3 = 0.01, 0.02, 0.10, 0.80
 
 
 def read_rec(f):
@@ -544,6 +561,41 @@ elif mode == "xdiff":
     ok4 = dd["x45m"] < RATIO_M45 * dd["x45"] and okr
     print("(4) x45m MUSCL: D⊥/(u·Δx) = %.3f(1 次の %.2f 倍、tol < %.2f)、Tl = %.6f〜%.6f °C : %s"
           % (dd["x45m"], dd["x45m"] / dd["x45"], RATIO_M45, min(tw), max(tw), "PASS" if ok4 else "FAIL"))
+    ok = ok1 and ok2 and ok3 and ok4
+elif mode == "chan":
+    kk = {}
+    ok1 = True
+    for tag, (nx, ny, w) in CH11.items():
+        hl = load_hl("save_" + tag, nx, ny)
+        m = (w - 1) // 2
+        if tag.startswith("ch0"):
+            weff = w * DX11
+            st = [hl[(j - 1) * nx + i - 1] for i in range(IST11[0], IST11[1] + 1)
+                  for j in range(J011 - m, J011 + m + 1)]
+        else:
+            weff = w * DX11 / math.sqrt(2.0)
+            st = [hl[(j - 1) * nx + i - 1] for i in range(1, nx + 1) for j in range(1, ny + 1)
+                  if abs(i - j) <= m and PST11[0] <= i + j <= PST11[1]]
+        qq = float("%.6f" % (C11 * 1.0 ** 3 * ST11 * weff))   # param_ch*.txt の噴出率(厚さ 1 m の一様流)
+        vin = qq * TT11
+        res = sum(hl) * DX11 * DX11 - vin
+        okv = abs(res) < TOL_SUM * vin
+        ok1 = ok1 and okv
+        h = sum(st) / len(st)
+        kk[tag] = qq / (weff * C11 * h ** 3 * ST11)
+        print("    %-7s: Q = %.4f m3/s、W = %.3f m、検定の %d セルの h = %.4f m(%.4f〜%.4f)、k = %.4f、"
+              "台帳の差 %.1e m3 : %s" % (tag, qq, weff, len(st), h, min(st), max(st), kk[tag], res,
+                                       "PASS" if okv else "FAIL"))
+    print("(1) 台帳  : 5 つの計算で |sum(hl)*A - V_in| < %.0e 相対 : %s" % (TOL_SUM, "PASS" if ok1 else "FAIL"))
+    ok2 = abs(kk["ch0w1"] - 1.0) < TOL_K0 and abs(kk["ch0w3"] - 1.0) < TOL_K0
+    print("(2) 0°    : k = %.4f(1 セル)・%.4f(3 セル)(tol 1±%.2f) : %s"
+          % (kk["ch0w1"], kk["ch0w3"], TOL_K0, "PASS" if ok2 else "FAIL"))
+    ok3 = abs(kk["ch45w1"] - 1.0) < TOL_K1
+    print("(3) 45° 1 本: k = %.4f(tol 1±%.2f。4 近傍では流れない) : %s"
+          % (kk["ch45w1"], TOL_K1, "PASS" if ok3 else "FAIL"))
+    ok4 = abs(kk["ch45w3"] - 1.0) < TOL_K3 and kk["ch45w3q"] < KQ3
+    print("(4) 45° 3 本: k = %.4f(tol 1±%.2f)、4 近傍の対照 k = %.4f(tol < %.2f) : %s"
+          % (kk["ch45w3"], TOL_K3, kk["ch45w3q"], KQ3, "PASS" if ok4 else "FAIL"))
     ok = ok1 and ok2 and ok3 and ok4
 elif mode == "heat":
     e, rres = heat_ledger(sys.argv[3])

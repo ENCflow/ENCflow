@@ -1,4 +1,4 @@
-# test/glacier — glacier module: Halfar dome similarity solution, cirque-formation smoke test, isotropy of the avalanche redistribution, and the erosion coupling length
+# test/glacier — glacier module: Halfar dome similarity solution, cirque-formation smoke test, isotropy of the avalanche redistribution, the erosion coupling length, and ice flow in valleys (8 neighbours)
 
 > English mirror of test/glacier/README.md. The Japanese file is the master copy.
 
@@ -6,7 +6,7 @@
 
 This is the verification case of the glacier module (`fn_glacier`,
 [the glacier chapter of the users guide](../../../docs/en/users_guide/glacier.md)).
-It consists of five configurations (docs/glacier_plan.md §7, developer.md §45).
+It consists of seven configurations (docs/glacier_plan.md §7, developer.md §45 and §96).
 
 1. **Halfar dome** (`param.txt`): an ice cap on a flat bed with zero mass
    balance spreads by shallow-ice-approximation (SIA) flow. A quantitative
@@ -40,6 +40,22 @@ It consists of five configurations (docs/glacier_plan.md §7, developer.md §45)
    valley spreads over the ice width independently of the grid spacing (200 m
    and 100 m), and that without averaging (gl_lc = 0 = local τb, written explicitly)
    it concentrates on the valley axis and its shape changes with the grid.
+6. **Halfar dome with the 8-neighbour 9-point stencil** (`param_d8.txt`): the
+   same input as configuration 1 on the 8-neighbour 9-point stencil of the SIA
+   flow (`gl_diagratio = 1/3`, with dynamic reassignment of blocked diagonal
+   shares; developer.md §96); it must pass the same judgement as configuration
+   1 (Check_halfar.py).
+7. **Dependence of ice flow in valleys on their orientation**
+   (`param_ch0w1.txt`, `param_ch45w1.txt`, `param_ch0w3.txt`,
+   `param_ch45w3.txt`, `param_ch45w3q.txt`; `gl_diagratio = 1/3`): valleys one
+   and three cells wide at 0° and 45° are cut into a slope of 0.1 (walls 500 m
+   higher on both sides), a cos² bump of ice (up to 200 m, 1 km long along the
+   valley) placed in the valley flows for two years of landform time, and the
+   movement of the centroid of the ice volume along the valley is compared.
+   The SIA flux per unit width depends only on the ice thickness and the
+   surface gradient (no wall drag), so the ice should advance the same
+   distance whatever the orientation. The 4-neighbour control (`ch45w3q`,
+   `gl_diagratio = 0`) must lag behind.
 
 ## Configuration
 
@@ -73,10 +89,11 @@ thickness goes from 200 to 177 m and the radius spreads from 600 to 640 m.
 
 | File | Contents |
 |---|---|
-| `Make_input.py` | Generates `data/hi0.txt` (Halfar initial ice thickness), `data/zcone.txt` (conical mountain), and `data/zv*.txt` / `data/hiv*.txt` (V-shaped valley and initial ice of configuration 5) |
+| `Make_input.py` | Generates `data/hi0.txt` (Halfar initial ice thickness), `data/zcone.txt` (conical mountain), `data/zv*.txt` / `data/hiv*.txt` (V-shaped valley and initial ice of configuration 5), and `data/zch*.txt` / `data/hich*.txt` (valleys and ice bumps of configuration 7) |
 | `Check_halfar.py` | Judges the mean, maximum and central errors of the final ice thickness Hi9998 against the similarity solution, the ratio of the ice volumes in the sectors along the grid axes and the diagonals (isotropy), and the conservation of S_total (water equivalent of the ice) |
 | `Check_cirque.py` | Judges glacier formation (max Hi > 1 m), subglacial erosion (dz < −0.01 m), no uplift, and no NaN |
 | `Check_ava.py` | Configuration 4: judges the coefficient of variation of SWE on circles of radius 800–1600 m (< 0.08), the mean SWE on the 400 m circle (below 90% of the initial value, i.e. the redistribution works), and the conservation of the water equivalent |
+| `Check_chan.py` | Configuration 7: relative change of S_total in the five runs < 1e-12, and the ratio R = 45°/0° of the centroid movement along the valley within 1 ± 0.03 for one line and 1 ± 0.05 for three lines, with R < 0.92 for three lines in the 4-neighbour control (the check can detect the difference) |
 | `Check_lc.py` | Configuration 5: for the erosion across the valley (mean over x = 2–4 km), judges that with gl_lc = 400 m the difference between Δx = 200 m and 100 m is below 5% in relative L1; that the erosion spreads over the ice width more than with gl_lc = 0 (the width where erosion exceeds half its maximum at least twice as large, and the mean/maximum within the ice at least 0.15 larger); that it decreases monotonically from the valley axis to the ice margin; that with gl_lc = 0 the same comparison exceeds 5% (the check can detect the grid dependence); that erosion occurs only in ice-covered cells; and no uplift and no NaN |
 | `Fig.py` | Draws the figures `en/figs/*.png` below (`python3 Fig.py en`; `figs/*.png` are the Japanese versions) |
 
@@ -84,7 +101,7 @@ thickness goes from 200 to 177 m and the radius spreads from 600 to 640 m.
 
 ```bash
 make
-./Run.sh          # generate inputs → Halfar → cirque → avalanche → erosion coupling length → the 4 Checks → equivalence check of the defaults. PASS when all pass
+./Run.sh          # generate inputs → Halfar → cirque → avalanche → erosion coupling length → 8-neighbour Halfar → ice flow in valleys → the 6 Checks → equivalence check of the defaults. PASS when all pass
 ./Run_MPI.sh 4
 python3 Fig.py en # en/figs/halfar.png, en/figs/cirque.png, en/figs/avalanche.png, en/figs/lc.png
 ```
@@ -177,6 +194,11 @@ this 10-year check (for the long-term trial runs see developer.md §45.3).
 | Coupling length: width where erosion exceeds half its maximum / mean/maximum within the ice | 1200 m / 0.82 (400 m / 0.52 with gl_lc = 0) | at least twice / at least 0.15 larger | PASS |
 | Coupling length: erosion decreases monotonically from the valley axis to the ice margin | holds on both grids with gl_lc = 400 m (step at the margin with gl_lc = 0) | holds | PASS |
 | Coupling length: erosion in ice-free cells, uplift, NaN | none | none | PASS |
+| 8-neighbour Halfar (configuration 6): mean, maximum and central errors | 0.34 m / 12.2 m / 0.14 m | < 4 m / < 45 m / < 6 m | PASS |
+| 8-neighbour Halfar: isotropy (difference of the sector volume ratio from the analytic ratio) | +0.41% | < 2% | PASS |
+| Ice flow in valleys (configuration 7): ratio R = 45°/0° of the centroid movement, one line | 1.001 (142.3 m at 0°) | 1 ± 0.03 (no flow on 4 neighbours) | PASS |
+| Ice flow in valleys: the same, three lines / 4-neighbour control | 1.019 / 0.871 | 1 ± 0.05 / < 0.92 | PASS |
+| Ice flow in valleys: relative change of the ice volume S_total | 0 (all five runs) | < 1e-12 | PASS |
 
 - The SIA flow agrees with the similarity solution to 0.16% of H₀ on average,
   and the ice volume is conserved at machine precision owing to the
@@ -198,6 +220,21 @@ this 10-year check (for the long-term trial runs see developer.md §45.3).
   valley glaciers; for thin glaciers such as cirque glaciers lower it to about
   twice the ice thickness (guidelines in
   [the glacier chapter of the users guide](../../../docs/en/users_guide/glacier.md)).
+- Configurations 6 and 7 check the 8-neighbour 9-point stencil of the SIA flow
+  (`gl_diagratio`; default 0 = 4 neighbours; parts shared with `lv_diagratio` of
+  lava flows; developer.md §96). On 4 neighbours a diagonal valley one cell wide,
+  whose cells touch only at corners, does not let the ice flow (confirmed in a
+  trial; not in the check). A band of three lines flows only through the zigzag
+  of the axis edges and advances only 0.87 times as far as at 0° (`ch45w3q`).
+  With 8 neighbours the blocked diagonal shares are reassigned according to the
+  ice thickness, so the flow in a valley at 0° stays the same as on 4 neighbours,
+  and at 45° the ice advances 1.00 times as far for one line and 1.02 times for
+  three lines. In a valley at 45° the cells along the valley are √2 times
+  farther apart, so a slab of ice with a cliff shows a difference in the
+  resolution along the valley (R = 1.10 in a trial; ±1% when the spacing at 0°
+  is matched). Configuration 7 uses a smooth bump to make this difference
+  small. The field outputs of configurations 1–5 are byte-identical before and
+  after the addition of the 8 neighbours (default 0).
 - Ice temperature and polythermal structure, calving, subglacial hydrology and
   the like are not included. A long-term case that quantitatively confirms
   cirque formation on the 10⁴-year scale is a candidate for future extension

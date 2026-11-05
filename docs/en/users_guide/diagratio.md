@@ -161,7 +161,7 @@ shallow water flow is small.
 | Groundwater lateral flow (soil layer, layer 2) | `gw_diagratio` | 0.586 | 1/3 (a change of the default is under consideration) | A pure diffusion process (the measurements of §2.3). In exchange the time-step limit of the explicit scheme drops by 15 %, and the cap of the river-bed exchange (`f_gwbed`) drops by 8 % for a one-cell-wide channel |
 | Saltwater zone of the two-layer fresh/salt model | `salt_diagratio` | 0.586 | same as `gw_diagratio` | It shares the passage widths with the soil lateral flow (a different value stops the run) |
 | Conduit layer | `gwc_diagratio` | 0.586 | 0.586 | The capacity of a conduit following the raster one cell wide does not depend on its direction (§2.2). The conduit layer has no reassignment. Independent of the d of the lateral flow |
-| Glaciers and lava flows | (four neighbours; an eight-neighbour version is being designed) | — | 1/3 with reassignment, 0.586 without | Processes flowing in valleys, where both the conveyance and the isotropy matter ([landslide_tsunami_plan.md](../../landslide_tsunami_plan.md) §11.1, in Japanese) |
+| Flow of glaciers and lava | `gl_diagratio`, `lv_diagratio` | 0 (four neighbours) | 1/3 (changing the default is under consideration) | Processes flowing in valleys, where both the conveyance and the isotropy matter. The blocked diagonal shares are reassigned according to the thickness of the flow, so d can be chosen for isotropy while the conveyance of valleys along a grid axis is kept (with 1/3 a diagonal valley one cell wide has the same conveyance too; [Lava flows](lavaflow.md), developer.md §96, in Japanese) |
 
 <a id="usage"></a>
 
@@ -177,6 +177,10 @@ shallow water flow is small.
   the grid such as the drawdown cone of a well or a recharge mound. In runs that use
   `salt_diagratio`, give it the same value. The time-step limit drops, so check the line
   printed at initialisation (`gwflow_lateral: dt limit`).
+- For glaciers and lava flows down narrow valleys oblique to the grid, set
+  `gl_diagratio` and `lv_diagratio` = 1/3 (with the default 0 on four neighbours, a diagonal
+  valley one cell wide does not flow, and a band of three diagonal lines has 2/3 of the
+  conveyance). The computation takes a little over 10 % longer.
 - Some values go in pairs: `fluv_diagratio` and `bs_diagratio` take the same value as
   `p_diagratio`, and `salt_diagratio` the same value as `gw_diagratio`. `gwc_diagratio` of
   the conduit layer is independent.
@@ -190,7 +194,11 @@ shallow water flow is small.
 - What becomes isotropic at 1/3 is the leading error term of a linear diffusion operator
   with constant coefficients. Whether the same holds for nonlinear flows such as the flow
   law of glaciers or the yield stress of lava, and at fronts where the thickness goes to 0,
-  has not been checked.
+  has been checked only as far as the shape at rest of a dome and the sectors of the Halfar
+  dome go (about the same as on four neighbours or slightly better; developer.md §96).
+- The reassignment for glaciers and lava flows gives slightly too much conveyance at the
+  edges of a band oblique to the grid (+6.5 % for a band of three lines, +4.0 % for five;
+  from the same rule as the dynamic reassignment of surface water).
 - What becomes isotropic is the direction of the error, not its size. On a well-resolved
   hill the 9-point stencil can give a larger error at the centre
   ([test/stencil9](../../../test/stencil9/en/README.md)).
