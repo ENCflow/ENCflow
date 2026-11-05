@@ -45,7 +45,7 @@
 | 土石流が谷を流れ下る | 単層混合体(水 + 土砂)の浅水流。抵抗則と侵食・堆積式は高橋・中川とクーロン + Manning の 2 通り。谷頭の 5 セルから混合体のハイドログラフを与える | `f_debris = 1`、`f_dbres`・`f_dbed`、`inflow_val`・`inflow_cs` |
 | 流れる混合体が岩盤を削る | 準静的な駆動応力 τ_d = ρ(1 + sC) g_e h_t tanθ の超過形 E = k_d (τ_d/τ_cd − 1)^m_d。濃い混合体が動いているセルだけで働き、削った岩は 1:1 で可動層に入る | `rock_kdb`・`rock_taucdb`・`rock_mdb`(`f_rockinc = 1`) |
 | 堆積物が床を守る | 可動層の厚さ sd による露出率 e^{−sd/H*}。侵食・堆積式が取り込むか被覆として残すかを決める | `rock_hstar`、`fn_sd`(堆積層 0.3 m) |
-| 勾配が緩む所で止まって積もる | 侵食・堆積式(平衡濃度へ)と低速凝集。急勾配の有効重力の補正 | `f_dbstop = 1`、`db_vstop`・`db_wstop`、`f_gravity_correction = 1` |
+| 勾配が緩む所で止まって積もる | 侵食・堆積式(平衡濃度へ)と低速凝集。急勾配の有効重力の補正 | `f_dbstop = 1`、`db_vstop`・`db_wstop`、`f_gravity_correction = 2` |
 | 清水の出水(比較) | 同じ流量を清水で流し、流水の剥離則に同じ係数・閾値・べき指数を当てる | `f_fluvial = 1`、`rock_kp`・`rock_tauc`・`rock_m` |
 | (補足)土石流の間の出水と隆起 | 出水の長期計算(代表出水を morfac で加速し、間欠係数で暦に換算)と土石流のイベント計算を、再開でつなぐ。一様隆起、出口は基準面 | `f_state_restore = 2`、`morfac`、`f_uplift`、`fn_uplift`・`fn_rock` |
 
@@ -70,7 +70,7 @@
 - **抵抗則と侵食・堆積式**: 高橋・中川(`f_dbres = 3`・`f_dbed = 3`。d_L = 0.1 m、δe = 10⁻⁴、
   δd = 0.5)とクーロン + Manning(`f_dbres = 1`・`f_dbed = 1`。δe = 7×10⁻⁴、δd = 0.05)。共通は
   φ = 35°、λ = 0.4、低速凝集 `f_dbstop = 1`(`db_vstop` = `db_wstop` = 0.05 m/s)、勾配補正
-  `f_gravity_correction = 1`。
+  `f_gravity_correction = 2`(既定)。
 - **河床**: 裸岩(sd = 0)と、厚さ 0.3 m の堆積層。
 - **岩盤侵食**: k_d = 1.8×10⁻⁴ m/s、τ_cd = 1 kPa、m_d = 1、H* = 0.05 m。k_d は、高橋・中川・裸岩の
   渓流(0〜360 m)の平均が 1 回約 1 cm になるように決めた値です(現行の既定の水理では 1.10 cm)。

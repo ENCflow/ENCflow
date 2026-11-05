@@ -60,7 +60,7 @@ at the head. (c) Rock erosion law: a rate with a threshold set by the slope and 
 | A debris flow runs down the valley | Shallow-water flow of a single-layer mixture (water + sediment). Two resistance laws with their erosion–deposition equations: Takahashi–Nakagawa and Coulomb + Manning. A hydrograph of the mixture at the 5 head cells | `f_debris = 1`, `f_dbres`, `f_dbed`, `inflow_val`, `inflow_cs` |
 | The flowing mixture erodes the rock | Excess form of the quasi-static driving stress τ_d = ρ(1 + sC) g_e h_t tanθ: E = k_d (τ_d/τ_cd − 1)^m_d. Acts only in cells where a dense mixture is moving; eroded rock enters the mobile layer 1:1 | `rock_kdb`, `rock_taucdb`, `rock_mdb` (`f_rockinc = 1`) |
 | A deposit protects the bed | Exposure e^{−sd/H*} from the thickness sd of the mobile layer. The erosion–deposition equation decides whether the flow takes it up or leaves it as cover | `rock_hstar`, `fn_sd` (0.3 m deposit) |
-| The flow stops and deposits where the slope eases | Erosion–deposition equation (towards the equilibrium concentration) and low-velocity settling. Correction of the effective gravity on steep slopes | `f_dbstop = 1`, `db_vstop`, `db_wstop`, `f_gravity_correction = 1` |
+| The flow stops and deposits where the slope eases | Erosion–deposition equation (towards the equilibrium concentration) and low-velocity settling. Correction of the effective gravity on steep slopes | `f_dbstop = 1`, `db_vstop`, `db_wstop`, `f_gravity_correction = 2` |
 | A clear-water flood (comparison) | The same discharge as clear water, with the same coefficient, threshold and exponent in the fluvial plucking law | `f_fluvial = 1`, `rock_kp`, `rock_tauc`, `rock_m` |
 | (Supplement) floods between debris flows, and uplift | Long-term flood runs (a representative flood accelerated by morfac and converted to calendar time by an intermittency factor) and debris-flow event runs chained by restarts. Uniform uplift; the outlet is a base level | `f_state_restore = 2`, `morfac`, `f_uplift`, `fn_uplift`, `fn_rock` |
 
@@ -90,7 +90,7 @@ with free outflow at the south end and roughness n = 0.05.
 - **Resistance and erosion–deposition**: Takahashi–Nakagawa (`f_dbres = 3`, `f_dbed = 3`;
   d_L = 0.1 m, δe = 10⁻⁴, δd = 0.5) and Coulomb + Manning (`f_dbres = 1`, `f_dbed = 1`;
   δe = 7×10⁻⁴, δd = 0.05). Common: φ = 35°, λ = 0.4, low-velocity settling `f_dbstop = 1`
-  (`db_vstop` = `db_wstop` = 0.05 m/s), slope correction `f_gravity_correction = 1`.
+  (`db_vstop` = `db_wstop` = 0.05 m/s), slope correction `f_gravity_correction = 2` (default).
 - **Bed**: bare rock (sd = 0) and a deposit 0.3 m thick.
 - **Rock erosion**: k_d = 1.8×10⁻⁴ m/s, τ_cd = 1 kPa, m_d = 1, H* = 0.05 m. k_d was chosen so
   that the mean over the stream (0–360 m) for Takahashi–Nakagawa on bare rock is about 1 cm per

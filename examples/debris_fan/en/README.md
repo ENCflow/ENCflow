@@ -72,7 +72,7 @@ schematic values chosen to make the phenomena visible, and do not reproduce the 
 | It does not stop in the steep valley and deposits when it slows | Erosion and deposition of Takahashi and Nakagawa (1991) (approach to the equilibrium concentration; while fast it runs on its inertia without depositing) | `f_dbed = 3`, `db_delte`, `db_deltd` |
 | Material that has stopped becomes terrain | Fix material that has stopped at low speed into the terrain | `f_dbstop = 1` |
 | The deposit holds water | Fill the pores of the layer added by deposition with the water of the local flow | `f_dbwet = 1` |
-| Gravity on steep slopes | Gravity correction for the slope inclination | `f_gravity_correction = 1` |
+| Gravity on steep slopes | Gravity correction for the slope inclination (friction and sediment shear also along the slope) | `f_gravity_correction = 2` (default) |
 | Valley orientation and grid | Give the terrain, failure depth and initial water depth by formulas in coordinates along the valley and take their values at the cell centres of each grid (no interpolation) | `make_init.py` |
 | Flow in diagonal directions | The eight neighbours of the ENC grid (the diagonal edges also carry flow; the four-neighbour control sets the diagonal passage widths to 0) | `p_diagratio` |
 
@@ -395,7 +395,7 @@ cells, as a guide.
   corners of the mountain front at the apex (staircases on the grid); and the number of houses (a
   discrete count). All of them shrink as the grid is refined.
 - **Gravity correction on steep slopes**: the effective gravity g cos²θ of the gravity correction for
-  steep slopes (`f_gravity_correction = 1`) is taken from the magnitude of the ground slope, not from the
+  steep slopes (`f_gravity_correction`) is taken from the magnitude of the ground slope, not from the
   slope in the normal direction of each edge (fixed on 2026-11-04; developer.md §91). Before the fix the
   effective gravity came out large on edges oblique to the slope, a direction dependence that remained as
   the grid was refined (in the speed of sliding on a uniform slope of 0.38-0.45, eight neighbours 3-5 % fast
