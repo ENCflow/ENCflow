@@ -9,8 +9,9 @@ module list_enc
 
 
   type t_list_enc
-    integer :: f_gravity_correction = 1       ! 重力の補正(急勾配地形での斜面方向
-                                              !   重力の誤差を補正)
+    integer :: f_gravity_correction = 2       ! 急勾配の補正(0: なし, 1: 有効重力 g cos²θ,
+                                              !   2: 1 + 斜面に沿う摩擦・流砂のせん断 = 既定。
+                                              !   2026-11-05 に 1 から変更。developer.md §93)
     integer :: f_exflux_reduction = 1         ! reduction of excessive flux
     integer :: f_hcap_upwind = 1              ! セル境界水深 (0:両側平均, 1:上流側水深で
                                               !   頭打ち(既定), 2:上流側水深そのもの)

@@ -104,11 +104,11 @@
     {
       "source": "docs/users_guide.md",
       "target": "docs/en/users_guide.md",
-      "source_sha256": "4d08d25b8516444433f5e5fe90364b4fa6135a937d5eee3294a84894dd3bd08f",
-      "target_sha256": "fee89ec217233c14c8189b20c632b405fa8df7433eed5d8e74818b86380e707a",
-      "reviewer": "Claude (Claude Code session; merge of claude/ecstatic-edison-e51vrz into main: both sides changed this pair; the merged files differ from main's recorded version only by the branch's passages (gl_lc, glacier_valley, test/glacier row, total count 776), compared side by side in Japanese and English)",
+      "source_sha256": "3c63c599032f3ad3739aec604c174f70091f5b4e125a550fc3b2e9f650e60822",
+      "target_sha256": "fa612f7c80b3e4bb0ef97f4677586ecfaa0ec96dc0ebbf57021448878b48cabd",
+      "reviewer": "Claude (Claude Code session; user-guide index: the added entry for the steep-slope gravity correction page compared with the Japanese source, rest unchanged since the previous record)",
       "method": "assistant",
-      "reviewed_on": "2026-11-04"
+      "reviewed_on": "2026-11-05"
     },
     {
       "source": "docs/users_guide/advection.md",
@@ -230,11 +230,11 @@
     {
       "source": "docs/users_guide/encgrid.md",
       "target": "docs/en/users_guide/encgrid.md",
-      "source_sha256": "315c297dee55b782d53fc1ec048d310b90b02b7bbb9f1223dcee3425a3943d9a",
-      "target_sha256": "9162def47e50c81999ebfad82f1cad894edb6ce385104580b89418d1dff50ef3",
-      "reviewer": "Claude (Claude Code session; the new effective-gravity formula of §5 (|∇z| with the minmod tangential slope) and the explanation of the fix written in both languages and compared)",
+      "source_sha256": "f58d8f5295a0fc961d0040235afd6617d338f09dd7eceb18f7eee450f93fe6a0",
+      "target_sha256": "f777782d2cfcf9221b3c52123a7bd1636766fda12e0718933cc91f1a0fc6917e",
+      "reviewer": "Claude (Claude Code session; §3 the upwind side of the edge-depth cap decided by the direction of the new velocity (developer.md §95) and §5 ex_flux normally 0, compared with the Japanese source, rest unchanged since the previous record)",
       "method": "assistant",
-      "reviewed_on": "2026-11-04"
+      "reviewed_on": "2026-11-05"
     },
     {
       "source": "docs/users_guide/forcing.md",
@@ -266,11 +266,11 @@
     {
       "source": "docs/users_guide/geomorph.md",
       "target": "docs/en/users_guide/geomorph.md",
-      "source_sha256": "d840a85925d5cc5583e097098e962f63ed1445945af07e1a5b7ef1e6f2bb37e7",
-      "target_sha256": "4ffab5e577f0cb8fbacb6b78c9d813aea2ca52f4b0acc1fad60c622d5ade5cb4",
-      "reviewer": "Claude (Claude Code session; merge of main into the branch: main's additions (dissol_src 4/5, talus dissolution, glacier, evapdry, stone_forest, glacier_valley) and the branch's edits (§91/§92 and the debris examples) both present in the two languages, compared)",
+      "source_sha256": "888ca6ce4d4a56253b7484ba630f10e50031add3328123a3ba33e01ec9b38215",
+      "target_sha256": "f81fb7dbde201d2e07bd47e85be20db28604850a2b30d42637e2051e99b2cf82",
+      "reviewer": "Claude (Claude Code session; default of f_gravity_correction changed from 1 to 2 (developer.md §93): the changed statements of the default and the recommendations compared side by side with the Japanese source, rest unchanged since the previous record)",
       "method": "assistant",
-      "reviewed_on": "2026-11-04"
+      "reviewed_on": "2026-11-05"
     },
     {
       "source": "docs/users_guide/glacier.md",
@@ -428,11 +428,20 @@
     {
       "source": "docs/users_guide/sediment.md",
       "target": "docs/en/users_guide/sediment.md",
-      "source_sha256": "1f78c52eb12b7ecdcc7e936c4f57443b69dd212093bda6ff86aba69bf49be169",
-      "target_sha256": "acf176dd17ad7d0fa533aefbc81bdca70dfd07b6d819ef6a2126e86602b50bc5",
-      "reviewer": "Claude (Claude Code session; merge of main into the branch: main's additions (dissol_src 4/5, talus dissolution, glacier, evapdry, stone_forest, glacier_valley) and the branch's edits (§91/§92 and the debris examples) both present in the two languages, compared)",
+      "source_sha256": "c45b0a09c0ae7eb2a2419e4f5fd663df802afed2fdd75f0bdfc7f1e4086c9772",
+      "target_sha256": "fc402c1c5f90e1ca228cfab2a0b03db171424d07f798a8ef8e6e86c6d7a11ad9",
+      "reviewer": "Claude (Claude Code session; default of f_gravity_correction changed from 1 to 2 (developer.md §93): the changed statements of the default and the recommendations compared side by side with the Japanese source, rest unchanged since the previous record)",
       "method": "assistant",
-      "reviewed_on": "2026-11-04"
+      "reviewed_on": "2026-11-05"
+    },
+    {
+      "source": "docs/users_guide/steep_slope.md",
+      "target": "docs/en/users_guide/steep_slope.md",
+      "source_sha256": "d9da5a85941ab74e3147f86ef6e5e1b06aeb665402ea19b83b8c6f7f691c0dd1",
+      "target_sha256": "7d8404c90f0bfd62c4df4fba3dc443751778468c9ba63f51c5102038901122b9",
+      "reviewer": "Claude (Claude Code session; new user-guide page on the steep-slope gravity correction (moved from docs/steep_slope_design.md without the design discussion): English mirror written alongside the Japanese source and compared section by section, including the equations, the tables (uniform-flow factors, edge stencils, the five-paper comparison), the figure captions, the limits and the references; structure checked by script (headings, math blocks, table rows, images, links))",
+      "method": "assistant",
+      "reviewed_on": "2026-11-05"
     },
     {
       "source": "docs/users_guide/structure.md",
@@ -446,11 +455,11 @@
     {
       "source": "docs/users_guide/swflow.md",
       "target": "docs/en/users_guide/swflow.md",
-      "source_sha256": "35773a186485e0836b9ccd66d4abbe7c2c8aa4ace99c59bd4c8fb25c310c6dc3",
-      "target_sha256": "6448892a57d0620a3414088da894012397450b875d4720b4d37caecf84c5d4df",
-      "reviewer": "Claude (Claude Code session; reviewed the Japanese source against the English mirror after adding the passage-width page and the links to it, 2026-11-03)",
+      "source_sha256": "5569d3b14cc779a61b9f0935fee54dc5ed235276baa8e9a6c9dd394ad662bfe9",
+      "target_sha256": "67524dd2e71d45990a64ddf9a1ee1c9714580c7d5fb9a45ceb24d68c52229b7a",
+      "reviewer": "Claude (Claude Code session; reading tips: ex_flux normally 0 and should not keep appearing, compared with the Japanese source, rest unchanged since the previous record)",
       "method": "assistant",
-      "reviewed_on": "2026-11-03"
+      "reviewed_on": "2026-11-05"
     },
     {
       "source": "docs/users_guide/swi.md",
@@ -608,11 +617,11 @@
     {
       "source": "examples/List_samples/list_enc.txt",
       "target": "examples/List_samples/en/list_enc.txt",
-      "source_sha256": "428cebef3e1540698de9d37dafdbacce1510718c7625c32ca4436d067bf8bf47",
-      "target_sha256": "55f9cfe139e34ded0297822ac2a8d5533c79ab9606512f3d0857399fae54ee12",
-      "reviewer": "Claude (Claude Code session; the default of f_opening_dynamic changed from 2 to 3 on 2026-10-31: the statements of the default and the notes on 2 were updated in the source and the translation together, and the changed parts were compared; rest unchanged since the previous record)",
+      "source_sha256": "e7092d33889a82eb50149da8e3efadfceaa1db5119ea82c888210104192931f8",
+      "target_sha256": "cefa59ab7847499ed4a480b2f7f26763677fa6a7fdc336bc525fc8f92e06d085",
+      "reviewer": "Claude (Claude Code session; default of f_gravity_correction changed from 1 to 2 (developer.md §93): the commented-out sample line now shows 2 in both files and its comment was compared with the Japanese source; value, identifier and commented-out state identical, rest unchanged since the previous record)",
       "method": "assistant",
-      "reviewed_on": "2026-10-31"
+      "reviewed_on": "2026-11-05"
     },
     {
       "source": "examples/List_samples/list_evap.txt",
@@ -635,11 +644,11 @@
     {
       "source": "examples/List_samples/list_geomorph.txt",
       "target": "examples/List_samples/en/list_geomorph.txt",
-      "source_sha256": "25170e316548eeda7e3385c76379ef8fca57535fdcbe70bbb2e0865db371c3d7",
-      "target_sha256": "4877d8452da18dea802e4f14c9d52f25c92e3dd35a90b89d5011a115c4e116dd",
-      "reviewer": "Claude (Claude Code session; compared the Japanese source with the English mirror after adding the base-level section of tower_karst and correcting the water-table statement of dissol_src 4/5, 2026-11-04)",
+      "source_sha256": "bfba638e45ce0bbd95d0289e41647cc1fa823666dd38f38bc337085eb3704a11",
+      "target_sha256": "2588d8d7528985bc950f610fdfe0b74e86c8e37a7445c96d097b560dd7f75f97",
+      "reviewer": "Claude (Claude Code session; default of f_gravity_correction changed from 1 to 2 (developer.md §93): the recommendation comment of f_debris compared with the Japanese source; values and identifiers unchanged, rest unchanged since the previous record)",
       "method": "assistant",
-      "reviewed_on": "2026-11-04"
+      "reviewed_on": "2026-11-05"
     },
     {
       "source": "examples/List_samples/list_glacier.txt",
@@ -2219,11 +2228,11 @@
     {
       "source": "examples/qanat/README.md",
       "target": "examples/qanat/en/README.md",
-      "source_sha256": "a2daac19dca374e7cc6bf5eb8a132b81f72b98b984060c54698fbb32d2a7014a",
-      "target_sha256": "b875bc1588f895af7ff2b86fab56ef4474caed52a889870fc84a0e15f3bd0469",
-      "reviewer": "Claude (assistant)",
+      "source_sha256": "fb5276d910063bb64351d5ca662cdb3dc59dea571a1b2d3b5372eecc905ebef4",
+      "target_sha256": "9118e28b88d4c7861a69d73d27e569fb41b0ef54b4d1bff59a2110ac4437f2e3",
+      "reviewer": "Claude (Claude Code session; recompute after the steep-slope gravity correction §91: the 2 L/s pumping row of the budget table and the two derived values in the text compared side by side with the Japanese source, rest unchanged since the previous record)",
       "method": "assistant",
-      "reviewed_on": "2026-11-02"
+      "reviewed_on": "2026-11-04"
     },
     {
       "source": "examples/qanat/figs/mechanism.png",
@@ -2705,11 +2714,11 @@
     {
       "source": "test/README.md",
       "target": "test/README.en.md",
-      "source_sha256": "68abc38dfab397e21cc5c9da4bb05029c40171cc5560ea28158187265abc356e",
-      "target_sha256": "ebba504064b850b103dcfc866b8ae67a4ea7d61f18ac2b34a39eb08c6641babb",
-      "reviewer": "Claude (Claude Code session; merge of main into the branch: main's additions (dissol_src 4/5, talus dissolution, glacier, evapdry, stone_forest, glacier_valley) and the branch's edits (§91/§92 and the debris examples) both present in the two languages, compared)",
+      "source_sha256": "f0609d252e16fe8cbab8c42684592300b6fe6398181c1755ed4e8995e779d0c4",
+      "target_sha256": "4fd7abbd9ff6c9ccc952026da2cf124866f4e2888af032c4d16e25f65086bd69",
+      "reviewer": "Claude (Claude Code session; new test slopefric: the added index row compared with the Japanese source, rest unchanged since the previous record)",
       "method": "assistant",
-      "reviewed_on": "2026-11-04"
+      "reviewed_on": "2026-11-05"
     },
     {
       "source": "test/avalanche/README.md",
@@ -3810,6 +3819,15 @@
       "reviewed_on": "2026-11-04"
     },
     {
+      "source": "test/slopefric/README.md",
+      "target": "test/slopefric/en/README.md",
+      "source_sha256": "9c24e6827bf2cf87bd98ccdd3d57cd68e4b1bc640afdcb41afe984cfe860b105",
+      "target_sha256": "cec4c15e367d3f372ee6ff7e29b9236c9cdcff59b5ecf1a1ea4f1d1027727cb6",
+      "reviewer": "Claude (Claude Code session; references to the steep-slope explanation moved to docs/users_guide/steep_slope.md (and the English mirror) in the uniform-flow item and the limits, compared with the Japanese source, rest unchanged since the previous record)",
+      "method": "assistant",
+      "reviewed_on": "2026-11-05"
+    },
+    {
       "source": "test/splash/README.md",
       "target": "test/splash/en/README.md",
       "source_sha256": "2206d6028d96bd09ac736c32d5f88e11a8f1fce577a7924a305414181bd8345e",
@@ -3929,11 +3947,11 @@
     {
       "source": "test/taupart/README.md",
       "target": "test/taupart/en/README.md",
-      "source_sha256": "164ec2bbff0eed06144403b79ca44bcf2cdbb8a794054e523ee8ef02a3b2e6ae",
-      "target_sha256": "dc935afe8d7cd2551082673b6e58e4630e3e73b0009a2bea380fd1782bc447ff",
-      "reviewer": "Claude (assistant)",
+      "source_sha256": "c3ae3fc5ede8e1ecf43b522d5bdfef55b16bb88406d9d41aa4613021c9f75717",
+      "target_sha256": "a1114148666e6b97a2c50cb31390d16472be291dc11b7837b3b0a1fd9c4f5b07",
+      "reviewer": "Claude (Claude Code session; default f_gravity_correction = 2: the check item 2 now states that the tau* of the capacity includes the slope factor (1 + S^2)^(7/6), and the 2026-11-05 record of the ratios was added, compared with the Japanese source, rest unchanged since the previous record)",
       "method": "assistant",
-      "reviewed_on": "2026-11-02"
+      "reviewed_on": "2026-11-05"
     },
     {
       "source": "test/tide/README.md",

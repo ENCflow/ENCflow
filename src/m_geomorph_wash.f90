@@ -24,6 +24,7 @@
 !======================================================================
 submodule(m_geomorph) m_geomorph_wash
   use m_parallel, only : par_info, par_stop, dcp, par_halo_cell
+  use m_swflow_enc, only : slope_shear_on, slope_shear_factor   ! 斜面に沿うせん断(§93)
   implicit none
 
 contains
@@ -71,8 +72,10 @@ module subroutine calc_wash(gm, p, g, s, dtw)
   integer :: i, j
   real :: hh, taus, er, fx, dzb, cap, fxg
   logical :: spread
+  logical :: ssh                  ! 斜面に沿う底面せん断(f_gravity_correction = 2。§93)
 
   spread = (gm%wlw%nsm > 0)
+  ssh = slope_shear_on()
   !$omp parallel do schedule(static) private(i, j, hh, taus, er, fx, dzb, cap, fxg)
   do j = dcp%js, dcp%je
     do i = g%wx(1,j), g%wx(2,j)
@@ -85,6 +88,7 @@ module subroutine calc_wash(gm, p, g, s, dtw)
       if (gm%wkf > 0.0) then
         hh = max(s%h(i,j), p%dv)
         taus = g%rn(i,j)**2 * s%vv(i,j)**2 / (gm%sgrav * gm%sd50 * hh**(1.0/3.0))
+        if (ssh) taus = taus * slope_shear_factor(g, s, i, j)   ! 斜面に沿うせん断(§93)
         if (taus > gm%wtausc) er = er + gm%wkf * (taus / gm%wtausc - 1.0)
       end if
       if (er <= 0.0) cycle

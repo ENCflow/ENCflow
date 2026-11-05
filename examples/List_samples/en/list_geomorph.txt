@@ -246,8 +246,8 @@
   !   morfac=1 required. The movable extent and depth are given by the
   !   soil depth (sd0/f_sdtype/fn_sd of &list_geoinfo; sd=0 = non-erodible
   !   bedrock). Porosity and specific gravity are shared with fluv_*.
-  !   Recommended: combine with f_gravity_correction = 1 of &list_enc on
-  !   steep terrain
+  !   Recommended: on steep terrain keep f_gravity_correction of &list_enc
+  !   above 0 (default 2)
   f_debris = 0
   db_phi = 0.0             ! internal friction angle of the sediment (deg).
                            !   0 = default 35 (representative of gravelly

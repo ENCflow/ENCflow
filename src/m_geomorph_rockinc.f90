@@ -46,6 +46,7 @@ submodule(m_geomorph) m_geomorph_rockinc
   use m_restart, only : restart_write_cell, restart_read_cell
   use m_sysdep_util, only : sysdep_mkdir
   use m_util, only : rtoa
+  use m_swflow_enc, only : slope_shear_on, slope_shear_factor   ! 斜面に沿うせん断(§93)
   implicit none
 
   real, parameter :: rhow = 1000.0       ! 水の密度 (kg/m3。淡水。debris・bedslide と同じ)
@@ -175,9 +176,11 @@ module subroutine calc_rockinc(gm, p, g, s, dts)
   real :: area, lcoef, bmax, lmax
   real(real64) :: vp, va
   logical :: abr
+  logical :: ssh                  ! 斜面に沿う底面せん断(f_gravity_correction = 2。§93)
 
   area = 1.0 / gm%wrk%ainv
   abr = (gm%rk%beta > 0.0)
+  ssh = slope_shear_on()
   ! 薄層の排出率の目安 L ≈ q_b / (Δ (1 − λ) H*)(セルの容量から。plan §4.3 の時間尺度。
   ! L·dts の最大を診断として報告する)
   lcoef = gm%poroi * gm%rk%hsinv / min(g%dx, g%dy)
@@ -204,6 +207,7 @@ module subroutine calc_rockinc(gm, p, g, s, dts)
       ! 研磨の駆動量と薄層の排出率の診断に使う
       qc = 0.0
       taus = taufac_h(gm%flv, hh) * rn2 * vv2 / (gm%sgrav * gm%d50 * hh**(1.0/3.0))
+      if (ssh) taus = taus * slope_shear_factor(g, s, i, j)   ! 斜面に沿うせん断(§93)
       if (taus > gm%tausc) then
         qc = qbs_rock(gm%f_qbform, taus, gm%tausc) * gm%flv%qbcoef
         lmax = max(lmax, qc * lcoef * dts)
@@ -212,6 +216,7 @@ module subroutine calc_rockinc(gm, p, g, s, dts)
       ep0 = 0.0
       if (gm%rk%kp > 0.0) then
         taub = rhow * p%gg * rn2 * vv2 / hh**(1.0/3.0)
+        if (ssh) taub = taub * slope_shear_factor(g, s, i, j)
         if (taub > gm%rk%tauc) ep0 = fr * gm%rk%kp * (taub / gm%rk%tauc - 1.0)**gm%rk%pm
       end if
       ! 研磨(床を叩く礫の量 q_b F_s(H^n) に比例。更新の頭の H で固定)

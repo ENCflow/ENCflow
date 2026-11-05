@@ -112,6 +112,10 @@ q_k = u_{n,k}\,h_{e,k}
 $`h_{e,k}`$ is the edge depth: the mean of the two cells, capped by the
 upwind depth (`f_hcap_upwind`) and by the energy head towards a dry cell
 (`f_dry_head_cap`); the rules are in [Advection schemes](advection.md) §5.
+The upwind side is decided by the direction of the new velocity of the step
+(the denominator of the semi-implicit friction term in §5 is at least 1 and
+friction does not change the direction, so the direction is fixed by the sign
+of the numerator before the friction is evaluated; developer.md §95).
 An edge whose two cells are both below the threshold depth $`d_d`$ (`dd`)
 carries no flux. Mass is conserved exactly in this form: each flux
 $`q_k`$ is computed once per edge and used with opposite signs by its two
@@ -173,7 +177,7 @@ g_e = g\cos^2\theta = \frac{g}{1 + |\nabla z|_k^2},
 |\nabla z|_k^2 = \left(\frac{z_n - z_c}{\Delta s_k}\right)^2 + \left(\overline{\nabla z}\cdot\mathbf{t}_k\right)^2
 ```
 
-The $`\cos^2\theta`$ correction (`f_gravity_correction = 1`, default) is
+The $`\cos^2\theta`$ correction (`f_gravity_correction = 1` and 2; the default is 2) is
 the formulation of Ni et al.[^ni19] that removes the over-estimate of the
 driving force by the horizontally projected shallow water equations on
 steep slopes: it reduces the driving force by 3% at a slope angle
@@ -189,7 +193,39 @@ between a valley floor and its walls, so the slope of the walls does not enter
 the cells of the floor (until 2026-11-04 the correction used the slope in the
 normal direction of the edge alone, so $`g_e`$ came out large on edges oblique
 to the slope: +7 % on an edge at 45° and +16 % on an edge across the slope at a
-slope of 0.4; developer.md §91).
+slope of 0.4; developer.md §91). With 1, $`g_e`$ also multiplies the friction
+term below, so it cancels in uniform flow: the depth and velocity of uniform flow
+are the same as without the correction (the classical horizontally projected
+Manning formula). The correction acts on the unsteady part (acceleration and
+start of motion, wave speed). The formulation, the stencils (which cells' ground
+is used for which edge), a comparison with published models and the limits (the
+difference between horizontal and slope-parallel velocity, deep water over a
+steep bed) are described in [Steep-slope gravity correction](steep_slope.md).
+
+With `f_gravity_correction = 2` (the default) the friction is also made consistent with the
+along-slope equations. The bed shear stress is evaluated with the Manning law
+from the slope-parallel speed
+$`|\mathbf V_s| = |\mathbf V|\sqrt{1 + (\hat{\mathbf V}\cdot\nabla z)^2}`$ and the bed-normal
+depth $`h\cos\theta`$ (Chow[^chow59]; with $`g`$, not $`g_e`$), and the coefficient of
+the friction term below becomes
+$`F = -\,g\,g_v\,n_e^2\,|\mathbf V_s|_e/(h_f\cos\theta)^{4/3}`$ ($`\hat{\mathbf V}`$ is the
+direction of the mean velocity of the two cells; $`\nabla z`$ and $`\cos\theta`$ come
+from the mean of the ground gradients (minmod, above) of the two cells, i.e. the
+field gradient). Uniform flow then follows
+the along-slope equations, $`h\cos\theta = (n^2 q^2/\sin\theta)^{3/10}`$ ($`q`$ is the
+horizontal unit discharge): for the same discharge the depth is larger and the
+velocity smaller than with 1 (the vertical depth is 1.21 times larger on a 30°
+slope, the size of the error of the classical horizontal-coordinate equations
+shown by Van Emelen et al.[^ve14]). The dimensionless shear stress of sediment
+transport and erosion is evaluated with the same speed and depth
+([sediment transport supplement](sediment.md) §1). A Manning's $`n`$ taken from
+measurements in mild-slope channels is a value for slope-parallel quantities, so
+it is used with 2; set 1 when $`n`$ was calibrated with a horizontally projected
+model. On a step of a single edge (walls, kerbs, steps in the DEM) the field
+gradient is nearly zero, so the friction and the sediment shear are treated as
+with 1 there (the hydraulics of a step lie outside the shallow-water
+assumptions). The default was changed from 1 to 2 on 2026-11-05 (developer.md
+§93, test test/slopefric).
 
 **Friction term $`F`$.** The Manning law is treated semi-implicitly.
 
@@ -227,11 +263,20 @@ reproducing urban inundation ([geographic information](geoinfo.md)).
 depth, $`q = u_n h_e`$. Towards a dry cell $`h_e`$ is capped by the energy
 head $`\eta_c + u_n^2/2g - z_n`$ (`f_dry_head_cap`), and an edge whose
 sender is completely dry gets $`u_n = q = 0`$. When the outflow of one step
-would use up the water of the cell (`f_exflux_reduction = 1`, default) the
-flux of that edge is scaled by $`(h_c - d_d)/\Delta h_c`$ (the **ex_flux
-column** on the screen counts these events). The edges are checked one
-after another, so negative depths are not excluded completely and $`h`$
-can become slightly negative under strong drying.
+would use up the water of the cell (`f_exflux_reduction = 1`, default), the
+flux of that edge is first scaled by $`(h_c - d_d)/\Delta h_c`$, edge by
+edge. A check per edge cannot catch outflow through several edges at once,
+so just before the continuity equation the total outflow $`O`$ of each cell
+is also computed, and in a cell where $`O`$ reaches the water $`h_c`$ all
+outflowing edges are scaled by the same ratio $`\max(h_c - d_d, 0)/O`$ (the
+ratio of the upwind cell is used, so both sides of an edge see the same value
+and mass is conserved). The flow computation therefore does not create
+negative depths (processes that change the depth after the flow computation,
+such as infiltration, evapotranspiration or a boundary water level, are
+separate). The **ex_flux column** on the screen counts both kinds of events
+and is normally 0. When it keeps appearing, some flow tries to use up the water
+of a cell within one step (a time step that is too large, an oscillating flux
+of a structure, and so on; developer.md §94).
 
 ## 6. Time integration and the adaptive Runge-Kutta scheme
 
@@ -349,7 +394,7 @@ non-hydrostatic correction or the newer advection schemes.
 | Parameter | Default | Meaning | Basis |
 |---|---:|---|---|
 | p_diagratio | 2/(2+√2) | share $`p_d`$ of the passage width given to the diagonal edges (§2) | **derived** the value that makes the eight widths equal; 0 gives a four-neighbour grid |
-| f_gravity_correction | 1 | effective gravity $`g\cos^2\theta`$ on steep slopes (§5) | **literature value** Ni et al.[^ni19]; no effect on gentle slopes |
+| f_gravity_correction | 2 | steep-slope correction (§5). 0: none, 1: effective gravity $`g\cos^2\theta`$, 2: 1 plus friction and sediment shear from the slope-parallel speed and the bed-normal depth (the default since 2026-11-05) | **literature value** Ni et al.[^ni19]; uniform flow of 2 from Chow[^chow59] and Van Emelen et al.[^ve14]; no effect on gentle slopes |
 | f_exflux_reduction | 1 | suppression of excessive outflow (§5) | **method** prevents negative depths at dry-bed fronts; keep on with dry beds |
 | f_hcap_upwind | 1 | upwind cap of the edge depth (§3) | **method** 1: mean capped by the upwind depth. 2: the upwind depth itself = continuity of the conservative scheme[^sd03]; use 2 with bores and breaking |
 | f_friction_fastmath | 0 | table approximation of the friction (§8) | **numerical** 0: exact; the regression tests use 0 |
@@ -378,5 +423,7 @@ non-hydrostatic correction are in the tables of their own pages.
 [^iwasa80]: Iwasa, Y., Inoue, K. and Mizutori, M. (1980): A study on the numerical analysis of the hydraulics of inundation flows (title translated; in Japanese). *Annuals of the Disaster Prevention Research Institute, Kyoto University*, 23 B-2, 305–317. (cell-centred depth / face-flux arrangement and the semi-implicit friction)
 [^sd03]: Stelling, G. S. and Duinmeijer, S. P. A. (2003): A staggered conservative scheme for every Froude number in rapidly varied shallow water flows. *Int. J. Numer. Meth. Fluids*, 43, 1329–1354. (conservative staggered scheme; upwind depth in the continuity equation)
 [^ni19]: Ni, Y., Cao, Z. and Liu, Q. (2019): Mathematical modeling of shallow-water flows on steep slopes. *J. Hydrol. Hydromech.*, 67(3), 252–259. doi:10.2478/johh-2019-0012. (effective gravity $`g\cos^2\theta`$ on steep slopes)
+[^chow59]: Chow, V. T. (1959): *Open-Channel Hydraulics*. McGraw-Hill, New York. (uniform flow in steep channels: Manning law with the bed-normal depth and the sine of the slope)
+[^ve14]: Van Emelen, S., Zech, Y. and Soares-Frazão, S. (2014): Limitations of the shallow water assumptions for problems involving steep slopes: Application to a dike overtopping test case. In: Schleiss et al. (Eds.), *River Flow 2014*, Taylor & Francis, London, 1669–1677. (classical and modified shallow water equations in slope and horizontal coordinates compared; uniform flow differs above 10°)
 [^jst81]: Jameson, A., Schmidt, W. and Turkel, E. (1981): Numerical solution of the Euler equations by finite volume methods using Runge–Kutta time stepping schemes. AIAA Paper 81-1259. (four-stage low-storage Runge–Kutta with coefficients 1/4, 1/3, 1/2, 1)
 [^cfl]: Courant, R., Friedrichs, K. and Lewy, H. (1928): Über die partiellen Differenzengleichungen der mathematischen Physik. *Math. Ann.*, 100, 32–74.

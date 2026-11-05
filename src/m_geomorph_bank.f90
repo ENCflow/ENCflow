@@ -29,6 +29,7 @@
 submodule(m_geomorph) m_geomorph_bank
   use m_parallel, only : par_info, par_stop, dcp
   use m_util, only : rtoa
+  use m_swflow_enc, only : slope_shear_on, slope_shear_factor   ! 斜面に沿うせん断(§93)
   implicit none
 
 contains
@@ -111,8 +112,10 @@ module subroutine bank_edge_pass(gm, p, g, s, dts)
   integer :: i, j, k, in, jn, jt, iw, jw, ib, jb, nbank, nbclip
   real :: sgn, hw, hhe, taus, tscb, eb, qs, dzb, vbank
   logical :: okc, okbank
+  logical :: ssh                  ! 斜面に沿う底面せん断(f_gravity_correction = 2。§93)
 
   nbank = 0
+  ssh = slope_shear_on()
   nbclip = 0
   vbank = 0.0
   jt = min(dcp%je + 1, dcp%jeh)
@@ -152,6 +155,7 @@ module subroutine bank_edge_pass(gm, p, g, s, dts)
         ! 脚部セルの無次元掃流力(calc_fluvial と同じマニング閉じ・有効掃流力比)
         taus = taufac_h(gm%flv, hhe) * g%rn(iw,jw)**2 * s%vv(iw,jw)**2 &
                / (gm%sgrav * gm%d50 * hhe**(1.0/3.0))
+        if (ssh) taus = taus * slope_shear_factor(g, s, iw, jw)   ! 斜面に沿うせん断(§93)
         ! 崩落土塊による遮蔽(§84.17): 脚部の崖錐 ht の分だけ河岸面に届く掃流力を減らす
         ! (Asahi ら 2013 式 (27)〜(28) の K = 1 − A_chunk/(D_chunk B) の格子版)
         if (gm%bnk%hcover > 0.0) then

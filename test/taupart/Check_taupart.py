@@ -4,7 +4,8 @@
      水深の変動係数 < 1 %(全構成)。
   2. 定常の流砂量: 各構成の 1500 s と 3000 s の東辺の開境界の台帳(固体 m³)の差を 1500 s で割った
      流砂量が、3000 s の結果の出口セル(開境界の面は自セルの水理で容量を出す)の h・V から同じ流砂量式で
-     評価した容量 × 幅 1 m に ±0.5 %。分割ありは τ* に φ(h/D84) = (1 + (a1/a2)² (h/D84)^(−5/3))^(−e/2)
+     評価した容量 × 幅 1 m に ±0.5 %。τ* は既定(f_gravity_correction = 2)の斜面の倍率 (1 + S²)^{7/6} を含む。
+     分割ありは τ* に φ(h/D84) = (1 + (a1/a2)² (h/D84)^(−5/3))^(−e/2)
      を掛ける(d0 は D84 = 2.2 d50 の既定、d19_mpm は MPM 式)。閾値未満の構成(d76)は台帳が 0。
      上流端の河床低下波が計測区間に届いていない(1500 s の区間の |Δz| < 5 mm)ことも確かめる。
 使い方: python3 Check_taupart.py(Screen_<構成>[_t2].log と result[_<構成>][_t2]/ を読む)
@@ -15,6 +16,9 @@ sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 from make_init import NX, DX, S, N, Q_UNIT, H0, X1, X2, JC
 
 D50, TSC, SG, G, T1, T2 = 0.01, 0.05, 1.65, 9.81, 1500.0, 3000.0
+# f_gravity_correction = 2(既定)の流砂のせん断の倍率(developer.md §93): (1 + (V̂·∇z)²)(1 + |∇z|²)^{1/6}。
+# 出口セルの勾配は片側差分で S、流れは下り向きなので (1 + S²)^{7/6}(2026-11-05 に既定が 2 になって追加)
+FAC_G2 = (1.0 + S * S) ** (7.0 / 6.0)
 A1, A2 = 6.5, 2.5
 # 構成: (D84 [m]。None = 2.2 d50, e, 流砂量式, 分割あり)
 CFG = [("off", None, 1.5, 1, False), ("d044", 0.044, 1.5, 1, True), ("d19", 0.19, 1.5, 1, True),
@@ -72,7 +76,7 @@ def main():
         if np.abs(dz).max() > 0.005:
             print("FAIL: %s: the bed of the measuring section moved (max |dz| %.4f m): the degradation wave reached it" % (name, np.abs(dz).max())); ok = False
         rate = (ledger("Screen_%s_t2.log" % name) - ledger("Screen_%s.log" % name)) / (T2 - T1)
-        ts = N ** 2 * vo ** 2 / (SG * D50 * ho ** (1.0 / 3.0))
+        ts = N ** 2 * vo ** 2 / (SG * D50 * ho ** (1.0 / 3.0)) * FAC_G2
         f = phi(ho / (d84 if d84 else 2.2 * D50), e) if on else 1.0
         qb = qbs(form, f * ts) * math.sqrt(SG * G * D50 ** 3) * 1.0     # 幅 1 m の固体流砂量 (m3/s)
         print("%-8s %7.4f %7.4f %7.4f %8.4f %8.4f %10.6f %10.6f %8.4f" % (name, hm / H0, vm * hm / Q_UNIT, ho, f * ts, f, rate, qb, rate / qb if qb > 0 else float("nan")))
