@@ -1778,11 +1778,11 @@
     {
       "source": "examples/landslide_tsunami/README.md",
       "target": "examples/landslide_tsunami/en/README.md",
-      "source_sha256": "de7a4c9015fc947439388ae916a2983e5a74f506b678d28b96af164ff1367d31",
-      "target_sha256": "40a8663895b4d4fcca690ff724237c5902c0e496afc2089fa7b3ee6326e8eb75",
-      "reviewer": "Claude (Claude Code session; both result tables, the 2026-11-04 recomputation note after §91, plunge speeds, the non-hydrostatic remarks and the oscillation amplitude updated in both languages and compared)",
+      "source_sha256": "237b6c7048c6bb46f37b7a52bf3738e9f717a99915c88855e060e176e4503d5e",
+      "target_sha256": "3e991e584679e0d48169191edc78e2bb0bd8e53ba2206dd3b06c5a39a06f9dac",
+      "reviewer": "Claude (Claude Code session; recomputed 2026-11-05 after the default f_gravity_correction = 2 and developer.md §94-95: the headings, the history paragraph and the changed values of B, B0 and the non-hydrostatic table compared with the Japanese source, rest unchanged since the previous record)",
       "method": "assistant",
-      "reviewed_on": "2026-11-04"
+      "reviewed_on": "2026-11-05"
     },
     {
       "source": "examples/levee_breach/README.md",
