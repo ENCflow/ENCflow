@@ -171,7 +171,7 @@ subroutine m_saltwater_init(sl, p, g, s, lat, lay1)
   fn_salt_hgs0 = ""
   salt_eps = 1.0e-3
   salt_eps_h = 1.0e-2
-  salt_diagratio = 2.0 / (2.0 + sqrt(2.0))   ! m_swflow_enc の p_diagratio と同値
+  salt_diagratio = 1.0 / 3.0                 ! gw_diagratio の既定と同じ(土層の側方流と通過幅を共有する。§98)
   salt_nsubmax = 200
   f_salt_exch = -1          ! 負 = 未指定(地表・地下の両方が有効なら 1、それ以外は 0)。
                             ! 2 = 湧出を混合比で配分する下限側の感度ケース(§47.9)

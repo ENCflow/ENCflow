@@ -20384,6 +20384,23 @@ users_guide/diagratio.md(日英。図 docs/figs/diagratio_tradeoff、fig_diagrat
 再現することを確かめた本作業の導出で、ほかの d では計測していない(追記 2026-11-05: d = 1/3 は溶岩の温度の
 1 次風上で計測し、式に合った。§99 の「検定の見直し」)。
 
+**既定の変更(2026-11-05。利用者の決定「する」、reference の更新は差の図を見た上での了承)**: `gw_diagratio` と
+`salt_diagratio` の既定を 2/(2+√2) から 1/3 にした(m_gwflow_lateral・m_saltwater の読み込みの既定値だけ。管路層の
+`gwc_diagratio` は 2/(2+√2) のまま)。試行で落ちていた gwwidth の総水量の検定(dd 未満の水膜の負の水深)は、
+main から入った §94 のセルの流出の合計による抑制で直っていて、1/3 でも合格した。
+- 検定の定数: Check_gwlateral.py の DIAGRATIO と Check_gwbed.py の r(解析値の通過幅)を 1/3 に、Check_gwtani.py の
+  「振り替えがなければ」の参考値(合否には使わない)を 1/3 にした(層2の飽和帯厚 2.45 倍 → 1.51 倍)。
+  gwbed の Fig.py の解析線も同じ定数。
+- reference の更新(gwbed・gwsect・gwseep・gwwidth): 総量はすべて保存。変化は gwbed の河道の最大水深 −3.1 %
+  (河床交換の上限 = 通過幅の和 2(1 − d + d√2)Δ が −8 %)、gwsect・gwwidth の地下へ移る物質 +3 %・湧出で戻る物質
+  +4 %(地表・地下の質量は 0.03 % 以内)、gwseep は 0.03 % 以内。更新後に -u なしで逐次がバイト一致、MPI
+  np = 1・2・4 が新しい reference にバイト一致。自己検定(salt・gwtani・gwlateral・gwdefault・conduit と 4 ケースの
+  Check)はすべて合格。salt・conduit の reference の構成は側方流を使わないので変わらない。
+- 文書: gwflow.md・gwflow_models.md・salt.md・diagratio.md と List_samples(日英)、test の README(gwbed の解析値と
+  図・gwseep・gwsect・gwlateral の壁沿いの倍率 0.707 → 0.833・gwtani の倍率)。gwseep の README の台帳の値は
+  main の §93 の後も古いままだったので、今の値にした。例題(estuary_barrage・catchment_metal・qanat の層2・
+  tutorials/chichibu の地下水)の数値の回し直しは handoff 00m(f)。
+
 
 ## 99. 氷河の SIA・溶岩流の流動の 8 近傍化(lv_diagratio・gl_diagratio。案 A の動的な振り替え。2026-11-05。§96 の段 3)
 

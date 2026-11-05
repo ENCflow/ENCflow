@@ -477,7 +477,7 @@ subroutine read_lateral_list(p, gw_ksh_mmh, gw_eps, gw_diagratio, f_gw_opening, 
 
   gw_ksh_mmh = 0.0
   gw_eps = 1.0e-3
-  gw_diagratio = 2.0 / (2.0 + sqrt(2.0))   ! m_swflow_enc の p_diagratio と同値
+  gw_diagratio = 1.0 / 3.0                 ! 既定 1/3 = 誤差の主要項が等方(2026-11-05 から。それより前は 2/(2+√2)。§98)
   f_gw_opening = 1                         ! 塞がれた斜めの配分の振り替え(1: あり = 既定、0: なし。§16.6)
 
   call par_info("reading list_gwflow_lateral in " // trim(p%fn_gwflow))

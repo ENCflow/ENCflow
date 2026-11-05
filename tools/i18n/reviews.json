@@ -212,9 +212,9 @@
     {
       "source": "docs/users_guide/diagratio.md",
       "target": "docs/en/users_guide/diagratio.md",
-      "source_sha256": "e8e3b3f2c69990c81bb2302d9307d124c09d6c95b45187e45bf91d473efbc8c6",
-      "target_sha256": "a77b466dc64dfb204d4ab2b71fa32adb7cdda9579a5327a38d8d5745cc15b269",
-      "reviewer": "Claude (Claude Code session; mechanical renumbering of the developer.md section references §93-96 -> §96-99 (collision with the sections merged from main) in both files, checked by script that the lines differ only in those numbers and that both files carry the same references; rest unchanged since the previous record)",
+      "source_sha256": "e46fe11343a6b1816e131cd5216729421bd81ea2fc3306d07310bc904225f9cc",
+      "target_sha256": "f7a911cb9ad44e5c9b2a85ae384a05daca504ad0d4bfcfeefd333d12f2acf536",
+      "reviewer": "Claude (Claude Code session; reviewed the text on the new default 1/3 of gw_diagratio and salt_diagratio and the values that change with it (developer.md sec. 98) in the Japanese source against the English mirror, 2026-11-05)",
       "method": "assistant",
       "reviewed_on": "2026-11-05"
     },
@@ -302,20 +302,20 @@
     {
       "source": "docs/users_guide/gwflow.md",
       "target": "docs/en/users_guide/gwflow.md",
-      "source_sha256": "92ccf21fff835bd3404d377be4b71d9f41e446c53b74ffb91ca88993f374d1cb",
-      "target_sha256": "dcd36dd1b86183821e1ab146cdbacc4ccb10adc9a216379fa2f86ac06affeaa0",
-      "reviewer": "Claude (Claude Code session; mechanical renumbering of the developer.md section references §93-96 -> §96-99 (collision with the sections merged from main) in both files, checked by script that the lines differ only in those numbers and that both files carry the same references; rest unchanged since the previous record)",
+      "source_sha256": "b9fd1c948b00ea6da5671f369a22b0345ea69c7ed577edfb5aadc418d829bc6c",
+      "target_sha256": "edff9480a0a1b91d41bb087a7684d34b3f5950b1e8fef9ea01d4ff5dbaadf19b",
+      "reviewer": "Claude (Claude Code session; reviewed the text on the new default 1/3 of gw_diagratio and salt_diagratio and the values that change with it (developer.md sec. 98) in the Japanese source against the English mirror, 2026-11-05)",
       "method": "assistant",
       "reviewed_on": "2026-11-05"
     },
     {
       "source": "docs/users_guide/gwflow_models.md",
       "target": "docs/en/users_guide/gwflow_models.md",
-      "source_sha256": "38943e93a74dcae23af61412777bc9a376b8fdec3e41436a193d4035491d6aac",
-      "target_sha256": "8a3eff439f60e4356b4ba0dd4be4c7091eacd6d4445d7251971f5b37af412a03",
-      "reviewer": "Claude (Claude Code session; full-text content and lexical review, no model execution)",
+      "source_sha256": "9c9a006ad91700d5c625b8ef4d62e536c822af4c3312029298f6ad550b37c963",
+      "target_sha256": "c779b93b36ae639b4844e2a6bdfa5fb2bc73cae527b16edec3ebec18896f94fc",
+      "reviewer": "Claude (Claude Code session; reviewed the text on the new default 1/3 of gw_diagratio and salt_diagratio and the values that change with it (developer.md sec. 98) in the Japanese source against the English mirror, 2026-11-05)",
       "method": "assistant",
-      "reviewed_on": "2026-10-30"
+      "reviewed_on": "2026-11-05"
     },
     {
       "source": "docs/users_guide/hydraulics.md",
@@ -437,9 +437,9 @@
     {
       "source": "docs/users_guide/salt.md",
       "target": "docs/en/users_guide/salt.md",
-      "source_sha256": "e01fb078893e751358740f8eb6ca0b9f8549ee71a4f61cbbb1da3e3ced34c62b",
-      "target_sha256": "869e35e3605aaf2be67d4b97c5c52b8afe5f1295945f051a1ee81f17a3d69a6e",
-      "reviewer": "Claude (Claude Code session; mechanical renumbering of the developer.md section references §93-96 -> §96-99 (collision with the sections merged from main) in both files, checked by script that the lines differ only in those numbers and that both files carry the same references; rest unchanged since the previous record)",
+      "source_sha256": "30f7da81ee8c3f1b91e739754e6d473bad2953d68dc56d464bfc71c7a022a795",
+      "target_sha256": "552f6c24ef63b9b44b57c9f34e5fda57cee877c223c34404b930d425e25e62ad",
+      "reviewer": "Claude (Claude Code session; reviewed the text on the new default 1/3 of gw_diagratio and salt_diagratio and the values that change with it (developer.md sec. 98) in the Japanese source against the English mirror, 2026-11-05)",
       "method": "assistant",
       "reviewed_on": "2026-11-05"
     },
@@ -680,9 +680,9 @@
     {
       "source": "examples/List_samples/list_gwflow.txt",
       "target": "examples/List_samples/en/list_gwflow.txt",
-      "source_sha256": "f9de8728cd2fa42e6f482bbac4bf53e680d3fa84e00418c539bc5be4e9f6f074",
-      "target_sha256": "dbabc6aea35a19aa32d0ac7103bbaa2a116bc8fbcf1f4810ed93dad7b6e8d00c",
-      "reviewer": "Claude (Claude Code session; reviewed the added text on the passage widths shared by the groundwater layers (conduit layer with its own gwc_diagratio, stop on a salt_diagratio mismatch; developer.md sec. 95) in the Japanese source against the English mirror, 2026-11-05)",
+      "source_sha256": "1db8cc7485d6b2385926f98477150063f74445bb1299c3b63a7e98956f487d2f",
+      "target_sha256": "93a095ea146b30f2c2e045cbf87c49be802e4c21da9c5e9f14f0767ce045c945",
+      "reviewer": "Claude (Claude Code session; reviewed the text on the new default 1/3 of gw_diagratio and salt_diagratio and the values that change with it (developer.md sec. 98) in the Japanese source against the English mirror, 2026-11-05)",
       "method": "assistant",
       "reviewed_on": "2026-11-05"
     },
@@ -743,9 +743,9 @@
     {
       "source": "examples/List_samples/list_salt.txt",
       "target": "examples/List_samples/en/list_salt.txt",
-      "source_sha256": "32802e2d3d4c1d232dd79a03f6afa650c9b542618a2a410808daa1acaef61b71",
-      "target_sha256": "efc0ab1f2c65a2572855969beb797b9733559e1e67c45c1a87f962b25ac12a9f",
-      "reviewer": "Claude (Claude Code session; reviewed the added text on the passage widths shared by the groundwater layers (conduit layer with its own gwc_diagratio, stop on a salt_diagratio mismatch; developer.md sec. 95) in the Japanese source against the English mirror, 2026-11-05)",
+      "source_sha256": "b7e8857a72e01088b5b1774ad3010a32831dab59d3c9172423de7fcd739f0282",
+      "target_sha256": "d0ed80e185293ae7dc3c88fd07cf0c9777425fb5bda1822c1bfaf1f436cf11de",
+      "reviewer": "Claude (Claude Code session; reviewed the text on the new default 1/3 of gw_diagratio and salt_diagratio and the values that change with it (developer.md sec. 98) in the Japanese source against the English mirror, 2026-11-05)",
       "method": "assistant",
       "reviewed_on": "2026-11-05"
     },
@@ -3299,20 +3299,20 @@
     {
       "source": "test/gwbed/README.md",
       "target": "test/gwbed/en/README.md",
-      "source_sha256": "32579494ac0c9493baef64c6782c6f5ea1664295d065e2f6e44c6f2f18c4a2db",
-      "target_sha256": "00d9a055a7c565ea40e27fc46ef4ace19bc4f8d2e508351e8a499c86226c32ed",
-      "reviewer": "Claude (Claude Code session; full-text content and lexical review, no model execution)",
+      "source_sha256": "4f389d6ed6128bf894ae9f5c1cb3a2e74e0773a0ba313f5769cce0ce16c58549",
+      "target_sha256": "cf96d54be7c37185faebea828fd0c97d2bd55633ff7c695f8d27f77716f6fd24",
+      "reviewer": "Claude (Claude Code session; reviewed the text on the new default 1/3 of gw_diagratio and salt_diagratio and the values that change with it (developer.md sec. 98) in the Japanese source against the English mirror, 2026-11-05)",
       "method": "assistant",
-      "reviewed_on": "2026-10-30"
+      "reviewed_on": "2026-11-05"
     },
     {
       "source": "test/gwbed/figs/gwbed.png",
       "target": "test/gwbed/en/figs/gwbed.png",
-      "source_sha256": "8577dc5f258c886eac81460ad11c28af1c415b17f92b3fb21a9e97c5882c3eaf",
-      "target_sha256": "8abb54c15997a9c0809b6d12ad1290d0d00a450238b2f490f55aa7b7c5e649a0",
-      "reviewer": "Claude (Claude Code session; English figure drawn by the same script with the en switch; visual check)",
+      "source_sha256": "7c0685268ba8a6168288b1d18f991fe2f99c51cdef08d595f73a47c3a8b715d4",
+      "target_sha256": "0f40939edc22d884d234fb4661871fda9928f2d5b6ab8782ac68fdb080151e5a",
+      "reviewer": "Claude (Claude Code session; viewed both figures regenerated by Fig.py from the same runs with the new default 1/3 of gw_diagratio; same data, labels translated; developer.md sec. 98; 2026-11-05)",
       "method": "assistant",
-      "reviewed_on": "2026-10-30"
+      "reviewed_on": "2026-11-05"
     },
     {
       "source": "test/gwdefault/README.md",
@@ -3326,47 +3326,47 @@
     {
       "source": "test/gwlateral/README.md",
       "target": "test/gwlateral/en/README.md",
-      "source_sha256": "7782f6717b3e78a5cb5c76b5bf30743b609dfaf7fa900891e7150c2c0e9fa955",
-      "target_sha256": "fc2c1d099ffae770382649234e2d8ad0bef0ef1fc9a03522cee810f9fc50e1af",
-      "reviewer": "Claude (Claude Code session; full-text content and lexical review, no model execution)",
+      "source_sha256": "21f424110a2c3ed4f89d021bb2a61da1f0364960468ad8693113d620a4b48f22",
+      "target_sha256": "d3e4c90e04b57196513813fda2cca967986e43dd1eb0418b5a4b941bb6fdc24b",
+      "reviewer": "Claude (Claude Code session; reviewed the text on the new default 1/3 of gw_diagratio and salt_diagratio and the values that change with it (developer.md sec. 98) in the Japanese source against the English mirror, 2026-11-05)",
       "method": "assistant",
-      "reviewed_on": "2026-10-30"
+      "reviewed_on": "2026-11-05"
     },
     {
       "source": "test/gwsect/README.md",
       "target": "test/gwsect/en/README.md",
-      "source_sha256": "bfe0e0c0849c5e796f9e64db2162c8b30ce0e38103bc6fd44ba679d078f58566",
-      "target_sha256": "d6ab72d17ab1d801ceb956e448739aa5a14428e0790ddcb27ce5569491f013bb",
-      "reviewer": "Claude (Claude Code session; full-text content and lexical review, no model execution)",
+      "source_sha256": "77dfc918c6dd593346f0d2d150432437742031ae1bf6683b3377c886feaeecd1",
+      "target_sha256": "a5926c237c3f2797750d5f714fd3a1de824e8502fb4aa976058163e8232486af",
+      "reviewer": "Claude (Claude Code session; reviewed the text on the new default 1/3 of gw_diagratio and salt_diagratio and the values that change with it (developer.md sec. 98) in the Japanese source against the English mirror, 2026-11-05)",
       "method": "assistant",
-      "reviewed_on": "2026-11-04"
+      "reviewed_on": "2026-11-05"
     },
     {
       "source": "test/gwseep/README.md",
       "target": "test/gwseep/en/README.md",
-      "source_sha256": "fc9c92f201138ece88b36c37d926acbf9ba72eb366d2fca4350621cf7b70e4f4",
-      "target_sha256": "f8916d9ba5621c95ff8c6cf1888edcfaa9e0f30735688a4221c66d733aa8e36a",
-      "reviewer": "Claude (Claude Code session; f_opening_dynamic default switch)",
+      "source_sha256": "31b0299eaefc7776392e4e14927b74af5b947a257e634f1440dcc6c63310a2f5",
+      "target_sha256": "4336603fff83c3989977ff45c0927770a1a73830113adae50e9e941cb9d0dce8",
+      "reviewer": "Claude (Claude Code session; reviewed the text on the new default 1/3 of gw_diagratio and salt_diagratio and the values that change with it (developer.md sec. 98) in the Japanese source against the English mirror, 2026-11-05)",
       "method": "assistant",
-      "reviewed_on": "2026-10-31"
+      "reviewed_on": "2026-11-05"
     },
     {
       "source": "test/gwseep/figs/gwseep.png",
       "target": "test/gwseep/en/figs/gwseep.png",
-      "source_sha256": "6e683f08aa2d0e75ba813cc13bbbd02a69d0aeb33fed88ac59dbfdbe34239c59",
-      "target_sha256": "d3c58dac7266cf004c972974be53803b2be6acb68b3e7ac06580ad47c7cfd538",
-      "reviewer": "Claude (Claude Code session; f_opening_dynamic default switch)",
+      "source_sha256": "2403ccd19c4c6d0e5e5cbed77a8c3b7a3f3ee169f0cd19a18c6d4578dbf2baf8",
+      "target_sha256": "9cb4ae6106058cf79b1331db682a50875b4dc2383c2d46fb7f41177eef4f9678",
+      "reviewer": "Claude (Claude Code session; viewed both figures regenerated by Fig.py from the same runs with the new default 1/3 of gw_diagratio; same data, labels translated; developer.md sec. 98; 2026-11-05)",
       "method": "assistant",
-      "reviewed_on": "2026-10-31"
+      "reviewed_on": "2026-11-05"
     },
     {
       "source": "test/gwtani/README.md",
       "target": "test/gwtani/en/README.md",
-      "source_sha256": "495003591b47cca2f5235a6b597b5d64fba438017e21a38da33a8f458fae9e05",
-      "target_sha256": "3cee6590b80a428db4e6d2c936019e835df6e799e4aa31c0620699e62bc04b86",
-      "reviewer": "Claude (Claude Code session; full-text content and lexical review, no model execution)",
+      "source_sha256": "f2df5228797446c080bc99f519fe2ac6c586baffb41c9d0baaec38fc8424ce05",
+      "target_sha256": "22d122a9126acd2df2a37cdb6c470c1ad10af26b02e1a62415c200b4ec504695",
+      "reviewer": "Claude (Claude Code session; reviewed the text on the new default 1/3 of gw_diagratio and salt_diagratio and the values that change with it (developer.md sec. 98) in the Japanese source against the English mirror, 2026-11-05)",
       "method": "assistant",
-      "reviewed_on": "2026-10-30"
+      "reviewed_on": "2026-11-05"
     },
     {
       "source": "test/gwtani/figs/gwtani.png",

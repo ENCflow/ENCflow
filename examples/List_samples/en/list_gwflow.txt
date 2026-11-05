@@ -177,10 +177,10 @@
   ! of excessive outflow (m). Must be greater than 0 (default 1e-3)
   gw_eps = 1.0e-3
 
-  ! Diagonal passage-width share [0,1] (default 2/(2+sqrt(2)) = the same
-  ! value as p_diagratio of the ENC core. Normally no need to change.
-  ! 0 is equivalent to 4 neighbors)
-  !gw_diagratio = 0.5857864
+  ! Diagonal passage-width share [0,1] (default 1/3 = isotropic leading error
+  ! term. The default before 2026-11-05 was 2/(2+sqrt(2)) = 0.5857864 = the same
+  ! value as p_diagratio of the ENC core. 0 is equivalent to 4 neighbors. Sec. 98)
+  !gw_diagratio = 0.3333333333
 
   ! Transfer of blocked diagonal shares (1: the passage width of diagonals
   ! blocked by outside or sea cells goes to the axis edges, so the

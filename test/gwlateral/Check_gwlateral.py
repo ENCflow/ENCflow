@@ -31,7 +31,7 @@ H0, A = 0.2, 0.004
 H0F = struct.unpack("<f", struct.pack("<f", H0))[0]   # 背景の float32 表現(丸めの偏りを除く)
 KSH, SY = 0.01, 0.2                                    # gw_ksh_mmh = 36000、sy0
 D = KSH * (H0 / SY) / SY                               # 0.05 m²/s
-DIAGRATIO = 2.0 / (2.0 + math.sqrt(2.0))               # gw_diagratio の既定(p_diagratio と同値)
+DIAGRATIO = 1.0 / 3.0                                  # gw_diagratio の既定(2026-11-05 から。§98)
 ATOL_LOG = 1e-13
 CASES = {"gauss": ("result", 121, 121), "strip": ("result_strip", 3, 40),
          "strip_open": ("result_strip_open", 3, 40), "line_open": ("result_line_open", 1, 40)}

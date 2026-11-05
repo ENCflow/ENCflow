@@ -80,17 +80,16 @@ architecture.md。このメモは「現在進行中・未完了の項目」だ�
      向きを見る振り替えは候補。
    - (d) 湿潤侵食の剥離深の横方向拡散 wet_lw(§84.16)も同じ 5 点の核を使う(合意の範囲外。9 点にするなら
      spl_diagratio と同じ形で足せる)。
-   - (e) 地下水の側方流 `gw_diagratio`(と同じ通過幅を使う `salt_diagratio`)の既定を 1/3 にする(利用者の決定
-     2026-11-05「する」。developer.md §98。等方性は計測済み。管路層の `gwc_diagratio` は 0.586 のまま独立に決めた)。
-     **保留中**: 試行で gwwidth の総水量の検定が落ちた原因(dd 未満の水膜の負の水深)は、別ブランチ
-     claude/inspiring-brahmagupta-c5jfsg の修正(セルの流出の合計による抑制。そのブランチの §94)で直る。その合流後に
-     既定を変え、gwseep・gwsect・gwwidth・gwbed の reference の差を利用者に示して目視確認を得てから更新する
-     (-u は了承の後)。gwlateral・gwbed の検定スクリプトの d の定数、例題 estuary_barrage・catchment_metal・
-     qanat(層2)ほかも変わる。
+   - (e) 地下水の側方流 `gw_diagratio`(と同じ通過幅を使う `salt_diagratio`)の既定を 1/3 にした(2026-11-05。利用者の
+     決定「する」、reference の差の図を見た上での了承。developer.md §98)。gwbed・gwsect・gwseep・gwwidth の reference を
+     更新し(逐次・MPI np = 1・2・4 がバイト一致)、検定スクリプトの d の定数と test の README を直した。**残り**: 例題
+     estuary_barrage・catchment_metal・qanat(層2)と tutorials/chichibu(地下水)の数値の回し直し((f))。
    - (f) 別ブランチ claude/inspiring-brahmagupta-c5jfsg(重力補正の既定・セルの流出の抑制ほか)は 2026-11-05 に main へ
      合流した。番号が衝突したので、このブランチの developer.md の節(旧 §93〜96)を §96〜99 に、本項を 00l から 00m に
-     付け替えてから main をこのブランチ(claude/nifty-hawking-yx6s0o)に merge した(利用者の了承)。**残り**: (e)、
-     例題の一括の回し直し((a)〜(c) の例題と、別ブランチの変更で値の変わる例題を 1 回で)。
+     付け替えてから main をこのブランチ(claude/nifty-hawking-yx6s0o)に merge した(利用者の了承)。merge 後の全 test
+     (95 ケース)で、main の既定 f_gravity_correction = 2 に検定の式が追随していなかった rockinc の T2・T9 を検定の側で
+     直した(ec37a8e。developer.md §93)。**残り**: 例題の一括の回し直し((a)〜(c)・(e) の例題と、別ブランチの変更で値の
+     変わる例題を 1 回で)。
 
 00k. **急勾配の重力補正の修正(developer.md §91)・最急勾配の D∞(§92)・岩盤侵食の有効重力(2026-11-04)の後始末**
    - (済 2026-11-04)reference の更新: 利用者の確認の上で、§91 で値が変わる 11 ケース(chichibu・

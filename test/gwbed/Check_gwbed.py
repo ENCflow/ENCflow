@@ -33,7 +33,7 @@ dx = dy = 2.0
 A = dx * dy
 sd, sy = 1.0, 0.2
 cap = sd * sy
-r = 2.0 / (2.0 + math.sqrt(2.0))          # gw_diagratio(既定)
+r = 1.0 / 3.0                             # gw_diagratio(既定。2026-11-05 から。§98)
 lp, ld = 1.0 - r, r / 2.0
 # 振り替え f_gw_opening(既定 1)は、結果に複写された設定ファイルで 0 の明示を探す
 opening = 1

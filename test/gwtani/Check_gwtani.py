@@ -34,7 +34,8 @@
 #       地下貯留 hg2 に (1)(3) が同じ形で成り立つ: 12000 s にセル 25〜34 で hg2 = r t、定常の
 #       飽和帯厚 h2 = hg2/sy2 が g·i·Δ(セル 1〜33)、層2はどのセルも満ちない。斜面は幅 1 セルで
 #       斜めのリンクがすべて塞がれるので、振り替え(f_gw_opening の既定 1)が層2に効かなければ
-#       軸の通過幅が (1 − d)Δ になり h2 は 2.45 倍になる(d = gw_diagratio の既定)。
+#       軸の通過幅が (1 − d)Δ になり h2 は 1.51 倍になる(d = gw_diagratio の既定 1/3。2026-11-05 より前の既定
+#       2/(2+√2) では 2.45 倍)。
 #   kcompare: 構成 3 と 4(K を半分)で、両方の (2) の対象のセルの t_sat の差が 1.5 % 以内
 #       (飽和の時刻は鉛直浸透で決まる)、定常の飽和域は構成 4 の方が広い(側方流で決まる)。
 #   restart: 保存状態のファイル(save_info.txt は保存日時の行を除く)と、共通の時刻の分布出力
@@ -152,7 +153,7 @@ def main_case(case, resdir):
 
 def main_l2only(resdir):
     resdir = resdir or "result_l2only"
-    sy2, k2, d2, diag = 0.2, 1e-3, 3.0, 2.0 / (2.0 + math.sqrt(2.0))
+    sy2, k2, d2, diag = 0.2, 1e-3, 3.0, 1.0 / 3.0
     g = (SB - math.sqrt(SB * SB - 4.0 * R / k2)) / 2.0
     g_none = (SB - math.sqrt(SB * SB - 4.0 * R / (k2 * (1.0 - diag)))) / 2.0
     data = [(t, read_bil(os.path.join(resdir, "Hg2%04d.bil" % k))) for k, t in frames(resdir) if 0 < k < 9000]

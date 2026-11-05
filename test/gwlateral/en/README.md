@@ -48,9 +48,9 @@ into the ground in the first step. The distributions are written as bil
 - **Configuration 2 (conductance along walls)**: on an interior grid the
   decay rate of the undulation would be λ = D k² (k = π/L). The east and west
   edge columns, however, have no outward diagonal links, so their north-south
-  conductance is 1 − d/2 = 0.707 times the interior value (d is the default
-  `gw_diagratio` 2/(2+√2)). The mean over the three columns is
-  (2 × 0.707 + 1)/3 = 0.805 times, and the check confirms that the decay rate
+  conductance is 1 − d/2 = 0.833 times the interior value (d is the default
+  `gw_diagratio` 1/3; 0.707 times with the default 2/(2+√2) before 2026-11-05).
+  The mean over the three columns is (2 × 0.833 + 1)/3 = 0.889 times, and the check confirms that the decay rate
   matches this discrete prediction. The shallow water solver has a
   correction that moves the blocked diagonal shares (f_opening_dynamic), and
   the lateral groundwater flow has a transfer with the same rule
@@ -84,8 +84,8 @@ make
 
 | Quantity | Computed | Theory |
 |---|---|---|
-| Configuration 1: d⟨r²⟩/dt (300–1800 s) | 0.200014 m²/s | 4D = 0.2 m²/s (ratio 1.00007) |
-| Configuration 2: decay rate (without the transfer) | 2.4806e-4 1/s | Discrete prediction with the walls 2.4820e-4 (ratio 0.99945) / interior theory D k² = 3.0843e-4 (ratio 0.804) |
+| Configuration 1: d⟨r²⟩/dt (300–1800 s) | 0.200007 m²/s | 4D = 0.2 m²/s (ratio 1.00004) |
+| Configuration 2: decay rate (without the transfer) | 2.7402e-4 1/s | Discrete prediction with the walls 2.7416e-4 (ratio 0.99949) / interior theory D k² = 3.0843e-4 (ratio 0.888) |
 | Configuration 3: decay rate (with the transfer) | 3.0827e-4 1/s | D k² = 3.0843e-4 (ratio 0.99951) |
 | Configuration 4: decay rate (one cell wide, with the transfer) | 3.0827e-4 1/s | D k² = 3.0843e-4 (ratio 0.99950) |
 
@@ -100,7 +100,7 @@ make
   one column wide and 0.985 times for one 40 columns wide (developer.md §16.6).
 - The remaining difference in configurations 3 and 4 (0.05 %) is of the size
   of the discretisation of the eigenvalue of a cosine on the grid (relative
-  k²Δx²/12 = 0.051 %); the ratio 0.99945 of configuration 2 has the same
+  k²Δx²/12 = 0.051 %); the ratio 0.99949 of configuration 2 has the same
   origin.
 - With MPI, np = 1, 2 and 4 all give distribution outputs and Logs identical
   byte for byte to the serial run (2026-10-30).
