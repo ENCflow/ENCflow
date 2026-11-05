@@ -259,11 +259,23 @@ reproducing urban inundation ([geographic information](geoinfo.md)).
 depth, $`q = u_n h_e`$. Towards a dry cell $`h_e`$ is capped by the energy
 head $`\eta_c + u_n^2/2g - z_n`$ (`f_dry_head_cap`), and an edge whose
 sender is completely dry gets $`u_n = q = 0`$. When the outflow of one step
-would use up the water of the cell (`f_exflux_reduction = 1`, default) the
-flux of that edge is scaled by $`(h_c - d_d)/\Delta h_c`$ (the **ex_flux
-column** on the screen counts these events). The edges are checked one
-after another, so negative depths are not excluded completely and $`h`$
-can become slightly negative under strong drying.
+would use up the water of the cell (`f_exflux_reduction = 1`, default), the
+flux of that edge is first scaled by $`(h_c - d_d)/\Delta h_c`$, edge by
+edge. A check per edge cannot catch outflow through several edges at once,
+so just before the continuity equation the total outflow $`O`$ of each cell
+is also computed, and in a cell where $`O`$ reaches the water $`h_c`$ all
+outflowing edges are scaled by the same ratio $`\max(h_c - d_d, 0)/O`$ (the
+ratio of the upwind cell is used, so both sides of an edge see the same value
+and mass is conserved). The flow computation therefore does not create
+negative depths (processes that change the depth after the flow computation,
+such as infiltration, evapotranspiration or a boundary water level, are
+separate). The **ex_flux column** on the screen counts both kinds of events.
+An edge whose velocity in the previous step was 0 does not get the cap by the
+upwind depth (`f_hcap_upwind`), so the outflow from a film thinner than
+$`d_d`$ that touches deep water (a slope thinned by infiltration, the edge of
+a pond whose level has dropped) is stopped by the suppression in every step,
+and these events pile up in ex_flux. This ex_flux does not come from the size
+of the time step (developer.md §94).
 
 ## 6. Time integration and the adaptive Runge-Kutta scheme
 

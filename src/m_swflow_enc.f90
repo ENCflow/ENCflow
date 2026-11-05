@@ -404,6 +404,9 @@ module m_swflow_enc
     real, allocatable :: mn(:,:,:)   ! セル境界での流量(時刻n。ステップ中は読み取り専用)
     real, allocatable :: mn1(:,:,:)  ! セル境界での流量の書き込み先(時刻n+1。completeでmnへコミット)
     real, allocatable :: h1(:,:)     ! セル中心での計算済み水深
+    real, allocatable :: rout(:,:)   ! セルの流出の縮め率(limit_cell_outflow。1 = 縮めない。
+                                     ! ステップごとの作業配列で保存しない。f_exflux_reduction > 0
+                                     ! のときだけ確保。§94)
     real, allocatable :: hs1(:,:)    ! 浮遊砂柱状量の書き込み先(時刻n+1。completeでs%hsへ
                                      ! コミット。s%sed_active のときだけ確保)
     real, allocatable :: cq1(:,:)    ! 輸送物質柱状量の書き込み先(同上の意味論。
@@ -1251,6 +1254,10 @@ subroutine m_swflow_enc_calc(p, g, b, s, ierror)
   ! 射影を掛けてエッジ流速・流量を補正する(docs/nonhydrostatic_plan.md §5)
   if (nhp%nh_active) call nh_project(p, g, s, sx_mod)
 
+  ! セルの流出の合計による過大な流出の抑制(辺ごとの抑制の取りこぼしを塞ぐ。§94)。
+  ! 確保の判定は namelist 由来で全ランク同一(中のハロ交換が collective 安全)
+  if (allocated(sx_mod%rout)) call limit_cell_outflow(p, g, s, sx_mod)
+
   ! 連続式を解いて水深を更新する
   call continuous(p, g, s, sx_mod)
 
@@ -1511,6 +1518,8 @@ subroutine init_enc_status(p, g, s, sx)
   ! エッジ配列の j 範囲: セル j を挟むエッジは j-1 と j なので下限は jsh-1
   allocate(sx%uv(1:4, dcp%ish-1:dcp%ieh, dcp%jsh-1:dcp%jeh), source = 0.0)
   allocate(sx%h1(dcp%ish:dcp%ieh, dcp%jsh:dcp%jeh), source = 0.0)
+  ! セルの流出の縮め率(過大な流出の抑制が有効なときだけ。§94)
+  if (opt%f_exflux_reduction > 0) allocate(sx%rout(dcp%ish:dcp%ieh, dcp%jsh:dcp%jeh), source = 1.0)
   allocate(sx%mn1(1:4, dcp%ish-1:dcp%ieh, dcp%jsh-1:dcp%jeh), source = 0.0)
   allocate(sx%mn(1:4, dcp%ish-1:dcp%ieh, dcp%jsh-1:dcp%jeh), source = 0.0)
   ! 浮遊砂の書き込みバッファ(sed_active は m_geomorph_init が設定済み。
@@ -1656,6 +1665,7 @@ subroutine del_enc_status(sx)
   if (allocated(sx%mn)) deallocate(sx%mn)
   if (allocated(sx%mn1)) deallocate(sx%mn1)
   if (allocated(sx%h1)) deallocate(sx%h1)
+  if (allocated(sx%rout)) deallocate(sx%rout)
   if (allocated(sx%hs1)) deallocate(sx%hs1)
   if (allocated(sx%cq1)) deallocate(sx%cq1)
   if (allocated(sx%hd1)) deallocate(sx%hd1)
@@ -2117,7 +2127,8 @@ subroutine calc_kth_momentum(p, g, s, sx, i, j, k, have_exflux, have_runge, have
     dhn = dhn / chn%wfrac(in,jn)
   end if
 
-  ! 過大な流出の抑制
+  ! 過大な流出の抑制(この辺だけで水量を超える流出。複数の辺の合計が超える分は
+  ! 連続式の直前の limit_cell_outflow が縮める。§94)
   !if ((dh > 0 .and. dhc + p%dd > s%h(i,j)) .or. (dh < 0 .and. dhn + p%dd > s%h(in,jn))) then
   if (sct%have_sect) then
     ! σ 有効時は矩形換算水深(体積)で判定・抑制する(dhc/dhn は vh 増分。
@@ -2769,6 +2780,125 @@ end subroutine
 
 
 !----------------------------------------------------------------------
+! セルの流出の合計による過大な流出の抑制(連続式の直前。developer.md §94)
+!   calc_kth_momentum と put_bc_faces の抑制は辺ごと(その辺の流出だけで水量を
+!   超えるか)なので、複数の辺から同時に出ると合計がセルの水量を超えて、連続式の
+!   後の水深が負になりうる(dd 未満の水膜が深いセルに接し、斜めの 2 辺がそれぞれ
+!   水量をわずかに下回る流出を持つ例。§94)。ここでは連続式と同じ換算・同じ飛ばす辺で
+!   セルの流出の合計 O を求め、O が水量 h(σ 有効時は矩形換算水深)以上のセルは、
+!   流出する辺をすべて同じ率 r = max(h − dd, 0)/O で縮める(辺ごとの抑制と同じく
+!   dd を残す。辺の向きによる偏りを作らないよう同率)。辺の流量と流速は風上(流出する
+!   側)のセルの率で縮めるので、辺の両側で同じ値になり保存は保たれる。超えるセルが
+!   なければ何も変えない。縮めたセルの数は ex_flux に加える
+!   帯の境界の辺は風上のセルが隣のランクのことがあるので、率をハロ交換する
+!   (自帯で求めた率を正とする。par_halo_cell)
+!----------------------------------------------------------------------
+subroutine limit_cell_outflow(p, g, s, sx)
+  type(t_sysparam), intent(in) :: p
+  type(t_geoinfo), intent(in) :: g
+  type(t_state), intent(inout) :: s
+  type(t_enc_status), intent(inout) :: sx
+
+  integer :: i, j, k, in, jn, ie, je, i1, i2, jc, ncell
+  real :: mne, dh, fw, winv, hv, outf, r
+  logical :: any_r
+  integer, parameter :: ke(1:8) = [ 1, 2, 3, 4, 4, 3, 2, 1]
+  real, parameter :: sign_e(1:8) = [1., 1., 1., 1., -1., -1., -1., -1.]
+
+  ! (1) 自帯のセルの率。流出の換算と飛ばす辺は continuous と同じ(取り込み条件を
+  !     変えるときは continuous と同時に更新すること)
+  ncell = 0
+  !$omp parallel do schedule(dynamic) private(i, j, k, in, jn, ie, je, mne, dh, fw, winv, hv, outf) &
+  !$omp reduction(+:ncell)
+  do j = dcp%js, dcp%je
+    do i = g%wx(1,j), g%wx(2,j)
+      sx%rout(i,j) = 1.0
+      if (g%sw(i,j) > 0) cycle
+      if (g%x(i,j) <= 0) cycle
+      winv = 1.0
+      if (chn%have_width) winv = 1.0 / chn%wfrac(i,j)
+      outf = 0.0
+      do k = 1, 8
+        in = i + din(k)
+        jn = j + djn(k)
+        if (g%x(in,jn) > 0) then
+          if (s%h(i,j) < p%dd .and. s%h(in,jn) < p%dd) cycle
+        else
+          if (.not. bcs%have_open_bc) cycle
+          if (.not. bc_open_face(in, jn)) cycle
+        end if
+        ie = i + die(k)
+        je = j + dje(k)
+        mne = sign_e(k) * sx%mn1(ke(k),ie,je)
+        if (mne <= 0.0) cycle
+        fw = 1.0
+        if (chn%have_frw) fw = chn%frw(ke(k),ie,je)
+        if (chn%have_fwd) fw = fw * chn%fwd(ke(k),ie,je)
+        dh = mne * geo%mn2dh(k) * fw * winv / s%gv(i,j)
+        outf = outf + dh
+      end do
+      if (outf <= 0.0) cycle
+      hv = s%h(i,j)
+      if (sct%have_sect) hv = sect_v(s%h(i,j), sct%sdep(i,j))
+      if (hv - outf <= 0.0) then
+        sx%rout(i,j) = max(hv - p%dd, 0.0) / outf
+        ncell = ncell + 1
+      end if
+    end do
+  end do
+  !$omp end parallel do
+
+  ! (2) 帯の外(ハロ行)のセルの率を受け取る(全ランクで毎ステップ呼ぶ)
+  call par_halo_cell(sx%rout)
+  s%n_exfluxes = s%n_exfluxes + ncell
+
+  ! (3) 縮める: 自帯のセルが使う辺(エッジ行 js−1..je)ごとに、風上のセルの率を掛ける。
+  !     各辺を書くのは 1 回だけ(行 je・列 ie・成分 k の反復)なので競合しない。
+  !     縮めるセルが自帯にもハロ行にもなければ何もしない
+  any_r = ncell > 0
+  if (.not. any_r .and. dcp%js - 1 >= dcp%jsh) any_r = any(sx%rout(:, dcp%js-1) < 1.0)
+  if (.not. any_r .and. dcp%je + 1 <= dcp%jeh) any_r = any(sx%rout(:, dcp%je+1) < 1.0)
+  if (.not. any_r) return
+  !$omp parallel do schedule(dynamic) private(i, k, ie, je, i1, i2, jc, in, jn, mne, r)
+  do je = dcp%js - 1, dcp%je
+    call edge_row_span(g, je, i1, i2)
+    do ie = i1, i2
+      do k = 1, 4
+        mne = sx%mn1(k,ie,je)
+        if (mne == 0.0) cycle
+        i = ie - die(k)              ! この辺を書くセル(流量は (i,jc) → (in,jn) が正)
+        jc = je - dje(k)
+        in = i + din(k)
+        jn = jc + djn(k)
+        if (mne > 0.0) then
+          r = rate(i, jc)
+        else
+          r = rate(in, jn)
+        end if
+        if (r < 1.0) then
+          sx%mn1(k,ie,je) = mne * r
+          sx%uv(k,ie,je) = sx%uv(k,ie,je) * r
+        end if
+      end do
+    end do
+  end do
+  !$omp end parallel do
+
+contains
+
+  ! 風上のセルの率(確保範囲外・領域外は 1 = 縮めない。海セルは (1) で 1 のまま)
+  real function rate(ii, jj)
+    integer, intent(in) :: ii, jj
+    rate = 1.0
+    if (ii < dcp%ish .or. ii > dcp%ieh .or. jj < dcp%jsh .or. jj > dcp%jeh) return
+    if (g%x(ii,jj) <= 0) return
+    rate = sx%rout(ii,jj)
+  end function
+
+end subroutine
+
+
+!----------------------------------------------------------------------
 ! 連続式による水深の更新と平均流速・流量の計算
 !----------------------------------------------------------------------
 subroutine continuous(p, g, s, sx)
@@ -2806,6 +2936,7 @@ subroutine continuous(p, g, s, sx)
       if (chn%have_width) winv = 1.0 / chn%wfrac(i,j)
       mnmax = 0
       ! 対象セルi,jの8近傍全ての水の流出入を計算し平均流量・流速と水位を更新する
+      ! (辺の取り込み条件と流出の換算は limit_cell_outflow と同時に更新すること。§94)
       s%ddir1(i,j) = 0
       s%ddir8(i,j) = 0
       do k = 1, 8
@@ -3109,8 +3240,10 @@ end subroutine
 !     - 源泉・消滅・乾燥時の処遇は所有モジュールの責務(ここは純移流)
 !     - 風上セルが領域外(開境界からの流入)の濃度は 0(清水流入)。ただし
 !       側方 Neumann の辺は鏡像セルの濃度(勾配 0。§90)、cbin があればその値
-!     - 乾燥エッジ条件(h<dd 両セル)は continuous と同一。強い乾燥化では
-!       h1 同様に c1 も僅かに負になり得る(f_exflux_reduction=1 で緩和)
+!     - 乾燥エッジ条件(h<dd 両セル)は continuous と同一。水の流出は
+!       f_exflux_reduction=1 でセルの水量を超えない(辺ごとの抑制とセルの合計の
+!       抑制。§94)が、c1 の非負は保証しない(MUSCL の面の濃度は供給元のセルの
+!       平均を超えうる。eul も水と違う流束)。強い乾燥化では c1 が僅かに負になり得る
 !     - eul = 真(波浪場の浮遊砂。§90)は面流束から h (r u^S − u_a ê_θ) を引く。このときは
 !       一様濃度でもその発散の分だけ濃度が変わる(水と違う速度で動く)
 !     - xrow(任意。水質の台帳。§30.9)を渡すと、系外との出入りを自帯の行
