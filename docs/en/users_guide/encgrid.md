@@ -216,8 +216,12 @@ shown by Van Emelen et al.[^ve14]). The dimensionless shear stress of sediment
 transport and erosion is evaluated with the same speed and depth
 ([sediment transport supplement](sediment.md) §1). Use it on steep slopes when
 Manning's $`n`$ is given from measurements in mild-slope channels (keep 1 for an
-$`n`$ calibrated with a horizontally projected model). The default is 1 and 2 is
-optional (developer.md §93, test test/slopefric).
+$`n`$ calibrated with a horizontally projected model). It also strengthens the
+friction where the water does not flow along a slope, such as walls, kerbs and
+steps in the DEM, treating them as a thin film on a slope, so the flow down a
+step is slower than with 1 (on a step of gradient 2 the friction coefficient is
+about 33 times that of 1). Compare with 1 on urban DEMs with many steps. The
+default is 1 and 2 is optional (developer.md §93, test test/slopefric).
 
 **Friction term $`F`$.** The Manning law is treated semi-implicitly.
 
