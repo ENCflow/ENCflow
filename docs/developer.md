@@ -19935,3 +19935,22 @@ wfswash_tanbe = 0.1 を入れた): 途中で不具合が 2 つ見つかった(�
 - 範囲外: 流れの計算の後に水深を変える処理(境界の水位、ダム、地下水・蒸発散など)は対象外。S の集計が
   正の水深だけを足すのは変えない。スカラーの柱状量 c1 の非負は保証しない(既定の MUSCL の面の濃度は
   供給元のセルの平均を超えうる。advect_scalar の契約の注を更新)。
+- **検証**(2026-11-05。gfortran 13.3 / Open MPI 4.1.6):
+  - 範囲外参照: -Og -fcheck=all(OpenMP なし)の逐次と MPI で、抑制が働く gwwidth(param.txt・
+    param_nowidth.txt)・gwsect・damwq・sewer_wq を np = 2・4、nhbreak と chichibu(1 時間まで。静的データ)を
+    np = 2 で回して実行時エラーなし。MPI の出力は逐次と全ファイル一致(再帰的に比較)。
+  - 回帰(-Ofast の逐次、reference を持つ 42 ケース): 値が変わったのは damwq・gwsect・gwwidth・sewer_wq・
+    nhbreak の 5 ケースだけ(負の水深が出ていたケース)。ほかの 37 ケースは PASS で、一致・許容内の内訳も
+    修正前と同じ。ただし wfdoppler の wavefield.csv が 1 値の最終桁(−6.0037614E−07 → −6.0037613E−07)で
+    許容内になった。-O2(厳密な数学。§28.3)のビルドでは、抑制が働かない 9 ケース(wfdoppler・wfcurrent・
+    wfsed・wave・tracer・chichibu_icmap・nhcurrent・nhwave・chichibu。OpenMP 1 スレッド)の全出力が修正前と
+    バイト一致したので、-Ofast の差はビルドの差(コードを足したことによる最適化の違い)。
+  - MPI: -O2 のビルドで、変わる 5 ケース(gwwidth は 2 設定)の np = 1・2・4 の全出力が逐次とバイト一致。
+  - 自己検定: gwwidth の全検定が PASS(雨の後の総水量の最大相対ずれ: 本体 2.0e-13、対照 0、管路層 0)。
+    gwsect(本体 3.9e-13、幅なし 5.9e-13 ほか)・damwq も PASS。対照を 1 分ごとの Log で見ると、雨の後の
+    総水量の最大相対ずれが 8.5e-5(修正前)→ 0。
+  - 変わる 5 ケースの reference との差(-Ofast): gwwidth は地表と地下の貯留の配分が 1.4e-5 m(総水量は
+    1e-14 で同じ)、最大水深 −2.1 %(1 時間の 0.3697 → 0.3618 m)、水質の台帳の湧出の累計 +0.44 %、ex_flux・
+    Runge の表示値。gwsect は配分 2.7e-6 m、最大水深 −0.28 %、水質の台帳 0.19 % 以内。damwq は V_max の 1 行
+    (−0.0066 %)。sewer_wq は貯留 1.3e-10 m・水質の台帳 0.007 % 以内。nhbreak は ex_flux(2 → 4)と Runge
+    (7.6 → 7.7 %)の 1 行ずつで、ほかの値はこのケースの許容内。
