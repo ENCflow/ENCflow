@@ -140,6 +140,23 @@ architecture.md。このメモは「現在進行中・未完了の項目」だ�
      (済 2026-11-05)値の変わる 16 ケースの reference を更新(利用者の承認の後。試作と同じケース・同じ差で
      あることを確かめてから。developer.md §95「検証と reference の更新」)し、main へマージした。
      **残り**: 全例題の再計算(既定 2・P・U″ の後に一度だけ。00k と下の残り)。
+   - (進行中 2026-11-05)全例題の再計算。別ブランチ claude/nifty-hawking-yx6s0o が既定を変える過程
+     (creep・spl・gl・lv の diagratio を 1/3 に、f_lvtemp_scheme を 3 に)を使う 8 例題(badland・
+     badland_round・badland_storm・mesa・mountain_valley・glacier_valley・shield_volcano・stratovolcano)は、
+     その branch のマージの後に再計算する。それ以外は 1 スレッドずつ 4 並列で回し、終わった例題から README
+     (日英)と図を更新している(値の変化は各コミットの説明): landslide_tsunami・tsunami_coast・
+     tsunami_fault・sewer_hybrid・bedrock_cover・ashfall_lahar・debris_bedrock・timberyard・tsunami_town・
+     qanat。変化なし(表示の桁で同じで、図も内容が同じ): stone_forest・levee_breach。残り(計算中。delta は
+     4 スレッドでも 1 ケース 40 分〜3.5 時間): estuary_barrage・nest_reflect・debris_fan・catchment_metal・
+     meander・karst・meander_cutoff・delta・tower_karst。対象外: vz_tani2023(論文の PDF が要る)、
+     benchmark(結果を README に載せていない)、tsunami_fault の param_hw(fault2disp_w.txt の bm_w が要る
+     開発者向けの設定)。
+     - 前回の数値の一部は、リポジトリの図化スクリプトの外の後処理で求めたもの(debris_bedrock の 1 s ごとの
+       出力の後処理、ashfall_lahar の堰堤の時刻と補足の土砂量、timberyard の追加ケース、tsunami_town の
+       最大流体力の中央値など)。前回値を再現できる定義を確かめてから求め直した。tsunami_town の中央値
+       (8.6・5.8)は 11-04 の実行ファイルでも再現しない古い値だったので、定義を明記して更新した。
+     - debris_bedrock の補足の k_p は、重力補正 1 で出水だけの定常勾配が約 0.355 になるように合わせた値で、
+       既定 2 では 0.379(出水の剥離の応力が急勾配で cos²θ 倍)。合わせ直すかは利用者の判断(README に明記)。
    - 残り: 上の既定の切り替え、混合体流動の抵抗則への適用、案 D〜F、落ち口の扱い(0・1 では落ち口の
      セルが乾き、平屋根に摩擦の見積もりより深い水がたまる。§93「段差の扱い」の所見 (2))。
 
