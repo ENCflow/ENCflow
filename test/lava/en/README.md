@@ -64,8 +64,9 @@ same practice as [test/volcano](../../volcano/en/README.md)).
     cooling): lava at 1150 °C from one side of the vents and at 1050 °C from the
     other side of a sheet flow down a uniform slope; the width to which the
     temperature boundary spreads across the flow is compared for a flow along a
-    grid axis (0°) and at 45°, with first-order upwind and MUSCL
-    (`f_lvtemp_scheme = 3`) for the heat advection. The checks are that it does
+    grid axis (0°) and at 45°, with first-order upwind (`f_lvtemp_scheme = 1`
+    given explicitly) and MUSCL (`f_lvtemp_scheme = 3`, the default) for the
+    heat advection. The checks are that it does
     not spread at 0°, that at 45° first-order upwind matches the crosswind
     diffusivity of the modified equation (√2/4)·u·Δx, and that MUSCL gives less
     than 1/4 of it (developer.md §94).
@@ -175,10 +176,10 @@ the erupted volume) (developer.md §51.5).
 | Configuration 8 (2) conservation of heat | Σhl·Tl·A = Σ V_k T_k to −1.8e-16 relative; residual on the screen 1.2e-16 | PASS |
 | Configuration 8 (3) range of the temperature | 1050.000000–1150.000000 °C, mixed zone of 21 cells | PASS |
 | Configuration 8' agreement with the isothermal run | lavaflow.dat and state.dat byte-identical | PASS |
-| Configuration 9 (1)(2) ledger and heat ledger | machine precision and complete solidification in all four runs, residual of the heat ledger ≤ 1.1e-15 | PASS |
-| Configuration 9 (3) flow length in the temperature mode | 55 m (2 m³/s) → 145 m (8 m³/s), ratio 2.64 (tolerance > 1.5) | PASS |
+| Configuration 9 (1)(2) ledger and heat ledger | machine precision and complete solidification in all four runs, residual of the heat ledger ≤ 9.5e-16 | PASS |
+| Configuration 9 (3) flow length in the temperature mode | 50 m (2 m³/s) → 145 m (8 m³/s), ratio 2.90 (tolerance > 1.5) | PASS |
 | Configuration 9 (4) flow length of the isothermal control | 120 m → 120 m, ratio 1.00 (tolerance 1 ± 0.1) | PASS |
-| Configuration 9r restart round trip | the three save files byte-identical to the uninterrupted run, residual of the heat ledger 1.75e-15 | PASS |
+| Configuration 9r restart round trip | the three save files byte-identical to the uninterrupted run, residual of the heat ledger 8.93e-16 | PASS |
 | Configuration 10 (1) ledgers and conservation of heat | in all four runs Σhl·A − V_in ≤ 5.1e-11 m³ (V_in 30,000 and 59,400 m³), heat ≤ 1.4e-15 (relative), residual on the screen ≤ 3.7e-13 | PASS |
 | Configuration 10 (2) boundary at 0° | with both first-order upwind and MUSCL both sides of the boundary stay at the eruption temperatures (difference ≤ 4.5e-13 °C); the MUSCL save is byte-identical to first-order upwind | PASS |
 | Configuration 10 (3) first-order upwind at 45° | σ = 6.85, 11.04, 15.73, 19.37 m (s = 14, 35, 71, 106 m), D⊥ = 0.357·u·Δx (theory 0.354, +1.0%; tolerance 15%) | PASS |
@@ -224,7 +225,7 @@ the erupted volume) (developer.md §51.5).
   length is set by the volume and the yield stress and does not depend on the
   effusion rate (a uniform deposit at the stopping thickness 0.98 m), whereas
   in the temperature mode the flow at the lower effusion rate cools from its
-  front and stops early, and the lava piles up behind it (up to 3.3 m thick).
+  front and stops early, and the lava piles up behind it (up to 3.5 m thick).
   Configurations 7–9 are not in the figure either.
 - The saves, field outputs and Log.txt of configurations 1–6 are
   byte-identical before and after the addition of the temperature mode (the
@@ -241,8 +242,16 @@ the erupted volume) (developer.md §51.5).
   and stepwise across it, so the reconstruction does not act, and the result is
   byte-identical to first-order upwind. The saves (except the line with the
   creation time in save_info.txt), field outputs and Log.txt of configurations
-  1–9 are byte-identical before and after the addition of MUSCL (the default 1
-  is the same expression as before). Configuration 10 is not in the figure.
+  1–9 were byte-identical before and after the addition of MUSCL (the default
+  was then 1). Making 3 the default (2026-11-05) changes configuration 8, where
+  lava flows in the temperature mode (only the temperature field; with no
+  cooling and zero temperature sensitivity the deposit does not change), and
+  configurations 9 and 9r (the shape of the deposit and the flow length; for
+  the flow at effusion rate Q 55 → 50 m, ratio 2.64 → 2.90). The isothermal
+  configurations 1–6 and the isothermal controls of configuration 9, the
+  configuration 7 that does not flow, and x0 and x45 of configuration 10, which
+  give first-order upwind explicitly, do not change. Configuration 10 is not in
+  the figure.
 - The flux stencil remains 4-neighbor; the 8-neighbor extension remains a
   candidate common to the diffusion-type modules (developer.md §61.4).
 

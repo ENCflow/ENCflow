@@ -39,8 +39,8 @@ module list_lavaflow
     ! --- 温度(段階2。lava_plan.md §8・developer.md §51.7)。f_lvtemp=1 のときだけ読む。
     !     既定は置かない(溶岩の種類で桁が変わる値と、原典を確かめていない値。番兵 -9999) ---
     integer :: f_lvtemp = 0                  ! 1: 溶岩の深さ平均温度を計算する(0 = 等温)
-    integer :: f_lvtemp_scheme = 1           ! 熱の移流の面の温度 (1: 1次風上 = 送り手の温度,
-                                             !   3: MUSCL + van Leer。developer.md §94)
+    integer :: f_lvtemp_scheme = 3           ! 熱の移流の面の温度 (3: MUSCL + van Leer = 既定(2026-11-05 から),
+                                             !   1: 1次風上 = 送り手の温度。developer.md §94)
     real :: lv_temp0(1:lvmax) = -9999.0      ! 噴火口ごとの噴出温度 (°C)
     real :: lv_tref = -9999.0                ! レオロジーの基準温度 T_r (°C。lv_visc・lv_tauy はこの温度の値)
     real :: lv_bvisc = -9999.0               ! 粘度の温度感度 β_η (1/K)

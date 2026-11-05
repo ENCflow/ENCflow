@@ -65,14 +65,11 @@ architecture.md。このメモは「現在進行中・未完了の項目」だ�
      test は PASS、reference(splash・splashsat・splashstrata)は identical で更新不要。**残り**: 例題 badland・
      badland_round・badland_storm・mesa(乾式侵食)と mountain_valley・badland_round・mesa(クリープ)の README の数値と
      図の回し直し(結果を利用者が目視確認してから README を更新する)。
-   - (b) 段 2(済 2026-11-05。developer.md §94): 溶岩の温度の数値拡散を計測し(4 近傍の 1 次風上は 0° で横断 0、
-     45° で 0.357·u·Δx = 修正方程式の 0.354 に +1 %)、MUSCL の選択式 `f_lvtemp_scheme = 3` を足した(既定 1 =
-     従来とビット一致。範囲の切り詰めは残し、流れ出しの面の反対側の近傍を範囲に加える。test/lava 構成 10)。
-     **残る判断(利用者の確認待ち)**: 既定を 3 にするか。§78 の地表のスカラーと同じ理由が当てはまり、冷えて
-     止まる流れ(構成 9 の流れ)の格子を変えた比較でも 3 の方が格子への依存が小さい(堆積の最大厚: 1 次
-     3.34・3.41・3.46 m、MUSCL 3.54・3.53・3.55 m。Δ = 5・2.5・1.25 m)。変えると test/lava 構成 9 の堆積
-     の形(検定は PASS のまま)と examples/stratovolcano の最後の段(温度モードの溶岩流。README の数値と図)
-     が変わる。
+   - (b) 段 2(済 2026-11-05。developer.md §94): 溶岩の温度の熱の移流に MUSCL(`f_lvtemp_scheme = 3`)を足し、
+     既定を 3 にした(2026-11-05。利用者の決定)。test/lava は全構成 PASS(構成 9 の長さの比 2.64 → 2.90)、
+     reference はなく更新不要。**残り**: examples/stratovolcano の最後の段(run_flow.py の温度モードの溶岩流)の
+     README の数値(到達距離・面積・最大の厚さ・固まった時刻・熱の損失、test/lava 構成 9 の「2.6 倍」の引用)と
+     図の回し直し(結果を利用者が目視確認してから README を更新する)。
    - (c) 段 3: 氷河の SIA・溶岩流の流動の 8 近傍化は設計案だけ(landslide_tsunami_plan.md §11.1。塞がれた斜めの
      振り替えの規則 = 案 A・B、d、既定の扱いを決めてから実装)。
    - (d) 湿潤侵食の剥離深の横方向拡散 wet_lw(§84.16)も同じ 5 点の核を使う(合意の範囲外。9 点にするなら

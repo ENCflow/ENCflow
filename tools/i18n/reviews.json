@@ -203,9 +203,9 @@
     {
       "source": "docs/users_guide/diagonal_diffusion.md",
       "target": "docs/en/users_guide/diagonal_diffusion.md",
-      "source_sha256": "9c3b2ef2c700f90b2cdffd226ae2f9d927c4caea9efe42588e1575635d92d07c",
-      "target_sha256": "92a7754672c7ec9b75223cbfcf0d3eb4027410d3ee5244c45f50427472d1d456",
-      "reviewer": "Claude (Claude Code session; reviewed the text on the new default 1/3 of creep_diagratio and spl_diagratio (developer.md sec. 93) in the Japanese source against the English mirror, 2026-11-05)",
+      "source_sha256": "fb41df3244e94315776c16f9afd707b3ddbb95df2b867925155add6bc686389c",
+      "target_sha256": "71081efcfb0bd852065a5aac266f1f0ad03ae011e2a17b5075f4ef6a9697f4b0",
+      "reviewer": "Claude (Claude Code session; reviewed the text on the new default 3 (MUSCL) of f_lvtemp_scheme (developer.md sec. 94) in the Japanese source against the English mirror, 2026-11-05)",
       "method": "assistant",
       "reviewed_on": "2026-11-05"
     },
@@ -347,9 +347,9 @@
     {
       "source": "docs/users_guide/lavaflow.md",
       "target": "docs/en/users_guide/lavaflow.md",
-      "source_sha256": "0fb8d0e00215aaebcb77aec33398a6fbada2c1f94c03dce54a2fdcdf7262d405",
-      "target_sha256": "2bcb40d78da49c46777a8e6b36a6ddce31a08b79e5892248fede67572d5a1e50",
-      "reviewer": "Claude (Claude Code session; reviewed the added text on the MUSCL option for the lava heat advection (f_lvtemp_scheme; developer.md sec. 94) and test/lava configuration 10 in the Japanese source against the English mirror, 2026-11-05)",
+      "source_sha256": "137f61902c91aac59bd498bfcf19994277d73517f98d8a1083803dc00c7f9354",
+      "target_sha256": "a894b50eff7367db7c47f18aa21ae786f7c7b686bd925894baff10d3d5138ccc",
+      "reviewer": "Claude (Claude Code session; reviewed the text on the new default 3 (MUSCL) of f_lvtemp_scheme (developer.md sec. 94) in the Japanese source against the English mirror, 2026-11-05)",
       "method": "assistant",
       "reviewed_on": "2026-11-05"
     },
@@ -698,9 +698,9 @@
     {
       "source": "examples/List_samples/list_lavaflow.txt",
       "target": "examples/List_samples/en/list_lavaflow.txt",
-      "source_sha256": "37e472f300db4b899dd4bf2b248c50f9763c776b4a7b77df51cf91d996bb5579",
-      "target_sha256": "dac1cfc1b9e5c40ea6c99b66bd95bbafb1f5e06c12059c3cdae3be10a543bdd6",
-      "reviewer": "Claude (Claude Code session; reviewed the added text on the MUSCL option for the lava heat advection (f_lvtemp_scheme; developer.md sec. 94) and test/lava configuration 10 in the Japanese source against the English mirror, 2026-11-05)",
+      "source_sha256": "f86bfbb8da7321356e71bf64511de8474979fb2f315bfa8a6ea4c9da4ea8b7ba",
+      "target_sha256": "d04ce0a59569f160fae20acb132c0910c14d9d4f5e927da41676e625622769f7",
+      "reviewer": "Claude (Claude Code session; reviewed the text on the new default 3 (MUSCL) of f_lvtemp_scheme (developer.md sec. 94) in the Japanese source against the English mirror, 2026-11-05)",
       "method": "assistant",
       "reviewed_on": "2026-11-05"
     },
@@ -3461,9 +3461,9 @@
     {
       "source": "test/lava/README.md",
       "target": "test/lava/en/README.md",
-      "source_sha256": "d0a6e39c3db0ccb722eaf755930359d2589ddb4f0c38631714f6d6fe2b5ae01e",
-      "target_sha256": "e2fc466b7b5eef610f93a2a0510825118a91bc818e472cb00ca18c6aa29ebe34",
-      "reviewer": "Claude (Claude Code session; reviewed the added text on the MUSCL option for the lava heat advection (f_lvtemp_scheme; developer.md sec. 94) and test/lava configuration 10 in the Japanese source against the English mirror, 2026-11-05)",
+      "source_sha256": "93b50d7ed8043c566de1f5d55cda480f618357d9a306a70451967c67b1a98589",
+      "target_sha256": "40c7ca85f41b2c3a63456cd7ed5b8a6b3c58556687a64c1445f14b445294bf80",
+      "reviewer": "Claude (Claude Code session; reviewed the text on the new default 3 (MUSCL) of f_lvtemp_scheme (developer.md sec. 94) in the Japanese source against the English mirror, 2026-11-05)",
       "method": "assistant",
       "reviewed_on": "2026-11-05"
     },

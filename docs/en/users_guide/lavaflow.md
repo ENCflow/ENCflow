@@ -153,10 +153,10 @@ lava_plan.md Sec. 8 and the implementation record developer.md Sec. 51.7.
 **What is computed**
 
 - The heat content $`h_l T_l`$ is carried with the lava flow (the edge flux times
-  the face temperature). By default the face temperature is the temperature of
-  the donor (first-order upwind); with `f_lvtemp_scheme = 3` it is reconstructed
-  from the three cells in line along the edge (MUSCL; see "Numerical diffusion of
-  the heat advection" below). Lava injected at a vent mixes with the lava
+  the face temperature). By default the face temperature is reconstructed from
+  the three cells in line along the edge (MUSCL); with `f_lvtemp_scheme = 1` it
+  is the temperature of the donor, i.e. first-order upwind (see "Numerical
+  diffusion of the heat advection" below). Lava injected at a vent mixes with the lava
   already there by heat content. The new temperature stays between the
   temperatures of the cell and of the lava flowing into it (with MUSCL the range
   also includes the neighbour on the far side of each edge the lava leaves
@@ -227,7 +227,7 @@ explicitly. A missing one stops the run)
 | Parameter | Default | Meaning |
 |---|---|---|
 | f_lvtemp | 0 | 1: compute the temperature (0 = isothermal) |
-| f_lvtemp_scheme | 1 | face temperature of the heat advection. 1: the temperature of the donor (first-order upwind), 3: MUSCL + van Leer (see "Numerical diffusion of the heat advection" below). 3 can be given only with `f_lvtemp = 1` |
+| f_lvtemp_scheme | 3 | face temperature of the heat advection. 3: MUSCL + van Leer (see "Numerical diffusion of the heat advection" below), 1: the temperature of the donor (first-order upwind; the default before 2026-11-05). Used only in the thermal mode (`f_lvtemp = 1`); not read in the isothermal mode |
 | lv_temp0(n) | none (required) | eruption temperature of vent n (°C); must be above `lv_tsol` |
 | lv_tref | none (required) | reference temperature $`T_r`$ of the rheology (°C); `lv_visc` and `lv_tauy` are the values at this temperature |
 | lv_bvisc | none (required) | temperature sensitivity of the viscosity $`\beta_\eta`$ (1/K); 0 or more |
@@ -312,8 +312,11 @@ explicitly. A missing one stops the run)
   new extremes). At a front where the receiver has no lava, and on edges where
   the cell further upwind is outside the domain, a wall, sea or without lava,
   the face temperature stays first-order upwind.
-- The default is 1 (results as before). With 3, the length of a flow that stops
-  as it cools and the shape of its deposit change.
+- The default is 3 (from 2026-11-05; the default before that was 1).
+  `f_lvtemp_scheme = 1` reproduces results from before 2026-11-05. The length
+  of a flow that stops as it cools and the shape of its deposit differ between
+  1 and 3 (for the flow of configuration 9 on 5 m cells the length goes from 55
+  to 50 m and the largest deposit thickness from 3.34 to 3.54 m).
 
 **Computing time**
 
@@ -338,8 +341,9 @@ explicitly. A missing one stops the run)
   effective specific heat), heat conduction into the ground and viscous
   heating are not computed. There is no thermal interaction between lava and
   water either.
-- The numerical diffusion of the heat advection is not zero even with MUSCL
-  (the limiter falls back to first order near temperature extremes).
+- The numerical diffusion of the heat advection is not zero even with the
+  default MUSCL (the limiter falls back to first order near temperature
+  extremes).
   Temperature structures a few cells wide (such as a hot core a few cells
   across) are blunted.
 - Backward Euler is first-order accurate, so when the update interval is long
@@ -417,7 +421,7 @@ The labels in the Basis column are explained in [How to read the basis of a defa
 | lv_cfl / lv_nsubmax | 0.4 / 10000 | sub-cycle safety factor and cap | **numerical** |
 | lv_cell / lv_q0 / lv_val | — | vent cells and effusion rate | **given** eruption scenario (from total volume and duration) |
 | f_lvtemp | 0 | whether to compute the temperature | **method** 0 = isothermal (as before); 1 for flows that stop by cooling |
-| f_lvtemp_scheme | 1 | face temperature of the heat advection | **method** 1 = first-order upwind as before (results unchanged). 3 cuts the crosswind numerical diffusion of a flow oblique to the grid to about 1/10 (configuration 10) and makes a flow that stops as it cools depend less on the cell size (the comparison of configuration 9 with different cells; developer.md Sec. 94). Whether to make 3 the default is under consideration |
+| f_lvtemp_scheme | 3 | face temperature of the heat advection | **method** 3 = MUSCL + van Leer. Cuts the crosswind numerical diffusion of a flow oblique to the grid to about 1/10 of first-order upwind (configuration 10) and makes a flow that stops as it cools depend less on the cell size (the comparison of configuration 9 with different cells; developer.md Sec. 94). 1 = first-order upwind (the default before 2026-11-05; for reproducing results from before then) |
 | lv_temp0 / lv_tref / lv_tsol | none | eruption, reference and solidification temperatures | **given** set by the lava type and observations (no default) |
 | lv_bvisc / lv_btau | none | temperature sensitivities of the viscosity and yield stress | **given** differ widely between lava types; $`\ln k/\Delta T`$ if cooling by $`\Delta T`$ makes it $`k`$ times larger |
 | lv_emis | none | effective emissivity | **calibrated** an effective value that includes crust insulation; calibrate on the flow length (a default will be set after checking the original sources) |

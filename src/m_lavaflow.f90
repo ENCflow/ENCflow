@@ -355,10 +355,8 @@ subroutine m_lavaflow_init(lv, p, g, s, mt)
   if (list%f_lvtemp_scheme /= 1 .and. list%f_lvtemp_scheme /= 3) then
     call par_stop("list_lavaflow: f_lvtemp_scheme must be 1(first-order upwind) or 3(MUSCL)")
   end if
-  if (list%f_lvtemp_scheme == 3 .and. .not. lv%thermal) then
-    call par_stop("list_lavaflow: f_lvtemp_scheme = 3 requires f_lvtemp=1")
-  end if
-  lv%tmuscl = (list%f_lvtemp_scheme == 3)
+  ! 温度モードでないときは読まない(既定 3。§94)
+  lv%tmuscl = lv%thermal .and. (list%f_lvtemp_scheme == 3)
 
   ! --- 状態の確保 ---
   allocate(s%hl(dcp%ish:dcp%ieh, dcp%jsh:dcp%jeh), source = 0.0)

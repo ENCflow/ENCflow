@@ -385,14 +385,15 @@ remains.
   dispersivity directly together with MUSCL, in the same piece of work, when
   it becomes necessary.
 - The heat flux of the **lava temperature** (`f_lvtemp = 1`) is the lava
-  edge flux times the face temperature, by default the temperature of the
-  donor (first-order upwind). Lava
-  flow is a nonlinear diffusion equation of lava thickness and follows the
-  same 4-neighbour conservative discretisation as the SIA of glaciers
-  ([Lava flow](lavaflow.md), [lava_plan.md](../../lava_plan.md) §1 and §3,
-  in Japanese), so it has no crosswind diffusion from diagonal edges, and has
-  the properties of 4-neighbour first-order upwind (zero along the axes,
-  largest at 45°; §2.3). The combination of first-order upwind and the
+  edge flux times the face temperature. Lava flow is a nonlinear diffusion
+  equation of lava thickness and follows the same 4-neighbour conservative
+  discretisation as the SIA of glaciers ([Lava flow](lavaflow.md),
+  [lava_plan.md](../../lava_plan.md) §1 and §3, in Japanese), so it has no
+  crosswind diffusion from diagonal edges. First-order upwind, which takes the
+  temperature of the donor as the face temperature (`f_lvtemp_scheme = 1`,
+  the default before 2026-11-05), has the properties of 4-neighbour
+  first-order upwind (zero along the axes, largest at 45°; §2.3). The
+  combination of first-order upwind and the
   donor-limited flux makes the new temperature a convex combination of the
   neighbouring temperatures of the previous time, so no new temperature
   maximum or minimum is created (lava_plan.md §8.7). Viscosity and yield
@@ -405,11 +406,11 @@ remains.
   $`0.354\,u\Delta`$). The diffusion along the flow makes the length of a flow
   that stops as it cools, and the shape of its deposit, depend on the cell
   size (with first-order upwind at Δ = 5 m the largest deposit thickness is
-  3–6 % thinner than on finer grids). `f_lvtemp_scheme = 3` switches to the
-  same van Leer link-wise MUSCL as the surface scalars, and the crosswind
+  3–6 % thinner than on finer grids). The default `f_lvtemp_scheme = 3` is
+  the same van Leer link-wise MUSCL as the surface scalars, and the crosswind
   diffusivity at 45° becomes $`0.034\,u\Delta`$ (0.09 times first order). The
   new temperature is kept within the range of the neighbouring temperatures,
-  so the property of creating no new extremes is kept (the default is 1;
+  so the property of creating no new extremes is kept (the default from
   2026-11-05; "Numerical diffusion of the heat advection" in
   [Lava flow](lavaflow.md), developer.md §94, in Japanese).
 
@@ -707,7 +708,7 @@ with a limiter.
 | Fronts, plumes and peaks of water quality, suspended sediment, the salt-water layer, driftwood and debris | First-order upwind diffuses by $`0.293\,u\Delta`$ crosswind and $`u\Delta/2`$ longitudinally; peaks drop and the answer changes with the grid | Link-wise MUSCL (`f_scalar_scheme = 3`; §3.3) | First order at extrema, boundaries, wet/dry fronts and coasts. Check thin structures by refining the grid |
 | Reproducing existing calculations calibrated with first-order upwind | -- | The previous results with `f_scalar_scheme = 1` | Concentration-dependent processes change in the direction of lower peaks |
 | Advective transport with groundwater, $`c_g`$ | First-order upwind diffusion | Deliberately kept first order (stands in for physical dispersion; §3.4) | Explicit dispersivity and MUSCL in the same future work |
-| Lava temperature | 4-neighbour first-order upwind diffusion (no diffusion from diagonal edges; crosswind 0 along the axes and $`0.354\,u\Delta`$ at 45°) | By default first-order upwind (creates no new temperature extrema). `f_lvtemp_scheme = 3` gives MUSCL (crosswind 0.09 times first order at 45°; §3.4) | With the default first order the crosswind temperature structure of a flow oblique to the grid smears, and a flow that stops as it cools depends on the cell size. Choose MUSCL. An 8-neighbour version is being designed |
+| Lava temperature | With first-order upwind, 4-neighbour diffusion (no diffusion from diagonal edges; crosswind 0 along the axes and $`0.354\,u\Delta`$ at 45°); a flow that stops as it cools depends on the cell size | Link-wise MUSCL (`f_lvtemp_scheme = 3`, the default from 2026-11-05; crosswind 0.09 times first order at 45°, creates no new temperature extrema; §3.4) | The limiter falls back to first order near temperature extrema, so temperature structures a few cells wide are blunted. `f_lvtemp_scheme = 1` gives the results from before 2026-11-05. An 8-neighbour version is being designed |
 | Cross-stream profiles of jets, shear layers and longshore currents (momentum) | The oblique family is smoothed across the stream; $`\approx 0.15\,u\Delta`$ in the cell velocity (scheme 3) | MUSCL on the flow-direction faces (scheme 3; about half of scheme 2; §4.3) | Lateral faces are first order. Physical viscosity acts only when it exceeds the numerical diffusion. Compare by refining the grid |
 | Checkerboard pattern in deep, slow stagnant zones | Circulations running oppositely on the parity sub-lattices are not damped | Build the lateral faces from opposite-parity parallel links (§4.4; always on) | -- |
 | Lateral faces at walls, pond edges, shelves and diagonally blocked openings | Fluxes that disagree with the mass create kinetic energy and blow up in finite time | Actual-flow flux (axis), opening ratio (diagonal), depth window for one-sided links (§4.5; always on) | Disagreeing signs of the flow; the lag of the bore in wall rows |
