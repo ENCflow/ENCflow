@@ -744,12 +744,13 @@ with a limiter.
   steepest slope of hillslopes (§92) were biases from judging and evaluating
   with per-edge quantities in eight directions, not numerical diffusion. All
   have been rewritten to evaluate with the gradient magnitude or D∞.
-- **4-neighbour 5-point stencils of diffusion-type processes**: creep and the
-  curvature of dry hillslope erosion use the 5-point Laplacian by default, which is
-  biased by the grid direction at short wavelengths close to the cell size (not
-  numerical diffusion, but a bias in the direction of the discretisation error).
-  Setting `creep_diagratio` and `spl_diagratio` to 1/3 gives the isotropic 9-point
-  stencil ([Sediment transport and hillslope processes](sediment.md) §2 and §6, developer.md §93). The glacier
+- **4-neighbour 5-point stencils of diffusion-type processes**: the 5-point
+  Laplacian of creep and of the curvature of dry hillslope erosion (the default
+  before 2026-11-05) is biased by the grid direction at short wavelengths close to
+  the cell size (not numerical diffusion, but a bias in the direction of the
+  discretisation error). The default is the isotropic 9-point stencil with
+  `creep_diagratio` and `spl_diagratio` = 1/3
+  ([Sediment transport and hillslope processes](sediment.md) §2 and §6, developer.md §93). The glacier
   SIA and lava flow remain 4-neighbour (an 8-neighbour version is being designed;
   landslide_tsunami_plan.md §11.1). How the diagonal share d is chosen for each
   process is summarised in [choosing the diagonal share d](diagratio.md).

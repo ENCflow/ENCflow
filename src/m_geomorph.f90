@@ -987,7 +987,7 @@ subroutine m_geomorph_init(gm, p, g, s)
     if (gm%creep_d <= 0.0) then
       call par_stop("list_geomorph: f_creep requires creep_d > 0")
     end if
-    ! 8 近傍の 9 点(§93)。0 = 4 近傍の 5 点(2026-11-05 以前と同じ経路)
+    ! 8 近傍の 9 点(§93。既定 d = 1/3)。0 = 4 近傍の 5 点(2026-11-05 以前の既定と同じ経路)
     if (list%creep_diagratio < 0.0 .or. list%creep_diagratio > 1.0) then
       call par_stop("list_geomorph: creep_diagratio must be in [0, 1]")
     end if
@@ -1001,8 +1001,6 @@ subroutine m_geomorph_init(gm, p, g, s)
     call init_creep(gm, p, g)
   else if (list%creep_hstar > 0.0) then
     call par_stop("list_geomorph: creep_hstar requires f_creep=1")
-  else if (list%creep_diagratio /= 0.0) then
-    call par_stop("list_geomorph: creep_diagratio requires f_creep=1")
   end if
 
   gm%f_fluvial = list%f_fluvial
@@ -1173,11 +1171,7 @@ subroutine m_geomorph_init(gm, p, g, s)
   if (gm%f_suspend > 0) call init_suspend(gm, p, list)
   if (gm%f_wash > 0) call init_wash(gm, list)
   if (list%wet_lw > 0.0) call init_wetlw(gm, g, list)
-  if (gm%f_splash > 0) then
-    call init_splash(gm, g, list)
-  else if (list%spl_diagratio /= 0.0) then
-    call par_stop("list_geomorph: spl_diagratio requires f_splash=1")
-  end if
+  if (gm%f_splash > 0) call init_splash(gm, g, list)
   if (gm%f_debris > 0) call init_debris(gm, p, g, list)
   ! 瞬時流動化(f_release)は f_debris の付属機構(fn_dbinit の有無で有効化。
   ! 検証・読み込みは init_debris 内)

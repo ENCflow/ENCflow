@@ -5,13 +5,13 @@
 [日本語](../README.md)
 
 Hillslope creep (`f_creep` of `&list_geomorph`) and the curvature κ of dry
-hillslope erosion (`f_splash`) are solved by default with the 4-neighbour 5-point
-Laplacian. The 5-point stencil is biased by the grid direction at short
+hillslope erosion (`f_splash`) are solved on the 8-neighbour 9-point stencil with the
+diagonal share d (`creep_diagratio`, `spl_diagratio`; default 1/3). d = 1/3 makes
+the leading discretisation error isotropic. The 4-neighbour 5-point Laplacian with
+d = 0 (the default before 2026-11-05) is biased by the grid direction at short
 wavelengths close to the cell size (the difference between the decay rates at 45°
-and 0° for the same wavenumber is +2.6 % at a wavelength of 8Δ and +11 % at 4Δ).
-Giving a diagonal share d in `creep_diagratio` or `spl_diagratio` switches to the
-8-neighbour 9-point stencil, and d = 1/3 makes the leading discretisation error
-isotropic (developer.md §93, in Japanese;
+and 0° for the same wavenumber is +2.6 % at a wavelength of 8Δ and +11 % at 4Δ)
+(developer.md §93, in Japanese;
 [the sediment models page of the user's guide](../../../docs/en/users_guide/sediment.md) §2 and §6).
 This case is a self-checking test of that isotropy, the normalisation of the weights
 and the reassignment at walls, against analytical solutions, exact discrete solutions

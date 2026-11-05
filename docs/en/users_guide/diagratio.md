@@ -156,8 +156,8 @@ shallow water flow is small.
 | Shallow water flow | `p_diagratio` | 0.586 | 0.586 (no need to change) | In the range of the largest gravity-wave time step. The reassignment rules and the verification of all tests and examples use this value. The advantage of 1/3 (isotropy of short waves) is smaller than the phase error itself |
 | Distribution of bedload | `fluv_diagratio` | 0.586 | same as `p_diagratio` | Uses the reassignment table of the water as it is (a different value gives 2.41 times the bedload capacity in a one-cell-wide channel; [passage-width adjustment](passage_width.md) §7) |
 | Bed sliding | `bs_diagratio` | 0.5858 | same as `p_diagratio` | The same "projected velocity × passage width" distribution as the ENC core. 0 is for comparison with analytical solutions |
-| Hillslope creep | `creep_diagratio` | 0 (four-neighbour 5-point) | 1/3 | A pure diffusion process, so isotropy is the criterion. With reassignment next to walls. A change of the default is under consideration |
-| Curvature of dry hillslope erosion | `spl_diagratio` | 0 (5-point) | 1/3 | The curvature is the local value of a Laplacian, so isotropy is the criterion. A change of the default is under consideration |
+| Hillslope creep | `creep_diagratio` | 1/3 | 1/3 | A pure diffusion process, so isotropy is the criterion. With reassignment next to walls. Changed from 0 (four-neighbour 5-point) on 2026-11-05 |
+| Curvature of dry hillslope erosion | `spl_diagratio` | 1/3 | 1/3 | The curvature is the local value of a Laplacian, so isotropy is the criterion. Changed from 0 (5-point) on 2026-11-05 |
 | Groundwater lateral flow (soil layer, layer 2) | `gw_diagratio` | 0.586 | 1/3 (a change of the default is under consideration) | A pure diffusion process (the measurements of §2.3). In exchange the time-step limit of the explicit scheme drops by 15 %, and the cap of the river-bed exchange (`f_gwbed`) drops by 8 % for a one-cell-wide channel |
 | Saltwater zone of the two-layer fresh/salt model | `salt_diagratio` | 0.586 | same as `gw_diagratio` | It shares the passage widths with the soil lateral flow (a different value stops the run) |
 | Conduit layer | `gwc_diagratio` | 0.586 | 0.586 | The capacity of a conduit following the raster one cell wide does not depend on its direction (§2.2). The conduit layer has no reassignment. Independent of the d of the lateral flow |
@@ -169,10 +169,10 @@ shallow water flow is small.
 
 - Normally keep the defaults. The references of the tests, the results of the examples
   and existing calibrations depend on the default values.
-- For hillslope creep and the curvature of dry hillslope erosion, in runs that discuss the
-  shape of hills and valleys a few cells across, setting `creep_diagratio` and
-  `spl_diagratio` to 1/3 nearly removes the bias with the grid direction
-  ([sediment transport and landform change](sediment.md) §2 and §6).
+- For hillslope creep and the curvature of dry hillslope erosion, the defaults
+  `creep_diagratio` and `spl_diagratio` = 1/3 nearly remove the bias with the grid direction
+  ([sediment transport and landform change](sediment.md) §2 and §6). To reproduce the
+  5-point results from before 2026-11-05, set them to 0.
 - For groundwater, `gw_diagratio = 1/3` is isotropic if you discuss shapes at the scale of
   the grid such as the drawdown cone of a well or a recharge mound. In runs that use
   `salt_diagratio`, give it the same value. The time-step limit drops, so check the line

@@ -43,9 +43,10 @@
                             !   conventional linear diffusion of z (default). > 0 multiplies the
                             !   flux by 1 − exp(−sd/H_c) of the supplying cell and moves only the
                             !   soil layer (z and sd updated together; needs soil depth sd0/fn_sd)
-  !creep_diagratio = 0.3333333333   ! diagonal share d (sec. 93). 0 = 4-neighbour 5-point (default).
-                            !   (0, 1] gives the 8-neighbour 9-point stencil; 1/3 makes the leading
-                            !   discretisation error independent of the grid direction (isotropic)
+  !creep_diagratio = 0.3333333333   ! diagonal share d (sec. 93). The default 1/3 is the 8-neighbour
+                            !   9-point stencil whose leading discretisation error is independent of
+                            !   the grid direction (isotropic). 0 = 4-neighbour 5-point (the default
+                            !   before 2026-11-05)
 
   ! ---- Bedload (Exner. Bed erosion and deposition) ----
   !f_fluvial = 1
@@ -227,8 +228,8 @@
                             !   cells erode with their faces. 0: central difference = the
                             !   old behaviour. sec. 48.4)
   !spl_diagratio = 0.3333333333     ! diagonal share d of the Laplacian of kappa and of the smoothing
-                            !   kernel of spl_lc (sec. 93). 0 = 5-point (default); 1/3 gives the
-                            !   isotropic 9-point stencil
+                            !   kernel of spl_lc (sec. 93). The default 1/3 is the isotropic 9-point
+                            !   stencil; 0 = 5-point (the default before 2026-11-05)
   !spl_ksat = 0.1          ! saturation curvature kappa_s (1/m) of the hollow amplification
                             !   (sec. 48.6). If positive, kappa in 1 + c kappa is replaced by
                             !   kappa/(1 + kappa/kappa_s), bounding the amplification at strong

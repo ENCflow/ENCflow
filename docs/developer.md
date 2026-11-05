@@ -19841,10 +19841,16 @@ d = 1/3 を採ったのは、流れ(浅水流・地下水)と通過幅を共有�
   (規律 3。順序は最適化の逐次の後になった)。release の MPI np = 1・2・4 で 9 構成の state.dat が逐次と
   バイト一致(規律 2)。
 
-**既定の変更(未実施。利用者の確認待ち)**: 既定を 1/3 にすると、クリープ・乾式侵食を使う検定と例題の
-結果が変わる(reference を持つ splash・splashsat・splashstrata を含む)。影響の範囲を示して利用者の目視確認を
-得てから、別コミットで既定と reference を更新する(handoff)。湿潤侵食の剥離深の横方向拡散 wet_lw
-(§84.16)も同じ 5 点の核を使うが、合意の範囲外なので変えていない(handoff に候補として記録)。
+**既定の変更(2026-11-05。利用者の決定「する」)**: `creep_diagratio`・`spl_diagratio` の既定を 0 から 1/3 に
+した。0 以外が既定になったので、「f_creep・f_splash なしで 0 以外を与えると停止」の検査は外した(過程が無効なら
+読まない。範囲 [0, 1] の検査は残す)。test/stencil9 の 5 点の対照(param_hill_c5・s5・lc_s5)は 0 を明示済み。
+影響: クリープ・乾式侵食を使う 12 の test(stencil9・creep・splash・splashsat・splashstrata・splashlc・
+splashslide・fluvial・hillsoil・rockfall・sedfeed・dbrock)はすべて PASS。reference を持つ splash・splashsat・
+splashstrata の Log.txt は identical(splash・splashstrata は凹地形増幅 spl_ca = spl_cb = 0 で曲率を使わず
+厳密に不変、splashsat は流出土砂量が 0.70801 → 0.70594 m³(−0.3 %)で、地形の出力の印字の桁より小さい)。
+reference の更新は不要。値が変わるのは例題(badland・badland_round・badland_storm・mesa・mountain_valley)で、
+README の数値と図の回し直しが要る(handoff 00l)。湿潤侵食の剥離深の横方向拡散 wet_lw(§84.16)も同じ 5 点の
+核を使うが、合意の範囲外なので変えていない(handoff に候補として記録)。
 
 
 ## 94. 溶岩の温度の移流の MUSCL(f_lvtemp_scheme。2026-11-05。§93 の段 2)

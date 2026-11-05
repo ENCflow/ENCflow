@@ -61,11 +61,10 @@ architecture.md。このメモは「現在進行中・未完了の項目」だ�
 ## 未完了・検証待ち
 
 00l. **拡散型プロセスの 4 近傍の異方性(developer.md §93、landslide_tsunami_plan.md §11.1。2026-11-05 合意)の残り**
-   - (a) **`creep_diagratio`・`spl_diagratio` の既定を 1/3 にするか(利用者の確認待ち)**: 段 1 は既定 0(5 点)で実装・
-     検証済み(test/stencil9)。既定を変えると、reference を持つ splash・splashsat・splashstrata と、自己検証の creep・
-     splashlc・splashslide・fluvial(param_creep)・hillsoil・rockfall・sedfeed・dbrock の値が変わり、例題 badland・
-     badland_round・badland_storm・mesa(乾式侵食)と mountain_valley・badland_round・mesa(クリープ)の README の数値の
-     回し直しが要る。影響の大きさを示して目視確認を得てから、既定と reference を別コミットで更新する(規律 1・4)。
+   - (a) `creep_diagratio`・`spl_diagratio` の既定を 1/3 にした(2026-11-05。利用者の決定。developer.md §93)。12 の
+     test は PASS、reference(splash・splashsat・splashstrata)は identical で更新不要。**残り**: 例題 badland・
+     badland_round・badland_storm・mesa(乾式侵食)と mountain_valley・badland_round・mesa(クリープ)の README の数値と
+     図の回し直し(結果を利用者が目視確認してから README を更新する)。
    - (b) 段 2(済 2026-11-05。developer.md §94): 溶岩の温度の数値拡散を計測し(4 近傍の 1 次風上は 0° で横断 0、
      45° で 0.357·u·Δx = 修正方程式の 0.354 に +1 %)、MUSCL の選択式 `f_lvtemp_scheme = 3` を足した(既定 1 =
      従来とビット一致。範囲の切り詰めは残し、流れ出しの面の反対側の近傍を範囲に加える。test/lava 構成 10)。

@@ -203,18 +203,18 @@
     {
       "source": "docs/users_guide/diagonal_diffusion.md",
       "target": "docs/en/users_guide/diagonal_diffusion.md",
-      "source_sha256": "a2fe5570ed2f4e9f525282c030bf6326619eddd92a4142f7dae69ff5ed471497",
-      "target_sha256": "399d9bcdac1492b829aa974b4020a1353a64e61a44771151f034c227ae4a8e15",
-      "reviewer": "Claude (Claude Code session; reviewed the added links to the page on choosing the diagonal share d (and the basis of p_diagratio in encgrid) in the Japanese source against the English mirror, 2026-11-05)",
+      "source_sha256": "9c3b2ef2c700f90b2cdffd226ae2f9d927c4caea9efe42588e1575635d92d07c",
+      "target_sha256": "92a7754672c7ec9b75223cbfcf0d3eb4027410d3ee5244c45f50427472d1d456",
+      "reviewer": "Claude (Claude Code session; reviewed the text on the new default 1/3 of creep_diagratio and spl_diagratio (developer.md sec. 93) in the Japanese source against the English mirror, 2026-11-05)",
       "method": "assistant",
       "reviewed_on": "2026-11-05"
     },
     {
       "source": "docs/users_guide/diagratio.md",
       "target": "docs/en/users_guide/diagratio.md",
-      "source_sha256": "f323224d71d9db353dd864befb0ed8356506957b88425d464cd9cb200bc84dde",
-      "target_sha256": "71df35df65af69139b28e850fab9e8b49418f4e3e70d43abe180888b2bf49534",
-      "reviewer": "Claude (Claude Code session; wrote the Japanese source and the English mirror of the new supplement page on choosing the diagonal share d and checked them section by section, 2026-11-05)",
+      "source_sha256": "5a50256f45cfe7517a81f4fa9e1c1f057449fd7bb3a4a71ed72ac6d8c2d39729",
+      "target_sha256": "93cab92286bcb5d1c79d8bd8e6cd20837fd7b4dad3deb981805c24d6f5959b19",
+      "reviewer": "Claude (Claude Code session; reviewed the text on the new default 1/3 of creep_diagratio and spl_diagratio (developer.md sec. 93) in the Japanese source against the English mirror, 2026-11-05)",
       "method": "assistant",
       "reviewed_on": "2026-11-05"
     },
@@ -284,9 +284,9 @@
     {
       "source": "docs/users_guide/geomorph.md",
       "target": "docs/en/users_guide/geomorph.md",
-      "source_sha256": "542efa53fc439a5798fc3a926617e831937c1d640ba2569a7c830cb095b8be08",
-      "target_sha256": "f1dd38e83b3783db931e41e3bdacb5ca9fa1fbd6323d3846a5d8dcdc088f7106",
-      "reviewer": "Claude (Claude Code session; reviewed the added text on the 9-point creep and splash curvature (creep_diagratio, spl_diagratio; developer.md sec. 93) in the Japanese source against the English mirror, 2026-11-05)",
+      "source_sha256": "acd4851479bbf45a6379562645e8de8d43d1daa11fe0e2e4aec60c08da112518",
+      "target_sha256": "0bb037cff8d5375aa85cb97230c077f6de242551d3efdd540e5d0923cccd61ed",
+      "reviewer": "Claude (Claude Code session; reviewed the text on the new default 1/3 of creep_diagratio and spl_diagratio (developer.md sec. 93) in the Japanese source against the English mirror, 2026-11-05)",
       "method": "assistant",
       "reviewed_on": "2026-11-05"
     },
@@ -446,9 +446,9 @@
     {
       "source": "docs/users_guide/sediment.md",
       "target": "docs/en/users_guide/sediment.md",
-      "source_sha256": "c51566bd6450ad72b627bd5d9368319d43744a112f864e51ba5b2d473e46a87c",
-      "target_sha256": "73acbe6b11f24564b18190a36554960710701d7a186bf2262f2d821f91e6cfb9",
-      "reviewer": "Claude (Claude Code session; reviewed the added links to the page on choosing the diagonal share d (and the basis of p_diagratio in encgrid) in the Japanese source against the English mirror, 2026-11-05)",
+      "source_sha256": "31979adc67c212b3855cbfba4ce671fd5e23d3f8b0e4c7312c2f35646a11c082",
+      "target_sha256": "4e9cdf463bf2972b86f833897c5fc3e78310b7ef94d3c5f2f75ee87a0f5fda2d",
+      "reviewer": "Claude (Claude Code session; reviewed the text on the new default 1/3 of creep_diagratio and spl_diagratio (developer.md sec. 93) in the Japanese source against the English mirror, 2026-11-05)",
       "method": "assistant",
       "reviewed_on": "2026-11-05"
     },
@@ -653,9 +653,9 @@
     {
       "source": "examples/List_samples/list_geomorph.txt",
       "target": "examples/List_samples/en/list_geomorph.txt",
-      "source_sha256": "9899cda151b157dbf1c834601708d1bf8a1c8ac4c5ca865393050d0a70e8981d",
-      "target_sha256": "78a75828d584df34d9f7644f9ea93e785129b71b1dec5b13343e5f2b8e1ca79a",
-      "reviewer": "Claude (Claude Code session; reviewed the added text on the 9-point creep and splash curvature (creep_diagratio, spl_diagratio; developer.md sec. 93) in the Japanese source against the English mirror, 2026-11-05)",
+      "source_sha256": "2b9239f6f5a07b0c11d6cf9c8537f3a6115bcf30aad7484974025e333c546586",
+      "target_sha256": "ca7e97ed4b7d0681d2ee909a0b9a39d57bd9ebe8fb5ad6556e763e310cf6ab64",
+      "reviewer": "Claude (Claude Code session; reviewed the text on the new default 1/3 of creep_diagratio and spl_diagratio (developer.md sec. 93) in the Japanese source against the English mirror, 2026-11-05)",
       "method": "assistant",
       "reviewed_on": "2026-11-05"
     },
@@ -3902,9 +3902,9 @@
     {
       "source": "test/stencil9/README.md",
       "target": "test/stencil9/en/README.md",
-      "source_sha256": "7b36d543b903a498f929cad89dcae9487d21d1f7dbf048850e82e69d0dc0e949",
-      "target_sha256": "135ef026737638731e4ca4dc2ebfe06c74f090f2fe312161630022897089a951",
-      "reviewer": "Claude (Claude Code session; wrote the Japanese source and the English mirror of the new test case README and checked them section by section, 2026-11-05)",
+      "source_sha256": "20437302d0cedb3c175d5157355bedbb8f9099d94a0916f2bc708be1ed0236f0",
+      "target_sha256": "e6dcf259b54dbfae0afa022eb840d29a921228fa472e5e8186c1dcc9a95277f1",
+      "reviewer": "Claude (Claude Code session; reviewed the text on the new default 1/3 of creep_diagratio and spl_diagratio (developer.md sec. 93) in the Japanese source against the English mirror, 2026-11-05)",
       "method": "assistant",
       "reviewed_on": "2026-11-05"
     },
