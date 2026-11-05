@@ -104,20 +104,20 @@
     {
       "source": "docs/users_guide.md",
       "target": "docs/en/users_guide.md",
-      "source_sha256": "4d08d25b8516444433f5e5fe90364b4fa6135a937d5eee3294a84894dd3bd08f",
-      "target_sha256": "fee89ec217233c14c8189b20c632b405fa8df7433eed5d8e74818b86380e707a",
-      "reviewer": "Claude (Claude Code session; merge of claude/ecstatic-edison-e51vrz into main: both sides changed this pair; the merged files differ from main's recorded version only by the branch's passages (gl_lc, glacier_valley, test/glacier row, total count 776), compared side by side in Japanese and English)",
+      "source_sha256": "a1915f74207fe83cfefde716ded632e67fdba6abb6b102d31f788e1f86c7a2d7",
+      "target_sha256": "e4bace20f03379ee1279d28e087eb2492f003655e7cbecbdfc0f57c9870d6ebc",
+      "reviewer": "Claude (Claude Code session; reviewed the added link to the new page on numerical diffusion by diagonal-edge fluxes in the Japanese source against the English mirror, 2026-11-05)",
       "method": "assistant",
-      "reviewed_on": "2026-11-04"
+      "reviewed_on": "2026-11-05"
     },
     {
       "source": "docs/users_guide/advection.md",
       "target": "docs/en/users_guide/advection.md",
-      "source_sha256": "443350a576f550da7927686372343bce3d21c10d9febed89861c14bc58f33d90",
-      "target_sha256": "ed4e14383728063156dd2d1d60115c5fa918919d3d31f89d2d09c455d8b41a41",
-      "reviewer": "Claude (Claude Code session; reviewed the Japanese source against the English mirror after unifying the term passage width / 通過幅 and noting the original paper's term, 2026-11-03)",
+      "source_sha256": "9cb8fd9fadc7d3cbadd7db78ae680e65bc9642557a653277d17f72135c7e026d",
+      "target_sha256": "d496b7c94341d98473c88ac1d5c5d6b96345b8589707d74fe9666ff24581cca7",
+      "reviewer": "Claude (Claude Code session; reviewed the added link to the new page on numerical diffusion by diagonal-edge fluxes in the Japanese source against the English mirror, 2026-11-05)",
       "method": "assistant",
-      "reviewed_on": "2026-11-03"
+      "reviewed_on": "2026-11-05"
     },
     {
       "source": "docs/users_guide/bedmotion.md",
@@ -201,13 +201,22 @@
       "reviewed_on": "2026-10-24"
     },
     {
+      "source": "docs/users_guide/diagonal_diffusion.md",
+      "target": "docs/en/users_guide/diagonal_diffusion.md",
+      "source_sha256": "82fce00d52cc93a22486160c2f4fd6365d74b3e489691e14fa7c4abd5a8bf6ac",
+      "target_sha256": "cf7e3bb3c7ffe3c00fabcb3b879befddae90be11749bbb241a804ebc76d733f1",
+      "reviewer": "Claude (Claude Code session; wrote the Japanese source and the English mirror of the new page on numerical diffusion by diagonal-edge fluxes and checked them section by section: headings, anchors, tables, equations, figures, numbers and links, 2026-11-05)",
+      "method": "assistant",
+      "reviewed_on": "2026-11-05"
+    },
+    {
       "source": "docs/users_guide/diffusion.md",
       "target": "docs/en/users_guide/diffusion.md",
-      "source_sha256": "9b92462cf780c0d3ddde71733eb776841a50e84c1e8a78dbe4faad82cd570f51",
-      "target_sha256": "6ec0f116d2876b459f326ce5c4846165e157b2be02e831db6c1ab88daea1d265",
-      "reviewer": "Claude (Claude Code session; full-text content and lexical review, no model execution)",
+      "source_sha256": "977f8d2ae7efe9fb533fa583cea7d24a2cdd426745433eb49be228acb6a172e8",
+      "target_sha256": "c96f894b7ba6a89640a30491b535635df4645cc701fb69291da290584e579449",
+      "reviewer": "Claude (Claude Code session; reviewed the added link to the new page on numerical diffusion by diagonal-edge fluxes in the Japanese source against the English mirror, 2026-11-05)",
       "method": "assistant",
-      "reviewed_on": "2026-10-29"
+      "reviewed_on": "2026-11-05"
     },
     {
       "source": "docs/users_guide/driftwood.md",
@@ -230,11 +239,11 @@
     {
       "source": "docs/users_guide/encgrid.md",
       "target": "docs/en/users_guide/encgrid.md",
-      "source_sha256": "315c297dee55b782d53fc1ec048d310b90b02b7bbb9f1223dcee3425a3943d9a",
-      "target_sha256": "9162def47e50c81999ebfad82f1cad894edb6ce385104580b89418d1dff50ef3",
-      "reviewer": "Claude (Claude Code session; the new effective-gravity formula of §5 (|∇z| with the minmod tangential slope) and the explanation of the fix written in both languages and compared)",
+      "source_sha256": "dc9f71d3a8a10062d557b46eda2148723b67ddc319108e4a6c995b4ffdad5f10",
+      "target_sha256": "ae43a0194bd8d9398e0f378df6a9bc57846a4c6ab06c58eab788d605d567c7cb",
+      "reviewer": "Claude (Claude Code session; reviewed the added link to the new page on numerical diffusion by diagonal-edge fluxes in the Japanese source against the English mirror, 2026-11-05)",
       "method": "assistant",
-      "reviewed_on": "2026-11-04"
+      "reviewed_on": "2026-11-05"
     },
     {
       "source": "docs/users_guide/forcing.md",

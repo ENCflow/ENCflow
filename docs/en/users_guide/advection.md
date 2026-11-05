@@ -15,7 +15,10 @@ numerical experiments (for developers) are in docs/developer.md §68
 A detailed design note (control-volume geometry, one-dimensional consistency,
 the diagonal sub-lattice mode and the revised lateral faces, verification and
 open issues) is in [docs/advection_design.md](../../advection_design.md)
-(Japanese).
+(Japanese). The size of the crosswind numerical diffusion that the fluxes of
+diagonal edges produce (for momentum and for scalar transport), and an
+overview of the countermeasures for each case, are in
+[Numerical diffusion by diagonal-edge fluxes](diagonal_diffusion.md).
 
 ## 1. Equations and the role of the advection term
 

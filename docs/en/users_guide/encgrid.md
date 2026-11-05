@@ -141,7 +141,10 @@ $`u_c = u + (p_d/4)\Delta^2\,\partial^2 u/\partial y^2 + \cdots`$. This
 quantity appears in the output and the probes; in the Gaussian jet of
 [test/diffusion](../../../test/diffusion/en/README.md) the centre velocity
 reads 0.14% low at $`\Delta x = 1`$ m (this is not an error of the
-diffusion term). The speed $`|\mathbf{V}| = \sqrt{u^2 + v^2}`$ is used by
+diffusion term). This smoothing does not accumulate in time and is separate
+from the crosswind numerical diffusion that diagonal edges produce through
+advection (for the latter, see
+[Numerical diffusion by diagonal-edge fluxes](diagonal_diffusion.md)). The speed $`|\mathbf{V}| = \sqrt{u^2 + v^2}`$ is used by
 the friction and drag terms and by the upwind decisions of the advection.
 
 ## 5. Terms of the momentum equation
