@@ -16,6 +16,8 @@
 #               j=11..20)。引数 x0c1 / x0c2
 #   wrk_x45c1.txt / wrk_x45c2.txt : 構成10 の 45° の噴火口(反対角線 i+j=33 の
 #               i=3..16(i<j)と i=17..30(i>j))。引数 x45c1 / x45c2
+#   wrk_zrunnz.txt : 構成9n(構成9 の斜面 zrun.txt に ±1 mm の決まった乱れ。線形合同法の乱数で、Python の
+#               版によらず同じ値)。引数 runnz
 #   wrk_zch0w1.txt / wrk_zch0w3.txt : 構成11(8 近傍の谷の通水能)の 0° の谷。勾配 tanθ = 0.1 の
 #               x 方向の斜面(nx=100, ny=11, dx=5。z = ST*(NX - i)*dx)の、行 j = 6(1 セル)・
 #               j = 5..7(3 セル)の谷を残して両側を 20 m 高くした地形。引数 ch0w1 / ch0w3
@@ -73,6 +75,16 @@ elif kind in ("ch0w1c", "ch0w3c", "ch45w1c", "ch45w3c"):
             for j in range(1, 73):
                 if abs(i - j) <= m and i + j in (8, 9):
                     print("%d %d" % (i, j))
+elif kind == "runnz":
+    NXR, NYR, DXR, STR = 64, 8, 5.0, 0.1
+    LXR = NXR * DXR
+    x = 12345
+    for j in range(1, NYR + 1):
+        row = []
+        for i in range(1, NXR + 1):
+            x = (1103515245 * x + 12345) % 2147483648
+            row.append("%.6f" % (STR * (LXR - (i - 0.5) * DXR) + 0.002 * (x / 2147483648.0) - 0.001))
+        print(" ".join(row))
 elif kind == "run":
     NXR, NYR, DXR, STR = 64, 8, 5.0, 0.1
     LXR = NXR * DXR

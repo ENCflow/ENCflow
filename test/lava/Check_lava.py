@@ -1,11 +1,11 @@
 #!/usr/bin/env python3
 # lava(溶岩流 = Bingham 粘性重力流)検定
-#   使い方: Check_lava.py <savedir> <huppert|bingham|dome|wall|bury|cool|adv|run|heat|xdiff|chan> [画面出力のログ ...]
+#   使い方: Check_lava.py <savedir> <huppert|bingham|dome|wall|bury|cool|adv|run|runnz|heat|xdiff|xdiff8|chan> [画面出力のログ ...]
 #
 #   huppert モード(構成1: Newton 極限の相似解。param.txt と対):
 #     (1) 台帳    : |Σhl − V_in/A_cell| < TOL_SUM(注入は厳密加算・
 #                   拡散はエッジ反対称 = 機械精度で保存)
-#     (2) 解析解  : 面積等価半径 r_A = √(N_wet dx dy/π) が
+#     (2) 解析解  : 面積等価半径 r_A = √(N_wet dx dy/π)(N_wet は hl > HL_EPS = 1 cm のセル数)が
 #                   r_N = 0.715 (g Q³/3ν)^{1/8} √t に相対 TOL_ANA 以内
 #     (3) 成長則  : r_A(tt)/r_A(tt/2) が √2 に相対 TOL_GROW 以内
 #   bingham モード(構成2: 停止・固化。param_ty.txt と対):
@@ -70,6 +70,18 @@
 #                   セルの厚さの平均)
 #     (4) 45° MUSCL: 同じ D⊥ が 1 次の RATIO_M45 倍未満、溶岩のある全セルで
 #                   T_c ≤ Tl ≤ T_h(相対 1e-12 の余裕)
+#   xdiff8 モード(構成10d: 構成10 を流動の 8 近傍の 9 点 d = 1/3 で。param_x*d.txt と対。<savedir> は使わず、
+#   save_x0d・save_x0dm・save_x45d・save_x45dm と Screen_x*d.log を読む):
+#     (1) 台帳    : xdiff (1) と同じ
+#     (2) 1 次風上: 0° と 45° の横断の拡散係数 D⊥/(u Δx) が (1 − d)F(φ) + d√2 F(φ − 45°)(F は 4 近傍の
+#                   1 次風上の (|cos φ| sin²φ + |sin φ| cos²φ)/2。d = 1/3 で 0° 0.1667、45° 0.2357。§96)に
+#                   相対 TOL_D45 以内。0° の σ は検定の列 IST0 の上の行の向きの θ から、45° は xdiff と同じ
+#     (3) MUSCL   : 0° と 45° の D⊥ が同じ向きの 1 次の RATIO_M45 倍未満、溶岩のある全セルで T_c ≤ Tl ≤ T_h
+#   runnz モード(構成9n: 構成9 の温度モードの 2 本を、地盤に ±1 mm の決まった乱れを加えて。param_run*nz.txt と対。
+#   <savedir> は使わず save_runnz・save_run4nz と画面出力のログ 2 本(第3・4引数)を読む):
+#     (1) 台帳と全量の固化、(2) 熱の台帳、(3) L(4Q)/L(Q) > RATIO_T9(run と同じ)。横に一様な構成9 の流れは
+#     乱れがあると流れの筋に分かれて長く伸びる(熱と粘度の正の帰還。§94 の訂正)ので、行の間の堆積厚の
+#     ばらつきも表示する
 #   chan モード(構成11: 谷の通水能の向きによる差。8 近傍の 9 点と塞がれた配分の振り替え。
 #   param_ch*.txt と対。<savedir> は使わず、save_ch0w1・ch45w1・ch0w3・ch45w3・ch45w3q を読む):
 #     通水能の比 k = Q/(W·(ρg/3η)·h³·S)(h は谷の中ほどの検定の範囲の溶岩厚の平均、W は谷の幅
@@ -88,7 +100,9 @@ GG = 9.8
 NX1, NY1, DX1 = 61, 61, 1.0
 Q1, T1, DT1 = 0.5, 600.0, 0.5    # 噴出率 (m3/s), 継続 (s), dt (s)
 RHO1, VISC1 = 2600.0, 2.0e4
-HL_EPS = 1.0e-6                  # wet 判定の溶岩厚閾値 (m)
+HL_EPS = 0.01                    # 広がりの判定厚 (m)。1e-6 m で数えると、数値の先行の薄膜(相似解にない
+                                 #   裾)まで数えて 8 近傍の 9 点では +10.9 %(4 近傍 +8.5 %)になるので、
+                                 #   相似解の先端に当たる 1 cm で数える(4 近傍 +2.8 %、9 点 +3.7 %。§96)
 TOL_ANA, TOL_GROW = 0.10, 0.05
 # --- 構成2(param_ty.txt と対で保守)---
 NX2, NY2, DX2 = 100, 8, 1.0
@@ -159,6 +173,10 @@ CH11 = {"ch0w1": (100, 11, 1), "ch45w1": (72, 72, 1), "ch0w3": (100, 11, 3),
         "ch45w3": (72, 72, 3), "ch45w3q": (72, 72, 3)}   # (nx, ny, 谷の幅のセル数・本数)
 J011, IST11, PST11 = 6, (40, 60), (64, 80)       # 0° の谷の中心の行・検定の列、45° の検定の i + j
 TOL_K0, TOL_K1, TOL_K3, KQ3 = 0.01, 0.02, 0.10, 0.80
+# --- 構成10d(param_x*d.txt と対で保守。格子・噴出は構成10 と同じ)---
+D10D = 1.0 / 3.0                                 # 流動の斜めの配分
+# --- 構成9n(param_run*nz.txt・make_init.py runnz と対で保守。格子・噴出は構成9 と同じ)---
+RUNS9N = {"nz": (2.0, 2400.0), "4nz": (8.0, 600.0)}
 
 
 def read_rec(f):
@@ -562,6 +580,119 @@ elif mode == "xdiff":
     print("(4) x45m MUSCL: D⊥/(u·Δx) = %.3f(1 次の %.2f 倍、tol < %.2f)、Tl = %.6f〜%.6f °C : %s"
           % (dd["x45m"], dd["x45m"] / dd["x45"], RATIO_M45, min(tw), max(tw), "PASS" if ok4 else "FAIL"))
     ok = ok1 and ok2 and ok3 and ok4
+elif mode == "xdiff8":
+    def fcross(phi):
+        # 4 近傍の 1 次風上の横断の拡散係数 D⊥/(u Δx)(正方セル。修正方程式。§94)
+        c, sn = abs(math.cos(phi)), abs(math.sin(phi))
+        return 0.5 * (c * sn * sn + sn * c * c)
+    th0 = (1.0 - D10D) * fcross(0.0) + D10D * math.sqrt(2.0) * fcross(-math.pi / 4.0)
+    th45 = (1.0 - D10D) * fcross(math.pi / 4.0) + D10D * math.sqrt(2.0) * fcross(0.0)
+    hl10, tl10 = {}, {}
+    ok1 = True
+    for tag in ("x0d", "x0dm", "x45d", "x45dm"):
+        base = tag[:3] if tag.startswith("x45") else tag[:2]
+        nx, ny = (NB10, NB10) if base == "x45" else (NX10, NY10)
+        hl = load_hl("save_" + tag, nx, ny)
+        tl = load_tl("save_" + tag, nx, ny)
+        hl10[tag], tl10[tag] = hl, tl
+        area = DX10 * DX10
+        vin = 2 * Q10[base] * TT10
+        res = sum(hl) * area - vin
+        ein = sum(Q10[base] * TT10 * t for t in TV10)
+        rel = (sum(h * t for h, t in zip(hl, tl)) * area - ein) / ein
+        e, rres = heat_ledger("Screen_%s.log" % tag)
+        okt = abs(res) < TOL_SUM * vin and abs(rel) < TOL_HEAT8 and abs(rres) < TOL_HB
+        ok1 = ok1 and okt
+        print("(1) %-5s台帳: sum(hl)*A - V_in = %.2e m3(V_in %.0f)、熱 相対 %.1e、画面の残差 %.1e : %s"
+              % (tag, res, vin, rel, rres, "PASS" if okt else "FAIL"))
+    dd = {}
+    # 0°: 検定の列の上の行の向きの θ から σ
+    for tag in ("x0d", "x0dm"):
+        hl, tl = hl10[tag], tl10[tag]
+        sg, hs, ss = [], [], []
+        for i in IST0:
+            acc = 0.0
+            for j in range(1, NY10 + 1):
+                idx = (j - 1) * NX10 + i - 1
+                th = (tl[idx] - TV10[1]) / (TV10[0] - TV10[1])
+                acc += th * (1.0 - th) * DX10
+            sg.append(math.sqrt(math.pi) * acc)
+            hs.append(0.5 * (hl[(NY10 // 2 - 1) * NX10 + i - 1] + hl[(NY10 // 2) * NX10 + i - 1]))
+            ss.append((i - 3) * DX10)
+        u = QW10["x0"] / (sum(hs) / len(hs))
+        dd[tag] = u * (sg[-1] ** 2 - sg[0] ** 2) / (2.0 * (ss[-1] - ss[0])) / (u * DX10)
+        print("    %-5s 0°: s = %s m で σ = %s m(u = %.4f m/s)、D⊥/(u·Δx) = %.4f"
+              % (tag, "/".join("%.0f" % v for v in ss), "/".join("%.2f" % v for v in sg), u, dd[tag]))
+    # 45°: xdiff と同じ反対角線の σ
+    dn = math.sqrt(2.0) * DX10
+    for tag in ("x45d", "x45dm"):
+        hl, tl = hl10[tag], tl10[tag]
+        sg, hs = [], []
+        for m in MST45:
+            acc, hb = 0.0, []
+            for i in range(1, NB10 + 1):
+                j = m - i
+                if j < 1 or j > NB10:
+                    continue
+                idx = (j - 1) * NB10 + i - 1
+                n = (i - j) * DX10 / math.sqrt(2.0)
+                if hl[idx] <= 0.0 or abs(n) > NWIN45:
+                    continue
+                th = (tl[idx] - TV10[1]) / (TV10[0] - TV10[1])
+                acc += th * (1.0 - th) * dn
+                if abs(i - j) == 1:
+                    hb.append(hl[idx])
+            sg.append(math.sqrt(math.pi) * acc)
+            hs.append(sum(hb) / len(hb))
+        ss = [(m - MV45) * DX10 / math.sqrt(2.0) for m in MST45]
+        u = QW10["x45"] / (sum(hs) / len(hs))
+        dd[tag] = u * (sg[-1] ** 2 - sg[0] ** 2) / (2.0 * (ss[-1] - ss[0])) / (u * DX10)
+        print("    %-5s45°: s = %s m で σ = %s m(u = %.4f m/s)、D⊥/(u·Δx) = %.4f"
+              % (tag, "/".join("%.0f" % v for v in ss), "/".join("%.2f" % v for v in sg), u, dd[tag]))
+    ok2 = abs(dd["x0d"] - th0) <= TOL_D45 * th0 and abs(dd["x45d"] - th45) <= TOL_D45 * th45
+    print("(2) 1 次風上: 0° D⊥/(u·Δx) = %.4f vs %.4f(相対 %+.1f%%)、45° %.4f vs %.4f(相対 %+.1f%%)(tol %.0f%%) : %s"
+          % (dd["x0d"], th0, 100 * (dd["x0d"] / th0 - 1), dd["x45d"], th45, 100 * (dd["x45d"] / th45 - 1),
+             100 * TOL_D45, "PASS" if ok2 else "FAIL"))
+    okr = True
+    for tag in ("x0dm", "x45dm"):
+        tw = [t for h, t in zip(hl10[tag], tl10[tag]) if h > 0.0]
+        okr = okr and min(tw) >= TV10[1] * (1.0 - 1e-12) and max(tw) <= TV10[0] * (1.0 + 1e-12)
+    ok3 = dd["x0dm"] < RATIO_M45 * dd["x0d"] and dd["x45dm"] < RATIO_M45 * dd["x45d"] and okr
+    print("(3) MUSCL   : 0° %.4f(1 次の %.2f 倍)、45° %.4f(%.2f 倍)(tol < %.2f)、温度の範囲 : %s"
+          % (dd["x0dm"], dd["x0dm"] / dd["x0d"], dd["x45dm"], dd["x45dm"] / dd["x45d"], RATIO_M45,
+             "PASS" if ok3 else "FAIL"))
+    ok = ok1 and ok2 and ok3
+elif mode == "runnz":
+    logs = sys.argv[3:5]
+    ok1, ok2 = True, True
+    lens, var = {}, {}
+    for (tag, (qq, tsup)), logname in zip(RUNS9N.items(), logs):
+        hl = load_hl("save_run" + tag, NX9, NY9)
+        z = load_z("save_run" + tag, NX9, NY9)
+        z0 = load_txt("wrk_zrunnz.txt", NX9, NY9)
+        dz = [zi - z0i for zi, z0i in zip(z, z0)]
+        vin = sum(qq * DT9 for it in range(1, round(tsup / DT9) + 1) if it * DT9 < tsup)
+        res = (sum(hl) + sum(dz)) * DX9 * DX9 - vin
+        okv = abs(res) < TOL_SUM * vin and max(hl) <= 0.0
+        ok1 = ok1 and okv
+        e, rres = heat_ledger(logname)
+        ok2 = ok2 and abs(rres) < TOL_HB
+        row = [sum(dz[(j - 1) * NX9 + i - 1] for j in range(1, NY9 + 1)) / NY9 for i in range(1, NX9 + 1)]
+        imax = max(i for i in range(NX9) if row[i] > DZ_RUN)
+        lens[tag] = (imax + 1) * DX9 - IV9 * DX9
+        im = max(range(NX9), key=lambda i: row[i])
+        col = [dz[(j - 1) * NX9 + im] for j in range(1, NY9 + 1)]
+        var[tag] = (min(col), max(col), max(row))
+        print("    save_run%-4s Q = %g m3/s × %4.0f s: 台帳の差 %.1e m3、残る溶岩 %.1e m、流れの長さ L = %.0f m、"
+              "行平均の最大厚 %.2f m(その列の行の間 %.2f〜%.2f m)、熱の台帳の残差 %.1e"
+              % (tag, qq, tsup, res, max(hl), lens[tag], var[tag][2], var[tag][0], var[tag][1], rres))
+    print("(1) 台帳と全量の固化(乱れあり 2 計算) : %s" % ("PASS" if ok1 else "FAIL"))
+    print("(2) 熱の台帳(tol %.0e) : %s" % (TOL_HB, "PASS" if ok2 else "FAIL"))
+    ratio = lens["4nz"] / lens["nz"]
+    ok3 = ratio > RATIO_T9
+    print("(3) 温度モード: L(4Q)/L(Q) = %.0f/%.0f m = %.2f(tol > %.1f) : %s"
+          % (lens["4nz"], lens["nz"], ratio, RATIO_T9, "PASS" if ok3 else "FAIL"))
+    ok = ok1 and ok2 and ok3
 elif mode == "chan":
     kk = {}
     ok1 = True

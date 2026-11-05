@@ -61,6 +61,11 @@ same practice as [test/volcano](../../volcano/en/README.md)).
    without temperature, whose length does not depend on the effusion rate.
    Configuration 9r checks that configuration 9 saved part way and restarted is
    byte-identical to the uninterrupted run (Run.sh writes its inputs).
+   Configuration 9n (`param_runnz.txt`, `param_run4nz.txt`) computes the two
+   runs of the temperature mode on a slope with a fixed perturbation of ±1 mm in
+   the bed (`make_init.py runnz`) and checks that the same trend (the 4Q flow is
+   longer) holds for the perturbed flow (a flow uniform across splits into
+   channels under a perturbation; the correction in developer.md §94).
 10. **Crosswind numerical diffusion of the heat** (`param_x0.txt`,
     `param_x0m.txt`, `param_x45.txt`, `param_x45m.txt`; temperature mode, no
     cooling): lava at 1150 °C from one side of the vents and at 1050 °C from the
@@ -71,7 +76,14 @@ same practice as [test/volcano](../../volcano/en/README.md)).
     heat advection. The checks are that it does
     not spread at 0°, that at 45° first-order upwind matches the crosswind
     diffusivity of the modified equation (√2/4)·u·Δx, and that MUSCL gives less
-    than 1/4 of it (developer.md §94).
+    than 1/4 of it (developer.md §94). These are properties of 4 neighbours,
+    so `lv_diagratio = 0` is given explicitly. Configuration 10d
+    (`param_x0d.txt`, `param_x0dm.txt`, `param_x45d.txt`, `param_x45dm.txt`)
+    computes the same input on the 8-neighbour 9-point stencil of the flow
+    (`lv_diagratio = 1/3`) and checks that the first-order crosswind
+    diffusivity matches (1 − d)F(φ) + d√2 F(φ − 45°) (F the 4-neighbour
+    coefficient; 0.167 at 0° and 0.236 at 45°) and that MUSCL gives less than
+    1/4 of it (developer.md §96).
 11. **Dependence of the conveyance of valleys on their orientation**
     (`param_ch0w1.txt`, `param_ch45w1.txt`, `param_ch0w3.txt`,
     `param_ch45w3.txt`, `param_ch45w3q.txt`; the 8-neighbour 9-point stencil
@@ -115,6 +127,7 @@ Configuration 10, crosswind numerical diffusion of the heat (temperature mode, n
 | Flow | a uniform sheet flow of q = 0.1 m²/s per width (η = 2e4 Pa·s, τ_y = 0, temperature sensitivity 0: 1.33 m thick, 0.075 m/s); no cooling | same |
 | Heat advection | first-order upwind (`x0`) and MUSCL (`x0m`) | first-order upwind (`x45`) and MUSCL (`x45m`) |
 | Compared with | the temperatures on both sides of the boundary (they stay at the eruption temperatures) | the crosswind diffusivity from the spreading of the boundary width σ (0.354·u·Δx for first-order upwind by the modified equation) |
+| Configuration 10d (8-neighbour 9-point stencil, d = 1/3) | the same input with first-order upwind (`x0d`) and MUSCL (`x0dm`); the crosswind diffusivity from σ along the rows across the check columns i = 10, 20, 30 (first-order theory 0.167·u·Δx) | the same input with first-order upwind (`x45d`) and MUSCL (`x45dm`); from σ on the anti-diagonals (theory 0.236·u·Δx) |
 
 Configuration 11, conveyance of valleys (8-neighbour 9-point stencil; values for the check):
 
@@ -127,15 +140,15 @@ Configuration 11, conveyance of valleys (8-neighbour 9-point stencil; values for
 
 | File | Contents |
 |---|---|
-| `make_init.py` / `make_init.py wall` / `cool` / `run` / `x0`, `x45` / `x0c1`, `x0c2`, `x45c1`, `x45c2` / `ch0w1`, `ch0w3`, `ch45w1`, `ch45w3` / `ch0w1c` etc. | `zinit.txt` (uniform slope) / `zwall.txt` (flat floor and a 10 m step) / `cool_cells.txt` (the vent of all cells of configuration 7) / `zrun.txt` (the slope tanθ = 0.1 of configuration 9) / `wrk_zx0.txt`, `wrk_zx45.txt` (the slopes of configuration 10) / `wrk_x0c*.txt`, `wrk_x45c*.txt` (the vents of configuration 10) / `wrk_zch*.txt` (the valleys of configuration 11) / `wrk_ch*c.txt` (the vents of configuration 11; wrk_* files are not tracked by git and are written by Run.sh and Run_MPI.sh) |
-| `Check_lava.py <save> huppert\|bingham\|dome\|wall\|bury\|cool\|adv\|run\|heat\|xdiff\|chan` | Configuration 1: (1) ledger Σhl·A = V_in, (2) area-equivalent radius within 10% of r_N, (3) r(tt)/r(tt/2) within 5% of √2. Configuration 2: (1) ledger Σhl + Σdz = V_in (solidification is an internal transfer to z), (2) hl + dz in the check window (i = 15–35) within 20% of h∞ and CV < threshold, (3) solidified fraction > 0.7. Configuration 4: (1) ledger Σhl·A = V_in, (2) the ratio of the area-equivalent radii of the sectors along the grid axes (±22.5°) and along the diagonals (±22.5°) within 5% of 1, (3) center thickness within 5% of H and area-equivalent radius within 5% of R, RMS error of the profile for r < R < 5% of H. Configuration 5: (1) ledger Σhl + Σdz = V_in, (2) solidified fraction > 0.999, (3) in every row of the column touching the wall (i = 30), hl = 0 and dz above half the maximum thickness. Configuration 6: (1) lava ledger, (2) sd = 0 and hg = 0 in every cell with solidified lava, sd = 1 m in the other cells, (3) Σ(h + hrs + hg) within 1e-9 (relative) of the initial surface water. Configuration 7 (`cool`; the third argument is the screen log): (1) the output Tl is uniform over all cells and within 2e-4 °C of the backward-Euler recursion, (2) the temperature drop within 1% (relative) of the exact solution, (3) still molten before the update at which the recursion reaches T ≤ the solidification temperature and all cells solidified after it, (4) the residual of the heat ledger within 1e-12 (relative) and its breakdown matching the recursion. Configuration 8 (`adv`): (1) lava ledger, (2) Σhl·Tl·A within 1e-9 (relative) of Σ V_k T_k and the residual on the screen, (3) 1050 ≤ Tl ≤ 1150 in every cell with lava, and a mixed zone exists. Configuration 9 (`run`; reads the saves of the four runs): (1) ledger and complete solidification, (2) residual of the heat ledger, (3) ratio of the flow lengths of the temperature mode L(4Q)/L(Q) > 1.5, (4) ratio of the isothermal control 1 ± 0.1. Configuration 9r (`heat`): residual of the heat ledger of the restarted run. Configuration 10 (`xdiff`; reads the saves of the four runs): (1) ledgers and conservation of heat of the four runs, (2) every cell of columns i = 10, 20 and 30 at 0° within 1e-9 °C of the eruption temperature of its side (both first-order upwind and MUSCL), (3) at 45° with first-order upwind, the growth of the square of the boundary width σ = √π ∫θ(1 − θ) dn, from the temperature θ on the anti-diagonals i + j = 37, 43, 53 and 63, gives D⊥ = u Δσ²/(2Δs) within 15% (relative) of (√2/4)·u·Δx, (4) D⊥ of MUSCL at 45° below 0.25 times first order, and 1050 ≤ Tl ≤ 1150 in every cell with lava. Configuration 4' (`dome`): the same as configuration 4. Configuration 11 (`chan`; reads the saves of the five runs): (1) ledgers of the five runs, (2) \|k − 1\| < 0.01 for one and three cells at 0°, (3) \|k − 1\| < 0.02 for one line at 45°, (4) \|k − 1\| < 0.1 for three lines at 45° and k < 0.8 for the 4-neighbour control |
+| `make_init.py` / `make_init.py wall` / `cool` / `run` / `runnz` / `x0`, `x45` / `x0c1`, `x0c2`, `x45c1`, `x45c2` / `ch0w1`, `ch0w3`, `ch45w1`, `ch45w3` / `ch0w1c` etc. | `zinit.txt` (uniform slope) / `zwall.txt` (flat floor and a 10 m step) / `cool_cells.txt` (the vent of all cells of configuration 7) / `zrun.txt` (the slope tanθ = 0.1 of configuration 9) / `wrk_zrunnz.txt` (the slope of configuration 9n with a perturbation of ±1 mm; a linear congruential generator, the same with any Python version) / `wrk_zx0.txt`, `wrk_zx45.txt` (the slopes of configuration 10) / `wrk_x0c*.txt`, `wrk_x45c*.txt` (the vents of configuration 10) / `wrk_zch*.txt` (the valleys of configuration 11) / `wrk_ch*c.txt` (the vents of configuration 11; wrk_* files are not tracked by git and are written by Run.sh and Run_MPI.sh) |
+| `Check_lava.py <save> huppert\|bingham\|dome\|wall\|bury\|cool\|adv\|run\|runnz\|heat\|xdiff\|xdiff8\|chan` | Configuration 1: (1) ledger Σhl·A = V_in, (2) area-equivalent radius of thickness 1 cm or more within 10% of r_N, (3) r(tt)/r(tt/2) within 5% of √2. Configuration 2: (1) ledger Σhl + Σdz = V_in (solidification is an internal transfer to z), (2) hl + dz in the check window (i = 15–35) within 20% of h∞ and CV < threshold, (3) solidified fraction > 0.7. Configuration 4: (1) ledger Σhl·A = V_in, (2) the ratio of the area-equivalent radii of the sectors along the grid axes (±22.5°) and along the diagonals (±22.5°) within 5% of 1, (3) center thickness within 5% of H and area-equivalent radius within 5% of R, RMS error of the profile for r < R < 5% of H. Configuration 5: (1) ledger Σhl + Σdz = V_in, (2) solidified fraction > 0.999, (3) in every row of the column touching the wall (i = 30), hl = 0 and dz above half the maximum thickness. Configuration 6: (1) lava ledger, (2) sd = 0 and hg = 0 in every cell with solidified lava, sd = 1 m in the other cells, (3) Σ(h + hrs + hg) within 1e-9 (relative) of the initial surface water. Configuration 7 (`cool`; the third argument is the screen log): (1) the output Tl is uniform over all cells and within 2e-4 °C of the backward-Euler recursion, (2) the temperature drop within 1% (relative) of the exact solution, (3) still molten before the update at which the recursion reaches T ≤ the solidification temperature and all cells solidified after it, (4) the residual of the heat ledger within 1e-12 (relative) and its breakdown matching the recursion. Configuration 8 (`adv`): (1) lava ledger, (2) Σhl·Tl·A within 1e-9 (relative) of Σ V_k T_k and the residual on the screen, (3) 1050 ≤ Tl ≤ 1150 in every cell with lava, and a mixed zone exists. Configuration 9 (`run`; reads the saves of the four runs): (1) ledger and complete solidification, (2) residual of the heat ledger, (3) ratio of the flow lengths of the temperature mode L(4Q)/L(Q) > 1.5, (4) ratio of the isothermal control 1 ± 0.1. Configuration 9r (`heat`): residual of the heat ledger of the restarted run. Configuration 10 (`xdiff`; reads the saves of the four runs): (1) ledgers and conservation of heat of the four runs, (2) every cell of columns i = 10, 20 and 30 at 0° within 1e-9 °C of the eruption temperature of its side (both first-order upwind and MUSCL), (3) at 45° with first-order upwind, the growth of the square of the boundary width σ = √π ∫θ(1 − θ) dn, from the temperature θ on the anti-diagonals i + j = 37, 43, 53 and 63, gives D⊥ = u Δσ²/(2Δs) within 15% (relative) of (√2/4)·u·Δx, (4) D⊥ of MUSCL at 45° below 0.25 times first order, and 1050 ≤ Tl ≤ 1150 in every cell with lava. Configuration 4' (`dome`): the same as configuration 4. Configuration 9n (`runnz`; reads the saves of the two runs): (1) ledger and complete solidification, (2) residual of the heat ledger, (3) L(4Q)/L(Q) > 1.5. Configuration 10d (`xdiff8`): (1) ledgers and conservation of heat of the four runs, (2) D⊥ of first-order upwind at 0° and 45° within 15% (relative) of (1 − d)F(φ) + d√2 F(φ − 45°), (3) D⊥ of MUSCL below 0.25 times first order and the range of the temperature. Configuration 11 (`chan`; reads the saves of the five runs): (1) ledgers of the five runs, (2) \|k − 1\| < 0.01 for one and three cells at 0°, (3) \|k − 1\| < 0.02 for one line at 45°, (4) \|k − 1\| < 0.1 for three lines at 45° and k < 0.8 for the 4-neighbour control |
 | `Fig.py` | The figure `en/figs/lava.png` below (`python3 Fig.py en`; `figs/lava.png` is the Japanese version) |
 
 ## Running
 
 ```bash
 make
-./Run.sh          # configuration 1 → Check → configuration 2 → Check → equivalence check of configuration 3 → configurations 4, 4', 5–9, 9r, 10 and 11 → Check (about 1 minute on one thread)
+./Run.sh          # configuration 1 → Check → configuration 2 → Check → equivalence check of configuration 3 → configurations 4, 4', 5–9, 9r, 9n, 10, 10d and 11 → Check (about 1.5 minutes on one thread)
 ./Run_MPI.sh 4    # MPI. state.dat and lavaflow.dat (and lavaflow_temp.dat) are byte-identical to the serial run (-O2 strict math)
 python3 Fig.py en # en/figs/lava.png
 ```
@@ -147,11 +160,14 @@ python3 Fig.py en # en/figs/lava.png
 Top left: the lava thickness of configuration 1 after 600 s. It spreads
 axisymmetrically from the center. Top center: the growth of the area-equivalent
 radius. The computation (●) follows the √t law of the similarity solution,
-and the growth law r(tt)/r(tt/2) agrees with √2 to 0.6%. The absolute value
-of the radius is 13.2 m (+8.5%) by the counting method of Check_lava (which
-includes the thin fringe) and 12.5 m (+2.8%) for the area with 1 cm or more
-in the figure; the difference is the treatment of the thin fringe at the
-front (including the lag of the front due to the edge-averaged thickness).
+and the growth law r(tt)/r(tt/2) agrees with √2 to 0.7%. The absolute value
+of the radius is 12.5 m (+2.8%) by the counting method of Check_lava
+(thickness 1 cm or more, as in the figure). Counting down to a thin fringe of
+1e-6 m gives 13.2 m (+8.5%); the difference is the treatment of the numerical
+precursor film at the front, which the similarity solution does not have
+(including the lag of the front due to the edge-averaged thickness; on the
+8-neighbour 9-point stencil the film spreads wider, +10.9%, so the check counts
+at 1 cm; developer.md §96).
 Top right: the final thickness of configuration 2 (row average). Downstream of
 the vents at x = 6–40 m, hl + dz forms a flat plateau of 0.42 m, agreeing
 with the analytical stopping thickness 0.3925 m to 7.1%, and the whole
@@ -175,8 +191,8 @@ the erupted volume) (developer.md §51.5).
 | Check | Computed | Result |
 |---|---|---|
 | Configuration 1 (1) ledger Σhl·A − V_in | −5.7e-14 m³ (V_in = 300 m³) | PASS |
-| Configuration 1 (2) area-equivalent radius | 13.17 m (r_N 12.13 m, +8.5%, tolerance 10%) | PASS |
-| Configuration 1 (3) growth law r(tt)/r(tt/2) | 1.423 (0.6% from √2) | PASS |
+| Configuration 1 (2) area-equivalent radius (thickness 1 cm or more) | 12.48 m (r_N 12.13 m, +2.8%, tolerance 10%) | PASS |
+| Configuration 1 (3) growth law r(tt)/r(tt/2) | 1.424 (0.7% from √2) | PASS |
 | Configuration 2 (1) ledger (Σhl + Σdz)·A − V_in | 1.2e-11 m³ (V_in = 149.75 m³) | PASS |
 | Configuration 2 (2) stopping thickness <hl + dz> | 0.4203 m (h∞ 0.3925, +7.1%, tolerance 20%), CV 0.001 | PASS |
 | Configuration 2 (3) solidified fraction | 1.000, max dz 0.43 m | PASS |
@@ -203,11 +219,15 @@ the erupted volume) (developer.md §51.5).
 | Configuration 9 (1)(2) ledger and heat ledger | machine precision and complete solidification in all four runs, residual of the heat ledger ≤ 9.5e-16 | PASS |
 | Configuration 9 (3) flow length in the temperature mode | 50 m (2 m³/s) → 145 m (8 m³/s), ratio 2.90 (tolerance > 1.5) | PASS |
 | Configuration 9 (4) flow length of the isothermal control | 120 m → 120 m, ratio 1.00 (tolerance 1 ± 0.1) | PASS |
+| Configuration 9n (1)–(3) perturbed slope | machine precision and complete solidification in both runs, residual of the heat ledger ≤ 4.7e-16, length 85 m (2 m³/s) → 150 m (8 m³/s), ratio 1.76 (tolerance > 1.5). Largest row-averaged thickness of the Q flow 2.19 m (1.90–2.37 m across the rows in that column) | PASS |
 | Configuration 9r restart round trip | the three save files byte-identical to the uninterrupted run, residual of the heat ledger 8.93e-16 | PASS |
 | Configuration 10 (1) ledgers and conservation of heat | in all four runs Σhl·A − V_in ≤ 5.1e-11 m³ (V_in 30,000 and 59,400 m³), heat ≤ 1.4e-15 (relative), residual on the screen ≤ 3.7e-13 | PASS |
 | Configuration 10 (2) boundary at 0° | with both first-order upwind and MUSCL both sides of the boundary stay at the eruption temperatures (difference ≤ 4.5e-13 °C); the MUSCL save is byte-identical to first-order upwind | PASS |
 | Configuration 10 (3) first-order upwind at 45° | σ = 6.85, 11.04, 15.73, 19.37 m (s = 14, 35, 71, 106 m), D⊥ = 0.357·u·Δx (theory 0.354, +1.0%; tolerance 15%) | PASS |
 | Configuration 10 (4) MUSCL at 45° | σ = 3.83, 5.02, 6.06, 6.75 m, D⊥ = 0.034·u·Δx (0.09 times first order; tolerance < 0.25), Tl = 1050–1150 °C | PASS |
+| Configuration 10d (1) ledger and conservation of heat | Σhl·A − V_in ≤ 5.1e-11 m³ in all four runs, heat relative ≤ 1.0e-15, residual on the screen ≤ 3.8e-13 | PASS |
+| Configuration 10d (2) first-order upwind on 8 neighbours | D⊥ = 0.1667·u·Δx at 0° (theory 0.1667, +0.0%), 0.2376 at 45° (theory 0.2357, +0.8%; tolerance 15%) | PASS |
+| Configuration 10d (3) MUSCL on 8 neighbours | 0.0252 at 0° (0.15 times first order), 0.0282 at 45° (0.12 times) (tolerance < 0.25), Tl = 1050–1150 °C | PASS |
 | Configuration 11 (1) ledger | Σhl·A − V_in ≤ 2.7e-12 m³ in all five runs | PASS |
 | Configuration 11 (2) 0° | k = 1.0000 (one cell), 1.0000 (three cells) (tolerance 1 ± 0.01) | PASS |
 | Configuration 11 (3) one line at 45° | k = 1.0000 (tolerance 1 ± 0.02; no flow on 4 neighbours) | PASS |
@@ -255,6 +275,15 @@ the erupted volume) (developer.md §51.5).
   in the temperature mode the flow at the lower effusion rate cools from its
   front and stops early, and the lava piles up behind it (up to 3.5 m thick).
   Configurations 7–9 are not in the figure either.
+- The flow of configuration 9 is perfectly uniform across (all rows the same),
+  and this solution is unstable. With a perturbation of ±1 mm in the bed, as in
+  configuration 9n, a positive feedback (a hotter channel flows faster and cools
+  more slowly) splits the flow into channels (deposit thickness varying by
+  ±15–25% across the rows), and the length of the Q flow grows from 50 m to
+  85 m. The length of the perturbed solution is 75–85 m with first-order upwind
+  or MUSCL, 4 or 8 neighbours, and cells of 5 to 1.25 m (the correction in
+  developer.md §94). The check of configuration 9 (length ratio > 1.5) holds
+  for both the solution uniform across and the perturbed one.
 - The saves, field outputs and Log.txt of configurations 1–6 are
   byte-identical before and after the addition of the temperature mode (the
   isothermal run allocates no temperature arrays and goes through the same
@@ -279,7 +308,13 @@ the erupted volume) (developer.md §51.5).
   configurations 1–6 and the isothermal controls of configuration 9, the
   configuration 7 that does not flow, and x0 and x45 of configuration 10, which
   give first-order upwind explicitly, do not change. Configuration 10 is not in
-  the figure.
+  the figure. Configuration 10d computes the same flows on the 8-neighbour
+  9-point stencil; the diagonal edges carry heat too, so first-order upwind
+  diffuses across the flow even at 0° (d√2 F(−45°) = 0.167·u·Δx). The formula
+  is this guide's own derivation, of the same form as for first-order upwind of
+  the surface water on the ENC grid, and the measurements at 0° and 45° agree
+  with it within 1%. MUSCL gives 0.12–0.15 times first order at both 0° and
+  45°, nearly the same in every direction.
 - Configurations 11 and 4' check the 8-neighbour 9-point stencil of the flow
   (`lv_diagratio`; default 0 = 4 neighbours; developer.md §96). On 4
   neighbours a diagonal valley one cell wide, whose cells touch only at

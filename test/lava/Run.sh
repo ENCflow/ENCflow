@@ -16,6 +16,10 @@
 #         MUSCL(f_lvtemp_scheme = 3)で。0° は拡散なし、45° の 1 次は修正方程式の 0.354·u·Δx、
 #         MUSCL はその 1/4 未満)
 # 構成4': 構成4 と同じ入力を流動の 8 近傍の 9 点(lv_diagratio = 1/3。§96)で(検定は構成4 と同じ)
+# 構成9n: 構成9 の温度モードの 2 本を、地盤に ±1 mm の決まった乱れを加えて(横に一様な流れが流れの筋に
+#         分かれる。§94 の訂正)。同じ体積で噴出率 4 倍の流れが長いこと
+# 構成10d: 構成10 を流動の 8 近傍の 9 点(d = 1/3)で。1 次風上の横断の数値拡散が (1 − d)F(φ) + d√2 F(φ − 45°)
+#         (0° 0.167、45° 0.236)、MUSCL はその 1/4 未満(§96)
 # 構成11: 谷の通水能の向きによる差(8 近傍の 9 点 d = 1/3 と塞がれた配分の振り替え。0° と 45° の
 #         1 セル幅・3 セル幅の谷の Newton 流体の一様流。45° の 3 本は 4 近傍の対照つき。§96)
 # 合否は Check_lava.py。save は save*_serial にも複製(Run_MPI 比較用)
@@ -27,6 +31,7 @@ python3 "$sdir/make_init.py" > zinit.txt
 python3 "$sdir/make_init.py" wall > zwall.txt
 python3 "$sdir/make_init.py" cool > cool_cells.txt
 python3 "$sdir/make_init.py" run > zrun.txt
+python3 "$sdir/make_init.py" runnz > wrk_zrunnz.txt
 python3 "$sdir/make_init.py" x0 > wrk_zx0.txt
 python3 "$sdir/make_init.py" x45 > wrk_zx45.txt
 for k in x0c1 x0c2 x45c1 x45c2 ch0w1c ch0w3c ch45w1c ch45w3c; do
@@ -181,6 +186,18 @@ else
 fi
 python3 "$sdir/Check_lava.py" - heat Screen_runb.log || rc=1
 
+# 構成9n: 構成9 の温度モードの 2 本を ±1 mm の乱れのある斜面で(§94 の訂正)
+set -o pipefail
+for c in runnz run4nz; do
+    ./encflow param_$c.txt | tee Screen_$c.log || exit 1
+done
+set +o pipefail
+echo ""
+python3 "$sdir/Check_lava.py" - runnz Screen_runnz.log Screen_run4nz.log || rc=1
+for c in runnz run4nz; do
+    rm -rf save_${c}_serial && cp -r save_$c save_${c}_serial
+done
+
 # 構成10: 熱の横断の数値拡散(0°・45° のシート流、1 次風上と MUSCL。§94)
 set -o pipefail
 for c in x0 x0m x45 x45m; do
@@ -190,6 +207,18 @@ set +o pipefail
 echo ""
 python3 "$sdir/Check_lava.py" - xdiff || rc=1
 for c in x0 x0m x45 x45m; do
+    rm -rf save_${c}_serial && cp -r save_$c save_${c}_serial
+done
+
+# 構成10d: 構成10 を流動の 8 近傍の 9 点(d = 1/3)で(§96)
+set -o pipefail
+for c in x0d x0dm x45d x45dm; do
+    ./encflow param_$c.txt | tee Screen_$c.log || exit 1
+done
+set +o pipefail
+echo ""
+python3 "$sdir/Check_lava.py" - xdiff8 || rc=1
+for c in x0d x0dm x45d x45dm; do
     rm -rf save_${c}_serial && cp -r save_$c save_${c}_serial
 done
 

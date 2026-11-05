@@ -12,13 +12,45 @@
 #     (4) gl_lc = 0 では (1) と同じ比較が 5% を超える(局所の τb の形が格子で
 #         変わり、この検定が格子依存を検出できることの確認)
 #     (5) 侵食は氷のあるセルだけ、(6) 隆起なし・NaN なし
-#   使い方: Check_lc.py(result_lc, result_lc2, result_lc0, result_lc02 を読む)
+#   (5) の「氷のない」は、終了時の氷厚(save_<case>/glacier.dat の全桁)と初期の氷厚がともに 0 のセル。
+#   分布出力 Hi は小数 4 桁で、8 近傍の 9 点(gl_diagratio > 0)では谷壁の縁のセルに 1e-7 m 級の氷が
+#   入って侵食される(氷はあるので正しい)のを 0.0000 と読んで誤って数えたため(§96)
+#   使い方: Check_lc.py(result_lc, result_lc2, result_lc0, result_lc02 と save_* を読む)
 import math
+import struct
 import sys
 
 CASES = {"lc": 200.0, "lc2": 100.0, "lc0": 200.0, "lc02": 100.0}
 LX = 6000.0
 XSEL = (2000.0, 4000.0)
+
+
+def read_rec(f):
+    n = struct.unpack("<i", f.read(4))[0]
+    payload = f.read(n)
+    n2 = struct.unpack("<i", f.read(4))[0]
+    assert n == n2, "record marker mismatch"
+    return payload
+
+
+def read_rle_array(f, ntot):
+    # m_restart の restart_write_cell の形式(test/lava/Check_lava.py と同じ読み方)
+    hdr = read_rec(f)
+    n, nrun = struct.unpack("<2q", hdr)
+    assert n == ntot, "unexpected array size %d != %d" % (n, ntot)
+    runs = struct.unpack("<%dq" % (2 * nrun), read_rec(f))
+    packed_raw = read_rec(f)
+    packed = struct.unpack("<%dd" % (len(packed_raw) // 8), packed_raw)
+    out = [0.0] * n
+    i = 0
+    k = 0
+    for r in range(nrun):
+        i += runs[2 * r]
+        lit = runs[2 * r + 1]
+        out[i:i + lit] = packed[k:k + lit]
+        i += lit
+        k += lit
+    return out
 
 
 def read_field(fn):
@@ -34,7 +66,10 @@ def profile(case, dx):
     z0 = read_field(f"result_{case}/Z0000.txt")
     z1 = read_field(f"result_{case}/Z9998.txt")
     hi = read_field(f"result_{case}/Hi9998.txt")
+    hi0 = read_field(f"result_{case}/Hi0000.txt")
     ny, nx = len(z0), len(z0[0])
+    with open(f"save_{case}/glacier.dat", "rb") as f:
+        hix = read_rle_array(f, nx * ny)          # 終了時の氷厚(全桁。行は j = 1 から)
     cols = [i for i in range(nx) if XSEL[0] <= (i + 0.5) * dx <= XSEL[1]]
     prof, hprof = [], []
     nan, up, out = 0, -1.0e30, 0
@@ -46,7 +81,7 @@ def profile(case, dx):
                 nan += 1
                 continue
             up = max(up, dz)
-            if dz < -1.0e-9 and hi[j][i] <= 0.0:
+            if dz < -1.0e-9 and hix[j * nx + i] <= 0.0 and hi0[j][i] <= 0.0:
                 out += 1
         for i in cols:
             s += z1[j][i] - z0[j][i]

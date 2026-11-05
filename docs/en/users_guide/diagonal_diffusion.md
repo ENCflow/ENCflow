@@ -405,8 +405,13 @@ remains.
   $`0.357\,u\Delta`$ as the modified equation predicts (theory
   $`0.354\,u\Delta`$). The diffusion along the flow makes the length of a flow
   that stops as it cools, and the shape of its deposit, depend on the cell
-  size (with first-order upwind at Δ = 5 m the largest deposit thickness is
-  3–6 % thinner than on finer grids). The default `f_lvtemp_scheme = 3` is
+  size when the flow is perfectly uniform across (with first-order upwind at
+  Δ = 5 m the largest deposit thickness is 3–6 % thinner than on finer grids).
+  However, a flow that stops as it cools and is uniform across is unstable: the
+  slightest perturbation splits it into channels, and its length then hardly
+  depends on the scheme or the cell size ("Numerical diffusion of the heat
+  advection" in [Lava flow](lavaflow.md), the correction in developer.md §94,
+  in Japanese). The default `f_lvtemp_scheme = 3` is
   the same van Leer link-wise MUSCL as the surface scalars, and the crosswind
   diffusivity at 45° becomes $`0.034\,u\Delta`$ (0.09 times first order). The
   new temperature is kept within the range of the neighbouring temperatures,

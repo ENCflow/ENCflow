@@ -12,6 +12,7 @@ python3 "$sdir/make_init.py" > zinit.txt
 python3 "$sdir/make_init.py" wall > zwall.txt
 python3 "$sdir/make_init.py" cool > cool_cells.txt
 python3 "$sdir/make_init.py" run > zrun.txt
+python3 "$sdir/make_init.py" runnz > wrk_zrunnz.txt
 python3 "$sdir/make_init.py" x0 > wrk_zx0.txt
 python3 "$sdir/make_init.py" x45 > wrk_zx45.txt
 for k in x0c1 x0c2 x45c1 x45c2 ch0w1c ch0w3c ch45w1c ch45w3c; do
@@ -184,6 +185,26 @@ if [ -d save_run_serial ]; then
     done
 fi
 
+# 構成9n: 構成9 の温度モードの 2 本を ±1 mm の乱れのある斜面で(§94 の訂正)
+set -o pipefail
+for c in runnz run4nz; do
+    mpirun -np "$NP" $MPIRUN_OPTS ./encflow_mpi param_$c.txt | tee Screen_$c.log || exit 1
+done
+set +o pipefail
+echo ""
+python3 "$sdir/Check_lava.py" - runnz Screen_runnz.log Screen_run4nz.log || rc=1
+if [ -d save_runnz_serial ]; then
+    for c in runnz run4nz; do
+        for f in state.dat lavaflow.dat lavaflow_temp.dat; do
+            if cmp -s save_$c/$f save_${c}_serial/$f; then
+                echo "=== 乱れのある冷えて止まる流れ($c): $f は逐次結果とビット一致 ==="
+            else
+                echo "警告: save_$c/$f が逐次ビルドと不一致(同上)" >&2
+            fi
+        done
+    done
+fi
+
 # 構成10: 熱の横断の数値拡散(0°・45° のシート流、1 次風上と MUSCL。§94)
 set -o pipefail
 for c in x0 x0m x45 x45m; do
@@ -197,6 +218,26 @@ if [ -d save_x0_serial ]; then
         for f in state.dat lavaflow.dat lavaflow_temp.dat; do
             if cmp -s save_$c/$f save_${c}_serial/$f; then
                 echo "=== 熱の横断の数値拡散($c): $f は逐次結果とビット一致 ==="
+            else
+                echo "警告: save_$c/$f が逐次ビルドと不一致(同上)" >&2
+            fi
+        done
+    done
+fi
+
+# 構成10d: 構成10 を流動の 8 近傍の 9 点(d = 1/3)で(§96)
+set -o pipefail
+for c in x0d x0dm x45d x45dm; do
+    mpirun -np "$NP" $MPIRUN_OPTS ./encflow_mpi param_$c.txt | tee Screen_$c.log || exit 1
+done
+set +o pipefail
+echo ""
+python3 "$sdir/Check_lava.py" - xdiff8 || rc=1
+if [ -d save_x0d_serial ]; then
+    for c in x0d x0dm x45d x45dm; do
+        for f in state.dat lavaflow.dat lavaflow_temp.dat; do
+            if cmp -s save_$c/$f save_${c}_serial/$f; then
+                echo "=== 熱の横断の数値拡散 8 近傍($c): $f は逐次結果とビット一致 ==="
             else
                 echo "警告: save_$c/$f が逐次ビルドと不一致(同上)" >&2
             fi

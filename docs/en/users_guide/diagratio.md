@@ -203,7 +203,10 @@ shallow water flow is small.
   hill the 9-point stencil can give a larger error at the centre
   ([test/stencil9](../../../test/stencil9/en/README.md)).
 - The crosswind numerical diffusion of §2.5 for values other than 0.586 is computed from the
-  formula that reproduces the table measured at 0.586, and has not been measured.
+  formula that reproduces the table measured at 0.586. The only measurement at another value
+  is the first-order upwind lava temperature at $`d = 1/3`$ (0.167 at 0° and 0.238 at 45°,
+  against 0.167 and 0.236 from the formula; [test/lava](../../../test/lava/en/README.md)
+  configuration 10d); it has not been measured for surface scalars.
 - Reassignment returns the conveyance to the natural width where both sides are blocked,
   but the conveyance at partly blocked places depends on $`d`$ and on how the blockage is
   measured ([passage-width adjustment](passage_width.md) §5).

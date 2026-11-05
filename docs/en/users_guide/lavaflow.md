@@ -289,35 +289,58 @@ explicitly. A missing one stops the run)
   thermal diffusivity of lava (about 10⁻⁶ m²/s), and the temperature difference
   between a hot core and cooled margins comes out differently with the flow
   direction (in this example the width σ of the temperature boundary of the 45°
-  flow is 19 m at 106 m downstream of the vent).
+  flow is 19 m at 106 m downstream of the vent). With the 8-neighbour 9-point
+  stencil of the flow, `lv_diagratio = d > 0`, the diagonal edges carry heat
+  too, and the crosswind diffusivity becomes
+  $`D_\perp = [(1 - d)F(\theta) + d\sqrt2\,F(\theta - 45°)]\,u\,\Delta x`$ ($`F`$ is
+  the 4-neighbour coefficient $`D_\perp/(u\Delta x)`$ above; this guide's own
+  derivation, of the same form as for first-order upwind of the surface water
+  on the ENC grid): 0.167 at 0° and 0.236 at 45° for d = 1/3 (configuration 10d
+  measures 0.167 and 0.238).
 - The numerical diffusion along the flow, $`(\Delta x/2)|u|`$ (largest for a flow
   along a grid axis), makes the length of a flow that stops as it cools, and
-  the shape of its deposit, depend on the cell size. Computing the same flow as
-  configuration 9 (along a grid axis) with different cell sizes (developer.md
-  Sec. 94), first-order upwind gives a largest deposit thickness of 3.34, 3.41
-  and 3.46 m and a length of 55, 52.5 and 51.2 m (the length is quantized by the
-  cell size) for cells of 5, 2.5 and 1.25 m: the coarser the grid, the thinner
-  and longer the flow.
+  the shape of its deposit, depend on the cell size when the flow is perfectly
+  uniform across (computing the flow of configuration 9 on 4 neighbours with
+  different cell sizes, first-order upwind gives a largest deposit thickness of
+  3.34, 3.41 and 3.46 m and a length of 55, 52.5 and 51.2 m for cells of 5, 2.5
+  and 1.25 m; the length is quantized by the cell size; developer.md Sec. 94).
+- However, a flow that stops as it cools and is uniform across is unstable.
+  A perturbation of only ±1 mm in the bed splits it into channels (a hotter
+  channel flows faster and cools more slowly, a positive feedback between heat
+  and viscosity), and the length of the flow of configuration 9 is 75–85 m with
+  first-order upwind or MUSCL, 4 or 8 neighbours, and cells of 5 to 1.25 m
+  ([test/lava](../../../test/lava/en/README.md) configuration 9n; the solution
+  uniform across is 50–55 m on 4 neighbours). With 8 neighbours
+  (`lv_diagratio`) the asymmetry of the rows at the walls acts as a
+  perturbation, so the flow splits into channels even with a uniform input.
+  Real terrain always has lateral perturbations, so the length on an ideal
+  slope uniform across, and its dependence on the cell size, are not a guide
+  (the correction in developer.md Sec. 94).
 - `f_lvtemp_scheme = 3` reconstructs the face temperature from three points in
   line along the edge: the donor, the receiver and the cell further upwind of
   the donor (the same van Leer limiter as the MUSCL of the surface scalars; see
   [Numerical diffusion by diagonal-edge fluxes](diagonal_diffusion.md)).
   Where the temperature varies linearly the leading term of the diffusion
   vanishes, and the crosswind diffusivity at 45° becomes $`0.034\,u\,\Delta x`$
-  (0.09 times first order). For the same flow as configuration 9 the largest
-  deposit thickness hardly changes with the cell size (3.54, 3.53 and 3.55 m
-  for 5, 2.5 and 1.25 m) and the length is 50, 50 and 48.8 m (first-order
-  upwind approaches these values as the grid is refined). The heat content is
+  (0.09 times first order). For the flow of configuration 9 uniform across (4
+  neighbours) the largest deposit thickness hardly changes with the cell size
+  (3.54, 3.53 and 3.55 m for 5, 2.5 and 1.25 m) and the length is 50, 50 and
+  48.8 m (with a perturbation it splits into channels as above, 80–85 m with
+  either scheme). On the 8-neighbour 9-point stencil (d = 1/3) the crosswind
+  diffusivity is $`0.025\,u\,\Delta x`$ at 0° and $`0.028\,u\,\Delta x`$ at 45°
+  (0.15 and 0.12 times the first-order (1 − d)F(φ) + d√2 F(φ − 45°) = 0.167 and
+  0.236; configuration 10d), nearly the same in every direction. The heat content is
   carried in the same conservative form, so conservation is unchanged, and the
   new temperature is kept within the range of the neighbouring temperatures (no
   new extremes). At a front where the receiver has no lava, and on edges where
   the cell further upwind is outside the domain, a wall, sea or without lava,
   the face temperature stays first-order upwind.
 - The default is 3 (from 2026-11-05; the default before that was 1).
-  `f_lvtemp_scheme = 1` reproduces results from before 2026-11-05. The length
-  of a flow that stops as it cools and the shape of its deposit differ between
-  1 and 3 (for the flow of configuration 9 on 5 m cells the length goes from 55
-  to 50 m and the largest deposit thickness from 3.34 to 3.54 m).
+  `f_lvtemp_scheme = 1` reproduces results from before 2026-11-05. For the flow
+  of configuration 9 uniform across, the length and the shape of the deposit
+  differ between 1 and 3 (4 neighbours, 5 m cells: length 55 → 50 m, largest
+  deposit thickness 3.34 → 3.54 m), but with a perturbation the difference
+  becomes small (4 neighbours, 2.5 m cells: 82.5 m and 85 m).
 
 **Computing time**
 
@@ -347,6 +370,14 @@ explicitly. A missing one stops the run)
   extremes).
   Temperature structures a few cells wide (such as a hot core a few cells
   across) are blunted.
+- A flow that stops as it cools on a slope uniform across splits into
+  channels at the slightest perturbation (a positive feedback between heat and
+  viscosity). The position and number of the channels are set by the
+  perturbation, and the computation is not guaranteed to match observations.
+  The flow length differs greatly with and without a perturbation (for the
+  flow of configuration 9, 50–55 m for the solution uniform across and 75–85 m
+  with a perturbation). Where the terrain confines the flow to valleys, the
+  channels matter less.
 - Backward Euler is first-order accurate, so when the update interval is long
   compared with the cooling time constant $`\rho c_p h_l / (dF/dT)`$ the cooling
   comes out somewhat too slow (test/lava configuration 7 has a time constant of
@@ -474,9 +505,12 @@ The labels in the Basis column are explained in [How to read the basis of a defa
   with different eruption temperatures (conservation of heat, the range of the
   temperature, agreement with the isothermal run), the flow length increasing
   with the effusion rate for the same volume (unchanged in the isothermal
-  control), a restart round trip, and the crosswind numerical diffusion of the
-  heat (none for a flow along a grid axis; at 45°, the value of the modified
-  equation with first-order upwind and less than 1/4 of it with MUSCL).
+  control; also on a slope with a ±1 mm perturbation of the bed), a restart
+  round trip, and the crosswind numerical diffusion of the heat (on 4
+  neighbours none for a flow along a grid axis and, at 45°, the value of the
+  modified equation with first-order upwind; on the 8-neighbour 9-point stencil
+  (1 − d)F(φ) + d√2 F(φ − 45°) at both 0° and 45°; less than 1/4 of it with
+  MUSCL in both cases).
 - Example: [examples/shield_volcano](../../../examples/shield_volcano/en/README.md) — a
   shield volcano growing as the lava flows of 20 eruptions with shifting vents and volumes
   pile up (with a comparison at a ten times larger yield stress), and the shape at rest of a

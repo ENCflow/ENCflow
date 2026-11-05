@@ -21,6 +21,8 @@
   fn_glacier = '-'
   dir_data = 'data'
   dir_result = 'result_lc02'
+  dir_save = 'save_lc02'
+  f_state_save = 1          ! 終了時の氷厚を全桁で残す(Check_lc.py の「侵食は氷のあるセルだけ」の判定用)
   f_out_z = 1               ! 地形の時間変化(侵食の検定用)
   f_check_cfl = 0
 /
