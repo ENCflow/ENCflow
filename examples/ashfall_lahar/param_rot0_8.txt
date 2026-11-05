@@ -31,7 +31,7 @@
 /
 
 &list_enc
-  f_gravity_correction = 1  ! 急勾配の重力補正(土石流ケースの標準)
+  f_gravity_correction = 2  ! 急勾配の重力補正(既定。斜面に沿う摩擦と流砂のせん断も。土石流ケースの標準)
 /
 
 &list_initial

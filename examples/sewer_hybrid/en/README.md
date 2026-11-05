@@ -156,8 +156,8 @@ end is 1.125 m, so the outfall sits slightly above the river surface.
 **(a) Water inside the pipes, S_grnd.** In run E, with only the river, the
 pipes are full (25 mm) after 30 minutes, and 22 mm stays in the pipes even
 after the rain stops (there is no outlet, so it cannot drain). In run F
-with the outfall, the water in the pipes stays at most 6 mm and drains to
-1 mm within 30 minutes after the rain stops. The effect of **the trunk
+with the outfall, the water in the pipes stays at most 6.5 mm and drains to
+1.4 mm within 30 minutes after the rain stops. The effect of **the trunk
 being able to discharge into the river** is seen directly.
 
 **(b) Water on the land surface.** S_surf in the Log is the mean over the
@@ -179,20 +179,24 @@ depth around the inlets. After the rain stops it falls below 1 mm within
 
 **(c) Longitudinal profile of the trunk filling ratio.** D and E stay at
 1.5–1.8 times pipe-full (pressurized in the pseudo slot), unchanged for
-3 hours. In F it is 0.1–1.0 at the end of the rain, lower downstream (0.7
-near the outfall), and after 3 hours the upstream side is nearly empty
-(0.01); only the water set by the river level remains in the 100 m reach
+3 hours. In F, at the end of the rain it rises from 0.1 at the upstream end
+toward downstream, reaches pipe-full (1.0) at x = 230–350 m and drops to
+0.8 near the outfall; after 3 hours the upstream side is nearly empty
+(0.01); only the water set by the river level remains in the 80 m reach
 from the outfall (the outfall invert 1.125 m < river level 1.5 m, so the
 pipe below the river surface does not empty).
 
 Summarizing where the water goes (out of the total rainfall of 61.0 mm):
 in E, 38.6 mm goes from the cliff into the river and 22.4 mm remains in
-the pipes; in F, 56.2 mm goes **from the outfall into the river**, 3.5 mm
+the pipes; in F, 57.3 mm goes **from the outfall into the river**, 2.4 mm
 from the cliff into the river, and 1.3 mm remains in the pipes (recomputed
 on 2026-10-22, and on 2026-10-31 with the default f_opening_dynamic = 3, which changes
 only the outfall 55.9 → 56.2 mm and the cliff 3.8 → 3.5 mm; developer.md §68.41; recomputed again on 2026-11-02
 with the default after the correction of the lateral faces of the momentum-conserving advection, which leaves
-the printed values unchanged; the figures are from that recomputation; §68.42, §68.43). The trunk of F carries more than 90 % of the rain,
+the printed values unchanged; §68.42, §68.43; recomputed again on 2026-11-05 after the default
+f_gravity_correction = 2 and the fixes of the outflow suppression and the edge depth, §93–§95, which changes
+the outfall 56.2 → 57.3 mm, the cliff 3.5 → 2.4 mm and the maximum in the pipes of F 6 → 6.5 mm; the values
+of D and E are unchanged; the figures are from that recomputation). The trunk of F carries more than 90 % of the rain,
 consistent with the estimate pipe-full capacity 1.70 m³/s ≳ runoff
 1.40 m³/s.
 
@@ -205,7 +209,7 @@ consistent with the estimate pipe-full capacity 1.70 m³/s ≳ runoff
 | C | 21.6 | 39.4 | 61.0 | No trunk |
 | D | 36.4 | 24.6 | 61.0 | Consistent storage coefficients |
 | E | 0.0 (land) | 22.4 | 22.4 | With river. 38.6 mm from the cliff into the river |
-| F | 0.1 (land) | 1.2 | 1.3 | River + outfall. 56.2 mm (4489 m³) from the outfall into the river, 3.5 mm from the cliff |
+| F | 0.1 (land) | 1.2 | 1.3 | River + outfall. 57.3 mm (4573 m³) from the outfall into the river, 2.4 mm from the cliff |
 
 - In the closed runs A–D, S_total = the total rainfall of 61.0 mm is
   conserved to a rounding of 1e-13. The S columns of the Log in E and F are

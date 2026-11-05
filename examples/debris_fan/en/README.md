@@ -21,11 +21,11 @@ schematic values chosen to make the phenomena visible, and do not reproduce the 
 **What this example shows (eight and four neighbours of the ENC grid)**
 
 - **Flow down oblique valleys even on coarse grids**: even on a 40 m grid, coarser than the valley floor
-  (30 m wide), eight neighbours deliver 0.91-1.09 times the reference sediment to the fan whatever the
+  (30 m wide), eight neighbours deliver 0.91-1.10 times the reference sediment to the fan whatever the
   valley orientation. With four neighbours, when the valley runs obliquely to the grid, the debris flow stops
   in the valley at 20 m and coarser, and at 40 m with 45° almost all of the 100,000 m³ stays in the valley.
 - **Little influenced by the valley orientation and the grid spacing**: on the 5 m grid, the map difference
-  due to the valley orientation with eight neighbours is half that with four (9 % and 18 %). With eight
+  due to the valley orientation with eight neighbours is half that with four (10 % and 18 %). With eight
   neighbours, the sediment reaching the fan, the extent and runout of the deposit, the arrival time and the
   lateral spreading agree within ±10 % of the reference over grids of 20-2.5 m and the three orientations.
 - **Four neighbours converge slowly**: even on the 2.5 m grid, four neighbours deliver 0.95 times the sediment
@@ -72,7 +72,7 @@ schematic values chosen to make the phenomena visible, and do not reproduce the 
 | It does not stop in the steep valley and deposits when it slows | Erosion and deposition of Takahashi and Nakagawa (1991) (approach to the equilibrium concentration; while fast it runs on its inertia without depositing) | `f_dbed = 3`, `db_delte`, `db_deltd` |
 | Material that has stopped becomes terrain | Fix material that has stopped at low speed into the terrain | `f_dbstop = 1` |
 | The deposit holds water | Fill the pores of the layer added by deposition with the water of the local flow | `f_dbwet = 1` |
-| Gravity on steep slopes | Gravity correction for the slope inclination | `f_gravity_correction = 1` |
+| Gravity on steep slopes | Gravity correction for the slope inclination (friction and sediment shear also along the slope) | `f_gravity_correction = 2` (default) |
 | Valley orientation and grid | Give the terrain, failure depth and initial water depth by formulas in coordinates along the valley and take their values at the cell centres of each grid (no interpolation) | `make_init.py` |
 | Flow in diagonal directions | The eight neighbours of the ENC grid (the diagonal edges also carry flow; the four-neighbour control sets the diagonal passage widths to 0) | `p_diagratio` |
 
@@ -159,7 +159,10 @@ too large on edges oblique to the slope, is now right: the sediment reaching the
 went from 68.2 to 69.2 thousand m³ (+1.5 %) and the arrival at the apex from 42.3 to 43.0 s. Four
 neighbours changed more: more material stays in the valley and less reaches the fan (68.5 → 65.9 thousand m³
 at 2.5 m), and the arrival at the apex is later and now agrees with eight neighbours (38.9 → 42.1 s at
-2.5 m).
+2.5 m). Recomputed all 26 cases on 2026-11-05 after the default f_gravity_correction = 2 and the fixes
+of the outflow suppression and the edge depth (§93–§95): the values mostly moved only in the last digit (the
+sediment reaching the fan in the reference case stays at 69.2 thousand m³, and the arrival at the apex at
+43.0 s). The tables, figures and numbers in the text are from this recomputation.
 Most of the flow in this example is fast, and the rest check acts only as the flow stops.
 
 ### How the debris flow behaves (reference: eight neighbours, 2.5 m, 0°)
@@ -183,7 +186,7 @@ the top, the valley at 0°, 22.5° and 45° (drawn back in the coordinates along
 - **Deposition on the fan (1-10 min)**: it spreads from the apex, slows and leaves a
   tongue-shaped deposit on the fan. The deposit on the fan grows to 17,000 m³ at 2 minutes,
   39,000 m³ at 5 minutes and 50,000 m³ at 10 minutes (bulk volume); at 10 minutes the deposit
-  reaches 267 m from the apex, the area thicker than 0.1 m is 63,000 m² and the greatest
+  reaches 266 m from the apex, the area thicker than 0.1 m is 63,000 m² and the greatest
   thickness is 2.5 m.
 - **Trailing mud**: when a debris flow with a concentration of 0.45 becomes a deposit with a
   porosity of 0.4, water is left over, and it spreads over the fan on top of the deposit as a
@@ -208,8 +211,8 @@ Sediment that reached the fan (deposit + moving; 1,000 m³; reference 69.2 thous
 
 | Grid | Eight neighbours (0° / 22.5° / 45°) | Four neighbours (0° / 22.5° / 45°) |
 |---|---|---|
-| 40 m | 63.1 / 75.7 / 71.3 | 51.8 / **0.7** / **0.5** |
-| 20 m | 72.0 / 70.7 / 66.3 | 59.4 / 52.0 / **18.8** |
+| 40 m | 63.0 / 76.0 / 71.4 | 51.8 / **0.6** / **0.5** |
+| 20 m | 72.1 / 70.6 / 66.3 | 59.5 / 52.1 / **18.8** |
 | 10 m | 66.0 / 65.5 / 66.1 | 59.0 / 60.3 / 53.6 |
 | 5 m | 69.7 / 68.0 / 67.8 | 65.7 / 65.2 / 62.9 |
 | 2.5 m | 69.2 (0° only) | 65.9 (0° only) |
@@ -224,12 +227,12 @@ Sediment that reached the fan (deposit + moving; 1,000 m³; reference 69.2 thous
   axis (0°), four neighbours also reach the fan (0.75 times the reference at 40 m).
 - **With eight neighbours the sediment reaches the fan even on grids coarser than the valley
   floor**: the diagonal edges connect the cells of the valley floor directly, so even at 40 m,
-  where the floor is less than one cell, 0.91-1.09 times the sediment reaches the fan in every
+  where the floor is less than one cell, 0.91-1.10 times the sediment reaches the fan in every
   orientation, and the extent and runout of the deposit are within ±10 % of the reference.
 - **At 5 m the two differ little**: at 5 m, where the floor is six cells wide, four neighbours
   also deliver 0.91-0.95 times the reference to the fan. With four neighbours, however,
   about 4,000 m³ of material remains on the valley floor just above the mouth
-  (s = 600-1,000 m) in every orientation (up to 1.3-1.7 m thick; 130 m³ or less with eight
+  (s = 600-1,000 m) in every orientation (up to 1.3-1.7 m thick; 140 m³ or less with eight
   neighbours), and the deposit on the fan spreads less sideways (there is no part extending along
   the mountain front toward ±45° from the valley axis).
 
@@ -253,7 +256,7 @@ maximum flow depth on the fan, mean of 22.5° and 45°; %):
 
 | | 40 m | 20 m | 10 m | 5 m |
 |---|---:|---:|---:|---:|
-| Eight neighbours | 47 / 42 | 21 / 19 | 13 / 13 | 9 / 9 |
+| Eight neighbours | 47 / 42 | 21 / 19 | 14 / 13 | 10 / 9 |
 | Four neighbours | 100 / 83 | 66 / 49 | 35 / 24 | 18 / 13 |
 
 Range of the main indicators relative to the reference (minimum-maximum over the three
@@ -261,14 +264,14 @@ orientations):
 
 | Indicator | 8 neighbours 40 m | 8 neighbours 20 m | 8 neighbours 10 m | 8 neighbours 5 m | 4 neighbours 40 m | 4 neighbours 20 m | 4 neighbours 10 m | 4 neighbours 5 m |
 |---|---:|---:|---:|---:|---:|---:|---:|---:|
-| Sediment reaching the fan | 0.91-1.09 | 0.96-1.04 | 0.95-0.95 | 0.98-1.01 | 0.01-0.75 | 0.27-0.86 | 0.77-0.87 | 0.91-0.95 |
-| Deposit area (≥ 0.1 m) | 0.91-1.04 | 0.92-0.96 | 0.90-0.94 | 0.98-0.99 | 0.00-0.63 | 0.37-0.75 | 0.78-0.81 | 0.90-0.93 |
-| Runout of the deposit | 0.95-1.00 | 0.95-0.97 | 0.90-0.94 | 0.95-0.96 | 0.00-0.98 | 0.70-0.96 | 0.91-0.92 | 0.94-1.00 |
-| Area of maximum flow depth ≥ 1 m | 0.60-0.80 | 1.00-1.09 | 1.01-1.10 | 0.97-0.98 | 0.07-0.60 | 0.61-0.79 | 0.85-0.89 | 0.87-0.90 |
-| Area of maximum force ≥ 10 | 0.56-0.85 | 0.96-1.15 | 0.87-1.00 | 0.91-1.03 | 0.38-1.13 | 0.23-1.10 | 0.58-0.88 | 0.79-1.02 |
-| Houses with flow depth ≥ 1 m | 0.40-0.62 | 0.91-0.98 | 0.93-1.07 | 0.89-0.91 | 0.00-0.58 | 0.44-0.80 | 0.80-0.89 | 0.80-0.84 |
-| Arrival at the apex | 1.14-1.62 | 0.96-1.02 | 1.01-1.05 | 1.01-1.02 | 1.86-2.95 | 0.94-1.66 | 0.97-1.22 | 0.98-1.09 |
-| Lateral spreading of the deposit | 0.87-0.97 | 0.93-0.98 | 0.97-1.01 | 0.99-1.01 | 0.90-1.84 | 0.75-0.90 | 0.89-0.97 | 0.90-0.94 |
+| Sediment reaching the fan | 0.91-1.10 | 0.96-1.04 | 0.95-0.95 | 0.98-1.01 | 0.01-0.75 | 0.27-0.86 | 0.77-0.87 | 0.91-0.95 |
+| Deposit area (≥ 0.1 m) | 0.91-1.04 | 0.92-0.96 | 0.90-0.94 | 0.98-1.00 | 0.00-0.63 | 0.37-0.75 | 0.78-0.80 | 0.90-0.93 |
+| Runout of the deposit | 0.96-1.00 | 0.96-0.98 | 0.91-0.99 | 0.95-0.97 | 0.00-0.98 | 0.70-0.96 | 0.91-0.92 | 0.95-1.00 |
+| Area of maximum flow depth ≥ 1 m | 0.60-0.83 | 0.99-1.09 | 1.02-1.12 | 0.97-0.99 | 0.07-0.60 | 0.61-0.79 | 0.84-0.89 | 0.87-0.90 |
+| Area of maximum force ≥ 10 | 0.56-0.84 | 0.94-1.22 | 0.88-1.00 | 0.92-1.03 | 0.38-1.13 | 0.23-1.10 | 0.58-0.89 | 0.79-1.02 |
+| Houses with flow depth ≥ 1 m | 0.40-0.64 | 0.91-0.98 | 0.96-1.07 | 0.89-0.91 | 0.00-0.58 | 0.44-0.80 | 0.80-0.89 | 0.80-0.84 |
+| Arrival at the apex | 1.14-1.62 | 0.94-1.02 | 1.01-1.04 | 1.01-1.02 | 1.86-2.98 | 0.94-1.66 | 0.97-1.21 | 0.98-1.09 |
+| Lateral spreading of the deposit | 0.86-0.97 | 0.93-0.97 | 0.97-1.02 | 0.99-1.01 | 0.90-1.84 | 0.75-0.90 | 0.89-0.97 | 0.90-0.94 |
 
 (The lateral spreading of the deposit is the standard deviation of the direction of the fan deposit seen from the
 apex. For four neighbours at 40 m with 22.5° and 45° there is almost no deposit on the fan, so this ratio has no
@@ -277,18 +280,18 @@ meaning.)
 - **Eight neighbours at 10 m or finer (three or more cells across the floor)**: every indicator,
   in every orientation, stays within ±13 % of the reference (the force area and the house
   count, which is discrete, deviate most). The map difference due to the valley orientation is
-  9 % at 5 m and 13 % at 10 m and shrinks as the grid is refined (the orientation difference is
+  10 % at 5 m and 14 % at 10 m and shrinks as the grid is refined (the orientation difference is
   a discretization error that converges with the grid).
 - **Eight neighbours at 20 m (1.5 cells across the floor)**: the sediment reaching the fan, the
   extent and runout of the deposit and the arrival time at the apex are within ±8 % of the
-  reference, and the area of a maximum flow depth of 1 m or more, the force and the house count
-  are within about ±15 %. Only the deposit opposite the scar (the deposit in the valley) swings
-  between 0.79 and 1.10 times the reference, because the cross-section of the valley is not
+  reference, the area of a maximum flow depth of 1 m or more and the house count are within
+  about ±10 %, and the force is 0.94-1.22 times. Only the deposit opposite the scar (the deposit in the valley) swings
+  between 0.78 and 1.10 times the reference, because the cross-section of the valley is not
   resolved.
 - **Eight neighbours at 40 m (0.75 cells across the floor)**: the amounts and extents (sediment
   reaching the fan, deposit area, runout) are kept, but the indicators of flow intensity break
-  down. The area of a maximum flow depth of 1 m or more comes out at 0.60-0.80 times the
-  reference, and the houses reached by flow 1 m deep or more at 0.40-0.62 times, and both also
+  down. The area of a maximum flow depth of 1 m or more comes out at 0.60-0.83 times the
+  reference, and the houses reached by flow 1 m deep or more at 0.40-0.64 times, and both also
   change much with the valley orientation (the deep, fast flow is averaged over coarse cells).
   At 0° the front reaches the apex 1.6 times later (the valley floor becomes a single row of
   cells, and the flow is squeezed into that narrow row).
@@ -319,7 +322,7 @@ direction of the fan deposit seen from the apex).
 
 | Valley at 0° | 20 m | 10 m | 5 m | 2.5 m |
 |---|---:|---:|---:|---:|
-| Eight neighbours | 34.2° | 35.3° | 35.2° | 35.0° |
+| Eight neighbours | 34.1° | 35.6° | 35.5° | 35.0° |
 | Four neighbours | 26.2° | 31.2° | 31.5° | 32.2° |
 
 - **The spreading with eight neighbours is not numerical diffusion**: numerical diffusion is proportional to the
@@ -361,8 +364,8 @@ valleys of other sizes, read the grid spacing as the number of cells across the 
 | What you want to know | Eight neighbours (ENC default) | Four neighbours |
 |---|---|---|
 | How far the material reaches and how much it deposits (sediment reaching the fan, deposit extent, runout) | within ±10 % of the reference even on a grid coarser than the valley floor (40 m, 0.75 cells across the floor) | in an oblique valley the flow stops in the valley at 1.5 cells or fewer across the floor (20 m and coarser); 0.77-0.92 times at 3 cells (10 m), 0.90-1.00 times at 6 cells (5 m) |
-| Flow intensity (maximum flow depth, force, flow reaching the houses) | about ±15 % at 1.5 cells or more across the floor (20 m), within ±13 % at 3 cells or more (10 m) | 0.79-1.02 times even at 6 cells across the floor (5 m) |
-| Arrival time | ±5 % at 1.5 cells or more across the floor | 0.98-1.09 times even at 6 cells across the floor (5 m) |
+| Flow intensity (maximum flow depth, force, flow reaching the houses) | at 1.5 cells or more across the floor (20 m) the force is 0.94-1.22 times and the rest about ±10 %; within ±13 % at 3 cells or more (10 m) | 0.79-1.02 times even at 6 cells across the floor (5 m) |
+| Arrival time | ±6 % at 1.5 cells or more across the floor | 0.98-1.09 times even at 6 cells across the floor (5 m) |
 
 Computing time per case (4 threads, on the machine on which this example was made): 0.3 s at 40 m,
 2 s at 20 m, 13 s at 10 m, a minute and a half at 5 m and 10 minutes at 2.5 m. The cost
@@ -395,7 +398,7 @@ cells, as a guide.
   corners of the mountain front at the apex (staircases on the grid); and the number of houses (a
   discrete count). All of them shrink as the grid is refined.
 - **Gravity correction on steep slopes**: the effective gravity g cos²θ of the gravity correction for
-  steep slopes (`f_gravity_correction = 1`) is taken from the magnitude of the ground slope, not from the
+  steep slopes (`f_gravity_correction`) is taken from the magnitude of the ground slope, not from the
   slope in the normal direction of each edge (fixed on 2026-11-04; developer.md §91). Before the fix the
   effective gravity came out large on edges oblique to the slope, a direction dependence that remained as
   the grid was refined (in the speed of sliding on a uniform slope of 0.38-0.45, eight neighbours 3-5 % fast
