@@ -1211,47 +1211,47 @@
     {
       "source": "examples/bedrock_cover/README.md",
       "target": "examples/bedrock_cover/en/README.md",
-      "source_sha256": "969f6f1fc89d2922f804896ccd76dbff79a0b2e4f045b5007b07eaf9642cb696",
-      "target_sha256": "918aea14e56a1d245fae127e29257538a237b7b18a4759398e577913e8c85b4a",
-      "reviewer": "Claude (assistant)",
+      "source_sha256": "5251fb2df682f5ecfda053236dbf71ff77a3f6f5a111200f23a4cd5e465e617a",
+      "target_sha256": "7c638b8129bb0f2e3b31f892b5b7ba8354db6d0fb352c6e610bc63fa1bb4c71e",
+      "reviewer": "Claude (Claude Code session; recomputed 2026-11-05: the results note, the 2.2 % agreement and the step positions compared with the Japanese source, rest unchanged since the previous record)",
       "method": "assistant",
-      "reviewed_on": "2026-11-02"
+      "reviewed_on": "2026-11-05"
     },
     {
       "source": "examples/bedrock_cover/figs/cover.png",
       "target": "examples/bedrock_cover/en/figs/cover.png",
-      "source_sha256": "bbd66f159e680ae4431dd3b11cbe654eba7e44708cd8dc31e9a876356f92482e",
-      "target_sha256": "d4c6cb4627486142f398fef25bd10119452a865a068bfcb1f5cf6a29d748d92b",
-      "reviewer": "Claude (Claude Code session; compared the Japanese and English figure images side by side: same plotted data and layout, labels translated (some compressed but faithful); provenance per the commits that drew the English figures: same saved results as the Japanese figures; no model execution)",
+      "source_sha256": "e4b6cb6c2b7b95a254198314542140c02c40ab200cc9400f6b315b6427a8c63e",
+      "target_sha256": "7e535447084da08e093cbd15b8f3788fa825c6d758db5990a9f7bfea68ef9a3e",
+      "reviewer": "Claude (Claude Code session; recomputed 2026-11-05: both drawn by plot_results.py from the same results, labels compared with the Japanese figure)",
       "method": "assistant",
-      "reviewed_on": "2026-10-29"
+      "reviewed_on": "2026-11-05"
     },
     {
       "source": "examples/bedrock_cover/figs/knick.png",
       "target": "examples/bedrock_cover/en/figs/knick.png",
-      "source_sha256": "bcf0fa1aa5faeff06237ba6aaaafb92e42afe96dfc283e1c98b8b0ecc145bcd2",
-      "target_sha256": "f91bb05c9b790585b0088ebe7e51fb0e3663c41dac717e8c7501dad82a9f2dbe",
-      "reviewer": "Claude (Claude Code session; compared the Japanese and English figure images side by side: same plotted data and layout, labels translated (some compressed but faithful); provenance per the commits that drew the English figures: same saved results as the Japanese figures; no model execution)",
+      "source_sha256": "3f630d90b7903f0c753907d284e57fc18fb114fdeaba4c55c4c1d9d1bff3363a",
+      "target_sha256": "87b275e8c39f9473c394cdd240bd99746c6c39d4f5ce4975ccefdb41c64988d3",
+      "reviewer": "Claude (Claude Code session; recomputed 2026-11-05: both drawn by plot_results.py from the same results, labels compared with the Japanese figure)",
       "method": "assistant",
-      "reviewed_on": "2026-10-29"
+      "reviewed_on": "2026-11-05"
     },
     {
       "source": "examples/bedrock_cover/figs/pulse.png",
       "target": "examples/bedrock_cover/en/figs/pulse.png",
-      "source_sha256": "1604a1cf23e384edbbc8cc89d8c0948e9fe8d416fe67c5e3de314d4b8d246ba2",
-      "target_sha256": "ca478b9738f418d17cb5d9c9ad989ed82b2f026201faabe5e7c973c73aec8ce8",
-      "reviewer": "Claude (Claude Code session; compared the Japanese and English figure images side by side: same plotted data and layout, labels translated (some compressed but faithful); provenance per the commits that drew the English figures: same saved results as the Japanese figures; no model execution)",
+      "source_sha256": "7867cca5b1e20f7623ea4496b9db86b87b1e4e4472927784a33ac19f3048ec09",
+      "target_sha256": "ee23b333c6fedaee883cd710fe42669cddae88252491fbba04cc6109dac181f5",
+      "reviewer": "Claude (Claude Code session; recomputed 2026-11-05: both drawn by plot_results.py from the same results, labels compared with the Japanese figure)",
       "method": "assistant",
-      "reviewed_on": "2026-10-29"
+      "reviewed_on": "2026-11-05"
     },
     {
       "source": "examples/bedrock_cover/figs/supply.png",
       "target": "examples/bedrock_cover/en/figs/supply.png",
-      "source_sha256": "d7637c5511e8dfe421b101f50626ddb800eaa1939e6a26768f7f483689c8ecdc",
-      "target_sha256": "5160c1682fdc2b94351c4b745564c9e68da57afbe644bd94ba3bbed150bb9fcf",
-      "reviewer": "Claude (Claude Code session; compared the Japanese and English figure images side by side: same plotted data and layout, labels translated (some compressed but faithful); provenance per the commits that drew the English figures: same saved results as the Japanese figures; no model execution)",
+      "source_sha256": "1493c84250b70a4d5acd1cf8894c35159fe6d3ff79a261c60846307d0ad4521e",
+      "target_sha256": "52acbe4dce87cd3e05c2d879f0611480ed8d22aba790d034983f0eaff216d252",
+      "reviewer": "Claude (Claude Code session; recomputed 2026-11-05: both drawn by plot_results.py from the same results, labels compared with the Japanese figure)",
       "method": "assistant",
-      "reviewed_on": "2026-10-29"
+      "reviewed_on": "2026-11-05"
     },
     {
       "source": "examples/catchment_metal/README.md",
