@@ -1355,11 +1355,11 @@
     {
       "source": "examples/debris_bedrock/README.md",
       "target": "examples/debris_bedrock/en/README.md",
-      "source_sha256": "8ca21fcb67eb5162f0e2a134e33a0abaff7b79144345c9f4592ee576d455e836",
-      "target_sha256": "65506f2d471661f67d4db20d1bb019c93f583f54f55a31d7961e238beeb690b3",
-      "reviewer": "Claude (Claude Code session; the event table, the values in the text (section means, flow depths at 21/41/61 m, cover and threshold cells, ledger ratios), the calibration mean 1.10 cm and the 2026-11-04 recomputation note after §91 updated in both languages and compared)",
+      "source_sha256": "31d6ec7c98011013794a652b8b2b11cd9ba2696c2c4b703a0526607c68a4e396",
+      "target_sha256": "f0fdb4a90ffa827e266a74b2ed5bb49b483ec4c2cb25f3914d6091bfcda0349c",
+      "reviewer": "Claude (Claude Code session; 2026-11-05: the f_gravity_correction = 2 mentions in the table and the text compared with the Japanese source, rest unchanged since the previous record)",
       "method": "assistant",
-      "reviewed_on": "2026-11-04"
+      "reviewed_on": "2026-11-05"
     },
     {
       "source": "examples/debris_bedrock/figs/cover.png",
@@ -1427,11 +1427,11 @@
     {
       "source": "examples/debris_fan/README.md",
       "target": "examples/debris_fan/en/README.md",
-      "source_sha256": "24dcd33065060a3443f152a49953a58cae98c5df3a518370cbc6dd96e14fb050",
-      "target_sha256": "e58b041b2b3176cba8e4a7905cad3380e032a0280e5ce9b9b3ef0b7159f2ecb1",
-      "reviewer": "Claude (Claude Code session; all tables, the reference-case narrative, the four-neighbour findings (arrival time now agrees, fan sediment 0.95 times at 2.5 m), the guide table and the gravity-correction item rewritten after §91 in both languages and compared)",
+      "source_sha256": "583f36beb526253e6ee88feeb74f8f589ab07c4ff7029300aa183b514911a50d",
+      "target_sha256": "a9aca28110f348716b89c67944b1e2e36edd9d4eb44d8bb7165b7d1ac375bef9",
+      "reviewer": "Claude (Claude Code session; 2026-11-05: the f_gravity_correction = 2 mentions in the table and the text compared with the Japanese source, rest unchanged since the previous record)",
       "method": "assistant",
-      "reviewed_on": "2026-11-04"
+      "reviewed_on": "2026-11-05"
     },
     {
       "source": "examples/debris_fan/figs/dependence.png",
