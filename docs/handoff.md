@@ -90,7 +90,13 @@ architecture.md。このメモは「現在進行中・未完了の項目」だ�
      (95 ケース)で、main の既定 f_gravity_correction = 2 に検定の式が追随していなかった rockinc の T2・T9 を検定の側で
      直した(ec37a8e。developer.md §93)。**残り**: 例題の一括の回し直し((a)〜(c)・(e) の例題と、別ブランチの変更で値の
      変わる例題を 1 回で)。
-     - **中断中(2026-11-05。利用者の指示「一旦中断」)**。起動前に止めた。合意済みの範囲は delta・meander・
+     - **中断中(2026-11-05。利用者の指示「一旦中断」)**。起動前に止めた。main の側でも同じ日に、このブランチに
+       関わらない例題を再計算して main に入れてあった(00l。landslide_tsunami ほか 12 例題を更新、stone_forest・
+       levee_breach は変化なし)。このブランチを main に入れた後の残り: このブランチの既定(creep・spl・gl・lv・
+       gw・salt の diagratio = 1/3、f_lvtemp_scheme = 3)で値が変わる badland・badland_round・badland_storm・mesa・
+       mountain_valley・glacier_valley・shield_volcano・stratovolcano・catchment_metal・estuary_barrage・qanat
+       (estuary_barrage・qanat は main で地下水 2/(2+√2) のまま再計算したので、もう一度)と tutorials/chichibu
+       (地下水)、main の側の未了の karst・tower_karst。合意済みの範囲は delta・meander・
        meander_cutoff を除く全例題(26 例題。vz_tani2023 は論文の PDF から抽出したデータが要るので除き、
        benchmark は README がないので除く)。手順の案: 各 README の実行の節の計算の行(make run・make supp・
        ./encflow など)を例題ごとに回し、描画は README の更新のときに結果を見ながら行う。4 並列・1 スレッドで
