@@ -4352,47 +4352,47 @@
     {
       "source": "tutorials/chichibu/README.md",
       "target": "tutorials/chichibu/en/README.md",
-      "source_sha256": "d72ab8ef55b87fa6d7ffd8552c302c2a85c435984675f863bd477d9bb83be09d",
-      "target_sha256": "943a85a083d4982c0a46f941b888a2c4a3edfb2f4e89e4468fa7299554396cbb",
-      "reviewer": "Claude (Claude Code session; reviewed the Japanese source against the English mirror after adding the passage-width page and the links to it, 2026-11-03)",
+      "source_sha256": "16fd3d7eaf2d3857d32c84f5c148db51eef3f8c60f6bdfbd279ad8f8ad618966",
+      "target_sha256": "1edc01799968e1209364c42196e9496dee774bff4231e1b4a125e26eb84ad63a",
+      "reviewer": "Claude (Claude Code session; main text (Steps 1-7) recomputed 2026-11-05 with the default f_gravity_correction = 2 after developer.md sec. 94-95: the screen-output rows of Steps 1, 5 and 6, the Step 4 explanation (bumps in the hydrograph, ex_flux now 0, dd is what matters), the Step 4 and Step 5 peak values, the 4-neighbour velocity and the dated note compared with the Japanese source; the supplement is unchanged since the previous record)",
       "method": "assistant",
-      "reviewed_on": "2026-11-03"
+      "reviewed_on": "2026-11-05"
     },
     {
       "source": "tutorials/chichibu/figs/step1_hend.png",
       "target": "tutorials/chichibu/en/figs/step1_hend.png",
-      "source_sha256": "510f1bc5f8d0e235d649fe567354c5ac0c699644dc8aceb98c24fe37eab40ddb",
-      "target_sha256": "9e439a5306e24b02ba5754827339c67b37254e54cb2785f8c7729f15f62e67ef",
-      "reviewer": "Claude (Claude Code session; lateral-flux fix of the momentum-conservative advection, §68.42)",
+      "source_sha256": "c2bf12c76e86840167d4d36abe1af7bdb0035ced72abc5bd7e67a709823f3e08",
+      "target_sha256": "3d9563f48ba271209003172fb999676cf1fe74650e9b790000a3e77babca4688",
+      "reviewer": "Claude (Claude Code session; main text recomputed 2026-11-05: both drawn by Fig_chichibu.sh (Fig_chichibu.plt and en/Fig_chichibu.plt, scripts unchanged) from the same results; English figures viewed for step1_hend, step1_hend_raw, step1_hend_4nb (Japanese), step4_hydro, step5_hydro and step6_osc, labels compared with the Japanese figures)",
       "method": "assistant",
-      "reviewed_on": "2026-11-01"
+      "reviewed_on": "2026-11-05"
     },
     {
       "source": "tutorials/chichibu/figs/step1_hend_4nb.png",
       "target": "tutorials/chichibu/en/figs/step1_hend_4nb.png",
-      "source_sha256": "06136cdc8545729d199ca5d5ab35976976d564275bf2cebaf6912e95aa8599f6",
-      "target_sha256": "292b315b685157903f7f462a3199552a1471335a2a0e371dae3d2edd95e53ed9",
-      "reviewer": "Claude (Claude Code session; visual comparison of both figures: same plot content, English labels)",
+      "source_sha256": "4bd767402a4c9a4962f8f7b6ef36f0e2706674b7ccac27740106ad9e4ba2e7c1",
+      "target_sha256": "df50a2ea21a97e7d03bd3cb0abe571bf61259b1ac0597e9e30cf48af90a994cd",
+      "reviewer": "Claude (Claude Code session; main text recomputed 2026-11-05: both drawn by Fig_chichibu.sh (Fig_chichibu.plt and en/Fig_chichibu.plt, scripts unchanged) from the same results; English figures viewed for step1_hend, step1_hend_raw, step1_hend_4nb (Japanese), step4_hydro, step5_hydro and step6_osc, labels compared with the Japanese figures)",
       "method": "assistant",
-      "reviewed_on": "2026-10-24"
+      "reviewed_on": "2026-11-05"
     },
     {
       "source": "tutorials/chichibu/figs/step1_hend_filled.png",
       "target": "tutorials/chichibu/en/figs/step1_hend_filled.png",
-      "source_sha256": "4cb913724b08c88396347d50f7d795039894bde3ee7fe1d1a7a3b4ef3723c7f4",
-      "target_sha256": "e2e9119c703fca7ff3de892d255841b7d36c5fdd7b43635fb5d08b89f284309f",
-      "reviewer": "Claude (Claude Code session; lateral-flux fix of the momentum-conservative advection, §68.42)",
+      "source_sha256": "b9c983c6ce5ef5ee894a56d790fe9f0fa47b85f2ef00efd7dc3597dc61ba7fa1",
+      "target_sha256": "c644bba8f714a497d6130de073a756e2566942ff37dc36a3c91071b201d7a2e6",
+      "reviewer": "Claude (Claude Code session; main text recomputed 2026-11-05: both drawn by Fig_chichibu.sh (Fig_chichibu.plt and en/Fig_chichibu.plt, scripts unchanged) from the same results; English figures viewed for step1_hend, step1_hend_raw, step1_hend_4nb (Japanese), step4_hydro, step5_hydro and step6_osc, labels compared with the Japanese figures)",
       "method": "assistant",
-      "reviewed_on": "2026-11-01"
+      "reviewed_on": "2026-11-05"
     },
     {
       "source": "tutorials/chichibu/figs/step1_hend_raw.png",
       "target": "tutorials/chichibu/en/figs/step1_hend_raw.png",
-      "source_sha256": "4d89fb91f8a22b5d7bc012e4edcc348be6eb3abb3fb6e05594c96e5f953edb78",
-      "target_sha256": "738e0aa2fdc11b862d7ea180b72bba55c2244ee3f5d1974bfc5426e10ad60273",
-      "reviewer": "Claude (Claude Code session; lateral-flux fix of the momentum-conservative advection, §68.42)",
+      "source_sha256": "e3741cc0582810e377ba435c2db5c773ac136196ed3dcbe2d1559a4389d39bcc",
+      "target_sha256": "e8f437ceb4c413290f4b7357234b6c7f116dfa400f3296ffa094c5a530145a8f",
+      "reviewer": "Claude (Claude Code session; main text recomputed 2026-11-05: both drawn by Fig_chichibu.sh (Fig_chichibu.plt and en/Fig_chichibu.plt, scripts unchanged) from the same results; English figures viewed for step1_hend, step1_hend_raw, step1_hend_4nb (Japanese), step4_hydro, step5_hydro and step6_osc, labels compared with the Japanese figures)",
       "method": "assistant",
-      "reviewed_on": "2026-11-01"
+      "reviewed_on": "2026-11-05"
     },
     {
       "source": "tutorials/chichibu/figs/step1_z.png",
@@ -4433,83 +4433,83 @@
     {
       "source": "tutorials/chichibu/figs/step3_transects.png",
       "target": "tutorials/chichibu/en/figs/step3_transects.png",
-      "source_sha256": "de261a490626369acee6c1b12462426cc65ca884324ba2c8936bf459fcc5a539",
-      "target_sha256": "4cffde3c0a821ae919644c5e1ab008bd33460ab1d681cf1fbeb22afa144a3024",
-      "reviewer": "Claude (Claude Code session; lateral-flux fix of the momentum-conservative advection, §68.42)",
+      "source_sha256": "cbde47af5791a0065d1863fb6d6460ff271146fa13230e359dd6133dcdb2d672",
+      "target_sha256": "03f850edb9f3066fb40cbca6e00ff6df80c515f6b660f43d2a9742b013139599",
+      "reviewer": "Claude (Claude Code session; main text recomputed 2026-11-05: both drawn by Fig_chichibu.sh (Fig_chichibu.plt and en/Fig_chichibu.plt, scripts unchanged) from the same results; English figures viewed for step1_hend, step1_hend_raw, step1_hend_4nb (Japanese), step4_hydro, step5_hydro and step6_osc, labels compared with the Japanese figures)",
       "method": "assistant",
-      "reviewed_on": "2026-11-01"
+      "reviewed_on": "2026-11-05"
     },
     {
       "source": "tutorials/chichibu/figs/step4_hydro.png",
       "target": "tutorials/chichibu/en/figs/step4_hydro.png",
-      "source_sha256": "ab9a4d68e1b261d96039012b2996ef429e1fa08fdab9123902cf0987d185789f",
-      "target_sha256": "5e10d90927864ca7109eb4d5ed25dee8469ee8df723f5018a996e4304731abd1",
-      "reviewer": "Claude (Claude Code session; lateral-flux fix of the momentum-conservative advection, §68.42)",
+      "source_sha256": "076b7303b861193abfaa3098b50e7a068bc0ec4cc1f42087d91dec2228d7045d",
+      "target_sha256": "0c2fb6ddac3435ec3a2d977c8d5b02faf15ac0b5e7358e9deaa28fe5210bc979",
+      "reviewer": "Claude (Claude Code session; main text recomputed 2026-11-05: both drawn by Fig_chichibu.sh (Fig_chichibu.plt and en/Fig_chichibu.plt, scripts unchanged) from the same results; English figures viewed for step1_hend, step1_hend_raw, step1_hend_4nb (Japanese), step4_hydro, step5_hydro and step6_osc, labels compared with the Japanese figures)",
       "method": "assistant",
-      "reviewed_on": "2026-11-01"
+      "reviewed_on": "2026-11-05"
     },
     {
       "source": "tutorials/chichibu/figs/step5_hydro.png",
       "target": "tutorials/chichibu/en/figs/step5_hydro.png",
-      "source_sha256": "3058f400569685c50520fedb0f759e316d535ab4a98d8fb280eb248571e10f18",
-      "target_sha256": "486294f4283d7c1c3d9adb29c44b5e7d6fecc688c92a58ec76717baf8f4f58cd",
-      "reviewer": "Claude (Claude Code session; lateral-flux fix of the momentum-conservative advection, §68.42)",
+      "source_sha256": "65855c027012742c32dabfa4c07f4f1dae4cd905bfa2e08a39792fb5e73fe740",
+      "target_sha256": "20793de63d196e5309289c64bdb322ca47b1f059560add50f7fe3a4553a764b8",
+      "reviewer": "Claude (Claude Code session; main text recomputed 2026-11-05: both drawn by Fig_chichibu.sh (Fig_chichibu.plt and en/Fig_chichibu.plt, scripts unchanged) from the same results; English figures viewed for step1_hend, step1_hend_raw, step1_hend_4nb (Japanese), step4_hydro, step5_hydro and step6_osc, labels compared with the Japanese figures)",
       "method": "assistant",
-      "reviewed_on": "2026-11-01"
+      "reviewed_on": "2026-11-05"
     },
     {
       "source": "tutorials/chichibu/figs/step6_hend.png",
       "target": "tutorials/chichibu/en/figs/step6_hend.png",
-      "source_sha256": "1f03a38a4e86cf1dbcbb7f7bcd33ac63f516c9cc7d0895c5ead604c11f0a4cf6",
-      "target_sha256": "95d2a6a56c72c5277d55ed37d46a3922d2bb3c120720d7b51d5165d4a3be16ec",
-      "reviewer": "Claude (Claude Code session; lateral-flux fix of the momentum-conservative advection, §68.42)",
+      "source_sha256": "13d3513ef06000dc22957ec5f791774288f3483c209d738bcc393526a15d6aae",
+      "target_sha256": "f9be32cd385cf74291a28010c3a3241acd0206bea1564b99e3904ab71a44db62",
+      "reviewer": "Claude (Claude Code session; main text recomputed 2026-11-05: both drawn by Fig_chichibu.sh (Fig_chichibu.plt and en/Fig_chichibu.plt, scripts unchanged) from the same results; English figures viewed for step1_hend, step1_hend_raw, step1_hend_4nb (Japanese), step4_hydro, step5_hydro and step6_osc, labels compared with the Japanese figures)",
       "method": "assistant",
-      "reviewed_on": "2026-11-01"
+      "reviewed_on": "2026-11-05"
     },
     {
       "source": "tutorials/chichibu/figs/step6_hend_step5.png",
       "target": "tutorials/chichibu/en/figs/step6_hend_step5.png",
-      "source_sha256": "510c458b1ec7225d7f2c009df33f896a5a31937b7ae361b54a6d2b3c3690148e",
-      "target_sha256": "c9f7baeabeca4ce9b6c314362c91e22e7fe93ad48083a37e9d0cefea3a0253ef",
-      "reviewer": "Claude (Claude Code session; lateral-flux fix of the momentum-conservative advection, §68.42)",
+      "source_sha256": "eb0adfb55b5a113ff5b1b4f04fe00361019640b3e6865b98cef5d4e8b44e5226",
+      "target_sha256": "14ca93be8d982e4c93c16ed33583421211b5c8453f1920f9592df743cbbbeb91",
+      "reviewer": "Claude (Claude Code session; main text recomputed 2026-11-05: both drawn by Fig_chichibu.sh (Fig_chichibu.plt and en/Fig_chichibu.plt, scripts unchanged) from the same results; English figures viewed for step1_hend, step1_hend_raw, step1_hend_4nb (Japanese), step4_hydro, step5_hydro and step6_osc, labels compared with the Japanese figures)",
       "method": "assistant",
-      "reviewed_on": "2026-11-01"
+      "reviewed_on": "2026-11-05"
     },
     {
       "source": "tutorials/chichibu/figs/step6_osc.png",
       "target": "tutorials/chichibu/en/figs/step6_osc.png",
-      "source_sha256": "8102fdf620eb13610b45ac1ed4cae0c64bc37588b286ec96d0ce14bbb49acf7b",
-      "target_sha256": "67d1aca0ce6b779dc955670b0fac548e8c75a1c92912dd247a6e2b5443530227",
-      "reviewer": "Claude (Claude Code session; lateral-flux fix of the momentum-conservative advection, §68.42)",
+      "source_sha256": "4f2c6173b021625c5841952d3bc1825af2ecee5f6e3e78ae9f30df16276e09ef",
+      "target_sha256": "d0a8d7ec0a89fb37ae6355660dcc51da20d8653dfebcc1f75c683b881bf8503a",
+      "reviewer": "Claude (Claude Code session; main text recomputed 2026-11-05: both drawn by Fig_chichibu.sh (Fig_chichibu.plt and en/Fig_chichibu.plt, scripts unchanged) from the same results; English figures viewed for step1_hend, step1_hend_raw, step1_hend_4nb (Japanese), step4_hydro, step5_hydro and step6_osc, labels compared with the Japanese figures)",
       "method": "assistant",
-      "reviewed_on": "2026-11-01"
+      "reviewed_on": "2026-11-05"
     },
     {
       "source": "tutorials/chichibu/figs/step6_osc_zoom.png",
       "target": "tutorials/chichibu/en/figs/step6_osc_zoom.png",
-      "source_sha256": "c0213e12e8e40f4b6650f8b681ee7024de1923804a7259778965b7c2a70922f3",
-      "target_sha256": "8fdca885c3bd67fd2e23d0320eeb9c0c2a85806a602e5da3c12fe66320d83b26",
-      "reviewer": "Claude (Claude Code session; lateral-flux fix of the momentum-conservative advection, §68.42)",
+      "source_sha256": "3140d49a6e68703b3cccf3bf831fca4665cc7b0452a05fa00e8f6f556e634699",
+      "target_sha256": "9ed048f98a5ee5161f10fbf4638079921eb4bb08a9cb32fa0257b33d27623460",
+      "reviewer": "Claude (Claude Code session; main text recomputed 2026-11-05: both drawn by Fig_chichibu.sh (Fig_chichibu.plt and en/Fig_chichibu.plt, scripts unchanged) from the same results; English figures viewed for step1_hend, step1_hend_raw, step1_hend_4nb (Japanese), step4_hydro, step5_hydro and step6_osc, labels compared with the Japanese figures)",
       "method": "assistant",
-      "reviewed_on": "2026-11-01"
+      "reviewed_on": "2026-11-05"
     },
     {
       "source": "tutorials/chichibu/figs/step7_3d.png",
       "target": "tutorials/chichibu/en/figs/step7_3d.png",
-      "source_sha256": "d546c2d1bd47bb65e0beee45e1f4ebeb686000c822a271558831fc88cf676369",
-      "target_sha256": "d546c2d1bd47bb65e0beee45e1f4ebeb686000c822a271558831fc88cf676369",
-      "reviewer": "Claude (Claude Code session; visual comparison of both figures: same plot content, English labels)",
+      "source_sha256": "82ddf43d80f938731ae40dcb606e0fe19e4c922ff6425f138acf0c5750fdb91c",
+      "target_sha256": "82ddf43d80f938731ae40dcb606e0fe19e4c922ff6425f138acf0c5750fdb91c",
+      "reviewer": "Claude (Claude Code session; Step 7 recomputed 2026-11-05 and re-rendered by Fig_step7.py (VTK offscreen) from result/vtk of param_step7.txt; the image has no text, so the English figure is the same file; viewed against the previous image, same view and colouring)",
       "method": "assistant",
-      "reviewed_on": "2026-10-24"
+      "reviewed_on": "2026-11-05"
     },
     {
       "source": "tutorials/chichibu/figs/step7_simple.png",
       "target": "tutorials/chichibu/en/figs/step7_simple.png",
-      "source_sha256": "a82c1e17bd7bf4c5425416c972aba4e016caa34c084b5aed190affbc2537f8f5",
-      "target_sha256": "a82c1e17bd7bf4c5425416c972aba4e016caa34c084b5aed190affbc2537f8f5",
-      "reviewer": "Claude (Claude Code session; visual comparison of both figures: same plot content, English labels)",
+      "source_sha256": "e7a7ce3a22fceae13296c8da11025e2ff23728ba841a484a48bcbbece4098463",
+      "target_sha256": "e7a7ce3a22fceae13296c8da11025e2ff23728ba841a484a48bcbbece4098463",
+      "reviewer": "Claude (Claude Code session; Step 7 recomputed 2026-11-05 and re-rendered by Fig_step7.py (VTK offscreen) from result/vtk of param_step7.txt; the image has no text, so the English figure is the same file; viewed against the previous image, same view and colouring)",
       "method": "assistant",
-      "reviewed_on": "2026-10-24"
+      "reviewed_on": "2026-11-05"
     },
     {
       "source": "tutorials/chichibu/figs/supp_hend.png",

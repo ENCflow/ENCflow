@@ -82,12 +82,12 @@ main: real precision: 64 bit
 main: number of valid cells: 17885
 time, progress, S(m), Runge, ex_flux, Cn_max, h_max(m), V_max(m/s)
   0:00:00.00   0.0%    0.0000   0.0%      0    0.0000    0.0000    0.0000
-  0:30:00.00   8.3%    0.0487  97.7%      0    0.2017    1.3950    4.2425
-  1:00:00.00  16.7%    0.1000   5.3%      0    0.3493    5.0962    8.4896
-  1:30:00.00  25.0%    0.1000   2.9%      0    0.4282    7.8049    9.0360
-  2:00:00.00  33.3%    0.1000   0.8%      0    0.4204    7.9216    8.6543
+  0:30:00.00   8.3%    0.0487  97.7%      0    0.1907    1.2868    4.0472
+  1:00:00.00  16.7%    0.1000   6.2%      0    0.3467    4.9832    8.3893
+  1:30:00.00  25.0%    0.1000   3.4%      0    0.4268    7.7557    8.9856
+  2:00:00.00  33.3%    0.1000   0.9%      0    0.4207    7.8634    8.6181
   ...
-  6:00:00.00 100.0%    0.1000   0.6%     38    0.5136   29.6988    4.1797
+  6:00:00.00 100.0%    0.1000   0.5%      0    0.5131   29.6515    4.1987
 main: program terminated normally
 ```
 
@@ -98,6 +98,13 @@ main: program terminated normally
 > which assumed 2.4 times the real flux on faces whose diagonal openings are blocked (2 only delays the
 > same growth); it was fixed the same day (developer.md §68.42). The parameter files now keep the
 > defaults, and the numbers and figures of the text were regenerated with the corrected defaults.
+>
+> **Note (2026-11-05)**: the numbers and figures of the main text were regenerated after the default
+> of the steep-slope gravity correction became 2 (friction along the slope;
+> [steep-slope gravity correction](../../../docs/en/users_guide/steep_slope.md)) and the treatment of
+> the outflow of a cell was fixed (developer.md §94, §95, in Japanese; the limiting of excessive
+> outflow, ex_flux, is now normally 0). Since ex_flux is now 0 in every step, Step 4 was rewritten to
+> start from the bump in the hydrograph.
 
 The contents of `en/param_step1.txt` (the full file, apart from the
 title comment at the top) are shown below. It is structured almost
@@ -256,7 +263,7 @@ ENC grid, giving a "4-neighbor" computation. Even on the same
 depression-filled DEM, the water now gets stuck on diagonal flow paths:
 the depth distribution after 12 hours is chopped up all over the
 catchment just like with the raw DEM, and the water never reaches the
-outlet (the maximum velocity also drops to about 0.7 m/s toward the end — the flow
+outlet (the maximum velocity also drops to about 0.5 m/s toward the end — the flow
 dies).
 
 ![Step 1: filled DEM computed with 4-neighbor exchange](figs/step1_hend_4nb.png)
@@ -427,16 +434,20 @@ with the same four-time layout.
 
 ## Step 4: Parameter tuning
 
-Looking closely at the screen output of Step 3, **the ex_flux column
-grows over time** (nearly 100 counts per 30 minutes near the end).
-ex_flux counts the events where "the outflow computed from the momentum
-equation was about to exceed the water volume of the cell and was
-therefore limited". It is a safety device, so mass is conserved, but
-frequent triggering is a sign that the computation is getting rough. In
-this case the usual remedies -- reducing the time step dt, reducing the
-adaptive Runge-Kutta threshold `p_adprunge_thresh` -- do not help. What
-worked was **reducing the threshold depth dd and the virtual depth
-dv**.
+Looking closely at the transect hydrographs of Step 3 (the figure of
+Step 3), the hydrograph of transect 4 has **spurious bumps** on the
+recession limb at t ≈ 232 min and 316 min (at 232 min it jumps by about
+450 m^3/s within a minute and settles over about 10 minutes). The
+ex_flux column of the screen output counts the events where "the
+outflow computed from the momentum equation was about to exceed the
+water volume of the cell and was therefore limited". It is a safety
+device, so mass is conserved; it is normally 0, and repeated counts
+are a sign that the computation is getting rough. In Step 3, however, ex_flux stays 0, so the bumps cannot be
+noticed from the screen output: it is important to plot the
+hydrographs and check. In this case the usual remedies -- reducing the
+time step dt, reducing the adaptive Runge-Kutta threshold
+`p_adprunge_thresh` -- do not help. What worked was **reducing the
+threshold depth dd** (the virtual depth dv is reduced along with it).
 
 ```
 &list_sysparam
@@ -446,12 +457,14 @@ dv**.
 /
 ```
 
-The defaults (both 0.001) are reduced to 1/10. The smaller these
-values, the more carefully thin films of water are treated, which
-improves accuracy; but there are also cases where more wetted cells
-mean longer computation time. Choose them as a balance of accuracy and
-speed (in this example, running `en/param_step4.txt` brings ex_flux
-down to 0).
+The defaults (both 0.001) are reduced to 1/10. dd is the depth below
+which an edge with both sides shallower does not move water, and it
+decides how the thin films spread over the slopes after the rain are
+treated. The smaller these values, the more carefully thin films of
+water are treated, which improves accuracy; but there are also cases
+where more wetted cells mean longer computation time. Choose them as a
+balance of accuracy and speed (in this example it is dd that matters:
+reducing dd alone removes the bumps, reducing dv alone does not).
 
 One more note: earlier versions of this tutorial also lowered the
 upwind fraction of the advection term, `p_adv_upwind_index`, at this
@@ -465,10 +478,10 @@ guide](../../../docs/en/users_guide/swflow.md)).
 
 ![Step 4: effect of parameter tuning](figs/step4_hydro.png)
 
-After tuning (`en/param_step4.txt`), the spurious bump that appeared on
-the recession limb at t = 220 min or so (in the period when ex_flux
-starts to occur) disappears and the waveform becomes smooth. The peak
-discharge differs by about 3%. In real-terrain computations on coarse
+After tuning (`en/param_step4.txt`), the spurious bumps that appeared on
+the recession limb at t ≈ 232 min and 316 min disappear and the
+waveform becomes smooth. The peak discharge differs by about 3% (5,546
+to 5,391 m^3/s). In real-terrain computations on coarse
 grids, **artifacts of the numerical settings** ride on the waveform
 like this. Before tuning roughness against observed hydrographs, it is
 important to remove them.
@@ -510,11 +523,11 @@ changes from one column to **three columns**.
 ```
 time, progress, S_surf(m), S_grnd(m), S_total(m), Runge, ex_flux, Cn_max, h_max(m), V_max(m/s)
   0:00:00.00   0.0%    0.0000     0.0000     0.0000    0.0%      0    0.0000    0.0000    0.0000
-  0:30:00.00   8.3%    0.0365     0.0024     0.0389   97.7%      0    0.2786    1.0676    7.1391
-  1:00:00.00  16.7%    0.0751     0.0049     0.0800    5.0%      0    0.4828    5.5794   13.4281
-  1:30:00.00  25.0%    0.0728     0.0072     0.0800    2.4%      0    0.5364    7.2886   13.7003
+  0:30:00.00   8.3%    0.0365     0.0024     0.0389   97.7%      0    0.2666    1.0016    6.8056
+  1:00:00.00  16.7%    0.0751     0.0049     0.0800    5.7%      0    0.4729    5.3407   13.2770
+  1:30:00.00  25.0%    0.0728     0.0072     0.0800    2.8%      0    0.5341    7.2748   13.5623
   ...
-  6:00:00.00 100.0%    0.0695     0.0105     0.0800    0.0%      0    0.5054   28.7804    5.3746
+  6:00:00.00 100.0%    0.0694     0.0106     0.0800    0.0%      0    0.5051   28.7403    5.4047
 ```
 
 - `S_surf` is surface water, `S_grnd` is subsurface storage, and
@@ -528,8 +541,8 @@ time, progress, S_surf(m), S_grnd(m), S_total(m), Runge, ex_flux, Cn_max, h_max(
 
 ![Step 5: effect of interception and infiltration](figs/step5_hydro.png)
 
-In the hydrograph the peak discharge drops by about a quarter (5,425
-to 4,128 m^3/s). Interception cuts the total by 20%, and infiltration keeps
+In the hydrograph the peak discharge drops by about a quarter (5,391
+to 4,109 m^3/s). Interception cuts the total by 20%, and infiltration keeps
 sucking up the thinly spread hillslope water, so both the rising limb
 and the recession drop.
 
@@ -572,8 +585,8 @@ immediately). Running it gives:
 ```
 time, progress, S_surf(m), S_grnd(m), S_total(m), Runge, ex_flux, Cn_max, h_max(m), V_max(m/s)
   ...
-  3:00:00.00  50.0%    0.0611     0.0091     0.0702    0.1%      0    0.5050    6.8181   13.9795
-  6:00:00.00 100.0%    0.0228     0.0104     0.0333    0.0%      0    0.3162    3.7106    6.8473
+  3:00:00.00  50.0%    0.0611     0.0093     0.0704    0.1%      0    0.5197    6.7430   14.4092
+  6:00:00.00 100.0%    0.0229     0.0106     0.0336    0.0%      0    0.3169    3.7250    6.8670
 ```
 
 - S_total now decreases -- that is the water that left the system
