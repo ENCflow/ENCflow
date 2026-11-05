@@ -203,9 +203,9 @@
     {
       "source": "docs/users_guide/diagonal_diffusion.md",
       "target": "docs/en/users_guide/diagonal_diffusion.md",
-      "source_sha256": "e80ab65d0b7239e8eee8888cfe40a67ca3af1b98e277bb1e55928be041d005c0",
-      "target_sha256": "461c52eae4f2cfb365e6c6342b955b611d4f59a44f344df5cd2f8664619805dc",
-      "reviewer": "Claude (Claude Code session; reviewed the correction on the instability of cooling-limited lava flows uniform across, the 8-neighbour crosswind diffusion of the heat and the test changes (developer.md sec. 94 and 96) in the Japanese source against the English mirror, 2026-11-05)",
+      "source_sha256": "dbe6e7bc8710150363d7f9ace4c6d7881660897cc2c82754f37a912190770f68",
+      "target_sha256": "76415345cac567a8be76a5f21feb032ad1588a6a4d444ae3035bac23e566bac4",
+      "reviewer": "Claude (Claude Code session; reviewed the lava temperature row corrected for the instability of cooling-limited lava flows uniform across (developer.md sec. 94) in the Japanese source against the English mirror, 2026-11-05)",
       "method": "assistant",
       "reviewed_on": "2026-11-05"
     },
@@ -347,9 +347,9 @@
     {
       "source": "docs/users_guide/lavaflow.md",
       "target": "docs/en/users_guide/lavaflow.md",
-      "source_sha256": "b15bfbfd7f0f0492bf6ae8fd93b6bd1d32c9d88fbce8edb72060303d14eec80a",
-      "target_sha256": "2420a06969873086e7ce467a1c16a6b40887b3f04df8fb52bf90005ade03aca1",
-      "reviewer": "Claude (Claude Code session; reviewed the correction on the instability of cooling-limited lava flows uniform across, the 8-neighbour crosswind diffusion of the heat and the test changes (developer.md sec. 94 and 96) in the Japanese source against the English mirror, 2026-11-05)",
+      "source_sha256": "c754a3b7e86d006d7dcc829d6180ff934f8b7ba7afc453ec17a147d9ece7a2a1",
+      "target_sha256": "856d519c637cad790004bb33f8cce91acc11cf4c595a1f73906dc18a08199414",
+      "reviewer": "Claude (Claude Code session; reviewed the basis row of f_lvtemp_scheme corrected for the instability of cooling-limited lava flows uniform across (developer.md sec. 94) in the Japanese source against the English mirror, 2026-11-05)",
       "method": "assistant",
       "reviewed_on": "2026-11-05"
     },
