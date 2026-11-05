@@ -1882,9 +1882,12 @@ end function
 !     水深のマニング閉じ)を、斜面に沿う速さ |V_s|² = |V|² (1 + (V̂·∇z)²) と地盤に直角な水深
 !     h cos θ で評価した値に直す倍率 (1 + (V̂·∇z)²)(1 + |∇z|²)^{1/6} を返す(底面せん断
 !     τ_b = ρ g n² |V_s|²/h_n^{1/3}。運動方程式の摩擦 slope_fric_factor と同じ底面せん断)。
-!     ∇z はセルの地盤の勾配(zdiff_minmod。重力補正と同じ)、V̂ はセルの流速 (u, v) の向き。
-!     流速 0 では (1 + |∇z|²)^{1/6}(せん断が 0 なので値は効かない)。z は j±1 行、u・v は
-!     その行を読む(呼び出し側のハロの範囲)
+!     ∇z はセルの地盤の勾配で、流れのステップ頭に gravity_prepare が時刻 n の z から求めた minmod の
+!     勾配(sx_mod%gzx・gzy。摩擦の倍率と同じ場の勾配)を読む。地形変化のプロセスはセルごとに z を
+!     その場で更新するループの中で倍率を求めるので、ここで z の近傍を差分すると、ほかのスレッドが
+!     更新中の z を読む競合と、ループの順序への依存が起きる(2026-11-05 に wfsed の再開の検定で検出。
+!     §93)。gzx・gzy は js−1..je+1 行を持ち、f_gravity_correction > 0 で確保される。V̂ はセルの
+!     流速 (u, v) の向き。流速 0 では (1 + |∇z|²)^{1/6}(せん断が 0 なので値は効かない)
 !   slope_shear_factor_e: 辺(両セル)の倍率の平均(辺の τ* は両セルの平均の速さ・水深で求めるため)
 !----------------------------------------------------------------------
 logical function slope_shear_on()
@@ -1898,8 +1901,9 @@ pure function slope_shear_factor(g, s, i, j) result(f)
   integer, intent(in) :: i, j
   real :: f
   real :: gx, gy, vv2, gv2
-  gx = zdiff_minmod(g, s, i, j, 1, 0) / g%dx
-  gy = zdiff_minmod(g, s, i, j, 0, 1) / g%dy
+  if (g%initialized) continue   ! 引数未使用の警告を抑制(呼び出し側の形を保つ)
+  gx = sx_mod%gzx(i,j)
+  gy = sx_mod%gzy(i,j)
   vv2 = s%u(i,j)**2 + s%v(i,j)**2
   gv2 = 0.0
   if (vv2 > 0.0) gv2 = (s%u(i,j) * gx + s%v(i,j) * gy)**2 / vv2
