@@ -18,14 +18,14 @@ module m_gwflow_lateral
   !       飽和超過は s%hg へ(層1の超過は層1側の既存機構が地表へ渡す)
   !   幾何(距離・通過幅)とエッジ作業領域は層間で共有
   !   (gwflow_lateral_geom_init。冪等。通過幅を共有する層 = 層1・層2・淡塩2層の塩水は
-  !   同じ斜めの配分比でなければならず、違えば停止する。§95)。安定条件の検査は層ごとに
+  !   同じ斜めの配分比でなければならず、違えば停止する。§98)。安定条件の検査は層ごとに
   !   gwflow_lateral_dtcheck で行う
   !
   ! 【管路連続体層カーネル(2026-08-18。gwconduit_plan.md §10)】
   !   下水道網・岩盤亀裂網などを表す等価連続体管路層のための第2カーネル
   !   conduit_core を併設する(呼び手は m_gwflow_conduit)。lateral_core と
   !   同じ 8 近傍・エッジ規約・2 ループ構造・距離と作業領域(glt)を共有する
-  !   (通過幅は管路層自身の gwc_diagratio の配分 cl%wl で、共有しない。§95)
+  !   (通過幅は管路層自身の gwc_diagratio の配分 cl%wl で、共有しない。§98)
   !   が、次の点が異なるため別カーネルとする(lateral_core は不変 =
   !   層1・層2 のビット一致は構造的に保証):
   !     - 水頭が折れ線(不圧 sy_c / 被圧 sy_slot の疑似スロット切替。
@@ -200,7 +200,7 @@ module m_gwflow_lateral
     real, allocatable :: cnd(:,:,:)  ! エッジ別コンダクタンス(所有4成分。m3/s。
                                      !   q 配列と同形状・同格納規約。静的)
     real :: wl(1:8) = 0.0            ! 管路層自身の通過幅 (m)(gwc_diagratio の配分。側方系の
-                                     !   共有の通過幅とは独立。developer.md §95)
+                                     !   共有の通過幅とは独立。developer.md §98)
   end type
 
   ! 幾何・作業領域(層間で共有。実体は切替器 m_gwflow の t_gwflow が持ち、各手続きが引数で受ける(nesting_plan.md §3.2 A 群))
@@ -232,7 +232,7 @@ contains
 ! 共有の通過幅を使う層(層1・層2 = gw_diagratio、淡塩2層の塩水 = salt_diagratio)は
 ! 同じ帯水層の連続体なので、同じ斜めの配分比でなければならない。最初の呼び手の値で
 ! 通過幅を作り、後の呼び手の値が違えば(差 > 1e-6)停止する(2026-11-05 まで後の値は
-! 黙って無視されていた。developer.md §95)。name は報告用のパラメータ名。管路層は
+! 黙って無視されていた。developer.md §98)。name は報告用のパラメータ名。管路層は
 ! 自分の通過幅を持つので、d によらない部分(gwflow_lateral_geom_init_base)だけを使う
 !----------------------------------------------------------------------
 subroutine gwflow_lateral_geom_init(glt, g, diagratio, eps, name)
@@ -963,7 +963,7 @@ end subroutine
 !----------------------------------------------------------------------
 ! セル別コンダクタンス密度 dens (m2/s。帯+ハロ) からエッジ別
 ! コンダクタンス cl%cnd を構築する(通過幅は管路層自身の cl%wl = gwc_diagratio の
-! 配分。側方 Darcy 流の共有の通過幅とは独立。§95。gwflow_lateral_geom_init_base と
+! 配分。側方 Darcy 流の共有の通過幅とは独立。§98。gwflow_lateral_geom_init_base と
 ! cl%wl の設定の後に呼ぶこと)
 !   cnd_k = min(両セルの密度) · wl_k
 !   min 規約: 管路は両セルに存在して初めて連続する(片側 0 なら無結合)。

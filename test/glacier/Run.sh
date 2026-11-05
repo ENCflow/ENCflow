@@ -11,10 +11,10 @@
 #   5) 侵食の結合長 gl_lc(param_lc.txt・param_lc2.txt・param_lc0.txt・
 #      param_lc02.txt): V 字谷の侵食の形が gl_lc > 0 では格子によらず氷の幅に
 #      広がること(gl_lc = 0 との比較)
-#   6) Halfar ドームを SIA 流動の 4 近傍(gl_diagratio = 0。既定は 8 近傍の 9 点。§96)で計算する対照
+#   6) Halfar ドームを SIA 流動の 4 近傍(gl_diagratio = 0。既定は 8 近傍の 9 点。§99)で計算する対照
 #      (param_d4.txt。判定は 1) と同じ)
 #   7) 谷の氷の流れの向きによる差(param_ch*.txt。8 近傍の 9 点と塞がれた配分の
-#      振り替え。0° と 45° の 1 セル幅・3 セル幅の谷。45° の 3 本は 4 近傍の対照つき。§96)
+#      振り替え。0° と 45° の 1 セル幅・3 セル幅の谷。45° の 3 本は 4 近傍の対照つき。§99)
 # 判定は Check_halfar.py / Check_cirque.py / Check_ava.py / Check_lc.py / Check_chan.py
 
 sdir=$(dirname "$(readlink -f "$0")")

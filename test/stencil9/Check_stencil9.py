@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# test/stencil9 の検定(developer.md §93)。save_<構成>/state.dat(倍精度)の z を読む。
+# test/stencil9 の検定(developer.md §96)。save_<構成>/state.dat(倍精度)の z を読む。
 #   gauss : 9 点のクリープ(d = 1/3)がよく解像したガウス丘で解析解に一致する(重みの正規化)
 #   hill  : 解像しきれない丘(σ = 2Δ)の、中心から同じ距離の格子軸寄りと斜めのセルの差
 #           (r² = 25: (5,0)・(4,3)、r² = 50: (7,1)・(5,5))が、9 点(d = 1/3)で小さく、

@@ -15,13 +15,13 @@
 # 構成10: 熱の横断の数値拡散(温度モード・冷却なし。0° と 45° のシート流を 1 次風上と
 #         MUSCL(f_lvtemp_scheme = 3)で。0° は拡散なし、45° の 1 次は修正方程式の 0.354·u·Δx、
 #         MUSCL はその 1/4 未満)
-# 構成4': 構成4 と同じ入力を流動の 4 近傍(lv_diagratio = 0)で計算する対照(既定は 8 近傍の 9 点。§96。検定は構成4 と同じ)
+# 構成4': 構成4 と同じ入力を流動の 4 近傍(lv_diagratio = 0)で計算する対照(既定は 8 近傍の 9 点。§99。検定は構成4 と同じ)
 # 構成9n: 構成9 の温度モードの 2 本を、地盤に ±1 mm の決まった乱れを加えて(横に一様な流れが流れの筋に
-#         分かれる。§94 の訂正)。同じ体積で噴出率 4 倍の流れが長いこと
+#         分かれる。§97 の訂正)。同じ体積で噴出率 4 倍の流れが長いこと
 # 構成10d: 構成10 を流動の 8 近傍の 9 点(d = 1/3)で。1 次風上の横断の数値拡散が (1 − d)F(φ) + d√2 F(φ − 45°)
-#         (0° 0.167、45° 0.236)、MUSCL はその 1/4 未満(§96)
+#         (0° 0.167、45° 0.236)、MUSCL はその 1/4 未満(§99)
 # 構成11: 谷の通水能の向きによる差(8 近傍の 9 点 d = 1/3 と塞がれた配分の振り替え。0° と 45° の
-#         1 セル幅・3 セル幅の谷の Newton 流体の一様流。45° の 3 本は 4 近傍の対照つき。§96)
+#         1 セル幅・3 セル幅の谷の Newton 流体の一様流。45° の 3 本は 4 近傍の対照つき。§99)
 # 合否は Check_lava.py。save は save*_serial にも複製(Run_MPI 比較用)
 
 sdir=$(dirname "$(readlink -f "$0")")
@@ -82,7 +82,7 @@ echo ""
 python3 "$sdir/Check_lava.py" save_dome dome || rc=1
 rm -rf save_dome_serial && cp -r save_dome save_dome_serial
 
-# 構成4': 構成4 と同じ入力を流動の 4 近傍(lv_diagratio = 0)で計算する対照(既定は 8 近傍の 9 点。§96)
+# 構成4': 構成4 と同じ入力を流動の 4 近傍(lv_diagratio = 0)で計算する対照(既定は 8 近傍の 9 点。§99)
 set -o pipefail
 ./encflow param_dome4.txt | tee -a Screen.log || exit 1
 set +o pipefail
@@ -186,7 +186,7 @@ else
 fi
 python3 "$sdir/Check_lava.py" - heat Screen_runb.log || rc=1
 
-# 構成9n: 構成9 の温度モードの 2 本を ±1 mm の乱れのある斜面で(§94 の訂正)
+# 構成9n: 構成9 の温度モードの 2 本を ±1 mm の乱れのある斜面で(§97 の訂正)
 set -o pipefail
 for c in runnz run4nz; do
     ./encflow param_$c.txt | tee Screen_$c.log || exit 1
@@ -198,7 +198,7 @@ for c in runnz run4nz; do
     rm -rf save_${c}_serial && cp -r save_$c save_${c}_serial
 done
 
-# 構成10: 熱の横断の数値拡散(0°・45° のシート流、1 次風上と MUSCL。§94)
+# 構成10: 熱の横断の数値拡散(0°・45° のシート流、1 次風上と MUSCL。§97)
 set -o pipefail
 for c in x0 x0m x45 x45m; do
     ./encflow param_$c.txt | tee Screen_$c.log || exit 1
@@ -210,7 +210,7 @@ for c in x0 x0m x45 x45m; do
     rm -rf save_${c}_serial && cp -r save_$c save_${c}_serial
 done
 
-# 構成10d: 構成10 を流動の 8 近傍の 9 点(d = 1/3)で(§96)
+# 構成10d: 構成10 を流動の 8 近傍の 9 点(d = 1/3)で(§99)
 set -o pipefail
 for c in x0d x0dm x45d x45dm; do
     ./encflow param_$c.txt | tee Screen_$c.log || exit 1
@@ -222,7 +222,7 @@ for c in x0d x0dm x45d x45dm; do
     rm -rf save_${c}_serial && cp -r save_$c save_${c}_serial
 done
 
-# 構成11: 谷の通水能の向きによる差(8 近傍の 9 点と塞がれた配分の振り替え。§96)
+# 構成11: 谷の通水能の向きによる差(8 近傍の 9 点と塞がれた配分の振り替え。§99)
 set -o pipefail
 for c in ch0w1 ch45w1 ch0w3 ch45w3 ch45w3q; do
     ./encflow param_$c.txt | tee Screen_$c.log || exit 1

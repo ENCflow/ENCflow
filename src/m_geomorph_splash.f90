@@ -99,7 +99,7 @@ module subroutine init_splash(gm, g, list)
   gm%ssgrad = list%spl_sgrad
   if (list%spl_ksat < 0.0) call par_stop("list_geomorph: spl_ksat must be >= 0")
   gm%sksat = list%spl_ksat
-  ! 曲率のラプラシアンと平滑化の核の 9 点化(spl_diagratio = d > 0。§93)
+  ! 曲率のラプラシアンと平滑化の核の 9 点化(spl_diagratio = d > 0。§96)
   if (list%spl_diagratio < 0.0 .or. list%spl_diagratio > 1.0) then
     call par_stop("list_geomorph: spl_diagratio must be in [0, 1]")
   end if
@@ -190,7 +190,7 @@ subroutine smooth_z(gm, g, s)
   w0 = 1.0 - 2.0 * (wx + wy)
   gm%spl%zs(:, dcp%jsh:dcp%jeh) = s%z(:, dcp%jsh:dcp%jeh)
   if (gm%spl%diag > 0.0) then
-    ! 9 点の核(§93): zs += τ ∇²zs(無効な近傍は自セル値で鏡像 = 寄与 0。5 点と同じ規約)
+    ! 9 点の核(§96): zs += τ ∇²zs(無効な近傍は自セル値で鏡像 = 寄与 0。5 点と同じ規約)
     do n = 1, gm%spl%nsm
       !$omp parallel do schedule(static) private(i, j)
       do j = dcp%js, dcp%je
@@ -304,7 +304,7 @@ module subroutine eval_splash(gm, p, g, s, dts)
       else
         kap = max((ze + zw - 2.0 * zc) * dx2i + (zn + zs - 2.0 * zc) * dy2i, 0.0)
       end if
-      ! 9 点(spl_diagratio > 0。§93): 同じ鏡像規約の 9 点ラプラシアンで置き換える
+      ! 9 点(spl_diagratio > 0。§96): 同じ鏡像規約の 9 点ラプラシアンで置き換える
       if (gm%spl%diag > 0.0) then
         if (smooth) then
           kap = max(lap9(gm, g, gm%spl%zs, i, j), 0.0)
@@ -437,7 +437,7 @@ module subroutine apply_splash(gm, g, s)
 end subroutine
 
 !----------------------------------------------------------------------
-! 9 点ラプラシアンの近傍重み(spl_diagratio = d > 0。§93)
+! 9 点ラプラシアンの近傍重み(spl_diagratio = d > 0。§96)
 !   通過幅の配分は m_swflow_enc の init_weights・クリープの 9 点(init_creep_diag)と同じ
 !   規則で、重み = 通過幅 / 中心間距離 / セル面積。任意の d・Δx ≠ Δy で f_xx・f_yy の係数が
 !   厳密に 1 の整合な 9 点ラプラシアンになり、d = 1/3(正方セル)で離散化誤差の主要項が等方
@@ -468,7 +468,7 @@ end subroutine
 
 
 !----------------------------------------------------------------------
-! セル (i, j) の 9 点ラプラシアン Σ_k w_k (f_k − f_c)(§93)。近傍が範囲外(列 1..nx の外)か
+! セル (i, j) の 9 点ラプラシアン Σ_k w_k (f_k − f_c)(§96)。近傍が範囲外(列 1..nx の外)か
 ! 領域外(x <= 0)なら自セル値で鏡像(寄与 0)= 5 点の κ の評価・平滑化と同じ規約。行方向は
 ! ハロ行と x の枠(常に確保済み)を読む。f は帯確保の配列(s%z・gm%spl%zs と同形)
 !----------------------------------------------------------------------

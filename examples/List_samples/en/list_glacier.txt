@@ -51,7 +51,7 @@
                             !   9-point stencil with dynamic reassignment of blocked diagonal shares;
                             !   glaciers in narrow valleys oblique to the grid do not depend on the
                             !   orientation. 0 = 4-neighbour (the default before 2026-11-05);
-                            !   developer.md Sec. 96)
+                            !   developer.md Sec. 99)
 
   ! ---- Weertman basal sliding (G3; requires f_glflow) ----
   f_glslide = 0             ! 1 to enable (us = As tau_b^3)

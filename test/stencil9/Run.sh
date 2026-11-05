@@ -1,5 +1,5 @@
 #!/bin/bash
-# stencil9: 9 点のクリープ・乾式斜面侵食の曲率の等方性と壁際の振り替えの検定(逐次。developer.md §93)
+# stencil9: 9 点のクリープ・乾式斜面侵食の曲率の等方性と壁際の振り替えの検定(逐次。developer.md §96)
 #   ./Run.sh
 # reference 比較ではなく、解析解・厳密な離散解・格子の向きの差で合否を判定する(Check_stencil9.py)。
 # save_* は save_*_serial にも複製する(Run_MPI.sh の比較用)

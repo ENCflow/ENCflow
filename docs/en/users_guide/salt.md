@@ -269,7 +269,7 @@ The labels in the Basis column are explained in [How to read the basis of a defa
 | salt_ni | 0.025 | interfacial Manning roughness of the gravity current | **empirical** placeholder of the order of a bed roughness; calibrate on observed salt-wedge positions |
 | salt_hss0 / salt_hgs0 | 0 / 0 | initial salt-layer thickness and subsurface salt storage | **given** supply the existing salt-water surface (geoelectric surveys, well salinity) when known |
 | salt_eps / salt_eps_h | 1e-3 / 1e-2 m | regularisation of the dry test / linearisation width of the square-root law | **numerical** like dd of the shallow water solver and gwc_eps_h of the conduit layer |
-| salt_diagratio | 2/(2+√2) | diagonal share | **derived** same as the ENC core ([ENC grid](encgrid.md) §2). It shares the passage widths with the soil lateral flow, so the same value as `gw_diagratio` (a different value stops the run; developer.md §95, in Japanese) |
+| salt_diagratio | 2/(2+√2) | diagonal share | **derived** same as the ENC core ([ENC grid](encgrid.md) §2). It shares the passage widths with the soil lateral flow, so the same value as `gw_diagratio` (a different value stops the run; developer.md §98, in Japanese) |
 | salt_nsubmax | 200 | sub-cycle cap of the gravity current | **numerical** |
 
 **Where to look when revising the defaults**

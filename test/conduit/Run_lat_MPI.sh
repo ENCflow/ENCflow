@@ -9,7 +9,7 @@ time mpirun -np "$NP" --bind-to none ./encflow_mpi param_lat.txt | tee Screen_la
 echo ""
 python3 ./Check_conduit.py B result_lat || exit 1
 
-# 模式実験 C(B + 土層の側方流 gw_diagratio = 1/3。管路層の通過幅は gwc_diagratio のまま。§95)
+# 模式実験 C(B + 土層の側方流 gw_diagratio = 1/3。管路層の通過幅は gwc_diagratio のまま。§98)
 time mpirun -np "$NP" --bind-to none ./encflow_mpi param_latgw.txt | tee Screen_latgw.log || exit 1
 echo ""
 python3 ./Check_conduit.py B result_latgw || exit 1

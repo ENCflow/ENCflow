@@ -58,7 +58,7 @@
 | ファイル | 内容 |
 |---|---|
 | `Run.sh` / `Run_MPI.sh N` | A の回帰テスト(Log.txt、ULP = 0)。`Run.sh` は続けて `Run_exch.sh`(C1〜C4)と `Run_wall.sh`(D1・D2)も実行する |
-| `Run_sea.sh` | B の実行(result_sea/)。続けて、同じ入力で `salt_diagratio = 0` を与えると停止すること(土層の側方流と通過幅を共有するので、`gw_diagratio` と違う値は不一致として検出する。2026-11-05 より前は黙って無視されていた。developer.md §95) |
+| `Run_sea.sh` | B の実行(result_sea/)。続けて、同じ入力で `salt_diagratio = 0` を与えると停止すること(土層の側方流と通過幅を共有するので、`gw_diagratio` と違う値は不一致として検出する。2026-11-05 より前は黙って無視されていた。developer.md §98) |
 | `Run_wall.sh` / `Check_wall.py` | D1・D2 の実行と検定(倍精度の保存状態 save_wall_*/ を読む) |
 | `Run_exch.sh` / `Check_exch.py` | C1〜C4 の実行と検定(倍精度の保存状態 save_exch_*/ を読む) |
 | `Fig.py` | 下の図 `figs/salt.png` |

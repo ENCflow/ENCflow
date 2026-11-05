@@ -51,7 +51,7 @@ module m_lavaflow
   !   熱量 hl·Tl(× ρc_p × セル面積 = J。0 °C 基準の顕熱):
   !     ∂(hl Tl)/∂t + ∇·(q T*) = Σ (Q/A) T_v − (F_rad + F_conv)/(ρ c_p)
   !   T* = エッジの送り手(風上)の温度(f_lvtemp_scheme = 3 では送り手・受け手・
-  !   さらに風上の 3 点の MUSCL の面値。§94)、T_v = 噴出温度。冷却は有効放射率 ε の
+  !   さらに風上の 3 点の MUSCL の面値。§97)、T_v = 噴出温度。冷却は有効放射率 ε の
   !   放射 F_rad = ε σ (Tl_K⁴ − Ta_K⁴) と対流 F_conv = h_c (Tl − Ta)(Ta は
   !   fn_meteo のセルの気温か lv_tair)。表面の殻の断熱は ε を下げて表す。
   !   粘度と降伏応力は η(T) = η_r exp(−β_η (T − T_r))、τ_y(T) = τ_r exp(−β_τ (T − T_r))
@@ -125,17 +125,17 @@ module m_lavaflow
 
   type t_lvwork
     real :: cw(1:4) = 0.0            ! エッジ伝導度重み(= 通過幅/距離。lv_diagratio = 0 では 4 近傍のみ)
-    real :: cwd(1:4) = 0.0           ! 8 近傍の振り替えの伝導度の増分(§96)。軸 k = 2・4: 塞がれた斜め
+    real :: cwd(1:4) = 0.0           ! 8 近傍の振り替えの伝導度の増分(§99)。軸 k = 2・4: 塞がれた斜め
                                      !   1 本分(ld·面長/距離。nb 倍して足す)、斜め k = 1・3: 斜め先 1 つ分
                                      !   ((自然幅 − 斜めの通過幅)/2/距離。塞がり率の和の 1/2 倍して足す)
     real :: dist(1:4) = 0.0          ! エッジ法線方向のセル中心間距離 (m)
-    real :: diag = 0.0               ! 流動の斜めの配分 d(lv_diagratio。0 = 4 近傍。§96)
+    real :: diag = 0.0               ! 流動の斜めの配分 d(lv_diagratio。0 = 4 近傍。§99)
     real :: area = 0.0               ! セル面積 dx*dy (m2)
     real :: ainv = 0.0               ! 1 / (dx*dy)
     real :: rdx2 = 0.0               ! 1/dx^2 + 1/dy^2(安定条件用)
     real, allocatable :: q(:,:,:)    ! エッジ溶岩フラックス4成分 (m3/s)
     real, allocatable :: ge(:,:,:)   ! エッジの伝導度 G = D·cw·(振り替え) (m2/s)。8 近傍(diag > 0)のみ
-                                     !   確保。q と同形(パスA が書き、dt の決定とパスB が読む。§96)
+                                     !   確保。q と同形(パスA が書き、dt の決定とパスB が読む。§99)
     real, allocatable :: sdz(:,:)    ! 固化深の作業領域 (m)(1:nx, js:je)。
                                      !   2パス構造用(判定は時刻 n の場、適用は
                                      !   パス2。lv_wsol>0 か温度モードのみ確保)
@@ -172,7 +172,7 @@ module m_lavaflow
     integer :: nsubmax = 10000       ! サブサイクル数の上限
     ! 温度(段階2。f_lvtemp=1。lava_plan.md §8)
     logical :: thermal = .false.     ! 温度を計算する
-    logical :: tmuscl = .false.      ! 熱の移流の面の温度を MUSCL で再構成する(f_lvtemp_scheme = 3。§94)
+    logical :: tmuscl = .false.      ! 熱の移流の面の温度を MUSCL で再構成する(f_lvtemp_scheme = 3。§97)
     logical :: usemet = .false.      ! 気温を meteo から読む(.false. = 定数 tair)
     real :: tref = 0.0               ! レオロジーの基準温度 T_r (°C)
     real :: bvisc = 0.0              ! 粘度の温度感度 β_η (1/K)
@@ -366,7 +366,7 @@ subroutine m_lavaflow_init(lv, p, g, s, mt)
   if (list%f_lvtemp_scheme /= 1 .and. list%f_lvtemp_scheme /= 3) then
     call par_stop("list_lavaflow: f_lvtemp_scheme must be 1(first-order upwind) or 3(MUSCL)")
   end if
-  ! 温度モードでないときは読まない(既定 3。§94)
+  ! 温度モードでないときは読まない(既定 3。§97)
   lv%tmuscl = lv%thermal .and. (list%f_lvtemp_scheme == 3)
 
   ! --- 状態の確保 ---
@@ -378,7 +378,7 @@ subroutine m_lavaflow_init(lv, p, g, s, mt)
   lv%lvw%ainv = 1.0 / lv%lvw%area
   lv%lvw%rdx2 = 1.0 / g%dx**2 + 1.0 / g%dy**2
   if (lv%lvw%diag > 0.0) then
-    ! 8 近傍の 9 点の伝導度と振り替えの増分(m_flow8。§96)
+    ! 8 近傍の 9 点の伝導度と振り替えの増分(m_flow8。§99)
     call flow8_weights(g, lv%lvw%diag, lv%lvw%cw, lv%lvw%cwd, lv%lvw%dist)
   else
     lv%lvw%cw(1) = 0.0             ! 斜め(未使用)
@@ -741,10 +741,10 @@ end subroutine
 !   持ち出しは自分の溶岩以下なので、新しい Tl は自セルと流れ込みの送り手の
 !   温度の凸結合になる(丸めの分を含めてその範囲に収める)。f_lvtemp_scheme = 3
 !   では T* を MUSCL の面値にし(tface_muscl)、範囲に流れ出しの面の反対側の
-!   近傍を加える(§94)。hl・tl をサブサイクルごとにハロ交換する
+!   近傍を加える(§97)。hl・tl をサブサイクルごとにハロ交換する
 !   lv_diagratio > 0 では 8 近傍の 9 点(パスA・B を flow8_coef・flow8_flux に替える。
 !   斜めのエッジと塞がれた配分の動的な振り替え、dt はセルごとの伝導度の和、ドナー律速は
-!   1 エッジ 1/8。パスC は共通。§96)
+!   1 エッジ 1/8。パスC は共通。§99)
 !----------------------------------------------------------------------
 subroutine tick_flow(lv, g, s, dtw)
   type(t_lavaflow), intent(inout) :: lv
@@ -773,7 +773,7 @@ subroutine tick_flow(lv, g, s, dtw)
     end if
 
     ! --- パスA: 拡散係数の最大値と dt_sub の決定 ---
-    !   8 近傍(lv_diagratio > 0。§96)はエッジの伝導度 G を ge に置き、dmax にセルごとの
+    !   8 近傍(lv_diagratio > 0。§99)はエッジの伝導度 G を ge に置き、dmax にセルごとの
     !   伝導度の和 Σ_k G_k の最大を返す(dt はその正値性の条件で決める)
     if (lv%lvw%diag > 0.0) then
       call flow8_coef(lv, g, s, jt, dmax)
@@ -824,7 +824,7 @@ subroutine tick_flow(lv, g, s, dtw)
     dtsub = trem
     if (dmax > 0.0) then
       if (lv%lvw%diag > 0.0) then
-        dlim = lv%cfl * lv%lvw%area / dmax     ! 自セルの係数 1 − dt Σ_k G_k / A >= 0(§96)
+        dlim = lv%cfl * lv%lvw%area / dmax     ! 自セルの係数 1 − dt Σ_k G_k / A >= 0(§99)
       else
         dlim = lv%cfl * 0.5 / (dmax * lv%lvw%rdx2)
       end if
@@ -840,7 +840,7 @@ subroutine tick_flow(lv, g, s, dtw)
     ! --- パスB: エッジ流量(ドナー律速つき) ---
     !   帯界面のエッジ成分 k=1..3(行 je)はハロ行 je+1 の書き手が担う
     !   (冗長計算。全域端では行が存在せず対象外)
-    !   8 近傍(§96)はパスA の伝導度 ge から(ドナー律速は 1 エッジ 1/8)
+    !   8 近傍(§99)はパスA の伝導度 ge から(ドナー律速は 1 エッジ 1/8)
     if (lv%lvw%diag > 0.0) then
       call flow8_flux(lv, g, s, jt, dtsub)
     else
@@ -895,7 +895,7 @@ subroutine tick_flow(lv, g, s, dtw)
             if (lv%thermal) then
               ! 熱のエッジ流量 = 溶岩のエッジ流量 × 面の温度。面の温度は送り手(風上)の
               ! 温度(1 次風上)か、f_lvtemp_scheme = 3 ではエッジの向きに沿った
-              ! 送り手・受け手・送り手のさらに風上の 3 点の MUSCL(tface_muscl。§94)
+              ! 送り手・受け手・送り手のさらに風上の 3 点の MUSCL(tface_muscl。§97)
               gqt = 0.0
               if (gq > 0.0) then
                 tf = s%tl(i,j)
@@ -922,7 +922,7 @@ subroutine tick_flow(lv, g, s, dtw)
     ! (厳密な算術では凸結合。範囲外は丸め、または hl がほぼ 0 になったセルの
     ! 桁落ちによる)。MUSCL(tmuscl)では流れ出しの面の値が、その面の反対側の
     ! 近傍(さらに風上のセル)の温度を正の重みで含むので、溶岩のあるその近傍も
-    ! 範囲に加える(凸結合になる十分条件は流れ出しの合計 ≤ 自セルの溶岩の 1/2。§94)
+    ! 範囲に加える(凸結合になる十分条件は流れ出しの合計 ≤ 自セルの溶岩の 1/2。§97)
     if (lv%thermal) then
       !$omp parallel do schedule(static) private(i, j, k, dv, dvt, ho, hn, tlo, thi, tn, io, jo)
       do j = dcp%js, dcp%je
@@ -1008,7 +1008,7 @@ end subroutine
 
 
 !----------------------------------------------------------------------
-! 8 近傍のパスA(lv_diagratio > 0。tick_flow の部品。§96)
+! 8 近傍のパスA(lv_diagratio > 0。tick_flow の部品。§99)
 !   エッジの伝導度 G = D·(cw + 振り替え量·cwd) を ge に置き(書き手 js..jt。各スロットの
 !   書き手は 1 つ)、自帯のセルごとの和 Σ_k G_k(8 方向。パスC の集計と同じ)の全域の
 !   最大を smax に返す(allreduce。全ランク同一)。
@@ -1102,7 +1102,7 @@ end subroutine
 
 
 !----------------------------------------------------------------------
-! 8 近傍のパスB(lv_diagratio > 0。tick_flow の部品。§96)
+! 8 近傍のパスB(lv_diagratio > 0。tick_flow の部品。§99)
 !   エッジ流量 = G·(s_c − s_n)(G はパスA の ge)。ドナー律速は 1 エッジの持ち出し ≤ ドナーの
 !   溶岩体積の 1/8(8 エッジの合計 ≤ 全量 → hl >= 0)。熱のエッジ流量は 4 近傍のパスB と同じ
 !   (面の温度は送り手の温度か、f_lvtemp_scheme = 3 ではエッジの向きの 3 点の MUSCL)
@@ -1256,11 +1256,11 @@ end function
 !   ため速度閾値で閉じる。f_dbstop=1 の db_vstop/db_wstop と同じ構成)。
 !   S は tick_flow と同じエッジの勾配の大きさ √(Sn² + St²)(流速の大きさ。
 !   法線成分だけだと斜め方向の流れが 1/√2 に見えて早く止まる。§51.4)。
-!   lv_diagratio > 0 の斜めのエッジは tick_flow(flow8_coef)と同じ角点の勾配(§96)。
+!   lv_diagratio > 0 の斜めのエッジは tick_flow(flow8_coef)と同じ角点の勾配(§99)。
 !   lv_diagratio > 0 では、流速を流量と整合する法線の流速 D·Sn/he で数える(降伏厚 h0 は
 !   上の勾配の大きさで評価)。大きさで数えると、流れる向きのエッジが両側の平均の厚さで
 !   降伏していて流量がないのに、流量のない向きのエッジが接線の勾配の流速を大きく示し、
-!   止まった溶岩がいつまでも固まらないことがある(試行で test/lava 構成 5。§96)。8 方向なら
+!   止まった溶岩がいつまでも固まらないことがある(試行で test/lava 構成 5。§99)。8 方向なら
 !   法線の流速の最大は流速の大きさの cos 22.5° = 0.92 倍以上(4 近傍で大きさを使う理由
 !   = 45° の流れが 1/√2 に見えて早く止まる、はほぼ解消する)
 !   数えるのは溶岩が実際に動けるエッジだけ: 隣の溶岩面のほうが高い流れ込みの
@@ -1334,7 +1334,7 @@ subroutine tick_solidify(lv, g, s, dtw)
           sm = sqrt(ss * ss + gt * gt)             ! エッジの勾配の大きさ
         else if (k <= 4) then
           ! 斜めのエッジ: tick_flow(flow8_coef)と同じ角点の勾配(書き手 = 自セル)。
-          ! 軸のエッジの接線勾配 edge_tslope は斜めには使えない(§96)
+          ! 軸のエッジの接線勾配 edge_tslope は斜めには使えない(§99)
           sm = sqrt(flow8_diag_gs2(g, s%z, s%hl, k, i, j))
         else
           sm = sqrt(flow8_diag_gs2(g, s%z, s%hl, ke(k), in, jn))   ! 書き手 = 近傍
@@ -1346,7 +1346,7 @@ subroutine tick_solidify(lv, g, s, dtw)
         dd = lv%coef * hf * hf * (2.0 * he + h0)
         if (lv%lvw%diag > 0.0) then
           ! 8 近傍: 流量と整合する法線の流速 D·Sn/he(流量のない向きのエッジに接線の勾配の
-          ! 流速を数えない。8 方向の法線の最大は流速の大きさの cos 22.5° 倍以上。§96)
+          ! 流速を数えない。8 方向の法線の最大は流速の大きさの cos 22.5° 倍以上。§99)
           ue = dd * (abs(ds) / lv%lvw%dist(ke(k))) / he
         else
           ue = dd * sm / he
@@ -1458,7 +1458,7 @@ end subroutine
 
 
 !----------------------------------------------------------------------
-! 熱の移流の面の温度(f_lvtemp_scheme = 3。tick_flow のパスB の部品。§94)
+! 熱の移流の面の温度(f_lvtemp_scheme = 3。tick_flow のパスB の部品。§97)
 !   送り手 d = (id,jd)・受け手 r = (ir,jr)・エッジの向きに沿って送り手の
 !   さらに風上のセル u = (iu,ju) の 3 点から、地表のスカラーのリンクごとの
 !   MUSCL(m_swflow_enc の muscl_face。§78)と同じ van Leer の面値

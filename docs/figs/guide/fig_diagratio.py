@@ -9,7 +9,7 @@ of a one-cell-wide line feature (channel, conduit) without reassignment, diagona
 over axis, and (d) the largest and smallest crosswind numerical diffusion of
 first-order upwind over the flow directions.
 
-All curves are computed here from closed forms (developer.md sec. 93 and 95,
+All curves are computed here from closed forms (developer.md sec. 96 and 98,
 users_guide/diagonal_diffusion.md sec. 2.3); the crosswind coefficient is the
 share-weighted sum (1 - d) F(phi) + d sqrt(2) F(phi - 45 deg) of the
 4-neighbour coefficient F, which reproduces the measured ENC table at

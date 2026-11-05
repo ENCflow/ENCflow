@@ -165,7 +165,7 @@ the ice surface to the axis edges that cross the same boundary, and, in a
 diagonal valley whose axis neighbours are blocked, the axis shares to the
 diagonal edges (the same rule as the dynamic reassignment of surface water,
 f_opening_dynamic = 3; shared with `lv_diagratio` of lava flows; developer.md
-Sec. 96). With d = 1/3 the ice in a diagonal valley advances 1.00 times as far
+Sec. 99). With d = 1/3 the ice in a diagonal valley advances 1.00 times as far
 as along a grid axis for one line and 1.02 times for three lines, and the sector
 ratio of the Halfar dome moves closer to the analytic one (+0.6 % on 4
 neighbours becomes +0.4 %; configurations 1 and 6). The default is 1/3 (from

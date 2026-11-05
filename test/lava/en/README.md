@@ -10,7 +10,7 @@ guide](../../../docs/en/users_guide/lavaflow.md), developer.md §51). It is
 closed by analytical-solution checks without a reference comparison (the
 same practice as [test/volcano](../../volcano/en/README.md)). The flow is
 computed on the default 8-neighbour 9-point stencil (`lv_diagratio = 1/3`;
-from 2026-11-05; developer.md §96). Four neighbours are given explicitly in
+from 2026-11-05; developer.md §99). Four neighbours are given explicitly in
 configuration 4' (control), configuration 10 (a check of a property of four
 neighbours) and `ch45w3q` of configuration 11 (control).
 
@@ -32,7 +32,7 @@ neighbours) and `ch45w3q` of configuration 11 (control).
    that it is the same along the grid axes and the diagonals
    (developer.md §51.4). `param_dome4.txt` (configuration 4') is a control
    that computes the same input with the flow on 4 neighbours
-   (`lv_diagratio = 0`, the default before 2026-11-05; developer.md §96) and
+   (`lv_diagratio = 0`, the default before 2026-11-05; developer.md §99) and
    must pass the same check.
 5. **Solidification at a wall** (`param_wall.txt`): lava is ponded against a
    10 m step (wall) at the end of a flat floor, and the check is that the
@@ -70,7 +70,7 @@ neighbours) and `ch45w3q` of configuration 11 (control).
    runs of the temperature mode on a slope with a fixed perturbation of ±1 mm in
    the bed (`make_init.py runnz`) and checks that the same trend (the 4Q flow is
    longer) holds for the perturbed flow (a flow uniform across splits into
-   channels under a perturbation; the correction in developer.md §94).
+   channels under a perturbation; the correction in developer.md §97).
 10. **Crosswind numerical diffusion of the heat** (`param_x0.txt`,
     `param_x0m.txt`, `param_x45.txt`, `param_x45m.txt`; temperature mode, no
     cooling): lava at 1150 °C from one side of the vents and at 1050 °C from the
@@ -81,14 +81,14 @@ neighbours) and `ch45w3q` of configuration 11 (control).
     heat advection. The checks are that it does
     not spread at 0°, that at 45° first-order upwind matches the crosswind
     diffusivity of the modified equation (√2/4)·u·Δx, and that MUSCL gives less
-    than 1/4 of it (developer.md §94). These are properties of 4 neighbours,
+    than 1/4 of it (developer.md §97). These are properties of 4 neighbours,
     so `lv_diagratio = 0` is given explicitly. Configuration 10d
     (`param_x0d.txt`, `param_x0dm.txt`, `param_x45d.txt`, `param_x45dm.txt`)
     computes the same input on the 8-neighbour 9-point stencil of the flow
     (`lv_diagratio = 1/3`) and checks that the first-order crosswind
     diffusivity matches (1 − d)F(φ) + d√2 F(φ − 45°) (F the 4-neighbour
     coefficient; 0.167 at 0° and 0.236 at 45°) and that MUSCL gives less than
-    1/4 of it (developer.md §96).
+    1/4 of it (developer.md §99).
 11. **Dependence of the conveyance of valleys on their orientation**
     (`param_ch0w1.txt`, `param_ch45w1.txt`, `param_ch0w3.txt`,
     `param_ch45w3.txt`, `param_ch45w3q.txt`; the 8-neighbour 9-point stencil
@@ -100,7 +100,7 @@ neighbours) and `ch45w3q` of configuration 11 (control).
     k = 1 is correct. The checks are k = 1 at 0° and for one line at 45°, and
     1 ± 0.1 for three lines at 45°; the 4-neighbour control (`ch45w3q`,
     `lv_diagratio = 0`) must give k < 0.8 (the check can detect the
-    difference) (developer.md §96).
+    difference) (developer.md §99).
 
 ## Configuration
 
@@ -172,7 +172,7 @@ of the radius is 12.6 m (+3.7%) by the counting method of Check_lava
 precursor film at the front, which the similarity solution does not have
 (including the lag of the front due to the edge-averaged thickness; on 4
 neighbours 12.5 m (+2.8%) and 13.2 m (+8.5%); the check counts at 1 cm;
-developer.md §96).
+developer.md §99).
 Top right: the final thickness of configuration 2 (row average). Downstream of
 the vents at x = 6–40 m, hl + dz forms a flat plateau of 0.42 m, agreeing
 with the analytical stopping thickness 0.3925 m to 7.1%, and the whole
@@ -291,14 +291,14 @@ the erupted volume) (developer.md §51.5).
   configuration 9 splits into channels as well, and configurations 9 and 9n give
   the same lengths of 75 m and 155 m. The length of the perturbed solution is
   75–85 m with first-order upwind or MUSCL, 4 or 8 neighbours, and cells of 5 to
-  1.25 m (the correction in developer.md §94). The check of configuration 9
+  1.25 m (the correction in developer.md §97). The check of configuration 9
   (length ratio > 1.5) holds for every one of these solutions.
 - The saves, field outputs and Log.txt of configurations 1–6 are
   byte-identical before and after the addition of the temperature mode (the
   isothermal run allocates no temperature arrays and goes through the same
   code).
 - Configuration 10 is a detector of the numerical diffusion of the heat
-  advection (developer.md §94). With 4-neighbour first-order upwind there is no
+  advection (developer.md §97). With 4-neighbour first-order upwind there is no
   crosswind diffusion for a flow along a grid axis, but at 45° the heat entering
   through both the x and the y edges averages the temperatures of the donors,
   and the boundary spreads with D⊥ = (Δx/2)(|u_x| sin²θ + |u_y| cos²θ) =
@@ -326,7 +326,7 @@ the erupted volume) (developer.md §51.5).
   with it within 1%. MUSCL gives 0.12–0.15 times first order at both 0° and
   45°, nearly the same in every direction.
 - Configuration 11 checks the 8-neighbour 9-point stencil of the flow
-  (`lv_diagratio`; default 1/3; developer.md §96). On 4
+  (`lv_diagratio`; default 1/3; developer.md §99). On 4
   neighbours a diagonal valley one cell wide, whose cells touch only at
   corners, does not flow (in a trial the lava piled up 19.7 m at the vent
   and the subcycles exceeded 1.2 million, so it is not in the check). A band
@@ -338,7 +338,7 @@ the erupted volume) (developer.md §51.5).
   k = 1. The +6.5% for three lines at 45° is an excess from the axis edges at
   the edges of the band receiving the shares of blocked diagonals that cross
   the valley; for uniform thickness it is 1 + d/6 (+5.6% for d = 1/3; the
-  derivation is in developer.md §96). For a band of five lines (trial) it
+  derivation is in developer.md §99). For a band of five lines (trial) it
   drops to +4.0%.
 - The saves (except the line with the creation time in save_info.txt), field
   outputs and Log.txt of configurations 1–10 were byte-identical before and

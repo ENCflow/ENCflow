@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# test/stencil9 の入力生成(developer.md §93。値は Check_stencil9.py と対で保守する)
+# test/stencil9 の入力生成(developer.md §96。値は Check_stencil9.py と対で保守する)
 #   z_hill2.txt : 81 × 81 セル(Δ = 1 m)、中心セル (41, 41) のガウス丘 z = 10 + A exp(−r²/2σ²)
 #                 (A = 1 m、σ = 2 m = 2Δ。格子で解像しきれない丘 = 格子の向きの検出器)
 #   z_strip1.txt: 1 × 40 セル、z = A cos(π (j − 0.5)/40)(南北の帯。四周は壁)

@@ -203,18 +203,18 @@
     {
       "source": "docs/users_guide/diagonal_diffusion.md",
       "target": "docs/en/users_guide/diagonal_diffusion.md",
-      "source_sha256": "0bc9e810f9ad92ea112bf7f83b184107300272612c554668ad578e6590f228a5",
-      "target_sha256": "94a7f9493a9d66e059371dda0f05e1aad84284e884ee843b656c7f4d2c2daee9",
-      "reviewer": "Claude (Claude Code session; reviewed the text on the new default 1/3 of lv_diagratio and gl_diagratio (developer.md sec. 96) in the Japanese source against the English mirror, 2026-11-05)",
+      "source_sha256": "06b0122d514eef6c55c1b80e09a6c3900adcf4c0d9cc94c130655a5366ad206a",
+      "target_sha256": "ae153d9f3708fbf9cb9f760417052e6b9ca17fb81814b2b2d8bd5ab86dd1673f",
+      "reviewer": "Claude (Claude Code session; mechanical renumbering of the developer.md section references §93-96 -> §96-99 (collision with the sections merged from main) in both files, checked by script that the lines differ only in those numbers and that both files carry the same references; rest unchanged since the previous record)",
       "method": "assistant",
       "reviewed_on": "2026-11-05"
     },
     {
       "source": "docs/users_guide/diagratio.md",
       "target": "docs/en/users_guide/diagratio.md",
-      "source_sha256": "72e8d211473afbf26ded4a8de290dfb3004725629eef25f4c043bf100511e5e5",
-      "target_sha256": "fa1bfda15739c0cfb83f795a0d78c3ae8617973285367b1543dcbd05f5687b54",
-      "reviewer": "Claude (Claude Code session; reviewed the text on the new default 1/3 of lv_diagratio and gl_diagratio (developer.md sec. 96) in the Japanese source against the English mirror, 2026-11-05)",
+      "source_sha256": "e8e3b3f2c69990c81bb2302d9307d124c09d6c95b45187e45bf91d473efbc8c6",
+      "target_sha256": "a77b466dc64dfb204d4ab2b71fa32adb7cdda9579a5327a38d8d5745cc15b269",
+      "reviewer": "Claude (Claude Code session; mechanical renumbering of the developer.md section references §93-96 -> §96-99 (collision with the sections merged from main) in both files, checked by script that the lines differ only in those numbers and that both files carry the same references; rest unchanged since the previous record)",
       "method": "assistant",
       "reviewed_on": "2026-11-05"
     },
@@ -293,18 +293,18 @@
     {
       "source": "docs/users_guide/glacier.md",
       "target": "docs/en/users_guide/glacier.md",
-      "source_sha256": "dd1137a3c2984bca2a550d3d84d6b9f0c86ff8519f94c0cae94e41901087b742",
-      "target_sha256": "2b8cb414db8e4bfe6d5e31ed41d96b274817f4897730594801ea61523e40a5f3",
-      "reviewer": "Claude (Claude Code session; reviewed the text on the new default 1/3 of lv_diagratio and gl_diagratio (developer.md sec. 96) in the Japanese source against the English mirror, 2026-11-05)",
+      "source_sha256": "77b47e80861a525a769440885252da1a3aa1cb2a91c8048e7897a9083aa89cbf",
+      "target_sha256": "1ad68b267ae242c429298b1e6022929dacda4565d91e1e892cc359310de408f6",
+      "reviewer": "Claude (Claude Code session; mechanical renumbering of the developer.md section references §93-96 -> §96-99 (collision with the sections merged from main) in both files, checked by script that the lines differ only in those numbers and that both files carry the same references; rest unchanged since the previous record)",
       "method": "assistant",
       "reviewed_on": "2026-11-05"
     },
     {
       "source": "docs/users_guide/gwflow.md",
       "target": "docs/en/users_guide/gwflow.md",
-      "source_sha256": "5bd181869e953714429e48e114d546ef277910dbb2d35f9221040552e8fe8f27",
-      "target_sha256": "aa76908678b387d7acdde1630f48edffd32f443e41d5ba21dfb4cea675f68330",
-      "reviewer": "Claude (Claude Code session; reviewed the added links to the page on choosing the diagonal share d (and the basis of p_diagratio in encgrid) in the Japanese source against the English mirror, 2026-11-05)",
+      "source_sha256": "92ccf21fff835bd3404d377be4b71d9f41e446c53b74ffb91ca88993f374d1cb",
+      "target_sha256": "dcd36dd1b86183821e1ab146cdbacc4ccb10adc9a216379fa2f86ac06affeaa0",
+      "reviewer": "Claude (Claude Code session; mechanical renumbering of the developer.md section references §93-96 -> §96-99 (collision with the sections merged from main) in both files, checked by script that the lines differ only in those numbers and that both files carry the same references; rest unchanged since the previous record)",
       "method": "assistant",
       "reviewed_on": "2026-11-05"
     },
@@ -347,9 +347,9 @@
     {
       "source": "docs/users_guide/lavaflow.md",
       "target": "docs/en/users_guide/lavaflow.md",
-      "source_sha256": "c6a4464d81e13e5b49a8f684b2b526cc07c3872c14a6eb792fe06fb1298d3338",
-      "target_sha256": "9e1a338cafa7997aea3c2213c4dd485e22ff6102b555b25dfd19a1da598ae11f",
-      "reviewer": "Claude (Claude Code session; reviewed the text on the new default 1/3 of lv_diagratio and gl_diagratio (developer.md sec. 96) in the Japanese source against the English mirror, 2026-11-05)",
+      "source_sha256": "fb2a8f407d4fe258d496433267fa93d34cdb4ecca5491d6268713050abcbc9c4",
+      "target_sha256": "7c5cbadd1a45b15186270ebb1d71466eb63d2ae7b4c7b4b9dd56efcbb063969b",
+      "reviewer": "Claude (Claude Code session; mechanical renumbering of the developer.md section references §93-96 -> §96-99 (collision with the sections merged from main) in both files, checked by script that the lines differ only in those numbers and that both files carry the same references; rest unchanged since the previous record)",
       "method": "assistant",
       "reviewed_on": "2026-11-05"
     },
@@ -437,18 +437,18 @@
     {
       "source": "docs/users_guide/salt.md",
       "target": "docs/en/users_guide/salt.md",
-      "source_sha256": "d769d26f00cd90b052777f78b1416a6769cfc0f1bc3aaae342459ae0c90a8898",
-      "target_sha256": "a42cc70f6c26eeeebab2aa9b935b800c4f5f6d8c772eaf890654d4eac6a8cf09",
-      "reviewer": "Claude (Claude Code session; reviewed the added text on the passage widths shared by the groundwater layers (conduit layer with its own gwc_diagratio, stop on a salt_diagratio mismatch; developer.md sec. 95) in the Japanese source against the English mirror, 2026-11-05)",
+      "source_sha256": "e01fb078893e751358740f8eb6ca0b9f8549ee71a4f61cbbb1da3e3ced34c62b",
+      "target_sha256": "869e35e3605aaf2be67d4b97c5c52b8afe5f1295945f051a1ee81f17a3d69a6e",
+      "reviewer": "Claude (Claude Code session; mechanical renumbering of the developer.md section references §93-96 -> §96-99 (collision with the sections merged from main) in both files, checked by script that the lines differ only in those numbers and that both files carry the same references; rest unchanged since the previous record)",
       "method": "assistant",
       "reviewed_on": "2026-11-05"
     },
     {
       "source": "docs/users_guide/sediment.md",
       "target": "docs/en/users_guide/sediment.md",
-      "source_sha256": "31979adc67c212b3855cbfba4ce671fd5e23d3f8b0e4c7312c2f35646a11c082",
-      "target_sha256": "4e9cdf463bf2972b86f833897c5fc3e78310b7ef94d3c5f2f75ee87a0f5fda2d",
-      "reviewer": "Claude (Claude Code session; reviewed the text on the new default 1/3 of creep_diagratio and spl_diagratio (developer.md sec. 93) in the Japanese source against the English mirror, 2026-11-05)",
+      "source_sha256": "69eec1a1ac52ca676d4d21a7c8ecf680ebfd09bccd92a299da6026d02b32d8a6",
+      "target_sha256": "36bd85a0ae7484540a2b4925d3728ea8edc1573e6e4352954fa6b3891f9e6cd4",
+      "reviewer": "Claude (Claude Code session; mechanical renumbering of the developer.md section references §93-96 -> §96-99 (collision with the sections merged from main) in both files, checked by script that the lines differ only in those numbers and that both files carry the same references; rest unchanged since the previous record)",
       "method": "assistant",
       "reviewed_on": "2026-11-05"
     },
@@ -653,18 +653,18 @@
     {
       "source": "examples/List_samples/list_geomorph.txt",
       "target": "examples/List_samples/en/list_geomorph.txt",
-      "source_sha256": "2b9239f6f5a07b0c11d6cf9c8537f3a6115bcf30aad7484974025e333c546586",
-      "target_sha256": "ca7e97ed4b7d0681d2ee909a0b9a39d57bd9ebe8fb5ad6556e763e310cf6ab64",
-      "reviewer": "Claude (Claude Code session; reviewed the text on the new default 1/3 of creep_diagratio and spl_diagratio (developer.md sec. 93) in the Japanese source against the English mirror, 2026-11-05)",
+      "source_sha256": "590a493029f44c5260becfd3125a0df2c55687d33135de6d5f2858679a27be65",
+      "target_sha256": "e1565afeb827f5a4e0b0f64181592012e2fe46086e645fc0ecad21c6fe689eec",
+      "reviewer": "Claude (Claude Code session; mechanical renumbering of the developer.md section references §93-96 -> §96-99 (collision with the sections merged from main) in both files, checked by script that the lines differ only in those numbers and that both files carry the same references; rest unchanged since the previous record)",
       "method": "assistant",
       "reviewed_on": "2026-11-05"
     },
     {
       "source": "examples/List_samples/list_glacier.txt",
       "target": "examples/List_samples/en/list_glacier.txt",
-      "source_sha256": "d1dec3d599dbb3a0ae9b65cfc0e335c559a8134feeb4887056bea591008c47f7",
-      "target_sha256": "402e5b7fca55048e09b2f62083a2536bbebd12bd642dfd64b7603cc702c69c8e",
-      "reviewer": "Claude (Claude Code session; reviewed the text on the new default 1/3 of lv_diagratio and gl_diagratio (developer.md sec. 96) in the Japanese source against the English mirror, 2026-11-05)",
+      "source_sha256": "400feaeb76472ea2e0c4c1b6881b7d574d0eac2f9a313f935907ef687bf1d163",
+      "target_sha256": "380b9267d7a47ad27e5f135956b90451a23b9d55f0f53d8590f375783f27a756",
+      "reviewer": "Claude (Claude Code session; mechanical renumbering of the developer.md section references §93-96 -> §96-99 (collision with the sections merged from main) in both files, checked by script that the lines differ only in those numbers and that both files carry the same references; rest unchanged since the previous record)",
       "method": "assistant",
       "reviewed_on": "2026-11-05"
     },
@@ -698,9 +698,9 @@
     {
       "source": "examples/List_samples/list_lavaflow.txt",
       "target": "examples/List_samples/en/list_lavaflow.txt",
-      "source_sha256": "a35ef14a8f64abd52a45e7ba4b9748a8fe8ea91e1537810ba0998be40b8a061d",
-      "target_sha256": "87249f355c5c884a16e4f0c435c32ca56afe8c53e7640a933460f93f159e2599",
-      "reviewer": "Claude (Claude Code session; reviewed the text on the new default 1/3 of lv_diagratio and gl_diagratio (developer.md sec. 96) in the Japanese source against the English mirror, 2026-11-05)",
+      "source_sha256": "fe49cb46e5b54e02a62d8dbcc72228fb38e585ffeca4ab76b518454ebae5d272",
+      "target_sha256": "f3675feb3434aa32210acb21ce8fff3b1e42b860c68ba726d5b54e0c7897a7b2",
+      "reviewer": "Claude (Claude Code session; mechanical renumbering of the developer.md section references §93-96 -> §96-99 (collision with the sections merged from main) in both files, checked by script that the lines differ only in those numbers and that both files carry the same references; rest unchanged since the previous record)",
       "method": "assistant",
       "reviewed_on": "2026-11-05"
     },
@@ -2723,9 +2723,9 @@
     {
       "source": "test/README.md",
       "target": "test/README.en.md",
-      "source_sha256": "29f8fc4a18d441c875616ef611d0a0a33d5b3c218dc7732e7160726395cf4724",
-      "target_sha256": "109b98382f182a8b33d69d9b2fa4788be800da595e4d1775493a48b6e455c3fb",
-      "reviewer": "Claude (Claude Code session; reviewed the added text on the 9-point creep and splash curvature (creep_diagratio, spl_diagratio; developer.md sec. 93) in the Japanese source against the English mirror, 2026-11-05)",
+      "source_sha256": "3e5779a50ffd7168f25bd382982d13ed0180e5e8ca324fa079a0d7f67e25c175",
+      "target_sha256": "e1c181dbd98e83207de219d160912b452c8fb62207b497658aee12a04f03d40f",
+      "reviewer": "Claude (Claude Code session; mechanical renumbering of the developer.md section references §93-96 -> §96-99 (collision with the sections merged from main) in both files, checked by script that the lines differ only in those numbers and that both files carry the same references; rest unchanged since the previous record)",
       "method": "assistant",
       "reviewed_on": "2026-11-05"
     },
@@ -2948,9 +2948,9 @@
     {
       "source": "test/conduit/README.md",
       "target": "test/conduit/en/README.md",
-      "source_sha256": "ebc3fe50cea463f3f188f1a9d8f4411db261989aaba7d565fc9beda0c8088b93",
-      "target_sha256": "e638475a52b8c958d4f0f0d940035216a8a3346a5a5f05332b169d87796b1e7c",
-      "reviewer": "Claude (Claude Code session; reviewed the added text on the passage widths shared by the groundwater layers (conduit layer with its own gwc_diagratio, stop on a salt_diagratio mismatch; developer.md sec. 95) in the Japanese source against the English mirror, 2026-11-05)",
+      "source_sha256": "bdc4761e07f12c6895bfb9a9e8c023c78e2e9664c6d9481c181461f83ee64411",
+      "target_sha256": "14cbb016402906f36ace40bcefdb2b3e89605a694f97ecf699bc418895fe776a",
+      "reviewer": "Claude (Claude Code session; mechanical renumbering of the developer.md section references §93-96 -> §96-99 (collision with the sections merged from main) in both files, checked by script that the lines differ only in those numbers and that both files carry the same references; rest unchanged since the previous record)",
       "method": "assistant",
       "reviewed_on": "2026-11-05"
     },
@@ -3227,9 +3227,9 @@
     {
       "source": "test/glacier/README.md",
       "target": "test/glacier/en/README.md",
-      "source_sha256": "7882f62aaf5205fca781a7b0ebc631e3759a9d7ca9bb66403c504175a05b79fb",
-      "target_sha256": "c3ffbb6dca7a0d46e0c2a15d82972fc6159dd2615f9674661ec66756333b3584",
-      "reviewer": "Claude (Claude Code session; reviewed the text on the new default 1/3 of lv_diagratio and gl_diagratio (developer.md sec. 96) in the Japanese source against the English mirror, 2026-11-05)",
+      "source_sha256": "1278c4fc5e9a5d93e3ee9d57d8c12a7cd09986f17a522f15d4f80b5c0f24640d",
+      "target_sha256": "34db4243e1a89741398b7531b48081187a24c6aa2fe69ba948ee5a9ad60f02b8",
+      "reviewer": "Claude (Claude Code session; mechanical renumbering of the developer.md section references §93-96 -> §96-99 (collision with the sections merged from main) in both files, checked by script that the lines differ only in those numbers and that both files carry the same references; rest unchanged since the previous record)",
       "method": "assistant",
       "reviewed_on": "2026-11-05"
     },
@@ -3461,9 +3461,9 @@
     {
       "source": "test/lava/README.md",
       "target": "test/lava/en/README.md",
-      "source_sha256": "b51ed43ecd481d70ec52525e2282ece2af6067b51fb941137e97228542ae80dc",
-      "target_sha256": "bb71e7490372216776a571072995fb66dce6578d2e111289fc4876e1d57925ed",
-      "reviewer": "Claude (Claude Code session; reviewed the text on the new default 1/3 of lv_diagratio and gl_diagratio (developer.md sec. 96) in the Japanese source against the English mirror, 2026-11-05)",
+      "source_sha256": "2f8fab9776251c50acd07d2cc9d685ed98f953c261e61a037a8112dc014861ad",
+      "target_sha256": "60d567635ec3f28473e6cae3f265554d45abe3500c9f8a27a204d7b02350b316",
+      "reviewer": "Claude (Claude Code session; mechanical renumbering of the developer.md section references §93-96 -> §96-99 (collision with the sections merged from main) in both files, checked by script that the lines differ only in those numbers and that both files carry the same references; rest unchanged since the previous record)",
       "method": "assistant",
       "reviewed_on": "2026-11-05"
     },
@@ -3740,9 +3740,9 @@
     {
       "source": "test/salt/README.md",
       "target": "test/salt/en/README.md",
-      "source_sha256": "dfc202c1b16f1bf481525e8ef03d7fe3b5a03b9b7cf3691cbd9776ff02668fe7",
-      "target_sha256": "e6b42c677c14dac6bffa3dfd4031d5e378e77081f65540794c3a3769a8c94f6b",
-      "reviewer": "Claude (Claude Code session; reviewed the added text on the passage widths shared by the groundwater layers (conduit layer with its own gwc_diagratio, stop on a salt_diagratio mismatch; developer.md sec. 95) in the Japanese source against the English mirror, 2026-11-05)",
+      "source_sha256": "fcee834a5b4fbaaa211bd53024dbc06d0ad65e406b9110f9320376aeac939682",
+      "target_sha256": "0a24dd612e467911e0a77b3a2410478179366964713e5576ee0a9a68284aae62",
+      "reviewer": "Claude (Claude Code session; mechanical renumbering of the developer.md section references §93-96 -> §96-99 (collision with the sections merged from main) in both files, checked by script that the lines differ only in those numbers and that both files carry the same references; rest unchanged since the previous record)",
       "method": "assistant",
       "reviewed_on": "2026-11-05"
     },
@@ -3902,9 +3902,9 @@
     {
       "source": "test/stencil9/README.md",
       "target": "test/stencil9/en/README.md",
-      "source_sha256": "20437302d0cedb3c175d5157355bedbb8f9099d94a0916f2bc708be1ed0236f0",
-      "target_sha256": "e6dcf259b54dbfae0afa022eb840d29a921228fa472e5e8186c1dcc9a95277f1",
-      "reviewer": "Claude (Claude Code session; reviewed the text on the new default 1/3 of creep_diagratio and spl_diagratio (developer.md sec. 93) in the Japanese source against the English mirror, 2026-11-05)",
+      "source_sha256": "7816eba2daef0ff4c91110ab17e79e97acb401b9f55c7e7d124dbe6d65136afd",
+      "target_sha256": "d0f34b4e7480b06ffaa6cea935d24de0e17f216743d7d7059984b52cfd48e84a",
+      "reviewer": "Claude (Claude Code session; mechanical renumbering of the developer.md section references §93-96 -> §96-99 (collision with the sections merged from main) in both files, checked by script that the lines differ only in those numbers and that both files carry the same references; rest unchanged since the previous record)",
       "method": "assistant",
       "reviewed_on": "2026-11-05"
     },

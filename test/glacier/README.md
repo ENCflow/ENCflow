@@ -4,7 +4,7 @@
 
 氷河モジュール(`fn_glacier`、[ユーザーガイドの氷河の章](../../docs/users_guide/glacier.md))
 の検証ケースです。7 つの構成からなります(docs/glacier_plan.md §7、
-developer.md §45・§96)。SIA 流動は既定の 8 近傍の 9 点(`gl_diagratio = 1/3`。2026-11-05 から)で
+developer.md §45・§99)。SIA 流動は既定の 8 近傍の 9 点(`gl_diagratio = 1/3`。2026-11-05 から)で
 計算します。4 近傍を明示するのは構成 6(対照)と構成 7 の `ch45w3q`(対照)です。
 
 1. **Halfar ドーム**(`param.txt`): 平坦床・質量収支ゼロの氷帽が浅氷近似
@@ -29,7 +29,7 @@ developer.md §45・§96)。SIA 流動は既定の 8 近傍の 9 点(`gl_diagrat
    よらず氷の幅に広がること、ならさない場合(gl_lc = 0 = 局所の τb を明示)は谷の
    軸に集中して形が格子で変わることを確かめる。
 6. **Halfar ドームの 4 近傍の対照**(`param_d4.txt`): 構成 1 と同じ入力を、SIA 流動の
-   4 近傍(`gl_diagratio = 0`。2026-11-05 より前の既定。developer.md §96)で
+   4 近傍(`gl_diagratio = 0`。2026-11-05 より前の既定。developer.md §99)で
    計算し、構成 1 と同じ判定(Check_halfar.py)に合うこと。
 7. **谷の氷の流れの向きによる差**(`param_ch0w1.txt`・`param_ch45w1.txt`・`param_ch0w3.txt`・
    `param_ch45w3.txt`・`param_ch45w3q.txt`。`gl_diagratio = 1/3`): 勾配 0.1 の斜面に 0° と 45° の
@@ -174,7 +174,7 @@ python3 Fig.py    # figs/halfar.png, figs/cirque.png, figs/avalanche.png, figs/l
   (試計算で 1500〜4000 年。developer.md §45.3)。既定の 500 m は谷氷河向けで、カールの
   ような薄い氷河では氷厚の 2 倍程度に下げます(目安は[ユーザーガイドの氷河の章](../../docs/users_guide/glacier.md))。
 - 構成 7 は SIA 流動の 8 近傍の 9 点(`gl_diagratio`。既定 1/3。溶岩流の `lv_diagratio` と
-  共通の部品。developer.md §96)の検定で、構成 6 は Halfar ドームの 4 近傍の対照です。4 近傍では斜めの 1 セル幅の谷はセルが角でしかつながらず、
+  共通の部品。developer.md §99)の検定で、構成 6 は Halfar ドームの 4 近傍の対照です。4 近傍では斜めの 1 セル幅の谷はセルが角でしかつながらず、
   氷は流れません(試作で確認。検定には入れていない)。3 本の帯は軸のエッジのジグザグだけで流れ、
   0° の 0.87 倍しか進みません(`ch45w3q`)。8 近傍では塞がれた斜めの配分を氷厚に応じて振り替えるので、
   0° の谷の流れは 4 近傍と同じまま、45° の 1 本で 1.00 倍、3 本で 1.02 倍になります。45° の谷は谷に

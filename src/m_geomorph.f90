@@ -84,9 +84,9 @@ module m_geomorph
   type t_creep
     real :: cw(1:4) = 0.0            ! エッジ伝導度重み(= 通過幅/距離)
     real :: hcinv = 0.0              ! 1 / H_c(深さ依存クリープ。0 = 従来の線形拡散。§89.8)
-    real :: diag = 0.0               ! 斜め配分 d(creep_diagratio。0 = 4 近傍の 5 点。§93)
+    real :: diag = 0.0               ! 斜め配分 d(creep_diagratio。0 = 4 近傍の 5 点。§96)
     real, allocatable :: cwo(:,:,:)  ! d > 0 のエッジ伝導度の表(壁で塞がれた斜めの配分を
-                                     !   軸エッジへ振り替えた値。q と同形状・同格納規約。§93)
+                                     !   軸エッジへ振り替えた値。q と同形状・同格納規約。§96)
   end type
 
   ! 石灰岩の溶食(f_dissol。§86。docs/karst_plan.md)
@@ -341,7 +341,7 @@ module m_geomorph
     real, allocatable :: zt(:,:)     ! 平滑化の作業面(同形)
     integer :: nsm = 0               ! 平滑化のパス数(= 4(ℓ/Δ)²。0 = 平滑化なし)
     real :: wsx = 0.0, wsy = 0.0     ! 1 パスの x・y 近傍重み(各方向の分散 2w Δ²)
-    real :: diag = 0.0               ! 曲率と平滑化の斜め配分 d(spl_diagratio。0 = 5 点。§93)
+    real :: diag = 0.0               ! 曲率と平滑化の斜め配分 d(spl_diagratio。0 = 5 点。§96)
     real :: w8(1:8) = 0.0            ! d > 0 の 9 点ラプラシアンの近傍重み (1/m2)(k = 1..8)
     real :: tsm = 0.0                ! d > 0 の平滑化 1 パスの拡散量 τ (m2)(z += τ ∇²z)
     integer :: nclip = 0             ! spl_dzmax クリップの発生セル数(累計)
@@ -987,7 +987,7 @@ subroutine m_geomorph_init(gm, p, g, s)
     if (gm%creep_d <= 0.0) then
       call par_stop("list_geomorph: f_creep requires creep_d > 0")
     end if
-    ! 8 近傍の 9 点(§93。既定 d = 1/3)。0 = 4 近傍の 5 点(2026-11-05 以前の既定と同じ経路)
+    ! 8 近傍の 9 点(§96。既定 d = 1/3)。0 = 4 近傍の 5 点(2026-11-05 以前の既定と同じ経路)
     if (list%creep_diagratio < 0.0 .or. list%creep_diagratio > 1.0) then
       call par_stop("list_geomorph: creep_diagratio must be in [0, 1]")
     end if

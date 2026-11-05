@@ -191,7 +191,7 @@ transfer is on by default). The fluxes of the saltwater zone of the two-layer
 fresh/salt model ([fresh/salt two layers](salt.md)) use the same passage widths,
 so give `salt_diagratio` the same value as `gw_diagratio` (a different value
 stops the run; before 2026-11-05 the value read later was silently ignored;
-developer.md §95, in Japanese). The conduit layer (`gwc_diagratio`) has its own
+developer.md §98, in Japanese). The conduit layer (`gwc_diagratio`) has its own
 passage widths and is independent. For how to choose the diagonal share (1/3 is
 isotropic for the lateral flow, 0.586 suits the conduit layer), see
 [choosing the diagonal share d](diagratio.md).
@@ -278,7 +278,7 @@ Applications are expressed by parameter combinations:
 | gwc_nsubmax | 100 | Cap on the number of lateral-conveyance subcycles (runaway guard of the automatic subdivision) |
 | gwc_eps | 1e-3 | Regularization amount for the dry test (m) |
 | gwc_eps_h | 1e-2 | Linearization width of the sqrt law (head difference, m) |
-| gwc_diagratio | 2/(2+sqrt(2)) | Diagonal partitioning of the conduit layer itself (normally no need to change). Independent of `gw_diagratio` of the soil lateral flow. The default is the value that makes the eight passage widths equal, so a conduit one cell wide has the same conveyance (flow for the same gradient) along an axis and along a diagonal (before 2026-11-05, with soil lateral flow enabled, the passage widths of `gw_diagratio` were silently used; developer.md §95, in Japanese) |
+| gwc_diagratio | 2/(2+sqrt(2)) | Diagonal partitioning of the conduit layer itself (normally no need to change). Independent of `gw_diagratio` of the soil lateral flow. The default is the value that makes the eight passage widths equal, so a conduit one cell wide has the same conveyance (flow for the same gradient) along an axis and along a diagonal (before 2026-11-05, with soil lateral flow enabled, the passage widths of `gw_diagratio` were silently used; developer.md §98, in Japanese) |
 
 - Surface exchange switches automatically with the head difference: if
   the surface water level is higher, water flows in (weir type while

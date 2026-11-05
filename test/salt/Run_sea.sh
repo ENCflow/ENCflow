@@ -4,7 +4,7 @@
 #   を逐次実行の同ファイルと直接 diff する)
 time ./encflow param_sea.txt | tee Screen_sea.log
 
-# 斜めの配分の不一致の検出(developer.md §95): 土層の側方流と塩水 zone は通過幅を共有する
+# 斜めの配分の不一致の検出(developer.md §98): 土層の側方流と塩水 zone は通過幅を共有する
 #   ので、salt_diagratio が gw_diagratio と違えば停止する(2026-11-05 まで後の値は黙って
 #   無視されていた)。同じ入力で salt_diagratio = 0 を与え、停止することを確かめる
 sed -e "s/dir_result = 'result_sea'/dir_result = 'result_sea_dmis'/" \

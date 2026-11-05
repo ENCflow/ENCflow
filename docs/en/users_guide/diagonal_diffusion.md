@@ -410,14 +410,14 @@ remains.
   However, a flow that stops as it cools and is uniform across is unstable: the
   slightest perturbation splits it into channels, and its length then hardly
   depends on the scheme or the cell size ("Numerical diffusion of the heat
-  advection" in [Lava flow](lavaflow.md), the correction in developer.md §94,
+  advection" in [Lava flow](lavaflow.md), the correction in developer.md §97,
   in Japanese). The default `f_lvtemp_scheme = 3` is
   the same van Leer link-wise MUSCL as the surface scalars, and the crosswind
   diffusivity at 45° becomes $`0.034\,u\Delta`$ (0.09 times first order). The
   new temperature is kept within the range of the neighbouring temperatures,
   so the property of creating no new extremes is kept (the default from
   2026-11-05; "Numerical diffusion of the heat advection" in
-  [Lava flow](lavaflow.md), developer.md §94, in Japanese).
+  [Lava flow](lavaflow.md), developer.md §97, in Japanese).
 
 <a id="scalar-limits"></a>
 
@@ -756,11 +756,11 @@ with a limiter.
   the cell size (not numerical diffusion, but a bias in the direction of the
   discretisation error). The default is the isotropic 9-point stencil with
   `creep_diagratio` and `spl_diagratio` = 1/3
-  ([Sediment transport and hillslope processes](sediment.md) §2 and §6, developer.md §93). The flow
+  ([Sediment transport and hillslope processes](sediment.md) §2 and §6, developer.md §96). The flow
   of the glacier SIA and of lava is also on the 8-neighbour 9-point stencil by default
   (`gl_diagratio` and `lv_diagratio` = 1/3, which reassigns blocked diagonal shares
   according to the thickness of the flow; changed from 0 = 4 neighbours on 2026-11-05;
-  [Lava flows](lavaflow.md), [Glaciers](glacier.md), developer.md §96). How the diagonal share d is chosen for each
+  [Lava flows](lavaflow.md), [Glaciers](glacier.md), developer.md §99). How the diagonal share d is chosen for each
   process is summarised in [choosing the diagonal share d](diagratio.md).
 - **The difference in spreading between 8 and 4 neighbours**: the lateral
   spreading of a debris-flow fan is larger with 8 neighbours, but it depends
@@ -789,7 +789,7 @@ with a limiter.
 | [test/wfcurrent](../../../test/wfcurrent/en/README.md) | Longshore current on a beach of uniform slope | Without breaking-wave mixing, the profile is smoothed by numerical lateral mixing (§4.2) |
 | [test/wfshadow](../../../test/wfshadow/en/README.md) | Shadow of a breakwater | The two-link decomposition gives sharp shadows along the grid directions (§5) |
 | developer.md §68.45 | Derivation of the crosswind numerical diffusion of momentum and the jet measurements | 0°, 22.5°, 45°; Δ = 1 and 0.5 m; schemes 2 and 3 |
-| [test/lava](../../../test/lava/en/README.md) configuration 10, developer.md §94 | Sheet flows at 0° and 45° carrying a boundary of lava temperature | Crosswind first-order upwind is 0 at 0° and $`0.357\,u\Delta`$ at 45° (theory 0.354); MUSCL gives 0.09 times first order |
+| [test/lava](../../../test/lava/en/README.md) configuration 10, developer.md §97 | Sheet flows at 0° and 45° carrying a boundary of lava temperature | Crosswind first-order upwind is 0 at 0° and $`0.357\,u\Delta`$ at 45° (theory 0.354); MUSCL gives 0.09 times first order |
 | developer.md §68.36 to §68.43, §78, §90.2, §90.13 | Sub-lattice mode, lateral-face fluxes, MUSCL for scalars, two-link decomposition, lateral mixing of longshore currents | Master records of the history and verification (in Japanese) |
 
 ## References

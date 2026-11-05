@@ -214,7 +214,7 @@ f_gwlateral=1([地下水の章](gwflow.md)。側方 K と比湧水量を共有)�
 | salt_ni | 0.025 | 底層重力流の界面 Manning 粗度 | **経験値** 河床粗度と同程度の置き値。実測の塩水くさび位置で校正 |
 | salt_hss0 / salt_hgs0 | 0 / 0 | 初期の塩水層厚・地下塩水貯留 | **与件** 既往の塩水面(電気探査・観測井の塩分)があれば与える |
 | salt_eps / salt_eps_h | 1e-3 / 1e-2 m | 乾燥判定の正則化量 / √則の線形化幅 | **数値設定** 浅水側の dd、管路層の gwc_eps_h と同格 |
-| salt_diagratio | 2/(2+√2) | 対角配分 | **導出** ENC 本体と同じ([ENC 格子の解説](encgrid.md) §2)。土層の側方流と通過幅を共有するので `gw_diagratio` と同じ値(違えば停止。developer.md §95) |
+| salt_diagratio | 2/(2+√2) | 対角配分 | **導出** ENC 本体と同じ([ENC 格子の解説](encgrid.md) §2)。土層の側方流と通過幅を共有するので `gw_diagratio` と同じ値(違えば停止。developer.md §98) |
 | salt_nsubmax | 200 | 重力流のサブサイクル上限 | **数値設定** |
 
 **既定値を見直すときの手がかり**

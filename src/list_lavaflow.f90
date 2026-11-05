@@ -34,7 +34,7 @@ module list_lavaflow
     real :: lv_cfl = 0.4                     ! 陽解法サブサイクルの安全係数 (0-1)
     integer :: lv_nsubmax = 10000            ! 1回の更新のサブサイクル数上限(暴走ガード)
     real :: lv_diagratio = 1.0 / 3.0         ! 流動の斜めの配分 d(既定 1/3 = 8 近傍の 9 点と、塞がれた配分の
-                                             !   動的な振り替え。0 = 4 近傍 = 2026-11-05 以前の既定。developer.md §96)
+                                             !   動的な振り替え。0 = 4 近傍 = 2026-11-05 以前の既定。developer.md §99)
     real :: lv_q0(1:lvmax) = -9999.0         ! 一定噴出率 (m3/s。時系列の代わり)
     character(len=maxpathlen) :: fn_lv_cell(1:lvmax) = ""  ! セル集合ファイル(i j の行列挙)
     character(len=maxpathlen) :: fn_lv_val(1:lvmax) = ""   ! 噴出率時系列ファイル(分, m3/s)
@@ -42,7 +42,7 @@ module list_lavaflow
     !     既定は置かない(溶岩の種類で桁が変わる値と、原典を確かめていない値。番兵 -9999) ---
     integer :: f_lvtemp = 0                  ! 1: 溶岩の深さ平均温度を計算する(0 = 等温)
     integer :: f_lvtemp_scheme = 3           ! 熱の移流の面の温度 (3: MUSCL + van Leer = 既定(2026-11-05 から),
-                                             !   1: 1次風上 = 送り手の温度。developer.md §94)
+                                             !   1: 1次風上 = 送り手の温度。developer.md §97)
     real :: lv_temp0(1:lvmax) = -9999.0      ! 噴火口ごとの噴出温度 (°C)
     real :: lv_tref = -9999.0                ! レオロジーの基準温度 T_r (°C。lv_visc・lv_tauy はこの温度の値)
     real :: lv_bvisc = -9999.0               ! 粘度の温度感度 β_η (1/K)

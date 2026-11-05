@@ -32,7 +32,7 @@ It consists of two schematic experiments (developer.md §46).
   layer are built from its own `gwc_diagratio` (default) and are not pulled
   along by the d of the lateral flow (the stability line of the conduit layer
   = the sum of the edge conductances agrees with B), plus the same self-check
-  as B (developer.md §95, in Japanese; before 2026-11-05 the conduit layer
+  as B (developer.md §98, in Japanese; before 2026-11-05 the conduit layer
   silently used the passage widths of `gw_diagratio` too, and the line changed
   from 0.518 s to 0.457 s).
 

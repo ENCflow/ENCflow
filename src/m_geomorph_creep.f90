@@ -21,7 +21,7 @@ module subroutine init_creep(gm, p, g)
 
   dts = p%dt * gm%idt_geomorph * gm%morfac
   if (gm%crp%diag > 0.0) then
-    ! 8 近傍の 9 点(creep_diagratio = d > 0。§93): 軸エッジと斜めエッジの伝導度と、
+    ! 8 近傍の 9 点(creep_diagratio = d > 0。§96): 軸エッジと斜めエッジの伝導度と、
     ! 壁で塞がれた斜めの配分を軸エッジへ振り替えた表を作る
     call init_creep_diag(gm, g, smax)
     ! 陽解法の安定条件(正値性 = 最大値原理): 自セルの係数 1 − D dts Σ_k cw_k / A >= 0。
@@ -89,7 +89,7 @@ module subroutine calc_creep(gm, g, s, dts)
         if (gm%crp%cw(k) > 0.0 .and. okc .and. g%x(in,jn) > 0) then
           if (g%sw(in,jn) <= 0) then
             ! エッジ流量(書き手 c から k 近傍 n に向かい正)。d > 0 の 9 点は振り替え込みの
-            ! 表の伝導度(§93)
+            ! 表の伝導度(§96)
             if (use_tab) then
               gq = gm%creep_d * (s%z(i,j) - s%z(in,jn)) * gm%crp%cwo(k, i+die(k), j+dje(k))
             else
@@ -169,7 +169,7 @@ subroutine calc_creep_soil(gm, g, s, dts)
           if (g%sw(in,jn) <= 0) then
             ! かさ体積の流量(書き手 c から k 近傍 n に向かい正)に、供給側の土層の
             ! 利用可能率を掛けて固体体積に換算(apply_edge_flux が poroi を掛け戻す)。
-            ! d > 0 の 9 点は振り替え込みの表の伝導度(§93)
+            ! d > 0 の 9 点は振り替え込みの表の伝導度(§96)
             if (use_tab) then
               gq = gm%creep_d * (s%z(i,j) - s%z(in,jn)) * gm%crp%cwo(k, i+die(k), j+dje(k))
             else
@@ -200,7 +200,7 @@ end subroutine
 
 
 !----------------------------------------------------------------------
-! 8 近傍の 9 点の伝導度と振り替えの表(creep_diagratio = d > 0。§93)
+! 8 近傍の 9 点の伝導度と振り替えの表(creep_diagratio = d > 0。§96)
 !   通過幅の配分は m_swflow_enc の init_weights・m_gwflow_lateral_geom_init と同じ規則
 !   (短い辺に d、長い辺は (Δmin/Δmax)² 倍。軸 lp、斜め ld の面長に対する割合)。伝導度 =
 !   通過幅 / 中心間距離で、内部では任意の d・Δx ≠ Δy で f_xx・f_yy の係数が厳密に 1 の

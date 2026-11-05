@@ -98,7 +98,7 @@ Both the diffusion term and the propagation of gravity waves are discretised by 
 $`(\Delta^2/12)(f_{xxxx} + 6d\,f_{xxyy} + f_{yyyy})`$, which is proportional to
 $`\nabla^4 f`$ and independent of direction when $`d = 1/3`$ (a stencil whose lowest-order
 discretisation error is isotropic[^patra06]; that the partition rule of ENC gives
-$`d = 1/3`$ is this guide's own derivation, developer.md §93, in Japanese). The ratio of the
+$`d = 1/3`$ is this guide's own derivation, developer.md §96, in Japanese). The ratio of the
 decay rates at 45° and 0° for the same wavenumber (diffusion) is as follows; the direction
 difference of the phase speed of gravity waves is about half of it.
 
@@ -113,7 +113,7 @@ difference between the cells towards an axis and towards a diagonal at the same 
 from the centre (r² = 50) is −1.92 % for the 5-point stencil, −0.03 % for 1/3 and +1.46 % for
 0.586 with hillslope creep ([test/stencil9](../../../test/stencil9/en/README.md)), −1.77 %,
 +0.01 % and +1.42 % for a groundwater mound, and −1.1 to −0.6 %, 0.02 % or less, and +0.8 to
-+0.5 % for the drawdown cone of a well (developer.md §95, in Japanese). 0.586 leaves 70–80 %
++0.5 % for the drawdown cone of a well (developer.md §98, in Japanese). 0.586 leaves 70–80 %
 of the bias of the 5-point stencil, in the opposite direction.
 
 The error of the phase speed of gravity waves itself (−2.6 % for a wavelength of 8Δ along a
@@ -161,7 +161,7 @@ shallow water flow is small.
 | Groundwater lateral flow (soil layer, layer 2) | `gw_diagratio` | 0.586 | 1/3 (a change of the default is under consideration) | A pure diffusion process (the measurements of §2.3). In exchange the time-step limit of the explicit scheme drops by 15 %, and the cap of the river-bed exchange (`f_gwbed`) drops by 8 % for a one-cell-wide channel |
 | Saltwater zone of the two-layer fresh/salt model | `salt_diagratio` | 0.586 | same as `gw_diagratio` | It shares the passage widths with the soil lateral flow (a different value stops the run) |
 | Conduit layer | `gwc_diagratio` | 0.586 | 0.586 | The capacity of a conduit following the raster one cell wide does not depend on its direction (§2.2). The conduit layer has no reassignment. Independent of the d of the lateral flow |
-| Flow of glaciers and lava | `gl_diagratio`, `lv_diagratio` | 1/3 | 1/3 | Processes flowing in valleys, where both the conveyance and the isotropy matter. The blocked diagonal shares are reassigned according to the thickness of the flow, so d can be chosen for isotropy while the conveyance of valleys along a grid axis is kept (with 1/3 a diagonal valley one cell wide has the same conveyance too; [Lava flows](lavaflow.md), developer.md §96, in Japanese). Changed from 0 (four neighbours) on 2026-11-05 |
+| Flow of glaciers and lava | `gl_diagratio`, `lv_diagratio` | 1/3 | 1/3 | Processes flowing in valleys, where both the conveyance and the isotropy matter. The blocked diagonal shares are reassigned according to the thickness of the flow, so d can be chosen for isotropy while the conveyance of valleys along a grid axis is kept (with 1/3 a diagonal valley one cell wide has the same conveyance too; [Lava flows](lavaflow.md), developer.md §99, in Japanese). Changed from 0 (four neighbours) on 2026-11-05 |
 
 <a id="usage"></a>
 
@@ -197,7 +197,7 @@ shallow water flow is small.
   with constant coefficients. Whether the same holds for nonlinear flows such as the flow
   law of glaciers or the yield stress of lava, and at fronts where the thickness goes to 0,
   has been checked only as far as the shape at rest of a dome and the sectors of the Halfar
-  dome go (about the same as on four neighbours or slightly better; developer.md §96).
+  dome go (about the same as on four neighbours or slightly better; developer.md §99).
 - The reassignment for glaciers and lava flows gives slightly too much conveyance at the
   edges of a band oblique to the grid (+6.5 % for a band of three lines, +4.0 % for five;
   from the same rule as the dynamic reassignment of surface water).
@@ -222,8 +222,8 @@ shallow water flow is small.
 | [test/stencil9](../../../test/stencil9/en/README.md) | Isotropy of 9-point hillslope creep and curvature, reassignment next to walls (d = 0 and 1/3) |
 | [test/conduit](../../../test/conduit/en/README.md) schematic experiment C | Changing the d of the soil lateral flow does not change the passage widths of the conduit layer |
 | [test/salt](../../../test/salt/en/README.md) `Run_sea.sh` | A mismatch between `salt_diagratio` and `gw_diagratio` stops the run |
-| developer.md §93 (in Japanese) | Analysis of the isotropy of the 5-point and 9-point stencils (the derivation of d = 1/3), the implementation for hillslope creep and curvature |
-| developer.md §95 (in Japanese) | Measurement of the isotropy of groundwater lateral flow, the passage widths shared by layers, why the conduit layer uses 0.586, the effect of d = 1/3 |
+| developer.md §96 (in Japanese) | Analysis of the isotropy of the 5-point and 9-point stencils (the derivation of d = 1/3), the implementation for hillslope creep and curvature |
+| developer.md §98 (in Japanese) | Measurement of the isotropy of groundwater lateral flow, the passage widths shared by layers, why the conduit layer uses 0.586, the effect of d = 1/3 |
 | [Numerical diffusion by diagonal-edge fluxes](diagonal_diffusion.md) | Direction dependence of the crosswind numerical diffusion (measured at d = 0.586) |
 | [Passage-width adjustment](passage_width.md) | The reassignment rules and how the default of `f_opening_dynamic` came to be 3 |
 

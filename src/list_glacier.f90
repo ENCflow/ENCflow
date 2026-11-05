@@ -26,7 +26,7 @@ module list_glacier
     real :: gl_cfl = 0.4                     ! 陽解法サブサイクルの安全係数 (0-1)
     integer :: gl_nsubmax = 10000            ! 1回の更新のサブサイクル数上限(暴走ガード)
     real :: gl_diagratio = 1.0 / 3.0         ! SIA 流動の斜めの配分 d(既定 1/3 = 8 近傍の 9 点と、塞がれた配分の
-                                             !   動的な振り替え。0 = 4 近傍 = 2026-11-05 以前の既定。developer.md §96)
+                                             !   動的な振り替え。0 = 4 近傍 = 2026-11-05 以前の既定。developer.md §99)
     integer :: f_glslide = 0                 ! Weertman 底面滑動 (0:なし, 1:有効)
     real :: gl_as = -9999.0                  ! 滑動係数 As (m yr^-1 Pa^-3。f_glslide=1 で未指定なら既定 1e-13)
     integer :: f_glero = 0                   ! 氷河侵食 (0:なし, 1:有効。f_glslide 必須)

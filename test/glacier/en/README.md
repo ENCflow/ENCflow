@@ -6,7 +6,7 @@
 
 This is the verification case of the glacier module (`fn_glacier`,
 [the glacier chapter of the users guide](../../../docs/en/users_guide/glacier.md)).
-It consists of seven configurations (docs/glacier_plan.md §7, developer.md §45 and §96).
+It consists of seven configurations (docs/glacier_plan.md §7, developer.md §45 and §99).
 The SIA flow is computed on the default 8-neighbour 9-point stencil
 (`gl_diagratio = 1/3`; from 2026-11-05). Four neighbours are given explicitly in
 configuration 6 (control) and `ch45w3q` of configuration 7 (control).
@@ -45,7 +45,7 @@ configuration 6 (control) and `ch45w3q` of configuration 7 (control).
    it concentrates on the valley axis and its shape changes with the grid.
 6. **4-neighbour control of the Halfar dome** (`param_d4.txt`): the same input
    as configuration 1 with the SIA flow on 4 neighbours (`gl_diagratio = 0`,
-   the default before 2026-11-05; developer.md §96); it must pass the same
+   the default before 2026-11-05; developer.md §99); it must pass the same
    judgement as configuration 1 (Check_halfar.py).
 7. **Dependence of ice flow in valleys on their orientation**
    (`param_ch0w1.txt`, `param_ch45w1.txt`, `param_ch0w3.txt`,
@@ -224,7 +224,7 @@ this 10-year check (for the long-term trial runs see developer.md §45.3).
   [the glacier chapter of the users guide](../../../docs/en/users_guide/glacier.md)).
 - Configuration 7 checks the 8-neighbour 9-point stencil of the SIA flow
   (`gl_diagratio`; default 1/3; parts shared with `lv_diagratio` of lava flows;
-  developer.md §96), and configuration 6 is the 4-neighbour control of the
+  developer.md §99), and configuration 6 is the 4-neighbour control of the
   Halfar dome. On 4 neighbours a diagonal valley one cell wide,
   whose cells touch only at corners, does not let the ice flow (confirmed in a
   trial; not in the check). A band of three lines flows only through the zigzag

@@ -60,18 +60,18 @@ architecture.md。このメモは「現在進行中・未完了の項目」だ�
 
 ## 未完了・検証待ち
 
-00l. **拡散型プロセスの 4 近傍の異方性(developer.md §93、landslide_tsunami_plan.md §11.1。2026-11-05 合意)の残り**
-   - (a) `creep_diagratio`・`spl_diagratio` の既定を 1/3 にした(2026-11-05。利用者の決定。developer.md §93)。12 の
+00m. **拡散型プロセスの 4 近傍の異方性(developer.md §96、landslide_tsunami_plan.md §11.1。2026-11-05 合意)の残り**
+   - (a) `creep_diagratio`・`spl_diagratio` の既定を 1/3 にした(2026-11-05。利用者の決定。developer.md §96)。12 の
      test は PASS、reference(splash・splashsat・splashstrata)は identical で更新不要。**残り**: 例題 badland・
      badland_round・badland_storm・mesa(乾式侵食)と mountain_valley・badland_round・mesa(クリープ)の README の数値と
      図の回し直し(結果を利用者が目視確認してから README を更新する)。
-   - (b) 段 2(済 2026-11-05。developer.md §94): 溶岩の温度の熱の移流に MUSCL(`f_lvtemp_scheme = 3`)を足し、
+   - (b) 段 2(済 2026-11-05。developer.md §97): 溶岩の温度の熱の移流に MUSCL(`f_lvtemp_scheme = 3`)を足し、
      既定を 3 にした(2026-11-05。利用者の決定)。test/lava は全構成 PASS(構成 9 の長さの比 2.64 → 2.90)、
      reference はなく更新不要。**残り**: examples/stratovolcano の最後の段(run_flow.py の温度モードの溶岩流)の
      README の数値(到達距離・面積・最大の厚さ・固まった時刻・熱の損失、test/lava 構成 9 の「2.6 倍」の引用。
      構成 9 の比は (c) の既定 1/3 で 2.07)と図の回し直し。README の更新は利用者の了承済み(2026-11-05「更新OK」)で、
      下の (f) の例題の一括の回し直しの中で行う。
-   - (c) 段 3(実装 2026-11-05。利用者の決定「入れる、A で」。developer.md §96): 氷河の SIA・溶岩流の流動の
+   - (c) 段 3(実装 2026-11-05。利用者の決定「入れる、A で」。developer.md §99): 氷河の SIA・溶岩流の流動の
      8 近傍の 9 点(`gl_diagratio`・`lv_diagratio`。塞がれた斜めの配分を流れの厚さに応じて振り替える案 A)。
      既定を 1/3 にした(2026-11-05。利用者の決定「既定を 1/3 に」。test/lava・test/glacier は全構成 PASS、reference は
      なし。4 近傍の対照は test/lava 構成 4'・test/glacier 構成 6)。**残り**: 例題 shield_volcano・stratovolcano
@@ -81,15 +81,15 @@ architecture.md。このメモは「現在進行中・未完了の項目」だ�
    - (d) 湿潤侵食の剥離深の横方向拡散 wet_lw(§84.16)も同じ 5 点の核を使う(合意の範囲外。9 点にするなら
      spl_diagratio と同じ形で足せる)。
    - (e) 地下水の側方流 `gw_diagratio`(と同じ通過幅を使う `salt_diagratio`)の既定を 1/3 にする(利用者の決定
-     2026-11-05「する」。developer.md §95。等方性は計測済み。管路層の `gwc_diagratio` は 0.586 のまま独立に決めた)。
+     2026-11-05「する」。developer.md §98。等方性は計測済み。管路層の `gwc_diagratio` は 0.586 のまま独立に決めた)。
      **保留中**: 試行で gwwidth の総水量の検定が落ちた原因(dd 未満の水膜の負の水深)は、別ブランチ
      claude/inspiring-brahmagupta-c5jfsg の修正(セルの流出の合計による抑制。そのブランチの §94)で直る。その合流後に
      既定を変え、gwseep・gwsect・gwwidth・gwbed の reference の差を利用者に示して目視確認を得てから更新する
      (-u は了承の後)。gwlateral・gwbed の検定スクリプトの d の定数、例題 estuary_barrage・catchment_metal・
      qanat(層2)ほかも変わる。
-   - (f) 別ブランチ claude/inspiring-brahmagupta-c5jfsg(重力補正の既定・セルの流出の抑制ほか。影響範囲が広い)の
-     main への合流を待つ(利用者の指示 2026-11-05)。合流後: main をこのブランチ(claude/nifty-hawking-yx6s0o)に
-     merge し、番号の衝突するこのブランチの developer.md §93〜96 と本項 00l を付け替える(利用者の了承)。続いて (e)、
+   - (f) 別ブランチ claude/inspiring-brahmagupta-c5jfsg(重力補正の既定・セルの流出の抑制ほか)は 2026-11-05 に main へ
+     合流した。番号が衝突したので、このブランチの developer.md の節(旧 §93〜96)を §96〜99 に、本項を 00l から 00m に
+     付け替えてから main をこのブランチ(claude/nifty-hawking-yx6s0o)に merge した(利用者の了承)。**残り**: (e)、
      例題の一括の回し直し((a)〜(c) の例題と、別ブランチの変更で値の変わる例題を 1 回で)。
 
 00k. **急勾配の重力補正の修正(developer.md §91)・最急勾配の D∞(§92)・岩盤侵食の有効重力(2026-11-04)の後始末**
@@ -1294,8 +1294,8 @@ architecture.md。このメモは「現在進行中・未完了の項目」だ�
   当面は既定なしの明示指定。確認できたら param_default で既定を置き、users guide の根拠表と
   List_samples を更新する)、玄武岩・安山岩の出典付きの値の例(同じく原典の確認待ち)、案 B(殻の
   被覆率と殻の温度。FLOWGO 型)、結晶化の潜熱・地面への熱伝導、実溶岩流事例での有効放射率の校正、
-  温度の輸送の数値拡散は計測し MUSCL の選択式を足した(2026-11-05。developer.md §94。既定を 3 に
-  するかは 00l の判断待ち。流動の 8 近傍化は 00l(c))、
+  温度の輸送の数値拡散は計測し MUSCL の選択式を足した(2026-11-05。developer.md §97。既定を 3 に
+  するかは 00m の判断待ち。流動の 8 近傍化は 00m(c))、
   (ii) 固化面の浸透と粗度: 固化した
   セルの土層は埋まる(sd = 0。developer.md §51.6)ので、土層を地下水の層とする
   モデルでは溶岩の上にしみ込まない。実際の新しい溶岩は透水性が高いことが多く、

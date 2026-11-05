@@ -181,7 +181,7 @@ subroutine gwflow_conduit_init(gwc, lat, gl2, p, g, s, dts)
   gwc_eps = 1.0e-3
   gwc_eps_h = 1.0e-2
   gwc_diagratio = 2.0 / (2.0 + sqrt(2.0))   ! p_diagratio と同値(8 本の通過幅が等しい = 1 セル幅の管路の
-                                             !   通水能が軸と斜めの向きで等しい。側方流と独立。§95)
+                                             !   通水能が軸と斜めの向きで等しい。側方流と独立。§98)
   gwc_nsubmax = 100                         ! サブサイクル数の上限(§46.5 (4))
 
   call par_info("reading list_gwflow_conduit in " // trim(p%fn_gwflow))
@@ -405,7 +405,7 @@ subroutine gwflow_conduit_init(gwc, lat, gl2, p, g, s, dts)
   end if
 
   ! --- 側方通水: 幾何(距離・作業領域は層1/2 と共有・冪等)→ 管路層自身の
-  !     通過幅(gwc_diagratio。側方流の gw_diagratio とは独立。§95)→ エッジ係数
+  !     通過幅(gwc_diagratio。側方流の gw_diagratio とは独立。§98)→ エッジ係数
   !     → 安定条件 ---
   if (gwc%lat) then
     call gwflow_lateral_geom_init_base(lat, g, 1.0e-3)

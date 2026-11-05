@@ -1,7 +1,7 @@
 module m_flow8
   ! ==============================================================
   ! 8 近傍の非線形拡散型の流れ(溶岩流 m_lavaflow・氷河の SIA m_glacier)の
-  ! 共通部品(lv_diagratio・gl_diagratio = d > 0。developer.md §96)
+  ! 共通部品(lv_diagratio・gl_diagratio = d > 0。developer.md §99)
   !
   !   - flow8_weights: 9 点の通過幅の伝導度(軸・斜め)と、振り替えの伝導度の増分
   !   - flow8_open:    エッジの振り替え量(塞がり率の和の 1/2。案 A)
@@ -37,7 +37,7 @@ contains
 
 !----------------------------------------------------------------------
 ! 9 点の通過幅の伝導度(d > 0)
-!   通過幅の配分は m_swflow_enc の init_weights・calc_creep の 9 点(§93)と同じ規則
+!   通過幅の配分は m_swflow_enc の init_weights・calc_creep の 9 点(§96)と同じ規則
 !   (短い辺に d、長い辺は (Δmin/Δmax)² 倍。軸 lp、斜め ld の面長に対する割合)。
 !   cw = 通過幅 / 中心間距離(k = 1・3: 斜め、2: 法線 y、4: 法線 x)。cwd は振り替えの
 !   伝導度の増分: 軸は塞がれた斜め 1 本分の ld·面長(水の fwd の (lp + nb·ld)/lp と同じ。

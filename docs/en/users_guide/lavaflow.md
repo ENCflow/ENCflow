@@ -303,7 +303,7 @@ explicitly. A missing one stops the run)
   uniform across (computing the flow of configuration 9 on 4 neighbours with
   different cell sizes, first-order upwind gives a largest deposit thickness of
   3.34, 3.41 and 3.46 m and a length of 55, 52.5 and 51.2 m for cells of 5, 2.5
-  and 1.25 m; the length is quantized by the cell size; developer.md Sec. 94).
+  and 1.25 m; the length is quantized by the cell size; developer.md Sec. 97).
 - However, a flow that stops as it cools and is uniform across is unstable.
   A perturbation of only ±1 mm in the bed splits it into channels (a hotter
   channel flows faster and cools more slowly, a positive feedback between heat
@@ -315,7 +315,7 @@ explicitly. A missing one stops the run)
   perturbation, so the flow splits into channels even with a uniform input.
   Real terrain always has lateral perturbations, so the length on an ideal
   slope uniform across, and its dependence on the cell size, are not a guide
-  (the correction in developer.md Sec. 94).
+  (the correction in developer.md Sec. 97).
 - `f_lvtemp_scheme = 3` reconstructs the face temperature from three points in
   line along the edge: the donor, the receiver and the cell further upwind of
   the donor (the same van Leer limiter as the MUSCL of the surface scalars; see
@@ -455,7 +455,7 @@ The labels in the Basis column are explained in [How to read the basis of a defa
 | lv_diagratio | 1/3 | diagonal share d of the flow | **method** 1/3 = the 8-neighbour 9-point stencil with reassignment of blocked shares (the default from 2026-11-05). Flows down narrow valleys oblique to the grid do not depend on the valley orientation (configuration 11), and the leading error term is isotropic ([Choosing the diagonal ratio d](diagratio.md)). The computation takes a little over 10 % longer. 0 = 4-neighbour (the default before 2026-11-05; for reproducing results from before then) |
 | lv_cell / lv_q0 / lv_val | — | vent cells and effusion rate | **given** eruption scenario (from total volume and duration) |
 | f_lvtemp | 0 | whether to compute the temperature | **method** 0 = isothermal (as before); 1 for flows that stop by cooling |
-| f_lvtemp_scheme | 3 | face temperature of the heat advection | **method** 3 = MUSCL + van Leer. Cuts the crosswind numerical diffusion of a flow oblique to the grid to about 1/10 of first-order upwind (configuration 10). For a flow that stops as it cools and is uniform across, it also makes the result depend less on the cell size, but with irregularities first-order upwind depends little on the cell size as well (configurations 9 and 9n; correction in developer.md Sec. 94). 1 = first-order upwind (the default before 2026-11-05; to reproduce results from before then, also set lv_diagratio = 0) |
+| f_lvtemp_scheme | 3 | face temperature of the heat advection | **method** 3 = MUSCL + van Leer. Cuts the crosswind numerical diffusion of a flow oblique to the grid to about 1/10 of first-order upwind (configuration 10). For a flow that stops as it cools and is uniform across, it also makes the result depend less on the cell size, but with irregularities first-order upwind depends little on the cell size as well (configurations 9 and 9n; correction in developer.md Sec. 97). 1 = first-order upwind (the default before 2026-11-05; to reproduce results from before then, also set lv_diagratio = 0) |
 | lv_temp0 / lv_tref / lv_tsol | none | eruption, reference and solidification temperatures | **given** set by the lava type and observations (no default) |
 | lv_bvisc / lv_btau | none | temperature sensitivities of the viscosity and yield stress | **given** differ widely between lava types; $`\ln k/\Delta T`$ if cooling by $`\Delta T`$ makes it $`k`$ times larger |
 | lv_emis | none | effective emissivity | **calibrated** an effective value that includes crust insulation; calibrate on the flow length (a default will be set after checking the original sources) |
@@ -582,7 +582,7 @@ The labels in the Basis column are explained in [How to read the basis of a defa
   the diagonal neighbour rises above the lava surface to the axis edges that
   cross the same boundary, and, in a diagonal valley whose axis neighbours are
   blocked, the axis shares to the diagonal edges (the same rule as the dynamic
-  reassignment of surface water, f_opening_dynamic = 3; developer.md Sec. 96).
+  reassignment of surface water, f_opening_dynamic = 3; developer.md Sec. 99).
   With d = 1/3 a valley along a grid axis keeps the conveyance of the
   4-neighbour grid, a diagonal valley one cell wide flows with the same
   conveyance, and a band of three lines carries +6.5 % (instead of −33 % on

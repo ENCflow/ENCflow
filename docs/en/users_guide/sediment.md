@@ -110,7 +110,7 @@ with the 5-point stencil). Verification: [test/stencil9](../../../test/stencil9/
 same distance goes from −1.92 % to −0.03 %; the decay in strips one and three cells
 wide agrees with the exact discrete solution to 1e-14; 7.5e-4 m against the
 analytical solution for a well-resolved hill). The default is 0; whether to change it
-is decided after checking the results (developer.md §93).
+is decided after checking the results (developer.md §96).
 
 **Depth-dependent creep (`creep_hstar` > 0)**:
 
@@ -563,7 +563,7 @@ same partition rule as `creep_diagratio` of the creep; invalid neighbours are mi
 by the cell's own value, the same convention as the 5-point stencil), and on a hill with
 σ = 2Δ the difference in $`\kappa`$ between the axis-side and diagonal cells at the same
 distance goes from −8.4 % to −0.27 % (with ℓ = 2 m, from +3.3 % to +0.13 %;
-[test/stencil9](../../../test/stencil9/en/README.md); the default is 0; developer.md §93).
+[test/stencil9](../../../test/stencil9/en/README.md); the default is 0; developer.md §96).
 The defaults $`k_r`$ = 0.0005 and $`k_t`$ = 0.05 are the medians of the tests
 (**empirical**); verification is
 [test/splash](../../../test/splash/en/README.md) (all digits agree with the
@@ -826,7 +826,7 @@ The labels in the Basis column are explained in [How to read the basis of a defa
 | dt_geomorph / morfac | 0 / 1 | update interval (s) / acceleration of morphological time (§1) | **method** MORFAC method[^roelvink06]; 1 for event runs |
 | creep_d | 0.005 m²/yr | creep diffusivity $`D`$ (§2) | **literature value** middle of the published range 0.001–0.05 m²/yr[^fernandes97] |
 | creep_hstar | 0 (conventional linear diffusion) | decay depth $`H_c`$ of depth-dependent creep (m) (§2) | **calibration value** no standard value. Does not affect the result under a thick soil |
-| creep_diagratio | 1/3 (8-neighbour 9-point) | diagonal share $`d`$ (§2) | **method** 1/3 gives the 9-point stencil whose leading discretisation error is isotropic[^patra06] ([test/stencil9](../../../test/stencil9/en/README.md)). Changed from 0 (4-neighbour 5-point) on 2026-11-05 (developer.md §93) |
+| creep_diagratio | 1/3 (8-neighbour 9-point) | diagonal share $`d`$ (§2) | **method** 1/3 gives the 9-point stencil whose leading discretisation error is isotropic[^patra06] ([test/stencil9](../../../test/stencil9/en/README.md)). Changed from 0 (4-neighbour 5-point) on 2026-11-05 (developer.md §96) |
 | f_qbform | 1 | bedload formula (§3) | **method** 1: Ashida–Michiue[^ashida72], 2: MPM[^mpm48] |
 | fluv_d50 | 0.01 m | representative grain size of bedload | **empirical** near the geometric mean of sand and gravel beds |
 | fluv_tausc / susp_tausc / wash_tausc | 0.05 | critical dimensionless shear stress (§1) | **literature value** representative value of the Shields curve for coarse sand to gravel[^shields36]; Ashida–Michiue[^ashida72] also use 0.05 for the mean grain size of a mixed bed (eq. (31)) |
@@ -847,7 +847,7 @@ The labels in the Basis column are explained in [How to read the basis of a defa
 | spl_lc | 0 m | correlation length $`\ell`$ of the curvature | **given** 0 = curvature on the grid (grid-dependent spacing); about one fifth of the valley spacing (examples/badland) |
 | spl_zbase | none | erosion base level | **given** the sea level when the cliff foot is the sea |
 | spl_ksat | 0 | saturation curvature $`\kappa_s`$ of the amplification | **given** 0 = no saturation; 0.05-0.2 1/m keeps benches at the foot of cliffs (examples/mesa) |
-| spl_diagratio | 1/3 (9-point) | diagonal share $`d`$ of the curvature and the smoothing kernel | **method** 1/3 gives the isotropic 9-point stencil ([test/stencil9](../../../test/stencil9/en/README.md)). Changed from 0 (5-point) on 2026-11-05 (developer.md §93) |
+| spl_diagratio | 1/3 (9-point) | diagonal share $`d`$ of the curvature and the smoothing kernel | **method** 1/3 gives the isotropic 9-point stencil ([test/stencil9](../../../test/stencil9/en/README.md)). Changed from 0 (5-point) on 2026-11-05 (developer.md §96) |
 | spl_strata | none | table of horizontal strata (bottom elevation, erodibility factor) | **given** hard/soft contrast of the stratigraphy; factor 0 = cap rock |
 | wthr_p0 / wthr_sdstar | 50 mm/kyr / 0.5 m | soil production rate / decay depth (§7) | **literature value** middle of the published range of the Heimsath function[^heimsath97] |
 | fn_wthr | none (1 everywhere) | distribution of the multiplier of the soil production rate | **given** differences in lithology, cells without weathering (0; the bedrock of mountain streams, for example) |
@@ -907,7 +907,7 @@ The labels in the Basis column are explained in [How to read the basis of a defa
 [^shields36]: Shields, A. (1936): Anwendung der Ähnlichkeitsmechanik und der Turbulenzforschung auf die Geschiebebewegung. Mitt. Preuss. Versuchsanst. Wasserbau Schiffbau, 26, Berlin.
 [^culling60]: Culling, W. E. H. (1960): Analytical theory of erosion. *J. Geol.*, 68, 336–344. (linear diffusion of hillslopes)
 [^fernandes97]: Fernandes, N. F. and Dietrich, W. E. (1997): Hillslope evolution by diffusive processes: The timescale for equilibrium adjustments. *Water Resour. Res.*, 33, 1307–1318. (range of diffusivities)
-[^patra06]: Patra, M. and Karttunen, M. (2006): Stencils with isotropic discretization error for differential operators. *Numer. Methods Partial Differ. Equ.*, 22(4), 936–953. doi:10.1002/num.20129 (stencils whose lowest-order discretisation error is isotropic; checked against the bibliographic record and abstract. That the ENC partition rule gives d = 1/3 follows from the modified equation in developer.md §93)
+[^patra06]: Patra, M. and Karttunen, M. (2006): Stencils with isotropic discretization error for differential operators. *Numer. Methods Partial Differ. Equ.*, 22(4), 936–953. doi:10.1002/num.20129 (stencils whose lowest-order discretisation error is isotropic; checked against the bibliographic record and abstract. That the ENC partition rule gives d = 1/3 follows from the modified equation in developer.md §96)
 [^johnstone15]: Johnstone, S. A. and Hilley, G. E. (2015): Lithologic control on the form of soil-mantled hillslopes. *Geology*, 43(1), 83–86. doi:10.1130/G36052.1 (checked against the abstract: when transport scales with both slope and soil depth, rock type shows up in the form of soil-mantled hillslopes. The form of the equation and the doi follow the description of Landlab's DepthDependentDiffuser)
 [^ashida72]: Ashida, K. and Michiue, M. (1972): Study on hydraulic resistance and bed-load transport rate in alluvial streams. *Proc. JSCE*, 206, 59–69 (in Japanese).
 [^mpm48]: Meyer-Peter, E. and Müller, R. (1948): Formulas for bed-load transport. *Proc. 2nd Meeting IAHSR*, Stockholm, 39–64.

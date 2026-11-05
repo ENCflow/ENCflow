@@ -113,16 +113,16 @@ module m_glacier
 
   type t_glwork
     real :: cw(1:4) = 0.0            ! エッジ伝導度重み(= 通過幅/距離。gl_diagratio = 0 では 4 近傍のみ)
-    real :: cwd(1:4) = 0.0           ! 8 近傍の振り替えの伝導度の増分(m_flow8 の flow8_weights。§96)
+    real :: cwd(1:4) = 0.0           ! 8 近傍の振り替えの伝導度の増分(m_flow8 の flow8_weights。§99)
     real :: dist(1:4) = 0.0          ! エッジ法線方向のセル中心間距離 (m)
-    real :: diag = 0.0               ! SIA 流動の斜めの配分 d(gl_diagratio。0 = 4 近傍。§96)
+    real :: diag = 0.0               ! SIA 流動の斜めの配分 d(gl_diagratio。0 = 4 近傍。§99)
     real :: dist8(1:8) = 0.0         ! 8近傍セル中心までの距離 (m)(雪崩の勾配用)
     real :: area = 0.0               ! セル面積 dx*dy (m2)
     real :: ainv = 0.0               ! 1 / (dx*dy)
     real :: rdx2 = 0.0               ! 1/dx^2 + 1/dy^2(安定条件用)
     real, allocatable :: q(:,:,:)    ! エッジ氷フラックス4成分 (m3/s)
     real, allocatable :: ge(:,:,:)   ! エッジの伝導度 G = D·(cw + 振り替え) (m2/s)。8 近傍(diag > 0)のみ
-                                     !   確保。q と同形(パスA が書き、dt の決定とパスB が読む。§96)
+                                     !   確保。q と同形(パスA が書き、dt の決定とパスB が読む。§99)
     real, allocatable :: edz(:,:)    ! 侵食深の作業領域 (m)(1:nx, js:je)。
                                      !   2パス構造用: パス1が時刻 n の z+hi
                                      !   (近傍参照)から侵食深を計算し、
@@ -332,7 +332,7 @@ subroutine m_glacier_init(gl, p, g, s, mt)
   gl%glw%ainv = 1.0 / gl%glw%area
   gl%glw%rdx2 = 1.0 / g%dx**2 + 1.0 / g%dy**2
   if (gl%glw%diag > 0.0) then
-    ! 8 近傍の 9 点の伝導度と振り替えの増分(m_flow8。§96)
+    ! 8 近傍の 9 点の伝導度と振り替えの増分(m_flow8。§99)
     call flow8_weights(g, gl%glw%diag, gl%glw%cw, gl%glw%cwd, gl%glw%dist)
   else
     gl%glw%cw(1) = 0.0             ! 斜め(未使用。calc_creep と同じ4近傍)
@@ -605,7 +605,7 @@ end subroutine
 !   エッジ流量の反対称集計により氷体積は機械精度で厳密に保存される
 !   gl_diagratio > 0 では 8 近傍の 9 点(パスA・B を flow8_coef・flow8_flux に替える。
 !   斜めのエッジと塞がれた配分の動的な振り替え、dt はセルごとの伝導度の和、ドナー律速は
-!   1 エッジ 1/8。パスC は共通。m_lavaflow と同じ形。§96)
+!   1 エッジ 1/8。パスC は共通。m_lavaflow と同じ形。§99)
 !----------------------------------------------------------------------
 subroutine tick_flow(gl, g, s, dts)
   type(t_glacier), intent(inout) :: gl
@@ -631,7 +631,7 @@ subroutine tick_flow(gl, g, s, dts)
     end if
 
     ! --- パスA: 拡散係数の最大値と dt_sub の決定 ---
-    !   8 近傍(gl_diagratio > 0。§96)はエッジの伝導度 G を ge に置き、dmax にセルごとの
+    !   8 近傍(gl_diagratio > 0。§99)はエッジの伝導度 G を ge に置き、dmax にセルごとの
     !   伝導度の和 Σ_k G_k の最大を返す(dt はその正値性の条件で決める)
     if (gl%glw%diag > 0.0) then
       call flow8_coef(gl, g, s, jt, dmax)
@@ -671,7 +671,7 @@ subroutine tick_flow(gl, g, s, dts)
     dtsub = trem
     if (dmax > 0.0) then
       if (gl%glw%diag > 0.0) then
-        dlim = gl%cfl * gl%glw%area / dmax     ! 自セルの係数 1 − dt Σ_k G_k / A >= 0(§96)
+        dlim = gl%cfl * gl%glw%area / dmax     ! 自セルの係数 1 − dt Σ_k G_k / A >= 0(§99)
       else
         dlim = gl%cfl * 0.5 / (dmax * gl%glw%rdx2)
       end if
@@ -687,7 +687,7 @@ subroutine tick_flow(gl, g, s, dts)
     ! --- パスB: エッジ流量(ドナー律速つき) ---
     !   帯界面のエッジ成分 k=1..3(行 je)はハロ行 je+1 の書き手が担う
     !   (冗長計算。全域端では行が存在せず対象外)
-    !   8 近傍(§96)はパスA の伝導度 ge から(ドナー律速は 1 エッジ 1/8)
+    !   8 近傍(§99)はパスA の伝導度 ge から(ドナー律速は 1 エッジ 1/8)
     if (gl%glw%diag > 0.0) then
       call flow8_flux(gl, g, s, jt, dtsub)
     else
@@ -759,7 +759,7 @@ end subroutine
 
 
 !----------------------------------------------------------------------
-! 8 近傍のパスA(gl_diagratio > 0。tick_flow の部品。§96。m_lavaflow の flow8_coef と同じ形)
+! 8 近傍のパスA(gl_diagratio > 0。tick_flow の部品。§99。m_lavaflow の flow8_coef と同じ形)
 !   エッジの伝導度 G = D·(cw + 振り替え量·cwd) を ge に置き(書き手 js..jt。各スロットの
 !   書き手は 1 つ)、自帯のセルごとの和 Σ_k G_k(8 方向。パスC の集計と同じ)の全域の
 !   最大を smax に返す(allreduce。全ランク同一)。
@@ -837,7 +837,7 @@ end subroutine
 
 
 !----------------------------------------------------------------------
-! 8 近傍のパスB(gl_diagratio > 0。tick_flow の部品。§96)
+! 8 近傍のパスB(gl_diagratio > 0。tick_flow の部品。§99)
 !   エッジ流量 = G·(s_c − s_n)(G はパスA の ge)。ドナー律速は 1 エッジの持ち出し ≤ ドナーの
 !   氷体積の 1/8(8 エッジの合計 ≤ 全量 → hi >= 0)
 !----------------------------------------------------------------------
