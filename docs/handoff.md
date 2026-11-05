@@ -96,7 +96,7 @@ architecture.md。このメモは「現在進行中・未完了の項目」だ�
        nest_reflect、f_gravity_correction = 0 の
        tsunami_coast・tsunami_fault・benchmark の v-shaped・v-valley(h-plane は README に数値の記載なし)。
 
-00l. **急勾配の摩擦と水平流速・斜面方向の流速の扱い(議論待ち。2026-11-04 に解説 docs/steep_slope_design.md を作成)**
+00l. **急勾配の摩擦と水平流速・斜面方向の流速の扱い(2026-11-04 に解説 docs/steep_slope_design.md を作成。2026-11-05 に案 B・C を選択式で実装、既定の扱いは議論待ち)**
    - 現状: 有効重力 g_e は勾配・圧力・摩擦の全部に掛かるので、等流では g_e が相殺し、等流は古典の
      水平投影のマニング式(水平流速・鉛直の水深)のまま。補正が効くのは非定常の部分(加速・動き出し・
      波速)。比べた 5 文献(Ni ら 2019、Van Emelen ら 2014、Hergarten & Robl 2015、Yuan ら 2016、
@@ -109,6 +109,11 @@ architecture.md。このメモは「現在進行中・未完了の項目」だ�
      (landslide_tsunami のような崩壊+湖の構成)、E 圧力の項の係数(下り向きの波速)、F 水の流れの
      曲率項。解説の推奨は A のあと B+C を選択式で試作して等流の解析解で検定し、既定の扱いを議論する
      こと。D は独立に検討する。
+   - (済 2026-11-05)B+C を `f_gravity_correction = 2` として実装した(developer.md §93、検定
+     test/slopefric)。既定は 1 のまま。無効時は -O2 で追加前とバイト一致、有効時は -O2 で np = 1・2・4 が
+     逐次とバイト一致。影響の試算: test/chichibu(Δx = 100 m)で測線のピーク流量が
+     −2.4〜−5.0 %、ピークの時刻が 4〜8 分遅れる(developer.md §93)。残り: 2 を既定にするかの議論(ほかの
+     急な例題での試算、マニングの n の与え方の整理)、混合体流動の抵抗則への適用、案 D〜F。
 
 00f. **BMI チュートリアル tutorials/bmi(2026-10-24 新設)の残り**
    - 新設: 初学者向けの 7 段(起動と終了 → update → get → 描画 → リアルタイム

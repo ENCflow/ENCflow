@@ -199,6 +199,26 @@ difference between horizontal and slope-parallel velocity, deep water over a
 steep bed) are described in [docs/steep_slope_design.md](../../steep_slope_design.md)
 (Japanese).
 
+With `f_gravity_correction = 2` the friction is also made consistent with the
+along-slope equations. The bed shear stress is evaluated with the Manning law
+from the slope-parallel speed
+$`|\mathbf V_s| = |\mathbf V|\sqrt{1 + (\hat{\mathbf V}\cdot\nabla z)^2}`$ and the bed-normal
+depth $`h\cos\theta`$ (Chow[^chow59]; with $`g`$, not $`g_e`$), and the coefficient of
+the friction term below becomes
+$`F = -\,g\,g_v\,n_e^2\,|\mathbf V_s|_e/(h_f\cos\theta)^{4/3}`$ ($`\hat{\mathbf V}`$ is the
+direction of the mean velocity of the two cells; $`\nabla z`$ and $`\cos\theta`$ are
+the same edge gradient as in $`|\nabla z|_k^2`$ above). Uniform flow then follows
+the along-slope equations, $`h\cos\theta = (n^2 q^2/\sin\theta)^{3/10}`$ ($`q`$ is the
+horizontal unit discharge): for the same discharge the depth is larger and the
+velocity smaller than with 1 (the vertical depth is 1.21 times larger on a 30°
+slope, the size of the error of the classical horizontal-coordinate equations
+shown by Van Emelen et al.[^ve14]). The dimensionless shear stress of sediment
+transport and erosion is evaluated with the same speed and depth
+([sediment transport supplement](sediment.md) §1). Use it on steep slopes when
+Manning's $`n`$ is given from measurements in mild-slope channels (keep 1 for an
+$`n`$ calibrated with a horizontally projected model). The default is 1 and 2 is
+optional (developer.md §93, test test/slopefric).
+
 **Friction term $`F`$.** The Manning law is treated semi-implicitly.
 
 ```math
@@ -357,7 +377,7 @@ non-hydrostatic correction or the newer advection schemes.
 | Parameter | Default | Meaning | Basis |
 |---|---:|---|---|
 | p_diagratio | 2/(2+√2) | share $`p_d`$ of the passage width given to the diagonal edges (§2) | **derived** the value that makes the eight widths equal; 0 gives a four-neighbour grid |
-| f_gravity_correction | 1 | effective gravity $`g\cos^2\theta`$ on steep slopes (§5) | **literature value** Ni et al.[^ni19]; no effect on gentle slopes |
+| f_gravity_correction | 1 | effective gravity $`g\cos^2\theta`$ on steep slopes (§5); with 2 the friction and the sediment shear also use the slope-parallel speed and the bed-normal depth | **literature value** Ni et al.[^ni19]; uniform flow of 2 from Chow[^chow59] and Van Emelen et al.[^ve14]; no effect on gentle slopes |
 | f_exflux_reduction | 1 | suppression of excessive outflow (§5) | **method** prevents negative depths at dry-bed fronts; keep on with dry beds |
 | f_hcap_upwind | 1 | upwind cap of the edge depth (§3) | **method** 1: mean capped by the upwind depth. 2: the upwind depth itself = continuity of the conservative scheme[^sd03]; use 2 with bores and breaking |
 | f_friction_fastmath | 0 | table approximation of the friction (§8) | **numerical** 0: exact; the regression tests use 0 |
@@ -386,5 +406,7 @@ non-hydrostatic correction are in the tables of their own pages.
 [^iwasa80]: Iwasa, Y., Inoue, K. and Mizutori, M. (1980): A study on the numerical analysis of the hydraulics of inundation flows (title translated; in Japanese). *Annuals of the Disaster Prevention Research Institute, Kyoto University*, 23 B-2, 305–317. (cell-centred depth / face-flux arrangement and the semi-implicit friction)
 [^sd03]: Stelling, G. S. and Duinmeijer, S. P. A. (2003): A staggered conservative scheme for every Froude number in rapidly varied shallow water flows. *Int. J. Numer. Meth. Fluids*, 43, 1329–1354. (conservative staggered scheme; upwind depth in the continuity equation)
 [^ni19]: Ni, Y., Cao, Z. and Liu, Q. (2019): Mathematical modeling of shallow-water flows on steep slopes. *J. Hydrol. Hydromech.*, 67(3), 252–259. doi:10.2478/johh-2019-0012. (effective gravity $`g\cos^2\theta`$ on steep slopes)
+[^chow59]: Chow, V. T. (1959): *Open-Channel Hydraulics*. McGraw-Hill, New York. (uniform flow in steep channels: Manning law with the bed-normal depth and the sine of the slope)
+[^ve14]: Van Emelen, S., Zech, Y. and Soares-Frazão, S. (2014): Limitations of the shallow water assumptions for problems involving steep slopes: Application to a dike overtopping test case. In: Schleiss et al. (Eds.), *River Flow 2014*, Taylor & Francis, London, 1669–1677. (classical and modified shallow water equations in slope and horizontal coordinates compared; uniform flow differs above 10°)
 [^jst81]: Jameson, A., Schmidt, W. and Turkel, E. (1981): Numerical solution of the Euler equations by finite volume methods using Runge–Kutta time stepping schemes. AIAA Paper 81-1259. (four-stage low-storage Runge–Kutta with coefficients 1/4, 1/3, 1/2, 1)
 [^cfl]: Courant, R., Friedrichs, K. and Lewy, H. (1928): Über die partiellen Differenzengleichungen der mathematischen Physik. *Math. Ann.*, 100, 32–74.

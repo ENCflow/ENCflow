@@ -166,6 +166,18 @@ $`\mathbf{t}_k`$ へ射影した成分から求めます。minmod は、平面�
 セルの地盤を使うか)、既往研究との比較、限界(水平流速と斜面方向の流速の違い、急な地盤の上の
 深い水)は [steep_slope_design.md](../steep_slope_design.md) にまとめています。
 
+`f_gravity_correction = 2` では、これに加えて摩擦を斜面に沿う式に合わせます。底面せん断を、斜面に
+沿う速さ $`|\mathbf V_s| = |\mathbf V|\sqrt{1 + (\hat{\mathbf V}\cdot\nabla z)^2}`$ と地盤に直角な水深
+$`h\cos\theta`$ のマニング則で評価し(Chow[^chow59]。$`g_e`$ でなく $`g`$)、下の摩擦項の係数を
+$`F = -\,g\,g_v\,n_e^2\,|\mathbf V_s|_e/(h_f\cos\theta)^{4/3}`$ にします($`\hat{\mathbf V}`$ は両側のセルの
+流速の平均の向き、$`\nabla z`$ と $`\cos\theta`$ は上の $`|\nabla z|_k^2`$ と同じエッジの勾配)。等流は斜面に
+沿う式の $`h\cos\theta = (n^2 q^2/\sin\theta)^{3/10}`$($`q`$ は水平の単位幅流量)になり、同じ流量で 1 より
+水深が深く、流速が遅くなります(30° の斜面で鉛直の水深が 1.21 倍。Van Emelen ら[^ve14]が水平座標の
+古典の式の誤差として示した大きさ)。流砂・侵食の無次元掃流力も同じ速さと水深で評価します
+([土砂輸送の解説](sediment.md) §1)。マニングの $`n`$ を緩勾配の水路の実測値から与える急斜面の計算で
+使います(水平投影のモデルで校正した $`n`$ では 1 のまま)。既定は 1 で、2 は選択式です
+(developer.md §93、検定 test/slopefric)。
+
 **摩擦項 $`F`$。** Manning 則を半陰的に扱います。
 
 ```math
@@ -307,7 +319,7 @@ $`x`$・$`y`$ 方向の単位幅流量を東西面・南北面に置く従来形
 | パラメータ | 既定 | 意味 | 根拠 |
 |---|---:|---|---|
 | p_diagratio | 2/(2+√2) | 斜めエッジへの通過幅の配分比 $`p_d`$(§2) | **導出** 8 本の通過幅が等しくなる値。0 で 4 近傍格子 |
-| f_gravity_correction | 1 | 急勾配の有効重力 $`g\cos^2\theta`$(§5) | **文献値** Ni et al.[^ni19]。緩勾配では無効果 |
+| f_gravity_correction | 1 | 急勾配の有効重力 $`g\cos^2\theta`$(§5)。2 で摩擦と流砂のせん断も斜面に沿う速さ・地盤に直角な水深で | **文献値** Ni et al.[^ni19]、2 の等流は Chow[^chow59]・Van Emelen ら[^ve14]。緩勾配では無効果 |
 | f_exflux_reduction | 1 | 過大流出の抑制(§5) | **方式** 乾床前縁の負水深を防ぐ。乾床のある計算では on のまま |
 | f_hcap_upwind | 1 | エッジ水深の上流側頭打ち(§3) | **方式** 1: 平均を上流側水深で頭打ち。2: 上流側水深そのもの = 保存形スキームの連続式[^sd03]。段波・砕波では 2 |
 | f_friction_fastmath | 0 | 摩擦項の表近似(§8) | **数値設定** 0: 厳密。回帰テストは 0 |
@@ -335,5 +347,7 @@ $`x`$・$`y`$ 方向の単位幅流量を東西面・南北面に置く従来形
 [^iwasa80]: 岩佐義朗・井上和也・水鳥雅文 (1980): 氾濫水の水理の数値解析に関する研究. 京都大学防災研究所年報, 23 B-2, 305–317.(セル中心水深・セル境界流量の差分配置と摩擦項の半陰的扱い)
 [^sd03]: Stelling, G. S. and Duinmeijer, S. P. A. (2003): A staggered conservative scheme for every Froude number in rapidly varied shallow water flows. *Int. J. Numer. Meth. Fluids*, 43, 1329–1354.(保存形スタガードスキーム。連続式の上流側水深)
 [^ni19]: Ni, Y., Cao, Z. and Liu, Q. (2019): Mathematical modeling of shallow-water flows on steep slopes. *J. Hydrol. Hydromech.*, 67(3), 252–259. doi:10.2478/johh-2019-0012.(急斜面の有効重力 $`g\cos^2\theta`$)
+[^chow59]: Chow, V. T. (1959): *Open-Channel Hydraulics*. McGraw-Hill, New York.(急勾配の水路の等流: 地盤に直角な水深と勾配の正弦のマニング則)
+[^ve14]: Van Emelen, S., Zech, Y. and Soares-Frazão, S. (2014): Limitations of the shallow water assumptions for problems involving steep slopes: Application to a dike overtopping test case. In: Schleiss et al. (Eds.), *River Flow 2014*, Taylor & Francis, London, 1669–1677.(斜面座標と水平座標の古典・修正の浅水方程式の比較。等流は 10° を超えると差が出る)
 [^jst81]: Jameson, A., Schmidt, W. and Turkel, E. (1981): Numerical solution of the Euler equations by finite volume methods using Runge–Kutta time stepping schemes. AIAA Paper 81-1259.(係数 1/4, 1/3, 1/2, 1 の 4 段低記憶ルンゲクッタ)
 [^cfl]: Courant, R., Friedrichs, K. and Lewy, H. (1928): Über die partiellen Differenzengleichungen der mathematischen Physik. *Math. Ann.*, 100, 32–74.

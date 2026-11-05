@@ -7,6 +7,7 @@
 submodule(m_geomorph) m_geomorph_suspend
   use m_parallel, only : par_info, par_stop, dcp
   use m_swflow_enc, only : sct, sect_v, sect_sigma   ! σ 断面の濃度解釈(sct%have_sect, sct%sdep。§26)
+  use m_swflow_enc, only : slope_shear_on, slope_shear_factor   ! 斜面に沿うせん断(§93)
   use m_sedform, only : t_ceqpar, sedform_set_ceq, sed_ceq_itakura, sed_rubey_wf   ! 平衡濃度・沈降速度の式(§84.9)
   implicit none
 
@@ -73,6 +74,7 @@ module subroutine calc_suspend(gm, p, g, s, dtw)
   real :: hh, taus, ceq, cc, fx, dzb, cap, fxg, afx, tsce
   real :: uec, vec, rs                 ! 波浪場の攪拌(f_wfsed。§90)
   logical :: spread, wsed, stk
+  logical :: ssh                  ! 斜面に沿う底面せん断(f_gravity_correction = 2。§93)
 
   spread = (gm%wlw%nsm > 0)
   ! 波浪場の土砂への作用(段 W4・W5): τ* は Euler 平均流速 u^E の流れと波の最大のせん断
@@ -80,6 +82,7 @@ module subroutine calc_suspend(gm, p, g, s, dtw)
   stk = .false.
   if (wsed) stk = allocated(s%wvus)
   rs = s%wv_ramp
+  ssh = slope_shear_on()
   !$omp parallel do schedule(static) private(i, j, hh, taus, ceq, cc, fx, dzb, cap, fxg, afx, tsce, &
   !$omp                                      uec, vec)
   do j = dcp%js, dcp%je
@@ -94,6 +97,7 @@ module subroutine calc_suspend(gm, p, g, s, dtw)
         ! 平衡濃度(浸食レート E = wf・ceq に相当する濃度換算)
         hh = max(s%h(i,j), p%dv)
         taus = g%rn(i,j)**2 * s%vv(i,j)**2 / (gm%sgrav * gm%sd50 * hh**(1.0/3.0))
+        if (ssh) taus = taus * slope_shear_factor(g, s, i, j)   ! 斜面に沿うせん断(§93)
         if (wsed) then
           ! 攪拌(§90): 平衡濃度は波・流れの最大のせん断 τ*_max(Soulsby 1997)で決める。
           ! 流れのせん断は u^E の速さで(輸送は advect_scalar が u^E と岸向きの速度 u_a で行う)
@@ -104,6 +108,7 @@ module subroutine calc_suspend(gm, p, g, s, dtw)
             vec = vec - rs * s%wvvs(i,j)
           end if
           taus = g%rn(i,j)**2 * (uec * uec + vec * vec) / (gm%sgrav * gm%sd50 * hh**(1.0/3.0))
+          if (ssh) taus = taus * slope_shear_factor(g, s, i, j)
           taus = max(taus, wfsed_taumax(taus, sqrt(2.0) * s%wvub(i,j), s%wvae(i,j), &
                                         wfsed_cphi(uec, vec, s%wvex(i,j), s%wvey(i,j)), &
                                         gm%wfs%z0s, gm%wfs%tws))

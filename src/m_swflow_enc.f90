@@ -32,6 +32,9 @@ module m_swflow_enc
                                       ! init_debris が呼ぶ。swflow init より前)
   public :: zdiff_minmod              ! 地盤の勾配の minmod 差分(重力補正の gravity_prepare と、
                                       ! m_geomorph の土石流の岩盤侵食の有効重力が使う。§91)
+  public :: slope_shear_on            ! 斜面に沿う底面せん断の有無(f_gravity_correction = 2。§93)
+  public :: slope_shear_factor        ! 流砂・侵食の無次元掃流力の斜面の倍率(セル。§93)
+  public :: slope_shear_factor_e      ! 同じく辺(両セルの平均。§93)
 
   ! 変数群(§71 0d)。opt/geo は nvfortran の submodule バグ回避(TPR #27323 系)で
   ! 公開(修正され次第 private に戻す)。chn は m_geomorph の掃流砂・m_wq・流木・
@@ -838,6 +841,15 @@ subroutine m_swflow_enc_init(p, g, b, s)
   if (len_trim(p%fn_enc) > 0) call list_enc_read(p, list)
 
   opt%f_gravity_correction = list%f_gravity_correction
+  select case (opt%f_gravity_correction)
+    case (0, 1)   ! なし / 有効重力 g_e = g/(1 + |∇z|²)(既定。§91)
+    case (2)      ! + 斜面に沿う速さと地盤に直角な水深の摩擦・流砂のせん断(§93)
+      call par_info("swflow_enc: f_gravity_correction = 2 (effective gravity + friction and " // &
+                    "sediment shear from the slope-parallel speed and the bed-normal depth)")
+    case default
+      call par_stop("list_enc: f_gravity_correction must be 0(none), 1(effective gravity) " // &
+                    "or 2(effective gravity + slope-parallel friction)")
+  end select
   opt%f_exflux_reduction = list%f_exflux_reduction
   opt%f_hcap_upwind = list%f_hcap_upwind
   select case (opt%f_hcap_upwind)
@@ -1862,6 +1874,46 @@ end function
 
 
 !----------------------------------------------------------------------
+! 斜面に沿う底面せん断(f_gravity_correction = 2。developer.md §93)
+!   slope_shear_on: 有効かどうか(swflow_enc の設定。ENC 以外の格子では偽)
+!   slope_shear_factor: 流砂・侵食の無次元掃流力 τ* = n² |V|²/(s d h^{1/3})(水平流速・鉛直の
+!     水深のマニング閉じ)を、斜面に沿う速さ |V_s|² = |V|² (1 + (V̂·∇z)²) と地盤に直角な水深
+!     h cos θ で評価した値に直す倍率 (1 + (V̂·∇z)²)(1 + |∇z|²)^{1/6} を返す(底面せん断
+!     τ_b = ρ g n² |V_s|²/h_n^{1/3}。運動方程式の摩擦 slope_fric_factor と同じ底面せん断)。
+!     ∇z はセルの地盤の勾配(zdiff_minmod。重力補正と同じ)、V̂ はセルの流速 (u, v) の向き。
+!     流速 0 では (1 + |∇z|²)^{1/6}(せん断が 0 なので値は効かない)。z は j±1 行、u・v は
+!     その行を読む(呼び出し側のハロの範囲)
+!   slope_shear_factor_e: 辺(両セル)の倍率の平均(辺の τ* は両セルの平均の速さ・水深で求めるため)
+!----------------------------------------------------------------------
+logical function slope_shear_on()
+  slope_shear_on = .false.
+  if (allocated(opt)) slope_shear_on = (opt%f_gravity_correction >= 2)
+end function
+
+pure function slope_shear_factor(g, s, i, j) result(f)
+  type(t_geoinfo), intent(in) :: g
+  type(t_state), intent(in) :: s
+  integer, intent(in) :: i, j
+  real :: f
+  real :: gx, gy, vv2, gv2
+  gx = zdiff_minmod(g, s, i, j, 1, 0) / g%dx
+  gy = zdiff_minmod(g, s, i, j, 0, 1) / g%dy
+  vv2 = s%u(i,j)**2 + s%v(i,j)**2
+  gv2 = 0.0
+  if (vv2 > 0.0) gv2 = (s%u(i,j) * gx + s%v(i,j) * gy)**2 / vv2
+  f = (1.0 + gv2) * (1.0 + gx**2 + gy**2)**(1.0 / 6.0)
+end function
+
+pure function slope_shear_factor_e(g, s, i, j, in, jn) result(f)
+  type(t_geoinfo), intent(in) :: g
+  type(t_state), intent(in) :: s
+  integer, intent(in) :: i, j, in, jn
+  real :: f
+  f = (slope_shear_factor(g, s, i, j) + slope_shear_factor(g, s, in, jn)) / 2
+end function
+
+
+!----------------------------------------------------------------------
 ! 曲率項の前計算(f_dbcurv=1。developer.md §28.10)
 !   セルごとに a_c = (u²z_xx + 2uv z_xy + v²z_yy)/√(1+z_x²+z_y²) を求める。
 !   これは地表面の流向法線曲率 κ_n と表面速度 V_s の積 V_s²κ_n を、水平
@@ -2261,6 +2313,7 @@ subroutine calc_kth_flux(p, g, s, sx, uve0, tae0, i, j, k, in, jn, f_runge, uve1
   real :: rme                     ! 1 + s・C(混合密度比 ρm/ρ)
   real :: vv0e                    ! 辺の速さ |V|(下限 p%vv 適用前。降伏停止判定用。§28.11)
   real :: tte                     ! 辺の接線方向の駆動(流動面の勾配の接線成分。降伏停止判定用。§28.16)
+  real :: slf                     ! 斜面に沿う摩擦の倍率(f_gravity_correction = 2 のときだけ > 0。§93)
   ! 波→流れ(段 W2。s%wv_flow > 0 のときだけ使う。§90)
   real :: wfe                     ! 辺の外力の成分 F_k/ρ (m2/s2。中心から近傍が正)
   real :: use_                    ! 辺の Stokes 輸送の成分 u^S_k (m/s。wv_flow = 2)
@@ -2288,6 +2341,11 @@ subroutine calc_kth_flux(p, g, s, sx, uve0, tae0, i, j, k, in, jn, f_runge, uve1
   ! セル境界での有効重力加速度を計算
   ge = p%gg                                 ! 重力加速度
   if (opt%f_gravity_correction > 0) ge = correct_ge()
+
+  ! 斜面に沿う摩擦の倍率(f_gravity_correction = 2。§93)。時刻 n の量から辺ごとに 1 回求め、
+  ! ルンゲクッタの段の間は変えない。既定(0・1)では 0 のままで、摩擦の文は従来のまま
+  slf = 0.0
+  if (opt%f_gravity_correction >= 2) slf = slope_fric_factor()
 
   ! セル境界での底面勾配項(符合は中心セルから近傍セルに向かい正)
   tg0e = -ge * (s%z(in,jn) - s%z(i,j)) / geo%w8dr(k) * gve
@@ -2459,6 +2517,11 @@ subroutine calc_kth_flux(p, g, s, sx, uve0, tae0, i, j, k, in, jn, f_runge, uve1
     else
       tfe = -ge * rne**2 * vve * m_ffactor_calc(hhe) * gve
     end if
+    ! 斜面に沿う摩擦(f_gravity_correction = 2。§93): マニングの摩擦だけを、斜面に沿う速さと
+    ! 地盤に直角な水深で、g で評価した値に置き換える(既定の文は変えずに上書きする。§90 の注)。
+    ! 波・流れの摩擦(wv_flow = 2)の差分の項には掛けない(波浪場を使う海浜の勾配では倍率がほぼ 1。
+    ! その分岐に文を足すと、既定の経路の -Ofast の最終桁が波浪場のケースで動いた。§93)
+    if (slf > 0.0 .and. fbe <= 0.0) tfe = tfe * slf
 
     ! セル境界での抗力項
     !   摩擦項と一緒に半陰解法で計算するため、次元が他の項と異なる(値は常に正)
@@ -2662,6 +2725,35 @@ contains
     else
       ge_corr = ge
     end if
+  end function
+
+  !--------------------------------------------------------------------
+  ! 斜面に沿う摩擦の倍率(f_gravity_correction = 2。developer.md §93)
+  !   マニングの底面せん断を、斜面に沿う速さ |V_s| = |V| √(1 + (V̂·∇z)²) と地盤に直角な水深
+  !   h_n = h cos θ で評価し(τ_b/ρ = g n² |V_s|²/h_n^{1/3})、斜面の面積 1/cos θ に掛かる力を
+  !   水平面積あたりに直すと、水平流速 V の減速度は g n² |V_s| V/h_n^{4/3} になる(本書の導出は
+  !   docs/steep_slope_design.md)。既定の摩擦 g_e n² |V| u/h^{4/3}(g_e = g/(1 + |∇z|²))に対する
+  !   倍率 (1 + |∇z|²)^{5/3} √(1 + (V̂·∇z)²) を返す。|∇z|² と ∇z は correct_ge と同じ辺の勾配
+  !   (法線成分 s_n、接線成分 s_t)。V̂ は両セルの時刻 n の流速の平均の向きで、流れがなければ
+  !   辺の法線の向き(その辺の流速だけが動き出すため)。斜面に沿う等流は
+  !   u_s = h_n^{2/3} sin^{1/2}θ / n(Chow 1959。Van Emelen ら 2014 の MSW)になる
+  !--------------------------------------------------------------------
+  function slope_fric_factor() result(f)
+    real :: f
+    real :: szn, szt, ub, vb, vn, vt, vb2, gzv2
+    szn = (s%z(in,jn) - s%z(i,j)) / geo%w8dr(k)
+    szt = ((sx%gzx(i,j) + sx%gzx(in,jn)) * geo%n8y(k) - (sx%gzy(i,j) + sx%gzy(in,jn)) * geo%n8x(k)) / 2
+    ub = (s%u(i,j) + s%u(in,jn)) / 2
+    vb = (s%v(i,j) + s%v(in,jn)) / 2
+    vn = ub * geo%n8x(k) + vb * geo%n8y(k)          ! 平均流速の辺の法線成分
+    vt = ub * geo%n8y(k) - vb * geo%n8x(k)          ! 同じく接線成分(t = (n_y, −n_x))
+    vb2 = vn**2 + vt**2
+    if (vb2 > 0.0) then
+      gzv2 = (vn * szn + vt * szt)**2 / vb2          ! (V̂·∇z)²
+    else
+      gzv2 = szn**2
+    end if
+    f = (1.0 + szn**2 + szt**2)**(5.0 / 3.0) * sqrt(1.0 + gzv2)
   end function
 
 end subroutine

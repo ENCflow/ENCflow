@@ -230,11 +230,11 @@
     {
       "source": "docs/users_guide/encgrid.md",
       "target": "docs/en/users_guide/encgrid.md",
-      "source_sha256": "bca8d70c3d943543e719b2d6fccbae4f722706b84d62c0af4afa2be0ed829897",
-      "target_sha256": "05042a25bbabe0e1a80f6f4918a64d63c13f298dd64f77b8f2ffbe3332221e3e",
-      "reviewer": "Claude (Claude Code session; steep-slope design note: the added paragraph in §5 on the cancellation of g_e in uniform flow and the link to docs/steep_slope_design.md compared side by side with the Japanese source, rest unchanged since the previous record)",
+      "source_sha256": "5d11d21f80dff0ffc7747c0f91838d17b757c1da36b6449a3554e7007e561708",
+      "target_sha256": "4201ae7a2d7ab0e00ece351fb4a73722f05f572708004f99b72e658417a22ce0",
+      "reviewer": "Claude (Claude Code session; f_gravity_correction = 2 (developer.md §93): the new paragraph in §5 on friction with the slope-parallel speed and the bed-normal depth, the parameter-table row and the two new references (Chow 1959, Van Emelen et al. 2014; pages checked against the paper) compared side by side with the Japanese source, rest unchanged since the previous record)",
       "method": "assistant",
-      "reviewed_on": "2026-11-04"
+      "reviewed_on": "2026-11-05"
     },
     {
       "source": "docs/users_guide/forcing.md",
@@ -428,11 +428,11 @@
     {
       "source": "docs/users_guide/sediment.md",
       "target": "docs/en/users_guide/sediment.md",
-      "source_sha256": "1f78c52eb12b7ecdcc7e936c4f57443b69dd212093bda6ff86aba69bf49be169",
-      "target_sha256": "acf176dd17ad7d0fa533aefbc81bdca70dfd07b6d819ef6a2126e86602b50bc5",
-      "reviewer": "Claude (Claude Code session; merge of main into the branch: main's additions (dissol_src 4/5, talus dissolution, glacier, evapdry, stone_forest, glacier_valley) and the branch's edits (§91/§92 and the debris examples) both present in the two languages, compared)",
+      "source_sha256": "b787ec2ecd1f172f3e2e3b1b4ad7e99a443eb6c376384a1bf7b3009a291d2eca",
+      "target_sha256": "9d4d8007870ccc826351bb2ee6b3b87f2db0b1bedbdbdbb1669859c441213a1b",
+      "reviewer": "Claude (Claude Code session; f_gravity_correction = 2 (developer.md §93): the new paragraph on the dimensionless shear stress with the slope-parallel speed and the bed-normal depth, including the factor 1.11 at 30 degrees and the 10-degree statement of Van Emelen et al. 2014 checked against the paper, compared side by side with the Japanese source, rest unchanged since the previous record)",
       "method": "assistant",
-      "reviewed_on": "2026-11-04"
+      "reviewed_on": "2026-11-05"
     },
     {
       "source": "docs/users_guide/structure.md",
@@ -446,11 +446,11 @@
     {
       "source": "docs/users_guide/swflow.md",
       "target": "docs/en/users_guide/swflow.md",
-      "source_sha256": "35773a186485e0836b9ccd66d4abbe7c2c8aa4ace99c59bd4c8fb25c310c6dc3",
-      "target_sha256": "6448892a57d0620a3414088da894012397450b875d4720b4d37caecf84c5d4df",
-      "reviewer": "Claude (Claude Code session; reviewed the Japanese source against the English mirror after adding the passage-width page and the links to it, 2026-11-03)",
+      "source_sha256": "0def8b9e121ea114f6b53f94a3df3cbf4dbd9b6d7ad720c11c863556c8ab69e6",
+      "target_sha256": "6985c175339f4016702097a6815ef705fc8481ae27f00384574ee045f2ab5d2e",
+      "reviewer": "Claude (Claude Code session; f_gravity_correction = 2 (developer.md §93): the parameter-table row compared with the Japanese source, rest unchanged since the previous record)",
       "method": "assistant",
-      "reviewed_on": "2026-11-03"
+      "reviewed_on": "2026-11-05"
     },
     {
       "source": "docs/users_guide/swi.md",
@@ -608,11 +608,11 @@
     {
       "source": "examples/List_samples/list_enc.txt",
       "target": "examples/List_samples/en/list_enc.txt",
-      "source_sha256": "428cebef3e1540698de9d37dafdbacce1510718c7625c32ca4436d067bf8bf47",
-      "target_sha256": "55f9cfe139e34ded0297822ac2a8d5533c79ab9606512f3d0857399fae54ee12",
-      "reviewer": "Claude (Claude Code session; the default of f_opening_dynamic changed from 2 to 3 on 2026-10-31: the statements of the default and the notes on 2 were updated in the source and the translation together, and the changed parts were compared; rest unchanged since the previous record)",
+      "source_sha256": "5b856f92146ac61946156a2f9c3d6fb8681529d292aa4db8adb0c12d26298867",
+      "target_sha256": "c3c9dee777ec0e4ca6b9966894184e48b1527736d5f6976958170368db146318",
+      "reviewer": "Claude (Claude Code session; f_gravity_correction = 2 (developer.md §93): the comment of f_gravity_correction (values 0, 1, 2) compared with the Japanese source; value, identifier and commented-out state unchanged, rest unchanged since the previous record)",
       "method": "assistant",
-      "reviewed_on": "2026-10-31"
+      "reviewed_on": "2026-11-05"
     },
     {
       "source": "examples/List_samples/list_evap.txt",
@@ -2705,11 +2705,11 @@
     {
       "source": "test/README.md",
       "target": "test/README.en.md",
-      "source_sha256": "68abc38dfab397e21cc5c9da4bb05029c40171cc5560ea28158187265abc356e",
-      "target_sha256": "ebba504064b850b103dcfc866b8ae67a4ea7d61f18ac2b34a39eb08c6641babb",
-      "reviewer": "Claude (Claude Code session; merge of main into the branch: main's additions (dissol_src 4/5, talus dissolution, glacier, evapdry, stone_forest, glacier_valley) and the branch's edits (§91/§92 and the debris examples) both present in the two languages, compared)",
+      "source_sha256": "f0609d252e16fe8cbab8c42684592300b6fe6398181c1755ed4e8995e779d0c4",
+      "target_sha256": "4fd7abbd9ff6c9ccc952026da2cf124866f4e2888af032c4d16e25f65086bd69",
+      "reviewer": "Claude (Claude Code session; new test slopefric: the added index row compared with the Japanese source, rest unchanged since the previous record)",
       "method": "assistant",
-      "reviewed_on": "2026-11-04"
+      "reviewed_on": "2026-11-05"
     },
     {
       "source": "test/avalanche/README.md",
@@ -3808,6 +3808,15 @@
       "reviewer": "Claude (Claude Code session; both figures regenerated by Fig.py (ja / en labels) from the same results after the gravity-correction fix §91 and D∞ §92; English labels checked)",
       "method": "assistant",
       "reviewed_on": "2026-11-04"
+    },
+    {
+      "source": "test/slopefric/README.md",
+      "target": "test/slopefric/en/README.md",
+      "source_sha256": "91600528c8863f7b74618f8140183f2a2c43ccc7bf6a9b0d1a204103665998d4",
+      "target_sha256": "bef493a97ad4455f9f5ae292444319e5c3e72b2bcae9f3865c82201fa62c2dc5",
+      "reviewer": "Claude (Claude Code session; new test slopefric: English mirror written alongside the Japanese source and compared section by section, including the setup and result tables, the checks, the MPI note and the limits)",
+      "method": "assistant",
+      "reviewed_on": "2026-11-05"
     },
     {
       "source": "test/splash/README.md",

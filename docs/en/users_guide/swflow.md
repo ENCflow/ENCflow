@@ -102,7 +102,7 @@ dt is the proper remedy. The effect of the threshold is demonstrated in
 
 | Parameter | Default | Meaning (details in the § of [the explanation](encgrid.md)) |
 |---|---|---|
-| f_gravity_correction | 1 | effective gravity g cos²θ on steep slopes (Ni et al. 2019[^ni19]); no effect on gentle slopes (§5) |
+| f_gravity_correction | 1 | effective gravity g cos²θ on steep slopes (Ni et al. 2019[^ni19]); no effect on gentle slopes. 2: friction and sediment shear also from the slope-parallel speed and the bed-normal depth (uniform flow follows the along-slope equations) (§5) |
 | f_exflux_reduction | 1 | suppression of excessive outflow. Prevents negative depths at fronts advancing over dry ground (keep on in computations with dry beds) (§5) |
 | f_hcap_upwind | 1 | edge depth. 0: mean of both cells, 1: the mean capped by the upwind depth (default), 2: the upwind depth itself (removes the spike at a bore front; required in non-hydrostatic cases with breaking or bores. It increases the outflow onto dry ground, so check ex_flux in inundation runs) (§3, [advection](advection.md) §5) |
 | f_friction_fastmath | 0 | table approximation of h^(-4/3) in the friction term. 0: exact (default), 1-5: coarser and faster (relative error 2e-4 to 6%) (§8) |
