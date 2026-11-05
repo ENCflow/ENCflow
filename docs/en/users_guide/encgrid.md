@@ -206,8 +206,9 @@ $`|\mathbf V_s| = |\mathbf V|\sqrt{1 + (\hat{\mathbf V}\cdot\nabla z)^2}`$ and t
 depth $`h\cos\theta`$ (Chow[^chow59]; with $`g`$, not $`g_e`$), and the coefficient of
 the friction term below becomes
 $`F = -\,g\,g_v\,n_e^2\,|\mathbf V_s|_e/(h_f\cos\theta)^{4/3}`$ ($`\hat{\mathbf V}`$ is the
-direction of the mean velocity of the two cells; $`\nabla z`$ and $`\cos\theta`$ are
-the same edge gradient as in $`|\nabla z|_k^2`$ above). Uniform flow then follows
+direction of the mean velocity of the two cells; $`\nabla z`$ and $`\cos\theta`$ come
+from the mean of the ground gradients (minmod, above) of the two cells, i.e. the
+field gradient). Uniform flow then follows
 the along-slope equations, $`h\cos\theta = (n^2 q^2/\sin\theta)^{3/10}`$ ($`q`$ is the
 horizontal unit discharge): for the same discharge the depth is larger and the
 velocity smaller than with 1 (the vertical depth is 1.21 times larger on a 30°
@@ -216,12 +217,11 @@ shown by Van Emelen et al.[^ve14]). The dimensionless shear stress of sediment
 transport and erosion is evaluated with the same speed and depth
 ([sediment transport supplement](sediment.md) §1). Use it on steep slopes when
 Manning's $`n`$ is given from measurements in mild-slope channels (keep 1 for an
-$`n`$ calibrated with a horizontally projected model). It also strengthens the
-friction where the water does not flow along a slope, such as walls, kerbs and
-steps in the DEM, treating them as a thin film on a slope, so the flow down a
-step is slower than with 1 (on a step of gradient 2 the friction coefficient is
-about 33 times that of 1). Compare with 1 on urban DEMs with many steps. The
-default is 1 and 2 is optional (developer.md §93, test test/slopefric).
+$`n`$ calibrated with a horizontally projected model). On a step of a single edge
+(walls, kerbs, steps in the DEM) the field gradient is nearly zero, so the
+friction and the sediment shear are treated as with 1 there (the hydraulics of a
+step lie outside the shallow-water assumptions). The default is 1 and 2 is
+optional (developer.md §93, test test/slopefric).
 
 **Friction term $`F`$.** The Manning law is treated semi-implicitly.
 

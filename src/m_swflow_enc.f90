@@ -2733,15 +2733,18 @@ contains
   !   h_n = h cos θ で評価し(τ_b/ρ = g n² |V_s|²/h_n^{1/3})、斜面の面積 1/cos θ に掛かる力を
   !   水平面積あたりに直すと、水平流速 V の減速度は g n² |V_s| V/h_n^{4/3} になる(本書の導出は
   !   docs/steep_slope_design.md)。既定の摩擦 g_e n² |V| u/h^{4/3}(g_e = g/(1 + |∇z|²))に対する
-  !   倍率 (1 + |∇z|²)^{5/3} √(1 + (V̂·∇z)²) を返す。|∇z|² と ∇z は correct_ge と同じ辺の勾配
-  !   (法線成分 s_n、接線成分 s_t)。V̂ は両セルの時刻 n の流速の平均の向きで、流れがなければ
-  !   辺の法線の向き(その辺の流速だけが動き出すため)。斜面に沿う等流は
+  !   倍率 (1 + |∇z|²)^{5/3} √(1 + (V̂·∇z)²) を返す。∇z は両セルの地盤の勾配(minmod。
+  !   gravity_prepare)の平均 = 場の勾配で、法線成分も辺の差分(correct_ge の s_n)ではなくこれから
+  !   求める(流砂のせん断の倍率 slope_shear_factor と同じ勾配)。平面の斜面では辺の差分と一致して
+  !   等流は斜面に沿う式になり、1 辺だけの段(壁・縁石・DEM の段)では minmod がほぼ 0 なので倍率は
+  !   ほぼ 1(1 と同じ扱い。斜面の薄層流の幾何を段に当てはめない。§93)。V̂ は両セルの時刻 n の流速の
+  !   平均の向きで、流れがなければ辺の法線の向き(その辺の流速だけが動き出すため)。斜面に沿う等流は
   !   u_s = h_n^{2/3} sin^{1/2}θ / n(Chow 1959。Van Emelen ら 2014 の MSW)になる
   !--------------------------------------------------------------------
   function slope_fric_factor() result(f)
     real :: f
     real :: szn, szt, ub, vb, vn, vt, vb2, gzv2
-    szn = (s%z(in,jn) - s%z(i,j)) / geo%w8dr(k)
+    szn = ((sx%gzx(i,j) + sx%gzx(in,jn)) * geo%n8x(k) + (sx%gzy(i,j) + sx%gzy(in,jn)) * geo%n8y(k)) / 2
     szt = ((sx%gzx(i,j) + sx%gzx(in,jn)) * geo%n8y(k) - (sx%gzy(i,j) + sx%gzy(in,jn)) * geo%n8x(k)) / 2
     ub = (s%u(i,j) + s%u(in,jn)) / 2
     vb = (s%v(i,j) + s%v(in,jn)) / 2

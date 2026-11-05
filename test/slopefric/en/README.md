@@ -125,7 +125,6 @@ some cases (the sediment cases with 2) (developer.md §28.3, §93).
   (docs/steep_slope_design.md §6).
 - The factor of 2 does not apply to the resistance laws of mixture flows
   (debris flows and others; developer.md §93).
-- Flow down steps (walls, kerbs, steps in the DEM) is not covered. With 2 the
-  friction is strengthened there as well, as for a thin film on a slope (on a
-  step of gradient 2 the friction coefficient is about 33 times that of 1;
-  developer.md §93).
+- Flow down steps (walls, kerbs, steps in the DEM) is not covered. On a step of a
+  single edge the field gradient (minmod) is nearly zero, so 2 is treated as 1
+  there (developer.md §93).
