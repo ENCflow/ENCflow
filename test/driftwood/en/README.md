@@ -50,9 +50,9 @@ exceeds the rooting depth of 2 mm, and the standing trees over the whole
 slope become driftwood (right). At 30 s there is almost no moving driftwood (left);
 all of it has deposited on the slope and just upstream of the slope break
 (center; grounded in the low-speed consolidation zone of the mixture). Only a
-little (1.9 mm) reaches the flat part.
+little (1.6 mm) reaches the flat part.
 Bottom row (configuration 2): hydraulic recruitment. The standing trees on
-the lower half of the slope are washed out (right), moving driftwood gathers
+the lower two thirds of the slope are washed out (right), moving driftwood gathers
 at the edge of the ponding just above the slope break (left), and it
 decelerates and deposits on the middle of the slope and in the ponded zone
 of the flat part (center).
@@ -61,13 +61,21 @@ of the flat part (center).
 
 | Configuration | Volume conservation | Recruitment / deposition (m·cell) | Arrival on the flat part max(hd + wd) | Result |
 |---|---|---|---|---|
-| 1 debris flow + erosion entrainment | 0.0 | 5.60 / 5.60 (almost all deposited) | 1.9 mm | PASS |
-| 2 hydraulic recruitment by flood | 3.0e-13 | 0.186 / 0.101 | 0.97 mm | PASS |
+| 1 debris flow + erosion entrainment | 0.0 | 5.60 / 5.60 (almost all deposited) | 1.6 mm | PASS |
+| 2 hydraulic recruitment by flood | 3.2e-13 | 0.200 / 0.102 | 0.84 mm | PASS |
 | 3 split continuation by restart | driftwood.dat and state.dat byte-identical to the continuous run | | | PASS |
 | 4 equivalence of defaults | save_min and save_minx byte-identical ((1)–(3) also PASS with stock₀ = 0.001) | | | PASS |
 
 - The wood volume (stock + moving + deposited) is conserved to machine
   precision in the closed domain.
+- The values of the table and the figures were recomputed with the
+  steep-slope gravity correction at the default 2 (friction and sediment
+  shear along the slope; 2026-11-05; developer.md §93, in Japanese). The
+  friction on the slope is stronger; compared with the values with 1 written
+  explicitly (the former values), the arrival on the flat part in
+  configuration 1 went from 1.9 to 1.6 mm, and in configuration 2 the
+  recruitment / deposition went from 0.186 / 0.101 to 0.200 / 0.102 and the
+  arrival on the flat part from 0.97 to 0.84 mm.
 - The draft is obtained from the exact solution of the cylinder buoyancy
   balance of Braudrick & Grant (2000) (for sg = 0.5 it coincides with the
   linear approximation hf = sg·D, so the numbers of this case are unchanged;

@@ -127,18 +127,18 @@ python3 Fig.py en # en/figs/profile.png, en/figs/map.png
 
 Top: terrain. Middle: terrain change dz (average over all rows, cm). In every
 configuration the whole slope is thinly eroded (0.3 cm in configurations 1 and
-2, 1.4 cm in configuration 3 over 120 s, 2.6 cm in configuration 4), erosion
-intensifies just before the slope break, deposition (+0.25 cm) appears directly
-below the slope break in configuration 1, and deposition (+3.1 cm) appears in
+2, 1.4 cm in configuration 3 over 120 s, 2.5 cm in configuration 4), erosion
+intensifies just before the slope break, deposition (+0.20 cm) appears directly
+below the slope break in configuration 1, and deposition (+2.9 cm) appears in
 the first cell of the flat below the slope break in configuration 3. Bottom:
 sediment in motion hs (cm). It is carried at a constant concentration on the
 slope and drops sharply on the flat beyond the slope break
 (in a dilute sheet flow θ_e ≈ 0, so deposition on the flat is slow, and in a
 short check the arrival of hs is taken as the evidence of activity). The
 pore-water entrainment of configuration 4 adds the pore water of the eroded bed
-to the flow, so the surface water increases (Σh 4.0 → 7.7 m·cell compared with
+to the flow, so the surface water increases (Σh 4.0 → 7.5 m·cell compared with
 configuration 3 at the same 60 s), and a positive feedback in which the velocity
-and erosion increase further is seen (erosion −2.6 cm at 60 s against −1.4 cm of
+and erosion increase further is seen (erosion −2.5 cm at 60 s against −1.4 cm of
 configuration 3 at 120 s).
 
 ![Distributions of configuration 1](figs/map.png)
@@ -151,12 +151,12 @@ slope break, and a thin water film on the flat are seen.
 
 | Configuration | Total solids Σhs + (1 − λ)Σdz | Co-moving update | Activity (min dz / arrival) | Water ledger |
 |---|---|---|---|---|
-| 1 | −1.6e-13 | 3.9e-14 | −0.32 cm / deposition below the slope break +0.25 cm | — |
-| 2 Egashira | −1.8e-13 | 3.9e-14 | −0.28 cm / max hs 0.03 cm | — |
-| 3 Takahashi–Nakagawa (120 s) | 2.6e-14 | 1.5e-13 | −1.4 cm / max hs 1.2 cm | — |
-| 4 + pore-water entrainment | 2.2e-13 | 6.8e-14 | −2.5 cm / max hs 0.70 cm | 1.1e-13 |
-| 5 + bed load | −4.4e-13 | 9.8e-14 | −0.20 cm / deposition below the slope break +0.07 cm | — |
-| 6 + pore water with the groundwater computation | 6.5e-14 | 3.6e-14 | −0.28 cm / deposition below the slope break +0.27 cm | 5.7e-14 (Σh + Σhg) |
+| 1 | −2.9e-13 | 3.9e-14 | −0.28 cm / deposition below the slope break +0.20 cm | — |
+| 2 Egashira | 4.9e-14 | 3.6e-14 | −0.28 cm / max hs 0.03 cm | — |
+| 3 Takahashi–Nakagawa (120 s) | 5.0e-13 | 1.3e-13 | −1.4 cm / max hs 1.2 cm | — |
+| 4 + pore-water entrainment | 3.3e-13 | 7.6e-14 | −2.5 cm / max hs 0.70 cm | 1.9e-13 |
+| 5 + bed load | −1.8e-12 | 9.8e-14 | −0.20 cm / deposition below the slope break +0.06 cm | — |
+| 6 + pore water with the groundwater computation | 2.4e-14 | 4.2e-14 | −0.28 cm / deposition below the slope break +0.21 cm | −5.8e-14 (Σh + Σhg) |
 
 - The total solids and the co-moving update hold at machine precision in all
   6 configurations. The E-D exchange amounts are obtained from the field at
@@ -188,9 +188,24 @@ slope break, and a thin water film on the flat are seen.
   1.254 to 1.245 cm (1.3 → 1.2 in the printed digits), and configuration 4 from
   −2.6 to −2.5 cm and max hs from 0.86 to 0.70 cm; the others are the same in the
   printed digits (the ledger values move within machine precision).
-- In the deposits on the flat of configuration 6, max|hg − sy0·sd| = 0.0 m (the
-  pores are filled with surface water). Back with `f_dbwet = 0` it becomes 2.4e-4 m
-  and (5) fails.
+- The values of the table and the figures were recomputed with the steep-slope
+  gravity correction at the default 2 (friction and sediment shear along the slope;
+  2026-11-05; developer.md §93, in Japanese). 2 evaluates the Manning term of the
+  combined Coulomb–Manning resistance law (and, in configuration 5, the shear of the
+  bed load as well) with the speed along the slope and the depth normal to the
+  ground, so the friction on the slope is stronger. Compared with the values with 1
+  written explicitly (the former values), configuration 1 went from −0.32 to
+  −0.28 cm and its deposition from +0.25 to +0.20 cm, the deposition of
+  configuration 5 from +0.07 to +0.06 cm, and that of configuration 6 from +0.27 to
+  +0.21 cm; the others are the same in the printed digits or move within machine
+  precision (the differences in the outlet row of configuration 7 are about
+  1e-5 m). The deposition of configuration 3 (+3.1 → +2.9 cm) and Σh (7.7 →
+  7.5 m·cell) and erosion (−2.6 → −2.5 cm) of configuration 4 in the description
+  of the figure have the same values with 1; they had been left uncorrected after
+  the earlier changes.
+- In the deposits on the flat of configuration 6, max|hg − sy0·sd| = 1e-20 m
+  (machine precision; the pores are filled with surface water). Back with
+  `f_dbwet = 0` it becomes 1.2e-4 m and (5) fails.
 - Configurations 1–6 are checks of **connectivity and conservation laws**. The
   quantitative validity of the constitutive laws is recorded in debris_plan.md
   as remaining work on literature comparison (coefficients for the immature
@@ -199,20 +214,20 @@ slope break, and a thin water film on the flat are seen.
 
 | Channel of configuration 7 | tanθ | Regime | C∞ | \|C/C∞ − 1\| over 100–220 m | \|C/C∞ − 1\| over 221–300 m | Bed change in the outlet row − mean over 100–220 m |
 |---|---|---|---|---|---|---|
-| 1 | 0.60 | upper limit | 0.540000 | 7e-16 | 1e-15 | −5e-5 m |
-| 2 | 0.25 | stony | 0.336545 | 7e-12 | 2e-6 | +5e-5 m |
-| 3 | 0.15 | stony | 0.165227 | 5e-13 | 1e-5 | −5e-5 m |
-| 4 | 0.10 | immature | 0.068313 | 6e-13 | 6e-5 | −5e-5 m |
-| 5 | 0.05 | immature | 0.014553 | 9e-13 | 2e-4 | −2e-5 m |
-| 6 | 0.02 | bedload | 0 | C = 7e-166 | C = 8e-226 | 0 |
+| 1 | 0.60 | upper limit | 0.540000 | 7e-16 | 4e-16 | −6e-5 m |
+| 2 | 0.25 | stony | 0.336545 | 2e-11 | 2e-6 | +4e-5 m |
+| 3 | 0.15 | stony | 0.165227 | 4e-13 | 1e-5 | −5e-5 m |
+| 4 | 0.10 | immature | 0.068313 | 9e-13 | 6e-5 | −5e-5 m |
+| 5 | 0.05 | immature | 0.014553 | 1e-12 | 2e-4 | −2e-5 m |
+| 6 | 0.02 | bedload | 0 | C = 2e-165 | C = 2e-225 | 0 |
 
 - The concentrations of configuration 7 match the equilibrium-concentration
-  formulas assembled in the check script within 1e-11 (the fixed point of the
+  formulas assembled in the check script within 2e-11 (the fixed point of the
   relaxation to C∞, computed from the local slope of the bed lowered by
   erosion).
 - The bed is lowered uniformly by the sediment the initial clear water picks
   up to reach C∞ (0.098 m in channel 1), and the outlet row agrees with that
-  mean within 5e-5 m. The small departure of the concentration on the outlet
+  mean within 6e-5 m. The small departure of the concentration on the outlet
   side (at most 2e-4) arises because the local bed slope changes slightly
   near the outlet (0.050007 in the outlet row of channel 5) and the
   relaxation lags between its C∞ and the concentration carried from

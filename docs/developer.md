@@ -19953,6 +19953,18 @@ wfswash_tanbe = 0.1 を入れた): 途中で不具合が 2 つ見つかった(�
     値は 1 の時の記録とほぼ同じ(T2 4.1e-8、T9 の od3 は水路中央 1.0000〜1.0001・壁際 0.9999)。
   - MPI(-Ofast。Run_MPI.sh の既定の許容 ULP = 1): 13 ケースすべて np = 2 で PASS(wfdoppler の
     wavefield.csv だけ許容内、ほかはバイト一致)。chichibu は np = 1・4 も PASS(Log.txt がバイト一致)。
+- **検定の揃え(2026-11-05)**: 1 を「急勾配の標準」の意味で明示していた 11 検定(bldgdebris・driftwood・
+  debris・bedslide・slide・splashslide・volcano・avalanche・nhbottom の ls_*・nest_identity・nest_twin)の設定を
+  2 にした(0dfdd4f)。自己検定はすべて PASS。README(日英)と図を今回の計算に更新し、1 を明示した同じコードとの
+  比較で、値の変化を 2 によるものとそれ以前の変更(§94・§95・§96 など)によるものに分けて各 README に書いた。
+  2 で目立って変わったのは、斜面を下る水の流れの摩擦と、マニングの項が残る混合体の抵抗則(クーロン・マニング
+  合成 f_dbres = 1、τ_y・マニング合成 f_dbres = 5)を使う構成: volcano の構成 2(平坦部の堆積 0.053 → 0.028 m)、
+  bldgdebris の構成 2(荷重判定の破壊 / 堆積 0.086 / 0.042 → 0.051 / 0.019)、debris の構成 1・5・6(遷緩点の
+  下の堆積 +0.25 → +0.20 cm など)、driftwood(平坦部への到達 1.9 → 1.6 mm・0.97 → 0.84 mm)。Voellmy の
+  乱流項でマニングが置き換わる volcano の構成 1 は 1 とビット一致、nhbottom の構成 2 は 1 と 2 の差が 0.04 m
+  以内(2026-10-31 の値からの変化は §91・§94・§95 など)、splashslide は表の値が 1 と同じ(個々のセルの地形は
+  変わる)。nest_identity は値が変わらない。README に残っていた古い値(debris の図の説明、bldgdebris の構成 5、
+  debris の構成 6 の f_dbwet = 0 の値)も直した。
 
 ## 94. セルの流出の合計による過大な流出の抑制(辺ごとの抑制の取りこぼしによる負の水深の修正。2026-11-05 不具合修正)
 

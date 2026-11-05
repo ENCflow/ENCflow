@@ -94,7 +94,7 @@ lower than that).
 Configuration 4 (left) and the control (right). The mass that flowed over
 land as a debris flow (mixture) becomes, with the handover, a bed layer in
 the cells with a ponded depth of 2 m or more and runs along the lake bed
-(deposit 5.1 m, handover 17,806 m³ = 93 % of the release); without the
+(deposit 5.1 m, handover 17,804 m³ = 93 % of the release); without the
 handover it stops near the shoreline and does not reach the lake bed
 (deposit on the flat part 0 m).
 
@@ -106,10 +106,14 @@ handover it stops near the shoreline and does not reach the lake bed
 | Configuration 1: cross-section passage speed | 7.519 m/s (−2.9% = agrees with the boundary layer 2·ld/ny of the 2 wall rows) | PASS |
 | Configuration 2: interior Vb | 7.736–7.746 m/s (0.14%) | PASS |
 | Configuration 2: cross-section passage speed | 7.175 m/s (−7.4%; wall ends + staircase cross-section) | PASS |
-| Configuration 3: ledger / Σh | Σdz −1.1e-11, max\|Δ(z − sd)\| 9e-13 / Σh unchanged (+1.6e-3 m·cell) | PASS |
+| Configuration 3: ledger / Σh | Σdz 1.6e-11, max\|Δ(z − sd)\| 9e-13 / Σh unchanged (−2.4e-3 m·cell) | PASS |
 | Configuration 3: lake-bed deposition / wave generation | flat lake bed max dz 5.16 m / water-surface maximum 0.51 m (flat part of the lake bed) | PASS |
 | Configuration 3: release ledger | released 19,110 = stopped 16,680 + moving 2,430 m³ | PASS |
-| Configuration 4: handover | 17,806 m³, lake-bed max dz 5.13 m; control 0.00 m | PASS |
+| Configuration 4: handover | 17,804 m³, lake-bed max dz 5.13 m; control 0.00 m | PASS |
+
+(Values recomputed on 2026-11-05 with the steep-slope gravity correction aligned to the default 2 (friction
+along the slope; developer.md §93). Only the rounding values of the ledger of configuration 3 and the handover of
+configuration 4 (17,806 → 17,804 m³) moved; the values in the figures are the same.)
 
 - The 45°-rotated benchmark is a detector for a wrong normalization of the
   8-direction distribution, which makes the passage speed come out √2 times

@@ -67,11 +67,11 @@ without feedback.
 
 | Configuration | Volume conservation | Destruction / deposition (m·cell) | Arrival on the flat part | Result |
 |---|---|---|---|---|
-| 1 depth criterion | 2.7e-14 | 0.023 / 0.0070 | 0.41 mm | PASS |
-| 2 driftwood + debris (load criterion) | 2.8e-14 | 0.086 / 0.042 | 0.63 mm | PASS. state.dat and driftwood.dat byte-identical to 2′ |
+| 1 depth criterion | 2.3e-14 | 0.021 / 0.0063 | 0.39 mm | PASS |
+| 2 driftwood + debris (load criterion) | 3.6e-15 | 0.051 / 0.019 | 0.40 mm | PASS. state.dat and driftwood.dat byte-identical to 2′ |
 | 3 restart | bldgdebris.dat and state.dat byte-identical to the continuous run | | | PASS |
-| 4 void-ratio feedback | 6.6e-14 | 0.085 / 0.076 | 0.91 mm | PASS. S(t) agrees with 4′ |
-| 5 defaults | −1.0e-11 | 15.3 / 6.6 | 0.12 m | PASS. Byte-identical to 5′ |
+| 4 void-ratio feedback | 5.7e-14 | 0.082 / 0.075 | 0.87 mm | PASS. S(t) agrees with 4′ |
+| 5 defaults | −1.0e-11 | 15.3 / 5.8 | 0.13 m | PASS. Byte-identical to 5′ |
 
 - The volume, weighted by gv, is conserved to machine precision, and it is
   also confirmed that the change of the void ratio conserves water volume
@@ -90,6 +90,18 @@ without feedback.
   values are reproduced; confirmed 2026-10-24). With the default 3 since
   2026-10-31 it is 0.086 / 0.042, close to the former default 1 (2 sped up the
   flow on steep slopes; §68.41).
+- The values of the table and the figures were recomputed with the
+  steep-slope gravity correction at the default 2 (friction and sediment
+  shear along the slope; 2026-11-05; developer.md §93, in Japanese). The
+  friction on the slope is stronger, so the flow is slower and the fluid
+  force of the load criterion is lower, and the destruction / deposition of
+  configuration 2 decreased from 0.086 / 0.042 to 0.051 / 0.019 (with 1
+  written explicitly the former values are obtained). The other
+  configurations decrease a little as well (configuration 1 from 0.023 /
+  0.0070 to 0.021 / 0.0063, configuration 4 from 0.085 / 0.076 to 0.082 /
+  0.075). The former values of configuration 5 (15.3 / 6.6, 0.12 m) are
+  15.3 / 5.9, 0.14 m even with 1; they had been left uncorrected after the
+  earlier changes.
 
 ## Related documents
 
