@@ -60,6 +60,18 @@ architecture.md。このメモは「現在進行中・未完了の項目」だ�
 
 ## 未完了・検証待ち
 
+00l. **拡散型プロセスの 4 近傍の異方性(developer.md §93、landslide_tsunami_plan.md §11.1。2026-11-05 合意)の残り**
+   - (a) **`creep_diagratio`・`spl_diagratio` の既定を 1/3 にするか(利用者の確認待ち)**: 段 1 は既定 0(5 点)で実装・
+     検証済み(test/stencil9)。既定を変えると、reference を持つ splash・splashsat・splashstrata と、自己検証の creep・
+     splashlc・splashslide・fluvial(param_creep)・hillsoil・rockfall・sedfeed・dbrock の値が変わり、例題 badland・
+     badland_round・badland_storm・mesa(乾式侵食)と mountain_valley・badland_round・mesa(クリープ)の README の数値の
+     回し直しが要る。影響の大きさを示して目視確認を得てから、既定と reference を別コミットで更新する(規律 1・4)。
+   - (b) 段 2: 溶岩の温度(4 近傍の 1 次風上)の数値拡散の計測と、効くなら MUSCL の選択式(範囲の切り詰めは残す)。
+   - (c) 段 3: 氷河の SIA・溶岩流の流動の 8 近傍化は設計案だけ(landslide_tsunami_plan.md §11.1。塞がれた斜めの
+     振り替えの規則 = 案 A・B、d、既定の扱いを決めてから実装)。
+   - (d) 湿潤侵食の剥離深の横方向拡散 wet_lw(§84.16)も同じ 5 点の核を使う(合意の範囲外。9 点にするなら
+     spl_diagratio と同じ形で足せる)。
+
 00k. **急勾配の重力補正の修正(developer.md §91)・最急勾配の D∞(§92)・岩盤侵食の有効重力(2026-11-04)の後始末**
    - (済 2026-11-04)reference の更新: 利用者の確認の上で、§91 で値が変わる 11 ケース(chichibu・
      chichibu_icmap・damwq・gwsect・gwseep・gwwidth・kdpart・sewer_wq・tracer・wfdoppler・wqbound)を

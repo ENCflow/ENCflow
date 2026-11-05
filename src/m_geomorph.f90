@@ -84,6 +84,9 @@ module m_geomorph
   type t_creep
     real :: cw(1:4) = 0.0            ! エッジ伝導度重み(= 通過幅/距離)
     real :: hcinv = 0.0              ! 1 / H_c(深さ依存クリープ。0 = 従来の線形拡散。§89.8)
+    real :: diag = 0.0               ! 斜め配分 d(creep_diagratio。0 = 4 近傍の 5 点。§93)
+    real, allocatable :: cwo(:,:,:)  ! d > 0 のエッジ伝導度の表(壁で塞がれた斜めの配分を
+                                     !   軸エッジへ振り替えた値。q と同形状・同格納規約。§93)
   end type
 
   ! 石灰岩の溶食(f_dissol。§86。docs/karst_plan.md)
@@ -338,6 +341,9 @@ module m_geomorph
     real, allocatable :: zt(:,:)     ! 平滑化の作業面(同形)
     integer :: nsm = 0               ! 平滑化のパス数(= 4(ℓ/Δ)²。0 = 平滑化なし)
     real :: wsx = 0.0, wsy = 0.0     ! 1 パスの x・y 近傍重み(各方向の分散 2w Δ²)
+    real :: diag = 0.0               ! 曲率と平滑化の斜め配分 d(spl_diagratio。0 = 5 点。§93)
+    real :: w8(1:8) = 0.0            ! d > 0 の 9 点ラプラシアンの近傍重み (1/m2)(k = 1..8)
+    real :: tsm = 0.0                ! d > 0 の平滑化 1 パスの拡散量 τ (m2)(z += τ ∇²z)
     integer :: nclip = 0             ! spl_dzmax クリップの発生セル数(累計)
     real :: vout = 0.0               ! 系外排出した固体土砂体積 (m3)(ランク局所累計)
   end type
@@ -981,6 +987,11 @@ subroutine m_geomorph_init(gm, p, g, s)
     if (gm%creep_d <= 0.0) then
       call par_stop("list_geomorph: f_creep requires creep_d > 0")
     end if
+    ! 8 近傍の 9 点(§93)。0 = 4 近傍の 5 点(2026-11-05 以前と同じ経路)
+    if (list%creep_diagratio < 0.0 .or. list%creep_diagratio > 1.0) then
+      call par_stop("list_geomorph: creep_diagratio must be in [0, 1]")
+    end if
+    gm%crp%diag = list%creep_diagratio
     ! 深さ依存クリープ(§89.8。docs/mountain_stream_plan.md §5.1): 土層 sd だけが動く
     if (list%creep_hstar < 0.0) call par_stop("list_geomorph: creep_hstar must be >= 0")
     if (list%creep_hstar > 0.0) then
@@ -990,6 +1001,8 @@ subroutine m_geomorph_init(gm, p, g, s)
     call init_creep(gm, p, g)
   else if (list%creep_hstar > 0.0) then
     call par_stop("list_geomorph: creep_hstar requires f_creep=1")
+  else if (list%creep_diagratio /= 0.0) then
+    call par_stop("list_geomorph: creep_diagratio requires f_creep=1")
   end if
 
   gm%f_fluvial = list%f_fluvial
@@ -1160,7 +1173,11 @@ subroutine m_geomorph_init(gm, p, g, s)
   if (gm%f_suspend > 0) call init_suspend(gm, p, list)
   if (gm%f_wash > 0) call init_wash(gm, list)
   if (list%wet_lw > 0.0) call init_wetlw(gm, g, list)
-  if (gm%f_splash > 0) call init_splash(gm, g, list)
+  if (gm%f_splash > 0) then
+    call init_splash(gm, g, list)
+  else if (list%spl_diagratio /= 0.0) then
+    call par_stop("list_geomorph: spl_diagratio requires f_splash=1")
+  end if
   if (gm%f_debris > 0) call init_debris(gm, p, g, list)
   ! 瞬時流動化(f_release)は f_debris の付属機構(fn_dbinit の有無で有効化。
   ! 検証・読み込みは init_debris 内)

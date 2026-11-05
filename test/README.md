@@ -102,6 +102,7 @@ reference の更新(`-u`)は結果の妥当性を人間が確認してから行�
 | [splashslide/](splashslide/) | 固結崖と崩壊崖の対照(乾式侵食と斜面崩壊の併用) | f_splash・f_slide | 解析 |
 | [splashlc/](splashlc/) | 曲率の相関長 spl_lc による谷の波長選択(2 波長擾乱の成長比の対照) | f_splash(spl_lc・spl_zbase) | 解析 |
 | [splashstrata/](splashstrata/) | 水平層理の侵食性倍率 spl_strata(3 層: キャップロック 0 / 0.5 / 1)の解析検証 | f_splash(spl_strata) | ref + 解析 |
+| [stencil9/](stencil9/) | 8 近傍の 9 点のクリープと乾式斜面侵食の曲率の等方性(σ = 2Δ の丘で同じ距離の格子軸寄りと斜めのセルを比べる。5 点は対照)、壁で塞がれた斜めの配分の振り替え(幅 1・3 セルの帯の減衰が厳密な離散解に一致)、よく解像した丘の解析解(§93) | f_creep(creep_diagratio)、f_splash(spl_diagratio) | 解析・自己検証 |
 | [splashsat/](splashsat/) | 凹地形増幅の飽和 spl_ksat(放物線の谷、κ 一定)の解析検証 | f_splash(spl_ksat) | ref + 解析 |
 | [rockfall/](rockfall/) | 崩落と崖錐(垂直な台地の崩落: 体積保存・終端の高さ差 ≤ H_c・崖錐の収支。窓版・支え方式(柱の崩落)・張り出し版(降雨 + 乾式侵食)・海セル版・基岩版 rf_bedrock・崖錐の溶食 f_dissol 併用) | f_rockfall | 解析 |
 | [sedinflow/](sedinflow/) | 区間流入の土砂濃度時系列の台帳検定 | 境界・土砂 | 解析 |

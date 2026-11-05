@@ -67,6 +67,24 @@ $`z`$ だけを更新し $`s_d`$ は変えない(有限厚の土層を運ぶモ�
 検証: [test/creep](../../test/creep/README.md)(ガウス丘の解析解に
 最大誤差 7.8e-5 m、`morfac` = 2 の等価性 2.3e-4 m)。
 
+**8 近傍の 9 点(`creep_diagratio` > 0)**: 5 点ラプラシアンは格子幅 Δ に近い
+短い波長で格子の向きに偏ります(同じ波数で 45° と 0° の減衰率の差が、波長 8Δ で
++2.6 %、4Δ で +11 %)。`creep_diagratio = d` を与えると、軸エッジに $`(1 - d)`$、
+斜めエッジに $`d/2`$ の割合の通過幅を配った 8 近傍の 9 点で解きます(浅水流・
+地下水の側方流と同じ配分則で、任意の $`d`$ で $`\nabla^2`$ の係数は厳密に 1)。
+$`d = 1/3`$ で離散化誤差の主要項 $`(\Delta^2/12)(f_{xxxx} + 6d\,f_{xxyy} + f_{yyyy})`$ が
+$`(\Delta^2/12)\nabla^4 f`$ になり、格子の向きによらなくなります(等方な 9 点
+ラプラシアン[^patra06]。差は 8Δ で +0.05 %、4Δ で +0.9 %)。壁(領域外・海セル)に接する
+セルでは、塞がれた斜めの配分を同じ界面を横切る軸エッジへ振り替えます(地下水の
+`f_gw_opening` と同じ規則。振り替えないと壁に平行な拡散係数が $`1 - d/2`$ 倍、1 セル幅の
+帯で $`1 - d`$ 倍になる)。陽解法の安定条件は、セルの係数の和から求めた正値性の条件で
+初期化時に検査します($`d = 1/3`$ で $`\Delta t_s \le 0.3\,\Delta^2/D`$。5 点は $`0.25\,\Delta^2/D`$)。
+等方になるのは誤差の向きで、誤差の大きさが小さくなるわけではありません(よく解像した
+丘の中心では 5 点より大きいこともある)。検証: [test/stencil9](../../test/stencil9/README.md)
+(σ = 2Δ の丘の同じ距離の格子軸寄りと斜めのセルの差が −1.92 % → −0.03 %、幅 1・3 セルの帯の
+減衰が厳密な離散解に 1e-14 で一致、よく解像した丘の解析解に 7.5e-4 m)。既定は 0 で、
+既定を変えるかは結果を確かめてから決めます(developer.md §93)。
+
 **深さ依存クリープ(`creep_hstar` > 0)**:
 
 ```math
@@ -418,7 +436,12 @@ examples/badland)。`spl_zbase` は侵食基準面(崖下が海なら海面)、
 不変。検証は [test/splashsat](../../test/splashsat/README.md))。水平層理 `spl_strata`(層の下端標高と
 侵食性倍率の表)を与えると、セルの地表標高が属する層の倍率を $`E`$ に掛けます
 (硬軟互層の縞・段・キャップロック。倍率 0 の層は削れません。検証は
-[test/splashstrata](../../test/splashstrata/README.md))。既定 $`k_r`$ = 0.0005、$`k_t`$ = 0.05 は
+[test/splashstrata](../../test/splashstrata/README.md))。曲率 $`\kappa`$ のラプラシアン(と `spl_lc` の
+平滑化の核)は既定で 5 点で、格子規模の谷の κ が格子の向きに偏ります。`spl_diagratio = 1/3`
+で等方な 9 点にでき(クリープの `creep_diagratio` と同じ配分則。無効な近傍は自セルの値で
+鏡像にする 5 点と同じ規約)、σ = 2Δ の丘で同じ距離の格子軸寄りと斜めのセルの κ の差が
+−8.4 % → −0.27 %(ℓ = 2 m で +3.3 % → +0.13 %)になります
+([test/stencil9](../../test/stencil9/README.md)。既定は 0。developer.md §93)。既定 $`k_r`$ = 0.0005、$`k_t`$ = 0.05 は
 テストの中央値(**経験値**)で、検証は
 [test/splash](../../test/splash/README.md)(増幅なしの解析形
 $`\Delta z = P(k_r + k_t S)T`$ に全桁一致、排出台帳が解析和に一致)と
@@ -620,6 +643,7 @@ $`\cos\theta\,C\rho_s D^2 (u/h)^2`$ ÷ 岩の抵抗」に比例させる則を�
 | dt_geomorph / morfac | 0 / 1 | 地形更新間隔 (s) / 地形時間の加速(§1) | **方式** MORFAC 法[^roelvink06]。イベント計算は 1 |
 | creep_d | 0.005 m²/yr | クリープ拡散係数 $`D`$(§2) | **文献値** 文献域 0.001〜0.05 m²/yr の中央[^fernandes97] |
 | creep_hstar | 0(従来の線形拡散) | 深さ依存クリープの減衰厚 $`H_c`$ (m)(§2) | **校正値** 標準値がない。厚い土層では結果によらない |
+| creep_diagratio | 0(4 近傍の 5 点) | 斜め配分 $`d`$(§2) | **方式** 1/3 で離散化誤差の主要項が等方な 9 点[^patra06]([test/stencil9](../../test/stencil9/README.md))。既定の変更は検証後に判断(developer.md §93) |
 | f_qbform | 1 | 流砂量式(§3) | **方式** 1: 芦田・道上[^ashida72]、2: MPM[^mpm48] |
 | fluv_d50 | 0.01 m | 掃流砂の代表粒径 | **経験値** 砂床〜礫床の幾何平均付近 |
 | fluv_tausc / susp_tausc / wash_tausc | 0.05 | 限界無次元掃流力(§1) | **文献値** Shields 曲線の粗砂〜礫の代表値[^shields36]。芦田・道上[^ashida72]も混合砂礫の平均粒径の値として 0.05 を使う(式 (31)) |
@@ -640,6 +664,7 @@ $`\cos\theta\,C\rho_s D^2 (u/h)^2`$ ÷ 岩の抵抗」に比例させる則を�
 | spl_lc | 0 m | 曲率の相関長 $`\ell`$ | **与件** 0 = 格子の κ(間隔が格子依存)。谷間隔のおよそ 1/5(examples/badland) |
 | spl_zbase | なし | 侵食基準面 | **与件** 崖下が海なら海面 |
 | spl_ksat | 0 | 増幅の飽和曲率 $`\kappa_s`$ | **与件** 0 = 飽和なし。崖の基部の段を残すには 0.05〜0.2 1/m(examples/mesa) |
+| spl_diagratio | 0(5 点) | 曲率と平滑化の核の斜め配分 $`d`$ | **方式** 1/3 で等方な 9 点([test/stencil9](../../test/stencil9/README.md))。既定の変更は検証後に判断(developer.md §93) |
 | spl_strata | なし | 水平層理の(下端標高, 侵食性倍率)表 | **与件** 層序の硬軟差。倍率 0 = キャップロック |
 | wthr_p0 / wthr_sdstar | 50 mm/kyr / 0.5 m | 土層生成速度 / 減衰深(§7) | **文献値** Heimsath 型の文献域の中央[^heimsath97] |
 | fn_wthr | なし(全域 1) | 土層生成速度の倍率の分布 | **与件** 岩質の違い、風化しないセル(0。渓流の岩盤など) |
@@ -678,6 +703,7 @@ $`\cos\theta\,C\rho_s D^2 (u/h)^2`$ ÷ 岩の抵抗」に比例させる則を�
 | ケース | 内容 | 要点 |
 |---|---|---|
 | [test/creep](../../test/creep/README.md) | ガウス丘の拡散 | 解析解に最大誤差 7.8e-5 m、morfac 等価性。深さ依存クリープの岩盤面の不変・土層の保存・裸岩で不変 |
+| [test/stencil9](../../test/stencil9/README.md) | 9 点のクリープ・曲率の等方性と壁際の振り替え | σ = 2Δ の丘の格子の向きの差がクリープで −1.92 % → −0.03 %、曲率で −8.4 % → −0.27 %(ℓ = 2 m で +3.3 % → +0.13 %)。帯の減衰が厳密な離散解に 1e-14 |
 | [test/fluvial](../../test/fluvial/README.md) | 閉領域の段波と河床変動 | 固体総量・共動更新が機械精度 |
 | [test/suspend](../../test/suspend/README.md) | 2 つの平衡濃度式、等流の水路の平衡と適応 | 固体総量 2.2e-15、平衡濃度が式の値と 1.5e-6、適応の減衰率が離散の予測と 1.4e-5 |
 | [test/sedinflow](../../test/sedinflow/README.md) | 境界からの土砂供給 | 流入総量の台帳閉合 ~1e-16 |
@@ -696,6 +722,7 @@ $`\cos\theta\,C\rho_s D^2 (u/h)^2`$ ÷ 岩の抵抗」に比例させる則を�
 [^shields36]: Shields, A. (1936): Anwendung der Ähnlichkeitsmechanik und der Turbulenzforschung auf die Geschiebebewegung. Mitt. Preuss. Versuchsanst. Wasserbau Schiffbau, 26, Berlin.
 [^culling60]: Culling, W. E. H. (1960): Analytical theory of erosion. *J. Geol.*, 68, 336–344.(斜面の線形拡散モデル)
 [^fernandes97]: Fernandes, N. F. and Dietrich, W. E. (1997): Hillslope evolution by diffusive processes: The timescale for equilibrium adjustments. *Water Resour. Res.*, 33, 1307–1318.(拡散係数の文献域)
+[^patra06]: Patra, M. and Karttunen, M. (2006): Stencils with isotropic discretization error for differential operators. *Numer. Methods Partial Differ. Equ.*, 22(4), 936–953. doi:10.1002/num.20129(離散化誤差の最低次が等方なステンシル。書誌と要旨で確認。ENC の配分則で d = 1/3 になることは developer.md §93 の修正方程式による)
 [^johnstone15]: Johnstone, S. A. and Hilley, G. E. (2015): Lithologic control on the form of soil-mantled hillslopes. *Geology*, 43(1), 83–86. doi:10.1130/G36052.1(要旨で確認: 輸送が勾配と土層厚の両方に比例すると、岩質が土層に覆われた斜面の形に現れる。式の形と doi は Landlab の DepthDependentDiffuser の説明による)
 [^ashida72]: 芦田和男・道上正規 (1972): 移動床流れの抵抗と掃流砂量に関する基礎的研究. 土木学会論文報告集, 206, 59–69.
 [^mpm48]: Meyer-Peter, E. and Müller, R. (1948): Formulas for bed-load transport. *Proc. 2nd Meeting IAHSR*, Stockholm, 39–64.

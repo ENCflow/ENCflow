@@ -104,9 +104,9 @@
     {
       "source": "docs/users_guide.md",
       "target": "docs/en/users_guide.md",
-      "source_sha256": "a1915f74207fe83cfefde716ded632e67fdba6abb6b102d31f788e1f86c7a2d7",
-      "target_sha256": "e4bace20f03379ee1279d28e087eb2492f003655e7cbecbdfc0f57c9870d6ebc",
-      "reviewer": "Claude (Claude Code session; reviewed the added link to the new page on numerical diffusion by diagonal-edge fluxes in the Japanese source against the English mirror, 2026-11-05)",
+      "source_sha256": "7479a2faea131e01fba08a79ac9edc1f57fa523521eb80f20867108e66023588",
+      "target_sha256": "589f9113ae89758219abad83ec78f190cd5942b9d1a660873a1bcb1f77ce3600",
+      "reviewer": "Claude (Claude Code session; reviewed the added text on the 9-point creep and splash curvature (creep_diagratio, spl_diagratio; developer.md sec. 93) in the Japanese source against the English mirror, 2026-11-05)",
       "method": "assistant",
       "reviewed_on": "2026-11-05"
     },
@@ -203,9 +203,9 @@
     {
       "source": "docs/users_guide/diagonal_diffusion.md",
       "target": "docs/en/users_guide/diagonal_diffusion.md",
-      "source_sha256": "82fce00d52cc93a22486160c2f4fd6365d74b3e489691e14fa7c4abd5a8bf6ac",
-      "target_sha256": "cf7e3bb3c7ffe3c00fabcb3b879befddae90be11749bbb241a804ebc76d733f1",
-      "reviewer": "Claude (Claude Code session; wrote the Japanese source and the English mirror of the new page on numerical diffusion by diagonal-edge fluxes and checked them section by section: headings, anchors, tables, equations, figures, numbers and links, 2026-11-05)",
+      "source_sha256": "7bbd384d484ded9d90f39618251a0afd220f7eb341e53140dde7ecb766a65429",
+      "target_sha256": "672b2eb9425801c21a39137c8217f97e294d5a89b608e81532186b74410ac4a7",
+      "reviewer": "Claude (Claude Code session; reviewed the added text on the 9-point creep and splash curvature (creep_diagratio, spl_diagratio; developer.md sec. 93) in the Japanese source against the English mirror, 2026-11-05)",
       "method": "assistant",
       "reviewed_on": "2026-11-05"
     },
@@ -275,11 +275,11 @@
     {
       "source": "docs/users_guide/geomorph.md",
       "target": "docs/en/users_guide/geomorph.md",
-      "source_sha256": "d840a85925d5cc5583e097098e962f63ed1445945af07e1a5b7ef1e6f2bb37e7",
-      "target_sha256": "4ffab5e577f0cb8fbacb6b78c9d813aea2ca52f4b0acc1fad60c622d5ade5cb4",
-      "reviewer": "Claude (Claude Code session; merge of main into the branch: main's additions (dissol_src 4/5, talus dissolution, glacier, evapdry, stone_forest, glacier_valley) and the branch's edits (§91/§92 and the debris examples) both present in the two languages, compared)",
+      "source_sha256": "542efa53fc439a5798fc3a926617e831937c1d640ba2569a7c830cb095b8be08",
+      "target_sha256": "f1dd38e83b3783db931e41e3bdacb5ca9fa1fbd6323d3846a5d8dcdc088f7106",
+      "reviewer": "Claude (Claude Code session; reviewed the added text on the 9-point creep and splash curvature (creep_diagratio, spl_diagratio; developer.md sec. 93) in the Japanese source against the English mirror, 2026-11-05)",
       "method": "assistant",
-      "reviewed_on": "2026-11-04"
+      "reviewed_on": "2026-11-05"
     },
     {
       "source": "docs/users_guide/glacier.md",
@@ -392,11 +392,11 @@
     {
       "source": "docs/users_guide/params_index.md",
       "target": "docs/en/users_guide/params_index.md",
-      "source_sha256": "3825c84dba7ec57ec3155e61ddfd014e1524d58bca5aeb526786eef3bed5e2da",
-      "target_sha256": "cbe2cf4fa1d196c1c16f59fdb209f59bf9d70f2936752f1788a18bee9f3d5090",
-      "reviewer": "Claude (Claude Code session; merge of claude/ecstatic-edison-e51vrz into main: both sides changed this pair; the merged files differ from main's recorded version only by the branch's passages (gl_lc, glacier_valley, test/glacier row, total count 776), compared side by side in Japanese and English)",
+      "source_sha256": "28ca2c6b5d3e6a6505196b81dbc1d49741ed7c9cf74011c1b4714f0bb328f255",
+      "target_sha256": "0c4fb33b0c2f674368cd528b1c9a5ffa5a846409da2a9155173c04db621b3fc6",
+      "reviewer": "Claude (Claude Code session; reviewed the added text on the 9-point creep and splash curvature (creep_diagratio, spl_diagratio; developer.md sec. 93) in the Japanese source against the English mirror, 2026-11-05)",
       "method": "assistant",
-      "reviewed_on": "2026-11-04"
+      "reviewed_on": "2026-11-05"
     },
     {
       "source": "docs/users_guide/passage_width.md",
@@ -437,11 +437,11 @@
     {
       "source": "docs/users_guide/sediment.md",
       "target": "docs/en/users_guide/sediment.md",
-      "source_sha256": "1f78c52eb12b7ecdcc7e936c4f57443b69dd212093bda6ff86aba69bf49be169",
-      "target_sha256": "acf176dd17ad7d0fa533aefbc81bdca70dfd07b6d819ef6a2126e86602b50bc5",
-      "reviewer": "Claude (Claude Code session; merge of main into the branch: main's additions (dissol_src 4/5, talus dissolution, glacier, evapdry, stone_forest, glacier_valley) and the branch's edits (§91/§92 and the debris examples) both present in the two languages, compared)",
+      "source_sha256": "caccbb3d4d15bb932ed7d7521bc6b3f00adf1dfa468dccbc119e3a4cedf40302",
+      "target_sha256": "5a9ab00f34602300b783656d3c6da656dd1dd41feda55c477b7217c5334eb07f",
+      "reviewer": "Claude (Claude Code session; reviewed the added text on the 9-point creep and splash curvature (creep_diagratio, spl_diagratio; developer.md sec. 93) in the Japanese source against the English mirror, 2026-11-05)",
       "method": "assistant",
-      "reviewed_on": "2026-11-04"
+      "reviewed_on": "2026-11-05"
     },
     {
       "source": "docs/users_guide/structure.md",
@@ -644,11 +644,11 @@
     {
       "source": "examples/List_samples/list_geomorph.txt",
       "target": "examples/List_samples/en/list_geomorph.txt",
-      "source_sha256": "25170e316548eeda7e3385c76379ef8fca57535fdcbe70bbb2e0865db371c3d7",
-      "target_sha256": "4877d8452da18dea802e4f14c9d52f25c92e3dd35a90b89d5011a115c4e116dd",
-      "reviewer": "Claude (Claude Code session; compared the Japanese source with the English mirror after adding the base-level section of tower_karst and correcting the water-table statement of dissol_src 4/5, 2026-11-04)",
+      "source_sha256": "9899cda151b157dbf1c834601708d1bf8a1c8ac4c5ca865393050d0a70e8981d",
+      "target_sha256": "78a75828d584df34d9f7644f9ea93e785129b71b1dec5b13343e5f2b8e1ca79a",
+      "reviewer": "Claude (Claude Code session; reviewed the added text on the 9-point creep and splash curvature (creep_diagratio, spl_diagratio; developer.md sec. 93) in the Japanese source against the English mirror, 2026-11-05)",
       "method": "assistant",
-      "reviewed_on": "2026-11-04"
+      "reviewed_on": "2026-11-05"
     },
     {
       "source": "examples/List_samples/list_glacier.txt",
@@ -2714,11 +2714,11 @@
     {
       "source": "test/README.md",
       "target": "test/README.en.md",
-      "source_sha256": "68abc38dfab397e21cc5c9da4bb05029c40171cc5560ea28158187265abc356e",
-      "target_sha256": "ebba504064b850b103dcfc866b8ae67a4ea7d61f18ac2b34a39eb08c6641babb",
-      "reviewer": "Claude (Claude Code session; merge of main into the branch: main's additions (dissol_src 4/5, talus dissolution, glacier, evapdry, stone_forest, glacier_valley) and the branch's edits (§91/§92 and the debris examples) both present in the two languages, compared)",
+      "source_sha256": "29f8fc4a18d441c875616ef611d0a0a33d5b3c218dc7732e7160726395cf4724",
+      "target_sha256": "109b98382f182a8b33d69d9b2fa4788be800da595e4d1775493a48b6e455c3fb",
+      "reviewer": "Claude (Claude Code session; reviewed the added text on the 9-point creep and splash curvature (creep_diagratio, spl_diagratio; developer.md sec. 93) in the Japanese source against the English mirror, 2026-11-05)",
       "method": "assistant",
-      "reviewed_on": "2026-11-04"
+      "reviewed_on": "2026-11-05"
     },
     {
       "source": "test/avalanche/README.md",
@@ -3889,6 +3889,15 @@
       "reviewer": "Claude (Claude Code session; full-text content and lexical review, no model execution)",
       "method": "assistant",
       "reviewed_on": "2026-10-24"
+    },
+    {
+      "source": "test/stencil9/README.md",
+      "target": "test/stencil9/en/README.md",
+      "source_sha256": "7b36d543b903a498f929cad89dcae9487d21d1f7dbf048850e82e69d0dc0e949",
+      "target_sha256": "135ef026737638731e4ca4dc2ebfe06c74f090f2fe312161630022897089a951",
+      "reviewer": "Claude (Claude Code session; wrote the Japanese source and the English mirror of the new test case README and checked them section by section, 2026-11-05)",
+      "method": "assistant",
+      "reviewed_on": "2026-11-05"
     },
     {
       "source": "test/sublattice/README.md",

@@ -1,0 +1,71 @@
+!======================================================================
+! stencil9: 曲率の相関長 ℓ = 2 m の等方性(9 点の核と κ、d = 1/3)
+!   σ = 2 m(2Δ)のガウス丘(z_hill2.txt)に降雨を 1 ステップ与え、乾式斜面侵食の雨滴項
+!   E = P kr (1 + ca κ) だけで 1 回更新する(リル項 spl_kt = 0)。侵食深は曲率 κ に比例するので、
+!   平坦なセルとの比から κ を読み、中心から同じ距離の格子軸寄りと斜めのセルで比べる
+!   (Check_stencil9.py splash)。丘の外側(r² > 2σ_eff²)が凹で κ > 0
+!======================================================================
+&list_sysparam
+  f_gridsystem = 0          ! 格子システム(0:ENC)
+  f_govequation = 0         ! 基礎方程式(0:DynWE)
+  dt = 1.0                  ! 時間刻み (s)
+  t0 = 0                    ! 計算開始時刻 (s)
+  tt = 1                    ! 計算終了時刻 (s)(地形更新 1 回)
+  dt_disp = 1               ! 画面表示時間刻み (s)
+  dt_file = 1               ! ファイル出力時間刻み (s)
+  dt_recrd = 1              ! プローブ出力時間刻み (s)
+  fn_geoinfo = '-'
+  fn_precip = '-'
+  fn_gwflow = '-'
+  fn_geomorph = '-'
+  fn_enc = '-'
+  dir_result = 'result_hill_lc_s9'
+  f_state_save = 1          ! 終了時の状態を保存(Check_stencil9.py が倍精度の z を読む)
+  dir_save = 'save_hill_lc_s9'
+  f_check_cfl = 0
+/
+
+&list_enc
+/
+
+&list_geoinfo
+  nx = 81
+  ny = 81
+  dx = 1.0
+  dy = 1.0
+  f_ztype = 1
+  fn_z = 'z_hill2.txt'
+  f_rntype = 0
+  rn0 = 0.03
+  sd0 = 5.0       ! 土層厚 (m)。侵食深より十分厚い
+  sy0 = 0.2       ! 比湧水量
+/
+
+&list_precip
+  prtype = 1
+  prval(1:2,1) = 0, 30
+  prval(1:2,2) = 9999, 30
+/
+
+&list_gwflow
+  f_gwvertical = 2          ! 鉛直モデル(2:Green-Ampt。降雨を浸透させて h = 0 に保つ)
+  f_gwlateral = 0           ! 側方なし
+/
+
+&list_gwflow_greenampt
+  gw_ksv_mmh = 72.0         ! 2e-5 m/s(降雨 30 mm/h より大きい)
+/
+
+&list_geomorph
+  dt_geomorph = 0.0         ! 0 = 毎ステップ更新
+  morfac = 1000.0           ! 加速係数(侵食深を測りやすい大きさに)
+  f_splash = 1              ! 乾式斜面侵食有効
+  spl_kr = 0.003            ! 雨滴侵食係数
+  spl_kt = 0.0              ! リル項なし(勾配に依らない = 侵食深は κ だけで決まる)
+  spl_ca = 100.0            ! 凹地形増幅(雨滴項)(m)
+  spl_cb = 0.0
+  spl_h = 1.0
+  spl_lc = 2.0              ! 曲率の相関長 ℓ (m)(0: 格子の κ)
+  spl_diagratio = 0.3333333333       ! 曲率のラプラシアンと平滑化の核の斜め配分(0: 5 点、1/3: 9 点)
+  fluv_porosity = 0.0       ! 空隙率(poroi = 1)
+/

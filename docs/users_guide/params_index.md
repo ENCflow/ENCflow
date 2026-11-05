@@ -2,7 +2,7 @@
 
 [ユーザーガイド目次へ](../users_guide.md)
 
-namelist パラメータ名から章を引く索引です(アルファベット順、全 776 項目)。
+namelist パラメータ名から章を引く索引です(アルファベット順、全 778 項目)。
 この索引は list_*.f90 の namelist 宣言から機械抽出で生成されています
 (developer.md §35.1)。
 
@@ -48,6 +48,7 @@ namelist パラメータ名から章を引く索引です(アルファベット�
 | cd | &list_sysparam | [浅水流計算](swflow.md) |
 | cm | &list_sysparam | [浅水流計算](swflow.md) |
 | creep_d | &list_geomorph | [土砂・地形変化](geomorph.md) |
+| creep_diagratio | &list_geomorph | [土砂・地形変化](geomorph.md) |
 | creep_hstar | &list_geomorph | [土砂・地形変化](geomorph.md) |
 | culv_ce | &list_struct_culvert | [構造物](structure.md) |
 | culv_flap | &list_struct_culvert | [構造物](structure.md) |
@@ -642,6 +643,7 @@ namelist パラメータ名から章を引く索引です(アルファベット�
 | snow_t_snow | &list_snow | [降雨・気象](forcing.md) |
 | spl_ca | &list_geomorph | [土砂・地形変化](geomorph.md) |
 | spl_cb | &list_geomorph | [土砂・地形変化](geomorph.md) |
+| spl_diagratio | &list_geomorph | [土砂・地形変化](geomorph.md) |
 | spl_dzmax | &list_geomorph | [土砂・地形変化](geomorph.md) |
 | spl_h | &list_geomorph | [土砂・地形変化](geomorph.md) |
 | spl_kr | &list_geomorph | [土砂・地形変化](geomorph.md) |

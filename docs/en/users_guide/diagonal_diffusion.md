@@ -733,6 +733,14 @@ with a limiter.
   steepest slope of hillslopes (§92) were biases from judging and evaluating
   with per-edge quantities in eight directions, not numerical diffusion. All
   have been rewritten to evaluate with the gradient magnitude or D∞.
+- **4-neighbour 5-point stencils of diffusion-type processes**: creep and the
+  curvature of dry hillslope erosion use the 5-point Laplacian by default, which is
+  biased by the grid direction at short wavelengths close to the cell size (not
+  numerical diffusion, but a bias in the direction of the discretisation error).
+  Setting `creep_diagratio` and `spl_diagratio` to 1/3 gives the isotropic 9-point
+  stencil ([Sediment transport and hillslope processes](sediment.md) §2 and §6, developer.md §93). The glacier
+  SIA and lava flow remain 4-neighbour (an 8-neighbour version is being designed;
+  landslide_tsunami_plan.md §11.1).
 - **The difference in spreading between 8 and 4 neighbours**: the lateral
   spreading of a debris-flow fan is larger with 8 neighbours, but it depends
   neither on the grid nor on the direction of the valley, so it is not
