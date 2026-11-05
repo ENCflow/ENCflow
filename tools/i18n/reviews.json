@@ -1571,20 +1571,20 @@
     {
       "source": "examples/estuary_barrage/README.md",
       "target": "examples/estuary_barrage/en/README.md",
-      "source_sha256": "fc565842868a64e8a1dfa1ba2c72e6af1e143051d5f5e53f8f29a4914845fda1",
-      "target_sha256": "1b0cf7620ea10c6f91aa7727d0304d1d1421e33476c10fb1896371a531d43b4c",
-      "reviewer": "Claude (assistant)",
+      "source_sha256": "d206f16fa8df4f87436ee2298b28090e340308485d9335734debaf21021597e6",
+      "target_sha256": "2c94f1fb036a802af9c3eec57b8a40a2efab67a2c5385e83e9db75e301182fef",
+      "reviewer": "Claude (Claude Code session; recomputed 2026-11-05: the table, the recompute note and the values in the bullets compared with the Japanese source, rest unchanged since the previous record)",
       "method": "assistant",
-      "reviewed_on": "2026-11-02"
+      "reviewed_on": "2026-11-05"
     },
     {
       "source": "examples/estuary_barrage/figs/cross.png",
       "target": "examples/estuary_barrage/en/figs/cross.png",
-      "source_sha256": "70291adc1b3a2c29c260dd7c33e78509cb98e95420928e8daf0f4f31a4673bb7",
-      "target_sha256": "94dec5cd0a844fca530ac73be3c442f3edd6b08e869109530409b55b48190736",
-      "reviewer": "Claude (assistant)",
+      "source_sha256": "ccb2ee87505763e85928953dba9aaf6b9e5682be2390a2b6f6867ffb593696bb",
+      "target_sha256": "da6137685ba8330af23841c6756bc4a58887a69b744e23f6342721fd3ca9e8cc",
+      "reviewer": "Claude (Claude Code session; recomputed 2026-11-05: both drawn by plot_results.py from the same results, labels compared with the Japanese figure)",
       "method": "assistant",
-      "reviewed_on": "2026-11-02"
+      "reviewed_on": "2026-11-05"
     },
     {
       "source": "examples/estuary_barrage/figs/mechanism.png",
@@ -1598,29 +1598,29 @@
     {
       "source": "examples/estuary_barrage/figs/plan.png",
       "target": "examples/estuary_barrage/en/figs/plan.png",
-      "source_sha256": "5da654ec064bfb43f04100a1abe404de37b72d9cfd2948a1909cf629b14e2f38",
-      "target_sha256": "16a425b2ecb324d245ee0b9d2f13d2e64d354fed40534c460d7dc213e233273f",
-      "reviewer": "Claude (assistant)",
+      "source_sha256": "8e565648e68d3fd80d5ff8e2337d031f8161374bbdbb6a49bf10496b5645e529",
+      "target_sha256": "e0a88d23865f21497f196e6e5b3b3ff2b59589a36a74deef827292b646c306ab",
+      "reviewer": "Claude (Claude Code session; recomputed 2026-11-05: both drawn by plot_results.py from the same results, labels compared with the Japanese figure)",
       "method": "assistant",
-      "reviewed_on": "2026-11-02"
+      "reviewed_on": "2026-11-05"
     },
     {
       "source": "examples/estuary_barrage/figs/profile.png",
       "target": "examples/estuary_barrage/en/figs/profile.png",
-      "source_sha256": "71d4e91057b36e6113c42291fe7dfa8649b3c6f73ab25a5d257cbdc646723d18",
-      "target_sha256": "c7b100b02f98544d98af67daf4df7f6abc5fa78bfc1c0073531eaed3142ed948",
-      "reviewer": "Claude (assistant)",
+      "source_sha256": "dbcd79c8c0a84dc3b6d4740cbd1fbadce81b1dcea2b27d8e8305341794a46db9",
+      "target_sha256": "fb111d0941f7c70a055c240e8dde74b3c5af96dbe359e7d49db8817b6a55f09a",
+      "reviewer": "Claude (Claude Code session; recomputed 2026-11-05: both drawn by plot_results.py from the same results, labels compared with the Japanese figure)",
       "method": "assistant",
-      "reviewed_on": "2026-11-02"
+      "reviewed_on": "2026-11-05"
     },
     {
       "source": "examples/estuary_barrage/figs/series.png",
       "target": "examples/estuary_barrage/en/figs/series.png",
-      "source_sha256": "a27486cb38b0823dfc918c2d5172a82dbbc3f008899afbe62459ca390a0f5627",
-      "target_sha256": "1cb3e12e5cf61616dad36cd2d67a23a4b224f0ab9b7ad307b2ddc9de9c99a536",
-      "reviewer": "Claude (assistant)",
+      "source_sha256": "abaa01edfb0531907ae29bed2ead6f294b8dd7424915fa2111b3e10480c844c6",
+      "target_sha256": "782a55b2e06976201073e6aa919eb58c3c1266b6378d2a74ae3f154bc8c63670",
+      "reviewer": "Claude (Claude Code session; recomputed 2026-11-05: both drawn by plot_results.py from the same results, labels compared with the Japanese figure)",
       "method": "assistant",
-      "reviewed_on": "2026-11-02"
+      "reviewed_on": "2026-11-05"
     },
     {
       "source": "examples/estuary_barrage/figs/setup.png",
