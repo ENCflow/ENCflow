@@ -32,6 +32,9 @@ module m_swflow_enc
                                       ! init_debris が呼ぶ。swflow init より前)
   public :: zdiff_minmod              ! 地盤の勾配の minmod 差分(重力補正の gravity_prepare と、
                                       ! m_geomorph の土石流の岩盤侵食の有効重力が使う。§91)
+  public :: slope_shear_on            ! 斜面に沿う底面せん断の有無(f_gravity_correction = 2。§93)
+  public :: slope_shear_factor        ! 流砂・侵食の無次元掃流力の斜面の倍率(セル。§93)
+  public :: slope_shear_factor_e      ! 同じく辺(両セルの平均。§93)
 
   ! 変数群(§71 0d)。opt/geo は nvfortran の submodule バグ回避(TPR #27323 系)で
   ! 公開(修正され次第 private に戻す)。chn は m_geomorph の掃流砂・m_wq・流木・
@@ -401,6 +404,9 @@ module m_swflow_enc
     real, allocatable :: mn(:,:,:)   ! セル境界での流量(時刻n。ステップ中は読み取り専用)
     real, allocatable :: mn1(:,:,:)  ! セル境界での流量の書き込み先(時刻n+1。completeでmnへコミット)
     real, allocatable :: h1(:,:)     ! セル中心での計算済み水深
+    real, allocatable :: rout(:,:)   ! セルの流出の縮め率(continuous が求め scale_cell_outflow が使う。1 = 縮めない。
+                                     ! ステップごとの作業配列で保存しない。f_exflux_reduction > 0
+                                     ! のときだけ確保。§94)
     real, allocatable :: hs1(:,:)    ! 浮遊砂柱状量の書き込み先(時刻n+1。completeでs%hsへ
                                      ! コミット。s%sed_active のときだけ確保)
     real, allocatable :: cq1(:,:)    ! 輸送物質柱状量の書き込み先(同上の意味論。
@@ -838,6 +844,17 @@ subroutine m_swflow_enc_init(p, g, b, s)
   if (len_trim(p%fn_enc) > 0) call list_enc_read(p, list)
 
   opt%f_gravity_correction = list%f_gravity_correction
+  select case (opt%f_gravity_correction)
+    case (0)      ! なし
+    case (1)      ! 有効重力 g_e = g/(1 + |∇z|²) だけ(§91。2026-11-05 までの既定)。摩擦と流砂のせん断は
+                  ! 水平流速・鉛直の水深のまま(水平投影のモデルで校正したマニングの n 向け)
+      call par_info("swflow_enc: f_gravity_correction = 1 (effective gravity only; friction and sediment " // &
+                    "shear in horizontal coordinates. The default 2 also evaluates them along the slope)")
+    case (2)      ! + 斜面に沿う速さと地盤に直角な水深の摩擦・流砂のせん断(既定。§93)
+    case default
+      call par_stop("list_enc: f_gravity_correction must be 0(none), 1(effective gravity) " // &
+                    "or 2(effective gravity + slope-parallel friction)")
+  end select
   opt%f_exflux_reduction = list%f_exflux_reduction
   opt%f_hcap_upwind = list%f_hcap_upwind
   select case (opt%f_hcap_upwind)
@@ -1156,6 +1173,8 @@ subroutine m_swflow_enc_calc(p, g, b, s, ierror)
   type(t_boundary), intent(inout) :: b   ! ダム節が診断量を更新(§22)
   type(t_state), intent(inout) :: s
   integer, intent(inout) :: ierror
+  integer :: nlim                 ! 流出の合計が水量以上の自帯のセルの数(§94)
+  logical :: scaled               ! 流出の辺を縮めたか(連続式を解き直す。§94)
 
   ! ステップ頭: 前ステップ確定状態のハロ交換
   !   h/u/v/vv は幅2(移流項のハロ再計算=案Aの依存)、mn は幅1。
@@ -1237,8 +1256,20 @@ subroutine m_swflow_enc_calc(p, g, b, s, ierror)
   ! 射影を掛けてエッジ流速・流量を補正する(docs/nonhydrostatic_plan.md §5)
   if (nhp%nh_active) call nh_project(p, g, s, sx_mod)
 
-  ! 連続式を解いて水深を更新する
-  call continuous(p, g, s, sx_mod)
+  ! 連続式を解いて水深を更新する。過大な流出の抑制が有効なら、同じループでセルの流出の
+  ! 合計も求め、水量以上のセルの率 rout と数 nlim を返す(§94)
+  call continuous(p, g, s, sx_mod, nlim)
+
+  ! セルの流出の合計による過大な流出の抑制(辺ごとの抑制の取りこぼしを塞ぐ。§94)。
+  ! 率をハロ交換し(確保の判定は namelist 由来で全ランク同一 = collective 安全)、縮める
+  ! セルが自帯かハロ行にあれば、流出の辺を風上のセルの率で縮めて連続式を解き直す
+  ! (まれ。縮めてから 1 回だけ解くのと同じ結果になる。解き直しの率は使わない)
+  if (allocated(sx_mod%rout)) then
+    call par_halo_cell(sx_mod%rout)
+    s%n_exfluxes = s%n_exfluxes + nlim
+    call scale_cell_outflow(g, sx_mod, nlim > 0, scaled)
+    if (scaled) call continuous(p, g, s, sx_mod, nlim)
+  end if
 
   ! 浮遊砂柱状量を移流する(連続式と同一のエッジ流量・係数による
   ! 風上輸送。時刻 n の s%h と s%hs が必要なため complete より前に置く)。
@@ -1497,6 +1528,8 @@ subroutine init_enc_status(p, g, s, sx)
   ! エッジ配列の j 範囲: セル j を挟むエッジは j-1 と j なので下限は jsh-1
   allocate(sx%uv(1:4, dcp%ish-1:dcp%ieh, dcp%jsh-1:dcp%jeh), source = 0.0)
   allocate(sx%h1(dcp%ish:dcp%ieh, dcp%jsh:dcp%jeh), source = 0.0)
+  ! セルの流出の縮め率(過大な流出の抑制が有効なときだけ。§94)
+  if (opt%f_exflux_reduction > 0) allocate(sx%rout(dcp%ish:dcp%ieh, dcp%jsh:dcp%jeh), source = 1.0)
   allocate(sx%mn1(1:4, dcp%ish-1:dcp%ieh, dcp%jsh-1:dcp%jeh), source = 0.0)
   allocate(sx%mn(1:4, dcp%ish-1:dcp%ieh, dcp%jsh-1:dcp%jeh), source = 0.0)
   ! 浮遊砂の書き込みバッファ(sed_active は m_geomorph_init が設定済み。
@@ -1642,6 +1675,7 @@ subroutine del_enc_status(sx)
   if (allocated(sx%mn)) deallocate(sx%mn)
   if (allocated(sx%mn1)) deallocate(sx%mn1)
   if (allocated(sx%h1)) deallocate(sx%h1)
+  if (allocated(sx%rout)) deallocate(sx%rout)
   if (allocated(sx%hs1)) deallocate(sx%hs1)
   if (allocated(sx%cq1)) deallocate(sx%cq1)
   if (allocated(sx%hd1)) deallocate(sx%hd1)
@@ -1862,6 +1896,50 @@ end function
 
 
 !----------------------------------------------------------------------
+! 斜面に沿う底面せん断(f_gravity_correction = 2。developer.md §93)
+!   slope_shear_on: 有効かどうか(swflow_enc の設定。ENC 以外の格子では偽)
+!   slope_shear_factor: 流砂・侵食の無次元掃流力 τ* = n² |V|²/(s d h^{1/3})(水平流速・鉛直の
+!     水深のマニング閉じ)を、斜面に沿う速さ |V_s|² = |V|² (1 + (V̂·∇z)²) と地盤に直角な水深
+!     h cos θ で評価した値に直す倍率 (1 + (V̂·∇z)²)(1 + |∇z|²)^{1/6} を返す(底面せん断
+!     τ_b = ρ g n² |V_s|²/h_n^{1/3}。運動方程式の摩擦 slope_fric_factor と同じ底面せん断)。
+!     ∇z はセルの地盤の勾配で、流れのステップ頭に gravity_prepare が時刻 n の z から求めた minmod の
+!     勾配(sx_mod%gzx・gzy。摩擦の倍率と同じ場の勾配)を読む。地形変化のプロセスはセルごとに z を
+!     その場で更新するループの中で倍率を求めるので、ここで z の近傍を差分すると、ほかのスレッドが
+!     更新中の z を読む競合と、ループの順序への依存が起きる(2026-11-05 に wfsed の再開の検定で検出。
+!     §93)。gzx・gzy は js−1..je+1 行を持ち、f_gravity_correction > 0 で確保される。V̂ はセルの
+!     流速 (u, v) の向き。流速 0 では (1 + |∇z|²)^{1/6}(せん断が 0 なので値は効かない)
+!   slope_shear_factor_e: 辺(両セル)の倍率の平均(辺の τ* は両セルの平均の速さ・水深で求めるため)
+!----------------------------------------------------------------------
+logical function slope_shear_on()
+  slope_shear_on = .false.
+  if (allocated(opt)) slope_shear_on = (opt%f_gravity_correction >= 2)
+end function
+
+pure function slope_shear_factor(g, s, i, j) result(f)
+  type(t_geoinfo), intent(in) :: g
+  type(t_state), intent(in) :: s
+  integer, intent(in) :: i, j
+  real :: f
+  real :: gx, gy, vv2, gv2
+  if (g%initialized) continue   ! 引数未使用の警告を抑制(呼び出し側の形を保つ)
+  gx = sx_mod%gzx(i,j)
+  gy = sx_mod%gzy(i,j)
+  vv2 = s%u(i,j)**2 + s%v(i,j)**2
+  gv2 = 0.0
+  if (vv2 > 0.0) gv2 = (s%u(i,j) * gx + s%v(i,j) * gy)**2 / vv2
+  f = (1.0 + gv2) * (1.0 + gx**2 + gy**2)**(1.0 / 6.0)
+end function
+
+pure function slope_shear_factor_e(g, s, i, j, in, jn) result(f)
+  type(t_geoinfo), intent(in) :: g
+  type(t_state), intent(in) :: s
+  integer, intent(in) :: i, j, in, jn
+  real :: f
+  f = (slope_shear_factor(g, s, i, j) + slope_shear_factor(g, s, in, jn)) / 2
+end function
+
+
+!----------------------------------------------------------------------
 ! 曲率項の前計算(f_dbcurv=1。developer.md §28.10)
 !   セルごとに a_c = (u²z_xx + 2uv z_xy + v²z_yy)/√(1+z_x²+z_y²) を求める。
 !   これは地表面の流向法線曲率 κ_n と表面速度 V_s の積 V_s²κ_n を、水平
@@ -2059,7 +2137,8 @@ subroutine calc_kth_momentum(p, g, s, sx, i, j, k, have_exflux, have_runge, have
     dhn = dhn / chn%wfrac(in,jn)
   end if
 
-  ! 過大な流出の抑制
+  ! 過大な流出の抑制(この辺だけで水量を超える流出。複数の辺の合計が超える分は
+  ! 連続式の後の scale_cell_outflow が縮めて連続式を解き直す。§94)
   !if ((dh > 0 .and. dhc + p%dd > s%h(i,j)) .or. (dh < 0 .and. dhn + p%dd > s%h(in,jn))) then
   if (sct%have_sect) then
     ! σ 有効時は矩形換算水深(体積)で判定・抑制する(dhc/dhn は vh 増分。
@@ -2192,9 +2271,9 @@ end subroutine
 !     エッジの流速が過大になって手前の 1 セルに水が積み上がるスパイクを
 !     防ぐ。乾湿前縁では乾側 h≈0 に対して湿側水深で流出するため前縁の
 !     挙動が変わる。§68.7)
-!   上流側は流速 uve の符号で決める(uve > 0: 中心セル c、< 0: 近傍セル n、
-!   0: 補正なし)。calc_kth_flux(RK の各段)と init_enc_status(初期流量
-!   mn1 = uv·he の整合。§7)が同じ関数を使う
+!   上流側は引数 uve の符号で決める(uve > 0: 中心セル c、< 0: 近傍セル n、
+!   0: 補正なし)。calc_kth_flux(RK の各段)は新しい流速の向きの予測(半陰解法の
+!   分子 upre。§95)を、init_enc_status(初期流量 mn1 = uv·he の整合。§7)は流速を渡す
 !----------------------------------------------------------------------
 pure function cap_he_upwind(he, hc, hn, uve) result(he_corr)
   real, intent(in) :: he          ! 両側平均のセル境界水深
@@ -2249,6 +2328,7 @@ subroutine calc_kth_flux(p, g, s, sx, uve0, tae0, i, j, k, in, jn, f_runge, uve1
   real :: hc0, hn0
   real :: hc, hn
   real :: dtl
+  real :: upre                    ! 新しい流速の向きの予測(半陰解法の分子。上流側の頭打ちに使う。§95)
   integer :: l
   ! 土石流(debris_active。debris_plan.md §2.3-2.4)
   logical :: have_db              ! 運動量への hs 算入の有無
@@ -2261,6 +2341,7 @@ subroutine calc_kth_flux(p, g, s, sx, uve0, tae0, i, j, k, in, jn, f_runge, uve1
   real :: rme                     ! 1 + s・C(混合密度比 ρm/ρ)
   real :: vv0e                    ! 辺の速さ |V|(下限 p%vv 適用前。降伏停止判定用。§28.11)
   real :: tte                     ! 辺の接線方向の駆動(流動面の勾配の接線成分。降伏停止判定用。§28.16)
+  real :: slf                     ! 斜面に沿う摩擦の倍率(f_gravity_correction = 2 のときだけ > 0。§93)
   ! 波→流れ(段 W2。s%wv_flow > 0 のときだけ使う。§90)
   real :: wfe                     ! 辺の外力の成分 F_k/ρ (m2/s2。中心から近傍が正)
   real :: use_                    ! 辺の Stokes 輸送の成分 u^S_k (m/s。wv_flow = 2)
@@ -2288,6 +2369,11 @@ subroutine calc_kth_flux(p, g, s, sx, uve0, tae0, i, j, k, in, jn, f_runge, uve1
   ! セル境界での有効重力加速度を計算
   ge = p%gg                                 ! 重力加速度
   if (opt%f_gravity_correction > 0) ge = correct_ge()
+
+  ! 斜面に沿う摩擦の倍率(f_gravity_correction = 2。§93)。時刻 n の量から辺ごとに 1 回求め、
+  ! ルンゲクッタの段の間は変えない。既定(0・1)では 0 のままで、摩擦の文は従来のまま
+  slf = 0.0
+  if (opt%f_gravity_correction >= 2) slf = slope_fric_factor()
 
   ! セル境界での底面勾配項(符合は中心セルから近傍セルに向かい正)
   tg0e = -ge * (s%z(in,jn) - s%z(i,j)) / geo%w8dr(k) * gve
@@ -2426,14 +2512,6 @@ subroutine calc_kth_flux(p, g, s, sx, uve0, tae0, i, j, k, in, jn, f_runge, uve1
     ! セル境界での水深を求める
     he = (hc + hn) / 2
 
-    ! セル境界での水深が上流側水深よりも深くならない様に調整
-    if (opt%f_hcap_upwind > 0) he = cap_he_upwind(he, hc, hn, uve0)
-
-    ! 摩擦項で使用する水深
-    !   水深が浅い場合に摩擦が過大となることを防ぐために水深の最小値を制限
-    !   (土石流有効時は混合流動深 h + hs。hse=0 なら厳密に従来と同値)
-    hhe = max(he + hse, p%dv)
-
     ! セル境界での移流項(時刻 n の値で固定。RK 段内の更新は比例形・
     ! アフィン形とも評価のうえ不採用。developer.md §68.19, §68.23)
     tae = tae0
@@ -2445,6 +2523,28 @@ subroutine calc_kth_flux(p, g, s, sx, uve0, tae0, i, j, k, in, jn, f_runge, uve1
     else
       tge = tg0e
     end if
+
+    ! l段目の時間刻み
+    dtl = p%dt / a(l) / lme
+
+    ! セル境界での水深が上流側水深よりも深くならない様に調整(f_hcap_upwind)
+    !   上流側は新しい流速の向きで決める(developer.md §95)。半陰解法の分母 1 − tfe·dtl は
+    !   1 以上(tfe ≤ 0)なので、新しい流速の向きは分子 upre = uve0 + (tae + tge)·dtl(波の外力
+    !   があればその項も)の符号で、摩擦より先に決まる。前ステップの流速 uve0 の向きで決めると、
+    !   静止から流れ出す辺(uve0 = 0)では頭打ちが掛からず、深いセルに接する薄い水膜からの
+    !   流出が両側の平均の水深で運ばれて毎ステップ過大流出の抑制で止められ、向きが反転する
+    !   辺では逆の側で頭打ちしていた(§94)。Stokes 輸送の摩擦の項(wv_flow = 2 の −tfe·use_·dtl)
+    !   は tfe によるので向きの予測には入れない(独自の簡略化)
+    if (opt%f_hcap_upwind > 0) then
+      upre = uve0 + (tae + tge) * dtl
+      if (s%wv_flow > 0) upre = upre + wfe / max((hc + hn) / 2, p%dv) * dtl
+      he = cap_he_upwind(he, hc, hn, upre)
+    end if
+
+    ! 摩擦項で使用する水深
+    !   水深が浅い場合に摩擦が過大となることを防ぐために水深の最小値を制限
+    !   (土石流有効時は混合流動深 h + hs。hse=0 なら厳密に従来と同値)
+    hhe = max(he + hse, p%dv)
 
     ! セル境界での摩擦項
     !   摩擦項は半陰解法で計算するため、次元が他の項と異なる(値は常に正)。
@@ -2459,6 +2559,11 @@ subroutine calc_kth_flux(p, g, s, sx, uve0, tae0, i, j, k, in, jn, f_runge, uve1
     else
       tfe = -ge * rne**2 * vve * m_ffactor_calc(hhe) * gve
     end if
+    ! 斜面に沿う摩擦(f_gravity_correction = 2。§93): マニングの摩擦だけを、斜面に沿う速さと
+    ! 地盤に直角な水深で、g で評価した値に置き換える(既定の文は変えずに上書きする。§90 の注)。
+    ! 波・流れの摩擦(wv_flow = 2)の差分の項には掛けない(波浪場を使う海浜の勾配では倍率がほぼ 1。
+    ! その分岐に文を足すと、既定の経路の -Ofast の最終桁が波浪場のケースで動いた。§93)
+    if (slf > 0.0 .and. fbe <= 0.0) tfe = tfe * slf
 
     ! セル境界での抗力項
     !   摩擦項と一緒に半陰解法で計算するため、次元が他の項と異なる(値は常に正)
@@ -2471,9 +2576,6 @@ subroutine calc_kth_flux(p, g, s, sx, uve0, tae0, i, j, k, in, jn, f_runge, uve1
     ! 波・流れの摩擦(wv_flow = 2): マニング則の摩擦の速さを vve から vvw へ差し替える
     ! (家屋の抗力・降伏の項は流れの速さ vve のまま)
     if (s%wv_flow >= 2 .and. fbe <= 0.0) tfe = tfe - ge * rne**2 * (vvw - vve) * m_ffactor_calc(hhe) * gve
-
-    ! l段目の時間刻み
-    dtl = p%dt / a(l) / lme
 
     ! セル境界での流速(符合は中心セルから近傍セルに向かい正)を更新
     !   摩擦項を半陰解法で計算する
@@ -2664,17 +2766,118 @@ contains
     end if
   end function
 
+  !--------------------------------------------------------------------
+  ! 斜面に沿う摩擦の倍率(f_gravity_correction = 2。developer.md §93)
+  !   マニングの底面せん断を、斜面に沿う速さ |V_s| = |V| √(1 + (V̂·∇z)²) と地盤に直角な水深
+  !   h_n = h cos θ で評価し(τ_b/ρ = g n² |V_s|²/h_n^{1/3})、斜面の面積 1/cos θ に掛かる力を
+  !   水平面積あたりに直すと、水平流速 V の減速度は g n² |V_s| V/h_n^{4/3} になる(本書の導出は
+  !   docs/users_guide/steep_slope.md §2.3)。1 の摩擦 g_e n² |V| u/h^{4/3}(g_e = g/(1 + |∇z|²))に対する
+  !   倍率 (1 + |∇z|²)^{5/3} √(1 + (V̂·∇z)²) を返す。∇z は両セルの地盤の勾配(minmod。
+  !   gravity_prepare)の平均 = 場の勾配で、法線成分も辺の差分(correct_ge の s_n)ではなくこれから
+  !   求める(流砂のせん断の倍率 slope_shear_factor と同じ勾配)。平面の斜面では辺の差分と一致して
+  !   等流は斜面に沿う式になり、1 辺だけの段(壁・縁石・DEM の段)では minmod がほぼ 0 なので倍率は
+  !   ほぼ 1(1 と同じ扱い。斜面の薄層流の幾何を段に当てはめない。§93)。V̂ は両セルの時刻 n の流速の
+  !   平均の向きで、流れがなければ辺の法線の向き(その辺の流速だけが動き出すため)。斜面に沿う等流は
+  !   u_s = h_n^{2/3} sin^{1/2}θ / n(Chow 1959。Van Emelen ら 2014 の MSW)になる
+  !--------------------------------------------------------------------
+  function slope_fric_factor() result(f)
+    real :: f
+    real :: szn, szt, ub, vb, vn, vt, vb2, gzv2
+    szn = ((sx%gzx(i,j) + sx%gzx(in,jn)) * geo%n8x(k) + (sx%gzy(i,j) + sx%gzy(in,jn)) * geo%n8y(k)) / 2
+    szt = ((sx%gzx(i,j) + sx%gzx(in,jn)) * geo%n8y(k) - (sx%gzy(i,j) + sx%gzy(in,jn)) * geo%n8x(k)) / 2
+    ub = (s%u(i,j) + s%u(in,jn)) / 2
+    vb = (s%v(i,j) + s%v(in,jn)) / 2
+    vn = ub * geo%n8x(k) + vb * geo%n8y(k)          ! 平均流速の辺の法線成分
+    vt = ub * geo%n8y(k) - vb * geo%n8x(k)          ! 同じく接線成分(t = (n_y, −n_x))
+    vb2 = vn**2 + vt**2
+    if (vb2 > 0.0) then
+      gzv2 = (vn * szn + vt * szt)**2 / vb2          ! (V̂·∇z)²
+    else
+      gzv2 = szn**2
+    end if
+    f = (1.0 + szn**2 + szt**2)**(5.0 / 3.0) * sqrt(1.0 + gzv2)
+  end function
+
+end subroutine
+
+
+!----------------------------------------------------------------------
+! セルの流出の合計による過大な流出の抑制の、辺を縮める段(developer.md §94)
+!   calc_kth_momentum と put_bc_faces の抑制は辺ごと(その辺の流出だけで水量を
+!   超えるか)なので、複数の辺から同時に出ると合計がセルの水量を超えて、連続式の
+!   後の水深が負になりうる(dd 未満の水膜が深いセルに接し、斜めの 2 辺がそれぞれ
+!   水量をわずかに下回る流出を持つ例。§94)。continuous が連続式と同じ換算・同じ
+!   飛ばす辺でセルの流出の合計 O を求め、O が水量 h(σ 有効時は矩形換算水深)以上の
+!   セルに率 r = max(h − dd, 0)/O を置く(辺ごとの抑制と同じく dd を残す。辺の向きに
+!   よる偏りを作らないよう、流出する辺はすべて同率。それ以外のセルは 1)。率は呼び出し
+!   側がハロ交換する(帯の境界の辺は風上のセルが隣のランクのことがある)。
+!   ここでは、自帯のセルが使う辺(エッジ行 js−1..je)ごとに、風上(流出する側)のセルの
+!   率を流量 mn1 と流速 uv に掛ける。辺の両側で同じ値になるので保存は保たれる。各辺を
+!   書くのは 1 回だけ(行 je・列 ie・成分 k の反復)なので OpenMP の競合はない。縮める
+!   セルが自帯にもハロ行にもなければ何もせず scaled = 偽(呼び出し側は連続式を解き直さ
+!   ない = 抑制が働かないステップの追加の計算は率の判定とハロ交換だけ)
+!----------------------------------------------------------------------
+subroutine scale_cell_outflow(g, sx, own_any, scaled)
+  type(t_geoinfo), intent(in) :: g
+  type(t_enc_status), intent(inout) :: sx
+  logical, intent(in) :: own_any      ! 自帯に率 < 1 のセルがある(continuous の nlim > 0)
+  logical, intent(out) :: scaled      ! 縮める段を実行した(連続式を解き直す)
+
+  integer :: i, k, ie, je, i1, i2, jc, in, jn
+  real :: mne, r
+
+  scaled = own_any
+  if (.not. scaled .and. dcp%js - 1 >= dcp%jsh) scaled = any(sx%rout(:, dcp%js-1) < 1.0)
+  if (.not. scaled .and. dcp%je + 1 <= dcp%jeh) scaled = any(sx%rout(:, dcp%je+1) < 1.0)
+  if (.not. scaled) return
+  !$omp parallel do schedule(dynamic) private(i, k, ie, je, i1, i2, jc, in, jn, mne, r)
+  do je = dcp%js - 1, dcp%je
+    call edge_row_span(g, je, i1, i2)
+    do ie = i1, i2
+      do k = 1, 4
+        mne = sx%mn1(k,ie,je)
+        if (mne == 0.0) cycle
+        i = ie - die(k)              ! この辺を書くセル(流量は (i,jc) → (in,jn) が正)
+        jc = je - dje(k)
+        in = i + din(k)
+        jn = jc + djn(k)
+        if (mne > 0.0) then
+          r = rate(i, jc)
+        else
+          r = rate(in, jn)
+        end if
+        if (r < 1.0) then
+          sx%mn1(k,ie,je) = mne * r
+          sx%uv(k,ie,je) = sx%uv(k,ie,je) * r
+        end if
+      end do
+    end do
+  end do
+  !$omp end parallel do
+
+contains
+
+  ! 風上のセルの率(確保範囲外・領域外は 1 = 縮めない。海セルは continuous で 1 のまま)
+  real function rate(ii, jj)
+    integer, intent(in) :: ii, jj
+    rate = 1.0
+    if (ii < dcp%ish .or. ii > dcp%ieh .or. jj < dcp%jsh .or. jj > dcp%jeh) return
+    if (g%x(ii,jj) <= 0) return
+    rate = sx%rout(ii,jj)
+  end function
+
 end subroutine
 
 
 !----------------------------------------------------------------------
 ! 連続式による水深の更新と平均流速・流量の計算
 !----------------------------------------------------------------------
-subroutine continuous(p, g, s, sx)
+subroutine continuous(p, g, s, sx, nlim)
   type(t_sysparam), intent(in) :: p
   type(t_geoinfo), intent(in) :: g
   type(t_state), intent(inout) :: s
   type(t_enc_status), intent(inout) :: sx
+  integer, intent(out) :: nlim     ! 流出の合計が水量以上の自帯のセルの数(§94。rout 無効なら 0)
 
   integer :: i, j, k
   integer :: in, jn, ie, je
@@ -2682,12 +2885,19 @@ subroutine continuous(p, g, s, sx)
   real :: dh
   real :: fw, winv
   real :: mnmax
+  real :: outf, hv                 ! セルの流出の合計と水量(§94)
+  logical :: have_rout
   integer, parameter :: ke(1:8) = [ 1, 2, 3, 4, 4, 3, 2, 1]
   real, parameter :: sign_e(1:8) = [1., 1., 1., 1., -1., -1., -1., -1.]
 
-  !$omp parallel do schedule(dynamic) private(i, j, k, in, jn, ie, je, uve, mne, dh, fw, winv, mnmax)
+  ! セルの流出の合計による過大な流出の抑制(§94)の率を同じループで求めるか
+  have_rout = allocated(sx%rout)
+  nlim = 0
+  !$omp parallel do schedule(dynamic) private(i, j, k, in, jn, ie, je, uve, mne, dh, fw, winv, mnmax, outf, hv) &
+  !$omp reduction(+:nlim)
   do j = dcp%js, dcp%je
     do i = g%wx(1,j), g%wx(2,j)
+      if (have_rout) sx%rout(i,j) = 1.0
       if (g%sw(i,j) > 0) cycle
       if (g%x(i,j) <= 0) cycle
       s%u(i,j) = 0
@@ -2704,6 +2914,7 @@ subroutine continuous(p, g, s, sx)
       winv = 1.0
       if (chn%have_width) winv = 1.0 / chn%wfrac(i,j)
       mnmax = 0
+      outf = 0.0
       ! 対象セルi,jの8近傍全ての水の流出入を計算し平均流量・流速と水位を更新する
       s%ddir1(i,j) = 0
       s%ddir8(i,j) = 0
@@ -2739,6 +2950,8 @@ subroutine continuous(p, g, s, sx)
         dh = mne * geo%mn2dh(k) * fw * winv / s%gv(i,j)
         ! 水深を更新
         sx%h1(i,j) = sx%h1(i,j) - dh
+        ! 流出の合計(§94。h1 とは別に足すので h1 の演算列は変わらない)
+        if (dh > 0.0) outf = outf + dh
         ! セル中心の平均流速・流量への寄与分を加算
         s%u(i,j) = s%u(i,j) + uve * (geo%w8mx(k) * fw)
         s%v(i,j) = s%v(i,j) + uve * (geo%w8my(k) * fw)
@@ -2752,6 +2965,16 @@ subroutine continuous(p, g, s, sx)
         end if
         if (dh > 0) s%ddir8(i,j) = s%ddir8(i,j) + 2**k   ! 全ての流出方向
       end do
+      ! 流出の合計が水量(σ 有効時は矩形換算水深)以上なら、流出する辺をすべて同じ率
+      ! max(h − dd, 0)/O で縮める率を置く(縮めるのは呼び出し側の scale_cell_outflow。§94)
+      if (have_rout .and. outf > 0.0) then
+        hv = s%h(i,j)
+        if (sct%have_sect) hv = sect_v(s%h(i,j), sct%sdep(i,j))
+        if (hv - outf <= 0.0) then
+          sx%rout(i,j) = max(hv - p%dd, 0.0) / outf
+          nlim = nlim + 1
+        end if
+      end if
       ! 河道幅有効セルは u,v をセル方向別通水率で正規化する(vv・摩擦・
       ! 抗力・移流が河道内流速を見る。m,n は流量積分の意味論を保つため
       ! 正規化しない=フラックス測線の実流量が保たれる条件。§18)
@@ -3008,8 +3231,10 @@ end subroutine
 !     - 源泉・消滅・乾燥時の処遇は所有モジュールの責務(ここは純移流)
 !     - 風上セルが領域外(開境界からの流入)の濃度は 0(清水流入)。ただし
 !       側方 Neumann の辺は鏡像セルの濃度(勾配 0。§90)、cbin があればその値
-!     - 乾燥エッジ条件(h<dd 両セル)は continuous と同一。強い乾燥化では
-!       h1 同様に c1 も僅かに負になり得る(f_exflux_reduction=1 で緩和)
+!     - 乾燥エッジ条件(h<dd 両セル)は continuous と同一。水の流出は
+!       f_exflux_reduction=1 でセルの水量を超えない(辺ごとの抑制とセルの合計の
+!       抑制。§94)が、c1 の非負は保証しない(MUSCL の面の濃度は供給元のセルの
+!       平均を超えうる。eul も水と違う流束)。強い乾燥化では c1 が僅かに負になり得る
 !     - eul = 真(波浪場の浮遊砂。§90)は面流束から h (r u^S − u_a ê_θ) を引く。このときは
 !       一様濃度でもその発散の分だけ濃度が変わる(水と違う速度で動く)
 !     - xrow(任意。水質の台帳。§30.9)を渡すと、系外との出入りを自帯の行

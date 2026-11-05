@@ -176,7 +176,10 @@ wavefield_calc                沿岸の波浪場(非定常は毎ステップ、�
                                 無効なら no-op。§90)
 swflow_calc                   ★浅水流本体(移流・拡散 → 運動方程式 → 境界強制 →
                                 [nh_project: 1 層 NH 射影で全加速度を補正。NH ON のみ] →
-                                連続式 → h,e,u,v,m,n 確定。§69)
+                                連続式(f_exflux_reduction > 0 ならセルの流出の合計も数える)→
+                                [scale_cell_outflow: 合計が水量以上のセルが自帯かハロ行に
+                                あれば、流出の辺を縮めて連続式を解き直す。率をハロ交換。§94] →
+                                h,e,u,v,m,n 確定。§69)
   └ par_allreduce_maxi(ierror) 発散検出の全ランク集約
 vzflow_calc                   VZ セルに入った雨(pre·dt/gv)を s%h から回収し、dt_vz ごとに
                                 共有参照柱を進めて区画の排水を出口セルの s%h へ(e 回復まで)。

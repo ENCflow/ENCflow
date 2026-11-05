@@ -8,7 +8,8 @@
 !======================================================================
 submodule(m_geomorph) m_geomorph_fluvial
   use m_parallel, only : par_info, par_stop, dcp, par_halo_cell
-  use m_swflow_enc, only : chn, bcs, bc_open_face, bc_neumann_cell, bc_inflow_nooutflow
+  use m_swflow_enc, only : chn, bcs, bc_open_face, bc_neumann_cell, bc_inflow_nooutflow, &
+                          slope_shear_on, slope_shear_factor, slope_shear_factor_e
   use m_util, only : rtoa
   implicit none
 
@@ -175,6 +176,7 @@ module subroutine calc_fluvial(gm, p, g, s, dts)
   real :: afx, tsce
   integer :: nclip, nfix
   logical :: okc, okbank
+  logical :: ssh                  ! 斜面に沿う底面せん断(f_gravity_correction = 2。§93)
 
   ! 沿岸の波浪場による攪拌と輸送(f_wfsed = 1。§90)は写しの手続きで(本手続きの命令列を
   ! 変えない。calc_fluvial_wfsed の注)
@@ -185,6 +187,7 @@ module subroutine calc_fluvial(gm, p, g, s, dts)
 
   nclip = 0
   nfix = 0
+  ssh = slope_shear_on()
 
   ! --- ステップ頭のハロ交換(m_gwflow_lateral と同じ「冒頭に置く」理由) ---
   ! 界面エッジの冗長計算(ハロ行 je+1 の書き手)が読む u, v, vv, h は
@@ -242,6 +245,7 @@ module subroutine calc_fluvial(gm, p, g, s, dts)
               ! 無次元掃流力(マニング閉じ。g は分子分母で相殺)。taufac は
               ! 有効掃流力の比(1 = 分離なし。1.0 の乗算は厳密に不変)
               taus = taufac_h(gm%flv, hhe) * rne**2 * vve**2 / (gm%sgrav * gm%d50 * hhe**(1.0/3.0))
+              if (ssh) taus = taus * slope_shear_factor_e(g, s, i, j, in, jn)   ! 斜面に沿うせん断(§93)
               if (taus > gm%tausc) then
                 ! 流砂方向の射影 dirp = (q⃗_b/q_b)·ê_k。補正なしは水深平均流向
                 ! ue/vve(|dirp| <= 1)。補正ありは q⃗_b/q_b = t̂ + r n̂ − γ∇z
@@ -399,6 +403,7 @@ module subroutine calc_fluvial(gm, p, g, s, dts)
               hhe = max(hhe, p%dv)
               rne = g%rn(i,j)
               taus = taufac_h(gm%flv, hhe) * rne**2 * vve**2 / (gm%sgrav * gm%d50 * hhe**(1.0/3.0))
+              if (ssh) taus = taus * slope_shear_factor(g, s, i, j)   ! 斜面に沿うせん断(§93)
               if (taus > gm%tausc) then
                 if (gm%f_qbform == 1) then       ! 芦田・道上
                   qbs = 17.0 * taus**1.5 * (1.0 - gm%tausc / taus) &
@@ -492,9 +497,11 @@ subroutine calc_fluvial_wfsed(gm, p, g, s, dts)
   real :: usc, vsc, usn, vsn, vvc, tauc
   integer :: nclip, nfix
   logical :: okc, okbank, stk, asym
+  logical :: ssh                  ! 斜面に沿う底面せん断(f_gravity_correction = 2。§93)
 
   nclip = 0
   nfix = 0
+  ssh = slope_shear_on()
   ! 攪拌の流れは Euler 平均流速 u^E = u − r u^S(GLM のときだけ Stokes を引く。r は立ち上げの
   ! 係数)、τ* は波・流れの最大のせん断(wfsed_taumax)。土砂を運ぶ速度は u^E に波の歪度・
   ! 非対称の岸向きの速度 u_a ê_θ を加えた u_s
@@ -588,6 +595,8 @@ subroutine calc_fluvial_wfsed(gm, p, g, s, dts)
               ! 運ぶ。τ*_s は上の taus = u_s の速さの Manning のせん断。波がなければ
               ! τ*_max = τ*_s = τ*_c で既存の式に一致)
               tauc = taufac_h(gm%flv, hhe) * rne**2 * vvc**2 / (gm%sgrav * gm%d50 * hhe**(1.0/3.0))
+              if (ssh) taus = taus * slope_shear_factor_e(g, s, i, j, in, jn)   ! 斜面に沿うせん断(§93)
+              if (ssh) tauc = tauc * slope_shear_factor_e(g, s, i, j, in, jn)
               cphi = wfsed_cphi((uec + uen) / 2, (vec + ven) / 2, (s%wvex(i,j) + s%wvex(in,jn)) / 2, &
                                 (s%wvey(i,j) + s%wvey(in,jn)) / 2)
               tmax = wfsed_taumax(tauc, sqrt(2.0) * (s%wvub(i,j) + s%wvub(in,jn)) / 2, &
@@ -757,6 +766,8 @@ subroutine calc_fluvial_wfsed(gm, p, g, s, dts)
               rne = g%rn(i,j)
               taus = taufac_h(gm%flv, hhe) * rne**2 * vve**2 / (gm%sgrav * gm%d50 * hhe**(1.0/3.0))
               tauc = taufac_h(gm%flv, hhe) * rne**2 * vvc**2 / (gm%sgrav * gm%d50 * hhe**(1.0/3.0))
+              if (ssh) taus = taus * slope_shear_factor(g, s, i, j)   ! 斜面に沿うせん断(§93)
+              if (ssh) tauc = tauc * slope_shear_factor(g, s, i, j)
               cphi = wfsed_cphi(uec, vec, s%wvex(i,j), s%wvey(i,j))
               tmax = wfsed_taumax(tauc, sqrt(2.0) * s%wvub(i,j), s%wvae(i,j), cphi, &
                                   gm%wfs%z0b, gm%wfs%twb)
@@ -1206,8 +1217,10 @@ subroutine wfsed_bed_diag(gm, p, g, s)
   integer :: i, j
   real :: uec, vec, usc, vsc, vv, vs, hh, tauc, taus, tmax, qb
   logical :: stk, asym
+  logical :: ssh                  ! 斜面に沿う底面せん断(f_gravity_correction = 2。§93)
   stk = allocated(s%wvus)
   asym = allocated(s%wvua)
+  ssh = slope_shear_on()
   !$omp parallel do schedule(static) private(i, j, uec, vec, usc, vsc, vv, vs, hh, tauc, taus, tmax, qb)
   do j = dcp%js, dcp%je
     do i = g%wx(1,j), g%wx(2,j)
@@ -1233,6 +1246,8 @@ subroutine wfsed_bed_diag(gm, p, g, s)
       hh = max(s%h(i,j), p%dv)
       tauc = taufac_h(gm%flv, hh) * g%rn(i,j)**2 * vv**2 / (gm%sgrav * gm%d50 * hh**(1.0/3.0))
       taus = taufac_h(gm%flv, hh) * g%rn(i,j)**2 * vs**2 / (gm%sgrav * gm%d50 * hh**(1.0/3.0))
+      if (ssh) taus = taus * slope_shear_factor(g, s, i, j)   ! 斜面に沿うせん断(§93)
+      if (ssh) tauc = tauc * slope_shear_factor(g, s, i, j)
       tmax = wfsed_taumax(tauc, sqrt(2.0) * s%wvub(i,j), s%wvae(i,j), &
                           wfsed_cphi(uec, vec, s%wvex(i,j), s%wvey(i,j)), gm%wfs%z0b, gm%wfs%twb)
       if (tmax <= gm%tausc) cycle

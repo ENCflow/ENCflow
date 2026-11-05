@@ -29,8 +29,12 @@
                             !   accurate and more costly)
 
   ! ---- Fluxes and stabilization ----
-  !f_gravity_correction = 1 ! gravity correction (corrects the slope-direction
-                            !   gravity error on steep terrain)
+  !f_gravity_correction = 2 ! steep-slope gravity correction (0: none,
+                            !   1: effective gravity g cos²θ,
+                            !   2: 1 plus friction and sediment shear from the
+                            !   slope-parallel speed and the bed-normal depth
+                            !   = default; uniform flow follows the along-slope
+                            !   equations)
   !f_exflux_reduction = 1   ! suppression of excessive outgoing fluxes (prevents
                             !   negative depths at dry-bed fronts; on is
                             !   recommended for runs with dry beds)
