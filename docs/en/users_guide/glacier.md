@@ -133,19 +133,20 @@ default $`A`$ = 1e-16 Pa⁻³ yr⁻¹ is the recommended value for temperate ice
 | gl_afl | 1.0e-16 | Glen flow-law coefficient A (Pa⁻³ yr⁻¹); ~1e-16 for temperate ice |
 | gl_cfl | 0.4 | Numerical stability safety factor (normally leave unchanged) |
 | gl_nsubmax | 10000 | Upper bound on internal iterations per update (guards against runaway parameters) |
-| gl_diagratio | 0 | Diagonal share d of the SIA flow (0 = 4-neighbour; above 0, the 8-neighbour 9-point stencil, which reassigns blocked diagonal shares according to the ice thickness; recommended 1/3; see below) |
+| gl_diagratio | 1/3 | Diagonal share d of the SIA flow. The default 1/3 is the 8-neighbour 9-point stencil, which reassigns blocked diagonal shares according to the ice thickness; 0 = 4-neighbour (the default before 2026-11-05); see below |
 
 You do not need to worry about the time step: the model checks the
 stability condition from the current ice thickness and slope at every
 update and subdivides internally as needed (ice volume is conserved
 exactly).
 
-The computation uses the 4-neighbour grid. The $`|\nabla s|`$ of the
-diffusivity is found from the gradients both across and along the boundary
-with the neighbouring cell, so an ice cap on a flat bed spreads to a shape that
-does not depend on the grid orientation (in the Halfar dome of test/glacier,
-the ratio of the ice volumes in the sectors along the grid axes and the
-diagonals agrees with the analytic ratio to 0.6%). Only cells with ice are
+The $`|\nabla s|`$ of the diffusivity is found from the gradients both across
+and along the boundary with the neighbouring cell (on the diagonal edges of the
+8-neighbour stencil, from the gradient at the corner), so an ice cap on a flat
+bed spreads to a shape that does not depend on the grid orientation (in the
+Halfar dome of test/glacier, the ratio of the ice volumes in the sectors along
+the grid axes and the diagonals agrees with the analytic ratio to 0.4%; 0.6% on
+4 neighbours, `gl_diagratio = 0`). Only cells with ice are
 used for the gradient along the boundary (so that the slope of valley walls
 does not enter the diffusivity). Before the change of 2026-11-03 only the
 gradient across the boundary was used, so ice flowed less readily along the
@@ -157,8 +158,8 @@ the grid. A diagonal valley one cell wide, whose cells touch only at corners,
 does not flow at all, and in a band of three diagonal lines the ice lags behind
 a valley along a grid axis (test/glacier configuration 7: the centroid of a
 bump of ice placed in the valley moves 0.87 times as far in two years as along
-a grid axis). `gl_diagratio = d > 0` puts the SIA flow on the 8-neighbour
-9-point stencil (with diagonal edges) and, according to the ice thickness,
+a grid axis). `gl_diagratio = d > 0` (default 1/3) puts the SIA flow on the
+8-neighbour 9-point stencil (with diagonal edges) and, according to the ice thickness,
 returns the shares blocked where the bed of the diagonal neighbour rises above
 the ice surface to the axis edges that cross the same boundary, and, in a
 diagonal valley whose axis neighbours are blocked, the axis shares to the
@@ -166,8 +167,10 @@ diagonal edges (the same rule as the dynamic reassignment of surface water,
 f_opening_dynamic = 3; shared with `lv_diagratio` of lava flows; developer.md
 Sec. 96). With d = 1/3 the ice in a diagonal valley advances 1.00 times as far
 as along a grid axis for one line and 1.02 times for three lines, and the sector
-ratio of the Halfar dome moves closer to the analytic one (+0.6 % → +0.4 %;
-configuration 6). The default is 0 (bit-identical to earlier results). As for
+ratio of the Halfar dome moves closer to the analytic one (+0.6 % on 4
+neighbours becomes +0.4 %; configurations 1 and 6). The default is 1/3 (from
+2026-11-05; the earlier default 0 = 4 neighbours is reproduced with
+`gl_diagratio = 0`). As for
 lava flows, the reassignment rule gives slightly too much conveyance at the
 edges of a diagonal band (+6.5 % for uniform flow in a band of three lines of
 lava), and in a diagonal valley the cells along the valley are √2 times farther
@@ -469,7 +472,7 @@ The labels in the Basis column are explained in [How to read the basis of a defa
 | gl_tmelt | 0 °C | temperature threshold of ice melt | **customary value** standard of the degree-day method |
 | gl_afl | 1e-16 Pa⁻³ yr⁻¹ | Glen flow-law coefficient $`A`$ | **literature value** recommended value for temperate ice (0 °C)[^cuffey10]; Glen's $`n`$ = 3 fixed[^glen55] |
 | gl_cfl / gl_nsubmax | 0.4 / 10000 | sub-cycle safety factor and cap | **numerical** |
-| gl_diagratio | 0 | diagonal share d of the SIA flow | **method** 0 = 4-neighbour as before (results unchanged). 1/3 for glaciers in narrow valleys oblique to the grid (the 8-neighbour 9-point stencil with reassignment of blocked shares; configuration 7; [Choosing the diagonal ratio d](diagratio.md)). Whether to make 1/3 the default is under consideration |
+| gl_diagratio | 1/3 | diagonal share d of the SIA flow | **method** 1/3 = the 8-neighbour 9-point stencil with reassignment of blocked shares (the default from 2026-11-05). Ice flowing down narrow valleys oblique to the grid does not depend on the valley orientation (configuration 7), and the leading error term is isotropic ([Choosing the diagonal ratio d](diagratio.md)). 0 = 4-neighbour (the default before 2026-11-05; for reproducing results from before then) |
 | gl_as | 1e-13 m yr⁻¹ Pa⁻³ | Weertman sliding coefficient $`A_s`$ ($`m`$ = 3 fixed[^weertman57]) | **derived** 100 m/yr at a basal shear stress of 100 kPa (typical 50–150 kPa[^cuffey10]) = the fast side of mountain glaciers |
 | gl_kg / gl_lexp | 1e-4 / 1 | erosion coefficient $`K_g`$ and exponent $`l`$ | **literature value** Variegated Glacier measurement, erosion rate ≈ 1e-4 × sliding speed[^humphrey94]; 1e-7–1e-6 for $`l`$ = 2[^herman15] |
 | gl_lc | max(500 m, 2Δx) | erosion coupling length | **literature value** between the measured coupling lengths of valley glaciers, 450–625 m (Blue and Variegated Glaciers)[^kamb86]; Variegated Glacier is also the source of gl_kg. 2Δx when twice the grid spacing is longer (**numerical setting**: the floor that stops the grid-scale concentration). 0 is the local τb |

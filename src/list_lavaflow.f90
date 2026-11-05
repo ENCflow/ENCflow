@@ -33,8 +33,8 @@ module list_lavaflow
     real :: lv_vsol = -9999.0                ! 停止判定の速度閾値 (m/s。lv_wsol>0 で未指定なら既定 5e-4)
     real :: lv_cfl = 0.4                     ! 陽解法サブサイクルの安全係数 (0-1)
     integer :: lv_nsubmax = 10000            ! 1回の更新のサブサイクル数上限(暴走ガード)
-    real :: lv_diagratio = 0.0               ! 流動の斜めの配分 d(0 = 4 近傍。> 0 = 8 近傍の 9 点と、
-                                             !   塞がれた配分の動的な振り替え。developer.md §96)
+    real :: lv_diagratio = 1.0 / 3.0         ! 流動の斜めの配分 d(既定 1/3 = 8 近傍の 9 点と、塞がれた配分の
+                                             !   動的な振り替え。0 = 4 近傍 = 2026-11-05 以前の既定。developer.md §96)
     real :: lv_q0(1:lvmax) = -9999.0         ! 一定噴出率 (m3/s。時系列の代わり)
     character(len=maxpathlen) :: fn_lv_cell(1:lvmax) = ""  ! セル集合ファイル(i j の行列挙)
     character(len=maxpathlen) :: fn_lv_val(1:lvmax) = ""   ! 噴出率時系列ファイル(分, m3/s)

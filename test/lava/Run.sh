@@ -15,7 +15,7 @@
 # 構成10: 熱の横断の数値拡散(温度モード・冷却なし。0° と 45° のシート流を 1 次風上と
 #         MUSCL(f_lvtemp_scheme = 3)で。0° は拡散なし、45° の 1 次は修正方程式の 0.354·u·Δx、
 #         MUSCL はその 1/4 未満)
-# 構成4': 構成4 と同じ入力を流動の 8 近傍の 9 点(lv_diagratio = 1/3。§96)で(検定は構成4 と同じ)
+# 構成4': 構成4 と同じ入力を流動の 4 近傍(lv_diagratio = 0)で計算する対照(既定は 8 近傍の 9 点。§96。検定は構成4 と同じ)
 # 構成9n: 構成9 の温度モードの 2 本を、地盤に ±1 mm の決まった乱れを加えて(横に一様な流れが流れの筋に
 #         分かれる。§94 の訂正)。同じ体積で噴出率 4 倍の流れが長いこと
 # 構成10d: 構成10 を流動の 8 近傍の 9 点(d = 1/3)で。1 次風上の横断の数値拡散が (1 − d)F(φ) + d√2 F(φ − 45°)
@@ -82,13 +82,13 @@ echo ""
 python3 "$sdir/Check_lava.py" save_dome dome || rc=1
 rm -rf save_dome_serial && cp -r save_dome save_dome_serial
 
-# 構成4': 構成4 と同じ入力を流動の 8 近傍の 9 点(lv_diagratio = 1/3)で(§96)
+# 構成4': 構成4 と同じ入力を流動の 4 近傍(lv_diagratio = 0)で計算する対照(既定は 8 近傍の 9 点。§96)
 set -o pipefail
-./encflow param_dome8.txt | tee -a Screen.log || exit 1
+./encflow param_dome4.txt | tee -a Screen.log || exit 1
 set +o pipefail
 echo ""
-python3 "$sdir/Check_lava.py" save_dome8 dome || rc=1
-rm -rf save_dome8_serial && cp -r save_dome8 save_dome8_serial
+python3 "$sdir/Check_lava.py" save_dome4 dome || rc=1
+rm -rf save_dome4_serial && cp -r save_dome4 save_dome4_serial
 
 # 構成5: 溶岩より高い壁の前にたまった溶岩の固化(§51.5)
 set -o pipefail

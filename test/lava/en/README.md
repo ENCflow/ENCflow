@@ -8,7 +8,11 @@ Checks of the lava flow module (`fn_lavaflow`; Bingham viscous gravity
 current + solidification. [The lava flow chapter of the users
 guide](../../../docs/en/users_guide/lavaflow.md), developer.md §51). It is
 closed by analytical-solution checks without a reference comparison (the
-same practice as [test/volcano](../../volcano/en/README.md)).
+same practice as [test/volcano](../../volcano/en/README.md)). The flow is
+computed on the default 8-neighbour 9-point stencil (`lv_diagratio = 1/3`;
+from 2026-11-05; developer.md §96). Four neighbours are given explicitly in
+configuration 4' (control), configuration 10 (a check of a property of four
+neighbours) and `ch45w3q` of configuration 11 (control).
 
 1. **Huppert** (`param.txt`): flat bed, constant-rate effusion from the
    single central cell (yield stress 0 = Newtonian limit). The
@@ -26,9 +30,10 @@ same practice as [test/volcano](../../volcano/en/README.md)).
    900 s from the single central cell of a flat bed is compared with the
    analytic plastic dome h(r)² = (2τ_y/ρg)(R − r) (Blake 1990), checking
    that it is the same along the grid axes and the diagonals
-   (developer.md §51.4). `param_dome8.txt` (configuration 4') computes the
-   same input with the 8-neighbour 9-point stencil of the flow
-   (`lv_diagratio = 1/3`; developer.md §96) and must pass the same check.
+   (developer.md §51.4). `param_dome4.txt` (configuration 4') is a control
+   that computes the same input with the flow on 4 neighbours
+   (`lv_diagratio = 0`, the default before 2026-11-05; developer.md §96) and
+   must pass the same check.
 5. **Solidification at a wall** (`param_wall.txt`): lava is ponded against a
    10 m step (wall) at the end of a flat floor, and the check is that the
    whole amount solidifies, up to the cells touching the wall
@@ -160,29 +165,29 @@ python3 Fig.py en # en/figs/lava.png
 Top left: the lava thickness of configuration 1 after 600 s. It spreads
 axisymmetrically from the center. Top center: the growth of the area-equivalent
 radius. The computation (●) follows the √t law of the similarity solution,
-and the growth law r(tt)/r(tt/2) agrees with √2 to 0.7%. The absolute value
-of the radius is 12.5 m (+2.8%) by the counting method of Check_lava
+and the growth law r(tt)/r(tt/2) agrees with √2 to 0.1%. The absolute value
+of the radius is 12.6 m (+3.7%) by the counting method of Check_lava
 (thickness 1 cm or more, as in the figure). Counting down to a thin fringe of
-1e-6 m gives 13.2 m (+8.5%); the difference is the treatment of the numerical
+1e-6 m gives 13.5 m (+10.9%); the difference is the treatment of the numerical
 precursor film at the front, which the similarity solution does not have
-(including the lag of the front due to the edge-averaged thickness; on the
-8-neighbour 9-point stencil the film spreads wider, +10.9%, so the check counts
-at 1 cm; developer.md §96).
+(including the lag of the front due to the edge-averaged thickness; on 4
+neighbours 12.5 m (+2.8%) and 13.2 m (+8.5%); the check counts at 1 cm;
+developer.md §96).
 Top right: the final thickness of configuration 2 (row average). Downstream of
 the vents at x = 6–40 m, hl + dz forms a flat plateau of 0.42 m, agreeing
 with the analytical stopping thickness 0.3925 m to 7.1%, and the whole
 amount has solidified (dz = hl + dz).
 Bottom left: profiles of the shape at rest of configuration 4. The profiles
 along the grid axis (●) and along the diagonal (■) overlap and follow the
-analytic plastic dome (black) (center thickness +1.2%, area-equivalent
-radius −1.5%). With the scheme before the fix, which judged the yield on the
+analytic plastic dome (black) (center thickness +1.3%, area-equivalent
+radius −1.3%). With the scheme before the fix, which judged the yield on the
 gradient across the edge only, the front along the diagonal stopped at 0.74
 times the distance along the grid axis, and the shape at rest was a diamond
 elongated along the grid axes (developer.md §51.4). Bottom center: the same
 shape at rest seen from above; it is a circle of the analytic radius (dashed).
 Bottom right: the final topography of configuration 5 (row average). The lava
 ponded against the wall has solidified up to the column touching the wall
-(dz 0.98 m at the wall). With the stop criterion before the fix, which counted
+(dz 0.97 m at the wall). With the stop criterion before the fix, which counted
 inflow edges, the column touching the wall stayed molten (hl 0.98 m, 13% of
 the erupted volume) (developer.md §51.5).
 
@@ -191,36 +196,36 @@ the erupted volume) (developer.md §51.5).
 | Check | Computed | Result |
 |---|---|---|
 | Configuration 1 (1) ledger Σhl·A − V_in | −5.7e-14 m³ (V_in = 300 m³) | PASS |
-| Configuration 1 (2) area-equivalent radius (thickness 1 cm or more) | 12.48 m (r_N 12.13 m, +2.8%, tolerance 10%) | PASS |
-| Configuration 1 (3) growth law r(tt)/r(tt/2) | 1.424 (0.7% from √2) | PASS |
+| Configuration 1 (2) area-equivalent radius (thickness 1 cm or more) | 12.58 m (r_N 12.13 m, +3.7%, tolerance 10%) | PASS |
+| Configuration 1 (3) growth law r(tt)/r(tt/2) | 1.413 (0.1% from √2) | PASS |
 | Configuration 2 (1) ledger (Σhl + Σdz)·A − V_in | 1.2e-11 m³ (V_in = 149.75 m³) | PASS |
-| Configuration 2 (2) stopping thickness <hl + dz> | 0.4203 m (h∞ 0.3925, +7.1%, tolerance 20%), CV 0.001 | PASS |
+| Configuration 2 (2) stopping thickness <hl + dz> | 0.4202 m (h∞ 0.3925, +7.1%, tolerance 20%), CV 0.001 | PASS |
 | Configuration 2 (3) solidified fraction | 1.000, max dz 0.43 m | PASS |
 | Configuration 3 equivalence of the defaults | save and Log byte-identical, 2 "(default)" lines | PASS |
-| Configuration 4 (1) ledger Σhl·A − V_in | −2.3e-13 m³ (V_in = 1798 m³) | PASS |
-| Configuration 4 (2) ratio of the sector area-equivalent radii (diagonal / grid axis) | 16.96 m / 16.74 m = 1.014 (tolerance 1 ± 0.05) | PASS |
-| Configuration 4 (3) analytic plastic dome | center thickness 3.710 m (H 3.665 m, +1.2%), area-equivalent radius 16.86 m (R 17.11 m, −1.5%), profile RMS 0.076 m (2.1% of H) | PASS |
-| Configuration 4' (1)–(3) 8-neighbour 9-point stencil | ledger 0.0 m³, ratio of the area-equivalent radii 17.04/16.74 m = 1.018, center thickness 3.714 m (+1.3%), area-equivalent radius 16.90 m (−1.3%), profile RMS 0.076 m (2.1% of H) | PASS |
-| Configuration 5 (1) ledger (Σhl + Σdz)·A − V_in | −2.3e-13 m³ (V_in = 59.9 m³) | PASS |
+| Configuration 4 (1) ledger Σhl·A − V_in | 4.5e-13 m³ (V_in = 1798 m³) | PASS |
+| Configuration 4 (2) ratio of the sector area-equivalent radii (diagonal / grid axis) | 17.04 m / 16.74 m = 1.018 (tolerance 1 ± 0.05) | PASS |
+| Configuration 4 (3) analytic plastic dome | center thickness 3.714 m (H 3.665 m, +1.3%), area-equivalent radius 16.90 m (R 17.11 m, −1.3%), profile RMS 0.076 m (2.1% of H) | PASS |
+| Configuration 4' (1)–(3) 4-neighbour control | ledger −2.3e-13 m³, ratio of the area-equivalent radii 16.96/16.74 m = 1.014, center thickness 3.710 m (+1.2%), area-equivalent radius 16.86 m (−1.5%), profile RMS 0.076 m (2.1% of H) | PASS |
+| Configuration 5 (1) ledger (Σhl + Σdz)·A − V_in | −1.9e-13 m³ (V_in = 59.9 m³) | PASS |
 | Configuration 5 (2) solidified fraction | 1.0000 (no lava left) | PASS |
-| Configuration 5 (3) column touching the wall | hl = 0 in every row, min dz 0.978 m (max dz 1.076 m) | PASS |
-| Configuration 6 (1) lava ledger | −1.8e-13 m³ (V_in = 60 m³) | PASS |
+| Configuration 5 (3) column touching the wall | hl = 0 in every row, min dz 0.966 m (max dz 1.084 m) | PASS |
+| Configuration 6 (1) lava ledger | −2.0e-13 m³ (V_in = 60 m³) | PASS |
 | Configuration 6 (2) burial of the soil layer | sd = 0 and hg = 0 in the 80 cells under the lava, sd = 1 m elsewhere (soil buried 80 m³, groundwater moved to the surface 5.65 m³) | PASS |
-| Configuration 6 (3) water conservation Σ(h + hrs + hg) − initial | −5.3e-13 m³ (initial 16 m³) | PASS |
+| Configuration 6 (3) water conservation Σ(h + hrs + hg) − initial | −4.1e-13 m³ (initial 16 m³) | PASS |
 | Configuration 7 (1) difference between the output Tl and the backward-Euler recursion | max 4.2e-5 °C (uniform over all cells) | PASS |
 | Configuration 7 (2) difference of the temperature drop from the exact solution | 9.4e-4 relative (tolerance 1%) | PASS |
 | Configuration 7 (3) solidification by temperature | all cells solidify at the 499th update (t = 4990 s, 799.60 °C), dz = 1 m | PASS |
 | Configuration 7 (4) residual of the heat ledger | −2.9e-16 (relative to the erupted heat); erupted 1.0525e11 J = radiated 1.8562e10 + convected 1.0180e10 + solidified 7.6505e10 J | PASS |
 | Configuration 7m air temperature from fn_meteo | save byte-identical to configuration 7 | PASS |
 | Configuration 8 (1) ledger Σhl·A − V_in | −1.1e-13 m³ (V_in = 599.5 m³) | PASS |
-| Configuration 8 (2) conservation of heat | Σhl·Tl·A = Σ V_k T_k to −1.8e-16 relative; residual on the screen 1.2e-16 | PASS |
-| Configuration 8 (3) range of the temperature | 1050.000000–1150.000000 °C, mixed zone of 21 cells | PASS |
+| Configuration 8 (2) conservation of heat | Σhl·Tl·A = Σ V_k T_k to −1.8e-16 relative; residual on the screen −1.2e-15 | PASS |
+| Configuration 8 (3) range of the temperature | 1050.000000–1150.000000 °C, mixed zone of 53 cells | PASS |
 | Configuration 8' agreement with the isothermal run | lavaflow.dat and state.dat byte-identical | PASS |
-| Configuration 9 (1)(2) ledger and heat ledger | machine precision and complete solidification in all four runs, residual of the heat ledger ≤ 9.5e-16 | PASS |
-| Configuration 9 (3) flow length in the temperature mode | 50 m (2 m³/s) → 145 m (8 m³/s), ratio 2.90 (tolerance > 1.5) | PASS |
+| Configuration 9 (1)(2) ledger and heat ledger | machine precision and complete solidification in all four runs, residual of the heat ledger ≤ 4.7e-16 | PASS |
+| Configuration 9 (3) flow length in the temperature mode | 75 m (2 m³/s) → 155 m (8 m³/s), ratio 2.07 (tolerance > 1.5) | PASS |
 | Configuration 9 (4) flow length of the isothermal control | 120 m → 120 m, ratio 1.00 (tolerance 1 ± 0.1) | PASS |
-| Configuration 9n (1)–(3) perturbed slope | machine precision and complete solidification in both runs, residual of the heat ledger ≤ 4.7e-16, length 85 m (2 m³/s) → 150 m (8 m³/s), ratio 1.76 (tolerance > 1.5). Largest row-averaged thickness of the Q flow 2.19 m (1.90–2.37 m across the rows in that column) | PASS |
-| Configuration 9r restart round trip | the three save files byte-identical to the uninterrupted run, residual of the heat ledger 8.93e-16 | PASS |
+| Configuration 9n (1)–(3) perturbed slope | machine precision and complete solidification in both runs, residual of the heat ledger ≤ 1.2e-16, length 75 m (2 m³/s) → 155 m (8 m³/s), ratio 2.07 (tolerance > 1.5). Largest row-averaged thickness of the Q flow 2.50 m (2.46–2.57 m across the rows in that column) | PASS |
+| Configuration 9r restart round trip | the three save files byte-identical to the uninterrupted run, residual of the heat ledger −6.32e-16 | PASS |
 | Configuration 10 (1) ledgers and conservation of heat | in all four runs Σhl·A − V_in ≤ 5.1e-11 m³ (V_in 30,000 and 59,400 m³), heat ≤ 1.4e-15 (relative), residual on the screen ≤ 3.7e-13 | PASS |
 | Configuration 10 (2) boundary at 0° | with both first-order upwind and MUSCL both sides of the boundary stay at the eruption temperatures (difference ≤ 4.5e-13 °C); the MUSCL save is byte-identical to first-order upwind | PASS |
 | Configuration 10 (3) first-order upwind at 45° | σ = 6.85, 11.04, 15.73, 19.37 m (s = 14, 35, 71, 106 m), D⊥ = 0.357·u·Δx (theory 0.354, +1.0%; tolerance 15%) | PASS |
@@ -273,17 +278,21 @@ the erupted volume) (developer.md §51.5).
   length is set by the volume and the yield stress and does not depend on the
   effusion rate (a uniform deposit at the stopping thickness 0.98 m), whereas
   in the temperature mode the flow at the lower effusion rate cools from its
-  front and stops early, and the lava piles up behind it (up to 3.5 m thick).
+  front and stops early, and the lava piles up behind it (largest row-averaged thickness 2.5 m; 3.5 m
+  on 4 neighbours).
   Configurations 7–9 are not in the figure either.
-- The flow of configuration 9 is perfectly uniform across (all rows the same),
-  and this solution is unstable. With a perturbation of ±1 mm in the bed, as in
-  configuration 9n, a positive feedback (a hotter channel flows faster and cools
-  more slowly) splits the flow into channels (deposit thickness varying by
-  ±15–25% across the rows), and the length of the Q flow grows from 50 m to
-  85 m. The length of the perturbed solution is 75–85 m with first-order upwind
-  or MUSCL, 4 or 8 neighbours, and cells of 5 to 1.25 m (the correction in
-  developer.md §94). The check of configuration 9 (length ratio > 1.5) holds
-  for both the solution uniform across and the perturbed one.
+- On 4 neighbours (the default before 2026-11-05) the flow of configuration 9
+  is perfectly uniform across (all rows the same), and this solution is
+  unstable. With a perturbation of ±1 mm in the bed, as in configuration 9n, a
+  positive feedback (a hotter channel flows faster and cools more slowly) splits
+  the flow into channels (deposit thickness varying by ±15–25% across the rows),
+  and the length of the Q flow grows from 50 m to 85 m. On the default 8
+  neighbours the asymmetry of the rows at the walls acts as a perturbation, so
+  configuration 9 splits into channels as well, and configurations 9 and 9n give
+  the same lengths of 75 m and 155 m. The length of the perturbed solution is
+  75–85 m with first-order upwind or MUSCL, 4 or 8 neighbours, and cells of 5 to
+  1.25 m (the correction in developer.md §94). The check of configuration 9
+  (length ratio > 1.5) holds for every one of these solutions.
 - The saves, field outputs and Log.txt of configurations 1–6 are
   byte-identical before and after the addition of the temperature mode (the
   isothermal run allocates no temperature arrays and goes through the same
@@ -300,7 +309,8 @@ the erupted volume) (developer.md §51.5).
   byte-identical to first-order upwind. The saves (except the line with the
   creation time in save_info.txt), field outputs and Log.txt of configurations
   1–9 were byte-identical before and after the addition of MUSCL (the default
-  was then 1). Making 3 the default (2026-11-05) changes configuration 8, where
+  was then 1). Making 3 the default (2026-11-05; the flow was then on 4 neighbours by
+  default) changes configuration 8, where
   lava flows in the temperature mode (only the temperature field; with no
   cooling and zero temperature sensitivity the deposit does not change), and
   configurations 9 and 9r (the shape of the deposit and the flow length; for
@@ -315,8 +325,8 @@ the erupted volume) (developer.md §51.5).
   the surface water on the ENC grid, and the measurements at 0° and 45° agree
   with it within 1%. MUSCL gives 0.12–0.15 times first order at both 0° and
   45°, nearly the same in every direction.
-- Configurations 11 and 4' check the 8-neighbour 9-point stencil of the flow
-  (`lv_diagratio`; default 0 = 4 neighbours; developer.md §96). On 4
+- Configuration 11 checks the 8-neighbour 9-point stencil of the flow
+  (`lv_diagratio`; default 1/3; developer.md §96). On 4
   neighbours a diagonal valley one cell wide, whose cells touch only at
   corners, does not flow (in a trial the lava piled up 19.7 m at the vent
   and the subcycles exceeded 1.2 million, so it is not in the check). A band
@@ -331,9 +341,20 @@ the erupted volume) (developer.md §51.5).
   derivation is in developer.md §96). For a band of five lines (trial) it
   drops to +4.0%.
 - The saves (except the line with the creation time in save_info.txt), field
-  outputs and Log.txt of configurations 1–10 are byte-identical before and
-  after the addition of the 8 neighbours (default 0; the code of the
-  4-neighbour path is unchanged).
+  outputs and Log.txt of configurations 1–10 were byte-identical before and
+  after the addition of the 8 neighbours (the default was then 0; the code of
+  the 4-neighbour path is unchanged). Making 1/3 the default (2026-11-05)
+  changes the values of configurations 1, 2, 4–6, 8, 9, 9r and 9n, whose flow
+  follows the default (the findings above are the values for 1/3). The main
+  differences from 4 neighbours are the area-equivalent radius of configuration
+  1, 12.48 → 12.58 m (+2.8 → +3.7%), the sector ratio of configuration 4,
+  1.014 → 1.018, the flow lengths of configuration 9, 50 and 145 m → 75 and
+  155 m (ratio 2.90 → 2.07), those of configuration 9n, 85 and 150 m → 75 and
+  155 m (ratio 1.76 → 2.07), and the mixed zone of configuration 8, 21 → 53
+  cells (the diagonal edges carry heat too). Configurations 4', 10 and
+  `ch45w3q` of 11, which give 4 neighbours explicitly, and configuration 7,
+  which does not flow, do not change (the save of configuration 4' is
+  byte-identical to the former configuration 4).
 
 ## Related documents
 

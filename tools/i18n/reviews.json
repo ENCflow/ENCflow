@@ -203,18 +203,18 @@
     {
       "source": "docs/users_guide/diagonal_diffusion.md",
       "target": "docs/en/users_guide/diagonal_diffusion.md",
-      "source_sha256": "dbe6e7bc8710150363d7f9ace4c6d7881660897cc2c82754f37a912190770f68",
-      "target_sha256": "76415345cac567a8be76a5f21feb032ad1588a6a4d444ae3035bac23e566bac4",
-      "reviewer": "Claude (Claude Code session; reviewed the lava temperature row corrected for the instability of cooling-limited lava flows uniform across (developer.md sec. 94) in the Japanese source against the English mirror, 2026-11-05)",
+      "source_sha256": "0bc9e810f9ad92ea112bf7f83b184107300272612c554668ad578e6590f228a5",
+      "target_sha256": "94a7f9493a9d66e059371dda0f05e1aad84284e884ee843b656c7f4d2c2daee9",
+      "reviewer": "Claude (Claude Code session; reviewed the text on the new default 1/3 of lv_diagratio and gl_diagratio (developer.md sec. 96) in the Japanese source against the English mirror, 2026-11-05)",
       "method": "assistant",
       "reviewed_on": "2026-11-05"
     },
     {
       "source": "docs/users_guide/diagratio.md",
       "target": "docs/en/users_guide/diagratio.md",
-      "source_sha256": "b1e43850ef8494f2fbd588f061eabfa485f6bf91e2008ae7f95469b54bd69706",
-      "target_sha256": "e02dba2df172a38e09a32a1c8262a77d508e7dc799a9ec2277d243ba2d0aa822",
-      "reviewer": "Claude (Claude Code session; reviewed the limits bullet on the crosswind diffusion now measured at d = 1/3 for the lava temperature (test/lava configuration 10d; developer.md sec. 96) in the Japanese source against the English mirror, 2026-11-05)",
+      "source_sha256": "72e8d211473afbf26ded4a8de290dfb3004725629eef25f4c043bf100511e5e5",
+      "target_sha256": "fa1bfda15739c0cfb83f795a0d78c3ae8617973285367b1543dcbd05f5687b54",
+      "reviewer": "Claude (Claude Code session; reviewed the text on the new default 1/3 of lv_diagratio and gl_diagratio (developer.md sec. 96) in the Japanese source against the English mirror, 2026-11-05)",
       "method": "assistant",
       "reviewed_on": "2026-11-05"
     },
@@ -293,9 +293,9 @@
     {
       "source": "docs/users_guide/glacier.md",
       "target": "docs/en/users_guide/glacier.md",
-      "source_sha256": "0b22c85ea16b19913ee264654ff99de94ac98856be7526be8a758d625673de65",
-      "target_sha256": "db6408cafb351ba00248e497a60db0f242487a4285531f837bca5c7f595946c2",
-      "reviewer": "Claude (Claude Code session; reviewed the text on the 8-neighbour flow of glaciers and lava (gl_diagratio, lv_diagratio; developer.md sec. 96) in the Japanese source against the English mirror, 2026-11-05)",
+      "source_sha256": "dd1137a3c2984bca2a550d3d84d6b9f0c86ff8519f94c0cae94e41901087b742",
+      "target_sha256": "2b8cb414db8e4bfe6d5e31ed41d96b274817f4897730594801ea61523e40a5f3",
+      "reviewer": "Claude (Claude Code session; reviewed the text on the new default 1/3 of lv_diagratio and gl_diagratio (developer.md sec. 96) in the Japanese source against the English mirror, 2026-11-05)",
       "method": "assistant",
       "reviewed_on": "2026-11-05"
     },
@@ -347,9 +347,9 @@
     {
       "source": "docs/users_guide/lavaflow.md",
       "target": "docs/en/users_guide/lavaflow.md",
-      "source_sha256": "c754a3b7e86d006d7dcc829d6180ff934f8b7ba7afc453ec17a147d9ece7a2a1",
-      "target_sha256": "856d519c637cad790004bb33f8cce91acc11cf4c595a1f73906dc18a08199414",
-      "reviewer": "Claude (Claude Code session; reviewed the basis row of f_lvtemp_scheme corrected for the instability of cooling-limited lava flows uniform across (developer.md sec. 94) in the Japanese source against the English mirror, 2026-11-05)",
+      "source_sha256": "c6a4464d81e13e5b49a8f684b2b526cc07c3872c14a6eb792fe06fb1298d3338",
+      "target_sha256": "9e1a338cafa7997aea3c2213c4dd485e22ff6102b555b25dfd19a1da598ae11f",
+      "reviewer": "Claude (Claude Code session; reviewed the text on the new default 1/3 of lv_diagratio and gl_diagratio (developer.md sec. 96) in the Japanese source against the English mirror, 2026-11-05)",
       "method": "assistant",
       "reviewed_on": "2026-11-05"
     },
@@ -662,9 +662,9 @@
     {
       "source": "examples/List_samples/list_glacier.txt",
       "target": "examples/List_samples/en/list_glacier.txt",
-      "source_sha256": "7f5e828fe853cac8a258b7f7da0bda5262da339d97609f586df748f9344f593c",
-      "target_sha256": "f29ca77ee3da362e261c35fd7fd62f867292ee872bece21a2ed3d1d8dbe371c4",
-      "reviewer": "Claude (Claude Code session; reviewed the text on the 8-neighbour flow of glaciers and lava (gl_diagratio, lv_diagratio; developer.md sec. 96) in the Japanese source against the English mirror, 2026-11-05)",
+      "source_sha256": "d1dec3d599dbb3a0ae9b65cfc0e335c559a8134feeb4887056bea591008c47f7",
+      "target_sha256": "402e5b7fca55048e09b2f62083a2536bbebd12bd642dfd64b7603cc702c69c8e",
+      "reviewer": "Claude (Claude Code session; reviewed the text on the new default 1/3 of lv_diagratio and gl_diagratio (developer.md sec. 96) in the Japanese source against the English mirror, 2026-11-05)",
       "method": "assistant",
       "reviewed_on": "2026-11-05"
     },
@@ -698,9 +698,9 @@
     {
       "source": "examples/List_samples/list_lavaflow.txt",
       "target": "examples/List_samples/en/list_lavaflow.txt",
-      "source_sha256": "eae289d52eec177dca3484e3be3c0a018a057e178b3580c11cc50a523a1226bf",
-      "target_sha256": "728ac69555a8db04cc917178ffcc02531f398348e2365f0f97fd214ee0b29a45",
-      "reviewer": "Claude (Claude Code session; reviewed the text on the 8-neighbour flow of glaciers and lava (gl_diagratio, lv_diagratio; developer.md sec. 96) in the Japanese source against the English mirror, 2026-11-05)",
+      "source_sha256": "a35ef14a8f64abd52a45e7ba4b9748a8fe8ea91e1537810ba0998be40b8a061d",
+      "target_sha256": "87249f355c5c884a16e4f0c435c32ca56afe8c53e7640a933460f93f159e2599",
+      "reviewer": "Claude (Claude Code session; reviewed the text on the new default 1/3 of lv_diagratio and gl_diagratio (developer.md sec. 96) in the Japanese source against the English mirror, 2026-11-05)",
       "method": "assistant",
       "reviewed_on": "2026-11-05"
     },
@@ -3227,9 +3227,9 @@
     {
       "source": "test/glacier/README.md",
       "target": "test/glacier/en/README.md",
-      "source_sha256": "6abffba7ce82384d724705cc3b8ebcac71d3e51f13ee2f878b339381984109ab",
-      "target_sha256": "f0be40b2e7a92a42342bc4f70a699e34449f2e3d58e7e94aaf63a30d7275565f",
-      "reviewer": "Claude (Claude Code session; reviewed the correction on the instability of cooling-limited lava flows uniform across, the 8-neighbour crosswind diffusion of the heat and the test changes (developer.md sec. 94 and 96) in the Japanese source against the English mirror, 2026-11-05)",
+      "source_sha256": "7882f62aaf5205fca781a7b0ebc631e3759a9d7ca9bb66403c504175a05b79fb",
+      "target_sha256": "c3ffbb6dca7a0d46e0c2a15d82972fc6159dd2615f9674661ec66756333b3584",
+      "reviewer": "Claude (Claude Code session; reviewed the text on the new default 1/3 of lv_diagratio and gl_diagratio (developer.md sec. 96) in the Japanese source against the English mirror, 2026-11-05)",
       "method": "assistant",
       "reviewed_on": "2026-11-05"
     },
@@ -3245,29 +3245,29 @@
     {
       "source": "test/glacier/figs/cirque.png",
       "target": "test/glacier/en/figs/cirque.png",
-      "source_sha256": "0a1529056d6eec9be9b2c4f3f2620bbf9ed914469fa200f438f310d95257da8d",
-      "target_sha256": "3fa1e179774ca3f561a72835a09b14c865f7bd7f64f89b24e76b629509da2b7d",
-      "reviewer": "Claude (Claude Code session; English figure drawn by the same script with the en switch; visual check)",
+      "source_sha256": "567047589fe319c3848dc0de62079a603d6837b4623281b5a354653cae9974d1",
+      "target_sha256": "d94ddbf9c7ef1b483d4f2fa6ff3682dc6710ccdb0236b024a1e941398e02a1bc",
+      "reviewer": "Claude (Claude Code session; viewed both figures regenerated by Fig.py from the same runs with the new default 1/3 of lv_diagratio and gl_diagratio; same data, labels translated; developer.md sec. 96; 2026-11-05)",
       "method": "assistant",
-      "reviewed_on": "2026-11-03"
+      "reviewed_on": "2026-11-05"
     },
     {
       "source": "test/glacier/figs/halfar.png",
       "target": "test/glacier/en/figs/halfar.png",
-      "source_sha256": "3b9b9fa41d742306b364b44d9b68cb3ad5de3f72d58b3990b8f1d9181857c78a",
-      "target_sha256": "1f4759c8bf8786b34caae83bbc6ae17d41514ad42be3529021f75586c62467d4",
-      "reviewer": "Claude (Claude Code session; English figure drawn by the same script with the en switch; visual check)",
+      "source_sha256": "b9ab9f7b46e99f87fc2536e43b1673542d79889b676fafb78eecf51484cf0cf1",
+      "target_sha256": "6d28156ce7008059e93591dc2bfd3e032a765d933a7279a45bea9b9988f9e0ec",
+      "reviewer": "Claude (Claude Code session; viewed both figures regenerated by Fig.py from the same runs with the new default 1/3 of lv_diagratio and gl_diagratio; same data, labels translated; developer.md sec. 96; 2026-11-05)",
       "method": "assistant",
-      "reviewed_on": "2026-11-03"
+      "reviewed_on": "2026-11-05"
     },
     {
       "source": "test/glacier/figs/lc.png",
       "target": "test/glacier/en/figs/lc.png",
-      "source_sha256": "f9cb0260892e12c7b8fcb0800b070fcb25b9fe95b3e0fdcc7b13cc5131e9b924",
-      "target_sha256": "a2f2a65ce19922362ee5968f03b5445a62e0b9e22e228cc3f710d0c493b6afe1",
-      "reviewer": "Claude (Claude Code session; English figure drawn by the same script with the en switch; visual check)",
+      "source_sha256": "013edeec762114480a1aa449afd752d60ea220680f10c94c75e015ca7eebe443",
+      "target_sha256": "aba4927d4cdac922cc980d99f91f58c9025c41932d0ec100c7db07f942f0ccd4",
+      "reviewer": "Claude (Claude Code session; viewed both figures regenerated by Fig.py from the same runs with the new default 1/3 of lv_diagratio and gl_diagratio; same data, labels translated; developer.md sec. 96; 2026-11-05)",
       "method": "assistant",
-      "reviewed_on": "2026-11-04"
+      "reviewed_on": "2026-11-05"
     },
     {
       "source": "test/gtif/README.md",
@@ -3461,20 +3461,20 @@
     {
       "source": "test/lava/README.md",
       "target": "test/lava/en/README.md",
-      "source_sha256": "27467b9eccfb40e2c50ded1a7c3fe4805b3e5ab4fb1fbe41ea67935846eafd6f",
-      "target_sha256": "23fd12039a307f1fff154036081b5fbac7d85f5dfe2d6bc85d36f8b333459028",
-      "reviewer": "Claude (Claude Code session; reviewed the correction on the instability of cooling-limited lava flows uniform across, the 8-neighbour crosswind diffusion of the heat, the test changes (developer.md sec. 94 and 96), the run time of the suite and the Huppert percentages matched to the Check_lava output in the Japanese source against the English mirror, 2026-11-05)",
+      "source_sha256": "b51ed43ecd481d70ec52525e2282ece2af6067b51fb941137e97228542ae80dc",
+      "target_sha256": "bb71e7490372216776a571072995fb66dce6578d2e111289fc4876e1d57925ed",
+      "reviewer": "Claude (Claude Code session; reviewed the text on the new default 1/3 of lv_diagratio and gl_diagratio (developer.md sec. 96) in the Japanese source against the English mirror, 2026-11-05)",
       "method": "assistant",
       "reviewed_on": "2026-11-05"
     },
     {
       "source": "test/lava/figs/lava.png",
       "target": "test/lava/en/figs/lava.png",
-      "source_sha256": "46780ac98e97dba9fff48043c52ec529a2994a5e8725e1fa506d1375eef32a15",
-      "target_sha256": "cadc4b1931d43fa7f0696bdbc044d020fad3ddca1b42b4a3c8afafe075a2dc66",
-      "reviewer": "Claude (Claude Code session; both images drawn by Fig.py and Fig.py en from the same test/lava results of 2026-11-03 (configurations 1-5), compared side by side: same plotted data and layout, labels translated)",
+      "source_sha256": "23625e267a425ffc72706c29c107b569064655d68dad9256bbc7bbb71a908df7",
+      "target_sha256": "211b058916b85a4986d120ce2692a29156ea84b09a3098e8d3705e2a0940b4b0",
+      "reviewer": "Claude (Claude Code session; viewed both figures regenerated by Fig.py from the same runs with the new default 1/3 of lv_diagratio and gl_diagratio; same data, labels translated; developer.md sec. 96; 2026-11-05)",
       "method": "assistant",
-      "reviewed_on": "2026-11-03"
+      "reviewed_on": "2026-11-05"
     },
     {
       "source": "test/nest_identity/README.md",

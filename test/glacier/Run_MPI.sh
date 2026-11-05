@@ -6,7 +6,7 @@
 # (逐次側を取っておくには: ./Run.sh 後に
 #    mv result result_serial; mv result_cirque result_cirque_serial;
 #    mv result_ava result_ava_serial;
-#    for c in lc lc2 lc0 lc02 d8 ch0w1 ch45w1 ch0w3 ch45w3 ch45w3q; do
+#    for c in lc lc2 lc0 lc02 d4 ch0w1 ch45w1 ch0w3 ch45w3 ch45w3q; do
 #        mv result_$c result_${c}_serial; done)
 
 NP=${1:-2}
@@ -24,7 +24,7 @@ mpirun -np "$NP" $MPIRUN_OPTS ./encflow_mpi param_ava.txt | tee Screen_ava.log |
 for c in lc lc2 lc0 lc02; do
     mpirun -np "$NP" $MPIRUN_OPTS ./encflow_mpi param_$c.txt | tee Screen_$c.log || exit 1
 done
-mpirun -np "$NP" $MPIRUN_OPTS ./encflow_mpi param_d8.txt | tee Screen_d8.log || exit 1
+mpirun -np "$NP" $MPIRUN_OPTS ./encflow_mpi param_d4.txt | tee Screen_d4.log || exit 1
 for c in ch0w1 ch45w1 ch0w3 ch45w3 ch45w3q; do
     mpirun -np "$NP" $MPIRUN_OPTS ./encflow_mpi param_$c.txt | tee Screen_$c.log || exit 1
 done
@@ -36,13 +36,13 @@ python3 "$sdir/Check_halfar.py" result Screen.log || rc=1
 python3 "$sdir/Check_cirque.py" result_cirque || rc=1
 python3 "$sdir/Check_ava.py" result_ava Screen_ava.log || rc=1
 python3 "$sdir/Check_lc.py" || rc=1
-python3 "$sdir/Check_halfar.py" result_d8 Screen_d8.log || rc=1
+python3 "$sdir/Check_halfar.py" result_d4 Screen_d4.log || rc=1
 python3 "$sdir/Check_chan.py" || rc=1
 
 for pair in "result result_serial" "result_cirque result_cirque_serial" "result_ava result_ava_serial" \
             "result_lc result_lc_serial" "result_lc2 result_lc2_serial" \
             "result_lc0 result_lc0_serial" "result_lc02 result_lc02_serial" \
-            "result_d8 result_d8_serial" "result_ch0w1 result_ch0w1_serial" \
+            "result_d4 result_d4_serial" "result_ch0w1 result_ch0w1_serial" \
             "result_ch45w1 result_ch45w1_serial" "result_ch0w3 result_ch0w3_serial" \
             "result_ch45w3 result_ch45w3_serial" "result_ch45w3q result_ch45w3q_serial"; do
     set -- $pair

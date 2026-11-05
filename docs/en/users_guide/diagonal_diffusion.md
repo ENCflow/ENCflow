@@ -713,7 +713,7 @@ with a limiter.
 | Fronts, plumes and peaks of water quality, suspended sediment, the salt-water layer, driftwood and debris | First-order upwind diffuses by $`0.293\,u\Delta`$ crosswind and $`u\Delta/2`$ longitudinally; peaks drop and the answer changes with the grid | Link-wise MUSCL (`f_scalar_scheme = 3`; §3.3) | First order at extrema, boundaries, wet/dry fronts and coasts. Check thin structures by refining the grid |
 | Reproducing existing calculations calibrated with first-order upwind | -- | The previous results with `f_scalar_scheme = 1` | Concentration-dependent processes change in the direction of lower peaks |
 | Advective transport with groundwater, $`c_g`$ | First-order upwind diffusion | Deliberately kept first order (stands in for physical dispersion; §3.4) | Explicit dispersivity and MUSCL in the same future work |
-| Lava temperature | With first-order upwind, 4-neighbour diffusion (no diffusion from diagonal edges; crosswind 0 along the axes and $`0.354\,u\Delta`$ at 45°); the length of a flow that stops as it cools and is uniform across depends on the cell size (less so with irregularities; §3.4) | Link-wise MUSCL (`f_lvtemp_scheme = 3`, the default from 2026-11-05; crosswind 0.09 times first order at 45°, creates no new temperature extrema; §3.4) | The limiter falls back to first order near temperature extrema, so temperature structures a few cells wide are blunted. `f_lvtemp_scheme = 1` gives the results from before 2026-11-05. Choosing `lv_diagratio`, which puts the flow on 8 neighbours (§7), gives the same MUSCL on the diagonal edges too |
+| Lava temperature | With first-order upwind, 4-neighbour diffusion (no diffusion from diagonal edges; crosswind 0 along the axes and $`0.354\,u\Delta`$ at 45°); the length of a flow that stops as it cools and is uniform across depends on the cell size (less so with irregularities; §3.4) | Link-wise MUSCL (`f_lvtemp_scheme = 3`, the default from 2026-11-05; crosswind 0.09 times first order at 45°, creates no new temperature extrema; §3.4) | The limiter falls back to first order near temperature extrema, so temperature structures a few cells wide are blunted. `f_lvtemp_scheme = 1` (with `lv_diagratio = 0` for the flow) gives the results from before 2026-11-05. The flow is on 8 neighbours by default (`lv_diagratio = 1/3`; §7), with the same MUSCL on the diagonal edges |
 | Cross-stream profiles of jets, shear layers and longshore currents (momentum) | The oblique family is smoothed across the stream; $`\approx 0.15\,u\Delta`$ in the cell velocity (scheme 3) | MUSCL on the flow-direction faces (scheme 3; about half of scheme 2; §4.3) | Lateral faces are first order. Physical viscosity acts only when it exceeds the numerical diffusion. Compare by refining the grid |
 | Checkerboard pattern in deep, slow stagnant zones | Circulations running oppositely on the parity sub-lattices are not damped | Build the lateral faces from opposite-parity parallel links (§4.4; always on) | -- |
 | Lateral faces at walls, pond edges, shelves and diagonally blocked openings | Fluxes that disagree with the mass create kinetic energy and blow up in finite time | Actual-flow flux (axis), opening ratio (diagonal), depth window for one-sided links (§4.5; always on) | Disagreeing signs of the flow; the lag of the bore in wall rows |
@@ -757,10 +757,10 @@ with a limiter.
   discretisation error). The default is the isotropic 9-point stencil with
   `creep_diagratio` and `spl_diagratio` = 1/3
   ([Sediment transport and hillslope processes](sediment.md) §2 and §6, developer.md §93). The flow
-  of the glacier SIA and of lava stays 4-neighbour by default, and `gl_diagratio` and
-  `lv_diagratio` select the 8-neighbour 9-point stencil (which reassigns blocked diagonal
-  shares according to the thickness of the flow; default 0; [Lava flows](lavaflow.md),
-  [Glaciers](glacier.md), developer.md §96). How the diagonal share d is chosen for each
+  of the glacier SIA and of lava is also on the 8-neighbour 9-point stencil by default
+  (`gl_diagratio` and `lv_diagratio` = 1/3, which reassigns blocked diagonal shares
+  according to the thickness of the flow; changed from 0 = 4 neighbours on 2026-11-05;
+  [Lava flows](lavaflow.md), [Glaciers](glacier.md), developer.md §96). How the diagonal share d is chosen for each
   process is summarised in [choosing the diagonal share d](diagratio.md).
 - **The difference in spreading between 8 and 4 neighbours**: the lateral
   spreading of a debris-flow fan is larger with 8 neighbours, but it depends

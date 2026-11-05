@@ -68,20 +68,29 @@ architecture.md。このメモは「現在進行中・未完了の項目」だ�
    - (b) 段 2(済 2026-11-05。developer.md §94): 溶岩の温度の熱の移流に MUSCL(`f_lvtemp_scheme = 3`)を足し、
      既定を 3 にした(2026-11-05。利用者の決定)。test/lava は全構成 PASS(構成 9 の長さの比 2.64 → 2.90)、
      reference はなく更新不要。**残り**: examples/stratovolcano の最後の段(run_flow.py の温度モードの溶岩流)の
-     README の数値(到達距離・面積・最大の厚さ・固まった時刻・熱の損失、test/lava 構成 9 の「2.6 倍」の引用)と
-     図の回し直し(結果を利用者が目視確認してから README を更新する)。
+     README の数値(到達距離・面積・最大の厚さ・固まった時刻・熱の損失、test/lava 構成 9 の「2.6 倍」の引用。
+     構成 9 の比は (c) の既定 1/3 で 2.07)と図の回し直し。README の更新は利用者の了承済み(2026-11-05「更新OK」)で、
+     下の (f) の例題の一括の回し直しの中で行う。
    - (c) 段 3(実装 2026-11-05。利用者の決定「入れる、A で」。developer.md §96): 氷河の SIA・溶岩流の流動の
-     8 近傍の 9 点を選択式で足した(`gl_diagratio`・`lv_diagratio`。既定 0 = 4 近傍とビット一致、推奨 1/3。塞がれた
-     斜めの配分を流れの厚さに応じて振り替える案 A。test/lava 構成 4'・11、test/glacier 構成 6・7)。**残る判断
-     (利用者の確認待ち)**: 既定を 1/3 にするか(変えると、溶岩・氷河を流す test(test/lava・test/glacier の既存の
-     構成。reference はない)と例題 shield_volcano・stratovolcano(溶岩流)、氷河の例題の結果が変わる。計算時間は
-     1 割余り増)。45° の帯の縁で通水能が多めに出る分(3 本で +6.5 %)を消す、流れの向きを見る振り替えは候補。
+     8 近傍の 9 点(`gl_diagratio`・`lv_diagratio`。塞がれた斜めの配分を流れの厚さに応じて振り替える案 A)。
+     既定を 1/3 にした(2026-11-05。利用者の決定「既定を 1/3 に」。test/lava・test/glacier は全構成 PASS、reference は
+     なし。4 近傍の対照は test/lava 構成 4'・test/glacier 構成 6)。**残り**: 例題 shield_volcano・stratovolcano
+     (溶岩流)と glacier_valley(氷河)の README の数値と図の回し直し((f) の一括の回し直しの中で。結果を利用者が
+     目視確認してから README を更新する)。45° の帯の縁で通水能が多めに出る分(3 本で +6.5 %)を消す、流れの
+     向きを見る振り替えは候補。
    - (d) 湿潤侵食の剥離深の横方向拡散 wet_lw(§84.16)も同じ 5 点の核を使う(合意の範囲外。9 点にするなら
      spl_diagratio と同じ形で足せる)。
-   - (e) 地下水の側方流 `gw_diagratio`(と同じ通過幅を使う `salt_diagratio`)の既定を 1/3 にするか(developer.md
-     §95。等方性は計測済み。管路層の `gwc_diagratio` は 0.586 のまま独立に決めた)。変えると gwseep・gwsect・
-     gwwidth・gwbed の reference と、gwlateral・gwbed の検定スクリプトの d の定数、例題 estuary_barrage・
-     catchment_metal・qanat(層2)ほかが変わる。(a) と同じ回にまとめて目視確認を得る。
+   - (e) 地下水の側方流 `gw_diagratio`(と同じ通過幅を使う `salt_diagratio`)の既定を 1/3 にする(利用者の決定
+     2026-11-05「する」。developer.md §95。等方性は計測済み。管路層の `gwc_diagratio` は 0.586 のまま独立に決めた)。
+     **保留中**: 試行で gwwidth の総水量の検定が落ちた原因(dd 未満の水膜の負の水深)は、別ブランチ
+     claude/inspiring-brahmagupta-c5jfsg の修正(セルの流出の合計による抑制。そのブランチの §94)で直る。その合流後に
+     既定を変え、gwseep・gwsect・gwwidth・gwbed の reference の差を利用者に示して目視確認を得てから更新する
+     (-u は了承の後)。gwlateral・gwbed の検定スクリプトの d の定数、例題 estuary_barrage・catchment_metal・
+     qanat(層2)ほかも変わる。
+   - (f) 別ブランチ claude/inspiring-brahmagupta-c5jfsg(重力補正の既定・セルの流出の抑制ほか。影響範囲が広い)の
+     main への合流を待つ(利用者の指示 2026-11-05)。合流後: main をこのブランチ(claude/nifty-hawking-yx6s0o)に
+     merge し、番号の衝突するこのブランチの developer.md §93〜96 と本項 00l を付け替える(利用者の了承)。続いて (e)、
+     例題の一括の回し直し((a)〜(c) の例題と、別ブランチの変更で値の変わる例題を 1 回で)。
 
 00k. **急勾配の重力補正の修正(developer.md §91)・最急勾配の D∞(§92)・岩盤侵食の有効重力(2026-11-04)の後始末**
    - (済 2026-11-04)reference の更新: 利用者の確認の上で、§91 で値が変わる 11 ケース(chichibu・

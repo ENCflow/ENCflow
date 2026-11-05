@@ -1,6 +1,6 @@
 !======================================================================
-! glacier 構成6: 構成1(Halfar ドーム)と同じ入力を、SIA 流動の 8 近傍の 9 点
-!   (gl_diagratio = 1/3。developer.md §96)で計算する(検定は構成1 と同じ Check_halfar.py。
+! glacier 構成6: 構成1(Halfar ドーム)と同じ入力を、SIA 流動の 4 近傍(gl_diagratio = 0。
+!   2026-11-05 より前の既定。developer.md §96)で計算する対照(検定は構成1 と同じ Check_halfar.py。
 !   以下は構成1 の説明)
 ! glacier: SIA 氷体流動の Halfar ドーム・ベンチマーク
 !   平坦床・質量収支ゼロ(気温 -30℃ で融解なし・降水なし)の氷帽が
@@ -26,7 +26,7 @@
   fn_snow = '-'
   fn_glacier = '-'
   dir_data = 'data'
-  dir_result = 'result_d8'
+  dir_result = 'result_d4'
   f_disp_debug = 1          ! S 列を全有効桁で表示(体積保存の検定用)
   f_check_cfl = 0
 /
@@ -79,6 +79,6 @@
   gl_ddfi = 8.0             ! 氷面度日係数 (mm/℃/day。-30℃では不活性)
   f_glflow = 1              ! SIA 流動
   gl_afl = 1.0e-16          ! Glen A (Pa^-3 yr^-1)
-  gl_diagratio = 0.3333333333   ! 8 近傍の 9 点(d = 1/3。developer.md §96)
+  gl_diagratio = 0.0        ! 4 近傍(対照。既定は 8 近傍の 9 点 d = 1/3。developer.md §96)
   fn_glacier_hi0 = 'hi0.txt'   ! Halfar ドームの初期氷厚(m)
 /

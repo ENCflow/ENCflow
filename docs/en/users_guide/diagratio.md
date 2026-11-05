@@ -161,7 +161,7 @@ shallow water flow is small.
 | Groundwater lateral flow (soil layer, layer 2) | `gw_diagratio` | 0.586 | 1/3 (a change of the default is under consideration) | A pure diffusion process (the measurements of §2.3). In exchange the time-step limit of the explicit scheme drops by 15 %, and the cap of the river-bed exchange (`f_gwbed`) drops by 8 % for a one-cell-wide channel |
 | Saltwater zone of the two-layer fresh/salt model | `salt_diagratio` | 0.586 | same as `gw_diagratio` | It shares the passage widths with the soil lateral flow (a different value stops the run) |
 | Conduit layer | `gwc_diagratio` | 0.586 | 0.586 | The capacity of a conduit following the raster one cell wide does not depend on its direction (§2.2). The conduit layer has no reassignment. Independent of the d of the lateral flow |
-| Flow of glaciers and lava | `gl_diagratio`, `lv_diagratio` | 0 (four neighbours) | 1/3 (changing the default is under consideration) | Processes flowing in valleys, where both the conveyance and the isotropy matter. The blocked diagonal shares are reassigned according to the thickness of the flow, so d can be chosen for isotropy while the conveyance of valleys along a grid axis is kept (with 1/3 a diagonal valley one cell wide has the same conveyance too; [Lava flows](lavaflow.md), developer.md §96, in Japanese) |
+| Flow of glaciers and lava | `gl_diagratio`, `lv_diagratio` | 1/3 | 1/3 | Processes flowing in valleys, where both the conveyance and the isotropy matter. The blocked diagonal shares are reassigned according to the thickness of the flow, so d can be chosen for isotropy while the conveyance of valleys along a grid axis is kept (with 1/3 a diagonal valley one cell wide has the same conveyance too; [Lava flows](lavaflow.md), developer.md §96, in Japanese). Changed from 0 (four neighbours) on 2026-11-05 |
 
 <a id="usage"></a>
 
@@ -177,10 +177,12 @@ shallow water flow is small.
   the grid such as the drawdown cone of a well or a recharge mound. In runs that use
   `salt_diagratio`, give it the same value. The time-step limit drops, so check the line
   printed at initialisation (`gwflow_lateral: dt limit`).
-- For glaciers and lava flows down narrow valleys oblique to the grid, set
-  `gl_diagratio` and `lv_diagratio` = 1/3 (with the default 0 on four neighbours, a diagonal
-  valley one cell wide does not flow, and a band of three diagonal lines has 2/3 of the
-  conveyance). The computation takes a little over 10 % longer.
+- For glaciers and lava, the defaults `gl_diagratio` and `lv_diagratio` = 1/3 make flows
+  down narrow valleys oblique to the grid independent of the valley orientation (with 0 on
+  four neighbours, a diagonal valley one cell wide does not flow, and a band of three
+  diagonal lines has 2/3 of the conveyance; the computation takes a little over 10 % longer
+  than on four neighbours). To reproduce the four-neighbour results from before 2026-11-05,
+  set them to 0.
 - Some values go in pairs: `fluv_diagratio` and `bs_diagratio` take the same value as
   `p_diagratio`, and `salt_diagratio` the same value as `gw_diagratio`. `gwc_diagratio` of
   the conduit layer is independent.
