@@ -33,7 +33,9 @@ jobs:
     name: full regression (serial, release)
     # fork では夜間スケジュールを回さない
     if: github.event_name != 'schedule' || github.repository_owner == 'ENCflow'
-    runs-on: ubuntu-latest
+    # reference の生成環境(開発 VM の gfortran 13)に合わせて固定。ubuntu-latest は 2026-11-05 に
+    # ubuntu-26.04(gfortran 15)へ切り替わり、vzcol が 1 量子で不一致になった(developer.md §10)
+    runs-on: ubuntu-24.04
     timeout-minutes: 60
     steps:
       - uses: actions/checkout@v4
@@ -52,7 +54,9 @@ jobs:
   full-mpi:
     name: full regression (MPI np=${{ matrix.np }}, release)
     if: github.event_name != 'schedule' || github.repository_owner == 'ENCflow'
-    runs-on: ubuntu-latest
+    # reference の生成環境(開発 VM の gfortran 13)に合わせて固定。ubuntu-latest は 2026-11-05 に
+    # ubuntu-26.04(gfortran 15)へ切り替わり、vzcol が 1 量子で不一致になった(developer.md §10)
+    runs-on: ubuntu-24.04
     timeout-minutes: 60
     strategy:
       fail-fast: false
@@ -82,7 +86,9 @@ jobs:
   debug-fcheck:
     name: debug -fcheck=all (serial vs np=2 bit-identical)
     if: github.event_name != 'schedule' || github.repository_owner == 'ENCflow'
-    runs-on: ubuntu-latest
+    # reference の生成環境(開発 VM の gfortran 13)に合わせて固定。ubuntu-latest は 2026-11-05 に
+    # ubuntu-26.04(gfortran 15)へ切り替わり、vzcol が 1 量子で不一致になった(developer.md §10)
+    runs-on: ubuntu-24.04
     timeout-minutes: 300
     steps:
       - uses: actions/checkout@v4
@@ -136,7 +142,9 @@ jobs:
   bmi:
     name: BMI conformance (bmi-tester) + equivalence
     if: github.event_name != 'schedule' || github.repository_owner == 'ENCflow'
-    runs-on: ubuntu-latest
+    # reference の生成環境(開発 VM の gfortran 13)に合わせて固定。ubuntu-latest は 2026-11-05 に
+    # ubuntu-26.04(gfortran 15)へ切り替わり、vzcol が 1 量子で不一致になった(developer.md §10)
+    runs-on: ubuntu-24.04
     timeout-minutes: 30
     steps:
       - uses: actions/checkout@v4

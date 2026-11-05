@@ -14,7 +14,9 @@ on:
 jobs:
   serial:
     name: build + regression (serial)
-    runs-on: ubuntu-latest
+    # reference の生成環境(開発 VM の gfortran 13)に合わせて固定。ubuntu-latest は 2026-11-05 に
+    # ubuntu-26.04(gfortran 15)へ切り替わり、vzcol が 1 量子で不一致になった(developer.md §10)
+    runs-on: ubuntu-24.04
     timeout-minutes: 30
     steps:
       - uses: actions/checkout@v4
@@ -32,7 +34,9 @@ jobs:
 
   mpi:
     name: build + regression (MPI np=2)
-    runs-on: ubuntu-latest
+    # reference の生成環境(開発 VM の gfortran 13)に合わせて固定。ubuntu-latest は 2026-11-05 に
+    # ubuntu-26.04(gfortran 15)へ切り替わり、vzcol が 1 量子で不一致になった(developer.md §10)
+    runs-on: ubuntu-24.04
     timeout-minutes: 30
     steps:
       - uses: actions/checkout@v4
