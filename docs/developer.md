@@ -19837,3 +19837,19 @@ wfswash_tanbe = 0.1 を入れた): 途中で不具合が 2 つ見つかった(�
   (上流から)、ピークの時刻が 4〜8 分遅れ、測線を通る総量は 0.3〜1.2 % 減った。全域の最大単位幅流量は
   −3.8 %、最大流速は −1.7 %。100 m の格子では斜面の勾配がならされて緩くなるので、30° の一様な斜面
   (等流の水深 +21 %)よりずっと小さい。
+- **reference の更新(2026-11-05。利用者の目視確認の後)**: 既定 2 で値の変わる 13 ケース(chichibu・
+  chichibu_icmap・dambreak・damwq・gwsect・gwseep・gwwidth・kdpart・sewer_wq・taupart・tracer・wfdoppler・
+  wqbound)を `./Run.sh -u` で更新した。chichibu・chichibu_icmap・dambreak は設定の値も 2 にしたので
+  reference/param.txt も更新(dambreak は平坦な床で倍率が厳密に 1 なので結果は同一)。taupart は Run_MPI.sh の
+  比較用の Log_d19_serial.txt も作り直した。変化(1 → 2): chichibu のピークの Q_max −2.1 %・h_max −0.24 %・
+  V_max −0.25 %、chichibu_icmap の Q_max −4.4 %・h_max −4.0 %・V_max −1.7 %、damwq・gwseep のピークの
+  V_max −1.1 %、gwseep の湧出の質量 +1.2 %、taupart の貯留 +0.4 %、ほかは 0.03 % 以内(wfdoppler は波浪場の
+  反復の回数が 2 時刻で 48 → 448 だが、どちらも残差 1e-9 未満に収束)。ほかの reference(nh* の全部、wave、
+  tide、wfcurrent、wfsed など)は変わらない。更新後に -u なしで再実行して新しい reference とバイト一致。
+  - 自己検定: taupart は検定の式を 2 に合わせて PASS(a6e06d7)。gwwidth の「雨の後の総水量が一定」(相対
+    1e-10)が 2 で落ちる(河道幅なしの構成で最大相対 6e-5。約 4 分ごとに跳ね上がって 2〜3 分で厳密な値に
+    戻る)。1 のまま粗度を 2 倍にしても同じずれが出て、適応的ルンゲクッタを切ると消えるので、2 のコードの
+    誤りではなく、摩擦が強いときに適応的ルンゲクッタの経路と組み合わさって起きる既存の一時的な水の勘定の
+    ずれ(連続式は辺ごとに対称で保存的なので、地下水との受け渡しとの組み合わせを疑う)。扱いは利用者の
+    判断待ちで、main へのマージはそれまで行わない(handoff 00l)。
+  - MPI: 新しい reference に対する確認は実行中(結果は追記する)。

@@ -128,6 +128,14 @@ architecture.md。このメモは「現在進行中・未完了の項目」だ�
      splashslide・volcano・avalanche・nhbottom の ls_*・nest_identity・nest_twin)と例題(ashfall_lahar・
      debris_bedrock・debris_fan・landslide_tsunami・stratovolcano・benchmark/h-plane)を 2 に揃えて
      自己検定・再計算、tutorials(既定を使うので結果が変わる。chichibu の数値と図)の確認。
+   - (済 2026-11-05)reference を持つ 13 ケースの更新(利用者の目視確認の後。developer.md §93「reference の
+     更新」)。taupart の自己検定の式を 2 に合わせた(a6e06d7)。
+   - **未決(利用者の判断待ち)**: test/gwwidth の自己検定「雨の後の総水量が一定」が 2 で落ちる(相対 6e-5)。
+     摩擦が強いときに適応的ルンゲクッタの経路で起きる既存の一時的な水の勘定のずれ(1 で粗度 2 倍でも出て、
+     適応的ルンゲクッタを切ると消える。地下水との受け渡しとの組み合わせを疑う)。案: (a) 原因を調べて直して
+     から main へマージ(推奨)、(b) gwwidth だけ 1 を明示して先へ進み、調査を残す。main へのマージは保留。
+     再現の材料: 河道幅なしの構成(param_nowidth.txt)を 1 分ごとの Log で見ると、S_total が約 4 分周期で
+     跳ねる。
    - 残り: 上の既定の切り替え、混合体流動の抵抗則への適用、案 D〜F、落ち口の扱い(0・1 では落ち口の
      セルが乾き、平屋根に摩擦の見積もりより深い水がたまる。§93「段差の扱い」の所見 (2))。
 
