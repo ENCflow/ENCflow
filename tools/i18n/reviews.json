@@ -2282,29 +2282,29 @@
     {
       "source": "examples/sewer_hybrid/README.md",
       "target": "examples/sewer_hybrid/en/README.md",
-      "source_sha256": "4e772a7675e316dad7cb5580e6827c6a1fbc2f2eccca8d53653173c1c2f098d0",
-      "target_sha256": "654cb13b6f63a0979cc3e38034e22c4ff3ebc63bbfdc4dee8cbffa88ed060fae",
-      "reviewer": "Claude (assistant)",
+      "source_sha256": "dce7974fd6837c83a9028de87ec956805ca501409956b4e80f9db7dbcd86186e",
+      "target_sha256": "93a0a2e13e389d8d9d0b1f70b12ea7b4f7abfcbed7e143d7032bad53920ca078",
+      "reviewer": "Claude (Claude Code session; recomputed 2026-11-05: run F values in (a), (c), the water destinations, the recompute note and the table compared with the Japanese source, rest unchanged since the previous record)",
       "method": "assistant",
-      "reviewed_on": "2026-11-02"
+      "reviewed_on": "2026-11-05"
     },
     {
       "source": "examples/sewer_hybrid/sewer_hybrid_outfall.png",
       "target": "examples/sewer_hybrid/en/figs/sewer_hybrid_outfall.png",
-      "source_sha256": "47b72b34f9d64db5eaba8b18252d7cdc149783d505e402c45b9ffb1149ebf808",
-      "target_sha256": "ff47959159e65e142713ac37816216afcc0bbed12bf6bc05396d0524f4ac550c",
-      "reviewer": "Claude (assistant)",
+      "source_sha256": "88df8f199c4891f6973cfdc37c67ce3cfafebeaf91e2ae265605368d9d5a31aa",
+      "target_sha256": "37b2ee5424adca1ce05a6d595eec808efb3e0ee36da2990399728e951047fc1f",
+      "reviewer": "Claude (Claude Code session; recomputed 2026-11-05: both drawn by plot_sewer.py from the same results, labels compared with the Japanese figure)",
       "method": "assistant",
-      "reviewed_on": "2026-11-02"
+      "reviewed_on": "2026-11-05"
     },
     {
       "source": "examples/sewer_hybrid/sewer_hybrid_result.png",
       "target": "examples/sewer_hybrid/en/figs/sewer_hybrid_result.png",
-      "source_sha256": "fd98f08ef12a4bf2886ab6824bc29484ad6f3079f5135fd350fbdbb0da4c7185",
-      "target_sha256": "0700138655452a3e5d589f3d8d55bf97966764bcd2e29da56b3cb6947c89f85a",
-      "reviewer": "Claude (assistant)",
+      "source_sha256": "682f13bd09fa87505f2b90e7d08497c90985bc807922feb69b401f3d9a481677",
+      "target_sha256": "bbadc98f9b4c205397645daf920d6058bba153a131cea6a62c17545be7a97f4c",
+      "reviewer": "Claude (Claude Code session; recomputed 2026-11-05: both drawn by plot_sewer.py from the same results, labels compared with the Japanese figure)",
       "method": "assistant",
-      "reviewed_on": "2026-11-02"
+      "reviewed_on": "2026-11-05"
     },
     {
       "source": "examples/shield_volcano/README.md",
