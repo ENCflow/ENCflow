@@ -2615,11 +2615,11 @@
     {
       "source": "examples/tsunami_fault/README.md",
       "target": "examples/tsunami_fault/en/README.md",
-      "source_sha256": "08d067a4244bac53f9f184d36fbebc072caf43a20866d9b0f16d3bfdeecb4492",
-      "target_sha256": "c142fc4da6796f4e720941b6dc2121c1241e5a89dbf0dbc637210af10f630e30",
-      "reviewer": "Claude (Claude Code session; example reruns with f_opening_dynamic default 3)",
+      "source_sha256": "8afe113518cf907c18574bb767923392b8ccd735ee9f358942678b250c8fcae4",
+      "target_sha256": "7267b98e695b165e6e5aec3c9c229b9108275454d2203a412147dacc0f721c6a",
+      "reviewer": "Claude (Claude Code session; recomputed 2026-11-05: the two changed minima of the coast probe compared with the Japanese source, rest unchanged since the previous record)",
       "method": "assistant",
-      "reviewed_on": "2026-10-31"
+      "reviewed_on": "2026-11-05"
     },
     {
       "source": "examples/tsunami_fault/figs/deformation.png",
