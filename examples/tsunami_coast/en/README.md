@@ -60,7 +60,7 @@ python3 plot_results.py     # figs/*.png and tables
 | Bay mouth x = 20 km | 4.0 / 3.78 / -1.96 | 3.8 / 3.05 / -2.11 | 12.0 / 4.12 / -2.01 |
 | Coast outside the bay (north) y = 65 km | 2.7 / 2.58 / -1.89 | 2.6 / 2.61 / -1.79 | 10.1 / 2.46 / -1.15 |
 | Coast of the southern cape y = 15 km (uplifted area) | 0.5 / 2.68 / -1.98 | 0.5 / 2.73 / -1.89 | 10.1 / 2.51 / -1.17 |
-| Shelf x = 40 km | 3.3 / 2.33 / -1.36 | 3.8 / 1.66 / -1.50 | 3.8 / 3.09 / -1.05 |
+| Shelf x = 40 km | 3.3 / 2.33 / -1.35 | 3.8 / 1.66 / -1.50 | 3.8 / 3.09 / -1.05 |
 | Above the offshore fault x = 90 km | 1.4 / 2.14 / -0.94 | 0.8 / 2.13 / -0.88 | 1.5 / 2.07 / -1.53 |
 | Land at the bay head x = 7 km (flooded by subsidence) | 27.5 / 2.76 / -0.18 | 27.4 / 2.84 / -0.18 | 38.9 / 2.49 / 0.37 |
 
@@ -70,7 +70,9 @@ picked up; at the land probe, the start of flooding). The maximum flood depth on
 the land at the bay head is 2.94 m with time history, 3.02 m instantaneous and
 2.12 m offshore only. The flooded land area is 301 / 299 / 266 km² (recomputed on
 2026-11-02 with the default f_opening_dynamic = 3 and the corrected lateral faces of the
-momentum-conserving advection; developer.md §68.41–§68.43).
+momentum-conserving advection; developer.md §68.41–§68.43; recomputed on 2026-11-05 after the
+default f_gravity_correction = 2 and the fixes of the outflow suppression and the edge depth, §93–§95,
+where only the last digit of the minimum at the shelf changed).
 
 - **With the coastal deformation included, the disturbance at the coast starts
   10 minutes earlier.** With the offshore fault only, the arrival at the coast

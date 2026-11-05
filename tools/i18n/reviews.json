@@ -2597,11 +2597,11 @@
     {
       "source": "examples/tsunami_coast/README.md",
       "target": "examples/tsunami_coast/en/README.md",
-      "source_sha256": "68b1ff485d108ec3134cf2d463d9124375bdb56bcd138662033481be66ad7491",
-      "target_sha256": "8db49c03995cc400fab29a6bcc44c1993f39a2ad8dd0157ecbdac84e4dc9d55b",
-      "reviewer": "Claude (assistant)",
+      "source_sha256": "b11a9d6b1cfb4d5c39a9cba96c8386acfc5b560ddeeba4dd5bc7bf7ac9b264e4",
+      "target_sha256": "0d216562439b5f5df8b45e19655f44f9fa4ae0de7523698e7072fc9fa0779d9e",
+      "reviewer": "Claude (Claude Code session; recomputed 2026-11-05: the shelf minimum and the recompute note compared with the Japanese source, rest unchanged since the previous record)",
       "method": "assistant",
-      "reviewed_on": "2026-11-02"
+      "reviewed_on": "2026-11-05"
     },
     {
       "source": "examples/tsunami_coast/figs/deformation.png",
