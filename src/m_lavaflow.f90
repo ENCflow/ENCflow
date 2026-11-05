@@ -1256,6 +1256,7 @@ end function
 !   ため速度閾値で閉じる。f_dbstop=1 の db_vstop/db_wstop と同じ構成)。
 !   S は tick_flow と同じエッジの勾配の大きさ √(Sn² + St²)(流速の大きさ。
 !   法線成分だけだと斜め方向の流れが 1/√2 に見えて早く止まる。§51.4)。
+!   lv_diagratio > 0 の斜めのエッジは tick_flow(flow8_coef)と同じ角点の勾配(§96)。
 !   数えるのは溶岩が実際に動けるエッジだけ: 隣の溶岩面のほうが高い流れ込みの
 !   エッジは、隣に溶岩がなければ数えない(送り手に溶岩がなく、パスB の
 !   ドナー律速で流量は 0)。数えると、溶岩より高い乾いたセル(谷壁・先に
@@ -1303,11 +1304,12 @@ subroutine tick_solidify(lv, g, s, dtw)
         if (s%tl(i,j) <= lv%tsol) lv%lvw%sdz(i,j) = s%hl(i,j)
         cycle
       end if
-      ! 4近傍エッジの深さ平均速度の最大(tick_flow パスB と同じ量)
+      ! エッジの深さ平均速度の最大(tick_flow パスB と同じ量。lv_diagratio = 0 は 4 近傍、
+      ! > 0 は斜めのエッジも)
       vmax = 0.0
       sc = s%z(i,j) + s%hl(i,j)
       do k = 1, 8
-        if (lv%lvw%cw(ke(k)) <= 0.0) cycle        ! 斜めは未使用
+        if (lv%lvw%cw(ke(k)) <= 0.0) cycle        ! 斜めは 8 近傍のときだけ
         in = i + din(k)
         jn = j + djn(k)
         if (g%x(in,jn) <= 0) cycle
@@ -1320,9 +1322,17 @@ subroutine tick_solidify(lv, g, s, dtw)
         ! 流れ込みのエッジ(隣の溶岩面のほうが高い)は、送り手である隣に溶岩が
         ! なければ数えない(流量は tick_flow パスB のドナー律速で 0。§51.5)
         if (ds < 0.0 .and. s%hl(in,jn) <= 0.0) cycle
-        ss = abs(ds) / lv%lvw%dist(ke(k))
-        gt = edge_tslope(g, s, i, j, in, jn)
-        sm = sqrt(ss * ss + gt * gt)               ! エッジの勾配の大きさ
+        if (mod(ke(k), 2) == 0) then
+          ss = abs(ds) / lv%lvw%dist(ke(k))
+          gt = edge_tslope(g, s, i, j, in, jn)
+          sm = sqrt(ss * ss + gt * gt)             ! エッジの勾配の大きさ
+        else if (k <= 4) then
+          ! 斜めのエッジ: tick_flow(flow8_coef)と同じ角点の勾配(書き手 = 自セル)。
+          ! 軸のエッジの接線勾配 edge_tslope は斜めには使えない(§96)
+          sm = sqrt(flow8_diag_gs2(g, s%z, s%hl, k, i, j))
+        else
+          sm = sqrt(flow8_diag_gs2(g, s%z, s%hl, ke(k), in, jn))   ! 書き手 = 近傍
+        end if
         h0 = 0.0
         if (lv%tauy > 0.0) h0 = lv%tauy / (lv%rhog * sm)
         hf = he - h0
