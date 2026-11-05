@@ -751,7 +751,8 @@ with a limiter.
   Setting `creep_diagratio` and `spl_diagratio` to 1/3 gives the isotropic 9-point
   stencil ([Sediment transport and hillslope processes](sediment.md) §2 and §6, developer.md §93). The glacier
   SIA and lava flow remain 4-neighbour (an 8-neighbour version is being designed;
-  landslide_tsunami_plan.md §11.1).
+  landslide_tsunami_plan.md §11.1). How the diagonal share d is chosen for each
+  process is summarised in [choosing the diagonal share d](diagratio.md).
 - **The difference in spreading between 8 and 4 neighbours**: the lateral
   spreading of a debris-flow fan is larger with 8 neighbours, but it depends
   neither on the grid nor on the direction of the valley, so it is not

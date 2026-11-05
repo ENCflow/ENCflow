@@ -556,7 +556,8 @@ D_\perp = \frac{c\,\Delta}{2}\,(\cos\varphi - \sin\varphi)\sin\varphi\cos\varphi
   格子幅に近い短い波長で格子の向きに偏ります(数値拡散ではなく、離散化誤差の向きの偏り)。
   `creep_diagratio`・`spl_diagratio` を 1/3 にすると等方な 9 点にできます
   ([土砂・地形変化の解説](sediment.md) §2・§6、developer.md §93)。氷河の SIA と溶岩流は
-  4 近傍のままです(8 近傍化は設計中。landslide_tsunami_plan.md §11.1)。
+  4 近傍のままです(8 近傍化は設計中。landslide_tsunami_plan.md §11.1)。過程ごとの斜めの
+  配分 d の選び方は[斜めの配分比 d の決め方](diagratio.md)にまとめています。
 - **8 近傍と 4 近傍の広がりの違い**: 土石流の扇状地の横への広がりは 8 近傍の方が大きく
   出ますが、格子によらず、谷の向きにもよらないので数値拡散ではありません
   ([examples/debris_fan](../../examples/debris_fan/README.md))。

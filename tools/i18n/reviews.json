@@ -104,9 +104,9 @@
     {
       "source": "docs/users_guide.md",
       "target": "docs/en/users_guide.md",
-      "source_sha256": "60bd6da35931253464d9950a580fe89fe97005f7ff1a98ebd1436543755fd57c",
-      "target_sha256": "dcdb1dd43e3297f26beb7cab91de53e4901c3f3796ee1c7d98fecc633064a82d",
-      "reviewer": "Claude (Claude Code session; reviewed the added text on the MUSCL option for the lava heat advection (f_lvtemp_scheme; developer.md sec. 94) and test/lava configuration 10 in the Japanese source against the English mirror, 2026-11-05)",
+      "source_sha256": "3eec21a352fba85a3ac906c6bd4af8a3d5060189fc83079624ae3e86fd0e6d7d",
+      "target_sha256": "48095fd5bfb9db548bf8bc1cc61bd9037bef5a5c507b662f857f2693b0140581",
+      "reviewer": "Claude (Claude Code session; reviewed the added links to the page on choosing the diagonal share d (and the basis of p_diagratio in encgrid) in the Japanese source against the English mirror, 2026-11-05)",
       "method": "assistant",
       "reviewed_on": "2026-11-05"
     },
@@ -203,9 +203,18 @@
     {
       "source": "docs/users_guide/diagonal_diffusion.md",
       "target": "docs/en/users_guide/diagonal_diffusion.md",
-      "source_sha256": "7b9ca8acda04369f2a6c49c265a4a6e359e00f635c75695ff5a5256d9afcc26b",
-      "target_sha256": "570b5faa46bef3a9ac5844f9ad879348f275c38c255c9e57ab8055b9f108a542",
-      "reviewer": "Claude (Claude Code session; reviewed the added text on the MUSCL option for the lava heat advection (f_lvtemp_scheme; developer.md sec. 94) and test/lava configuration 10 in the Japanese source against the English mirror, 2026-11-05)",
+      "source_sha256": "a2fe5570ed2f4e9f525282c030bf6326619eddd92a4142f7dae69ff5ed471497",
+      "target_sha256": "399d9bcdac1492b829aa974b4020a1353a64e61a44771151f034c227ae4a8e15",
+      "reviewer": "Claude (Claude Code session; reviewed the added links to the page on choosing the diagonal share d (and the basis of p_diagratio in encgrid) in the Japanese source against the English mirror, 2026-11-05)",
+      "method": "assistant",
+      "reviewed_on": "2026-11-05"
+    },
+    {
+      "source": "docs/users_guide/diagratio.md",
+      "target": "docs/en/users_guide/diagratio.md",
+      "source_sha256": "f323224d71d9db353dd864befb0ed8356506957b88425d464cd9cb200bc84dde",
+      "target_sha256": "71df35df65af69139b28e850fab9e8b49418f4e3e70d43abe180888b2bf49534",
+      "reviewer": "Claude (Claude Code session; wrote the Japanese source and the English mirror of the new supplement page on choosing the diagonal share d and checked them section by section, 2026-11-05)",
       "method": "assistant",
       "reviewed_on": "2026-11-05"
     },
@@ -239,9 +248,9 @@
     {
       "source": "docs/users_guide/encgrid.md",
       "target": "docs/en/users_guide/encgrid.md",
-      "source_sha256": "dc9f71d3a8a10062d557b46eda2148723b67ddc319108e4a6c995b4ffdad5f10",
-      "target_sha256": "ae43a0194bd8d9398e0f378df6a9bc57846a4c6ab06c58eab788d605d567c7cb",
-      "reviewer": "Claude (Claude Code session; reviewed the added link to the new page on numerical diffusion by diagonal-edge fluxes in the Japanese source against the English mirror, 2026-11-05)",
+      "source_sha256": "7ced97a02233bb03dd8262d2bd941ed77113920b25f220fd97598428ea179a0e",
+      "target_sha256": "f43ebc072b15af672994dfb0794cd53b620d2e33dbd230050b5bdc23c33d4c78",
+      "reviewer": "Claude (Claude Code session; reviewed the added links to the page on choosing the diagonal share d (and the basis of p_diagratio in encgrid) in the Japanese source against the English mirror, 2026-11-05)",
       "method": "assistant",
       "reviewed_on": "2026-11-05"
     },
@@ -293,9 +302,9 @@
     {
       "source": "docs/users_guide/gwflow.md",
       "target": "docs/en/users_guide/gwflow.md",
-      "source_sha256": "da25e201b311391cb8f7ea251dcb6948437ab469bd2965b556debbfd86c6d529",
-      "target_sha256": "368b56272c5fc7ba0d9b47ab927fdbcf5092f639eea2fec33e86ec3ea38697e4",
-      "reviewer": "Claude (Claude Code session; reviewed the added text on the passage widths shared by the groundwater layers (conduit layer with its own gwc_diagratio, stop on a salt_diagratio mismatch; developer.md sec. 95) in the Japanese source against the English mirror, 2026-11-05)",
+      "source_sha256": "5bd181869e953714429e48e114d546ef277910dbb2d35f9221040552e8fe8f27",
+      "target_sha256": "aa76908678b387d7acdde1630f48edffd32f443e41d5ba21dfb4cea675f68330",
+      "reviewer": "Claude (Claude Code session; reviewed the added links to the page on choosing the diagonal share d (and the basis of p_diagratio in encgrid) in the Japanese source against the English mirror, 2026-11-05)",
       "method": "assistant",
       "reviewed_on": "2026-11-05"
     },
@@ -401,11 +410,11 @@
     {
       "source": "docs/users_guide/passage_width.md",
       "target": "docs/en/users_guide/passage_width.md",
-      "source_sha256": "12a0abaa28884b3394c1d55a5a59f362d10e3e888cbc275502bc6259fbed5f4e",
-      "target_sha256": "8c872aeb9af0b9aff1fb3271168a793a249731851763b55c24e590c40e400914",
-      "reviewer": "Claude (Claude Code session; reviewed the Japanese source against the English mirror after adding the paragraph on representing channels on the raster, 2026-11-03)",
+      "source_sha256": "4b0711cc53a360916cf46ddf66825ca665bed75d795d3113da9f00641d7a2ef5",
+      "target_sha256": "ce068f4526b25cfca05369832ab9fc4d2d46cdac3e34128cdfbb8d553e6e7b65",
+      "reviewer": "Claude (Claude Code session; reviewed the added links to the page on choosing the diagonal share d (and the basis of p_diagratio in encgrid) in the Japanese source against the English mirror, 2026-11-05)",
       "method": "assistant",
-      "reviewed_on": "2026-11-03"
+      "reviewed_on": "2026-11-05"
     },
     {
       "source": "docs/users_guide/record.md",
@@ -437,9 +446,9 @@
     {
       "source": "docs/users_guide/sediment.md",
       "target": "docs/en/users_guide/sediment.md",
-      "source_sha256": "caccbb3d4d15bb932ed7d7521bc6b3f00adf1dfa468dccbc119e3a4cedf40302",
-      "target_sha256": "5a9ab00f34602300b783656d3c6da656dd1dd41feda55c477b7217c5334eb07f",
-      "reviewer": "Claude (Claude Code session; reviewed the added text on the 9-point creep and splash curvature (creep_diagratio, spl_diagratio; developer.md sec. 93) in the Japanese source against the English mirror, 2026-11-05)",
+      "source_sha256": "c51566bd6450ad72b627bd5d9368319d43744a112f864e51ba5b2d473e46a87c",
+      "target_sha256": "73acbe6b11f24564b18190a36554960710701d7a186bf2262f2d821f91e6cfb9",
+      "reviewer": "Claude (Claude Code session; reviewed the added links to the page on choosing the diagonal share d (and the basis of p_diagratio in encgrid) in the Japanese source against the English mirror, 2026-11-05)",
       "method": "assistant",
       "reviewed_on": "2026-11-05"
     },

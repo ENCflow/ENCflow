@@ -72,7 +72,9 @@ $`4\Delta`$, but the reconstruction of §4 returns the velocity exactly for
 an isotropic flow (its weights sum to 1), so the conveyance is neither
 short nor in excess. $`p_d = 0`$ gives a four-neighbour grid (the diagonal
 edges have zero width and are left out of the momentum equation) and
-$`p_d = 1`$ a grid with diagonals only. For $`\Delta x \ne \Delta y`$ the
+$`p_d = 1`$ a grid with diagonals only (for this value and its trade-offs
+with other criteria such as the isotropy of the error and the time-step
+limit, see [choosing the diagonal share d](diagratio.md)). For $`\Delta x \ne \Delta y`$ the
 share $`p_d`$ is applied on the shorter side and scaled by
 $`(\Delta_{\min}/\Delta_{\max})^2`$ on the longer side (`init_weights`).
 
@@ -351,7 +353,7 @@ non-hydrostatic correction or the newer advection schemes.
 
 | Parameter | Default | Meaning | Basis |
 |---|---:|---|---|
-| p_diagratio | 2/(2+√2) | share $`p_d`$ of the passage width given to the diagonal edges (§2) | **derived** the value that makes the eight widths equal; 0 gives a four-neighbour grid |
+| p_diagratio | 2/(2+√2) | share $`p_d`$ of the passage width given to the diagonal edges (§2) | **method** the choice that makes the eight widths equal (the conveyance of a one-cell-wide channel without reassignment does not depend on direction, and the gravity-wave time-step limit is in its largest range); the isotropy of the error is best at 1/3, and the trade-offs between criteria are in [choosing the diagonal share d](diagratio.md); 0 gives a four-neighbour grid |
 | f_gravity_correction | 1 | effective gravity $`g\cos^2\theta`$ on steep slopes (§5) | **literature value** Ni et al.[^ni19]; no effect on gentle slopes |
 | f_exflux_reduction | 1 | suppression of excessive outflow (§5) | **method** prevents negative depths at dry-bed fronts; keep on with dry beds |
 | f_hcap_upwind | 1 | upwind cap of the edge depth (§3) | **method** 1: mean capped by the upwind depth. 2: the upwind depth itself = continuity of the conservative scheme[^sd03]; use 2 with bores and breaking |

@@ -94,7 +94,8 @@ partition rule as the shallow water flow and the lateral groundwater flow; the
 coefficient of $`\nabla^2`$ is exactly 1 for any $`d`$). With $`d = 1/3`$ the leading
 discretisation error $`(\Delta^2/12)(f_{xxxx} + 6d\,f_{xxyy} + f_{yyyy})`$ becomes
 $`(\Delta^2/12)\nabla^4 f`$ and no longer depends on the grid direction (an isotropic
-9-point Laplacian[^patra06]; the difference is +0.05 % at 8Δ and +0.9 % at 4Δ). In cells
+9-point Laplacian[^patra06]; the difference is +0.05 % at 8Δ and +0.9 % at 4Δ; for a
+comparison with the d of other processes, see [choosing the diagonal share d](diagratio.md)). In cells
 next to walls (outside the domain, sea cells), the blocked diagonal shares are
 reassigned to the axis edge crossing the same interface (the same rule as
 `f_gw_opening` of the groundwater; without it, the diffusivity parallel to a wall

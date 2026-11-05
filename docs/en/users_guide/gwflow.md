@@ -192,7 +192,9 @@ fresh/salt model ([fresh/salt two layers](salt.md)) use the same passage widths,
 so give `salt_diagratio` the same value as `gw_diagratio` (a different value
 stops the run; before 2026-11-05 the value read later was silently ignored;
 developer.md §95, in Japanese). The conduit layer (`gwc_diagratio`) has its own
-passage widths and is independent.
+passage widths and is independent. For how to choose the diagonal share (1/3 is
+isotropic for the lateral flow, 0.586 suits the conduit layer), see
+[choosing the diagonal share d](diagratio.md).
 
 When [water quality](wq.md) (fn_wq; f_wq_infil=1 is the default) is
 enabled, dissolved substances in the groundwater move with the lateral
