@@ -26,6 +26,15 @@ It consists of two schematic experiments (developer.md §46).
   confirm mass conservation through all the coupling paths and 8-direction
   isotropy (point symmetry and transpose symmetry) with `Check_conduit.py B`
   (a self-check without an analytical solution).
+- **Schematic experiment C** (`param_latgw.txt`): B with lateral flow in the
+  soil layer (`f_gwlateral = 1`) added with the diagonal share
+  `gw_diagratio = 1/3`. The check is that the passage widths of the conduit
+  layer are built from its own `gwc_diagratio` (default) and are not pulled
+  along by the d of the lateral flow (the stability line of the conduit layer
+  = the sum of the edge conductances agrees with B), plus the same self-check
+  as B (developer.md §95, in Japanese; before 2026-11-05 the conduit layer
+  silently used the passage widths of `gw_diagratio` too, and the line changed
+  from 0.518 s to 0.457 s).
 
 ## Configuration
 
@@ -48,9 +57,10 @@ hcrown + (hgc − cap)/slot_sy, and h + hgc = 0.1 m, so
 | File | Contents |
 |---|---|
 | `param.txt` / `param_lat.txt` | Schematic experiment A / B |
-| `data_conduit/inlet.txt` | Inlet density distribution of B (non-zero only in the central 3×3) |
+| `param_latgw.txt` | C (B + soil lateral flow with `gw_diagratio = 1/3`) |
+| `data_conduit/inlet.txt` | Inlet density distribution of B and C (non-zero only in the central 3×3) |
 | `Run.sh` / `Run_MPI.sh N` | Regression test of A (serial / MPI) and the analytical check `Check_conduit.py A` |
-| `Run_lat.sh` / `Run_lat_MPI.sh N` | Run of B (result_lat/) and the self-check `Check_conduit.py B` |
+| `Run_lat.sh` / `Run_lat_MPI.sh N` | Run of B (result_lat/) and the self-check `Check_conduit.py B`, then the run of C (result_latgw/) with the same self-check and the agreement of the stability line of the conduit layer with B |
 | `Check_conduit.py` | A: S_total = h₀ at every row, S_surf and S_grnd approach the equilibrium monotonically without overshooting, agreement with h_eq and hgc_eq to all printed digits at the final time, H and Hgc distributions at the final time uniformly h_eq and hgc_eq (within the rounding of the 4 decimals shown in the map output). B: S_total = h₀ at every row, Hgc and H distributions at the final time point-symmetric and transpose-symmetric with zero difference, the centre surcharged above the capacity (Hgc > capacity) |
 | `Fig.py` | Draws the figures below, `en/figs/*.png` (`python3 Fig.py en`; `figs/*.png` are the Japanese versions) |
 
@@ -60,7 +70,7 @@ hcrown + (hgc − cap)/slot_sy, and h + hgc = 0.1 m, so
 make
 ./Run.sh            # A: compares Log.txt with the reference (ULP = 0) → Check_conduit.py A
 ./Run_MPI.sh 4
-./Run_lat.sh        # B: output to result_lat/ (about a second) → Check_conduit.py B
+./Run_lat.sh        # B: output to result_lat/ (about a second) → Check_conduit.py B, then C (result_latgw/)
 ./Run_lat_MPI.sh 4  # MPI of B. The rule is bit-identity with the serial run
 python3 Fig.py en   # en/figs/equilibrium.png, en/figs/lateral.png (also prints the tables)
 ```
@@ -107,6 +117,12 @@ relief of 0.094–0.101 m.
   distribution is exactly symmetric even when lateral spreading, vertical
   infiltration, leakage and inflow all act at once. The Logs of MPI
   np = 1, 2, 4 agree completely with the serial run (§46.4).
+- Schematic experiment C confirms that, of the groundwater layers sharing
+  the passage widths, only the conduit layer has its own diagonal share. The
+  stability line of the conduit layer is 0.518 s as in B (0.457 s with the
+  executable before the fix, which used the 1/3 passage widths of the soil
+  lateral flow), and the conservation of S_total and the symmetry of the
+  distributions hold as in B.
 - That a restart round trip (save at 75 s → restore and run to 150 s) is
   bit-identical with a straight-through run is also confirmed in §46.4.
 - Examples of application in the field are

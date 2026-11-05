@@ -160,7 +160,10 @@
 !======================================================================
 &list_gwflow_lateral
   ! gw_eps, gw_diagratio and f_gw_opening are the geometry of lateral flow;
-  ! the lateral flow in layer 2 uses the same values. When only layer-2
+  ! the lateral flow in layer 2 uses the same values. The saltwater zone of the
+  ! two-layer fresh/salt model uses the same passage widths, so give
+  ! salt_diagratio the same value as gw_diagratio (a different value stops the
+  ! run). gwc_diagratio of the conduit layer is independent. When only layer-2
   ! lateral flow is used (f_gwlateral = 0), the three geometry items are
   ! still read from this group if it exists (gw_ksh_mmh is not used);
   ! otherwise the defaults apply
@@ -332,7 +335,9 @@
   ! Numerical parameters (normally no need to change)
   gwc_eps = 1.0e-3          ! regularization amount for the dry test (m)
   gwc_eps_h = 1.0e-2        ! linearization width of the sqrt law (m)
-  !gwc_diagratio = 0.5857864 ! diagonal partitioning of the flux width [0,1]
+  !gwc_diagratio = 0.5857864 ! diagonal partitioning of the conduit layer itself [0,1]
+                            !   (independent of gw_diagratio; the default gives a conduit one
+                            !   cell wide the same conveyance along an axis and a diagonal)
   ! Upper limit of the number of subcycles of the lateral conveyance. A dt
   ! above the stability limit of the explicit scheme is automatically
   ! split into N = ceiling(dt/limit) substeps (N is printed at

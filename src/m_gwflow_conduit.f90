@@ -81,7 +81,7 @@ module m_gwflow_conduit
   use m_state, only : t_state, gw_to_h, sect_cell, sect_vh, sect_add_vh, sect_sig
   use m_gwflow_lateral, only : t_conduitlayer, t_gwlat, conduit_head, conduit_core, &
                                conduit_build_cnd, gwflow_conduit_dtcheck, &
-                               gwflow_lateral_geom_init
+                               gwflow_lateral_geom_init_base, lateral_widths
   use m_gwflow_layer2, only : t_gwl2, gwflow_layer2_active, gwflow_layer2_leakinfo
   use m_fileio, only : fileio_read_matrix
   use m_restart, only : restart_write_cell, restart_read_cell
@@ -147,6 +147,7 @@ subroutine gwflow_conduit_init(gwc, lat, gl2, p, g, s, dts)
   real :: gwc_cnd_m2s, gwc_cap, gwc_depth, gwc_sy, gwc_slot_sy, gwc_sat0
   real :: gwc_inlet, gwc_cw, gwc_co, gwc_leak_mmh
   real :: gwc_eps, gwc_eps_h, gwc_diagratio
+  real :: lpx, lpy, ldx, ldy           ! 管路層の通過幅のシェア(lateral_widths の出力。未使用)
   integer :: gwc_leak_layer
   character(len=1024) :: fn_gwc_cnd, fn_gwc_cap, fn_gwc_bot, fn_gwc_inlet
   character(len=1024) :: fn_gwc_outfall, fn_gwc_leak, fn_gwc_sy, fn_gwc_slot_sy
@@ -179,7 +180,8 @@ subroutine gwflow_conduit_init(gwc, lat, gl2, p, g, s, dts)
   gwc_leak_mmh = 0.0
   gwc_eps = 1.0e-3
   gwc_eps_h = 1.0e-2
-  gwc_diagratio = 2.0 / (2.0 + sqrt(2.0))   ! m_swflow_enc の p_diagratio と同値
+  gwc_diagratio = 2.0 / (2.0 + sqrt(2.0))   ! p_diagratio と同値(8 本の通過幅が等しい = 1 セル幅の管路の
+                                             !   通水能が軸と斜めの向きで等しい。側方流と独立。§95)
   gwc_nsubmax = 100                         ! サブサイクル数の上限(§46.5 (4))
 
   call par_info("reading list_gwflow_conduit in " // trim(p%fn_gwflow))
@@ -402,9 +404,12 @@ subroutine gwflow_conduit_init(gwc, lat, gl2, p, g, s, dts)
     end if
   end if
 
-  ! --- 側方通水: 幾何(層1/2 と共有・冪等)→ エッジ係数 → 安定条件 ---
+  ! --- 側方通水: 幾何(距離・作業領域は層1/2 と共有・冪等)→ 管路層自身の
+  !     通過幅(gwc_diagratio。側方流の gw_diagratio とは独立。§95)→ エッジ係数
+  !     → 安定条件 ---
   if (gwc%lat) then
-    call gwflow_lateral_geom_init(lat, g, gwc_diagratio, 1.0e-3)
+    call gwflow_lateral_geom_init_base(lat, g, 1.0e-3)
+    call lateral_widths(g, gwc_diagratio, gwc%cl%wl, lpx, lpy, ldx, ldy)
     allocate(dens(dcp%ish:dcp%ieh, dcp%jsh:dcp%jeh), source = 0.0)
     if (len_trim(fn_gwc_cnd) > 0) then
       call read_map_scatter(p, g, fn_gwc_cnd, dens, "gwc_cnd")

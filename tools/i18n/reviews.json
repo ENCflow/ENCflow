@@ -293,11 +293,11 @@
     {
       "source": "docs/users_guide/gwflow.md",
       "target": "docs/en/users_guide/gwflow.md",
-      "source_sha256": "c006099071917af7faf4565c0a38b5d7c8deef6f8cacb273d5a7ad1614b678c7",
-      "target_sha256": "9f7732f0b2cd6df5c7327dcf414f05f85eef3ad0c4eaae678d4c89c045ace8ad",
-      "reviewer": "Claude (Claude Code session; compared the Japanese and English changes for the water-quality substance carried by structures and withdrawals, 2026-11-04)",
+      "source_sha256": "da25e201b311391cb8f7ea251dcb6948437ab469bd2965b556debbfd86c6d529",
+      "target_sha256": "368b56272c5fc7ba0d9b47ab927fdbcf5092f639eea2fec33e86ec3ea38697e4",
+      "reviewer": "Claude (Claude Code session; reviewed the added text on the passage widths shared by the groundwater layers (conduit layer with its own gwc_diagratio, stop on a salt_diagratio mismatch; developer.md sec. 95) in the Japanese source against the English mirror, 2026-11-05)",
       "method": "assistant",
-      "reviewed_on": "2026-11-04"
+      "reviewed_on": "2026-11-05"
     },
     {
       "source": "docs/users_guide/gwflow_models.md",
@@ -428,11 +428,11 @@
     {
       "source": "docs/users_guide/salt.md",
       "target": "docs/en/users_guide/salt.md",
-      "source_sha256": "df303255c1733db515ebd189e8ef743d3f953548f8486c4a4acbc05757810f8c",
-      "target_sha256": "92eb98c9d31dffc3877a3e8ac78249bc1f32e70fc3b30bbcc9de187aa23bfa15",
-      "reviewer": "Claude (Claude Code session; reviewed the Japanese source against the English mirror; figures from the same results or drawing code with label changes only, 2026-10-30)",
+      "source_sha256": "d769d26f00cd90b052777f78b1416a6769cfc0f1bc3aaae342459ae0c90a8898",
+      "target_sha256": "a42cc70f6c26eeeebab2aa9b935b800c4f5f6d8c772eaf890654d4eac6a8cf09",
+      "reviewer": "Claude (Claude Code session; reviewed the added text on the passage widths shared by the groundwater layers (conduit layer with its own gwc_diagratio, stop on a salt_diagratio mismatch; developer.md sec. 95) in the Japanese source against the English mirror, 2026-11-05)",
       "method": "assistant",
-      "reviewed_on": "2026-10-30"
+      "reviewed_on": "2026-11-05"
     },
     {
       "source": "docs/users_guide/sediment.md",
@@ -662,11 +662,11 @@
     {
       "source": "examples/List_samples/list_gwflow.txt",
       "target": "examples/List_samples/en/list_gwflow.txt",
-      "source_sha256": "8d7e0f79ca14debc100f9eae47ae8c83be62ba6f122619e7bc1517cbb5240eba",
-      "target_sha256": "75bd99fa229504189c7a162775e8c3f627463bea672f96b473deb85accc12d24",
-      "reviewer": "Claude (Claude Code session; compared the Japanese and English changes for the water-quality substance carried by structures and withdrawals, 2026-11-04)",
+      "source_sha256": "f9de8728cd2fa42e6f482bbac4bf53e680d3fa84e00418c539bc5be4e9f6f074",
+      "target_sha256": "dbabc6aea35a19aa32d0ac7103bbaa2a116bc8fbcf1f4810ed93dad7b6e8d00c",
+      "reviewer": "Claude (Claude Code session; reviewed the added text on the passage widths shared by the groundwater layers (conduit layer with its own gwc_diagratio, stop on a salt_diagratio mismatch; developer.md sec. 95) in the Japanese source against the English mirror, 2026-11-05)",
       "method": "assistant",
-      "reviewed_on": "2026-11-04"
+      "reviewed_on": "2026-11-05"
     },
     {
       "source": "examples/List_samples/list_initial.txt",
@@ -725,11 +725,11 @@
     {
       "source": "examples/List_samples/list_salt.txt",
       "target": "examples/List_samples/en/list_salt.txt",
-      "source_sha256": "bd7f358f0c7e1159dddcd1da16e1ec2a135a45a7ae831de2734ace9bf93796ac",
-      "target_sha256": "845bab5d0d88d508b926e41ed154e54f8ee0adae4b334aee1dcdd7857ff695b1",
-      "reviewer": "Claude (Claude Code session; reviewed the Japanese source against the English mirror; figures from the same results or drawing code with label changes only, 2026-10-29)",
+      "source_sha256": "32802e2d3d4c1d232dd79a03f6afa650c9b542618a2a410808daa1acaef61b71",
+      "target_sha256": "efc0ab1f2c65a2572855969beb797b9733559e1e67c45c1a87f962b25ac12a9f",
+      "reviewer": "Claude (Claude Code session; reviewed the added text on the passage widths shared by the groundwater layers (conduit layer with its own gwc_diagratio, stop on a salt_diagratio mismatch; developer.md sec. 95) in the Japanese source against the English mirror, 2026-11-05)",
       "method": "assistant",
-      "reviewed_on": "2026-10-29"
+      "reviewed_on": "2026-11-05"
     },
     {
       "source": "examples/List_samples/list_seawall.txt",
@@ -2939,11 +2939,11 @@
     {
       "source": "test/conduit/README.md",
       "target": "test/conduit/en/README.md",
-      "source_sha256": "966c192f90a6db2fd4c8117f19d9b8cf3f20a93177c87d675d5e9d56da62565f",
-      "target_sha256": "3b434b74efe65b37f724bb3b8fc42de74a2b84f3c8599318242579b0546d6293",
-      "reviewer": "Claude (Claude Code session; full-text content and lexical review, no model execution)",
+      "source_sha256": "ebc3fe50cea463f3f188f1a9d8f4411db261989aaba7d565fc9beda0c8088b93",
+      "target_sha256": "e638475a52b8c958d4f0f0d940035216a8a3346a5a5f05332b169d87796b1e7c",
+      "reviewer": "Claude (Claude Code session; reviewed the added text on the passage widths shared by the groundwater layers (conduit layer with its own gwc_diagratio, stop on a salt_diagratio mismatch; developer.md sec. 95) in the Japanese source against the English mirror, 2026-11-05)",
       "method": "assistant",
-      "reviewed_on": "2026-10-29"
+      "reviewed_on": "2026-11-05"
     },
     {
       "source": "test/conduit/figs/equilibrium.png",
@@ -3731,11 +3731,11 @@
     {
       "source": "test/salt/README.md",
       "target": "test/salt/en/README.md",
-      "source_sha256": "f7a4c941aa9141e17da672cdb34f97958740962af7322e379a9a20131aa5fa7f",
-      "target_sha256": "2ef7c341e0d2260c32a52e2681a8b6f4f1cdba8e6ff268dca360e2e90b88021c",
-      "reviewer": "Claude (Claude Code session; f_opening_dynamic default switch)",
+      "source_sha256": "dfc202c1b16f1bf481525e8ef03d7fe3b5a03b9b7cf3691cbd9776ff02668fe7",
+      "target_sha256": "e6b42c677c14dac6bffa3dfd4031d5e378e77081f65540794c3a3769a8c94f6b",
+      "reviewer": "Claude (Claude Code session; reviewed the added text on the passage widths shared by the groundwater layers (conduit layer with its own gwc_diagratio, stop on a salt_diagratio mismatch; developer.md sec. 95) in the Japanese source against the English mirror, 2026-11-05)",
       "method": "assistant",
-      "reviewed_on": "2026-10-31"
+      "reviewed_on": "2026-11-05"
     },
     {
       "source": "test/salt/figs/salt.png",

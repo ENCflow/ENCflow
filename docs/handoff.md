@@ -78,6 +78,10 @@ architecture.md。このメモは「現在進行中・未完了の項目」だ�
      振り替えの規則 = 案 A・B、d、既定の扱いを決めてから実装)。
    - (d) 湿潤侵食の剥離深の横方向拡散 wet_lw(§84.16)も同じ 5 点の核を使う(合意の範囲外。9 点にするなら
      spl_diagratio と同じ形で足せる)。
+   - (e) 地下水の側方流 `gw_diagratio`(と同じ通過幅を使う `salt_diagratio`)の既定を 1/3 にするか(developer.md
+     §95。等方性は計測済み。管路層の `gwc_diagratio` は 0.586 のまま独立に決めた)。変えると gwseep・gwsect・
+     gwwidth・gwbed の reference と、gwlateral・gwbed の検定スクリプトの d の定数、例題 estuary_barrage・
+     catchment_metal・qanat(層2)ほかが変わる。(a) と同じ回にまとめて目視確認を得る。
 
 00k. **急勾配の重力補正の修正(developer.md §91)・最急勾配の D∞(§92)・岩盤侵食の有効重力(2026-11-04)の後始末**
    - (済 2026-11-04)reference の更新: 利用者の確認の上で、§91 で値が変わる 11 ケース(chichibu・

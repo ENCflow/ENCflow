@@ -244,7 +244,7 @@ subroutine m_saltwater_init(sl, p, g, s, lat, lay1)
   end if
 
   ! --- 幾何(gwflow の側方系と共有・冪等)とエッジ作業領域 ---
-  call gwflow_lateral_geom_init(lat, g, salt_diagratio, 1.0e-3)
+  call gwflow_lateral_geom_init(lat, g, salt_diagratio, 1.0e-3, "salt_diagratio")
   call gwflow_lateral_geom_get(lat, sl%sw%rdr, sl%sw%wl, sl%sw%ainv)
   if (sl%sw%gw) call gwflow_lateral_open_get(lat, sl%sw%wlo)
   allocate(sl%sw%qs(1:4, dcp%ish-1:dcp%ieh, dcp%jsh-1:dcp%jeh), source = 0.0)
