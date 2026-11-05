@@ -3740,11 +3740,11 @@
     {
       "source": "test/rockinc/README.md",
       "target": "test/rockinc/en/README.md",
-      "source_sha256": "e2bd34d4b9ba26ddfa5cab9b7edbe8920b58d4a8445379490e3dae073e654c58",
-      "target_sha256": "3900029d19b3a736900a7a1d689c8a965b656f6f56427b7bbe184bde0c409049",
-      "reviewer": "Claude (Claude Code session; reviewed the Japanese source against the English mirror after unifying the term passage width / 通過幅 and noting the original paper's term, 2026-11-03)",
+      "source_sha256": "cb801235ccfccd7b21f1271afea8f2aae2cae5fbd93f6e059b4d7435548e1691",
+      "target_sha256": "75aba97d27d36651a272d3b7b01bd4c4f78faf852ae3924bdc0f96dca3caeff4",
+      "reviewer": "Claude (Claude Code session; reviewed the table row of T9 and the added dated item on the check formulas brought in line with the default f_gravity_correction = 2 (developer.md sec. 93) in the Japanese source against the English mirror, 2026-11-05)",
       "method": "assistant",
-      "reviewed_on": "2026-11-03"
+      "reviewed_on": "2026-11-05"
     },
     {
       "source": "test/salt/README.md",

@@ -17,9 +17,12 @@
 #                                 q_j = q_{j−1} + (1 − λ) Δy E_p0(S)(1 − q_j/q_c(S))(q_0 = q_in)を
 #                                 等流の水理で解いた準解析解と勾配を比べ、隆起・研磨・給砂・開境界の
 #                                 流出の台帳で土砂収支を閉じる
-#   Check_rockinc.py steep    T9: 急勾配の等流で、セル値の Manning 閉じの τ_b と等流の釣り合いの比。
-#                                 f_opening_dynamic = 2(既定)・0 は記録、3(塞がりを局所の平面から
-#                                 測る。developer.md §68.41)は水路中央・壁際の列とも 1 ± TOL_ST で合格
+#   Check_rockinc.py steep    T9: 急勾配の等流で、セル値の τ_b と等流の釣り合いの比。τ_b は既定の
+#                                 f_gravity_correction = 2 の斜面に沿うせん断(Manning 閉じに倍率
+#                                 (1 + (V̂·∇z)²)(1 + |∇z|²)^{1/6} = 流下方向の一様勾配で (1 + S²)^{7/6}。
+#                                 developer.md §93)、釣り合いは地盤に直角な水深の ρ g h cosθ sinθ。
+#                                 f_opening_dynamic = 2・0 は記録、3(塞がりを局所の平面から測る。
+#                                 developer.md §68.41)は水路中央・壁際の列とも 1 ± TOL_ST で合格
 #   Check_rockinc.py sheet    T10: 勾配 SH_S の平面の面状流(0°・45°)で、セル値の τ_b を等流の面状流
 #                                 (q = r L)と局所の釣り合い ρ g h S と比べる(記録。合否なし)
 # 水理(h、|V|、v)は最終時刻の分布出力(bil = 単精度)、H = sd・z・Ri は save(倍精度)から読む。
@@ -30,7 +33,7 @@ from make_init import NX, NY, DX, I1, I2, S, N, Q_UNIT, NX_ST, I1_ST, I2_ST, SLO
 from make_init import SH_S, SH_RAIN, SH_GRID
 
 RHO, G = 1000.0, 9.8                 # m_geomorph_rockinc の rhow、既定の重力加速度
-TOL_ST = 0.005                       # T9 の f_opening_dynamic = 3 の τ_b / ρ g h tanθ の許容
+TOL_ST = 0.005                       # T9 の f_opening_dynamic = 3 の τ_b / ρ g h cosθ sinθ の許容
 DD, DVIRT = 0.001, 0.001             # list_sysparam の dd・dv(既定)
 LAM, SGRAV, TAUSC = 0.4, 1.65, 0.05  # fluv_porosity・fluv_sgrav・fluv_tausc
 # 構成 cover(T2)
@@ -111,19 +114,26 @@ def load_bil(resdir, name, k, nx, ny):
     return grid(list(struct.unpack("<%df" % (nx * ny), data)), nx)
 
 
-def taub(vv, h):
-    """セル値の底面せん断応力(m_geomorph_rockinc と同じ Manning 閉じ。h_e = max(h, d_v))"""
-    return RHO * G * N ** 2 * vv ** 2 / max(h, DVIRT) ** (1.0 / 3.0)
+def fss(slope):
+    """既定の f_gravity_correction = 2 の斜面に沿うせん断の倍率(developer.md §93)。流れが一様な勾配 slope に
+    沿うとき (1 + (V̂·∇z)²)(1 + |∇z|²)^{1/6} = (1 + slope²)^{7/6}(slope = 0 で 1 = f_gravity_correction = 1 の式)"""
+    return (1.0 + slope * slope) ** (7.0 / 6.0)
 
 
-def ep0(vv, h, kp, tauc, m):
-    tb = taub(vv, h)
+def taub(vv, h, slope=S):
+    """セル値の底面せん断応力(m_geomorph_rockinc と同じ Manning 閉じ。h_e = max(h, d_v))に、既定 2 の斜面に
+    沿うせん断の倍率 fss(slope) を掛けたもの。slope は流下方向の地盤の勾配(既定は水路の S)"""
+    return RHO * G * N ** 2 * vv ** 2 / max(h, DVIRT) ** (1.0 / 3.0) * fss(slope)
+
+
+def ep0(vv, h, kp, tauc, m, slope=S):
+    tb = taub(vv, h, slope)
     return kp * (tb / tauc - 1.0) ** m if tb > tauc else 0.0
 
 
-def qcap(vv, h, d50):
-    """単位幅の掃流砂容量(芦田・道上。m_geomorph_fluvial と同じ式。g は τ* で相殺)"""
-    taus = N ** 2 * vv ** 2 / (SGRAV * d50 * max(h, DVIRT) ** (1.0 / 3.0))
+def qcap(vv, h, d50, slope=S):
+    """単位幅の掃流砂容量(芦田・道上。m_geomorph_fluvial と同じ式。g は τ* で相殺。τ* にも既定 2 の倍率)"""
+    taus = N ** 2 * vv ** 2 / (SGRAV * d50 * max(h, DVIRT) ** (1.0 / 3.0)) * fss(slope)
     if taus <= TAUSC:
         return 0.0
     qbs = 17.0 * taus ** 1.5 * (1.0 - TAUSC / taus) * (1.0 - math.sqrt(TAUSC / taus))
@@ -255,15 +265,14 @@ def check_uplift():
     i, dts = I1 - 1, 0.1 * UP_MORF
 
     def uniform(slope):
-        h = (Q_UNIT * N / math.sqrt(slope)) ** 0.6
-        return h, Q_UNIT / h
+        return uniform_flow(slope)
 
     def slope_analytic(q):
         lo, hi = 1.0e-4, 0.05
         for _ in range(100):
             mid = math.sqrt(lo * hi)
             h, v = uniform(mid)
-            if ep0(v, h, UP_KP, UP_TAUC, UP_M) * (1.0 - q / qcap(v, h, UP_D50)) > UP_U:
+            if ep0(v, h, UP_KP, UP_TAUC, UP_M, mid) * (1.0 - q / qcap(v, h, UP_D50, mid)) > UP_U:
                 hi = mid
             else:
                 lo = mid
@@ -294,7 +303,10 @@ def check_uplift():
 
 def uniform_flow(slope):
     """幅一様の等流(Manning)の水深と流速(水路の単位幅流量 Q_UNIT)"""
-    h = (Q_UNIT * N / math.sqrt(slope)) ** 0.6
+    # 既定の f_gravity_correction = 2 の等流: 地盤に直角な水深 h_n = (q n/√sinθ)^0.6、鉛直の水深 h = h_n/cosθ、
+    # 水平の流速 V = q/h(1 の式 h = (q n/√S)^0.6 との差は相対 0.65 S² 程度。§93)
+    th = math.atan(slope)
+    h = (Q_UNIT * N / math.sqrt(math.sin(th))) ** 0.6 / math.cos(th)
     return h, Q_UNIT / h
 
 
@@ -304,8 +316,8 @@ def t11_profile(qin, beta):
     (E_p0(S) + β q_j)(1 − q_j/q_c(S)) = U の根(S について単調。二分法)"""
     def resid(s, qprev):
         h, v = uniform_flow(s)
-        e = ep0(v, h, UP_KP, UP_TAUC, UP_M)
-        qc = qcap(v, h, UP_D50)
+        e = ep0(v, h, UP_KP, UP_TAUC, UP_M, s)
+        qc = qcap(v, h, UP_D50, s)
         a = (1.0 - LAM) * DX * e
         q = (qprev + a) / (1.0 + a / qc)
         return (e + beta * q) * (1.0 - q / qc) - UP_U, q
@@ -419,12 +431,16 @@ def check_box(logfile):
 
 
 def check_steep():
-    """T9: 等流の中央部(j = 20〜40)のセル値の τ_b と釣り合いの比。2・0 は記録、3 は 1 ± TOL_ST で合格"""
+    """T9: 等流の中央部(j = 20〜40)のセル値の τ_b と釣り合いの比。2・0 は記録、3 は 1 ± TOL_ST で合格。
+    τ_b と釣り合いは既定の f_gravity_correction = 2 の形(斜面に沿う速さ V/cosθ と地盤に直角な水深
+    h cosθ の Manning 閉じ = ρ g n² V²/h^(1/3) × (1 + S²)^(7/6)、釣り合い ρ g h cosθ sinθ。§93)。
+    2026-11-05 までは f_gravity_correction = 1 の τ_b/ρ g h tanθ で判定していた(既定 2 では等流で
+    cos^(13/3)θ になる)"""
     ok = True
     rows = ([("steep_s%03d" % round(s * 100), s, False) for s in SLOPES_ST] + [("steep_s020_od0", 0.2, False)]
             + [("steep_s%03d_od3" % round(s * 100), s, True) for s in SLOPES_ST])
-    print("(T9) 急勾配の等流: τ_b = ρ g n² V²/h^(1/3) と等流の釣り合いの比(j = 20〜40 の平均)")
-    print("      構成                勾配   水路中央 τ_b/ρghtanθ  τ_b/ρgh sinθcosθ   壁際 τ_b/ρghtanθ   中央 V/V_Manning(h)")
+    print("(T9) 急勾配の等流: τ_b = ρ g n² V²/h^(1/3) (1 + S²)^(7/6) と等流の釣り合い ρ g h cosθ sinθ の比(j = 20〜40 の平均)")
+    print("      構成                勾配   水路中央 τ_b/ρgh cosθsinθ  壁際 同      中央 V/V_eq   (記録)水路中央の旧式 τ_b/ρghtanθ")
     for tag, s, judged in rows:
         try:
             hh = load_bil("result_" + tag, "H", 1, NX_ST, NY)
@@ -434,26 +450,27 @@ def check_steep():
             ok = False
             continue
         th = math.atan(s)
-        rc, rs, rw, rv = [], [], [], []
+        rc, rw, rv, ro = [], [], [], []
         for j in range(19, 40):
             for i, acc in ((I1_ST - 1 + (I2_ST - I1_ST) // 2, "c"), (I1_ST - 1, "w")):
                 h, v = hh[j][i], vv[j][i]
-                tb = taub(v, h)
+                tb = taub(v, h, s)
+                bal = RHO * G * h * math.cos(th) * math.sin(th)
                 if acc == "c":
-                    rc.append(tb / (RHO * G * h * s))
-                    rs.append(tb / (RHO * G * h * math.sin(th) * math.cos(th)))
-                    rv.append(v / (h ** (2.0 / 3.0) * math.sqrt(s) / N))
+                    rc.append(tb / bal)
+                    rv.append(v / (math.cos(th) * (h * math.cos(th)) ** (2.0 / 3.0) * math.sqrt(math.sin(th)) / N))
+                    ro.append(taub(v, h, 0.0) / (RHO * G * h * s))
                 else:
-                    rw.append(tb / (RHO * G * h * s))
-        vals = [sum(x) / len(x) for x in (rc, rs, rw, rv)]
+                    rw.append(tb / bal)
+        vals = [sum(x) / len(x) for x in (rc, rw, rv, ro)]
         if not all(math.isfinite(x) for x in vals):
             ok = False
         mark = ""
         if judged:
-            g = abs(vals[0] - 1.0) < TOL_ST and abs(vals[2] - 1.0) < TOL_ST
+            g = abs(vals[0] - 1.0) < TOL_ST and abs(vals[1] - 1.0) < TOL_ST
             ok = ok and g
             mark = "  %s" % ("PASS" if g else "FAIL")
-        print("      %-19s %5.2f   %8.4f            %8.4f            %8.4f            %8.4f%s"
+        print("      %-19s %5.2f   %8.4f                  %8.4f    %8.4f      %8.4f%s"
               % ((tag, s) + tuple(vals) + (mark,)))
     print("(T9) f_opening_dynamic = 2・0 は記録、3 は水路中央・壁際の列とも 1 ± %.3f : %s"
           % (TOL_ST, "PASS" if ok else "FAIL"))
@@ -490,7 +507,7 @@ def check_sheet():
                 for j, i, lk in cells:
                     h, v = hh[j][i], vv[j][i]
                     hu = (r * lk * N / math.sqrt(SH_S)) ** 0.6
-                    tb = taub(v, h)
+                    tb = taub(v, h, SH_S)
                     ru.append(tb / (RHO * G * hu * SH_S))
                     rb.append(tb / (RHO * G * h * SH_S))
                 a, b = sum(ru) / len(ru), sum(rb) / len(rb)
