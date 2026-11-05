@@ -324,10 +324,9 @@ The three ways a field gets written (automatic / flag / riding on a flag) and th
 
 - Time-step health: `Cn_max` must not exceed 1 (the run stops by default),
   `Runge` should not stay above some tens of percent, `ex_flux` should not
-  keep growing. If any applies, reduce dt ([Courant number and time
-  step](courant.md)). Where a thin film touches deep water (a slope thinned
-  by infiltration, the edge of a pond whose level has dropped), however,
-  ex_flux can grow regardless of the time step ([ENC grid and time integration](encgrid.md) §5).
+  keep appearing (it is normally 0). If any applies, reduce dt ([Courant
+  number and time step](courant.md)). When ex_flux keeps appearing, also
+  suspect an oscillating flux at a boundary or a structure ([ENC grid and time integration](encgrid.md) §5).
 - Water budget: in a closed domain without boundary conditions S is
   constant (all significant digits with `f_disp_debug = 1`). If it
   changes, look at boundaries, sea cells, structures and evapotranspiration.

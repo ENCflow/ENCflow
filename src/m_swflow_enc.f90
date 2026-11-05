@@ -2271,9 +2271,9 @@ end subroutine
 !     エッジの流速が過大になって手前の 1 セルに水が積み上がるスパイクを
 !     防ぐ。乾湿前縁では乾側 h≈0 に対して湿側水深で流出するため前縁の
 !     挙動が変わる。§68.7)
-!   上流側は流速 uve の符号で決める(uve > 0: 中心セル c、< 0: 近傍セル n、
-!   0: 補正なし)。calc_kth_flux(RK の各段)と init_enc_status(初期流量
-!   mn1 = uv·he の整合。§7)が同じ関数を使う
+!   上流側は引数 uve の符号で決める(uve > 0: 中心セル c、< 0: 近傍セル n、
+!   0: 補正なし)。calc_kth_flux(RK の各段)は新しい流速の向きの予測(半陰解法の
+!   分子 upre。§95)を、init_enc_status(初期流量 mn1 = uv·he の整合。§7)は流速を渡す
 !----------------------------------------------------------------------
 pure function cap_he_upwind(he, hc, hn, uve) result(he_corr)
   real, intent(in) :: he          ! 両側平均のセル境界水深
@@ -2328,6 +2328,7 @@ subroutine calc_kth_flux(p, g, s, sx, uve0, tae0, i, j, k, in, jn, f_runge, uve1
   real :: hc0, hn0
   real :: hc, hn
   real :: dtl
+  real :: upre                    ! 新しい流速の向きの予測(半陰解法の分子。上流側の頭打ちに使う。§95)
   integer :: l
   ! 土石流(debris_active。debris_plan.md §2.3-2.4)
   logical :: have_db              ! 運動量への hs 算入の有無
@@ -2511,14 +2512,6 @@ subroutine calc_kth_flux(p, g, s, sx, uve0, tae0, i, j, k, in, jn, f_runge, uve1
     ! セル境界での水深を求める
     he = (hc + hn) / 2
 
-    ! セル境界での水深が上流側水深よりも深くならない様に調整
-    if (opt%f_hcap_upwind > 0) he = cap_he_upwind(he, hc, hn, uve0)
-
-    ! 摩擦項で使用する水深
-    !   水深が浅い場合に摩擦が過大となることを防ぐために水深の最小値を制限
-    !   (土石流有効時は混合流動深 h + hs。hse=0 なら厳密に従来と同値)
-    hhe = max(he + hse, p%dv)
-
     ! セル境界での移流項(時刻 n の値で固定。RK 段内の更新は比例形・
     ! アフィン形とも評価のうえ不採用。developer.md §68.19, §68.23)
     tae = tae0
@@ -2530,6 +2523,28 @@ subroutine calc_kth_flux(p, g, s, sx, uve0, tae0, i, j, k, in, jn, f_runge, uve1
     else
       tge = tg0e
     end if
+
+    ! l段目の時間刻み
+    dtl = p%dt / a(l) / lme
+
+    ! セル境界での水深が上流側水深よりも深くならない様に調整(f_hcap_upwind)
+    !   上流側は新しい流速の向きで決める(developer.md §95)。半陰解法の分母 1 − tfe·dtl は
+    !   1 以上(tfe ≤ 0)なので、新しい流速の向きは分子 upre = uve0 + (tae + tge)·dtl(波の外力
+    !   があればその項も)の符号で、摩擦より先に決まる。前ステップの流速 uve0 の向きで決めると、
+    !   静止から流れ出す辺(uve0 = 0)では頭打ちが掛からず、深いセルに接する薄い水膜からの
+    !   流出が両側の平均の水深で運ばれて毎ステップ過大流出の抑制で止められ、向きが反転する
+    !   辺では逆の側で頭打ちしていた(§94)。Stokes 輸送の摩擦の項(wv_flow = 2 の −tfe·use_·dtl)
+    !   は tfe によるので向きの予測には入れない(独自の簡略化)
+    if (opt%f_hcap_upwind > 0) then
+      upre = uve0 + (tae + tge) * dtl
+      if (s%wv_flow > 0) upre = upre + wfe / max((hc + hn) / 2, p%dv) * dtl
+      he = cap_he_upwind(he, hc, hn, upre)
+    end if
+
+    ! 摩擦項で使用する水深
+    !   水深が浅い場合に摩擦が過大となることを防ぐために水深の最小値を制限
+    !   (土石流有効時は混合流動深 h + hs。hse=0 なら厳密に従来と同値)
+    hhe = max(he + hse, p%dv)
 
     ! セル境界での摩擦項
     !   摩擦項は半陰解法で計算するため、次元が他の項と異なる(値は常に正)。
@@ -2561,9 +2576,6 @@ subroutine calc_kth_flux(p, g, s, sx, uve0, tae0, i, j, k, in, jn, f_runge, uve1
     ! 波・流れの摩擦(wv_flow = 2): マニング則の摩擦の速さを vve から vvw へ差し替える
     ! (家屋の抗力・降伏の項は流れの速さ vve のまま)
     if (s%wv_flow >= 2 .and. fbe <= 0.0) tfe = tfe - ge * rne**2 * (vvw - vve) * m_ffactor_calc(hhe) * gve
-
-    ! l段目の時間刻み
-    dtl = p%dt / a(l) / lme
 
     ! セル境界での流速(符合は中心セルから近傍セルに向かい正)を更新
     !   摩擦項を半陰解法で計算する

@@ -112,6 +112,10 @@ q_k = u_{n,k}\,h_{e,k}
 $`h_{e,k}`$ is the edge depth: the mean of the two cells, capped by the
 upwind depth (`f_hcap_upwind`) and by the energy head towards a dry cell
 (`f_dry_head_cap`); the rules are in [Advection schemes](advection.md) §5.
+The upwind side is decided by the direction of the new velocity of the step
+(the denominator of the semi-implicit friction term in §5 is at least 1 and
+friction does not change the direction, so the direction is fixed by the sign
+of the numerator before the friction is evaluated; developer.md §95).
 An edge whose two cells are both below the threshold depth $`d_d`$ (`dd`)
 carries no flux. Mass is conserved exactly in this form: each flux
 $`q_k`$ is computed once per edge and used with opposite signs by its two
@@ -269,13 +273,10 @@ ratio of the upwind cell is used, so both sides of an edge see the same value
 and mass is conserved). The flow computation therefore does not create
 negative depths (processes that change the depth after the flow computation,
 such as infiltration, evapotranspiration or a boundary water level, are
-separate). The **ex_flux column** on the screen counts both kinds of events.
-An edge whose velocity in the previous step was 0 does not get the cap by the
-upwind depth (`f_hcap_upwind`), so the outflow from a film thinner than
-$`d_d`$ that touches deep water (a slope thinned by infiltration, the edge of
-a pond whose level has dropped) is stopped by the suppression in every step,
-and these events pile up in ex_flux. This ex_flux does not come from the size
-of the time step (developer.md §94).
+separate). The **ex_flux column** on the screen counts both kinds of events
+and is normally 0. When it keeps appearing, some flow tries to use up the water
+of a cell within one step (a time step that is too large, an oscillating flux
+of a structure, and so on; developer.md §94).
 
 ## 6. Time integration and the adaptive Runge-Kutta scheme
 
