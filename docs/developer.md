@@ -680,12 +680,15 @@ ENCflow は各分野の専用モデルと精度を競うものではなく、次
   debug 逐次の reference を作り直して MPI 結果と照合する(リポジトリの
   reference は不変 — 消去・再生成はランナーの使い捨て作業領域のみ)。
 - **CI のランナーを ubuntu-24.04 に固定(2026-11-05。利用者の決定)**: GitHub の ubuntu-latest が 2026-11-05 に
-  ubuntu-24.04(gfortran 13.2)から ubuntu-26.04(gfortran 15.2)へ切り替わり、ci.yml の vzcol の Log.txt が
+  ubuntu-24.04 から ubuntu-26.04 へ切り替わり(コンパイラは gfortran 13 から 15 へ)、ci.yml の vzcol の Log.txt が
   1 量子(相対 2e-14)で reference と不一致になった(逐次・MPI np = 2 とも。main の d5aa81a・8977ce5。開発 VM の
   gfortran 13.3 では 4 スレッド・1 スレッドともバイト一致で、スレッドによる揺らぎではない)。reference は
   開発 VM の gfortran 13 で作るので、ci.yml・nightly.yml のコンパイルするジョブの runs-on を ubuntu-24.04 に
-  固定した(i18n.yml は Python の検査だけなので ubuntu-latest のまま)。gfortran 15 への移行は、reference の
-  生成環境ごと移す別の判断(ubuntu-24.04 のランナーが提供される間の措置)。
+  固定した(i18n.yml は Python の検査だけなので ubuntu-latest のまま)。固定の後の main(d83c164)の ci.yml は
+  逐次・np = 2 とも 16 ケースが合格(vzcol は identical)。ランナーのログに出る apt の gfortran の版
+  (4:13.2.0・4:15.2.0)はメタパッケージの版で、コンパイラの版ではない(開発 VM の Ubuntu 24.04 では同じ
+  4:13.2.0 で、実体の gfortran-13 は 13.3.0。325618a・d83c164 の説明の「gfortran 13.2」はこの取り違え)。
+  gfortran 15 への移行は、reference の生成環境ごと移す別の判断(ubuntu-24.04 のランナーが提供される間の措置)。
 - **sewer_wq は同一バイナリ以外との ULP=0 比較が成立しない(既知
   2026-09-15)**: release(-Ofast/-flto)では逐次/MPI 二つのバイナリの
   ビルド差(演算並べ替え)が Runge サブステップ回数の閾値敏感性で増幅され、
