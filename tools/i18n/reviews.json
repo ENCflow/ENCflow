@@ -455,9 +455,9 @@
     {
       "source": "docs/users_guide/steep_slope.md",
       "target": "docs/en/users_guide/steep_slope.md",
-      "source_sha256": "d9da5a85941ab74e3147f86ef6e5e1b06aeb665402ea19b83b8c6f7f691c0dd1",
-      "target_sha256": "7d8404c90f0bfd62c4df4fba3dc443751778468c9ba63f51c5102038901122b9",
-      "reviewer": "Claude (Claude Code session; new user-guide page on the steep-slope gravity correction (moved from docs/steep_slope_design.md without the design discussion): English mirror written alongside the Japanese source and compared section by section, including the equations, the tables (uniform-flow factors, edge stencils, the five-paper comparison), the figure captions, the limits and the references; structure checked by script (headings, math blocks, table rows, images, links))",
+      "source_sha256": "64a075a7040261d552356b980bc01cf0d745b84c5efee57334ad17e93cf675b4",
+      "target_sha256": "f4c7d52f82da232818e4bc03d047ce8eaf3285167b178efafe2cbeed076a7adc",
+      "reviewer": "Claude (Claude Code session; wording on which terms of the resistance laws of mixture flows the friction factor of 2 multiplies (the Manning terms of f_dbres = 1, 5 and the dilute-side fallback; checked against m_swflow_enc) in sec. 2.3 and sec. 6.2 compared with the Japanese source, rest unchanged since the previous record)",
       "method": "assistant",
       "reviewed_on": "2026-11-05"
     },
