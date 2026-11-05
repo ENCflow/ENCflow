@@ -20014,4 +20014,5 @@ mn1 = uv·he は流速の向きのまま(流速と流量の整合。§7)。
   kdpart・tracer・wfdoppler・wqbound の台帳・濃度の範囲など、いずれも判定の閾値の内側)は、test の README に
   書かれていないことを確かめた。dambreak の Stoker の解析解との比較は、行方向の一様性の指標の 4 桁目
   (1.983 → 1.982 m)だけが変わった。
-- MPI: 新しい reference に対する確認(Run_MPI.sh、np = 2。chichibu は np = 1・4 も)は実行中(結果は追記する)。
+- MPI(-Ofast。Run_MPI.sh): 16 ケースすべて np = 2 で PASS(全ファイルが新しい reference とバイト一致)。
+  chichibu は np = 1・4 も PASS(バイト一致)。
