@@ -104,9 +104,9 @@
     {
       "source": "docs/users_guide.md",
       "target": "docs/en/users_guide.md",
-      "source_sha256": "7479a2faea131e01fba08a79ac9edc1f57fa523521eb80f20867108e66023588",
-      "target_sha256": "589f9113ae89758219abad83ec78f190cd5942b9d1a660873a1bcb1f77ce3600",
-      "reviewer": "Claude (Claude Code session; reviewed the added text on the 9-point creep and splash curvature (creep_diagratio, spl_diagratio; developer.md sec. 93) in the Japanese source against the English mirror, 2026-11-05)",
+      "source_sha256": "60bd6da35931253464d9950a580fe89fe97005f7ff1a98ebd1436543755fd57c",
+      "target_sha256": "dcdb1dd43e3297f26beb7cab91de53e4901c3f3796ee1c7d98fecc633064a82d",
+      "reviewer": "Claude (Claude Code session; reviewed the added text on the MUSCL option for the lava heat advection (f_lvtemp_scheme; developer.md sec. 94) and test/lava configuration 10 in the Japanese source against the English mirror, 2026-11-05)",
       "method": "assistant",
       "reviewed_on": "2026-11-05"
     },
@@ -203,9 +203,9 @@
     {
       "source": "docs/users_guide/diagonal_diffusion.md",
       "target": "docs/en/users_guide/diagonal_diffusion.md",
-      "source_sha256": "7bbd384d484ded9d90f39618251a0afd220f7eb341e53140dde7ecb766a65429",
-      "target_sha256": "672b2eb9425801c21a39137c8217f97e294d5a89b608e81532186b74410ac4a7",
-      "reviewer": "Claude (Claude Code session; reviewed the added text on the 9-point creep and splash curvature (creep_diagratio, spl_diagratio; developer.md sec. 93) in the Japanese source against the English mirror, 2026-11-05)",
+      "source_sha256": "7b9ca8acda04369f2a6c49c265a4a6e359e00f635c75695ff5a5256d9afcc26b",
+      "target_sha256": "570b5faa46bef3a9ac5844f9ad879348f275c38c255c9e57ab8055b9f108a542",
+      "reviewer": "Claude (Claude Code session; reviewed the added text on the MUSCL option for the lava heat advection (f_lvtemp_scheme; developer.md sec. 94) and test/lava configuration 10 in the Japanese source against the English mirror, 2026-11-05)",
       "method": "assistant",
       "reviewed_on": "2026-11-05"
     },
@@ -338,11 +338,11 @@
     {
       "source": "docs/users_guide/lavaflow.md",
       "target": "docs/en/users_guide/lavaflow.md",
-      "source_sha256": "3998e6641be889de4ee5f71c0012111910d45e89d1d9320f4c617bcc31c80cfa",
-      "target_sha256": "eff3fdcb192217727de25a79ac0460e763d76dec3fe571dfd06f4978231fc620",
-      "reviewer": "Claude (Claude Code session; final stage of examples/stratovolcano, a thermal one-event lava flow: changed passages compared side by side with the Japanese source, unchanged parts as recorded earlier)",
+      "source_sha256": "0fb8d0e00215aaebcb77aec33398a6fbada2c1f94c03dce54a2fdcdf7262d405",
+      "target_sha256": "2bcb40d78da49c46777a8e6b36a6ddce31a08b79e5892248fede67572d5a1e50",
+      "reviewer": "Claude (Claude Code session; reviewed the added text on the MUSCL option for the lava heat advection (f_lvtemp_scheme; developer.md sec. 94) and test/lava configuration 10 in the Japanese source against the English mirror, 2026-11-05)",
       "method": "assistant",
-      "reviewed_on": "2026-11-04"
+      "reviewed_on": "2026-11-05"
     },
     {
       "source": "docs/users_guide/massflow.md",
@@ -392,9 +392,9 @@
     {
       "source": "docs/users_guide/params_index.md",
       "target": "docs/en/users_guide/params_index.md",
-      "source_sha256": "28ca2c6b5d3e6a6505196b81dbc1d49741ed7c9cf74011c1b4714f0bb328f255",
-      "target_sha256": "0c4fb33b0c2f674368cd528b1c9a5ffa5a846409da2a9155173c04db621b3fc6",
-      "reviewer": "Claude (Claude Code session; reviewed the added text on the 9-point creep and splash curvature (creep_diagratio, spl_diagratio; developer.md sec. 93) in the Japanese source against the English mirror, 2026-11-05)",
+      "source_sha256": "0a3b23a0a17087e16fd479f2a7e69b070261ce13e9c3e21da084cd4e771b54b2",
+      "target_sha256": "44a1a658d68c18466867eb976facf5253643c2e3753005ec5dbd4a3d48f5b1e7",
+      "reviewer": "Claude (Claude Code session; reviewed the added text on the MUSCL option for the lava heat advection (f_lvtemp_scheme; developer.md sec. 94) and test/lava configuration 10 in the Japanese source against the English mirror, 2026-11-05)",
       "method": "assistant",
       "reviewed_on": "2026-11-05"
     },
@@ -689,11 +689,11 @@
     {
       "source": "examples/List_samples/list_lavaflow.txt",
       "target": "examples/List_samples/en/list_lavaflow.txt",
-      "source_sha256": "34d21a8f34d1dafc69810acb8835bc7ca46eb7b8a788b7e674b25adbde81ec16",
-      "target_sha256": "df194bf9ce2be614aa72bf7353ad3f401ca9d563aa9d1e3c45e84fef74038ef7",
-      "reviewer": "Claude (Claude Code session; lava temperature mode: header and the commented-out temperature block compared line by line with the Japanese source; values, identifiers and comment-out state identical, checked with tools/consistency/check.py samples)",
+      "source_sha256": "37e472f300db4b899dd4bf2b248c50f9763c776b4a7b77df51cf91d996bb5579",
+      "target_sha256": "dac1cfc1b9e5c40ea6c99b66bd95bbafb1f5e06c12059c3cdae3be10a543bdd6",
+      "reviewer": "Claude (Claude Code session; reviewed the added text on the MUSCL option for the lava heat advection (f_lvtemp_scheme; developer.md sec. 94) and test/lava configuration 10 in the Japanese source against the English mirror, 2026-11-05)",
       "method": "assistant",
-      "reviewed_on": "2026-11-04"
+      "reviewed_on": "2026-11-05"
     },
     {
       "source": "examples/List_samples/list_meteo.txt",
@@ -3452,11 +3452,11 @@
     {
       "source": "test/lava/README.md",
       "target": "test/lava/en/README.md",
-      "source_sha256": "a835beb9bbe3e0dc5e75e84736856e3352a1a5b63f08b837693b5c33c3cec004",
-      "target_sha256": "661a84459aedbbd2959bea63aff7368846e4bc6cd897b543bb4f705fc55daee9",
-      "reviewer": "Claude (Claude Code session; lava temperature mode f_lvtemp, developer.md Sec. 51.7: changed passages compared side by side with the Japanese source, unchanged parts as recorded earlier)",
+      "source_sha256": "d0a6e39c3db0ccb722eaf755930359d2589ddb4f0c38631714f6d6fe2b5ae01e",
+      "target_sha256": "e2fc466b7b5eef610f93a2a0510825118a91bc818e472cb00ca18c6aa29ebe34",
+      "reviewer": "Claude (Claude Code session; reviewed the added text on the MUSCL option for the lava heat advection (f_lvtemp_scheme; developer.md sec. 94) and test/lava configuration 10 in the Japanese source against the English mirror, 2026-11-05)",
       "method": "assistant",
-      "reviewed_on": "2026-11-04"
+      "reviewed_on": "2026-11-05"
     },
     {
       "source": "test/lava/figs/lava.png",

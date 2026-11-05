@@ -1,4 +1,4 @@
-# test/lava — lava flow (fn_lavaflow): Huppert similarity solution, Bingham stopping thickness, plastic dome, solidification at a wall, burial of the soil layer and temperature (cooling, heat advection, a flow that stops as it cools)
+# test/lava — lava flow (fn_lavaflow): Huppert similarity solution, Bingham stopping thickness, plastic dome, solidification at a wall, burial of the soil layer and temperature (cooling, heat advection, a flow that stops as it cools, crosswind numerical diffusion of the heat)
 
 > English mirror of test/lava/README.md. The Japanese file is the master copy.
 
@@ -59,6 +59,16 @@ same practice as [test/volcano](../../volcano/en/README.md)).
    without temperature, whose length does not depend on the effusion rate.
    Configuration 9r checks that configuration 9 saved part way and restarted is
    byte-identical to the uninterrupted run (Run.sh writes its inputs).
+10. **Crosswind numerical diffusion of the heat** (`param_x0.txt`,
+    `param_x0m.txt`, `param_x45.txt`, `param_x45m.txt`; temperature mode, no
+    cooling): lava at 1150 °C from one side of the vents and at 1050 °C from the
+    other side of a sheet flow down a uniform slope; the width to which the
+    temperature boundary spreads across the flow is compared for a flow along a
+    grid axis (0°) and at 45°, with first-order upwind and MUSCL
+    (`f_lvtemp_scheme = 3`) for the heat advection. The checks are that it does
+    not spread at 0°, that at 45° first-order upwind matches the crosswind
+    diffusivity of the modified equation (√2/4)·u·Δx, and that MUSCL gives less
+    than 1/4 of it (developer.md §94).
 
 ## Configuration
 
@@ -81,17 +91,27 @@ Temperature mode (configurations 7–9; the values are for the checks, not defau
 | Time | dt = 1 s, update 10 s, 7200 s | dt = 0.5 s, 900 s | dt = 1 s, 7200 s |
 | Compared with | the backward-Euler recursion, the exact solution (RK4), the time of solidification (4990 s) | Σ V_k T_k (heat), the range of the temperature, the isothermal run | the ratio of the flow lengths (temperature mode and isothermal control) |
 
+Configuration 10, crosswind numerical diffusion of the heat (temperature mode, no cooling; the values are for the check):
+
+| Item | 0° (`param_x0.txt`, `param_x0m.txt`) | 45° (`param_x45.txt`, `param_x45m.txt`) |
+|---|---|---|
+| Domain and grid | 300 m × 100 m (60 × 20), Δx = 5 m, slope 0.1 along x (`wrk_zx0.txt`) | 300 m × 300 m (60 × 60), Δx = 5 m, slope 0.1 along (1,1) (`wrk_zx45.txt`) |
+| Effusion | 5 m³/s each at 1150 °C from j = 1–10 and at 1050 °C from j = 11–20 of column i = 3, for 3000 s | 9.9 m³/s each at 1150 °C from the 14 cells with i < j and at 1050 °C from the 14 cells with i > j on the anti-diagonal i + j = 33, for 3000 s |
+| Flow | a uniform sheet flow of q = 0.1 m²/s per width (η = 2e4 Pa·s, τ_y = 0, temperature sensitivity 0: 1.33 m thick, 0.075 m/s); no cooling | same |
+| Heat advection | first-order upwind (`x0`) and MUSCL (`x0m`) | first-order upwind (`x45`) and MUSCL (`x45m`) |
+| Compared with | the temperatures on both sides of the boundary (they stay at the eruption temperatures) | the crosswind diffusivity from the spreading of the boundary width σ (0.354·u·Δx for first-order upwind by the modified equation) |
+
 | File | Contents |
 |---|---|
-| `make_init.py` / `make_init.py wall` / `cool` / `run` | `zinit.txt` (uniform slope) / `zwall.txt` (flat floor and a 10 m step) / `cool_cells.txt` (the vent of all cells of configuration 7) / `zrun.txt` (the slope tanθ = 0.1 of configuration 9) |
-| `Check_lava.py <save> huppert\|bingham\|dome\|wall\|bury\|cool\|adv\|run\|heat` | Configuration 1: (1) ledger Σhl·A = V_in, (2) area-equivalent radius within 10% of r_N, (3) r(tt)/r(tt/2) within 5% of √2. Configuration 2: (1) ledger Σhl + Σdz = V_in (solidification is an internal transfer to z), (2) hl + dz in the check window (i = 15–35) within 20% of h∞ and CV < threshold, (3) solidified fraction > 0.7. Configuration 4: (1) ledger Σhl·A = V_in, (2) the ratio of the area-equivalent radii of the sectors along the grid axes (±22.5°) and along the diagonals (±22.5°) within 5% of 1, (3) center thickness within 5% of H and area-equivalent radius within 5% of R, RMS error of the profile for r < R < 5% of H. Configuration 5: (1) ledger Σhl + Σdz = V_in, (2) solidified fraction > 0.999, (3) in every row of the column touching the wall (i = 30), hl = 0 and dz above half the maximum thickness. Configuration 6: (1) lava ledger, (2) sd = 0 and hg = 0 in every cell with solidified lava, sd = 1 m in the other cells, (3) Σ(h + hrs + hg) within 1e-9 (relative) of the initial surface water. Configuration 7 (`cool`; the third argument is the screen log): (1) the output Tl is uniform over all cells and within 2e-4 °C of the backward-Euler recursion, (2) the temperature drop within 1% (relative) of the exact solution, (3) still molten before the update at which the recursion reaches T ≤ the solidification temperature and all cells solidified after it, (4) the residual of the heat ledger within 1e-12 (relative) and its breakdown matching the recursion. Configuration 8 (`adv`): (1) lava ledger, (2) Σhl·Tl·A within 1e-9 (relative) of Σ V_k T_k and the residual on the screen, (3) 1050 ≤ Tl ≤ 1150 in every cell with lava, and a mixed zone exists. Configuration 9 (`run`; reads the saves of the four runs): (1) ledger and complete solidification, (2) residual of the heat ledger, (3) ratio of the flow lengths of the temperature mode L(4Q)/L(Q) > 1.5, (4) ratio of the isothermal control 1 ± 0.1. Configuration 9r (`heat`): residual of the heat ledger of the restarted run |
+| `make_init.py` / `make_init.py wall` / `cool` / `run` / `x0`, `x45` / `x0c1`, `x0c2`, `x45c1`, `x45c2` | `zinit.txt` (uniform slope) / `zwall.txt` (flat floor and a 10 m step) / `cool_cells.txt` (the vent of all cells of configuration 7) / `zrun.txt` (the slope tanθ = 0.1 of configuration 9) / `wrk_zx0.txt`, `wrk_zx45.txt` (the slopes of configuration 10) / `wrk_x0c*.txt`, `wrk_x45c*.txt` (the vents of configuration 10; wrk_* files are not tracked by git and are written by Run.sh and Run_MPI.sh) |
+| `Check_lava.py <save> huppert\|bingham\|dome\|wall\|bury\|cool\|adv\|run\|heat\|xdiff` | Configuration 1: (1) ledger Σhl·A = V_in, (2) area-equivalent radius within 10% of r_N, (3) r(tt)/r(tt/2) within 5% of √2. Configuration 2: (1) ledger Σhl + Σdz = V_in (solidification is an internal transfer to z), (2) hl + dz in the check window (i = 15–35) within 20% of h∞ and CV < threshold, (3) solidified fraction > 0.7. Configuration 4: (1) ledger Σhl·A = V_in, (2) the ratio of the area-equivalent radii of the sectors along the grid axes (±22.5°) and along the diagonals (±22.5°) within 5% of 1, (3) center thickness within 5% of H and area-equivalent radius within 5% of R, RMS error of the profile for r < R < 5% of H. Configuration 5: (1) ledger Σhl + Σdz = V_in, (2) solidified fraction > 0.999, (3) in every row of the column touching the wall (i = 30), hl = 0 and dz above half the maximum thickness. Configuration 6: (1) lava ledger, (2) sd = 0 and hg = 0 in every cell with solidified lava, sd = 1 m in the other cells, (3) Σ(h + hrs + hg) within 1e-9 (relative) of the initial surface water. Configuration 7 (`cool`; the third argument is the screen log): (1) the output Tl is uniform over all cells and within 2e-4 °C of the backward-Euler recursion, (2) the temperature drop within 1% (relative) of the exact solution, (3) still molten before the update at which the recursion reaches T ≤ the solidification temperature and all cells solidified after it, (4) the residual of the heat ledger within 1e-12 (relative) and its breakdown matching the recursion. Configuration 8 (`adv`): (1) lava ledger, (2) Σhl·Tl·A within 1e-9 (relative) of Σ V_k T_k and the residual on the screen, (3) 1050 ≤ Tl ≤ 1150 in every cell with lava, and a mixed zone exists. Configuration 9 (`run`; reads the saves of the four runs): (1) ledger and complete solidification, (2) residual of the heat ledger, (3) ratio of the flow lengths of the temperature mode L(4Q)/L(Q) > 1.5, (4) ratio of the isothermal control 1 ± 0.1. Configuration 9r (`heat`): residual of the heat ledger of the restarted run. Configuration 10 (`xdiff`; reads the saves of the four runs): (1) ledgers and conservation of heat of the four runs, (2) every cell of columns i = 10, 20 and 30 at 0° within 1e-9 °C of the eruption temperature of its side (both first-order upwind and MUSCL), (3) at 45° with first-order upwind, the growth of the square of the boundary width σ = √π ∫θ(1 − θ) dn, from the temperature θ on the anti-diagonals i + j = 37, 43, 53 and 63, gives D⊥ = u Δσ²/(2Δs) within 15% (relative) of (√2/4)·u·Δx, (4) D⊥ of MUSCL at 45° below 0.25 times first order, and 1050 ≤ Tl ≤ 1150 in every cell with lava |
 | `Fig.py` | The figure `en/figs/lava.png` below (`python3 Fig.py en`; `figs/lava.png` is the Japanese version) |
 
 ## Running
 
 ```bash
 make
-./Run.sh          # configuration 1 → Check → configuration 2 → Check → equivalence check of configuration 3 → configurations 4–9 and 9r → Check (about 30 seconds)
+./Run.sh          # configuration 1 → Check → configuration 2 → Check → equivalence check of configuration 3 → configurations 4–9, 9r and 10 → Check (about 45 seconds on one thread)
 ./Run_MPI.sh 4    # MPI. state.dat and lavaflow.dat (and lavaflow_temp.dat) are byte-identical to the serial run (-O2 strict math)
 python3 Fig.py en # en/figs/lava.png
 ```
@@ -159,6 +179,10 @@ the erupted volume) (developer.md §51.5).
 | Configuration 9 (3) flow length in the temperature mode | 55 m (2 m³/s) → 145 m (8 m³/s), ratio 2.64 (tolerance > 1.5) | PASS |
 | Configuration 9 (4) flow length of the isothermal control | 120 m → 120 m, ratio 1.00 (tolerance 1 ± 0.1) | PASS |
 | Configuration 9r restart round trip | the three save files byte-identical to the uninterrupted run, residual of the heat ledger 1.75e-15 | PASS |
+| Configuration 10 (1) ledgers and conservation of heat | in all four runs Σhl·A − V_in ≤ 5.1e-11 m³ (V_in 30,000 and 59,400 m³), heat ≤ 1.4e-15 (relative), residual on the screen ≤ 3.7e-13 | PASS |
+| Configuration 10 (2) boundary at 0° | with both first-order upwind and MUSCL both sides of the boundary stay at the eruption temperatures (difference ≤ 4.5e-13 °C); the MUSCL save is byte-identical to first-order upwind | PASS |
+| Configuration 10 (3) first-order upwind at 45° | σ = 6.85, 11.04, 15.73, 19.37 m (s = 14, 35, 71, 106 m), D⊥ = 0.357·u·Δx (theory 0.354, +1.0%; tolerance 15%) | PASS |
+| Configuration 10 (4) MUSCL at 45° | σ = 3.83, 5.02, 6.06, 6.75 m, D⊥ = 0.034·u·Δx (0.09 times first order; tolerance < 0.25), Tl = 1050–1150 °C | PASS |
 
 - The +7% of the stopping thickness includes the upward bias
   h∞ + √(v_sol h/(coef (2h + h₀) S)) from the cutoff by the stop detection
@@ -206,6 +230,19 @@ the erupted volume) (developer.md §51.5).
   byte-identical before and after the addition of the temperature mode (the
   isothermal run allocates no temperature arrays and goes through the same
   code).
+- Configuration 10 is a detector of the numerical diffusion of the heat
+  advection (developer.md §94). With 4-neighbour first-order upwind there is no
+  crosswind diffusion for a flow along a grid axis, but at 45° the heat entering
+  through both the x and the y edges averages the temperatures of the donors,
+  and the boundary spreads with D⊥ = (Δx/2)(|u_x| sin²θ + |u_y| cos²θ) =
+  0.354·u·Δx of the modified equation. MUSCL (`f_lvtemp_scheme = 3`) removes the
+  leading term; what remains is where the limiter falls back to first order at
+  both ends of the boundary. At 0° the temperature is constant along the flow
+  and stepwise across it, so the reconstruction does not act, and the result is
+  byte-identical to first-order upwind. The saves (except the line with the
+  creation time in save_info.txt), field outputs and Log.txt of configurations
+  1–9 are byte-identical before and after the addition of MUSCL (the default 1
+  is the same expression as before). Configuration 10 is not in the figure.
 - The flux stencil remains 4-neighbor; the 8-neighbor extension remains a
   candidate common to the diffusion-type modules (developer.md §61.4).
 

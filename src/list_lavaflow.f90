@@ -39,6 +39,8 @@ module list_lavaflow
     ! --- 温度(段階2。lava_plan.md §8・developer.md §51.7)。f_lvtemp=1 のときだけ読む。
     !     既定は置かない(溶岩の種類で桁が変わる値と、原典を確かめていない値。番兵 -9999) ---
     integer :: f_lvtemp = 0                  ! 1: 溶岩の深さ平均温度を計算する(0 = 等温)
+    integer :: f_lvtemp_scheme = 1           ! 熱の移流の面の温度 (1: 1次風上 = 送り手の温度,
+                                             !   3: MUSCL + van Leer。developer.md §94)
     real :: lv_temp0(1:lvmax) = -9999.0      ! 噴火口ごとの噴出温度 (°C)
     real :: lv_tref = -9999.0                ! レオロジーの基準温度 T_r (°C。lv_visc・lv_tauy はこの温度の値)
     real :: lv_bvisc = -9999.0               ! 粘度の温度感度 β_η (1/K)
@@ -59,7 +61,7 @@ subroutine list_lavaflow_read(p, list)
   type(t_sysparam), intent(in) :: p
   type(t_list_lavaflow), intent(inout) :: list
 
-  integer :: f_lavaflow, lv_nsubmax, f_lvtemp
+  integer :: f_lavaflow, lv_nsubmax, f_lvtemp, f_lvtemp_scheme
   real :: lv_rho, lv_visc, lv_tauy, lv_wsol, lv_vsol, lv_cfl
   real :: lv_q0(1:lvmax), lv_temp0(1:lvmax)
   real :: lv_tref, lv_bvisc, lv_btau, lv_tsol, lv_emis, lv_hconv, lv_cp, lv_tair
@@ -71,8 +73,9 @@ subroutine list_lavaflow_read(p, list)
   namelist /list_lavaflow/ f_lavaflow, dt_lavaflow_c, lv_rho, lv_visc, &
                            lv_tauy, lv_wsol, lv_vsol, lv_cfl, lv_nsubmax, &
                            lv_cell, lv_q0, lv_val, fn_lv_cell, fn_lv_val, &
-                           f_lvtemp, lv_temp0, lv_tref, lv_bvisc, lv_btau, &
-                           lv_tsol, lv_emis, lv_hconv, lv_cp, lv_tair
+                           f_lvtemp, f_lvtemp_scheme, lv_temp0, lv_tref, &
+                           lv_bvisc, lv_btau, lv_tsol, lv_emis, lv_hconv, lv_cp, &
+                           lv_tair
 
   ! ネームリストにありながらファイルに記述のなかった変数は、
   ! 事前に保存されていた値がそのまま保持される
@@ -89,6 +92,7 @@ subroutine list_lavaflow_read(p, list)
   fn_lv_cell = list%fn_lv_cell
   fn_lv_val = list%fn_lv_val
   f_lvtemp = list%f_lvtemp
+  f_lvtemp_scheme = list%f_lvtemp_scheme
   lv_temp0 = list%lv_temp0
   lv_tref = list%lv_tref
   lv_bvisc = list%lv_bvisc
@@ -121,6 +125,7 @@ subroutine list_lavaflow_read(p, list)
   list%fn_lv_cell = fn_lv_cell
   list%fn_lv_val = fn_lv_val
   list%f_lvtemp = f_lvtemp
+  list%f_lvtemp_scheme = f_lvtemp_scheme
   list%lv_temp0 = lv_temp0
   list%lv_tref = lv_tref
   list%lv_bvisc = lv_bvisc

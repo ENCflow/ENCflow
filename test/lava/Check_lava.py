@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 # lava(溶岩流 = Bingham 粘性重力流)検定
-#   使い方: Check_lava.py <savedir> <huppert|bingham|dome|wall|bury|cool|adv|run|heat> [画面出力のログ ...]
+#   使い方: Check_lava.py <savedir> <huppert|bingham|dome|wall|bury|cool|adv|run|heat|xdiff> [画面出力のログ ...]
 #
 #   huppert モード(構成1: Newton 極限の相似解。param.txt と対):
 #     (1) 台帳    : |Σhl − V_in/A_cell| < TOL_SUM(注入は厳密加算・
@@ -57,6 +57,19 @@
 #     (4) 等温    : |L(4Q)/L(Q) − 1| ≤ TOL_I9(長さは体積で決まり噴出率によらない)
 #   heat モード(構成9r: リスタートした計算の熱の台帳。<savedir> は使わない。第3引数 = ログ):
 #     (1) 画面出力の残差(開始時 + 噴出 − 放射 − 対流 − 固化 − 残存)が相対 TOL_HB 以内
+#   xdiff モード(構成10: 熱の横断の数値拡散。param_x*.txt と対。<savedir> は使わず、
+#   save_x0・save_x0m・save_x45・save_x45m と Screen_x*.log を読む):
+#     (1) 台帳    : 4 つの計算で |Σhl − V_in/A_cell| < TOL_SUM、Σhl·Tl·A が Σ V_k T_k に
+#                   相対 TOL_HEAT8 以内、画面出力の残差が相対 TOL_HB 以内
+#     (2) 0°      : 検定の列 IST0 の全セルが自分の側の噴出温度に TOL_T0 (°C) 以内
+#                   (1 次風上・MUSCL とも。格子軸に沿う流れでは横断の数値拡散が出ない)
+#     (3) 45° 1 次: 反対角線 i + j = m の上の温度 θ = (Tl − T_c)/(T_h − T_c) から境目の幅
+#                   σ = √π ∫ θ(1 − θ) dn(誤差関数の形なら標準偏差)を求め、検定の線
+#                   MST45 の最初と最後の σ² の増え方 D⊥ = u Δσ²/(2 Δs) が
+#                   (√2/4)·u·Δx = 0.354·u·Δx に相対 TOL_D45 以内(u = q/h、h は境目の両側の
+#                   セルの厚さの平均)
+#     (4) 45° MUSCL: 同じ D⊥ が 1 次の RATIO_M45 倍未満、溶岩のある全セルで
+#                   T_c ≤ Tl ≤ T_h(相対 1e-12 の余裕)
 import sys, struct, math, re
 
 TOL_SUM = 1.0e-8
@@ -116,6 +129,19 @@ RUNS9 = {"": (2.0, 2400.0), "4": (8.0, 600.0)}   # 接尾辞: (総噴出率 m3/s
 DT9 = 1.0
 DZ_RUN = 0.05                                    # 流れの先端の判定厚 (m)
 RATIO_T9, TOL_I9 = 1.5, 0.1
+# --- 構成10(param_x*.txt・make_init.py x0/x45/x0c*/x45c* と対で保守)---
+NX10, NY10, NB10, DX10 = 60, 20, 60, 5.0         # 0° は 60 × 20、45° は 60 × 60
+TT10, DT10 = 3000.0, 2.0
+Q10 = {"x0": 5.0, "x45": 9.9}                    # 噴火口ごとの噴出率 (m3/s)
+QW10 = {"x0": 5.0 / (10 * DX10),                 # 幅あたりの流量 q (m2/s)
+        "x45": 9.9 / (14 * math.sqrt(2.0) * DX10)}
+TV10 = (1150.0, 1050.0)                          # 噴出温度(噴火口1・2)
+IST0 = (10, 20, 30)                              # 0° の検定の列
+MV45, MST45 = 33, (37, 43, 53, 63)               # 45° の噴火口の反対角線 i + j と検定の線
+NWIN45 = 70.0                                    # 横断の積分範囲 |n| (m)
+TOL_T0 = 1.0e-9
+DTH45, TOL_D45 = math.sqrt(2.0) / 4.0, 0.15      # 1 次風上の D⊥/(u Δx) の理論値と許容
+RATIO_M45 = 0.25
 
 
 def read_rec(f):
@@ -448,6 +474,76 @@ elif mode == "run":
           % (lens["4"], lens[""], rt, RATIO_T9, "PASS" if ok3 else "FAIL"))
     print("(4) 等温    : L(4Q)/L(Q) = %.0f/%.0f m = %.2f(tol 1±%.1f。長さは体積で決まる) : %s"
           % (lens["i4"], lens["i"], ri, TOL_I9, "PASS" if ok4 else "FAIL"))
+    ok = ok1 and ok2 and ok3 and ok4
+elif mode == "xdiff":
+    hl10, tl10 = {}, {}
+    ok1 = True
+    for tag in ("x0", "x0m", "x45", "x45m"):
+        base = tag.rstrip("m")
+        nx, ny = (NB10, NB10) if base == "x45" else (NX10, NY10)
+        hl = load_hl("save_" + tag, nx, ny)
+        tl = load_tl("save_" + tag, nx, ny)
+        hl10[tag], tl10[tag] = hl, tl
+        area = DX10 * DX10
+        vin = 2 * Q10[base] * TT10
+        res = sum(hl) * area - vin
+        ein = sum(Q10[base] * TT10 * t for t in TV10)
+        rel = (sum(h * t for h, t in zip(hl, tl)) * area - ein) / ein
+        e, rres = heat_ledger("Screen_%s.log" % tag)
+        okt = abs(res) < TOL_SUM * vin and abs(rel) < TOL_HEAT8 and abs(rres) < TOL_HB
+        ok1 = ok1 and okt
+        print("(1) %-4s台帳: sum(hl)*A - V_in = %.2e m3(V_in %.0f)、熱 相対 %.1e、画面の残差 %.1e : %s"
+              % (tag, res, vin, rel, rres, "PASS" if okt else "FAIL"))
+    # (2) 0°: 検定の列の全セルが自分の側の噴出温度のまま
+    ok2 = True
+    for tag in ("x0", "x0m"):
+        hl, tl = hl10[tag], tl10[tag]
+        dmax, nlv = 0.0, 0
+        for i in IST0:
+            for j in range(1, NY10 + 1):
+                idx = (j - 1) * NX10 + i - 1
+                if hl[idx] <= 0.0:
+                    continue
+                nlv += 1
+                dmax = max(dmax, abs(tl[idx] - (TV10[0] if j <= NY10 // 2 else TV10[1])))
+        okt = nlv == len(IST0) * NY10 and dmax <= TOL_T0
+        ok2 = ok2 and okt
+        print("(2) %-4s0°: 列 i = %s の %d セルの噴出温度との差 max %.1e °C(tol %.0e) : %s"
+              % (tag, ",".join(str(i) for i in IST0), nlv, dmax, TOL_T0, "PASS" if okt else "FAIL"))
+    # (3)(4) 45°: 境目の幅 σ と横断の拡散係数
+    dn = math.sqrt(2.0) * DX10                   # 反対角線の上のセルの間隔
+    def sigma45(tag, m):
+        hl, tl = hl10[tag], tl10[tag]
+        acc, hb = 0.0, []
+        for i in range(1, NB10 + 1):
+            j = m - i
+            if j < 1 or j > NB10:
+                continue
+            idx = (j - 1) * NB10 + i - 1
+            n = (i - j) * DX10 / math.sqrt(2.0)
+            if hl[idx] <= 0.0 or abs(n) > NWIN45:
+                continue
+            th = (tl[idx] - TV10[1]) / (TV10[0] - TV10[1])
+            acc += th * (1.0 - th) * dn
+            if abs(i - j) == 1:
+                hb.append(hl[idx])
+        return math.sqrt(math.pi) * acc, sum(hb) / len(hb)
+    dd = {}
+    for tag in ("x45", "x45m"):
+        sg, hs = zip(*[sigma45(tag, m) for m in MST45])
+        ss = [(m - MV45) * DX10 / math.sqrt(2.0) for m in MST45]
+        u = QW10["x45"] / (sum(hs) / len(hs))
+        dd[tag] = u * (sg[-1] ** 2 - sg[0] ** 2) / (2.0 * (ss[-1] - ss[0])) / (u * DX10)
+        print("    %-4s45°: s = %s m で σ = %s m(u = %.4f m/s)、D⊥/(u·Δx) = %.3f"
+              % (tag, "/".join("%.0f" % v for v in ss), "/".join("%.2f" % v for v in sg), u, dd[tag]))
+    ok3 = abs(dd["x45"] - DTH45) <= TOL_D45 * DTH45
+    print("(3) x45 1 次: D⊥/(u·Δx) = %.3f vs 修正方程式 √2/4 = %.3f(相対 %.1f%%、tol %.0f%%) : %s"
+          % (dd["x45"], DTH45, 100 * (dd["x45"] / DTH45 - 1), 100 * TOL_D45, "PASS" if ok3 else "FAIL"))
+    tw = [t for h, t in zip(hl10["x45m"], tl10["x45m"]) if h > 0.0]
+    okr = min(tw) >= TV10[1] * (1.0 - 1e-12) and max(tw) <= TV10[0] * (1.0 + 1e-12)
+    ok4 = dd["x45m"] < RATIO_M45 * dd["x45"] and okr
+    print("(4) x45m MUSCL: D⊥/(u·Δx) = %.3f(1 次の %.2f 倍、tol < %.2f)、Tl = %.6f〜%.6f °C : %s"
+          % (dd["x45m"], dd["x45m"] / dd["x45"], RATIO_M45, min(tw), max(tw), "PASS" if ok4 else "FAIL"))
     ok = ok1 and ok2 and ok3 and ok4
 elif mode == "heat":
     e, rres = heat_ledger(sys.argv[3])

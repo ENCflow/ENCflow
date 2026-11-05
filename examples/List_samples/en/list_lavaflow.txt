@@ -55,6 +55,10 @@
   !   moves to z when Tl <= lv_tsol), so set lv_wsol above to 0 (lv_vsol is
   !   not read)
   !f_lvtemp = 1             ! 1: compute the temperature (default 0 = isothermal)
+  !f_lvtemp_scheme = 3      ! face temperature of the heat advection (default 1 = the donor's
+                            !   temperature (first-order upwind); 3 = MUSCL: cuts the crosswind
+                            !   numerical diffusion of a flow oblique to the grid to about 1/10;
+                            !   developer.md Sec. 94)
   !lv_temp0(1) = 1150.0     ! eruption temperature of vent 1 (deg C; above lv_tsol)
   !lv_tref = 1150.0         ! reference temperature (deg C; lv_visc and lv_tauy are the values here)
   !lv_bvisc = 0.04          ! temperature sensitivity of the viscosity (1/K; ln k/dT if k times after cooling by dT)

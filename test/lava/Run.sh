@@ -12,6 +12,9 @@
 #        8': 同じ入力の等温の計算(f_lvtemp = 0)と lavaflow.dat・state.dat がバイト一致
 # 構成9: 冷えて止まる流れ(温度モード。同じ体積で噴出率 4 倍の流れが長い。等温の対照では同じ長さ)
 #        9r: 温度モードのリスタートの往復(1800 s で保存 → 再開)が通しの計算とバイト一致
+# 構成10: 熱の横断の数値拡散(温度モード・冷却なし。0° と 45° のシート流を 1 次風上と
+#         MUSCL(f_lvtemp_scheme = 3)で。0° は拡散なし、45° の 1 次は修正方程式の 0.354·u·Δx、
+#         MUSCL はその 1/4 未満)
 # 合否は Check_lava.py。save は save*_serial にも複製(Run_MPI 比較用)
 
 sdir=$(dirname "$(readlink -f "$0")")
@@ -21,6 +24,11 @@ python3 "$sdir/make_init.py" > zinit.txt
 python3 "$sdir/make_init.py" wall > zwall.txt
 python3 "$sdir/make_init.py" cool > cool_cells.txt
 python3 "$sdir/make_init.py" run > zrun.txt
+python3 "$sdir/make_init.py" x0 > wrk_zx0.txt
+python3 "$sdir/make_init.py" x45 > wrk_zx45.txt
+for k in x0c1 x0c2 x45c1 x45c2; do
+    python3 "$sdir/make_init.py" $k > wrk_$k.txt
+done
 
 rc=0
 
@@ -158,6 +166,18 @@ else
     rc=1
 fi
 python3 "$sdir/Check_lava.py" - heat Screen_runb.log || rc=1
+
+# 構成10: 熱の横断の数値拡散(0°・45° のシート流、1 次風上と MUSCL。§94)
+set -o pipefail
+for c in x0 x0m x45 x45m; do
+    ./encflow param_$c.txt | tee Screen_$c.log || exit 1
+done
+set +o pipefail
+echo ""
+python3 "$sdir/Check_lava.py" - xdiff || rc=1
+for c in x0 x0m x45 x45m; do
+    rm -rf save_${c}_serial && cp -r save_$c save_${c}_serial
+done
 
 if [ $rc -eq 0 ]; then
     echo "=== lava 検定 PASS ==="

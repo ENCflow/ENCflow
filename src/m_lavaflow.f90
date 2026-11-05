@@ -50,7 +50,8 @@ module m_lavaflow
   !   状態 s%tl = 深さ平均温度 (°C。溶岩のないセルは 0)。移流で保存する量は
   !   熱量 hl·Tl(× ρc_p × セル面積 = J。0 °C 基準の顕熱):
   !     ∂(hl Tl)/∂t + ∇·(q T*) = Σ (Q/A) T_v − (F_rad + F_conv)/(ρ c_p)
-  !   T* = エッジの送り手(風上)の温度、T_v = 噴出温度。冷却は有効放射率 ε の
+  !   T* = エッジの送り手(風上)の温度(f_lvtemp_scheme = 3 では送り手・受け手・
+  !   さらに風上の 3 点の MUSCL の面値。§94)、T_v = 噴出温度。冷却は有効放射率 ε の
   !   放射 F_rad = ε σ (Tl_K⁴ − Ta_K⁴) と対流 F_conv = h_c (Tl − Ta)(Ta は
   !   fn_meteo のセルの気温か lv_tair)。表面の殻の断熱は ε を下げて表す。
   !   粘度と降伏応力は η(T) = η_r exp(−β_η (T − T_r))、τ_y(T) = τ_r exp(−β_τ (T − T_r))
@@ -164,6 +165,7 @@ module m_lavaflow
     integer :: nsubmax = 10000       ! サブサイクル数の上限
     ! 温度(段階2。f_lvtemp=1。lava_plan.md §8)
     logical :: thermal = .false.     ! 温度を計算する
+    logical :: tmuscl = .false.      ! 熱の移流の面の温度を MUSCL で再構成する(f_lvtemp_scheme = 3。§94)
     logical :: usemet = .false.      ! 気温を meteo から読む(.false. = 定数 tair)
     real :: tref = 0.0               ! レオロジーの基準温度 T_r (°C)
     real :: bvisc = 0.0              ! 粘度の温度感度 β_η (1/K)
@@ -350,6 +352,13 @@ subroutine m_lavaflow_init(lv, p, g, s, mt)
   end if
   lv%thermal = (list%f_lvtemp == 1)
   if (lv%thermal) call init_thermal(lv, list, mt)
+  if (list%f_lvtemp_scheme /= 1 .and. list%f_lvtemp_scheme /= 3) then
+    call par_stop("list_lavaflow: f_lvtemp_scheme must be 1(first-order upwind) or 3(MUSCL)")
+  end if
+  if (list%f_lvtemp_scheme == 3 .and. .not. lv%thermal) then
+    call par_stop("list_lavaflow: f_lvtemp_scheme = 3 requires f_lvtemp=1")
+  end if
+  lv%tmuscl = (list%f_lvtemp_scheme == 3)
 
   ! --- 状態の確保 ---
   allocate(s%hl(dcp%ish:dcp%ieh, dcp%jsh:dcp%jeh), source = 0.0)
@@ -397,6 +406,7 @@ subroutine m_lavaflow_init(lv, p, g, s, mt)
   write(msg,'(a,i0,a,i0,a)') "lavaflow enabled (dt_lavaflow = ", lv%idt, &
         " steps, ", lv%lvw%nvent, " vent(s)"
   if (lv%thermal) msg = trim(msg) // ", temperature f_lvtemp=1"
+  if (lv%tmuscl) msg = trim(msg) // ", heat advection MUSCL (f_lvtemp_scheme=3)"
   call par_info(trim(msg) // ")")
 end subroutine
 
@@ -708,8 +718,9 @@ end subroutine
 !   パスB で熱のエッジ流量 q·T*(T* = 送り手の温度。風上)を、パスC で熱量
 !   hl·Tl を同じ保存形で更新して Tl = 熱量/hl とする。ドナー律速で送り手の
 !   持ち出しは自分の溶岩以下なので、新しい Tl は自セルと流れ込みの送り手の
-!   温度の凸結合になる(丸めの分を含めてその範囲に収める)。hl・tl をサブ
-!   サイクルごとにハロ交換する
+!   温度の凸結合になる(丸めの分を含めてその範囲に収める)。f_lvtemp_scheme = 3
+!   では T* を MUSCL の面値にし(tface_muscl)、範囲に流れ出しの面の反対側の
+!   近傍を加える(§94)。hl・tl をサブサイクルごとにハロ交換する
 !----------------------------------------------------------------------
 subroutine tick_flow(lv, g, s, dtw)
   type(t_lavaflow), intent(inout) :: lv
@@ -719,7 +730,8 @@ subroutine tick_flow(lv, g, s, dtw)
   integer :: i, j, k, in, jn, jt, nsub
   real :: trem, dtsub, dmax, dlim
   real :: sc, sn_, ds, ss, gt, h0, hf, he, dd, gq, qcap, dv
-  real :: cf, ty, gqt, dvt, ho, hn, tlo, thi, tn
+  real :: cf, ty, gqt, dvt, ho, hn, tlo, thi, tn, tf
+  integer :: io, jo
   real :: w1(1)
   logical :: okc, last
 
@@ -795,7 +807,7 @@ subroutine tick_flow(lv, g, s, dtw)
     !   帯界面のエッジ成分 k=1..3(行 je)はハロ行 je+1 の書き手が担う
     !   (冗長計算。全域端では行が存在せず対象外)
     !$omp parallel do schedule(static) private(i, j, k, in, jn, okc, sc, sn_, ds, ss, gt, h0, hf, &
-    !$omp                                      he, dd, gq, qcap, cf, ty, gqt)
+    !$omp                                      he, dd, gq, qcap, cf, ty, gqt, tf)
     do j = dcp%js, jt
       do i = g%wx(1,j), g%wx(2,j)
         if (g%x(i,j) <= 0) cycle
@@ -843,12 +855,18 @@ subroutine tick_flow(lv, g, s, dtw)
           end if
           lv%lvw%q(k, i+die(k), j+dje(k)) = gq
           if (lv%thermal) then
-            ! 熱のエッジ流量 = 溶岩のエッジ流量 × 送り手(風上)の温度
+            ! 熱のエッジ流量 = 溶岩のエッジ流量 × 面の温度。面の温度は送り手(風上)の
+            ! 温度(1 次風上)か、f_lvtemp_scheme = 3 ではエッジの向きに沿った
+            ! 送り手・受け手・送り手のさらに風上の 3 点の MUSCL(tface_muscl。§94)
             gqt = 0.0
             if (gq > 0.0) then
-              gqt = gq * s%tl(i,j)
+              tf = s%tl(i,j)
+              if (lv%tmuscl) tf = tface_muscl(g, s, i, j, in, jn, i - din(k), j - djn(k))
+              gqt = gq * tf
             else if (gq < 0.0) then
-              gqt = gq * s%tl(in,jn)
+              tf = s%tl(in,jn)
+              if (lv%tmuscl) tf = tface_muscl(g, s, in, jn, i, j, in + din(k), jn + djn(k))
+              gqt = gq * tf
             end if
             lv%lvw%qt(k, i+die(k), j+dje(k)) = gqt
           end if
@@ -863,9 +881,11 @@ subroutine tick_flow(lv, g, s, dtw)
     ! 同じコードを通す = β = 0・冷却なしで hl が等温とビット一致する条件)。
     ! 新しい Tl は自セル(溶岩があれば)と流れ込みの送り手の温度の範囲に収める
     ! (厳密な算術では凸結合。範囲外は丸め、または hl がほぼ 0 になったセルの
-    ! 桁落ちによる)
+    ! 桁落ちによる)。MUSCL(tmuscl)では流れ出しの面の値が、その面の反対側の
+    ! 近傍(さらに風上のセル)の温度を正の重みで含むので、溶岩のあるその近傍も
+    ! 範囲に加える(凸結合になる十分条件は流れ出しの合計 ≤ 自セルの溶岩の 1/2。§94)
     if (lv%thermal) then
-      !$omp parallel do schedule(static) private(i, j, k, dv, dvt, ho, hn, tlo, thi, tn)
+      !$omp parallel do schedule(static) private(i, j, k, dv, dvt, ho, hn, tlo, thi, tn, io, jo)
       do j = dcp%js, dcp%je
         do i = g%wx(1,j), g%wx(2,j)
           if (g%x(i,j) <= 0) cycle
@@ -886,6 +906,17 @@ subroutine tick_flow(lv, g, s, dtw)
             if (sign_e(k) * lv%lvw%q(ke(k), i+die(k), j+dje(k)) < 0.0) then
               tlo = min(tlo, s%tl(i+din(k), j+djn(k)))       ! 流れ込み(送り手 = 近傍)
               thi = max(thi, s%tl(i+din(k), j+djn(k)))
+            else if (lv%tmuscl .and. sign_e(k) * lv%lvw%q(ke(k), i+die(k), j+dje(k)) > 0.0) then
+              io = i - din(k)                                ! 流れ出しの面の反対側の近傍
+              jo = j - djn(k)
+              if (g%x(io,jo) > 0) then                       ! 領域外は x = 0(sw・hl を読まない)
+                if (g%sw(io,jo) <= 0) then
+                  if (s%hl(io,jo) > 0.0) then
+                    tlo = min(tlo, s%tl(io,jo))
+                    thi = max(thi, s%tl(io,jo))
+                  end if
+                end if
+              end if
             end if
           end do
           hn = ho - dv * dtsub * lv%lvw%ainv              ! 下の hl の更新と同じ式
@@ -1211,6 +1242,40 @@ pure subroutine edge_rheology(lv, s, i, j, in, jn, cf, ty)
   cf = lv%coef * exp(min(max(lv%bvisc * (te - lv%tref), -xexp), xexp))
   ty = lv%tauy * exp(min(max(-lv%btau * (te - lv%tref), -xexp), xexp))
 end subroutine
+
+
+!----------------------------------------------------------------------
+! 熱の移流の面の温度(f_lvtemp_scheme = 3。tick_flow のパスB の部品。§94)
+!   送り手 d = (id,jd)・受け手 r = (ir,jr)・エッジの向きに沿って送り手の
+!   さらに風上のセル u = (iu,ju) の 3 点から、地表のスカラーのリンクごとの
+!   MUSCL(m_swflow_enc の muscl_face。§78)と同じ van Leer の面値
+!     T_f = T_d + ψ(r)/2·(T_r − T_d)、r = (T_d − T_u)/(T_r − T_d)、
+!     ψ = (r + |r|)/(1 + |r|)
+!   を比 r を作らない形(a = T_d − T_u、δ = T_r − T_d が同符号なら
+!   T_f = T_d + a·δ/(a + δ)、そうでなければ T_d)で返す。T_f は T_d と T_r の
+!   間にある。受け手に溶岩がない(温度 0 は値でない)、u が領域外・確保範囲外・
+!   無効・海・溶岩なしなら送り手の温度(1 次風上)のまま。u の列は送り手から
+!   ±1(書き手の行窓 ±2)なので領域内なら dcp%ish..ieh に入り、行は
+!   書き手の行 js..je+1 から ±2 で帯+ハロ 2 に入る(念のため確かめる)。
+!   x は全域+1 周、sw は全域で確保されているので、領域の判定の後に読む
+!----------------------------------------------------------------------
+pure function tface_muscl(g, s, id, jd, ir, jr, iu, ju) result(tf)
+  type(t_geoinfo), intent(in) :: g
+  type(t_state), intent(in) :: s
+  integer, intent(in) :: id, jd, ir, jr, iu, ju
+  real :: tf, a, d
+
+  tf = s%tl(id,jd)
+  if (s%hl(ir,jr) <= 0.0) return
+  if (iu < 1 .or. iu > g%nx .or. ju < 1 .or. ju > g%ny) return
+  if (ju < dcp%jsh .or. ju > dcp%jeh) return
+  if (g%x(iu,ju) <= 0) return
+  if (g%sw(iu,ju) > 0) return
+  if (s%hl(iu,ju) <= 0.0) return
+  a = tf - s%tl(iu,ju)
+  d = s%tl(ir,jr) - tf
+  if (a * d > 0.0) tf = tf + a * d / (a + d)
+end function
 
 
 !----------------------------------------------------------------------
