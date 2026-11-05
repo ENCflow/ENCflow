@@ -175,7 +175,7 @@ Storage above saturation capacity exfiltrates to the surface
 |---|---|---|
 | gw_ksh_mmh | 360 | Lateral saturated hydraulic conductivity (mm/h). 1e-4 m/s = 10 x the matrix value (effective value with macropore / pipe flow) |
 | gw_eps | 1e-3 | Regularization thickness for the dry test and suppression of excessive outflow (m) |
-| gw_diagratio | 2/(2+sqrt(2)) | Diagonal partitioning (normally no need to change; 0 is equivalent to 4 neighbors) |
+| gw_diagratio | 1/3 | Diagonal partitioning (the default 1/3 makes the leading error term isotropic; the default before 2026-11-05 was 2/(2+sqrt(2)); 0 is equivalent to 4 neighbors; [Choosing the diagonal ratio d](diagratio.md)). The lateral flow in layer 2 and the saltwater zone of the two-layer fresh/salt model use the same passage widths |
 | f_gw_opening | 1 | Transfer of blocked diagonal shares (1: the passage width of diagonals blocked by outside or sea cells goes to the axis edges, so the conductance along walls equals the interior value; 0: none = the default before 2026-10-30; [supplement](gwflow_models.md#4-lateral-flow-f_gwlateral--1)) |
 
 The stability condition of the explicit scheme is checked at
@@ -187,7 +187,14 @@ and the lateral flow in layer 2 (next section) uses the same values. When
 layer-2 lateral flow is used without lateral flow in the soil layer
 (f_gwlateral = 0), the three geometry items are still read from this group if
 it exists (gw_ksh_mmh is not used), and the defaults apply otherwise (the
-transfer is on by default).
+transfer is on by default). The fluxes of the saltwater zone of the two-layer
+fresh/salt model ([fresh/salt two layers](salt.md)) use the same passage widths,
+so give `salt_diagratio` the same value as `gw_diagratio` (a different value
+stops the run; before 2026-11-05 the value read later was silently ignored;
+developer.md §98, in Japanese). The conduit layer (`gwc_diagratio`) has its own
+passage widths and is independent. For how to choose the diagonal share (1/3 is
+isotropic for the lateral flow, 0.586 suits the conduit layer), see
+[choosing the diagonal share d](diagratio.md).
 
 When [water quality](wq.md) (fn_wq; f_wq_infil=1 is the default) is
 enabled, dissolved substances in the groundwater move with the lateral
@@ -271,7 +278,7 @@ Applications are expressed by parameter combinations:
 | gwc_nsubmax | 100 | Cap on the number of lateral-conveyance subcycles (runaway guard of the automatic subdivision) |
 | gwc_eps | 1e-3 | Regularization amount for the dry test (m) |
 | gwc_eps_h | 1e-2 | Linearization width of the sqrt law (head difference, m) |
-| gwc_diagratio | 2/(2+sqrt(2)) | Diagonal partitioning (normally no need to change) |
+| gwc_diagratio | 2/(2+sqrt(2)) | Diagonal partitioning of the conduit layer itself (normally no need to change). Independent of `gw_diagratio` of the soil lateral flow. The default is the value that makes the eight passage widths equal, so a conduit one cell wide has the same conveyance (flow for the same gradient) along an axis and along a diagonal (before 2026-11-05, with soil lateral flow enabled, the passage widths of `gw_diagratio` were silently used; developer.md §98, in Japanese) |
 
 - Surface exchange switches automatically with the head difference: if
   the surface water level is higher, water flows in (weir type while

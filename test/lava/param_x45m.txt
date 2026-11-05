@@ -1,0 +1,64 @@
+!======================================================================
+! lava 構成10(45°・MUSCL): param_x45.txt と同じ入力で、熱の移流の面の温度を
+!   MUSCL + van Leer(f_lvtemp_scheme = 3。developer.md §97)にした計算。
+!   横断に線形な温度場では面の値がエッジ中点の値になり、横断の数値拡散の
+!   主要項が消える(Check_lava.py xdiff の (4))
+!======================================================================
+&list_sysparam
+  f_gridsystem = 0
+  f_govequation = 0
+  dt = 2.0
+  t0 = 0
+  tt = 3000
+  dt_disp = 1000
+  dt_file = 3000
+  dt_recrd = 3000
+  fn_geoinfo = '-'
+  fn_initial = '-'
+  fn_lavaflow = '-'
+  dir_result = 'result_x45m'
+  dir_save = 'save_x45m'
+  f_state_save = 1
+  f_check_cfl = 0
+/
+
+&list_initial
+  f_htype = 0
+  h0 = 0.0                  ! 水なし(溶岩のみの検定)
+/
+
+&list_geoinfo
+  lx = 300.0
+  ly = 300.0
+  nx = 60
+  ny = 60
+  f_ztype = 1
+  fn_z = 'wrk_zx45.txt'
+  f_rntype = 0
+  rn0 = 0.03
+/
+
+&list_lavaflow
+  lv_rho = 2600.0
+  lv_visc = 2.0e4           ! η (Pa s)(構成1・8 と同じ)
+  lv_tauy = 0.0             ! Newton 流体
+  lv_diagratio = 0.0        ! 4 近傍(この構成は 4 近傍の熱の移流の数値拡散の検定。8 近傍は構成 10d)
+  fn_lv_cell(1) = 'wrk_x45c1.txt'   ! 噴火口1(1150 °C の側)
+  lv_val(1:2,1,1) = 0, 9.9   ! (時刻(min), 噴出率(m3/s))。計算の間ずっと一定
+  lv_val(1:2,2,1) = 9999, 9.9
+  fn_lv_cell(2) = 'wrk_x45c2.txt'   ! 噴火口2(1050 °C の側)
+  lv_val(1:2,1,2) = 0, 9.9
+  lv_val(1:2,2,2) = 9999, 9.9
+  f_lvtemp = 1              ! 温度を計算する
+  f_lvtemp_scheme = 3       ! 熱の移流の面の温度を MUSCL で再構成する
+  lv_temp0(1) = 1150.0      ! 噴火口1の噴出温度 (°C)
+  lv_temp0(2) = 1050.0      ! 噴火口2の噴出温度 (°C)
+  lv_tref = 1100.0          ! 基準温度 (°C)
+  lv_bvisc = 0.0            ! 温度感度 0 = 流れは温度によらない
+  lv_btau = 0.0
+  lv_tsol = 700.0           ! 固化温度 (°C)(冷却なしなので固まらない)
+  lv_emis = 0.0             ! 冷却なし
+  lv_hconv = 0.0
+  lv_cp = 1150.0            ! 比熱 (J/kg/K)
+  lv_tair = 20.0            ! 気温 (°C)
+/

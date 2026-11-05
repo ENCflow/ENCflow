@@ -72,7 +72,9 @@ $`4\Delta`$, but the reconstruction of §4 returns the velocity exactly for
 an isotropic flow (its weights sum to 1), so the conveyance is neither
 short nor in excess. $`p_d = 0`$ gives a four-neighbour grid (the diagonal
 edges have zero width and are left out of the momentum equation) and
-$`p_d = 1`$ a grid with diagonals only. For $`\Delta x \ne \Delta y`$ the
+$`p_d = 1`$ a grid with diagonals only (for this value and its trade-offs
+with other criteria such as the isotropy of the error and the time-step
+limit, see [choosing the diagonal share d](diagratio.md)). For $`\Delta x \ne \Delta y`$ the
 share $`p_d`$ is applied on the shorter side and scaled by
 $`(\Delta_{\min}/\Delta_{\max})^2`$ on the longer side (`init_weights`).
 
@@ -145,7 +147,10 @@ $`u_c = u + (p_d/4)\Delta^2\,\partial^2 u/\partial y^2 + \cdots`$. This
 quantity appears in the output and the probes; in the Gaussian jet of
 [test/diffusion](../../../test/diffusion/en/README.md) the centre velocity
 reads 0.14% low at $`\Delta x = 1`$ m (this is not an error of the
-diffusion term). The speed $`|\mathbf{V}| = \sqrt{u^2 + v^2}`$ is used by
+diffusion term). This smoothing does not accumulate in time and is separate
+from the crosswind numerical diffusion that diagonal edges produce through
+advection (for the latter, see
+[Numerical diffusion by diagonal-edge fluxes](diagonal_diffusion.md)). The speed $`|\mathbf{V}| = \sqrt{u^2 + v^2}`$ is used by
 the friction and drag terms and by the upwind decisions of the advection.
 
 ## 5. Terms of the momentum equation
@@ -393,7 +398,7 @@ non-hydrostatic correction or the newer advection schemes.
 
 | Parameter | Default | Meaning | Basis |
 |---|---:|---|---|
-| p_diagratio | 2/(2+√2) | share $`p_d`$ of the passage width given to the diagonal edges (§2) | **derived** the value that makes the eight widths equal; 0 gives a four-neighbour grid |
+| p_diagratio | 2/(2+√2) | share $`p_d`$ of the passage width given to the diagonal edges (§2) | **method** the choice that makes the eight widths equal (the conveyance of a one-cell-wide channel without reassignment does not depend on direction, and the gravity-wave time-step limit is in its largest range); the isotropy of the error is best at 1/3, and the trade-offs between criteria are in [choosing the diagonal share d](diagratio.md); 0 gives a four-neighbour grid |
 | f_gravity_correction | 2 | steep-slope correction (§5). 0: none, 1: effective gravity $`g\cos^2\theta`$, 2: 1 plus friction and sediment shear from the slope-parallel speed and the bed-normal depth (the default since 2026-11-05) | **literature value** Ni et al.[^ni19]; uniform flow of 2 from Chow[^chow59] and Van Emelen et al.[^ve14]; no effect on gentle slopes |
 | f_exflux_reduction | 1 | suppression of excessive outflow (§5) | **method** prevents negative depths at dry-bed fronts; keep on with dry beds |
 | f_hcap_upwind | 1 | upwind cap of the edge depth (§3) | **method** 1: mean capped by the upwind depth. 2: the upwind depth itself = continuity of the conservative scheme[^sd03]; use 2 with bores and breaking |

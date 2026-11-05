@@ -76,7 +76,7 @@ make
 | Final total storage of param_nowidth.txt (m) | 0.0508264 | 0.0413 (19 % lost) |
 | Final total storage of param_gwc.txt (m) | 0.0203306 (equal to the rain total) | 0.0210 (3.5 % created by the inflow into the conduits) |
 | Total storage of param_snow.txt (m; surface + snow) | 0.0200000 (constant) | 0.0198 (1 % of the melt water lost) |
-| Concentration on the valley floor (mg/L) | 0.99986–0.99993 (conduits 1.00044–1.00049) | 1.02–1.03 (without width 1.31, conduits 1.0004–1.0037) |
+| Concentration on the valley floor (mg/L) | 0.99986–0.99991 (conduits 1.00044–1.00049) | 1.02–1.03 (without width 1.31, conduits 1.0004–1.0037) |
 
 - The concentration exceeded 1 before the fix because the fraction of the
   proportional transfer of infiltration on σ cells was taken from the water

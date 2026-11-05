@@ -23,6 +23,8 @@ module list_geomorph
     real :: creep_hstar = 0.0        ! 深さ依存クリープの土層の減衰厚 H_c (m。§89.8)。0 = 従来の z の
                                      ! 線形拡散(sd は不変・裸岩も拡散)。> 0: 流量に供給側(高い側)
                                      ! セルの 1 − exp(−sd/H_c) を掛け、z と sd を共動更新(土層だけが動く)
+    real :: creep_diagratio = 1.0 / 3.0  ! クリープの斜め配分 d(既定 1/3 = 8 近傍の 9 点で離散化誤差が
+                                     ! 等方。0 = 4 近傍の 5 点 = 2026-11-05 以前の既定。§96)
 
     integer :: f_fluvial = 0         ! 掃流砂 Exner(河床の浸食・堆積)(0:無効, 1:有効)
     integer :: f_qbform = 1          ! 流砂量式(1:芦田・道上, 2:MPM)
@@ -202,6 +204,8 @@ module list_geomorph
     real :: spl_ksat = 0.0           ! 凹地形増幅の飽和曲率 κ_s (1/m)(§48.6)。正なら有効曲率
                                      ! κ̃ = κ / (1 + κ/κ_s) を増幅項 1 + c κ̃ に使う(κ ≪ κ_s で
                                      ! 従来と同じ、κ ≫ κ_s で 1 + c κ_s に飽和)。0 = 飽和なし(既定)
+    real :: spl_diagratio = 1.0 / 3.0  ! 曲率 κ のラプラシアンと平滑化の核の斜め配分 d(既定 1/3 = 9 点で
+                                     ! 離散化誤差が等方。0 = 5 点 = 2026-11-05 以前の既定。§96)
     real :: spl_strata(1:2,1:nspstmax) = -9999.0
                                      ! 水平層理(硬軟差)の表(§48.5)。列 k = (層の下端標高
                                      ! z_k [m], 侵食性倍率 f_k)。z_k は昇順、f_k >= 0
@@ -411,7 +415,7 @@ subroutine list_geomorph_read(p, list)
   real :: dt_geomorph
   real :: morfac
   integer :: f_creep
-  real :: creep_d, creep_hstar
+  real :: creep_d, creep_hstar, creep_diagratio
   integer :: f_fluvial
   integer :: f_qbform
   real :: fluv_d50
@@ -455,7 +459,7 @@ subroutine list_geomorph_read(p, list)
   integer :: f_splash
   real :: spl_kr, spl_ca, spl_kt, spl_cb, spl_h, spl_dzmax, spl_lc, spl_zbase
   integer :: spl_sgrad
-  real :: spl_ksat
+  real :: spl_ksat, spl_diagratio
   real :: spl_strata(1:2,1:nspstmax)
   integer :: f_debris
   real :: db_phi
@@ -500,7 +504,7 @@ subroutine list_geomorph_read(p, list)
   real :: bs_reltime, bs_rho, bs_mu, bs_xi, bs_vstop, bs_eps_s, bs_diagratio, bs_cfl
   real :: bs_hplunge, bs_tstop
 
-  namelist /list_geomorph/ dt_geomorph, morfac, f_creep, creep_d, creep_hstar, &
+  namelist /list_geomorph/ dt_geomorph, morfac, f_creep, creep_d, creep_hstar, creep_diagratio, &
                            f_fluvial, f_qbform, fluv_d50, fluv_tausc, &
                            fluv_porosity, fluv_sgrav, fluv_dzmax, fluv_diagratio, &
                            fluv_bcfeed, fluv_bcfeed_fac, fluv_taufac, f_taupart, fluv_d84, taupart_e, fluv_slope, fluv_mus, fluv_muk, &
@@ -516,7 +520,7 @@ subroutine list_geomorph_read(p, list)
                            f_wfswash, wfswash_kc, wfswash_kl, wfswash_tanbe, wfswash_phim, &
                            f_wash, wash_kr, wash_kf, wash_tausc, wet_lw, &
                            f_splash, spl_kr, spl_ca, spl_kt, spl_cb, spl_h, spl_dzmax, &
-                           spl_lc, spl_zbase, spl_sgrad, spl_ksat, spl_strata, &
+                           spl_lc, spl_zbase, spl_sgrad, spl_ksat, spl_diagratio, spl_strata, &
                            f_debris, db_phi, db_delte, db_deltd, f_dbstop, db_vstop, db_wstop, f_dbres, &
                            f_dbed, db_d50, db_erest, db_cmin, f_dbwet, db_satbed, &
                            db_mu, db_xi, db_tauy, f_dbcurv, &
@@ -537,6 +541,7 @@ subroutine list_geomorph_read(p, list)
   f_creep = list%f_creep
   creep_d = list%creep_d
   creep_hstar = list%creep_hstar
+  creep_diagratio = list%creep_diagratio
   f_fluvial = list%f_fluvial
   f_qbform = list%f_qbform
   fluv_d50 = list%fluv_d50
@@ -619,6 +624,7 @@ subroutine list_geomorph_read(p, list)
   spl_zbase = list%spl_zbase
   spl_sgrad = list%spl_sgrad
   spl_ksat = list%spl_ksat
+  spl_diagratio = list%spl_diagratio
   spl_strata = list%spl_strata
   f_debris = list%f_debris
   db_phi = list%db_phi
@@ -703,6 +709,7 @@ subroutine list_geomorph_read(p, list)
   list%f_creep = f_creep
   list%creep_d = creep_d
   list%creep_hstar = creep_hstar
+  list%creep_diagratio = creep_diagratio
   list%f_fluvial = f_fluvial
   list%f_qbform = f_qbform
   list%fluv_d50 = fluv_d50
@@ -785,6 +792,7 @@ subroutine list_geomorph_read(p, list)
   list%spl_zbase = spl_zbase
   list%spl_sgrad = spl_sgrad
   list%spl_ksat = spl_ksat
+  list%spl_diagratio = spl_diagratio
   list%spl_strata = spl_strata
   list%f_debris = f_debris
   list%db_phi = db_phi

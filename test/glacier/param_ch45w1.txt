@@ -1,0 +1,66 @@
+!======================================================================
+! glacier 構成7: 谷の氷の流れの向きによる差(8 近傍の 9 点と塞がれた配分の振り替え。§99)
+!   45°・1 本の谷(勾配 0.1 の斜面の両側の地盤を 500 m 高くした壁。Make_input.py)に
+!   置いた cos² の氷の盛り上がり(最大 200 m、谷に沿う長さ 1 km)を、地形時間 2 年
+!   (tt × gl_morfac)流す。0° と 45° で、谷に沿う座標の氷の体積の重心の移動距離を比べる
+!   (Check_chan.py)。SIA の幅あたりの流量は氷厚と面の勾配だけで決まる(側壁の抵抗なし)
+!   ので、谷の向きによらず同じ距離を進むのが正しい。気温 -30 ℃(融解なし)・降水なし。
+!======================================================================
+&list_sysparam
+  f_gridsystem = 0          ! 格子システム(0:ENC, 1:STG)
+  f_govequation = 0         ! 基礎方程式(0:DynWE)
+  dt = 60                   ! 時間刻み (s)
+  t0 = 0                    ! 計算開始時刻 (s)
+  tt = 172800               ! 計算終了時刻 (s)(地形時間 = tt × 365 = 2 年)
+  dt_disp = 86400           ! 画面表示時間刻み (s)
+  dt_file = 172800          ! ファイル出力時間刻み (s)
+  dt_recrd = 172800         ! プローブ出力時間刻み (s)
+  fn_geoinfo = '-'
+  fn_initial = '-'
+  fn_enc = '-'
+  fn_meteo = '-'
+  fn_snow = '-'
+  fn_glacier = '-'
+  dir_data = 'data'
+  dir_result = 'result_ch45w1'
+  f_disp_debug = 1          ! S 列を全有効桁で表示(体積保存の検定用)
+  f_check_cfl = 0
+/
+
+&list_enc
+/
+
+&list_initial
+  f_htype = 0
+  h0 = 0.0
+/
+
+&list_geoinfo
+  lx = 2200.0
+  ly = 2200.0
+  nx = 44
+  ny = 44
+  f_ztype = 1
+  fn_z = 'zch45w1.txt'
+  f_rntype = 0
+  rn0 = 0.03
+/
+
+&list_meteo
+  temp0 = -30.0
+/
+
+&list_snow
+  snow_ddf = 3.0            ! 度日係数 (mm/℃/day)
+/
+
+&list_glacier
+  dt_glacier_c = "1 hour"   ! 更新間隔
+  gl_morfac = 365.0         ! 地形時間 = 172800 s × 365 = 2 年
+  gl_ddfi = 8.0             ! 氷面度日係数 (mm/℃/day。-30℃では不活性)
+  f_glflow = 1              ! SIA 流動
+  gl_afl = 1.0e-15          ! Glen A (Pa^-3 yr^-1。速く進めるための値)
+  gl_nsubmax = 400000       ! 1 回の更新のサブサイクルの上限(4 近傍の対照が多く要る)
+  gl_diagratio = 0.3333333333   ! 8 近傍の 9 点(d = 1/3。developer.md §99)
+  fn_glacier_hi0 = 'hich45w1.txt'   ! 初期氷厚 (m)
+/

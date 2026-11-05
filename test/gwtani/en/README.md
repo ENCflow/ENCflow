@@ -71,7 +71,8 @@ check's own).
   and the same predictions (uniform rise early in the rain, the steady straight line h2 = g·i·Δ) hold
   for the subsurface storage of layer 2. The slope is one cell wide and all its diagonal links are
   blocked, so if the transfer of blocked diagonal shares (f_gw_opening, default 1) did not apply to
-  layer 2 the axis passage width would be 0.414 times and the saturated thickness 2.45 times.
+  layer 2 the axis passage width would be 0.667 times and the saturated thickness 1.51 times (with
+  the default `gw_diagratio` = 1/3; 0.414 and 2.45 times with the default 2/(2+√2) before 2026-11-05).
 - **Which one controls**: comparing the time at which a cell reaches its steady state,
   t_ss = sy·g·i·Δ/r, with T_v, cells with short T_v (thin soil) fill by vertical infiltration, and
   cells with long T_v reach the steady state set by lateral flow first. With a uniform soil depth,

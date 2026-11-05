@@ -104,20 +104,20 @@
     {
       "source": "docs/users_guide.md",
       "target": "docs/en/users_guide.md",
-      "source_sha256": "3c63c599032f3ad3739aec604c174f70091f5b4e125a550fc3b2e9f650e60822",
-      "target_sha256": "fa612f7c80b3e4bb0ef97f4677586ecfaa0ec96dc0ebbf57021448878b48cabd",
-      "reviewer": "Claude (Claude Code session; user-guide index: the added entry for the steep-slope gravity correction page compared with the Japanese source, rest unchanged since the previous record)",
+      "source_sha256": "3a5c91bbb197d48f7980e8f6b6b69aa1149c388997e8b06984cd4ab18cc2aa71",
+      "target_sha256": "7cd4cf2d6e993ba8232d5224f28c10018112cf3207bbcc2e9939dc787a7ce43a",
+      "reviewer": "Claude (Claude Code session; merge of main into claude/nifty-hawking-yx6s0o: the merged files are the three-way merge of both sides, checked by script for both files that the merged file minus each parent equals the other side's own change (encgrid.md: the p_diagratio row from this branch and the f_gravity_correction row from main in both languages); each side's changes had been reviewed on its branch)",
       "method": "assistant",
       "reviewed_on": "2026-11-05"
     },
     {
       "source": "docs/users_guide/advection.md",
       "target": "docs/en/users_guide/advection.md",
-      "source_sha256": "443350a576f550da7927686372343bce3d21c10d9febed89861c14bc58f33d90",
-      "target_sha256": "ed4e14383728063156dd2d1d60115c5fa918919d3d31f89d2d09c455d8b41a41",
-      "reviewer": "Claude (Claude Code session; reviewed the Japanese source against the English mirror after unifying the term passage width / 通過幅 and noting the original paper's term, 2026-11-03)",
+      "source_sha256": "9cb8fd9fadc7d3cbadd7db78ae680e65bc9642557a653277d17f72135c7e026d",
+      "target_sha256": "d496b7c94341d98473c88ac1d5c5d6b96345b8589707d74fe9666ff24581cca7",
+      "reviewer": "Claude (Claude Code session; reviewed the added link to the new page on numerical diffusion by diagonal-edge fluxes in the Japanese source against the English mirror, 2026-11-05)",
       "method": "assistant",
-      "reviewed_on": "2026-11-03"
+      "reviewed_on": "2026-11-05"
     },
     {
       "source": "docs/users_guide/bedmotion.md",
@@ -201,13 +201,31 @@
       "reviewed_on": "2026-10-24"
     },
     {
+      "source": "docs/users_guide/diagonal_diffusion.md",
+      "target": "docs/en/users_guide/diagonal_diffusion.md",
+      "source_sha256": "06b0122d514eef6c55c1b80e09a6c3900adcf4c0d9cc94c130655a5366ad206a",
+      "target_sha256": "ae153d9f3708fbf9cb9f760417052e6b9ca17fb81814b2b2d8bd5ab86dd1673f",
+      "reviewer": "Claude (Claude Code session; mechanical renumbering of the developer.md section references §93-96 -> §96-99 (collision with the sections merged from main) in both files, checked by script that the lines differ only in those numbers and that both files carry the same references; rest unchanged since the previous record)",
+      "method": "assistant",
+      "reviewed_on": "2026-11-05"
+    },
+    {
+      "source": "docs/users_guide/diagratio.md",
+      "target": "docs/en/users_guide/diagratio.md",
+      "source_sha256": "e46fe11343a6b1816e131cd5216729421bd81ea2fc3306d07310bc904225f9cc",
+      "target_sha256": "f7a911cb9ad44e5c9b2a85ae384a05daca504ad0d4bfcfeefd333d12f2acf536",
+      "reviewer": "Claude (Claude Code session; reviewed the text on the new default 1/3 of gw_diagratio and salt_diagratio and the values that change with it (developer.md sec. 98) in the Japanese source against the English mirror, 2026-11-05)",
+      "method": "assistant",
+      "reviewed_on": "2026-11-05"
+    },
+    {
       "source": "docs/users_guide/diffusion.md",
       "target": "docs/en/users_guide/diffusion.md",
-      "source_sha256": "9b92462cf780c0d3ddde71733eb776841a50e84c1e8a78dbe4faad82cd570f51",
-      "target_sha256": "6ec0f116d2876b459f326ce5c4846165e157b2be02e831db6c1ab88daea1d265",
-      "reviewer": "Claude (Claude Code session; full-text content and lexical review, no model execution)",
+      "source_sha256": "977f8d2ae7efe9fb533fa583cea7d24a2cdd426745433eb49be228acb6a172e8",
+      "target_sha256": "c96f894b7ba6a89640a30491b535635df4645cc701fb69291da290584e579449",
+      "reviewer": "Claude (Claude Code session; reviewed the added link to the new page on numerical diffusion by diagonal-edge fluxes in the Japanese source against the English mirror, 2026-11-05)",
       "method": "assistant",
-      "reviewed_on": "2026-10-29"
+      "reviewed_on": "2026-11-05"
     },
     {
       "source": "docs/users_guide/driftwood.md",
@@ -230,9 +248,9 @@
     {
       "source": "docs/users_guide/encgrid.md",
       "target": "docs/en/users_guide/encgrid.md",
-      "source_sha256": "f58d8f5295a0fc961d0040235afd6617d338f09dd7eceb18f7eee450f93fe6a0",
-      "target_sha256": "f777782d2cfcf9221b3c52123a7bd1636766fda12e0718933cc91f1a0fc6917e",
-      "reviewer": "Claude (Claude Code session; §3 the upwind side of the edge-depth cap decided by the direction of the new velocity (developer.md §95) and §5 ex_flux normally 0, compared with the Japanese source, rest unchanged since the previous record)",
+      "source_sha256": "27e8e5c6c4b628aae3a1a96feeeaa28c3514c774d6771289c32ea409535fa875",
+      "target_sha256": "9997dee6a827e08aef8f3057af44c5db8c185b9beac1591d922423a5efb1caaa",
+      "reviewer": "Claude (Claude Code session; merge of main into claude/nifty-hawking-yx6s0o: the merged files are the three-way merge of both sides, checked by script for both files that the merged file minus each parent equals the other side's own change (encgrid.md: the p_diagratio row from this branch and the f_gravity_correction row from main in both languages); each side's changes had been reviewed on its branch)",
       "method": "assistant",
       "reviewed_on": "2026-11-05"
     },
@@ -266,38 +284,38 @@
     {
       "source": "docs/users_guide/geomorph.md",
       "target": "docs/en/users_guide/geomorph.md",
-      "source_sha256": "888ca6ce4d4a56253b7484ba630f10e50031add3328123a3ba33e01ec9b38215",
-      "target_sha256": "f81fb7dbde201d2e07bd47e85be20db28604850a2b30d42637e2051e99b2cf82",
-      "reviewer": "Claude (Claude Code session; default of f_gravity_correction changed from 1 to 2 (developer.md §93): the changed statements of the default and the recommendations compared side by side with the Japanese source, rest unchanged since the previous record)",
+      "source_sha256": "348f039f4215af7a793b021d17dc33e3e491f74c88d740b60c9f1c964da1a87c",
+      "target_sha256": "8063b085e4c21d0b422fa29ae550c73c90e9abc295e454034eb806b579410a06",
+      "reviewer": "Claude (Claude Code session; merge of main into claude/nifty-hawking-yx6s0o: the merged files are the three-way merge of both sides, checked by script for both files that the merged file minus each parent equals the other side's own change (encgrid.md: the p_diagratio row from this branch and the f_gravity_correction row from main in both languages); each side's changes had been reviewed on its branch)",
       "method": "assistant",
       "reviewed_on": "2026-11-05"
     },
     {
       "source": "docs/users_guide/glacier.md",
       "target": "docs/en/users_guide/glacier.md",
-      "source_sha256": "73cb30561b968080962ed776bd3df76b6496132e57332e84ca3f4bb54727e811",
-      "target_sha256": "84c44eb98e9e9951958ead8c8431b9fe4f4fcb86d5317ec8c9a3d7ed1bba88f3",
-      "reviewer": "Claude (Claude Code session; glacier_valley example registration: changed passages compared side by side with the Japanese source, unchanged parts as recorded earlier)",
+      "source_sha256": "77b47e80861a525a769440885252da1a3aa1cb2a91c8048e7897a9083aa89cbf",
+      "target_sha256": "1ad68b267ae242c429298b1e6022929dacda4565d91e1e892cc359310de408f6",
+      "reviewer": "Claude (Claude Code session; mechanical renumbering of the developer.md section references §93-96 -> §96-99 (collision with the sections merged from main) in both files, checked by script that the lines differ only in those numbers and that both files carry the same references; rest unchanged since the previous record)",
       "method": "assistant",
-      "reviewed_on": "2026-11-04"
+      "reviewed_on": "2026-11-05"
     },
     {
       "source": "docs/users_guide/gwflow.md",
       "target": "docs/en/users_guide/gwflow.md",
-      "source_sha256": "c006099071917af7faf4565c0a38b5d7c8deef6f8cacb273d5a7ad1614b678c7",
-      "target_sha256": "9f7732f0b2cd6df5c7327dcf414f05f85eef3ad0c4eaae678d4c89c045ace8ad",
-      "reviewer": "Claude (Claude Code session; compared the Japanese and English changes for the water-quality substance carried by structures and withdrawals, 2026-11-04)",
+      "source_sha256": "b9fd1c948b00ea6da5671f369a22b0345ea69c7ed577edfb5aadc418d829bc6c",
+      "target_sha256": "edff9480a0a1b91d41bb087a7684d34b3f5950b1e8fef9ea01d4ff5dbaadf19b",
+      "reviewer": "Claude (Claude Code session; reviewed the text on the new default 1/3 of gw_diagratio and salt_diagratio and the values that change with it (developer.md sec. 98) in the Japanese source against the English mirror, 2026-11-05)",
       "method": "assistant",
-      "reviewed_on": "2026-11-04"
+      "reviewed_on": "2026-11-05"
     },
     {
       "source": "docs/users_guide/gwflow_models.md",
       "target": "docs/en/users_guide/gwflow_models.md",
-      "source_sha256": "38943e93a74dcae23af61412777bc9a376b8fdec3e41436a193d4035491d6aac",
-      "target_sha256": "8a3eff439f60e4356b4ba0dd4be4c7091eacd6d4445d7251971f5b37af412a03",
-      "reviewer": "Claude (Claude Code session; full-text content and lexical review, no model execution)",
+      "source_sha256": "9c9a006ad91700d5c625b8ef4d62e536c822af4c3312029298f6ad550b37c963",
+      "target_sha256": "c779b93b36ae639b4844e2a6bdfa5fb2bc73cae527b16edec3ebec18896f94fc",
+      "reviewer": "Claude (Claude Code session; reviewed the text on the new default 1/3 of gw_diagratio and salt_diagratio and the values that change with it (developer.md sec. 98) in the Japanese source against the English mirror, 2026-11-05)",
       "method": "assistant",
-      "reviewed_on": "2026-10-30"
+      "reviewed_on": "2026-11-05"
     },
     {
       "source": "docs/users_guide/hydraulics.md",
@@ -329,11 +347,11 @@
     {
       "source": "docs/users_guide/lavaflow.md",
       "target": "docs/en/users_guide/lavaflow.md",
-      "source_sha256": "3998e6641be889de4ee5f71c0012111910d45e89d1d9320f4c617bcc31c80cfa",
-      "target_sha256": "eff3fdcb192217727de25a79ac0460e763d76dec3fe571dfd06f4978231fc620",
-      "reviewer": "Claude (Claude Code session; final stage of examples/stratovolcano, a thermal one-event lava flow: changed passages compared side by side with the Japanese source, unchanged parts as recorded earlier)",
+      "source_sha256": "fb2a8f407d4fe258d496433267fa93d34cdb4ecca5491d6268713050abcbc9c4",
+      "target_sha256": "7c5cbadd1a45b15186270ebb1d71466eb63d2ae7b4c7b4b9dd56efcbb063969b",
+      "reviewer": "Claude (Claude Code session; mechanical renumbering of the developer.md section references §93-96 -> §96-99 (collision with the sections merged from main) in both files, checked by script that the lines differ only in those numbers and that both files carry the same references; rest unchanged since the previous record)",
       "method": "assistant",
-      "reviewed_on": "2026-11-04"
+      "reviewed_on": "2026-11-05"
     },
     {
       "source": "docs/users_guide/massflow.md",
@@ -383,20 +401,20 @@
     {
       "source": "docs/users_guide/params_index.md",
       "target": "docs/en/users_guide/params_index.md",
-      "source_sha256": "3825c84dba7ec57ec3155e61ddfd014e1524d58bca5aeb526786eef3bed5e2da",
-      "target_sha256": "cbe2cf4fa1d196c1c16f59fdb209f59bf9d70f2936752f1788a18bee9f3d5090",
-      "reviewer": "Claude (Claude Code session; merge of claude/ecstatic-edison-e51vrz into main: both sides changed this pair; the merged files differ from main's recorded version only by the branch's passages (gl_lc, glacier_valley, test/glacier row, total count 776), compared side by side in Japanese and English)",
+      "source_sha256": "b10794727ab5c8aad9077c329a3db06268ac17a757ad5c62241ff913b598b24b",
+      "target_sha256": "5ad6f10a8196a32aa81c6f173d0cb9d788e3494734f6e3c65cf8a9d47e0e59a0",
+      "reviewer": "Claude (Claude Code session; reviewed the text on the 8-neighbour flow of glaciers and lava (gl_diagratio, lv_diagratio; developer.md sec. 96) in the Japanese source against the English mirror, 2026-11-05)",
       "method": "assistant",
-      "reviewed_on": "2026-11-04"
+      "reviewed_on": "2026-11-05"
     },
     {
       "source": "docs/users_guide/passage_width.md",
       "target": "docs/en/users_guide/passage_width.md",
-      "source_sha256": "12a0abaa28884b3394c1d55a5a59f362d10e3e888cbc275502bc6259fbed5f4e",
-      "target_sha256": "8c872aeb9af0b9aff1fb3271168a793a249731851763b55c24e590c40e400914",
-      "reviewer": "Claude (Claude Code session; reviewed the Japanese source against the English mirror after adding the paragraph on representing channels on the raster, 2026-11-03)",
+      "source_sha256": "4b0711cc53a360916cf46ddf66825ca665bed75d795d3113da9f00641d7a2ef5",
+      "target_sha256": "ce068f4526b25cfca05369832ab9fc4d2d46cdac3e34128cdfbb8d553e6e7b65",
+      "reviewer": "Claude (Claude Code session; reviewed the added links to the page on choosing the diagonal share d (and the basis of p_diagratio in encgrid) in the Japanese source against the English mirror, 2026-11-05)",
       "method": "assistant",
-      "reviewed_on": "2026-11-03"
+      "reviewed_on": "2026-11-05"
     },
     {
       "source": "docs/users_guide/record.md",
@@ -419,18 +437,18 @@
     {
       "source": "docs/users_guide/salt.md",
       "target": "docs/en/users_guide/salt.md",
-      "source_sha256": "df303255c1733db515ebd189e8ef743d3f953548f8486c4a4acbc05757810f8c",
-      "target_sha256": "92eb98c9d31dffc3877a3e8ac78249bc1f32e70fc3b30bbcc9de187aa23bfa15",
-      "reviewer": "Claude (Claude Code session; reviewed the Japanese source against the English mirror; figures from the same results or drawing code with label changes only, 2026-10-30)",
+      "source_sha256": "30f7da81ee8c3f1b91e739754e6d473bad2953d68dc56d464bfc71c7a022a795",
+      "target_sha256": "552f6c24ef63b9b44b57c9f34e5fda57cee877c223c34404b930d425e25e62ad",
+      "reviewer": "Claude (Claude Code session; reviewed the text on the new default 1/3 of gw_diagratio and salt_diagratio and the values that change with it (developer.md sec. 98) in the Japanese source against the English mirror, 2026-11-05)",
       "method": "assistant",
-      "reviewed_on": "2026-10-30"
+      "reviewed_on": "2026-11-05"
     },
     {
       "source": "docs/users_guide/sediment.md",
       "target": "docs/en/users_guide/sediment.md",
-      "source_sha256": "c45b0a09c0ae7eb2a2419e4f5fd663df802afed2fdd75f0bdfc7f1e4086c9772",
-      "target_sha256": "fc402c1c5f90e1ca228cfab2a0b03db171424d07f798a8ef8e6e86c6d7a11ad9",
-      "reviewer": "Claude (Claude Code session; default of f_gravity_correction changed from 1 to 2 (developer.md §93): the changed statements of the default and the recommendations compared side by side with the Japanese source, rest unchanged since the previous record)",
+      "source_sha256": "591a021485b5aeffc9fb69de582ca83858ca324781bdc012f503242843da305e",
+      "target_sha256": "79deb25f2204b0524aa3e9d87d08c115ea66196f615c0f1cc45c1d1dd5e3fdfd",
+      "reviewer": "Claude (Claude Code session; merge of main into claude/nifty-hawking-yx6s0o: the merged files are the three-way merge of both sides, checked by script for both files that the merged file minus each parent equals the other side's own change (encgrid.md: the p_diagratio row from this branch and the f_gravity_correction row from main in both languages); each side's changes had been reviewed on its branch)",
       "method": "assistant",
       "reviewed_on": "2026-11-05"
     },
@@ -644,29 +662,29 @@
     {
       "source": "examples/List_samples/list_geomorph.txt",
       "target": "examples/List_samples/en/list_geomorph.txt",
-      "source_sha256": "bfba638e45ce0bbd95d0289e41647cc1fa823666dd38f38bc337085eb3704a11",
-      "target_sha256": "2588d8d7528985bc950f610fdfe0b74e86c8e37a7445c96d097b560dd7f75f97",
-      "reviewer": "Claude (Claude Code session; default of f_gravity_correction changed from 1 to 2 (developer.md §93): the recommendation comment of f_debris compared with the Japanese source; values and identifiers unchanged, rest unchanged since the previous record)",
+      "source_sha256": "c89a39e477ce8c23aeb5cf7bcbdfe5a6e4a925f330f96b51b723be76fbe27de4",
+      "target_sha256": "2dcabe8c0d2e3f0adc8d27b4b9b974764c83823fb1fb447c6acd1b780a69caa6",
+      "reviewer": "Claude (Claude Code session; merge of main into claude/nifty-hawking-yx6s0o: the merged files are the three-way merge of both sides, checked by script for both files that the merged file minus each parent equals the other side's own change (encgrid.md: the p_diagratio row from this branch and the f_gravity_correction row from main in both languages); each side's changes had been reviewed on its branch)",
       "method": "assistant",
       "reviewed_on": "2026-11-05"
     },
     {
       "source": "examples/List_samples/list_glacier.txt",
       "target": "examples/List_samples/en/list_glacier.txt",
-      "source_sha256": "6027bf0879bd5a259882cda8051278b3ff8f7bfe682accbf01095950f2694098",
-      "target_sha256": "b89554adff109f22d3f621a98f11aafe1eb46b9c9b623d78bb2a39d9d36e6797",
-      "reviewer": "Claude (Claude Code session; gl_lc default max(500 m, 2dx), §45.4; full-text content and lexical review, no model execution)",
+      "source_sha256": "400feaeb76472ea2e0c4c1b6881b7d574d0eac2f9a313f935907ef687bf1d163",
+      "target_sha256": "380b9267d7a47ad27e5f135956b90451a23b9d55f0f53d8590f375783f27a756",
+      "reviewer": "Claude (Claude Code session; mechanical renumbering of the developer.md section references §93-96 -> §96-99 (collision with the sections merged from main) in both files, checked by script that the lines differ only in those numbers and that both files carry the same references; rest unchanged since the previous record)",
       "method": "assistant",
-      "reviewed_on": "2026-11-04"
+      "reviewed_on": "2026-11-05"
     },
     {
       "source": "examples/List_samples/list_gwflow.txt",
       "target": "examples/List_samples/en/list_gwflow.txt",
-      "source_sha256": "8d7e0f79ca14debc100f9eae47ae8c83be62ba6f122619e7bc1517cbb5240eba",
-      "target_sha256": "75bd99fa229504189c7a162775e8c3f627463bea672f96b473deb85accc12d24",
-      "reviewer": "Claude (Claude Code session; compared the Japanese and English changes for the water-quality substance carried by structures and withdrawals, 2026-11-04)",
+      "source_sha256": "1db8cc7485d6b2385926f98477150063f74445bb1299c3b63a7e98956f487d2f",
+      "target_sha256": "93a095ea146b30f2c2e045cbf87c49be802e4c21da9c5e9f14f0767ce045c945",
+      "reviewer": "Claude (Claude Code session; reviewed the text on the new default 1/3 of gw_diagratio and salt_diagratio and the values that change with it (developer.md sec. 98) in the Japanese source against the English mirror, 2026-11-05)",
       "method": "assistant",
-      "reviewed_on": "2026-11-04"
+      "reviewed_on": "2026-11-05"
     },
     {
       "source": "examples/List_samples/list_initial.txt",
@@ -689,11 +707,11 @@
     {
       "source": "examples/List_samples/list_lavaflow.txt",
       "target": "examples/List_samples/en/list_lavaflow.txt",
-      "source_sha256": "34d21a8f34d1dafc69810acb8835bc7ca46eb7b8a788b7e674b25adbde81ec16",
-      "target_sha256": "df194bf9ce2be614aa72bf7353ad3f401ca9d563aa9d1e3c45e84fef74038ef7",
-      "reviewer": "Claude (Claude Code session; lava temperature mode: header and the commented-out temperature block compared line by line with the Japanese source; values, identifiers and comment-out state identical, checked with tools/consistency/check.py samples)",
+      "source_sha256": "fe49cb46e5b54e02a62d8dbcc72228fb38e585ffeca4ab76b518454ebae5d272",
+      "target_sha256": "f3675feb3434aa32210acb21ce8fff3b1e42b860c68ba726d5b54e0c7897a7b2",
+      "reviewer": "Claude (Claude Code session; mechanical renumbering of the developer.md section references §93-96 -> §96-99 (collision with the sections merged from main) in both files, checked by script that the lines differ only in those numbers and that both files carry the same references; rest unchanged since the previous record)",
       "method": "assistant",
-      "reviewed_on": "2026-11-04"
+      "reviewed_on": "2026-11-05"
     },
     {
       "source": "examples/List_samples/list_meteo.txt",
@@ -725,11 +743,11 @@
     {
       "source": "examples/List_samples/list_salt.txt",
       "target": "examples/List_samples/en/list_salt.txt",
-      "source_sha256": "bd7f358f0c7e1159dddcd1da16e1ec2a135a45a7ae831de2734ace9bf93796ac",
-      "target_sha256": "845bab5d0d88d508b926e41ed154e54f8ee0adae4b334aee1dcdd7857ff695b1",
-      "reviewer": "Claude (Claude Code session; reviewed the Japanese source against the English mirror; figures from the same results or drawing code with label changes only, 2026-10-29)",
+      "source_sha256": "b7e8857a72e01088b5b1774ad3010a32831dab59d3c9172423de7fcd739f0282",
+      "target_sha256": "d0ed80e185293ae7dc3c88fd07cf0c9777425fb5bda1822c1bfaf1f436cf11de",
+      "reviewer": "Claude (Claude Code session; reviewed the text on the new default 1/3 of gw_diagratio and salt_diagratio and the values that change with it (developer.md sec. 98) in the Japanese source against the English mirror, 2026-11-05)",
       "method": "assistant",
-      "reviewed_on": "2026-10-29"
+      "reviewed_on": "2026-11-05"
     },
     {
       "source": "examples/List_samples/list_seawall.txt",
@@ -2714,9 +2732,9 @@
     {
       "source": "test/README.md",
       "target": "test/README.en.md",
-      "source_sha256": "f0609d252e16fe8cbab8c42684592300b6fe6398181c1755ed4e8995e779d0c4",
-      "target_sha256": "4fd7abbd9ff6c9ccc952026da2cf124866f4e2888af032c4d16e25f65086bd69",
-      "reviewer": "Claude (Claude Code session; new test slopefric: the added index row compared with the Japanese source, rest unchanged since the previous record)",
+      "source_sha256": "ee233bf4ada1e00e2c31f08780094b2b8fd4ee2047da22fef7e4e5a88636f575",
+      "target_sha256": "0cbd3c34c4c067ad14c01ac51de1858bbe7b5ae10526829b2655e7d410219b74",
+      "reviewer": "Claude (Claude Code session; merge of main into claude/nifty-hawking-yx6s0o: the merged files are the three-way merge of both sides, checked by script for both files that the merged file minus each parent equals the other side's own change (encgrid.md: the p_diagratio row from this branch and the f_gravity_correction row from main in both languages); each side's changes had been reviewed on its branch)",
       "method": "assistant",
       "reviewed_on": "2026-11-05"
     },
@@ -2939,11 +2957,11 @@
     {
       "source": "test/conduit/README.md",
       "target": "test/conduit/en/README.md",
-      "source_sha256": "966c192f90a6db2fd4c8117f19d9b8cf3f20a93177c87d675d5e9d56da62565f",
-      "target_sha256": "3b434b74efe65b37f724bb3b8fc42de74a2b84f3c8599318242579b0546d6293",
-      "reviewer": "Claude (Claude Code session; full-text content and lexical review, no model execution)",
+      "source_sha256": "bdc4761e07f12c6895bfb9a9e8c023c78e2e9664c6d9481c181461f83ee64411",
+      "target_sha256": "14cbb016402906f36ace40bcefdb2b3e89605a694f97ecf699bc418895fe776a",
+      "reviewer": "Claude (Claude Code session; mechanical renumbering of the developer.md section references §93-96 -> §96-99 (collision with the sections merged from main) in both files, checked by script that the lines differ only in those numbers and that both files carry the same references; rest unchanged since the previous record)",
       "method": "assistant",
-      "reviewed_on": "2026-10-29"
+      "reviewed_on": "2026-11-05"
     },
     {
       "source": "test/conduit/figs/equilibrium.png",
@@ -3218,11 +3236,11 @@
     {
       "source": "test/glacier/README.md",
       "target": "test/glacier/en/README.md",
-      "source_sha256": "6fba3dbafb5bfdb9f174e6636a949f6095fec127f5fb373ac019f25b88d259a0",
-      "target_sha256": "9d4c4f1e65f6a5595eb82dceb2f03749a47ebdc86c0989126a05dc11fb574fef",
-      "reviewer": "Claude (Claude Code session; gl_lc default max(500 m, 2dx), §45.4; full-text content and lexical review, no model execution)",
+      "source_sha256": "1278c4fc5e9a5d93e3ee9d57d8c12a7cd09986f17a522f15d4f80b5c0f24640d",
+      "target_sha256": "34db4243e1a89741398b7531b48081187a24c6aa2fe69ba948ee5a9ad60f02b8",
+      "reviewer": "Claude (Claude Code session; mechanical renumbering of the developer.md section references §93-96 -> §96-99 (collision with the sections merged from main) in both files, checked by script that the lines differ only in those numbers and that both files carry the same references; rest unchanged since the previous record)",
       "method": "assistant",
-      "reviewed_on": "2026-11-04"
+      "reviewed_on": "2026-11-05"
     },
     {
       "source": "test/glacier/figs/avalanche.png",
@@ -3236,29 +3254,29 @@
     {
       "source": "test/glacier/figs/cirque.png",
       "target": "test/glacier/en/figs/cirque.png",
-      "source_sha256": "0a1529056d6eec9be9b2c4f3f2620bbf9ed914469fa200f438f310d95257da8d",
-      "target_sha256": "3fa1e179774ca3f561a72835a09b14c865f7bd7f64f89b24e76b629509da2b7d",
-      "reviewer": "Claude (Claude Code session; English figure drawn by the same script with the en switch; visual check)",
+      "source_sha256": "567047589fe319c3848dc0de62079a603d6837b4623281b5a354653cae9974d1",
+      "target_sha256": "d94ddbf9c7ef1b483d4f2fa6ff3682dc6710ccdb0236b024a1e941398e02a1bc",
+      "reviewer": "Claude (Claude Code session; viewed both figures regenerated by Fig.py from the same runs with the new default 1/3 of lv_diagratio and gl_diagratio; same data, labels translated; developer.md sec. 96; 2026-11-05)",
       "method": "assistant",
-      "reviewed_on": "2026-11-03"
+      "reviewed_on": "2026-11-05"
     },
     {
       "source": "test/glacier/figs/halfar.png",
       "target": "test/glacier/en/figs/halfar.png",
-      "source_sha256": "3b9b9fa41d742306b364b44d9b68cb3ad5de3f72d58b3990b8f1d9181857c78a",
-      "target_sha256": "1f4759c8bf8786b34caae83bbc6ae17d41514ad42be3529021f75586c62467d4",
-      "reviewer": "Claude (Claude Code session; English figure drawn by the same script with the en switch; visual check)",
+      "source_sha256": "b9ab9f7b46e99f87fc2536e43b1673542d79889b676fafb78eecf51484cf0cf1",
+      "target_sha256": "6d28156ce7008059e93591dc2bfd3e032a765d933a7279a45bea9b9988f9e0ec",
+      "reviewer": "Claude (Claude Code session; viewed both figures regenerated by Fig.py from the same runs with the new default 1/3 of lv_diagratio and gl_diagratio; same data, labels translated; developer.md sec. 96; 2026-11-05)",
       "method": "assistant",
-      "reviewed_on": "2026-11-03"
+      "reviewed_on": "2026-11-05"
     },
     {
       "source": "test/glacier/figs/lc.png",
       "target": "test/glacier/en/figs/lc.png",
-      "source_sha256": "f9cb0260892e12c7b8fcb0800b070fcb25b9fe95b3e0fdcc7b13cc5131e9b924",
-      "target_sha256": "a2f2a65ce19922362ee5968f03b5445a62e0b9e22e228cc3f710d0c493b6afe1",
-      "reviewer": "Claude (Claude Code session; English figure drawn by the same script with the en switch; visual check)",
+      "source_sha256": "013edeec762114480a1aa449afd752d60ea220680f10c94c75e015ca7eebe443",
+      "target_sha256": "aba4927d4cdac922cc980d99f91f58c9025c41932d0ec100c7db07f942f0ccd4",
+      "reviewer": "Claude (Claude Code session; viewed both figures regenerated by Fig.py from the same runs with the new default 1/3 of lv_diagratio and gl_diagratio; same data, labels translated; developer.md sec. 96; 2026-11-05)",
       "method": "assistant",
-      "reviewed_on": "2026-11-04"
+      "reviewed_on": "2026-11-05"
     },
     {
       "source": "test/gtif/README.md",
@@ -3281,20 +3299,20 @@
     {
       "source": "test/gwbed/README.md",
       "target": "test/gwbed/en/README.md",
-      "source_sha256": "32579494ac0c9493baef64c6782c6f5ea1664295d065e2f6e44c6f2f18c4a2db",
-      "target_sha256": "00d9a055a7c565ea40e27fc46ef4ace19bc4f8d2e508351e8a499c86226c32ed",
-      "reviewer": "Claude (Claude Code session; full-text content and lexical review, no model execution)",
+      "source_sha256": "4f389d6ed6128bf894ae9f5c1cb3a2e74e0773a0ba313f5769cce0ce16c58549",
+      "target_sha256": "cf96d54be7c37185faebea828fd0c97d2bd55633ff7c695f8d27f77716f6fd24",
+      "reviewer": "Claude (Claude Code session; reviewed the text on the new default 1/3 of gw_diagratio and salt_diagratio and the values that change with it (developer.md sec. 98) in the Japanese source against the English mirror, 2026-11-05)",
       "method": "assistant",
-      "reviewed_on": "2026-10-30"
+      "reviewed_on": "2026-11-05"
     },
     {
       "source": "test/gwbed/figs/gwbed.png",
       "target": "test/gwbed/en/figs/gwbed.png",
-      "source_sha256": "8577dc5f258c886eac81460ad11c28af1c415b17f92b3fb21a9e97c5882c3eaf",
-      "target_sha256": "8abb54c15997a9c0809b6d12ad1290d0d00a450238b2f490f55aa7b7c5e649a0",
-      "reviewer": "Claude (Claude Code session; English figure drawn by the same script with the en switch; visual check)",
+      "source_sha256": "7c0685268ba8a6168288b1d18f991fe2f99c51cdef08d595f73a47c3a8b715d4",
+      "target_sha256": "0f40939edc22d884d234fb4661871fda9928f2d5b6ab8782ac68fdb080151e5a",
+      "reviewer": "Claude (Claude Code session; viewed both figures regenerated by Fig.py from the same runs with the new default 1/3 of gw_diagratio; same data, labels translated; developer.md sec. 98; 2026-11-05)",
       "method": "assistant",
-      "reviewed_on": "2026-10-30"
+      "reviewed_on": "2026-11-05"
     },
     {
       "source": "test/gwdefault/README.md",
@@ -3308,47 +3326,47 @@
     {
       "source": "test/gwlateral/README.md",
       "target": "test/gwlateral/en/README.md",
-      "source_sha256": "7782f6717b3e78a5cb5c76b5bf30743b609dfaf7fa900891e7150c2c0e9fa955",
-      "target_sha256": "fc2c1d099ffae770382649234e2d8ad0bef0ef1fc9a03522cee810f9fc50e1af",
-      "reviewer": "Claude (Claude Code session; full-text content and lexical review, no model execution)",
+      "source_sha256": "21f424110a2c3ed4f89d021bb2a61da1f0364960468ad8693113d620a4b48f22",
+      "target_sha256": "d3e4c90e04b57196513813fda2cca967986e43dd1eb0418b5a4b941bb6fdc24b",
+      "reviewer": "Claude (Claude Code session; reviewed the text on the new default 1/3 of gw_diagratio and salt_diagratio and the values that change with it (developer.md sec. 98) in the Japanese source against the English mirror, 2026-11-05)",
       "method": "assistant",
-      "reviewed_on": "2026-10-30"
+      "reviewed_on": "2026-11-05"
     },
     {
       "source": "test/gwsect/README.md",
       "target": "test/gwsect/en/README.md",
-      "source_sha256": "bfe0e0c0849c5e796f9e64db2162c8b30ce0e38103bc6fd44ba679d078f58566",
-      "target_sha256": "d6ab72d17ab1d801ceb956e448739aa5a14428e0790ddcb27ce5569491f013bb",
-      "reviewer": "Claude (Claude Code session; full-text content and lexical review, no model execution)",
+      "source_sha256": "77dfc918c6dd593346f0d2d150432437742031ae1bf6683b3377c886feaeecd1",
+      "target_sha256": "a5926c237c3f2797750d5f714fd3a1de824e8502fb4aa976058163e8232486af",
+      "reviewer": "Claude (Claude Code session; reviewed the text on the new default 1/3 of gw_diagratio and salt_diagratio and the values that change with it (developer.md sec. 98) in the Japanese source against the English mirror, 2026-11-05)",
       "method": "assistant",
-      "reviewed_on": "2026-11-04"
+      "reviewed_on": "2026-11-05"
     },
     {
       "source": "test/gwseep/README.md",
       "target": "test/gwseep/en/README.md",
-      "source_sha256": "fc9c92f201138ece88b36c37d926acbf9ba72eb366d2fca4350621cf7b70e4f4",
-      "target_sha256": "f8916d9ba5621c95ff8c6cf1888edcfaa9e0f30735688a4221c66d733aa8e36a",
-      "reviewer": "Claude (Claude Code session; f_opening_dynamic default switch)",
+      "source_sha256": "31b0299eaefc7776392e4e14927b74af5b947a257e634f1440dcc6c63310a2f5",
+      "target_sha256": "4336603fff83c3989977ff45c0927770a1a73830113adae50e9e941cb9d0dce8",
+      "reviewer": "Claude (Claude Code session; reviewed the text on the new default 1/3 of gw_diagratio and salt_diagratio and the values that change with it (developer.md sec. 98) in the Japanese source against the English mirror, 2026-11-05)",
       "method": "assistant",
-      "reviewed_on": "2026-10-31"
+      "reviewed_on": "2026-11-05"
     },
     {
       "source": "test/gwseep/figs/gwseep.png",
       "target": "test/gwseep/en/figs/gwseep.png",
-      "source_sha256": "6e683f08aa2d0e75ba813cc13bbbd02a69d0aeb33fed88ac59dbfdbe34239c59",
-      "target_sha256": "d3c58dac7266cf004c972974be53803b2be6acb68b3e7ac06580ad47c7cfd538",
-      "reviewer": "Claude (Claude Code session; f_opening_dynamic default switch)",
+      "source_sha256": "2403ccd19c4c6d0e5e5cbed77a8c3b7a3f3ee169f0cd19a18c6d4578dbf2baf8",
+      "target_sha256": "9cb4ae6106058cf79b1331db682a50875b4dc2383c2d46fb7f41177eef4f9678",
+      "reviewer": "Claude (Claude Code session; viewed both figures regenerated by Fig.py from the same runs with the new default 1/3 of gw_diagratio; same data, labels translated; developer.md sec. 98; 2026-11-05)",
       "method": "assistant",
-      "reviewed_on": "2026-10-31"
+      "reviewed_on": "2026-11-05"
     },
     {
       "source": "test/gwtani/README.md",
       "target": "test/gwtani/en/README.md",
-      "source_sha256": "495003591b47cca2f5235a6b597b5d64fba438017e21a38da33a8f458fae9e05",
-      "target_sha256": "3cee6590b80a428db4e6d2c936019e835df6e799e4aa31c0620699e62bc04b86",
-      "reviewer": "Claude (Claude Code session; full-text content and lexical review, no model execution)",
+      "source_sha256": "f2df5228797446c080bc99f519fe2ac6c586baffb41c9d0baaec38fc8424ce05",
+      "target_sha256": "22d122a9126acd2df2a37cdb6c470c1ad10af26b02e1a62415c200b4ec504695",
+      "reviewer": "Claude (Claude Code session; reviewed the text on the new default 1/3 of gw_diagratio and salt_diagratio and the values that change with it (developer.md sec. 98) in the Japanese source against the English mirror, 2026-11-05)",
       "method": "assistant",
-      "reviewed_on": "2026-10-30"
+      "reviewed_on": "2026-11-05"
     },
     {
       "source": "test/gwtani/figs/gwtani.png",
@@ -3452,20 +3470,20 @@
     {
       "source": "test/lava/README.md",
       "target": "test/lava/en/README.md",
-      "source_sha256": "a835beb9bbe3e0dc5e75e84736856e3352a1a5b63f08b837693b5c33c3cec004",
-      "target_sha256": "661a84459aedbbd2959bea63aff7368846e4bc6cd897b543bb4f705fc55daee9",
-      "reviewer": "Claude (Claude Code session; lava temperature mode f_lvtemp, developer.md Sec. 51.7: changed passages compared side by side with the Japanese source, unchanged parts as recorded earlier)",
+      "source_sha256": "2f8fab9776251c50acd07d2cc9d685ed98f953c261e61a037a8112dc014861ad",
+      "target_sha256": "60d567635ec3f28473e6cae3f265554d45abe3500c9f8a27a204d7b02350b316",
+      "reviewer": "Claude (Claude Code session; mechanical renumbering of the developer.md section references §93-96 -> §96-99 (collision with the sections merged from main) in both files, checked by script that the lines differ only in those numbers and that both files carry the same references; rest unchanged since the previous record)",
       "method": "assistant",
-      "reviewed_on": "2026-11-04"
+      "reviewed_on": "2026-11-05"
     },
     {
       "source": "test/lava/figs/lava.png",
       "target": "test/lava/en/figs/lava.png",
-      "source_sha256": "46780ac98e97dba9fff48043c52ec529a2994a5e8725e1fa506d1375eef32a15",
-      "target_sha256": "cadc4b1931d43fa7f0696bdbc044d020fad3ddca1b42b4a3c8afafe075a2dc66",
-      "reviewer": "Claude (Claude Code session; both images drawn by Fig.py and Fig.py en from the same test/lava results of 2026-11-03 (configurations 1-5), compared side by side: same plotted data and layout, labels translated)",
+      "source_sha256": "23625e267a425ffc72706c29c107b569064655d68dad9256bbc7bbb71a908df7",
+      "target_sha256": "211b058916b85a4986d120ce2692a29156ea84b09a3098e8d3705e2a0940b4b0",
+      "reviewer": "Claude (Claude Code session; viewed both figures regenerated by Fig.py from the same runs with the new default 1/3 of lv_diagratio and gl_diagratio; same data, labels translated; developer.md sec. 96; 2026-11-05)",
       "method": "assistant",
-      "reviewed_on": "2026-11-03"
+      "reviewed_on": "2026-11-05"
     },
     {
       "source": "test/nest_identity/README.md",
@@ -3722,20 +3740,20 @@
     {
       "source": "test/rockinc/README.md",
       "target": "test/rockinc/en/README.md",
-      "source_sha256": "e2bd34d4b9ba26ddfa5cab9b7edbe8920b58d4a8445379490e3dae073e654c58",
-      "target_sha256": "3900029d19b3a736900a7a1d689c8a965b656f6f56427b7bbe184bde0c409049",
-      "reviewer": "Claude (Claude Code session; reviewed the Japanese source against the English mirror after unifying the term passage width / 通過幅 and noting the original paper's term, 2026-11-03)",
+      "source_sha256": "cb801235ccfccd7b21f1271afea8f2aae2cae5fbd93f6e059b4d7435548e1691",
+      "target_sha256": "75aba97d27d36651a272d3b7b01bd4c4f78faf852ae3924bdc0f96dca3caeff4",
+      "reviewer": "Claude (Claude Code session; reviewed the table row of T9 and the added dated item on the check formulas brought in line with the default f_gravity_correction = 2 (developer.md sec. 93) in the Japanese source against the English mirror, 2026-11-05)",
       "method": "assistant",
-      "reviewed_on": "2026-11-03"
+      "reviewed_on": "2026-11-05"
     },
     {
       "source": "test/salt/README.md",
       "target": "test/salt/en/README.md",
-      "source_sha256": "f7a4c941aa9141e17da672cdb34f97958740962af7322e379a9a20131aa5fa7f",
-      "target_sha256": "2ef7c341e0d2260c32a52e2681a8b6f4f1cdba8e6ff268dca360e2e90b88021c",
-      "reviewer": "Claude (Claude Code session; f_opening_dynamic default switch)",
+      "source_sha256": "fcee834a5b4fbaaa211bd53024dbc06d0ad65e406b9110f9320376aeac939682",
+      "target_sha256": "0a24dd612e467911e0a77b3a2410478179366964713e5576ee0a9a68284aae62",
+      "reviewer": "Claude (Claude Code session; mechanical renumbering of the developer.md section references §93-96 -> §96-99 (collision with the sections merged from main) in both files, checked by script that the lines differ only in those numbers and that both files carry the same references; rest unchanged since the previous record)",
       "method": "assistant",
-      "reviewed_on": "2026-10-31"
+      "reviewed_on": "2026-11-05"
     },
     {
       "source": "test/salt/figs/salt.png",
@@ -3898,6 +3916,15 @@
       "reviewer": "Claude (Claude Code session; full-text content and lexical review, no model execution)",
       "method": "assistant",
       "reviewed_on": "2026-10-24"
+    },
+    {
+      "source": "test/stencil9/README.md",
+      "target": "test/stencil9/en/README.md",
+      "source_sha256": "7816eba2daef0ff4c91110ab17e79e97acb401b9f55c7e7d124dbe6d65136afd",
+      "target_sha256": "d0f34b4e7480b06ffaa6cea935d24de0e17f216743d7d7059984b52cfd48e84a",
+      "reviewer": "Claude (Claude Code session; mechanical renumbering of the developer.md section references §93-96 -> §96-99 (collision with the sections merged from main) in both files, checked by script that the lines differ only in those numbers and that both files carry the same references; rest unchanged since the previous record)",
+      "method": "assistant",
+      "reviewed_on": "2026-11-05"
     },
     {
       "source": "test/sublattice/README.md",

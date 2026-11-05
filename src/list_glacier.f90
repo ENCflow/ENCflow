@@ -25,6 +25,8 @@ module list_glacier
     real :: gl_afl = 1.0e-16                 ! Glen 流動則の係数 A (Pa^-3 yr^-1)
     real :: gl_cfl = 0.4                     ! 陽解法サブサイクルの安全係数 (0-1)
     integer :: gl_nsubmax = 10000            ! 1回の更新のサブサイクル数上限(暴走ガード)
+    real :: gl_diagratio = 1.0 / 3.0         ! SIA 流動の斜めの配分 d(既定 1/3 = 8 近傍の 9 点と、塞がれた配分の
+                                             !   動的な振り替え。0 = 4 近傍 = 2026-11-05 以前の既定。developer.md §99)
     integer :: f_glslide = 0                 ! Weertman 底面滑動 (0:なし, 1:有効)
     real :: gl_as = -9999.0                  ! 滑動係数 As (m yr^-1 Pa^-3。f_glslide=1 で未指定なら既定 1e-13)
     integer :: f_glero = 0                   ! 氷河侵食 (0:なし, 1:有効。f_glslide 必須)
@@ -49,7 +51,7 @@ subroutine list_glacier_read(p, list)
   type(t_list_glacier), intent(inout) :: list
 
   integer :: f_glacier, f_glflow, f_glslide, f_glero, f_glava, gl_nsubmax
-  real :: gl_morfac, gl_dens, gl_tfirn_yr, gl_ddfi, gl_tmelt, gl_afl, gl_cfl
+  real :: gl_morfac, gl_dens, gl_tfirn_yr, gl_ddfi, gl_tmelt, gl_afl, gl_cfl, gl_diagratio
   real :: gl_as, gl_kg, gl_lexp, gl_lc, gl_ava_tanc
   character(len=80) :: dt_glacier_c
   character(len=maxpathlen) :: fn_glacier_hi0
@@ -58,7 +60,7 @@ subroutine list_glacier_read(p, list)
 
   namelist /list_glacier/ f_glacier, dt_glacier_c, gl_morfac, gl_dens, &
                           gl_tfirn_yr, gl_ddfi, gl_tmelt, &
-                          f_glflow, gl_afl, gl_cfl, gl_nsubmax, &
+                          f_glflow, gl_afl, gl_cfl, gl_nsubmax, gl_diagratio, &
                           f_glslide, gl_as, f_glero, gl_kg, gl_lexp, gl_lc, &
                           f_glava, gl_ava_tanc, fn_glacier_hi0
 
@@ -75,6 +77,7 @@ subroutine list_glacier_read(p, list)
   gl_afl = list%gl_afl
   gl_cfl = list%gl_cfl
   gl_nsubmax = list%gl_nsubmax
+  gl_diagratio = list%gl_diagratio
   f_glslide = list%f_glslide
   gl_as = list%gl_as
   f_glero = list%f_glero
@@ -103,6 +106,7 @@ subroutine list_glacier_read(p, list)
   list%gl_afl = gl_afl
   list%gl_cfl = gl_cfl
   list%gl_nsubmax = gl_nsubmax
+  list%gl_diagratio = gl_diagratio
   list%f_glslide = f_glslide
   list%gl_as = gl_as
   list%f_glero = f_glero

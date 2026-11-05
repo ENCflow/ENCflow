@@ -55,6 +55,10 @@
   !   moves to z when Tl <= lv_tsol), so set lv_wsol above to 0 (lv_vsol is
   !   not read)
   !f_lvtemp = 1             ! 1: compute the temperature (default 0 = isothermal)
+  !f_lvtemp_scheme = 3      ! face temperature of the heat advection (default 3 = MUSCL: cuts the
+                            !   crosswind numerical diffusion of a flow oblique to the grid to about
+                            !   1/10 of first-order upwind; 1 = the donor's temperature (first-order
+                            !   upwind; the default before 2026-11-05); developer.md Sec. 97)
   !lv_temp0(1) = 1150.0     ! eruption temperature of vent 1 (deg C; above lv_tsol)
   !lv_tref = 1150.0         ! reference temperature (deg C; lv_visc and lv_tauy are the values here)
   !lv_bvisc = 0.04          ! temperature sensitivity of the viscosity (1/K; ln k/dT if k times after cooling by dT)
@@ -68,6 +72,11 @@
   ! ---- subcycling ----
   !lv_cfl = 0.4             ! safety factor of the explicit scheme (0-1)
   !lv_nsubmax = 10000       ! cap on subcycles per update (runaway guard)
+  !lv_diagratio = 0.3333333333   ! diagonal share d of the flow (default 1/3 = the 8-neighbour
+                            !   9-point stencil with dynamic reassignment of blocked diagonal shares;
+                            !   flows down narrow valleys oblique to the grid do not depend on the
+                            !   orientation. 0 = 4-neighbour (the default before 2026-11-05);
+                            !   developer.md Sec. 99)
 
   ! ---- vents (numbers n consecutive from 1; up to 20) ----
   !   The rate is the total over the cell set, distributed equally

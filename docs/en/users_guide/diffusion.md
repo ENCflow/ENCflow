@@ -264,6 +264,12 @@ and the diffusion term is computed when `wf_break_visc > 0` even with
 - The diffusion term flattens velocity peaks and delays arrival. It is
   distinct from the numerical smearing of advection scheme 1 (the former
   default); combined, they smear twice.
+- The default advection scheme 3 also has a crosswind numerical diffusion of
+  $`\approx 0.15\,|u|\Delta`$ from the first-order lateral faces of diagonal
+  edges. On practical grids it is often larger than the $`\nu`$ of the
+  zero-equation model, and then adding the diffusion term hardly changes the
+  transverse profile. How to compare them is in
+  [Numerical diffusion by diagonal-edge fluxes](diagonal_diffusion.md) §4.1.
 - With a finer grid more eddies are resolved and the effective mixing for
   the same $`\nu`$ changes. It is safer to recalibrate $`\alpha`$ of model 2
   for each grid spacing.

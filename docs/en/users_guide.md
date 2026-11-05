@@ -48,6 +48,8 @@ phenomenon-specific setups. Individual chapters also link to relevant cases.
   - [Passage-width adjustment](users_guide/passage_width.md) -- reassignment where the eight-direction passage widths are blocked, how blockage is measured and how the default of f_opening_dynamic came to be 3, the view of the adjustment as effective resolution, and its limits (supplement to the shallow water chapter; intermediate to advanced)
   - [Steep-slope gravity correction](users_guide/steep_slope.md) -- the effective gravity g cos²θ and the slope-parallel friction and sediment shear (f_gravity_correction; default 2): formulation, which gradient each edge uses, verification, comparison with published papers and models, what it cannot do and its accuracy limits (supplement to the shallow water chapter; intermediate to advanced)
   - [Advection schemes](users_guide/advection.md) -- equations, the momentum control volume of the conservative form, stencils, the limiter (supplement to the shallow water chapter)
+  - [Numerical diffusion by diagonal-edge fluxes](users_guide/diagonal_diffusion.md) -- how the eight-direction links smooth across the stream and by how much, effects and countermeasures for scalar transport (link-wise MUSCL) and for momentum (first-order lateral faces, the diagonal sub-lattice, consistency of the lateral-face fluxes), the two-link decomposition, choices by case (supplement to the shallow water chapter; intermediate to advanced)
+  - [Choosing the diagonal share d](users_guide/diagratio.md) -- what the distribution d of the eight-direction passage widths changes (conveyance of one-cell-wide channels and conduits, direction bias of the error, time-step limit, crosswind numerical diffusion), the best value for each criterion, and the value and recommendation for each process (shallow water, bedload, hillslope creep, curvature, groundwater, conduit layer, glaciers and lava) (supplement; intermediate to advanced)
   - [Non-hydrostatic correction](users_guide/nonhydrostatic.md) -- equations of the one-layer model, projection algorithm, active set, breaking, moving bottom, the models it drew on (supplement to the shallow water chapter)
   - [Diffusion term](users_guide/diffusion.md) -- eddy-viscosity models (constant, zero-equation), nine-point Laplacian, stability condition (supplement to the shallow water chapter)
 - [Geographic information](users_guide/geoinfo.md) (&list_geoinfo) -- grid, terrain, roughness, masks, seawalls
@@ -84,7 +86,7 @@ phenomenon-specific setups. Individual chapters also link to relevant cases.
 - [Use cases](users_guide/usecases.md) -- lookup from phenomenon names to feature combinations (unsupported phenomena are listed too)
 
 **Appendix**
-- [Full parameter index](users_guide/params_index.md) -- reverse lookup from all 776 parameter names to their chapters
+- [Full parameter index](users_guide/params_index.md) -- reverse lookup from all 781 parameter names to their chapters
 
 ---
 

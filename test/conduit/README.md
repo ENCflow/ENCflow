@@ -16,6 +16,11 @@
   sqrt 乱流則の側方拡散、Green-Ampt 鉛直浸透、管路 ⇔ 土層の漏水・浸入水を
   すべて有効にして、全結合経路の質量保存と 8 方向等方性(点対称・転置
   対称)を `Check_conduit.py B` で確かめる(解析解はない自己検証)。
+- **模式実験 C**(`param_latgw.txt`): B に土層の側方流(`f_gwlateral = 1`)を斜めの配分
+  `gw_diagratio = 1/3` で足す。管路層の通過幅は管路層自身の `gwc_diagratio`(既定)で
+  作られ、側方流の d に引きずられないこと(管路層の安定条件の表示 = エッジの通水係数の
+  和が B と一致)と、B と同じ自己検定を確かめる(developer.md §98。2026-11-05 より前は
+  管路層も `gw_diagratio` の通過幅を黙って使い、表示が 0.518 s から 0.457 s に変わった)。
 
 ## 構成
 
@@ -37,9 +42,10 @@ hcrown + (hgc − cap)/slot_sy に等しく、かつ h + hgc = 0.1 m なので
 | ファイル | 内容 |
 |---|---|
 | `param.txt` / `param_lat.txt` | 模式実験 A / B |
-| `data_conduit/inlet.txt` | B の枡密度分布(中心 3×3 のみ非ゼロ) |
+| `param_latgw.txt` | C(B + 土層の側方流 `gw_diagratio = 1/3`) |
+| `data_conduit/inlet.txt` | B・C の枡密度分布(中心 3×3 のみ非ゼロ) |
 | `Run.sh` / `Run_MPI.sh N` | A の回帰テスト(逐次 / MPI)と解析検定 `Check_conduit.py A` |
-| `Run_lat.sh` / `Run_lat_MPI.sh N` | B の実行(result_lat/)と自己検定 `Check_conduit.py B` |
+| `Run_lat.sh` / `Run_lat_MPI.sh N` | B の実行(result_lat/)と自己検定 `Check_conduit.py B`、続けて C の実行(result_latgw/)と同じ自己検定・管路層の安定条件の表示の B との一致 |
 | `Check_conduit.py` | A: 全行の S_total = h₀、S_surf・S_grnd が平衡へ単調に近づき行き過ぎない、最終時刻に h_eq・hgc_eq と表示全桁で一致、最終時刻の H・Hgc の分布が一様に h_eq・hgc_eq(分布出力の表示 4 桁の丸めの範囲)。B: 全行の S_total = h₀、最終時刻の Hgc・H の分布が点対称・転置対称で差 0、中心が満管を超えて被圧(Hgc > 容量) |
 | `Fig.py` | 下の図 `figs/*.png` を描く |
 
@@ -49,7 +55,7 @@ hcrown + (hgc − cap)/slot_sy に等しく、かつ h + hgc = 0.1 m なので
 make
 ./Run.sh            # A: Log.txt を reference と比較(ULP = 0)→ Check_conduit.py A
 ./Run_MPI.sh 4
-./Run_lat.sh        # B: result_lat/ に出力(1 秒ほど)→ Check_conduit.py B
+./Run_lat.sh        # B: result_lat/ に出力(1 秒ほど)→ Check_conduit.py B、続けて C(result_latgw/)
 ./Run_lat_MPI.sh 4  # B の MPI。逐次とビット一致するのが規律
 python3 Fig.py      # figs/equilibrium.png, figs/lateral.png(数表も表示。引数 en で英語版を en/figs/ に)
 ```
@@ -89,6 +95,10 @@ sqrt 乱流則の 8 方向コンダクタンスで放射状に広がり、中心
 - 模式実験 B は、側方拡散・鉛直浸透・漏水・浸入水のすべてを同時に
   働かせても質量が保存され、分布が厳密に対称であることの確認です。
   MPI np = 1, 2, 4 の Log は逐次と完全一致します(§46.4)。
+- 模式実験 C は、通過幅を共有する地下水の層のうち管路層だけが自分の斜めの配分を持つ
+  ことの確認です。管路層の安定条件の表示は B と同じ 0.518 s(修正前の実行ファイルでは
+  土層の側方流の 1/3 の通過幅を使って 0.457 s)で、S_total の保存と分布の対称性も B と
+  同じく成り立ちます。
 - リスタート往復(75 s で保存 → 復元して 150 s まで)が一気通しとビット
   一致することも §46.4 で確認しています。
 - 実地への展開例は [examples/qanat](../../examples/qanat/)(横坑集水)と

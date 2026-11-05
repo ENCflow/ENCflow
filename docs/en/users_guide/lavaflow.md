@@ -124,6 +124,7 @@ following (calibration quantities):
 | lv_vsol | 5e-4 | stop-detection velocity threshold (m/s); typically 10⁻⁴–10⁻³; read only when lv_wsol>0 |
 | lv_cfl | 0.4 | safety factor of the explicit subcycling (0–1) |
 | lv_nsubmax | 10000 | cap on subcycles per update (runaway guard) |
+| lv_diagratio | 1/3 | diagonal share d of the flow. The default 1/3 is the 8-neighbour 9-point stencil, which reassigns blocked diagonal shares according to the lava thickness; 0 = 4-neighbour (the default before 2026-11-05); see "Valley orientation" below |
 | lv_cell(1:2,k,n) | — | cell k (i, j) of vent n; vent numbers n are consecutive from 1 |
 | lv_q0(n) | — | constant effusion rate of vent n (m³/s) |
 | lv_val(1:2,k,n) | — | effusion time series (time (min), m³/s); overrides lv_q0 |
@@ -153,9 +154,14 @@ lava_plan.md Sec. 8 and the implementation record developer.md Sec. 51.7.
 **What is computed**
 
 - The heat content $`h_l T_l`$ is carried with the lava flow (the edge flux times
-  the temperature of the donor). Lava injected at a vent mixes with the lava
+  the face temperature). By default the face temperature is reconstructed from
+  the three cells in line along the edge (MUSCL); with `f_lvtemp_scheme = 1` it
+  is the temperature of the donor, i.e. first-order upwind (see "Numerical
+  diffusion of the heat advection" below). Lava injected at a vent mixes with the lava
   already there by heat content. The new temperature stays between the
-  temperatures of the cell and of the lava flowing into it.
+  temperatures of the cell and of the lava flowing into it (with MUSCL the range
+  also includes the neighbour on the far side of each edge the lava leaves
+  through).
 - Cooling is the heat flux from the surface
 
   ```math
@@ -222,6 +228,7 @@ explicitly. A missing one stops the run)
 | Parameter | Default | Meaning |
 |---|---|---|
 | f_lvtemp | 0 | 1: compute the temperature (0 = isothermal) |
+| f_lvtemp_scheme | 3 | face temperature of the heat advection. 3: MUSCL + van Leer (see "Numerical diffusion of the heat advection" below), 1: the temperature of the donor (first-order upwind; the default before 2026-11-05). Used only in the thermal mode (`f_lvtemp = 1`); not read in the isothermal mode |
 | lv_temp0(n) | none (required) | eruption temperature of vent n (°C); must be above `lv_tsol` |
 | lv_tref | none (required) | reference temperature $`T_r`$ of the rheology (°C); `lv_visc` and `lv_tauy` are the values at this temperature |
 | lv_bvisc | none (required) | temperature sensitivity of the viscosity $`\beta_\eta`$ (1/K); 0 or more |
@@ -264,6 +271,78 @@ explicitly. A missing one stops the run)
   (only when saved with `f_lvtemp = 1`). Restarting in the temperature mode
   without this file stops the run.
 
+**Numerical diffusion of the heat advection**
+
+- Carrying heat by first-order upwind smears the temperature in proportion to
+  the cell size (numerical diffusion). With the flow on 4 neighbours
+  (`lv_diagratio = 0`), in a flow oblique to the grid the heat entering through both the x and the y edges
+  averages the temperatures of the donors, and the temperature also smears
+  across the flow. The crosswind diffusivity of the modified equation is
+  $`D_\perp = (\Delta x/2)(|u_x| \sin^2\theta + |u_y| \cos^2\theta)`$ ($`u`$ is the
+  depth-averaged speed and $`\theta`$ the flow direction): 0 for a flow along a
+  grid axis and $`0.354\,u\,\Delta x`$ at 45° (the formula is this guide's own
+  derivation from the modified equation; the phenomenon is the long-known false
+  diffusion of first-order upwind in a flow oblique to the grid[^dvdm76]).
+  [test/lava](../../../test/lava/en/README.md) configuration 10 measures
+  $`0.357\,u\,\Delta x`$ (+1 % from the theory) in a sheet flow at 45°
+  ($`\Delta x`$ = 5 m, $`u`$ = 0.075 m/s) and 0 at 0°. This is 10⁵ times the
+  thermal diffusivity of lava (about 10⁻⁶ m²/s), and the temperature difference
+  between a hot core and cooled margins comes out differently with the flow
+  direction (in this example the width σ of the temperature boundary of the 45°
+  flow is 19 m at 106 m downstream of the vent). With the 8-neighbour 9-point
+  stencil of the flow, `lv_diagratio = d > 0` (default 1/3), the diagonal edges carry heat
+  too, and the crosswind diffusivity becomes
+  $`D_\perp = [(1 - d)F(\theta) + d\sqrt2\,F(\theta - 45°)]\,u\,\Delta x`$ ($`F`$ is
+  the 4-neighbour coefficient $`D_\perp/(u\Delta x)`$ above; this guide's own
+  derivation, of the same form as for first-order upwind of the surface water
+  on the ENC grid): 0.167 at 0° and 0.236 at 45° for d = 1/3 (configuration 10d
+  measures 0.167 and 0.238).
+- The numerical diffusion along the flow, $`(\Delta x/2)|u|`$ (largest for a flow
+  along a grid axis), makes the length of a flow that stops as it cools, and
+  the shape of its deposit, depend on the cell size when the flow is perfectly
+  uniform across (computing the flow of configuration 9 on 4 neighbours with
+  different cell sizes, first-order upwind gives a largest deposit thickness of
+  3.34, 3.41 and 3.46 m and a length of 55, 52.5 and 51.2 m for cells of 5, 2.5
+  and 1.25 m; the length is quantized by the cell size; developer.md Sec. 97).
+- However, a flow that stops as it cools and is uniform across is unstable.
+  A perturbation of only ±1 mm in the bed splits it into channels (a hotter
+  channel flows faster and cools more slowly, a positive feedback between heat
+  and viscosity), and the length of the flow of configuration 9 is 75–85 m with
+  first-order upwind or MUSCL, 4 or 8 neighbours, and cells of 5 to 1.25 m
+  ([test/lava](../../../test/lava/en/README.md) configuration 9n; the solution
+  uniform across is 50–55 m on 4 neighbours). With 8 neighbours
+  (the default `lv_diagratio = 1/3`) the asymmetry of the rows at the walls acts as a
+  perturbation, so the flow splits into channels even with a uniform input.
+  Real terrain always has lateral perturbations, so the length on an ideal
+  slope uniform across, and its dependence on the cell size, are not a guide
+  (the correction in developer.md Sec. 97).
+- `f_lvtemp_scheme = 3` reconstructs the face temperature from three points in
+  line along the edge: the donor, the receiver and the cell further upwind of
+  the donor (the same van Leer limiter as the MUSCL of the surface scalars; see
+  [Numerical diffusion by diagonal-edge fluxes](diagonal_diffusion.md)).
+  Where the temperature varies linearly the leading term of the diffusion
+  vanishes, and the crosswind diffusivity at 45° becomes $`0.034\,u\,\Delta x`$
+  (0.09 times first order). For the flow of configuration 9 uniform across (4
+  neighbours) the largest deposit thickness hardly changes with the cell size
+  (3.54, 3.53 and 3.55 m for 5, 2.5 and 1.25 m) and the length is 50, 50 and
+  48.8 m (with a perturbation it splits into channels as above, 80–85 m with
+  either scheme). On the 8-neighbour 9-point stencil (d = 1/3) the crosswind
+  diffusivity is $`0.025\,u\,\Delta x`$ at 0° and $`0.028\,u\,\Delta x`$ at 45°
+  (0.15 and 0.12 times the first-order (1 − d)F(φ) + d√2 F(φ − 45°) = 0.167 and
+  0.236; configuration 10d), nearly the same in every direction. The heat content is
+  carried in the same conservative form, so conservation is unchanged, and the
+  new temperature is kept within the range of the neighbouring temperatures (no
+  new extremes). At a front where the receiver has no lava, and on edges where
+  the cell further upwind is outside the domain, a wall, sea or without lava,
+  the face temperature stays first-order upwind.
+- The default is 3 (from 2026-11-05; the default before that was 1).
+  `f_lvtemp_scheme = 1` together with `lv_diagratio = 0` for the flow (whose
+  default became 1/3 on the same day) reproduces results from before 2026-11-05. For the flow
+  of configuration 9 uniform across, the length and the shape of the deposit
+  differ between 1 and 3 (4 neighbours, 5 m cells: length 55 → 50 m, largest
+  deposit thickness 3.34 → 3.54 m), but with a perturbation the difference
+  becomes small (4 neighbours, 2.5 m cells: 82.5 m and 85 m).
+
 **Computing time**
 
 - Cooling proceeds in real time, so the time cannot be shortened by raising
@@ -287,6 +366,19 @@ explicitly. A missing one stops the run)
   effective specific heat), heat conduction into the ground and viscous
   heating are not computed. There is no thermal interaction between lava and
   water either.
+- The numerical diffusion of the heat advection is not zero even with the
+  default MUSCL (the limiter falls back to first order near temperature
+  extremes).
+  Temperature structures a few cells wide (such as a hot core a few cells
+  across) are blunted.
+- A flow that stops as it cools on a slope uniform across splits into
+  channels at the slightest perturbation (a positive feedback between heat and
+  viscosity). The position and number of the channels are set by the
+  perturbation, and the computation is not guaranteed to match observations.
+  The flow length differs greatly with and without a perturbation (for the
+  flow of configuration 9, 50–55 m for the solution uniform across and 75–85 m
+  with a perturbation). Where the terrain confines the flow to valleys, the
+  channels matter less.
 - Backward Euler is first-order accurate, so when the update interval is long
   compared with the cooling time constant $`\rho c_p h_l / (dF/dT)`$ the cooling
   comes out somewhat too slow (test/lava configuration 7 has a time constant of
@@ -360,8 +452,10 @@ The labels in the Basis column are explained in [How to read the basis of a defa
 | lv_tauy | 0 | yield stress $`\tau_y`$ | **compatibility** 0 = Newtonian (the form verifiable against the similarity solution[^huppert82]); real lavas take the values of the type table above |
 | lv_wsol / lv_vsol | 0 / 5e-4 m/s | solidification rate / stop-detection velocity | **given** 0 = no solidification / **empirical** stop criterion 10⁻⁴–10⁻³ m/s (advance below 10–100 m per day) |
 | lv_cfl / lv_nsubmax | 0.4 / 10000 | sub-cycle safety factor and cap | **numerical** |
+| lv_diagratio | 1/3 | diagonal share d of the flow | **method** 1/3 = the 8-neighbour 9-point stencil with reassignment of blocked shares (the default from 2026-11-05). Flows down narrow valleys oblique to the grid do not depend on the valley orientation (configuration 11), and the leading error term is isotropic ([Choosing the diagonal ratio d](diagratio.md)). The computation takes a little over 10 % longer. 0 = 4-neighbour (the default before 2026-11-05; for reproducing results from before then) |
 | lv_cell / lv_q0 / lv_val | — | vent cells and effusion rate | **given** eruption scenario (from total volume and duration) |
 | f_lvtemp | 0 | whether to compute the temperature | **method** 0 = isothermal (as before); 1 for flows that stop by cooling |
+| f_lvtemp_scheme | 3 | face temperature of the heat advection | **method** 3 = MUSCL + van Leer. Cuts the crosswind numerical diffusion of a flow oblique to the grid to about 1/10 of first-order upwind (configuration 10). For a flow that stops as it cools and is uniform across, it also makes the result depend less on the cell size, but with irregularities first-order upwind depends little on the cell size as well (configurations 9 and 9n; correction in developer.md Sec. 97). 1 = first-order upwind (the default before 2026-11-05; to reproduce results from before then, also set lv_diagratio = 0) |
 | lv_temp0 / lv_tref / lv_tsol | none | eruption, reference and solidification temperatures | **given** set by the lava type and observations (no default) |
 | lv_bvisc / lv_btau | none | temperature sensitivities of the viscosity and yield stress | **given** differ widely between lava types; $`\ln k/\Delta T`$ if cooling by $`\Delta T`$ makes it $`k`$ times larger |
 | lv_emis | none | effective emissivity | **calibrated** an effective value that includes crust insulation; calibrate on the flow length (a default will be set after checking the original sources) |
@@ -398,7 +492,10 @@ The labels in the Basis column are explained in [How to read the basis of a defa
   and the Bingham stopping thickness h∞ against analytic solutions, and
   the shape at rest of lava erupted from one vent on a flat bed until it
   stops, compared with the analytic plastic dome[^blake90] (a check that
-  the shape is the same along the grid axes and the diagonals), a check
+  the shape is the same along the grid axes and the diagonals, also with the
+  8-neighbour 9-point stencil), the conveyance of valleys one and three cells
+  wide at 0° and 45° (independent of the orientation with the 8-neighbour
+  9-point stencil and reassignment), a check
   that lava ponded against a 10 m step solidifies completely, up to the
   cells touching the wall, and a check that the soil layer under
   solidified lava is buried and the total water is conserved when the
@@ -409,7 +506,12 @@ The labels in the Basis column are explained in [How to read the basis of a defa
   with different eruption temperatures (conservation of heat, the range of the
   temperature, agreement with the isothermal run), the flow length increasing
   with the effusion rate for the same volume (unchanged in the isothermal
-  control), and a restart round trip.
+  control; also on a slope with a ±1 mm perturbation of the bed), a restart
+  round trip, and the crosswind numerical diffusion of the heat (on 4
+  neighbours none for a flow along a grid axis and, at 45°, the value of the
+  modified equation with first-order upwind; on the 8-neighbour 9-point stencil
+  (1 − d)F(φ) + d√2 F(φ − 45°) at both 0° and 45°; less than 1/4 of it with
+  MUSCL in both cases).
 - Example: [examples/shield_volcano](../../../examples/shield_volcano/en/README.md) — a
   shield volcano growing as the lava flows of 20 eruptions with shifting vents and volumes
   pile up (with a comparison at a ten times larger yield stress), and the shape at rest of a
@@ -459,16 +561,41 @@ The labels in the Basis column are explained in [How to read the basis of a defa
   viscosity, so to look only at the shape you can lower the viscosity to
   shorten the run (shorten the eruption by the same ratio and, when using
   solidification, raise lv_vsol and lv_wsol by the same ratio).
-- **Grid orientation**: the computation uses the 4-neighbour grid. Yield
-  and stopping are judged on the gradient magnitude, so the shape at rest
-  of a dome on a flat bed is the same along the grid axes and the
-  diagonals (in test/lava configuration 4 the area-equivalent radii of the
-  sectors differ by 1.4% and the centre thickness by 1.2% from the
-  analytic solution). Where neither neighbour along an edge carries lava,
+- **Grid orientation**: yield and stopping are judged on the gradient
+  magnitude, so the shape at rest of a dome on a flat bed is the same along
+  the grid axes and the diagonals (in test/lava configuration 4 the
+  area-equivalent radii of the sectors differ by 1.8% and the centre thickness
+  by 1.3% from the analytic solution; 1.4% and 1.2% on 4 neighbours,
+  `lv_diagratio = 0`, in configuration 4'). Where neither neighbour along an edge carries lava,
   as at the margin of a narrow flow, only the gradient across the edge is
   used. Before the change of 2026-11-03 only the gradient across the edge
   was used, and lava fields became diamonds elongated along the grid axes
   (developer.md Sec. 51.4).
+- **Valley orientation (lv_diagratio)**: on the 4-neighbour grid, lava flows
+  less easily down a narrow valley oblique to the grid. A diagonal valley one
+  cell wide, whose cells touch only at corners, does not flow at all (the lava
+  piles up at the vent), and a band of three diagonal lines carries 2/3 of the
+  flux of a valley along a grid axis ([test/lava](../../../test/lava/en/README.md)
+  configuration 11; uniform flow of a Newtonian fluid). `lv_diagratio = d > 0`
+  (default 1/3) puts the flow on the 8-neighbour 9-point stencil (with diagonal edges) and,
+  according to the lava thickness, returns the shares blocked where the bed of
+  the diagonal neighbour rises above the lava surface to the axis edges that
+  cross the same boundary, and, in a diagonal valley whose axis neighbours are
+  blocked, the axis shares to the diagonal edges (the same rule as the dynamic
+  reassignment of surface water, f_opening_dynamic = 3; developer.md Sec. 99).
+  With d = 1/3 a valley along a grid axis keeps the conveyance of the
+  4-neighbour grid, a diagonal valley one cell wide flows with the same
+  conveyance, and a band of three lines carries +6.5 % (instead of −33 % on
+  the 4-neighbour grid). The shape at rest of a dome on a flat bed differs from
+  the analytic solution about as much as on the 4-neighbour grid (configurations
+  4 and 4'). The computation takes a little over 10 % longer than on 4
+  neighbours. The default is 1/3 (from 2026-11-05; the earlier default 0 =
+  4 neighbours is reproduced with `lv_diagratio = 0`). At the edges of a diagonal band the
+  reassignment rule gives slightly too much conveyance (+6.5 % for a band of
+  three lines, +4.0 % for five; it decreases as the band widens). In a
+  diagonal valley the cells along the valley are √2 times farther apart, so
+  the resolution along the valley is coarser than along a grid axis (a
+  property of the grid, with or without the 8-neighbour stencil).
 - Not supported with STG (f_gridsystem=1), nor together with geomorph
   morfac > 1 (lava is an event-time process).
 - **Temperature mode**: cannot be combined with solidification by a speed
@@ -489,4 +616,5 @@ The labels in the Basis column are explained in [How to read the basis of a defa
 [^huppert82]: Huppert, H. E. (1982): The propagation of two-dimensional and axisymmetric viscous gravity currents over a rigid horizontal surface. *J. Fluid Mech.*, 121, 43–58. (similarity solution of the Newtonian limit; the check of test/lava)
 [^costa05]: Costa, A. and Macedonio, G. (2005): Numerical simulation of lava flows based on depth-averaged equations. *Geophys. Res. Lett.*, 32, L05304. (a depth-averaged lava flow model with the viscosity an exponential function of temperature)
 [^walker73]: Walker, G. P. L. (1973): Lengths of lava flows. *Phil. Trans. R. Soc. Lond. A*, 274, 107–118. (the relation between the length of lava flows and the effusion rate)
+[^dvdm76]: de Vahl Davis, G. and Mallinson, G. D. (1976): An evaluation of upwind and central difference approximations by a study of recirculating flow. *Computers & Fluids*, 4, 29–43. doi:10.1016/0045-7930(76)90010-4 (the false diffusion of first-order upwind in a flow oblique to the grid)
 [^pinkerton95]: Pinkerton, H. and Norton, G. (1995): Rheological properties of basaltic lavas at sub-liquidus temperatures: laboratory and field measurements on lavas from Mount Etna. *J. Volcanol. Geotherm. Res.*, 68, 307–323. (measured viscosities of basaltic lava)

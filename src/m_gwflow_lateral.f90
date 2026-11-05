@@ -17,13 +17,15 @@ module m_gwflow_lateral
   !       水頭底 = z - sd - d2、容量 = d2·sy2(定数)、地表湛水結合なし、
   !       飽和超過は s%hg へ(層1の超過は層1側の既存機構が地表へ渡す)
   !   幾何(距離・通過幅)とエッジ作業領域は層間で共有
-  !   (gwflow_lateral_geom_init。冪等)。安定条件の検査は層ごとに
+  !   (gwflow_lateral_geom_init。冪等。通過幅を共有する層 = 層1・層2・淡塩2層の塩水は
+  !   同じ斜めの配分比でなければならず、違えば停止する。§98)。安定条件の検査は層ごとに
   !   gwflow_lateral_dtcheck で行う
   !
   ! 【管路連続体層カーネル(2026-08-18。gwconduit_plan.md §10)】
   !   下水道網・岩盤亀裂網などを表す等価連続体管路層のための第2カーネル
   !   conduit_core を併設する(呼び手は m_gwflow_conduit)。lateral_core と
-  !   同じ 8 近傍・エッジ規約・2 ループ構造・幾何/作業領域(glt)を共有する
+  !   同じ 8 近傍・エッジ規約・2 ループ構造・距離と作業領域(glt)を共有する
+  !   (通過幅は管路層自身の gwc_diagratio の配分 cl%wl で、共有しない。§98)
   !   が、次の点が異なるため別カーネルとする(lateral_core は不変 =
   !   層1・層2 のビット一致は構造的に保証):
   !     - 水頭が折れ線(不圧 sy_c / 被圧 sy_slot の疑似スロット切替。
@@ -150,7 +152,9 @@ module m_gwflow_lateral
   public :: t_latlayer
   public :: t_gwlat
   public :: gwflow_lateral_geom_init
+  public :: gwflow_lateral_geom_init_base
   public :: gwflow_lateral_geom_init_layer2
+  public :: lateral_widths
   public :: gwflow_lateral_dtcheck
   public :: lateral_core
   public :: t_conduitlayer
@@ -195,6 +199,8 @@ module m_gwflow_lateral
     real, allocatable :: cap(:,:)    ! 貯留容量 (m 柱状)。0 = 管路なし。帯+ハロ
     real, allocatable :: cnd(:,:,:)  ! エッジ別コンダクタンス(所有4成分。m3/s。
                                      !   q 配列と同形状・同格納規約。静的)
+    real :: wl(1:8) = 0.0            ! 管路層自身の通過幅 (m)(gwc_diagratio の配分。側方系の
+                                     !   共有の通過幅とは独立。developer.md §98)
   end type
 
   ! 幾何・作業領域(層間で共有。実体は切替器 m_gwflow の t_gwflow が持ち、各手続きが引数で受ける(nesting_plan.md §3.2 A 群))
@@ -211,7 +217,10 @@ module m_gwflow_lateral
     real, allocatable :: qm(:,:,:)   ! 質量エッジフラックス4成分 (g/s = 水流量 q ×
                                      !   風上体積濃度 cg/hg。q と同形状・同格納規約。
                                      !   一時作業領域。s%cg 確保時のみ確保。§30 W3)
-    logical :: geom_ready = .false.  ! 幾何・作業領域の初期化済み(冪等口)
+    logical :: base_ready = .false.  ! d によらない幾何(距離・面積逆数)と作業領域の初期化済み
+    logical :: geom_ready = .false.  ! 通過幅まで含めた幾何の初期化済み(冪等口)
+    real :: diagratio = -1.0         ! 共有の通過幅を作った斜めの配分比(未設定は負)
+    character(len=32) :: dname = ""  ! それを与えたパラメータ名(不一致の報告用)
     logical :: initialized = .false. ! 層1(土層)側方の有効化
   end type
 
@@ -220,25 +229,84 @@ contains
 
 !----------------------------------------------------------------------
 ! 幾何(距離・通過幅)とエッジ作業領域の初期化(冪等。層間共有)。
-! diagratio は最初の呼び手の値を採用する(層1・層2で同一が前提)
+! 共有の通過幅を使う層(層1・層2 = gw_diagratio、淡塩2層の塩水 = salt_diagratio)は
+! 同じ帯水層の連続体なので、同じ斜めの配分比でなければならない。最初の呼び手の値で
+! 通過幅を作り、後の呼び手の値が違えば(差 > 1e-6)停止する(2026-11-05 まで後の値は
+! 黙って無視されていた。developer.md §98)。name は報告用のパラメータ名。管路層は
+! 自分の通過幅を持つので、d によらない部分(gwflow_lateral_geom_init_base)だけを使う
 !----------------------------------------------------------------------
-subroutine gwflow_lateral_geom_init(glt, g, diagratio, eps)
+subroutine gwflow_lateral_geom_init(glt, g, diagratio, eps, name)
   type(t_gwlat), intent(inout) :: glt
   type(t_geoinfo), intent(in) :: g
   real, intent(in) :: diagratio
   real, intent(in) :: eps
-  integer :: k
-  real :: lpx, lpy, ldx, ldy, dr
-  real :: l8x(1:8), l8y(1:8), w8dr(1:8)
+  character(len=*), intent(in), optional :: name
+  character(len=256) :: msg
 
-  if (glt%geom_ready) return
+  if (glt%geom_ready) then
+    if (abs(diagratio - glt%diagratio) > 1.0e-6) then
+      write(msg,'(a,f10.7,a,f10.7,a)') " = ", diagratio, " differs from " // trim(glt%dname) // " = ", &
+          glt%diagratio, "; the groundwater layers share one passage-width geometry, give the same value"
+      if (present(name)) then
+        call par_stop("gwflow_lateral: " // name // trim(msg))
+      else
+        call par_stop("gwflow_lateral: diagratio" // trim(msg))
+      end if
+    end if
+    return
+  end if
+  call gwflow_lateral_geom_init_base(glt, g, eps)
+  call lateral_widths(g, diagratio, glt%wl, glt%lpx, glt%lpy, glt%ldx, glt%ldy)
+  glt%diagratio = diagratio
+  glt%dname = "diagratio"
+  if (present(name)) glt%dname = name
+  glt%geom_ready = .true.
+end subroutine
+
+
+!----------------------------------------------------------------------
+! 幾何のうち d(diagratio)によらない部分(近傍セル中心間距離・面積逆数)と
+! エッジ作業領域の初期化(冪等。層間共有)。eps は最初の呼び手の値を採用する
+!----------------------------------------------------------------------
+subroutine gwflow_lateral_geom_init_base(glt, g, eps)
+  type(t_gwlat), intent(inout) :: glt
+  type(t_geoinfo), intent(in) :: g
+  real, intent(in) :: eps
+  integer :: k
+  real :: dr
+  real :: w8dr(1:8)
+
+  if (glt%base_ready) return
   glt%eps = eps
   glt%ainv = 1.0 / (g%dx * g%dy)
 
-  ! 8近傍の距離と通過幅(m_swflow_enc の init_weights と同一の配分則)
+  ! 8近傍の距離(m_swflow_enc の init_weights と同一)
   dr = sqrt(g%dx**2 + g%dy**2)
   w8dr(1:8) = [ dr, g%dy, dr, g%dx, g%dx, dr, g%dy, dr ]
   forall(k=1:8) glt%rdr(k) = 1.0 / w8dr(k)
+
+  ! エッジ流量4成分(一時作業領域)。j 範囲はセル j を挟むエッジが
+  ! j-1 と j にあるため下限 jsh-1(m_swflow_enc の uv/mn と同形)。
+  ! 確保時 0: マスク起因で書かれないエッジは恒久 0(無フラックス)
+  allocate(glt%q(1:4, dcp%ish-1:dcp%ieh, dcp%jsh-1:dcp%jeh), source = 0.0)
+  glt%base_ready = .true.
+end subroutine
+
+
+!----------------------------------------------------------------------
+! 8 近傍の通過幅(m_swflow_enc の init_weights と同一の配分則)を斜めの配分比
+! diagratio から求める。wl(k) = k 方向のエッジの通過幅 (m)、lpx・lpy・ldx・ldy は
+! 軸と斜めのシェア(t_gwlat の同名の成分の意味)。Δx ≠ Δy では短い辺を基準に
+! diagratio を適用する
+!----------------------------------------------------------------------
+pure subroutine lateral_widths(g, diagratio, wl, lpx, lpy, ldx, ldy)
+  type(t_geoinfo), intent(in) :: g
+  real, intent(in) :: diagratio
+  real, intent(out) :: wl(1:8)
+  real, intent(out) :: lpx, lpy, ldx, ldy
+  integer :: k
+  real :: l8x(1:8), l8y(1:8)
+
   if (g%dy > g%dx) then
     lpy = 1 - (g%dx / g%dy)**2 * diagratio
     ldy = diagratio / 2 * (g%dx / g%dy)**2
@@ -252,17 +320,7 @@ subroutine gwflow_lateral_geom_init(glt, g, diagratio, eps)
   end if
   l8y(1:8) = [ ldy, 0.0, ldy, lpy, lpy, ldy, 0.0, ldy ]
   l8x(1:8) = [ ldx, lpx, ldx, 0.0, 0.0, ldx, lpx, ldx ]
-  forall(k=1:8) glt%wl(k) = sqrt((l8y(k) * g%dy)**2 + (l8x(k) * g%dx)**2)
-  glt%lpx = lpx
-  glt%lpy = lpy
-  glt%ldx = ldx
-  glt%ldy = ldy
-
-  ! エッジ流量4成分(一時作業領域)。j 範囲はセル j を挟むエッジが
-  ! j-1 と j にあるため下限 jsh-1(m_swflow_enc の uv/mn と同形)。
-  ! 確保時 0: マスク起因で書かれないエッジは恒久 0(無フラックス)
-  allocate(glt%q(1:4, dcp%ish-1:dcp%ieh, dcp%jsh-1:dcp%jeh), source = 0.0)
-  glt%geom_ready = .true.
+  forall(k=1:8) wl(k) = sqrt((l8y(k) * g%dy)**2 + (l8x(k) * g%dx)**2)
 end subroutine
 
 
@@ -419,7 +477,7 @@ subroutine read_lateral_list(p, gw_ksh_mmh, gw_eps, gw_diagratio, f_gw_opening, 
 
   gw_ksh_mmh = 0.0
   gw_eps = 1.0e-3
-  gw_diagratio = 2.0 / (2.0 + sqrt(2.0))   ! m_swflow_enc の p_diagratio と同値
+  gw_diagratio = 1.0 / 3.0                 ! 既定 1/3 = 誤差の主要項が等方(2026-11-05 から。それより前は 2/(2+√2)。§98)
   f_gw_opening = 1                         ! 塞がれた斜めの配分の振り替え(1: あり = 既定、0: なし。§16.6)
 
   call par_info("reading list_gwflow_lateral in " // trim(p%fn_gwflow))
@@ -462,7 +520,7 @@ subroutine gwflow_lateral_geom_init_layer2(glt, p, g)
   if (glt%geom_ready) return
   call read_lateral_list(p, gw_ksh_mmh, gw_eps, gw_diagratio, f_gw_opening, found)
   if (.not. found) call par_info("list_gwflow_lateral not found: layer-2 lateral flow uses the default geometry")
-  call gwflow_lateral_geom_init(glt, g, gw_diagratio, gw_eps)
+  call gwflow_lateral_geom_init(glt, g, gw_diagratio, gw_eps, "gw_diagratio")
   if (f_gw_opening == 1 .and. .not. allocated(glt%wlo)) then
     call build_opening(glt, g)
     call par_info("gwflow_lateral: blocked diagonal shares are transferred to the axis edges (f_gw_opening = 1)")
@@ -507,7 +565,7 @@ subroutine gwflow_lateral_init(glt, lay1, p, g, s, dts)
   lay1%cap_const = -1.0                     ! 動的 sd·sy0
   lay1%to_surface = .true.
 
-  call gwflow_lateral_geom_init(glt, g, gw_diagratio, gw_eps)
+  call gwflow_lateral_geom_init(glt, g, gw_diagratio, gw_eps, "gw_diagratio")
   if (f_gw_opening == 1 .and. .not. allocated(glt%wlo)) then
     call build_opening(glt, g)
     call par_info("gwflow_lateral: blocked diagonal shares are transferred to the axis edges (f_gw_opening = 1)")
@@ -904,8 +962,9 @@ end subroutine
 
 !----------------------------------------------------------------------
 ! セル別コンダクタンス密度 dens (m2/s。帯+ハロ) からエッジ別
-! コンダクタンス cl%cnd を構築する(通過幅配分は側方 Darcy 流と同一の
-! diagratio 規約。gwflow_lateral_geom_init の後に呼ぶこと)
+! コンダクタンス cl%cnd を構築する(通過幅は管路層自身の cl%wl = gwc_diagratio の
+! 配分。側方 Darcy 流の共有の通過幅とは独立。§98。gwflow_lateral_geom_init_base と
+! cl%wl の設定の後に呼ぶこと)
 !   cnd_k = min(両セルの密度) · wl_k
 !   min 規約: 管路は両セルに存在して初めて連続する(片側 0 なら無結合)。
 !   将来の GIS 前処理(4 成分エッジマップの直接入力)はこの構築を
@@ -921,7 +980,7 @@ subroutine conduit_build_cnd(glt, g, dens, cl)
   integer :: i, j, k, in, jn, jt
   real :: cv
 
-  if (.not. glt%geom_ready) call par_stop("conduit_build_cnd: geometry is not initialized")
+  if (.not. glt%base_ready) call par_stop("conduit_build_cnd: geometry is not initialized")
   if (.not. allocated(cl%cnd)) then
     allocate(cl%cnd(1:4, dcp%ish-1:dcp%ieh, dcp%jsh-1:dcp%jeh), source = 0.0)
   end if
@@ -935,7 +994,7 @@ subroutine conduit_build_cnd(glt, g, dens, cl)
         cv = 0.0
         if (g%sw(i,j) <= 0 .and. g%x(in,jn) > 0) then
           if (g%sw(in,jn) <= 0) then
-            cv = min(dens(i,j), dens(in,jn)) * glt%wl(k)
+            cv = min(dens(i,j), dens(in,jn)) * cl%wl(k)
           end if
         end if
         cl%cnd(k, i+die(k), j+dje(k)) = cv
@@ -1015,7 +1074,10 @@ subroutine gwflow_lateral_dispose(glt, lay1, p)
   if (allocated(glt%q)) deallocate(glt%q)
   if (allocated(glt%qm)) deallocate(glt%qm)
   if (allocated(glt%wlo)) deallocate(glt%wlo)
+  glt%base_ready = .false.
   glt%geom_ready = .false.
+  glt%diagratio = -1.0
+  glt%dname = ""
   glt%initialized = .false.
 end subroutine
 

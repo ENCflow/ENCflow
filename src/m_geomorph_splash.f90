@@ -99,6 +99,17 @@ module subroutine init_splash(gm, g, list)
   gm%ssgrad = list%spl_sgrad
   if (list%spl_ksat < 0.0) call par_stop("list_geomorph: spl_ksat must be >= 0")
   gm%sksat = list%spl_ksat
+  ! 曲率のラプラシアンと平滑化の核の 9 点化(spl_diagratio = d > 0。§96)
+  if (list%spl_diagratio < 0.0 .or. list%spl_diagratio > 1.0) then
+    call par_stop("list_geomorph: spl_diagratio must be in [0, 1]")
+  end if
+  gm%spl%diag = list%spl_diagratio
+  if (gm%spl%diag > 0.0) then
+    call splash_w8(gm, g)
+    write(msg, '(a,f6.4,a)') "geomorph: splash curvature on the 9-point stencil (spl_diagratio = ", &
+                            gm%spl%diag, ")"
+    call par_info(trim(msg))
+  end if
   if (gm%sksat > 0.0) then
     write(msg, '(a,es10.3,a,f8.2,a,f8.2)') "geomorph: splash curvature saturation spl_ksat = ", gm%sksat, &
       " 1/m (max amplification: splash ", 1.0 + gm%sca * gm%sksat, ", rill ", 1.0 + gm%scb * gm%sksat
@@ -146,6 +157,9 @@ module subroutine init_splash(gm, g, list)
     gm%spl%nsm = max(1, nint(4.0 * (gm%slc / dmin)**2))
     gm%spl%wsx = min(0.125, gm%slc**2 / (2.0 * gm%spl%nsm * g%dx**2))
     gm%spl%wsy = min(0.125, gm%slc**2 / (2.0 * gm%spl%nsm * g%dy**2))
+    ! 9 点(d > 0): 1 パス z += τ ∇²z(9 点)。各方向の分散は 5 点と同じ 2τ。τ ≤ Δmin²/8 なら
+    ! 自セルの係数が正で、伝達関数がすべての波数で非負(市松を符号反転で残さない)
+    gm%spl%tsm = min(0.125 * dmin**2, gm%slc**2 / (2.0 * gm%spl%nsm))
     write(msg, '(a,es10.3,a,i0,a)') "geomorph: splash curvature length spl_lc = ", gm%slc, &
                                    " m (", gm%spl%nsm, " smoothing passes)"
     call par_info(trim(msg))
@@ -175,6 +189,23 @@ subroutine smooth_z(gm, g, s)
   wy = gm%spl%wsy
   w0 = 1.0 - 2.0 * (wx + wy)
   gm%spl%zs(:, dcp%jsh:dcp%jeh) = s%z(:, dcp%jsh:dcp%jeh)
+  if (gm%spl%diag > 0.0) then
+    ! 9 点の核(§96): zs += τ ∇²zs(無効な近傍は自セル値で鏡像 = 寄与 0。5 点と同じ規約)
+    do n = 1, gm%spl%nsm
+      !$omp parallel do schedule(static) private(i, j)
+      do j = dcp%js, dcp%je
+        gm%spl%zt(:, j) = gm%spl%zs(:, j)
+        do i = g%wx(1,j), g%wx(2,j)
+          if (g%x(i,j) <= 0) cycle
+          gm%spl%zt(i,j) = gm%spl%zs(i,j) + gm%spl%tsm * lap9(gm, g, gm%spl%zs, i, j)
+        end do
+      end do
+      !$omp end parallel do
+      gm%spl%zs(:, dcp%js:dcp%je) = gm%spl%zt(:, dcp%js:dcp%je)
+      call par_halo_cell(gm%spl%zs)
+    end do
+    return
+  end if
   do n = 1, gm%spl%nsm
     !$omp parallel do schedule(static) private(i, j, zc, ze, zw, zn, zsn)
     do j = dcp%js, dcp%je
@@ -272,6 +303,14 @@ module subroutine eval_splash(gm, p, g, s, dts)
         kap = max((ke + kw - 2.0 * kc) * dx2i + (kn + ks - 2.0 * kc) * dy2i, 0.0)
       else
         kap = max((ze + zw - 2.0 * zc) * dx2i + (zn + zs - 2.0 * zc) * dy2i, 0.0)
+      end if
+      ! 9 点(spl_diagratio > 0。§96): 同じ鏡像規約の 9 点ラプラシアンで置き換える
+      if (gm%spl%diag > 0.0) then
+        if (smooth) then
+          kap = max(lap9(gm, g, gm%spl%zs, i, j), 0.0)
+        else
+          kap = max(lap9(gm, g, s%z, i, j), 0.0)
+        end if
       end if
       ! 増幅の飽和(§48.6): 有効曲率 κ̃ = κ/(1 + κ/κ_s)
       if (gm%sksat > 0.0) kap = kap / (1.0 + kap / gm%sksat)
@@ -396,5 +435,58 @@ module subroutine apply_splash(gm, g, s)
     gm%spl%vout = gm%spl%vout + rsum(j) * g%dx * g%dy / gm%poroi
   end do
 end subroutine
+
+!----------------------------------------------------------------------
+! 9 点ラプラシアンの近傍重み(spl_diagratio = d > 0。§96)
+!   通過幅の配分は m_swflow_enc の init_weights・クリープの 9 点(init_creep_diag)と同じ
+!   規則で、重み = 通過幅 / 中心間距離 / セル面積。任意の d・Δx ≠ Δy で f_xx・f_yy の係数が
+!   厳密に 1 の整合な 9 点ラプラシアンになり、d = 1/3(正方セル)で離散化誤差の主要項が等方
+!----------------------------------------------------------------------
+subroutine splash_w8(gm, g)
+  type(t_geomorph), intent(inout) :: gm
+  type(t_geoinfo), intent(in) :: g
+  real :: d, lpx, lpy, ldx, ldy, dr, wd, ainv
+  d = gm%spl%diag
+  dr = sqrt(g%dx**2 + g%dy**2)
+  if (g%dy > g%dx) then
+    lpy = 1 - (g%dx / g%dy)**2 * d
+    ldy = d / 2 * (g%dx / g%dy)**2
+    lpx = 1 - d
+    ldx = d / 2
+  else
+    lpy = 1 - d
+    ldy = d / 2
+    lpx = 1 - (g%dy / g%dx)**2 * d
+    ldx = d / 2 * (g%dy / g%dx)**2
+  end if
+  wd = sqrt((ldy * g%dy)**2 + (ldx * g%dx)**2)
+  ainv = 1.0 / (g%dx * g%dy)
+  ! k = 1..8 の近傍(din/djn の順: 北西・北・北東・西・東・南西・南・南東)
+  gm%spl%w8(1:8) = [ wd / dr, lpx * g%dx / g%dy, wd / dr, lpy * g%dy / g%dx, &
+                     lpy * g%dy / g%dx, wd / dr, lpx * g%dx / g%dy, wd / dr ] * ainv
+end subroutine
+
+
+!----------------------------------------------------------------------
+! セル (i, j) の 9 点ラプラシアン Σ_k w_k (f_k − f_c)(§96)。近傍が範囲外(列 1..nx の外)か
+! 領域外(x <= 0)なら自セル値で鏡像(寄与 0)= 5 点の κ の評価・平滑化と同じ規約。行方向は
+! ハロ行と x の枠(常に確保済み)を読む。f は帯確保の配列(s%z・gm%spl%zs と同形)
+!----------------------------------------------------------------------
+pure function lap9(gm, g, f, i, j) result(lap)
+  type(t_geomorph), intent(in) :: gm
+  type(t_geoinfo), intent(in) :: g
+  real, intent(in) :: f(dcp%ish:, dcp%jsh:)
+  integer, intent(in) :: i, j
+  real :: lap
+  integer :: k, in, jn
+  lap = 0.0
+  do k = 1, 8
+    in = i + din(k)
+    jn = j + djn(k)
+    if (in < 1 .or. in > g%nx) cycle
+    if (g%x(in,jn) <= 0) cycle
+    lap = lap + gm%spl%w8(k) * (f(in,jn) - f(i,j))
+  end do
+end function
 
 end submodule

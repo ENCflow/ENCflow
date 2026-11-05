@@ -104,7 +104,8 @@ L_{\text{diag}} = \frac{p_d}{2}\sqrt{2}\,\Delta
 ```
 
 $`p_d`$ is `p_diagratio`; with the default $`2/(2+\sqrt2) \approx 0.586`$ all
-eight widths are $`0.414\Delta`$. The passage width of a diagonal edge is the
+eight widths are $`0.414\Delta`$ (for what this value means and its trade-offs
+with other criteria, see [choosing the diagonal share d](diagratio.md)). The passage width of a diagonal edge is the
 length of the end parts of the two sides at the corner, projected onto the
 direction normal to the diagonal. In other words, a diagonal passage width
 is not a face that exists in the raster but **a virtual width made by lending

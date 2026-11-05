@@ -78,7 +78,7 @@ consists of nine schematic experiments.
 | File | Contents |
 |---|---|
 | `Run.sh` / `Run_MPI.sh N` | Regression test of A (Log.txt, ULP = 0). `Run.sh` then also runs `Run_exch.sh` (C1–C4) and `Run_wall.sh` (D1, D2) |
-| `Run_sea.sh` | Run of B (result_sea/) |
+| `Run_sea.sh` | Run of B (result_sea/). Then a check that the same input with `salt_diagratio = 0` stops (the saltwater zone shares the passage widths with the soil lateral flow, so a value different from `gw_diagratio` is detected as a mismatch; before 2026-11-05 it was silently ignored; developer.md §98, in Japanese) |
 | `Run_wall.sh` / `Check_wall.py` | Run and check of D1 and D2 (reads the double-precision saved states save_wall_*/) |
 | `Run_exch.sh` / `Check_exch.py` | Run and check of C1–C4 (reads the double-precision saved states save_exch_*/) |
 | `Fig.py` | The figure `en/figs/salt.png` below (`python3 Fig.py en`; `figs/salt.png` is the Japanese version) |

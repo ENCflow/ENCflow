@@ -1,0 +1,67 @@
+!======================================================================
+! lava 構成9n(構成9 の同じ流れを、地盤に ±1 mm の決まった乱れを加えた斜面 wrk_zrunnz.txt
+!   (make_init.py runnz)で。横に一様な流れは乱れで流れの筋に分かれる。§97 の訂正)。以下は構成9 の説明
+! lava 構成9b: 構成9(param_run.txt)の噴出率 4 倍の版(温度モード)
+!   同じ体積(約 4800 m3)を 4 倍の噴出率 8 m3/s で 10 分出す。
+!   ほかの値は param_run.txt と同じに保つこと(検定は Check_lava.py run)
+!======================================================================
+&list_sysparam
+  f_gridsystem = 0
+  f_govequation = 0
+  dt = 1.0
+  t0 = 0
+  tt = 7200
+  dt_disp = 1200
+  dt_file = 7200
+  dt_recrd = 7200
+  fn_geoinfo = '-'
+  fn_initial = '-'
+  fn_lavaflow = '-'
+  dir_result = 'result_run4nz'
+  dir_save = 'save_run4nz'
+  f_state_save = 1
+  f_check_cfl = 0
+/
+
+&list_initial
+  f_htype = 0
+  h0 = 0.0                  ! 水なし(溶岩のみの検定)
+/
+
+&list_geoinfo
+  lx = 320.0
+  ly = 40.0
+  nx = 64
+  ny = 8
+  f_ztype = 1
+  fn_z = 'wrk_zrunnz.txt'         ! 等勾配斜面 tanθ = 0.1(make_init.py run)
+  f_rntype = 0
+  rn0 = 0.03
+/
+
+&list_lavaflow
+  lv_rho = 2600.0
+  lv_visc = 1.0e3           ! 基準温度での粘度 η_r (Pa s)
+  lv_tauy = 100.0           ! 基準温度での降伏応力 τ_r (Pa)
+  lv_cell(1:2,1,1) = 3, 1  ! 上流端の列噴火口(i = 3)
+  lv_cell(1:2,2,1) = 3, 2
+  lv_cell(1:2,3,1) = 3, 3
+  lv_cell(1:2,4,1) = 3, 4
+  lv_cell(1:2,5,1) = 3, 5
+  lv_cell(1:2,6,1) = 3, 6
+  lv_cell(1:2,7,1) = 3, 7
+  lv_cell(1:2,8,1) = 3, 8
+  lv_val(1:2,1,1) = 0, 8.0  ! (時刻(min), 総噴出率(m3/s))
+  lv_val(1:2,2,1) = 10, 8.0
+  lv_val(1:2,3,1) = 10, 0.0 ! 重複時刻 = 10 分ちょうどで階段状に停止
+  f_lvtemp = 1              ! 温度を計算する
+  lv_temp0(1) = 1150.0      ! 噴出温度 (°C)
+  lv_tref = 1150.0          ! 基準温度 (°C)(= 噴出温度)
+  lv_bvisc = 0.04           ! 粘度の温度感度 (1/K)(25 K 冷えるごとに e 倍)
+  lv_btau = 0.04            ! 降伏応力の温度感度 (1/K)
+  lv_tsol = 1000.0          ! 固化温度 (°C)
+  lv_emis = 0.95            ! 有効放射率
+  lv_hconv = 70.0           ! 対流の熱伝達係数 (W/m2/K)
+  lv_cp = 1150.0            ! 比熱 (J/kg/K)
+  lv_tair = 20.0            ! 気温 (°C)
+/

@@ -136,8 +136,8 @@ the value of `gw_diagratio` ([test/gwlateral](../../../test/gwlateral/en/README.
 checks this with the spreading of a Gaussian mound). A cell next to the
 domain edge, an outside cell or a sea cell has no outward diagonal links,
 so on its own its conductance along the wall is $`1 - d/2`$ times the interior value
-(0.71 times with the default $`d`$ = `gw_diagratio` = 2/(2+√2)), and a strip
-one cell wide with walls on both sides gets $`1 - d`$ times (0.41 times).
+(0.83 times with the default $`d`$ = `gw_diagratio` = 1/3), and a strip
+one cell wide with walls on both sides gets $`1 - d`$ times (0.67 times).
 The shallow water solver moves the blocked diagonal shares to the axis
 directions (`f_opening_dynamic`). The lateral flow makes the same transfer
 by default (`f_gw_opening = 1`; 0 = no transfer): the passage width of the
@@ -388,7 +388,8 @@ The labels in the Basis column are explained in [How to read the basis of a defa
 | sd0 / sy0 (geographic information) | 1 m / 0.2 | soil thickness / specific yield | **literature value** thin soil of forested slopes[^tani97]; $`s_y`$ = effective porosity − initial water content |
 | gw_ksh_mmh | 360 mm/h | lateral saturated conductivity $`K_{sh}`$ (§4) | **literature value** ten times the matrix = macropores and pipe flow[^beven82][^mosley79] |
 | gw_eps | 1e-3 m | regularisation thickness of the dry test | **numerical** like dd of the shallow water solver |
-| gw_diagratio / gwc_diagratio | 2/(2+√2) | eight-direction share | **derived** same as the ENC core ([ENC grid](encgrid.md) §2) |
+| gw_diagratio | 1/3 | eight-direction share | **method** isotropic leading error term (the default from 2026-11-05; before that the same 2/(2+√2) as the ENC core; [Choosing the diagonal ratio d](diagratio.md), developer.md §98, in Japanese) |
+| gwc_diagratio | 2/(2+√2) | eight-direction share | **derived** same as the ENC core ([ENC grid](encgrid.md) §2); the capacity of a conduit one cell wide does not depend on its direction |
 | f_gw_opening | 1 | transfer of blocked diagonal shares (§4) | **method** 1 = the same rule as the opening correction of the ENC core (an original numerical correction) makes the conductance along walls equal to the interior value; 0 = no transfer (the default before 2026-10-30) |
 | gw2_depth / gw2_sy / gw2_infil_mmh | 3 m / 0.05 / 1 mm/h | thickness, specific yield and infiltration capacity of the bedrock layer (§5) | **literature value** upper end of the granitic weathered-zone observations[^kosugi06][^katsura08] |
 | gw2_ksh_mmh / gw2_sat0 | 0 / 0 | lateral $`K`$ / initial saturation of layer 2 | **given** 0 = capacity only / **calibration** spin-up for long runs |

@@ -72,7 +72,9 @@
   salt_eps = 1.0e-3         ! regularization amount for the dry test (m)
   salt_eps_h = 1.0e-2       ! linearization width of the gravity-current sqrt
                             !   law (head difference, m)
-  !salt_diagratio = 0.5857864 ! diagonal share of the passage width [0,1]
+  !salt_diagratio = 0.3333333333 ! diagonal share of the passage width [0,1] (it shares the
+                            !   passage widths with the soil lateral flow, so give the same
+                            !   value as gw_diagratio; a different value stops the run)
   salt_nsubmax = 200        ! upper bound of adaptive subcycles of the surface
                             !   gravity current
 

@@ -171,7 +171,7 @@ subroutine m_saltwater_init(sl, p, g, s, lat, lay1)
   fn_salt_hgs0 = ""
   salt_eps = 1.0e-3
   salt_eps_h = 1.0e-2
-  salt_diagratio = 2.0 / (2.0 + sqrt(2.0))   ! m_swflow_enc の p_diagratio と同値
+  salt_diagratio = 1.0 / 3.0                 ! gw_diagratio の既定と同じ(土層の側方流と通過幅を共有する。§98)
   salt_nsubmax = 200
   f_salt_exch = -1          ! 負 = 未指定(地表・地下の両方が有効なら 1、それ以外は 0)。
                             ! 2 = 湧出を混合比で配分する下限側の感度ケース(§47.9)
@@ -244,7 +244,7 @@ subroutine m_saltwater_init(sl, p, g, s, lat, lay1)
   end if
 
   ! --- 幾何(gwflow の側方系と共有・冪等)とエッジ作業領域 ---
-  call gwflow_lateral_geom_init(lat, g, salt_diagratio, 1.0e-3)
+  call gwflow_lateral_geom_init(lat, g, salt_diagratio, 1.0e-3, "salt_diagratio")
   call gwflow_lateral_geom_get(lat, sl%sw%rdr, sl%sw%wl, sl%sw%ainv)
   if (sl%sw%gw) call gwflow_lateral_open_get(lat, sl%sw%wlo)
   allocate(sl%sw%qs(1:4, dcp%ish-1:dcp%ieh, dcp%jsh-1:dcp%jeh), source = 0.0)
