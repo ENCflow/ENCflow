@@ -12,7 +12,7 @@ correction (`f_gravity_correction` in `&list_enc`).
   cancels, so uniform flow follows the classical horizontally projected Manning
   formula $`h = (n^2q^2/\tan\theta)^{3/10}`$ ($`h`$ is the vertical depth and
   $`q = h|\mathbf V|`$ the horizontal unit discharge; developer.md §91,
-  docs/steep_slope_design.md §2.3).
+  docs/en/users_guide/steep_slope.md §2.3).
 - `f_gravity_correction = 2` (default): the friction and the sediment shear are evaluated
   from the slope-parallel speed and the bed-normal depth $`h\cos\theta`$
   (developer.md §93). Uniform flow then follows the along-slope equations,
@@ -122,7 +122,7 @@ some cases (the sediment cases with 2) (developer.md §28.3, §93).
 - Only uniform flow on a uniform slope is tested. The centrifugal acceleration
   on slopes whose gradient changes (convex or concave), deep water over a steep
   bed and the coefficient of the pressure term (wave speed) are not covered
-  (docs/steep_slope_design.md §6).
+  (docs/en/users_guide/steep_slope.md §6).
 - The factor of 2 does not apply to the resistance laws of mixture flows
   (debris flows and others; developer.md §93).
 - Flow down steps (walls, kerbs, steps in the DEM) is not covered. On a step of a

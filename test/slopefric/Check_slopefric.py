@@ -7,7 +7,7 @@
 MARGIN セル以上離れ、水深が HMIN 以上のセルの、水深 h(鉛直)と水平の単位幅流量 q = h |V|
 (出力の H・u・v)を、等流の関係(水深の勾配と移流が勾配に比べて小さい局所の釣り合い)と比べる。
   f_gravity_correction = 1(g1): 古典の水平投影のマニング式 h = (n² q² / tanθ)^{3/10}
-      (有効重力 g_e が勾配と摩擦の両方に掛かって相殺する。developer.md §91・docs/steep_slope_design.md §2.3)
+      (有効重力 g_e が勾配と摩擦の両方に掛かって相殺する。developer.md §91・docs/users_guide/steep_slope.md §2.3)
   f_gravity_correction = 2(g2): 斜面に沿う式の等流 h_n = (n² q² / sinθ)^{3/10}、h = h_n / cosθ
       (摩擦を斜面に沿う速さと地盤に直角な水深で評価。developer.md §93。Chow 1959、Van Emelen ら 2014)
   (1) 関係: 評価するセルの h / h_解析 の平均が 1 から TOL_MEAN 以内、各セルが TOL_CELL 以内

@@ -104,11 +104,11 @@
     {
       "source": "docs/users_guide.md",
       "target": "docs/en/users_guide.md",
-      "source_sha256": "4d08d25b8516444433f5e5fe90364b4fa6135a937d5eee3294a84894dd3bd08f",
-      "target_sha256": "fee89ec217233c14c8189b20c632b405fa8df7433eed5d8e74818b86380e707a",
-      "reviewer": "Claude (Claude Code session; merge of claude/ecstatic-edison-e51vrz into main: both sides changed this pair; the merged files differ from main's recorded version only by the branch's passages (gl_lc, glacier_valley, test/glacier row, total count 776), compared side by side in Japanese and English)",
+      "source_sha256": "3c63c599032f3ad3739aec604c174f70091f5b4e125a550fc3b2e9f650e60822",
+      "target_sha256": "fa612f7c80b3e4bb0ef97f4677586ecfaa0ec96dc0ebbf57021448878b48cabd",
+      "reviewer": "Claude (Claude Code session; user-guide index: the added entry for the steep-slope gravity correction page compared with the Japanese source, rest unchanged since the previous record)",
       "method": "assistant",
-      "reviewed_on": "2026-11-04"
+      "reviewed_on": "2026-11-05"
     },
     {
       "source": "docs/users_guide/advection.md",
@@ -230,9 +230,9 @@
     {
       "source": "docs/users_guide/encgrid.md",
       "target": "docs/en/users_guide/encgrid.md",
-      "source_sha256": "b5c6b39129523827b1151b364a7a7ca095d2971096ecb9fb69d963c9e63cd8b4",
-      "target_sha256": "2781f6d8d8d66e5c3402d0f953c31514d7f507aad172ebf21cdc856e8f80264d",
-      "reviewer": "Claude (Claude Code session; default of f_gravity_correction changed from 1 to 2 (developer.md §93): the changed statements of the default and the recommendations compared side by side with the Japanese source, rest unchanged since the previous record)",
+      "source_sha256": "2a402fc9a8804a3fc6994edfd3987faa92bd35e1313f463c45a271dee5916b08",
+      "target_sha256": "bc7779d087f671b0febf48d7a7a026ad78a024e658b84523e274782799b3b8a6",
+      "reviewer": "Claude (Claude Code session; the link to the steep-slope explanation now points to the user-guide page steep_slope.md, compared with the Japanese source, rest unchanged since the previous record)",
       "method": "assistant",
       "reviewed_on": "2026-11-05"
     },
@@ -431,6 +431,15 @@
       "source_sha256": "c45b0a09c0ae7eb2a2419e4f5fd663df802afed2fdd75f0bdfc7f1e4086c9772",
       "target_sha256": "fc402c1c5f90e1ca228cfab2a0b03db171424d07f798a8ef8e6e86c6d7a11ad9",
       "reviewer": "Claude (Claude Code session; default of f_gravity_correction changed from 1 to 2 (developer.md §93): the changed statements of the default and the recommendations compared side by side with the Japanese source, rest unchanged since the previous record)",
+      "method": "assistant",
+      "reviewed_on": "2026-11-05"
+    },
+    {
+      "source": "docs/users_guide/steep_slope.md",
+      "target": "docs/en/users_guide/steep_slope.md",
+      "source_sha256": "d9da5a85941ab74e3147f86ef6e5e1b06aeb665402ea19b83b8c6f7f691c0dd1",
+      "target_sha256": "7d8404c90f0bfd62c4df4fba3dc443751778468c9ba63f51c5102038901122b9",
+      "reviewer": "Claude (Claude Code session; new user-guide page on the steep-slope gravity correction (moved from docs/steep_slope_design.md without the design discussion): English mirror written alongside the Japanese source and compared section by section, including the equations, the tables (uniform-flow factors, edge stencils, the five-paper comparison), the figure captions, the limits and the references; structure checked by script (headings, math blocks, table rows, images, links))",
       "method": "assistant",
       "reviewed_on": "2026-11-05"
     },
@@ -3812,9 +3821,9 @@
     {
       "source": "test/slopefric/README.md",
       "target": "test/slopefric/en/README.md",
-      "source_sha256": "b8ae87c50e647354d50315e7655f20ea03b8e5ef3c4eefdd0da10158a3079d76",
-      "target_sha256": "56c16310c5f736cf38d610a3c512df783d861b5e09cbca9c7c2c55c69ac8ebc1",
-      "reviewer": "Claude (Claude Code session; default of f_gravity_correction changed from 1 to 2 (developer.md §93): the changed statements of the default and the recommendations compared side by side with the Japanese source, rest unchanged since the previous record)",
+      "source_sha256": "9c24e6827bf2cf87bd98ccdd3d57cd68e4b1bc640afdcb41afe984cfe860b105",
+      "target_sha256": "cec4c15e367d3f372ee6ff7e29b9236c9cdcff59b5ecf1a1ea4f1d1027727cb6",
+      "reviewer": "Claude (Claude Code session; references to the steep-slope explanation moved to docs/users_guide/steep_slope.md (and the English mirror) in the uniform-flow item and the limits, compared with the Japanese source, rest unchanged since the previous record)",
       "method": "assistant",
       "reviewed_on": "2026-11-05"
     },

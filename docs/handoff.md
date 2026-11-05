@@ -99,7 +99,7 @@ architecture.md。このメモは「現在進行中・未完了の項目」だ�
        nest_reflect、f_gravity_correction = 0 の
        tsunami_coast・tsunami_fault・benchmark の v-shaped・v-valley(h-plane は README に数値の記載なし)。
 
-00l. **急勾配の摩擦と水平流速・斜面方向の流速の扱い(2026-11-04 に解説 docs/steep_slope_design.md を作成。2026-11-05 に案 B・C を選択式で実装、既定の扱いは議論待ち)**
+00l. **急勾配の摩擦と水平流速・斜面方向の流速の扱い(2026-11-04 に解説 docs/steep_slope_design.md を作成し、2026-11-05 にユーザーガイド users_guide/steep_slope.md へ移した。2026-11-05 に案 B・C を選択式で実装、既定の扱いは議論待ち)**
    - 現状: 有効重力 g_e は勾配・圧力・摩擦の全部に掛かるので、等流では g_e が相殺し、等流は古典の
      水平投影のマニング式(水平流速・鉛直の水深)のまま。補正が効くのは非定常の部分(加速・動き出し・
      波速)。比べた 5 文献(Ni ら 2019、Van Emelen ら 2014、Hergarten & Robl 2015、Yuan ら 2016、

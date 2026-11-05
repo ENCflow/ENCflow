@@ -7,7 +7,7 @@
 - `f_gravity_correction = 1`(2026-11-05 までの既定): 有効重力 $`g_e = g\cos^2\theta`$ が勾配と摩擦の両方に掛かって
   相殺し、等流は古典の水平投影のマニング式 $`h = (n^2q^2/\tan\theta)^{3/10}`$ になります
   ($`h`$ は鉛直の水深、$`q = h|\mathbf V|`$ は水平の単位幅流量。developer.md §91、
-  docs/steep_slope_design.md §2.3)。
+  docs/users_guide/steep_slope.md §2.3)。
 - `f_gravity_correction = 2`(既定): 摩擦と流砂のせん断を、斜面に沿う速さと地盤に直角な水深 $`h\cos\theta`$ で
   評価します(developer.md §93)。等流は斜面に沿う式の $`h\cos\theta = (n^2q^2/\sin\theta)^{3/10}`$
   (Chow 1959、Van Emelen ら 2014)になります。
@@ -96,7 +96,7 @@ MPI のバイト比較は、逐次と MPI の両方を -O2(厳密な数学)で�
 ## できないこと・限界
 
 - 一様な斜面の等流だけの検定です。勾配が変わる斜面(凸・凹)の遠心加速度、急な地盤の上の深い水、
-  圧力の項の係数(波速)は扱いません(docs/steep_slope_design.md §6)。
+  圧力の項の係数(波速)は扱いません(docs/users_guide/steep_slope.md §6)。
 - 混合体流動(土石流など)の抵抗則には 2 の倍率は掛かりません(developer.md §93)。
 - 段差(壁・縁石・DEM の段)を下る流れは扱いません。1 辺だけの段では場の勾配(minmod)がほぼ 0 に
   なるので、2 は 1 と同じ扱いです(developer.md §93)。

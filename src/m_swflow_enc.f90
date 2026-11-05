@@ -2738,7 +2738,7 @@ contains
   !   マニングの底面せん断を、斜面に沿う速さ |V_s| = |V| √(1 + (V̂·∇z)²) と地盤に直角な水深
   !   h_n = h cos θ で評価し(τ_b/ρ = g n² |V_s|²/h_n^{1/3})、斜面の面積 1/cos θ に掛かる力を
   !   水平面積あたりに直すと、水平流速 V の減速度は g n² |V_s| V/h_n^{4/3} になる(本書の導出は
-  !   docs/steep_slope_design.md)。既定の摩擦 g_e n² |V| u/h^{4/3}(g_e = g/(1 + |∇z|²))に対する
+  !   docs/users_guide/steep_slope.md §2.3)。1 の摩擦 g_e n² |V| u/h^{4/3}(g_e = g/(1 + |∇z|²))に対する
   !   倍率 (1 + |∇z|²)^{5/3} √(1 + (V̂·∇z)²) を返す。∇z は両セルの地盤の勾配(minmod。
   !   gravity_prepare)の平均 = 場の勾配で、法線成分も辺の差分(correct_ge の s_n)ではなくこれから
   !   求める(流砂のせん断の倍率 slope_shear_factor と同じ勾配)。平面の斜面では辺の差分と一致して

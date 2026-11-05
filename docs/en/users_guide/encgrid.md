@@ -196,8 +196,7 @@ Manning formula). The correction acts on the unsteady part (acceleration and
 start of motion, wave speed). The formulation, the stencils (which cells' ground
 is used for which edge), a comparison with published models and the limits (the
 difference between horizontal and slope-parallel velocity, deep water over a
-steep bed) are described in [docs/steep_slope_design.md](../../steep_slope_design.md)
-(Japanese).
+steep bed) are described in [Steep-slope gravity correction](steep_slope.md).
 
 With `f_gravity_correction = 2` (the default) the friction is also made consistent with the
 along-slope equations. The bed shear stress is evaluated with the Manning law

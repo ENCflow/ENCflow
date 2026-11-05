@@ -1,4 +1,4 @@
-"""steep-slope gravity correction design note (docs/steep_slope_design.md):
+"""steep-slope gravity correction explanation (docs/users_guide/steep_slope.md and its English mirror):
 the 1-D meaning of the effective gravity, the stencils used for an axis edge and a
 diagonal edge, and the edge-direction bias of the old per-edge definition.
 
