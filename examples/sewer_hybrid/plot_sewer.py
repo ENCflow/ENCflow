@@ -128,7 +128,8 @@ for run, c, label in [("D", C_RED, T("D: 閉領域(川なし・吐口なし)", "
         hgc = read(f"result_{run}/Hgc{k:04d}.txt")
         axs[2].plot(xg[1:38], (hgc[10] / capT[10])[1:38], color=c, lw=2, ls=ls, label=f"{run}, {tl}")
 axs[2].axhline(1.0, color=C_MUTED, lw=1, ls="--"); axs[2].annotate(T("満管(= 1)", "pipe-full (= 1)"), (20, 1.05), color=C_MUTED, fontsize=9)
-axs[2].set_xlim(0, 400); axs[2].legend(frameon=False, fontsize=8, ncol=3)
+axs[2].set_xlim(0, 400)
+axs[2].legend(frameon=False, fontsize=8, ncol=3, loc="center", bbox_to_anchor=(215, 1.26), bbox_transform=axs[2].transData)  # 満管線と D・E の線の間の空白に
 for ax in axs[:2]:
     ax.axvspan(0, 61.0 / 60.0, color="#eceae6", zorder=0); ax.set_xlim(0, 3); ax.set_xlabel(T("時間 (h)", "time (h)"))
 for ax in axs: style(ax)

@@ -133,10 +133,12 @@ matplotlib.
 
 ## Results
 
-(The tables are values recomputed and confirmed on 2026-11-02 with the current defaults
+(The tables and figures are values recomputed on 2026-11-05 with the current defaults
+(f_gravity_correction = 2, after the fixes of the outflow suppression and the edge depth;
+developer.md §93–§95, in Japanese). Compared with the recomputation of 2026-11-02
 (f_opening_dynamic = 3 and the correction of the lateral faces of the momentum-conserving
-advection). The figures are from an earlier run and are indistinguishable at the digits shown.
-developer.md §68.41–§68.43, in Japanese)
+advection; §68.41–§68.43), only the last digit of the step position at 6000 s and the largest
+difference from the theory (2.3 → 2.2 %) changed)
 
 ### Amount of supply: tools and cover
 
@@ -148,7 +150,7 @@ developer.md §68.41–§68.43, in Japanese)
   is at r = 0.4–0.6, and the bed is fully covered as r → 1.
 - **Both**: even at r = 0 the plucked gravel serves as tools and abrasion occurs (3.06×10⁻⁶ m/s,
   faster than the 2.53×10⁻⁶ of plucking only); the maximum is at r ≈ 0.3.
-- The steady incision rate agrees with the theory within 2.3 % (0 < r < 1), and the cover
+- The steady incision rate agrees with the theory within 2.2 % (0 < r < 1), and the cover
   thickness also agrees with H* ln(1/(1 − r)). r = 1 is on the way to full cover (the cover keeps
   thickening and the incision rate tends to 0).
 
@@ -189,8 +191,8 @@ developer.md §68.41–§68.43, in Japanese)
 
 | Supply ratio | Position of the step (the mid-height point of the drop; from the inflow end) | Incision of the upstream reach (40 m from the inflow end) | Incision of the downstream reach (90 m) |
 |---|---|---|---|
-| 0 | 70.0 → 68.8 → 66.0 → 60.8 m (6000, 15000, 30000 s) | 8.2 cm | 7.0 cm |
-| 0.4 | 70.0 → 68.9 → 66.4 → 61.6 m | 5.0 cm | 3.6 cm |
+| 0 | 70.0 → 68.7 → 66.0 → 60.8 m (6000, 15000, 30000 s) | 8.2 cm | 7.0 cm |
+| 0.4 | 70.0 → 68.8 → 66.4 → 61.6 m | 5.0 cm | 3.6 cm |
 
 - Plucking is fast on the face of the step and just below it (where the velocity is largest),
   and the step retreats upstream while relaxing (largest slope 0.31 → 0.08). A scour hole (like
