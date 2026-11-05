@@ -3947,11 +3947,11 @@
     {
       "source": "test/taupart/README.md",
       "target": "test/taupart/en/README.md",
-      "source_sha256": "164ec2bbff0eed06144403b79ca44bcf2cdbb8a794054e523ee8ef02a3b2e6ae",
-      "target_sha256": "dc935afe8d7cd2551082673b6e58e4630e3e73b0009a2bea380fd1782bc447ff",
-      "reviewer": "Claude (assistant)",
+      "source_sha256": "c3ae3fc5ede8e1ecf43b522d5bdfef55b16bb88406d9d41aa4613021c9f75717",
+      "target_sha256": "a1114148666e6b97a2c50cb31390d16472be291dc11b7837b3b0a1fd9c4f5b07",
+      "reviewer": "Claude (Claude Code session; default f_gravity_correction = 2: the check item 2 now states that the tau* of the capacity includes the slope factor (1 + S^2)^(7/6), and the 2026-11-05 record of the ratios was added, compared with the Japanese source, rest unchanged since the previous record)",
       "method": "assistant",
-      "reviewed_on": "2026-11-02"
+      "reviewed_on": "2026-11-05"
     },
     {
       "source": "test/tide/README.md",

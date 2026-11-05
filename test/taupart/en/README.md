@@ -36,7 +36,8 @@ the same transport formula from the depth and velocity of the outlet cell.
    Manning uniform depth, V·h within ±1 % of q, and the coefficient of variation of the depth < 1 %.
    The degradation wave from the upstream end has not reached the section (|Δz| < 5 mm).
 2. The steady bed-load rate agrees within ±0.5 % with the capacity evaluated from the h and V of the
-   outlet cell at 3000 s with the transport formula including the factor (the capacity of an
+   outlet cell at 3000 s with the transport formula including the factor (τ* includes the slope factor
+   $`(1 + S^2)^{7/6}`$ of the default `f_gravity_correction = 2`; developer.md §93) (the capacity of an
    open-boundary face uses the hydraulics of the cell itself; the outlet cell lowers by about 3 cm in
    3000 s because of the free-outflow boundary, which does not affect the check because the h and V
    of that moment are used). The configuration below the threshold has a ledger of 0.
@@ -50,6 +51,8 @@ the same transport formula from the depth and velocity of the outlet cell.
 Record of 2026-11-02 (gfortran 13.3, release build): steady rate / capacity = off 1.0000, d044 0.9994,
 d19 1.0004, d0 0.9988, d19_mpm 1.0004; d76 has no bed load. np = 2 and 4 are byte-identical to the
 serial run.
+Record of 2026-11-05 (after the default became `f_gravity_correction = 2`; the τ* of the capacity includes
+the slope factor): off 0.9994, d044 0.9993, d19 0.9999, d0 0.9988, d19_mpm 0.9999; d76 has no bed load.
 
 ## Run
 
