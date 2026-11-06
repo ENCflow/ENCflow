@@ -1445,65 +1445,65 @@
     {
       "source": "examples/debris_fan/README.md",
       "target": "examples/debris_fan/en/README.md",
-      "source_sha256": "49ebbc5911e4fdfd8e3495e62709d6430bd6987261466cefe5f57bab8ddb1bab",
-      "target_sha256": "900fca917b1bcf0322197719965633358910ceba040fa7fab1e955506c45e627",
-      "reviewer": "Claude (Claude Code session; recomputed 2026-11-05: the summary, the recompute note, the tables and the values in the text compared with the Japanese source, rest unchanged since the previous record)",
+      "source_sha256": "1f63c455dbcdd854ba8284336b3938e90ed270701d6a84169df335c7c7564d9b",
+      "target_sha256": "22a0ddcb64736c26f647a841e40525827bedf09dc3978b9dbd9ac51777c42bd7",
+      "reviewer": "Claude (Claude Code session; compared the Japanese source with the English mirror for the summary bullets, the mechanism table row on gravity, the Courant range, the results history (corrected 2026-11-05 statement and the 2026-11-06 recompute with 2 after §101), the narrative of the reference case, the fan-sediment table, the orientation bullets, the L1 and ratio tables with their bullets, the front-arrival range, the spreading table and bullets, the guide table and the notes on the scar margin, conservation (outflow of 11 m³ in one case) and pore water; also removed a duplicated sentence at the end of the English history paragraph; rest unchanged since the previous record)",
       "method": "assistant",
-      "reviewed_on": "2026-11-05"
+      "reviewed_on": "2026-11-06"
     },
     {
       "source": "examples/debris_fan/figs/dependence.png",
       "target": "examples/debris_fan/en/figs/dependence.png",
-      "source_sha256": "96cf4e21fdfd37038562506918f3c551b93e18da977f3297765427eabf541e91",
-      "target_sha256": "67c5aeb6cf8106ebd19255c50d6d3bc9c19bda5cdc25da1f952a3e4c4fe10ca3",
-      "reviewer": "Claude (Claude Code session; recomputed 2026-11-05: both drawn by plot_results.py from the same results, labels compared with the Japanese figure)",
+      "source_sha256": "a39982677b9df5d8011cd579e03c60d35035d7eba1e0383c9742b62060066bac",
+      "target_sha256": "06646eac71f76ede07e1550dee604c8c0bdd359f58d9d95a3c4c83f443429461",
+      "reviewer": "Claude (Claude Code session; viewed both images side by side: same eight panels (map difference, sediment on the fan, deposit area, spreading, depth area, arrival time, houses, valley deposit) with the same data and reference band; titles, axis labels and legend translated)",
       "method": "assistant",
-      "reviewed_on": "2026-11-05"
+      "reviewed_on": "2026-11-06"
     },
     {
       "source": "examples/debris_fan/figs/maps_20m.png",
       "target": "examples/debris_fan/en/figs/maps_20m.png",
-      "source_sha256": "68e877a2d8eae4d67feb426d8b4d7cd70e29c6648f7a16f7eb08ee76f27b2189",
-      "target_sha256": "1bce571f26b2b2821c441c297d597ce2ba55839a6999d252a4dcabb091517b67",
-      "reviewer": "Claude (Claude Code session; recomputed 2026-11-05: both drawn by plot_results.py from the same results, labels compared with the Japanese figure)",
+      "source_sha256": "649eb6df642aa8c244f417c7f54133d487e2f892fb852ab9f429358de687f427",
+      "target_sha256": "d80fc6e36a6fffe5ccad29e79d93a21d8bd6ad72df2482aaac776c48eca21b02",
+      "reviewer": "Claude (Claude Code session; viewed both images side by side: same six maps on the 20 m grid with the same colours and lines; titles, colour-bar label and axis labels translated)",
       "method": "assistant",
-      "reviewed_on": "2026-11-05"
+      "reviewed_on": "2026-11-06"
     },
     {
       "source": "examples/debris_fan/figs/maps_40m.png",
       "target": "examples/debris_fan/en/figs/maps_40m.png",
-      "source_sha256": "2f6034263feec280e487d22d24a5513842df7aa07f83b956767e98844b0ede4f",
-      "target_sha256": "aa2786f8f8798856ccf8e0b986d7c2e399f8bb2aff871cd75ff30e59ed7e873d",
-      "reviewer": "Claude (Claude Code session; recomputed 2026-11-05: both drawn by plot_results.py from the same results, labels compared with the Japanese figure)",
+      "source_sha256": "ed979e49f2679289062b1c316a2a370eb402c0b5fbd06aee270fc85f73d9d8d1",
+      "target_sha256": "c013b9c6010d5245fa0165e7ecde3a87a30bc8ed2995635e1cb467b509ad6992",
+      "reviewer": "Claude (Claude Code session; viewed both images side by side: same six maps on the 40 m grid with the same colours and lines; titles, colour-bar label and axis labels translated)",
       "method": "assistant",
-      "reviewed_on": "2026-11-05"
+      "reviewed_on": "2026-11-06"
     },
     {
       "source": "examples/debris_fan/figs/maps_5m.png",
       "target": "examples/debris_fan/en/figs/maps_5m.png",
-      "source_sha256": "eb655ce16e4814e4856b6c2d179f57a98abdce70a137695ae6f685e6dbd25b31",
-      "target_sha256": "beb20a2921bc9edfcbb1d45838bb9b23c12ed46b7bf9b6c2cd9bcbab944fa1bb",
-      "reviewer": "Claude (Claude Code session; recomputed 2026-11-05: both drawn by plot_results.py from the same results, labels compared with the Japanese figure)",
+      "source_sha256": "16d9063a174eddf19e065e0011e84dfe39673f0d736b9f7af0c2d16b777a409a",
+      "target_sha256": "e0ea5d1ec4f904d8e9ed2c3ecfd4b2b69dfe104b383d1393e3dfb10a61d1fe0f",
+      "reviewer": "Claude (Claude Code session; viewed both images side by side: same six maps (0/22.5/45 degrees, eight and four neighbours) of deposit thickness, the 1 m depth line, the moving-mud line and houses; titles, colour-bar label and axis labels translated)",
       "method": "assistant",
-      "reviewed_on": "2026-11-05"
+      "reviewed_on": "2026-11-06"
     },
     {
       "source": "examples/debris_fan/figs/overlay.png",
       "target": "examples/debris_fan/en/figs/overlay.png",
-      "source_sha256": "057a2e243ec2c21f97f829b5790684a682918d1d73cd006132ad895185d2e8cb",
-      "target_sha256": "b4d96d3277a6cc4d0347956f9adbc0c7aeccd74618ae97c11041802b71d4ec9c",
-      "reviewer": "Claude (Claude Code session; recomputed 2026-11-05: both drawn by plot_results.py from the same results, labels compared with the Japanese figure)",
+      "source_sha256": "2a02f64123483aa1b4974c6f7cf1f1fe7a834d008f7718bec910b0d916c72f36",
+      "target_sha256": "06d0c892660740efdd9120f4be8c52bd8fe0da8c63ed0dc92f7dcf9437e7f80d",
+      "reviewer": "Claude (Claude Code session; viewed both images side by side: same overlaid 0.5 m deposit and 1 m depth lines for eight and four neighbours by orientation and grid spacing; titles and legends translated)",
       "method": "assistant",
-      "reviewed_on": "2026-11-05"
+      "reviewed_on": "2026-11-06"
     },
     {
       "source": "examples/debris_fan/figs/series.png",
       "target": "examples/debris_fan/en/figs/series.png",
-      "source_sha256": "6a33dcd0a5004a33c3b10b848ed76a33c0b68ebef970ab06398a6de69dc301f5",
-      "target_sha256": "fc5ea6f17b72e090864ce8a3fb02949763b7e1fc85e89d4f1d220f4e874ef1c3",
-      "reviewer": "Claude (Claude Code session; recomputed 2026-11-05: both drawn by plot_results.py from the same results, labels compared with the Japanese figure)",
+      "source_sha256": "0bbc2d5831a3f0fa08f87e721cef0a7f36350a0d211d2532598a39a90d18489b",
+      "target_sha256": "6859f11f9217dadb990e387fd04f71a4506db189da4392469162c2063e8c1895",
+      "reviewer": "Claude (Claude Code session; viewed both images side by side: same front-position, along-path deposit and direction-on-fan curves for eight and four neighbours; titles, axis labels, annotations and legends translated)",
       "method": "assistant",
-      "reviewed_on": "2026-11-05"
+      "reviewed_on": "2026-11-06"
     },
     {
       "source": "examples/debris_fan/figs/setup.png",
