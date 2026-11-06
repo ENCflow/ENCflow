@@ -4334,9 +4334,9 @@
     {
       "source": "tutorials/chichibu/Fig_chichibu.plt",
       "target": "tutorials/chichibu/en/Fig_chichibu.plt",
-      "source_sha256": "68cf67d6216f986fbc38c84842b31bad2ee0364b9016f36e1a9ae72e4d8bb150",
-      "target_sha256": "f44c931e3a8f644367eaf374c2eda40b3847d53de6b00f0f2d3fb494b6e4d0d0",
-      "reviewer": "Claude (Claude Code session; Step 4 revised 2026-11-06 to try f_advection_donor = 2: Japanese and English texts, parameter comments and plot titles edited together; figures drawn by Fig_chichibu.sh (Fig_chichibu.plt and en/Fig_chichibu.plt) from the same results, Japanese and English step4_hydro viewed and labels compared; step7 figures are the same files drawn by Fig_step7.py)",
+      "source_sha256": "6a42700b9c9b600f23200968978db3206428be8aafd83a33e6f44d23523528a3",
+      "target_sha256": "d2604c65056da87b3e88235f19a996f135e7efa663df22c798ea92e67ee5fbfb",
+      "reviewer": "Claude (Claude Code session; Step 4 restructured 2026-11-06 for beginners and the dated history notes removed: Japanese and English texts, plot legends and figures edited/regenerated together; both texts read side by side)",
       "method": "assistant",
       "reviewed_on": "2026-11-06"
     },
@@ -4352,9 +4352,9 @@
     {
       "source": "tutorials/chichibu/README.md",
       "target": "tutorials/chichibu/en/README.md",
-      "source_sha256": "250313ae347e1685338e18e9e3c8d7988c624ccbb4c44bb8f863e8e3e2f16059",
-      "target_sha256": "ab30e0c9e93fbc0af0f67c8728277013005ec915f5cecaa3c85bc0ad3dd3c68c",
-      "reviewer": "Claude (Claude Code session; interim 2026-11-06: param_supp_* switched to f_advection_donor = 2 and the README notes that the supplement numbers are being recomputed; Japanese and English edited together)",
+      "source_sha256": "e3b1e144b364915a5bb9eb8f74a6609104ee64137ff235c02cd986d6f4132f94",
+      "target_sha256": "899f8d7c03e6412c6a38f0d2947b9be377d9c5804368b0d7097b2dbdfb73b10e",
+      "reviewer": "Claude (Claude Code session; Step 4 restructured 2026-11-06 for beginners and the dated history notes removed: Japanese and English texts, plot legends and figures edited/regenerated together; both texts read side by side)",
       "method": "assistant",
       "reviewed_on": "2026-11-06"
     },
@@ -4442,9 +4442,9 @@
     {
       "source": "tutorials/chichibu/figs/step4_hydro.png",
       "target": "tutorials/chichibu/en/figs/step4_hydro.png",
-      "source_sha256": "a4b3d7873da35a2f1cce72f513437e3e29b12fec72e25e7d65a216473720b3a7",
-      "target_sha256": "f1d764cd8f80e017f5b5a174ba580dc2118a845adc2f4fccf99a84f7851bc12f",
-      "reviewer": "Claude (Claude Code session; Step 4 revised 2026-11-06 to try f_advection_donor = 2: Japanese and English texts, parameter comments and plot titles edited together; figures drawn by Fig_chichibu.sh (Fig_chichibu.plt and en/Fig_chichibu.plt) from the same results, Japanese and English step4_hydro viewed and labels compared; step7 figures are the same files drawn by Fig_step7.py)",
+      "source_sha256": "2f7ebc3d374a812f0ace6308639f8f825e796eeeb94cfe1f489593a4ae4fb510",
+      "target_sha256": "15427c05a88b8d56b79b02b98ad37c62d22553572d5411a087f5974b135477e1",
+      "reviewer": "Claude (Claude Code session; Step 4 restructured 2026-11-06 for beginners and the dated history notes removed: Japanese and English texts, plot legends and figures edited/regenerated together; both texts read side by side)",
       "method": "assistant",
       "reviewed_on": "2026-11-06"
     },

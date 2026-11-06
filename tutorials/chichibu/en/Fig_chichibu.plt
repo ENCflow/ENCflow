@@ -164,11 +164,11 @@ set title "Step 3: hydrographs at the transects (upstream 1 -> downstream 4)"
 plot for [i=1:4] sprintf('result_step3/fluxes/flux000%d.csv', i) using 2:3 with lines lw 1.5 title sprintf("transect %d", i)
 
 # ---- Step 4: 移流項の風上供給元の切替(f_advection_donor = 2)の効果 ----
-#      灰色の破線は旧版の調整(dd = dv = 0.0001。跳ねの先送り)
+#      灰色の破線は限界水深を 1/10 にした計算(dd = dv = 0.0001。跳ねの先送り)
 set output "en/figs/step4_hydro.png"
 set title "Step 4: effect of switching the momentum donors of the advection term (transect 4)"
 plot 'result_step3/fluxes/flux0004.csv' using 2:3 with lines lw 1.5 title "Step 3 (defaults)", \
-     'result_cmp_dd/fluxes/flux0004.csv' using 2:3 with lines lw 1.2 dt 2 lc rgb "#808080" title "dd = dv = 0.0001 (previous adjustment)", \
+     'result_cmp_dd/fluxes/flux0004.csv' using 2:3 with lines lw 1.2 dt 2 lc rgb "#808080" title "dd = dv = 0.0001 (threshold depth 1/10)", \
      'result_step4/fluxes/flux0004.csv' using 2:3 with lines lw 1.5 title "Step 4 (f\\_advection\\_donor = 2)"
 
 # ---- Step 5: 遮断・浸透による流出の減少 ----

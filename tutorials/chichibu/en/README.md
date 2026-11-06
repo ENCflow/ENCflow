@@ -15,9 +15,9 @@ computation with real terrain data, in the following order.
 - **Step 2**: GeoTIFF input/output, channel mask and roughness
 - **Step 3**: Measurement (probes and flux transects) and distributed
   output
-- **Step 4**: Tuning the numerical settings -- how to read ex_flux, what
-  the bumps on the recession limb are, and the momentum donors of the
-  advection term
+- **Step 4**: Tuning the numerical settings -- how to read ex_flux, the
+  threshold depth dd, what the bumps on the recession limb are and how
+  to remove them
 - **Step 5**: Rainfall interception and subsurface infiltration (bucket
   model), the three water-storage columns
 - **Step 6**: Boundary condition at the catchment outlet; understanding
@@ -92,31 +92,6 @@ time, progress, S(m), Runge, ex_flux, Cn_max, h_max(m), V_max(m/s)
   6:00:00.00 100.0%    0.1000   0.5%      0    0.5131   29.6515    4.1987
 main: program terminated normally
 ```
-
-> **Note (2026-10-31)**: on the day f_opening_dynamic 3 became the default, Step 5, which closes the
-> basin outlet and pools water deeply, was found to stop at the edge of the pool at 5:14 h, and the
-> `param_*.txt` of this tutorial temporarily set 2 explicitly. The cause was not the treatment of the
-> openings but a mass inconsistency of the lateral face flux of the momentum-conservative advection,
-> which assumed 2.4 times the real flux on faces whose diagonal openings are blocked (2 only delays the
-> same growth); it was fixed the same day (developer.md §68.42). The parameter files now keep the
-> defaults, and the numbers and figures of the text were regenerated with the corrected defaults.
->
-> **Note (2026-11-05)**: the numbers and figures of the main text were regenerated after the default
-> of the steep-slope gravity correction became 2 (friction along the slope;
-> [steep-slope gravity correction](../../../docs/en/users_guide/steep_slope.md)) and the treatment of
-> the outflow of a cell was fixed (developer.md §94, §95, in Japanese; the limiting of excessive
-> outflow, ex_flux, is now normally 0). Since ex_flux is now 0 in every step, Step 4 was rewritten to
-> start from the bump in the hydrograph.
->
-> **Note (2026-11-06)**: the cause of the bumps on the recession limb was identified (a thin film of
-> water on the bank acts as the momentum donor of the main-channel advection term, and its wet/dry
-> test flips), and the option `f_advection_donor = 2` for the upwind donors of the momentum-conserving
-> advection was added (developer.md §100, in Japanese). Step 4 was changed from "reduce the threshold
-> depths dd and dv to 1/10" to "try `f_advection_donor = 2`"; the `param_*.txt` of Steps 4 to 7 return
-> dd and dv to their defaults and carry `&list_enc`. The numbers and figures of Steps 4 to 7 were
-> regenerated. The numbers and figures of the supplement (effect of resolution) are still those of
-> the Step 4 configuration before the revision (dd = dv = 0.0001, `f_advection_donor` at its default
-> 0); their recomputation with the same setting and the update are in progress.
 
 The contents of `en/param_step1.txt` (the full file, apart from the
 title comment at the top) are shown below. It is structured almost
@@ -448,67 +423,62 @@ with the same four-time layout.
 
 Looking closely at the transect hydrographs of Step 3 (the figure of
 Step 3), the hydrograph of transect 4 has **spurious bumps** on the
-recession limb at t ≈ 232 min and 316 min (at 232 min it jumps by about
-435 m^3/s within a minute and settles over about 10 minutes). The
-ex_flux column of the screen output counts the events where "the
+recession limb at t ≈ 232 min and 316 min (at 232 min it jumps by more
+than 400 m^3/s within a minute and settles over about 10 minutes). The
+ex_flux column of the screen output is a guide for diagnosing a lack of
+accuracy or a rough computation. It counts the events where "the
 outflow computed from the momentum equation was about to exceed the
-water volume of the cell and was therefore limited". It is a safety
-device, so mass is conserved; it is normally 0, and repeated counts
-are a sign that the computation is getting rough. In Step 3, however, ex_flux stays 0, so the bumps cannot be
-noticed from the screen output: it is important to plot the
-hydrographs and check. In this case the usual remedies -- reducing the
-time step dt, reducing the adaptive Runge-Kutta threshold
-`p_adprunge_thresh` -- do not help.
+water volume of the cell and was therefore limited"; it is a safety
+device, so mass is conserved, and it is normally 0. Repeated counts are
+a sign that the computation is getting rough. This time, however,
+ex_flux stays 0, so the bumps cannot be noticed from the screen output.
+It is important to plot the hydrographs and check them.
 
-Earlier versions of this tutorial removed the bumps at this point by
-reducing the **threshold depth dd** (the depth below which an edge
-with both sides shallower does not move water; default 0.001 m) to
-1/10, 0.0001 (together with the virtual depth dv; it is dd that
-matters: reducing dd alone removes the bumps, reducing dv alone does
-not). The bumps do disappear within the 6-hour run (the gray dashed
-line in the figure below). But this does not remove the cause; it only
-**postpones** it. Tracing the bumps to their source showed the
-following (developer.md §100, in Japanese).
+In this case the usual remedies -- reducing the time step dt, reducing
+the threshold of the adaptive Runge-Kutta, `p_adprunge_thresh` -- do
+not help. Other parameters that concern the accuracy of the computation
+are the **threshold depth dd** and the **virtual depth dv**
+(`&list_sysparam`). dd is the depth below which a cell counts as dry:
+an edge whose two sides are both shallower than dd moves no water
+(default 0.001 m = 1 mm). dv is the lower bound of the depth used in
+the friction term, which keeps the friction from blowing up in very
+shallow water (default 0.001 m). Here, reducing dd to 1/10, 0.0001 m
+(together with dv), removes the bumps within the 6-hour run (the gray
+dashed line in the figure below). But this does not remove the cause;
+it only **postpones** it. The real cause lies elsewhere.
 
-- The bump starts just upstream of transect 4, at the edge entering a
-  flat channel reach of the filled DEM (a "pond"; it is also a source
-  of the discharge oscillations explained in Step 6). The main-channel
-  water enters this edge from the diagonally upstream cell, whereas
-  the upstream cell on the line of the edge (the western neighbor) is
-  a bank cell that lies on the channel mask but stands 27 m above the
-  pond, carrying nothing but a film of about 1 mm of water left by the
-  rain.
-- The default momentum-conserving advection term
-  (`f_advection_scheme = 3`) estimates the momentum inflow through the
-  face of an edge as the mass flux through the face (the cell-averaged
-  discharge, i.e. the sum of the contributions from all directions)
-  times **the velocity of the upstream link on the line of the edge**.
-  When that upstream link is a bank film, the large discharge entering
-  the pond is multiplied by the near-zero velocity of the film, and a
-  deceleration that should not exist (a brake) acts: it built a
-  water-surface step of 0.6 to 1.2 m within one cell inside the flat
-  pond and held the water back.
-- The film thins slowly after the rain and drops below the threshold
-  depth dd (1 mm) at t = 231 min. At that moment it fails the donor
-  test (depth ≥ dd), the brake vanishes within one step, and the water
-  that was held back is released: the +435 m^3/s bump (the bump at
-  316 min and the small bumps at 116 and 204 min on transect 3 are the
-  same mechanism at other places). Reducing dd to 1/10 only moves the
-  moment the film drops below 0.1 mm beyond the end of the run; the
-  brake stays (and so does the held-back peak discharge).
+- After the rain, a thin film of water remains on top of the river
+  banks. In the default computation of the advection term, where the
+  main flow turns, this film can put a **strong brake** on the main flow
+  (the mechanism is explained in [section 4.4 of the advection chapter
+  of the users guide](../../../docs/en/users_guide/advection.md)).
+- While the brake keeps acting, water piles up in the river as behind a
+  dam.
+- The film thins slowly after the rain and at some point drops below
+  dd. At that moment the film counts as "dry", the brake is released,
+  and the water that was held back is let go all at once. That is the
+  bump.
+- Reducing dd only delays the release of the brake (beyond the end of
+  the run); the brake itself remains, and so does the held-back peak
+  discharge.
 
 The bumps concentrate on the recession limb because, after the rain,
-the films on the slopes and banks thin slowly all at once and cross dd
-one after another. The wet/dry test of a thin cell acting as a switch
-in the momentum equation of a deep neighboring edge is a structure not
-specific to ENCflow: it can occur in any 2D model whose wet/dry
-threshold enters the choice of the upwind side. The remedy is to
-determine the upwind value of a face not from the single link on the
-line but as **an average weighted by the discharges of all links that
-actually carry water into the cell of the face**. Add `fn_enc` to
-`&list_sysparam` and set `f_advection_donor = 2` in `&list_enc`
-([section 4.4 of the advection chapter of the users guide](../../../docs/en/users_guide/advection.md)).
-dd and dv stay at their defaults.
+the films on the slopes and banks all thin slowly together and cross dd
+one after another at many places. The wet/dry test of a thin layer of
+water acting as a switch in the computation of a deep flow next to it
+is a structure not specific to ENCflow: it can occur in 2D models in
+general.
+
+The remedy is to change where the advection term reads "the momentum of
+the incoming water". By default it is read from the cell straight
+behind the face (here the film on the bank); with
+`f_advection_donor = 2` it is read from the flows that actually carry
+water into the cell, in proportion to the water each carries. The film
+carries almost no water, so its influence practically vanishes and
+neither the brake nor the bump arises. The result also hardly changes
+with dd any more. Add `fn_enc` to `&list_sysparam` and set
+`f_advection_donor = 2` in `&list_enc`. dd and dv stay at their
+defaults.
 
 ```
 &list_sysparam
@@ -521,38 +491,39 @@ dd and dv stay at their defaults.
 /
 ```
 
-The weight of the film link vanishes in the discharge ratio (of the
-order of one part in a million), so neither the brake nor the bump
-arises, and the result hardly changes with dd any more (the
-sensitivity of the transect 4 peak to dd drops from 155 to 24 m^3/s).
-
 ![Step 4: effect of switching the momentum donors of the advection term](figs/step4_hydro.png)
 
-After the change (`en/param_step4.txt`), the spurious bumps that
-appeared on the recession limb at t ≈ 232 min and 316 min disappear and
-the waveform becomes smooth (a small step of +23 m^3/s remains at
-343 min). At the same time, because the artificial deceleration that
-was distributed along the whole main channel is gone, the peak
-discharge rises from 5,546 to 6,323 m^3/s (+14%) and the peak arrives
-20 minutes earlier (171 to 151 min). The dashed line with reduced dd
-(5,391 m^3/s) shows no bumps but is the same held-back waveform as
-Step 3. In real-terrain computations on coarse grids, **artifacts of
-the numerical settings** ride on the waveform like this. Before tuning
-roughness against observed hydrographs, it is important to remove
-them. Note that `f_advection_donor = 2` is optional (the default is 0)
-and is a change that moves the peak by 10 to 20%; which is closer to
-reality should be judged against observations.
+After the change (`en/param_step4.txt`), the bumps on the recession
+limb disappear and the waveform becomes smooth. At the same time,
+because the artificial brakes that acted at many places along the main
+channel are gone, the peak discharge becomes a little more than 10%
+larger (5,546 to 6,323 m^3/s) and the peak arrives about 20 minutes
+earlier. The dashed line with reduced dd shows no bumps but is the same
+held-back waveform as Step 3. In real-terrain computations on coarse
+grids, **artifacts of the numerical settings** ride on the waveform like
+this. Before tuning roughness against observed hydrographs, it is
+important to remove them.
 
-One more note: earlier versions of this tutorial also lowered the
-upwind fraction of the advection term, `p_adv_upwind_index`, at this
-point. With the current default advection scheme (momentum-conserving
-with MUSCL, `f_advection_scheme = 3`) this coefficient is not used (it
-belongs to scheme 1 only), so no upwinding adjustment is needed.
-Solving with the diffusive wave (`f_govequation = 1` in
-`&list_sysparam`), which drops the advection term altogether, remains
-an option ([the shallow-water flow chapter of the users
-guide](../../../docs/en/users_guide/swflow.md)). The diffusive wave has
-no advection term, so it does not show these bumps either.
+`f_advection_donor = 2` is optional; the default is 0. Set it in cases
+where the river is narrow compared with the grid (one-cell-wide
+channels) and the flow turns at many places without following the grid
+directions -- narrow mountain valleys or meandering channels computed on
+a coarse grid, for instance. Bumps on the recession limb of the
+hydrograph, or a result that changes with dd, are the signs. In wide
+flows or on smooth terrain the result changes little (of the order of a
+few percent). Since it is a change that moves the peak by 10 to 20%,
+judge which is closer to reality against observations.
+
+Note that the diffusive wave (`f_govequation = 1` in `&list_sysparam`)
+has no advection term, so it does not show these bumps. But the
+diffusive wave neglects the inertia of the water: it cannot represent
+places where the flow accelerates or decelerates sharply (bores,
+hydraulic jumps, the front of an inundation, run-up), and the arrival
+time and the peak of the flood wave differ from those of the dynamic
+wave. Keep the dynamic wave for inundation computations with wetting
+and drying, and use the diffusive wave only for sensitivity experiments
+and comparisons with other models ([the shallow-water flow chapter of
+the users guide](../../../docs/en/users_guide/swflow.md)).
 
 ## Step 5: Rainfall interception and subsurface infiltration
 
@@ -908,9 +879,8 @@ subsection and "What to take away about the ENC grid".
 This tutorial has used a 200 m grid throughout. To see how the results
 change with a finer grid, we move the Step 4 configuration (no losses,
 no outlet) to 100 m and 50 m grids. Note, however, that the numbers and
-figures below were computed with the Step 4 configuration as it was
-before the revision of 2026-11-06 (dd = dv = 0.0001, `f_advection_donor`
-at its default 0). The `param_supp_*.txt` files have already been
+figures below were computed with dd = dv = 0.0001 and `f_advection_donor`
+at its default 0. The `param_supp_*.txt` files have already been
 updated to `f_advection_donor = 2` as in Step 4; the recomputation with
 that setting (hours) and the update of the numbers and figures are in
 progress. The terrain data are the 100 m and
