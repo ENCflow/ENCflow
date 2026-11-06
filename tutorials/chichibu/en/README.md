@@ -890,7 +890,7 @@ resolutions, to see what the 8-direction exchange of the ENC grid
 brings. These six runs (plus the three width-equalized runs and the twelve
 runs with a different treatment of advection described below) and the
 figures are reproduced in one go with `./Fig_supp.sh` from the case
-directory (it includes seven 50 m grid runs, so it takes about three hours
+directory (it includes seven 50 m grid runs, so it takes 3 to 4 hours
 on a 4-core laptop).
 
 ### Mapping the transects
@@ -922,9 +922,9 @@ the design reasons for ENCflow's fixed step are in the
 
 | grid | computed cells | dt | steps | run time (ENC, 4 threads) |
 |---|---|---|---|---|
-| 200 m | 17,885 | 6 s | 3,600 | 16 s |
-| 100 m | 71,486 | 1.5 s | 14,400 | 211 s |
-| 50 m | 285,843 | 0.75 s | 28,800 | 1,355 s |
+| 200 m | 17,885 | 6 s | 3,600 | 21 s |
+| 100 m | 71,486 | 1.5 s | 14,400 | 236 s |
+| 50 m | 285,843 | 0.75 s | 28,800 | 1,535 s |
 
 ### Result 1: changing the resolution (ENC)
 
@@ -1274,7 +1274,7 @@ computations should differ much less; checking this is left to the reader
 
 ### What to take away about the ENC grid
 
-- **Weak grid dependence**: from 200 to 50 m (16 times the cells, 85
+- **Weak grid dependence**: from 200 to 50 m (16 times the cells, 73
   times the run time) the peaks changed by +16% upstream and +14 to 33%
   downstream, with the peak times within 10 minutes. For an
   estimate of the flood wave over the whole catchment a 200 m grid is
@@ -1295,7 +1295,7 @@ computations should differ much less; checking this is left to the reader
   in the user's guide.
 - **The price of resolution is computation**: halving the grid
   multiplies the cells by 4 and, because dt must shrink with the
-  growing velocities, the steps by 2 to 4, so the run time grows 6 to
-  13 times. In
+  growing velocities, the steps by 2 to 4, so the run time grows 7 to
+  11 times. In
   practice, first grasp the overall behavior at about 200 m, then
   refine where the location and purpose require it.
