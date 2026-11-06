@@ -20681,7 +20681,7 @@ test/lava・test/glacier の全構成が逐次・MPI np = 2・4 で合格し、�
   セルごとに 8 リンク分を 1 回だけ作れば重い部分が 1/8 になる(最適化は未実施。handoff 00n)。
 
 **検証**(2026-11-06。gfortran 13.3 / Open MPI 4.1.6、Ubuntu 24.04。-Ofast の既定ビルド):
-- 既定 0(無効)の回帰: reference を持つ 42 ケースの `./Run.sh`(逐次、ULP = 0)が 42 ケースすべて PASS(OpenMP 2 スレッド)。31 ケースは identical、11 ケース(chichibu_icmap・nhbore・nhbottom・nhbreak・nhcurrent・nhshelf・nhsolitary・nhwave・nhwave_nh・wfcurrent・wfsed)は各 Run.sh の許容(印字の最終桁 1 つ = ULP 1。nh 系は Runge 列を除外)の内側で 1〜4 値の最終桁の差(nh 系は複数スレッドの既知の非決定性 §91 の記録と同じ型)。変更前(d4f19a4)と変更後の実行ファイルを 1 スレッドで比べると、chichibu_icmap の Log.txt・summary.csv はバイト一致(= 最終桁の差はスレッド数由来で、コードを足したことによる -Ofast の最適化の差ではない)。nh 系 8 ケースと wfcurrent・wfsed の同じ比較は実行中(結果は追記)。
+- 既定 0(無効)の回帰: reference を持つ 42 ケースの `./Run.sh`(逐次、ULP = 0)が 42 ケースすべて PASS(OpenMP 2 スレッド)。31 ケースは identical、11 ケース(chichibu_icmap・nhbore・nhbottom・nhbreak・nhcurrent・nhshelf・nhsolitary・nhwave・nhwave_nh・wfcurrent・wfsed)は各 Run.sh の許容(印字の最終桁 1 つ = ULP 1。nh 系は Runge 列を除外)の内側で 1〜4 値の最終桁の差(nh 系は複数スレッドの既知の非決定性 §91 の記録と同じ型)。変更前(d4f19a4)と変更後の実行ファイルを 1 スレッドで比べると、chichibu_icmap の Log.txt・summary.csv はバイト一致(= 最終桁の差はスレッド数由来で、コードを足したことによる -Ofast の最適化の差ではない)。nh 系 8 ケース(nhbore・nhbottom・nhbreak・nhcurrent・nhshelf・nhsolitary・nhwave・nhwave_nh)と wfcurrent・wfsed も Log.txt・summary.csv・wavefield.csv がバイト一致。無効時の数値はコードを足す前と同じで、許容内の 11 ケースはすべて複数スレッドの非決定性による。
   無効時は inflow_face_value を呼ばず、コードを足したことによる -Ofast の最適化の差も出なかった。
 - 有効時の実行ファイルの同一性: 実装後の bin/encflow で f_advection_donor = 2 を明示した tutorials/chichibu
   Step 3・Step 4 と test/dambreak の出力(Log.txt・fluxes)が、設計時の試作 B4(同じ式。scratchpad)と
