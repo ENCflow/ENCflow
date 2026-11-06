@@ -1796,11 +1796,11 @@
     {
       "source": "examples/landslide_tsunami/README.md",
       "target": "examples/landslide_tsunami/en/README.md",
-      "source_sha256": "237b6c7048c6bb46f37b7a52bf3738e9f717a99915c88855e060e176e4503d5e",
-      "target_sha256": "3e991e584679e0d48169191edc78e2bb0bd8e53ba2206dd3b06c5a39a06f9dac",
-      "reviewer": "Claude (Claude Code session; recomputed 2026-11-05 after the default f_gravity_correction = 2 and developer.md §94-95: the headings, the history paragraph and the changed values of B, B0 and the non-hydrostatic table compared with the Japanese source, rest unchanged since the previous record)",
+      "source_sha256": "2ddbbdedca91e9da8557e73a644355394f722811933a6fde9a2d0338185c3514",
+      "target_sha256": "ad32b1e1dd1c7f683073f0462d8a954e68195dcbd6a775b8c059d39cb6f844c5",
+      "reviewer": "Claude (Claude Code session; compared the Japanese source with the English mirror for the run times, the recompute history (corrected statement on f_gravity_correction and the 2026-11-06 recompute with 2), both result tables and the updated numbers in the text; rest unchanged since the previous record)",
       "method": "assistant",
-      "reviewed_on": "2026-11-05"
+      "reviewed_on": "2026-11-06"
     },
     {
       "source": "examples/levee_breach/README.md",
