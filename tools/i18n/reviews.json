@@ -455,9 +455,9 @@
     {
       "source": "docs/users_guide/steep_slope.md",
       "target": "docs/en/users_guide/steep_slope.md",
-      "source_sha256": "14e6203d0456b94513a454f0d705fe264f4b9ae14b1173a0dcb7e82d1b4bbcc6",
-      "target_sha256": "90bbe4620aaf90476caeff16d15558c94a7deef811109fc8edd195455ef98506",
-      "reviewer": "Claude (Claude Code session; compared the Japanese source with the English mirror for the slope-parallel evaluation of the resistance laws of mixture flows (developer.md §101): changed values, history notes and analytic formulas; rest unchanged since the previous record)",
+      "source_sha256": "0c5dc5b2e402527b02e2967311bdd0c5bd80596f203a80270c5daf4516dce22a",
+      "target_sha256": "d6be4ce0cfde55f81f7e3ef35def294849c211c61e53c44c0ca1707332ff8a15",
+      "reviewer": "Claude (Claude Code session; compared the Japanese source with the English mirror for §2.6 (the yield of mixture flows set by gravity uses g′, the start-of-motion threshold is the same as with 2) and the limits of 3 in §6.2 (normal stress of the Coulomb-type yield with g′, no analytic check with debris flows); rest unchanged since the previous record)",
       "method": "assistant",
       "reviewed_on": "2026-11-06"
     },

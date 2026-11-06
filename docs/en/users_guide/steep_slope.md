@@ -370,7 +370,11 @@ adding the difference force $`-(g' - g_e)\,g_v\,(\eta_n - \eta_c)/\Delta s_k`$ f
 water-surface difference at time $`n`$ as an external force of the edge, like the
 advection and diffusion terms; the change of the depths between the Runge–Kutta stages
 is multiplied by $`g_e`$ (our simplification; developer.md §100, in Japanese). Friction,
-sediment shear and the resistance laws of mixture flows are the same as with 2.
+sediment shear and the velocity terms of the resistance laws of mixture flows are the same
+as with 2, and the normal stress of the yield of mixture flows that is set by gravity
+(Coulomb type) is evaluated with $`g'`$ (as in Yuan et al.; the driving force and the yield
+share the same $`g'`$, so the threshold at which a mixture at rest starts to move is the
+same as with 2).
 
 ## 3. Discretization: which gradient each edge equation uses
 
@@ -790,10 +794,11 @@ the maximum velocity V9999) with speeds along the slope needs a conversion.
 - **Limits of 3 (experimental)**: at steep fronts and bores the limit on
   $`\nabla z\cdot\nabla h`$ acts, and the result departs from both the thin-layer
   equations and the formula of Yuan et al. No correction is added on boundary edges
-  (they keep $`g_e`$). The normal stress of the yield (Coulomb) of mixture flows keeps
-  $`g_e`$ (Yuan et al. evaluate it with $`g'`$, so for sediment at rest in a hollow of
-  the slope the normal stress returns to $`\rho g h`$). The combination with the
-  non-hydrostatic model (`fn_nh`) has not been verified.
+  (they keep $`g_e`$). The normal stress of the yield (Coulomb type) of mixture flows is
+  evaluated with $`g'`$ (as in Yuan et al.; smaller at fronts and larger at tails and in
+  hollows where the surface is gentler than the bed), but there is no analytic check in
+  combination with debris flows. The combination with the non-hydrostatic model
+  (`fn_nh`) has not been verified.
 - **Steps and free overfalls**: at a step of a single edge (wall, kerb, step in the
   DEM) the water falls and the shallow-water assumptions do not hold. 2 treats a step
   as with 1 (§3.4). With 0, 1 and 2 alike, at a free overfall (the edge of a roof, the

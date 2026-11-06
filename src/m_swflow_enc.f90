@@ -1980,6 +1980,29 @@ end function
 
 
 !----------------------------------------------------------------------
+! 辺の g′/g_e(f_gravity_correction = 3。developer.md §100)。gp_edge と同じ勾配の組み立てと制限で、
+! (1 + |∇b|²)/(1 + |∇b|² + ∇b·∇h)。混合体流動の降伏の垂直応力と停止判定の接線方向の駆動に掛ける
+!----------------------------------------------------------------------
+function gp_ratio(s, sx, i, j, k, in, jn) result(r)
+  type(t_state), intent(in) :: s
+  type(t_enc_status), intent(in) :: sx
+  integer, intent(in) :: i, j, k, in, jn
+  real :: r
+  real :: szn, szt, shn, sht, b2, pb, hc, hn
+
+  szn = (s%z(in,jn) - s%z(i,j)) / geo%w8dr(k)
+  szt = ((sx%gzx(i,j) + sx%gzx(in,jn)) * geo%n8y(k) - (sx%gzy(i,j) + sx%gzy(in,jn)) * geo%n8x(k)) / 2
+  hc = flowdepth(s, i, j)
+  hn = flowdepth(s, in, jn)
+  shn = (hn - hc) / geo%w8dr(k)
+  sht = ((sx%ghx(i,j) + sx%ghx(in,jn)) * geo%n8y(k) - (sx%ghy(i,j) + sx%ghy(in,jn)) * geo%n8x(k)) / 2
+  b2 = szn**2 + szt**2
+  pb = max(-b2, min(b2, szn * shn + szt * sht))
+  r = (1.0 + b2) / (1.0 + b2 + pb)
+end function
+
+
+!----------------------------------------------------------------------
 ! 軸方向の地盤の差の minmod(+側の差 z(+) − z と −側の差 z − z(−))。両側が有効セル
 ! (x > 0)なら符号が同じときだけ絶対値の小さい方、違えば(折れの頂部・底部)0。片側
 ! だけ有効ならその差、どちらもなければ 0。x は番兵付き (0:nx+1, 0:ny+1) なので、z は
@@ -2472,6 +2495,7 @@ subroutine calc_kth_flux(p, g, s, sx, uve0, tae0, i, j, k, in, jn, f_runge, uve1
   real :: ayt                     ! 停止判定の降伏の閾値(§28.16・§101)
   real :: fyf, fvf, fv1f          ! 斜面に沿う混合体流動の抵抗の倍率(降伏・速度の 2 乗・掃流状集合流動。§101)
   logical :: fb1                  ! 速度の 2 乗の抵抗が (d/h)^1 の形(高橋・中川の掃流状集合流動。§101)
+  real :: gpr                     ! 3 の降伏の垂直応力と停止判定の接線方向の駆動の倍率 g′/g_e(§100。それ以外は 1)
   ! 波→流れ(段 W2。s%wv_flow > 0 のときだけ使う。§90)
   real :: wfe                     ! 辺の外力の成分 F_k/ρ (m2/s2。中心から近傍が正)
   real :: use_                    ! 辺の Stokes 輸送の成分 u^S_k (m/s。wv_flow = 2)
@@ -2627,6 +2651,15 @@ subroutine calc_kth_flux(p, g, s, sx, uve0, tae0, i, j, k, in, jn, f_runge, uve1
   !   Ni 補正下で g cosθ。補正なしなら g)。浮上条件は 0 に切る
   if (dbr%db_curv > 0 .and. aye > 0.0) then
     aye = aye * max(0.0, 1.0 + (dbr%acv(i,j) + dbr%acv(in,jn)) / 2 / sqrt(p%gg * ge))
+  end if
+
+  ! 3(水面の勾配の項の g′。§100)では、重力で決まる降伏(クーロン型。f_dbres = 1〜4)の垂直応力も g′ で
+  ! 評価する(Yuan ら 2016 と同じ。一定の停止応力 f_dbres = 5 は重力によらない)。駆動と降伏が同じ g′ を
+  ! 共有するので、静止の閾値 |∇η| ≤ μ は 2 と同じ。停止判定の接線方向の駆動 tte にも同じ倍率を掛ける(下)
+  gpr = 1.0
+  if (opt%have_gp .and. have_db) then
+    gpr = gp_ratio(s, sx, i, j, k, in, jn)
+    if (dbr%db_res /= 5) aye = aye * gpr
   end if
 
   ! 斜面に沿う混合体流動の抵抗(f_gravity_correction >= 2。developer.md §101)。マニングの摩擦の倍率 slf
@@ -2795,6 +2828,8 @@ subroutine calc_kth_flux(p, g, s, sx, uve0, tae0, i, j, k, in, jn, f_runge, uve1
       if (vv0e < dbr%db_vstop) then
         tte = ge * gve * ((dbr%gsx(i,j) + dbr%gsx(in,jn)) * geo%n8y(k) &
                           - (dbr%gsy(i,j) + dbr%gsy(in,jn)) * geo%n8x(k)) / 2
+        ! 3 では法線方向の駆動(tae + tge)が g′ なので、接線方向も g′ に揃える(§100)
+        if (opt%have_gp) tte = tte * gpr
         ! 閾値: 動き出す向き = 駆動の向き(辺の法線成分 tae + tge、接線成分 −tte)の、斜面に沿う降伏の倍率
         ! (f_gravity_correction >= 2。§101。一様な斜面では最急勾配の向きで 1)
         ayt = ayh
