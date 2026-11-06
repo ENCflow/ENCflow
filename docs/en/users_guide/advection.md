@@ -444,6 +444,42 @@ on outflow $`u_e`$ (no contribution).
   is physical and stays). It also cuts the momentum exchange between the
   main channel and the flooded valley floor, so the default is 0; judge its
   validity against observations (§68.18).
+- **Donors weighted by the fluxes of all inflow links (`f_advection_donor = 2`).**
+  The upwind value of a flow-direction face is taken not from the single
+  link on line $`k`$ but as the average over **all links that actually
+  carry water into the face cell** from the upstream half-plane, weighted
+  by their real fluxes $`Q_l`$:
+  $`\bar u = u_e + \sum_l w_l Q_l (\tilde u_l - u_e) / \sum_l Q_l`$.
+  Each $`\tilde u_l`$ is the MUSCL face value along that link's own line,
+  projected onto $`\hat k`$ with the direction of the donor cell's discharge
+  vector (a momentum projection); $`w_l`$ is a ramp that is 1 when the
+  donor's flow is within 45° of the flow direction and 0 at 90° (from the
+  side). Links from the side or from downstream are not in the set (the
+  momentum deficit of water entering from the side is handled by the
+  lateral faces). Outflow faces are unchanged. When the link on line $`k`$
+  is a thin film on a bank and most of the face flux arrives through the
+  diagonal links, the default (0) multiplies the deep cell's mass flux by
+  the film's velocity, an artificial brake (a 0.6–1.2 m water-surface step
+  at the entrance of a flat channel reach of a real DEM), and the brake is
+  released all at once when the film recedes below the critical depth `dd`
+  and drops out of the donor test, which **makes the recession limb of the
+  hydrograph jump** ([tutorials/chichibu](../../../tutorials/chichibu/en/README.md)
+  Step 4). With 2 the weight of the thin link vanishes with its flux ratio
+  (of order one millionth), so neither the brake nor the jump appears and
+  the result hardly depends on `dd`. In uniform flow (any direction) every
+  link gives $`\tilde u_l = u_e`$ and the term vanishes; in one-dimensional
+  flow the MUSCL along the diagonal links returns the axis value, so the
+  result is the same as before (the bore metrics are unchanged); a 90° bend
+  with dry banks stays lossless. No channel mask is needed.
+  **Known changes**: in Chichibu on the 200 m grid the peak is +14% and
+  20 min earlier (the same direction as 1: the artificial brake distributed
+  along the whole main channel is removed); a channel with lateral inflow
+  is 2–9% deeper because the momentum deficit of lateral inflow entering
+  through diagonal links is counted both at the lateral faces and here;
+  two-dimensional flows fed obliquely (rows along walls, nearshore
+  currents) move by 1–4% in general; the run time is +30% (Step 3). The
+  default stays 0; judge the option against observations (developer.md
+  §100, in Japanese).
 - **Excluded edges.** Edges excluded from the momentum equation (invalid
   neighbour, zero passage width, both cells dry) have $`A_e = 0`$. With
   `f_channel_advection = 0` the term is also dropped on edges touching a
@@ -497,6 +533,8 @@ has the figures, tables and the list of derived cases).
 - Rainfall runoff on a real DEM with a channel mask: 3 +
   `f_opening_dynamic = 3` + `f_dry_head_cap = 1` (the defaults). If the
   result is later and smaller than observed, try `f_advection_donor = 1`.
+  If the recession limb of the hydrograph jumps or the result depends on
+  `dd`, use `f_advection_donor = 2` (§4.4).
   Roughness calibrated with scheme 1 needs recalibration.
 - Inundation, incised terrain and dam breaks without a channel mask: the
   defaults (3 + `f_opening_dynamic = 3`; until 2026-10-18 the 2 had to be
@@ -554,7 +592,7 @@ The labels in the Basis column are explained in [How to read the basis of a defa
 |---|---:|---|---|
 | f_advection_scheme | 3 | scheme of the advection term (1: cell-centre gradient, 2: conservative + first-order upwind, 3: conservative + MUSCL) | **verification case** bore position error +1.1% in [test/dambreak](../../../test/dambreak/en/README.md), depth ratio 0.992 with lateral inflow in [test/bendloss](../../../test/bendloss/en/README.md), grid convergence in [test/chichibu](../../../test/chichibu/en/README.md) (table above) |
 | p_adv_upwind_index | 0.5 | upwinding index of scheme 1 (0: central, 1: first-order upwind) | **empirical** halfway between central and first-order upwind. The bore lag grows with $`p`$ (§3) |
-| f_advection_donor | 0 | limit the donors of the flow-direction faces to channel cells on edges between channel cells | **method** off by default; it cuts the momentum exchange between the main channel and the flooded valley floor, so judge against observations (§4.4) |
+| f_advection_donor | 0 | upwind donors of the flow-direction faces (1: limited to channel cells on edges between channel cells, 2: weighted by the fluxes of all links that actually carry water into the face cell) | **method** off by default; 1 cuts the momentum exchange between the main channel and the flooded valley floor and 2 removes the artificial brake along the whole main channel so the flood wave becomes faster and larger, so judge either against observations (§4.4) |
 | limiter $`\psi`$ (fixed) | van Leer | flux limiter of scheme 3 | **literature value** van Leer[^vanleer79]; inside Sweby's TVD region[^sweby84] (§4.3) |
 | f_scalar_scheme | 3 | face value of the scalar transport (suspended sediment, water quality, saline layer, driftwood, building debris) (1: first-order upwind, 3: link-wise MUSCL) | **verification case** measured numerical diffusion in [test/tracer](../../../test/tracer/en/README.md) (longitudinal D 1/3–1/5, lateral Dy 1/14; §7). First order is not the default because its numerical diffusion is proportional to the grid spacing |
 

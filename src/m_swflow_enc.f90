@@ -95,9 +95,10 @@ module m_swflow_enc
                                             !   セル間のエッジのみ, 2:全エッジ, 3:全エッジで
                                             !   塞がりを局所の平面から測る(既定)。§68.14・§68.41)
     integer :: f_scalar_scheme                ! スカラー輸送の移流スキーム (1: 1 次風上, 3: MUSCL。§78)
-    integer :: f_advection_donor              ! 運動量保存形移流の風上供給元の制限 (0:湿潤セル
-                                            !   すべて, 1:河道セル間のエッジでは河道セルのみ。
-                                            !   §68.18)
+    integer :: f_advection_donor              ! 運動量保存形移流の風上供給元 (0:線 k 上の湿潤
+                                            !   セル, 1:河道セル間のエッジでは河道セルのみ
+                                            !   (§68.18), 2:流入面を全流入リンクの流量で
+                                            !   重み付け(§100))
     integer :: f_inflow_edge                  ! 区間流入の外縁セルに接するエッジの扱い (0:接する
                                             !   エッジすべての移流項 0, 1:区間の内側へ向かうエッジ
                                             !   だけ移流項 0, 2:1 + そのエッジの流速のエネルギー
@@ -996,14 +997,19 @@ subroutine m_swflow_enc_init(p, g, b, s)
   if (opt%f_scalar_scheme /= 1 .and. opt%f_scalar_scheme /= 3) then
     call par_stop("list_enc: f_scalar_scheme must be 1(first-order upwind) or 3(MUSCL)")
   end if
-  if (opt%f_advection_donor < 0 .or. opt%f_advection_donor > 1) then
-    call par_stop("list_enc: f_advection_donor must be 0(all wet cells) or 1(channel cells on channel edges)")
+  if (opt%f_advection_donor < 0 .or. opt%f_advection_donor > 2) then
+    call par_stop("list_enc: f_advection_donor must be 0(wet cells on the edge line), " &
+                  //"1(channel cells on channel edges) or 2(flux-weighted inflow links)")
   end if
   if (opt%f_advection_donor == 1 .and. .not. any(g%rw > 0)) then
     call par_stop("list_enc: f_advection_donor=1 requires a channel mask (fn_rw in list_geoinfo)")
   end if
-  if (opt%f_advection_donor == 1 .and. opt%f_advection_scheme < 2) then
-    call par_info("swflow: f_advection_donor=1 has no effect with f_advection_scheme=1")
+  if (opt%f_advection_donor >= 1 .and. opt%f_advection_scheme < 2) then
+    call par_info("swflow: f_advection_donor="//trim(itoa(opt%f_advection_donor)) &
+                  //" has no effect with f_advection_scheme=1")
+  end if
+  if (opt%f_advection_donor == 2 .and. opt%f_advection_scheme >= 2) then
+    call par_info("swflow_enc: f_advection_donor = 2 (inflow faces weighted by the fluxes of all inflow links)")
   end if
   if (opt%f_dry_head_cap < 0 .or. opt%f_dry_head_cap > 1) then
     call par_stop("list_enc: f_dry_head_cap must be 0(off) or 1(cap edge depth toward dry cells by energy head)")

@@ -113,11 +113,11 @@
     {
       "source": "docs/users_guide/advection.md",
       "target": "docs/en/users_guide/advection.md",
-      "source_sha256": "9cb8fd9fadc7d3cbadd7db78ae680e65bc9642557a653277d17f72135c7e026d",
-      "target_sha256": "d496b7c94341d98473c88ac1d5c5d6b96345b8589707d74fe9666ff24581cca7",
-      "reviewer": "Claude (Claude Code session; reviewed the added link to the new page on numerical diffusion by diagonal-edge fluxes in the Japanese source against the English mirror, 2026-11-05)",
+      "source_sha256": "7de11d18e8074ab06639f2eea78f23f3b3d0a037789115cc4cfa5c124082a488",
+      "target_sha256": "fc4afa99102e190d26cc4cd1786128e0d0e04bba1ed17bb4938389bfab2a6f39",
+      "reviewer": "Claude (Claude Code session; Japanese source and English mirror of the f_advection_donor = 2 additions written together and compared paragraph by paragraph, table rows and numbers checked; no model execution)",
       "method": "assistant",
-      "reviewed_on": "2026-11-05"
+      "reviewed_on": "2026-11-06"
     },
     {
       "source": "docs/users_guide/bedmotion.md",
@@ -473,11 +473,11 @@
     {
       "source": "docs/users_guide/swflow.md",
       "target": "docs/en/users_guide/swflow.md",
-      "source_sha256": "5569d3b14cc779a61b9f0935fee54dc5ed235276baa8e9a6c9dd394ad662bfe9",
-      "target_sha256": "67524dd2e71d45990a64ddf9a1ee1c9714580c7d5fb9a45ceb24d68c52229b7a",
-      "reviewer": "Claude (Claude Code session; reading tips: ex_flux normally 0 and should not keep appearing, compared with the Japanese source, rest unchanged since the previous record)",
+      "source_sha256": "225ba583c1cff001864c596944cbf585009d11ba17be6454d093a85e8a1d8c2b",
+      "target_sha256": "dd0757bd0f733388546a7663772296d2c59fd8fd4b6218de6ba6fad9eadff749",
+      "reviewer": "Claude (Claude Code session; Japanese source and English mirror of the f_advection_donor = 2 additions written together and compared paragraph by paragraph, table rows and numbers checked; no model execution)",
       "method": "assistant",
-      "reviewed_on": "2026-11-05"
+      "reviewed_on": "2026-11-06"
     },
     {
       "source": "docs/users_guide/swi.md",
@@ -635,11 +635,11 @@
     {
       "source": "examples/List_samples/list_enc.txt",
       "target": "examples/List_samples/en/list_enc.txt",
-      "source_sha256": "e7092d33889a82eb50149da8e3efadfceaa1db5119ea82c888210104192931f8",
-      "target_sha256": "cefa59ab7847499ed4a480b2f7f26763677fa6a7fdc336bc525fc8f92e06d085",
-      "reviewer": "Claude (Claude Code session; default of f_gravity_correction changed from 1 to 2 (developer.md §93): the commented-out sample line now shows 2 in both files and its comment was compared with the Japanese source; value, identifier and commented-out state identical, rest unchanged since the previous record)",
+      "source_sha256": "320cfc453223c82ff2949c3de7aa5c8723c26dbf0be937fb0c526b091d1c1eb4",
+      "target_sha256": "0cc895194344066799fc1696b5cc30743399f90af911f69992cae5c94f2b804f",
+      "reviewer": "Claude (Claude Code session; Japanese source and English mirror of the f_advection_donor = 2 additions written together and compared paragraph by paragraph, table rows and numbers checked; no model execution)",
       "method": "assistant",
-      "reviewed_on": "2026-11-05"
+      "reviewed_on": "2026-11-06"
     },
     {
       "source": "examples/List_samples/list_evap.txt",
