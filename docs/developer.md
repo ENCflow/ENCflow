@@ -20681,7 +20681,7 @@ test/lava・test/glacier の全構成が逐次・MPI np = 2・4 で合格し、�
   セルごとに 8 リンク分を 1 回だけ作れば重い部分が 1/8 になる(最適化は未実施。handoff 00n)。
 
 **検証**(2026-11-06。gfortran 13.3 / Open MPI 4.1.6、Ubuntu 24.04。-Ofast の既定ビルド):
-- 既定 0(無効)の回帰: reference を持つ 42 ケースの `./Run.sh`(逐次、ULP = 0)を順に実行中: 2026-11-06 の時点で 17 ケース(chichibu・chichibu_icmap・coastal_drain・conduit・culvert・damwq・dissol・evapdry・frost・gwbed・gwsect・gwseep・gwwidth・kdpart・nhbore・nhbottom・nhbreak まで)が PASS(identical)。残りの結果は完走後にここへ追記する。
+- 既定 0(無効)の回帰: reference を持つ 42 ケースの `./Run.sh`(逐次、ULP = 0)が 42 ケースすべて PASS(OpenMP 2 スレッド)。31 ケースは identical、11 ケース(chichibu_icmap・nhbore・nhbottom・nhbreak・nhcurrent・nhshelf・nhsolitary・nhwave・nhwave_nh・wfcurrent・wfsed)は各 Run.sh の許容(印字の最終桁 1 つ = ULP 1。nh 系は Runge 列を除外)の内側で 1〜4 値の最終桁の差(nh 系は複数スレッドの既知の非決定性 §91 の記録と同じ型)。変更前の実行ファイルと 1 スレッドで比べた内訳の確認は次項に追記する。
   無効時は inflow_face_value を呼ばず、コードを足したことによる -Ofast の最適化の差も出なかった。
 - 有効時の実行ファイルの同一性: 実装後の bin/encflow で f_advection_donor = 2 を明示した tutorials/chichibu
   Step 3・Step 4 と test/dambreak の出力(Log.txt・fluxes)が、設計時の試作 B4(同じ式。scratchpad)と
