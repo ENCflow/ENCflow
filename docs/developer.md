@@ -20725,3 +20725,38 @@ test/lava・test/glacier の全構成が逐次・MPI np = 2・4 で合格し、�
 説明(「dd を小さくすると跳ねが消える」= 先送り)の改訂は 2026-11-06 に実施(Step 4 を 2 を試す形に、
 Step 4〜7 の param・数値・図を再生成。補足の解像度比較の 21 ケースも同日に 2 で再計算して表・本文・図を
 更新。handoff 00n(d))。
+
+**既定の判断材料**(2026-11-06。test/ の全 44 ケースと examples の 12 構成を 0 と 2 で比較。dd = dv は既定。
+例題は dd = dv = 0.0001 の変種(base_dd・d2_dd)も実行。作業ノートは当日の scratchpad):
+- 明確に劣化(理論解・自己検定で判定): test/bendloss の横流入 lat1・lat1r の水深誤差 +12% → +18%、両岸流入
+  lat2r −0.03% → +25.8%(側方面の二重計上 = 段階 2 の課題)。test/sublattice の滑らかな渦の運動エネルギー保持
+  96% → 52%(a_sm 0.980 → 0.718。市松模様は逆に速く減衰 1609 → 778 s)。test/dbonset の 22.5° 斜面の滑動速度
+  −0.35% → −2.8%(FAIL。原因は投影の上限 spd ≤ 2: 軸から 15〜30° ずれた流れでは 67.5° の斜めリンクの 1/cos = 2.6
+  が上限に掛かり一様流の恒等式が崩れる。上限を外した試作では dbonset は戻るが、sublattice の渦が成長(1.036 /
+  1.075)、lat2r は +35.8%、inflowadv jet3 で 12.65 m/s のジェットと +1.718 m の水頭生成 → 上限は必要な安全弁)。
+  test/inflowadv の区間流入直下に速く浅い帯(osc5 4.37 → 3.94 m、jet3 4.52 → 2.25 m・6.69 m/s。水頭生成はなし)。
+  test/uniflow W = 5 の壁あり h/h_n 1.041 → 1.051。test/wfswash の沿岸対称性 2e-11 → 2e-7 m(許容 1e-9 で FAIL。
+  物理的には無視できる)。test/fluxline 85° 測線 1.00036(許容の縁で FAIL)。test/sedfeed (5) 1.0027 → 0.9853
+  (±1% で FAIL。区間流入列の流速場)。
+- 中立(44 中 35): dambreak(0.03% 以内)・nh 系(理論に同程度かわずかに近い)・wave_shore・culvert・tide・
+  coastal_drain・salt・gwbed(ビット一致)・gw/wq/kdpart の収支検定(kdpart の沈降 +27% だが単調性 PASS)・
+  地形変化系の検定(bendsed の湾曲効果 −17%、avalanche の巻き込み −11%、volcano の斜面変化点の 1 セル極大
+  0.03 → 0.21 m。fixation・bankface・fluvial・driftwood・bldgdebris・berode は全 PASS)。
+- chichibu 型(実地形の狭い河道・薄い水膜): test/chichibu(100 m、dd = 1e-4)T3 +15%、T4 +18% で 29 分早い。
+  chichibu_icmap 測線 2 +16%。tutorials/chichibu は本節の表のとおり。
+- 例題: 影響なし/中立 = ashfall_lahar(主・回転格子 0°/45° とも 4 桁一致)、mountain_valley V_a(完全一致)、
+  estuary_barrage(堰あり 帯水層塩水 −0.6%・底層塩水 −2%、堰なし 底層塩水 −6%・くさび先端 80 m 短い)、
+  catchment_metal step2(下流 2 測線のピーク −4%、跳ねなし)、badland_storm(土砂流出 +5%)。中程度 =
+  levee_breach(破堤からの流入 +5.5%、ピーク 635 → 654 m³/s)、meander_cutoff(短絡の時期 15〜20 h は同じ、
+  終了時のループの流れ 835 → 548 セル、崩落 −26%)。明確に変わる(劣化の向き)= meander(200 h の外岸後退
+  20/28/38/42 → 18/18/18/16 m、中心の移動 24 → 9 m、崩落 4,045 → 2,778 m³: bendloss の横流入の劣化と同じ向きで
+  湾曲の運動量伝達が弱まる)、debris_fan(扇頂到達 43 → 48 s(+12%)、谷の最大流速 25.1 → 21.7 m/s、谷の堆積 +8%:
+  uniflow の壁の抵抗増と同じ向き)。dd = 0.0001 の変種: estuary・mountain_valley・levee_breach・debris_fan では
+  base_dd = base、d2_dd = d2(2 の効果は dd の雑音より大)。ashfall では dd の方が効く(ピーク +5%、回転依存
+  0.105 → 0.056。2 は無関係)。meander は dd でも 200 h の指標が動く(中心の移動 24 → 17 m)が、外岸後退の
+  下流への成長は保たれ、2 の「成長しない」変化とは質が違う。
+- 計算時間: 2 は 1 スレッドで平均 +21%(0〜+41%)、chichibu 200 m 4 スレッドで +30%。
+- 推奨(利用者の判断待ち): 既定は 0 のまま。2 は実地形の狭い河道と薄い水膜で逓減期の跳ねが出るケース
+  (tutorials/chichibu・test/chichibu・chichibu_icmap の類)に明示して使う。湾曲・側方流入・区間流入・壁・
+  渦が主役のケース(bendloss・sublattice・inflowadv・meander・debris_fan)では 2 を使わない。段階 2 で側方面の
+  二重計上を解けば bendloss 系の劣化は縮むはずで、その後に再評価する。
