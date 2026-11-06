@@ -1,9 +1,9 @@
 #!/bin/bash
-# slopefric: 急斜面の薄層流の摩擦(f_gravity_correction = 1 の古典の等流と、2 の斜面に沿う摩擦の等流)
+# slopefric: 急斜面の薄層流の摩擦(f_gravity_correction = 1 の古典の等流と、2・3 の斜面に沿う摩擦の等流)
 # の検定(逐次実行)
 #   ./Run.sh
-# make_init.py が 16 ケース(流れ 12 = 下り向き 0°・22.5°・45° × 8・4 近傍 × f_gravity_correction 1・2、
-# 掃流砂 4 = 下り向き 0°・45° × f_gravity_correction 1・2)の入力と
+# make_init.py が 21 ケース(流れ 15 = 下り向き 0°・22.5°・45° × 8・4 近傍 × f_gravity_correction 1・2
+# と 8 近傍の 3、掃流砂 6 = 下り向き 0°・45° × f_gravity_correction 1・2・3)の入力と
 # 設定を生成し、全ケースを実行して Check_slopefric.py が等流の解析解に比べる。reference は持たない。
 # 画面出力は Screen.log にまとめる。実行後の save_<case>/ は save_<case>_serial/ にも複製する
 # (Run_MPI.sh のバイト比較用)

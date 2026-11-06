@@ -164,7 +164,7 @@ $`g_e`$ is computed per edge (§3.3) and multiplies the following terms.
 
 | Term | Expression (edge $`k`$, $`\Delta s_k`$ is the distance between the cell centres) | $`g_e`$ |
 |---|---|---|
-| Slope and pressure (water-surface gradient) | $`-\,g_e\,g_v\,(\eta_n - \eta_c)/\Delta s_k`$, $`\eta = z + h`$ | yes |
+| Slope and pressure (water-surface gradient) | $`-\,g_e\,g_v\,(\eta_n - \eta_c)/\Delta s_k`$, $`\eta = z + h`$ | yes ($`g'`$ with 3; §2.6) |
 | Manning friction (semi-implicit; the coefficient $`F`$ multiplies $`u_k`$) | 1: $`F = -\,g_e\,g_v\,n^2\,|\mathbf V|_e/h_f^{4/3}`$; 2: the expression below | 1 only |
 | Yield (Coulomb) of mixture flows and the turbulent term of Voellmy | $`a_y = g_e\tan\phi\,sC/(1+sC)`$, $`g_e V^2/(\xi h)`$ | yes |
 | Curvature term (centrifugal acceleration; f_dbcurv) | gravity normal to the ground $`g_n = \sqrt{g\,g_e} = g\cos\theta`$ | yes |
@@ -312,6 +312,47 @@ orientation of the grid** (+7.4 % on an edge at 45° and +16 % on an edge across
 slope at a gradient of 0.4).
 
 ![Effective gravity of the edges on a uniform slope](../../figs/steepslope_bias_en.png)
+
+### 2.6 Variable gravity of the water-surface gradient term (3; experimental)
+
+In addition to 2, 3 replaces the $`g_e`$ of the water-surface gradient term (the
+ground-gradient term, the depth-gradient term and the sediment-column term of debris
+flows) with the variable gravity of eq. 42 of Yuan et al. (2016) (for water, without
+the term of the basal friction angle)
+
+```math
+g' = \frac{g\cos^2\theta}{1 + \cos^2\theta\,\nabla h\cdot\nabla z}
+   = \frac{g}{1 + |\nabla z|^2 + \nabla z\cdot\nabla h}
+   = \frac{g}{1 + \nabla z\cdot\nabla\eta}
+```
+
+($`\eta = z + h`$ is the water surface; with debris flows the depth is $`h + h_s`$).
+This form has the following properties (checked for ENCflow).
+
+- **Uniform depth** ($`\nabla h = 0`$): $`g' = g\cos^2\theta = g_e`$, so the driving
+  force of thin flows is the same as with 2.
+- **Horizontal water surface** ($`\nabla\eta = 0`$): $`g'`$ returns to $`g`$, and waves
+  in deep water over steep lake shores, reservoir slopes or steep coasts travel at
+  $`\sqrt{gh}`$ ("deep water over a steep bed" in §6.2). Because the force is
+  proportional to $`\nabla\eta`$, a lake at rest stays exactly in balance.
+- **Around a uniform flow**, the coefficient of the force $`-g'\,\partial\eta/\partial n`$
+  with respect to the depth gradient is $`g\cos^4\theta`$ downslope and
+  $`g\cos^2\theta`$ across the slope, as in the thin-layer equations (§2.1). The
+  horizontal wave speed downslope is $`\cos^2\theta\sqrt{gh}`$, slower than the
+  $`\cos\theta\sqrt{gh}`$ of 1 and 2 ("coefficient of the pressure term" in §6.2).
+
+On an edge, the normal components of the gradients are edge differences (for the
+ground, as for $`g_e`$ in §3.3) and the tangential components are the averages of the
+minmod gradients of the two cells (for the ground as in §3.2, and the same minmod for
+the depth). At steep fronts and steps $`\nabla z\cdot\nabla h`$ becomes large and the
+denominator approaches zero or becomes negative, so $`\nabla z\cdot\nabla h`$ is limited
+to $`[-|\nabla z|^2,\ |\nabla z|^2]`$ ($`g/(1 + 2|\nabla z|^2) \le g' \le g`$; our
+simplification; Yuan et al. use an empirical damping factor). It is implemented by
+adding the difference force $`-(g' - g_e)\,g_v\,(\eta_n - \eta_c)/\Delta s_k`$ for the
+water-surface difference at time $`n`$ as an external force of the edge, like the
+advection and diffusion terms; the change of the depths between the Runge–Kutta stages
+is multiplied by $`g_e`$ (our simplification; developer.md §100, in Japanese). Friction,
+sediment shear and the resistance laws of mixture flows are the same as with 2.
 
 ## 3. Discretization: which gradient each edge equation uses
 
@@ -501,6 +542,26 @@ gradient is used for these reasons:
 - **Steps**: in a schematic 1 m urban block (rain on the roofs of 8 m buildings) and in
   overtopping of a 2 m wall, the results of 2 are the same as those of 1 (§3.4;
   developer.md §93).
+- **test/steepwave** (the check of 3; §2.6): a lake at rest against a steep shore
+  (gradient 1, slope direction 30°, 8 neighbours) stays exactly at rest with 2 and 3.
+  For a small long wave crossing a steep lake bed (gradient 0.5, depth 40 → 4 m), the
+  arrival times of the crest with 3 agree with no correction (0; exact for deep water
+  with a nearly horizontal surface) and are 1.002–1.015 times the long-wave travel time
+  $`\int dx/\sqrt{gh}`$; with 2 they are 1.038–1.101 times (slower because
+  $`g_e = g\cos^2\theta`$ over the slope). For a small bump on a uniform layer
+  (bed-normal thickness 1 m) on a frictionless 30° slope, the speed at which it splits
+  into two is, relative to $`2\sqrt{g\cos\theta\,h_n}`$ of the thin-layer equations,
+  1.007 with 3, 1.156 with 2 ($`1/\cos\theta = 1.155`$) and 1.353 with 0
+  ($`1/\cos^2\theta = 1.333`$). The thin flow and the onset of bed-load erosion in
+  test/slopefric also follow the same along-slope equations with 3 as with 2.
+- **Indications of the impact of 3** (trial computations; the settings of the example
+  are unchanged): in the four configurations of examples/landslide_tsunami (lake shore
+  gradient 0.4), the waves of the lake with 3 are close to those without correction (0)
+  (the leading wave of the rockslide at x = 298 m is 1.34 m with 0, 1.41 m with 1 and 2,
+  and 1.33 m with 3). In the configuration where a debris flow runs down on land and is
+  handed over to the bed layer in the lake, the deposit in the shore band is 1,070 m³
+  with 3 against 608 m³ with 2 (1,165 m³ with 0; slide volume 19,110 m³). developer.md
+  §100 (in Japanese).
 - **Indications of the impact of the default 2**: in the steep mountain catchment of
   test/chichibu (Δx = 100 m), the peak of the maximum unit discharge is −2.1 %
   relative to 1; in test/chichibu_icmap the maximum unit discharge is −4.4 % and the
@@ -681,7 +742,8 @@ the maximum velocity V9999) with speeds along the slope needs a conversion.
   $`1/\cos\theta`$ times larger (last row of the table in §2.3; the same across the
   slope). Van Emelen et al. find the difference between the classical and modified
   equations "not large" for a dam break on 30°, and Ni et al. find that CAR (with
-  $`g\cos^2\theta`$ also on the pressure) agrees with the analytic solution.
+  $`g\cos^2\theta`$ also on the pressure) agrees with the analytic solution. 3
+  (experimental) gives the thin-layer coefficient around a uniform flow (§2.6).
 - **Convex and concave slopes (curvature)**: with equations that carry only the
   horizontal velocity, the horizontal velocity is conserved without forces, so on a
   convex slope (gradient increasing) the slope-parallel speed increases artificially
@@ -699,7 +761,15 @@ the maximum velocity V9999) with speeds along the slope needs a conversion.
   landslide enters a lake, has both states in one computation: the flow of the
   landslide material needs the correction and the waves of the lake do not (the
   correction on the 0.4 slope edges of the lake shore changed the leading wave from
-  +1.37 to +1.41 m; developer.md §91).
+  +1.37 to +1.41 m; developer.md §91). 3 (experimental) returns to $`g`$ for a
+  horizontal water surface and handles both in one computation (§2.6).
+- **Limits of 3 (experimental)**: at steep fronts and bores the limit on
+  $`\nabla z\cdot\nabla h`$ acts, and the result departs from both the thin-layer
+  equations and the formula of Yuan et al. No correction is added on boundary edges
+  (they keep $`g_e`$). The normal stress of the yield (Coulomb) of mixture flows keeps
+  $`g_e`$ (Yuan et al. evaluate it with $`g'`$, so for sediment at rest in a hollow of
+  the slope the normal stress returns to $`\rho g h`$). The combination with the
+  non-hydrostatic model (`fn_nh`) has not been verified.
 - **Steps and free overfalls**: at a step of a single edge (wall, kerb, step in the
   DEM) the water falls and the shallow-water assumptions do not hold. 2 treats a step
   as with 1 (§3.4). With 0, 1 and 2 alike, at a free overfall (the edge of a roof, the
@@ -725,12 +795,13 @@ the maximum velocity V9999) with speeds along the slope needs a conversion.
 | 2 (default) | flow and erosion on steep slopes; computations that use a literature value of Manning's $`n`$ (measured in mild-slope channels; a value for slope-parallel quantities) as it is |
 | 1 | computations with a Manning's $`n`$ calibrated in a horizontally projected model, and reproducing computations made before 2026-11-05; a notice is printed at start-up |
 | 0 | computations dominated by deep water over a steep bed (lakes, reservoirs, tsunamis on steep coasts; §6.2), and comparisons with the classical shallow water equations |
+| 3 (experimental) | computations with both flow on steep slopes and waves in deep water over steep lake shores or coasts (a landslide entering a lake, etc.; §2.6). Whether to make it the default is under consideration (indications of its impact in §4) |
 
 On gentle slopes the differences between 0, 1 and 2 are very small (at a gradient of
 0.1 = 1:10, $`g_e/g = 0.990`$ and the friction factor of 2 for flow in the direction of
 steepest descent is $`(1 + |\nabla z|^2)^{13/6} = 1.022`$; at 1:50, 1.001), so for floods
-on gentle plains the choice makes little difference. Only the values 0, 1 and 2 are
-accepted. An example setting is in
+on gentle plains the choice makes little difference. Only the values 0, 1, 2 and 3
+are accepted. An example setting is in
 [List_samples/en/list_enc.txt](../../../examples/List_samples/en/list_enc.txt).
 
 The figures are produced by `python3 docs/figs/make_guide_figs.py steepslope`
