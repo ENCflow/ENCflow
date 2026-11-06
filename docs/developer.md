@@ -20681,7 +20681,7 @@ test/lava・test/glacier の全構成が逐次・MPI np = 2・4 で合格し、�
   セルごとに 8 リンク分を 1 回だけ作れば重い部分が 1/8 になる(最適化は未実施。handoff 00n)。
 
 **検証**(2026-11-06。gfortran 13.3 / Open MPI 4.1.6、Ubuntu 24.04。-Ofast の既定ビルド):
-- 既定 0(無効)の回帰: reference を持つ 42 ケースの `./Run.sh`(逐次、ULP = 0)が 42 ケースすべて PASS(OpenMP 2 スレッド)。31 ケースは identical、11 ケース(chichibu_icmap・nhbore・nhbottom・nhbreak・nhcurrent・nhshelf・nhsolitary・nhwave・nhwave_nh・wfcurrent・wfsed)は各 Run.sh の許容(印字の最終桁 1 つ = ULP 1。nh 系は Runge 列を除外)の内側で 1〜4 値の最終桁の差(nh 系は複数スレッドの既知の非決定性 §91 の記録と同じ型)。変更前の実行ファイルと 1 スレッドで比べた内訳の確認は次項に追記する。
+- 既定 0(無効)の回帰: reference を持つ 42 ケースの `./Run.sh`(逐次、ULP = 0)が 42 ケースすべて PASS(OpenMP 2 スレッド)。31 ケースは identical、11 ケース(chichibu_icmap・nhbore・nhbottom・nhbreak・nhcurrent・nhshelf・nhsolitary・nhwave・nhwave_nh・wfcurrent・wfsed)は各 Run.sh の許容(印字の最終桁 1 つ = ULP 1。nh 系は Runge 列を除外)の内側で 1〜4 値の最終桁の差(nh 系は複数スレッドの既知の非決定性 §91 の記録と同じ型)。変更前(d4f19a4)と変更後の実行ファイルを 1 スレッドで比べると、chichibu_icmap の Log.txt・summary.csv はバイト一致(= 最終桁の差はスレッド数由来で、コードを足したことによる -Ofast の最適化の差ではない)。nh 系 8 ケースと wfcurrent・wfsed の同じ比較は実行中(結果は追記)。
   無効時は inflow_face_value を呼ばず、コードを足したことによる -Ofast の最適化の差も出なかった。
 - 有効時の実行ファイルの同一性: 実装後の bin/encflow で f_advection_donor = 2 を明示した tutorials/chichibu
   Step 3・Step 4 と test/dambreak の出力(Log.txt・fluxes)が、設計時の試作 B4(同じ式。scratchpad)と
@@ -20711,7 +20711,7 @@ test/lava・test/glacier の全構成が逐次・MPI np = 2・4 で合格し、�
 | 同 Step 4(dd 1e-4): 測線 4 のピーク(dd の感度 = Step 3 との差) | 5391 @175(差 155) | 6299 @153(差 24) |
 | 同 Step 5(遮断+バケツ): 逓減部の荒れ rms(d²Q) / 最大上昇 / ピーク | 37.9 / +248 / 4109 | 9.9 / +51 / 4038 |
 | test/chichibu(100 m): 測線 4 のピーク | 4761 @215 | 5641 @186(+18%) |
-| reference を持つ 42 ケース(有効時の Log.txt の最大相対差) | — | 一致 19(conduit・dissol・evapdry・frost・gwbed・nhbottom・nhwave・nhwave_nh・pump・salt・splash・splashsat・splashstrata・taupart・tracer・vzcol・vzzone・wfshadow・wfshoal)、変わる 23: chichibu 32%・chichibu_icmap 25%・gwsect 41%・gwseep 24%・gwwidth 22%・damwq 20%(薄い水膜の V_max・Q_max)、nhbreak 64%(砕波遡上の前縁)、wqstruct 70%、tide 16%、wfdoppler 18%、coastal_drain 9%、wave 7%、dambreak 4%・nhcurrent 4%・nhshelf 3.6%・nhbore 2.5%・culvert 3%・kdpart 4%・wfsed 2%・wfcurrent 2%・sewer_wq 1.5%・nhsolitary 0.9%・wqbound 0.2% |
+| reference を持つ 42 ケース(有効時の Log.txt の最大相対差) | — | 一致 18(conduit・dissol・evapdry・frost・gwbed・nhwave・nhwave_nh・pump・salt・splash・splashsat・splashstrata・taupart・tracer・vzcol・vzzone・wfshadow・wfshoal)、変わる 24: chichibu 32%・chichibu_icmap 25%・gwsect 41%・gwseep 24%・gwwidth 22%・damwq 20%(薄い水膜の V_max・Q_max)、nhbreak 64%(砕波遡上の前縁)、wqstruct 70%、tide 16%、wfdoppler 18%、coastal_drain 9%、wave 7%、dambreak 4%・nhcurrent 4%・nhshelf 3.6%・nhbore 2.5%・culvert 3%・kdpart 4%・wfsed 2%・wfcurrent 2%・sewer_wq 1.5%・nhsolitary 0.9%・wqbound 0.2%・nhbottom 0.03%(nhbottom は Run.sh が自前でドライバ uplift を src の libencflow.a からビルドするので、試作の回帰では初回に別の試作のライブラリで走っていた。B4 のライブラリで回し直した値) |
 
 - 秩父では跳ねが消えるだけでなく dd の感度がほぼ消える(155 → 24)。バケツ付きの逓減部の荒れは 1/4。
 - ピークは +14〜18%、到達 20〜30 分早い。f_advection_donor = 1 と同じ向き(本川の全長に分布していた
