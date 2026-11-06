@@ -126,19 +126,20 @@ python3 Fig.py en # en/figs/profile.png, en/figs/map.png
 ![Longitudinal profiles of the 4 configurations](figs/profile.png)
 
 Top: terrain. Middle: terrain change dz (average over all rows, cm). In every
-configuration the whole slope is thinly eroded (0.3 cm in configurations 1 and
-2, 1.4 cm in configuration 3 over 120 s, 2.5 cm in configuration 4), erosion
+configuration the whole slope is thinly eroded (0.3 cm in configuration 1,
+0.2 cm in configuration 2, 1.4 cm in configuration 3 over 120 s, 1.6 cm in
+configuration 4), erosion
 intensifies just before the slope break, deposition (+0.20 cm) appears directly
-below the slope break in configuration 1, and deposition (+2.9 cm) appears in
+below the slope break in configuration 1, and deposition (+2.2 cm) appears in
 the first cell of the flat below the slope break in configuration 3. Bottom:
 sediment in motion hs (cm). It is carried at a constant concentration on the
 slope and drops sharply on the flat beyond the slope break
 (in a dilute sheet flow θ_e ≈ 0, so deposition on the flat is slow, and in a
 short check the arrival of hs is taken as the evidence of activity). The
 pore-water entrainment of configuration 4 adds the pore water of the eroded bed
-to the flow, so the surface water increases (Σh 4.0 → 7.5 m·cell compared with
+to the flow, so the surface water increases (Σh 4.0 → 6.6 m·cell compared with
 configuration 3 at the same 60 s), and a positive feedback in which the velocity
-and erosion increase further is seen (erosion −2.5 cm at 60 s against −1.4 cm of
+and erosion increase further is seen (erosion −1.6 cm at 60 s against −1.4 cm of
 configuration 3 at 120 s).
 
 ![Distributions of configuration 1](figs/map.png)
@@ -151,12 +152,12 @@ slope break, and a thin water film on the flat are seen.
 
 | Configuration | Total solids Σhs + (1 − λ)Σdz | Co-moving update | Activity (min dz / arrival) | Water ledger |
 |---|---|---|---|---|
-| 1 | −2.9e-13 | 3.9e-14 | −0.28 cm / deposition below the slope break +0.20 cm | — |
-| 2 Egashira | 4.9e-14 | 3.6e-14 | −0.28 cm / max hs 0.03 cm | — |
-| 3 Takahashi–Nakagawa (120 s) | 5.0e-13 | 1.3e-13 | −1.4 cm / max hs 1.2 cm | — |
-| 4 + pore-water entrainment | 3.3e-13 | 7.6e-14 | −2.5 cm / max hs 0.70 cm | 1.9e-13 |
+| 1 | −4.6e-13 | 3.6e-14 | −0.28 cm / deposition below the slope break +0.20 cm | — |
+| 2 Egashira | −1.6e-13 | 4.1e-14 | −0.19 cm / max hs 0.03 cm | — |
+| 3 Takahashi–Nakagawa (120 s) | −5.0e-13 | 1.3e-13 | −1.4 cm / max hs 1.2 cm | — |
+| 4 + pore-water entrainment | −1.3e-14 | 7.2e-14 | −1.6 cm / max hs 0.053 cm | −5.9e-14 |
 | 5 + bed load | −1.8e-12 | 9.8e-14 | −0.20 cm / deposition below the slope break +0.06 cm | — |
-| 6 + pore water with the groundwater computation | 2.4e-14 | 4.2e-14 | −0.28 cm / deposition below the slope break +0.21 cm | −5.8e-14 (Σh + Σhg) |
+| 6 + pore water with the groundwater computation | 5.2e-14 | 3.9e-14 | −0.28 cm / deposition below the slope break +0.21 cm | −5.8e-14 (Σh + Σhg) |
 
 - The total solids and the co-moving update hold at machine precision in all
   6 configurations. The E-D exchange amounts are obtained from the field at
@@ -188,9 +189,9 @@ slope break, and a thin water film on the flat are seen.
   1.254 to 1.245 cm (1.3 → 1.2 in the printed digits), and configuration 4 from
   −2.6 to −2.5 cm and max hs from 0.86 to 0.70 cm; the others are the same in the
   printed digits (the ledger values move within machine precision).
-- The values of the table and the figures were recomputed with the steep-slope
-  gravity correction at the default 2 (friction and sediment shear along the slope;
-  2026-11-05; developer.md §93, in Japanese). 2 evaluates the Manning term of the
+- On 2026-11-05 the values were recomputed with the steep-slope gravity correction
+  at the default 2 (friction and sediment shear along the slope; developer.md §93, in
+  Japanese). 2 evaluates the Manning term of the
   combined Coulomb–Manning resistance law (and, in configuration 5, the shear of the
   bed load as well) with the speed along the slope and the depth normal to the
   ground, so the friction on the slope is stronger. Compared with the values with 1
@@ -203,6 +204,18 @@ slope break, and a thin water film on the flat are seen.
   7.5 m·cell) and erosion (−2.6 → −2.5 cm) of configuration 4 in the description
   of the figure have the same values with 1; they had been left uncorrected after
   the earlier changes.
+- The values of the table and the figures were recomputed on 2026-11-06 after the
+  change by which 2 also evaluates the resistance laws of mixture flows along the
+  slope (developer.md §101). The resistance proportional to the square of the velocity
+  of the laminar law of Egashira and of the stony type of Takahashi–Nakagawa becomes
+  1/cos⁴θ times larger on steep slopes and the flow becomes slower; compared with the
+  values just before, configuration 2 went from −0.28 to −0.19 cm and max hs from
+  0.031 to 0.026 cm, the deposition in the first cell of the flat in configuration 3
+  from +2.9 to +2.2 cm (max hs from 1.24 to 1.16 cm), and configuration 4 from −2.5 to
+  −1.6 cm, max hs from 0.70 to 0.053 cm and Σh (60 s) from 7.5 to 6.6 m·cell.
+  Configurations 1, 5 and 6 with Coulomb + Manning (the yield factor is 1 for flow in
+  the direction of steepest descent) and configuration 7 with Manning only are the same
+  in the printed digits, and the ledger values move within machine precision.
 - In the deposits on the flat of configuration 6, max|hg − sy0·sd| = 1e-20 m
   (machine precision; the pores are filled with surface water). Back with
   `f_dbwet = 0` it becomes 1.2e-4 m and (5) fails.

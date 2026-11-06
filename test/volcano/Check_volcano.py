@@ -6,7 +6,10 @@
 #     (1) 水台帳  : |Σh − Q・tt| < TOL_SUM(閉領域・f_dbed=0)
 #     (2) 固体台帳: |Σhs + (1-λ)Σ(z-z0) − cs・Q・tt| < TOL_SUM
 #     (3) 解析解  : 検定窓(x∈[60,100])の流動深 h_t = h+hs の平均が
-#                   h_ana = (q_m²/(ξ(tanθ−μ)))^(1/3) に相対 TOL_ANA 以内、
+#                   h_ana = (q_m²/(ξ c⁴ (tanθ−μ)))^(1/3) に相対 TOL_ANA 以内
+#                   (f_gravity_correction = 2 は Voellmy を斜面に沿って評価し、等流は
+#                   V_s² = ξ h_t cosθ (sinθ − μ cosθ)。水平の流速・鉛直の深さでは c⁴ = cos⁴θ が
+#                   付く。developer.md §101。0・1 は c⁴ = 1)、
 #                   窓内の変動係数 < TOL_CV(等流性)、濃度 C ≈ cs/(1+cs)
 #   tauy モード(構成2: ランアウト・停止。param_ty.txt と対):
 #     (1) 固体台帳: |Σhs + (1-λ)Σ(z-z0)| < TOL_SUM(放出・凝集とも内部移転)
@@ -21,8 +24,9 @@ NX1, NY1, DX1 = 150, 8, 1.0
 ST1, LX1 = 0.2, 150.0            # 斜面 tanθ, 全長(make_init.py z と対)
 QIN, CSIN, TT1 = 4.0, 0.8, 120.0 # 流入 (m3/s), 濃度 (hs/h), 継続 (s)
 XI, MU = 200.0, 0.1              # Voellmy ξ, μ
+GC1 = 2                          # f_gravity_correction(param.txt と対)
 IW1, IW2 = 60, 100               # 検定窓(等流到達・末端プールの外)
-TOL_ANA, TOL_CV = 0.03, 0.05
+TOL_ANA, TOL_CV = 0.01, 0.05     # TOL_ANA: 2 と 0・1 の解析解の差(tanθ = 0.2 で 2.7 %)より小さく
 # --- 構成2(param_ty.txt と対で保守)---
 NX2, NY2, DX2 = 60, 20, 1.0
 ST2, XB2 = 0.4, 30.0             # slope_break(user_geoinfo と対)
@@ -92,7 +96,8 @@ if mode == "voellmy":
           % (sres, TOL_SUM, "PASS" if ok2 else "FAIL"))
     # 解析解(単位幅の混合体流量 q_m = Q(1+cs)/ly)
     qm = QIN * (1.0 + CSIN) / NY1
-    hana = (qm * qm / (XI * (ST1 - MU))) ** (1.0 / 3.0)
+    c4 = 1.0 / (1.0 + ST1 * ST1) ** 2 if GC1 >= 2 else 1.0
+    hana = (qm * qm / (XI * c4 * (ST1 - MU))) ** (1.0 / 3.0)
     win = [idx for idx in range(ntot) if IW1 <= (idx % NX1 + 0.5) * DX1 <= IW2]
     ht = [h[idx] + hs[idx] for idx in win]
     mean = sum(ht) / len(ht)

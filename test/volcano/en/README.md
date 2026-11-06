@@ -12,8 +12,12 @@ configurations.
 1. **Voellmy steady uniform flow** (`param.txt`): a mixture is fed at a
    constant rate onto a slope of uniform gradient and compared with the
    analytical uniform-flow depth of the Voellmy resistance law (`f_dbres = 4`:
-   μ + g V²/(ξ h)), h_t = (q_m²/(ξ(tanθ − μ)))^{1/3}, as a quantitative
-   benchmark. The water and solid ledgers (budgets) are also checked.
+   μ + g V²/(ξ h)) as a quantitative benchmark. The default steep-slope gravity
+   correction 2 evaluates Voellmy along the slope (developer.md §101), so uniform
+   flow follows the along-slope equation V_s² = ξ h_t cosθ (sinθ − μ cosθ), which
+   with the horizontal velocity and the vertical depth reads
+   h_t = (q_m²/(ξ cos⁴θ (tanθ − μ)))^{1/3}. The water and solid ledgers (budgets)
+   are also checked.
 2. **τ_y runout** (`param_ty.txt`): with a constant retarding stress τ_y plus
    Manning combined (`f_dbres = 5`), the sequence instantaneous mobilization of
    a soil mass on the slope → descent → deposition on the flat → stopping and
@@ -64,7 +68,7 @@ python3 Fig.py en # en/figs/voellmy.png, en/figs/tauy.png
 
 Top: the flow depth h_t = h + hs in the steady state (average over all rows).
 The uniform-flow depth is reached within a few metres of the inflow, and in the
-check window (grey) it agrees with the analytical solution 0.3434 m to
+check window (grey) it agrees with the analytical solution 0.3525 m to
 **0.00%** (coefficient of variation 0.0001). The rise at the downstream end is
 backwater because the east side is a wall (no outflow boundary); it does not
 reach the check window within the 120 s.
@@ -78,19 +82,19 @@ Left: the release area with collapse depth D = 2 m. Centre: the terrain change
 after 90 s. The release area is lowered by up to 1.55 m, and a fan-shaped deposit
 lies on the slope from directly below it to the slope break (with a retarding
 stress of 4000 Pa the flow stops on the slope). Right: the remaining sediment
-in motion hs is only a thin fringe of about a mm beyond the slope break, 0.4% of the
-released amount (99.6% has been fixed to the bed).
+in motion hs is only a thin fringe of about a mm beyond the slope break, 0.5% of the
+released amount (99.5% has been fixed to the bed).
 
 ## Findings
 
 | Check | Computed value | Verdict |
 |---|---|---|
-| Configuration 1 (1) water ledger Σh − Q tt | −1.9e-12 m·cell | PASS (machine precision) |
-| Configuration 1 (2) solid ledger Σhs + (1 − λ)Σdz − cs Q tt | −2.2e-12 m·cell | PASS |
-| Configuration 1 (3) <h_t> versus the analytical solution | 0.3434 / 0.3434 m (0.0%), CV 0.000, C 0.444 (theory 0.444) | PASS |
+| Configuration 1 (1) water ledger Σh − Q tt | 4.0e-13 m·cell | PASS (machine precision) |
+| Configuration 1 (2) solid ledger Σhs + (1 − λ)Σdz − cs Q tt | −1.3e-12 m·cell | PASS |
+| Configuration 1 (3) <h_t> versus the analytical solution | 0.3525 / 0.3525 m (0.0%), CV 0.000, C 0.444 (theory 0.444) | PASS |
 | Configuration 2 (1) solid ledger | 1.6e-11 m·cell | PASS |
-| Configuration 2 (2) activity | release area min dz = −1.55 m, flat max dz = 0.028 m | PASS |
-| Configuration 2 (3) stopping | remaining Σhs / released solids = 0.004 (< 0.3) | PASS |
+| Configuration 2 (2) activity | release area min dz = −1.55 m, flat max dz = 0.031 m | PASS |
+| Configuration 2 (3) stopping | remaining Σhs / released solids = 0.005 (< 0.3) | PASS |
 
 - The Voellmy uniform flow agrees with the analytical solution to 4 digits, and
   the water and solid ledgers close at machine precision. These are the
@@ -123,8 +127,19 @@ released amount (99.6% has been fixed to the bed).
   0.053 m). Configuration 1 does not change with 2 (the turbulent term of Voellmy
   replaces the Manning term). The difference of the ledger values of configuration 1
   from the former values (−2.4e-12, −3.0e-12) is a machine-precision rounding
-  difference from earlier changes of the flow computation (§94, §95 and others). The
-  values of the table and the text and the figures are from this computation.
+  difference from earlier changes of the flow computation (§94, §95 and others).
+  Recomputed on 2026-11-06 after the change by which 2 also evaluates the resistance
+  laws of mixture flows along the slope (developer.md §101). The uniform flow of
+  configuration 1 now follows the along-slope equation, and its depth changed
+  0.3434 → 0.3525 m (+2.65 % = (1 + tan²θ)^{2/3}; the turbulent term of Voellmy is
+  1/cos⁴θ times larger). The analytical solution was also changed to the along-slope
+  equation, and the tolerance was narrowed from 3 % to 1 % (a width that tells apart the
+  2.65 % difference from the horizontal equation of 1). In configuration 2 the deposit on
+  the flat part changed 0.028 → 0.031 m and the remaining fraction 0.004 → 0.005 (the
+  yield factor is 1 in the direction of steepest descent but grows for flow spreading
+  obliquely across the slope). The differences of the ledger values are machine-precision
+  rounding. The values of the table and the text and the figures are from this
+  computation.
 
 ## Related documents
 

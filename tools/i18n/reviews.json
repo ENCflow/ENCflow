@@ -356,11 +356,11 @@
     {
       "source": "docs/users_guide/massflow.md",
       "target": "docs/en/users_guide/massflow.md",
-      "source_sha256": "90808cae593a61667f136b79ba94a9d80e127de90515c18c7fe33a58b32a80d6",
-      "target_sha256": "23adea31e6f55278c6df908c46db84562d955fae75fdc3c1660ebb819c373eae",
-      "reviewer": "Claude (Claude Code session; the steepest-slope (D∞) paragraph, the f_dbed = 1 and f_slide wording, the Tarboton footnote and the §7 test/dbonset row with the safety-factor cases updated in both languages and compared)",
+      "source_sha256": "3a57e5781a82c950c22b00ddde531bd7af57107374e7548b095c43e545782d92",
+      "target_sha256": "b16fd76325dc15e94b868325dd210b59d7152c58263bac18ba6b789143ecd39a",
+      "reviewer": "Claude (Claude Code session; compared the Japanese source with the English mirror for the slope-parallel evaluation of the resistance laws of mixture flows (developer.md §101): changed values, history notes and analytic formulas; rest unchanged since the previous record)",
       "method": "assistant",
-      "reviewed_on": "2026-11-04"
+      "reviewed_on": "2026-11-06"
     },
     {
       "source": "docs/users_guide/nest.md",
@@ -455,9 +455,9 @@
     {
       "source": "docs/users_guide/steep_slope.md",
       "target": "docs/en/users_guide/steep_slope.md",
-      "source_sha256": "768a150dc13879748fa2f05db3bbb926c4e57149a82ead3e8d5fd4210f9e1be0",
-      "target_sha256": "4109a370e2a9f9e6c2c9f4a5e2452e3bad41f2a9e786828d3533d109b710e9a4",
-      "reviewer": "Claude (Claude Code session; compared the Japanese source with the English mirror for the added §2.6 on the experimental option 3, the test/steepwave and impact items in §4, the notes on 3 in §6.2, the row of 3 in §7 and the accepted values; rest unchanged since the previous record)",
+      "source_sha256": "14e6203d0456b94513a454f0d705fe264f4b9ae14b1173a0dcb7e82d1b4bbcc6",
+      "target_sha256": "90bbe4620aaf90476caeff16d15558c94a7deef811109fc8edd195455ef98506",
+      "reviewer": "Claude (Claude Code session; compared the Japanese source with the English mirror for the slope-parallel evaluation of the resistance laws of mixture flows (developer.md §101): changed values, history notes and analytic formulas; rest unchanged since the previous record)",
       "method": "assistant",
       "reviewed_on": "2026-11-06"
     },
@@ -2732,29 +2732,29 @@
     {
       "source": "test/README.md",
       "target": "test/README.en.md",
-      "source_sha256": "ebca6025a053aef62aecce51055d7f1cd2ac68af82cc6166123e82c8b41e25f1",
-      "target_sha256": "9d9ed7fc73cd6733b5df839422e0875e6c1dfb8ca5a9f0cdb3da045c89d0ee9c",
-      "reviewer": "Claude (Claude Code session; compared the added row of test/steepwave and the slopefric row mentioning 3 in the Japanese and English test indexes; rest unchanged since the previous record)",
+      "source_sha256": "946196e416cacfd9ead9929dc3b066c47ae489c333fe7c4b26af49f9d11b4a6b",
+      "target_sha256": "212b82f201df147940443790c43c0e28ecf0145fa5549d682d5fc679f68344a6",
+      "reviewer": "Claude (Claude Code session; compared the Japanese source with the English mirror for the slope-parallel evaluation of the resistance laws of mixture flows (developer.md §101): changed values, history notes and analytic formulas; rest unchanged since the previous record)",
       "method": "assistant",
       "reviewed_on": "2026-11-06"
     },
     {
       "source": "test/avalanche/README.md",
       "target": "test/avalanche/en/README.md",
-      "source_sha256": "1c56941fdeb7312ef2429960aa544247d5d4da1ae1e9868b5d643d05f2bc9308",
-      "target_sha256": "98a6ebdbf18027419e9e61fae4bb0f63fdcaa750cbc9cf3f91b4120de33d876a",
-      "reviewer": "Claude (Claude Code session; tests aligned to the default f_gravity_correction = 2 (developer.md sec. 93) and recomputed 2026-11-05: the tables, the values in the text and the added recompute note compared with the Japanese source, rest unchanged since the previous record)",
+      "source_sha256": "ed0c43336bf49a5d33a310ac9b5a77e87e7bb44a427b073ffc7d5262e7a36e3c",
+      "target_sha256": "98374093db1a20f4cbb589a44a9082f4b2f3741b9a0bee1a025d28dc74da248b",
+      "reviewer": "Claude (Claude Code session; compared the Japanese source with the English mirror for the slope-parallel evaluation of the resistance laws of mixture flows (developer.md §101): changed values, history notes and analytic formulas; rest unchanged since the previous record)",
       "method": "assistant",
-      "reviewed_on": "2026-11-05"
+      "reviewed_on": "2026-11-06"
     },
     {
       "source": "test/avalanche/figs/avalanche.png",
       "target": "test/avalanche/en/figs/avalanche.png",
-      "source_sha256": "743ff6aacf7f3dfe52ec0f17e02ec755ac3307b09c2d851ea32809cbe2e84f17",
-      "target_sha256": "fb968a8bc951c1b9c9d42fb91953ea4c7b57a8320c335d152ae1bff0c9fb2df4",
-      "reviewer": "Claude (Claude Code session; tests aligned to the default f_gravity_correction = 2 and recomputed 2026-11-05: both drawn by the case's figure script with and without the en switch from the same results; English figure viewed, labels compared with the Japanese figure)",
+      "source_sha256": "d77810f7aa03e3830aa0076e0eca8ad59e19e8eb4be6b049f535d010a1784e09",
+      "target_sha256": "bcbd7affb4af9d772ba44fef5b47d7dc459f61237c897a1d215a066cbfa79df9",
+      "reviewer": "Claude (Claude Code session; viewed the regenerated Japanese and English figures drawn by the same script from the same results of the slope-parallel mixture-resistance computation (developer.md §101); labels translated, data identical)",
       "method": "assistant",
-      "reviewed_on": "2026-11-05"
+      "reviewed_on": "2026-11-06"
     },
     {
       "source": "test/bankface/README.md",
@@ -2777,11 +2777,11 @@
     {
       "source": "test/bedslide/README.md",
       "target": "test/bedslide/en/README.md",
-      "source_sha256": "d5b87e01c0179f041632b5d6a9a8bc272606e38c057d3c6d2bc2501a68d9e337",
-      "target_sha256": "b04c6f4f2e9067ad26e3965b777c198713eeda64dc03ae1cbbeaae9c4e893768",
-      "reviewer": "Claude (Claude Code session; tests aligned to the default f_gravity_correction = 2 (developer.md sec. 93) and recomputed 2026-11-05: the tables, the values in the text and the added recompute note compared with the Japanese source, rest unchanged since the previous record)",
+      "source_sha256": "c489dd58eb4765b315b1e2ad57dacf12b5e1bf39686b8d18415104c7d93ca8f2",
+      "target_sha256": "07ae2aa0ac32af1cc4150bbb93f340b5f246887f1d8a67001523e32398006e47",
+      "reviewer": "Claude (Claude Code session; compared the Japanese source with the English mirror for the slope-parallel evaluation of the resistance laws of mixture flows (developer.md §101): changed values, history notes and analytic formulas; rest unchanged since the previous record)",
       "method": "assistant",
-      "reviewed_on": "2026-11-05"
+      "reviewed_on": "2026-11-06"
     },
     {
       "source": "test/bedslide/figs/bench.png",
@@ -2795,11 +2795,11 @@
     {
       "source": "test/bedslide/figs/plunge.png",
       "target": "test/bedslide/en/figs/plunge.png",
-      "source_sha256": "f00e2c0bdf89728ab398dca8db9101d91a236aa242a01bd15e6c95187b862d48",
-      "target_sha256": "6680e5216d18cb9cc47b6be8e451c3a3897634d5b35a7302ba942ed135b34c63",
-      "reviewer": "Claude (Claude Code session; tests aligned to the default f_gravity_correction = 2 and recomputed 2026-11-05: both drawn by the case's figure script with and without the en switch from the same results; English figure viewed, labels compared with the Japanese figure)",
+      "source_sha256": "cb018cabf9e98ff5e0c188b6397f5414ba138c5f56b08d0f851d567090d547c9",
+      "target_sha256": "a666bd887010cbce1d43b5ea5d6c189ed2baf1f70d42a21fd49bbbdf3d6c6194",
+      "reviewer": "Claude (Claude Code session; viewed the regenerated Japanese and English figures drawn by the same script from the same results of the slope-parallel mixture-resistance computation (developer.md §101); labels translated, data identical)",
       "method": "assistant",
-      "reviewed_on": "2026-11-05"
+      "reviewed_on": "2026-11-06"
     },
     {
       "source": "test/bedslide/figs/tsunami.png",
@@ -3099,31 +3099,40 @@
       "reviewed_on": "2026-11-04"
     },
     {
+      "source": "test/dbslope/README.md",
+      "target": "test/dbslope/en/README.md",
+      "source_sha256": "8b36a52cffb3b064bb4ed6ba9bc64b75c6d5167b42766ad41c799708e2bdd7f6",
+      "target_sha256": "6de93f88407b75b56d54c0a60624c26d80d864f875e6d643cb23b8804afe8fe8",
+      "reviewer": "Claude (Claude Code session; full-text comparison of the new Japanese README of test/dbslope with its English mirror: purpose and factors, configuration and laws, checks, run commands, result table, findings, limits and references)",
+      "method": "assistant",
+      "reviewed_on": "2026-11-06"
+    },
+    {
       "source": "test/debris/README.md",
       "target": "test/debris/en/README.md",
-      "source_sha256": "10f49878b7d839225e5808a25cf62d9d1df4ec88b02745633a98c86cedfc0e3d",
-      "target_sha256": "0e751824a42473754ccd7f71b7658237845970bd34a2c51539fbb43cbe0d3401",
-      "reviewer": "Claude (Claude Code session; tests aligned to the default f_gravity_correction = 2 (developer.md sec. 93) and recomputed 2026-11-05: the tables, the values in the text and the added recompute note compared with the Japanese source, rest unchanged since the previous record)",
+      "source_sha256": "a316599b383b91771a073180ffb4fe37ba10055a7c3c58d8916501543101fe63",
+      "target_sha256": "4d20a95ab9d5f75423e51776ae523a69796ff21a2b48bffdb777c9a4b817d0d3",
+      "reviewer": "Claude (Claude Code session; compared the Japanese source with the English mirror for the slope-parallel evaluation of the resistance laws of mixture flows (developer.md §101): changed values, history notes and analytic formulas; rest unchanged since the previous record)",
       "method": "assistant",
-      "reviewed_on": "2026-11-05"
+      "reviewed_on": "2026-11-06"
     },
     {
       "source": "test/debris/figs/map.png",
       "target": "test/debris/en/figs/map.png",
-      "source_sha256": "89c1e10ba2f79e5e5151a41f9b6b09c174221aacbf0bbb1ebc03c19fe6a3d1f4",
-      "target_sha256": "807f841a2622ccef66000890fadd04bf43a091cae863b774a2cb45aab0073b2f",
-      "reviewer": "Claude (Claude Code session; tests aligned to the default f_gravity_correction = 2 and recomputed 2026-11-05: both drawn by the case's figure script with and without the en switch from the same results; English figure viewed, labels compared with the Japanese figure)",
+      "source_sha256": "10f36360411a22c7ab15d58e2a1ece847ee1fcc6542130c6bd4d6037af4a1741",
+      "target_sha256": "d2c3fe5f32bbc320c1690f99b4d76c5fc4b75fde38d42afe78a800ab38afa1a9",
+      "reviewer": "Claude (Claude Code session; viewed the regenerated Japanese and English figures drawn by the same script from the same results of the slope-parallel mixture-resistance computation (developer.md §101); labels translated, data identical)",
       "method": "assistant",
-      "reviewed_on": "2026-11-05"
+      "reviewed_on": "2026-11-06"
     },
     {
       "source": "test/debris/figs/profile.png",
       "target": "test/debris/en/figs/profile.png",
-      "source_sha256": "e4a4af506d34d4aaa98f7c482e03e7b3a3544ffbee2d26d8d646a9a0ca28373a",
-      "target_sha256": "36fd649e0865f8ad63d1fdbb30afb6b9edc81cb120bb81e2af3c9ff33b27be20",
-      "reviewer": "Claude (Claude Code session; tests aligned to the default f_gravity_correction = 2 and recomputed 2026-11-05: both drawn by the case's figure script with and without the en switch from the same results; English figure viewed, labels compared with the Japanese figure)",
+      "source_sha256": "a90e90142b96ef34f706b21a245818cf0e88f156a1b2d976bca0e6f9061dd627",
+      "target_sha256": "1accc5ad7b27013c2e1246638c0e3fb4b35d7e95152e68419739600642208368",
+      "reviewer": "Claude (Claude Code session; viewed the regenerated Japanese and English figures drawn by the same script from the same results of the slope-parallel mixture-resistance computation (developer.md §101); labels translated, data identical)",
       "method": "assistant",
-      "reviewed_on": "2026-11-05"
+      "reviewed_on": "2026-11-06"
     },
     {
       "source": "test/diffusion/README.md",
@@ -3812,29 +3821,29 @@
     {
       "source": "test/slide/README.md",
       "target": "test/slide/en/README.md",
-      "source_sha256": "ea48a4ee964a25ad735653124da52cee58d78bb0cef0de5551b4a577bbfc9345",
-      "target_sha256": "1efcfef7382e53d79255040423ea0f49393b0ac862a35e72f0b478e944912b77",
-      "reviewer": "Claude (Claude Code session; tests aligned to the default f_gravity_correction = 2 (developer.md sec. 93) and recomputed 2026-11-05: the tables, the values in the text and the added recompute note compared with the Japanese source, rest unchanged since the previous record)",
+      "source_sha256": "9654b349cecf37788e6f7099318754e1e9b29f5886e9a6591d1976c6b80bc9a0",
+      "target_sha256": "717bdf33d7bca647993c98cde4390a5a9a1f40241cc7550fe430e9678bc776bd",
+      "reviewer": "Claude (Claude Code session; compared the Japanese source with the English mirror for the slope-parallel evaluation of the resistance laws of mixture flows (developer.md §101): changed values, history notes and analytic formulas; rest unchanged since the previous record)",
       "method": "assistant",
-      "reviewed_on": "2026-11-05"
+      "reviewed_on": "2026-11-06"
     },
     {
       "source": "test/slide/figs/fslide.png",
       "target": "test/slide/en/figs/fslide.png",
-      "source_sha256": "9d17f2288d24be3c63ce758ee041619f8ff4a408dd0cd638d755946293a3b643",
-      "target_sha256": "aac78f732977a22618e95ee1657be4a115e17f43973989e1cb1e650a2f34d222",
-      "reviewer": "Claude (Claude Code session; tests aligned to the default f_gravity_correction = 2 and recomputed 2026-11-05: both drawn by the case's figure script with and without the en switch from the same results; English figure viewed, labels compared with the Japanese figure)",
+      "source_sha256": "787854edad6f6fde95d55d0b1a41281dbcfa258193827a19a8969c20d7a2abd9",
+      "target_sha256": "eb8c092d914a03bd48f3d8b0e102d90ca8de3c7a65f10556e43c969e30232b71",
+      "reviewer": "Claude (Claude Code session; viewed the regenerated Japanese and English figures drawn by the same script from the same results of the slope-parallel mixture-resistance computation (developer.md §101); labels translated, data identical)",
       "method": "assistant",
-      "reviewed_on": "2026-11-05"
+      "reviewed_on": "2026-11-06"
     },
     {
       "source": "test/slide/figs/release.png",
       "target": "test/slide/en/figs/release.png",
-      "source_sha256": "b382a98d525da1ea9b75da31dc56926cfa0ef6f80f71f58c41fb2cb249a47a59",
-      "target_sha256": "e3a7988156c8fce6ad0a02374d1f713dcac676bb5f5786358e5d7942308035fc",
-      "reviewer": "Claude (Claude Code session; tests aligned to the default f_gravity_correction = 2 and recomputed 2026-11-05: both drawn by the case's figure script with and without the en switch from the same results; English figure viewed, labels compared with the Japanese figure)",
+      "source_sha256": "47ea27d6157b0e7b390f034bf7c24b1aad16a8e72a0cae32dce646ae86bd9b2c",
+      "target_sha256": "581be3f3fc6ab5103c7c58e8fe8beb79f746378aea1d32eceea05b5102db721e",
+      "reviewer": "Claude (Claude Code session; viewed the regenerated Japanese and English figures drawn by the same script from the same results of the slope-parallel mixture-resistance computation (developer.md §101); labels translated, data identical)",
       "method": "assistant",
-      "reviewed_on": "2026-11-05"
+      "reviewed_on": "2026-11-06"
     },
     {
       "source": "test/slopefric/README.md",
@@ -3893,20 +3902,20 @@
     {
       "source": "test/splashslide/README.md",
       "target": "test/splashslide/en/README.md",
-      "source_sha256": "3ee69378cb999cb780d3d58b615a24faaf84aadc23d013676267ced3992de42a",
-      "target_sha256": "87e3515cd265e312a8caf471aba6113430d98a3763d932510d8222917793323c",
-      "reviewer": "Claude (Claude Code session; tests aligned to the default f_gravity_correction = 2 (developer.md sec. 93) and recomputed 2026-11-05: the tables, the values in the text and the added recompute note compared with the Japanese source, rest unchanged since the previous record)",
+      "source_sha256": "5217b3be50db7a5a87eba0f38e2d3b5dae33765b9370e2099d0947ddb7fafe1d",
+      "target_sha256": "def1f07f219834495dff8b3ca06577be5adaadfe6b204b5e41f5aafcbd2d8cdb",
+      "reviewer": "Claude (Claude Code session; compared the Japanese source with the English mirror for the slope-parallel evaluation of the resistance laws of mixture flows (developer.md §101): changed values, history notes and analytic formulas; rest unchanged since the previous record)",
       "method": "assistant",
-      "reviewed_on": "2026-11-05"
+      "reviewed_on": "2026-11-06"
     },
     {
       "source": "test/splashslide/figs/splashslide.png",
       "target": "test/splashslide/en/figs/splashslide.png",
-      "source_sha256": "5bcc2467a294601c1a4f99b55c21341c36975ee82ef953319bdc6ca551d381a5",
-      "target_sha256": "46420529c11371f997776f6df1802075d4c4140628e0b7d312b1e3f0139b0b1f",
-      "reviewer": "Claude (Claude Code session; tests aligned to the default f_gravity_correction = 2 and recomputed 2026-11-05: both drawn by the case's figure script with and without the en switch from the same results; English figure viewed, labels compared with the Japanese figure)",
+      "source_sha256": "7905392efdca9db311b8ad4c69fb385bf89fdb38889b3b9d6e64688900addacc",
+      "target_sha256": "f2245f4727da8670a3a3979e8fb7d15b98d816a11515ecea2a93c362e0c51b13",
+      "reviewer": "Claude (Claude Code session; viewed the regenerated Japanese and English figures drawn by the same script from the same results of the slope-parallel mixture-resistance computation (developer.md §101); labels translated, data identical)",
       "method": "assistant",
-      "reviewed_on": "2026-11-05"
+      "reviewed_on": "2026-11-06"
     },
     {
       "source": "test/splashstrata/README.md",
@@ -4046,29 +4055,29 @@
     {
       "source": "test/volcano/README.md",
       "target": "test/volcano/en/README.md",
-      "source_sha256": "da2d0d2172dbfa5cbbff6b4f0da4966853f76ed2aaa46d73c5f40e0a7ee9ec72",
-      "target_sha256": "e752f6b8da8e2b1b88d2281e08315ff128db2e1910d062ddcb60aa22636d4ca9",
-      "reviewer": "Claude (Claude Code session; tests aligned to the default f_gravity_correction = 2 (developer.md sec. 93) and recomputed 2026-11-05: the tables, the values in the text and the added recompute note compared with the Japanese source, rest unchanged since the previous record)",
+      "source_sha256": "9197a8a6af7b7de591ba9f45136cc8bce5fdba142b0610db8b10cbd97a1d7b17",
+      "target_sha256": "5f23201dd785bc97e8b82325f348c57a6f0f53a9ad5bf6579a488e7e9d0ed29f",
+      "reviewer": "Claude (Claude Code session; compared the Japanese source with the English mirror for the slope-parallel evaluation of the resistance laws of mixture flows (developer.md §101): changed values, history notes and analytic formulas; rest unchanged since the previous record)",
       "method": "assistant",
-      "reviewed_on": "2026-11-05"
+      "reviewed_on": "2026-11-06"
     },
     {
       "source": "test/volcano/figs/tauy.png",
       "target": "test/volcano/en/figs/tauy.png",
-      "source_sha256": "503786f62975640eefbcde1413b314b8b42e77cedaff59ef6d142071b4e48857",
-      "target_sha256": "caa3fea3dffb0f77c39a996b3a7b3a4a37722dd845a7294c5403e105ed0b1c23",
-      "reviewer": "Claude (Claude Code session; tests aligned to the default f_gravity_correction = 2 and recomputed 2026-11-05: both drawn by the case's figure script with and without the en switch from the same results; English figure viewed, labels compared with the Japanese figure)",
+      "source_sha256": "9f8f89e7cd780e6d2598c09e98df4c004433c503320c2337e8952365169c5d5b",
+      "target_sha256": "8e096b5db0a84bb3a3ff30235f0587251cd76070ce0262e2aec3e605270ce81b",
+      "reviewer": "Claude (Claude Code session; viewed the regenerated Japanese and English figures drawn by the same script from the same results of the slope-parallel mixture-resistance computation (developer.md §101); labels translated, data identical)",
       "method": "assistant",
-      "reviewed_on": "2026-11-05"
+      "reviewed_on": "2026-11-06"
     },
     {
       "source": "test/volcano/figs/voellmy.png",
       "target": "test/volcano/en/figs/voellmy.png",
-      "source_sha256": "117361870d59a6082cbc76aa1dab1cf5c011a6c11bfe7baec661ccc74e514ff9",
-      "target_sha256": "655880d8e6899d64aeec530691af139cfa599448de7b9becf4753b5d3a4f0a86",
-      "reviewer": "Claude (Claude Code session; tests aligned to the default f_gravity_correction = 2 and recomputed 2026-11-05: both drawn by the case's figure script with and without the en switch from the same results; English figure viewed, labels compared with the Japanese figure)",
+      "source_sha256": "c49c84af128f6d55d2b2139374e6df9f19d0a53174343eba57bb697d0b18f405",
+      "target_sha256": "6e84ca3452af90ecc483a9681abece4c753523afde1c43d3bac2422b3c68f810",
+      "reviewer": "Claude (Claude Code session; viewed the regenerated Japanese and English figures drawn by the same script from the same results of the slope-parallel mixture-resistance computation (developer.md §101); labels translated, data identical)",
       "method": "assistant",
-      "reviewed_on": "2026-11-05"
+      "reviewed_on": "2026-11-06"
     },
     {
       "source": "test/vzcol/README.md",

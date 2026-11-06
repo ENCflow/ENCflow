@@ -166,7 +166,7 @@ $`g_e`$ is computed per edge (§3.3) and multiplies the following terms.
 |---|---|---|
 | Slope and pressure (water-surface gradient) | $`-\,g_e\,g_v\,(\eta_n - \eta_c)/\Delta s_k`$, $`\eta = z + h`$ | yes ($`g'`$ with 3; §2.6) |
 | Manning friction (semi-implicit; the coefficient $`F`$ multiplies $`u_k`$) | 1: $`F = -\,g_e\,g_v\,n^2\,|\mathbf V|_e/h_f^{4/3}`$; 2: the expression below | 1 only |
-| Yield (Coulomb) of mixture flows and the turbulent term of Voellmy | $`a_y = g_e\tan\phi\,sC/(1+sC)`$, $`g_e V^2/(\xi h)`$ | yes |
+| Yield (Coulomb) of mixture flows and the turbulent term of Voellmy | $`a_y = g_e\tan\phi\,sC/(1+sC)`$, $`g_e V^2/(\xi h)`$ | yes with 1; rewritten in the slope-parallel form with 2 (§2.3) |
 | Curvature term (centrifugal acceleration; f_dbcurv) | gravity normal to the ground $`g_n = \sqrt{g\,g_e} = g\cos\theta`$ | yes |
 | Pressure of the sediment column of mixtures | $`-\,g_e\,g_v\,(h_{s,n} - h_{s,c})/\Delta s_k`$ | yes |
 | Advection, diffusion, building drag, wave forcing | — | no |
@@ -248,15 +248,33 @@ difference showed only in the calibrated roughness). A literature value of $`n`$
 (measured in mild-slope channels) is a value for slope-parallel quantities and can be
 used as it is with 2 (§7).
 
-The steady speed of resistance laws not proportional to $`g_e`$ (the dilatant term
-of Takahashi–Nakagawa, the constitutive law of Egashira, a constant stopping
-stress) changes with $`g_e`$. Of the resistance laws of mixture flows, the friction
-factor of 2 is not applied to the yield terms (Coulomb, a constant stopping stress)
-or to the terms that replace Manning (the turbulent term of Voellmy, the laminar law
-of Egashira, the stony type and the bedload-like aggregate flow of
-Takahashi–Nakagawa). It is applied to the Manning term of the laws combined with
-Manning (`f_dbres` = 1, 5) and on edges that fall back to Manning on the dilute side
-(§6.2).
+With 2, the resistance laws of mixture flows (the debris-flow model) are also
+evaluated with the slope-parallel speed and the bed-normal thickness (developer.md
+§101, in Japanese). When the resistance stress $`\tau`$ is given along the slope, the
+deceleration of the horizontal velocity is
+$`\tau\,\mathbf V/(\rho_m h\cos\theta\,|\mathbf V_s|)`$, so the factors relative to the
+horizontal form (1) are ($`r = |\mathbf V_s|/|\mathbf V|`$; $`1/\cos\theta`$ for flow in the
+direction of steepest descent, 1 for flow along a contour)
+
+| Resistance term | Factor | Direction of steepest descent (30°) |
+|---|---|---|
+| Yield (Coulomb, the $`\mu`$ of Voellmy, a constant yield stress, the yield of Egashira and Takahashi) | $`1/(r\cos\theta)`$ | 1 |
+| Resistance proportional to the square of the velocity (the turbulent term $`g V^2/(\xi h)`$ of Voellmy, the laminar law of Egashira, the stony type of Takahashi–Nakagawa) | $`r/\cos^3\theta`$ | $`1/\cos^4\theta`$ = 1.78 |
+| Bedload-like collective flow of Takahashi–Nakagawa | $`r/\cos^2\theta`$ | $`1/\cos^3\theta`$ = 1.54 |
+
+For a mixture flowing in the direction of steepest descent the yield does not change
+(the gradient at which a mixture at rest starts to move, $`\tan\theta = \mu`$, is the
+same; the onset check uses the factor for the direction of the driving force), and
+the resistance proportional to the square of the velocity grows, so the fast parts of
+the flow become slower. Uniform flow with Voellmy follows
+$`V_s^2 = \xi\,h\cos\theta\,(\sin\theta - \mu\cos\theta)`$ as in RAMMS, and the
+slope-parallel speed at the same depth is $`\cos^2\theta`$ times that of 1 (0.75 at 30°;
+test/dbslope). The literature values of $`\mu`$ and $`\xi`$ (RAMMS) and the speed and
+thickness in the formulas of Egashira and Takahashi are slope-parallel quantities, so
+they can be used as they are with 2. The Manning term of the laws combined with
+Manning (`f_dbres` = 1, 5) and edges that fall back to Manning on the dilute side get
+the same friction factor of 2 as water flow (until 2026-11-05, 2 made only the Manning
+terms slope-parallel).
 
 ### 2.4 Shear of sediment transport and erosion
 
@@ -542,6 +560,12 @@ gradient is used for these reasons:
 - **Steps**: in a schematic 1 m urban block (rain on the roofs of 8 m buildings) and in
   overtopping of a 2 m wall, the results of 2 are the same as those of 1 (§3.4;
   developer.md §93).
+- **test/dbslope** (resistance laws of mixture flows; §2.3): the depth of uniform flow
+  on a strip of a 30° slope (4 neighbours) agrees within 0.03 % with the along-slope
+  equations with 2 and with the horizontal equations with 1, for all four laws
+  (Voellmy, Egashira, the stony type and the bedload-like collective flow of
+  Takahashi–Nakagawa; the ratio of the depths of 2 and 1 for the same discharge is
+  1.11–1.21).
 - **test/steepwave** (the check of 3; §2.6): a lake at rest against a steep shore
   (gradient 1, slope direction 30°, 8 neighbours) stays exactly at rest with 2 and 3.
   For a small long wave crossing a steep lake bed (gradient 0.5, depth 40 → 4 m), the
@@ -777,12 +801,16 @@ the maximum velocity V9999) with speeds along the slope needs a conversion.
   can become deeper than the friction-controlled estimate (6.2 mm on a schematic flat
   roof on a 1 m grid, against an estimate of about 4 mm at the centre of the roof from
   friction; developer.md §93).
-- **Resistance laws of mixture flows**: the friction factor of 2 multiplies the
-  Manning friction only (including the Manning term of the laws combined with
-  Manning, `f_dbres` = 1, 5), not the laminar law of Egashira, the building drag, the
-  yield or Voellmy. Nor does it multiply the extra term of the wave–current friction
-  (`wv_flow = 2`) (on the beach slopes where wave fields are used the factor is nearly
-  1). Mixture flows treat their resistance laws in horizontal coordinates with $`g_e`$.
+- **Range of the resistance laws**: 2 evaluates the Manning friction and the
+  resistance laws of mixture flows along the slope (§2.3). The building drag and the
+  extra term of the wave–current friction (`wv_flow = 2`) get no factor (on the beach
+  slopes where wave fields are used the factor is nearly 1). The terminal speed of the
+  Voellmy law of the inertia-free bed layer (`f_bedslide`),
+  $`V = \sqrt{\xi\,h_b\,(S - \mu b)}`$, stays in the horizontal form and is
+  $`1/\cos^2\theta`$ times the speed of the slope-parallel form (1.16 at a gradient of
+  0.4; developer.md §101). The factor of the yield for a mixture flowing obliquely
+  across the slope (how $`r`$ acts) is not checked by the uniform-flow check
+  (test/dbslope).
 - **Speed on curved streamlines**: the $`\hat{\mathbf V}`$ of 2 is the direction of the
   mean velocity of the two cells, computed per edge. Where the flow turns sharply at an
   edge (confluences, strong bends), the estimate of the slope-parallel speed is
@@ -792,8 +820,8 @@ the maximum velocity V9999) with speeds along the slope needs a conversion.
 
 | Value | When to use |
 |---|---|
-| 2 (default) | flow and erosion on steep slopes; computations that use a literature value of Manning's $`n`$ (measured in mild-slope channels; a value for slope-parallel quantities) as it is |
-| 1 | computations with a Manning's $`n`$ calibrated in a horizontally projected model, and reproducing computations made before 2026-11-05; a notice is printed at start-up |
+| 2 (default) | flow and erosion on steep slopes; computations that use a literature value of Manning's $`n`$ (measured in mild-slope channels; a value for slope-parallel quantities) or literature values for mixture flows (such as the $`\mu`$ and $`\xi`$ of RAMMS) as they are |
+| 1 | computations with a Manning's $`n`$ or parameters of the resistance laws of mixture flows calibrated in a horizontally projected model, and reproducing computations made before 2026-11-05 (before 2026-11-06 for mixture flows); a notice is printed at start-up |
 | 0 | computations dominated by deep water over a steep bed (lakes, reservoirs, tsunamis on steep coasts; §6.2), and comparisons with the classical shallow water equations |
 | 3 (experimental) | computations with both flow on steep slopes and waves in deep water over steep lake shores or coasts (a landslide entering a lake, etc.; §2.6). Whether to make it the default is under consideration (indications of its impact in §4) |
 
