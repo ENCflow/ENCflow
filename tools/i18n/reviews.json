@@ -4352,9 +4352,9 @@
     {
       "source": "tutorials/chichibu/README.md",
       "target": "tutorials/chichibu/en/README.md",
-      "source_sha256": "4058ce692b1247bacd9c33df8c6db849f77f97c6b76cb794ccfba3fa89e41c77",
-      "target_sha256": "3d168643fc7e771c7a2d3980937ce62326d48c8422dfd9572b143d33e3f6b0db",
-      "reviewer": "Claude (Claude Code session; supplement recomputed 2026-11-06 with f_advection_donor = 2: tables, numbers and claims of Results 1-3 and the summary edited in Japanese and English together; both texts read side by side)",
+      "source_sha256": "af889037fb969acf6324a80fa1994b5479c5da1274289715507ed521a633415c",
+      "target_sha256": "048da57644fe58f67829f7e2ffad834a9ef64d4835d8cb32ff2df2b38a2a277f",
+      "reviewer": "Claude (Claude Code session; supplement Results 3 paragraph updated 2026-11-06 with the verified dt checks in Japanese and English together; both texts read side by side)",
       "method": "assistant",
       "reviewed_on": "2026-11-06"
     },

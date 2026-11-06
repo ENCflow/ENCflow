@@ -1065,15 +1065,17 @@ spans twice the others.** Peak discharge
 For reference, the maximum velocity of each computation (V_max in the Log)
 on the 100 m grid was 42 m/s without advection, 27 m/s with scheme 1
 (upwind 0.5), 18 m/s with scheme 1 (upwind 1.0) and 26 m/s with scheme 3. The 50 m case without advection
-diverges during the rainfall at dt = 0.75 s (the velocity exceeds 60 m/s at bed
-steps and the Courant number exceeds 1), so that one run uses dt = 0.4 s.
-Scheme 1 with upwind 0.1 stops on the 200 m and 100 m grids during the
-recession (5.5 and 2.9 hours, when the ponded water at the outlet exceeds
-35 m) and on the 50 m grid during the rising limb (56 minutes), with the
-velocity diverging. We take it as an instability of the non-conservative,
-weakly upwinded scheme in deep still water and at steep steps. The 200 m and
-100 m peaks (2.2 to 2.3 hours) come before the stop, so they are listed in
-the table, and the curves end early in the figure.
+diverges after 54 minutes, during the rainfall, at dt = 0.75 s (the velocity
+reaches 59 m/s at bed steps and the Courant number exceeds 1), so that one run
+uses dt = 0.4 s. Scheme 1 with upwind 0.1 stops on the 200 m and 100 m grids
+during the recession (5.5 and 2.9 hours, when the ponded water at the outlet
+exceeds 35 m) and on the 50 m grid during the rising limb (56 minutes), with
+the velocity diverging. On the 100 m grid, reducing dt from 1.5 to 1.0 s
+hardly changes the time it stops (2.6 → 2.9 h), so this is not a time-step
+issue; we take it as an instability of the non-conservative, weakly upwinded
+scheme in deep still water and at steep steps. The 200 m and 100 m peaks
+(2.2 to 2.3 hours) come before the stop, so they are listed in the table, and
+the curves end early in the figure.
 
 #### Dropping the advection term makes the peak larger and earlier on finer grids
 
