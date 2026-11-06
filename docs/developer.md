@@ -20680,8 +20680,23 @@ test/lava・test/glacier の全構成が逐次・MPI np = 2・4 で合格し、�
   (6 時間、OpenMP 2)で 38 → 49 s(+30%)。線上の MUSCL 値・実流量・供給元の流向は k̂ によらないので、
   セルごとに 8 リンク分を 1 回だけ作れば重い部分が 1/8 になる(最適化は未実施。handoff 00n)。
 
-**検証**(2026-11-06。gfortran 13.3 / Open MPI 4.1.6、Ubuntu 24.04):
-- (記入予定: 既定 0 の回帰、-fcheck=all、MPI np = 1, 2, 4、有効時の各検定)
+**検証**(2026-11-06。gfortran 13.3 / Open MPI 4.1.6、Ubuntu 24.04。-Ofast の既定ビルド):
+- 既定 0(無効)の回帰: reference を持つ 42 ケースの `./Run.sh`(逐次、ULP = 0)を順に実行中: 2026-11-06 の時点で 17 ケース(chichibu・chichibu_icmap・coastal_drain・conduit・culvert・damwq・dissol・evapdry・frost・gwbed・gwsect・gwseep・gwwidth・kdpart・nhbore・nhbottom・nhbreak まで)が PASS(identical)。残りの結果は完走後にここへ追記する。
+  無効時は inflow_face_value を呼ばず、コードを足したことによる -Ofast の最適化の差も出なかった。
+- 有効時の実行ファイルの同一性: 実装後の bin/encflow で f_advection_donor = 2 を明示した tutorials/chichibu
+  Step 3・Step 4 と test/dambreak の出力(Log.txt・fluxes)が、設計時の試作 B4(同じ式。scratchpad)と
+  バイト一致。有効時の検定の数値は下の表のとおり(試作の値がそのまま実装の値)。
+- 範囲外参照: `-Og -fcheck=all`(OpenMP 1)の逐次と MPI np = 2 で、f_advection_donor = 2 の Step 3(6 時間。
+  流域マスクの静的データ)が実行時エラーなしで完走し、逐次と np = 2 の Log.txt・fluxes がバイト一致
+  (規律 3。確保範囲は変えていないが、新しいステンシルが読む範囲の確認として)。
+- MPI: -Ofast の MPI ビルドで Step 3(有効時)の np = 1・2・4 の Log.txt と全測線の fluxes が互いにバイト
+  一致し、逐次ビルドの出力ともバイト一致(読む量が従来のハロの範囲に収まることの確認)。
+- 一様流の恒等性: test/slopefric(0°・22.5°・45° × 8・4 近傍 × 重力補正 1・2)が有効時も PASS(0° は表の値が
+  同一、斜めは比が 1e-4 動く = 一様流の恒等性は離散では近似)。
+- 1 次元: test/dambreak の中央行の Stoker の指標(段波位置 +1.23%・hm −1.42%・um +1.16%・越え 0.008 m・
+  L1 0.0062)が基準(+1.25%・−1.45%・+1.17%・0.002 m・0.0063)と同じ水準。Log の最大値の列は壁沿いの行で
+  4% 動く(前線の遅れ 1 セルは同じ)。
+- 90° 屈曲: test/bendloss zigzag が有効時も K = 0.00、区間平均水深 1.376 m(直線 1.373、基準 1.374)。
 
 **有効時の変化(試作 B4 = 同じ式。基準 = 現行の既定)**:
 
