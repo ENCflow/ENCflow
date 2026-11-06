@@ -163,11 +163,13 @@ set output "figs/step3_transects.png"
 set title "Step 3: 各測線のハイドログラフ(上流 1 → 下流 4)"
 plot for [i=1:4] sprintf('result_step3/fluxes/flux000%d.csv', i) using 2:3 with lines lw 1.5 title sprintf("測線 %d", i)
 
-# ---- Step 4: 風上化と限界水深の調整の効果 ----
+# ---- Step 4: 移流項の風上供給元の切替(f_advection_donor = 2)の効果 ----
+#      灰色の破線は旧版の調整(dd = dv = 0.0001。跳ねの先送り)
 set output "figs/step4_hydro.png"
-set title "Step 4: パラメータ調整の効果(測線 4)"
-plot 'result_step3/fluxes/flux0004.csv' using 2:3 with lines lw 1.5 title "Step 3(調整前)", \
-     'result_step4/fluxes/flux0004.csv' using 2:3 with lines lw 1.5 title "Step 4(調整後)"
+set title "Step 4: 移流項の供給元の切替の効果(測線 4)"
+plot 'result_step3/fluxes/flux0004.csv' using 2:3 with lines lw 1.5 title "Step 3(既定)", \
+     'result_cmp_dd/fluxes/flux0004.csv' using 2:3 with lines lw 1.2 dt 2 lc rgb "#808080" title "dd = dv = 0.0001(旧版の調整)", \
+     'result_step4/fluxes/flux0004.csv' using 2:3 with lines lw 1.5 title "Step 4(f\\_advection\\_donor = 2)"
 
 # ---- Step 5: 遮断・浸透による流出の減少 ----
 set output "figs/step5_hydro.png"

@@ -3,7 +3,8 @@
 !======================================================================
 !
 ! Supplement: effect of resolution (100 m)
-!       The Step 4 configuration (no losses, no outlet, dd = dv = 0.0001) moved to the 100 m grid.
+!       The Step 4 configuration as it was before the 2026-11-06 revision (no losses, no outlet,
+!       dd = dv = 0.0001, f_advection_donor at its default 0) moved to the 100 m grid.
 !       Text input; distributed output is depth only, every hour
 !
 !======================================================================

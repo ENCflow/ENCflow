@@ -4334,11 +4334,11 @@
     {
       "source": "tutorials/chichibu/Fig_chichibu.plt",
       "target": "tutorials/chichibu/en/Fig_chichibu.plt",
-      "source_sha256": "939b94ea07dcd64562cf8b7e3faf6501f7549e341c15c4aaa692b2ed4677ac07",
-      "target_sha256": "0352a45593cd0783d91e82a2b6a88c7a67fe70506fdc37cd2fca7227d23f11b0",
-      "reviewer": "Claude (Claude Code session; full-text content and lexical review, no model execution)",
+      "source_sha256": "68cf67d6216f986fbc38c84842b31bad2ee0364b9016f36e1a9ae72e4d8bb150",
+      "target_sha256": "f44c931e3a8f644367eaf374c2eda40b3847d53de6b00f0f2d3fb494b6e4d0d0",
+      "reviewer": "Claude (Claude Code session; Step 4 revised 2026-11-06 to try f_advection_donor = 2: Japanese and English texts, parameter comments and plot titles edited together; figures drawn by Fig_chichibu.sh (Fig_chichibu.plt and en/Fig_chichibu.plt) from the same results, Japanese and English step4_hydro viewed and labels compared; step7 figures are the same files drawn by Fig_step7.py)",
       "method": "assistant",
-      "reviewed_on": "2026-10-24"
+      "reviewed_on": "2026-11-06"
     },
     {
       "source": "tutorials/chichibu/Fig_supp.plt",
@@ -4352,11 +4352,11 @@
     {
       "source": "tutorials/chichibu/README.md",
       "target": "tutorials/chichibu/en/README.md",
-      "source_sha256": "16fd3d7eaf2d3857d32c84f5c148db51eef3f8c60f6bdfbd279ad8f8ad618966",
-      "target_sha256": "1edc01799968e1209364c42196e9496dee774bff4231e1b4a125e26eb84ad63a",
-      "reviewer": "Claude (Claude Code session; main text (Steps 1-7) recomputed 2026-11-05 with the default f_gravity_correction = 2 after developer.md sec. 94-95: the screen-output rows of Steps 1, 5 and 6, the Step 4 explanation (bumps in the hydrograph, ex_flux now 0, dd is what matters), the Step 4 and Step 5 peak values, the 4-neighbour velocity and the dated note compared with the Japanese source; the supplement is unchanged since the previous record)",
+      "source_sha256": "2378f8a1220ca8e8c97f92192fcc3806073765482f302e864fdb73859c2f3b84",
+      "target_sha256": "034971442d8a705b360ba5dffba0d5e7a03351541f72da77725e3cfe3e04c37a",
+      "reviewer": "Claude (Claude Code session; Step 4 revised 2026-11-06 to try f_advection_donor = 2: Japanese and English texts, parameter comments and plot titles edited together; figures drawn by Fig_chichibu.sh (Fig_chichibu.plt and en/Fig_chichibu.plt) from the same results, Japanese and English step4_hydro viewed and labels compared; step7 figures are the same files drawn by Fig_step7.py)",
       "method": "assistant",
-      "reviewed_on": "2026-11-05"
+      "reviewed_on": "2026-11-06"
     },
     {
       "source": "tutorials/chichibu/figs/step1_hend.png",
@@ -4442,74 +4442,74 @@
     {
       "source": "tutorials/chichibu/figs/step4_hydro.png",
       "target": "tutorials/chichibu/en/figs/step4_hydro.png",
-      "source_sha256": "076b7303b861193abfaa3098b50e7a068bc0ec4cc1f42087d91dec2228d7045d",
-      "target_sha256": "0c2fb6ddac3435ec3a2d977c8d5b02faf15ac0b5e7358e9deaa28fe5210bc979",
-      "reviewer": "Claude (Claude Code session; main text recomputed 2026-11-05: both drawn by Fig_chichibu.sh (Fig_chichibu.plt and en/Fig_chichibu.plt, scripts unchanged) from the same results; English figures viewed for step1_hend, step1_hend_raw, step1_hend_4nb (Japanese), step4_hydro, step5_hydro and step6_osc, labels compared with the Japanese figures)",
+      "source_sha256": "a4b3d7873da35a2f1cce72f513437e3e29b12fec72e25e7d65a216473720b3a7",
+      "target_sha256": "f1d764cd8f80e017f5b5a174ba580dc2118a845adc2f4fccf99a84f7851bc12f",
+      "reviewer": "Claude (Claude Code session; Step 4 revised 2026-11-06 to try f_advection_donor = 2: Japanese and English texts, parameter comments and plot titles edited together; figures drawn by Fig_chichibu.sh (Fig_chichibu.plt and en/Fig_chichibu.plt) from the same results, Japanese and English step4_hydro viewed and labels compared; step7 figures are the same files drawn by Fig_step7.py)",
       "method": "assistant",
-      "reviewed_on": "2026-11-05"
+      "reviewed_on": "2026-11-06"
     },
     {
       "source": "tutorials/chichibu/figs/step5_hydro.png",
       "target": "tutorials/chichibu/en/figs/step5_hydro.png",
-      "source_sha256": "65855c027012742c32dabfa4c07f4f1dae4cd905bfa2e08a39792fb5e73fe740",
-      "target_sha256": "20793de63d196e5309289c64bdb322ca47b1f059560add50f7fe3a4553a764b8",
-      "reviewer": "Claude (Claude Code session; main text recomputed 2026-11-05: both drawn by Fig_chichibu.sh (Fig_chichibu.plt and en/Fig_chichibu.plt, scripts unchanged) from the same results; English figures viewed for step1_hend, step1_hend_raw, step1_hend_4nb (Japanese), step4_hydro, step5_hydro and step6_osc, labels compared with the Japanese figures)",
+      "source_sha256": "fa27e9861910b9211cc5418ab922e64aba74c43859b98072bddad8ca18e7fa32",
+      "target_sha256": "e1f0edfbff5524e95487541a3041cba182a2c877fc8331e33457d1b1f3436bac",
+      "reviewer": "Claude (Claude Code session; Step 4 revised 2026-11-06 to try f_advection_donor = 2: Japanese and English texts, parameter comments and plot titles edited together; figures drawn by Fig_chichibu.sh (Fig_chichibu.plt and en/Fig_chichibu.plt) from the same results, Japanese and English step4_hydro viewed and labels compared; step7 figures are the same files drawn by Fig_step7.py)",
       "method": "assistant",
-      "reviewed_on": "2026-11-05"
+      "reviewed_on": "2026-11-06"
     },
     {
       "source": "tutorials/chichibu/figs/step6_hend.png",
       "target": "tutorials/chichibu/en/figs/step6_hend.png",
-      "source_sha256": "13d3513ef06000dc22957ec5f791774288f3483c209d738bcc393526a15d6aae",
-      "target_sha256": "f9be32cd385cf74291a28010c3a3241acd0206bea1564b99e3904ab71a44db62",
-      "reviewer": "Claude (Claude Code session; main text recomputed 2026-11-05: both drawn by Fig_chichibu.sh (Fig_chichibu.plt and en/Fig_chichibu.plt, scripts unchanged) from the same results; English figures viewed for step1_hend, step1_hend_raw, step1_hend_4nb (Japanese), step4_hydro, step5_hydro and step6_osc, labels compared with the Japanese figures)",
+      "source_sha256": "65f312398ddfc298659750a7e02813320a0c81f1d6817cf724aa2e11f13b0c17",
+      "target_sha256": "112f288bbf093cb8f7b7596f308ab5e72f93185979800c9de0a24ceec225bd77",
+      "reviewer": "Claude (Claude Code session; Step 4 revised 2026-11-06 to try f_advection_donor = 2: Japanese and English texts, parameter comments and plot titles edited together; figures drawn by Fig_chichibu.sh (Fig_chichibu.plt and en/Fig_chichibu.plt) from the same results, Japanese and English step4_hydro viewed and labels compared; step7 figures are the same files drawn by Fig_step7.py)",
       "method": "assistant",
-      "reviewed_on": "2026-11-05"
+      "reviewed_on": "2026-11-06"
     },
     {
       "source": "tutorials/chichibu/figs/step6_hend_step5.png",
       "target": "tutorials/chichibu/en/figs/step6_hend_step5.png",
-      "source_sha256": "eb0adfb55b5a113ff5b1b4f04fe00361019640b3e6865b98cef5d4e8b44e5226",
-      "target_sha256": "14ca93be8d982e4c93c16ed33583421211b5c8453f1920f9592df743cbbbeb91",
-      "reviewer": "Claude (Claude Code session; main text recomputed 2026-11-05: both drawn by Fig_chichibu.sh (Fig_chichibu.plt and en/Fig_chichibu.plt, scripts unchanged) from the same results; English figures viewed for step1_hend, step1_hend_raw, step1_hend_4nb (Japanese), step4_hydro, step5_hydro and step6_osc, labels compared with the Japanese figures)",
+      "source_sha256": "a4ba4e46618caeb251185e8574ff123463bf0e9f51be3d6b4c62dbe602547efc",
+      "target_sha256": "f3f1bb9f240c7ab7c510e3523bc7a32c807520c1c418743258a3b214e2bffa84",
+      "reviewer": "Claude (Claude Code session; Step 4 revised 2026-11-06 to try f_advection_donor = 2: Japanese and English texts, parameter comments and plot titles edited together; figures drawn by Fig_chichibu.sh (Fig_chichibu.plt and en/Fig_chichibu.plt) from the same results, Japanese and English step4_hydro viewed and labels compared; step7 figures are the same files drawn by Fig_step7.py)",
       "method": "assistant",
-      "reviewed_on": "2026-11-05"
+      "reviewed_on": "2026-11-06"
     },
     {
       "source": "tutorials/chichibu/figs/step6_osc.png",
       "target": "tutorials/chichibu/en/figs/step6_osc.png",
-      "source_sha256": "4f2c6173b021625c5841952d3bc1825af2ecee5f6e3e78ae9f30df16276e09ef",
-      "target_sha256": "d0a8d7ec0a89fb37ae6355660dcc51da20d8653dfebcc1f75c683b881bf8503a",
-      "reviewer": "Claude (Claude Code session; main text recomputed 2026-11-05: both drawn by Fig_chichibu.sh (Fig_chichibu.plt and en/Fig_chichibu.plt, scripts unchanged) from the same results; English figures viewed for step1_hend, step1_hend_raw, step1_hend_4nb (Japanese), step4_hydro, step5_hydro and step6_osc, labels compared with the Japanese figures)",
+      "source_sha256": "ca6d076019f0329d3a72411dd377064921a140a7515ea8bad2a48fc24c14a8d2",
+      "target_sha256": "1db1a7cde5c017ff00760a054e59c0a5d98c1e913b532b05b000c78b54d942be",
+      "reviewer": "Claude (Claude Code session; Step 4 revised 2026-11-06 to try f_advection_donor = 2: Japanese and English texts, parameter comments and plot titles edited together; figures drawn by Fig_chichibu.sh (Fig_chichibu.plt and en/Fig_chichibu.plt) from the same results, Japanese and English step4_hydro viewed and labels compared; step7 figures are the same files drawn by Fig_step7.py)",
       "method": "assistant",
-      "reviewed_on": "2026-11-05"
+      "reviewed_on": "2026-11-06"
     },
     {
       "source": "tutorials/chichibu/figs/step6_osc_zoom.png",
       "target": "tutorials/chichibu/en/figs/step6_osc_zoom.png",
-      "source_sha256": "3140d49a6e68703b3cccf3bf831fca4665cc7b0452a05fa00e8f6f556e634699",
-      "target_sha256": "9ed048f98a5ee5161f10fbf4638079921eb4bb08a9cb32fa0257b33d27623460",
-      "reviewer": "Claude (Claude Code session; main text recomputed 2026-11-05: both drawn by Fig_chichibu.sh (Fig_chichibu.plt and en/Fig_chichibu.plt, scripts unchanged) from the same results; English figures viewed for step1_hend, step1_hend_raw, step1_hend_4nb (Japanese), step4_hydro, step5_hydro and step6_osc, labels compared with the Japanese figures)",
+      "source_sha256": "3b72aa07dff51b788ca32937dc3fca84dd07c496b0a909006ef40d34c926f4bf",
+      "target_sha256": "551b0dfee24d97833f571f7f47a47336addbcddd3edfcbdab74c911be3dd8d0e",
+      "reviewer": "Claude (Claude Code session; Step 4 revised 2026-11-06 to try f_advection_donor = 2: Japanese and English texts, parameter comments and plot titles edited together; figures drawn by Fig_chichibu.sh (Fig_chichibu.plt and en/Fig_chichibu.plt) from the same results, Japanese and English step4_hydro viewed and labels compared; step7 figures are the same files drawn by Fig_step7.py)",
       "method": "assistant",
-      "reviewed_on": "2026-11-05"
+      "reviewed_on": "2026-11-06"
     },
     {
       "source": "tutorials/chichibu/figs/step7_3d.png",
       "target": "tutorials/chichibu/en/figs/step7_3d.png",
-      "source_sha256": "82ddf43d80f938731ae40dcb606e0fe19e4c922ff6425f138acf0c5750fdb91c",
-      "target_sha256": "82ddf43d80f938731ae40dcb606e0fe19e4c922ff6425f138acf0c5750fdb91c",
-      "reviewer": "Claude (Claude Code session; Step 7 recomputed 2026-11-05 and re-rendered by Fig_step7.py (VTK offscreen) from result/vtk of param_step7.txt; the image has no text, so the English figure is the same file; viewed against the previous image, same view and colouring)",
+      "source_sha256": "83f1e617b2d55e62c7454c644b4c8294e4b0a631b17f4cee24f032f7048dc94b",
+      "target_sha256": "83f1e617b2d55e62c7454c644b4c8294e4b0a631b17f4cee24f032f7048dc94b",
+      "reviewer": "Claude (Claude Code session; Step 4 revised 2026-11-06 to try f_advection_donor = 2: Japanese and English texts, parameter comments and plot titles edited together; figures drawn by Fig_chichibu.sh (Fig_chichibu.plt and en/Fig_chichibu.plt) from the same results, Japanese and English step4_hydro viewed and labels compared; step7 figures are the same files drawn by Fig_step7.py)",
       "method": "assistant",
-      "reviewed_on": "2026-11-05"
+      "reviewed_on": "2026-11-06"
     },
     {
       "source": "tutorials/chichibu/figs/step7_simple.png",
       "target": "tutorials/chichibu/en/figs/step7_simple.png",
-      "source_sha256": "e7a7ce3a22fceae13296c8da11025e2ff23728ba841a484a48bcbbece4098463",
-      "target_sha256": "e7a7ce3a22fceae13296c8da11025e2ff23728ba841a484a48bcbbece4098463",
-      "reviewer": "Claude (Claude Code session; Step 7 recomputed 2026-11-05 and re-rendered by Fig_step7.py (VTK offscreen) from result/vtk of param_step7.txt; the image has no text, so the English figure is the same file; viewed against the previous image, same view and colouring)",
+      "source_sha256": "72259a576a640a0972a12d44971f54170bea98f95a3f614d3f66b4e8d6fac8bb",
+      "target_sha256": "72259a576a640a0972a12d44971f54170bea98f95a3f614d3f66b4e8d6fac8bb",
+      "reviewer": "Claude (Claude Code session; Step 4 revised 2026-11-06 to try f_advection_donor = 2: Japanese and English texts, parameter comments and plot titles edited together; figures drawn by Fig_chichibu.sh (Fig_chichibu.plt and en/Fig_chichibu.plt) from the same results, Japanese and English step4_hydro viewed and labels compared; step7 figures are the same files drawn by Fig_step7.py)",
       "method": "assistant",
-      "reviewed_on": "2026-11-05"
+      "reviewed_on": "2026-11-06"
     },
     {
       "source": "tutorials/chichibu/figs/supp_hend.png",
@@ -4586,65 +4586,65 @@
     {
       "source": "tutorials/chichibu/param_step4.txt",
       "target": "tutorials/chichibu/en/param_step4.txt",
-      "source_sha256": "e85d6143a65cb86414dafbaad2f9ff1c2cc9e0048614eaaa1be5298a7d40c1e4",
-      "target_sha256": "cabb9ae705b9ff2ab65c49b2ce32ca01e88d828635a34458498d6abacf531a3e",
-      "reviewer": "Claude (Claude Code session; lateral-flux fix of the momentum-conservative advection, §68.42)",
+      "source_sha256": "3ca59cfe295d088dbda78d139c914a41ab2efc4d095b86295f14384578926bce",
+      "target_sha256": "42f9c1bd1f44433c6e60e0d0bcca25ae53cd7c9f295652b5e195e1e77a54cc30",
+      "reviewer": "Claude (Claude Code session; Step 4 revised 2026-11-06 to try f_advection_donor = 2: Japanese and English texts, parameter comments and plot titles edited together; figures drawn by Fig_chichibu.sh (Fig_chichibu.plt and en/Fig_chichibu.plt) from the same results, Japanese and English step4_hydro viewed and labels compared; step7 figures are the same files drawn by Fig_step7.py)",
       "method": "assistant",
-      "reviewed_on": "2026-11-01"
+      "reviewed_on": "2026-11-06"
     },
     {
       "source": "tutorials/chichibu/param_step5.txt",
       "target": "tutorials/chichibu/en/param_step5.txt",
-      "source_sha256": "6f2c6ba88310f4cb926aceb3f5a3747659a8f8e8862abf2304ed1070f65c9a69",
-      "target_sha256": "888c50fcd32667d99902d9dce175e629ad776e835e1bd3f47f875fe92f8e08d5",
-      "reviewer": "Claude (Claude Code session; lateral-flux fix of the momentum-conservative advection, §68.42)",
+      "source_sha256": "84e78a2e1709675945716ef6d4dda753f7c54d37211c215616174f955cd46cf6",
+      "target_sha256": "5d3d324d115faa156e6279284f871ce4d40c7f5143b4c51ce23152898fd550b5",
+      "reviewer": "Claude (Claude Code session; Step 4 revised 2026-11-06 to try f_advection_donor = 2: Japanese and English texts, parameter comments and plot titles edited together; figures drawn by Fig_chichibu.sh (Fig_chichibu.plt and en/Fig_chichibu.plt) from the same results, Japanese and English step4_hydro viewed and labels compared; step7 figures are the same files drawn by Fig_step7.py)",
       "method": "assistant",
-      "reviewed_on": "2026-11-01"
+      "reviewed_on": "2026-11-06"
     },
     {
       "source": "tutorials/chichibu/param_step6.txt",
       "target": "tutorials/chichibu/en/param_step6.txt",
-      "source_sha256": "903ac083183cdcc99043a2373b04058d1f80faaa1272345ffb39ac7ebd24da0a",
-      "target_sha256": "467735f2964693287e3e92d8c38fe68830e0fa25919aea43730bbb98ea3315f9",
-      "reviewer": "Claude (Claude Code session; lateral-flux fix of the momentum-conservative advection, §68.42)",
+      "source_sha256": "49517fcc3ac78060103f3b4b1b3cb6ba384e536a2bf3dc5a22265c26ff0c9338",
+      "target_sha256": "44d9fd3034521aedc05d0ba56850a284db1f35b6041702df21e85714f544c3e4",
+      "reviewer": "Claude (Claude Code session; Step 4 revised 2026-11-06 to try f_advection_donor = 2: Japanese and English texts, parameter comments and plot titles edited together; figures drawn by Fig_chichibu.sh (Fig_chichibu.plt and en/Fig_chichibu.plt) from the same results, Japanese and English step4_hydro viewed and labels compared; step7 figures are the same files drawn by Fig_step7.py)",
       "method": "assistant",
-      "reviewed_on": "2026-11-01"
+      "reviewed_on": "2026-11-06"
     },
     {
       "source": "tutorials/chichibu/param_step7.txt",
       "target": "tutorials/chichibu/en/param_step7.txt",
-      "source_sha256": "8a36d375aabc5e4361042d0e61a8de68e0bf3451eb1e624e2097d897fa197a21",
-      "target_sha256": "686f3143617fb52efad5d1b36275a1602acbd72774037368bd62c9309abfc179",
-      "reviewer": "Claude (Claude Code session; lateral-flux fix of the momentum-conservative advection, §68.42)",
+      "source_sha256": "1ac98abe40f4a186c9f2539740149bf70ce170b7b5c8bdc08e61deae0350a5e4",
+      "target_sha256": "cfb01590a70ed9523f082a44c422c83aa8a34700e854569dd8addfd5cdcbb4c5",
+      "reviewer": "Claude (Claude Code session; Step 4 revised 2026-11-06 to try f_advection_donor = 2: Japanese and English texts, parameter comments and plot titles edited together; figures drawn by Fig_chichibu.sh (Fig_chichibu.plt and en/Fig_chichibu.plt) from the same results, Japanese and English step4_hydro viewed and labels compared; step7 figures are the same files drawn by Fig_step7.py)",
       "method": "assistant",
-      "reviewed_on": "2026-11-01"
+      "reviewed_on": "2026-11-06"
     },
     {
       "source": "tutorials/chichibu/param_supp_100m.txt",
       "target": "tutorials/chichibu/en/param_supp_100m.txt",
-      "source_sha256": "cc6558e6a09d7cef1172eaef97e5fb0a6b783f008646fea6b562bc57a8dc6518",
-      "target_sha256": "46123f760b0365b189d4c13eaf5c064e38da11a3d2c875ed973cd5befd9de705",
-      "reviewer": "Claude (Claude Code session; lateral-flux fix of the momentum-conservative advection, §68.42)",
+      "source_sha256": "f59325fad720f1d70ec726f6e3645dcd65b80f167854b21419c23893527ab8e3",
+      "target_sha256": "5f04a0c0d430936dbd4cf5fc44d13aaef848ea6c2bc95d8384978362af394023",
+      "reviewer": "Claude (Claude Code session; Step 4 revised 2026-11-06 to try f_advection_donor = 2: Japanese and English texts, parameter comments and plot titles edited together; figures drawn by Fig_chichibu.sh (Fig_chichibu.plt and en/Fig_chichibu.plt) from the same results, Japanese and English step4_hydro viewed and labels compared; step7 figures are the same files drawn by Fig_step7.py)",
       "method": "assistant",
-      "reviewed_on": "2026-11-01"
+      "reviewed_on": "2026-11-06"
     },
     {
       "source": "tutorials/chichibu/param_supp_200m.txt",
       "target": "tutorials/chichibu/en/param_supp_200m.txt",
-      "source_sha256": "31cb4d116bf4bb413757dddff6dad936116a8f78e364c5e55e96629784060a14",
-      "target_sha256": "bc3ec4c5b7d95b10542f25c847b7ce6c4cbede71b1a66b010e2086f91841e30f",
-      "reviewer": "Claude (Claude Code session; lateral-flux fix of the momentum-conservative advection, §68.42)",
+      "source_sha256": "f98c501a6103e234834aa3d0ab6e71d2933644f46a1b9f6a3f3ecbbd1c5119f0",
+      "target_sha256": "3c7747113458b4916eb31080a475636ed2f6a8ec40ff4def938a22172e6e5875",
+      "reviewer": "Claude (Claude Code session; Step 4 revised 2026-11-06 to try f_advection_donor = 2: Japanese and English texts, parameter comments and plot titles edited together; figures drawn by Fig_chichibu.sh (Fig_chichibu.plt and en/Fig_chichibu.plt) from the same results, Japanese and English step4_hydro viewed and labels compared; step7 figures are the same files drawn by Fig_step7.py)",
       "method": "assistant",
-      "reviewed_on": "2026-11-01"
+      "reviewed_on": "2026-11-06"
     },
     {
       "source": "tutorials/chichibu/param_supp_50m.txt",
       "target": "tutorials/chichibu/en/param_supp_50m.txt",
-      "source_sha256": "d17d9721e2acd8bacc03574e903693b9943aa01dcce621e64f197d3697699ba4",
-      "target_sha256": "5cab1ff51f4b345461b5b6e93c3bdea1948223422acb3681f8944ed68a88c74e",
-      "reviewer": "Claude (Claude Code session; lateral-flux fix of the momentum-conservative advection, §68.42)",
+      "source_sha256": "844e52001bc12b7126770f906f2121163d88a3b3f087c2cea6322ee137464089",
+      "target_sha256": "3061925eea94c6ca8471cb5a069018c9bf528fc2b4798dc4ab1e99b8996a029e",
+      "reviewer": "Claude (Claude Code session; Step 4 revised 2026-11-06 to try f_advection_donor = 2: Japanese and English texts, parameter comments and plot titles edited together; figures drawn by Fig_chichibu.sh (Fig_chichibu.plt and en/Fig_chichibu.plt) from the same results, Japanese and English step4_hydro viewed and labels compared; step7 figures are the same files drawn by Fig_step7.py)",
       "method": "assistant",
-      "reviewed_on": "2026-11-01"
+      "reviewed_on": "2026-11-06"
     },
     {
       "source": "tutorials/wave/README.md",
