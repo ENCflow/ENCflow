@@ -61,11 +61,11 @@ incompatible with the premise of the projection).
 ```
 cd examples/landslide_tsunami
 make                                   # link to ../../bin/encflow and inputs (z.txt, slide.txt, submarine.txt)
-./encflow param_rockslide.txt          # hydrostatic: 3–7 s each (120 s of simulation; gfortran, 4 threads)
+./encflow param_rockslide.txt          # hydrostatic: 5–9 s each (120 s of simulation; gfortran, 4 threads)
 ./encflow param_debrisflow.txt
 ./encflow param_mixture_only.txt
 ./encflow param_submarine.txt
-./encflow param_rockslide_nh0.txt      # non-hydrostatic: 15–35 s (250–900 CG iterations per step)
+./encflow param_rockslide_nh0.txt      # non-hydrostatic: 19–45 s (250–900 CG iterations per step)
 ./encflow param_rockslide_nh.txt
 ./encflow param_submarine_nh0.txt
 ./encflow param_submarine_nh.txt
@@ -78,7 +78,7 @@ result_A_nh / result_C_nh0 / result_C_nh: Hb (bed-layer thickness), Vb
 E (water level = z+h; the free surface of mixture cells is E + Hs) and the
 time series in probes/.
 
-## Results: the four hydrostatic patterns (recomputed 2026-10-06, on 2026-11-02 with the default f_opening_dynamic = 3 and the corrected advection term, on 2026-11-04 after the fix of the yield rest check and after the fix of the steep-slope gravity correction, and on 2026-11-05 with the default f_gravity_correction = 2 and the fixes of the outflow suppression and the edge depth; gfortran, dt = 0.05 s)
+## Results: the four hydrostatic patterns (recomputed 2026-10-06, on 2026-11-02 with the default f_opening_dynamic = 3 and the corrected advection term, on 2026-11-04 after the fix of the yield rest check and after the fix of the steep-slope gravity correction, on 2026-11-05 after the fixes of the outflow suppression and the edge depth, and on 2026-11-06 with the setting aligned to the default f_gravity_correction = 2; gfortran, dt = 0.05 s)
 
 Recomputed after the fix of a real bug in the advection scheme (developer.md
 §69.9; out-of-domain reference of the "further upwind" cell in MUSCL) since
@@ -102,13 +102,22 @@ the effective gravity, which came out too large on edges oblique to the 0.4 slop
 edges along the shoreline), is now right; the leading wave of A at x = 298 m changed +1.37 → +1.41 m,
 the shoreline-zone deposition of B 834 → 690 m³ and its leading wave +1.16 → +1.20 m, and the leading
 wave of B0 +0.79 → +0.86 m (the runout of all four cases is unchanged).
-Recomputed on 2026-11-05 after the default f_gravity_correction = 2 (friction and sediment shear along the
-slope; developer.md §93), the suppression of excessive outflow by the total outflow of a cell (§94) and the
-choice of the upwind side of the edge depth by the direction of the new velocity (§95). The hydrostatic
-values of A and C (basal layer only) are unchanged; the shoreline-zone deposition of B, which uses the
-mixture, changed 690 → 614 m³ and that of B0 9,485 → 9,454 m³ (runout and leading waves nearly the same;
-the last digits of the non-hydrostatic comparison move). The tables and figures, including the
-non-hydrostatic comparison, show these recomputed values.
+Recomputed on 2026-11-05 after the suppression of excessive outflow by the total outflow of a cell
+(developer.md §94) and the choice of the upwind side of the edge depth by the direction of the new
+velocity (§95). The hydrostatic values of A and C (basal layer only) are unchanged; the shoreline-zone
+deposition of B, which uses the mixture, changed 690 → 614 m³ and that of B0 9,485 → 9,454 m³ (runout and
+leading waves nearly the same; the last digits of the non-hydrostatic comparison move). At that time the
+settings still stated `f_gravity_correction = 1` explicitly, and the earlier statement that the example
+was recomputed with the default f_gravity_correction = 2 was wrong.
+Recomputed on 2026-11-06 with the settings aligned to the default 2 (friction and sediment shear along
+the slope; developer.md §93). In the hydrostatic table A has the same values; the shoreline-zone
+deposition of B changed 614 → 608 m³ and that of B0 9,454 → 9,524 m³ (runout and leading waves nearly the
+same). In the non-hydrostatic comparison, the underwater bed layer that keeps moving with the
+acceleration term changed 4,009 → 3,210 m³ for A and 3,371 → 3,109 m³ for C. The tables and figures,
+including the non-hydrostatic comparison, show these recomputed values. Trial computations with the
+experimental f_gravity_correction = 3 (which returns the gravity to g in deep water over steep lake
+shores) are in developer.md §100 (in Japanese; the settings of the example stay at 2; the waves of the
+lake come close to those without correction).
 
 ![Profiles](../figs/profiles.png)
 
@@ -131,16 +140,16 @@ of the flat lake bottom (x ≈ 300 m); in B0 (mixture only) it piles up within
 | Case | Deposition in the shoreline zone (x 200–275 m) | Lake bottom (275–350 m) | Runout | Leading wave x=298 m | x=548 m |
 |---|---|---|---|---|---|
 | A debris avalanche | 213 m³ | 18,820 m³ | 332 m | +1.41 m (13 s) | +0.76 m (25 s) |
-| B debris flow → handover | 614 m³ | 17,683 m³ | 338 m | +1.19 m (21 s) | +0.60 m (34 s) |
-| B0 mixture only | 9,454 m³ | 0 m³ | 232 m | +0.86 m (22 s) | +0.41 m (34 s) |
-| C submarine landslide | 1 m³ | 17,509 m³ | 348 m | +1.57 m (2 s) / −1.21 m | +0.71 m (15 s) / −0.54 m |
+| B debris flow → handover | 608 m³ | 17,696 m³ | 338 m | +1.19 m (21 s) | +0.60 m (34 s) |
+| B0 mixture only | 9,524 m³ | 0 m³ | 232 m | +0.86 m (22 s) | +0.40 m (34 s) |
+| C submarine landslide | 1 m³ | 17,508 m³ | 348 m | +1.57 m (2 s) / −1.21 m | +0.71 m (15 s) / −0.54 m |
 
 Interpretation:
 
 - **A and B have almost the same underwater runout** (332 / 338 m). A moves at the
   terminal velocity from right after release, so it reaches the shoreline
   early (8 s); B flows down the land as a mixture with inertia and hands
-  over after plunging (15 s). B leaves 614 m³ in the shoreline zone before
+  over after plunging (15 s). B leaves 608 m³ in the shoreline zone before
   the handover, and its leading wave is +1.2 m against +1.4 m for A.
 - **B0 does not run underwater.** The mixture loses its driving once the
   water surface becomes flat, so a wave from the increase in column height
@@ -158,7 +167,7 @@ Interpretation:
   decelerated before reaching the plunge cells, so in this case the handover
   loses no momentum (see the item on the bias below).
 
-## Results: comparison with the non-hydrostatic versions (2026-10-06; recomputed 2026-11-02 with the default f_opening_dynamic = 3 and the corrected advection term, on 2026-11-04 after the fix of the steep-slope gravity correction, and on 2026-11-05 with the default f_gravity_correction = 2 and the fixes of the outflow suppression and the edge depth)
+## Results: comparison with the non-hydrostatic versions (2026-10-06; recomputed 2026-11-02 with the default f_opening_dynamic = 3 and the corrected advection term, on 2026-11-04 after the fix of the steep-slope gravity correction, on 2026-11-05 after the fixes of the outflow suppression and the edge depth, and on 2026-11-06 with the setting aligned to the default f_gravity_correction = 2)
 
 ![Non-hydrostatic](../figs/nonhydro.png)
 
@@ -170,12 +179,12 @@ acceleration term, blue/green = non-hydrostatic + acceleration term).
 
 | Case | x=212 m | x=298 m | x=398 m | x=548 m | Underwater bed layer: stopped / moving (m³) |
 |---|---|---|---|---|---|
-| A hydrostatic | +1.55@8s / -1.11 | +1.41@13s / -0.39 | +1.01@18s / -0.26 | +0.76@25s / -0.25 | 18,367 / 743 |
-| A non-hydrostatic (no acceleration term) | +1.60@8s / -1.09 | +1.65@15s / -1.36 | +0.72@20s / -0.65 | +0.40@27s / -0.37 | 18,246 / 864 |
-| A non-hydrostatic + acceleration term | +1.55@8s / -1.08 | +1.07@15s / -0.72 | +0.64@20s / -0.53 | +0.36@27s / -0.30 | 15,101 / 4,009 |
-| C hydrostatic | +1.80@13s / -2.74 | +1.57@2s / -1.21 | +1.15@7s / -0.63 | +0.71@15s / -0.54 | 19,099 / 11 |
-| C non-hydrostatic (no acceleration term) | +1.94@10s / -3.00 | +1.96@2s / -2.09 | +0.65@18s / -0.91 | +0.44@25s / -0.50 | 19,048 / 62 |
-| C non-hydrostatic + acceleration term | +1.67@13s / -2.38 | +1.03@12s / -1.30 | +0.54@17s / -0.78 | +0.36@25s / -0.43 | 15,739 / 3,371 |
+| A hydrostatic | +1.55@8s / -1.10 | +1.41@13s / -0.39 | +1.01@18s / -0.26 | +0.76@25s / -0.25 | 18,394 / 716 |
+| A non-hydrostatic (no acceleration term) | +1.60@8s / -1.09 | +1.65@15s / -1.36 | +0.72@20s / -0.65 | +0.40@27s / -0.37 | 18,295 / 815 |
+| A non-hydrostatic + acceleration term | +1.55@8s / -1.07 | +1.07@15s / -0.72 | +0.64@20s / -0.53 | +0.36@27s / -0.30 | 15,900 / 3,210 |
+| C hydrostatic | +1.79@13s / -2.74 | +1.57@2s / -1.21 | +1.15@7s / -0.63 | +0.71@15s / -0.54 | 19,099 / 11 |
+| C non-hydrostatic (no acceleration term) | +1.88@14s / -3.00 | +1.96@2s / -2.09 | +0.65@18s / -0.91 | +0.44@25s / -0.50 | 19,087 / 23 |
+| C non-hydrostatic + acceleration term | +1.63@13s / -2.39 | +1.03@12s / -1.30 | +0.54@17s / -0.78 | +0.36@25s / -0.43 | 16,001 / 3,109 |
 
 Each entry is maximum@time / minimum (m). The bed-layer column gives the
 stopped and moving volumes at 120 s.
@@ -191,7 +200,7 @@ stopped and moving volumes at 120 s.
   deposition zone).** The leading wave at the slope foot (x = 298) is
   1.65 / 1.96 m without the acceleration term (higher than hydrostatic: the
   bottom displacement of the 1–2 cells at the front of the slide is mapped to
-  the surface without attenuation) and 1.07 / 1.04 m with it (the Kajiura
+  the surface without attenuation) and 1.07 / 1.03 m with it (the Kajiura
   filter removes the short waves). The acceleration term lowers the far-field
   leading wave (lake center and far-shore side) by 10–20 %.
 - **[Limitation] Self-excited oscillation with the bed layer.** With the
@@ -201,7 +210,7 @@ stopped and moving volumes at 120 s.
   ω → √(4g/H) (T = 6.3 s) and the group velocity becomes 0, so the short
   waves excited by the front of the slide stay where they were generated and
   shake the driving head Φ = z + r·h of the bed layer, and part of the bed
-  layer (A 4,000 m³, C 3,400 m³) never meets the stopping criterion and
+  layer (A 3,200 m³, C 3,100 m³) never meets the stopping criterion and
   keeps moving. Without the acceleration term it is about ±0.1 m. **This
   oscillation is superimposed on the water level directly above the
   deposition zone and on the stopped volume**, so for the near-field wave
@@ -213,7 +222,7 @@ stopped and moving volumes at 120 s.
   is the goal, non-hydrostatic (either variant); for the near-field waveform
   directly above the deposition zone, the leading wave with the acceleration
   term; for the terrain of stopping and deposition, hydrostatic or without
-  the acceleration term. The run time is 3–8 times that of hydrostatic (CG
+  the acceleration term. The run time is 2–8 times that of hydrostatic (CG
   iterations).
 
 ## Properties to be aware of (reasons for the settings)

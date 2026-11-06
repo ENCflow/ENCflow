@@ -32,7 +32,7 @@ module m_swflow_enc
                                       ! init_debris が呼ぶ。swflow init より前)
   public :: zdiff_minmod              ! 地盤の勾配の minmod 差分(重力補正の gravity_prepare と、
                                       ! m_geomorph の土石流の岩盤侵食の有効重力が使う。§91)
-  public :: slope_shear_on            ! 斜面に沿う底面せん断の有無(f_gravity_correction = 2。§93)
+  public :: slope_shear_on            ! 斜面に沿う底面せん断の有無(f_gravity_correction >= 2。§93)
   public :: slope_shear_factor        ! 流砂・侵食の無次元掃流力の斜面の倍率(セル。§93)
   public :: slope_shear_factor_e      ! 同じく辺(両セルの平均。§93)
 
@@ -110,6 +110,8 @@ module m_swflow_enc
     integer :: f_diffusion_term               ! 拡散項の計算 (0:無効, 1:定数, 2:ゼロ方程式)
     logical :: have_diff = .false.            ! 拡散項を計算する(f_diffusion_term > 0、nh_break_visc > 0
                                             !   または wf_break_visc > 0。init が設定)
+    logical :: have_gp = .false.              ! 水面の勾配の項の g′ の補正を足す(f_gravity_correction = 3 かつ
+                                            !   f_pressure_term > 0。init が設定。§100)
     real :: wf_break_visc = 0.0               ! 波浪場の砕波による水平混合の係数 M(§90)
     real :: p_diagratio != 2 / (2 + sqrt(2.))  ! ratio of diagonal component
     real :: p_adv_upwind_index != 0.0          ! upwind index of advection term
@@ -420,6 +422,9 @@ module m_swflow_enc
     real, allocatable :: gzx(:,:), gzy(:,:)  ! セルの地盤の勾配 ∂z/∂x, ∂z/∂y(minmod で制限した
                                      ! 差分。重力補正の cos²θ = 1/(1 + |∇z|²) の接線成分に使う。
                                      ! f_gravity_correction > 0 のときだけ確保。§91)
+    real, allocatable :: ghx(:,:), ghy(:,:)  ! セルの流動深(h、土石流が有効なら + hs)の勾配
+                                     ! (minmod)。水面の勾配の項の g′ の接線成分に使う。
+                                     ! f_gravity_correction = 3 のときだけ確保。§100)
     logical :: initialized = .false.
   end type
   type(t_enc_status), allocatable :: sx_mod   ! エッジ状態(同上: init が確保、dispose が解放)
@@ -851,9 +856,12 @@ subroutine m_swflow_enc_init(p, g, b, s)
       call par_info("swflow_enc: f_gravity_correction = 1 (effective gravity only; friction and sediment " // &
                     "shear in horizontal coordinates. The default 2 also evaluates them along the slope)")
     case (2)      ! + 斜面に沿う速さと地盤に直角な水深の摩擦・流砂のせん断(既定。§93)
+    case (3)      ! 2 + 水面の勾配の項に Yuan ら (2016) の g′(深い水で g に戻る。試作。§100)
+      call par_info("swflow_enc: f_gravity_correction = 3 (2 + variable g' of the water-surface gradient " // &
+                    "term, Yuan et al. 2016; experimental)")
     case default
-      call par_stop("list_enc: f_gravity_correction must be 0(none), 1(effective gravity) " // &
-                    "or 2(effective gravity + slope-parallel friction)")
+      call par_stop("list_enc: f_gravity_correction must be 0(none), 1(effective gravity), " // &
+                    "2(effective gravity + slope-parallel friction) or 3(2 + variable g')")
   end select
   opt%f_exflux_reduction = list%f_exflux_reduction
   opt%f_hcap_upwind = list%f_hcap_upwind
@@ -1052,6 +1060,8 @@ subroutine m_swflow_enc_init(p, g, b, s)
       opt%f_advection_term = 0
       opt%f_pressure_term = 0
   end select
+  ! 水面の勾配の項の g′ の補正(f_gravity_correction = 3。圧力項を解くときだけ。§100)
+  opt%have_gp = (opt%f_gravity_correction >= 3 .and. opt%f_pressure_term > 0)
 
   ! 重み係数をセットする
   call init_weights(p, g)
@@ -1566,6 +1576,11 @@ subroutine init_enc_status(p, g, s, sx)
     allocate(sx%gzx(dcp%ish:dcp%ieh, dcp%jsh:dcp%jeh), source = 0.0)
     allocate(sx%gzy(dcp%ish:dcp%ieh, dcp%jsh:dcp%jeh), source = 0.0)
   end if
+  ! 水面の勾配の項の g′ のセルの流動深の勾配(f_gravity_correction = 3 のみ。gravity_prepare が書く。§100)
+  if (opt%f_gravity_correction >= 3) then
+    allocate(sx%ghx(dcp%ish:dcp%ieh, dcp%jsh:dcp%jeh), source = 0.0)
+    allocate(sx%ghy(dcp%ish:dcp%ieh, dcp%jsh:dcp%jeh), source = 0.0)
+  end if
 
   ! 流速の初期条件を設定する(uv)。前ステップ流量 mn1 も同時に uv·he で
   ! 整合させる(init 末尾の complete が mn1 → mn にコミットする)。
@@ -1682,6 +1697,8 @@ subroutine del_enc_status(sx)
   if (allocated(sx%hbd1)) deallocate(sx%hbd1)
   if (allocated(sx%gzx)) deallocate(sx%gzx)
   if (allocated(sx%gzy)) deallocate(sx%gzy)
+  if (allocated(sx%ghx)) deallocate(sx%ghx)
+  if (allocated(sx%ghy)) deallocate(sx%ghy)
 end subroutine
 
 
@@ -1852,7 +1869,114 @@ subroutine gravity_prepare(g, s, sx)
     end do
   end do
   !$omp end parallel do
+
+  ! 水面の勾配の項の g′ のセルの流動深の勾配(f_gravity_correction = 3 のみ。§100)。h(と hs)は
+  ! ステップの頭でハロ交換済みなので、js−1..je+1 行の minmod が帯の外の 1 行まで読める
+  if (allocated(sx%ghx)) then
+    !$omp parallel do schedule(dynamic) private(i, j)
+    do j = j1, j2
+      do i = g%wx(1,j), g%wx(2,j)
+        sx%ghx(i,j) = 0.0
+        sx%ghy(i,j) = 0.0
+        if (g%x(i,j) <= 0) cycle
+        sx%ghx(i,j) = hdiff_minmod(g, s, i, j, 1, 0) / g%dx
+        sx%ghy(i,j) = hdiff_minmod(g, s, i, j, 0, 1) / g%dy
+      end do
+    end do
+    !$omp end parallel do
+  end if
 end subroutine
+
+
+!----------------------------------------------------------------------
+! 軸方向の流動深の差の minmod(f_gravity_correction = 3 の g′。§100)。流動深は水深 h、土石流が
+! 有効なら + max(hs, 0)(水面 = z + h + hs と同じ)。差の取り方と無効セルの扱いは zdiff_minmod と
+! 同じ(minmod は奇関数なので、水面が水平なら −zdiff_minmod、水深が一様なら 0 になる)
+!----------------------------------------------------------------------
+pure function hdiff_minmod(g, s, i, j, di, dj) result(d)
+  type(t_geoinfo), intent(in) :: g
+  type(t_state), intent(in) :: s
+  integer, intent(in) :: i, j, di, dj
+  real :: d
+  real :: dp, dm, hc
+  logical :: okp, okm
+
+  okp = g%x(i+di, j+dj) > 0
+  okm = g%x(i-di, j-dj) > 0
+  dp = 0.0
+  dm = 0.0
+  hc = flowdepth(s, i, j)
+  if (okp) dp = flowdepth(s, i+di, j+dj) - hc
+  if (okm) dm = hc - flowdepth(s, i-di, j-dj)
+  if (okp .and. okm) then
+    if (dp * dm <= 0.0) then
+      d = 0.0
+    else if (abs(dp) < abs(dm)) then
+      d = dp
+    else
+      d = dm
+    end if
+  else if (okp) then
+    d = dp
+  else if (okm) then
+    d = dm
+  else
+    d = 0.0
+  end if
+end function
+
+
+!----------------------------------------------------------------------
+! 水面の勾配の項の流動深(f_gravity_correction = 3。§100): 水深 h、土石流が有効なら + max(hs, 0)
+! (calc_kth_flux の圧力項の水面 z + h + hs と同じ)
+!----------------------------------------------------------------------
+pure function flowdepth(s, ii, jj) result(hf)
+  type(t_state), intent(in) :: s
+  integer, intent(in) :: ii, jj
+  real :: hf
+  hf = s%h(ii,jj)
+  if (s%debris_active) hf = hf + max(s%hs(ii,jj), 0.0)
+end function
+
+
+!----------------------------------------------------------------------
+! 水面の勾配の項の重力の補正(f_gravity_correction = 3。developer.md §100)
+!   calc_kth_flux は水面の勾配の項(地盤の勾配・水深の勾配・土砂柱)に有効重力
+!   g_e = g/(1 + |∇b|²)(correct_ge)を掛ける。3 ではこれを Yuan ら (2016) の式 42 の水の場合
+!   (底面の摩擦角の項なし)
+!     g′ = g cos²θ / (1 + cos²θ ∇h·∇b) = g / (1 + |∇b|² + ∇b·∇h)
+!   に置き換える。水深が一様(∇h = 0)なら g_e と同じ、水面が水平(∇h = −∇b)なら g に戻る(急な
+!   湖岸の上の深い水の波速が √(gh) になる。案 D)。一様な流れのまわりでは、下り向きの水深の勾配の
+!   係数が薄層の式の g cos⁴θ、斜面を横切る向きが g cos²θ になる(案 E)。置き換えは、時刻 n の水面の
+!   差に対する差の力 −(g′ − g_e) g_v (η_n − η_c)/Δs を、移流項・拡散項と同じく辺の外力として
+!   calc_kth_momentum が足す形にする(calc_kth_flux の文に手を入れると -Ofast の最終桁が既存の
+!   reference とずれたため。ルンゲクッタの段の間の水深の変化には g_e が掛かる。独自の簡略化)。
+!   勾配の法線成分は辺の差分(地盤は correct_ge と同じ)、接線成分は両セルの minmod の勾配の平均
+!   (地盤は gzx・gzy、流動深は ghx・ghy)。∇b·∇h を [−|∇b|², |∇b|²] に制限する(独自の簡略化。
+!   上限で g′ ≥ g/(1 + 2|∇b|²)、下限で g′ ≤ g。Yuan らは経験的な減衰係数を使う)。g_e の値と式の順は
+!   correct_ge と同じ(流速の下限 p%vv > 0 なので correct_ge は常に補正を返す)
+!----------------------------------------------------------------------
+function gp_edge(p, s, sx, i, j, k, in, jn) result(ta_e)
+  type(t_sysparam), intent(in) :: p
+  type(t_state), intent(in) :: s
+  type(t_enc_status), intent(in) :: sx
+  integer, intent(in) :: i, j, k, in, jn
+  real :: ta_e
+  real :: szn, szt, shn, sht, b2, pb, gec, gpe, gve, hc, hn
+
+  szn = (s%z(in,jn) - s%z(i,j)) / geo%w8dr(k)
+  szt = ((sx%gzx(i,j) + sx%gzx(in,jn)) * geo%n8y(k) - (sx%gzy(i,j) + sx%gzy(in,jn)) * geo%n8x(k)) / 2
+  hc = flowdepth(s, i, j)
+  hn = flowdepth(s, in, jn)
+  shn = (hn - hc) / geo%w8dr(k)
+  sht = ((sx%ghx(i,j) + sx%ghx(in,jn)) * geo%n8y(k) - (sx%ghy(i,j) + sx%ghy(in,jn)) * geo%n8x(k)) / 2
+  b2 = szn**2 + szt**2
+  pb = max(-b2, min(b2, szn * shn + szt * sht))
+  gec = p%gg / (1.0 + szn**2 + szt**2)
+  gpe = p%gg / (1.0 + b2 + pb)
+  gve = (s%gv(i,j) + s%gv(in,jn)) / 2
+  ta_e = -(gpe - gec) * (s%z(in,jn) + hn - s%z(i,j) - hc) / geo%w8dr(k) * gve
+end function
 
 
 !----------------------------------------------------------------------
@@ -2083,6 +2207,8 @@ subroutine calc_kth_momentum(p, g, s, sx, i, j, k, have_exflux, have_runge, have
 
   ! セル境界の拡散項を加算する(移流項と独立な重ね合わせ)
   if (opt%have_diff) tae = tae + diff_edge(i, j, k, in, jn)
+  ! 水面の勾配の項の重力の補正 −(g′ − g_e) g_v ∂η/∂n を加算する(f_gravity_correction = 3。§100)
+  if (opt%have_gp) tae = tae + gp_edge(p, s, sx, i, j, k, in, jn)
 
   ! 中心セルi,jからk近傍セルin,jnへの流速uv1と単位幅流量mn1を計算する
   call calc_kth_flux(p, g, s, sx, uve, tae, i, j, k, in, jn, 0, uve1, mne1, hee)
@@ -2341,7 +2467,7 @@ subroutine calc_kth_flux(p, g, s, sx, uve0, tae0, i, j, k, in, jn, f_runge, uve1
   real :: rme                     ! 1 + s・C(混合密度比 ρm/ρ)
   real :: vv0e                    ! 辺の速さ |V|(下限 p%vv 適用前。降伏停止判定用。§28.11)
   real :: tte                     ! 辺の接線方向の駆動(流動面の勾配の接線成分。降伏停止判定用。§28.16)
-  real :: slf                     ! 斜面に沿う摩擦の倍率(f_gravity_correction = 2 のときだけ > 0。§93)
+  real :: slf                     ! 斜面に沿う摩擦の倍率(f_gravity_correction >= 2 のときだけ > 0。§93)
   ! 波→流れ(段 W2。s%wv_flow > 0 のときだけ使う。§90)
   real :: wfe                     ! 辺の外力の成分 F_k/ρ (m2/s2。中心から近傍が正)
   real :: use_                    ! 辺の Stokes 輸送の成分 u^S_k (m/s。wv_flow = 2)
@@ -2370,8 +2496,8 @@ subroutine calc_kth_flux(p, g, s, sx, uve0, tae0, i, j, k, in, jn, f_runge, uve1
   ge = p%gg                                 ! 重力加速度
   if (opt%f_gravity_correction > 0) ge = correct_ge()
 
-  ! 斜面に沿う摩擦の倍率(f_gravity_correction = 2。§93)。時刻 n の量から辺ごとに 1 回求め、
-  ! ルンゲクッタの段の間は変えない。既定(0・1)では 0 のままで、摩擦の文は従来のまま
+  ! 斜面に沿う摩擦の倍率(f_gravity_correction >= 2。§93)。時刻 n の量から辺ごとに 1 回求め、
+  ! ルンゲクッタの段の間は変えない。0・1 では 0 のままで、摩擦の文は従来のまま
   slf = 0.0
   if (opt%f_gravity_correction >= 2) slf = slope_fric_factor()
 

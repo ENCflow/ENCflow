@@ -11,12 +11,14 @@
       斜面に沿う式の等流 h_n = (n² q² / sinθ)^{3/10}、h = h_n / cosθ(Chow 1959、Van Emelen ら 2014)
 
 の 2 つを、下り向き φ = 0°・22.5°・45° と 8 近傍・4 近傍の全部で回す(12 ケース)。
+f_gravity_correction = 3(試作。2 + 水面の勾配の項の g′。developer.md §100)は、摩擦と流砂のせん断が 2 と
+同じで、薄層流では g′ ≈ g_e なので 2 と同じ式に合うはずで、これを 8 近傍の 3 向きで確かめる(3 ケース)。
 
-流砂のせん断(名前の末尾 _sed。下り向き 0°・45°、8 近傍、f_gravity_correction 1・2 の 4 ケース):
+流砂のせん断(名前の末尾 _sed。下り向き 0°・45°、8 近傍、f_gravity_correction 1・2・3 の 6 ケース):
 同じ流れに掃流砂(f_fluvial = 1)を加え、侵食の始まる位置を無次元掃流力が限界 τ*c に達する位置
 (等流の解析解)と比べる。斜面の上の端からの流下方向の水平距離 ℓ で、q = r ℓ(r は雨)、
   f_gravity_correction = 1: τ* = h tanθ / (s d)、h = (n² q² / tanθ)^{3/10}(古典)
-  f_gravity_correction = 2: τ* = h_n sinθ / (s d)、h_n = (n² q² / sinθ)^{3/10}(斜面に沿う底面せん断
+  f_gravity_correction = 2・3: τ* = h_n sinθ / (s d)、h_n = (n² q² / sinθ)^{3/10}(斜面に沿う底面せん断
       τ_b = ρ g h_n sinθ。§93)
 粒径は f_gravity_correction = 2 の始まりが ℓ = SED_LC になる値にする(1 では上流へ約 5 m ずれる)。
 定数は Check_slopefric.py と対。
@@ -71,6 +73,10 @@ def case_name(phi, nb, gc, sed=False):
 
 CASES = [(p, n, gc) for gc in GCS for p in PHIS for n in NBS]
 CASES_SED = [(p, 8, gc) for gc in GCS for p in SED_PHIS]
+# f_gravity_correction = 3(2 + 水面の勾配の項の g′。§100)も、薄層流では水深の勾配が小さく g′ ≈ g_e なので
+# 2 と同じ斜面に沿う式に合う(8 近傍だけ確かめる)
+CASES += [(p, 8, 3) for p in PHIS]
+CASES_SED += [(p, 8, 3) for p in SED_PHIS]
 
 
 def write_case(phi, nb, gc, sed=False):
@@ -129,7 +135,7 @@ def write_case(phi, nb, gc, sed=False):
   f_out_v = 1
 {out_z}/
 &list_enc
-  f_gravity_correction = {gc}   ! 1: 有効重力 / 2: + 斜面に沿う摩擦(既定。§93)
+  f_gravity_correction = {gc}   ! 1: 有効重力 / 2: + 斜面に沿う摩擦(既定。§93)/ 3: 2 + 水面の勾配の項の g′(§100)
   p_diagratio = {pd}       ! 8 近傍(既定)/ 4 近傍(0)
 /
 &list_initial

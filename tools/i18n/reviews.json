@@ -455,11 +455,11 @@
     {
       "source": "docs/users_guide/steep_slope.md",
       "target": "docs/en/users_guide/steep_slope.md",
-      "source_sha256": "64a075a7040261d552356b980bc01cf0d745b84c5efee57334ad17e93cf675b4",
-      "target_sha256": "f4c7d52f82da232818e4bc03d047ce8eaf3285167b178efafe2cbeed076a7adc",
-      "reviewer": "Claude (Claude Code session; wording on which terms of the resistance laws of mixture flows the friction factor of 2 multiplies (the Manning terms of f_dbres = 1, 5 and the dilute-side fallback; checked against m_swflow_enc) in sec. 2.3 and sec. 6.2 compared with the Japanese source, rest unchanged since the previous record)",
+      "source_sha256": "768a150dc13879748fa2f05db3bbb926c4e57149a82ead3e8d5fd4210f9e1be0",
+      "target_sha256": "4109a370e2a9f9e6c2c9f4a5e2452e3bad41f2a9e786828d3533d109b710e9a4",
+      "reviewer": "Claude (Claude Code session; compared the Japanese source with the English mirror for the added §2.6 on the experimental option 3, the test/steepwave and impact items in §4, the notes on 3 in §6.2, the row of 3 in §7 and the accepted values; rest unchanged since the previous record)",
       "method": "assistant",
-      "reviewed_on": "2026-11-05"
+      "reviewed_on": "2026-11-06"
     },
     {
       "source": "docs/users_guide/structure.md",
@@ -635,11 +635,11 @@
     {
       "source": "examples/List_samples/list_enc.txt",
       "target": "examples/List_samples/en/list_enc.txt",
-      "source_sha256": "e7092d33889a82eb50149da8e3efadfceaa1db5119ea82c888210104192931f8",
-      "target_sha256": "cefa59ab7847499ed4a480b2f7f26763677fa6a7fdc336bc525fc8f92e06d085",
-      "reviewer": "Claude (Claude Code session; default of f_gravity_correction changed from 1 to 2 (developer.md §93): the commented-out sample line now shows 2 in both files and its comment was compared with the Japanese source; value, identifier and commented-out state identical, rest unchanged since the previous record)",
+      "source_sha256": "56fac2e7b99dcd2a61d685f195f0ea4a9a6dc353aa27bf382fb822fecfa97f80",
+      "target_sha256": "e88388646d9c0b862ded0b0eacf1eebe71a75fa95cc5d1134bb0fdf63c4d5fd9",
+      "reviewer": "Claude (Claude Code session; compared the comment of f_gravity_correction describing the experimental value 3 in the Japanese and English samples; values, identifiers and commented-out state unchanged)",
       "method": "assistant",
-      "reviewed_on": "2026-11-05"
+      "reviewed_on": "2026-11-06"
     },
     {
       "source": "examples/List_samples/list_evap.txt",
@@ -1796,11 +1796,11 @@
     {
       "source": "examples/landslide_tsunami/README.md",
       "target": "examples/landslide_tsunami/en/README.md",
-      "source_sha256": "237b6c7048c6bb46f37b7a52bf3738e9f717a99915c88855e060e176e4503d5e",
-      "target_sha256": "3e991e584679e0d48169191edc78e2bb0bd8e53ba2206dd3b06c5a39a06f9dac",
-      "reviewer": "Claude (Claude Code session; recomputed 2026-11-05 after the default f_gravity_correction = 2 and developer.md §94-95: the headings, the history paragraph and the changed values of B, B0 and the non-hydrostatic table compared with the Japanese source, rest unchanged since the previous record)",
+      "source_sha256": "2ddbbdedca91e9da8557e73a644355394f722811933a6fde9a2d0338185c3514",
+      "target_sha256": "ad32b1e1dd1c7f683073f0462d8a954e68195dcbd6a775b8c059d39cb6f844c5",
+      "reviewer": "Claude (Claude Code session; compared the Japanese source with the English mirror for the run times, the recompute history (corrected statement on f_gravity_correction and the 2026-11-06 recompute with 2), both result tables and the updated numbers in the text; rest unchanged since the previous record)",
       "method": "assistant",
-      "reviewed_on": "2026-11-05"
+      "reviewed_on": "2026-11-06"
     },
     {
       "source": "examples/levee_breach/README.md",
@@ -2732,11 +2732,11 @@
     {
       "source": "test/README.md",
       "target": "test/README.en.md",
-      "source_sha256": "ee233bf4ada1e00e2c31f08780094b2b8fd4ee2047da22fef7e4e5a88636f575",
-      "target_sha256": "0cbd3c34c4c067ad14c01ac51de1858bbe7b5ae10526829b2655e7d410219b74",
-      "reviewer": "Claude (Claude Code session; merge of main into claude/nifty-hawking-yx6s0o: the merged files are the three-way merge of both sides, checked by script for both files that the merged file minus each parent equals the other side's own change (encgrid.md: the p_diagratio row from this branch and the f_gravity_correction row from main in both languages); each side's changes had been reviewed on its branch)",
+      "source_sha256": "ebca6025a053aef62aecce51055d7f1cd2ac68af82cc6166123e82c8b41e25f1",
+      "target_sha256": "9d9ed7fc73cd6733b5df839422e0875e6c1dfb8ca5a9f0cdb3da045c89d0ee9c",
+      "reviewer": "Claude (Claude Code session; compared the added row of test/steepwave and the slopefric row mentioning 3 in the Japanese and English test indexes; rest unchanged since the previous record)",
       "method": "assistant",
-      "reviewed_on": "2026-11-05"
+      "reviewed_on": "2026-11-06"
     },
     {
       "source": "test/avalanche/README.md",
@@ -3839,11 +3839,11 @@
     {
       "source": "test/slopefric/README.md",
       "target": "test/slopefric/en/README.md",
-      "source_sha256": "9c24e6827bf2cf87bd98ccdd3d57cd68e4b1bc640afdcb41afe984cfe860b105",
-      "target_sha256": "cec4c15e367d3f372ee6ff7e29b9236c9cdcff59b5ecf1a1ea4f1d1027727cb6",
-      "reviewer": "Claude (Claude Code session; references to the steep-slope explanation moved to docs/users_guide/steep_slope.md (and the English mirror) in the uniform-flow item and the limits, compared with the Japanese source, rest unchanged since the previous record)",
+      "source_sha256": "4ebade6e3dee943c9a8d448dc3351bc4fdc345cf8898294052870514116cbe3f",
+      "target_sha256": "b8e7ff4396c8c18898dd843d5d81b5fc646bd76171490fa4adb7f60572724c31",
+      "reviewer": "Claude (Claude Code session; compared the Japanese source with the English mirror for the option-3 bullet, case counts, checks, run time, result rows of 3, the new finding and the corrected wording on mixture resistance laws; rest unchanged since the previous record)",
       "method": "assistant",
-      "reviewed_on": "2026-11-05"
+      "reviewed_on": "2026-11-06"
     },
     {
       "source": "test/splash/README.md",
@@ -3916,6 +3916,15 @@
       "reviewer": "Claude (Claude Code session; full-text content and lexical review, no model execution)",
       "method": "assistant",
       "reviewed_on": "2026-10-24"
+    },
+    {
+      "source": "test/steepwave/README.md",
+      "target": "test/steepwave/en/README.md",
+      "source_sha256": "742bd8f605e1278e5e29734c77d5e5f08e5fa992917edd68d3834f488576bb64",
+      "target_sha256": "89e12208456fe7fd3724fb56b9ac59ad004724d6abd8cf70b3d718616ecb7eff",
+      "reviewer": "Claude (Claude Code session; full-text comparison of the new Japanese README of test/steepwave with its English mirror: configurations, checks, run commands, result tables, findings, limits and references)",
+      "method": "assistant",
+      "reviewed_on": "2026-11-06"
     },
     {
       "source": "test/stencil9/README.md",
