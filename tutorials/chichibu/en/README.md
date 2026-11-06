@@ -114,9 +114,9 @@ main: program terminated normally
 > advection was added (developer.md §100, in Japanese). Step 4 was changed from "reduce the threshold
 > depths dd and dv to 1/10" to "try `f_advection_donor = 2`"; the `param_*.txt` of Steps 4 to 7 return
 > dd and dv to their defaults and carry `&list_enc`. The numbers and figures of Steps 4 to 7 were
-> regenerated. The runs of the supplement (effect of resolution) keep the Step 4 configuration as it
-> was before the revision (dd = dv = 0.0001, `f_advection_donor` at its default 0) and were not
-> recomputed.
+> regenerated. The numbers and figures of the supplement (effect of resolution) are still those of
+> the Step 4 configuration before the revision (dd = dv = 0.0001, `f_advection_donor` at its default
+> 0); their recomputation with the same setting and the update are in progress.
 
 The contents of `en/param_step1.txt` (the full file, apart from the
 title comment at the top) are shown below. It is structured almost
@@ -907,16 +907,17 @@ subsection and "What to take away about the ENC grid".
 
 This tutorial has used a 200 m grid throughout. To see how the results
 change with a finer grid, we move the Step 4 configuration (no losses,
-no outlet) to 100 m and 50 m grids. Note, however, that the runs of this
-supplement were made with the Step 4 configuration as it was before the
-revision of 2026-11-06 (dd = dv = 0.0001, `f_advection_donor` at its
-default 0); they have not been recomputed with `f_advection_donor = 2`
-(that takes hours of computation; the 200 m peak moves as it does in
-Step 4, 5,391 to 6,323 m^3/s). The terrain data are the 100 m and
+no outlet) to 100 m and 50 m grids. Note, however, that the numbers and
+figures below were computed with the Step 4 configuration as it was
+before the revision of 2026-11-06 (dd = dv = 0.0001, `f_advection_donor`
+at its default 0). The `param_supp_*.txt` files have already been
+updated to `f_advection_donor = 2` as in Step 4; the recomputation with
+that setting (hours) and the update of the numbers and figures are in
+progress. The terrain data are the 100 m and
 50 m versions of the same area kept in `test/chichibu/` (text format),
 and the parameter files are `en/param_supp_200m.txt` /
 `en/param_supp_100m.txt` / `en/param_supp_50m.txt` (the 200 m one is
-the pre-revision Step 4 configuration with text input only). We also run the
+the Step 4 configuration with text input only). We also run the
 **4-neighbor** computation mentioned at the end of Step 1
 (`p_diagratio = 0.0`, diagonal exchange closed) at the same three
 resolutions, to see what the 8-direction exchange of the ENC grid

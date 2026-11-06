@@ -4352,9 +4352,9 @@
     {
       "source": "tutorials/chichibu/README.md",
       "target": "tutorials/chichibu/en/README.md",
-      "source_sha256": "2378f8a1220ca8e8c97f92192fcc3806073765482f302e864fdb73859c2f3b84",
-      "target_sha256": "034971442d8a705b360ba5dffba0d5e7a03351541f72da77725e3cfe3e04c37a",
-      "reviewer": "Claude (Claude Code session; Step 4 revised 2026-11-06 to try f_advection_donor = 2: Japanese and English texts, parameter comments and plot titles edited together; figures drawn by Fig_chichibu.sh (Fig_chichibu.plt and en/Fig_chichibu.plt) from the same results, Japanese and English step4_hydro viewed and labels compared; step7 figures are the same files drawn by Fig_step7.py)",
+      "source_sha256": "250313ae347e1685338e18e9e3c8d7988c624ccbb4c44bb8f863e8e3e2f16059",
+      "target_sha256": "ab30e0c9e93fbc0af0f67c8728277013005ec915f5cecaa3c85bc0ad3dd3c68c",
+      "reviewer": "Claude (Claude Code session; interim 2026-11-06: param_supp_* switched to f_advection_donor = 2 and the README notes that the supplement numbers are being recomputed; Japanese and English edited together)",
       "method": "assistant",
       "reviewed_on": "2026-11-06"
     },
@@ -4622,27 +4622,27 @@
     {
       "source": "tutorials/chichibu/param_supp_100m.txt",
       "target": "tutorials/chichibu/en/param_supp_100m.txt",
-      "source_sha256": "f59325fad720f1d70ec726f6e3645dcd65b80f167854b21419c23893527ab8e3",
-      "target_sha256": "5f04a0c0d430936dbd4cf5fc44d13aaef848ea6c2bc95d8384978362af394023",
-      "reviewer": "Claude (Claude Code session; Step 4 revised 2026-11-06 to try f_advection_donor = 2: Japanese and English texts, parameter comments and plot titles edited together; figures drawn by Fig_chichibu.sh (Fig_chichibu.plt and en/Fig_chichibu.plt) from the same results, Japanese and English step4_hydro viewed and labels compared; step7 figures are the same files drawn by Fig_step7.py)",
+      "source_sha256": "3cefd69ab45e6e7f3607155041b0aa0de7391ac1601a8ab7e5462fe6ddf1505a",
+      "target_sha256": "1f9c50e92c550d96c55f2d5f785eae4a460861729cc8b20796f3daa6e6f16cab",
+      "reviewer": "Claude (Claude Code session; interim 2026-11-06: param_supp_* switched to f_advection_donor = 2 and the README notes that the supplement numbers are being recomputed; Japanese and English edited together)",
       "method": "assistant",
       "reviewed_on": "2026-11-06"
     },
     {
       "source": "tutorials/chichibu/param_supp_200m.txt",
       "target": "tutorials/chichibu/en/param_supp_200m.txt",
-      "source_sha256": "f98c501a6103e234834aa3d0ab6e71d2933644f46a1b9f6a3f3ecbbd1c5119f0",
-      "target_sha256": "3c7747113458b4916eb31080a475636ed2f6a8ec40ff4def938a22172e6e5875",
-      "reviewer": "Claude (Claude Code session; Step 4 revised 2026-11-06 to try f_advection_donor = 2: Japanese and English texts, parameter comments and plot titles edited together; figures drawn by Fig_chichibu.sh (Fig_chichibu.plt and en/Fig_chichibu.plt) from the same results, Japanese and English step4_hydro viewed and labels compared; step7 figures are the same files drawn by Fig_step7.py)",
+      "source_sha256": "9d93a585cb507bbca4e0cfd39ccc72d7a62cd6cc6bf542f00e95f6895152e81a",
+      "target_sha256": "a57ac8adfd97c42bd58895d88d30dc5418c983a457bf1a3a2927b8e7ecf093d1",
+      "reviewer": "Claude (Claude Code session; interim 2026-11-06: param_supp_* switched to f_advection_donor = 2 and the README notes that the supplement numbers are being recomputed; Japanese and English edited together)",
       "method": "assistant",
       "reviewed_on": "2026-11-06"
     },
     {
       "source": "tutorials/chichibu/param_supp_50m.txt",
       "target": "tutorials/chichibu/en/param_supp_50m.txt",
-      "source_sha256": "844e52001bc12b7126770f906f2121163d88a3b3f087c2cea6322ee137464089",
-      "target_sha256": "3061925eea94c6ca8471cb5a069018c9bf528fc2b4798dc4ab1e99b8996a029e",
-      "reviewer": "Claude (Claude Code session; Step 4 revised 2026-11-06 to try f_advection_donor = 2: Japanese and English texts, parameter comments and plot titles edited together; figures drawn by Fig_chichibu.sh (Fig_chichibu.plt and en/Fig_chichibu.plt) from the same results, Japanese and English step4_hydro viewed and labels compared; step7 figures are the same files drawn by Fig_step7.py)",
+      "source_sha256": "4e6dc177c0a547696334a7b08396a7461223452578bef6a3e5e81759125438cd",
+      "target_sha256": "1e6711abf933552f6ec63b361048ad2ae6b59999cb153f7ba9545cf44383a2d2",
+      "reviewer": "Claude (Claude Code session; interim 2026-11-06: param_supp_* switched to f_advection_donor = 2 and the README notes that the supplement numbers are being recomputed; Japanese and English edited together)",
       "method": "assistant",
       "reviewed_on": "2026-11-06"
     },
