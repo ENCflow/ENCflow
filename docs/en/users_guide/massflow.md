@@ -56,6 +56,19 @@ held at rest explicitly, so that starting and stopping follow the same
 equation; see "Rest and onset of motion" below).
 $`g_e`$ is the effective gravity $`g\cos^2\theta`$ on steep slopes
 ([ENC grid](encgrid.md) §5).
+The expressions in the table are in the form of the horizontal velocity
+$`|\mathbf{V}|`$ and the vertical depth $`h_t`$, and are used as they are with
+`f_gravity_correction` = 0 and 1. With the default 2, factors that re-evaluate the
+resistance with the slope-parallel speed $`|\mathbf{V}_s| = r|\mathbf{V}|`$ and the
+bed-normal thickness $`h_t\cos\theta`$ are applied: $`1/(r\cos\theta)`$ for the yield
+(1 for flow in the direction of steepest descent), $`r/\cos^3\theta`$ for the terms
+proportional to the square of the velocity (the turbulent term of Voellmy, the
+laminar law of Egashira, the stony type of Takahashi–Nakagawa) and
+$`r/\cos^2\theta`$ for the bedload-like collective flow. Uniform flow with Voellmy
+then follows $`V_s^2 = \xi\,h_t\cos\theta\,(\sin\theta - \mu\cos\theta)`$ as in RAMMS,
+so μ and ξ calibrated with RAMMS can be used as they are
+([steep-slope gravity correction](steep_slope.md) §2.3, developer.md §101 (in
+Japanese), verified by [test/dbslope](../../../test/dbslope/en/README.md)).
 
 | f_dbres | Name | Yield deceleration $`a_y`$ and velocity-dependent term | Extra parameters |
 |---:|---|---|---|
@@ -102,7 +115,8 @@ magnitude combines the drive in the normal direction of the edge
 (advection and gravity) with the gradient of the flow surface (the
 average of the two cells) projected onto the tangent of the edge, so the
 slope at which the flow starts stays $`a_y/g_e`$ even when the slope is
-oblique to the grid. It is verified by
+oblique to the grid (the yield factor of the default 2 is determined by the
+direction of the drive and is 1 on a uniform slope). It is verified by
 [test/dbonset](../../../test/dbonset/en/README.md) (on a uniform slope
 the threshold and the speed and direction of sliding agree with the
 analytical solution of a rigid sliding block within 0.4%, regardless of
@@ -463,7 +477,8 @@ The labels in the Basis column are explained in [How to read the basis of a defa
 |---|---|---|
 | [test/debris](../../../test/debris/en/README.md) | four constitutive configurations (simple, Egashira, Takahashi–Nakagawa, pore water); equilibrium concentration of uniform flow on a slope | total solid 1e-13, np = 1, 2, 4 agree; equilibrium concentration within 1e-11 of the Takahashi-type C∞ |
 | [test/slide](../../../test/slide/en/README.md) | fluidisation and stability test | self-checks of conservation and water budget |
-| [test/volcano](../../../test/volcano/en/README.md) | Voellmy uniform flow and τ_y run-out | uniform depth within 0.04% of the analytical solution (four neighbours) |
+| [test/volcano](../../../test/volcano/en/README.md) | Voellmy uniform flow and τ_y run-out | uniform depth agrees to 0.0% with the analytical solution (the along-slope equation with the default 2; four neighbours) |
+| [test/dbslope](../../../test/dbslope/en/README.md) | uniform flow on a 30° slope (Voellmy, Egashira, the stony type and the bedload-like collective flow of Takahashi–Nakagawa), steep-slope gravity correction 1 and 2 | for all four, within 0.03% of the analytical solutions of the along-slope equations with 2 and of the horizontal equations with 1 (ratio of the depths of 2 and 1: 1.11–1.21) |
 | [test/curvature](../../../test/curvature/en/README.md) | steady one-dimensional test of the curvature term | thickening on the arc 1.03 times the ODE |
 | [test/dbonset](../../../test/dbonset/en/README.md) | rest and onset of motion under the yield (uniform slope 0.9, 1.1 and 1.3 times the yield slope; slope direction 0°, 22.5° and 45°; eight and four neighbours; without and with the steep-slope gravity correction) and the safety factor of the slope-stability test (same slopes; c' = 0, no groundwater) | threshold, speed and direction independent of the direction and the stencil, within 0.4% of the analytical solution of a rigid sliding block (g cos²θ with the gravity correction); safety factor independent of the direction, within 0.1% of tanφs/tanθ |
 | [test/avalanche](../../../test/avalanche/en/README.md) | avalanche (Voellmy + velocity-proportional entrainment) | grows by entrainment to about 3.4 times the released amount and stops; ledger to machine precision |

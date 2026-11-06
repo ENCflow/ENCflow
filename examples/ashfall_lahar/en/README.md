@@ -140,8 +140,8 @@ Right: sediment that passed the valley outlet to the fan and sediment trapped be
 |---|---:|---:|---:|---:|---:|---:|---:|
 | Before the eruption | 2,700 m³ (100 % of the rain) | — | — | — | — | 0 | 0 |
 | Ash, clear-water control | 549 m³ (20 %) | — | — | — | — | water 0.26 m³/s | 1,283 m³ |
-| Ash (lahar) | 1,350 m³ (50 %) | 2,100 m³ (27 %) | 1,075 m³ | — | 1,076 m³ / 2.8 m | water 0.30, water + sediment 0.54 m³/s | 468 m³ |
-| Ash + check dam | 1,341 m³ (50 %) | 2,076 m³ (26 %) | 300 m³ | 1,621 m³ | 299 m³ / 0.6 m | (as above) | 478 m³ |
+| Ash (lahar) | 1,341 m³ (50 %) | 2,089 m³ (27 %) | 1,096 m³ | — | 1,096 m³ / 2.8 m | water 0.30, water + sediment 0.55 m³/s | 473 m³ |
+| Ash + check dam | 1,332 m³ (49 %) | 2,068 m³ (26 %) | 302 m³ | 1,652 m³ | 301 m³ / 0.6 m | (as above) | 483 m³ |
 
 (The tables and figures show the values recomputed on 2026-10-31 with the default f_opening_dynamic = 3; developer.md §68.41.
 Recomputing on 2026-11-02 with the default after the correction of the lateral faces of the momentum-conserving advection
@@ -163,8 +163,14 @@ dam 1,658 → 1,621 m³. In the clear-water control too, the arrival at the vall
 slope; with §94 and §95 alone neither changes). The times of overflow and filling of the dam and the sediment that
 left before the overflow, compared with the same definitions, agree at the same 2-minute outputs and within 1 m³.
 In the supplement the sediment amounts with eight neighbours moved by 1–2 % and their bed-change difference between
-0° and 45° went from 9 to 11 %, while those with four neighbours are nearly the same. The tables and figures are
-from this recomputation.)
+0° and 45° went from 9 to 11 %, while those with four neighbours are nearly the same. On the same day the example
+was recomputed after the change by which 2 also evaluates the resistance laws of mixture flows along the slope
+(developer.md §101): in the steep valley the turbulent term of Voellmy grows and the lahar becomes a little slower
+and deeper, and the fan-apex deposit changed 1,076 → 1,096 m³, the deposit behind the dam 1,621 → 1,652 m³ and the
+water through the fan section 468 → 473 m³, by 1–2 % (overflow at 42 minutes and filling at 52 minutes are the
+same; the sediment that left before the overflow changed 134 → 129 m³). In the supplement the bed-change
+difference between 0° and 45° went from 11 to 8 % with eight neighbours and from 16 to 12 % with four. The tables
+and figures are from this recomputation.)
 
 The rain totals 2,700 m³ from 10 to 70 minutes. The water into the ground is the sum of the
 rain that soaked in and the water that went into the pores of the deposits.
@@ -175,25 +181,25 @@ rain that soaked in and the water that went into the pores of the deposits.
   capacity of 5 mm/h flows over the slope; in the clear-water control 0.26 m³/s passes the
   valley section and 0.37 m³/s the fan section (both the upstream area × 25 mm/h).
 - **The flow erodes the ash and becomes a lahar**: 27 % of the ash upstream of the valley
-  outlet (2,100 m³) is eroded, and the flow in the valley becomes a lahar with a sediment
+  outlet (2,089 m³) is eroded, and the flow in the valley becomes a lahar with a sediment
   concentration of 0.45 (the upper limit it can carry). Water and sediment together pass the
-  valley section at about twice the clear-water control (0.54 m³/s), and the flow arrives
-  3.3 minutes earlier (11.7 versus 15.0 minutes). The whole slope is eroded by 4–5 cm, nearly
+  valley section at about twice the clear-water control (0.55 m³/s), and the flow arrives
+  3.2 minutes earlier (11.8 versus 15.0 minutes). The whole slope is eroded by 4–5 cm, nearly
   uniformly.
 - **Out of the valley it stops and deposits**: at the valley outlet, where the gradient breaks
   from 0.35 to 0.08, the amount of sediment the flow can carry drops, and a deposit of
-  1,076 m³, up to 2.8 m thick, forms at the fan apex. Downstream of it a thin flow with a
+  1,096 m³, up to 2.8 m thick, forms at the fan apex. Downstream of it a thin flow with a
   concentration of about 0.07 crosses the fan. When a dense lahar deposits, its pores take
   most of the water of the flow (a lahar of 0.45 solids and 0.55 water that deposits with a
   porosity of 0.5 leaves about 80 % of its water in the pores), so the water through the fan
-  section is about 40 % of the clear-water control (468 m³).
-- **The check dam holds back the sediment**: 1,621 m³ is trapped behind the dam, the sediment
-  passing the valley outlet to the fan falls from 1,075 to 300 m³ (a 70 % reduction), and the
+  section is about 40 % of the clear-water control (473 m³).
+- **The check dam holds back the sediment**: 1,652 m³ is trapped behind the dam, the sediment
+  passing the valley outlet to the fan falls from 1,096 to 302 m³ (a 70 % reduction), and the
   deposit at the fan apex falls from 2.8 to 0.6 m at most. Until about 42 minutes, while the
   space behind the dam first fills with water, no flow from the valley reaches the fan; once
   the overflow starts, a flow of low concentration comes out. The deposit just upstream of the
   dam reaches the crest level at about 52 minutes (the dam is full), and after that sediment
-  also passes over the dam. Of the 300 m³ that reached the fan, 134 m³ came out before the
+  also passes over the dam. Of the 302 m³ that reached the fan, 129 m³ came out before the
   overflow started; it was carried by water flowing down the valley walls downstream of the
   dam and at both ends of the dam (not through the dam).
 
@@ -222,12 +228,12 @@ Cross-sections of the flow depth averaged over 30–60 minutes. Left: in the val
 
 | | 8 neighbours (ENC default) | 4 neighbours |
 |---|---:|---:|
-| Difference between 0° and 45° in flow depth (30–60 min mean; relative L1 difference) | 8 % | 25 % |
-| Difference between 0° and 45° in bed change | 11 % | 16 % |
-| Flow on the valley floor (0°; 4 cells across) | nearly uniform (12–14 mm) | split to both edges (17 mm and 5 mm) |
-| Central flow on the fan: peak / half width (0° → 45°) | 12 → 13 mm / 32 → 28 m | 16 → 12 mm / 19 → 30 m |
-| Sediment passing the valley outlet to the fan (0° → 45°) | 1,075 → 1,080 m³ | 1,064 → 1,010 m³ |
-| Deposit at the fan apex (0° → 45°) | 1,076 → 1,082 m³ | 1,061 → 1,033 m³ |
+| Difference between 0° and 45° in flow depth (30–60 min mean; relative L1 difference) | 8 % | 26 % |
+| Difference between 0° and 45° in bed change | 8 % | 12 % |
+| Flow on the valley floor (0°; 4 cells across) | nearly uniform (14–15 mm) | split to both edges (20 mm and 6 mm) |
+| Central flow on the fan: peak / half width (0° → 45°) | 12 → 13 mm / 32 → 28 m | 17 → 13 mm / 19 → 30 m |
+| Sediment passing the valley outlet to the fan (0° → 45°) | 1,096 → 1,114 m³ | 1,108 → 1,107 m³ |
+| Deposit at the fan apex (0° → 45°) | 1,096 → 1,103 m³ | 1,103 → 1,094 m³ |
 
 - **With 4 neighbours the flow is tied to the grid direction**: water can only move along the
   axes, so at 0°, with the valley along the grid, the water from the valley walls flows along

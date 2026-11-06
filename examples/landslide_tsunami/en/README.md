@@ -78,7 +78,7 @@ result_A_nh / result_C_nh0 / result_C_nh: Hb (bed-layer thickness), Vb
 E (water level = z+h; the free surface of mixture cells is E + Hs) and the
 time series in probes/.
 
-## Results: the four hydrostatic patterns (recomputed 2026-10-06, on 2026-11-02 with the default f_opening_dynamic = 3 and the corrected advection term, on 2026-11-04 after the fix of the yield rest check and after the fix of the steep-slope gravity correction, on 2026-11-05 after the fixes of the outflow suppression and the edge depth, and on 2026-11-06 with the setting aligned to the default f_gravity_correction = 2; gfortran, dt = 0.05 s)
+## Results: the four hydrostatic patterns (recomputed 2026-10-06, on 2026-11-02 with the default f_opening_dynamic = 3 and the corrected advection term, on 2026-11-04 after the fix of the yield rest check and after the fix of the steep-slope gravity correction, on 2026-11-05 after the fixes of the outflow suppression and the edge depth, on 2026-11-06 with the setting aligned to the default f_gravity_correction = 2, and on the same day after the resistance laws of mixture flows were made slope-parallel; gfortran, dt = 0.05 s)
 
 Recomputed after the fix of a real bug in the advection scheme (developer.md
 §69.9; out-of-domain reference of the "further upwind" cell in MUSCL) since
@@ -118,6 +118,14 @@ including the non-hydrostatic comparison, show these recomputed values. Trial co
 experimental f_gravity_correction = 3 (which returns the gravity to g in deep water over steep lake
 shores) are in developer.md §100 (in Japanese; the settings of the example stay at 2; the waves of the
 lake come close to those without correction).
+On the same day, after the change by which 2 also evaluates the resistance laws of mixture flows along the
+slope (developer.md §101), B and B0, which use the mixture, were recomputed. On the 0.4 slope on land the
+turbulent term of Voellmy becomes 1.35 times larger (1/cos⁴θ) and the mixture becomes slower: the
+shoreline-zone deposition of B changed 608 → 780 m³, the lake floor 17,696 → 17,363 m³, the leading wave
+(x = 298 m) +1.19 → +1.10 m and the mixture speed at handover 3.0 → 2.8 m/s; the shoreline-zone deposition
+of B0 changed 9,524 → 8,820 m³ and its leading wave +0.86 → +0.75 m (the runout is the same). A and C, which
+use only the bed layer, and the non-hydrostatic comparison (A and C) do not change. The tables and figures
+show these values.
 
 ![Profiles](../figs/profiles.png)
 
@@ -140,8 +148,8 @@ of the flat lake bottom (x ≈ 300 m); in B0 (mixture only) it piles up within
 | Case | Deposition in the shoreline zone (x 200–275 m) | Lake bottom (275–350 m) | Runout | Leading wave x=298 m | x=548 m |
 |---|---|---|---|---|---|
 | A debris avalanche | 213 m³ | 18,820 m³ | 332 m | +1.41 m (13 s) | +0.76 m (25 s) |
-| B debris flow → handover | 608 m³ | 17,696 m³ | 338 m | +1.19 m (21 s) | +0.60 m (34 s) |
-| B0 mixture only | 9,524 m³ | 0 m³ | 232 m | +0.86 m (22 s) | +0.40 m (34 s) |
+| B debris flow → handover | 780 m³ | 17,363 m³ | 338 m | +1.10 m (22 s) | +0.54 m (34 s) |
+| B0 mixture only | 8,820 m³ | 0 m³ | 232 m | +0.75 m (22 s) | +0.34 m (35 s) |
 | C submarine landslide | 1 m³ | 17,508 m³ | 348 m | +1.57 m (2 s) / −1.21 m | +0.71 m (15 s) / −0.54 m |
 
 Interpretation:
@@ -149,12 +157,12 @@ Interpretation:
 - **A and B have almost the same underwater runout** (332 / 338 m). A moves at the
   terminal velocity from right after release, so it reaches the shoreline
   early (8 s); B flows down the land as a mixture with inertia and hands
-  over after plunging (15 s). B leaves 608 m³ in the shoreline zone before
-  the handover, and its leading wave is +1.2 m against +1.4 m for A.
+  over after plunging (15 s). B leaves 780 m³ in the shoreline zone before
+  the handover, and its leading wave is +1.1 m against +1.4 m for A.
 - **B0 does not run underwater.** The mixture loses its driving once the
   water surface becomes flat, so a wave from the increase in column height
-  right after plunging (+0.9 m) appears but the sediment stays at the
-  shoreline (the "free surface" of 3.5 m at x = 212 m is not water but a
+  right after plunging (+0.8 m) appears but the sediment stays at the
+  shoreline (the "free surface" of 3.2 m at x = 212 m is not water but a
   piled-up sediment column). To use the terrain results (position and
   thickness of the deposit), use B or A.
 - **In C the trough leads.** The bottom drops at the scar (x 220–290 m) and
@@ -162,7 +170,7 @@ Interpretation:
   +1.6 m from the uplift of the deposition front right after release,
   followed by −1.2 m from the scar.
 - The "plunge speeds" in the Log of B are the volume-weighted means of the
-  mixture velocity at handover (3.0 m/s) and the terminal velocity of the bed
+  mixture velocity at handover (2.8 m/s) and the terminal velocity of the bed
   layer (7.1 m/s). The mixture has mixed with the water column and
   decelerated before reaching the plunge cells, so in this case the handover
   loses no momentum (see the item on the bias below).

@@ -1980,6 +1980,29 @@ end function
 
 
 !----------------------------------------------------------------------
+! 辺の g′/g_e(f_gravity_correction = 3。developer.md §100)。gp_edge と同じ勾配の組み立てと制限で、
+! (1 + |∇b|²)/(1 + |∇b|² + ∇b·∇h)。混合体流動の降伏の垂直応力と停止判定の接線方向の駆動に掛ける
+!----------------------------------------------------------------------
+function gp_ratio(s, sx, i, j, k, in, jn) result(r)
+  type(t_state), intent(in) :: s
+  type(t_enc_status), intent(in) :: sx
+  integer, intent(in) :: i, j, k, in, jn
+  real :: r
+  real :: szn, szt, shn, sht, b2, pb, hc, hn
+
+  szn = (s%z(in,jn) - s%z(i,j)) / geo%w8dr(k)
+  szt = ((sx%gzx(i,j) + sx%gzx(in,jn)) * geo%n8y(k) - (sx%gzy(i,j) + sx%gzy(in,jn)) * geo%n8x(k)) / 2
+  hc = flowdepth(s, i, j)
+  hn = flowdepth(s, in, jn)
+  shn = (hn - hc) / geo%w8dr(k)
+  sht = ((sx%ghx(i,j) + sx%ghx(in,jn)) * geo%n8y(k) - (sx%ghy(i,j) + sx%ghy(in,jn)) * geo%n8x(k)) / 2
+  b2 = szn**2 + szt**2
+  pb = max(-b2, min(b2, szn * shn + szt * sht))
+  r = (1.0 + b2) / (1.0 + b2 + pb)
+end function
+
+
+!----------------------------------------------------------------------
 ! 軸方向の地盤の差の minmod(+側の差 z(+) − z と −側の差 z − z(−))。両側が有効セル
 ! (x > 0)なら符号が同じときだけ絶対値の小さい方、違えば(折れの頂部・底部)0。片側
 ! だけ有効ならその差、どちらもなければ 0。x は番兵付き (0:nx+1, 0:ny+1) なので、z は
@@ -2468,6 +2491,11 @@ subroutine calc_kth_flux(p, g, s, sx, uve0, tae0, i, j, k, in, jn, f_runge, uve1
   real :: vv0e                    ! 辺の速さ |V|(下限 p%vv 適用前。降伏停止判定用。§28.11)
   real :: tte                     ! 辺の接線方向の駆動(流動面の勾配の接線成分。降伏停止判定用。§28.16)
   real :: slf                     ! 斜面に沿う摩擦の倍率(f_gravity_correction >= 2 のときだけ > 0。§93)
+  real :: ayh                     ! 降伏減速度の水平の値(斜面に沿う倍率の前。停止判定が駆動の向きの倍率を掛ける。§101)
+  real :: ayt                     ! 停止判定の降伏の閾値(§28.16・§101)
+  real :: fyf, fvf, fv1f          ! 斜面に沿う混合体流動の抵抗の倍率(降伏・速度の 2 乗・掃流状集合流動。§101)
+  logical :: fb1                  ! 速度の 2 乗の抵抗が (d/h)^1 の形(高橋・中川の掃流状集合流動。§101)
+  real :: gpr                     ! 3 の降伏の垂直応力と停止判定の接線方向の駆動の倍率 g′/g_e(§100。それ以外は 1)
   ! 波→流れ(段 W2。s%wv_flow > 0 のときだけ使う。§90)
   real :: wfe                     ! 辺の外力の成分 F_k/ρ (m2/s2。中心から近傍が正)
   real :: use_                    ! 辺の Stokes 輸送の成分 u^S_k (m/s。wv_flow = 2)
@@ -2547,6 +2575,7 @@ subroutine calc_kth_flux(p, g, s, sx, uve0, tae0, i, j, k, in, jn, f_runge, uve1
   fbe = 0.0
   hte = 0.0
   rme = 1.0
+  fb1 = .false.
   if (have_db) then
     hsc = max(s%hs(i,j), 0.0)
     hsn = max(s%hs(in,jn), 0.0)
@@ -2606,6 +2635,7 @@ subroutine calc_kth_flux(p, g, s, sx, uve0, tae0, i, j, k, in, jn, f_runge, uve1
               ! 掃流状集合流動(式(24)): (ρT/0.49)(dL/h)。ρT/ρT が相殺する
               ! ため rme を fbe に含めて同じ −fbe・vve/(rme・hte) 形に載せる
               fbe = rme * (dbr%db_d50v / hte) / db_c49
+              fb1 = .true.
             end if
           else
             hte = 0.0     ! マニング経路(fbe=0)へ
@@ -2621,6 +2651,33 @@ subroutine calc_kth_flux(p, g, s, sx, uve0, tae0, i, j, k, in, jn, f_runge, uve1
   !   Ni 補正下で g cosθ。補正なしなら g)。浮上条件は 0 に切る
   if (dbr%db_curv > 0 .and. aye > 0.0) then
     aye = aye * max(0.0, 1.0 + (dbr%acv(i,j) + dbr%acv(in,jn)) / 2 / sqrt(p%gg * ge))
+  end if
+
+  ! 3(水面の勾配の項の g′。§100)では、重力で決まる降伏(クーロン型。f_dbres = 1〜4)の垂直応力も g′ で
+  ! 評価する(Yuan ら 2016 と同じ。一定の停止応力 f_dbres = 5 は重力によらない)。駆動と降伏が同じ g′ を
+  ! 共有するので、静止の閾値 |∇η| ≤ μ は 2 と同じ。停止判定の接線方向の駆動 tte にも同じ倍率を掛ける(下)
+  gpr = 1.0
+  if (opt%have_gp .and. have_db) then
+    gpr = gp_ratio(s, sx, i, j, k, in, jn)
+    if (dbr%db_res /= 5) aye = aye * gpr
+  end if
+
+  ! 斜面に沿う混合体流動の抵抗(f_gravity_correction >= 2。developer.md §101)。マニングの摩擦の倍率 slf
+  ! (§93)と同じく、抵抗を斜面に沿う速さ |V_s| = r|V| と地盤に直角な厚さ h cos θ で評価し直す倍率を
+  ! 掛ける: 降伏(クーロン・Voellmy の μ・一定の停止応力)は 1/(r cos θ)、速度の 2 乗の抵抗(Voellmy の
+  ! 乱流項 g V²/(ξ h)・江頭の層流則・高橋・中川の石礫型)は r/cos³θ、掃流状集合流動は r/cos²θ。
+  ! 停止判定の閾値には、流れの向きでなく駆動の向きの倍率を掛ける(ayh。下の停止判定)
+  if (have_db) then
+    ayh = aye
+    if (slf > 0.0 .and. (aye > 0.0 .or. fbe > 0.0)) then
+      call slope_db_factors(fyf, fvf, fv1f)
+      aye = aye * fyf
+      if (fb1) then
+        fbe = fbe * fv1f
+      else
+        fbe = fbe * fvf
+      end if
+    end if
   end if
 
   ! ルンゲクッタの段数を初期化
@@ -2771,7 +2828,13 @@ subroutine calc_kth_flux(p, g, s, sx, uve0, tae0, i, j, k, in, jn, f_runge, uve1
       if (vv0e < dbr%db_vstop) then
         tte = ge * gve * ((dbr%gsx(i,j) + dbr%gsx(in,jn)) * geo%n8y(k) &
                           - (dbr%gsy(i,j) + dbr%gsy(in,jn)) * geo%n8x(k)) / 2
-        if ((tae + tge)**2 + tte**2 <= aye**2) then
+        ! 3 では法線方向の駆動(tae + tge)が g′ なので、接線方向も g′ に揃える(§100)
+        if (opt%have_gp) tte = tte * gpr
+        ! 閾値: 動き出す向き = 駆動の向き(辺の法線成分 tae + tge、接線成分 −tte)の、斜面に沿う降伏の倍率
+        ! (f_gravity_correction >= 2。§101。一様な斜面では最急勾配の向きで 1)
+        ayt = ayh
+        if (slf > 0.0) ayt = ayh * yield_dir_factor(tae + tge, -tte)
+        if ((tae + tge)**2 + tte**2 <= ayt**2) then
           uve1 = 0.0
           mne1 = 0.0
         end if
@@ -2922,6 +2985,61 @@ contains
       gzv2 = szn**2
     end if
     f = (1.0 + szn**2 + szt**2)**(5.0 / 3.0) * sqrt(1.0 + gzv2)
+  end function
+
+  !--------------------------------------------------------------------
+  ! 斜面に沿う混合体流動の抵抗の倍率(f_gravity_correction >= 2。developer.md §101)
+  !   斜面に沿う抵抗の応力 τ(−V̂_s の向き。V_s は斜面に沿う速度)を水平の流速の半陰の係数に直すと
+  !   F = −τ/(ρ_m h_n |V_s|)(h_n = h cos θ。§93 のマニングと同じ導出)。r = |V_s|/|V| = √(1 + (V̂·∇z)²)、
+  !   cos²θ = 1/(1 + |∇z|²) として、現状の水平の形(g_e = g cos²θ、|V|、h)に対する倍率は
+  !     fy  = √(1 + |∇z|²)/r       = 1/(r cos θ)  降伏(a_y = g_e μ' の重力形、一定の停止応力 τ_y/(ρ_m h))
+  !     fv  = (1 + |∇z|²)^{3/2} r  = r/cos³θ      Voellmy の乱流項(g_e → g)、江頭の層流則・高橋・中川の石礫型
+  !                                               (f_b ∝ (d/h)² の h → h_n)
+  !     fv1 = (1 + |∇z|²) r        = r/cos²θ      高橋・中川の掃流状集合流動(f ∝ d/h)
+  !   最急勾配の向きの流れ(r = 1/cos θ)では fy = 1・fv = 1/cos⁴θ・fv1 = 1/cos³θ、等高線に沿う流れ(r = 1)
+  !   では fy = 1/cos θ。∇z と V̂ は slope_fric_factor と同じ(場の勾配 = 両セルの minmod の平均、両セルの
+  !   流速の平均の向き。流れがなければ辺の法線の向き)。1 辺だけの段では場の勾配がほぼ 0 で倍率はほぼ 1
+  !--------------------------------------------------------------------
+  subroutine slope_db_factors(fy, fv, fv1)
+    real, intent(out) :: fy, fv, fv1
+    real :: szn, szt, ub, vb, vn, vt, vb2, gzv2, g2, rr
+    szn = ((sx%gzx(i,j) + sx%gzx(in,jn)) * geo%n8x(k) + (sx%gzy(i,j) + sx%gzy(in,jn)) * geo%n8y(k)) / 2
+    szt = ((sx%gzx(i,j) + sx%gzx(in,jn)) * geo%n8y(k) - (sx%gzy(i,j) + sx%gzy(in,jn)) * geo%n8x(k)) / 2
+    ub = (s%u(i,j) + s%u(in,jn)) / 2
+    vb = (s%v(i,j) + s%v(in,jn)) / 2
+    vn = ub * geo%n8x(k) + vb * geo%n8y(k)
+    vt = ub * geo%n8y(k) - vb * geo%n8x(k)
+    vb2 = vn**2 + vt**2
+    if (vb2 > 0.0) then
+      gzv2 = (vn * szn + vt * szt)**2 / vb2
+    else
+      gzv2 = szn**2
+    end if
+    g2 = szn**2 + szt**2
+    rr = sqrt(1.0 + gzv2)
+    fy = sqrt(1.0 + g2) / rr
+    fv1 = (1.0 + g2) * rr
+    fv = fv1 * sqrt(1.0 + g2)
+  end subroutine
+
+  !--------------------------------------------------------------------
+  ! 停止判定の降伏の倍率(f_gravity_correction >= 2。developer.md §101): 動き出す向き = 駆動の向き
+  ! d = (dn, dt)(辺の法線・接線の成分。t = (n_y, −n_x))の、斜面に沿う降伏の倍率
+  ! √(1 + |∇z|²)/√(1 + (d̂·∇z)²)。一様な斜面では駆動が最急勾配の向きなので 1(閾値 tan θ = μ は変わらない)
+  !--------------------------------------------------------------------
+  function yield_dir_factor(dn, dt) result(f)
+    real, intent(in) :: dn, dt
+    real :: f
+    real :: szn, szt, d2, gzd2
+    szn = ((sx%gzx(i,j) + sx%gzx(in,jn)) * geo%n8x(k) + (sx%gzy(i,j) + sx%gzy(in,jn)) * geo%n8y(k)) / 2
+    szt = ((sx%gzx(i,j) + sx%gzx(in,jn)) * geo%n8y(k) - (sx%gzy(i,j) + sx%gzy(in,jn)) * geo%n8x(k)) / 2
+    d2 = dn**2 + dt**2
+    if (d2 > 0.0) then
+      gzd2 = (dn * szn + dt * szt)**2 / d2
+    else
+      gzd2 = szn**2
+    end if
+    f = sqrt((1.0 + szn**2 + szt**2) / (1.0 + gzd2))
   end function
 
 end subroutine
