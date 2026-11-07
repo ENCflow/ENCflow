@@ -1157,7 +1157,7 @@ metre of water the ground is lowered by `dissol_ceq / dissol_rho` (default
 (20 to 100 mm/kyr).
 
 **Choosing the water amount.** The amount of water is one of five sources chosen with
-`dissol_src` (table and panel (a) of the figure above). The default 1 (infiltration) needs the
+`dissol_src` (table and panel (a) of the figure below). The default 1 (infiltration) needs the
 groundwater module (`fn_gwflow`); use 2 (rainfall on the ground) to run without groundwater, 3
 to include dissolution of bare rock faces, and 4 or 5 (recharge to the rock) in runs with the
 conduit continuum layer (`f_gwconduit`). Infiltration (1 and 3) can produce bottomless pits
