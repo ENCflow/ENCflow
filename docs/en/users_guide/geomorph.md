@@ -105,8 +105,11 @@ at the end, count the actual updates instead of using this equality.
 run. Rainfall and boundary-condition clocks are not rescaled, so their
 history over the accelerated period is not reproduced. The update interval
 and acceleration factor must also satisfy process stability limits.
-For example, explicit creep requires
-`creep_d × dts × (1/dx² + 1/dy²) ≤ 0.5`.
+For example, explicit creep on square cells requires `dts ≤ 0.3 dx²/creep_d` with the
+default 9-point stencil (`creep_diagratio = 1/3`) and
+`creep_d × dts × (1/dx² + 1/dy²) ≤ 0.5` (= `dts ≤ 0.25 dx²/creep_d`) with the 5-point stencil
+(`creep_diagratio = 0`); a setting beyond the limit stops at start-up, and the limit is printed as
+"creep stability dt limit".
 
 Event processes and coupled modules have the following restrictions.
 
