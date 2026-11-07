@@ -519,11 +519,16 @@ With `f_advection_donor = 3` the wet/dry test of the parallel edge becomes a con
   rain the water level at the bend cells is a little higher than with 0
   (the zigzag channel of test/bendloss with 2 mm/h on the floodplain:
   1.73 → 1.81 m; 0 with `dd` divided by 10 gives 2.02 m; the reach-mean depths
-  do not change). At transect 3 of the 50 m grid of Chichibu, jumps of
-  another type, which do not vanish when `dd` is changed, remain. On subgrid
-  channels narrower than the cell (Chichibu on the 100 m grid with a 50 m
-  width), 3 can also make the discharge oscillate with a 2-minute period (a
-  feedback of the ε weight; it does not appear with ε = 0.02). Boundary faces
+  do not change). At transect 3 of the 50 m grid of Chichibu, fine
+  oscillations with a period of 5 to 6 minutes remain; they are not wet/dry
+  switches but an oscillation of a hydraulic jump and a pond in the stepped bed
+  created by depression filling about 1 km downstream of the transect (a flat
+  pond and a 7 m step), and they appear in the same way with 0 and with half
+  the time step (an oscillation caused by the terrain; Step 6 and the
+  supplement of tutorials/chichibu). On subgrid channels narrower than the
+  cell (Chichibu on the 100 m grid with a 50 m width), 3 can also make the
+  discharge oscillate with a 2-minute period (a feedback of the ε weight; it
+  does not appear with ε = 0.02). Boundary faces
   on lateral Neumann sides are not covered (both flow-direction and lateral
   faces are the same as with 0).
 - **Excluded edges.** Edges excluded from the momentum equation (invalid

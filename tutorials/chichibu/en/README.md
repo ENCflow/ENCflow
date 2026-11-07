@@ -1013,6 +1013,18 @@ tabulated below (in parentheses: change from the next coarser grid).
   flow. Even with the channel representation equalized, **the
   difference in how the valley floor and the slopes are resolved**
   remains.
+- At transect 3 of the 50 m grid, the 1-minute values carry fine
+  oscillations with a period of 5 to 6 minutes around the peak and on the
+  recession (±100 to 450 m³/s per minute). About 1 km downstream of the
+  transect, a hydraulic jump moves back and forth in the stepped bed created
+  by depression filling (a flat "pond" and a 7 m step), and the motion
+  propagates up to the transect through the subcritical flow: an example of
+  the oscillations caused by the terrain in Step 6 (it is not a wet/dry
+  switch and remains when `f_advection_donor` or the time step is changed).
+  Placing the transect 150 m upstream, above a step, reduces the recession
+  oscillation to a third. On the 100 m and 200 m grids the steps created by
+  depression filling lie at other places and have other sizes, and the
+  1-minute values at transect 3 are smooth.
 - At every resolution the S column stays at 0.1000 m after the rain.
   The total volume is the same; only **the distribution and the speed
   of the water** differ. Check this yourself.
