@@ -64,8 +64,11 @@ All that is needed is **an incident side** and **the offshore waves** (`wf_hm0`,
 **The direction is the direction the waves travel to** (not the direction they come
 from). It is measured counterclockwise from the x axis (east): a wave travelling north
 is 90°, one travelling west is 180°. This is the same convention as `wave_dir` in the
-[sediment and morphology chapter](geomorph.md), and differs by 180° from the
-"coming from" (nautical) convention of SWAN and XBeach.
+[sediment and morphology chapter](geomorph.md). From an angle θ_n in the nautical
+convention of SWAN, XBeach and others (the coming-from direction measured clockwise from
+north), convert with θ = 270° − θ_n (on a grid whose x axis points east; a wave coming
+from the west has θ_n = 270° and θ = 0°). Adding or subtracting 180° alone does not give
+the right angle.
 
 **The period is a single representative period.** `wf_trep` (and the period column of
 `wf_val`) is used as is for σ = 2π/T in the dispersion relation. For random waves the
@@ -92,6 +95,24 @@ T_p is known, T_m−1,0 ≈ T_p/1.1 is a guide for a single-peaked spectrum (Eur
 4. **Check the results.** Look at the distributions Wh (wave height) and Wa (mean
    direction), and check that the imbalance (residual of the budget) in the ledger
    `result/wavefield.csv` is small ([output and checks](#output-and-checks)).
+
+![The wave field in plan view: types of sides, lateral Neumann against absorbing, the direction convention, and the cells waves pass through](../../figs/wavefield_plan_en.png)
+
+(a) shows, in plan view, what the wave field computes on a straight coast of the same form as the
+input example above (offshore to the west, land to the east). The white lines are wave crests (for
+illustration; line width = wave height) and the navy arrows are wave rays, normal to the crests.
+Waves entering obliquely from the offshore side grow in height as the water gets shallower
+(shoaling), turn so that their crests follow the depth contours (refraction) and lose height in the
+surf zone; a breakwater casts a shadow behind it. (b) compares the types of the sides crossing the
+coast. Lateral Neumann (2) treats the same sea as continuing outside the side, so waves entering
+obliquely from outside still arrive and the field stays uniform alongshore. Absorbing (0) removes
+the waves that should enter from outside, leaving a false shadow near the side (an example on a
+uniform depth without breaking, computed with rays for each direction). (c) is the direction
+convention: `wf_dir` and the output Wa give the direction of travel counterclockwise from the x axis
+(east). The y components of the output are positive to the south, the opposite of the direction
+convention. (d) shows the cells waves pass through (wave cells) and the cells they do not; the rules
+are in "[Cells waves pass through and cells they do not](#cells-waves-pass-through-and-cells-they-do-not)"
+below.
 
 ## Recommended values by pattern
 
@@ -238,6 +259,26 @@ velocity (the mass transport of water), and the flow at the bed (the Eulerian ve
 − Stokes transport) represents the return flow (how to read the output velocities is in
 [output and checks](#output-and-checks)). The formulas are in the
 [explanation](wavefield_models.md#6-action-on-the-flow-wf_flow).
+
+![Wave height, dissipation, mean water level and longshore current in a cross-shore section, the vertical structure in the surf zone and the velocity carrying sand](../../figs/wavefield_profile_en.png)
+
+(a) is a schematic cross-shore section (vertically exaggerated). The solid line is the water surface
+at one instant and the dashed lines are the envelope of the wave height H_m0 solved by the model: the
+phase-averaged wave field solves this envelope (the wave energy), not the individual waves. (b)–(e)
+are an illustration, not an ENCflow result: the steady 1-D balance for waves of H_m0 = 1.5 m,
+T = 8 s and direction 20° on a 1/80 beach, solved with the formulas and defaults of the explanation.
+The wave height first grows by shoaling and then decreases by breaking ((b)); the energy of the
+broken waves passes through the roller and is dissipated slightly further shoreward ((c)). The mean
+water level falls slightly offshore of the surf zone (set-down) and rises towards the shoreline
+(set-up; (d)). The breaking of obliquely incident waves drives a longshore current, and the roller
+moves its peak shoreward ((e)). (f) is the idea behind `wf_flow = 2`: the shallow water velocity
+(output u, v) is the Lagrangian mean velocity, the mass transport of water, which is nearly 0 on a
+closed beach. The mass carried onshore above the trough by the waves and the roller (the Stokes
+transport) is returned by an offshore flow near the bed (the undertow). (g) is the velocity carrying
+sand in the [action on sediment](#action-on-sediment-f_wfsed): the sum of the undertow and the onshore
+velocity due to wave skewness and asymmetry. The swash zone above the shoreline is not solved by the
+phase-averaged wave field; [swash-zone transport](#swash-zone-transport-f_wfswash) (`f_wfswash`)
+handles it with empirical formulas.
 
 ### Roller (f_wf_roller, wf_beta)
 
@@ -392,7 +433,8 @@ The formulas are in the [explanation](wavefield_models.md#8-action-on-sediment-f
 Beach erosion and recovery are decided by the balance between the offshore undertow and the
 onshore velocity. With high waves the undertow wins and sand is carried offshore (a bar forms);
 with low waves and long-period swell the onshore velocity wins offshore of the surf zone and sand
-returns onshore (storm and calm of test/wfsed). Which one wins is sensitive to the skewness and
+returns onshore (storm and calm of test/wfsed; the balance is sketched in (g) of the cross-shore
+figure in [action on the flow](#action-on-the-flow-wf_flow)). Which one wins is sensitive to the skewness and
 asymmetry coefficients `wfsed_facsk` and `wfsed_facas` (default 0.1), so these two are the
 calibration parameters when the morphological change is to be matched.
 
