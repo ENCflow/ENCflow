@@ -163,11 +163,12 @@ subroutine adv_prepare_mc(p, g, s, sx, tx)
   real :: ta
   real :: ubf                       ! 流入面の全流入リンクの流量重み付き風上値(f_advection_donor = 2。§100)
   logical :: okf                    ! 同上: 流入リンクがあり ubf が有効か
+  real :: wsh                       ! 線 k の供給元の重み(f_advection_donor = 3。§100)
   logical :: donor_rw               ! このエッジの流下方向の供給元を河道セルに限るか(§68.18)
 
   !$omp parallel do schedule(dynamic) &
   !$omp private(i, j, k, in, jn, ie, je, hc, hn, hb, lme, ue, um, umm, up, upp, &
-  !$omp         qc, qn, qtp, qtm, ubc, ubn, ubtp, ubtm, ta, ubf, okf, donor_rw)
+  !$omp         qc, qn, qtp, qtm, ubc, ubn, ubtp, ubtm, ta, ubf, okf, wsh, donor_rw)
   do j = dcp%js, dcp%je
     do i = g%wx(1,j), g%wx(2,j)
       if (g%x(i,j) <= 0) cycle
@@ -254,6 +255,12 @@ subroutine adv_prepare_mc(p, g, s, sx, tx)
         ! 判定は far_ok(全域で確保された g%x だけを見る): upp の向こうの
         ! セルは行 j ± 3 で帯+ハロ 2 の外に出るため、h を見る cell_ok を使うと
         ! ランク境界で判定が変わり np=1 と np=2 が一致しない
+        ! f_advection_donor = 3: 線 k 上の供給元のリンクが面のセルへ運ぶ実流量 Q_k が、面のセルへの
+        ! 最大の流入リンクの実流量 Q_max の ε(p_adv_donor_eps)倍に満たないときだけ、MUSCL の風上値を
+        ! 重み w = (Q_k/Q_max)/ε で u_e へ寄せる(ū = u_e + w(ū_k − u_e)。w = 1 なら 0 と同じ値。
+        ! donor_share。§100)。線 k のリンクがほとんど水を運ばない面で「深いセルの質量流束 × 薄い
+        ! リンクの流速」の人工的な減速を消し、他のリンクの水の運動量は持ち込まない(2 は持ち込むので、
+        ! 河岸の段差をまたぐ交換リンクへ本流の運動量が注入され、横流入の水路が深くなる。§100)。
         ! f_advection_donor = 2: 流入面の風上値を、面のセルへ上流側半平面から実際に水を運ぶ
         ! 全リンクの流量で重み付けした平均にする(inflow_face_value。§100)。線 k 上の 1 本の
         ! リンクの流速に面の全流束を掛ける取り方だと、線上のリンクが河岸の薄い水膜で面の
@@ -269,6 +276,10 @@ subroutine adv_prepare_mc(p, g, s, sx, tx)
             ubc = ubf
           else if (donor_ok(i - din(k), j - djn(k), donor_rw)) then
             ubc = face_value(um, ue, umm, far_ok(i - 2 * din(k), j - 2 * djn(k)))
+            if (opt%f_advection_donor == 3) then
+              wsh = donor_share(i, j, 9 - k)      ! 面のセル c と線 k の供給元 c − d(c の 9 − k 近傍)
+              if (wsh < 1.0) ubc = ue + wsh * (ubc - ue)
+            end if
           else
             ubc = ue
           end if
@@ -284,6 +295,10 @@ subroutine adv_prepare_mc(p, g, s, sx, tx)
             ubn = ubf
           else if (donor_ok(in + din(k), jn + djn(k), donor_rw)) then
             ubn = face_value(up, ue, upp, far_ok(in + 2 * din(k), jn + 2 * djn(k)))
+            if (opt%f_advection_donor == 3) then
+              wsh = donor_share(in, jn, k)        ! 面のセル n と線 k の供給元 n + d(n の k 近傍)
+              if (wsh < 1.0) ubn = ue + wsh * (ubn - ue)
+            end if
           else
             ubn = ue
           end if
@@ -458,6 +473,28 @@ contains
     ub = ue0
     if (ok) ub = ue0 + msum / ssum
   end subroutine
+
+  ! 線 k の供給元の重み(f_advection_donor = 3。developer.md §100)。面のセル (ci, cj) へ線 k 上の
+  ! 供給元(kk 近傍)から入る実流量 Q_k と、面のセルへの 8 リンクの流入の最大 Q_max の比
+  ! r = Q_k/Q_max に対し w = min(1, r/ε)(ε = p_adv_donor_eps)。面のセルへの流入がなければ 1。
+  ! 読むのは qlk(時刻 n の mn。エッジ幅 2 の交換済み)だけで、inflow_face_value(2)が読む範囲に
+  ! 含まれる。海セルからの流入も最大に数える(海セルは運動量を供給しないので、寄せる側 = u_e で安全)。
+  ! 割り算は Q_k < εQ_max のときだけ行う(商は 1 未満)。Q_max が正でも極小のとき εQ_max が 0 に
+  ! アンダーフローして 0 で割る(-ffpe-trap=zero で停止。test/slopefric の計算開始直後)ことを避ける。
+  ! 値は min(1, Q_k/(εQ_max)) と同じ
+  pure function donor_share(ci, cj, kk) result(w)
+    integer, intent(in) :: ci, cj, kk
+    real :: w, qk, qmax, qe
+    integer :: l
+    qk = max(0.0, -qlk(ci, cj, kk))
+    qmax = 0.0
+    do l = 1, 8
+      qmax = max(qmax, -qlk(ci, cj, l))
+    end do
+    qe = opt%p_adv_donor_eps * qmax
+    w = 1.0
+    if (qk < qe) w = qk / qe
+  end function
 
   ! 枠外の位置 (ci, cj) が側方 Neumann の辺だけの外なら、辺の法線方向に枠内へ寄せた
   ! 鏡像セル(境界面の運動方程式と同じ。§90)の添字を返す。それ以外はそのまま

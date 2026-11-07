@@ -104,20 +104,20 @@
     {
       "source": "docs/users_guide.md",
       "target": "docs/en/users_guide.md",
-      "source_sha256": "3a5c91bbb197d48f7980e8f6b6b69aa1149c388997e8b06984cd4ab18cc2aa71",
-      "target_sha256": "7cd4cf2d6e993ba8232d5224f28c10018112cf3207bbcc2e9939dc787a7ce43a",
-      "reviewer": "Claude (Claude Code session; merge of main into claude/nifty-hawking-yx6s0o: the merged files are the three-way merge of both sides, checked by script for both files that the merged file minus each parent equals the other side's own change (encgrid.md: the p_diagratio row from this branch and the f_gravity_correction row from main in both languages); each side's changes had been reviewed on its branch)",
+      "source_sha256": "c76907aaa51b2fdc8bcb51e6316914cb777eb4debd71f305c603825c4533ce73",
+      "target_sha256": "ecee3839661ee698e064aa193ba537a5024f09a17896e82df8187945630a763d",
+      "reviewer": "Claude (Claude Code session; f_advection_donor = 3 and p_adv_donor_eps added 2026-11-07, option 2's known changes corrected; Japanese and English edited together and read side by side)",
       "method": "assistant",
-      "reviewed_on": "2026-11-05"
+      "reviewed_on": "2026-11-07"
     },
     {
       "source": "docs/users_guide/advection.md",
       "target": "docs/en/users_guide/advection.md",
-      "source_sha256": "7de11d18e8074ab06639f2eea78f23f3b3d0a037789115cc4cfa5c124082a488",
-      "target_sha256": "fc4afa99102e190d26cc4cd1786128e0d0e04bba1ed17bb4938389bfab2a6f39",
-      "reviewer": "Claude (Claude Code session; Japanese source and English mirror of the f_advection_donor = 2 additions written together and compared paragraph by paragraph, table rows and numbers checked; no model execution)",
+      "source_sha256": "23178159ad1326bd98235cf2bb113a5d1ff7c531589003efe33b594fd74ba2e9",
+      "target_sha256": "f04c1fa46df89485e6fb91cb836d98f20c0439e3b65aa675170455617437aeea",
+      "reviewer": "Claude (Claude Code session; f_advection_donor = 3 and p_adv_donor_eps added 2026-11-07, option 2's known changes corrected; Japanese and English edited together and read side by side)",
       "method": "assistant",
-      "reviewed_on": "2026-11-06"
+      "reviewed_on": "2026-11-07"
     },
     {
       "source": "docs/users_guide/bedmotion.md",
@@ -401,11 +401,11 @@
     {
       "source": "docs/users_guide/params_index.md",
       "target": "docs/en/users_guide/params_index.md",
-      "source_sha256": "b10794727ab5c8aad9077c329a3db06268ac17a757ad5c62241ff913b598b24b",
-      "target_sha256": "5ad6f10a8196a32aa81c6f173d0cb9d788e3494734f6e3c65cf8a9d47e0e59a0",
-      "reviewer": "Claude (Claude Code session; reviewed the text on the 8-neighbour flow of glaciers and lava (gl_diagratio, lv_diagratio; developer.md sec. 96) in the Japanese source against the English mirror, 2026-11-05)",
+      "source_sha256": "5e32383ff99cd5819ab50e83beaede1f17d0c7dbfee675191c2465e980b0fc4e",
+      "target_sha256": "3397780c48499167f86952ffc05436c1e776ad5fa968add3df441fdb527078e7",
+      "reviewer": "Claude (Claude Code session; f_advection_donor = 3 and p_adv_donor_eps added 2026-11-07, option 2's known changes corrected; Japanese and English edited together and read side by side)",
       "method": "assistant",
-      "reviewed_on": "2026-11-05"
+      "reviewed_on": "2026-11-07"
     },
     {
       "source": "docs/users_guide/passage_width.md",
@@ -473,11 +473,11 @@
     {
       "source": "docs/users_guide/swflow.md",
       "target": "docs/en/users_guide/swflow.md",
-      "source_sha256": "225ba583c1cff001864c596944cbf585009d11ba17be6454d093a85e8a1d8c2b",
-      "target_sha256": "dd0757bd0f733388546a7663772296d2c59fd8fd4b6218de6ba6fad9eadff749",
-      "reviewer": "Claude (Claude Code session; Japanese source and English mirror of the f_advection_donor = 2 additions written together and compared paragraph by paragraph, table rows and numbers checked; no model execution)",
+      "source_sha256": "bb9d54876331061fbcdc093eea7ba9046a70e2abf907e7a6882cbb79e471ff0c",
+      "target_sha256": "7fa400c97f3c0c14e51b9c0422bb41eae581d8013a57f56efe63ee4ea5b59343",
+      "reviewer": "Claude (Claude Code session; f_advection_donor = 3 and p_adv_donor_eps added 2026-11-07, option 2's known changes corrected; Japanese and English edited together and read side by side)",
       "method": "assistant",
-      "reviewed_on": "2026-11-06"
+      "reviewed_on": "2026-11-07"
     },
     {
       "source": "docs/users_guide/swi.md",
@@ -635,11 +635,11 @@
     {
       "source": "examples/List_samples/list_enc.txt",
       "target": "examples/List_samples/en/list_enc.txt",
-      "source_sha256": "320cfc453223c82ff2949c3de7aa5c8723c26dbf0be937fb0c526b091d1c1eb4",
-      "target_sha256": "0cc895194344066799fc1696b5cc30743399f90af911f69992cae5c94f2b804f",
-      "reviewer": "Claude (Claude Code session; Japanese source and English mirror of the f_advection_donor = 2 additions written together and compared paragraph by paragraph, table rows and numbers checked; no model execution)",
+      "source_sha256": "aacb21260b5208dc5ad02da3e37888e00271bf25ea3e03dfe0511117fe4e1fa5",
+      "target_sha256": "e88925b8acc4e08768e4167158dacf86b51bc916583e86ad6bafc33e86907638",
+      "reviewer": "Claude (Claude Code session; f_advection_donor = 3 and p_adv_donor_eps added 2026-11-07, option 2's known changes corrected; Japanese and English edited together and read side by side)",
       "method": "assistant",
-      "reviewed_on": "2026-11-06"
+      "reviewed_on": "2026-11-07"
     },
     {
       "source": "examples/List_samples/list_evap.txt",

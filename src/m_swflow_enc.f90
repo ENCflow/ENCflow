@@ -14,7 +14,7 @@ module m_swflow_enc
   use m_sysdep_util, only : sysdep_mkdir
   use m_restart, only : restart_write_cell, restart_read_cell, restart_write_edge, &
                         restart_read_edge, restart_skip
-  use m_util, only : itoa
+  use m_util, only : itoa, rtoa
   implicit none
   private
 
@@ -98,7 +98,9 @@ module m_swflow_enc
     integer :: f_advection_donor              ! 運動量保存形移流の風上供給元 (0:線 k 上の湿潤
                                             !   セル, 1:河道セル間のエッジでは河道セルのみ
                                             !   (§68.18), 2:流入面を全流入リンクの流量で
-                                            !   重み付け(§100))
+                                            !   重み付け, 3:線 k の供給元の流量が面のセルへの
+                                            !   最大の流入リンクの ε 倍未満なら u_e へ寄せる
+                                            !   (§100))
     integer :: f_inflow_edge                  ! 区間流入の外縁セルに接するエッジの扱い (0:接する
                                             !   エッジすべての移流項 0, 1:区間の内側へ向かうエッジ
                                             !   だけ移流項 0, 2:1 + そのエッジの流速のエネルギー
@@ -114,6 +116,7 @@ module m_swflow_enc
     real :: wf_break_visc = 0.0               ! 波浪場の砕波による水平混合の係数 M(§90)
     real :: p_diagratio != 2 / (2 + sqrt(2.))  ! ratio of diagonal component
     real :: p_adv_upwind_index != 0.0          ! upwind index of advection term
+    real :: p_adv_donor_eps = 0.1             ! f_advection_donor = 3 のしきい値 ε(§100)
     real :: p_adprunge_thresh != 2.0           ! threshold of adaptive Runge-Kutta
     real :: p_diffusion_nu != 0.0              ! 拡散項の動粘性係数 (m2/s。モデル2では
                                             !   加算のバックグラウンド粘性)
@@ -894,6 +897,7 @@ subroutine m_swflow_enc_init(p, g, b, s)
   end if
   opt%p_diagratio = list%p_diagratio
   opt%p_adv_upwind_index = list%p_adv_upwind_index
+  opt%p_adv_donor_eps = list%p_adv_donor_eps
   opt%p_adprunge_thresh = list%p_adprunge_thresh
   opt%p_diffusion_nu = list%p_diffusion_nu
   opt%p_diffusion_alpha = list%p_diffusion_alpha
@@ -997,9 +1001,13 @@ subroutine m_swflow_enc_init(p, g, b, s)
   if (opt%f_scalar_scheme /= 1 .and. opt%f_scalar_scheme /= 3) then
     call par_stop("list_enc: f_scalar_scheme must be 1(first-order upwind) or 3(MUSCL)")
   end if
-  if (opt%f_advection_donor < 0 .or. opt%f_advection_donor > 2) then
+  if (opt%f_advection_donor < 0 .or. opt%f_advection_donor > 3) then
     call par_stop("list_enc: f_advection_donor must be 0(wet cells on the edge line), " &
-                  //"1(channel cells on channel edges) or 2(flux-weighted inflow links)")
+                  //"1(channel cells on channel edges), 2(flux-weighted inflow links) " &
+                  //"or 3(edge-line donor ramped toward u_e by its share of the inflow)")
+  end if
+  if (opt%f_advection_donor == 3 .and. (opt%p_adv_donor_eps <= 0.0 .or. opt%p_adv_donor_eps > 1.0)) then
+    call par_stop("list_enc: p_adv_donor_eps must satisfy 0 < p_adv_donor_eps <= 1")
   end if
   if (opt%f_advection_donor == 1 .and. .not. any(g%rw > 0)) then
     call par_stop("list_enc: f_advection_donor=1 requires a channel mask (fn_rw in list_geoinfo)")
@@ -1010,6 +1018,10 @@ subroutine m_swflow_enc_init(p, g, b, s)
   end if
   if (opt%f_advection_donor == 2 .and. opt%f_advection_scheme >= 2) then
     call par_info("swflow_enc: f_advection_donor = 2 (inflow faces weighted by the fluxes of all inflow links)")
+  end if
+  if (opt%f_advection_donor == 3 .and. opt%f_advection_scheme >= 2) then
+    call par_info("swflow_enc: f_advection_donor = 3 (edge-line donor ramped toward u_e when it carries " &
+                  //"less than p_adv_donor_eps = "//rtoa(opt%p_adv_donor_eps)//" of the largest inflow link)")
   end if
   if (opt%f_dry_head_cap < 0 .or. opt%f_dry_head_cap > 1) then
     call par_stop("list_enc: f_dry_head_cap must be 0(off) or 1(cap edge depth toward dry cells by energy head)")
