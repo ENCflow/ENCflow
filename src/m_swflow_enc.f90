@@ -97,10 +97,10 @@ module m_swflow_enc
     integer :: f_scalar_scheme                ! スカラー輸送の移流スキーム (1: 1 次風上, 3: MUSCL。§78)
     integer :: f_advection_donor              ! 運動量保存形移流の風上供給元 (0:線 k 上の湿潤
                                             !   セル, 1:河道セル間のエッジでは河道セルのみ
-                                            !   (§68.18), 2:流入面を全流入リンクの流量で
-                                            !   重み付け, 3:線 k の供給元の流量が面のセルへの
+                                            !   (§68.18), 3:線 k の供給元の流量が面のセルへの
                                             !   最大の流入リンクの ε 倍未満なら u_e へ寄せる
-                                            !   (§100))
+                                            !   (§100)。2(流入面を全流入リンクの流量で重み付け)
+                                            !   は 2026-11-07 に廃止)
     integer :: f_inflow_edge                  ! 区間流入の外縁セルに接するエッジの扱い (0:接する
                                             !   エッジすべての移流項 0, 1:区間の内側へ向かうエッジ
                                             !   だけ移流項 0, 2:1 + そのエッジの流速のエネルギー
@@ -1001,9 +1001,15 @@ subroutine m_swflow_enc_init(p, g, b, s)
   if (opt%f_scalar_scheme /= 1 .and. opt%f_scalar_scheme /= 3) then
     call par_stop("list_enc: f_scalar_scheme must be 1(first-order upwind) or 3(MUSCL)")
   end if
-  if (opt%f_advection_donor < 0 .or. opt%f_advection_donor > 3) then
+  ! f_advection_donor = 2(流入面の風上値を全流入リンクの流量で重み付け)は 2026-11-07 に廃止
+  ! (通過流の運動量を河岸の交換リンクへ持ち込み、横流入・渦・壁の検定を悪くした。跳ねと dd の
+  ! 感度の対策は 3 が副作用なしに担う。developer.md §100)
+  if (opt%f_advection_donor == 2) then
+    call par_stop("list_enc: f_advection_donor=2 (flux-weighted inflow links) was removed;" &
+                  //" use f_advection_donor=3 (see developer.md sec.100)")
+  else if (opt%f_advection_donor < 0 .or. opt%f_advection_donor > 3) then
     call par_stop("list_enc: f_advection_donor must be 0(wet cells on the edge line), " &
-                  //"1(channel cells on channel edges), 2(flux-weighted inflow links) " &
+                  //"1(channel cells on channel edges) " &
                   //"or 3(edge-line donor ramped toward u_e by its share of the inflow)")
   end if
   if (opt%f_advection_donor == 3 .and. (opt%p_adv_donor_eps <= 0.0 .or. opt%p_adv_donor_eps > 1.0)) then
@@ -1015,9 +1021,6 @@ subroutine m_swflow_enc_init(p, g, b, s)
   if (opt%f_advection_donor >= 1 .and. opt%f_advection_scheme < 2) then
     call par_info("swflow: f_advection_donor="//trim(itoa(opt%f_advection_donor)) &
                   //" has no effect with f_advection_scheme=1")
-  end if
-  if (opt%f_advection_donor == 2 .and. opt%f_advection_scheme >= 2) then
-    call par_info("swflow_enc: f_advection_donor = 2 (inflow faces weighted by the fluxes of all inflow links)")
   end if
   if (opt%f_advection_donor == 3 .and. opt%f_advection_scheme >= 2) then
     call par_info("swflow_enc: f_advection_donor = 3 (edge-line donor ramped toward u_e when it carries " &

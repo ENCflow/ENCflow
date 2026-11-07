@@ -113,9 +113,9 @@
     {
       "source": "docs/users_guide/advection.md",
       "target": "docs/en/users_guide/advection.md",
-      "source_sha256": "23178159ad1326bd98235cf2bb113a5d1ff7c531589003efe33b594fd74ba2e9",
-      "target_sha256": "f04c1fa46df89485e6fb91cb836d98f20c0439e3b65aa675170455617437aeea",
-      "reviewer": "Claude (Claude Code session; f_advection_donor = 3 and p_adv_donor_eps added 2026-11-07, option 2's known changes corrected; Japanese and English edited together and read side by side)",
+      "source_sha256": "287cb563207e2a8f5b7411ea2d5107944bb2a817a56a78265a221d781fe25a18",
+      "target_sha256": "1a074b3ef26d4efbb9c89cf475c7cbb84bb63d116e6d527ca31280ef23989016",
+      "reviewer": "Claude (Claude Code session; f_advection_donor = 2 removed on 2026-11-07: option-2 description replaced by a removal note, option 3 made self-contained, its Courant-number caveat and the leftover small bumps added; Japanese and English edited together and read side by side)",
       "method": "assistant",
       "reviewed_on": "2026-11-07"
     },
@@ -473,9 +473,9 @@
     {
       "source": "docs/users_guide/swflow.md",
       "target": "docs/en/users_guide/swflow.md",
-      "source_sha256": "bb9d54876331061fbcdc093eea7ba9046a70e2abf907e7a6882cbb79e471ff0c",
-      "target_sha256": "7fa400c97f3c0c14e51b9c0422bb41eae581d8013a57f56efe63ee4ea5b59343",
-      "reviewer": "Claude (Claude Code session; f_advection_donor = 3 and p_adv_donor_eps added 2026-11-07, option 2's known changes corrected; Japanese and English edited together and read side by side)",
+      "source_sha256": "3af09952f4aba5c81ad5c8abba685ac1f935511772970770e8bfa8af15122877",
+      "target_sha256": "126d70812336441fa6e9853eb34ec0afba51847cf5ea7cc51b7798eef3623257",
+      "reviewer": "Claude (Claude Code session; f_advection_donor = 2 removed on 2026-11-07: option-2 description replaced by a removal note, option 3 made self-contained, its Courant-number caveat and the leftover small bumps added; Japanese and English edited together and read side by side)",
       "method": "assistant",
       "reviewed_on": "2026-11-07"
     },
@@ -635,9 +635,9 @@
     {
       "source": "examples/List_samples/list_enc.txt",
       "target": "examples/List_samples/en/list_enc.txt",
-      "source_sha256": "aacb21260b5208dc5ad02da3e37888e00271bf25ea3e03dfe0511117fe4e1fa5",
-      "target_sha256": "e88925b8acc4e08768e4167158dacf86b51bc916583e86ad6bafc33e86907638",
-      "reviewer": "Claude (Claude Code session; f_advection_donor = 3 and p_adv_donor_eps added 2026-11-07, option 2's known changes corrected; Japanese and English edited together and read side by side)",
+      "source_sha256": "c57b847a058f1e275fe98b6e6a691abed31561a73434f97639a376bccf14f6b9",
+      "target_sha256": "4e11ee032546f1290fab12fb596914f92c47cc7dba9cdf9a9c4dca1c68ee8f47",
+      "reviewer": "Claude (Claude Code session; f_advection_donor = 2 removed on 2026-11-07: comment lines of the f_advection_donor example rewritten in both languages; values, identifiers and comment-out state unchanged)",
       "method": "assistant",
       "reviewed_on": "2026-11-07"
     },

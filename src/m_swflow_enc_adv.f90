@@ -161,14 +161,12 @@ subroutine adv_prepare_mc(p, g, s, sx, tx)
   real :: qc, qn, qtp, qtm
   real :: ubc, ubn, ubtp, ubtm
   real :: ta
-  real :: ubf                       ! 流入面の全流入リンクの流量重み付き風上値(f_advection_donor = 2。§100)
-  logical :: okf                    ! 同上: 流入リンクがあり ubf が有効か
   real :: wsh                       ! 線 k の供給元の重み(f_advection_donor = 3。§100)
   logical :: donor_rw               ! このエッジの流下方向の供給元を河道セルに限るか(§68.18)
 
   !$omp parallel do schedule(dynamic) &
   !$omp private(i, j, k, in, jn, ie, je, hc, hn, hb, lme, ue, um, umm, up, upp, &
-  !$omp         qc, qn, qtp, qtm, ubc, ubn, ubtp, ubtm, ta, ubf, okf, wsh, donor_rw)
+  !$omp         qc, qn, qtp, qtm, ubc, ubn, ubtp, ubtm, ta, wsh, donor_rw)
   do j = dcp%js, dcp%je
     do i = g%wx(1,j), g%wx(2,j)
       if (g%x(i,j) <= 0) cycle
@@ -258,23 +256,15 @@ subroutine adv_prepare_mc(p, g, s, sx, tx)
         ! f_advection_donor = 3: 線 k 上の供給元のリンクが面のセルへ運ぶ実流量 Q_k が、面のセルへの
         ! 最大の流入リンクの実流量 Q_max の ε(p_adv_donor_eps)倍に満たないときだけ、MUSCL の風上値を
         ! 重み w = (Q_k/Q_max)/ε で u_e へ寄せる(ū = u_e + w(ū_k − u_e)。w = 1 なら 0 と同じ値。
-        ! donor_share。§100)。線 k のリンクがほとんど水を運ばない面で「深いセルの質量流束 × 薄い
-        ! リンクの流速」の人工的な減速を消し、他のリンクの水の運動量は持ち込まない(2 は持ち込むので、
-        ! 河岸の段差をまたぐ交換リンクへ本流の運動量が注入され、横流入の水路が深くなる。§100)。
-        ! f_advection_donor = 2: 流入面の風上値を、面のセルへ上流側半平面から実際に水を運ぶ
-        ! 全リンクの流量で重み付けした平均にする(inflow_face_value。§100)。線 k 上の 1 本の
-        ! リンクの流速に面の全流束を掛ける取り方だと、線上のリンクが河岸の薄い水膜で面の
-        ! 流束の主部が斜めのリンクから来るとき、「深いセルの質量流束 × 薄いリンクの流速」の
-        ! 人工的な減速になり、水膜の乾湿判定(cell_ok)の切り替わりで減速が一度に外れて
-        ! ハイドログラフの跳ねになる(tutorials/chichibu Step 3 の 232 min)。流入リンクが
-        ! なければ(okf が偽)従来の分岐。流出面は検査体積自身の風上値のまま(流出面にも
-        ! 重み付けを掛けて面の値を一価にする形は、横流入の水路が亜臨界化した。§100)
-        okf = .false.
+        ! donor_share。§100)。線 k 上の 1 本のリンクの流速に面の全流束を掛ける取り方だと、線上の
+        ! リンクが河岸の薄い水膜で面の流束の主部が斜めのリンクから来るとき、「深いセルの質量流束 ×
+        ! 薄いリンクの流速」の人工的な減速になり、水膜の乾湿判定(cell_ok)の切り替わりで減速が
+        ! 一度に外れてハイドログラフの跳ねになる(tutorials/chichibu Step 3 の 232 min)。3 はこの
+        ! 減速だけを消し、他のリンクの水の運動量は持ち込まない(面のセルへの全流入リンクの流量で
+        ! 重み付けした平均を風上値にする旧 2 は持ち込むので、河岸の段差をまたぐ交換リンクへ本流の
+        ! 運動量が注入されて横流入の水路が深くなり、渦・壁の検定も悪くした。2026-11-07 廃止。§100)
         if (qc >= 0) then
-          if (opt%f_advection_donor == 2) call inflow_face_value(i, j, k, 1.0, ue, ubf, okf)
-          if (okf) then
-            ubc = ubf
-          else if (donor_ok(i - din(k), j - djn(k), donor_rw)) then
+          if (donor_ok(i - din(k), j - djn(k), donor_rw)) then
             ubc = face_value(um, ue, umm, far_ok(i - 2 * din(k), j - 2 * djn(k)))
             if (opt%f_advection_donor == 3) then
               wsh = donor_share(i, j, 9 - k)      ! 面のセル c と線 k の供給元 c − d(c の 9 − k 近傍)
@@ -286,14 +276,10 @@ subroutine adv_prepare_mc(p, g, s, sx, tx)
         else
           ubc = face_value(ue, um, up, far_ok(in + din(k), jn + djn(k)))
         end if
-        okf = .false.
         if (qn >= 0) then
           ubn = face_value(ue, up, um, far_ok(i - din(k), j - djn(k)))
         else
-          if (opt%f_advection_donor == 2) call inflow_face_value(in, jn, k, -1.0, ue, ubf, okf)
-          if (okf) then
-            ubn = ubf
-          else if (donor_ok(in + din(k), jn + djn(k), donor_rw)) then
+          if (donor_ok(in + din(k), jn + djn(k), donor_rw)) then
             ubn = face_value(up, ue, upp, far_ok(in + 2 * din(k), jn + 2 * djn(k)))
             if (opt%f_advection_donor == 3) then
               wsh = donor_share(in, jn, k)        ! 面のセル n と線 k の供給元 n + d(n の k 近傍)
@@ -376,109 +362,12 @@ subroutine adv_prepare_mc(p, g, s, sx, tx)
 
 contains
 
-  ! セル (ci, cj) から kk 近傍(1..8)へ向かう ENC エッジの法線流速(流出が正)。uvk の 8 方向版
-  ! (ke8/sgn8 で 5..8 を向かいのセルのスロットに写す。確保範囲外は 0、側方 Neumann の辺の
-  ! 外は uvk と同じ鏡像)。f_advection_donor = 2 の inflow_face_value が使う(§100)
-  pure function uvk8(ci, cj, kk) result(u)
-    integer, intent(in) :: ci, cj, kk
-    real :: u
-    integer :: ei, ej, mi, mj
-    mi = ci
-    mj = cj
-    if (bcs%have_neumann) then
-      ei = ci + din(kk)
-      ej = cj + djn(kk)
-      if (ei < 1 .or. ei > g%nx .or. ej < 1 .or. ej > dcp%ny_g) call mirror_cell(ci, cj, mi, mj)
-    end if
-    ei = mi + die(kk)
-    ej = mj + dje(kk)
-    if (ei < 0 .or. ei > ubound(sx%uv, 2) .or. ej < dcp%jsh - 1 .or. ej > dcp%jeh) then
-      u = 0.0
-    else
-      u = sgn8(kk) * sx%uv(ke8(kk), ei, ej)
-    end if
-  end function
-
-  ! 流入面の風上値(f_advection_donor = 2。developer.md §100)。面のセル (ci, cj)(面 c なら c、
-  ! 面 n なら n)へ、辺 e 以外のリンク l から実際に入る実流量 Q_l(qlk。流入が正)を重みに、
-  ! 各リンクの水の k̂ 成分 ũ_l の u_e からの偏差を平均する:
-  !   ū = u_e + Σ_l w_l Q_l (ũ_l − u_e) / Σ_l Q_l
-  !   - 集合: 流れの向き σk̂(sig = +1: 面 c、水は +k̂ へ。−1: 面 n、水は −k̂ へ)の上流側半平面
-  !     から入るリンク(ê_l·σk̂ > 0。ê_l は供給元 d から面のセルへ向く単位ベクトル)。横(直交)・
-  !     下流側からのリンクは分母にも入れない(横から入る水の運動量の欠損は側方面の規則が担う。
-  !     1 次元の流れで NE 辺に対する NW リンクが外れても、残る W・SW が同じ値なので恒等性は
-  !     保たれる)。辺 e 自身は面のセルの下流側なので自動的に外れる。線 k のリンクも同じ扱いで、
-  !     その ũ_l は従来の線 k の MUSCL 値に一致する。乾いた・薄い供給元は Q_l が小さく寄与が
-  !     消えるので、cell_ok(h ≥ dd)の二値は結果に効かない
-  !   - ũ_l: リンク l 自身の線上で、面のセルへ向かう速さ s_up(= −uv_l)、その上流のリンク
-  !     s_upup、線の続きのリンク s_dn から従来と同じ MUSCL(face_value)で面値 f_l を作り、
-  !     リンクの水の速度ベクトルが供給元 d の流量ベクトル (m, n)_d に平行とみなして k̂ 成分へ
-  !     射影する: ũ_l = f_l·((m,n)_d·k̂)/((m,n)_d·ê_l)(運動量の射影。|射影| は
-  !     |(m,n)_d|/((m,n)_d·ê_l) ≤ 2 で頭打ち。供給元の流量がほぼ 0 か ê_l 成分がないときは
-  !     リンクに沿う水として f_l·(ê_l·k̂))。「向きを変えても速さを保つ」換算は斜めの辺で
-  !     一様流の恒等性を壊す(x 方向の一様流で NE 辺に u が注入される)ので採らない
-  !   - w_l: 供給元の流向 d̂ が σk̂ から 45° 以内なら 1、90° で 0 のランプ
-  !     min(1, √2·max(0, d̂·σk̂))。供給元の流向が横向きに近いリンクの寄与を連続に弱める
-  !     (90° 屈曲の角のセルの斜めの辺などで効く。1 次元の斜めリンクは供給元が k̂ と 45° で 1)
-  !   - 一様流(任意の向き)では全リンクで ũ_l = (u,v)·k̂ = u_e。1 次元(y 一様)の流れでは
-  !     斜めリンクの線上 MUSCL が軸の MUSCL と同じ x の標本点を持ち、射影の係数 √2 で軸の値に
-  !     戻るので、従来の線 k の MUSCL 値に一致する(dambreak の中央行の Stoker の指標は不変)
-  !   - ステンシルは従来と同じ範囲(面 n の upup = 行 j−3 = jsh−1、面 c の upup = 行 j+2 ≤ jeh。
-  !     リンク l の線上の upup は面のセルから 2 歩で、線 k と同じ深さ)。読むのは uv(エッジ幅 2
-  !     の交換済み)・mn(qlk)・s%m・s%n(セル幅 2)・g%x・g%sw だけで、通信は増やさない
-  !   - 流出面には使わない(S&D の流儀 = 運動量の持ち出しは検査体積自身の風上値。流出面にも
-  !     掛けて面の値を一価にすると、下流セルの横からの遅い水に持ち出しが引かれ、検査体積ごとに
-  !     「輸入で払い、輸出で戻す」が連鎖して横流入の水路が亜臨界化した。§100)
-  pure subroutine inflow_face_value(ci, cj, kk, sig, ue0, ub, ok)
-    integer, intent(in) :: ci, cj, kk
-    real, intent(in) :: sig, ue0
-    real, intent(out) :: ub
-    logical, intent(out) :: ok
-    integer :: l, di, dj
-    real :: ql, ssum, msum, cosk, sup, supp, sdn, fl, md, nd, den, mag, proj, spd, ut, wdir
-    ssum = 0.0
-    msum = 0.0
-    do l = 1, 8
-      di = ci + din(l)
-      dj = cj + djn(l)
-      if (di < lbound(s%m, 1) .or. di > ubound(s%m, 1) .or. dj < dcp%jsh .or. dj > dcp%jeh) cycle
-      if (g%x(di,dj) <= 0) cycle
-      if (g%sw(di,dj) > 0) cycle                 ! 海セルは運動量を供給しない(§68.35)
-      cosk = -(geo%n8x(l) * geo%n8x(kk) + geo%n8y(l) * geo%n8y(kk))   ! ê_l·k̂
-      if (sig * cosk <= 1.0e-6) cycle            ! 上流側半平面から入るリンクだけ
-      ql = -qlk(ci, cj, l)                       ! 面のセルへの流入が正
-      if (ql <= 0.0) cycle
-      sup = -uvk8(ci, cj, l)                     ! リンク d → 面のセルの速さ(面のセルへ向かい正)
-      supp = -uvk8(di, dj, l)                    ! その上流のリンク(d の l 近傍 → d)
-      sdn = uvk8(ci, cj, 9 - l)                  ! 線の続き(面のセル → 反対側)
-      fl = face_value(sup, sdn, supp, far_ok(di + din(l), dj + djn(l)))
-      md = s%m(di,dj)
-      nd = s%n(di,dj)
-      mag = sqrt(md * md + nd * nd)
-      den = -(md * geo%n8x(l) + nd * geo%n8y(l))  ! 供給元の流量の ê_l 成分
-      if (mag > 0.0 .and. den > 1.0e-3 * mag) then
-        spd = min(mag / den, 2.0)
-        proj = (md * geo%n8x(kk) + nd * geo%n8y(kk)) / den
-        proj = max(-spd, min(spd, proj))
-        ut = fl * proj
-        wdir = min(1.0, max(0.0, sqrt(2.0) * sig * (md * geo%n8x(kk) + nd * geo%n8y(kk)) / mag))
-      else
-        ut = fl * cosk
-        wdir = min(1.0, max(0.0, sqrt(2.0) * sig * cosk))
-      end if
-      ssum = ssum + ql
-      msum = msum + wdir * ql * (ut - ue0)
-    end do
-    ok = ssum > 0.0
-    ub = ue0
-    if (ok) ub = ue0 + msum / ssum
-  end subroutine
-
   ! 線 k の供給元の重み(f_advection_donor = 3。developer.md §100)。面のセル (ci, cj) へ線 k 上の
   ! 供給元(kk 近傍)から入る実流量 Q_k と、面のセルへの 8 リンクの流入の最大 Q_max の比
   ! r = Q_k/Q_max に対し w = min(1, r/ε)(ε = p_adv_donor_eps)。面のセルへの流入がなければ 1。
-  ! 読むのは qlk(時刻 n の mn。エッジ幅 2 の交換済み)だけで、inflow_face_value(2)が読む範囲に
-  ! 含まれる。海セルからの流入も最大に数える(海セルは運動量を供給しないので、寄せる側 = u_e で安全)。
+  ! 読むのは面のセル(行 j − 1・j)の 8 リンクの qlk(時刻 n の mn。エッジ幅 2 の交換済み)だけで、
+  ! エッジの行は j − 2 .. j(MPI の np = 1・2・4 が逐次とバイト一致。§100)。海セルからの流入も最大に
+  ! 数える(海セルは運動量を供給しないので、寄せる側 = u_e で安全)。
   ! 割り算は Q_k < εQ_max のときだけ行う(商は 1 未満)。Q_max が正でも極小のとき εQ_max が 0 に
   ! アンダーフローして 0 で割る(-ffpe-trap=zero で停止。test/slopefric の計算開始直後)ことを避ける。
   ! 値は min(1, Q_k/(εQ_max)) と同じ

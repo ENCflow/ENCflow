@@ -72,21 +72,19 @@
                             !   (0: wet cells on the edge line = default, 1: on
                             !   edges between channel cells the streamwise
                             !   donors are channel cells only; needs fn_rw,
-                            !   2: inflow faces weighted by the fluxes of all
-                            !   links that carry water into the face cell; no
-                            !   channel mask needed, 3: only on faces where the
-                            !   link of the donor on the edge line carries less
-                            !   than p_adv_donor_eps times the largest inflow
-                            !   link of the face cell, the upwind value is pulled
-                            !   toward the edge's own velocity; no channel mask
-                            !   needed). 1 avoids the artificial loss when the
-                            !   donor on the edge line falls on a flooded valley
-                            !   cell; 2 and 3 avoid the artificial brake of a
-                            !   thin bank film acting as donor and the jump of
-                            !   the recession limb when its wet/dry test flips.
-                            !   2 degrades the lateral-inflow, vortex and wall
-                            !   tests, so use 3 first against the jumps
-                            !   (users_guide/advection.md section 4.4)
+                            !   3: only on faces where the link of the donor on
+                            !   the edge line carries less than p_adv_donor_eps
+                            !   times the largest inflow link of the face cell,
+                            !   the upwind value is pulled toward the edge's own
+                            !   velocity; no channel mask needed). 1 avoids the
+                            !   artificial loss when the donor on the edge line
+                            !   falls on a flooded valley cell; 3 avoids the
+                            !   artificial brake of a thin bank film acting as
+                            !   donor and the jump of the recession limb when
+                            !   its wet/dry test flips. 2 (weighted by the
+                            !   fluxes of all inflow links) was removed (the run
+                            !   stops if it is set. users_guide/advection.md
+                            !   section 4.4)
   !f_dry_head_cap = 1       ! cap the edge depth toward a dry cell by the
                             !   energy head eta + u_n^2/2g - z_receiver
                             !   (0: off, 1: on = default). Water cannot climb
