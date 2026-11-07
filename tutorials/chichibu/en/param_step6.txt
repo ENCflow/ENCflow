@@ -41,7 +41,7 @@
 ! ENC computation settings
 !======================================================================
 &list_enc
-  f_advection_donor = 2      ! upwind momentum donors of the advection term (2: weighted by the inflow link fluxes)
+  f_advection_donor = 3      ! upwind momentum donors of the advection term (3: treat donors carrying almost no water as neutral)
 /
 
 !======================================================================

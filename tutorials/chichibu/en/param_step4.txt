@@ -2,7 +2,7 @@
 ! The Japanese file is the master copy; edit it first.
 !======================================================================
 !
-! Step 4: Tuning the numerical settings (upwind donors of the advection term, f_advection_donor = 2)
+! Step 4: Tuning the numerical settings (upwind donors of the advection term, f_advection_donor = 3)
 !
 !======================================================================
 ! System parameter settings
@@ -38,7 +38,7 @@
 ! ENC computation settings
 !======================================================================
 &list_enc
-  f_advection_donor = 2      ! upwind momentum donors of the advection term (2: weighted by the inflow link fluxes)
+  f_advection_donor = 3      ! upwind momentum donors of the advection term (3: treat donors carrying almost no water as neutral)
 /
 
 !======================================================================
