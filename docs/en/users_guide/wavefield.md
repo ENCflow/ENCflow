@@ -64,8 +64,11 @@ All that is needed is **an incident side** and **the offshore waves** (`wf_hm0`,
 **The direction is the direction the waves travel to** (not the direction they come
 from). It is measured counterclockwise from the x axis (east): a wave travelling north
 is 90°, one travelling west is 180°. This is the same convention as `wave_dir` in the
-[sediment and morphology chapter](geomorph.md), and differs by 180° from the
-"coming from" (nautical) convention of SWAN and XBeach.
+[sediment and morphology chapter](geomorph.md). From an angle θ_n in the nautical
+convention of SWAN, XBeach and others (the coming-from direction measured clockwise from
+north), convert with θ = 270° − θ_n (on a grid whose x axis points east; a wave coming
+from the west has θ_n = 270° and θ = 0°). Adding or subtracting 180° alone does not give
+the right angle.
 
 **The period is a single representative period.** `wf_trep` (and the period column of
 `wf_val`) is used as is for σ = 2π/T in the dispersion relation. For random waves the

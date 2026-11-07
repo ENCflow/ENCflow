@@ -545,11 +545,11 @@
     {
       "source": "docs/users_guide/wavefield.md",
       "target": "docs/en/users_guide/wavefield.md",
-      "source_sha256": "69e11b4a844d1938eca19dd42ed15bc771d5cbffedf199ff18be4fdcfb240c7c",
-      "target_sha256": "d1b51d8673ec2f66983334d0eafb67556c4d195ae7e98c84ae760f8bd7a482d6",
-      "reviewer": "Claude (Claude Code session; the changed delta references (example link, renamed README sections) compared in both languages; the rest is unchanged from the recorded version)",
+      "source_sha256": "b25f474eb5ec142ee49427dc70a1da6942a4df1d7b847149b5bcdd177d6b07c5",
+      "target_sha256": "17dc99b920a0ff41842ef3dcf258b06bc4190cb17bc8f5b82eac9f1842e33be5",
+      "reviewer": "Claude (Claude Code session; compared the changed paragraph on the direction convention (nautical conversion theta = 270 deg - theta_n instead of a 180 deg difference) in both languages; the rest is unchanged from the recorded version)",
       "method": "assistant",
-      "reviewed_on": "2026-11-02"
+      "reviewed_on": "2026-11-07"
     },
     {
       "source": "docs/users_guide/wavefield_models.md",
@@ -824,11 +824,11 @@
     {
       "source": "examples/List_samples/list_wavefield.txt",
       "target": "examples/List_samples/en/list_wavefield.txt",
-      "source_sha256": "1f783e9a8c7f0c0eb4b45cdab9aacdb6e895da93c3a01cfaf530e77697788683",
-      "target_sha256": "5784f5c6560c8d57aa4f96f1bc747ad9aa81131cc09117f56601aeb184f2215f",
-      "reviewer": "Claude (Claude Code session; full-text content and lexical review, no model execution)",
+      "source_sha256": "bd83d5647d94639a7cf6b74c23132fcd183c0067efdb5da6ebb039b9d7db50c1",
+      "target_sha256": "edc5e377366a88d17711f9c39ea0b7a68a1268d27c6932a2253c3e4c731724a0",
+      "reviewer": "Claude (Claude Code session; compared the changed header comment on the direction convention in both languages; effective input and the rest unchanged)",
       "method": "assistant",
-      "reviewed_on": "2026-10-28"
+      "reviewed_on": "2026-11-07"
     },
     {
       "source": "examples/List_samples/list_wq.txt",
