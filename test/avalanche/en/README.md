@@ -6,7 +6,7 @@
 
 A check of the **dense-flow snow avalanche** configuration that borrows the
 sediment-flow model ("application to avalanches" in developer.md §28.8; the
-avalanche paragraph of users_guide/geomorph.md). It combines the equivalent
+[snow avalanches](../../../docs/en/users_guide/geomorph_applications.md#5-snow-avalanches-dense-flow) on the applications page of the user's guide). It combines the equivalent
 fluid with the Voellmy resistance law (`f_dbres = 4`) and the
 **velocity-proportional entrainment** E = δe|V| that scours the snow along the
 path (`f_dbed = 4`; entrainment only, deposition by stopping `f_dbstop`), and

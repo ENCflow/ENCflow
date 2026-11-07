@@ -212,7 +212,7 @@ stock `wst` is not written as a field.
   (releases carry no wood). **Culverts and pumps** transfer water only,
   so wood accumulates upstream of such works (= upper-bound estimate of
   trapping; usable for with/without two-case comparisons in the same
-  manner as [representing sabo facilities](geomorph.md)).
+  manner as [representing sabo facilities](geomorph_applications.md#6-sabo-facilities-sediment-retarding-basins-check-dams)).
 - Save/restore preserves `hd`, `wd`, `wst` and `zref` in
   `driftwood.dat`. **The `Wd9999` maximum and cumulative process volumes
   in the CSV are not restored**. Do not read whole-period statistics or

@@ -200,7 +200,7 @@
                            !   4:速度比例連行 E = δe・|V| — 雪崩・岩屑なだれの
                            !   走路連行(連行のみ。堆積は f_dbstop。連行可能層は
                            !   sd(雪崩では走路の雪厚)。C >= db_cmin のセルのみ。
-                           !   users_guide/geomorph.md の雪崩の項))
+                           !   users_guide/geomorph_applications.md の雪崩))
   db_delte = 0.0007        ! 侵食速度係数 δe(f_dbed=1,3。校正パラメータ)
   db_deltd = 0.05          ! 堆積速度係数 δd(f_dbed=1,3。校正パラメータ)
   f_dbres = 1              ! 抵抗則(0:マニングのみ, 1:クーロン+マニング合成,
