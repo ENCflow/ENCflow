@@ -9,11 +9,11 @@ shapes it leads to. Schematic, not solver output.
 Generate: python docs/figs/make_guide_figs.py geomorph_dissol
 """
 import numpy as np
-from _geomorph import (canvas, header, panel, rule, box, poly, dim, badge, columns, run,
+from _geomorph import (canvas, header, panel, rule, box, poly, dim, badge, columns, run, chart,
                        text, block, line, arrow, INK, MUTED, RULE,
                        SOIL, WATER, BLUE, SED, GREEN, TALUS, ORANGE, PANEL)
 
-H = 1010
+H = 1432
 LIME, CONDUIT = '#c9cfd6', '#7fa7c9'
 
 T = {
@@ -39,6 +39,16 @@ T = {
     'share': '壁へ p\n(接触幅 L_k の比で配る)\n床へ 1 − p',
     'auto': 'dissol_lat = −1(推奨):\np = h ΣL / (h ΣL + Δx²)\n= 濡れ面の面積比。深い湛水ほど\n壁の分け前が増える',
     'p0': 'p = 0: 吸込穴のセルが幅 1 セルの深い穴になる', 'p1': 'p > 0: 集水の大きい窪みほど広く深い漏斗形(窪みの併合 = コックピット、塔の裾の後退)',
+    'd': '(d) 溶食速度と岩に入る水の量',
+    'dx': '溶かす水の量 (m/yr)', 'dy': '溶食速度 (mm/kyr)',
+    'ceq': 'dissol_ceq = {} mg/L', 'ceqd': 'dissol_ceq = 100 mg/L(既定)',
+    'lit': 'カルストの化学的削剥の文献域 20〜100 mm/kyr',
+    'd_note': 'w = (dissol_ceq / dissol_rho) × 水量(dissol_src で選んだ浸透・涵養・降雨などの量)。dissol_rho = 2500 kg/m³。既定の 100 mg/L では涵養 1 m/yr で 40 mm/kyr(●)。',
+    'e': '(e) 側方溶食の自動の配分 dissol_lat = −1',
+    'ex': '湛水深 / 格子幅  h / Δx', 'ey': '岩壁へ配る割合 p',
+    'w1': '直線の岩壁沿い(壁が軸 1・斜め 2)', 'w2': '行き止まり(軸 3・斜め 4)', 'w3': '穴(8 近傍すべてが壁)',
+    'ex1': 'h = 5 m、Δx = 10 m',
+    'e_note': 'p = h ΣL / (h ΣL + Δx²)。ΣL は壁の接触幅の和(軸 Δx、斜め 0.586 Δx)。深い湛水、壁に囲まれたセルほど壁の分け前が大きい。',
     'foot': '流下に伴う飽和、陥没ドリーネ・洞窟の幾何は扱わない。深さ 10 m 級のドリーネには 100 kyr 級の地形時間(morfac × リスタート連鎖)が要る。',
  },
  'en': {
@@ -63,6 +73,16 @@ T = {
     'share': 'to the walls: p\n(split by contact widths L_k)\nto the floor: 1 − p',
     'auto': 'dissol_lat = −1 (recommended):\np = h ΣL / (h ΣL + Δx²)\n= wetted-area ratio;\ndeeper ponds give the walls\na larger share',
     'p0': 'p = 0: a sink cell becomes a deep one-cell hole', 'p1': 'p > 0: wider, deeper funnels where the catchment is larger (merging = cockpits; tower feet retreat)',
+    'd': '(d) Dissolution rate and the water entering the rock',
+    'dx': 'dissolving water (m/yr)', 'dy': 'dissolution rate (mm/kyr)',
+    'ceq': 'dissol_ceq = {} mg/L', 'ceqd': 'dissol_ceq = 100 mg/L (default)',
+    'lit': 'literature range of karst chemical denudation 20–100 mm/kyr',
+    'd_note': 'w = (dissol_ceq / dissol_rho) × water (the infiltration, recharge or rain selected by dissol_src). dissol_rho = 2500 kg/m³. The default 100 mg/L gives 40 mm/kyr for 1 m/yr of recharge (the dot).',
+    'e': '(e) Automatic split of lateral dissolution, dissol_lat = −1',
+    'ex': 'ponded depth / cell size  h / Δx', 'ey': 'share to the walls p',
+    'w1': 'along a straight wall (walls: 1 axial, 2 diagonal)', 'w2': 'dead end (3 axial, 4 diagonal)', 'w3': 'pit (all 8 neighbours are walls)',
+    'ex1': 'h = 5 m, Δx = 10 m',
+    'e_note': 'p = h ΣL / (h ΣL + Δx²), where ΣL sums the contact widths of the walls: Δx for an axial and 0.586 Δx for a diagonal neighbour. Deeper ponds and cells enclosed by walls give the walls a larger share.',
     'foot': 'No saturation along the flow path and no collapse dolines or cave geometry. A 10 m deep doline needs ~100 kyr of landform time (morfac × restart chains).',
  },
 }
@@ -168,6 +188,32 @@ def panel_lateral(ax, t):
     line(ax, list(zip(1200 + xx, yb + yy)), INK, 1.1, z=6)
 
 
+def panel_rates(fig, ax, t):
+    y0 = 964
+    panel(ax, 35, y0, t['d'])
+    r = np.linspace(0, 2.0, 200)
+    c = chart(fig, 110, y0 + 42, 620, 230, (0, 2.0), (0, 250), xlabel=t['dx'], ylabel=t['dy'])
+    band = c.axhspan(20, 100, color='#e7f0e3', lw=0, label=t['lit'])
+    for ceq, col, lw in [(50, BLUE, 1.4), (100, SED, 2.2), (300, ORANGE, 1.4)]:
+        lab = t['ceqd'] if ceq == 100 else t['ceq'].format(ceq)
+        c.plot(r, ceq * 1e-3 / 2500.0 * r * 1e6, color=col, lw=lw, label=lab)
+    c.plot([1.0], [40.0], 'o', color=SED, ms=5, zorder=5)
+    c.legend(loc='upper left', fontsize=7.4, frameon=False, labelspacing=0.3)
+    block(ax, 35, y0 + 342, t['d_note'], 735, size=7.9)
+    # (e) automatic wall share.
+    panel(ax, 805, y0, t['e'])
+    x = np.linspace(0, 1.5, 300)
+    ld = 2.0 / (2.0 + np.sqrt(2.0))
+    c = chart(fig, 880, y0 + 42, 620, 230, (0, 1.5), (0, 1.0), xlabel=t['ex'], ylabel=t['ey'])
+    for (na, nd), key, col in [((1, 2), 'w1', BLUE), ((3, 4), 'w2', SED), ((4, 4), 'w3', ORANGE)]:
+        sl = na + nd * ld
+        c.plot(x, sl * x / (sl * x + 1), color=col, lw=2.0 if key == 'w3' else 1.6, label=t[key])
+    c.axvline(0.5, color=MUTED, lw=.8, ls=':')
+    c.text(0.52, 0.97, t['ex1'], fontsize=7.4, color=MUTED, va='top')
+    c.legend(loc='lower right', fontsize=7.4, frameon=False, labelspacing=0.3)
+    block(ax, 805, y0 + 342, t['e_note'], 735, size=7.9)
+
+
 def build(lang):
     t = T[lang]
     fig, ax = canvas(H)
@@ -178,7 +224,10 @@ def build(lang):
     rule(ax, 35, 1540, 634)
     panel_lateral(ax, t)
     rule(ax, 35, 1540, 944)
-    block(ax, 35, 954, t['foot'], 1505, size=8.1, color=MUTED)
+    panel_rates(fig, ax, t)
+    line(ax, [(787, 960), (787, 1364)], RULE, .8)
+    rule(ax, 35, 1540, 1370)
+    block(ax, 35, 1380, t['foot'], 1505, size=8.1, color=MUTED)
     return fig
 
 

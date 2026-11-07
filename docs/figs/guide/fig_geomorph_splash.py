@@ -14,7 +14,7 @@ from _geomorph import (canvas, header, panel, rule, box, poly, badge, chart, gro
                        text, block, line, arrow, INK, MUTED, RULE,
                        SOIL, ROCK, WATER, BLUE, SED, GREEN, ORANGE, PANEL)
 
-H = 1190
+H = 1590
 
 T = {
  'ja': {
@@ -47,6 +47,14 @@ T = {
     'lin': 'spl_ksat = 0: 1 + c κ', 'sat': 'spl_ksat = κ_s: 1 + c κ/(1 + κ/κ_s)', 'asym': '1 + c κ_s に飽和',
     'd_note': '崖の基部(硬層の上面)のような強い凹部で増幅を有界にし、段(ベンチ)を残す。'
               'κ ≪ κ_s では従来どおりで、谷間隔の選択則は変わらない。図は c κ_s = 10。',
+    'e': '(e) 侵食速度と勾配・凹地形の増幅(既定 spl_kr = 0.0005、spl_kt = 0.05、spl_h = 1)',
+    'ex': '勾配 S', 'ey': '侵食速度 / 降雨強度  E / P',
+    'e0': '凹地形の増幅なし(spl_ca = spl_cb = 0 または κ = 0)', 'e1': 'spl_cb κ = 1(例: spl_cb = 10 m、κ = 0.1 /m)',
+    'e4': 'spl_cb κ = 4', 'eh2': 'spl_h = 2(増幅なし)', 'ekr': '雨滴項 spl_kr だけ',
+    'cross': 'S = spl_kr / spl_kt = 0.01\nより緩い所は雨滴項が主',
+    'e_items': ['E は地表到達降雨強度 P に比例する(雨が止めば侵食も止まる)。図の縦軸は雨量 1 m あたりの侵食深(m)と読める。',
+                '急斜面ではリル項 spl_kt S^h が雨滴項の数十〜数百倍になり、凹地形の増幅(1 + spl_cb κ)が谷を深める。',
+                'spl_h を大きくすると、緩い斜面の侵食が弱まり急斜面に集中する。'],
     'foot': '係数の既定・校正の考え方は本文と sediment.md §6。谷形成の対照(固結度)は f_slide との併用(test/splashslide)。',
  },
  'en': {
@@ -79,6 +87,14 @@ T = {
     'lin': 'spl_ksat = 0: 1 + c κ', 'sat': 'spl_ksat = κ_s: 1 + c κ/(1 + κ/κ_s)', 'asym': 'saturates at 1 + c κ_s',
     'd_note': 'Bounds the amplification in strong concavities, e.g. at the foot of a cliff on top of a hard layer, so that benches survive. '
               'Unchanged for κ ≪ κ_s, so the valley-spacing selection is the same. Drawn with c κ_s = 10.',
+    'e': '(e) Erosion rate versus slope and amplification (spl_kr = 0.0005, spl_kt = 0.05, spl_h = 1)',
+    'ex': 'slope S', 'ey': 'erosion / rain intensity  E / P',
+    'e0': 'no concavity amplification (spl_ca = spl_cb = 0 or κ = 0)', 'e1': 'spl_cb κ = 1 (e.g. spl_cb = 10 m, κ = 0.1 /m)',
+    'e4': 'spl_cb κ = 4', 'eh2': 'spl_h = 2 (no amplification)', 'ekr': 'splash term spl_kr only',
+    'cross': 'below S = spl_kr / spl_kt = 0.01\nthe splash term dominates',
+    'e_items': ['E is proportional to the rain reaching the ground P (no rain, no erosion). The vertical axis reads as the erosion depth (m) per metre of rain.',
+                'On steep slopes the rill term spl_kt S^h is tens to hundreds of times the splash term, and the concavity amplification (1 + spl_cb κ) deepens valleys.',
+                'A larger spl_h weakens erosion on gentle slopes and concentrates it on steep ones.'],
     'foot': 'Defaults and calibration of the coefficients: the text and sediment.md §6. Contrast of valley formation by consolidation: combine with f_slide (test/splashslide).',
  },
 }
@@ -192,6 +208,28 @@ def panel_ksat(fig, ax, t):
     block(ax, 805, 1052, t['d_note'], 735, size=8.4)
 
 
+def panel_rate(fig, ax, t):
+    y0 = 1170
+    panel(ax, 35, y0, t['e'])
+    S = np.logspace(-3, np.log10(2.0), 300)
+    kr, kt = 0.0005, 0.05
+    c = chart(fig, 110, y0 + 46, 620, 250, (1e-3, 2.0), (1e-4, 1.0), xlabel=t['ex'], ylabel=t['ey'])
+    c.set_xscale('log'); c.set_yscale('log')
+    c.plot(S, kr + kt * S, color=SED, lw=2.2, label=t['e0'])
+    c.plot(S, kr + kt * 2 * S, color=ORANGE, lw=1.6, label=t['e1'])
+    c.plot(S, kr + kt * 5 * S, color=ORANGE, lw=1.6, ls='--', label=t['e4'])
+    c.plot(S, kr + kt * S ** 2, color=BLUE, lw=1.4, ls='-.', label=t['eh2'])
+    c.axhline(kr, color=MUTED, lw=.9, ls=':')
+    c.text(1.1e-3, kr * 0.75, t['ekr'], fontsize=7.4, color=MUTED, va='top')
+    c.plot([kr / kt, kr / kt], [1e-4, 4e-2], color=MUTED, lw=.8, ls=':')
+    c.text(kr / kt * 1.12, 2.1e-4, t['cross'], fontsize=7.4, color=MUTED, va='center')
+    c.legend(loc='upper left', fontsize=7.2, frameon=False, labelspacing=0.25)
+    y = y0 + 50
+    for s_ in t['e_items']:
+        a = block(ax, 805, y, '• ' + s_, 735, size=8.0)
+        y += 21 * (a.get_text().count('\n') + 1) + 6
+
+
 def build(lang):
     t = T[lang]
     fig, ax = canvas(H)
@@ -200,10 +238,13 @@ def build(lang):
     panel_spacing(fig, ax, t)
     rule(ax, 35, 1540, 724)
     line(ax, [(787, 105), (787, 1140)], RULE, .8)
+    line(ax, [(787, 1206), (787, 1536)], RULE, .8)
     panel_strata(ax, t)
     panel_ksat(fig, ax, t)
     rule(ax, 35, 1540, 1148)
-    block(ax, 35, 1158, t['foot'], 1505, size=8.2, color=MUTED)
+    panel_rate(fig, ax, t)
+    rule(ax, 35, 1540, 1544)
+    block(ax, 35, 1554, t['foot'], 1505, size=8.2, color=MUTED)
     return fig
 
 

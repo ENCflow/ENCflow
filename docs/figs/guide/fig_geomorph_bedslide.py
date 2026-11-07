@@ -11,11 +11,11 @@ The Phi line in (b) is evaluated from the drawn profile with r = 0.5
 Generate: python docs/figs/make_guide_figs.py geomorph_bedslide
 """
 import numpy as np
-from _geomorph import (canvas, header, panel, rule, box, poly, dim, cross, water_px, ground_px, run,
+from _geomorph import (canvas, header, panel, rule, box, poly, dim, cross, water_px, ground_px, run, chart,
                        text, block, line, arrow, INK, MUTED, RULE,
                        SOIL, ROCK, WATER, BLUE, SED, MOVING, GREEN, ORANGE, PANEL)
 
-H = 1240
+H = 1612
 
 T = {
  'ja': {
@@ -50,6 +50,15 @@ T = {
     'd_items': ['f_bsvplunge = 1: 混合体が底層の終端速度まで減速してから引き渡す(高速突入の運動量は混合体のまま水柱へ)',
                 'f_bsplunge = 1: 静水時の水深(初期水面 − 現在の z)で判定(突入で一時的に離水した汀線帯でも引き渡す)',
                 'bs_tstop = 10〜15 s: 突入直後の汀線帯の一時的な失速で誤って固定しない'],
+    'e': '(e) 速度と地盤の勾配(陸上と、平らな水面の下)',
+    'ex': '地盤の勾配 |∇z|', 'ey': '底層の速度 V (m/s)',
+    'v_land': '陸上(h = 0): V = √(ξ hb (|∇z| − μ))',
+    'v_sub': '水中(h ≥ hb、平らな水面): V = √(ξ hb (1 − r)(|∇z| − μ))',
+    'lin': '降伏の近傍(S − μ b < bs_eps_s)は線形化',
+    'e_items': ['水中でも動き出す勾配は陸上と同じ μ(駆動の勾配と摩擦がともに 1 − r 倍になる)。速さは √(1 − r) 倍(r = 0.5 で約 0.71 倍)。',
+                '慣性なしなので、勾配が μ を下回ったセルではその場で止まりにかかる(停止の固定は bs_vstop・bs_tstop)。',
+                '降伏の近傍では V を勾配の超過分に比例させ(幅 bs_eps_s)、サブサイクルの刻みが細かくなりすぎるのを防ぐ。'],
+    'e_par': '図の値: hb = 5 m、μ = bs_mu = 0.15、ξ = bs_xi = 500 m/s²、r = 0.5(bs_rho = 2000)、bs_eps_s = 0.02',
     'foot': '間隙分の扱いは f_dbwet(0: 表面が上がる、1: 水柱から埋没、2: 地下貯留へ)。水の抗力・付加質量は ξ に含め、非静水圧・分散性は扱わない。',
  },
  'en': {
@@ -77,13 +86,22 @@ T = {
     'c': '(c) How to give the collapse depth D (fn_bsinit)',
     'ok': 'slip plane reaching the toe', 'ng': 'constant-depth box',
     'okn': 'Depth tapers to 0 toward the toe;\nthe mass slides out along the slope.',
-    'ngn': 'Once emptied it becomes a hole with a\ndownstream wall: an inertia-free flow\ndriven by the surface gradient cannot\nclimb steps (same in the debris-flow model).',
+    'ngn': 'Once emptied it becomes a hole with a\ndownstream wall: an inertia-free flow\ndriven by the surface gradient cannot\nclimb steps, as in the debris-flow model.',
     'd': '(d) Hand-over from the mixture  bs_hplunge > 0 (f_debris = 1)',
     'mix': 'on land: mixture h + hs (with inertia)', 'pl': 'cells with ponded depth ≥ bs_hplunge:\nhs → hb (bulk hs/(1 − λ))',
     'bed': 'under water: moving layer hb (inertia-free)',
     'd_items': ['f_bsvplunge = 1: hand over only after the mixture slows to the layer\'s terminal speed (fast-entry momentum stays in the mixture and goes to the water)',
                 'f_bsplunge = 1: judge by the still-water depth (initial surface − current z), so shoreline cells briefly exposed by the entry still hand over',
                 'bs_tstop = 10–15 s: avoids false fixing during the brief stall of the shoreline zone right after entry'],
+    'e': '(e) Speed versus ground slope (on land and under a flat water surface)',
+    'ex': 'ground slope |∇z|', 'ey': 'layer speed V (m/s)',
+    'v_land': 'on land (h = 0): V = √(ξ hb (|∇z| − μ))',
+    'v_sub': 'under water (h ≥ hb, flat surface): V = √(ξ hb (1 − r)(|∇z| − μ))',
+    'lin': 'linearized near yield (S − μ b < bs_eps_s)',
+    'e_items': ['Under water the layer starts to move at the same slope μ as on land (driving slope and friction are both scaled by 1 − r); the speed is √(1 − r) times smaller (about 0.71 for r = 0.5).',
+                'Without inertia, a cell whose slope falls below μ starts to stop at once (fixing to the terrain follows bs_vstop and bs_tstop).',
+                'Near yield, V is made proportional to the excess slope (width bs_eps_s) so that the subcycle step does not become too small.'],
+    'e_par': 'Values: hb = 5 m, μ = bs_mu = 0.15, ξ = bs_xi = 500 m/s², r = 0.5 (bs_rho = 2000), bs_eps_s = 0.02',
     'foot': 'The pore part follows f_dbwet (0: surface rises, 1: buried from the water column, 2: to groundwater storage). Water drag and added mass are lumped into ξ; no non-hydrostatic pressure or dispersion.',
  },
 }
@@ -230,6 +248,36 @@ def panel_handover(ax, t):
         y += 22 * (a.get_text().count('\n') + 1) + 2
 
 
+def bed_speed(slope, hb=5.0, mu=0.15, xi=500.0, r=0.5, eps=0.02, submerged=False):
+    """Inertia-free Voellmy speed of m_geomorph_bedslide for a planar slope (flat water surface)."""
+    s = np.asarray(slope, float)
+    S = (1 - r) * s if submerged else s
+    b = (1 - r) if submerged else 1.0
+    sy = S - mu * b
+    v = np.where(sy < eps, np.sqrt(xi * hb / eps) * sy, np.sqrt(xi * hb * np.maximum(sy, 0.0)))
+    return np.where(sy > 0, v, 0.0)
+
+
+def panel_speed(fig, ax, t):
+    y0 = 1180
+    panel(ax, 35, y0, t['e'])
+    sl = np.linspace(0, 0.6, 1200)
+    c = chart(fig, 110, y0 + 42, 620, 260, (0, 0.6), (0, 36), xlabel=t['ex'], ylabel=t['ey'])
+    c.plot(sl, bed_speed(sl), color=SED, lw=2.0, label=t['v_land'])
+    c.plot(sl, bed_speed(sl, submerged=True), color=BLUE, lw=2.0, label=t['v_sub'])
+    c.axvline(0.15, color=MUTED, lw=.8, ls=':')
+    c.text(0.155, 20, 'μ', fontsize=9, color=MUTED, va='center')
+    c.annotate(t['lin'], xy=(0.165, 4.0), xytext=(0.27, 3.0), fontsize=7.6, color=MUTED, va='center',
+               arrowprops=dict(arrowstyle='-|>', color=MUTED, lw=.8))
+    c.legend(loc='upper left', fontsize=7.4, frameon=True, facecolor='white', edgecolor='none', framealpha=1,
+             labelspacing=0.3)
+    y = y0 + 44
+    for s_ in t['e_items']:
+        a = block(ax, 805, y, '• ' + s_, 735, size=8.0)
+        y += 21 * (a.get_text().count('\n') + 1) + 6
+    block(ax, 805, y + 6, t['e_par'], 735, size=7.8, color=MUTED)
+
+
 def build(lang):
     t = T[lang]
     fig, ax = canvas(H)
@@ -241,7 +289,9 @@ def build(lang):
     panel_geometry(ax, t)
     panel_handover(ax, t)
     rule(ax, 35, 1540, 1160)
-    block(ax, 35, 1172, t['foot'], 1505, size=8.1, color=MUTED)
+    panel_speed(fig, ax, t)
+    rule(ax, 35, 1540, 1552)
+    block(ax, 35, 1562, t['foot'], 1505, size=8.1, color=MUTED)
     return fig
 
 

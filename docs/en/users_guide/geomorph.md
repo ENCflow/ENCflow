@@ -171,6 +171,10 @@ under uplift U, the soil depth is H_ss = sd* ln(W0/U) and the cross-slope
 curvature of the hillslope is −U/D_eff (D_eff = D (1 − e^{−H_ss/H_c})); C2 of
 [test/hillsoil](../../../test/hillsoil/en/README.md) checks this.
 
+![Equations of hillslope creep and soil production: depth-dependent factor, steady soil depth, explicit stability](../../figs/geomorph_creep_en.png)
+
+Panel (a) is the factor of depth-dependent creep: with soil three times H_c deep it is almost the linear diffusion, thinner soil moves more slowly, and nothing moves from bare rock. Panel (b) balances soil production against uplift; the crossing is the steady soil depth H_ss = H* ln(W0/U) (no steady soil depth exists when the uplift is at least the bare-rock production W0). Panel (c) is the upper limit of dts from the explicit stability condition; halving the cell size gives a quarter of the limit. The curves are the equations for illustrative values, not computed results.
+
 **Outputs for this section**: landform change in `Z0001...` (`f_out_z=1`) and `Sd0001...`. The process is slow, so match the morphological acceleration morfac with `dt_file` ([Output and monitoring](#output-and-monitoring)).
 
 ## Bedload (f_fluvial)
@@ -247,6 +251,10 @@ are printed at start-up (literature check in developer.md §84.12).
 is never carried onto a neighbouring
 cell whose ground is above the water surface (a bank face), and a dry cell
 never supplies bed load (§84.2).
+
+![Behaviour of the bedload equations: transverse slope in bends, resistance partition on steep gravel beds](../../figs/geomorph_fluvial_en.png)
+
+Panel (a) plots the transverse slope r/γ at which the cross-channel bedload of the direction correction above (direction t̂ + r n̂ − γ∇z) vanishes in a uniform bend, against the ratio of depth to radius of curvature: the higher the Shields number (the smaller γ), the steeper the balancing slope (default μs, μk and N*; capped by sec_rmax). Transverse slopes beyond the dashed repose angle collapse if f_repose is used. Panel (b) is the factor φ of f_taupart in the table and (c) the resulting bedload capacity ratio: in flows as shallow as the gravel the capacity drops strongly. The curves are the equations for illustrative values; the actual bed shape results from the interaction with the flow.
 
 **Bank retreat and collapse (bank erosion, angle of repose).** A bank face
 (a neighbouring cell above the water surface) retreats with
@@ -348,6 +356,10 @@ exchange with the bed is reduced in proportion to the width.
 The minimal input to "just carry some turbidity" is `f_suspend = 1` and
 `sd0` (grain size defaults to fine sand 0.2 mm; the settling velocity is
 derived automatically by the Rubey formula).
+
+![Behaviour of the suspended-sediment equations: settling velocity (Rubey) and equilibrium concentration (f_esform)](../../figs/geomorph_suspend_en.png)
+
+Panel (a) is the settling velocity of the Rubey formula, about 2.5 cm/s for the default fine sand of 0.2 mm. At clay sizes the Rubey value is one to two orders of magnitude below the effective settling of mud flocs (10⁻⁴–10⁻³ m/s), so give susp_wf directly for mud ("Mud (cohesive)" below). Panel (b) compares the two equilibrium-concentration formulas: Itakura–Kishi (f_esform = 2) is 0 until the upward flux exceeds settling and rises at a larger τ* for coarser grains. The curves are the formulas of the source code for illustrative values, not computed results.
 
 ### Ledger of fines in the bed (f_bedfines)
 
@@ -562,7 +574,7 @@ represent this.
 
 ![Dry-slope erosion: where each term acts, valley feedback, valley-spacing length, strata](../../figs/geomorph_splash_en.png)
 
-Panel (a) shows where the two terms of the erosion rate act (only the splash term on a plateau, the rill term added on steep slopes, amplification in concavities) and the valley feedback. Panel (b) is the linear-stage growth rate: with spl_lc = 0 the shortest grid wavelength grows fastest, with spl_lc = ℓ a spacing of about 4.4ℓ is selected (curves of the expressions in the spl_lc entry of the table below). Panel (c) shows horizontal strata spl_strata and panel (d) the saturation spl_ksat. The sections are illustrative, not computed results.
+Panel (a) shows where the two terms of the erosion rate act (only the splash term on a plateau, the rill term added on steep slopes, amplification in concavities) and the valley feedback. Panel (b) is the linear-stage growth rate: with spl_lc = 0 the shortest grid wavelength grows fastest, with spl_lc = ℓ a spacing of about 4.4ℓ is selected (curves of the expressions in the spl_lc entry of the table below). Panel (c) shows horizontal strata spl_strata, panel (d) the saturation spl_ksat, and panel (e) the erosion rate against slope for the default coefficients: the splash term dominates on slopes gentler than 0.01 and the rill term on steeper ones, and the concavity amplification multiplies the rill term by (1 + spl_cb κ). The sections are illustrative, not computed results.
 
 | Parameter | Default | Meaning |
 |---|---|---|
@@ -795,6 +807,10 @@ formulation, not on appearances.
   hazard map without disturbance by collapse mobilization. Both modes require
   `f_debris = 1`; other enabled terrain processes can still change the state.
 
+![Behaviour of the debris-flow and slope-failure equations: Voellmy steady speed, infinite-slope safety factor](../../figs/geomorph_debris_en.png)
+
+Panel (a) draws the steady speed of the Voellmy law on a slope for the μ and ξ of the recommended values at the end of the chapter: μ sets the slope at which the flow stops (tan θ = μ) and ξ the speed on steep slopes (the speed grows with the square root of the flow depth). Panel (b) is the safety factor of the slope stability test f_slide: as the water table rises and the saturated thickness hw approaches the soil depth sd, the smallest failing slope for the default strength (c' = 0, φ = 30°) drops from 30° to 15°. The curves are the equations for illustrative values, not computed results.
+
 **Hazard outputs** - output switches in &list_sysparam provide
 statistical fields representing sediment-hazard intensity (see also
 the table in [Input and output](io.md)): `f_out_fs` (safety factor Fs
@@ -999,7 +1015,7 @@ the edges).
 
 ![Moving bed layer: bookkeeping, driving head and speed, collapse-depth geometry, hand-over from the mixture](../../figs/geomorph_bedslide_en.png)
 
-Panel (a) shows two cells before and after moving Δ of the layer: h is kept, so the water surface also moves by Δ. Panel (b) gives the driving head Φ = z + r h (Φ = z on land; under a flat water surface its gradient is (1 − r) times that of z) and the speed, (c) the shape of the collapse depth fn_bsinit ("How to give the failure surface" below) and (d) the hand-over from the mixture. The sections are illustrative, not computed results.
+Panel (a) shows two cells before and after moving Δ of the layer: h is kept, so the water surface also moves by Δ. Panel (b) gives the driving head Φ = z + r h (Φ = z on land; under a flat water surface its gradient is (1 − r) times that of z) and the speed, (c) the shape of the collapse depth fn_bsinit ("How to give the failure surface" below), (d) the hand-over from the mixture and (e) the speed against the ground slope on land and under a flat water surface: the layer starts to move at the same slope μ in both and moves √(1 − r) times as fast under water. The sections are illustrative, not computed results.
 
 | Parameter | Default | Meaning |
 |---|---|---|
@@ -1130,7 +1146,7 @@ phi0) in `fn_wave` (&list_wave) and every landform update does the following.
 
 ![Wave-driven longshore transport: the four steps of one landform update](../../figs/geomorph_wave_en.png)
 
-Panel (a) is an illustrative delta shoreline showing the surf zone, the angle α between the wave direction and the shoreward normal (opposite to the offshore normal n̂), the shadow behind dry land upwind (exposure 0), the river-mouth rule wave_vmax and the direction of the alongshore flux (shadow and flux evaluated for the drawn shoreline with the steps above). Panel (b) is the angle dependence of the deep-water CERC formula: waves at angles below that of the maximum flux (about 42°) smooth shoreline bumps, waves at higher angles make bumps grow.
+Panel (a) is an illustrative delta shoreline showing the surf zone, the angle α between the wave direction and the shoreward normal (opposite to the offshore normal n̂), the shadow behind dry land upwind (exposure 0), the river-mouth rule wave_vmax and the direction of the alongshore flux (shadow and flux evaluated for the drawn shoreline with the steps above). Panel (b) is the angle dependence of the deep-water CERC formula: waves at angles below that of the maximum flux (about 42°) smooth shoreline bumps, waves at higher angles make bumps grow. Panel (d) relates the breaking depth H_b/γ to the offshore wave height and period (place any sea mask well offshore of it) and (e) gives the flux factor behind a submerged bar.
 
 | parameter | default | meaning |
 |---|---|---|
@@ -1517,7 +1533,7 @@ form anywhere".
 
 ![Limestone dissolution: amount of dissolving water, update of z and sd, lateral dissolution](../../figs/geomorph_dissol_en.png)
 
-Panel (a) shows the choice of dissolving water dissol_src and the sink term, (b) the dissolved thickness w and the update of z and sd (residue fraction; talus dissolves first), and (c) the split of lateral dissolution dissol_lat explained after the table below, with the different hollows it produces. The sections are illustrative, not computed results.
+Panel (a) shows the choice of dissolving water dissol_src and the sink term, (b) the dissolved thickness w and the update of z and sd (residue fraction; talus dissolves first), (c) the split of lateral dissolution dissol_lat explained after the table below, with the different hollows it produces, (d) the dissolution rate against the amount of water and the solubility (40 mm/kyr for the default 100 mg/L and 1 m/yr of recharge; literature range 20–100 mm/kyr), and (e) the share p to the walls with dissol_lat = −1. The sections are illustrative, not computed results.
 
 | Parameter | Default | Meaning |
 |---|---|---|

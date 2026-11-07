@@ -14,7 +14,7 @@ from _geomorph import (canvas, header, panel, rule, box, poly, chart, run,
                        text, block, line, arrow, INK, MUTED, RULE,
                        SOIL, WATER, BLUE, SED, GREEN, ORANGE, PANEL)
 
-H = 980
+H = 1384
 DIR = np.radians(30.0)                       # travel direction, CCW from east (north = 90 deg)
 WV = np.array([np.cos(DIR), -np.sin(DIR)])   # pixel frame (y down)
 
@@ -38,6 +38,14 @@ T = {
     'opts': ['wave_vmax: 可動河床の河口では必須(流速が超えるセルは陰)',
              'f_wave_shadow = 1: 水没砂州の陰の流束を (h_天端 / h_トラフ)^{5/2} 倍',
              '乾いたセルへは運ばない(乾いた浜の後退は f_repose)。海域マスクのセルは源にも砕波帯にもならない'],
+    'd': '(d) 砕波水深 H_b/γ と沖波',
+    'dx': '沖波の有義波高 H₀ (m)', 'dy': '砕波水深 H_b/γ (m)', 'tp': 'T = {:g} s',
+    'ex05': 'H₀ = 0.5 m、T = 5 s → 0.86 m(test/wave_shore)',
+    'd_note': 'H_b = 0.39 g^{1/5} (T H₀²)^{2/5}(Komar & Gaughan 1972)、γ = 0.78。これより浅い湿潤セルが砕波帯。海域マスクを使うなら、この水深より十分沖に置く。',
+    'e': '(e) 水没砂州の陰の流束の倍率 (h_c/h_t)^{5/2}(f_wave_shadow = 1)',
+    'ex': '砂州の天端水深 / トラフの水深  h_c / h_t', 'ey': '流束の倍率',
+    'half': 'h_c/h_t = 0.5 → 0.18',
+    'e_note': '砂州を通った波は γ h_c までの高さしか残らないとみなし、浅水のエネルギー流束 ∝ H^{5/2} の比で陰の列全体の流束を減らす(回折なし)。単調に浅くなる浜では 1(無効時と同じ)。',
     'foot': '回折・岸沖輸送・セットアップ・離岸流・多方向スペクトルは扱わない。波を解いて過程の漂砂を求めるのは f_wfsed(沿岸の波浪場)。',
  },
  'en': {
@@ -59,6 +67,14 @@ T = {
     'opts': ['wave_vmax: required at mobile-bed river mouths (faster cells are shadowed)',
              'f_wave_shadow = 1: flux behind submerged bars × (h_crest/h_trough)^{5/2}',
              'No transport onto dry cells (dry beach retreat is f_repose). Sea-mask cells are neither sources nor surf zone'],
+    'd': '(d) Breaking depth H_b/γ and offshore waves',
+    'dx': 'offshore significant wave height H₀ (m)', 'dy': 'breaking depth H_b/γ (m)', 'tp': 'T = {:g} s',
+    'ex05': 'H₀ = 0.5 m, T = 5 s → 0.86 m (test/wave_shore)',
+    'd_note': 'H_b = 0.39 g^{1/5} (T H₀²)^{2/5} (Komar & Gaughan 1972), γ = 0.78. Wet cells shallower than this form the surf zone. Place any sea mask well offshore of this depth.',
+    'e': '(e) Flux factor (h_c/h_t)^{5/2} behind a bar (f_wave_shadow = 1)',
+    'ex': 'bar crest depth / trough depth  h_c / h_t', 'ey': 'flux factor',
+    'half': 'h_c/h_t = 0.5 → 0.18',
+    'e_note': 'Waves passing a bar keep at most the height γ h_c, so the flux of the whole shadowed row is reduced by the ratio of the shallow-water energy flux ∝ H^{5/2} (no diffraction). It is 1 on a monotonically shoaling beach (same as off).',
     'foot': 'No diffraction, cross-shore transport, setup, rip currents or directional spectra. Solving the waves for process-based transport is f_wfsed (coastal wave field).',
  },
 }
@@ -191,6 +207,30 @@ def panel_steps(ax, t):
         y += 21 * (a.get_text().count('\n') + 1)
 
 
+def panel_charts(fig, ax, t):
+    y0 = 948
+    panel(ax, 35, y0, t['d'])
+    h0 = np.linspace(0, 4, 300)
+    c = chart(fig, 110, y0 + 42, 620, 200, (0, 4), (0, 6), xlabel=t['dx'], ylabel=t['dy'])
+    for tp, col, lw in [(4, GREEN, 1.4), (8, SED, 2.0), (12, BLUE, 1.4)]:
+        hb = 0.39 * 9.8 ** 0.2 * (tp * h0 ** 2) ** 0.4 / 0.78
+        c.plot(h0, hb, color=col, lw=lw, label=t['tp'].format(tp))
+    hb5 = 0.39 * 9.8 ** 0.2 * (5 * 0.25) ** 0.4 / 0.78
+    c.plot([0.5], [hb5], 'o', color=ORANGE, ms=5, zorder=5)
+    c.annotate(t['ex05'], xy=(0.5, hb5), xytext=(1.0, 0.45), fontsize=7.4, color=ORANGE,
+               arrowprops=dict(arrowstyle='-|>', color=ORANGE, lw=.8), va='center')
+    c.legend(loc='upper left', fontsize=7.4, frameon=False, labelspacing=0.3)
+    block(ax, 35, y0 + 304, t['d_note'], 735, size=7.9)
+    panel(ax, 805, y0, t['e'])
+    r = np.linspace(0, 1, 200)
+    c = chart(fig, 880, y0 + 42, 620, 200, (0, 1), (0, 1.02), xlabel=t['ex'], ylabel=t['ey'])
+    c.plot(r, r ** 2.5, color=SED, lw=2.0)
+    c.plot([0.5], [0.5 ** 2.5], 'o', color=ORANGE, ms=5, zorder=5)
+    c.annotate(t['half'], xy=(0.5, 0.5 ** 2.5), xytext=(0.18, 0.5), fontsize=7.6, color=ORANGE,
+               arrowprops=dict(arrowstyle='-|>', color=ORANGE, lw=.8), va='center')
+    block(ax, 805, y0 + 304, t['e_note'], 735, size=7.9)
+
+
 def build(lang):
     t = T[lang]
     fig, ax = canvas(H)
@@ -200,7 +240,10 @@ def build(lang):
     panel_cerc(fig, ax, t)
     panel_steps(ax, t)
     rule(ax, 35, 1540, 928)
-    block(ax, 35, 938, t['foot'], 1505, size=8.1, color=MUTED)
+    panel_charts(fig, ax, t)
+    line(ax, [(787, 944), (787, 1318)], RULE, .8)
+    rule(ax, 35, 1540, 1324)
+    block(ax, 35, 1334, t['foot'], 1505, size=8.1, color=MUTED)
     return fig
 
 
