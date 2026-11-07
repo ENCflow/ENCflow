@@ -3,7 +3,7 @@
 [English](en/README.md)
 
 土砂流動モデルを援用した**流れ型雪崩**の構成(developer.md §28.8 の
-「雪崩への適用」、users_guide/geomorph.md の雪崩の項)の検定です。
+「雪崩への適用」、[ユーザーガイドの適用例の雪崩](../../docs/users_guide/geomorph_applications.md#5-雪崩流れ型))の検定です。
 Voellmy 抵抗則の等価流体(`f_dbres = 4`)に、走路の雪を削り込む
 **速度比例連行** E = δe|V|(`f_dbed = 4`。連行のみ、堆積は停止 `f_dbstop`)を
 組み合わせ、発生区の破断で流動化した雪が走路の雪を取り込んで成長し、

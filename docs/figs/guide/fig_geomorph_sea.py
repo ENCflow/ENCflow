@@ -12,7 +12,7 @@ from _geomorph import (canvas, header, panel, rule, box, poly, cross, water_px, 
                        text, block, line, arrow, INK, MUTED, RULE,
                        SOIL, WATER, BLUE, SED, MOVING, GREEN, ORANGE, PANEL)
 
-H = 800
+H = 826
 MASK = '#9fc1de'
 
 T = {
@@ -33,7 +33,7 @@ T = {
                 ('沿岸漂砂(fn_wave)', '源にも砕波帯にもならず、平滑化では陸(水深 0)として扱う')],
     'shore': '汀線', 'sea': '海', 'land': '陸',
     'dep': '海底への堆積', 'pile': '前面に溜まる', 'out': '系外へ',
-    'foot': '海セルの z は利用者が置けない(読み込み時に 0。fn_tide ありでは毎ステップ 潮位 − hsea0)。潮位を与えるときは沖の辺に海域マスクの帯を置く(河口デルタの項)。',
+    'foot': '海セルの z は利用者が置けない(読み込み時に 0。fn_tide ありでは毎ステップ 潮位 − hsea0)。潮位を与えるときは沖の辺に海域マスクの帯を置く(適用例の河口デルタ)。',
  },
  'en': {
     'title': 'Representing the sea and where sediment goes  |  Ordinary cells + initial level versus the sea mask fn_sw',
@@ -52,7 +52,7 @@ T = {
                 ('longshore transport (fn_wave)', 'neither source nor surf zone; treated as land (depth 0) when smoothing')],
     'shore': 'shoreline', 'sea': 'sea', 'land': 'land',
     'dep': 'deposits on the seabed', 'pile': 'piles at the front', 'out': 'leaves',
-    'foot': 'The z of sea cells cannot be set by the user (0 at input; with fn_tide reset every step to tide − hsea0). To impose tides, put a band of sea mask at the offshore edge (see the river-delta item).',
+    'foot': 'The z of sea cells cannot be set by the user (0 at input; with fn_tide reset every step to tide − hsea0). To impose tides, put a band of sea mask at the offshore edge (see river-mouth deltas on the applications page).',
  },
 }
 

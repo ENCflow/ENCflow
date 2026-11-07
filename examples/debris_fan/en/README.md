@@ -435,8 +435,8 @@ cells, as a guide.
 - **Vertical structure**: the bulge at the front, the concentration of boulders and three-dimensional
   flow are not represented (a single depth-integrated mixture layer).
 - **Erosion and sediment control structures**: no check dams or other countermeasures are placed
-  (for how to place them, see the "erosion and sediment control structures" paragraph of
-  [Sediment and landform change](../../../docs/en/users_guide/geomorph.md) and the example
+  (for how to place them, see [sabo facilities](../../../docs/en/users_guide/geomorph_applications.md#6-sabo-facilities-sediment-retarding-basins-check-dams) on the
+  applications page of sediment and landform change and the example
   [ashfall_lahar](../../ashfall_lahar/en/README.md)).
 
 ## Notes

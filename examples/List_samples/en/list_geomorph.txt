@@ -280,8 +280,8 @@
                            !   avalanches (entrainment only; deposition via
                            !   f_dbstop. The entrainable layer is sd (for
                            !   avalanches, the snow depth along the path). Cells
-                           !   with C >= db_cmin only. See the avalanche
-                           !   paragraph of users_guide/geomorph.md))
+                           !   with C >= db_cmin only. See snow avalanches
+                           !   in users_guide/geomorph_applications.md))
   db_delte = 0.0007        ! erosion rate coefficient delta_e (f_dbed=1,3;
                            !   calibration parameter)
   db_deltd = 0.05          ! deposition rate coefficient delta_d (f_dbed=1,3;

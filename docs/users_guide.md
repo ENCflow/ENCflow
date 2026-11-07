@@ -65,6 +65,7 @@ ENCflow の設定と実行のリファレンスです。初めての方はまず
 - [土砂・地形変化](users_guide/geomorph.md)(&list_geomorph)— 掃流砂・浮遊砂・斜面浸食・土石流・長期地形発達・蛇行河道の発達(側岸侵食・定着・頸部短絡)
   - [土砂輸送と斜面・長期地形過程の解説](users_guide/sediment.md) — クリープ・流砂量式・Exner・浮遊砂の E-D・斜面浸食・乾式侵食・風化隆起・MORFAC の式と既定値の根拠(土砂・地形変化の補足)
   - [土石流・斜面崩壊・動く底層の解説](users_guide/massflow.md) — 単層混合体・5 つの抵抗則・侵食堆積則・曲率項・安全率・動く底層の式と参考にした他モデル(土砂・地形変化の補足)
+  - [土砂・地形変化の適用例](users_guide/geomorph_applications.md) — 津波堆積物・河口デルタ・火山流動・ラハール・雪崩・砂防施設の組み方
 - [流木](users_guide/driftwood.md)(&list_driftwood)— 流木化(水理的流失・侵食連行)・輸送・堆積(ラスタ場の概算)
   - [流木モデルの解説](users_guide/driftwood_models.md) — 3 台帳の移送則・喫水・面積基準と材積収支・実務値の出典・既定値の根拠(流木の補足)
 - [家屋破壊・瓦礫](users_guide/bldgdebris.md)(&list_bldgdebris)— 氾濫流・流木による木造家屋の破壊・瓦礫の輸送・堆積・空隙率への帰還(ラスタ場の概算)
