@@ -100,6 +100,6 @@ V 字集水域の出口流量。Δx = 100 m と 10 m で波形が変わります
 
 ## 関連文書
 
-- developer.md §68.18(風上供給元の河道限定 f_advection_donor と chichibu の診断)、§68.20(段差での散逸と運動量交換の機構。階段斜面の追試)
+- developer.md §68.18(風上供給元の河道限定 f_advection_donor = 1 と chichibu の診断。1 は 2026-11-07 に廃止。§100)、§68.20(段差での散逸と運動量交換の機構。階段斜面の追試)
 - [test/dambreak](../dambreak/)(段波の跳躍条件)、[test/bendloss](../bendloss/)(階段状 1 セル水路)
 - [docs/users_guide/swflow.md](../../docs/users_guide/swflow.md) — `f_advection_scheme`、`f_govequation`

@@ -433,17 +433,18 @@ on outflow $`u_e`$ (no contribution).
   is outside the domain or invalid, that face degrades to first-order
   upwind (reading 0 would give $`r \gg 1 \to \psi = 2`$, anti-diffusion, and
   the first edge leaving a prescribed boundary would blow up; §69.9).
-- **Donors limited to channel cells (`f_advection_donor = 1`).** On edges
-  between channel cells of the channel mask (`fn_rw`), the donors of the
-  flow-direction faces are limited to channel cells (a face whose donor is a
-  non-channel cell takes $`\bar u = u_e`$). This prevents the artificial loss
-  that accumulates at bends, confluences and irregular two-cell-wide reaches
-  when the upwind edge on line $`k`$ falls onto a flooded valley-floor or
-  hillslope cell whose slow water becomes the momentum donor. Lateral faces
-  are not affected (the deceleration by lateral inflow from the hillslopes
-  is physical and stays). It also cuts the momentum exchange between the
-  main channel and the flooded valley floor, so the default is 0; judge its
-  validity against observations (§68.18).
+- **(Removed) Donors limited to channel cells (formerly `f_advection_donor = 1`).**
+  This option limited the donors of the flow-direction faces to channel
+  cells on edges between channel cells of the channel mask (against the
+  artificial loss when the donor on line $`k`$ falls on a flooded valley-floor
+  cell at bends and confluences and its slow water decelerates the flow;
+  §68.18). Valley-floor donors carrying little water become neutral under 3
+  below as well, so most of its effect is contained in 3 (on the 100 m grid
+  of Chichibu, combining 1 and 3 gives only 3% more than 3 alone); it could
+  not be combined with 3, and whether cutting the momentum exchange between
+  the main channel and the flooded valley floor is right was never verified.
+  It was therefore removed on 2026-11-07. Setting it stops the run; use 3
+  (developer.md §100, in Japanese).
 - **(Removed) Donors weighted by the fluxes of all inflow links (formerly `f_advection_donor = 2`).**
   This option took the upwind value of a flow-direction face as the average
   over all links that actually carry water into the face cell, weighted by
@@ -553,9 +554,9 @@ has the figures, tables and the list of derived cases).
   discontinuities: the default (3).
 - Rainfall runoff on a real DEM with a channel mask: 3 +
   `f_opening_dynamic = 3` + `f_dry_head_cap = 1` (the defaults). If the
-  result is later and smaller than observed, try `f_advection_donor = 1`.
-  If the recession limb of the hydrograph jumps or the result depends on
-  `dd`, use `f_advection_donor = 3` (§4.4).
+  result is later and smaller than observed, or the recession limb of the
+  hydrograph jumps or the result depends on `dd`, use
+  `f_advection_donor = 3` (§4.4).
   Roughness calibrated with scheme 1 needs recalibration.
 - Inundation, incised terrain and dam breaks without a channel mask: the
   defaults (3 + `f_opening_dynamic = 3`; until 2026-10-18 the 2 had to be
@@ -613,7 +614,7 @@ The labels in the Basis column are explained in [How to read the basis of a defa
 |---|---:|---|---|
 | f_advection_scheme | 3 | scheme of the advection term (1: cell-centre gradient, 2: conservative + first-order upwind, 3: conservative + MUSCL) | **verification case** bore position error +1.1% in [test/dambreak](../../../test/dambreak/en/README.md), depth ratio 0.992 with lateral inflow in [test/bendloss](../../../test/bendloss/en/README.md), grid convergence in [test/chichibu](../../../test/chichibu/en/README.md) (table above) |
 | p_adv_upwind_index | 0.5 | upwinding index of scheme 1 (0: central, 1: first-order upwind) | **empirical** halfway between central and first-order upwind. The bore lag grows with $`p`$ (§3) |
-| f_advection_donor | 0 | upwind donors of the flow-direction faces (1: limited to channel cells on edges between channel cells, 3: the upwind value is pulled toward u_e only on faces where the real flux of the line-k donor is below ε times the largest inflow link of the face cell; 2 was removed) | **method** off by default; 1 cuts the momentum exchange between the main channel and the flooded valley floor; 3 removes the artificial brake along the whole main channel so the flood wave becomes faster and larger (the lateral-inflow, vortex and wall tests stay the same as 0); judge either against observations (§4.4) |
+| f_advection_donor | 0 | upwind donors of the flow-direction faces (3: the upwind value is pulled toward u_e only on faces where the real flux of the line-k donor is below ε times the largest inflow link of the face cell; 1 and 2 were removed) | **method** off by default; 3 removes the artificial brake along the whole main channel so the flood wave becomes faster and larger (the lateral-inflow, vortex and wall tests stay the same as 0); judge it against observations (§4.4) |
 | p_adv_donor_eps | 0.1 | threshold ε of `f_advection_donor = 3` (real flux of the line-k donor / largest real flux of the links entering the face cell) | **empirical** in Chichibu the peak differs by less than 0.3% between 0.05 and 0.2 (§4.4) |
 | limiter $`\psi`$ (fixed) | van Leer | flux limiter of scheme 3 | **literature value** van Leer[^vanleer79]; inside Sweby's TVD region[^sweby84] (§4.3) |
 | f_scalar_scheme | 3 | face value of the scalar transport (suspended sediment, water quality, saline layer, driftwood, building debris) (1: first-order upwind, 3: link-wise MUSCL) | **verification case** measured numerical diffusion in [test/tracer](../../../test/tracer/en/README.md) (longitudinal D 1/3–1/5, lateral Dy 1/14; §7). First order is not the default because its numerical diffusion is proportional to the grid spacing |

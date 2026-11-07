@@ -113,9 +113,9 @@
     {
       "source": "docs/users_guide/advection.md",
       "target": "docs/en/users_guide/advection.md",
-      "source_sha256": "287cb563207e2a8f5b7411ea2d5107944bb2a817a56a78265a221d781fe25a18",
-      "target_sha256": "1a074b3ef26d4efbb9c89cf475c7cbb84bb63d116e6d527ca31280ef23989016",
-      "reviewer": "Claude (Claude Code session; f_advection_donor = 2 removed on 2026-11-07: option-2 description replaced by a removal note, option 3 made self-contained, its Courant-number caveat and the leftover small bumps added; Japanese and English edited together and read side by side)",
+      "source_sha256": "b0d471e47124fcd3e5a5fecc0577c48aa4133662bebefae5c774b64aae832839",
+      "target_sha256": "f3119ed46fb6cb13cbf9e7c54dd82ac196e53b870c73b653d739407971df5e1f",
+      "reviewer": "Claude (Claude Code session; f_advection_donor = 1 removed on 2026-11-07: option-1 description replaced by a removal note, usage guidance merged into option 3, table rows updated; Japanese and English edited together and read side by side)",
       "method": "assistant",
       "reviewed_on": "2026-11-07"
     },
@@ -473,9 +473,9 @@
     {
       "source": "docs/users_guide/swflow.md",
       "target": "docs/en/users_guide/swflow.md",
-      "source_sha256": "3af09952f4aba5c81ad5c8abba685ac1f935511772970770e8bfa8af15122877",
-      "target_sha256": "126d70812336441fa6e9853eb34ec0afba51847cf5ea7cc51b7798eef3623257",
-      "reviewer": "Claude (Claude Code session; f_advection_donor = 2 removed on 2026-11-07: option-2 description replaced by a removal note, option 3 made self-contained, its Courant-number caveat and the leftover small bumps added; Japanese and English edited together and read side by side)",
+      "source_sha256": "9c3dba966776bbdcd9a781f0ba934197ee29f8a620158d4d6ce494e9f8cc9313",
+      "target_sha256": "25c3c30f20925a8ae7eb301024e94d6ae60e4b2887c0d1d762b08df866753883",
+      "reviewer": "Claude (Claude Code session; f_advection_donor = 1 removed on 2026-11-07: option-1 description replaced by a removal note, usage guidance merged into option 3, table rows updated; Japanese and English edited together and read side by side)",
       "method": "assistant",
       "reviewed_on": "2026-11-07"
     },
@@ -635,9 +635,9 @@
     {
       "source": "examples/List_samples/list_enc.txt",
       "target": "examples/List_samples/en/list_enc.txt",
-      "source_sha256": "c57b847a058f1e275fe98b6e6a691abed31561a73434f97639a376bccf14f6b9",
-      "target_sha256": "4e11ee032546f1290fab12fb596914f92c47cc7dba9cdf9a9c4dca1c68ee8f47",
-      "reviewer": "Claude (Claude Code session; f_advection_donor = 2 removed on 2026-11-07: comment lines of the f_advection_donor example rewritten in both languages; values, identifiers and comment-out state unchanged)",
+      "source_sha256": "4784a95fdd90a860f83c8bea10fb42f4359f6dbb4bfe1cbebbfc4936e3b480e2",
+      "target_sha256": "af92e0a252a54852bed78a0f35bb1673e13ba1f853bd61648095d6a4f5b4d53b",
+      "reviewer": "Claude (Claude Code session; f_advection_donor = 1 removed on 2026-11-07: comment lines of the f_advection_donor example rewritten in both languages; values, identifiers and comment-out state unchanged)",
       "method": "assistant",
       "reviewed_on": "2026-11-07"
     },
@@ -2885,11 +2885,11 @@
     {
       "source": "test/chichibu/README.md",
       "target": "test/chichibu/en/README.md",
-      "source_sha256": "6ac1d087d43ccd00db771698b37ac52ee1e6bb4db43c35da19da3fefe806b794",
-      "target_sha256": "a06d581c8688b41ff9f46a86933b2b12ebd1acaf6f59a6c697bd48a4dd9b1aaf",
-      "reviewer": "Claude (Claude Code session; lateral-flux fix of the momentum-conservative advection, §68.42)",
+      "source_sha256": "a04d672866d34c59d9a5349032a2dd5bf79fe76b64d99ffccba6ad20bc314f16",
+      "target_sha256": "7281f28e561bf2ff07c0c653938461df70805b9555d2d0b2a3ed841395dc3ac8",
+      "reviewer": "Claude (Claude Code session; f_advection_donor = 1 removed on 2026-11-07: the derived case param_dyn_s3_donor1 replaced by param_dyn_s3_donor3 and the main-result sentence annotated (test/chichibu); the section 68.18 reference annotated (test/hillslope); Japanese and English edited together)",
       "method": "assistant",
-      "reviewed_on": "2026-11-01"
+      "reviewed_on": "2026-11-07"
     },
     {
       "source": "test/chichibu/data_chichibu/README.md",
@@ -3389,11 +3389,11 @@
     {
       "source": "test/hillslope/README.md",
       "target": "test/hillslope/en/README.md",
-      "source_sha256": "97c0d4eea2da928244c6d05d61e176f277aed4570f2ca484293435c72471870e",
-      "target_sha256": "da214e7b8176cca4ca534434aac9a91da5c6740ce577b615ab5d641f006ca84b",
-      "reviewer": "Claude (Claude Code session; full-text content and lexical review, no model execution)",
+      "source_sha256": "c4f0203ff91a60b7c8fe17dc1ec314cfdd9657580c10f09ff53e7abd6e5127d0",
+      "target_sha256": "c35311ba152d50da7c32c42b23402615734fc449aa1f2d3157dacf1439f1adfc",
+      "reviewer": "Claude (Claude Code session; f_advection_donor = 1 removed on 2026-11-07: the derived case param_dyn_s3_donor1 replaced by param_dyn_s3_donor3 and the main-result sentence annotated (test/chichibu); the section 68.18 reference annotated (test/hillslope); Japanese and English edited together)",
       "method": "assistant",
-      "reviewed_on": "2026-10-24"
+      "reviewed_on": "2026-11-07"
     },
     {
       "source": "test/hillslope/figs/plane.png",

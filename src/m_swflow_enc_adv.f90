@@ -162,11 +162,10 @@ subroutine adv_prepare_mc(p, g, s, sx, tx)
   real :: ubc, ubn, ubtp, ubtm
   real :: ta
   real :: wsh                       ! 線 k の供給元の重み(f_advection_donor = 3。§100)
-  logical :: donor_rw               ! このエッジの流下方向の供給元を河道セルに限るか(§68.18)
 
   !$omp parallel do schedule(dynamic) &
   !$omp private(i, j, k, in, jn, ie, je, hc, hn, hb, lme, ue, um, umm, up, upp, &
-  !$omp         qc, qn, qtp, qtm, ubc, ubn, ubtp, ubtm, ta, wsh, donor_rw)
+  !$omp         qc, qn, qtp, qtm, ubc, ubn, ubtp, ubtm, ta, wsh)
   do j = dcp%js, dcp%je
     do i = g%wx(1,j), g%wx(2,j)
       if (g%x(i,j) <= 0) cycle
@@ -221,12 +220,6 @@ subroutine adv_prepare_mc(p, g, s, sx, tx)
         ! gv(建物空隙率)は v1 と同様に乗じない(圧力項の ×gve と同じ流儀は
         ! 採らず、移流は輸送項として gv 非依存。§68.9)
         hb = (vol_depth(i, j) + vol_depth(in, jn)) / 2
-        ! 河道セル間のエッジでは流下方向の供給元を河道セルに限る
-        ! (f_advection_donor=1。屈曲・合流で線 k 上の風上エッジが浸水した
-        ! 谷底・斜面セルに落ちると、その遅い水が供給元になって運動量を失う
-        ! 人工損失の対策。側方面は対象外。§68.18)
-        donor_rw = .false.
-        if (opt%f_advection_donor == 1) donor_rw = g%rw(i,j) > 0 .and. g%rw(in,jn) > 0
 
         ! 線 k 上のエッジ流速(基準セルから k 方向。確保範囲外は 0)
         ue  = sx%uv(k,ie,je)
@@ -264,7 +257,7 @@ subroutine adv_prepare_mc(p, g, s, sx, tx)
         ! 重み付けした平均を風上値にする旧 2 は持ち込むので、河岸の段差をまたぐ交換リンクへ本流の
         ! 運動量が注入されて横流入の水路が深くなり、渦・壁の検定も悪くした。2026-11-07 廃止。§100)
         if (qc >= 0) then
-          if (donor_ok(i - din(k), j - djn(k), donor_rw)) then
+          if (cell_ok(i - din(k), j - djn(k))) then
             ubc = face_value(um, ue, umm, far_ok(i - 2 * din(k), j - 2 * djn(k)))
             if (opt%f_advection_donor == 3) then
               wsh = donor_share(i, j, 9 - k)      ! 面のセル c と線 k の供給元 c − d(c の 9 − k 近傍)
@@ -279,7 +272,7 @@ subroutine adv_prepare_mc(p, g, s, sx, tx)
         if (qn >= 0) then
           ubn = face_value(ue, up, um, far_ok(i - din(k), j - djn(k)))
         else
-          if (donor_ok(in + din(k), jn + djn(k), donor_rw)) then
+          if (cell_ok(in + din(k), jn + djn(k))) then
             ubn = face_value(up, ue, upp, far_ok(in + 2 * din(k), jn + 2 * djn(k)))
             if (opt%f_advection_donor == 3) then
               wsh = donor_share(in, jn, k)        ! 面のセル n と線 k の供給元 n + d(n の k 近傍)
@@ -475,24 +468,6 @@ contains
     integer :: mi, mj
     call mirror_cell(ci, cj, mi, mj)
     h = s%h(mi,mj)
-  end function
-
-  ! 流下方向の風上供給元になれるか: cell_ok に加え、河道セル間のエッジでは
-  ! 河道セルに限る(f_advection_donor=1。§68.18)。側方面の供給元は対象外
-  ! (斜面からの横流入の運動量吸い込みは物理なので残す)。
-  ! drw(= 並列ループの private 変数 donor_rw)は必ず引数で受ける: 内部手続き
-  ! のホスト結合はスレッドの private 複製ではなく共有の元変数(未初期化)を
-  ! 読む(2026-10-03 の実バグ。§8)
-  pure function donor_ok(ci, cj, drw) result(ok)
-    integer, intent(in) :: ci, cj
-    logical, intent(in) :: drw
-    logical :: ok
-    integer :: mi, mj
-    ok = cell_ok(ci, cj)
-    if (ok .and. drw) then
-      call mirror_cell(ci, cj, mi, mj)
-      ok = g%rw(mi,mj) > 0
-    end if
   end function
 
   ! 側方面(sgn = ±1 の t 側)の流入流速(1 次風上。供給元が壁・乾床・海なら u_e)。
@@ -726,7 +701,7 @@ contains
     real :: qc, qn, qtp, qtm
     real :: ubc, ubn, ubtp, ubtm
     real :: ta
-    logical :: donor_rw, ok
+    logical :: ok
 
     if (g%x(ci,cj) <= 0) return
     if (g%sw(ci,cj) > 0) return
@@ -753,8 +728,6 @@ contains
       hn = s%h(im,jm)
       if (hc < p%dd .and. hn < p%dd) cycle
       hb = (vol_depth(ci, cj) + vol_depth(im, jm)) / 2
-      donor_rw = .false.
-      if (opt%f_advection_donor == 1) donor_rw = g%rw(ci,cj) > 0 .and. g%rw(im,jm) > 0
 
       ! 線 k 上のエッジ流速(k 方向。枠外は鏡像)
       ue  = sgn8(k) * sx%uv(ke8(k),ie,je)
@@ -769,7 +742,7 @@ contains
 
       ! 流向面の風上化流速(adv_prepare_mc と同じ)
       if (qc >= 0) then
-        if (donor_ok(ci - din(k), cj - djn(k), donor_rw)) then
+        if (cell_ok(ci - din(k), cj - djn(k))) then
           ubc = face_value(um, ue, umm, far_ok(ci - 2 * din(k), cj - 2 * djn(k)))
         else
           ubc = ue
@@ -780,7 +753,7 @@ contains
       if (qn >= 0) then
         ubn = face_value(ue, up, um, far_ok(ci - din(k), cj - djn(k)))
       else
-        if (donor_ok(in + din(k), jn + djn(k), donor_rw)) then
+        if (cell_ok(in + din(k), jn + djn(k))) then
           ubn = face_value(up, ue, upp, far_ok(in + 2 * din(k), jn + 2 * djn(k)))
         else
           ubn = ue
@@ -947,19 +920,6 @@ contains
     integer :: mi, mj
     call mirror_cell(ci, cj, mi, mj)
     h = s%h(mi,mj)
-  end function
-
-  ! 流下方向の風上供給元になれるか(adv_prepare_mc と同じ。drw は引数で受ける)
-  pure function donor_ok(ci, cj, drw) result(ok)
-    integer, intent(in) :: ci, cj
-    logical, intent(in) :: drw
-    logical :: ok
-    integer :: mi, mj
-    ok = cell_ok(ci, cj)
-    if (ok .and. drw) then
-      call mirror_cell(ci, cj, mi, mj)
-      ok = g%rw(mi,mj) > 0
-    end if
   end function
 
   ! 斜めエッジ kk(1, 3, 6, 8)の sgn 側の側方面の開口率(adv_prepare_mc の axis_open と同じ。
