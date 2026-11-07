@@ -113,9 +113,9 @@
     {
       "source": "docs/users_guide/advection.md",
       "target": "docs/en/users_guide/advection.md",
-      "source_sha256": "5967f387ea53f0417f883d04f16a914c3c5361c2923ca6d89a53ae7ecf12920c",
-      "target_sha256": "b54ede1c4003159d3799e7d137bdf5368331475d244954f6486e5dc3f5a5f3e5",
-      "reviewer": "Claude (Claude Code session; option-3 limits updated on 2026-11-07 with the identified cause of the remaining jumps (wet/dry test of the lateral-face inflow velocity and opening) and the oscillation on narrow subgrid channels; Japanese and English edited together and read side by side)",
+      "source_sha256": "7e40d8e75d30228436893dd15287f95060d41ab9968ec59ea9c60f8b4926aa75",
+      "target_sha256": "e9ecadaa9e0bb5d2e82b01832de8a1141bb6f5b54b9313c0391224c4a0bd8afb",
+      "reviewer": "Claude (Claude Code session; option 3 extended on 2026-11-07 with the continuous wet/dry weight min(1, h/dd) of the lateral faces (parallel link and opening fraction), its effects and limits; Japanese and English edited together and read side by side)",
       "method": "assistant",
       "reviewed_on": "2026-11-07"
     },
@@ -473,9 +473,9 @@
     {
       "source": "docs/users_guide/swflow.md",
       "target": "docs/en/users_guide/swflow.md",
-      "source_sha256": "9c3dba966776bbdcd9a781f0ba934197ee29f8a620158d4d6ce494e9f8cc9313",
-      "target_sha256": "25c3c30f20925a8ae7eb301024e94d6ae60e4b2887c0d1d762b08df866753883",
-      "reviewer": "Claude (Claude Code session; f_advection_donor = 1 removed on 2026-11-07: option-1 description replaced by a removal note, usage guidance merged into option 3, table rows updated; Japanese and English edited together and read side by side)",
+      "source_sha256": "8bd42720cbc3ac660b197ad054ab718f4dbd3eed5bef2549709080ba94231f78",
+      "target_sha256": "c91d1228100a6407d1a36579ab43b1030b2220491b1061d9b4d1d4782ea0cb24",
+      "reviewer": "Claude (Claude Code session; option 3 extended on 2026-11-07 with the continuous wet/dry weight min(1, h/dd) of the lateral faces (parallel link and opening fraction), its effects and limits; Japanese and English edited together and read side by side)",
       "method": "assistant",
       "reviewed_on": "2026-11-07"
     },
@@ -635,9 +635,9 @@
     {
       "source": "examples/List_samples/list_enc.txt",
       "target": "examples/List_samples/en/list_enc.txt",
-      "source_sha256": "4784a95fdd90a860f83c8bea10fb42f4359f6dbb4bfe1cbebbfc4936e3b480e2",
-      "target_sha256": "af92e0a252a54852bed78a0f35bb1673e13ba1f853bd61648095d6a4f5b4d53b",
-      "reviewer": "Claude (Claude Code session; f_advection_donor = 1 removed on 2026-11-07: comment lines of the f_advection_donor example rewritten in both languages; values, identifiers and comment-out state unchanged)",
+      "source_sha256": "7aa3d49a6bb06c9abe298f93c21a32b362ffb43c940fa5990b29595899ae2a8f",
+      "target_sha256": "5a9000dde603a5fb7d3295c5990a933192e190b514541f05cb384be041dd68d0",
+      "reviewer": "Claude (Claude Code session; option 3 extended on 2026-11-07 with the continuous wet/dry weight min(1, h/dd) of the lateral faces (parallel link and opening fraction), its effects and limits; Japanese and English edited together and read side by side)",
       "method": "assistant",
       "reviewed_on": "2026-11-07"
     },

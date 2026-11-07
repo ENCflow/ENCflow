@@ -97,7 +97,8 @@ module m_swflow_enc
     integer :: f_scalar_scheme                ! スカラー輸送の移流スキーム (1: 1 次風上, 3: MUSCL。§78)
     integer :: f_advection_donor              ! 運動量保存形移流の風上供給元 (0:線 k 上の湿潤
                                             !   セル, 3:線 k の供給元の流量が面のセルへの
-                                            !   最大の流入リンクの ε 倍未満なら u_e へ寄せる
+                                            !   最大の流入リンクの ε 倍未満なら u_e へ寄せ、
+                                            !   側方面の乾湿判定を dd 未満で連続な重みに
                                             !   (§100)。1(河道セル間のエッジでは河道セルのみ。
                                             !   §68.18)と 2(流入面を全流入リンクの流量で
                                             !   重み付け)は 2026-11-07 に廃止)
@@ -1024,7 +1025,8 @@ subroutine m_swflow_enc_init(p, g, b, s)
   end if
   if (opt%f_advection_donor == 3 .and. opt%f_advection_scheme >= 2) then
     call par_info("swflow_enc: f_advection_donor = 3 (edge-line donor ramped toward u_e when it carries " &
-                  //"less than p_adv_donor_eps = "//rtoa(opt%p_adv_donor_eps)//" of the largest inflow link)")
+                  //"less than p_adv_donor_eps = "//rtoa(opt%p_adv_donor_eps)//" of the largest inflow link; " &
+                  //"side-face wet/dry tests weighted by min(1, h/dd))")
   end if
   if (opt%f_dry_head_cap < 0 .or. opt%f_dry_head_cap > 1) then
     call par_stop("list_enc: f_dry_head_cap must be 0(off) or 1(cap edge depth toward dry cells by energy head)")

@@ -74,7 +74,9 @@
                             !   the edge line carries less than p_adv_donor_eps
                             !   times the largest inflow link of the face cell,
                             !   the upwind value is pulled toward the edge's own
-                            !   velocity; no channel mask needed). 3 avoids the
+                            !   velocity, and the wet/dry tests of the lateral
+                            !   faces become a continuous weight below dd; no
+                            !   channel mask needed). 3 avoids the
                             !   artificial brake of a thin bank film acting as
                             !   donor and the jump of the recession limb when
                             !   its wet/dry test flips. 1 (donors limited to
