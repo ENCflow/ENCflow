@@ -122,8 +122,8 @@ with the 5-point stencil). Verification: [test/stencil9](../../../test/stencil9/
 (on a hill with σ = 2Δ, the difference between the axis-side and diagonal cells at the
 same distance goes from −1.92 % to −0.03 %; the decay in strips one and three cells
 wide agrees with the exact discrete solution to 1e-14; 7.5e-4 m against the
-analytical solution for a well-resolved hill). The default is 0; whether to change it
-is decided after checking the results (developer.md §96).
+analytical solution for a well-resolved hill). The default is 1/3, changed from 0 on
+2026-11-05 (developer.md §96).
 
 **Depth-dependent creep (`creep_hstar` > 0)**:
 
@@ -665,7 +665,7 @@ same partition rule as `creep_diagratio` of the creep; invalid neighbours are mi
 by the cell's own value, the same convention as the 5-point stencil), and on a hill with
 σ = 2Δ the difference in $`\kappa`$ between the axis-side and diagonal cells at the same
 distance goes from −8.4 % to −0.27 % (with ℓ = 2 m, from +3.3 % to +0.13 %;
-[test/stencil9](../../../test/stencil9/en/README.md); the default is 0; developer.md §96).
+[test/stencil9](../../../test/stencil9/en/README.md); the default was changed from 0 on 2026-11-05; developer.md §96).
 The defaults $`k_r`$ = 0.0005 and $`k_t`$ = 0.05 are the medians of the tests
 (**empirical**); verification is
 [test/splash](../../../test/splash/en/README.md) (all digits agree with the
