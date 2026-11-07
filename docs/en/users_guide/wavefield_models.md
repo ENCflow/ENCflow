@@ -107,7 +107,7 @@ spreading σθ through the definition of Kuik et al. (1988)[^kuik88], σθ² = 2
 and the distribution is normalised discretely over the bins (Σ D Δθ = 1; the same
 distribution shape as SWAN). σθ = 0 is distributed linearly over the two bins that
 bracket θ_0. The number of bins N_θ is restricted to multiples of 8, so the axis and
-diagonal directions of x and y always lie on bin centres.
+diagonal directions of x and y always lie on bin centres ((a) of the figure in §3).
 
 The representative period is used as is for σ = 2π/T in the dispersion relation. For random waves
 the default interpretation is the energy period T_m−1,0; the guide for converting from the peak
@@ -124,6 +124,21 @@ This applies to the flux of wave energy the idea of D∞ (Tarboton 1997[^tarboto
 flow direction between two of the 8 neighbours by angle: an **original** discretisation. It is
 written so that receivers gather from their senders, so the computation does not depend on the order
 in which cells are processed.
+
+![Directional bins and spectrum, the two-link decomposition, the virtual senders outside the sides, and the width of shadow edges](../../figs/wavefield_scheme_en.png)
+
+(a) shows the directional bins and the offshore directional distribution (§2.4); the number of bins is
+a multiple of 8, so the axis and diagonal directions are bin centres. Refraction (§4.1) moves energy
+to the neighbouring bins. (b) is the two-link decomposition: the propagation velocity of bin m is split
+non-negatively into the axis and diagonal links that bracket it and carried upwind. A direction along
+an axis or a diagonal uses a single link, so there is no crosswind numerical diffusion. (c) shows the
+virtual senders placed outside the outer sides (§4.4): an incident side holds the bin energy of the
+offshore waves, a lateral Neumann side the value of the cell inside, and a corner gives priority to the
+incident side. (d) is the steady solution for a half-plane lit in a uniform medium, obtained when
+drawing the figure from the discrete two-link equations
+$`E_{i,j} = (1 - \tan\theta)\,E_{i-1,j} + \tan\theta\,E_{i-1,j-1}`$ (i, j: cell numbers along x and y; 0 ≤ θ ≤ 45°; square cells).
+The shadow edge is sharp along an axis (0°) and a diagonal (45°) and is blurred over about 10–12
+cells in between (bullets below).
 
 - **Propagation along lattice directions (axes, diagonals) has no crosswind numerical
   diffusion.** The leading term of the modified equation of first-order upwind on a square grid with
@@ -221,7 +236,7 @@ Each link has one sender, so energy is not injected twice at corners. Outgoing w
 reflection). For a virtual sender at a corner (outside the grid in both x and y), the type of side is
 chosen with the priority incident > lateral Neumann > absorbing (**original**; the area outside the
 corner of an incident side is regarded as offshore waves, which keeps the alongshore-uniform solution
-of a straight coast intact).
+of a straight coast intact). The virtual senders and the corner are sketched in (c) of the figure in §3.
 
 A **wave cell** is a cell inside the domain (x > 0) that is neither a sea-mask cell (sw)
 nor an absorbing cell and whose depth exceeds `wf_hmin`. Waves heading towards land,
@@ -432,6 +447,21 @@ same root. With a single representative frequency, the absolute angular frequenc
 steady current, so fixing ω and solving the wavenumber of each directional bin directly is consistent
 (**original**). The change of ω by a current that varies in time is not included (**our own
 simplification**).
+
+![Dispersion relation on a current solved graphically, wavenumber and height along the current, the blocking current speed, and a river-mouth jet](../../figs/wavefield_current_en.png)
+
+(a) solves the dispersion relation on a current graphically (depth 3 m, period 2.5 s). The wavenumber
+is where the straight line ω − kU meets the curve σ₀(k) of the dispersion relation without current. On
+an opposing current the intersection moves to a larger k (a shorter wavelength) with σ > ω; for an
+opposing current stronger than the one whose line touches the curve, there is no intersection
+(blocking; c_g + U = 0 at the tangent point). (b) gives the wavenumber and height of the same wave
+against the current speed from the conservation of the wave action flux (c_g + U)E/σ (§7.2); the
+height grows sharply towards blocking (in reality it is capped by breaking, which the model
+represents). (c) relates the blocking current speed to period and depth: the shorter the period, the
+weaker the opposing current that blocks it (about 1 m/s for a 2.5 s period, while 8 s swell needs an
+opposing current of more than 2–3 m/s in depths of 1–10 m). (d) is a schematic of waves from offshore
+entering a river-mouth jet: the crests crowd together over the jet, and the wave action that reaches
+the blocked area (grey) is removed and recorded as blocked in the ledger.
 
 ### 7.2 Wave action balance
 

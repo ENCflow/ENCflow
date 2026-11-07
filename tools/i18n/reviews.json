@@ -545,20 +545,20 @@
     {
       "source": "docs/users_guide/wavefield.md",
       "target": "docs/en/users_guide/wavefield.md",
-      "source_sha256": "b25f474eb5ec142ee49427dc70a1da6942a4df1d7b847149b5bcdd177d6b07c5",
-      "target_sha256": "17dc99b920a0ff41842ef3dcf258b06bc4190cb17bc8f5b82eac9f1842e33be5",
-      "reviewer": "Claude (Claude Code session; compared the changed paragraph on the direction convention (nautical conversion theta = 270 deg - theta_n instead of a 180 deg difference) in both languages; the rest is unchanged from the recorded version)",
+      "source_sha256": "d19f7786ba198c214a437910dd686b832c63fbbc5f0f6bf44f05cf7a6cbd21d9",
+      "target_sha256": "a073b7218b8cd074b046a48e45964334fe3b40ac281cdfad841579d8f1e50cb0",
+      "reviewer": "Claude (Claude Code session; compared the added figure references and explanatory paragraphs (plan view, cross-shore profile) and the cross-reference in the calibration section in both languages; the rest is unchanged from the recorded version)",
       "method": "assistant",
       "reviewed_on": "2026-11-07"
     },
     {
       "source": "docs/users_guide/wavefield_models.md",
       "target": "docs/en/users_guide/wavefield_models.md",
-      "source_sha256": "5b396850b8a56fb0f9d668d357700f14b3d0383a2fdeeffd41d1671f9a624e01",
-      "target_sha256": "0e57b007bf8cf7401d8109b458af653f1069695ea8951a9c52a80c94aad4dcb5",
-      "reviewer": "Claude (Claude Code session; reviewed the changed sections (added reference sections, footnotes and citation markers) of the Japanese source against the English mirror, 2026-10-30)",
+      "source_sha256": "5a88874df881386e146b26ab4b6630a3ec6ca6c2136455e30948be02462c4f53",
+      "target_sha256": "40df3f49985ef78712e31305b5850b6e13492c394613efbca56c1f53092df6c2",
+      "reviewer": "Claude (Claude Code session; compared the added figure references and explanatory paragraphs (scheme in sec. 3, current in sec. 7.1) and the cross-references in sec. 2.4 and 4.4 in both languages; the rest is unchanged from the recorded version)",
       "method": "assistant",
-      "reviewed_on": "2026-10-30"
+      "reviewed_on": "2026-11-07"
     },
     {
       "source": "docs/users_guide/wq.md",
