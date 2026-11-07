@@ -497,11 +497,19 @@ on outflow $`u_e`$ (no contribution).
   not represented but treated as neutral, so the advective acceleration or
   deceleration at such a face is not counted. On the 200 m grid of Chichibu
   a small recession jump at transect 3 (+222 m³/s) and a small step around
-  310 minutes at transect 4 (+57 m³/s) remain with 3. Both vanish when `dd`
-  is divided by 10, so they are wet/dry switches of thin water, occurring
-  on faces where the test of 3 does not act (the faces are not identified;
-  the lateral-face donors are the candidates). Boundary faces on lateral
-  Neumann sides are not covered.
+  310 minutes at transect 4 (+57 m³/s) remain with 3 (the 100 m and 50 m
+  grids have jumps of the same type). They come from the wet/dry test of the inflow
+  velocity and the opening fraction of the lateral faces (±t): when a cell
+  with a thin film on a bank enters the parallel link or the opening test of
+  a lateral face, its slow velocity is applied to the lateral inflow of the
+  main flow turning into the face and acts as a brake, which is released the
+  moment the film drops below `dd`. The test of 3 acts on flow-direction
+  faces only, so changing `p_adv_donor_eps` does not remove them (a smaller
+  `dd` only postpones them). On subgrid channels narrower than the cell
+  (Chichibu on the 100 m grid with a 50 m width), 3 can also make the
+  discharge oscillate with a 2-minute period (a feedback of the ε weight; it
+  does not appear with ε = 0.02). Boundary faces on lateral Neumann sides are
+  not covered.
 - **Excluded edges.** Edges excluded from the momentum equation (invalid
   neighbour, zero passage width, both cells dry) have $`A_e = 0`$. With
   `f_channel_advection = 0` the term is also dropped on edges touching a

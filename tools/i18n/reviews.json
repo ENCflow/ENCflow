@@ -113,9 +113,9 @@
     {
       "source": "docs/users_guide/advection.md",
       "target": "docs/en/users_guide/advection.md",
-      "source_sha256": "b0d471e47124fcd3e5a5fecc0577c48aa4133662bebefae5c774b64aae832839",
-      "target_sha256": "f3119ed46fb6cb13cbf9e7c54dd82ac196e53b870c73b653d739407971df5e1f",
-      "reviewer": "Claude (Claude Code session; f_advection_donor = 1 removed on 2026-11-07: option-1 description replaced by a removal note, usage guidance merged into option 3, table rows updated; Japanese and English edited together and read side by side)",
+      "source_sha256": "5967f387ea53f0417f883d04f16a914c3c5361c2923ca6d89a53ae7ecf12920c",
+      "target_sha256": "b54ede1c4003159d3799e7d137bdf5368331475d244954f6486e5dc3f5a5f3e5",
+      "reviewer": "Claude (Claude Code session; option-3 limits updated on 2026-11-07 with the identified cause of the remaining jumps (wet/dry test of the lateral-face inflow velocity and opening) and the oscillation on narrow subgrid channels; Japanese and English edited together and read side by side)",
       "method": "assistant",
       "reviewed_on": "2026-11-07"
     },
