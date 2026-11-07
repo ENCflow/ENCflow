@@ -177,14 +177,14 @@ set title "Step 5: effect of interception and infiltration (transect 4)"
 plot 'result_step4/fluxes/flux0004.csv' using 2:3 with lines lw 1.5 title "Step 4 (no losses)", \
      'result_step5/fluxes/flux0004.csv' using 2:3 with lines lw 1.5 title "Step 5 (interception + infiltration)"
 
-# ---- Step 6: 流量振動と移動平均 ----
+# ---- Step 6: 1 分値の流量と移動平均 ----
 # 移動平均(窓 N 点 = N 分)。gnuplot 5.2 以降の配列機能を使用
 N = 11
 array A[N]
 ma(x) = (A[(int($0) % N) + 1] = x, $0 < N-1 ? NaN : (sum [i=1:N] A[i]) / N)
 
 set output "en/figs/step6_osc.png"
-set title "Step 6: 1-minute discharge oscillation and moving average (transect 4)"
+set title "Step 6: 1-minute discharge and moving average (transect 4)"
 set xrange [60:360]
 plot 'result_step6/fluxes/flux0004.csv' using 2:3 with lines lc rgb "#4477aa" title "1-minute values (raw)", \
      ''                                 using ($2 - (N-1)/2.0):(ma($3)) with lines lw 2 lc rgb "#c04040" title sprintf("%d-minute moving average (centered)", N)
