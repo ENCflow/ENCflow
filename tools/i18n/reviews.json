@@ -284,11 +284,11 @@
     {
       "source": "docs/users_guide/geomorph.md",
       "target": "docs/en/users_guide/geomorph.md",
-      "source_sha256": "348f039f4215af7a793b021d17dc33e3e491f74c88d740b60c9f1c964da1a87c",
-      "target_sha256": "8063b085e4c21d0b422fa29ae550c73c90e9abc295e454034eb806b579410a06",
-      "reviewer": "Claude (Claude Code session; merge of main into claude/nifty-hawking-yx6s0o: the merged files are the three-way merge of both sides, checked by script for both files that the merged file minus each parent equals the other side's own change (encgrid.md: the p_diagratio row from this branch and the f_gravity_correction row from main in both languages); each side's changes had been reviewed on its branch)",
+      "source_sha256": "d51a633e36d30c048324637c57888dd5d45860ca1829bf51102d01f02fb8ff44",
+      "target_sha256": "6da005ef68a82bc9da6afb4c96811442196ba31addf6b25c626c8334c03a80a6",
+      "reviewer": "Claude (Claude Code session; compared the Japanese source with the English mirror for the nine explanatory figures and their caption paragraphs added to the landform-change chapter: bank and bend mechanisms, fixation, dry-slope erosion, rockfall and talus, moving bed layer, wave-driven longshore transport, bedrock incision, limestone dissolution, representation of the sea; the rest of the pair is unchanged since the previous record)",
       "method": "assistant",
-      "reviewed_on": "2026-11-05"
+      "reviewed_on": "2026-11-07"
     },
     {
       "source": "docs/users_guide/glacier.md",

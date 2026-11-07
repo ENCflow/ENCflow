@@ -222,6 +222,10 @@ Combined with the subgrid channel width (fn_width), bedload
 concentrates in the channel width and changes the riverbed there
 ([the channel chapter](channel.md)).
 
+![Bank and bend mechanisms of bedload: cross-section, bank erosion, repose collapse, slump blocks](../../figs/geomorph_bank_en.png)
+
+Panel (a) shows a bend looking downstream: the near-bed secondary flow drags the sediment toward the inner bank while the bed-slope term moves it down the transverse slope, and their balance gives a deep outer side and a shallow inner side. Panels (b)–(d) draw grid cells as columns: (b) bank erosion lowers the bank cell and places the same volume on the toe cell, (c) repose collapse moves the part above the repose slope from the high to the low cell, and (d) slump blocks (the bank mode of rockfall and talus) turn the part of a bank above the critical height into talus at the toe that shields the bank face. Shapes and values are illustrative, not computed results.
+
 **Cross-sectional bed shape in bends (direction correction).** By default
 the bed load follows the depth-averaged flow direction, so bends do not
 scour the outer bank and deposit on the inner bank. With `fluv_slope = 1`
@@ -276,6 +280,10 @@ height plus the pool scour at which failure should start), h_cover the block siz
 (tens of centimetres to a metre). Verification: slump / slump0 in
 [test/berode](../../../test/berode/en/README.md); example: param_cohesive_slump.txt in
 [examples/meander](../../../examples/meander/en/README.md).
+
+![Fixation of inner-bank bars: evolution of the fixation degree a and where it acts](../../figs/geomorph_fixation_en.png)
+
+Panel (a) is an illustration for one bar cell drawn with the update rules: while dry, a approaches 1 with T_fix; while submerged it decays with fix_tdec; and it returns to 0 when the fixed surface is eroded by more than fix_dzreset (the water depth and bed history are prescribed). Panel (b) lists where a changes how hard the bed is to erode. Values are illustrative, not recommendations.
 
 **Fixation of inner-bank bars.** Bed load deposits only up to the water
 surface of the supplying cell, so under a constant discharge the inner-bank
@@ -427,6 +435,10 @@ river-mouth terrace, the tsunami deposits above), represent that area
 as ordinary cells + an initial water level, and if you use a sea mask,
 place it offshore of the area of interest.
 
+![Representing the sea and where sediment goes: ordinary cells + initial level versus the sea mask](../../figs/geomorph_sea_en.png)
+
+Panel (a) represents the sea as ordinary cells with an initial water level, where every process also acts in submerged cells. Panel (b) summarizes, path by path, what happens to sediment on reaching sea-mask cells. The sections are illustrative.
+
 **River-mouth deltas** - the process in which a river entering still water
 builds a mouth bar, bifurcates, grows lobes and switches channels can be
 computed with settings alone, representing the sea as ordinary cells + an
@@ -544,6 +556,10 @@ Whether valleys form at all
 depends on cliff cohesion (slopes that cannot stand steeper than the
 angle of repose do not preserve hollows) — combine with f_slide to
 represent this.
+
+![Dry-slope erosion: where each term acts, valley feedback, valley-spacing length, strata](../../figs/geomorph_splash_en.png)
+
+Panel (a) shows where the two terms of the erosion rate act (only the splash term on a plateau, the rill term added on steep slopes, amplification in concavities) and the valley feedback. Panel (b) is the linear-stage growth rate: with spl_lc = 0 the shortest grid wavelength grows fastest, with spl_lc = ℓ a spacing of about 4.4ℓ is selected (curves of the expressions in the spl_lc entry of the table below). Panel (c) shows horizontal strata spl_strata and panel (d) the saturation spl_ksat. The sections are illustrative, not computed results.
 
 | Parameter | Default | Meaning |
 |---|---|---|
@@ -897,6 +913,10 @@ retreat rate (talus-limited retreat).
    column falls, so the cycle is talus-limited without tuning H_c to the face height.
    u is also part of the private file.
 
+![Rules of rockfall and talus: free-face height, collapse, talus, protection, supported faces, undercutting](../../figs/geomorph_rockfall_en.png)
+
+The figure draws the rules above with grid columns. Panel (a) shows how the free-face height is measured (the step between adjacent cells, or the drop to the lowest point in a window), (b) rules 1–3, (c) the order in which a vertical face retreats one column at a time under rule 4 (supported faces), (d) rule 5 (undercutting) and (e) which parameter belongs to which rule. Heights and thicknesses are illustrative, not computed results.
+
 | Parameter | Default | Meaning |
 |---|---|---|
 | rf_hc | none (required) | Critical free-face height H_c (m); a structural quantity (rock-mass strength) |
@@ -973,6 +993,10 @@ into lakes or the sea, and for prescribed submarine landslides.
 Represent the water body as a "solved sea" (no sea mask: real bathymetry
 plus an initial water level f_htype=2, long-wave radiation f_bc_*=2 on
 the edges).
+
+![Moving bed layer: bookkeeping, driving head and speed, collapse-depth geometry, hand-over from the mixture](../../figs/geomorph_bedslide_en.png)
+
+Panel (a) shows two cells before and after moving Δ of the layer: h is kept, so the water surface also moves by Δ. Panel (b) gives the driving head Φ = z + r h (Φ = z on land; under a flat water surface its gradient is (1 − r) times that of z) and the speed, (c) the shape of the collapse depth fn_bsinit ("How to give the failure surface" below) and (d) the hand-over from the mixture. The sections are illustrative, not computed results.
 
 | Parameter | Default | Meaning |
 |---|---|---|
@@ -1100,6 +1124,10 @@ phi0) in `fn_wave` (&list_wave) and every landform update does the following.
    shore-parallel flux, applied to the bed as edge fluxes exactly like bed load
    (supply limiter, dzmax and conservation are shared; nothing is carried onto
    dry cells, so the retreat of a dry beach is the task of `f_repose`).
+
+![Wave-driven longshore transport: the four steps of one landform update](../../figs/geomorph_wave_en.png)
+
+Panel (a) is an illustrative delta shoreline showing the surf zone, the angle α between the wave direction and the shoreward normal (opposite to the offshore normal n̂), the shadow behind dry land upwind (exposure 0), the river-mouth rule wave_vmax and the direction of the alongshore flux (shadow and flux evaluated for the drawn shoreline with the steps above). Panel (b) is the angle dependence of the deep-water CERC formula: waves at angles below that of the maximum flux (about 42°) smooth shoreline bumps, waves at higher angles make bumps grow.
 
 | parameter | default | meaning |
 |---|---|---|
@@ -1280,6 +1308,10 @@ state variable is introduced.
   by this factor even in cells where the bedrock is not eroded
   (τ_b ≤ τ_c, or `fn_rock` is 0).
 
+![Bedrock incision by flowing water: plucking, abrasion, cover, thin-layer transport, and rock erosion by debris flows](../../figs/geomorph_rockinc_en.png)
+
+Panel (a) shows the four actions in one channel cell, (b) the exposure and availability, (c) the steady abrasion rate forming a hump against supply / capacity (tools and cover), and (d) the equation of the rock erosion by debris flows in the subsection below and the conditions for the cells where it acts. The curves in (b) and (c) are the expressions of the text; the section is illustrative.
+
 | Parameter | Default | Meaning |
 |---|---|---|
 | f_rockinc | 0 | 1 enables it (`f_fluvial = 1` is required, or `f_debris = 1` for the debris-flow term) |
@@ -1385,6 +1417,8 @@ erodes the rock. It is an optional term of `f_rockinc = 1`, enabled by
   `rock_beta` to 0 (the run stops otherwise). Incision by floods belongs to the
   flood runs, so that the calendar accounting is not mixed.
 
+The equation and the conditions for the cells where it acts are sketched in panel (d) of [the figure above](#bedrock-incision-by-flowing-water-f_rockinc).
+
 | Parameter | Default | Meaning |
 |---|---|---|
 | rock_kdb | 0 (= no debris-flow term) | Rate coefficient k_d (m/s): the lowering rate of bare rock at τ_d = 2τ_cd. Requires `f_debris = 1` |
@@ -1477,6 +1511,10 @@ dissolution accelerates: the positive feedback closes with the existing
 exchange law alone. The sink distribution is given by `fn_gwc_inlet`; a
 small uniform density over the whole limestone area means "a doline may
 form anywhere".
+
+![Limestone dissolution: amount of dissolving water, update of z and sd, lateral dissolution](../../figs/geomorph_dissol_en.png)
+
+Panel (a) shows the choice of dissolving water dissol_src and the sink term, (b) the dissolved thickness w and the update of z and sd (residue fraction; talus dissolves first), and (c) the split of lateral dissolution dissol_lat explained after the table below, with the different hollows it produces. The sections are illustrative, not computed results.
 
 | Parameter | Default | Meaning |
 |---|---|---|
