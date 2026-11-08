@@ -71,7 +71,7 @@ band + margin hydrostatic, cuts off the non-hydrostatic pressure at the interfac
 shifts the phase of the dispersive waves and produces a concentric error pattern
 over the whole child (§ "φ of the non-hydrostatic band").
 
-## Results (2026-10-09; gfortran, serial with 4 threads)
+## Results (gfortran, serial with 4 threads)
 
 Error η − η_fine (m), where the fine grid is averaged 3×3 per parent cell.
 in = inside the child's footprint (parent cells 160..226), out = outside. The
@@ -112,7 +112,7 @@ output is in steps of 1e-4 m (4-digit text).
   parent's coarse interpolated values (the band values are not the child's
   solution). Restricted to the child's interior, it equals the root values above.
 
-## Time ratio r_t > 1, water-level-only band and 2-level nest (Phase 3; 2026-10-09)
+## Time ratio r_t > 1, water-level-only band and 2-level nest
 
 Variants in which the parent dt is returned to its own CFL (0.05 s, Cn ≈ 0.6)
 and the child advances with dt/r_t: r3t3 (ratio 3, r_t 3), r5t5 (ratio 5, r_t 5),
@@ -168,7 +168,7 @@ incident amplitude (0.047 m):
   accuracy for this wave, but it confirms the 2-level operation of recursion,
   time interpolation and replacement).
 
-## Conservation correction (nest_fb = 3) and sponge (nest_bc = 4) (Phase 4; 2026-10-09)
+## Conservation correction (nest_fb = 3) and sponge (nest_bc = 4)
 
 Based on r3t3: r3t3_fb3 adds the conservation correction to the child-to-parent
 feedback, and r3t3_sp is a sponge relaxing the 4 cells inside the band towards
@@ -203,7 +203,7 @@ conservation of the closed domain (100 m square × S).
 - The water-level-only band (bc1) is the worst in both volume and residual (the
   default bc2 is recommended).
 
-## φ of the non-hydrostatic band (nest_nh; 2026-10-10)
+## φ of the non-hydrostatic band (nest_nh)
 
 Non-hydrostatic version (f_nonhydrostatic = 1; CG, whole-domain solve). A
 Gaussian wave with σ = 2 m (kH ≈ 0.5, so dispersion is effective; the inputs are
@@ -258,14 +258,8 @@ Child (averaged 3×3 onto the parent grid; core = excluding the outer 2 parent c
   version and worse than the stand-alone coarse grid (the band + margin of 8
   cells becomes hydrostatic, which shifts the phase of the dispersive waves).
   Use the default nest_nh = 1.
-- Two alternatives that were tried were not adopted (developer.md §75): a
-  Dirichlet band with φ = 0 that also corrects the edges between the band and
-  the interior conflicts with the parent's overwrite and grows from the
-  interface (the child's h_max after the passage 1.02 → 1.17 m); a hydrostatic
-  band alone with no margin diverges through interference between the
-  prescribed fluxes and the projection (identity case, 50 steps).
 
-## One-way: Dirichlet band (nest_bc = 2) and Flather radiation (nest_bc = 3) (2026-10-10)
+## One-way: Dirichlet band (nest_bc = 2) and Flather radiation (nest_bc = 3)
 
 r3t3 made one-way (nest_fb = 0): r3t3_ow2 (band) and r3t3_ow3 (Flather; the
 child's 4 edges are set to `f_bc_* = 2` and the parent's water level and normal

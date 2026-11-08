@@ -78,10 +78,10 @@ characters of this example.
 | F | Yes | Same as D | River + an open outfall at the trunk end (38, 11) (`fn_gwc_outfall`, Cd·A = 0.47 m²) | Conduit head and flooding when the trunk can discharge directly into the river |
 
 The slot_sy = 0.03 of A and B is a "soft" value of the same order as sy.
-At the time of the implementation in 2026-08 this was unavoidable as a
-compromise with the upper limit of the explicit time step (dt ≤ 0.061 s
-from the trunk conveyance). Now that subcycling (§46.5 (4)) exists, run D
-and later can use the physically stiffer slot_sy (sy/5) as is (in this
+It relaxes the upper limit of the explicit time step (dt ≤ 0.061 s from the
+trunk conveyance) but creates the "phantom storage" described above. Run D
+and later use the physically stiffer slot_sy (sy/5). Time steps above the
+limit are split automatically by subcycling (§46.5 (4)) (in this
 configuration dt = 0.02 s is below the limit of 0.037 s, so the number of
 subdivisions is N = 1).
 
@@ -121,8 +121,7 @@ their soft slot_sy, A and B were hiding the water that should have
 overflowed in underground "phantom storage". **The choice of the scalar
 sy (the A ↔ B difference of 8 mm) is of the same size as the effect of the
 trunk itself (C − A = 3.4 mm, C − B = 11.4 mm)** and sways the answer.
-This is the direct reason the feature for giving sy and slot_sy per cell
-(§46.5 (5)) was built.
+This is why sy and slot_sy are given per cell (§46.5 (5)).
 
 **(b) Distribution of surface depth at the end of the rain.** On a uniform
 slope the surface water flows east and, since all four sides are walls,
@@ -161,10 +160,7 @@ with the outfall, the water in the pipes stays at most 6.5 mm and drains to
 being able to discharge into the river** is seen directly.
 
 **(b) Water on the land surface.** S_surf in the Log is the mean over the
-land cells only (before 2026-10-22 it also included the water column of
-the river cells of the sea mask, so the figure subtracted the t = 0 value
-to obtain the land share. That subtraction is no longer needed, and the
-figure shows the same values). In run E,
+land cells only. In run E,
 after about 6 mm ponds during the first 10 minutes of rain, the surface
 stays nearly dry. The full pipes have their head right around the surface,
 carry the rain that enters through the inlets through the pipes to the
@@ -189,14 +185,7 @@ pipe below the river surface does not empty).
 Summarizing where the water goes (out of the total rainfall of 61.0 mm):
 in E, 38.6 mm goes from the cliff into the river and 22.4 mm remains in
 the pipes; in F, 57.3 mm goes **from the outfall into the river**, 2.4 mm
-from the cliff into the river, and 1.3 mm remains in the pipes (recomputed
-on 2026-10-22, and on 2026-10-31 with the default f_opening_dynamic = 3, which changes
-only the outfall 55.9 → 56.2 mm and the cliff 3.8 → 3.5 mm; developer.md §68.41; recomputed again on 2026-11-02
-with the default after the correction of the lateral faces of the momentum-conserving advection, which leaves
-the printed values unchanged; §68.42, §68.43; recomputed again on 2026-11-05 after the default
-f_gravity_correction = 2 and the fixes of the outflow suppression and the edge depth, §93–§95, which changes
-the outfall 56.2 → 57.3 mm, the cliff 3.5 → 2.4 mm and the maximum in the pipes of F 6 → 6.5 mm; the values
-of D and E are unchanged; the figures are from that recomputation). The trunk of F carries more than 90 % of the rain,
+from the cliff into the river, and 1.3 mm remains in the pipes. The trunk of F carries more than 90 % of the rain,
 consistent with the estimate pipe-full capacity 1.70 m³/s ≳ runoff
 1.40 m³/s.
 
@@ -214,8 +203,7 @@ consistent with the estimate pipe-full capacity 1.70 m³/s ≳ runoff
 - In the closed runs A–D, S_total = the total rainfall of 61.0 mm is
   conserved to a rounding of 1e-13. The S columns of the Log in E and F are
   means over the land (798 cells), excluding the river cells of the sea
-  mask (before 2026-10-22 the water column of the river cells, 1.5 m × 42
-  cells divided by the land area = 78.9 mm, was added on top), and S_total
+  mask, and S_total
   decreases only by the water that left into the river (the drop from the
   cliff and the outfall discharge). The cumulative volume discharged from
   the outfall into the river is printed on screen at the end of the run
@@ -234,34 +222,28 @@ consistent with the estimate pipe-full capacity 1.70 m³/s ≳ runoff
   groundwater collection by a gallery in
   [examples/qanat](../../qanat/en/README.md).
 
-## 7. What this experiment decided (design record)
+## 7. What this experiment shows
 
-The experiment was run on 2026-08-23 and became the basis of the following
-decisions in developer.md §46.5. All of them have since been implemented.
-
-1. **The conversion from pipe specifications to parameters is done in
-   preprocessing** (code unchanged). `pipe_params()` in gen_data.py is the
-   model to follow.
-2. **Open outfalls** (§46.5 (3), (8b) → `fn_gwc_outfall`). Before the
-   implementation, the only path from the conduits to the surface was the
-   eruption while pressurized, and the water in the pipes did not drain
-   after the rain (S_grnd of A–D stays at 25–51 mm). Run F demonstrates
-   this feature.
-3. **Per-cell sy and slot_sy** (§46.5 (5) → `fn_gwc_sy` / `fn_gwc_slot_sy`).
-   The basis was that the A ↔ B difference was of the same order as the
-   effect of the trunk. Run D demonstrates it.
-4. **Subcycling** (§46.5 (4)). The prerequisite for being able to use a
-   stiff slot_sy.
-5. **Trunk and branch pipes coexisting in the same instance works
-   mechanically.** The conveyance between cells takes the smaller of the
-   two at the edge (the min convention), so the branch → trunk connection
-   being limited on the branch side is represented naturally. Multiple
-   instances are unnecessary unless separate systems must be used in the
-   same cell (sewers × bedrock).
-6. At the time, negative values in the invert-elevation map were rejected,
-   so the ground datum was raised by +8 m to avoid them (`z_of` in
-   gen_data.py). Negative values are now accepted (§46.5 (7)), and inverts
-   below sea level can be given as they are.
+1. **The conversion from pipe specifications to parameters can be done in
+   preprocessing** (no code change needed). `pipe_params()` in gen_data.py
+   is the model to follow.
+2. **Without an open outfall** (`fn_gwc_outfall`; §46.5 (3), (8b)), the only
+   path from the conduits to the surface is the eruption while pressurized,
+   and the water in the pipes does not drain after the rain (S_grnd of A–D
+   stays at 25–51 mm). Run F demonstrates the outfall.
+3. **sy and slot_sy are given per cell** (`fn_gwc_sy` / `fn_gwc_slot_sy`;
+   §46.5 (5)), because the choice of a uniform value (the A ↔ B difference)
+   is of the same order as the effect of the trunk and sways the answer.
+   Run D demonstrates the per-cell maps.
+4. **A stiff slot_sy is handled by subcycling** (§46.5 (4)).
+5. **Trunk and branch pipes can coexist in one layer.** The conveyance
+   between cells takes the smaller of the two at the edge (the min
+   convention), so the branch → trunk connection being limited on the
+   branch side is represented naturally. Multiple instances are unnecessary
+   unless separate systems must be used in the same cell (sewers × bedrock).
+6. `z_of` in gen_data.py raises the ground datum by +8 m so that the invert
+   elevations are positive. Invert elevations may also be negative
+   (§46.5 (7)), so inverts below sea level can be given as they are.
 
 ## 8. Limitations and extensions
 
@@ -273,10 +255,8 @@ decisions in developer.md §46.5. All of them have since been implemented.
   [users_guide/gwflow.md](../../../docs/en/users_guide/gwflow.md)).
 - Since the pipes are represented by a single head, the head difference
   between trunk and branch pipes within one cell (the loss in the
-  connecting pipe) cannot be represented. Whether to build a quasi-1-D
-  "buried channel" module with a cross-section shape will be decided once
-  a comparison with an SWMM reference solution shows a deficiency (end of
-  §46.5).
+  connecting pipe) cannot be represented. There is no quasi-1-D conduit
+  model with a cross-section shape.
 
 ## Related documents
 

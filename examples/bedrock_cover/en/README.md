@@ -133,13 +133,6 @@ matplotlib.
 
 ## Results
 
-(The tables and figures are values recomputed on 2026-11-05 with the current defaults
-(f_gravity_correction = 2, after the fixes of the outflow suppression and the edge depth;
-developer.md §93–§95, in Japanese). Compared with the recomputation of 2026-11-02
-(f_opening_dynamic = 3 and the correction of the lateral faces of the momentum-conserving
-advection; §68.41–§68.43), only the last digit of the step position at 6000 s and the largest
-difference from the theory (2.3 → 2.2 %) changed)
-
 ### Amount of supply: tools and cover
 
 ![Supply ratio, incision rate and cover thickness](figs/supply.png)

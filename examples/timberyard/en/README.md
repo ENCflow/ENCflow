@@ -112,14 +112,7 @@ Right: where the timber is after 4 hours (1000 m³).
 | Seawall +4 m, gate left open | 65-105 min | 70 min | 38,880 m³ | 88 % / x 1,125 m | 20,196 m³ | 24,492 m³ | 14,767 m³ |
 
 There is 60,000 m³ of timber in total. The rest is on the seawall (140-1,200 m³) and still
-floating (404 m³ with the +4 m seawall). The tables and figures show the values recomputed on
-2026-11-02 with the default f_opening_dynamic = 3 and the corrected lateral faces of the
-momentum-conserving advection (developer.md §68.41–§68.43). Recomputed on 2026-11-04 after the fix of
-the steep-slope gravity correction (§91): the values moved, for example the timber entering the town
-decreased by 1-8 % (the README values were confirmed to be reproduced by the executable before the fix).
-Recomputed on 2026-11-05 after the default f_gravity_correction = 2 and the fixes of the outflow suppression
-and the edge depth (§93–§95): the values moved, for example the timber entering the town increased by 1-9 %
-(the tables, figures and numbers in the text are from this recomputation).
+floating (404 m³ with the +4 m seawall).
 
 - **In the Ise Bay type, about three quarters of the timber enters the town and stays**: timber starts
   to float away at 65 minutes, when the water exceeds +1.0 m, and is all released by 105 minutes.

@@ -120,8 +120,8 @@ for run, c, label in [("D", C_RED, T("D: 閉領域(川なし・吐口なし)", "
                       ("E", C_AQUA, T("E: 東端に川(受け皿)。吐口なし", "E: river at the eastern end (receiver); no outfall")),
                       ("F", C_PURPLE, T("F: 川 + 幹線末端の開放吐口", "F: river + open outfall at the trunk end"))]:
     t, ss, sg = read_log(f"result_{run}/Log.txt"); final[run] = (ss[-1] - ss[0], sg[-1])
-    # Log の S_surf は陸地セルだけの平均(2026-10-22 以降。海域マスクの川セルを含まない)。
-    # 以前は川セルの水柱を含んでいたため t = 0 の値を引いていた。現在 ss[0] = 0 で差し引きは恒等
+    # Log の S_surf は陸地セルだけの平均(海域マスクの川セルを含まない)。初期値 ss[0](= 0)からの
+    # 増分を描く
     axs[0].plot(t, sg, color=c, lw=2, label=label)
     axs[1].plot(t, ss - ss[0], color=c, lw=2, label=label)
     for k, ls, tl in [(2, "-", "t = 1 h"), (6, ":", "t = 3 h")]:

@@ -443,12 +443,9 @@ gentle undulation.
   The difference is mostly not transport by wet erosion but the dry erosion that stopped.
 - **Reproducibility of the numbers**: in the cases with wet erosion, differences of the size of
   rounding errors are amplified by the positive feedback of flow concentration, so the same
-  computation gives numbers a few percent different with different builds (optimization) (an example
-  checked with f_opening_dynamic = 2: the relief of the case with overland flow of result 2 is 4.39 m
-  with -Ofast and 4.34 m with -O2). The tables give values computed on 2026-11-02 with the current
-  default (f_opening_dynamic = 3, -Ofast build). Compared with the older version computed with
-  f_opening_dynamic = 2, the values of the cases with overland flow differ by a few to a dozen percent
-  (the valley spacing of result 3, 6.5 → 5.4 m, and others), but the conclusions do not change.
+  computation gives numbers a few percent different with different builds (optimization) (for
+  example, with f_opening_dynamic = 2 the relief of the case with overland flow of result 2 is 4.39 m
+  with -Ofast and 4.34 m with -O2). The tables give values computed with an -Ofast build.
 
 ## Starting points for sensitivity experiments
 

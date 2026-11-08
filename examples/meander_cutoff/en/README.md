@@ -144,9 +144,7 @@ collapse and fines from the screen output (Screen.log, Screen_<configuration>.lo
 
 ## Results
 
-Values from recomputing all configurations on 2026-11-03 with the version after main's fix of
-the lateral faces of the momentum-conservative advection (developer.md §68.42, §68.43), with the
-fixed terrain (see the notes) and the default f_opening_dynamic = 3 (gfortran 13.3, -Ofast
+The tables and figures are values computed for all configurations with gfortran 13.3 (-Ofast
 -march=native, 1 thread). The tables are excerpts from the output of plot_results.py.
 
 ![Flow states](figs/states.png)
@@ -297,18 +295,13 @@ thickness of fines Sf. Black = initial banks.
 
 ## Notes
 
-- **The terrain was fixed on 2026-11-02**: before that, make_init.py's test for lowering the neck
-  picked the land around the bend apexes (10 places, 409 cells) and lowered it to bed + 0.95 m, and
-  the array shift wrapped round between the east and west edges and put a strip along the east edge
-  (196 cells) at bed + 2.4 m. The present terrain follows the uniform rule under "Banks" above, so
-  it differs from that of earlier results (developer.md §84.18).
 - **Flow settings**: the parameter files set `f_inflow_edge = 2` (zero advection term on the edges
   into the inflow section, with their speed capped by the energy head; developer.md §68.40).
   `f_opening_dynamic` is written out at its default 3 (a dug channel without a channel mask needs
   2 or more to keep the conveyance of the rows next to the banks; see the
   [meander notes](../../meander/en/README.md#notes)).
 - **dt = 0.1 s** keeps the CFL condition in the fast flow over the deep pools (3–4 m) of the sharp
-  bends during the flood (0.2 s stopped in the trials when the example was made).
+  bends during the flood (the computation stops with 0.2 s).
 - **Limit of the bed change per update**: `fluv_dzmax` (0.05 m) fires on 12,006–13,170 edges with
   the flood and on 44–399 edges without it (ledger). Lowering morfac reduces it.
 - **Reproducibility**: the same executable gives bit-identical results for any number of threads,
@@ -347,4 +340,4 @@ thickness of fines Sf. Black = initial banks.
 - [examples/meander](../../meander/en/README.md) — deformation of a meandering channel by the
   same mechanisms (outer-bank retreat, inner-bank bars, fixation)
 - [docs/users_guide/geomorph.md](../../../docs/en/users_guide/geomorph.md)
-- docs/meander_plan.md §3.5, developer.md §84.5, §84.17, §84.18
+- docs/meander_plan.md §3.5, developer.md §84.5, §84.17

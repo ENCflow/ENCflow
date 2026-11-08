@@ -96,54 +96,7 @@ result_A_nh / result_C_nh0 / result_C_nh: Hb (bed-layer thickness), Vb
 E (water level = z+h; the free surface of mixture cells is E + Hs) and the
 time series in probes/.
 
-## Results: the four hydrostatic patterns (recomputed 2026-10-06, on 2026-11-02 with the default f_opening_dynamic = 3 and the corrected advection term, on 2026-11-04 after the fix of the yield rest check and after the fix of the steep-slope gravity correction, on 2026-11-05 after the fixes of the outflow suppression and the edge depth, on 2026-11-06 with the setting aligned to the default f_gravity_correction = 2, and on the same day after the resistance laws of mixture flows were made slope-parallel; gfortran, dt = 0.05 s)
-
-Recomputed after the fix of a real bug in the advection scheme (developer.md
-§69.9; out-of-domain reference of the "further upwind" cell in MUSCL) since
-the first version of 2026-09-30. The bed-layer-only A and C are unchanged;
-B and B0, which use the mixture, changed in the deposition in the shoreline
-zone and in the leading wave.
-Recomputed on 2026-10-31 with the default f_opening_dynamic = 3 (developer.md §68.41) and on
-2026-11-02 with the default after the correction of the lateral faces of the momentum-conserving
-advection (§68.42, §68.43): A and C, which use only the bed layer, are nearly the same (the stopped
-and moving volumes of the bed layer move by a few %), while B and B0, whose mixture flows down the
-land, change in the deposition in the shoreline zone and in the leading wave (shoreline zone of B
-1,164 → 845 m³, leading wave +1.0 → +1.2 m; reach of B0 242 → 232 m, leading wave +0.5 → +0.8 m).
-Recomputed on 2026-11-04 after the fix of the yield rest check (developer.md §28.16): the output of A
-and C (bed layer only) is the same, and the deposition in the shoreline zone of B and B0, which use
-the mixture, decreased a little (B 845 → 834 m³, B0 9,765 → 9,350 m³; confirmed by reproducing the
-earlier values with the executable before the fix under the same conditions). Of the leading waves,
-only that of B at x = 298 m changes, +1.17 → +1.16 m. The tables and figures (except the
-non-hydrostatic comparison) show the recomputed values.
-Recomputed on the same day after the fix of the steep-slope gravity correction (developer.md §91):
-the effective gravity, which came out too large on edges oblique to the 0.4 slope (including the
-edges along the shoreline), is now right; the leading wave of A at x = 298 m changed +1.37 → +1.41 m,
-the shoreline-zone deposition of B 834 → 690 m³ and its leading wave +1.16 → +1.20 m, and the leading
-wave of B0 +0.79 → +0.86 m (the runout of all four cases is unchanged).
-Recomputed on 2026-11-05 after the suppression of excessive outflow by the total outflow of a cell
-(developer.md §94) and the choice of the upwind side of the edge depth by the direction of the new
-velocity (§95). The hydrostatic values of A and C (basal layer only) are unchanged; the shoreline-zone
-deposition of B, which uses the mixture, changed 690 → 614 m³ and that of B0 9,485 → 9,454 m³ (runout and
-leading waves nearly the same; the last digits of the non-hydrostatic comparison move). At that time the
-settings still stated `f_gravity_correction = 1` explicitly, and the earlier statement that the example
-was recomputed with the default f_gravity_correction = 2 was wrong.
-Recomputed on 2026-11-06 with the settings aligned to the default 2 (friction and sediment shear along
-the slope; developer.md §93). In the hydrostatic table A has the same values; the shoreline-zone
-deposition of B changed 614 → 608 m³ and that of B0 9,454 → 9,524 m³ (runout and leading waves nearly the
-same). In the non-hydrostatic comparison, the underwater bed layer that keeps moving with the
-acceleration term changed 4,009 → 3,210 m³ for A and 3,371 → 3,109 m³ for C. The tables and figures,
-including the non-hydrostatic comparison, show these recomputed values. Trial computations with the
-experimental f_gravity_correction = 3 (which returns the gravity to g in deep water over steep lake
-shores) are in developer.md §100 (in Japanese; the settings of the example stay at 2; the waves of the
-lake come close to those without correction).
-On the same day, after the change by which 2 also evaluates the resistance laws of mixture flows along the
-slope (developer.md §101), B and B0, which use the mixture, were recomputed. On the 0.4 slope on land the
-turbulent term of Voellmy becomes 1.35 times larger (1/cos⁴θ) and the mixture becomes slower: the
-shoreline-zone deposition of B changed 608 → 780 m³, the lake floor 17,696 → 17,363 m³, the leading wave
-(x = 298 m) +1.19 → +1.10 m and the mixture speed at handover 3.0 → 2.8 m/s; the shoreline-zone deposition
-of B0 changed 9,524 → 8,820 m³ and its leading wave +0.86 → +0.75 m (the runout is the same). A and C, which
-use only the bed layer, and the non-hydrostatic comparison (A and C) do not change. The tables and figures
-show these values.
+## Results: the four hydrostatic patterns (gfortran, dt = 0.05 s)
 
 ![Profiles](../figs/profiles.png)
 
@@ -193,7 +146,7 @@ Interpretation:
   decelerated before reaching the plunge cells, so in this case the handover
   loses no momentum (see the item on the bias below).
 
-## Results: comparison with the non-hydrostatic versions (2026-10-06; recomputed 2026-11-02 with the default f_opening_dynamic = 3 and the corrected advection term, on 2026-11-04 after the fix of the steep-slope gravity correction, on 2026-11-05 after the fixes of the outflow suppression and the edge depth, and on 2026-11-06 with the setting aligned to the default f_gravity_correction = 2)
+## Results: comparison with the non-hydrostatic versions
 
 ![Non-hydrostatic](../figs/nonhydro.png)
 
@@ -320,6 +273,12 @@ schematic for the item below; the curves of (b) and (d) are illustrative (not co
   through the terrain).
 - dt: set by √(gH) in deep water. At 40 m, dt=0.05 s and dx=5 m give
   CFL≈0.2.
+- f_gravity_correction (the steep-slope correction; this example uses the
+  default 2): the flow of the collapsed material needs the correction, the
+  waves in deep water over the steep lake shore do not. The experimental 3
+  returns the gravity to g where the water surface is level, so one
+  computation can handle both (the lake waves come close to those without
+  correction; [steep slopes](../../../docs/en/users_guide/steep_slope.md)).
 
 ## Related
 

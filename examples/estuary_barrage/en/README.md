@@ -180,13 +180,6 @@ phase. Grey = the preliminary flood-and-rain stage.
 | No barrage, clogged river bed | 494 | 2.88 | 0.931 | 0.001 | 2.64–2.96 | 597 |
 | Barrage, clogged river bed | 130 | 0.48 (barrage) | 0.016 | 0.000 | 0.48 (barrage) | 155 |
 
-(The table and figures show the values recomputed on 2026-11-02 with the default f_opening_dynamic = 3
-and the corrected lateral faces of the momentum-conserving advection; developer.md §68.41–§68.43.
-Recomputed on 2026-11-05 after the default f_gravity_correction = 2 and the fixes of the outflow
-suppression and the edge depth (§93–§95): the salt in the aquifer stays within 0–3 %, the bottom salt in
-the river moved by −5 to +7 % and the wedge tip by about 0.1 km. The table, figures and numbers in the
-text are from this recomputation.)
-
 (The table is printed by `python3 plot_results.py`.)
 
 - **Salt wedge**: without a barrage the wedge travels 2.3–3.0 km from the
