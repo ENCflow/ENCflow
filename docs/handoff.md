@@ -62,7 +62,9 @@ architecture.md。このメモは「現在進行中・未完了の項目」だ�
 
 00n. **examples の監査(2026-11-08。chichibu を除く README のある 31 例題)の残り**
    - 計算なしで確かめられる誤り・説明文のない図・開発の経緯の残り(§35.1)は 2026-11-08 に直した
-     (洪水・水域・火山、地形、河川・山地の 3 コミット)。残りは次のとおり。
+     (洪水・水域・火山、地形、河川・山地の 3 コミット)。説明図の追加も同日に済んだ(stone_forest の
+     設定と仕組み、glacier_valley の機構と則、qanat・levee_breach・timberyard の則、tower_karst の
+     基準面の構成。いずれも計算結果を使わずに描く)。残りは次のとおり。
    - **結果が要る図と数値**(利用者の保存済み結果か再計算が要る。直したら README の該当箇所も見る):
      - landslide_tsunami: 結果の図 4 枚(profiles・probes・deposit・nonhydro)に英語版がない。
        plot_results.py に `en` 引数がなく、ラベルが英語で固定(日本語版の README にも英語の図が載る)。
@@ -92,10 +94,13 @@ architecture.md。このメモは「現在進行中・未完了の項目」だ�
      決まる静的な上限を超える理由。badland_storm 結果 5 の間隔の指標が初期の雑音を写している疑い。
      stone_forest の台地の低下 400 mm/kyr(溶食だけなら 216 mm/kyr。残りは崩落か)。glacier_valley の
      「最大の厚さ約 370 m」と x10 の数値(結果がなく照合していない)。
-   - **説明図の追加**: 模式図がない stone_forest・glacier_valley(質量収支・Weertman 滑動と侵食・時間の
-     加速)。則の図がない qanat(一定の 30 mm/h・通水の sqrt 則)・levee_breach(破堤の進み方・家屋の
-     壊れ方・空隙率)・timberyard(流出・停止の閾値)。tower_karst の基準面の構成(河道・水頭の底・
-     吐口・隆起)。
+   - **判断待ち(説明図を描いて分かったこと。README は今の設定のとおりに書いた)**:
+     - levee_breach・timberyard は家屋の寸法 fn_bb を与えていないので、家屋の抗力が働かない。空隙率
+       fn_gv は貯留と慣性にだけ入り(src/m_swflow_enc.f90。通過幅は縮めない)、等流の流量は変わらない。
+       市街地の家屋が流れを妨げる例題にするなら、fn_bb を与えて回し直す(結果が変わる)。
+     - qanat の坑道の通水は f_gwc_fluxlaw = 2(√ 則)だが、床の勾配の等流の水位差 0.04 m が
+       gwc_eps_h = 0.1 m の中にあるので、線形化した枝で流れている。√ 則で流すなら gwc_eps_h を
+       下げて回し直す(結果が変わる)。
    - **大きな組み直し**: delta(要約の図と結論を冒頭に。段 6・7 の検証の記録を移す。README は約 600 行)、
      mesa(補足 3 を結論から先に書く形に。比較の図を 1 枚に)、catchment_metal(結論を前に。ステップ 6・6b を
      1 つの節に)。
