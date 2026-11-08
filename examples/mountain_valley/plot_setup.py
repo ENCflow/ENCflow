@@ -112,7 +112,7 @@ def _long(ax):
     ax.plot(x, zr + hcov + hw, color=C_FLOW, lw=1.0, zorder=3)
     # 出口の行(基準面)
     ax.fill_between([196, 204], [-1, -1], [9.5, 9.5], color="#f1dcdc", zorder=0.5)
-    ax.text(200, 9.3, T("出口の行 = 基準面\n(隆起・風化・下刻なし)", "outlet row = base level\n(no uplift, weathering or incision)"),
+    ax.text(200, 9.3, T("出口の行 = 基準面\n(隆起・風化・下刻なし)", "outlet row = base level\n(no uplift, weathering\nor incision)"),
             ha="center", va="top", fontsize=8, color=C_INC)
     # 流入
     _arrow(ax, -14, 7.0 + 0.08 + 0.5, -1, 7.0 + 0.08 + 0.5, C_FLOW, lw=2.0)
@@ -129,7 +129,7 @@ def _long(ax):
     # 隆起と下刻
     for xi in (30, 100, 170):
         _arrow(ax, xi, 7.0 - 0.03 * xi - 2.8, xi, 7.0 - 0.03 * xi - 1.9, C_UP, lw=1.4, ms=8)
-    ax.text(100, 7.0 - 0.03 * 100 - 2.2, T("隆起 U", "uplift U"), ha="center", fontsize=8, color=C_UP)
+    ax.text(98, 7.0 - 0.03 * 100 - 2.6, T("隆起 U", "uplift U"), ha="right", fontsize=8, color=C_UP)
     for xi in (60, 130):
         _arrow(ax, xi, 7.0 - 0.03 * xi + 0.02, xi, 7.0 - 0.03 * xi - 0.7, C_INC, lw=1.4, ms=8)
     ax.text(130, 7.0 - 0.03 * 130 - 0.85, T("下刻 (E_p0 + β q)(1 − q/q_c) = U\n→ 勾配が決まる", "incision (E_p0 + β q)(1 − q/q_c) = U\n→ sets the slope"),
@@ -165,10 +165,10 @@ def _time(ax):
           "Coefficients of the continuous processes are multiplied by 1/i_f (the same as advancing only those processes on calendar time):"),
         "   uplift0 = %g mm/yr / i_f = %.1f mm/yr,  wthr_p0 = %g mm/yr / i_f = %.3e mm/kyr,  creep_d = %g m²/yr / F = %.4e m²/s"
         % (U_CAL, UPLIFT0, W0_CAL, WTHR_P0, D_CAL, CREEP_D),
-        T("暦の時間 = 出水の時間 / F × 1 年。20 万年 = 出水の時間 6×10⁵ s(morfac %g で流れの時間 %.0f s)。"
-          % (Grid("4m").morfac, Grid("4m").flow_time(T_RUN)),
-          "calendar time = flood time / F × 1 year; 200,000 years = flood time 6×10⁵ s (flow time %.0f s with morfac %g)."
-          % (Grid("4m").flow_time(T_RUN), Grid("4m").morfac)),
+        T("暦の時間 = 出水の時間 / F × 1 年、出水の時間 = 流れの時間 × morfac。20 万年 = 出水の時間 6×10⁷ s"
+          "(morfac %g で流れの時間 %.0f s)。" % (Grid("4m").morfac, Grid("4m").flow_time(T_RUN)),
+          "calendar time = flood time / F × 1 year, flood time = flow time × morfac; 200,000 years = flood time 6×10⁷ s"
+          " (flow time %.0f s with morfac %g)." % (Grid("4m").flow_time(T_RUN), Grid("4m").morfac)),
         "",
         T("定常の予測(結果と比べる):", "Steady-state predictions (compared with the results):"),
         T("  斜面: 岩盤面が動かない W0 e^{−H/sd*} = U → 土層厚 H_ss = sd* ln(W0/U) = %.3f m" % H_SS,
@@ -230,10 +230,11 @@ def setup():
     zp = (U_CAL * 1.0e-3 / D_EFF) * dx ** 2 * (k * g.lh - k * (k - 1) / 2.0) + z[j, g.ic - 1]
     ax.plot(np.concatenate([-k[::-1] * dx, k[1:] * dx]), np.concatenate([zp[::-1], zp[1:]]), color="C3", lw=1.3, ls="--",
             label=T("定常の予測(放物線形。分水界は渓流の底より %.2f m 高い)" % (zp[-1] - zp[0]),
-                    "steady prediction (parabola; divide %.2f m above the stream bed)" % (zp[-1] - zp[0])))
+                    "steady prediction (parabola;\ndivide %.2f m above the stream bed)" % (zp[-1] - zp[0])))
     ax.text(-20, z[j, g.ic - 1] + 3.4, T("斜面の勾配 %g" % SH, "hillslope gradient %g" % SH), fontsize=8)
     ax.set_xlabel(T("渓流からの距離 (m)", "distance from the stream (m)"))
     ax.set_ylabel("z (m)")
+    ax.set_ylim(z[j].min() - 1, z[j].max() + 2.4)        # 凡例が分水界の点に重ならない余白
     ax.legend(fontsize=7, loc="upper center")
     ax.set_title(T("横断(y = %g m の行)" % (j * dx), "Cross-section (row y = %g m)" % (j * dx)), fontsize=9)
     # 縦断
@@ -273,7 +274,7 @@ def setup():
                            "formative discharge Q = %g m³/s at the head (uniform depth %.2f m)\nslopes stay dry; free outflow at the south edge" % (QF, h0))),
         (T("渓流", "stream"), T("d50 = %g cm、空隙率 %g、H* = %g m\n剥離 k_p = %.1e m/s、τ_c = %g Pa、m = %g\n研磨 β = %.1e 1/m(出水中の値)" % (D50 * 100, LAM, HSTAR, KP, TAUC, PM, BETA),
                             "d50 = %g cm, porosity %g, H* = %g m\nplucking k_p = %.1e m/s, τ_c = %g Pa, m = %g\nabrasion β = %.1e 1/m (values during floods)" % (D50 * 100, LAM, HSTAR, KP, TAUC, PM, BETA))),
-        (T("斜面(暦の値)", "slopes (calendar)"), T("隆起 U = %g mm/yr\n土層生成 W0 = %g mm/yr(sd* = %g m)\nクリープ D = %g m²/yr(H_c = %g m)" % (U_CAL, W0_CAL, SDSTAR, D_CAL, HC),
+        (T("斜面(暦の値)", "slopes\n(calendar)"), T("隆起 U = %g mm/yr\n土層生成 W0 = %g mm/yr(sd* = %g m)\nクリープ D = %g m²/yr(H_c = %g m)" % (U_CAL, W0_CAL, SDSTAR, D_CAL, HC),
                                             "uplift U = %g mm/yr\nsoil production W0 = %g mm/yr (sd* = %g m)\ncreep D = %g m²/yr (H_c = %g m)" % (U_CAL, W0_CAL, SDSTAR, D_CAL, HC))),
         (T("時間", "time"), T("出水 %g s/年(i_f = %.1e)。dt = %g s、morfac %g(dts = %g s)\n暦の %g 万年、出力は %g 万年ごと" % (F_FLOOD, IF, g.dt, g.morfac, g.dt * g.morfac, T_RUN / 1e4, T_OUT / 1e4),
                            "flood %g s/yr (i_f = %.1e); dt = %g s, morfac %g (dts = %g s)\n%g kyr of calendar time, output every %g kyr" % (F_FLOOD, IF, g.dt, g.morfac, g.dt * g.morfac, T_RUN / 1e3, T_OUT / 1e3))),

@@ -201,8 +201,9 @@ bulging south, outer bank on the south). The dashed line is the final water surf
 ![Metrics](figs/metrics.png)
 
 Time evolution of the channel width, the maximum shift of the centre and the maximum amplitude
-of the wet belt over x = 150–650 m (all configurations; dashed = gentle recession and the feed
-configurations).
+of the wet belt over x = 150–650 m (all configurations; dashed = the three varying Q + fixation
+configurations with the gentle recession, the capacity feed, and fines + feed + ledger of fines;
+non-cohesive + capacity feed is solid).
 
 Width / maximum shift of the centre / maximum amplitude of the wet belt (m; initially 20 / 0 /
 19), deepest scour and fixed cells:
@@ -245,8 +246,9 @@ flood-period output for the varying-flow configurations.)
   blocks has little effect).
 - **Capacity feed stops the bed degradation** (non-cohesive + capacity feed): the bed change of
   the channel is −0.03 to −0.11 m (−0.48 to −0.94 m without feed), the upstream bends move too,
-  and the channel spreads the most, to a width of 38.3 m and an amplitude of 49 m at 200 h
-  (capacity feed 6,079 m³).
+  and the channel spreads the most of the constant-discharge configurations, to a width of 38.3 m
+  and an amplitude of 49 m at 200 h (capacity feed 6,079 m³; the width is the largest of all
+  configurations).
 
 ### Varying discharge and fixation: the inner bank becomes land
 

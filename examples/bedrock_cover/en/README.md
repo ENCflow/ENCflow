@@ -54,7 +54,9 @@ transported gravel hammers and wears the rock (abrasion), and the gravel that st
 (mobile layer H) covers and protects the rock. Plucked rock joins the mobile layer and also
 serves as tools. (b) Steady incision rate against supply ratio: plucking slows linearly with
 the cover, while abrasion is a hump peaking at the supply ratio 1/2 where tools balance cover.
-(c) Steady cover thickness and exposure.
+The schematic leaves out the self-supply of plucked rock, so only plucking wears at r = 0; in the
+runs the plucked gravel serves as tools and abrasion occurs even at r = 0 ("both" in the
+results). (c) Steady cover thickness and exposure.
 
 | Real phenomenon | Representation in ENCflow | Settings |
 |---|---|---|
@@ -86,8 +88,8 @@ uniform-flow hydraulics.
 
 ![Setup](figs/setup.png)
 
-Left: channel layout (configuration A; dark stripes are channels, light stripes banks). Upper
-middle: channel profile (uniform channel and the step). Lower middle: supply series of
+Left: channel layout (configuration A; green-to-blue stripes are channels, brown stripes banks).
+Upper middle: channel profile (uniform channel and the step). Lower middle: supply series of
 configuration B (constant and pulsed). Right: common settings.
 
 Incised channels one cell wide (Δx = 1 m), 100 m long, slope 0.01, roughness n = 0.04, with dry

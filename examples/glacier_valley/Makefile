@@ -4,7 +4,7 @@
 #   make run-x10    補足(param_glacial_x10.txt。侵食係数 10 倍。約 5 分)
 #   make run-lakes  湖の段(補足の最終の地形に雨を降らせる。約 3 分)
 #   make run-noero  対照(param_glacial_noero.txt。侵食なし。約 10 分)
-#   make plot       図(figs/*.png と en/figs/*.png)
+#   make plot       図(figs/*.png と en/figs/*.png。説明図 mechanism.png だけなら計算の前に python3 plot_schematic.py)
 #   make clean      リンクと生成物を削除する
 
 TOPDIR	= ../..
@@ -41,6 +41,8 @@ run-noero: all
 	./encflow param_glacial_noero.txt 2>&1 | tee Screen_glacial_noero.log
 
 plot:
+	python3 plot_schematic.py
+	python3 plot_schematic.py en
 	python3 plot_results.py
 	python3 plot_results.py en
 

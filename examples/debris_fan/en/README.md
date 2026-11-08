@@ -54,7 +54,7 @@ schematic values chosen to make the phenomena visible, and do not reproduce the 
   valley the shape of the valley breaks down, and when the valley runs obliquely to the grid
   axes the flow can be pulled toward the grid axes (in the supplement of the example
   [ashfall_lahar](../../ashfall_lahar/en/README.md), the dependence on the valley orientation
-  with four neighbours was about three times that with eight). Real valleys cannot choose their
+  with four neighbours is about three times that with eight). Real valleys cannot choose their
   orientation to the grid, and a wide area has to be computed on a coarse grid, so knowing how
   much the results depend on the choice of grid is a prerequisite for using the computation in
   hazard assessment.
@@ -168,7 +168,11 @@ python3 plot_results.py  # figs/*.png and tables (with the argument en, the Engl
 
 ## Results
 
-### How the debris flow behaves (reference: eight neighbours, 2.5 m, 0°)
+### How the debris flow behaves
+
+The numbers in this section are those of the reference (eight neighbours, 2.5 m, 0°). The
+figure shows the 5 m grid, comparing eight and four neighbours and the valley orientations
+(the map of the 2.5 m reference is not shown).
 
 ![Deposits on the 5 m grid](figs/maps_5m.png)
 
@@ -241,7 +245,7 @@ rows 3.5 m above it. Drawn from the grids of make_init.py.
   staircase that alternates between edges at 45° to the valley, with no edge along the valley as
   with eight neighbours. In both cases the debris flow stops partway and fills the valley. At 40 m
   with 22.5° and 45° almost all of the 100,000 m³ stays in the valley and does not reach the
-  fan, and even at 20 m with 45° three quarters stay in the valley. With the valley along a grid
+  fan, and even at 20 m with 45° three quarters of the 100,000 m³ stay in the valley. With the valley along a grid
   axis (0°), four neighbours also reach the fan (0.75 times the reference at 40 m).
 - **With eight neighbours the sediment reaches the fan even on grids coarser than the valley
   floor**: the diagonal edges connect the cells of the valley floor directly, so even at 40 m,
@@ -383,7 +387,7 @@ valleys of other sizes, read the grid spacing as the number of cells across the 
 | Flow intensity (maximum flow depth, force, flow reaching the houses) | about ±10 % at 1.5 cells or more across the floor (20 m; the force 0.91-1.06 times); within ±15 % at 3 cells or more (10 m) | 0.77-1.01 times even at 6 cells across the floor (5 m) |
 | Arrival time | ±10 % at 1.5 cells or more across the floor | 0.96-1.10 times even at 6 cells across the floor (5 m) |
 
-Computing time per case (4 threads, on the machine on which this example was made): 0.3 s at 40 m,
+Computing time per case (a guide with 4 threads): 0.3 s at 40 m,
 2 s at 20 m, 13 s at 10 m, a minute and a half at 5 m and 10 minutes at 2.5 m. The cost
 is inversely proportional to the cube of the grid spacing (the number of cells to the square, the
 number of time steps to the first power). To estimate the runout of debris flows over a wide area on
@@ -504,5 +508,4 @@ cells, as a guide.
   run down to about 2°). https://www.pref.tottori.lg.jp/secure/1137670/1-7.pdf
 
 The documents of the Ministry, the Geological Survey, the Forestry Agency and Tottori Prefecture were
-checked through excerpts from a web search when this example was made; their full texts have not been
-compared.
+checked through excerpts from a web search; their full texts have not been compared.

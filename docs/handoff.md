@@ -60,6 +60,51 @@ architecture.md。このメモは「現在進行中・未完了の項目」だ�
 
 ## 未完了・検証待ち
 
+00o. **examples の監査(2026-11-08。chichibu を除く README のある 31 例題)の残り**
+   - 計算なしで確かめられる誤り・説明文のない図・開発の経緯の残り(§35.1)は 2026-11-08 に直した
+     (洪水・水域・火山、地形、河川・山地の 3 コミット)。説明図の追加も同日に済んだ(stone_forest の
+     設定と仕組み、glacier_valley の機構と則、qanat・levee_breach・timberyard の則、tower_karst の
+     基準面の構成。いずれも計算結果を使わずに描く)。残りは次のとおり。
+   - **結果が要る図と数値**(利用者の保存済み結果か再計算が要る。直したら README の該当箇所も見る):
+     - landslide_tsunami: 結果の図 4 枚(profiles・probes・deposit・nonhydro)に英語版がない。
+       plot_results.py に `en` 引数がなく、ラベルが英語で固定(日本語版の README にも英語の図が載る)。
+       deposit で A の線が B の線に隠れる。profiles の縦軸の範囲では水面が見えない。
+     - badland: ℓ = 4 m と Δx = 2 m のケースは起伏 2 m に届かず、plot_results.py は最後の出力で代える。
+       README は終了時の値だと書いたが、spacing.png の凡例「起伏 2 m 到達時」と点はそのまま。未発達の
+       点を区別して描き直す。
+     - badland_round: 図の題「L ≈ 2 m」と本文の 2.4 m。
+     - mesa: maps の題「キャップ上面(z = 17 m)」(17 m は帽岩の下面。README の説明は直した)。
+       series_bench.png(README に未掲載)では、bench の大きい台地は 5×10⁷ s 以降に崩れる
+       (8.6×10⁷ s で約 2 m。bench2 は 17.8 m)。README の補足 1 は 4.3×10⁷ s の値だけを書いている
+       ので、終盤を書くなら数表を出す。
+     - tower_karst: maps_steady の色が飽和している。
+     - stone_forest: 英語版の stats の横軸の目盛の数字が続いて読めない。図 3 組(maps・sections・
+       stats)は i18n の確認記録がない。
+     - delta: fixation.png の題の陸化 66 と表の 67(この図を描くスクリプトはリポジトリにない。00g)。
+     - debris_bedrock: cover.png は 150 s までで(plot_results.py の kmax)、本文が引く 300 s の値を
+       示せない。
+     - timberyard: supp の題「海側に浮く」と描いている量(止まった材木 Wd9998)が合わない。
+     - catchment_metal: まとめの図 (b) の対数軸の下限が 0.1 kg で、ステップ 6・6b の 0.01 kg の棒が
+       見えない。ステップ 6・6b の図に本文が引く G1 の値が描かれていない。
+     - vz_tani2023: TY2 KT の p90 が 2 つの表で 0.021 と 0.020。
+     - estuary_barrage: 凡例「帯水層の塩水 zone」に英単語。図の堰の線(0.52 km)と表の 0.48 km。
+     - shield_volcano: 本文の「4 近傍の格子」と数値は旧い既定のまま(今の既定は 8 近傍の 9 点。00m (c) の
+       回し直しで直す)。dome.png の「縦は約 3 倍に拡大」は実際は約 6.4 倍。
+   - **要確認**: tsunami_town の開口部も閉じるケースの堆積に出る縞と、最大浸水深 4.79 m が沖の水位から
+     決まる静的な上限を超える理由。badland_storm 結果 5 の間隔の指標が初期の雑音を写している疑い。
+     stone_forest の台地の低下 400 mm/kyr(溶食だけなら 216 mm/kyr。残りは崩落か)。glacier_valley の
+     「最大の厚さ約 370 m」と x10 の数値(結果がなく照合していない)。
+   - 説明図を描いて分かった 2 点は、2026-11-08 に利用者の決定で回し直して解決した: levee_breach・
+     timberyard に家屋の寸法 fn_bb = 10 m(levee_breach の住宅地の粗度はガイドに合わせて 0.05 → 0.03)、
+     qanat の gwc_eps_h を既定の 0.01 m(等流の水位差 0.04 m が √ 則の枝に入る)。
+   - **大きな組み直し**: delta(要約の図と結論を冒頭に。段 6・7 の検証の記録を移す。README は約 600 行)、
+     mesa(補足 3 を結論から先に書く形に。比較の図を 1 枚に)、catchment_metal(結論を前に。ステップ 6・6b を
+     1 つの節に)。
+   - **README に載っていない図**: mesa 29 枚、badland_round 3 枚(maps_strata3・rounding_strata・
+     rounding_strata3)、badland_storm 1 枚(flow_tilt)、delta 5 枚(mud・sand・wave_a45・wave_capfeed・
+     wave_headon の *_evolution)。載せるか生成をやめるかを決める(00g の mesa の英語図の残りは、
+     README に載っていない図なので英語化は要らない)。
+
 00n. **運動量保存形移流の風上供給元 f_advection_donor(developer.md §102。既定 0。2026-11-07 に 3 を追加して 1・2 を廃止、同日 3 に側方面の乾湿判定の連続化を追加)の残り**
    - 背景: tutorials/chichibu Step 3 の逓減部の跳ね(232 min +435 m³/s)は、河岸の薄い水膜(213,39)が本川の辺の
      線 k 上の供給元になって作る人工的な減速(池の入口の 0.65 m の段差)が、水膜が dd を割った瞬間に外れる現象。

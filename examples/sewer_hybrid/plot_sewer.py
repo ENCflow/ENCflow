@@ -179,8 +179,8 @@ axl.set_xlim(0, 400)
 axl.set_ylim(0, 5.9)
 axl.set_xlabel("x (m)")
 axl.set_ylabel(T("充満率 hgc / cap", "filling ratio hgc / cap"))
-axl.set_title(T("(c) t = 1 h の管内充満率: 緩い slot_sy(A, B)は満管の 3〜5 倍の幻の貯留を作り、硬い slot_sy(D)は 2 倍未満に収まる",
-                "(c) Filling ratio at t = 1 h: soft slot_sy (A, B) gives 3–5× pipe-full phantom storage; stiff slot_sy (D) stays below 2×"),
+axl.set_title(T("(c) t = 1 h の管内充満率: 緩い slot_sy(A, B)では枝管の東端で 5〜5.5 になり(1 を超える分は幻の貯留)、\n硬い slot_sy(D)は 2 未満に収まる",
+                "(c) Filling ratio at t = 1 h: with soft slot_sy (A, B) it reaches 5–5.5 at the east end of the branch (the part above 1 is\nphantom storage); with stiff slot_sy (D) it stays below 2"),
               fontsize=11, loc="left")
 axl.legend(loc="upper left", frameon=False, fontsize=9, ncol=2)
 style(axl)

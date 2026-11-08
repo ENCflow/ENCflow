@@ -117,9 +117,10 @@ ax.axis("off")
 ax = axs[2]
 r = np.linspace(0, 1, 200)
 for a_, lab in [(0.08, T("降伏応力が小さい", "small yield stress")), (0.6, T("大きい(溶岩ドーム)", "large (lava dome)"))]:
-    h = np.sqrt(a_ * (1 - r))
-    ax.plot(np.r_[-r[::-1], r], np.r_[h[::-1], h], lw=2, label=lab)
-ax.text(-0.95, 0.85, T("1 つの火口から噴出して止まった形\nh(r)² = (2τ_y/ρg)(R − r)(塑性ドーム)", "shape at rest from one vent\nh(r)² = (2τ_y/ρg)(R − r) (plastic dome)"), fontsize=9)
+    R = (a_ / 0.08) ** -0.2          # 同じ体積 V = (8π/15)√a R^2.5 にそろえる: R ∝ a^−0.2(a = 2τ_y/ρg)
+    h = np.sqrt(a_ * R * (1 - r))
+    ax.plot(R * np.r_[-r[::-1], r], np.r_[h[::-1], h], lw=2, label=lab)
+ax.text(-0.95, 0.85, T("1 つの火口から同じ体積を噴出して止まった形\nh(r)² = (2τ_y/ρg)(R − r)(塑性ドーム)", "shape at rest of the same volume from one vent\nh(r)² = (2τ_y/ρg)(R − r) (plastic dome)"), fontsize=9)
 ax.set_ylim(0, 1.1); ax.legend(fontsize=8, loc="center right")
 ax.set_title(T("(c) 降伏応力が形を決める(粘度は速さだけ)", "(c) the yield stress sets the shape (viscosity only the speed)"), fontsize=10)
 ax.set_yticks([]); ax.set_xticks([])

@@ -67,7 +67,7 @@ at the head. (c) Rock erosion law: a rate with a threshold set by the slope and 
 The rock erosion law uses the excess form of the quasi-static driving stress rather than the
 inertial stress of particle impacts because a single-layer mixture does not resolve the coarse
 front where the impacts concentrate. A law proportional to the inertial stress is sensitive to
-numerically thin layers, and changing the resistance law changed its result by an order of
+numerically thin layers, and changing the resistance law changes its result by an order of
 magnitude. The quasi-static stress equals the bed shear stress of the resistance law in steady
 uniform flow and does not depend on the choice of law
 ([supplement](../../../docs/en/users_guide/sediment.md#bedrock-incision-by-flowing-water-f_rockinc)).
@@ -92,9 +92,9 @@ with free outflow at the south end and roughness n = 0.05.
   δe = 7×10⁻⁴, δd = 0.05). Common: φ = 35°, λ = 0.4, low-velocity settling `f_dbstop = 1`
   (`db_vstop` = `db_wstop` = 0.05 m/s), slope correction `f_gravity_correction = 2` (default).
 - **Bed**: bare rock (sd = 0) and a deposit 0.3 m thick.
-- **Rock erosion**: k_d = 1.8×10⁻⁴ m/s, τ_cd = 1 kPa, m_d = 1, H* = 0.05 m. k_d was chosen so
+- **Rock erosion**: k_d = 1.8×10⁻⁴ m/s, τ_cd = 1 kPa, m_d = 1, H* = 0.05 m. k_d is chosen so
   that the mean over the stream (0–360 m) for Takahashi–Nakagawa on bare rock is about 1 cm per
-  event (1.10 cm with the hydraulics of the current defaults).
+  event (1.17 cm for T_b in the results).
 - **Time**: 300 s with dt = 0.02 s. The landform is updated every step (`dt_geomorph = 0`,
   `morfac = 1`). Output every 10 s.
 
@@ -363,10 +363,10 @@ interval between debris flows (once in how many years) is chosen by the user.
 ## Choosing the settings (channel shape and resistance law)
 
 - **A channel one cell across (supplement)**: running the same chain in the 5-cell channel of the
-  first part, the columns along the walls were plucked 35 % less even in the first flood. Once the
-  middle was lower, the flow gathered there and the floods nearly stopped eroding the wall columns.
-  At slope 0.20, once in 100 years, the lowering rate of the middle three columns rose 1.45 times
-  over 10 cycles, and in 150 cycles with uplift the centre column became a slot 7–10 m deep. Rock
+  first part, the columns along the walls are plucked 35 % less even in the first flood. Once the
+  middle is lower, the flow gathers there and the floods nearly stop eroding the wall columns.
+  At slope 0.20, once in 100 years, the lowering rate of the middle three columns rises 1.45 times
+  over 10 cycles, and in 150 cycles with uplift the centre column becomes a slot 7–10 m deep. Rock
   erosion in ENCflow is vertical only, with no lateral erosion, so nothing stops the positive
   feedback of gathering flow and the channel narrows to the grid width. For a question about the
   long profile we use a one-cell channel whose cross-section cannot change. Floods in one cell have
@@ -376,10 +376,10 @@ interval between debris flows (once in how many years) is chosen by the user.
   becomes cos²θ times smaller on steep slopes, and the same k_p gives a steady slope of 0.379 with
   floods only).
 - **Outfall (supplement)**: the cell at a free-outflow boundary has slightly deeper and slower flow
-  (5 % at slope 0.30) and is plucked 17 % less (computed with f_gravity_correction = 1), so the last cell of the channel became a sill that
-  trapped the sediment carried by the floods, and the deposit grew upstream (with size 0.4 m even
-  at slope 0.40). With an outfall of slope 0.6 below the channel the sediment leaves without
-  stopping.
+  (5 % at slope 0.30) and is plucked 17 % less (computed with f_gravity_correction = 1), so without
+  an outfall the last cell of the channel becomes a sill that traps the sediment carried by the
+  floods, and the deposit grows upstream (with size 0.4 m even at slope 0.40). With an outfall of
+  slope 0.6 below the channel the sediment leaves without stopping.
 - **Resistance law**: Takahashi–Nakagawa gives a thick and slow flow in the upper part of the steep
   reach (flow depth after the front has passed (30 s) 0.75, 0.76 and 0.78 m at 21, 41 and 61 m from
   the head, speed 3.8 to 4.0 m/s) and Coulomb + Manning a thin and fast one (0.68, 0.71 and 0.74 m,

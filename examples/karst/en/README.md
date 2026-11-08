@@ -135,8 +135,9 @@ period.
 
 ![Evolution of the denudation depth](figs/evolution.png)
 
-Terrain (shading) and denudation depth (coloured dots) at landform times of 250, 750, 1000 and 1500
-years (the maximum denudation depth is in each title).
+Terrain (shading) and contours of the denudation depth (0.5, 1, 2, 4 and 8 m; the dolines are 1–2
+cells wide, so the contours appear as small rings) at landform times of 250, 750, 1000 and 1500 years
+(the maximum denudation depth is in each title).
 
 ![Sections through the deepest doline](figs/sections.png)
 
@@ -275,13 +276,13 @@ each update as talus (ht; also added to the soil sd) (angle of repose of talus 3
   Choose a morfac for which Δz per update is much smaller than the ponding depth. To extend the landform
   time, chain restarts.
 - **Safety valve dissol_dzmax**: with a cap on the dissolution per cell and update (the dissolving power
-  beyond it is discarded), morfac = 10⁴ also runs (testing dzmax = 0.05 m for 3 days = 30 days at 10³:
-  the mean lowering of the plain, 0.037 m, is almost equal to 0.041 m at 10³, but the deepest sink, −3.6
-  m, is shallower than −9.9 m at 10³ = the growth of the holes is capped). It is not suited to studying
-  the depth of the holes.
+  beyond it is discarded), morfac = 10⁴ also runs, but the cap limits the growth of the holes. With
+  dzmax = 0.05 m and morfac = 10⁴ for 3 days (equivalent to 30 days at 10³), the mean lowering of the
+  plain is 0.037 m, almost equal to 0.041 m at 10³, while the deepest sink is −3.6 m, shallower than
+  −9.9 m at 10³. It is not suited to studying the depth of the holes.
 - **Receptacle of the sinks**: when the head of the conduit layer reaches the surface, the inflow stops
   and water remains in the depressions (with a storage coefficient of 0.1 and a depth of 50 m this
-  happened within 10 days). This example uses a storage coefficient of 1, a depth of 1000 m and a
+  happens within 10 days). This example uses a storage coefficient of 1, a depth of 1000 m and a
   capacity of 2000 m, a receptacle into which water "disappears underground". To represent springs, add
   lateral flow `gwc_cnd_m2s` and an outfall `fn_gwc_outfall` ([qanat](../../qanat/en/README.md),
   [test/coastal_drain](../../../test/coastal_drain/en/README.md)).

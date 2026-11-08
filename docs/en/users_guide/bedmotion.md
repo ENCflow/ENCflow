@@ -229,7 +229,7 @@ waves spreading from uplifted areas, their superposition in bays) it is
 part of the same run with the settings of §3 unchanged. The example is
 [examples/tsunami_coast](../../../examples/tsunami_coast/en/README.md) (a deep
 fault under the coast subsides the shore by 0.6 m, and the disturbance
-reaches the coast 10 minutes before the offshore fault's tsunami).
+reaches the coast 7–8 minutes before the offshore fault's tsunami).
 
 When you already hold **a displacement field of your own** (geodetic
 data, slip inversions, other models), write the table yourself following
@@ -469,8 +469,8 @@ The three ways a field gets written (automatic / flag / riding on a flag) and th
 - [examples/tsunami_coast](../../../examples/tsunami_coast/en/README.md):
   three segments, a deep fault under the coast (0.6 m coastal subsidence),
   a shallow offshore fault (the main tsunami, 30 s later) and a splay
-  fault at the bay mouth (0.8 m uplift of the cape). The disturbance from
-  the coastal deformation reaches the shore 10 minutes before the offshore
+  fault at the bay mouth (up to 1.0 m uplift of the cape). The disturbance from
+  the coastal deformation reaches the shore 7–8 minutes before the offshore
   tsunami, and the subsided plain at the bay head floods earlier.
 - [examples/levee_breach](../../../examples/levee_breach/en/README.md):
   overtopping at a low section of the crest breaches a resolved levee (the

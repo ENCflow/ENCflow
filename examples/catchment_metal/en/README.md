@@ -164,10 +164,9 @@ The settings and equations of each mechanism are in the users guide:
   rivers are recorded every hour.
 - dt = 10 s, 180 days. With gfortran and 4 threads, step 1 takes 16 minutes,
   steps 2–5, which include groundwater flow, about 20 minutes per case, and
-  steps 6 and 6b about 15 minutes (measured for steps 1, 4 and 6; about
-  2 hours 30 minutes for the eight cases). The
-  results do not depend on the number of threads (bit-identical with 1 and
-  4 threads).
+  steps 6 and 6b about 15 minutes (about 2 hours 30 minutes for the eight
+  cases). The results do not depend on the number of threads (the results
+  with 1 and 4 threads are bit-identical).
 
 | Case | Settings file | Groundwater flow | Retardation R | Tanks | Form of the substance | Evapotranspiration |
 |---|---|---|---|---|---|---|
@@ -277,10 +276,10 @@ The dashed lines are G3 of step 3 (no tanks).
   first place.
 - **Half the load of the tributary with the tanks**: the amount passing the
   outlet of the farm tributary (G3) drops from 4.6 kg to 2.1 kg. The tanks
-  start empty and are not full until about day 70; they spill for the
-  first time in the 7th storm (day 63). Until then they store the water and
-  substance of the floods, and water from above the tanks does not reach
-  the outlet (discharge of G3 in figure (d)).
+  start empty, fill and begin to spill after the 7th storm (day 63), and
+  floods reach G3 from the 8th storm (day 73). Until then they store the
+  water and substance of the floods, and water from above the tanks does
+  not reach the outlet (discharge of G3 in figure (d)).
 - **Smoothing of the load**: once full, the tanks release the stored
   substance little by little in the dry season, so the dry-season
   concentration at G3 is higher with the tanks (average 0.27 µg/L, against
@@ -448,7 +447,7 @@ day 180, 1–2 kg is in the surface water. The table is printed by
 ## Applying this to a real catchment
 
 - **Grid and computing time**: this example is 214 km² on a 250 m grid
-  (3,430 cells), 16–20 minutes per case for 180 days (4 threads). A
+  (3,430 cells), 15–20 minutes per case for 180 days (4 threads). A
   1,000–1,500 km² catchment on a 250 m grid has around 20 thousand cells,
   and more than 100 thousand on a 100 m grid. Computing time is roughly
   proportional to the number of cells, so use MPI parallelism as well
@@ -472,7 +471,7 @@ day 180, 1–2 kg is in the surface water. The table is printed by
     absorbed never returns to the surface, so both forms are trapped
     completely until the tank is full and not at all afterwards.
   - The dam and lake structures treat the pond as fully mixed, and settling
-    in the pond is not implemented yet. The particulate form is released
+    in the pond is not represented. The particulate form is released
     without settling in the pond, so the release concentration comes out
     too high and the trapping too low.
 - **Form of the substance**: real heavy metals are split between dissolved

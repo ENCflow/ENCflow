@@ -57,6 +57,39 @@ chosen to make the processes easy to see; they do not reproduce a particular val
 | Surface water | Shallow-water flow (free outflow at the east edge) | Rain and meltwater flow down the valley |
 | Lake stage | Shallow-water flow only | Rain on the final terrain of the supplement; looks at the water that does not drain |
 
+![Mechanisms and laws](figs/mechanism.png)
+
+(a) Schematic long section of the valley glacier (shapes and scale are conceptual). Above the equilibrium
+line, 2680 m (0 °C), all precipitation falls as snow, and the snow turns into ice with the time constant
+gl_tfirn_yr (200 years of landform time). On slopes steeper than 0.6, a share min(1, (tanθ − 0.6)/0.6) of
+the snow moves to the downslope neighbouring cells at each update (avalanching). Below the equilibrium
+line, rain runs off and the snow-free ice surface melts. The ice flows by basal sliding and internal
+deformation, and the bed under the sliding ice is cut (the debris is carried out of the domain and not
+deposited). The terminus settles where the ice that flows in balances the melt. (b1) The surface mass
+balance b that ENCflow gives with this example's values (per year of landform time). The temperature at
+the ice-surface elevation z is 17.42 °C − 0.65 °C/100 m × z, and precipitation is
+1500 mm/yr × (1 + 5 % × (z − 2680 m)/100 m). Above the equilibrium line all precipitation becomes ice
+(except snow moved by avalanching); below it the snow-free ice surface melts with a degree-day factor of
+6 mm/°C/day (a degree-day method; sublimation and refreezing are not represented). b jumps from 0 to
++1.5 m/yr at the equilibrium line and falls by 1.42 m/yr for every 100 m below it. On the right is the
+elevation distribution of the initial terrain: 50 of its 192 km² lie above the equilibrium line. The
+plateau spreads just above the line, so a small shift of the line changes the accumulation area a lot
+(see "Notes" below). (b2) SIA ice flux per unit width (Glen's n = 3 and Weertman's m = 3 are fixed). The
+deformation term (2A/5)(ρ_i g|∇s|)³H⁵ and the sliding term A_s(ρ_i g|∇s|)³H⁴ are in the ratio H : 2500 m,
+so even 300 m of ice moves 89 % of its flux by sliding in this example. (b3) Weertman sliding
+u_b = A_s τ_b³ (the default A_s = 10⁻¹³ m yr⁻¹ Pa⁻³ gives 100 m/yr at 100 kPa). (b4) Erosion law
+ė = K_g u_b (K_g = 10⁻⁴ in the main run, 10⁻³ in the supplement) and the range of measured erosion rates
+(Hallet et al. 1996). Ice 300 m thick with a surface slope of 0.03 has τ_b = 79 kPa and u_b = 50 m/yr,
+and erodes 5 mm/yr (the example in b3). Erosion grows with the cube of τ_b, so even thin ice erodes fast
+on steep slopes (the head slopes and shoulder edges in the results). (b5) Erosion coupling length
+gl_lc = 500 m: the τ_b used for erosion is the magnitude of the driving-stress vectors of the surrounding
+ice-covered cells averaged with these weights (standard deviation 500 m); the flow uses the local value
+(applying the Gaussian kernel with the same length across the valley is ENCflow's own simplification;
+"Erosion coupling length" in the users guide). (c) One update (30 s) is 0.19 years of landform time, and
+6000 years are 946,740 s of computational time (about 11 days). Only the ice gain and loss, the flow and
+the erosion are advanced by gl_morfac; rain and meltwater flow are not accelerated, so the ice and water
+budgets do not match (an approximation of the time acceleration).
+
 ## Geometry and settings
 
 ![Settings](figs/setup.png)
@@ -109,11 +142,14 @@ make run-x10       # supplement (about 5 minutes)
 make run-lakes     # lake stage (prep_lakes.py copies the final terrain of the supplement to data/z_glacial.txt; about 3 minutes)
 make run-noero     # control (about 10 minutes)
 make plot          # figs/*.png and en/figs/*.png
+python3 plot_schematic.py   # explanatory figure figs/mechanism.png only (no results needed; en: English)
 ```
 
-With the main run alone, setup.png, glacier.png and valley.png can be drawn. With the supplement, the lake
-stage and the control, x10.png and the control line are added. Set the number of threads with
-`OMP_NUM_THREADS`. The figures need Python 3, NumPy and matplotlib.
+mechanism.png uses no results (it is drawn from the formulas, the setting values and the terrain of
+make_terrain.py), so it can be drawn before the runs. With the main run alone, setup.png, glacier.png and
+valley.png can be drawn. With the supplement, the lake stage and the control, x10.png and the control
+line are added. Set the number of threads with `OMP_NUM_THREADS`. The figures need Python 3, NumPy and
+matplotlib.
 
 ## Results
 
@@ -121,14 +157,15 @@ stage and the control, x10.png and the control line are added. Set the number of
 
 ![Glacier and erosion in the main run](figs/glacier.png)
 
-(a) Ice thickness after 6000 years. (b) Distribution of erosion (the blue line is the glacier extent).
-(c) Ice volume and maximum erosion. (d) Position of the terminus of the main glacier (compared with the
-control).
+(a) Ice thickness after 6000 years (the grey is a hillshade of the bed after 6000 years, with the ice
+thickness coloured where it is 1 m or more). (b) Distribution of erosion (the blue line is the glacier
+extent). (c) Ice volume and maximum erosion. (d) Position of the terminus of the main glacier (compared
+with the control).
 
 - **Growth of the glacier**: within about 1000 years, snow builds ice about 150 m thick that covers the
-  plateaus on both sides, and a valley glacier (up to about 370 m thick) that extends to x ≈ 15.7 km. In
-  the tributary, a small glacier about 60 m thick forms at its head, and the ice of the main valley pushes
-  a little over 1 km into the mouth of the tributary.
+  plateaus on both sides, and a valley glacier (up to about 370 m thick) that extends to x ≈ 15.3 km; its
+  terminus advances to 15.7 km by 2000 years. In the tributary, a small glacier about 60 m thick forms at
+  its head, and the ice of the main valley pushes a little over 1 km into the mouth of the tributary.
 - **Distribution of erosion**: after 6000 years the erosion is at most 76 m on the steep slopes of the
   valley head, 30–60 m at the shoulder edges where plateau ice flows down into the valley, and 16–42 m on
   the floor of the main valley. On steep slopes, even thin ice has a large basal shear stress, so sliding
@@ -219,8 +256,8 @@ erosion). It does not mean that the erosion rate itself matches measurements.
   because the ice is thicker there.
 - **The glacier size is sensitive to the equilibrium line**: the plateau at the valley shoulders for
   x < 7 km lies just above the equilibrium line, so moving the line a little changes the size of the
-  accumulation area a lot (in a trial run with the equilibrium line at 2750 m, the terminus was at 10.9 km
-  and did not reach the tributary confluence).
+  accumulation area a lot (with the equilibrium line at 2750 m, the terminus is at 10.9 km and does not
+  reach the tributary confluence).
 - **Update interval**: one glacier update is 0.19 years of landform time. Lengthening the interval to tens
   of years of landform time gives unnatural results from the time splitting (aim for one year or less).
 - **Small lakes**: among the lakes of the supplement, the 6 m deep lakes at the shoulder edges are 1–3

@@ -2,6 +2,8 @@
 
 > English mirror of examples/vz_tani2023/README.md. The Japanese file is the master copy.
 
+[日本語](../README.md)
+
 This example recomputes, with the vertical unsaturated flow (VZ) runoff of ENCflow
 ([fn_vz](../../../docs/en/users_guide/vz.md)) and the same settings, the
 computations of the VZ runoff model that Tani (2023)[^tani2023] carried out with
@@ -287,9 +289,9 @@ makes no adjustment to fit the observations):
 
 The 1-hour rain bars of the figures are drawn centred on the full hour, and the
 figures do not tell whether the rain belongs to the hour before or after the full
-hour. The computation was run with the bars as drawn and shifted by ±0.5 h and
+hour. The computation is run with the bars as drawn and shifted by ±0.5 h and
 ±1.0 h, and the assignment minimising p90 for the values of the paper at limit 2 or
-more was taken (`RAIN_SHIFT_H` of `extract_tani2023.py`; for KI2 the comparison with
+more is taken (`RAIN_SHIFT_H` of `extract_tani2023.py`; for KI2 the comparison with
 the straight baseflow given).
 
 | Event | −1.0 h | −0.5 h | bars as drawn | +0.5 h | +1.0 h |
@@ -306,7 +308,7 @@ the hour ending at the full hour. Why only TY1 differs cannot be told from the p
 was made is suspected, but not confirmed). KIEX (bars from the start of the rain at
 0 h) and MREX (bars averaged over about 12 hours) are not shifted.
 
-## What this example does not cover yet
+## What this example does not cover
 
 - The "investigated distribution" of soil depth (frequency distributions of KI and
   MR) has no numbers in the paper, so only the linear distribution can be handled

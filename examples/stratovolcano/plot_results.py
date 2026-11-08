@@ -193,7 +193,7 @@ if avail:
         ax.imshow(rgb, origin="upper", extent=[KM[0], KM[1], KM[0], KM[1]])
         lev = np.arange(10, z.max(), 20)
         # 配列の先頭行が北端なので、行の座標は北から南へ減らす(X・Y を渡すと origin・extent は
-        # 効かず、そのままでは陰影の図と南北が逆になる。2026-11-04 修正)
+        # 効かず、そのままでは陰影の図と南北が逆になる)
         ax.contour(x / 1000, x[::-1] / 1000, z, levels=lev, colors="k", linewidths=0.4)
         h, r10, s1, s2, s3 = morph(z)
         print(f"  {c}: H = {h:.0f} m, R10 = {r10 / 1000:.2f} km, slopes {s1:.1f} / {s2:.1f} / {s3:.1f} deg")

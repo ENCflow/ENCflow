@@ -118,9 +118,9 @@ leading wave is 24 % lower with non-hydrostatic pressure.
 | 5 South y = 30.5 km (beyond the end of the fault) | 0.322 / 138 / -0.146 | 0.325 / 126 / -0.148 | 0.311 / 150 / -0.128 |
 
 - **The effect of the rise time** is small. With 30 s (shorter than the time
-  for the wave to cross the fault width, 30 km / 140 m/s ≈ 210 s), apart from
+  for the wave to cross the fault width, horizontally 29 km / 140 m/s ≈ 207 s), apart from
   the maximum water level directly above the source going from 2.02 to 1.77 m,
-  the wave heights after propagation differ by 1–2% and the times of the
+  the wave heights after propagation differ by 2.4% or less and the times of the
   maximum are delayed by 12–18 s (the centroid of the rise). The single
   snapshot of the instantaneous displacement gives the same result as the
   conventional way of prescribing "initial water level = ground displacement".

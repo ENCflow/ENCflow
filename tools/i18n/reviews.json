@@ -122,11 +122,11 @@
     {
       "source": "docs/users_guide/bedmotion.md",
       "target": "docs/en/users_guide/bedmotion.md",
-      "source_sha256": "62bfad6f378e27b72f0c530cb3ffe92b91f91c031606f1eff57e7d334a710a0d",
-      "target_sha256": "6a015ef91f54687fdfdbc67716b2297c257bec5b36b6e82368012b05dfc53a3c",
-      "reviewer": "Claude (Claude Code session; reviewed the Japanese source against the English mirror; figures from the same results and drawing code with label changes only, 2026-10-30)",
+      "source_sha256": "61288a0f125a3e6fea6547ed849de802765fcf5348d5e4699529825b0ec3ea7f",
+      "target_sha256": "8f7cc855d8a5f46a8cf3b0a763f97823d0107192adc44cf9c407a480b00d15ae",
+      "reviewer": "Claude (Claude Code session; corrected both versions in parallel against the local results and inputs (probe series, displacement snapshots, fill ratios, run steps), and compared the edited passages and numbers)",
       "method": "assistant",
-      "reviewed_on": "2026-10-30"
+      "reviewed_on": "2026-11-08"
     },
     {
       "source": "docs/users_guide/bedmotion_models.md",
@@ -248,9 +248,9 @@
     {
       "source": "docs/users_guide/encgrid.md",
       "target": "docs/en/users_guide/encgrid.md",
-      "source_sha256": "890334ad83a524fba56002dcacf4cc9d412d3bca8dd43fb4d52f565fcdba1a8b",
-      "target_sha256": "a7ec0d86fa44f63970dfe84ad1c82ce2ae4d7e067281c44bc0bbb69664bca065",
-      "reviewer": "Claude (Claude Code session; STG grid: domain mask and two or more MPI processes unsupported and stopped at initialization, new test/stg; Japanese and English edited together and read side by side)",
+      "source_sha256": "452681d125b3ef1884c17b39776061cd7f23fe7481e0485354c6fac379d6869b",
+      "target_sha256": "174c8958188a71d36b1bdd822dc6776f55e68b47f935db4cec6b5e754ac54340",
+      "reviewer": "Claude (Claude Code session; merged main into the branch and compared both versions of the two changed passages: section 2 passage width and section 9 STG limits)",
       "method": "assistant",
       "reviewed_on": "2026-11-08"
     },
@@ -356,11 +356,11 @@
     {
       "source": "docs/users_guide/lavaflow.md",
       "target": "docs/en/users_guide/lavaflow.md",
-      "source_sha256": "fb2a8f407d4fe258d496433267fa93d34cdb4ecca5491d6268713050abcbc9c4",
-      "target_sha256": "7c5cbadd1a45b15186270ebb1d71466eb63d2ae7b4c7b4b9dd56efcbb063969b",
-      "reviewer": "Claude (Claude Code session; mechanical renumbering of the developer.md section references §93-96 -> §96-99 (collision with the sections merged from main) in both files, checked by script that the lines differ only in those numbers and that both files carry the same references; rest unchanged since the previous record)",
+      "source_sha256": "622e2fe9212fc31f2b4ed8a7e963049fbf5e4a107f621a33b8b07d2bbff8a494",
+      "target_sha256": "6e4984b9a7e51d32eb6d49b30b15804d63977057d92995c48712ea5cde8553f4",
+      "reviewer": "Claude (Claude Code session; corrected both versions in parallel against the inputs, scripts and source (param files, plot scripts, list/source definitions), and compared the edited passages and numbers)",
       "method": "assistant",
-      "reviewed_on": "2026-11-05"
+      "reviewed_on": "2026-11-08"
     },
     {
       "source": "docs/users_guide/massflow.md",
@@ -959,11 +959,11 @@
     {
       "source": "examples/badland/README.md",
       "target": "examples/badland/en/README.md",
-      "source_sha256": "6f76109d677ea6ba28d3bed60ff96d27c1bc12363587de781b93fa4b117a58c3",
-      "target_sha256": "107a52e966da99555c42fa7860cea4941168a17aa13927f31010891a2fbadba1",
-      "reviewer": "Claude (Claude Code session; Japanese source and English mirror updated together after recomputing the example: changed captions, table rows and notes compared line by line, numbers checked against the plot_results.py output; model run by the session)",
+      "source_sha256": "62d6af25ffef670d586b54b97974c3cf07a25cd10101d4a589aa00c15f4fc6c2",
+      "target_sha256": "831ad8b0e166f744cd1cf34fc36d421d11891c503fc3bae17692f8f7562d7f8e",
+      "reviewer": "Claude (Claude Code session; corrected both versions in parallel against the inputs, scripts and committed figures, and compared the edited passages and numbers)",
       "method": "assistant",
-      "reviewed_on": "2026-11-02"
+      "reviewed_on": "2026-11-08"
     },
     {
       "source": "examples/badland/figs/main_features.png",
@@ -1022,11 +1022,11 @@
     {
       "source": "examples/badland_round/README.md",
       "target": "examples/badland_round/en/README.md",
-      "source_sha256": "7a007b4a3115ef68f962aff2fe34bca87e0a319e15b0aa8ececaed51a23be322",
-      "target_sha256": "1c4d4b63129c89ed88ddedca2a1d19c8552264e89353df21c2983ec17d8a33ca",
-      "reviewer": "Claude (Claude Code session; Japanese source and English mirror written together and compared section by section, tables and numbers checked; no model execution)",
+      "source_sha256": "334840c5f74de12fe81c4f11c9c28f169f5d8da0ac3d560bbcb9fe49baca29d2",
+      "target_sha256": "8a59f22a7c8c71724ecdb636fd07d68ad85d1a1db1802f0c6df0d4e66d410a7d",
+      "reviewer": "Claude (Claude Code session; corrected both versions in parallel against the inputs, scripts and committed figures, and compared the edited passages and numbers)",
       "method": "assistant",
-      "reviewed_on": "2026-11-02"
+      "reviewed_on": "2026-11-08"
     },
     {
       "source": "examples/badland_round/figs/maps.png",
@@ -1157,9 +1157,9 @@
     {
       "source": "examples/badland_storm/README.md",
       "target": "examples/badland_storm/en/README.md",
-      "source_sha256": "9cae9f23950b9afd1e162654233a541436d8d2034af2076e1a818d20969ba50a",
-      "target_sha256": "733af83f3424482ca9825beddd168a92d9c9c5f2b66322a25decbe5815fd95bd",
-      "reviewer": "Claude (Claude Code session; removed development history from both versions in parallel and compared the edited passages, headings, tables and numbers; no model execution)",
+      "source_sha256": "c025ea659481fcb99183e159a2539a15b88f03b27f99572047b1b75642d2095a",
+      "target_sha256": "7e9f6a3cc309233a5317efe439a956c2ee459297a71d7361aaff18a570a96db9",
+      "reviewer": "Claude (Claude Code session; corrected both versions in parallel against the inputs, scripts and committed figures, and compared the edited passages and numbers)",
       "method": "assistant",
       "reviewed_on": "2026-11-08"
     },
@@ -1265,9 +1265,9 @@
     {
       "source": "examples/bedrock_cover/README.md",
       "target": "examples/bedrock_cover/en/README.md",
-      "source_sha256": "3a3b470772221c24f58b5de1efdd2df455039821a87b08a3faa03626f250e619",
-      "target_sha256": "97fa67cb18f000bd55fe08f69c3cbca58de11d5691b2715b8607ad5ec76c67ab",
-      "reviewer": "Claude (Claude Code session; removed development history from both versions in parallel and compared the edited passages, headings, tables and numbers; no model execution)",
+      "source_sha256": "4ea5e061ddf27bbd901fde2c4ea18aab3ca4654e8f9256562ce24fd26a93901a",
+      "target_sha256": "8a3172998b8c436e6d75899943c52a79f26b1d1c12c5b4d314f87113e240ca26",
+      "reviewer": "Claude (Claude Code session; corrected both versions in parallel against the inputs, scripts and committed figures, and compared the edited passages and numbers)",
       "method": "assistant",
       "reviewed_on": "2026-11-08"
     },
@@ -1290,6 +1290,15 @@
       "reviewed_on": "2026-11-05"
     },
     {
+      "source": "examples/bedrock_cover/figs/mechanism.png",
+      "target": "examples/bedrock_cover/en/figs/mechanism.png",
+      "source_sha256": "b9a9f1bc82ed80c0f1f4827cd47ea22aa8d9ae7ef5a388448e7ce75a2225b600",
+      "target_sha256": "5120711d137be254f28ee0c53ae50be99a737b4628efdd322ef31c80244b6647",
+      "reviewer": "Claude (Claude Code session; regenerated both from the same inputs and compared every label)",
+      "method": "assistant",
+      "reviewed_on": "2026-11-08"
+    },
+    {
       "source": "examples/bedrock_cover/figs/pulse.png",
       "target": "examples/bedrock_cover/en/figs/pulse.png",
       "source_sha256": "7867cca5b1e20f7623ea4496b9db86b87b1e4e4472927784a33ac19f3048ec09",
@@ -1297,6 +1306,15 @@
       "reviewer": "Claude (Claude Code session; recomputed 2026-11-05: both drawn by plot_results.py from the same results, labels compared with the Japanese figure)",
       "method": "assistant",
       "reviewed_on": "2026-11-05"
+    },
+    {
+      "source": "examples/bedrock_cover/figs/setup.png",
+      "target": "examples/bedrock_cover/en/figs/setup.png",
+      "source_sha256": "f83024579545cda8a1daa5865750f40524186116359d6348e1760e04e858d81d",
+      "target_sha256": "9fd94741c6750fa114324cae953b9bc867a448ed434acaf9e56b28a2bdfb459b",
+      "reviewer": "Claude (Claude Code session; regenerated both from the same inputs and compared every label)",
+      "method": "assistant",
+      "reviewed_on": "2026-11-08"
     },
     {
       "source": "examples/bedrock_cover/figs/supply.png",
@@ -1310,9 +1328,9 @@
     {
       "source": "examples/catchment_metal/README.md",
       "target": "examples/catchment_metal/en/README.md",
-      "source_sha256": "5a78c84668d60e26f1cead8f31af0558dd57efbda0c23293d70bfff82bfbf1d5",
-      "target_sha256": "235c1e2287520e5a263a5f34a4d9f3701c021b0009be2e3115b5a9c12e459f3d",
-      "reviewer": "Claude (Claude Code session; removed development history from both versions in parallel and compared the edited passages, headings, tables and numbers; no model execution)",
+      "source_sha256": "48a3a414c81a4679086fc1253835b3df4d2571c0a30b5b3fd2db28e65c4a0bed",
+      "target_sha256": "5eac9a7bc987553a62fba25112390b076bb99a0710bc3aa3e3602ec7e88271c2",
+      "reviewer": "Claude (Claude Code session; corrected both versions in parallel against the inputs, scripts and source (param files, plot scripts, list/source definitions), and compared the edited passages and numbers)",
       "method": "assistant",
       "reviewed_on": "2026-11-08"
     },
@@ -1409,9 +1427,9 @@
     {
       "source": "examples/debris_bedrock/README.md",
       "target": "examples/debris_bedrock/en/README.md",
-      "source_sha256": "a521662cddfa6f9523b2c345c3ecbb5b741ecaf6f2f9ca57e9a1deae18361ecf",
-      "target_sha256": "395b372d34620d46c15813a2de9027d9cc2033ef353fa4ad3e55621e79c066e7",
-      "reviewer": "Claude (Claude Code session; removed development history from both versions in parallel and compared the edited passages, headings, tables and numbers; no model execution)",
+      "source_sha256": "2306fb3cfe9a3e930b446c87e181f242dd39311fd97a0a6e3b66609751e8e13c",
+      "target_sha256": "e3803bd9c0be51459f92c59f27acbf21a674abb92558371e6def4fdd95f6c394",
+      "reviewer": "Claude (Claude Code session; corrected both versions in parallel against the inputs, scripts and committed figures, and compared the edited passages and numbers)",
       "method": "assistant",
       "reviewed_on": "2026-11-08"
     },
@@ -1470,6 +1488,24 @@
       "reviewed_on": "2026-11-06"
     },
     {
+      "source": "examples/debris_bedrock/figs/mechanism.png",
+      "target": "examples/debris_bedrock/en/figs/mechanism.png",
+      "source_sha256": "709d7dcd7c71ca20657900b9276fb886de710a96cd0aa5ddc11095e8ae1ce10b",
+      "target_sha256": "c31f7d6280a34a27c62250ddaffae85f24056340ed65aa92c45df94107ee0b96",
+      "reviewer": "Claude (Claude Code session; regenerated both from the same inputs and compared every label)",
+      "method": "assistant",
+      "reviewed_on": "2026-11-08"
+    },
+    {
+      "source": "examples/debris_bedrock/figs/setup.png",
+      "target": "examples/debris_bedrock/en/figs/setup.png",
+      "source_sha256": "146c737684006ce97d024e8e9c7a22e1be593a72a9051c68c74744ef26d37339",
+      "target_sha256": "4280f1db61d0e16a15a251e173d803382d8b73ea0d74c04412edfb872da22867",
+      "reviewer": "Claude (Claude Code session; regenerated both from the same inputs and compared every label)",
+      "method": "assistant",
+      "reviewed_on": "2026-11-08"
+    },
+    {
       "source": "examples/debris_bedrock/figs/threshold.png",
       "target": "examples/debris_bedrock/en/figs/threshold.png",
       "source_sha256": "f35797cb7ab1b110dd360c0a8f3cabbf79ce0649786e72e5e2cae0fb41a3e51c",
@@ -1481,9 +1517,9 @@
     {
       "source": "examples/debris_fan/README.md",
       "target": "examples/debris_fan/en/README.md",
-      "source_sha256": "9f923c397af70fdddef535164bf72a490b649676e63082b3c06ebe1ac587bf6e",
-      "target_sha256": "cd76ba9706fc9fb1fa6c6dd44f8d0ac68fd28df464dbf658753520d9767e8b25",
-      "reviewer": "Claude (Claude Code session; removed development history from both versions in parallel and compared the edited passages, headings, tables and numbers; no model execution)",
+      "source_sha256": "ac6fd76cde7d12a3c289a75961899b2d996aedc946e110b847534ddedc855eb6",
+      "target_sha256": "7814eed63c3294f86bd5a63b20d6132c9a7556902fb8c81e35d8440bec382253",
+      "reviewer": "Claude (Claude Code session; corrected both versions in parallel against the local results and inputs (probe series, displacement snapshots, fill ratios, run steps), and compared the edited passages and numbers)",
       "method": "assistant",
       "reviewed_on": "2026-11-08"
     },
@@ -1580,11 +1616,11 @@
     {
       "source": "examples/delta/README.md",
       "target": "examples/delta/en/README.md",
-      "source_sha256": "4899d8cea4e94fd2332684cbda401db04971599c73feecd79a25a530be7090b3",
-      "target_sha256": "c1d48a3879e52f22163a00277e5430106e9ec0beb7e942ac2e21dc1ad600727d",
-      "reviewer": "Claude (Claude Code session; stage 6 updated after the tide rerun with the inlet bedload fix was found bit-identical: how the sand leaves through the sides, the speed in the channel at low tide (1.4 -> 1.8 m/s at probe 1) and the tide amount in the note on the sides crossing the coast; the three changed passages compared side by side in both languages, rest unchanged since the previous record at a60d67b)",
+      "source_sha256": "3cd98112b16dcb8d8d81685070a1af1437a914a99a4530a3fcc63f55d1da92a7",
+      "target_sha256": "f3bec0f3b9f43418561d61fab9c27a2506a7e788bcffda8f081d9bd9bd9c4946",
+      "reviewer": "Claude (Claude Code session; corrected both versions in parallel against the inputs, scripts and committed figures, and compared the edited passages and numbers)",
       "method": "assistant",
-      "reviewed_on": "2026-11-04"
+      "reviewed_on": "2026-11-08"
     },
     {
       "source": "examples/delta/figs/mechanism.png",
@@ -1603,6 +1639,33 @@
       "reviewer": "Claude (Claude Code session; schematic and set-up figures regenerated by the same plot_results.py code with only the labels switched by the en argument (tidal panel retitled, tidal strip marked); images compared visually)",
       "method": "assistant",
       "reviewed_on": "2026-11-02"
+    },
+    {
+      "source": "examples/delta/figs/tide_cmp.png",
+      "target": "examples/delta/en/figs/tide_cmp.png",
+      "source_sha256": "e0e8be9ea993cca0777ef6e843921de4619242cb9db0ca567cee9a716aa0e76e",
+      "target_sha256": "d568e1b8d30985d92d141b8a96a5e1f05536bcae4cb74137cc4b0a482f577f2b",
+      "reviewer": "Claude (Claude Code session; compared the Japanese and English figure images side by side: same plotted data and layout, labels translated)",
+      "method": "assistant",
+      "reviewed_on": "2026-11-08"
+    },
+    {
+      "source": "examples/delta/figs/tide_phases.png",
+      "target": "examples/delta/en/figs/tide_phases.png",
+      "source_sha256": "49cb55dcab7421c957579dc9307f5ab79fe06ebce1abb2261f5062d5c6324592",
+      "target_sha256": "f6c17ab09cdb4729097ada969e9f43d5f9f8f9a433ce83386afcc532676b4208",
+      "reviewer": "Claude (Claude Code session; compared the Japanese and English figure images side by side: same plotted data and layout, labels translated)",
+      "method": "assistant",
+      "reviewed_on": "2026-11-08"
+    },
+    {
+      "source": "examples/delta/figs/tide_series.png",
+      "target": "examples/delta/en/figs/tide_series.png",
+      "source_sha256": "97021a9efcb84ee24e8fb33ce39cf75a2a93e99e12617d74651b068ad4b3bfd9",
+      "target_sha256": "1451df5420b38ecce9346340ab1a14dcc527c5c817d4701fdccdcaba9c93b344",
+      "reviewer": "Claude (Claude Code session; compared the Japanese and English figure images side by side: same plotted data and layout, labels translated)",
+      "method": "assistant",
+      "reviewed_on": "2026-11-08"
     },
     {
       "source": "examples/delta/figs/tidedom_cmp.png",
@@ -1715,11 +1778,11 @@
     {
       "source": "examples/glacier_valley/README.md",
       "target": "examples/glacier_valley/en/README.md",
-      "source_sha256": "919ade5e0ea9353856c0ff466e68bf51e05ee0a4faeb58d8885a4b2f79905a74",
-      "target_sha256": "ff3a51989d66c9b56a3907ece9781e53ff653e8f11efd0eca0da9fbde73ad994",
-      "reviewer": "Claude (Claude Code session; new example glacier_valley: English mirror written alongside the Japanese source and compared section by section, including numbers, figure captions and references)",
+      "source_sha256": "6a87647ce8f135e905ff450b50e55922f80ef1b58f76266d579ba8db3fe3a8ec",
+      "target_sha256": "d0c5d13029d02d2172b646d9be795770b46f95813d85167c323a387a501d1bb4",
+      "reviewer": "Claude (Claude Code session; checked the figures' rules against src and param files, and compared the added captions sentence by sentence)",
       "method": "assistant",
-      "reviewed_on": "2026-11-04"
+      "reviewed_on": "2026-11-08"
     },
     {
       "source": "examples/glacier_valley/figs/glacier.png",
@@ -1729,6 +1792,15 @@
       "reviewer": "Claude (Claude Code session; English figure drawn by plot_results.py en from the same results as the Japanese figure (2026-11-04); titles, labels and legends compared, same data and layout)",
       "method": "assistant",
       "reviewed_on": "2026-11-04"
+    },
+    {
+      "source": "examples/glacier_valley/figs/mechanism.png",
+      "target": "examples/glacier_valley/en/figs/mechanism.png",
+      "source_sha256": "7c7dd089ed2bd5e7491550a3103e6f4d1d20ae29b84a45a62b9da10e5f60e872",
+      "target_sha256": "a1720a21da51d053c0949a07dfc1298549c59289044e85e3ee075ae3e51aae03",
+      "reviewer": "Claude (Claude Code session; both drawn by the same script from the same inputs; compared every label and value)",
+      "method": "assistant",
+      "reviewed_on": "2026-11-08"
     },
     {
       "source": "examples/glacier_valley/figs/setup.png",
@@ -1760,11 +1832,11 @@
     {
       "source": "examples/karst/README.md",
       "target": "examples/karst/en/README.md",
-      "source_sha256": "a6210e993bec0638f4e827f3bbc643772987c6e0dfcac67baa2e94d462cd91ab",
-      "target_sha256": "460082a1a7726762cebbee91e4cc6e1568ef17d5632266b5f310a449f8236cc7",
-      "reviewer": "Claude (Claude Code session; compared the Japanese source with the English mirror after the karst dissolution updates of 2026-11-03/04: talus dissolution, dissol_src 4/5, fn_dissol multiplier, tests H/I/talus, steady and stone-forest examples)",
+      "source_sha256": "8fedc8dfd9dd8782dc00a982cdf29a75f9a907a766eec00853875f82c7acf4ca",
+      "target_sha256": "56d37bdfe9800828d4d435048eddf533e4847cd81490cff120823a5354b6cc6d",
+      "reviewer": "Claude (Claude Code session; corrected both versions in parallel against the inputs, scripts and committed figures, and compared the edited passages and numbers)",
       "method": "assistant",
-      "reviewed_on": "2026-11-04"
+      "reviewed_on": "2026-11-08"
     },
     {
       "source": "examples/karst/figs/evolution.png",
@@ -1904,20 +1976,29 @@
     {
       "source": "examples/levee_breach/README.md",
       "target": "examples/levee_breach/en/README.md",
-      "source_sha256": "8ddd91ab173d59264ba9dab6b1e29b04f63a13b4d48ef04a2e239b3b16e5f036",
-      "target_sha256": "1d09c2219f85ed7febae604ea611e5a132dfef6c0e38d65acf9fe539da9d0e88",
-      "reviewer": "Claude (Claude Code session; removed development history from both versions in parallel and compared the edited passages, headings, tables and numbers; no model execution)",
+      "source_sha256": "9b78843557f5a2971b01fa1e846e14c0dce5a14d6cb43f59eea433f85ae5520b",
+      "target_sha256": "e0b41f73bd9e979b2afb397850aa6a9b225732fb17f9c50f35bdebaff207edd7",
+      "reviewer": "Claude (Claude Code session; added one sensitivity item from a verification run in both versions and compared them)",
+      "method": "assistant",
+      "reviewed_on": "2026-11-08"
+    },
+    {
+      "source": "examples/levee_breach/figs/laws.png",
+      "target": "examples/levee_breach/en/figs/laws.png",
+      "source_sha256": "5145e57a8f975870c28f157b076fabbcd4c10a8c31c2bcc5da0de137f4659531",
+      "target_sha256": "875484fed3db6af566e2e7dba68c60ad76dcb10535a6e03a901e62aeae4174a4",
+      "reviewer": "Claude (Claude Code session; both drawn by the same script from the same results; compared every label and value)",
       "method": "assistant",
       "reviewed_on": "2026-11-08"
     },
     {
       "source": "examples/levee_breach/figs/maps.png",
       "target": "examples/levee_breach/en/figs/maps.png",
-      "source_sha256": "b12eb3b86212c17dbbd168cc07ea0551760927b269f4cd99205b007d0c0eba54",
-      "target_sha256": "0730818e91a3cedb1b8f6f5bdd0c571d2bdc8eb2cd8fa22fdca6faa0410cb8db",
-      "reviewer": "Claude (assistant)",
+      "source_sha256": "a367b3774699918573313843bf7f17cef3e55a745127f33aa291186577fb0381",
+      "target_sha256": "15b449e8024362e3cf99fd209e857cfa909d61135028534e2d543c8b1b49254a",
+      "reviewer": "Claude (Claude Code session; both drawn by the same script from the same results; compared every label and value)",
       "method": "assistant",
-      "reviewed_on": "2026-11-02"
+      "reviewed_on": "2026-11-08"
     },
     {
       "source": "examples/levee_breach/figs/mechanism.png",
@@ -1931,11 +2012,11 @@
     {
       "source": "examples/levee_breach/figs/series.png",
       "target": "examples/levee_breach/en/figs/series.png",
-      "source_sha256": "3d188a7d698bbddb88b6d967b8d2d45ea17200075c7c18ff0bfc543551607c8a",
-      "target_sha256": "2db4f210aced05ec264a82cdf95753ae23c4917da43ea2fe2d5d284b7aef3733",
-      "reviewer": "Claude (assistant)",
+      "source_sha256": "e6da91bee4fb76212128e4b7312a8ebc8d1e3ad9e309f6c58090a7c60e98f716",
+      "target_sha256": "d13fd47ee33e2262cee4d99031fc7df4be8b06090e142600e763ab9a7a9be543",
+      "reviewer": "Claude (Claude Code session; both drawn by the same script from the same results; compared every label and value)",
       "method": "assistant",
-      "reviewed_on": "2026-11-02"
+      "reviewed_on": "2026-11-08"
     },
     {
       "source": "examples/levee_breach/figs/setup.png",
@@ -1976,9 +2057,9 @@
     {
       "source": "examples/meander/README.md",
       "target": "examples/meander/en/README.md",
-      "source_sha256": "4a4f6006d4b49c6b64a24f537302b180b44ba11fdf838cff817b4bf3355a4b76",
-      "target_sha256": "83bdca3a6683a5c7f69a4860ffe2fd270f4d0c929f168efb429ed06e954c2571",
-      "reviewer": "Claude (Claude Code session; removed development history from both versions in parallel and compared the edited passages, headings, tables and numbers; no model execution)",
+      "source_sha256": "ef039e176b509341f1e5e816c989a5029daada63ffc3ac2de256b7a1d2a6336e",
+      "target_sha256": "1230255da8ddedcbe4182e1271175d183e1aefd329c6502704477925079617e9",
+      "reviewer": "Claude (Claude Code session; corrected both versions in parallel against the inputs, scripts and committed figures, and compared the edited passages and numbers)",
       "method": "assistant",
       "reviewed_on": "2026-11-08"
     },
@@ -2048,9 +2129,9 @@
     {
       "source": "examples/meander_cutoff/README.md",
       "target": "examples/meander_cutoff/en/README.md",
-      "source_sha256": "9e29350dc33455b03b95e19515bf066dc87a351eddd3f02f76479358dd8a4a2c",
-      "target_sha256": "d90d54f582b74b30ed0fd5402b34a5e3f5741bd98efa5fae293cfc1de531d431",
-      "reviewer": "Claude (Claude Code session; removed development history from both versions in parallel and compared the edited passages, headings, tables and numbers; no model execution)",
+      "source_sha256": "5d1d4870b7c2405c5b3b24836d202b266d0cc948e43a81fa45ab9cb38f712a59",
+      "target_sha256": "be21cf5a1bb3e717321805cff706403b43b36061cdd685eae70372e5b1eea8b3",
+      "reviewer": "Claude (Claude Code session; corrected both versions in parallel against the inputs, scripts and committed figures, and compared the edited passages and numbers)",
       "method": "assistant",
       "reviewed_on": "2026-11-08"
     },
@@ -2084,11 +2165,11 @@
     {
       "source": "examples/meander_cutoff/figs/setup.png",
       "target": "examples/meander_cutoff/en/figs/setup.png",
-      "source_sha256": "7e893f399e74ad73e5307f1650b8582cde07129038c80694b3ed4ef064973a17",
-      "target_sha256": "37ac700c43514e33122ec227c62221266dc6be297a73018b76611723192778d3",
-      "reviewer": "Claude (Claude Code session; schematic and setup figure drawn by plot_setup.py from input files only, Japanese and English images compared side by side: same data and layout, labels translated; no model execution)",
+      "source_sha256": "23018c631ddcb92efa096ec33acf075a2ac5a8890123b4893d8edf6ea6ffd055",
+      "target_sha256": "1ca2d124f2a94986b79500fdd76f47a5b2033c5809c45c499f9175219fd2c420",
+      "reviewer": "Claude (Claude Code session; regenerated both from the same inputs and compared every label)",
       "method": "assistant",
-      "reviewed_on": "2026-11-02"
+      "reviewed_on": "2026-11-08"
     },
     {
       "source": "examples/meander_cutoff/figs/states.png",
@@ -2102,11 +2183,11 @@
     {
       "source": "examples/mesa/README.md",
       "target": "examples/mesa/en/README.md",
-      "source_sha256": "0eb8e566f4d5a572596e40c17fb8cf0553e3e158ada1843bcf32d974e28bc86a",
-      "target_sha256": "21a7673f58ad3ef93e6a135c5383cec049f296c11f1c4e0a997ac4e642940adb",
-      "reviewer": "Claude (Claude Code session; Japanese source and English mirror updated together after recomputing all 29 cases: corrected table values, the talus-volume interpretation and figure links compared line by line, values checked against the plot_results.py output and the logs; model run by the session)",
+      "source_sha256": "aaad44940a52cfd4ab489b922ee31e5ee3fe59296e7f851a840daeef4320711b",
+      "target_sha256": "65f9b67c78a447abfa15347a188a1a86250128346fa133b00500712b0537267a",
+      "reviewer": "Claude (Claude Code session; corrected both versions in parallel against the inputs, scripts and committed figures, and compared the edited passages and numbers)",
       "method": "assistant",
-      "reviewed_on": "2026-11-02"
+      "reviewed_on": "2026-11-08"
     },
     {
       "source": "examples/mesa/figs/maps.png",
@@ -2246,11 +2327,11 @@
     {
       "source": "examples/mesa/figs/setup.png",
       "target": "examples/mesa/en/figs/setup.png",
-      "source_sha256": "6ea8cc8328557e479c9153190d4bc8ec47f1a2294a5cf28e9e07ba2959cd5b47",
-      "target_sha256": "1b346cb559f30ba4b53480e47bb60f790b07a2e6783757db5b22ebc3365c4a3a",
-      "reviewer": "Claude (Claude Code session; schematic and setup figure drawn by plot_setup.py from input files only, Japanese and English images compared side by side: same data and layout, labels translated; no model execution)",
+      "source_sha256": "5bae0f27673fa34fedf544afe93fa4e78a6f5b63eab8741644cdc5084c5c5147",
+      "target_sha256": "a88353ce56a576778c9d9942a235c4132f73f5430cf90d7f02057a1568ecb994",
+      "reviewer": "Claude (Claude Code session; regenerated both from the same inputs and compared every label)",
       "method": "assistant",
-      "reviewed_on": "2026-11-02"
+      "reviewed_on": "2026-11-08"
     },
     {
       "source": "examples/mesa/figs/talus_dx4.png",
@@ -2273,9 +2354,9 @@
     {
       "source": "examples/mountain_valley/README.md",
       "target": "examples/mountain_valley/en/README.md",
-      "source_sha256": "12191a03788480798a6f5f3767adeba6645f3842b033becc1cb10e0885d9286b",
-      "target_sha256": "bf70630018f76b836919cd0a9eabfcbb8fb030e61dde6c103159a4edb3d3836d",
-      "reviewer": "Claude (Claude Code session; removed development history from both versions in parallel and compared the edited passages, headings, tables and numbers; no model execution)",
+      "source_sha256": "79b13f61552cdc7f1308b96662b70c946f4e43d5d82de77fab98bbe0310ada0f",
+      "target_sha256": "7ca216792a81b46595a5787c28ab48c686baa950381cd5d5763e40a44adb882b",
+      "reviewer": "Claude (Claude Code session; corrected both versions in parallel against the inputs, scripts and committed figures, and compared the edited passages and numbers)",
       "method": "assistant",
       "reviewed_on": "2026-11-08"
     },
@@ -2298,6 +2379,15 @@
       "reviewed_on": "2026-10-28"
     },
     {
+      "source": "examples/mountain_valley/figs/mechanism.png",
+      "target": "examples/mountain_valley/en/figs/mechanism.png",
+      "source_sha256": "e8f61b65f1e7d3fe35070fb7ee507928df456fee417a5e55197f19250ab6b2bd",
+      "target_sha256": "033a2bc03a9ba7f287ec94d2e79391eedad950e4bca3eef7a9b6cd8365cee668",
+      "reviewer": "Claude (Claude Code session; regenerated both from the same inputs and compared every label)",
+      "method": "assistant",
+      "reviewed_on": "2026-11-08"
+    },
+    {
       "source": "examples/mountain_valley/figs/pulse.png",
       "target": "examples/mountain_valley/en/figs/pulse.png",
       "source_sha256": "e4f1ae8f313a83beb1087208a7606a76156067b8c54f73e615a0b6bcae0446b3",
@@ -2305,6 +2395,15 @@
       "reviewer": "Claude (Claude Code session; English figure drawn by the same script with the en switch from the same saved results; visual check of both rendered figures: same layout, values and geometry, labels translated)",
       "method": "assistant",
       "reviewed_on": "2026-10-28"
+    },
+    {
+      "source": "examples/mountain_valley/figs/setup.png",
+      "target": "examples/mountain_valley/en/figs/setup.png",
+      "source_sha256": "cb2abbb294afdc0c512dffe440d6c8608cd21f5b65b22b9d0d8264267f3279d8",
+      "target_sha256": "a5274692a7d64922fbea919365661bdf9eb35343c721f14abd950280f23f6724",
+      "reviewer": "Claude (Claude Code session; regenerated both from the same inputs and compared every label)",
+      "method": "assistant",
+      "reviewed_on": "2026-11-08"
     },
     {
       "source": "examples/mountain_valley/figs/valley.png",
@@ -2318,9 +2417,9 @@
     {
       "source": "examples/nest_reflect/README.md",
       "target": "examples/nest_reflect/en/README.md",
-      "source_sha256": "4c6d8e53510b621615313e814bd0493b8b8b3beb3d66ce24e5ff3566647d86a4",
-      "target_sha256": "7272cc013fd485f7e0934bf3918579082cdff0d3e179f561d27a4f79e2b9e04e",
-      "reviewer": "Claude (Claude Code session; edited both versions in parallel (setup and how-it-works sections, figures moved into their sections with captions, run steps) and compared headings, tables, images and numbers)",
+      "source_sha256": "07cfd62976a6b91bba0ea4c99b2265c2c3cfd50f84e34ef200c8034bda07f254",
+      "target_sha256": "e29c345f790cac984369462e0a756e1b54b300f89d20ee93a23131fa4d353197",
+      "reviewer": "Claude (Claude Code session; corrected both versions in parallel against the local results and inputs (probe series, displacement snapshots, fill ratios, run steps), and compared the edited passages and numbers)",
       "method": "assistant",
       "reviewed_on": "2026-11-08"
     },
@@ -2381,9 +2480,18 @@
     {
       "source": "examples/qanat/README.md",
       "target": "examples/qanat/en/README.md",
-      "source_sha256": "7df81c524267f90ddfe5125be05d0b10e8d8b1c4b71be6949bbf2429ae1c8404",
-      "target_sha256": "b60d88dc3af7a9cfb5916b8156cb72ae59a4d01efba79a53495c1143d640fa88",
-      "reviewer": "Claude (Claude Code session; removed development history from both versions in parallel and compared the edited passages, headings, tables and numbers; no model execution)",
+      "source_sha256": "0aec398d008c0cee66b1c837b826cc9092f93c575201f89071fbe3030d67adbf",
+      "target_sha256": "3f87310e7b5f5f50d4552b37530142c82abfdfcbbddb9be1164bc7f6851e84fa",
+      "reviewer": "Claude (Claude Code session; reran all cases with the old and new settings, checked that the old settings reproduce the previous README, and replaced each number from the new results in both versions)",
+      "method": "assistant",
+      "reviewed_on": "2026-11-08"
+    },
+    {
+      "source": "examples/qanat/figs/laws.png",
+      "target": "examples/qanat/en/figs/laws.png",
+      "source_sha256": "ec47b2a4ff75e7920f7e480b916f5e2819383a3b6f96ff1beb895de537c59ba4",
+      "target_sha256": "1107071f61da36350e28307e5531e05e18f2c582873d1cb07b0cd009dbf11831",
+      "reviewer": "Claude (Claude Code session; both drawn by the same script from the same results; compared every label and value)",
       "method": "assistant",
       "reviewed_on": "2026-11-08"
     },
@@ -2399,29 +2507,29 @@
     {
       "source": "examples/qanat/figs/plan.png",
       "target": "examples/qanat/en/figs/plan.png",
-      "source_sha256": "2e50a6cce10f7bb5b98707e3f175ffa93144cf4465d26ada6e953e6e2d8bdc9d",
-      "target_sha256": "dfba465ccc49c4332a063c832406f6c6081b21e66c85c55f8c03990de7fa5e3c",
-      "reviewer": "Claude (Claude Code session; example reruns with f_opening_dynamic default 3)",
+      "source_sha256": "ffe56aff5eb0264e0424b1a1ed0d47ee7b670db70c83b63f66d41d78e4475eb5",
+      "target_sha256": "3e42ca9ffbff26e2ae2176b9749774fd3594316d815e513d1f6e56673626f9cd",
+      "reviewer": "Claude (Claude Code session; both drawn by the same script from the same results; compared every label and value)",
       "method": "assistant",
-      "reviewed_on": "2026-10-31"
+      "reviewed_on": "2026-11-08"
     },
     {
       "source": "examples/qanat/figs/profile.png",
       "target": "examples/qanat/en/figs/profile.png",
-      "source_sha256": "3720e2011b21457e374bd37c75fa58b1451ee6de61eafef81f46b841068d2b6a",
-      "target_sha256": "6ff9516b54503f65b479ac6c84b61782439b69cc705ee22be3fa4b03f3eeeabd",
-      "reviewer": "Claude (assistant)",
+      "source_sha256": "3b9c271e5a8b84eefd2fbc7c9021a9e3b53334d444dee7b9e8d534ae002236be",
+      "target_sha256": "cf5fce0e7742306eecee931ce85c586610e581c5c32dcd18e8dbaf6be027d65e",
+      "reviewer": "Claude (Claude Code session; both drawn by the same script from the same results; compared every label and value)",
       "method": "assistant",
-      "reviewed_on": "2026-11-02"
+      "reviewed_on": "2026-11-08"
     },
     {
       "source": "examples/qanat/figs/series.png",
       "target": "examples/qanat/en/figs/series.png",
-      "source_sha256": "c21dbf40b2633c3fd2e8edce63c3638d631efa251d2c8022b75b72d46ffb3ab3",
-      "target_sha256": "5cd79f1ce2359b462b8503a561e52e3c334b9f79d2fc7e6963996c77e0ed2c43",
-      "reviewer": "Claude (assistant)",
+      "source_sha256": "7e1d61e45ad4755b6de7df0f6f2a543824daf62f4493a6f8a57d174974cfa2e5",
+      "target_sha256": "747d38063ac4dd02665729fdd206052859a8a109ffac066df23a9cbd77a45352",
+      "reviewer": "Claude (Claude Code session; both drawn by the same script from the same results; compared every label and value)",
       "method": "assistant",
-      "reviewed_on": "2026-11-02"
+      "reviewed_on": "2026-11-08"
     },
     {
       "source": "examples/qanat/figs/setup.png",
@@ -2435,9 +2543,9 @@
     {
       "source": "examples/sewer_hybrid/README.md",
       "target": "examples/sewer_hybrid/en/README.md",
-      "source_sha256": "3bafe7c1f0397ee491989c74109d2f13a2b1239bbff51d2ea30942ba01483185",
-      "target_sha256": "2b7a0b2a919b49c62c5835099bf407a4537e10dbe84921513a39c7e8f603bae9",
-      "reviewer": "Claude (Claude Code session; edited both versions in parallel (figure embedding, captions, panel descriptions, run steps) and compared headings, tables, images and numbers)",
+      "source_sha256": "e8e428630b5fae0c377a0433373ddc094c1a7cc554d29b289abf3ae98523a396",
+      "target_sha256": "73107060d7e6043f4c57dd97a45d4662c584a971e70e7df257f0d551a1daff9f",
+      "reviewer": "Claude (Claude Code session; corrected both versions in parallel against the local results and inputs (probe series, displacement snapshots, fill ratios, run steps), and compared the edited passages and numbers)",
       "method": "assistant",
       "reviewed_on": "2026-11-08"
     },
@@ -2471,20 +2579,20 @@
     {
       "source": "examples/sewer_hybrid/figs/sewer_hybrid_result.png",
       "target": "examples/sewer_hybrid/en/figs/sewer_hybrid_result.png",
-      "source_sha256": "ac8ad17a8b0eb441771af5251a3857ec08d07867853cab86dd8092b2fb4d56cb",
-      "target_sha256": "2e71302358c64b18ee52e9af390ee268f912d0529bed18eec5030fae0b8d73e2",
-      "reviewer": "Claude (Claude Code session; compared the Japanese and English figure images side by side: same plotted data and layout from the same script and the same results (runs A–F rerun with the current build), labels translated)",
+      "source_sha256": "24d0bf57c856b5d96bc03a2e92227a020360d6607ff985ef2ace9bd8ed55c4fe",
+      "target_sha256": "ee5275242689131ae1ec65b5d054201586872c103e42dac1a204778dec50b8ce",
+      "reviewer": "Claude (Claude Code session; compared the Japanese and English figure images side by side: same plotted data and layout from the same script, only the corrected title or label styling changed, labels translated)",
       "method": "assistant",
       "reviewed_on": "2026-11-08"
     },
     {
       "source": "examples/shield_volcano/README.md",
       "target": "examples/shield_volcano/en/README.md",
-      "source_sha256": "69a4ba358dbefa3dbf339b5751bf2211019ad8cac4b3644230378b013368b464",
-      "target_sha256": "47fa7549b6803d3d495d7239c24e364debfb5c0bea94f006c52c73024cdc2081",
-      "reviewer": "Claude (Claude Code session; full-text review of the new example README against the Japanese source, numbers and structure cross-checked)",
+      "source_sha256": "f70c002c31b0b64b88b82ed13f42f3c06ba5a7c669684789778614bbee3cb345",
+      "target_sha256": "2df75feba43b107405a7b312a4967f3369bb655573f898743b10cdb11ff7f808",
+      "reviewer": "Claude (Claude Code session; corrected both versions in parallel against the inputs, scripts and source (param files, plot scripts, list/source definitions), and compared the edited passages and numbers)",
       "method": "assistant",
-      "reviewed_on": "2026-11-03"
+      "reviewed_on": "2026-11-08"
     },
     {
       "source": "examples/shield_volcano/figs/dome.png",
@@ -2498,11 +2606,11 @@
     {
       "source": "examples/shield_volcano/figs/mechanism.png",
       "target": "examples/shield_volcano/en/figs/mechanism.png",
-      "source_sha256": "ce9a247a7dd7168cf0a8cb2bad0228f1257dc6f88ce6ceb8da556f68d9b53c92",
-      "target_sha256": "0092eef8f39f439d2edecbc952f018306326a7fceafd06a891f2fea7356f5c75",
-      "reviewer": "Claude (Claude Code session; English figure drawn by the same script with the en switch; visual check)",
+      "source_sha256": "c49b9aa42656f63389c82bdd50f20538acb1bf17c1e921bed38a52ed6cce35b1",
+      "target_sha256": "92b3683dccf8e523d97054d595444ab10b6e501ae897e38ffe69aa7998164f27",
+      "reviewer": "Claude (Claude Code session; compared the Japanese and English figure images side by side: same schematic drawn from formulas by the same script, labels translated)",
       "method": "assistant",
-      "reviewed_on": "2026-11-03"
+      "reviewed_on": "2026-11-08"
     },
     {
       "source": "examples/shield_volcano/figs/setup.png",
@@ -2523,11 +2631,38 @@
       "reviewed_on": "2026-11-03"
     },
     {
+      "source": "examples/stone_forest/README.md",
+      "target": "examples/stone_forest/en/README.md",
+      "source_sha256": "662c60b250a4270b602e3ff89bdbf8084bf1aa8e84fb6bf1344d511956fa2d4b",
+      "target_sha256": "3dac007ed21d32e4167e772aaaf05eb423d74e3bb81016a70b05b3cfef560158",
+      "reviewer": "Claude (Claude Code session; checked the figures' rules against src and param files, and compared the added captions sentence by sentence)",
+      "method": "assistant",
+      "reviewed_on": "2026-11-08"
+    },
+    {
+      "source": "examples/stone_forest/figs/mechanism.png",
+      "target": "examples/stone_forest/en/figs/mechanism.png",
+      "source_sha256": "083520848388f80add5964f89a4eb9cf6b1bfcf19b710800c440a72f980e4177",
+      "target_sha256": "47c23d3c935bb8781e87fdc3704d43ce75d50824860d3641b9c7e4aa27765772",
+      "reviewer": "Claude (Claude Code session; both drawn by the same script from the same inputs; compared every label and value)",
+      "method": "assistant",
+      "reviewed_on": "2026-11-08"
+    },
+    {
+      "source": "examples/stone_forest/figs/setup.png",
+      "target": "examples/stone_forest/en/figs/setup.png",
+      "source_sha256": "e8b1b3f6240403065878c246a84c7210cf32cbde74b5a67a11a98ddfc10e3441",
+      "target_sha256": "ba08284070d1ee4c506c98d9f9310cb88c24606c4777ce5c903bb4292de71942",
+      "reviewer": "Claude (Claude Code session; both drawn by the same script from the same inputs; compared every label and value)",
+      "method": "assistant",
+      "reviewed_on": "2026-11-08"
+    },
+    {
       "source": "examples/stratovolcano/README.md",
       "target": "examples/stratovolcano/en/README.md",
-      "source_sha256": "bde8e1a0b6b203fa9d20e286724af4f32235bec1a75e943c65eab013ef18fc40",
-      "target_sha256": "a4cfd3acf5126e998a27016120eb7fffb80aed61eb25818acf852ba52f94b76a",
-      "reviewer": "Claude (Claude Code session; removed development history from both versions in parallel and compared the edited passages, headings, tables and numbers; no model execution)",
+      "source_sha256": "e5cebe2ace2be355a547ffc2ee938d98ce12005a86bc72202e3510cae301acf5",
+      "target_sha256": "78d1c228c03f2828a705a72be3a6920bf98fb139bce0e35843d2d5dae7069f5a",
+      "reviewer": "Claude (Claude Code session; corrected both versions in parallel against the inputs, scripts and source (param files, plot scripts, list/source definitions), and compared the edited passages and numbers)",
       "method": "assistant",
       "reviewed_on": "2026-11-08"
     },
@@ -2597,38 +2732,47 @@
     {
       "source": "examples/timberyard/README.md",
       "target": "examples/timberyard/en/README.md",
-      "source_sha256": "737f31ef10bfc6f430b5156ad121a9498ae6182e8f9726237f1086afc3593b76",
-      "target_sha256": "3ca120b204620292ccf5d6d03e2f2495f46d5d1ed2783769f13d4c138b2f51fd",
-      "reviewer": "Claude (Claude Code session; removed development history from both versions in parallel and compared the edited passages, headings, tables and numbers; no model execution)",
+      "source_sha256": "7cbadab82c22c54c10a958e44163f47129f1319b6228609f8613e17b1a972c86",
+      "target_sha256": "3cc11089d31be084a4abc28efdddc16c0b9d385d29c07cf6e5baaf8af402ca13",
+      "reviewer": "Claude (Claude Code session; reran all cases with the old and new settings, checked that the old settings reproduce every number of the previous README, and replaced each number from the new tables in both versions)",
+      "method": "assistant",
+      "reviewed_on": "2026-11-08"
+    },
+    {
+      "source": "examples/timberyard/figs/laws.png",
+      "target": "examples/timberyard/en/figs/laws.png",
+      "source_sha256": "0192ab89a09e8bd6f55ce6df45149c1a607b1b8d431916e00cc4851a9a671915",
+      "target_sha256": "c03846bff247ff762ad8c3dfb9d157b07d0e44c854f42966a9b22f5314476a68",
+      "reviewer": "Claude (Claude Code session; both drawn by the same script from the same inputs; compared every label and value)",
       "method": "assistant",
       "reviewed_on": "2026-11-08"
     },
     {
       "source": "examples/timberyard/figs/maps.png",
       "target": "examples/timberyard/en/figs/maps.png",
-      "source_sha256": "10e585012ba09a272a92721e02df336960e7c4c6fee7136707c19e5271b8ddd6",
-      "target_sha256": "bedc07b7d11fe3b317d545f1934a6589699652da64b8fdf178d6c3befa7c8c55",
-      "reviewer": "Claude (Claude Code session; recomputed 2026-11-05: both drawn by plot_results.py from the same results, labels compared with the Japanese figure)",
+      "source_sha256": "5e7e19188f5d5c76604b9a3f2cb88be56fafd8e2aed5ef7647679312eefb9569",
+      "target_sha256": "3355660df98e177d86b32f38ed6807064b31593fab8c536728c1ab3e23c654c3",
+      "reviewer": "Claude (Claude Code session; both drawn by the same script from the same results; compared every label and value)",
       "method": "assistant",
-      "reviewed_on": "2026-11-05"
+      "reviewed_on": "2026-11-08"
     },
     {
       "source": "examples/timberyard/figs/mechanism.png",
       "target": "examples/timberyard/en/figs/mechanism.png",
-      "source_sha256": "bdeca8d6276ff0410b53ea1c0b339ecd4a0b54db08f86d9416a5f1f4e86fdeec",
-      "target_sha256": "398091bb5d02b479020cd48e9ca3f3447bc7750bdb1bc82977216aaca53fdf46",
-      "reviewer": "Claude (Claude Code session; example reruns with f_opening_dynamic default 3)",
+      "source_sha256": "258b71281c9cc3f368eab35c58b16ab814f90884531a07e2cc7a7970a9c53791",
+      "target_sha256": "5708e901b3e1b5f59f7aabf7421997c291037b24cc16921ed438a95e7db99b77",
+      "reviewer": "Claude (Claude Code session; compared the Japanese and English figure images side by side: same schematic drawn from formulas by the same script, labels translated)",
       "method": "assistant",
-      "reviewed_on": "2026-10-31"
+      "reviewed_on": "2026-11-08"
     },
     {
       "source": "examples/timberyard/figs/series.png",
       "target": "examples/timberyard/en/figs/series.png",
-      "source_sha256": "fdf0e8f80cee7d06aeef5e924ddf093def8175429029d8c81dedd3f4e5b3f59d",
-      "target_sha256": "d5487909cd2dc7d0ff703292cfdae795b6d0b3a4e3f157d61da9372e633c040c",
-      "reviewer": "Claude (Claude Code session; recomputed 2026-11-05: both drawn by plot_results.py from the same results, labels compared with the Japanese figure)",
+      "source_sha256": "58d2d8c14a0aa389b4b7a309d4fdae3eecaea600257a9abc8016f2bb761edeea",
+      "target_sha256": "e0e05db77a73048d4593aab2693fbc221943af61e68a230caa08891d796e4dc7",
+      "reviewer": "Claude (Claude Code session; both drawn by the same script from the same results; compared every label and value)",
       "method": "assistant",
-      "reviewed_on": "2026-11-05"
+      "reviewed_on": "2026-11-08"
     },
     {
       "source": "examples/timberyard/figs/setup.png",
@@ -2642,18 +2786,18 @@
     {
       "source": "examples/timberyard/figs/supp.png",
       "target": "examples/timberyard/en/figs/supp.png",
-      "source_sha256": "731b97e2edd527a81f81bb85cb248da6abdee2cd530880a2a18b0e5dbec93f16",
-      "target_sha256": "c508dd6d5ae88347667ef99025aec7066f4cff0169c4b0a8e62a7cb82bde2894",
-      "reviewer": "Claude (Claude Code session; recomputed 2026-11-05: both drawn by plot_results.py from the same results, labels compared with the Japanese figure)",
+      "source_sha256": "f1d524221de351a02330ddfa816e9e68cdc9166e7b46b9df5b184321d7bf15fb",
+      "target_sha256": "a1c5f6ec9f137f4f062636d87754bb18c69a6ef2dd7698137a5a43547f8e6c4e",
+      "reviewer": "Claude (Claude Code session; both drawn by the same script from the same results; compared every label and value)",
       "method": "assistant",
-      "reviewed_on": "2026-11-05"
+      "reviewed_on": "2026-11-08"
     },
     {
       "source": "examples/tower_karst/README.md",
       "target": "examples/tower_karst/en/README.md",
-      "source_sha256": "3f538839cbc5e078333812a1fdfc27eecc71d563cdaa65783a3ad517b3e5523b",
-      "target_sha256": "d94ec43f21439dee7574516bf708835ac99c7f8039c2b7494fe00ec3976b84d5",
-      "reviewer": "Claude (Claude Code session; removed development history from both versions in parallel and compared the edited passages, headings, tables and numbers; no model execution)",
+      "source_sha256": "a304485f2afac1d05e5f35f8cda651cd979f07478efdbc360bbdeccc3c6e5ffd",
+      "target_sha256": "9331a2a07d99de82030a8037e686bae2db771075254864c814d16a3be6a6bca0",
+      "reviewer": "Claude (Claude Code session; checked the figures' rules against src and param files, and compared the added captions sentence by sentence)",
       "method": "assistant",
       "reviewed_on": "2026-11-08"
     },
@@ -2694,6 +2838,15 @@
       "reviewed_on": "2026-11-04"
     },
     {
+      "source": "examples/tower_karst/figs/maps_steady.png",
+      "target": "examples/tower_karst/en/figs/maps_steady.png",
+      "source_sha256": "a14502580a117f4c6225d243f9cd2fd5e9af4e11b7fedbac41fa6c4670e34137",
+      "target_sha256": "9eb5987b908738f6990806b14d0650859d5e23a6fb59b28b8276d49eef614e97",
+      "reviewer": "Claude (Claude Code session; compared the Japanese and English figure images side by side: same plotted data and layout, labels translated)",
+      "method": "assistant",
+      "reviewed_on": "2026-11-08"
+    },
+    {
       "source": "examples/tower_karst/figs/mechanism.png",
       "target": "examples/tower_karst/en/figs/mechanism.png",
       "source_sha256": "227f18d7e50591c2953f72c821235e26173fc45ed3e1bc59be2641e78f6bc1af",
@@ -2730,6 +2883,15 @@
       "reviewed_on": "2026-11-04"
     },
     {
+      "source": "examples/tower_karst/figs/sections_steady.png",
+      "target": "examples/tower_karst/en/figs/sections_steady.png",
+      "source_sha256": "e473276d26e507f381404cfe824f5e2cdce150143eb9ba2acca45e4b1ed17764",
+      "target_sha256": "39b899e6b4d71cc85cc51bb2d502b506434d72f793b3319c53d36b14a0bed470",
+      "reviewer": "Claude (Claude Code session; compared the Japanese and English figure images side by side: same plotted data and layout, labels translated)",
+      "method": "assistant",
+      "reviewed_on": "2026-11-08"
+    },
+    {
       "source": "examples/tower_karst/figs/setup.png",
       "target": "examples/tower_karst/en/figs/setup.png",
       "source_sha256": "34e0f1c50f3d3c3e0d9cc1604e1ea22a258a200460d7bd12ce8b8692abc04f36",
@@ -2737,6 +2899,15 @@
       "reviewer": "Claude (Claude Code session; schematic and setup figure drawn by plot_setup.py from input files only, Japanese and English images compared side by side: same data and layout, labels translated; no model execution)",
       "method": "assistant",
       "reviewed_on": "2026-11-02"
+    },
+    {
+      "source": "examples/tower_karst/figs/setup_base.png",
+      "target": "examples/tower_karst/en/figs/setup_base.png",
+      "source_sha256": "40cbb20014ce74534e56fcb5611f9b7f743455d4c544fcc1fa58be03fd8cdbb0",
+      "target_sha256": "399521e044a622abe4df3bd2d54333587c4aad4a0b80ad9cfc37202c38234f69",
+      "reviewer": "Claude (Claude Code session; both drawn by the same script from the same inputs; compared every label and value)",
+      "method": "assistant",
+      "reviewed_on": "2026-11-08"
     },
     {
       "source": "examples/tower_karst/figs/towers.png",
@@ -2766,11 +2937,20 @@
       "reviewed_on": "2026-11-04"
     },
     {
+      "source": "examples/tower_karst/figs/towers_steady.png",
+      "target": "examples/tower_karst/en/figs/towers_steady.png",
+      "source_sha256": "20848628f86c60ca0833aa3a359301de3ddef32fd93bdb98940923033a376851",
+      "target_sha256": "32fc72b67536f4196a21c845abb62657ac8b21bf2a01b776ce41fc8b63b8e642",
+      "reviewer": "Claude (Claude Code session; compared the Japanese and English figure images side by side: same plotted data and layout, labels translated)",
+      "method": "assistant",
+      "reviewed_on": "2026-11-08"
+    },
+    {
       "source": "examples/tsunami_coast/README.md",
       "target": "examples/tsunami_coast/en/README.md",
-      "source_sha256": "f1b9f348d1704fb9f1418508e20a1f5e4a0428e7544d261888f284b23df11e85",
-      "target_sha256": "9768129d430b3fdf3a9cb6d31d7f469e1ab9e180b64db468a024b30d48c8e280",
-      "reviewer": "Claude (Claude Code session; edited both versions in parallel (figure embedding, captions, new section on how it works, run steps) and compared headings, tables, images and numbers)",
+      "source_sha256": "494bad04217186cc29437fd81cc373073aba6d7d9240b4b2ae16b40da0854ac9",
+      "target_sha256": "460631f94c5f4de240b7f8d3d979588858cbf912eed53fe090ad50476e1a6b8c",
+      "reviewer": "Claude (Claude Code session; corrected both versions in parallel against the local results and inputs (probe series, displacement snapshots, fill ratios, run steps), and compared the edited passages and numbers)",
       "method": "assistant",
       "reviewed_on": "2026-11-08"
     },
@@ -2822,9 +3002,9 @@
     {
       "source": "examples/tsunami_fault/README.md",
       "target": "examples/tsunami_fault/en/README.md",
-      "source_sha256": "bc0e32a5416eae2bd8415c70e4a991d25bcb69e161908e7116b56adebada3c5b",
-      "target_sha256": "ee2728f9e147bf0b8ad12a1ae001885a6ea56a447f573a703696bca3b67abe83",
-      "reviewer": "Claude (Claude Code session; edited both versions in parallel (figure embedding, captions, new section on how it works, run steps, numbered probe rows matching the script output) and compared headings, tables, images and numbers)",
+      "source_sha256": "27cc2ba4f3f7ca2d3f67d62893453cfe1ff7c1b454241239df656efe1e1f6151",
+      "target_sha256": "81f52cc6bd6caef9a2b322049ca67b32e2b0f3e9da3416c8a66a2f39747698c6",
+      "reviewer": "Claude (Claude Code session; corrected both versions in parallel against the local results and inputs (probe series, displacement snapshots, fill ratios, run steps), and compared the edited passages and numbers)",
       "method": "assistant",
       "reviewed_on": "2026-11-08"
     },
@@ -2867,18 +3047,18 @@
     {
       "source": "examples/tsunami_fault/figs/setup.png",
       "target": "examples/tsunami_fault/en/figs/setup.png",
-      "source_sha256": "6c7a167b9726f64a82b8b6a41f0f6173ad8039c000b8ccdd3a061a28ee0b1046",
-      "target_sha256": "6b2c2befea4fe11a77284187e29d5a53477c25448b758e464de37217eb28bb54",
-      "reviewer": "Claude (Claude Code session; compared the Japanese and English figure images side by side: same plotted data and layout from the same script and the same inputs and results (the three cases rerun with the current build), labels translated)",
+      "source_sha256": "a46dc91a88473b9133ae5538f6162011ba20692aaa98770c5d8d2c637939c665",
+      "target_sha256": "0a6eb1a5773b5739826369667bd8540db7485b809a1f336736c693197a41851e",
+      "reviewer": "Claude (Claude Code session; compared the Japanese and English figure images side by side: same plotted data and layout from the same script, only the corrected title or label styling changed, labels translated)",
       "method": "assistant",
       "reviewed_on": "2026-11-08"
     },
     {
       "source": "examples/tsunami_town/README.md",
       "target": "examples/tsunami_town/en/README.md",
-      "source_sha256": "a9d984358b23a70129226ed13a5a909e22e8045e1959eed037884eaa4f4412ea",
-      "target_sha256": "15b03b7a735589be3f85b617a4b472dbb70f45ae6f841bb45224df0387d770a1",
-      "reviewer": "Claude (Claude Code session; removed development history from both versions in parallel and compared the edited passages, headings, tables and numbers; no model execution)",
+      "source_sha256": "b88c3e11f531f642c1d930290b79e38d861791b67c2d24444a86cd830a7bdced",
+      "target_sha256": "668ecfa73c9726e644e722e67b9312faae82a1e41c2db44588a3c4111c0f8721",
+      "reviewer": "Claude (Claude Code session; corrected both versions in parallel against the inputs, scripts and source (param files, plot scripts, list/source definitions), and compared the edited passages and numbers)",
       "method": "assistant",
       "reviewed_on": "2026-11-08"
     },
@@ -2939,9 +3119,9 @@
     {
       "source": "examples/vz_tani2023/README.md",
       "target": "examples/vz_tani2023/en/README.md",
-      "source_sha256": "ef1bf2241c1e01bf65fcd96bf4609baebb924ada79063581c1b37219e6e4a264",
-      "target_sha256": "b4361151807c63b2fc2f99270c139ad17a212f2f79fecf1fce4b6763b841228b",
-      "reviewer": "Claude (Claude Code session; removed development history from both versions in parallel and compared the edited passages, headings, tables and numbers; no model execution)",
+      "source_sha256": "9c01e7328e587a1c9e638c4721735ee35dee83a760c1e910511ecafb85771e98",
+      "target_sha256": "e3f625fda395a8e63cc1b87c8ab873fc7adbc44d2b015ccd4985090f97d10ad6",
+      "reviewer": "Claude (Claude Code session; corrected both versions in parallel against the inputs, scripts and source (param files, plot scripts, list/source definitions), and compared the edited passages and numbers)",
       "method": "assistant",
       "reviewed_on": "2026-11-08"
     },

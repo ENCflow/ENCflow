@@ -7,8 +7,8 @@
   figs/mechanism.png  (a) 出水の越流による短絡(平面の模式)、(b) 河岸の後退による短絡
                       (ループの脚の間の陸を横切る断面の模式)、(c) 短絡の後の旧河道
                       (滞水域と出入口の堆積。三日月湖への途中)
-  figs/setup.png      初期地形(河床からの高さ。ループ・脚の間の最も狭い陸・出水で流れが横切る
-                      3 つの陸)、中心線に沿う両岸の高さ、流入ハイドログラフ 2 種
+  figs/setup.png      初期地形(河床からの高さ。ループ・最も狭い陸(ループの脚の間と 2 つのループの間)・
+                      出水で流れが横切る 3 つの陸)、中心線に沿う両岸の高さ、流入ハイドログラフ 2 種
 
 入力は make_init.py が書く z.txt / h.txt / sd.txt(make で作る)と、make_init.py の中心線。
 依存: numpy, matplotlib
@@ -189,7 +189,9 @@ def setup():
     ax.text(343, 72, "y = 70 m", fontsize=7.5, color="0.2", ha="right")
     for (xa, ya) in ((112, 76), (163, 130), (214, 76)):
         ax.plot([xa - 11, xa + 11], [ya, ya], color=C_ERODE, lw=2.0)
-    ax.text(163, 196, T("赤線 = ループの脚の間の最も狭い陸(幅 22 m)", "red = narrowest land between loop limbs (22 m)"), fontsize=7.5, color=C_ERODE, ha="center")
+    ax.text(163, 186, T("赤線 = 最も狭い陸(幅 22 m)\n左右はループの脚の間、中央は 2 つのループの間",
+                        "red = narrowest land (22 m)\nbetween the limbs of each loop (left, right) and between the loops (centre)"),
+            fontsize=7.5, color=C_ERODE, ha="center", va="bottom")
     for (xa, xb), (ya, yb) in LANDS_XY:
         ax.plot([xa, xb, xb, xa, xa], [ya, ya, yb, yb, ya], color="0.25", lw=0.8, ls="--")
     for xa, ya, lab in ((112, 132, T("ループ 1", "loop 1")), (214, 89, T("ループ 2", "loop 2"))):

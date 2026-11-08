@@ -66,10 +66,11 @@ Hasegawa 1989, Asahi et al. 2013, Parker et al. 2011).
 
 Left: the initial terrain (colour = height above the bed of the nearest centreline point;
 blue = channel). The channel above the dotted line y = 70 m is loop 1 and loop 2 (see "Metrics"
-below). The red lines are the narrowest land between the limbs of the loops, and the dashed boxes
-are the three lands the flood flow crosses (used in the result tables). Top right: height of the
-land 12 m off the centreline on both banks (above the bed). Bottom right: inflow (in the no-flood
-configurations 15 m³/s continues up to 180 h of landform time).
+below). The red lines are the narrowest land (22 m wide): between the limbs of loop 1 and of
+loop 2 (left and right) and between the two loops (centre). The dashed boxes are the three lands
+the flood flow crosses (used in the result tables). Top right: height of the land 12 m off the
+centreline on both banks (above the bed). Bottom right: inflow (in the no-flood configurations
+15 m³/s continues up to 180 h of landform time).
 
 346 m × 206 m, Δx = 2 m (173 × 103 cells). The inputs are made by `make_init.py` (`make`; it
 takes about 10 s because the nearest distance from every cell to the centreline is found by

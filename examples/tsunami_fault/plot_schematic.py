@@ -89,7 +89,9 @@ def fig_setup():
               norm=Normalize(0, 100), interpolation="nearest")
     ax.contour(x, y, z0, levels=[0], colors=C_INK, linewidths=0.9)
     cs = ax.contour(x, y, z0, levels=[-1500, -1000, -500], colors="#4a6b8a", linewidths=0.6, linestyles="--")
-    ax.clabel(cs, fmt=lambda v: "%d m" % -v, fontsize=7.5, inline=True)
+    for tl in ax.clabel(cs, fmt=lambda v: "%d m" % -v, fontsize=7.5, inline=True):
+        tl.set_color("#1f3550")
+        tl.set_bbox(dict(boxstyle="round,pad=0.12", fc="white", ec="none", alpha=0.75))
     y1, y2 = FT["yt"] - FT["L"] / 2, FT["yt"] + FT["L"] / 2
     ax.add_patch(Rectangle((FT["xt"], y1), XB - FT["xt"], y2 - y1, facecolor=C_F, alpha=0.22, edgecolor="none", zorder=3))
     ax.add_patch(Rectangle((FT["xt"], y1), XB - FT["xt"], y2 - y1, facecolor="none", edgecolor=C_F, lw=0.9, ls="--", zorder=4))

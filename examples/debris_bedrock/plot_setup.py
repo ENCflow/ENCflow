@@ -67,25 +67,29 @@ def _profile(ax):
         _arrow(ax, xi, zi + 0.3, xi, zi - 7.0 if xi < 120 else zi - 4.0, C_ERODE, lw=1.8, ms=10)
     # ラベル
     _arrow(ax, -30, z[0] + 7, -3, z[0] + 7, C_MIX, lw=2.2)
-    ax.text(-32, z[0] + 9.5, T("谷頭: 混合体のハイドログラフ\n(ピーク %g m³/s、C = %g。水 %g + 固体 %g m³/s)" % (QPEAK, CMIX, QPEAK * (1 - CMIX), QPEAK * CMIX),
+    ax.text(-32, z[0] + 8.0, T("谷頭: 混合体のハイドログラフ\n(ピーク %g m³/s、C = %g。水 %g + 固体 %g m³/s)" % (QPEAK, CMIX, QPEAK * (1 - CMIX), QPEAK * CMIX),
                                 "head: hydrograph of the mixture\n(peak %g m³/s, C = %g: water %g + solids %g m³/s)" % (QPEAK, CMIX, QPEAK * (1 - CMIX), QPEAK * CMIX)),
             fontsize=8, color=C_MIX, va="bottom")
-    ax.text(6, 33, T("急な区間だけ削る: 駆動応力 τ_d = ρ(1 + sC) g_e h_t tanθ が\n閾値 τ_cd を超える。侵食速度 k_d (τ_d/τ_cd − 1)^m × 露出率 e^{−sd/H*}\n削った岩は 1:1 で可動層へ",
-                     "erosion only on the steep reaches: the driving stress\nτ_d = ρ(1 + sC) g_e h_t tanθ exceeds the threshold τ_cd\nrate k_d (τ_d/τ_cd − 1)^m × exposure e^{−sd/H*}; eroded rock joins the mobile layer 1:1"),
+    ax.text(4, 31, T("急な区間だけ削る:\n駆動応力 τ_d = ρ(1 + sC) g_e h_t tanθ が\n閾値 τ_cd を超える。侵食速度\nk_d (τ_d/τ_cd − 1)^m × 露出率 e^{−sd/H*}\n削った岩は 1:1 で可動層へ",
+                     "erosion only on the steep reaches: the driving\nstress τ_d = ρ(1 + sC) g_e h_t tanθ exceeds\nthe threshold τ_cd; rate k_d (τ_d/τ_cd − 1)^m\n× exposure e^{−sd/H*}; eroded rock joins the\nmobile layer 1:1"),
             fontsize=8, color=C_ERODE, va="top")
-    ax.text(228, np.interp(228, x, z) + 8.5, T("勾配が緩む所で堆積\n(平衡濃度に向かう)", "deposition where the slope eases\n(towards the equilibrium concentration)"),
+    zd = np.interp(228, x, z)
+    _arrow(ax, 228, zd + 14.0, 228, zd + 5.8, "#8c510a", lw=1.0, ms=7)
+    ax.text(228, zd + 14.5, T("勾配が緩む所で堆積\n(平衡濃度に向かう)", "deposition where the slope eases\n(towards the equilibrium concentration)"),
             ha="center", fontsize=8, color="#8c510a", va="bottom")
     ax.text(300, np.interp(300, x, z) + 10, T("堆積層(sd)が床を守る: 露出率 e^{−sd/H*}、H* = %g m\n厚さ %g m の堆積層の構成では、剥がれるまで削れない" % (HSTAR, SDCOV),
-                                             "a deposit (sd) protects the bed: exposure e^{−sd/H*}, H* = %g m\nwith the %g m deposit the rock erodes only once stripped" % (HSTAR, SDCOV)),
+                                             "a deposit (sd) protects the bed:\nexposure e^{−sd/H*}, H* = %g m; with the\n%g m deposit the rock erodes only once stripped" % (HSTAR, SDCOV)),
             fontsize=8, color=C_TXT, va="bottom")
     for a, b, s in REACH:
         ax.text((a + b) / 2, np.interp((a + b) / 2, x, z) - 5.5 if a >= 120 else np.interp((a + b) / 2, x, z) - 7.5,
                 T("勾配 %g" % s, "slope %g" % s), ha="center", fontsize=8)
         ax.axvline(b, color="0.75", lw=0.6, ls=":")
     _arrow(ax, 401, z[-1] + 2.5, 418, z[-1] + 2.5, C_FLOW, lw=1.8)
-    ax.text(402, z[-1] + 4.5, T("南辺: 自由流出", "south: free outflow"), fontsize=8, color=C_FLOW)
-    ax.text(300, z[-1] + 24, T("混合体 = 単層(水 + 土砂。抵抗則と侵食・堆積式は 2 通り)", "single-layer mixture (water + sediment; two resistance laws with their erosion–deposition equations)"),
-            fontsize=8, color=C_MIX, ha="center")
+    ax.text(421, z[-1] + 4.5, T("南辺: 自由流出", "south: free outflow"), fontsize=8, color=C_FLOW, ha="right")
+    ax.text(125, np.interp(125, x, z) + 0.8 * 6 + 3.0,
+            T("混合体 = 単層(水 + 土砂。抵抗則と侵食・堆積式は 2 通り)",
+              "single-layer mixture (water + sediment;\ntwo resistance laws with their erosion–deposition equations)"),
+            fontsize=8, color=C_MIX, ha="left", va="bottom")
     ax.set_xlim(-34, 424)
     ax.set_ylim(z.min() - 8, z.max() + 16)
     ax.set_xlabel(T("谷頭からの距離 (m)", "distance from the head (m)"))
@@ -105,7 +109,8 @@ def _hydro(ax):
     ax.set_xlabel(T("時刻 (s)", "time (s)"))
     ax.set_ylabel(T("谷頭の流量 (m³/s)", "discharge at the head (m³/s)"))
     ax.legend(fontsize=7.5, loc="upper right")
-    ax.text(72, 30, T("計算は %g s(dt = %g s)\n岩盤は毎ステップ更新(morfac 1)" % (TT, DT), "run of %g s (dt = %g s)\nrock updated every step (morfac 1)" % (TT, DT)), fontsize=7.5)
+    ax.text(46, 34, T("計算は %g s(dt = %g s)\n岩盤は毎ステップ更新\n(morfac 1)" % (TT, DT), "run of %g s (dt = %g s)\nrock updated every step\n(morfac 1)" % (TT, DT)),
+            fontsize=7.5, va="top")
     ax.set_title(T("(b) 谷頭の混合体のハイドログラフ", "(b) Hydrograph of the mixture at the head"), loc="left", fontsize=10)
 
 
@@ -128,21 +133,22 @@ def _law(ax):
     ax.text(0.01, 98, T("k_d = %.1e m/s、τ_cd = %g kPa、m = %g\nρ(1 + sC) = %.0f kg/m³、g_e = g cos²θ" % (KD, TAUCD / 1000, MD, RHO * (1 + SG * CMIX)),
                          "k_d = %.1e m/s, τ_cd = %g kPa, m = %g\nρ(1 + sC) = %.0f kg/m³, g_e = g cos²θ" % (KD, TAUCD / 1000, MD, RHO * (1 + SG * CMIX))),
             fontsize=7.5, ha="left", va="top")
-    ax.set_title(T("(c) 岩盤侵食則: 勾配と流動深で決まる閾値つきの速度", "(c) Rock erosion law: a rate with a threshold set by slope and flow depth"),
+    ax.set_title(T("(c) 岩盤侵食則: 勾配と流動深で決まる閾値つきの速度", "(c) Rock erosion law: a rate with a threshold\nset by slope and flow depth"),
                  loc="left", fontsize=10)
 
 
 def _chain(ax):
     ax.axis("off")
-    boxes = [(0.02, T("出水\n(T_r 年分)", "floods\n(T_r years)"), C_WATER), (0.30, T("土石流\n1 回", "one debris\nflow"), C_MIX),
-             (0.58, T("出水\n(T_r 年分)", "floods\n(T_r years)"), C_WATER), (0.86, "…", "white")]
-    for xb, lab, c in boxes:
-        ax.add_patch(plt.Rectangle((xb, 0.62), 0.12, 0.26, facecolor=c, edgecolor="k", lw=0.8))
-        ax.text(xb + 0.06, 0.75, lab, ha="center", va="center", fontsize=8)
-        if xb < 0.8:
-            _arrow(ax, xb + 0.125, 0.75, xb + 0.275, 0.75, "k", lw=1.2, ms=9)
-    ax.text(0.5, 0.95, T("f_state_restore = 2 でつなぐ(新しい時間軸、dt を変えられる)。累積下刻 Ri は続く",
-                         "chained with f_state_restore = 2 (new time axis; dt can change); cumulative incision Ri continues"),
+    boxes = [(0.0, T("出水\n(T_r 年分)", "floods\n(T_r years)"), C_WATER), (0.26, T("土石流\n1 回", "one debris\nflow"), C_MIX),
+             (0.52, T("出水\n(T_r 年分)", "floods\n(T_r years)"), C_WATER), (0.78, "…", "white")]
+    for k, (xb, lab, c) in enumerate(boxes):
+        bw = 0.08 if lab == "…" else 0.2
+        ax.add_patch(plt.Rectangle((xb, 0.56), bw, 0.24, facecolor=c, edgecolor="k", lw=0.8))
+        ax.text(xb + bw / 2, 0.68, lab, ha="center", va="center", fontsize=7.5)
+        if k + 1 < len(boxes):
+            _arrow(ax, xb + bw + 0.005, 0.68, boxes[k + 1][0] - 0.005, 0.68, "k", lw=1.2, ms=9)
+    ax.text(0.5, 0.97, T("f_state_restore = 2 でつなぐ(新しい時間軸、dt を変えられる)\n累積下刻 Ri は続く",
+                         "chained with f_state_restore = 2 (new time axis; dt can change);\ncumulative incision Ri continues"),
             ha="center", va="top", fontsize=8)
     lines = [
         T("出水: 清水 %g m³/s を年 %g s(i_f = %.1e)、morfac %g。流水の剥離 k_p = %.1e m/s、τ_c = %g Pa" % (QF, F, IF, MORFAC, KP, TAUC),
@@ -168,7 +174,7 @@ def _chain(ax):
         yv -= 0.12
     ax.set_xlim(0, 1)
     ax.set_ylim(0, 1)
-    ax.set_title(T("(d) 補足の長期の連鎖: 出水と土石流を交互につなぐ", "(d) Long-term chain of the supplement: floods and debris flows alternately"),
+    ax.set_title(T("(d) 補足の長期の連鎖: 出水と土石流を交互につなぐ", "(d) Long-term chain of the supplement:\nfloods and debris flows alternately"),
                  loc="left", fontsize=10)
 
 
@@ -195,10 +201,13 @@ def setup():
     for k, (a, b, s) in enumerate(REACH):
         if k % 2 == 0:
             ax.axvspan(a, b, color="0.93", zorder=0)
-        ax.text((a + b) / 2, np.interp((a + b) / 2, x, z.mean(axis=1)) + 6, T("勾配 %g\n%g〜%g m" % (s, a, b), "slope %g\n%g–%g m" % (s, a, b)),
-                ha="center", fontsize=7.5)
+        # ラベルが縦断の線や隣のラベルに重ならない高さ(急な区間ほど上、勾配 0.04 は 0.01 の上に)
+        dz = 16 if k == len(REACH) - 2 else 6 + 28 * s
+        xl, ha = ((a + b) / 2, "center") if k < len(REACH) - 1 else (b - 2, "right")
+        ax.text(xl, np.interp((a + b) / 2, x, z.mean(axis=1)) + dz, T("勾配 %g\n%g〜%g m" % (s, a, b), "slope %g\n%g–%g m" % (s, a, b)),
+                ha=ha, fontsize=7.5)
     ax.text(395, 97, T("幅 %g m(%d セル、Δx = %g m、両岸は壁)、長さ %g m\n谷頭の %d セルから混合体を流入、南端は自由流出、n = 0.05\n河床: 裸岩(sd = 0)、または厚さ %g m の堆積層" % (NX * DX, NX, DX, NY * DX, NX, SDCOV),
-                        "%g m wide (%d cells, Δx = %g m, walls on both banks), %g m long\nmixture inflow at the %d head cells, free outflow at the south end, n = 0.05\nbed: bare rock (sd = 0) or a %g m deposit" % (NX * DX, NX, DX, NY * DX, NX, SDCOV)),
+                        "%g m wide (%d cells, Δx = %g m, walls on both banks), %g m long\nmixture inflow at the %d head cells, free outflow at the south end,\nn = 0.05; bed: bare rock (sd = 0) or a %g m deposit" % (NX * DX, NX, DX, NY * DX, NX, SDCOV)),
             fontsize=7.5, va="top", ha="right")
     ax.set_xlim(0, NY * DX)
     ax.set_ylim(0, 100)
@@ -229,7 +238,7 @@ def setup():
     yv = 0.95
     for k, v in rows:
         ax.text(0.0, yv, k, fontsize=8, fontweight="bold", va="top")
-        ax.text(0.3, yv, v, fontsize=8, va="top")
+        ax.text(0.34, yv, v, fontsize=8, va="top")
         yv -= 0.2
     ax.set_title(T("前半の構成", "Configurations of the first part"), fontsize=9, loc="left")
     # 設定の要約
@@ -242,10 +251,10 @@ def setup():
                                      "Takahashi–Nakagawa (f_dbres = 3, f_dbed = 3) and\nCoulomb + Manning (f_dbres = 1, f_dbed = 1)\nφ = 35°, λ = 0.4, low-velocity settling f_dbstop = 1")),
         (T("岩盤侵食", "rock erosion"), T("k_d = %.1e m/s、τ_cd = %g kPa、m_d = %g\nH* = %g m" % (KD, TAUCD / 1000, MD, HSTAR),
                                      "k_d = %.1e m/s, τ_cd = %g kPa, m_d = %g\nH* = %g m" % (KD, TAUCD / 1000, MD, HSTAR))),
-        (T("時間(前半)", "time (first part)"), T("%g s、dt = %g s、岩盤は毎ステップ更新(morfac 1)" % (TT, DT), "%g s, dt = %g s, rock updated every step (morfac 1)" % (TT, DT))),
-        (T("出水(補足)", "floods (suppl.)"), T("清水 %g m³/s、年 %g s(i_f = %.1e)、morfac %g\n剥離 k_p = %.1e m/s、τ_c = %g Pa、研磨なし" % (QF, F, IF, MORFAC, KP, TAUC),
+        (T("時間(前半)", "time\n(first part)"), T("%g s、dt = %g s、岩盤は毎ステップ更新(morfac 1)" % (TT, DT), "%g s, dt = %g s, rock updated every step (morfac 1)" % (TT, DT))),
+        (T("出水(補足)", "floods\n(suppl.)"), T("清水 %g m³/s、年 %g s(i_f = %.1e)、morfac %g\n剥離 k_p = %.1e m/s、τ_c = %g Pa、研磨なし" % (QF, F, IF, MORFAC, KP, TAUC),
                                        "clear water %g m³/s, %g s per year (i_f = %.1e), morfac %g\nplucking k_p = %.1e m/s, τ_c = %g Pa, no abrasion" % (QF, F, IF, MORFAC, KP, TAUC))),
-        (T("連鎖(補足)", "chain (suppl.)"), T("土石流 %s 年に 1 回と出水だけ、粒径 %s m\n固定勾配 %d サイクル、隆起ありの確認 %d サイクル" % ("・".join(str(t) for t in TRS), "・".join(str(d) for d in D50S), NCYC, NCYC_U),
+        (T("連鎖(補足)", "chain\n(suppl.)"), T("土石流 %s 年に 1 回と出水だけ、粒径 %s m\n固定勾配 %d サイクル、隆起ありの確認 %d サイクル" % ("・".join(str(t) for t in TRS), "・".join(str(d) for d in D50S), NCYC, NCYC_U),
                                        "debris flows once in %s years and floods only; sizes %s m\n%d cycles at fixed slopes, %d cycles for the check with uplift" % (", ".join(str(t) for t in TRS), ", ".join(str(d) for d in D50S), NCYC, NCYC_U))),
     ]
     yv = 0.98

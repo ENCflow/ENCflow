@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 # examples/timberyard の入力生成(引数なしで全ファイルを書く。make が呼ぶ)
-#   z.txt / sw.txt / gv.txt / stock.txt と、比較ケースの stock_far.txt(貯木場を
+#   z.txt / sw.txt / gv.txt / bb.txt / stock.txt と、比較ケースの stock_far.txt(貯木場を
 #   港の沖側へ移した材木ストック)・z_wall4.txt(防潮壁の天端 +4.0 m。開口部は +0.5 m)
 #   伊勢湾台風型の「海岸の貯木場から高潮で材木が市街地へ流入する」現象の
 #   理想化実験。西から順に:
@@ -10,6 +10,8 @@
 #     i=36..37   : 岸壁・防潮壁(z=+1.5 m。中央 j=25..36 は開口部 z=+0.5 m
 #                  = 流入が集中する低所)
 #     i=38..120  : 市街地(z=+0.5 → +2.0 m へ緩勾配。建物空隙率 gv=0.6)
+#   bb.txt は家屋の平均寸法(一様に 10 m = 木造の戸建て住宅の平面の代表寸法)。家屋の抗力は
+#   1 − gv に比例するので、建物のない所では働かない
 #   貯木場・市街地を海域マスクにしない理由: 海セルには材木ストックを
 #   置けず流木の移流も働かない(解説は README.md)。
 import numpy as np
@@ -48,6 +50,7 @@ for j in range(ny):
 np.savetxt('z.txt', z, fmt='%.4f')
 np.savetxt('sw.txt', sw, fmt='%d')
 np.savetxt('gv.txt', gv, fmt='%.2f')
+np.savetxt('bb.txt', np.full((ny, nx), 10.0), fmt='%.1f')
 np.savetxt('stock.txt', stock, fmt='%.3f')
 # 貯木場を港の沖側(i = 2..14。防潮壁から 210〜340 m)へ移す: 同じ 6 万 m3 を 13 列に
 far = np.zeros((ny, nx))
@@ -58,5 +61,5 @@ zw = z.copy()
 zw[:, 35:37] = np.where(zw[:, 35:37] > 0.5, Z_WALL_HIGH, zw[:, 35:37])
 np.savetxt('z_wall4.txt', zw, fmt='%.4f')
 vol = stock.sum() * 10.0 * 10.0
-print('written: z.txt sw.txt gv.txt stock.txt stock_far.txt z_wall4.txt (%d x %d)' % (nx, ny))
+print('written: z.txt sw.txt gv.txt bb.txt stock.txt stock_far.txt z_wall4.txt (%d x %d)' % (nx, ny))
 print('timber stock total = %.0f m3 (far: %.0f m3)' % (vol, far.sum() * 100.0))

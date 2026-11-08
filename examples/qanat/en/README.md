@@ -39,6 +39,14 @@ particular qanat.
 
 ![Schematic of the mechanisms](figs/mechanism.png)
 
+Schematic of a real qanat (not a model result). (a) A mother well is dug below the water
+table, and a tunnel sloping more gently than the ground leads the water to an outlet on
+lower land. Groundwater enters along the collection section below the water table, and the
+conveyance section carries it to the outlet (the thin vertical lines are shafts). (b) When a
+nearby deep well lowers the water table, the collection section shortens; where the tunnel
+lies above the water table, its water leaks into the ground, and the flow dwindles and
+finally stops.
+
 | Real phenomenon | How ENCflow represents it | Settings |
 |---|---|---|
 | Groundwater flows through the fan aquifer | Layer 2 (a plane 2-D aquifer given a thickness, specific yield and lateral hydraulic conductivity) | `f_gwlayer2 = 1`, `gw2_depth`, `gw2_sy`, `gw2_ksh_mmh` |
@@ -48,6 +56,39 @@ particular qanat.
 | Water in the tunnel flows down its gradient to the outlet and comes out at the surface | Flow in the tunnel (an approximation of free-surface flow) and an open outfall | `f_gwc_fluxlaw = 2`, `fn_gwc_outfall` |
 | Part of the groundwater bypasses the qanat and flows downstream | It seeps out into a drain at the foot of the fan (the ground level of the drain caps the water table) | Terrain (the eastmost column is lowered) |
 | A deep well pumps groundwater | Withdrawal from the aquifer by cell (the amount that can be pumped is capped by the storage of the cell) | `f_gwpump = 1`, `gwp_*` |
+
+![The laws in ENCflow](figs/laws.png)
+
+The laws in the table, drawn with this example's inputs and settings (no results are used).
+(a) Exchange between the tunnel and the aquifer. The tunnel water level H_c (floor + depth)
+is compared with the water table H_aq, and water moves from the higher to the lower side at
+the exchange capacity of 30 mm/h (0.83 L/s per tunnel cell of 10 m), regardless of the size
+of the head difference. One step (10 s) moves at most 0.083 mm of water column, capped by
+the storage of the giving side (for leakage, the water in the tunnel); nothing leaks into a
+full aquifer, and the conveyance section has an exchange capacity of 0. One step's transfer
+is 0.83 mm of tunnel level and 0.42 mm of water table, so where the two levels are closer
+than that, the direction alternates from step to step, the mean exchange is smaller than
+30 mm/h, and the water table stays almost level with the water in the tunnel (the
+water-table panel of the results). (b) Flow in the tunnel (f_gwc_fluxlaw = 2). For the head
+difference ΔH to the next cell, q = C f √(ΔH/Δs) (C = 0.5 m²/s × passage width 4.14 m,
+f = depth / 1 m, Δs = 10 m), linearized to be proportional to ΔH for ΔH < gwc_eps_h = 0.01 m
+(the default; with the square-root law alone the rate of change of the flow grows without bound
+as ΔH → 0, and the explicit time step could not be set). It is a simple approximation of
+free-surface flow that makes the square-root pipe law proportional to the filling ratio f.
+The head difference of uniform flow on the floor gradient of 0.004, 0.04 m, lies on the
+square-root branch, so the tunnel flow in this example is 1.31 L/s per cm of depth. The qanat
+flow of 3.5 L/s before pumping corresponds to a depth of 2.7 cm, the same as the 2.7 cm in the
+conveyance section of the water-depth panel of the results. No water flows out of a cell 1 cm deep or less (gwc_eps). (c) Open outfall on land.
+The smaller of the orifice C_dA √(2gΔH) (C_dA = 0.15 m²) and the per-step limit that lowers
+the tunnel level to the surface water level of the outlet cell flows out, with no backflow.
+For ΔH < 0.53 m the limit is the smaller, so whenever the tunnel water there is deeper than
+1 cm, the outfall releases what lowers the tunnel level to the surface water level. The
+water that comes down the tunnel passes straight out, and the outfall does not throttle the
+qanat flow. (d) The tunnel cell and the pumping-well cell on the column at the well's x
+(75 m) as the water table falls. The tunnel cell switches from collection (+0.83 L/s) to
+leakage (−0.83 L/s) at the tunnel water level (floor 2.33 m + depth), while the well pumps
+its demand down to the base of the aquifer (layer 2), capped by the storage of the cell. The
+initial water table is 1.8 m below the ground.
 
 ## Geometry and settings
 
@@ -91,9 +132,12 @@ and transect 1 that measures the qanat flow. Bottom: longitudinal section along 
 ```
 cd examples/qanat
 make                    # links and inputs (gen_data.py)
-make run                # run the 3 cases in turn (about 25 minutes per case on one thread)
+make run                # run the 3 cases in turn (about 40 minutes per case on one thread)
 python3 plot_results.py # figs/*.png and the table (with the argument en, the English version goes to en/figs/)
 ```
+
+mechanism.png, setup.png and laws.png use no results, so they can be drawn right after
+`make`, before the runs.
 
 ## Results
 
@@ -116,12 +160,12 @@ dot = pumping well.
 
 | Case (period) | Qanat flow | Pumping | Groundwater seeping into the drain | Storage loss | Tunnel below the water table |
 |---|---:|---:|---:|---:|---:|
-| Before pumping (days 130-150) | 3.50 L/s | — | 6.50 L/s | 0.00 L/s | 150 m |
-| Well 2 L/s (days 280-300) | 1.70 L/s | 2.00 L/s | 6.30 L/s | 0.00 L/s | 140 m |
+| Before pumping (days 130-150) | 3.54 L/s | — | 6.46 L/s | 0.00 L/s | 150 m |
+| Well 2 L/s (days 280-300) | 1.71 L/s | 2.00 L/s | 6.29 L/s | 0.00 L/s | 140 m |
 | Well 5 L/s (days 280-300) | 0 | 5.00 L/s | 5.07 L/s | 0.07 L/s | 70 m |
 
 The values are 20-day means. The qanat-only case stays almost the same as before pumping up
-to day 300 (qanat flow 3.50 L/s over days 280-300). The groundwater seeping into the drain is
+to day 300 (qanat flow 3.53 L/s over days 280-300). The groundwater seeping into the drain is
 what remains of the recharge after subtracting the qanat flow and the pumping and adding the
 storage loss (it agrees within 0.2 L/s with the mean of the east-edge transect; the flow over
 the plain pulsates, so the transect is read as a 20-day mean).
@@ -130,16 +174,16 @@ the plain pulsates, so the transect is read as a 20-day mean).
   because the initial water table is high, 14 L/s comes out in the first few days, settling
   to 3.5 L/s in about 50 days. The remaining 6.5 L/s bypasses the tunnel and seeps out into
   the drain at the foot of the fan. Over most of the collection section the water table is
-  held 5-6 cm above the tunnel floor, at almost the same height as the water in the tunnel
+  held 3-4 cm above the tunnel floor, at almost the same height as the water in the tunnel
   (the tunnel collects water by lowering the surrounding water table to its own level). The
-  water in the tunnel is up to 6 cm deep in the collection section and 4.3 cm deep in the
+  water in the tunnel is up to 4 cm deep in the collection section and 2.7 cm deep in the
   conveyance section.
 - **Most of the pumped water comes out of the qanat flow**: when pumping at 2 L/s starts, the
-  qanat flow falls from 3.5 to 1.7 L/s in about 20 days. The 1.80 L/s lost is 90 % of the
-  pumping rate; the groundwater flowing to the drain falls by only 0.20 L/s. While the tunnel
+  qanat flow falls from 3.5 to 1.7 L/s in about 30 days. The 1.83 L/s lost is 92 % of the
+  pumping rate; the groundwater flowing to the drain falls by only 0.17 L/s. While the tunnel
   is collecting groundwater, the water in the tunnel holds up the surrounding water table, so
   the water table falls mainly on the well's (north) side (on the north-south line through the
-  well, 0.23 m at the north edge against 0.04 m at the south edge). The well pumps groundwater
+  well, 0.23 m at the north edge against 0.03 m at the south edge). The well pumps groundwater
   that was on its way to the tunnel. Apart from storage depletion, pumped water is supplied
   mainly by a decrease of the outflow where that groundwater used to go (springs, rivers,
   qanats) (Theis 1940). In this example, that outflow is above all the qanat.
@@ -153,7 +197,7 @@ the plain pulsates, so the transect is read as a 20-day mean).
   (the water-depth panel). This is the same mechanism by which real qanats dry up: as the
   water table falls, the collection section shortens, and what is still collected is lost on
   the way.
-- **The deep well keeps pumping**: the water table at the well cell falls by 2.2 m at 5 L/s,
+- **The deep well keeps pumping**: the water table at the well cell falls by 2.0 m at 5 L/s,
   but the aquifer is 8 m thick, so both cases pump 100 % of their demand (the
   `demand / pumped` summary at the end of the run).
 

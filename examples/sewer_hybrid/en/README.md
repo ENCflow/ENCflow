@@ -188,7 +188,8 @@ pipe-full. With the soft slot_sy of A and B, at the eastern end the
 branch pipes (dotted) hold 5–5.5 times and the trunk (solid) 1.7–2.3 times
 the pipe-full volume in the "slot". The part beyond the pipe volume is
 non-existent water. With the stiff slot_sy of D, both trunk and branches
-stay within 1.5–1.9 times, and the excess has overflowed onto the surface
+stay within 1.9 times even at the east end (1.2 times on the upstream branch),
+and the excess has overflowed onto the surface
 (that it is still nearly 2 is because sy/5 is still soft; in practice sy/50
 is the default. §64). The ratio grows downstream because the head in the
 pipes is closer to the ground there; at the eastern end the head reaches
