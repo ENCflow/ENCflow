@@ -121,14 +121,15 @@ stage and the control, x10.png and the control line are added. Set the number of
 
 ![Glacier and erosion in the main run](figs/glacier.png)
 
-(a) Ice thickness after 6000 years. (b) Distribution of erosion (the blue line is the glacier extent).
-(c) Ice volume and maximum erosion. (d) Position of the terminus of the main glacier (compared with the
-control).
+(a) Ice thickness after 6000 years (the grey is a hillshade of the bed after 6000 years, with the ice
+thickness coloured where it is 1 m or more). (b) Distribution of erosion (the blue line is the glacier
+extent). (c) Ice volume and maximum erosion. (d) Position of the terminus of the main glacier (compared
+with the control).
 
 - **Growth of the glacier**: within about 1000 years, snow builds ice about 150 m thick that covers the
-  plateaus on both sides, and a valley glacier (up to about 370 m thick) that extends to x ≈ 15.7 km. In
-  the tributary, a small glacier about 60 m thick forms at its head, and the ice of the main valley pushes
-  a little over 1 km into the mouth of the tributary.
+  plateaus on both sides, and a valley glacier (up to about 370 m thick) that extends to x ≈ 15.3 km; its
+  terminus advances to 15.7 km by 2000 years. In the tributary, a small glacier about 60 m thick forms at
+  its head, and the ice of the main valley pushes a little over 1 km into the mouth of the tributary.
 - **Distribution of erosion**: after 6000 years the erosion is at most 76 m on the steep slopes of the
   valley head, 30–60 m at the shoulder edges where plateau ice flows down into the valley, and 16–42 m on
   the floor of the main valley. On steep slopes, even thin ice has a large basal shear stress, so sliding
@@ -219,8 +220,8 @@ erosion). It does not mean that the erosion rate itself matches measurements.
   because the ice is thicker there.
 - **The glacier size is sensitive to the equilibrium line**: the plateau at the valley shoulders for
   x < 7 km lies just above the equilibrium line, so moving the line a little changes the size of the
-  accumulation area a lot (in a trial run with the equilibrium line at 2750 m, the terminus was at 10.9 km
-  and did not reach the tributary confluence).
+  accumulation area a lot (with the equilibrium line at 2750 m, the terminus is at 10.9 km and does not
+  reach the tributary confluence).
 - **Update interval**: one glacier update is 0.19 years of landform time. Lengthening the interval to tens
   of years of landform time gives unnatural results from the time splitting (aim for one year or less).
 - **Small lakes**: among the lakes of the supplement, the 6 m deep lakes at the shoulder edges are 1–3

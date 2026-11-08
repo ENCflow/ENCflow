@@ -129,8 +129,9 @@ Right: size of the domain of each case (origin at the river mouth).
   level 0 m (mean tide) on a rising tide. The tidal range is as large as the basin depth: the basin is
   1 m deep at low tide and 3 m at high tide. The north and south sides are lateral Neumann, as if the
   same coast continued outside.
-- **Time**: the landform change is multiplied by morfac (100 or 200), so 15–24 hours of hydraulic
-  computation show 1500–4000 hours of landform change (the tidal cases lower morfac and solve 5 tidal
+- **Time**: the landform change is multiplied by morfac (100 or 200), so 15–20 hours of hydraulic
+  computation show 1500–4000 hours of landform change (smallq, with the river at 1/10, uses
+  morfac 1000 for 14900 hours of landform time; the tidal cases lower morfac and solve 5 tidal
   cycles = 62.1 hours of hydraulic time; for the limits of this lowering see "Tides and landform
   acceleration" under "Notes"). All times below are landform times.
 - The grid spacing is 5 m, and make_init.py creates the inputs (`make`).
@@ -183,10 +184,10 @@ to the farthest land; and the number of distributaries is the number of channels
 radius 0.5 R and 0.8 R centred on the mouth. All figures have north up; the colour is the change in
 ground elevation (deposit thickness) and the black line is the shoreline.
 
-The tables and figures were computed with the version of 20–29 October 2026 (stages 6 and 7 with that of 2 November). Because the shape of
-the delta differs between realizations (see "The shape differs between realizations" in the
-notes), recomputing with the same settings changes the positions of the lobes and the number of
-distributaries, and the deposit, emerged land and maximum radius can change within a few %.
+Because the shape of the delta differs between realizations (see "The shape differs between
+realizations" in the notes), recomputing with the same settings changes the positions of the lobes
+and the number of distributaries, and the deposit, emerged land and maximum radius can change
+within a few %.
 
 ### Stage 1: a river mouth without waves — mouth bar, bifurcation, lobes (base)
 
@@ -270,8 +271,10 @@ fix at 4000 h (the panels are arranged as in the final landform of base).
 
 ![Without and with waves](../figs/wave_cmp.png)
 
-Deposit thickness at 1500 h. Left: without waves (baseqb); middle: reference (shoreline
-orientation taken at the grid scale, `wave_lsm = 0`); right: with waves (wave).
+Deposit thickness at 1500 h. Left: without waves (baseqb); middle: reference (wave with
+`wave_lsm = 0`: the depth from which the shoreline orientation is taken is smoothed with the
+default cell-radius kernel (radius 2 cells), so the orientation is set at the grid scale;
+"cell-radius kernel" in the figure title); right: with waves (wave, `wave_lsm = 10 m`).
 
 wave adds offshore waves (significant wave height 0.6 m, period 6 s, coming from the
 east-southeast at an incidence angle of 30° to the shoreline) to baseqb, the reference without
@@ -514,18 +517,18 @@ the streaks stretching offshore described below.)
   on 425). These streaks are not bars elongated by tidal currents. With a lower morfac the streaks
   become shorter or do not form (next item).
 - **Check with a lower morfac**: runs with morfac 120 and 60 (`morfac` of param_tidedom.txt set to 120
-  and 60, `tt` to 268272 and 536544, giving 6 and 12 tidal cycles) were compared at landform 8942 h
+  and 60, `tt` to 268272 and 536544, giving 6 and 12 tidal cycles) are compared at landform 8942 h
   (3 tidal cycles of tidedom). In all three runs the top of the delta becomes flats and ebb channels
   (flats of 42.3, 32.1 and 46.0×10³ m² for morfac 240, 120 and 60), the flow over the flats is weak on
   the rising tide (in most rising tides 90 % of the cells are at 0.1 m/s or less), and the channels run
   fast at low tide (median speed 0.45–0.52 m/s). None of them shows the shapes of a tide-dominated
-  delta. Two things differed. The streaks stretching offshore: the two streaks of morfac 240 (previous
+  delta. Two things differ. The streaks stretching offshore: the two streaks of morfac 240 (previous
   item) become a single streak reaching x = 430 m with 120, and do not form with 60, where the delta
   instead spreads compactly to the south-east as far as x = 460 m. Read the streaks as particular to
   runs with a large morfac. The other is the sand leaving through the north and south sides. With
-  morfac 120, at the low tides of the 4th to 6th tidal cycles the river water flowed to the south side
-  along a channel following the coast (0.7–0.9 m/s), and 40 % of the sand fed left, mainly through the
-  south side (1 % with 240 and with 60). The flats were narrower accordingly, and the tidal discharge
+  morfac 120, at the low tides of the 4th to 6th tidal cycles the river water flows to the south side
+  along a channel following the coast (0.7–0.9 m/s), and 40 % of the sand fed leaves, mainly through the
+  south side (1 % with 240 and with 60). The flats are narrower accordingly, and the tidal discharge
   in and out of the flats is 0.94 times the river (1.6 times with 240, 1.5 times with 60). Where the
   low-tide channels head differs from run to run, as does the split of the flow between distributaries
   ("The shape differs between realizations" under "Notes"), and these three runs cannot separate the effect of
@@ -640,8 +643,8 @@ Arranged as in the figure of stage 6. Except while the river water fills the cha
   5 tidal cycles. The sand that enters in one tidal cycle is a quarter of the sand of the final delta of
   tide, so the landform change in one cycle cannot be called small. In the check of tidedom with
   morfac 120 and 60 (stage 7), the flats and the difference between the flows on the rising and the
-  falling tide appeared in the same way, but the streaks stretching offshore grew long only with
-  morfac 240 and did not form with 60. Read the details of the landform as values that depend on morfac
+  falling tide appear in the same way, but the streaks stretching offshore grow long only with
+  morfac 240 and do not form with 60. Read the details of the landform as values that depend on morfac
   (for the amount of sediment leaving through the north and south sides, see "Sides crossing the
   coast" below). The references without tide have a steady flow, so they see the same landform time
   with the cheaper morfac 100 (1000 in smallq).
@@ -655,8 +658,8 @@ Arranged as in the figure of stage 6. Except while the river water fills the cha
 - **How the tide level is given**: the tide level is updated every step (`dt_tiupdate = 0.005` min =
   0.3 s, not more than the time step), and the tide table `tival` is given every 4.5 min (tide_m2.txt
   made by make_init.py). The natural period of this basin is 10–18 min (835 m long, 1–3 m deep); with
-  the default stepwise update every minute and a tide table every 15.5 min, the basin oscillated (a
-  seiche), and a back-and-forth flow twice the tidal current (0.06 m/s) remained in front of the strip
+  the default stepwise update every minute and a tide table every 15.5 min, the basin oscillates (a
+  seiche), and a back-and-forth flow twice the tidal current (0.06 m/s) remains in front of the strip
   (the [tide level](../../../docs/en/users_guide/tide.md#parameters-and-the-basis-of-their-defaults)
   chapter of the user's guide).
 - **Sides crossing the coast**: in the tidal cases the river flow runs around along the coast at every

@@ -1265,9 +1265,9 @@
     {
       "source": "examples/bedrock_cover/README.md",
       "target": "examples/bedrock_cover/en/README.md",
-      "source_sha256": "3a3b470772221c24f58b5de1efdd2df455039821a87b08a3faa03626f250e619",
-      "target_sha256": "97fa67cb18f000bd55fe08f69c3cbca58de11d5691b2715b8607ad5ec76c67ab",
-      "reviewer": "Claude (Claude Code session; removed development history from both versions in parallel and compared the edited passages, headings, tables and numbers; no model execution)",
+      "source_sha256": "4ea5e061ddf27bbd901fde2c4ea18aab3ca4654e8f9256562ce24fd26a93901a",
+      "target_sha256": "8a3172998b8c436e6d75899943c52a79f26b1d1c12c5b4d314f87113e240ca26",
+      "reviewer": "Claude (Claude Code session; corrected both versions in parallel against the inputs, scripts and committed figures, and compared the edited passages and numbers)",
       "method": "assistant",
       "reviewed_on": "2026-11-08"
     },
@@ -1290,6 +1290,15 @@
       "reviewed_on": "2026-11-05"
     },
     {
+      "source": "examples/bedrock_cover/figs/mechanism.png",
+      "target": "examples/bedrock_cover/en/figs/mechanism.png",
+      "source_sha256": "b9a9f1bc82ed80c0f1f4827cd47ea22aa8d9ae7ef5a388448e7ce75a2225b600",
+      "target_sha256": "5120711d137be254f28ee0c53ae50be99a737b4628efdd322ef31c80244b6647",
+      "reviewer": "Claude (Claude Code session; regenerated both from the same inputs and compared every label)",
+      "method": "assistant",
+      "reviewed_on": "2026-11-08"
+    },
+    {
       "source": "examples/bedrock_cover/figs/pulse.png",
       "target": "examples/bedrock_cover/en/figs/pulse.png",
       "source_sha256": "7867cca5b1e20f7623ea4496b9db86b87b1e4e4472927784a33ac19f3048ec09",
@@ -1297,6 +1306,15 @@
       "reviewer": "Claude (Claude Code session; recomputed 2026-11-05: both drawn by plot_results.py from the same results, labels compared with the Japanese figure)",
       "method": "assistant",
       "reviewed_on": "2026-11-05"
+    },
+    {
+      "source": "examples/bedrock_cover/figs/setup.png",
+      "target": "examples/bedrock_cover/en/figs/setup.png",
+      "source_sha256": "f83024579545cda8a1daa5865750f40524186116359d6348e1760e04e858d81d",
+      "target_sha256": "9fd94741c6750fa114324cae953b9bc867a448ed434acaf9e56b28a2bdfb459b",
+      "reviewer": "Claude (Claude Code session; regenerated both from the same inputs and compared every label)",
+      "method": "assistant",
+      "reviewed_on": "2026-11-08"
     },
     {
       "source": "examples/bedrock_cover/figs/supply.png",
@@ -1409,9 +1427,9 @@
     {
       "source": "examples/debris_bedrock/README.md",
       "target": "examples/debris_bedrock/en/README.md",
-      "source_sha256": "a521662cddfa6f9523b2c345c3ecbb5b741ecaf6f2f9ca57e9a1deae18361ecf",
-      "target_sha256": "395b372d34620d46c15813a2de9027d9cc2033ef353fa4ad3e55621e79c066e7",
-      "reviewer": "Claude (Claude Code session; removed development history from both versions in parallel and compared the edited passages, headings, tables and numbers; no model execution)",
+      "source_sha256": "2306fb3cfe9a3e930b446c87e181f242dd39311fd97a0a6e3b66609751e8e13c",
+      "target_sha256": "e3803bd9c0be51459f92c59f27acbf21a674abb92558371e6def4fdd95f6c394",
+      "reviewer": "Claude (Claude Code session; corrected both versions in parallel against the inputs, scripts and committed figures, and compared the edited passages and numbers)",
       "method": "assistant",
       "reviewed_on": "2026-11-08"
     },
@@ -1468,6 +1486,24 @@
       "reviewer": "Claude (Claude Code session; viewed both images side by side: same slope profiles at 1500, 3000 and 4530 years, the steady slope 0.253 and the mean-slope series with the 1-D prediction; titles, legends and axis labels translated)",
       "method": "assistant",
       "reviewed_on": "2026-11-06"
+    },
+    {
+      "source": "examples/debris_bedrock/figs/mechanism.png",
+      "target": "examples/debris_bedrock/en/figs/mechanism.png",
+      "source_sha256": "709d7dcd7c71ca20657900b9276fb886de710a96cd0aa5ddc11095e8ae1ce10b",
+      "target_sha256": "c31f7d6280a34a27c62250ddaffae85f24056340ed65aa92c45df94107ee0b96",
+      "reviewer": "Claude (Claude Code session; regenerated both from the same inputs and compared every label)",
+      "method": "assistant",
+      "reviewed_on": "2026-11-08"
+    },
+    {
+      "source": "examples/debris_bedrock/figs/setup.png",
+      "target": "examples/debris_bedrock/en/figs/setup.png",
+      "source_sha256": "146c737684006ce97d024e8e9c7a22e1be593a72a9051c68c74744ef26d37339",
+      "target_sha256": "4280f1db61d0e16a15a251e173d803382d8b73ea0d74c04412edfb872da22867",
+      "reviewer": "Claude (Claude Code session; regenerated both from the same inputs and compared every label)",
+      "method": "assistant",
+      "reviewed_on": "2026-11-08"
     },
     {
       "source": "examples/debris_bedrock/figs/threshold.png",
@@ -1580,11 +1616,11 @@
     {
       "source": "examples/delta/README.md",
       "target": "examples/delta/en/README.md",
-      "source_sha256": "4899d8cea4e94fd2332684cbda401db04971599c73feecd79a25a530be7090b3",
-      "target_sha256": "c1d48a3879e52f22163a00277e5430106e9ec0beb7e942ac2e21dc1ad600727d",
-      "reviewer": "Claude (Claude Code session; stage 6 updated after the tide rerun with the inlet bedload fix was found bit-identical: how the sand leaves through the sides, the speed in the channel at low tide (1.4 -> 1.8 m/s at probe 1) and the tide amount in the note on the sides crossing the coast; the three changed passages compared side by side in both languages, rest unchanged since the previous record at a60d67b)",
+      "source_sha256": "3cd98112b16dcb8d8d81685070a1af1437a914a99a4530a3fcc63f55d1da92a7",
+      "target_sha256": "f3bec0f3b9f43418561d61fab9c27a2506a7e788bcffda8f081d9bd9bd9c4946",
+      "reviewer": "Claude (Claude Code session; corrected both versions in parallel against the inputs, scripts and committed figures, and compared the edited passages and numbers)",
       "method": "assistant",
-      "reviewed_on": "2026-11-04"
+      "reviewed_on": "2026-11-08"
     },
     {
       "source": "examples/delta/figs/mechanism.png",
@@ -1742,11 +1778,11 @@
     {
       "source": "examples/glacier_valley/README.md",
       "target": "examples/glacier_valley/en/README.md",
-      "source_sha256": "919ade5e0ea9353856c0ff466e68bf51e05ee0a4faeb58d8885a4b2f79905a74",
-      "target_sha256": "ff3a51989d66c9b56a3907ece9781e53ff653e8f11efd0eca0da9fbde73ad994",
-      "reviewer": "Claude (Claude Code session; new example glacier_valley: English mirror written alongside the Japanese source and compared section by section, including numbers, figure captions and references)",
+      "source_sha256": "17f96ae2be3893e71529952e4b1ff679def089bd252beaba186f29f55d1ef918",
+      "target_sha256": "14497352714163ec6027f7cdb8f159c5f4da42a94e3d5d1f55f59de25325da56",
+      "reviewer": "Claude (Claude Code session; corrected both versions in parallel against the inputs, scripts and committed figures, and compared the edited passages and numbers)",
       "method": "assistant",
-      "reviewed_on": "2026-11-04"
+      "reviewed_on": "2026-11-08"
     },
     {
       "source": "examples/glacier_valley/figs/glacier.png",
@@ -2003,9 +2039,9 @@
     {
       "source": "examples/meander/README.md",
       "target": "examples/meander/en/README.md",
-      "source_sha256": "4a4f6006d4b49c6b64a24f537302b180b44ba11fdf838cff817b4bf3355a4b76",
-      "target_sha256": "83bdca3a6683a5c7f69a4860ffe2fd270f4d0c929f168efb429ed06e954c2571",
-      "reviewer": "Claude (Claude Code session; removed development history from both versions in parallel and compared the edited passages, headings, tables and numbers; no model execution)",
+      "source_sha256": "ef039e176b509341f1e5e816c989a5029daada63ffc3ac2de256b7a1d2a6336e",
+      "target_sha256": "1230255da8ddedcbe4182e1271175d183e1aefd329c6502704477925079617e9",
+      "reviewer": "Claude (Claude Code session; corrected both versions in parallel against the inputs, scripts and committed figures, and compared the edited passages and numbers)",
       "method": "assistant",
       "reviewed_on": "2026-11-08"
     },
@@ -2075,9 +2111,9 @@
     {
       "source": "examples/meander_cutoff/README.md",
       "target": "examples/meander_cutoff/en/README.md",
-      "source_sha256": "9e29350dc33455b03b95e19515bf066dc87a351eddd3f02f76479358dd8a4a2c",
-      "target_sha256": "d90d54f582b74b30ed0fd5402b34a5e3f5741bd98efa5fae293cfc1de531d431",
-      "reviewer": "Claude (Claude Code session; removed development history from both versions in parallel and compared the edited passages, headings, tables and numbers; no model execution)",
+      "source_sha256": "5d1d4870b7c2405c5b3b24836d202b266d0cc948e43a81fa45ab9cb38f712a59",
+      "target_sha256": "be21cf5a1bb3e717321805cff706403b43b36061cdd685eae70372e5b1eea8b3",
+      "reviewer": "Claude (Claude Code session; corrected both versions in parallel against the inputs, scripts and committed figures, and compared the edited passages and numbers)",
       "method": "assistant",
       "reviewed_on": "2026-11-08"
     },
@@ -2111,11 +2147,11 @@
     {
       "source": "examples/meander_cutoff/figs/setup.png",
       "target": "examples/meander_cutoff/en/figs/setup.png",
-      "source_sha256": "7e893f399e74ad73e5307f1650b8582cde07129038c80694b3ed4ef064973a17",
-      "target_sha256": "37ac700c43514e33122ec227c62221266dc6be297a73018b76611723192778d3",
-      "reviewer": "Claude (Claude Code session; schematic and setup figure drawn by plot_setup.py from input files only, Japanese and English images compared side by side: same data and layout, labels translated; no model execution)",
+      "source_sha256": "23018c631ddcb92efa096ec33acf075a2ac5a8890123b4893d8edf6ea6ffd055",
+      "target_sha256": "1ca2d124f2a94986b79500fdd76f47a5b2033c5809c45c499f9175219fd2c420",
+      "reviewer": "Claude (Claude Code session; regenerated both from the same inputs and compared every label)",
       "method": "assistant",
-      "reviewed_on": "2026-11-02"
+      "reviewed_on": "2026-11-08"
     },
     {
       "source": "examples/meander_cutoff/figs/states.png",
@@ -2300,9 +2336,9 @@
     {
       "source": "examples/mountain_valley/README.md",
       "target": "examples/mountain_valley/en/README.md",
-      "source_sha256": "12191a03788480798a6f5f3767adeba6645f3842b033becc1cb10e0885d9286b",
-      "target_sha256": "bf70630018f76b836919cd0a9eabfcbb8fb030e61dde6c103159a4edb3d3836d",
-      "reviewer": "Claude (Claude Code session; removed development history from both versions in parallel and compared the edited passages, headings, tables and numbers; no model execution)",
+      "source_sha256": "79b13f61552cdc7f1308b96662b70c946f4e43d5d82de77fab98bbe0310ada0f",
+      "target_sha256": "7ca216792a81b46595a5787c28ab48c686baa950381cd5d5763e40a44adb882b",
+      "reviewer": "Claude (Claude Code session; corrected both versions in parallel against the inputs, scripts and committed figures, and compared the edited passages and numbers)",
       "method": "assistant",
       "reviewed_on": "2026-11-08"
     },
@@ -2325,6 +2361,15 @@
       "reviewed_on": "2026-10-28"
     },
     {
+      "source": "examples/mountain_valley/figs/mechanism.png",
+      "target": "examples/mountain_valley/en/figs/mechanism.png",
+      "source_sha256": "e8f61b65f1e7d3fe35070fb7ee507928df456fee417a5e55197f19250ab6b2bd",
+      "target_sha256": "033a2bc03a9ba7f287ec94d2e79391eedad950e4bca3eef7a9b6cd8365cee668",
+      "reviewer": "Claude (Claude Code session; regenerated both from the same inputs and compared every label)",
+      "method": "assistant",
+      "reviewed_on": "2026-11-08"
+    },
+    {
       "source": "examples/mountain_valley/figs/pulse.png",
       "target": "examples/mountain_valley/en/figs/pulse.png",
       "source_sha256": "e4f1ae8f313a83beb1087208a7606a76156067b8c54f73e615a0b6bcae0446b3",
@@ -2332,6 +2377,15 @@
       "reviewer": "Claude (Claude Code session; English figure drawn by the same script with the en switch from the same saved results; visual check of both rendered figures: same layout, values and geometry, labels translated)",
       "method": "assistant",
       "reviewed_on": "2026-10-28"
+    },
+    {
+      "source": "examples/mountain_valley/figs/setup.png",
+      "target": "examples/mountain_valley/en/figs/setup.png",
+      "source_sha256": "cb2abbb294afdc0c512dffe440d6c8608cd21f5b65b22b9d0d8264267f3279d8",
+      "target_sha256": "a5274692a7d64922fbea919365661bdf9eb35343c721f14abd950280f23f6724",
+      "reviewer": "Claude (Claude Code session; regenerated both from the same inputs and compared every label)",
+      "method": "assistant",
+      "reviewed_on": "2026-11-08"
     },
     {
       "source": "examples/mountain_valley/figs/valley.png",

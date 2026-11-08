@@ -78,8 +78,9 @@ Dietrich 2006, in which all coarse sediment is carried by the representative flo
 idea). The coefficients of the continuous processes are given multiplied by 1/i_f (uplift
 `uplift0`, soil production `wthr_p0`, creep `creep_d`; these processes are linear in their
 coefficients, so this is the same as running only those processes on calendar time). Calendar
-time = flood time / F × 1 year. The order within each flood (sediment collected at the foot of the
-hillslopes between floods is flushed at the start of a flood) is replaced by simultaneous progress.
+time = flood time / F × 1 year, and flood time = flow time × morfac. The order within each flood
+(sediment collected at the foot of the hillslopes between floods is flushed at the start of a
+flood) is replaced by simultaneous progress.
 
 **Steady-state predictions** (compared with the results):
 
@@ -122,8 +123,8 @@ of 0.04 and a hillslope gradient of 0.25.
   H_c = 0.3 m). The input values are the calendar values divided by i_f: `uplift0` = 10519.2 mm/yr,
   `wthr_p0` = 3.15576×10⁷ mm/kyr, `creep_d` = 3.3333×10⁻⁵ m²/s.
 - **Time**: dt = 0.5 s, landform update every step × morfac 100 (dts = 50 s; "max thin-layer
-  drainage rate x dts" at the end is 0.20). 200,000 calendar years (flow time 6×10⁵ s), output
-  every 10,000 years.
+  drainage rate x dts" at the end is 0.20). 200,000 calendar years (flood time 6×10⁷ s, flow time
+  6×10⁵ s), output every 10,000 years.
 
 | Configuration | Parameter file | Contents |
 |---|---|---|
@@ -156,6 +157,10 @@ The other figures and tables can be drawn without V_b2 and the supplements. With
 
 ![Cross-slope profile and soil depth of the hillslopes](figs/valley.png)
 
+C2 in the legend is the steady-state prediction for the hillslopes (the hillslope equations under
+"Steady-state predictions" above: the parabolic cross-slope form on the left, the soil depth H_ss
+on the right).
+
 - From the bare-rock V, the soil made by weathering is carried by creep to the stream, and the
   hillslopes approach a parabolic form. After 200,000 years (about 4 times the adjustment time of
   the hillslopes, L²/D_eff ≈ 48,000 years), the heights averaged over the middle half of the rows
@@ -167,6 +172,11 @@ The other figures and tables can be drawn without V_b2 and the supplements. With
 ### Stream: the supply from the hillslopes changes the slope and what does the incision
 
 ![Slope and cover thickness of the stream](figs/channel.png)
+
+C1 in the legend is the steady-state prediction for the stream (the stream equation under
+"Steady-state predictions" above solved from the head with uniform-flow hydraulics, giving the
+slope and the cover thickness H* ln(1/(1 − q/q_c))); it is drawn as dashed lines in the colour of
+each configuration.
 
 | Configuration | Stream slope (excluding the head row) | Prediction | Cover thickness | Share of abrasion |
 |---|---|---|---|---|
@@ -194,7 +204,7 @@ within 0.4 % of H_ss (divide height 2.62 m; the difference from 2.86 m with Δx 
 the positions of the hillslope cell centres, and both follow the discrete prediction). The balance
 equations hold whatever the grid, but in a stream one cell wide the grid spacing sets the width of
 the stream, so the slope itself depends on the grid. "max thin-layer drainage rate x dts" at the
-end was 0.84, but that was a transient value; in the stream cells at the end it is 0.10 or less.
+end is 0.84, but that is a transient value; in the stream cells at the end it is 0.10 or less.
 
 ### Base-level fall: the stream responds quickly, the hillslopes slowly
 
@@ -317,9 +327,9 @@ is compared in channels one cell wide, without hillslopes, with the supply given
 - **Update interval**: the morphological time of one landform update, dts = dt × morfac, should
   satisfy the guide for the drainage of a thin cover ("max thin-layer drainage rate x dts" at the
   end of the run well below 0.5; 0.20 with dts = 50 s in the main case). Running the channels of
-  the timing-of-supply supplement with dts = 5 s (morfac 50) raised this value to 1.8 in the
-  abrasion-only channels and the slope under the short pulses came out gentler than under constant
-  supply (0.00689). The slopes for dts = 1 s and 0.5 s differ by 0.7 % or less.
+  the timing-of-supply supplement with dts = 5 s (morfac 50) raises this value to 1.8 in the
+  abrasion-only channels, and the slope under the short pulses comes out gentler than under
+  constant supply (0.00689). The slopes for dts = 1 s and 0.5 s differ by 0.7 % or less.
 - **Restart for the base-level fall**: V_c restarts from the save of V_b (`cp -r save_V_b
   save_V_c`; with `f_state_restore = 1`, t0 is the same 0 as the saved run and tt is the end time
   of the whole run). make run includes this step.

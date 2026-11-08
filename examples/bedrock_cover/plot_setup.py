@@ -122,12 +122,13 @@ def _hump(ax):
     ax.plot(r, ea * r * (1 - r), color="#ad5b29", lw=2.0, label=T("研磨だけ: β q_c r (1 − r)", "abrasion only: β q_c r (1 − r)"))
     ax.plot(r, (1 - r) * (ep + ea * r), color="#52744b", lw=2.0, label=T("両方", "both"))
     ax.axvline(0.5, color="0.6", lw=0.8, ls=":")
-    ax.text(0.51, ea * 0.25 + 0.15, T("研磨の最大 r = 1/2\n(道具と被覆の釣り合い)", "abrasion peaks at r = 1/2\n(tools balance cover)"),
-            fontsize=7.5, color="#ad5b29")
-    ax.text(0.02, ep + 0.1, T("給砂なし: 剥離だけが削る", "no supply: only plucking wears"), fontsize=7.5, color="#287ca5")
+    ax.text(0.49, ea * 0.25 + 0.15, T("研磨の最大 r = 1/2\n(道具と被覆の釣り合い)", "abrasion peaks at r = 1/2\n(tools balance cover)"),
+            fontsize=7.5, color="#ad5b29", ha="right", va="bottom")
+    ax.text(0.02, ep - 0.92, T("給砂なし:\n剥離だけが削る", "no supply:\nonly plucking"), fontsize=7.5, color="#287ca5",
+            va="bottom")
     ax.text(0.98, 1.9, T("全被覆 r → 1:\n下刻は 0", "full cover r → 1:\nno incision"), fontsize=7.5, ha="right")
     ax.set_xlim(0, 1)
-    ax.set_ylim(0, 3.6)
+    ax.set_ylim(0, 4.4)                                  # 両方の最大 ≈ 3.84(r ≈ 0.35)が切れない高さ
     ax.set_xlabel(T("給砂比 r = q_in / q_c", "supply ratio r = q_in / q_c"))
     ax.set_ylabel(T("定常の下刻速度 (10⁻⁶ m/s)", "steady incision rate (10⁻⁶ m/s)"))
     ax.legend(fontsize=7.5, loc="upper right")
@@ -188,7 +189,8 @@ def setup():
             transform=ax.transAxes)
     ax.text(0.5, 1.02, T("北端: 区間流入 Q と給砂 ↓", "north: inflow Q and supply ↓"), ha="center", fontsize=7.5,
             transform=ax.transAxes)
-    ax.set_xlabel(T("x (m)\n南辺: 自由流出。濃い縞 = 水路、淡い縞 = 岸 (+2 m)", "x (m)\nsouth: free outflow. dark stripes = channels, light = banks (+2 m)"),
+    ax.set_xlabel(T("x (m)\n南辺: 自由流出\n緑〜青の縞 = 水路、茶色の縞 = 岸 (+2 m)",
+                    "x (m)\nsouth: free outflow\ngreen-to-blue stripes = channels,\nbrown stripes = banks (+2 m)"),
                   fontsize=8)
     ax.set_ylabel(T("y (m)(流れは上から下へ)", "y (m) (flow from top to bottom)"))
     ax.set_title(T("水路の配置(構成 A。水路 6 本と岸)\n", "Channel layout (configuration A: 6 channels and banks)\n"), fontsize=9)
@@ -200,7 +202,7 @@ def setup():
     ax.plot(y, zs[:, 1], color="C3", lw=1.3, ls="--", label=T("段差 0.3 m(構成 D。70 m より下流)", "0.3 m step (configuration D; below 70 m)"))
     ax.plot(y, z6[:, 0], color="0.5", lw=0.9, ls=":", label=T("岸(+2 m、乾いたまま)", "banks (+2 m, dry)"))
     ax.axvspan(J1 * DX, J2 * DX, color="0.92")
-    ax.text((J1 + J2) / 2 * DX, 12.7, T("測る区間", "measured reach"), ha="center", fontsize=7.5)
+    ax.text((J1 + J2) / 2 * DX, 11.5, T("測る区間", "measured reach"), ha="center", fontsize=7.5)
     ax.set_xlim(0, ny * DX)
     ax.set_ylim(9.6, 13.4)
     ax.set_xlabel(T("流入端からの距離 (m)", "distance from the inflow end (m)"))
@@ -234,7 +236,7 @@ def setup():
         (T("水路", "channel"), T("幅 1 セル(Δx = 1 m)、長さ 100 m\n勾配 0.01、n = 0.04、両岸は +2 m", "one cell wide (Δx = 1 m), 100 m long\nslope 0.01, n = 0.04, banks at +2 m")),
         (T("流れ", "flow"), T("区間流入 Q = %.3f m³/s\n等流水深 %.1f m、V = %.2f m/s、τ_b = %.1f Pa" % (Q, H0, V0, TAUB),
                            "segment inflow Q = %.3f m³/s\nuniform depth %.1f m, V = %.2f m/s, τ_b = %.1f Pa" % (Q, H0, V0, TAUB))),
-        (T("礫と被覆", "gravel, cover"), T("d50 = %g cm、空隙率 %g、H* = %g cm\n容量 q_c = %.2e m²/s(芦田・道上)" % (D50 * 100, LAM, HSTAR * 100, QC_UNI),
+        (T("礫と被覆", "gravel,\ncover"), T("d50 = %g cm、空隙率 %g、H* = %g cm\n容量 q_c = %.2e m²/s(芦田・道上)" % (D50 * 100, LAM, HSTAR * 100, QC_UNI),
                                    "d50 = %g cm, porosity %g, H* = %g cm\ncapacity q_c = %.2e m²/s (Ashida–Michiue)" % (D50 * 100, LAM, HSTAR * 100, QC_UNI))),
         (T("岩盤下刻", "incision"), T("剥離 k_p = %.0e m/s、τ_c = %g Pa、m = %g\n(裸岩の E_p0 = %.1e m/s)\n研磨 β = %g 1/m(最大 β q_c/4 = %.1e m/s)" % (KP, TAUC, PM, EP0, BETA, BETA * QC_UNI / 4),
                                  "plucking k_p = %.0e m/s, τ_c = %g Pa, m = %g\n(bare-rock E_p0 = %.1e m/s)\nabrasion β = %g 1/m (max β q_c/4 = %.1e m/s)" % (KP, TAUC, PM, EP0, BETA, BETA * QC_UNI / 4))),
