@@ -3,7 +3,7 @@
 !======================================================================
 !
 ! Supplement: effect of resolution (50 m)
-!       The Step 4 configuration (no losses, no outlet, dd = dv = 0.0001) moved to the 50 m grid.
+!       The Step 4 configuration (no losses, no outlet, f_advection_donor = 3) moved to the 50 m grid.
 !       Text input; distributed output is depth only, every hour
 !
 !======================================================================
@@ -23,14 +23,19 @@
   fn_geoinfo = "-"           ! geographic information settings file
   fn_precip  = "-"           ! precipitation settings file
   fn_record  = "-"           ! record settings file
+  fn_enc     = "-"           ! ENC settings file
 
   dir_data = "../../test/chichibu/data_chichibu_50m"   ! input data directory
 
   f_input_mode = 1           ! matrix input format (1: text, 2: bil, 4: geotiff)
   f_output_mode = 1          ! matrix output format (1: text, 2: bil, 4: geotiff)
+/
 
-  dd = 0.0001                ! water moves only above this depth (threshold depth)
-  dv = 0.0001                ! depths below this are forced to this value (virtual depth)
+!======================================================================
+! ENC computation settings (same as Step 4; Fig_supp.sh appends the 4-neighbor and old-scheme variants to this block)
+!======================================================================
+&list_enc
+  f_advection_donor = 3      ! upwind momentum donors of the advection term (3: treat donors carrying almost no water as neutral)
 /
 
 !======================================================================

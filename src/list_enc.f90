@@ -26,12 +26,19 @@ module list_enc
                                               !   流木・瓦礫)の移流スキーム (1: 1 次風上(旧既定),
                                               !   3: リンクごとの MUSCL + van Leer 面値再構成(既定。
                                               !   2026-10-13 に 1 から昇格。developer.md §78))
-    integer :: f_advection_donor = 0          ! 運動量保存形移流(スキーム 2, 3)の風上供給元の
-                                              !   制限 (0:湿潤セルすべて(既定), 1:河道セル間の
-                                              !   エッジでは流下方向の供給元を河道セル(rw>0)に
-                                              !   限る。fn_rw 必須)。
-                                              !   屈曲で線上の供給元が浸水した非河道セルに落ちる
-                                              !   人工損失の対策(developer.md §68.18)
+    integer :: f_advection_donor = 0          ! 運動量保存形移流(スキーム 2, 3)の風上供給元
+                                              !   (0:線 k 上の湿潤セル(既定), 3:線 k 上の供給元の
+                                              !   リンクが運ぶ水が、面のセルへの最大の流入リンクの
+                                              !   p_adv_donor_eps 倍に満たないとき、その比に
+                                              !   応じて風上値を u_e へ寄せる。側方面の平行リンク
+                                              !   と開口率の乾湿判定も、dd 未満では水深に比例して
+                                              !   中立へ寄せる連続な重みにする。河道マスク不要)。
+                                              !   3 は供給元が河岸の薄い水膜のとき、その乾湿判定
+                                              !   でハイドログラフが跳ねる問題の対策
+                                              !   (developer.md §102。横流入・渦・壁の検定は 0 と
+                                              !   同じ)。1(河道セル間のエッジの供給元を河道セルに
+                                              !   限る。§68.18)と 2(全流入リンクの流量で重み付け)
+                                              !   は 2026-11-07 に廃止(指定すると停止)
     integer :: f_dry_head_cap = 1             ! 乾燥セルへ向かうエッジ水深のエネルギー頭による
                                               !   頭打ち (0:なし, 1:有効(既定))。受け手が乾燥の
                                               !   とき he ≤ max(η + u_n²/2g − z_受け手, 0) とし、
@@ -58,6 +65,11 @@ module list_enc
     real :: p_diagratio = 2 / (2 + sqrt(2.))  ! ratio of diagonal component
     real :: p_adv_upwind_index = 0.5          ! 移流項の風上化指数 (0~1。
                                               !   0:中心差分, 1:1次精度風上差分)
+    real :: p_adv_donor_eps = 0.1             ! f_advection_donor = 3 のしきい値 ε (0 < ε ≤ 1。
+                                              !   線 k の供給元のリンクの実流量が面のセルへの
+                                              !   最大の流入リンクの ε 倍未満なら、比 r に応じて
+                                              !   重み min(1, r/ε) で風上値を u_e へ寄せる。
+                                              !   経験値。developer.md §102)
     real :: p_adprunge_thresh = 1.5           ! threshold of adaptive Runge-Kutta (1.1~)
     real :: p_diffusion_nu = 0.0              ! 拡散項の動粘性係数 (m2/s。モデル2では
                                               !   加算のバックグラウンド粘性)
@@ -117,13 +129,16 @@ subroutine list_enc_read(p, list)
   integer :: f_advection_scheme         ! 移流項のスキーム
   integer :: f_opening_dynamic          ! 塞がれた開口の動的振り替え (0:なし, 1:河道, 2:全域)
   integer :: f_dry_head_cap             ! 乾燥セルへのエッジ水深のエネルギー頭による頭打ち (0/1)
-  integer :: f_advection_donor          ! 運動量保存形移流の供給元制限 (0:全湿潤セル, 1:河道セル)
+  integer :: f_advection_donor          ! 運動量保存形移流の風上供給元 (0:線 k 上の湿潤セル,
+                                        !   3:線 k の供給元の流量比で u_e へ寄せ、側方面の乾湿
+                                        !   判定を連続に。1・2 は廃止)
   integer :: f_inflow_edge              ! 区間流入の外縁セルに接するエッジの扱い (0/1/2)
   integer :: f_scalar_scheme            ! スカラー輸送の移流スキーム (1:1次風上, 3:MUSCL)
   integer :: f_rivermouth_drop          ! 河口から海へ段落ち
   integer :: f_diffusion_term           ! 拡散項の計算 (0:無効, 1:定数, 2:ゼロ方程式)
   real :: p_diagratio                   ! ratio of diagonal component
   real :: p_adv_upwind_index            ! upwind index of advection term
+  real :: p_adv_donor_eps               ! f_advection_donor = 3 のしきい値 ε
   real :: p_adprunge_thresh             ! threshold of adaptive Runge-Kutta (1.1~)
   real :: p_diffusion_nu                ! 拡散項の動粘性係数 (m2/s)
   real :: p_diffusion_alpha             ! ゼロ方程式モデルの係数 α
@@ -158,7 +173,7 @@ subroutine list_enc_read(p, list)
                       f_friction_fastmath, f_advection_scheme, &
                       f_rivermouth_drop, f_opening_dynamic, f_dry_head_cap, f_advection_donor, &
                       f_inflow_edge, f_scalar_scheme, &
-                      f_adaptive_runge, p_diagratio, p_adv_upwind_index, p_adprunge_thresh, &
+                      f_adaptive_runge, p_diagratio, p_adv_upwind_index, p_adv_donor_eps, p_adprunge_thresh, &
                       f_diffusion_term, p_diffusion_nu, p_diffusion_alpha, &
                       f_nonhydrostatic, nh_hmin, nh_solver, nh_itmax, nh_tol, &
                       f_nh_adaptive, nh_detector, nh_chi_on, nh_margin, nh_amin, nh_arel, &
@@ -183,6 +198,7 @@ subroutine list_enc_read(p, list)
   p_diagratio = list%p_diagratio
   p_adv_upwind_index = list%p_adv_upwind_index
   p_adv_upwind_index = list%p_adv_upwind_index
+  p_adv_donor_eps = list%p_adv_donor_eps
   p_adprunge_thresh = list%p_adprunge_thresh
   p_diffusion_nu = list%p_diffusion_nu
   f_nonhydrostatic = list%f_nonhydrostatic
@@ -232,6 +248,7 @@ subroutine list_enc_read(p, list)
   list%f_diffusion_term = f_diffusion_term
   list%p_diagratio = min(max(p_diagratio, 0.0), 1.0)                ! 値を0.0~1.0に制限
   list%p_adv_upwind_index = min(max(p_adv_upwind_index, 0.0), 1.0)  ! 値を0.0~1.0に制限
+  list%p_adv_donor_eps = p_adv_donor_eps                            ! 範囲の検査は m_swflow_enc の init
   list%p_adprunge_thresh = max(p_adprunge_thresh, 1.1)              ! 値を1.1以上に制限
   list%p_diffusion_nu = max(p_diffusion_nu, 0.0)                    ! 値を0.0以上に制限
   list%p_diffusion_alpha = max(p_diffusion_alpha, 0.0)              ! 値を0.0以上に制限

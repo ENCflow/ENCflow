@@ -145,8 +145,25 @@ the coefficient follows from the flow and the roughness).
   with the default 2 of 2026-10-18 to 31 are reproduced by setting 2
   explicitly). The idea of the reassignment, how the default came to be 3,
   and its limits are summarized in [Passage-width adjustment](passage_width.md).
-- **If real-terrain results are later and smaller than observed** (with a
-  channel mask) try `f_advection_donor = 1`.
+- **If real-terrain results are later and smaller than observed, or the
+  recession limb of the hydrograph jumps or the result depends on the
+  critical depth `dd`**, use
+  `f_advection_donor = 3` (removes the artificial brake caused by a thin
+  film on a bank acting as the momentum donor of the main channel, and the
+  jump when its wet/dry test flips; [Advection](advection.md) §4.4). The
+  default stays 0. Option 3 takes effect where raster channels about one
+  cell wide run diagonally or in steps (many bends) and the banks are
+  wetted by rain; in channels several cells wide it gives nearly the same
+  values as 0. Whether a case qualifies can be checked by dividing `dd` by
+  10 and seeing whether the result changes. When you use it, note two
+  points:
+  - Flood waves become faster and larger (in Chichibu the peak at transect
+    4 rises by 15% on the 200 m grid and 21% on the 100 m grid). Compare
+    with observations if available; otherwise present the results of both
+    0 and 3 as a range.
+  - On subgrid channels narrower than the cell and in flat reaches created
+    by depression filling, fine oscillations can appear (limits in §4.4).
+    Fix the terrain first.
 - **The diffusion term is for** the transverse velocity distribution of
   channels and circulation in bays. With `f_diffusion_term = 2` no
   coefficient is needed; the roughness n sets the size of ν (typically
@@ -166,12 +183,13 @@ the coefficient follows from the flow and the roughness).
 | Parameter | Default | Meaning (details in the § of the explanation pages) |
 |---|---|---|
 | f_advection_scheme | 3 | scheme of the advection term. 3: momentum-conservative + MUSCL (default), 2: momentum-conservative, first-order upwind, 1: cell-centre gradient (former default; non-conservative, bores lag, no grid convergence on real terrain) ([advection](advection.md) §3–5) |
-| f_advection_donor | 0 | 1: on edges between channel cells, limit the upwind donor in the flow direction to channel cells (against the artificial loss at bends and confluences; requires the channel mask fn_rw; judge against observations) (§4.4) |
+| f_advection_donor | 0 | 3: only on faces where the real flux of the line-k donor is below p_adv_donor_eps times the largest inflow link of the face cell, pull the upwind value toward the control volume's velocity, and make the wet/dry tests of the lateral faces a continuous weight below dd (removes the artificial brake of a thin bank film acting as donor and the jump of the recession limb when its wet/dry test flips; the dependence on dd almost disappears; the peak becomes faster and larger; the lateral-inflow, vortex and wall tests stay the same as 0; no channel mask needed). 1 (donors limited to channel cells on edges between channel cells) and 2 (weighted by the fluxes of all inflow links) were removed (setting them stops the run). Judge it against observations (§4.4) |
 | f_scalar_scheme | 3 | advection scheme of the scalar transport (suspended sediment, water quality, salt layer, driftwood, debris). 3: link-wise MUSCL (default), 1: first-order upwind (former default; numerical diffusion 3–5 times longitudinally and 14 times laterally; kept for comparison) ([Advection](advection.md) §7) |
 | f_dry_head_cap | 1 | cap the edge depth toward a dry cell by the energy head (water does not climb onto dry ground above the water surface; prevents leaks and blow-ups at bore fronts and in incised channels; inactive at ordinary wet/dry fronts, identical to 0 there) (§5) |
 | f_opening_dynamic | 3 | dynamic reassignment of blocked diagonal openings. 3: all edges, with the blockage measured above the local plane (default; changed from 2 on 2026-10-31; the upslope ground of a uniform slope is not counted as a wall; removes the excessive velocity and τ_b of steep, shallow flows; developer.md §68.41, in Japanese), 2: all edges, counting a diagonal neighbour as blocking whenever its ground is above the cell (the default from 2026-10-18 to 31; the same as 3 in channels with high banks), 1: edges between channel cells only (inactive without the channel mask; the default until 2026-10-18), 0: off. Corrects the excessive edge velocity of the ENC grid in one-cell channels and along walls (§5) |
 | f_inflow_edge | 0 | treatment of the edges touching the outer cells of a segment inflow. 0: zero advection on all of them (default), 1: zero advection only on the edges into the inflow section (a flow falling sideways from the end of the section creates no energy), 2: as 1, and the velocity of those edges is capped by the energy head of the inflow cell (suppresses a supercritical jet right below the inflow; the cap acts almost always near the inflow). Use 2 when the bed beside or below the inflow moves and for narrow inflows ([Advection](advection.md) §4.4) |
 | p_adv_upwind_index | 0.5 | upwinding index of scheme 1 only (0: central difference, 1: first-order upwind) (§3) |
+| p_adv_donor_eps | 0.1 | threshold ε of f_advection_donor = 3 (0 < ε ≤ 1; empirical; the peak is nearly the same for 0.05–0.2, but where fine disturbances appear changes) (§4.4) |
 | f_diffusion_term | 0 | diffusion term. 0: none (default), 2: zero-equation model ν = ν0 + α·u*·h (recommended), 1: constant viscosity ([diffusion](diffusion.md) §2) |
 | p_diffusion_nu | -- | ν0 (m²/s). For model 1 a positive value must be given explicitly (unset is an error stop); for model 2 an optional background viscosity (§2) |
 | p_diffusion_alpha | 0.41/6 | coefficient α of the zero-equation model (default is the Elder type; calibrate within 0.15–0.6 for stronger transverse mixing) (§2) |

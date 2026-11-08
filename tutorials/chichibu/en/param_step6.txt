@@ -22,6 +22,7 @@
   fn_intercept = "-"         ! rainfall interception settings file
   fn_gwflow = "-"            ! groundwater settings file
   fn_boundary = "-"          ! boundary condition settings file
+  fn_enc     = "-"           ! ENC settings file
 
   dir_data = "data_chichibu" ! input data directory
 
@@ -34,9 +35,13 @@
   f_out_cn = 1               ! file output (Courant number Cn0001)
   f_out_hmax = 1             ! file output (maximum depth H9999)
   f_out_vvmax = 1            ! file output (maximum velocity V9999)
+/
 
-  dd = 0.0001                ! water movement is computed above this depth (threshold depth)
-  dv = 0.0001                ! depths below this are forced to this value (virtual depth)
+!======================================================================
+! ENC computation settings
+!======================================================================
+&list_enc
+  f_advection_donor = 3      ! upwind momentum donors of the advection term (3: keep thin films carrying almost no water from braking the main flow)
 /
 
 !======================================================================

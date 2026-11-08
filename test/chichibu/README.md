@@ -84,7 +84,7 @@ python3 Fig.py    # figs/chichibu.png(引数 en で英語版を en/figs/ に)
 |---|---|---|---|
 | 移流スキーム | `param_base_{noadv,s1,s3}.txt` | 開口補正なしでのスキーム比較(100 m) | §68.8 続報、§68.12 |
 | 動的開口補正 | `param_dyn_{noadv,s1,s3}.txt`、`param_dyn2_{s1,s3}.txt` | f_opening_dynamic = 1(河道エッジ)/ 2(全エッジ) | §68.14 |
-| 供給元の限定 | `param_dyn_s3_donor1.txt` | f_advection_donor = 1(河道—河道エッジの供給元を河道セルに限る) | §68.18 |
+| 供給元の選択 | `param_dyn_s3_donor3.txt` | f_advection_donor = 3(線 k の供給元がほとんど水を運ばない面だけ中立に扱う)。河道—河道エッジの供給元を河道セルに限る旧 `param_dyn_s3_donor1.txt`(f_advection_donor = 1)は 1 の廃止(2026-11-07)で置き換えた | §68.18、§102 |
 | 乾燥受け手の頭打ち | `param_cap.txt` | f_dry_head_cap = 1(現在は既定。reference とバイト一致) | §68.16 |
 | 解像度 | `param50_*.txt`(`data_chichibu_50m`)、`param200_*.txt`(tutorials の 200 m データ)、`param500_*.txt` / `param500r_*.txt`(`data_chichibu_500m`。r = 100 m 河道マスクから集約) | 50 / 200 / 500 m 格子での base / dyn × s1 / s3 | §68.14、§68.18 |
 | サブグリッド河道幅 | `param_w{50,100}_{s1,s3}.txt`(`width_chichibu{50,100}.txt`)、`param200_w{50,100}_s3.txt` | fn_width による河道幅の指定(100 m = 格子幅、50 m) | §68.12、§68.24 |
@@ -93,7 +93,9 @@ python3 Fig.py    # figs/chichibu.png(引数 en で英語版を en/figs/ に)
 
 主な結果(最下流の測線 4 のピーク、§68.19 の表より): スキーム 1 と 3 の差は
 動的開口補正で縮まり(3 の 3773 → 4857 m³/s)、f_advection_donor = 1 で
-さらに 5656 m³/s(100 m)と 50 m 格子の値へ近づきます。壁付き自然河岸
+さらに 5656 m³/s(100 m)と 50 m 格子の値へ近づきました(いずれも当時の
+コード。1 は 2026-11-07 に廃止し、効果の大部分を含む 3 に置き換えた。
+現行コードの `param_dyn_s3_donor3.txt` では 5,746 m³/s。§102)。壁付き自然河岸
 (lev1)は 6 h 完走しますが Runge 12%・ex_flux 多発と荒く、自然河岸には
 壁なしの幅モードを使うのが推奨です(§68.25、§68.29)。
 

@@ -163,11 +163,13 @@ set output "en/figs/step3_transects.png"
 set title "Step 3: hydrographs at the transects (upstream 1 -> downstream 4)"
 plot for [i=1:4] sprintf('result_step3/fluxes/flux000%d.csv', i) using 2:3 with lines lw 1.5 title sprintf("transect %d", i)
 
-# ---- Step 4: 風上化と限界水深の調整の効果 ----
+# ---- Step 4: 移流項の風上供給元の切替(f_advection_donor = 3)の効果 ----
+#      灰色の破線は限界水深を 1/10 にした計算(dd = dv = 0.0001。跳ねの先送り)
 set output "en/figs/step4_hydro.png"
-set title "Step 4: effect of the parameter adjustments (transect 4)"
-plot 'result_step3/fluxes/flux0004.csv' using 2:3 with lines lw 1.5 title "Step 3 (before)", \
-     'result_step4/fluxes/flux0004.csv' using 2:3 with lines lw 1.5 title "Step 4 (after)"
+set title "Step 4: effect of switching the momentum donors of the advection term (transect 4)"
+plot 'result_step3/fluxes/flux0004.csv' using 2:3 with lines lw 1.5 title "Step 3 (defaults)", \
+     'result_cmp_dd/fluxes/flux0004.csv' using 2:3 with lines lw 1.2 dt 2 lc rgb "#808080" title "dd = dv = 0.0001 (threshold depth 1/10)", \
+     'result_step4/fluxes/flux0004.csv' using 2:3 with lines lw 1.5 title "Step 4 (f\\_advection\\_donor = 3)"
 
 # ---- Step 5: 遮断・浸透による流出の減少 ----
 set output "en/figs/step5_hydro.png"
@@ -175,22 +177,14 @@ set title "Step 5: effect of interception and infiltration (transect 4)"
 plot 'result_step4/fluxes/flux0004.csv' using 2:3 with lines lw 1.5 title "Step 4 (no losses)", \
      'result_step5/fluxes/flux0004.csv' using 2:3 with lines lw 1.5 title "Step 5 (interception + infiltration)"
 
-# ---- Step 6: 流量振動と移動平均 ----
+# ---- Step 6: 1 分値の流量と移動平均 ----
 # 移動平均(窓 N 点 = N 分)。gnuplot 5.2 以降の配列機能を使用
 N = 11
 array A[N]
 ma(x) = (A[(int($0) % N) + 1] = x, $0 < N-1 ? NaN : (sum [i=1:N] A[i]) / N)
 
 set output "en/figs/step6_osc.png"
-set title "Step 6: 1-minute discharge oscillation and moving average (transect 4)"
+set title "Step 6: 1-minute discharge and moving average (transect 4)"
 set xrange [60:360]
-plot 'result_step6/fluxes/flux0004.csv' using 2:3 with lines lc rgb "#4477aa" title "1-minute values (raw)", \
-     ''                                 using ($2 - (N-1)/2.0):(ma($3)) with lines lw 2 lc rgb "#c04040" title sprintf("%d-minute moving average (centered)", N)
-
-set output "en/figs/step6_osc_zoom.png"
-set title "Same, zoomed in (120-240 min)"
-set xrange [120:240]
-set yrange [2000:4400]
-do for [i=1:N] { A[i] = 0.0 }
 plot 'result_step6/fluxes/flux0004.csv' using 2:3 with lines lc rgb "#4477aa" title "1-minute values (raw)", \
      ''                                 using ($2 - (N-1)/2.0):(ma($3)) with lines lw 2 lc rgb "#c04040" title sprintf("%d-minute moving average (centered)", N)
