@@ -113,11 +113,11 @@
     {
       "source": "docs/users_guide/advection.md",
       "target": "docs/en/users_guide/advection.md",
-      "source_sha256": "b05bfd6f7dbfa170b7bcbde4dac88d40ae99838a5e68659340ee6f1e071ca3d6",
-      "target_sha256": "f15302777c7a1204b1f0b01304f91d374766a2d612ee395cde027a7c8d4acb18",
-      "reviewer": "Claude (Claude Code session; 2026-11-07: cause of the remaining fine oscillation at transect 3 of the 50 m Chichibu grid identified (hydraulic jump and pond in the stepped bed about 1 km downstream) and added to the option-3 limits and the tutorial supplement; Japanese and English edited together and read side by side)",
+      "source_sha256": "d67da546f517668e3ecb8b16b4d5029c6cdbc9bcbb8aebcb2a98f6cd0917f159",
+      "target_sha256": "7ad2c7318a70df6ebddeea3da9832396787658457e0e1ff5ab7a7a292fdfa24f",
+      "reviewer": "Claude (Claude Code session; 2026-11-08: ε default study for f_advection_donor = 3: statements that results are nearly the same for 0.05-0.2 restricted to the peak; mechanism of the narrow subgrid channel oscillation and the ε window added; Japanese and English edited together and read side by side)",
       "method": "assistant",
-      "reviewed_on": "2026-11-07"
+      "reviewed_on": "2026-11-08"
     },
     {
       "source": "docs/users_guide/bedmotion.md",
@@ -473,11 +473,11 @@
     {
       "source": "docs/users_guide/swflow.md",
       "target": "docs/en/users_guide/swflow.md",
-      "source_sha256": "8bd42720cbc3ac660b197ad054ab718f4dbd3eed5bef2549709080ba94231f78",
-      "target_sha256": "c91d1228100a6407d1a36579ab43b1030b2220491b1061d9b4d1d4782ea0cb24",
-      "reviewer": "Claude (Claude Code session; option 3 extended on 2026-11-07 with the continuous wet/dry weight min(1, h/dd) of the lateral faces (parallel link and opening fraction), its effects and limits; Japanese and English edited together and read side by side)",
+      "source_sha256": "ce1b3fe3f78e7845af80f7c35a4669f7263b45b6ab30827cd6f2580ccb08aaf5",
+      "target_sha256": "82ac2ab16c5a96e34a35519a021b16043b5584d7ae385fb239a676737d7c8709",
+      "reviewer": "Claude (Claude Code session; 2026-11-08: ε default study for f_advection_donor = 3: statements that results are nearly the same for 0.05-0.2 restricted to the peak; mechanism of the narrow subgrid channel oscillation and the ε window added; Japanese and English edited together and read side by side)",
       "method": "assistant",
-      "reviewed_on": "2026-11-07"
+      "reviewed_on": "2026-11-08"
     },
     {
       "source": "docs/users_guide/swi.md",
@@ -635,11 +635,11 @@
     {
       "source": "examples/List_samples/list_enc.txt",
       "target": "examples/List_samples/en/list_enc.txt",
-      "source_sha256": "7aa3d49a6bb06c9abe298f93c21a32b362ffb43c940fa5990b29595899ae2a8f",
-      "target_sha256": "5a9000dde603a5fb7d3295c5990a933192e190b514541f05cb384be041dd68d0",
-      "reviewer": "Claude (Claude Code session; option 3 extended on 2026-11-07 with the continuous wet/dry weight min(1, h/dd) of the lateral faces (parallel link and opening fraction), its effects and limits; Japanese and English edited together and read side by side)",
+      "source_sha256": "0d3b868aa6cd2576262054ce9caa86293b357af529511cfa013a1b64c928bc88",
+      "target_sha256": "85bbbbdbbc932cd53840674ba920f2b20427eed797901eea2f855040325a6872",
+      "reviewer": "Claude (Claude Code session; 2026-11-08: ε default study for f_advection_donor = 3: statements that results are nearly the same for 0.05-0.2 restricted to the peak; mechanism of the narrow subgrid channel oscillation and the ε window added; Japanese and English edited together and read side by side)",
       "method": "assistant",
-      "reviewed_on": "2026-11-07"
+      "reviewed_on": "2026-11-08"
     },
     {
       "source": "examples/List_samples/list_evap.txt",

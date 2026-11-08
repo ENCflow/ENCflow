@@ -508,9 +508,10 @@ With `f_advection_donor = 3` the wet/dry test of the parallel edge becomes a con
   channel ran to the end with dt = 6 s under 0 (maximum 0.88), but under 3
   exceeded 1 after 1.5 hours and needed dt = 4 s).
   $`\varepsilon`$ is empirical (in Chichibu the peak differs by less than 0.3%
-  between 0.05 and 0.2). The momentum of a main flow entering obliquely is
-  not represented but treated as neutral, so the advective acceleration or
-  deceleration at such a face is not counted. The lateral-face weight only
+  between 0.05 and 0.2, but where fine disturbances appear depends on
+  $`\varepsilon`$; see the narrow subgrid channels below). The momentum of a
+  main flow entering obliquely is not represented but treated as neutral, so
+  the advective acceleration or deceleration at such a face is not counted. The lateral-face weight only
   removes the jump at the moment of switching; the lateral-face brake from
   banks with films of `dd` or more (the main flow turning at a grid bend is
   slowed by the slow bank link, the artificial loss of the type at the start
@@ -527,8 +528,17 @@ With `f_advection_donor = 3` the wet/dry test of the parallel edge becomes a con
   the time step (an oscillation caused by the terrain; Step 6 and the
   supplement of tutorials/chichibu). On subgrid channels narrower than the
   cell (Chichibu on the 100 m grid with a 50 m width), 3 can also make the
-  discharge oscillate with a 2-minute period (a feedback of the ε weight; it
-  does not appear with ε = 0.02). Boundary faces
+  discharge oscillate with a period of 2 to 3 minutes. In a flat reach created
+  by depression filling, when the line-$`k`$ donor is a deep stagnant pocket
+  (carrying about a tenth of the inflow), its share moves back and forth across
+  the threshold $`\varepsilon`$, the weight switches between 0 and 1, and the
+  deceleration is switched on and off. With $`\varepsilon`$ of 0.07 or less this
+  oscillation does not appear, but a smaller $`\varepsilon`$ brings other faces
+  with even smaller shares to the threshold and produces jumps elsewhere (at
+  transect 3 of the 50 m grid of Chichibu, +184 m³/s in one minute with 0.05
+  and +194 m³/s with 0.02). No $`\varepsilon`$ removes all the disturbances, so the
+  default stays 0.1 (revising the weight criterion is future work;
+  developer.md §100). Boundary faces
   on lateral Neumann sides are not covered (both flow-direction and lateral
   faces are the same as with 0).
 - **Excluded edges.** Edges excluded from the momentum equation (invalid
@@ -644,7 +654,7 @@ The labels in the Basis column are explained in [How to read the basis of a defa
 | f_advection_scheme | 3 | scheme of the advection term (1: cell-centre gradient, 2: conservative + first-order upwind, 3: conservative + MUSCL) | **verification case** bore position error +1.1% in [test/dambreak](../../../test/dambreak/en/README.md), depth ratio 0.992 with lateral inflow in [test/bendloss](../../../test/bendloss/en/README.md), grid convergence in [test/chichibu](../../../test/chichibu/en/README.md) (table above) |
 | p_adv_upwind_index | 0.5 | upwinding index of scheme 1 (0: central, 1: first-order upwind) | **empirical** halfway between central and first-order upwind. The bore lag grows with $`p`$ (§3) |
 | f_advection_donor | 0 | upwind donors (3: the upwind value is pulled toward u_e only on faces where the real flux of the line-k donor is below ε times the largest inflow link of the face cell, and the wet/dry tests of the lateral faces become a continuous weight below dd; 1 and 2 were removed) | **method** off by default; 3 removes the artificial brake along the whole main channel so the flood wave becomes faster and larger (the lateral-inflow, vortex and wall tests stay the same as 0); judge it against observations (§4.4) |
-| p_adv_donor_eps | 0.1 | threshold ε of `f_advection_donor = 3` (real flux of the line-k donor / largest real flux of the links entering the face cell) | **empirical** in Chichibu the peak differs by less than 0.3% between 0.05 and 0.2 (§4.4) |
+| p_adv_donor_eps | 0.1 | threshold ε of `f_advection_donor = 3` (real flux of the line-k donor / largest real flux of the links entering the face cell) | **empirical** in Chichibu the peak differs by less than 0.3% between 0.05 and 0.2. Disturbances at faces whose weight switches at the threshold move with ε (0.085 or more: the oscillation on narrow subgrid channels; 0.05 or less: other jumps; §4.4) |
 | limiter $`\psi`$ (fixed) | van Leer | flux limiter of scheme 3 | **literature value** van Leer[^vanleer79]; inside Sweby's TVD region[^sweby84] (§4.3) |
 | f_scalar_scheme | 3 | face value of the scalar transport (suspended sediment, water quality, saline layer, driftwood, building debris) (1: first-order upwind, 3: link-wise MUSCL) | **verification case** measured numerical diffusion in [test/tracer](../../../test/tracer/en/README.md) (longitudinal D 1/3–1/5, lateral Dy 1/14; §7). First order is not the default because its numerical diffusion is proportional to the grid spacing |
 

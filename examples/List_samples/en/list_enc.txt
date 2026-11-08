@@ -118,7 +118,7 @@
   !p_adv_upwind_index = 0.5 ! upwinding index of the advection term (0-1.
                             !   0: central difference, 1: first-order upwind)
   !p_adv_donor_eps = 0.1    ! threshold eps of f_advection_donor = 3
-                            !   (0 < eps <= 1; empirical; results are nearly
+                            !   (0 < eps <= 1; empirical; the peak is nearly
                             !   the same for 0.05-0.2)
   !f_diffusion_term = 0     ! diffusion term (0: none, 1: constant viscosity,
                             !   2: zero-equation model nu = nu0 + alpha*(u*)*h).
