@@ -41,7 +41,7 @@ fault2disp_all.txt); not computed results.
 
 | Segment | Position and geometry | Slip | Time | Effect |
 |---|---|---|---|---|
-| 1 deep (beneath the coast) | upper edge x = 60 km, depth 8 km; width 40 km; dip 20° | 5 m | t = 0, 20 s | coast to bay subsides 0.4–0.6 m; the outer shelf and slope (x ≈ 40–65 km) are uplifted 0.9–2.2 m (with the subsidence from the offshore fault, the final displacement is 0.7–1.4 m) |
+| 1 deep (beneath the coast) | upper edge x = 60 km, depth 8 km; width 40 km; dip 20° | 5 m | t = 0, 20 s | coast to bay subsides 0.4–0.6 m; the outer shelf and slope (x ≈ 40–65 km) are uplifted 0.9–2.2 m (with the subsidence from the offshore fault, the final displacement is 0.7–1.4 m at x ≈ 40–61 km and turns into subsidence seaward of 64 km) |
 | 2 shallow (offshore) | upper edge x = 100 km, depth 5 km; width 30 km; dip 15° | 8 m | t = 30 s, 20 s | main tsunami (3.4 m uplift offshore, −1.4 m subsidence) |
 | 3 splay fault (south of the bay mouth) | upper edge x = 22 km, y = 15 km, depth 1 km; width 8 km; dip 60° | 2 m | t = 0, 10 s | the cape and the surrounding shelf are uplifted by up to 1.0 m (with the subsidence from the deep segment, the final displacement is up to 0.6 m) |
 
@@ -131,15 +131,17 @@ picked up; at the land probe, the start of flooding). The maximum flood depth on
 the land at the bay head is 2.94 m with time history, 3.02 m instantaneous and
 2.12 m offshore only. The flooded land area is 301 / 299 / 266 km².
 
-- **With the coastal deformation included, the disturbance at the coast starts
-  10 minutes earlier.** With the offshore fault only, the arrival at the coast
-  takes 10 min (bay mouth 12 min, bay head 25 min), but when the subsidence
-  beneath the coast and the uplift of the outer shelf occur at t = 0, the water
-  level starts moving at 2.6–2.7 min on the coast and from 0.5 min at the cape
-  (uplifted area). In the probe time series (bay head, bay mouth, coast), the
-  first slow positive wave (1–1.5 m, 10–15 min) is the inflow into the subsided
-  area and the wave from the uplift of the shelf, and the sharp wave at 20–25 min
-  that follows is the tsunami from the offshore fault.
+- **With the coastal deformation included, the disturbance in the bay and on
+  the coast starts 7–8 minutes earlier.** With the offshore fault only, the
+  arrival at the coast takes 10 min (bay mouth 12 min, bay head 25 min), but when
+  the subsidence beneath the coast and the uplift of the outer shelf occur at
+  t = 0, the water level starts moving at 2.7 min on the coast, 4.0 min at the
+  bay mouth, 18 min at the bay head and 0.5 min at the cape (uplifted area). In
+  the time series at the bay mouth and on the coast outside the bay, the first
+  slow positive wave (1.3–1.5 m, 14–16 min) is the inflow into the subsided area
+  and the wave from the uplift of the shelf, and the sharp wave at 23–24 min that
+  follows is the tsunami from the offshore fault. At the bay head these two
+  arrive at 29 and 37 min.
 - **Flooding of the subsided plain**: at the bay head the water surface first
   drops with the subsidence (−0.6 m), and its recovery by inflow from the
   surroundings becomes a positive wave as it is. The land at the bay head floods
@@ -153,12 +155,18 @@ the land at the bay head is 2.94 m with time history, 3.02 m instantaneous and
   offshore tsunami overlap inside the bay, and the maximum level at the bay head
   is 4.3 m (3.6 m offshore only). At the bay mouth the time-history case gives
   3.78 m against 3.05 m for the instantaneous displacement (+24%), and on the
-  shelf 2.33 m against 1.66 m (+40%): **even a time lag of about 50 seconds
-  changes how the waves overlap**. This is because the phase difference between
-  the waves of the deep segment (t = 0) and the shallow segment (t = 30 s)
-  interferes on the shelf. The instantaneous displacement (the conventional
-  method) roughly reproduces the arrival times and the overall amplitudes, but
-  the details of the near-field waveforms depend on the time lag.
+  shelf 2.33 m against 1.66 m (+40%): **even a 30-second lag in the start of
+  the motion changes how the waves overlap**. This is because the phase
+  difference between the waves of the deep segment (t = 0) and the shallow
+  segment (t = 30 s) interferes on the shelf. The instantaneous displacement
+  (the conventional method) roughly reproduces the arrival times and the
+  maximum levels at the bay head, on the coast and at the cape (within 2%), but
+  gives 20–30% lower levels at the bay mouth and on the shelf. Note that the
+  maximum levels at the bay mouth and on the shelf are highest in the
+  offshore-only case (bay mouth 4.12 m against 3.78 m, shelf 3.09 m against
+  2.33 m). Depending on how they overlap with the waves from the coastal
+  deformation, the crests of the offshore tsunami become lower in places, so
+  including the coastal deformation does not always raise the water level.
 - The uplift of the cape (segment 3) emits a local positive wave at 0.5 min,
   which becomes the first wave on the southern coast (a 1.5 m rise after a
   −0.6 m drawdown).

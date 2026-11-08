@@ -36,7 +36,7 @@ computed results.
 ## Running
 
 ```
-python3 make_inputs.py            # initial water level evaluated at the cell centres of each grid (data/)
+make                              # link to the executable in bin/ and the initial water level evaluated at the cell centres of each grid (data/)
 python3 plot_schematic.py         # explanatory figures figs/setup.png, mechanism.png (can be drawn before the runs)
 ./encflow param_coarse.txt        # stand-alone coarse grid
 ./encflow param_root_r3.txt       # ratio 3 (nest_r3.txt -> param_child_r3.txt)
@@ -190,21 +190,21 @@ incident amplitude (0.047 m):
   1.8e-4 m against 2.4e-4 m for r3t3; dashed lines in the figure of the error
   over time). Because the parent dt was coarsened while keeping r_t = r, the
   errors are larger than the r_t = 1 results (parent dt = 1/60 s).
-- The residual after the passage is 1.3–2 times that of the stand-alone coarse
+- The residual after the passage is 1.5–2 times that of the stand-alone coarse
   grid (= the parent's time-step error itself); right after the passage the
   time-interpolated band leaves a disturbance of about 1–1.5% of the incident
   amplitude inside the child. The large parent Cn of 0.6 contributes to this; where accuracy matters,
   reduce the parent dt or take r_t smaller than r (e.g. r_t = 1–2 for ratio 3).
 - The difference between ratios 3 and 5 is small (both residuals are set by the
   parent's time step and the output step), so convergence with respect to the
-  child resolution cannot be separated in this setup. A convergence test with a
-  finer reference grid and binary output remains to be done.
+  child resolution cannot be separated in this setup (this example does not
+  include a convergence test with a finer reference grid and binary output).
 - The water-level-only band (bc1) has the largest residual at later times
   (t = 8 and 10 s), and the volume change by replacement is 1.23 m³ (about 50
   times that of bc2). The default nest_bc = 2 is recommended.
-- The 2-level nest (2lv) ran to completion at the same error level as r3t3 (the
-  grandchild covers 81×81 cells inside the child and does not contribute to
-  accuracy for this wave, but it confirms the 2-level operation of recursion,
+- The 2-level nest (2lv) gives the same error level as r3t3 (the grandchild
+  covers 81×81 cells inside the child and does not contribute to accuracy for
+  this wave, but the configuration checks the 2-level operation of recursion,
   time interpolation and replacement).
 
 ## Conservation correction (nest_fb = 3) and sponge (nest_bc = 4)
@@ -362,5 +362,5 @@ the whole footprint is usable at the same level as the core (at most 6e-4 m).
   consistency at the interface; combination with Flather is possible but not
   evaluated).
 - Degeneracy check: with a parent at rest, the Flather child is bit-identical to
-  the current radiation boundary (`f_bc_* = 2`) (the flather case of
+  the ordinary radiation boundary (`f_bc_* = 2`) (the flather case of
   test/nest_identity).

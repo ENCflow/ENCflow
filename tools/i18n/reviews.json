@@ -122,11 +122,11 @@
     {
       "source": "docs/users_guide/bedmotion.md",
       "target": "docs/en/users_guide/bedmotion.md",
-      "source_sha256": "62bfad6f378e27b72f0c530cb3ffe92b91f91c031606f1eff57e7d334a710a0d",
-      "target_sha256": "6a015ef91f54687fdfdbc67716b2297c257bec5b36b6e82368012b05dfc53a3c",
-      "reviewer": "Claude (Claude Code session; reviewed the Japanese source against the English mirror; figures from the same results and drawing code with label changes only, 2026-10-30)",
+      "source_sha256": "61288a0f125a3e6fea6547ed849de802765fcf5348d5e4699529825b0ec3ea7f",
+      "target_sha256": "8f7cc855d8a5f46a8cf3b0a763f97823d0107192adc44cf9c407a480b00d15ae",
+      "reviewer": "Claude (Claude Code session; corrected both versions in parallel against the local results and inputs (probe series, displacement snapshots, fill ratios, run steps), and compared the edited passages and numbers)",
       "method": "assistant",
-      "reviewed_on": "2026-10-30"
+      "reviewed_on": "2026-11-08"
     },
     {
       "source": "docs/users_guide/bedmotion_models.md",
@@ -1481,9 +1481,9 @@
     {
       "source": "examples/debris_fan/README.md",
       "target": "examples/debris_fan/en/README.md",
-      "source_sha256": "9f923c397af70fdddef535164bf72a490b649676e63082b3c06ebe1ac587bf6e",
-      "target_sha256": "cd76ba9706fc9fb1fa6c6dd44f8d0ac68fd28df464dbf658753520d9767e8b25",
-      "reviewer": "Claude (Claude Code session; removed development history from both versions in parallel and compared the edited passages, headings, tables and numbers; no model execution)",
+      "source_sha256": "ac6fd76cde7d12a3c289a75961899b2d996aedc946e110b847534ddedc855eb6",
+      "target_sha256": "7814eed63c3294f86bd5a63b20d6132c9a7556902fb8c81e35d8440bec382253",
+      "reviewer": "Claude (Claude Code session; corrected both versions in parallel against the local results and inputs (probe series, displacement snapshots, fill ratios, run steps), and compared the edited passages and numbers)",
       "method": "assistant",
       "reviewed_on": "2026-11-08"
     },
@@ -2318,9 +2318,9 @@
     {
       "source": "examples/nest_reflect/README.md",
       "target": "examples/nest_reflect/en/README.md",
-      "source_sha256": "4c6d8e53510b621615313e814bd0493b8b8b3beb3d66ce24e5ff3566647d86a4",
-      "target_sha256": "7272cc013fd485f7e0934bf3918579082cdff0d3e179f561d27a4f79e2b9e04e",
-      "reviewer": "Claude (Claude Code session; edited both versions in parallel (setup and how-it-works sections, figures moved into their sections with captions, run steps) and compared headings, tables, images and numbers)",
+      "source_sha256": "07cfd62976a6b91bba0ea4c99b2265c2c3cfd50f84e34ef200c8034bda07f254",
+      "target_sha256": "e29c345f790cac984369462e0a756e1b54b300f89d20ee93a23131fa4d353197",
+      "reviewer": "Claude (Claude Code session; corrected both versions in parallel against the local results and inputs (probe series, displacement snapshots, fill ratios, run steps), and compared the edited passages and numbers)",
       "method": "assistant",
       "reviewed_on": "2026-11-08"
     },
@@ -2435,9 +2435,9 @@
     {
       "source": "examples/sewer_hybrid/README.md",
       "target": "examples/sewer_hybrid/en/README.md",
-      "source_sha256": "3bafe7c1f0397ee491989c74109d2f13a2b1239bbff51d2ea30942ba01483185",
-      "target_sha256": "2b7a0b2a919b49c62c5835099bf407a4537e10dbe84921513a39c7e8f603bae9",
-      "reviewer": "Claude (Claude Code session; edited both versions in parallel (figure embedding, captions, panel descriptions, run steps) and compared headings, tables, images and numbers)",
+      "source_sha256": "e8e428630b5fae0c377a0433373ddc094c1a7cc554d29b289abf3ae98523a396",
+      "target_sha256": "73107060d7e6043f4c57dd97a45d4662c584a971e70e7df257f0d551a1daff9f",
+      "reviewer": "Claude (Claude Code session; corrected both versions in parallel against the local results and inputs (probe series, displacement snapshots, fill ratios, run steps), and compared the edited passages and numbers)",
       "method": "assistant",
       "reviewed_on": "2026-11-08"
     },
@@ -2471,9 +2471,9 @@
     {
       "source": "examples/sewer_hybrid/figs/sewer_hybrid_result.png",
       "target": "examples/sewer_hybrid/en/figs/sewer_hybrid_result.png",
-      "source_sha256": "ac8ad17a8b0eb441771af5251a3857ec08d07867853cab86dd8092b2fb4d56cb",
-      "target_sha256": "2e71302358c64b18ee52e9af390ee268f912d0529bed18eec5030fae0b8d73e2",
-      "reviewer": "Claude (Claude Code session; compared the Japanese and English figure images side by side: same plotted data and layout from the same script and the same results (runs A–F rerun with the current build), labels translated)",
+      "source_sha256": "24d0bf57c856b5d96bc03a2e92227a020360d6607ff985ef2ace9bd8ed55c4fe",
+      "target_sha256": "ee5275242689131ae1ec65b5d054201586872c103e42dac1a204778dec50b8ce",
+      "reviewer": "Claude (Claude Code session; compared the Japanese and English figure images side by side: same plotted data and layout from the same script, only the corrected title or label styling changed, labels translated)",
       "method": "assistant",
       "reviewed_on": "2026-11-08"
     },
@@ -2768,9 +2768,9 @@
     {
       "source": "examples/tsunami_coast/README.md",
       "target": "examples/tsunami_coast/en/README.md",
-      "source_sha256": "f1b9f348d1704fb9f1418508e20a1f5e4a0428e7544d261888f284b23df11e85",
-      "target_sha256": "9768129d430b3fdf3a9cb6d31d7f469e1ab9e180b64db468a024b30d48c8e280",
-      "reviewer": "Claude (Claude Code session; edited both versions in parallel (figure embedding, captions, new section on how it works, run steps) and compared headings, tables, images and numbers)",
+      "source_sha256": "494bad04217186cc29437fd81cc373073aba6d7d9240b4b2ae16b40da0854ac9",
+      "target_sha256": "460631f94c5f4de240b7f8d3d979588858cbf912eed53fe090ad50476e1a6b8c",
+      "reviewer": "Claude (Claude Code session; corrected both versions in parallel against the local results and inputs (probe series, displacement snapshots, fill ratios, run steps), and compared the edited passages and numbers)",
       "method": "assistant",
       "reviewed_on": "2026-11-08"
     },
@@ -2822,9 +2822,9 @@
     {
       "source": "examples/tsunami_fault/README.md",
       "target": "examples/tsunami_fault/en/README.md",
-      "source_sha256": "bc0e32a5416eae2bd8415c70e4a991d25bcb69e161908e7116b56adebada3c5b",
-      "target_sha256": "ee2728f9e147bf0b8ad12a1ae001885a6ea56a447f573a703696bca3b67abe83",
-      "reviewer": "Claude (Claude Code session; edited both versions in parallel (figure embedding, captions, new section on how it works, run steps, numbered probe rows matching the script output) and compared headings, tables, images and numbers)",
+      "source_sha256": "27cc2ba4f3f7ca2d3f67d62893453cfe1ff7c1b454241239df656efe1e1f6151",
+      "target_sha256": "81f52cc6bd6caef9a2b322049ca67b32e2b0f3e9da3416c8a66a2f39747698c6",
+      "reviewer": "Claude (Claude Code session; corrected both versions in parallel against the local results and inputs (probe series, displacement snapshots, fill ratios, run steps), and compared the edited passages and numbers)",
       "method": "assistant",
       "reviewed_on": "2026-11-08"
     },
@@ -2867,9 +2867,9 @@
     {
       "source": "examples/tsunami_fault/figs/setup.png",
       "target": "examples/tsunami_fault/en/figs/setup.png",
-      "source_sha256": "6c7a167b9726f64a82b8b6a41f0f6173ad8039c000b8ccdd3a061a28ee0b1046",
-      "target_sha256": "6b2c2befea4fe11a77284187e29d5a53477c25448b758e464de37217eb28bb54",
-      "reviewer": "Claude (Claude Code session; compared the Japanese and English figure images side by side: same plotted data and layout from the same script and the same inputs and results (the three cases rerun with the current build), labels translated)",
+      "source_sha256": "a46dc91a88473b9133ae5538f6162011ba20692aaa98770c5d8d2c637939c665",
+      "target_sha256": "0a6eb1a5773b5739826369667bd8540db7485b809a1f336736c693197a41851e",
+      "reviewer": "Claude (Claude Code session; compared the Japanese and English figure images side by side: same plotted data and layout from the same script, only the corrected title or label styling changed, labels translated)",
       "method": "assistant",
       "reviewed_on": "2026-11-08"
     },
