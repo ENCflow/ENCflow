@@ -95,7 +95,7 @@ subdivisions is N = 1).
 
 ```bash
 python3 gen_data.py                 # generate data_sewer/ (the converted values are printed on screen)
-for r in A B C D E F; do ../../bin/encflow param_$r.txt; done   # 70–110 s each (4 cores)
+for r in A B C D E F; do ../../bin/encflow param_$r.txt; done   # 2–3 min each (4 cores)
 python3 plot_sewer.py               # draw the figures
 ```
 
@@ -110,18 +110,20 @@ thick enough to carry the rain".
 **(a) Time series of the water overflowing onto the surface, S_surf.**
 During the first 10 minutes of rain, 5–6 mm of rain that cannot enter the
 pipes through the inlets ponds on the surface, then is drawn into the
-pipes and decreases for a while. Once the pipes are full (about 35 min in
+pipes and decreases for a while. Once the pipes are full (about 25 min in
 run D), the surface water starts to increase from the water **erupting**
 from the inlets and the rain that cannot be absorbed, and nearly levels
-off at the end of the rain (1 hour). Runs A (18.2 mm) and B (10.2 mm),
-which have a trunk, flood less than run C (21.6 mm) without one, so the
-trunk is indeed carrying water. Run D with consistent storage
-coefficients, however, gives **36.4 mm**, 2–3.5 times A and B. Because of
-their soft slot_sy, A and B were hiding the water that should have
-overflowed in underground "phantom storage". **The choice of the scalar
-sy (the A ↔ B difference of 8 mm) is of the same size as the effect of the
-trunk itself (C − A = 3.4 mm, C − B = 11.4 mm)** and sways the answer.
-This is why sy and slot_sy are given per cell (§46.5 (5)).
+off at the end of the rain (1 hour). Run A (18.2 mm), which has a trunk,
+has 3.4 mm less than run C (21.6 mm) without one, and this difference is
+almost the same as the volume of the trunk pipe (3.5 mm over the domain).
+In a closed box the trunk cannot take water out of the system either, so
+its effect is the volume it adds for storage. Run D with consistent
+storage coefficients, however, gives **36.4 mm**, 2–3.6 times A and B.
+Because of their soft slot_sy, A and B were hiding the water that should
+have overflowed in underground "phantom storage". **The choice of the
+scalar sy (the A ↔ B difference of 8 mm) is larger than the effect of the
+trunk itself (C − A = 3.4 mm)** and sways the answer. This is why sy and
+slot_sy are given per cell (§46.5 (5)).
 
 **(b) Distribution of surface depth at the end of the rain.** On a uniform
 slope the surface water flows east and, since all four sides are walls,
@@ -176,7 +178,7 @@ depth around the inlets. After the rain stops it falls below 1 mm within
 **(c) Longitudinal profile of the trunk filling ratio.** D and E stay at
 1.5–1.8 times pipe-full (pressurized in the pseudo slot), unchanged for
 3 hours. In F, at the end of the rain it rises from 0.1 at the upstream end
-toward downstream, reaches pipe-full (1.0) at x = 230–350 m and drops to
+toward downstream, reaches pipe-full (1.0) at x = 235–355 m and drops to
 0.8 near the outfall; after 3 hours the upstream side is nearly empty
 (0.01); only the water set by the river level remains in the 80 m reach
 from the outfall (the outfall invert 1.125 m < river level 1.5 m, so the
@@ -185,7 +187,7 @@ pipe below the river surface does not empty).
 Summarizing where the water goes (out of the total rainfall of 61.0 mm):
 in E, 38.6 mm goes from the cliff into the river and 22.4 mm remains in
 the pipes; in F, 57.3 mm goes **from the outfall into the river**, 2.4 mm
-from the cliff into the river, and 1.3 mm remains in the pipes. The trunk of F carries more than 90 % of the rain,
+from the cliff into the river, and 1.2 mm remains in the pipes and 0.1 mm on the surface. The trunk of F carries more than 90 % of the rain,
 consistent with the estimate pipe-full capacity 1.70 m³/s ≳ runoff
 1.40 m³/s.
 
@@ -207,7 +209,7 @@ consistent with the estimate pipe-full capacity 1.70 m³/s ≳ runoff
   decreases only by the water that left into the river (the drop from the
   cliff and the outfall discharge). The cumulative volume discharged from
   the outfall into the river is printed on screen at the end of the run
-  (F: "outfall discharge total = 4.4591E+03 m3").
+  (F: "outfall discharge total = 4.5730E+03 m3").
 - The trunk conveyance governs the upper limit of the explicit time step
   (24 m³/s per edge; dt ≤ 0.061 s at Δx = 10 m, and 0.037 s with the stiff
   slot_sy). This example stays within the limit at dt = 0.02 s, but with a

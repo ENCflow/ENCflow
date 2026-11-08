@@ -2399,9 +2399,9 @@
     {
       "source": "examples/sewer_hybrid/README.md",
       "target": "examples/sewer_hybrid/en/README.md",
-      "source_sha256": "f6b039ad37e8cdeb8de91216c3b1a1487b6aadbf9996b312a38164ab36dd2de8",
-      "target_sha256": "6a62606491e3f9add73d7ce8a7469c976e5025b47a0b955b122d09412ebad99e",
-      "reviewer": "Claude (Claude Code session; removed development history from both versions in parallel and compared the edited passages, headings, tables and numbers; no model execution)",
+      "source_sha256": "3fb2d38c9a2f32fbb81a279b2ced8ef11434338a78a03341e3a62596803358da",
+      "target_sha256": "34e35146768a40a1221d9e05067a5570bbaf80065d90626f5ad8d87b707e52a8",
+      "reviewer": "Claude (Claude Code session; corrected both versions in parallel against a rerun of runs A–F with the current build and compared the edited passages and numbers)",
       "method": "assistant",
       "reviewed_on": "2026-11-08"
     },
