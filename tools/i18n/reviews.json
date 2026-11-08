@@ -113,9 +113,9 @@
     {
       "source": "docs/users_guide/advection.md",
       "target": "docs/en/users_guide/advection.md",
-      "source_sha256": "d67da546f517668e3ecb8b16b4d5029c6cdbc9bcbb8aebcb2a98f6cd0917f159",
-      "target_sha256": "7ad2c7318a70df6ebddeea3da9832396787658457e0e1ff5ab7a7a292fdfa24f",
-      "reviewer": "Claude (Claude Code session; 2026-11-08: ε default study for f_advection_donor = 3: statements that results are nearly the same for 0.05-0.2 restricted to the peak; mechanism of the narrow subgrid channel oscillation and the ε window added; Japanese and English edited together and read side by side)",
+      "source_sha256": "81213001e4553fcf436a8ebb5e6a421a2311575e495a91e08c676a9a560457ca",
+      "target_sha256": "2b72f22090669b50bcfe0a3c6b8e2d95b4a185122203cb2b51bfb6e157455601",
+      "reviewer": "Claude (Claude Code session; 2026-11-08: option-3 limits extended with the measured size of the wet-bank lateral-face brake in Chichibu and the rejected depth-ratio prototypes; Japanese and English edited together and read side by side)",
       "method": "assistant",
       "reviewed_on": "2026-11-08"
     },

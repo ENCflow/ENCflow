@@ -511,11 +511,16 @@ With `f_advection_donor = 3` the wet/dry test of the parallel edge becomes a con
   between 0.05 and 0.2, but where fine disturbances appear depends on
   $`\varepsilon`$; see the narrow subgrid channels below). The momentum of a
   main flow entering obliquely is not represented but treated as neutral, so
-  the advective acceleration or deceleration at such a face is not counted. The lateral-face weight only
-  removes the jump at the moment of switching; the lateral-face brake from
+  the advective acceleration or deceleration at such a face is not counted.
+  The lateral-face weight only removes the jump at the moment of switching; the lateral-face brake from
   banks with films of `dd` or more (the main flow turning at a grid bend is
   slowed by the slow bank link, the artificial loss of the type at the start
-  of §4.4) remains as with 0. Films thinner than `dd` are also counted in
+  of §4.4) remains as with 0. In Chichibu the films on slopes wetted by rain
+  carry most of this brake; removing it in prototypes raised the peak at
+  transect 4 of the 200 m grid by 6 to 12% and made the discharge rough or the
+  run diverge on the 100 m and 50 m grids. Because this brake also provides
+  damping that computations on real terrain rely on, it has not been removed
+  (developer.md §100). Films thinner than `dd` are also counted in
   proportion to their thickness, so in a bent channel with banks wetted by
   rain the water level at the bend cells is a little higher than with 0
   (the zigzag channel of test/bendloss with 2 mm/h on the floodplain:
@@ -537,7 +542,8 @@ With `f_advection_donor = 3` the wet/dry test of the parallel edge becomes a con
   with even smaller shares to the threshold and produces jumps elsewhere (at
   transect 3 of the 50 m grid of Chichibu, +184 m³/s in one minute with 0.05
   and +194 m³/s with 0.02). No $`\varepsilon`$ removes all the disturbances, so the
-  default stays 0.1 (revising the weight criterion is future work;
+  default stays 0.1 (a prototype that judges the donor by the ratio of depths
+  removed this oscillation but roughened other places, so it was not adopted;
   developer.md §100). Boundary faces
   on lateral Neumann sides are not covered (both flow-direction and lateral
   faces are the same as with 0).
