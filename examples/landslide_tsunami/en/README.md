@@ -26,6 +26,14 @@ of a sea mask is not solved and so cannot be a tsunami source). The collapse
 is a planar slide of volume 19,110 m³ (slip-surface gradient 0.25,
 daylighting at the ground surface at the lower end; make_init.py).
 
+![Common geometry](figs/setup.png)
+
+Top: plan (north up; the vertical axis is the distance from the north edge). Contours every 10 m, the thick
+blue line is the shoreline, hatching marks the release blocks (orange = the land block of A and B, green = the
+underwater block of C) and ▲ the probes 1–6. Bottom: profile along the centre row (97.5 m from the north edge)
+at true scale. The release depth is about 10 m in the uppermost cells. Drawn from the input files z.txt,
+slide.txt and submarine.txt; not a computed result.
+
 ## The four patterns
 
 | Case | Parameter file | On land | Underwater | Use |
@@ -34,6 +42,15 @@ daylighting at the ground surface at the lower end; make_init.py).
 | B | param_debrisflow.txt | Debris-flow model (mixture hs; with inertia) | Handover to the bed layer hb in the ponded zone (bs_hplunge) | Plunge of a water-rich debris flow. The momentum exchange of the plunge is carried by the mixture (shallow-water equations), and after deceleration it is handed over to the bed layer |
 | B0 | param_mixture_only.txt | Mixture | Stays a mixture (no handover) | Control for B. Shows the limit of a one-layer model (it does not run underwater) |
 | C | param_submarine.txt | — | The mass on the underwater slope is mobilized as a bed layer | Submarine landslide (tsunami with a leading trough) |
+
+![How the four patterns work](figs/mechanism.png)
+
+Schematic of how the four patterns work (the water-surface displacement is exaggerated about five times; not
+computed results). A runs as an inertia-free bed layer hb from land into the water; the bed z moves up and down
+as the bed layer moves, and so does the water surface (a moving-bottom tsunami source). B flows down the land as
+a mixture hs with inertia, passes the entry momentum to the water column, and is handed over to the bed layer
+after slowing down in the ponded zone. B0 enters the water as a mixture, loses its driving once the water surface
+is flat and piles up at the shoreline. In C the bed drops in the scar of the underwater block, so a trough leads.
 
 The handover settings of B are the following four. The reasons are in
 "Properties to be aware of" below.
@@ -70,6 +87,7 @@ make                                   # link to ../../bin/encflow and inputs (z
 ./encflow param_submarine_nh0.txt
 ./encflow param_submarine_nh.txt
 python3 plot_results.py                # figs/*.png and tables
+python3 plot_schematic.py en          # explanatory figures en/figs/setup, mechanism, properties, nh_theory.png (no results needed; without en: Japanese labels in figs/)
 ```
 
 The outputs are result_A / result_B / result_B0 / result_C and result_A_nh0 /
@@ -197,6 +215,18 @@ acceleration term, blue/green = non-hydrostatic + acceleration term).
 Each entry is maximum@time / minimum (m). The bed-layer column gives the
 stopped and moving volumes at 120 s.
 
+![Behaviour of the one-layer non-hydrostatic model](figs/nh_theory.png)
+
+The linear analysis behind the reading below (flat bed, small amplitude; the expressions of
+docs/nonhydrostatic_plan.md §16.1). Left: wave speed against wavenumber. In the hydrostatic model every wave
+travels at √(gH), while in the one-layer NH model shorter waves are slower, and at the ratio of slide length to
+water depth of this example (kH ≈ 1–3, shaded) the waves split and decay. Middle: the fraction of the bottom
+displacement passed to the surface. It is 1 for the hydrostatic model and for NH without the acceleration term
+(short displacements are passed unchanged), and close to the exact 1/cosh(kH) (Kajiura) with the acceleration
+term. Right: period against wavelength at 40 m depth. The period of short waves in the one-layer NH model stops
+falling at π√(H/g) = 6.3 s, where the group velocity becomes 0 (the 6 s period of the self-excited oscillation
+below).
+
 - **Dispersion halves the far-field leading wave.** At the lake center
   (x = 398) 1.01 → 0.64–0.72 m, on the far-shore side (548) 0.76 →
   0.36–0.40 m (A). The ratio of the slide length (70 m) to the water depth
@@ -234,6 +264,12 @@ stopped and moving volumes at 120 s.
   iterations).
 
 ## Properties to be aware of (reasons for the settings)
+
+![Properties to be aware of](figs/properties.png)
+
+(a) Shape of the failure surface, (b) temporary drying of the shoreline zone at entry and bs_tstop, (c) deciding
+the handover (f_bsplunge, f_bsvplunge), (d) direction of the bias of the inertia-free bed layer. Each is a
+schematic for the item below; the curves of (b) and (d) are illustrative (not computed results).
 
 - **Give the failure surface as a plane that daylights at the ground
   surface.** A box of constant depth becomes a pit with a wall on the
