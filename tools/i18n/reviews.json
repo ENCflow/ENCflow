@@ -1605,6 +1605,33 @@
       "reviewed_on": "2026-11-02"
     },
     {
+      "source": "examples/delta/figs/tide_cmp.png",
+      "target": "examples/delta/en/figs/tide_cmp.png",
+      "source_sha256": "e0e8be9ea993cca0777ef6e843921de4619242cb9db0ca567cee9a716aa0e76e",
+      "target_sha256": "d568e1b8d30985d92d141b8a96a5e1f05536bcae4cb74137cc4b0a482f577f2b",
+      "reviewer": "Claude (Claude Code session; compared the Japanese and English figure images side by side: same plotted data and layout, labels translated)",
+      "method": "assistant",
+      "reviewed_on": "2026-11-08"
+    },
+    {
+      "source": "examples/delta/figs/tide_phases.png",
+      "target": "examples/delta/en/figs/tide_phases.png",
+      "source_sha256": "49cb55dcab7421c957579dc9307f5ab79fe06ebce1abb2261f5062d5c6324592",
+      "target_sha256": "f6c17ab09cdb4729097ada969e9f43d5f9f8f9a433ce83386afcc532676b4208",
+      "reviewer": "Claude (Claude Code session; compared the Japanese and English figure images side by side: same plotted data and layout, labels translated)",
+      "method": "assistant",
+      "reviewed_on": "2026-11-08"
+    },
+    {
+      "source": "examples/delta/figs/tide_series.png",
+      "target": "examples/delta/en/figs/tide_series.png",
+      "source_sha256": "97021a9efcb84ee24e8fb33ce39cf75a2a93e99e12617d74651b068ad4b3bfd9",
+      "target_sha256": "1451df5420b38ecce9346340ab1a14dcc527c5c817d4701fdccdcaba9c93b344",
+      "reviewer": "Claude (Claude Code session; compared the Japanese and English figure images side by side: same plotted data and layout, labels translated)",
+      "method": "assistant",
+      "reviewed_on": "2026-11-08"
+    },
+    {
       "source": "examples/delta/figs/tidedom_cmp.png",
       "target": "examples/delta/en/figs/tidedom_cmp.png",
       "source_sha256": "961584a7c0452faf340a6748038c7083692bf905d0e7ffd6a488b012fbe2cb81",
@@ -2694,6 +2721,15 @@
       "reviewed_on": "2026-11-04"
     },
     {
+      "source": "examples/tower_karst/figs/maps_steady.png",
+      "target": "examples/tower_karst/en/figs/maps_steady.png",
+      "source_sha256": "a14502580a117f4c6225d243f9cd2fd5e9af4e11b7fedbac41fa6c4670e34137",
+      "target_sha256": "9eb5987b908738f6990806b14d0650859d5e23a6fb59b28b8276d49eef614e97",
+      "reviewer": "Claude (Claude Code session; compared the Japanese and English figure images side by side: same plotted data and layout, labels translated)",
+      "method": "assistant",
+      "reviewed_on": "2026-11-08"
+    },
+    {
       "source": "examples/tower_karst/figs/mechanism.png",
       "target": "examples/tower_karst/en/figs/mechanism.png",
       "source_sha256": "227f18d7e50591c2953f72c821235e26173fc45ed3e1bc59be2641e78f6bc1af",
@@ -2730,6 +2766,15 @@
       "reviewed_on": "2026-11-04"
     },
     {
+      "source": "examples/tower_karst/figs/sections_steady.png",
+      "target": "examples/tower_karst/en/figs/sections_steady.png",
+      "source_sha256": "e473276d26e507f381404cfe824f5e2cdce150143eb9ba2acca45e4b1ed17764",
+      "target_sha256": "39b899e6b4d71cc85cc51bb2d502b506434d72f793b3319c53d36b14a0bed470",
+      "reviewer": "Claude (Claude Code session; compared the Japanese and English figure images side by side: same plotted data and layout, labels translated)",
+      "method": "assistant",
+      "reviewed_on": "2026-11-08"
+    },
+    {
       "source": "examples/tower_karst/figs/setup.png",
       "target": "examples/tower_karst/en/figs/setup.png",
       "source_sha256": "34e0f1c50f3d3c3e0d9cc1604e1ea22a258a200460d7bd12ce8b8692abc04f36",
@@ -2764,6 +2809,15 @@
       "reviewer": "Claude (Claude Code session; compared the Japanese source with the English mirror after adding the rf_hc = 50 m sensitivity subsection of tower_karst, 2026-11-04)",
       "method": "assistant",
       "reviewed_on": "2026-11-04"
+    },
+    {
+      "source": "examples/tower_karst/figs/towers_steady.png",
+      "target": "examples/tower_karst/en/figs/towers_steady.png",
+      "source_sha256": "20848628f86c60ca0833aa3a359301de3ddef32fd93bdb98940923033a376851",
+      "target_sha256": "32fc72b67536f4196a21c845abb62657ac8b21bf2a01b776ce41fc8b63b8e642",
+      "reviewer": "Claude (Claude Code session; compared the Japanese and English figure images side by side: same plotted data and layout, labels translated)",
+      "method": "assistant",
+      "reviewed_on": "2026-11-08"
     },
     {
       "source": "examples/tsunami_coast/README.md",
