@@ -701,14 +701,33 @@ When you notice oscillations, consider them in this order.
    gorge, or a reservoir as flat, or where a depression was filled in).
    In the computation, a "pond" several meters deep forms on such a flat
    reach, and the motion of its surface or fluctuating overtopping can
-   seed oscillations (in the resolution comparison of the supplement, the
-   oscillations at transect 3 of the 50 m grid and at transect 3 of the
-   200 m grid with a 50 m channel width are examples). Preprocessing the
-   channels so that the
-   longitudinal profile is monotone (eliminating the flat reaches), or
-   moving the channels to subgrid channels (`fn_channel`) with an
-   independently specified bed profile, removes the flat ponds
-   themselves.
+   seed oscillations. The figure below shows examples at transect 3 of
+   the resolution comparison in the supplement (the lower row is the
+   change of the discharge per minute, which makes the oscillations
+   obvious).
+
+   ![Fine oscillations caused by the terrain (transect 3 of the supplement)](figs/supp_t3_osc.png)
+
+   On the 50 m grid (left), a hydraulic jump moves back and forth in the
+   stepped bed (flat ponds and steps) about 1 km downstream of the
+   transect, and oscillations with a period of 5 to 6 minutes ride on the
+   peak and the recession. On the 100 m and 200 m grids (dashed), the
+   steps created by depression filling lie at other places and have
+   other sizes, and the curves are smooth. On the 200 m grid with a 50 m
+   channel width (right), the water surface of the flat reach just
+   upstream of the transect sloshes back and forth (a seiche), and ups
+   and downs with a period of about 4 minutes continue. Without the width
+   (dashed), the same flat reach shows hardly any oscillation; in the
+   deep, narrow 50 m channel the sloshing is damped less and becomes
+   visible. This run specifies only the channel width and keeps the bed
+   of the depression-filled DEM, so the flat reach remains; when the bed
+   of this reach was dug to a uniform slope as a test, the oscillation
+   almost vanished.
+
+   Preprocessing the channels so that the longitudinal profile is
+   monotone (eliminating the flat reaches), or moving the channels to
+   subgrid channels (`fn_channel`) with an independently specified bed
+   profile, removes the flat ponds themselves.
 
 4. The choice of measurement locations also mitigates it. A transect
    placed on a flat reach (pond) several meters deep picks up the
@@ -981,27 +1000,28 @@ tabulated below (in parentheses: change from the next coarser grid).
 - The 1-minute values of W = 50 carry fine oscillations. The oscillation at
   transect 3 of the 200 m grid between 70 and 130 minutes (period about 4
   minutes, ±30 to 100 m³/s per minute) is a seiche in flat reaches upstream
-  created by depression filling. The steep front of the rise (+950 m³/s in one
-  minute) is a property of 3 that the 200 m grid without the width also shows
-  (+846). The oscillation with a period of 2 to 3 minutes around the peak of
-  transect 2 of the 100 m grid (47 to 64 minutes) comes from a face whose donor
-  is a deep stagnant pocket in a flat reach, where the weight moves back and
-  forth across the threshold `p_adv_donor_eps` (the limits of 3 in the
-  [advection chapter](../../../docs/en/users_guide/advection.md)). Smoothed with
-  a 5-minute moving average, the peak drops by 1.4% at transect 3 of the 200 m
+  created by depression filling (right of the figure in item 3 of Step 6). The
+  steep front of the rise (+950 m³/s in one minute) is a property of 3 that
+  the 200 m grid without the width also shows (+846). The oscillation with a
+  period of 2 to 3 minutes around the peak of transect 2 of the 100 m grid (47
+  to 64 minutes) comes from a face whose donor is a deep stagnant pocket in a
+  flat reach, where the weight moves back and forth across the threshold
+  `p_adv_donor_eps` (the limits of 3 in the
+  [advection chapter](../../../docs/en/users_guide/advection.md)). Smoothed with a
+  5-minute moving average, the peak drops by 1.4% at transect 3 of the 200 m
   grid and by 5.9% at transect 2 of the 100 m grid; transect 4 hardly changes.
-- At transect 3 of the 50 m grid, the 1-minute values carry fine
-  oscillations with a period of 5 to 6 minutes around the peak and on the
-  recession (±100 to 450 m³/s per minute). About 1 km downstream of the
-  transect, a hydraulic jump moves back and forth in the stepped bed created
-  by depression filling (a flat "pond" and a 7 m step), and the motion
-  propagates up to the transect through the subcritical flow: an example of
-  the oscillations caused by the terrain in Step 6 (it is not a wet/dry
-  switch and remains when `f_advection_donor` or the time step is changed).
-  Placing the transect 150 m upstream, above a step, reduces the recession
-  oscillation to a third. On the 100 m and 200 m grids the steps created by
-  depression filling lie at other places and have other sizes, and the
-  1-minute values at transect 3 are smooth.
+- At transect 3 of the 50 m grid, the 1-minute values carry fine oscillations
+  with a period of 5 to 6 minutes around the peak and on the recession (±100
+  to 450 m³/s per minute). About 1 km downstream of the transect, a hydraulic
+  jump moves back and forth in the stepped bed created by depression filling
+  (a flat "pond" and a 7 m step), and the motion propagates up to the transect
+  through the subcritical flow: an example of the oscillations caused by the
+  terrain in Step 6 (left of the figure in item 3 of Step 6; it is not a
+  wet/dry switch and remains when `f_advection_donor` or the time step is
+  changed). Placing the transect 150 m upstream, above a step, reduces the
+  recession oscillation to a third. On the 100 m and 200 m grids the steps
+  created by depression filling lie at other places and have other sizes, and
+  the 1-minute values at transect 3 are smooth.
 - At every resolution the S column stays at 0.1000 m after the rain.
   The total volume is the same; only **the distribution and the speed
   of the water** differ. Check this yourself.
