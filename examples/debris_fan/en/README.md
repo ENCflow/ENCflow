@@ -64,6 +64,16 @@ schematic values chosen to make the phenomena visible, and do not reproduce the 
 
 ## Mechanisms needed for the reproduction
 
+![From the collapse to the fan](figs/mechanism.png)
+
+(a) Volumes (values of make_init.py): the 100,000 m³ collapse mass is 60,000 m³ of solid and 40,000 m³ of pore
+water; with 33,000 m³ of water placed on the collapse it is released as a debris flow of concentration 0.45. If all
+the solid deposits with porosity 0.4, 40,000 m³ of water goes into the pores, and the remaining 33,000 m³ becomes
+the trailing thin mud. (b) The collapsed mass crosses the valley floor and runs up the far wall, and part of it
+stays at the foot of that wall. (c) Down the valley it runs on inertia without depositing, and on the fan it
+spreads, slows down and deposits. The time ranges are those of the results below (reference case). A schematic;
+the shapes are not computed results.
+
 | Real phenomenon | How ENCflow represents it | Settings |
 |---|---|---|
 | The slope fails and fluidizes | Give the distribution of the failure depth and fluidize it at the start of the computation (move the solid (1 − λ)D into the flowing sediment and the pore water λD into the flowing water) | `fn_dbinit`, `db_reltime = 0`, `db_relsat = 1` |
@@ -75,6 +85,17 @@ schematic values chosen to make the phenomena visible, and do not reproduce the 
 | Gravity on steep slopes | Gravity correction for the slope inclination (friction and the resistance laws of mixture flows also along the slope) | `f_gravity_correction = 2` (default) |
 | Valley orientation and grid | Give the terrain, failure depth and initial water depth by formulas in coordinates along the valley and take their values at the cell centres of each grid (no interpolation) | `make_init.py` |
 | Flow in diagonal directions | The eight neighbours of the ENC grid (the diagonal edges also carry flow; the four-neighbour control sets the diagonal passage widths to 0) | `p_diagratio` |
+
+![Where the Takahashi–Nakagawa laws act](figs/laws.png)
+
+The Takahashi–Nakagawa (1991) laws evaluated with this example's values (not computed results). (a) The resistance
+law switches with concentration and flow depth. Most of the flow down the valley is in the stony form with the
+dilatant term; where the depth exceeds 30 times the grain size (9 m) it becomes the Manning law (the mud-flow rule
+of the original paper; the yield term remains). Only the collapse mass just after release and the front passing the
+upper valley are deeper than 9 m. (b) While the speed exceeds p v_c (which grows with depth to the 1.5 power) there is
+no deposition: the fast, deep valley flow does not deposit, and deposition starts on the fan as the flow thins and
+slows. (c) Downstream of the collapse the equilibrium concentration is below the flow's 0.45, so the flow deposits
+once it slows.
 
 ## Geometry and settings
 
@@ -141,7 +162,7 @@ four-neighbour case checks where four neighbours go as the grid is refined (for 
 cd examples/debris_fan
 make                     # links and the inputs and settings of all 26 cases (make_init.py)
 make run                 # compute all 26 cases in turn (about 30 minutes with 4 threads; mostly the two 2.5 m cases)
-python3 plot_results.py  # figs/*.png and tables (with the argument en, the English version in en/figs/)
+python3 plot_results.py  # figs/*.png and tables (with the argument en, the English version in en/figs/; the explanatory figures setup, grid, mechanism, laws need no results)
 ```
 
 `make quick` computes only the 18 cases at 40, 20 and 10 m (a few minutes). For a single case,
@@ -226,6 +247,14 @@ Sediment that reached the fan (deposit + moving; 1,000 m³; reference 67.2 thous
 | 10 m | 65.5 / 64.4 / 64.0 | 57.8 / 57.6 / 47.7 |
 | 5 m | 68.8 / 66.6 / 66.6 | 63.8 / 62.1 / 59.3 |
 | 2.5 m | 67.2 (0° only) | 63.1 (0° only) |
+
+![Valley floor and grid cells](figs/grid.png)
+
+The valley floor (between the dashes, 30 m wide) and the grid cells (colour = height above the floor at the same s).
+Blue dots are cells whose centres lie on the floor; black lines are axis edges between them (eight and four
+neighbours), orange dashes diagonal edges (eight neighbours only), and purple lines the detours that four-neighbour
+flow takes where cells touch only at corners. At 40 m and 0° no cell centre lies on the floor, and the valley is two
+rows 3.5 m above it. Drawn from the grids of make_init.py.
 
 - **With four neighbours, the debris flow cannot run down an oblique valley on coarse grids**:
   when the valley runs obliquely to the grid, the cells of the valley floor (cells whose centres
