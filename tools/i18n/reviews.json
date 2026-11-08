@@ -1805,11 +1805,47 @@
     {
       "source": "examples/landslide_tsunami/README.md",
       "target": "examples/landslide_tsunami/en/README.md",
-      "source_sha256": "8842a70079ab731b5845f6cb2174f6718a766e04236f1edd4c22c9c8766f9e2e",
-      "target_sha256": "add33970509c7079212111071a7497f5eb59f572cd65f6e6f461b59e16e0df84",
-      "reviewer": "Claude (Claude Code session; compared the Japanese source with the English mirror for the results heading, the new paragraph on the recompute after the slope-parallel resistance laws of mixture flows (§101), the B and B0 rows of the results table and the updated numbers in the reading notes; rest unchanged since the previous record)",
+      "source_sha256": "3f4ca21806e5d8a3625538a7ff6db21d1aad93d3918bcf126720ce6932f05edb",
+      "target_sha256": "f31322cafd997cb4df5b13c40942721141fc89f173e19824b1904115c7cab05a",
+      "reviewer": "Claude (Claude Code session; added four explanatory figures drawn by plot_schematic.py (no model results; setup from the input files z.txt, slide.txt, submarine.txt) with caption paragraphs, and the run line of the script; compared the Japanese source with the English mirror for the added text; the rest of the pair is unchanged since the previous record)",
       "method": "assistant",
-      "reviewed_on": "2026-11-06"
+      "reviewed_on": "2026-11-08"
+    },
+    {
+      "source": "examples/landslide_tsunami/figs/mechanism.png",
+      "target": "examples/landslide_tsunami/en/figs/mechanism.png",
+      "source_sha256": "6494b2dbc1a457f75ff0135de66bad59f8f75b96d27e035b71e4db0f551dd74c",
+      "target_sha256": "b7be453f3eb62f5050d8d3a616bb2ace5fb9b4c4b7c2d12d8e2e8e93daaaf070",
+      "reviewer": "Claude (Claude Code session; schematic drawn by plot_schematic.py from the input files and closed-form expressions only (no model execution); viewed the Japanese and English images side by side: same shapes, values and layout, labels translated)",
+      "method": "assistant",
+      "reviewed_on": "2026-11-08"
+    },
+    {
+      "source": "examples/landslide_tsunami/figs/nh_theory.png",
+      "target": "examples/landslide_tsunami/en/figs/nh_theory.png",
+      "source_sha256": "d3c930685cfd1fe9163d380866bff7779e80d10d4779e03249d81285d4aab6c4",
+      "target_sha256": "08b3cb0e5e33d9bbc3e1a7d5696a48edf80a60c41ad7ab53d700875f34cb2848",
+      "reviewer": "Claude (Claude Code session; schematic drawn by plot_schematic.py from the input files and closed-form expressions only (no model execution); viewed the Japanese and English images side by side: same shapes, values and layout, labels translated)",
+      "method": "assistant",
+      "reviewed_on": "2026-11-08"
+    },
+    {
+      "source": "examples/landslide_tsunami/figs/properties.png",
+      "target": "examples/landslide_tsunami/en/figs/properties.png",
+      "source_sha256": "f85bbfd3e0621a018b3fc1d44be4388af31cb1fd22975ce9bf5476e518844be8",
+      "target_sha256": "424b5df58a9873731b134839f22f071a6aaf638a7e33ac66091ab7ea9612f7a1",
+      "reviewer": "Claude (Claude Code session; schematic drawn by plot_schematic.py from the input files and closed-form expressions only (no model execution); viewed the Japanese and English images side by side: same shapes, values and layout, labels translated)",
+      "method": "assistant",
+      "reviewed_on": "2026-11-08"
+    },
+    {
+      "source": "examples/landslide_tsunami/figs/setup.png",
+      "target": "examples/landslide_tsunami/en/figs/setup.png",
+      "source_sha256": "4082020a1dbdc5d286222c1200579a93ef78b7832f7cad097df00a6125df84de",
+      "target_sha256": "1f09dc9ac62f7fc80564c7c621365aa448e992e0841636cba1464ae2d61cd0a5",
+      "reviewer": "Claude (Claude Code session; schematic drawn by plot_schematic.py from the input files and closed-form expressions only (no model execution); viewed the Japanese and English images side by side: same shapes, values and layout, labels translated)",
+      "method": "assistant",
+      "reviewed_on": "2026-11-08"
     },
     {
       "source": "examples/levee_breach/README.md",
