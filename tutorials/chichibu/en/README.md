@@ -1313,7 +1313,16 @@ computations should differ much less; checking this is left to the reader
   downstream, with the peak times within 8 minutes. For an
   estimate of the flood wave over the whole catchment a 200 m grid is
   enough; go to 100 m and below when the absolute values in small
-  upstream catchments matter.
+  upstream catchments matter. For an example with another phenomenon,
+  [examples/debris_fan](../../../examples/debris_fan/en/README.md) computes a
+  debris flow that runs from a slope failure down a valley and spreads on
+  an alluvial fan: the sediment reaching the fan, the extent and runout of
+  the deposit, the arrival time and the lateral spreading agree within
+  ±10% of the reference over grid spacings of 20 to 2.5 m and three valley
+  orientations relative to the grid (even on a 40 m grid, coarser than the
+  30 m wide valley floor, 0.92 to 1.09 times the reference sediment reaches
+  the fan). It also compares four neighbors, which shows what the
+  8-direction exchange of the ENC grid brings.
 - **Flow is not obstructed even at coarse resolution**: most
   structured-grid models exchange water along the axes only (4
   neighbors) and cannot carry a one-cell-wide channel diagonally, so

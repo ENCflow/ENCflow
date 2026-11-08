@@ -4604,8 +4604,8 @@
     {
       "source": "tutorials/chichibu/README.md",
       "target": "tutorials/chichibu/en/README.md",
-      "source_sha256": "53eb11a83b89a9b8679931f30e7d3131fda30805a97382bf64ba9431e23dc1ca",
-      "target_sha256": "9c1feb577d163bb191c14db5eb7c7b4233edef0372e37a0d78f7ae523bad46fa",
+      "source_sha256": "c3dde34ebd4d7d6fb1d9166aefcb75a092802ad44516c10e7bc3c78cd29aa729",
+      "target_sha256": "102e34f1e8d372ba78ab6ac8794f0fa3083ed7cc7fbe0aac0549435290c29215",
       "reviewer": "Claude (Claude Code session; full-text content and lexical review, no model execution)",
       "method": "assistant",
       "reviewed_on": "2026-11-08"
