@@ -498,8 +498,8 @@ in the READMEs):
   (param_*_nh0 / param_*_nh); near-field comparison with hydrostatic and
   indicative run times.
 - [examples/tsunami_fault](../../../examples/tsunami_fault/en/README.md) -- fault tsunami (prescribed bed motion) with
-  the correction and the acceleration term (param_nh.txt). Even for a 30 km
-  wide uplift in 2000 m of water ($`kH`$ ≈ 0.4–0.8) dispersion during
+  the correction and the acceleration term (param_nh.txt). Even for an uplift
+  and subsidence 15–30 km wide in 2000 m of water ($`kH`$ ≈ 0.4–0.8) dispersion during
   propagation lowers the leading wave by 13–24%, while the acceleration term
   contributes only −2% above the source.
 - [examples/nest_reflect](../../../examples/nest_reflect/en/README.md) -- non-hydrostatic parent and child grids;

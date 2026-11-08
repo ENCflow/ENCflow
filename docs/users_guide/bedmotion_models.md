@@ -46,7 +46,7 @@ utils/fault2disp は、断層の位置・走向・傾斜・すべり角・長さ
 
 破壊過程を省いた瞬時変位(章のパターン C)との差は、震源近傍の到達時刻と
 波高に現れます。例題では [examples/tsunami_fault](../../examples/tsunami_fault/) の
-最高水位で 2〜3 %、[examples/tsunami_coast](../../examples/tsunami_coast/) の
+最高水位で震源直上 −13 %・伝播後 −1〜2 %、[examples/tsunami_coast](../../examples/tsunami_coast/) の
 湾口・棚で +24〜40 % です(各 README)。
 
 ## 3. 静水圧と非静水圧
