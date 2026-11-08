@@ -347,11 +347,11 @@
     {
       "source": "docs/users_guide/io.md",
       "target": "docs/en/users_guide/io.md",
-      "source_sha256": "f66b7ceb4388dcfc3403033fc456e79ee6eb5514d84b7d7b02d8698adb2d5728",
-      "target_sha256": "d81910286154f292d7f9f04f212a038bc7f78be7a4f4d9d232a78c1bcc222cb4",
-      "reviewer": "Claude (Claude Code session; lava temperature mode f_lvtemp, developer.md Sec. 51.7: changed passages compared side by side with the Japanese source, unchanged parts as recorded earlier)",
+      "source_sha256": "169acbb9d2b7c1efda1f457ce9ea622e2523f579121e99f6fdfe36ea79855bdf",
+      "target_sha256": "13ef0b4d81fd8e695485de434a0463e9fa1dc6b197417dbcfec4f73a4f490ded",
+      "reviewer": "Claude (Claude Code session; A0000 row of the output table: ENC only, not written with STG; Japanese and English edited together and read side by side)",
       "method": "assistant",
-      "reviewed_on": "2026-11-04"
+      "reviewed_on": "2026-11-08"
     },
     {
       "source": "docs/users_guide/lavaflow.md",

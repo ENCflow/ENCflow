@@ -5798,6 +5798,16 @@ Cn_max)→ 場の最大値**。
   出力ファイル集合も含めて不変。t_geoinfo に gv_active(namelist 由来、
   全ランク同値)を追加。利用者向けの読み方は users_guide/io.md
   「河道幅・建物のあるセルの読み方」。
+  2026-11-08 追記(不具合修正。利用者の判断「STG では出さない」): STG(f_gridsystem = 1)は A0000 を
+  出さない。出力の判定が河道の状態 chn(m_swflow_enc の allocatable。ENC の init だけが確保)を
+  参照するため、STG では初期化直後の output_state で segfault していた(回帰ケースに STG がなく
+  見逃されていた)。判定を f_gridsystem == 0 の内側に入れ子にした(.and. の短絡評価は保証されない)。
+  ENC の出力は不変。凍結方針(§7 の「STG は比較検証用に凍結する」)に沿い、STG 側では河道幅・家屋空隙率の
+  係数を出さない。直した後、同じ設定の STG は測線の集計(m_record_flux)で segfault した(ENC の状態
+  opt%have_edge_flux を参照)ので、同じ型として STG ではエッジ流量方式(§24.2)を使わず、従来の階段面の
+  セル値の積算にした(判定は全ランク同値の f_gridsystem。ENC は不変)。その先、STG の計算本体が 1 ステップ目で
+  浮動小数点例外を出す(m_swflow_stg の連続式の ÷GV。H・GV・BB・DN・D を全列 1:IG へ全配列代入で写すが、
+  写し元は §80 以降マスクの列窓で確保され、列窓が狭いと形状が合わない)。直し方は未決(handoff 00n(f))。
   **実バグ(2026-10-17 修正)**: 当初 gv_active を rank0 だけが呼ぶ read_gvbb の
   中で立てていたため rank0 以外では偽のままになり、np>=2 の初期出力で
   rank0 だけが output_areafactor の gather に入って deadlock した
