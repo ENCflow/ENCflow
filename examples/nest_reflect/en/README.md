@@ -15,35 +15,86 @@ two-way nests (ratio 3: child 201×201; ratio 5: child 335×335). Since r_t = 1,
 dt is set by the child's CFL (ratio 3: 1/60 s; ratio 5: 1/100 s; the stand-alone
 coarse grid also 1/60 s).
 
+## Setup
+
+![Setup](figs/setup.png)
+
+(a) Central part of the domain. A Gaussian initial water level (a = 0.2 m,
+σ = 5 m) is placed at the centre of a 100 m square body of water 1 m deep, with
+the footprint of the child grid (dashed; parent cells 160..226, 17.4 m square)
+and that of the grandchild of the 2-level nest (dotted). The grey circles are
+the crest positions at t = 2, 4 and 6 s from linear theory (approximate).
+(b) Enlarged north-west corner of the footprint (ratio 3). The band is the
+outer 3 child cells (= 1 parent cell) and receives the parent's values; only
+the parent cells without band cells (hatched) are replaced by the child's
+solution. Errors are taken over in = inside the footprint and out = outside;
+the child's own error is taken over the core (outer 2 parent cells excluded)
+and full (whole footprint). (c) Grids and time steps. Drawn from the input
+files (make_inputs.py, the params and the nest lists) and formulas; not
+computed results.
+
 ## Running
 
 ```
 python3 make_inputs.py            # initial water level evaluated at the cell centres of each grid (data/)
+python3 plot_schematic.py         # explanatory figures figs/setup.png, mechanism.png (can be drawn before the runs)
 ./encflow param_coarse.txt        # stand-alone coarse grid
 ./encflow param_root_r3.txt       # ratio 3 (nest_r3.txt -> param_child_r3.txt)
 ./encflow param_root_r5.txt       # ratio 5
 ./encflow param_fine.txt          # uniform fine grid (reference; several minutes)
 python3 analyze.py
+python3 Fig.py                    # result figures figs/snapshots.png etc. (runs not yet done are skipped)
 ```
 
-## Figures
+After adding the runs of the later sections, `python3 Fig.py` also draws their
+figures (error_time.png, oneway_edge.png, nh_profile.png). With the argument
+`en`, the figures are drawn with English labels into en/figs/
+(`python3 plot_schematic.py en`, `python3 Fig.py en`). Plotting needs Python 3,
+NumPy and matplotlib.
 
-Generated in `figs/` with `./Fig.py` after each run (matplotlib; runs that do
-not exist are skipped).
+## How it works
+
+![How it works](figs/mechanism.png)
+
+(a) Profile of the Gaussian wave from the centre, solved as linear
+shallow-water waves (hydrostatic). The crest reaches the edges of the child
+(8.7 m) at t ≈ 2 s (height 0.046 m, close to the incident amplitude 0.047 m in
+the runs) and crosses the corners (12.3 m) at 3–4 s. At t = 4 s the crest is
+outside and the trailing trough is crossing the interface; by t ≥ 6 s the wave
+has left the child ("after the passage" in the results). (b) Time ratio r_t
+(ratio 3). With r_t = 1 the parent also advances with the child's 1/60 s
+(parent Cn 0.20); with r_t = 3 the parent advances with its own 0.05 s
+(Cn 0.60), and the child receives the band values for its 3 steps interpolated
+in time between 2 parent steps. (c) Wave speed against wavenumber at a depth of
+1 m, and the distribution of the energy of the Gaussian over wavenumber. The
+σ = 5 m wave lies mostly at kH < 0.5 with little dispersion, whereas the
+σ = 2 m wave of the non-hydrostatic version spreads around kH ≈ 0.5, so its
+shorter components lag and trailing waves follow (section on the
+non-hydrostatic band). Drawn from the inputs and formulas; not computed
+results.
+
+The mechanism of nesting itself (placing the child and the parent–child
+exchange, the boundary options, time stepping) is illustrated in
+[Nesting](../../../docs/en/users_guide/nest.md) and its
+[background](../../../docs/en/users_guide/nest_models.md).
+
+## Results (gfortran, serial with 4 threads)
 
 ![Water level and error at t = 4 s](figs/snapshots.png)
 
 Water level at t = 4 s (when the crest has crossed the child's interface and
 is outside it, and the trailing trough is inside the child). Top row: fine grid (reference), stand-alone coarse grid, and the
 root of the ratio-3 two-way nest. Bottom left is the child grid itself; bottom
-centre and right are the errors from the fine grid. Inside the child's footprint
+centre and right are the errors from the fine grid (the titles give the RMS inside
+the footprint). Inside the child's footprint
 (dashed) the root of the nest has the child's solution returned by replacement,
-so its error is smaller than that of the stand-alone coarse grid and no pattern
-attributable to the interface is visible.
+so its error is smaller than that of the stand-alone coarse grid (RMS 4.0e-5 m
+against 2.5e-4 m) and no pattern attributable to the interface is visible.
 
 ![Time evolution of the error](figs/error_time.png)
 
-Time evolution of the RMS error inside and outside the child's footprint. Solid
+Time evolution of the RMS error inside and outside the child's footprint
+(light blue = the wave passing the interface). Solid
 lines are r_t = 1 (parent dt = 1/60 s), dashed lines r_t = r (parent dt = 0.05 s,
 Cn ≈ 0.6). The roots of the r_t = 1 nests are better than the stand-alone coarse
 grid throughout the passage of the wave across the interface (t = 2–4 s). The
@@ -53,27 +104,6 @@ level set by the parent's time-step error (§ "Time ratio r_t > 1"). The
 conservation correction (fb3) corrects the interface ring locally, so local
 bumps appear during the passage, but its RMS is comparable to the r_t = 3 root
 and it conserves volume (§ "Conservation correction").
-
-![Error of the one-way child: band and Flather](../figs/oneway_edge.png)
-
-Error distribution of the one-way (nest_fb = 0) child (t = 2 s). With the
-Dirichlet band, the 3 child cells at the rim take the parent's coarse
-interpolated values and the maximum error over the whole footprint is 1e-2 m,
-whereas with Flather radiation the child computes up to the boundary cells, so
-the whole footprint is usable at the same level as the core (at most 6e-4 m)
-(§ "One-way").
-
-![φ of the non-hydrostatic band](../figs/nh_profile.png)
-
-Non-hydrostatic (σ = 2 m) at t = 4 s. Top: water level along the centreline
-(vertical lines = the child's interface). Bottom: error distribution of the
-child. The default, which makes the band the parent's known φ cells
-(nest_nh = 1), is close to the fine grid, whereas nest_nh = 0, which makes the
-band + margin hydrostatic, cuts off the non-hydrostatic pressure at the interface,
-shifts the phase of the dispersive waves and produces a concentric error pattern
-over the whole child (§ "φ of the non-hydrostatic band").
-
-## Results (gfortran, serial with 4 threads)
 
 Error η − η_fine (m), where the fine grid is averaged 3×3 per parent cell.
 in = inside the child's footprint (parent cells 160..226), out = outside. The
@@ -232,6 +262,16 @@ python3 make_inputs.py
 python3 analyze_nh.py
 ```
 
+![φ of the non-hydrostatic band](figs/nh_profile.png)
+
+Non-hydrostatic (σ = 2 m) at t = 4 s. Top: water level along the centreline
+(vertical lines = the child's interface). Bottom: error distribution of the
+child (inside the dashed line = core). The default, which makes the band the parent's known φ cells
+(nest_nh = 1), is close to the fine grid, whereas nest_nh = 0, which makes the
+band + margin hydrostatic, cuts off the non-hydrostatic pressure at the interface,
+shifts the phase of the dispersive waves and produces a concentric error pattern
+over the whole child.
+
 | t (s) | run | RMS in | MAX in | RMS out | MAX out |
 |---|---|---|---|---|---|
 | 2 | coarse_nh | 3.7e-4 | 1.4e-3 | 7.0e-6 | 1.1e-4 |
@@ -284,6 +324,14 @@ margin).
 ```
 ./encflow param_root_r3t3_ow2.txt; ./encflow param_root_r3t3_ow3.txt; python3 analyze.py
 ```
+
+![Error of the one-way child: band and Flather](figs/oneway_edge.png)
+
+Error distribution of the one-way (nest_fb = 0) child (t = 2 s). With the
+Dirichlet band, the 3 child cells at the rim take the parent's coarse
+interpolated values and the maximum error over the whole footprint is 1e-2 m,
+whereas with Flather radiation the child computes up to the boundary cells, so
+the whole footprint is usable at the same level as the core (at most 6e-4 m).
 
 | t (s) | run | RMS full | MAX full | RMS core | MAX core |
 |---|---|---|---|---|---|
