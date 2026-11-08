@@ -1013,6 +1013,18 @@ tabulated below (in parentheses: change from the next coarser grid).
   flow. Even with the channel representation equalized, **the
   difference in how the valley floor and the slopes are resolved**
   remains.
+- The 1-minute values of W = 50 carry fine oscillations. The oscillation at
+  transect 3 of the 200 m grid between 70 and 130 minutes (period about 4
+  minutes, ±30 to 100 m³/s per minute) is a seiche in flat reaches upstream
+  created by depression filling. The steep front of the rise (+950 m³/s in one
+  minute) is a property of 3 that the 200 m grid without the width also shows
+  (+846). The oscillation with a period of 2 to 3 minutes around the peak of
+  transect 2 of the 100 m grid (47 to 64 minutes) comes from a face whose donor
+  is a deep stagnant pocket in a flat reach, where the weight moves back and
+  forth across the threshold `p_adv_donor_eps` (the limits of 3 in the
+  [advection chapter](../../../docs/en/users_guide/advection.md)). Smoothed with
+  a 5-minute moving average, the peak drops by 1.4% at transect 3 of the 200 m
+  grid and by 5.9% at transect 2 of the 100 m grid; transect 4 hardly changes.
 - At transect 3 of the 50 m grid, the 1-minute values carry fine
   oscillations with a period of 5 to 6 minutes around the peak and on the
   recession (±100 to 450 m³/s per minute). About 1 km downstream of the

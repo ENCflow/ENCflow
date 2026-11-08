@@ -113,9 +113,9 @@
     {
       "source": "docs/users_guide/advection.md",
       "target": "docs/en/users_guide/advection.md",
-      "source_sha256": "81213001e4553fcf436a8ebb5e6a421a2311575e495a91e08c676a9a560457ca",
-      "target_sha256": "2b72f22090669b50bcfe0a3c6b8e2d95b4a185122203cb2b51bfb6e157455601",
-      "reviewer": "Claude (Claude Code session; 2026-11-08: option-3 limits extended with the measured size of the wet-bank lateral-face brake in Chichibu and the rejected depth-ratio prototypes; Japanese and English edited together and read side by side)",
+      "source_sha256": "1adad934a3dfecc2f53c7c29941542cada1e7e60c0268b23ca4f91e0a84724ae",
+      "target_sha256": "a647e89a6d7ed79cf0b5ed103dd7ac889edcb02d0c120e3f8d9413948652cce2",
+      "reviewer": "Claude (Claude Code session; 2026-11-08: 200 m W = 50 transect 3 oscillation identified as a seiche in filled flat reaches; note on the W = 50 fine oscillations added to the supplement and the option-3 limits; Japanese and English edited together and read side by side)",
       "method": "assistant",
       "reviewed_on": "2026-11-08"
     },
@@ -4352,11 +4352,11 @@
     {
       "source": "tutorials/chichibu/README.md",
       "target": "tutorials/chichibu/en/README.md",
-      "source_sha256": "07289fcf780ce482ff7ac4ad13bf9a686820a3fe67f9bc263b3daa28fa309e6d",
-      "target_sha256": "79fbbc811bd250aed1150e17c0fe4560bcc0d8599bbb81276c865b030c286124",
-      "reviewer": "Claude (Claude Code session; 2026-11-07: cause of the remaining fine oscillation at transect 3 of the 50 m Chichibu grid identified (hydraulic jump and pond in the stepped bed about 1 km downstream) and added to the tutorial supplement; Japanese and English edited together and read side by side)",
+      "source_sha256": "01d91bbf3fd3ebd084e8f9c24f24594a78addcbb94b74dc20c6c88f420f7cb0e",
+      "target_sha256": "0bd02b17f37f63c2c00569230c2d26112eb566483a5226f2e7ad630052c413fa",
+      "reviewer": "Claude (Claude Code session; 2026-11-08: 200 m W = 50 transect 3 oscillation identified as a seiche in filled flat reaches; note on the W = 50 fine oscillations added to the supplement and the option-3 limits; Japanese and English edited together and read side by side)",
       "method": "assistant",
-      "reviewed_on": "2026-11-07"
+      "reviewed_on": "2026-11-08"
     },
     {
       "source": "tutorials/chichibu/figs/step1_hend.png",

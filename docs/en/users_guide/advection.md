@@ -544,7 +544,13 @@ With `f_advection_donor = 3` the wet/dry test of the parallel edge becomes a con
   and +194 m³/s with 0.02). No $`\varepsilon`$ removes all the disturbances, so the
   default stays 0.1 (a prototype that judges the donor by the ratio of depths
   removed this oscillation but roughened other places, so it was not adopted;
-  developer.md §100). Boundary faces
+  developer.md §100). With a 50 m wide channel on the 200 m grid, a seiche
+  (standing wave) with a period of about 4 minutes can remain in flat reaches
+  created by depression filling (±30 to 100 m³/s per minute in the discharge).
+  It becomes visible because 3 combined with MUSCL has little dissipation; it
+  does not appear with 0, with first-order upwinding or without the width, and
+  it vanishes when the flat reaches are removed from the terrain (an
+  oscillation caused by the terrain). Boundary faces
   on lateral Neumann sides are not covered (both flow-direction and lateral
   faces are the same as with 0).
 - **Excluded edges.** Edges excluded from the momentum equation (invalid
