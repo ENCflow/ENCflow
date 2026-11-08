@@ -113,9 +113,9 @@
     {
       "source": "docs/users_guide/advection.md",
       "target": "docs/en/users_guide/advection.md",
-      "source_sha256": "e4b8743b48797127c8b6d5b1b4c6d6ca963713b5623190d18f338db21dc8498c",
-      "target_sha256": "ac479ba11eaf62dd519b89377c9b1a2681d209350e99ee33ef5ee8a9160a15cb",
-      "reviewer": "Claude (Claude Code session; developer.md section of f_advection_donor renumbered from 100 to 102 to avoid the collision with the 100 and 101 sections on main; references updated in Japanese and English alike)",
+      "source_sha256": "5fda1ea3dcf43098995014c74acb5e80345c3ff9a7ddbee72033dc2a63cb1013",
+      "target_sha256": "e2fd34fc9864a3cf07372710276fd15a2569940c0db4bb6ebefe6c089637a83e",
+      "reviewer": "Claude (Claude Code session; full-text content and lexical review, no model execution)",
       "method": "assistant",
       "reviewed_on": "2026-11-08"
     },
@@ -482,9 +482,9 @@
     {
       "source": "docs/users_guide/swflow.md",
       "target": "docs/en/users_guide/swflow.md",
-      "source_sha256": "949a546f6b1b156df05dbcec6aaec6e6c2ef4fb58e594e0fcd74612f8dd2ff3d",
-      "target_sha256": "139bc421c7a87b3f5d7f9f4c3fce85fff96f2668155f2b9b3921fb69cbe2d84b",
-      "reviewer": "Claude (Claude Code session; STG grid: domain mask and two or more MPI processes unsupported and stopped at initialization, new test/stg; Japanese and English edited together and read side by side)",
+      "source_sha256": "bf00286b49086946da229ef9f9d9f197215652268aea002ba61fe437f6dbef38",
+      "target_sha256": "50689ea81b909ad5cdf80b0d4c3a3747758641ac3e542e3f5183452746d18db2",
+      "reviewer": "Claude (Claude Code session; full-text content and lexical review, no model execution)",
       "method": "assistant",
       "reviewed_on": "2026-11-08"
     },
@@ -644,9 +644,9 @@
     {
       "source": "examples/List_samples/list_enc.txt",
       "target": "examples/List_samples/en/list_enc.txt",
-      "source_sha256": "86906abee3e7f030163241a0fe34cfdbd3729715abc3db675590e3399dbc5a75",
-      "target_sha256": "a6fabd1edc1d64ffe0aaa415ab84e9101308569caaf39ad070e8920c30762988",
-      "reviewer": "Claude (Claude Code session; merge of main into the f_advection_donor branch: the branch's f_advection_donor = 3 entries and main's additions (geomorph applications page / f_gravity_correction = 3 comment) combined; Japanese and English compared side by side after the merge)",
+      "source_sha256": "0ce0c2b5bf9d2df29a21e4df7729dc9583a5ccbc17a1be5eaca616258dc38ecd",
+      "target_sha256": "8781c3746757e9ffda6081c47faed1045627303c0e94adfe355a7977447d99f9",
+      "reviewer": "Claude (Claude Code session; full-text content and lexical review, no model execution)",
       "method": "assistant",
       "reviewed_on": "2026-11-08"
     },

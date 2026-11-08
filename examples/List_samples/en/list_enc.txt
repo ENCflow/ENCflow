@@ -75,7 +75,9 @@
                             !   (0: wet cells on the edge line = default,
                             !   3: only on faces where the link of the donor on
                             !   the edge line carries less than p_adv_donor_eps
-                            !   times the largest inflow link of the face cell,
+                            !   times the largest inflow link of the face cell
+                            !   and the donor is thin (shallower than
+                            !   p_adv_donor_eps times the face cell's depth),
                             !   the upwind value is pulled toward the edge's own
                             !   velocity, and the wet/dry tests of the lateral
                             !   faces become a continuous weight below dd; no
@@ -121,8 +123,9 @@
   !p_adv_upwind_index = 0.5 ! upwinding index of the advection term (0-1.
                             !   0: central difference, 1: first-order upwind)
   !p_adv_donor_eps = 0.1    ! threshold eps of f_advection_donor = 3
-                            !   (0 < eps <= 1; empirical; the peak is nearly
-                            !   the same for 0.05-0.2)
+                            !   (0 < eps <= 1; used for both the flux ratio
+                            !   and the depth ratio; empirical; the peak is
+                            !   nearly the same for 0.05-0.2)
   !f_diffusion_term = 0     ! diffusion term (0: none, 1: constant viscosity,
                             !   2: zero-equation model nu = nu0 + alpha*(u*)*h).
                             !   For a first try, 2 is handy (no coefficient to
