@@ -47,7 +47,7 @@ Schematic (not computed results). One cycle consists of three stages and is repe
 | Little rain infiltrates on ash | constant Green-Ampt infiltration capacity of 5 mm/h; the infiltrated water is stored in the pores of the ash. No infiltration on lava without ash | `fn_gwflow`, `gw_ksv_mmh` |
 | Rain that cannot infiltrate runs down the slopes, carries ash and deposits it at the foot | shallow water flow + bedload (representative grain size 1 mm); deposition where the slope eases and the transport capacity drops | `fn_precip`, `f_fluvial`, `fluv_d50` |
 | Erosion during the long repose between eruptions | one storm is computed and its landform change multiplied by `morfac` = 100 (taken as 100 such storms) | `morfac` |
-| Over-steep slopes collapse | the excess over an angle of repose of 33° is removed (it did not act at the slopes of this example) | `f_repose`, `repose_phi` |
+| Over-steep slopes collapse | the excess over an angle of repose of 33° is removed (it does not act at the slopes of this example) | `f_repose`, `repose_phi` |
 | Eruptions mostly at the summit, sometimes on the flanks | summit vents scattered with a standard deviation of 75 m; 25% of the eruptions after the first are on the flanks (600–1000 m from the summit) | `vents` of `run_cycles.py` |
 | The three processes repeat in turn | one computation per stage; the final bed elevation Z and soil depth Sd become the inputs of the next stage (a Python driver) | `run_cycles.py` |
 | Lava stops as it cools (the final stage only) | a lava flow with temperature: it cools by radiation and convection from its surface; as it cools its viscosity and yield stress rise and it stops, and it solidifies at the solidification temperature | `f_lvtemp` (`run_flow.py`) |
@@ -84,7 +84,9 @@ south-southeast and 710 m southwest of the summit).
   in P, 3.2% in L and 4.3% in P0 (`molten_frozen_m3` of the ledger ledger.csv).
 - The erosion stage is computed for 2 hours with dt = 1 s (10 minutes without rain, 60 minutes of
   rain, 50 minutes of recession). To resolve the thin flows on the slopes, the minimum moving water
-  depth is 0.2 mm (as in [ashfall_lahar](../../ashfall_lahar/en/README.md)).
+  depth is 0.2 mm (as in [ashfall_lahar](../../ashfall_lahar/en/README.md)). The steep-slope gravity
+  correction is `f_gravity_correction = 1` (effective gravity g cos²θ; the default is 2; see
+  [Steep-slope gravity correction](../../../docs/en/users_guide/steep_slope.md)).
 
 ## How to run
 
@@ -128,8 +130,8 @@ slopes.
 | Of which left the domain | 0.5% | 0.03% | — |
 
 - **A volcano of stacked lava and ash layers forms**: in every case the edifice is concave, steep near
-  the summit and gentler toward the foot (slopes of 8–11° at 0.1–0.5 km from the summit and about 1°
-  at 1.0–1.5 km). As in the section figure below, lava and ash alternate inside.
+  the summit and gentler toward the foot (slopes of 8–11° at 0.1–0.5 km from the summit and
+  0.5–1.1° at 1.0–1.5 km). As in the section figure below, lava and ash alternate inside.
 - **The concave shape comes mainly from the ashfall pattern**: P0, without erosion, is also concave.
   Ash that thins exponentially from the vent piles up into an edifice that is steeper toward the
   summit.
@@ -212,7 +214,7 @@ runs pass them.
 - **A higher effusion rate flows further and wider**: erupting the same volume at 4 times the rate (c)
   extends the reach from 0.71 km to 0.85 km and the area 1.8 times, and the maximum thickness becomes 60%.
   The difference is likely smaller than in the check on a uniform slope (test/lava configuration 9; the
-  reach 2.6 times) because on the volcano the flow splits into valleys and spreads sideways.
+  reach 2.07 times) because on the volcano the flow splits into valleys and spreads sideways.
 - **Thin, wide flows solidify early**: the amount of molten lava is largest around the end of the
   effusion (58% of the erupted volume in S, 90% in S4) and then decreases as the lava cools. S4 spreads
   thinly and has all solidified in 5 hours; S and E take 11–12 hours.

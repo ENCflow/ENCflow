@@ -94,10 +94,11 @@ python3 plot_results.py # figs/*.png and the table (with the argument en, the En
 
 ## Results
 
-![Reach of the timber and timber remaining](figs/maps.png)
+![Reach of the timber and timber stopped at the end](figs/maps.png)
 
 Top: reach of the timber (maximum over the run of floating plus stopped timber; Wd9999).
-Bottom: timber remaining after 4 hours (Wd9998). Black = seawall, dashed = opening.
+Bottom: timber stopped after 4 hours (Wd9998; floating timber is not included). Black =
+seawall, dashed = opening.
 
 ![Timber in the town and its fate](figs/series.png)
 
@@ -168,10 +169,11 @@ floating (404 m³ with the +4 m seawall).
   margin, the time of release is set by the surge level. `dw_wrec` is set from the time the
   release takes (stock ÷ rate).
 - **"How far it reached" and "where it remained"**: Wd9999 is the maximum amount over the run,
-  including where timber only passed (the reach; for hazard maps), and Wd9998 is what remained at
-  the end. The volume is the column amount × porosity × cell area. In the ledger (driftwood.csv),
-  the sum of the remaining stock, floating timber and stopped timber falls from the initial
-  60,000 m³ by the amount carried offshore (out of the domain through the westmost column).
+  including where timber only passed (the reach; for hazard maps), and Wd9998 is the timber
+  stopped at the end (floating timber is not included). The volume is the column amount ×
+  porosity × cell area. In the ledger (driftwood.csv), the sum of the remaining stock, floating
+  timber and stopped timber falls from the initial 60,000 m³ by the amount carried offshore (out
+  of the domain through the westmost column).
 - **The town is a closed lowland**: the east, north and south edges are closed, so the town fills
   at the surge peak and the flow stops, and most of the timber stops there (the supplement shows
   how the stopping rules matter).
@@ -198,7 +200,11 @@ Two cases with different rules for stopping timber are compared with the Ise Bay
 | Does not stop in slow flow | param_vstop0.txt | `dw_vstop = 0` (timber stops only where the water is shallower than its draft) |
 | Stopped timber floats off again | param_refloat.txt | `dw_wfloat = 0.005`, `dw_vfloat = 0.05` (stopped timber floats off again in a flow faster than 0.05 m/s) |
 
-![Supplement: timber remaining at the end](figs/supp.png)
+![Supplement: timber stopped at the end](figs/supp.png)
+
+Timber stopped after 4 hours (Wd9998) in the three cases; the colours do not include floating
+timber. In the panel titles, "left in the town" is the sum of the timber stopped and afloat in
+the town, and "afloat seaward" is the timber afloat seaward of the town.
 
 | Case | Maximum timber in the town | Reach (share of the town) | Left in the town after 4 hours (stopped + floating) | Afloat in the harbour and yard area | Carried offshore |
 |---|---:|---:|---:|---:|---:|

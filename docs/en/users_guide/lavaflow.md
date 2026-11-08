@@ -556,8 +556,9 @@ The labels in the Basis column are explained in [How to read the basis of a defa
   of real domes are often slopes of broken blocks fallen from the cracked
   surface (talus), and neither growth from inside nor collapse into
   pyroclastic flows is computed, so what can be computed is an estimate of
-  the shape at rest (a collapse can be given separately with f_release of
-  the debris flow model). The shape at rest does not depend on the
+  the shape at rest (a collapse can be given separately with the instantaneous
+  mobilization of the debris flow model, by giving the failure-depth map
+  fn_dbinit). The shape at rest does not depend on the
   viscosity, so to look only at the shape you can lower the viscosity to
   shorten the run (shorten the eruption by the same ratio and, when using
   solidification, raise lv_vsol and lv_wsol by the same ratio).

@@ -39,8 +39,8 @@ the phenomena easy to see; this is not a reproduction of a particular volcano.
 
 Schematic (not computed results). (a) A lava flow stops by its yield stress, and the stopped lava
 solidifies into terrain. (b) Flows from shifting vents with varying volumes pile up into a
-shield. (c) The shape at rest from one vent is set by the yield stress; a large yield stress
-gives a lava dome.
+shield. (c) The shape at rest from one vent is set by the yield stress; for the same volume, a
+larger yield stress gives a higher, narrower lava dome.
 
 | Real phenomenon | Representation in ENCflow | Settings |
 |---|---|---|
@@ -134,7 +134,7 @@ exaggeration about 25×). (d) Time evolution of the profile of solidified lava i
   `lv_vsol` below which lava is considered stopped, not only on the yield stress. With a ten
   times smaller threshold for S2 (5×10⁻⁷ m/s), lava is slow to be judged stopped and does not
   finish stopping within the same run time (21% of the erupted volume is still flowing at the
-  end). The slope at that time was 2.8°, gentler than the 3.5° with a threshold of 5×10⁻⁶ m/s.
+  end). The slope at that time is 2.8°, gentler than the 3.5° with a threshold of 5×10⁻⁶ m/s.
   The shape after the lava has fully stopped has not been checked. The effect is smaller than
   that of the tenfold yield stress (slopes 1.0° and 3.5°), but the numbers are a rough guide
   that includes the choice of the threshold.
@@ -160,7 +160,7 @@ and the analytic plastic dome; the red dashed line is the case with solidificati
   lava back, so the center becomes 43 m (16% higher than the analytic solution). This is the
   effect of a numerical closure, the stop-detection threshold, not a computation of cooling and
   solidification. A smaller threshold approaches the shape without solidification, but takes
-  longer to finish stopping (with lv_vsol = 10⁻⁷ m/s, 46% of the erupted volume had still not
+  longer to finish stopping (with lv_vsol = 10⁻⁷ m/s, 46% of the erupted volume has still not
   solidified at 6×10⁶ s).
 
 ## What this model cannot represent (differences from the real phenomena)
@@ -178,7 +178,8 @@ and the analytic plastic dome; the red dashed line is the case with solidificati
   fallen pyroclastics and a foot of material washed down by rain, cannot be made with lava alone.
 - **Talus, growth from inside, collapse and pyroclastic flows of lava domes**: what can be
   computed is an estimate of the shape at rest held by the yield stress (a collapse can be given
-  separately with `f_release` of the debris flow model).
+  separately with the instantaneous mobilization of the debris flow model, which takes a
+  collapse-depth distribution `fn_dbinit`).
 - **Time**: the viscosity is larger than real and the repose is shortened, so the days inside
   the computation are not the duration of real eruptions.
 - **Grid**: on the 100 m grid one lava lobe is a few cells wide. The computation uses the

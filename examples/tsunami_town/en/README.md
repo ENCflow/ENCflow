@@ -214,7 +214,13 @@ change how house destruction is decided.
 
 ![Supplement: houses destroyed](figs/supp_damage.png)
 
+Houses destroyed at 60 minutes (the fraction turned into debris) in the 4 cases. The panel titles
+give the amount and share of the house stock destroyed. Black = seawall, dashed = opening.
+
 ![Supplement: remaining houses and floating debris](figs/supp_ledger.png)
+
+From the ledger (bldgdebris.csv), left: remaining house stock; right: floating debris over time
+(1000 m³). The two load-criterion cases nearly coincide.
 
 | Case | Houses destroyed (all / seaward / middle / inland) | Max inundation depth in the town (max / mean) | Debris carried offshore |
 |---|---:|---:|---:|
@@ -224,12 +230,13 @@ change how house destruction is decided.
 | Load criterion + driftwood | 60 / 83 / 66 / 30 % | 4.62 / 3.64 m | 19,558 m³ |
 
 - **Porosity feedback**: when the sites of destroyed houses let the flow through, the water
-  spreads over a larger area, the level falls and inland destruction decreases (100 % → 96 %).
-  Without the feedback the town fills as a "narrow container with 0.6 porosity" and the maximum
-  inundation depth reaches 5.58 m. With the feedback, the debris going offshore with the backwash is also
-  only two thirds (23 thousand against 34 thousand m³). Which is closer to a real disaster area depends on whether the sites of destroyed
-  houses become "open ground that lets the flow through" or stay "blocked by debris" (this model
-  assumes the former).
+  spreads over a larger area, the level falls and inland destruction decreases (inland 100 % →
+  89 %; 100 % → 96 % overall). Without the feedback the town fills as a "narrow container with
+  0.6 porosity" and the maximum inundation depth reaches 5.58 m. With the feedback, the debris
+  going offshore with the backwash is also only two thirds (23 thousand against 34 thousand m³).
+  Which is closer to a real disaster area depends on whether the sites of destroyed houses become
+  "open ground that lets the flow through" or stay "blocked by debris" (this model assumes the
+  former).
 - **Destruction criterion**: with the load hV² criterion, destruction concentrates where the flow
   is strong (the path of the flow entering through the opening, where water falls over the
   seawall) and decreases inland (60 % in all). Houses do not break in standing water. The

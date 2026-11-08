@@ -117,13 +117,9 @@ def _logs(ax, x0, x1, y, n=6, color=C_LOG):
         ax.add_patch(plt.Rectangle((xc - 0.18, y - 0.06), 0.36, 0.12, color=color, angle=8 * (k % 3 - 1)))
 
 
-def _house(ax, x, y, broken=False):
-    if broken:
-        ax.plot([x, x + 0.5], [y, y + 0.35], color=C_HOUSE, lw=2)
-        ax.plot([x + 0.1, x + 0.55], [y + 0.3, y], color=C_HOUSE, lw=2)
-    else:
-        ax.add_patch(plt.Rectangle((x, y), 0.5, 0.45, facecolor="w", edgecolor=C_HOUSE, lw=1.2))
-        ax.add_patch(plt.Polygon([(x - 0.05, y + 0.45), (x + 0.25, y + 0.75), (x + 0.55, y + 0.45)], color=C_HOUSE))
+def _house(ax, x, y):
+    ax.add_patch(plt.Rectangle((x, y), 0.5, 0.45, facecolor="w", edgecolor=C_HOUSE, lw=1.2))
+    ax.add_patch(plt.Polygon([(x - 0.05, y + 0.45), (x + 0.25, y + 0.75), (x + 0.55, y + 0.45)], color=C_HOUSE))
 
 
 def _section(ax, wall_h, yard_x, surge_h, logs_town, title, gate_jet=False, held=False):
@@ -139,7 +135,7 @@ def _section(ax, wall_h, yard_x, surge_h, logs_town, title, gate_jet=False, held
             ax.plot([xs, xs], [-2.0, -1.2], color="0.3", lw=1.5)
         ax.text(np.mean(yard_x), -2.7, T("係留・柵で留める", "held by mooring and fences"), ha="center", fontsize=8)
     for xh in (6.2, 7.6, 9.0, 10.4):
-        _house(ax, xh, np.interp(xh, x, ground), broken=(logs_town and xh < 8))
+        _house(ax, xh, np.interp(xh, x, ground))
     if logs_town:
         _logs(ax, 5.6, 8.6, surge_h, n=4)
         ax.annotate("", xy=(8.8, surge_h + 0.35), xytext=(3.2, surge_h + 0.35), arrowprops=dict(arrowstyle="-|>", color=C_LOG, lw=2))
@@ -157,8 +153,8 @@ def mechanism():
     gs = fig.add_gridspec(2, 3, height_ratios=[1.25, 1])
     ax = fig.add_subplot(gs[0, :])
     _section(ax, 1.5, (2.0, 4.2), 3.5, True,
-             T("(a) 高潮で水位が上がると、貯木場の材木が浮き上がって流れ出し、防潮壁を越えて市街地の家屋を壊す",
-               "(a) As the surge raises the water, timber in the yard floats free, crosses the seawall and damages houses"))
+             T("(a) 高潮で水位が上がると、貯木場の材木が浮き上がって流れ出し、防潮壁を越えて市街地へ入る",
+               "(a) As the surge raises the water, timber in the yard floats free, crosses the seawall and enters the town"))
     ax.text(0.2, 3.8, T("高潮", "storm surge"), fontsize=9, color="#2a78d6")
     ax.text(3.1, -1.4, T("貯木場", "timber yard"), fontsize=9, ha="center")
     ax.text(4.8, 1.8, T("防潮壁", "seawall"), fontsize=8, ha="center")
