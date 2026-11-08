@@ -28,9 +28,9 @@ on an idealised coast with a bay. No code changes (settings only).
 
 | Segment | Position and geometry | Slip | Time | Effect |
 |---|---|---|---|---|
-| 1 deep (beneath the coast) | upper edge x = 60 km, depth 8 km; width 40 km; dip 20° | 5 m | t = 0, 20 s | coast to bay subsides 0.5–0.6 m; the outer shelf (x ≈ 40–60 km) is uplifted 0.7–1.4 m |
+| 1 deep (beneath the coast) | upper edge x = 60 km, depth 8 km; width 40 km; dip 20° | 5 m | t = 0, 20 s | coast to bay subsides 0.4–0.6 m; the outer shelf and slope (x ≈ 40–65 km) are uplifted 0.9–2.2 m (with the subsidence from the offshore fault, the final displacement is 0.7–1.4 m) |
 | 2 shallow (offshore) | upper edge x = 100 km, depth 5 km; width 30 km; dip 15° | 8 m | t = 30 s, 20 s | main tsunami (3.4 m uplift offshore, −1.4 m subsidence) |
-| 3 splay fault (south of the bay mouth) | upper edge x = 22 km, y = 15 km, depth 1 km; width 8 km; dip 60° | 2 m | t = 0, 10 s | the cape and the surrounding shelf are uplifted 0.5–0.8 m |
+| 3 splay fault (south of the bay mouth) | upper edge x = 22 km, y = 15 km, depth 1 km; width 8 km; dip 60° | 2 m | t = 0, 10 s | the cape and the surrounding shelf are uplifted by up to 1.0 m (with the subsidence from the deep segment, the final displacement is up to 0.6 m) |
 
 | Case | Settings | Meaning |
 |---|---|---|
@@ -40,7 +40,7 @@ on an idealised coast with a bay. No code changes (settings only).
 
 ```
 make                        # links, z.txt, bm/ (fault2disp), bm_off/
-./encflow param_full.txt    # 20 s each (gfortran, 4 threads; dt = 1.5 s, 60 min)
+./encflow param_full.txt    # about 30 s each (gfortran, 4 threads; dt = 1.5 s, 60 min)
 ./encflow param_inst.txt
 ./encflow param_offshore.txt
 python3 plot_results.py     # figs/*.png and tables
@@ -83,9 +83,11 @@ the land at the bay head is 2.94 m with time history, 3.02 m instantaneous and
   drops with the subsidence (−0.6 m), and its recovery by inflow from the
   surroundings becomes a positive wave as it is. The land at the bay head floods
   from 27.5 min (38.9 min with the offshore fault only), with a maximum flood
-  depth of 3.0 m (2.1 m offshore only). The subsided land remains under water
-  after the tsunami has receded (depth 0.7 m at 60 min; the difference from the
-  1.0 m residual with the offshore fault only is the difference in bed elevation).
+  depth of 2.9 m (2.1 m offshore only). The subsided land (ground 0.38 →
+  −0.18 m) lies below sea level, and water remains after the tsunami has
+  receded (level 0.72 m, depth 0.90 m at 60 min). In the offshore-only case the
+  ground stays above sea level (0.37 m), and the depth of 0.63 m (level
+  1.00 m) at 60 min is water still draining away.
 - **Response inside the bay**: the inflow into the subsided area and the
   offshore tsunami overlap inside the bay, and the maximum level at the bay head
   is 4.3 m (3.6 m offshore only). At the bay mouth the time-history case gives

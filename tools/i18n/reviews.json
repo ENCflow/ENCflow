@@ -2732,9 +2732,9 @@
     {
       "source": "examples/tsunami_coast/README.md",
       "target": "examples/tsunami_coast/en/README.md",
-      "source_sha256": "b69128638a9c1271af182234a1dc6055d39b583d141eb6f166af22bf8552b6cc",
-      "target_sha256": "450326d58648e9f97bf01c192e76b393cacfcf965c38153616fecda3963fc454",
-      "reviewer": "Claude (Claude Code session; removed development history from both versions in parallel and compared the edited passages, headings, tables and numbers; no model execution)",
+      "source_sha256": "ca59e5029e358d8704a6f5e73cddb71a02069ae2b6f335a7a6309eb6732f6bbb",
+      "target_sha256": "b63af40da83a480fb1b41627aef2f01cc25d18e015d69a0f8948ec4a350665b7",
+      "reviewer": "Claude (Claude Code session; corrected both versions in parallel against a rerun of the three cases and single-segment fault2disp runs, and compared the edited passages and numbers)",
       "method": "assistant",
       "reviewed_on": "2026-11-08"
     },
