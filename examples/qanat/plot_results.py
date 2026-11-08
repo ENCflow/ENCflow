@@ -317,9 +317,11 @@ def laws():
     ax.plot(dh, qcond(hfull), color="0.45", lw=1.2, ls=":", label=T(f"満水(水深 {hfull:g} m)", f"full (depth {hfull:g} m)"))
     ax.axvline(dhb, color=C_TUNNEL, lw=1.3, ls="--")
     ax.axvline(eps_h, color="0.45", lw=0.9)
-    ax.text(dhb * 0.93, 0.03, T(f"床の勾配 {dhb / DX:g} × {DX:g} m\n= {dhb:g} m(等流)", f"floor gradient\n{dhb / DX:g} × {DX:g} m = {dhb:g} m\n(uniform flow)"),
-            ha="right", va="bottom", color=C_TUNNEL, **tx)
-    ax.text(eps_h * 1.08, 0.03, f"gwc_eps_h = {eps_h:g} m", ha="left", va="bottom", color="0.35", **tx)
+    # 2 本の縦線の札は、互いに外側へ置く(gwc_eps_h が床の勾配の水位差より小さいか大きいかで入れ替える)
+    right = eps_h < dhb
+    ax.text(dhb * (1.07 if right else 0.93), 0.03, T(f"床の勾配 {dhb / DX:g} × {DX:g} m\n= {dhb:g} m(等流)", f"floor gradient\n{dhb / DX:g} × {DX:g} m = {dhb:g} m\n(uniform flow)"),
+            ha="left" if right else "right", va="bottom", color=C_TUNNEL, **tx)
+    ax.text(eps_h * (0.93 if right else 1.08), 0.03, f"gwc_eps_h = {eps_h:g} m", ha="right" if right else "left", va="bottom", color="0.35", **tx)
     ax.text(1.15e-3, 0.0125, T("線形化した枝(q ∝ ΔH)", "linearized branch (q ∝ ΔH)"), color="0.35", **tx)
     ax.text(0.95, 0.0125, T("√ 則(q ∝ √ΔH)", "square-root law (q ∝ √ΔH)"), color="0.35", ha="right", **tx)
     ax.text(1.15e-3, 900, T("$q = C f\\sqrt{\\Delta H/\\Delta s}$($\\Delta H \\geq \\varepsilon_h$)\n"

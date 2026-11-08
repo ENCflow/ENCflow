@@ -2480,18 +2480,18 @@
     {
       "source": "examples/qanat/README.md",
       "target": "examples/qanat/en/README.md",
-      "source_sha256": "cdc035846dda16f29326c8b3ebc777781a83aaabd86ac7b77f60f8e3143a1db9",
-      "target_sha256": "0c3c4b5295aad972fedaba9086d56a4a88408fe4b1915cc0098bd922c77725e1",
-      "reviewer": "Claude (Claude Code session; checked the figures' rules against src and param files, and compared the added captions sentence by sentence)",
+      "source_sha256": "0aec398d008c0cee66b1c837b826cc9092f93c575201f89071fbe3030d67adbf",
+      "target_sha256": "3f87310e7b5f5f50d4552b37530142c82abfdfcbbddb9be1164bc7f6851e84fa",
+      "reviewer": "Claude (Claude Code session; reran all cases with the old and new settings, checked that the old settings reproduce the previous README, and replaced each number from the new results in both versions)",
       "method": "assistant",
       "reviewed_on": "2026-11-08"
     },
     {
       "source": "examples/qanat/figs/laws.png",
       "target": "examples/qanat/en/figs/laws.png",
-      "source_sha256": "45bc079b4773d796079953c5d82ec7d3a5080005f65af93304e111a8fd94c77f",
-      "target_sha256": "f0639243705cf49770906e5251558661bfdba4dbbec2b8f5b0adb27471630ff8",
-      "reviewer": "Claude (Claude Code session; both drawn by the same script from the same inputs; compared every label and value)",
+      "source_sha256": "ec47b2a4ff75e7920f7e480b916f5e2819383a3b6f96ff1beb895de537c59ba4",
+      "target_sha256": "1107071f61da36350e28307e5531e05e18f2c582873d1cb07b0cd009dbf11831",
+      "reviewer": "Claude (Claude Code session; both drawn by the same script from the same results; compared every label and value)",
       "method": "assistant",
       "reviewed_on": "2026-11-08"
     },
@@ -2507,29 +2507,29 @@
     {
       "source": "examples/qanat/figs/plan.png",
       "target": "examples/qanat/en/figs/plan.png",
-      "source_sha256": "2e50a6cce10f7bb5b98707e3f175ffa93144cf4465d26ada6e953e6e2d8bdc9d",
-      "target_sha256": "dfba465ccc49c4332a063c832406f6c6081b21e66c85c55f8c03990de7fa5e3c",
-      "reviewer": "Claude (Claude Code session; example reruns with f_opening_dynamic default 3)",
+      "source_sha256": "ffe56aff5eb0264e0424b1a1ed0d47ee7b670db70c83b63f66d41d78e4475eb5",
+      "target_sha256": "3e42ca9ffbff26e2ae2176b9749774fd3594316d815e513d1f6e56673626f9cd",
+      "reviewer": "Claude (Claude Code session; both drawn by the same script from the same results; compared every label and value)",
       "method": "assistant",
-      "reviewed_on": "2026-10-31"
+      "reviewed_on": "2026-11-08"
     },
     {
       "source": "examples/qanat/figs/profile.png",
       "target": "examples/qanat/en/figs/profile.png",
-      "source_sha256": "3720e2011b21457e374bd37c75fa58b1451ee6de61eafef81f46b841068d2b6a",
-      "target_sha256": "6ff9516b54503f65b479ac6c84b61782439b69cc705ee22be3fa4b03f3eeeabd",
-      "reviewer": "Claude (assistant)",
+      "source_sha256": "3b9c271e5a8b84eefd2fbc7c9021a9e3b53334d444dee7b9e8d534ae002236be",
+      "target_sha256": "cf5fce0e7742306eecee931ce85c586610e581c5c32dcd18e8dbaf6be027d65e",
+      "reviewer": "Claude (Claude Code session; both drawn by the same script from the same results; compared every label and value)",
       "method": "assistant",
-      "reviewed_on": "2026-11-02"
+      "reviewed_on": "2026-11-08"
     },
     {
       "source": "examples/qanat/figs/series.png",
       "target": "examples/qanat/en/figs/series.png",
-      "source_sha256": "c21dbf40b2633c3fd2e8edce63c3638d631efa251d2c8022b75b72d46ffb3ab3",
-      "target_sha256": "5cd79f1ce2359b462b8503a561e52e3c334b9f79d2fc7e6963996c77e0ed2c43",
-      "reviewer": "Claude (assistant)",
+      "source_sha256": "7e1d61e45ad4755b6de7df0f6f2a543824daf62f4493a6f8a57d174974cfa2e5",
+      "target_sha256": "747d38063ac4dd02665729fdd206052859a8a109ffac066df23a9cbd77a45352",
+      "reviewer": "Claude (Claude Code session; both drawn by the same script from the same results; compared every label and value)",
       "method": "assistant",
-      "reviewed_on": "2026-11-02"
+      "reviewed_on": "2026-11-08"
     },
     {
       "source": "examples/qanat/figs/setup.png",

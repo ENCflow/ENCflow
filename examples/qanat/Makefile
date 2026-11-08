@@ -1,6 +1,6 @@
 # ENCflow/examples/qanat/Makefile
 #   make        ../../bin/ の実行ファイルへのリンクと入力(gen_data.py)を作る
-#   make run    3 ケースを順に計算する(1 ケース 1 スレッドで 25 分ほど)
+#   make run    3 ケースを順に計算する(1 ケース 1 スレッドで 40 分ほど)
 #   make clean  リンクと生成物を削除する
 
 TOPDIR	= ../..
