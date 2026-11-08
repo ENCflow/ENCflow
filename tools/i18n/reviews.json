@@ -2318,9 +2318,9 @@
     {
       "source": "examples/nest_reflect/README.md",
       "target": "examples/nest_reflect/en/README.md",
-      "source_sha256": "0e1ae6de9cfb342fee07e90e0ed4dde8a9c4d0cbb4c79a8c1ea62223765ba2db",
-      "target_sha256": "fcae2f476eb77a3abd2a5a5ab308cef9d4d746824e68919992e1cdd852bdfbf1",
-      "reviewer": "Claude (Claude Code session; removed development history from both versions in parallel and compared the edited passages, headings, tables and numbers; no model execution)",
+      "source_sha256": "a89544d326de4237784b171b38afbed0d3c9761b8bb3a59e2c87f92ff4115774",
+      "target_sha256": "d71c8d76fb8de28629f85fb1469d14d6753e137893f90d20c21d1b629bf5c23a",
+      "reviewer": "Claude (Claude Code session; corrected both versions in parallel against a rerun of all 17 runs with the current build (analyze.py, analyze_nh.py, run logs, a debug print of the NH margin), and compared the edited tables, passages and numbers)",
       "method": "assistant",
       "reviewed_on": "2026-11-08"
     },
