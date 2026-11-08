@@ -13,6 +13,8 @@ acceleration of morphological time.
 Debris flows, slope failure and the moving bed layer are in
 [Debris flow, slope failure and moving bed layer](massflow.md). The
 implementation is in `src/m_geomorph*.f90` (one submodule per process).
+Explanatory figures and graphs of the equations are mostly in the sections of the chapter; this page has the
+figures of the transport formulas and equilibrium concentration and of the adaptation length of suspended sediment.
 
 ## 1. Common framework
 
@@ -122,8 +124,8 @@ with the 5-point stencil). Verification: [test/stencil9](../../../test/stencil9/
 (on a hill with σ = 2Δ, the difference between the axis-side and diagonal cells at the
 same distance goes from −1.92 % to −0.03 %; the decay in strips one and three cells
 wide agrees with the exact discrete solution to 1e-14; 7.5e-4 m against the
-analytical solution for a well-resolved hill). The default is 0; whether to change it
-is decided after checking the results (developer.md §96).
+analytical solution for a well-resolved hill). The default is 1/3, changed from 0 on
+2026-11-05 (developer.md §96).
 
 **Depth-dependent creep (`creep_hstar` > 0)**:
 
@@ -564,6 +566,16 @@ form, which has no published value, calibrated in
 Verification: the same test, total solid conserved to 2.2e-15 with both
 equilibrium formulas.
 
+![Adaptation length of suspended sediment: distance to approach the equilibrium, L = q/(β w_f)](../../figs/sediment_adapt_en.png)
+
+Solving the exchange above in steady uniform flow, the concentration approaches the equilibrium $`C_{eq}/\beta`$
+over the distance $`L = q/(\beta w_f)`$ ($`q = hV`$) (panel (a); the continuous solution that configurations 3
+and 4 of [test/suspend](../../../test/suspend/en/README.md) compare with). $`L`$ does not depend on the entrainment
+formula and is set by the settling velocity. Panel (b) plots $`L`$ against the grain size for $`q`$ = 1 m²/s: tens
+of metres for fine sand, close to a cell size, and kilometres for silt and mud flocs, so mud travels far from where
+it was entrained before it settles. The curves evaluate the expressions for illustrative values; they are not
+computed results.
+
 ## 5. Hillslope erosion (f_wash)
 
 Wet ($`h > d_d`$) cells outside channels ($`r_w = 0`$) release sediment by
@@ -598,7 +610,8 @@ the shares that would fall outside the domain or on sea cells are returned
 to the source cell, so $`\sum_i \Delta z_i = -\sum_j e_j`$: the total solid is
 conserved). The suspended sediment $`h_s`$ enters the source cell $`j`$.
 $`\ell_w`$ is the width of the rills (flow paths), approximated as a fixed
-value independent of discharge.
+value independent of discharge. The figure of where it acts (sharing with dry-slope erosion and channels), the detachment rate and the shape of
+the kernel is in [hillslope erosion in the chapter](geomorph.md#hillslope-erosion-f_wash).
 
 ## 6. Dry-slope erosion (f_splash)
 
@@ -665,7 +678,7 @@ same partition rule as `creep_diagratio` of the creep; invalid neighbours are mi
 by the cell's own value, the same convention as the 5-point stencil), and on a hill with
 σ = 2Δ the difference in $`\kappa`$ between the axis-side and diagonal cells at the same
 distance goes from −8.4 % to −0.27 % (with ℓ = 2 m, from +3.3 % to +0.13 %;
-[test/stencil9](../../../test/stencil9/en/README.md); the default is 0; developer.md §96).
+[test/stencil9](../../../test/stencil9/en/README.md); the default was changed from 0 on 2026-11-05; developer.md §96).
 The defaults $`k_r`$ = 0.0005 and $`k_t`$ = 0.05 are the medians of the tests
 (**empirical**); verification is
 [test/splash](../../../test/splash/en/README.md) (all digits agree with the

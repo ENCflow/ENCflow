@@ -14,6 +14,8 @@ import matplotlib
 matplotlib.use('Agg')
 from matplotlib import pyplot as plt
 from matplotlib.patches import Rectangle, Polygon, Circle, FancyArrowPatch
+import re
+from matplotlib.font_manager import FontProperties
 from _schematic import drawing_style, text, block, line, arrow, INK, MUTED, RULE
 
 DPI = 150
@@ -23,6 +25,54 @@ SOIL, ROCK, WATER = '#dfc58e', '#d4d1c9', '#d7eaf5'
 BLUE, SED, MOVING, GREEN = '#287ca5', '#ad5b29', '#da9760', '#52744b'
 TALUS, PANEL, SKY = '#b98d5f', '#f4f3ee', '#eef5fa'
 ORANGE = '#eb6834'
+
+
+# Line-breaking rules for kblock: no line starts with a closing mark, no line ends with an opening one.
+CLOSE = set('。、,.)）」』]】:;!?%・…')
+OPEN = set('(（「『[【')
+NBSP = '\u00a0'
+# Formulas stay on one line: spaces around binary operators become no-break spaces, and runs joined by them are one token.
+GLUE = re.compile(r' ([=+−/×<>≤≥∝]) ')
+_F = r'(?:[^\s\u3000-\u30ff\u3400-\u9fff\uff00-\uffef]|\u00a0)'   # formula characters (no CJK, no full-width)
+TOKEN = re.compile(_F + r'*\u00a0' + _F + r'*'
+                   r'|[0-9]+(?:[.][0-9]+)?(?:[-–][0-9]+(?:[.][0-9]+)?)?|[A-Za-z_][A-Za-z0-9_]*(?:=[0-9.]+)?|\s+|.')
+
+
+def kwrap(ax, s, width, size=9, weight='normal'):
+    """Like _schematic.wrap (renderer-measured), with the two line-breaking rules above."""
+    renderer = ax.figure.canvas.get_renderer()
+    px = abs(ax.transData.transform((width, 0))[0] - ax.transData.transform((0, 0))[0])
+    fp = FontProperties(family=matplotlib.rcParams['font.family'], size=size, weight=weight)
+
+    def fits(t):
+        return renderer.get_text_width_height_descent(t, fp, False)[0] <= px
+    lines = []
+    for par in s.split('\n'):
+        if not par:
+            lines.append(''); continue
+        par = GLUE.sub(NBSP + r'\1' + NBSP, par)
+        cur = ''
+        for tok in TOKEN.findall(par):
+            cand = cur + tok
+            if not cur or fits(cand) or tok in CLOSE:
+                cur = cand
+                continue
+            if not tok.strip():
+                lines.append(cur.rstrip()); cur = ''
+                continue
+            head, carry = cur.rstrip(), ''
+            while head and head[-1] in OPEN:
+                carry, head = head[-1] + carry, head[:-1]
+            if head:
+                lines.append(head.rstrip()); cur = carry + tok
+            else:
+                cur = cand
+        lines.append(cur.rstrip())
+    return '\n'.join(lines)
+
+
+def kblock(ax, x, y, s, width, size=8.3, color=INK, weight='normal'):
+    return text(ax, x, y, kwrap(ax, s, width, size, weight), size=size, color=color, weight=weight)
 
 
 def canvas(height, width=WIDTH):

@@ -284,20 +284,20 @@
     {
       "source": "docs/users_guide/geomorph.md",
       "target": "docs/en/users_guide/geomorph.md",
-      "source_sha256": "2a21941be9eb3fe00830793e782fe7ac2740ed05cd61372af14f0b581bfdcbb3",
-      "target_sha256": "5f8560255cc712eece889cd72f4beeacd6cca8241d059ecf5ac287a64479a889",
-      "reviewer": "Claude (Claude Code session; corrected the position of the dissolution figure referred to in the water-amount summary (below, not above) in both languages; the rest of the pair is unchanged since the previous record)",
+      "source_sha256": "0428676fd3414b42dc8725304880a7c1b33917890f7e6a1b29e83c73570d06a9",
+      "target_sha256": "489ca967563f3437739824772caa87250f816d55fc2010ef2f50c9bd58123cff",
+      "reviewer": "Claude (Claude Code session; added the hillslope-erosion (f_wash) figure with its caption paragraph and compared the Japanese source with the English mirror for the added text; the rest of the pair is unchanged since the previous record)",
       "method": "assistant",
-      "reviewed_on": "2026-11-07"
+      "reviewed_on": "2026-11-08"
     },
     {
       "source": "docs/users_guide/geomorph_applications.md",
       "target": "docs/en/users_guide/geomorph_applications.md",
-      "source_sha256": "d89e6b5d6af5e1bbe3ba417284766c61bfee421bc88290596d6c2b4519ab3dec",
-      "target_sha256": "d58ecde4d69516d726007ce040db148917588add1ca3c76d1b6299a0651290d3",
-      "reviewer": "Claude (Claude Code session; geomorph chapter split, step 1: the six application setups moved to users_guide/geomorph_applications.md; compared the Japanese source with the English mirror for the moved text, the new pointer paragraphs and the re-targeted links; the rest of the pair is unchanged since the previous record)",
+      "source_sha256": "2a30003e46c927d0c6c5b34aad6c6fae37f82dafc44616669bcff1e6f824d152",
+      "target_sha256": "a50d4abb6701ea622d50b17d49aef42a7f50db93d5e177252e5e4bc6d3654fdd",
+      "reviewer": "Claude (Claude Code session; added four setup figures (river-mouth delta, volcanic mass flows and lahars, dense snow avalanche, sabo facilities) with caption paragraphs and two pointers (to the chapter's sea figure in §1, to the figure at the end of §4 in §3); compared the Japanese source with the English mirror for the added text; the rest of the pair is unchanged since the previous record)",
       "method": "assistant",
-      "reviewed_on": "2026-11-07"
+      "reviewed_on": "2026-11-08"
     },
     {
       "source": "docs/users_guide/glacier.md",
@@ -365,11 +365,11 @@
     {
       "source": "docs/users_guide/massflow.md",
       "target": "docs/en/users_guide/massflow.md",
-      "source_sha256": "3a57e5781a82c950c22b00ddde531bd7af57107374e7548b095c43e545782d92",
-      "target_sha256": "b16fd76325dc15e94b868325dd210b59d7152c58263bac18ba6b789143ecd39a",
-      "reviewer": "Claude (Claude Code session; compared the Japanese source with the English mirror for the slope-parallel evaluation of the resistance laws of mixture flows (developer.md §101): changed values, history notes and analytic formulas; rest unchanged since the previous record)",
+      "source_sha256": "93aa80dd1b471bb796e3c5885553c4fc7f7802457e4eb9d10a1f2a84bbf4052f",
+      "target_sha256": "868ba2a4a9954c29233f43f4625eb956a9119c3f9e776f240d578e6ae3ab16f5",
+      "reviewer": "Claude (Claude Code session; added two figures (single-layer mixture and its exchange with the bed; behaviour of the resistance laws) with caption paragraphs, a pointer in the intro and in §3, and compared the Japanese source with the English mirror for the added text; the English figure versions were drawn by the same scripts with translated labels; the rest of the pair is unchanged since the previous record)",
       "method": "assistant",
-      "reviewed_on": "2026-11-06"
+      "reviewed_on": "2026-11-08"
     },
     {
       "source": "docs/users_guide/nest.md",
@@ -455,11 +455,11 @@
     {
       "source": "docs/users_guide/sediment.md",
       "target": "docs/en/users_guide/sediment.md",
-      "source_sha256": "821c790858a000b576ee4459e87a05726cd9cfff129aa0501a47ad0f47411074",
-      "target_sha256": "77b6b3842086265a566d1cdb750f741d2f9bc6be7a6482248e7e5842f8a2dea2",
-      "reviewer": "Claude (Claude Code session; geomorph chapter split, step 2: mechanism details moved from the chapter to sediment.md (rockfall rules, longshore smoothing/shadow/river-mouth rule, fixation usage, slump blocks, steep-slope bias, dissolution water sources) with compact summaries left in the chapter, and the index entry updated; compared the Japanese source with the English mirror for the moved and rewritten text; the rest of each pair is unchanged since the previous record)",
+      "source_sha256": "ac28c4c184bce7c06571b3186f8d47d7854f666d43b0a9a0113a62535b96fd10",
+      "target_sha256": "ccfc9cb15749ce2b6362d1738c35f4da3e7f907f812ebc397a2f6e749eec05ff",
+      "reviewer": "Claude (Claude Code session; added the figure of the adaptation length of suspended sediment with its caption paragraph in §4, a pointer to the chapter's hillslope-erosion figure in §5 and a sentence on where the figures are in the intro; compared the Japanese source with the English mirror for the added text; the rest of the pair is unchanged since the previous record)",
       "method": "assistant",
-      "reviewed_on": "2026-11-07"
+      "reviewed_on": "2026-11-08"
     },
     {
       "source": "docs/users_guide/steep_slope.md",

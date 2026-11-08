@@ -433,6 +433,16 @@ solid volume is conserved; the suspended sediment `hs` enters the source cell), 
 is insufficient, the shortfall is discarded as bedrock exposure and reported at the end as
 "wet_lw spreading: solid volume lost to bedrock floor" (0 means strict conservation).
 
+![Hillslope erosion: where it acts, detachment rate, lateral spreading of the detachment depth](../../figs/geomorph_wash_en.png)
+
+Panel (a) shows how the work is divided: dry cells belong to dry-slope erosion (f_splash; the detached sediment
+leaves the system), wet cells outside channels to f_wash (the detached sediment goes to hs), and channel cells to
+bedload and suspended sediment. Panel (b) plots the detachment rate against the Shields number: below the threshold
+only the rain term acts, and above it the sheet-erosion term soon exceeds it (default coefficients; calibration
+assumed). Panel (c) is the Gaussian kernel of wet_lw: spreading the detachment gathered in one cell to its
+neighbours keeps the total. The curves and bars evaluate the expressions for illustrative values; they are not
+computed results.
+
 **Outputs for this section**: detached sediment rides in the surface `Hs0001...`; the loss of soil appears in `Sd0001...` and `Z0001...` ([Output and monitoring](#output-and-monitoring)).
 
 ## Dry-slope erosion (f_splash)
@@ -1287,12 +1297,16 @@ The three ways a field gets written (automatic / flag / riding on a flag) and th
 **How to read and check**
 
 - Sediment budget: what stays on the bed and slopes is
-  Σ(Z − Z0000) × f_w × A (f_w the channel area fraction: on channel-width
-  cells the bed change is concentrated on the channel bed f_w × A; 1
-  without width), what is in transport is Σ(Hs × gv × f_w × A) (gv × f_w
-  is written as A0000). In a closed domain without export their sum is
-  constant (export through open boundaries and capture by check dams are
-  extra). Z and Sd on channel-width cells are channel-bed values.
+  Σ(Z − Z0000) × f_w × A (bulk volume; f_w the channel area fraction: on
+  channel-width cells the bed change is concentrated on the channel bed
+  f_w × A; 1 without width), whose solid volume is (1 − λ) times that
+  (λ = fluv_porosity); what is in transport is Σ(Hs × gv × f_w × A) (solid
+  volume; gv × f_w is written as A0000). In a closed domain without export
+  and with morfac = 1, (1 − λ) × Σ(Z − Z0000) × f_w × A + Σ(Hs × gv × f_w × A)
+  is constant (export through open boundaries and capture by check dams are
+  extra; with morfac > 1 and suspended sediment or wash, only the bed side
+  of the exchange with the water column is multiplied by morfac, so it is
+  not constant). Z and Sd on channel-width cells are channel-bed values.
 - With accelerated morphological time (morfac), read `Z0001...` in
   morphological time (time of FILENUMBER.csv × morfac).
 - Saturation Hg / (sy0 × Sd) (post-processed from the groundwater Hg and
