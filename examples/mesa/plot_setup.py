@@ -192,7 +192,7 @@ def setup():
         (T("乾式侵食", "dry erosion"), T("f_splash(badland_round と同じ係数)", "f_splash (same as badland_round)")),
         (T("層理", "strata"), T("主ケース: 帽岩 z ≥ 17 m(0.05)、\n中間硬層 8〜10 m(0.3)、ほかは 1。\n対照: 層理なし", "main case: cap z ≥ 17 m (0.05),\nhard bed 8–10 m (0.3), others 1;\ncontrol: no strata")),
         (T("クリープ", "creep"), T("弱い D = 3×10⁻⁷ m²/s(裾の土の移動)", "weak D = 3×10⁻⁷ m²/s (soil at the foot)")),
-        (T("崩落", "rockfall"), T("対照の系列だけ(f_rockfall)", "only in the contrast series (f_rockfall)")),
+        (T("崩落", "rockfall"), T("補足 3 の系列だけ(f_rockfall)", "only in the supplement-3 series (f_rockfall)")),
         (T("時間", "time"), T("dt 2 s、地形更新 2 s × morfac 500\n48 h = T_geo 8.6×10⁷ s、4 h ごとに Z", "dt 2 s, update every 2 s × morfac 500\n48 h = T_geo 8.6×10⁷ s, Z every 4 h")),
     ]
     yv = 0.97

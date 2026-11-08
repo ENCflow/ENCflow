@@ -210,18 +210,24 @@ larger ℓ, so the stage of growth is aligned instead of the time). Lower left: 
 spacing-selection rule (centroid wavelength of Δz and valley spacing at T_geo = 1.8×10⁶ s
 and when the relief reaches 2 m, against ℓ; the grey line is the linear theory
 λ* = 4.4 ℓ). Lower centre: grid convergence for spl_lc = 2 m (Δx = 0.5 / 1 / 2 m). Lower
-right: terrain for Δx = 0.5 m and 2 m (T_geo = 3.6×10⁶ s).
+right: terrain for Δx = 0.5 m and 2 m (T_geo = 3.6×10⁶ s). For ℓ = 4 m and Δx = 2 m the
+relief does not reach 2 m before the end of the run (final 0.53 m and 1.96 m), so the map
+and points "when the relief reaches 2 m" for these two cases are the values at the end
+(T_geo = 2.2×10⁷ s and 5.4×10⁶ s).
 
 | Case | ℓ (m) | Δx (m) | T_geo = 1.8×10⁶ s: centroid wavelength of Δz / valley spacing / mean lowering (m) | When relief reaches 2 m (T_geo): centroid wavelength / valley spacing (m) / number / mean lowering (m) | Final: relief / maximum incision / mean lowering / valley head x (m) |
 |---|---|---|---|---|---|
 | param_grid | 0 | 1 | 3.3 / 3.5 / 7.5 | (9×10⁵ s) 3.4 / 3.5 / 66 / 4.9 | 1.02 / 15.0 / 12.5 / 0.5 (through the plateau) |
 | param_lc1 | 1 | 1 | 6.8 / 6.7 / 4.6 | (9×10⁵ s) 5.5 / 6.0 / 39 / 3.0 | 4.10 / 14.8 / 8.1 / 0.5 (through the plateau) |
 | param_lc2 | 2 | 1 | 10.1 / 14.5 / 3.0 | (2.7×10⁶ s) 10.9 / 13.2 / 17 / 4.6 | 3.74 / 14.5 / 6.5 / 30.5 |
-| param_lc4 (to T_geo 2.2×10⁷ s) | 4 | 1 | 4.2 / – / 1.7 (not yet grown) | (2.2×10⁷ s) 22.5 / 24.5 / 4 / 10.3 | 0.53 / 14.7 / 10.3 / 30.5 |
+| param_lc4 (to T_geo 2.2×10⁷ s) | 4 | 1 | 4.2 / – / 1.7 (not yet grown) | (2.2×10⁷ s; end of run, 2 m not reached) 22.5 / 24.5 / 4 / 10.3 | 0.53 / 14.7 / 10.3 / 30.5 |
 | param_lc2_dx05 | 2 | 0.5 | 9.6 / 11.8 / 3.8 | (2.7×10⁶ s) 10.4 / 11.8 / 19 / 5.4 | 4.55 / 14.5 / 7.9 / 22.8 |
-| param_lc2_dx2 | 2 | 2 | 10.8 / 15.4 / 2.0 | (5.4×10⁶ s) 12.8 / 15.1 / 14 / 4.9 | 1.96 / 13.9 / 4.9 / 37.0 |
+| param_lc2_dx2 | 2 | 2 | 10.8 / 15.4 / 2.0 | (5.4×10⁶ s; end of run, 2 m not reached) 12.8 / 15.1 / 14 / 4.9 | 1.96 / 13.9 / 4.9 / 37.0 |
 
 The plateau edge is at x = 40 m. The final time is T_geo = 5.4×10⁶ s except for param_lc4.
+"When relief reaches 2 m" is the first output at which the relief of the cliff-face zone
+exceeds 2 m; for the cases whose relief does not reach 2 m before the end of the run
+(param_lc4, param_lc2_dx2), `plot_results.py` uses the last output.
 
 - **With the grid curvature the spacing sticks to the grid**: with spl_lc = 0 the centroid
   wavelength is 3.4 m (≈ 3Δx), a checkerboard of bumps rises and an erosion front two cells
@@ -231,9 +237,12 @@ The plateau edge is at x = 40 m. The final time is T_geo = 5.4×10⁶ s except f
   diffusion term (hillslope creep) does not help: diffusion is also proportional to k²,
   so it only changes whether growth occurs and does not select a spacing.
 - **With ℓ the spacing is proportional to ℓ**: the centroid wavelength when the relief
-  reaches 2 m is 5.5 / 10.9 / 22.5 m for ℓ = 1 / 2 / 4 m (≈ 5–6 ℓ; linear theory
-  λ* = 4.4 ℓ; for ℓ = 4 m the valleys have already merged by then). Growth is slower for
-  larger ℓ (maximum growth rate ∝ 1/ℓ²), and ℓ = 4 m takes about 8 times as long as 2 m.
+  reaches 2 m is 5.5 / 10.9 m for ℓ = 1 / 2 m (≈ 5–6 ℓ; linear theory λ* = 4.4 ℓ). Growth
+  is slower for larger ℓ (maximum growth rate ∝ 1/ℓ²): for ℓ = 4 m the relief is still only
+  0.53 m at the end of the run, T_geo = 2.2×10⁷ s (about 8 times the time at which ℓ = 2 m
+  reaches a relief of 2 m), and the valleys have not yet grown. The centroid wavelength of
+  22.5 m and the valley spacing of 24.5 m (4 valleys) for ℓ = 4 m are values at this end
+  time, not at the 2 m stage, and do not compare the same stage of growth as ℓ = 1 / 2 m.
 - **Grid convergence**: solving ℓ = 2 m with Δx = 0.5 / 1 / 2 m, the centroid wavelength
   when the valleys form (T_geo = 1.8×10⁶ s) agrees at 9.6 / 10.1 / 10.8 m (the
   spacing-selection rule does not depend on the grid). On the other hand, the mean lowering

@@ -959,11 +959,11 @@
     {
       "source": "examples/badland/README.md",
       "target": "examples/badland/en/README.md",
-      "source_sha256": "6f76109d677ea6ba28d3bed60ff96d27c1bc12363587de781b93fa4b117a58c3",
-      "target_sha256": "107a52e966da99555c42fa7860cea4941168a17aa13927f31010891a2fbadba1",
-      "reviewer": "Claude (Claude Code session; Japanese source and English mirror updated together after recomputing the example: changed captions, table rows and notes compared line by line, numbers checked against the plot_results.py output; model run by the session)",
+      "source_sha256": "62d6af25ffef670d586b54b97974c3cf07a25cd10101d4a589aa00c15f4fc6c2",
+      "target_sha256": "831ad8b0e166f744cd1cf34fc36d421d11891c503fc3bae17692f8f7562d7f8e",
+      "reviewer": "Claude (Claude Code session; corrected both versions in parallel against the inputs, scripts and committed figures, and compared the edited passages and numbers)",
       "method": "assistant",
-      "reviewed_on": "2026-11-02"
+      "reviewed_on": "2026-11-08"
     },
     {
       "source": "examples/badland/figs/main_features.png",
@@ -1022,11 +1022,11 @@
     {
       "source": "examples/badland_round/README.md",
       "target": "examples/badland_round/en/README.md",
-      "source_sha256": "7a007b4a3115ef68f962aff2fe34bca87e0a319e15b0aa8ececaed51a23be322",
-      "target_sha256": "1c4d4b63129c89ed88ddedca2a1d19c8552264e89353df21c2983ec17d8a33ca",
-      "reviewer": "Claude (Claude Code session; Japanese source and English mirror written together and compared section by section, tables and numbers checked; no model execution)",
+      "source_sha256": "334840c5f74de12fe81c4f11c9c28f169f5d8da0ac3d560bbcb9fe49baca29d2",
+      "target_sha256": "8a59f22a7c8c71724ecdb636fd07d68ad85d1a1db1802f0c6df0d4e66d410a7d",
+      "reviewer": "Claude (Claude Code session; corrected both versions in parallel against the inputs, scripts and committed figures, and compared the edited passages and numbers)",
       "method": "assistant",
-      "reviewed_on": "2026-11-02"
+      "reviewed_on": "2026-11-08"
     },
     {
       "source": "examples/badland_round/figs/maps.png",
@@ -1157,9 +1157,9 @@
     {
       "source": "examples/badland_storm/README.md",
       "target": "examples/badland_storm/en/README.md",
-      "source_sha256": "9cae9f23950b9afd1e162654233a541436d8d2034af2076e1a818d20969ba50a",
-      "target_sha256": "733af83f3424482ca9825beddd168a92d9c9c5f2b66322a25decbe5815fd95bd",
-      "reviewer": "Claude (Claude Code session; removed development history from both versions in parallel and compared the edited passages, headings, tables and numbers; no model execution)",
+      "source_sha256": "c025ea659481fcb99183e159a2539a15b88f03b27f99572047b1b75642d2095a",
+      "target_sha256": "7e9f6a3cc309233a5317efe439a956c2ee459297a71d7361aaff18a570a96db9",
+      "reviewer": "Claude (Claude Code session; corrected both versions in parallel against the inputs, scripts and committed figures, and compared the edited passages and numbers)",
       "method": "assistant",
       "reviewed_on": "2026-11-08"
     },
@@ -1787,11 +1787,11 @@
     {
       "source": "examples/karst/README.md",
       "target": "examples/karst/en/README.md",
-      "source_sha256": "a6210e993bec0638f4e827f3bbc643772987c6e0dfcac67baa2e94d462cd91ab",
-      "target_sha256": "460082a1a7726762cebbee91e4cc6e1568ef17d5632266b5f310a449f8236cc7",
-      "reviewer": "Claude (Claude Code session; compared the Japanese source with the English mirror after the karst dissolution updates of 2026-11-03/04: talus dissolution, dissol_src 4/5, fn_dissol multiplier, tests H/I/talus, steady and stone-forest examples)",
+      "source_sha256": "8fedc8dfd9dd8782dc00a982cdf29a75f9a907a766eec00853875f82c7acf4ca",
+      "target_sha256": "56d37bdfe9800828d4d435048eddf533e4847cd81490cff120823a5354b6cc6d",
+      "reviewer": "Claude (Claude Code session; corrected both versions in parallel against the inputs, scripts and committed figures, and compared the edited passages and numbers)",
       "method": "assistant",
-      "reviewed_on": "2026-11-04"
+      "reviewed_on": "2026-11-08"
     },
     {
       "source": "examples/karst/figs/evolution.png",
@@ -2129,11 +2129,11 @@
     {
       "source": "examples/mesa/README.md",
       "target": "examples/mesa/en/README.md",
-      "source_sha256": "0eb8e566f4d5a572596e40c17fb8cf0553e3e158ada1843bcf32d974e28bc86a",
-      "target_sha256": "21a7673f58ad3ef93e6a135c5383cec049f296c11f1c4e0a997ac4e642940adb",
-      "reviewer": "Claude (Claude Code session; Japanese source and English mirror updated together after recomputing all 29 cases: corrected table values, the talus-volume interpretation and figure links compared line by line, values checked against the plot_results.py output and the logs; model run by the session)",
+      "source_sha256": "aaad44940a52cfd4ab489b922ee31e5ee3fe59296e7f851a840daeef4320711b",
+      "target_sha256": "65f9b67c78a447abfa15347a188a1a86250128346fa133b00500712b0537267a",
+      "reviewer": "Claude (Claude Code session; corrected both versions in parallel against the inputs, scripts and committed figures, and compared the edited passages and numbers)",
       "method": "assistant",
-      "reviewed_on": "2026-11-02"
+      "reviewed_on": "2026-11-08"
     },
     {
       "source": "examples/mesa/figs/maps.png",
@@ -2273,11 +2273,11 @@
     {
       "source": "examples/mesa/figs/setup.png",
       "target": "examples/mesa/en/figs/setup.png",
-      "source_sha256": "6ea8cc8328557e479c9153190d4bc8ec47f1a2294a5cf28e9e07ba2959cd5b47",
-      "target_sha256": "1b346cb559f30ba4b53480e47bb60f790b07a2e6783757db5b22ebc3365c4a3a",
-      "reviewer": "Claude (Claude Code session; schematic and setup figure drawn by plot_setup.py from input files only, Japanese and English images compared side by side: same data and layout, labels translated; no model execution)",
+      "source_sha256": "5bae0f27673fa34fedf544afe93fa4e78a6f5b63eab8741644cdc5084c5c5147",
+      "target_sha256": "a88353ce56a576778c9d9942a235c4132f73f5430cf90d7f02057a1568ecb994",
+      "reviewer": "Claude (Claude Code session; regenerated both from the same inputs and compared every label)",
       "method": "assistant",
-      "reviewed_on": "2026-11-02"
+      "reviewed_on": "2026-11-08"
     },
     {
       "source": "examples/mesa/figs/talus_dx4.png",
@@ -2550,6 +2550,15 @@
       "reviewed_on": "2026-11-03"
     },
     {
+      "source": "examples/stone_forest/README.md",
+      "target": "examples/stone_forest/en/README.md",
+      "source_sha256": "06fe0678efddbf1c308d85ddb1949c005b5b110c35213adc1b106662145fa305",
+      "target_sha256": "cdf4b0d7a22bb3f3a20a2f0f6f8438a3d2dbc6c9f979886b5fff616071dbdcbc",
+      "reviewer": "Claude (Claude Code session; full-text comparison of both versions, section by section, including tables and links)",
+      "method": "assistant",
+      "reviewed_on": "2026-11-08"
+    },
+    {
       "source": "examples/stratovolcano/README.md",
       "target": "examples/stratovolcano/en/README.md",
       "source_sha256": "e5cebe2ace2be355a547ffc2ee938d98ce12005a86bc72202e3510cae301acf5",
@@ -2678,9 +2687,9 @@
     {
       "source": "examples/tower_karst/README.md",
       "target": "examples/tower_karst/en/README.md",
-      "source_sha256": "3f538839cbc5e078333812a1fdfc27eecc71d563cdaa65783a3ad517b3e5523b",
-      "target_sha256": "d94ec43f21439dee7574516bf708835ac99c7f8039c2b7494fe00ec3976b84d5",
-      "reviewer": "Claude (Claude Code session; removed development history from both versions in parallel and compared the edited passages, headings, tables and numbers; no model execution)",
+      "source_sha256": "e5e1a3acc7ae356b8226a85b083611a2d77f5693154fb70f076ca31df1337040",
+      "target_sha256": "2629ae5fca04a1354ee0b11f1d4f2310ba9ddc6db7b12a113ae4036426a9f12d",
+      "reviewer": "Claude (Claude Code session; corrected both versions in parallel against the inputs, scripts and committed figures, and compared the edited passages and numbers)",
       "method": "assistant",
       "reviewed_on": "2026-11-08"
     },

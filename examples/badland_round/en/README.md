@@ -180,12 +180,14 @@ Overland flow is zero throughout, and the groundwater storage equals the cumulat
 (conservative form).
 
 - **No creep (advective only)**: the hills shrink with their crests kept sharp, and the sides
-  even steepen (initial 0.8 → 1.1 to 3.8). After T_geo ≈ 1.4×10⁷ s the hollow feedback lets
-  gullies cut the hills radially, and the hills are dissected, leaving a pinnacle in the
-  centre (sharp badlands of the Mancos type). That the gullies align with the grid axes and
-  diagonals is an artefact of grid anisotropy.
-- **D = 1×10⁻⁶ m²/s (L ≈ 8 m)**: the tops become convex, rounded caps and the sides become
-  gentler (0.08 to 1.0). **The smaller the hill, the smaller (rounder) its top curvature**: the
+  of the 24 / 15 / 9 m hills even steepen (initial 0.8 → 1.1 to 3.8; the smallest, 5 m hill
+  eases to 0.56). After T_geo ≈ 1.4×10⁷ s the hollow feedback lets gullies cut the hills
+  radially, and the hills are dissected, leaving a pinnacle in the centre (sharp badlands of
+  the Mancos type). That the gullies align with the grid axes and diagonals is an artefact
+  of grid anisotropy.
+- **D = 1×10⁻⁶ m²/s (L ≈ 8 m)**: the tops become convex, rounded caps and the sides of the
+  15 / 9 / 5 m hills become gentler (0.08 to 0.64; the 24 m hill, at 1.02, is slightly steeper
+  than the initial 0.8). **The smaller the hill, the smaller (rounder) its top curvature**: the
   H₀ = 5 m hill becomes a flat dome as a whole, the 9 m hill a rounded mound, and the 24 m hill
   keeps traces of gullies on its sides while having a rounded top. This is the "rounded
   crests, rounder for lower hills" type. A gentle apron of soil carried by creep forms at the

@@ -137,7 +137,7 @@ en/figs/ (`python3 plot_setup.py en`, `python3 plot_results.py [series] en`).
 ![Evolution of the terrain](figs/maps.png)
 
 Top: with cap rock, bottom: no strata. Shaded relief at T_geo = 0, 7.2×10⁶, 1.4×10⁷, 2.2×10⁷ s
-(red line = outline of the top of the cap rock z = 17 m).
+(red line = contour z = 17 m at the base of the cap rock = outline of where the cap rock remains).
 
 ![Evolution of the section](figs/sections.png)
 
@@ -168,16 +168,16 @@ volume = sediment that left the domain ÷ 0.6 (both cases).
 - **No strata**: by 7.2×10⁶ s the edge is already deeply cut into a star shape, and neither a flat
   top nor vertical cliffs are kept. By 1.4×10⁷ s the plateau surface has disappeared, dissected
   into radial ridges.
-- The intermediate hard bed (z = 8 to 10 m, factor 0.3) did not become a step (the soft beds go
+- The intermediate hard bed (z = 8 to 10 m, factor 0.3) does not become a step (the soft beds go
   down to the base level at once, so a bed 2 m thick with a factor of 0.3 does not remain within
   the cliff). Supplement 1 is the contrast with a thicker, harder bed.
 
 ## Supplement 1: does a bench appear with a thicker, harder intermediate bed?
 
-| Case | Intermediate hard bed | spl_cb | Retreat rate of the large plateau (R₀ = 30 m) (m/s) | Final height of the top of the large plateau (m) |
+| Case | Intermediate hard bed | spl_cb | Retreat rate of the large plateau (R₀ = 30 m) (m/s) | Height of the top of the large plateau (m) (T_geo 4.3×10⁷ s) |
 |---|---|---|---|---|
 | cap | z = 8–10 m, factor 0.3 | 32 | 1.2×10⁻⁶ (accelerating; dissected at 2.2×10⁷ s) | 2.5 |
-| bench | z = 6–10 m, factor 0.05 | 32 | 5.3×10⁻⁷ (linear) | 20 (still there at 8.6×10⁷ s) |
+| bench | z = 6–10 m, factor 0.05 | 32 | 5.3×10⁻⁷ (linear) | 20 |
 | bench2 | z = 5–10 m, factor 0.02 | 32 | 3.5×10⁻⁷ (linear) | 20 |
 | bench3 | z = 5–10 m, factor 0.02 | 0 | 1.9×10⁻⁷ (linear) | 20 |
 
@@ -206,8 +206,8 @@ plateau) (T_geo = 4.3×10⁷ s):
   from just below the cap rock to the top of the hard bed, so the drop at the edge of the cap rock
   falls from 20 m to 10 m, the S^1.5 erosion of the edge cells decreases, and the retreat becomes
   linear and 2 to 3 times slower; the amphitheatre-like notches of the edge (cap at 1.4×10⁷ s) do
-  not occur either. The large plateau keeps a flat top (20 m) until 8.6×10⁷ s, and the small plateau
-  goes from a butte to a pinnacle after 4.3×10⁷ s.
+  not occur either. At 4.3×10⁷ s the large plateau still keeps a flat top (20 m; cap: 2.5 m), and by
+  then the small plateau has gone from a butte to a pinnacle.
 - **Switching off the hollow amplification (bench3, spl_cb = 0) gives a bench**. A shoulder several
   metres wide runs all around at the top of the hard bed, z ≈ 10 m (the band of the hard bed 5 to
   9.5 m is 4 m wide, the soft band 10.5 to 17 m is 7 m), and in plan view the contours split into two
@@ -219,7 +219,7 @@ plateau) (T_geo = 4.3×10⁷ s):
 ## Supplement 2: do vertical cliffs and a bench coexist with saturated amplification (spl_ksat)?
 
 `spl_ksat`, which replaces κ in the hollow amplification $`1 + c_b\kappa`$ by the effective curvature
-$`\tilde\kappa = \kappa/(1 + \kappa/\kappa_s)`$, was added to the bench2 set-up, capping the
+$`\tilde\kappa = \kappa/(1 + \kappa/\kappa_s)`$, is added to the bench2 set-up, capping the
 amplification at 2.6 times (κ_s = 0.05) and 7.4 times (κ_s = 0.2) (over 100 times without
 saturation; no amplification = bench3).
 
@@ -380,10 +380,11 @@ above the step is also a target of column collapse) is compared.
 - **A vertical upper cliff and a wide step coexist (H_c = 15 m).** In the section (y = 50 m), the drop
   of 8 to 9 m from the cap rock to the top of the hard bed (z ≈ 11 to 12 m) fits within a horizontal
   2 to 4 m (a gentle slope of 14 m in rc2) and retreats in parallel. The step area is twice that of
-  rc2 and 20 to 40 times that without collapse, surrounding the plateau as a surface of debris on the
-  top of the hard bed (the azimuthally averaged "angle of the upper cliff" averages the step and the
-  edge and comes out at 30 to 50°, but in the section the edge of the step is vertical). The lower
-  cliff (below the hard bed) is a talus slope of 30 to 35°, the same as with the window version.
+  rc2 and 15 to 40 times that without collapse (4.3×10⁷ / 8.6×10⁷ s), surrounding the plateau as a
+  surface of debris on the top of the hard bed (the azimuthally averaged "angle of the upper cliff"
+  averages the step and the edge and comes out at 30 to 50°, but in the section the edge of the step
+  is vertical). The lower cliff (below the hard bed) is a talus slope of 30 to 35°, the same as with
+  the window version.
 - **However, the retreat of the edge is not controlled by the talus.** Raising the talus erodibility
   from 0.01 to 0.3 leaves the retreat rate of the edge at 3.1 to 3.2×10⁻⁷ m/s (almost the same as
   3.5×10⁻⁷ without collapse); only the total talus falls, 2846 → 97 m³. The upper cliff (10 m) is below

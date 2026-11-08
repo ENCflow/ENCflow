@@ -1,6 +1,6 @@
 ! バッドランド型の谷形成: 格子収束(README「格子収束」)。spl_lc = 2 m、Δx = 2 m
 !   param_lc2.txt と同じ地形・同じ係数を Δx = 2 m で解く(縁の雑音は 1 m の
-!   基準格子上の同じ実現)。間隔・下刻深が Δx によらず収束することを見る
+!   基準格子上の同じ実現)。間隔・下刻深の Δx への依存を見る
 !   実行: python3 make_terrain.py sweep --dx 2 && ./encflow param_lc2_dx2.txt
 &list_sysparam
   f_gridsystem = 0

@@ -171,11 +171,11 @@ control).
 | Water depth at the end of a downpour (m): median on land / maximum | – | 0.011 / 0.012 |
 | Sediment that left the domain by dry-slope erosion (m³) | 1.44×10⁵ | 3.5×10⁴ |
 
-**With overland flow, the valleys did not deepen and the plateau was not dissected.** In the
-control the valley heads retreat 42 m from the plateau edge in 25 cycles and the plateau is
+**With overland flow, the valleys do not deepen and the plateau is not dissected.** In the
+control the valley heads retreat 42.5 m from the plateau edge in 25 cycles and the plateau is
 dissected into comb-like ridges, whereas with overland flow they retreat only 5.5 m and the
-cliff face has only a row of shallow notches (relief 3.8 m; control 8.0 m). The valley spacing
-(11 to 12 m) hardly changes.
+cliff face has only a row of shallow notches (relief 3.8 m; control 6.0 m final, 8.0 m
+maximum). The valley spacing (11 to 12 m) hardly changes.
 
 The cause is that "dry-slope erosion does not act on cells covered with water". Writing two cycles
 every 5 minutes and following the fraction of wet cells (a run of param_storm.txt with tt = 7200
@@ -209,7 +209,7 @@ and the cliff stays a steep scarp with shallow notches.
 ### Result 2: plateau tilted 2 %
 
 Water ponding on a flat plateau is partly an artefact of the geometry (real plateaus slope gently
-towards the cliff edge), so the same comparison was made with the plateau tilted 2 % towards the
+towards the cliff edge), so the same comparison is also made with the plateau tilted 2 % towards the
 cliff, so that ponded water drains to the valley heads.
 
 ![Evolution of the terrain and difference, tilted plateau](figs/maps_tilt.png)
@@ -237,15 +237,15 @@ plateau: **with overland flow the valleys develop more slowly and the plateau is
 (retreat of the valley head 7.5 m; control 43.5 m).
 
 A variant with the hydraulics of overland flow only, with the wet erosion (f_wash, f_suspend) off
-(param_stormnowet_tilt.txt), gave almost the same result as the case with wet erosion (valley head
+(param_stormnowet_tilt.txt), gives almost the same result as the case with wet erosion (valley head
 53.5 m, relief 4.34 m). So **the wet erosion contributes almost nothing; the effect of overland
 flow is that "dry-slope erosion stops while water covers the surface"**. It works in two steps.
 
 1. Dry-slope erosion is proportional to the rainfall intensity P, so a 10-minute downpour of
    60 mm/h is equivalent to one hour of 10 mm/h; in the control (all infiltrates) the downpour
-   carries nearly half of the driving force of dry-slope erosion (10 mm/h of the 60-minute mean of
-   18.3 mm/h). Lowering the infiltration capacity turns this most effective rain into overland
-   flow and removes it from dry-slope erosion.
+   carries a little over half of the driving force of dry-slope erosion (10 mm/h of the
+   60-minute mean of 18.3 mm/h). Lowering the infiltration capacity turns this most effective
+   rain into overland flow and removes it from dry-slope erosion.
 2. After a downpour, the water on the plateau drains through the valley heads (amphitheatres), so
    the valley heads, where the hollow feedback is strongest, stay wet longest (the band along the
    plateau edge is wet until 20 minutes after the end of the downpour), and the retreat of the
@@ -289,12 +289,12 @@ rain infiltrating = result_dry_tilt).
 | Columns at x = 30 / 45 / 60 m: mean elevation (m) | 13.9 / 7.7 / 3.8 | – | 26.6 / 19.2 / 11.3 |
 | Same: y-direction relief (standard deviation) (m) | 10.9 / 6.4 / 4.0 | – | 2.0 / 2.8 / 2.3 |
 
-**The landform changed completely.** Whereas the control (dry only) is "deep valleys between sharp
+**The landform changes completely.** Whereas the control (dry only) is "deep valleys between sharp
 ridges dissecting the plateau like the teeth of a comb", with strong wet erosion:
 
 - The valley spacing is less than halved (5.4 m, 44 valleys) into a **dense gully network**, and the
-  valley heads cut into the plateau from the first cycle and retreat 50 m in 25 cycles (control 43 m,
-  and the control does not move until the 6th cycle).
+  valley heads cut into the plateau from the first cycle and retreat 50.5 m in 25 cycles (control
+  43.5 m, and the control does not move until the 6th cycle).
 - The valleys are shallow (relief about 2 m), and the cliff loses its 56° wall and is smoothed into
   a **gentle slope of gradient 0.5 to 1** (the mean elevation at x = 30 to 60 m is 7 to 13 m
   higher than the control = rather than the cliff retreating, the whole slope is lowered from the
@@ -318,7 +318,7 @@ spacing changes, the spacing changes and does not converge (result 4).
 
 ### Result 4: grid convergence of the gully spacing (Δx = 2 / 1 / 0.5 m)
 
-With the set-up of result 3 (strong wet erosion, tilted plateau), only the grid spacing was changed
+With the set-up of result 3 (strong wet erosion, tilted plateau), only the grid spacing is changed
 (param_storm_wet_dx2.txt / param_storm_wet.txt / param_storm_wet_dx05.txt). The initial
 perturbation is the same white noise on a 1 m grid mapped onto each grid (make_terrain.py --dx),
 and the comparison times are the 5th and 10th cycles (T_geo 9×10⁵ and 1.8×10⁶ s). The numbers of
@@ -362,7 +362,7 @@ Terrain at the 5th (top) and 10th (bottom) cycles for Δx = 2 / 1 / 0.5 m (colum
 
 ### Result 5: grid convergence with lateral spreading of detachment wet_lw = 2 m
 
-`wet_lw = 2.0` was added to the three grids of result 4 (the detachment depth evaluated in each
+`wet_lw = 2.0` is added to the three grids of result 4 (the detachment depth evaluated in each
 cell is distributed to the neighbouring cells with a Gaussian kernel of standard deviation 2 m
 before it is applied to the terrain = the flow path erodes as a rill about 2 m wide; the total
 solid volume is conserved) (param_storm_wet_lw*.txt; otherwise the same). The ledger "solid volume
@@ -394,10 +394,10 @@ gentle undulation.
 
 - **Grid convergence**: for Δx = 1 m and 0.5 m, relief 0.18 / 0.15 m, mean lowering 2.7 / 3.0 m,
   maximum incision 7.4 / 7.8 m and spacing of the undulation 8.4 / 7.0 m agree within 5 to 20 %
-  (in result 4 the spacing changed systematically 4.5 → 3.3 m and the mean lowering 5.0 → 6.2 m). Δx = 2 m (ℓ_w/Δx = 1) does not resolve the kernel on the grid and gives a
+  (in result 4 the spacing changes systematically 4.5 → 3.3 m and the mean lowering 5.0 → 6.2 m). Δx = 2 m (ℓ_w/Δx = 1) does not resolve the kernel on the grid and gives a
   different result (spacing 26 m, relief 0.38 m), so as with spl_lc, **ℓ_w/Δx ≥ 2** is needed.
 - **Reinterpreting result 3**: "pushing overland flow towards cutting the valley floors makes a
-  dense gully network" (spacing 5.4 m, 44 valleys) was a product of the grid: concentration on flow
+  dense gully network" (spacing 5.4 m, 44 valleys) is a product of the grid: concentration on flow
   paths one cell wide. Wet erosion with a width scale works **to smooth away** the deep valleys with
   sharp ridges that the dry hollow feedback makes. The conclusion of result 3, that within this
   model deep valleys with sharp ridges form only when almost no overland flow occurs, becomes
@@ -432,20 +432,19 @@ gentle undulation.
   so to make steps both ends of each interval are given (`prval` in the param files).
 - **morfac**: set to 50. With badland's 500, the positive feedback of flow concentration runs away
   within one update.
-- **Upper limit of the wet-erosion coefficients**: in a 5-cycle preliminary run, susp_esa = 10⁻³
-  broke down and 10⁻⁴ was stable.
+- **Upper limit of the wet-erosion coefficients**: with susp_esa = 10⁻³ the run breaks down
+  within 5 cycles, and with 10⁻⁴ it is stable.
 - **Time step for finer grids**: for Δx = 0.5 m, dt = 0.25 s (the same dt/Δx as Δx = 1 m) breaks
   down in the first downpour (without landform change it is stable with a maximum Courant number of
-  0.73; flow gathering into one-cell grooves exceeds a Courant number of 1). With dt = 0.125 s it ran
+  0.73; flow gathering into one-cell grooves exceeds a Courant number of 1). With dt = 0.125 s it runs
   10 cycles with a maximum Courant number of ≈ 1.0 to 1.2. Wet erosion has no cap on the change per
   update, so finer grids keep their stability through the time step of the flow.
 - The export by dry-slope erosion is 1.44×10⁵ m³ in the control and 3.5×10⁴ m³ with overland flow.
   The difference is mostly not transport by wet erosion but the dry erosion that stopped.
 - **Reproducibility of the numbers**: in the cases with wet erosion, differences of the size of
   rounding errors are amplified by the positive feedback of flow concentration, so the same
-  computation gives numbers a few percent different with different builds (optimization) (for
-  example, with f_opening_dynamic = 2 the relief of the case with overland flow of result 2 is 4.39 m
-  with -Ofast and 4.34 m with -O2). The tables give values computed with an -Ofast build.
+  computation gives numbers a few percent different with different builds (optimization). The
+  tables give values computed with an -Ofast build.
 
 ## Starting points for sensitivity experiments
 
