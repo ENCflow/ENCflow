@@ -279,7 +279,9 @@ architecture.md。このメモは「現在進行中・未完了の項目」だ�
      (2026-10-06 の結果)とデータが違う(拡大すると水位の時系列の山の形・終端の値、沿岸の遡上の
      尖りが違う。生成時は「目視で同一」としていた)。この 4 枚は英語図を外して英語 README から
      日本語図を共有する形に戻した(上の oneway_edge・nh_profile と同じ扱い)。日本語図・表を現行の
-     結果で作り直すかは上と同じ判断待ちで、作り直したら英語図も同じ結果から描く。deformation の
+     結果で作り直すかは上と同じ判断待ちで、作り直したら英語図も同じ結果から描く(tsunami_coast の
+     2 枚は 2026-11-08 に、日英とも現行の同じ結果から描き直して英語図を戻した。残りは tsunami_fault の
+     2 枚)。deformation の
      2 枚は与件(規定の地盤変位)の図で一致、levee_breach の 3 枚は日本語図と一致(2026-10-24・25 の
      同じ版の結果)。英語図のうち確認した 28 組(badland・badland_round・bedrock_cover・levee_breach・
      nest_reflect・tsunami の deformation・test/gwbed)は記録済み。test/gwbed は英語の題 2 つが
