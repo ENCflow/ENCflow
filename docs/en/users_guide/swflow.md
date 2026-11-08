@@ -54,7 +54,7 @@ safe combination for tsunamis, inundation and flood runoff alike.
 
 | Parameter | Default | Meaning |
 |---|---|---|
-| f_gridsystem | 0 | 0: ENC grid (default), 1: STG (staggered grid; legacy-compatible, for comparison only. New features and restart are not supported) |
+| f_gridsystem | 0 | 0: ENC grid (default), 1: STG (staggered grid; legacy-compatible, for comparison only. New features, restart, the domain mask and two or more MPI processes are not supported; a domain mask or two or more processes stop the run at initialization) |
 | f_govequation | 0 | 0: dynamic wave (advection + pressure; default), 1: diffusive wave (pressure only), 2: kinematic wave |
 | f_check_cfl | 1 | Courant number monitoring. 0: monitor only (no stop), 1: display the state and stop when Cn > 1 (default), 2: judge and stop on the advective Courant number ignoring the wave speed (the definition of the Cn column and Cn output also switches to the advective Cn) ([explanation](encgrid.md) §7) |
 

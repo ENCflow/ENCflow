@@ -11,7 +11,9 @@ walls), whether the advection scheme and the opening correction produce
 uniform-flow solution, the analytical solution of spatially varied flow and
 a straight channel (developer.md §68.8–68.32). There is no regression
 comparison with a reference; each experiment is judged by its check
-script (`Check_bendloss.py`, `Check_lateral.py`) and analytical values. It
+script (`Check_bendloss.py`, `Check_lateral.py`) and analytical values
+(`./Run.sh` finally runs the channel with lateral inflow and judges pass or
+fail on whether scheme 3 is within ±2% of the analytical solution). It
 is also the record of the experiments that gave the basis for adopting the
 default scheme (f_advection_scheme = 3, f_opening_dynamic = 1; the latter was changed to 2 on 2026-10-18 and to 3 on 2026-10-31, §68.38, §68.41) (the table
 of §68.19).
@@ -85,7 +87,7 @@ velocities amplifies the acceleration and deceleration 2.4 times
 | Flood-wave peak at 3.8 km (m³/s) | Without opening correction: 182.1 / 166.1; dynamic opening correction: 176.5 / 176.5 (scheme 1 / 3) | §68.13–68.14 |
 | Subgrid channel width W = 4 m | Scheme 3 agrees exactly with Manning (h 2.380 m, u 4.202 m/s) | §68.9, 68.11 |
 | Diagonal one-cell channel | Agrees with Manning when the width is specified (capped at the natural width 7.07 m) | §68.11 |
-| Channel with lateral inflow | Scheme 3 is 0.98–0.99 of the analytical solution, scheme 1 is 1.7–2.5 times it (becomes subcritical) | §68.17 |
+| Channel with lateral inflow | Scheme 3 is within 1% of the analytical solution (`./Run.sh` judges pass or fail at ±2%), scheme 1 is 1.7–2.6 times it (becomes subcritical) | §68.17 |
 | Stepped bed | The advection term carries the dissipation at the steps (a difference only for n = 0.03, Q 40 → 200) | §68.20 |
 
 Below are the detailed records of each experiment (the dates are the dates
@@ -243,13 +245,25 @@ through the side edges (no momentum in the flow direction) is compared with
 the solution of the ordinary differential equation of spatially varied flow
 (Chow). `python3 Make_lateral.py` generates the cases,
 `./encflow param_lat1r_s1.txt` etc. run them, and
-`python3 Check_lateral.py lat1r _s1 _s3` compares. Results of 2026-10-02
-(depth ratio ENC / physical solution at 1/2/3 km):
+`python3 Check_lateral.py lat1r _s1 _s3` compares (with `--tol 0.02` it exits
+with code 1 when a depth ratio at 1/2/3 km is outside 1 ± 0.02; `./Run.sh`
+judges lat1r and lat2r with scheme 3 this way). Results (depth ratio ENC /
+physical solution at 1/2/3 km):
 
 | | Scheme 1 | Scheme 3 |
 |---|---|---|
-| One-sided lateral inflow (lat1r) | 1.72 / 1.89 / 2.00 (becomes subcritical) | 0.992 / 0.992 / 0.992 |
-| Two-sided lateral inflow (lat2r) | 2.17 / 2.55 / 2.44 (unsteady) | 0.975 / 0.977 / 0.978 |
+| One-sided lateral inflow (lat1r) | 1.72 / 1.89 / 2.00 (becomes subcritical) | 0.999 / 0.999 / 0.998 |
+| Two-sided lateral inflow (lat2r) | 2.17 / 2.56 / 2.45 (unsteady) | 1.000 / 0.999 / 0.999 |
+
+The analytical solution uses horizontal Manning friction, so the settings
+specify `f_gravity_correction = 0` explicitly. With the default 2 (friction
+evaluated along the slope), in lat1r, whose rows 1–2 are inactive cells, the
+cross gradient of the channel cells is taken from the difference toward the
+valid side only (the 5 m step of the bank ÷ 10 m = 0.5); the friction becomes
+(1 + 0.5²)^{5/3} ≈ 1.45 times larger and the depth ratio of scheme 3 becomes
+1.118 (in lat2r, with banks on both sides, the minmod gives a gradient of 0
+and the ratio stays 1.000). This is a limitation in the
+[steep-slope chapter](../../../docs/en/users_guide/steep_slope.md) of the user's guide ("Steps and free overfalls" in §6.2).
 
 ## Stepped bed (Make_channel.py stair / stair3, param_stair{,3}_dyn_{noadv,s1}.txt)
 

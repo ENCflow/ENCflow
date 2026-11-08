@@ -8,7 +8,7 @@ module m_swflow_stg
   use m_geoinfo, only : t_geoinfo
   use m_boundary, only : t_boundary, e_bc_wall
   use m_state, only : t_state
-  use m_parallel, only : dcp, par_stop
+  use m_parallel, only : dcp, par_stop, nproc
   implicit none
   private
 
@@ -79,6 +79,24 @@ subroutine m_swflow_stg_init(p, g, b, s)
     call par_stop("list_bound_stage: prescribed water level cells are not supported " &
                   //"with STG (f_gridsystem=1)")
   end if
+
+  ! 領域マスクは STG 非対応(凍結方針 §7)。STG の計算範囲は海域の判別 X(g%sw)の陸のセルで決まり、
+  ! 領域マスク g%x を読まない(マスクの外も計算してしまい、§80 以降は列窓の外の値がないので
+  ! 計算が例外で止まる)。領域の外のセルが 1 つでもあれば停止する(g%x は初期化の時点で全ランクが
+  ! 全域を持つので判定は全ランク同値。f_masktype = 2 で外側の海を外した場合も含む)
+  if (any(g%x(1:g%nx, 1:g%ny) <= 0)) then
+    call par_stop("list_geoinfo: a domain mask with cells outside the domain (f_masktype > 0) " &
+                  //"is not supported with STG (f_gridsystem=1)")
+  end if
+
+  ! MPI の 2 ランク以上は STG 非対応(凍結方針 §7)。STG は帯で確保・計算するが帯の境界でハロを
+  ! 交換しないので、帯の境界で水が失われる(test/stg の閉じた斜面の雨で、np = 2・4 の水量が
+  ! 24 %・43 % 減った)。nproc は全ランク同値
+  if (nproc > 1) then
+    call par_stop("main: STG (f_gridsystem=1) runs with one MPI process only " &
+                  //"(no halo exchange between bands); use np = 1 or ENC (f_gridsystem=0)")
+  end if
+
   if (b%ninflow > 0) then
     call par_stop("list_bound_inflow: segment inflow is not supported with STG (f_gridsystem=1)")
   end if

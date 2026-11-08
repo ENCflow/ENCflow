@@ -2,7 +2,7 @@
 """横流入つき 1 セル水路の定常水面形を、空間変化流(Chow 1959, Ch.12)の
 常微分方程式と比べる(developer.md §68.17)。
 
-  python3 Check_lateral.py lat2 [_s1 _s3 ...]
+  python3 Check_lateral.py lat2 [_s1 _s3 ...] [--tol 0.02]
 最終出力の H, m を河道行で読み、Q(x) = m·dy から横流入 q_L を測り、
   dh/dx = (S0 − Sf − c·Q·q_L/(g A²)) / (1 − Fr²)
 を上流側 x0 の ENC 水深を初期値として下流へ積分する(超臨界)。
@@ -12,7 +12,12 @@
 import glob, math, os, re, sys
 import numpy as np
 G, DX, S0, N = 9.8, 10.0, 0.02, 0.03
-kind = sys.argv[1]; sufs = sys.argv[2:] or ['_s1', '_s3']
+args = sys.argv[1:]
+tol = None                             # --tol T: 1/2/3 km の水深比が 1 ± T に入らなければ終了コード 1
+if '--tol' in args:
+    k = args.index('--tol'); tol = float(args[k + 1]); del args[k:k + 2]
+kind = args[0]; sufs = args[1:] or ['_s1', '_s3']
+nfail = 0
 jc = {'lat1': 3, 'lat2': 11, 'lat1r': 3, 'lat2r': 11, 'lat1r_s3': 3}[kind]
 
 def last(d, pre):
@@ -51,3 +56,10 @@ for suf in sufs:
     # ENC の状態によらない参照: x0 の等流水深から c=2 で積分した物理解に対する比
     hp = ode(hn0, x[i0:i1], Qf, qL, 2)
     print(f'  ENC/physical(c=2 from normal depth) depth ratio at 1/2/3 km: {H[i0+80]/hp[80]:.3f} / {H[i0+180]/hp[180]:.3f} / {H[i0+280]/hp[280]:.3f}; physical h {hp[80]:.3f} / {hp[180]:.3f} / {hp[280]:.3f}')
+    if tol is not None:
+        rs = [H[i0+ix] / hp[ix] for ix in (80, 180, 280)]
+        ok = all(abs(r - 1.0) <= tol for r in rs)
+        nfail += 0 if ok else 1
+        print(f'  {"PASS" if ok else "FAIL"}: depth ratio within 1 ± {tol} at 1/2/3 km')
+if tol is not None and nfail > 0:
+    sys.exit(1)
