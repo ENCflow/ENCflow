@@ -2318,29 +2318,65 @@
     {
       "source": "examples/nest_reflect/README.md",
       "target": "examples/nest_reflect/en/README.md",
-      "source_sha256": "0e1ae6de9cfb342fee07e90e0ed4dde8a9c4d0cbb4c79a8c1ea62223765ba2db",
-      "target_sha256": "fcae2f476eb77a3abd2a5a5ab308cef9d4d746824e68919992e1cdd852bdfbf1",
-      "reviewer": "Claude (Claude Code session; removed development history from both versions in parallel and compared the edited passages, headings, tables and numbers; no model execution)",
+      "source_sha256": "4c6d8e53510b621615313e814bd0493b8b8b3beb3d66ce24e5ff3566647d86a4",
+      "target_sha256": "7272cc013fd485f7e0934bf3918579082cdff0d3e179f561d27a4f79e2b9e04e",
+      "reviewer": "Claude (Claude Code session; edited both versions in parallel (setup and how-it-works sections, figures moved into their sections with captions, run steps) and compared headings, tables, images and numbers)",
       "method": "assistant",
       "reviewed_on": "2026-11-08"
     },
     {
       "source": "examples/nest_reflect/figs/error_time.png",
       "target": "examples/nest_reflect/en/figs/error_time.png",
-      "source_sha256": "91a343774db37dbb15afabc0fcb20d4701bf9f6c181d7c51cc10a8d293bf193b",
-      "target_sha256": "eb13e342d8f49d1c348c8751a94c24fa99174ac7ef50789e054c35f5549f400f",
-      "reviewer": "Claude (Claude Code session; compared the Japanese and English figure images side by side: same plotted data and layout, labels translated (some compressed but faithful); provenance per the commits that drew the English figures: same saved results as the Japanese figures; no model execution)",
+      "source_sha256": "185e16c08468585e742f0f1d27b121481950fb45b81dafc1948cbc403bff6aa6",
+      "target_sha256": "6901184c3b8e9d91af9d972d2e3276eb70523f26d911fac38523e7dc33627db6",
+      "reviewer": "Claude (Claude Code session; compared the Japanese and English figure images side by side: same plotted data and layout from the same script and the same inputs and results (all 17 runs rerun with the current build), labels translated)",
       "method": "assistant",
-      "reviewed_on": "2026-10-29"
+      "reviewed_on": "2026-11-08"
+    },
+    {
+      "source": "examples/nest_reflect/figs/mechanism.png",
+      "target": "examples/nest_reflect/en/figs/mechanism.png",
+      "source_sha256": "0fa85e94e8f6d80b318b9a662941fd98866f5f913b524cd4a585f7a1cddcec6d",
+      "target_sha256": "ca11a8496809e940f2f5403eb480846aeba7e6f925ceb00532b507895b0f4cac",
+      "reviewer": "Claude (Claude Code session; compared the Japanese and English figure images side by side: same plotted data and layout from the same script and the same inputs and results (all 17 runs rerun with the current build), labels translated)",
+      "method": "assistant",
+      "reviewed_on": "2026-11-08"
+    },
+    {
+      "source": "examples/nest_reflect/figs/nh_profile.png",
+      "target": "examples/nest_reflect/en/figs/nh_profile.png",
+      "source_sha256": "7c89735300b5a3d2b6c525e616af9f765fa286295c5bebc30624c2ac3181e8a1",
+      "target_sha256": "97b522c14940f15b6ea6b9b9b4b11521d5a327f484d6d65d4c38c6803fd50b82",
+      "reviewer": "Claude (Claude Code session; compared the Japanese and English figure images side by side: same plotted data and layout from the same script and the same inputs and results (all 17 runs rerun with the current build), labels translated)",
+      "method": "assistant",
+      "reviewed_on": "2026-11-08"
+    },
+    {
+      "source": "examples/nest_reflect/figs/oneway_edge.png",
+      "target": "examples/nest_reflect/en/figs/oneway_edge.png",
+      "source_sha256": "c9b72be91cadf1740e00dff0743a4fab9df78e77c90467778823135b2c981ea4",
+      "target_sha256": "8100d4b9682c87ed7b75ed6134519546a427cced78736d5e82c52884ee5782e3",
+      "reviewer": "Claude (Claude Code session; compared the Japanese and English figure images side by side: same plotted data and layout from the same script and the same inputs and results (all 17 runs rerun with the current build), labels translated)",
+      "method": "assistant",
+      "reviewed_on": "2026-11-08"
+    },
+    {
+      "source": "examples/nest_reflect/figs/setup.png",
+      "target": "examples/nest_reflect/en/figs/setup.png",
+      "source_sha256": "723aa762b3451ba49acc5e7ecada43c02ee56df5ea233ac876da10b51c489cb2",
+      "target_sha256": "12d7a224e47e0c05100b772393d86294849613e10463c9c0acbf087981e66bae",
+      "reviewer": "Claude (Claude Code session; compared the Japanese and English figure images side by side: same plotted data and layout from the same script and the same inputs and results (all 17 runs rerun with the current build), labels translated)",
+      "method": "assistant",
+      "reviewed_on": "2026-11-08"
     },
     {
       "source": "examples/nest_reflect/figs/snapshots.png",
       "target": "examples/nest_reflect/en/figs/snapshots.png",
-      "source_sha256": "ddc485624ee19ef85c6aa1e28ad1a43747e2cee19ec3e48a4dfcfa2767a69108",
-      "target_sha256": "fe18c12de978380887ef1202f0d4fa18a32cdbf571e05863ae3b9c8d70b34259",
-      "reviewer": "Claude (Claude Code session; compared the Japanese and English figure images side by side: same plotted data and layout, labels translated (some compressed but faithful); provenance per the commits that drew the English figures: same saved results as the Japanese figures; no model execution)",
+      "source_sha256": "f25b9854182433d55c97307051d2dac640885c0819c547e96ce2ec4045e90fe1",
+      "target_sha256": "dea9f97aa5822b11be4de11988678e96c486a6dbddc8cb436b86b396dab036b3",
+      "reviewer": "Claude (Claude Code session; compared the Japanese and English figure images side by side: same plotted data and layout from the same script and the same inputs and results (all 17 runs rerun with the current build), labels translated)",
       "method": "assistant",
-      "reviewed_on": "2026-10-29"
+      "reviewed_on": "2026-11-08"
     },
     {
       "source": "examples/qanat/README.md",
