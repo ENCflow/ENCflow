@@ -33,7 +33,7 @@ make                        # link to encflow, z.txt, bm/ (runs fault2disp)
 python3 plot_results.py     # figs/*.png and tables
 ```
 
-Computation time: hydrostatic 8 s, non-hydrostatic 22 s (gfortran, 4 threads; dt = 2 s, 40 min).
+Computation time: hydrostatic 13 s, non-hydrostatic 48 s (gfortran, 4 threads; dt = 2 s, 40 min).
 
 ## Results
 
@@ -43,7 +43,7 @@ Computation time: hydrostatic 8 s, non-hydrostatic 22 s (gfortran, 4 threads; dt
 
 ![Probes](../figs/probes.png)
 
-| Probe | Hydrostatic (30 s rise) max (m) / arrival (s) / min (m) | Hydrostatic (instantaneous displacement) max (m) / arrival (s) / min (m) | Non-hydrostatic + acceleration term max (m) / arrival (s) / min (m) |
+| Probe | Hydrostatic (30 s rise) max (m) / time of max (s) / min (m) | Hydrostatic (instantaneous displacement) max (m) / time of max (s) / min (m) | Non-hydrostatic + acceleration term max (m) / time of max (s) / min (m) |
 |---|---:|---:|---:|
 | Directly above the upper edge x = 120.5 km (depth 2000 m) | 1.768 / 30 / -0.912 | 2.022 / 6 / -0.922 | 1.732 / 30 / -0.882 |
 | Foot of the slope x = 60.5 km | 0.896 / 450 / -0.509 | 0.918 / 432 / -0.513 | 0.712 / 462 / -0.536 |
@@ -54,26 +54,29 @@ Computation time: hydrostatic 8 s, non-hydrostatic 22 s (gfortran, 4 threads; dt
 - **The effect of the rise time** is small. With 30 s (shorter than the time
   for the wave to cross the fault width, 30 km / 140 m/s ≈ 210 s), apart from
   the maximum water level directly above the source going from 2.02 to 1.77 m,
-  the wave heights after propagation differ by 2–3% and the arrivals are delayed
-  by 12–18 s (the centroid of the rise). The single snapshot of the
-  instantaneous displacement gives the same result as the conventional way of
-  prescribing "initial water level = ground displacement".
-- **Non-hydrostatic**: the 30 km wide uplift and the roughly 15 km wide
-  subsidence have kH ≈ 0.4–0.8 for a depth of 2000 m, so the dispersion of the
-  one-layer NH model (ω² = gHk²/(1 + k²H²/4)) disperses the wave during
-  propagation and a train of undulations follows the leading wave. The leading
-  wave height goes from 0.90 to 0.71 m at the foot of the slope (−20%), from
-  1.22 to 0.92 m at the coast (−24%) and from 0.78 to 0.68 m in the east
-  (−13%). The contribution of the acceleration term (the one-layer
-  approximation of the Kajiura filter) is 1.77 → 1.73 m directly above the
-  source (−2%; kH is small, so F ≈ 1), and most of the difference comes from
-  the dispersion during propagation. For a source of this size the hydrostatic
-  (non-dispersive) model errs on the side of overestimating the coastal wave
-  heights by 20–30% (long-wave dispersion is a known property of tsunamis in
-  the far field and from short sources). The CG iterations average 216 per step
-  (27,000 cells in the whole domain).
-- At the southern point (beyond the end of the fault) the three cases differ by
-  less than 4%.
+  the wave heights after propagation differ by 1–2% and the times of the
+  maximum are delayed by 12–18 s (the centroid of the rise). The single
+  snapshot of the instantaneous displacement gives the same result as the
+  conventional way of prescribing "initial water level = ground displacement".
+- **Non-hydrostatic**: the uplift and subsidence, 15–30 km wide, have
+  kH ≈ 0.4–0.8 for a depth of 2000 m, so the dispersion of the one-layer NH
+  model (ω² = gHk²/(1 + k²H²/4)) disperses the wave during propagation and a
+  train of undulations follows the leading wave. The leading wave height goes
+  from 0.90 to 0.71 m at the foot of the slope (−20%), from 1.22 to 0.92 m at
+  the coast (−24%) and from 0.78 to 0.68 m in the east (−13%). The
+  contribution of the acceleration term (the one-layer approximation of the
+  Kajiura filter) is 1.77 → 1.73 m directly above the source (−2%; the main
+  component of the displacement has a wavelength of about 70 km, so
+  kH ≈ 0.18 is small and the filter factor F ≈ 0.98), and most of the
+  difference comes from the dispersion during propagation. For a source of
+  this size the hydrostatic (non-dispersive) model errs on the side of
+  overestimating the coastal wave heights by 20–30% (long-wave dispersion is a
+  known property of tsunamis in the far field and from short sources). The CG
+  iterations average 216 per step. About 27,000 cells are solved
+  non-hydrostatically; the land and a 5-cell band along the open boundaries
+  (nh_bc_margin) stay hydrostatic.
+- At the southern point (beyond the end of the fault) the maximum levels of the
+  three cases differ by about 4%.
 
 ## Giving the fault in longitude/latitude (fault2disp_ll.txt)
 
@@ -105,8 +108,9 @@ agrees likewise.
 ## Usage notes
 
 - A real fault is given by the segment table in fault2disp.txt (≤ 50).
-  Positions are in the projected coordinates of the grid (m); conversion from
-  longitude/latitude is up to the user. Delayed rupture is t_r(k); the rise of
+  Positions are in the projected coordinates of the grid (m); to give them in
+  longitude and latitude, use f_lonlat = 1 (the section "Giving the fault in
+  longitude/latitude" above). Delayed rupture is t_r(k); the rise of
   each segment is t_rise(k) and f_rise(k).
 - For a fault above steep seabed topography, give fn_z to add the contribution
   of the horizontal displacement u_h·∇z (Tanioka & Satake 1996).

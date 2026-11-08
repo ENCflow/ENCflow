@@ -431,7 +431,7 @@ $`z`$ との 2 階差分(1 ステップ遅れ。$`z`$ を動かすすべての�
   `f_nh_slope = 1`、さらに `f_nh_bottom = 1` を重ねた param_*_nh0 / param_*_nh。
   静水圧との近地波形の比較と計算時間の目安。
 - [examples/tsunami_fault](../../examples/tsunami_fault/README.md) — 断層津波(規定底面運動)に非静水圧+
-  加速度項を重ねた param_nh.txt。水深 2000 m・幅 30 km の隆起($`kH`$ ≈ 0.4〜0.8)
+  加速度項を重ねた param_nh.txt。水深 2000 m・幅 15〜30 km の隆起と沈降($`kH`$ ≈ 0.4〜0.8)
   でも伝播中の分散で先頭波高が 13〜24% 下がり、加速度項の寄与は震源直上で
   −2% と小さい。
 - [examples/nest_reflect](../../examples/nest_reflect/README.md) — 非静水圧の親子格子で、帯を親の $`\phi`$ の

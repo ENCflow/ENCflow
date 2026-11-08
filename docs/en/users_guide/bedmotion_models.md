@@ -59,8 +59,9 @@ is given.
 
 The difference from the instantaneous input that omits the rupture process
 (pattern C of the chapter) appears in the near-field arrival time and wave
-height: 2–3 % in the maximum level of
-[examples/tsunami_fault](../../../examples/tsunami_fault/en/README.md) and +24 to 40 % at
+height: in the maximum level, −13 % directly above the source and −1 to −2 %
+after propagation in
+[examples/tsunami_fault](../../../examples/tsunami_fault/en/README.md), and +24 to 40 % at
 the bay mouth and shelf of
 [examples/tsunami_coast](../../../examples/tsunami_coast/en/README.md) (see the READMEs).
 
