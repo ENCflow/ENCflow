@@ -5,7 +5,7 @@
 !   走路の雪(sd0=0.5m = 連行可能層)を速度比例連行(f_dbed=4:
 !   E = δe・|V|)で取り込みながら Voellmy 則(f_dbres=4)で流下、
 !   平坦部で停止・堆積(f_dbstop=1)する。
-!   キャリアは疑似間隙水(db_relsat 小。users_guide/geomorph.md 雪崩の項)。
+!   キャリアは疑似間隙水(db_relsat 小。users_guide/geomorph_applications.md の雪崩)。
 !   検定は Check_avalanche.py:
 !     (1) 固体台帳(放出・連行・凝集すべて内部移転 = 機械精度で 0)
 !     (2) 共動更新恒等 (sd-sd0) = (z-z0)

@@ -7,7 +7,7 @@
 利用者の問いから始めた試行の記録(構成法・結果・機構の議論・残課題)で、
 実装済みの *_plan.md と同じく実績の記録として保持する。** ケースの入力・解析
 スクリプト・図は利用者の作業ディレクトリ work/(git 管理外)にあり、本書は
-それを独立に読めるように書く。設定の手順は users_guide/geomorph.md「河口デルタ」、
+それを独立に読めるように書く。設定の手順は users_guide/geomorph_applications.md「河口デルタ」、
 用途の対応は users_guide/usecases.md、他モデルとの対応は comparison.md、
 実行できる形は examples/delta を参照。
 

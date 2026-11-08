@@ -2,6 +2,9 @@
 """debris_fan の図と数表(事前に make run で全ケースを計算しておく)。
 
   figs/setup.png       模式地形(崩壊斜面・谷・扇状地・住宅地)、谷筋の縦断、谷の横断、格子に対する谷の向き
+  figs/grid.png        格子 40・20 m の谷底のセルのつながり方(入力だけ。計算結果を使わない)
+  figs/mechanism.png   崩壊から扇状地までの仕組みと、崩壊土塊・水・堆積の量の内訳(入力だけ)
+  figs/laws.png        高橋・中川 (1991) の抵抗則の切り替え・慣性走行・平衡濃度(param.txt の値で式を評価)
   figs/maps_40m.png    格子 40 m の 3 つの向きの堆積厚と最大流動深(左: ENC の 8 近傍、右: 4 近傍)
   figs/maps_20m.png    同じく格子 20 m
   figs/maps_5m.png     同じく格子 5 m
@@ -11,7 +14,8 @@
 数表(標準出力): 各ケースの指標、向きの差と格子の差のまとめ、地図の差。
 ケースの座標はすべて谷沿いの座標 (s, n)(make_init.py)。体積・面積は各ケースの格子のセルで数え、
 向きの比較の地図の差(L1)は谷沿いの共通の 5 m 格子へ双一次補間して求める。
-引数 en で英語ラベル版を en/figs/ に描く(データと描画処理は共通)。
+引数 en で英語ラベル版を en/figs/ に描く(データと描画処理は共通)。計算結果がなければ説明図
+(setup・grid・mechanism・laws)だけを描く。
 """
 import math
 import os
@@ -22,6 +26,7 @@ matplotlib.use("Agg")
 import matplotlib.pyplot as plt
 from matplotlib.colors import LightSource, ListedColormap
 from matplotlib.patches import Polygon, Ellipse
+from matplotlib.lines import Line2D
 import make_init as M
 
 EN = "en" in sys.argv[1:]
@@ -433,6 +438,395 @@ def fig_setup():
     plt.close(fig)
 
 
+# ---------------------------------------------------------------- 図: 格子と谷底のセル(入力だけ)
+GRID_CASES = [(40.0, 0.0), (40.0, 22.5), (40.0, 45.0), (20.0, 45.0)]
+GRID_BOX = (560.0, 860.0, -75.0, 75.0)        # 描く範囲 (s0, s1, n0, n1)
+REL_CMAP = plt.get_cmap("YlOrBr")
+
+
+def floor_cells(dx, th):
+    """make_init.py の格子で、中心が谷底(|n| ≤ WF/2)にある陸のセルと、谷底からの高さ。"""
+    nx, ny, ox, oy, out = M.grid(dx, th)
+    s, n = M.to_sn(dx, th)
+    land = (out["mask"] > 0) & (out["sw"] == 0)
+    rel = np.where(land, out["z"] - M.z_axis(np.clip(s, 0.0, M.L_V)), np.nan)   # 同じ s の谷底からの高さ
+    floor = land & (np.abs(n) <= M.WF / 2) & (s <= M.L_V)
+    return s, n, rel, floor, (nx, ny, ox, oy)
+
+
+def _cell_poly(dx, th, ox, oy, i, j):
+    t = math.radians(th)
+    c, sn = math.cos(t), math.sin(t)
+    xs = np.array([i, i + 1, i + 1, i]) * dx - ox
+    ys = np.array([j, j, j + 1, j + 1]) * dx - oy
+    return np.c_[xs * c - ys * sn, xs * sn + ys * c]
+
+
+def grid_panel(ax, dx, th, box=GRID_BOX):
+    s, n, rel, floor, (nx, ny, ox, oy) = floor_cells(dx, th)
+    s0, s1, n0, n1 = box
+    near = (s > s0 - dx) & (s < s1 + dx) & (n > n0 - dx) & (n < n1 + dx) & np.isfinite(rel)
+    for j, i in np.argwhere(near):
+        col = REL_CMAP(min(rel[j, i], 24.0) / 24.0 * 0.85)
+        ax.add_patch(Polygon(_cell_poly(dx, th, ox, oy, i, j), closed=True, facecolor=col, edgecolor="0.55",
+                             lw=0.5, zorder=1))
+        if rel[j, i] < 7.5:
+            ax.text(s[j, i], n[j, i] - 0.16 * dx, f"{rel[j, i]:.1f}", fontsize=6.6 if dx > 30 else 6.0, ha="center",
+                    va="top", color="0.2", zorder=6, clip_on=True)
+    # the true valley floor and the foot of the walls
+    ax.axhspan(-M.WF / 2, M.WF / 2, color="#1f5f8b", alpha=0.10, zorder=2, lw=0)
+    for y in (-M.WF / 2, M.WF / 2):
+        ax.axhline(y, color="#1f5f8b", lw=0.9, ls="--", zorder=3)
+    fl = [tuple(q) for q in np.argwhere(floor & near)]
+    fset = set(fl)
+    for j, i in fl:
+        ax.plot(s[j, i], n[j, i], "o", color="#1f5f8b", ms=5, zorder=7)
+    others = np.argwhere(near & ~floor)
+    ax.plot(s[others[:, 0], others[:, 1]], n[others[:, 0], others[:, 1]], ".", color="0.45", ms=2.5, zorder=6)
+    # edges between floor cells: axis edges (both stencils) and diagonal edges (eight neighbours only)
+    n_diag_only = 0
+    for j, i in fl:
+        for dj, di in ((0, 1), (1, 0)):
+            q = (j + dj, i + di)
+            if q in fset:
+                ax.plot([s[j, i], s[q]], [n[j, i], n[q]], color="0.15", lw=2.2, zorder=5, solid_capstyle="round")
+        for dj, di in ((1, 1), (1, -1)):
+            q = (j + dj, i + di)
+            if q in fset:
+                ax.plot([s[j, i], s[q]], [n[j, i], n[q]], color="#d9480f", lw=1.8, ls=(0, (3, 1.6)), zorder=5)
+                c1, c2 = (j, i + di), (j + dj, i)
+                if c1 not in fset and c2 not in fset:      # 角でしかつながらない: 4 近傍は低い方の共通の軸の隣を通る
+                    cb = c1 if rel[c1] <= rel[c2] else c2
+                    ax.plot([s[j, i], s[cb], s[q]], [n[j, i], n[cb], n[q]], color="#6a3d9a", lw=1.3, zorder=4)
+                    ax.plot(s[cb], n[cb], "s", color="#6a3d9a", ms=4, zorder=6)
+    for j, i in fl:
+        ax_n = [(j, i + 1), (j, i - 1), (j + 1, i), (j - 1, i)]
+        if not any(q in fset for q in ax_n):
+            n_diag_only += 1
+    ax.set_xlim(s0, s1)
+    ax.set_ylim(n0, n1)
+    ax.set_aspect("equal")
+    ax.tick_params(labelsize=7.5)
+    return len(fl), n_diag_only
+
+
+def fig_grid():
+    fig, axs = plt.subplots(2, 2, figsize=(13.6, 8.6))
+    fig.subplots_adjust(left=0.06, right=0.98, top=0.88, bottom=0.17, wspace=0.12, hspace=0.38)
+    fig.suptitle(T("谷底と格子のセル: 谷の向きと格子の大きさで、谷底のセルのつながり方が変わる(入力から描いた図)",
+                   "Valley floor and grid cells: how the floor cells connect depends on the valley orientation and the cell size "
+                   "(drawn from the inputs)"), fontsize=11, x=0.06, ha="left")
+    notes = {
+        (40.0, 0.0): T("谷底(破線の間)にセルの中心がない。谷は谷底より 3.5 m 高い 2 列(幅 80 m)で表される",
+                       "no cell centre on the floor (between the dashes); the valley is two rows 3.5 m above it (80 m wide)"),
+        (40.0, 22.5): T("軸でつながる 2 個ずつの組。組の間は角でつながるか、谷底の外のセル(5〜7 m 高い)をはさむ",
+                        "pairs joined along an axis; between pairs a corner link or a cell outside the floor (5–7 m higher)"),
+        (40.0, 45.0): T("谷底のセルは角でしかつながらない。4 近傍は谷底より 2.7 m 高いセルを通る",
+                        "floor cells touch only at corners; four neighbours pass through cells 2.7 m above the floor"),
+        (20.0, 45.0): T("谷底のセルは軸のエッジでつながる 2 列の階段。8 近傍は谷に沿う斜めのエッジでもつながる",
+                        "a two-row staircase of axis edges; eight neighbours also link the floor cells along the valley"),
+    }
+    for ax, (dx, th) in zip(axs.ravel(), GRID_CASES):
+        nf, nd = grid_panel(ax, dx, th)
+        ax.set_title(T(f"格子 {dx:g} m・谷の向き {th:g}°", f"{dx:g} m grid, valley at {th:g}°"), fontsize=10, loc="left")
+        ax.text(0.0, -0.17, notes[(dx, th)], transform=ax.transAxes, fontsize=8.4, va="top")
+        ax.set_xlabel(T("s (m)  谷を下る向き", "s (m)  down the valley"), fontsize=8.5)
+        ax.set_ylabel("n (m)", fontsize=8.5)
+    handles = [Line2D([], [], color="#1f5f8b", marker="o", ls="none", ms=5, label=T("谷底のセル(中心が谷底)", "floor cell (centre on the floor)")),
+               Line2D([], [], color="0.15", lw=2.2, label=T("谷底のセルの間の軸のエッジ(8 近傍・4 近傍とも)", "axis edge between floor cells (both)")),
+               Line2D([], [], color="#d9480f", lw=1.8, ls=(0, (3, 1.6)), label=T("谷底のセルの間の斜めのエッジ(8 近傍だけ)", "diagonal edge between floor cells (eight neighbours only)")),
+               Line2D([], [], color="#6a3d9a", lw=1.3, marker="s", ms=4, label=T("角でしかつながらない所の 4 近傍の回り道", "four-neighbour detour where cells touch only at corners")),
+               Line2D([], [], color="#1f5f8b", lw=0.9, ls="--", label=T("谷底(幅 30 m)の縁", "edges of the floor (30 m wide)"))]
+    fig.legend(handles=handles, loc="lower left", ncol=3, fontsize=8.3, frameon=False, bbox_to_anchor=(0.05, 0.0))
+    sm = plt.cm.ScalarMappable(cmap=ListedColormap(REL_CMAP(np.linspace(0, 0.85, 256))), norm=plt.Normalize(0, 24))
+    cax = fig.add_axes([0.74, 0.085, 0.17, 0.018])
+    cb = fig.colorbar(sm, cax=cax, orientation="horizontal")
+    cb.set_label(T("同じ s の谷底からの高さ (m)\n数字は 7.5 m 未満のセルの値", "height above the floor at the same s (m)\nnumbers: cells below 7.5 m"), fontsize=7.8)
+    cb.ax.tick_params(labelsize=7)
+    fig.savefig(f"{FIGDIR}/grid.png", dpi=100)
+    plt.close(fig)
+
+
+# ---------------------------------------------------------------- 図: 仕組み(入力と設定だけ)
+C_SOL, C_WAT, C_DEB, C_DEP2, C_GRD = "#8c5a2b", "#7fb3d5", "#c8a17a", "#e0b070", "#d8cdb8"
+
+
+def _stack(ax, x, parts, w=0.62):
+    y = 0.0
+    for v, col, lab, tc in parts:
+        ax.bar([x], [v], bottom=[y], width=w, color=col, edgecolor="white", lw=0.8)
+        if lab:
+            ax.text(x, y + v / 2, lab, ha="center", va="center", fontsize=8.2, color=tc)
+        y += v
+    return y
+
+
+def fig_mechanism():
+    lam, c0, v0 = M.LAMBDA, M.C0, M.V0 / 1e4                 # 空隙率、流れ出す濃度、崩壊土量(万 m³)
+    sol, pore = (1 - lam) * v0, lam * v0
+    extra = v0 * ((1 - lam) / c0 - 1)                         # 崩壊域に置く水(make_init.py の h)
+    water = pore + extra
+    dep_pore = sol * lam / (1 - lam)                          # 固体がすべて空隙率 λ で積もったときの間隙水
+    fig = plt.figure(figsize=(14, 8.8))
+    gs = fig.add_gridspec(2, 3, width_ratios=[1.05, 1.6, 1.1], height_ratios=[1, 1], hspace=0.42, wspace=0.28,
+                          left=0.05, right=0.98, top=0.9, bottom=0.07)
+    fig.suptitle(T("崩壊から扇状地まで(模式)。量は入力(make_init.py)から求めた値、時間の区切りは結果の節の基準のケース",
+                   "From the collapse to the fan (schematic). Volumes are from the inputs (make_init.py); the time ranges are "
+                   "those of the reference case in the results"), fontsize=10.5, x=0.05, ha="left")
+    # (a) composition of the released mass
+    ax = fig.add_subplot(gs[:, 0])
+    _stack(ax, 0, [(sol, C_SOL, T(f"固体\n{sol:.0f} 万", f"solid\n{sol:.0f}"), "white"),
+                   (pore, C_WAT, T(f"間隙水\n{pore:.0f} 万", f"pore water\n{pore:.0f}"), "black")])
+    _stack(ax, 1, [(extra, C_WAT, T(f"水\n{extra:.1f} 万", f"water\n{extra:.1f}"), "black")])
+    _stack(ax, 2, [(sol, C_SOL, T(f"固体\n{sol:.0f} 万", f"solid\n{sol:.0f}"), "white"),
+                   (water, C_WAT, T(f"水\n{water:.1f} 万", f"water\n{water:.1f}"), "black")])
+    _stack(ax, 3, [(sol, C_SOL, T("固体", "solid"), "white"),
+                   (dep_pore, C_WAT, T(f"間隙\n{dep_pore:.0f} 万", f"pores\n{dep_pore:.0f}"), "black"),
+                   (water - dep_pore, "#d6e9f5", T(f"余る水\n{water - dep_pore:.1f} 万", f"excess\n{water - dep_pore:.1f}"), "#1f5f8b")])
+    ax.set_xticks([0, 1, 2, 3])
+    ax.set_xticklabels([T("崩壊土塊\n(飽和)", "collapse\nmass\n(saturated)"), T("崩壊域に\n置く水", "water placed\non the\ncollapse"),
+                        T("流れ出す\n土石流", "debris flow\nreleased"), T("固体がすべて\n積もると", "if all solid\ndeposits")],
+                       fontsize=8.2)
+    ax.set_ylabel(T("体積(万 m³)", "volume (10⁴ m³)"))
+    ax.set_ylim(0, 15.5)
+    ax.text(2, sol + water + 0.3, T(f"濃度 {c0:.2f}", f"C = {c0:.2f}"), ha="center", fontsize=8.6, weight="bold")
+    ax.text(0, v0 + 0.3, T(f"{v0:.0f} 万 m³", f"{M.V0:,.0f} m³"), ha="center", fontsize=8.4)
+    ax.set_title(T("(a) 量の内訳", "(a) Volumes"), fontsize=10, loc="left")
+    for sp in ("top", "right"):
+        ax.spines[sp].set_visible(False)
+    # (b) cross-section at the collapse: slide and run-up on the opposite bank
+    ax = fig.add_subplot(gs[0, 1])
+    nl = np.linspace(-230, 230, 921)
+    zl = M.terrain(np.full_like(nl, M.S_C), nl)
+    dl = M.collapse_shape(np.full_like(nl, M.S_C), nl) * (M.V0 / (math.pi / 2 * M.A_S * M.A_N))
+    zmin = zl.min()
+    ax.fill_between(nl, zmin - 25, zl, color=C_GRD, lw=0)
+    ax.plot(nl, zl, color="#6b4f2a", lw=1.3)
+    ax.fill_between(nl, zl - dl, zl, where=dl > 0, color="#c0392b", alpha=0.45, lw=0)
+    run = (nl > -60) & (nl < -8)
+    runup = np.where(run, 9.0 * np.clip(np.sin(np.pi * (nl + 60) / 52), 0, None) ** 0.7, 0.0)
+    ax.fill_between(nl, zl, zl + runup, where=run, color=C_DEP2, lw=0)
+    ax.annotate("", xy=(-35, zmin + 26), xytext=(95, zmin + 62), arrowprops=dict(arrowstyle="-|>", color="#c0392b", lw=1.8,
+                                                                                connectionstyle="arc3,rad=0.25"))
+    ax.text(30, zmin + 166, T("① 北岸の斜面が崩れる\n   (崩壊深は中心で約 20 m)", "① the north wall collapses\n   (about 20 m deep at the centre)"),
+            fontsize=8.2, color="#8b1a10", va="top")
+    ax.text(-150, zmin + 166, T("② 勢いのまま谷底を横切り、\n   対岸の斜面を駆け上がる。\n   一部が対岸の脚に残る",
+                                "② it crosses the floor and\n   runs up the far wall;\n   part stays at its foot"),
+            fontsize=8.2, color="0.15", va="top")
+    ax.set_xlim(-230, 230)
+    ax.set_ylim(zmin - 25, zmin + 170)
+    ax.set_aspect("equal")
+    ax.set_xlabel(T("n (m)  谷を横切る向き(北岸が正)", "n (m)  across the valley (north bank +)"), fontsize=8.5)
+    ax.set_ylabel(T("標高 (m)", "elevation (m)"), fontsize=8.5)
+    ax.set_title(T(f"(b) 崩壊の中心の横断(s = {M.S_C:g} m)。崩壊直後(0〜20 秒)",
+                   f"(b) Section at the collapse centre (s = {M.S_C:g} m), 0–20 s"),
+                 fontsize=10, loc="left")
+    ax.tick_params(labelsize=7.5)
+    # (c) longitudinal sketch: valley run and fan deposition
+    ax = fig.add_subplot(gs[1, 1:])
+    xi = np.linspace(0, M.L_V + M.L_F, 1200)
+    zb = M.z_axis(xi)
+    ax.fill_between(xi, -10, zb, color=C_GRD, lw=0)
+    ax.plot(xi, zb, color="#6b4f2a", lw=1.3)
+    vf = (xi > 380) & (xi < 960)
+    thk = np.where(vf, 14 * np.clip(np.sin(np.pi * (xi - 380) / 580), 0, None) ** 0.5, 0)
+    ax.fill_between(xi, zb, zb + thk, where=vf, color=C_DEB, lw=0)
+    dep = (xi > M.L_V) & (xi < M.L_V + 270)
+    dth = np.where(dep, 10 * np.clip(np.sin(np.pi * (xi - M.L_V) / 270), 0, None) ** 0.6, 0)
+    ax.fill_between(xi, zb, zb + dth, where=dep, color=C_DEP2, lw=0)
+    mud = (xi > M.L_V + 120) & (xi < M.L_V + 380)
+    ax.fill_between(xi, zb + np.where(xi < M.L_V + 270, dth, 0), zb + np.where(xi < M.L_V + 270, dth, 0) + 2.5, where=mud,
+                    color=C_WAT, alpha=0.8, lw=0)
+    ax.annotate("", xy=(930, M.z_axis(930) + 24), xytext=(560, M.z_axis(560) + 30),
+                arrowprops=dict(arrowstyle="-|>", color="0.2", lw=1.6))
+    ax.axvline(M.L_V, color="k", lw=0.8, ls="--")
+    ax.text(M.L_V + 6, 352, T("谷の出口 = 扇頂", "valley mouth = fan apex"), fontsize=8.2, va="top")
+    ax.text(330, 300, T("③ 谷の流下(20〜50 秒): 濃い土石流が速く流れ、\n    慣性で走る間は堆積しない",
+                        "③ down the valley (20–50 s): the dense flow runs fast\n    and does not deposit while it runs on inertia"),
+            fontsize=8.4, color="0.15")
+    ax.text(M.L_V + 60, 180, T("④ 扇状地での堆積(1〜10 分): 広がって遅くなり、\n    舌状に堆積する",
+                               "④ deposition on the fan (1–10 min): it spreads, slows\n    down and leaves a tongue-shaped deposit"),
+            fontsize=8.4, color="0.15")
+    ax.text(M.L_V + 300, 95, T("⑤ 余った水が薄い泥の流れになり、\n    堆積の先へ広がる", "⑤ the excess water becomes a thin mud\n    that spreads beyond the deposit"),
+            fontsize=8.4, color="#1f5f8b")
+    ax.axvspan(M.L_V + M.R_H1, M.L_V + M.R_H2, color="#1f5f8b", alpha=0.07, lw=0)
+    ax.text(M.L_V + 0.5 * (M.R_H1 + M.R_H2), 12, T("住宅地", "houses"), ha="center", fontsize=8.2, color="#1f5f8b")
+    ax.axvspan(M.S_C - M.A_S, M.S_C + M.A_S, color="#c0392b", alpha=0.12, lw=0)
+    ax.text(M.S_C, 12, T("崩壊", "collapse"), ha="center", fontsize=8.2, color="#8b1a10")
+    ax.set_xlim(0, M.L_V + M.L_F)
+    ax.set_ylim(-10, 360)
+    ax.set_xlabel(T("谷筋〜扇状地の軸に沿う距離 (m)(縦は 1.5 倍に誇張、流れの厚さは誇張)",
+                    "distance along the valley and fan axis (m) (vertical ×1.5; flow thickness exaggerated)"), fontsize=8.5)
+    ax.set_ylabel(T("標高 (m)", "elevation (m)"), fontsize=8.5)
+    ax.set_title(T("(c) 谷筋と扇状地の縦断", "(c) Long profile of the valley and the fan"), fontsize=10, loc="left")
+    ax.tick_params(labelsize=7.5)
+    # (d) note on the settings
+    ax = fig.add_subplot(gs[0, 2])
+    ax.axis("off")
+    ax.set_title(T("(d) 対応する設定", "(d) Settings"), fontsize=10, loc="left")
+    rows = [(T("崩壊と流動化", "collapse, mobilization"), "fn_dbinit, db_reltime = 0, db_relsat = 1"),
+            (T("崩壊域の水", "water on the collapse"), "f_htype = 1, fn_hinit"),
+            (T("流れの抵抗", "resistance"), T("f_dbres = 3(高橋・中川の石礫型)", "f_dbres = 3 (Takahashi–Nakagawa stony)")),
+            (T("侵食・堆積", "erosion, deposition"), T("f_dbed = 3(慣性で走る間は堆積しない)", "f_dbed = 3 (no deposition while running on inertia)")),
+            (T("止まった土砂", "stopped sediment"), "f_dbstop = 1"),
+            (T("堆積の間隙水", "pore water of deposits"), "f_dbwet = 1"),
+            (T("侵食できる層", "erodible layer"), T("sd = 崩壊深(ほかは不侵食の基盤)", "sd = release depth (bedrock elsewhere)"))]
+    y = 0.95
+    for k, v in rows:
+        ax.text(0.0, y, k, fontsize=8.4, transform=ax.transAxes, va="top")
+        ax.text(0.0, y - 0.065, v, fontsize=8.0, transform=ax.transAxes, va="top", color="0.3")
+        y -= 0.14
+    ax.text(0.0, y - 0.03, T(f"(a) の見方: 空隙率 λ = {lam:g}(C* = {1 - lam:g})。崩壊域の初期水深は\n"
+                             "h = D((1 − λ)/C0 − 1)。積もった土砂の間隙を流れの水が満たす\n"
+                             "(f_dbwet = 1)ので、余った水が後続の薄い泥の流れになる。",
+                             f"Reading (a): porosity λ = {lam:g} (C* = {1 - lam:g});\n"
+                             "initial depth on the collapse h = D((1 − λ)/C0 − 1).\n"
+                             "The flow's water fills the pores of the deposit\n"
+                             "(f_dbwet = 1); the excess becomes the trailing mud."),
+            fontsize=8.0, transform=ax.transAxes, va="top", color="0.2")
+    fig.savefig(f"{FIGDIR}/mechanism.png", dpi=100)
+    plt.close(fig)
+
+
+# ---------------------------------------------------------------- 図: 高橋・中川の則(式だけ)
+TANPHI = math.tan(math.radians(35.0))       # param.txt の db_phi
+SGRAV, D50, CMIN = 1.65, 0.3, 0.02          # fluv_sgrav(既定)、db_d50、db_cmin(既定)
+TANA, AB, P_TN, HDMUD, CBL = 0.45, 0.02, 1.0 / 3.0, 30.0, 0.4   # m_swflow_enc・m_geomorph_debris の定数
+
+
+def c_inf_tn(tn):
+    """f_dbed = 3 の平衡濃度(石礫型の導出式。上限 0.9 C*。ceq_egashira)。"""
+    tn = np.asarray(tn, float)
+    out = np.where(tn > 0, tn / (SGRAV * (TANPHI - tn)), 0.0)
+    return np.where(tn >= TANPHI, 0.9 * CSTAR, np.minimum(out, 0.9 * CSTAR))
+
+
+def p_vc(h, c):
+    """堆積が始まる速さ p v_c(高橋・中川 1991 の式 (15)(27)。m_geomorph_debris の f_dbed = 3)。"""
+    tc = SGRAV * c / (SGRAV * c + 1) * TANPHI
+    sc = tc / math.sqrt(1 + tc * tc)
+    vc = 0.4 / D50 * math.sqrt(9.8 * sc / AB * (c + (1 - c) / (SGRAV + 1))) * ((CSTAR / c) ** (1 / 3) - 1) * h ** 1.5
+    return P_TN * vc
+
+
+def fig_laws():
+    fig, axs = plt.subplots(1, 3, figsize=(14, 5.8))
+    fig.subplots_adjust(left=0.05, right=0.98, top=0.85, bottom=0.33, wspace=0.3)
+    fig.suptitle(T("高橋・中川 (1991) の則がこの例題で働く範囲(param.txt の値で式を評価。計算結果ではない)",
+                   "Where the Takahashi–Nakagawa (1991) laws act in this example (expressions with the values of param.txt; "
+                   "not computed results)"), fontsize=10.5, x=0.05, ha="left")
+    note = dict(fontsize=7.9, va="top", linespacing=1.45)
+    # (a) regimes of the resistance law
+    ax = axs[0]
+    hmax = 20.0
+    ax.add_patch(plt.Rectangle((CBL * CSTAR, 0), 0.6 - CBL * CSTAR, HDMUD * D50, color="#e8d5bf", lw=0))
+    ax.add_patch(plt.Rectangle((CMIN, 0), CBL * CSTAR - CMIN, HDMUD * D50, color="#d6e4ef", lw=0))
+    ax.add_patch(plt.Rectangle((0, HDMUD * D50), 0.6, hmax - HDMUD * D50, color="#eeeeee", lw=0))
+    ax.add_patch(plt.Rectangle((0, 0), CMIN, HDMUD * D50, color="#eeeeee", lw=0))
+    ax.text(0.345, 4.6, T("石礫型\n(ダイラタント項)", "stony\n(dilatant term)"), ha="center", fontsize=8.6, color=C_SOL)
+    ax.text(0.13, 4.6, T("掃流状\n集合流動", "collective\nform"), ha="center", fontsize=8.6, color="#1f5f8b")
+    ax.text(0.2, 15.2, T("Manning 則\n(h_t ≥ 30 d。泥流域の規定)\n降伏の項は残る", "Manning\n(h_t ≥ 30 d; mud-flow rule)\nthe yield term remains"),
+            ha="center", fontsize=8.2, color="0.3")
+    ax.axhline(HDMUD * D50, color="0.4", lw=0.9, ls="--")
+    ax.text(0.02, HDMUD * D50 + 0.2, "h_t = 30 d = 9 m", fontsize=7.8, color="0.3", va="bottom")
+    ax.plot([0.45, 0.45], [9.0, 18.0], color="#c0392b", lw=3.0, solid_capstyle="butt")
+    ax.text(0.465, 17.6, T("崩壊直後\nの土塊と、\n谷の上流\n側の前縁", "collapse\nmass and\nthe front\nin the\nupper\nvalley"),
+            fontsize=7.6, color="#c0392b", va="top")
+    ax.plot([0.45, 0.45], [0.5, 9.0], color=C_SOL, lw=3.0, solid_capstyle="butt")
+    ax.text(0.465, 8.6, T("谷を下る\n土石流", "debris\nflow\ndown the\nvalley"), fontsize=7.6, color=C_SOL, va="top")
+    ax.annotate("", xy=(0.1, 0.7), xytext=(0.36, 1.1), arrowprops=dict(arrowstyle="-|>", color="#1f5f8b", lw=1.2))
+    ax.text(0.03, 1.5, T("後続の泥(薄まる)", "trailing mud (diluting)"), fontsize=7.6, color="#1f5f8b")
+    ax.set_xlim(0, 0.6)
+    ax.set_ylim(0, hmax)
+    ax.set_xlabel(T("混合体積濃度 C", "mixture volume concentration C"), fontsize=8.8)
+    ax.set_ylabel(T("流動深 h_t (m)(d = 0.3 m)", "flow depth h_t (m) (d = 0.3 m)"), fontsize=8.8)
+    ax.set_title(T("(a) 抵抗則の切り替え(f_dbres = 3)", "(a) Regimes of the resistance law (f_dbres = 3)"), fontsize=9.5, loc="left")
+    ax.text(0.0, -0.17, T("境は C = 0.4 C* = 0.24、c_min = 0.02、h_t = 30 d。\n"
+                          "谷を下る流れの大半は石礫型で、深さ 9 m を超えるのは\n"
+                          "崩壊直後の土塊と、谷の上流側を前縁が通る間だけ。\n"
+                          "後続の泥は薄まると掃流状集合流動の式に移る。",
+                          "Boundaries: C = 0.4 C* = 0.24, c_min = 0.02, h_t = 30 d.\n"
+                          "Most of the valley flow is stony; it is deeper than 9 m\n"
+                          "only in the collapse mass and while the front passes\n"
+                          "the upper valley. The trailing mud moves to the\n"
+                          "collective form as it dilutes."),
+            transform=ax.transAxes, **note)
+    # (b) inertial run and deposition
+    ax = axs[1]
+    hh = np.linspace(0.02, 12, 500)
+    for c, ls, lab in ((0.45, "-", "C = 0.45"), (0.30, "--", "C = 0.30")):
+        ax.plot(hh, [p_vc(h, c) for h in hh], color=C_SOL, lw=2.0, ls=ls, label=f"p v_c ({lab})")
+    pv = np.array([p_vc(h, 0.45) for h in hh])
+    ax.fill_between(hh, pv, 30, color="#f4f3ee", lw=0)
+    ax.text(0.4, 27.5, T("V > p v_c: 慣性で走り、堆積しない", "V > p v_c: runs on inertia, no deposition"), fontsize=8.4,
+            va="top")
+    ax.text(11.8, 1.0, T("V < p v_c: 堆積する\n(率に (1 − V/(p v_c))⁴ を掛ける)", "V < p v_c: deposits\n(rate × (1 − V/(p v_c))⁴)"),
+            fontsize=8.0, color=C_SOL, ha="right")
+    h23 = (23.0 / p_vc(1.0, 0.45)) ** (2.0 / 3.0)
+    ax.axhline(23.0, color="#c0392b", lw=0.9, ls=":")
+    ax.text(11.8, 23.4, T(f"谷の中の最大流速 23 m/s(結果の節)。\n深さ {h23:.0f} m より浅ければ線より上",
+                          f"max speed in the valley 23 m/s (results);\nabove the curve if shallower than {h23:.0f} m"),
+            fontsize=7.6, color="#c0392b", va="bottom", ha="right")
+    for h0 in (2.0, 5.0):
+        v0 = p_vc(h0, 0.45)
+        ax.plot(h0, v0, "o", color=C_SOL, ms=4)
+        ax.text(h0 + 0.15, v0 - 0.3, f"{v0:.1f} m/s", fontsize=7.6, color=C_SOL, va="top")
+    ax.set_xlim(0, 12)
+    ax.set_ylim(0, 30)
+    ax.set_xlabel(T("流動深 h_t (m)", "flow depth h_t (m)"), fontsize=8.8)
+    ax.set_ylabel(T("流速 V (m/s)", "speed V (m/s)"), fontsize=8.8)
+    ax.legend(loc="upper left", bbox_to_anchor=(0.0, 0.72), fontsize=7.8, frameon=False)
+    ax.set_title(T("(b) 慣性で走る間は堆積しない(f_dbed = 3)", "(b) No deposition while running on inertia (f_dbed = 3)"),
+                 fontsize=9.5, loc="left")
+    ax.text(0.0, -0.17, T("p = 1/3、d = 0.3 m、φ = 35°。堆積が始まる速さ p v_c は\n"
+                          "流動深の 1.5 乗に比例し、濃度が低いほど大きい。\n"
+                          "速く深い谷の流れは堆積せず、扇状地で薄く遅く\n"
+                          "なると線より下に入って堆積する。",
+                          "p = 1/3, d = 0.3 m, φ = 35°. The speed below which\n"
+                          "deposition starts, p v_c, grows with depth to the 1.5\n"
+                          "power and is larger for lower concentration. The fast,\n"
+                          "deep valley flow does not deposit; on the fan it thins,\n"
+                          "slows, falls below the curve and deposits."),
+            transform=ax.transAxes, **note)
+    # (c) equilibrium concentration along the path
+    ax = axs[2]
+    xi = np.linspace(0, M.L_V + M.L_F, 900)
+    ci = c_inf_tn(M.slope_axis(xi))
+    ax.plot(xi, ci, color=C_SOL, lw=2.0, label=T("平衡濃度 C∞(谷底・扇状地の軸の勾配)", "equilibrium C∞ (slope of the axis)"))
+    ax.axhline(M.C0, color="#1f5f8b", lw=1.4, ls="--", label=T(f"流れ出す濃度 {M.C0:g}", f"released concentration {M.C0:g}"))
+    ax.fill_between(xi, ci, M.C0, where=ci < M.C0, color="#f6e3c8", lw=0)
+    ax.axvline(M.L_V, color="k", lw=0.8, ls="--")
+    ax.axvspan(M.S_C - M.A_S, M.S_C + M.A_S, color="#c0392b", alpha=0.12, lw=0)
+    ax.text(M.S_C, 0.03, T("崩壊", "collapse"), ha="center", fontsize=8, color="#8b1a10")
+    ax.text(M.L_V + 10, 0.03, T("扇頂", "apex"), fontsize=8)
+    ax.text(520, 0.33, T("C∞ < C: 遅くなれば\n堆積する側", "C∞ < C: deposits\nonce it slows"), fontsize=8.2, color=C_SOL)
+    for x0 in (M.L_V, M.L_V + M.L_F):
+        cv = float(c_inf_tn(M.slope_axis(x0)))
+        ax.plot(x0, cv, "o", color=C_SOL, ms=4)
+        ax.text(x0 - 15, cv + 0.02, f"{cv:.2f}", fontsize=8, ha="right")
+    ax.set_xlim(0, M.L_V + M.L_F)
+    ax.set_ylim(0, 0.7)
+    ax.set_xlabel(T("谷筋〜扇状地の軸に沿う距離 (m)", "distance along the valley and fan axis (m)"), fontsize=8.8)
+    ax.set_ylabel(T("濃度", "concentration"), fontsize=8.8)
+    ax.legend(loc="upper right", fontsize=7.6, frameon=False)
+    ax.set_title(T("(c) 平衡濃度と流れの濃度", "(c) Equilibrium and flow concentration"), fontsize=9.5, loc="left")
+    ax.text(0.0, -0.17, T("崩壊地より下流では C∞ が 0.45 を下回り、流れは\n"
+                          "堆積する側にある(侵食できるのは崩壊域の土層と\n"
+                          "積もった土砂だけ)。勾配は流動面の勾配\n"
+                          "(等流では谷底の勾配)。",
+                          "Downstream of the collapse C∞ is below 0.45, so the\n"
+                          "flow is on the depositing side (only the collapse soil\n"
+                          "and the deposits are erodible). The slope is that of\n"
+                          "the flow surface (the bed slope for uniform flow)."),
+            transform=ax.transAxes, **note)
+    for a in axs:
+        a.tick_params(labelsize=7.8)
+        for sp in ("top", "right"):
+            a.spines[sp].set_visible(False)
+    fig.savefig(f"{FIGDIR}/laws.png", dpi=100)
+    plt.close(fig)
+
+
 # ---------------------------------------------------------------- 図: 結果
 from matplotlib.colors import BoundaryNorm
 from matplotlib.lines import Line2D
@@ -699,11 +1093,16 @@ def fig_series(cases):
 
 
 def main():
-    if "setup" in sys.argv[1:]:
-        fig_setup()
-        return
     fig_setup()
+    fig_grid()
+    fig_mechanism()
+    fig_laws()
+    if "setup" in sys.argv[1:]:
+        return
     cases = load_all()
+    if not cases:
+        print("計算結果がないので、説明図(setup・grid・mechanism・laws)だけを描いた")
+        return
     mets = {k: c.metrics() for k, c in cases.items()}
     print_table(cases, mets)
     print_summary(cases, mets)

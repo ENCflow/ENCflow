@@ -24,13 +24,36 @@ on an idealised coast with a bay. No code changes (settings only).
   waterline (with 0.6 m of subsidence, 1.2 km goes below sea level). East,
   north and south are long-wave radiation boundaries; the "solved sea"
   configuration (f_htype=2, still-water level 0).
+
+![Setup](figs/setup.png)
+
+(a) Plan (north up). On the terrain, the surface projections of the three
+fault planes (rectangles; the thick line is the top edge and the triangles
+point down-dip) and probes 1–7. The west is a wall; east, north and south are
+radiation boundaries. (b) Section along the bay axis (y = 40 km). Top: the
+terrain (depths beyond 10 m compressed logarithmically); bottom: the fault
+planes (vertical and horizontal scales nearly equal; the splay fault 3 is the
+section at y = 15 km overlaid). All are reverse faults, with the hanging wall
+(west side) moving up-dip. Drawn from the input files (z.txt and
+fault2disp_all.txt); not computed results.
+
 - Faults ([fault2disp_all.txt](../fault2disp_all.txt) → bm/; strike N–S, dipping west):
 
 | Segment | Position and geometry | Slip | Time | Effect |
 |---|---|---|---|---|
-| 1 deep (beneath the coast) | upper edge x = 60 km, depth 8 km; width 40 km; dip 20° | 5 m | t = 0, 20 s | coast to bay subsides 0.5–0.6 m; the outer shelf (x ≈ 40–60 km) is uplifted 0.7–1.4 m |
+| 1 deep (beneath the coast) | upper edge x = 60 km, depth 8 km; width 40 km; dip 20° | 5 m | t = 0, 20 s | coast to bay subsides 0.4–0.6 m; the outer shelf and slope (x ≈ 40–65 km) are uplifted 0.9–2.2 m (with the subsidence from the offshore fault, the final displacement is 0.7–1.4 m) |
 | 2 shallow (offshore) | upper edge x = 100 km, depth 5 km; width 30 km; dip 15° | 8 m | t = 30 s, 20 s | main tsunami (3.4 m uplift offshore, −1.4 m subsidence) |
-| 3 splay fault (south of the bay mouth) | upper edge x = 22 km, y = 15 km, depth 1 km; width 8 km; dip 60° | 2 m | t = 0, 10 s | the cape and the surrounding shelf are uplifted 0.5–0.8 m |
+| 3 splay fault (south of the bay mouth) | upper edge x = 22 km, y = 15 km, depth 1 km; width 8 km; dip 60° | 2 m | t = 0, 10 s | the cape and the surrounding shelf are uplifted by up to 1.0 m (with the subsidence from the deep segment, the final displacement is up to 0.6 m) |
+
+![Ground displacement](figs/deformation.png)
+
+(a) Final ground displacement of the three faults together (red = uplift,
+blue = subsidence). (b) Displacement along the bay axis by source: the coastal
+faults 1 and 3 (the difference between bm/ and bm_off/) and the offshore fault
+2 (bm_off/). The deep fault 1 lowers the coast and bay by 0.4–0.6 m and raises
+the outer shelf and slope by up to 2.2 m, but that area overlaps the
+subsidence of the offshore fault 2, and the final displacement there is 1.4 m.
+Drawn from the fault2disp output bm/ and bm_off/; not computed results.
 
 | Case | Settings | Meaning |
 |---|---|---|
@@ -40,19 +63,57 @@ on an idealised coast with a bay. No code changes (settings only).
 
 ```
 make                        # links, z.txt, bm/ (fault2disp), bm_off/
-./encflow param_full.txt    # 20 s each (gfortran, 4 threads; dt = 1.5 s, 60 min)
+python3 plot_schematic.py   # explanatory figures figs/setup.png, deformation.png, mechanism.png (can be drawn before the runs)
+./encflow param_full.txt    # about 30 s each (gfortran, 4 threads; dt = 1.5 s, 60 min)
 ./encflow param_inst.txt
 ./encflow param_offshore.txt
-python3 plot_results.py     # figs/*.png and tables
+python3 plot_results.py     # result figures figs/probes.png, snapshots.png and tables
 ```
+
+With the argument `en`, the figures are drawn with English labels into
+en/figs/ (`python3 plot_schematic.py en`, `python3 plot_results.py en`).
+Plotting needs Python 3, NumPy and matplotlib.
+
+## How it works
+
+![How it works](figs/mechanism.png)
+
+(a) Time history of the ground displacement that fn_bedmotion reads (11
+snapshots every 5 s in bm/). Faults 1 and 3 move at t = 0–20 s and the
+offshore fault 2 at t = 30–50 s. The crest of the slope uplift (x = 58 km)
+rises 2.2 m by 20 s and drops to 1.4 m with the subsidence of fault 2. The
+dashed lines are the instantaneous case (the final displacement given at
+t = 0). (b) The rule of fn_bedmotion: the ground height z is moved and the
+water column h is kept, so the water surface moves with the ground. Seabed
+uplift becomes a wave as a raised water surface, subsidence of the bay floor
+draws water in from around (a flood wave), and subsidence of the land floods
+the plain now below sea level. (c) Travel time along the bay axis to the
+coast (bay mouth) at the long-wave speed √(gh), with the final ground
+displacement (right axis). It takes 15.9 min from the crest of the slope
+uplift and 23.3 min from the crest of the offshore uplift, close to the two
+peaks at the bay-mouth probe (15.9 and 23.9 min). Drawn from the inputs and
+formulas; not computed results.
 
 ## Results
 
-![Ground displacement](figs/deformation.png)
+![Probes](figs/probes.png)
 
-![Probes](../figs/probes.png)
+Water level (z + h) at the seven probes. ▲ marks the arrival (the time at
+which the change in depth exceeds 0.1 m; at the land probe, the start of
+flooding). The water surface moving with the ground shows up as a step right
+after the ground moves (−0.6 m at the bay head, +0.7 m at the cape). At the
+bay mouth, ① is the wave from the coastal deformation (absent in the
+offshore-only case) and ② the tsunami from the offshore fault. For the land
+at the bay head (7), the line shows the ground height until it floods (in
+the time-history case it drops from 0.38 m to −0.18 m).
 
-![Water-level distributions and flooding](../figs/snapshots.png)
+![Water-level distributions and flooding](figs/snapshots.png)
+
+Water level in the time-history case (t = 2, 5, 10, 20 and 30 min; the black
+line is the coastline before the motion) and the maximum flood depth on land
+around the bay. At t = 2 min the bay surface has dropped about 0.6 m with the
+ground, and the uplift of the outer shelf and slope and the offshore uplift
+appear as raised water surfaces.
 
 | Probe | With time history: arrival (min) / max / min (m) | Instantaneous displacement: arrival / max / min | Offshore fault only: arrival / max / min |
 |---|---:|---:|---:|
@@ -68,11 +129,7 @@ Arrival = the time at which the change in depth exceeds 0.1 m (motion together
 with the bed does not change the depth, so only the waves and the inflow are
 picked up; at the land probe, the start of flooding). The maximum flood depth on
 the land at the bay head is 2.94 m with time history, 3.02 m instantaneous and
-2.12 m offshore only. The flooded land area is 301 / 299 / 266 km² (recomputed on
-2026-11-02 with the default f_opening_dynamic = 3 and the corrected lateral faces of the
-momentum-conserving advection; developer.md §68.41–§68.43; recomputed on 2026-11-05 after the
-default f_gravity_correction = 2 and the fixes of the outflow suppression and the edge depth, §93–§95,
-where only the last digit of the minimum at the shelf changed).
+2.12 m offshore only. The flooded land area is 301 / 299 / 266 km².
 
 - **With the coastal deformation included, the disturbance at the coast starts
   10 minutes earlier.** With the offshore fault only, the arrival at the coast
@@ -87,9 +144,11 @@ where only the last digit of the minimum at the shelf changed).
   drops with the subsidence (−0.6 m), and its recovery by inflow from the
   surroundings becomes a positive wave as it is. The land at the bay head floods
   from 27.5 min (38.9 min with the offshore fault only), with a maximum flood
-  depth of 3.0 m (2.1 m offshore only). The subsided land remains under water
-  after the tsunami has receded (depth 0.7 m at 60 min; the difference from the
-  1.0 m residual with the offshore fault only is the difference in bed elevation).
+  depth of 2.9 m (2.1 m offshore only). The subsided land (ground 0.38 →
+  −0.18 m) lies below sea level, and water remains after the tsunami has
+  receded (level 0.72 m, depth 0.90 m at 60 min). In the offshore-only case the
+  ground stays above sea level (0.37 m), and the depth of 0.63 m (level
+  1.00 m) at 60 min is water still draining away.
 - **Response inside the bay**: the inflow into the subsided area and the
   offshore tsunami overlap inside the bay, and the maximum level at the bay head
   is 4.3 m (3.6 m offshore only). At the bay mouth the time-history case gives

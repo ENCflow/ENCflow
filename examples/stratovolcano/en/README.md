@@ -127,10 +127,6 @@ slopes.
 | Ash moved by storms (fraction of the fallen ash) | 1.8×10⁷ m³ (16%) | 1.2×10⁷ m³ (58%) | — |
 | Of which left the domain | 0.5% | 0.03% | — |
 
-The table and figures were recomputed after the fix of the steep-slope gravity correction
-(2026-11-04; developer.md §91, in Japanese). The flanks are gentle (8–11°), so the correction
-changes little; the only change in the table is the slope of L at 1.0–1.5 km (0.6 → 0.5°).
-
 - **A volcano of stacked lava and ash layers forms**: in every case the edifice is concave, steep near
   the summit and gentler toward the foot (slopes of 8–11° at 0.1–0.5 km from the summit and about 1°
   at 1.0–1.5 km). As in the section figure below, lava and ash alternate inside.
@@ -235,8 +231,9 @@ and the margins. (e) Distance from the vent to the flow front. (f) Amount of lav
 - **Dynamics of explosive eruptions**: eruption columns, pyroclastic flows and ballistics are not
   computed. The ashfall is a schematic distribution of the preprocessing, without bias by the wind.
 - **Lahars (debris flows)**: not used. The lahar model (`f_debris`) requires `morfac` = 1 and cannot
-  lump the many storms of the repose period into one computation. In prototypes that computed lahars
-  under similar conditions as a single storm, one storm moved 0.4–4% of the ash of that eruption.
+  lump the many storms of the repose period into one computation. Computing lahars under similar
+  conditions for a single storm only, one storm moves 0.4–4% of the ash of that eruption (the input
+  of that computation is not included in this example).
   Lahars in a storm right after an eruption are in the [ashfall_lahar](../../ashfall_lahar/en/README.md)
   example.
 - **Time**: one cycle is "one eruption + the erosion of 100 storms"; the length of the repose period

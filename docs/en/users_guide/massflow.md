@@ -16,7 +16,9 @@ implementation is in `src/m_geomorph_debris.f90`,
 `src/m_geomorph_bedslide.f90` and, for the resistance laws merged into
 the momentum equation, `src/m_swflow_enc.f90` (`calc_kth_flux`). The design
 history and the literature checks are in docs/debris_plan.md and
-docs/landslide_tsunami_plan.md.
+docs/landslide_tsunami_plan.md. The graphs of the Voellmy steady speed and the infinite-slope safety
+factor and the figure of the moving bed layer are in the sections of the chapter; this page has the figures of
+the single-layer mixture and its exchange and of the behaviour of the resistance laws.
 
 ## 1. Single-layer mixture model
 
@@ -47,6 +49,18 @@ Kanako[^nakatani08] and Morpho2DH[^morpho2dh]: shallow water equations
 plus a granular resistance law plus an erosion/deposition law, without a
 separate sediment layer (within the scope of developer.md §0).
 
+![Single-layer mixture and its exchange with the bed: state of one cell, bookkeeping of the exchange, speed toward the equilibrium](../../figs/massflow_mixture_en.png)
+
+Panel (a) shows the state of one cell: the water $`h`$ and the solid column $`h_s`$ (solid volume as a
+thickness) move with one velocity, the friction depth is $`h_t`$ and the surface is $`z + h + h_s`$. Panel (b)
+is the exchange with the bed at the landform update (§3): $`\Delta z = -\Delta h_s/C_*`$ is applied equally to
+$`z`$ and $`s_d`$, so the bedrock surface does not move; pore-water entrainment (`f_dbwet`) and stopping
+(`f_dbstop`) also act here. Panel (c) plots, for the two erosion/deposition laws of §3, the bed change per metre
+travelled against the concentration; both move toward the same equilibrium concentration $`C_\infty`$. The speed
+of f_dbed = 1 is set by $`\delta_e`$ and $`\delta_d`$ (by default deposition is faster than erosion), while
+f_dbed = 2 has no coefficient and flows close to clear water erode strongly. The curves evaluate the expressions
+with the default coefficients; they are not computed results.
+
 ## 2. Resistance laws (f_dbres)
 
 All resistances are merged semi-implicitly as decelerations (a yield term
@@ -56,6 +70,19 @@ held at rest explicitly, so that starting and stopping follow the same
 equation; see "Rest and onset of motion" below).
 $`g_e`$ is the effective gravity $`g\cos^2\theta`$ on steep slopes
 ([ENC grid](encgrid.md) §5).
+The expressions in the table are in the form of the horizontal velocity
+$`|\mathbf{V}|`$ and the vertical depth $`h_t`$, and are used as they are with
+`f_gravity_correction` = 0 and 1. With the default 2, factors that re-evaluate the
+resistance with the slope-parallel speed $`|\mathbf{V}_s| = r|\mathbf{V}|`$ and the
+bed-normal thickness $`h_t\cos\theta`$ are applied: $`1/(r\cos\theta)`$ for the yield
+(1 for flow in the direction of steepest descent), $`r/\cos^3\theta`$ for the terms
+proportional to the square of the velocity (the turbulent term of Voellmy, the
+laminar law of Egashira, the stony type of Takahashi–Nakagawa) and
+$`r/\cos^2\theta`$ for the bedload-like collective flow. Uniform flow with Voellmy
+then follows $`V_s^2 = \xi\,h_t\cos\theta\,(\sin\theta - \mu\cos\theta)`$ as in RAMMS,
+so μ and ξ calibrated with RAMMS can be used as they are
+([steep-slope gravity correction](steep_slope.md) §2.3, developer.md §101 (in
+Japanese), verified by [test/dbslope](../../../test/dbslope/en/README.md)).
 
 | f_dbres | Name | Yield deceleration $`a_y`$ and velocity-dependent term | Extra parameters |
 |---:|---|---|---|
@@ -102,7 +129,8 @@ magnitude combines the drive in the normal direction of the edge
 (advection and gravity) with the gradient of the flow surface (the
 average of the two cells) projected onto the tangent of the edge, so the
 slope at which the flow starts stays $`a_y/g_e`$ even when the slope is
-oblique to the grid. It is verified by
+oblique to the grid (the yield factor of the default 2 is determined by the
+direction of the drive and is 1 on a uniform slope). It is verified by
 [test/dbonset](../../../test/dbonset/en/README.md) (on a uniform slope
 the threshold and the speed and direction of sliding agree with the
 analytical solution of a rigid sliding block within 0.4%, regardless of
@@ -137,6 +165,17 @@ when comparing with μ–ξ values calibrated in RAMMS. Verification:
 [test/curvature](../../../test/curvature/en/README.md) (comparison with the
 steady one-dimensional ODE; the thickening on the arc, on minus off, is
 1.03 times the ODE value).
+
+![Behaviour of the mixture resistance laws: stopping slope vs concentration, speed vs grain size, curvature term](../../figs/massflow_resist_en.png)
+
+Panel (a) plots the slope at which the flow stops (and a resting mixture does not start),
+$`\tan\theta_y = a_y/g_e`$ from the yield decelerations of the table, against the concentration. Laws 1–3 rise
+with the concentration, so dilute flows run on gentler slopes; law 4 is μ whatever the concentration, and law 5
+depends on the flow depth. The curve of law 1 is the same expression as the Egashira–Ashida equilibrium slope
+$`\theta_e`$ of §3. Panel (b) plots the uniform-flow speed on a 20° slope (the same balances as test/dbslope)
+against the grain size: in the Egashira law the resistance vanishes for small grains and the speed diverges, and
+the Takahashi–Nakagawa law switches to Manning for $`h_t/d \ge 30`$. Panel (c) is the multiplier of the
+curvature term. The curves evaluate the expressions for illustrative values; they are not computed results.
 
 ## 3. Erosion and deposition laws (f_dbed)
 
@@ -225,7 +264,7 @@ formula (eqs. (5)–(7) of Morpho2DH[^morpho2dh]) with no extra parameter:
 
 $`\theta`$ is the bed slope along the flow and $`\theta_e`$ the equilibrium
 slope of the concentration $`C`$ (its inverse is the stony-type
-$`C_\infty`$). In each cell $`\theta`$ is a one-sided difference to the
+$`C_\infty`$; the direction and speed of the exchange of f_dbed = 1 and 2 are compared in the figure of §1). In each cell $`\theta`$ is a one-sided difference to the
 downstream neighbour in the flow direction (a central difference cannot see a
 two-cell undulation; developer.md §89.24, in Japanese).
 
@@ -463,7 +502,8 @@ The labels in the Basis column are explained in [How to read the basis of a defa
 |---|---|---|
 | [test/debris](../../../test/debris/en/README.md) | four constitutive configurations (simple, Egashira, Takahashi–Nakagawa, pore water); equilibrium concentration of uniform flow on a slope | total solid 1e-13, np = 1, 2, 4 agree; equilibrium concentration within 1e-11 of the Takahashi-type C∞ |
 | [test/slide](../../../test/slide/en/README.md) | fluidisation and stability test | self-checks of conservation and water budget |
-| [test/volcano](../../../test/volcano/en/README.md) | Voellmy uniform flow and τ_y run-out | uniform depth within 0.04% of the analytical solution (four neighbours) |
+| [test/volcano](../../../test/volcano/en/README.md) | Voellmy uniform flow and τ_y run-out | uniform depth agrees to 0.0% with the analytical solution (the along-slope equation with the default 2; four neighbours) |
+| [test/dbslope](../../../test/dbslope/en/README.md) | uniform flow on a 30° slope (Voellmy, Egashira, the stony type and the bedload-like collective flow of Takahashi–Nakagawa), steep-slope gravity correction 1 and 2 | for all four, within 0.03% of the analytical solutions of the along-slope equations with 2 and of the horizontal equations with 1 (ratio of the depths of 2 and 1: 1.11–1.21) |
 | [test/curvature](../../../test/curvature/en/README.md) | steady one-dimensional test of the curvature term | thickening on the arc 1.03 times the ODE |
 | [test/dbonset](../../../test/dbonset/en/README.md) | rest and onset of motion under the yield (uniform slope 0.9, 1.1 and 1.3 times the yield slope; slope direction 0°, 22.5° and 45°; eight and four neighbours; without and with the steep-slope gravity correction) and the safety factor of the slope-stability test (same slopes; c' = 0, no groundwater) | threshold, speed and direction independent of the direction and the stencil, within 0.4% of the analytical solution of a rigid sliding block (g cos²θ with the gravity correction); safety factor independent of the direction, within 0.1% of tanφs/tanθ |
 | [test/avalanche](../../../test/avalanche/en/README.md) | avalanche (Voellmy + velocity-proportional entrainment) | grows by entrainment to about 3.4 times the released amount and stops; ledger to machine precision |

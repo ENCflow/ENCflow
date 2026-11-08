@@ -7,11 +7,14 @@
 This page gives the equations and the basis of the default values for the
 processes of the [sediment and landform chapter](geomorph.md) that move
 sediment with the flow or shape hillslopes over long times: hillslope
-creep, bedload, suspended sediment, hillslope erosion, dry-slope erosion,
-bedrock weathering and uplift, and the acceleration of morphological time.
+creep, bedload (including wave-driven longshore transport), suspended sediment, hillslope
+erosion, dry-slope erosion (including rockfall and talus), bedrock weathering and uplift, and the
+acceleration of morphological time.
 Debris flows, slope failure and the moving bed layer are in
 [Debris flow, slope failure and moving bed layer](massflow.md). The
 implementation is in `src/m_geomorph*.f90` (one submodule per process).
+Explanatory figures and graphs of the equations are mostly in the sections of the chapter; this page has the
+figures of the transport formulas and equilibrium concentration and of the adaptation length of suspended sediment.
 
 ## 1. Common framework
 
@@ -121,8 +124,8 @@ with the 5-point stencil). Verification: [test/stencil9](../../../test/stencil9/
 (on a hill with σ = 2Δ, the difference between the axis-side and diagonal cells at the
 same distance goes from −1.92 % to −0.03 %; the decay in strips one and three cells
 wide agrees with the exact discrete solution to 1e-14; 7.5e-4 m against the
-analytical solution for a well-resolved hill). The default is 0; whether to change it
-is decided after checking the results (developer.md §96).
+analytical solution for a well-resolved hill). The default is 1/3, changed from 0 on
+2026-11-05 (developer.md §96).
 
 **Depth-dependent creep (`creep_hstar` > 0)**:
 
@@ -274,6 +277,24 @@ overshoot with eight directions at once; one sweep per update).
 Verification: [test/berode](../../../test/berode/en/README.md),
 [test/repose](../../../test/repose/en/README.md).
 
+**Self-protection of the bank by slump blocks.** A cohesive bank fails in
+blocks once pool scour makes the bank face higher than a critical height, and
+the fallen blocks cover the toe and stop bank erosion until the flow has
+carried them away (Asahi et al. 2013; Parker et al. 2011[^parker11]). This is represented
+by the **bank mode** `rf_bank = 1` of [rockfall and talus](geomorph.md#rockfall-and-talus-f_rockfall)
+`f_rockfall` together with `berode_hcover` (developer.md §84.17): the part of a
+bank face (a step above the water surface of the receiving cell; submerged steps,
+i.e. pool walls, are excluded) that exceeds the critical height `rf_hc` collapses
+into talus ht at the toe, the talus is removed by the outflow of bed load, bank
+erosion and avalanching, and at a toe with talus ht the shear stress reaching the
+bank face is reduced by (1 − ht/h_cover)⁺. With fixation (`f_fixation`) the
+critical height rises to H_c (1 + c_τ,b a) with the fixation degree of the source
+cell. H_c is a structural quantity for the bank material (a guide: the initial bank
+height plus the pool scour at which failure should start), h_cover the block size
+(tens of centimetres to a metre). Verification: slump / slump0 in
+[test/berode](../../../test/berode/en/README.md); example: param_cohesive_slump.txt in
+[examples/meander](../../../examples/meander/en/README.md).
+
 **Fixation.** The cell fixation degree $`a`$ of `f_fixation = 1` grows while
 the cell is dry (h ≤ dd) as
 
@@ -294,6 +315,39 @@ unchanged), and, with `fix_cn` > 0, to make the Manning n of the flow
 friction $`n(1 + c_n a)`$ (the $`\tau_*`$ of the sediment keeps the original
 n; elevations and volumes are untouched). Verification:
 [test/fixation](../../../test/fixation/en/README.md).
+
+**Using fixation and choosing its values.** Bed load deposits only up to the water
+surface of the supplying cell, so under a constant discharge the inner-bank
+bar stays submerged and the channel only widens instead of migrating.
+`f_fixation = 1` represents the establishment of vegetation and the like on
+cells exposed at low flow (h ≤ dd) by a fixation degree a ∈ [0, 1] (output
+`Fx0001...`): while dry, a approaches 1 as 1 − exp(−t/T_fix) (`fix_tfix`,
+morphological time including morfac), and the critical shear stress of the
+bed load supplied by that cell and of the bank erosion of that cell rises to
+τ*c (1 + c_τ a) (`fix_ctau`). With suspended sediment (`f_suspend`) only the
+entrainment term (equilibrium concentration) of a fixed cell is reduced, by the
+same c_τ, while settling is unchanged, so fines supplied during floods settle
+on the fixed bars (the path that raises a bar to floodplain level). With
+`fix_cn` > 0 the flow roughness of fixed cells rises to n (1 + c_n a), the
+flow slows down and more fines are trapped (the form drag of vegetation; the
+τ* of the sediment is not changed. Typical Manning n: grass 0.03 to 0.035,
+floodplains with brush or trees 0.05 to 0.15, i.e. c_n = 1 to 3; the default
+is 0 pending a literature check). Deposition onto a fixed surface is not
+hindered and elevations and volumes are untouched. When a submerged cell is
+eroded by more than `fix_dzreset` (default 0.1 m) below the fixation surface,
+a returns to 0 (nothing becomes permanently unerodible). It does not act on
+the angle-of-repose avalanching. If a fixed bar stays submerged without being
+eroded (with a strong fixation the erosion never reaches the threshold, and an
+exposed bar becomes permanent in practice), add a decay while submerged with
+`fix_tdec` (while wet, a <- a exp(-t/T_dec): die-back of vegetation, softening
+of the surface layer; a T_dec longer than the duration of a flood keeps the
+fixation through short floods). The effect on bank erosion can be separated
+from the bed with `fix_ctau_bank` (roots stiffen the surface layer but hardly
+the bank toe, so a value below the bed c_tau, e.g. 0.5-1). Use it with an inflow series that alternates
+floods and low flows ([examples/meander](../../../examples/meander/en/README.md),
+param_fix.txt; with suspended sediment param_fixsusp.txt). Restart in
+`geomorph_fixation.dat` (the dynamic roughness is rebuilt from a and not
+saved). Verification: [test/fixation](../../../test/fixation/en/README.md).
 
 **Defaults.** `fluv_d50` = 0.01 m lies near the geometric mean of a sand
 bed (0.5 mm) and a mountain gravel bed (5 cm); values for sand and gravel
@@ -414,6 +468,44 @@ multiplies the $`\tau_*`$ passed to the transport formula by this factor
   depth, a resistance-law option is a candidate, but it affects the whole flow
   and is deferred as a separate item (docs/mountain_stream_plan.md §14.6, item 8).
 
+### Wave-driven longshore transport (fn_wave)
+
+Reasons and verification for the smoothing length, the shadowing by submerged bars and the river-mouth rule of [wave-driven longshore transport in the chapter](geomorph.md#wave-driven-longshore-transport-fn_wave) (the steps of one landform update and the figure are in the chapter).
+
+**Give the smoothing length `wave_lsm`** (the default 0 keeps the cell-radius-2
+kernel for compatibility). Under high-angle waves (incidence above 45°) the
+shoreline roughness grows, which is physical, but the only length that selects
+the growing wavelength is the smoothing cut-off, so the cell-radius kernel lines
+up bars at the grid spacing. With σ given as a length of 2Δx or more the cut-off
+no longer depends on the grid and the straight-shoreline linear theory is
+reproduced (test/wave_shore: with σ = 2Δx the low-angle decay rate is 1.05 and
+the high-angle growth rate 0.86 of theory, grid-scale power 30 % → 6 %). Use
+2Δx up to about a quarter of the surf-zone width W_b. Irregularities shorter than
+σ are smoothed by the local slope term β (`wave_bslp`, default 5).
+
+**Shadowing by submerged bars (`f_wave_shadow`)** reduces longshore transport
+on the beach in the lee of a bar (mouth bar, lobe, breakwater). A wave that has
+crossed a bar with crest depth h_c keeps at most γh_c, so the flux of the whole
+lee column (inner beach included) is reduced by (h_c/h_trough)^{5/2}
+(shallow-water energy flux ∝ H^{5/2}; the transmission treatment of a
+breakwater in one-line models). Diffraction is not represented, so sand piles at
+the updrift edge of the lee rather than at its centre, and the downdrift side
+erodes. In the submerged breakwater case of test/wave_shore the bed change at
+the lee centre drops to 1/5, the deposition at the updrift edge rises 4× and the
+downdrift erosion 2.6×. The test uses the depth steps of the grid, so bars and
+holes shorter than σ also shadow weakly (developer.md §84.15).
+
+**`wave_vmax` is required at river mouths with a mobile bed**: once the
+river's flow depth exceeds h_b the channel itself becomes a wave source,
+longshore transport acts on bars and riffles inside the channel and the run
+diverges ("Notes" in examples/delta/README.md). With `wave_vmax` set, cells
+whose speed exceeds it are neither a source nor surf zone, so waves do not
+enter the channel. Put the value between the river's flow speed and the speed
+on the shoreline band (check the V output; e.g. 0.5 for 0.8 m/s in the channel
+and 0.3 m/s on the delta front). During a flood the speed rises in front of
+the mouth too, so waves pause there and resume at low flow. Verification:
+[test/wave_river](../../../test/wave_river/en/README.md).
+
 ## 4. Suspended sediment (f_suspend)
 
 **Transport.** The concentration $`C = h_s/h`$ is the solid volume per
@@ -474,6 +566,16 @@ form, which has no published value, calibrated in
 Verification: the same test, total solid conserved to 2.2e-15 with both
 equilibrium formulas.
 
+![Adaptation length of suspended sediment: distance to approach the equilibrium, L = q/(β w_f)](../../figs/sediment_adapt_en.png)
+
+Solving the exchange above in steady uniform flow, the concentration approaches the equilibrium $`C_{eq}/\beta`$
+over the distance $`L = q/(\beta w_f)`$ ($`q = hV`$) (panel (a); the continuous solution that configurations 3
+and 4 of [test/suspend](../../../test/suspend/en/README.md) compare with). $`L`$ does not depend on the entrainment
+formula and is set by the settling velocity. Panel (b) plots $`L`$ against the grain size for $`q`$ = 1 m²/s: tens
+of metres for fine sand, close to a cell size, and kilometres for silt and mud flocs, so mud travels far from where
+it was entrained before it settles. The curves evaluate the expressions for illustrative values; they are not
+computed results.
+
 ## 5. Hillslope erosion (f_wash)
 
 Wet ($`h > d_d`$) cells outside channels ($`r_w = 0`$) release sediment by
@@ -508,7 +610,8 @@ the shares that would fall outside the domain or on sea cells are returned
 to the source cell, so $`\sum_i \Delta z_i = -\sum_j e_j`$: the total solid is
 conserved). The suspended sediment $`h_s`$ enters the source cell $`j`$.
 $`\ell_w`$ is the width of the rills (flow paths), approximated as a fixed
-value independent of discharge.
+value independent of discharge. The figure of where it acts (sharing with dry-slope erosion and channels), the detachment rate and the shape of
+the kernel is in [hillslope erosion in the chapter](geomorph.md#hillslope-erosion-f_wash).
 
 ## 6. Dry-slope erosion (f_splash)
 
@@ -575,7 +678,7 @@ same partition rule as `creep_diagratio` of the creep; invalid neighbours are mi
 by the cell's own value, the same convention as the 5-point stencil), and on a hill with
 σ = 2Δ the difference in $`\kappa`$ between the axis-side and diagonal cells at the same
 distance goes from −8.4 % to −0.27 % (with ℓ = 2 m, from +3.3 % to +0.13 %;
-[test/stencil9](../../../test/stencil9/en/README.md); the default is 0; developer.md §96).
+[test/stencil9](../../../test/stencil9/en/README.md); the default was changed from 0 on 2026-11-05; developer.md §96).
 The defaults $`k_r`$ = 0.0005 and $`k_t`$ = 0.05 are the medians of the tests
 (**empirical**); verification is
 [test/splash](../../../test/splash/en/README.md) (all digits agree with the
@@ -584,6 +687,69 @@ export ledger equals the analytical sum) and
 [test/splashslide](../../../test/splashslide/en/README.md) (contrast of a
 cohesive and a loose cliff). The full reasoning and trials are in
 docs/splash_plan.md.
+
+### Rockfall and talus (f_rockfall)
+
+The rules of [rockfall and talus in the chapter](geomorph.md#rockfall-and-talus-f_rockfall) in detail (the figure drawing the rules with grid columns is in the chapter).
+
+The cliffs of cap-rock mesas and buttes retreat with a vertical free face
+because the undercut cap collapses and the fallen debris forms a talus that
+protects the weak layer at the foot. A raster (one z per cell) cannot hold an
+overhang, so three rules approximate the process (developer.md sec. 48.7):
+
+1. **Collapse**: the part of the height difference between neighbouring cells
+   (the free-face height) that exceeds the critical height `rf_hc` is moved from
+   the high to the low cell with the same numerical form as the angle-of-repose
+   avalanching (relax x excess / 2 / 8 per update; conservative). With a window
+   radius `rf_rc` the free-face height is measured as the drop to the lowest point
+   within r_c (a square window of nint(r_c/dx) cells), and the excess over H_c
+   (capped by the excess of that edge over the talus repose angle) is moved on
+   edges steeper than the talus angle. The whole face then takes part even on a
+   fine grid where the cliff spans several cells, and the critical height no
+   longer depends on dx.
+2. **Talus**: the volume arriving at the low cell is booked as talus thickness
+   `ht` (output `Ht0001...`). Edges whose donor cell is talus-covered also move the
+   excess over the talus repose angle `rf_phi` (only the talus itself).
+3. **Protection**: the dry-slope erosion `f_splash` of a talus-covered cell
+   (ht > 0) is multiplied by `rf_ftalus` (> 0), and the detached depth is taken from
+   the talus first (the material below is exposed once the talus is gone). Fallen
+   debris is taken to cover the cell it lands on. Talus spreads at its repose angle
+   only where it is at least `rf_hmin` thick.
+
+The removal rate of the talus (`rf_ftalus` x dry erosion) controls the cliff
+retreat rate (talus-limited retreat).
+
+4. **Supported-face mode (`rf_fface` >= 0; requires the window `rf_rc` > 0)**: under
+   rule 1 the whole face only sheds the excess of H_w over H_c and relaxes to the
+   repose angle, so even strong protection turns the plateau into a talus cone and
+   no vertical cliff survives. The supported-face mode changes two things.
+   (a) A cell whose foot (the cell beyond a drop steeper than the talus angle) is
+   covered by talus (ht >= `rf_hmin`, or a collapsing column) is a "talus-supported
+   face": its dry erosion E is multiplied by `rf_fface` (0 = it does not erode; the
+   flag is from the previous update; it replaces the strata factor). (b) The collapse
+   becomes a **column collapse**: a column starts at the top of the face (a cell with
+   no step higher than H_c above it) when H_w > H_c and falls until it is level with
+   its lower neighbours (the full drop; at most tan(phi_t) x dist / 32 per edge and
+   update, the amount the receiving talus can pass on). A column whose foot is a
+   collapsing column waits, so the face retreats one column at a time and stays
+   vertical, and the bedrock of a fallen column is buried as a shelf at the level of
+   the talus top. Collapse stops once the talus is thick enough that H_w <= H_c and
+   resumes when dry erosion (`rf_ftalus`) removes the talus: the talus removal rate
+   controls the retreat rate, and in steady state retreat rate x cliff height ~
+   talus removal rate x talus width. The collapsing-column flags are part of the
+   private file `geomorph_rockfall.dat` (restored automatically).
+5. **Undercut collapse (`rf_uc` > 0; requires the supported-face mode)**: a real cap
+   falls because the weak layer beneath it is cut back (undercut), not because of the
+   face height. A foot cell (a land cell with a step steeper than the talus angle
+   above it) remembers the bedrock depth u removed by dry erosion since it was last
+   buried by rockfall debris (talus loss is not counted; u is reset when the cell is no
+   longer a foot), and a column at the top of the face also falls when its foot has
+   u >= u_c (in addition to H_w > H_c), but only when the foot is weaker than the
+   column (its `spl_strata` erodibility factor is larger); a slope of one material is
+   not affected (`spl_strata` is required). While the debris covers the foot the edge is
+   protected; once the talus is removed and the bedrock is cut back by u_c the next
+   column falls, so the cycle is talus-limited without tuning H_c to the face height.
+   u is also part of the private file.
 
 ## 7. Bedrock weathering and uplift (f_wthr / f_uplift)
 
@@ -645,6 +811,31 @@ fraction $`f_{\rm res}`$ (`dissol_fres`) in the soil:
 $`z \leftarrow z - (1 - f_{\rm res}) w`$,
 $`s_d \leftarrow s_d + f_{\rm res} w`$. Local and linear, hence
 unconditionally stable.
+
+**Choosing the water amount (dissol_src).** The water amount is one of five sources. `dissol_src = 1` (default) is the
+**infiltration** of the groundwater module (vertical exchange of the bucket
+or Green-Ampt model) and needs `fn_gwflow`. `dissol_src = 2` is the
+**rainfall on the ground** (after interception), a maximum-denudation model
+that works without groundwater (evapotranspiration is not subtracted).
+`dissol_src = 3` is **infiltration plus the runoff generated on bare rock**:
+in cells whose soil is thinner than `dissol_sdsurf`, the runoff (rain minus
+infiltration) also spends `dissol_fsurf` of its capacity on that rock face
+(dissolution of bare slopes and tower faces; water arriving from upstream
+is taken as saturated and not counted). `dissol_src = 4` is the **recharge
+to the rock** (the exchange from the soil or layer 2 into the conduit
+continuum layer; requires `f_gwconduit = 1` and `gwc_leak_layer > 0`): where
+the conduit head is above the head of the soil (bedrock surface + soil water /
+specific yield) there is no recharge and dissolution stops. However, where
+rain accumulates in a thick soil so that its head stays above the conduit,
+dissolution continues even when the bedrock surface is below the water table
+(in param_base.txt of examples/tower_karst the bedrock under 24 m of residue
+dissolved to 24 m below the water table). There is no mechanism yet that makes
+the water table the base level of a corrosion plain ("no dissolution in the
+saturated zone"). `dissol_src = 5` adds the runoff on
+bare rock (the same term as 3). Infiltration (1 and 3) counts the water that
+entered the soil, so where the soil keeps thickening (residue of talus, for
+example) the added capacity keeps infiltration going and the pits have no bottom (the
+larger morfac, the more so); use 4 or 5 whenever a conduit layer is present.
 
 **Lateral dissolution** (`dissol_lat` = $`p`$). Of the capacity $`W_w`$ of
 a ponded cell w, the share $`p`$ goes to the land cells n among its 8
@@ -769,6 +960,20 @@ $`B_a = E_{a0}\,\Delta t_s\,e^{-H^n/H_*}`$). Changing the update interval
 or `morfac` gives the same result, and it is unconditionally stable. The
 outflow from a thin layer is explicit, with the time scale
 $`H_*(1-\lambda)\Delta x / q_c`$.
+
+**Bias of τ_b on steep slopes.** In the uniform-flow test (T9 of
+[test/rockinc](../../../test/rockinc/en/README.md)), τ_b computed from the
+cell velocity exceeded the uniform-flow balance ρ g h tanθ by 1 % at slope
+0.01, 14 % at 0.1 and 29 % at 0.2 (5 cells wide, Δx = 1 m, depth 0.3 m).
+The dynamic reassignment of blocked openings (`f_opening_dynamic = 2`, the
+default from 2026-10-18 to 31) counts the upslope ground of a uniform slope
+as a partial wall and speeds up the flow; the effect grows with grid spacing
+× slope relative to the depth. With `f_opening_dynamic = 3` (blockage
+measured above the local plane; the default since 2026-10-31) this bias
+disappears, and τ_b agrees with the uniform-flow balance within 1 ± 0.5 % at
+slopes 0.01 to 0.2 (T9; nearly the same as 2 in channels with high banks).
+If you set 2 explicitly, calibrate
+`rock_kp` and `rock_tauc` (and the transport rate) including this bias.
 
 **Rock erosion by debris flows (rock_kdb).** In debris-flow event runs
 (`f_debris = 1`), the quasi-static driving stress of the flowing mixture erodes
@@ -956,3 +1161,4 @@ The labels in the Basis column are explained in [How to read the basis of a defa
 [^engelund74]: Engelund, F. (1974): Flow and bed topography in channel bends. *J. Hydraul. Div. ASCE*, 100(HY11), 1631–1648. (Cited by Asahi et al. (2013) as the source of the secondary-flow coefficient N* = 7.0; the paper itself not checked)
 [^chatanantavet09]: Chatanantavet, P. and Parker, G. (2009): Physically based modeling of bedrock incision by abrasion, plucking, and macroabrasion. *J. Geophys. Res.*, 114, F04018. doi:10.1029/2008JF001044 (source of the abrasion law used by Inoue et al. (2016); the paper itself not checked)
 [^whipple02]: Whipple, K. X. and Tucker, G. E. (2002): Implications of sediment-flux-dependent river incision models for landscape evolution. *J. Geophys. Res.*, 107. doi:10.1029/2000JB000044 (cited for the classification of Sklar & Dietrich (2004); the paper itself not checked)
+[^parker11]: Parker, G., Shimizu, Y., Wilkerson, G. V., Eke, E. C., Abad, J. D., Lauer, J. W., Paola, C., Dietrich, W. E. and Voller, V. R. (2011): A new framework for modeling the migration of meandering rivers. *Earth Surf. Process. Landforms*, 36(1), 70–86. (A framework that treats the migration of the eroding bank and of the depositing bank with separate relations; checked against the abstract)

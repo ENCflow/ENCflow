@@ -29,8 +29,9 @@
 !   sea-mask cells (sw)
 !
 !   The direction is the direction of travel (counterclockwise from the
-!   x axis = east, north = 90°). It differs by 180° from the "coming from"
-!   convention of SWAN and XBeach
+!   x axis = east, north = 90°). From an angle θ_n in the nautical convention
+!   of SWAN, XBeach and others (coming from, clockwise from north), convert
+!   with θ = 270° − θ_n (not a difference of 180°)
 !
 !   Features that cannot be combined (the run stops): the STG grid, nesting
 !

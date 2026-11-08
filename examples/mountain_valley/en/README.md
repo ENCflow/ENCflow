@@ -152,11 +152,6 @@ The other figures and tables can be drawn without V_b2 and the supplements. With
 
 ## Results
 
-(The tables and figures are from runs made on or after 2026-10-28. On 2026-11-02, V_a, V_b and V_c
-were recomputed with the current defaults (f_opening_dynamic = 3 and the correction of the lateral
-faces of the momentum-conserving advection) and the outputs were confirmed identical.
-developer.md §68.41–§68.43, in Japanese)
-
 ### Hillslopes: steady soil and a parabolic form
 
 ![Cross-slope profile and soil depth of the hillslopes](figs/valley.png)

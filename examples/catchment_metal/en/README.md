@@ -208,10 +208,6 @@ deposits on day 180. Time series of (d) discharge and (e) concentration
 storms). (f) Where the metal is in the whole catchment (cumulative). Dashed
 lines are the case being compared.
 
-The tables and figures were computed with the version of 2026-11-03 (after
-the fix of the water exchange between the subsurface and the surface,
-developer.md §26.1).
-
 ### Step 1: surface water and the substance — most of the substance disappears underground
 
 ![Step 1](figs/step1.png)
@@ -547,11 +543,6 @@ day 180, 1–2 kg is in the surface water. The table is printed by
   (`mass_gw_g`) + surface buildup pool (`mass_pool_g`) holds in every case
   to the output precision (relative about 1e-8) (last column of the table
   printed by plot_results.py).
-- **Channel width and groundwater**: before the fix of 2026-11-03
-  (developer.md §26.1), water seeping out of the ground on subgrid channel
-  width cells reached the surface only in the channel-width fraction, and
-  the seepage water looked too concentrated. Do not compute this example
-  with an executable older than that.
 - The concentration maps are daily outputs (`dt_file_c = "1d"`) and do not
   catch the times of flood peaks. Look at concentrations during floods in
   the time series at the gauges (hourly).

@@ -4,7 +4,8 @@
   python3 Fig.py        # 引数 en で英語版を en/figs/ に
 
 - figs/voellmy.png : 構成 1(Voellmy 定常等流)。流動深 h_t = h + hs の全行平均の縦断と
-                     解析解 h_ana = (q_m²/(ξ(tanθ − μ)))^{1/3}、濃度 C
+                     解析解 h_ana = (q_m²/(ξ c⁴ (tanθ − μ)))^{1/3}(f_gravity_correction = 2 の斜面に沿う Voellmy。
+                     c = cos θ。developer.md §101)、濃度 C
 - figs/tauy.png    : 構成 2(τ_y ランアウト)。初期の崩壊深、最終の地形変化 dz と残存 hs
 """
 import sys, os, struct
@@ -47,7 +48,8 @@ NX1, NY1, DX1 = 150, 8, 1.0
 ST, MU, XI = 0.2, 0.1, 200.0
 QIN, CS = 4.0, 0.8
 QM = QIN * (1 + CS) / (NY1 * DX1)
-HANA = (QM ** 2 / (XI * (ST - MU))) ** (1.0 / 3.0)
+C4 = 1.0 / (1.0 + ST * ST) ** 2          # cos⁴θ(f_gravity_correction = 2。param.txt と対)
+HANA = (QM ** 2 / (XI * C4 * (ST - MU))) ** (1.0 / 3.0)
 st = load_state("save", NX1, NY1)
 x = (np.arange(NX1) + 0.5) * DX1
 ht = (st["h"] + st["hs"]).mean(axis=0)
@@ -55,7 +57,7 @@ C = np.where(st["h"] + st["hs"] > 1e-6, st["hs"] / np.maximum(st["h"] + st["hs"]
 fig, axes = plt.subplots(2, 1, figsize=(9, 6), sharex=True)
 ax = axes[0]
 ax.plot(x, ht, "C0o-", ms=2.5, lw=0.8, label=T("ENCflow h_t = h + hs(全行平均)", "ENCflow h_t = h + hs (average over all rows)"))
-ax.axhline(HANA, color="k", ls="--", lw=1.2, label=f"{T('解析解', 'Analytical')} (q_m²/(ξ(tanθ−μ)))^(1/3) = {HANA:.4f} m")
+ax.axhline(HANA, color="k", ls="--", lw=1.2, label=f"{T('解析解', 'Analytical')} (q_m²/(ξ cos⁴θ (tanθ−μ)))^(1/3) = {HANA:.4f} m")
 ax.axvspan(60, 100, color="0.9", label=T("検定窓 x ∈ [60, 100]", "Check window x ∈ [60, 100]"))
 ax.set_ylabel(T("流動深 h_t (m)", "Flow depth h_t (m)"))
 ax.set_ylim(0, HANA * 1.6)

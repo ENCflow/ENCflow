@@ -100,8 +100,9 @@ given to the zone as an approximate baseflow (`extract_tani2023.py` writes
 `data/base_KI2.txt`, read by `fn_vz_base` of `param_ki2.txt`;
 [baseflow in the User's Guide](../../../docs/en/users_guide/vz.md#baseflow)), and the
 drainage + baseflow is also compared with the values calculated in the paper (see
-the results). As extensions on the ENCflow side, cells with soil depth 0 and the
-hydrostatic initial condition `vz_wt0` were added (developer.md §87.2).
+the results). Cells with soil depth 0 and the hydrostatic initial condition `vz_wt0`
+are features on the ENCflow side that the model of the paper does not have
+(developer.md §87.2).
 
 ## Running
 
@@ -119,11 +120,9 @@ the runoff rates calculated in the paper, by ENCflow and observed, and
 `fig_<event>_psi.png` shows the pressure heads (hydraulic heads). They contain
 numbers of the paper, so the figures are not kept in the repository either. The
 vertical profiles of the column are written every 30 minutes (every 10 minutes for
-KIEX), so the results of the 7 events take about 110 MB. A `data/` extracted before
-2026-10-27 lacks the baseflow of KI2, `base_KI2.txt`; run the extraction again with
-`./Run.sh <PDF of the paper>`.
+KIEX), so the results of the 7 events take about 110 MB.
 
-## Results (2026-10-26; gfortran 13.3, default numerical settings)
+## Results (gfortran 13.3, default numerical settings)
 
 Output of `compare_tani2023.py`. The log10 ratio is log10(ENCflow / value calculated
 in the paper), and p90 is the 90 % value of its absolute value (0.1 corresponds to a

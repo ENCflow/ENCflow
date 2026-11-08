@@ -180,10 +180,8 @@ needs Python 3, NumPy and matplotlib.
 
 ## Results
 
-Values from recomputing all configurations on 2026-11-03 with the version after main's fix of
-the lateral faces of the momentum-conservative advection (developer.md §68.42, §68.43), with the
-default f_opening_dynamic = 3 (gfortran 13.3, -Ofast -march=native, 1 thread). The tables are
-excerpts from the output of plot_results.py.
+The tables and figures are values computed for all configurations with gfortran 13.3 (-Ofast
+-march=native, 1 thread). The tables are excerpts from the output of plot_results.py.
 
 ### Constant discharge: outer-bank retreat and widening
 
@@ -294,9 +292,9 @@ same bed change as the non-cohesive one and are left out of the table.)
   channel is filled, from about 150 h the flow cuts new bends into the floodplain that cross the
   initial channel (x ≈ 260–480 m; wavelength about 100 m, about half the initial one), and the
   amplitude of the wet belt grows to 45 m at 200 h. Fines settle on the floodplain near the inlet
-  (131 cells). This configuration is sensitive to the numerical settings of the flow: in the
-  2026-11-02 version computed with f_opening_dynamic = 2, the bar top stopped at 0.80 m and the
-  outer banks almost stopped retreating (developer.md §84.18).
+  (131 cells). This configuration is sensitive to the numerical settings of the flow: with the
+  opening treatment f_opening_dynamic = 2, the bar top stops at about 0.8 m and the outer banks
+  almost stop retreating.
 
 ### Sediment feed: stopping degradation and raising bars to floodplain level
 
@@ -376,13 +374,11 @@ reads them from the ledgers in the screen output.)
   between scour beside the inlet and the jet (developer.md §68.40). Results near the inlet depend
   on this rule.
 - **Dynamic reassignment of blocked openings**: all configurations write out the default
-  `f_opening_dynamic = 3` (the default since 2026-10-31). An incised channel without a channel mask
-  needs 2 or more to keep the conveyance of the rows next to the banks (the default 1 used up to
-  2026-10-18 has no effect there; developer.md §84.7, test/uniflow). Up to 2026-11-02 this example
-  was computed with 2, whose numbers do not match those with 3 (comparison in developer.md
-  §84.18).
+  `f_opening_dynamic = 3`. An incised channel without a channel mask needs 2 or more to keep the
+  conveyance of the rows next to the banks (1 has no effect there; developer.md §84.7,
+  test/uniflow).
 - **Time step**: dt = 0.2 s, and 0.1 s for the two configurations with suspended sediment (the
-  configuration with suspended sediment and fixation exceeded the CFL limit at 0.2 s; 2026-10-19).
+  configuration with suspended sediment and fixation exceeds the CFL limit at 0.2 s).
 - **Limit of the bed change per update**: `fluv_dzmax` (0.05 m) fires on 40–338,714 edges (ledger
   table), more often in the varying Q + fixation + suspended fines configuration and the
   non-cohesive + capacity feed configuration. morfac = 50 is large; lowering it reduces this.

@@ -57,13 +57,13 @@ eroded more deeply in the hollows of the perturbation (deepening of
 valleys); on the unconsolidated cliff the whole cliff collapses and deposits
 at the foot of the slope (red). Right: y-direction relief of the columns in
 the cliff-face band. For the consolidated cliff the amplitude grows × 1.24;
-for the unconsolidated cliff it decays × 0.77.
+for the unconsolidated cliff it decays × 0.78.
 
 ## Findings
 
 | Check | Consolidated cliff | Unconsolidated cliff | Result |
 |---|---|---|---|
-| Growth rate of the relief | × 1.24 (≥ 1.15) | × 0.77 (≤ 0.9) | PASS |
+| Growth rate of the relief | × 1.24 (≥ 1.15) | × 0.78 (≤ 0.9) | PASS |
 | Plateau interior \|Δz\| | 0.0 | 0.0 | PASS |
 | Minimum elevation z | 0.00 m | −1.30 m (≥ −1.5) | PASS |
 
@@ -89,7 +89,10 @@ for the unconsolidated cliff it decays × 0.77.
   to the default 2 leaves the values of the table the same as with 1 (2 acts
   on the friction of the water flow and on the Manning term of the resistance
   law of the debris flow of the unconsolidated cliff, and changes the terrain
-  of individual cells).
+  of individual cells). After the change of 2026-11-06 by which 2 also
+  evaluates the resistance laws of mixture flows along the slope (developer.md
+  §101), the unconsolidated cliff goes from × 0.77 to × 0.78 (sediment leaving
+  the cliff 32.3 → 31.1 m³). The table and the figures show these values.
 
 ## Related documents
 

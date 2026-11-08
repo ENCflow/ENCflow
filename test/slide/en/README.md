@@ -64,12 +64,12 @@ area over the slope break onto the flat part as a fan.
 ![Slope stability test](figs/fslide.png)
 
 Configuration 2 (left three panels) and 3 (right). Left: the run minimum
-safety factor Fs9999. Fs < 1 over the whole slope (minimum 0.492), and
+safety factor Fs9999. Fs < 1 over the whole slope (minimum 0.493), and
 only the gentle part near the slope break has Fs > 1. Center left: the
 final soil thickness sd. Many cells on the slope reach sd = 0 (failed and
-bedrock exposed; 406 cells), and stripes of failed sediment that flowed
+bedrock exposed; 428 cells), and stripes of failed sediment that flowed
 down and redeposited are also visible. Center right: the maximum flow
-depth D9999 (maximum 0.47 m). Right: Fs9999 of configuration 3. Since
+depth D9999 (maximum 0.45 m). Right: Fs9999 of configuration 3. Since
 nothing is mobilized, the minimum of Fs stays at 0.943, and only the
 detection of the hazardous range (< 1) takes place (the hazard map of the
 judge-only mode).
@@ -79,7 +79,7 @@ judge-only mode).
 | Configuration | Total solid | Co-moving update | Water budget / activity | Result |
 |---|---|---|---|---|
 | 1 release | 4e-14 | 4e-14 | Σh = 52.8000 (expected λ relsat ΣD = 52.8000) / collapse area min dz −0.98 m, deposition outside the area +0.28 m | PASS |
-| 2 fslide | 9e-12 (tolerance 1e-8: rounding accumulated over about 20 000 cell conversions) | 9e-14 | slope min sd = 0 (406 cells failed) / min Fs9999 0.492, D9999 ≥ H9999 | PASS |
+| 2 fslide | 9e-12 (tolerance 1e-8: rounding accumulated over about 20 000 cell conversions) | 9e-14 | slope min sd = 0 (428 cells failed) / min Fs9999 0.493, D9999 ≥ H9999 | PASS |
 | 3 fsdiag | — | — | z, sd and hs unchanged; min Fs 0.943 < 1 detected (600 cells evaluated) | PASS |
 
 - The mobilization fires only once, by a time-crossing test, and does not
@@ -117,7 +117,9 @@ judge-only mode).
   (§94, §95), configuration 2 has 426 cells, 0.469 and 0.44 m (configuration 1 stays at +0.31 m), and
   with the steep-slope gravity correction aligned to the default 2 (friction along the slope; §93),
   configuration 1 deposits +0.28 m outside the collapse area and configuration 2 has 406 cells, 0.492
-  and 0.47 m. The table and the figures show these values.
+  and 0.47 m. After the change of 2026-11-06 by which 2 also evaluates the resistance laws of mixture
+  flows along the slope (developer.md §101), configuration 2 has 428 cells, 0.493 and 0.45 m
+  (configuration 1 stays at +0.28 m). The table and the figures show these values.
 
 ## Related documents
 

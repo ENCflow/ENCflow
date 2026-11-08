@@ -120,9 +120,8 @@ Python 3・NumPy・matplotlib が要ります。
 
 ## 結果
 
-2026-11-03 に、main の運動量保存形移流の側方面の修正(developer.md §68.42・§68.43)の後の版で、直した
-地形(注意を参照)と既定の f_opening_dynamic = 3 で全構成を再計算した値です(gfortran 13.3、-Ofast
--march=native、1 スレッド)。数表は plot_results.py の出力の抜粋です。
+数表と図は gfortran 13.3(-Ofast -march=native、1 スレッド)で全構成を計算した値です。数表は
+plot_results.py の出力の抜粋です。
 
 ![流れの状態](figs/states.png)
 
@@ -247,16 +246,12 @@ Python 3・NumPy・matplotlib が要ります。
 
 ## 注意
 
-- **地形は 2026-11-02 に直した**: それまでの make_init.py は、頸部を下げる判定が湾曲の頂部の周り
-  (10 か所・409 セル)に当たって河床 + 0.95 m に下げ、東西の端で配列のずらしが折り返して東辺の帯
-  (196 セル)を河床 + 2.4 m にしていました。今の地形は上の「河岸」のとおり一様の規則で、それより前の
-  結果とは地形が違います(developer.md §84.18)。
 - **流れの数値設定**: `f_inflow_edge = 2`(区間流入の内側へ向かうエッジの移流項を 0 にし、その
   流速をエネルギー水頭で抑える。developer.md §68.40)を指定しています。`f_opening_dynamic` は既定の
   3 を明記しています(河道マスクのない掘り込み河道で河岸に接する行の通水能を保つには 2 以上が要る。
   [meander の注意](../meander/README.md#注意))。
-- **dt = 0.1 s**: 出水時の鋭い湾曲の深い淵(3〜4 m)の速い流れで CFL を満たすための値です(作成時の
-  試行では 0.2 s で止まった)。
+- **dt = 0.1 s**: 出水時の鋭い湾曲の深い淵(3〜4 m)の速い流れで CFL を満たすための値です(0.2 s
+  では計算が止まります)。
 - **1 更新の河床変化の上限**: `fluv_dzmax`(0.05 m)の発動は、出水ありで 12,006〜13,170 エッジ、
   出水なしで 44〜399 エッジです(台帳)。morfac を下げると減ります。
 - **再現性**: 同じ実行ファイルならスレッド数によらず結果はビット一致しますが、コンパイラ・最適化・
@@ -289,4 +284,4 @@ Python 3・NumPy・matplotlib が要ります。
 
 - [examples/meander](../meander/README.md) — 同じ機構での蛇行河道の変形(外岸の後退・内岸の砂州・定着)
 - [docs/users_guide/geomorph.md](../../docs/users_guide/geomorph.md)
-- docs/meander_plan.md §3.5、developer.md §84.5・§84.17・§84.18
+- docs/meander_plan.md §3.5、developer.md §84.5・§84.17

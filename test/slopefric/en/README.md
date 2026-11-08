@@ -17,12 +17,19 @@ correction (`f_gravity_correction` in `&list_enc`).
   from the slope-parallel speed and the bed-normal depth $`h\cos\theta`$
   (developer.md §93). Uniform flow then follows the along-slope equations,
   $`h\cos\theta = (n^2q^2/\sin\theta)^{3/10}`$ (Chow 1959; Van Emelen et al. 2014).
+- `f_gravity_correction = 3` (experimental): in addition to 2, the effective gravity of
+  the water-surface gradient term is replaced by a variable gravity $`g'`$
+  (developer.md §100, docs/en/users_guide/steep_slope.md §2.6). The friction and the
+  sediment shear are the same as with 2, and for a uniform depth $`g' = g_e`$, so uniform
+  flow should follow the same along-slope equations as with 2.
 
-The case checks against analytic solutions that these two relations hold for
+The case checks against analytic solutions that the two relations of 1 and 2 hold for
 every combination of the slope direction (0°, 22.5° and 45° from the x axis of
 the grid) and eight or four neighbours, and that with 2 the sediment shear (the
 onset of bedload) follows the along-slope bed shear stress
-$`\tau_b = \rho g\,h\cos\theta\,\sin\theta`$. Pass/fail is decided by the
+$`\tau_b = \rho g\,h\cos\theta\,\sin\theta`$. For 3 it checks, for the three
+directions with eight neighbours and the two sediment directions, that the same
+equations as for 2 hold. Pass/fail is decided by the
 self-check `Check_slopefric.py`, not by a reference comparison (the same type as
 test/dbonset).
 
@@ -33,7 +40,7 @@ test/dbonset).
 | Terrain | A uniform slope 60 m square (slope angle 30°, gradient 0.5774, downslope direction φ). The upslope sides (west and south) are walls; the downslope sides (east, and north when φ > 0) are free outflow (`make_init.py` writes `d_<φ>/z.txt`) |
 | Grid | 60 × 60 cells (Δx = 1 m). Eight neighbours (default `p_diagratio`) and four neighbours (`p_diagratio = 0`) |
 | Flow | Constant rain of 300 mm/h over the whole slope, Manning's roughness 0.1, dt = 0.1 s, 20 minutes (about ten travel times; steady) |
-| Cases | Flow: φ = 0°, 22.5°, 45° × eight/four neighbours × `f_gravity_correction` 1/2, 12 cases (a name such as `p22p5_n8_g2` = 22.5°, eight neighbours, 2). Sediment: φ = 0°, 45° × 1/2, 4 cases (eight neighbours; names end in `_sed`) |
+| Cases | Flow: φ = 0°, 22.5°, 45° × eight/four neighbours × `f_gravity_correction` 1/2, 12 cases, and 3 with eight neighbours, 3 cases (a name such as `p22p5_n8_g2` = 22.5°, eight neighbours, 2). Sediment: φ = 0°, 45° × 1/2/3, 6 cases (eight neighbours; names end in `_sed`) |
 | Sediment setup | Bedload on the same slope as the flow (`f_fluvial = 1`, Ashida–Michiue, τ*c = 0.05, s = 1.65, grain size 0.0515 m, movable layer 1 m). The grain size puts the onset of erosion with 2 at a horizontal downslope distance of 30 m. `morfac = 0.02` keeps the bed change small |
 
 | File | Content |
@@ -46,14 +53,14 @@ Checks:
 1. Uniform-flow relation: on cells at least 5 cells from the walls and the
    outflow sides and at least 8 mm deep, the mean of $`h/h_{analytic}(q)`$ from
    $`h`$ and $`q = h|\mathbf V|`$ is within 0.5 % of 1 and every cell within
-   1.5 % (the classical formula for 1, the along-slope formula for 2)
+   1.5 % (the classical formula for 1, the along-slope formula for 2 and 3)
 2. Independent of direction and neighbours: (1) holds for every φ and
    neighbourhood
 3. Discriminating power: the depth of 2 measured with the formula of 1 is
    $`\cos^{-13/10}30° = 1.206`$ times larger (the two formulas can be told apart)
 4. Sediment shear: the horizontal downslope distance where erosion starts
    matches the position ℓ_c where the dimensionless shear stress reaches τ*c
-   (1: classical $`\tau_* = h\tan\theta/(s\,d)`$, 25.37 m; 2: along-slope
+   (1: classical $`\tau_* = h\tan\theta/(s\,d)`$, 25.37 m; 2 and 3: along-slope
    $`\tau_* = h\cos\theta\,\sin\theta/(s\,d)`$, 30.00 m). No erosion upslope of
    ℓ_c − 1.5 m, erosion on every cell at ℓ_c + 2 to 6 m (on the 45° slope the
    cells within 3 m of the flow line through the upper corner are left out)
@@ -65,7 +72,7 @@ The depth is printed with four decimals (0.1 mm), so (1) compares cells at least
 
 ```bash
 make            # links to the executables
-./Run.sh        # runs the 16 cases and checks them (about 5 minutes on four threads)
+./Run.sh        # runs the 21 cases and checks them (about 4 to 5 minutes on four threads)
 ./Run_MPI.sh 2  # MPI (run Run.sh first to compare state.dat byte by byte with the serial save)
 ```
 
@@ -74,7 +81,7 @@ executables are built with -O2 (strict math). With the default -Ofast build, the
 difference between the serial and the MPI builds can change the last digits of
 some cases (the sediment cases with 2) (developer.md §28.3, §93).
 
-## Results (2026-11-05)
+## Results (2026-11-05; the rows of 3 on 2026-11-06)
 
 | Case | φ | Neighbours | f_gravity_correction | Cells | mean of $`h/h_{analytic}`$ | min | max |
 |---|---:|---:|---:|---:|---:|---:|---:|
@@ -90,6 +97,9 @@ some cases (the sediment cases with 2) (developer.md §28.3, §93).
 | p22p5_n4_g2 | 22.5° | 4 | 2 | 1694 | 1.0030 | 0.9998 | 1.0077 |
 | p45_n8_g2 | 45° | 8 | 2 | 1661 | 1.0040 | 1.0008 | 1.0087 |
 | p45_n4_g2 | 45° | 4 | 2 | 1644 | 1.0025 | 1.0001 | 1.0066 |
+| p0_n8_g3 | 0° | 8 | 3 | 1700 | 1.0035 | 1.0011 | 1.0071 |
+| p22p5_n8_g3 | 22.5° | 8 | 3 | 1706 | 1.0039 | 1.0009 | 1.0105 |
+| p45_n8_g3 | 45° | 8 | 3 | 1661 | 1.0040 | 1.0007 | 1.0085 |
 
 | Case | φ | f_gravity_correction | ℓ_c (m) | Onset of erosion (m) | Eroded upslope | Not eroded in the downslope band |
 |---|---:|---:|---:|---:|---:|---:|
@@ -97,6 +107,8 @@ some cases (the sediment cases with 2) (developer.md §28.3, §93).
 | p45_n8_g1_sed | 45° | 1 | 25.37 | 26.16 | 0 / 948 | 0 / 180 |
 | p0_n8_g2_sed | 0° | 2 | 30.00 | 31.50 | 0 / 1200 | 0 / 200 |
 | p45_n8_g2_sed | 45° | 2 | 30.00 | 30.41 | 0 / 1140 | 0 / 106 |
+| p0_n8_g3_sed | 0° | 3 | 30.00 | 31.50 | 0 / 1200 | 0 / 200 |
+| p45_n8_g3_sed | 45° | 3 | 30.00 | 30.41 | 0 / 1140 | 0 / 106 |
 
 ## Findings
 
@@ -109,6 +121,10 @@ some cases (the sediment cases with 2) (developer.md §28.3, §93).
   evaluation of the sediment shear directly. Without the slope factor of the
   sediment shear, erosion with 2 would start at about 52 m (an estimate: the
   dimensionless shear stress becomes $`\cos^{7/3}30° = 0.715`$ times smaller).
+- 3 gives almost the same printed values as 2 (the same values at 0°; the last digit of
+  the ratios differs by 1 or 2 at 22.5° and 45°; the same onset of erosion). In thin flow
+  on a uniform slope the depth gradient is small compared with the slope, so
+  $`g' \approx g_e`$.
 - With `morfac = 1` over 20 minutes the downstream bed changes by tens of times
   the flow depth and headcuts and deposits appear, so `morfac = 0.02` is used to
   look only at the position of the onset.
@@ -122,9 +138,13 @@ some cases (the sediment cases with 2) (developer.md §28.3, §93).
 - Only uniform flow on a uniform slope is tested. The centrifugal acceleration
   on slopes whose gradient changes (convex or concave), deep water over a steep
   bed and the coefficient of the pressure term (wave speed) are not covered
-  (docs/en/users_guide/steep_slope.md §6).
-- The factor of 2 does not apply to the resistance laws of mixture flows
-  (debris flows and others; developer.md §93).
+  (docs/en/users_guide/steep_slope.md §6; deep water and the wave speed with 3 are
+  checked in [test/steepwave](../../steepwave/en/README.md)).
+- Among the resistance laws of mixture flows (debris flows and others), the factor
+  of 2 applies only to the Manning terms (the Manning term of the laws combined
+  with Manning, `f_dbres` = 1 and 5, and edges that reduce to Manning on the dilute
+  side; docs/en/users_guide/steep_slope.md §2.3 and §6.2, developer.md §93). This
+  case looks only at water flow.
 - Flow down steps (walls, kerbs, steps in the DEM) is not covered. On a step of a
   single edge the field gradient (minmod) is nearly zero, so 2 is treated as 1
   there (developer.md §93).

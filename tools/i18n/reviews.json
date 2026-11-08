@@ -104,11 +104,11 @@
     {
       "source": "docs/users_guide.md",
       "target": "docs/en/users_guide.md",
-      "source_sha256": "c76907aaa51b2fdc8bcb51e6316914cb777eb4debd71f305c603825c4533ce73",
-      "target_sha256": "ecee3839661ee698e064aa193ba537a5024f09a17896e82df8187945630a763d",
-      "reviewer": "Claude (Claude Code session; f_advection_donor = 3 and p_adv_donor_eps added 2026-11-07, option 2's known changes corrected; Japanese and English edited together and read side by side)",
+      "source_sha256": "e489f36db5a968d96c8a488622553f634ca3b0d69b762f16c29bc8420134af53",
+      "target_sha256": "7f92f9ec7df8c1ad62e8f5c64d558d227bd7be5884f66b15c0aff63ea5931c04",
+      "reviewer": "Claude (Claude Code session; merge of main into the f_advection_donor branch: the branch's f_advection_donor = 3 entries and main's additions (geomorph applications page / f_gravity_correction = 3 comment) combined; Japanese and English compared side by side after the merge)",
       "method": "assistant",
-      "reviewed_on": "2026-11-07"
+      "reviewed_on": "2026-11-08"
     },
     {
       "source": "docs/users_guide/advection.md",
@@ -131,11 +131,11 @@
     {
       "source": "docs/users_guide/bedmotion_models.md",
       "target": "docs/en/users_guide/bedmotion_models.md",
-      "source_sha256": "e49dc819c6d57a75f4b081a038903b38f692c27c909cf54c08fd15eaf0c01730",
-      "target_sha256": "49681786496f2dab3222d25c8d141f99ff39ed031080e848cc81ce113f7c808b",
-      "reviewer": "Claude (Claude Code session; reviewed the Japanese source against the English mirror; figures from the same results and drawing code with label changes only, 2026-10-30)",
+      "source_sha256": "01067ae7210af2eaa3e254fa6ac2b322c41ee9d4175abe1d69883cf37e67efbf",
+      "target_sha256": "04fed5bab05718127599d0f3d244325fa4a4180f973f4e4d1fe3a583ec1de5da",
+      "reviewer": "Claude (Claude Code session; updated the tsunami_fault citation in both versions in parallel to match the corrected example README, and compared the edited passages)",
       "method": "assistant",
-      "reviewed_on": "2026-10-30"
+      "reviewed_on": "2026-11-08"
     },
     {
       "source": "docs/users_guide/bldgdebris.md",
@@ -230,11 +230,11 @@
     {
       "source": "docs/users_guide/driftwood.md",
       "target": "docs/en/users_guide/driftwood.md",
-      "source_sha256": "b92b301e77e0f82013217a152fd20c6ece49c5915c4d95e410f419070a91f5c4",
-      "target_sha256": "8cd768839793c441a351975b4dc5728b73637ca158bff5439d9563df05f776fd",
-      "reviewer": "Claude (Claude Code session; reviewed the Japanese source against the English mirror; figures from the same results and drawing code with label changes only, 2026-10-31)",
+      "source_sha256": "4e75a927e05d34bcf2022693fdc1f4dc4e2ee4561a0fe1fbb3ec43ed1287ff98",
+      "target_sha256": "868d0652ca5a2f8242563e7e8e5f75984bd1420378e7ba8a28b3f101be4682ec",
+      "reviewer": "Claude (Claude Code session; geomorph chapter split, step 1: the six application setups moved to users_guide/geomorph_applications.md; compared the Japanese source with the English mirror for the moved text, the new pointer paragraphs and the re-targeted links; the rest of the pair is unchanged since the previous record)",
       "method": "assistant",
-      "reviewed_on": "2026-10-31"
+      "reviewed_on": "2026-11-07"
     },
     {
       "source": "docs/users_guide/driftwood_models.md",
@@ -284,11 +284,20 @@
     {
       "source": "docs/users_guide/geomorph.md",
       "target": "docs/en/users_guide/geomorph.md",
-      "source_sha256": "348f039f4215af7a793b021d17dc33e3e491f74c88d740b60c9f1c964da1a87c",
-      "target_sha256": "8063b085e4c21d0b422fa29ae550c73c90e9abc295e454034eb806b579410a06",
-      "reviewer": "Claude (Claude Code session; merge of main into claude/nifty-hawking-yx6s0o: the merged files are the three-way merge of both sides, checked by script for both files that the merged file minus each parent equals the other side's own change (encgrid.md: the p_diagratio row from this branch and the f_gravity_correction row from main in both languages); each side's changes had been reviewed on its branch)",
+      "source_sha256": "0428676fd3414b42dc8725304880a7c1b33917890f7e6a1b29e83c73570d06a9",
+      "target_sha256": "489ca967563f3437739824772caa87250f816d55fc2010ef2f50c9bd58123cff",
+      "reviewer": "Claude (Claude Code session; added the hillslope-erosion (f_wash) figure with its caption paragraph and compared the Japanese source with the English mirror for the added text; the rest of the pair is unchanged since the previous record)",
       "method": "assistant",
-      "reviewed_on": "2026-11-05"
+      "reviewed_on": "2026-11-08"
+    },
+    {
+      "source": "docs/users_guide/geomorph_applications.md",
+      "target": "docs/en/users_guide/geomorph_applications.md",
+      "source_sha256": "2a30003e46c927d0c6c5b34aad6c6fae37f82dafc44616669bcff1e6f824d152",
+      "target_sha256": "a50d4abb6701ea622d50b17d49aef42a7f50db93d5e177252e5e4bc6d3654fdd",
+      "reviewer": "Claude (Claude Code session; added four setup figures (river-mouth delta, volcanic mass flows and lahars, dense snow avalanche, sabo facilities) with caption paragraphs and two pointers (to the chapter's sea figure in §1, to the figure at the end of §4 in §3); compared the Japanese source with the English mirror for the added text; the rest of the pair is unchanged since the previous record)",
+      "method": "assistant",
+      "reviewed_on": "2026-11-08"
     },
     {
       "source": "docs/users_guide/glacier.md",
@@ -356,11 +365,11 @@
     {
       "source": "docs/users_guide/massflow.md",
       "target": "docs/en/users_guide/massflow.md",
-      "source_sha256": "90808cae593a61667f136b79ba94a9d80e127de90515c18c7fe33a58b32a80d6",
-      "target_sha256": "23adea31e6f55278c6df908c46db84562d955fae75fdc3c1660ebb819c373eae",
-      "reviewer": "Claude (Claude Code session; the steepest-slope (D∞) paragraph, the f_dbed = 1 and f_slide wording, the Tarboton footnote and the §7 test/dbonset row with the safety-factor cases updated in both languages and compared)",
+      "source_sha256": "93aa80dd1b471bb796e3c5885553c4fc7f7802457e4eb9d10a1f2a84bbf4052f",
+      "target_sha256": "868ba2a4a9954c29233f43f4625eb956a9119c3f9e776f240d578e6ae3ab16f5",
+      "reviewer": "Claude (Claude Code session; added two figures (single-layer mixture and its exchange with the bed; behaviour of the resistance laws) with caption paragraphs, a pointer in the intro and in §3, and compared the Japanese source with the English mirror for the added text; the English figure versions were drawn by the same scripts with translated labels; the rest of the pair is unchanged since the previous record)",
       "method": "assistant",
-      "reviewed_on": "2026-11-04"
+      "reviewed_on": "2026-11-08"
     },
     {
       "source": "docs/users_guide/nest.md",
@@ -383,11 +392,11 @@
     {
       "source": "docs/users_guide/nonhydrostatic.md",
       "target": "docs/en/users_guide/nonhydrostatic.md",
-      "source_sha256": "897f43a0e8be6cc0ea1db1e938e0330f97350ee8b389c325125796a59fbde38a",
-      "target_sha256": "82bcf0e8be6c5e78001a2921eaf71f25645202865e93bb18db8d24503b606eb2",
-      "reviewer": "Claude (Claude Code session; diff-level content review of the 2026-10-25 reproducibility edits against the Japanese master)",
+      "source_sha256": "51feb44dccdbffcf1baf9d50acc7ea7556f28d9ad729d8411d3a80f09caef609",
+      "target_sha256": "e8979f36354fe0c1783d84cfa632dfbe1d1ed80944ffd5ff77e2baa2d5f32474",
+      "reviewer": "Claude (Claude Code session; updated the tsunami_fault citation in both versions in parallel to match the corrected example README, and compared the edited passages)",
       "method": "assistant",
-      "reviewed_on": "2026-10-25"
+      "reviewed_on": "2026-11-08"
     },
     {
       "source": "docs/users_guide/parallel.md",
@@ -446,20 +455,20 @@
     {
       "source": "docs/users_guide/sediment.md",
       "target": "docs/en/users_guide/sediment.md",
-      "source_sha256": "591a021485b5aeffc9fb69de582ca83858ca324781bdc012f503242843da305e",
-      "target_sha256": "79deb25f2204b0524aa3e9d87d08c115ea66196f615c0f1cc45c1d1dd5e3fdfd",
-      "reviewer": "Claude (Claude Code session; merge of main into claude/nifty-hawking-yx6s0o: the merged files are the three-way merge of both sides, checked by script for both files that the merged file minus each parent equals the other side's own change (encgrid.md: the p_diagratio row from this branch and the f_gravity_correction row from main in both languages); each side's changes had been reviewed on its branch)",
+      "source_sha256": "ac28c4c184bce7c06571b3186f8d47d7854f666d43b0a9a0113a62535b96fd10",
+      "target_sha256": "ccfc9cb15749ce2b6362d1738c35f4da3e7f907f812ebc397a2f6e749eec05ff",
+      "reviewer": "Claude (Claude Code session; added the figure of the adaptation length of suspended sediment with its caption paragraph in §4, a pointer to the chapter's hillslope-erosion figure in §5 and a sentence on where the figures are in the intro; compared the Japanese source with the English mirror for the added text; the rest of the pair is unchanged since the previous record)",
       "method": "assistant",
-      "reviewed_on": "2026-11-05"
+      "reviewed_on": "2026-11-08"
     },
     {
       "source": "docs/users_guide/steep_slope.md",
       "target": "docs/en/users_guide/steep_slope.md",
-      "source_sha256": "64a075a7040261d552356b980bc01cf0d745b84c5efee57334ad17e93cf675b4",
-      "target_sha256": "f4c7d52f82da232818e4bc03d047ce8eaf3285167b178efafe2cbeed076a7adc",
-      "reviewer": "Claude (Claude Code session; wording on which terms of the resistance laws of mixture flows the friction factor of 2 multiplies (the Manning terms of f_dbres = 1, 5 and the dilute-side fallback; checked against m_swflow_enc) in sec. 2.3 and sec. 6.2 compared with the Japanese source, rest unchanged since the previous record)",
+      "source_sha256": "0c5dc5b2e402527b02e2967311bdd0c5bd80596f203a80270c5daf4516dce22a",
+      "target_sha256": "d6be4ce0cfde55f81f7e3ef35def294849c211c61e53c44c0ca1707332ff8a15",
+      "reviewer": "Claude (Claude Code session; compared the Japanese source with the English mirror for §2.6 (the yield of mixture flows set by gravity uses g′, the start-of-motion threshold is the same as with 2) and the limits of 3 in §6.2 (normal stress of the Coulomb-type yield with g′, no analytic check with debris flows); rest unchanged since the previous record)",
       "method": "assistant",
-      "reviewed_on": "2026-11-05"
+      "reviewed_on": "2026-11-06"
     },
     {
       "source": "docs/users_guide/structure.md",
@@ -518,11 +527,11 @@
     {
       "source": "docs/users_guide/usecases.md",
       "target": "docs/en/users_guide/usecases.md",
-      "source_sha256": "37db2706408324fe22addb7ce1326d7d33d900670a60fb500c1424896ccc4ee8",
-      "target_sha256": "d007dc295d07a82d45a9361e4035232d56871f45f6add02a98acb8d323e99172",
-      "reviewer": "Claude (Claude Code session; merge of main into the branch: main's additions (dissol_src 4/5, talus dissolution, glacier, evapdry, stone_forest, glacier_valley) and the branch's edits (§91/§92 and the debris examples) both present in the two languages, compared)",
+      "source_sha256": "38bdc569aa9b9b8eee70cd5bb09737314fbce0cb1b4201c52315d6025bdbd0a7",
+      "target_sha256": "fcef78f52c0e2d25a2184dbbb9e45e04b2a7a984ef36c6d24dc6520d8ffd6b84",
+      "reviewer": "Claude (Claude Code session; geomorph chapter split, step 1: the six application setups moved to users_guide/geomorph_applications.md; compared the Japanese source with the English mirror for the moved text, the new pointer paragraphs and the re-targeted links; the rest of the pair is unchanged since the previous record)",
       "method": "assistant",
-      "reviewed_on": "2026-11-04"
+      "reviewed_on": "2026-11-07"
     },
     {
       "source": "docs/users_guide/user_routines.md",
@@ -545,20 +554,20 @@
     {
       "source": "docs/users_guide/wavefield.md",
       "target": "docs/en/users_guide/wavefield.md",
-      "source_sha256": "69e11b4a844d1938eca19dd42ed15bc771d5cbffedf199ff18be4fdcfb240c7c",
-      "target_sha256": "d1b51d8673ec2f66983334d0eafb67556c4d195ae7e98c84ae760f8bd7a482d6",
-      "reviewer": "Claude (Claude Code session; the changed delta references (example link, renamed README sections) compared in both languages; the rest is unchanged from the recorded version)",
+      "source_sha256": "d19f7786ba198c214a437910dd686b832c63fbbc5f0f6bf44f05cf7a6cbd21d9",
+      "target_sha256": "a073b7218b8cd074b046a48e45964334fe3b40ac281cdfad841579d8f1e50cb0",
+      "reviewer": "Claude (Claude Code session; compared the added figure references and explanatory paragraphs (plan view, cross-shore profile) and the cross-reference in the calibration section in both languages; the rest is unchanged from the recorded version)",
       "method": "assistant",
-      "reviewed_on": "2026-11-02"
+      "reviewed_on": "2026-11-07"
     },
     {
       "source": "docs/users_guide/wavefield_models.md",
       "target": "docs/en/users_guide/wavefield_models.md",
-      "source_sha256": "5b396850b8a56fb0f9d668d357700f14b3d0383a2fdeeffd41d1671f9a624e01",
-      "target_sha256": "0e57b007bf8cf7401d8109b458af653f1069695ea8951a9c52a80c94aad4dcb5",
-      "reviewer": "Claude (Claude Code session; reviewed the changed sections (added reference sections, footnotes and citation markers) of the Japanese source against the English mirror, 2026-10-30)",
+      "source_sha256": "5a88874df881386e146b26ab4b6630a3ec6ca6c2136455e30948be02462c4f53",
+      "target_sha256": "40df3f49985ef78712e31305b5850b6e13492c394613efbca56c1f53092df6c2",
+      "reviewer": "Claude (Claude Code session; compared the added figure references and explanatory paragraphs (scheme in sec. 3, current in sec. 7.1) and the cross-references in sec. 2.4 and 4.4 in both languages; the rest is unchanged from the recorded version)",
       "method": "assistant",
-      "reviewed_on": "2026-10-30"
+      "reviewed_on": "2026-11-07"
     },
     {
       "source": "docs/users_guide/wq.md",
@@ -635,9 +644,9 @@
     {
       "source": "examples/List_samples/list_enc.txt",
       "target": "examples/List_samples/en/list_enc.txt",
-      "source_sha256": "0d3b868aa6cd2576262054ce9caa86293b357af529511cfa013a1b64c928bc88",
-      "target_sha256": "85bbbbdbbc932cd53840674ba920f2b20427eed797901eea2f855040325a6872",
-      "reviewer": "Claude (Claude Code session; 2026-11-08: ε default study for f_advection_donor = 3: statements that results are nearly the same for 0.05-0.2 restricted to the peak; mechanism of the narrow subgrid channel oscillation and the ε window added; Japanese and English edited together and read side by side)",
+      "source_sha256": "86906abee3e7f030163241a0fe34cfdbd3729715abc3db675590e3399dbc5a75",
+      "target_sha256": "a6fabd1edc1d64ffe0aaa415ab84e9101308569caaf39ad070e8920c30762988",
+      "reviewer": "Claude (Claude Code session; merge of main into the f_advection_donor branch: the branch's f_advection_donor = 3 entries and main's additions (geomorph applications page / f_gravity_correction = 3 comment) combined; Japanese and English compared side by side after the merge)",
       "method": "assistant",
       "reviewed_on": "2026-11-08"
     },
@@ -662,11 +671,11 @@
     {
       "source": "examples/List_samples/list_geomorph.txt",
       "target": "examples/List_samples/en/list_geomorph.txt",
-      "source_sha256": "c89a39e477ce8c23aeb5cf7bcbdfe5a6e4a925f330f96b51b723be76fbe27de4",
-      "target_sha256": "2dcabe8c0d2e3f0adc8d27b4b9b974764c83823fb1fb447c6acd1b780a69caa6",
-      "reviewer": "Claude (Claude Code session; merge of main into claude/nifty-hawking-yx6s0o: the merged files are the three-way merge of both sides, checked by script for both files that the merged file minus each parent equals the other side's own change (encgrid.md: the p_diagratio row from this branch and the f_gravity_correction row from main in both languages); each side's changes had been reviewed on its branch)",
+      "source_sha256": "6366bfde929c358823b512b42b566f5621c9d48bd6342325ff0c1a9e9d0b2133",
+      "target_sha256": "81b0dd9b499ce76d5f0496610179fc6969fa8f5dff664d9ef0424c6fb4acd988",
+      "reviewer": "Claude (Claude Code session; geomorph chapter split, step 1: the six application setups moved to users_guide/geomorph_applications.md; compared the Japanese source with the English mirror for the moved text, the new pointer paragraphs and the re-targeted links; the rest of the pair is unchanged since the previous record)",
       "method": "assistant",
-      "reviewed_on": "2026-11-05"
+      "reviewed_on": "2026-11-07"
     },
     {
       "source": "examples/List_samples/list_glacier.txt",
@@ -824,11 +833,11 @@
     {
       "source": "examples/List_samples/list_wavefield.txt",
       "target": "examples/List_samples/en/list_wavefield.txt",
-      "source_sha256": "1f783e9a8c7f0c0eb4b45cdab9aacdb6e895da93c3a01cfaf530e77697788683",
-      "target_sha256": "5784f5c6560c8d57aa4f96f1bc747ad9aa81131cc09117f56601aeb184f2215f",
-      "reviewer": "Claude (Claude Code session; full-text content and lexical review, no model execution)",
+      "source_sha256": "bd83d5647d94639a7cf6b74c23132fcd183c0067efdb5da6ebb039b9d7db50c1",
+      "target_sha256": "edc5e377366a88d17711f9c39ea0b7a68a1268d27c6932a2253c3e4c731724a0",
+      "reviewer": "Claude (Claude Code session; compared the changed header comment on the direction convention in both languages; effective input and the rest unchanged)",
       "method": "assistant",
-      "reviewed_on": "2026-10-28"
+      "reviewed_on": "2026-11-07"
     },
     {
       "source": "examples/List_samples/list_wq.txt",
@@ -851,74 +860,101 @@
     {
       "source": "examples/ashfall_lahar/README.md",
       "target": "examples/ashfall_lahar/en/README.md",
-      "source_sha256": "4198084203d17649f151fb12c9f3c705f99d4a73086427b8c15f1aa69a5a68a8",
-      "target_sha256": "f719e8151ad2767deafb9691974ff6dd7ceda24cca1ce5879003f7fc16785ab0",
-      "reviewer": "Claude (Claude Code session; recomputed 2026-11-05: the table, the recompute note, the values in the result bullets and the supplement table and text compared with the Japanese source, rest unchanged since the previous record)",
+      "source_sha256": "4155d56f517b946d4d82e3f26fbfc2ff3069461412c7e7700f47190ef73e3a19",
+      "target_sha256": "70766b6633d3e2f86ce2a7531b4f5f590f248e57696b4e30a9569f09b98647e1",
+      "reviewer": "Claude (Claude Code session; removed development history from both versions in parallel and compared the edited passages, headings, tables and numbers; no model execution)",
       "method": "assistant",
-      "reviewed_on": "2026-11-05"
+      "reviewed_on": "2026-11-08"
+    },
+    {
+      "source": "examples/ashfall_lahar/figs/laws.png",
+      "target": "examples/ashfall_lahar/en/figs/laws.png",
+      "source_sha256": "bf5cee98436b7b1629ca68fef041f254e0bab624aa3541302c632c26ac584ce0",
+      "target_sha256": "713302cdd087d7b0333fdee6a1a953233aea1aacce3a79c3d69695f6fd863e62",
+      "reviewer": "Claude (Claude Code session; drawn by plot_results.py without model results (setup from the input files of make_init.py, the others from the settings and closed-form expressions); viewed the Japanese and English images side by side: same shapes, values and layout, labels translated)",
+      "method": "assistant",
+      "reviewed_on": "2026-11-08"
     },
     {
       "source": "examples/ashfall_lahar/figs/maps.png",
       "target": "examples/ashfall_lahar/en/figs/maps.png",
-      "source_sha256": "cab5dadd924e3fd34906b5d185368726d7beb8357bf7ddfd737b648ebe41bdcc",
-      "target_sha256": "f6ce2a7be35c46632d47e23bbc3015670a2f39c88c299715f6aa8f10857b0fbf",
-      "reviewer": "Claude (Claude Code session; recomputed 2026-11-05: both drawn by the plot scripts from the same results, labels compared with the Japanese figure)",
+      "source_sha256": "d174ccafa70f0e687a2b4df34b339abbd0109f8efdf1042f0a6fa06962478613",
+      "target_sha256": "b2eed598a45d6ce0cea4ff98802e984e20bfdb6360cf69e2da9b018ddc2db6f1",
+      "reviewer": "Claude (Claude Code session; viewed both images: same six panels, data and colour scales; titles, axis labels and colour-bar units translated)",
       "method": "assistant",
-      "reviewed_on": "2026-11-05"
+      "reviewed_on": "2026-11-06"
     },
     {
       "source": "examples/ashfall_lahar/figs/mechanism.png",
       "target": "examples/ashfall_lahar/en/figs/mechanism.png",
-      "source_sha256": "5cc0512619279743da4fe471f664e44a423f293c331e32345cb687be41bc3985",
-      "target_sha256": "fbf6f1e94da2a4ef8460f2c1f9bfd40b3d28f542ff8f09113d73cf03c7d28b72",
-      "reviewer": "Claude (Claude Code session; example reruns with f_opening_dynamic default 3)",
+      "source_sha256": "0a739d7f630799f2db9685e032e77e21b8066262b74df24d288c6083b4a4ce4d",
+      "target_sha256": "d87680429f3626c7b2d66cae06bd84ffa5d01780e01833ba0e0823773d58d5f7",
+      "reviewer": "Claude (Claude Code session; drawn by plot_results.py without model results (setup from the input files of make_init.py, the others from the settings and closed-form expressions); viewed the Japanese and English images side by side: same shapes, values and layout, labels translated)",
       "method": "assistant",
-      "reviewed_on": "2026-10-31"
+      "reviewed_on": "2026-11-08"
     },
     {
       "source": "examples/ashfall_lahar/figs/profile.png",
       "target": "examples/ashfall_lahar/en/figs/profile.png",
-      "source_sha256": "2c1771065b16b5ab351fb76d274b5470da54e473e61e8bbd079533f315a84c25",
-      "target_sha256": "08150be30291abb2faeee981fd766b382eef7ad44ea31d77430da925ec73be67",
-      "reviewer": "Claude (Claude Code session; recomputed 2026-11-05: both drawn by the plot scripts from the same results, labels compared with the Japanese figure)",
+      "source_sha256": "0754ddff59b7318153b50ef43ee81c4a42733b8813c48aebde4f85466f53eb53",
+      "target_sha256": "32e78e614e26cd4bc335d138d6388ee63b37d9e41bf1f1fb194d5036a7e13723",
+      "reviewer": "Claude (Claude Code session; viewed both images side by side: same profiles of bed change and maximum concentration along the valley axis; legend, axis labels and the dam/valley-outlet annotations translated)",
       "method": "assistant",
-      "reviewed_on": "2026-11-05"
+      "reviewed_on": "2026-11-06"
     },
     {
       "source": "examples/ashfall_lahar/figs/rotated.png",
       "target": "examples/ashfall_lahar/en/figs/rotated.png",
-      "source_sha256": "2bf13f5bf72c5d703bf97382b0b1975f6865058aa5cfeba3ff11fcd23f6485a4",
-      "target_sha256": "7ffb0e13a526e551f6f07b083bfc19a3012f766a88fc30dec6b5c9cce40e4921",
-      "reviewer": "Claude (Claude Code session; recomputed 2026-11-05: both drawn by the plot scripts from the same results, labels compared with the Japanese figure)",
+      "source_sha256": "d03dad0730517c152d359a541a915acaa7d7ab19ad61514060d12a9d6c99b1a3",
+      "target_sha256": "ccc6a6be42295d25e1eecd1e59c1c76b361c6af49a59d5b6eb9fd67c0eadc62b",
+      "reviewer": "Claude (Claude Code session; viewed both images side by side: same eight maps (0/45 degrees, 8/4 neighbours, flow depth at 40 min and bed change at 90 min) and colour scales; titles and axis labels translated)",
       "method": "assistant",
-      "reviewed_on": "2026-11-05"
+      "reviewed_on": "2026-11-06"
     },
     {
       "source": "examples/ashfall_lahar/figs/rotated_profile.png",
       "target": "examples/ashfall_lahar/en/figs/rotated_profile.png",
-      "source_sha256": "46e4d829c9889fd64e115b8d9c4e2137457387abaf631c913d92ca88588dc7ee",
-      "target_sha256": "3ac2f11b0c28c39e281e07b0aa7da31d0a74b2b2228021f44375ec8724571a9f",
-      "reviewer": "Claude (Claude Code session; recomputed 2026-11-05: both drawn by the plot scripts from the same results, labels compared with the Japanese figure)",
+      "source_sha256": "38208fd8aecabcd5635e6ec7970d991479a8b1bfb95db8f56459da34d10525af",
+      "target_sha256": "6176ecf2cb99482c9019eccca168add89f6ad022b232cbde95bc3a06752d4b2b",
+      "reviewer": "Claude (Claude Code session; viewed both images side by side: same cross sections of the valley and the fan for the four configurations, including the half widths 32/28/19/30 m in the legend; titles, legends and axis labels translated)",
       "method": "assistant",
-      "reviewed_on": "2026-11-05"
+      "reviewed_on": "2026-11-06"
+    },
+    {
+      "source": "examples/ashfall_lahar/figs/rotated_setup.png",
+      "target": "examples/ashfall_lahar/en/figs/rotated_setup.png",
+      "source_sha256": "2dbb9be9d9c8ae0e8bd8beff27ddd26f8bc094e9620bec06e38c5781c2e3d2b8",
+      "target_sha256": "8d78aa4d21a81e101e00c3327636e4edb1df3b22d09b80f0c13a75f8012e5a82",
+      "reviewer": "Claude (Claude Code session; drawn by plot_rotated.py from the grids of make_rotated.py without model results; viewed the Japanese and English images side by side: same grids, contours and layout, labels translated)",
+      "method": "assistant",
+      "reviewed_on": "2026-11-08"
     },
     {
       "source": "examples/ashfall_lahar/figs/series.png",
       "target": "examples/ashfall_lahar/en/figs/series.png",
-      "source_sha256": "d36788d482297f419ad72521fb0e3e23a2c52855bcb7799a00de39a853cdf1af",
-      "target_sha256": "6118d72b92e1e8b2a48e25305c0137a10beaf1624e2b684f3c9601f192600a3b",
-      "reviewer": "Claude (Claude Code session; recomputed 2026-11-05: both drawn by the plot scripts from the same results, labels compared with the Japanese figure)",
+      "source_sha256": "0e941484580d2e268e088852fcfc18458f05e1ce4a60a2b701c25c6aa0c0592e",
+      "target_sha256": "cddbb610ef9f8a25e383cf64e2afdf14c4135d06003755c039a45b3454bbaf13",
+      "reviewer": "Claude (Claude Code session; viewed both images side by side: same discharge series at the valley and fan sections and the same sediment budget curves; titles, legends and axis labels translated)",
       "method": "assistant",
-      "reviewed_on": "2026-11-05"
+      "reviewed_on": "2026-11-06"
     },
     {
       "source": "examples/ashfall_lahar/figs/setup.png",
       "target": "examples/ashfall_lahar/en/figs/setup.png",
-      "source_sha256": "51fe7ff4e412b530f91e86bffc3447b14702853a7a4a9603933e2c5ac2b3c116",
-      "target_sha256": "4ea3e972ab124316f87875ab69b34f0f253031947cad71a1d3ef81661358a109",
-      "reviewer": "Claude (Claude Code session; example reruns with f_opening_dynamic default 3)",
+      "source_sha256": "d8b23153aab23cc652adaa00c0cebd39d3560d1e149fb3404a6ad47be9b108ca",
+      "target_sha256": "ce76529dc55884ea71966f7ae63ba3e5972f213777429b43aa0a5ef854efb2b2",
+      "reviewer": "Claude (Claude Code session; drawn by plot_results.py without model results (setup from the input files of make_init.py, the others from the settings and closed-form expressions); viewed the Japanese and English images side by side: same shapes, values and layout, labels translated)",
       "method": "assistant",
-      "reviewed_on": "2026-10-31"
+      "reviewed_on": "2026-11-08"
+    },
+    {
+      "source": "examples/ashfall_lahar/figs/stripes.png",
+      "target": "examples/ashfall_lahar/en/figs/stripes.png",
+      "source_sha256": "35e03028b81f9e70c65defb36ff2d8c5907c2c95a5d43c04cc35a788f6e5f79e",
+      "target_sha256": "1b08b94fe8a598a1b85e4ebe62aac719d26cec6f9bef4979c3d8add3e193646d",
+      "reviewer": "Claude (Claude Code session; drawn by plot_results.py without model results (setup from the input files of make_init.py, the others from the settings and closed-form expressions); viewed the Japanese and English images side by side: same shapes, values and layout, labels translated)",
+      "method": "assistant",
+      "reviewed_on": "2026-11-08"
     },
     {
       "source": "examples/badland/README.md",
@@ -1121,11 +1157,11 @@
     {
       "source": "examples/badland_storm/README.md",
       "target": "examples/badland_storm/en/README.md",
-      "source_sha256": "96bb3f095dc310e66be9e854a71f063234f07009a43b07eceee9b10cf15f9ffb",
-      "target_sha256": "2a188ef003925c4873bcc88d30cc489b18182d268b82c5713b80ec0b9ad3a591",
-      "reviewer": "Claude (Claude Code session; Japanese source and English mirror updated together after recomputing results 1-5 with the main default f_opening_dynamic = 3: changed tables, text and notes compared line by line, values checked against the plot_storm.py and conv_dx.py output and analysis scripts; model run by the session)",
+      "source_sha256": "9cae9f23950b9afd1e162654233a541436d8d2034af2076e1a818d20969ba50a",
+      "target_sha256": "733af83f3424482ca9825beddd168a92d9c9c5f2b66322a25decbe5815fd95bd",
+      "reviewer": "Claude (Claude Code session; removed development history from both versions in parallel and compared the edited passages, headings, tables and numbers; no model execution)",
       "method": "assistant",
-      "reviewed_on": "2026-11-02"
+      "reviewed_on": "2026-11-08"
     },
     {
       "source": "examples/badland_storm/figs/flow.png",
@@ -1229,11 +1265,11 @@
     {
       "source": "examples/bedrock_cover/README.md",
       "target": "examples/bedrock_cover/en/README.md",
-      "source_sha256": "5251fb2df682f5ecfda053236dbf71ff77a3f6f5a111200f23a4cd5e465e617a",
-      "target_sha256": "7c638b8129bb0f2e3b31f892b5b7ba8354db6d0fb352c6e610bc63fa1bb4c71e",
-      "reviewer": "Claude (Claude Code session; recomputed 2026-11-05: the results note, the 2.2 % agreement and the step positions compared with the Japanese source, rest unchanged since the previous record)",
+      "source_sha256": "3a3b470772221c24f58b5de1efdd2df455039821a87b08a3faa03626f250e619",
+      "target_sha256": "97fa67cb18f000bd55fe08f69c3cbca58de11d5691b2715b8607ad5ec76c67ab",
+      "reviewer": "Claude (Claude Code session; removed development history from both versions in parallel and compared the edited passages, headings, tables and numbers; no model execution)",
       "method": "assistant",
-      "reviewed_on": "2026-11-05"
+      "reviewed_on": "2026-11-08"
     },
     {
       "source": "examples/bedrock_cover/figs/cover.png",
@@ -1274,11 +1310,11 @@
     {
       "source": "examples/catchment_metal/README.md",
       "target": "examples/catchment_metal/en/README.md",
-      "source_sha256": "c5307f6d0e229f37fb69300f51ae34b2bde50fb9d6c71aacb8f7a6b1fd14e360",
-      "target_sha256": "0d3e384910dd4377e84c9551da949dfc677d82f96f11280fd21d87959abf88dc",
-      "reviewer": "Claude (Claude Code session; full-text content and lexical review, no model execution)",
+      "source_sha256": "5a78c84668d60e26f1cead8f31af0558dd57efbda0c23293d70bfff82bfbf1d5",
+      "target_sha256": "235c1e2287520e5a263a5f34a4d9f3701c021b0009be2e3115b5a9c12e459f3d",
+      "reviewer": "Claude (Claude Code session; removed development history from both versions in parallel and compared the edited passages, headings, tables and numbers; no model execution)",
       "method": "assistant",
-      "reviewed_on": "2026-11-04"
+      "reviewed_on": "2026-11-08"
     },
     {
       "source": "examples/catchment_metal/figs/mechanism.png",
@@ -1373,137 +1409,164 @@
     {
       "source": "examples/debris_bedrock/README.md",
       "target": "examples/debris_bedrock/en/README.md",
-      "source_sha256": "79cc127f69b8995c9f1088051ab16ab6d3aa9f4fcb3b8af0a319f95e235fde05",
-      "target_sha256": "7d1f2e91c9e1fda49e1f36c64fc0329517b26f243d304e846bd02c47e7635088",
-      "reviewer": "Claude (Claude Code session; recomputed 2026-11-05: the results note, the first-part table and text (C_b, C_c, W and the clear-water comparison rewritten for the default 2), the supplement tables and text, and the setup notes compared with the Japanese source, rest unchanged since the previous record)",
+      "source_sha256": "a521662cddfa6f9523b2c345c3ecbb5b741ecaf6f2f9ca57e9a1deae18361ecf",
+      "target_sha256": "395b372d34620d46c15813a2de9027d9cc2033ef353fa4ad3e55621e79c066e7",
+      "reviewer": "Claude (Claude Code session; removed development history from both versions in parallel and compared the edited passages, headings, tables and numbers; no model execution)",
       "method": "assistant",
-      "reviewed_on": "2026-11-05"
+      "reviewed_on": "2026-11-08"
     },
     {
       "source": "examples/debris_bedrock/figs/cover.png",
       "target": "examples/debris_bedrock/en/figs/cover.png",
-      "source_sha256": "38afafef177c3c4d21d2f0ead2b7fe137692433c74bb5989873c131a7d298730",
-      "target_sha256": "5f91ed94f73b6d9de0b930c308549551963ecae4ac9cff4f5ccb9940c2e5d531",
-      "reviewer": "Claude (Claude Code session; recomputed 2026-11-05: both drawn by the plot scripts from the same results, labels compared with the Japanese figure)",
+      "source_sha256": "bf9a08bdeb83e11e61de3a7b13b0c4423a948aa75df6c0de8626260021ee2199",
+      "target_sha256": "3e451ead78b7a9231e56a8c11ccf45696f5d1e0d51d9271f338bf71c9ea31eb9",
+      "reviewer": "Claude (Claude Code session; viewed both images side by side: same mobile-layer and rock-erosion series at 21, 61 and 101 m for T_c and C_c; titles, legends and axis labels translated)",
       "method": "assistant",
-      "reviewed_on": "2026-11-05"
+      "reviewed_on": "2026-11-06"
     },
     {
       "source": "examples/debris_bedrock/figs/erosion.png",
       "target": "examples/debris_bedrock/en/figs/erosion.png",
-      "source_sha256": "8e0f981b7a13cc4411b5f9572b72844ca258679d426079bf30e3c55135c6752d",
-      "target_sha256": "4c35da4b6ce8bf4db82a4252dd9d9c20c7e73e2f350fbde736247da7bd97bc3a",
-      "reviewer": "Claude (Claude Code session; recomputed 2026-11-05: both drawn by the plot scripts from the same results, labels compared with the Japanese figure)",
+      "source_sha256": "46a9b3e77b5627e72ecd21b02cd4f9b120b32d33a576c2bc44264955314f12ae",
+      "target_sha256": "1aa4d81679a91bd4f5e202d573b81420d9c01457103478ed34829dc05c7131cf",
+      "reviewer": "Claude (Claude Code session; viewed both images side by side: same bed profile, erosion profiles for bare rock and cover, and final mobile layer; panel titles, legends, axis labels and the initial-deposit note translated)",
       "method": "assistant",
-      "reviewed_on": "2026-11-05"
+      "reviewed_on": "2026-11-06"
     },
     {
       "source": "examples/debris_bedrock/figs/long_cover.png",
       "target": "examples/debris_bedrock/en/figs/long_cover.png",
-      "source_sha256": "58da382f588a2298aac3c25317ffe8e85b094ab4d1ff134f9419c6bb47e818d5",
-      "target_sha256": "1395f2dca453600df326fd1d47e7a8cbe7a726e6906462127c49bd45af73e898",
-      "reviewer": "Claude (Claude Code session; recomputed 2026-11-05: both drawn by the plot scripts from the same results, labels compared with the Japanese figure)",
+      "source_sha256": "9ba474c1b1fd693f047a1f1689fe9816f6880120a0f0b275c05eb579fac58939",
+      "target_sha256": "46cd7700be6cdf1facbe74d530d33c8717b1aa9a95e4697e7914befe7b410543",
+      "reviewer": "Claude (Claude Code session; viewed both images side by side: same mobile-layer curves for size 0.4 m at slopes 0.15, 0.20 and 0.25 and the three frequencies; title, legend and axis labels translated)",
       "method": "assistant",
-      "reviewed_on": "2026-11-05"
+      "reviewed_on": "2026-11-06"
     },
     {
       "source": "examples/debris_bedrock/figs/long_rate.png",
       "target": "examples/debris_bedrock/en/figs/long_rate.png",
-      "source_sha256": "a7f000fb833737f5a6a83cfcaac0a834965dd875e802ada585bac4c33be42922",
-      "target_sha256": "2290cd773763140086d326f3233479992cc68d1b5135f0988c07e650a3775f50",
-      "reviewer": "Claude (Claude Code session; recomputed 2026-11-05: both drawn by the plot scripts from the same results, labels compared with the Japanese figure)",
+      "source_sha256": "a71faa904a2fd03f5157dd2bc199837fe4db85d945597b30a18f33f5c852c458",
+      "target_sha256": "17191f1230e28342f3b339db4441a08644cc78e8e82b115236e55f84fd1773e7",
+      "reviewer": "Claude (Claude Code session; viewed both images side by side: same lowering-rate curves and dashed sums for sizes 0.1 and 0.4 m, the uplift line and the footnote values (-31 to -3.1 mm/yr); titles, legends, axis labels and footnotes translated)",
       "method": "assistant",
-      "reviewed_on": "2026-11-05"
+      "reviewed_on": "2026-11-06"
     },
     {
       "source": "examples/debris_bedrock/figs/long_slope.png",
       "target": "examples/debris_bedrock/en/figs/long_slope.png",
-      "source_sha256": "b47de9d6ab371d9d755c0a4c33b68b8966312d6c052fcde7ea40c336f2d27279",
-      "target_sha256": "b1d48b2500ced79c1a8a3df30558d61a7159696ad8a722a2b9bbf007729b3101",
-      "reviewer": "Claude (Claude Code session; recomputed 2026-11-05: both drawn by the plot scripts from the same results, labels compared with the Japanese figure)",
+      "source_sha256": "f7847c7188848b10da60d7b17041455189bae58072c988488a7f000ea0464c45",
+      "target_sha256": "4ce961f36747b7d7ff6a5502d7c767e46ae6d088bd4974dc1eab35c62d91e733",
+      "reviewer": "Claude (Claude Code session; viewed both images side by side: same steady-slope curves against debris-flow frequency and the equilibrium-slope line 0.256; legend, axis labels and annotation translated)",
       "method": "assistant",
-      "reviewed_on": "2026-11-05"
+      "reviewed_on": "2026-11-06"
     },
     {
       "source": "examples/debris_bedrock/figs/long_uplift.png",
       "target": "examples/debris_bedrock/en/figs/long_uplift.png",
-      "source_sha256": "7adbe0f210974e0c1d4b25659ac7e97740bd4cf89fc60e536cbd9b666c0a39bf",
-      "target_sha256": "9285177068f1d71cad42b13fb1441393cdd5e0dca86404ce2c182e2ab4de185b",
-      "reviewer": "Claude (Claude Code session; recomputed 2026-11-05: both drawn by the plot scripts from the same results, labels compared with the Japanese figure)",
+      "source_sha256": "30b90cd0bf19a8c6d3e6cdc428c53193f46552282b2b6c96a7bb39b829ade895",
+      "target_sha256": "7bd2972d16681b4c3c0ff08075035aee20e2bbad2c751155b8c6a7c16eaf786b",
+      "reviewer": "Claude (Claude Code session; viewed both images side by side: same slope profiles at 1500, 3000 and 4530 years, the steady slope 0.253 and the mean-slope series with the 1-D prediction; titles, legends and axis labels translated)",
       "method": "assistant",
-      "reviewed_on": "2026-11-05"
+      "reviewed_on": "2026-11-06"
     },
     {
       "source": "examples/debris_bedrock/figs/threshold.png",
       "target": "examples/debris_bedrock/en/figs/threshold.png",
-      "source_sha256": "d72a4821f90782f4802c2fb152ddc8842b860020df7d93f3e1e3ca641550f803",
-      "target_sha256": "135e305062186a8bcda67ed49e65fd86ce288a66e9237c358ac75d71ec69bfb2",
-      "reviewer": "Claude (Claude Code session; both figures regenerated by plot_results.py / plot_long.py (ja / en labels) from the same results after §91; English labels checked on erosion.png)",
+      "source_sha256": "f35797cb7ab1b110dd360c0a8f3cabbf79ce0649786e72e5e2cae0fb41a3e51c",
+      "target_sha256": "18ad55fee337b52cb03b4ffebfe3d502525cae349b214158b52e7a75199114ff",
+      "reviewer": "Claude (Claude Code session; viewed both images side by side: same erosion profiles for tau_cd = 0.5, 1 and 2 kPa; title and axis labels translated)",
       "method": "assistant",
-      "reviewed_on": "2026-11-04"
+      "reviewed_on": "2026-11-06"
     },
     {
       "source": "examples/debris_fan/README.md",
       "target": "examples/debris_fan/en/README.md",
-      "source_sha256": "49ebbc5911e4fdfd8e3495e62709d6430bd6987261466cefe5f57bab8ddb1bab",
-      "target_sha256": "900fca917b1bcf0322197719965633358910ceba040fa7fab1e955506c45e627",
-      "reviewer": "Claude (Claude Code session; recomputed 2026-11-05: the summary, the recompute note, the tables and the values in the text compared with the Japanese source, rest unchanged since the previous record)",
+      "source_sha256": "9f923c397af70fdddef535164bf72a490b649676e63082b3c06ebe1ac587bf6e",
+      "target_sha256": "cd76ba9706fc9fb1fa6c6dd44f8d0ac68fd28df464dbf658753520d9767e8b25",
+      "reviewer": "Claude (Claude Code session; removed development history from both versions in parallel and compared the edited passages, headings, tables and numbers; no model execution)",
       "method": "assistant",
-      "reviewed_on": "2026-11-05"
+      "reviewed_on": "2026-11-08"
     },
     {
       "source": "examples/debris_fan/figs/dependence.png",
       "target": "examples/debris_fan/en/figs/dependence.png",
-      "source_sha256": "96cf4e21fdfd37038562506918f3c551b93e18da977f3297765427eabf541e91",
-      "target_sha256": "67c5aeb6cf8106ebd19255c50d6d3bc9c19bda5cdc25da1f952a3e4c4fe10ca3",
-      "reviewer": "Claude (Claude Code session; recomputed 2026-11-05: both drawn by plot_results.py from the same results, labels compared with the Japanese figure)",
+      "source_sha256": "a39982677b9df5d8011cd579e03c60d35035d7eba1e0383c9742b62060066bac",
+      "target_sha256": "06646eac71f76ede07e1550dee604c8c0bdd359f58d9d95a3c4c83f443429461",
+      "reviewer": "Claude (Claude Code session; viewed both images side by side: same eight panels (map difference, sediment on the fan, deposit area, spreading, depth area, arrival time, houses, valley deposit) with the same data and reference band; titles, axis labels and legend translated)",
       "method": "assistant",
-      "reviewed_on": "2026-11-05"
+      "reviewed_on": "2026-11-06"
+    },
+    {
+      "source": "examples/debris_fan/figs/grid.png",
+      "target": "examples/debris_fan/en/figs/grid.png",
+      "source_sha256": "c78b503d3cce9fcef3d87ab8d98883c26a65a7104d5a29366f3bbf4f9b20ec52",
+      "target_sha256": "78ce8af39a20db4ff2a0509e65724d90f46ca3456cd0e78f964e8cd67c3092b5",
+      "reviewer": "Claude (Claude Code session; drawn by plot_results.py without model results (grid from the grids of make_init.py, mechanism from its volumes, laws from the closed-form Takahashi–Nakagawa expressions with the values of param.txt); viewed the Japanese and English images side by side: same shapes, values and layout, labels translated)",
+      "method": "assistant",
+      "reviewed_on": "2026-11-08"
+    },
+    {
+      "source": "examples/debris_fan/figs/laws.png",
+      "target": "examples/debris_fan/en/figs/laws.png",
+      "source_sha256": "f2acca5d931d47f60f2452d57cb31dd049a434c0fa35a14ae01267aca4ddd015",
+      "target_sha256": "5a167f2e7c4f612174bc999c39436c2ae48cfdd80a11c5f0b33dda02ec2abb5f",
+      "reviewer": "Claude (Claude Code session; drawn by plot_results.py without model results (grid from the grids of make_init.py, mechanism from its volumes, laws from the closed-form Takahashi–Nakagawa expressions with the values of param.txt); viewed the Japanese and English images side by side: same shapes, values and layout, labels translated)",
+      "method": "assistant",
+      "reviewed_on": "2026-11-08"
     },
     {
       "source": "examples/debris_fan/figs/maps_20m.png",
       "target": "examples/debris_fan/en/figs/maps_20m.png",
-      "source_sha256": "68e877a2d8eae4d67feb426d8b4d7cd70e29c6648f7a16f7eb08ee76f27b2189",
-      "target_sha256": "1bce571f26b2b2821c441c297d597ce2ba55839a6999d252a4dcabb091517b67",
-      "reviewer": "Claude (Claude Code session; recomputed 2026-11-05: both drawn by plot_results.py from the same results, labels compared with the Japanese figure)",
+      "source_sha256": "649eb6df642aa8c244f417c7f54133d487e2f892fb852ab9f429358de687f427",
+      "target_sha256": "d80fc6e36a6fffe5ccad29e79d93a21d8bd6ad72df2482aaac776c48eca21b02",
+      "reviewer": "Claude (Claude Code session; viewed both images side by side: same six maps on the 20 m grid with the same colours and lines; titles, colour-bar label and axis labels translated)",
       "method": "assistant",
-      "reviewed_on": "2026-11-05"
+      "reviewed_on": "2026-11-06"
     },
     {
       "source": "examples/debris_fan/figs/maps_40m.png",
       "target": "examples/debris_fan/en/figs/maps_40m.png",
-      "source_sha256": "2f6034263feec280e487d22d24a5513842df7aa07f83b956767e98844b0ede4f",
-      "target_sha256": "aa2786f8f8798856ccf8e0b986d7c2e399f8bb2aff871cd75ff30e59ed7e873d",
-      "reviewer": "Claude (Claude Code session; recomputed 2026-11-05: both drawn by plot_results.py from the same results, labels compared with the Japanese figure)",
+      "source_sha256": "ed979e49f2679289062b1c316a2a370eb402c0b5fbd06aee270fc85f73d9d8d1",
+      "target_sha256": "c013b9c6010d5245fa0165e7ecde3a87a30bc8ed2995635e1cb467b509ad6992",
+      "reviewer": "Claude (Claude Code session; viewed both images side by side: same six maps on the 40 m grid with the same colours and lines; titles, colour-bar label and axis labels translated)",
       "method": "assistant",
-      "reviewed_on": "2026-11-05"
+      "reviewed_on": "2026-11-06"
     },
     {
       "source": "examples/debris_fan/figs/maps_5m.png",
       "target": "examples/debris_fan/en/figs/maps_5m.png",
-      "source_sha256": "eb655ce16e4814e4856b6c2d179f57a98abdce70a137695ae6f685e6dbd25b31",
-      "target_sha256": "beb20a2921bc9edfcbb1d45838bb9b23c12ed46b7bf9b6c2cd9bcbab944fa1bb",
-      "reviewer": "Claude (Claude Code session; recomputed 2026-11-05: both drawn by plot_results.py from the same results, labels compared with the Japanese figure)",
+      "source_sha256": "16d9063a174eddf19e065e0011e84dfe39673f0d736b9f7af0c2d16b777a409a",
+      "target_sha256": "e0ea5d1ec4f904d8e9ed2c3ecfd4b2b69dfe104b383d1393e3dfb10a61d1fe0f",
+      "reviewer": "Claude (Claude Code session; viewed both images side by side: same six maps (0/22.5/45 degrees, eight and four neighbours) of deposit thickness, the 1 m depth line, the moving-mud line and houses; titles, colour-bar label and axis labels translated)",
       "method": "assistant",
-      "reviewed_on": "2026-11-05"
+      "reviewed_on": "2026-11-06"
+    },
+    {
+      "source": "examples/debris_fan/figs/mechanism.png",
+      "target": "examples/debris_fan/en/figs/mechanism.png",
+      "source_sha256": "c01ba1e2e608f7e5bdd1c51dd5017728d5aaebbeb7b33f02ba1ffcd9021c2f88",
+      "target_sha256": "55f294ed9cb8a66217db5c1218426dce8e16f615cc4194ac2b842da79aa02ca4",
+      "reviewer": "Claude (Claude Code session; drawn by plot_results.py without model results (grid from the grids of make_init.py, mechanism from its volumes, laws from the closed-form Takahashi–Nakagawa expressions with the values of param.txt); viewed the Japanese and English images side by side: same shapes, values and layout, labels translated)",
+      "method": "assistant",
+      "reviewed_on": "2026-11-08"
     },
     {
       "source": "examples/debris_fan/figs/overlay.png",
       "target": "examples/debris_fan/en/figs/overlay.png",
-      "source_sha256": "057a2e243ec2c21f97f829b5790684a682918d1d73cd006132ad895185d2e8cb",
-      "target_sha256": "b4d96d3277a6cc4d0347956f9adbc0c7aeccd74618ae97c11041802b71d4ec9c",
-      "reviewer": "Claude (Claude Code session; recomputed 2026-11-05: both drawn by plot_results.py from the same results, labels compared with the Japanese figure)",
+      "source_sha256": "2a02f64123483aa1b4974c6f7cf1f1fe7a834d008f7718bec910b0d916c72f36",
+      "target_sha256": "06d0c892660740efdd9120f4be8c52bd8fe0da8c63ed0dc92f7dcf9437e7f80d",
+      "reviewer": "Claude (Claude Code session; viewed both images side by side: same overlaid 0.5 m deposit and 1 m depth lines for eight and four neighbours by orientation and grid spacing; titles and legends translated)",
       "method": "assistant",
-      "reviewed_on": "2026-11-05"
+      "reviewed_on": "2026-11-06"
     },
     {
       "source": "examples/debris_fan/figs/series.png",
       "target": "examples/debris_fan/en/figs/series.png",
-      "source_sha256": "6a33dcd0a5004a33c3b10b848ed76a33c0b68ebef970ab06398a6de69dc301f5",
-      "target_sha256": "fc5ea6f17b72e090864ce8a3fb02949763b7e1fc85e89d4f1d220f4e874ef1c3",
-      "reviewer": "Claude (Claude Code session; recomputed 2026-11-05: both drawn by plot_results.py from the same results, labels compared with the Japanese figure)",
+      "source_sha256": "0bbc2d5831a3f0fa08f87e721cef0a7f36350a0d211d2532598a39a90d18489b",
+      "target_sha256": "6859f11f9217dadb990e387fd04f71a4506db189da4392469162c2063e8c1895",
+      "reviewer": "Claude (Claude Code session; viewed both images side by side: same front-position, along-path deposit and direction-on-fan curves for eight and four neighbours; titles, axis labels, annotations and legends translated)",
       "method": "assistant",
-      "reviewed_on": "2026-11-05"
+      "reviewed_on": "2026-11-06"
     },
     {
       "source": "examples/debris_fan/figs/setup.png",
@@ -1589,11 +1652,11 @@
     {
       "source": "examples/estuary_barrage/README.md",
       "target": "examples/estuary_barrage/en/README.md",
-      "source_sha256": "d206f16fa8df4f87436ee2298b28090e340308485d9335734debaf21021597e6",
-      "target_sha256": "2c94f1fb036a802af9c3eec57b8a40a2efab67a2c5385e83e9db75e301182fef",
-      "reviewer": "Claude (Claude Code session; recomputed 2026-11-05: the table, the recompute note and the values in the bullets compared with the Japanese source, rest unchanged since the previous record)",
+      "source_sha256": "df776720c3d7f43a044b0370771dbd51035caa1cb4301d32ed9143c34ae238a4",
+      "target_sha256": "fb5c0b0ca30d9f99f80ddc01507ad88e84a5227dd92f00c0c6fa5dc9d7cca4c0",
+      "reviewer": "Claude (Claude Code session; removed development history from both versions in parallel and compared the edited passages, headings, tables and numbers; no model execution)",
       "method": "assistant",
-      "reviewed_on": "2026-11-05"
+      "reviewed_on": "2026-11-08"
     },
     {
       "source": "examples/estuary_barrage/figs/cross.png",
@@ -1796,20 +1859,56 @@
     {
       "source": "examples/landslide_tsunami/README.md",
       "target": "examples/landslide_tsunami/en/README.md",
-      "source_sha256": "237b6c7048c6bb46f37b7a52bf3738e9f717a99915c88855e060e176e4503d5e",
-      "target_sha256": "3e991e584679e0d48169191edc78e2bb0bd8e53ba2206dd3b06c5a39a06f9dac",
-      "reviewer": "Claude (Claude Code session; recomputed 2026-11-05 after the default f_gravity_correction = 2 and developer.md §94-95: the headings, the history paragraph and the changed values of B, B0 and the non-hydrostatic table compared with the Japanese source, rest unchanged since the previous record)",
+      "source_sha256": "62e98f2a41c0b90910e9e0beba17f690cedff57faf400e8d324978da02912e45",
+      "target_sha256": "9a10e3a8540e6a1fed620ed9771edb0fbb77c275c979fe6f972e4294a043faed",
+      "reviewer": "Claude (Claude Code session; removed development history from both versions in parallel and compared the edited passages, headings, tables and numbers; no model execution)",
       "method": "assistant",
-      "reviewed_on": "2026-11-05"
+      "reviewed_on": "2026-11-08"
+    },
+    {
+      "source": "examples/landslide_tsunami/figs/mechanism.png",
+      "target": "examples/landslide_tsunami/en/figs/mechanism.png",
+      "source_sha256": "6494b2dbc1a457f75ff0135de66bad59f8f75b96d27e035b71e4db0f551dd74c",
+      "target_sha256": "b7be453f3eb62f5050d8d3a616bb2ace5fb9b4c4b7c2d12d8e2e8e93daaaf070",
+      "reviewer": "Claude (Claude Code session; schematic drawn by plot_schematic.py from the input files and closed-form expressions only (no model execution); viewed the Japanese and English images side by side: same shapes, values and layout, labels translated)",
+      "method": "assistant",
+      "reviewed_on": "2026-11-08"
+    },
+    {
+      "source": "examples/landslide_tsunami/figs/nh_theory.png",
+      "target": "examples/landslide_tsunami/en/figs/nh_theory.png",
+      "source_sha256": "d3c930685cfd1fe9163d380866bff7779e80d10d4779e03249d81285d4aab6c4",
+      "target_sha256": "08b3cb0e5e33d9bbc3e1a7d5696a48edf80a60c41ad7ab53d700875f34cb2848",
+      "reviewer": "Claude (Claude Code session; schematic drawn by plot_schematic.py from the input files and closed-form expressions only (no model execution); viewed the Japanese and English images side by side: same shapes, values and layout, labels translated)",
+      "method": "assistant",
+      "reviewed_on": "2026-11-08"
+    },
+    {
+      "source": "examples/landslide_tsunami/figs/properties.png",
+      "target": "examples/landslide_tsunami/en/figs/properties.png",
+      "source_sha256": "f85bbfd3e0621a018b3fc1d44be4388af31cb1fd22975ce9bf5476e518844be8",
+      "target_sha256": "424b5df58a9873731b134839f22f071a6aaf638a7e33ac66091ab7ea9612f7a1",
+      "reviewer": "Claude (Claude Code session; schematic drawn by plot_schematic.py from the input files and closed-form expressions only (no model execution); viewed the Japanese and English images side by side: same shapes, values and layout, labels translated)",
+      "method": "assistant",
+      "reviewed_on": "2026-11-08"
+    },
+    {
+      "source": "examples/landslide_tsunami/figs/setup.png",
+      "target": "examples/landslide_tsunami/en/figs/setup.png",
+      "source_sha256": "4082020a1dbdc5d286222c1200579a93ef78b7832f7cad097df00a6125df84de",
+      "target_sha256": "1f09dc9ac62f7fc80564c7c621365aa448e992e0841636cba1464ae2d61cd0a5",
+      "reviewer": "Claude (Claude Code session; schematic drawn by plot_schematic.py from the input files and closed-form expressions only (no model execution); viewed the Japanese and English images side by side: same shapes, values and layout, labels translated)",
+      "method": "assistant",
+      "reviewed_on": "2026-11-08"
     },
     {
       "source": "examples/levee_breach/README.md",
       "target": "examples/levee_breach/en/README.md",
-      "source_sha256": "d11e64e7cb22e9bddaacae5a827e6a7c423597e995e95e5ecc4cf0e64a08c092",
-      "target_sha256": "875aaef8da11b8025e6051503e0de3c462110c7c9f0031873babca4809a2308e",
-      "reviewer": "Claude (Claude Code session; reviewed the Japanese source against the English mirror after unifying the term passage width / 通過幅 and noting the original paper's term, 2026-11-03)",
+      "source_sha256": "8ddd91ab173d59264ba9dab6b1e29b04f63a13b4d48ef04a2e239b3b16e5f036",
+      "target_sha256": "1d09c2219f85ed7febae604ea611e5a132dfef6c0e38d65acf9fe539da9d0e88",
+      "reviewer": "Claude (Claude Code session; removed development history from both versions in parallel and compared the edited passages, headings, tables and numbers; no model execution)",
       "method": "assistant",
-      "reviewed_on": "2026-11-03"
+      "reviewed_on": "2026-11-08"
     },
     {
       "source": "examples/levee_breach/figs/maps.png",
@@ -1877,11 +1976,11 @@
     {
       "source": "examples/meander/README.md",
       "target": "examples/meander/en/README.md",
-      "source_sha256": "2dbf46709a0ae869f72f3ea2f01b478ad02606d96318cd1c8213313eb54f8dff",
-      "target_sha256": "3f8bba1ecb70823a521ccaa49a3be76bf6f8cb93f9e7f2b52b8c757206e7eb3b",
-      "reviewer": "Claude (Claude Code session; README results rewritten from the 2026-11-03 recomputation (f_opening_dynamic = 3; meander_cutoff with the fixed terrain): English mirror compared section by section with the Japanese master - headings, tables, numbers, links and figure references match)",
+      "source_sha256": "4a4f6006d4b49c6b64a24f537302b180b44ba11fdf838cff817b4bf3355a4b76",
+      "target_sha256": "83bdca3a6683a5c7f69a4860ffe2fd270f4d0c929f168efb429ed06e954c2571",
+      "reviewer": "Claude (Claude Code session; removed development history from both versions in parallel and compared the edited passages, headings, tables and numbers; no model execution)",
       "method": "assistant",
-      "reviewed_on": "2026-11-03"
+      "reviewed_on": "2026-11-08"
     },
     {
       "source": "examples/meander/figs/feed.png",
@@ -1949,11 +2048,11 @@
     {
       "source": "examples/meander_cutoff/README.md",
       "target": "examples/meander_cutoff/en/README.md",
-      "source_sha256": "227368d3a237c451cfdc0ed7e868c93aa8efe7ac5d1581eba2f5da24d7320c20",
-      "target_sha256": "f6386a4198f5b2c2f72fbf161f0513992139786b7d6e8dc0c427981b400af653",
-      "reviewer": "Claude (Claude Code session; README results rewritten from the 2026-11-03 recomputation (f_opening_dynamic = 3; meander_cutoff with the fixed terrain): English mirror compared section by section with the Japanese master - headings, tables, numbers, links and figure references match)",
+      "source_sha256": "9e29350dc33455b03b95e19515bf066dc87a351eddd3f02f76479358dd8a4a2c",
+      "target_sha256": "d90d54f582b74b30ed0fd5402b34a5e3f5741bd98efa5fae293cfc1de531d431",
+      "reviewer": "Claude (Claude Code session; removed development history from both versions in parallel and compared the edited passages, headings, tables and numbers; no model execution)",
       "method": "assistant",
-      "reviewed_on": "2026-11-03"
+      "reviewed_on": "2026-11-08"
     },
     {
       "source": "examples/meander_cutoff/figs/final_slump_fines.png",
@@ -2174,11 +2273,11 @@
     {
       "source": "examples/mountain_valley/README.md",
       "target": "examples/mountain_valley/en/README.md",
-      "source_sha256": "c35e5cf7e77507b741c775a74b94ac94e1318688076540d4f460e8f1407b6dcb",
-      "target_sha256": "96441709463c187139dfc258ec87d72ebf65bd52795650c6c4f7b2d56de46c9a",
-      "reviewer": "Claude (assistant)",
+      "source_sha256": "12191a03788480798a6f5f3767adeba6645f3842b033becc1cb10e0885d9286b",
+      "target_sha256": "bf70630018f76b836919cd0a9eabfcbb8fb030e61dde6c103159a4edb3d3836d",
+      "reviewer": "Claude (Claude Code session; removed development history from both versions in parallel and compared the edited passages, headings, tables and numbers; no model execution)",
       "method": "assistant",
-      "reviewed_on": "2026-11-02"
+      "reviewed_on": "2026-11-08"
     },
     {
       "source": "examples/mountain_valley/figs/channel.png",
@@ -2219,38 +2318,74 @@
     {
       "source": "examples/nest_reflect/README.md",
       "target": "examples/nest_reflect/en/README.md",
-      "source_sha256": "022f90f6f700ccae749f5ab1a379fb954c416fa56b317070b8ae462a82aac597",
-      "target_sha256": "87b3f410763b4391f4865f13730f7486bc7e6ad2b92249d941af2161e3970a10",
-      "reviewer": "Claude (Claude Code session; snapshots/error_time links switched to en/figs; oneway_edge/nh_profile kept on the shared Japanese figures because regenerated results differ numerically from the committed figures)",
+      "source_sha256": "4c6d8e53510b621615313e814bd0493b8b8b3beb3d66ce24e5ff3566647d86a4",
+      "target_sha256": "7272cc013fd485f7e0934bf3918579082cdff0d3e179f561d27a4f79e2b9e04e",
+      "reviewer": "Claude (Claude Code session; edited both versions in parallel (setup and how-it-works sections, figures moved into their sections with captions, run steps) and compared headings, tables, images and numbers)",
       "method": "assistant",
-      "reviewed_on": "2026-10-25"
+      "reviewed_on": "2026-11-08"
     },
     {
       "source": "examples/nest_reflect/figs/error_time.png",
       "target": "examples/nest_reflect/en/figs/error_time.png",
-      "source_sha256": "91a343774db37dbb15afabc0fcb20d4701bf9f6c181d7c51cc10a8d293bf193b",
-      "target_sha256": "eb13e342d8f49d1c348c8751a94c24fa99174ac7ef50789e054c35f5549f400f",
-      "reviewer": "Claude (Claude Code session; compared the Japanese and English figure images side by side: same plotted data and layout, labels translated (some compressed but faithful); provenance per the commits that drew the English figures: same saved results as the Japanese figures; no model execution)",
+      "source_sha256": "185e16c08468585e742f0f1d27b121481950fb45b81dafc1948cbc403bff6aa6",
+      "target_sha256": "6901184c3b8e9d91af9d972d2e3276eb70523f26d911fac38523e7dc33627db6",
+      "reviewer": "Claude (Claude Code session; compared the Japanese and English figure images side by side: same plotted data and layout from the same script and the same inputs and results (all 17 runs rerun with the current build), labels translated)",
       "method": "assistant",
-      "reviewed_on": "2026-10-29"
+      "reviewed_on": "2026-11-08"
+    },
+    {
+      "source": "examples/nest_reflect/figs/mechanism.png",
+      "target": "examples/nest_reflect/en/figs/mechanism.png",
+      "source_sha256": "0fa85e94e8f6d80b318b9a662941fd98866f5f913b524cd4a585f7a1cddcec6d",
+      "target_sha256": "ca11a8496809e940f2f5403eb480846aeba7e6f925ceb00532b507895b0f4cac",
+      "reviewer": "Claude (Claude Code session; compared the Japanese and English figure images side by side: same plotted data and layout from the same script and the same inputs and results (all 17 runs rerun with the current build), labels translated)",
+      "method": "assistant",
+      "reviewed_on": "2026-11-08"
+    },
+    {
+      "source": "examples/nest_reflect/figs/nh_profile.png",
+      "target": "examples/nest_reflect/en/figs/nh_profile.png",
+      "source_sha256": "7c89735300b5a3d2b6c525e616af9f765fa286295c5bebc30624c2ac3181e8a1",
+      "target_sha256": "97b522c14940f15b6ea6b9b9b4b11521d5a327f484d6d65d4c38c6803fd50b82",
+      "reviewer": "Claude (Claude Code session; compared the Japanese and English figure images side by side: same plotted data and layout from the same script and the same inputs and results (all 17 runs rerun with the current build), labels translated)",
+      "method": "assistant",
+      "reviewed_on": "2026-11-08"
+    },
+    {
+      "source": "examples/nest_reflect/figs/oneway_edge.png",
+      "target": "examples/nest_reflect/en/figs/oneway_edge.png",
+      "source_sha256": "c9b72be91cadf1740e00dff0743a4fab9df78e77c90467778823135b2c981ea4",
+      "target_sha256": "8100d4b9682c87ed7b75ed6134519546a427cced78736d5e82c52884ee5782e3",
+      "reviewer": "Claude (Claude Code session; compared the Japanese and English figure images side by side: same plotted data and layout from the same script and the same inputs and results (all 17 runs rerun with the current build), labels translated)",
+      "method": "assistant",
+      "reviewed_on": "2026-11-08"
+    },
+    {
+      "source": "examples/nest_reflect/figs/setup.png",
+      "target": "examples/nest_reflect/en/figs/setup.png",
+      "source_sha256": "723aa762b3451ba49acc5e7ecada43c02ee56df5ea233ac876da10b51c489cb2",
+      "target_sha256": "12d7a224e47e0c05100b772393d86294849613e10463c9c0acbf087981e66bae",
+      "reviewer": "Claude (Claude Code session; compared the Japanese and English figure images side by side: same plotted data and layout from the same script and the same inputs and results (all 17 runs rerun with the current build), labels translated)",
+      "method": "assistant",
+      "reviewed_on": "2026-11-08"
     },
     {
       "source": "examples/nest_reflect/figs/snapshots.png",
       "target": "examples/nest_reflect/en/figs/snapshots.png",
-      "source_sha256": "ddc485624ee19ef85c6aa1e28ad1a43747e2cee19ec3e48a4dfcfa2767a69108",
-      "target_sha256": "fe18c12de978380887ef1202f0d4fa18a32cdbf571e05863ae3b9c8d70b34259",
-      "reviewer": "Claude (Claude Code session; compared the Japanese and English figure images side by side: same plotted data and layout, labels translated (some compressed but faithful); provenance per the commits that drew the English figures: same saved results as the Japanese figures; no model execution)",
+      "source_sha256": "f25b9854182433d55c97307051d2dac640885c0819c547e96ce2ec4045e90fe1",
+      "target_sha256": "dea9f97aa5822b11be4de11988678e96c486a6dbddc8cb436b86b396dab036b3",
+      "reviewer": "Claude (Claude Code session; compared the Japanese and English figure images side by side: same plotted data and layout from the same script and the same inputs and results (all 17 runs rerun with the current build), labels translated)",
       "method": "assistant",
-      "reviewed_on": "2026-10-29"
+      "reviewed_on": "2026-11-08"
     },
     {
       "source": "examples/qanat/README.md",
       "target": "examples/qanat/en/README.md",
-      "source_sha256": "210184ed8935909e8139780f3380eea2618a191c47149bc633d1cdbc6b315df7",
-      "target_sha256": "489314ad7a054ce289c1956ee06a7e698e2eb16bd237bc274537fef9b6ec120d",
-      "reviewer": "Claude (Claude Code session; recomputed 2026-11-05: the 2 L/s row, the recompute note and the values in the text compared with the Japanese source, rest unchanged since the previous record)",
+      "source_sha256": "7df81c524267f90ddfe5125be05d0b10e8d8b1c4b71be6949bbf2429ae1c8404",
+      "target_sha256": "b60d88dc3af7a9cfb5916b8156cb72ae59a4d01efba79a53495c1143d640fa88",
+      "reviewer": "Claude (Claude Code session; removed development history from both versions in parallel and compared the edited passages, headings, tables and numbers; no model execution)",
       "method": "assistant",
-      "reviewed_on": "2026-11-05"
+      "reviewed_on": "2026-11-08"
     },
     {
       "source": "examples/qanat/figs/mechanism.png",
@@ -2300,29 +2435,47 @@
     {
       "source": "examples/sewer_hybrid/README.md",
       "target": "examples/sewer_hybrid/en/README.md",
-      "source_sha256": "dce7974fd6837c83a9028de87ec956805ca501409956b4e80f9db7dbcd86186e",
-      "target_sha256": "93a0a2e13e389d8d9d0b1f70b12ea7b4f7abfcbed7e143d7032bad53920ca078",
-      "reviewer": "Claude (Claude Code session; recomputed 2026-11-05: run F values in (a), (c), the water destinations, the recompute note and the table compared with the Japanese source, rest unchanged since the previous record)",
+      "source_sha256": "3bafe7c1f0397ee491989c74109d2f13a2b1239bbff51d2ea30942ba01483185",
+      "target_sha256": "2b7a0b2a919b49c62c5835099bf407a4537e10dbe84921513a39c7e8f603bae9",
+      "reviewer": "Claude (Claude Code session; edited both versions in parallel (figure embedding, captions, panel descriptions, run steps) and compared headings, tables, images and numbers)",
       "method": "assistant",
-      "reviewed_on": "2026-11-05"
+      "reviewed_on": "2026-11-08"
     },
     {
-      "source": "examples/sewer_hybrid/sewer_hybrid_outfall.png",
+      "source": "examples/sewer_hybrid/figs/mechanism.png",
+      "target": "examples/sewer_hybrid/en/figs/mechanism.png",
+      "source_sha256": "e0edbe7e59c34236deb7e0245972cd6a07121969c05d9a945fd08703a9ebcbbd",
+      "target_sha256": "acd6b3245b9b57b87e14ff57cdebbb6c13b68507430202ab4fe16a6a284248d4",
+      "reviewer": "Claude (Claude Code session; compared the Japanese and English figure images side by side: same plotted data and layout from the same script and the same results (runs A–F rerun with the current build), labels translated)",
+      "method": "assistant",
+      "reviewed_on": "2026-11-08"
+    },
+    {
+      "source": "examples/sewer_hybrid/figs/setup.png",
+      "target": "examples/sewer_hybrid/en/figs/setup.png",
+      "source_sha256": "c18d3621d31b53b3323daab4f4b6e72503e7489f5af9faf7965e4b9466449024",
+      "target_sha256": "1fa77c41b8b7359227a3d903b94d36944a06924e0609ab97639a12ee2ae86ccf",
+      "reviewer": "Claude (Claude Code session; compared the Japanese and English figure images side by side: same plotted data and layout from the same script and the same results (runs A–F rerun with the current build), labels translated)",
+      "method": "assistant",
+      "reviewed_on": "2026-11-08"
+    },
+    {
+      "source": "examples/sewer_hybrid/figs/sewer_hybrid_outfall.png",
       "target": "examples/sewer_hybrid/en/figs/sewer_hybrid_outfall.png",
-      "source_sha256": "88df8f199c4891f6973cfdc37c67ce3cfafebeaf91e2ae265605368d9d5a31aa",
-      "target_sha256": "37b2ee5424adca1ce05a6d595eec808efb3e0ee36da2990399728e951047fc1f",
-      "reviewer": "Claude (Claude Code session; recomputed 2026-11-05: both drawn by plot_sewer.py from the same results, labels compared with the Japanese figure)",
+      "source_sha256": "32471b48f96b09c28a12683720bebb39398e05b5256fecc127a329e51ad6e6cd",
+      "target_sha256": "98eb7b7d2db0d1d2f6f0842ff42bc58b9009191aa7691f4919937103c5ed551d",
+      "reviewer": "Claude (Claude Code session; compared the Japanese and English figure images side by side: same plotted data and layout from the same script and the same results (runs A–F rerun with the current build), labels translated)",
       "method": "assistant",
-      "reviewed_on": "2026-11-05"
+      "reviewed_on": "2026-11-08"
     },
     {
-      "source": "examples/sewer_hybrid/sewer_hybrid_result.png",
+      "source": "examples/sewer_hybrid/figs/sewer_hybrid_result.png",
       "target": "examples/sewer_hybrid/en/figs/sewer_hybrid_result.png",
-      "source_sha256": "682f13bd09fa87505f2b90e7d08497c90985bc807922feb69b401f3d9a481677",
-      "target_sha256": "bbadc98f9b4c205397645daf920d6058bba153a131cea6a62c17545be7a97f4c",
-      "reviewer": "Claude (Claude Code session; recomputed 2026-11-05: both drawn by plot_sewer.py from the same results, labels compared with the Japanese figure)",
+      "source_sha256": "ac8ad17a8b0eb441771af5251a3857ec08d07867853cab86dd8092b2fb4d56cb",
+      "target_sha256": "2e71302358c64b18ee52e9af390ee268f912d0529bed18eec5030fae0b8d73e2",
+      "reviewer": "Claude (Claude Code session; compared the Japanese and English figure images side by side: same plotted data and layout from the same script and the same results (runs A–F rerun with the current build), labels translated)",
       "method": "assistant",
-      "reviewed_on": "2026-11-05"
+      "reviewed_on": "2026-11-08"
     },
     {
       "source": "examples/shield_volcano/README.md",
@@ -2372,11 +2525,11 @@
     {
       "source": "examples/stratovolcano/README.md",
       "target": "examples/stratovolcano/en/README.md",
-      "source_sha256": "1c1aadb0648aacd164ac1ed43a5e0ef383751ccdde68b2fca0c7d06cb82b2336",
-      "target_sha256": "c60ca945774a44078ade949442e5b7d18286ac200f6905bc5e7273f9224d388a",
-      "reviewer": "Claude (Claude Code session; the slope of L at 1.0-1.5 km and the 2026-11-04 recomputation note after §91 updated in both languages and compared)",
+      "source_sha256": "bde8e1a0b6b203fa9d20e286724af4f32235bec1a75e943c65eab013ef18fc40",
+      "target_sha256": "a4cfd3acf5126e998a27016120eb7fffb80aed61eb25818acf852ba52f94b76a",
+      "reviewer": "Claude (Claude Code session; removed development history from both versions in parallel and compared the edited passages, headings, tables and numbers; no model execution)",
       "method": "assistant",
-      "reviewed_on": "2026-11-04"
+      "reviewed_on": "2026-11-08"
     },
     {
       "source": "examples/stratovolcano/figs/erosion.png",
@@ -2444,11 +2597,11 @@
     {
       "source": "examples/timberyard/README.md",
       "target": "examples/timberyard/en/README.md",
-      "source_sha256": "e2a9192aac94098b53eb8b57cf883c1d02e1b66a8692dd763607a11df67a2162",
-      "target_sha256": "f1f3e4925aa46b335be26099c14848ca1e60c6729df62b9d55e7d9a2e18c82d8",
-      "reviewer": "Claude (Claude Code session; recomputed 2026-11-05: the table, the recompute note, the values in the result bullets and the supplement table and text compared with the Japanese source, rest unchanged since the previous record)",
+      "source_sha256": "737f31ef10bfc6f430b5156ad121a9498ae6182e8f9726237f1086afc3593b76",
+      "target_sha256": "3ca120b204620292ccf5d6d03e2f2495f46d5d1ed2783769f13d4c138b2f51fd",
+      "reviewer": "Claude (Claude Code session; removed development history from both versions in parallel and compared the edited passages, headings, tables and numbers; no model execution)",
       "method": "assistant",
-      "reviewed_on": "2026-11-05"
+      "reviewed_on": "2026-11-08"
     },
     {
       "source": "examples/timberyard/figs/maps.png",
@@ -2498,11 +2651,11 @@
     {
       "source": "examples/tower_karst/README.md",
       "target": "examples/tower_karst/en/README.md",
-      "source_sha256": "c67c1cb953bfb8c7eaf74e3b0086421572a6aa2cd8c99345f12e150f9d25b0d4",
-      "target_sha256": "1fbb5ef859ee6074840271595c71900df5bbb52806aca5ebeba33dcea48d2203",
-      "reviewer": "Claude (Claude Code session; compared the Japanese source with the English mirror after adding the rf_hc = 50 m sensitivity subsection of tower_karst, 2026-11-04)",
+      "source_sha256": "3f538839cbc5e078333812a1fdfc27eecc71d563cdaa65783a3ad517b3e5523b",
+      "target_sha256": "d94ec43f21439dee7574516bf708835ac99c7f8039c2b7494fe00ec3976b84d5",
+      "reviewer": "Claude (Claude Code session; removed development history from both versions in parallel and compared the edited passages, headings, tables and numbers; no model execution)",
       "method": "assistant",
-      "reviewed_on": "2026-11-04"
+      "reviewed_on": "2026-11-08"
     },
     {
       "source": "examples/tower_karst/figs/hydrograph.png",
@@ -2615,47 +2768,119 @@
     {
       "source": "examples/tsunami_coast/README.md",
       "target": "examples/tsunami_coast/en/README.md",
-      "source_sha256": "b11a9d6b1cfb4d5c39a9cba96c8386acfc5b560ddeeba4dd5bc7bf7ac9b264e4",
-      "target_sha256": "0d216562439b5f5df8b45e19655f44f9fa4ae0de7523698e7072fc9fa0779d9e",
-      "reviewer": "Claude (Claude Code session; recomputed 2026-11-05: the shelf minimum and the recompute note compared with the Japanese source, rest unchanged since the previous record)",
+      "source_sha256": "f1b9f348d1704fb9f1418508e20a1f5e4a0428e7544d261888f284b23df11e85",
+      "target_sha256": "9768129d430b3fdf3a9cb6d31d7f469e1ab9e180b64db468a024b30d48c8e280",
+      "reviewer": "Claude (Claude Code session; edited both versions in parallel (figure embedding, captions, new section on how it works, run steps) and compared headings, tables, images and numbers)",
       "method": "assistant",
-      "reviewed_on": "2026-11-05"
+      "reviewed_on": "2026-11-08"
     },
     {
       "source": "examples/tsunami_coast/figs/deformation.png",
       "target": "examples/tsunami_coast/en/figs/deformation.png",
-      "source_sha256": "dbd20977bc4cc4a1350104f2550e534bc9f062056f0e6596e343c1c8a0b34cea",
-      "target_sha256": "098dc8a317a9bf414890bdeef8f4e0b631d47dd2091667b87315c6ef77d9aa81",
-      "reviewer": "Claude (Claude Code session; example reruns with f_opening_dynamic default 3)",
+      "source_sha256": "ef4195db6d6a1ca27213ad0d21260ab1689a38afcb4e543cf28de41755bf8cd8",
+      "target_sha256": "8234a2006b85a2249864bc2caff70fc632af25ab5d2f55fa9ec7f9593f093f56",
+      "reviewer": "Claude (Claude Code session; compared the Japanese and English figure images side by side: same plotted data and layout from the same script and the same results (the three cases rerun with the current build), labels translated)",
       "method": "assistant",
-      "reviewed_on": "2026-10-31"
+      "reviewed_on": "2026-11-08"
+    },
+    {
+      "source": "examples/tsunami_coast/figs/mechanism.png",
+      "target": "examples/tsunami_coast/en/figs/mechanism.png",
+      "source_sha256": "cddf0891686152bddd12ebcdfff4a3bb3ceb5e587f2fbf4090d51abdbe4c8cb1",
+      "target_sha256": "71465b093bf252bb5b96b3d7e5e6ed5a3525f6aff8f7528a4e7b1f54e255899b",
+      "reviewer": "Claude (Claude Code session; compared the Japanese and English figure images side by side: same plotted data and layout from the same script and the same results (the three cases rerun with the current build), labels translated)",
+      "method": "assistant",
+      "reviewed_on": "2026-11-08"
+    },
+    {
+      "source": "examples/tsunami_coast/figs/probes.png",
+      "target": "examples/tsunami_coast/en/figs/probes.png",
+      "source_sha256": "8fcb66d13cd68973cdbff40cbe99ff00d4fa6893fcad1b4892e76ef86f767f97",
+      "target_sha256": "b4f9d784729b92f61bda94ef1054b21fff1a47098148e49e122b54ee1be382da",
+      "reviewer": "Claude (Claude Code session; compared the Japanese and English figure images side by side: same plotted data and layout from the same script and the same results (the three cases rerun with the current build), labels translated)",
+      "method": "assistant",
+      "reviewed_on": "2026-11-08"
+    },
+    {
+      "source": "examples/tsunami_coast/figs/setup.png",
+      "target": "examples/tsunami_coast/en/figs/setup.png",
+      "source_sha256": "f0b343dd66d8453e59ad2629ba5a2bd2d86be51f579ac6b7d4a908b289a4f740",
+      "target_sha256": "585f52a20ce35e7fdf812c931619b0a09c2f1ffacfe1bc43b3d2c385ac07fc25",
+      "reviewer": "Claude (Claude Code session; compared the Japanese and English figure images side by side: same plotted data and layout from the same script and the same results (the three cases rerun with the current build), labels translated)",
+      "method": "assistant",
+      "reviewed_on": "2026-11-08"
+    },
+    {
+      "source": "examples/tsunami_coast/figs/snapshots.png",
+      "target": "examples/tsunami_coast/en/figs/snapshots.png",
+      "source_sha256": "e15f2d7ee32d10c39986ee74bad642403d3058eb1118e8e2b50c992a1684c9f4",
+      "target_sha256": "558195805de26c41fa1fe18ee34e504c1447affc8a5a294e7c804fc715bf0182",
+      "reviewer": "Claude (Claude Code session; compared the Japanese and English figure images side by side: same plotted data and layout from the same script and the same results (the three cases rerun with the current build), labels translated)",
+      "method": "assistant",
+      "reviewed_on": "2026-11-08"
     },
     {
       "source": "examples/tsunami_fault/README.md",
       "target": "examples/tsunami_fault/en/README.md",
-      "source_sha256": "8afe113518cf907c18574bb767923392b8ccd735ee9f358942678b250c8fcae4",
-      "target_sha256": "7267b98e695b165e6e5aec3c9c229b9108275454d2203a412147dacc0f721c6a",
-      "reviewer": "Claude (Claude Code session; recomputed 2026-11-05: the two changed minima of the coast probe compared with the Japanese source, rest unchanged since the previous record)",
+      "source_sha256": "bc0e32a5416eae2bd8415c70e4a991d25bcb69e161908e7116b56adebada3c5b",
+      "target_sha256": "ee2728f9e147bf0b8ad12a1ae001885a6ea56a447f573a703696bca3b67abe83",
+      "reviewer": "Claude (Claude Code session; edited both versions in parallel (figure embedding, captions, new section on how it works, run steps, numbered probe rows matching the script output) and compared headings, tables, images and numbers)",
       "method": "assistant",
-      "reviewed_on": "2026-11-05"
+      "reviewed_on": "2026-11-08"
     },
     {
       "source": "examples/tsunami_fault/figs/deformation.png",
       "target": "examples/tsunami_fault/en/figs/deformation.png",
-      "source_sha256": "3bc89d43d2b5d3152a89f06e512382f5dd1b0b01dfbb73b3ca6527377fae6da4",
-      "target_sha256": "8efd5136296e80c01c96a9cc9da4ea8582e928616efbaa85bd75e944168163dd",
-      "reviewer": "Claude (Claude Code session; example reruns with f_opening_dynamic default 3)",
+      "source_sha256": "669408278f4cbb25135c59cb55942a756b0a3922d8c2edd6939792024426da9d",
+      "target_sha256": "95467c455504b07116bde979d53da9fae1d0fef50ca2f63ee7057fbc9a55b08c",
+      "reviewer": "Claude (Claude Code session; compared the Japanese and English figure images side by side: same plotted data and layout from the same script and the same inputs and results (the three cases rerun with the current build), labels translated)",
       "method": "assistant",
-      "reviewed_on": "2026-10-31"
+      "reviewed_on": "2026-11-08"
+    },
+    {
+      "source": "examples/tsunami_fault/figs/mechanism.png",
+      "target": "examples/tsunami_fault/en/figs/mechanism.png",
+      "source_sha256": "8a7f210346fef29fcd2d4986247bb31cf1669086a8b58ce04162dc5201f7262a",
+      "target_sha256": "045836c22b1a42542aa013d42ba635da52f5d04aba1021e58c611e211cf12e88",
+      "reviewer": "Claude (Claude Code session; compared the Japanese and English figure images side by side: same plotted data and layout from the same script and the same inputs and results (the three cases rerun with the current build), labels translated)",
+      "method": "assistant",
+      "reviewed_on": "2026-11-08"
+    },
+    {
+      "source": "examples/tsunami_fault/figs/probes.png",
+      "target": "examples/tsunami_fault/en/figs/probes.png",
+      "source_sha256": "1dedaef7a7cf621115637bb8622b29a468f048573aeea6ada8addb533a5fbd42",
+      "target_sha256": "861b3d0df7d1c1962cf53f5ecbf1b65fc0dc478ba06e4da097f68dad8906efcb",
+      "reviewer": "Claude (Claude Code session; compared the Japanese and English figure images side by side: same plotted data and layout from the same script and the same inputs and results (the three cases rerun with the current build), labels translated)",
+      "method": "assistant",
+      "reviewed_on": "2026-11-08"
+    },
+    {
+      "source": "examples/tsunami_fault/figs/profiles.png",
+      "target": "examples/tsunami_fault/en/figs/profiles.png",
+      "source_sha256": "792da8bb8ea3b2ce61b5ed38361e128c1f84918d0540d28518fa259aca6ace4c",
+      "target_sha256": "ecc3241258444eaaa2c646a8d8f9b19dc237ace0964098319aa16e0e89e82ce0",
+      "reviewer": "Claude (Claude Code session; compared the Japanese and English figure images side by side: same plotted data and layout from the same script and the same inputs and results (the three cases rerun with the current build), labels translated)",
+      "method": "assistant",
+      "reviewed_on": "2026-11-08"
+    },
+    {
+      "source": "examples/tsunami_fault/figs/setup.png",
+      "target": "examples/tsunami_fault/en/figs/setup.png",
+      "source_sha256": "6c7a167b9726f64a82b8b6a41f0f6173ad8039c000b8ccdd3a061a28ee0b1046",
+      "target_sha256": "6b2c2befea4fe11a77284187e29d5a53477c25448b758e464de37217eb28bb54",
+      "reviewer": "Claude (Claude Code session; compared the Japanese and English figure images side by side: same plotted data and layout from the same script and the same inputs and results (the three cases rerun with the current build), labels translated)",
+      "method": "assistant",
+      "reviewed_on": "2026-11-08"
     },
     {
       "source": "examples/tsunami_town/README.md",
       "target": "examples/tsunami_town/en/README.md",
-      "source_sha256": "12b4fa95dbb0c02b46794cbbbf63325e37c43ff3d42c46b09587e493e449f6db",
-      "target_sha256": "b5ff6fd184a37e6b4fe2827e54dc58b1e182afe49010b2323196c673c6a4a412",
-      "reviewer": "Claude (Claude Code session; recomputed 2026-11-05: the tables, the recompute note, the values in the result bullets and the supplement text compared with the Japanese source, rest unchanged since the previous record)",
+      "source_sha256": "a9d984358b23a70129226ed13a5a909e22e8045e1959eed037884eaa4f4412ea",
+      "target_sha256": "15b03b7a735589be3f85b617a4b472dbb70f45ae6f841bb45224df0387d770a1",
+      "reviewer": "Claude (Claude Code session; removed development history from both versions in parallel and compared the edited passages, headings, tables and numbers; no model execution)",
       "method": "assistant",
-      "reviewed_on": "2026-11-05"
+      "reviewed_on": "2026-11-08"
     },
     {
       "source": "examples/tsunami_town/figs/maps.png",
@@ -2714,11 +2939,11 @@
     {
       "source": "examples/vz_tani2023/README.md",
       "target": "examples/vz_tani2023/en/README.md",
-      "source_sha256": "353c847fa82071c846626c76c41ae90bf9c4d052434565e40d77e63b5e9438a7",
-      "target_sha256": "72f5ed66b88611109b07190c47a7c877ad1f604373cfaf8f38bd13fd8db70593",
-      "reviewer": "Claude (Claude Code session; full-text content and lexical review, no model execution)",
+      "source_sha256": "ef1bf2241c1e01bf65fcd96bf4609baebb924ada79063581c1b37219e6e4a264",
+      "target_sha256": "b4361151807c63b2fc2f99270c139ad17a212f2f79fecf1fce4b6763b841228b",
+      "reviewer": "Claude (Claude Code session; removed development history from both versions in parallel and compared the edited passages, headings, tables and numbers; no model execution)",
       "method": "assistant",
-      "reviewed_on": "2026-10-27"
+      "reviewed_on": "2026-11-08"
     },
     {
       "source": "examples/vz_tani2023/figs/setup.png",
@@ -2732,29 +2957,29 @@
     {
       "source": "test/README.md",
       "target": "test/README.en.md",
-      "source_sha256": "ee233bf4ada1e00e2c31f08780094b2b8fd4ee2047da22fef7e4e5a88636f575",
-      "target_sha256": "0cbd3c34c4c067ad14c01ac51de1858bbe7b5ae10526829b2655e7d410219b74",
-      "reviewer": "Claude (Claude Code session; merge of main into claude/nifty-hawking-yx6s0o: the merged files are the three-way merge of both sides, checked by script for both files that the merged file minus each parent equals the other side's own change (encgrid.md: the p_diagratio row from this branch and the f_gravity_correction row from main in both languages); each side's changes had been reviewed on its branch)",
+      "source_sha256": "946196e416cacfd9ead9929dc3b066c47ae489c333fe7c4b26af49f9d11b4a6b",
+      "target_sha256": "212b82f201df147940443790c43c0e28ecf0145fa5549d682d5fc679f68344a6",
+      "reviewer": "Claude (Claude Code session; compared the Japanese source with the English mirror for the slope-parallel evaluation of the resistance laws of mixture flows (developer.md §101): changed values, history notes and analytic formulas; rest unchanged since the previous record)",
       "method": "assistant",
-      "reviewed_on": "2026-11-05"
+      "reviewed_on": "2026-11-06"
     },
     {
       "source": "test/avalanche/README.md",
       "target": "test/avalanche/en/README.md",
-      "source_sha256": "1c56941fdeb7312ef2429960aa544247d5d4da1ae1e9868b5d643d05f2bc9308",
-      "target_sha256": "98a6ebdbf18027419e9e61fae4bb0f63fdcaa750cbc9cf3f91b4120de33d876a",
-      "reviewer": "Claude (Claude Code session; tests aligned to the default f_gravity_correction = 2 (developer.md sec. 93) and recomputed 2026-11-05: the tables, the values in the text and the added recompute note compared with the Japanese source, rest unchanged since the previous record)",
+      "source_sha256": "cdc88133b2ccfd5473c3fdeb11c543894524b05c1f2c18d3db9cbcd23fb06b05",
+      "target_sha256": "493d944a78b0fd1256c8c8714a221ec2baf22207617e0e3e38af480b5306edce",
+      "reviewer": "Claude (Claude Code session; geomorph chapter split, step 1: the six application setups moved to users_guide/geomorph_applications.md; compared the Japanese source with the English mirror for the moved text, the new pointer paragraphs and the re-targeted links; the rest of the pair is unchanged since the previous record)",
       "method": "assistant",
-      "reviewed_on": "2026-11-05"
+      "reviewed_on": "2026-11-07"
     },
     {
       "source": "test/avalanche/figs/avalanche.png",
       "target": "test/avalanche/en/figs/avalanche.png",
-      "source_sha256": "743ff6aacf7f3dfe52ec0f17e02ec755ac3307b09c2d851ea32809cbe2e84f17",
-      "target_sha256": "fb968a8bc951c1b9c9d42fb91953ea4c7b57a8320c335d152ae1bff0c9fb2df4",
-      "reviewer": "Claude (Claude Code session; tests aligned to the default f_gravity_correction = 2 and recomputed 2026-11-05: both drawn by the case's figure script with and without the en switch from the same results; English figure viewed, labels compared with the Japanese figure)",
+      "source_sha256": "d77810f7aa03e3830aa0076e0eca8ad59e19e8eb4be6b049f535d010a1784e09",
+      "target_sha256": "bcbd7affb4af9d772ba44fef5b47d7dc459f61237c897a1d215a066cbfa79df9",
+      "reviewer": "Claude (Claude Code session; viewed the regenerated Japanese and English figures drawn by the same script from the same results of the slope-parallel mixture-resistance computation (developer.md §101); labels translated, data identical)",
       "method": "assistant",
-      "reviewed_on": "2026-11-05"
+      "reviewed_on": "2026-11-06"
     },
     {
       "source": "test/bankface/README.md",
@@ -2777,11 +3002,11 @@
     {
       "source": "test/bedslide/README.md",
       "target": "test/bedslide/en/README.md",
-      "source_sha256": "d5b87e01c0179f041632b5d6a9a8bc272606e38c057d3c6d2bc2501a68d9e337",
-      "target_sha256": "b04c6f4f2e9067ad26e3965b777c198713eeda64dc03ae1cbbeaae9c4e893768",
-      "reviewer": "Claude (Claude Code session; tests aligned to the default f_gravity_correction = 2 (developer.md sec. 93) and recomputed 2026-11-05: the tables, the values in the text and the added recompute note compared with the Japanese source, rest unchanged since the previous record)",
+      "source_sha256": "c489dd58eb4765b315b1e2ad57dacf12b5e1bf39686b8d18415104c7d93ca8f2",
+      "target_sha256": "07ae2aa0ac32af1cc4150bbb93f340b5f246887f1d8a67001523e32398006e47",
+      "reviewer": "Claude (Claude Code session; compared the Japanese source with the English mirror for the slope-parallel evaluation of the resistance laws of mixture flows (developer.md §101): changed values, history notes and analytic formulas; rest unchanged since the previous record)",
       "method": "assistant",
-      "reviewed_on": "2026-11-05"
+      "reviewed_on": "2026-11-06"
     },
     {
       "source": "test/bedslide/figs/bench.png",
@@ -2795,11 +3020,11 @@
     {
       "source": "test/bedslide/figs/plunge.png",
       "target": "test/bedslide/en/figs/plunge.png",
-      "source_sha256": "f00e2c0bdf89728ab398dca8db9101d91a236aa242a01bd15e6c95187b862d48",
-      "target_sha256": "6680e5216d18cb9cc47b6be8e451c3a3897634d5b35a7302ba942ed135b34c63",
-      "reviewer": "Claude (Claude Code session; tests aligned to the default f_gravity_correction = 2 and recomputed 2026-11-05: both drawn by the case's figure script with and without the en switch from the same results; English figure viewed, labels compared with the Japanese figure)",
+      "source_sha256": "cb018cabf9e98ff5e0c188b6397f5414ba138c5f56b08d0f851d567090d547c9",
+      "target_sha256": "a666bd887010cbce1d43b5ea5d6c189ed2baf1f70d42a21fd49bbbdf3d6c6194",
+      "reviewer": "Claude (Claude Code session; viewed the regenerated Japanese and English figures drawn by the same script from the same results of the slope-parallel mixture-resistance computation (developer.md §101); labels translated, data identical)",
       "method": "assistant",
-      "reviewed_on": "2026-11-05"
+      "reviewed_on": "2026-11-06"
     },
     {
       "source": "test/bedslide/figs/tsunami.png",
@@ -3099,31 +3324,40 @@
       "reviewed_on": "2026-11-04"
     },
     {
+      "source": "test/dbslope/README.md",
+      "target": "test/dbslope/en/README.md",
+      "source_sha256": "8b36a52cffb3b064bb4ed6ba9bc64b75c6d5167b42766ad41c799708e2bdd7f6",
+      "target_sha256": "6de93f88407b75b56d54c0a60624c26d80d864f875e6d643cb23b8804afe8fe8",
+      "reviewer": "Claude (Claude Code session; full-text comparison of the new Japanese README of test/dbslope with its English mirror: purpose and factors, configuration and laws, checks, run commands, result table, findings, limits and references)",
+      "method": "assistant",
+      "reviewed_on": "2026-11-06"
+    },
+    {
       "source": "test/debris/README.md",
       "target": "test/debris/en/README.md",
-      "source_sha256": "10f49878b7d839225e5808a25cf62d9d1df4ec88b02745633a98c86cedfc0e3d",
-      "target_sha256": "0e751824a42473754ccd7f71b7658237845970bd34a2c51539fbb43cbe0d3401",
-      "reviewer": "Claude (Claude Code session; tests aligned to the default f_gravity_correction = 2 (developer.md sec. 93) and recomputed 2026-11-05: the tables, the values in the text and the added recompute note compared with the Japanese source, rest unchanged since the previous record)",
+      "source_sha256": "a316599b383b91771a073180ffb4fe37ba10055a7c3c58d8916501543101fe63",
+      "target_sha256": "4d20a95ab9d5f75423e51776ae523a69796ff21a2b48bffdb777c9a4b817d0d3",
+      "reviewer": "Claude (Claude Code session; compared the Japanese source with the English mirror for the slope-parallel evaluation of the resistance laws of mixture flows (developer.md §101): changed values, history notes and analytic formulas; rest unchanged since the previous record)",
       "method": "assistant",
-      "reviewed_on": "2026-11-05"
+      "reviewed_on": "2026-11-06"
     },
     {
       "source": "test/debris/figs/map.png",
       "target": "test/debris/en/figs/map.png",
-      "source_sha256": "89c1e10ba2f79e5e5151a41f9b6b09c174221aacbf0bbb1ebc03c19fe6a3d1f4",
-      "target_sha256": "807f841a2622ccef66000890fadd04bf43a091cae863b774a2cb45aab0073b2f",
-      "reviewer": "Claude (Claude Code session; tests aligned to the default f_gravity_correction = 2 and recomputed 2026-11-05: both drawn by the case's figure script with and without the en switch from the same results; English figure viewed, labels compared with the Japanese figure)",
+      "source_sha256": "10f36360411a22c7ab15d58e2a1ece847ee1fcc6542130c6bd4d6037af4a1741",
+      "target_sha256": "d2c3fe5f32bbc320c1690f99b4d76c5fc4b75fde38d42afe78a800ab38afa1a9",
+      "reviewer": "Claude (Claude Code session; viewed the regenerated Japanese and English figures drawn by the same script from the same results of the slope-parallel mixture-resistance computation (developer.md §101); labels translated, data identical)",
       "method": "assistant",
-      "reviewed_on": "2026-11-05"
+      "reviewed_on": "2026-11-06"
     },
     {
       "source": "test/debris/figs/profile.png",
       "target": "test/debris/en/figs/profile.png",
-      "source_sha256": "e4a4af506d34d4aaa98f7c482e03e7b3a3544ffbee2d26d8d646a9a0ca28373a",
-      "target_sha256": "36fd649e0865f8ad63d1fdbb30afb6b9edc81cb120bb81e2af3c9ff33b27be20",
-      "reviewer": "Claude (Claude Code session; tests aligned to the default f_gravity_correction = 2 and recomputed 2026-11-05: both drawn by the case's figure script with and without the en switch from the same results; English figure viewed, labels compared with the Japanese figure)",
+      "source_sha256": "a90e90142b96ef34f706b21a245818cf0e88f156a1b2d976bca0e6f9061dd627",
+      "target_sha256": "1accc5ad7b27013c2e1246638c0e3fb4b35d7e95152e68419739600642208368",
+      "reviewer": "Claude (Claude Code session; viewed the regenerated Japanese and English figures drawn by the same script from the same results of the slope-parallel mixture-resistance computation (developer.md §101); labels translated, data identical)",
       "method": "assistant",
-      "reviewed_on": "2026-11-05"
+      "reviewed_on": "2026-11-06"
     },
     {
       "source": "test/diffusion/README.md",
@@ -3812,38 +4046,38 @@
     {
       "source": "test/slide/README.md",
       "target": "test/slide/en/README.md",
-      "source_sha256": "ea48a4ee964a25ad735653124da52cee58d78bb0cef0de5551b4a577bbfc9345",
-      "target_sha256": "1efcfef7382e53d79255040423ea0f49393b0ac862a35e72f0b478e944912b77",
-      "reviewer": "Claude (Claude Code session; tests aligned to the default f_gravity_correction = 2 (developer.md sec. 93) and recomputed 2026-11-05: the tables, the values in the text and the added recompute note compared with the Japanese source, rest unchanged since the previous record)",
+      "source_sha256": "9654b349cecf37788e6f7099318754e1e9b29f5886e9a6591d1976c6b80bc9a0",
+      "target_sha256": "717bdf33d7bca647993c98cde4390a5a9a1f40241cc7550fe430e9678bc776bd",
+      "reviewer": "Claude (Claude Code session; compared the Japanese source with the English mirror for the slope-parallel evaluation of the resistance laws of mixture flows (developer.md §101): changed values, history notes and analytic formulas; rest unchanged since the previous record)",
       "method": "assistant",
-      "reviewed_on": "2026-11-05"
+      "reviewed_on": "2026-11-06"
     },
     {
       "source": "test/slide/figs/fslide.png",
       "target": "test/slide/en/figs/fslide.png",
-      "source_sha256": "9d17f2288d24be3c63ce758ee041619f8ff4a408dd0cd638d755946293a3b643",
-      "target_sha256": "aac78f732977a22618e95ee1657be4a115e17f43973989e1cb1e650a2f34d222",
-      "reviewer": "Claude (Claude Code session; tests aligned to the default f_gravity_correction = 2 and recomputed 2026-11-05: both drawn by the case's figure script with and without the en switch from the same results; English figure viewed, labels compared with the Japanese figure)",
+      "source_sha256": "787854edad6f6fde95d55d0b1a41281dbcfa258193827a19a8969c20d7a2abd9",
+      "target_sha256": "eb8c092d914a03bd48f3d8b0e102d90ca8de3c7a65f10556e43c969e30232b71",
+      "reviewer": "Claude (Claude Code session; viewed the regenerated Japanese and English figures drawn by the same script from the same results of the slope-parallel mixture-resistance computation (developer.md §101); labels translated, data identical)",
       "method": "assistant",
-      "reviewed_on": "2026-11-05"
+      "reviewed_on": "2026-11-06"
     },
     {
       "source": "test/slide/figs/release.png",
       "target": "test/slide/en/figs/release.png",
-      "source_sha256": "b382a98d525da1ea9b75da31dc56926cfa0ef6f80f71f58c41fb2cb249a47a59",
-      "target_sha256": "e3a7988156c8fce6ad0a02374d1f713dcac676bb5f5786358e5d7942308035fc",
-      "reviewer": "Claude (Claude Code session; tests aligned to the default f_gravity_correction = 2 and recomputed 2026-11-05: both drawn by the case's figure script with and without the en switch from the same results; English figure viewed, labels compared with the Japanese figure)",
+      "source_sha256": "47ea27d6157b0e7b390f034bf7c24b1aad16a8e72a0cae32dce646ae86bd9b2c",
+      "target_sha256": "581be3f3fc6ab5103c7c58e8fe8beb79f746378aea1d32eceea05b5102db721e",
+      "reviewer": "Claude (Claude Code session; viewed the regenerated Japanese and English figures drawn by the same script from the same results of the slope-parallel mixture-resistance computation (developer.md §101); labels translated, data identical)",
       "method": "assistant",
-      "reviewed_on": "2026-11-05"
+      "reviewed_on": "2026-11-06"
     },
     {
       "source": "test/slopefric/README.md",
       "target": "test/slopefric/en/README.md",
-      "source_sha256": "9c24e6827bf2cf87bd98ccdd3d57cd68e4b1bc640afdcb41afe984cfe860b105",
-      "target_sha256": "cec4c15e367d3f372ee6ff7e29b9236c9cdcff59b5ecf1a1ea4f1d1027727cb6",
-      "reviewer": "Claude (Claude Code session; references to the steep-slope explanation moved to docs/users_guide/steep_slope.md (and the English mirror) in the uniform-flow item and the limits, compared with the Japanese source, rest unchanged since the previous record)",
+      "source_sha256": "4ebade6e3dee943c9a8d448dc3351bc4fdc345cf8898294052870514116cbe3f",
+      "target_sha256": "b8e7ff4396c8c18898dd843d5d81b5fc646bd76171490fa4adb7f60572724c31",
+      "reviewer": "Claude (Claude Code session; compared the Japanese source with the English mirror for the option-3 bullet, case counts, checks, run time, result rows of 3, the new finding and the corrected wording on mixture resistance laws; rest unchanged since the previous record)",
       "method": "assistant",
-      "reviewed_on": "2026-11-05"
+      "reviewed_on": "2026-11-06"
     },
     {
       "source": "test/splash/README.md",
@@ -3893,20 +4127,20 @@
     {
       "source": "test/splashslide/README.md",
       "target": "test/splashslide/en/README.md",
-      "source_sha256": "3ee69378cb999cb780d3d58b615a24faaf84aadc23d013676267ced3992de42a",
-      "target_sha256": "87e3515cd265e312a8caf471aba6113430d98a3763d932510d8222917793323c",
-      "reviewer": "Claude (Claude Code session; tests aligned to the default f_gravity_correction = 2 (developer.md sec. 93) and recomputed 2026-11-05: the tables, the values in the text and the added recompute note compared with the Japanese source, rest unchanged since the previous record)",
+      "source_sha256": "5217b3be50db7a5a87eba0f38e2d3b5dae33765b9370e2099d0947ddb7fafe1d",
+      "target_sha256": "def1f07f219834495dff8b3ca06577be5adaadfe6b204b5e41f5aafcbd2d8cdb",
+      "reviewer": "Claude (Claude Code session; compared the Japanese source with the English mirror for the slope-parallel evaluation of the resistance laws of mixture flows (developer.md §101): changed values, history notes and analytic formulas; rest unchanged since the previous record)",
       "method": "assistant",
-      "reviewed_on": "2026-11-05"
+      "reviewed_on": "2026-11-06"
     },
     {
       "source": "test/splashslide/figs/splashslide.png",
       "target": "test/splashslide/en/figs/splashslide.png",
-      "source_sha256": "5bcc2467a294601c1a4f99b55c21341c36975ee82ef953319bdc6ca551d381a5",
-      "target_sha256": "46420529c11371f997776f6df1802075d4c4140628e0b7d312b1e3f0139b0b1f",
-      "reviewer": "Claude (Claude Code session; tests aligned to the default f_gravity_correction = 2 and recomputed 2026-11-05: both drawn by the case's figure script with and without the en switch from the same results; English figure viewed, labels compared with the Japanese figure)",
+      "source_sha256": "7905392efdca9db311b8ad4c69fb385bf89fdb38889b3b9d6e64688900addacc",
+      "target_sha256": "f2245f4727da8670a3a3979e8fb7d15b98d816a11515ecea2a93c362e0c51b13",
+      "reviewer": "Claude (Claude Code session; viewed the regenerated Japanese and English figures drawn by the same script from the same results of the slope-parallel mixture-resistance computation (developer.md §101); labels translated, data identical)",
       "method": "assistant",
-      "reviewed_on": "2026-11-05"
+      "reviewed_on": "2026-11-06"
     },
     {
       "source": "test/splashstrata/README.md",
@@ -3916,6 +4150,15 @@
       "reviewer": "Claude (Claude Code session; full-text content and lexical review, no model execution)",
       "method": "assistant",
       "reviewed_on": "2026-10-24"
+    },
+    {
+      "source": "test/steepwave/README.md",
+      "target": "test/steepwave/en/README.md",
+      "source_sha256": "742bd8f605e1278e5e29734c77d5e5f08e5fa992917edd68d3834f488576bb64",
+      "target_sha256": "89e12208456fe7fd3724fb56b9ac59ad004724d6abd8cf70b3d718616ecb7eff",
+      "reviewer": "Claude (Claude Code session; full-text comparison of the new Japanese README of test/steepwave with its English mirror: configurations, checks, run commands, result tables, findings, limits and references)",
+      "method": "assistant",
+      "reviewed_on": "2026-11-06"
     },
     {
       "source": "test/stencil9/README.md",
@@ -4037,29 +4280,29 @@
     {
       "source": "test/volcano/README.md",
       "target": "test/volcano/en/README.md",
-      "source_sha256": "da2d0d2172dbfa5cbbff6b4f0da4966853f76ed2aaa46d73c5f40e0a7ee9ec72",
-      "target_sha256": "e752f6b8da8e2b1b88d2281e08315ff128db2e1910d062ddcb60aa22636d4ca9",
-      "reviewer": "Claude (Claude Code session; tests aligned to the default f_gravity_correction = 2 (developer.md sec. 93) and recomputed 2026-11-05: the tables, the values in the text and the added recompute note compared with the Japanese source, rest unchanged since the previous record)",
+      "source_sha256": "9197a8a6af7b7de591ba9f45136cc8bce5fdba142b0610db8b10cbd97a1d7b17",
+      "target_sha256": "5f23201dd785bc97e8b82325f348c57a6f0f53a9ad5bf6579a488e7e9d0ed29f",
+      "reviewer": "Claude (Claude Code session; compared the Japanese source with the English mirror for the slope-parallel evaluation of the resistance laws of mixture flows (developer.md §101): changed values, history notes and analytic formulas; rest unchanged since the previous record)",
       "method": "assistant",
-      "reviewed_on": "2026-11-05"
+      "reviewed_on": "2026-11-06"
     },
     {
       "source": "test/volcano/figs/tauy.png",
       "target": "test/volcano/en/figs/tauy.png",
-      "source_sha256": "503786f62975640eefbcde1413b314b8b42e77cedaff59ef6d142071b4e48857",
-      "target_sha256": "caa3fea3dffb0f77c39a996b3a7b3a4a37722dd845a7294c5403e105ed0b1c23",
-      "reviewer": "Claude (Claude Code session; tests aligned to the default f_gravity_correction = 2 and recomputed 2026-11-05: both drawn by the case's figure script with and without the en switch from the same results; English figure viewed, labels compared with the Japanese figure)",
+      "source_sha256": "9f8f89e7cd780e6d2598c09e98df4c004433c503320c2337e8952365169c5d5b",
+      "target_sha256": "8e096b5db0a84bb3a3ff30235f0587251cd76070ce0262e2aec3e605270ce81b",
+      "reviewer": "Claude (Claude Code session; viewed the regenerated Japanese and English figures drawn by the same script from the same results of the slope-parallel mixture-resistance computation (developer.md §101); labels translated, data identical)",
       "method": "assistant",
-      "reviewed_on": "2026-11-05"
+      "reviewed_on": "2026-11-06"
     },
     {
       "source": "test/volcano/figs/voellmy.png",
       "target": "test/volcano/en/figs/voellmy.png",
-      "source_sha256": "117361870d59a6082cbc76aa1dab1cf5c011a6c11bfe7baec661ccc74e514ff9",
-      "target_sha256": "655880d8e6899d64aeec530691af139cfa599448de7b9becf4753b5d3a4f0a86",
-      "reviewer": "Claude (Claude Code session; tests aligned to the default f_gravity_correction = 2 and recomputed 2026-11-05: both drawn by the case's figure script with and without the en switch from the same results; English figure viewed, labels compared with the Japanese figure)",
+      "source_sha256": "c49c84af128f6d55d2b2139374e6df9f19d0a53174343eba57bb697d0b18f405",
+      "target_sha256": "6e84ca3452af90ecc483a9681abece4c753523afde1c43d3bac2422b3c68f810",
+      "reviewer": "Claude (Claude Code session; viewed the regenerated Japanese and English figures drawn by the same script from the same results of the slope-parallel mixture-resistance computation (developer.md §101); labels translated, data identical)",
       "method": "assistant",
-      "reviewed_on": "2026-11-05"
+      "reviewed_on": "2026-11-06"
     },
     {
       "source": "test/vzcol/README.md",

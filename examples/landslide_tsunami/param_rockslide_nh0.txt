@@ -39,7 +39,7 @@
 /
 
 &list_enc
-  f_gravity_correction = 1  ! 急斜面(tanθ=0.4)なので重力項の勾配補正を有効に
+  f_gravity_correction = 2  ! 急斜面(tanθ=0.4)の重力項の勾配補正(既定の 2。斜面に沿う摩擦と流砂も)
   f_nonhydrostatic = 1      ! 1 層非静水圧補正(developer.md §69)
   nh_solver = 2             ! CG
   nh_tol = 1.0e-6

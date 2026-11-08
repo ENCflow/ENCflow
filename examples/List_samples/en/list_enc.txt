@@ -34,7 +34,10 @@
                             !   2: 1 plus friction and sediment shear from the
                             !   slope-parallel speed and the bed-normal depth
                             !   = default; uniform flow follows the along-slope
-                            !   equations)
+                            !   equations; 3: 2 plus the water-surface gradient
+                            !   term with a variable gravity g' (returns to g in
+                            !   deep water with a horizontal surface;
+                            !   experimental; developer.md §100)
   !f_exflux_reduction = 1   ! suppression of excessive outgoing fluxes (prevents
                             !   negative depths at dry-bed fronts; on is
                             !   recommended for runs with dry beds)

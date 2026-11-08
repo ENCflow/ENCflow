@@ -270,8 +270,8 @@ architecture.md。このメモは「現在進行中・未完了の項目」だ�
      (日英)と図を更新した(値の変化は各コミットの説明): landslide_tsunami・tsunami_coast・tsunami_fault・
      sewer_hybrid・bedrock_cover・ashfall_lahar・debris_bedrock・timberyard・tsunami_town・qanat・
      estuary_barrage・debris_fan。変化なし(表示の桁で同じで、図も内容が同じ): stone_forest・levee_breach。
-     nest_reflect は今回の変更による出力の差が t ≥ 8 s の最終桁(出力の刻み 1e-4 m)だけで更新しない(README
-     の表が 2026-10-09 の結果のままなのは 00g の既知の判断待ち)。
+     nest_reflect は今回の変更による出力の差が t ≥ 8 s の最終桁(出力の刻み 1e-4 m)だけだった(README の
+     表と図は 2026-11-08 に現行の結果で作り直した。00g)。
      **未了(中断時点)**: catchment_metal(8 段のうち step1 だけ計算済み)・karst・meander・meander_cutoff・
      delta・tower_karst(1 Myr の連鎖のうち param.txt・param_steady.txt は計算済み、param_base.txt の途中で
      止めた)。再開するときは各 README の「実行方法」で回し、plot スクリプトの数表を README と比べる(delta は
@@ -284,8 +284,27 @@ architecture.md。このメモは「現在進行中・未完了の項目」だ�
        (8.6・5.8)は 11-04 の実行ファイルでも再現しない古い値だったので、定義を明記して更新した。
      - debris_bedrock の補足の k_p は、重力補正 1 で出水だけの定常勾配が約 0.355 になるように合わせた値で、
        既定 2 では 0.379(出水の剥離の応力が急勾配で cos²θ 倍)。合わせ直すかは利用者の判断(README に明記)。
-   - 残り: 上の既定の切り替え、混合体流動の抵抗則への適用、案 D〜F、落ち口の扱い(0・1 では落ち口の
-     セルが乾き、平屋根に摩擦の見積もりより深い水がたまる。§93「段差の扱い」の所見 (2))。
+   - (試作 2026-11-06)案 D + E を `f_gravity_correction = 3` として実装した(利用者の判断「推奨どおり、
+     D + E の試作から」。developer.md §100、検定 test/steepwave、users_guide/steep_slope.md §2.6 日英)。水面の
+     勾配の項の g_e を Yuan ら (2016) の g′ = g/(1 + |∇z|² + ∇z·∇h) に置き換える(湖で g、一様な流れで g_e、
+     一様な流れのまわりの下り向きの係数が薄層の式の g cos⁴θ)。既定は 2 のまま。無効時は全 reference と
+     ビット一致(calc_kth_flux の文に手を入れると -Ofast の最終桁が動いたので、差の力を辺の外力として足す形)。
+     MPI np = 1・2・4 と -fcheck=all の np = 2・4 も確認した。examples/landslide_tsunami の 4 構成を 0〜3 で試算し
+     (例題は変えていない。§100 の表)、湖の波は 3 が 0 に近い(A の先頭波 x = 298 m: 0 が 1.34、1・2 が 1.41、
+     3 が 1.33 m)。土石流の B の汀線帯の堆積は 2 の 608 m³ に対し 3 が 1,070 m³(0 は 1,165 m³)。
+     既定は当面 2 のまま(利用者の判断 2026-11-06。下の混合体流動の抵抗則の扱いを先に決めてから再検討)。
+     試算の途中で、examples/landslide_tsunami の param が 1 を明示したまま「既定 2 で再計算」と書いていたのを
+     見つけ、2 に揃えて再計算した(README 日英・図。§100 の注)。
+   - (2026-11-06。利用者の判断「全て推奨で」)混合体流動の抵抗則を 2 の中で斜面に沿う形にした(developer.md §101、
+     検定 test/dbslope 日英。降伏は 1/(r cosθ)、速度の 2 乗の抵抗は r/cos³θ)。土石流を使う自己検定 10 本の README と
+     図を更新した。(済 2026-11-06)土石流の例題 landslide_tsunami の B・B0、ashfall_lahar、debris_bedrock、
+     debris_fan(param が 1 を「土石流ケースの標準」として明示したままだったので 2 に揃えた)を再計算し、
+     README(日英)と図を更新した(§101「例題の再計算」)。3 の降伏の垂直応力と停止判定の接線成分は g′ に
+     揃えた(§100 の追記)。慣性のない底層(f_bedslide)の
+     Voellmy は水平の形のままで、記録だけ(§101「適用しないもの」。直すかは別に決める)。
+   - 案 F と落ち口の扱い(0・1 では落ち口のセルが乾き、平屋根に摩擦の見積もりより深い水がたまる。§93「段差の
+     扱い」の所見 (2))は見送り(利用者の判断 2026-11-06)。examples/stratovolcano の run_cycles.py も 1 を明示して
+     いる(00m (f) の例題の一括の回し直しで 2 に揃える)。
 
 00f. **BMI チュートリアル tutorials/bmi(2026-10-24 新設)の残り**
    - 新設: 初学者向けの 7 段(起動と終了 → update → get → 描画 → リアルタイム
@@ -309,24 +328,12 @@ architecture.md。このメモは「現在進行中・未完了の項目」だ�
      mesa・karst・tower_karst・tsunami_fault・tsunami_coast・levee_breach・nest_reflect・
      sewer_hybrid・delta)。既定(引数なし)の出力は不変(結果のある 7 件でバイト一致を確認)。
    - 英語図を en/figs に生成し英語 README から参照済み: tsunami_fault・tsunami_coast・
-     levee_breach・sewer_hybrid・badland・badland_round(README の手順で結果を再生成。
-     同じ結果から描いた日本語版はコミット済みの figs/ と一致)。nest_reflect は snapshots・
-     error_time の 2 枚のみ英語化。**oneway_edge と nh_profile は現行 main で再計算すると
-     数値が変わる**(Flather 一方向の max |Δη| 4.0e-4 → 6.2e-4 m、NH 子の max 4.8e-3 →
-     5.3e-3 m / 5.7e-3 → 6.2e-3 m。図は 2026-10-22 生成、以後の src 変更は bf03768b の
-     区間流入面の移流など)ため、英語図を作らず日本語図の共有のまま。README の表の数値も
-     同じ古い結果に基づく。原因の切り分け(どのコミットで変わったか)と、日本語図・表を
-     現行で再生成するかの判断待ち。
-   - **2026-10-29 の確認記録の作業で判明**: tsunami_fault の probes・profiles と tsunami_coast の
-     probes・snapshots の英語図は、再計算した結果(2026-10-25 のコード)から描かれていて、日本語図
-     (2026-10-06 の結果)とデータが違う(拡大すると水位の時系列の山の形・終端の値、沿岸の遡上の
-     尖りが違う。生成時は「目視で同一」としていた)。この 4 枚は英語図を外して英語 README から
-     日本語図を共有する形に戻した(上の oneway_edge・nh_profile と同じ扱い)。日本語図・表を現行の
-     結果で作り直すかは上と同じ判断待ちで、作り直したら英語図も同じ結果から描く。deformation の
-     2 枚は与件(規定の地盤変位)の図で一致、levee_breach の 3 枚は日本語図と一致(2026-10-24・25 の
-     同じ版の結果)。英語図のうち確認した 28 組(badland・badland_round・bedrock_cover・levee_breach・
-     nest_reflect・tsunami の deformation・test/gwbed)は記録済み。test/gwbed は英語の題 2 つが
-     重なって切れていたので、英語の文字列だけ 2 行に折り返して描き直した。
+     levee_breach・sewer_hybrid・badland・badland_round・nest_reflect(README の手順で結果を
+     再生成し、日本語版と同じ結果から描いた。tsunami_fault・tsunami_coast・nest_reflect の結果の図は
+     2026-11-08 に日英とも現行の結果から描き直した。nest_reflect は README の表も現行の値にした。
+     一方向 Flather と非静水圧の値が 2026-10-22 の図から変わっていた件は、変化が履歴より前
+     〔10-22〜10-25〕でどのコミットかは特定できない。10-29・11-01 のビルドとの比較では出力の
+     最小桁の差だけ)。
    - **残(利用者の保存済み結果が要る。再計算は数時間〜十数時間)**: badland_storm・mesa・
      karst・tower_karst。各ケース直下で日本語版と同じ引数に `en` を足して実行し、
      英語 README の図リンクを `../figs/` → `figs/` に切替えて record する。
@@ -580,9 +587,10 @@ architecture.md。このメモは「現在進行中・未完了の項目」だ�
      libencflow.a に逐次と MPI の .o が混在してトップレベルの make(utils の
      リンク)が失敗する。モードを切り替えるときは `make clean` を挟むこと。
 
-000. **章ページから詳説ページへの内容移行(2026-10-12 完了)**の残りは任意 1 件:
-   geomorph 章の土石流節の用途別ガイド(火山流動・ラハール・雪崩・砂防施設)を
-   「土石流の使い方」として別ページにする余地がある(未着手)。
+000. **章ページから詳説ページへの内容移行(2026-10-12 完了)**の残り 1 件も済(2026-11-07):
+   geomorph 章の用途別ガイド(火山流動・ラハール・雪崩・砂防施設に、浮遊砂の節の津波堆積物・
+   河口デルタを加えた 6 項目)を users_guide/geomorph_applications.md(日英)に分けた
+   (developer.md §35.1「geomorph 章の分割」)。
 
 0d. **領域マスク外の負荷削減(developer.md §79〜§83。旧番号 00d)の残り**
    第一段(計算時間)と (B) 逐次版の確保範囲(§79)、(C) x 方向の確保範囲(§80)、

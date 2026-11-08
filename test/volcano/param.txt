@@ -3,9 +3,11 @@
 !   等勾配斜面(tanθ=0.2, 150m x 8m)の上流端に混合体の区間流入
 !   (Q=4.0 m3/s, 濃度 cs=0.8=hs/h 比)を与え、Voellmy 抵抗則
 !   (f_dbres=4: 降伏 μ + 乱流項 gV²/(ξh))の定常等流を発達させる。
-!   解析解(駆動 ge・tanθ = ge・μ + ge・V²/(ξ・h_t) と連続 q_m = V・h_t):
-!     h_t = (q_m² / (ξ・(tanθ − μ)))^(1/3),  V = q_m / h_t
-!   ge が両辺で相殺するため f_gravity_correction の有無に依らない。
+!   解析解(f_gravity_correction = 2 は Voellmy を斜面に沿って評価する。developer.md §101。
+!   水平の流速 V・鉛直の深さ h_t の駆動 ge・tanθ = ge・μ + ge・V²/(ξ・c⁴・h_t)(c = cosθ)と
+!   連続 q_m = V・h_t。斜面に沿う速さ・地盤に直角な厚さでは V_s² = ξ h_n (sinθ − μ cosθ)):
+!     h_t = (q_m² / (ξ・c⁴・(tanθ − μ)))^(1/3),  V = q_m / h_t
+!   (0・1 は水平の形のままで c⁴ = 1)
 !   E-D は交換なし(f_dbed=0 の等価流体モード)なので、閉領域の台帳
 !     Σh = Q・tt,  Σhs + (1-λ)Σ(z-z0) = cs・Q・tt
 !   が機械精度で成立する(Check_volcano.py voellmy モード)。

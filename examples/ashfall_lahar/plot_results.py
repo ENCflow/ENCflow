@@ -2,7 +2,9 @@
 """ashfall_lahar の図と数表(事前に make run で 4 ケースを計算しておく)。
 
   figs/mechanism.png 噴火前の雨・降灰後の泥流・砂防堰堤の機構の模式図(データを使わない)
-  figs/setup.png     地形と降灰厚(平面)、谷筋の縦断、雨と浸透能
+  figs/setup.png     地形と降灰厚(平面)、谷筋の縦断、雨と浸透能、谷と堤体の列の横断(入力ファイルから)
+  figs/laws.png      平衡濃度と勾配、抵抗則の止まる勾配、積もった土砂の間隙に残る水(式だけ。データを使わない)
+  figs/stripes.png   移動限界水深 dd が流れの深さと同程度のときに格子 1 つ分の縞が育つ仕組み(模式。データを使わない)
   figs/maps.png      地形変化(侵食・堆積)と最大流動深(降灰、降灰+砂防堰堤)
   figs/profile.png   谷筋の縦断: 終了時の侵食・堆積と、流れの濃度の最大
   figs/series.png    谷出口・扇状地の流動深と、扇状地に届いた土砂・堰堤にたまった土砂の時間変化
@@ -73,26 +75,50 @@ def _ground(x):
     return np.where(x < 5.5, 6.0 - x, 0.5 - 0.1 * (x - 5.5))
 
 
+def _budget(ax, kind):
+    """左の小さな棒: 雨 30 mm/h の行き先(浸透能で決まる)。"""
+    cap = 100.0 if kind == "pre" else 5.0
+    soak = min(30.0, cap)
+    ax.bar([0], [soak], width=0.55, color=C_WATER, alpha=0.75)
+    ax.bar([0], [30.0 - soak], bottom=[soak], width=0.55, color=C_LAHAR, alpha=0.75)
+    ax.set_xlim(-0.6, 1.9)
+    ax.set_ylim(0, 40)
+    ax.set_xticks([])
+    ax.set_yticks([0, 10, 20, 30])
+    ax.tick_params(labelsize=7.5)
+    ax.set_ylabel("mm/h", fontsize=8)
+    for sp in ("top", "right"):
+        ax.spines[sp].set_visible(False)
+    ax.text(0, 31, T("雨 30", "rain 30"), ha="center", va="bottom", fontsize=8)
+    if kind == "pre":
+        ax.text(0.38, 15, T("しみ込む\n30", "soaks\nin 30"), fontsize=7.8, va="center", color="#1f5f8b")
+        ax.annotate(T("浸透能\n100", "capacity\n100"), xy=(1.25, 39.5), xytext=(1.25, 33), ha="center", fontsize=7.6,
+                    color="#2b8a3e", arrowprops=dict(arrowstyle="-|>", color="#2b8a3e", lw=0.9))
+    else:
+        ax.axhline(cap, xmin=0.0, xmax=0.62, color="#4d4d4d", lw=1.6)
+        ax.text(0.38, 2.5, T("しみ込む 5", "soaks in 5"), fontsize=7.6, va="center", color="#1f5f8b")
+        ax.text(0.38, 18, T("表面を\n流れる\n25", "runs\noff\n25"), fontsize=7.8, va="center", color=C_LAHAR)
+        ax.text(1.25, cap + 1.0, T("浸透能 5", "capacity 5"), fontsize=7.4, ha="center", va="bottom", color="#4d4d4d")
+
+
 def _panel(ax, kind):
     """kind: 'pre'(噴火前)、'ash'(降灰後)、'dam'(降灰後+砂防堰堤)。"""
     x = np.linspace(0, 10, 501)
     g = _ground(x)
     ax.fill_between(x, -1.2, g - 0.35, color="0.85")
     ax.fill_between(x, g - 0.35, g, color=C_SOIL)
-    top = g
     if kind != "pre":
         ash = np.where(x < 5.5, 0.32 - 0.04 * x, 0.06)
-        top = g + ash
-        ax.fill_between(x, g, top, color=C_ASH)
-        ax.plot(x, top, color=C_CRUST, lw=1.6)
+        ax.fill_between(x, g, g + ash, color=C_ASH)
+        ax.plot(x, g + ash, color=C_CRUST, lw=1.6)
     for xr in np.arange(0.4, 10, 0.7):                                   # 雨
         ax.plot([xr, xr - 0.15], [7.2, 6.75], color=C_WATER, lw=1)
     if kind == "pre":
         for xi in (1.0, 2.5, 4.0, 7.0, 8.5):
             gi = float(_ground(np.array([xi]))[0])
             _arrow(ax, xi, gi + 0.55, xi, gi - 0.25, C_WATER, lw=2.2)
-        ax.text(0.25, 1.0, T("雨はすべて地面にしみ込む\n(森林の土壌の浸透能は雨より大きい)",
-                             "all the rain soaks into the ground\n(forest soil infiltrates faster than it rains)"),
+        ax.text(0.25, 1.0, T("雨はすべて地面にしみ込む\n(森林の土壌の浸透能 100 mm/h は雨 30 mm/h より大きい)",
+                             "all the rain soaks into the ground\n(the forest soil takes 100 mm/h, more than the 30 mm/h of rain)"),
                 fontsize=9)
         ax.text(6.0, 3.2, T("表面流も泥流も起きない", "no surface flow, no lahar"), fontsize=10, color="#2b8a3e")
         title = T("(a) 噴火前", "(a) before the eruption")
@@ -100,51 +126,73 @@ def _panel(ax, kind):
         for xi in (1.2, 3.0):
             ti = 6.0 - xi + 0.32 - 0.04 * xi
             _arrow(ax, xi, ti + 0.45, xi, ti - 0.05, C_WATER, lw=0.9)
-        # 表面流 → 泥流
         xs = np.linspace(0.6, 5.3, 60)
         ts = 6.0 - xs + 0.32 - 0.04 * xs
         xe = 5.3 if kind == "ash" else 3.95                              # 堰堤ありは堆砂域の手前まで
         ax.plot(xs[:20], ts[:20] + 0.12, color=C_WATER, lw=3)
         m = (xs >= xs[19]) & (xs <= xe)
         ax.plot(xs[m], ts[m] + 0.16, color=C_LAHAR, lw=5)
+        ax.text(0.15, 7.45, T("① 細かい灰が表面に皮膜を作り、浸透能が 5 mm/h に下がる(噴火前の 20 分の 1)",
+                              "① fine ash forms a crust and the infiltration capacity drops to 5 mm/h (1/20 of before)"),
+                fontsize=8.5)
+        ax.text(2.1 if kind == "ash" else 1.3, 4.95 if kind == "ash" else 5.6,
+                T("② 雨の 25 mm/h 分が表面を流れ、灰を削る", "② 25 mm/h of the rain runs off and erodes the ash"),
+                fontsize=8.5, color="#1f5f8b", va="top")
+        ax.text(3.75 if kind == "ash" else 2.9, 4.3 if kind == "ash" else 4.75, T("③ 削った灰を取り込んで泥流になり、濃度は運べる上限\n"
+                              "   0.45(= 0.9 C*)に達する。同じ雨の清水より流量が大きく速い",
+                              "③ the eroded ash turns the flow into a lahar whose\n"
+                              "   concentration reaches the cap 0.45 (= 0.9 C*);\n"
+                              "   more discharge and faster than clear water"),
+                fontsize=8.5, color=C_LAHAR, va="top")
         if kind == "ash":
             _arrow(ax, 4.6, 1.9, 5.25, 1.25, C_LAHAR, lw=3)
-        else:
-            _arrow(ax, 3.2, 3.25, 3.9, 2.55, C_LAHAR, lw=3)
-        ax.text(0.15, 7.45, T("① 細かい灰が表面に皮膜を作り、浸透能が下がる(噴火前の数十分の一)",
-                              "① fine ash forms a crust on the surface and infiltration drops (to a few % of before)"),
-                fontsize=8.5)
-        ax.text(2.1, 4.6, T("② 雨の大半が表面を流れ、灰を削る", "② most of the rain runs off and erodes the ash"),
-                fontsize=8.5, color="#1f5f8b")
-        ax.text(3.6, 3.2, T("③ 削った灰を取り込んで泥流になる\n   (同じ雨の清水より流量が大きく速い)",
-                            "③ the eroded ash turns the flow into a lahar\n   (more discharge and faster than clear water)"),
-                fontsize=8.5, color=C_LAHAR)
-        if kind == "ash":
             xd = np.linspace(5.3, 7.8, 100)
             dep = 0.55 * np.clip(1 - ((xd - 6.0) / 1.8) ** 2, 0, 1) * np.where(xd < 5.6, (xd - 5.3) / 0.3, 1)
             gd = _ground(xd) + 0.06
             ax.fill_between(xd, gd, gd + dep, color=C_DEP)
-            ax.text(6.1, 1.25, T("④ 勾配が緩む谷出口で運べる土砂の量が減り、\n   扇状地に堆積する",
-                                 "④ where the slope eases at the valley outlet the flow\n   can carry less and deposits on the fan"),
-                    fontsize=8.5, color="0.15")
+            xo = np.linspace(7.8, 10, 40)
+            ax.plot(xo, _ground(xo) + 0.13, color=C_WATER, lw=2.0)
+            ax.text(5.95, 3.0, T("④ 勾配が 0.35 → 0.08 に緩む谷出口で、運べる濃度(平衡濃度)が\n"
+                                  "   0.06〜0.07 に下がり、谷から来た土砂の大半が扇頂に積もる",
+                                  "④ where the slope eases from 0.35 to 0.08, the concentration the\n"
+                                  "   flow can carry (equilibrium) drops to 0.06–0.07, and most of\n"
+                                  "   the sediment from the valley deposits at the fan apex"),
+                    fontsize=8.5, color="0.15", va="top")
+            ax.text(0.35, 1.75, T("⑤ 積もった土砂の間隙に流れの水の約 8 割が残る\n"
+                                  "   → 扇状地を流れる水は清水の対照より少ない",
+                                  "⑤ about 80 % of the flow's water stays in the pores of\n"
+                                  "   the deposit → less water flows over the fan than in\n"
+                                  "   the clear-water control"),
+                    fontsize=8.5, color="#1f5f8b", va="top")
+            _arrow(ax, 4.2, 1.2, 5.95, 0.85, "#1f5f8b", lw=1.0)
+            ax.text(7.9, 0.98, T("濃度 0.06〜0.07 の薄い流れ", "thin flow, concentration 0.06–0.07"), fontsize=8,
+                    color="#1f5f8b", va="top")
             title = T("(b) 降灰後の雨", "(b) rain after the ashfall")
         else:
+            _arrow(ax, 3.2, 3.25, 3.9, 2.55, C_LAHAR, lw=3)
             xb = 4.9
             zb = float(_ground(np.array([xb]))[0])
             ax.add_patch(plt.Rectangle((xb - 0.07, zb - 0.1), 0.14, 1.25, color="0.35", zorder=4))
             crest = zb + 1.15
             xp = np.linspace((6.32 - (crest - 0.1)) / 1.04, xb - 0.07, 40)
-            ax.fill_between(xp, 6.32 - 1.04 * xp, np.full_like(xp, crest - 0.1), color=C_DEP, zorder=3)
+            ax.fill_between(xp, 6.32 - 1.04 * xp, np.full_like(xp, crest - 0.25), color=C_DEP, zorder=3)
+            ax.fill_between(xp, np.maximum(6.32 - 1.04 * xp, crest - 0.25), np.full_like(xp, crest - 0.02),
+                            color=C_WATER, alpha=0.8, zorder=3)
             xo = np.linspace(xb + 0.07, 8.0, 60)
             ax.plot(xo, _ground(xo) + 0.13, color="#9c7b5a", lw=2.5)
             _arrow(ax, 6.6, _ground(np.array([6.6]))[0] + 0.35, 7.6, _ground(np.array([7.6]))[0] + 0.3, "#9c7b5a", lw=2)
-            _arrow(ax, 6.05, 3.35, 4.65, 2.3, "0.3", lw=1.2)
-            ax.text(6.1, 3.25, T("⑤ 堰堤の上流の空き容量に土砂がたまる\n   (満砂すると土砂も越えて流れる)",
-                                              "⑤ sediment fills the empty space behind the dam\n   (once full, sediment passes over it too)"),
-                    fontsize=8.5, color="0.15")
-            ax.text(5.9, 1.25, T("越流する流れは土砂が少なく、扇状地の堆積が減る",
-                                 "the overflow carries little sediment and the fan receives less"),
-                    fontsize=8.5, color="0.15")
+            _arrow(ax, 6.2, 2.75, 4.65, 2.3, "0.3", lw=1.2)
+            ax.text(6.3, 3.05, T("⑥ 堰堤の上流の空き容量に土砂がたまる。まず水がたまって満水で\n"
+                                 "   越流し(越流する流れは土砂が少なく、扇状地の堆積が減る)、\n"
+                                 "   堆砂が天端に届くと(満砂)土砂も越えて流れる",
+                                 "⑥ sediment fills the space behind the dam; water ponds first\n"
+                                 "   and then overtops (the overflow carries little sediment, so\n"
+                                 "   the fan receives less), and once the deposit reaches the\n"
+                                 "   crest (full) sediment passes over it too"),
+                    fontsize=8.5, color="0.15", va="top")
+            ax.text(6.3, 1.5, T("堰堤の外側の谷壁を流れ下る水は堰堤を通らず、\n土砂も少し運ぶ(横断は設定の図 (e))",
+                                 "water running down the walls outside the dam bypasses it\nand carries some sediment (cross-section: setup figure (e))"),
+                    fontsize=8, color="#1f5f8b", va="top")
             title = T("(c) 降灰後の雨+砂防堰堤", "(c) rain after the ashfall + check dam")
     ax.axvline(5.5, color="k", lw=0.6, ls=":")
     ax.text(5.55, 6.7, T("谷出口", "valley outlet"), fontsize=8)
@@ -156,27 +204,82 @@ def _panel(ax, kind):
 
 
 def mechanism():
-    fig, axs = plt.subplots(3, 1, figsize=(12, 12.5))
-    for ax, kind in zip(axs, ("pre", "ash", "dam")):
-        _panel(ax, kind)
+    fig = plt.figure(figsize=(13, 12.2))
+    gs = fig.add_gridspec(3, 2, width_ratios=[1, 7.5], wspace=0.05, hspace=0.16, left=0.04, right=0.99,
+                          top=0.955, bottom=0.01)
+    for row, kind in enumerate(("pre", "ash", "dam")):
+        _budget(fig.add_subplot(gs[row, 0]), kind)
+        _panel(fig.add_subplot(gs[row, 1]), kind)
     handles = [plt.Rectangle((0, 0), 1, 1, color=c) for c in (C_SOIL, C_ASH, C_WATER, C_LAHAR, C_DEP)]
     fig.legend(handles, [T("森林の土壌", "forest soil"), T("降灰層(上面の黒線 = 皮膜)", "ash layer (black top line = crust)"),
-                         T("雨・表面流", "rain, surface flow"), T("泥流", "lahar"), T("堆積", "deposit")],
+                         T("雨・表面流・しみ込む水", "rain, surface flow, infiltrating water"), T("泥流・表面を流れる雨", "lahar, runoff"),
+                         T("堆積", "deposit")],
                loc="upper center", ncol=5, fontsize=9, frameon=False, bbox_to_anchor=(0.5, 1.0))
-    fig.tight_layout(rect=(0, 0, 1, 0.975))
     fig.savefig(f"{FIGDIR}/mechanism.png", dpi=100)
     plt.close(fig)
 
 
 # ---------------------------------------------------------------- 設定
+X_XS = 150.0                              # 谷の横断を描く位置(A–A')。B–B' は堤体の列
+YC = NY * DX / 2                          # 谷の中心線の y
+ASH_X = 10.0                              # 横断図での降灰厚の誇張倍率
+
+
+def _xsec(ax, y, zn, z0, zd, title, dam):
+    """横断(y 方向)。zn = 元の地表、z0 = 降灰後の地表、zd = 堤体込みの地表。縦は誇張、灰は ASH_X 倍。"""
+    on = zd > z0 + 1e-6                   # 堤体のセル(灰を誇張する前に判定)
+    z0 = zn + ASH_X * (z0 - zn)
+    yy = np.r_[0.0, y, NY * DX]
+    ext = lambda a: np.r_[a[0], a, a[-1]]
+    base = zn.min() - 4
+    ax.fill_between(yy, base, ext(zn), color=C_SOIL, lw=0)
+    ax.fill_between(yy, ext(zn), ext(z0), color=C_ASH, lw=0)
+    ax.plot(yy, ext(z0), color=C_CRUST, lw=1.2)
+    if dam:
+        yb = np.r_[y[on][0] - DX / 2, y[on][-1] + DX / 2]
+        crest = zd[on][0]
+        yf = np.linspace(yb[0], yb[1], 200)
+        ax.fill_between(yf, np.interp(yf, yy, ext(z0)), crest, color="0.45", lw=0, zorder=5)
+        ax.plot([yb[0], yb[1]], [crest, crest], color="0.2", lw=1.0, zorder=6)
+        ax.annotate("", xy=(yb[1], crest + 1.4), xytext=(yb[0], crest + 1.4),
+                    arrowprops=dict(arrowstyle="<->", color="0.2", lw=0.9))
+        ax.text(YC, crest + 1.8, T("堤体: 天端は谷底 + 5 m で水平、幅 50 m(不侵食 sd = 0)",
+                                   "dam: crest level at floor + 5 m, 50 m wide (non-erodible, sd = 0)"),
+                ha="center", va="bottom", fontsize=8)
+        for side in (-1, 1):
+            yw = YC + side * 50
+            zw = float(np.interp(yw, y, z0))
+            ax.annotate(T("天端より高い谷壁:\nここの水は堰堤を通らない", "wall above the crest:\nwater here bypasses the dam"),
+                        xy=(yw, zw + 0.3), xytext=(YC + side * 48, crest + 11.5), ha="center", fontsize=7.6, color="#1f5f8b",
+                        arrowprops=dict(arrowstyle="-|>", color="#1f5f8b", lw=0.8))
+    else:
+        flo = np.abs(y - YC) < 7.5
+        ax.annotate("", xy=(YC + 7.5, zn[flo].min() - 1.2), xytext=(YC - 7.5, zn[flo].min() - 1.2),
+                    arrowprops=dict(arrowstyle="<->", color="0.2", lw=0.9))
+        ax.text(YC, zn[flo].min() - 1.6, T("谷底 15 m", "floor 15 m"), ha="center", va="top", fontsize=8)
+        ax.text(146, zn.min() + 1.0, T("谷壁の横断勾配 0.25", "side slope 0.25"), fontsize=8, ha="right", va="bottom")
+        ax.annotate(T("谷壁に降った雨は 100 m ほど\n流れる間に谷底へ集まる", "rain on the walls reaches the\nfloor within about 100 m of flow"),
+                    xy=(48, float(np.interp(48, y, z0))), xytext=(10, zn.max() + 2.5), fontsize=7.6, color="#1f5f8b",
+                    arrowprops=dict(arrowstyle="-|>", color="#1f5f8b", lw=0.8))
+    ax.set_xlim(0, NY * DX)
+    ax.set_ylim(base, zn.max() + (13 if dam else 9))
+    ax.set_xlabel(T("y (m)  谷を横切る向き", "y (m)  across the valley"))
+    ax.set_ylabel(T("標高 (m)", "elevation (m)"))
+    ax.set_title(title, fontsize=10, loc="left")
+
+
 def setup():
     z0 = np.loadtxt("z.txt")
     zn = np.loadtxt("z_noash.txt")
     zd = np.loadtxt("z_dam.txt")
     ash = np.loadtxt("ash.txt")
-    fig = plt.figure(figsize=(14, 8))
-    gs = fig.add_gridspec(2, 2, height_ratios=[0.85, 1], width_ratios=[1.3, 1])
-    axs = [fig.add_subplot(gs[0, :]), fig.add_subplot(gs[1, 0]), fig.add_subplot(gs[1, 1])]
+    i_xs = int(X_XS / DX)
+    fig = plt.figure(figsize=(14, 13.0))
+    gs = fig.add_gridspec(3, 2, height_ratios=[0.95, 1, 1.15], width_ratios=[1.25, 1], hspace=0.40, wspace=0.18,
+                          left=0.06, right=0.97, top=0.96, bottom=0.05)
+    axs = [fig.add_subplot(gs[0, :]), fig.add_subplot(gs[1, 0]), fig.add_subplot(gs[1, 1]),
+           fig.add_subplot(gs[2, 0]), fig.add_subplot(gs[2, 1])]
+    # (a) plan
     ax = axs[0]
     im = ax.imshow(ash, origin="lower", extent=EXT, cmap="Oranges", vmin=0, vmax=0.32)
     cs = ax.contour(X, Y, z0, levels=np.arange(0, 160, 10), colors="k", linewidths=0.4)
@@ -188,30 +291,46 @@ def setup():
         ax.plot(px, py, "o", color="#1f5f8b", ms=5)
         ax.text(px + 4, py + 4, f"P{n}", color="#1f5f8b", fontsize=9)
     ax.axvline(XAPEX, color="k", lw=0.8, ls=":")
+    ax.text(XAPEX + 3, 4, T("谷出口", "valley outlet"), fontsize=8, va="bottom")
     for n, xs in ((1, X_SEC1), (2, X_SEC2)):
         ax.axvline(xs, color="#1f5f8b", lw=1.2, ls="--")
         ax.text(xs + 3, 140, T(f"測線 {n}", f"transect {n}"), color="#1f5f8b", fontsize=8, va="top")
-    ax.set_xlabel(T("x (m)  ← 山腹(火口側)   扇状地 →", "x (m)  ← mountain slope (vent side)   fan →"))
+    for xs, lab in ((X[i_xs], "A"), (X[I_DAM], "B")):
+        ax.plot([xs, xs], [0, 150], color="#6a3d9a", lw=1.0, ls="-.")
+        ax.text(xs, 152, f"{lab}", color="#6a3d9a", fontsize=9, ha="center", va="bottom")
+        ax.text(xs, -2, f"{lab}'", color="#6a3d9a", fontsize=9, ha="center", va="top")
+    ax.set_xlabel(T("x (m)  ← 山腹(火口側)   扇状地 →", "x (m)  ← mountain slope (vent side)   fan →"), labelpad=10)
     ax.set_ylabel("y (m)")
-    ax.set_title(T("降灰厚と地形(等高線 10 m)", "Ash thickness and terrain (10 m contours)"), fontsize=10)
+    ax.set_title(T("(a) 降灰厚(色)と地形(等高線 10 m)。A–A'・B–B' は (d)(e) の横断の位置",
+                   "(a) Ash thickness (colour) and terrain (10 m contours); A–A' and B–B' are the sections (d), (e)"),
+                 fontsize=10, loc="left", pad=14)
     fig.colorbar(im, ax=ax, shrink=0.9, pad=0.01).set_label(T("降灰厚 (m)", "ash thickness (m)"))
-    ax = axs[1]
+    # (b) longitudinal section (top) and ash thickness along the valley axis (bottom strip)
+    sub = gs[1, 0].subgridspec(2, 1, height_ratios=[3.2, 1], hspace=0.08)
+    axs[1].remove()
+    ax = fig.add_subplot(sub[0])
+    axa = fig.add_subplot(sub[1], sharex=ax)
+    axs[1] = ax
     ax.plot(X, zn[J], color="0.3", lw=1.2, label=T("元の地表(谷底)", "original ground (valley floor)"))
     ax.plot([X[I_DAM]] * 2, [zn[J, I_DAM], zd[J, I_DAM]], color="red", lw=4, label=T("砂防堰堤(高さ 5 m)", "check dam (5 m high)"))
-    ax.axvline(XAPEX, color="k", lw=0.8, ls="--")
+    for a in (ax, axa):
+        a.axvline(XAPEX, color="k", lw=0.8, ls="--")
     ax.text(XAPEX + 6, 100, T("谷出口", "valley outlet"), fontsize=8)
     ax.text(110, 95, T("山腹 勾配 0.35", "slope 0.35"), fontsize=9)
     ax.text(380, 30, T("扇状地 勾配 0.08", "fan 0.08"), fontsize=9)
-    ax.set_xlabel("x (m)")
     ax.set_ylabel(T("標高 (m)", "elevation (m)"))
-    tw = ax.twinx()
-    tw.plot(X, ash[J], color="#e6550d", lw=1.5, label=T("降灰厚(右軸)", "ash thickness (right axis)"))
-    tw.set_ylim(0, 1.0)
-    tw.set_ylabel(T("降灰厚 (m)", "ash thickness (m)"), color="#e6550d")
-    h1, l1 = ax.get_legend_handles_labels()
-    h2, l2 = tw.get_legend_handles_labels()
-    ax.legend(h1 + h2, l1 + l2, fontsize=8, loc="upper right")
-    ax.set_title(T("谷筋の縦断", "Longitudinal section along the valley axis"), fontsize=10)
+    ax.legend(fontsize=8, loc="upper right")
+    ax.tick_params(labelbottom=False)
+    ax.set_title(T("(b) 谷筋の縦断と降灰厚", "(b) Section along the valley axis and ash thickness"), fontsize=10, loc="left")
+    axa.fill_between(X, 0, ash[J], color=C_ASH, lw=0)
+    axa.plot(X, ash[J], color=C_CRUST, lw=1.2)
+    axa.set_ylim(0, 0.44)
+    axa.set_yticks([0, 0.1, 0.2, 0.3])
+    axa.set_ylabel(T("降灰厚 (m)", "ash (m)"), fontsize=8.5)
+    axa.set_xlabel("x (m)")
+    for xx, aa in ((22, 0.30), (240, 0.05), (450, 0.03)):
+        axa.text(xx, aa + 0.035, f"{aa:.2f} m", fontsize=8, va="bottom")
+    # (c) rain and infiltration
     ax = axs[2]
     ax.fill_between([10, 70], 0, 5, color=C_WATER, alpha=0.6, label=T("降灰後: 灰にしみ込む分", "after the ashfall: soaks into the ash"))
     ax.fill_between([10, 70], 5, 30, color=C_LAHAR, alpha=0.45, label=T("降灰後: 表面を流れる分", "after the ashfall: runs off"))
@@ -222,10 +341,208 @@ def setup():
     ax.set_xlim(0, 90)
     ax.set_xlabel(T("時刻 (分)", "time (min)"))
     ax.set_ylabel("mm/h")
-    ax.legend(fontsize=7.5, loc="center left", bbox_to_anchor=(0.0, 0.62))
-    ax.set_title(T("雨と浸透能", "Rain and infiltration capacity"), fontsize=10)
-    fig.tight_layout()
+    ax.legend(fontsize=7.5, loc="center left", bbox_to_anchor=(0.0, 0.64))
+    ax.set_title(T("(c) 雨と浸透能", "(c) Rain and infiltration capacity"), fontsize=10, loc="left")
+    # (d)(e) cross-sections
+    _xsec(axs[3], Y, zn[:, i_xs], z0[:, i_xs], zd[:, i_xs],
+          T(f"(d) A–A' 谷の横断(x = {X[i_xs]:.1f} m)。縦 3 倍・灰の厚さ 10 倍",
+            f"(d) A–A' across the valley (x = {X[i_xs]:.1f} m); vertical ×3, ash ×10"), dam=False)
+    _xsec(axs[4], Y, zn[:, I_DAM], z0[:, I_DAM], zd[:, I_DAM],
+          T(f"(e) B–B' 堤体の列の横断(x = {X[I_DAM]:.1f} m)。縦 3 倍・灰の厚さ 10 倍",
+            f"(e) B–B' across the dam column (x = {X[I_DAM]:.1f} m); vertical ×3, ash ×10"), dam=True)
+    for ax in axs[3:]:
+        ax.set_aspect(3.0)
     fig.savefig(f"{FIGDIR}/setup.png", dpi=105)
+    plt.close(fig)
+
+
+# ---------------------------------------------------------------- 濃度と勾配(式だけ)
+TANPHI, SG, CSTAR, MU = np.tan(np.radians(30.0)), 1.65, 0.5, 0.05   # db_phi、fluv_sgrav(既定)、1 − fluv_porosity、db_mu
+ST_VALLEY, ST_FAN = 0.35, 0.08
+
+
+def c_inf(tn):
+    """高橋型の平衡濃度(f_dbed = 1。massflow.md §3 の式。上限 0.9 C*)。"""
+    tn = np.asarray(tn, float)
+    stony = tn / (SG * (TANPHI - tn))
+    out = np.where(tn > 0.138, stony, np.where(tn > 0.03, 6.7 * stony ** 2, 0.0))
+    return np.minimum(out, 0.9 * CSTAR)
+
+
+def laws():
+    fig, axs = plt.subplots(1, 3, figsize=(14, 5.6), gridspec_kw=dict(width_ratios=[1, 1, 0.9]))
+    fig.subplots_adjust(left=0.05, right=0.99, top=0.84, bottom=0.3, wspace=0.28)
+    fig.suptitle(T("濃度と勾配: 谷で上限の 0.45、扇状地で 0.06〜0.07 になる理由と、抵抗則・間隙水の選び方"
+                   "(この例題の値で式を評価。計算結果ではない)",
+                   "Concentration and slope: why 0.45 in the valley and 0.06–0.07 on the fan, and the choice of laws "
+                   "(this example's values in the expressions; not computed results)"),
+                 fontsize=10.5, x=0.05, ha="left")
+    # (a) equilibrium concentration
+    ax = axs[0]
+    tn = np.linspace(0.0, 0.42, 800)
+    stony = tn / (SG * (TANPHI - tn))
+    ax.plot(tn, np.where(tn > 0.138, np.minimum(stony, 1.0), np.nan), color="0.6", lw=1.0, ls="--")
+    ax.plot(tn, c_inf(tn), color=C_LAHAR, lw=2.2)
+    ax.axhline(0.9 * CSTAR, color="0.4", lw=0.8, ls=":")
+    ax.text(0.005, 0.9 * CSTAR + 0.012, T("運べる上限 0.9 C* = 0.45", "cap 0.9 C* = 0.45"), fontsize=8, color="0.3")
+    for st, lab, col in ((ST_VALLEY, T("谷 0.35", "valley 0.35"), "#8c5a2b"), (ST_FAN, T("扇状地 0.08", "fan 0.08"), "#1f5f8b")):
+        ax.axvline(st, color=col, lw=1.0, ls="--")
+        cv = float(c_inf(st))
+        ax.plot(st, cv, "o", color=col, ms=6, zorder=5)
+        ax.text(st + 0.006, 0.012 if st > 0.2 else 0.64, lab, fontsize=8.5, color=col, rotation=90,
+                va="bottom" if st > 0.2 else "top")
+    ax.annotate(T("C∞ = 0.064", "C∞ = 0.064"), xy=(ST_FAN, float(c_inf(ST_FAN))), xytext=(0.13, 0.13), fontsize=8.5,
+                color="#1f5f8b", arrowprops=dict(arrowstyle="-|>", color="#1f5f8b", lw=0.8))
+    ax.text(0.356, 0.635, T("式の値\n0.93 は\n上限で\n0.45 に", "formula:\n0.93,\ncapped\nat 0.45"), fontsize=7.8,
+            color="0.35", va="top")
+    ax.set_xlim(0, 0.42)
+    ax.set_ylim(0, 0.65)
+    ax.set_xlabel(T("勾配 tan θ", "slope tan θ"))
+    ax.set_ylabel(T("平衡濃度 C∞", "equilibrium concentration C∞"))
+    ax.set_title(T("(a) 平衡濃度(高橋型 f_dbed = 1)", "(a) Equilibrium concentration (Takahashi type, f_dbed = 1)"),
+                 fontsize=9.5, loc="left")
+    ax.text(0.0, -0.26, T("谷では式の値が上限を超え、流れは 0.45 まで灰を取り込む。\n"
+                          "勾配 0.08 の扇状地では 0.064(未成熟の式 6.7 C∞²)に下がる\n"
+                          "ので、運べなくなった土砂が谷出口で積もる。\nφ = 30°、s = 1.65、C* = 0.5。",
+                          "In the valley the formula exceeds the cap, and the flow takes\n"
+                          "up ash to 0.45. On the 0.08 fan it drops to 0.064 (immature\n"
+                          "form 6.7 C∞²), so the sediment that can no longer be carried\n"
+                          "deposits at the outlet. φ = 30°, s = 1.65, C* = 0.5."),
+            transform=ax.transAxes, fontsize=8, va="top")
+    # (b) stopping slope of the resistance laws
+    ax = axs[1]
+    cc = np.linspace(0.0, 0.5, 400)
+    coul = TANPHI * SG * cc / (1 + SG * cc)
+    ax.plot(cc, coul, color="#c0392b", lw=2.0, label=T("f_dbres = 1 クーロン(φ = 30°)", "f_dbres = 1 Coulomb (φ = 30°)"))
+    ax.plot(cc, np.where(cc >= 0.02, MU, np.nan), color="#1f5f8b", lw=2.0,
+            label=T("f_dbres = 4 Voellmy(μ = 0.05。この例題)", "f_dbres = 4 Voellmy (μ = 0.05; this example)"))
+    for st, lab in ((ST_VALLEY, T("谷 0.35", "valley 0.35")), (ST_FAN, T("扇状地 0.08", "fan 0.08"))):
+        ax.axhline(st, color="0.55", lw=0.9, ls="--")
+        ax.text(0.497, st + 0.006, lab, fontsize=8, color="0.35", ha="right", va="bottom")
+    cv = TANPHI * SG * 0.45 / (1 + SG * 0.45)
+    ax.plot(0.45, cv, "o", color="#c0392b", ms=6, zorder=5)
+    ax.annotate(T(f"濃度 0.45 で {cv:.2f}: これより緩い\n扇状地(0.08)の手前で止まる", f"{cv:.2f} at 0.45: stops before\nthe gentler fan (0.08)"),
+                xy=(0.45, cv), xytext=(0.12, 0.27), fontsize=8, color="#c0392b",
+                arrowprops=dict(arrowstyle="-|>", color="#c0392b", lw=0.8))
+    ax.set_xlim(0, 0.5)
+    ax.set_ylim(0, 0.42)
+    ax.set_xlabel(T("混合体積濃度 C", "mixture volume concentration C"))
+    ax.set_ylabel(T("止まる勾配 tan θ_y", "stopping slope tan θ_y"))
+    ax.set_title(T("(b) 抵抗則の止まる勾配", "(b) Stopping slope of the resistance law"), fontsize=9.5, loc="left")
+    ax.legend(fontsize=7.8, loc="upper left", frameon=False)
+    ax.text(0.0, -0.26, T("線より緩い勾配では流れが止まる。Voellmy の μ = 0.05 は濃度に\n"
+                          "よらず扇状地を流れ下れる(細かい灰の泥流の小さい見かけ摩擦)。\n"
+                          "江頭則(f_dbres = 2)は粒径 1 mm では抵抗が消える。",
+                          "On slopes gentler than the curve the flow stops. Voellmy's\n"
+                          "μ = 0.05 runs down the fan whatever the concentration (small\n"
+                          "apparent friction of fine-ash lahars). The Egashira law\n"
+                          "(f_dbres = 2) loses its resistance at 1 mm grains."),
+            transform=ax.transAxes, fontsize=8, va="top")
+    # (c) pore water left in the deposit
+    ax = axs[2]
+    w = 0.55
+    ax.bar([0], [0.45], width=w, color=C_LAHAR)
+    ax.bar([0], [0.55], bottom=[0.45], width=w, color=C_WATER)
+    ax.bar([1], [0.45], width=w, color=C_DEP)
+    ax.bar([1], [0.45], bottom=[0.45], width=w, color=C_WATER, hatch="///", edgecolor="#1f5f8b", lw=0)
+    ax.bar([2], [0.10], width=w, color=C_WATER)
+    ax.text(0, 0.22, T("固体\n0.45", "solid\n0.45"), ha="center", va="center", fontsize=8.5, color="white")
+    ax.text(0, 0.72, T("水\n0.55", "water\n0.55"), ha="center", va="center", fontsize=8.5)
+    ax.text(1, 0.22, T("固体\n0.45", "solid\n0.45"), ha="center", va="center", fontsize=8.5)
+    ax.text(1, 0.67, T("間隙の水\n0.45", "pore\nwater\n0.45"), ha="center", va="center", fontsize=8.5)
+    ax.text(2, 0.13, "0.10", ha="center", va="bottom", fontsize=8.5)
+    ax.set_xticks([0, 1, 2])
+    ax.set_xticklabels([T("流れ 1 m³", "flow 1 m³"), T("積もった層\n0.9 m³", "deposit\n0.9 m³"),
+                        T("流れ去る水", "water\nflowing on")], fontsize=8.5)
+    ax.set_ylim(0, 1.1)
+    ax.set_ylabel(T("体積 (m³)", "volume (m³)"))
+    ax.set_title(T("(c) 積もると水が間隙に残る(f_dbwet = 2)", "(c) Water left in the pores (f_dbwet = 2)"),
+                 fontsize=9.5, loc="left")
+    ax.text(0.0, -0.26, T("濃度 0.45 の泥流が空隙率 0.5 で積もると、流れの\n"
+                          "水の 0.45/0.55 ≈ 8 割が間隙に残る。扇状地の断面を\n"
+                          "通る水が清水の対照の 4 割ほどになる理由。",
+                          "When a 0.45 lahar deposits with porosity 0.5,\n"
+                          "0.45/0.55 ≈ 80 % of its water stays in the pores:\n"
+                          "why the water through the fan section is about\n"
+                          "40 % of the clear-water control."),
+            transform=ax.transAxes, fontsize=8, va="top")
+    for a in axs:
+        for sp in ("top", "right"):
+            a.spines[sp].set_visible(False)
+        a.tick_params(labelsize=8)
+    fig.savefig(f"{FIGDIR}/laws.png", dpi=100)
+    plt.close(fig)
+
+
+# ---------------------------------------------------------------- 移動限界水深と縞(模式)
+def _stripe_panel(ax, kind):
+    n = 9
+    xs = np.arange(n)
+    if kind == "dd1":
+        bed = np.where(xs % 2 == 0, 1.0, 0.55)              # 高い行・低い行が交互(格子 1 つ分の縞)
+        water = np.where(xs % 2 == 0, 0.10, 0.42)           # 低い行に横から水が集まる
+        dd = 0.25
+    else:
+        bed = np.full(n, 0.72)
+        water = np.full(n, 0.30)
+        dd = 0.06
+    for i in xs:
+        ax.add_patch(plt.Rectangle((i, 0), 1, bed[i], facecolor=C_ASH, edgecolor="0.5", lw=0.6))
+        ax.add_patch(plt.Rectangle((i, bed[i]), 1, water[i], facecolor=C_WATER, edgecolor="none", alpha=0.9))
+        ax.plot([i + 0.08, i + 0.92], [bed[i] + dd] * 2, color="#c0392b", lw=1.0, ls="--")
+    if kind == "dd1":
+        for i in xs:
+            if i % 2 == 0:
+                ax.annotate("", xy=(i + 0.5, bed[i] + 0.0), xytext=(i + 0.5, bed[i] - 0.18),
+                            arrowprops=dict(arrowstyle="-|>", color="#8c5a2b", lw=1.6))
+                if 0 < i < n - 1:
+                    for d in (-1, 1):
+                        ax.annotate("", xy=(i + 0.5 + d * 0.75, bed[i] + 0.02), xytext=(i + 0.5 + d * 0.2, bed[i] + 0.08),
+                                    arrowprops=dict(arrowstyle="-|>", color="#1f5f8b", lw=0.9))
+            else:
+                ax.annotate("", xy=(i + 0.5, bed[i] - 0.15), xytext=(i + 0.5, bed[i] + 0.02),
+                            arrowprops=dict(arrowstyle="-|>", color=C_LAHAR, lw=1.6))
+        ax.text(0.0, 1.62, T("高い行(↑): 水深 ≤ dd で止まる → 運んでいた土砂を置く → さらに高くなる",
+                             "high rows (↑): depth ≤ dd, the flow stops → drops its sediment → rises further"), fontsize=8.2,
+                color="#8c5a2b")
+        ax.text(0.0, 1.42, T("低い行(↓): 横から水が集まって流れる → 削る → さらに低くなる",
+                             "low rows (↓): water gathers from the sides and flows → erodes → sinks further"), fontsize=8.2,
+                color=C_LAHAR)
+        title = T("(a) dd = 1 mm(既定): 流れの深さ(1 mm 前後)と同程度", "(a) dd = 1 mm (default): about the flow depth (≈ 1 mm)")
+    else:
+        for i in xs:
+            ax.annotate("", xy=(i + 0.5, bed[i] - 0.1), xytext=(i + 0.5, bed[i] + 0.02),
+                        arrowprops=dict(arrowstyle="-|>", color=C_LAHAR, lw=1.2))
+        ax.text(0.0, 1.62, T("どの行も水深 > dd で流れ続け、一様に削られる", "every row keeps depth > dd and flows; erosion is uniform"),
+                fontsize=8.2, color="#1f5f8b")
+        ax.text(0.0, 1.42, T("縞は育たない(この例題は dd = 0.2 mm)", "no stripes grow (this example uses dd = 0.2 mm)"),
+                fontsize=8.2, color="0.25")
+        title = T("(b) dd = 0.2 mm: 流れの深さより十分小さい", "(b) dd = 0.2 mm: well below the flow depth")
+    ax.set_xlim(-0.2, n + 0.2)
+    ax.set_ylim(0, 1.8)
+    ax.set_xticks(xs + 0.5)
+    ax.set_xticklabels([])
+    ax.set_yticks([])
+    for sp in ("top", "right", "left"):
+        ax.spines[sp].set_visible(False)
+    ax.set_xlabel(T("斜面を横切る向きのセル(斜面を見下ろす向き。模式で、縦は誇張)。赤の破線 = 地盤 + dd",
+                    "cells across the slope (looking downslope; schematic, vertical exaggerated); red dashes = bed + dd"),
+                  fontsize=8.5)
+    ax.set_title(title, fontsize=9.5, loc="left")
+
+
+def stripes():
+    fig, axs = plt.subplots(1, 2, figsize=(14, 4.4))
+    fig.subplots_adjust(left=0.02, right=0.99, top=0.80, bottom=0.14, wspace=0.08)
+    fig.suptitle(T("移動限界水深 dd とシート流: dd が流れの深さと同程度だと格子 1 つ分の縞が育つ(模式)",
+                   "Threshold depth dd and sheet flow: with dd about the flow depth, stripes one cell wide grow (schematic)"),
+                 fontsize=10.5, x=0.02, ha="left")
+    _stripe_panel(axs[0], "dd1")
+    _stripe_panel(axs[1], "dd02")
+    fig.text(0.02, 0.015, T("この急斜面では流れの濃度が運べる上限に張り付き、勾配の変化で埋め戻す働きもないので、いったんできた縞は消えない。",
+                            "On this steep slope the flow concentration stays at the cap and no slope change refills the rows, so stripes "
+                            "once formed do not decay."), fontsize=8.2, color="0.3")
+    fig.savefig(f"{FIGDIR}/stripes.png", dpi=100)
     plt.close(fig)
 
 
@@ -426,6 +743,8 @@ def table():
 if __name__ == "__main__":
     mechanism()
     setup()
+    laws()
+    stripes()
     if all(os.path.exists(f"result_{c}/FILENUMBER.csv") for c, _, _, _ in CASES):
         maps()
         profile()

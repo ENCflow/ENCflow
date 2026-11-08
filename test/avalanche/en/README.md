@@ -6,7 +6,7 @@
 
 A check of the **dense-flow snow avalanche** configuration that borrows the
 sediment-flow model ("application to avalanches" in developer.md §28.8; the
-avalanche paragraph of users_guide/geomorph.md). It combines the equivalent
+[snow avalanches](../../../docs/en/users_guide/geomorph_applications.md#5-snow-avalanches-dense-flow) on the applications page of the user's guide). It combines the equivalent
 fluid with the Voellmy resistance law (`f_dbres = 4`) and the
 **velocity-proportional entrainment** E = δe|V| that scours the snow along the
 path (`f_dbed = 4`; entrainment only, deposition by stopping `f_dbstop`), and
@@ -51,24 +51,24 @@ Top left: fracture depth D = 0.5 m of the release area. Top right: thickness
 of the entrained snow sd₀ − sd. Along the path from the release area to the
 slope break the snow is scoured through its full depth (0.5 m). Bottom left:
 change of the snow surface z − z₀. The path is negative from scouring, and
-stopped debris deposits up to 0.82 m around the slope break (x = 30 m) at
+stopped debris deposits up to 0.64 m around the slope break (x = 30 m) at
 x = 24–42 m. Bottom right: longitudinal profile (average over all rows).
 That the two curves z − z₀ and −(sd₀ − sd) coincide is the co-update
 identity itself (z and sd move by the same amount), and some snow that
-is still flowing (remaining hs) is left near the slope break (7.7 % of the
+is still flowing (remaining hs) is left near the slope break (7.9 % of the
 total).
 
 ## Findings
 
 | Check | Computed | Result |
 |---|---|---|
-| (1) Solid ledger | −4.4e-14 m·cell | PASS |
-| (2) Co-update | 5.0e-14 m | PASS |
+| (1) Solid ledger | −3.4e-14 m·cell | PASS |
+| (2) Co-update | 2.1e-14 m | PASS |
 | (3) Entrainment activity | path min(sd − sd₀) = −0.500 m (full depth) | PASS |
-| (4) Growth | entrained solid 55.7 / released solid 21.6 = 2.58 times | PASS |
-| (5) Stopping | remaining Σhs / (released + entrained) = 0.077 | PASS |
+| (4) Growth | entrained solid 52.4 / released solid 21.6 = 2.43 times | PASS |
+| (5) Stopping | remaining Σhs / (released + entrained) = 0.079 | PASS |
 
-- By entrainment the avalanche grows to about 3.6 times the released amount,
+- By entrainment the avalanche grows to about 3.4 times the released amount,
   and 92 % stops and deposits around the slope break. The ledger and the
   co-update are at machine precision.
 - The entrainable layer is given by reinterpreting the existing soil depth
@@ -94,8 +94,11 @@ total).
   and entrains less). After the suppression of excessive outflow by the cell total and the fix of the
   upwind side of the edge depth of 2026-11-05 (§94, §95) it is 2.57 (remaining 0.071), and with the
   steep-slope gravity correction aligned to the default 2 (friction along the slope; §93) it is 2.58
-  (remaining 0.077, largest deposit 0.82 m). The table, the values in the text and the figures are
-  from this computation.
+  (remaining 0.077, largest deposit 0.82 m). After the change of 2026-11-06 by which 2 also evaluates
+  the resistance laws of mixture flows along the slope (developer.md §101) it is 2.43 (remaining 0.079,
+  largest deposit 0.64 m; on the steep path the turbulent term of Voellmy is 1/cos⁴θ times larger, the
+  flow is slower and entrains less). The table, the values in the text and the figures are from this
+  computation.
 
 ## Related documents
 
