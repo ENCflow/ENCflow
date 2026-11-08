@@ -228,10 +228,15 @@ Sediment that reached the fan (deposit + moving; 1,000 m³; reference 67.2 thous
 | 2.5 m | 67.2 (0° only) | 63.1 (0° only) |
 
 - **With four neighbours, the debris flow cannot run down an oblique valley on coarse grids**:
-  on the 20 and 40 m grids, where the valley floor (30 m wide) is 1-2 cells, the cells of the
-  valley floor touch only at their corners when the valley runs obliquely to the grid. With four
-  neighbours no flow passes through a corner, so the flow has to go round through a higher cell
-  of the valley wall next to it, and the debris flow stops there and fills the valley. At 40 m
+  when the valley runs obliquely to the grid, the cells of the valley floor (cells whose centres
+  lie on the floor) line up in steps. On the 40 m grid, where the floor (30 m wide) is less than
+  one cell, some of them touch only at their corners (at 45° all of them; at 22.5° the pairs of
+  cells joined along an axis are linked either at a corner or across a cell outside the floor).
+  With four neighbours no flow passes through a corner, so the flow has to pass through a cell at
+  the foot of the valley wall that is higher than the floor (2.7 m at 45°, 5-7 m at 22.5°). At
+  20 m with 45° the floor cells are joined by axis edges, but the four-neighbour path is a
+  staircase that alternates between edges at 45° to the valley, with no edge along the valley as
+  with eight neighbours. In both cases the debris flow stops partway and fills the valley. At 40 m
   with 22.5° and 45° almost all of the 100,000 m³ stays in the valley and does not reach the
   fan, and even at 20 m with 45° three quarters stay in the valley. With the valley along a grid
   axis (0°), four neighbours also reach the fan (0.75 times the reference at 40 m).
@@ -303,8 +308,10 @@ meaning.)
   down. The area of a maximum flow depth of 1 m or more comes out at 0.63-0.81 times the
   reference, and the houses reached by flow 1 m deep or more at 0.46-0.72 times, and both also
   change much with the valley orientation (the deep, fast flow is averaged over coarse cells).
-  At 0° the front reaches the apex 1.6 times later (the valley floor becomes a single row of
-  cells, and the flow is squeezed into that narrow row).
+  At 0° the front reaches the apex 1.6 times later (the valley floor falls on a cell boundary,
+  so the valley is represented by two rows of cells 3.5 m above the floor (80 m wide); the flow
+  spreads to about twice the width and becomes shallower and slower, with a maximum speed of
+  17 m/s in the valley against 23 m/s at 5 m).
 - **Four neighbours**: even at 5 m the map difference due to the valley orientation is twice that
   with eight neighbours, and the arrival time at the apex shifts by 7 seconds with the
   orientation (0.96-1.10 times). At 10 m the sediment reaching the fan is 0.71-0.86 times the

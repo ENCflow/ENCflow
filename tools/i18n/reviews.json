@@ -1481,11 +1481,11 @@
     {
       "source": "examples/debris_fan/README.md",
       "target": "examples/debris_fan/en/README.md",
-      "source_sha256": "7aa9a7119e26029a419c5bda17797732da4f616607d33efd9732c25426b180c0",
-      "target_sha256": "49bf56dbacda4ca64e9fecd64ed1f109354e92fbe586233e389357dae725761a",
-      "reviewer": "Claude (Claude Code session; geomorph chapter split, step 1: the six application setups moved to users_guide/geomorph_applications.md; compared the Japanese source with the English mirror for the moved text, the new pointer paragraphs and the re-targeted links; the rest of the pair is unchanged since the previous record)",
+      "source_sha256": "4e50947471f813b507f1b3b9596445e46ca855bcfd204570bf60b348a3a5d556",
+      "target_sha256": "6cfdef4f8e920bbb47daf8bcf04bc70528703bb42edb4cd27f696b0e07ee490b",
+      "reviewer": "Claude (Claude Code session; corrected two statements about the grid geometry against the inputs of make_init.py and reruns of the 40 m (0°, 45°), 20 m (45°) and 5 m (0°) cases that reproduced the table values: the floor cells touch only at corners on the 40 m oblique grids, not at 20 m 45° (axis-joined staircase); at 40 m 0° the floor falls on a cell boundary and the valley is two rows 3.5 m above it, the flow about twice as wide and slower (17 vs 23 m/s); compared the Japanese and English sentences; the rest of the pair is unchanged since the previous record)",
       "method": "assistant",
-      "reviewed_on": "2026-11-07"
+      "reviewed_on": "2026-11-08"
     },
     {
       "source": "examples/debris_fan/figs/dependence.png",
