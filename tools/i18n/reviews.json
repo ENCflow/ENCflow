@@ -4352,9 +4352,9 @@
     {
       "source": "tutorials/chichibu/README.md",
       "target": "tutorials/chichibu/en/README.md",
-      "source_sha256": "35e5d2af0f92ca22f845665986db1cebfd2d87a716804e6d6dacfd4e74abe426",
-      "target_sha256": "241f18c6375af8747224e0999dc744e8f4eb2bdb6fab8e4067cf5e71b02b7e1b",
-      "reviewer": "Claude (Claude Code session; Step 6 item 3 of the chichibu tutorial: note that the regraded-terrain test input is not included, and caution that changing the terrain does not always help (50 m counter-example); Japanese and English edited together and read side by side)",
+      "source_sha256": "da0b2c2c71387dcaf3027c5a07a73333c43a5c121c77d5d70f80893f029f8e79",
+      "target_sha256": "c9a8d441988c12fa86a4e27013a9c650612784680b8890039ca6b502c6e8fcb8",
+      "reviewer": "Claude (Claude Code session; chichibu tutorial for beginners: Step 4 remedy paragraph shortened to two ideas with the setting introduced afterwards, settings comment of f_advection_donor reworded in param_step4-7 (values unchanged), Step 6 item 3 links the subgrid channel to the channel chapter; Japanese and English edited together and read side by side)",
       "method": "assistant",
       "reviewed_on": "2026-11-08"
     },
@@ -4586,38 +4586,38 @@
     {
       "source": "tutorials/chichibu/param_step4.txt",
       "target": "tutorials/chichibu/en/param_step4.txt",
-      "source_sha256": "e55668129eaae7140fbc28b77f1a37f0ffe7bc62b61bba07660434d184d30649",
-      "target_sha256": "7f3923f94bb8be773ebdd56d0d0388b68c8c398c71fef0284f3c90ce8ac24651",
-      "reviewer": "Claude (Claude Code session; tutorials/chichibu moved from f_advection_donor = 2 to 3 on 2026-11-07: headers and the &list_enc line changed in both languages, values identical, comments compared line by line)",
+      "source_sha256": "8c98d980c1360212f9dd5594a84415542365dd1c68ad56511a70ab38db8fa864",
+      "target_sha256": "4e946d4af205b9bede6e6490d0ef37eb6ed088c444a787e29a34ff8674c87ce0",
+      "reviewer": "Claude (Claude Code session; chichibu tutorial for beginners: Step 4 remedy paragraph shortened to two ideas with the setting introduced afterwards, settings comment of f_advection_donor reworded in param_step4-7 (values unchanged), Step 6 item 3 links the subgrid channel to the channel chapter; Japanese and English edited together and read side by side)",
       "method": "assistant",
-      "reviewed_on": "2026-11-07"
+      "reviewed_on": "2026-11-08"
     },
     {
       "source": "tutorials/chichibu/param_step5.txt",
       "target": "tutorials/chichibu/en/param_step5.txt",
-      "source_sha256": "b2ee29b55791b1f709b12c6129f7345946fc9a1e8805df7f877527a226cc3d3f",
-      "target_sha256": "32d1e46c5188d64ead2bf02fcc190001e4d3cb68fda0693eca7e1ae0ee338b64",
-      "reviewer": "Claude (Claude Code session; tutorials/chichibu moved from f_advection_donor = 2 to 3 on 2026-11-07: headers and the &list_enc line changed in both languages, values identical, comments compared line by line)",
+      "source_sha256": "1ff205848822697f0c615010e8e082def9bb96125f2c503fae6eec2a2b3acc31",
+      "target_sha256": "9dcdea5fd215df486b087184fffccfff1ec9ad0aac86f421f8b1aafc9a78b7bb",
+      "reviewer": "Claude (Claude Code session; chichibu tutorial for beginners: Step 4 remedy paragraph shortened to two ideas with the setting introduced afterwards, settings comment of f_advection_donor reworded in param_step4-7 (values unchanged), Step 6 item 3 links the subgrid channel to the channel chapter; Japanese and English edited together and read side by side)",
       "method": "assistant",
-      "reviewed_on": "2026-11-07"
+      "reviewed_on": "2026-11-08"
     },
     {
       "source": "tutorials/chichibu/param_step6.txt",
       "target": "tutorials/chichibu/en/param_step6.txt",
-      "source_sha256": "7d8f6b8d070837883f05a28313e75b4a7fedda0e3fbf5493ed0acdb16bafac77",
-      "target_sha256": "233f51a5c3dfa690d78b112447968c77e50688d54bf595830470774447da2cf0",
-      "reviewer": "Claude (Claude Code session; tutorials/chichibu moved from f_advection_donor = 2 to 3 on 2026-11-07: headers and the &list_enc line changed in both languages, values identical, comments compared line by line)",
+      "source_sha256": "82f66e9cbbd6c287d6cb4ca1100100f80bb24524e7ed8505637a700f427bc4a2",
+      "target_sha256": "5384728b8c82a642a0298836f47d13ef1f0dedf619d7b46bfa2dd29f0ab75431",
+      "reviewer": "Claude (Claude Code session; chichibu tutorial for beginners: Step 4 remedy paragraph shortened to two ideas with the setting introduced afterwards, settings comment of f_advection_donor reworded in param_step4-7 (values unchanged), Step 6 item 3 links the subgrid channel to the channel chapter; Japanese and English edited together and read side by side)",
       "method": "assistant",
-      "reviewed_on": "2026-11-07"
+      "reviewed_on": "2026-11-08"
     },
     {
       "source": "tutorials/chichibu/param_step7.txt",
       "target": "tutorials/chichibu/en/param_step7.txt",
-      "source_sha256": "4f060e204cffb258fb192e76411e6353bf7bff24b59e09ae9ba40fe906078b2f",
-      "target_sha256": "23fbf0af9e81273a07bd03d31cf6eb7df78c8e535ccabb04215d504a54155a6b",
-      "reviewer": "Claude (Claude Code session; tutorials/chichibu moved from f_advection_donor = 2 to 3 on 2026-11-07: headers and the &list_enc line changed in both languages, values identical, comments compared line by line)",
+      "source_sha256": "f308c917e3351eedf7ee3e1b5be7a8d9dbdd2daecb9996e8fff937a9510e491c",
+      "target_sha256": "9a0a3605346d1b2da022b99a42e8e213ad5b206466bb2b0ad373b0f4c532f67b",
+      "reviewer": "Claude (Claude Code session; chichibu tutorial for beginners: Step 4 remedy paragraph shortened to two ideas with the setting introduced afterwards, settings comment of f_advection_donor reworded in param_step4-7 (values unchanged), Step 6 item 3 links the subgrid channel to the channel chapter; Japanese and English edited together and read side by side)",
       "method": "assistant",
-      "reviewed_on": "2026-11-07"
+      "reviewed_on": "2026-11-08"
     },
     {
       "source": "tutorials/chichibu/param_supp_100m.txt",

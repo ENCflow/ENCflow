@@ -38,7 +38,7 @@
 ! ENC computation settings
 !======================================================================
 &list_enc
-  f_advection_donor = 3      ! upwind momentum donors of the advection term (3: treat donors carrying almost no water as neutral)
+  f_advection_donor = 3      ! upwind momentum donors of the advection term (3: keep thin films carrying almost no water from braking the main flow)
 /
 
 !======================================================================

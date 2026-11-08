@@ -469,20 +469,19 @@ water acting as a switch in the computation of a deep flow next to it
 is a structure not specific to ENCflow: it can occur in 2D models in
 general.
 
-The remedy is to choose where the advection term reads "the momentum of
-the incoming water". By default it is always read from the cell
-straight behind the face (here the film on the bank). With
-`f_advection_donor = 3`, the water flowing in from the cell behind is
-compared with the largest flow entering the same place; when it is less
-than 1/10 of that, the momentum of the cell behind is not read and is
-treated as neutral (it neither speeds up nor slows down the flow). The film carries almost no water, so
-it becomes neutral; no brake acts, and no bump arises. The momentum of
-water flowing in from the side is read in the same spirit: as the film
-on the side cell becomes thinner than dd, it is read less and less (not
-switched off all at once the moment the film drops below dd). The result
-also hardly changes with dd any more. Add `fn_enc` to `&list_sysparam` and
-set `f_advection_donor = 3` in `&list_enc`. dd and dv stay at their
-defaults.
+The remedy is to keep the wet/dry test of thin water from acting as a
+switch on the flow next to it. First, the cells used in the computation
+of the advection term are chosen: a cell with a thin film that carries
+almost no water is not used for the main flow. This removes the brake.
+Further, so that using or not using a cell does not flip on and off
+abruptly, a film is not dropped the moment it falls below dd; its
+influence is weakened little by little as it becomes thinner. As a
+result no bump arises, and the result hardly changes with dd any more.
+
+To use this treatment, add `fn_enc` to `&list_sysparam` and set
+`f_advection_donor = 3` in `&list_enc` (for the details, see
+[section 4.4 of the advection chapter of the users guide](../../../docs/en/users_guide/advection.md)).
+dd and dv stay at their defaults.
 
 ```
 &list_sysparam
@@ -491,13 +490,9 @@ defaults.
 /
 
 &list_enc
-  f_advection_donor = 3      ! upwind momentum donors of the advection term (3: treat donors carrying almost no water as neutral)
+  f_advection_donor = 3      ! upwind momentum donors of the advection term (3: keep thin films carrying almost no water from braking the main flow)
 /
 ```
-
-The threshold of 1/10 is an empirical value and can be changed with
-`p_adv_donor_eps` (default 0.1; between 0.05 and 0.2 the peak hardly
-changes).
 
 ![Step 4: effect of switching the momentum donors of the advection term](figs/step4_hydro.png)
 
@@ -713,10 +708,13 @@ When you notice oscillations, consider them in this order.
    transect, and oscillations with a period of 5 to 6 minutes ride on the
    peak and the recession. On the 100 m and 200 m grids (dashed), the
    steps created by depression filling lie at other places and have
-   other sizes, and the curves are smooth. On the 200 m grid with a 50 m
-   channel width (right), the water surface of the flat reach just
-   upstream of the transect sloshes back and forth (a seiche), and ups
-   and downs with a period of about 4 minutes continue. Without the width
+   other sizes, and the curves are smooth. The right panel is a run in
+   which a 50 m wide channel is given inside the cells of the 200 m grid
+   (a subgrid channel; see
+   [the channel chapter of the users guide](../../../docs/en/users_guide/channel.md)).
+   The water surface of the flat reach just upstream of the transect
+   sloshes back and forth (a seiche), and ups and downs with a period of
+   about 4 minutes continue. Without the width
    (dashed), the same flat reach shows hardly any oscillation; in the
    deep, narrow 50 m channel the sloshing is damped less and becomes
    visible. This run specifies only the channel width and keeps the bed
