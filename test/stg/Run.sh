@@ -7,6 +7,7 @@
 # 結果の Log.txt は result_serial/ に複製する(Run_MPI.sh のバイト比較用)
 sdir=$(dirname "$(readlink -f "$0")")
 ../Scripts/Check_mode.sh serial || exit 1
+export OMP_NUM_THREADS=${OMP_NUM_THREADS:-1}   # 40 × 24 の小さな格子なので 1 スレッドで十分
 
 python3 "$sdir/make_init.py" || exit 1
 rm -rf result_stg result_stgmask

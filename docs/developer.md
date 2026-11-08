@@ -690,6 +690,11 @@ ENCflow は各分野の専用モデルと精度を競うものではなく、次
   -flto)製のコミット済み reference と比較できないため、ランナー内で
   debug 逐次の reference を作り直して MPI 結果と照合する(リポジトリの
   reference は不変 — 消去・再生成はランナーの使い捨て作業領域のみ)。
+- **CI の高速ケースの検定スクリプトは標準ライブラリだけで書く(2026-11-08)**: ci.yml は gfortran・make(MPI のジョブは
+  OpenMPI も)だけを入れ、numpy は入れない(nightly の bmi ジョブだけが pip で入れる)。test/stg の Check_stg.py が
+  numpy を読んで main の ci.yml(45205ab)の逐次のジョブを落としたので、bil(float32)を array で読む形に直した。
+  ci.yml に加える検定型のケース(prmap・wfswash・gwlateral・gwtani・stg)の Check_*.py は、numpy のない Python で
+  確かめてから加える(sys.modules['numpy'] = None として実行すると、手元でも ImportError を再現できる)。
 - **CI のランナーを ubuntu-24.04 に固定(2026-11-05。利用者の決定)**: GitHub の ubuntu-latest が 2026-11-05 に
   ubuntu-24.04 から ubuntu-26.04 へ切り替わり(コンパイラは gfortran 13 から 15 へ)、ci.yml の vzcol の Log.txt が
   1 量子(相対 2e-14)で reference と不一致になった(逐次・MPI np = 2 とも。main の d5aa81a・8977ce5。開発 VM の
