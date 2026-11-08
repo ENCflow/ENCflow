@@ -1481,11 +1481,11 @@
     {
       "source": "examples/debris_fan/README.md",
       "target": "examples/debris_fan/en/README.md",
-      "source_sha256": "7aa9a7119e26029a419c5bda17797732da4f616607d33efd9732c25426b180c0",
-      "target_sha256": "49bf56dbacda4ca64e9fecd64ed1f109354e92fbe586233e389357dae725761a",
-      "reviewer": "Claude (Claude Code session; geomorph chapter split, step 1: the six application setups moved to users_guide/geomorph_applications.md; compared the Japanese source with the English mirror for the moved text, the new pointer paragraphs and the re-targeted links; the rest of the pair is unchanged since the previous record)",
+      "source_sha256": "3e6e9022f21fc71f55979cd9e0b3aaa78aa8cc440f7a69a59905c303b577fd54",
+      "target_sha256": "1d50596ea6a26c266f9bac44264399bc0a5963372fd0efb72aef8c5b83039d09",
+      "reviewer": "Claude (Claude Code session; added three explanatory figures (mechanism, laws, grid) drawn by plot_results.py without model results, with caption paragraphs, and the run-line note; compared the Japanese source with the English mirror for the added text; the rest of the pair is unchanged since the previous record)",
       "method": "assistant",
-      "reviewed_on": "2026-11-07"
+      "reviewed_on": "2026-11-08"
     },
     {
       "source": "examples/debris_fan/figs/dependence.png",
@@ -1495,6 +1495,24 @@
       "reviewer": "Claude (Claude Code session; viewed both images side by side: same eight panels (map difference, sediment on the fan, deposit area, spreading, depth area, arrival time, houses, valley deposit) with the same data and reference band; titles, axis labels and legend translated)",
       "method": "assistant",
       "reviewed_on": "2026-11-06"
+    },
+    {
+      "source": "examples/debris_fan/figs/grid.png",
+      "target": "examples/debris_fan/en/figs/grid.png",
+      "source_sha256": "c78b503d3cce9fcef3d87ab8d98883c26a65a7104d5a29366f3bbf4f9b20ec52",
+      "target_sha256": "78ce8af39a20db4ff2a0509e65724d90f46ca3456cd0e78f964e8cd67c3092b5",
+      "reviewer": "Claude (Claude Code session; drawn by plot_results.py without model results (grid from the grids of make_init.py, mechanism from its volumes, laws from the closed-form Takahashi–Nakagawa expressions with the values of param.txt); viewed the Japanese and English images side by side: same shapes, values and layout, labels translated)",
+      "method": "assistant",
+      "reviewed_on": "2026-11-08"
+    },
+    {
+      "source": "examples/debris_fan/figs/laws.png",
+      "target": "examples/debris_fan/en/figs/laws.png",
+      "source_sha256": "f2acca5d931d47f60f2452d57cb31dd049a434c0fa35a14ae01267aca4ddd015",
+      "target_sha256": "5a167f2e7c4f612174bc999c39436c2ae48cfdd80a11c5f0b33dda02ec2abb5f",
+      "reviewer": "Claude (Claude Code session; drawn by plot_results.py without model results (grid from the grids of make_init.py, mechanism from its volumes, laws from the closed-form Takahashi–Nakagawa expressions with the values of param.txt); viewed the Japanese and English images side by side: same shapes, values and layout, labels translated)",
+      "method": "assistant",
+      "reviewed_on": "2026-11-08"
     },
     {
       "source": "examples/debris_fan/figs/maps_20m.png",
@@ -1522,6 +1540,15 @@
       "reviewer": "Claude (Claude Code session; viewed both images side by side: same six maps (0/22.5/45 degrees, eight and four neighbours) of deposit thickness, the 1 m depth line, the moving-mud line and houses; titles, colour-bar label and axis labels translated)",
       "method": "assistant",
       "reviewed_on": "2026-11-06"
+    },
+    {
+      "source": "examples/debris_fan/figs/mechanism.png",
+      "target": "examples/debris_fan/en/figs/mechanism.png",
+      "source_sha256": "c01ba1e2e608f7e5bdd1c51dd5017728d5aaebbeb7b33f02ba1ffcd9021c2f88",
+      "target_sha256": "55f294ed9cb8a66217db5c1218426dce8e16f615cc4194ac2b842da79aa02ca4",
+      "reviewer": "Claude (Claude Code session; drawn by plot_results.py without model results (grid from the grids of make_init.py, mechanism from its volumes, laws from the closed-form Takahashi–Nakagawa expressions with the values of param.txt); viewed the Japanese and English images side by side: same shapes, values and layout, labels translated)",
+      "method": "assistant",
+      "reviewed_on": "2026-11-08"
     },
     {
       "source": "examples/debris_fan/figs/overlay.png",

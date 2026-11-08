@@ -64,6 +64,16 @@ schematic values chosen to make the phenomena visible, and do not reproduce the 
 
 ## Mechanisms needed for the reproduction
 
+![From the collapse to the fan](figs/mechanism.png)
+
+(a) Volumes (values of make_init.py): the 100,000 m³ collapse mass is 60,000 m³ of solid and 40,000 m³ of pore
+water; with 33,000 m³ of water placed on the collapse it is released as a debris flow of concentration 0.45. If all
+the solid deposits with porosity 0.4, 40,000 m³ of water goes into the pores, and the remaining 33,000 m³ becomes
+the trailing thin mud. (b) The collapsed mass crosses the valley floor and runs up the far wall, and part of it
+stays at the foot of that wall. (c) Down the valley it runs on inertia without depositing, and on the fan it
+spreads, slows down and deposits. The time ranges are those of the results below (reference case). A schematic;
+the shapes are not computed results.
+
 | Real phenomenon | How ENCflow represents it | Settings |
 |---|---|---|
 | The slope fails and fluidizes | Give the distribution of the failure depth and fluidize it at the start of the computation (move the solid (1 − λ)D into the flowing sediment and the pore water λD into the flowing water) | `fn_dbinit`, `db_reltime = 0`, `db_relsat = 1` |
@@ -75,6 +85,17 @@ schematic values chosen to make the phenomena visible, and do not reproduce the 
 | Gravity on steep slopes | Gravity correction for the slope inclination (friction and the resistance laws of mixture flows also along the slope) | `f_gravity_correction = 2` (default) |
 | Valley orientation and grid | Give the terrain, failure depth and initial water depth by formulas in coordinates along the valley and take their values at the cell centres of each grid (no interpolation) | `make_init.py` |
 | Flow in diagonal directions | The eight neighbours of the ENC grid (the diagonal edges also carry flow; the four-neighbour control sets the diagonal passage widths to 0) | `p_diagratio` |
+
+![Where the Takahashi–Nakagawa laws act](figs/laws.png)
+
+The Takahashi–Nakagawa (1991) laws evaluated with this example's values (not computed results). (a) The resistance
+law switches with concentration and flow depth. Most of the flow down the valley is in the stony form with the
+dilatant term; where the depth exceeds 30 times the grain size (9 m) it becomes the Manning law (the mud-flow rule
+of the original paper; the yield term remains). Only the collapse mass just after release and the front passing the
+upper valley are deeper than 9 m. (b) While the speed exceeds p v_c (which grows with depth to the 1.5 power) there is
+no deposition: the fast, deep valley flow does not deposit, and deposition starts on the fan as the flow thins and
+slows. (c) Downstream of the collapse the equilibrium concentration is below the flow's 0.45, so the flow deposits
+once it slows.
 
 ## Geometry and settings
 
@@ -141,7 +162,7 @@ four-neighbour case checks where four neighbours go as the grid is refined (for 
 cd examples/debris_fan
 make                     # links and the inputs and settings of all 26 cases (make_init.py)
 make run                 # compute all 26 cases in turn (about 30 minutes with 4 threads; mostly the two 2.5 m cases)
-python3 plot_results.py  # figs/*.png and tables (with the argument en, the English version in en/figs/)
+python3 plot_results.py  # figs/*.png and tables (with the argument en, the English version in en/figs/; the explanatory figures setup, grid, mechanism, laws need no results)
 ```
 
 `make quick` computes only the 18 cases at 40, 20 and 10 m (a few minutes). For a single case,
@@ -227,11 +248,24 @@ Sediment that reached the fan (deposit + moving; 1,000 m³; reference 67.2 thous
 | 5 m | 68.8 / 66.6 / 66.6 | 63.8 / 62.1 / 59.3 |
 | 2.5 m | 67.2 (0° only) | 63.1 (0° only) |
 
+![Valley floor and grid cells](figs/grid.png)
+
+The valley floor (between the dashes, 30 m wide) and the grid cells (colour = height above the floor at the same s).
+Blue dots are cells whose centres lie on the floor; black lines are axis edges between them (eight and four
+neighbours), orange dashes diagonal edges (eight neighbours only), and purple lines the detours that four-neighbour
+flow takes where cells touch only at corners. At 40 m and 0° no cell centre lies on the floor, and the valley is two
+rows 3.5 m above it. Drawn from the grids of make_init.py.
+
 - **With four neighbours, the debris flow cannot run down an oblique valley on coarse grids**:
-  on the 20 and 40 m grids, where the valley floor (30 m wide) is 1-2 cells, the cells of the
-  valley floor touch only at their corners when the valley runs obliquely to the grid. With four
-  neighbours no flow passes through a corner, so the flow has to go round through a higher cell
-  of the valley wall next to it, and the debris flow stops there and fills the valley. At 40 m
+  when the valley runs obliquely to the grid, the cells of the valley floor (cells whose centres
+  lie on the floor) line up in steps. On the 40 m grid, where the floor (30 m wide) is less than
+  one cell, some of them touch only at their corners (at 45° all of them; at 22.5° the pairs of
+  cells joined along an axis are linked either at a corner or across a cell outside the floor).
+  With four neighbours no flow passes through a corner, so the flow has to pass through a cell at
+  the foot of the valley wall that is higher than the floor (2.7 m at 45°, 5-7 m at 22.5°). At
+  20 m with 45° the floor cells are joined by axis edges, but the four-neighbour path is a
+  staircase that alternates between edges at 45° to the valley, with no edge along the valley as
+  with eight neighbours. In both cases the debris flow stops partway and fills the valley. At 40 m
   with 22.5° and 45° almost all of the 100,000 m³ stays in the valley and does not reach the
   fan, and even at 20 m with 45° three quarters stay in the valley. With the valley along a grid
   axis (0°), four neighbours also reach the fan (0.75 times the reference at 40 m).
@@ -303,8 +337,10 @@ meaning.)
   down. The area of a maximum flow depth of 1 m or more comes out at 0.63-0.81 times the
   reference, and the houses reached by flow 1 m deep or more at 0.46-0.72 times, and both also
   change much with the valley orientation (the deep, fast flow is averaged over coarse cells).
-  At 0° the front reaches the apex 1.6 times later (the valley floor becomes a single row of
-  cells, and the flow is squeezed into that narrow row).
+  At 0° the front reaches the apex 1.6 times later (the valley floor falls on a cell boundary,
+  so the valley is represented by two rows of cells 3.5 m above the floor (80 m wide); the flow
+  spreads to about twice the width and becomes shallower and slower, with a maximum speed of
+  17 m/s in the valley against 23 m/s at 5 m).
 - **Four neighbours**: even at 5 m the map difference due to the valley orientation is twice that
   with eight neighbours, and the arrival time at the apex shifts by 7 seconds with the
   orientation (0.96-1.10 times). At 10 m the sediment reaching the fan is 0.71-0.86 times the
