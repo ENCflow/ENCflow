@@ -4352,9 +4352,9 @@
     {
       "source": "tutorials/chichibu/README.md",
       "target": "tutorials/chichibu/en/README.md",
-      "source_sha256": "964db93979cc92eeeb4d43c6cd9ce69d445a36c02cdd00ec527cfbf0ac3721eb",
-      "target_sha256": "6ba24ea54473f20e28488955f529c314f80f50f672d10a86d8810a0b2d8f6703",
-      "reviewer": "Claude (Claude Code session; Step 6 item 3 of the chichibu tutorial gained the terrain-oscillation figure of supplement transect 3, drawn by the paired JA/EN Fig_supp.plt block 2d from the same results; Japanese and English edited together and read side by side)",
+      "source_sha256": "35e5d2af0f92ca22f845665986db1cebfd2d87a716804e6d6dacfd4e74abe426",
+      "target_sha256": "241f18c6375af8747224e0999dc744e8f4eb2bdb6fab8e4067cf5e71b02b7e1b",
+      "reviewer": "Claude (Claude Code session; Step 6 item 3 of the chichibu tutorial: note that the regraded-terrain test input is not included, and caution that changing the terrain does not always help (50 m counter-example); Japanese and English edited together and read side by side)",
       "method": "assistant",
       "reviewed_on": "2026-11-08"
     },

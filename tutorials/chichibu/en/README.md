@@ -721,13 +721,25 @@ When you notice oscillations, consider them in this order.
    deep, narrow 50 m channel the sloshing is damped less and becomes
    visible. This run specifies only the channel width and keeps the bed
    of the depression-filled DEM, so the flat reach remains; when the bed
-   of this reach was dug to a uniform slope as a test, the oscillation
-   almost vanished.
+   of this reach was regraded to a uniform slope as a test, the
+   oscillation almost vanished (this test was made on a working copy of
+   the depression-filled DEM by rewriting the elevations of 10 channel
+   cells in the reach; its input is not included in the tutorial).
 
    Preprocessing the channels so that the longitudinal profile is
    monotone (eliminating the flat reaches), or moving the channels to
    subgrid channels (`fn_channel`) with an independently specified bed
    profile, removes the flat ponds themselves.
+
+   However, changing the terrain does not always help. When the stepped
+   bed on the 50 m grid (left) was regraded to a uniform slope (1.6%) in
+   the same way, the transition from the gentle reach to the steep reach
+   moved closer to the transect, and the oscillation grew about fourfold.
+   What matters is less the pond itself than the abrupt transition from
+   subcritical to supercritical flow downstream of the transect. After
+   changing the terrain, rerun the computation and check that the
+   oscillation at the transect has decreased (for placing transects, see
+   item 4).
 
 4. The choice of measurement locations also mitigates it. A transect
    placed on a flat reach (pond) several meters deep picks up the
