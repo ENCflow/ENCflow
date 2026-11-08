@@ -150,7 +150,20 @@ the coefficient follows from the flow and the roughness).
   critical depth `dd`**, use
   `f_advection_donor = 3` (removes the artificial brake caused by a thin
   film on a bank acting as the momentum donor of the main channel, and the
-  jump when its wet/dry test flips; [Advection](advection.md) §4.4).
+  jump when its wet/dry test flips; [Advection](advection.md) §4.4). The
+  default stays 0. Option 3 takes effect where raster channels about one
+  cell wide run diagonally or in steps (many bends) and the banks are
+  wetted by rain; in channels several cells wide it gives nearly the same
+  values as 0. Whether a case qualifies can be checked by dividing `dd` by
+  10 and seeing whether the result changes. When you use it, note two
+  points:
+  - Flood waves become faster and larger (in Chichibu the peak at transect
+    4 rises by 15% on the 200 m grid and 21% on the 100 m grid). Compare
+    with observations if available; otherwise present the results of both
+    0 and 3 as a range.
+  - On subgrid channels narrower than the cell and in flat reaches created
+    by depression filling, fine oscillations can appear (limits in §4.4).
+    Fix the terrain first.
 - **The diffusion term is for** the transverse velocity distribution of
   channels and circulation in bays. With `f_diffusion_term = 2` no
   coefficient is needed; the roughness n sets the size of ν (typically

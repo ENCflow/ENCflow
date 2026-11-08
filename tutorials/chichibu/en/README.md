@@ -660,77 +660,39 @@ guide](../../../docs/en/users_guide/boundary.md).
 
 ### About the fine oscillations in the hydrograph
 
-The 1-minute hydrographs of real-terrain computations can carry fine
+Compared with Step 4 (no losses), Step 5 (interception + infiltration) may
+look as if the fine fluctuations of the waveform have increased (the
+1-minute values move up and down slightly at the end of the rise at
+transect 4 and on the recessions at transects 3 and 4). One of the causes
+is that infiltration thins the films on the slopes and banks one after
+another, so wet/dry switches of thin water become more frequent.
+
+The 1-minute hydrographs of real-terrain computations can carry such fine
 oscillations (spikes). Most of them are of the same type as the bumps
 treated in Step 4: the moment a thin film on a bank drops below dd, an
 artificial brake that acted on the water of the main flow entering from
-the side is released all at once, giving a short spike. From Step 5 on,
-infiltration thins the films on the slopes and banks one after another,
-so such triggers become more frequent. `f_advection_donor = 3` also
-switches the test for water entering from the side gradually with the
-depth, so in this basin hardly any spikes appear in Steps 5 and 6 (figure
-below; the 1-minute values and the 11-minute moving average almost
-coincide).
+the side is released all at once, giving a short spike.
+`f_advection_donor = 3` also switches the test for water entering from the
+side gradually with the depth, so in this basin no conspicuous spikes
+appear in Steps 5 and 6, and the remaining ups and downs are a few tens of
+m³/s per minute (figure below; the 1-minute values and the 11-minute moving
+average almost coincide).
 
 ![Step 6: 1-minute discharge and moving average](figs/step6_osc.png)
 
 When you notice oscillations, consider them in this order.
 
 1. **First check whether they come from the numerical settings.** If
-   the oscillations move in time or vanish when dd is divided by 10, they
-   are wet/dry switches of thin water. Set `f_advection_donor = 3` if you
-   have not (Step 4).
-2. **For the oscillations that remain, post-processing (smoothing) of
-   the output is sufficient for the time being.** If they do not harm the
-   water balance of the computation and do not affect the time scales
-   that matter in runoff analysis (tens of minutes and longer), overlay a
-   moving average when plotting. The bundled `Plot_ma.plt` is an example:
-
-   ```bash
-   gnuplot -p -c Plot_ma.plt result
-   ```
-
-   draws the 1-minute values at transect 4 together with their 11-minute
-   moving average. The script is just these few lines:
-
-   ```gnuplot
-   set datafile separator comma
-   N = 11                     # window width (points) = 11 minutes
-   array A[N]
-   ma(x) = (A[(int($0) % N) + 1] = x, $0 < N-1 ? NaN : (sum [i=1:N] A[i]) / N)
-   plot "result/fluxes/flux0004.csv" us 2:3 w l title "1-min values", \
-        "" us ($2 - (N-1)/2.0):(ma($3)) w l lw 2 title "11-min moving average"
-   ```
-
-   It looks intimidating at first, but all it does is "average the most
-   recent N points and draw them". Line by line:
-
-   - `set datafile separator comma` -- the result CSV files are
-     comma-separated, so we tell gnuplot so (the default is whitespace).
-   - `N = 11` -- the width of the averaging window (in points). The
-     output is written every minute, so this is an 11-minute average.
-   - `array A[N]` -- a box (array) holding the most recent N values.
-     Arrays are available in gnuplot 5.2 and later.
-   - `ma(x)` -- the function that computes the average. gnuplot reads
-     the data one row at a time and updates `$0` (the row number,
-     counted from 0), so storing the value x at the position given by
-     the row number modulo N keeps the most recent N points in the
-     array at all times (a ring buffer). Until N points are available
-     (`$0 < N-1`) it returns NaN, so nothing is drawn; after that it
-     returns the sum of the N points divided by N.
-   - `plot ... us 2:3 w l` -- the raw 1-minute values, with column 2 of
-     the CSV (time in min) as x and column 3 (discharge in m³/s) as y,
-     drawn as a line (`w l` = with lines; `us` is short for `using`).
-   - `"" us ($2 - (N-1)/2.0):(ma($3))` -- reads the same file (`""`)
-     again and draws column 3 passed through `ma()`, i.e. the moving
-     average. The "average of the most recent N points" lags by
-     (N-1)/2 minutes, so the x coordinate is shifted back by that much
-     to center it (otherwise the peak would appear at the wrong time).
-
-   Drawing the raw values on top also shows the reader what the
-   smoothing removed.
-
-   ![Same, zoomed](figs/step6_osc_zoom.png)
+   the oscillations move in time, increase or vanish when dd is divided by
+   10, they are wet/dry switches of thin water (running Step 5 with
+   dd = dv = 0.0001 actually increases the small ups and downs on the
+   recessions at transects 3 and 4, and a jump of +68 m³/s in one minute
+   appears at transect 4). Set `f_advection_donor = 3` if you have not
+   (Step 4).
+2. **Small oscillations that remain can often be left as they are.** If
+   they do not harm the water balance of the computation and do not affect
+   the time scales that matter in runoff analysis (tens of minutes and
+   longer), overlaying a moving average when you plot is enough.
 
 3. **For oscillations caused by the terrain, the fundamental remedy is
    improving the terrain data.** Along the channels of a
@@ -739,7 +701,10 @@ When you notice oscillations, consider them in this order.
    gorge, or a reservoir as flat, or where a depression was filled in).
    In the computation, a "pond" several meters deep forms on such a flat
    reach, and the motion of its surface or fluctuating overtopping can
-   seed oscillations. Preprocessing the channels so that the
+   seed oscillations (in the resolution comparison of the supplement, the
+   oscillations at transect 3 of the 50 m grid and at transect 3 of the
+   200 m grid with a 50 m channel width are examples). Preprocessing the
+   channels so that the
    longitudinal profile is monotone (eliminating the flat reaches), or
    moving the channels to subgrid channels (`fn_channel`) with an
    independently specified bed profile, removes the flat ponds
