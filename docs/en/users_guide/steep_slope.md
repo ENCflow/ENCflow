@@ -482,7 +482,10 @@ gradient is used for these reasons:
   At a step the water falls and the shallow-water assumptions do not hold in the first
   place, so the geometry of a thin film on a slope is not applied and the step stays
   as with 1. With the difference along the edge, the friction coefficient of flow down
-  a step of gradient 2 (63°) would be $`5^{13/6} = 33`$ times that of 1.
+  a step of gradient 2 (63°) would be $`5^{13/6} = 33`$ times that of 1. However, at a
+  cell with an inactive neighbour (outside the mask or the domain), the gradient along
+  that axis is the difference toward the valid side only, so a neighbouring step is
+  counted as a gradient ("Steps and free overfalls" in §6.2).
 - **Friction and sediment shear with the same gradient**: the factor of the sediment
   and erosion shear also uses the minmod gradient of the cells, so it is the same bed
   shear as the friction of the momentum equation.
@@ -805,7 +808,14 @@ the maximum velocity V9999) with speeds along the slope needs a conversion.
   crest of a wall) the cell at the brink tends to dry, and the water surface upstream
   can become deeper than the friction-controlled estimate (6.2 mm on a schematic flat
   roof on a 1 m grid, against an estimate of about 4 mm at the centre of the roof from
-  friction; developer.md §93).
+  friction; developer.md §93). At a cell next to an inactive cell, the gradient along
+  that axis is the difference toward the valid side only (a correct estimate on a slope
+  at the edge of the domain), so a step on the other side makes the factor of 2 too
+  large. In a test of a one-cell channel with an inactive cell on one side and a bank
+  5 m higher on the other (Δx = 10 m), the cross gradient was counted as 0.5, and the
+  friction became about 1.45 times and the depth about 1.12 times larger (with banks on
+  both sides the minmod gives a gradient of 0 and there is no effect; the channel with
+  lateral inflow in test/bendloss).
 - **Range of the resistance laws**: 2 evaluates the Manning friction and the
   resistance laws of mixture flows along the slope (§2.3). The building drag and the
   extra term of the wave–current friction (`wv_flow = 2`) get no factor (on the beach

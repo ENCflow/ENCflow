@@ -767,9 +767,15 @@ subroutine m_record_flux(r, p, s)
   character(len=10) :: ffmt
   character(len=80) :: afmt
   type(t_flux) :: flx
-  if (p%initialized) continue  ! 引数未使用の警告を抑制
+  logical :: edge_flux   ! エッジ流量方式(§24.2)を使うか(全ランク同値)
 
   if (r%nfl <= 0) return
+
+  ! エッジ流量方式は ENC だけ。STG(f_gridsystem /= 0)では ENC の状態 opt が未確保
+  ! (参照すると segfault)なので、従来の階段面のセル値の積算を使う(凍結方針 developer.md §7)。
+  ! .and. は短絡評価が保証されないので入れ子にする
+  edge_flux = .false.
+  if (p%f_gridsystem == 0) edge_flux = opt%have_edge_flux
 
   do ifl = 1, r%nfl
     flx = r%flux(ifl)
@@ -790,7 +796,7 @@ subroutine m_record_flux(r, p, s)
       end if
     end do
     ! ENC: 階段面を横切るエッジ流量の符号付き和(§24.2。全ランクで同じ判定)
-    if (flx%mode == 0 .and. opt%have_edge_flux) call flux_edges(flx, s, wk)
+    if (flx%mode == 0 .and. edge_flux) call flux_edges(flx, s, wk)
     call par_reduce_points(wk)
 
     ! --- 以下は従来の逐次ロジック(セル値の参照だけ wk 経由) ---
@@ -807,7 +813,7 @@ subroutine m_record_flux(r, p, s)
     hmax = 0.0
     vmax = 0.0
     b = 0.
-    if (flx%mode == 0 .and. opt%have_edge_flux) then
+    if (flx%mode == 0 .and. edge_flux) then
       ! エッジ流量方式(§24.2): A 側(踏面セルとその短手負側)から B 側
       ! (短手正側)へ向かうエッジ流量の和。符号は踏面係数 ct と同じ規約
       ! (x 長手: +y 向きが sign(Δx)、y 長手: +x 向きが −sign(Δy))。

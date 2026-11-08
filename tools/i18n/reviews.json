@@ -104,20 +104,20 @@
     {
       "source": "docs/users_guide.md",
       "target": "docs/en/users_guide.md",
-      "source_sha256": "b653b25c790137ec9182b792203530f88a4eddc817139159593d1d89d89b95d8",
-      "target_sha256": "e45d8d8d39bbdf8c8b993ce00f0d6846ad8ad7ef2f9b6d9b71e0b7346ebbd999",
-      "reviewer": "Claude (Claude Code session; geomorph chapter split, step 2: mechanism details moved from the chapter to sediment.md (rockfall rules, longshore smoothing/shadow/river-mouth rule, fixation usage, slump blocks, steep-slope bias, dissolution water sources) with compact summaries left in the chapter, and the index entry updated; compared the Japanese source with the English mirror for the moved and rewritten text; the rest of each pair is unchanged since the previous record)",
+      "source_sha256": "e489f36db5a968d96c8a488622553f634ca3b0d69b762f16c29bc8420134af53",
+      "target_sha256": "7f92f9ec7df8c1ad62e8f5c64d558d227bd7be5884f66b15c0aff63ea5931c04",
+      "reviewer": "Claude (Claude Code session; merge of main into the f_advection_donor branch: the branch's f_advection_donor = 3 entries and main's additions (geomorph applications page / f_gravity_correction = 3 comment) combined; Japanese and English compared side by side after the merge)",
       "method": "assistant",
-      "reviewed_on": "2026-11-07"
+      "reviewed_on": "2026-11-08"
     },
     {
       "source": "docs/users_guide/advection.md",
       "target": "docs/en/users_guide/advection.md",
-      "source_sha256": "9cb8fd9fadc7d3cbadd7db78ae680e65bc9642557a653277d17f72135c7e026d",
-      "target_sha256": "d496b7c94341d98473c88ac1d5c5d6b96345b8589707d74fe9666ff24581cca7",
-      "reviewer": "Claude (Claude Code session; reviewed the added link to the new page on numerical diffusion by diagonal-edge fluxes in the Japanese source against the English mirror, 2026-11-05)",
+      "source_sha256": "e4b8743b48797127c8b6d5b1b4c6d6ca963713b5623190d18f338db21dc8498c",
+      "target_sha256": "ac479ba11eaf62dd519b89377c9b1a2681d209350e99ee33ef5ee8a9160a15cb",
+      "reviewer": "Claude (Claude Code session; developer.md section of f_advection_donor renumbered from 100 to 102 to avoid the collision with the 100 and 101 sections on main; references updated in Japanese and English alike)",
       "method": "assistant",
-      "reviewed_on": "2026-11-05"
+      "reviewed_on": "2026-11-08"
     },
     {
       "source": "docs/users_guide/bedmotion.md",
@@ -248,9 +248,9 @@
     {
       "source": "docs/users_guide/encgrid.md",
       "target": "docs/en/users_guide/encgrid.md",
-      "source_sha256": "a7df7508af454383f66a2adabb0a9869430415a9489db033aa55fd219d810ccc",
-      "target_sha256": "e902ea379e72ce5bb444313ead96699de0a7d019551c9b9a9fa7b26bbfbba3f1",
-      "reviewer": "Claude (Claude Code session; checked the corrected sentence against src/m_swflow_enc.f90 and compared both versions)",
+      "source_sha256": "452681d125b3ef1884c17b39776061cd7f23fe7481e0485354c6fac379d6869b",
+      "target_sha256": "174c8958188a71d36b1bdd822dc6776f55e68b47f935db4cec6b5e754ac54340",
+      "reviewer": "Claude (Claude Code session; merged main into the branch and compared both versions of the two changed passages: section 2 passage width and section 9 STG limits)",
       "method": "assistant",
       "reviewed_on": "2026-11-08"
     },
@@ -347,11 +347,11 @@
     {
       "source": "docs/users_guide/io.md",
       "target": "docs/en/users_guide/io.md",
-      "source_sha256": "f66b7ceb4388dcfc3403033fc456e79ee6eb5514d84b7d7b02d8698adb2d5728",
-      "target_sha256": "d81910286154f292d7f9f04f212a038bc7f78be7a4f4d9d232a78c1bcc222cb4",
-      "reviewer": "Claude (Claude Code session; lava temperature mode f_lvtemp, developer.md Sec. 51.7: changed passages compared side by side with the Japanese source, unchanged parts as recorded earlier)",
+      "source_sha256": "169acbb9d2b7c1efda1f457ce9ea622e2523f579121e99f6fdfe36ea79855bdf",
+      "target_sha256": "13ef0b4d81fd8e695485de434a0463e9fa1dc6b197417dbcfec4f73a4f490ded",
+      "reviewer": "Claude (Claude Code session; A0000 row of the output table: ENC only, not written with STG; Japanese and English edited together and read side by side)",
       "method": "assistant",
-      "reviewed_on": "2026-11-04"
+      "reviewed_on": "2026-11-08"
     },
     {
       "source": "docs/users_guide/lavaflow.md",
@@ -410,11 +410,11 @@
     {
       "source": "docs/users_guide/params_index.md",
       "target": "docs/en/users_guide/params_index.md",
-      "source_sha256": "b10794727ab5c8aad9077c329a3db06268ac17a757ad5c62241ff913b598b24b",
-      "target_sha256": "5ad6f10a8196a32aa81c6f173d0cb9d788e3494734f6e3c65cf8a9d47e0e59a0",
-      "reviewer": "Claude (Claude Code session; reviewed the text on the 8-neighbour flow of glaciers and lava (gl_diagratio, lv_diagratio; developer.md sec. 96) in the Japanese source against the English mirror, 2026-11-05)",
+      "source_sha256": "5e32383ff99cd5819ab50e83beaede1f17d0c7dbfee675191c2465e980b0fc4e",
+      "target_sha256": "3397780c48499167f86952ffc05436c1e776ad5fa968add3df441fdb527078e7",
+      "reviewer": "Claude (Claude Code session; f_advection_donor = 3 and p_adv_donor_eps added 2026-11-07, option 2's known changes corrected; Japanese and English edited together and read side by side)",
       "method": "assistant",
-      "reviewed_on": "2026-11-05"
+      "reviewed_on": "2026-11-07"
     },
     {
       "source": "docs/users_guide/passage_width.md",
@@ -464,11 +464,11 @@
     {
       "source": "docs/users_guide/steep_slope.md",
       "target": "docs/en/users_guide/steep_slope.md",
-      "source_sha256": "0c5dc5b2e402527b02e2967311bdd0c5bd80596f203a80270c5daf4516dce22a",
-      "target_sha256": "d6be4ce0cfde55f81f7e3ef35def294849c211c61e53c44c0ca1707332ff8a15",
-      "reviewer": "Claude (Claude Code session; compared the Japanese source with the English mirror for §2.6 (the yield of mixture flows set by gravity uses g′, the start-of-motion threshold is the same as with 2) and the limits of 3 in §6.2 (normal stress of the Coulomb-type yield with g′, no analytic check with debris flows); rest unchanged since the previous record)",
+      "source_sha256": "975eee929d781597a99b20fc9ccaa471975e6b64391224af5511d405da9785cd",
+      "target_sha256": "29ac3859cc786d9f435e2d2464551aa9b83919a4a9968a415bbf2c8fe1567414",
+      "reviewer": "Claude (Claude Code session; lateral-inflow test of test/bendloss: f_gravity_correction = 0 made explicit, current results, pass/fail in Run.sh, and the inactive-neighbour limitation of option 2 in the steep-slope chapter; Japanese and English edited together and read side by side)",
       "method": "assistant",
-      "reviewed_on": "2026-11-06"
+      "reviewed_on": "2026-11-08"
     },
     {
       "source": "docs/users_guide/structure.md",
@@ -482,11 +482,11 @@
     {
       "source": "docs/users_guide/swflow.md",
       "target": "docs/en/users_guide/swflow.md",
-      "source_sha256": "5569d3b14cc779a61b9f0935fee54dc5ed235276baa8e9a6c9dd394ad662bfe9",
-      "target_sha256": "67524dd2e71d45990a64ddf9a1ee1c9714580c7d5fb9a45ceb24d68c52229b7a",
-      "reviewer": "Claude (Claude Code session; reading tips: ex_flux normally 0 and should not keep appearing, compared with the Japanese source, rest unchanged since the previous record)",
+      "source_sha256": "949a546f6b1b156df05dbcec6aaec6e6c2ef4fb58e594e0fcd74612f8dd2ff3d",
+      "target_sha256": "139bc421c7a87b3f5d7f9f4c3fce85fff96f2668155f2b9b3921fb69cbe2d84b",
+      "reviewer": "Claude (Claude Code session; STG grid: domain mask and two or more MPI processes unsupported and stopped at initialization, new test/stg; Japanese and English edited together and read side by side)",
       "method": "assistant",
-      "reviewed_on": "2026-11-05"
+      "reviewed_on": "2026-11-08"
     },
     {
       "source": "docs/users_guide/swi.md",
@@ -644,11 +644,11 @@
     {
       "source": "examples/List_samples/list_enc.txt",
       "target": "examples/List_samples/en/list_enc.txt",
-      "source_sha256": "56fac2e7b99dcd2a61d685f195f0ea4a9a6dc353aa27bf382fb822fecfa97f80",
-      "target_sha256": "e88388646d9c0b862ded0b0eacf1eebe71a75fa95cc5d1134bb0fdf63c4d5fd9",
-      "reviewer": "Claude (Claude Code session; compared the comment of f_gravity_correction describing the experimental value 3 in the Japanese and English samples; values, identifiers and commented-out state unchanged)",
+      "source_sha256": "86906abee3e7f030163241a0fe34cfdbd3729715abc3db675590e3399dbc5a75",
+      "target_sha256": "a6fabd1edc1d64ffe0aaa415ab84e9101308569caaf39ad070e8920c30762988",
+      "reviewer": "Claude (Claude Code session; merge of main into the f_advection_donor branch: the branch's f_advection_donor = 3 entries and main's additions (geomorph applications page / f_gravity_correction = 3 comment) combined; Japanese and English compared side by side after the merge)",
       "method": "assistant",
-      "reviewed_on": "2026-11-06"
+      "reviewed_on": "2026-11-08"
     },
     {
       "source": "examples/List_samples/list_evap.txt",
@@ -3137,11 +3137,11 @@
     {
       "source": "test/README.md",
       "target": "test/README.en.md",
-      "source_sha256": "946196e416cacfd9ead9929dc3b066c47ae489c333fe7c4b26af49f9d11b4a6b",
-      "target_sha256": "212b82f201df147940443790c43c0e28ecf0145fa5549d682d5fc679f68344a6",
-      "reviewer": "Claude (Claude Code session; compared the Japanese source with the English mirror for the slope-parallel evaluation of the resistance laws of mixture flows (developer.md §101): changed values, history notes and analytic formulas; rest unchanged since the previous record)",
+      "source_sha256": "94316119abe4a3e4e8d80a22e2386b15738de9e4dedec00eae5bfc7e4eda2138",
+      "target_sha256": "3bdc9df10711fb9cf42c27ab96712043ca6ca87450c1d5f601746a0bfde9e4b6",
+      "reviewer": "Claude (Claude Code session; STG grid: domain mask and two or more MPI processes unsupported and stopped at initialization, new test/stg; Japanese and English edited together and read side by side)",
       "method": "assistant",
-      "reviewed_on": "2026-11-06"
+      "reviewed_on": "2026-11-08"
     },
     {
       "source": "test/avalanche/README.md",
@@ -3218,11 +3218,11 @@
     {
       "source": "test/bendloss/README.md",
       "target": "test/bendloss/en/README.md",
-      "source_sha256": "74544da4e9ba01e3ba215b162106544f21eaa8b4755b758e9573675284c1ba13",
-      "target_sha256": "ac50f76f4bab1e2511e31d366b20792c4e53d097ea48d886eee6f590966e445b",
-      "reviewer": "Claude (Claude Code session; reviewed the Japanese source against the English mirror after unifying the term passage width / 通過幅 and noting the original paper's term, 2026-11-03)",
+      "source_sha256": "c2d26e734601cec2d931434bddfb5da130362826cb65c29af3053fd49e55bf4e",
+      "target_sha256": "adc03699d9a7a42451eaa00707affa1ee3d8992794e7516b56225289f1bb4518",
+      "reviewer": "Claude (Claude Code session; lateral-inflow test of test/bendloss: f_gravity_correction = 0 made explicit, current results, pass/fail in Run.sh, and the inactive-neighbour limitation of option 2 in the steep-slope chapter; Japanese and English edited together and read side by side)",
       "method": "assistant",
-      "reviewed_on": "2026-11-03"
+      "reviewed_on": "2026-11-08"
     },
     {
       "source": "test/bendloss/figs/bendloss.png",
@@ -3290,11 +3290,11 @@
     {
       "source": "test/chichibu/README.md",
       "target": "test/chichibu/en/README.md",
-      "source_sha256": "6ac1d087d43ccd00db771698b37ac52ee1e6bb4db43c35da19da3fefe806b794",
-      "target_sha256": "a06d581c8688b41ff9f46a86933b2b12ebd1acaf6f59a6c697bd48a4dd9b1aaf",
-      "reviewer": "Claude (Claude Code session; lateral-flux fix of the momentum-conservative advection, §68.42)",
+      "source_sha256": "584730267db2d19dc2e197d70f1123c752e1ed387038c04aaf6a1bada7bd07e2",
+      "target_sha256": "b931a35697ecd7569150d8d131bcc1b214a3fa056a8881ca2f87a44bf0f004a4",
+      "reviewer": "Claude (Claude Code session; developer.md section of f_advection_donor renumbered from 100 to 102 to avoid the collision with the 100 and 101 sections on main; references updated in Japanese and English alike)",
       "method": "assistant",
-      "reviewed_on": "2026-11-01"
+      "reviewed_on": "2026-11-08"
     },
     {
       "source": "test/chichibu/data_chichibu/README.md",
@@ -3803,11 +3803,11 @@
     {
       "source": "test/hillslope/README.md",
       "target": "test/hillslope/en/README.md",
-      "source_sha256": "97c0d4eea2da928244c6d05d61e176f277aed4570f2ca484293435c72471870e",
-      "target_sha256": "da214e7b8176cca4ca534434aac9a91da5c6740ce577b615ab5d641f006ca84b",
-      "reviewer": "Claude (Claude Code session; full-text content and lexical review, no model execution)",
+      "source_sha256": "83e96c5a6e1c5f488c8be5e543fee73fe11b3753ceaf239f72b4b83aa51c8d93",
+      "target_sha256": "431edfc930bcced6a4596667289fb7da046e0dceb459ab17b6e316e5b5759cb8",
+      "reviewer": "Claude (Claude Code session; developer.md section of f_advection_donor renumbered from 100 to 102 to avoid the collision with the 100 and 101 sections on main; references updated in Japanese and English alike)",
       "method": "assistant",
-      "reviewed_on": "2026-10-24"
+      "reviewed_on": "2026-11-08"
     },
     {
       "source": "test/hillslope/figs/plane.png",
@@ -4350,6 +4350,15 @@
       "reviewed_on": "2026-11-05"
     },
     {
+      "source": "test/stg/README.md",
+      "target": "test/stg/en/README.md",
+      "source_sha256": "8f51ac00a5664a377a40d7cdceeb3ac7ce3658943b71996ec315413cf0e96e30",
+      "target_sha256": "a350b747a3b85dcba8619f173a680feb5a4ff329bdfa2ffcdff269b935d28e25",
+      "reviewer": "Claude (Claude Code session; STG grid: domain mask and two or more MPI processes unsupported and stopped at initialization, new test/stg; Japanese and English edited together and read side by side)",
+      "method": "assistant",
+      "reviewed_on": "2026-11-08"
+    },
+    {
       "source": "test/sublattice/README.md",
       "target": "test/sublattice/en/README.md",
       "source_sha256": "3c74294f395b9ad671bf7b8146688011b345d1fec7d87b2e08a10c8c8c819ac0",
@@ -4757,29 +4766,29 @@
     {
       "source": "tutorials/chichibu/Fig_chichibu.plt",
       "target": "tutorials/chichibu/en/Fig_chichibu.plt",
-      "source_sha256": "939b94ea07dcd64562cf8b7e3faf6501f7549e341c15c4aaa692b2ed4677ac07",
-      "target_sha256": "0352a45593cd0783d91e82a2b6a88c7a67fe70506fdc37cd2fca7227d23f11b0",
-      "reviewer": "Claude (Claude Code session; full-text content and lexical review, no model execution)",
+      "source_sha256": "02885e87a34364453bcc9b668362c348c30b64128da37929abc85a077a66390a",
+      "target_sha256": "ff36589aee6e25113d6615fefb731387b7e0cb5aa223251262601400cfbf1a56",
+      "reviewer": "Claude (Claude Code session; 2026-11-08: Step 6 fine-oscillation section reorganised (smoothing example and zoom figure removed; introduction starts from the Step 4/Step 5 comparison and the wet/dry cause), guidance on when to use f_advection_donor = 3; Japanese and English edited together and read side by side)",
       "method": "assistant",
-      "reviewed_on": "2026-10-24"
+      "reviewed_on": "2026-11-08"
     },
     {
       "source": "tutorials/chichibu/Fig_supp.plt",
       "target": "tutorials/chichibu/en/Fig_supp.plt",
-      "source_sha256": "04941d83bc7fd9d0b56929acac1e1ce4e586df2068b2b8405fab78b7731f4f25",
-      "target_sha256": "1c7cb04dd5d4d818d87f6d31389f686cc0b05e4854048b8fbdff8270955eb9c5",
-      "reviewer": "Claude (assistant)",
+      "source_sha256": "c4ace46b44313a82f789284da285dd316c1cc88555241bf1d3dbc5a28eb86c87",
+      "target_sha256": "a16deed5eec7af8c872ecc7e20cc81d711f974d76a2eaeab560a8383cc83348d",
+      "reviewer": "Claude (Claude Code session; Step 6 item 3 of the chichibu tutorial gained the terrain-oscillation figure of supplement transect 3, drawn by the paired JA/EN Fig_supp.plt block 2d from the same results; Japanese and English edited together and read side by side)",
       "method": "assistant",
-      "reviewed_on": "2026-11-01"
+      "reviewed_on": "2026-11-08"
     },
     {
       "source": "tutorials/chichibu/README.md",
       "target": "tutorials/chichibu/en/README.md",
-      "source_sha256": "16fd3d7eaf2d3857d32c84f5c148db51eef3f8c60f6bdfbd279ad8f8ad618966",
-      "target_sha256": "1edc01799968e1209364c42196e9496dee774bff4231e1b4a125e26eb84ad63a",
-      "reviewer": "Claude (Claude Code session; main text (Steps 1-7) recomputed 2026-11-05 with the default f_gravity_correction = 2 after developer.md sec. 94-95: the screen-output rows of Steps 1, 5 and 6, the Step 4 explanation (bumps in the hydrograph, ex_flux now 0, dd is what matters), the Step 4 and Step 5 peak values, the 4-neighbour velocity and the dated note compared with the Japanese source; the supplement is unchanged since the previous record)",
+      "source_sha256": "caf386a23e940300e670043be0a7230d58299f2b1963793b5592f246d98ab70e",
+      "target_sha256": "cf5e3a7d37c577f9f1ec58ebfbaa0015a376936887780d2f9b9b1aa454b19df1",
+      "reviewer": "Claude (Claude Code session; chichibu tutorial: 'edge' explained at its first use in Step 4, and the pointer at the end of Step 5 to the oscillation section of Step 6 removed; Japanese and English edited together and read side by side)",
       "method": "assistant",
-      "reviewed_on": "2026-11-05"
+      "reviewed_on": "2026-11-08"
     },
     {
       "source": "tutorials/chichibu/figs/step1_hend.png",
@@ -4865,110 +4874,110 @@
     {
       "source": "tutorials/chichibu/figs/step4_hydro.png",
       "target": "tutorials/chichibu/en/figs/step4_hydro.png",
-      "source_sha256": "076b7303b861193abfaa3098b50e7a068bc0ec4cc1f42087d91dec2228d7045d",
-      "target_sha256": "0c2fb6ddac3435ec3a2d977c8d5b02faf15ac0b5e7358e9deaa28fe5210bc979",
-      "reviewer": "Claude (Claude Code session; main text recomputed 2026-11-05: both drawn by Fig_chichibu.sh (Fig_chichibu.plt and en/Fig_chichibu.plt, scripts unchanged) from the same results; English figures viewed for step1_hend, step1_hend_raw, step1_hend_4nb (Japanese), step4_hydro, step5_hydro and step6_osc, labels compared with the Japanese figures)",
+      "source_sha256": "20cfbc0afdaeecb8cb7c5e8757834b537a870b7c59d1a0a8ea026eb2d81e2ace",
+      "target_sha256": "a3706e15b4aba0bd66e575b59c5f4fe785666e225666e485c636fb0492700667",
+      "reviewer": "Claude (Claude Code session; tutorial rerun on 2026-11-07 after option 3 gained the continuous lateral-face wet/dry weight: Step 4-7 and supplement numbers, screen samples and the Step 6 fine-oscillation section rewritten; figures regenerated by the paired JA/EN gnuplot scripts and Fig_step7.py from the same results; Japanese and English edited together and read side by side)",
       "method": "assistant",
-      "reviewed_on": "2026-11-05"
+      "reviewed_on": "2026-11-07"
     },
     {
       "source": "tutorials/chichibu/figs/step5_hydro.png",
       "target": "tutorials/chichibu/en/figs/step5_hydro.png",
-      "source_sha256": "65855c027012742c32dabfa4c07f4f1dae4cd905bfa2e08a39792fb5e73fe740",
-      "target_sha256": "20793de63d196e5309289c64bdb322ca47b1f059560add50f7fe3a4553a764b8",
-      "reviewer": "Claude (Claude Code session; main text recomputed 2026-11-05: both drawn by Fig_chichibu.sh (Fig_chichibu.plt and en/Fig_chichibu.plt, scripts unchanged) from the same results; English figures viewed for step1_hend, step1_hend_raw, step1_hend_4nb (Japanese), step4_hydro, step5_hydro and step6_osc, labels compared with the Japanese figures)",
+      "source_sha256": "0325f643f7a32e22562707e7323dda4b1756d9e499d4954b51dc68e911f255dd",
+      "target_sha256": "9d2b3a4155f3855fb9b917462d532a496aa026e72bcce5ed87b85d6a0264e382",
+      "reviewer": "Claude (Claude Code session; tutorial rerun on 2026-11-07 after option 3 gained the continuous lateral-face wet/dry weight: Step 4-7 and supplement numbers, screen samples and the Step 6 fine-oscillation section rewritten; figures regenerated by the paired JA/EN gnuplot scripts and Fig_step7.py from the same results; Japanese and English edited together and read side by side)",
       "method": "assistant",
-      "reviewed_on": "2026-11-05"
+      "reviewed_on": "2026-11-07"
     },
     {
       "source": "tutorials/chichibu/figs/step6_hend.png",
       "target": "tutorials/chichibu/en/figs/step6_hend.png",
-      "source_sha256": "13d3513ef06000dc22957ec5f791774288f3483c209d738bcc393526a15d6aae",
-      "target_sha256": "f9be32cd385cf74291a28010c3a3241acd0206bea1564b99e3904ab71a44db62",
-      "reviewer": "Claude (Claude Code session; main text recomputed 2026-11-05: both drawn by Fig_chichibu.sh (Fig_chichibu.plt and en/Fig_chichibu.plt, scripts unchanged) from the same results; English figures viewed for step1_hend, step1_hend_raw, step1_hend_4nb (Japanese), step4_hydro, step5_hydro and step6_osc, labels compared with the Japanese figures)",
+      "source_sha256": "74902f248c4923aee31e56f31642abe5dffc5a0f1167aa0685a1327b3a64544d",
+      "target_sha256": "98b21a73c90389982be48e1238841fd52d98d9f7d0411937a54d9e140a232ddf",
+      "reviewer": "Claude (Claude Code session; tutorial rerun on 2026-11-07 after option 3 gained the continuous lateral-face wet/dry weight: Step 4-7 and supplement numbers, screen samples and the Step 6 fine-oscillation section rewritten; figures regenerated by the paired JA/EN gnuplot scripts and Fig_step7.py from the same results; Japanese and English edited together and read side by side)",
       "method": "assistant",
-      "reviewed_on": "2026-11-05"
+      "reviewed_on": "2026-11-07"
     },
     {
       "source": "tutorials/chichibu/figs/step6_hend_step5.png",
       "target": "tutorials/chichibu/en/figs/step6_hend_step5.png",
-      "source_sha256": "eb0adfb55b5a113ff5b1b4f04fe00361019640b3e6865b98cef5d4e8b44e5226",
-      "target_sha256": "14ca93be8d982e4c93c16ed33583421211b5c8453f1920f9592df743cbbbeb91",
-      "reviewer": "Claude (Claude Code session; main text recomputed 2026-11-05: both drawn by Fig_chichibu.sh (Fig_chichibu.plt and en/Fig_chichibu.plt, scripts unchanged) from the same results; English figures viewed for step1_hend, step1_hend_raw, step1_hend_4nb (Japanese), step4_hydro, step5_hydro and step6_osc, labels compared with the Japanese figures)",
+      "source_sha256": "9e5cd62adac880a2c410e661e6fa1f91b5958cad1b2e0b47f3e05916f2446986",
+      "target_sha256": "9b82cc947c23f1130e4e6a9e7b742543caaedf9dc492bf19191e983bd19492eb",
+      "reviewer": "Claude (Claude Code session; tutorial rerun on 2026-11-07 after option 3 gained the continuous lateral-face wet/dry weight: Step 4-7 and supplement numbers, screen samples and the Step 6 fine-oscillation section rewritten; figures regenerated by the paired JA/EN gnuplot scripts and Fig_step7.py from the same results; Japanese and English edited together and read side by side)",
       "method": "assistant",
-      "reviewed_on": "2026-11-05"
+      "reviewed_on": "2026-11-07"
     },
     {
       "source": "tutorials/chichibu/figs/step6_osc.png",
       "target": "tutorials/chichibu/en/figs/step6_osc.png",
-      "source_sha256": "4f2c6173b021625c5841952d3bc1825af2ecee5f6e3e78ae9f30df16276e09ef",
-      "target_sha256": "d0a8d7ec0a89fb37ae6355660dcc51da20d8653dfebcc1f75c683b881bf8503a",
-      "reviewer": "Claude (Claude Code session; main text recomputed 2026-11-05: both drawn by Fig_chichibu.sh (Fig_chichibu.plt and en/Fig_chichibu.plt, scripts unchanged) from the same results; English figures viewed for step1_hend, step1_hend_raw, step1_hend_4nb (Japanese), step4_hydro, step5_hydro and step6_osc, labels compared with the Japanese figures)",
+      "source_sha256": "bacb6d64c66acd4ec4a1e508e45717847663c2cc534329e5db954d6b702fdcde",
+      "target_sha256": "6f81a6feac8f9eb67c2dad588d19215911cfcec086b2e2558e9999615434961f",
+      "reviewer": "Claude (Claude Code session; tutorial rerun on 2026-11-07 after option 3 gained the continuous lateral-face wet/dry weight: Step 4-7 and supplement numbers, screen samples and the Step 6 fine-oscillation section rewritten; figures regenerated by the paired JA/EN gnuplot scripts and Fig_step7.py from the same results; Japanese and English edited together and read side by side)",
       "method": "assistant",
-      "reviewed_on": "2026-11-05"
-    },
-    {
-      "source": "tutorials/chichibu/figs/step6_osc_zoom.png",
-      "target": "tutorials/chichibu/en/figs/step6_osc_zoom.png",
-      "source_sha256": "3140d49a6e68703b3cccf3bf831fca4665cc7b0452a05fa00e8f6f556e634699",
-      "target_sha256": "9ed048f98a5ee5161f10fbf4638079921eb4bb08a9cb32fa0257b33d27623460",
-      "reviewer": "Claude (Claude Code session; main text recomputed 2026-11-05: both drawn by Fig_chichibu.sh (Fig_chichibu.plt and en/Fig_chichibu.plt, scripts unchanged) from the same results; English figures viewed for step1_hend, step1_hend_raw, step1_hend_4nb (Japanese), step4_hydro, step5_hydro and step6_osc, labels compared with the Japanese figures)",
-      "method": "assistant",
-      "reviewed_on": "2026-11-05"
+      "reviewed_on": "2026-11-07"
     },
     {
       "source": "tutorials/chichibu/figs/step7_3d.png",
       "target": "tutorials/chichibu/en/figs/step7_3d.png",
-      "source_sha256": "82ddf43d80f938731ae40dcb606e0fe19e4c922ff6425f138acf0c5750fdb91c",
-      "target_sha256": "82ddf43d80f938731ae40dcb606e0fe19e4c922ff6425f138acf0c5750fdb91c",
-      "reviewer": "Claude (Claude Code session; Step 7 recomputed 2026-11-05 and re-rendered by Fig_step7.py (VTK offscreen) from result/vtk of param_step7.txt; the image has no text, so the English figure is the same file; viewed against the previous image, same view and colouring)",
+      "source_sha256": "b122283860b468e89ee2a26d932122649d28f4da11c8cc9be91056b1fdbf5c80",
+      "target_sha256": "b122283860b468e89ee2a26d932122649d28f4da11c8cc9be91056b1fdbf5c80",
+      "reviewer": "Claude (Claude Code session; tutorial rerun on 2026-11-07 after option 3 gained the continuous lateral-face wet/dry weight: Step 4-7 and supplement numbers, screen samples and the Step 6 fine-oscillation section rewritten; figures regenerated by the paired JA/EN gnuplot scripts and Fig_step7.py from the same results; Japanese and English edited together and read side by side)",
       "method": "assistant",
-      "reviewed_on": "2026-11-05"
+      "reviewed_on": "2026-11-07"
     },
     {
       "source": "tutorials/chichibu/figs/step7_simple.png",
       "target": "tutorials/chichibu/en/figs/step7_simple.png",
-      "source_sha256": "e7a7ce3a22fceae13296c8da11025e2ff23728ba841a484a48bcbbece4098463",
-      "target_sha256": "e7a7ce3a22fceae13296c8da11025e2ff23728ba841a484a48bcbbece4098463",
-      "reviewer": "Claude (Claude Code session; Step 7 recomputed 2026-11-05 and re-rendered by Fig_step7.py (VTK offscreen) from result/vtk of param_step7.txt; the image has no text, so the English figure is the same file; viewed against the previous image, same view and colouring)",
+      "source_sha256": "97f7e82159ff472a4c8d491f0d8a5e30897888ede83b5f11c2193de34bbfda8f",
+      "target_sha256": "97f7e82159ff472a4c8d491f0d8a5e30897888ede83b5f11c2193de34bbfda8f",
+      "reviewer": "Claude (Claude Code session; tutorial rerun on 2026-11-07 after option 3 gained the continuous lateral-face wet/dry weight: Step 4-7 and supplement numbers, screen samples and the Step 6 fine-oscillation section rewritten; figures regenerated by the paired JA/EN gnuplot scripts and Fig_step7.py from the same results; Japanese and English edited together and read side by side)",
       "method": "assistant",
-      "reviewed_on": "2026-11-05"
+      "reviewed_on": "2026-11-07"
     },
     {
       "source": "tutorials/chichibu/figs/supp_hend.png",
       "target": "tutorials/chichibu/en/figs/supp_hend.png",
-      "source_sha256": "68ed7af6ecf4b18063f5a69e63d77269c8ecf2d2b45607674ff146edac7d331f",
-      "target_sha256": "c431cc5c4a0bd068dfc52d817e850dbd56c7106fcaaf271b3670a183f4d391cc",
-      "reviewer": "Claude (assistant)",
+      "source_sha256": "23a6fb943e2e075b396869ef7f6772da17db2b689e01fdff5db0e4c156b7b969",
+      "target_sha256": "eb108e559dd197446d68f3f1825740d6acf08d8a4606f1dc733b9aaa09da8460",
+      "reviewer": "Claude (Claude Code session; tutorial rerun on 2026-11-07 after option 3 gained the continuous lateral-face wet/dry weight: Step 4-7 and supplement numbers, screen samples and the Step 6 fine-oscillation section rewritten; figures regenerated by the paired JA/EN gnuplot scripts and Fig_step7.py from the same results; Japanese and English edited together and read side by side)",
       "method": "assistant",
-      "reviewed_on": "2026-11-01"
+      "reviewed_on": "2026-11-07"
     },
     {
       "source": "tutorials/chichibu/figs/supp_hydro.png",
       "target": "tutorials/chichibu/en/figs/supp_hydro.png",
-      "source_sha256": "b206400fe1a6b9a84d651fc8932aadcd5ef1bfd6258a32ec4ea557ac44e9fcac",
-      "target_sha256": "24a56cc0da6e3985882e7d402908b631a0b7384a6fce0bb945796b903fb2f594",
-      "reviewer": "Claude (assistant)",
+      "source_sha256": "fea05f3a02ea40bbcfb431df6256942edeaba46723124fe7cef671cb86e9912e",
+      "target_sha256": "1eef673bad16f862adab861be1d7a4ef343c7eafcefb90ad18e4fd2fde157621",
+      "reviewer": "Claude (Claude Code session; tutorial rerun on 2026-11-07 after option 3 gained the continuous lateral-face wet/dry weight: Step 4-7 and supplement numbers, screen samples and the Step 6 fine-oscillation section rewritten; figures regenerated by the paired JA/EN gnuplot scripts and Fig_step7.py from the same results; Japanese and English edited together and read side by side)",
       "method": "assistant",
-      "reviewed_on": "2026-11-01"
+      "reviewed_on": "2026-11-07"
     },
     {
       "source": "tutorials/chichibu/figs/supp_hydro_adv.png",
       "target": "tutorials/chichibu/en/figs/supp_hydro_adv.png",
-      "source_sha256": "9b76f09415caa97cdc5704492ebfde980afde46ae14863b0dca3df119ab91820",
-      "target_sha256": "f2adb644dd3a8ebb06621222d018b47440b3ac30c75ebc2f984b63c62e5482c2",
-      "reviewer": "Claude (assistant)",
+      "source_sha256": "eac8b26db1ce4fb4bbdfb3294ceff228b3cbb60d53dd20996afc9118b93da5de",
+      "target_sha256": "8dc069e1e833445c47ca95a8d136e692edabd2a0a9b6db8a1545a227340bc70f",
+      "reviewer": "Claude (Claude Code session; tutorial rerun on 2026-11-07 after option 3 gained the continuous lateral-face wet/dry weight: Step 4-7 and supplement numbers, screen samples and the Step 6 fine-oscillation section rewritten; figures regenerated by the paired JA/EN gnuplot scripts and Fig_step7.py from the same results; Japanese and English edited together and read side by side)",
       "method": "assistant",
-      "reviewed_on": "2026-11-01"
+      "reviewed_on": "2026-11-07"
     },
     {
       "source": "tutorials/chichibu/figs/supp_hydro_w50.png",
       "target": "tutorials/chichibu/en/figs/supp_hydro_w50.png",
-      "source_sha256": "6b1b3303a1074e5ae3f23f2a09c72e5ec77de2f03b2ba8dac655c875bc4fe859",
-      "target_sha256": "f1646674b721f4f6dd5aa85bcb53277c68f04505344e21328ce966679cdf35fc",
-      "reviewer": "Claude (assistant)",
+      "source_sha256": "dc0b0cacfe5c09c4689c5305b4f4a3b7ca3172fd78132198987b0b62c8b7a37c",
+      "target_sha256": "0f62630d72de24c78b2093c82bfcd95850af074ec158b0b48e36671a5c79b272",
+      "reviewer": "Claude (Claude Code session; tutorial rerun on 2026-11-07 after option 3 gained the continuous lateral-face wet/dry weight: Step 4-7 and supplement numbers, screen samples and the Step 6 fine-oscillation section rewritten; figures regenerated by the paired JA/EN gnuplot scripts and Fig_step7.py from the same results; Japanese and English edited together and read side by side)",
       "method": "assistant",
-      "reviewed_on": "2026-11-01"
+      "reviewed_on": "2026-11-07"
+    },
+    {
+      "source": "tutorials/chichibu/figs/supp_t3_osc.png",
+      "target": "tutorials/chichibu/en/figs/supp_t3_osc.png",
+      "source_sha256": "0daa2cc2f2b27e5b7b4af0b727a543b82607f512f25423dc9b2faa3215d548e4",
+      "target_sha256": "30e0db80a9361b729e615f2626b51ebd6ecd3b10f15bc7b3665cb05008fa3b87",
+      "reviewer": "Claude (Claude Code session; Step 6 item 3 of the chichibu tutorial gained the terrain-oscillation figure of supplement transect 3, drawn by the paired JA/EN Fig_supp.plt block 2d from the same results; Japanese and English edited together and read side by side)",
+      "method": "assistant",
+      "reviewed_on": "2026-11-08"
     },
     {
       "source": "tutorials/chichibu/figs/supp_transects.png",
@@ -5009,65 +5018,65 @@
     {
       "source": "tutorials/chichibu/param_step4.txt",
       "target": "tutorials/chichibu/en/param_step4.txt",
-      "source_sha256": "e85d6143a65cb86414dafbaad2f9ff1c2cc9e0048614eaaa1be5298a7d40c1e4",
-      "target_sha256": "cabb9ae705b9ff2ab65c49b2ce32ca01e88d828635a34458498d6abacf531a3e",
-      "reviewer": "Claude (Claude Code session; lateral-flux fix of the momentum-conservative advection, §68.42)",
+      "source_sha256": "8c98d980c1360212f9dd5594a84415542365dd1c68ad56511a70ab38db8fa864",
+      "target_sha256": "4e946d4af205b9bede6e6490d0ef37eb6ed088c444a787e29a34ff8674c87ce0",
+      "reviewer": "Claude (Claude Code session; chichibu tutorial for beginners: Step 4 remedy paragraph shortened to two ideas with the setting introduced afterwards, settings comment of f_advection_donor reworded in param_step4-7 (values unchanged), Step 6 item 3 links the subgrid channel to the channel chapter; Japanese and English edited together and read side by side)",
       "method": "assistant",
-      "reviewed_on": "2026-11-01"
+      "reviewed_on": "2026-11-08"
     },
     {
       "source": "tutorials/chichibu/param_step5.txt",
       "target": "tutorials/chichibu/en/param_step5.txt",
-      "source_sha256": "6f2c6ba88310f4cb926aceb3f5a3747659a8f8e8862abf2304ed1070f65c9a69",
-      "target_sha256": "888c50fcd32667d99902d9dce175e629ad776e835e1bd3f47f875fe92f8e08d5",
-      "reviewer": "Claude (Claude Code session; lateral-flux fix of the momentum-conservative advection, §68.42)",
+      "source_sha256": "1ff205848822697f0c615010e8e082def9bb96125f2c503fae6eec2a2b3acc31",
+      "target_sha256": "9dcdea5fd215df486b087184fffccfff1ec9ad0aac86f421f8b1aafc9a78b7bb",
+      "reviewer": "Claude (Claude Code session; chichibu tutorial for beginners: Step 4 remedy paragraph shortened to two ideas with the setting introduced afterwards, settings comment of f_advection_donor reworded in param_step4-7 (values unchanged), Step 6 item 3 links the subgrid channel to the channel chapter; Japanese and English edited together and read side by side)",
       "method": "assistant",
-      "reviewed_on": "2026-11-01"
+      "reviewed_on": "2026-11-08"
     },
     {
       "source": "tutorials/chichibu/param_step6.txt",
       "target": "tutorials/chichibu/en/param_step6.txt",
-      "source_sha256": "903ac083183cdcc99043a2373b04058d1f80faaa1272345ffb39ac7ebd24da0a",
-      "target_sha256": "467735f2964693287e3e92d8c38fe68830e0fa25919aea43730bbb98ea3315f9",
-      "reviewer": "Claude (Claude Code session; lateral-flux fix of the momentum-conservative advection, §68.42)",
+      "source_sha256": "82f66e9cbbd6c287d6cb4ca1100100f80bb24524e7ed8505637a700f427bc4a2",
+      "target_sha256": "5384728b8c82a642a0298836f47d13ef1f0dedf619d7b46bfa2dd29f0ab75431",
+      "reviewer": "Claude (Claude Code session; chichibu tutorial for beginners: Step 4 remedy paragraph shortened to two ideas with the setting introduced afterwards, settings comment of f_advection_donor reworded in param_step4-7 (values unchanged), Step 6 item 3 links the subgrid channel to the channel chapter; Japanese and English edited together and read side by side)",
       "method": "assistant",
-      "reviewed_on": "2026-11-01"
+      "reviewed_on": "2026-11-08"
     },
     {
       "source": "tutorials/chichibu/param_step7.txt",
       "target": "tutorials/chichibu/en/param_step7.txt",
-      "source_sha256": "8a36d375aabc5e4361042d0e61a8de68e0bf3451eb1e624e2097d897fa197a21",
-      "target_sha256": "686f3143617fb52efad5d1b36275a1602acbd72774037368bd62c9309abfc179",
-      "reviewer": "Claude (Claude Code session; lateral-flux fix of the momentum-conservative advection, §68.42)",
+      "source_sha256": "f308c917e3351eedf7ee3e1b5be7a8d9dbdd2daecb9996e8fff937a9510e491c",
+      "target_sha256": "9a0a3605346d1b2da022b99a42e8e213ad5b206466bb2b0ad373b0f4c532f67b",
+      "reviewer": "Claude (Claude Code session; chichibu tutorial for beginners: Step 4 remedy paragraph shortened to two ideas with the setting introduced afterwards, settings comment of f_advection_donor reworded in param_step4-7 (values unchanged), Step 6 item 3 links the subgrid channel to the channel chapter; Japanese and English edited together and read side by side)",
       "method": "assistant",
-      "reviewed_on": "2026-11-01"
+      "reviewed_on": "2026-11-08"
     },
     {
       "source": "tutorials/chichibu/param_supp_100m.txt",
       "target": "tutorials/chichibu/en/param_supp_100m.txt",
-      "source_sha256": "cc6558e6a09d7cef1172eaef97e5fb0a6b783f008646fea6b562bc57a8dc6518",
-      "target_sha256": "46123f760b0365b189d4c13eaf5c064e38da11a3d2c875ed973cd5befd9de705",
-      "reviewer": "Claude (Claude Code session; lateral-flux fix of the momentum-conservative advection, §68.42)",
+      "source_sha256": "88f077e044ce1a0f890233e9d4e4babff1cd923856eb5dd208272537d574f0fd",
+      "target_sha256": "8c19de92454aa1dd33b46f781380b9ddc522c0ee5ccd4f95857af2c5c72d332f",
+      "reviewer": "Claude (Claude Code session; tutorials/chichibu moved from f_advection_donor = 2 to 3 on 2026-11-07: headers and the &list_enc line changed in both languages, values identical, comments compared line by line)",
       "method": "assistant",
-      "reviewed_on": "2026-11-01"
+      "reviewed_on": "2026-11-07"
     },
     {
       "source": "tutorials/chichibu/param_supp_200m.txt",
       "target": "tutorials/chichibu/en/param_supp_200m.txt",
-      "source_sha256": "31cb4d116bf4bb413757dddff6dad936116a8f78e364c5e55e96629784060a14",
-      "target_sha256": "bc3ec4c5b7d95b10542f25c847b7ce6c4cbede71b1a66b010e2086f91841e30f",
-      "reviewer": "Claude (Claude Code session; lateral-flux fix of the momentum-conservative advection, §68.42)",
+      "source_sha256": "6cee17ba6faeb3bc87f8cad3aa8437fa25c7901c9fcb1cc9299bab2dafd770d2",
+      "target_sha256": "39d7cbc692da825cb0e83b41109b4f6fa766fd19cd1cbf46f59493068792ce54",
+      "reviewer": "Claude (Claude Code session; tutorials/chichibu moved from f_advection_donor = 2 to 3 on 2026-11-07: headers and the &list_enc line changed in both languages, values identical, comments compared line by line)",
       "method": "assistant",
-      "reviewed_on": "2026-11-01"
+      "reviewed_on": "2026-11-07"
     },
     {
       "source": "tutorials/chichibu/param_supp_50m.txt",
       "target": "tutorials/chichibu/en/param_supp_50m.txt",
-      "source_sha256": "d17d9721e2acd8bacc03574e903693b9943aa01dcce621e64f197d3697699ba4",
-      "target_sha256": "5cab1ff51f4b345461b5b6e93c3bdea1948223422acb3681f8944ed68a88c74e",
-      "reviewer": "Claude (Claude Code session; lateral-flux fix of the momentum-conservative advection, §68.42)",
+      "source_sha256": "d5c2ed5d7565f8bfdda6bb0afd4c89cb182f40d274a920896aa12a82f5bc0474",
+      "target_sha256": "e896e89cda1e80a7e94cce6c30598ff3b5f246cd5d6b79d2c40c0b583256661f",
+      "reviewer": "Claude (Claude Code session; tutorials/chichibu moved from f_advection_donor = 2 to 3 on 2026-11-07: headers and the &list_enc line changed in both languages, values identical, comments compared line by line)",
       "method": "assistant",
-      "reviewed_on": "2026-11-01"
+      "reviewed_on": "2026-11-07"
     },
     {
       "source": "tutorials/wave/README.md",

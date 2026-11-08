@@ -395,6 +395,14 @@ east/west and north/south faces, the classical finite-difference
 arrangement[^iwasa80]. It is kept for comparison with the ENC grid and does
 not support restart, sub-grid channels, internal structures, the
 non-hydrostatic correction or the newer advection schemes.
+Nor does it support the domain mask (when `f_masktype > 0` leaves cells
+outside the domain) or two or more MPI processes; these stop the run at
+initialization. STG decides where to compute from the land cells of the sea
+mask (`fn_sw`) and never reads the domain mask, and it does not exchange
+halos between bands (without the stop it would compute outside the mask or
+lose water at the band boundaries). Operation without a mask on one process
+is checked through the conservation of the continuity equation by
+[test/stg](../../../test/stg/en/README.md).
 
 ## 10. Parameters
 

@@ -122,7 +122,12 @@ subroutine output_state(o, p, g, s, k)
   ! 分布出力の柱状量(H・Hs・cq 等)をセル平均・体積・濡れ面積に換算する
   ! 係数。どちらかが有効なときだけ出す = それ以外は全セル 1 で情報がない。
   ! 断面形 σ の体積比は水深依存なので含めない。users_guide/io.md)
-  if (k == 0 .and. (g%gv_active .or. chn%have_width)) call output_areafactor(o, p, g, s)
+  ! STG(f_gridsystem /= 0)では出さない: 河道の状態 chn は ENC の init だけが確保する
+  ! allocatable で、STG では未確保(参照すると segfault。凍結方針 developer.md §7)。
+  ! Fortran の .and. は短絡評価が保証されないので入れ子にする。条件は全ランク同値
+  if (k == 0 .and. p%f_gridsystem == 0) then
+    if (g%gv_active .or. chn%have_width) call output_areafactor(o, p, g, s)
+  end if
   if (p%f_out_h > 0) call output_matrix(o, p, g, "H", s%h, k)          ! 水深
   if (p%f_out_e > 0) call output_matrix(o, p, g, "E", s%e, k)          ! 水位
   if (p%f_out_u > 0) call output_matrix(o, p, g, "u", s%u, k)          ! x方向流速

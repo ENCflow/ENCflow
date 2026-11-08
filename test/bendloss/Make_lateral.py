@@ -44,6 +44,7 @@ base = """&list_sysparam
 /
 &list_enc
   f_advection_scheme = {s}
+  f_gravity_correction = 0   ! 解析解(Chow)と同じ水平のマニングの摩擦で比べる(README)
   f_hcap_upwind = 1
   f_opening_dynamic = 1
   f_dry_head_cap = 1

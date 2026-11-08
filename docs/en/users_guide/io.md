@@ -177,7 +177,7 @@ lists the main outputs.
 | — (with fn_snow) | — | Sw | snow water equivalent SWE (mm) (automatic) |
 | — (with fn_swi) | — | Swi / Swi9999 / Swit9999 | Soil Water Index (mm) distribution, period maximum, and its time ([Soil Water Index](swi.md); automatic) |
 | — (always) | — | X0000 | domain mask (0: outside, 1: land, 2: sea); for visualization and checking the active domain in GIS |
-| — (when the void ratio fn_gv or a channel width is active) | — | A0000 | effective area factor = void ratio gv × channel area fraction f_w (0–1); the factor that converts column quantities to cell averages, volumes and wet area (see "Reading cells with channel width or buildings" below) |
+| — (when the void ratio fn_gv or a channel width is active; ENC only) | — | A0000 | effective area factor = void ratio gv × channel area fraction f_w (0–1); the factor that converts column quantities to cell averages, volumes and wet area (see "Reading cells with channel width or buildings" below). Not written with STG (f_gridsystem = 1) |
 
 `FILENUMBER.csv` maps raster output numbers to calendar time, `t(s)`
 and step `it`. Its `9999` row records the final time when statistics were

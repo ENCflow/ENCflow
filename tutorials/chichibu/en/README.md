@@ -15,11 +15,13 @@ computation with real terrain data, in the following order.
 - **Step 2**: GeoTIFF input/output, channel mask and roughness
 - **Step 3**: Measurement (probes and flux transects) and distributed
   output
-- **Step 4**: Parameter tuning -- how to read ex_flux, threshold depth
+- **Step 4**: Tuning the numerical settings -- how to read ex_flux, the
+  threshold depth dd, what the bumps on the recession limb are and how
+  to remove them
 - **Step 5**: Rainfall interception and subsurface infiltration (bucket
   model), the three water-storage columns
-- **Step 6**: Boundary condition at the catchment outlet; understanding
-  discharge oscillations caused by real terrain data
+- **Step 6**: Boundary condition at the catchment outlet; reading and
+  dealing with fine oscillations in the 1-minute values
 - **Step 7**: 3D visualization (animation) with ParaView
 
 We assume you have completed the [wave tutorial](../../wave/en/README.md)
@@ -90,21 +92,6 @@ time, progress, S(m), Runge, ex_flux, Cn_max, h_max(m), V_max(m/s)
   6:00:00.00 100.0%    0.1000   0.5%      0    0.5131   29.6515    4.1987
 main: program terminated normally
 ```
-
-> **Note (2026-10-31)**: on the day f_opening_dynamic 3 became the default, Step 5, which closes the
-> basin outlet and pools water deeply, was found to stop at the edge of the pool at 5:14 h, and the
-> `param_*.txt` of this tutorial temporarily set 2 explicitly. The cause was not the treatment of the
-> openings but a mass inconsistency of the lateral face flux of the momentum-conservative advection,
-> which assumed 2.4 times the real flux on faces whose diagonal openings are blocked (2 only delays the
-> same growth); it was fixed the same day (developer.md §68.42). The parameter files now keep the
-> defaults, and the numbers and figures of the text were regenerated with the corrected defaults.
->
-> **Note (2026-11-05)**: the numbers and figures of the main text were regenerated after the default
-> of the steep-slope gravity correction became 2 (friction along the slope;
-> [steep-slope gravity correction](../../../docs/en/users_guide/steep_slope.md)) and the treatment of
-> the outflow of a cell was fixed (developer.md §94, §95, in Japanese; the limiting of excessive
-> outflow, ex_flux, is now normally 0). Since ex_flux is now 0 in every step, Step 4 was rewritten to
-> start from the bump in the hydrograph.
 
 The contents of `en/param_step1.txt` (the full file, apart from the
 title comment at the top) are shown below. It is structured almost
@@ -432,59 +419,114 @@ the variable as its first argument, so `gnuplot -c Plot_step1.plt V`
 (or `Q`) shows the time evolution of the velocity or the discharge
 with the same four-time layout.
 
-## Step 4: Parameter tuning
+## Step 4: Tuning the numerical settings
 
 Looking closely at the transect hydrographs of Step 3 (the figure of
 Step 3), the hydrograph of transect 4 has **spurious bumps** on the
-recession limb at t ≈ 232 min and 316 min (at 232 min it jumps by about
-450 m^3/s within a minute and settles over about 10 minutes). The
-ex_flux column of the screen output counts the events where "the
+recession limb at t ≈ 232 min and 316 min (at 232 min it jumps by more
+than 400 m^3/s within a minute and settles over about 10 minutes). The
+ex_flux column of the screen output is a guide for diagnosing a lack of
+accuracy or a rough computation. It counts the events where "the
 outflow computed from the momentum equation was about to exceed the
-water volume of the cell and was therefore limited". It is a safety
-device, so mass is conserved; it is normally 0, and repeated counts
-are a sign that the computation is getting rough. In Step 3, however, ex_flux stays 0, so the bumps cannot be
-noticed from the screen output: it is important to plot the
-hydrographs and check. In this case the usual remedies -- reducing the
-time step dt, reducing the adaptive Runge-Kutta threshold
-`p_adprunge_thresh` -- do not help. What worked was **reducing the
-threshold depth dd** (the virtual depth dv is reduced along with it).
+water volume of the cell and was therefore limited"; it is a safety
+device, so mass is conserved, and it is normally 0. Repeated counts are
+a sign that the computation is getting rough. This time, however,
+ex_flux stays 0, so the bumps cannot be noticed from the screen output.
+It is important to plot the hydrographs and check them.
+
+In this case the usual remedies -- reducing the time step dt, reducing
+the threshold of the adaptive Runge-Kutta, `p_adprunge_thresh` -- do
+not help. Other parameters that concern the accuracy of the computation
+are the **threshold depth dd** and the **virtual depth dv**
+(`&list_sysparam`). dd is the depth below which a cell counts as dry:
+an edge (the boundary between two cells) whose two sides are both
+shallower than dd moves no water (default 0.001 m = 1 mm). dv is the lower bound of the depth used in
+the friction term, which keeps the friction from blowing up in very
+shallow water (default 0.001 m). Here, reducing dd to 1/10, 0.0001 m
+(together with dv), removes the bumps within the 6-hour run (the gray
+dashed line in the figure below). But this does not remove the cause;
+it only **postpones** it. The real cause lies elsewhere.
+
+- After the rain, a thin film of water remains on top of the river
+  banks. In the default computation of the advection term, where the
+  main flow turns, this film can put a **strong brake** on the main flow
+  (the mechanism is explained in [section 4.4 of the advection chapter
+  of the users guide](../../../docs/en/users_guide/advection.md)).
+- While the brake keeps acting, water piles up in the river as behind a
+  dam.
+- The film thins slowly after the rain and at some point drops below
+  dd. At that moment the film counts as "dry", the brake is released,
+  and the water that was held back is let go all at once. That is the
+  bump.
+- Reducing dd only delays the release of the brake (beyond the end of
+  the run); the brake itself remains, and so does the held-back peak
+  discharge.
+
+The bumps concentrate on the recession limb because, after the rain,
+the films on the slopes and banks all thin slowly together and cross dd
+one after another at many places. The wet/dry test of a thin layer of
+water acting as a switch in the computation of a deep flow next to it
+is a structure not specific to ENCflow: it can occur in 2D models in
+general.
+
+The remedy is to keep the wet/dry test of thin water from acting as a
+switch on the flow next to it. First, the cells used in the computation
+of the advection term are chosen: a cell with a thin film that carries
+almost no water is not used for the main flow. This removes the brake.
+Further, so that using or not using a cell does not flip on and off
+abruptly, a film is not dropped the moment it falls below dd; its
+influence is weakened little by little as it becomes thinner. As a
+result no bump arises, and the result hardly changes with dd any more.
+
+To use this treatment, add `fn_enc` to `&list_sysparam` and set
+`f_advection_donor = 3` in `&list_enc` (for the details, see
+[section 4.4 of the advection chapter of the users guide](../../../docs/en/users_guide/advection.md)).
+dd and dv stay at their defaults.
 
 ```
 &list_sysparam
   ...
-  dd = 0.0001                ! water movement is computed above this depth (threshold depth)
-  dv = 0.0001                ! depths below this are forced to this value (virtual depth)
+  fn_enc     = "-"           ! ENC settings file
+/
+
+&list_enc
+  f_advection_donor = 3      ! upwind momentum donors of the advection term (3: keep thin films carrying almost no water from braking the main flow)
 /
 ```
 
-The defaults (both 0.001) are reduced to 1/10. dd is the depth below
-which an edge with both sides shallower does not move water, and it
-decides how the thin films spread over the slopes after the rain are
-treated. The smaller these values, the more carefully thin films of
-water are treated, which improves accuracy; but there are also cases
-where more wetted cells mean longer computation time. Choose them as a
-balance of accuracy and speed (in this example it is dd that matters:
-reducing dd alone removes the bumps, reducing dv alone does not).
+![Step 4: effect of switching the momentum donors of the advection term](figs/step4_hydro.png)
 
-One more note: earlier versions of this tutorial also lowered the
-upwind fraction of the advection term, `p_adv_upwind_index`, at this
-point. With the current default advection scheme (momentum-conserving
-with MUSCL, `f_advection_scheme = 3`) this coefficient is not used (it
-belongs to scheme 1 only), so no upwinding adjustment is needed.
-Solving with the diffusive wave (`f_govequation = 1` in
-`&list_sysparam`), which drops the advection term altogether, remains
-an option ([the shallow-water flow chapter of the users
-guide](../../../docs/en/users_guide/swflow.md)).
+After the change (`en/param_step4.txt`), the bumps at 232 and 316
+minutes disappear and the waveform becomes smooth. At the same time,
+because the artificial brakes that acted at many places along the main
+channel are gone, the peak discharge becomes about 15% larger (5,546 to
+6,353 m^3/s) and the peak arrives about 20 minutes earlier.
+The dashed line with reduced dd shows no bumps but is the same
+held-back waveform as Step 3. In real-terrain computations on
+coarse grids, **artifacts of the numerical settings** ride on the
+waveform like this. Before tuning roughness against observed
+hydrographs, it is important to remove them.
 
-![Step 4: effect of parameter tuning](figs/step4_hydro.png)
+`f_advection_donor = 3` is optional; the default is 0. Set it in cases
+where the river is narrow compared with the grid (one-cell-wide
+channels) and the flow turns at many places without following the grid
+directions -- narrow mountain valleys or meandering channels computed on
+a coarse grid, for instance. Bumps on the recession limb of the
+hydrograph, or a result that changes with dd, are the signs. In wide
+flows or on smooth terrain the result changes little (about 1%). Since
+it is a change that moves the peak by 10 to 20%, judge which is closer
+to reality against observations.
 
-After tuning (`en/param_step4.txt`), the spurious bumps that appeared on
-the recession limb at t ≈ 232 min and 316 min disappear and the
-waveform becomes smooth. The peak discharge differs by about 3% (5,546
-to 5,391 m^3/s). In real-terrain computations on coarse
-grids, **artifacts of the numerical settings** ride on the waveform
-like this. Before tuning roughness against observed hydrographs, it is
-important to remove them.
+Note that the diffusive wave (`f_govequation = 1` in `&list_sysparam`)
+has no advection term, so it does not show these bumps. But the
+diffusive wave neglects the inertia of the water: it cannot represent
+places where the flow accelerates or decelerates sharply (bores,
+hydraulic jumps, the front of an inundation, run-up), and the arrival
+time and the peak of the flood wave differ from those of the dynamic
+wave. Keep the dynamic wave for inundation computations with wetting
+and drying, and use the diffusive wave only for sensitivity experiments
+and comparisons with other models ([the shallow-water flow chapter of
+the users guide](../../../docs/en/users_guide/swflow.md)).
 
 ## Step 5: Rainfall interception and subsurface infiltration
 
@@ -523,11 +565,11 @@ changes from one column to **three columns**.
 ```
 time, progress, S_surf(m), S_grnd(m), S_total(m), Runge, ex_flux, Cn_max, h_max(m), V_max(m/s)
   0:00:00.00   0.0%    0.0000     0.0000     0.0000    0.0%      0    0.0000    0.0000    0.0000
-  0:30:00.00   8.3%    0.0365     0.0024     0.0389   97.7%      0    0.2666    1.0016    6.8056
-  1:00:00.00  16.7%    0.0751     0.0049     0.0800    5.7%      0    0.4729    5.3407   13.2770
-  1:30:00.00  25.0%    0.0728     0.0072     0.0800    2.8%      0    0.5341    7.2748   13.5623
+  0:30:00.00   8.3%    0.0365     0.0024     0.0389   97.7%      0    0.2677    1.0142    6.8382
+  1:00:00.00  16.7%    0.0751     0.0049     0.0800    5.8%      0    0.5546    5.5107   14.2646
+  1:30:00.00  25.0%    0.0728     0.0072     0.0800    2.8%      0    0.6010    5.8559   15.3383
   ...
-  6:00:00.00 100.0%    0.0694     0.0106     0.0800    0.0%      0    0.5051   28.7403    5.4047
+  6:00:00.00 100.0%    0.0694     0.0106     0.0800    0.1%      2    0.5057   28.8202    5.2103
 ```
 
 - `S_surf` is surface water, `S_grnd` is subsurface storage, and
@@ -538,16 +580,17 @@ time, progress, S_surf(m), S_grnd(m), S_total(m), Runge, ex_flux, Cn_max, h_max(
   moves between the surface and the subsurface.
 - S_surf decreases and S_grnd increases over time -- you can read the
   progress of infiltration directly.
+- ex_flux shows 2 to 3 limitations in the rows at 3 and 6 hours. They do
+  not occur continuously and mass is conserved, so this much is no
+  problem (as explained in Step 4, continuous occurrence is the sign of
+  a rough computation).
 
 ![Step 5: effect of interception and infiltration](figs/step5_hydro.png)
 
-In the hydrograph the peak discharge drops by about a quarter (5,391
-to 4,109 m^3/s). Interception cuts the total by 20%, and infiltration keeps
+In the hydrograph the peak discharge drops by about a third (6,353
+to 4,036 m^3/s). Interception cuts the total by 20%, and infiltration keeps
 sucking up the thinly spread hillslope water, so both the rising limb
 and the recession drop.
-
-One more change catches the eye: **fine oscillations** (spikes) appear
-on the hydrograph. They are explained in the second half of Step 6.
 
 ## Step 6: Boundary condition at the catchment outlet
 
@@ -585,13 +628,13 @@ immediately). Running it gives:
 ```
 time, progress, S_surf(m), S_grnd(m), S_total(m), Runge, ex_flux, Cn_max, h_max(m), V_max(m/s)
   ...
-  3:00:00.00  50.0%    0.0611     0.0093     0.0704    0.1%      0    0.5197    6.7430   14.4092
-  6:00:00.00 100.0%    0.0229     0.0106     0.0336    0.0%      0    0.3169    3.7250    6.8670
+  3:00:00.00  50.0%    0.0578     0.0092     0.0670    0.1%      3    0.4947    6.8672   12.5859
+  6:00:00.00 100.0%    0.0220     0.0106     0.0326    0.0%      2    0.3073    3.5359    6.5963
 ```
 
 - S_total now decreases -- that is the water that left the system
   through the outlet.
-- h_max drops from 30 m to 3.7 m. The disappearance of the ponding can
+- h_max drops from 30 m to 3.5 m. The disappearance of the ponding can
   also be confirmed in the depth distribution.
 
 | Step 5 (no outlet) | Step 6 (perfect drain) |
@@ -611,88 +654,93 @@ guide](../../../docs/en/users_guide/boundary.md).
 
 ### About the fine oscillations in the hydrograph
 
-From Step 5 on, the 1-minute hydrographs carry fine oscillations. They
-do not disappear when the infiltration capacity is changed, and they
-remain in Step 6 with the outlet in place. This is not a defect of the
-model but **a phenomenon you will universally encounter in runoff
-computations using real terrain data**, so let us explain what it is.
+Compared with Step 4 (no losses), Step 5 (interception + infiltration) may
+look as if the fine fluctuations of the waveform have increased (the
+1-minute values move up and down slightly at the end of the rise at
+transect 4 and on the recessions at transects 3 and 4). One of the causes
+is that infiltration thins the films on the slopes and banks one after
+another, so wet/dry switches of thin water become more frequent.
 
-![Step 6: 1-minute discharge oscillations and moving average](figs/step6_osc.png)
+The 1-minute hydrographs of real-terrain computations can carry such fine
+oscillations (spikes). Most of them are of the same type as the bumps
+treated in Step 4: the moment a thin film on a bank drops below dd, an
+artificial brake that acted on the water of the main flow entering from
+the side is released all at once, giving a short spike.
+`f_advection_donor = 3` also switches the test for water entering from the
+side gradually with the depth, so in this basin no conspicuous spikes
+appear in Steps 5 and 6, and the remaining ups and downs are a few tens of
+m³/s per minute (figure below; the 1-minute values and the 11-minute moving
+average almost coincide).
 
-The cause lies in the terrain data. Along the channels of a
-depression-filled DEM, "perfectly flat reaches" appear here and there
-(places where the original DEM recorded a river water surface, a gorge,
-or a reservoir as flat, or where a depression was filled in). In the
-computation, a "pond" several meters deep forms on such a flat reach,
-and the pond becomes an oscillator with responses such as seiching and
-fluctuating overtopping. When a **spatially distributed loss** such as
-subsurface infiltration is added, the water balance between the ponds
-and the rapids connecting them is constantly perturbed, and the
-oscillations, amplified toward downstream, ride on the hydrograph.
+![Step 6: 1-minute discharge and moving average](figs/step6_osc.png)
 
-Deal with it in stages.
+When you notice oscillations, consider them in this order.
 
-1. **For the time being, post-processing (smoothing) of the output is
-   sufficient.** The oscillations do not harm the water balance of the
-   computation and do not affect the time scales that matter in runoff
-   analysis (tens of minutes and longer). Overlay a moving average when
-   plotting. The bundled `Plot_ma.plt` is an example:
+1. **First check whether they come from the numerical settings.** If
+   the oscillations move in time, increase or vanish when dd is divided by
+   10, they are wet/dry switches of thin water (running Step 5 with
+   dd = dv = 0.0001 actually increases the small ups and downs on the
+   recessions at transects 3 and 4, and a jump of +68 m³/s in one minute
+   appears at transect 4). Set `f_advection_donor = 3` if you have not
+   (Step 4).
+2. **Small oscillations that remain can often be left as they are.** If
+   they do not harm the water balance of the computation and do not affect
+   the time scales that matter in runoff analysis (tens of minutes and
+   longer), overlaying a moving average when you plot is enough.
 
-   ```bash
-   gnuplot -p -c Plot_ma.plt result
-   ```
+3. **For oscillations caused by the terrain, the fundamental remedy is
+   improving the terrain data.** Along the channels of a
+   depression-filled DEM, "perfectly flat reaches" appear here and there
+   (places where the original DEM recorded a river water surface, a
+   gorge, or a reservoir as flat, or where a depression was filled in).
+   In the computation, a "pond" several meters deep forms on such a flat
+   reach, and the motion of its surface or fluctuating overtopping can
+   seed oscillations. The figure below shows examples at transect 3 of
+   the resolution comparison in the supplement (the lower row is the
+   change of the discharge per minute, which makes the oscillations
+   obvious).
 
-   draws the 1-minute values at transect 4 together with their 11-minute
-   moving average. The script is just these few lines:
+   ![Fine oscillations caused by the terrain (transect 3 of the supplement)](figs/supp_t3_osc.png)
 
-   ```gnuplot
-   set datafile separator comma
-   N = 11                     # window width (points) = 11 minutes
-   array A[N]
-   ma(x) = (A[(int($0) % N) + 1] = x, $0 < N-1 ? NaN : (sum [i=1:N] A[i]) / N)
-   plot "result/fluxes/flux0004.csv" us 2:3 w l title "1-min values", \
-        "" us ($2 - (N-1)/2.0):(ma($3)) w l lw 2 title "11-min moving average"
-   ```
+   On the 50 m grid (left), a hydraulic jump moves back and forth in the
+   stepped bed (flat ponds and steps) about 1 km downstream of the
+   transect, and oscillations with a period of 5 to 6 minutes ride on the
+   peak and the recession. On the 100 m and 200 m grids (dashed), the
+   steps created by depression filling lie at other places and have
+   other sizes, and the curves are smooth. The right panel is a run in
+   which a 50 m wide channel is given inside the cells of the 200 m grid
+   (a subgrid channel; see
+   [the channel chapter of the users guide](../../../docs/en/users_guide/channel.md)).
+   The water surface of the flat reach just upstream of the transect
+   sloshes back and forth (a seiche), and ups and downs with a period of
+   about 4 minutes continue. Without the width
+   (dashed), the same flat reach shows hardly any oscillation; in the
+   deep, narrow 50 m channel the sloshing is damped less and becomes
+   visible. This run specifies only the channel width and keeps the bed
+   of the depression-filled DEM, so the flat reach remains; when the bed
+   of this reach was regraded to a uniform slope as a test, the
+   oscillation almost vanished (this test was made on a working copy of
+   the depression-filled DEM by rewriting the elevations of 10 channel
+   cells in the reach; its input is not included in the tutorial).
 
-   It looks intimidating at first, but all it does is "average the most
-   recent N points and draw them". Line by line:
-
-   - `set datafile separator comma` -- the result CSV files are
-     comma-separated, so we tell gnuplot so (the default is whitespace).
-   - `N = 11` -- the width of the averaging window (in points). The
-     output is written every minute, so this is an 11-minute average.
-   - `array A[N]` -- a box (array) holding the most recent N values.
-     Arrays are available in gnuplot 5.2 and later.
-   - `ma(x)` -- the function that computes the average. gnuplot reads
-     the data one row at a time and updates `$0` (the row number,
-     counted from 0), so storing the value x at the position given by
-     the row number modulo N keeps the most recent N points in the
-     array at all times (a ring buffer). Until N points are available
-     (`$0 < N-1`) it returns NaN, so nothing is drawn; after that it
-     returns the sum of the N points divided by N.
-   - `plot ... us 2:3 w l` -- the raw 1-minute values, with column 2 of
-     the CSV (time in min) as x and column 3 (discharge in m³/s) as y,
-     drawn as a line (`w l` = with lines; `us` is short for `using`).
-   - `"" us ($2 - (N-1)/2.0):(ma($3))` -- reads the same file (`""`)
-     again and draws column 3 passed through `ma()`, i.e. the moving
-     average. The "average of the most recent N points" lags by
-     (N-1)/2 minutes, so the x coordinate is shifted back by that much
-     to center it (otherwise the peak would appear at the wrong time).
-
-   Drawing the raw values on top also shows the reader what the
-   smoothing removed.
-
-   ![Same, zoomed](figs/step6_osc_zoom.png)
-
-2. **The fundamental remedy is improving the terrain data.**
    Preprocessing the channels so that the longitudinal profile is
    monotone (eliminating the flat reaches), or moving the channels to
    subgrid channels (`fn_channel`) with an independently specified bed
    profile, removes the flat ponds themselves.
 
-3. The choice of measurement locations also mitigates it. A transect
+   However, changing the terrain does not always help. When the stepped
+   bed on the 50 m grid (left) was regraded to a uniform slope (1.6%) in
+   the same way, the transition from the gentle reach to the steep reach
+   moved closer to the transect, and the oscillation grew about fourfold.
+   What matters is less the pond itself than the abrupt transition from
+   subcritical to supercritical flow downstream of the transect. After
+   changing the terrain, rerun the computation and check that the
+   oscillation at the transect has decreased (for placing transects, see
+   item 4).
+
+4. The choice of measurement locations also mitigates it. A transect
    placed on a flat reach (pond) several meters deep picks up the
-   pond's surface motion directly, so **place transects on ordinary
+   motion of the pond surface directly, so **place transects on ordinary
    channel reaches with a longitudinal slope**.
 
 ## Step 7: 3D visualization with ParaView
@@ -836,7 +884,8 @@ subsection and "What to take away about the ENC grid".
 
 This tutorial has used a 200 m grid throughout. To see how the results
 change with a finer grid, we move the Step 4 configuration (no losses,
-no outlet) to 100 m and 50 m grids. The terrain data are the 100 m and
+no outlet, `f_advection_donor = 3`) to 100 m and 50 m grids. The terrain
+data are the 100 m and
 50 m versions of the same area kept in `test/chichibu/` (text format),
 and the parameter files are `en/param_supp_200m.txt` /
 `en/param_supp_100m.txt` / `en/param_supp_50m.txt` (the 200 m one is
@@ -847,7 +896,7 @@ resolutions, to see what the 8-direction exchange of the ENC grid
 brings. These six runs (plus the three width-equalized runs and the twelve
 runs with a different treatment of advection described below) and the
 figures are reproduced in one go with `./Fig_supp.sh` from the case
-directory (it includes seven 50 m grid runs, so it takes about three hours
+directory (it includes seven 50 m grid runs, so it takes 3 to 4 hours
 on a 4-core laptop).
 
 ### Mapping the transects
@@ -869,7 +918,7 @@ The time step is 6 s at 200 m, 1.5 s at 100 m and 0.75 s at 50 m.
 Shrinking it only in proportion to the grid (3 s and 1.5 s) made the
 100 m run stop during the rainfall with a Courant number above 1. A
 finer grid resolves the valleys of steep tributaries and the maximum
-velocity grows (16 m/s at 200 m, 26 m/s at 100 m, 33 m/s at 50 m), so
+velocity grows (20 m/s at 200 m, 27 m/s at 100 m, 39 m/s at 50 m), so
 **the cost of a finer grid grows faster than "cells x steps"**, which
 is worth remembering when choosing a resolution. The procedure for choosing
 `dt` from the cell width and the estimated maximum velocity and depth is in
@@ -879,9 +928,9 @@ the design reasons for ENCflow's fixed step are in the
 
 | grid | computed cells | dt | steps | run time (ENC, 4 threads) |
 |---|---|---|---|---|
-| 200 m | 17,885 | 6 s | 3,600 | 16 s |
-| 100 m | 71,486 | 1.5 s | 14,400 | 211 s |
-| 50 m | 285,843 | 0.75 s | 28,800 | 1,355 s |
+| 200 m | 17,885 | 6 s | 3,600 | 17 s |
+| 100 m | 71,486 | 1.5 s | 14,400 | 219 s |
+| 50 m | 285,843 | 0.75 s | 28,800 | 1,337 s |
 
 ### Result 1: changing the resolution (ENC)
 
@@ -892,14 +941,14 @@ tabulated below (in parentheses: change from the next coarser grid).
 
 | transect (upstream to downstream) | 200 m | 100 m | 50 m |
 |---|---|---|---|
-| 1 (small catchment area) | 1,232 | 1,376 (+12%) | 1,391 (+1%) |
-| 2 | 2,983 | 3,250 (+9%) | 3,313 (+2%) |
-| 3 | 4,228 | 4,398 (+4%) | 5,122 (+16%) |
-| 4 (near the catchment outlet) | 5,425 | 5,507 (+2%) | 6,208 (+13%) |
+| 1 (small catchment area) | 1,220 | 1,398 (+15%) | 1,416 (+1%) |
+| 2 | 3,035 | 3,564 (+17%) | 3,610 (+1%) |
+| 3 | 4,536 | 5,105 (+13%) | 6,075 (+19%) |
+| 4 (near the catchment outlet) | 6,353 | 6,837 (+8%) | 7,578 (+11%) |
 
 - **Upstream (transects 1 and 2)**: the coarser the grid, the smaller
-  the peak. It changes by 9 to 12% from 200 to 100 m but only by 1 to
-  2% from 100 to 50 m, i.e. it has converged at 100 m and below. We
+  the peak. It changes by 15 to 17% from 200 to 100 m but only by
+  1% from 100 to 50 m, i.e. it has converged at 100 m and below. We
   attribute the smaller runoff on the coarse grid to two things: in a
   200 m cell the valley floor and the hillslopes are mixed in one cell,
   which blunts the concentration of water from the slopes into the
@@ -907,42 +956,49 @@ tabulated below (in parentheses: change from the next coarser grid).
   one or two cells); and the channel width becomes the cell width,
   which increases channel storage and damps the short hydrographs of
   small catchments the most.
-- **Downstream (transects 3 and 4)**: the change from 200 to 100 m is
-  2 to 4%, smaller than upstream, but the peaks still grow by another
-  13 to 16% from 100 to 50 m. The peak times hardly change across the
-  three resolutions (172 to 183 min at transect 4). On a raster the
-  channel width equals the cell width, so a finer grid makes the
-  channel narrower and deeper (the maximum depth at probe 4 is 7.5,
-  10.9 and 16.1 m), and we consider the reduced flattening of the
+- **Downstream (transects 3 and 4)**: the peaks grow by 8 to 13% from
+  200 to 100 m and by another 11 to 19% from 100 to 50 m, so they have not
+  converged the way the upstream ones have. The peak times hardly change
+  across the three resolutions (151 to 156 min at transect 4). On a raster
+  the channel width equals the cell width, so a finer grid makes the
+  channel narrower and deeper (the maximum depth at probe 4 is 6.8,
+  10.9 and 16.9 m), and we consider the reduced flattening of the
   wave (channel storage) along the long main river to be the main
   cause.
   To test this, we equalized the channel width of the 200 m and
   100 m grids to the 50 m of the 50 m grid with a subgrid channel
   (`fn_channel`, [the channel chapter of the users
   guide](../../../docs/en/users_guide/channel.md); `./Fig_supp.sh` runs
-  these as `result_supp_*_w50`). The peaks at transects 3 and 4 become
-  4,291 / 4,630 at 200 m and 3,686 / 4,588 at 100 m. At transect 4 near the
-  catchment outlet the difference between 200 m and 100 m shrinks from
-  1.5% to 0.9%, but it was small even before the widths were equalized,
-  so **channel-cell storage cannot be called the main cause of the gap
-  between the two coarse grids**. At transect 3 the gap does not close but
-  reverses (100 m is 14% lower), so a further grid-dependent factor remains,
+  these as `result_supp_*_w50`; at 200 m the flow gathers in the 50 m wide
+  channel and becomes faster, so the Courant number exceeds 1 with dt = 6 s
+  and dt = 4 s is used instead; running the 200 m case without a width at
+  dt = 4 s changes the transect 4 peak by only 0.02%). The peaks at
+  transects 3 and 4 become 4,681 / 5,399 at 200 m and 4,440 / 5,559 at
+  100 m. At transect 4 near the catchment outlet, equalizing the widths
+  more than halves the difference between 200 m and 100 m (7.6% without width, 3.0%
+  with W = 50) but does not remove it: **channel-cell storage explains only
+  part of the gap between the two coarse grids**. At transect 3 the gap
+  reverses (100 m is 5% lower), so a further grid-dependent factor remains,
   such as the conveyance of the narrowed channel. Neither reaches the 50 m
-  grid with its resolved channel (5,122 / 6,208), and the peaks arrive about
-  30 minutes later.
+  grid with its resolved channel (6,075 / 7,578), and the transect 4 peaks
+  arrive 22 to 28 minutes later than on the 50 m grid and 27 to 30 minutes
+  later than on the same grid without a width.
 
   ![Supplement: channel width equalized to 50 m](figs/supp_hydro_w50.png)
 
-  In the figure, the W = 50 curves of 200 m and 100 m (solid) nearly
-  coincide downstream, yet they are lower and later than the 50 m grid
+  In the figure, the W = 50 curves of 200 m and 100 m (solid) come close
+  to each other downstream, yet they are lower and later than the 50 m grid
   (light blue) and even later than the no-width runs (dashed); at the
-  upstream transect 1 the width hardly matters. Giving the 50 m grid
-  W = 50 m (= the cell width; light-blue dashed line) coincides with the
-  resolved 50 m grid: the peaks differ by less than 0.001% and the discharge
-  by at most 0.8 m³/s (1.3 × 10⁻⁴). When the width equals the cell width, the
-  subgrid channel reduces to the resolved representation as designed (not to
-  the last digit; rounding differences such as the treatment of diagonal
-  edges remain). A 50 m subgrid channel
+  upstream transect 1 the width changes the peak by 5% or less. Giving the
+  50 m grid W = 50 m (= the cell width; light-blue dashed line) coincides
+  with the resolved 50 m grid: the peaks differ by less than 0.02%. The discharge
+  differs by up to 15 m³/s (3% of the flow at that moment) where
+  one-minute wiggles appear (315 to 358 min on the recession at transect 4,
+  where small wiggles remain in the W = 50 run) and by at most 2.1 m³/s
+  (3 × 10⁻⁴ of the peak) elsewhere. When the width equals the cell
+  width, the subgrid channel reduces to the resolved representation as
+  designed (not to the last digit; small differences such as the treatment
+  of diagonal edges remain and show up as one-minute wiggles). A 50 m subgrid channel
   squeezes the flow into a conveyance section of
   1/4 to 1/2 of the cell width, so the storage decreases but the
   conveyance hits its cap and the wave is delayed, whereas on the 50 m
@@ -950,6 +1006,31 @@ tabulated below (in parentheses: change from the next coarser grid).
   flow. Even with the channel representation equalized, **the
   difference in how the valley floor and the slopes are resolved**
   remains.
+- The 1-minute values of W = 50 carry fine oscillations. The oscillation at
+  transect 3 of the 200 m grid between 70 and 130 minutes (period about 4
+  minutes, ±30 to 100 m³/s per minute) is a seiche in flat reaches upstream
+  created by depression filling (right of the figure in item 3 of Step 6). The
+  steep front of the rise (+950 m³/s in one minute) is a property of 3 that
+  the 200 m grid without the width also shows (+846). The oscillation with a
+  period of 2 to 3 minutes around the peak of transect 2 of the 100 m grid (47
+  to 64 minutes) comes from a face whose donor is a deep stagnant pocket in a
+  flat reach, where the weight moves back and forth across the threshold
+  `p_adv_donor_eps` (the limits of 3 in the
+  [advection chapter](../../../docs/en/users_guide/advection.md)). Smoothed with a
+  5-minute moving average, the peak drops by 1.4% at transect 3 of the 200 m
+  grid and by 5.9% at transect 2 of the 100 m grid; transect 4 hardly changes.
+- At transect 3 of the 50 m grid, the 1-minute values carry fine oscillations
+  with a period of 5 to 6 minutes around the peak and on the recession (±100
+  to 450 m³/s per minute). About 1 km downstream of the transect, a hydraulic
+  jump moves back and forth in the stepped bed created by depression filling
+  (a flat "pond" and a 7 m step), and the motion propagates up to the transect
+  through the subcritical flow: an example of the oscillations caused by the
+  terrain in Step 6 (left of the figure in item 3 of Step 6; it is not a
+  wet/dry switch and remains when `f_advection_donor` or the time step is
+  changed). Placing the transect 150 m upstream, above a step, reduces the
+  recession oscillation to a third. On the 100 m and 200 m grids the steps
+  created by depression filling lie at other places and have other sizes, and
+  the 1-minute values at transect 3 are smooth.
 - At every resolution the S column stays at 0.1000 m after the rain.
   The total volume is the same; only **the distribution and the speed
   of the water** differ. Check this yourself.
@@ -961,16 +1042,16 @@ of the ENC panels above), with the following peaks.
 
 | transect | 200 m | 100 m | 50 m |
 |---|---|---|---|
-| 1 | 53 | 54 | 47 |
-| 2 | 40 | 51 | 61 |
-| 3 | 0 | 864 | 324 |
-| 4 | 4 | 30 | 402 |
+| 1 | 53 | 53 | 46 |
+| 2 | 40 | 50 | 57 |
+| 3 | 0 | 837 | 308 |
+| 4 | 4 | 31 | 467 |
 
 At 200 m only 4 m³/s (0.1% of ENC) reaches transect 4 near the
-catchment outlet; at 100 m it is 30 m³/s, and on the 50 m grid, where
-the channel cells are 50 m wide, it finally reaches 402 m³/s (6% of
+catchment outlet; at 100 m it is 31 m³/s, and on the 50 m grid, where
+the channel cells are 50 m wide, it finally reaches 467 m³/s (6% of
 ENC). **Even with a grid four times finer, the channel network stays
-essentially cut into pieces with 4 neighbors.** The 864 m³/s at
+essentially cut into pieces with 4 neighbors.** The 837 m³/s at
 transect 3 on the 100 m grid appears because, just upstream of this
 transect, the channel runs straight east-west along a grid row for
 about 1 km: reaches aligned with the axes pass water, diagonal reaches
@@ -984,9 +1065,9 @@ In the depth distributions after 6 hours, ENC (left) has gathered the
 channel water at the outlet at every resolution and the catchment is
 blank, whereas with 4 neighbors (right) spots of ponded water remain
 all over the channel network, stopped at every diagonal reach. These
-fragmented "ponds" are also a source of the discharge oscillations
-explained in Step 6, and the 4-neighbor hydrograph on the 50 m grid
-(transect 4) shows them.
+fragmented "ponds" can also seed oscillations, as noted in item 3 of
+Step 6, and the 4-neighbor hydrograph on the 50 m grid (transect 4)
+shows them.
 
 ### Result 3: the advection term and resolution dependence
 
@@ -1011,34 +1092,34 @@ spans twice the others.** Peak discharge
 
 | advection | 200 m | 100 m | 50 m |
 |---|---|---|---|
-| none (diffusion wave) | 10,140 @110 | 16,237 @100 | 18,538 @90 |
-| scheme 1 (old, upwind 0.5 = default) | 5,906 @155 | 6,105 @167 | 6,316 @176 |
-| scheme 1 (upwind 0.1) | 7,157 @131 | 8,073 @134 | diverged (55 min, before the peak) |
-| scheme 1 (upwind 1.0) | 4,443 @197 | 4,283 @224 | 4,661 @224 |
-| scheme 3 (default) | 5,425 @172 | 5,507 @183 | 6,208 @175 |
+| none (diffusion wave) | 10,009 @111 | 16,025 @100 | 18,252 @91 |
+| scheme 1 (old, upwind 0.5 = default) | 5,866 @157 | 6,012 @165 | 5,912 @179 |
+| scheme 1 (upwind 0.1) | 7,053 @134 | 7,854 @138 | diverged (56 min, before the peak) |
+| scheme 1 (upwind 1.0) | 4,480 @203 | 4,445 @228 | 4,856 @220 |
+| scheme 3 (default) | 6,353 @151 | 6,837 @154 | 7,578 @156 |
 
 For reference, the maximum velocity of each computation (V_max in the Log)
-on the 100 m grid was 42 m/s without advection, 25 m/s with scheme 1
-(upwind 0.5), 19 m/s with scheme 1 (upwind 1.0) and 26 m/s with scheme 3. The 50 m case without advection
-diverged after 42 minutes at dt = 0.75 s (the velocity reached 62 m/s at bed
-steps and the Courant number exceeded 1), so that one run uses dt = 0.4 s.
-Scheme 1 with upwind 0.1 stops on the 100 m grid during the recession
-(4.2 hours, when the ponded water at the outlet exceeds 33 m), with the
-velocity diverging in the ponded outlet cells, and on the 50 m grid during
-the rising limb (55 minutes). On the 100 m grid, reducing dt from 1.5 to
-1.0 s hardly changes the time it stops (4.0 → 4.2 h), so this is not a
-time-step issue; we take it as an instability of the non-conservative,
-weakly upwinded scheme in deep still water and at steep steps. The 100 m
-peak (2 to 3 hours) comes before the stop, so it is listed in the table,
-and the curves end early in the figure.
+on the 100 m grid was 42 m/s without advection, 27 m/s with scheme 1
+(upwind 0.5), 18 m/s with scheme 1 (upwind 1.0) and 27 m/s with scheme 3. The 50 m case without advection
+diverges after 54 minutes, during the rainfall, at dt = 0.75 s (the velocity
+reaches 59 m/s at bed steps and the Courant number exceeds 1), so that one run
+uses dt = 0.4 s. Scheme 1 with upwind 0.1 stops on the 200 m and 100 m grids
+during the recession (5.5 and 2.9 hours, when the ponded water at the outlet
+exceeds 35 m) and on the 50 m grid during the rising limb (56 minutes), with
+the velocity diverging. On the 100 m grid, reducing dt from 1.5 to 1.0 s
+hardly changes the time it stops (2.6 → 2.9 h), so this is not a time-step
+issue; we take it as an instability of the non-conservative, weakly upwinded
+scheme in deep still water and at steep steps. The 200 m and 100 m peaks
+(2.2 to 2.3 hours) come before the stop, so they are listed in the table, and
+the curves end early in the figure.
 
 #### Dropping the advection term makes the peak larger and earlier on finer grids
 
 Without the advection term (diffusion wave, local inertia equation), the peak
-at transect 4 goes 10,140 → 16,237 → 18,538 m³/s and 110 → 100 → 90 min from 200 m to 100 m to 50 m: **the finer the grid,
-the larger and earlier the peak**. The resolution dependence is an order of
-magnitude stronger than with the default scheme 3 (5,425 → 5,507 → 6,208,
-with the timing almost unchanged), and the values themselves are 2 to 3
+at transect 4 goes 10,009 → 16,025 → 18,252 m³/s and 111 → 100 → 91 min from 200 m to 100 m to 50 m: **the finer the grid,
+the larger and earlier the peak**. The resolution dependence is far
+stronger than with the default scheme 3 (6,353 → 6,837 → 7,578 at
+151 → 154 → 156 min), and the values themselves are 1.6 to 2.4
 times larger. Let us follow the reasons step by step.
 
 1. **The velocity of a diffusion wave is set by the local slope alone.** In
@@ -1070,7 +1151,7 @@ times larger. Let us follow the reasons step by step.
    the wave form**, not the mean speed. Without the advection term
    (inertia) the velocity follows changes of the water-surface slope
    instantly, and at a step, where the surface slope is large, the velocity
-   shoots up (V_max 42 m/s on the 100 m grid against 26 m/s with scheme 3).
+   shoots up (V_max 42 m/s on the 100 m grid against 27 m/s with scheme 3).
    In reality hydraulic jumps and turbulence dissipate this acceleration;
    the equations have no term for it. Deeper water travels faster (wave
    speed ≈ 5/3 u), so the front steepens into a bore, and a steeper front
@@ -1099,33 +1180,31 @@ weak resolution dependence of scheme 3.
 
 #### What is the advection term decelerating?
 
-From the diagnostic builds recorded in developer.md §68.17 to §68.20, what
-the advection term does to slow and flatten the wave in this case splits
-into three parts.
+What the advection term does to slow and flatten the wave in this case
+splits into three parts.
 
 1. **Dissipation at bed steps**: in a one-cell channel with a stepped bed
    (stair3 in test/bendloss), the run without advection produces excessive
    velocities at every step and the flood wave grows into a bore, whereas
    the momentum-conserving advection term supplies a hydraulic-jump-like
-   dissipation that holds the wave down (a factor 2.3 in peak; §68.20). Since
+   dissipation that holds the wave down (a factor 2.3 in peak). Since
    the bed of a real DEM is such a succession of steps, we believe this
    accounts for most of the difference from the run without advection.
 2. **Deceleration by lateral inflow**: in rainfall runoff most of the channel
    discharge enters from the side, from hillslopes and tributaries, carrying
    no streamwise momentum. The conservative form naturally contains the term
    that mixes this water in and slows the channel flow (−u·q_L/h; it matches
-   the analytic solution of spatially varied flow within 1 to 2%; §68.17).
-   Intuitively this looks like the main braking mechanism, but its measured
-   share of the scheme 1 vs scheme 3 difference was about 20%.
+   the analytic solution of spatially varied flow within 1 to 2%).
 3. **Momentum exchange with the inundated valley floor**: on the 100 m grid
    the flood cross-section of the main river spreads beyond the single
    channel-mask cell onto valley-floor cells, and at bends and confluences
-   that slow water becomes the upwind donor and drains momentum. About 65%
-   of the scheme 1 vs scheme 3 difference is this; restricting the donor to
-   channel cells (`f_advection_donor = 1`) raises the 100 m peak by 16%
-   (§68.18, §68.19). On a finer grid the main river fits within the channel
-   cells and this loss shrinks, consistent with the gentle increase of the
-   scheme 3 peak with resolution.
+   that slow water becomes the upwind donor and drains momentum. As seen in
+   Step 4, the choice of donors alone (`f_advection_donor`) moves the
+   transect 4 peak by about 15%. The runs of this section use
+   `f_advection_donor = 3` as in Step 4, so thin films and stagnant water
+   that carry almost no water are excluded as donors. On a finer grid the
+   main river fits within the channel cells and this exchange shrinks, consistent with
+   the gentle increase of the scheme 3 peak with resolution.
 
 #### Why it is said that advection matters little in mountain runoff
 
@@ -1150,7 +1229,7 @@ sound engineering practice (nothing here is meant to disparage them).
 
 One-dimensional channel models are also often run without the advection
 term. Adding the lateral-inflow momentum term (−u·q_L/h) captures part 2
-above (about 20% of the difference here), but the step dissipation of part 1
+above, but the step dissipation of part 1
 and the valley-floor exchange of part 3 would have to enter a 1-D model with
 prescribed cross-sections in other forms (roughness, local loss
 coefficients, compound-channel momentum exchange). We therefore expect a 1-D
@@ -1162,7 +1241,8 @@ the ENCflow result with advection (untested).
 No. A result that moves little under grid refinement is a property one
 wants from a model that claims to be physically based (convergence), but
 there is no guarantee that the converged value matches observations (the
-100 m peak moves by 16% with `f_advection_donor`, for instance). This
+choice of advection donors alone, `f_advection_donor`, moves the 200 m peak
+of Step 4 by about 15%, for instance). This
 tutorial catchment has no comparison with observations, and **closeness to
 reality is unverified**. Conversely, a diffusion wave calibrated with a
 roughness coefficient per resolution can surely be made to match
@@ -1179,28 +1259,26 @@ the numerical viscosity of its upwind weighting (`p_adv_upwind_index`) scales
 with Δx and therefore with resolution. The upwind index changed the result a
 great deal.
 
-- **Upwind 0.5 (default)**: the transect 4 peak goes 5,906 → 6,105 → 6,316
-  m³/s, only 9%, 11% and 2% larger than scheme 3 and 17 and 16 minutes
-  earlier on the 200 m and 100 m grids (almost simultaneous on 50 m). The
-  peak grows with refinement as it does with scheme 3, and on 50 m the two
-  schemes nearly coincide.
-- **Upwind 0.1**: 7,157 → 8,073 m³/s (200 m → 100 m), 32% and 47% larger
-  than scheme 3 and 41 and 49 minutes earlier. The 50 m grid diverged during
-  the rising limb at 55 minutes, with velocities above 90 m/s, before
-  reaching the peak (the transect 1 peak of 1,451 m³/s comes before that and
-  is 4% above the 1,391 of scheme 3). **The finer the grid, the further it
-  moves away from scheme 3 toward the run without advection**, the same trend as recorded
-  with the settings of test/chichibu (hillslope roughness 0.15, upwind 0.1):
-  "scheme 1 is 41% larger and 1.2 hours earlier than scheme 3 on the 100 m
-  grid" (§68.17).
-- **Upwind 1.0 (full upwind)**: 4,443 → 4,283 → 4,661 m³/s, 18%, 22% and 25%
-  smaller than scheme 3 and 25, 41 and 49 minutes later; even the upstream
-  transect 1 is 2 to 7% smaller. On the same grid the two ends of the upwind
-  weight (0.1 and 1.0) give peaks of 7,157 vs 4,443 at 200 m and 8,073 vs
-  4,283 at 100 m, a factor of 1.6 to 1.9. The gap does not close with
+- **Upwind 0.5 (default)**: the transect 4 peak goes 5,866 → 6,012 → 5,912
+  m³/s, within 2.5% across the three resolutions, but 8%, 12% and 22%
+  smaller than scheme 3 and 6, 11 and 23 minutes later. On the 50 m grid the
+  maximum velocity reaches 57 m/s (39 m/s with scheme 3) and an oscillation
+  appears on the recession at transect 4 (270 to 300 min), visible in the
+  figure.
+- **Upwind 0.1**: 7,053 → 7,854 m³/s (200 m → 100 m), 11% and 15% larger
+  than scheme 3 and 17 and 16 minutes earlier. The 50 m grid diverged during
+  the rising limb at 56 minutes, with velocities above 90 m/s, before
+  reaching the peak (the transect 1 peak of 1,442 m³/s comes before that and
+  is 2% above the 1,416 of scheme 3). **The finer the grid, the further it
+  moves away from scheme 3 toward the run without advection.**
+- **Upwind 1.0 (full upwind)**: 4,480 → 4,445 → 4,856 m³/s, 29%, 35% and 36%
+  smaller than scheme 3 and 52, 74 and 64 minutes later; even the upstream
+  transect 1 is 5 to 8% smaller. On the same grid the two ends of the upwind
+  weight (0.1 and 1.0) give peaks of 7,053 vs 4,480 at 200 m and 7,854 vs
+  4,445 at 100 m, a factor of 1.6 to 1.8. The gap does not close with
   refinement (100 m is the lowest), presumably because the velocity resolved
-  on the finer grid (V_max 15 → 19 → 21 m/s) offsets part of the smaller
-  Δx, so the numerical viscosity Δx·u decreases less than the grid spacing.
+  on the finer grid offsets part of the smaller Δx, so the numerical
+  viscosity Δx·u decreases less than the grid spacing.
 
 The difference is explained by the amount of numerical viscosity. A larger
 upwind weight means a numerical viscosity proportional to Δx·u that smooths
@@ -1214,13 +1292,15 @@ refined. The resolution dependence of scheme 1 thus comes both from the
 physical approximation (non-conservative form) and from the numerical
 viscosity (upwind weight × Δx), and the result moves with the choice of the
 upwind weight: a scheme that carries one extra calibration parameter.
-Therefore, the weak resolution dependence of ENCflow presupposes the
-default momentum-conserving scheme (and the dynamic opening correction).
+Whether scheme 1 can be said to have weak resolution dependence therefore
+hinges on the choice of the upwind weight. What ENCflow makes the default is
+the momentum-conserving scheme (with the dynamic opening correction), which
+adds no calibration parameter.
 
 #### What is special about this case
 
 This case routes 100 mm of rain in one hour with no losses and produces
-5,000 to 6,000 m³/s near the basin outlet (a specific discharge close to
+6,000 to 8,000 m³/s near the basin outlet (a specific discharge around
 10 m³/s/km²), an extreme flow. Both the step dissipation and the lateral
 inflow scale with discharge, so the influence of the advection term is
 probably larger here than in an ordinary flood. For a milder event the three
@@ -1229,9 +1309,9 @@ computations should differ much less; checking this is left to the reader
 
 ### What to take away about the ENC grid
 
-- **Weak grid dependence**: from 200 to 50 m (16 times the cells, 85
-  times the run time) the peaks changed by +13% upstream and +14 to 21%
-  downstream, with the peak times almost unchanged. For an
+- **Weak grid dependence**: from 200 to 50 m (16 times the cells, 80
+  times the run time) the peaks changed by +16 to 19% upstream and +19 to 34%
+  downstream, with the peak times within 6 minutes. For an
   estimate of the flood wave over the whole catchment a 200 m grid is
   enough; go to 100 m and below when the absolute values in small
   upstream catchments matter.

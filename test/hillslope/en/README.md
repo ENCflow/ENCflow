@@ -120,6 +120,6 @@ the outlet), not from the schemes.
 
 ## Related documents
 
-- developer.md §68.18 (restriction of the upwind donor to channels, f_advection_donor, and the diagnosis of chichibu), §68.20 (mechanism of the dissipation and momentum exchange at steps; the stepped-slope follow-up)
+- developer.md §68.18 (restriction of the upwind donor to channels, f_advection_donor = 1, and the diagnosis of chichibu; option 1 was removed on 2026-11-07, §102), §68.20 (mechanism of the dissipation and momentum exchange at steps; the stepped-slope follow-up)
 - [test/dambreak](../../dambreak/en/README.md) (jump condition of the bore), [test/bendloss](../../bendloss/en/README.md) (stepped one-cell channel)
 - [docs/users_guide/swflow.md](../../../docs/en/users_guide/swflow.md) — `f_advection_scheme`, `f_govequation`

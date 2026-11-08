@@ -1,6 +1,7 @@
 # 補足節(解像度の影響と 4 近傍との比較)の図を figs/supp_*.png に描画する。
 # 事前に Fig_supp.sh が 6 ケースの計算を result_supp_{200m,100m,50m}[_4nb] に
-# 用意していることを前提とする(単体では実行しない)。
+# 用意していることを前提とする(図 2d は河道幅 50 m の result_supp_200m_w50 も使う。
+# 単体では実行しない)。
 
 set datafile separator whitespace
 set terminal pngcairo size 1100,780 font ",11"
@@ -146,6 +147,41 @@ do for [t=1:2] {
        sprintf("result_supp_50m/fluxes/flux000%d.csv", TRNW[t])      using 2:3 with lines lw 1.8      lc rgb '#1f9fd0' title "50 m(解像河道)", \
        sprintf("result_supp_50m_w50/fluxes/flux000%d.csv", TRNW[t])  using 2:3 with lines lw 1.2 dt 2 lc rgb '#1f9fd0' title "50 m W = 50"
 }
+unset multiplot
+
+# ---- 図 2d: 地形が原因の細かい振動(測線 3 の 1 分値。README Step 6 の 3 の例) ----
+# 左: 50 m 格子は約 1 km 下流の段々の河床を跳水が行き来し、100 m・200 m 格子(破線)は滑らか。
+# 右: 河道幅 50 m の 200 m 格子は上流の平坦な区間の静振で上下し、幅なし(破線)は滑らか。
+# 下段は 1 分ごとの流量の変化(振動が見やすい)。立ち上がりの急な前線(3 の性質)を外して 70 分から描く
+reset
+set datafile separator comma
+set terminal pngcairo size 1000,700 font ",11"
+set output "figs/supp_t3_osc.png"
+set multiplot layout 2,2 title "地形が原因の細かい振動(測線 3 の 1 分値)" noenhanced
+set grid
+set xlabel "時間 (min)"
+set key top right
+set ylabel "流量 (m^3/s)"
+set xrange [70:135]
+set title "50 m 格子(約 1 km 下流の段々の河床を跳水が行き来)" noenhanced
+set yrange [1500:6500]
+plot "result_supp_50m/fluxes/flux0003.csv"  using 2:3 with lines lw 1.6      lc rgb '#1f9fd0' title "50 m", \
+     "result_supp_100m/fluxes/flux0003.csv" using 2:3 with lines lw 1.2 dt 2 lc rgb '#2ca02c' title "100 m", \
+     "result_supp_200m/fluxes/flux0003.csv" using 2:3 with lines lw 1.2 dt 2 lc rgb '#9467bd' title "200 m"
+set title "200 m 格子・河道幅 50 m(上流の平坦な区間の静振)" noenhanced
+set yrange [1500:5000]
+plot "result_supp_200m_w50/fluxes/flux0003.csv" using 2:3 with lines lw 1.6      lc rgb '#9467bd' title "200 m W = 50", \
+     "result_supp_200m/fluxes/flux0003.csv"     using 2:3 with lines lw 1.2 dt 2 lc rgb '#9467bd' title "200 m 幅なし"
+# 下段: 1 分ごとの変化 = 当該行の流量 − 前の行の流量(各曲線の先頭で前値を NaN に戻す)
+set ylabel "1 分ごとの変化 (m^3/s)"
+set title "同 1 分ごとの変化" noenhanced
+set yrange [-300:500]
+plot p = NaN, "result_supp_50m/fluxes/flux0003.csv"  using 2:(d = $3 - p, p = $3, d) with lines lw 1.6      lc rgb '#1f9fd0' title "50 m", \
+     p = NaN, "result_supp_100m/fluxes/flux0003.csv" using 2:(d = $3 - p, p = $3, d) with lines lw 1.2 dt 2 lc rgb '#2ca02c' title "100 m", \
+     p = NaN, "result_supp_200m/fluxes/flux0003.csv" using 2:(d = $3 - p, p = $3, d) with lines lw 1.2 dt 2 lc rgb '#9467bd' title "200 m"
+set yrange [-200:400]
+plot p = NaN, "result_supp_200m_w50/fluxes/flux0003.csv" using 2:(d = $3 - p, p = $3, d) with lines lw 1.6      lc rgb '#9467bd' title "200 m W = 50", \
+     p = NaN, "result_supp_200m/fluxes/flux0003.csv"     using 2:(d = $3 - p, p = $3, d) with lines lw 1.2 dt 2 lc rgb '#9467bd' title "200 m 幅なし"
 unset multiplot
 
 # ---- 図 3: 6 時間後の水深分布。左 ENC、右 4 近傍(行: 200 / 100 / 50 m) ----
