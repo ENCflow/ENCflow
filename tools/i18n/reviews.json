@@ -2786,20 +2786,56 @@
     {
       "source": "examples/tsunami_fault/README.md",
       "target": "examples/tsunami_fault/en/README.md",
-      "source_sha256": "76fc37ea8a3c33400e4fa7ede107e591a6ac25e45081a79d230ea1688c688c78",
-      "target_sha256": "9723c0cd2aac8ee7ef9e4eda56396c9f26137bc73ccc18100761a249528d2466",
-      "reviewer": "Claude (Claude Code session; corrected both versions in parallel against a rerun of the three cases (run logs, probe series, displacement snapshots), and compared the edited passages and numbers)",
+      "source_sha256": "bc0e32a5416eae2bd8415c70e4a991d25bcb69e161908e7116b56adebada3c5b",
+      "target_sha256": "ee2728f9e147bf0b8ad12a1ae001885a6ea56a447f573a703696bca3b67abe83",
+      "reviewer": "Claude (Claude Code session; edited both versions in parallel (figure embedding, captions, new section on how it works, run steps, numbered probe rows matching the script output) and compared headings, tables, images and numbers)",
       "method": "assistant",
       "reviewed_on": "2026-11-08"
     },
     {
       "source": "examples/tsunami_fault/figs/deformation.png",
       "target": "examples/tsunami_fault/en/figs/deformation.png",
-      "source_sha256": "3bc89d43d2b5d3152a89f06e512382f5dd1b0b01dfbb73b3ca6527377fae6da4",
-      "target_sha256": "8efd5136296e80c01c96a9cc9da4ea8582e928616efbaa85bd75e944168163dd",
-      "reviewer": "Claude (Claude Code session; example reruns with f_opening_dynamic default 3)",
+      "source_sha256": "669408278f4cbb25135c59cb55942a756b0a3922d8c2edd6939792024426da9d",
+      "target_sha256": "95467c455504b07116bde979d53da9fae1d0fef50ca2f63ee7057fbc9a55b08c",
+      "reviewer": "Claude (Claude Code session; compared the Japanese and English figure images side by side: same plotted data and layout from the same script and the same inputs and results (the three cases rerun with the current build), labels translated)",
       "method": "assistant",
-      "reviewed_on": "2026-10-31"
+      "reviewed_on": "2026-11-08"
+    },
+    {
+      "source": "examples/tsunami_fault/figs/mechanism.png",
+      "target": "examples/tsunami_fault/en/figs/mechanism.png",
+      "source_sha256": "8a7f210346fef29fcd2d4986247bb31cf1669086a8b58ce04162dc5201f7262a",
+      "target_sha256": "045836c22b1a42542aa013d42ba635da52f5d04aba1021e58c611e211cf12e88",
+      "reviewer": "Claude (Claude Code session; compared the Japanese and English figure images side by side: same plotted data and layout from the same script and the same inputs and results (the three cases rerun with the current build), labels translated)",
+      "method": "assistant",
+      "reviewed_on": "2026-11-08"
+    },
+    {
+      "source": "examples/tsunami_fault/figs/probes.png",
+      "target": "examples/tsunami_fault/en/figs/probes.png",
+      "source_sha256": "1dedaef7a7cf621115637bb8622b29a468f048573aeea6ada8addb533a5fbd42",
+      "target_sha256": "861b3d0df7d1c1962cf53f5ecbf1b65fc0dc478ba06e4da097f68dad8906efcb",
+      "reviewer": "Claude (Claude Code session; compared the Japanese and English figure images side by side: same plotted data and layout from the same script and the same inputs and results (the three cases rerun with the current build), labels translated)",
+      "method": "assistant",
+      "reviewed_on": "2026-11-08"
+    },
+    {
+      "source": "examples/tsunami_fault/figs/profiles.png",
+      "target": "examples/tsunami_fault/en/figs/profiles.png",
+      "source_sha256": "792da8bb8ea3b2ce61b5ed38361e128c1f84918d0540d28518fa259aca6ace4c",
+      "target_sha256": "ecc3241258444eaaa2c646a8d8f9b19dc237ace0964098319aa16e0e89e82ce0",
+      "reviewer": "Claude (Claude Code session; compared the Japanese and English figure images side by side: same plotted data and layout from the same script and the same inputs and results (the three cases rerun with the current build), labels translated)",
+      "method": "assistant",
+      "reviewed_on": "2026-11-08"
+    },
+    {
+      "source": "examples/tsunami_fault/figs/setup.png",
+      "target": "examples/tsunami_fault/en/figs/setup.png",
+      "source_sha256": "6c7a167b9726f64a82b8b6a41f0f6173ad8039c000b8ccdd3a061a28ee0b1046",
+      "target_sha256": "6b2c2befea4fe11a77284187e29d5a53477c25448b758e464de37217eb28bb54",
+      "reviewer": "Claude (Claude Code session; compared the Japanese and English figure images side by side: same plotted data and layout from the same script and the same inputs and results (the three cases rerun with the current build), labels translated)",
+      "method": "assistant",
+      "reviewed_on": "2026-11-08"
     },
     {
       "source": "examples/tsunami_town/README.md",

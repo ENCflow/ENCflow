@@ -266,26 +266,15 @@ architecture.md。このメモは「現在進行中・未完了の項目」だ�
      mesa・karst・tower_karst・tsunami_fault・tsunami_coast・levee_breach・nest_reflect・
      sewer_hybrid・delta)。既定(引数なし)の出力は不変(結果のある 7 件でバイト一致を確認)。
    - 英語図を en/figs に生成し英語 README から参照済み: tsunami_fault・tsunami_coast・
-     levee_breach・sewer_hybrid・badland・badland_round(README の手順で結果を再生成。
-     同じ結果から描いた日本語版はコミット済みの figs/ と一致)。nest_reflect は snapshots・
+     levee_breach・sewer_hybrid・badland・badland_round(README の手順で結果を再生成し、
+     日本語版と同じ結果から描いた。tsunami_fault・tsunami_coast の結果の図は 2026-11-08 に
+     日英とも現行の結果から描き直した)。nest_reflect は snapshots・
      error_time の 2 枚のみ英語化。**oneway_edge と nh_profile は現行 main で再計算すると
      数値が変わる**(Flather 一方向の max |Δη| 4.0e-4 → 6.2e-4 m、NH 子の max 4.8e-3 →
      5.3e-3 m / 5.7e-3 → 6.2e-3 m。図は 2026-10-22 生成、以後の src 変更は bf03768b の
      区間流入面の移流など)ため、英語図を作らず日本語図の共有のまま。README の表の数値も
      同じ古い結果に基づく。原因の切り分け(どのコミットで変わったか)と、日本語図・表を
      現行で再生成するかの判断待ち。
-   - **2026-10-29 の確認記録の作業で判明**: tsunami_fault の probes・profiles と tsunami_coast の
-     probes・snapshots の英語図は、再計算した結果(2026-10-25 のコード)から描かれていて、日本語図
-     (2026-10-06 の結果)とデータが違う(拡大すると水位の時系列の山の形・終端の値、沿岸の遡上の
-     尖りが違う。生成時は「目視で同一」としていた)。この 4 枚は英語図を外して英語 README から
-     日本語図を共有する形に戻した(上の oneway_edge・nh_profile と同じ扱い)。日本語図・表を現行の
-     結果で作り直すかは上と同じ判断待ちで、作り直したら英語図も同じ結果から描く(tsunami_coast の
-     2 枚は 2026-11-08 に、日英とも現行の同じ結果から描き直して英語図を戻した。残りは tsunami_fault の
-     2 枚)。deformation の
-     2 枚は与件(規定の地盤変位)の図で一致、levee_breach の 3 枚は日本語図と一致(2026-10-24・25 の
-     同じ版の結果)。英語図のうち確認した 28 組(badland・badland_round・bedrock_cover・levee_breach・
-     nest_reflect・tsunami の deformation・test/gwbed)は記録済み。test/gwbed は英語の題 2 つが
-     重なって切れていたので、英語の文字列だけ 2 行に折り返して描き直した。
    - **残(利用者の保存済み結果が要る。再計算は数時間〜十数時間)**: badland_storm・mesa・
      karst・tower_karst。各ケース直下で日本語版と同じ引数に `en` を足して実行し、
      英語 README の図リンクを `../figs/` → `figs/` に切替えて record する。
