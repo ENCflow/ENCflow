@@ -233,6 +233,11 @@ stock of each area destroyed into debris.
 - `--rows` (the rows of the breach) and `J_LOW1`, `J_LOW2` in make_terrain.py (the section
   with a low crest): the width of the breach.
 - `bd_fcrit` and `bd_fcrit2` (the load at which houses break): the area swept away changes.
+- `fn_bb` and `RN_HOUSE` in make_terrain.py (the mean building size and the ground roughness of the
+  residential areas): the building drag acts where the water is deep, and the ground roughness where
+  the flow is shallow and fast. With the floodplain roughness of 0.05 in the residential areas as
+  well (counting the building resistance twice, through the drag and the roughness), 48 % instead of
+  69 % of the houses in area A are swept away.
 - `J_DIKE` and `H_DIKE` in make_terrain.py (position and height of the secondary levee): if it
   is too low, the flood overtops it.
 - `S_EW` and `S_NS` (slopes of the landside): the direction and speed of the spreading flood.

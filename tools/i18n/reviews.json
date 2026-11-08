@@ -1976,9 +1976,9 @@
     {
       "source": "examples/levee_breach/README.md",
       "target": "examples/levee_breach/en/README.md",
-      "source_sha256": "e40796cb3d6d02660b14b27afdc61bdcbc4f9eca5cd6fc36e56b78331972473c",
-      "target_sha256": "891bdde47f9ef7355cfe69429cc579a9ff5498004b20abad63ba17cb4ec71a01",
-      "reviewer": "Claude (Claude Code session; reran all cases with the old and new settings, checked that the old settings reproduce every number of the previous README, and replaced each number from the new tables in both versions)",
+      "source_sha256": "9b78843557f5a2971b01fa1e846e14c0dce5a14d6cb43f59eea433f85ae5520b",
+      "target_sha256": "e0b41f73bd9e979b2afb397850aa6a9b225732fb17f9c50f35bdebaff207edd7",
+      "reviewer": "Claude (Claude Code session; added one sensitivity item from a verification run in both versions and compared them)",
       "method": "assistant",
       "reviewed_on": "2026-11-08"
     },
