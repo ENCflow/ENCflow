@@ -101,7 +101,7 @@ the output goes to `result_xxx/` (`dir_result` is set). Name suffixes:
 |---|---|---|---|
 | Advection scheme | `param_base_{noadv,s1,s3}.txt` | Scheme comparison without opening correction (100 m) | §68.8 follow-up, §68.12 |
 | Dynamic opening correction | `param_dyn_{noadv,s1,s3}.txt`, `param_dyn2_{s1,s3}.txt` | f_opening_dynamic = 1 (channel edges) / 2 (all edges) | §68.14 |
-| Choice of the donor | `param_dyn_s3_donor3.txt` | f_advection_donor = 3 (only faces whose donor on line k carries almost no water are treated as neutral). It replaces the former `param_dyn_s3_donor1.txt` (f_advection_donor = 1, restricting the donor on channel–channel edges to channel cells) after option 1 was removed (2026-11-07) | §68.18, §100 |
+| Choice of the donor | `param_dyn_s3_donor3.txt` | f_advection_donor = 3 (only faces whose donor on line k carries almost no water are treated as neutral). It replaces the former `param_dyn_s3_donor1.txt` (f_advection_donor = 1, restricting the donor on channel–channel edges to channel cells) after option 1 was removed (2026-11-07) | §68.18, §102 |
 | Cap for dry receivers | `param_cap.txt` | f_dry_head_cap = 1 (now the default; byte-identical with the reference) | §68.16 |
 | Resolution | `param50_*.txt` (`data_chichibu_50m`), `param200_*.txt` (the 200 m data of tutorials), `param500_*.txt` / `param500r_*.txt` (`data_chichibu_500m`; r = aggregated from the 100 m channel mask) | base / dyn × s1 / s3 on the 50 / 200 / 500 m grids | §68.14, §68.18 |
 | Sub-grid channel width | `param_w{50,100}_{s1,s3}.txt` (`width_chichibu{50,100}.txt`), `param200_w{50,100}_s3.txt` | Channel width specified by fn_width (100 m = grid width, 50 m) | §68.12, §68.24 |
@@ -114,7 +114,7 @@ opening correction (scheme 3: 3773 → 4857 m³/s), and with
 f_advection_donor = 1 it approached further, to 5656 m³/s (100 m), the value
 of the 50 m grid (both with the code of that time; option 1 was removed on
 2026-11-07 and replaced by 3, which contains most of its effect; with the
-current code `param_dyn_s3_donor3.txt` gives 5,746 m³/s; §100). The walled natural banks (lev1) complete the 6 h but are
+current code `param_dyn_s3_donor3.txt` gives 5,746 m³/s; §102). The walled natural banks (lev1) complete the 6 h but are
 rough, with Runge 12% and frequent ex_flux; for natural banks the wall-less
 width mode is recommended (§68.25, §68.29).
 

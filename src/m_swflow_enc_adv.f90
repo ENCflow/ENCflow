@@ -136,7 +136,7 @@ end subroutine
 !     非ゼロになり薄いエッジで発散した)。
 !     ū は 1 次風上(u_e か、平行な隣接リンクの流速。斜めエッジでは面の
 !     前後にある反対偶奇の平行リンク 2 本の平均。§68.36)。f_advection_donor = 3
-!     では平行リンクの乾湿判定を dd 未満で連続な重みにする(lateral_u_w。§100)。
+!     では平行リンクの乾湿判定を dd 未満で連続な重みにする(lateral_u_w。§102)。
 !   - h̄_e = (h_c + h_n)/2(下限 dd/2)。サブグリッド河道(§18・§26)では
 !     水量 h×wfrac(σ 有効時 sect_v(h)×wfrac)を使う(§68.9)。lm は v1 と
 !     同じ流儀で乗じる(輸送項は dtl = dt/lme の減衰を相殺する。§20)。
@@ -162,7 +162,7 @@ subroutine adv_prepare_mc(p, g, s, sx, tx)
   real :: qc, qn, qtp, qtm
   real :: ubc, ubn, ubtp, ubtm
   real :: ta
-  real :: wsh                       ! 線 k の供給元の重み(f_advection_donor = 3。§100)
+  real :: wsh                       ! 線 k の供給元の重み(f_advection_donor = 3。§102)
 
   !$omp parallel do schedule(dynamic) &
   !$omp private(i, j, k, in, jn, ie, je, hc, hn, hb, lme, ue, um, umm, up, upp, &
@@ -250,13 +250,13 @@ subroutine adv_prepare_mc(p, g, s, sx, tx)
         ! f_advection_donor = 3: 線 k 上の供給元のリンクが面のセルへ運ぶ実流量 Q_k が、面のセルへの
         ! 最大の流入リンクの実流量 Q_max の ε(p_adv_donor_eps)倍に満たないときだけ、MUSCL の風上値を
         ! 重み w = (Q_k/Q_max)/ε で u_e へ寄せる(ū = u_e + w(ū_k − u_e)。w = 1 なら 0 と同じ値。
-        ! donor_share。§100)。線 k 上の 1 本のリンクの流速に面の全流束を掛ける取り方だと、線上の
+        ! donor_share。§102)。線 k 上の 1 本のリンクの流速に面の全流束を掛ける取り方だと、線上の
         ! リンクが河岸の薄い水膜で面の流束の主部が斜めのリンクから来るとき、「深いセルの質量流束 ×
         ! 薄いリンクの流速」の人工的な減速になり、水膜の乾湿判定(cell_ok)の切り替わりで減速が
         ! 一度に外れてハイドログラフの跳ねになる(tutorials/chichibu Step 3 の 232 min)。3 はこの
         ! 減速だけを消し、他のリンクの水の運動量は持ち込まない(面のセルへの全流入リンクの流量で
         ! 重み付けした平均を風上値にする旧 2 は持ち込むので、河岸の段差をまたぐ交換リンクへ本流の
-        ! 運動量が注入されて横流入の水路が深くなり、渦・壁の検定も悪くした。2026-11-07 廃止。§100)
+        ! 運動量が注入されて横流入の水路が深くなり、渦・壁の検定も悪くした。2026-11-07 廃止。§102)
         if (qc >= 0) then
           if (cell_ok(i - din(k), j - djn(k))) then
             ubc = face_value(um, ue, umm, far_ok(i - 2 * din(k), j - 2 * djn(k)))
@@ -335,7 +335,7 @@ subroutine adv_prepare_mc(p, g, s, sx, tx)
         ! 開口率 axis_open の乾湿判定を、dd 未満では水深に比例して中立へ寄せる連続な重み min(1, h/dd)
         ! にする(lateral_u_w・wet_weight。dd 以上の水深では 0 と同じ値)。河岸の水膜が dd を割った瞬間に
         ! 平行リンクの遅い流速による減速が一度に外れ、ハイドログラフの跳ねになるのを防ぐ
-        ! (tutorials/chichibu 200 m の測線 3 の 120 min・測線 4 の 310 min。§100)
+        ! (tutorials/chichibu 200 m の測線 3 の 120 min・測線 4 の 310 min。§102)
         if (qtp >= 0) then
           ubtp = ue
         else if (opt%f_advection_donor == 3) then
@@ -365,11 +365,11 @@ subroutine adv_prepare_mc(p, g, s, sx, tx)
 
 contains
 
-  ! 線 k の供給元の重み(f_advection_donor = 3。developer.md §100)。面のセル (ci, cj) へ線 k 上の
+  ! 線 k の供給元の重み(f_advection_donor = 3。developer.md §102)。面のセル (ci, cj) へ線 k 上の
   ! 供給元(kk 近傍)から入る実流量 Q_k と、面のセルへの 8 リンクの流入の最大 Q_max の比
   ! r = Q_k/Q_max に対し w = min(1, r/ε)(ε = p_adv_donor_eps)。面のセルへの流入がなければ 1。
   ! 読むのは面のセル(行 j − 1・j)の 8 リンクの qlk(時刻 n の mn。エッジ幅 2 の交換済み)だけで、
-  ! エッジの行は j − 2 .. j(MPI の np = 1・2・4 が逐次とバイト一致。§100)。海セルからの流入も最大に
+  ! エッジの行は j − 2 .. j(MPI の np = 1・2・4 が逐次とバイト一致。§102)。海セルからの流入も最大に
   ! 数える(海セルは運動量を供給しないので、寄せる側 = u_e で安全)。
   ! 割り算は Q_k < εQ_max のときだけ行う(商は 1 未満)。Q_max が正でも極小のとき εQ_max が 0 に
   ! アンダーフローして 0 で割る(-ffpe-trap=zero で停止。test/slopefric の計算開始直後)ことを避ける。
@@ -543,7 +543,7 @@ contains
     end if
   end function
 
-  ! 側方面の供給元の重み(f_advection_donor = 3。developer.md §100): cell_ok の乾湿判定(水深 ≥ dd で 1、
+  ! 側方面の供給元の重み(f_advection_donor = 3。developer.md §102): cell_ok の乾湿判定(水深 ≥ dd で 1、
   ! 未満で 0)を、dd 未満では水深に比例して 0 へ寄せる連続な値 min(1, h/dd) にしたもの。確保範囲外・
   ! 無効・海セルは cell_ok と同じく 0。h ≥ dd なら厳密に 1 で、h = 0 なら 0
   pure function wet_weight(ci, cj) result(w)
@@ -558,7 +558,7 @@ contains
     w = min(1.0, max(0.0, s%h(mi,mj)) / p%dd)
   end function
 
-  ! lateral_u の f_advection_donor = 3 版(developer.md §100)。平行リンクの有効判定(両端セルの cell_ok)
+  ! lateral_u の f_advection_donor = 3 版(developer.md §102)。平行リンクの有効判定(両端セルの cell_ok)
   ! を、両端セルの wet_weight の小さい方 w ∈ [0, 1] に置き換える。
   !   法線エッジ: ū = u_e + w (u_par − u_e)。
   !   斜めエッジ: 2 本の重み w1, w2 で ū = u_e + (w1 f1 (u1 − u_e) + w2 f2 (u2 − u_e)) / max(1, w1 + w2)。

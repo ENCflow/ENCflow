@@ -99,7 +99,7 @@ module m_swflow_enc
                                             !   セル, 3:線 k の供給元の流量が面のセルへの
                                             !   最大の流入リンクの ε 倍未満なら u_e へ寄せ、
                                             !   側方面の乾湿判定を dd 未満で連続な重みに
-                                            !   (§100)。1(河道セル間のエッジでは河道セルのみ。
+                                            !   (§102)。1(河道セル間のエッジでは河道セルのみ。
                                             !   §68.18)と 2(流入面を全流入リンクの流量で
                                             !   重み付け)は 2026-11-07 に廃止)
     integer :: f_inflow_edge                  ! 区間流入の外縁セルに接するエッジの扱い (0:接する
@@ -117,7 +117,7 @@ module m_swflow_enc
     real :: wf_break_visc = 0.0               ! 波浪場の砕波による水平混合の係数 M(§90)
     real :: p_diagratio != 2 / (2 + sqrt(2.))  ! ratio of diagonal component
     real :: p_adv_upwind_index != 0.0          ! upwind index of advection term
-    real :: p_adv_donor_eps = 0.1             ! f_advection_donor = 3 のしきい値 ε(§100)
+    real :: p_adv_donor_eps = 0.1             ! f_advection_donor = 3 のしきい値 ε(§102)
     real :: p_adprunge_thresh != 2.0           ! threshold of adaptive Runge-Kutta
     real :: p_diffusion_nu != 0.0              ! 拡散項の動粘性係数 (m2/s。モデル2では
                                             !   加算のバックグラウンド粘性)
@@ -1005,7 +1005,7 @@ subroutine m_swflow_enc_init(p, g, b, s)
   ! f_advection_donor = 1(河道セル間のエッジの供給元を河道セルに限る。§68.18)と 2(流入面の風上値を
   ! 全流入リンクの流量で重み付け)は 2026-11-07 に廃止。2 は通過流の運動量を河岸の交換リンクへ持ち込み、
   ! 横流入・渦・壁の検定を悪くした。1 は効果の大部分が 3 に含まれ(秩父 100 m で 1 + 3 は 3 より +3%)、
-  ! 3 と併用できず、本流と浸水谷底の運動量交換を切る操作の正否が未検証だった(developer.md §100)
+  ! 3 と併用できず、本流と浸水谷底の運動量交換を切る操作の正否が未検証だった(developer.md §102)
   if (opt%f_advection_donor == 1) then
     call par_stop("list_enc: f_advection_donor=1 (channel-cell donors on channel edges) was removed;" &
                   //" use f_advection_donor=3 (see developer.md sec.100)")

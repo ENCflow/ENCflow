@@ -113,9 +113,9 @@
     {
       "source": "docs/users_guide/advection.md",
       "target": "docs/en/users_guide/advection.md",
-      "source_sha256": "1adad934a3dfecc2f53c7c29941542cada1e7e60c0268b23ca4f91e0a84724ae",
-      "target_sha256": "a647e89a6d7ed79cf0b5ed103dd7ac889edcb02d0c120e3f8d9413948652cce2",
-      "reviewer": "Claude (Claude Code session; 2026-11-08: 200 m W = 50 transect 3 oscillation identified as a seiche in filled flat reaches; note on the W = 50 fine oscillations added to the supplement and the option-3 limits; Japanese and English edited together and read side by side)",
+      "source_sha256": "e4b8743b48797127c8b6d5b1b4c6d6ca963713b5623190d18f338db21dc8498c",
+      "target_sha256": "ac479ba11eaf62dd519b89377c9b1a2681d209350e99ee33ef5ee8a9160a15cb",
+      "reviewer": "Claude (Claude Code session; developer.md section of f_advection_donor renumbered from 100 to 102 to avoid the collision with the 100 and 101 sections on main; references updated in Japanese and English alike)",
       "method": "assistant",
       "reviewed_on": "2026-11-08"
     },
@@ -2885,11 +2885,11 @@
     {
       "source": "test/chichibu/README.md",
       "target": "test/chichibu/en/README.md",
-      "source_sha256": "a04d672866d34c59d9a5349032a2dd5bf79fe76b64d99ffccba6ad20bc314f16",
-      "target_sha256": "7281f28e561bf2ff07c0c653938461df70805b9555d2d0b2a3ed841395dc3ac8",
-      "reviewer": "Claude (Claude Code session; f_advection_donor = 1 removed on 2026-11-07: the derived case param_dyn_s3_donor1 replaced by param_dyn_s3_donor3 and the main-result sentence annotated (test/chichibu); the section 68.18 reference annotated (test/hillslope); Japanese and English edited together)",
+      "source_sha256": "584730267db2d19dc2e197d70f1123c752e1ed387038c04aaf6a1bada7bd07e2",
+      "target_sha256": "b931a35697ecd7569150d8d131bcc1b214a3fa056a8881ca2f87a44bf0f004a4",
+      "reviewer": "Claude (Claude Code session; developer.md section of f_advection_donor renumbered from 100 to 102 to avoid the collision with the 100 and 101 sections on main; references updated in Japanese and English alike)",
       "method": "assistant",
-      "reviewed_on": "2026-11-07"
+      "reviewed_on": "2026-11-08"
     },
     {
       "source": "test/chichibu/data_chichibu/README.md",
@@ -3389,11 +3389,11 @@
     {
       "source": "test/hillslope/README.md",
       "target": "test/hillslope/en/README.md",
-      "source_sha256": "c4f0203ff91a60b7c8fe17dc1ec314cfdd9657580c10f09ff53e7abd6e5127d0",
-      "target_sha256": "c35311ba152d50da7c32c42b23402615734fc449aa1f2d3157dacf1439f1adfc",
-      "reviewer": "Claude (Claude Code session; f_advection_donor = 1 removed on 2026-11-07: the derived case param_dyn_s3_donor1 replaced by param_dyn_s3_donor3 and the main-result sentence annotated (test/chichibu); the section 68.18 reference annotated (test/hillslope); Japanese and English edited together)",
+      "source_sha256": "83e96c5a6e1c5f488c8be5e543fee73fe11b3753ceaf239f72b4b83aa51c8d93",
+      "target_sha256": "431edfc930bcced6a4596667289fb7da046e0dceb459ab17b6e316e5b5759cb8",
+      "reviewer": "Claude (Claude Code session; developer.md section of f_advection_donor renumbered from 100 to 102 to avoid the collision with the 100 and 101 sections on main; references updated in Japanese and English alike)",
       "method": "assistant",
-      "reviewed_on": "2026-11-07"
+      "reviewed_on": "2026-11-08"
     },
     {
       "source": "test/hillslope/figs/plane.png",

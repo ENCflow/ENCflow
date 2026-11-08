@@ -445,7 +445,7 @@ With `f_advection_donor = 3` the wet/dry test of the parallel edge becomes a con
   not be combined with 3, and whether cutting the momentum exchange between
   the main channel and the flooded valley floor is right was never verified.
   It was therefore removed on 2026-11-07. Setting it stops the run; use 3
-  (developer.md §100, in Japanese).
+  (developer.md §102, in Japanese).
 - **(Removed) Donors weighted by the fluxes of all inflow links (formerly `f_advection_donor = 2`).**
   This option took the upwind value of a flow-direction face as the average
   over all links that actually carry water into the face cell, weighted by
@@ -456,7 +456,7 @@ With `f_advection_donor = 3` the wet/dry test of the parallel edge becomes a con
   flows along walls slowed down, and a slope flow 22.5° off the axis was
   delayed), and 3 below handles the recession jumps and the sensitivity to
   `dd` without these side effects, so 2 was removed on 2026-11-07. Setting
-  it stops the run; use 3 (developer.md §100, in Japanese).
+  it stops the run; use 3 (developer.md §102, in Japanese).
 - **Donors that carry almost no water, or are thin films, pulled toward neutral (`f_advection_donor = 3`).**
   The upwind value of a flow-direction face is the MUSCL face value
   $`\bar u_k`$ of the link on line $`k`$, as with the default (0). Only when
@@ -497,7 +497,7 @@ With `f_advection_donor = 3` the wet/dry test of the parallel edge becomes a con
   test/sublattice, test/uniflow, test/inflowadv, test/dbonset and
   test/sedfeed pass as with 0, with the judged values at the same level as 0. No
   channel mask is needed. The method is **original to ENCflow**
-  (developer.md §100, in Japanese). **Known changes and limits**: relative to
+  (developer.md §102, in Japanese). **Known changes and limits**: relative to
   0, the Chichibu peak near the basin outlet is +15% and 22 min earlier on the
   200 m grid and +21% on the 100 m grid
   ([test/chichibu](../../../test/chichibu/en/README.md)) (the artificial brake
@@ -520,7 +520,7 @@ With `f_advection_donor = 3` the wet/dry test of the parallel edge becomes a con
   transect 4 of the 200 m grid by 6 to 12% and made the discharge rough or the
   run diverge on the 100 m and 50 m grids. Because this brake also provides
   damping that computations on real terrain rely on, it has not been removed
-  (developer.md §100). Films thinner than `dd` are also counted in
+  (developer.md §102). Films thinner than `dd` are also counted in
   proportion to their thickness, so in a bent channel with banks wetted by
   rain the water level at the bend cells is a little higher than with 0
   (the zigzag channel of test/bendloss with 2 mm/h on the floodplain:
@@ -544,7 +544,7 @@ With `f_advection_donor = 3` the wet/dry test of the parallel edge becomes a con
   and +194 m³/s with 0.02). No $`\varepsilon`$ removes all the disturbances, so the
   default stays 0.1 (a prototype that judges the donor by the ratio of depths
   removed this oscillation but roughened other places, so it was not adopted;
-  developer.md §100). With a 50 m wide channel on the 200 m grid, a seiche
+  developer.md §102). With a 50 m wide channel on the 200 m grid, a seiche
   (standing wave) with a period of about 4 minutes can remain in flat reaches
   created by depression filling (±30 to 100 m³/s per minute in the discharge).
   It becomes visible because 3 combined with MUSCL has little dissipation; it
