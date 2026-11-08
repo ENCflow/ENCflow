@@ -38,7 +38,37 @@ and the angle of the walls.
 | Fallen debris dissolves in the clefts | Talus dissolution (a cell carrying talus dissolves the talus first) | (automatic) |
 | Stripping of the soil | **Not represented** (the soil rides on the surface lowered by dissolution and sinks into the clefts) | — |
 
+![Schematic of the mechanisms](figs/mechanism.png)
+
+Schematic (does not use the results). (a) A real stone forest: on a soil-covered plateau, recharge that
+carries soil CO₂ gathers in the joints and dissolves them below the soil (left); later the soil is
+stripped and pillars whose walls are joint faces appear (right). (b) How ENCflow represents it (a section
+across the joints; one column = one 2 m cell). Left: initial state. Joint cells have soluble fraction 6,
+the others 1, under 1 m of soil. The rain of 0.228 mm/h is below the capacity of 40 mm/h, so all of it
+soaks in. Middle: the state after 5 kyr computed from the dissolution formula alone,
+w = k_d·f_sol·F·morfac (k_d = 1.2×10⁻⁴, F = infiltration = rain). The bedrock surface lowers by
+0.24 m/kyr in cells of fraction 1 and by 1.44 m/kyr in joint cells, the surface by 0.9 times that, and the
+soil thickens by the residue (0.1 times). Right: one cleft enlarged, showing the rule by which the part of
+the drop H_w to the lowest point in the window (wall cell ± 2 cells) above H_c = 8 m collapses into talus
+in the cleft and dissolution takes the talus first (amounts illustrative). The soil on the wall falls with
+it, counts as talus and dissolves as talus (a simplification: the talus material is not distinguished).
+(c) Rules and values. Collapse is judged on the drop of the surface z. The cleft in the surface deepens at
+1.08 m/kyr (1.2 m/kyr in the bedrock surface) and reaches H_c after about 7.4 kyr, when collapse begins.
+(d) A step to the neighbour stands up to H_c, so on a 2 m grid the wall angle is at most
+atan(8/2) ≈ 76°. The levelling-off of the cleft depth and the maximum bedrock slope of 75° in the results
+correspond to H_c in (c) and to the limit in (d).
+
 ## Geometry and settings
+
+![Settings](figs/setup.png)
+
+Settings drawn from the inputs (joints.txt, z.txt, param.txt), not from results. Left: joint map (joint
+cells of soluble fraction 6 are 23.5 % of the domain; dashed = the section at y = 103 m, the same as in
+sections.png of the results). Upper middle: initial section at y = 103 m (plateau z = 30 m, brown = soil
+1 m, dark grey = joint cells). Lower middle: rain of 0.228 mm/h against the infiltration capacity of
+40 mm/h and the soil → conduit-layer exchange of 20 mm/h (log scale). The rain is two orders of magnitude
+smaller than both, so all of it soaks in and the soil never saturates. Right: summary of the settings (the
+same values as the table below).
 
 | Item | Value |
 |---|---|
@@ -57,10 +87,12 @@ and the angle of the walls.
 cd examples/stone_forest
 make                                        # link to the executable and inputs (make_terrain.py writes z.txt and joints.txt)
 make run                                    # main case (about one hour)
+python3 plot_setup.py                       # figs/mechanism.png, setup.png (does not use the results)
 python3 plot_results.py | tee analysis.txt  # figs/maps, sections, stats.png and the tables
 ```
 
-With the argument `en` the figures are drawn with English labels into en/figs/.
+With the argument `en` the figures are drawn with English labels into en/figs/
+(`python3 plot_setup.py en`, `python3 plot_results.py en`).
 
 ## Results
 

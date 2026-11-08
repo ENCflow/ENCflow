@@ -107,6 +107,7 @@ python3 make_terrain.py --steady            # infiltration map ksv_steady.txt fo
 ./encflow param_steady.txt > Screen_steady.log          # 0.99 Myr with quasi-steady forcing (about 1 hour)
 python3 plot_results.py param_steady.txt steady | tee analysis_steady.txt   # figs/*_steady.png
 python3 make_terrain.py --steady --base     # inputs with the base level: z_base, gwc_bot, gwc_outfall, uplift, sol_base, ksv_base.txt (section "base level" below)
+python3 plot_setup.py                       # with these inputs it also draws figs/setup_base.png (base-level configuration and the four configurations; does not use the results)
 ./encflow param_base.txt > Screen_base.log  # 0.99 Myr with a base level (water table) and uplift (about 3 hours on 4 threads)
 python3 plot_results.py param_base.txt steady | tee analysis_base.txt       # figs/*_base.png
 ./encflow param_base_hc50.txt > Screen_base_hc50.log   # sensitivity variant rf_hc = 50 m (shared inputs; about 3 hours)
@@ -242,6 +243,25 @@ case), the thin steady film gathers all of the water into the few lowest cells o
 makes the concentration at the feet extreme (a side effect of the steady forcing).
 
 ## Base level (water table) and uplift (param_base.txt)
+
+![Base level and uplift configuration](figs/setup_base.png)
+
+Drawn from the inputs (z_base.txt and the other files written by make_terrain.py --steady --base, and the
+param*.txt files), not from results. (a) Section through towers 1 and 2 (y = 305 m): the rain of
+0.228 mm/h soaks in entirely on the plain and only 2.5 % of it on the bare-rock towers. The soil water
+moves to the conduit layer (exchange R, at most 20 mm/h and only while the soil head is above the conduit
+head H), and R is the water of dissolution. The conduit head is the head floor z_b = −45 m (fixed in
+absolute elevation) plus the storage of 0.02 × 2000 m = 40 m, i.e. −5 m (the initial water table), and the
+water flows by the linear law to the outfall in the east. The land is uplifted at 0.2 mm/yr. (b) River
+column at the east edge: the outfall is an orifice Q = Cd·A √(2g(H − z − h)) (Cd·A = 0.15 m²) that
+discharges onto the river surface only while H is above the river water level z + h; the water leaves
+through the east edge. (c) Rules and values (formulas in src). The 0.05 m²/s of lateral flow is the value
+for a full layer; the actual flow is that times the fill ratio (initially 0.02). Dissolution is
+w = k_d·f_sol·morfac·[R + 0.3 f_b max(P − R, 0)], giving an initial surface lowering estimated at
+0.22 m/kyr on the plain and 0.07 m/kyr on bare rock (uplift 0.20 m/kyr). (d) Input values for the plain,
+bare rock and the river column. (e) Comparison of the four configurations (shaded = changed from the
+configuration to the left). Items 1 (the flap of the outfall) and 2 (dissolution that continues below the
+water table) of "What does not work" below follow from the rules in (b) and (c).
 
 This configuration supplies item 2 of the previous section (no base level at the feet). The
 easternmost column becomes the river of the base level (z = −5 m; insoluble and impermeable, with

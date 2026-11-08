@@ -89,6 +89,7 @@ python3 make_terrain.py --steady            # 準定常強制用の浸透能 ksv
 ./encflow param_steady.txt > Screen_steady.log          # 準定常強制で 0.99 Myr(約 1 時間)
 python3 plot_results.py param_steady.txt steady | tee analysis_steady.txt   # figs/*_steady.png
 python3 make_terrain.py --steady --base     # 基準面つきの入力 z_base・gwc_bot・gwc_outfall・uplift・sol_base・ksv_base.txt(下の「基準面」の節)
+python3 plot_setup.py                       # 入力がそろったので figs/setup_base.png も描く(基準面の構成と 4 構成の比較。計算結果は使わない)
 ./encflow param_base.txt > Screen_base.log  # 基準面(地下水面)+ 隆起で 0.99 Myr(4 スレッドで約 3 時間)
 python3 plot_results.py param_base.txt steady | tee analysis_base.txt       # figs/*_base.png
 ./encflow param_base_hc50.txt > Screen_base_hc50.log   # 感度変種 rf_hc = 50 m(入力は共通。約 3 時間)
@@ -204,6 +205,21 @@ python3 plot_results.py param_base_hc50.txt steady | tee analysis_base_hc50.txt 
 各塔の最も低い数セルに全部集まり、これが裾の集中を極端にしています(定常化の副作用)。
 
 ## 基準面(地下水面)と隆起(param_base.txt)
+
+![基準面と隆起の構成](figs/setup_base.png)
+
+入力(make_terrain.py --steady --base が書く z_base.txt などと param*.txt)から描いた図で、計算結果は
+使わない。(a) 塔 1・2 を通る横断(y = 305 m): 雨 0.228 mm/h は平野では全量しみ込み、裸岩の塔では
+2.5 % だけしみ込む。土層の水は管路層へ移り(交換 R。最大 20 mm/h で、土層の水頭が管路層の水頭 H より
+高いときだけ)、R が溶食の水量になる。管路層の水頭は、水頭底 z_b = −45 m(絶対標高で固定)に貯留
+0.02 × 2000 m = 40 m を足した −5 m(初期の地下水面)で、水は線形則で東の吐口へ流れる。陸は 0.2 mm/yr
+で隆起する。(b) 東端の河道の列: 吐口はオリフィス Q = Cd·A √(2g(H − z − h))(Cd·A = 0.15 m²)で、H が
+河道の水面 z + h より高いときだけ河道の地表へ放流し、水は東の辺から域外へ出る。(c) 規則と値(src の
+式)。側方通水の 0.05 m²/s は満管時の値で、実際の通水はその充満率(初期 0.02)倍になる。溶食は
+w = k_d·f_sol·morfac·[R + 0.3 f_b max(P − R, 0)] で、初めの地表の低下は平野 0.22 m/kyr、裸岩
+0.07 m/kyr と見積もられる(隆起は 0.20 m/kyr)。(d) 平野・裸岩・河道の列ごとの入力の値。(e) 4 つの
+構成の比較(色付き = 左の構成から変えた値)。下の「できていないこと」の 1(吐口のフラップ)と 2(地下
+水面より下でも続く溶食)は、(b)・(c) の規則から読める。
 
 前節の 2(裾に基準面がない)を補う構成です。東端の 1 列を基準面の河道(z = −5 m。不溶・不透水、
 東の辺は自由流出)にし、管路層に側方通水(線形則 0.05 m²/s)と河道の列の吐口(オリフィス

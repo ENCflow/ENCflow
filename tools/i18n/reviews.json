@@ -2606,9 +2606,27 @@
     {
       "source": "examples/stone_forest/README.md",
       "target": "examples/stone_forest/en/README.md",
-      "source_sha256": "06fe0678efddbf1c308d85ddb1949c005b5b110c35213adc1b106662145fa305",
-      "target_sha256": "cdf4b0d7a22bb3f3a20a2f0f6f8438a3d2dbc6c9f979886b5fff616071dbdcbc",
-      "reviewer": "Claude (Claude Code session; full-text comparison of both versions, section by section, including tables and links)",
+      "source_sha256": "662c60b250a4270b602e3ff89bdbf8084bf1aa8e84fb6bf1344d511956fa2d4b",
+      "target_sha256": "3dac007ed21d32e4167e772aaaf05eb423d74e3bb81016a70b05b3cfef560158",
+      "reviewer": "Claude (Claude Code session; checked the figures' rules against src and param files, and compared the added captions sentence by sentence)",
+      "method": "assistant",
+      "reviewed_on": "2026-11-08"
+    },
+    {
+      "source": "examples/stone_forest/figs/mechanism.png",
+      "target": "examples/stone_forest/en/figs/mechanism.png",
+      "source_sha256": "083520848388f80add5964f89a4eb9cf6b1bfcf19b710800c440a72f980e4177",
+      "target_sha256": "47c23d3c935bb8781e87fdc3704d43ce75d50824860d3641b9c7e4aa27765772",
+      "reviewer": "Claude (Claude Code session; both drawn by the same script from the same inputs; compared every label and value)",
+      "method": "assistant",
+      "reviewed_on": "2026-11-08"
+    },
+    {
+      "source": "examples/stone_forest/figs/setup.png",
+      "target": "examples/stone_forest/en/figs/setup.png",
+      "source_sha256": "e8b1b3f6240403065878c246a84c7210cf32cbde74b5a67a11a98ddfc10e3441",
+      "target_sha256": "ba08284070d1ee4c506c98d9f9310cb88c24606c4777ce5c903bb4292de71942",
+      "reviewer": "Claude (Claude Code session; both drawn by the same script from the same inputs; compared every label and value)",
       "method": "assistant",
       "reviewed_on": "2026-11-08"
     },
@@ -2741,9 +2759,9 @@
     {
       "source": "examples/tower_karst/README.md",
       "target": "examples/tower_karst/en/README.md",
-      "source_sha256": "e5e1a3acc7ae356b8226a85b083611a2d77f5693154fb70f076ca31df1337040",
-      "target_sha256": "2629ae5fca04a1354ee0b11f1d4f2310ba9ddc6db7b12a113ae4036426a9f12d",
-      "reviewer": "Claude (Claude Code session; corrected both versions in parallel against the inputs, scripts and committed figures, and compared the edited passages and numbers)",
+      "source_sha256": "a304485f2afac1d05e5f35f8cda651cd979f07478efdbc360bbdeccc3c6e5ffd",
+      "target_sha256": "9331a2a07d99de82030a8037e686bae2db771075254864c814d16a3be6a6bca0",
+      "reviewer": "Claude (Claude Code session; checked the figures' rules against src and param files, and compared the added captions sentence by sentence)",
       "method": "assistant",
       "reviewed_on": "2026-11-08"
     },
@@ -2845,6 +2863,15 @@
       "reviewer": "Claude (Claude Code session; schematic and setup figure drawn by plot_setup.py from input files only, Japanese and English images compared side by side: same data and layout, labels translated; no model execution)",
       "method": "assistant",
       "reviewed_on": "2026-11-02"
+    },
+    {
+      "source": "examples/tower_karst/figs/setup_base.png",
+      "target": "examples/tower_karst/en/figs/setup_base.png",
+      "source_sha256": "40cbb20014ce74534e56fcb5611f9b7f743455d4c544fcc1fa58be03fd8cdbb0",
+      "target_sha256": "399521e044a622abe4df3bd2d54333587c4aad4a0b80ad9cfc37202c38234f69",
+      "reviewer": "Claude (Claude Code session; both drawn by the same script from the same inputs; compared every label and value)",
+      "method": "assistant",
+      "reviewed_on": "2026-11-08"
     },
     {
       "source": "examples/tower_karst/figs/towers.png",
