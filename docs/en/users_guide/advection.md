@@ -544,7 +544,7 @@ With `f_advection_donor = 3` the wet/dry test of the parallel edge becomes a con
   transect and from the oscillating jump and pond in the stepped bed created
   by depression filling about 1 km downstream (a flat pond and a 7 m step);
   they are not wet/dry switches and appear with 0 as well (oscillations caused
-  by the terrain; Step 6 and the supplement of tutorials/chichibu). With 3, at
+  by the terrain; the supplements of tutorials/chichibu). With 3, at
   93 to 95 min on the recession limb, the jump below the step is briefly pushed
   upstream, water is stored and then released when it moves back, which gives
   a dip of −330 and +330 m³/s in one minute (about −145 m³/s in one minute at

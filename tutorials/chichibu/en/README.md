@@ -20,9 +20,10 @@ computation with real terrain data, in the following order.
   to remove them
 - **Step 5**: Rainfall interception and subsurface infiltration (bucket
   model), the three water-storage columns
-- **Step 6**: Boundary condition at the catchment outlet; reading and
-  dealing with fine oscillations in the 1-minute values
+- **Step 6**: Boundary condition at the catchment outlet
 - **Step 7**: 3D visualization (animation) with ParaView
+- **Supplements**: reading and dealing with fine oscillations in the
+  hydrograph; the effect of resolution and the character of the ENC grid
 
 We assume you have completed the [wave tutorial](../../wave/en/README.md)
 first (it explains how to run the model, the meaning of each screen
@@ -652,97 +653,6 @@ downstream river stage or a tide level. For the use of edge boundaries
 [the boundary condition chapter of the users
 guide](../../../docs/en/users_guide/boundary.md).
 
-### About the fine oscillations in the hydrograph
-
-Compared with Step 4 (no losses), Step 5 (interception + infiltration) may
-look as if the fine fluctuations of the waveform have increased (the
-1-minute values move up and down slightly at the end of the rise at
-transect 4, around 120 minutes). One of the causes
-is that infiltration thins the films on the slopes and banks one after
-another, so wet/dry switches of thin water become more frequent.
-
-The 1-minute hydrographs of real-terrain computations can carry such fine
-oscillations (spikes). Most of them are of the same type as the bumps
-treated in Step 4: the moment a thin film on a bank drops below dd, an
-artificial brake that acted on the water of the main flow entering from
-the side is released all at once, giving a short spike.
-`f_advection_donor = 3` also switches the test for water entering from the
-side gradually with the depth, so in this basin no conspicuous spikes
-appear in Steps 5 and 6, and the remaining ups and downs are 10 to 20
-m³/s per minute (figure below; the 1-minute values and the 11-minute moving
-average almost coincide).
-
-![Step 6: 1-minute discharge and moving average](figs/step6_osc.png)
-
-When you notice oscillations, consider them in this order.
-
-1. **First check whether they come from the numerical settings.** If
-   the oscillations move in time, increase or vanish when dd is divided by
-   10, they are wet/dry switches of thin water (running Step 5 with
-   dd = dv = 0.0001 actually increases the small ups and downs on the
-   recessions at transects 3 and 4, and a jump of +62 m³/s in one minute
-   appears at transect 4). Set `f_advection_donor = 3` if you have not
-   (Step 4).
-2. **Small oscillations that remain can often be left as they are.** If
-   they do not harm the water balance of the computation and do not affect
-   the time scales that matter in runoff analysis (tens of minutes and
-   longer), overlaying a moving average when you plot is enough.
-
-3. **For oscillations caused by the terrain, the fundamental remedy is
-   improving the terrain data.** Along the channels of a
-   depression-filled DEM, "perfectly flat reaches" appear here and there
-   (places where the original DEM recorded a river water surface, a
-   gorge, or a reservoir as flat, or where a depression was filled in).
-   In the computation, a "pond" several meters deep forms on such a flat
-   reach, and the motion of its surface or fluctuating overtopping can
-   seed oscillations. The figure below shows examples at transect 3 of
-   the resolution comparison in the supplement (the lower row is the
-   change of the discharge per minute, which makes the oscillations
-   obvious).
-
-   ![Fine oscillations caused by the terrain (transect 3 of the supplement)](figs/supp_t3_osc.png)
-
-   On the 50 m grid (left), a deep dip appears at 93 to 95 minutes on the
-   recession. Just upstream of the transect a flat reach ends in a 10 m
-   step; the hydraulic jump below the step is briefly pushed upstream,
-   stores water and releases it when it moves back. On the 100 m and
-   200 m grids (dashed), the steps lie at other places and have other
-   sizes, and the curves are smooth. The right panel is a run in
-   which a 50 m wide channel is given inside the cells of the 200 m grid
-   (a subgrid channel; see
-   [the channel chapter of the users guide](../../../docs/en/users_guide/channel.md)).
-   The water surface of the flat reach just upstream of the transect
-   sloshes back and forth (a seiche), and ups and downs with a period of
-   about 4 minutes continue. Without the width
-   (dashed), the same flat reach shows hardly any oscillation; in the
-   deep, narrow 50 m channel the sloshing is damped less and becomes
-   visible. This run specifies only the channel width and keeps the bed
-   of the depression-filled DEM, so the flat reach remains; when the bed
-   of this reach was regraded to a uniform slope as a test, the
-   oscillation almost vanished (this test was made on a working copy of
-   the depression-filled DEM by rewriting the elevations of 10 channel
-   cells in the reach; its input is not included in the tutorial).
-
-   Preprocessing the channels so that the longitudinal profile is
-   monotone (eliminating the flat reaches), or moving the channels to
-   subgrid channels (`fn_channel`) with an independently specified bed
-   profile, removes the flat ponds themselves.
-
-   On the 50 m grid (left) as well, regrading the stepped bed about 1 km
-   downstream of the transect (a flat pond and a 7 m step) to a uniform
-   slope (1.6%) removed the dip at 93 to 95 minutes and more than halved the
-   fine fluctuations on the recession (this test was also made on a working
-   copy; its input is not included). Depending on how the terrain is
-   changed, however, a transition to a steep reach can move closer to the
-   transect and produce another oscillation. After changing the terrain,
-   rerun the computation and check that the oscillation at the transect has
-   decreased (for placing transects, see item 4).
-
-4. The choice of measurement locations also mitigates it. A transect
-   placed on a flat reach (pond) several meters deep picks up the
-   motion of the pond surface directly, so **place transects on ordinary
-   channel reaches with a longitudinal slope**.
-
 ## Step 7: 3D visualization with ParaView
 
 Finally, let us look at the distributed outputs as a 3D animation. We
@@ -872,13 +782,110 @@ are regenerated with `Fig_step7.py`, which draws with the same VTK
 library that ParaView uses. The figures of the supplement are
 regenerated separately with `./Fig_supp.sh`.
 
-## Supplement: effect of resolution and the character of the ENC grid
+## Supplement: fine oscillations in the hydrograph
 
 **Everything from here on is supplementary.** The tutorial procedure is
-complete at this point; the following is for readers who are curious about
-how the results change with a finer grid, what the 8-direction exchange of
-the ENC grid buys, and what the advection term does. Reproducing the
-computations takes a few hours because they include 50 m grid cases (see below).
+complete at this point; the following is for curious readers. This
+supplement covers how to read and deal with fine oscillations on the
+1-minute hydrographs of real-terrain computations, and the next one covers
+the effect of resolution and the character of the ENC grid.
+
+Compared with Step 4 (no losses), Step 5 (interception + infiltration) may
+look as if the fine fluctuations of the waveform have increased (the
+1-minute values move up and down slightly at the end of the rise at
+transect 4, around 120 minutes). One of the causes
+is that infiltration thins the films on the slopes and banks one after
+another, so wet/dry switches of thin water become more frequent.
+
+The 1-minute hydrographs of real-terrain computations can carry such fine
+oscillations (spikes). Most of them are of the same type as the bumps
+treated in Step 4: the moment a thin film on a bank drops below dd, an
+artificial brake that acted on the water of the main flow entering from
+the side is released all at once, giving a short spike.
+`f_advection_donor = 3` also switches the test for water entering from the
+side gradually with the depth, so in this basin no conspicuous spikes
+appear in Steps 5 and 6, and the remaining ups and downs are 10 to 20
+m³/s per minute (figure below; the 1-minute values and the 11-minute moving
+average almost coincide).
+
+![Step 6: 1-minute discharge and moving average](figs/step6_osc.png)
+
+When you notice oscillations, consider them in this order.
+
+1. **First check whether they come from the numerical settings.** If
+   the oscillations move in time, increase or vanish when dd is divided by
+   10, they are wet/dry switches of thin water (running Step 5 with
+   dd = dv = 0.0001 actually increases the small ups and downs on the
+   recessions at transects 3 and 4, and a jump of +62 m³/s in one minute
+   appears at transect 4). Set `f_advection_donor = 3` if you have not
+   (Step 4).
+2. **Small oscillations that remain can often be left as they are.** If
+   they do not harm the water balance of the computation and do not affect
+   the time scales that matter in runoff analysis (tens of minutes and
+   longer), overlaying a moving average when you plot is enough.
+
+3. **For oscillations caused by the terrain, the fundamental remedy is
+   improving the terrain data.** Along the channels of a
+   depression-filled DEM, "perfectly flat reaches" appear here and there
+   (places where the original DEM recorded a river water surface, a
+   gorge, or a reservoir as flat, or where a depression was filled in).
+   In the computation, a "pond" several meters deep forms on such a flat
+   reach, and the motion of its surface or fluctuating overtopping can
+   seed oscillations. The figure below shows examples at transect 3 on
+   the 50 m grid and on the 200 m grid with a 50 m wide channel, both
+   computed in the next supplement (effect of resolution) (the lower row
+   is the change of the discharge per minute, which makes the oscillations
+   obvious).
+
+   ![Fine oscillations caused by the terrain (transect 3 of the supplement)](figs/supp_t3_osc.png)
+
+   On the 50 m grid (left), a deep dip appears at 93 to 95 minutes on the
+   recession. Just upstream of the transect a flat reach ends in a 10 m
+   step; the hydraulic jump below the step is briefly pushed upstream,
+   stores water and releases it when it moves back. On the 100 m and
+   200 m grids (dashed), the steps lie at other places and have other
+   sizes, and the curves are smooth. The right panel is a run in
+   which a 50 m wide channel is given inside the cells of the 200 m grid
+   (a subgrid channel; see
+   [the channel chapter of the users guide](../../../docs/en/users_guide/channel.md)).
+   The water surface of the flat reach just upstream of the transect
+   sloshes back and forth (a seiche), and ups and downs with a period of
+   about 4 minutes continue. Without the width
+   (dashed), the same flat reach shows hardly any oscillation; in the
+   deep, narrow 50 m channel the sloshing is damped less and becomes
+   visible. This run specifies only the channel width and keeps the bed
+   of the depression-filled DEM, so the flat reach remains; when the bed
+   of this reach was regraded to a uniform slope as a test, the
+   oscillation almost vanished (this test was made on a working copy of
+   the depression-filled DEM by rewriting the elevations of 10 channel
+   cells in the reach; its input is not included in the tutorial).
+
+   Preprocessing the channels so that the longitudinal profile is
+   monotone (eliminating the flat reaches), or moving the channels to
+   subgrid channels (`fn_channel`) with an independently specified bed
+   profile, removes the flat ponds themselves.
+
+   On the 50 m grid (left) as well, regrading the stepped bed about 1 km
+   downstream of the transect (a flat pond and a 7 m step) to a uniform
+   slope (1.6%) removed the dip at 93 to 95 minutes and more than halved the
+   fine fluctuations on the recession (this test was also made on a working
+   copy; its input is not included). Depending on how the terrain is
+   changed, however, a transition to a steep reach can move closer to the
+   transect and produce another oscillation. After changing the terrain,
+   rerun the computation and check that the oscillation at the transect has
+   decreased (for placing transects, see item 4).
+
+4. The choice of measurement locations also mitigates it. A transect
+   placed on a flat reach (pond) several meters deep picks up the
+   motion of the pond surface directly, so **place transects on ordinary
+   channel reaches with a longitudinal slope**.
+
+## Supplement: effect of resolution and the character of the ENC grid
+
+This supplement is for readers who are curious about how the results change
+with a finer grid, what the 8-direction exchange of the ENC grid buys, and
+what the advection term does. Reproducing the computations takes a few hours
+because they include 50 m grid cases (see below).
 If you only want the conclusions, read the bold sentences at the end of each
 subsection and "What to take away about the ENC grid".
 
@@ -1008,7 +1015,8 @@ tabulated below (in parentheses: change from the next coarser grid).
   transect 3 of the 200 m grid between 90 and 130 minutes (period about 4
   minutes; the 1-minute discharge departs from its 11-minute moving average
   by about ±60 m³/s) is a seiche in flat reaches upstream created by
-  depression filling (right of the figure in item 3 of Step 6). Smoothed with
+  depression filling (right of the figure in item 3 of the previous
+  supplement). Smoothed with
   a 5-minute moving average, the peak drops by 0.7% at transect 3 of the
   200 m grid; transect 4 hardly changes.
 - At transect 3 of the 50 m grid, the 1-minute values show a deep dip at 93
@@ -1016,8 +1024,8 @@ tabulated below (in parentheses: change from the next coarser grid).
   upstream of the transect a flat reach (four cells of equal elevation) ends
   in a 10 m step; the hydraulic jump below the step is briefly pushed
   upstream, stores water and releases it when it moves back: an example of
-  the oscillations caused by the terrain in Step 6 (left of the figure in
-  item 3 of Step 6; the discharge above the step is smooth, so it is not a
+  the oscillations caused by the terrain in the previous supplement (left of
+  the figure in item 3 there; the discharge above the step is smooth, so it is not a
   wet/dry switch). Placing the transect 150 m upstream, above the step,
   removes the dip. On the 100 m and 200 m grids the steps lie at other
   places and have other sizes, and the 1-minute values at transect 3 are
@@ -1057,7 +1065,7 @@ channel water at the outlet at every resolution and the catchment is
 blank, whereas with 4 neighbors (right) spots of ponded water remain
 all over the channel network, stopped at every diagonal reach. These
 fragmented "ponds" can also seed oscillations, as noted in item 3 of
-Step 6, and the 4-neighbor hydrograph on the 50 m grid (transect 4)
+the previous supplement, and the 4-neighbor hydrograph on the 50 m grid (transect 4)
 shows them.
 
 ### Result 3: the advection term and resolution dependence
