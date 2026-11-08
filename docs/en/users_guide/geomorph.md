@@ -433,6 +433,16 @@ solid volume is conserved; the suspended sediment `hs` enters the source cell), 
 is insufficient, the shortfall is discarded as bedrock exposure and reported at the end as
 "wet_lw spreading: solid volume lost to bedrock floor" (0 means strict conservation).
 
+![Hillslope erosion: where it acts, detachment rate, lateral spreading of the detachment depth](../../figs/geomorph_wash_en.png)
+
+Panel (a) shows how the work is divided: dry cells belong to dry-slope erosion (f_splash; the detached sediment
+leaves the system), wet cells outside channels to f_wash (the detached sediment goes to hs), and channel cells to
+bedload and suspended sediment. Panel (b) plots the detachment rate against the Shields number: below the threshold
+only the rain term acts, and above it the sheet-erosion term soon exceeds it (default coefficients; calibration
+assumed). Panel (c) is the Gaussian kernel of wet_lw: spreading the detachment gathered in one cell to its
+neighbours keeps the total. The curves and bars evaluate the expressions for illustrative values; they are not
+computed results.
+
 **Outputs for this section**: detached sediment rides in the surface `Hs0001...`; the loss of soil appears in `Sd0001...` and `Z0001...` ([Output and monitoring](#output-and-monitoring)).
 
 ## Dry-slope erosion (f_splash)

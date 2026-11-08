@@ -25,6 +25,8 @@ the long-wave radiation edge boundary (type 2) or
 water-level-prescribed cells ([Boundary conditions](boundary.md)).
 Give the thickness and extent of the erodible layer as the soil depth
 sd (sd=0 means non-erodible).
+The two ways of representing the sea and where the sediment goes in each are shown in the figure of
+[the sea mask and the fate of sediment](geomorph.md#suspended-sediment-f_suspend) in the chapter.
 
 - **Sand**: the model's native regime. f_esform=2 (Itakura-Kishi) with
   susp_wf=0 (Rubey-derived) works without calibration parameters.
@@ -90,6 +92,14 @@ tide level every step (`dt_tiupdate` at or below the time step; the default upda
 excite a natural oscillation; "Water bodies with short natural periods" in
 [tide level](tide.md#parameters-and-the-basis-of-their-defaults)).
 
+![Setup pattern of a river-mouth delta: sea, boundaries, supply from the river, mechanisms to switch on](../../figs/geomorph_app_delta_en.png)
+
+Panels (a) and (b) are the plan and profile of the minimal configuration above: the sea is ordinary cells with
+an initial level, the offshore edge radiates long waves, and the channel is cut between dry non-erodible land.
+With tides, put a sea-mask band on the offshore edge and set the north and south edges to f_bc = 3. Panel (c)
+lists the mechanisms and guide values, and (d) the shapes for high and low mud concentration. The sketch has
+exaggerated scales and is not a computed result (computed results are in examples/delta).
+
 ## 3. Volcanic flows (debris avalanches, dense pyroclastic flows, lahars)
 
 Density flows without bed erosion can be approximated with
@@ -108,7 +118,8 @@ the entrainable layer thickness as the soil depth sd (the mechanism
 and setup are the same as in [§5 (snow avalanches)](#5-snow-avalanches-dense-flow) —
 only the reinterpretation of the entrainable layer differs). Dilute
 phenomena (pyroclastic surges, plumes, atmospheric ash transport) are
-out of scope by design (see debris_plan.md §5).
+out of scope by design (see debris_plan.md §5). The equivalent fluid and the concentration-varying
+mixture of §4 are compared in the figure at the end of §4.
 
 ## 4. Lahars (volcanic mudflows)
 
@@ -158,6 +169,13 @@ pays off).
   hydrograph. Dilute systems (pyroclastic surges) are out of scope
   (debris_plan.md §5).
 
+![Setting up volcanic mass flows and lahars: equivalent fluid vs concentration-varying mixture, how to start](../../figs/geomorph_app_volcanic_en.png)
+
+Panel (a) is the equivalent fluid of §3: a flow that exchanges nothing with the bed (its concentration does not
+change) stops and is fixed into the terrain. Panel (b) is a lahar: erosion and pore water along the path raise
+the concentration (bulking), and downstream it deposits, dilutes and turns into a flood; the concentration line
+sketches this sequence and is not a computed result. Panel (c) shows the four ways to start the flow.
+
 ## 5. Snow avalanches (dense flow)
 
 The equivalent-fluid setup of [§3](#3-volcanic-flows-debris-avalanches-dense-pyroclastic-flows-lahars) is
@@ -186,6 +204,13 @@ and the co-update identity) applies to snow as well. Dense-flow snow
 avalanches and sediment density flows are the same "granular
 shallow-water flow", so the reuse rests on an identity of
 formulation, not on appearances.
+
+![Reading a dense snow avalanche through the sediment model: sediment containers in the language of snow](../../figs/geomorph_app_avalanche_en.png)
+
+Panel (a) places the reinterpretation of the table above on a slope section: z is the elevation including the
+snow surface, sd the entrainable snow on the path, z − sd the ground, and the fracture depth of the release zone
+is the release depth D of fn_dbinit. The flowing snow hs grows by entraining the snow on the path, and stopped
+snow is fixed into the terrain by f_dbstop. Panel (b) summarizes the setup below and (c) what cannot be done.
 
 - **Typical setup**: `f_debris = 1`, `f_dbed = 4`
   (**velocity-proportional entrainment** of path snow, E = δe·|V|; use
@@ -232,6 +257,13 @@ inputs (terrain and settings), and results are bit-reproducible
 regardless of rank or thread count, so the difference between the two
 cases is exactly the facility's effect, cleanly separated from
 numerical noise.
+
+![Representing sabo facilities: place them with terrain and soil depth, compare runs with and without](../../figs/geomorph_app_sabo_en.png)
+
+Panel (a) is a sediment-retarding basin (an excavation in the terrain), (b) an impermeable check dam (dam body
+added to the terrain with sd = 0; filling → full → overtopping), and (c) the approximation of a permeable dam
+(a culvert passes only water and all sediment is trapped = the upper bound of capture). The profiles are
+sketches, not computed results.
 
 - **Sediment-retarding basin (yusachi)**: just carve the excavation
   and widening into the terrain z in preprocessing. Deposition by
