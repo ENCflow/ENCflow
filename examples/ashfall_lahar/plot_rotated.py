@@ -4,7 +4,9 @@
   figs/rotated.png  谷を格子に沿わせた場合(0°)と 45° 傾けた場合の、40 分の流動深と終了時の
                     地形変化(8 近傍と 4 近傍)。45° の結果は谷沿いの座標へ戻して描く
   figs/rotated_profile.png  谷底付近の横断の流動深(30〜60 分の平均)と、扇状地の流れの横の広がり
-引数 en で英語ラベル版を en/figs/ に描く。
+  figs/rotated_setup.png    0° と 45° の格子の配置(谷・領域外・下流端の海)と、8 近傍・4 近傍のやり取り
+                            (make_rotated.py の入力をその場で作って描く。計算結果は使わない)
+引数 en で英語ラベル版を en/figs/ に描く。計算結果がないときは rotated_setup.png だけを描く。
 """
 import glob
 import math
@@ -145,5 +147,113 @@ def main():
     plt.close(fig)
 
 
+def _plan(ax, th):
+    """make_rotated.py の格子(領域外・海・谷)をその場で作って描く。"""
+    import make_rotated as mr
+    nx, ny, ox, oy, out = mr.grid(th)
+    z = np.array(out["z"]); mask = np.array(out["mask"]); sw = np.array(out["sw"])
+    ext = [0, nx * DX, 0, ny * DX]
+    ax.imshow(np.where(mask == 0, 1.0, np.nan), origin="lower", extent=ext, cmap="Greys", vmin=0, vmax=6,
+              interpolation="nearest")
+    ax.imshow(np.where((mask == 1) & (sw == 0), z, np.nan), origin="lower", extent=ext, cmap="YlOrBr", vmin=-60,
+              vmax=220, interpolation="nearest")
+    ax.imshow(np.where(sw == 1, 1.0, np.nan), origin="lower", extent=ext, cmap="Blues", vmin=0, vmax=1.3,
+              interpolation="nearest")
+    xc = (np.arange(nx) + 0.5) * DX
+    yc = (np.arange(ny) + 0.5) * DX
+    ax.contour(xc, yc, np.where((mask == 1) & (sw == 0), z, np.nan), levels=np.arange(0, 160, 10), colors="k",
+               linewidths=0.35)
+    t = math.radians(th)
+    c, s_ = math.cos(t), math.sin(t)
+    to_g = lambda xr, yr: (xr * c + yr * s_ + ox, -xr * s_ + yr * c + oy)
+    (x0, y0), (x1, y1) = to_g(300, 0), to_g(300, 150)
+    ax.plot([x0, x1], [y0, y1], color="k", lw=0.9, ls="--")
+    (a0, b0), (a1, b1) = to_g(20, 75), to_g(560, 75)
+    ax.annotate("", xy=(a1, b1), xytext=(a0, b0), arrowprops=dict(arrowstyle="-|>", color="#1f5f8b", lw=1.4))
+    if th == 0:
+        lx, ly = to_g(150, 92)
+        ax.text(lx, ly, T("谷の軸 x'", "valley axis x'"), color="#1f5f8b", fontsize=8.5, ha="center", va="bottom")
+        ux, uy = to_g(304, 146)
+        ax.text(ux, uy, T("谷出口", "outlet"), fontsize=8, va="top")
+        ax.annotate(T("海域マスク\n(水位 0 m の吸い込み)", "sea mask\n(sink at level 0 m)"), xy=(612, 40), xytext=(585, 18),
+                    fontsize=8, color="#1f5f8b", ha="right", va="bottom",
+                    arrowprops=dict(arrowstyle="-|>", color="#1f5f8b", lw=0.8))
+    else:
+        lx, ly = to_g(170, 112)
+        ax.text(lx, ly, T("谷の軸 x'", "valley axis x'"), color="#1f5f8b", fontsize=8.5, ha="left", va="bottom")
+        ux, uy = to_g(300, 152)
+        ax.text(ux + 4, uy, T("谷出口", "outlet"), fontsize=8, ha="left", va="bottom")
+        sx, sy = to_g(607, 40)
+        ax.annotate(T("海域マスク\n(水位 0 m の吸い込み)", "sea mask\n(sink at level 0 m)"), xy=(sx, sy), xytext=(300, 30),
+                    fontsize=8, color="#1f5f8b", ha="center", va="bottom",
+                    arrowprops=dict(arrowstyle="-|>", color="#1f5f8b", lw=0.8))
+    ax.set_xlim(0, nx * DX)
+    ax.set_ylim(0, ny * DX)
+    ax.set_aspect("equal")
+    ax.set_xlabel("x (m)", fontsize=8.5)
+    ax.set_ylabel("y (m)", fontsize=8.5)
+    ax.tick_params(labelsize=7.5)
+    return nx, ny
+
+
+def _stencil(ax, diag, title):
+    for i in range(3):
+        for j in range(3):
+            ax.add_patch(plt.Rectangle((i, j), 1, 1, facecolor="#f4f3ee" if (i, j) != (1, 1) else "#d7eaf5",
+                                       edgecolor="0.6", lw=0.8))
+    for di, dj in ((1, 0), (-1, 0), (0, 1), (0, -1)):
+        ax.annotate("", xy=(1.5 + 0.85 * di, 1.5 + 0.85 * dj), xytext=(1.5, 1.5),
+                    arrowprops=dict(arrowstyle="<|-|>", color="#1f5f8b", lw=2.0))
+    for di, dj in ((1, 1), (-1, 1), (1, -1), (-1, -1)):
+        if diag:
+            ax.annotate("", xy=(1.5 + 0.85 * di, 1.5 + 0.85 * dj), xytext=(1.5, 1.5),
+                        arrowprops=dict(arrowstyle="<|-|>", color="#1f5f8b", lw=2.0))
+        else:
+            ax.plot([1.5, 1.5 + 0.85 * di], [1.5, 1.5 + 0.85 * dj], color="#c0392b", lw=1.0, ls=":")
+            ax.plot(1.5 + 0.5 * di, 1.5 + 0.5 * dj, marker="x", color="#c0392b", ms=7, mew=1.6)
+    ax.set_xlim(-0.1, 3.1)
+    ax.set_ylim(-0.1, 3.1)
+    ax.set_aspect("equal")
+    ax.axis("off")
+    ax.set_title(title, fontsize=8.8, loc="left")
+
+
+def grid_setup():
+    fig = plt.figure(figsize=(14, 6.6))
+    gs = fig.add_gridspec(2, 3, width_ratios=[2.15, 1.25, 0.75], height_ratios=[1, 1], wspace=0.22, hspace=0.35,
+                          left=0.05, right=0.99, top=0.88, bottom=0.08)
+    fig.suptitle(T("補足実験の格子: 同じ谷を格子に沿わせた場合(0°)と 45° 傾けた場合、8 近傍と 4 近傍(入力から描いた図)",
+                   "Grids of the supplement: the same valley along the grid (0°) and turned 45°, eight and four neighbours "
+                   "(drawn from the inputs)"), fontsize=10.5, x=0.05, ha="left")
+    ax = fig.add_subplot(gs[0, 0])
+    nx, ny = _plan(ax, 0)
+    ax.set_title(T(f"(a) 0°: {nx} × {ny} セル", f"(a) 0°: {nx} × {ny} cells"), fontsize=9.5, loc="left")
+    ax = fig.add_subplot(gs[:, 1])
+    nx, ny = _plan(ax, 45)
+    ax.set_title(T(f"(b) 45°: {nx} × {ny} セル(谷の外は領域外)", f"(b) 45°: {nx} × {ny} cells (outside the valley: no cells)"),
+                 fontsize=9.5, loc="left")
+    _stencil(fig.add_subplot(gs[0, 2]), True, T("(c) 8 近傍(ENC の既定)", "(c) eight neighbours\n(ENC default)"))
+    _stencil(fig.add_subplot(gs[1, 2]), False, T("(d) 4 近傍\n(p_diagratio = 0)", "(d) four neighbours\n(p_diagratio = 0)"))
+    ax = fig.add_subplot(gs[1, 0])
+    ax.axis("off")
+    ax.text(0.0, 0.95, T("・谷・降灰・雨は本計算と同じ(堰堤なし)。谷沿いの座標 x'(0〜600 m)と横断 y'(0〜150 m)の\n"
+                         "  長方形の外は領域外、谷の下流端の外の x' = 600〜615 m は海域マスク(東辺の自由流出の代わり)。\n"
+                         "・45° の結果は谷沿いの座標 (x', y') へ戻して 0° と比べる(双一次補間)。\n"
+                         "・(c) 8 近傍は軸の 4 本と斜めの 4 本のエッジで水をやり取りし、既定の p_diagratio = 2/(2+√2) で\n"
+                         "  8 本の通過幅が等しい。(d) 4 近傍は斜めの通過幅を 0 にした対照で、水は軸の向きにしか動けない。",
+                         "• Valley, ash and rain are those of the main runs (no dam). Outside the rectangle of the along-valley\n"
+                         "  coordinate x' (0–600 m) and the cross coordinate y' (0–150 m) there are no cells; beyond the downstream\n"
+                         "  end, x' = 600–615 m is a sea mask (in place of the free outflow of the east edge).\n"
+                         "• The 45° results are drawn back in (x', y') and compared with 0° (bilinear interpolation).\n"
+                         "• (c) Eight neighbours exchange water through 4 axis and 4 diagonal edges; with the default\n"
+                         "  p_diagratio = 2/(2+√2) all eight passage widths are equal. (d) Four neighbours, the control, set the\n"
+                         "  diagonal passage width to 0, so water moves only along the axes."),
+            transform=ax.transAxes, fontsize=8.2, va="top", linespacing=1.5)
+    fig.savefig(f"{FIGDIR}/rotated_setup.png", dpi=100)
+    plt.close(fig)
+
+
 if __name__ == "__main__":
-    main()
+    grid_setup()
+    if all(os.path.exists(f"result_rot{th}_{nb}/FILENUMBER.csv") for th, nb in RUNS):
+        main()
