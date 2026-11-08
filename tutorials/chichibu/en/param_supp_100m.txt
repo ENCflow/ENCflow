@@ -35,7 +35,7 @@
 ! ENC computation settings (same as Step 4; Fig_supp.sh appends the 4-neighbor and old-scheme variants to this block)
 !======================================================================
 &list_enc
-  f_advection_donor = 3      ! upwind momentum donors of the advection term (3: treat donors carrying almost no water as neutral)
+  f_advection_donor = 3      ! upwind momentum donors of the advection term (3: treat thin donors carrying almost no water as neutral)
 /
 
 !======================================================================
