@@ -3,6 +3,8 @@
 
   figs/mechanism.png 越水から破堤・氾濫・家屋の流失までの模式図(データを使わない)
   figs/setup.png     地形と天端の低い区間・住宅地・二線堤(平面)、破堤口の横断、洪水と破堤の時刻
+  figs/laws.png      与えた破堤の進み方、家屋の空隙率、家屋の破壊と瓦礫の則(入力と param.txt の値だけ。
+                     計算結果を使わない)
   figs/maps.png      4 ケースの最大浸水深と家屋の流失
   figs/series.png    堤内地へ入る流量、破堤口より下流の川の流量、住宅地の浸水深の時間変化
 引数 en で英語ラベル版を en/figs/ に描く(データと描画処理は共通)。
@@ -38,6 +40,7 @@ CASES = [("overtop", T("越水だけ", "overtopping only"), "#8a8983", ":"),
          ("dike", T("破堤+二線堤", "breach + secondary levee"), "#1f5f8b", "-.")]
 T_BREACH = {"breach": (180, 240), "delay": (240, 300), "dike": (180, 240)}
 C_GROUND, C_WATER, C_LEVEE, C_HOUSE = "#d9c7a0", "#2a78d6", "#555555", "#8c564b"
+CM, DD_MIN = 2.0, 0.001          # 家屋の付加質量係数 cm・移動限界水深 dd(param.txt になく src/list_sysparam.f90 の既定)
 
 
 def rd(path):
@@ -181,8 +184,9 @@ def setup():
     ax.fill_between(xs[:40], -4, z0[j - 1, :40], color=C_GROUND, step="mid")
     ax.step(xs[:40], z0[J_LOW1 - 4, :40], where="mid", color="k", lw=1, ls=":", label=T("ふつうの区間の堤防(高さ 4 m)", "ordinary levee (4 m high)"))
     ax.step(xs[:40], zb[:40], where="mid", color="#c0392b", lw=1.2, ls="--", label=T("破堤後(堤内地の地盤高まで下がる)", "after the breach (down to the landside ground)"))
-    t, zp, hp = probe("overtop", 1) if os.path.exists("result_overtop/probes/probe0001.csv") else (None, [0.0], [0.0])
-    ax.axhline(np.max(np.asarray(zp) + np.asarray(hp)), xmin=0.02, xmax=0.33, color=C_WATER, lw=2, label=T("洪水のピークの水位(越水だけのケース)", "flood peak level (overtopping-only case)"))
+    if os.path.exists("result_overtop/probes/probe0001.csv"):     # 洪水のピークの水位は越水だけのケースの結果から(計算前は描かない)
+        t, zp, hp = probe("overtop", 1)
+        ax.axhline(np.max(np.asarray(zp) + np.asarray(hp)), xmin=0.02, xmax=0.33, color=C_WATER, lw=2, label=T("洪水のピークの水位(越水だけのケース)", "flood peak level (overtopping-only case)"))
     ax.set_xlim(0, 400)
     ax.set_ylim(-3.5, 4.5)
     ax.set_xlabel("x (m)")
@@ -211,6 +215,256 @@ def setup():
     ax.set_title(T("洪水と破堤の時刻", "Flood and breach timing"), fontsize=10)
     fig.tight_layout()
     fig.savefig(f"{FIGDIR}/setup.png", dpi=100)
+    plt.close(fig)
+
+
+# ---------------------------------------------------------------- 則(入力と設定値だけ。計算結果を使わない)
+def param_value(name, fn="param.txt"):
+    """設定ファイルの「name = 値」を読む(最初の 1 つ。! 以降のコメントは除く)。"""
+    for line in open(fn, encoding="utf-8"):
+        s = line.split("!")[0]
+        if "=" in s and s.split("=")[0].strip() == name:
+            return float(s.split("=")[1])
+    raise KeyError(f"{name} is not in {fn}")
+
+
+def draft(sg, d):
+    """横向き円柱の喫水: 水没断面積比 (θ − sinθ)/2π = sg を二分法で解く(src/m_driftwood.f90 の m_driftwood_draft と同じ)。"""
+    lo, hi = 0.0, 1.0
+    for _ in range(60):
+        xm = 0.5 * (lo + hi)
+        th = 2.0 * np.arccos(1.0 - 2.0 * xm)
+        if (th - np.sin(th)) / (2.0 * np.pi) < sg:
+            lo = xm
+        else:
+            hi = xm
+    return 0.5 * (lo + hi) * d
+
+
+def breach_schedule(out):
+    """make_breach.py が data/<out>/ に書いた規定底面運動: 時刻 (分)、窓の左上 (i1, j1)、累積変位 (時刻, 行, 列)。"""
+    ts, ds = [], []
+    for line in open(f"data/{out}/bmlist.txt"):
+        if line.startswith("#") or not line.strip():
+            continue
+        f = line.split()
+        i1, j1, ni, nj = (int(v) for v in f[2:6])
+        ts.append(float(f[0]) / 60.0)
+        ds.append(np.loadtxt(os.path.join("data", f[1])).reshape(nj, ni))
+    return np.array(ts), (i1, j1), np.array(ds)
+
+
+def _box(ax, x, y, w, h, text, fc, ec, fs=8.5):
+    ax.add_patch(plt.Rectangle((x, y), w, h, facecolor=fc, edgecolor=ec, lw=1.2))
+    ax.text(x + 0.12, y + h - 0.12, text, fontsize=fs, va="top", ha="left", linespacing=1.35)
+
+
+def _arrow(ax, xy, xytext, color, ls="-", lw=1.5):
+    ax.annotate("", xy=xy, xytext=xytext, arrowprops=dict(arrowstyle="-|>", color=color, lw=lw, ls=ls,
+                                                          shrinkA=0, shrinkB=0))
+
+
+def laws():
+    z = rd("data/z.txt")
+    gv0 = rd("data/gv.txt").min()                         # 住宅地の空隙率
+    stock = rd("data/bdstock.txt").max()                  # 家屋ストック (m3/m2)
+    fc1, fc2 = param_value("bd_fcrit"), param_value("bd_fcrit2")
+    wdes, fsink = param_value("bd_wdes"), param_value("bd_fsink")
+    wstop, vstop = param_value("bd_wstop"), param_value("bd_vstop")
+    sgbd, dlog = param_value("bd_sg"), param_value("bd_dlog")
+    hf = draft(sgbd, dlog)                                # 瓦礫の喫水
+    tq, qq = inflow_series()
+    tpk = tq[qq == qq.max()]                              # 上流端の流量のピークの期間
+    fig = plt.figure(figsize=(15, 11))
+    gs = fig.add_gridspec(2, 2, width_ratios=[1.1, 1], height_ratios=[1, 1], left=0.06, right=0.985,
+                          top=0.92, bottom=0.04, wspace=0.13, hspace=0.24)
+    fig.suptitle(T("破堤・家屋の空隙率・家屋の破壊の則(make_breach.py が書いた入力と param.txt の値で描く。計算結果ではない)",
+                   "The breach, building porosity and building destruction as ENCflow applies them "
+                   "(inputs written by make_breach.py and the values of param.txt; not computed results)"),
+                 fontsize=10.5, x=0.06, ha="left")
+
+    # (a) 与えた破堤: 行ごとの天端の高さと、破堤口の幅
+    sub = gs[0, 0].subgridspec(2, 1, height_ratios=[1.55, 1], hspace=0.08)
+    ax = fig.add_subplot(sub[0])
+    axw = fig.add_subplot(sub[1], sharex=ax)
+    tt = np.linspace(150.0, 330.0, 3601)
+    info = {}                                             # 中央の行・両端の行と、下がり始め・下がり終わりの時刻
+    for out, cmap, col, ls, lab in (("bm_breach", "Reds", "#c0392b", "-", T("越水で破堤(param.txt)", "breach by overtopping (param.txt)")),
+                                    ("bm_delay", "Oranges", "#e08214", "--", T("1 時間遅れる(param_delay.txt)", "breach 1 hour later (param_delay.txt)"))):
+        ts, (i1, j1), d = breach_schedule(out)
+        nj = d.shape[1]
+        jc = j1 + (nj - 1) // 2                           # 最初に下がる中央の行(make_breach.py の --center の既定)
+        cols = plt.get_cmap(cmap)(np.linspace(0.95, 0.45, nj - (jc - j1)))
+        started, floor = np.zeros_like(tt), np.zeros_like(tt)
+        for jj in range(nj):
+            j = j1 + jj
+            dd = np.interp(tt, ts, d[:, jj, 0])           # スナップショットの間は線形補間(f_bminterp = 1 の既定)
+            crest = z[j - 1, i1 - 1] + dd - z[j - 1, I_LEV2]   # 天端 − 法尻(列 16 = make_breach.py の --floor-col)
+            started += (dd < 0.0) * DX
+            floor += (crest < 0.005) * DX
+            if j in (jc, j1):
+                info[(out, j == jc)] = (j, tt[np.argmax(dd < 0.0)], tt[np.argmax(crest < 0.005)], crest[0])
+            if j >= jc:
+                ax.plot(tt, crest, ls, color=cols[j - jc], lw=1.7 if j in (jc, j1 + nj - 1) else 0.9,
+                        label=lab if j == jc else None)
+        axw.plot(tt, started, ls, color=col, lw=1.0)
+        axw.plot(tt, floor, ls, color=col, lw=2.2)
+    zn = z[J_LOW1 - 3, I_LEV2 - 2] - z[J_LOW1 - 3, I_LEV2]
+    ax.axhline(zn, color="0.45", lw=0.9, ls=":")
+    ax.text(328, zn + 0.06, T(f"ふつうの区間の天端(法尻 + {zn:.1f} m)", f"ordinary levee crest (toe + {zn:.1f} m)"),
+            fontsize=8, color="0.35", ha="right", va="bottom")
+    jc, t0c, t1c, cr0 = info[("bm_breach", True)]
+    je_, t0e, t1e, _ = info[("bm_breach", False)]
+    jn = 2 * jc - je_                                     # 反対側の端の行(中央から対称)
+    lag = info[("bm_delay", True)][1] - t0c
+    ax.text(152, cr0 + 0.08, T(f"天端の低い区間(法尻 + {cr0:.1f} m)", f"low crest (toe + {cr0:.1f} m)"), fontsize=8, va="bottom")
+    ax.annotate(T(f"中央の行 {jc}\n{t0c:.0f}→{t1c:.0f} 分", f"central row {jc}\n{t0c:.0f}→{t1c:.0f} min"),
+                xy=((t0c + t1c) / 2 + 1, cr0 * 0.45), xytext=(156, 0.75),
+                fontsize=8, color="#c0392b", arrowprops=dict(arrowstyle="-", color="#c0392b", lw=0.7))
+    ax.annotate(T(f"両端の行 {je_}・{jn}: {t0e:.0f}→{t1e:.0f} 分", f"end rows {je_}, {jn}: {t0e:.0f}→{t1e:.0f} min"),
+                xy=(t0e + 0.2 * (t1e - t0e), cr0 * 0.8), xytext=(t0e - 14, cr0 + 0.42),
+                fontsize=8, color="#c0392b", arrowprops=dict(arrowstyle="-", color="#c0392b", lw=0.7))
+    ax.text(t1e + lag + 7, 1.3, T(f"同じ進み方で\n{lag:.0f} 分遅い", f"same course,\n{lag:.0f} min later"), fontsize=8, color="#e08214", ha="center")
+    for a in (ax, axw):
+        a.axvspan(tpk[0], tpk[-1], color=C_WATER, alpha=0.08, lw=0)
+        a.grid(alpha=0.3)
+    ax.text(152, 4.52, T(f"上流端の流量のピーク {qq.max():,.0f} m³/s({tpk[0]:.0f}〜{tpk[-1]:.0f} 分)",
+                         f"upstream peak {qq.max():,.0f} m³/s ({tpk[0]:.0f}-{tpk[-1]:.0f} min)"), fontsize=8, color=C_WATER, va="top")
+    ax.set_ylim(-0.15, 4.6)
+    ax.set_ylabel(T("天端の高さ (m)\n(堤内地の法尻から)", "crest height (m)\nabove the landside toe"), fontsize=9)
+    ax.legend(fontsize=8, loc="upper right", bbox_to_anchor=(1.0, 0.84), frameon=False)
+    ax.tick_params(labelbottom=False, labelsize=8)
+    ax.set_title(T("(a) 与えた破堤(規定底面運動。make_breach.py の出力)", "(a) The prescribed breach (bed motion written by make_breach.py)"),
+                 fontsize=9.5, loc="left")
+    axw.plot([], [], color="0.3", lw=1.0, label=T("下がり始めた幅", "width going down"))
+    axw.plot([], [], color="0.3", lw=2.2, label=T("法尻の高さまで下がった幅", "width down to the toe"))
+    axw.legend(fontsize=8, loc="upper left", frameon=False)
+    axw.set_ylim(0, 165)
+    axw.set_xlim(150, 330)
+    axw.set_ylabel(T("破堤口の幅 (m)", "breach width (m)"), fontsize=9)
+    axw.set_xlabel(T("時刻 (分)", "time (min)"), fontsize=9)
+    axw.tick_params(labelsize=8)
+
+    # (b) 家屋の空隙率と、壊れた家屋の分
+    ax = fig.add_subplot(gs[0, 1])
+    ax.set_title(T(f"(b) 家屋の空隙率 gv(住宅地 {gv0:.1f})と、壊れた家屋の分", f"(b) Building porosity gv ({gv0:.1f} in the residential areas) and destroyed houses"),
+                 fontsize=9.5, loc="left")
+    houses = [(1.2, 7.4, 4.0, 2.5), (6.4, 6.9, 2.5, 4.0), (2.3, 12.0, 3.2, 3.125)]     # 3 棟 × 10 m² = 30 m²(1 − gv0 = 0.3)
+    for k, dmg in enumerate((0.0, 0.5, 1.0)):
+        x0 = 3.2 + 12.4 * k
+        gv = gv0 + (1.0 - gv0) * dmg
+        ax.add_patch(plt.Rectangle((x0, 6.0), 10, 10, facecolor="#cfe3f6", edgecolor="k", lw=1.2))
+        for hx, hy, hw, hh in houses:
+            sc = np.sqrt(1.0 - dmg)
+            cx, cy = hx + hw / 2, hy + hh / 2
+            if dmg < 1.0:
+                ax.add_patch(plt.Rectangle((x0 + cx - hw * sc / 2, cy - hh * sc / 2), hw * sc, hh * sc, facecolor=C_HOUSE, edgecolor="none"))
+            ax.add_patch(plt.Rectangle((x0 + hx, hy), hw, hh, facecolor="none", edgecolor=C_HOUSE, lw=0.8, ls=":"))
+        ax.text(x0 + 5, 16.5, T(["壊れていない", "半分壊れた", "全部壊れた"][k], ["intact", "half destroyed", "all destroyed"][k])
+                + f"  d = {dmg:g}", ha="center", fontsize=8.5)
+        ax.text(x0 + 5, 5.4, f"gv = {gv:.2f}\nλm = {gv + (1 - gv) * CM:.2f}\n" + T(f"水深 × {1 / gv:.2f}", f"depth × {1 / gv:.2f}"),
+                ha="center", va="top", fontsize=8.2, linespacing=1.4)
+    for yy in (7.5, 11.0, 14.5):
+        _arrow(ax, (3.2, yy), (0.4, yy), C_WATER, lw=1.3)
+    ax.text(0.2, 15.6, "q = u·h", fontsize=8, color=C_WATER)
+    ax.text(0.3, -0.6, T(f"連続式: 水がたまるのは建物の外の gv·Δx·Δy だけ(同じ水量なら水深は 1/gv 倍)\n"
+                         f"辺の流量 q = u·h は辺の全幅で通す(通過幅を gv で縮めない。左の矢印)\n"
+                         f"運動方程式: 慣性 λm = gv + (1 − gv)·cm(cm = {CM:.1f})、圧力と摩擦の項 × gv\n"
+                         f"  → 加速は遅くなるが、等流の流量は変わらない\n"
+                         f"家屋の抗力の項には家屋の寸法 fn_bb が要る(この例題は与えないので働かない)\n"
+                         f"壊れると gv = {gv0:.1f} + {1 - gv0:.1f}·d(d = 破壊率。f_bdgv = 1)。水量を保ち、\n"
+                         f"  水深は gv の比で浅くなる。セルは 10 m × 10 m",
+                         f"Continuity: water is stored only outside the buildings, gv·Δx·Δy (depth × 1/gv for\n"
+                         f"  the same volume). An edge passes q = u·h over its full width (the passage width is not\n"
+                         f"  narrowed by gv; arrows). Momentum: inertia λm = gv + (1 − gv)·cm (cm = {CM:.1f});\n"
+                         f"  the pressure and friction terms × gv, so the flow accelerates more slowly, but uniform\n"
+                         f"  flow keeps its discharge. Building drag needs the building size fn_bb, which this\n"
+                         f"  example does not give, so there is no drag. Destruction raises gv = {gv0:.1f} + {1 - gv0:.1f}·d\n"
+                         f"  (d = destroyed fraction; f_bdgv = 1), keeping the water volume. Cells 10 m × 10 m."),
+            fontsize=8, va="top", linespacing=1.5)
+    ax.set_xlim(0, 38)
+    ax.set_ylim(-11.5, 18)
+    ax.set_aspect("equal")
+    ax.axis("off")
+
+    # (c) 家屋が壊れる条件: 流体力 hV² と破壊の倍率
+    sub = gs[1, 0].subgridspec(1, 2, width_ratios=[1.45, 1], wspace=0.05)
+    ax = fig.add_subplot(sub[0])
+    vmax, hmax = 4.0, 3.0
+    vg, hg = np.meshgrid(np.linspace(0.0, vmax, 801), np.linspace(0.0, hmax, 601))
+    xx = hg * vg ** 2
+    aa = np.where(xx > fc1, np.clip((xx - fc1) / (fc2 - fc1), 0.0, 1.0), np.nan)
+    aa = np.where(xx >= fc2, 1.5, aa)                     # 倍率 1 の範囲(hV² ≥ bd_fcrit2)は別の色(色見本の三角)
+    ramp_cols = ["#fee8c8", "#fdd49e", "#fdbb84", "#fc8d59", "#ef6548", "#c8402c"]
+    cf = ax.contourf(vg, hg, aa, levels=[0, 0.2, 0.4, 0.6, 0.8, 1.0], colors=ramp_cols, extend="max", alpha=0.9)
+    v = np.linspace(0.3, vmax, 400)
+    ax.plot(v, fc1 / v ** 2, color="k", lw=1.8)
+    ax.plot(v, fc2 / v ** 2, color="#7f0000", lw=1.8)
+    for xv in (3.0, 4.0):
+        ax.plot(v, xv / v ** 2, color="#7f0000", lw=0.8, ls="--")
+    for xv in (fc1, 3.0, 4.0, fc2):                       # 線の上の数字 = hV²(等高線の数字と同じ置き方)
+        ax.text(np.sqrt(xv / 1.2), 1.2, f"{xv:g}", fontsize=8, color="k" if xv == fc1 else "#7f0000", va="center", ha="center",
+                bbox=dict(facecolor="w", edgecolor="none", pad=0.8))
+    tfull = stock / wdes / 60.0                           # 倍率 1 で家屋ストックが全部壊れるまで (分)
+    ax.text(0.12, 0.2, T(f"壊れない\n(hV² ≤ {fc1:g})", f"no breaking\n(hV² ≤ {fc1:g})"), fontsize=8.5, color="0.3")
+    ax.text(3.0, 2.0, T(f"倍率 1\n{tfull:.1f} 分で全壊", f"factor 1:\nall in {tfull:.1f} min"), fontsize=8.5, color="w", ha="center", va="center")
+    ax.set_xlim(0, vmax)
+    ax.set_ylim(0, hmax)
+    ax.set_xlabel(T("流速 V (m/s)", "velocity V (m/s)"), fontsize=9)
+    ax.set_ylabel(T("浸水深 h (m)", "inundation depth h (m)"), fontsize=9)
+    ax.tick_params(labelsize=8)
+    ax.set_title(T("(c) 家屋が壊れる条件(f_bdcrit = 2: 流体力 hV²)", "(c) When houses break (f_bdcrit = 2: load hV²)"), fontsize=9.5, loc="left")
+    axi = fig.add_subplot(sub[1])
+    axi.axis("off")
+    axi.set_xlim(0, 1)
+    axi.set_ylim(0, 1)
+    for y_, c_, ls_, lab in ((0.94, "k", "-", T(f"hV² = {fc1:g}(bd_fcrit): 壊れ始める", f"hV² = {fc1:g} (bd_fcrit): breaking starts")),
+                             (0.87, "#7f0000", "-", T(f"hV² = {fc2:g}(bd_fcrit2): 最も速い", f"hV² = {fc2:g} (bd_fcrit2): fastest")),
+                             (0.80, "#7f0000", "--", T("hV² = 3、4", "hV² = 3, 4"))):
+        axi.plot([0.04, 0.16], [y_, y_], color=c_, ls=ls_, lw=1.8 if ls_ == "-" else 0.9)
+        axi.text(0.2, y_, lab, fontsize=8, va="center")
+    rows = "\n".join(T(f"  hV² = {xv:g} → {tfull / min(1.0, (xv - fc1) / (fc2 - fc1)):.0f} 分", f"  hV² = {xv:g} → {tfull / min(1.0, (xv - fc1) / (fc2 - fc1)):.0f} min")
+                     for xv in (3.0, 4.0))
+    axi.text(0.04, 0.72, T(f"判定量 X = (h + bd_sg·hbd)·V²\n(図は流れる瓦礫 hbd = 0)\n"
+                           f"倍率 a = min(1, (X − {fc1:g})/({fc2:g} − {fc1:g}))\n"
+                           f"壊れる速さ = bd_wdes·a\n  = {wdes * 1e4:g}×10⁻⁴·a m³/m²/s\n\n"
+                           f"家屋ストック {stock:g} m³/m² が全部壊れるまで\n(その値が続いたとき):\n{rows}\n"
+                           f"  hV² ≥ {fc2:g} → {tfull:.1f} 分",
+                           f"load X = (h + bd_sg·hbd)·V²\n(floating debris hbd = 0 here)\n"
+                           f"factor a = min(1, (X − {fc1:g})/({fc2:g} − {fc1:g}))\n"
+                           f"breaking rate = bd_wdes·a\n  = {wdes * 1e4:g}×10⁻⁴·a m³/m²/s\n\n"
+                           f"time to break the whole house stock\n{stock:g} m³/m² (if X stays):\n{rows}\n"
+                           f"  hV² ≥ {fc2:g} → {tfull:.1f} min"),
+             fontsize=8, va="top", linespacing=1.45)
+    cax = axi.inset_axes([0.04, 0.06, 0.8, 0.045])
+    cb = fig.colorbar(cf, cax=cax, orientation="horizontal", ticks=[0, 0.2, 0.4, 0.6, 0.8, 1.0], extendfrac=0.12)
+    cb.ax.tick_params(labelsize=7.5)
+    cb.set_label(T(f"破壊の倍率 a(三角 = 1。hV² ≥ {fc2:g})", f"breaking factor a (triangle = 1; hV² ≥ {fc2:g})"), fontsize=8)
+
+    # (d) 壊れた家屋の行き先(瓦礫)
+    ax = fig.add_subplot(gs[1, 1])
+    ax.set_title(T("(d) 壊れた家屋の行き先(瓦礫。fn_bldgdebris)", "(d) Where the destroyed houses go (debris; fn_bldgdebris)"), fontsize=9.5, loc="left")
+    _box(ax, 0.0, 3.9, 2.9, 1.6, T(f"家屋ストック wbs\n{stock:g} m³/m²(住宅地)\n壊れる速さ bd_wdes·a((c))", f"house stock wbs\n{stock:g} m³/m² (residential)\nbreaks at bd_wdes·a ((c))"), "#efe6dc", C_HOUSE)
+    _box(ax, 6.2, 3.9, 3.9, 1.6, T(f"流れる瓦礫 hbd\n水と同じ流れで運ばれる\n判定量 X に {sgbd:g}·hbd を足す((c))", f"floating debris hbd\ncarried with the water\nadds {sgbd:g}·hbd to the load X ((c))"), "#e3eefa", C_WATER)
+    _box(ax, 6.2, 0.2, 3.9, 1.5, T("止まった瓦礫 wbd\nその場に残る\n(再び流れない: bd_wfloat = 0)", "deposited debris wbd\nstays in place\n(no refloating: bd_wfloat = 0)"), "#efe6dc", C_HOUSE)
+    _box(ax, 0.0, 0.2, 4.1, 1.5, T(f"空隙率への帰還(f_bdgv = 1)\n破壊率 d = 1 − wbs/wbs0\ngv = {gv0:.1f} + {1 - gv0:.1f}·d((b))", f"feedback to the porosity (f_bdgv = 1)\ndestroyed fraction d = 1 − wbs/wbs0\ngv = {gv0:.1f} + {1 - gv0:.1f}·d ((b))"), "#e8f3e8", "#2e7d32")
+    _arrow(ax, (6.2, 4.85), (2.9, 4.85), "#c0392b", lw=1.8)
+    ax.text(4.55, 4.95, T(f"浮く分\n1 − bd_fsink = {1 - fsink:.1f}", f"floating share\n1 − bd_fsink = {1 - fsink:.1f}"), fontsize=8, color="#c0392b", ha="center", va="bottom")
+    _arrow(ax, (6.2, 1.2), (2.9, 4.3), "#c0392b", lw=1.8)
+    ax.text(5.05, 3.0, T(f"沈む分\nbd_fsink = {fsink:g}\n(瓦・基礎など。\nその場に)", f"sinking share\nbd_fsink = {fsink:g}\n(tiles, foundations;\non the spot)"),
+            fontsize=8, color="#c0392b", ha="left", va="center")
+    _arrow(ax, (7.45, 1.7), (7.45, 3.9), C_HOUSE, lw=1.8)
+    ax.text(7.6, 2.8, T(f"止まる:\nH < 喫水 {hf:.2f} m\nまたは V < bd_vstop = {vstop:g} m/s\nのとき bd_wstop = {wstop:g} m/s で\n乾いたセル(h ≤ {DD_MIN:g} m)は全部",
+                        f"stops where\nH < draft {hf:.2f} m\nor V < bd_vstop = {vstop:g} m/s,\nat bd_wstop = {wstop:g} m/s;\ndry cells (h ≤ {DD_MIN:g} m): all"),
+            fontsize=8, va="center", linespacing=1.4)
+    _arrow(ax, (1.6, 1.7), (1.6, 3.9), "#2e7d32", ls="--", lw=1.4)
+    ax.text(0.0, -0.15, T(f"喫水は寸法 bd_dlog = {dlog:g} m・比重 bd_sg = {sgbd:g} の横向き円柱の浮力の釣り合いから(半分沈む)。\nH = h(土砂なし)。",
+                          f"The draft is the buoyancy balance of a horizontal cylinder (bd_dlog = {dlog:g} m, bd_sg = {sgbd:g};\nhalf submerged). H = h (no sediment)."),
+            fontsize=7.8, va="top", color="0.3")
+    ax.set_xlim(0, 10.2)
+    ax.set_ylim(-0.9, 5.8)
+    ax.axis("off")
+    fig.savefig(f"{FIGDIR}/laws.png", dpi=100)
     plt.close(fig)
 
 
@@ -297,6 +551,7 @@ def table():
 if __name__ == "__main__":
     mechanism()
     setup()
+    laws()
     if all(os.path.exists(f"result_{c}/FILENUMBER.csv") for c, _, _, _ in CASES):
         maps()
         series()

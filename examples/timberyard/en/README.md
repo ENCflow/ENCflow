@@ -45,7 +45,34 @@ enters the town. (b)-(d) The three countermeasures compared.
 | As the water rises, the moorings fail and the timber floats away | When the depth in the timber yard exceeds a threshold (normal depth + margin), the timber stock turns into floating timber | `fn_driftwood`, `dw_hrec`, `dw_wrec` |
 | The timber is carried by the flow | The floating timber is carried with the same flow as the water | (automatic) |
 | Timber stops where it is shallow or the flow stops | Floating timber turns into stopped timber where the water is shallower than its draft or the flow is slow | `dw_wstop`, `dw_vstop` |
-| Buildings obstruct the flow | Building porosity (buildings occupy 40 % of the area) | `fn_gv` |
+| Buildings obstruct the flow | Building porosity (buildings occupy 40 % of the area): water is stored only outside the buildings and the flow accelerates more slowly. The building drag needs the building size `fn_bb`, which is not given, so the uniform-flow discharge does not change | `fn_gv` |
+
+![How timber floats away, stops and is carried](figs/laws.png)
+
+Drawn from the inputs and the values of the settings files (not computed results). (a) Floating
+away: where the depth in a timber-yard cell exceeds dw_hrec and the velocity exceeds
+dw_vrec (= 0), the timber stock turns into floating timber at dw_wrec = 2×10⁻⁴ m³/m²/s until the
+remaining stock runs out. The yard bed is at −2.0 m, so dw_hrec = 3.0 m is the water level
++1.0 m (normal depth 2.0 m + 1.0 m), 4.5 m in the delayed case is +2.5 m, and 4.0 m in the moved
+case (harbour bed −3.0 m) is +1.0 m. The offshore level passes the release level at 60 minutes
+(114 minutes in the delayed case), and the 0.5 m³/m² stock floats away in 42 minutes (64 minutes
+for the 0.77 m³/m² on the offshore side of the harbour). The times in the results table (65-105
+minutes and so on) are read from the ledger recorded every 5 minutes. (b) Stopping: floating
+timber turns into stopped timber at dw_wstop = 0.005 m³/m²/s where the water is shallower than
+the draft of 0.30 m (the depth to which a log 0.6 m in diameter with specific gravity 0.5 sinks:
+half its diameter) or slower than dw_vstop = 0.02 m/s (all at once on dry cells). In the main
+case the timber stays in the town because the flow in the town stops at the surge peak and
+enters the hatched range. In the supplement, param_vstop0.txt removes this velocity condition,
+and param_refloat.txt floats stopped timber off again at dw_wfloat = 0.005 m³/m²/s where the
+depth exceeds 0.45 m (1.5 times the draft) and the velocity exceeds 0.05 m/s (green; the gap to
+the stopping side prevents switching back and forth). (c) Carried: the floating timber moves
+with the same edge fluxes as the water in the continuity equation, multiplied by the timber
+concentration at the edge. Timber moves at the speed of the water, has no upper limit on its
+amount, and exerts no force on the flow. Timber that flows into the westmost sea-mask column
+leaves the domain ("carried offshore" in the table). The rate laws for floating away and
+stopping are ENCflow's own simplifications, and the thresholds are calibration values. The draft
+is the buoyancy balance of a horizontal cylinder
+([Driftwood models explained](../../../docs/en/users_guide/driftwood_models.md) §1, §2).
 
 ## Geometry and settings
 
@@ -89,7 +116,7 @@ cd examples/timberyard
 make                    # links and inputs (make_terrain.py)
 make run                # run the 4 cases in turn (about 1 minute per case on 4 threads)
 make supp               # the 2 supplement cases (optional)
-python3 plot_results.py # figs/*.png and the table (with the argument en, the English version goes to en/figs/)
+python3 plot_results.py # figs/*.png and the table (with the argument en, the English version goes to en/figs/; after make, the explanatory figures mechanism, setup and laws need no results)
 ```
 
 ## Results
@@ -188,8 +215,9 @@ floating (404 m³ with the +4 m seawall).
   release takes.
 - `dw_vstop`, `dw_wfloat`, `dw_vfloat`: where the timber remains (supplement).
 - `dw_dlog`, `dw_sglog`: the draft (the depth below which timber stops).
-- `fn_gv`: the share of buildings. A lower porosity gives a larger column amount for the same
-  timber and a faster flow.
+- `fn_gv`: the share of buildings. A lower porosity gives a larger depth and column amount for the
+  same water and timber, and the flow accelerates more slowly (the building drag acts only when the
+  building size `fn_bb` is given).
 
 ## Supplement: where the timber remains
 

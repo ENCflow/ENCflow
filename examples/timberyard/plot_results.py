@@ -3,6 +3,7 @@
 
   figs/mechanism.png 高潮で貯木場の材木が流れ出して市街地へ入る仕組みと、3 つの対策の模式図
   figs/setup.png     地形と貯木場・防潮壁・開口部、高潮の波形と材木が流れ出し始める水位
+  figs/laws.png      材木が流れ出す・止まる・運ばれる則(入力と設定ファイルの値だけ。計算結果を使わない)
   figs/maps.png      4 ケースの材木の届いた範囲(Wd9999)と最後に残った材木(Wd9998)
   figs/series.png    市街地にある材木の量の時間変化と、最後の材木の行き先
   figs/supp.png      補足: 材木を止める規則による、最後に残る材木の違い
@@ -41,6 +42,7 @@ SUPP = [("ise", T("本体(流れが遅いと止まる)", "main (stops where the 
         ("vstop0", T("流れが遅くても止まらない", "does not stop in slow flow"), "#8a8983"),
         ("refloat", T("止まった材木が再び流れる", "stopped timber floats off again"), "#2b8a3e")]
 C_SEA, C_GROUND, C_LOG, C_HOUSE = "#7fb2e5", "#d9c7a0", "#8c5a2b", "#8c564b"
+DD_MIN = 0.001                   # 移動限界水深 dd(param.txt になく src/list_sysparam.f90 の既定。乾いたセルの判定)
 
 
 def rd(path):
@@ -213,6 +215,235 @@ def setup():
     plt.close(fig)
 
 
+# ---------------------------------------------------------------- 則(入力と設定値だけ。計算結果を使わない)
+def param_value(name, fn="param.txt"):
+    """設定ファイルの「name = 値」を読む(最初の 1 つ。! 以降のコメントは除く)。"""
+    for line in open(fn, encoding="utf-8"):
+        s = line.split("!")[0]
+        if "=" in s and s.split("=")[0].strip() == name:
+            return float(s.split("=")[1])
+    raise KeyError(f"{name} is not in {fn}")
+
+
+def draft(sg, d):
+    """横向き円柱の喫水: 水没断面積比 (θ − sinθ)/2π = sg を二分法で解く(src/m_driftwood.f90 の m_driftwood_draft と同じ)。"""
+    lo, hi = 0.0, 1.0
+    for _ in range(60):
+        xm = 0.5 * (lo + hi)
+        th = 2.0 * np.arccos(1.0 - 2.0 * xm)
+        if (th - np.sin(th)) / (2.0 * np.pi) < sg:
+            lo = xm
+        else:
+            hi = xm
+    return 0.5 * (lo + hi) * d
+
+
+def lv(v):
+    """標高の表示(+1.5、−2.0)。"""
+    return f"{v:+.1f}".replace("-", "−")
+
+
+def laws():
+    z, zw = rd("z.txt"), rd("z_wall4.txt")
+    st, sf = rd("stock.txt"), rd("stock_far.txt")
+    z_har, z_yard = z[0, 1], z[0, I_YARD[0] - 1]                 # 港・貯木場の底
+    z_wall, z_open, z_high = z[0, I_WALL[0] - 1], z[J_OPEN[0] - 1, I_WALL[0] - 1], zw[0, I_WALL[0] - 1]
+    gv_town = rd("gv.txt")[0, I_TOWN - 1]
+    wrec, vrec = param_value("dw_wrec"), param_value("dw_vrec")
+    wstop, vstop = param_value("dw_wstop"), param_value("dw_vstop")
+    dlog, sg = param_value("dw_dlog"), param_value("dw_sglog")
+    hf = draft(sg, dlog)                                          # 丸太の喫水
+    wfl, rfl, vfl = (param_value(n, "param_refloat.txt") for n in ("dw_wfloat", "dw_rfloat", "dw_vfloat"))
+    vstop0 = param_value("dw_vstop", "param_vstop0.txt")
+    # 流れ出す水位 = 底 + dw_hrec と、流れ出しにかかる時間 = ストック ÷ dw_wrec(各ケースの設定ファイルから)
+    rel = []
+    for case, fn, zb, stock in (("ise", "param.txt", z_yard, st.max()), ("wall4", "param_wall4.txt", z_yard, st.max()),
+                                ("hold", "param_hold.txt", z_yard, st.max()), ("far", "param_far.txt", z_har, sf.max())):
+        lev = zb + param_value("dw_hrec", fn)
+        tt = np.linspace(0, 150, 15001)
+        t_on = tt[np.argmax(surge(tt) > lev)]                     # 沖の水位が流れ出す水位を越える時刻 (分)
+        rel.append((case, fn, lev, t_on, stock, stock / param_value("dw_wrec", fn) / 60.0))
+    fig = plt.figure(figsize=(15, 10.8))
+    gs = fig.add_gridspec(2, 1, height_ratios=[1.05, 1], left=0.06, right=0.985, top=0.92, bottom=0.04, hspace=0.25)
+    fig.suptitle(T("材木が流れ出す・止まる・運ばれる則(make_terrain.py が作った入力と設定ファイルの値で描く。計算結果ではない)",
+                   "How timber floats away, stops and is carried in ENCflow "
+                   "(inputs made by make_terrain.py and the values of the settings files; not computed results)"),
+                 fontsize=10.5, x=0.06, ha="left")
+
+    # (a) 流れ出す: 貯木場の水深の閾値と、高潮の水位
+    top = gs[0].subgridspec(2, 2, width_ratios=[1, 3.4], height_ratios=[2.3, 1], wspace=0.03, hspace=0.16)
+    axs = fig.add_subplot(top[0, 0])
+    ax = fig.add_subplot(top[0, 1], sharey=axs)
+    axg = fig.add_subplot(top[1, 1], sharex=ax)
+    ground = [(0, -3.6), (0, z_har), (1.2, z_har), (1.2, z_yard), (2.9, z_yard), (2.9, z_wall), (3.1, z_wall), (3.1, 0.5), (4.0, 0.8), (4.0, -3.6)]
+    axs.add_patch(plt.Polygon(ground, closed=True, color=C_GROUND))
+    axs.add_patch(plt.Polygon([(0, z_har), (1.2, z_har), (1.2, z_yard), (2.9, z_yard), (2.9, 0.0), (0, 0.0)], color=C_SEA, alpha=0.55))
+    axs.add_patch(plt.Rectangle((2.9, z_wall), 0.2, z_high - z_wall, facecolor="none", edgecolor="k", lw=0.9, ls="-."))
+    axs.plot([2.85, 3.15], [z_open, z_open], color="k", lw=1.0, ls="--")
+    _logs(axs, 1.3, 2.8, 0.0, n=4)
+    for x_, zb, lev, col, yl in ((1.55, z_yard, rel[0][2], C_LOG, -1.25), (2.3, z_yard, rel[2][2], "#e08214", -1.25),
+                                 (0.35, z_har, rel[3][2], "#1f5f8b", -1.9)):     # dw_hrec の矢印(param.txt・param_hold.txt・param_far.txt)
+        axs.annotate("", xy=(x_, lev), xytext=(x_, zb), arrowprops=dict(arrowstyle="<|-|>", color=col, lw=1.3, shrinkA=0, shrinkB=0))
+        axs.text(x_ + 0.06, yl, f"{lev - zb:.1f} m", color=col, fontsize=8, va="center")
+    axs.text(0.6, -3.35, T("港", "harbour"), ha="center", fontsize=8)
+    axs.text(2.05, -2.45, T("貯木場", "timber yard"), ha="center", fontsize=8)
+    axs.text(3.55, 1.25, T("市街地", "town"), ha="center", fontsize=8)
+    axs.text(3.0, z_high + 0.12, "wall4", ha="center", fontsize=7.5)
+    axs.text(0.45, 0.1, T("初期の水位 0 m", "initial level 0 m"), fontsize=7.5, color="#1f5f8b", va="bottom")
+    axs.set_xlim(0, 4.0)
+    axs.set_xticks([])
+    axs.set_ylim(-3.6, 4.6)
+    axs.set_ylabel(T("標高・水位 (m)", "elevation, water level (m)"), fontsize=9)
+    axs.tick_params(labelsize=8)
+    axs.set_title(T("(a) 流れ出す: 水深 > dw_hrec のとき", "(a) Floating away: depth > dw_hrec"), fontsize=9.5, loc="left")
+    t = np.linspace(0, 240, 2401)
+    ax.plot(t, surge(t), color="#2a78d6", lw=2.2)
+    for lev, lab, ls, c in ((z_high, T(f"かさ上げした防潮壁 {lv(z_high)} m(wall4)", f"raised seawall {lv(z_high)} m (wall4)"), "-.", "k"),
+                            (rel[2][2], T(f"流れ出す水位 {lv(rel[2][2])} m(遅らせる)", f"release level {lv(rel[2][2])} m (delayed)"), ":", "#e08214"),
+                            (z_wall, T(f"防潮壁 {lv(z_wall)} m", f"seawall {lv(z_wall)} m"), "-", "k"),
+                            (rel[0][2], T(f"流れ出す水位 {lv(rel[0][2])} m", f"release level {lv(rel[0][2])} m"), ":", C_LOG),
+                            (z_open, T(f"開口部(陸閘){lv(z_open)} m", f"opening (gate) {lv(z_open)} m"), "--", "k"),
+                            (z_yard, T(f"貯木場の底 {lv(z_yard)} m", f"yard bed {lv(z_yard)} m"), "-", C_GROUND),
+                            (z_har, T(f"港の底 {lv(z_har)} m", f"harbour bed {lv(z_har)} m"), "-", C_GROUND)):
+        ax.axhline(lev, color=c, ls=ls, lw=1.2 if c != C_GROUND else 2.0)
+        ax.text(2.5, lev + 0.06, lab, fontsize=8, va="bottom", color=c if c != C_GROUND else "#8c6d3f")
+    for _, _, lev, t_on, _, _ in rel[0], rel[2]:
+        ax.plot(t_on, lev, "o", color="#2a78d6", ms=5, zorder=5)
+        ax.text(t_on + 2.5, lev - 0.12, T(f"{t_on:.0f} 分", f"{t_on:.0f} min"), fontsize=8, va="top", color="#1f5f8b")
+    ax.text(150, 3.62, T("高潮(沖の水位。tival)", "storm surge (offshore level; tival)"), fontsize=8, color="#2a78d6", ha="center", va="bottom")
+    ax.set_xlim(0, 240)
+    ax.tick_params(labelleft=False, labelbottom=False, labelsize=8)
+    ax.grid(alpha=0.3)
+    ax.text(238, -1.0, T(f"水深 = 水位 − 底。流れ出す条件: 水深 > dw_hrec かつ V > dw_vrec(= {vrec:g})\n"
+                         f"速さ dw_wrec = {wrec * 1e4:g}×10⁻⁴ m³/m²/s で、残りのストックがなくなるまで",
+                         f"depth = level − bed. Floats away where depth > dw_hrec and V > dw_vrec (= {vrec:g}),\n"
+                         f"at dw_wrec = {wrec * 1e4:g}×10⁻⁴ m³/m²/s until the remaining stock runs out"),
+            fontsize=8, ha="right", va="center", bbox=dict(facecolor="w", edgecolor="0.75", alpha=0.95, pad=3))
+    names = {"ise": T("伊勢湾台風型", "Ise Bay type"), "wall4": T("防潮壁 +4 m", "seawall +4 m"),
+             "hold": T("流出を遅らせる", "release delayed"), "far": T("貯木場を離す", "yard moved away")}
+    colors = {"ise": "#c0392b", "wall4": "#2b8a3e", "hold": "#e08214", "far": "#1f5f8b"}
+    for r, (case, fn, lev, t_on, stock, dur) in enumerate(rel):
+        axg.barh(r, dur, left=t_on, height=0.55, color=colors[case], alpha=0.85)
+        axg.text(t_on + dur + 2.5, r, T(f"{stock:.2g} m³/m² ÷ dw_wrec = {dur:.0f} 分", f"{stock:.2g} m³/m² ÷ dw_wrec = {dur:.0f} min"),
+                 fontsize=8, va="center")
+    axg.set_yticks(range(len(rel)))
+    axg.set_yticklabels([f"{names[c]}({fn})" if not EN else f"{names[c]} ({fn})" for c, fn, *_ in rel], fontsize=8)
+    axg.set_ylim(len(rel) - 0.4, -0.6)
+    axg.set_xlim(0, 240)
+    axg.grid(axis="x", alpha=0.3)
+    axg.tick_params(labelsize=8)
+    axg.set_xlabel(T("時刻 (分)", "time (min)"), fontsize=9)
+    axg.text(0.0, 1.03, T("流れ出す期間(沖の水位が流れ出す水位を越えた時刻から、dw_wrec の速さが続いたとき)",
+                          "Release period (from the time the offshore level passes the release level, at the rate dw_wrec)"),
+             transform=axg.transAxes, fontsize=8, va="bottom")
+
+    # (b) 止まる・再び流れる: (V, H) 平面
+    bot = gs[1].subgridspec(1, 3, width_ratios=[1.25, 0.95, 1.55], wspace=0.08)
+    ax = fig.add_subplot(bot[0])
+    vmx, hmx = 0.1, 1.0
+    ax.add_patch(plt.Rectangle((0, 0), vmx, hf, facecolor=C_LOG, alpha=0.35, lw=0))
+    ax.add_patch(plt.Rectangle((0, hf), vstop, hmx - hf, facecolor=C_LOG, alpha=0.25, lw=0, hatch="///", edgecolor=C_LOG))
+    ax.add_patch(plt.Rectangle((vfl, rfl * hf), vmx - vfl, hmx - rfl * hf, facecolor="#2b8a3e", alpha=0.18, lw=0))
+    ax.axhline(hf, color=C_LOG, lw=1.4)
+    ax.plot([vstop, vstop], [hf, hmx], color=C_LOG, lw=1.2, ls="--")
+    ax.plot([vfl, vfl, vmx], [hmx, rfl * hf, rfl * hf], color="#2b8a3e", lw=1.2, ls="--")
+    ax.text(0.098, hf / 2, T(f"H < 喫水 {hf:.2f} m: 止まる(全ケース)", f"H < draft {hf:.2f} m: stops (all cases)"),
+            fontsize=8, ha="right", va="center", color="#5a3a1a")
+    ax.text(vstop / 2, 0.66, T(f"V < dw_vstop = {vstop:g} m/s: 止まる", f"V < dw_vstop = {vstop:g} m/s: stops"),
+            fontsize=7.8, rotation=90, ha="center", va="center", color="#5a3a1a")
+    ax.text(0.075, 0.74, T(f"止まった材木が再び流れる\n(param_refloat.txt だけ)\nH > {rfl:g}·喫水 = {rfl * hf:.2f} m\nかつ V > dw_vfloat = {vfl:g} m/s",
+                           f"stopped timber floats\noff again (param_refloat.txt\nonly): H > {rfl:g}·draft = {rfl * hf:.2f} m\nand V > dw_vfloat = {vfl:g} m/s"),
+            fontsize=7.8, ha="center", va="center", color="#1b5e20")
+    ax.text(0.05, 0.37, T("流れる材木は流れ続け、\n止まった材木はそのまま", "floating timber keeps floating;\nstopped timber stays"),
+            fontsize=7.8, ha="center", va="center", color="0.3")
+    ax.set_xlim(0, vmx)
+    ax.set_ylim(0, hmx)
+    ax.set_xlabel(T("流速 V (m/s)", "velocity V (m/s)"), fontsize=9)
+    ax.set_ylabel(T("水深 H (m)", "depth H (m)"), fontsize=9)
+    ax.tick_params(labelsize=8)
+    ax.set_title(T("(b) 止まる・再び流れる", "(b) Stopping and floating off again"), fontsize=9.5, loc="left")
+    axi = fig.add_subplot(bot[1])
+    axi.axis("off")
+    axi.set_xlim(0, 1)
+    axi.set_ylim(0, 1)
+    axi.text(0.0, 1.0, T(f"止まる(流れる材木 → 止まった材木)\n"
+                         f"  H < 喫水 または V < dw_vstop のとき\n"
+                         f"  速さ dw_wstop = {wstop:g} m³/m²/s\n"
+                         f"  ({st.max():g} m³/m² が {st.max() / wstop:.0f} 秒で止まる)\n"
+                         f"  乾いたセル(h ≤ {DD_MIN:g} m)では全部\n"
+                         f"  param_vstop0.txt は dw_vstop = {vstop0:g}:\n"
+                         f"  流れが遅くても止まらない(斜線が消える)\n\n"
+                         f"再び流れる(param_refloat.txt だけ)\n"
+                         f"  H > dw_rfloat·喫水 かつ V > dw_vfloat\n"
+                         f"  速さ dw_wfloat = {wfl:g} m³/m²/s\n"
+                         f"  (止まる側との間をあけて行き来を防ぐ)\n\n"
+                         f"毎ステップ、流れ出す → 止まる →\n再び流れる の順にセルごとに処理する\n"
+                         f"H = h + max(hs, 0) = h(土砂なし)",
+                         f"Stopping (floating → stopped timber)\n"
+                         f"  where H < draft or V < dw_vstop,\n"
+                         f"  at dw_wstop = {wstop:g} m³/m²/s\n"
+                         f"  ({st.max():g} m³/m² stops in {st.max() / wstop:.0f} s);\n"
+                         f"  all at once on dry cells (h ≤ {DD_MIN:g} m).\n"
+                         f"  param_vstop0.txt has dw_vstop = {vstop0:g}:\n"
+                         f"  no stopping in slow flow (no hatch)\n\n"
+                         f"Floating off again (param_refloat.txt)\n"
+                         f"  where H > dw_rfloat·draft and V > dw_vfloat,\n"
+                         f"  at dw_wfloat = {wfl:g} m³/m²/s\n"
+                         f"  (a gap to the stopping side prevents\n  switching back and forth)\n\n"
+                         f"Each step, cell by cell: float away →\nstop → float off again.\n"
+                         f"H = h + max(hs, 0) = h (no sediment)"),
+             fontsize=8, va="top", linespacing=1.4)
+    axl = axi.inset_axes([0.05, 0.02, 0.55, 0.22])
+    axl.add_patch(plt.Rectangle((-0.6, -0.5), 1.55, 0.5, color=C_SEA, alpha=0.55, lw=0))
+    axl.add_patch(plt.Circle((0, 0), dlog / 2, color=C_LOG))
+    axl.plot([-0.6, 0.95], [0, 0], color="#2a78d6", lw=1)
+    axl.annotate("", xy=(0.42, -hf), xytext=(0.42, 0.0), arrowprops=dict(arrowstyle="<|-|>", lw=0.8, shrinkA=0, shrinkB=0))
+    axl.text(0.46, -hf / 2, T(f"喫水\n{hf:.2f} m", f"draft\n{hf:.2f} m"), fontsize=7.2, va="center")
+    axl.text(0.0, 0.33, T(f"直径 {dlog:g} m・比重 {sg:g}", f"diameter {dlog:g} m, s.g. {sg:g}"), fontsize=7.2, ha="center")
+    axl.set_xlim(-0.6, 0.95)
+    axl.set_ylim(-0.42, 0.42)
+    axl.set_aspect("equal")
+    axl.axis("off")
+
+    # (c) 運ばれる: 水と同じ流量で運ぶ
+    ax = fig.add_subplot(bot[2])
+    ax.set_title(T("(c) 運ばれる: 水と同じ流れで(advect_scalar)", "(c) Carried: with the same flow as the water (advect_scalar)"), fontsize=9.5, loc="left")
+    gx = np.array([0.3, 4.6, 8.9])
+    ax.fill_between([gx[0], gx[2]], 0.0, 0.5, color=C_GROUND)
+    ax.add_patch(plt.Polygon([(gx[0], 0.5), (gx[2], 0.5), (gx[2], 2.75), (gx[0], 3.15)], color=C_SEA, alpha=0.55))
+    ax.plot([gx[1], gx[1]], [0.5, 3.6], color="k", lw=1.0, ls="--")
+    _logs(ax, 0.5, 4.4, 3.08, n=5)
+    _logs(ax, 4.9, 8.7, 2.8, n=2)
+    ax.annotate("", xy=(5.6, 1.6), xytext=(3.6, 1.6), arrowprops=dict(arrowstyle="-|>", color="#2a78d6", lw=2.2))
+    ax.text(3.45, 1.6, T("水の流量 q = u·h", "water flux q = u·h"), ha="right", va="center", fontsize=8, color="#1f5f8b")
+    ax.annotate("", xy=(5.6, 3.62), xytext=(3.6, 3.62), arrowprops=dict(arrowstyle="-|>", color=C_LOG, lw=2.2))
+    ax.text(3.45, 3.62, T("材木の流量 q·(hd/h)", "timber flux q·(hd/h)"), ha="right", va="center", fontsize=8, color=C_LOG)
+    ax.text(2.45, 0.85, T("風上のセル", "upwind cell"), ha="center", fontsize=8)
+    ax.text(6.75, 0.85, T("風下のセル", "downwind cell"), ha="center", fontsize=8)
+    ax.text(gx[0], -0.25, T(f"材木の柱状の量 hd を、水の連続式と同じ辺の流量 q で運ぶ:\n"
+                            f"  hd ← hd − Δt/(gv·Δx·Δy)·Σ L·q·(hd/h)面   (水: h ← h − Δt/(gv·Δx·Δy)·Σ L·q)\n"
+                            f"  (hd/h)面 は辺での材木の濃度(風上側。リンクごとの MUSCL + van Leer。\n"
+                            f"  f_scalar_scheme = 3 の既定)\n"
+                            f"• 材木は水と同じ速さで動き、濃度 hd/h が一様なら一様のまま\n"
+                            f"• 材木の量に上限はなく、材木は流れに力を返さない(運動量・抵抗に入れない)\n"
+                            f"• 西端の海域マスクの列へ出た材木は領域の外へ出る(沖へ出る)\n"
+                            f"• 材木の体積 = hd × gv × セルの面積(市街地は gv = {gv_town:g})",
+                            f"The column amount of timber hd moves with the same edge flux q as the water:\n"
+                            f"  hd ← hd − Δt/(gv·Δx·Δy)·Σ L·q·(hd/h)face   (water: h ← h − Δt/(gv·Δx·Δy)·Σ L·q)\n"
+                            f"  (hd/h)face is the timber concentration at the edge (upwind side; link-wise\n"
+                            f"  MUSCL + van Leer, the default f_scalar_scheme = 3)\n"
+                            f"• Timber moves at the speed of the water; a uniform hd/h stays uniform\n"
+                            f"• No upper limit on the amount; timber exerts no force on the flow (not in momentum or drag)\n"
+                            f"• Timber that flows into the westmost sea-mask column leaves the domain (offshore)\n"
+                            f"• Timber volume = hd × gv × cell area (gv = {gv_town:g} in the town)"),
+            fontsize=8, va="top", linespacing=1.45)
+    ax.set_xlim(0, 10)
+    ax.set_ylim(-5.2, 4.3)
+    ax.axis("off")
+    fig.savefig(f"{FIGDIR}/laws.png", dpi=100)
+    plt.close(fig)
+
+
 # ---------------------------------------------------------------- 結果
 def maps():
     fig, axs = plt.subplots(2, 4, figsize=(17, 5.6), constrained_layout=True)
@@ -313,6 +544,7 @@ def table():
 if __name__ == "__main__":
     mechanism()
     setup()
+    laws()
     if all(os.path.exists(f"result_{c}/FILENUMBER.csv") for c, *_ in CASES):
         maps()
         series()

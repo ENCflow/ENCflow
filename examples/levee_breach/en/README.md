@@ -54,9 +54,41 @@ example does not compute the erosion of ②; it gives how the ground of ③ goes
 | Overtopping starts at a section with a low crest | The levee is the ground elevation itself (a resolved levee), and the low section of the crest is in the terrain | `fn_z` (make_terrain.py) |
 | Overtopping erodes the levee, it breaches and the opening widens | The ground elevation of the breach cells is lowered with a given time, width and depth (prescribed bed motion; erosion of the levee body is not computed) | `fn_bedmotion` (made by make_breach.py) |
 | The flood spreads over the landside | Shallow-water flow (treatment of the front spreading onto dry ground). The plain continues downstream (the south edge is a free outflow) | `f_exflux_reduction = 1`, `f_bc_s = 1` |
-| Houses obstruct the flow | Building porosity (buildings occupy 30 % of the residential areas) | `fn_gv` |
+| Houses obstruct the flow | Building porosity (buildings occupy 30 % of the residential areas): water is stored only outside the buildings and the flow accelerates more slowly. The building drag needs the building size `fn_bb`, which is not given, so the uniform-flow discharge does not change | `fn_gv` |
 | Fast flood flow sweeps houses away | When the load hV² (depth × velocity²) exceeds a threshold, houses break into debris, and the porosity rises by the destroyed fraction | `fn_bldgdebris`, `f_bdcrit = 2` |
 | A secondary levee holds back the flood | A step in the terrain (a 2 m high embankment) | `fn_z` (z_dike.txt) |
+
+![The breach, building porosity and building destruction](figs/laws.png)
+
+Drawn from the inputs and the values of param.txt (not computed results). (a) How make_breach.py
+lowers the ground of the breach cells (columns 14-15 × rows 53-67) (top: crest height of each
+row; bottom: breach width). The erosion of the levee is not computed: at the start of each step
+ENCflow adds to the ground elevation the increment of the displacement interpolated linearly
+between the snapshots (the water depth is kept;
+[prescribed bed motion](../../../docs/en/users_guide/bedmotion.md)). The central row 60 drops to
+the height of the landside toe in 20 minutes from 180 minutes, each row outward starts 5.7
+minutes later, and the whole 150 m is at the toe height at 240 minutes. The breach 1 hour later
+follows the same course 60 minutes later and opens when the upstream peak (150-270 minutes) is
+nearly over. (b) In a cell where buildings occupy 30 % (porosity gv = 0.7), water is stored only
+outside the buildings, so the same volume of water stands 1/0.7 = 1.43 times deeper. The passage
+widths of the edges are not narrowed by gv; the momentum equation has the inertia
+λm = gv + (1 − gv)·cm = 1.3 and multiplies the pressure and friction terms by gv, so the flow
+accelerates more slowly but uniform flow keeps its discharge. The building drag term acts only
+when the building size fn_bb is given, and this example does not give it
+([ENC grid](../../../docs/en/users_guide/encgrid.md) §3, §5). As houses are destroyed, gv rises
+in proportion to the destroyed fraction d from 0.7 to 1, and the depth falls with the water
+volume kept. (c) Houses start to break when the load X = (h + bd_sg·hbd)V² (hbd: floating debris)
+exceeds bd_fcrit = 2 m³/s², and the house stock of 0.2 m³/m² decreases at the rate bd_wdes·a,
+where the factor a rises linearly from 0 to 1 as X goes from 2 to 6 m³/s²; with X of 6 or more
+the houses are all destroyed in 6.7 minutes. At a depth of 1 m houses start to break at 1.41 m/s
+and break fastest above 2.45 m/s. In the results the load exceeds 2 m³/s² only within about 200 m
+of the breach, and houses B and C are flooded without breaking. The thresholds and the rate law
+are ENCflow's own simplification, a broken-line approximation of fragility curves, and the
+thresholds are calibration values
+([Building destruction and debris models explained](../../../docs/en/users_guide/bldgdebris_models.md)).
+(d) 30 % of the destroyed houses (bd_fsink) becomes deposited debris on the spot, and 70 %
+becomes floating debris carried with the water, which stops where the water is shallower than the
+draft of 0.15 m or slower than 0.05 m/s (deposited debris does not float off again).
 
 ## Geometry and settings
 
@@ -107,7 +139,7 @@ free outflow (the plain continues downstream).
 cd examples/levee_breach
 make                    # links and inputs (make_terrain.py and make_breach.py write data/)
 make run                # run the 4 cases in turn (6-8 minutes per case on 4 threads)
-python3 plot_results.py # figs/*.png and the table (with the argument en, the English version goes to en/figs/)
+python3 plot_results.py # figs/*.png and the table (with the argument en, the English version goes to en/figs/; after make, the explanatory figures mechanism and laws need no results)
 ```
 
 ## Results

@@ -88,9 +88,11 @@ fluxes, kept apart from physical widths such as the channel width and the
 water-surface width and from the effective flow width of river engineering
 practice (the physical side uses the terms conveyance and conveyance ratio).
 
-The passage widths are narrowed afterwards by sub-grid channel widths,
-levee walls and building occupancy ([channels](channel.md),
-[geographic information](geoinfo.md)). The weights $`L_k/\Delta s_k`$ of
+The passage widths are narrowed afterwards by sub-grid channel widths and
+levee walls ([channels](channel.md)). The building porosity $`g_v`$
+([geographic information](geoinfo.md)) does not narrow the passage widths;
+it enters the storage in the continuity equation (§3) and the coefficients
+of the momentum equation (§5). The weights $`L_k/\Delta s_k`$ of
 the nine-point Laplacian of the diffusion term come from the same widths,
 and [Diffusion term](diffusion.md) §3 shows that they give a consistent
 Laplacian for any $`p_d`$. The rules and history of the reassignment that

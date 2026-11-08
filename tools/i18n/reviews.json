@@ -248,11 +248,11 @@
     {
       "source": "docs/users_guide/encgrid.md",
       "target": "docs/en/users_guide/encgrid.md",
-      "source_sha256": "27e8e5c6c4b628aae3a1a96feeeaa28c3514c774d6771289c32ea409535fa875",
-      "target_sha256": "9997dee6a827e08aef8f3057af44c5db8c185b9beac1591d922423a5efb1caaa",
-      "reviewer": "Claude (Claude Code session; merge of main into claude/nifty-hawking-yx6s0o: the merged files are the three-way merge of both sides, checked by script for both files that the merged file minus each parent equals the other side's own change (encgrid.md: the p_diagratio row from this branch and the f_gravity_correction row from main in both languages); each side's changes had been reviewed on its branch)",
+      "source_sha256": "a7df7508af454383f66a2adabb0a9869430415a9489db033aa55fd219d810ccc",
+      "target_sha256": "e902ea379e72ce5bb444313ead96699de0a7d019551c9b9a9fa7b26bbfbba3f1",
+      "reviewer": "Claude (Claude Code session; checked the corrected sentence against src/m_swflow_enc.f90 and compared both versions)",
       "method": "assistant",
-      "reviewed_on": "2026-11-05"
+      "reviewed_on": "2026-11-08"
     },
     {
       "source": "docs/users_guide/forcing.md",
@@ -1967,9 +1967,18 @@
     {
       "source": "examples/levee_breach/README.md",
       "target": "examples/levee_breach/en/README.md",
-      "source_sha256": "f509e5712f7353d5d24ecf5aec1312321a8286a7b8f607b6ec17185dbbd0faab",
-      "target_sha256": "0b5f03ee91662aec58854099908feb7363a7d20fa5711c0be50813089ec88f41",
-      "reviewer": "Claude (Claude Code session; corrected both versions in parallel against the inputs, scripts and source (param files, plot scripts, list/source definitions), and compared the edited passages and numbers)",
+      "source_sha256": "61e3dc57a024009c07d4c5834140f6e06f96c2625e435b56f0e1c12172a4fd2a",
+      "target_sha256": "0584566a00e4e8a9e36bed5401ae2093c03beb8a09f8aee0b9c3b62ef6023a58",
+      "reviewer": "Claude (Claude Code session; checked the figures' rules against src and param files, and compared the added captions and corrected rows sentence by sentence)",
+      "method": "assistant",
+      "reviewed_on": "2026-11-08"
+    },
+    {
+      "source": "examples/levee_breach/figs/laws.png",
+      "target": "examples/levee_breach/en/figs/laws.png",
+      "source_sha256": "dcbda2486a065df6ff03a75a132fda8a109ad732df505c46317b82a117fcb820",
+      "target_sha256": "2c3c2487698b970950d60a6ca4941e91e6b025d1fac18ea9946bf18e3e6c949e",
+      "reviewer": "Claude (Claude Code session; both drawn by the same script from the same inputs; compared every label and value)",
       "method": "assistant",
       "reviewed_on": "2026-11-08"
     },
@@ -2705,9 +2714,18 @@
     {
       "source": "examples/timberyard/README.md",
       "target": "examples/timberyard/en/README.md",
-      "source_sha256": "8e8b3611814908c6e75942610b5a65bfb7bf0838724b656f21ef74c5d07ec09b",
-      "target_sha256": "01fb920f5d20daae4c225635ffe05a2e0e3a752f84690d4e56af9a84a92b5147",
-      "reviewer": "Claude (Claude Code session; corrected both versions in parallel against the inputs, scripts and source (param files, plot scripts, list/source definitions), and compared the edited passages and numbers)",
+      "source_sha256": "2a6f3297315b53cd84d25fabe25fda5c79821a6eeecf37b0f69e7d4fa49a03a4",
+      "target_sha256": "e058e74793e4dbd1b8fe5d002f230d67744d824918d1fef13eec400d7afd4e48",
+      "reviewer": "Claude (Claude Code session; checked the figures' rules against src and param files, and compared the added captions and corrected rows sentence by sentence)",
+      "method": "assistant",
+      "reviewed_on": "2026-11-08"
+    },
+    {
+      "source": "examples/timberyard/figs/laws.png",
+      "target": "examples/timberyard/en/figs/laws.png",
+      "source_sha256": "0192ab89a09e8bd6f55ce6df45149c1a607b1b8d431916e00cc4851a9a671915",
+      "target_sha256": "c03846bff247ff762ad8c3dfb9d157b07d0e44c854f42966a9b22f5314476a68",
+      "reviewer": "Claude (Claude Code session; both drawn by the same script from the same inputs; compared every label and value)",
       "method": "assistant",
       "reviewed_on": "2026-11-08"
     },
