@@ -860,11 +860,20 @@
     {
       "source": "examples/ashfall_lahar/README.md",
       "target": "examples/ashfall_lahar/en/README.md",
-      "source_sha256": "c563c15696e28aee6bea343e7f9d6680d48aad605ab2891e3381d2a9866fbe77",
-      "target_sha256": "569c5ce7fd67766d25594822c11009ea8c6396f8ce428bb23d6c8419624102e5",
-      "reviewer": "Claude (Claude Code session; compared the Japanese source with the English mirror for both rows of the main results table, the 2026-11-06 recompute note after §101, the updated numbers in the bullets on erosion, the fan apex and the check dam, and all six rows of the supplement table; rest unchanged since the previous record)",
+      "source_sha256": "501d3a515d318ab89498beebdb9b9668c630a02a0eefa83e33e424cdcce6dfa4",
+      "target_sha256": "6f6d1a596e7fe47627333fe8d64c91061086bc640bfe0bc06410e50777b8fa2d",
+      "reviewer": "Claude (Claude Code session; revised the captions of the mechanism and setup figures, added the captions of three new figures (laws, stripes, rotated_setup), pointers from the results and the Egashira bullet, and the run-line notes; compared the Japanese source with the English mirror for every changed passage; the rest of the pair is unchanged since the previous record)",
       "method": "assistant",
-      "reviewed_on": "2026-11-06"
+      "reviewed_on": "2026-11-08"
+    },
+    {
+      "source": "examples/ashfall_lahar/figs/laws.png",
+      "target": "examples/ashfall_lahar/en/figs/laws.png",
+      "source_sha256": "bf5cee98436b7b1629ca68fef041f254e0bab624aa3541302c632c26ac584ce0",
+      "target_sha256": "713302cdd087d7b0333fdee6a1a953233aea1aacce3a79c3d69695f6fd863e62",
+      "reviewer": "Claude (Claude Code session; drawn by plot_results.py without model results (setup from the input files of make_init.py, the others from the settings and closed-form expressions); viewed the Japanese and English images side by side: same shapes, values and layout, labels translated)",
+      "method": "assistant",
+      "reviewed_on": "2026-11-08"
     },
     {
       "source": "examples/ashfall_lahar/figs/maps.png",
@@ -878,11 +887,11 @@
     {
       "source": "examples/ashfall_lahar/figs/mechanism.png",
       "target": "examples/ashfall_lahar/en/figs/mechanism.png",
-      "source_sha256": "5cc0512619279743da4fe471f664e44a423f293c331e32345cb687be41bc3985",
-      "target_sha256": "fbf6f1e94da2a4ef8460f2c1f9bfd40b3d28f542ff8f09113d73cf03c7d28b72",
-      "reviewer": "Claude (Claude Code session; example reruns with f_opening_dynamic default 3)",
+      "source_sha256": "0a739d7f630799f2db9685e032e77e21b8066262b74df24d288c6083b4a4ce4d",
+      "target_sha256": "d87680429f3626c7b2d66cae06bd84ffa5d01780e01833ba0e0823773d58d5f7",
+      "reviewer": "Claude (Claude Code session; drawn by plot_results.py without model results (setup from the input files of make_init.py, the others from the settings and closed-form expressions); viewed the Japanese and English images side by side: same shapes, values and layout, labels translated)",
       "method": "assistant",
-      "reviewed_on": "2026-10-31"
+      "reviewed_on": "2026-11-08"
     },
     {
       "source": "examples/ashfall_lahar/figs/profile.png",
@@ -912,6 +921,15 @@
       "reviewed_on": "2026-11-06"
     },
     {
+      "source": "examples/ashfall_lahar/figs/rotated_setup.png",
+      "target": "examples/ashfall_lahar/en/figs/rotated_setup.png",
+      "source_sha256": "2dbb9be9d9c8ae0e8bd8beff27ddd26f8bc094e9620bec06e38c5781c2e3d2b8",
+      "target_sha256": "8d78aa4d21a81e101e00c3327636e4edb1df3b22d09b80f0c13a75f8012e5a82",
+      "reviewer": "Claude (Claude Code session; drawn by plot_rotated.py from the grids of make_rotated.py without model results; viewed the Japanese and English images side by side: same grids, contours and layout, labels translated)",
+      "method": "assistant",
+      "reviewed_on": "2026-11-08"
+    },
+    {
       "source": "examples/ashfall_lahar/figs/series.png",
       "target": "examples/ashfall_lahar/en/figs/series.png",
       "source_sha256": "0e941484580d2e268e088852fcfc18458f05e1ce4a60a2b701c25c6aa0c0592e",
@@ -923,11 +941,20 @@
     {
       "source": "examples/ashfall_lahar/figs/setup.png",
       "target": "examples/ashfall_lahar/en/figs/setup.png",
-      "source_sha256": "51fe7ff4e412b530f91e86bffc3447b14702853a7a4a9603933e2c5ac2b3c116",
-      "target_sha256": "4ea3e972ab124316f87875ab69b34f0f253031947cad71a1d3ef81661358a109",
-      "reviewer": "Claude (Claude Code session; example reruns with f_opening_dynamic default 3)",
+      "source_sha256": "d8b23153aab23cc652adaa00c0cebd39d3560d1e149fb3404a6ad47be9b108ca",
+      "target_sha256": "ce76529dc55884ea71966f7ae63ba3e5972f213777429b43aa0a5ef854efb2b2",
+      "reviewer": "Claude (Claude Code session; drawn by plot_results.py without model results (setup from the input files of make_init.py, the others from the settings and closed-form expressions); viewed the Japanese and English images side by side: same shapes, values and layout, labels translated)",
       "method": "assistant",
-      "reviewed_on": "2026-10-31"
+      "reviewed_on": "2026-11-08"
+    },
+    {
+      "source": "examples/ashfall_lahar/figs/stripes.png",
+      "target": "examples/ashfall_lahar/en/figs/stripes.png",
+      "source_sha256": "35e03028b81f9e70c65defb36ff2d8c5907c2c95a5d43c04cc35a788f6e5f79e",
+      "target_sha256": "1b08b94fe8a598a1b85e4ebe62aac719d26cec6f9bef4979c3d8add3e193646d",
+      "reviewer": "Claude (Claude Code session; drawn by plot_results.py without model results (setup from the input files of make_init.py, the others from the settings and closed-form expressions); viewed the Japanese and English images side by side: same shapes, values and layout, labels translated)",
+      "method": "assistant",
+      "reviewed_on": "2026-11-08"
     },
     {
       "source": "examples/badland/README.md",

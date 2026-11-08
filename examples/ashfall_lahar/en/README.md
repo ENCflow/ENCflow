@@ -42,6 +42,11 @@ make the phenomena visible, and do not reproduce a particular volcano.
 
 ![Schematic of the mechanisms](figs/mechanism.png)
 
+(a) Before the eruption, (b) rain after the ashfall, (c) rain after the ashfall + check dam. The bars on the left
+show where the 30 mm/h of rain goes: with an infiltration capacity of 100 mm/h it all soaks in, with 5 mm/h
+25 mm/h runs off. The lahar concentration reaches the cap of 0.45 in the valley and drops to 0.06–0.07 on the
+gentler fan (why: panel (a) of the figure in "Choosing the settings" below). A schematic, not computed results.
+
 | Real phenomenon | How ENCflow represents it | Settings |
 |---|---|---|
 | Ashfall lowers the infiltration capacity | The infiltration capacity is given directly (constant infiltration capacity of Green-Ampt; the water that soaks in is stored up to the capacity of the layer = thickness × porosity) | `fn_gwflow`, `f_gwvertical = 2`, `gw_ksv_mmh`, `gw_psif = 0` |
@@ -57,12 +62,16 @@ make the phenomena visible, and do not reproduce a particular volcano.
 
 ![Settings](figs/setup.png)
 
-Top: ash thickness (colour) and terrain (contours), check dam (red), and the two transects
+(a) Ash thickness (colour) and terrain (contours), check dam (red), and the two transects
 that measure discharge (dashed; in the valley at x = 250 m and on the fan at x = 355 m).
-P1–P3 are probes (time series in result_*/probes/). Bottom left: longitudinal section along
-the valley axis and ash thickness. Bottom right: rain and infiltration capacity (after the
+P1–P3 are probes (time series in result_*/probes/); A–A' and B–B' are the positions of the sections (d) and (e).
+(b) Longitudinal section along the valley axis and ash thickness. (c) Rain and infiltration capacity (after the
 ashfall only 5 mm/h soaks in and the remaining 25 mm/h flows over the surface; the soil before
-the eruption takes in water faster than it rains).
+the eruption takes in water faster than it rains). (d) Section across the valley (floor 15 m wide, side slope
+0.25). (e) Section across the dam column: the crest is level at 5 m above the floor and 50 m wide, and the walls
+outside it rise above the crest, so water running down them bypasses the dam ("came out before the overflow
+started" in the results). In (d) and (e) the vertical is exaggerated three times and the ash thickness ten
+times. Drawn from the input files.
 
 600 m × 150 m, dx = dy = 5 m (120 × 30 cells). The western half is a valley cut into a
 mountain slope of gradient 0.35, with a valley floor 15 m wide and valley walls with a cross
@@ -110,9 +119,9 @@ no sediment. It is run alongside to see what changes because the flow became a l
 cd examples/ashfall_lahar
 make                       # links and inputs (make_init.py)
 make run                   # the four cases in turn (a few minutes each)
-python3 plot_results.py en # en/figs/*.png and the table (without en: figs/, Japanese labels)
+python3 plot_results.py en # en/figs/*.png and the table (without en: figs/, Japanese labels; the explanatory figures mechanism, setup, laws, stripes need no results)
 make rotated               # the four cases of the supplement (valley orientation and grid)
-python3 plot_rotated.py en # en/figs/rotated*.png and the table
+python3 plot_rotated.py en # en/figs/rotated*.png and the table (rotated_setup.png needs no results)
 ```
 
 ## Results
@@ -192,7 +201,8 @@ rain that soaked in and the water that went into the pores of the deposits.
   concentration of about 0.07 crosses the fan. When a dense lahar deposits, its pores take
   most of the water of the flow (a lahar of 0.45 solids and 0.55 water that deposits with a
   porosity of 0.5 leaves about 80 % of its water in the pores), so the water through the fan
-  section is about 40 % of the clear-water control (473 m³).
+  section is about 40 % of the clear-water control (473 m³) (the concentration and the pore water are
+  explained in panels (a) and (c) of the figure in "Choosing the settings" below).
 - **The check dam holds back the sediment**: 1,652 m³ is trapped behind the dam, the sediment
   passing the valley outlet to the fan falls from 1,096 to 302 m³ (a 70 % reduction), and the
   deposit at the fan apex falls from 2.8 to 0.6 m at most. Until about 42 minutes, while the
@@ -215,6 +225,12 @@ outside the valley is outside the domain, and beyond the downstream end of the v
 sea mask with a water level of 0 m (a sink; the 0° case is treated the same way;
 make_rotated.py). The 45° results are drawn back in the coordinates along the valley
 (x', y').
+
+![Grids of the supplement](figs/rotated_setup.png)
+
+The grids of (a) 0° and (b) 45° (grey = outside the domain, blue = the sea mask at the downstream end, contours
+every 10 m). (c) Eight neighbours exchange water through eight axis and diagonal edges; (d) four neighbours set the
+diagonal passage width to 0. Drawn from the inputs of make_rotated.py.
 
 ![Valley orientation and the grid](figs/rotated.png)
 
@@ -282,6 +298,12 @@ Cross-sections of the flow depth averaged over 30–60 minutes. Left: in the val
 
 ## Notes
 
+![Threshold depth and stripes](figs/stripes.png)
+
+Schematic of the first item below. (a) When dd is comparable with the flow depth, rows that stop drop their
+sediment and rise, while the low rows where the water gathers keep eroding, and stripes one cell wide grow.
+(b) When dd is well below the flow depth, every row flows and is eroded uniformly.
+
 - **Movement threshold depth dd**: the sheet flow on the slope is about 1 mm deep. When `dd`
   is comparable with the flow depth (the default 1 mm), cells switch between flowing and
   stopped, and a stopped cell drops the sediment it was carrying. A slightly lower row
@@ -310,10 +332,21 @@ Cross-sections of the flow depth averaged over 30–60 minutes. Left: in the val
 
 ## Choosing the settings (resistance and erosion laws)
 
+![Concentration and slope](figs/laws.png)
+
+The expressions evaluated with this example's values (not computed results). (a) Takahashi-type equilibrium
+concentration and slope: in the valley (gradient 0.35) the formula exceeds the cap of 0.45, and on the fan (0.08) it
+drops to 0.064, so the sediment that can no longer be carried deposits at the valley outlet (the concentration of
+about 0.07 on the fan in the results). (b) Stopping slope of the resistance law: with Coulomb friction it is 0.25
+at a concentration of 0.45, so the flow stops before the fan, while Voellmy's μ = 0.05 runs down the fan (the second
+item below). (c) When a lahar of concentration 0.45 deposits with porosity 0.5, about 80 % of its water stays in the
+pores (`f_dbwet = 2`).
+
 - **The Egashira constitutive law (`f_dbres = 2`) cannot be used for fine ash**: its laminar
   resistance scales with (d/h)², so with a grain size of 1 mm and a flow depth of a few
   centimetres the resistance almost vanishes and the velocity blows up. The Egashira law is
-  a resistance law for stony flows with grain sizes of centimetres or more.
+  a resistance law for stony flows with grain sizes of centimetres or more (speed against grain size: the figure
+  in [debris flow, slope failure and moving bed layer](../../../docs/en/users_guide/massflow.md#2-resistance-laws-f_dbres)).
 - **With Coulomb friction (`f_dbres = 1`) the flow cannot descend the fan**: with φ = 30° the
   gradient at which a mixture of concentration 0.45 keeps flowing is
   tanφ·sC/(1 + sC) ≈ 0.25, so it stops before the fan of gradient 0.08. The Voellmy type
