@@ -39,6 +39,14 @@ particular qanat.
 
 ![Schematic of the mechanisms](figs/mechanism.png)
 
+Schematic of a real qanat (not a model result). (a) A mother well is dug below the water
+table, and a tunnel sloping more gently than the ground leads the water to an outlet on
+lower land. Groundwater enters along the collection section below the water table, and the
+conveyance section carries it to the outlet (the thin vertical lines are shafts). (b) When a
+nearby deep well lowers the water table, the collection section shortens; where the tunnel
+lies above the water table, its water leaks into the ground, and the flow dwindles and
+finally stops.
+
 | Real phenomenon | How ENCflow represents it | Settings |
 |---|---|---|
 | Groundwater flows through the fan aquifer | Layer 2 (a plane 2-D aquifer given a thickness, specific yield and lateral hydraulic conductivity) | `f_gwlayer2 = 1`, `gw2_depth`, `gw2_sy`, `gw2_ksh_mmh` |
@@ -48,6 +56,38 @@ particular qanat.
 | Water in the tunnel flows down its gradient to the outlet and comes out at the surface | Flow in the tunnel (an approximation of free-surface flow) and an open outfall | `f_gwc_fluxlaw = 2`, `fn_gwc_outfall` |
 | Part of the groundwater bypasses the qanat and flows downstream | It seeps out into a drain at the foot of the fan (the ground level of the drain caps the water table) | Terrain (the eastmost column is lowered) |
 | A deep well pumps groundwater | Withdrawal from the aquifer by cell (the amount that can be pumped is capped by the storage of the cell) | `f_gwpump = 1`, `gwp_*` |
+
+![The laws in ENCflow](figs/laws.png)
+
+The laws in the table, drawn with this example's inputs and settings (no results are used).
+(a) Exchange between the tunnel and the aquifer. The tunnel water level H_c (floor + depth)
+is compared with the water table H_aq, and water moves from the higher to the lower side at
+the exchange capacity of 30 mm/h (0.83 L/s per tunnel cell of 10 m), regardless of the size
+of the head difference. One step (10 s) moves at most 0.083 mm of water column, capped by
+the storage of the giving side (for leakage, the water in the tunnel); nothing leaks into a
+full aquifer, and the conveyance section has an exchange capacity of 0. One step's transfer
+is 0.83 mm of tunnel level and 0.42 mm of water table, so where the two levels are closer
+than that, the direction alternates from step to step, the mean exchange is smaller than
+30 mm/h, and the water table stays almost level with the water in the tunnel (the
+water-table panel of the results). (b) Flow in the tunnel (f_gwc_fluxlaw = 2). For the head
+difference ΔH to the next cell, q = C f √(ΔH/Δs) (C = 0.5 m²/s × passage width 4.14 m,
+f = depth / 1 m, Δs = 10 m), linearized to be proportional to ΔH for ΔH < gwc_eps_h = 0.1 m.
+It is a simple approximation of free-surface flow that makes the square-root pipe law
+proportional to the filling ratio f. The head difference of uniform flow on the floor
+gradient of 0.004, 0.04 m, lies on the linearized branch, so the tunnel flow in this example
+is 0.83 L/s per cm of depth. The qanat flow of 3.5 L/s before pumping corresponds to a depth
+of 4.2 cm, close to the 4.3 cm in the conveyance section of the water-depth panel of the
+results. No water flows out of a cell 1 cm deep or less (gwc_eps). (c) Open outfall on land.
+The smaller of the orifice C_dA √(2gΔH) (C_dA = 0.15 m²) and the per-step limit that lowers
+the tunnel level to the surface water level of the outlet cell flows out, with no backflow.
+For ΔH < 0.53 m the limit is the smaller, so whenever the tunnel water there is deeper than
+1 cm, the outfall releases what lowers the tunnel level to the surface water level. The
+water that comes down the tunnel passes straight out, and the outfall does not throttle the
+qanat flow. (d) The tunnel cell and the pumping-well cell on the column at the well's x
+(75 m) as the water table falls. The tunnel cell switches from collection (+0.83 L/s) to
+leakage (−0.83 L/s) at the tunnel water level (floor 2.33 m + depth), while the well pumps
+its demand down to the base of the aquifer (layer 2), capped by the storage of the cell. The
+initial water table is 1.8 m below the ground.
 
 ## Geometry and settings
 
@@ -94,6 +134,9 @@ make                    # links and inputs (gen_data.py)
 make run                # run the 3 cases in turn (about 25 minutes per case on one thread)
 python3 plot_results.py # figs/*.png and the table (with the argument en, the English version goes to en/figs/)
 ```
+
+mechanism.png, setup.png and laws.png use no results, so they can be drawn right after
+`make`, before the runs.
 
 ## Results
 

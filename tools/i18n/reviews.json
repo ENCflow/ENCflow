@@ -1778,9 +1778,9 @@
     {
       "source": "examples/glacier_valley/README.md",
       "target": "examples/glacier_valley/en/README.md",
-      "source_sha256": "17f96ae2be3893e71529952e4b1ff679def089bd252beaba186f29f55d1ef918",
-      "target_sha256": "14497352714163ec6027f7cdb8f159c5f4da42a94e3d5d1f55f59de25325da56",
-      "reviewer": "Claude (Claude Code session; corrected both versions in parallel against the inputs, scripts and committed figures, and compared the edited passages and numbers)",
+      "source_sha256": "6a87647ce8f135e905ff450b50e55922f80ef1b58f76266d579ba8db3fe3a8ec",
+      "target_sha256": "d0c5d13029d02d2172b646d9be795770b46f95813d85167c323a387a501d1bb4",
+      "reviewer": "Claude (Claude Code session; checked the figures' rules against src and param files, and compared the added captions sentence by sentence)",
       "method": "assistant",
       "reviewed_on": "2026-11-08"
     },
@@ -1792,6 +1792,15 @@
       "reviewer": "Claude (Claude Code session; English figure drawn by plot_results.py en from the same results as the Japanese figure (2026-11-04); titles, labels and legends compared, same data and layout)",
       "method": "assistant",
       "reviewed_on": "2026-11-04"
+    },
+    {
+      "source": "examples/glacier_valley/figs/mechanism.png",
+      "target": "examples/glacier_valley/en/figs/mechanism.png",
+      "source_sha256": "7c7dd089ed2bd5e7491550a3103e6f4d1d20ae29b84a45a62b9da10e5f60e872",
+      "target_sha256": "a1720a21da51d053c0949a07dfc1298549c59289044e85e3ee075ae3e51aae03",
+      "reviewer": "Claude (Claude Code session; both drawn by the same script from the same inputs; compared every label and value)",
+      "method": "assistant",
+      "reviewed_on": "2026-11-08"
     },
     {
       "source": "examples/glacier_valley/figs/setup.png",
@@ -2471,9 +2480,18 @@
     {
       "source": "examples/qanat/README.md",
       "target": "examples/qanat/en/README.md",
-      "source_sha256": "7df81c524267f90ddfe5125be05d0b10e8d8b1c4b71be6949bbf2429ae1c8404",
-      "target_sha256": "b60d88dc3af7a9cfb5916b8156cb72ae59a4d01efba79a53495c1143d640fa88",
-      "reviewer": "Claude (Claude Code session; removed development history from both versions in parallel and compared the edited passages, headings, tables and numbers; no model execution)",
+      "source_sha256": "cdc035846dda16f29326c8b3ebc777781a83aaabd86ac7b77f60f8e3143a1db9",
+      "target_sha256": "0c3c4b5295aad972fedaba9086d56a4a88408fe4b1915cc0098bd922c77725e1",
+      "reviewer": "Claude (Claude Code session; checked the figures' rules against src and param files, and compared the added captions sentence by sentence)",
+      "method": "assistant",
+      "reviewed_on": "2026-11-08"
+    },
+    {
+      "source": "examples/qanat/figs/laws.png",
+      "target": "examples/qanat/en/figs/laws.png",
+      "source_sha256": "45bc079b4773d796079953c5d82ec7d3a5080005f65af93304e111a8fd94c77f",
+      "target_sha256": "f0639243705cf49770906e5251558661bfdba4dbbec2b8f5b0adb27471630ff8",
+      "reviewer": "Claude (Claude Code session; both drawn by the same script from the same inputs; compared every label and value)",
       "method": "assistant",
       "reviewed_on": "2026-11-08"
     },

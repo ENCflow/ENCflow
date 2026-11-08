@@ -3,12 +3,15 @@
 
   figs/mechanism.png カナートの仕組みと、揚水井で湧出が細る機構の模式図(データを使わない)
   figs/setup.png     地形と坑道・涵養の帯・揚水井・排水路(平面)、坑道に沿う縦断
+  figs/laws.png      ENCflow の則をこの例題の値で描いた図(坑道と帯水層の交換、坑道の通水、開放の吐口、
+                     揚水井と坑道のセルの地下水位による違い。計算結果を使わない。入力と param*.txt の値だけ)
   figs/profile.png   坑道に沿う地下水位(坑道の床からの高さ)と坑道の水深(揚水を始める前と 300 日後)
   figs/plan.png      300 日後の地下水位の低下(カナートだけのケースとの差)
   figs/series.png    湧出量の時間変化と、終了前 20 日の水収支(涵養の行き先)
 引数 en で英語ラベル版を en/figs/ に描く(データと描画処理は共通)。
 """
 import os
+import re
 import sys
 import numpy as np
 import matplotlib
@@ -216,6 +219,221 @@ def setup():
     plt.close(fig)
 
 
+# ---------------------------------------------------------------- 則(ENCflow の式をこの例題の値で。データを使わない)
+def par(name, fn="param.txt"):
+    """param*.txt の「name = 数値」の値(書いていなければ None)"""
+    with open(fn, encoding="utf-8") as f:
+        for line in f:
+            m = re.match(r"\s*%s\s*=\s*([-+0-9.eE]+)" % re.escape(name), line.split("!")[0])
+            if m:
+                return float(m.group(1))
+    return None
+
+
+def laws():
+    """坑道と帯水層の交換(src/m_gwflow_conduit.f90 の (3) 層間交換)、坑道の通水(src/m_gwflow_lateral.f90 の
+    conduit_core。f_gwc_fluxlaw = 2)、陸側の開放の吐口(m_gwflow_conduit.f90 の (4))、揚水(src/m_gwflow_pump.f90)を、
+    入力(data_qanat/ の z・gwc_*.txt)と param*.txt の値で描く。param*.txt に書いていない値は src の既定
+    (gwc_eps = 1e-3 m、gwc_diagratio = 2/(2+√2)、重力 9.8 m/s2)"""
+    z = rd("data_qanat/z.txt")
+    zb = rd("data_qanat/gwc_bot.txt")[J]
+    leak = rd("data_qanat/gwc_leak.txt")[J, I1 - 1:I2]          # 交換能 (mm/h)
+    cap = rd("data_qanat/gwc_cap.txt")[J, I1 - 1:I2].max()      # 貯留容量 (m 柱状)
+    cnd = rd("data_qanat/gwc_cnd.txt")[J, I1 - 1:I2].max()      # 通水能密度 (m2/s)
+    ca = rd("data_qanat/gwc_outfall.txt").max()                 # 吐口の Cd·A (m2)
+    dt, syc, eps_h = par("dt"), par("gwc_sy"), par("gwc_eps_h")
+    eps = par("gwc_eps") or 1.0e-3                               # 乾燥判定(既定)
+    sd, d2, sat0 = par("sd0"), par("gw2_depth"), par("gw2_sat0")
+    gg = 9.8
+    width = (1.0 - 2.0 / (2.0 + np.sqrt(2.0))) * DX             # 軸の向きの通過幅 (m)(lateral_widths)
+    ck = cnd * width                                            # エッジの通水能 C (m3/s)
+    hfull = cap / syc                                           # 坑道の高さ (m)。水深 = hgc/sy、充満率 = 水深/高さ
+    area = DX * DX
+    kl = leak.max()                                             # 集水区間の交換能 (mm/h)
+    qx = kl / 1000.0 / 3600.0 * area * 1000.0                   # 1 セルの交換 (L/s)
+    dhb = (zb[I1 - 1] - zb[I2 - 1]) / (I2 - I1)                 # 隣のセルとの床の高さの差 (m)
+    i_lined = int(np.argmax(leak == 0)) + I1                    # 漏れない区間の始まりの列
+    iw = WELL[0] - 1
+    zg = z[WELL[1] - 1, iw]                                     # 井戸の x の地表(坑道のセルも同じ)
+    ztop, zbase, zfl = zg - sd, zg - sd - d2, zb[iw]
+    wt0 = zbase + sat0 * d2                                     # 初期の地下水位(地表下 1.8 m)
+    tx = dict(fontsize=8.2)
+
+    fig = plt.figure(figsize=(14, 10.4))
+    gs = fig.add_gridspec(2, 2, hspace=0.36, wspace=0.24, left=0.065, right=0.96, top=0.955, bottom=0.07)
+
+    # ---- (a) 坑道と帯水層の交換
+    ax = fig.add_subplot(gs[0, 0])
+    dmax = 0.15
+    ax.axhline(0, color=C_TUNNEL, lw=2.6, alpha=0.55)
+    ax.plot([0, dmax], [qx, qx], color=C_WATER, lw=2.6)
+    ax.plot([-dmax, 0], [-qx, -qx], color=C_WATER, lw=2.6)
+    ax.plot([0, 0], [-qx, qx], color=C_WATER, lw=0.8, ls=":")
+    ax.plot([0, 0], [-qx, qx], "o", mfc="w", mec=C_WATER, ms=5)
+    ax.plot(0, 0, "o", color=C_WATER, ms=5)
+    ax.text(0.008, qx + 0.08, T(f"集水: 帯水層 → 坑道\n{kl:g} mm/h × {area:.0f} m² = {qx:.2f} L/s\n(水位差の大きさによらない)",
+                                f"collection: aquifer → tunnel\n{kl:g} mm/h × {area:.0f} m² = {qx:.2f} L/s\n(regardless of the head difference)"),
+            color=C_WATER, va="bottom", **tx)
+    ax.text(-dmax + 0.004, -qx + 0.08, T(f"漏水: 坑道 → 帯水層。同じ {kl:g} mm/h\n(坑道の水があるだけ。\n帯水層が満杯なら止まる)",
+                                         f"leakage: tunnel → aquifer, the same {kl:g} mm/h\n(only as much as the tunnel holds;\nnone into a full aquifer)"),
+            color=C_WATER, va="bottom", ha="left", **tx)
+    ax.text(dmax - 0.004, 0.07, T(f"導水区間(x ≥ {(i_lined - 0.5) * DX:.0f} m):\n交換能 0 で漏れない",
+                                  f"conveyance section (x ≥ {(i_lined - 0.5) * DX:.0f} m):\nexchange capacity 0, watertight"),
+            color=C_TUNNEL, ha="right", va="bottom", **tx)
+    ax.text(-dmax + 0.004, 1.48, T("$H_{aq}$ = 帯水層の底 + $h_{g2}/s_{y2}$(地下水位。$s_{y2}$ = %g)\n"
+                                   "$H_c$ = 坑道の床 + $h_{gc}/s_y$(坑道の水位。$s_y$ = %g)" % (SY2, syc),
+                                   "$H_{aq}$ = aquifer base + $h_{g2}/s_{y2}$ (water table; $s_{y2}$ = %g)\n"
+                                   "$H_c$ = tunnel floor + $h_{gc}/s_y$ (tunnel water level; $s_y$ = %g)" % (SY2, syc)),
+            va="top", ha="left", linespacing=1.5, **tx)
+    ax.text(dmax - 0.004, -1.48, T(f"1 ステップ(Δt = {dt:g} s)に移すのは {kl / 3.6e3 * dt:.3f} mm 柱状まで\n"
+                                   f"(坑道の水位で {kl / 3.6e3 * dt / syc:.2f} mm、地下水位で {kl / 3.6e3 * dt / SY2:.2f} mm)",
+                                   f"one step (Δt = {dt:g} s) moves at most {kl / 3.6e3 * dt:.3f} mm of water column\n"
+                                   f"({kl / 3.6e3 * dt / syc:.2f} mm of tunnel level, {kl / 3.6e3 * dt / SY2:.2f} mm of water table)"),
+            va="bottom", ha="right", color=C_TUNNEL, **tx)
+    ax.set_xlim(-dmax, dmax)
+    ax.set_ylim(-1.55, 1.55)
+    ax.set_xlabel(T("地下水位 − 坑道の水位 $H_{aq} - H_c$ (m)", "water table − tunnel water level $H_{aq} - H_c$ (m)"))
+    ax.set_ylabel(T("帯水層 → 坑道の交換 (L/s。1 セル = 坑道 10 m)", "aquifer → tunnel exchange (L/s per cell = 10 m of tunnel)"))
+    sec = ax.secondary_yaxis("right", functions=(lambda v: v * 3600.0 / area, lambda v: v * area / 3600.0))
+    sec.set_ylabel("mm/h")
+    ax.grid(alpha=0.3)
+    ax.set_title(T("(a) 坑道と帯水層の交換(gwc_leak_layer = 2、fn_gwc_leak)", "(a) Tunnel–aquifer exchange (gwc_leak_layer = 2, fn_gwc_leak)"),
+                 fontsize=10, loc="left")
+
+    # ---- (b) 坑道の通水(f_gwc_fluxlaw = 2)
+    ax = fig.add_subplot(gs[0, 1])
+    dh = np.logspace(-3, 0, 400)
+
+    def qcond(d, dhv=dh):
+        """坑道の流量 (L/s)。水深 d (m)、隣のセルとの水位差 dhv (m)(conduit_core の f_gwc_fluxlaw = 2)"""
+        f = min(d / hfull, 1.0)
+        return np.where(dhv >= eps_h, ck * f * np.sqrt(dhv / DX), ck * f * dhv / np.sqrt(DX * eps_h)) * 1000.0
+
+    rate = float(qcond(0.01, np.array(dhb)))                    # 床の勾配の等流の流量 (L/s / 水深 1 cm)
+
+    ax.axvspan(1e-3, eps_h, color="#eef3f8", zorder=0)
+    for dep, col in ((0.02, "#9ecae1"), (0.05, "#4292c6"), (0.10, "#2171b5"), (0.20, "#08306b")):
+        ax.plot(dh, qcond(dep), color=col, lw=2.0, label=T(f"水深 {dep * 100:.0f} cm", f"depth {dep * 100:.0f} cm"))
+    ax.plot(dh, qcond(hfull), color="0.45", lw=1.2, ls=":", label=T(f"満水(水深 {hfull:g} m)", f"full (depth {hfull:g} m)"))
+    ax.axvline(dhb, color=C_TUNNEL, lw=1.3, ls="--")
+    ax.axvline(eps_h, color="0.45", lw=0.9)
+    ax.text(dhb * 0.93, 0.03, T(f"床の勾配 {dhb / DX:g} × {DX:g} m\n= {dhb:g} m(等流)", f"floor gradient\n{dhb / DX:g} × {DX:g} m = {dhb:g} m\n(uniform flow)"),
+            ha="right", va="bottom", color=C_TUNNEL, **tx)
+    ax.text(eps_h * 1.08, 0.03, f"gwc_eps_h = {eps_h:g} m", ha="left", va="bottom", color="0.35", **tx)
+    ax.text(1.15e-3, 0.0125, T("線形化した枝(q ∝ ΔH)", "linearized branch (q ∝ ΔH)"), color="0.35", **tx)
+    ax.text(0.95, 0.0125, T("√ 則(q ∝ √ΔH)", "square-root law (q ∝ √ΔH)"), color="0.35", ha="right", **tx)
+    ax.text(1.15e-3, 900, T("$q = C f\\sqrt{\\Delta H/\\Delta s}$($\\Delta H \\geq \\varepsilon_h$)\n"
+                            "$q = C f\\,\\Delta H/\\sqrt{\\Delta s\\,\\varepsilon_h}$($\\Delta H < \\varepsilon_h$)\n"
+                            "$C$ = %g m$^2$/s × %.2f m = %.2f m$^3$/s\n$f$ = 水深 / %g m、$\\Delta s$ = %g m\n"
+                            "水深 %g cm 以下のセルからは流れない"
+                            % (cnd, width, ck, hfull, DX, eps / syc * 100),
+                            "$q = C f\\sqrt{\\Delta H/\\Delta s}$ ($\\Delta H \\geq \\varepsilon_h$)\n"
+                            "$q = C f\\,\\Delta H/\\sqrt{\\Delta s\\,\\varepsilon_h}$ ($\\Delta H < \\varepsilon_h$)\n"
+                            "$C$ = %g m$^2$/s × %.2f m = %.2f m$^3$/s\n$f$ = depth / %g m, $\\Delta s$ = %g m\n"
+                            "no flow out of a cell %g cm deep or less"
+                            % (cnd, width, ck, hfull, DX, eps / syc * 100)),
+            va="top", ha="left", linespacing=1.55, **tx)
+    ax.set_xscale("log")
+    ax.set_yscale("log")
+    ax.set_xlim(1e-3, 1.0)
+    ax.set_ylim(1e-2, 1.5e3)
+    ax.set_xlabel(T(f"隣の坑道のセルとの水位差 ΔH (m)({DX:g} m 離れたセルの間)", f"head difference ΔH to the next tunnel cell (m) ({DX:g} m apart)"))
+    ax.set_ylabel(T("坑道の流量 q (L/s)", "tunnel flow q (L/s)"))
+    ax.legend(fontsize=7.8, loc="center right", bbox_to_anchor=(1.0, 0.36), framealpha=0.9)
+    ax.grid(alpha=0.3, which="major")
+    ax.set_title(T(f"(b) 坑道の通水(f_gwc_fluxlaw = 2)。等流では {rate:.2f} L/s × 水深 (cm)",
+                   f"(b) Tunnel flow (f_gwc_fluxlaw = 2); uniform flow: {rate:.2f} L/s × depth (cm)"), fontsize=10, loc="left")
+
+    # ---- (c) 開放の吐口(fn_gwc_outfall)
+    ax = fig.add_subplot(gs[1, 0])
+    dmm = np.linspace(-10.0, 60.0, 701)
+    dhm = np.maximum(dmm, 0.0) / 1000.0
+    q_or = ca * np.sqrt(2.0 * gg * dhm) * 1000.0
+    q_eq = area * dhm / ((1.0 + 1.0 / syc) * dt) * 1000.0
+    dcross = (ca * np.sqrt(2.0 * gg) * (1.0 + 1.0 / syc) * dt / area) ** 2
+    ax.plot(dmm, q_or, color=C_WATER, lw=1.2, ls="--",
+            label=T(f"オリフィス $C_dA\\sqrt{{2g\\Delta H}}$($C_dA$ = {ca:g} m$^2$)", f"orifice $C_dA\\sqrt{{2g\\Delta H}}$ ($C_dA$ = {ca:g} m$^2$)"))
+    ax.plot(dmm, q_eq, color="0.35", lw=1.2, ls=":",
+            label=T("1 ステップの上限 $A\\,\\Delta H/((1 + 1/s_y)\\,\\Delta t)$", "per-step limit $A\\,\\Delta H/((1 + 1/s_y)\\,\\Delta t)$"))
+    ax.plot(dmm, np.minimum(q_or, q_eq), color=C_WATER, lw=2.6, label=T("吐口から出る量(小さい方)", "outflow (the smaller)"))
+    ax.text(-9.5, 3.0, T("逆流なし", "no\nbackflow"), color=C_WATER, va="bottom", **tx)
+    ax.text(59.0, 78.5, T(f"ΔH < {dcross:.2f} m では 1 ステップの上限の方が小さい。\n"
+                          "毎ステップ、坑道の水位を出口のセルの地表水位まで\n下げる量を地表へ流す"
+                          f"(A = {area:g} m²、Δt = {dt:g} s)",
+                          f"for ΔH < {dcross:.2f} m the per-step limit is the smaller:\n"
+                          "each step releases what lowers the tunnel level\nto the surface water level of the outlet cell"
+                          f"\n(A = {area:g} m², Δt = {dt:g} s)"),
+            ha="right", va="top", color="0.1", linespacing=1.4, **tx)
+    ax.text(59.0, 63.5, T(f"出口(x = {X[I2 - 1]:g} m)は坑道の床 = 地表なので\nΔH = 坑道の水深 − 地表の水深。\n"
+                          f"坑道の水深 {eps / syc * 100:g} cm 以下(gwc_eps)なら出さない",
+                          f"outlet (x = {X[I2 - 1]:g} m): tunnel floor = ground,\nso ΔH = tunnel depth − surface water depth;\n"
+                          f"no outflow while the tunnel is {eps / syc * 100:g} cm deep or less (gwc_eps)"),
+            ha="right", va="top", color=C_TUNNEL, linespacing=1.4, **tx)
+    ax.set_xlim(-10, 60)
+    ax.set_ylim(0, 80)
+    ax.set_xlabel(T("坑道の水位 − 出口のセルの地表水位 ΔH (mm)", "tunnel water level − surface water level of the outlet cell ΔH (mm)"))
+    ax.set_ylabel(T("吐口から地表への流量 (L/s)", "outflow to the surface (L/s)"))
+    ax.legend(fontsize=7.8, loc="lower right", framealpha=0.95)
+    ax.grid(alpha=0.3)
+    ax.set_title(T("(c) 陸側の開放の吐口(fn_gwc_outfall)", "(c) Open outfall on land (fn_gwc_outfall)"), fontsize=10, loc="left")
+
+    # ---- (d) 地下水位が下がると: 坑道のセルと揚水井のセル(井戸の x の柱)
+    g = gs[1, 1].subgridspec(1, 2, width_ratios=[0.5, 1.0], wspace=0.04)
+    axc = fig.add_subplot(g[0])
+    axr = fig.add_subplot(g[1], sharey=axc)
+    north = (J + 1 - WELL[1]) * DX
+    for x0, lab in ((0.05, T("坑道の\nセル", "tunnel\ncell")), (1.15, T(f"井戸の\nセル({north:.0f} m 北)", f"well cell\n({north:.0f} m north)"))):
+        axc.add_patch(plt.Rectangle((x0, ztop), 1.0, sd, facecolor=C_GROUND, edgecolor="0.4", lw=0.6))
+        axc.add_patch(plt.Rectangle((x0, zbase), 1.0, d2, facecolor="#eef0f2", edgecolor="0.4", lw=0.6))
+        axc.add_patch(plt.Rectangle((x0, zbase), 1.0, wt0 - zbase, facecolor=C_AQ, edgecolor="none"))
+        axc.add_patch(plt.Rectangle((x0, zbase - 1.2), 1.0, 1.2, facecolor="0.75", edgecolor="0.4", lw=0.6, hatch="///"))
+        axc.text(x0 + 0.5, zg + 0.15, lab, ha="center", va="bottom", fontsize=8)
+    axc.add_patch(plt.Rectangle((0.3, zfl), 0.5, hfull, facecolor="w", edgecolor=C_TUNNEL, lw=1.6))
+    axc.plot([0.3, 0.8], [zfl + 0.06, zfl + 0.06], color=C_WATER, lw=2)
+    axc.annotate("", xy=(1.85, zg + 0.05), xytext=(1.85, zbase + 0.6), arrowprops=dict(arrowstyle="-|>", color="#c0392b", lw=2))
+    axc.text(1.78, zfl, T("揚水", "pumping"), color="#c0392b", fontsize=7.8, ha="right", va="center")
+    axc.text(0.55, zbase - 0.6, T("帯水層の底", "aquifer base"), fontsize=7.6, ha="center", va="center", color="0.15",
+             bbox=dict(boxstyle="round,pad=0.15", fc="w", ec="none", alpha=0.85))
+    axc.set_xlim(0, 2.25)
+    axc.set_xticks([])
+    axc.set_ylim(zbase - 1.3, zg + 1.3)
+    axc.set_ylabel(T(f"x = {X[iw]:g} m の標高 (m)", f"elevation at x = {X[iw]:g} m (m)"))
+    for s in ("top", "right", "bottom"):
+        axc.spines[s].set_visible(False)
+    axc.set_title(T(f"(d) 地下水位が下がると(x = {X[iw]:g} m)", f"(d) As the water table falls (x = {X[iw]:g} m)"), fontsize=10, loc="left")
+    # 地下水位に対する取り出し量(正 = 帯水層から出る)
+    axr.plot([0, 0], [zbase, ztop], color="0.5", lw=0.8)
+    axr.axhline(zfl, color=C_WATER, lw=0.8, ls=":")
+    axr.plot([qx, qx], [zfl, ztop], color=C_WATER, lw=2.6)
+    axr.plot([-qx, -qx], [zbase, zfl], color=C_WATER, lw=2.6)
+    axr.text(2.15, zfl + 0.08, T(f"坑道の水位\n(床 {zfl:.2f} m + 水深)", f"tunnel water level\n(floor {zfl:.2f} m + depth)"),
+             color=C_WATER, va="bottom", ha="left", fontsize=7.8)
+    for qw, col in ((CASES[1][2], CASES[1][3]), (CASES[2][2], CASES[2][3])):
+        axr.plot([qw * 1000, qw * 1000], [zbase, ztop], color=col, lw=2.6)
+        axr.text(qw * 1000, ztop + 0.12, T(f"井戸 {qw * 1000:g} L/s", f"well {qw * 1000:g} L/s"), color=col, ha="center", va="bottom", fontsize=7.8)
+    axr.text(qx - 0.1, ztop + 0.12, T(f"集水 +{qx:.2f}", f"collection +{qx:.2f}"), color=C_WATER, ha="right", va="bottom", fontsize=7.8)
+    axr.text(-qx, zbase - 0.15, T(f"漏水 −{qx:.2f}", f"leakage −{qx:.2f}"), color=C_WATER, ha="left", va="top", fontsize=7.8)
+    for ax_ in (axc, axr):
+        ax_.axhline(wt0, color=C_WATER, lw=1.0, ls=(0, (2, 2)))
+        ax_.axhline(ztop, color="0.5", lw=0.6)
+        ax_.axhline(zbase, color="0.3", lw=0.9)
+    axr.text(2.15, wt0 + 0.08, T("初期の地下水位", "initial water table"), color=C_WATER, ha="left", va="bottom", fontsize=7.6)
+    axr.text(6.4, zbase - 0.12, T(f"帯水層の底(地表下 {sd + d2:g} m)", f"aquifer base ({sd + d2:g} m below ground)"), color="0.3",
+             ha="right", va="top", fontsize=7.6)
+    axr.text(-1.5, zg + 1.25, T("井戸は帯水層の底まで要求どおり汲む\n(汲めるのはセルの貯留まで)。坑道のセルは\n坑道の水位を境に集水と漏水が入れ替わる",
+                                "the well pumps its demand down to the aquifer base\n(capped by the cell's storage); the tunnel cell switches\n"
+                                "between collection and leakage at the tunnel water level"),
+             ha="left", va="top", fontsize=7.8, color="0.1", linespacing=1.4)
+    axr.set_xlim(-1.6, 6.5)
+    axr.tick_params(labelleft=False)
+    axr.set_xlabel(T("帯水層から取り出す量 (L/s。1 セル)", "taken from the aquifer (L/s, one cell)"))
+    axr.grid(alpha=0.3)
+    for s in ("top", "right"):
+        axr.spines[s].set_visible(False)
+    fig.savefig(f"{FIGDIR}/laws.png", dpi=100)
+    plt.close(fig)
+
+
 # ---------------------------------------------------------------- 結果
 def k_at(case, day):
     fr = frames(case)
@@ -352,6 +570,7 @@ def table():
 if __name__ == "__main__":
     mechanism()
     setup()
+    laws()
     if all(os.path.exists(f"result_{c}/FILENUMBER.csv") for c, _, _, _, _ in CASES):
         profile()
         plan()
