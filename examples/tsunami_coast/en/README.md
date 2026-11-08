@@ -68,11 +68,7 @@ Arrival = the time at which the change in depth exceeds 0.1 m (motion together
 with the bed does not change the depth, so only the waves and the inflow are
 picked up; at the land probe, the start of flooding). The maximum flood depth on
 the land at the bay head is 2.94 m with time history, 3.02 m instantaneous and
-2.12 m offshore only. The flooded land area is 301 / 299 / 266 km² (recomputed on
-2026-11-02 with the default f_opening_dynamic = 3 and the corrected lateral faces of the
-momentum-conserving advection; developer.md §68.41–§68.43; recomputed on 2026-11-05 after the
-default f_gravity_correction = 2 and the fixes of the outflow suppression and the edge depth, §93–§95,
-where only the last digit of the minimum at the shelf changed).
+2.12 m offshore only. The flooded land area is 301 / 299 / 266 km².
 
 - **With the coastal deformation included, the disturbance at the coast starts
   10 minutes earlier.** With the offshore fault only, the arrival at the coast

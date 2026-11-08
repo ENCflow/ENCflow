@@ -124,9 +124,6 @@ downstream of the breach. Right: inundation depth at houses B.
 | Breach 1 hour later | 2.60 million m³ | 479 m³/s | 797 m³/s | 175 ha | 1.81 m | 34 / 0 / 0 % | 0.70 / 0.55 m | 283 min |
 | Breach + secondary levee | 4.41 million m³ | 637 m³/s | 803 m³/s | 267 ha | 2.63 m | 52 / 0 / 0 % | 2.03 / 0.25 m | 222 min |
 
-(The tables and figures show the values recomputed on 2026-11-02 with the default f_opening_dynamic = 3 and the corrected
-lateral faces of the momentum-conserving advection; developer.md §68.41–§68.43.)
-
 The upstream discharge peaks at 1,600 m³/s. "Houses swept away" is the fraction of the house
 stock of each area destroyed into debris.
 
@@ -298,7 +295,7 @@ band marks the breach in progress (70-90 minutes).
 
 **Breach width and discharge** (same terrain with different breach widths, failing all at
 once at 70-80 minutes; steady discharge at 100 minutes compared; this table was computed with
-the default f_opening_dynamic = 2 of 2026-10-18 to 31):
+f_opening_dynamic = 2; the default is 3):
 
 | Width (cells / sites) | Resolved levee Q (m³/s) | Broad-crested weir 1.7·B·H^1.5 (m³/s) | Virtual wall f_br_diag = 0 Q / ratio to resolved | f_br_diag = 1 Q / ratio to resolved |
 |---:|---:|---:|---:|---:|

@@ -152,35 +152,6 @@ Right: sediment that passed the valley outlet to the fan and sediment trapped be
 | Ash (lahar) | 1,341 m³ (50 %) | 2,089 m³ (27 %) | 1,096 m³ | — | 1,096 m³ / 2.8 m | water 0.30, water + sediment 0.55 m³/s | 473 m³ |
 | Ash + check dam | 1,332 m³ (49 %) | 2,068 m³ (26 %) | 302 m³ | 1,652 m³ | 301 m³ / 0.6 m | (as above) | 483 m³ |
 
-(The tables and figures show the values recomputed on 2026-10-31 with the default f_opening_dynamic = 3; developer.md §68.41.
-Recomputing on 2026-11-02 with the default after the correction of the lateral faces of the momentum-conserving advection
-leaves the table values unchanged; the figures are from that recomputation; §68.42, §68.43. Recomputing on
-2026-11-04 with the code after the fix of the yield rest check (§28.16) leaves the values of this table and of the
-supplement unchanged: the outputs of the mudflow and check-dam cases are byte-identical to those before the fix,
-and the supplementary 45° eight-neighbour case differs only in the last printed digit of the water depth in a few
-cells, so the figures are those of 11-02. Recomputed on the same day after the fix of the steep-slope gravity
-correction and the change that takes the slope of the equilibrium concentration by D∞ (developer.md §91, §92):
-values moved by a few m³, such as the fan-apex deposit 1,091 → 1,099 m³, the deposit behind the dam 1,656 →
-1,658 m³ and the water through the fan section 477 → 474 m³. The times of overflow and filling of the dam and the
-sediment that left before the overflow, compared with the same definitions between the executables before and
-after the fix, agree at the same 2-minute outputs and within 1 m³. In the supplement the sediment amounts at 45°
-moved by 1–2 % and the bed-change difference with four neighbours went from 17 to 16 %. Recomputed on 2026-11-05
-after the default f_gravity_correction = 2 and the fixes of the outflow suppression and the edge depth (§93–§95):
-the sediment amounts moved by 1–2 %, such as the fan-apex deposit 1,099 → 1,076 m³ and the deposit behind the
-dam 1,658 → 1,621 m³. In the clear-water control too, the arrival at the valley section was delayed from 14.5 to
-15.0 minutes and the water into the ground increased from 540 to 549 m³ (the effect of the friction along the
-slope; with §94 and §95 alone neither changes). The times of overflow and filling of the dam and the sediment that
-left before the overflow, compared with the same definitions, agree at the same 2-minute outputs and within 1 m³.
-In the supplement the sediment amounts with eight neighbours moved by 1–2 % and their bed-change difference between
-0° and 45° went from 9 to 11 %, while those with four neighbours are nearly the same. On the same day the example
-was recomputed after the change by which 2 also evaluates the resistance laws of mixture flows along the slope
-(developer.md §101): in the steep valley the turbulent term of Voellmy grows and the lahar becomes a little slower
-and deeper, and the fan-apex deposit changed 1,076 → 1,096 m³, the deposit behind the dam 1,621 → 1,652 m³ and the
-water through the fan section 468 → 473 m³, by 1–2 % (overflow at 42 minutes and filling at 52 minutes are the
-same; the sediment that left before the overflow changed 134 → 129 m³). In the supplement the bed-change
-difference between 0° and 45° went from 11 to 8 % with eight neighbours and from 16 to 12 % with four. The tables
-and figures are from this recomputation.)
-
 The rain totals 2,700 m³ from 10 to 70 minutes. The water into the ground is the sum of the
 rain that soaked in and the water that went into the pores of the deposits.
 
@@ -324,11 +295,9 @@ sediment and rise, while the low rows where the water gathers keep eroding, and 
   to the fan" (the sediment budget upstream of the valley outlet).
 - **The free-outflow east edge**: in the easternmost column, too, the equilibrium
   concentration of the flow uses the same slope as the interior (the terrain beyond the edge is
-  extended at its slope). Before the fix of 2026-10-30 (developer.md §28.15) the slope in the
-  easternmost column became 0, and an artificial deposit formed in the easternmost few
-  columns (at most 0.2 m in the easternmost column, about 160 m³ in all). Because of the water that
-  was in its pores, the "water into the ground" in the table is now about 90 m³ less than
-  before the fix (the other values are unchanged).
+  extended at its slope; developer.md §28.15). With a slope of 0 in the easternmost column, an
+  artificial deposit forms in the easternmost few columns (at most 0.2 m in the easternmost column,
+  about 160 m³ in all).
 
 ## Choosing the settings (resistance and erosion laws)
 

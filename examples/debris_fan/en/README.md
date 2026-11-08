@@ -31,9 +31,6 @@ schematic values chosen to make the phenomena visible, and do not reproduce the 
 - **Four neighbours converge slowly**: even on the 2.5 m grid, four neighbours deliver 0.94 and 0.95 times the sediment
   and deposit area of eight neighbours to the fan, with 0.94 times the lateral spreading, and remain off the
   converged result of eight neighbours (the arrival time at the apex agrees).
-- Biases depending on the grid orientation in the check of whether material at rest starts to move and in
-  the gravity correction on steep slopes (with both eight and four neighbours) were found while making this
-  example and fixed (developer.md §28.16, §91).
 
 ## What happens in a real debris-flow disaster
 
@@ -170,29 +167,6 @@ python3 plot_results.py  # figs/*.png and tables (with the argument en, the Engl
 2.5 GB (0.9 GB for the two 2.5 m cases; `make clean` removes it).
 
 ## Results
-
-The tables and figures are the values of all 26 cases recomputed with the code after the fixes of the
-yield rest check (developer.md §28.16) and of the gravity correction on steep slopes (§91) (2026-11-04).
-The fix of the rest check changed little (in the reference case the deposit on the fan 49,133 → 48,941 m³
-and the flowing material 19,088 → 19,280 m³); most of the flow in this example is fast, and the rest
-check acts only as it stops. With the fix of the gravity correction, the effective gravity, which came out
-too large on edges oblique to the slope, is now right: the sediment reaching the fan in the reference case
-went from 68.2 to 69.2 thousand m³ (+1.5 %) and the arrival at the apex from 42.3 to 43.0 s. Four
-neighbours changed more: more material stays in the valley and less reaches the fan (68.5 → 65.9 thousand m³
-at 2.5 m), and the arrival at the apex is later and now agrees with eight neighbours (38.9 → 42.1 s at
-2.5 m). Recomputed all 26 cases on 2026-11-05 after the fixes of the outflow suppression and the edge depth
-(§94, §95): the values mostly moved only in the last digit (the sediment reaching the fan in the reference
-case stays at 69.2 thousand m³, and the arrival at the apex at 43.0 s). At that time this README said
-"recomputed with the default f_gravity_correction = 2", but param.txt still specified 1 explicitly as "the
-standard for debris-flow cases", so the computation actually used 1. On 2026-11-06 param.txt was aligned to
-the default 2 and all 26 cases were recomputed after the change by which 2 also evaluates the resistance
-laws of mixture flows along the slope (developer.md §101; the velocity-squared resistance of the
-Takahashi–Nakagawa stony type becomes 1/cos⁴θ times larger in the direction of steepest descent). The flow
-in the steep valley becomes slower: in the reference case the arrival at the apex went from 43.0 to 47.4 s,
-the arrival at the edge of the residential area from 52 to 59 s, the sediment reaching the fan from 69.2 to
-67.2 thousand m³, and the houses reached by flow with a maximum depth of 1 m or more from 45 to 39. The
-trends of the dependence on the grid and the orientation do not change. The tables, figures and numbers in
-the text are from this recomputation.
 
 ### How the debris flow behaves (reference: eight neighbours, 2.5 m, 0°)
 
@@ -376,23 +350,19 @@ direction of the fan deposit seen from the apex).
   20 m to 2.5 m and does not depend on the valley orientation. The problem that the diagonal edges cause a
   sideways numerical diffusion in the transport of the flowing sediment (the scalar hs) has had its leading term
   removed by link-wise MUSCL (`f_scalar_scheme = 3`, the default; developer.md §78), which is in effect in this
-  example too. As a trial, returning to first-order upwind (`f_scalar_scheme = 1`, the former scheme, in which
-  the diagonal links produce a cross-flow numerical diffusion Dy ≈ 0.29uΔy) changed the spreading at 5 m and 0°
-  only by 0.8 % (35.11° → 34.83°); what changes is the sharpness of the concentration (the greatest deposit
-  thickness drops by 10 %; a trial with the code before the fix of the gravity correction). The advection of momentum is the momentum-conservative MUSCL (the default), and
+  example too. With first-order upwind (`f_scalar_scheme = 1`, in which the diagonal links produce a
+  cross-flow numerical diffusion Dy ≈ 0.29uΔy) the spreading at 5 m and 0° changes only by about 1 %; what
+  changes is the sharpness of the concentration (the greatest deposit thickness drops by about a tenth). The advection of momentum is the momentum-conservative MUSCL (the default), and
   neither uses a diffusion term (eddy viscosity) (`f_diffusion_term = 0`).
 - **The narrowness with four neighbours is a bias in how diagonal flow is represented**: with four
   neighbours the spreading grows as the grid is refined (from 27° at 20 m to 33° at 2.5 m), but it approaches
   slowly and does not reach that of eight neighbours even at 2.5 m. Without diagonal edges, flow in a diagonal
-  direction is carried split over two axis-direction edges. Even after the bias of the edge-by-edge yield rest
-  check, in which the driving force looked too small (developer.md §28.16), and the bias in which the effective
-  gravity came out too large on edges oblique to the slope (§91) were fixed, the spreading with four neighbours
-  stays narrow (32.8° at 2.5 m), so we take it to be a bias of representing the transport of momentum and the
-  pressure gradient on axis-direction edges only, not of the stopping check or the gravity correction (not
-  separated out further). The time at which the front reaches the apex at 0° was 39 seconds with four neighbours
-  on every grid, earlier than the 42 seconds with eight neighbours, before the gravity correction was fixed;
-  after the fix they nearly agree (the excess speed was the bias of the gravity correction; in the current
-  computation 43-46 and 46-47 seconds, 20-2.5 m). The sediment reaching the fan with four neighbours is 0.94
+  direction is carried split over two axis-direction edges. The yield rest check and the gravity correction
+  on steep slopes are formulated independently of the grid orientation (see "Why the dependence is small,
+  and what remains" below), and still the spreading with four neighbours stays narrow (32.8° at 2.5 m), so we
+  take it to be a bias of representing the transport of momentum and the pressure gradient on axis-direction
+  edges only (not separated out further). The times at which the front reaches the apex at 0° nearly agree
+  between four and eight neighbours (43-46 and 46-47 seconds, 20-2.5 m). The sediment reaching the fan with four neighbours is 0.94
   times that with eight neighbours even at 2.5 m, and the material left in the valley is 1.16 times.
 - **Which is right**: closer to the solution of this model's equations (depth-integrated shallow water + the
   Takahashi-Nakagawa constitutive law) is the result with eight neighbours, which depends neither on the grid
@@ -445,11 +415,10 @@ cells, as a guide.
   discrete count). All of them shrink as the grid is refined.
 - **Gravity correction on steep slopes**: the effective gravity g cos²θ of the gravity correction for
   steep slopes (`f_gravity_correction`) is taken from the magnitude of the ground slope, not from the
-  slope in the normal direction of each edge (fixed on 2026-11-04; developer.md §91). Before the fix the
-  effective gravity came out large on edges oblique to the slope, a direction dependence that remained as
-  the grid was refined (in the speed of sliding on a uniform slope of 0.38-0.45, eight neighbours 3-5 % fast
-  and four neighbours 0-9 % fast; test/dbonset). In this example, the too-early arrival at the apex with four
-  neighbours (39 s) was this bias.
+  slope in the normal direction of each edge (developer.md §91). Taken from the slope in the normal
+  direction of each edge, the effective gravity comes out large on edges oblique to the slope, a direction
+  dependence that remains as the grid is refined (in the speed of sliding on a uniform slope of 0.38-0.45,
+  eight neighbours 3-5 % fast and four neighbours 0-9 % fast; test/dbonset).
 
 ## What this model cannot represent (differences from real phenomena)
 
@@ -492,8 +461,7 @@ cells, as a guide.
   the downstream end. Only at 40 m with 22.5° and four neighbours, thin muddy water (sediment column
   1 mm or less) that runs down over the debris flow stopped in the valley reaches the sink at the
   downstream end after about 500 seconds, and 11 m³ (0.02 % of the solid) leaves by 10 minutes (the
-  solid ledger of -11 m³ in the table; the computation of 2026-11-05 also gave -5 m³, so the earlier
-  statement "within ±0.06 m³ in every case" was wrong). For the water, the S column of `Log.txt` shows that the 33,264 m³ at the start
+  solid ledger of -11 m³ in the table). For the water, the S column of `Log.txt` shows that the 33,264 m³ at the start
   (33,333 m³ of water over the failure; rounding of the four-digit display) changes by the 40,000 m³
   of pore water added by the failure and the water that enters the pores of the deposit (about
   9,400 m³ by 1 minute).
@@ -509,8 +477,8 @@ cells, as a guide.
   more water), the farther it flows and the more trailing mud there is. At 0.50 it deposits thickly
   near the apex.
 - `db_d50` (`param.txt`; 0.3 m): in the Takahashi-Nakagawa law, the smaller the grain size, the more
-  suddenly it deposits at low speed. In a trial, with 0.1 m most of the material stopped in the
-  valley just below the scar and did not reach the fan.
+  suddenly it deposits at low speed. With 0.1 m most of the material stops in the valley just below
+  the scar and does not reach the fan.
 - `V0`, `S_C`, `N_C`, `A_S`, `A_N` (`make_init.py`): volume, location and size of the failure.
 - `S_TOP`, `S_APX`, `S_END` (`make_init.py`): slopes of the valley and the fan.
 - `DXS`, `THETAS` (`make_init.py`): combinations of grid spacing and valley orientation.

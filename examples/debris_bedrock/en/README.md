@@ -124,45 +124,6 @@ Python 3, NumPy and matplotlib.
 
 ## Results
 
-(The tables and figures are from runs made on or after 2026-10-29. Recomputed on 2026-11-02 with
-the current defaults (f_opening_dynamic = 3 and the correction of the lateral faces of the
-momentum-conserving advection): the first part (5 cells across) changes only in the third decimal
-of the tables (the same at the digits shown), and the outputs of the chain of the supplement
-(1 cell across) are bit-identical. developer.md §68.41–§68.43, in Japanese. Recomputed on
-2026-11-04 after the fix of the yield rest check (§28.16): the values of the two Coulomb + Manning
-configurations (C_b, C_c) changed (ledger C_b 32.8 → 38.9 m³, C_c 7.1 → 11.0 m³; while the mixture
-ponds upstream of a slope break, a slow and thick flow erodes for longer). The four
-Takahashi–Nakagawa configurations, the clear-water flood W and the chain of the supplement give
-the same values in the tables, and only the figures erosion and cover were redrawn. Recomputed on
-the same day after the fix of the steep-slope gravity correction and the change that gives rock
-erosion the effective gravity of the momentum equation, g/(1 + |∇z|²) (§91): the values in the
-tables moved by about 1 % (ledger T_b 39.2 → 39.5 m³, T_b05 117.1 → 117.8 m³; the clear-water flood W
-is the same at the digits shown). The chain of the supplement changes only in the third decimal,
-and the steady slopes are the same. Recomputed on 2026-11-05 after the default
-f_gravity_correction = 2 (the Manning friction and the shear stresses of sediment transport and plucking
-evaluated with the speed along the slope and the depth normal to the ground) and the fixes of the outflow
-suppression and the edge depth (§93–§95): the values of the configurations with Manning friction changed
-(ledger C_b 38.8 → 42.4 m³, C_c 11.1 → 10.2 m³, clear-water flood W 4.1 → 3.5 m³; with the gravity
-correction 1 specified, C_b 38.9 m³ and W 4.1 m³, so the change comes almost entirely from the default 2).
-The four Takahashi–Nakagawa configurations are the same at the digits shown. In the chain of the
-supplement the plucking stress of the floods becomes cos²θ times smaller on steep slopes and the steady
-slopes rose (floods only 0.354 → 0.379, once in 30 years 0.251 → 0.256 and so on). The post-processing
-of the output every 1 s was redone with the same definitions, which reproduce the previous values for
-Takahashi–Nakagawa (T_b) and for W with the gravity correction 1. Recomputed on 2026-11-06 after the
-default 2 also evaluates the resistance laws of mixture flows along the slope (§101; the
-velocity-squared resistance of Takahashi–Nakagawa is 1/cos⁴θ times larger in the direction of steepest
-descent, 1.26 times at slope 0.35): the erosion of the four Takahashi–Nakagawa configurations grew by
-6 to 12 % (ledger T_b 39.5 → 42.1 m³, T_b05 117.8 → 124.9 m³; for the same discharge the flow becomes
-deeper and slower, and the driving stress, proportional to the depth, becomes larger). Coulomb + Manning
-moved little (C_b 42.4 → 42.6 m³, C_c 10.2 → 10.4 m³), and the outputs of the clear-water flood W are
-bit-identical. In the chain of the supplement the erosion by one debris flow grew by 1 to 11 % (1.56 →
-1.62 cm at slope 0.25, 2.66 → 2.96 cm at 0.40), and the steady slopes with debris flows fell by 0.004 or
-less (size 0.1 m, once in 100 years 0.325 → 0.321, once in 30 years 0.256 → 0.253; floods only
-unchanged). At the same time the comparison of flow depths in the text was changed from the maximum,
-which depends on the instant at which the output every 1 s catches the passing front, to the value after
-the front has passed (30 s). The numbers in the tables and text and the figures are from this
-recomputation)
-
 ### Rock erosion by one debris flow
 
 ![Longitudinal distribution of rock erosion and the mobile layer at the end](figs/erosion.png)
@@ -225,9 +186,8 @@ in the central column. Evaluated with the quasi-static stress, the same flow ero
 0.019 cm, nearly the same (post-processing of the output every 1 s). The debris flow erodes more
 (12 times in the ledgers, and 12 times as the mean over the stream between quasi-static stresses).
 With f_gravity_correction = 1 the Manning closure agrees with ρ g h tanθ (ratio 1.000 in the same
-uniform flow), 1/cos²θ times the quasi-static stress, so W eroded 0.32 cm, 1.5 times the
-evaluation with the quasi-static stress (0.22 cm) (a computation with the executable of 2026-11-05
-and the gravity correction 1 specified).
+uniform flow), 1/cos²θ times the quasi-static stress, so W erodes 0.32 cm, 1.5 times the
+evaluation with the quasi-static stress (0.22 cm).
 
 ### Effect of the cover
 
@@ -411,11 +371,12 @@ interval between debris flows (once in how many years) is chosen by the user.
   feedback of gathering flow and the channel narrows to the grid width. For a question about the
   long profile we use a one-cell channel whose cross-section cannot change. Floods in one cell have
   a depth close to the uniform-flow value and pluck less than the middle column of 5 cells, so k_p
-  was tuned to give a steady slope of about 0.355 with floods only (all of this was tried with the
-  gravity correction 1; with the default 2 the plucking stress of the floods becomes cos²θ times
-  smaller on steep slopes, and the same k_p gives a steady slope of 0.379 with floods only).
+  is tuned to give a steady slope of about 0.355 with floods only (the numbers in this item are
+  computed with f_gravity_correction = 1; with the default 2 the plucking stress of the floods
+  becomes cos²θ times smaller on steep slopes, and the same k_p gives a steady slope of 0.379 with
+  floods only).
 - **Outfall (supplement)**: the cell at a free-outflow boundary has slightly deeper and slower flow
-  (5 % at slope 0.30) and is plucked 17 % less (tried with the gravity correction 1), so the last cell of the channel became a sill that
+  (5 % at slope 0.30) and is plucked 17 % less (computed with f_gravity_correction = 1), so the last cell of the channel became a sill that
   trapped the sediment carried by the floods, and the deposit grew upstream (with size 0.4 m even
   at slope 0.40). With an outfall of slope 0.6 below the channel the sediment leaves without
   stopping.

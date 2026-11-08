@@ -124,17 +124,7 @@ backwash). Right: where the debris is at 60 minutes (1000 m³).
 Seaward = x 270-500 m, middle = 500-800 m, inland = 800-1,200 m. "Houses destroyed" is the
 fraction of the house stock turned into debris by 60 minutes. Debris is in the same units as
 the house stock (m³); the amount still floating at 60 minutes (hundreds to thousands of m³) is
-left out of the table. The tables and figures show the values recomputed on 2026-11-02
-with the default f_opening_dynamic = 3 and the corrected lateral faces of the momentum-conserving
-advection (developer.md §68.41–§68.43). Recomputed on 2026-11-04 after the fix of the steep-slope
-gravity correction (§91): the inundation depths and the fractions of destroyed houses are nearly the
-same (the maximum depth with the seawall +3 m and the opening closed 2.90 → 2.89 m and so on) and the
-debris volumes moved by 0.1–6 % (the README values were confirmed to be reproduced by the executable
-before the fix). Recomputed on 2026-11-05 after the default f_gravity_correction = 2 and the fixes of
-the outflow suppression and the edge depth (§93–§95): the inundation depths and the fractions of
-destroyed houses are nearly the same (the maximum depth with the +4 m tsunami 4.82 → 4.79 m and so on)
-and the debris volumes moved by 0–5 % (the tables, figures and numbers in the text show this
-recomputation).
+left out of the table.
 
 - **With a +4 m tsunami almost the whole town is destroyed**: the tsunami overtops the seawall
   by 2 m and the whole town is flooded 2 m or more. Houses on the seaward side and in the middle

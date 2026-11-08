@@ -120,8 +120,6 @@ dot = pumping well.
 | Well 2 L/s (days 280-300) | 1.70 L/s | 2.00 L/s | 6.30 L/s | 0.00 L/s | 140 m |
 | Well 5 L/s (days 280-300) | 0 | 5.00 L/s | 5.07 L/s | 0.07 L/s | 70 m |
 
-(The table and figures show the values recomputed on 2026-11-02 with the default f_opening_dynamic = 3 and the corrected lateral faces of the momentum-conserving advection; only the thin surface water changes, and the groundwater and qanat values agree with the default 2 of 2026-10-18 to 31 within 0.1 L/s. developer.md §68.41–§68.43. Recomputed on 2026-11-04 after the fix of the steep-slope gravity correction (§91), the qanat flow and the drain with the 2 L/s well moved to 1.71 and 6.29 L/s; recomputed on 2026-11-05 after the default f_gravity_correction = 2 and the fixes of the outflow suppression and the edge depth (§93–§95), they returned to 1.70 and 6.30 L/s (the second decimal moves as described in "Notes"). The other values are the same, and the figures are from the computation of 11-02 because these differences do not show in them)
-
 The values are 20-day means. The qanat-only case stays almost the same as before pumping up
 to day 300 (qanat flow 3.50 L/s over days 280-300). The groundwater seeping into the drain is
 what remains of the recharge after subtracting the qanat flow and the pumping and adding the

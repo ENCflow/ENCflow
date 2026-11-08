@@ -216,18 +216,15 @@ infiltrates at the feet, the surface source on the tower faces, and collapse. Sa
 **What can be read off.** Numerically, a million years runs stably in an hour. The plain keeps
 lowering at 216 mm/kyr, the relative height grows from 40 to 61 m in the first 164 kyr, so the
 mechanism "the lowering plain leaves the towers standing" works. After that, however, the towers
-are **consumed by collapse** and the relative height decreases. The cause is two gaps of the model
-that the steady forcing lays bare, not the coefficients.
+are **consumed by collapse** and the relative height decreases. The cause is the following two
+points that the steady forcing lays bare, not the coefficients.
 
-1. **Fallen limestone did not dissolve (fixed).** In the first trial floor dissolution still
-   followed the rule "lower z, keep sd", so under the talus (sd, ht) piled at the feet only the
-   bedrock kept dissolving and the column of talus sank immortal to 1.35 km. Limestone debris
-   dissolves as fast as the bedrock, so the water of dissolution is now spent on the talus ht first
-   and then on the bedrock (developer.md §86.7; the table above is the rerun). The talus now
-   dissolves away, but its residue (insoluble, residue fraction 0.1) piles up 215 m in the foot
-   cells and the bedrock below keeps dissolving at the valve's 0.3 m per update, so the "conveyor"
-   into which the tower collapses remains (bedrock surface at −463 m, dashed line in the sections).
-   The root cause is item 2.
+1. **The bedrock keeps dissolving under the residue of the collapsed rock.** Limestone debris
+   dissolves as fast as the bedrock, so the water of dissolution is spent on the talus ht piled at
+   the feet first and then on the bedrock (developer.md §86.7). The talus dissolves away, but its
+   residue (insoluble, residue fraction 0.1) piles up 215 m in the foot cells and the bedrock below
+   keeps dissolving at the valve's 0.3 m per update, so a "conveyor" forms into which the tower
+   collapses (bedrock surface at −463 m, dashed line in the sections). The root cause is item 2.
 2. **No base level (water table) at the feet.** The conduit layer is a sink 1000 m deep with a
    capacity of 2000 m, so the foot pits have no bottom. The feet of real towers stand at the water
    table, which is the base level of the rivers; the pits stop at the water surface and dissolution
