@@ -4352,9 +4352,9 @@
     {
       "source": "tutorials/chichibu/README.md",
       "target": "tutorials/chichibu/en/README.md",
-      "source_sha256": "da0b2c2c71387dcaf3027c5a07a73333c43a5c121c77d5d70f80893f029f8e79",
-      "target_sha256": "c9a8d441988c12fa86a4e27013a9c650612784680b8890039ca6b502c6e8fcb8",
-      "reviewer": "Claude (Claude Code session; chichibu tutorial for beginners: Step 4 remedy paragraph shortened to two ideas with the setting introduced afterwards, settings comment of f_advection_donor reworded in param_step4-7 (values unchanged), Step 6 item 3 links the subgrid channel to the channel chapter; Japanese and English edited together and read side by side)",
+      "source_sha256": "caf386a23e940300e670043be0a7230d58299f2b1963793b5592f246d98ab70e",
+      "target_sha256": "cf5e3a7d37c577f9f1ec58ebfbaa0015a376936887780d2f9b9b1aa454b19df1",
+      "reviewer": "Claude (Claude Code session; chichibu tutorial: 'edge' explained at its first use in Step 4, and the pointer at the end of Step 5 to the oscillation section of Step 6 removed; Japanese and English edited together and read side by side)",
       "method": "assistant",
       "reviewed_on": "2026-11-08"
     },

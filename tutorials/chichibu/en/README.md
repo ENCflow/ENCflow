@@ -439,8 +439,8 @@ the threshold of the adaptive Runge-Kutta, `p_adprunge_thresh` -- do
 not help. Other parameters that concern the accuracy of the computation
 are the **threshold depth dd** and the **virtual depth dv**
 (`&list_sysparam`). dd is the depth below which a cell counts as dry:
-an edge whose two sides are both shallower than dd moves no water
-(default 0.001 m = 1 mm). dv is the lower bound of the depth used in
+an edge (the boundary between two cells) whose two sides are both
+shallower than dd moves no water (default 0.001 m = 1 mm). dv is the lower bound of the depth used in
 the friction term, which keeps the friction from blowing up in very
 shallow water (default 0.001 m). Here, reducing dd to 1/10, 0.0001 m
 (together with dv), removes the bumps within the 6-hour run (the gray
@@ -590,8 +590,7 @@ time, progress, S_surf(m), S_grnd(m), S_total(m), Runge, ex_flux, Cn_max, h_max(
 In the hydrograph the peak discharge drops by about a third (6,353
 to 4,036 m^3/s). Interception cuts the total by 20%, and infiltration keeps
 sucking up the thinly spread hillslope water, so both the rising limb
-and the recession drop. How to read fine oscillations in the 1-minute
-values is explained in the second half of Step 6.
+and the recession drop.
 
 ## Step 6: Boundary condition at the catchment outlet
 
