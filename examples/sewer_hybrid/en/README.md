@@ -22,7 +22,17 @@ needed; everything is assembled from input files alone. The following
 explains, in order, the meaning of the parameters, the configuration of
 each run, and how to read the results.
 
-![Comparison of runs A–D](figs/sewer_hybrid_result.png)
+![Setup](figs/setup.png)
+
+(a) Plan (north up). Every cell has branch pipes (D 0.4 m, 10 m per cell)
+and one inlet, and the trunk main (D 1.0 m) runs along row j = 11. The cell
+at the trunk end has 10 inlets; in A–E the water of the trunk leaves to the
+surface there. In runs E and F the two easternmost columns are a river
+(level fixed at 1.5 m), and in run F the trunk end has an open outfall.
+(b) Long profile along the trunk row (vertical scale about 20 times the
+horizontal). The branch inverts are 2 m below the ground and the trunk
+inverts 5 m below it; the invert at the trunk end, 1.125 m, lies below the
+river level of 1.5 m. Drawn from the input files; not computed results.
 
 ## 1. The five parameters of the conduit continuum layer
 
@@ -57,6 +67,30 @@ accumulates in the slot, hiding underground the water that should have
 overflowed onto the surface. This is "phantom storage", one of the main
 characters of this example.
 
+![How the conduit continuum layer works](figs/mechanism.png)
+
+(a) The conduit of one cell drawn as a tank whose width is the storage
+coefficient and whose height is the head (widths and heights each in true
+proportion). Above the pipe part (blue; sy wide and cap/sy tall) the pseudo
+slot used after pipe-full (orange hatching; slot_sy wide) stands up to the
+ground. Once the head exceeds the ground, water erupts from the inlets, so
+the pipes take water only up to the area of the tank filled to the ground;
+the orange part is the non-existent "phantom storage". With the soft
+slot_sy of A and B a branch cell stores 4.8–5.4 times cap, D (slot = sy/5)
+1.8 times and the default (sy/50) 1.1 times. When sy does not match the
+pipe, the head also rises at the wrong rate (2.9 times faster in a trunk
+cell of A, 2.9 times slower in a branch cell of B). (b) Strength of the
+exchange with the surface (per cell). Inflow into pipes that are not full
+(weir) needs 7.3 mm of depth to take in 60 mm/h of rain. Inflow into full
+pipes and eruption while pressurized (orifice) reach 40 times the rain at
+a head difference of 1 cm, so the head in full pipes quickly follows the
+surface water level. (c) What the trunk can carry: 1.70 m³/s when full at
+the ground slope 0.005, thick enough for the 1.40 m³/s of rain on the
+domain (less in proportion to the filling ratio when not full). (d) What
+the outfall (run F) can pass: discharging 1.40 m³/s needs a head of the
+river level + 0.45 m, below the outfall crown (2.125 m). Drawn from the
+formulas and input values; not computed results.
+
 ## 2. Setup
 
 | Item | Value |
@@ -89,15 +123,21 @@ subdivisions is N = 1).
 |---|---|
 | `gen_data.py` | Conversion from pipe specifications to cap / cnd / bot / sy / slot, and generation of all maps in `data_sewer/` (including the river system and outfall maps) |
 | `param_A.txt` to `param_F.txt` | Parameters of each run. Output goes to `result_A/` to `result_F/` |
-| `plot_sewer.py` | Two figures (`sewer_hybrid_result.png`, `sewer_hybrid_outfall.png`) |
+| `plot_schematic.py` | Two explanatory figures (`figs/setup.png`, `figs/mechanism.png`), drawn from the inputs and formulas only, so they can be drawn before the runs |
+| `plot_sewer.py` | Two result figures (`figs/sewer_hybrid_result.png`, `figs/sewer_hybrid_outfall.png`); the outfall discharge is read from the screen output of run F, `Screen_F.log` |
 
 ## 3. Running
 
 ```bash
 python3 gen_data.py                 # generate data_sewer/ (the converted values are printed on screen)
-for r in A B C D E F; do ../../bin/encflow param_$r.txt; done   # 2–3 min each (4 cores)
-python3 plot_sewer.py               # draw the figures
+python3 plot_schematic.py           # explanatory figures figs/setup.png, mechanism.png (can be drawn before the runs)
+for r in A B C D E F; do ../../bin/encflow param_$r.txt | tee Screen_$r.log; done   # 2–3 min each (4 cores)
+python3 plot_sewer.py               # result figures figs/sewer_hybrid_result.png, sewer_hybrid_outfall.png
 ```
+
+With the argument `en`, the figures are drawn with English labels into
+en/figs/ (`python3 plot_schematic.py en`, `python3 plot_sewer.py en`).
+Plotting needs Python 3, NumPy and matplotlib.
 
 In the output of `gen_data.py`, compare the pipe-full conveyance of the
 branch pipes C = 2.08 m³/s, that of the trunk 24.0 m³/s, the pipe-full
@@ -107,10 +147,14 @@ thick enough to carry the rain".
 
 ## 4. Reading the figures (runs A–D)
 
+![Comparison of runs A–D](figs/sewer_hybrid_result.png)
+
 **(a) Time series of the water overflowing onto the surface, S_surf.**
 During the first 10 minutes of rain, 5–6 mm of rain that cannot enter the
 pipes through the inlets ponds on the surface, then is drawn into the
-pipes and decreases for a while. Once the pipes are full (about 25 min in
+pipes and decreases for a while (inflow into pipes that are not full
+follows the weir law and needs about 7 mm of depth to take in the rain;
+panel (b) of the mechanism figure). Once the pipes are full (about 25 min in
 run D), the surface water starts to increase from the water **erupting**
 from the inlets and the rain that cannot be absorbed, and nearly levels
 off at the end of the rain (1 hour). Run A (18.2 mm), which has a trunk,
@@ -120,25 +164,38 @@ In a closed box the trunk cannot take water out of the system either, so
 its effect is the volume it adds for storage. Run D with consistent
 storage coefficients, however, gives **36.4 mm**, 2–3.6 times A and B.
 Because of their soft slot_sy, A and B were hiding the water that should
-have overflowed in underground "phantom storage". **The choice of the
+have overflowed in underground "phantom storage" ((b)). **The choice of the
 scalar sy (the A ↔ B difference of 8 mm) is larger than the effect of the
 trunk itself (C − A = 3.4 mm)** and sways the answer. This is why sy and
 slot_sy are given per cell (§46.5 (5)).
 
-**(b) Distribution of surface depth at the end of the rain.** On a uniform
-slope the surface water flows east and, since all four sides are walls,
-ponds at the eastern end (the dashed line is the trunk). Every run has the
-same shape of distribution; only the amounts differ. Keep in mind that
-this is not an experiment for seeing "which blocks get flooded" but one
-for comparing totals and time series.
+**(b) Where the rain is after 3 hours.** The box is closed, so all 61.0 mm
+of rain is either on the surface or in the pipes. The water in the pipes is
+split, cell by cell, into the part up to the pipe volume (cap) and the part
+beyond it in the pseudo slot (phantom storage). A, B and C hide 27–35 mm in
+the non-existent slot, and that much less is on the surface. The slot part
+of D is 8.6 mm. A and C have the same slot part (26.9 mm) and differ only
+in the pipe volume (the trunk). The slot part of B is 8 mm larger than that
+of A because the large sy matched to the trunk makes the pipe part of the
+tank of a branch cell lower, so the slot starts lower (panel (a) of the
+mechanism figure). The surface water flows east down the uniform slope and
+ponds at the eastern end, since all four sides are walls. This is not an
+experiment for seeing "which blocks get flooded" but one for comparing
+totals and time series.
 
 **(c) Filling ratio of the pipes hgc / cap at the end of the rain.** 1 is
-pipe-full. With the soft slot_sy of A and B, the branch pipes (dotted)
-hold 3–5 times and the trunk (solid) 1.7–2.3 times the pipe-full volume in
-the "slot". The part beyond the pipe volume is non-existent water. With
-the stiff slot_sy of D, both trunk and branches stay within 1.5–1.9 times,
-and the excess has overflowed onto the surface (that it is still nearly 2
-is because sy/5 is still soft; in practice sy/50 is the default. §64).
+pipe-full. With the soft slot_sy of A and B, at the eastern end the
+branch pipes (dotted) hold 5–5.5 times and the trunk (solid) 1.7–2.3 times
+the pipe-full volume in the "slot". The part beyond the pipe volume is
+non-existent water. With the stiff slot_sy of D, both trunk and branches
+stay within 1.5–1.9 times, and the excess has overflowed onto the surface
+(that it is still nearly 2 is because sy/5 is still soft; in practice sy/50
+is the default. §64). The ratio grows downstream because the head in the
+pipes is closer to the ground there; at the eastern end the head reaches
+the ground, and the values exceed the amounts up to the ground in panel (a)
+of the mechanism figure (4.8 times for the branch cells of A, 5.4 times for
+those of B, 1.8 times for D) by the depth of the water ponded on the
+surface.
 
 ## 5. Effect of the river and the outfall (runs E, F)
 
@@ -179,17 +236,20 @@ depth around the inlets. After the rain stops it falls below 1 mm within
 1.5–1.8 times pipe-full (pressurized in the pseudo slot), unchanged for
 3 hours. In F, at the end of the rain it rises from 0.1 at the upstream end
 toward downstream, reaches pipe-full (1.0) at x = 235–355 m and drops to
-0.8 near the outfall; after 3 hours the upstream side is nearly empty
+0.8 near the outfall (the outfall passes the rain at a head below its
+crown; panel (d) of the mechanism figure); after 3 hours the upstream side is nearly empty
 (0.01); only the water set by the river level remains in the 80 m reach
 from the outfall (the outfall invert 1.125 m < river level 1.5 m, so the
 pipe below the river surface does not empty).
 
-Summarizing where the water goes (out of the total rainfall of 61.0 mm):
-in E, 38.6 mm goes from the cliff into the river and 22.4 mm remains in
-the pipes; in F, 57.3 mm goes **from the outfall into the river**, 2.4 mm
-from the cliff into the river, and 1.2 mm remains in the pipes and 0.1 mm on the surface. The trunk of F carries more than 90 % of the rain,
-consistent with the estimate pipe-full capacity 1.70 m³/s ≳ runoff
-1.40 m³/s.
+**(d) Where the rain is after 3 hours (mean over the land).** Out of the
+total rainfall of 61.0 mm, in E 38.6 mm drops from the cliff into the river
+and 22.4 mm (6.8 mm of it in the slot) remains in the pipes; in F 57.3 mm
+goes **from the outfall into the river** and 2.4 mm from the cliff into the
+river, while 1.2 mm remains in the pipes and 0.1 mm on the surface. The
+trunk of F carries more than 90 % of the rain, consistent with the estimate
+pipe-full capacity 1.70 m³/s ≳ runoff 1.40 m³/s (panel (c) of the mechanism
+figure).
 
 ## 6. Findings (numbers)
 
