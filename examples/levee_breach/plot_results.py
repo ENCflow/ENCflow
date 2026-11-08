@@ -367,19 +367,25 @@ def laws():
     for yy in (7.5, 11.0, 14.5):
         _arrow(ax, (3.2, yy), (0.4, yy), C_WATER, lw=1.3)
     ax.text(0.2, 15.6, "q = u·h", fontsize=8, color=C_WATER)
+    # 家屋の抗力と地面の摩擦の比(src/m_swflow_enc.f90 の抗力 kk·cd/2·h/B·(1 − gv)·|V| と、摩擦 g n²|V| h^(-4/3)·gv)。
+    # kk・cd・gg は list_sysparam.f90 の既定(param で変えていない)。B と住宅地の粗度は make_terrain.py の入力から
+    KK, CD, GG = 0.5, 1.0, 9.8
+    i1, _, j1, _ = BLOCKS["A"]
+    bbh, rnh = rd("data/bb.txt")[j1 - 1, i1 - 1], rd("data/rn.txt")[j1 - 1, i1 - 1]
+    ratio = lambda hh: (KK * CD / 2) * (hh / bbh) * (1 - gv0) / (GG * rnh ** 2 * gv0 * hh ** (-4.0 / 3.0))
     ax.text(0.3, -0.6, T(f"連続式: 水がたまるのは建物の外の gv·Δx·Δy だけ(同じ水量なら水深は 1/gv 倍)\n"
                          f"辺の流量 q = u·h は辺の全幅で通す(通過幅を gv で縮めない。左の矢印)\n"
                          f"運動方程式: 慣性 λm = gv + (1 − gv)·cm(cm = {CM:.1f})、圧力と摩擦の項 × gv\n"
-                         f"  → 加速は遅くなるが、等流の流量は変わらない\n"
-                         f"家屋の抗力の項には家屋の寸法 fn_bb が要る(この例題は与えないので働かない)\n"
+                         f"家屋の抗力 (kk·cd/2)(h/B)(1 − gv)|V|(kk = {KK:g}、cd = {CD:g}、B = {bbh:g} m = fn_bb)は\n"
+                         f"  地面の摩擦(粗度 {rnh:.2f})の {ratio(1.0):.1f} 倍(浸水深 1 m)、{ratio(2.0):.0f} 倍(2 m)で、流れを遅くする\n"
                          f"壊れると gv = {gv0:.1f} + {1 - gv0:.1f}·d(d = 破壊率。f_bdgv = 1)。水量を保ち、\n"
                          f"  水深は gv の比で浅くなる。セルは 10 m × 10 m",
                          f"Continuity: water is stored only outside the buildings, gv·Δx·Δy (depth × 1/gv for\n"
                          f"  the same volume). An edge passes q = u·h over its full width (the passage width is not\n"
                          f"  narrowed by gv; arrows). Momentum: inertia λm = gv + (1 − gv)·cm (cm = {CM:.1f});\n"
-                         f"  the pressure and friction terms × gv, so the flow accelerates more slowly, but uniform\n"
-                         f"  flow keeps its discharge. Building drag needs the building size fn_bb, which this\n"
-                         f"  example does not give, so there is no drag. Destruction raises gv = {gv0:.1f} + {1 - gv0:.1f}·d\n"
+                         f"  the pressure and friction terms × gv. Building drag (kk·cd/2)(h/B)(1 − gv)|V| (kk = {KK:g},\n"
+                         f"  cd = {CD:g}, B = {bbh:g} m = fn_bb) is {ratio(1.0):.1f} times the ground friction (n = {rnh:.2f}) at a depth\n"
+                         f"  of 1 m and {ratio(2.0):.0f} times at 2 m, slowing the flow. Destruction raises gv = {gv0:.1f} + {1 - gv0:.1f}·d\n"
                          f"  (d = destroyed fraction; f_bdgv = 1), keeping the water volume. Cells 10 m × 10 m."),
             fontsize=8, va="top", linespacing=1.5)
     ax.set_xlim(0, 38)

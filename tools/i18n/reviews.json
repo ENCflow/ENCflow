@@ -1976,29 +1976,29 @@
     {
       "source": "examples/levee_breach/README.md",
       "target": "examples/levee_breach/en/README.md",
-      "source_sha256": "61e3dc57a024009c07d4c5834140f6e06f96c2625e435b56f0e1c12172a4fd2a",
-      "target_sha256": "0584566a00e4e8a9e36bed5401ae2093c03beb8a09f8aee0b9c3b62ef6023a58",
-      "reviewer": "Claude (Claude Code session; checked the figures' rules against src and param files, and compared the added captions and corrected rows sentence by sentence)",
+      "source_sha256": "e40796cb3d6d02660b14b27afdc61bdcbc4f9eca5cd6fc36e56b78331972473c",
+      "target_sha256": "891bdde47f9ef7355cfe69429cc579a9ff5498004b20abad63ba17cb4ec71a01",
+      "reviewer": "Claude (Claude Code session; reran all cases with the old and new settings, checked that the old settings reproduce every number of the previous README, and replaced each number from the new tables in both versions)",
       "method": "assistant",
       "reviewed_on": "2026-11-08"
     },
     {
       "source": "examples/levee_breach/figs/laws.png",
       "target": "examples/levee_breach/en/figs/laws.png",
-      "source_sha256": "dcbda2486a065df6ff03a75a132fda8a109ad732df505c46317b82a117fcb820",
-      "target_sha256": "2c3c2487698b970950d60a6ca4941e91e6b025d1fac18ea9946bf18e3e6c949e",
-      "reviewer": "Claude (Claude Code session; both drawn by the same script from the same inputs; compared every label and value)",
+      "source_sha256": "5145e57a8f975870c28f157b076fabbcd4c10a8c31c2bcc5da0de137f4659531",
+      "target_sha256": "875484fed3db6af566e2e7dba68c60ad76dcb10535a6e03a901e62aeae4174a4",
+      "reviewer": "Claude (Claude Code session; both drawn by the same script from the same results; compared every label and value)",
       "method": "assistant",
       "reviewed_on": "2026-11-08"
     },
     {
       "source": "examples/levee_breach/figs/maps.png",
       "target": "examples/levee_breach/en/figs/maps.png",
-      "source_sha256": "b12eb3b86212c17dbbd168cc07ea0551760927b269f4cd99205b007d0c0eba54",
-      "target_sha256": "0730818e91a3cedb1b8f6f5bdd0c571d2bdc8eb2cd8fa22fdca6faa0410cb8db",
-      "reviewer": "Claude (assistant)",
+      "source_sha256": "a367b3774699918573313843bf7f17cef3e55a745127f33aa291186577fb0381",
+      "target_sha256": "15b449e8024362e3cf99fd209e857cfa909d61135028534e2d543c8b1b49254a",
+      "reviewer": "Claude (Claude Code session; both drawn by the same script from the same results; compared every label and value)",
       "method": "assistant",
-      "reviewed_on": "2026-11-02"
+      "reviewed_on": "2026-11-08"
     },
     {
       "source": "examples/levee_breach/figs/mechanism.png",
@@ -2012,11 +2012,11 @@
     {
       "source": "examples/levee_breach/figs/series.png",
       "target": "examples/levee_breach/en/figs/series.png",
-      "source_sha256": "3d188a7d698bbddb88b6d967b8d2d45ea17200075c7c18ff0bfc543551607c8a",
-      "target_sha256": "2db4f210aced05ec264a82cdf95753ae23c4917da43ea2fe2d5d284b7aef3733",
-      "reviewer": "Claude (assistant)",
+      "source_sha256": "e6da91bee4fb76212128e4b7312a8ebc8d1e3ad9e309f6c58090a7c60e98f716",
+      "target_sha256": "d13fd47ee33e2262cee4d99031fc7df4be8b06090e142600e763ab9a7a9be543",
+      "reviewer": "Claude (Claude Code session; both drawn by the same script from the same results; compared every label and value)",
       "method": "assistant",
-      "reviewed_on": "2026-11-02"
+      "reviewed_on": "2026-11-08"
     },
     {
       "source": "examples/levee_breach/figs/setup.png",
@@ -2732,9 +2732,9 @@
     {
       "source": "examples/timberyard/README.md",
       "target": "examples/timberyard/en/README.md",
-      "source_sha256": "2a6f3297315b53cd84d25fabe25fda5c79821a6eeecf37b0f69e7d4fa49a03a4",
-      "target_sha256": "e058e74793e4dbd1b8fe5d002f230d67744d824918d1fef13eec400d7afd4e48",
-      "reviewer": "Claude (Claude Code session; checked the figures' rules against src and param files, and compared the added captions and corrected rows sentence by sentence)",
+      "source_sha256": "7cbadab82c22c54c10a958e44163f47129f1319b6228609f8613e17b1a972c86",
+      "target_sha256": "3cc11089d31be084a4abc28efdddc16c0b9d385d29c07cf6e5baaf8af402ca13",
+      "reviewer": "Claude (Claude Code session; reran all cases with the old and new settings, checked that the old settings reproduce every number of the previous README, and replaced each number from the new tables in both versions)",
       "method": "assistant",
       "reviewed_on": "2026-11-08"
     },
@@ -2750,11 +2750,11 @@
     {
       "source": "examples/timberyard/figs/maps.png",
       "target": "examples/timberyard/en/figs/maps.png",
-      "source_sha256": "10e585012ba09a272a92721e02df336960e7c4c6fee7136707c19e5271b8ddd6",
-      "target_sha256": "bedc07b7d11fe3b317d545f1934a6589699652da64b8fdf178d6c3befa7c8c55",
-      "reviewer": "Claude (Claude Code session; recomputed 2026-11-05: both drawn by plot_results.py from the same results, labels compared with the Japanese figure)",
+      "source_sha256": "5e7e19188f5d5c76604b9a3f2cb88be56fafd8e2aed5ef7647679312eefb9569",
+      "target_sha256": "3355660df98e177d86b32f38ed6807064b31593fab8c536728c1ab3e23c654c3",
+      "reviewer": "Claude (Claude Code session; both drawn by the same script from the same results; compared every label and value)",
       "method": "assistant",
-      "reviewed_on": "2026-11-05"
+      "reviewed_on": "2026-11-08"
     },
     {
       "source": "examples/timberyard/figs/mechanism.png",
@@ -2768,11 +2768,11 @@
     {
       "source": "examples/timberyard/figs/series.png",
       "target": "examples/timberyard/en/figs/series.png",
-      "source_sha256": "fdf0e8f80cee7d06aeef5e924ddf093def8175429029d8c81dedd3f4e5b3f59d",
-      "target_sha256": "d5487909cd2dc7d0ff703292cfdae795b6d0b3a4e3f157d61da9372e633c040c",
-      "reviewer": "Claude (Claude Code session; recomputed 2026-11-05: both drawn by plot_results.py from the same results, labels compared with the Japanese figure)",
+      "source_sha256": "58d2d8c14a0aa389b4b7a309d4fdae3eecaea600257a9abc8016f2bb761edeea",
+      "target_sha256": "e0e05db77a73048d4593aab2693fbc221943af61e68a230caa08891d796e4dc7",
+      "reviewer": "Claude (Claude Code session; both drawn by the same script from the same results; compared every label and value)",
       "method": "assistant",
-      "reviewed_on": "2026-11-05"
+      "reviewed_on": "2026-11-08"
     },
     {
       "source": "examples/timberyard/figs/setup.png",
@@ -2786,11 +2786,11 @@
     {
       "source": "examples/timberyard/figs/supp.png",
       "target": "examples/timberyard/en/figs/supp.png",
-      "source_sha256": "731b97e2edd527a81f81bb85cb248da6abdee2cd530880a2a18b0e5dbec93f16",
-      "target_sha256": "c508dd6d5ae88347667ef99025aec7066f4cff0169c4b0a8e62a7cb82bde2894",
-      "reviewer": "Claude (Claude Code session; recomputed 2026-11-05: both drawn by plot_results.py from the same results, labels compared with the Japanese figure)",
+      "source_sha256": "f1d524221de351a02330ddfa816e9e68cdc9166e7b46b9df5b184321d7bf15fb",
+      "target_sha256": "a1c5f6ec9f137f4f062636d87754bb18c69a6ef2dd7698137a5a43547f8e6c4e",
+      "reviewer": "Claude (Claude Code session; both drawn by the same script from the same results; compared every label and value)",
       "method": "assistant",
-      "reviewed_on": "2026-11-05"
+      "reviewed_on": "2026-11-08"
     },
     {
       "source": "examples/tower_karst/README.md",

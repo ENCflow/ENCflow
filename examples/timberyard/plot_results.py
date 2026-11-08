@@ -514,8 +514,9 @@ def supp():
         draw_wall(ax)
         f = fate(case)
         town = (f["town"] + f["floating_town"]) / 1000
-        ax.set_title(T(f"{lab}: 市街地に残る {town:.1f} 千 m³、海側に浮く {(f['floating'] - f['floating_town']) / 1000:.0f} 千 m³",
-                       f"{lab}: {town:.1f}k m³ left in the town, {(f['floating'] - f['floating_town']) / 1000:.0f}k m³ afloat seaward"), fontsize=9)
+        sea = max(f["floating"] - f["floating_town"], 0.0) / 1000      # 台帳の丸めで −0 と出さない
+        ax.set_title(T(f"{lab}: 市街地に残る {town:.1f} 千 m³、海側に浮く {sea:.0f} 千 m³",
+                       f"{lab}: {town:.1f}k m³ left in the town, {sea:.0f}k m³ afloat seaward"), fontsize=9)
         ax.set_xlabel("x (m)")
     axs[0].set_ylabel("y (m)")
     fig.colorbar(im, ax=axs, shrink=0.9).set_label(T("最後に残った材木 (m³/m²)", "timber remaining (m³/m²)"))
