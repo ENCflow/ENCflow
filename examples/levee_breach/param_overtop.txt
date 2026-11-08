@@ -24,7 +24,7 @@
   f_out_h = 1
   f_out_hmax = 1
   f_out_vvmax = 1
-  f_out_fmax = 1            ! 最大流体力 hV²(F9999。家屋の破壊判定と同じ量)
+  f_out_fmax = 1            ! 最大流体力 hV²(F9999。家屋の破壊の判定量 (h + 0.5 hbd)V² から流れる瓦礫の分を除いた量)
   f_out_bds = 1             ! 家屋の破壊率 Bs0001…
   f_out_wbd = 1             ! 堆積瓦礫 Bd0001…と最大到達量 Bd9999
   f_check_cfl = 0
