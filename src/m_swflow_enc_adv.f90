@@ -248,9 +248,10 @@ subroutine adv_prepare_mc(p, g, s, sx, tx)
         ! セルは行 j ± 3 で帯+ハロ 2 の外に出るため、h を見る cell_ok を使うと
         ! ランク境界で判定が変わり np=1 と np=2 が一致しない
         ! f_advection_donor = 3: 線 k 上の供給元のリンクが面のセルへ運ぶ実流量 Q_k が、面のセルへの
-        ! 最大の流入リンクの実流量 Q_max の ε(p_adv_donor_eps)倍に満たないときだけ、MUSCL の風上値を
-        ! 重み w = (Q_k/Q_max)/ε で u_e へ寄せる(ū = u_e + w(ū_k − u_e)。w = 1 なら 0 と同じ値。
-        ! donor_share。§102)。線 k 上の 1 本のリンクの流速に面の全流束を掛ける取り方だと、線上の
+        ! 最大の流入リンクの実流量 Q_max の ε(p_adv_donor_eps)倍に満たず、かつ供給元が薄い(水深が
+        ! 面のセルの水深の ε 倍未満)ときだけ、MUSCL の風上値を u_e へ寄せる(ū = u_e + w(ū_k − u_e)、
+        ! w = max((Q_k/Q_max)/ε, (h_d/h_c)/ε)。w = 1 なら 0 と同じ値。donor_share。§102)。
+        ! 線 k 上の 1 本のリンクの流速に面の全流束を掛ける取り方だと、線上の
         ! リンクが河岸の薄い水膜で面の流束の主部が斜めのリンクから来るとき、「深いセルの質量流束 ×
         ! 薄いリンクの流速」の人工的な減速になり、水膜の乾湿判定(cell_ok)の切り替わりで減速が
         ! 一度に外れてハイドログラフの跳ねになる(tutorials/chichibu Step 3 の 232 min)。3 はこの
@@ -367,16 +368,22 @@ contains
 
   ! 線 k の供給元の重み(f_advection_donor = 3。developer.md §102)。面のセル (ci, cj) へ線 k 上の
   ! 供給元(kk 近傍)から入る実流量 Q_k と、面のセルへの 8 リンクの流入の最大 Q_max の比
-  ! r = Q_k/Q_max に対し w = min(1, r/ε)(ε = p_adv_donor_eps)。面のセルへの流入がなければ 1。
-  ! 読むのは面のセル(行 j − 1・j)の 8 リンクの qlk(時刻 n の mn。エッジ幅 2 の交換済み)だけで、
-  ! エッジの行は j − 2 .. j(MPI の np = 1・2・4 が逐次とバイト一致。§102)。海セルからの流入も最大に
-  ! 数える(海セルは運動量を供給しないので、寄せる側 = u_e で安全)。
+  ! r = Q_k/Q_max に対し w_r = min(1, r/ε)(ε = p_adv_donor_eps)。面のセルへの流入がなければ 1。
+  ! 薄い供給元に限る: w_r < 1 でも、供給元の水深 h_d が面のセルの水深 h_c の ε 倍以上なら寄せない
+  ! (w = 1 = 0 と同じ)。それ未満は w = max(w_r, h_d/(ε h_c))(水膜が薄くなるほど流量比の重みに
+  ! 近づく)。流量比だけだと、平坦部の深い淀み(流入の 1 割前後)を供給元とする本流の面で r が ε の
+  ! 境目を行き来し、重みが 0 と 1 で切り替わって区間が振動した(補足の 100 m・幅 50 m の測線 2。§102)。
+  ! 読むのは面のセル(行 j − 1・j)の 8 リンクの qlk(時刻 n の mn。エッジ幅 2 の交換済み)と、面の
+  ! セルと供給元の水深(hcell。呼び出し側の cell_ok と同じく、側方 Neumann の辺の外は鏡像のセルを
+  ! 読む。辺の外のハロを s%h で直接読むと、リスタートの継続が通し計算と一致しなかった。test/wfcurrent・
+  ! wfsed。§102)だけで、エッジの行は j − 2 .. j(MPI の np = 1・2・4 が逐次とバイト一致。§102)。海セルからの流入も最大に数える(海セルは
+  ! 運動量を供給しないので、寄せる側 = u_e で安全)。
   ! 割り算は Q_k < εQ_max のときだけ行う(商は 1 未満)。Q_max が正でも極小のとき εQ_max が 0 に
   ! アンダーフローして 0 で割る(-ffpe-trap=zero で停止。test/slopefric の計算開始直後)ことを避ける。
-  ! 値は min(1, Q_k/(εQ_max)) と同じ
+  ! 水深の比も h_d < εh_c のときだけ割る(面のセルが乾いていれば εh_c = 0 で w = 1)
   pure function donor_share(ci, cj, kk) result(w)
     integer, intent(in) :: ci, cj, kk
-    real :: w, qk, qmax, qe
+    real :: w, qk, qmax, qe, hd, he
     integer :: l
     qk = max(0.0, -qlk(ci, cj, kk))
     qmax = 0.0
@@ -385,7 +392,16 @@ contains
     end do
     qe = opt%p_adv_donor_eps * qmax
     w = 1.0
-    if (qk < qe) w = qk / qe
+    if (qk < qe) then
+      w = qk / qe
+      hd = hcell(ci + din(kk), cj + djn(kk))        ! 供給元の水深(辺の外は鏡像。cell_ok と同じセル)
+      he = opt%p_adv_donor_eps * hcell(ci, cj)      ! 面のセルの水深の ε 倍
+      if (hd >= he) then
+        w = 1.0
+      else
+        w = max(w, hd / he)
+      end if
+    end if
   end function
 
   ! 枠外の位置 (ci, cj) が側方 Neumann の辺だけの外なら、辺の法線方向に枠内へ寄せた

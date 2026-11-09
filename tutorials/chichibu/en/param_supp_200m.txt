@@ -3,7 +3,7 @@
 !======================================================================
 !
 ! Supplement: effect of resolution (200 m)
-!       The Step 4 configuration (no losses, no outlet, f_advection_donor = 3) moved to the 200 m grid.
+!       The Step 3 configuration (no losses, no outlet) moved to the 200 m grid.
 !       Text input; distributed output is depth only, every hour
 !
 !======================================================================
@@ -32,10 +32,9 @@
 /
 
 !======================================================================
-! ENC computation settings (same as Step 4; Fig_supp.sh appends the 4-neighbor and old-scheme variants to this block)
+! ENC computation settings (defaults; Fig_supp.sh appends the 4-neighbor and old-scheme variants to this block)
 !======================================================================
 &list_enc
-  f_advection_donor = 3      ! upwind momentum donors of the advection term (3: treat donors carrying almost no water as neutral)
 /
 
 !======================================================================

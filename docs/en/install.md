@@ -99,7 +99,7 @@ sudo dnf install -y gnuplot
 
 `gnuplot --version` confirms the installation and version.
 
-For 3D visualization and animation (Step 7 of the chichibu tutorial),
+For 3D visualization and animation (Step 6 of the chichibu tutorial),
 we use **ParaView**. You can install it with your package manager
 (again, pick the one line for your environment):
 

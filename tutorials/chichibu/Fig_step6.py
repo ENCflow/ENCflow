@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
-# Step 7 の 3D 図(figs/step7_simple.png, figs/step7_3d.png)を再生成する。
+# Step 6 の 3D 図(figs/step6_simple.png, figs/step6_3d.png)を再生成する。
 #
-#   前提: ./encflow param_step7.txt と ../../bin/out2vtk param_step7.txt を
+#   前提: ./encflow param_step6.txt と ../../bin/out2vtk param_step6.txt を
 #         実行済みで result/vtk/ が存在すること。
 #   依存: VTK の Python パッケージ(pip install vtk)。ParaView と同じ
 #         VTK ライブラリで描画するため、本文の ParaView 手順と同じ見え方になる。
@@ -9,7 +9,7 @@
 #   構成: オフスクリーン GL 文脈は作り直しに弱い環境があるため、
 #         1 図 = 1 サブプロセスで描画する。
 #
-#   使い方: python3 Fig_step7.py [出力ディレクトリ(既定 figs)]
+#   使い方: python3 Fig_step6.py [出力ディレクトリ(既定 figs)]
 import multiprocessing
 import os
 import sys
@@ -79,7 +79,7 @@ def fig_simple(outdir):
     cam.SetFocalPoint(30000, 20000, 1000)
     cam.SetPosition(52000, -30000, 34000)
     ren.ResetCameraClippingRange()
-    render(vtk, ren, os.path.join(outdir, "step7_simple.png"))
+    render(vtk, ren, os.path.join(outdir, "step6_simple.png"))
 
 
 # ---- 図2: 地形+水面の2レイヤ、鉛直 EXAG 倍 ----
@@ -152,7 +152,7 @@ def fig_3d(outdir):
     cam.SetFocalPoint(34000, 22000, 3000)
     cam.SetPosition(50000, -14000, 21000)
     ren.ResetCameraClippingRange()
-    render(vtk, ren, os.path.join(outdir, "step7_3d.png"))
+    render(vtk, ren, os.path.join(outdir, "step6_3d.png"))
 
 
 if __name__ == "__main__":

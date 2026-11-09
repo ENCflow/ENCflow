@@ -149,8 +149,8 @@ do for [t=1:2] {
 }
 unset multiplot
 
-# ---- 図 2d: 地形が原因の細かい振動(測線 3 の 1 分値。README Step 6 の 3 の例) ----
-# 左: 50 m 格子は約 1 km 下流の段々の河床を跳水が行き来し、100 m・200 m 格子(破線)は滑らか。
+# ---- 図 2d: 地形が原因の細かい振動(測線 3 の 1 分値。README の補足「ハイドログラフの細かい振動について」の 3 の例) ----
+# 左: 50 m 格子は測線のすぐ上流の 10 m の段差の下の跳水が逓減部(93〜95 分)に凹みを作り、100 m・200 m 格子(破線)は滑らか。
 # 右: 河道幅 50 m の 200 m 格子は上流の平坦な区間の静振で上下し、幅なし(破線)は滑らか。
 # 下段は 1 分ごとの流量の変化(振動が見やすい)。立ち上がりの急な前線(3 の性質)を外して 70 分から描く
 reset
@@ -163,7 +163,7 @@ set xlabel "time (min)"
 set key top right
 set ylabel "discharge (m^3/s)"
 set xrange [70:135]
-set title "50 m grid (jump in the stepped bed 1 km downstream)" noenhanced
+set title "50 m grid (jump below the step just upstream)" noenhanced
 set yrange [1500:6500]
 plot "result_supp_50m/fluxes/flux0003.csv"  using 2:3 with lines lw 1.6      lc rgb '#1f9fd0' title "50 m", \
      "result_supp_100m/fluxes/flux0003.csv" using 2:3 with lines lw 1.2 dt 2 lc rgb '#2ca02c' title "100 m", \

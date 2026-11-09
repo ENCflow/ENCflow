@@ -1,10 +1,9 @@
 #!/bin/bash
 # チュートリアル本文(README.md)の図 figs/*.png を一括再生成する。
 #   使い方: ./Fig_chichibu.sh   (要 gnuplot。実行ファイルは make で用意)
-# 本文の手順どおり Step 1〜6 を順に実行して結果を result_step1〜6 に
+# 本文の手順どおり Step 1〜5 を順に実行して結果を result_step1〜5 に
 # 退避し、窪地除去・4 近傍の比較計算(Step 2 の設定で計算時間を 12 時間に
-# 延ばしたもの)を result_cmp_{filled,raw,4nb} に、Step 4 の比較用に限界水深を
-# 1/10 にした計算(Step 3 の設定で dd = dv = 0.0001)を result_cmp_dd に置いてから
+# 延ばしたもの)を result_cmp_{filled,raw,4nb} に置いてから
 # Fig_chichibu.plt で描画する。計算済みの result_* があれば計算を飛ばして描画だけ行う
 # (全て計算し直す場合は rm -rf result_step* result_cmp_* してから実行)。
 set -eu
@@ -12,8 +11,8 @@ set -eu
 mkdir -p figs en/figs
 rm -f wrk_*
 
-# --- Step 1〜6 の実行(結果を result_stepN に退避) ---
-for s in 1 2 3 4 5 6; do
+# --- Step 1〜5 の実行(結果を result_stepN に退避) ---
+for s in 1 2 3 4 5; do
   if [ ! -d "result_step$s" ]; then
     rm -rf result
     ./encflow "param_step$s.txt"
@@ -39,17 +38,6 @@ for c in filled raw 4nb; do
     mv result "result_cmp_$c"
   fi
 done
-
-# --- Step 4 の比較: 限界水深を 1/10 にした計算(Step 3 の設定で dd = dv = 0.0001)。
-#     跳ねが先送りされるだけで、流入面の人工的な減速は残ることを図で示す ---
-if [ ! -d result_cmp_dd ]; then
-  sed -e '/f_out_vvmax/a\  dd = 0.0001                ! 限界水深(既定の 1/10)' \
-      -e '/f_out_vvmax/a\  dv = 0.0001                ! 仮想水深(同上)' \
-      param_step3.txt > wrk_param_dd.txt
-  rm -rf result
-  ./encflow wrk_param_dd.txt
-  mv result result_cmp_dd
-fi
 
 # --- 地形図用: 流域マスク外を欠損(-9999)にした地盤高 ---
 awk 'NR==FNR{for(i=1;i<=NF;i++)b[FNR,i]=$i;next}

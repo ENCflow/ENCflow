@@ -23,7 +23,7 @@ experiments of §68. The tutorial on the same catchment at 200 m grid is
 | Domain and grid | 56 km × 30 km, 560 × 300 cells (Δx = 100 m). `data_chichibu/` (elevation `Chichibu_100m_filled2.txt` (depression-filled), catchment mask, channel mask) |
 | Roughness | Slopes n = 0.15, channel cells (fn_rw) n = 0.02 |
 | Rainfall | 200 mm/h from 0 to 30 min, 0 thereafter (surface flow is the only process; no infiltration or interception) |
-| Computation | Dynamic wave (f_govequation = 0), the default ENC settings (f_advection_scheme = 3, f_opening_dynamic = 3 (changed from 1 to 2 on 2026-10-18 and from 2 to 3 on 2026-10-31; §68.38, §68.41), f_dry_head_cap = 1). `p_adv_upwind_index = 0.1`, dt = 2.5 s, 6 h |
+| Computation | Dynamic wave (f_govequation = 0), the default ENC settings (f_advection_scheme = 3, f_opening_dynamic = 3 (changed from 1 to 2 on 2026-10-18 and from 2 to 3 on 2026-10-31; §68.38, §68.41), f_dry_head_cap = 1, f_advection_donor = 3 (changed from 0 on 2026-11-09; §102)). `p_adv_upwind_index = 0.1`, dt = 2.5 s, 6 h |
 | Records | Discharge at transects 1–4 (the main stem from upstream to downstream; x = 16.5 / 21.5 / 29.6 / 43.3 km), depth at 2 probes (channel cells on transects 1 and 2) |
 
 | File | Contents |
@@ -51,22 +51,28 @@ deep form in the channel cells (black dots) of the main stem and the
 tributaries. Inundation (around 1 m) also spreads over the lowlands of the
 valley floor. Middle: discharge at transects 1–4. The peak becomes larger
 and later from upstream to downstream, and at the most downstream transect
-4 it is 4830 m³/s @ 3.53 h. Right: depth at the probes. Even after the
-rainfall ends (0.5 h) the channel depth keeps increasing for more than an
-hour, showing the delay of the collection from the hillslopes.
+4 it is 5759 m³/s @ 3.08 h. Right: depth at the probes. Even after the
+rainfall ends (0.5 h) the channel depth keeps increasing for 0.3–0.5 hours
+(the peak is at 0.82 h at probe 1 and 0.97 h at probe 2), showing the delay
+of the collection from the hillslopes.
 
 ## Findings
 
 | Transect | Position | Peak discharge (m³/s) | Peak time (h) |
 |---|---|---|---|
-| 1 | Uppermost main stem (x = 16.5 km) | 1197 | 0.82 |
-| 2 | x = 21.5 km | 2862 | 0.98 |
-| 3 | x = 29.6 km | 3974 | 1.77 |
-| 4 | 4.6 km upstream of the catchment outlet (x = 43.3 km) | 4830 | 3.53 |
+| 1 | Uppermost main stem (x = 16.5 km) | 1179 | 0.83 |
+| 2 | x = 21.5 km | 2956 | 0.97 |
+| 3 | x = 29.6 km | 4474 | 1.60 |
+| 4 | 4.6 km upstream of the catchment outlet (x = 43.3 km) | 5759 | 3.08 |
 
 - The reference is the Log of the default settings (scheme 3, dynamic
-  opening correction). The verdict of `Run.sh` is PASS (rerun on 2026-10-31;
-  Log.txt identical to the reference). The table and figure above were
+  opening correction, f_advection_donor = 3). The table and figure above are the
+  values after the default became f_advection_donor = 3 on 2026-11-09; compared with
+  the previous default 0 (1197 @ 0.82 h, 2862 @ 0.98 h, 3974 @ 1.77 h and
+  4830 m³/s @ 3.53 h at transects 1–4), the peaks at transects 3 and 4 are 13 and
+  19 % larger and 0.2 and 0.5 hours earlier (the artificial brake from thin films
+  on rain-wetted banks acting as momentum donors of the main channel is removed;
+  [docs/en/users_guide/advection_donor.md](../../../docs/en/users_guide/advection_donor.md)). The values with the default 0 were
   recomputed on 2026-11-01 with the default (f_opening_dynamic = 3) after the fix of §68.42
   (lateral face flux from the real link discharges); they are 0.4–3.4 % smaller than the
   values of the default 3 before the fix (1202 @ 0.82 h, 2882 @ 0.98 h, 4025 @ 1.72 h and
@@ -77,10 +83,11 @@ hour, showing the delay of the collection from the hillslopes.
   transect 4).
 - **The domain is closed** (outside the catchment mask is wall; the S column
   of the Log is constant at the total rainfall of 100 mm). Water accumulates
-  in the channel cell (479, 35) at the outlet, reaching a depth of 33 m at
-  6 h, and the backwater runs up the main stem to x = 41.7 km, including
-  transect 4 (the 6 h depth of 1.05 m at transect 4 is a value in the
-  backwater zone). The peak (3.53 h) is before this influence. In practical
+  in the channel cell (479, 35) at the outlet, reaching a depth of 34 m (water
+  level 141.4 m) at 6 h, and the backwater runs up the main stem to x = 41.6 km,
+  including transect 4 (the 6 h depth of 4.89 m at transect 4 is a value in the
+  backwater zone). The peak (3.08 h) is before this influence (the pond level of
+  130 m at 3 h is below the bed of transect 4, 137 m). In practical
   computations place a free-outflow boundary (`&list_bound`) at the outlet.
 - This case is also a guide to convergence: on the 50 / 100 / 200 m grids of
   the same catchment the most downstream peak changes with resolution
@@ -101,7 +108,7 @@ the output goes to `result_xxx/` (`dir_result` is set). Name suffixes:
 |---|---|---|---|
 | Advection scheme | `param_base_{noadv,s1,s3}.txt` | Scheme comparison without opening correction (100 m) | §68.8 follow-up, §68.12 |
 | Dynamic opening correction | `param_dyn_{noadv,s1,s3}.txt`, `param_dyn2_{s1,s3}.txt` | f_opening_dynamic = 1 (channel edges) / 2 (all edges) | §68.14 |
-| Choice of the donor | `param_dyn_s3_donor3.txt` | f_advection_donor = 3 (only faces whose donor on line k carries almost no water are treated as neutral). It replaces the former `param_dyn_s3_donor1.txt` (f_advection_donor = 1, restricting the donor on channel–channel edges to channel cells) after option 1 was removed (2026-11-07) | §68.18, §102 |
+| Choice of the donor | `param_dyn_s3_donor3.txt` | f_advection_donor = 3 (only faces whose donor on line k carries almost no water are treated as neutral; the default since 2026-11-09). It replaces the former `param_dyn_s3_donor1.txt` (f_advection_donor = 1, restricting the donor on channel–channel edges to channel cells) after option 1 was removed (2026-11-07) | §68.18, §102 |
 | Cap for dry receivers | `param_cap.txt` | f_dry_head_cap = 1 (now the default; byte-identical with the reference) | §68.16 |
 | Resolution | `param50_*.txt` (`data_chichibu_50m`), `param200_*.txt` (the 200 m data of tutorials), `param500_*.txt` / `param500r_*.txt` (`data_chichibu_500m`; r = aggregated from the 100 m channel mask) | base / dyn × s1 / s3 on the 50 / 200 / 500 m grids | §68.14, §68.18 |
 | Sub-grid channel width | `param_w{50,100}_{s1,s3}.txt` (`width_chichibu{50,100}.txt`), `param200_w{50,100}_s3.txt` | Channel width specified by fn_width (100 m = grid width, 50 m) | §68.12, §68.24 |

@@ -105,19 +105,31 @@ architecture.md。このメモは「現在進行中・未完了の項目」だ�
      wave_headon の *_evolution)。載せるか生成をやめるかを決める(00g の mesa の英語図の残りは、
      README に載っていない図なので英語化は要らない)。
 
-00n. **運動量保存形移流の風上供給元 f_advection_donor(developer.md §102。既定 0。2026-11-07 に 3 を追加して 1・2 を廃止、同日 3 に側方面の乾湿判定の連続化を追加)の残り**
+00n. **運動量保存形移流の風上供給元 f_advection_donor(developer.md §102。2026-11-09 に既定を 0 から 3 に変更。2026-11-07 に 3 を追加して 1・2 を廃止、同日 3 に側方面の乾湿判定の連続化を追加。2026-11-08 に 3 の流向面の判定を薄い供給元に限定)の残り**
    - 背景: tutorials/chichibu Step 3 の逓減部の跳ね(232 min +435 m³/s)は、河岸の薄い水膜(213,39)が本川の辺の
      線 k 上の供給元になって作る人工的な減速(池の入口の 0.65 m の段差)が、水膜が dd を割った瞬間に外れる現象。
      dd を小さくするのは先送り。選択式の 3(線 k の供給元の流量比で風上値を u_e へ寄せるランプ。p_adv_donor_eps、
-     既定 0.1)で消える(dd の感度 155 → 21 m³/s。側方面の連続化を加えて 8 m³/s)が、ピークが +15〜21% 動くので既定は 0 のまま。全流入リンクの流量で
+     既定 0.1)で消える(dd の感度 155 → 21 m³/s。側方面の連続化を加えて 8 m³/s)。ピークが +15〜21% 動くので当初は既定を 0 のままにした((1) で 3 を既定にした)。全流入リンクの流量で
      重み付けする 2(2026-11-06 実装)は、通過流の運動量の持ち込みで横流入・渦・壁・22.5° の斜面流の検定を悪くし、
      目的は 3 が副作用なしに満たすので、tutorials/chichibu を 3 へ移した後に廃止した(利用者の指示。§102
      「f_advection_donor = 2 の廃止」。指定すると停止)。河道セル同士のエッジの供給元を河道セルに限る 1(§68.18)も、
      効果の大部分が 3 に含まれ 3 と併用できないので同日に廃止した(§102「f_advection_donor = 1 の廃止」)。
-   - (1) 既定化の判断(観測か細格子の参照解。§68.18 の判断の延長)。3 は 100 m の秩父でピーク +21%(test/chichibu。dd 1e-4)。流れが速くなる分
-     Courant 数も上がり、tutorials/chichibu 補足の 200 m・幅 50 m のサブグリッド河道は dt 6 → 4 s が必要だった。
-     2026-11-06 の test/ 44 ケース・examples 12 構成の 0/2 比較(§102「既定の判断材料」)の 3 版は未実施(試作時の
-     回帰の変化は、薄い水膜のケース以外は 1% 以内)。
+   - (1) 済(2026-11-09。§102 末尾「既定化の判断基準の見直し」「斜めの直線水路の検定 test/wetbank」「既定を 3 に変更」):
+     利用者の決定で既定を 3 にした。判断は、正解のある理想化検定 test/wetbank(格子に斜めの 1 セル幅の河道で河岸を
+     雨で濡らすと、雨の流入の分を超えて 0 は 10〜40 %、3 は 6〜17 % 深くなる。格子に沿う水路はどちらも 0.2 %)と、
+     検定・例題に劣化がないこと(2026-11-08〜09 の比較)。格子収束(0 との差が格子を細かくしても縮まないこと)は、
+     0 の減速がラスタ河道の段ごとの格子規模の誤差なので 3 の正否を判別しないとして基準から外した。流れが速くなる分
+     Courant 数も上がる(tutorials/chichibu 補足の 200 m・幅 50 m のサブグリッド河道は dt 6 → 4 s)。実施: 既定値の
+     変更(e3c79971)、reference 9 ケースの更新(5cf48367。差の一覧の目視確認の後)、tutorials/chichibu の Step 3 に
+     0 を明示して Step 1・BMI の値と図を更新(8532bbef)、users guide・List_samples・test/chichibu などの README の
+     記述(同日)、例題: 既定の判断で 0 と差の出た、または値を README に載せる meander・meander_cutoff・
+     estuary_barrage・catchment_metal・debris_fan の全ケースを回し直して README(日英)と図を更新(同日。§102 の
+     「既定を 3 に変更」の例題の項)。そのほかの例題は 00k の後の「全例題の再計算」で既定 3 も含めて回す。**残り**:
+     (i) 3 で残る側方面の減速(dd 以上の河岸の水膜。test/wetbank の 6〜17 % の主な原因)は (2) の **次の候補** と同じ課題。
+     (ii) examples/meander の細粒分の帳簿の構成(param_fixsuspfines.txt)は、3 で砂州が氾濫原より 0.64 m 高くまで育ち、
+     125 h ごろから出水が氾濫原へあふれて引かなくなった(0 では天端 1.37 m で、氾濫原の水は上流側に限られる。§102)。
+     README は今の結果のとおりに書き直した。例題の狙い(砂州が氾濫原の高さまで育つ)に戻すなら、給砂倍率
+     inflow_cs_fac を下げる案がある(利用者の判断。未着手)。
    - (2) 済(2026-11-07。§102「S2 の試作と不採用、側方面の乾湿判定を連続にする S1a を 3 に追加」): 3 で残っていた
      小さな跳ね(200 m の測線 3 の 120 min +222・測線 4 の 310 min +57、100 m の 4 つ、Step 5 の 5 つ)の原因は、側方面の
      流入流速 lateral_u と開口率 axis_open の乾湿判定(h ≥ dd)だった。3 に、この判定を dd 未満で水深に比例して中立へ寄せる
@@ -137,16 +149,16 @@ architecture.md。このメモは「現在進行中・未完了の項目」だ�
      減衰と組み合わせて外す案は、必要な減衰が物理的な乱流粘性の数千倍(1 次風上の数値粘性の桁)で数値粘性の言い換えに
      なり、普遍性も検証の手段もないので取り下げた(§102 末尾)。段階 2(a)(側方面の二重計上の
      解消)は inflowadv osc3 で振動を起こすので単独では入れられない(2026-11-07 の試作)。
-   - (2b) 3 と、幅をセル幅より狭くしたサブグリッド河道の組合せの振動(2026-11-07 に発見。§102 同項と末尾の「ε の既定の
-     検討」): 100 m・W = 50 の測線 2 の 2〜3 分周期の振動は、平坦な区間の深い淀み(流入の 1 割前後)を線 k の供給元とする
-     本流の面で、割合が ε の境目を行き来して重みが 0 と 1 で切り替わるもの(2026-11-08 に計測ビルドで特定)。ε ≤ 0.07 で
-     消えるが、小さくすると別の面が境目に来て跳ねが出る(50 m の測線 3 に 0.05 で +184 m³/s など)ので、既定は 0.1 のまま
-     (利用者の判断)。流向面の ε のランプを水深の比に置き換える試作(2026-11-08。§102 末尾)は、この振動を消し検定は 3 と
-     同じだったが、50 m の測線 2・3 のピーク付近と 200 m・W = 50 の測線 3 が荒れ、3 より明らかに良いとは言えないので
-     入れていない。
-     200 m・W = 50 の測線 3 の急な前線は 3 の 200 m の一般的な性質(幅なしでも 1 分 +846)、揺れは窪地除去でできた
-     平坦な区間の静振(周期約 4 分。0・1 次風上・幅なし・平坦部を掘り直した地形では出ない。2026-11-08 に特定。§102
-     末尾)で、3 の対象外。tutorials/chichibu 補足の W = 50 の本文に、この揺れと 100 m・W = 50 の測線 2 の振動を注記した。
+   - (2b) 済(2026-11-08。§102 末尾「流向面の判定を薄い供給元に限る」): 3 と、幅をセル幅より狭くしたサブグリッド河道の
+     組合せの振動。100 m・W = 50 の測線 2 の 2〜3 分周期の振動は、平坦な区間の深い淀み(流入の 1 割前後、水深は面の
+     セルの 0.9 倍)を線 k の供給元とする本流の面で、割合が ε の境目を行き来して重みが 0 と 1 で切り替わるものだった。
+     3 の流向面の判定に「供給元の水深が面のセルの水深の ε 倍未満(薄い)」を加え(w = min(1, max(r, h_d/h_c)/ε)。
+     新しいパラメータなし)、振動は消えた(極値 17 → 1)。dambreak は 0 と全桁一致、他の検定は 3 と同じく合格。
+     200 m・W = 50 の測線 3 の揺れは窪地除去でできた平坦な区間の静振(周期約 4 分。0・幅なしでは出ない。地形が原因)で、
+     本案でも残る(前線は 1 分 948 → 402 m³/s に緩やかになった)。対処は (2) の (i) 地形前処理。
+   - (2c) 済(2026-11-08。§102 末尾「tutorials/chichibu の回し直し(本案)」): Step 4〜7 と補足の 3 のケースを本案で
+     回し直し、図と本文(日英)の数値・注記を直した(W = 50 の 100 m の振動の注記を削除、50 m の測線 3 の注記を段差の
+     下の跳水による 93〜95 min の凹みに書き換え)。補足の計算時間の表は測り直していない。
    - (d) 済: tutorials/chichibu Step 4 は「dd・dv を 1/10」(先送り)ではなく供給元の選択で跳ねを消す形(日英。
      2026-11-06 に 2 で改訂、2026-11-07 に 3 へ移行し、同日 3 の側方面の連続化で回し直し)。Step 4〜7 の param は
      dd・dv 既定 + &list_enc の f_advection_donor = 3。測線 4 のピーク 5,546 → 6,353 @151 min(232・316 min の跳ねは
@@ -165,7 +177,11 @@ architecture.md。このメモは「現在進行中・未完了の項目」だ�
      使わない)、STG が領域マスクを読まず帯の境界でハロも交換しないと分かったので、領域マスクと MPI の 2 ランク以上は
      初期化で止めることにした(凍結方針。developer.md §7)。マスクなし・1 ランクの動作確認として test/stg を CI に加えた。
    - (g) 調査の作業ファイル(分布出力の走査・計測印字版・試作 B1〜B6・図)は本セッションの scratchpad にあり、
-     リポジトリには入れていない。要点は §102 と、利用者ガイド advection.md §4.4。
+     リポジトリには入れていない。要点は §102 と、利用者ガイド advection_donor.md。
+   - (h) 済(2026-11-09。§102 末尾「教材の再構成と解説の分離」): 既定を 3 にしたので、tutorials/chichibu から
+     f_advection_donor の話題を除いた((d) の Step 4 を削除し、旧 Step 5〜7 を 4〜6 に繰り上げた。Step 3 は既定のまま)。
+     解説は users guide の docs/users_guide/advection_donor.md(日英。図 4 枚)へ移し、advection.md §4.4 と swflow.md の
+     該当項目は要約とリンクにした。
 
 00m. **拡散型プロセスの 4 近傍の異方性(developer.md §96、landslide_tsunami_plan.md §11.1。2026-11-05 合意)の残り**
    - (a) `creep_diagratio`・`spl_diagratio` の既定を 1/3 にした(2026-11-05。利用者の決定。developer.md §96)。12 の
@@ -190,7 +206,8 @@ architecture.md。このメモは「現在進行中・未完了の項目」だ�
    - (e) 地下水の側方流 `gw_diagratio`(と同じ通過幅を使う `salt_diagratio`)の既定を 1/3 にした(2026-11-05。利用者の
      決定「する」、reference の差の図を見た上での了承。developer.md §98)。gwbed・gwsect・gwseep・gwwidth の reference を
      更新し(逐次・MPI np = 1・2・4 がバイト一致)、検定スクリプトの d の定数と test の README を直した。**残り**: 例題
-     estuary_barrage・catchment_metal・qanat(層2)と tutorials/chichibu(地下水)の数値の回し直し((f))。
+     qanat(層2)と tutorials/chichibu(地下水)の数値の回し直し((f))。estuary_barrage・catchment_metal は
+     2026-11-09 に今のコードで回し直して済(00n(1))。
    - (f) 別ブランチ claude/inspiring-brahmagupta-c5jfsg(重力補正の既定・セルの流出の抑制ほか)は 2026-11-05 に main へ
      合流した。番号が衝突したので、このブランチの developer.md の節(旧 §93〜96)を §96〜99 に、本項を 00l から 00m に
      付け替えてから main をこのブランチ(claude/nifty-hawking-yx6s0o)に merge した(利用者の了承)。merge 後の全 test
@@ -203,7 +220,8 @@ architecture.md。このメモは「現在進行中・未完了の項目」だ�
        gw・salt の diagratio = 1/3、f_lvtemp_scheme = 3)で値が変わる badland・badland_round・badland_storm・mesa・
        mountain_valley・glacier_valley・shield_volcano・stratovolcano・catchment_metal・estuary_barrage・qanat
        (estuary_barrage・qanat は main で地下水 2/(2+√2) のまま再計算したので、もう一度)と tutorials/chichibu
-       (地下水)、main の側の未了の karst・tower_karst。合意済みの範囲は delta・meander・
+       (地下水)、main の側の未了の karst・tower_karst(catchment_metal・estuary_barrage は 2026-11-09 に今のコードで
+       回し直して済。00n(1))。合意済みの範囲は delta・meander・
        meander_cutoff を除く全例題(26 例題。vz_tani2023 は論文の PDF から抽出したデータが要るので除き、
        benchmark は README がないので除く)。手順の案: 各 README の実行の節の計算の行(make run・make supp・
        ./encflow など)を例題ごとに回し、描画は README の更新のときに結果を見ながら行う。4 並列・1 スレッドで
@@ -305,7 +323,7 @@ architecture.md。このメモは「現在進行中・未完了の項目」だ�
      抑制で止められる繰り返しを断つ。利用者の判断「推奨で」)。ex_flux はふだん 0 になる。
      (済 2026-11-05)値の変わる 16 ケースの reference を更新(利用者の承認の後。試作と同じケース・同じ差で
      あることを確かめてから。developer.md §95「検証と reference の更新」)し、main へマージした。
-     **残り**: 全例題の再計算(既定 2・P・U″ の後に一度だけ。00k と下の残り)。
+     **残り**: 全例題の再計算(既定 2・P・U″ の後に一度だけ。00k と下の残り。2026-11-09 の既定 f_advection_donor = 3 も含める。00n(1))。
    - (2026-11-05 に利用者の指示で中断)全例題の再計算。別ブランチ claude/nifty-hawking-yx6s0o が既定を変える
      過程(creep・spl・gl・lv の diagratio を 1/3 に、f_lvtemp_scheme を 3 に)を使う 8 例題(badland・
      badland_round・badland_storm・mesa・mountain_valley・glacier_valley・shield_volcano・stratovolcano)は、
@@ -317,7 +335,12 @@ architecture.md。このメモは「現在進行中・未完了の項目」だ�
      表と図は 2026-11-08 に現行の結果で作り直した。00g)。
      **未了(中断時点)**: catchment_metal(8 段のうち step1 だけ計算済み)・karst・meander・meander_cutoff・
      delta・tower_karst(1 Myr の連鎖のうち param.txt・param_steady.txt は計算済み、param_base.txt の途中で
-     止めた)。再開するときは各 README の「実行方法」で回し、plot スクリプトの数表を README と比べる(delta は
+     止めた)。2026-11-09 に既定を f_advection_donor = 3 にした(00n(1))ので、上で済んだ例題も含めて 3 での値の
+     変化を確かめる(既定の判断で 0 と 3 を比べた levee_breach・ashfall_lahar・mountain_valley の V_a・badland_storm は
+     ほぼ同じか全出力が一致。meander・meander_cutoff・estuary_barrage・catchment_metal・debris_fan は
+     00n(1) で今のコード(11-05 の既定の変更を含む)で回し直して README と図を更新済みで、未了から
+     catchment_metal・meander・meander_cutoff が外れる)。
+     再開するときは各 README の「実行方法」で回し、plot スクリプトの数表を README と比べる(delta は
      4 スレッドでも 1 ケース 40 分〜3.5 時間、meander・meander_cutoff・karst は 1 ケース 40 分〜3 時間、
      tower_karst の連鎖は約 21 時間)。対象外: vz_tani2023(論文の PDF が要る)、benchmark(結果を README に
      載せていない)、tsunami_fault の param_hw(fault2disp_w.txt の bm_w が要る開発者向けの設定)。

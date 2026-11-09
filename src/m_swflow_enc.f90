@@ -1016,24 +1016,27 @@ subroutine m_swflow_enc_init(p, g, b, s)
   ! 3 と併用できず、本流と浸水谷底の運動量交換を切る操作の正否が未検証だった(developer.md §102)
   if (opt%f_advection_donor == 1) then
     call par_stop("list_enc: f_advection_donor=1 (channel-cell donors on channel edges) was removed;" &
-                  //" use f_advection_donor=3 (see developer.md sec.100)")
+                  //" use f_advection_donor=3 (see developer.md sec.102)")
   else if (opt%f_advection_donor == 2) then
     call par_stop("list_enc: f_advection_donor=2 (flux-weighted inflow links) was removed;" &
-                  //" use f_advection_donor=3 (see developer.md sec.100)")
+                  //" use f_advection_donor=3 (see developer.md sec.102)")
   else if (opt%f_advection_donor /= 0 .and. opt%f_advection_donor /= 3) then
     call par_stop("list_enc: f_advection_donor must be 0(wet cells on the edge line) " &
-                  //"or 3(edge-line donor ramped toward u_e by its share of the inflow)")
+                  //"or 3(thin edge-line donor carrying little of the inflow ramped toward u_e)")
   end if
   if (opt%f_advection_donor == 3 .and. (opt%p_adv_donor_eps <= 0.0 .or. opt%p_adv_donor_eps > 1.0)) then
     call par_stop("list_enc: p_adv_donor_eps must satisfy 0 < p_adv_donor_eps <= 1")
   end if
-  if (opt%f_advection_donor == 3 .and. opt%f_advection_scheme < 2) then
-    call par_info("swflow: f_advection_donor="//trim(itoa(opt%f_advection_donor)) &
-                  //" has no effect with f_advection_scheme=1")
+  ! 0 は 2026-11-09 までの既定(線 k の供給元をそのまま使う)。斜めのラスタ河道で河岸が濡れると人工的な減速で
+  ! 河道が深くなる(test/wetbank。§102)ので、明示した実行は起動時に知らせる
+  if (opt%f_advection_donor == 0 .and. opt%f_advection_scheme >= 2) then
+    call par_info("swflow_enc: f_advection_donor = 0 (edge-line donor used as is; the default until 2026-11-09. " &
+                  //"The default 3 treats thin donors carrying little of the inflow as neutral)")
   end if
   if (opt%f_advection_donor == 3 .and. opt%f_advection_scheme >= 2) then
     call par_info("swflow_enc: f_advection_donor = 3 (edge-line donor ramped toward u_e when it carries " &
-                  //"less than p_adv_donor_eps = "//rtoa(opt%p_adv_donor_eps)//" of the largest inflow link; " &
+                  //"less than p_adv_donor_eps = "//rtoa(opt%p_adv_donor_eps)//" of the largest inflow link " &
+                  //"and is shallower than p_adv_donor_eps times the face cell; " &
                   //"side-face wet/dry tests weighted by min(1, h/dd))")
   end if
   if (opt%f_dry_head_cap < 0 .or. opt%f_dry_head_cap > 1) then

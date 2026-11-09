@@ -95,7 +95,7 @@ sudo dnf install -y gnuplot
 
 `gnuplot --version` でインストールとバージョンを確認できます。
 
-3D 可視化・アニメーション(チュートリアル chichibu の Step 7)には
+3D 可視化・アニメーション(チュートリアル chichibu の Step 6)には
 **ParaView** を使います。パッケージマネージャでインストールできます
 (こちらも環境に合った1つだけ):
 

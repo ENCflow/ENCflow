@@ -92,7 +92,7 @@ the design of comparisons.
 > cases, with and without frozen ground, and show in a figure that
 > surface runoff increases with frozen ground.
 
-> Starting from tutorials/chichibu/param_step5.txt, set up a
+> Starting from tutorials/chichibu/param_step4.txt, set up a
 > sensitivity experiment in work/ with 1.5x the rainfall, and compare
 > the hydrographs against the original case in one figure.
 

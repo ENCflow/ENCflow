@@ -50,7 +50,7 @@ cd ../test/wave && ./Run.sh                                        # run an exam
 
 The first line also installs **gnuplot**, used for plotting in the
 tutorials. For the other visualization tool, **ParaView** (3D views;
-not needed until Step 7 of the chichibu tutorial), see
+not needed until Step 6 of the chichibu tutorial), see
 [section 2 of the installation guide](install.md) when you get there.
 
 If you get stuck, see Microsoft's
@@ -213,7 +213,7 @@ Minimal explanations of the words used in this and later documents.
 | gnuplot | Graph-plotting software, used by the tutorials' plot scripts (`Plot_*.plt`) |
 | less | A viewer that shows a text file one screen at a time. Quit with `q` |
 | make | A tool that runs build steps automatically — it is what `make install` actually is |
-| ParaView | 3D visualization software, used in Step 7 (animation) of the chichibu tutorial |
+| ParaView | 3D visualization software, used in Step 6 (animation) of the chichibu tutorial |
 | QGIS | Free GIS software. It shows the GeoTIFF inputs and outputs directly on a map |
 | sudo | A command prefix that runs a command with administrator rights, used when installing software (apt). When asked for a password, type the one you chose at the first WSL startup (**nothing appears on screen while you type, but the input is being received**) |
 | VS Code | Microsoft's free editor. With the "WSL" extension, editing, terminal, and file browsing come together in one window |

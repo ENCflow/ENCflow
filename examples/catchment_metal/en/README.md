@@ -211,7 +211,7 @@ lines are the case being compared.
 
 ![Step 1](figs/step1.png)
 
-- **98 % goes underground**: of the 606 kg put in over 180 days, 9.6 kg
+- **98 % goes underground**: of the 606 kg put in over 180 days, 9.5 kg
   (1.6 %) leaves to the sea and 595 kg (98 %) enters the ground with the
   infiltrating water and stays there. The substance from the farmland lies
   on the dry surface, dissolves in the first water of the next rain, and
@@ -233,18 +233,18 @@ lines are the case being compared.
 ![Step 2](figs/step2.png)
 
 - **Baseflow appears**: infiltrated water flows underground and seeps out
-  on the valley floors; after the 4th storm (day 33) the rivers keep
-  flowing between storms (near the mouth, 5.7 m³/s on day 100 and 2.6 m³/s
-  on day 180).
-- **The subsurface substance returns to the river**: of the 320 kg that
-  entered the ground, 217 kg returns to the rivers with the seepage, and
-  the export to the sea rises from 9.6 kg to 502 kg (83 % of the input).
+  on the valley floors; from day 30, before the 4th storm (day 33), the
+  rivers keep flowing between storms (near the mouth, 5.7 m³/s on day 100
+  and 2.6 m³/s on day 180).
+- **The subsurface substance returns to the river**: of the 323 kg that
+  entered the ground, 221 kg returns to the rivers with the seepage, and
+  the export to the sea rises from 9.5 kg to 502 kg (83 % of the input).
   In the dry season the concentration near the mouth averages 10 µg/L and
   that at the outlet of the farm tributary (G3) 22 µg/L: the dry-season
   river quality is set by loads coming through the groundwater.
 - Below the mine (G1), the concentration is diluted by the baseflow down to
   32 µg/L on day 95, and rises again as the baseflow declines in the dry
-  season (119 µg/L on day 180).
+  season (120 µg/L on day 180).
 
 ### Step 3: + delay underground by sorption — the substance accumulates in the ground
 
@@ -252,11 +252,11 @@ lines are the case being compared.
 
 - **It stays in the ground**: with R = 100 the subsurface substance moves
   at only 1/100 of the groundwater speed, and only 7 kg returns to the
-  rivers with the seepage (217 kg in step 2). Of the 217 kg applied to the
-  farmland, 211 kg is still in the farmland soil after 180 days, and the
+  rivers with the seepage (221 kg in step 2). Of the 217 kg applied to the
+  farmland, 214 kg is still in the farmland soil after 180 days, and the
   substance also accumulates under the river bed below the mine
   (figure (c)).
-- **Export to the sea is 317 kg (52 %)**: mostly what the mine effluent
+- **Export to the sea is 313 kg (52 %)**: mostly what the mine effluent
   carries down the river. In the dry season the concentration at the
   outlet of the farm tributary (G3) is nearly 0, and near the mouth it
   averages 7 µg/L (10 µg/L in step 2).
@@ -264,25 +264,29 @@ lines are the case being compared.
   disappeared. What accumulates in the ground comes out little by little
   over years (which this 180-day run does not show).
 
-### Step 4: + tanks (dissolved form) — half the load of the tributary, little change for the whole catchment
+### Step 4: + tanks (dissolved form) — the load of the tributary is delayed but hardly reduced
 
 ![Step 4](figs/step4.png)
 
 The dashed lines are G3 of step 3 (no tanks).
 
 - **Little change for the whole catchment**: the export to the sea goes
-  from 316.6 kg to 315.2 kg, because in step 3 the substance of the
+  from 313.2 kg to 313.0 kg, because in step 3 the substance of the
   farmland stays in the soil, so little passes through the tanks in the
   first place.
-- **Half the load of the tributary with the tanks**: the amount passing the
-  outlet of the farm tributary (G3) drops from 4.6 kg to 2.1 kg. The tanks
-  start empty, fill and begin to spill after the 7th storm (day 63), and
-  floods reach G3 from the 8th storm (day 73). Until then they store the
-  water and substance of the floods, and water from above the tanks does
-  not reach the outlet (discharge of G3 in figure (d)).
+- **The load of the tributary comes later**: the amount passing the outlet
+  of the farm tributary (G3) goes from 1.01 kg to 0.93 kg, less than 10 %
+  lower. What changes is when it passes. Without tanks it is carried by the
+  floods up to day 60, while the farmland receives the load (0.93 kg by day
+  65). With tanks only 0.01 kg passes by day 65, and the rest comes out
+  little by little from day 66 (0.65 kg by day 100). The three tanks start
+  empty and fill in the 6th and 7th storms (days 53 and 63); the lowest tank
+  spills for the first time on day 66. Until then they store the water and
+  substance of the floods, and water from above the tanks does not reach
+  the outlet (discharge of G3 in figure (d)).
 - **Smoothing of the load**: once full, the tanks release the stored
   substance little by little in the dry season, so the dry-season
-  concentration at G3 is higher with the tanks (average 0.27 µg/L, against
+  concentration at G3 is higher with the tanks (average 0.10 µg/L, against
   0.02 µg/L without tanks). For the dissolved form, tanks mainly store,
   delay and smooth the load; they remove little (only what seeps through
   the tank beds).
@@ -295,19 +299,19 @@ The dashed lines are the case without tanks (step5_notank).
 
 - **The particulate form does not enter the ground**: the substance stays
   at the surface, is carried by floods and settles where the flow is slow.
-  The surface deposits on day 180 are 264 kg (176 kg without tanks).
+  The surface deposits on day 180 are 263 kg (177 kg without tanks).
 - **The tanks trap it**: the amount passing the outlet of the farm
-  tributary (G3) is 2.6 kg with the tanks against 93 kg without (97 % less),
+  tributary (G3) is 2.7 kg with the tanks against 89 kg without (97 % less),
   and 99 kg is deposited on the tank beds. The concentration peaks at G3
-  during floods drop from 20–80 µg/L to 2–10 µg/L, and the export of the
-  whole catchment to the sea falls by a fifth, from 430 kg to 342 kg.
+  during floods drop from 20–60 µg/L to 2–10 µg/L, and the export of the
+  whole catchment to the sea falls by a fifth, from 428 kg to 342 kg.
 - **The first floods below the mine**: in the reach where the effluent
   seeped into the bed on dry days, particulate substance remains on the
   surface and is washed out by the first three floods (concentration peaks
-  at G1 of 390–1,240 µg/L, against 100–240 µg/L for the dissolved form in
+  at G1 of 390–1,240 µg/L, against 100–330 µg/L for the dissolved form in
   step 3). Once the river flows continuously, the peaks are similar to
   those of the dissolved form (40–75 µg/L).
-- On the farmland, 104 kg stays deposited on slopes where the flood flow is
+- On the farmland, 105 kg stays deposited on slopes where the flood flow is
   weak (with or without tanks).
 
 ### Step 6: + evapotranspiration — the river dries up in the dry season and the substance stays in the ground
@@ -320,7 +324,7 @@ water went (depth over the catchment; the inputs are 600 mm of rain and
 
 - **Three quarters of the rain leave as evapotranspiration**: over 180 days the
   evapotranspiration is 444 mm (74 % of the rain), the outflow to the sea
-  139 mm (413 mm in step 4) and the storage in the catchment on day 180
+  140 mm (413 mm in step 4) and the storage in the catchment on day 180
   20 mm (191 mm). 97 % of the evapotranspiration is taken from the
   groundwater. In the wet season it evaporates at 3.7 mm per day, close to
   the potential evapotranspiration (4 mm), but in the dry season the soil
@@ -328,22 +332,22 @@ water went (depth over the catchment; the inputs are 600 mm of rain and
   0.3 mm per day (days 140–180).
 - **The river dries up in the dry season**: the baseflow disappears and the
   main river stops flowing about 20 days into the dry season (G5 near the
-  mouth stops on day 118, G2 below the T1 confluence on day 122). On dry
-  days only the mine effluent flows; about 3 km down T1 it has seeped into
+  mouth stops on day 120, G2 below the T1 confluence on day 123). On dry
+  days only the mine effluent flows; about 2 km down T1 it has seeped into
   the bed or evaporated. At G1, 1.5 km below the mine, the discharge is
   0.014 m³/s (about 30 % of the effluent) and the concentration is about
-  510 µg/L, the effluent itself (500 µg/L) slightly concentrated (in step 4
+  525 µg/L, the effluent itself (500 µg/L) slightly concentrated (in step 4
   the baseflow dilutes it to 81 µg/L).
 - **Water stays in the tanks**: the level of the three tanks falls by about
   0.4 m in the dry season, but the concentration of the substance in their
-  water is kept and rises by about 10 % in the lower two (evaporation removes
-  only water). In step 4 groundwater from upstream keeps flowing in and
-  replacing the water in the dry season, and the concentration falls to
-  between a half and a fifth. The lowest tank never
+  water is kept and rises by 3–8 % (evaporation removes only water). In
+  step 4 groundwater from upstream keeps flowing in and replacing the water
+  in the dry season, and the concentration falls to between two thirds and
+  a third. The lowest tank never
   fills and does not spill, so only 0.01 kg passes the outlet of the farm
-  tributary (G3) (2.1 kg in step 4).
-- **The substance stays in the ground**: the export to the sea is 17 kg
-  (2.8 % of the input; 315 kg in step 4) and 588 kg (97 %) remains in the
+  tributary (G3) (0.93 kg in step 4).
+- **The substance stays in the ground**: the export to the sea is 20 kg
+  (3.3 % of the input; 313 kg in step 4) and 586 kg (97 %) remains in the
   ground. The infiltrated water leaves as evapotranspiration before
   groundwater flow brings it to the valleys, and only the substance stays
   in the soil.
@@ -370,16 +374,16 @@ subsurface storage hg is smaller than evap_hglim = 0.05 m.
   season it is 3.4 mm per day (3.7 mm), 10 % less, and in the early dry
   season it is even larger (1.9 mm per day on days 100–140; 1.5 mm), because
   the water left in the soil in the wet season is taken over a longer time
-  in the dry season. The outflow to the sea is 148 mm (139 mm; 413 mm in
+  in the dry season. The outflow to the sea is 149 mm (140 mm; 413 mm in
   step 4).
 - **The drying up comes a week later**: the main river stops flowing on days
-  126–128, only about a week later than in step 6. At G1, 1.5 km below the
-  mine, the dry-season discharge is 0.019 m³/s (0.014) and the concentration
-  is about 505 µg/L; the river in the dry season is the effluent itself.
+  127–128, only about a week later than in step 6. At G1, 1.5 km below the
+  mine, the dry-season discharge is 0.018 m³/s (0.014) and the concentration
+  is about 520 µg/L; the river in the dry season is the effluent itself.
 - **The export to the sea is four times larger**: because the baseflow
   continues from the end of the wet season into the early dry season, more
-  substance reaches the sea: 77 kg (13 % of the input; 17 kg in step 6 and
-  315 kg in step 4), and 528 kg remains in the ground.
+  substance reaches the sea: 82 kg (13 % of the input; 20 kg in step 6 and
+  313 kg in step 4), and 524 kg remains in the ground.
 - **How to read it**: with evap_hglim = 0.05 m, the time constant with which
   the soil water decreases without recharge, evap_hglim/PET = 12.5 days, is
   much shorter than the dry season (80 days), so the soil water runs out
@@ -398,17 +402,17 @@ farm tributary G3 and amount exported to the sea (logarithmic scale).
 
 | Step | Exported to the sea (kg; share of input) | In the ground (kg) | Surface deposits (kg; of which in tanks) | Passed G3 (kg) | Dry-season concentration near the mouth (µg/L) |
 |---|---:|---:|---:|---:|---:|
-| 1 surface water | 9.6 (1.6 %) | 594.6 | 0 | 1.0 | — (the river dries up) |
-| 2 + groundwater flow | 501.6 (82.7 %) | 103.3 | 0 | 108.7 | 10.1 |
-| 3 + sorption delay | 316.6 (52.2 %) | 288.5 | 0 | 4.6 | 7.3 |
-| 4 + tanks | 315.2 (52.0 %) | 289.6 | 0 | 2.1 | 7.3 |
-| 5 particulate + tanks | 341.9 (56.4 %) | 0 | 263.5 (99.4) | 2.6 | 5.3 |
-| 5' particulate, no tanks | 429.7 (70.9 %) | 0 | 175.7 (—) | 92.9 | 5.3 |
-| 6 + evapotranspiration (dissolved, tanks) | 16.8 (2.8 %) | 588.2 | 0 | 0.01 | — (the river dries up) |
-| 6b + reduction by dry soil | 77.1 (12.7 %) | 527.8 | 0 | 0.01 | — (dry for most of the dry season) |
+| 1 surface water | 9.5 (1.6 %) | 594.7 | 0 | 0.8 | — (the river dries up) |
+| 2 + groundwater flow | 502.0 (82.8 %) | 102.8 | 0 | 108.0 | 10.1 |
+| 3 + sorption delay | 313.2 (51.7 %) | 291.9 | 0 | 1.0 | 7.2 |
+| 4 + tanks | 313.0 (51.6 %) | 291.9 | 0 | 0.9 | 7.3 |
+| 5 particulate + tanks | 342.2 (56.4 %) | 0 | 263.1 (98.6) | 2.7 | 5.3 |
+| 5' particulate, no tanks | 428.0 (70.6 %) | 0 | 177.4 (—) | 89.0 | 5.3 |
+| 6 + evapotranspiration (dissolved, tanks) | 19.8 (3.3 %) | 585.6 | 0 | 0.01 | — (the river dries up) |
+| 6b + reduction by dry soil | 81.5 (13.4 %) | 523.9 | 0 | 0.01 | — (dry for most of the dry season) |
 
 The input is 606 kg in all eight cases (mine 389 kg, farmland 217 kg). On
-day 180, 1–2 kg is in the surface water. The table is printed by
+day 180, 0.9–2.1 kg is in the surface water. The table is printed by
 `python3 plot_results.py` (the residual of the balance is below 1e-2 g).
 
 - **Groundwater cannot be ignored**: whether groundwater flow is included
@@ -419,9 +423,10 @@ day 180, 1–2 kg is in the surface water. The table is printed by
   soil, so it is practical to set a range from the literature or soil
   analyses and bracket the result with its upper and lower values.
 - **Tanks depend on the form of the substance**:
-  - Dissolved: the export of the whole catchment hardly changes, but the
-    load of the tributary with tanks is halved and smoothed in time (the
-    load of floods is stored and released in the dry season).
+  - Dissolved: neither the export of the whole catchment nor the amount of
+    the load of the tributary with tanks changes much (10 % less at the
+    tributary outlet). The tanks store the load of floods and release it
+    little by little once full, so the load is delayed and smoothed in time.
   - Particulate: the tanks trap 97 % of the load at the tributary outlet
     and reduce the export of the whole catchment by a fifth. When looking
     at metals that are mainly particulate (such as lead) or at loads that
@@ -434,9 +439,9 @@ day 180, 1–2 kg is in the surface water. The table is printed by
   evapotranspiration, three quarters of the rain return to the atmosphere, the
   dry-season baseflow disappears and the main river dries up (step 6). 97 %
   of the substance stays in the ground and the export to the sea falls from
-  315 kg to 17 kg. With the reduction by the dryness of the soil (step 6b,
+  313 kg to 20 kg. With the reduction by the dryness of the soil (step 6b,
   evap_hglim 0.05 m) the drying up comes only a week later and the export to
-  the sea is 77 kg. To see the amount and quality of river water in the dry
+  the sea is 82 kg. To see the amount and quality of river water in the dry
   season, evapotranspiration and the amount of soil water that limits it
   (evap_hglim) control the result as much as groundwater flow.
 - **Point and area sources**: the mine effluent keeps flowing on dry days,

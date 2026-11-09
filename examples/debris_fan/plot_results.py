@@ -1085,7 +1085,7 @@ def fig_series(cases):
         axs[row, 1].set_ylim(0, ymax)
         ymax = max(axs[0, 2].get_ylim()[1], axs[1, 2].get_ylim()[1])
         axs[row, 2].set_ylim(0, ymax)
-    handles = [Line2D([], [], color=COL_DX[dx], lw=1.4, label=f"{dx:g} m") for dx in DXS]
+    handles = [Line2D([], [], color=COL_DX[dx], lw=1.4, label=f"{dx:g} m") for dx in DXS_ALL]
     handles += [Line2D([], [], color="k", ls=ls, lw=1.2, label=th_label(th)) for th, ls in ((0.0, "-"), (22.5, "--"), (45.0, ":"))]
     axs[0, 2].legend(handles=handles, fontsize=8, loc="upper right")
     fig.savefig(f"{FIGDIR}/series.png", dpi=100)
