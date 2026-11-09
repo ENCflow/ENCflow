@@ -1,8 +1,8 @@
-date      : 2026-11-05 16:26:13
+date      : 2026-11-09 09:32:40
 host      : vm
 user      : 
 pwd       : /home/user/ENCflow/test/gwwidth
 exe       : /home/user/ENCflow/bin/encflow
 mode      : serial__double
 modules   : (no modules)
-lib       : 	libgfortran.so.5 => /lib/x86_64-linux-gnu/libgfortran.so.5 (0x00007f1ad0800000)
+lib       : 	libgfortran.so.5 => /lib/x86_64-linux-gnu/libgfortran.so.5 (0x00007f5132e00000)
