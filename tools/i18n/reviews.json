@@ -1310,11 +1310,11 @@
     {
       "source": "examples/catchment_metal/README.md",
       "target": "examples/catchment_metal/en/README.md",
-      "source_sha256": "5a78c84668d60e26f1cead8f31af0558dd57efbda0c23293d70bfff82bfbf1d5",
-      "target_sha256": "235c1e2287520e5a263a5f34a4d9f3701c021b0009be2e3115b5a9c12e459f3d",
-      "reviewer": "Claude (Claude Code session; removed development history from both versions in parallel and compared the edited passages, headings, tables and numbers; no model execution)",
+      "source_sha256": "a75ea7933452f69f10ece5eaa874e4ae5ee0b57caaad3478b99b4432ac00bce1",
+      "target_sha256": "670c41a73dd0ac4bdb17937eac9b8d3dc78ed982d7cd17fa1921e367df412048",
+      "reviewer": "Claude (Claude Code session; full-text content and lexical review, no model execution)",
       "method": "assistant",
-      "reviewed_on": "2026-11-08"
+      "reviewed_on": "2026-11-09"
     },
     {
       "source": "examples/catchment_metal/figs/mechanism.png",
@@ -1337,74 +1337,74 @@
     {
       "source": "examples/catchment_metal/figs/step1.png",
       "target": "examples/catchment_metal/en/figs/step1.png",
-      "source_sha256": "419527f61cfff462477681231ecd8dd3899770ad619283f991905831ac3a81a0",
-      "target_sha256": "d29a6e5a75d20c790ff4b51766f610662f9d4ea2c76f1491c76bcb4392eafc09",
-      "reviewer": "Claude (Claude Code session; compared the figure drawn by the shared plot_results.py with Japanese and English labels, 2026-11-03)",
+      "source_sha256": "1144a67d0e2abff9deffa8971ecf9c2b10508b669450ee345e7abaecb23ff132",
+      "target_sha256": "983a5c2c7dd442264e255bb542804d0c0be84d1594f93eaf63a5877e53fa0511",
+      "reviewer": "Claude (Claude Code session; recomputed 2026-11-09 with the current defaults including f_advection_donor = 3: all drawn by plot_results.py (python3 plot_results.py and python3 plot_results.py en; script unchanged) from the same results of the eight cases; Japanese step4, step6 and summary and English step4 and summary viewed, labels compared; the other step figures differ only in their data)",
       "method": "assistant",
-      "reviewed_on": "2026-11-03"
+      "reviewed_on": "2026-11-09"
     },
     {
       "source": "examples/catchment_metal/figs/step2.png",
       "target": "examples/catchment_metal/en/figs/step2.png",
-      "source_sha256": "77beccc6e87020b361f3e496b946699f56dd4c01720c9aca6b804e2ad9fde471",
-      "target_sha256": "4546104b15b750cbd34bff68e6f52eabd213d24e9696a96d8c2c42d67cd327ae",
-      "reviewer": "Claude (Claude Code session; compared the figure drawn by the shared plot_results.py with Japanese and English labels, 2026-11-03)",
+      "source_sha256": "1611b16ca55154221fed65617f8cd15c172253022025ae91f59d21fbf76443be",
+      "target_sha256": "145c010c6ee6035ebf7a601c048423db2c12ca2051f66a2be63f565288c2fd28",
+      "reviewer": "Claude (Claude Code session; recomputed 2026-11-09 with the current defaults including f_advection_donor = 3: all drawn by plot_results.py (python3 plot_results.py and python3 plot_results.py en; script unchanged) from the same results of the eight cases; Japanese step4, step6 and summary and English step4 and summary viewed, labels compared; the other step figures differ only in their data)",
       "method": "assistant",
-      "reviewed_on": "2026-11-03"
+      "reviewed_on": "2026-11-09"
     },
     {
       "source": "examples/catchment_metal/figs/step3.png",
       "target": "examples/catchment_metal/en/figs/step3.png",
-      "source_sha256": "592eec1e060eff778053861aeeaeb5df92a7e337e0d800754aa8bb8ab2ae57af",
-      "target_sha256": "4351949f0a423ce2072d281f3fafc8bd7fe92724e76e0cf3cf48ee18de00b39c",
-      "reviewer": "Claude (Claude Code session; compared the figure drawn by the shared plot_results.py with Japanese and English labels, 2026-11-03)",
+      "source_sha256": "a12a613d20a08fbeecd4e7ae8f92dcf17358b4b8b432be0be63726bae7b23827",
+      "target_sha256": "4072c688c1c50995fed6eb7315d0346172e9a234de4161338de4f38f1529404c",
+      "reviewer": "Claude (Claude Code session; recomputed 2026-11-09 with the current defaults including f_advection_donor = 3: all drawn by plot_results.py (python3 plot_results.py and python3 plot_results.py en; script unchanged) from the same results of the eight cases; Japanese step4, step6 and summary and English step4 and summary viewed, labels compared; the other step figures differ only in their data)",
       "method": "assistant",
-      "reviewed_on": "2026-11-03"
+      "reviewed_on": "2026-11-09"
     },
     {
       "source": "examples/catchment_metal/figs/step4.png",
       "target": "examples/catchment_metal/en/figs/step4.png",
-      "source_sha256": "8b765881c1eaaec8a7ff4f8b84047f27bf7b5bc5c547e2b45a73d778bf30b973",
-      "target_sha256": "5d9dc3e6642c5f256f982aaa3ec2d26ce7c1287f4b2b460152e01011e82a32d2",
-      "reviewer": "Claude (Claude Code session; compared the figure drawn by the shared plot_results.py with Japanese and English labels, 2026-11-03)",
+      "source_sha256": "fad4b3ccc32b9c4388a31c1e26365d8e0396492e1b31f4c1590f643e2e346c92",
+      "target_sha256": "d3226b934184fa5c4d200dd464c2320aaf6c385b9a16f413950b3364a98f20e9",
+      "reviewer": "Claude (Claude Code session; recomputed 2026-11-09 with the current defaults including f_advection_donor = 3: all drawn by plot_results.py (python3 plot_results.py and python3 plot_results.py en; script unchanged) from the same results of the eight cases; Japanese step4, step6 and summary and English step4 and summary viewed, labels compared; the other step figures differ only in their data)",
       "method": "assistant",
-      "reviewed_on": "2026-11-03"
+      "reviewed_on": "2026-11-09"
     },
     {
       "source": "examples/catchment_metal/figs/step5.png",
       "target": "examples/catchment_metal/en/figs/step5.png",
-      "source_sha256": "7dadbbfd18d94e49420d0b65c115220a8b1864e4ded6f6e630b70bd76408d0be",
-      "target_sha256": "0814b6c62b2bb1b4d27d0d83902de91732a3cf41e937590e7a2627b69181e952",
-      "reviewer": "Claude (Claude Code session; compared the figure drawn by the shared plot_results.py with Japanese and English labels, 2026-11-03)",
+      "source_sha256": "8600024a16908d863347d19fa5c986112849666b01376f6bee845486b6d03706",
+      "target_sha256": "ab2f521b3d83f29a8cf4966965c44bc8f4b671da905fdf098cc683cca32f8d1d",
+      "reviewer": "Claude (Claude Code session; recomputed 2026-11-09 with the current defaults including f_advection_donor = 3: all drawn by plot_results.py (python3 plot_results.py and python3 plot_results.py en; script unchanged) from the same results of the eight cases; Japanese step4, step6 and summary and English step4 and summary viewed, labels compared; the other step figures differ only in their data)",
       "method": "assistant",
-      "reviewed_on": "2026-11-03"
+      "reviewed_on": "2026-11-09"
     },
     {
       "source": "examples/catchment_metal/figs/step6.png",
       "target": "examples/catchment_metal/en/figs/step6.png",
-      "source_sha256": "7eb6ff2912bedf558fbf0a4ffcb3edf8351d4661f2653ec6ef88cfcf83a71126",
-      "target_sha256": "76f79ecd201c8fd445853cfa590fda5e16cd43b2fad89399d6601f86a9c63928",
-      "reviewer": "Claude (Claude Code session; full-text content and lexical review, no model execution)",
+      "source_sha256": "6888a887154ef4392b495e01973f9272b4bb4762360eb5a18eda7b861a0bd6dd",
+      "target_sha256": "fb93bafe287b6bf9948ecad5fd3881960c48efe00ce4b07b0a397b39b27d6b61",
+      "reviewer": "Claude (Claude Code session; recomputed 2026-11-09 with the current defaults including f_advection_donor = 3: all drawn by plot_results.py (python3 plot_results.py and python3 plot_results.py en; script unchanged) from the same results of the eight cases; Japanese step4, step6 and summary and English step4 and summary viewed, labels compared; the other step figures differ only in their data)",
       "method": "assistant",
-      "reviewed_on": "2026-11-04"
+      "reviewed_on": "2026-11-09"
     },
     {
       "source": "examples/catchment_metal/figs/step6b.png",
       "target": "examples/catchment_metal/en/figs/step6b.png",
-      "source_sha256": "7331da849501d34ad057dfcb0b572393c06615fa286d5955d5c6e2b555705bc9",
-      "target_sha256": "dad2eb3971a98356e153e412ce6590064b384733024694109e18b29b32054dc5",
-      "reviewer": "Claude (Claude Code session; full-text content and lexical review, no model execution)",
+      "source_sha256": "4bd06f1b70f81687a34cc5320ad816f4b6e1d73d65811383b822565e1b9f4197",
+      "target_sha256": "9b70db9aa094a4186bded3a8728fc863c812cf105b87ece787d5179c4f1c731f",
+      "reviewer": "Claude (Claude Code session; recomputed 2026-11-09 with the current defaults including f_advection_donor = 3: all drawn by plot_results.py (python3 plot_results.py and python3 plot_results.py en; script unchanged) from the same results of the eight cases; Japanese step4, step6 and summary and English step4 and summary viewed, labels compared; the other step figures differ only in their data)",
       "method": "assistant",
-      "reviewed_on": "2026-11-04"
+      "reviewed_on": "2026-11-09"
     },
     {
       "source": "examples/catchment_metal/figs/summary.png",
       "target": "examples/catchment_metal/en/figs/summary.png",
-      "source_sha256": "bce73d309ab9593cec80f1048015624edbe1abbb03a964b7beab754d27791761",
-      "target_sha256": "81376eaef2ddab36b5958c576f254fd8d013bde87c835ac02ae78ef946880481",
-      "reviewer": "Claude (Claude Code session; full-text content and lexical review, no model execution)",
+      "source_sha256": "f20de1880e50f5a6a2a369a584175933e33c3a159bc014e7a1311d7afabc5db4",
+      "target_sha256": "e6b031b9ba679a3c389f1b579fd805b1b192480d5a2ffcde41b578a6455b9cea",
+      "reviewer": "Claude (Claude Code session; recomputed 2026-11-09 with the current defaults including f_advection_donor = 3: all drawn by plot_results.py (python3 plot_results.py and python3 plot_results.py en; script unchanged) from the same results of the eight cases; Japanese step4, step6 and summary and English step4 and summary viewed, labels compared; the other step figures differ only in their data)",
       "method": "assistant",
-      "reviewed_on": "2026-11-04"
+      "reviewed_on": "2026-11-09"
     },
     {
       "source": "examples/debris_bedrock/README.md",
