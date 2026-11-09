@@ -106,4 +106,4 @@ make         # links to the executables
 ```
 
 Related: developer.md §102 (the formulation of f_advection_donor and the results of this case),
-docs/users_guide/advection.md §4.4, and [test/bendloss](../../bendloss/en/README.md) for 90° bends.
+[docs/en/users_guide/advection_donor.md](../../../docs/en/users_guide/advection_donor.md), and [test/bendloss](../../bendloss/en/README.md) for 90° bends.

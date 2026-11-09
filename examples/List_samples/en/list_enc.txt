@@ -92,8 +92,8 @@
                             !   limited to channel cells on edges between
                             !   channel cells) and 2 (weighted by the fluxes of
                             !   all inflow links) were removed (the run stops
-                            !   if they are set. users_guide/advection.md
-                            !   section 4.4)
+                            !   if they are set. users_guide/
+                            !   advection_donor.md)
   !f_dry_head_cap = 1       ! cap the edge depth toward a dry cell by the
                             !   energy head eta + u_n^2/2g - z_receiver
                             !   (0: off, 1: on = default). Water cannot climb

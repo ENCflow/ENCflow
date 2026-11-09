@@ -93,5 +93,5 @@ make         # 実行ファイルへのリンク
 ./Run.sh     # 36 ケースを実行して判定(1 スレッドで約 6 分)
 ```
 
-関連: developer.md §102(f_advection_donor の定式と、この検定の結果)、docs/users_guide/advection.md §4.4、
+関連: developer.md §102(f_advection_donor の定式と、この検定の結果)、[docs/users_guide/advection_donor.md](../../docs/users_guide/advection_donor.md)、
 90° の屈曲は [test/bendloss](../bendloss/README.md)。

@@ -72,7 +72,7 @@ of the collection from the hillslopes.
   4830 m³/s @ 3.53 h at transects 1–4), the peaks at transects 3 and 4 are 13 and
   19 % larger and 0.2 and 0.5 hours earlier (the artificial brake from thin films
   on rain-wetted banks acting as momentum donors of the main channel is removed;
-  docs/users_guide/advection.md §4.4). The values with the default 0 were
+  [docs/en/users_guide/advection_donor.md](../../../docs/en/users_guide/advection_donor.md)). The values with the default 0 were
   recomputed on 2026-11-01 with the default (f_opening_dynamic = 3) after the fix of §68.42
   (lateral face flux from the real link discharges); they are 0.4–3.4 % smaller than the
   values of the default 3 before the fix (1202 @ 0.82 h, 2882 @ 0.98 h, 4025 @ 1.72 h and

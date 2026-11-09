@@ -104,18 +104,27 @@
     {
       "source": "docs/users_guide.md",
       "target": "docs/en/users_guide.md",
-      "source_sha256": "e489f36db5a968d96c8a488622553f634ca3b0d69b762f16c29bc8420134af53",
-      "target_sha256": "7f92f9ec7df8c1ad62e8f5c64d558d227bd7be5884f66b15c0aff63ea5931c04",
-      "reviewer": "Claude (Claude Code session; merge of main into the f_advection_donor branch: the branch's f_advection_donor = 3 entries and main's additions (geomorph applications page / f_gravity_correction = 3 comment) combined; Japanese and English compared side by side after the merge)",
+      "source_sha256": "6e8c4f3193b3b17184e04182c522408eb3fcfa780fa470e34dac5420f56f7346",
+      "target_sha256": "4cd489acc5922b01198cb61e20e888c420986a318fdc9dea491d22e84c98e730",
+      "reviewer": "Claude (Claude Code session; TOC entry for the new page advection_donor.md added in both versions; unchanged text as in the previous record)",
       "method": "assistant",
-      "reviewed_on": "2026-11-08"
+      "reviewed_on": "2026-11-09"
     },
     {
       "source": "docs/users_guide/advection.md",
       "target": "docs/en/users_guide/advection.md",
-      "source_sha256": "7516f0bd14108e1af03769565c9ef643128ba0834bd5a5e61dd28cfca4e205d7",
-      "target_sha256": "75b67063243d34e4394f07fff437d5316608f6af60deac4a4a14f8d4a6150eec",
-      "reviewer": "Claude (Claude Code session; full-text content and lexical review, no model execution)",
+      "source_sha256": "0f6c41edcfc3aa026470e0f44ebf6451bc764138fdaa09c931364d60eb6d0957",
+      "target_sha256": "3a3b6ee8bf5588584bb2ff17164ff8454117b367ec03aa720a35e2297929e3ff",
+      "reviewer": "Claude (Claude Code session; f_advection_donor bullets of section 4.4 condensed to a summary with a link to advection_donor.md (details moved there), links added in the introduction, section 4.3, the guidance and the parameter table; Japanese and English edited together and compared)",
+      "method": "assistant",
+      "reviewed_on": "2026-11-09"
+    },
+    {
+      "source": "docs/users_guide/advection_donor.md",
+      "target": "docs/en/users_guide/advection_donor.md",
+      "source_sha256": "f90550a01c88144d3ba7d7a137c3c1517a36a6833dc077549734a4d954e6779e",
+      "target_sha256": "30f5c401b0e902195a7ed91fbd5c3dea88122b20b18a7d82b127c46a01a67c32",
+      "reviewer": "Claude (Claude Code session; new users guide page on f_advection_donor (physical vs artificial braking, cell arrangement at bends, Chichibu 0 vs 3, verification, limits) with four figures from docs/figs/guide/fig_advection_donor.py; Japanese written first, English mirror translated and compared section by section including figure captions, numbers and links)",
       "method": "assistant",
       "reviewed_on": "2026-11-09"
     },
@@ -482,9 +491,9 @@
     {
       "source": "docs/users_guide/swflow.md",
       "target": "docs/en/users_guide/swflow.md",
-      "source_sha256": "ab7a0d788fbcf06e9beef68c4e112834941c785b161a59c5b852c5b42bd4d7f0",
-      "target_sha256": "d08014550e90950751718ea0df776a88e40d36c5da299c139011263acf63a66a",
-      "reviewer": "Claude (Claude Code session; full-text content and lexical review, no model execution)",
+      "source_sha256": "281357632687051b031253dfc3f14df597dac742b0c7ecb796c4489bafc11b2b",
+      "target_sha256": "cdd760692a466707aa8464acbc47340c8fb9a0e7f41c940fee65e0eb730eeca0",
+      "reviewer": "Claude (Claude Code session; f_advection_donor bullet condensed to a summary with a link to advection_donor.md and the parameter-table references pointed there; Japanese and English edited together and compared)",
       "method": "assistant",
       "reviewed_on": "2026-11-09"
     },
@@ -644,9 +653,9 @@
     {
       "source": "examples/List_samples/list_enc.txt",
       "target": "examples/List_samples/en/list_enc.txt",
-      "source_sha256": "a33ee6257bf240d6e18695802201ef1b1c8b452cb20c62bd8a4c92d47cdfd9a5",
-      "target_sha256": "a1b613d9d8af40f89bca9ffdf82ccb5ac9bc2e96e4583779f67c33b0297c92ef",
-      "reviewer": "Claude (Claude Code session; full-text content and lexical review, no model execution)",
+      "source_sha256": "5d2346bf57f910a06fc7fcdf91d69b5a961141a5bce5b318160b370b856d2e9d",
+      "target_sha256": "a1ba1a88cbf5b2b33cd7879c5bbd6e5446086e52b9e8dd6ddf00f6d81f293530",
+      "reviewer": "Claude (Claude Code session; reference for f_advection_donor changed from users_guide/advection.md section 4.4 to the new page advection_donor.md in both versions; unchanged text as in the previous record)",
       "method": "assistant",
       "reviewed_on": "2026-11-09"
     },
@@ -3110,9 +3119,9 @@
     {
       "source": "test/chichibu/README.md",
       "target": "test/chichibu/en/README.md",
-      "source_sha256": "6a6ac4d7ff04234d648fa4e711b1df0898fa4f05f30a110552f428531ddaaa67",
-      "target_sha256": "c89b0695dd23efd3e06384794ae8cf8b825c5173627f98dc47a76a831aa1e402",
-      "reviewer": "Claude (Claude Code session; full-text content and lexical review, no model execution)",
+      "source_sha256": "2b2412ec83b3f04be5ba79482e5cae2e68dc3c5891bade5296638372d7d1f5ec",
+      "target_sha256": "af243d7cc807d1d4264a56b7d67f496b1aa2f611a9cf55bf48e68db4a1fb7f86",
+      "reviewer": "Claude (Claude Code session; reference for f_advection_donor changed from users_guide/advection.md section 4.4 to the new page advection_donor.md in both versions; unchanged text as in the previous record)",
       "method": "assistant",
       "reviewed_on": "2026-11-09"
     },
@@ -4442,9 +4451,9 @@
     {
       "source": "test/wetbank/README.md",
       "target": "test/wetbank/en/README.md",
-      "source_sha256": "7396675cbe4a63014bcb8f1de42d4a20ed469764e50e8914561a642e1f0da034",
-      "target_sha256": "b1eb6fd12d24e41141e3d08a7c83ea1148e9a63ef28a7941553db6dad2515181",
-      "reviewer": "Claude (Claude Code session; full-text content and lexical review, no model execution)",
+      "source_sha256": "71849667368736b920c51b2f25e94e0491b0a2c00c3c30eba43acf3ce3a2b87e",
+      "target_sha256": "78e575d34900c037ba4861efefd508ced4c5b8e8922d7c9b5796ff0a887bbfc8",
+      "reviewer": "Claude (Claude Code session; reference for f_advection_donor changed from users_guide/advection.md section 4.4 to the new page advection_donor.md in both versions; unchanged text as in the previous record)",
       "method": "assistant",
       "reviewed_on": "2026-11-09"
     },
