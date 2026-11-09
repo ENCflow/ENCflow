@@ -132,7 +132,11 @@ architecture.md。このメモは「現在進行中・未完了の項目」だ�
      使わない)、STG が領域マスクを読まず帯の境界でハロも交換しないと分かったので、領域マスクと MPI の 2 ランク以上は
      初期化で止めることにした(凍結方針。developer.md §7)。マスクなし・1 ランクの動作確認として test/stg を CI に加えた。
    - (g) 調査の作業ファイル(分布出力の走査・計測印字版・試作 B1〜B6・図)は本セッションの scratchpad にあり、
-     リポジトリには入れていない。要点は §102 と、利用者ガイド advection.md §4.4。
+     リポジトリには入れていない。要点は §102 と、利用者ガイド advection_donor.md。
+   - (h) 済(2026-11-09。§102 末尾「教材の再構成と解説の分離」): 既定を 3 にしたので、tutorials/chichibu から
+     f_advection_donor の話題を除いた((d) の Step 4 を削除し、旧 Step 5〜7 を 4〜6 に繰り上げた。Step 3 は既定のまま)。
+     解説は users guide の docs/users_guide/advection_donor.md(日英。図 4 枚)へ移し、advection.md §4.4 と swflow.md の
+     該当項目は要約とリンクにした。
 
 00m. **拡散型プロセスの 4 近傍の異方性(developer.md §96、landslide_tsunami_plan.md §11.1。2026-11-05 合意)の残り**
    - (a) `creep_diagratio`・`spl_diagratio` の既定を 1/3 にした(2026-11-05。利用者の決定。developer.md §96)。12 の

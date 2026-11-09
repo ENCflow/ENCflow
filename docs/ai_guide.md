@@ -78,7 +78,7 @@ Claude Code の場合は、リポジトリに同梱のスラッシュコマン�
 > 作って。使う機能は docs/users_guide/usecases.md を参照。凍土あり/
 > なしの2ケースを比較し、凍土ありで地表流出が増えることを図で示して。
 
-> tutorials/chichibu/param_step5.txt をベースに、降雨を 1.5 倍にした
+> tutorials/chichibu/param_step4.txt をベースに、降雨を 1.5 倍にした
 > 感度実験を work/ に組んで。元のケースとハイドログラフを重ねて
 > 比較して。
 

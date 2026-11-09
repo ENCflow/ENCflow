@@ -2,7 +2,7 @@
 ! The Japanese file is the master copy; edit it first.
 !======================================================================
 !
-! Step 5: Introducing rainfall interception and subsurface infiltration
+! Step 5: Setting the boundary condition at the catchment outlet
 !
 !======================================================================
 ! System parameter settings
@@ -21,7 +21,7 @@
   fn_record  = "-"           ! record settings file
   fn_intercept = "-"         ! rainfall interception settings file
   fn_gwflow = "-"            ! groundwater settings file
-  fn_enc     = "-"           ! ENC settings file
+  fn_boundary = "-"          ! boundary condition settings file
 
   dir_data = "data_chichibu" ! input data directory
 
@@ -34,13 +34,6 @@
   f_out_cn = 1               ! file output (Courant number Cn0001)
   f_out_hmax = 1             ! file output (maximum depth H9999)
   f_out_vvmax = 1            ! file output (maximum velocity V9999)
-/
-
-!======================================================================
-! ENC computation settings
-!======================================================================
-&list_enc
-  f_advection_donor = 3      ! upwind momentum donors of the advection term (3: keep thin films carrying almost no water from braking the main flow)
 /
 
 !======================================================================
@@ -157,4 +150,27 @@
   ! subsurface storage capacity (water-column equivalent depth) (m);
   ! must be greater than 0
   gw_capacity = 0.2
+/
+
+!======================================================================
+! Prescribed-stage cell groups: force the water level of a set of cells
+! to a specified value (multiple groups allowed)
+!======================================================================
+!   Setting eta below the bed keeps the cells always empty, i.e. a
+!   perfect drain. The third subscript is the group number (consecutive
+!   from 1).
+!     stage_cell(:,k,n) = i, j   : coordinates of the k-th cell of group n
+!     stage_eta(n) = eta         : fixed prescribed water level
+!                                  (m; same datum as z)
+!     stage_val(:,k,n) = t, eta  : prescribed water level time series
+!                                  (time (min), level (m))
+!                                  (use instead of the fixed value;
+!                                   linear interpolation, end values
+!                                   held outside the range)
+!======================================================================
+&list_bound_stage
+  ! group 1: catchment outlet (level below the bed for perfect drainage)
+  stage_cell(:,1,1) = 239, 19
+  stage_cell(:,2,1) = 240, 19
+  stage_eta(1) = 111.0
 /

@@ -1,6 +1,6 @@
 # チュートリアル本文(README.md)の図を figs/*.png に描画する。
 # 事前に Fig_chichibu.sh が各 Step の計算を実行し、結果を
-# result_step1 〜 result_step6, result_cmp_* に、前処理済みデータを
+# result_step1 〜 result_step5, result_cmp_* に、前処理済みデータを
 # wrk_* に用意していることを前提とする(単体では実行しない)。
 
 set datafile separator whitespace
@@ -141,14 +141,14 @@ set output "figs/step1_hend_4nb.png"
 set title "12 時間後の水深: filled DEM を 4 近傍で計算(p_diagratio = 0)" noenhanced
 plot 'result_cmp_4nb/H9998.txt' matrix using (kx($1)):(kx($2)):($3 <= 0.01 ? NaN : $3) with image notitle
 
-# ---- Step 6: 湛水の解消(最終時刻の水深) ----
-set output "figs/step6_hend_step5.png"
-set title "Step 5: 6 時間後の水深(出口なし)"
-plot 'result_step5/H9998.txt' matrix using (kx($1)):(kx($2)):($3 <= 0.01 ? NaN : $3) with image notitle
+# ---- Step 5: 湛水の解消(最終時刻の水深) ----
+set output "figs/step5_hend_step4.png"
+set title "Step 4: 6 時間後の水深(出口なし)"
+plot 'result_step4/H9998.txt' matrix using (kx($1)):(kx($2)):($3 <= 0.01 ? NaN : $3) with image notitle
 
-set output "figs/step6_hend.png"
-set title "Step 6: 6 時間後の水深(完全排水口あり)"
-plot 'result_step6/H9998.txt' matrix using (kx($1)):(kx($2)):($3 <= 0.01 ? NaN : $3) with image notitle
+set output "figs/step5_hend.png"
+set title "Step 5: 6 時間後の水深(完全排水口あり)"
+plot 'result_step5/H9998.txt' matrix using (kx($1)):(kx($2)):($3 <= 0.01 ? NaN : $3) with image notitle
 
 # ---- ここからハイドログラフ(CSV はカンマ区切り) ----
 reset
@@ -163,28 +163,8 @@ set output "figs/step3_transects.png"
 set title "Step 3: 各測線のハイドログラフ(上流 1 → 下流 4)"
 plot for [i=1:4] sprintf('result_step3/fluxes/flux000%d.csv', i) using 2:3 with lines lw 1.5 title sprintf("測線 %d", i)
 
-# ---- Step 4: 移流項の風上供給元の切替(f_advection_donor = 3)の効果 ----
-#      灰色の破線は限界水深を 1/10 にした計算(dd = dv = 0.0001。跳ねの先送り)
+# ---- Step 4: 遮断・浸透による流出の減少 ----
 set output "figs/step4_hydro.png"
-set title "Step 4: 移流項の供給元の切替の効果(測線 4)"
-plot 'result_step3/fluxes/flux0004.csv' using 2:3 with lines lw 1.5 title "Step 3(既定)", \
-     'result_cmp_dd/fluxes/flux0004.csv' using 2:3 with lines lw 1.2 dt 2 lc rgb "#808080" title "dd = dv = 0.0001(限界水深 1/10)", \
-     'result_step4/fluxes/flux0004.csv' using 2:3 with lines lw 1.5 title "Step 4(f\\_advection\\_donor = 3)"
-
-# ---- Step 5: 遮断・浸透による流出の減少 ----
-set output "figs/step5_hydro.png"
-set title "Step 5: 降雨遮断と地下浸透の効果(測線 4)"
-plot 'result_step4/fluxes/flux0004.csv' using 2:3 with lines lw 1.5 title "Step 4(損失なし)", \
-     'result_step5/fluxes/flux0004.csv' using 2:3 with lines lw 1.5 title "Step 5(遮断+浸透)"
-
-# ---- Step 6: 1 分値の流量と移動平均 ----
-# 移動平均(窓 N 点 = N 分)。gnuplot 5.2 以降の配列機能を使用
-N = 11
-array A[N]
-ma(x) = (A[(int($0) % N) + 1] = x, $0 < N-1 ? NaN : (sum [i=1:N] A[i]) / N)
-
-set output "figs/step6_osc.png"
-set title "Step 6: 1 分値の流量と移動平均(測線 4)"
-set xrange [60:360]
-plot 'result_step6/fluxes/flux0004.csv' using 2:3 with lines lc rgb "#4477aa" title "1 分値(生)", \
-     ''                                 using ($2 - (N-1)/2.0):(ma($3)) with lines lw 2 lc rgb "#c04040" title sprintf("%d 分移動平均(中央寄せ)", N)
+set title "Step 4: 降雨遮断と地下浸透の効果(測線 4)"
+plot 'result_step3/fluxes/flux0004.csv' using 2:3 with lines lw 1.5 title "Step 3(損失なし)", \
+     'result_step4/fluxes/flux0004.csv' using 2:3 with lines lw 1.5 title "Step 4(遮断+浸透)"

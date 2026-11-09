@@ -141,14 +141,14 @@ set output "en/figs/step1_hend_4nb.png"
 set title "Depth after 12 hours: filled DEM with 4-neighbor exchange (p_diagratio = 0)" noenhanced
 plot 'result_cmp_4nb/H9998.txt' matrix using (kx($1)):(kx($2)):($3 <= 0.01 ? NaN : $3) with image notitle
 
-# ---- Step 6: 湛水の解消(最終時刻の水深) ----
-set output "en/figs/step6_hend_step5.png"
-set title "Step 5: depth after 6 hours (no outlet)"
-plot 'result_step5/H9998.txt' matrix using (kx($1)):(kx($2)):($3 <= 0.01 ? NaN : $3) with image notitle
+# ---- Step 5: 湛水の解消(最終時刻の水深) ----
+set output "en/figs/step5_hend_step4.png"
+set title "Step 4: depth after 6 hours (no outlet)"
+plot 'result_step4/H9998.txt' matrix using (kx($1)):(kx($2)):($3 <= 0.01 ? NaN : $3) with image notitle
 
-set output "en/figs/step6_hend.png"
-set title "Step 6: depth after 6 hours (with a perfect drain outlet)"
-plot 'result_step6/H9998.txt' matrix using (kx($1)):(kx($2)):($3 <= 0.01 ? NaN : $3) with image notitle
+set output "en/figs/step5_hend.png"
+set title "Step 5: depth after 6 hours (with a perfect drain outlet)"
+plot 'result_step5/H9998.txt' matrix using (kx($1)):(kx($2)):($3 <= 0.01 ? NaN : $3) with image notitle
 
 # ---- ここからハイドログラフ(CSV はカンマ区切り) ----
 reset
@@ -163,28 +163,8 @@ set output "en/figs/step3_transects.png"
 set title "Step 3: hydrographs at the transects (upstream 1 -> downstream 4)"
 plot for [i=1:4] sprintf('result_step3/fluxes/flux000%d.csv', i) using 2:3 with lines lw 1.5 title sprintf("transect %d", i)
 
-# ---- Step 4: 移流項の風上供給元の切替(f_advection_donor = 3)の効果 ----
-#      灰色の破線は限界水深を 1/10 にした計算(dd = dv = 0.0001。跳ねの先送り)
+# ---- Step 4: 遮断・浸透による流出の減少 ----
 set output "en/figs/step4_hydro.png"
-set title "Step 4: effect of switching the momentum donors of the advection term (transect 4)"
-plot 'result_step3/fluxes/flux0004.csv' using 2:3 with lines lw 1.5 title "Step 3 (defaults)", \
-     'result_cmp_dd/fluxes/flux0004.csv' using 2:3 with lines lw 1.2 dt 2 lc rgb "#808080" title "dd = dv = 0.0001 (threshold depth 1/10)", \
-     'result_step4/fluxes/flux0004.csv' using 2:3 with lines lw 1.5 title "Step 4 (f\\_advection\\_donor = 3)"
-
-# ---- Step 5: 遮断・浸透による流出の減少 ----
-set output "en/figs/step5_hydro.png"
-set title "Step 5: effect of interception and infiltration (transect 4)"
-plot 'result_step4/fluxes/flux0004.csv' using 2:3 with lines lw 1.5 title "Step 4 (no losses)", \
-     'result_step5/fluxes/flux0004.csv' using 2:3 with lines lw 1.5 title "Step 5 (interception + infiltration)"
-
-# ---- Step 6: 1 分値の流量と移動平均 ----
-# 移動平均(窓 N 点 = N 分)。gnuplot 5.2 以降の配列機能を使用
-N = 11
-array A[N]
-ma(x) = (A[(int($0) % N) + 1] = x, $0 < N-1 ? NaN : (sum [i=1:N] A[i]) / N)
-
-set output "en/figs/step6_osc.png"
-set title "Step 6: 1-minute discharge and moving average (transect 4)"
-set xrange [60:360]
-plot 'result_step6/fluxes/flux0004.csv' using 2:3 with lines lc rgb "#4477aa" title "1-minute values (raw)", \
-     ''                                 using ($2 - (N-1)/2.0):(ma($3)) with lines lw 2 lc rgb "#c04040" title sprintf("%d-minute moving average (centered)", N)
+set title "Step 4: effect of interception and infiltration (transect 4)"
+plot 'result_step3/fluxes/flux0004.csv' using 2:3 with lines lw 1.5 title "Step 3 (no losses)", \
+     'result_step4/fluxes/flux0004.csv' using 2:3 with lines lw 1.5 title "Step 4 (interception + infiltration)"

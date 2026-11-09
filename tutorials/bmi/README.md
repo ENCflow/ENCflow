@@ -130,7 +130,7 @@ B〜D の `python3 step1_hello.py` を「または」で毎回併記します。
 ### 題材のパラメータファイル
 
 `param.txt` は chichibu チュートリアルの Step 2(GeoTIFF 入力、河道
-マスクと粗度)に、Step 6 の流域出口の排水口(`&list_bound_stage`)だけを
+マスクと粗度)に、Step 5 の流域出口の排水口(`&list_bound_stage`)だけを
 足したものです。入力データは `dir_data = "../chichibu/data_chichibu"` で
 chichibu のものを共有しています。BMI を使っても**入力ファイル・結果の
 出力・画面表示はスタンドアロン実行とまったく同じ**です。試しに

@@ -40,11 +40,11 @@
     {
       "source": "docs/ai_guide.md",
       "target": "docs/en/ai_guide.md",
-      "source_sha256": "05dba74b5dad590b1a8f1c1acfba0e74588241f10c8febc38e3d9f1cf22813e7",
-      "target_sha256": "439db425a8b1dc993f34f258ad6aa355aaca5bac4b3f853e7b2ff62bc037a96a",
-      "reviewer": "Claude (Claude Code session; full-text content and lexical review, no model execution)",
+      "source_sha256": "81d445b6e3c7cc3826c715db0941379dd86d584d8a2ba26a76e64f1cd5554b07",
+      "target_sha256": "7c660c07352832480e61b6e35fae311385ad015f31fbf3fb4d779854bf2d41ca",
+      "reviewer": "Claude (Claude Code session; chichibu tutorial step numbers updated after removing the old Step 4 (Step 7 -> 6, Step 6 -> 5, param_step5 -> param_step4) in both versions; unchanged text as in the previous record)",
       "method": "assistant",
-      "reviewed_on": "2026-10-24"
+      "reviewed_on": "2026-11-09"
     },
     {
       "source": "docs/colab_quickstart.ipynb",
@@ -77,11 +77,11 @@
     {
       "source": "docs/install.md",
       "target": "docs/en/install.md",
-      "source_sha256": "d59e0930d09850a60684a9fa20c1260da32c81ccc55d2e24a572fa9a2f1a6cdd",
-      "target_sha256": "adc785599244d06dec1e55a79da798eb381d7cd14e42eeb1caa4f47a15662e3f",
-      "reviewer": "Claude (Claude Code session; full-text content and lexical review, no model execution)",
+      "source_sha256": "42af9258d9407d0904bb6cbd1cde73a78d4a9c5515d6ea1be786ad16383298d9",
+      "target_sha256": "54e087ac9c574ccce0afffb83d3ffe59a98633c32c24bc7f87d95079c02374be",
+      "reviewer": "Claude (Claude Code session; chichibu tutorial step numbers updated after removing the old Step 4 (Step 7 -> 6, Step 6 -> 5, param_step5 -> param_step4) in both versions; unchanged text as in the previous record)",
       "method": "assistant",
-      "reviewed_on": "2026-10-24"
+      "reviewed_on": "2026-11-09"
     },
     {
       "source": "docs/multilingual.md",
@@ -95,11 +95,11 @@
     {
       "source": "docs/tutorial.md",
       "target": "docs/en/tutorial.md",
-      "source_sha256": "d1abf5aa122731e721de8e7e3f993b7ac0d6deaebebfb7b8baa2ba6853ef6d96",
-      "target_sha256": "71f298ae86cee1d40a2bc92cc76063dd3527a2c94b549adfbffea6c7185cc14c",
-      "reviewer": "Claude (Claude Code session; reviewed the Japanese source against the English mirror after adding the passage-width page and the links to it, 2026-11-03)",
+      "source_sha256": "c2ed36863c75d275d97b763ca31c8ca7b6d79169aac5ad9533403461865374e9",
+      "target_sha256": "112ab86148ba0842517054309c86351ded8503fb90edb8ba2f937d38baed4578",
+      "reviewer": "Claude (Claude Code session; the deleted topic 'tuning numerical settings' removed from the chichibu row of the tutorial list in both versions; unchanged text as in the previous record)",
       "method": "assistant",
-      "reviewed_on": "2026-11-03"
+      "reviewed_on": "2026-11-09"
     },
     {
       "source": "docs/users_guide.md",
@@ -599,11 +599,11 @@
     {
       "source": "docs/windows.md",
       "target": "docs/en/windows.md",
-      "source_sha256": "897709c11af56682b44776431113ba1d89d11f2eed52e95bffaa70ed1990fef7",
-      "target_sha256": "17d0ea6453a5aecf892fe468313560ffdd382f2959b0d92de72be534403488c8",
-      "reviewer": "Claude (Claude Code session; full-text content and lexical review, no model execution)",
+      "source_sha256": "e389afefd28d431d76ed37ab9fecb2671a4d086907f6ea9c86963cbe691d6bcb",
+      "target_sha256": "c30d522e4a043108057c0ef1399e68176749bbd1870bc85cb781ee73752eeef1",
+      "reviewer": "Claude (Claude Code session; chichibu tutorial step numbers updated after removing the old Step 4 (Step 7 -> 6, Step 6 -> 5, param_step5 -> param_step4) in both versions; unchanged text as in the previous record)",
       "method": "assistant",
-      "reviewed_on": "2026-10-24"
+      "reviewed_on": "2026-11-09"
     },
     {
       "source": "examples/List_samples/list_bedmotion.txt",
@@ -4577,9 +4577,9 @@
     {
       "source": "tutorials/bmi/README.md",
       "target": "tutorials/bmi/en/README.md",
-      "source_sha256": "244ccc43b6af50926f62db95161750a66a923c1df71315e0c6e4206323d43f28",
-      "target_sha256": "c0fb458ace9e521cc9b0373c9190f88fa7a74c657aab4ff2b746891e2c0e4d9e",
-      "reviewer": "Claude (Claude Code session; full-text content and lexical review, no model execution)",
+      "source_sha256": "17299a97deea9ac9b47cf8890b4663223cee2e555b300d4361c0f2cb8f734bc8",
+      "target_sha256": "4910a18994559db0dc2af314ec7d3dc98f3e4909e8e4c7bcf06bcbcf17fb0f85",
+      "reviewer": "Claude (Claude Code session; chichibu tutorial step numbers updated after removing the old Step 4 (Step 7 -> 6, Step 6 -> 5, param_step5 -> param_step4) in both versions; unchanged text as in the previous record)",
       "method": "assistant",
       "reviewed_on": "2026-11-09"
     },
@@ -4604,11 +4604,11 @@
     {
       "source": "tutorials/chichibu/Fig_chichibu.plt",
       "target": "tutorials/chichibu/en/Fig_chichibu.plt",
-      "source_sha256": "02885e87a34364453bcc9b668362c348c30b64128da37929abc85a077a66390a",
-      "target_sha256": "ff36589aee6e25113d6615fefb731387b7e0cb5aa223251262601400cfbf1a56",
-      "reviewer": "Claude (Claude Code session; 2026-11-08: Step 6 fine-oscillation section reorganised (smoothing example and zoom figure removed; introduction starts from the Step 4/Step 5 comparison and the wet/dry cause), guidance on when to use f_advection_donor = 3; Japanese and English edited together and read side by side)",
+      "source_sha256": "2b6b75a7389a3f75f6efe4bebff555bc58842db6d2c7dfecfc10c654f58b11f7",
+      "target_sha256": "78dfa6283d519a3db4861c131bdf55d7dd3ee98d73beb0e4846aa29ead3303c8",
+      "reviewer": "Claude (Claude Code session; chichibu tutorial restructured: plots of the deleted Step 4 removed, Step 4/5 plots renamed (step5_hend, step5_hend_step4, step4_hydro Step 3 vs Step 4); same data files and outputs in both versions, titles compared)",
       "method": "assistant",
-      "reviewed_on": "2026-11-08"
+      "reviewed_on": "2026-11-09"
     },
     {
       "source": "tutorials/chichibu/Fig_supp.plt",
@@ -4622,9 +4622,9 @@
     {
       "source": "tutorials/chichibu/README.md",
       "target": "tutorials/chichibu/en/README.md",
-      "source_sha256": "fd6d0db6f4f9a3e19938c0f7e641abd7cd1a10a4729c1e26506a55f3d727467b",
-      "target_sha256": "00a9d4814f6a06aea612ef7348c1d5e988dc91e194bcb3ac7bf1d571106849e1",
-      "reviewer": "Claude (Claude Code session; updated the cited debris_fan ratio (0.92-1.10) in both versions and compared the passage; unchanged text as in the previous record)",
+      "source_sha256": "ef935e0a942e47e0939932e18085cf4e4677167e330266db488dd2d14bc8f134",
+      "target_sha256": "510f44471f34d6f53c4da28953e17a7d7500e5618376abb4b1123ffa75613793",
+      "reviewer": "Claude (Claude Code session; chichibu tutorial restructured for the default f_advection_donor = 3: old Step 4 (numerical settings) removed and Steps 5-7 renumbered to 4-6, Step 3 shows the default, ex_flux explained in Step 1, oscillation supplement without the dd item and the 1-min/moving-average comparison, links to the new users guide page advection_donor.md; Japanese and English edited together and compared)",
       "method": "assistant",
       "reviewed_on": "2026-11-09"
     },
@@ -4703,74 +4703,56 @@
     {
       "source": "tutorials/chichibu/figs/step3_transects.png",
       "target": "tutorials/chichibu/en/figs/step3_transects.png",
-      "source_sha256": "cbde47af5791a0065d1863fb6d6460ff271146fa13230e359dd6133dcdb2d672",
-      "target_sha256": "03f850edb9f3066fb40cbca6e00ff6df80c515f6b660f43d2a9742b013139599",
-      "reviewer": "Claude (Claude Code session; main text recomputed 2026-11-05: both drawn by Fig_chichibu.sh (Fig_chichibu.plt and en/Fig_chichibu.plt, scripts unchanged) from the same results; English figures viewed for step1_hend, step1_hend_raw, step1_hend_4nb (Japanese), step4_hydro, step5_hydro and step6_osc, labels compared with the Japanese figures)",
+      "source_sha256": "84f97f4a8b6cd530ec36b8710fe99b29634edb49ea8df1d046503944615db188",
+      "target_sha256": "036032eee1dd6d41facbca29393d8dea3ca52f80bb208e3e97c6ce2a8703c1e3",
+      "reviewer": "Claude (Claude Code session; chichibu tutorial restructured: regenerated by Fig_chichibu.sh with the renumbered steps (results identical to the old Steps 4-6); Japanese and English images compared, titles and legends match)",
       "method": "assistant",
-      "reviewed_on": "2026-11-05"
+      "reviewed_on": "2026-11-09"
     },
     {
       "source": "tutorials/chichibu/figs/step4_hydro.png",
       "target": "tutorials/chichibu/en/figs/step4_hydro.png",
-      "source_sha256": "c7950603b8f478a9c86aa11987dc9232528ffccc28ae06091f6d75ba422d68d7",
-      "target_sha256": "e2040cc8afcdf618e53515b44a1bb9c0e0c801ffe826208f2ca8380a8adcc6af",
-      "reviewer": "Claude (Claude Code session; full-text content and lexical review, no model execution)",
+      "source_sha256": "f4cab1423ab0ef80b1a1bd0445fdac290228209c3d1eadc946967f675893c975",
+      "target_sha256": "d0d04cfc332ab467955d587c920394983aa25311d9b1c8c03260500ec3603aae",
+      "reviewer": "Claude (Claude Code session; chichibu tutorial restructured: regenerated by Fig_chichibu.sh with the renumbered steps (results identical to the old Steps 4-6); Japanese and English images compared, titles and legends match)",
       "method": "assistant",
-      "reviewed_on": "2026-11-08"
+      "reviewed_on": "2026-11-09"
     },
     {
-      "source": "tutorials/chichibu/figs/step5_hydro.png",
-      "target": "tutorials/chichibu/en/figs/step5_hydro.png",
-      "source_sha256": "633bfe0c27c857fba3ca542f8353ba7dd84b9840b70787e48e3df4d3d1eddd70",
-      "target_sha256": "ac2a40ecf91f1c502493856df86b54954b2b36c3f7ede0a80cf79d63c5e4570f",
-      "reviewer": "Claude (Claude Code session; full-text content and lexical review, no model execution)",
+      "source": "tutorials/chichibu/figs/step5_hend.png",
+      "target": "tutorials/chichibu/en/figs/step5_hend.png",
+      "source_sha256": "d8fd6242d88320f68545d5bc9b7a1695b4b93dd6cbbb68447f8e388435a05230",
+      "target_sha256": "77499fcb44a07a84a983fe0ce63d6ff25941770db9889ab76fbe1dcee6b89fc7",
+      "reviewer": "Claude (Claude Code session; chichibu tutorial restructured: regenerated by Fig_chichibu.sh with the renumbered steps (results identical to the old Steps 4-6); Japanese and English images compared, titles and legends match)",
       "method": "assistant",
-      "reviewed_on": "2026-11-08"
+      "reviewed_on": "2026-11-09"
     },
     {
-      "source": "tutorials/chichibu/figs/step6_hend.png",
-      "target": "tutorials/chichibu/en/figs/step6_hend.png",
-      "source_sha256": "94782061d94f932768215a34aa9da16d4f952b892fa53daf0352d2eb3c91f059",
-      "target_sha256": "4039574c807116c06408c22c14275b5bac27db3ea0f9a2da4721c96360110d21",
-      "reviewer": "Claude (Claude Code session; full-text content and lexical review, no model execution)",
+      "source": "tutorials/chichibu/figs/step5_hend_step4.png",
+      "target": "tutorials/chichibu/en/figs/step5_hend_step4.png",
+      "source_sha256": "bf4369ef679ed8bd7e1a65b339fe209d0666509dce62a20de4c6e5fa61028267",
+      "target_sha256": "6656c2e60615b8eb0b5b75639264604e63519b67c89be0ac42051b582598cd60",
+      "reviewer": "Claude (Claude Code session; chichibu tutorial restructured: regenerated by Fig_chichibu.sh with the renumbered steps (results identical to the old Steps 4-6); Japanese and English images compared, titles and legends match)",
       "method": "assistant",
-      "reviewed_on": "2026-11-08"
+      "reviewed_on": "2026-11-09"
     },
     {
-      "source": "tutorials/chichibu/figs/step6_hend_step5.png",
-      "target": "tutorials/chichibu/en/figs/step6_hend_step5.png",
-      "source_sha256": "ebf36e26c30ba06bfa70809c16ddd3130a3d14ea4cc96155a34ba0332fd96d6d",
-      "target_sha256": "c5e8558362829ec7495e0e35c06d6e80536e772a07731b8d76429f116a54cd66",
-      "reviewer": "Claude (Claude Code session; full-text content and lexical review, no model execution)",
-      "method": "assistant",
-      "reviewed_on": "2026-11-08"
-    },
-    {
-      "source": "tutorials/chichibu/figs/step6_osc.png",
-      "target": "tutorials/chichibu/en/figs/step6_osc.png",
-      "source_sha256": "2e13df13ab2b8e7f7098df4f886aa63709f43bee803ae3bdb16f37b22f221028",
-      "target_sha256": "0d3167f59c31226fa6738a8f4864ad117e5f41253224b26f21866db0b5d98148",
-      "reviewer": "Claude (Claude Code session; full-text content and lexical review, no model execution)",
-      "method": "assistant",
-      "reviewed_on": "2026-11-08"
-    },
-    {
-      "source": "tutorials/chichibu/figs/step7_3d.png",
-      "target": "tutorials/chichibu/en/figs/step7_3d.png",
+      "source": "tutorials/chichibu/figs/step6_3d.png",
+      "target": "tutorials/chichibu/en/figs/step6_3d.png",
       "source_sha256": "dffd2680bc11513117dac79878e093473efa670581355cdd81121837e73fa27d",
       "target_sha256": "dffd2680bc11513117dac79878e093473efa670581355cdd81121837e73fa27d",
-      "reviewer": "Claude (Claude Code session; full-text content and lexical review, no model execution)",
+      "reviewer": "Claude (Claude Code session; chichibu tutorial restructured: renamed from step7_* with Step 6 (ParaView) and Fig_step6.py; images unchanged and without text, Japanese and English compared)",
       "method": "assistant",
-      "reviewed_on": "2026-11-08"
+      "reviewed_on": "2026-11-09"
     },
     {
-      "source": "tutorials/chichibu/figs/step7_simple.png",
-      "target": "tutorials/chichibu/en/figs/step7_simple.png",
+      "source": "tutorials/chichibu/figs/step6_simple.png",
+      "target": "tutorials/chichibu/en/figs/step6_simple.png",
       "source_sha256": "675f20150d615261805bcb2253e2a125e411fce9a449762012fabccb281f851e",
       "target_sha256": "675f20150d615261805bcb2253e2a125e411fce9a449762012fabccb281f851e",
-      "reviewer": "Claude (Claude Code session; full-text content and lexical review, no model execution)",
+      "reviewer": "Claude (Claude Code session; chichibu tutorial restructured: renamed from step7_* with Step 6 (ParaView) and Fig_step6.py; images unchanged and without text, Japanese and English compared)",
       "method": "assistant",
-      "reviewed_on": "2026-11-08"
+      "reviewed_on": "2026-11-09"
     },
     {
       "source": "tutorials/chichibu/figs/supp_hend.png",
@@ -4847,74 +4829,65 @@
     {
       "source": "tutorials/chichibu/param_step3.txt",
       "target": "tutorials/chichibu/en/param_step3.txt",
-      "source_sha256": "79424c8c77f728d5e609eb233ab19c0943055b17195462ce66fa703d11660790",
-      "target_sha256": "55057f67ee4d2baa108002f3e30175511d626e8ef8a3634c6c944bc0498a214f",
-      "reviewer": "Claude (Claude Code session; full-text content and lexical review, no model execution)",
+      "source_sha256": "1939e0a1112e0efaf0200e7ab69e5ac50d49bea96cb930fe8d2e13b72bf2e91f",
+      "target_sha256": "87ddb5f23d9e9e4bbd1028efebe51877a09da74882cee25132093f303a1f91ff",
+      "reviewer": "Claude (Claude Code session; chichibu tutorial restructured: param files renumbered (old step5-7 -> step4-6, old step4 removed), fn_enc and the f_advection_donor block removed from Step 3 and the supplement cases, headers updated; all values identical in both versions, comments compared)",
       "method": "assistant",
       "reviewed_on": "2026-11-09"
     },
     {
       "source": "tutorials/chichibu/param_step4.txt",
       "target": "tutorials/chichibu/en/param_step4.txt",
-      "source_sha256": "8c98d980c1360212f9dd5594a84415542365dd1c68ad56511a70ab38db8fa864",
-      "target_sha256": "4e946d4af205b9bede6e6490d0ef37eb6ed088c444a787e29a34ff8674c87ce0",
-      "reviewer": "Claude (Claude Code session; chichibu tutorial for beginners: Step 4 remedy paragraph shortened to two ideas with the setting introduced afterwards, settings comment of f_advection_donor reworded in param_step4-7 (values unchanged), Step 6 item 3 links the subgrid channel to the channel chapter; Japanese and English edited together and read side by side)",
+      "source_sha256": "f40f49eaa6839e11dbc74b4f37a7e61a1b4d634652ddb5602e66f9e79a00bdaa",
+      "target_sha256": "44b0e1f26f180b4cdb63aba8e728115f9bbcef1e7e276cf65b76d48e2b34fde4",
+      "reviewer": "Claude (Claude Code session; chichibu tutorial restructured: param files renumbered (old step5-7 -> step4-6, old step4 removed), fn_enc and the f_advection_donor block removed from Step 3 and the supplement cases, headers updated; all values identical in both versions, comments compared)",
       "method": "assistant",
-      "reviewed_on": "2026-11-08"
+      "reviewed_on": "2026-11-09"
     },
     {
       "source": "tutorials/chichibu/param_step5.txt",
       "target": "tutorials/chichibu/en/param_step5.txt",
-      "source_sha256": "1ff205848822697f0c615010e8e082def9bb96125f2c503fae6eec2a2b3acc31",
-      "target_sha256": "9dcdea5fd215df486b087184fffccfff1ec9ad0aac86f421f8b1aafc9a78b7bb",
-      "reviewer": "Claude (Claude Code session; chichibu tutorial for beginners: Step 4 remedy paragraph shortened to two ideas with the setting introduced afterwards, settings comment of f_advection_donor reworded in param_step4-7 (values unchanged), Step 6 item 3 links the subgrid channel to the channel chapter; Japanese and English edited together and read side by side)",
+      "source_sha256": "1791a2d76d6d25348e8fd630d4769b9420e6333cc5de2271d650d606f50bacd7",
+      "target_sha256": "1e53a2ba72b2722dd4fbe041dbeceb204b079eecb9075f087c8164d9354f506d",
+      "reviewer": "Claude (Claude Code session; chichibu tutorial restructured: param files renumbered (old step5-7 -> step4-6, old step4 removed), fn_enc and the f_advection_donor block removed from Step 3 and the supplement cases, headers updated; all values identical in both versions, comments compared)",
       "method": "assistant",
-      "reviewed_on": "2026-11-08"
+      "reviewed_on": "2026-11-09"
     },
     {
       "source": "tutorials/chichibu/param_step6.txt",
       "target": "tutorials/chichibu/en/param_step6.txt",
-      "source_sha256": "82f66e9cbbd6c287d6cb4ca1100100f80bb24524e7ed8505637a700f427bc4a2",
-      "target_sha256": "5384728b8c82a642a0298836f47d13ef1f0dedf619d7b46bfa2dd29f0ab75431",
-      "reviewer": "Claude (Claude Code session; chichibu tutorial for beginners: Step 4 remedy paragraph shortened to two ideas with the setting introduced afterwards, settings comment of f_advection_donor reworded in param_step4-7 (values unchanged), Step 6 item 3 links the subgrid channel to the channel chapter; Japanese and English edited together and read side by side)",
+      "source_sha256": "3d03192334809336b8588e92868c402ae77edc59b78d46f2d40733a421a71939",
+      "target_sha256": "a6a169fea54c2a2c6ba2ea24b6a64d8b4d6bdec44be02bbe30b38e0aa43e77d8",
+      "reviewer": "Claude (Claude Code session; chichibu tutorial restructured: param files renumbered (old step5-7 -> step4-6, old step4 removed), fn_enc and the f_advection_donor block removed from Step 3 and the supplement cases, headers updated; all values identical in both versions, comments compared)",
       "method": "assistant",
-      "reviewed_on": "2026-11-08"
-    },
-    {
-      "source": "tutorials/chichibu/param_step7.txt",
-      "target": "tutorials/chichibu/en/param_step7.txt",
-      "source_sha256": "f308c917e3351eedf7ee3e1b5be7a8d9dbdd2daecb9996e8fff937a9510e491c",
-      "target_sha256": "9a0a3605346d1b2da022b99a42e8e213ad5b206466bb2b0ad373b0f4c532f67b",
-      "reviewer": "Claude (Claude Code session; chichibu tutorial for beginners: Step 4 remedy paragraph shortened to two ideas with the setting introduced afterwards, settings comment of f_advection_donor reworded in param_step4-7 (values unchanged), Step 6 item 3 links the subgrid channel to the channel chapter; Japanese and English edited together and read side by side)",
-      "method": "assistant",
-      "reviewed_on": "2026-11-08"
+      "reviewed_on": "2026-11-09"
     },
     {
       "source": "tutorials/chichibu/param_supp_100m.txt",
       "target": "tutorials/chichibu/en/param_supp_100m.txt",
-      "source_sha256": "5e24ff76b515f13b2f74f085919a0cfc5c5aed183a830a9e3bcf6ea9a8f7602b",
-      "target_sha256": "ea2ed26e0d7b17a4abd0a6a6c443dc2845b7644c2fded09e6bd3ad6f5dbe0999",
-      "reviewer": "Claude (Claude Code session; full-text content and lexical review, no model execution)",
+      "source_sha256": "b17c1b92c5972af849f72f8a4ffc4c22e8fff5c40a40019bbe411eebc1626a5a",
+      "target_sha256": "649144d1bb67fe6dad00fd12d31cb7cec0cc0dd88f099d95b8d9685332095a2f",
+      "reviewer": "Claude (Claude Code session; chichibu tutorial restructured: param files renumbered (old step5-7 -> step4-6, old step4 removed), fn_enc and the f_advection_donor block removed from Step 3 and the supplement cases, headers updated; all values identical in both versions, comments compared)",
       "method": "assistant",
-      "reviewed_on": "2026-11-08"
+      "reviewed_on": "2026-11-09"
     },
     {
       "source": "tutorials/chichibu/param_supp_200m.txt",
       "target": "tutorials/chichibu/en/param_supp_200m.txt",
-      "source_sha256": "4e451c144664a9b528ad4bfd2817ff37797eadfdfef5a36718364b6f20166d9c",
-      "target_sha256": "19c1f52099bcfac19568f367db3268cd5b1d250d14eeb2aba365e3b39f64b980",
-      "reviewer": "Claude (Claude Code session; full-text content and lexical review, no model execution)",
+      "source_sha256": "b43eae66074da0873f5b639183ca85a4b274096b23b0b0d6c68c01d99d074a33",
+      "target_sha256": "55e5bcf36e979466dff25aea1af1d106589d279e28a51e4864525d944ac539f8",
+      "reviewer": "Claude (Claude Code session; chichibu tutorial restructured: param files renumbered (old step5-7 -> step4-6, old step4 removed), fn_enc and the f_advection_donor block removed from Step 3 and the supplement cases, headers updated; all values identical in both versions, comments compared)",
       "method": "assistant",
-      "reviewed_on": "2026-11-08"
+      "reviewed_on": "2026-11-09"
     },
     {
       "source": "tutorials/chichibu/param_supp_50m.txt",
       "target": "tutorials/chichibu/en/param_supp_50m.txt",
-      "source_sha256": "6007e2d878e330e5ebc369c3721bcaefd81c5a00733c672bfc7da302a424a0d0",
-      "target_sha256": "6adde3d303d946579f02ab94c5dc40d1121720a033b2f9d302a236df750fb52e",
-      "reviewer": "Claude (Claude Code session; full-text content and lexical review, no model execution)",
+      "source_sha256": "ca0c574b8df2cbfed1d428fae448b271c4d318e67aafe2933c272aa215f0a983",
+      "target_sha256": "f9815ae12e91d391bbd5dc19ab4277ca16f4f14ba0c8057e187d2f051d2a3b83",
+      "reviewer": "Claude (Claude Code session; chichibu tutorial restructured: param files renumbered (old step5-7 -> step4-6, old step4 removed), fn_enc and the f_advection_donor block removed from Step 3 and the supplement cases, headers updated; all values identical in both versions, comments compared)",
       "method": "assistant",
-      "reviewed_on": "2026-11-08"
+      "reviewed_on": "2026-11-09"
     },
     {
       "source": "tutorials/wave/README.md",

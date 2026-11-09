@@ -15,13 +15,10 @@ computation with real terrain data, in the following order.
 - **Step 2**: GeoTIFF input/output, channel mask and roughness
 - **Step 3**: Measurement (probes and flux transects) and distributed
   output
-- **Step 4**: Tuning the numerical settings -- how to read ex_flux, the
-  threshold depth dd, what the bumps on the recession limb are and how
-  to remove them
-- **Step 5**: Rainfall interception and subsurface infiltration (bucket
+- **Step 4**: Rainfall interception and subsurface infiltration (bucket
   model), the three water-storage columns
-- **Step 6**: Boundary condition at the catchment outlet
-- **Step 7**: 3D visualization (animation) with ParaView
+- **Step 5**: Boundary condition at the catchment outlet
+- **Step 6**: 3D visualization (animation) with ParaView
 - **Supplements**: reading and dealing with fine oscillations in the
   hydrograph; the effect of resolution and the character of the ENC grid
 
@@ -168,6 +165,10 @@ The screen output tells us the following.
   water outlet**; the constant S column confirms mass conservation.
 - Meanwhile the h_max column keeps growing from 7 m to nearly 30 m: the water
   that cannot get out keeps accumulating somewhere.
+- The ex_flux column counts how often an outflow computed from the momentum
+  equation was about to exceed the water in the cell and was limited. It is a
+  safety device that keeps mass conserved and is normally 0; continuous
+  occurrence is the sign of a rough computation.
 
 The depth distribution at the final time (`result/H9998.txt`) shows
 where it accumulates (the depth maps use a palette in which zero depth
@@ -191,7 +192,7 @@ the northeast corner.
 
 Just upstream of the catchment outlet (the northeast corner), ponded
 water over 25 m deep has grown. This ponding of runoff dammed by the
-wall will be resolved in Step 6 by setting a boundary condition. Until
+wall will be resolved in Step 5 by setting a boundary condition. Until
 then we proceed with the outlet ponding as a known artifact (it hardly
 affects the measurements further upstream).
 
@@ -386,22 +387,9 @@ corresponding directly to the `flxy` / `pbxy` values above).
   1 to 2 cm). **Checking the configured positions against the mask by
   eye, as done here,** is the basic routine when placing measurements.
 
-In this Step the upwind momentum donors of the advection term are also set to
-`f_advection_donor = 0` (the default until 2026-11-09). Adding `fn_enc = "-"` to
-`&list_sysparam` makes the model read `&list_enc` from the same file. This setting
-is used to show the hydrograph jumps that Step 4 examines; the default is 3, and
-Step 4 returns to it.
-
-```
-&list_enc
-  f_advection_donor = 0      ! upwind momentum donors of the advection term (0: the default until 2026-11-09, used here to show the hydrograph jumps examined in Step 4; the default is 3)
-/
-```
-
-When you run it, the numbers on screen differ from Step 2 only by this
-`f_advection_donor = 0` (without it they match Step 2 **exactly**: measurement
-and file output have no effect whatsoever on the computation itself). The
-results now include `fluxes/flux0001.csv`
+When you run it, the numbers on screen match Step 2 **exactly**
+(measurement and file output have no effect whatsoever on the computation
+itself). The results now include `fluxes/flux0001.csv`
 (transect discharge time series) and `probes/probe0001.csv` (probe
 depth and velocity time series).
 
@@ -433,125 +421,11 @@ the variable as its first argument, so `gnuplot -c Plot_step1.plt V`
 (or `Q`) shows the time evolution of the velocity or the discharge
 with the same four-time layout.
 
-## Step 4: Tuning the numerical settings
-
-Looking closely at the transect hydrographs of Step 3 (the figure of
-Step 3), the hydrograph of transect 4 has **spurious bumps** on the
-recession limb at t ≈ 232 min and 316 min (at 232 min it jumps by more
-than 400 m^3/s within a minute and settles over about 10 minutes). The
-ex_flux column of the screen output is a guide for diagnosing a lack of
-accuracy or a rough computation. It counts the events where "the
-outflow computed from the momentum equation was about to exceed the
-water volume of the cell and was therefore limited"; it is a safety
-device, so mass is conserved, and it is normally 0. Repeated counts are
-a sign that the computation is getting rough. This time, however,
-ex_flux stays 0, so the bumps cannot be noticed from the screen output.
-It is important to plot the hydrographs and check them.
-
-In this case the usual remedies -- reducing the time step dt, reducing
-the threshold of the adaptive Runge-Kutta, `p_adprunge_thresh` -- do
-not help. Other parameters that concern the accuracy of the computation
-are the **threshold depth dd** and the **virtual depth dv**
-(`&list_sysparam`). dd is the depth below which a cell counts as dry:
-an edge (the boundary between two cells) whose two sides are both
-shallower than dd moves no water (default 0.001 m = 1 mm). dv is the lower bound of the depth used in
-the friction term, which keeps the friction from blowing up in very
-shallow water (default 0.001 m). Here, reducing dd to 1/10, 0.0001 m
-(together with dv), removes the bumps within the 6-hour run (the gray
-dashed line in the figure below). But this does not remove the cause;
-it only **postpones** it. The real cause lies elsewhere.
-
-- After the rain, a thin film of water remains on top of the river
-  banks. In the computation of the advection term with
-  `f_advection_donor = 0` used in Step 3, where the main flow turns, this
-  film can put a **strong brake** on the main flow
-  (the mechanism is explained in [section 4.4 of the advection chapter
-  of the users guide](../../../docs/en/users_guide/advection.md)).
-- While the brake keeps acting, water piles up in the river as behind a
-  dam.
-- The film thins slowly after the rain and at some point drops below
-  dd. At that moment the film counts as "dry", the brake is released,
-  and the water that was held back is let go all at once. That is the
-  bump.
-- Reducing dd only delays the release of the brake (beyond the end of
-  the run); the brake itself remains, and so does the held-back peak
-  discharge.
-
-The bumps concentrate on the recession limb because, after the rain,
-the films on the slopes and banks all thin slowly together and cross dd
-one after another at many places. The wet/dry test of a thin layer of
-water acting as a switch in the computation of a deep flow next to it
-is a structure not specific to ENCflow: it can occur in 2D models in
-general.
-
-The remedy is to keep the wet/dry test of thin water from acting as a
-switch on the flow next to it. First, the cells used in the computation
-of the advection term are chosen: a cell with a thin film that carries
-almost no water is not used for the main flow. This removes the brake.
-Further, so that using or not using a cell does not flip on and off
-abruptly, a film is not dropped the moment it falls below dd; its
-influence is weakened little by little as it becomes thinner. As a
-result no bump arises, and the result hardly changes with dd any more.
-
-This treatment is `f_advection_donor = 3`, the default. Change the 0 set in
-Step 3 back to 3 (deleting the line in `&list_enc` and relying on the default does
-the same; for the details, see
-[section 4.4 of the advection chapter of the users guide](../../../docs/en/users_guide/advection.md)).
-dd and dv stay at their defaults.
-
-```
-&list_sysparam
-  ...
-  fn_enc     = "-"           ! ENC settings file
-/
-
-&list_enc
-  f_advection_donor = 3      ! upwind momentum donors of the advection term (3: keep thin films carrying almost no water from braking the main flow)
-/
-```
-
-![Step 4: effect of switching the momentum donors of the advection term](figs/step4_hydro.png)
-
-After the change (`en/param_step4.txt`), the bumps at 232 and 316
-minutes disappear and the waveform becomes smooth. At the same time,
-because the artificial brakes that acted at many places along the main
-channel are gone, the peak discharge becomes about 13% larger (5,546 to
-6,279 m^3/s) and the peak arrives about 20 minutes earlier.
-The dashed line with reduced dd shows no bumps but is the same
-held-back waveform as Step 3. In real-terrain computations on
-coarse grids, **artifacts of the numerical settings** ride on the
-waveform like this. Before tuning roughness against observed
-hydrographs, it is important to remove them.
-
-`f_advection_donor = 3` has been the default since 2026-11-09 (the default
-before was 0). Where the river is narrow compared with the grid (one-cell-wide
-channels) and the flow turns at many places without following the grid
-directions -- narrow mountain valleys or meandering channels computed on a
-coarse grid, for instance -- and the banks are wetted by rain, 0 puts an
-artificial brake on the main flow. In a check with straight channels oblique to
-the grid and banks wetted by rain ([test/wetbank](../../../test/wetbank/en/README.md)),
-the channel becomes deeper beyond the effect of the rain inflow by 10 to 40% with 0
-and by 6 to 17% with 3. In wide flows or
-on smooth terrain the difference between 0 and 3 is small (about 1%). To
-reproduce results computed with the previous default, set
-`f_advection_donor = 0` explicitly.
-
-Note that the diffusive wave (`f_govequation = 1` in `&list_sysparam`)
-has no advection term, so it does not show these bumps. But the
-diffusive wave neglects the inertia of the water: it cannot represent
-places where the flow accelerates or decelerates sharply (bores,
-hydraulic jumps, the front of an inundation, run-up), and the arrival
-time and the peak of the flood wave differ from those of the dynamic
-wave. Keep the dynamic wave for inundation computations with wetting
-and drying, and use the diffusive wave only for sensitivity experiments
-and comparisons with other models ([the shallow-water flow chapter of
-the users guide](../../../docs/en/users_guide/swflow.md)).
-
-## Step 5: Rainfall interception and subsurface infiltration
+## Step 4: Rainfall interception and subsurface infiltration
 
 So far, all the rain that fell has run off. In a real catchment,
 interception by the canopy and infiltration into the ground reduce the
-runoff. `en/param_step5.txt` stacks the two simplest loss models.
+runoff. `en/param_step4.txt` stacks the two simplest loss models.
 
 ```
 &list_sysparam
@@ -601,23 +475,23 @@ time, progress, S_surf(m), S_grnd(m), S_total(m), Runge, ex_flux, Cn_max, h_max(
   progress of infiltration directly.
 - ex_flux shows 2 limitations each in the rows at 3 and 6 hours. They do
   not occur continuously and mass is conserved, so this much is no
-  problem (as explained in Step 4, continuous occurrence is the sign of
+  problem (as explained in Step 1, continuous occurrence is the sign of
   a rough computation).
 
-![Step 5: effect of interception and infiltration](figs/step5_hydro.png)
+![Step 4: effect of interception and infiltration](figs/step4_hydro.png)
 
 In the hydrograph the peak discharge drops by about a third (6,279
 to 4,086 m^3/s). Interception cuts the total by 20%, and infiltration keeps
 sucking up the thinly spread hillslope water, so both the rising limb
 and the recession drop.
 
-## Step 6: Boundary condition at the catchment outlet
+## Step 5: Boundary condition at the catchment outlet
 
 We now resolve the outlet ponding (h_max of about 30 m) that we have
 been turning a blind eye to since Step 1. The catchment outlet is not
 on the outer rim (the four edges) of the computational domain but in
 its interior, so instead of an edge boundary condition we use
-**prescribed-stage cell groups**. `en/param_step6.txt` fixes the water
+**prescribed-stage cell groups**. `en/param_step5.txt` fixes the water
 level of the two outlet channel cells at a low value, turning them into
 a "drain".
 
@@ -656,11 +530,11 @@ time, progress, S_surf(m), S_grnd(m), S_total(m), Runge, ex_flux, Cn_max, h_max(
 - h_max drops from 30 m to 3.6 m. The disappearance of the ponding can
   also be confirmed in the depth distribution.
 
-| Step 5 (no outlet) | Step 6 (perfect drain) |
+| Step 4 (no outlet) | Step 5 (perfect drain) |
 |---|---|
-| ![step5](figs/step6_hend_step5.png) | ![step6](figs/step6_hend.png) |
+| ![step4](figs/step5_hend_step4.png) | ![step5](figs/step5_hend.png) |
 
-The hydrographs at the upstream transects 1-4 barely change from Step 5
+The hydrographs at the upstream transects 1-4 barely change from Step 4
 (the outlet ponding affects only a very small area at the far
 downstream end).
 
@@ -671,7 +545,7 @@ downstream river stage or a tide level. For the use of edge boundaries
 [the boundary condition chapter of the users
 guide](../../../docs/en/users_guide/boundary.md).
 
-## Step 7: 3D visualization with ParaView
+## Step 6: 3D visualization with ParaView
 
 Finally, let us look at the distributed outputs as a 3D animation. We
 use the free visualization software
@@ -679,7 +553,7 @@ use the free visualization software
 section 2 of the [installation guide](../../../docs/en/install.md)
 for installing it) and the bundled converter utility utils/out2vtk.
 
-`en/param_step7.txt` is the Step 4 configuration adapted for
+`en/param_step6.txt` is the Step 3 configuration adapted for
 animation: the run is shortened to 4 hours (`tt_c`), distributed
 output is written every 2 minutes (`dt_file_c`), and the output format
 is GeoTIFF only (`f_output_mode = 4`). The smoothness of the animation
@@ -693,7 +567,7 @@ distributed output (GeoTIFF) every 2 minutes. This is the raw material
 of the animation.
 
 ```bash
-./encflow en/param_step7.txt
+./encflow en/param_step6.txt
 ```
 
 Once `result/` holds the depth files `H0000.tif` to `H0120.tif` (121
@@ -707,7 +581,7 @@ it to VTK format with the bundled converter utility out2vtk.
 
 ```bash
 make -C ../../utils/out2vtk install   # first time only: build the converter
-../../bin/out2vtk en/param_step7.txt
+../../bin/out2vtk en/param_step6.txt
 ```
 
 out2vtk takes the parameter file used for the computation as it is
@@ -735,7 +609,7 @@ animation.
    gray** (dry cells carry NaN depth and are painted yellow by default)
 4. Press **▶ (play)**
 
-![Step 7: the minimal procedure (t = 2 hours)](figs/step7_simple.png)
+![Step 6: the minimal procedure (t = 2 hours)](figs/step6_simple.png)
 
 This alone gives a picture of "depth colors draped on the 3D
 terrain". The surface in this file is the water surface elevation
@@ -764,7 +638,7 @@ Independent refinements you can add to the minimal procedure.
 - **Showing the time**: **Filters → Annotate Time**.
 - **To a movie file**: **File → Save Animation** (PNG sequence or AVI).
 
-![Step 7: two-layer view of terrain + water (t = 2 hours, 3x vertical exaggeration)](figs/step7_3d.png)
+![Step 6: two-layer view of terrain + water (t = 2 hours, 3x vertical exaggeration)](figs/step6_3d.png)
 
 ### Further: overlaying maps and satellite imagery
 
@@ -778,9 +652,8 @@ For that procedure and for settings such as the water-film threshold
 
 In this tutorial we went once around the standard workflow of a
 catchment computation with real terrain data: data preparation
-(depression filling) -> minimal configuration -> measurement -> tuning
-of numerical settings -> adding physical processes -> boundary
-conditions -> 3D visualization. From here:
+(depression filling) -> minimal configuration -> measurement -> adding
+physical processes -> boundary conditions -> 3D visualization. From here:
 
 - Refining the groundwater model (Green-Ampt, lateral flow),
   distributed roughness, subgrid channels, and more --
@@ -788,15 +661,15 @@ conditions -> 3D visualization. From here:
 - How to write the namelists of each feature --
   [examples/List_samples/en/](../../../examples/List_samples/en/)
 - To run a large computation in parallel with MPI:
-  `mpirun -np 4 ./encflow_mpi en/param_step6.txt` (the results match
+  `mpirun -np 4 ./encflow_mpi en/param_step5.txt` (the results match
   the serial run bit for bit)
 
 The figures of this document (`figs/`, i.e. `en/figs/`) can be
 regenerated in one go with `./Fig_chichibu.sh` run from the case
 directory (gnuplot is required; it runs the same computations as in
 the text, in order, and draws both the Japanese and the English
-figures). Only the 3D figures of Step 7 are outside its scope; they
-are regenerated with `Fig_step7.py`, which draws with the same VTK
+figures). Only the 3D figures of Step 6 are outside its scope; they
+are regenerated with `Fig_step6.py`, which draws with the same VTK
 library that ParaView uses. The figures of the supplement are
 regenerated separately with `./Fig_supp.sh`.
 
@@ -808,41 +681,16 @@ supplement covers how to read and deal with fine oscillations on the
 1-minute hydrographs of real-terrain computations, and the next one covers
 the effect of resolution and the character of the ENC grid.
 
-Compared with Step 4 (no losses), Step 5 (interception + infiltration) may
-look as if the fine fluctuations of the waveform have increased (the
-1-minute values move up and down slightly at the end of the rise at
-transect 4, around 120 minutes). One of the causes
-is that infiltration thins the films on the slopes and banks one after
-another, so wet/dry switches of thin water become more frequent.
+The 1-minute hydrographs of real-terrain computations can carry fine
+oscillations (short ups and downs). When you notice oscillations, consider
+them in this order.
 
-The 1-minute hydrographs of real-terrain computations can carry such fine
-oscillations (spikes). Most of them are of the same type as the bumps
-treated in Step 4: the moment a thin film on a bank drops below dd, an
-artificial brake that acted on the water of the main flow entering from
-the side is released all at once, giving a short spike.
-`f_advection_donor = 3` also switches the test for water entering from the
-side gradually with the depth, so in this basin no conspicuous spikes
-appear in Steps 5 and 6, and the remaining ups and downs are 10 to 20
-m³/s per minute (figure below; the 1-minute values and the 11-minute moving
-average almost coincide).
-
-![Step 6: 1-minute discharge and moving average](figs/step6_osc.png)
-
-When you notice oscillations, consider them in this order.
-
-1. **First check whether they come from the numerical settings.** If
-   the oscillations move in time, increase or vanish when dd is divided by
-   10, they are wet/dry switches of thin water (running Step 5 with
-   dd = dv = 0.0001 actually increases the small ups and downs on the
-   recessions at transects 3 and 4, and a jump of +62 m³/s in one minute
-   appears at transect 4). If you set `f_advection_donor = 0`, return to the
-   default 3 (Step 4).
-2. **Small oscillations that remain can often be left as they are.** If
+1. **Small oscillations can often be left as they are.** If
    they do not harm the water balance of the computation and do not affect
    the time scales that matter in runoff analysis (tens of minutes and
    longer), overlaying a moving average when you plot is enough.
 
-3. **For oscillations caused by the terrain, the fundamental remedy is
+2. **For oscillations caused by the terrain, the fundamental remedy is
    improving the terrain data.** Along the channels of a
    depression-filled DEM, "perfectly flat reaches" appear here and there
    (places where the original DEM recorded a river water surface, a
@@ -891,9 +739,9 @@ When you notice oscillations, consider them in this order.
    changed, however, a transition to a steep reach can move closer to the
    transect and produce another oscillation. After changing the terrain,
    rerun the computation and check that the oscillation at the transect has
-   decreased (for placing transects, see item 4).
+   decreased (for placing transects, see item 3).
 
-4. The choice of measurement locations also mitigates it. A transect
+3. The choice of measurement locations also mitigates it. A transect
    placed on a flat reach (pond) several meters deep picks up the
    motion of the pond surface directly, so **place transects on ordinary
    channel reaches with a longitudinal slope**.
@@ -908,13 +756,13 @@ If you only want the conclusions, read the bold sentences at the end of each
 subsection and "What to take away about the ENC grid".
 
 This tutorial has used a 200 m grid throughout. To see how the results
-change with a finer grid, we move the Step 4 configuration (no losses,
-no outlet, `f_advection_donor = 3`) to 100 m and 50 m grids. The terrain
+change with a finer grid, we move the Step 3 configuration (no losses,
+no outlet) to 100 m and 50 m grids. The terrain
 data are the 100 m and
 50 m versions of the same area kept in `test/chichibu/` (text format),
 and the parameter files are `en/param_supp_200m.txt` /
 `en/param_supp_100m.txt` / `en/param_supp_50m.txt` (the 200 m one is
-the Step 4 configuration with text input only). We also run the
+the Step 3 configuration with text input only). We also run the
 **4-neighbor** computation mentioned at the end of Step 1
 (`p_diagratio = 0.0`, diagonal exchange closed) at the same three
 resolutions, to see what the 8-direction exchange of the ENC grid
@@ -1215,11 +1063,13 @@ splits into three parts.
 3. **Momentum exchange with the inundated valley floor**: on the 100 m grid
    the flood cross-section of the main river spreads beyond the single
    channel-mask cell onto valley-floor cells, and at bends and confluences
-   that slow water becomes the upwind donor and drains momentum. As seen in
-   Step 4, the choice of donors alone (`f_advection_donor`) moves the
-   transect 4 peak by about 13%. The runs of this section use
-   `f_advection_donor = 3` as in Step 4, so thin films that carry almost no
-   water are excluded as donors. On a finer grid the
+   that slow water becomes the upwind donor and drains momentum. The
+   artificial part, in which a thin film on a bank that carries almost no
+   water becomes the donor and slows the main flow, is removed by the default
+   treatment (for how it works, and for the fact that this treatment alone
+   moves the transect 4 peak by about 13%, see
+   [one-cell-wide channels and the upwind donors of the advection term](../../../docs/en/users_guide/advection_donor.md)
+   in the users guide). On a finer grid the
    main river fits within the channel cells and this exchange shrinks, consistent with
    the gentle increase of the scheme 3 peak with resolution.
 
@@ -1257,9 +1107,10 @@ the ENCflow result with advection (untested).
 
 No. A result that moves little under grid refinement is a property one
 wants from a model that claims to be physically based (convergence), but
-there is no guarantee that the converged value matches observations (the
-choice of advection donors alone, `f_advection_donor`, moves the 200 m peak
-of Step 4 by about 13%, for instance). This
+there is no guarantee that the converged value matches observations (a
+detail of the advection discretization alone
+([the treatment of the upwind donors](../../../docs/en/users_guide/advection_donor.md))
+moves the 200 m peak by about 13%, for instance). This
 tutorial catchment has no comparison with observations, and **closeness to
 reality is unverified**. Conversely, a diffusion wave calibrated with a
 roughness coefficient per resolution can surely be made to match
