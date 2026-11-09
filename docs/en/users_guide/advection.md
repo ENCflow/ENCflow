@@ -533,7 +533,13 @@ With `f_advection_donor = 3` the wet/dry test of the parallel edge becomes a con
   transect 4 of the 200 m grid by 6 to 12% and made the discharge rough or the
   run diverge on the 100 m and 50 m grids. Because this brake also provides
   damping that computations on real terrain rely on, it has not been removed
-  (developer.md §102). Films thinner than `dd` are also counted in
+  (developer.md §102). In a check with straight channels oblique to the grid
+  and banks wetted by rain ([test/wetbank](../../../test/wetbank/en/README.md)),
+  the channel became deeper than the rain inflow alone explains by 10–40% with 0
+  (largest around 30°, growing when the grid is refined with the channel kept one
+  cell wide) and by 6–17% with 3, and by 0.2% with either in a grid-aligned
+  channel. Option 3 removes the flow-direction part; the rest is this
+  lateral-face brake. Films thinner than `dd` are also counted in
   proportion to their thickness, so in a bent channel with banks wetted by
   rain the water level at the bend cells differs a little from 0 (the zigzag
   channel of test/bendloss with 2 mm/h on the floodplain: bend 1 1.50 → 1.68 m,

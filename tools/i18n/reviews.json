@@ -113,11 +113,11 @@
     {
       "source": "docs/users_guide/advection.md",
       "target": "docs/en/users_guide/advection.md",
-      "source_sha256": "0c852dc5759f91b0e46c8986e21cde79af06702a84f40a3897a9d2e1f2ecf71f",
-      "target_sha256": "ceb1d2c0e2cc6e57f7037160d139db0babf3dccb39c0c2257c5d9e52c8592bf1",
+      "source_sha256": "ee0f9e7965641f7c59019ef0dde2f93caad33e0ae0a23d39fd42bca15be5225b",
+      "target_sha256": "1c95652189bf70c57b5b2772c3ee9b197cc097f7e6cecb509bcf19df5c3b1037",
       "reviewer": "Claude (Claude Code session; full-text content and lexical review, no model execution)",
       "method": "assistant",
-      "reviewed_on": "2026-11-08"
+      "reviewed_on": "2026-11-09"
     },
     {
       "source": "docs/users_guide/bedmotion.md",
@@ -2957,11 +2957,11 @@
     {
       "source": "test/README.md",
       "target": "test/README.en.md",
-      "source_sha256": "94316119abe4a3e4e8d80a22e2386b15738de9e4dedec00eae5bfc7e4eda2138",
-      "target_sha256": "3bdc9df10711fb9cf42c27ab96712043ca6ca87450c1d5f601746a0bfde9e4b6",
-      "reviewer": "Claude (Claude Code session; STG grid: domain mask and two or more MPI processes unsupported and stopped at initialization, new test/stg; Japanese and English edited together and read side by side)",
+      "source_sha256": "9c5991f17f4fcf36a39df4833e5204ef4f9261b1b6ce32f64dc60e62adff9d90",
+      "target_sha256": "2e780039c3a5e03fbf9d461252fc3175871c90a02d5ea7841b65053f54f8387d",
+      "reviewer": "Claude (Claude Code session; full-text content and lexical review, no model execution)",
       "method": "assistant",
-      "reviewed_on": "2026-11-08"
+      "reviewed_on": "2026-11-09"
     },
     {
       "source": "test/avalanche/README.md",
@@ -4438,6 +4438,15 @@
       "reviewer": "Claude (Claude Code session; f_opening_dynamic default switch)",
       "method": "assistant",
       "reviewed_on": "2026-10-31"
+    },
+    {
+      "source": "test/wetbank/README.md",
+      "target": "test/wetbank/en/README.md",
+      "source_sha256": "7396675cbe4a63014bcb8f1de42d4a20ed469764e50e8914561a642e1f0da034",
+      "target_sha256": "b1eb6fd12d24e41141e3d08a7c83ea1148e9a63ef28a7941553db6dad2515181",
+      "reviewer": "Claude (Claude Code session; full-text content and lexical review, no model execution)",
+      "method": "assistant",
+      "reviewed_on": "2026-11-09"
     },
     {
       "source": "test/wetlw/README.md",
