@@ -1027,9 +1027,11 @@ subroutine m_swflow_enc_init(p, g, b, s)
   if (opt%f_advection_donor == 3 .and. (opt%p_adv_donor_eps <= 0.0 .or. opt%p_adv_donor_eps > 1.0)) then
     call par_stop("list_enc: p_adv_donor_eps must satisfy 0 < p_adv_donor_eps <= 1")
   end if
-  if (opt%f_advection_donor == 3 .and. opt%f_advection_scheme < 2) then
-    call par_info("swflow: f_advection_donor="//trim(itoa(opt%f_advection_donor)) &
-                  //" has no effect with f_advection_scheme=1")
+  ! 0 は 2026-11-09 までの既定(線 k の供給元をそのまま使う)。斜めのラスタ河道で河岸が濡れると人工的な減速で
+  ! 河道が深くなる(test/wetbank。§102)ので、明示した実行は起動時に知らせる
+  if (opt%f_advection_donor == 0 .and. opt%f_advection_scheme >= 2) then
+    call par_info("swflow_enc: f_advection_donor = 0 (edge-line donor used as is; the default until 2026-11-09. " &
+                  //"The default 3 treats thin donors carrying little of the inflow as neutral)")
   end if
   if (opt%f_advection_donor == 3 .and. opt%f_advection_scheme >= 2) then
     call par_info("swflow_enc: f_advection_donor = 3 (edge-line donor ramped toward u_e when it carries " &

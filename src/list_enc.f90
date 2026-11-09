@@ -26,8 +26,9 @@ module list_enc
                                               !   流木・瓦礫)の移流スキーム (1: 1 次風上(旧既定),
                                               !   3: リンクごとの MUSCL + van Leer 面値再構成(既定。
                                               !   2026-10-13 に 1 から昇格。developer.md §78))
-    integer :: f_advection_donor = 0          ! 運動量保存形移流(スキーム 2, 3)の風上供給元
-                                              !   (0:線 k 上の湿潤セル(既定), 3:線 k 上の供給元の
+    integer :: f_advection_donor = 3          ! 運動量保存形移流(スキーム 2, 3)の風上供給元
+                                              !   (0:線 k 上の湿潤セル(2026-11-09 までの既定),
+                                              !   3(既定。2026-11-09 に 0 から昇格):線 k 上の供給元の
                                               !   リンクが運ぶ水が、面のセルへの最大の流入リンクの
                                               !   p_adv_donor_eps 倍に満たず、供給元の水深も面の
                                               !   セルの水深の p_adv_donor_eps 倍に満たない(薄い)
@@ -132,7 +133,7 @@ subroutine list_enc_read(p, list)
   integer :: f_opening_dynamic          ! 塞がれた開口の動的振り替え (0:なし, 1:河道, 2:全域)
   integer :: f_dry_head_cap             ! 乾燥セルへのエッジ水深のエネルギー頭による頭打ち (0/1)
   integer :: f_advection_donor          ! 運動量保存形移流の風上供給元 (0:線 k 上の湿潤セル,
-                                        !   3:線 k の供給元の流量比で u_e へ寄せ、側方面の乾湿
+                                        !   3(既定):線 k の薄い供給元を u_e へ寄せ、側方面の乾湿
                                         !   判定を連続に。1・2 は廃止)
   integer :: f_inflow_edge              ! 区間流入の外縁セルに接するエッジの扱い (0/1/2)
   integer :: f_scalar_scheme            ! スカラー輸送の移流スキーム (1:1次風上, 3:MUSCL)
