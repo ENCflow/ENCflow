@@ -1976,29 +1976,29 @@
     {
       "source": "examples/meander/README.md",
       "target": "examples/meander/en/README.md",
-      "source_sha256": "4a4f6006d4b49c6b64a24f537302b180b44ba11fdf838cff817b4bf3355a4b76",
-      "target_sha256": "83bdca3a6683a5c7f69a4860ffe2fd270f4d0c929f168efb429ed06e954c2571",
-      "reviewer": "Claude (Claude Code session; removed development history from both versions in parallel and compared the edited passages, headings, tables and numbers; no model execution)",
+      "source_sha256": "45b5a54f1d0132098bd84907c93039097147b07a0282c61e70db2ca1487f3508",
+      "target_sha256": "491dca7c4987a2137346916525a77c2c5edc0bd0aedb8fa6f48bd164cca7db57",
+      "reviewer": "Claude (Claude Code session; updated both versions in parallel and compared every changed passage, table row and number; unchanged text as in the previous record)",
       "method": "assistant",
-      "reviewed_on": "2026-11-08"
+      "reviewed_on": "2026-11-09"
     },
     {
       "source": "examples/meander/figs/feed.png",
       "target": "examples/meander/en/figs/feed.png",
-      "source_sha256": "17dbe003aa6d028f27a8ff1e5ae4d0739abda6357982bee6085873805e87c4aa",
-      "target_sha256": "91128a8c7d2a2a304f6dc204df1f6bc24e933890f59ed0bd137121656f5bc6b3",
-      "reviewer": "Claude (Claude Code session; result figures drawn by plot_results.py from the 2026-11-03 runs, Japanese and English images compared side by side: same data and layout, labels translated)",
+      "source_sha256": "cd3f8531a5a5d454892197923df20b6c2c98e3450cdd02b07f533560b94dff13",
+      "target_sha256": "a2b5b342c20d1a4c345c03d02eb72927633d919013d8545c3ff12faed30de7a5",
+      "reviewer": "Claude (Claude Code session; viewed both images side by side: same 100 h and 200 h bed-change maps of the two feed configurations with water edges and fixed bars, translated titles)",
       "method": "assistant",
-      "reviewed_on": "2026-11-03"
+      "reviewed_on": "2026-11-09"
     },
     {
       "source": "examples/meander/figs/fixation.png",
       "target": "examples/meander/en/figs/fixation.png",
-      "source_sha256": "e58630084110481a342100ae8c2e68f88460527a27ef80674e74133b052b9252",
-      "target_sha256": "7683aac59f641dca382d3c4e9ce6111726734638b1949c452725bb8ca196d915",
-      "reviewer": "Claude (Claude Code session; result figures drawn by plot_results.py from the 2026-11-03 runs, Japanese and English images compared side by side: same data and layout, labels translated)",
+      "source_sha256": "98c15141cf8522004c0649c42e198ef90e3b7b0ccdad1a18e82b06acdba9636d",
+      "target_sha256": "0ec4377ae221418fc9affdf8c42403eb89b0f024b3e220c30bdec3bb6532ac99",
+      "reviewer": "Claude (Claude Code session; viewed both images side by side: same fixation-degree and low-flow depth maps of the varying Q + fixation run, translated titles)",
       "method": "assistant",
-      "reviewed_on": "2026-11-03"
+      "reviewed_on": "2026-11-09"
     },
     {
       "source": "examples/meander/figs/mechanism.png",
@@ -2012,29 +2012,29 @@
     {
       "source": "examples/meander/figs/metrics.png",
       "target": "examples/meander/en/figs/metrics.png",
-      "source_sha256": "c9d6ff49493eb21086f92469b10529102f2ca960a791b0fa419ffc77c9d38b2e",
-      "target_sha256": "49eafd6d55c9eca200af35af4ab7d149ee8a8900688ab3c1c5978efd429750f1",
-      "reviewer": "Claude (Claude Code session; result figures drawn by plot_results.py from the 2026-11-03 runs, Japanese and English images compared side by side: same data and layout, labels translated)",
+      "source_sha256": "840f61fd433e96345426c531c8450015f9cba585658c70c4d4c3f7e1ad2d8dcb",
+      "target_sha256": "91bc83dfac45866e85f6f21175ca18cd3f6b05d6b9f81db848709a853e026ee6",
+      "reviewer": "Claude (Claude Code session; viewed both images side by side: same width, centre-shift and wet-belt amplitude series for the ten configurations, translated labels and legend)",
       "method": "assistant",
-      "reviewed_on": "2026-11-03"
+      "reviewed_on": "2026-11-09"
     },
     {
       "source": "examples/meander/figs/planform.png",
       "target": "examples/meander/en/figs/planform.png",
-      "source_sha256": "3f2a6db7fd15601e6d4bdf3f954a477c87e1a73441e88505fa408e5629ea3f4e",
-      "target_sha256": "16cb33f9e21a8d7805bf9d4d172b0fa8b32973a968987431327488af8657aa08",
-      "reviewer": "Claude (Claude Code session; result figures drawn by plot_results.py from the 2026-11-03 runs, Japanese and English images compared side by side: same data and layout, labels translated)",
+      "source_sha256": "e53978c97919bff936d31729c252fcb720c61b9185a55ac0623475e6b7b50f16",
+      "target_sha256": "c345e4eeb77a024c67d3207c8acfa2d9df41affb93b9508fcd9a8276a9506eb2",
+      "reviewer": "Claude (Claude Code session; viewed both images side by side: same initial channel and eight 200 h bed-change maps with the same colours and water edges, translated titles)",
       "method": "assistant",
-      "reviewed_on": "2026-11-03"
+      "reviewed_on": "2026-11-09"
     },
     {
       "source": "examples/meander/figs/sections.png",
       "target": "examples/meander/en/figs/sections.png",
-      "source_sha256": "1b057ae9e9d937da272ad18439587bd10c527d11bf60ebf435ca39f7b2436a09",
-      "target_sha256": "6f412a10afe33fc7fad0f764dfa5a5b02792f459d4d91852b9e3816fe2e4092e",
-      "reviewer": "Claude (Claude Code session; result figures drawn by plot_results.py from the 2026-11-03 runs, Japanese and English images compared side by side: same data and layout, labels translated)",
+      "source_sha256": "341b65be011edadb2bcf189c7ca1ab7b234bee7ff9178c8c074ddf447b6e8661",
+      "target_sha256": "fc635b4af55ba85329d5819835cf732e7666551b78f269fd3309712450b672d4",
+      "reviewer": "Claude (Claude Code session; viewed both images side by side: same two cross-section time series at x = 420 and 520 m with the final water surface, translated titles and legend)",
       "method": "assistant",
-      "reviewed_on": "2026-11-03"
+      "reviewed_on": "2026-11-09"
     },
     {
       "source": "examples/meander/figs/setup.png",
