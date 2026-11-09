@@ -77,10 +77,14 @@ architecture.md。このメモは「現在進行中・未完了の項目」だ�
      Courant 数も上がる(tutorials/chichibu 補足の 200 m・幅 50 m のサブグリッド河道は dt 6 → 4 s)。実施: 既定値の
      変更(e3c79971)、reference 9 ケースの更新(5cf48367。差の一覧の目視確認の後)、tutorials/chichibu の Step 3 に
      0 を明示して Step 1・BMI の値と図を更新(8532bbef)、users guide・List_samples・test/chichibu などの README の
-     記述(同日)。**残り**: (i) 例題: 既定の判断で 0 と差の出た、または値を README に載せる meander・meander_cutoff・
-     estuary_barrage・catchment_metal・debris_fan の全ケースを 2026-11-09 に回し直し中(終わったら README(日英)と
-     図を更新)。そのほかの例題は 00k の後の「全例題の再計算」で既定 3 も含めて回す。(ii) 3 で残る側方面の減速
-     (dd 以上の河岸の水膜。test/wetbank の 6〜17 % の主な原因)は (2) の **次の候補** と同じ課題。
+     記述(同日)、例題: 既定の判断で 0 と差の出た、または値を README に載せる meander・meander_cutoff・
+     estuary_barrage・catchment_metal・debris_fan の全ケースを回し直して README(日英)と図を更新(同日。§102 の
+     「既定を 3 に変更」の例題の項)。そのほかの例題は 00k の後の「全例題の再計算」で既定 3 も含めて回す。**残り**:
+     (i) 3 で残る側方面の減速(dd 以上の河岸の水膜。test/wetbank の 6〜17 % の主な原因)は (2) の **次の候補** と同じ課題。
+     (ii) examples/meander の細粒分の帳簿の構成(param_fixsuspfines.txt)は、3 で砂州が氾濫原より 0.64 m 高くまで育ち、
+     125 h ごろから出水が氾濫原へあふれて引かなくなった(0 では天端 1.37 m で、氾濫原の水は上流側に限られる。§102)。
+     README は今の結果のとおりに書き直した。例題の狙い(砂州が氾濫原の高さまで育つ)に戻すなら、給砂倍率
+     inflow_cs_fac を下げる案がある(利用者の判断。未着手)。
    - (2) 済(2026-11-07。§102「S2 の試作と不採用、側方面の乾湿判定を連続にする S1a を 3 に追加」): 3 で残っていた
      小さな跳ね(200 m の測線 3 の 120 min +222・測線 4 の 310 min +57、100 m の 4 つ、Step 5 の 5 つ)の原因は、側方面の
      流入流速 lateral_u と開口率 axis_open の乾湿判定(h ≥ dd)だった。3 に、この判定を dd 未満で水深に比例して中立へ寄せる
@@ -153,7 +157,8 @@ architecture.md。このメモは「現在進行中・未完了の項目」だ�
    - (e) 地下水の側方流 `gw_diagratio`(と同じ通過幅を使う `salt_diagratio`)の既定を 1/3 にした(2026-11-05。利用者の
      決定「する」、reference の差の図を見た上での了承。developer.md §98)。gwbed・gwsect・gwseep・gwwidth の reference を
      更新し(逐次・MPI np = 1・2・4 がバイト一致)、検定スクリプトの d の定数と test の README を直した。**残り**: 例題
-     estuary_barrage・catchment_metal・qanat(層2)と tutorials/chichibu(地下水)の数値の回し直し((f))。
+     qanat(層2)と tutorials/chichibu(地下水)の数値の回し直し((f))。estuary_barrage・catchment_metal は
+     2026-11-09 に今のコードで回し直して済(00n(1))。
    - (f) 別ブランチ claude/inspiring-brahmagupta-c5jfsg(重力補正の既定・セルの流出の抑制ほか)は 2026-11-05 に main へ
      合流した。番号が衝突したので、このブランチの developer.md の節(旧 §93〜96)を §96〜99 に、本項を 00l から 00m に
      付け替えてから main をこのブランチ(claude/nifty-hawking-yx6s0o)に merge した(利用者の了承)。merge 後の全 test
@@ -166,7 +171,8 @@ architecture.md。このメモは「現在進行中・未完了の項目」だ�
        gw・salt の diagratio = 1/3、f_lvtemp_scheme = 3)で値が変わる badland・badland_round・badland_storm・mesa・
        mountain_valley・glacier_valley・shield_volcano・stratovolcano・catchment_metal・estuary_barrage・qanat
        (estuary_barrage・qanat は main で地下水 2/(2+√2) のまま再計算したので、もう一度)と tutorials/chichibu
-       (地下水)、main の側の未了の karst・tower_karst。合意済みの範囲は delta・meander・
+       (地下水)、main の側の未了の karst・tower_karst(catchment_metal・estuary_barrage は 2026-11-09 に今のコードで
+       回し直して済。00n(1))。合意済みの範囲は delta・meander・
        meander_cutoff を除く全例題(26 例題。vz_tani2023 は論文の PDF から抽出したデータが要るので除き、
        benchmark は README がないので除く)。手順の案: 各 README の実行の節の計算の行(make run・make supp・
        ./encflow など)を例題ごとに回し、描画は README の更新のときに結果を見ながら行う。4 並列・1 スレッドで
@@ -282,7 +288,9 @@ architecture.md。このメモは「現在進行中・未完了の項目」だ�
      delta・tower_karst(1 Myr の連鎖のうち param.txt・param_steady.txt は計算済み、param_base.txt の途中で
      止めた)。2026-11-09 に既定を f_advection_donor = 3 にした(00n(1))ので、上で済んだ例題も含めて 3 での値の
      変化を確かめる(既定の判断で 0 と 3 を比べた levee_breach・ashfall_lahar・mountain_valley の V_a・badland_storm は
-     ほぼ同じか全出力が一致。meander・meander_cutoff・estuary_barrage・catchment_metal・debris_fan は 00n(1) で回し直し)。
+     ほぼ同じか全出力が一致。meander・meander_cutoff・estuary_barrage・catchment_metal・debris_fan は
+     00n(1) で今のコード(11-05 の既定の変更を含む)で回し直して README と図を更新済みで、未了から
+     catchment_metal・meander・meander_cutoff が外れる)。
      再開するときは各 README の「実行方法」で回し、plot スクリプトの数表を README と比べる(delta は
      4 スレッドでも 1 ケース 40 分〜3.5 時間、meander・meander_cutoff・karst は 1 ケース 40 分〜3 時間、
      tower_karst の連鎖は約 21 時間)。対象外: vz_tani2023(論文の PDF が要る)、benchmark(結果を README に
