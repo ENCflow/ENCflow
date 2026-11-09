@@ -164,12 +164,12 @@ The flood run (param.txt) every 30 min (5 h of landform time). Left: speed; righ
 
 | t (min) | Landform time (h) | Q (m³/s) | Flowing cells in the loops | Discharge round the top (estimate), loop 1 / 2 (m³/s) | Flowing cells on the three lands / mean bed change of the lands (m) | Flowing cells in the lower bend | Wet outside the initial channel |
 |---|---|---|---|---|---|---|---|
-| 30 | 5 | 15 | 2,265 | 15.1 / 15.0 | 0 / −0.01 | 469 | 11 |
-| 60 | 10 | 40 | 1,556 | 21.6 / 11.5 | 585 / −0.50 | 291 | 5,215 |
-| 90 | 15 | 40 | 1,463 | 4.9 / 11.7 | 600 / −0.92 | 367 | 2,714 |
-| 120 | 20 | 15 | 847 | 1.0 / 5.2 | 480 / −1.06 | 125 | 2,042 |
-| 150 | 25 | 15 | 823 | 0.3 / 9.0 | 481 / −1.10 | 120 | 2,006 |
-| 180 | 30 | 15 | 820 | 0.3 / 8.3 | 466 / −1.13 | 120 | 1,951 |
+| 30 | 5 | 15 | 2,265 | 15.2 / 15.0 | 0 / −0.01 | 469 | 12 |
+| 60 | 10 | 40 | 1,601 | 21.9 / 12.5 | 590 / −0.51 | 276 | 5,269 |
+| 90 | 15 | 40 | 1,577 | 5.4 / 14.0 | 587 / −0.86 | 345 | 2,640 |
+| 120 | 20 | 15 | 808 | 0.6 / 6.0 | 484 / −1.03 | 177 | 2,083 |
+| 150 | 25 | 15 | 800 | 0.2 / 9.4 | 479 / −1.08 | 180 | 2,008 |
+| 180 | 30 | 15 | 792 | 0.1 / 8.2 | 467 / −1.10 | 188 | 1,972 |
 
 The three lands are the initial land inside the dashed boxes of the settings figure (between the
 limbs of loop 1: 180, between the two loops: 303, between the limbs of loop 2: 253; 736 cells in
@@ -178,34 +178,34 @@ all). The lower bend has 469 cells.
 - **Before the flood only the bends develop** (5 h): pools on the outer banks and bars on the
   inner banks begin to form (deepest scour 1.9 m), and no flow crosses the land.
 - **The flood (40 m³/s) makes overbank flow cut shortcuts** (10–15 h): the floodplain is widely
-  inundated (5,215 wet cells outside the initial channel), and flow heading east over the land
+  inundated (5,269 wet cells outside the initial channel), and flow heading east over the land
   between the limbs of loop 1, the land between the two loops and the land between the limbs of
-  loop 2 incises the land (585–600 flowing cells on the three lands, mean bed change −0.5 to
+  loop 2 incises the land (587–590 flowing cells on the three lands, mean bed change −0.5 to
   −0.9 m). The discharge round the top of loop 1 falls from 22 to 5 m³/s during the flood (the 22
   at 10 h includes the flow over the inundated floodplain on the line through the apex). The
   pools on the outer banks deepen to 4.1 m during the flood.
-- **When the flood recedes the flow moves to the shortcuts, and loop 1 and the lower bend become
-  old channels** (from 20 h): the flow leaves the upstream limb of loop 1, crosses the land
-  between the limbs of loop 1 and the land between the two loops diagonally, and enters the
-  upstream limb of loop 2. The flowing cells in the loops go 2,265 → 847 → 820, the discharge round
-  the top of loop 1 is 0.3–1.0 m³/s, and the flowing cells in the lower bend go 469 → 120 (at the
-  end, of the 1,133 cells of the initial channel of loop 1, 399 hold standing water and 417 are
-  dry). Loop 2 keeps flowing: the discharge round its top is 5–9 m³/s (30–60 % of the 15 m³/s),
-  and the rest crosses the land between the limbs of loop 2. By the end the land of the shortcuts
-  has been incised by 0.9–1.7 m on average (−1.73 m between the limbs of loop 1, −1.00 m between
-  the two loops, −0.87 m between the limbs of loop 2).
+- **When the flood recedes the flow moves to the shortcuts, and loop 1 becomes an old channel**
+  (from 20 h): the flow leaves the upstream limb of loop 1, crosses the land between the limbs of
+  loop 1 and the land between the two loops diagonally, and enters the upstream limb of loop 2.
+  The flowing cells in the loops go 2,265 → 808 → 792, and the discharge round the top of loop 1
+  is 0.1–0.6 m³/s (at the end, of the 1,133 cells of the initial channel of loop 1, 394 hold
+  standing water and 426 are dry). The flow in the lower bend also shrinks (flowing cells
+  469 → 177–188). Loop 2 keeps flowing: the discharge round its top is 6–9 m³/s (40–60 % of the
+  15 m³/s), and the rest crosses the land between the limbs of loop 2. By the end the land of the
+  shortcuts has been incised by 0.9–1.7 m on average (−1.72 m between the limbs of loop 1,
+  −0.92 m between the two loops, −0.88 m between the limbs of loop 2).
 - **Slump blocks play no part in the cutoff by overbank flow**: with flood + slump blocks the time
-  of the cutoff (15–20 h) and the shift of the flow are the same (848 against 820 flowing cells in
-  the loops at the end; discharge round the tops 0.2 / 7.9 against 0.3 / 8.3), and the slump
-  blocks are small, 596 m³ (angle-of-repose avalanching 1,003 m³; 1,428 m³ in the configuration
+  of the cutoff (15–20 h) and the shift of the flow are the same (796 against 792 flowing cells in
+  the loops at the end; discharge round the tops 0.2 / 6.6 against 0.1 / 8.2), and the slump
+  blocks are small, 585 m³ (angle-of-repose avalanching 1,035 m³; 1,451 m³ in the configuration
   without slump blocks).
 - **The old channels begin to fill**: at the end the bed of the initial channel has risen by
-  +0.44 m on average in loop 1, +0.80 m in the lower bend and +0.77 m in loop 2. By 30 h the
+  +0.44 m on average in loop 1, +0.67 m in the lower bend and +0.77 m in loop 2. By 30 h the
   entrances are not closed and no oxbow lake forms.
 - **The size of the flood decides the cutoff** (a trial; no parameter file is provided): with a
   flood peak of 25 m³/s, only 13–28 of the 180 cells of the land between the limbs of loop 1 flow
-  during the flood (157–159 at 40 m³/s), no shortcut is cut and the loops keep flowing (1,865
-  flowing cells in the loops at 30 h; discharge round the tops 16.1 / 15.8 m³/s).
+  during the flood (160–164 at 40 m³/s), no shortcut is cut and the loops keep flowing (1,952
+  flowing cells in the loops at 30 h; discharge round the tops 15.9 / 15.8 m³/s).
 
 ### No flood: cut off by bank retreat alone
 
@@ -307,7 +307,7 @@ thickness of fines Sf. Black = initial banks.
   [meander notes](../../meander/en/README.md#notes)).
 - **dt = 0.1 s** keeps the CFL condition in the fast flow over the deep pools (3–4 m) of the sharp
   bends during the flood (the computation stops with 0.2 s).
-- **Limit of the bed change per update**: `fluv_dzmax` (0.05 m) fires on 12,006–13,170 edges with
+- **Limit of the bed change per update**: `fluv_dzmax` (0.05 m) fires on 10,467–12,368 edges with
   the flood and on 2–44 edges without it (ledger). Lowering morfac reduces it.
 - **Reproducibility**: the same executable gives bit-identical results for any number of threads,
   but a different compiler, optimisation or CPU (this README uses gfortran 13.3 with -Ofast

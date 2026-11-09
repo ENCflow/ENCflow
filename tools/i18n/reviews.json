@@ -2048,8 +2048,8 @@
     {
       "source": "examples/meander_cutoff/README.md",
       "target": "examples/meander_cutoff/en/README.md",
-      "source_sha256": "6560da2c2307c6beac88277513d539c5af651377fac6ca58e1901f5865750b4f",
-      "target_sha256": "3e25e89190d5808ad0a87bec8867f5e370abfeecf60b930773857d8fbc02cf78",
+      "source_sha256": "bbc5cbbb2ad42c3d327749949686001c7d6383d687c450cc37edbab257440a92",
+      "target_sha256": "30f2a2f5249d46b8c69926057db37bd1b2c55248fe9a1156c3a2e9e1bc345ec0",
       "reviewer": "Claude (Claude Code session; full-text content and lexical review, no model execution)",
       "method": "assistant",
       "reviewed_on": "2026-11-09"
@@ -2057,11 +2057,11 @@
     {
       "source": "examples/meander_cutoff/figs/final_slump_fines.png",
       "target": "examples/meander_cutoff/en/figs/final_slump_fines.png",
-      "source_sha256": "ce1247e13f7e47b57c04b1eb1f14323726b7ca5d4ea7e11f3b642408d70d1456",
-      "target_sha256": "5f7f3e2000da9f90ae42d050bdd280ef25eb0b53f3f5f54595a5f2338cf107d2",
-      "reviewer": "Claude (Claude Code session; result figures drawn by plot_results.py from the 2026-11-03 runs, Japanese and English images compared side by side: same data and layout, labels translated)",
+      "source_sha256": "08c6e4d55cdcccc4bc7a2e578d77168d7516dd4a7fe77fff532890819da658d3",
+      "target_sha256": "bb57052b61239518f89c364c259e6380a7aa3d6733518d304156bef0c708071e",
+      "reviewer": "Claude (Claude Code session; recomputed 2026-11-09 with the default f_advection_donor = 3: both drawn by plot_results.py (python3 plot_results.py and python3 plot_results.py en; the script changed only in the printed return-time criterion) from the same results of the six configurations; Japanese and English states, sequence and final_slump_fines viewed, labels compared)",
       "method": "assistant",
-      "reviewed_on": "2026-11-03"
+      "reviewed_on": "2026-11-09"
     },
     {
       "source": "examples/meander_cutoff/figs/mechanism.png",
@@ -2075,11 +2075,11 @@
     {
       "source": "examples/meander_cutoff/figs/sequence.png",
       "target": "examples/meander_cutoff/en/figs/sequence.png",
-      "source_sha256": "d2d6d12cf01489d225430c4abcd9f082aff322318aec34d4fc7c1808cc1f2e2e",
-      "target_sha256": "39259ab5f67b4a07f5f121cc6bf0c66de84673fa58c83466aed880c0101a7808",
-      "reviewer": "Claude (Claude Code session; result figures drawn by plot_results.py from the 2026-11-03 runs, Japanese and English images compared side by side: same data and layout, labels translated)",
+      "source_sha256": "67ae7fa6f9f1d47590d25cc00ddd22a895e7fd1662dc70c5c14d08a51911ab12",
+      "target_sha256": "5d0d898ebc03afbc2a3af89fe9266afd434470c78789091b22d6fca6c2a2704b",
+      "reviewer": "Claude (Claude Code session; recomputed 2026-11-09 with the default f_advection_donor = 3: both drawn by plot_results.py (python3 plot_results.py and python3 plot_results.py en; the script changed only in the printed return-time criterion) from the same results of the six configurations; Japanese and English states, sequence and final_slump_fines viewed, labels compared)",
       "method": "assistant",
-      "reviewed_on": "2026-11-03"
+      "reviewed_on": "2026-11-09"
     },
     {
       "source": "examples/meander_cutoff/figs/setup.png",
@@ -2093,11 +2093,11 @@
     {
       "source": "examples/meander_cutoff/figs/states.png",
       "target": "examples/meander_cutoff/en/figs/states.png",
-      "source_sha256": "ceee1b2c250ce0b9d5c028eaea58cd24027f7c6915ad8ef9882754fb0f2012c7",
-      "target_sha256": "6936aa95f6fbe3ed8b8e399ed2bf8cfa1deaa627f183116cbbfabbbe61d23067",
-      "reviewer": "Claude (Claude Code session; result figures drawn by plot_results.py from the 2026-11-03 runs, Japanese and English images compared side by side: same data and layout, labels translated)",
+      "source_sha256": "2d2a55c3e73227d8f19bd8c1cf6811463902c7548d9e8f7d40172c7dc59aa050",
+      "target_sha256": "31dca66ccf47c204bda53ed93248f79b2034fd0b902d44e310290e4066cb6a59",
+      "reviewer": "Claude (Claude Code session; recomputed 2026-11-09 with the default f_advection_donor = 3: both drawn by plot_results.py (python3 plot_results.py and python3 plot_results.py en; the script changed only in the printed return-time criterion) from the same results of the six configurations; Japanese and English states, sequence and final_slump_fines viewed, labels compared)",
       "method": "assistant",
-      "reviewed_on": "2026-11-03"
+      "reviewed_on": "2026-11-09"
     },
     {
       "source": "examples/mesa/README.md",
