@@ -1338,7 +1338,7 @@ computations should differ much less; checking this is left to the reader
   the deposit, the arrival time and the lateral spreading agree within
   ±10% of the reference over grid spacings of 20 to 2.5 m and three valley
   orientations relative to the grid (even on a 40 m grid, coarser than the
-  30 m wide valley floor, 0.92 to 1.09 times the reference sediment reaches
+  30 m wide valley floor, 0.92 to 1.10 times the reference sediment reaches
   the fan). It also compares four neighbors, which shows what the
   8-direction exchange of the ENC grid brings.
 - **Flow is not obstructed even at coarse resolution**: most
