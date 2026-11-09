@@ -85,12 +85,12 @@ main: real precision: 64 bit
 main: number of valid cells: 17885
 time, progress, S(m), Runge, ex_flux, Cn_max, h_max(m), V_max(m/s)
   0:00:00.00   0.0%    0.0000   0.0%      0    0.0000    0.0000    0.0000
-  0:30:00.00   8.3%    0.0487  97.7%      0    0.1907    1.2868    4.0472
-  1:00:00.00  16.7%    0.1000   6.2%      0    0.3467    4.9832    8.3893
-  1:30:00.00  25.0%    0.1000   3.4%      0    0.4268    7.7557    8.9856
-  2:00:00.00  33.3%    0.1000   0.9%      0    0.4207    7.8634    8.6181
+  0:30:00.00   8.3%    0.0487  97.7%      0    0.1907    1.2869    4.0483
+  1:00:00.00  16.7%    0.1000   6.2%      0    0.3446    4.9054    8.4385
+  1:30:00.00  25.0%    0.1000   3.4%      0    0.4433    7.0997    9.2601
+  2:00:00.00  33.3%    0.1000   0.9%      0    0.4253    6.9333    9.1495
   ...
-  6:00:00.00 100.0%    0.1000   0.5%      0    0.5131   29.6515    4.1987
+  6:00:00.00 100.0%    0.1000   0.6%      0    0.5149   29.8791    4.1599
 main: program terminated normally
 ```
 
@@ -166,7 +166,7 @@ The screen output tells us the following.
   afterwards. By default the outer rim of the computational domain is
   an impermeable wall, so this catchment is a **closed vessel with no
   water outlet**; the constant S column confirms mass conservation.
-- Meanwhile the h_max column keeps growing from 8 m to nearly 30 m: the water
+- Meanwhile the h_max column keeps growing from 7 m to nearly 30 m: the water
   that cannot get out keeps accumulating somewhere.
 
 The depth distribution at the final time (`result/H9998.txt`) shows
@@ -386,9 +386,22 @@ corresponding directly to the `flxy` / `pbxy` values above).
   1 to 2 cm). **Checking the configured positions against the mask by
   eye, as done here,** is the basic routine when placing measurements.
 
-When you run it, the numbers on screen match Step 2 **exactly**:
-measurement and file output have no effect whatsoever on the
-computation itself. The results now include `fluxes/flux0001.csv`
+In this Step the upwind momentum donors of the advection term are also set to
+`f_advection_donor = 0` (the default until 2026-11-09). Adding `fn_enc = "-"` to
+`&list_sysparam` makes the model read `&list_enc` from the same file. This setting
+is used to show the hydrograph jumps that Step 4 examines; the default is 3, and
+Step 4 returns to it.
+
+```
+&list_enc
+  f_advection_donor = 0      ! upwind momentum donors of the advection term (0: the default until 2026-11-09, used here to show the hydrograph jumps examined in Step 4; the default is 3)
+/
+```
+
+When you run it, the numbers on screen differ from Step 2 only by this
+`f_advection_donor = 0` (without it they match Step 2 **exactly**: measurement
+and file output have no effect whatsoever on the computation itself). The
+results now include `fluxes/flux0001.csv`
 (transect discharge time series) and `probes/probe0001.csv` (probe
 depth and velocity time series).
 
@@ -449,8 +462,9 @@ dashed line in the figure below). But this does not remove the cause;
 it only **postpones** it. The real cause lies elsewhere.
 
 - After the rain, a thin film of water remains on top of the river
-  banks. In the default computation of the advection term, where the
-  main flow turns, this film can put a **strong brake** on the main flow
+  banks. In the computation of the advection term with
+  `f_advection_donor = 0` used in Step 3, where the main flow turns, this
+  film can put a **strong brake** on the main flow
   (the mechanism is explained in [section 4.4 of the advection chapter
   of the users guide](../../../docs/en/users_guide/advection.md)).
 - While the brake keeps acting, water piles up in the river as behind a
@@ -479,8 +493,9 @@ abruptly, a film is not dropped the moment it falls below dd; its
 influence is weakened little by little as it becomes thinner. As a
 result no bump arises, and the result hardly changes with dd any more.
 
-To use this treatment, add `fn_enc` to `&list_sysparam` and set
-`f_advection_donor = 3` in `&list_enc` (for the details, see
+This treatment is `f_advection_donor = 3`, the default. Change the 0 set in
+Step 3 back to 3 (deleting the line in `&list_enc` and relying on the default does
+the same; for the details, see
 [section 4.4 of the advection chapter of the users guide](../../../docs/en/users_guide/advection.md)).
 dd and dv stay at their defaults.
 
@@ -508,15 +523,17 @@ coarse grids, **artifacts of the numerical settings** ride on the
 waveform like this. Before tuning roughness against observed
 hydrographs, it is important to remove them.
 
-`f_advection_donor = 3` is optional; the default is 0. Set it in cases
-where the river is narrow compared with the grid (one-cell-wide
+`f_advection_donor = 3` has been the default since 2026-11-09 (the default
+before was 0). Where the river is narrow compared with the grid (one-cell-wide
 channels) and the flow turns at many places without following the grid
-directions -- narrow mountain valleys or meandering channels computed on
-a coarse grid, for instance. Bumps on the recession limb of the
-hydrograph, or a result that changes with dd, are the signs. In wide
-flows or on smooth terrain the result changes little (about 1%). Since
-it is a change that moves the peak by 10 to 20%, judge which is closer
-to reality against observations.
+directions -- narrow mountain valleys or meandering channels computed on a
+coarse grid, for instance -- and the banks are wetted by rain, 0 puts an
+artificial brake on the main flow. In a check with straight channels oblique to
+the grid and banks wetted by rain ([test/wetbank](../../../test/wetbank/en/README.md)),
+0 makes the channel 10 to 40% too deep and 3 removes most of it. In wide flows or
+on smooth terrain the difference between 0 and 3 is small (about 1%). To
+reproduce results computed with the previous default, set
+`f_advection_donor = 0` explicitly.
 
 Note that the diffusive wave (`f_govequation = 1` in `&list_sysparam`)
 has no advection term, so it does not show these bumps. But the
@@ -817,8 +834,8 @@ When you notice oscillations, consider them in this order.
    10, they are wet/dry switches of thin water (running Step 5 with
    dd = dv = 0.0001 actually increases the small ups and downs on the
    recessions at transects 3 and 4, and a jump of +62 m³/s in one minute
-   appears at transect 4). Set `f_advection_donor = 3` if you have not
-   (Step 4).
+   appears at transect 4). If you set `f_advection_donor = 0`, return to the
+   default 3 (Step 4).
 2. **Small oscillations that remain can often be left as they are.** If
    they do not harm the water balance of the computation and do not affect
    the time scales that matter in runoff analysis (tens of minutes and
