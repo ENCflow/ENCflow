@@ -2048,11 +2048,11 @@
     {
       "source": "examples/meander_cutoff/README.md",
       "target": "examples/meander_cutoff/en/README.md",
-      "source_sha256": "9e29350dc33455b03b95e19515bf066dc87a351eddd3f02f76479358dd8a4a2c",
-      "target_sha256": "d90d54f582b74b30ed0fd5402b34a5e3f5741bd98efa5fae293cfc1de531d431",
-      "reviewer": "Claude (Claude Code session; removed development history from both versions in parallel and compared the edited passages, headings, tables and numbers; no model execution)",
+      "source_sha256": "6560da2c2307c6beac88277513d539c5af651377fac6ca58e1901f5865750b4f",
+      "target_sha256": "3e25e89190d5808ad0a87bec8867f5e370abfeecf60b930773857d8fbc02cf78",
+      "reviewer": "Claude (Claude Code session; full-text content and lexical review, no model execution)",
       "method": "assistant",
-      "reviewed_on": "2026-11-08"
+      "reviewed_on": "2026-11-09"
     },
     {
       "source": "examples/meander_cutoff/figs/final_slump_fines.png",

@@ -154,10 +154,10 @@ for rdir, pfile, log, _, _ in CASES:
         return "地形時間 %.0f〜%.0f h の間" % (tm[ks[ks.index(k) - 1]] * MORFAC / 3600, tm[k] * MORFAC / 3600)
     print("短絡(ループで流れているセル < %d)の時期: %s" % (0.5 * loop.sum(), "なし" if cut is None else interval(cut)))
     if cut is not None:
-        # 短絡の後に流れがループへ戻った時期: ループで流れているセルが 1 出力で 150 以上増えた出力
+        # 短絡の後に流れがループへ戻った時期: ループで流れているセルが 1 出力で 100 以上増えた出力
         # (出水なしでは、2 つのループの間の陸が切れてループ 1 からループ 2 の上流側の脚へ流れが入る時)
-        back = next((k for k in ks[ks.index(cut) + 1:] if nloop[k] - nloop[ks[ks.index(k) - 1]] >= 150), None)
-        print("短絡の後に流れがループへ戻った(ループで流れているセルが 1 出力で 150 以上増えた)時期: %s" % (
+        back = next((k for k in ks[ks.index(cut) + 1:] if nloop[k] - nloop[ks[ks.index(k) - 1]] >= 100), None)
+        print("短絡の後に流れがループへ戻った(ループで流れているセルが 1 出力で 100 以上増えた)時期: %s" % (
             "なし" if back is None else interval(back)))
     print("終了時の陸: " + "、".join("%s 流れている %d / %d セル・河床変化の平均 %+.2f m" % (
         LANDS[n][0], (fl & m).sum(), m.sum(), dz[m].mean()) for n, m in enumerate(LANDM)))

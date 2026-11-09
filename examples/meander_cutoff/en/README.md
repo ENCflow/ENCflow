@@ -118,7 +118,7 @@ with 4 cases running at the same time.
 cells** are cells with depth > 0.05 m and speed > 0.3 m/s. The time of the cutoff is the first
 output at which the flowing cells in the loops fall below half the number of loop cells (1,132),
 and the time the flow returned to the loop is the first output after it at which the flowing
-cells in the loops increase by 150 or more in one output. The **lower bend** is the bend that
+cells in the loops increase by 100 or more in one output. The **lower bend** is the bend that
 swings south from the downstream limb of loop 1 to the upstream limb of loop 2 (the initial
 channel with y ≤ 70 m and x = 115–210 m; 469 cells). The **discharge round the top (estimate)**
 is the sum of h|V| Δx along a north–south line (y ≥ 140 m) through the apex of the loop (where
@@ -214,59 +214,64 @@ in the lower bend (of 469). Bold marks the first row after the cutoff.
 
 | Landform time (h) | Control (repose 40°) | Repose 40° + slump blocks | Cohesive + slump blocks | Cohesive + slump blocks + fines |
 |---|---|---|---|---|
-| 20 | 2,210 / 15.5 / 450 | 2,206 / 15.3 / 464 | 2,204 / 15.8 / 467 | 2,196 / 15.6 / 451 |
-| 40 | 2,189 / 16.1 / 449 | 2,160 / 15.8 / 463 | 2,113 / 15.6 / 452 | 2,131 / 16.1 / 449 |
-| 60 | 2,155 / 15.6 / 440 | 2,071 / 16.1 / 425 | 2,113 / 16.5 / 431 | 2,023 / 16.2 / 413 |
-| 80 | **928 / 0.2 / 249** | **928 / 0.1 / 225** | **1,021 / 0.6 / 236** | 1,853 / 16.8 / 325 |
-| 100 | 883 / 0.2 / 249 | 856 / 0.0 / 241 | 916 / 0.5 / 250 | **812 / 0.4 / 218** |
-| 120 | 1,151 / 3.2 / 125 | 844 / 0.1 / 241 | 831 / 0.1 / 248 | 740 / 0.3 / 219 |
-| 140 | 1,101 / 1.7 / 65 | 1,104 / 3.0 / 89 | 1,020 / 3.3 / 72 | 717 / 0.1 / 181 |
-| 160 | 1,031 / 1.6 / 1 | 1,025 / 2.1 / 53 | 1,052 / 2.7 / 49 | 698 / 0.0 / 153 |
-| 180 | 1,015 / 1.4 / 0 | 984 / 1.9 / 0 | 1,005 / 2.1 / 12 | 853 / 3.0 / 124 |
-| Time of the cutoff | 65–70 h | 75–80 h | 75–80 h | 90–95 h |
-| Time the flow returned to the loop | 100–105 h | 125–130 h | 135–140 h | 175–180 h |
+| 20 | 2,209 / 15.4 / 463 | 2,231 / 15.5 / 465 | 2,219 / 15.7 / 460 | 2,206 / 15.7 / 458 |
+| 40 | 2,136 / 16.1 / 464 | 2,151 / 15.8 / 455 | 2,123 / 15.9 / 462 | 2,118 / 15.9 / 442 |
+| 60 | 2,102 / 15.7 / 429 | 2,137 / 15.8 / 458 | 2,088 / 16.4 / 421 | 2,033 / 16.0 / 407 |
+| 80 | **899 / 0.2 / 229** | **915 / 0.1 / 250** | **969 / 2.4 / 232** | 1,840 / 17.1 / 387 |
+| 100 | 840 / 0.2 / 240 | 883 / 0.2 / 254 | 850 / 0.2 / 244 | **799 / 0.2 / 224** |
+| 120 | 1,126 / 2.7 / 116 | 1,001 / 2.8 / 125 | 847 / 0.0 / 244 | 770 / 0.1 / 220 |
+| 140 | 1,063 / 1.9 / 70 | 1,037 / 2.6 / 79 | 1,084 / 3.1 / 62 | 718 / 0.0 / 173 |
+| 160 | 1,074 / 2.0 / 44 | 1,009 / 2.1 / 44 | 992 / 2.2 / 29 | 689 / 0.0 / 174 |
+| 180 | 1,037 / 1.7 / 0 | 968 / 1.9 / 0 | 944 / 1.6 / 0 | 643 / 0.0 / 149 |
+| Time of the cutoff | 70–75 h | 65–70 h | 75–80 h | 85–90 h |
+| Time the flow returned to the loop | 105–110 h | 115–120 h | 125–130 h | none (by 180 h) |
 
 - **Without overbank flow, outer-bank retreat alone cuts the neck of loop 2** (the original form of
   a neck cutoff): near the root, both limbs of loop 2 are bends whose outer banks face the inside of
   the loop (the neck). When the outer banks, retreating from both sides, meet at the narrowest land
   between the limbs (a little south of the red line in the settings figure, y ≈ 55–75 m), the flow
   passes straight from the lower bend into the downstream limb of loop 2 (the 80 and 100 h panels).
-  In all four configurations the flowing cells in the loops fall slowly from 2,200 to 1,850–2,150
+  In all four configurations the flowing cells in the loops fall slowly from 2,200 to 1,840–2,100
   before the cutoff (outer-bank retreat and inner-bank deposition shift the flow out of the initial
   channel), then drop to 800–1,000 at the cutoff, when the discharge round the top of loop 2 falls
-  to almost zero (0.0–0.6 m³/s). Loop 1 is not cut off by 180 h.
+  to almost zero (0.0–0.4 m³/s; with cohesive banks + slump blocks a little over 2 m³/s remains for
+  about 15 h just after the cutoff). Loop 1 is not cut off by 180 h.
 - **Next the land between the two loops is cut and the flow returns to loop 2**: the land between
   the two loops is eroded from both sides by the downstream limb of loop 1 and the upstream limb of
   loop 2 (both are the outer banks of the bends round the tops). Once this land is cut, the flow goes
   from loop 1 straight into the upstream limb of loop 2 and down that limb to the shortcut across
-  the neck. Part of the flow also goes round the top of loop 2 (1.4–3.3 m³/s, 10–20 % of the
-  15 m³/s). Instead, the flow in the lower bend stops: at 180 h the flowing cells in the lower bend
-  are 0–12 (124 with fines, just after the cut), and the bed of the initial channel of the bend has
-  risen by +0.67 to +0.74 m on average. The lower bend becomes the next old channel, a chain of
-  cutoffs (the 140 and 180 h panels).
+  the neck. Part of the flow also goes round the top of loop 2 (1.6–3.3 m³/s, 10–20 % of the
+  15 m³/s). Instead, the flow in the lower bend stops: at 180 h no cells in the lower bend are
+  flowing, and the bed of the initial channel of the bend has risen by +0.66 to +0.68 m on average.
+  The lower bend becomes the next old channel, a chain of cutoffs (the 140 and 180 h panels). In
+  the configuration with fines this land is not cut by 180 h (the downstream limb of loop 1 widens
+  into the land but does not break through to loop 2), and the lower bend keeps flowing (149 cells
+  at 180 h).
 - **In the cohesive banks, slump blocks are the only route of retreat**: angle-of-repose
-  avalanching 0 m³, slump blocks 11,550 m³. In the non-cohesive control, angle-of-repose
-  avalanching (11,234 m³) plays the same role, and adding slump blocks only changes the split
-  (4,779 m³ by avalanching + 7,399 m³ by slump blocks). The two configurations with slump blocks
-  cut off 10 h later and have the flow return 25–35 h later than the control. A 10 h difference in
-  the time of the cutoff (two outputs) is within what differences in rounding alone can cause (see
-  the notes).
-- **Adding fines delays the cutoff by about 15 h and the return of the flow by about 40 h**
-  (90–95 h and 175–180 h against 75–80 h and 135–140 h for cohesive + slump blocks). The channel
-  widens a little more slowly: the wet cells outside the initial channel at 60–100 h are 2–9 %
-  fewer than without fines (1,884, 2,462, 2,660 against 1,969, 2,499, 2,924).
-- **The old channel begins to fill but is not closed**: at 180 h, 540–646 of the 1,132 cells of the
-  initial channel of loop 2 are dry and 136–273 hold standing water, and its bed has risen by
-  +0.36 to +0.66 m on average (loop 1: −0.05 to +0.37 m). By 180 h the entrances are not closed.
-- **Fines settle at the margins of the flowing channel and in standing water before the outlet
-  rather than in the old channel** (bottom row of the figure; the figure below): the mean
-  thickness of fines Sf is 0.06 m (at most 0.66 m) in the initial channel of loop 2 and 0.17 m (at
-  most 1.29 m) in the flowing loop 1. The thickest, 2.0 m, is in the standing water where the outer
-  bank widened just before the outlet straight (x = 315 m, y = 17 m). Little fine sediment reaches
-  the old channel through its weak flow; it settles where the flow is shallow and slow at its
-  margins. The fines carried along with the bed load add up to 9.3 × 10⁵ m³: in the channel the
-  fines keep moving with the bed load.
-- The channel widens a lot (2,857–3,194 wet cells outside the initial channel at 180 h; the initial
+  avalanching 0 m³, slump blocks 11,014 m³. In the non-cohesive control, angle-of-repose
+  avalanching (11,183 m³) plays the same role, and adding slump blocks only changes the split
+  (4,706 m³ by avalanching + 7,250 m³ by slump blocks). In the three configurations the cutoff
+  falls within 65–80 h; the differences, one or two outputs (5–10 h), are within what differences
+  in rounding alone can cause (see the notes). The flow returns 10–20 h later in the two
+  configurations with slump blocks than in the control (115–120 h and 125–130 h against
+  105–110 h).
+- **Adding fines delays the cutoff by about 10 h, and the flow does not return to loop 2 by
+  180 h** (85–90 h and none, against 75–80 h and 125–130 h for cohesive + slump blocks). The
+  channel widens a little more slowly: the wet cells outside the initial channel at 60–100 h are
+  3–5 % fewer than without fines (1,858, 2,406, 2,633 against 1,950, 2,471, 2,708).
+- **The old channel begins to fill but is not closed**: at 180 h, 535–727 of the 1,132 cells of the
+  initial channel of loop 2 are dry and 150–405 hold standing water, and its bed has risen by
+  +0.37 to +0.62 m on average (loop 1: −0.06 to +0.38 m). By 180 h the entrances are not closed.
+- **Fines settle at the margins of the flowing channel, in standing water and at the mouth of the
+  old channel rather than inside the old channel** (bottom row of the figure; the figure below):
+  the mean thickness of fines Sf is 0.06 m in the initial channel of loop 2 and 0.15 m (at most
+  1.32 m) in the flowing loop 1. Little fine sediment reaches the inside of the old channel, where
+  the flow has stopped; the only thick deposit in loop 2, 0.6–1.1 m, is at the mouth of its
+  downstream limb (where it meets the shortcut across the neck, y ≈ 73 m, x = 225–245 m), and
+  part of it stands above the water. The thickest, 2.0 m, is in the standing water where the outer
+  bank widened just before the outlet straight (x = 315 m, y = 27 m). The fines carried along with
+  the bed load add up to 9.2 × 10⁵ m³: in the channel the fines keep moving with the bed load.
+- The channel widens a lot (2,969–3,062 wet cells outside the initial channel at 180 h; the initial
   channel has 3,904 cells). Banks with a repose angle of 40° and a critical height of 1.8 m retreat
   widely under a constant discharge, so the time of the cutoff depends strongly on the bank
   strength settings (φ, H_c).
@@ -303,7 +308,7 @@ thickness of fines Sf. Black = initial banks.
 - **dt = 0.1 s** keeps the CFL condition in the fast flow over the deep pools (3–4 m) of the sharp
   bends during the flood (the computation stops with 0.2 s).
 - **Limit of the bed change per update**: `fluv_dzmax` (0.05 m) fires on 12,006–13,170 edges with
-  the flood and on 44–399 edges without it (ledger). Lowering morfac reduces it.
+  the flood and on 2–44 edges without it (ledger). Lowering morfac reduces it.
 - **Reproducibility**: the same executable gives bit-identical results for any number of threads,
   but a different compiler, optimisation or CPU (this README uses gfortran 13.3 with -Ofast
   -march=native, which uses the instructions of the CPU it is built on) changes the rounding,
