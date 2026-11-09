@@ -113,8 +113,8 @@
     {
       "source": "docs/users_guide/advection.md",
       "target": "docs/en/users_guide/advection.md",
-      "source_sha256": "ee0f9e7965641f7c59019ef0dde2f93caad33e0ae0a23d39fd42bca15be5225b",
-      "target_sha256": "1c95652189bf70c57b5b2772c3ee9b197cc097f7e6cecb509bcf19df5c3b1037",
+      "source_sha256": "7516f0bd14108e1af03769565c9ef643128ba0834bd5a5e61dd28cfca4e205d7",
+      "target_sha256": "75b67063243d34e4394f07fff437d5316608f6af60deac4a4a14f8d4a6150eec",
       "reviewer": "Claude (Claude Code session; full-text content and lexical review, no model execution)",
       "method": "assistant",
       "reviewed_on": "2026-11-09"
@@ -482,11 +482,11 @@
     {
       "source": "docs/users_guide/swflow.md",
       "target": "docs/en/users_guide/swflow.md",
-      "source_sha256": "bf00286b49086946da229ef9f9d9f197215652268aea002ba61fe437f6dbef38",
-      "target_sha256": "50689ea81b909ad5cdf80b0d4c3a3747758641ac3e542e3f5183452746d18db2",
+      "source_sha256": "ab7a0d788fbcf06e9beef68c4e112834941c785b161a59c5b852c5b42bd4d7f0",
+      "target_sha256": "d08014550e90950751718ea0df776a88e40d36c5da299c139011263acf63a66a",
       "reviewer": "Claude (Claude Code session; full-text content and lexical review, no model execution)",
       "method": "assistant",
-      "reviewed_on": "2026-11-08"
+      "reviewed_on": "2026-11-09"
     },
     {
       "source": "docs/users_guide/swi.md",
@@ -644,11 +644,11 @@
     {
       "source": "examples/List_samples/list_enc.txt",
       "target": "examples/List_samples/en/list_enc.txt",
-      "source_sha256": "0ce0c2b5bf9d2df29a21e4df7729dc9583a5ccbc17a1be5eaca616258dc38ecd",
-      "target_sha256": "8781c3746757e9ffda6081c47faed1045627303c0e94adfe355a7977447d99f9",
+      "source_sha256": "a33ee6257bf240d6e18695802201ef1b1c8b452cb20c62bd8a4c92d47cdfd9a5",
+      "target_sha256": "a1b613d9d8af40f89bca9ffdf82ccb5ac9bc2e96e4583779f67c33b0297c92ef",
       "reviewer": "Claude (Claude Code session; full-text content and lexical review, no model execution)",
       "method": "assistant",
-      "reviewed_on": "2026-11-08"
+      "reviewed_on": "2026-11-09"
     },
     {
       "source": "examples/List_samples/list_evap.txt",
@@ -3110,11 +3110,11 @@
     {
       "source": "test/chichibu/README.md",
       "target": "test/chichibu/en/README.md",
-      "source_sha256": "584730267db2d19dc2e197d70f1123c752e1ed387038c04aaf6a1bada7bd07e2",
-      "target_sha256": "b931a35697ecd7569150d8d131bcc1b214a3fa056a8881ca2f87a44bf0f004a4",
-      "reviewer": "Claude (Claude Code session; developer.md section of f_advection_donor renumbered from 100 to 102 to avoid the collision with the 100 and 101 sections on main; references updated in Japanese and English alike)",
+      "source_sha256": "6a6ac4d7ff04234d648fa4e711b1df0898fa4f05f30a110552f428531ddaaa67",
+      "target_sha256": "c89b0695dd23efd3e06384794ae8cf8b825c5173627f98dc47a76a831aa1e402",
+      "reviewer": "Claude (Claude Code session; full-text content and lexical review, no model execution)",
       "method": "assistant",
-      "reviewed_on": "2026-11-08"
+      "reviewed_on": "2026-11-09"
     },
     {
       "source": "test/chichibu/data_chichibu/README.md",
@@ -3146,20 +3146,20 @@
     {
       "source": "test/chichibu/figs/chichibu.png",
       "target": "test/chichibu/en/figs/chichibu.png",
-      "source_sha256": "8874f89f1c9cc387c1a28e0d3016a10535381dfc10f0d5e78d2b3f490667980a",
-      "target_sha256": "3b2347e42fa192680813c8161048b174f73b0d5caea734c7bc5b54087fec82e2",
-      "reviewer": "Claude (Claude Code session; lateral-flux fix of the momentum-conservative advection, §68.42)",
+      "source_sha256": "46ce7980e8332cf2de067f4ce57abe2a99c859b0e3ef762d14d0c8983af7763c",
+      "target_sha256": "7292e781ea93641dbc2191d3e88a9294e330e20373db33a7cead3466969b86e0",
+      "reviewer": "Claude (Claude Code session; recomputed 2026-11-09 with the default f_advection_donor = 3: both drawn by Fig.py (python3 Fig.py and python3 Fig.py en, script unchanged) from the same result of param.txt; Japanese and English figures viewed, labels compared)",
       "method": "assistant",
-      "reviewed_on": "2026-11-01"
+      "reviewed_on": "2026-11-09"
     },
     {
       "source": "test/chichibu_icmap/README.md",
       "target": "test/chichibu_icmap/en/README.md",
-      "source_sha256": "5c44f32fdd2c69ff48a7ce9bd1f66775c37cfd88567ef7cac4ad0b6f963876ff",
-      "target_sha256": "46eb87b4bafbfd6c20ab000a9a093f9ec6488a282862eccce684a324a0d00e9a",
+      "source_sha256": "e79773f4be1907759814336c1cd0800da03a2809f975813ce0a5679e4ac0bbea",
+      "target_sha256": "1f29760fc2b19e4d8b1b5b68232cffad3418103afea77da94218095fbfc9d262",
       "reviewer": "Claude (Claude Code session; full-text content and lexical review, no model execution)",
       "method": "assistant",
-      "reviewed_on": "2026-10-24"
+      "reviewed_on": "2026-11-09"
     },
     {
       "source": "test/coastal_drain/README.md",
@@ -4613,8 +4613,8 @@
     {
       "source": "tutorials/chichibu/README.md",
       "target": "tutorials/chichibu/en/README.md",
-      "source_sha256": "0a8d76579a522518b2c3d3db7b59eb9c7dac2b5185e9675a46ec52635a0e5c16",
-      "target_sha256": "4b201546e0c6fc30845a01de40c2d65a50252f2f9a763aabdb5d3e9e78d78196",
+      "source_sha256": "ddbffbda64127626f907cf677fc42ca56a5ea5813d59229a0f6419151cef6a15",
+      "target_sha256": "e885071c7d0eafe54f055a7d4779837b90c8c606bfd83cea0d468a6b31f9b32a",
       "reviewer": "Claude (Claude Code session; full-text content and lexical review, no model execution)",
       "method": "assistant",
       "reviewed_on": "2026-11-09"

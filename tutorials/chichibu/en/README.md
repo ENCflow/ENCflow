@@ -530,7 +530,8 @@ directions -- narrow mountain valleys or meandering channels computed on a
 coarse grid, for instance -- and the banks are wetted by rain, 0 puts an
 artificial brake on the main flow. In a check with straight channels oblique to
 the grid and banks wetted by rain ([test/wetbank](../../../test/wetbank/en/README.md)),
-0 makes the channel 10 to 40% too deep and 3 removes most of it. In wide flows or
+the channel becomes deeper beyond the effect of the rain inflow by 10 to 40% with 0
+and by 6 to 17% with 3. In wide flows or
 on smooth terrain the difference between 0 and 3 is small (about 1%). To
 reproduce results computed with the previous default, set
 `f_advection_donor = 0` explicitly.

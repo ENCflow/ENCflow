@@ -70,9 +70,10 @@
                             !   blunting concentration fronts, peaks and
                             !   density-driven loads; kept for comparison).
                             !   users_guide/advection.md section 7
-  !f_advection_donor = 0    ! upwind momentum donors of the momentum-
+  !f_advection_donor = 3    ! upwind momentum donors of the momentum-
                             !   conservative advection (schemes 2, 3)
-                            !   (0: wet cells on the edge line = default,
+                            !   (0: wet cells on the edge line (the default
+                            !   until 2026-11-09),
                             !   3: only on faces where the link of the donor on
                             !   the edge line carries less than p_adv_donor_eps
                             !   times the largest inflow link of the face cell
@@ -80,15 +81,19 @@
                             !   p_adv_donor_eps times the face cell's depth),
                             !   the upwind value is pulled toward the edge's own
                             !   velocity, and the wet/dry tests of the lateral
-                            !   faces become a continuous weight below dd; no
-                            !   channel mask needed). 3 avoids the
+                            !   faces become a continuous weight below dd =
+                            !   default; no channel mask needed). 3 avoids the
                             !   artificial brake of a thin bank film acting as
                             !   donor and the jump of the recession limb when
-                            !   its wet/dry test flips. 1 (donors limited to
-                            !   channel cells on edges between channel cells)
-                            !   and 2 (weighted by the fluxes of all inflow
-                            !   links) were removed (the run stops if they are
-                            !   set. users_guide/advection.md section 4.4)
+                            !   its wet/dry test flips (test/wetbank). 0
+                            !   reproduces results computed with the previous
+                            !   default (with 3 the flow is faster than with 0
+                            !   and dt may need to be reduced). 1 (donors
+                            !   limited to channel cells on edges between
+                            !   channel cells) and 2 (weighted by the fluxes of
+                            !   all inflow links) were removed (the run stops
+                            !   if they are set. users_guide/advection.md
+                            !   section 4.4)
   !f_dry_head_cap = 1       ! cap the edge depth toward a dry cell by the
                             !   energy head eta + u_n^2/2g - z_receiver
                             !   (0: off, 1: on = default). Water cannot climb

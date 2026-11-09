@@ -353,7 +353,7 @@ this one line of the face value only; the rest of the path is shared.
 The lateral faces use first-order upwinding: on inflow ($`q_t < 0`$) the
 velocity of the parallel neighbouring edge $`u_{t\pm}`$ (green in the control-volume figure),
 on outflow $`u_e`$ (no contribution).
-With `f_advection_donor = 3` the wet/dry test of the parallel edge becomes a continuous weight (§4.4).
+With the default `f_advection_donor = 3` the wet/dry test of the parallel edge becomes a continuous weight (§4.4).
 
 ### 4.4 Walls, dry cells and boundaries
 
@@ -457,9 +457,9 @@ With `f_advection_donor = 3` the wet/dry test of the parallel edge becomes a con
   delayed), and 3 below handles the recession jumps and the sensitivity to
   `dd` without these side effects, so 2 was removed on 2026-11-07. Setting
   it stops the run; use 3 (developer.md §102, in Japanese).
-- **Thin donors that carry almost no water pulled toward neutral (`f_advection_donor = 3`).**
+- **Thin donors that carry almost no water pulled toward neutral (`f_advection_donor = 3`, the default).**
   The upwind value of a flow-direction face is the MUSCL face value
-  $`\bar u_k`$ of the link on line $`k`$, as with the default (0). Only when
+  $`\bar u_k`$ of the link on line $`k`$, as with 0 (the default until 2026-11-09). Only when
   the real flux $`Q_k`$ that this link carries into the face cell is below
   $`\varepsilon`$ times (`p_adv_donor_eps`, default 0.1) the largest real flux
   $`Q_\mathrm{max}`$ of the eight links entering the face cell, and the depth
@@ -508,7 +508,12 @@ With `f_advection_donor = 3` the wet/dry test of the parallel edge becomes a con
   test/inflowadv, test/dbonset and test/sedfeed pass as with 0, with the
   judged values at the same level as 0. No
   channel mask is needed. The method is **original to ENCflow**
-  (developer.md §102, in Japanese). **Known changes and limits**: relative to
+  (developer.md §102, in Japanese). On 2026-11-09 the default was changed from 0
+  to 3 (in the test/wetbank check below, 3 is as close as or closer to the
+  analytical solution than 0 in every geometry, and no other check or example
+  gets worse). To
+  reproduce results computed with the previous default, set
+  `f_advection_donor = 0` explicitly. **Known changes and limits**: relative to
   0, the Chichibu peak near the basin outlet is +13% and 20 min earlier on the
   200 m grid and +20% on the 100 m grid
   ([test/chichibu](../../../test/chichibu/en/README.md)) (the artificial brake
@@ -615,11 +620,10 @@ has the figures, tables and the list of derived cases).
 - Bores, hydraulic jumps, tsunami run-up and other flows with
   discontinuities: the default (3).
 - Rainfall runoff on a real DEM with a channel mask: 3 +
-  `f_opening_dynamic = 3` + `f_dry_head_cap = 1` (the defaults). If the
-  result is later and smaller than observed, or the recession limb of the
-  hydrograph jumps or the result depends on `dd`, use
-  `f_advection_donor = 3` (§4.4).
-  Roughness calibrated with scheme 1 needs recalibration.
+  `f_opening_dynamic = 3` + `f_dry_head_cap = 1` + `f_advection_donor = 3`
+  (the defaults). Roughness calibrated with scheme 1 needs recalibration. To
+  reproduce cases calibrated with the default before 2026-11-09,
+  `f_advection_donor = 0`, set 0 explicitly (§4.4).
 - Inundation, incised terrain and dam breaks without a channel mask: the
   defaults (3 + `f_opening_dynamic = 3`; until 2026-10-18 the 2 had to be
   set explicitly, and from 2026-10-18 to 31 the default was 2). Use
@@ -676,7 +680,7 @@ The labels in the Basis column are explained in [How to read the basis of a defa
 |---|---:|---|---|
 | f_advection_scheme | 3 | scheme of the advection term (1: cell-centre gradient, 2: conservative + first-order upwind, 3: conservative + MUSCL) | **verification case** bore position error +1.1% in [test/dambreak](../../../test/dambreak/en/README.md), depth ratio 0.992 with lateral inflow in [test/bendloss](../../../test/bendloss/en/README.md), grid convergence in [test/chichibu](../../../test/chichibu/en/README.md) (table above) |
 | p_adv_upwind_index | 0.5 | upwinding index of scheme 1 (0: central, 1: first-order upwind) | **empirical** halfway between central and first-order upwind. The bore lag grows with $`p`$ (§3) |
-| f_advection_donor | 0 | upwind donors (3: the upwind value is pulled toward u_e only on faces where the real flux of the line-k donor is below ε times the largest inflow link of the face cell and the donor's depth is also below ε times the face cell's depth, and the wet/dry tests of the lateral faces become a continuous weight below dd; 1 and 2 were removed) | **method** off by default; 3 removes the artificial brake along the whole main channel so the flood wave becomes faster and larger (the lateral-inflow, vortex and wall tests stay the same as 0); judge it against observations (§4.4) |
+| f_advection_donor | 3 | upwind donors (3: the upwind value is pulled toward u_e only on faces where the real flux of the line-k donor is below ε times the largest inflow link of the face cell and the donor's depth is also below ε times the face cell's depth, and the wet/dry tests of the lateral faces become a continuous weight below dd; 0: wet cells on line k (the default until 2026-11-09); 1 and 2 were removed) | **method** reduces the artificial brake when the banks of a raster channel oblique to the grid are wet (in [test/wetbank](../../../test/wetbank/en/README.md) the increase of the channel depth beyond the rain inflow drops from 10–40% with 0 to 6–17%); the lateral-inflow, vortex and wall tests stay the same as 0; the flood wave becomes faster and larger than with 0; 0 reproduces earlier results (§4.4) |
 | p_adv_donor_eps | 0.1 | threshold ε of `f_advection_donor = 3` (used for both the real flux of the line-k donor / largest real flux of the links entering the face cell and the donor's depth / face cell's depth) | **empirical** the peak at transect 4 of the 200 m grid of Chichibu differs by less than 0.5% between 0.05 and 0.2; values outside this range have not been checked (§4.4) |
 | limiter $`\psi`$ (fixed) | van Leer | flux limiter of scheme 3 | **literature value** van Leer[^vanleer79]; inside Sweby's TVD region[^sweby84] (§4.3) |
 | f_scalar_scheme | 3 | face value of the scalar transport (suspended sediment, water quality, saline layer, driftwood, building debris) (1: first-order upwind, 3: link-wise MUSCL) | **verification case** measured numerical diffusion in [test/tracer](../../../test/tracer/en/README.md) (longitudinal D 1/3–1/5, lateral Dy 1/14; §7). First order is not the default because its numerical diffusion is proportional to the grid spacing |
