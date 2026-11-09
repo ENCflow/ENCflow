@@ -1652,20 +1652,20 @@
     {
       "source": "examples/estuary_barrage/README.md",
       "target": "examples/estuary_barrage/en/README.md",
-      "source_sha256": "df776720c3d7f43a044b0370771dbd51035caa1cb4301d32ed9143c34ae238a4",
-      "target_sha256": "fb5c0b0ca30d9f99f80ddc01507ad88e84a5227dd92f00c0c6fa5dc9d7cca4c0",
-      "reviewer": "Claude (Claude Code session; removed development history from both versions in parallel and compared the edited passages, headings, tables and numbers; no model execution)",
+      "source_sha256": "cfae5e6adc3f9e22c8b9369131f05c3ce28149967ca566a2c106bd0787ea4df7",
+      "target_sha256": "3b75645f636d3d4b3014bef198375ef53ec2a86d45f182adb989a3606c10b269",
+      "reviewer": "Claude (Claude Code session; full-text content and lexical review, no model execution)",
       "method": "assistant",
-      "reviewed_on": "2026-11-08"
+      "reviewed_on": "2026-11-09"
     },
     {
       "source": "examples/estuary_barrage/figs/cross.png",
       "target": "examples/estuary_barrage/en/figs/cross.png",
-      "source_sha256": "ccb2ee87505763e85928953dba9aaf6b9e5682be2390a2b6f6867ffb593696bb",
-      "target_sha256": "da6137685ba8330af23841c6756bc4a58887a69b744e23f6342721fd3ca9e8cc",
-      "reviewer": "Claude (Claude Code session; recomputed 2026-11-05: both drawn by plot_results.py from the same results, labels compared with the Japanese figure)",
+      "source_sha256": "585460e0c2e8e194c38a1ea9ba5a3890e2318b1e6fca908f088d9868db3e3a4b",
+      "target_sha256": "fc6ad9c69caa97489131883aae0d08a1196e418713f17316b31093d0b50ba911",
+      "reviewer": "Claude (Claude Code session; recomputed 2026-11-09 with the current defaults including f_advection_donor = 3: all drawn by plot_results.py (python3 plot_results.py and python3 plot_results.py en; script unchanged) from the same results of the eight cases; Japanese and English plan and series viewed, labels compared; profile and cross differ only in their data)",
       "method": "assistant",
-      "reviewed_on": "2026-11-05"
+      "reviewed_on": "2026-11-09"
     },
     {
       "source": "examples/estuary_barrage/figs/mechanism.png",
@@ -1679,29 +1679,29 @@
     {
       "source": "examples/estuary_barrage/figs/plan.png",
       "target": "examples/estuary_barrage/en/figs/plan.png",
-      "source_sha256": "8e565648e68d3fd80d5ff8e2337d031f8161374bbdbb6a49bf10496b5645e529",
-      "target_sha256": "e0a88d23865f21497f196e6e5b3b3ff2b59589a36a74deef827292b646c306ab",
-      "reviewer": "Claude (Claude Code session; recomputed 2026-11-05: both drawn by plot_results.py from the same results, labels compared with the Japanese figure)",
+      "source_sha256": "c86197736d1a2b7f184d4ad76ffbe73d2d0e608d1f6e705aa901b11891084dbf",
+      "target_sha256": "324ae0f211cf88fd55f44059fb8888b931956da475a115ff8919d631f9779ad7",
+      "reviewer": "Claude (Claude Code session; recomputed 2026-11-09 with the current defaults including f_advection_donor = 3: all drawn by plot_results.py (python3 plot_results.py and python3 plot_results.py en; script unchanged) from the same results of the eight cases; Japanese and English plan and series viewed, labels compared; profile and cross differ only in their data)",
       "method": "assistant",
-      "reviewed_on": "2026-11-05"
+      "reviewed_on": "2026-11-09"
     },
     {
       "source": "examples/estuary_barrage/figs/profile.png",
       "target": "examples/estuary_barrage/en/figs/profile.png",
-      "source_sha256": "dbcd79c8c0a84dc3b6d4740cbd1fbadce81b1dcea2b27d8e8305341794a46db9",
-      "target_sha256": "fb111d0941f7c70a055c240e8dde74b3c5af96dbe359e7d49db8817b6a55f09a",
-      "reviewer": "Claude (Claude Code session; recomputed 2026-11-05: both drawn by plot_results.py from the same results, labels compared with the Japanese figure)",
+      "source_sha256": "c0705ac42d41f4de02bf3f898cda365c8770ae7ab9b9ac0f6e2fb38e741043ef",
+      "target_sha256": "31f7bb1b05371df88f1dc98092cef4f4a88ccd81e37994feed054d57b254ccc2",
+      "reviewer": "Claude (Claude Code session; recomputed 2026-11-09 with the current defaults including f_advection_donor = 3: all drawn by plot_results.py (python3 plot_results.py and python3 plot_results.py en; script unchanged) from the same results of the eight cases; Japanese and English plan and series viewed, labels compared; profile and cross differ only in their data)",
       "method": "assistant",
-      "reviewed_on": "2026-11-05"
+      "reviewed_on": "2026-11-09"
     },
     {
       "source": "examples/estuary_barrage/figs/series.png",
       "target": "examples/estuary_barrage/en/figs/series.png",
-      "source_sha256": "abaa01edfb0531907ae29bed2ead6f294b8dd7424915fa2111b3e10480c844c6",
-      "target_sha256": "782a55b2e06976201073e6aa919eb58c3c1266b6378d2a74ae3f154bc8c63670",
-      "reviewer": "Claude (Claude Code session; recomputed 2026-11-05: both drawn by plot_results.py from the same results, labels compared with the Japanese figure)",
+      "source_sha256": "78b4938b20aa5a1a3ee3142a185ef0bf5ed88220e18cebbe1e177c0c5524ebb9",
+      "target_sha256": "09f3f2581981b2e3d3aaa2914e05c2a03dbdcce2ea3d6dc04c9c1a284bcfc02f",
+      "reviewer": "Claude (Claude Code session; recomputed 2026-11-09 with the current defaults including f_advection_donor = 3: all drawn by plot_results.py (python3 plot_results.py and python3 plot_results.py en; script unchanged) from the same results of the eight cases; Japanese and English plan and series viewed, labels compared; profile and cross differ only in their data)",
       "method": "assistant",
-      "reviewed_on": "2026-11-05"
+      "reviewed_on": "2026-11-09"
     },
     {
       "source": "examples/estuary_barrage/figs/setup.png",
