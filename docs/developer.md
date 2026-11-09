@@ -21640,3 +21640,24 @@ handoff 00n(2b)。出典は独自):
   いない(目次で案内)。
 - 計算時間の表(17 / 219 / 1,337 s。現行の 3 で測定)は測り直していない(本案の追加は寄せる面でだけ働く比較 1 つ。0 と
   本案の比は上の +7〜8 %)。
+
+**実バグ: 薄い供給元の判定が側方 Neumann の辺の外のハロの水深を読み、再開の継続が通し計算と一致しなかった**(2026-11-09。
+既定化の検討で、既定を 3 にした作業用ビルドで test/ の全ケースを回して発見。上の「流向面の判定を薄い供給元に限る」の
+実装の誤り):
+- 症状: test/wfcurrent・wfsed(側方 Neumann の辺あり)で、既定を 3 にすると再開の継続(param_rt1 → rt2)の save
+  (state.dat・swflow_enc.dat・wavefield.dat)が通し計算と一致しなかった(Run.sh の「restart continuation differs」)。
+  同じ判定は 0 と、水深の条件を入れる前の 3 では一致した。wfdoppler も reference と差が出ていた。
+- 原因: donor_share は供給元と面のセルの水深を s%h(ci + din(kk), cj + djn(kk))・s%h(ci, cj) で直接読んでいた。呼び出し側の
+  cell_ok は側方 Neumann の辺の外のセルを鏡像(mirror_cell。§90)に置き換えて判定するので、辺の外の供給元が cell_ok で
+  有効になったとき、水深だけ辺の外のハロ(状態として保存されず、再開では復元されない値)を読んでいた。
+- 修正: 鏡像を通す既存の hcell(「cell_ok が真のセルにだけ使う」)に置き換えた。側方 Neumann の辺のないケースは読む値が
+  同じで、Step 4 と 200 m・W = 50 の測線流量と Log は修正前とバイト一致(tutorials/chichibu・秩父の数値と上の評価は
+  変わらない)。
+- 検証(gfortran 13.3 / Open MPI 4.1.6): 既定 3 の作業用ビルドで wfcurrent の再開の継続が通し計算と一致、側方 Neumann の
+  辺のある wfcurrent・wfdoppler・wfsed・wfshadow・wfshoal・wfswash が既定 3 でも reference(0 で作成)と一致して合格。
+  option 0 の逐次回帰(wfcurrent・wfsed・wfdoppler・dambreak・wave)が合格。wfcurrent に f_advection_donor = 3 を指定した
+  計算で、MPI の np = 1・2・4 が逐次と Log・save の 3 ファイルでバイト一致、-fcheck=all -ffpe-trap の np = 2 で実行時
+  エラーなし。
+- 教訓: 呼び出し側の判定と同じセルを読むときは、同じ添字の変換(ここでは mirror_cell)を通す関数を使う。3 の検証
+  (MPI・-fcheck)を Step 4 と 200 m・W = 50(側方 Neumann の辺なし)だけで行っていて見落とした。境界の扱いに触れる
+  変更では、側方 Neumann の辺のあるケース(test/wfcurrent に f_advection_donor = 3 を指定)と再開の継続も確かめる。
