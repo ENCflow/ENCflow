@@ -102,15 +102,15 @@ brute force).
 
 | Case | Parameter file | Inflow | Banks | Landform time | Run time (guide) |
 |---|---|---|---|---|---|
-| Flood | param.txt | 15 → 40 → 15 m³/s | angle-of-repose avalanching 40° | 30 h | about 50 min |
-| Flood + slump blocks | param_slump.txt | same | repose 40° + slump blocks (H_c = 1.8 m, talus 35°) | 30 h | about 50 min |
-| No flood: control | param_noflood.txt | constant 15 m³/s | angle-of-repose avalanching 40° | 180 h | about 3 h |
-| No flood: slump blocks | param_slump_noflood.txt | same | repose 40° + slump blocks | 180 h | about 3 h |
-| No flood: cohesive | param_slump_cohesive.txt | same | **cohesive**: repose 60° (no collapse) + retreat by slump blocks only | 180 h | about 3 h |
-| No flood: cohesive + fines | param_slump_fines.txt | same; fines (0.2 mm) fed at 0.5 × the equilibrium concentration | cohesive + suspended sediment + ledger of fines in the bed (the initial bed is coarse sand only) | 180 h | about 3.5 h |
+| Flood | param.txt | 15 → 40 → 15 m³/s | angle-of-repose avalanching 40° | 30 h | about 30 min |
+| Flood + slump blocks | param_slump.txt | same | repose 40° + slump blocks (H_c = 1.8 m, talus 35°) | 30 h | about 30 min |
+| No flood: control | param_noflood.txt | constant 15 m³/s | angle-of-repose avalanching 40° | 180 h | about 2 h |
+| No flood: slump blocks | param_slump_noflood.txt | same | repose 40° + slump blocks | 180 h | about 2 h |
+| No flood: cohesive | param_slump_cohesive.txt | same | **cohesive**: repose 60° (no collapse) + retreat by slump blocks only | 180 h | about 2 h |
+| No flood: cohesive + fines | param_slump_fines.txt | same; fines (0.2 mm) fed at 0.5 × the equilibrium concentration | cohesive + suspended sediment + ledger of fines in the bed (the initial bed is coarse sand only) | 180 h | about 2.2 h |
 
-The run times are for gfortran 13.3 (-Ofast -march=native) on 1 thread of an Intel Xeon (2.8 GHz)
-with 4 cases running at the same time.
+The run times are for gfortran 13.3 (-Ofast -march=native) on 1 thread of an Intel Xeon (2.3 GHz)
+with other cases running at the same time (one core per case).
 
 **Metrics** (plot_results.py): the **loops** are the part of the initial channel with y > 70 m
 (the limbs and tops of the two loops; 2,265 cells); the part west of x = 160 m is loop 1

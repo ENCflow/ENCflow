@@ -2048,8 +2048,8 @@
     {
       "source": "examples/meander_cutoff/README.md",
       "target": "examples/meander_cutoff/en/README.md",
-      "source_sha256": "bbc5cbbb2ad42c3d327749949686001c7d6383d687c450cc37edbab257440a92",
-      "target_sha256": "30f2a2f5249d46b8c69926057db37bd1b2c55248fe9a1156c3a2e9e1bc345ec0",
+      "source_sha256": "cfaaa67ff300f87fc771372ecb58aef34e68faa845b6b1bc605aafc6b9024165",
+      "target_sha256": "94026a6a92f2ea6fd201970032b39842d1b9221df12bd9cd3f46ee9af0f9fe3c",
       "reviewer": "Claude (Claude Code session; full-text content and lexical review, no model execution)",
       "method": "assistant",
       "reviewed_on": "2026-11-09"
