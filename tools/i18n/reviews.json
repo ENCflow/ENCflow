@@ -1985,9 +1985,9 @@
     {
       "source": "examples/levee_breach/README.md",
       "target": "examples/levee_breach/en/README.md",
-      "source_sha256": "d20dd0c0321af722efc1b47d27d1fab8c61a388982981a577aa4853463089fcb",
-      "target_sha256": "3dc591a0c37bca1ae020f1df47f6cdc2e0dee4e75c8bd51538047d574f0ef000",
-      "reviewer": "Claude (Claude Code session; breach-width table recomputed with the current defaults (12 runs; widths, measurement and weir head stated in the heading), text ratios updated (0.45, 153 vs 162, 1.64) and the 0.38 dx statement replaced by the measured 0.40-0.45 times; Japanese and English edited together and compared)",
+      "source_sha256": "d86be4b60464dc25f0fb76b22a80e31662f2a601c8a3b5905da846e0ae2ad66e",
+      "target_sha256": "da4120191a832cd2e0ec15bfb31277e7cdb77a979bcff3bb5395ff034f74fdba",
+      "reviewer": "Claude (Claude Code session; make sweep and sweep_width.py added for the breach-width table: command line in the supplement block and the table heading point to them; table values unchanged and reproduced by make sweep; Japanese and English edited together and compared)",
       "method": "assistant",
       "reviewed_on": "2026-11-10"
     },

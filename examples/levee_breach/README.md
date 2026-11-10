@@ -232,6 +232,7 @@ python3 make_breach.py --z <地盤高> --cols I1 I2 --rows J1 J2 \
 ```
 make supp                # 入力(make_supp.py・make_breach.py が data_supp/ に作る)と 2 ケースの計算(1 ケース 30 秒前後)
 python3 plot_supp.py     # figs/supp_*.png と数表
+make sweep               # 下の「破堤幅と流量の関係」の 12 ケースの計算と表(sweep_width.py。1 ケース 4 スレッドで 1 分前後)
 ```
 
 ![補足の設定](figs/supp_setup.png)
@@ -288,7 +289,8 @@ z.txt の 1 m の等高線。両段とも同じ)。
 
 **破堤幅と流量の関係**(同じ地形で破堤幅を 1・2・3・5 セル(行 50、49〜50、49〜51、48〜52)に変え、
 70〜80 分で同時に全壊させて、100 分の測線 1 の流量を比較。広頂堰の H は破堤口前の河道(プローブ 2)の
-水位 − 堤底。make の対象外の計算で、param_supp.txt・param_supp_vwall.txt の破堤口と時刻を変えて回す):
+水位 − 堤底。`make sweep` で計算して表を出す。sweep_width.py が param_supp.txt・param_supp_vwall.txt の破堤口と
+時刻だけを変えた設定 param_sweep_*.txt を作る):
 
 | 幅(セル数 / サイト数) | 解像堤防 Q (m³/s) | 広頂堰 1.7·B·H^1.5 (m³/s) | 仮想壁面 f_br_diag = 0 Q / 解像比 | f_br_diag = 1 Q / 解像比 |
 |---:|---:|---:|---:|---:|

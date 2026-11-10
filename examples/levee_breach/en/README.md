@@ -279,6 +279,7 @@ discharge and the inundation.
 ```
 make supp                # inputs (make_supp.py and make_breach.py write data_supp/) and the 2 runs (about 30 seconds per case)
 python3 plot_supp.py     # figs/supp_*.png and the table
+make sweep               # the 12 runs and the table of "Breach width and discharge" below (sweep_width.py; about 1 minute per case with 4 threads)
 ```
 
 ![Settings of the supplement](figs/supp_setup.png)
@@ -348,8 +349,9 @@ initial terrain z.txt of the resolved levee; the same in both rows).
 **Breach width and discharge** (same terrain with breach widths of 1, 2, 3 and 5 cells (rows 50,
 49-50, 49-51 and 48-52), failing all at once at 70-80 minutes; the discharge at transect 1 at
 100 minutes compared; H of the broad-crested weir is the water level in the channel in front of
-the breach (probe 2) minus the floor. These runs are not part of make: they change the opening
-and the times in param_supp.txt and param_supp_vwall.txt):
+the breach (probe 2) minus the floor. `make sweep` computes the runs and prints the table;
+sweep_width.py writes the settings param_sweep_*.txt, changing only the opening and the times in
+param_supp.txt and param_supp_vwall.txt):
 
 | Width (cells / sites) | Resolved levee Q (m³/s) | Broad-crested weir 1.7·B·H^1.5 (m³/s) | Virtual wall f_br_diag = 0 Q / ratio to resolved | f_br_diag = 1 Q / ratio to resolved |
 |---:|---:|---:|---:|---:|
