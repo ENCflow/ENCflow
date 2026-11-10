@@ -12,7 +12,8 @@ give priority to "getting a run going casually": read them in the order
 "overview → just try it (minimal input) → recommended values by pattern
 → the sections you need". Theory, equations, the basis of the defaults
 and detailed settings are in the explanation pages that hang under each
-chapter (indented "... explained" entries in the table of contents).
+chapter (the "... explained" entries and others listed when you open
+"Explanations" under each chapter in the table of contents).
 There is no need to read every field; the chapters of the fields you
 are interested in are enough.
 
@@ -31,19 +32,21 @@ phenomenon-specific setups. Individual chapters also link to relevant cases.
 - [Finding features by task](#finding-features-by-task)
 
 **Part II: Cross-cutting facilities**
-- [Time management](users_guide/time.md) -- time axis, time step, output interval, calendar
+- [Time management](users_guide/time.md) -- time axis, time step, output interval, calendar <details><summary>Explanations (2)</summary>
   - [Courant number and how to choose the time step](users_guide/courant.md) -- primer for newcomers to numerical computation: grid and step, Courant number, velocity and wave speed, explicit vs implicit, reading Cn_max, procedure for estimating dt (primer for time management)
   - [Time-step design policy](users_guide/timestep_policy.md) -- why mainly explicit with a fixed step, relation to variable steps and sub-cycling, solving the equations accurately vs reproducing the phenomenon (supplement to time management; intermediate to advanced)
+  </details>
 - [Coordinate systems](users_guide/coordinates.md) -- absolute vs. local coordinates, EPSG, geographic (lat-lon) grids
 - [Input and output formats](users_guide/io.md) -- text / bil / GeoTIFF, output file organization
 - [Writing user routines](users_guide/user_routines.md) — giving topography and initial conditions in code (procedure, index contract, pitfalls)
 - [Suspend and restart](users_guide/restart.md) -- state files, time continuation, use as initial conditions
-- [Nesting (multi-level grids)](users_guide/nest.md) (fn_nest, &list_nest) -- child grids solved inside a parent grid in the same run (multi-level, two-way, Flather radiation, non-hydrostatic band)
+- [Nesting (multi-level grids)](users_guide/nest.md) (fn_nest, &list_nest) -- child grids solved inside a parent grid in the same run (multi-level, two-way, Flather radiation, non-hydrostatic band) <details><summary>Explanations (1)</summary>
   - [Nesting explained](users_guide/nest_models.md) -- time interpolation, boundary-band methods, the Flather condition, the sponge, child-to-parent replacement and the conservation correction, with the basis of the defaults (supplement to nesting)
+  </details>
 - [Parallel execution](users_guide/parallel.md) -- OpenMP, MPI, reproducibility of results
 
 **Part III: Feature reference**
-- [Shallow water computation](users_guide/swflow.md) (&list_enc, numerical parameters) -- scheme selection, adaptive Runge-Kutta, numerical constants
+- [Shallow water computation](users_guide/swflow.md) (&list_enc, numerical parameters) -- scheme selection, adaptive Runge-Kutta, numerical constants <details><summary>Explanations (9)</summary>
   - [ENC grid and time integration](users_guide/encgrid.md) -- passage widths of the eight-direction grid, continuity, cell-velocity reconstruction, pressure/friction/drag terms, adaptive Runge-Kutta, Courant number, parameters and the basis of their defaults (supplement to the shallow water chapter)
   - [Passage-width adjustment](users_guide/passage_width.md) -- reassignment where the eight-direction passage widths are blocked, how blockage is measured and how the default of f_opening_dynamic came to be 3, the view of the adjustment as effective resolution, and its limits (supplement to the shallow water chapter; intermediate to advanced)
   - [Steep-slope gravity correction](users_guide/steep_slope.md) -- the effective gravity g cos²θ and the slope-parallel friction and sediment shear (f_gravity_correction; default 2): formulation, which gradient each edge uses, verification, comparison with published papers and models, what it cannot do and its accuracy limits (supplement to the shallow water chapter; intermediate to advanced)
@@ -53,35 +56,46 @@ phenomenon-specific setups. Individual chapters also link to relevant cases.
   - [Choosing the diagonal share d](users_guide/diagratio.md) -- what the distribution d of the eight-direction passage widths changes (conveyance of one-cell-wide channels and conduits, direction bias of the error, time-step limit, crosswind numerical diffusion), the best value for each criterion, and the value and recommendation for each process (shallow water, bedload, hillslope creep, curvature, groundwater, conduit layer, glaciers and lava) (supplement; intermediate to advanced)
   - [Non-hydrostatic correction](users_guide/nonhydrostatic.md) -- equations of the one-layer model, projection algorithm, active set, breaking, moving bottom, the models it drew on (supplement to the shallow water chapter)
   - [Diffusion term](users_guide/diffusion.md) -- eddy-viscosity models (constant, zero-equation), nine-point Laplacian, stability condition (supplement to the shallow water chapter)
+  </details>
 - [Geographic information](users_guide/geoinfo.md) (&list_geoinfo) -- grid, terrain, roughness, masks, seawalls
 - [Initial conditions](users_guide/initial.md) (&list_initial) -- depth, water level, depression filling
 - [Boundary conditions](users_guide/boundary.md) (&list_bound_edge/source/stage/inflow) -- edge boundaries, sources, prescribed stages, reach inflow
 - [Tide and sea surface](users_guide/tide.md) (&list_tide) -- storm surge, rising-tide inundation, drainage
-- [Coastal wave field](users_guide/wavefield.md) (&list_wavefield) -- shoaling, refraction, breaking and breakwater shadows of offshore waves, wave setup and longshore currents, change of waves by currents, sediment transport by waves and swash-zone transport (phase-averaged, one representative period, directional bins)
+- [Coastal wave field](users_guide/wavefield.md) (&list_wavefield) -- shoaling, refraction, breaking and breakwater shadows of offshore waves, wave setup and longshore currents, change of waves by currents, sediment transport by waves and swash-zone transport (phase-averaged, one representative period, directional bins) <details><summary>Explanations (1)</summary>
   - [Coastal wave field explained](users_guide/wavefield_models.md) -- wave action balance and two-link upwind decomposition, breaking and friction, radiation stress and roller, GLM, Doppler shift and blocking, stirring and transport velocity, empirical swash formulas, with equations and the basis of the defaults; the models it drew on and the parts original to ENCflow (supplement to the coastal wave field chapter)
-- [Internal hydraulic structures](users_guide/structure.md) (&list_struct_pump/culvert/diversion/dam) -- pumps, culverts, diversions, dams and lakes
+  </details>
+- [Internal hydraulic structures](users_guide/structure.md) (&list_struct_pump/culvert/diversion/dam) -- pumps, culverts, diversions, dams and lakes <details><summary>Explanations (1)</summary>
   - [Hydraulics of structures and boundaries](users_guide/hydraulics.md) -- Honma weir formula, the three culvert regimes, dam operation rules, free-outflow and radiation boundaries, inflow distribution, with equations and the basis of the coefficients (supplement)
-- [Channels](users_guide/channel.md) (&list_channel) -- levees, channel width, cross-section shape, breach
+  </details>
+- [Channels](users_guide/channel.md) (&list_channel) -- levees, channel width, cross-section shape, breach <details><summary>Explanations (1)</summary>
   - [Channels explained](users_guide/channel_models.md) -- crest and opening correction of the virtual walls, plan-area fraction of the subgrid width, equivalent depth of the section shape σ, breach crest and the basis of the defaults (supplement to channels)
-- [Rainfall and weather](users_guide/forcing.md) (&list_precip / intercept / meteo / evap / snow) -- precipitation, interception, air temperature, evapotranspiration, snow accumulation and snowmelt
+  </details>
+- [Rainfall and weather](users_guide/forcing.md) (&list_precip / intercept / meteo / evap / snow) -- precipitation, interception, air temperature, evapotranspiration, snow accumulation and snowmelt <details><summary>Explanations (1)</summary>
   - [Rainfall and meteorology models explained](users_guide/forcing_models.md) -- interception models, elevation corrections, Hamon/Thornthwaite PET and the degree-day method, with the basis of the defaults (supplement to rainfall and weather)
-- [Groundwater](users_guide/gwflow.md) (&list_gwflow plus model-specific settings) -- infiltration, lateral flow, weathered bedrock layer, conduit continuum layer (sewer networks, fractured bedrock)
+  </details>
+- [Groundwater](users_guide/gwflow.md) (&list_gwflow plus model-specific settings) -- infiltration, lateral flow, weathered bedrock layer, conduit continuum layer (sewer networks, fractured bedrock) <details><summary>Explanations (1)</summary>
   - [Groundwater models](users_guide/gwflow_models.md) -- bucket, Green-Ampt, Boussinesq lateral flow, weathered bedrock layer, conduit continuum layer, pumping and frozen ground, with equations and the basis of the defaults (supplement)
+  </details>
 - [Fresh and salt water layers](users_guide/salt.md) (&list_salt) -- salt wedges, seawater intrusion, freshwater lenses (sharp-interface approximation)
-- [Sediment and landform change](users_guide/geomorph.md) (&list_geomorph) -- bedload, suspended sediment, hillslope erosion, debris flow, long-term landscape evolution, development of meandering channels (bank erosion, fixation, neck cutoff)
+- [Sediment and landform change](users_guide/geomorph.md) (&list_geomorph) -- bedload, suspended sediment, hillslope erosion, debris flow, long-term landscape evolution, development of meandering channels (bank erosion, fixation, neck cutoff) <details><summary>Explanations (3)</summary>
   - [Sediment transport, hillslope and long-term processes](users_guide/sediment.md) -- creep, bedload formulas, Exner, suspended-load exchange, hillslope erosion, dry-slope erosion, rules of rockfall and talus, longshore transport, weathering/uplift, MORFAC, with equations and the basis of the defaults (supplement)
   - [Debris flow, slope failure and moving bed layer](users_guide/massflow.md) -- single-layer mixture, five resistance laws, erosion/deposition laws, curvature term, safety factor, moving bed layer, with equations and the models referred to (supplement)
   - [Applications of sediment and landform change](users_guide/geomorph_applications.md) -- setups for tsunami deposits, river-mouth deltas, volcanic flows, lahars, snow avalanches and sabo facilities
-- [Driftwood](users_guide/driftwood.md) (&list_driftwood) -- wood recruitment (hydraulic washout / erosion entrainment), transport and deposition (raster-field estimate)
+  </details>
+- [Driftwood](users_guide/driftwood.md) (&list_driftwood) -- wood recruitment (hydraulic washout / erosion entrainment), transport and deposition (raster-field estimate) <details><summary>Explanations (1)</summary>
   - [Driftwood models explained](users_guide/driftwood_models.md) -- transfer rules of the three ledgers, draft, area bases and volume budget, sources of the practical values and basis of the defaults (supplement to driftwood)
-- [Building destruction and debris](users_guide/bldgdebris.md) (&list_bldgdebris) -- destruction of wooden houses by inundation flows and driftwood, debris transport and deposition, feedback to the void ratio (raster-field estimate)
+  </details>
+- [Building destruction and debris](users_guide/bldgdebris.md) (&list_bldgdebris) -- destruction of wooden houses by inundation flows and driftwood, debris transport and deposition, feedback to the void ratio (raster-field estimate) <details><summary>Explanations (1)</summary>
   - [Building destruction and debris models explained](users_guide/bldgdebris_models.md) -- destruction criterion and ramp, destruction rate, void-ratio feedback, volume budget, thresholds versus the literature and the basis of the defaults (supplement to building destruction and debris)
+  </details>
 - [Glaciers](users_guide/glacier.md) (&list_glacier) -- accumulation, melt, ice flow, glacial erosion, avalanche redistribution
 - [Lava flows](users_guide/lavaflow.md) (&list_lavaflow) -- vent effusion, Bingham viscous spreading, stopping and solidification (lava fields as topography), and temperature (flows that stop as they cool)
-- [Prescribed bed motion](users_guide/bedmotion.md) (&list_bedmotion) -- forcing z with a time history of ground displacement (tsunami generation from faults, coastal uplift/subsidence, breaching a resolved levee)
+- [Prescribed bed motion](users_guide/bedmotion.md) (&list_bedmotion) -- forcing z with a time history of ground displacement (tsunami generation from faults, coastal uplift/subsidence, breaching a resolved levee) <details><summary>Explanations (1)</summary>
   - [Prescribed bed motion explained](users_guide/bedmotion_models.md) -- time interpolation of the displacement, fault displacement field and initial sea surface, relation to the non-hydrostatic correction, restart and MPI contract (supplement to prescribed bed motion)
-- [Water quality](users_guide/wq.md) (&list_wq) -- load input, transport, decay, washoff, Kd two-phase partitioning, groundwater pathway, reservoirs
+  </details>
+- [Water quality](users_guide/wq.md) (&list_wq) -- load input, transport, decay, washoff, Kd two-phase partitioning, groundwater pathway, reservoirs <details><summary>Explanations (1)</summary>
   - [Water-quality models](users_guide/wq_models.md) -- decay, settling, Kd partitioning, infiltration and groundwater transport, buildup/washoff, reservoirs and sewer surcharge, with equations and the sources of the representative values (supplement)
+  </details>
 - [Soil Water Index](users_guide/swi.md) (&list_swi) - the operational sediment-disaster warning index (JMA 3-tank model; dedicated runs)
 - [Vertical unsaturated flow (VZ) runoff](users_guide/vz.md) (&list_vz / &list_vz_column / &list_vz_zone) - the rainfall-runoff response of mountain hillslopes from the one-dimensional Richards equation on shared reference columns (the VZ model of Tani 2023; direct drainage of zones to outlet cells)
 - [Measurement](users_guide/record.md) (&list_record) -- probes, flux transects

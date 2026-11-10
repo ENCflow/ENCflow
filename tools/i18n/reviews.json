@@ -104,11 +104,11 @@
     {
       "source": "docs/users_guide.md",
       "target": "docs/en/users_guide.md",
-      "source_sha256": "6e8c4f3193b3b17184e04182c522408eb3fcfa780fa470e34dac5420f56f7346",
-      "target_sha256": "4cd489acc5922b01198cb61e20e888c420986a318fdc9dea491d22e84c98e730",
-      "reviewer": "Claude (Claude Code session; TOC entry for the new page advection_donor.md added in both versions; unchanged text as in the previous record)",
+      "source_sha256": "7a4f33cf92f19e586e40f7faa5639a25033a2f76babd41376e0fd5e1c4323290",
+      "target_sha256": "0c2bbdd5b0b1feae90b8efd402fb8cdf335493380ee896a85f1390592957465b",
+      "reviewer": "Claude (Claude Code session; folded the same 13 chapter groups in both versions, updated the intro sentence in both, and checked the rendering with cmark-gfm and a browser)",
       "method": "assistant",
-      "reviewed_on": "2026-11-09"
+      "reviewed_on": "2026-11-10"
     },
     {
       "source": "docs/users_guide/advection.md",
