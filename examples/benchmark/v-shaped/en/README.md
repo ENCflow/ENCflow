@@ -264,7 +264,14 @@ These values appear in the table of [Passage-width adjustment](../../../../docs/
 - The depth depends on the grid. The depth in a channel represented by a single diagonal row of cells is
   1.3 times the theory (1.8 in the cell before the sink), and that of the single hillslope cell next to
   the channel 1.1 to 1.5 times. These do not affect the comparison of discharge, but when depths are to
-  be read, resolve the channel with three or more cells across.
+  be read, resolve the channel with three or more cells across. At 45° the channel looks N Δx/√2 wide
+  (N = number of rows of channel cells = 2⌊14.1 m / Δx⌋ + 1); N = 1 for Δx between 14.1 and 28.3 m, and
+  20 m (14.1 m) lies in that band. On grids whose cells are wider than the channel, giving the channel mask
+  fn_rw and the sub-grid channel width fn_width = 20 m ([channel chapter](../../../../docs/en/users_guide/channel.md))
+  brings the depth close to the theory (at 40 m, 0.69 times at 0° and 0.84 at 45° without the width become
+  1.05 and 1.03 with it, and the outlet NRMSE goes from 0.117 and 0.094 to 0.034 and 0.053). A cell whose
+  width is not smaller than the cell size is treated as a resolved channel, so giving a width of 20 m on
+  the 20 m grid changes nothing.
 - Water thinner than the limit depth dd = 1 mm does not flow, so the end of the recession (after about
   130 min on the hillslopes) reaches zero earlier than the theory (setting dd and dv to 0.1 mm recovers the
   tail; see the results section).

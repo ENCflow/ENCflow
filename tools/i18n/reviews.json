@@ -1346,8 +1346,8 @@
     {
       "source": "examples/benchmark/v-shaped/README.md",
       "target": "examples/benchmark/v-shaped/en/README.md",
-      "source_sha256": "baa214c9a2515c2027a1dfed965b93d7ee7d86f6d8b9de72280c6a167dda0159",
-      "target_sha256": "77522f93807d9a0db80be023bc85ff3e83d4367473aeaa8f6315c5597a0167a8",
+      "source_sha256": "82601e4a6d75ec81ff91752339f075bf52ba5b480ded28599591760788e45069",
+      "target_sha256": "503f6c064fcb9d4d75bb449e45e7b67ea200020ada39a5ac67fc8783e5eea831",
       "reviewer": "Claude (Claude Code session; wrote and read both versions side by side: structure, numbers, tables, links and captions)",
       "method": "assistant",
       "reviewed_on": "2026-11-10"
