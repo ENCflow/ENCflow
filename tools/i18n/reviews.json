@@ -13,9 +13,9 @@
     {
       "source": "README.ja.md",
       "target": "README.md",
-      "source_sha256": "c5c82c0b14247f877d9fb24108e554994179e9d2d81dd76e3d37864bb1b9a477",
-      "target_sha256": "9e6398e47f8f2dffc3aef6d03afb9ea9a9aead1e0351bf73a8e9c9f6add31bda",
-      "reviewer": "Claude (Claude Code session; 'What it can do' rewritten around phenomena with implementation details removed, same items and links in both versions; claims checked against the previous text and the guide (estimates kept as estimates); read side by side)",
+      "source_sha256": "c07d5a7ad29988db206c80be7f6f2e7fe8d61c7208a87f30538985c666114dcc",
+      "target_sha256": "4785a4a38b22364631a6e452ad31bc4278cecca7ca52b0c5dac27d3775e8bbbe",
+      "reviewer": "Claude (Claude Code session; 'What it deliberately does not do' shortened in both versions; kept only the 'can do' notes that bound or explain a limit (coastal-wave estimate, ash-fall preprocessing, fresh/salt sharp interface, sewer continuum); read side by side)",
       "method": "assistant",
       "reviewed_on": "2026-11-10"
     },
