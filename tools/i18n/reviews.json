@@ -86,11 +86,11 @@
     {
       "source": "docs/multilingual.md",
       "target": "docs/en/multilingual.md",
-      "source_sha256": "b8dd6dc075cbe5a30316bca63f3ab1648cf4b41209662ed261ac738c629dc856",
-      "target_sha256": "5ee4980c677d8db426b7e87d4edeffa7bacc57e24aedbcfdfc4d63bdf1e55375",
-      "reviewer": "Claude (Claude Code session; full-text content and lexical review, no model execution)",
+      "source_sha256": "d1c0d073459b6fb085597a53007ef1336dcf67cebcb9e3288faba71f391931c7",
+      "target_sha256": "e3de9f328c2ede8c6aa0a1f966369b2ecd0e37e28d0104dcbdda93e9ba39af11",
+      "reviewer": "Claude (Claude Code session; wrote and read both versions side by side: structure, numbers, tables, links and captions)",
       "method": "assistant",
-      "reviewed_on": "2026-10-24"
+      "reviewed_on": "2026-11-10"
     },
     {
       "source": "docs/tutorial.md",
@@ -428,11 +428,11 @@
     {
       "source": "docs/users_guide/passage_width.md",
       "target": "docs/en/users_guide/passage_width.md",
-      "source_sha256": "4b0711cc53a360916cf46ddf66825ca665bed75d795d3113da9f00641d7a2ef5",
-      "target_sha256": "ce068f4526b25cfca05369832ab9fc4d2d46cdac3e34128cdfbb8d553e6e7b65",
-      "reviewer": "Claude (Claude Code session; reviewed the added links to the page on choosing the diagonal share d (and the basis of p_diagratio in encgrid) in the Japanese source against the English mirror, 2026-11-05)",
+      "source_sha256": "e204222e1e12f2513ac2fc4d42fbb101c5e07d5d8bb1007710a90d70b871174f",
+      "target_sha256": "fdb623dae835e89873866a8a3f3dd5cf51387aa348f7465acd2a8fa87e75789e",
+      "reviewer": "Claude (Claude Code session; wrote and read both versions side by side: structure, numbers, tables, links and captions)",
       "method": "assistant",
-      "reviewed_on": "2026-11-05"
+      "reviewed_on": "2026-11-10"
     },
     {
       "source": "docs/users_guide/record.md",
@@ -860,11 +860,11 @@
     {
       "source": "examples/README.md",
       "target": "examples/README.en.md",
-      "source_sha256": "972e6189e0f95ec323a1dbb61b0c0eb00afd39224a55eef978b25c7c7764a3d0",
-      "target_sha256": "74eba6d8000d836e708e0c174771560f0a61536ffc475c155d5090c95be90c2a",
-      "reviewer": "Claude (Claude Code session; shortened the nine long content cells in both versions to the same content and compared them row by row)",
+      "source_sha256": "b552f45c302341eb12718aca5099f5fbbc626ff738c52e84145590d2cb57488e",
+      "target_sha256": "d54497eac5c47a6bb918aa68a22808bac7f28d45af3bca497b944861b97b94c2",
+      "reviewer": "Claude (Claude Code session; wrote and read both versions side by side: structure, numbers, tables, links and captions)",
       "method": "assistant",
-      "reviewed_on": "2026-11-08"
+      "reviewed_on": "2026-11-10"
     },
     {
       "source": "examples/ashfall_lahar/README.md",
@@ -1333,6 +1333,33 @@
       "reviewer": "Claude (Claude Code session; recomputed 2026-11-05: both drawn by plot_results.py from the same results, labels compared with the Japanese figure)",
       "method": "assistant",
       "reviewed_on": "2026-11-05"
+    },
+    {
+      "source": "examples/benchmark/README.md",
+      "target": "examples/benchmark/en/README.md",
+      "source_sha256": "ac62487656b141183dc6144ecc6857790656406c043a6ac8615070d1011ecec0",
+      "target_sha256": "0f7a29e742772b22fd5d5724701a6e6d498673307c6d54ff8c80098a739da587",
+      "reviewer": "Claude (Claude Code session; wrote and read both versions side by side: structure, numbers, tables, links and captions)",
+      "method": "assistant",
+      "reviewed_on": "2026-11-10"
+    },
+    {
+      "source": "examples/benchmark/v-shaped/README.md",
+      "target": "examples/benchmark/v-shaped/en/README.md",
+      "source_sha256": "eb0bedffb40c7520aac7d14f43a3be47f088056ab8f89f147c41661c9c69a710",
+      "target_sha256": "6f1c6d9ef0775763b15ac56de8c15497003e38d88e645e8bb1c65875ba0c5efb",
+      "reviewer": "Claude (Claude Code session; wrote and read both versions side by side: structure, numbers, tables, links and captions)",
+      "method": "assistant",
+      "reviewed_on": "2026-11-10"
+    },
+    {
+      "source": "examples/benchmark/v-valley/README.md",
+      "target": "examples/benchmark/v-valley/en/README.md",
+      "source_sha256": "5cf302a21effd4532454c07de2d3630bc65f453ab3a11d30a17ec81b8362b939",
+      "target_sha256": "2acaed5b1025503ab2281fc03325189422a3609bcea72ac2e3cb2630128c3486",
+      "reviewer": "Claude (Claude Code session; wrote and read both versions side by side: structure, numbers, tables, links and captions)",
+      "method": "assistant",
+      "reviewed_on": "2026-11-10"
     },
     {
       "source": "examples/catchment_metal/README.md",

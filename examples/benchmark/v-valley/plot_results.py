@@ -6,9 +6,10 @@
 
   slopes.png   斜面の勾配 S_S = 0.01〜0.04(格子 10 m)の下流端の流量: 0° の 8 近傍(基準)、45° の 8 近傍、45° の 4 近傍
   grids.png    格子 20・10・5 m(S_S = 0.03)の下流端の流量: 45° の 8 近傍と 4 近傍(0° の基準を重ねる)
-  maps.png     60 分の水深の分布(45°、S_S = 0.03。20 m と 10 m の 8 近傍と 4 近傍)
+  maps.png     60 分の水深: 45°・20 m の谷底付近のセル(8 近傍と 4 近傍)と、谷底の軸に沿う水深(20・10・5 m)
 数値の表は check.py が出す。
 """
+import math
 import os
 import sys
 import numpy as np
@@ -93,38 +94,68 @@ def fig_grids():
 
 
 def fig_maps():
-    fig, axes = plt.subplots(2, 2, figsize=(11, 10.5))
-    norm = LogNorm(vmin=1e-3, vmax=1.0)
-    im = None
-    for row, dx in enumerate((20.0, 10.0)):
+    """60 分(H0002)の水深。上: 45°・20 m の谷底付近のセル(8 近傍と 4 近傍。谷の座標 s, n に戻して描く)、
+    下: 谷底の軸のセルの列に沿う水深(45° の 20・10・5 m、8 近傍と 4 近傍)。"""
+    from matplotlib.patches import Polygon
+    fig, axes = plt.subplots(2, 2, figsize=(12, 9.0))
+    ss = M.S_S_BASE
+    hp20 = math.sqrt(2) / 2 * (ss - M.S_V) * 20.0
+    for col, suf in enumerate(("", "_4nb")):
+        ax = axes[0, col]
+        dx = 20.0
+        name = M.case_name(ss, dx, 45.0, suf)
+        path = f"result_{name}/H0002.txt"
+        if not os.path.isfile(path):
+            ax.set_axis_off()
+            continue
+        H = np.loadtxt(path)[::-1]
         nx, ny, ox, oy, c, sn, _ = M.frame(dx, 45.0)
-        for col, suf in enumerate(("", "_4nb")):
-            ax = axes[row, col]
-            name = M.case_name(M.S_S_BASE, dx, 45.0, suf)
+        _, kind, s, n = M.grid(ss, dx, 45.0)
+        sel = (kind == 1) & (s > 380) & (s < 620) & (np.abs(n) < 130)
+        jj, ii = np.nonzero(sel)
+        cmap = plt.get_cmap("viridis")
+        vmax = 0.3
+        for i, j in zip(ii, jj):
+            xs = np.array([i, i + 1, i + 1, i]) * dx - ox
+            ys = np.array([j, j, j + 1, j + 1]) * dx - oy
+            s4 = xs * c - ys * sn
+            n4 = xs * sn + ys * c
+            fc = "#f3efe6" if H[j, i] < 1e-3 else cmap(np.clip(H[j, i] / vmax, 0, 1))
+            ax.add_patch(Polygon(np.c_[s4, n4], closed=True, facecolor=fc, edgecolor="0.6", lw=0.3))
+            if abs(n[j, i]) < 1e-6:
+                ax.text(s[j, i], n[j, i], f"{H[j, i]:.2f}", ha="center", va="center", fontsize=6.5, color="w")
+        ax.axhline(0, color="k", lw=0.6, ls="--")
+        ax.set_xlim(380, 620)
+        ax.set_ylim(-130, 130)
+        ax.set_aspect("equal")
+        ax.set_xlabel("s (m)")
+        ax.set_ylabel("n (m)")
+        ax.set_title(T(f"Δx = 20 m、45°、{'8 近傍' if suf == '' else '4 近傍'}: 谷底付近の 60 分の水深(数字 = 軸のセル)",
+                       f"Δx = 20 m, 45°, {'8-neighbour' if suf == '' else '4-neighbour'}: depth near the floor at 60 min (numbers = axis cells)"), fontsize=9)
+    sm = plt.cm.ScalarMappable(cmap="viridis", norm=plt.Normalize(0, 0.3))
+    fig.colorbar(sm, ax=axes[0, :].tolist(), fraction=0.02, pad=0.01).set_label(T("水深 (m)。白 = 1 mm 未満", "depth (m); white < 1 mm"))
+    for col, suf in enumerate(("", "_4nb")):
+        ax = axes[1, col]
+        for dx in (20.0, 10.0, 5.0):
+            name = M.case_name(ss, dx, 45.0, suf)
             path = f"result_{name}/H0002.txt"
             if not os.path.isfile(path):
-                ax.set_axis_off()
                 continue
             H = np.loadtxt(path)[::-1]
-            _, kind, s, n = M.grid(M.S_S_BASE, dx, 45.0)
-            Hm = np.ma.masked_where((kind != 1) | (H <= 1e-4), H)
-            ax.imshow(np.where(kind > 0, 1.0, np.nan), origin="lower", extent=[0, nx * dx, 0, ny * dx], cmap="Greys", vmin=0, vmax=4)
-            im = ax.imshow(Hm, origin="lower", extent=[0, nx * dx, 0, ny * dx], cmap="viridis", norm=norm)
-            def xy(ss, nn):
-                return ss * c + nn * sn + ox, -ss * sn + nn * c + oy
-            xs, ys = zip(*[xy(a, b) for a, b in ((0, -M.WH), (M.L, -M.WH), (M.L, M.WH), (0, M.WH), (0, -M.WH))])
-            ax.plot(xs, ys, color="k", lw=0.8)
-            ax.plot(*zip(xy(0, 0), xy(M.L, 0)), color="k", lw=0.6, ls="--")
-            hmax = float(np.nanmax(np.where(kind == 1, H, np.nan)))
-            ax.set_title(T(f"Δx = {dx:g} m、{'8 近傍' if suf == '' else '4 近傍'}(60 分。最大水深 {hmax:.2f} m)",
-                           f"Δx = {dx:g} m, {'8-neighbour' if suf == '' else '4-neighbour'} (60 min; max depth {hmax:.2f} m)"), fontsize=9)
-            ax.set_xlabel("x (m)")
-            ax.set_ylabel("y (m)")
-            ax.set_aspect("equal")
-    if im is not None:
-        fig.colorbar(im, ax=axes.ravel().tolist(), fraction=0.025, pad=0.02).set_label(T("水深 (m)(対数)", "depth (m) (log scale)"))
-    fig.suptitle(T(f"向き 45°、S_S = {M.S_S_BASE}、60 分の水深(1 mm 未満は描かない)。破線 = 谷底の軸",
-                   f"Orientation 45°, S_S = {M.S_S_BASE}, depth at 60 min (< 1 mm not drawn). Dashed = valley axis"), fontsize=10)
+            _, kind, s, n = M.grid(ss, dx, 45.0)
+            axis = (kind == 1) & (np.abs(n) < 1e-6)
+            k = np.argsort(s[axis])
+            ax.plot(s[axis][k], H[axis][k], color=COL_D[dx], ls=LS_D[dx], lw=1.4, label=f"Δx = {dx:g} m")
+            if suf == "_4nb" and ss > M.S_V:
+                ax.axhline(math.sqrt(2) / 2 * (ss - M.S_V) * dx, color=COL_D[dx], lw=0.7, ls=":")
+        ax.set_xlabel("s (m)")
+        ax.set_ylabel(T("谷底の軸のセルの水深 (m)", "depth in the floor-axis cells (m)"))
+        ax.set_title(T(f"45°、{'8 近傍' if suf == '' else '4 近傍(点線 = 窪地の深さ H_p)'}: 60 分の谷底の軸に沿う水深",
+                       f"45°, {'8-neighbour' if suf == '' else '4-neighbour (dotted = depression depth H_p)'}: depth along the floor axis at 60 min"), fontsize=9)
+        ax.set_xlim(0, M.L)
+        ax.set_ylim(0, 0.35)
+        ax.grid(alpha=0.3)
+        ax.legend(fontsize=8)
     fig.savefig(f"{FIGDIR}/maps.png", dpi=110)
     plt.close(fig)
 
