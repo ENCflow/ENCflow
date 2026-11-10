@@ -887,11 +887,11 @@
     {
       "source": "examples/ashfall_lahar/figs/maps.png",
       "target": "examples/ashfall_lahar/en/figs/maps.png",
-      "source_sha256": "d174ccafa70f0e687a2b4df34b339abbd0109f8efdf1042f0a6fa06962478613",
-      "target_sha256": "b2eed598a45d6ce0cea4ff98802e984e20bfdb6360cf69e2da9b018ddc2db6f1",
-      "reviewer": "Claude (Claude Code session; viewed both images: same six panels, data and colour scales; titles, axis labels and colour-bar units translated)",
+      "source_sha256": "a7452760a16001b63494d2b596a73dbcfffab96d6ab0fd0c63f467c54166eafe",
+      "target_sha256": "70b85d7610a47ade52f58182d0bb6359c2a105fdc2f84b67c53b2aae58bfaa7e",
+      "reviewer": "Claude (Claude Code session; English figure drawn by the same script with the en switch from the same results of 2026-11-10; compared side by side: same plotted data and layout, labels translated)",
       "method": "assistant",
-      "reviewed_on": "2026-11-06"
+      "reviewed_on": "2026-11-10"
     },
     {
       "source": "examples/ashfall_lahar/figs/mechanism.png",
@@ -905,29 +905,29 @@
     {
       "source": "examples/ashfall_lahar/figs/profile.png",
       "target": "examples/ashfall_lahar/en/figs/profile.png",
-      "source_sha256": "0754ddff59b7318153b50ef43ee81c4a42733b8813c48aebde4f85466f53eb53",
-      "target_sha256": "32e78e614e26cd4bc335d138d6388ee63b37d9e41bf1f1fb194d5036a7e13723",
-      "reviewer": "Claude (Claude Code session; viewed both images side by side: same profiles of bed change and maximum concentration along the valley axis; legend, axis labels and the dam/valley-outlet annotations translated)",
+      "source_sha256": "acb18a9f1df820ddafc49b6aaf9f83130d3270b3b8ff4a067d03f6262d70cd03",
+      "target_sha256": "6157af1b60e6688085595652a4ad916ed9c6d7b749a8684b5d4936bbcf3dd759",
+      "reviewer": "Claude (Claude Code session; English figure drawn by the same script with the en switch from the same results of 2026-11-10; compared side by side: same plotted data and layout, labels translated)",
       "method": "assistant",
-      "reviewed_on": "2026-11-06"
+      "reviewed_on": "2026-11-10"
     },
     {
       "source": "examples/ashfall_lahar/figs/rotated.png",
       "target": "examples/ashfall_lahar/en/figs/rotated.png",
-      "source_sha256": "d03dad0730517c152d359a541a915acaa7d7ab19ad61514060d12a9d6c99b1a3",
-      "target_sha256": "ccc6a6be42295d25e1eecd1e59c1c76b361c6af49a59d5b6eb9fd67c0eadc62b",
-      "reviewer": "Claude (Claude Code session; viewed both images side by side: same eight maps (0/45 degrees, 8/4 neighbours, flow depth at 40 min and bed change at 90 min) and colour scales; titles and axis labels translated)",
+      "source_sha256": "bf2ba3b242954e26c4fa462721ed01e48d14f949ea6edc9e056d899cb3846418",
+      "target_sha256": "3db7b64a31e26cefb7bf8e8ed586d2cb38c0d4fcc85b0866aa0130427b6e85fd",
+      "reviewer": "Claude (Claude Code session; English figure drawn by the same script with the en switch from the same results of 2026-11-10; compared side by side: same plotted data and layout, labels translated)",
       "method": "assistant",
-      "reviewed_on": "2026-11-06"
+      "reviewed_on": "2026-11-10"
     },
     {
       "source": "examples/ashfall_lahar/figs/rotated_profile.png",
       "target": "examples/ashfall_lahar/en/figs/rotated_profile.png",
-      "source_sha256": "38208fd8aecabcd5635e6ec7970d991479a8b1bfb95db8f56459da34d10525af",
-      "target_sha256": "6176ecf2cb99482c9019eccca168add89f6ad022b232cbde95bc3a06752d4b2b",
-      "reviewer": "Claude (Claude Code session; viewed both images side by side: same cross sections of the valley and the fan for the four configurations, including the half widths 32/28/19/30 m in the legend; titles, legends and axis labels translated)",
+      "source_sha256": "d9e023219de3b1603c8f49c241850995b3c309b3e02a98e0e752e96c453f48c0",
+      "target_sha256": "5bbe5dae41880f69f70bc3c53e5f7baafee4cebf942c4329471f970723950c92",
+      "reviewer": "Claude (Claude Code session; English figure drawn by the same script with the en switch from the same results of 2026-11-10; compared side by side: same plotted data and layout, labels translated)",
       "method": "assistant",
-      "reviewed_on": "2026-11-06"
+      "reviewed_on": "2026-11-10"
     },
     {
       "source": "examples/ashfall_lahar/figs/rotated_setup.png",
@@ -941,11 +941,11 @@
     {
       "source": "examples/ashfall_lahar/figs/series.png",
       "target": "examples/ashfall_lahar/en/figs/series.png",
-      "source_sha256": "0e941484580d2e268e088852fcfc18458f05e1ce4a60a2b701c25c6aa0c0592e",
-      "target_sha256": "cddbb610ef9f8a25e383cf64e2afdf14c4135d06003755c039a45b3454bbaf13",
-      "reviewer": "Claude (Claude Code session; viewed both images side by side: same discharge series at the valley and fan sections and the same sediment budget curves; titles, legends and axis labels translated)",
+      "source_sha256": "c5564f1af0deaa56ba39dec743d38cf3a4513c4d2cf2283547ee9dd6d47e66be",
+      "target_sha256": "f22f90a183909e49e67d1cc94d0b04a04e9234076a46dde0cb1d07176762d896",
+      "reviewer": "Claude (Claude Code session; English figure drawn by the same script with the en switch from the same results of 2026-11-10; compared side by side: same plotted data and layout, labels translated)",
       "method": "assistant",
-      "reviewed_on": "2026-11-06"
+      "reviewed_on": "2026-11-10"
     },
     {
       "source": "examples/ashfall_lahar/figs/setup.png",
