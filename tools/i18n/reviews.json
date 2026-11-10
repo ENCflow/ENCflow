@@ -2633,20 +2633,20 @@
     {
       "source": "examples/shield_volcano/README.md",
       "target": "examples/shield_volcano/en/README.md",
-      "source_sha256": "f70c002c31b0b64b88b82ed13f42f3c06ba5a7c669684789778614bbee3cb345",
-      "target_sha256": "2df75feba43b107405a7b312a4967f3369bb655573f898743b10cdb11ff7f808",
-      "reviewer": "Claude (Claude Code session; corrected both versions in parallel against the inputs, scripts and source (param files, plot scripts, list/source definitions), and compared the edited passages and numbers)",
+      "source_sha256": "dddf383efbce5a4abf0aa7ddf849ff500d523d77c87eb7d79993f65315ffec2f",
+      "target_sha256": "a796ae2f25c2915cc6d47b97890c6dff99768033b158d40d8a34eeb1f14a020a",
+      "reviewer": "Claude (Claude Code session; recomputation of 2026-11-10 with the 9-point lava stencil: the shape table, sector-radius ratios, height ratio, threshold sensitivity, dome errors, dome_sol values, the vertical exaggeration of panel (c) and the rewritten grid bullet compared against the Japanese source and the printed numbers of plot_results.py; no model execution)",
       "method": "assistant",
-      "reviewed_on": "2026-11-08"
+      "reviewed_on": "2026-11-10"
     },
     {
       "source": "examples/shield_volcano/figs/dome.png",
       "target": "examples/shield_volcano/en/figs/dome.png",
-      "source_sha256": "60a0fbfc870c24681d38b470b336fd148aadea81de71d22d7eacfc793473db6d",
-      "target_sha256": "477bbe5bb4719fdbe968303b4062eb5831785370d18b560403c4c1c824f45315",
-      "reviewer": "Claude (Claude Code session; English figure drawn by the same script with the en switch; visual check)",
+      "source_sha256": "4705320bc1118db1781ba60d94b56f5e95d1c24db6d071d0e0aa86d82b68cada",
+      "target_sha256": "61b78dd9e60735dbb89f271f8707656d9da66a321151370e4a25932fad18b89f",
+      "reviewer": "Claude (Claude Code session; English figure drawn by the same script with the en switch from the same results of 2026-11-10; compared side by side: same plotted data, labels translated; the vertical exaggeration in the dome profile label is computed from each figure's own axes, about 6.4 in Japanese and 6.5 in English)",
       "method": "assistant",
-      "reviewed_on": "2026-11-03"
+      "reviewed_on": "2026-11-10"
     },
     {
       "source": "examples/shield_volcano/figs/mechanism.png",
@@ -2669,11 +2669,11 @@
     {
       "source": "examples/shield_volcano/figs/shield.png",
       "target": "examples/shield_volcano/en/figs/shield.png",
-      "source_sha256": "6ed703972c8bcfe523c5d42383c4e9f9d0f12493d192ee4812074d8c164457ed",
-      "target_sha256": "dad7a0d65b84f42bce077f0de55d5b952369d5c5d4e3873fc0cb749def79a817",
-      "reviewer": "Claude (Claude Code session; English figure drawn by the same script with the en switch; visual check)",
+      "source_sha256": "9cf7793b0926b01dc8dd6c1e2baf5380ea9c1fc6f8102d65cdee8473b1509671",
+      "target_sha256": "6d2a56f0554ea6060146b9a2ebb62d0e66a4b9d1ef75febe4b094a44153f5a28",
+      "reviewer": "Claude (Claude Code session; English figure drawn by the same script with the en switch from the same results of 2026-11-10; compared side by side: same plotted data, labels translated; the vertical exaggeration in the dome profile label is computed from each figure's own axes, about 6.4 in Japanese and 6.5 in English)",
       "method": "assistant",
-      "reviewed_on": "2026-11-03"
+      "reviewed_on": "2026-11-10"
     },
     {
       "source": "examples/stone_forest/README.md",
