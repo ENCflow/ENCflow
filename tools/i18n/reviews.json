@@ -2489,9 +2489,9 @@
     {
       "source": "examples/qanat/README.md",
       "target": "examples/qanat/en/README.md",
-      "source_sha256": "5c21e603661040bcab61f9c152d3af8d00a4d31f371e2978efd3ebc1ca98f338",
-      "target_sha256": "800f6e05d6121278a42e6736ebeb2b4e34788624d0bbb47e4f33a04bf8f6a600",
-      "reviewer": "Claude (Claude Code session; values updated to reruns with the default f_advection_donor = 3: qanat flow 3.54 -> 3.60 L/s and the shares and breakdowns derived from it, Japanese and English edited together and compared; two wording items pending a check against f_advection_donor = 0 controls)",
+      "source_sha256": "4938e4002f232838ee96785e5de45ee7fc94a1a4bdfddd0d16bacfe2778702de",
+      "target_sha256": "ee19a7fcc3be1658aa16d7800fd046b4d5de16b0a7b517c96964ea74d581e812",
+      "reviewer": "Claude (Claude Code session; values updated to reruns with the default f_advection_donor = 3: qanat flow 3.54 -> 3.60 L/s and the shares and breakdowns derived from it, the east-edge transect agreement 0.2 -> 0.5 L/s; other prose values checked against f_advection_donor = 0 controls and unchanged; Japanese and English edited together and compared)",
       "method": "assistant",
       "reviewed_on": "2026-11-10"
     },

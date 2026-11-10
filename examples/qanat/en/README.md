@@ -167,7 +167,7 @@ dot = pumping well.
 The values are 20-day means. The qanat-only case stays almost the same as before pumping up
 to day 300 (qanat flow 3.60 L/s over days 280-300). The groundwater seeping into the drain is
 what remains of the recharge after subtracting the qanat flow and the pumping and adding the
-storage loss (it agrees within 0.2 L/s with the mean of the east-edge transect; the flow over
+storage loss (it agrees within 0.5 L/s with the mean of the east-edge transect; the flow over
 the plain pulsates, so the transect is read as a 20-day mean).
 
 - **Once the water table is in equilibrium, 36 % of the recharge comes out of the qanat**:
