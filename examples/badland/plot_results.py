@@ -369,7 +369,7 @@ if cases:
             open_unreached(a, ln, dxs, ys, [r[3]["reached"] for r in rows2])
     if not all(t[3]["reached"] for t in tab if t[0]["lc"] == 2.0):
         a.plot([], [], ls="none", marker="o", mfc="white", mec="0.3", label=LAB_OPEN)
-    a.set_xscale("log"); a.set_xticks(dxs); a.set_xticklabels(["%g" % d for d in dxs]); a.set_xlabel(T("Δx (m)(spl_lc = 2 m)", "Δx (m) (spl_lc = 2 m)")); a.legend(fontsize=7); a.set_title(T("格子収束", "Grid convergence"), fontsize=9)
+    a.set_xscale("log"); a.set_xticks(dxs); a.set_xticklabels(["%g" % d for d in dxs]); a.minorticks_off(); a.set_xlabel(T("Δx (m)(spl_lc = 2 m)", "Δx (m) (spl_lc = 2 m)")); a.legend(fontsize=7); a.set_title(T("格子収束", "Grid convergence"), fontsize=9)
     # 下段右 2 枚: Δx = 0.5 と 2 の地図
     for k, nm in enumerate(["param_lc2_dx05", "param_lc2_dx2"]):
         cc = [c for c in cases if c["name"] == nm]
