@@ -19,14 +19,15 @@ looks at the difference from the 0° result, which the answer should not depend 
 
 - **Eight neighbours do not depend on orientation**: the outlet discharge on the grid rotated by 45°
   follows the 0° result with an NRMSE (root-mean-square difference divided by the reference peak) of
-  0.008 to 0.023 for every hillslope slope and grid spacing, and the peak is 0.99 to 1.00 times that at 0°.
+  0.006 to 0.017 for every hillslope slope and grid spacing, and the peak is 0.99 to 1.00 times that at 0°.
 - **Four neighbours are delayed when S_S > S_V, the more so the steeper the hillslopes and the coarser
-  the grid**: at 10 m the peak comes 6 min late with an NRMSE of 0.072 for S_S = 0.03, and 8 min late with
-  0.096 for S_S = 0.04. At 20 m (S_S = 0.03) the peak is 29 min late and 0.85 times (NRMSE 0.20); at 5 m
-  this shrinks to 2 min and 0.026. Even for S_S ≤ S_V the staircase path delays the peak by 5 min.
-- **Estimate of the depressions**: the water left in the valley at 180 min in excess of eight neighbours is
-  0.015 (5 m), 0.041 (10 m) and 0.130 (20 m) of the rain, 1.2 to 2 times the estimate Σ V_p for the
-  floor cells on the axis (0.007, 0.029, 0.113). The rest is the thin flow over the rims of the depressions.
+  the grid**: at 10 m the peak comes 6 min late with an NRMSE of 0.051 for S_S = 0.03, and 8 min late with
+  0.068 for S_S = 0.04. At 20 m (S_S = 0.03) the peak is 29 min late and 0.85 times (NRMSE 0.14); at 5 m
+  this shrinks to 2 min and 0.019. Even for S_S ≤ S_V the staircase path delays the peak by 5 min.
+- **The estimate of the depressions holds**: the water left in the valley after 6 hours in excess of eight
+  neighbours is 0.012 (5 m), 0.033 (10 m) and 0.111 (20 m) of the rain, which agrees with the estimate
+  Σ V_p for the floor cells on the axis (0.007, 0.029, 0.113) at 10 and 20 m (at 5 m it is larger by the
+  thin flow over the rims).
 
 ## Set-up
 
@@ -43,7 +44,7 @@ with four neighbours. Drawn from the inputs and the equations; not a computed re
 |---|---|
 | Terrain | z = 3 + S_V (L − s) + S_S \|n\|. L = 1000 m, width 2 × 810 m, S_V = 0.02, S_S = 0.01, 0.02, 0.03, 0.04. The valley floor is a line of zero width |
 | Roughness | Manning's n = 0.1 (uniform) |
-| Rain | 10.8 mm/h everywhere for 60 min. The computation runs for 3 hours |
+| Rain | 10.8 mm/h everywhere for 60 min. The computation runs for 6 hours (the thin flow with n = 0.1 is slow, so the run continues until the valley has drained) |
 | Grids | Δx = 10 m for the four values of S_S; Δx = 20 and 5 m for S_S = 0.03. Orientations 0° and 45°. Outside the rectangle of the valley is outside the domain (wall) |
 | Time step | dt = 0.1 Δx (2, 1, 0.5 s) |
 | Outlet | the 2 cells beyond the downstream end (s = L), over the full width, are sea cells (a sink fixed at elevation 0 m and depth 1 m) |
@@ -103,43 +104,43 @@ Left: 0°, eight neighbours (reference); middle: 45°, eight neighbours; right: 
 lines are the reference with the same S_S.
 
 Table of `check.py`. NRMSE is the root-mean-square difference from the reference (0°, eight neighbours,
-same S_S and Δx) divided by the reference peak; the residual is the water left in the valley at the end
-(180 min) divided by the rain; depressions is the estimate Σ V_p / rain above; the balance is
-(runoff volume + residual) / rain.
+same S_S and Δx) divided by the reference peak; the volume ratio is the 6-hour runoff volume divided by
+that of the reference; the residual is the water left in the valley at the end (6 hours) divided by the
+rain; depressions is the estimate Σ V_p / rain above; the balance is (runoff volume + residual) / rain.
 
 | Case | peak (m³/s) | time of peak (min) | NRMSE | peak ratio | shift of peak | volume ratio | residual | depressions | balance | verdict |
 |---|---|---|---|---|---|---|---|---|---|---|
-| S_S 0.01, 0°, 8 | 1.502 | 101 | — | — | — | — | 0.377 | — | 0.999 | — |
-| S_S 0.01, 45°, 8 | 1.508 | 99 | 0.010 | 1.004 | −2 | 1.005 | 0.372 | 0 | 1.000 | PASS |
-| S_S 0.01, 45°, 4 | 1.485 | 106 | 0.019 | 0.989 | +5 | 0.991 | 0.380 | 0 | 1.000 | — |
-| S_S 0.02, 0°, 8 | 1.808 | 90 | — | — | — | — | 0.324 | — | 1.000 | — |
-| S_S 0.02, 45°, 8 | 1.807 | 89 | 0.009 | 0.999 | −1 | 1.002 | 0.320 | 0 | 0.999 | PASS |
-| S_S 0.02, 45°, 4 | 1.776 | 95 | 0.041 | 0.982 | +5 | 0.974 | 0.339 | 0 | 1.000 | — |
-| S_S 0.03, 0°, 8 | 2.058 | 85 | — | — | — | — | 0.274 | — | 1.000 | — |
-| S_S 0.03, 0°, 4 | 2.091 | 82 | 0.013 | 1.016 | −3 | 1.004 | 0.272 | — | 1.000 | — |
-| S_S 0.03, 45°, 8 | 2.045 | 85 | 0.012 | 0.994 | 0 | 1.004 | 0.269 | 0.029 | 1.000 | PASS |
-| S_S 0.03, 45°, 4 | 2.006 | 91 | 0.072 | 0.975 | +6 | 0.948 | 0.310 | 0.029 | 0.999 | — |
-| S_S 0.04, 0°, 8 | 2.283 | 81 | — | — | — | — | 0.243 | — | 1.000 | — |
-| S_S 0.04, 45°, 8 | 2.255 | 83 | 0.023 | 0.988 | +2 | 1.013 | 0.231 | 0.057 | 1.000 | PASS |
-| S_S 0.04, 45°, 4 | 2.206 | 89 | 0.096 | 0.966 | +8 | 0.922 | 0.300 | 0.057 | 0.999 | — |
+| S_S 0.01, 0°, 8 | 1.502 | 101 | — | — | — | — | 0.122 | — | 0.999 | — |
+| S_S 0.01, 45°, 8 | 1.508 | 99 | 0.008 | 1.004 | −2 | 0.998 | 0.121 | 0 | 1.000 | PASS |
+| S_S 0.01, 45°, 4 | 1.485 | 106 | 0.014 | 0.989 | +5 | 0.996 | 0.123 | 0 | 1.000 | — |
+| S_S 0.02, 0°, 8 | 1.808 | 90 | — | — | — | — | 0.103 | — | 1.000 | — |
+| S_S 0.02, 45°, 8 | 1.807 | 89 | 0.007 | 0.999 | −1 | 0.998 | 0.101 | 0 | 1.000 | PASS |
+| S_S 0.02, 45°, 4 | 1.776 | 95 | 0.029 | 0.982 | +5 | 0.987 | 0.110 | 0 | 0.999 | — |
+| S_S 0.03, 0°, 8 | 2.058 | 85 | — | — | — | — | 0.085 | — | 0.999 | — |
+| S_S 0.03, 0°, 4 | 2.091 | 82 | 0.009 | 1.016 | −3 | 1.001 | 0.084 | — | 1.000 | — |
+| S_S 0.03, 45°, 8 | 2.045 | 85 | 0.008 | 0.994 | 0 | 1.001 | 0.082 | 0.029 | 1.000 | PASS |
+| S_S 0.03, 45°, 4 | 2.006 | 91 | 0.051 | 0.975 | +6 | 0.965 | 0.115 | 0.029 | 1.000 | — |
+| S_S 0.04, 0°, 8 | 2.283 | 81 | — | — | — | — | 0.074 | — | 0.999 | — |
+| S_S 0.04, 45°, 8 | 2.255 | 83 | 0.017 | 0.988 | +2 | 1.002 | 0.070 | 0.057 | 1.000 | PASS |
+| S_S 0.04, 45°, 4 | 2.206 | 89 | 0.068 | 0.966 | +8 | 0.938 | 0.130 | 0.057 | 1.000 | — |
 
 The guide values for passing (45° with eight neighbours) are NRMSE ≤ 0.05, |peak ratio − 1| ≤ 0.05 and
 |balance − 1| ≤ 0.01.
 
 - **The steeper the hillslopes, the larger and earlier the peak** (at 0° from 1.50 m³/s at 101 min for
   S_S = 0.01 to 2.28 m³/s at 81 min for 0.04). The rain stops at 60 min, but the thin flow with n = 0.1 is
-  slow, so the peak comes after the rain and 0.24 to 0.38 of the rain is still in the valley at 180 min
-  (the outlet passes 60 to 80 % of the rain in 3 hours). The volume ratio and the residual are values at
-  this intermediate time.
-- **At 45° eight neighbours follow 0°** (NRMSE 0.009 to 0.023, peak 0.99 to 1.00 times, time of peak
+  slow, so the peak comes after the rain and 0.07 to 0.12 of the rain is still in the valley after 6 hours
+  (a long recession tail).
+- **At 45° eight neighbours follow 0°** (NRMSE 0.007 to 0.017, peak 0.99 to 1.00 times, time of peak
   within ±2 min). The largest difference is a slightly later rise for S_S = 0.04.
 - **At 45° four neighbours are delayed, the more so the larger S_S**: the peak is 5 to 8 min late and
-  0.97 to 0.99 times, the runoff by 180 min is 0.95 of the reference for S_S = 0.03 and 0.92 for 0.04, and
-  the difference stays in the valley (residual 0.310 and 0.300 against 0.269 and 0.231 with eight
-  neighbours). The excess (0.041 and 0.069 of the rain) is 1.2 to 1.4 times the estimate for the floor cells
+  0.97 to 0.99 times, the 6-hour runoff is 0.965 of the reference for S_S = 0.03 and 0.938 for 0.04, and
+  the difference stays in the valley (residual 0.115 and 0.130 against 0.082 and 0.070 with eight
+  neighbours). The excess (0.033 and 0.060 of the rain) agrees with the estimate Σ V_p for the floor cells
   on the axis (0.029 and 0.057). Even for S_S ≤ S_V (no depressions) the staircase path delays the peak by
-  5 min, with an NRMSE of 0.041 for S_S = 0.02.
-- **At 0° four neighbours are nearly the same as eight** (NRMSE 0.013; the peak is 1.6 % larger and 3 min
+  5 min, with an NRMSE of 0.029 for S_S = 0.02 (the downstream neighbours are level with the floor cell, so
+  the water moves on the water-surface slope alone).
+- **At 0° four neighbours are nearly the same as eight** (NRMSE 0.009; the peak is 1.6 % larger and 3 min
   earlier).
 
 ### Grid spacing (S_S = 0.03)
@@ -148,15 +149,15 @@ The guide values for passing (45° with eight neighbours) are NRMSE ≤ 0.05, |p
 
 | Case | peak (m³/s) | time of peak (min) | NRMSE | peak ratio | shift of peak | volume ratio | residual | depressions | balance | verdict |
 |---|---|---|---|---|---|---|---|---|---|---|
-| 20 m, 0°, 8 | 2.039 | 83 | — | — | — | — | 0.286 | — | 1.000 | — |
-| 20 m, 45°, 8 | 2.015 | 86 | 0.012 | 0.988 | +3 | 1.009 | 0.284 | 0.113 | 0.999 | PASS |
-| 20 m, 45°, 4 | 1.731 | 112 | 0.204 | 0.849 | +29 | 0.827 | 0.414 | 0.113 | 0.999 | — |
-| 10 m, 0°, 8 | 2.058 | 85 | — | — | — | — | 0.274 | — | 1.000 | — |
-| 10 m, 45°, 8 | 2.045 | 85 | 0.012 | 0.994 | 0 | 1.004 | 0.269 | 0.029 | 1.000 | PASS |
-| 10 m, 45°, 4 | 2.006 | 91 | 0.072 | 0.975 | +6 | 0.948 | 0.310 | 0.029 | 0.999 | — |
-| 5 m, 0°, 8 | 2.084 | 83 | — | — | — | — | 0.263 | — | 0.999 | — |
-| 5 m, 45°, 8 | 2.092 | 82 | 0.008 | 1.004 | −1 | 1.005 | 0.261 | 0.007 | 1.000 | PASS |
-| 5 m, 45°, 4 | 2.080 | 85 | 0.026 | 0.998 | +2 | 0.985 | 0.276 | 0.007 | 1.000 | — |
+| 20 m, 0°, 8 | 2.039 | 83 | — | — | — | — | 0.091 | — | 0.999 | — |
+| 20 m, 45°, 8 | 2.015 | 86 | 0.008 | 0.988 | +3 | 1.008 | 0.090 | 0.113 | 0.999 | PASS |
+| 20 m, 45°, 4 | 1.731 | 112 | 0.145 | 0.849 | +29 | 0.884 | 0.201 | 0.113 | 0.998 | — |
+| 10 m, 0°, 8 | 2.058 | 85 | — | — | — | — | 0.085 | — | 0.999 | — |
+| 10 m, 45°, 8 | 2.045 | 85 | 0.008 | 0.994 | 0 | 1.001 | 0.082 | 0.029 | 1.000 | PASS |
+| 10 m, 45°, 4 | 2.006 | 91 | 0.051 | 0.975 | +6 | 0.965 | 0.115 | 0.029 | 1.000 | — |
+| 5 m, 0°, 8 | 2.084 | 83 | — | — | — | — | 0.079 | — | 0.999 | — |
+| 5 m, 45°, 8 | 2.092 | 82 | 0.006 | 1.004 | −1 | 1.004 | 0.078 | 0.007 | 1.000 | PASS |
+| 5 m, 45°, 4 | 2.080 | 85 | 0.019 | 0.998 | +2 | 0.992 | 0.090 | 0.007 | 1.001 | — |
 
 ![Depth at 60 min](figs/maps.png)
 
@@ -165,12 +166,14 @@ valley coordinates, with the depth written in the axis cells). Bottom: depth alo
 at 60 min (45°; 20, 10 and 5 m). The dotted lines for four neighbours are the depression depth H_p.
 
 - **Eight neighbours stay independent of orientation on coarser grids**: at 20, 10 and 5 m alike, 45°
-  follows 0° (NRMSE 0.008 to 0.012). The grid dependence of the 0° results themselves is +2 % in the peak
+  follows 0° (NRMSE 0.006 to 0.008). The grid dependence of the 0° results themselves is +2 % in the peak
   from 20 to 5 m (2.04 to 2.08 m³/s).
 - **Four neighbours are the more delayed the coarser the grid**: at 20 m the peak is 29 min late and 0.85
-  times, the runoff by 180 min is 0.83 times, and 0.13 of the rain stays in the valley in excess (about
-  the estimate of 0.113 for the depressions). At 10 m the delay is 6 min and 0.95 times (excess residual
-  0.041 against the estimate 0.029), at 5 m 2 min and 0.985 times (0.015 against 0.007).
+  times, the 6-hour runoff is 0.88 times, and 0.111 of the rain stays in the valley in excess (the
+  estimate for the depressions is 0.113). At 10 m the delay is 6 min and 0.965 times (excess residual 0.033
+  against the estimate 0.029), at 5 m 2 min and 0.992 times (0.012 against 0.007). The formula
+  H_p = (√2/2)(S_S − S_V) Δx gives the water left in the valley with four neighbours at 45° directly at
+  10 and 20 m.
 - **The depth in the floor-axis cells** is 0.1 to 0.2 m at 60 min with eight neighbours (the flow of the
   water collected on the floor), whereas with four neighbours at 20 m the axis cells hold water in
   depressions of H_p = 0.14 m with a thin flow passing over them (in the right panel above only the axis
@@ -183,10 +186,11 @@ at 60 min (45°; 20, 10 and 5 m). The dotted lines for four neighbours are the d
 - The sink is open over the full width of the downstream end, so water leaves from the downstream ends of
   the hillslopes too. This differs from a real valley whose outlet is a single point.
 - The estimate Σ V_p counts only the floor cells on the axis and not the thin flow over the rims of the
-  depressions. The water left in excess with four neighbours is 1.2 to 2 times Σ V_p.
-- The rain stops at 60 min and the thin flow with n = 0.1 is slow, so the valley does not drain within
-  3 hours (0.24 to 0.38 of the rain remains). The volume ratio and the residual are values at 180 min, not
-  final runoff depths.
+  depressions. The water left in excess with four neighbours agrees with Σ V_p at 10 and 20 m and is
+  1.7 times it at 5 m.
+- After the rain stops at 60 min the thin flow with n = 0.1 is slow, so 0.07 to 0.12 of the rain is still
+  in the valley after 6 hours (water thinner than the limit depth dd = 1 mm does not flow). The volume
+  ratio and the residual are values at 6 hours.
 - Infiltration, interception, the channel features and structures are not used. There is no regression
   reference; the verdict of `check.py` follows guide values.
 

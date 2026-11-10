@@ -1355,8 +1355,8 @@
     {
       "source": "examples/benchmark/v-valley/README.md",
       "target": "examples/benchmark/v-valley/en/README.md",
-      "source_sha256": "5cf302a21effd4532454c07de2d3630bc65f453ab3a11d30a17ec81b8362b939",
-      "target_sha256": "2acaed5b1025503ab2281fc03325189422a3609bcea72ac2e3cb2630128c3486",
+      "source_sha256": "85dcdcc431487d8531f0274e4d6b609057652e3a808a2cdb85c7f5f4725b6640",
+      "target_sha256": "9c65093c23eca2aec536a37d7bda40928f0b2ba18763d057355d55bab706c2f5",
       "reviewer": "Claude (Claude Code session; wrote and read both versions side by side: structure, numbers, tables, links and captions)",
       "method": "assistant",
       "reviewed_on": "2026-11-10"
