@@ -199,6 +199,18 @@ if avail:
         print(f"  {c}: H = {h:.0f} m, R10 = {r10 / 1000:.2f} km, slopes {s1:.1f} / {s2:.1f} / {s3:.1f} deg")
         ax.set_title("(" + "abc"[m] + ") " + CNAME[c] + T(f"\n高さ {h:.0f} m、等高線 20 m", f"\nheight {h:.0f} m, contours 20 m"), fontsize=9.5)
         ax.set_xlabel("km"); ax.set_ylabel("km")
+    # 山腹の噴火の高まり: 最終地形の火口のセルの高さ − 山頂から同じ距離の輪(幅 1 セル)の平均
+    print(T("山腹の噴火の高まり(最終地形の火口のセルの高さ − 山頂から同じ距離の輪の平均。数字は噴火の順番)",
+            "flank-eruption mounds (final height at the vent cell minus the mean of the ring at the same distance from the summit; number = order)"))
+    for c in avail:
+        s, n, led = data[c]
+        zf = s[f"z{n:02d}"]
+        bumps = []
+        for k, (kind, vi, vj) in enumerate(s["vents"], 1):
+            if kind == 1:
+                ring = np.abs(R - R[vj - 1, vi - 1]) < 0.5 * DX
+                bumps.append(f"{k}: {zf[vj - 1, vi - 1] - zf[ring].mean():.1f} m")
+        print(f"  {c}: " + ", ".join(bumps))
     ax = fig.add_subplot(gs[1, 0:2])
     ax2 = fig.add_subplot(gs[1, 2])
     for c in avail:
