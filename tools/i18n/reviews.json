@@ -104,9 +104,9 @@
     {
       "source": "docs/users_guide.md",
       "target": "docs/en/users_guide.md",
-      "source_sha256": "7a4f33cf92f19e586e40f7faa5639a25033a2f76babd41376e0fd5e1c4323290",
-      "target_sha256": "0c2bbdd5b0b1feae90b8efd402fb8cdf335493380ee896a85f1390592957465b",
-      "reviewer": "Claude (Claude Code session; folded the same 13 chapter groups in both versions, updated the intro sentence in both, and checked the rendering with cmark-gfm and a browser)",
+      "source_sha256": "123356d8a5863a1644b4bb9bc2ecaaadfb43871ce12042d15c163431b55b223f",
+      "target_sha256": "bfd42658e28d79da0bcb371fdc0158ebd89236f32b41061dba35bae86b67988d",
+      "reviewer": "Claude (Claude Code session; fn_* section: unfolded the features table, linked every feature and geographic input, added the fn_nest and fn_vz rows, pond row set to fn_rscap with fn_reservoir unused (checked in src); both versions edited together, anchors checked against the target headings, rendering checked with cmark-gfm and a browser)",
       "method": "assistant",
       "reviewed_on": "2026-11-10"
     },
@@ -356,11 +356,11 @@
     {
       "source": "docs/users_guide/io.md",
       "target": "docs/en/users_guide/io.md",
-      "source_sha256": "169acbb9d2b7c1efda1f457ce9ea622e2523f579121e99f6fdfe36ea79855bdf",
-      "target_sha256": "13ef0b4d81fd8e695485de434a0463e9fa1dc6b197417dbcfec4f73a4f490ded",
-      "reviewer": "Claude (Claude Code session; A0000 row of the output table: ENC only, not written with STG; Japanese and English edited together and read side by side)",
+      "source_sha256": "c8440d6e71c211ade1682cb6a9962631a435c742e38955fc634d50a3a5a4cfc7",
+      "target_sha256": "d47b976b11c418b756643546f630a71a038a91b40aaa05da2438ca38954cbf77",
+      "reviewer": "Claude (Claude Code session; f_out_hrs row: pond depth is output when fn_rscap is given (fn_reservoir is unused, checked in src); Japanese and English edited together and read side by side)",
       "method": "assistant",
-      "reviewed_on": "2026-11-08"
+      "reviewed_on": "2026-11-10"
     },
     {
       "source": "docs/users_guide/lavaflow.md",
@@ -806,11 +806,11 @@
     {
       "source": "examples/List_samples/list_sysparam.txt",
       "target": "examples/List_samples/en/list_sysparam.txt",
-      "source_sha256": "14aade4037f02373640c22ef7a6ab7ee43a64155390aeb3897e706eb8a18da62",
-      "target_sha256": "70be29146aa3c3d4e2e3266e30f25ad2c07407a11cc319890f93d6b9697639d9",
-      "reviewer": "Claude (Claude Code session; full-text content and lexical review, no model execution)",
+      "source_sha256": "ac166c10841e5ea4ab08005be7f9385be6a00bd19d7fc34e8a6cb56359f55aaf",
+      "target_sha256": "238f1ecf9ba59ea1ac2dee111aededd0bad6d7939743942e5ef930e94026467b",
+      "reviewer": "Claude (Claude Code session; comment of the commented-out fn_reservoir line only: not used in the computation, ponds come from fn_rscap in list_geoinfo; values, identifiers and enabled state unchanged; both versions read side by side)",
       "method": "assistant",
-      "reviewed_on": "2026-10-27"
+      "reviewed_on": "2026-11-10"
     },
     {
       "source": "examples/List_samples/list_tide.txt",

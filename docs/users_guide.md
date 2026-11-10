@@ -126,42 +126,41 @@ ENCflow は地表の水の流れを計算するモデルです。必要に応じ
 
 | 設定 | 書かなかった場合 |
 |---|---|
-| 地理情報 `fn_geoinfo` | 同じファイルの `&list_geoinfo` を読む（地理情報の準備は必須） |
+| [地理情報](users_guide/geoinfo.md) `fn_geoinfo` | 同じファイルの `&list_geoinfo` を読む（地理情報の準備は必須） |
 | [初期条件](users_guide/initial.md) `fn_initial` | 乾いた状態から開始 |
 | [浅水流計算](users_guide/swflow.md) `fn_enc` | 既定の計算法で水の流れを計算 |
 | [境界条件](users_guide/boundary.md) `fn_boundary` | 計算領域の4辺は不透過（水を通さない壁） |
 
 これ以外の下表の追加機能は、`fn_XXX` を書かなければ有効になりません。
 
-<details>
-<summary>追加できる機能の一覧</summary>
+**追加できる機能の一覧**
 
 | 機能 | 設定ファイルの指定 | namelist グループ |
 |---|---|---|
-| 潮位・海面 | `fn_tide` | &list_tide |
-| 沿岸の波浪場(波高・波向の分布) | `fn_wavefield` | &list_wavefield |
-| 波浪による沿岸漂砂(弧状・カスプ状デルタ、汀線の均し) | `fn_wave` | &list_wave([土砂・地形変化](users_guide/geomorph.md)の「波浪による沿岸漂砂」。fn_geomorph の f_fluvial=1 が必須) |
-| 内部水理構造物 | `fn_structure` | &list_struct_pump / culvert / diversion / dam |
-| ため池 | `fn_reservoir` | (地理情報と併用) |
-| 河道 | `fn_channel` | &list_channel(+ breach) |
-| [降水](users_guide/forcing.md) | `fn_precip` | &list_precip |
-| 降雨遮断 | `fn_intercept` | &list_intercept(+ モデル固有) |
-| 気象強制場(気温ほか) | `fn_meteo` | &list_meteo |
-| 蒸発散 | `fn_evap` | &list_evap |
-| 積雪・融雪 | `fn_snow` | &list_snow |
-| 氷河 | `fn_glacier` | &list_glacier |
-| 溶岩流 | `fn_lavaflow` | &list_lavaflow |
-| 規定底面運動 | `fn_bedmotion` | &list_bedmotion |
-| 地下水 | `fn_gwflow` | &list_gwflow(+ モデル固有) |
-| 淡塩2層 | `fn_salt` | &list_salt |
-| 土砂・地形変化 | `fn_geomorph` | &list_geomorph |
-| 流木 | `fn_driftwood` | &list_driftwood |
-| 家屋破壊・瓦礫 | `fn_bldgdebris` | &list_bldgdebris |
-| 水質(負荷流出) | `fn_wq` | &list_wq |
-| 土壌雨量指数 | `fn_swi` | &list_swi |
-| 計測(プローブ・測線) | `fn_record` | &list_record |
-
-</details>
+| [ネスティング](users_guide/nest.md)(多段格子) | `fn_nest` | &list_nest |
+| [潮位・海面](users_guide/tide.md) | `fn_tide` | &list_tide |
+| [沿岸の波浪場](users_guide/wavefield.md)(波高・波向の分布) | `fn_wavefield` | &list_wavefield |
+| [波浪による沿岸漂砂](users_guide/geomorph.md#波浪による沿岸漂砂fn_wave)(弧状・カスプ状デルタ、汀線の均し) | `fn_wave` | &list_wave(fn_geomorph の f_fluvial=1 が必須) |
+| [内部水理構造物](users_guide/structure.md) | `fn_structure` | &list_struct_pump / culvert / diversion / dam |
+| [ため池](users_guide/geoinfo.md#ため池) | 地理情報の `fn_rscap`(`fn_reservoir` は計算に使われない) | &list_geoinfo |
+| [河道](users_guide/channel.md) | `fn_channel` | &list_channel(+ breach) |
+| [降水](users_guide/forcing.md#降水list_precip) | `fn_precip` | &list_precip |
+| [降雨遮断](users_guide/forcing.md#降雨遮断list_intercept) | `fn_intercept` | &list_intercept(+ モデル固有) |
+| [気象強制場](users_guide/forcing.md#気象強制場list_meteo)(気温ほか) | `fn_meteo` | &list_meteo |
+| [蒸発散](users_guide/forcing.md#蒸発散list_evap) | `fn_evap` | &list_evap |
+| [積雪・融雪](users_guide/forcing.md#積雪融雪list_snow) | `fn_snow` | &list_snow |
+| [氷河](users_guide/glacier.md) | `fn_glacier` | &list_glacier |
+| [溶岩流](users_guide/lavaflow.md) | `fn_lavaflow` | &list_lavaflow |
+| [規定底面運動](users_guide/bedmotion.md) | `fn_bedmotion` | &list_bedmotion |
+| [地下水](users_guide/gwflow.md) | `fn_gwflow` | &list_gwflow(+ モデル固有) |
+| [淡塩2層](users_guide/salt.md) | `fn_salt` | &list_salt |
+| [土砂・地形変化](users_guide/geomorph.md) | `fn_geomorph` | &list_geomorph |
+| [流木](users_guide/driftwood.md) | `fn_driftwood` | &list_driftwood |
+| [家屋破壊・瓦礫](users_guide/bldgdebris.md) | `fn_bldgdebris` | &list_bldgdebris |
+| [水質](users_guide/wq.md)(負荷流出) | `fn_wq` | &list_wq |
+| [土壌雨量指数](users_guide/swi.md) | `fn_swi` | &list_swi |
+| [鉛直不飽和浸透(VZ)流出](users_guide/vz.md) | `fn_vz` | &list_vz(+ &list_vz_column / &list_vz_zone) |
+| [計測](users_guide/record.md)(プローブ・測線) | `fn_record` | &list_record |
 
 書き方に迷ったら、[動く設定例（test/wave）](../test/wave/) や
 [全設定の記述例](../examples/List_samples/list_sysparam.txt) を参考にしてください。

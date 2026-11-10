@@ -157,7 +157,7 @@ lists the main outputs.
 | f_out_pre | 0 | Pr | rainfall intensity (mm/h) |
 | f_out_fr / f_out_cn | 0 | Fr / Cn | Froude number / Courant number |
 | f_out_hg | 0 | Hg | subsurface storage depth (m) (when fn_gwflow is enabled; also Hg2 with the weathered bedrock layer, Hgc with the conduit continuum layer, Hgs with the fresh/salt layers, and the subsurface mass pool Cg (g/m²) of water quality with f_wq_infil=1) |
-| f_out_hrs | 0 | Hrs | pond depth (m) (when fn_reservoir is enabled) |
+| f_out_hrs | 0 | Hrs | pond depth (m) (when fn_rscap is given in the geographic information) |
 | f_out_hs | 0 | Hs | sediment column (m) (requires an active sediment process; for visualizing the concentration C = hs/(h+hs)) |
 | f_out_hd | 0 | Hd | floating driftwood volume (m³/m²) (requires [Driftwood](driftwood.md)) |
 | f_out_wd | 0 | Wd / Wd9999 | deposited driftwood (m³/m²) and the maximum arrival max(floating+deposited) over the run (the driftwood hazard map) |
