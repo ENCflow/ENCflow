@@ -2,6 +2,8 @@
 #   make        ../../bin/ の実行ファイルへのリンクと入力(data/。make_terrain.py・make_breach.py)を作る
 #   make run    4 ケースを順に計算する(1 ケース 4 スレッドで 6〜8 分)
 #   make supp   補足(仮想壁面の破堤との比較)の入力(data_supp/)を作り、2 ケースを計算する
+#   make sweep  補足の「破堤幅と流量の関係」の 12 ケース(破堤幅 1・2・3・5 セル × 解像堤防・仮想壁面
+#               f_br_diag = 0・1。sweep_width.py が設定を作る)を計算して表を出す(1 ケース 4 スレッドで 1 分前後)
 #   make clean  リンクと生成物を削除する
 
 TOPDIR	= ../..
@@ -42,6 +44,15 @@ supp: links data_supp/bm/bmlist.txt
 	./encflow param_supp.txt | tee Screen_supp.log
 	./encflow param_supp_vwall.txt | tee Screen_supp_vwall.log
 
+# 設定 param_sweep_*.txt は sweep_width.py inputs が毎回作り直す(前回の設定は消す)
+sweep: links data_supp/bm/bmlist.txt
+	python3 sweep_width.py inputs
+	@for p in param_sweep_*.txt; do \
+	    c=$${p#param_sweep_}; c=$${c%.txt}; \
+	    ./encflow $$p | tee Screen_sweep_$$c.log; \
+	done
+	python3 sweep_width.py table
+
 data_supp/z.txt: make_supp.py
 	python3 make_supp.py
 
@@ -53,6 +64,6 @@ install: all
 
 clean:
 	rm -rf result_* data data_supp
-	rm -f encflow encflow_mpi a.out Screen*.log
+	rm -f encflow encflow_mpi a.out Screen*.log param_sweep_*.txt
 
-.PHONY: all links inputs run supp install clean
+.PHONY: all links inputs run supp sweep install clean

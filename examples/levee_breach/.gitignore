@@ -5,3 +5,4 @@ Screen_*.log
 encflow
 encflow_mpi
 __pycache__/
+param_sweep_*.txt
