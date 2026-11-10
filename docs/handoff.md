@@ -225,7 +225,7 @@ architecture.md。このメモは「現在進行中・未完了の項目」だ�
        (地下水)、main の側の未了の karst・tower_karst(catchment_metal・estuary_barrage は 2026-11-09 に今のコードで
        回し直して済。00n(1))。合意済みの範囲は delta・meander・
        meander_cutoff を除く全例題(26 例題。vz_tani2023 は論文の PDF から抽出したデータが要るので除き、
-       benchmark は README がないので除く)。手順の案: 各 README の実行の節の計算の行(make run・make supp・
+       benchmark は 2026-11-10 に今のコードで作り直して結果も README に載せたので除く)。手順の案: 各 README の実行の節の計算の行(make run・make supp・
        ./encflow など)を例題ごとに回し、描画は README の更新のときに結果を見ながら行う。4 並列・1 スレッドで
        長いものから順に、tower_karst は準備(make と make_terrain.py --steady・--steady --base)の後に
        主ケース・steady・base・base_hc50 の 4 本に分ける。合計は README の 4 スレッドの目安で約 25 時間。
@@ -273,7 +273,7 @@ architecture.md。このメモは「現在進行中・未完了の項目」だ�
        回し直しても別の実現値が 1 つ増えるだけ。各 10〜18 時間)。影響なし: 表面流のない badland・
        badland_round・mesa・shield_volcano・vz_tani2023・stone_forest(雨は全量浸透)、平坦な床の
        nest_reflect、f_gravity_correction = 0 の
-       tsunami_coast・tsunami_fault・benchmark の v-shaped・v-valley(h-plane は README に数値の記載なし)。
+       tsunami_coast・tsunami_fault(benchmark は 2026-11-10 に既定の設定で作り直した)。
 
 00l. **急勾配の摩擦と水平流速・斜面方向の流速の扱い(2026-11-04 に解説 docs/steep_slope_design.md を作成し、2026-11-05 にユーザーガイド users_guide/steep_slope.md へ移した。2026-11-05 に案 B・C を選択式で実装し、同日に既定を 2 にした)**
    - 現状: 有効重力 g_e は勾配・圧力・摩擦の全部に掛かるので、等流では g_e が相殺し、等流は古典の
@@ -344,8 +344,8 @@ architecture.md。このメモは「現在進行中・未完了の項目」だ�
      catchment_metal・meander・meander_cutoff が外れる)。
      再開するときは各 README の「実行方法」で回し、plot スクリプトの数表を README と比べる(delta は
      4 スレッドでも 1 ケース 40 分〜3.5 時間、meander・meander_cutoff・karst は 1 ケース 40 分〜3 時間、
-     tower_karst の連鎖は約 21 時間)。対象外: vz_tani2023(論文の PDF が要る)、benchmark(結果を README に
-     載せていない)、tsunami_fault の param_hw(fault2disp_w.txt の bm_w が要る開発者向けの設定)。
+     tower_karst の連鎖は約 21 時間)。対象外: vz_tani2023(論文の PDF が要る)、benchmark(2026-11-10 に今の
+     コードで再構築済み)、tsunami_fault の param_hw(fault2disp_w.txt の bm_w が要る開発者向けの設定)。
      - 前回の数値の一部は、リポジトリの図化スクリプトの外の後処理で求めたもの(debris_bedrock の 1 s ごとの
        出力の後処理、ashfall_lahar の堰堤の時刻と補足の土砂量、timberyard の追加ケース、tsunami_town の
        最大流体力の中央値など)。前回値を再現できる定義を確かめてから求め直した。tsunami_town の中央値
@@ -548,8 +548,9 @@ architecture.md。このメモは「現在進行中・未完了の項目」だ�
      作業環境では icce-ojs-tamu.tdl.org と esurf.copernicus.org に接続できなかった(検索の結果で確認)。
      第II部の io・time・restart・parallel・user_routines はモデル・式を含まないので対象外とした
    - 検定スクリプト: pump・frost・conduit・nhbottom は 2026-10-29 に整備済み
-     (developer.md §16.3・§16.4・§46.4・§69.10)。残り: benchmark 系(examples/benchmark の
-     h-plane・v-shaped・v-valley)の環境非依存テストへの昇格(§10)。旧 1c(Boussinesq)は
+     (developer.md §16.3・§16.4・§46.4・§69.10)。残り: benchmark 系(examples/benchmark の v-shaped・
+     v-valley。2026-11-10 の再構築で理論解の計算 analytic.py と合否つきの check.py を備えた。§104)の
+     test/ への昇格(§10)。旧 1c(Boussinesq)は
      2026-10-30 に test/gwlateral・test/gwtani で整備(§16.6・§16.7)。解析解のある候補はほかに
      中期の淡塩 2 層 (3)(Glover のくさび・淡水レンズ)、
      中期の geomorph(平衡勾配。巻き上げと沈降の釣り合いは 2026-10-30 に test/suspend
@@ -1291,15 +1292,6 @@ architecture.md。このメモは「現在進行中・未完了の項目」だ�
      排出を土砂プロセスへの引き渡しに置換)、雪崩の保持容量モデル
      (Gruber 型)、有効圧依存滑動、GLOF、cold-based 閾値、分布 A
 
-## 既知の壊れている例題
-
-- **examples/benchmark/h-plane の hp10x**: 実行中に FPE で停止する
-  (-ffpe-trap 検知。f_rntype=2 廃止の等価変換(2026-08-15)以前からの
-  既存問題。hp10 は正常)。原因未調査。
-- examples/benchmark の mkdata/ ディレクトリに生成物(elev.txt,
-  mask.txt)やビルド済みバイナリ(v-valley の tada)がコミットされて
-  いる。掃除するか .gitignore の対象にするか要判断。
-
 ## 公開準備(方針の正本は developer.md §34)
 
 - 到達点: v3.0.0(2026-10-25。タグ v3.0.0 = 1aaf1752。Zenodo の版 DOI
@@ -1387,7 +1379,7 @@ architecture.md。このメモは「現在進行中・未完了の項目」だ�
       既定で 2026-11-02 に再計算し README(日英)と図を更新)、教材 chichibu(2 の明示を解除し 2026-11-01 に
       既定で再生成)。不変 = nest_reflect(平坦。粗格子で 2 と 3 の
       Log が一致)・vz_tani2023(平坦で VZ のみ。論文の PDF がなく計算不能)・教材 wave(出力一致)・
-      badland/badland_round/mesa(水の流れなし)・benchmark(README なし)。**未了 = badland_storm・karst・
+      badland/badland_round/mesa(水の流れなし)・benchmark(2026-11-10 に既定で再構築)。**未了 = badland_storm・karst・
       tower_karst**(この環境では 1 ケース 2〜30 時間かかり終えられなかった。README の数値は既定 2 のままで、
       その旨を README(日英)に注記。回し方は各 README のとおりで、plot スクリプトの数表と README を比べて
       更新する。badland_storm は結果 5 の wet_lw の 3 構成と result_wet2 の手計算も要る。main 側の文書の組み直しの branch(2026-11-02 に取り込み)で
