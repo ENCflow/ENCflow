@@ -13,9 +13,9 @@
     {
       "source": "README.ja.md",
       "target": "README.md",
-      "source_sha256": "b2ad496b6df8baf8db311043a97de0e5e0bfde3318f649bdaa5f061fe86b45eb",
-      "target_sha256": "f2168142bcb2c17158de0b27d24193cdba8e5e3fe0426c56c0098d44c3384cb4",
-      "reviewer": "Claude (Claude Code session; user-requested edits: examples link in the top link row, removed the bit-identity conditions, the 'barrier to trying' sentence and the CI-consistency sentence, merged the AI-automation sentences, heading shortened to sources and verification; both versions edited together and read side by side)",
+      "source_sha256": "c5c82c0b14247f877d9fb24108e554994179e9d2d81dd76e3d37864bb1b9a477",
+      "target_sha256": "9e6398e47f8f2dffc3aef6d03afb9ea9a9aead1e0351bf73a8e9c9f6add31bda",
+      "reviewer": "Claude (Claude Code session; 'What it can do' rewritten around phenomena with implementation details removed, same items and links in both versions; claims checked against the previous text and the guide (estimates kept as estimates); read side by side)",
       "method": "assistant",
       "reviewed_on": "2026-11-10"
     },
