@@ -82,131 +82,74 @@ channel, add groundwater ([Tutorial](docs/en/tutorial.md)).
 
 ## What it can do
 
-Each item below corresponds to an independent research topic or
-practical application, yet all share the same input system, the same
-grid, and the same way of running. They are not mutually exclusive
-modes: any combination can be activated at once, and interactions
-between processes, from rainfall through snowmelt, runoff and erosion
-to inundation, are solved within the same time evolution. You do not
-need to understand all of it. Read only the lines you care about.
+Every item uses the same input, the same grid, and the same way of
+running, and any combination can be enabled at once. Chains of
+phenomena, from rainfall through snowmelt, runoff and erosion to
+inundation, interact within a single run. Read only the lines you care
+about.
 
-- **River flooding and inundation**: dynamic-wave shallow water
-  equations. Subgrid channels, levee breach, and a family of structures
-  up to pumps, sluice gates, culverts, diversions, and dam operation.
-- **Storm surge and tsunami run-up**: coastal inundation driven by
-  tide or sea-level time series on sea cells. The dynamic wave with
-  wetting-and-drying tracks the run-up front. Storm surge, river flood
-  and heavy rainfall form a compound flood in a single model. Timber
-  influx from coastal log yards into urban areas is handled with the
-  driftwood feature, and the destruction of wooden houses and the
-  generation, flow and deposition of the resulting debris by the
-  building-damage feature, both estimated in the same time evolution as
-  the run-up, giving damage-ratio maps and
-  debris arrival and deposit maps.
-- **Coastal waves**: shoaling, refraction, breaking and the shadows of
-  breakwaters and islands are computed for offshore waves on the same
-  grid by a phase-averaged energy balance over directional bins, giving
-  maps of wave height and direction. Wave setup and longshore currents
-  (radiation stress, roller and GLM Stokes drift) can also be added to
-  the shallow-water flow, and conversely river-mouth jets, tidal and
-  longshore currents can change the waves (Doppler shift, refraction by
-  currents and blocking) in a two-way coupling. Longshore sediment
-  transport and beach erosion and recovery, with sand stirred by the wave
-  field and carried by the wave-driven flow and wave asymmetry, are
-  computed in the same time evolution as the morphology.
-- **Tsunami generation from an earthquake, and dispersive waves**: the
-  fault displacement is given as a time history of the ground, and the
-  tsunami is followed from generation through propagation to run-up in
-  one computation. Because land and sea cells move alike, the waves
-  raised at the shore by coseismic coastal uplift and subsidence, and
-  the flooding of subsided lowland, are in the same run. An optional
-  one-layer non-hydrostatic correction covers the cases where
-  dispersion is essential, such as soliton fission of a tsunami
-  intruding up a river, solitary waves, and the near field of landslide
-  tsunamis.
-- **Rainfall–runoff and catchment hydrology**: uniform or distributed
-  rainfall, canopy interception, evapotranspiration, Green–Ampt
-  infiltration, and two-layer groundwater in a soil layer and a
-  weathered-bedrock layer providing baseflow and recession. Well
-  pumping and groundwater abstraction sinks for drawdown analysis.
-  Also Tani's VZ model, which derives the runoff response of mountain
-  hillslopes from vertical unsaturated infiltration (the one-dimensional
-  Richards equation on shared reference columns, read out at the soil
-  depth of the zones and drained directly to outlets).
-- **Seawater intrusion and salt wedges**: with a fresh/salt two-layer
-  sharp-interface approximation, seawater intrusion into and retreat
-  from aquifers, freshwater lenses, pumping-induced intrusion and well
-  salinization, and where the seawater that ran up in a storm surge or
-  tsunami ends up, on the same grid as the surface and ground water.
-- **Urban pluvial flooding**: the sewer network is represented as an
-  equivalent continuum with per-cell capacity and 8-direction
-  conveyances, fully coupled with the surface inundation in a single
-  time evolution, from inlet uptake through pipe-full pressurized flow
-  to manhole eruption, sea outfalls, and pump stations. The same
-  machinery applies to fractured bedrock, karst, farmland tile drains,
-  and qanats.
-- **Sediment and slope hazards**: riverbed evolution by bedload and
-  suspended load, hillslope erosion, slope failure, and debris flow.
-  Terrain and soil depth evolve during the computation and feed back
-  into the flow. The development of meandering channels (bed-load
-  direction correction in bends, bank erosion, angle-of-repose
-  avalanching, vegetation fixation of inner-bank bars, neck cutoff, a
-  ledger of fines in the bed) emerges as landform change on the same
-  grid. Driftwood generation, transport and deposition can be
-  assessed as maps, and a mixed debris-flow-and-driftwood surge only
-  needs both features enabled. Hazard outputs such as safety-factor
-  maps, maximum flow depth, fluid force and driftwood arrival, and the
-  operational Soil Water Index are included.
-- **Volcanic hazards**: sector collapse, pyroclastic flows, and lahars,
-  with their deposition and natural dam formation, as equivalent-fluid
-  analyses. The chain from eruption supply through runout, deposition,
-  natural damming, dam-break flooding, and rainfall-triggered secondary
-  lahars can be followed in a single run. Sending the collapsed mass
-  into a lake or the sea as a "moving bed layer" extends the same run
-  to landslide tsunamis, including submarine slides, from generation
-  through propagation to run-up.
-- **Lava flows**: effusion from a set of vent cells, Bingham viscous
-  spreading and stopping, and solidification into lava-field
-  topography. Because solidified lava becomes the bed, subsequent
-  rainfall, floods, and sediment transport flow over the new topography
-  in the same run.
-- **Water quality and mass transport**: load runoff from point sources,
-  areal sources, land-use-specific unit loads, and wet deposition;
-  advective transport, decay and settling, buildup and washoff.
-  Two-phase partitioning of sorbing substances such as heavy metals,
-  transport through groundwater, and completely mixed reservoirs and
-  ponds close the mass budget across surface, subsurface and impounded
-  water in one run. Also suited to the sanitation risk of sewage
-  eruption and to radionuclide runoff analysis.
-- **Snow accumulation and melt**: degree-day method. With the
-  temperature lapse rate, the snow line emerges automatically.
-  Infiltration suppression by frozen ground captures snowmelt floods
-  running over frozen soil. Runout and deposition of dense-flow snow
-  avalanches can also be analyzed with the same equivalent fluid as the
-  volcanic flows.
-- **Glaciers**: firnification of perennial snow and ice-surface melt,
-  ice flow by the shallow ice approximation, basal sliding with glacial
-  erosion, and avalanche redistribution of snow. Glacier meltwater
-  feeds the runoff and flood computation, and long-term experiments can
-  form glacial landforms such as cirques.
-- **Long-term landscape evolution**: bedrock weathering, uplift, and
-  repeated representative hydrology for millennium-scale landscape
-  evolution experiments, a landscape evolution model driven by real
-  hydraulics.
+- **River flooding and inundation**: water spilling from rivers and
+  spreading over the land, levee breaches, and the effect of operating
+  pumps, sluice gates and dams on the flooding.
+- **Storm surge and tsunami run-up**: surge and tsunami running up onto
+  land, and compound disasters where they coincide with river floods
+  and heavy rain. The fate of timber swept away and of debris from
+  destroyed houses can also be estimated.
+- **Coastal waves**: wave heights along the coast, including the
+  shadows of breakwaters and islands, wave setup and longshore
+  currents, the contest between waves and currents at river mouths,
+  and beach erosion and recovery.
+- **Earthquake tsunamis**: a tsunami from fault motion, from generation
+  through propagation to run-up, together with coseismic uplift and
+  subsidence and the flooding of lowland. Also waves where dispersion
+  matters, such as a tsunami splitting up as it travels up a river, or
+  landslide tsunamis.
+- **Rainfall–runoff and catchment hydrology**: where the rain goes
+  (interception by the canopy, evapotranspiration, infiltration,
+  baseflow from groundwater). Also the runoff response of mountain
+  hillslopes and the drawdown of groundwater by well pumping.
+- **Seawater intrusion and salt wedges**: seawater intruding into and
+  retreating from coastal aquifers, freshwater lenses, wells turning
+  saline under pumping, and where the seawater that ran up in a storm
+  surge or tsunami ends up.
+- **Urban pluvial flooding**: flooding when the sewers overflow, from
+  inlet uptake through manhole eruption to outfalls and pump stations.
+  Also the water in fractured bedrock, karst, tile drains and qanats.
+- **Sediment and slope hazards**: riverbed erosion and deposition,
+  hillslope erosion and failure, debris flows, the growth and cutoff of
+  meanders, and driftwood. The changed terrain changes the flow in
+  turn. Hazard maps and the Soil Water Index are included.
+- **Volcanic hazards**: sector collapse, pyroclastic flows and lahars
+  with their deposits, natural dams forming and breaking, and
+  rain-triggered secondary lahars, up to landslide tsunamis where the
+  collapsed mass plunges into a lake or the sea.
+- **Lava flows**: lava flowing from vents, stopping and solidifying,
+  and the rain, floods and sediment that then flow over the new lava
+  field.
+- **Water quality and mass transport**: runoff and transport of
+  pollutant loads, decay and settling, buildup and washoff, sorbing
+  substances such as heavy metals, movement through groundwater, and
+  mixing in reservoirs. Also for the sanitation risk of sewage eruption
+  and the runoff of radionuclides.
+- **Snow accumulation and melt**: snowpack and melt that change with
+  elevation, snowmelt floods running over frozen ground, and the runout
+  and deposits of snow avalanches.
+- **Glaciers**: glacier accumulation, flow and melt with meltwater
+  runoff, glacial erosion, and the formation of landforms such as
+  cirques.
+- **Long-term landscape evolution**: landscapes developing over
+  millennia through weathering, uplift and repeated runoff events.
 
-Any process that is not used consumes no memory and no CPU time at
-all, and needs no parameter file either.
-In its minimal configuration, ENCflow is simply a fast, well-behaved
-2-D flood model.
+Processes you do not use consume no memory or CPU time and need no
+settings file. In its minimal configuration, ENCflow is simply a fast,
+well-behaved 2-D flood model.
 
-To look up the feature combination and key settings from the
-phenomenon you want to compute, see the
-[use-case gallery](docs/en/users_guide/usecases.md). And
-[with an AI agent](docs/en/ai_guide.md) you can start from a model
-case described in the words of the phenomenon, without looking
-anything up yourself. Set-ups that chain several processes in one run
-are collected in
+To look up the feature combination and key settings from a phenomenon,
+see the [use-case gallery](docs/en/users_guide/usecases.md); set-ups
+that chain several processes are in
 [examples: Examples of chained processes](examples/README.en.md#examples-of-chained-processes).
+[With an AI agent](docs/en/ai_guide.md) you can start by describing the
+phenomenon in your own words and having a model case built.
 
 ## What it deliberately does not do
 
