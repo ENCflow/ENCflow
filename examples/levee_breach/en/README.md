@@ -190,7 +190,7 @@ stock of each area destroyed into debris.
 - **The secondary levee deepens the flood in front and protects what is behind**: houses B
   in front of the secondary levee are flooded deeper, from 0.79 to 2.04 m, and houses C
   behind it shallower, from 0.63 to 0.24 m. The water leaving downstream through the south
-  edge falls from 4.69 to 1.79 million m³. Water held in front of the secondary levee flows
+  edge falls from 4.68 to 1.78 million m³. Water held in front of the secondary levee flows
   back into the river through the breach when the river falls (the negative flow from about
   400 minutes in the left panel).
 

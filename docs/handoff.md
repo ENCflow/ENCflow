@@ -124,7 +124,9 @@ architecture.md。このメモは「現在進行中・未完了の項目」だ�
      0 を明示して Step 1・BMI の値と図を更新(8532bbef)、users guide・List_samples・test/chichibu などの README の
      記述(同日)、例題: 既定の判断で 0 と差の出た、または値を README に載せる meander・meander_cutoff・
      estuary_barrage・catchment_metal・debris_fan の全ケースを回し直して README(日英)と図を更新(同日。§102 の
-     「既定を 3 に変更」の例題の項)。そのほかの例題は 00k の後の「全例題の再計算」で既定 3 も含めて回す。**残り**:
+     「既定を 3 に変更」の例題の項)。main で 2026-11-08 に旧既定 0 で回し直された levee_breach・timberyard・qanat も、
+     マージ後の 2026-11-10 に既定 3 で全ケースを回し直して README(日英)と図を更新した(§102 の同じ項)。
+     そのほかの例題は 00k の後の「全例題の再計算」で既定 3 も含めて回す。**残り**:
      (i) 3 で残る側方面の減速(dd 以上の河岸の水膜。test/wetbank の 6〜17 % の主な原因)は (2) の **次の候補** と同じ課題。
      (ii) examples/meander の細粒分の帳簿の構成(param_fixsuspfines.txt)は、3 で砂州が氾濫原より 0.64 m 高くまで育ち、
      125 h ごろから出水が氾濫原へあふれて引かなくなった(0 では天端 1.37 m で、氾濫原の水は上流側に限られる。§102)。

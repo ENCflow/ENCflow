@@ -1985,9 +1985,9 @@
     {
       "source": "examples/levee_breach/README.md",
       "target": "examples/levee_breach/en/README.md",
-      "source_sha256": "4997be33f91b405db612c3725aac703657645449c2ceeb1c06d6f41233f71166",
-      "target_sha256": "f8316f06f545edbd8bc2022a61f70d7c01b4a0f7f57d2c97c736c0bd7abad1f4",
-      "reviewer": "Claude (Claude Code session; values updated to reruns with the default f_advection_donor = 3: delayed-breach row (165 ha, 1.70 m), virtual-wall supplement row (150 / 119, 41.3, 70.4), the breach-width table qualified as computed with f_opening_dynamic = 2 and f_advection_donor = 0; Japanese and English edited together and compared)",
+      "source_sha256": "832556eb05bba7fd9c5bbf9b25c72405308d590367cd4de0374cc0e74d272d7b",
+      "target_sha256": "4153ed2d3c45d59561c2c18d0c2124215820bdfd0b0bf99202b93c9c625031d4",
+      "reviewer": "Claude (Claude Code session; values updated to reruns with the default f_advection_donor = 3: delayed-breach row (165 ha, 1.70 m), south-edge outflow 4.69 -> 4.68 and 1.79 -> 1.78 million m3, virtual-wall supplement row (150 / 119, 41.3, 70.4), the breach-width table qualified as computed with f_opening_dynamic = 2 and f_advection_donor = 0; other prose values checked against f_advection_donor = 0 controls and unchanged; Japanese and English edited together and compared)",
       "method": "assistant",
       "reviewed_on": "2026-11-10"
     },
