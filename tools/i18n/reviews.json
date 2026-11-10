@@ -1337,8 +1337,8 @@
     {
       "source": "examples/benchmark/README.md",
       "target": "examples/benchmark/en/README.md",
-      "source_sha256": "ac62487656b141183dc6144ecc6857790656406c043a6ac8615070d1011ecec0",
-      "target_sha256": "0f7a29e742772b22fd5d5724701a6e6d498673307c6d54ff8c80098a739da587",
+      "source_sha256": "5b25eea0306dcc945268a380a8942f93cef270c91cb998b9a82a7cc0981fe0fc",
+      "target_sha256": "0a44c4067b780ec461e9225ee6d943d10851ce2022e05d3f591325e51f4ea0b6",
       "reviewer": "Claude (Claude Code session; wrote and read both versions side by side: structure, numbers, tables, links and captions)",
       "method": "assistant",
       "reviewed_on": "2026-11-10"
@@ -1346,8 +1346,8 @@
     {
       "source": "examples/benchmark/v-shaped/README.md",
       "target": "examples/benchmark/v-shaped/en/README.md",
-      "source_sha256": "eb0bedffb40c7520aac7d14f43a3be47f088056ab8f89f147c41661c9c69a710",
-      "target_sha256": "6f1c6d9ef0775763b15ac56de8c15497003e38d88e645e8bb1c65875ba0c5efb",
+      "source_sha256": "8d09907ae6baa9a2ef1761d88e22532785ab4c53040e19164c99af3a339f2601",
+      "target_sha256": "4e302466486907b9273909a51cff20e9c9a58c92502fc48b8b58c8276e0c0359",
       "reviewer": "Claude (Claude Code session; wrote and read both versions side by side: structure, numbers, tables, links and captions)",
       "method": "assistant",
       "reviewed_on": "2026-11-10"
@@ -3173,11 +3173,11 @@
     {
       "source": "test/README.md",
       "target": "test/README.en.md",
-      "source_sha256": "9c5991f17f4fcf36a39df4833e5204ef4f9261b1b6ce32f64dc60e62adff9d90",
-      "target_sha256": "2e780039c3a5e03fbf9d461252fc3175871c90a02d5ea7841b65053f54f8387d",
-      "reviewer": "Claude (Claude Code session; full-text content and lexical review, no model execution)",
+      "source_sha256": "b85eaffccbe8ebae8fe8ed97342bb5e24c2c3291cfde11545961d9c08c601825",
+      "target_sha256": "1ecfead30131a6f131e30f98b9b7cd6306784a5a117a5cf5f1590b120b43c742",
+      "reviewer": "Claude (Claude Code session; wrote and read both versions side by side: structure, numbers, tables, links and captions)",
       "method": "assistant",
-      "reviewed_on": "2026-11-09"
+      "reviewed_on": "2026-11-10"
     },
     {
       "source": "test/avalanche/README.md",
@@ -4528,6 +4528,15 @@
       "reviewer": "Claude (Claude Code session; viewed the regenerated Japanese and English figures drawn by the same script from the same results of the slope-parallel mixture-resistance computation (developer.md §101); labels translated, data identical)",
       "method": "assistant",
       "reviewed_on": "2026-11-06"
+    },
+    {
+      "source": "test/vshaped/README.md",
+      "target": "test/vshaped/en/README.md",
+      "source_sha256": "9f0fae0885700dc2699f22939922abfa328fa8e79912b55c0cebe45f1cb169b2",
+      "target_sha256": "2115a591982e75c655ee153c123b53918a91e79b43a243613b9cd59e3255be12",
+      "reviewer": "Claude (Claude Code session; wrote and read both versions side by side: structure, numbers, tables, links and captions)",
+      "method": "assistant",
+      "reviewed_on": "2026-11-10"
     },
     {
       "source": "test/vzcol/README.md",
