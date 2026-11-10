@@ -331,9 +331,9 @@ history and roadmap.
   immediately. Suited to hydraulics and hydrology coursework.
 - **Researchers** — process interactions such as slope failure leading
   to debris flow, channel blockage and inundation, or weathering
-  leading to soil and erosion, in a single model. Bit reproducibility of
-  runs under matched conditions makes numerical experiments strictly
-  comparable.
+  leading to soil and erosion, in a single model. With all the source
+  open, you can add your own equations or processes with the help of AI
+  and test them in combination with the existing ones.
 - **Practitioners** — inundation analysis, structure operation,
   sediment hazards, and water quality in one input system, with no
   tool-switching between projects, and a direct path to large runs on

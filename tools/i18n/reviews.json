@@ -13,9 +13,9 @@
     {
       "source": "README.ja.md",
       "target": "README.md",
-      "source_sha256": "ba4fd72689e65431e47f3676f1c3e43b3fd41695140d4a7e179129c5ea1788c3",
-      "target_sha256": "4fdd8dc65de995cfa3b6dce83c2046a3f30a1431ab8a7ca34f817a52380c9858",
-      "reviewer": "Claude (Claude Code session; BMI 'combine with other models' item shortened to about the length of the 'whole model, or a small part' item in both versions, keeping what BMI is and both coupling directions; read side by side)",
+      "source_sha256": "dbf2f89dfa8a0c2ad4521cdc2febe42f631d20b517c0e928b56bdd3e7f62b461",
+      "target_sha256": "07b33caf64ee2ce50b9dcec30f3ca201822bd02906849a23d1471284300b0002",
+      "reviewer": "Claude (Claude Code session; researchers item: user's wording (all source open, add one's own equations or processes with the help of AI) in both versions; read side by side)",
       "method": "assistant",
       "reviewed_on": "2026-11-10"
     },
