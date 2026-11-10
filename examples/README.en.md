@@ -20,7 +20,7 @@ python3 plot_results.py   # plotting (where provided)
 | Directory | Contents | Main features |
 |---|---|---|
 | [List_samples/](List_samples/) | Annotated samples of every namelist (one file per group); a dictionary of settings and defaults (English in en/) | All features |
-| [benchmark/](benchmark/) | Three rainfall-runoff problems (plane slope, V-shaped catchment, V-shaped valley) checked against analytical solutions | Shallow water, rainfall |
+| [benchmark/](benchmark/en/README.md) | Two reference problems of rainfall runoff: the outlet discharge of a V-shaped catchment against the kinematic-wave theory, and a V-shaped valley without a channel that shows the pseudo-depressions of a valley floor oblique to the grid. Grids of 20, 10 and 5 m, orientations 0° and 45°, ENC eight and four neighbours | Shallow water, rainfall (default settings), diagonal share p_diagratio |
 | [vz_tani2023/](vz_tani2023/en/README.md) | Reproduction of the VZ runoff model of Tani (2023): runoff rates and pressure heads of all seven events compared with the paper | Vertical unsaturated flow (VZ) runoff fn_vz (shared column, linear distribution of soil depth) |
 | [badland/](badland/en/README.md) | Badland formation as rainfall carves valleys into a plateau and scarp: self-organised valleys, their spacing rule and sharp ridges | Dry hillslope erosion f_splash (spl_lc, spl_zbase) |
 | [badland_storm/](badland_storm/en/README.md) | A low-infiltration cliff where surface flow appears only in downpours: does dry erosion stop or become a gully network? (contrast to badland) | f_splash + f_wash, f_suspend, Green-Ampt, rainfall series |
@@ -80,7 +80,7 @@ one run" (for reference after reading the chapters).
 - Rainfall → sewer (conduits) → surcharge and drainage: [sewer_hybrid/](sewer_hybrid/en/README.md).
 - Recharge from the mountains → fan groundwater → qanat collection and outflow (dwindling with a pumping well): [qanat/](qanat/en/README.md).
 - Rain → surface runoff and infiltration → groundwater flow → seepage (baseflow) → heavy-metal concentration in the river (changed by sorption delay, tanks, settling of particulate metal and evapotranspiration): [catchment_metal/](catchment_metal/en/README.md).
-- Single-feature analytical benchmarks: [benchmark/](benchmark/).
+- Reference problems of rainfall runoff with a theoretical solution, and the check of valley orientation and neighbour count: [benchmark/](benchmark/en/README.md).
 - Slope failure → debris flow → residential area on the fan (dependence on the grid spacing and the valley orientation; eight versus four neighbours on coarse grids): [debris_fan/](debris_fan/en/README.md).
 - Grid refinement (nesting): [nest_reflect/](nest_reflect/en/README.md).
 
