@@ -2228,38 +2228,38 @@
     {
       "source": "examples/mesa/README.md",
       "target": "examples/mesa/en/README.md",
-      "source_sha256": "aaad44940a52cfd4ab489b922ee31e5ee3fe59296e7f851a840daeef4320711b",
-      "target_sha256": "65f9b67c78a447abfa15347a188a1a86250128346fa133b00500712b0537267a",
-      "reviewer": "Claude (Claude Code session; corrected both versions in parallel against the inputs, scripts and committed figures, and compared the edited passages and numbers)",
+      "source_sha256": "1d993bc2b026f379dc28007f28447289cb74bccbc3429767e0f866e396ad062c",
+      "target_sha256": "04afef058bcebf0e905dbb1cdde9a566abf52697be0c5ec9f5560a4d474b5ee8",
+      "reviewer": "Claude (Claude Code session; recomputation of 2026-11-10 with the current defaults: the changed table cells and the 17 changed numbers in the prose, including the face3 lower-cliff angle added with the user's approval, compared against the Japanese source and the printed tables of plot_results.py for all 12 modes; no model execution)",
       "method": "assistant",
-      "reviewed_on": "2026-11-08"
+      "reviewed_on": "2026-11-10"
     },
     {
       "source": "examples/mesa/figs/maps.png",
       "target": "examples/mesa/en/figs/maps.png",
-      "source_sha256": "9d2ef7aea58cfc0035611c78088f5de335f2b0d95975705aa3f10a5121b4cd91",
-      "target_sha256": "92cf16f94417a8eda0cce13ee9a27ed70fb46593759b3f17731583129d31ad95",
-      "reviewer": "Claude (Claude Code session; both images drawn by plot_results.py [series] and [series] en from the same recomputed results of 2026-11-02, compared side by side: same plotted data and layout, labels translated)",
+      "source_sha256": "a0c8845174ade777b4622359872ac98f94e79611be268065b9e13da2f48a8d93",
+      "target_sha256": "3c5e179804ab1be503f87245a046526cb3492768128e6f1e265a1cc26cca7ebf",
+      "reviewer": "Claude (Claude Code session; English figure drawn by the same script with the en switch from the same results of 2026-11-10; compared side by side: same plotted data and layout, labels translated)",
       "method": "assistant",
-      "reviewed_on": "2026-11-02"
+      "reviewed_on": "2026-11-10"
     },
     {
       "source": "examples/mesa/figs/maps_bench.png",
       "target": "examples/mesa/en/figs/maps_bench.png",
-      "source_sha256": "f20dc49eb83bb13dadc5e36f358b9c264f6a5ceb0f9bc7c5a79f0e8f9b4a80bd",
-      "target_sha256": "928966201888b699afb16f884327857303a8133cac2c518cef530f608df22f16",
-      "reviewer": "Claude (Claude Code session; both images drawn by plot_results.py [series] and [series] en from the same recomputed results of 2026-11-02, compared side by side: same plotted data and layout, labels translated)",
+      "source_sha256": "b3ce155e3144f9fb15ea9ce9a768d7349e44aea8bcdfa4e04649c69891ce6b72",
+      "target_sha256": "97c431c37545e9ed991a0ee685c72afa021784ebe41872ae2774f6ad1b8d3ef5",
+      "reviewer": "Claude (Claude Code session; English figure drawn by the same script with the en switch from the same results of 2026-11-10; compared side by side: same plotted data and layout, labels translated)",
       "method": "assistant",
-      "reviewed_on": "2026-11-02"
+      "reviewed_on": "2026-11-10"
     },
     {
       "source": "examples/mesa/figs/maps_sat.png",
       "target": "examples/mesa/en/figs/maps_sat.png",
-      "source_sha256": "71cb23fab6a9390b9810e1c1ef12eba237f75fa04542330d4d8ab0b02565d15a",
-      "target_sha256": "bef18c84ee1db9ac5001997bf5f8e61b6455e19eea2be7be2988b6b26834cd03",
-      "reviewer": "Claude (Claude Code session; both images drawn by plot_results.py [series] and [series] en from the same recomputed results of 2026-11-02, compared side by side: same plotted data and layout, labels translated)",
+      "source_sha256": "b8f0f27369adc9e84ec1de0562867ebff020cd6c92bebc77a18afc09ed7233da",
+      "target_sha256": "ea9e42f01ffd63c7d3f0af6816ac97458023ff2c7a0cd8b7471832d337bb314c",
+      "reviewer": "Claude (Claude Code session; English figure drawn by the same script with the en switch from the same results of 2026-11-10; compared side by side: same plotted data and layout, labels translated)",
       "method": "assistant",
-      "reviewed_on": "2026-11-02"
+      "reviewed_on": "2026-11-10"
     },
     {
       "source": "examples/mesa/figs/mechanism.png",
@@ -2273,101 +2273,101 @@
     {
       "source": "examples/mesa/figs/sections.png",
       "target": "examples/mesa/en/figs/sections.png",
-      "source_sha256": "2cd0c434c49627c4b6964f6dbd2a8a0c507c0b8286599d6efcf7677aa1198c03",
-      "target_sha256": "b115d35e37ce2ba87889542543124e710b14b07e72a33a3b8048008268bf5716",
-      "reviewer": "Claude (Claude Code session; both images drawn by plot_results.py [series] and [series] en from the same recomputed results of 2026-11-02, compared side by side: same plotted data and layout, labels translated)",
+      "source_sha256": "58a032affbad09bd2d692b9c83ac0def40789b9ea76d2a8855b0ca8f5d2958aa",
+      "target_sha256": "65b9c488c45fe09fe2c4ec12084f81729f40fea60efa18d2e1ce1476ba0828b1",
+      "reviewer": "Claude (Claude Code session; English figure drawn by the same script with the en switch from the same results of 2026-11-10; compared side by side: same plotted data and layout, labels translated)",
       "method": "assistant",
-      "reviewed_on": "2026-11-02"
+      "reviewed_on": "2026-11-10"
     },
     {
       "source": "examples/mesa/figs/sections_bench.png",
       "target": "examples/mesa/en/figs/sections_bench.png",
-      "source_sha256": "d0a320cec5795a67d5d58d4e9ae9c64dbd82b6b89c0be0dc3b18322669d7a902",
-      "target_sha256": "bd3c41e0ed446b20e75f29fb509ac94ef0609d3aa3eb981f87d23260aeeb6ff8",
-      "reviewer": "Claude (Claude Code session; both images drawn by plot_results.py [series] and [series] en from the same recomputed results of 2026-11-02, compared side by side: same plotted data and layout, labels translated)",
+      "source_sha256": "b96b2ba0ba9b5afc66ea1cc51903b31280179952e3b085a6de8c51a3841248bb",
+      "target_sha256": "f40a58a028f35156b37d7b6bbc446b31655b1be203c4959441c4bd73218d78bd",
+      "reviewer": "Claude (Claude Code session; English figure drawn by the same script with the en switch from the same results of 2026-11-10; compared side by side: same plotted data and layout, labels translated)",
       "method": "assistant",
-      "reviewed_on": "2026-11-02"
+      "reviewed_on": "2026-11-10"
     },
     {
       "source": "examples/mesa/figs/sections_dx4.png",
       "target": "examples/mesa/en/figs/sections_dx4.png",
-      "source_sha256": "e3d5e32840d3b4188641095b1da067eab61c8797c6e9dcd333051e89ff00477a",
-      "target_sha256": "2c90e63ad43240a30af01a2a6f4e7b981ff39414b21c743ee7ba08872b9ac04c",
-      "reviewer": "Claude (Claude Code session; both images drawn by plot_results.py [series] and [series] en from the same recomputed results of 2026-11-02, compared side by side: same plotted data and layout, labels translated)",
+      "source_sha256": "dd06bd22dbf76c78da22e67a75e0421ce3d1d491e723f798ff515853034f01c4",
+      "target_sha256": "5ae52cbdb1c09e4405d347fdd827076151c106d1d3ca2129893ef4dd957ce7d9",
+      "reviewer": "Claude (Claude Code session; English figure drawn by the same script with the en switch from the same results of 2026-11-10; compared side by side: same plotted data and layout, labels translated)",
       "method": "assistant",
-      "reviewed_on": "2026-11-02"
+      "reviewed_on": "2026-11-10"
     },
     {
       "source": "examples/mesa/figs/sections_face.png",
       "target": "examples/mesa/en/figs/sections_face.png",
-      "source_sha256": "5f86801c757b52875e9dea3dc4be6c7ed6409c89b231b62357b920583a1e3d1e",
-      "target_sha256": "540c1c0bbe3f5ed4d300a2f96e51c2a1e373ebc19eb7136fdaba6f429d61236d",
-      "reviewer": "Claude (Claude Code session; both images drawn by plot_results.py [series] and [series] en from the same recomputed results of 2026-11-02, compared side by side: same plotted data and layout, labels translated)",
+      "source_sha256": "c9008730b5fd7aa9e54da03a54860ec4f255ee74fcaa78aa181d0cbcdb9e9c32",
+      "target_sha256": "6d42666a6978bff576c9e352bec5c33c2ff63666dd8e303d62f2f22c89dcc53d",
+      "reviewer": "Claude (Claude Code session; English figure drawn by the same script with the en switch from the same results of 2026-11-10; compared side by side: same plotted data and layout, labels translated)",
       "method": "assistant",
-      "reviewed_on": "2026-11-02"
+      "reviewed_on": "2026-11-10"
     },
     {
       "source": "examples/mesa/figs/sections_face8.png",
       "target": "examples/mesa/en/figs/sections_face8.png",
-      "source_sha256": "3c0700a5917210c017763d59817686fba55077881c93042d52cd4d1f0e4adafb",
-      "target_sha256": "b1da8e77dd3b6284277495b37a453a761222fa07e7c459e4e117b38b125dfc67",
-      "reviewer": "Claude (Claude Code session; both images drawn by plot_results.py [series] and [series] en from the same recomputed results of 2026-11-02, compared side by side: same plotted data and layout, labels translated)",
+      "source_sha256": "92362b2c9456fb6b2124c252d9888c7c886a5178a9572f8977c1e8edee681b07",
+      "target_sha256": "440aa51cf7a695ae54ff56cd6090f991c7365daad8b5a9040f9bab27966cc76b",
+      "reviewer": "Claude (Claude Code session; English figure drawn by the same script with the en switch from the same results of 2026-11-10; compared side by side: same plotted data and layout, labels translated)",
       "method": "assistant",
-      "reviewed_on": "2026-11-02"
+      "reviewed_on": "2026-11-10"
     },
     {
       "source": "examples/mesa/figs/sections_rc.png",
       "target": "examples/mesa/en/figs/sections_rc.png",
-      "source_sha256": "1ed6b4acf3f6244b1fb77569234b09bf1ecedc7e2e512704d2865c7a1ab9da5d",
-      "target_sha256": "f88f4a721b8c6e29d73c7c949a7e011bae8e21cd5cb34b30091c92dd9726dbb9",
-      "reviewer": "Claude (Claude Code session; both images drawn by plot_results.py [series] and [series] en from the same recomputed results of 2026-11-02, compared side by side: same plotted data and layout, labels translated)",
+      "source_sha256": "2841c3eed6e2d176e1ff037bb29d565b82224b3ecab378d96b876e222010b28e",
+      "target_sha256": "d11e8fd1f7a25666d1960a63a52be43949e275370bbf62a632ca34de71813e3d",
+      "reviewer": "Claude (Claude Code session; English figure drawn by the same script with the en switch from the same results of 2026-11-10; compared side by side: same plotted data and layout, labels translated)",
       "method": "assistant",
-      "reviewed_on": "2026-11-02"
+      "reviewed_on": "2026-11-10"
     },
     {
       "source": "examples/mesa/figs/sections_rock.png",
       "target": "examples/mesa/en/figs/sections_rock.png",
-      "source_sha256": "9b3c9cc212c7044a62d83cb4b6c4564cec6c3aa0243ba90ae766d50f83e4d8e9",
-      "target_sha256": "b50979e884376e97a6a295c082be43c0f4213ca770352da9c085f1e4572daf2f",
-      "reviewer": "Claude (Claude Code session; both images drawn by plot_results.py [series] and [series] en from the same recomputed results of 2026-11-02, compared side by side: same plotted data and layout, labels translated)",
+      "source_sha256": "3f294bef80842dea1f56db7b225afa6ded47644397518e2cb4b377656a74c20d",
+      "target_sha256": "f9c465ecb1a6d35701a477f3f31d336384829a227f05d57e492e527b782700b5",
+      "reviewer": "Claude (Claude Code session; English figure drawn by the same script with the en switch from the same results of 2026-11-10; compared side by side: same plotted data and layout, labels translated)",
       "method": "assistant",
-      "reviewed_on": "2026-11-02"
+      "reviewed_on": "2026-11-10"
     },
     {
       "source": "examples/mesa/figs/sections_sat.png",
       "target": "examples/mesa/en/figs/sections_sat.png",
-      "source_sha256": "908a37fcc8cbf949501ae7e9aa2e2900ec9a5b5648fef48ff20fded677c3e168",
-      "target_sha256": "15176125e79da5cf90d7996e2a77077dc8cd2b1e28eb1f2ba043967458f2b223",
-      "reviewer": "Claude (Claude Code session; both images drawn by plot_results.py [series] and [series] en from the same recomputed results of 2026-11-02, compared side by side: same plotted data and layout, labels translated)",
+      "source_sha256": "4c708b10ade79a5a9b4e7580d058cb19116f9693ddc5c1162a7666f9df2731f9",
+      "target_sha256": "7ab8e78a6bf39f35265cba3ff6d0340ff5e621f14cb1591aadc45fdfa25b5f04",
+      "reviewer": "Claude (Claude Code session; English figure drawn by the same script with the en switch from the same results of 2026-11-10; compared side by side: same plotted data and layout, labels translated)",
       "method": "assistant",
-      "reviewed_on": "2026-11-02"
+      "reviewed_on": "2026-11-10"
     },
     {
       "source": "examples/mesa/figs/sections_uc.png",
       "target": "examples/mesa/en/figs/sections_uc.png",
-      "source_sha256": "3c7457c1264d955c6ece79f08b4012e6b481cfab6e1cc3e360ff3789fa326bbb",
-      "target_sha256": "64a4452be4b2f0238e9f7ff098c90377ad6fcc69c428b0adaaaa6db5beb5ffaa",
-      "reviewer": "Claude (Claude Code session; both images drawn by plot_results.py [series] and [series] en from the same recomputed results of 2026-11-02, compared side by side: same plotted data and layout, labels translated)",
+      "source_sha256": "d643be64b19e7ffd880b3032b018394ceb02e91952ca4c82ee450d0c8a9c7065",
+      "target_sha256": "b245ee907644c7ad925ca9b79b5f7edcb475ff98534a62aedd976ec930574aca",
+      "reviewer": "Claude (Claude Code session; English figure drawn by the same script with the en switch from the same results of 2026-11-10; compared side by side: same plotted data and layout, labels translated)",
       "method": "assistant",
-      "reviewed_on": "2026-11-02"
+      "reviewed_on": "2026-11-10"
     },
     {
       "source": "examples/mesa/figs/sections_ucx.png",
       "target": "examples/mesa/en/figs/sections_ucx.png",
-      "source_sha256": "eeed28b98bba13655108de902385bf99e5de6c195b5fa1f1b80babab4a878201",
-      "target_sha256": "bf0841038466c3cd7de1ad19d40d2da905c53c5b0104921981cfb0dda0bd9aef",
-      "reviewer": "Claude (Claude Code session; both images drawn by plot_results.py [series] and [series] en from the same recomputed results of 2026-11-02, compared side by side: same plotted data and layout, labels translated)",
+      "source_sha256": "bbaa02c562299a37ece262fb23d521e6d414153ecd0ca72cfd95ce11ea2df9da",
+      "target_sha256": "6dbaa046e8ce1d746480e0a4e685b34b5f1bee5612b60c8441639b6f56c89c03",
+      "reviewer": "Claude (Claude Code session; English figure drawn by the same script with the en switch from the same results of 2026-11-10; compared side by side: same plotted data and layout, labels translated)",
       "method": "assistant",
-      "reviewed_on": "2026-11-02"
+      "reviewed_on": "2026-11-10"
     },
     {
       "source": "examples/mesa/figs/series.png",
       "target": "examples/mesa/en/figs/series.png",
-      "source_sha256": "eb69ad015d185e279c898af11aed83823f30f3fc2608fd42d25903a92cda41ea",
-      "target_sha256": "447eddd694a7ab5acd11ce2c9f4344e95d5c5bc7a348cf27eff6ef002c75190d",
-      "reviewer": "Claude (Claude Code session; both images drawn by plot_results.py [series] and [series] en from the same recomputed results of 2026-11-02, compared side by side: same plotted data and layout, labels translated)",
+      "source_sha256": "95f3c10cbf6f1fe41b5e1ee31d6652b9e6c23efe9327139c0735c836322a11fe",
+      "target_sha256": "8176e581070dd64fe89fa8b1c30ad6cbb9d4c13f6754339bc455740725e1b26e",
+      "reviewer": "Claude (Claude Code session; English figure drawn by the same script with the en switch from the same results of 2026-11-10; compared side by side: same plotted data and layout, labels translated)",
       "method": "assistant",
-      "reviewed_on": "2026-11-02"
+      "reviewed_on": "2026-11-10"
     },
     {
       "source": "examples/mesa/figs/setup.png",
@@ -2381,20 +2381,20 @@
     {
       "source": "examples/mesa/figs/talus_dx4.png",
       "target": "examples/mesa/en/figs/talus_dx4.png",
-      "source_sha256": "296cae2f481abde31e3e55760d42aa5a2afe8cb90b04f6d239b209eedb37424c",
-      "target_sha256": "d928eb0111251f2fcb8f3391e264fd74095b6649cdbbc68e1621ba50dfb9dc87",
-      "reviewer": "Claude (Claude Code session; both images drawn by plot_results.py [series] and [series] en from the same recomputed results of 2026-11-02, compared side by side: same plotted data and layout, labels translated)",
+      "source_sha256": "d30bfe50bb837bf88d3cc2c3bc0c10468e01a0dd9711554279dfa14e760d18e8",
+      "target_sha256": "74957404b64255a42e4558734e8c453e6e0127dc28d905c4921815124b029e12",
+      "reviewer": "Claude (Claude Code session; English figure drawn by the same script with the en switch from the same results of 2026-11-10; compared side by side: same plotted data and layout, labels translated)",
       "method": "assistant",
-      "reviewed_on": "2026-11-02"
+      "reviewed_on": "2026-11-10"
     },
     {
       "source": "examples/mesa/figs/talus_rc.png",
       "target": "examples/mesa/en/figs/talus_rc.png",
-      "source_sha256": "8f3e83b4c7b636722b2c29b96e6724d7cdcb2136c3c5514a0a7a789c3efc8071",
-      "target_sha256": "dfaeced789e9cfa3b62f203984ea948dfaa71a36f3a06d464b060de8ba5d13a3",
-      "reviewer": "Claude (Claude Code session; both images drawn by plot_results.py [series] and [series] en from the same recomputed results of 2026-11-02, compared side by side: same plotted data and layout, labels translated)",
+      "source_sha256": "8887e6ce586ca8224e7b821bf269eba4e397d57ee13df9109945182669c6f92b",
+      "target_sha256": "0caf95fc166ab2d0b35058efa7607ce1804f2d27548c8fb311cd96189741db2d",
+      "reviewer": "Claude (Claude Code session; English figure drawn by the same script with the en switch from the same results of 2026-11-10; compared side by side: same plotted data and layout, labels translated)",
       "method": "assistant",
-      "reviewed_on": "2026-11-02"
+      "reviewed_on": "2026-11-10"
     },
     {
       "source": "examples/mountain_valley/README.md",
