@@ -181,7 +181,12 @@ Left: depth in the outlet channel cell (P1); right: depth in the hillslope cell 
   much. From the second cell on, the depth follows the theoretical profile (5.1 to 5.2 mm), and the
   discharge is unaffected.
 - The hillslope discharge drops to zero at about 130 min. Water thinner than the limit depth dd = 1 mm
-  does not flow, so the long tail of the kinematic wave (0.03 m³/s at 180 min) does not appear.
+  does not flow, so the long tail of the kinematic wave (0.03 m³/s at 180 min) does not appear. With dd
+  and the depth floor of the friction term dv in `&list_sysparam` set to 0.1 mm (20 m, 0°), the recession
+  continues to 180 min and follows the theoretical tail (0.11 against 0.10 m³/s at 150 min, 0.045 against
+  0.039 at 180 min), and the hillslope NRMSE goes from 0.021 to 0.015, the outlet from 0.020 to 0.019.
+  With dd alone at 0.1 mm the tail appears but recedes more slowly, 1.5 times the theory at 150 min
+  (0.15 m³/s), because the friction of water thinner than 1 mm is evaluated at the depth dv = 1 mm.
 
 ### Grid orientation and four neighbours
 
@@ -261,7 +266,8 @@ These values appear in the table of [Passage-width adjustment](../../../../docs/
   the channel 1.1 to 1.5 times. These do not affect the comparison of discharge, but when depths are to
   be read, resolve the channel with three or more cells across.
 - Water thinner than the limit depth dd = 1 mm does not flow, so the end of the recession (after about
-  130 min on the hillslopes) reaches zero earlier than the theory.
+  130 min on the hillslopes) reaches zero earlier than the theory (setting dd and dv to 0.1 mm recovers the
+  tail; see the results section).
 - The roughness on the edge between the hillslope foot and the channel is the average of the two sides.
   Where a flow crosses a boundary between very different roughnesses, the depth of the one cell at the
   boundary departs from the uniform-flow value.
