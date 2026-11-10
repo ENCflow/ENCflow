@@ -51,7 +51,7 @@ filled in (the total is the same).
 | Quantity | Configuration 0 (no wet_lw) | Configuration l (ℓ_w = 3 m) |
 |---|---|---|
 | Total solids Σhs + (1−λ)Σ(z−z0) | −8.882e−16 | 0.000e+00 |
-| Grid-scale roughness of the erosion depth (sum of squares of the Laplacian, m²) | 4.19e−05 | 7.47e−06 (0.18 times) |
+| Grid-scale roughness of the erosion depth (sum of squares of the Laplacian, m²) | 4.18e−05 | 7.46e−06 (0.18 times) |
 | Maximum erosion depth (m) | 5.58e−03 | 4.61e−03 |
 | Ratio of the total erosion | 1 | 1.002 |
 

@@ -92,7 +92,9 @@ for the unconsolidated cliff it decays × 0.78.
   of individual cells). After the change of 2026-11-06 by which 2 also
   evaluates the resistance laws of mixture flows along the slope (developer.md
   §101), the unconsolidated cliff goes from × 0.77 to × 0.78 (sediment leaving
-  the cliff 32.3 → 31.1 m³). The table and the figures show these values.
+  the cliff 32.3 → 31.1 m³). Rerun on 2026-11-10 with the current defaults it stays at
+  × 0.78 and the sediment leaving the cliff is 32.3 m³ (not separated out). The table and
+  the figures show these values.
 
 ## Related documents
 

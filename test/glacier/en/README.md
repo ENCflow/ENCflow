@@ -185,7 +185,7 @@ this 10-year check (for the long-term trial runs see developer.md §45.3).
 | Halfar maximum absolute error | 12.2 m (ice margin) | < 45 m (equivalent to a 1.5-cell offset of the margin) | PASS |
 | Halfar central error | 0.14 m | < 6 m (23 m without flow) | PASS |
 | Halfar isotropy (ratio of the ice volumes in the diagonal and axis sectors, relative to the analytic ratio) | +0.41% | < 2% (−5.49% with the code before the fix) | PASS |
-| Relative change of the ice volume S_total | ~1e-15 | Machine precision | PASS |
+| Relative change of the ice volume S_total | about 1e-14 or less (round-off) | Machine precision | PASS |
 | Cirque: max Hi / min dz / max dz | 92.7 m / −0.012 m / 0 | > 1 m / < −0.01 m / ≤ 0 | PASS |
 | Avalanche: coefficient of variation of SWE on circles of radius 800–1600 m | 0.017–0.042 | < 0.08 (0.230–0.350 with the code before the fix) | PASS |
 | Avalanche: mean SWE on the 400 m circle | 408 mm | < 900 mm (90% of the initial 1000 mm) | PASS |

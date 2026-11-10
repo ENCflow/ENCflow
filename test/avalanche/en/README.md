@@ -51,25 +51,25 @@ Top left: fracture depth D = 0.5 m of the release area. Top right: thickness
 of the entrained snow sd₀ − sd. Along the path from the release area to the
 slope break the snow is scoured through its full depth (0.5 m). Bottom left:
 change of the snow surface z − z₀. The path is negative from scouring, and
-stopped debris deposits up to 0.64 m around the slope break (x = 30 m) at
+stopped debris deposits up to 0.85 m around the slope break (x = 30 m) at
 x = 24–42 m. Bottom right: longitudinal profile (average over all rows).
 That the two curves z − z₀ and −(sd₀ − sd) coincide is the co-update
 identity itself (z and sd move by the same amount), and some snow that
-is still flowing (remaining hs) is left near the slope break (7.9 % of the
+is still flowing (remaining hs) is left near the slope break (9.2 % of the
 total).
 
 ## Findings
 
 | Check | Computed | Result |
 |---|---|---|
-| (1) Solid ledger | −3.4e-14 m·cell | PASS |
-| (2) Co-update | 2.1e-14 m | PASS |
+| (1) Solid ledger | about 1e-13 m·cell or less (round-off) | PASS |
+| (2) Co-update | about 1e-14 m or less (round-off) | PASS |
 | (3) Entrainment activity | path min(sd − sd₀) = −0.500 m (full depth) | PASS |
-| (4) Growth | entrained solid 52.4 / released solid 21.6 = 2.43 times | PASS |
-| (5) Stopping | remaining Σhs / (released + entrained) = 0.079 | PASS |
+| (4) Growth | entrained solid 54.8 / released solid 21.6 = 2.53 times | PASS |
+| (5) Stopping | remaining Σhs / (released + entrained) = 0.092 | PASS |
 
-- By entrainment the avalanche grows to about 3.4 times the released amount,
-  and 92 % stops and deposits around the slope break. The ledger and the
+- By entrainment the avalanche grows to about 3.5 times the released amount,
+  and 91 % stops and deposits around the slope break. The ledger and the
   co-update are at machine precision.
 - The entrainable layer is given by reinterpreting the existing soil depth
   sd, and the co-update, ledger, clamp and two-pass MPI structure are all
@@ -97,8 +97,9 @@ total).
   (remaining 0.077, largest deposit 0.82 m). After the change of 2026-11-06 by which 2 also evaluates
   the resistance laws of mixture flows along the slope (developer.md §101) it is 2.43 (remaining 0.079,
   largest deposit 0.64 m; on the steep path the turbulent term of Voellmy is 1/cos⁴θ times larger, the
-  flow is slower and entrains less). The table, the values in the text and the figures are from this
-  computation.
+  flow is slower and entrains less). Rerun on 2026-11-10 with the current defaults (including the
+  later f_advection_donor = 3 and others; not separated out) it is 2.53 (remaining 0.092, largest
+  deposit 0.85 m). The table, the values in the text and the figures are from this computation.
 
 ## Related documents
 

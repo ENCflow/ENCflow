@@ -5,12 +5,12 @@
 [日本語](../README.md)
 
 In the hollow-feedback of dry-slope erosion f_splash, when the curvature κ
-is evaluated with the 5-point Laplacian of the grid, the shortest
-wavelength (2Δx) grows fastest (the infinite-wavenumber problem of Smith &
-Bretherton), and the valley spacing sticks to the grid width. `spl_lc` is
-an option that takes κ from z smoothed with a correlation length ℓ (the
-collection scale of the subgrid rills), so that the growth rate of a
-perturbation
+is evaluated with the Laplacian of the grid (the default 9 points; also
+with 5 points), the shortest wavelength (2Δx) grows fastest (the
+infinite-wavenumber problem of Smith & Bretherton), and the valley spacing
+sticks to the grid width. `spl_lc` is an option that takes κ from z
+smoothed with a correlation length ℓ (the collection scale of the subgrid
+rills), so that the growth rate of a perturbation
 
   σ(k) = Dₐ k² exp(−ℓ²k²/2),  Dₐ = P kₜ c_b S^h
 
@@ -64,7 +64,7 @@ Top row: κ on the grid; bottom row: correlation length ℓ = 2 m. Left: the
 final terrain. Center: the y-direction relief of the columns in the
 cliff-face band (gray: initial, red: final). Right: the y-direction
 spectrum of the cliff-face band. With κ on the grid, the 4 m perturbation
-grows ×5.1 in 30 minutes (20 m: ×2.6), and deep one-cell-wide notches line
+grows ×6.9 in 30 minutes (20 m: ×2.0), and deep one-cell-wide notches line
 up at 4 m intervals. With ℓ = 2 m, the 4 m component stays neutral to
 slightly decreasing at ×0.67 (since the gradient is taken as the steepest
 descent, only the high cells are eroded and grid-scale relief decays
@@ -75,8 +75,8 @@ are selected.
 
 | Check | Configuration g (κ on the grid) | Configuration l (ℓ = 2 m) |
 |---|---|---|
-| Growth ratio of λ₁ = 4 m | ×5.11 (30 min) | ×0.67 (≤ 1.5) |
-| Growth ratio of λ₂ = 20 m | ×2.55 (30 min) | ×2.57 (≥ 1.5, 3.8 times λ₁ ≥ 3) |
+| Growth ratio of λ₁ = 4 m | ×6.91 (30 min) | ×0.67 (≤ 1.5) |
+| Growth ratio of λ₂ = 20 m | ×1.97 (30 min) | ×2.59 (≥ 1.5, 3.9 times λ₁ ≥ 3) |
 | Plateau interior max\|Δz\| | 0.0008 m | 0.0017 m |
 | Lowest elevation z | 0.000 m | 0.000 m |
 

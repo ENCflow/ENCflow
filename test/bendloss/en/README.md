@@ -62,7 +62,8 @@ and zigzag channels coincide, and **the head loss per bend is 0.000 m
 themselves show a local rise of the depth (1.95 m with scheme 1, 1.44 m
 with scheme 3), but it does not appear in the reach average. The depth
 agrees with Manning's 1.373 m because of the default dynamic opening
-correction (f_opening_dynamic = 2; §68.38); with the default before
+correction (f_opening_dynamic = 3; 2 became the default on 2026-10-18
+and 3 on 2026-10-31; §68.38, §68.41); with the default before
 2026-10-18 (no opening correction) it was 1.789 m (+30%), because a
 one-cell-wide channel lacks the diagonal edges, so without the opening
 correction the flow passes only through the passage width of the axis

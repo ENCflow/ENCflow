@@ -61,8 +61,8 @@ into the ground in the first step. The distributions are written as bil
 - **Configurations 3 and 4 (transfer)**: `f_gw_opening = 1` moves the passage
   width of the blocked diagonals to the axis edges crossing the same
   interface. The conductance along walls then equals the interior value, and
-  even in a strip one cell wide (all diagonals blocked; 0.414 times without
-  the transfer) the axis edges get the full cell width, so the check confirms
+  even in a strip one cell wide (all diagonals blocked; 1 − d = 0.667 times
+  without the transfer) the axis edges get the full cell width, so the check confirms
   that the decay rate returns to λ = D k² on both strips.
 
 | File | Content |
@@ -89,15 +89,17 @@ make
 | Configuration 3: decay rate (with the transfer) | 3.0827e-4 1/s | D k² = 3.0843e-4 (ratio 0.99951) |
 | Configuration 4: decay rate (one cell wide, with the transfer) | 3.0827e-4 1/s | D k² = 3.0843e-4 (ratio 0.99950) |
 
-- The remaining difference in configuration 1 (7e-5) is of the size of the
+- The remaining difference in configuration 1 (4e-5) is of the size of the
   nonlinearity (the interface saturated thickness changes with the
   undulation) and the float32 rounding of the distribution outputs. The total
   subsurface storage (S_grnd in the Log) is unchanged in all digits at all
   times.
-- The decay in configuration 2 is 20 % slower than the interior theory
-  because of the reduced conductance along the walls. Preliminary runs with
-  other strip widths also followed the prediction: 0.414 times for a strip
-  one column wide and 0.985 times for one 40 columns wide (developer.md §16.6).
+- The decay in configuration 2 is 11 % slower than the interior theory
+  because of the reduced conductance along the walls. The prediction is
+  1 − d = 0.667 times for a strip one column wide and 0.992 times for one
+  40 columns wide (with the default before 2026-11-05, d = 2/(2+√2), it was 0.414
+  and 0.985 times, and preliminary runs with other strip widths followed the
+  prediction; developer.md §16.6).
 - The remaining difference in configurations 3 and 4 (0.05 %) is of the size
   of the discretisation of the eigenvalue of a cosine on the grid (relative
   k²Δx²/12 = 0.051 %); the ratio 0.99949 of configuration 2 has the same

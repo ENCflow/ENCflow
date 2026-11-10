@@ -231,7 +231,10 @@ architecture.md。このメモは「現在進行中・未完了の項目」だ�
        debris_bedrock・shield_volcano・badland・timberyard・badland_round・mesa・badland_storm。回し直して変化がなかった
        もの: tsunami_fault・bedrock_cover・nest_reflect(図もビット一致)。計算済みで照合中: tower_karst の基準面(残りの
        構成の後に README を照合する)。計算中: glacier_valley。計算待ち: mountain_valley・catchment_metal・
-       estuary_barrage・karst・tower_karst の残り・stone_forest・delta と検定(00m の wave_shore を含む)。
+       estuary_barrage・karst・tower_karst の残り・stone_forest・delta。検定は済: reference を持たない
+       自己検定 48 本(wave_shore を含む)がすべて PASS し、README の値と食い違った 32 検定の README(日英)と
+       図 12 組を今の値に直した(利用者の了承「案 1・全件」。丸め誤差の水準の残差は「〜程度以下(丸め誤差)」と
+       上限で書く。users guide の advection・sediment が引く sublattice・creep の値も直した)。
      - **中断中(2026-11-05。利用者の指示「一旦中断」)**(2026-11-10 に再開。上の項)。起動前に止めた。main の側でも同じ日に、このブランチに
        関わらない例題を再計算して main に入れてあった(00l。landslide_tsunami ほか 12 例題を更新、stone_forest・
        levee_breach は変化なし)。このブランチを main に入れた後の残り: このブランチの既定(creep・spl・gl・lv・
@@ -249,8 +252,7 @@ architecture.md。このメモは「現在進行中・未完了の項目」だ�
        完了の印を残して再開できる形で、ワーカーから切り離して起動する。README の更新は stratovolcano(了承済み)
        以外は、結果を利用者に見せて目視確認を得てから。
      - merge 後の全 test(95 ケース)は 94 ケースで確認済み(rockinc は ec37a8e で解消、bmi_nest は並列ビルドの
-       競合で単独なら PASS)。**wave_shore は未確認**(7 構成を回す途中、6 つ目でワーカーの再起動により止まった。
-       逐次で数時間かかる)。
+       競合で単独なら PASS)。残っていた wave_shore も 2026-11-10 の一括の回し直しで PASS(4 スレッドで 36 分)。
 
 00k. **急勾配の重力補正の修正(developer.md §91)・最急勾配の D∞(§92)・岩盤侵食の有効重力(2026-11-04)の後始末**
    - (済 2026-11-04)reference の更新: 利用者の確認の上で、§91 で値が変わる 11 ケース(chichibu・
