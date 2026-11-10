@@ -28,7 +28,8 @@ python3 plot_results.py            # 図 figs/*.png(引数 en で英語版を en
 ありません。実際の流域の観測との照合は含みません。回帰テストの reference は持たず、合否は
 `check.py` の目安(理論解との正規化二乗平均平方根誤差など)で判定します。
 
-関連: 一様平面斜面の運動学的波との比較と粗い格子の V 字集水域は [test/hillslope](../../test/hillslope/)、
+関連: v-shaped の 20 m の 2 ケースは [test/vshaped](../../test/vshaped/) で合否つきの検定として CI でも回ります。
+一様平面斜面の運動学的波との比較と粗い格子の V 字集水域は [test/hillslope](../../test/hillslope/)、
 通過幅の調整(開口の振り替え)の検定の一覧は[通過幅の調整](../../docs/users_guide/passage_width.md)、
 ENC 格子の原論文は Tada (2026)[^tada26]。
 

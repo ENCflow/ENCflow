@@ -268,10 +268,13 @@ These values appear in the table of [Passage-width adjustment](../../../../docs/
 - Infiltration, interception, the channel features (fn_channel) and structures are not used. There is no
   comparison with observations of a real catchment.
 - There is no regression reference. The verdict of `check.py` follows the guide values above, and the
-  last digits change with rounding and the machine.
+  last digits change with rounding and the machine (the two 20 m cases are checked in CI by test/vshaped
+  with the same guide values).
 
 ## Related
 
+- [test/vshaped](../../../../test/vshaped/en/README.md): the two 20 m cases of this example (0°, 45°) as a pass/fail
+  check with an independent standard-library implementation (run in CI).
 - [test/hillslope](../../../../test/hillslope/en/README.md): comparison of a uniform plane slope with the
   kinematic wave, and the V-shaped catchment on coarse 100 m and 10 m grids (comparison of advection schemes).
 - [Passage-width adjustment](../../../../docs/en/users_guide/passage_width.md): the list of checks of opening

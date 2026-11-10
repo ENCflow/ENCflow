@@ -36,7 +36,8 @@ comparison with observations of a real catchment. The cases hold no regression r
 pass or fail is judged by the guide values of `check.py` (such as the normalised root-mean-square
 error against the theory).
 
-Related: the comparison of a uniform plane slope with the kinematic wave and the coarse-grid
+Related: the two 20 m cases of v-shaped run as a pass/fail check in [test/vshaped](../../../test/vshaped/en/README.md),
+also in CI. The comparison of a uniform plane slope with the kinematic wave and the coarse-grid
 V-shaped catchment are in [test/hillslope](../../../test/hillslope/en/README.md); the list of
 checks of the passage-width adjustment (reassignment of blocked openings) is in
 [Passage-width adjustment](../../../docs/en/users_guide/passage_width.md); the original paper

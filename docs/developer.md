@@ -666,8 +666,8 @@ ENCflow は各分野の専用モデルと精度を競うものではなく、次
   (例: `FILES="Log.txt fluxes/flux0001.csv"`)。点集約方式は
   ランク数によらず CSV がビット不変なので ULP=0 で比較できる。
   測線がランク境界を跨ぐ配置を意図的に含めること(点集約の急所)。
-- benchmark 系(解析解あり)はいずれ環境非依存の解析解ベーステストに昇格させ、
-  CI に載せる(CI のランナーではローカル reference は使えない)。
+- benchmark 系(解析解あり)は環境非依存の解析解ベーステストとして test/vshaped に昇格させ、CI に
+  載せた(2026-11-10。§104。examples/benchmark/v-shaped の 20 m の 2 ケースを Check_vshaped.py で判定)。
 - **record・出力・save 等のファイル形式を変更したら utils/ の該当ツールを
   確認する**。utils/ は一部(rerecord 等)を除き読み書きを独立実装しており、
   回帰テストの網の外にあるため、形式変更に黙って取り残される。libencflow を
@@ -22036,6 +22036,16 @@ h-plane と mkdata を廃止し、v-shaped(Tada 2026 の検証問題)と v-valle
   (縁を越える薄い水の分だけ多い)。S_S ≤ S_V(窪地なし)でも 4 近傍の 45° は階段状の経路で 5 分遅れる。
   n = 0.1 の薄い流れは遅く、180 分でも雨の 0.23〜0.38 が谷に残る。0° の 8 近傍の格子依存はピークで
   20 → 5 m で +2 %。計算時間は 19 ケースで 37 分。
+
+**test/ への昇格(同日。利用者の「全て推奨で」)**: examples/benchmark/v-shaped の 20 m の 2 ケース(0°・45°)を
+test/vshaped にした。入力の生成(make_init.py)と理論解・判定(Check_vshaped.py)は Python の標準ライブラリだけの
+独立した実装(CI のランナーに NumPy がないため。生成した入力は examples の NumPy 版とバイト一致、理論解は
+最大 7e-4 m³/s 以内で一致)。合否の目安は examples の check.py と同じ(出口・斜面の NRMSE ≤ 0.04、格子比 ±1 %、
+t50 ±3 分、収支 ±1 %)。Run_MPI.sh は理論解との比較に加えて逐次の測線 CSV とのバイト比較を行う。ci.yml の
+逐次・MPI の両方のケース一覧に加えた(1 ケース 7 秒 × 2)。test/README(日英)に行を足した。
+
+**v-valley の計算時間(同日)**: 3 時間では n = 0.1 の薄い流れが排水し切らず雨の 0.24〜0.38 が残るので、6 時間
+(tt = 21600)に延ばした(利用者の「全て推奨で」)。
 
 **文書の更新**: examples/README(日英)の benchmark の行、examples/benchmark/README(日英。索引)、
 users_guide/passage_width.md(日英)の V 字流域の行(振り替え 2 と 3 の誤差。新しい例題の _od2 ケースで計算し

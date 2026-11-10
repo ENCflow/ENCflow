@@ -548,9 +548,9 @@ architecture.md。このメモは「現在進行中・未完了の項目」だ�
      作業環境では icce-ojs-tamu.tdl.org と esurf.copernicus.org に接続できなかった(検索の結果で確認)。
      第II部の io・time・restart・parallel・user_routines はモデル・式を含まないので対象外とした
    - 検定スクリプト: pump・frost・conduit・nhbottom は 2026-10-29 に整備済み
-     (developer.md §16.3・§16.4・§46.4・§69.10)。残り: benchmark 系(examples/benchmark の v-shaped・
-     v-valley。2026-11-10 の再構築で理論解の計算 analytic.py と合否つきの check.py を備えた。§104)の
-     test/ への昇格(§10)。旧 1c(Boussinesq)は
+     (developer.md §16.3・§16.4・§46.4・§69.10)。benchmark 系は 2026-11-10 に test/vshaped(V 字流域の
+     20 m の 2 ケース。運動学的波の理論解との合否)として昇格し CI に載せた(§104)。v-valley は理論解がなく
+     0° との比較なので examples のまま。旧 1c(Boussinesq)は
      2026-10-30 に test/gwlateral・test/gwtani で整備(§16.6・§16.7)。解析解のある候補はほかに
      中期の淡塩 2 層 (3)(Glover のくさび・淡水レンズ)、
      中期の geomorph(平衡勾配。巻き上げと沈降の釣り合いは 2026-10-30 に test/suspend
