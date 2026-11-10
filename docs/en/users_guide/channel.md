@@ -242,7 +242,7 @@ a failure (levees must be enabled).
   the discharge of a resolved levee (a levee present as DEM elevation;
   [prescribed bed motion](bedmotion.md) §5). With f_br_diag = 1 the
   diagonal edges touching the sites open as well, and a breach 3–5 cells
-  wide gives nearly the same discharge as the resolved levee (1.7 times
+  wide gives nearly the same discharge as the resolved levee (1.6 times
   for one cell, 1.2 for two; measured with 10 m cells and 1.5–1.7 m of
   head in the supplement of [examples/levee_breach](../../../examples/levee_breach/en/README.md)).
 - **When the levee is present as elevation in the DEM (a resolved levee)**

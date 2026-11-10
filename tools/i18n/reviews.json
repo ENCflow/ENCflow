@@ -131,11 +131,11 @@
     {
       "source": "docs/users_guide/bedmotion.md",
       "target": "docs/en/users_guide/bedmotion.md",
-      "source_sha256": "61288a0f125a3e6fea6547ed849de802765fcf5348d5e4699529825b0ec3ea7f",
-      "target_sha256": "8f7cc855d8a5f46a8cf3b0a763f97823d0107192adc44cf9c407a480b00d15ae",
-      "reviewer": "Claude (Claude Code session; corrected both versions in parallel against the local results and inputs (probe series, displacement snapshots, fill ratios, run steps), and compared the edited passages and numbers)",
+      "source_sha256": "698933560fd457bae57577f5bae9106e22bf0a5c7743dbae0f58fb1787a3625c",
+      "target_sha256": "4527e3736e40bec11e851394bfc166c32f84c3081f861d74e8304af0ee68dd01",
+      "reviewer": "Claude (Claude Code session; cited ratio for a one-cell breach updated to 1.6 times after the recomputation of the levee_breach breach-width table; unchanged text as in the previous record)",
       "method": "assistant",
-      "reviewed_on": "2026-11-08"
+      "reviewed_on": "2026-11-10"
     },
     {
       "source": "docs/users_guide/bedmotion_models.md",
@@ -176,20 +176,20 @@
     {
       "source": "docs/users_guide/channel.md",
       "target": "docs/en/users_guide/channel.md",
-      "source_sha256": "708f97da4e0ea05a301a84e394f82921dadf9ebcc4384b9cfc136897b9f51175",
-      "target_sha256": "67a525eff4eff118365beacdb5e6abc11b19a025cdec21c8f4319162ee6ed4d9",
-      "reviewer": "Claude (Claude Code session; compared the Japanese and English changes for the exact volume exchange on section-shape cells, 2026-11-04)",
+      "source_sha256": "e120367a606611b1e602ca8577768bfdf80154b69161ebfba3aec0caa075de22",
+      "target_sha256": "52e9b973a6530d4aaa95b0e37b915316cd88399dec195b41d7df38381454fd15",
+      "reviewer": "Claude (Claude Code session; cited ratio for a one-cell breach updated to 1.6 times after the recomputation of the levee_breach breach-width table; unchanged text as in the previous record)",
       "method": "assistant",
-      "reviewed_on": "2026-11-04"
+      "reviewed_on": "2026-11-10"
     },
     {
       "source": "docs/users_guide/channel_models.md",
       "target": "docs/en/users_guide/channel_models.md",
-      "source_sha256": "67c15dab4947448a8de95779eb2edfcae30725cc9faf5b10be0b4df9de859521",
-      "target_sha256": "603652adb01519b95d8eb7372af9327e27681c3d59ef17f44f0484c76c9beeae",
-      "reviewer": "Claude (Claude Code session; compared the Japanese and English changes for the exact volume exchange on section-shape cells, 2026-11-04)",
+      "source_sha256": "1dd5db1751182b30b561e20999839ace5b228cb303ec8b1ab122e5ce8f5b3ba3",
+      "target_sha256": "0b570931bf2e93e30733da94766a463b8ea748eed4e1bc86d8624875416507e4",
+      "reviewer": "Claude (Claude Code session; breach-width table and the cited ratios updated to the recomputation of examples/levee_breach with the current defaults (1.6 times for one cell, 162 vs 153, 0.40-0.45 times for f_br_diag = 0); Japanese and English edited together and compared)",
       "method": "assistant",
-      "reviewed_on": "2026-11-04"
+      "reviewed_on": "2026-11-10"
     },
     {
       "source": "docs/users_guide/coordinates.md",
@@ -1985,9 +1985,9 @@
     {
       "source": "examples/levee_breach/README.md",
       "target": "examples/levee_breach/en/README.md",
-      "source_sha256": "832556eb05bba7fd9c5bbf9b25c72405308d590367cd4de0374cc0e74d272d7b",
-      "target_sha256": "4153ed2d3c45d59561c2c18d0c2124215820bdfd0b0bf99202b93c9c625031d4",
-      "reviewer": "Claude (Claude Code session; values updated to reruns with the default f_advection_donor = 3: delayed-breach row (165 ha, 1.70 m), south-edge outflow 4.69 -> 4.68 and 1.79 -> 1.78 million m3, virtual-wall supplement row (150 / 119, 41.3, 70.4), the breach-width table qualified as computed with f_opening_dynamic = 2 and f_advection_donor = 0; other prose values checked against f_advection_donor = 0 controls and unchanged; Japanese and English edited together and compared)",
+      "source_sha256": "d20dd0c0321af722efc1b47d27d1fab8c61a388982981a577aa4853463089fcb",
+      "target_sha256": "3dc591a0c37bca1ae020f1df47f6cdc2e0dee4e75c8bd51538047d574f0ef000",
+      "reviewer": "Claude (Claude Code session; breach-width table recomputed with the current defaults (12 runs; widths, measurement and weir head stated in the heading), text ratios updated (0.45, 153 vs 162, 1.64) and the 0.38 dx statement replaced by the measured 0.40-0.45 times; Japanese and English edited together and compared)",
       "method": "assistant",
       "reviewed_on": "2026-11-10"
     },
