@@ -2993,11 +2993,11 @@
     {
       "source": "examples/tsunami_coast/README.md",
       "target": "examples/tsunami_coast/en/README.md",
-      "source_sha256": "494bad04217186cc29437fd81cc373073aba6d7d9240b4b2ae16b40da0854ac9",
-      "target_sha256": "460631f94c5f4de240b7f8d3d979588858cbf912eed53fe090ad50476e1a6b8c",
-      "reviewer": "Claude (Claude Code session; corrected both versions in parallel against the local results and inputs (probe series, displacement snapshots, fill ratios, run steps), and compared the edited passages and numbers)",
+      "source_sha256": "47c19fc7ade235347b4355158cc74842948550e35da75f743bd77904cec23cea",
+      "target_sha256": "be8977d27c57cd8a865aa7ef62c0083b41c57211d78cc3f98958fea67a2371ff",
+      "reviewer": "Claude (Claude Code session; recomputation of 2026-11-10: the three last-digit changes (bay-head minimum, bay-head land maximum and maximum flood depth offshore-only) compared against the Japanese source and the printed tables of plot_results.py; no model execution)",
       "method": "assistant",
-      "reviewed_on": "2026-11-08"
+      "reviewed_on": "2026-11-10"
     },
     {
       "source": "examples/tsunami_coast/figs/deformation.png",
@@ -3020,11 +3020,11 @@
     {
       "source": "examples/tsunami_coast/figs/probes.png",
       "target": "examples/tsunami_coast/en/figs/probes.png",
-      "source_sha256": "8fcb66d13cd68973cdbff40cbe99ff00d4fa6893fcad1b4892e76ef86f767f97",
-      "target_sha256": "b4f9d784729b92f61bda94ef1054b21fff1a47098148e49e122b54ee1be382da",
-      "reviewer": "Claude (Claude Code session; compared the Japanese and English figure images side by side: same plotted data and layout from the same script and the same results (the three cases rerun with the current build), labels translated)",
+      "source_sha256": "93c5cc5ded590ba1e667f9191ecc194553cef6f308122ed085b69bee5c5a85af",
+      "target_sha256": "0986ea6ec437971530adee6b910ff3b7319a48befc5df8ce65ed3889efa4ea6c",
+      "reviewer": "Claude (Claude Code session; English figure drawn by the same script with the en switch from the same results of 2026-11-10; compared side by side: same plotted data and layout, labels translated)",
       "method": "assistant",
-      "reviewed_on": "2026-11-08"
+      "reviewed_on": "2026-11-10"
     },
     {
       "source": "examples/tsunami_coast/figs/setup.png",
@@ -3038,11 +3038,11 @@
     {
       "source": "examples/tsunami_coast/figs/snapshots.png",
       "target": "examples/tsunami_coast/en/figs/snapshots.png",
-      "source_sha256": "e15f2d7ee32d10c39986ee74bad642403d3058eb1118e8e2b50c992a1684c9f4",
-      "target_sha256": "558195805de26c41fa1fe18ee34e504c1447affc8a5a294e7c804fc715bf0182",
-      "reviewer": "Claude (Claude Code session; compared the Japanese and English figure images side by side: same plotted data and layout from the same script and the same results (the three cases rerun with the current build), labels translated)",
+      "source_sha256": "214ef6fa0e64e96ab70c0479fdbd6df6f5c3e379be91e75680709ff246c4e5bc",
+      "target_sha256": "94dbd89447bebd916127815388cca37c24663d4de20891d4080b5ff4ea7b2d57",
+      "reviewer": "Claude (Claude Code session; English figure drawn by the same script with the en switch from the same results of 2026-11-10; compared side by side: same plotted data and layout, labels translated)",
       "method": "assistant",
-      "reviewed_on": "2026-11-08"
+      "reviewed_on": "2026-11-10"
     },
     {
       "source": "examples/tsunami_fault/README.md",
