@@ -104,9 +104,9 @@
     {
       "source": "docs/users_guide.md",
       "target": "docs/en/users_guide.md",
-      "source_sha256": "b90ab959267a9002d84123f79cd76a70be3102fb3a4360815b05d1b5d6ba4064",
-      "target_sha256": "54987ef44e8c8adc4ab9b17b5a62083d5dad8291342a96dec97e541474732b30",
-      "reviewer": "Claude (Claude Code session; features table: removed the parenthetical notes from the Feature column in both versions (nesting, wave field, longshore transport, weather forcing, water quality, VZ runoff, measurement); links and other columns unchanged; read side by side)",
+      "source_sha256": "a9546b98ef352870fd84116be8bd8b2a4f3ac8a1e9488bad91b9188a0743b47d",
+      "target_sha256": "8743abf6d424db5c5ec57e616f69fe6b1be57876e4f713c69e7e0ccb2ac9a8c0",
+      "reviewer": "Claude (Claude Code session; fn_reservoir removed: pond row now only fn_rscap, parameter count 781 in both versions; read side by side)",
       "method": "assistant",
       "reviewed_on": "2026-11-10"
     },
@@ -419,11 +419,11 @@
     {
       "source": "docs/users_guide/params_index.md",
       "target": "docs/en/users_guide/params_index.md",
-      "source_sha256": "5e32383ff99cd5819ab50e83beaede1f17d0c7dbfee675191c2465e980b0fc4e",
-      "target_sha256": "3397780c48499167f86952ffc05436c1e776ad5fa968add3df441fdb527078e7",
-      "reviewer": "Claude (Claude Code session; f_advection_donor = 3 and p_adv_donor_eps added 2026-11-07, option 2's known changes corrected; Japanese and English edited together and read side by side)",
+      "source_sha256": "74526df2854c4ad187c251b8ad9068a3164bfa95230805c35119d480b098ba66",
+      "target_sha256": "f4ccb366583d2de393e10f5543ae9ea7876126ce62e240aecd32d7a6d1cd368c",
+      "reviewer": "Claude (Claude Code session; removed the fn_reservoir row and updated the entry count to 781 in both versions; tools/params_index/check.py passes)",
       "method": "assistant",
-      "reviewed_on": "2026-11-07"
+      "reviewed_on": "2026-11-10"
     },
     {
       "source": "docs/users_guide/passage_width.md",
@@ -806,9 +806,9 @@
     {
       "source": "examples/List_samples/list_sysparam.txt",
       "target": "examples/List_samples/en/list_sysparam.txt",
-      "source_sha256": "ac166c10841e5ea4ab08005be7f9385be6a00bd19d7fc34e8a6cb56359f55aaf",
-      "target_sha256": "238f1ecf9ba59ea1ac2dee111aededd0bad6d7939743942e5ef930e94026467b",
-      "reviewer": "Claude (Claude Code session; comment of the commented-out fn_reservoir line only: not used in the computation, ponds come from fn_rscap in list_geoinfo; values, identifiers and enabled state unchanged; both versions read side by side)",
+      "source_sha256": "6221f2f158f890e253db26da838eb7332bdaeee45adf16128891fb9f7779806b",
+      "target_sha256": "eb1c6e89837280f0fc30ffb1d7c05727cc33f781d6fb8a722cbaaf25db40d3aa",
+      "reviewer": "Claude (Claude Code session; removed the commented-out fn_reservoir line from both versions; values, identifiers and enabled state of the other lines unchanged; tools/consistency/check.py passes)",
       "method": "assistant",
       "reviewed_on": "2026-11-10"
     },

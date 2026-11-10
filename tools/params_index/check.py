@@ -6,7 +6,8 @@
 src/*.f90 の `namelist /group/ a, b, &` 宣言(継続行を連結、! 以降のコメントを除く。
 再開ヘッダ &save_info・&wavefield_info は利用者パラメータでないため対象外)から (名前, グループ) を
 抽出し、docs/users_guide/params_index.md とその英語ミラーの表、章ページ、索引の
-項目数の記述と照合する(developer.md §35.1)。索引を生成・変更はしない。
+項目数の記述と照合する(developer.md §35.1)。索引を生成・変更はしない。廃止して指定の検出のためだけに
+namelist に残すパラメータ(REMOVED。developer.md §103)は利用者パラメータでないので対象外。
 
 検査項目:
   1. 索引(日)の行の集合 = コードの (名前, グループ) の集合(欠落・余分・重複)
@@ -30,6 +31,9 @@ INDEX_EN = "docs/en/users_guide/params_index.md"
 GUIDE_JA = "docs/users_guide.md"
 GUIDE_EN = "docs/en/users_guide.md"
 EXCLUDE_GROUPS = {"save_info", "wavefield_info"}
+# 廃止したパラメータ (グループ, 名前)。namelist には指定を検出して案内付きで停止させるためだけに残すので、
+# 索引と章ページの照合の対象外(developer.md §103)。tools/consistency/check.py にも同じ集合がある
+REMOVED = {("list_sysparam", "fn_reservoir")}
 
 NAMELIST = re.compile(r"^\s*namelist\s*/\s*(\w+)\s*/\s*(.*)$", re.I)
 ROW = re.compile(r"^\|\s*(\S+)\s*\|\s*&(\w+)\s*\|\s*\[([^\]]*)\]\(([^)\s]+)\)[^|]*\|\s*$")
@@ -75,7 +79,7 @@ def namelists(root: Path) -> dict[str, list[str]]:
             names = [n.strip().lower() for n in m.group(2).split(",") if n.strip()]
             seen = groups.setdefault(group, [])
             for n in names:
-                if n not in seen:
+                if n not in seen and (group, n) not in REMOVED:
                     seen.append(n)
     return groups
 

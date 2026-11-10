@@ -5,6 +5,7 @@ import sys
 import tempfile
 import unittest
 from pathlib import Path
+from unittest import mock
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 import check  # noqa: E402
@@ -55,6 +56,15 @@ class NamelistTest(unittest.TestCase):
     def test_continuation_comment_and_exclusion(self):
         groups = check.namelists(repo(ROWS))
         self.assertEqual(groups, {"list_a": ["aa", "ab", "ac"], "list_b": ["ba", "aa"]})
+
+    def test_removed_parameter_is_not_indexed(self):
+        # 廃止して検出だけ残す (グループ, 名前) は宣言にあっても索引・章ページを要求しない。
+        # 除くのはその組だけで、同じ名前の別グループの宣言(list_a の aa)は残す
+        rows = ["| aa | &list_a | [A](a.md) |", "| ab | &list_a | [A](a.md) |", "| ba | &list_b | [B](b.md) |"]
+        with mock.patch.object(check, "REMOVED", {("list_a", "ac"), ("list_b", "aa")}):
+            root = repo(rows, pages={"a.md": "aa ab", "b.md": "ba"})
+            self.assertEqual(check.namelists(root), {"list_a": ["aa", "ab"], "list_b": ["ba"]})
+            self.assertEqual(check.check(root), [])
 
 
 class CheckTest(unittest.TestCase):

@@ -96,7 +96,7 @@ ENCflow の設定と実行のリファレンスです。初めての方はまず
 - [用途集](users_guide/usecases.md)— 現象名から機能の組み合わせを引く(未対応の現象も明示)
 
 **付録**
-- [全パラメータ索引](users_guide/params_index.md) — 全 782 パラメータの名前→章の逆引き
+- [全パラメータ索引](users_guide/params_index.md) — 全 781 パラメータの名前→章の逆引き
 
 ---
 
@@ -142,7 +142,7 @@ ENCflow は地表の水の流れを計算するモデルです。必要に応じ
 | [沿岸の波浪場](users_guide/wavefield.md) | `fn_wavefield` | &list_wavefield |
 | [波浪による沿岸漂砂](users_guide/geomorph.md#波浪による沿岸漂砂fn_wave) | `fn_wave` | &list_wave(fn_geomorph の f_fluvial=1 が必須) |
 | [内部水理構造物](users_guide/structure.md) | `fn_structure` | &list_struct_pump / culvert / diversion / dam |
-| [ため池](users_guide/geoinfo.md#ため池) | 地理情報の `fn_rscap`(`fn_reservoir` は計算に使われない) | &list_geoinfo |
+| [ため池](users_guide/geoinfo.md#ため池) | 地理情報の `fn_rscap` | &list_geoinfo |
 | [河道](users_guide/channel.md) | `fn_channel` | &list_channel(+ breach) |
 | [降水](users_guide/forcing.md#降水list_precip) | `fn_precip` | &list_precip |
 | [降雨遮断](users_guide/forcing.md#降雨遮断list_intercept) | `fn_intercept` | &list_intercept(+ モデル固有) |

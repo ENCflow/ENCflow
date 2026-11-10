@@ -61,7 +61,6 @@
   !fn_wave = "list_wave.txt"           ! wave conditions (longshore transport; needs f_fluvial=1 in fn_geomorph)
   !fn_wavefield = "list_wavefield.txt" ! coastal wave field (shoaling, refraction, breaking, shadows; users_guide/wavefield.md)
   !fn_structure = ""        ! internal hydraulic structures (pumps, culverts, etc.)
-  !fn_reservoir = ""        ! not used in the computation (ponds are set by fn_rscap in list_geoinfo)
   !fn_channel = ""          ! channels (levees and channel width)
   !fn_precip = ""           ! precipitation
   !fn_intercept = ""        ! rainfall interception

@@ -102,7 +102,7 @@ phenomenon-specific setups. Individual chapters also link to relevant cases.
 - [Use cases](users_guide/usecases.md) -- lookup from phenomenon names to feature combinations (unsupported phenomena are listed too)
 
 **Appendix**
-- [Full parameter index](users_guide/params_index.md) -- reverse lookup from all 782 parameter names to their chapters
+- [Full parameter index](users_guide/params_index.md) -- reverse lookup from all 781 parameter names to their chapters
 
 ---
 
@@ -148,7 +148,7 @@ The additional features below stay disabled unless you specify their `fn_XXX` en
 | [Coastal wave field](users_guide/wavefield.md) | `fn_wavefield` | &list_wavefield |
 | [Wave-driven longshore transport](users_guide/geomorph.md#wave-driven-longshore-transport-fn_wave) | `fn_wave` | &list_wave (needs f_fluvial=1 in fn_geomorph) |
 | [Internal hydraulic structures](users_guide/structure.md) | `fn_structure` | &list_struct_pump / culvert / diversion / dam |
-| [Ponds](users_guide/geoinfo.md#ponds) | `fn_rscap` in the geographic information (`fn_reservoir` is not used in the computation) | &list_geoinfo |
+| [Ponds](users_guide/geoinfo.md#ponds) | `fn_rscap` in the geographic information | &list_geoinfo |
 | [Channels](users_guide/channel.md) | `fn_channel` | &list_channel (+ breach) |
 | [Precipitation](users_guide/forcing.md#precipitation-list_precip) | `fn_precip` | &list_precip |
 | [Rainfall interception](users_guide/forcing.md#rainfall-interception-list_intercept) | `fn_intercept` | &list_intercept (+ model-specific) |
