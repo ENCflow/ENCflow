@@ -860,11 +860,11 @@
     {
       "source": "examples/README.md",
       "target": "examples/README.en.md",
-      "source_sha256": "fc842a3bb7f28fbea5a714380eae2930639ce403e8285c79d7d695c773b669f3",
-      "target_sha256": "8ec98fa8d77fa398380b9cefe44d693660b22e06b0546b60403ab80718f046bb",
-      "reviewer": "Claude (Claude Code session; merge of main into the branch: main's additions (dissol_src 4/5, talus dissolution, glacier, evapdry, stone_forest, glacier_valley) and the branch's edits (§91/§92 and the debris examples) both present in the two languages, compared)",
+      "source_sha256": "972e6189e0f95ec323a1dbb61b0c0eb00afd39224a55eef978b25c7c7764a3d0",
+      "target_sha256": "74eba6d8000d836e708e0c174771560f0a61536ffc475c155d5090c95be90c2a",
+      "reviewer": "Claude (Claude Code session; shortened the nine long content cells in both versions to the same content and compared them row by row)",
       "method": "assistant",
-      "reviewed_on": "2026-11-04"
+      "reviewed_on": "2026-11-08"
     },
     {
       "source": "examples/ashfall_lahar/README.md",
