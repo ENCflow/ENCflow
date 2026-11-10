@@ -471,6 +471,7 @@ def fig_series():
     t, q = hydro(case)
     ts, fs = sat_series(case)
     lg = logtab(case)
+    cap = 1000 * CAP                              # 土層の容量 (mm)
     fig = plt.figure(figsize=(13.0, 8.2))
     outer = fig.add_gridspec(1, 2, width_ratios=[2.25, 1.0], wspace=0.17)
     gs = outer[0, 0].subgridspec(4, 1, hspace=0.30)
@@ -491,7 +492,8 @@ def fig_series():
     ax2 = fig.add_subplot(gs[1], sharex=ax1)
     shade_storms(ax2)
     ax2.plot(ts, 100 * fs, color=BLUE_D, lw=2.0)
-    ax2.set_ylim(0, None)
+    ax2.set_ylim(0, 100)
+    ax2.set_yticks(np.arange(0, 101, 25))
     ax2.set_ylabel(T("飽和域の割合 (%)", "saturated area (%)"))
     panel_label(ax2, T("(b) 飽和域(流出寄与域)の割合", "(b) Saturated (source) area fraction"))
 
@@ -499,7 +501,11 @@ def fig_series():
     shade_storms(ax3)
     ax3.plot(lg[:, 0], 1000 * lg[:, 3], color=BLUE, lw=2.0, label=T("土層の水(地下貯留)", "soil water (groundwater storage)"))
     ax3.plot(lg[:, 0], 1000 * lg[:, 2], color="#eb6834", lw=2.0, label=T("地表の水", "surface water"))
-    ax3.set_ylim(0, None)
+    ax3.axhline(cap, color=MUTED, lw=1.0, ls=(0, (4, 3)), zorder=1)
+    ax3.text(30.0, cap - 3.0, T(f"土層の容量 {cap:.0f} mm", f"soil capacity {cap:.0f} mm"), fontsize=8, color=INK2,
+             ha="center", va="top")
+    ax3.set_ylim(0, 1.08 * cap)
+    ax3.set_yticks(np.arange(0, cap + 1, 25))
     ax3.set_ylabel(T("貯留高 (mm)", "storage (mm)"))
     ax3.legend(loc="upper right", ncol=2, fontsize=8, bbox_to_anchor=(1.0, 1.16))
     panel_label(ax3, T("(c) 流域平均の貯留", "(c) Catchment-mean storage"))
@@ -517,18 +523,21 @@ def fig_series():
     for a in (ax1, ax2, ax3):
         plt.setp(a.get_xticklabels(), visible=False)
 
-    # (e) 貯留と飽和域の関係(発達と縮小の経路)
+    # (e) 貯留と飽和域の関係(発達と縮小の経路)。軸は土層の容量と全域(100 %)まで取る。
+    # 飽和したセルは容量いっぱいの水を持つので、飽和域の割合は「土層の水 / 容量」を超えない(点線)
     ax5 = fig.add_subplot(gr[0])
     sg = np.interp(ts, lg[:, 0], 1000 * lg[:, 3])
+    ax5.plot([0, cap], [0, 100], color=MUTED, lw=1.0, ls=(0, (1.5, 2.5)), zorder=1,
+             label=T("上限(土層の水がすべて飽和域にある)", "upper bound (all soil water in saturated cells)"))
     seg = [(12, 48, T("雨の後(縮小)", "after the rain (shrinking)"), MUTED, "-"), (60, 96, None, MUTED, "-"),
            (0, 12, T("1 回目の雨(発達)", "storm 1 (growth)"), BLUE_D, "-"),
            (48, 60, T("2 回目の雨(発達)", "storm 2 (growth)"), BLUE_D, (0, (4, 2)))]
     for a, b, lab, col, ls in seg:
         k = (ts >= a - 1e-9) & (ts <= b + 1e-9)
         ax5.plot(sg[k], 100 * fs[k], color=col, lw=2.0, ls=ls, label=lab)
-    off = {6: ((8, -4), "left"), 12: ((8, -12), "left"), 24: ((8, -4), "left"), 48: ((-6, -13), "center"),
-           60: ((8, 2), "left")}
-    for th in (6, 12, 24, 48, 60):
+    off = {6: ((8, -4), "left"), 12: ((8, -12), "left"), 16: ((-7, 3), "right"), 24: ((-7, 3), "right"),
+           48: ((5, -13), "left"), 60: ((8, 2), "left")}
+    for th in (6, 12, 16, 24, 48, 60):
         k = int(np.argmin(np.abs(ts - th)))
         ax5.plot([sg[k]], [100 * fs[k]], marker="o", ms=5.5, mfc="white", mec=INK, mew=1.2, ls="none", zorder=5,
                  clip_on=False)
@@ -536,8 +545,10 @@ def fig_series():
                      color=INK2, ha=off[th][1])
     ax5.set_xlabel(T("土層の水(流域平均。mm)", "soil water, catchment mean (mm)"))
     ax5.set_ylabel(T("飽和域の割合 (%)", "saturated area (%)"))
-    ax5.set_xlim(0, 1.18 * sg.max())
-    ax5.set_ylim(0, 110 * fs.max())
+    ax5.set_xlim(0, cap)
+    ax5.set_ylim(0, 100)
+    ax5.set_xticks(np.arange(0, cap + 1, 20))
+    ax5.set_yticks(np.arange(0, 101, 20))
     ax5.legend(loc="upper left", fontsize=8)
     panel_label(ax5, T("(e) 貯留と飽和域(発達と縮小の経路)", "(e) Storage vs saturated area"))
 

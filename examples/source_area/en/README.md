@@ -186,9 +186,11 @@ second storm, and at the end of the second storm.
 
 (a) Rain (grey) and runoff from the catchment (black). Blue is the rain that fell on the
 saturated area (rain × saturated fraction); the rest of the runoff is water that passed through
-the soil. (b) Fraction of the saturated area. (c) Catchment-mean storage. (d) Cumulative rain
-and runoff. (e) Soil water versus the saturated fraction (circles mark times). (f) Fraction of
-saturated cells by class of upslope area on the flow tree.
+the soil. (b) Fraction of the saturated area. (c) Catchment-mean storage (the dashed line is the
+soil capacity). (d) Cumulative rain and runoff. (e) Soil water versus the saturated fraction
+(circles mark times; the axes run to the soil capacity of 100 mm and to the whole catchment,
+100 %; the dotted line is the upper bound, where all soil water is in saturated cells). (f)
+Fraction of saturated cells by class of upslope area on the flow tree.
 
 | Storm | Soil water before the rain (mm) | Saturated area before the rain (%) | Time when runoff exceeds 1 mm/h (h) | Peak (mm/h) | Time of peak (h) | Max. saturated area (%) | Runoff in 48 h (mm) | Ratio to rain (%) |
 |---|---:|---:|---:|---:|---:|---:|---:|---:|
@@ -222,8 +224,11 @@ upslope area (on the flow tree, counting the cell itself) is as follows.
 - **The same storage gives different saturated areas during growth and shrinkage**: when the
   catchment-mean soil water is 55–57 mm, the saturated area is 16 % during the first storm
   (6 h) and 29 % after the rain (16 h) (the path in (e) forms a loop). During the rain, water
-  enters uniformly over the slopes; after the rain it has moved toward the valleys. The
-  catchment-mean storage alone does not determine the extent of the saturated area.
+  enters uniformly over the slopes; after the rain it has moved toward the valleys (the closer
+  to the dotted line in (e), the more of the soil water sits in the saturated area: the
+  saturated cells hold 28 % of the soil water at 6 h, 53 % at 16 h and 64 % just before the
+  second storm). The catchment-mean storage alone does not determine the extent of the
+  saturated area.
 - **Outlet runoff rises abruptly once the saturated area has connected along the valleys**: in
   the first storm the runoff is practically zero until 8 h (0.05 mm/h at 8 h), then reaches
   4.3 mm/h in one hour and 8.6 mm/h (86 % of the rain) in four hours. For a little over three
