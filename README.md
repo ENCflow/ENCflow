@@ -217,7 +217,7 @@ belong to specialized models
   Python, run them in batch, and diff or aggregate the text outputs,
   all from shell scripts alone. This suits sensitivity analysis,
   calibration, and bulk scenario runs.
-- **Automation with AI agents** — the same property extends directly
+- **Advanced automation with AI agents** — the same property extends directly
   to advanced automation by AI, letting AI agents drive case
   generation, execution, verification, and analysis directly. Much of
   the development and verification of ENCflow itself is carried out in

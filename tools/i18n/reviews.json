@@ -13,9 +13,9 @@
     {
       "source": "README.ja.md",
       "target": "README.md",
-      "source_sha256": "3e1b0119a3b89dab115c9c2e575ac8e529ecb9fb07e6e55b2a6ffc2ecb3faaf1",
-      "target_sha256": "44e5b6b4bd4ecdfc73f65fb0c97bcda9bdc0459786a7a726bd5aec001abae741",
-      "reviewer": "Claude (Claude Code session; split the AI-automation sentences of the script-automation item into a separate item (AI agents) in both versions, text otherwise unchanged; read side by side)",
+      "source_sha256": "28d328429d808c80c61192a31aa1f23e4fc42bbbcb00d10706ebe72cde6a007f",
+      "target_sha256": "0f34a6d22e0a45c4446a4d30796f2040f96669e055b8e3baf30dd039d0eaf39e",
+      "reviewer": "Claude (Claude Code session; heading of the AI item set to the user's wording (advanced automation with AI agents) in both versions; read side by side)",
       "method": "assistant",
       "reviewed_on": "2026-11-10"
     },
