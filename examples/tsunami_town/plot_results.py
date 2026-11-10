@@ -166,7 +166,7 @@ def setup():
     st = rd("bdstock.txt")
     fig, axs = plt.subplots(1, 3, figsize=(16, 4.2), gridspec_kw=dict(width_ratios=[1.35, 1.35, 1]), constrained_layout=True)
     ax = axs[0]
-    im = ax.imshow(z, extent=EXT, cmap="terrain", vmin=-6, vmax=6)
+    im = ax.imshow(z, extent=EXT, cmap="terrain", vmin=-6, vmax=10)
     draw_wall(ax)
     ax.text(75, 300, T("海\n−5 m", "sea\n−5 m"), ha="center", va="center", fontsize=8)
     ax.text(205, 300, T("浜", "beach"), ha="center", va="center", fontsize=8)
