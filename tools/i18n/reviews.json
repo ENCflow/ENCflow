@@ -1031,38 +1031,38 @@
     {
       "source": "examples/badland_round/README.md",
       "target": "examples/badland_round/en/README.md",
-      "source_sha256": "334840c5f74de12fe81c4f11c9c28f169f5d8da0ac3d560bbcb9fe49baca29d2",
-      "target_sha256": "8a59f22a7c8c71724ecdb636fd07d68ad85d1a1db1802f0c6df0d4e66d410a7d",
-      "reviewer": "Claude (Claude Code session; corrected both versions in parallel against the inputs, scripts and committed figures, and compared the edited passages and numbers)",
+      "source_sha256": "8f3c80a0ce26bc41e195473025e6e67e0b80e308cfe4b7fe620d9900a291e7af",
+      "target_sha256": "505892da86bebf92b8edf32badd2a505087dc2169ba4627da0a758a6e3b92716",
+      "reviewer": "Claude (Claude Code session; recomputation of 2026-11-10 with the 9-point creep and dry-slope stencils: the changed cells of the hill table, budget table, strata table and step table, and the two numbers in the bullets compared against the Japanese source and the printed tables of plot_results.py (main, strata, strata3); no model execution)",
       "method": "assistant",
-      "reviewed_on": "2026-11-08"
+      "reviewed_on": "2026-11-10"
     },
     {
       "source": "examples/badland_round/figs/maps.png",
       "target": "examples/badland_round/en/figs/maps.png",
-      "source_sha256": "25fdccd14dcf05216b573e32c44aabd6b0c3848f98352f6bddb5b534970ed400",
-      "target_sha256": "36026a92850f3d6663018e9760bb7c5f3e00d054591ede345e7ab3b9db5cc5f7",
-      "reviewer": "Claude (Claude Code session; compared the Japanese and English figure images side by side: same plotted data and layout, labels translated (some compressed but faithful); provenance per the commits that drew the English figures: same saved results as the Japanese figures; no model execution)",
+      "source_sha256": "d5a7d65569e3f2ae38ba58e5f3d31c07045d0ef089c722b87cd8f4bf875d75bc",
+      "target_sha256": "489d029f38ed9922bba96f678e1f93fe023e7e6566d05f743c2e48b764d09908",
+      "reviewer": "Claude (Claude Code session; English figure drawn by the same script with the en switch from the same results of 2026-11-10; compared side by side: same plotted data and layout, labels translated)",
       "method": "assistant",
-      "reviewed_on": "2026-10-29"
+      "reviewed_on": "2026-11-10"
     },
     {
       "source": "examples/badland_round/figs/maps_strata.png",
       "target": "examples/badland_round/en/figs/maps_strata.png",
-      "source_sha256": "97aaeadec9f897036db73d3fa9cab02d6a1f23623470355628d681f62546c129",
-      "target_sha256": "dda347b3b53401a680fe9aad6873a94a3b69e72aa2302020fdb8752fe4ea3a4c",
-      "reviewer": "Claude (Claude Code session; compared the Japanese and English figure images side by side: same plotted data and layout, labels translated (some compressed but faithful); provenance per the commits that drew the English figures: same saved results as the Japanese figures; no model execution)",
+      "source_sha256": "efebdaa618e4dad76f24135bcf37315fb6fdac07ac42c4547ebf1aebb134568b",
+      "target_sha256": "09306a6c9709c621f5d8d06527f790a89a97f2009767afc6d61dce63d12f2874",
+      "reviewer": "Claude (Claude Code session; English figure drawn by the same script with the en switch from the same results of 2026-11-10; compared side by side: same plotted data and layout, labels translated)",
       "method": "assistant",
-      "reviewed_on": "2026-10-29"
+      "reviewed_on": "2026-11-10"
     },
     {
       "source": "examples/badland_round/figs/maps_strata3.png",
       "target": "examples/badland_round/en/figs/maps_strata3.png",
-      "source_sha256": "d032f36bd1820cfba1863cf8c10f08a25f523cbc7bc4f4a43cc339f906b91197",
-      "target_sha256": "9d904c054b95f86ed8caf2e5bf5f089e8a7c76700abf3a1a395361d62f65efc1",
-      "reviewer": "Claude (Claude Code session; compared the Japanese and English figure images side by side: same plotted data and layout, labels translated (some compressed but faithful); provenance per the commits that drew the English figures: same saved results as the Japanese figures; no model execution)",
+      "source_sha256": "efe07612df38a0b7084adf5f52ec79ec5afa94ae6ca4e4cca8bdd7a466f80723",
+      "target_sha256": "57cbc1ac725b422f628509e9ab5f13ea4595b928b6657778e03e6d7ec52b60e5",
+      "reviewer": "Claude (Claude Code session; English figure drawn by the same script with the en switch from the same results of 2026-11-10; compared side by side: same plotted data and layout, labels translated)",
       "method": "assistant",
-      "reviewed_on": "2026-10-29"
+      "reviewed_on": "2026-11-10"
     },
     {
       "source": "examples/badland_round/figs/mechanism.png",
@@ -1076,83 +1076,83 @@
     {
       "source": "examples/badland_round/figs/radial.png",
       "target": "examples/badland_round/en/figs/radial.png",
-      "source_sha256": "ef919e6d10da474b0e7d0bf0ef74fd7204dcde4f39cb53884cb7b015de176b0f",
-      "target_sha256": "c72fc0d863c0ca894bebf343e02210eb7fc67644884af7a819222384ad48fff4",
-      "reviewer": "Claude (Claude Code session; compared the Japanese and English figure images side by side: same plotted data and layout, labels translated (some compressed but faithful); provenance per the commits that drew the English figures: same saved results as the Japanese figures; no model execution)",
+      "source_sha256": "3556d391c0b9c7c9a3aff5f844a08776dc28f440d91c37c5e4c4aeaadaa79c58",
+      "target_sha256": "7ad2b2ab3212446cd24b8dbb38e33617c3879d9932b08a916d5d253048a13c79",
+      "reviewer": "Claude (Claude Code session; English figure drawn by the same script with the en switch from the same results of 2026-11-10; compared side by side: same plotted data and layout, labels translated)",
       "method": "assistant",
-      "reviewed_on": "2026-10-29"
+      "reviewed_on": "2026-11-10"
     },
     {
       "source": "examples/badland_round/figs/radial_strata.png",
       "target": "examples/badland_round/en/figs/radial_strata.png",
-      "source_sha256": "401782959e1391fb3ae3d433fd054fdc2f0ee01757f530c3d36a6d81d2479000",
-      "target_sha256": "19aea569c6e80cf3410db9d515a3797afd78777741c5be5538f10fa003bd7f54",
-      "reviewer": "Claude (Claude Code session; compared the Japanese and English figure images side by side: same plotted data and layout, labels translated (some compressed but faithful); provenance per the commits that drew the English figures: same saved results as the Japanese figures; no model execution)",
+      "source_sha256": "470545f69dd8c4b4695e1f0b016e8d4b77480768ad9a45f3efb078b1b4eec1ff",
+      "target_sha256": "0ee1da61b2c04e4ea215e67e452b2e502bc829cb55c69a30c1fb53a3b7a2ad16",
+      "reviewer": "Claude (Claude Code session; English figure drawn by the same script with the en switch from the same results of 2026-11-10; compared side by side: same plotted data and layout, labels translated)",
       "method": "assistant",
-      "reviewed_on": "2026-10-29"
+      "reviewed_on": "2026-11-10"
     },
     {
       "source": "examples/badland_round/figs/radial_strata3.png",
       "target": "examples/badland_round/en/figs/radial_strata3.png",
-      "source_sha256": "c31ab272626ea1c426dc85c4a939539c3af1230f978b846a1afee703f0847dd8",
-      "target_sha256": "0a6a351ae8c71f14f49d34366875ab61358f57e7b37c06a2b00c74d53e293cfa",
-      "reviewer": "Claude (Claude Code session; compared the Japanese and English figure images side by side: same plotted data and layout, labels translated (some compressed but faithful); provenance per the commits that drew the English figures: same saved results as the Japanese figures; no model execution)",
+      "source_sha256": "e1aac337c687854e2b4332a57c86191b68c6866c4dc2973a73444308d8a7ce72",
+      "target_sha256": "aadbf7edc34822e34644bd40aacbf10e7fb9d84daf18739bd84683381f26e49c",
+      "reviewer": "Claude (Claude Code session; English figure drawn by the same script with the en switch from the same results of 2026-11-10; compared side by side: same plotted data and layout, labels translated)",
       "method": "assistant",
-      "reviewed_on": "2026-10-29"
+      "reviewed_on": "2026-11-10"
     },
     {
       "source": "examples/badland_round/figs/rounding.png",
       "target": "examples/badland_round/en/figs/rounding.png",
-      "source_sha256": "e81bb72964853dc69ace0026c70acdcfc7811f9b9848972c0d3ec241af6ed265",
-      "target_sha256": "6150bfc6669ee488426eff615ea44709b1e833b1b4eb43ba154145640451ec66",
-      "reviewer": "Claude (Claude Code session; compared the Japanese and English figure images side by side: same plotted data and layout, labels translated (some compressed but faithful); provenance per the commits that drew the English figures: same saved results as the Japanese figures; no model execution)",
+      "source_sha256": "57faa4b2f0f8bf2d0238fab18d5ad17702dcfeb78b808b580bd4192c3fb9456d",
+      "target_sha256": "c9f886b15128a09052fee6217ecfe428fec78500a112cd071244bcc0ec4c9e17",
+      "reviewer": "Claude (Claude Code session; English figure drawn by the same script with the en switch from the same results of 2026-11-10; compared side by side: same plotted data and layout, labels translated)",
       "method": "assistant",
-      "reviewed_on": "2026-10-29"
+      "reviewed_on": "2026-11-10"
     },
     {
       "source": "examples/badland_round/figs/rounding_strata.png",
       "target": "examples/badland_round/en/figs/rounding_strata.png",
-      "source_sha256": "db158f1c9637be37261d707816e817d38b420c10823e39b3597e4b3e5f33ea57",
-      "target_sha256": "6b4c8b239a6cd94b561364bee950694636d6d05eb62f885fa00236b12ea779d9",
-      "reviewer": "Claude (Claude Code session; compared the Japanese and English figure images side by side: same plotted data and layout, labels translated (some compressed but faithful); provenance per the commits that drew the English figures: same saved results as the Japanese figures; no model execution)",
+      "source_sha256": "abcfce8c764243df78c149081424a2941b8eb807144b8da12a28db644abdb7e1",
+      "target_sha256": "fd0d14ecb26c9da1c893c36239b584673c3990bef6f769bf5b1c1899927dd664",
+      "reviewer": "Claude (Claude Code session; English figure drawn by the same script with the en switch from the same results of 2026-11-10; compared side by side: same plotted data and layout, labels translated)",
       "method": "assistant",
-      "reviewed_on": "2026-10-29"
+      "reviewed_on": "2026-11-10"
     },
     {
       "source": "examples/badland_round/figs/rounding_strata3.png",
       "target": "examples/badland_round/en/figs/rounding_strata3.png",
-      "source_sha256": "5376e7de42f810e9c8c006c576d3e2fe4b2c6accdcac62e68cf187e91bea2e07",
-      "target_sha256": "e456003e272161338239a25cbb4d62267dffad0891b810e551c715ec36775dd8",
-      "reviewer": "Claude (Claude Code session; compared the Japanese and English figure images side by side: same plotted data and layout, labels translated (some compressed but faithful); provenance per the commits that drew the English figures: same saved results as the Japanese figures; no model execution)",
+      "source_sha256": "9801ce3d477695235df5b1974d5748044337327adc25cb1e71ec4c2d8cb35a6d",
+      "target_sha256": "f01134ff6f6833e53e1ff681022be8299080ea110ca2a2db73a6f2817e6affc6",
+      "reviewer": "Claude (Claude Code session; English figure drawn by the same script with the en switch from the same results of 2026-11-10; compared side by side: same plotted data and layout, labels translated)",
       "method": "assistant",
-      "reviewed_on": "2026-10-29"
+      "reviewed_on": "2026-11-10"
     },
     {
       "source": "examples/badland_round/figs/sections.png",
       "target": "examples/badland_round/en/figs/sections.png",
-      "source_sha256": "d99855a0fa4b52339f8f355050f4669876b2232cea9dc5143b794bb88ebbab55",
-      "target_sha256": "044ff6977b5a32815a35b6b3d81b5388014e7869a31d58a5033c6e30b20875d9",
-      "reviewer": "Claude (Claude Code session; compared the Japanese and English figure images side by side: same plotted data and layout, labels translated (some compressed but faithful); provenance per the commits that drew the English figures: same saved results as the Japanese figures; no model execution)",
+      "source_sha256": "97dd6360a8535d930979600ef4ec3d71a302393553f0c51a7e49877c2baadeec",
+      "target_sha256": "c5041c243a04e2dfdc9d2f8a145525b6a14f6271139e5eed07058cfd66d05994",
+      "reviewer": "Claude (Claude Code session; English figure drawn by the same script with the en switch from the same results of 2026-11-10; compared side by side: same plotted data and layout, labels translated)",
       "method": "assistant",
-      "reviewed_on": "2026-10-29"
+      "reviewed_on": "2026-11-10"
     },
     {
       "source": "examples/badland_round/figs/sections_strata.png",
       "target": "examples/badland_round/en/figs/sections_strata.png",
-      "source_sha256": "575d35b46dad4c5f3346bac4c02491d19f3a778b33aae797c30fa0864400ca7c",
-      "target_sha256": "77bb7dfe7d585ff3fa49d097ade11a50bba7e0f1dacc5d660d2b30a2d064d24d",
-      "reviewer": "Claude (Claude Code session; compared the Japanese and English figure images side by side: same plotted data and layout, labels translated (some compressed but faithful); provenance per the commits that drew the English figures: same saved results as the Japanese figures; no model execution)",
+      "source_sha256": "eb20059dad40360982e4cb6dec1168042c44b893144a4848adef8b5ac2a27259",
+      "target_sha256": "dafe7d5d4dd448f6ac2f165f1df73ca5825ea38f9671ad10848d6ae6a2b50695",
+      "reviewer": "Claude (Claude Code session; English figure drawn by the same script with the en switch from the same results of 2026-11-10; compared side by side: same plotted data and layout, labels translated)",
       "method": "assistant",
-      "reviewed_on": "2026-10-29"
+      "reviewed_on": "2026-11-10"
     },
     {
       "source": "examples/badland_round/figs/sections_strata3.png",
       "target": "examples/badland_round/en/figs/sections_strata3.png",
-      "source_sha256": "b78d1588beaf1e2460f64f4031179d09a9ac299b075e82c9ff7e8aebe4c94b8f",
-      "target_sha256": "0b5ba490afa7ff9a337c4b2e6aa5c88e3d910ce2e9ec9523f6140611bebfbde7",
-      "reviewer": "Claude (Claude Code session; compared the Japanese and English figure images side by side: same plotted data and layout, labels translated (some compressed but faithful); provenance per the commits that drew the English figures: same saved results as the Japanese figures; no model execution)",
+      "source_sha256": "91344c99299b4566796b2fea3690c319070d45bd64cd078437515814829761f2",
+      "target_sha256": "124b883ea0f67740ac4bfb3bf9ff973b00d88a038e3cc0666a3404fbab5ffa2d",
+      "reviewer": "Claude (Claude Code session; English figure drawn by the same script with the en switch from the same results of 2026-11-10; compared side by side: same plotted data and layout, labels translated)",
       "method": "assistant",
-      "reviewed_on": "2026-10-29"
+      "reviewed_on": "2026-11-10"
     },
     {
       "source": "examples/badland_round/figs/setup.png",
