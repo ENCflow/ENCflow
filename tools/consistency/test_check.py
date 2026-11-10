@@ -77,6 +77,72 @@ def tests_repo(ja=README_JA, en=README_EN, dirs=("a", "b"), refs=("a",)):
     return root
 
 
+GUIDE_TOC = """\
+# ガイド
+
+- [骨格](#骨格)
+- [時刻](users_guide/time.md) — 説明 <details><summary>解説(2 件)</summary>
+  - [入門](users_guide/courant.md) — 説明
+  - [方針](users_guide/policy.md) — 説明
+  </details>
+- [構造物](users_guide/structure.md) <details><summary>解説(1 件)</summary>
+  - [水理則](users_guide/hydraulics.md) — 説明
+  </details>
+- [索引](users_guide/params_index.md)
+
+---
+
+- [本文の箇条書き](users_guide/time.md)
+  - [目次ではない](users_guide/other.md)
+"""
+
+TUTORIAL_TABLE = """\
+本文
+
+| 分野(章ページ) | 詳説ページ |
+|---|---|
+| [時刻](users_guide/time.md) | [入門](users_guide/courant.md)(入門)、[方針](users_guide/policy.md) |
+| [構造物](users_guide/structure.md)・[境界](users_guide/boundary.md) | [水理則](users_guide/hydraulics.md) |
+
+本文
+"""
+
+
+def guide_repo(table=TUTORIAL_TABLE, toc=GUIDE_TOC):
+    root = Path(tempfile.mkdtemp())
+    write(root, "docs/users_guide.md", toc)
+    write(root, "docs/en/users_guide.md", toc)
+    write(root, "docs/tutorial.md", table)
+    write(root, "docs/en/tutorial.md", table.replace("| 分野(章ページ) | 詳説ページ |",
+                                                    "| Field (chapter page) | Explanation pages |"))
+    return root
+
+
+class GuideTest(unittest.TestCase):
+    def test_clean_and_toc_ends_at_rule(self):
+        # 水平線より後の字下げの箇条書き(other.md)は目次に数えない
+        root = guide_repo()
+        self.assertEqual(check.guide_explanations(root / "docs/users_guide.md"),
+                         {"users_guide/courant.md": "users_guide/time.md",
+                          "users_guide/policy.md": "users_guide/time.md",
+                          "users_guide/hydraulics.md": "users_guide/structure.md"})
+        self.assertEqual(check.check_guide(root)[0], [])
+
+    def test_missing_extra_duplicate_and_wrong_row(self):
+        bad = (TUTORIAL_TABLE.replace("、[方針](users_guide/policy.md)", "、[他](users_guide/other.md)")
+               .replace("[水理則](users_guide/hydraulics.md) |", "[水理則](users_guide/hydraulics.md)、[入門](users_guide/courant.md) |"))
+        errors, _ = check.check_guide(guide_repo(bad))
+        self.assertTrue(any("policy.md (under users_guide/time.md" in e and "missing" in e for e in errors))
+        self.assertTrue(any("other.md is not an explanation page" in e for e in errors))
+        self.assertTrue(any("courant.md is listed 2 times" in e for e in errors))
+        self.assertTrue(any("courant.md is under users_guide/time.md" in e and "left column" in e for e in errors))
+        self.assertEqual(len([e for e in errors if e.startswith("docs/en/tutorial.md")]), 4)
+
+    def test_table_not_found(self):
+        errors, _ = check.check_guide(guide_repo(TUTORIAL_TABLE.replace("詳説ページ |", "解説 |")))
+        self.assertTrue(any("docs/tutorial.md: the table" in e and "was not found" in e for e in errors))
+
+
 class SamplesTest(unittest.TestCase):
     def test_clean(self):
         errors, notes = check.check_samples(samples_repo())

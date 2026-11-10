@@ -1,7 +1,8 @@
 #!/usr/bin/env python3
-"""設定例(List_samples)と検証ケースの一覧(test/README)の一貫性検査。Python 標準ライブラリのみ。
+"""設定例(List_samples)・検証ケースの一覧(test/README)・チュートリアルの詳説ページの表の一貫性検査。
+Python 標準ライブラリのみ。
 
-  python3 tools/consistency/check.py [--root DIR] [samples] [tests]   (省略時は両方)
+  python3 tools/consistency/check.py [--root DIR] [samples] [tests] [guide]   (省略時はすべて)
 
 samples: examples/List_samples/list_*.txt と英語ミラー en/list_*.txt の各グループ(`&名前` から
   `/` の行まで。名前の末尾の `_数字` は同じグループの別の例で、その名前の namelist が src に
@@ -20,6 +21,10 @@ tests: test/README.md(英語版 test/README.en.md)のケース一覧の表を te
   2. 英語版の表が同じディレクトリを同じ順に並べる
   3. 「検証」の列(表の最後の列)に ref と書くのは reference/ を持つケースだけで、reference/ を
      持つケースには ref と書く
+guide: docs/tutorial.md(英語版 docs/en/tutorial.md)の「分野(章ページ) | 詳説ページ」の表を、
+  docs/users_guide.md(英語版)の目次(最初の水平線まで)で章の下に字下げして並ぶ詳説ページと照合する。
+  1. 目次の詳説ページが表に 1 回ずつあり、表の詳説ページが目次にある
+  2. 表の行の左の列に、その詳説ページの目次での親の章がある
 不一致があれば行ごとに報告して終了コード 1。索引・文書を生成・変更はしない(developer.md §35.1)。
 """
 from __future__ import annotations
@@ -38,6 +43,9 @@ EXCLUDE_GROUPS = {"save_info", "wavefield_info"}   # 再開ヘッダ(利用者�
 # 宣言に数えず、設定例に書かれていたら誤りとする(developer.md §103)。tools/params_index/check.py にも同じ集合がある
 REMOVED = {("list_sysparam", "fn_reservoir")}
 EXCLUDE_TEST_DIRS = {"Scripts"}
+GUIDE = {"ja": "docs/users_guide.md", "en": "docs/en/users_guide.md"}
+TUTORIAL = {"ja": "docs/tutorial.md", "en": "docs/en/tutorial.md"}
+TUTORIAL_HEADER = {"ja": "| 分野(章ページ) | 詳説ページ |", "en": "| Field (chapter page) | Explanation pages |"}
 
 NAMELIST = re.compile(r"^\s*namelist\s*/\s*(\w+)\s*/\s*(.*)$", re.I)
 HEADER = re.compile(r"^\s*&(\w+)")
@@ -45,6 +53,9 @@ ASSIGN = re.compile(r"^\s*(!?)([A-Za-z]\w*)\s*(\([^)]*\))?\s*=(?!=)\s*([^!]*)")
 MENTION = re.compile(r"^\s*!*\s*([A-Za-z]\w*)\s*(?:\([^)]*\))?\s*=(?!=)")
 ROW = re.compile(r"^\|\s*\[([^\]/]+)/?\]\([^)]*\)\s*\|.*\|\s*([^|]*?)\s*\|\s*$")
 REF = re.compile(r"\bref\b")
+TOC_CHAPTER = re.compile(r"^- \[[^\]]*\]\((users_guide/[\w.-]+\.md)\)")
+TOC_SUB = re.compile(r"^ {2,4}- \[[^\]]*\]\((users_guide/[\w.-]+\.md)\)")
+GUIDE_LINK = re.compile(r"\]\((users_guide/[\w.-]+\.md)\)")
 
 
 def text(path: Path) -> str:
@@ -211,14 +222,76 @@ def check_tests(root: Path) -> tuple[list[str], list[str]]:
     return errors, notes
 
 
+def guide_explanations(path: Path) -> dict[str, str]:
+    """ユーザーガイドの目次(最初の水平線まで)の詳説ページ → 親の章ページ"""
+    parent, out = None, {}
+    for line in text(path).split("\n"):
+        if line.strip() == "---":
+            break
+        m = TOC_CHAPTER.match(line)
+        if m:
+            parent = m.group(1)
+            continue
+        m = TOC_SUB.match(line)
+        if m and parent:
+            out[m.group(1)] = parent
+    return out
+
+
+def tutorial_rows(path: Path, header: str):
+    """チュートリアルの「分野(章ページ) | 詳説ページ」の表 → [(行番号, {章ページ}, [詳説ページ])]。表がなければ None"""
+    lines = text(path).split("\n")
+    if header not in lines:
+        return None
+    rows = []
+    for i in range(lines.index(header) + 2, len(lines)):
+        if not lines[i].startswith("|"):
+            break
+        cells = lines[i].strip().strip("|").split("|")
+        left, right = (cells[0], "|".join(cells[1:])) if len(cells) > 1 else (cells[0], "")
+        rows.append((i + 1, set(GUIDE_LINK.findall(left)), GUIDE_LINK.findall(right)))
+    return rows
+
+
+def check_guide(root: Path) -> tuple[list[str], list[str]]:
+    errors, notes = [], []
+    for lang in ("ja", "en"):
+        guide, tutorial = root / GUIDE[lang], root / TUTORIAL[lang]
+        missing = [str(p.relative_to(root)) for p in (guide, tutorial) if not p.exists()]
+        if missing:
+            errors.append(f"{', '.join(missing)}: not found")
+            continue
+        toc = guide_explanations(guide)
+        rows = tutorial_rows(tutorial, TUTORIAL_HEADER[lang])
+        if rows is None:
+            errors.append(f"{TUTORIAL[lang]}: the table {TUTORIAL_HEADER[lang]!r} was not found")
+            continue
+        seen = Counter()
+        for no, chapters, pages in rows:
+            for page in pages:
+                seen[page] += 1
+                if page not in toc:
+                    errors.append(f"{TUTORIAL[lang]}:{no}: {page} is not an explanation page in the table of "
+                                  f"contents of {GUIDE[lang]}")
+                elif toc[page] not in chapters:
+                    errors.append(f"{TUTORIAL[lang]}:{no}: {page} is under {toc[page]} in {GUIDE[lang]}, "
+                                  f"which is not in the left column of this row")
+        for page, n in sorted(seen.items()):
+            if n > 1:
+                errors.append(f"{TUTORIAL[lang]}: {page} is listed {n} times")
+        for page in sorted(set(toc) - set(seen)):
+            errors.append(f"{TUTORIAL[lang]}: {page} (under {toc[page]} in {GUIDE[lang]}) is missing from the table")
+    return errors, notes
+
+
 def main(argv=None) -> int:
     ap = argparse.ArgumentParser(description=__doc__.split("\n")[0])
     ap.add_argument("--root", default=Path(__file__).resolve().parents[2], type=Path)
-    ap.add_argument("what", nargs="*", choices=["samples", "tests"], help="checks to run (default: both)")
+    ap.add_argument("what", nargs="*", choices=["samples", "tests", "guide"], help="checks to run (default: all)")
     args = ap.parse_args(argv)
-    what = args.what or ["samples", "tests"]
+    what = args.what or ["samples", "tests", "guide"]
     errors_all = []
-    for name, fn in (("samples", check_samples), ("tests", check_tests)):
+    for name, fn in (("samples", check_samples), ("tests", check_tests), ("guide", check_guide)):
         if name not in what:
             continue
         errors, notes = fn(args.root)
