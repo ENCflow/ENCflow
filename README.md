@@ -302,17 +302,13 @@ through the standard initialize / update / get_value / set_value calls.
   runs, or sweep through many scenarios from a script.
 - **Combine it with other models** — BMI is a common socket adopted by
   models across hydrology, geomorphology, oceanography, snow and ice,
-  and beyond, for plugging models into one another. It is a door to
-  going beyond ENCflow's own limits: physics that ENCflow deliberately
-  leaves out, such as deep three-dimensional groundwater or the growth
-  of waves by wind,
-  can be solved in one connected system by exchanging state with the
-  specialist model of that field. And the direction reverses: external
-  systems can call on ENCflow's flood hydraulics as an engine. A
-  continental-scale hydrology model can dispatch ENCflow to resolve
-  high-resolution inundation just in the basins at risk, or a
-  forecasting system that assimilates observations while it runs can
-  use ENCflow as its flood component.
+  and beyond, for plugging models into one another, and a door beyond
+  ENCflow's own limits. Physics that ENCflow leaves out, such as deep
+  three-dimensional groundwater or the growth of waves by wind, can be
+  solved together with the specialist model of that field by exchanging
+  state; conversely, a continental-scale hydrology model or a
+  forecasting system that assimilates observations can call ENCflow as
+  its high-resolution flood component.
 - **A whole model, or a small part** — ENCflow is a self-contained model
   with many processes, yet a feature that is not enabled costs no memory
   and no CPU, and needs no parameter file of its own. Minimal
