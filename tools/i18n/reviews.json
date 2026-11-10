@@ -13,9 +13,9 @@
     {
       "source": "README.ja.md",
       "target": "README.md",
-      "source_sha256": "c07d5a7ad29988db206c80be7f6f2e7fe8d61c7208a87f30538985c666114dcc",
-      "target_sha256": "4785a4a38b22364631a6e452ad31bc4278cecca7ca52b0c5dac27d3775e8bbbe",
-      "reviewer": "Claude (Claude Code session; 'What it deliberately does not do' shortened in both versions; kept only the 'can do' notes that bound or explain a limit (coastal-wave estimate, ash-fall preprocessing, fresh/salt sharp interface, sewer continuum); read side by side)",
+      "source_sha256": "ba4fd72689e65431e47f3676f1c3e43b3fd41695140d4a7e179129c5ea1788c3",
+      "target_sha256": "4fdd8dc65de995cfa3b6dce83c2046a3f30a1431ab8a7ca34f817a52380c9858",
+      "reviewer": "Claude (Claude Code session; BMI 'combine with other models' item shortened to about the length of the 'whole model, or a small part' item in both versions, keeping what BMI is and both coupling directions; read side by side)",
       "method": "assistant",
       "reviewed_on": "2026-11-10"
     },
