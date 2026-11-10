@@ -968,38 +968,38 @@
     {
       "source": "examples/badland/README.md",
       "target": "examples/badland/en/README.md",
-      "source_sha256": "62d6af25ffef670d586b54b97974c3cf07a25cd10101d4a589aa00c15f4fc6c2",
-      "target_sha256": "831ad8b0e166f744cd1cf34fc36d421d11891c503fc3bae17692f8f7562d7f8e",
-      "reviewer": "Claude (Claude Code session; corrected both versions in parallel against the inputs, scripts and committed figures, and compared the edited passages and numbers)",
+      "source_sha256": "92d5b1e7b794900641cc12db1ef5ccad6d9986fcd66183f4adf4c5219ed2f344",
+      "target_sha256": "f7303c59a8d2bdb3df4bfe7ad395c40c0ee3aff22df8b2f12b54518c2ed4f2c1",
+      "reviewer": "Claude (Claude Code session; recomputation of 2026-11-10 with the 9-point creep and dry-slope stencils: the main-case table and bullets, the spacing-selection caption, table and note, the rewritten grid-curvature bullet (grooves on the cliff face, no penetration of the plateau), the l and grid-convergence bullets, the rockfall supplement and the spl_dzmax paragraph (rerun with 0.5 and 0.1 m) compared against the Japanese source and the printed tables of plot_results.py; no model execution)",
       "method": "assistant",
-      "reviewed_on": "2026-11-08"
+      "reviewed_on": "2026-11-10"
     },
     {
       "source": "examples/badland/figs/main_features.png",
       "target": "examples/badland/en/figs/main_features.png",
-      "source_sha256": "e6f99a2f9d153f300f25b3d2895a299f54b01b8f4ec12c7e98e2e8bc8d0b0b12",
-      "target_sha256": "af1f5802e31d03d116417731a8865258541141d087ace579f3019a4ff0bb561c",
-      "reviewer": "Claude (Claude Code session; both images drawn by plot_results.py and plot_results.py en from the same recomputed results of 2026-11-02, compared side by side: same plotted data and layout, labels translated; pixel difference from the previous version is confined to the corrected curvature title)",
+      "source_sha256": "8a40baeb52a4caf7984fd8903bf086459d882d8fd4c7b02421e1426e51edef0e",
+      "target_sha256": "15e5a8728737958fe3eb5748a858e5e6970ef1381226bfa62f7709790d479595",
+      "reviewer": "Claude (Claude Code session; English figure drawn by the same script with the en switch from the same results of 2026-11-10; compared side by side: same plotted data and layout, labels translated)",
       "method": "assistant",
-      "reviewed_on": "2026-11-02"
+      "reviewed_on": "2026-11-10"
     },
     {
       "source": "examples/badland/figs/main_maps.png",
       "target": "examples/badland/en/figs/main_maps.png",
-      "source_sha256": "621605dbe3eb675dca1bbca22cd09c0521fe07694484547508a7026e6e2298cc",
-      "target_sha256": "946848caaa7e611023bd9b58b17af025e9a19a91640e5ecf1690a1d25062a4a4",
-      "reviewer": "Claude (Claude Code session; compared the Japanese and English figure images side by side: same plotted data and layout, labels translated (some compressed but faithful); provenance per the commits that drew the English figures: same saved results as the Japanese figures; no model execution)",
+      "source_sha256": "ab0d09cdca47656f71b8ac391ffbd38558d64e7273e380aceae0ab7056a9d972",
+      "target_sha256": "154dec676b984a7c8d2e2b3637275b0f8bb80628762e22aa4b42b219f2427c82",
+      "reviewer": "Claude (Claude Code session; English figure drawn by the same script with the en switch from the same results of 2026-11-10; compared side by side: same plotted data and layout, labels translated)",
       "method": "assistant",
-      "reviewed_on": "2026-10-29"
+      "reviewed_on": "2026-11-10"
     },
     {
       "source": "examples/badland/figs/main_series.png",
       "target": "examples/badland/en/figs/main_series.png",
-      "source_sha256": "6c90605cdaee852b445b1e90fee98cfd40def343e9fe090bc893b883063fb7cd",
-      "target_sha256": "385485533c860d4956786f1616bfdb428c7c68b23e7b5827af50f0161d46bb84",
-      "reviewer": "Claude (Claude Code session; compared the Japanese and English figure images side by side: same plotted data and layout, labels translated (some compressed but faithful); provenance per the commits that drew the English figures: same saved results as the Japanese figures; no model execution)",
+      "source_sha256": "85076745ce036ac6416f0612122390729f75f9ee5b83791fdde37c3ab5f551e4",
+      "target_sha256": "361d0e639076327ed680624c5348b60130f0cac0ea54bf95b8f42440081c209c",
+      "reviewer": "Claude (Claude Code session; English figure drawn by the same script with the en switch from the same results of 2026-11-10; compared side by side: same plotted data and layout, labels translated)",
       "method": "assistant",
-      "reviewed_on": "2026-10-29"
+      "reviewed_on": "2026-11-10"
     },
     {
       "source": "examples/badland/figs/mechanism.png",
@@ -1022,11 +1022,11 @@
     {
       "source": "examples/badland/figs/spacing.png",
       "target": "examples/badland/en/figs/spacing.png",
-      "source_sha256": "ac80bfa18a101389b8dfa9430d263e47de1560a9689de332390743496fe388db",
-      "target_sha256": "a61f7ad658f9a9bfcc9aeb59b26036dbe0a5f63794700bbb416f88357d5543d3",
-      "reviewer": "Claude (Claude Code session; compared the Japanese and English figure images side by side: same plotted data and layout, labels translated (some compressed but faithful); provenance per the commits that drew the English figures: same saved results as the Japanese figures; no model execution)",
+      "source_sha256": "05cb9aa7fdd31f2c3b7ad0511aa7b148cea48bf0dde3dc5cfd15603ec577ffc8",
+      "target_sha256": "649fa34244e170fa2890a00b2366a89f09a8b328edbe36ccae8852b5c8f5b80d",
+      "reviewer": "Claude (Claude Code session; English figure drawn by the same script with the en switch from the same results of 2026-11-10; compared side by side: same plotted data and layout, labels translated)",
       "method": "assistant",
-      "reviewed_on": "2026-10-29"
+      "reviewed_on": "2026-11-10"
     },
     {
       "source": "examples/badland_round/README.md",
