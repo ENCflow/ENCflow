@@ -19748,7 +19748,8 @@ namelist 値による判定 = collective 安全)。`f_wavefield = 0` では流�
 vzcol・vzzone・wfshoal・wfshadow は reference とビット一致、wfcurrent・wfsed は reference を作ったマシンとの CPU の
 差の許容内(§90.18)で、同じマシンで変更前のソースから作った実行ファイルと比べると両ケースの全出力(88・134
 ファイル)がバイト一致(prmap・wfswash・gwlateral・gwtani・stg は検定型)。test/wfsed の param_bad6 は新しい
-メッセージで停止し、param_bad2 は従来のメッセージのまま。
+メッセージで停止し、param_bad2 は従来のメッセージのまま。MPI np=2(Open MPI 4.1.6)でも CI の 17 ケースが合格し、
+param_bad6 は案内を 1 回だけ表示して止まる(§103 の検証と同時に確認)。
 
 ## 91. 急勾配の重力補正の cos²θ を地盤の勾配の大きさで求める(格子の向きによる有効重力の偏りの修正。2026-11-04 挙動変更)
 
@@ -21926,3 +21927,8 @@ wfsed は CPU の差の許容内(§90.18)で、同じマシンで変更前のソ
 ファイル)がバイト一致)。CI にない fn_wave の test/wave_river(param_vmax)も変更前の実行ファイルと全出力(21
 ファイル)がバイト一致。fn_reservoir を書いた設定は案内を表示して終了コード 1 で止まり、結果ディレクトリを
 作らない。トップレベルの make(utils のリンク)が通る。i18n の監査・consistency・params_index・単体テストが合格。
+
+**検証(MPI np=2、Open MPI 4.1.6)**: CI の 17 ケースが合格(比べ方は逐次と同じで、wfcurrent・wfsed の許容内を除き
+reference とビット一致。gwtani・stg などの検定型は np=1 とのバイト比較・初期化の停止を含めて合格)。fn_reservoir を
+書いた設定と test/wfsed の param_bad6 は、np=2 でも案内を 1 回だけ表示して終了コード 1 で止まる(fn_reservoir は
+結果ディレクトリを作らない)。
