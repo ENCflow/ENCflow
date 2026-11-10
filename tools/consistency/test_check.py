@@ -5,6 +5,7 @@ import sys
 import tempfile
 import unittest
 from pathlib import Path
+from unittest import mock
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 import check  # noqa: E402
@@ -94,6 +95,18 @@ class SamplesTest(unittest.TestCase):
         errors, _ = check.check_samples(samples_repo(bad, bad))
         self.assertTrue(any("ad is not declared in namelist /list_a/" in e for e in errors))
         self.assertTrue(any("&list_z is not a namelist group" in e for e in errors))
+
+    def test_removed_parameter_is_reported(self):
+        # 廃止して検出だけ残す名前は宣言に数えず、設定例に書かれていたら誤り(未宣言とは別の文言)
+        with mock.patch.object(check, "REMOVED", {("list_a", "ab")}):
+            root = samples_repo()
+            self.assertEqual(check.namelists(root)["list_a"], {"aa", "ac"})
+            errors, _ = check.check_samples(root)
+            self.assertTrue(any("ab was removed from namelist /list_a/" in e for e in errors))
+            self.assertFalse(any("ab is not declared" in e for e in errors))
+            errors, _ = check.check_samples(samples_repo(SAMPLE.replace("  !ab = 2.5         ! コメントアウトした例\n", ""),
+                                                         SAMPLE.replace("  !ab = 2.5         ! コメントアウトした例\n", "")))
+            self.assertEqual(errors, [])
 
     def test_ja_en_differ(self):
         errors, _ = check.check_samples(samples_repo(en=SAMPLE.replace("!ab = 2.5", "!ab = 3.5")))

@@ -93,7 +93,6 @@ module m_sysparam
     character(:), allocatable :: fn_geoinfo    ! 地形条件設定ファイル
     character(:), allocatable :: fn_initial    ! 初期条件設定ファイル
     character(:), allocatable :: fn_precip     ! 降水条件設定ファイル
-    character(:), allocatable :: fn_reservoir  ! ため池条件設定ファイル
     character(:), allocatable :: fn_tide       ! 潮位条件設定ファイル
     character(:), allocatable :: fn_wave       ! 波浪条件設定ファイル(沿岸漂砂。§84.15)
     character(:), allocatable :: fn_boundary   ! 境界条件設定ファイル
@@ -236,7 +235,14 @@ subroutine m_sysparam_init(p, fn_sysparam)
   p%fn_geoinfo = list%fn_geoinfo               ! 地形条件設定ファイル
   p%fn_initial = list%fn_initial               ! 初期条件設定ファイル
   p%fn_precip = list%fn_precip                 ! 降水条件設定ファイル
-  p%fn_reservoir = list%fn_reservoir           ! ため池条件設定ファイル
+  ! fn_reservoir は廃止(2026-11-10。読んだファイルを結果ディレクトリへ写すだけで計算に使われていなかった。
+  ! ため池は &list_geoinfo の fn_rscap で与える。developer.md §103)。namelist には指定を検出するためだけに
+  ! 残し、書かれていたら案内して止める(全ランク同一の namelist 値なので collective 安全)
+  if (len_trim(list%fn_reservoir) > 0) then
+    call par_stop("list_sysparam: fn_reservoir was removed (it was not used in the computation);" &
+                  //" ponds are given by fn_rscap (pond storage limit depth, m) in &list_geoinfo" &
+                  //" (see docs/users_guide/geoinfo.md)")
+  end if
   p%fn_tide = list%fn_tide                     ! 潮位条件設定ファイル
   p%fn_wave = list%fn_wave                     ! 波浪条件設定ファイル
   p%fn_boundary = list%fn_boundary             ! 境界条件設定ファイル

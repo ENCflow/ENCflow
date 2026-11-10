@@ -102,7 +102,7 @@ phenomenon-specific setups. Individual chapters also link to relevant cases.
 - [Use cases](users_guide/usecases.md) -- lookup from phenomenon names to feature combinations (unsupported phenomena are listed too)
 
 **Appendix**
-- [Full parameter index](users_guide/params_index.md) -- reverse lookup from all 782 parameter names to their chapters
+- [Full parameter index](users_guide/params_index.md) -- reverse lookup from all 781 parameter names to their chapters
 
 ---
 
@@ -132,42 +132,41 @@ such as rainfall, add its `fn_XXX` entry to `&list_sysparam`.
 
 | Setting | When omitted |
 |---|---|
-| Geographic input `fn_geoinfo` | Read `&list_geoinfo` from the same file (geographic input must still be provided) |
+| [Geographic input](users_guide/geoinfo.md) `fn_geoinfo` | Read `&list_geoinfo` from the same file (geographic input must still be provided) |
 | [Initial conditions](users_guide/initial.md) `fn_initial` | Start dry |
 | [Shallow water computation](users_guide/swflow.md) `fn_enc` | Compute water flow with the default numerical settings |
 | [Boundary conditions](users_guide/boundary.md) `fn_boundary` | All four sides of the domain are impermeable walls (no water passes through) |
 
 The additional features below stay disabled unless you specify their `fn_XXX` entries.
 
-<details>
-<summary>Features you can add</summary>
+**Features you can add**
 
 | Feature | Configuration-file entry | namelist group |
 |---|---|---|
-| Tide and sea surface | `fn_tide` | &list_tide |
-| Coastal wave field (distribution of wave height and direction) | `fn_wavefield` | &list_wavefield |
-| Wave-driven longshore transport (arcuate and cuspate deltas, shoreline smoothing) | `fn_wave` | &list_wave ([Sediment and landform change](users_guide/geomorph.md), "Wave-driven longshore transport"; needs f_fluvial=1 in fn_geomorph) |
-| Internal hydraulic structures | `fn_structure` | &list_struct_pump / culvert / diversion / dam |
-| Ponds | `fn_reservoir` | (used together with geographic information) |
-| Channels | `fn_channel` | &list_channel (+ breach) |
-| [Precipitation](users_guide/forcing.md) | `fn_precip` | &list_precip |
-| Rainfall interception | `fn_intercept` | &list_intercept (+ model-specific) |
-| Weather forcing fields (air temperature etc.) | `fn_meteo` | &list_meteo |
-| Evapotranspiration | `fn_evap` | &list_evap |
-| Snow accumulation and snowmelt | `fn_snow` | &list_snow |
-| Glaciers | `fn_glacier` | &list_glacier |
-| Lava flows | `fn_lavaflow` | &list_lavaflow |
-| Prescribed bed motion | `fn_bedmotion` | &list_bedmotion |
-| Groundwater | `fn_gwflow` | &list_gwflow (+ model-specific) |
-| Fresh and salt water layers | `fn_salt` | &list_salt |
-| Sediment and landform change | `fn_geomorph` | &list_geomorph |
-| Driftwood | `fn_driftwood` | &list_driftwood |
-| Building destruction and debris | `fn_bldgdebris` | &list_bldgdebris |
-| Water quality (load runoff) | `fn_wq` | &list_wq |
-| Soil Water Index | `fn_swi` | &list_swi |
-| Measurement (probes, transects) | `fn_record` | &list_record |
-
-</details>
+| [Nesting](users_guide/nest.md) | `fn_nest` | &list_nest |
+| [Tide and sea surface](users_guide/tide.md) | `fn_tide` | &list_tide |
+| [Coastal wave field](users_guide/wavefield.md) | `fn_wavefield` | &list_wavefield |
+| [Wave-driven longshore transport](users_guide/geomorph.md#wave-driven-longshore-transport-fn_wave) | `fn_wave` | &list_wave (needs f_fluvial=1 in fn_geomorph) |
+| [Internal hydraulic structures](users_guide/structure.md) | `fn_structure` | &list_struct_pump / culvert / diversion / dam |
+| [Ponds](users_guide/geoinfo.md#ponds) | `fn_rscap` in the geographic information | &list_geoinfo |
+| [Channels](users_guide/channel.md) | `fn_channel` | &list_channel (+ breach) |
+| [Precipitation](users_guide/forcing.md#precipitation-list_precip) | `fn_precip` | &list_precip |
+| [Rainfall interception](users_guide/forcing.md#rainfall-interception-list_intercept) | `fn_intercept` | &list_intercept (+ model-specific) |
+| [Weather forcing fields](users_guide/forcing.md#meteorological-forcing-field-list_meteo) | `fn_meteo` | &list_meteo |
+| [Evapotranspiration](users_guide/forcing.md#evapotranspiration-list_evap) | `fn_evap` | &list_evap |
+| [Snow accumulation and snowmelt](users_guide/forcing.md#snowpack-and-snowmelt-list_snow) | `fn_snow` | &list_snow |
+| [Glaciers](users_guide/glacier.md) | `fn_glacier` | &list_glacier |
+| [Lava flows](users_guide/lavaflow.md) | `fn_lavaflow` | &list_lavaflow |
+| [Prescribed bed motion](users_guide/bedmotion.md) | `fn_bedmotion` | &list_bedmotion |
+| [Groundwater](users_guide/gwflow.md) | `fn_gwflow` | &list_gwflow (+ model-specific) |
+| [Fresh and salt water layers](users_guide/salt.md) | `fn_salt` | &list_salt |
+| [Sediment and landform change](users_guide/geomorph.md) | `fn_geomorph` | &list_geomorph |
+| [Driftwood](users_guide/driftwood.md) | `fn_driftwood` | &list_driftwood |
+| [Building destruction and debris](users_guide/bldgdebris.md) | `fn_bldgdebris` | &list_bldgdebris |
+| [Water quality](users_guide/wq.md) | `fn_wq` | &list_wq |
+| [Soil Water Index](users_guide/swi.md) | `fn_swi` | &list_swi |
+| [Vertical unsaturated flow runoff](users_guide/vz.md) | `fn_vz` | &list_vz (+ &list_vz_column / &list_vz_zone) |
+| [Measurement](users_guide/record.md) | `fn_record` | &list_record |
 
 For examples to build on, see the [working setup in test/wave](../../test/wave/en/README.md)
 or the [annotated parameter list](../../examples/List_samples/en/list_sysparam.txt).

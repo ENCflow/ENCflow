@@ -6075,6 +6075,9 @@ Cn_max)→ 場の最大値**。
   英語版 README.en.md の表が同じ並びであること、「検証」の列の ref の有無と reference/ の有無の
   一致を検査する(列の他の語は自由記述なので見ない)。導入時の検査で、表に載っていなかった
   bmi_vars・gwbed・sublattice(日英)を足した。設定例の名前の誤り・日英の不一致は 0 件だった。
+  **廃止して検出だけ残すパラメータ(2026-11-10)**: 指定を検出して案内付きで止めるためだけに namelist に
+  残す (グループ, 名前) は、両方の検査の `REMOVED` に登録する。索引の検査は対象外にし(索引・章ページを
+  要求しない)、設定例の検査は宣言に数えず、書かれていたら誤りにする(§103。最初の例は fn_reservoir)。
 
 - **geomorph 章の分割(2026-11-07。案 B)**: 説明図 9 枚と式のグラフを加えて 1400 行に近づいた
   geomorph 章を、上の役割分担(章ページ = とりあえず動かすための説明・表・制約、詳説ページ =
@@ -19713,6 +19716,41 @@ fig_wavefield.py(make_guide_figs.py wavefield。章の 2 枚)と fig_wavefield_m
 ない旨を図と本文に書いた)。matplotlib 3.11.2・IPAGothic で 2 回生成してバイト一致。コード・reference・既定値の
 変更はない。
 
+### 90.26 fn_wave の沿岸漂砂と波による流れ(wf_flow ≥ 1)の併用の停止(2026-11-10 挙動変更。利用者「全て推奨で」)
+
+**経緯**: ユーザーガイドの機能一覧に「沿岸の波浪場は波浪による沿岸漂砂(fn_wave)の上位互換」と書けるかを
+検討し、上位互換ではないと整理した(fn_wave は CERC 式の漂砂量そのもので、汀線の擾乱の減衰・成長が線形理論に
+一致することを test/wave_shore で検定済み。波浪場の漂砂は過程から求める量で test/wfsed の直線海岸で CERC の
+約 1.6 倍、高角の波の汀線の不安定は未検定。examples/delta の段 4・段 5 で汀線の形が異なる。使い分けは
+wavefield.md の冒頭の表)。その過程で、波浪場を流れだけに使い(`wf_flow` ≥ 1・`f_wfsed = 0`)、漂砂は fn_wave で
+与える組み合わせが、コードで止まらず、文書にも検証にもないことがわかった。
+
+**問題**: CERC 式の量は、斜めの砕波が起こす沿岸流による輸送を含む沿岸漂砂の総量である。`wf_flow` ≥ 1 では波で
+起きた沿岸流が浅水流に入り、fn_wave の前提の掃流砂(`f_fluvial = 1`)がその流れで砂を運ぶので、CERC の量に
+上乗せされ、同じ輸送の一部を二重に数える(fn_wave と過程の漂砂 f_wfsed を同時に有効にしない D4 と同じ理由)。
+
+**決定**: 開始時に停止する。代案の「注意書きだけ」は、もっともらしい結果を出せてしまうので採らない(§0 方針 13)。
+波による流れと漂砂を組むときは f_wfsed を使う。
+
+**実装**: m_geomorph_init が fn_wave の沿岸漂砂(`f_wave_longshore = 1`)を有効にしたとき共有状態の旗
+`s%wv_cerc` を立て(init の順は geomorph → wavefield。要求 `s%wv_sed` と同じ型)、m_wavefield_init が setup_params
+の後(`wf_flow` の既定の解決と検査の後)に `s%wv_cerc .and. wf%flow >= 1` なら par_stop する(全ランク同一の
+namelist 値による判定 = collective 安全)。`f_wavefield = 0` では流れに作用しないので止めない。f_wfsed = 1 と fn_wave
+の組み合わせは従来どおり m_geomorph_init が先に止める(test/wfsed の param_bad2 のメッセージは変わらない)。
+旗は論理値 1 個で、fn_wave と fn_wavefield を使わない計算の結果には関わらない。
+
+**検定**: test/wfsed に param_bad6(param_bad2 から f_wfsed を外した設定 = `wf_flow = 2` と fn_wave の沿岸漂砂)を
+足し、Run.sh の stop_check で停止とメッセージを確かめる。既存の test・examples・tutorials でこの組み合わせを使う
+ものはない(fn_wave と fn_wavefield を両方書くのは param_bad2 だけ)。文書は wavefield.md の「流れへの作用」と
+「適用範囲と併用の制限」、geomorph.md の fn_wave の「使い方」(日英)。
+
+**検証(2026-11-10、gfortran 13.2、逐次)**: CI の 17 ケースが合格。wave・dambreak・frost・pump・conduit・salt・
+vzcol・vzzone・wfshoal・wfshadow は reference とビット一致、wfcurrent・wfsed は reference を作ったマシンとの CPU の
+差の許容内(§90.18)で、同じマシンで変更前のソースから作った実行ファイルと比べると両ケースの全出力(88・134
+ファイル)がバイト一致(prmap・wfswash・gwlateral・gwtani・stg は検定型)。test/wfsed の param_bad6 は新しい
+メッセージで停止し、param_bad2 は従来のメッセージのまま。MPI np=2(Open MPI 4.1.6)でも CI の 17 ケースが合格し、
+param_bad6 は案内を 1 回だけ表示して止まる(§103 の検証と同時に確認)。
+
 ## 91. 急勾配の重力補正の cos²θ を地盤の勾配の大きさで求める(格子の向きによる有効重力の偏りの修正。2026-11-04 挙動変更)
 
 (定式化・ステンシル(どの辺にどのセルの地盤を使うか)・既往研究との比較・限界をまとめた
@@ -21853,3 +21891,44 @@ handoff 00n(2b)。出典は独自):
   ことによる test/bendloss の屈曲セルの水位、秩父 50 m の測線 3 の凹み、幅 50 m のサブグリッド河道の静振、計算時間
   +8 %)は新しい文書の §7 へ移した。swflow.md の「数セル以上の幅の河道では 0 とほぼ同じ値」は test/wetbank の値
   (4 セルで 0 が 12.2 %、3 が 6.6 %)と合わないので削った。
+
+## 103. fn_reservoir の廃止(2026-11-10 挙動変更。利用者の提案と「全て推奨で」)
+
+**経緯**: ユーザーガイドの機能一覧のため池の行が「`fn_reservoir` で有効」としていたが、&list_sysparam の
+`fn_reservoir`(宣言のコメントは「ため池条件設定ファイル」)は、指定されたファイルを結果ディレクトリへ写す
+(m_main の init_resultdir)だけで、どのモジュールも読んでいなかった。ため池は &list_geoinfo の `fn_rscap`
+(限界貯留高の分布。正値のセルがため池。m_geoinfo)で有効になる。文書の誤り(ユーザーガイドの表、io.md の
+f_out_hrs の条件、List_samples のコメント)を先に直した(文書のみ)うえで、利用者の提案「文書からは完全に
+消し、コードでは指定されたら fn_rscap へ誘導して停止」を採った。
+
+**決定**:
+
+- namelist /list_sysparam/ には `fn_reservoir` を指定の検出のためだけに残す。宣言ごと消すと、書かれた入力は
+  namelist の読込エラーになるが、その文面は処理系によって違い(名前を出さない処理系もある)、fn_rscap へ
+  案内できない。f_rntype = 2(§41)・f_advection_donor = 1・2(§102)の廃止と同じく、黙って無視せず案内して
+  止める(§41 の f_lusetype などは namelist から削除して読込エラーにした。公開前の判断)。
+- 値が空でなければ m_sysparam_init が par_stop で止め、fn_rscap(&list_geoinfo)と users_guide/geoinfo.md を
+  案内する(全ランク同一の namelist 値による判定 = collective 安全。結果ディレクトリを作る前に止まる)。
+  `""` を明示的に書いたものは未指定と同じで止めない。判定は m_* の init に置く(§12: list_* は読むだけ)。
+- t_sysparam の成分、init_resultdir の複写、`"-"` の正規化は削除。list_sysparam の宣言には「廃止(検出用)」と
+  書く。
+- 文書から消す: ユーザーガイドの機能一覧(ため池の行は「地理情報の fn_rscap」)、全パラメータ索引(日英。
+  781 項目)、List_samples(日英)。
+- **廃止して検出だけ残すパラメータの規約(新設)**: (グループ, 名前) を tools/params_index/check.py と
+  tools/consistency/check.py の `REMOVED` に登録する(両方に同じ集合。EXCLUDE_GROUPS と同じ置き方)。索引の
+  検査は宣言から除いて索引・章ページを要求せず、設定例の検査は宣言に数えず、書かれていたら「removed」として
+  誤りにする(単体テストあり)。後に宣言ごと消すときは REMOVED からも外す。
+
+既存の test・examples・tutorials で fn_reservoir を書いたものはない(List_samples のコメントアウトした例だけ
+だった)。
+
+**検証(2026-11-10、gfortran 13.2、逐次)**: CI の 17 ケースが合格(10 ケースは reference とビット一致、wfcurrent・
+wfsed は CPU の差の許容内(§90.18)で、同じマシンで変更前のソースから作った実行ファイルとは全出力(88・134
+ファイル)がバイト一致)。CI にない fn_wave の test/wave_river(param_vmax)も変更前の実行ファイルと全出力(21
+ファイル)がバイト一致。fn_reservoir を書いた設定は案内を表示して終了コード 1 で止まり、結果ディレクトリを
+作らない。トップレベルの make(utils のリンク)が通る。i18n の監査・consistency・params_index・単体テストが合格。
+
+**検証(MPI np=2、Open MPI 4.1.6)**: CI の 17 ケースが合格(比べ方は逐次と同じで、wfcurrent・wfsed の許容内を除き
+reference とビット一致。gwtani・stg などの検定型は np=1 とのバイト比較・初期化の停止を含めて合格)。fn_reservoir を
+書いた設定と test/wfsed の param_bad6 は、np=2 でも案内を 1 回だけ表示して終了コード 1 で止まる(fn_reservoir は
+結果ディレクトリを作らない)。

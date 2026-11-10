@@ -179,6 +179,9 @@ module m_state
     ! 更新ごとにハロまで埋める(向きは流速 u・v と同じ = x 東・y 南)。漂砂の推定
     ! (固体体積の単位幅輸送量)は m_geomorph が更新ごとに帯へ書く
     logical :: wv_sed = .false.         ! 波浪場の土砂への作用(攪拌と、Euler 平均流速・岸向きの速度の輸送)
+    ! fn_wave の沿岸漂砂(CERC 型。f_wave_longshore = 1)が有効(m_geomorph_init が立てる)。波による
+    ! 流れ(wf_flow >= 1)との併用を m_wavefield_init が止めるためだけに使う(§90.26)
+    logical :: wv_cerc = .false.
     real, allocatable :: wvex(:,:)      ! 平均波向の単位ベクトルの x 成分(無波 0)
     real, allocatable :: wvey(:,:)      ! 同 y 成分(南が正)
     real, allocatable :: wvae(:,:)      ! 底面の軌道の振幅 A = √2 u_rms/σ̄ (m)

@@ -104,7 +104,9 @@ module list_sysparam
     character(len=maxpathlen) :: fn_geoinfo = "-"        ! 地形条件設定ファイル(必須)
     character(len=maxpathlen) :: fn_initial = ""         ! 初期条件設定ファイル
     character(len=maxpathlen) :: fn_precip = ""          ! 降水条件設定ファイル
-    character(len=maxpathlen) :: fn_reservoir = ""       ! ため池条件設定ファイル
+    character(len=maxpathlen) :: fn_reservoir = ""       ! 廃止(計算に使われていなかった。ため池は
+                                                         !   &list_geoinfo の fn_rscap)。指定を検出して
+                                                         !   止めるためだけに残す(m_sysparam。developer.md §103)
     character(len=maxpathlen) :: fn_tide = ""            ! 潮位条件設定ファイル
     character(len=maxpathlen) :: fn_boundary = ""        ! 境界条件設定ファイル
     character(len=maxpathlen) :: fn_structure = ""       ! 内部水理構造物設定ファイル
@@ -223,7 +225,7 @@ subroutine list_sysparam_read(list, fn_sysparam)
   character(:), allocatable :: fn_geoinfo    ! 地形条件設定ファイル
   character(:), allocatable :: fn_initial    ! 初期条件設定ファイル
   character(:), allocatable :: fn_precip     ! 降水条件設定ファイル
-  character(:), allocatable :: fn_reservoir  ! ため池条件設定ファイル
+  character(:), allocatable :: fn_reservoir  ! 廃止(検出用。上の注)
   character(:), allocatable :: fn_tide       ! 潮位条件設定ファイル
   character(:), allocatable :: fn_boundary   ! 境界条件設定ファイル
   character(:), allocatable :: fn_structure  ! 内部水理構造物設定ファイル
@@ -509,7 +511,6 @@ subroutine list_sysparam_read(list, fn_sysparam)
   if (trim(list%fn_geoinfo) == "-") list%fn_geoinfo = trim(fn_sysparam)
   if (trim(list%fn_initial) == "-") list%fn_initial = trim(fn_sysparam)
   if (trim(list%fn_precip) == "-") list%fn_precip = trim(fn_sysparam)
-  if (trim(list%fn_reservoir) == "-") list%fn_reservoir = trim(fn_sysparam)
   if (trim(list%fn_tide) == "-") list%fn_tide = trim(fn_sysparam)
   if (trim(list%fn_boundary) == "-") list%fn_boundary = trim(fn_sysparam)
   if (trim(list%fn_structure) == "-") list%fn_structure = trim(fn_sysparam)

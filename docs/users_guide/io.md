@@ -139,7 +139,7 @@ H・H9999 と、常に保存する開始時の地盤高 Z0000・領域マスク 
 | f_out_pre | 0 | Pr | 降雨強度 (mm/h) |
 | f_out_fr / f_out_cn | 0 | Fr / Cn | フルード数 / クーラン数 |
 | f_out_hg | 0 | Hg | 地下貯留水深 (m)(fn_gwflow 有効時。風化基岩層有効時は Hg2、管路連続体層有効時は Hgc、淡塩2層有効時は Hgs、水質の浸透同伴 f_wq_infil=1 時は地下質量プール Cg (g/m²) も出力) |
-| f_out_hrs | 0 | Hrs | ため池水深 (m)(fn_reservoir 有効時) |
+| f_out_hrs | 0 | Hrs | ため池水深 (m)(地理情報の fn_rscap を与えたとき) |
 | f_out_hs | 0 | Hs | 土砂柱状量 (m)(土砂プロセス有効時。濃度 C = hs/(h+hs) の可視化に) |
 | f_out_hd | 0 | Hd | 流動流木の柱状材積 (m³/m²)([流木](driftwood.md)有効時) |
 | f_out_wd | 0 | Wd / Wd9999 | 堆積流木 (m³/m²) と期間最大到達量 max(流動+堆積)(流木ハザードマップ) |

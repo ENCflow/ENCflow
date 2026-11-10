@@ -2,7 +2,7 @@
 
 [ユーザーガイド目次へ](../users_guide.md)
 
-namelist パラメータ名から章を引く索引です(アルファベット順、全 782 項目)。
+namelist パラメータ名から章を引く索引です(アルファベット順、全 781 項目)。
 この索引は list_*.f90 の namelist 宣言から機械抽出で生成されています
 (developer.md §35.1)。
 
@@ -423,7 +423,6 @@ namelist パラメータ名から章を引く索引です(アルファベット�
 | fn_pump_in_cell | &list_struct_pump | [構造物](structure.md) |
 | fn_pump_out_cell | &list_struct_pump | [構造物](structure.md) |
 | fn_record | &list_sysparam | [第I部(機能の有効化)](../users_guide.md) |
-| fn_reservoir | &list_sysparam | [第I部(機能の有効化)](../users_guide.md) |
 | fn_rn | &list_geoinfo | [地理情報](geoinfo.md) |
 | fn_rock | &list_geomorph | [土砂・地形変化](geomorph.md) |
 | fn_rscap | &list_geoinfo | [地理情報](geoinfo.md) |

@@ -1203,6 +1203,9 @@ subroutine m_geomorph_init(gm, p, g, s)
           call par_stop("list_wave: f_wave_longshore cannot be combined with f_rockinc yet")
         end if
         call init_wave(gm, p, g, wlist)
+        ! 波による流れ(wf_flow >= 1)との併用は m_wavefield_init が止める(init の順は geomorph →
+        ! wavefield。§90.26)
+        s%wv_cerc = .true.
       end if
     end block
   end if

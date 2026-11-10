@@ -9,7 +9,8 @@ samples: examples/List_samples/list_*.txt と英語ミラー en/list_*.txt の�
   有効な行 `名前 = 値` と、コメントアウトした例 `!名前 = 値`(! の直後に名前)だけ。! の後に
   空白がある行は説明文として読まない(「E = …」のような式の説明を代入と取り違えないため)。
   1. グループが src の namelist にある
-  2. 代入の名前がそのグループに宣言されている(綴りの誤り・廃止したパラメータの検出)
+  2. 代入の名前がそのグループに宣言されている(綴りの誤り・廃止したパラメータの検出。廃止して指定の検出の
+     ためだけに namelist に残すパラメータ REMOVED(developer.md §103)は宣言に数えず、書かれていたら報告する)
   3. 日英の組で (グループ, 名前, 添字, 値, 有効/コメント) の並びが一致する(設定例はコメントだけを
      訳し、値・識別子・有効状態を保つ規約。docs/multilingual.md)
   参考に、どの設定例にも現れないパラメータの数をグループ別に表示する(失敗にはしない。説明文の
@@ -33,6 +34,9 @@ SAMPLES = "examples/List_samples"
 TEST_DIR = "test"
 TEST_README = {"ja": "test/README.md", "en": "test/README.en.md"}
 EXCLUDE_GROUPS = {"save_info", "wavefield_info"}   # 再開ヘッダ(利用者パラメータでない)
+# 廃止したパラメータ (グループ, 名前)。namelist には指定を検出して案内付きで停止させるためだけに残すので、
+# 宣言に数えず、設定例に書かれていたら誤りとする(developer.md §103)。tools/params_index/check.py にも同じ集合がある
+REMOVED = {("list_sysparam", "fn_reservoir")}
 EXCLUDE_TEST_DIRS = {"Scripts"}
 
 NAMELIST = re.compile(r"^\s*namelist\s*/\s*(\w+)\s*/\s*(.*)$", re.I)
@@ -73,8 +77,9 @@ def namelists(root: Path) -> dict[str, set[str]]:
         for st in fortran_statements(text(path)):
             m = NAMELIST.match(st)
             if m and m.group(1).lower() not in EXCLUDE_GROUPS:
+                group = m.group(1).lower()
                 names = {n.strip().lower() for n in m.group(2).split(",") if n.strip()}
-                groups.setdefault(m.group(1).lower(), set()).update(names)
+                groups.setdefault(group, set()).update(n for n in names if (group, n) not in REMOVED)
     return groups
 
 
@@ -125,6 +130,9 @@ def check_samples(root: Path) -> tuple[list[str], list[str]]:
             for no, group, name, _idx, _val, _active in items:
                 if group not in groups:
                     errors.append(f"{rel}:{no}: &{group} is not a namelist group in src/*.f90")
+                elif (group, name) in REMOVED:
+                    errors.append(f"{rel}:{no}: {name} was removed from namelist /{group}/ "
+                                  f"(kept in src only to stop the run with guidance)")
                 elif name not in groups[group]:
                     errors.append(f"{rel}:{no}: {name} is not declared in namelist /{group}/")
             seqs[lang] = items
