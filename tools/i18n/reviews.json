@@ -473,9 +473,9 @@
     {
       "source": "docs/users_guide/steep_slope.md",
       "target": "docs/en/users_guide/steep_slope.md",
-      "source_sha256": "a95171bb20c4a1727c78ae0e53dddd0fdce739a87df189575bde78bba568ea87",
-      "target_sha256": "05c83794ea6112d9bf32a162700232eb011b501f57fc9759885413d6fd95925a",
-      "reviewer": "Claude (Claude Code session; compared the Japanese source with the English mirror for the added sentence on the non-hydrostatic combination in §6.2 (1.92 m with 2 and 2.80 m with 3 in test/nhbottom) and the row for 3 in the table of §7 (not made the default, 2026-11-10); rest unchanged since the previous record)",
+      "source_sha256": "8881d0d679bd41913a16bf91740fe5f794ad4e08d58db1a803e95d57b19c2850",
+      "target_sha256": "4fb86c56511880ae1e5f621725cba27ebb0ff576fc695821df40d6a408bffee9",
+      "reviewer": "Claude (Claude Code session; the sentence added to §4 on the effect of the default 2 through the dry/wet switch in examples/badland_storm result 1 compared against the Japanese source; the rest of the file is unchanged since the previous record)",
       "method": "assistant",
       "reviewed_on": "2026-11-10"
     },
@@ -1166,101 +1166,101 @@
     {
       "source": "examples/badland_storm/README.md",
       "target": "examples/badland_storm/en/README.md",
-      "source_sha256": "c025ea659481fcb99183e159a2539a15b88f03b27f99572047b1b75642d2095a",
-      "target_sha256": "7e9f6a3cc309233a5317efe439a956c2ee459297a71d7361aaff18a570a96db9",
-      "reviewer": "Claude (Claude Code session; corrected both versions in parallel against the inputs, scripts and committed figures, and compared the edited passages and numbers)",
+      "source_sha256": "7b966ca300bfc9ebf3b9c27e0575dedbd3aa9ab9fb7e9eb463f4fc08acce72f9",
+      "target_sha256": "21c9c59e4864078760ed4cae57feddcc1c77688e813a61cb4354d479c28a9e0d",
+      "reviewer": "Claude (Claude Code session; recomputation of 2026-11-10 with the current defaults, f_gravity_correction = 2: all changed table cells and the rewritten passages of results 1 to 5, the schematic caption, the limitation on the dry/wet threshold and the time-step note compared item by item against the Japanese source, the printed tables of plot_storm.py and conv_dx.py and the diagnostic runs; no model execution)",
       "method": "assistant",
-      "reviewed_on": "2026-11-08"
+      "reviewed_on": "2026-11-10"
     },
     {
       "source": "examples/badland_storm/figs/flow.png",
       "target": "examples/badland_storm/en/figs/flow.png",
-      "source_sha256": "49838ca1a105a81c3f5af2565ca9744be31189650c3854bbbb0c820aac7024ab",
-      "target_sha256": "c7a5c8ce2904a52157d8272b73c8caba04d98f85d648e28b20ea0c5dcf884d4e",
-      "reviewer": "Claude (Claude Code session; both images drawn by plot_storm.py and plot_storm.py en from the same results recomputed with f_opening_dynamic = 3 on 2026-11-02, compared side by side: same plotted data and layout, labels translated)",
+      "source_sha256": "26cb80cbdbff679de3568ab4609cf98fe31e52ee70d790d3a1a663589df46849",
+      "target_sha256": "89606520c1e485691122f5dc6dc86251e6a30026d890f8078cf724eee86d8c4d",
+      "reviewer": "Claude (Claude Code session; English figure drawn by the same script with the en switch from the same results of 2026-11-10; compared side by side: same plotted data and layout, labels translated)",
       "method": "assistant",
-      "reviewed_on": "2026-11-02"
+      "reviewed_on": "2026-11-10"
     },
     {
       "source": "examples/badland_storm/figs/flow_tilt.png",
       "target": "examples/badland_storm/en/figs/flow_tilt.png",
-      "source_sha256": "679fd644305dae880c13b6029f84d777ee1b91893fc377f7d9a1e10a7433a3d0",
-      "target_sha256": "4163cb615dbf7de2bcd09ca4ca5f971964f84ffb57f6fe3f83d0177281a274d2",
-      "reviewer": "Claude (Claude Code session; both images drawn by plot_storm.py and plot_storm.py en from the same results recomputed with f_opening_dynamic = 3 on 2026-11-02, compared side by side: same plotted data and layout, labels translated)",
+      "source_sha256": "6d3f324d71de6c7fb45acd2bc2a6c188b2b9c500169630988531966dcae14910",
+      "target_sha256": "b3483c31c8d4df3e69a635dee8583b4cd84c3171d62b1c5bb206f68416f80ef4",
+      "reviewer": "Claude (Claude Code session; English figure drawn by the same script with the en switch from the same results of 2026-11-10; compared side by side: same plotted data and layout, labels translated)",
       "method": "assistant",
-      "reviewed_on": "2026-11-02"
+      "reviewed_on": "2026-11-10"
     },
     {
       "source": "examples/badland_storm/figs/flow_wet.png",
       "target": "examples/badland_storm/en/figs/flow_wet.png",
-      "source_sha256": "78ae53b74f5915781c83d62daa368bd2a1c45c06b9ce4233d1fabffc953c8113",
-      "target_sha256": "5e641624e53ee96350ab4afdb869a93d783765de4b741a5568f0cc689441af98",
-      "reviewer": "Claude (Claude Code session; both images drawn by plot_storm.py and plot_storm.py en from the same results recomputed with f_opening_dynamic = 3 on 2026-11-02, compared side by side: same plotted data and layout, labels translated)",
+      "source_sha256": "0387f011055fd2bc25a1df88288effe20e2213e37866d9b26e3bf03fcb1ab0ca",
+      "target_sha256": "b6aa1f72fc06383d58115a1a6c48d4b0b629c449bc65e268b2071bf7e90ea05c",
+      "reviewer": "Claude (Claude Code session; English figure drawn by the same script with the en switch from the same results of 2026-11-10; compared side by side: same plotted data and layout, labels translated)",
       "method": "assistant",
-      "reviewed_on": "2026-11-02"
+      "reviewed_on": "2026-11-10"
     },
     {
       "source": "examples/badland_storm/figs/maps.png",
       "target": "examples/badland_storm/en/figs/maps.png",
-      "source_sha256": "847765ee3c1088c314c5b672f0df16d6cb24e8a991656b5436c71ad4870dc3d8",
-      "target_sha256": "02baefcc8ec5e863a392233b79ca722a000fd53f302a46ee6df6ac2867d1cb04",
-      "reviewer": "Claude (Claude Code session; both images drawn by plot_storm.py and plot_storm.py en from the same results recomputed with f_opening_dynamic = 3 on 2026-11-02, compared side by side: same plotted data and layout, labels translated)",
+      "source_sha256": "42962bf64f30e770e4dba575dbf8005cb9249eab998a8368944d2970ef80155a",
+      "target_sha256": "d8484674b05dfeedeb1f500772361fe7d0bef07ac2ae793c67e887695a069d4f",
+      "reviewer": "Claude (Claude Code session; English figure drawn by the same script with the en switch from the same results of 2026-11-10; compared side by side: same plotted data and layout, labels translated)",
       "method": "assistant",
-      "reviewed_on": "2026-11-02"
+      "reviewed_on": "2026-11-10"
     },
     {
       "source": "examples/badland_storm/figs/maps_tilt.png",
       "target": "examples/badland_storm/en/figs/maps_tilt.png",
-      "source_sha256": "522d18e61fa3172e83d5050b90e98bd3bc3a462ca830a1147802b1859594d737",
-      "target_sha256": "f63f148577cbcab6e01f2d0ae05ca8ab762cf80968f83ef86103915df6e5be4c",
-      "reviewer": "Claude (Claude Code session; both images drawn by plot_storm.py and plot_storm.py en from the same results recomputed with f_opening_dynamic = 3 on 2026-11-02, compared side by side: same plotted data and layout, labels translated)",
+      "source_sha256": "bf35ec70e1df01d9e2edc223a5a1d71f42f3d71e74ad0770039ff35d6aab8cf4",
+      "target_sha256": "3be8351196f9d71abebe3c16aaa4f88ef26596b4aeb8d3d66b50d270f6e12707",
+      "reviewer": "Claude (Claude Code session; English figure drawn by the same script with the en switch from the same results of 2026-11-10; compared side by side: same plotted data and layout, labels translated)",
       "method": "assistant",
-      "reviewed_on": "2026-11-02"
+      "reviewed_on": "2026-11-10"
     },
     {
       "source": "examples/badland_storm/figs/maps_wet.png",
       "target": "examples/badland_storm/en/figs/maps_wet.png",
-      "source_sha256": "fda54eef9cf12aa4571c10fdc4dd0f45daac1fefb25fed448b8bee027b7499a9",
-      "target_sha256": "76699c23b8b20ec4eed508b7915adc3a0227990785bce0fdd1e4829d3430010b",
-      "reviewer": "Claude (Claude Code session; both images drawn by plot_storm.py and plot_storm.py en from the same results recomputed with f_opening_dynamic = 3 on 2026-11-02, compared side by side: same plotted data and layout, labels translated)",
+      "source_sha256": "3841f5b1267e5531a8a9f12dea535b3adb936703302758f6a01b32db217c590a",
+      "target_sha256": "34735760818ee7f25292a4f12158c9f0deb98ccedb70ffd225deb788c671d31d",
+      "reviewer": "Claude (Claude Code session; English figure drawn by the same script with the en switch from the same results of 2026-11-10; compared side by side: same plotted data and layout, labels translated)",
       "method": "assistant",
-      "reviewed_on": "2026-11-02"
+      "reviewed_on": "2026-11-10"
     },
     {
       "source": "examples/badland_storm/figs/mechanism.png",
       "target": "examples/badland_storm/en/figs/mechanism.png",
-      "source_sha256": "350d1d97947b2a4ed709bdf7bbc051240ef35da26b454b61128cabb8c42b4841",
-      "target_sha256": "3d1f3822daceb7660d35eb8f0ee6d56d2d479c3f6877a74c56a0e016ac6577e4",
-      "reviewer": "Claude (Claude Code session; schematic and setup figure drawn by plot_setup.py from input files only, Japanese and English images compared side by side: same data and layout, labels translated; no model execution)",
+      "source_sha256": "df43d7960ee778dbb51a5f86d58ccd12026428b167977be507fe819a52a6f4e8",
+      "target_sha256": "ee7cd1b32b7d70e9bc67fdbd0af6808970568139253b4020c609b7eac3c12ad4",
+      "reviewer": "Claude (Claude Code session; English figure drawn by the same script with the en switch from the same results of 2026-11-10; compared side by side: same plotted data and layout, labels translated)",
       "method": "assistant",
-      "reviewed_on": "2026-11-02"
+      "reviewed_on": "2026-11-10"
     },
     {
       "source": "examples/badland_storm/figs/series.png",
       "target": "examples/badland_storm/en/figs/series.png",
-      "source_sha256": "75423e1507d8bc6a3de24523b2ed436e8ae73c33fc30c450f5744a9ccf286f1d",
-      "target_sha256": "eb7a93a002d0000b236149e9e52dbd8dac46df42f320970720b8ec17720f8965",
-      "reviewer": "Claude (Claude Code session; both images drawn by plot_storm.py and plot_storm.py en from the same results recomputed with f_opening_dynamic = 3 on 2026-11-02, compared side by side: same plotted data and layout, labels translated)",
+      "source_sha256": "451caa21ce3996f7b36a77e4cad972c8dd70aa7879add1ef70913d1817edd11c",
+      "target_sha256": "bd49b7af0d64405e594ba5270b7e88c1a11542714a2d1345872e0bc03ebf8270",
+      "reviewer": "Claude (Claude Code session; English figure drawn by the same script with the en switch from the same results of 2026-11-10; compared side by side: same plotted data and layout, labels translated)",
       "method": "assistant",
-      "reviewed_on": "2026-11-02"
+      "reviewed_on": "2026-11-10"
     },
     {
       "source": "examples/badland_storm/figs/series_tilt.png",
       "target": "examples/badland_storm/en/figs/series_tilt.png",
-      "source_sha256": "b944c786e1c631c24f3656495dca8ba76e101acf9a641031ed70eef936a03739",
-      "target_sha256": "3e31635c0d02df61a20cacae8b0a3339013ff13f46d7316e3549e1b91873209a",
-      "reviewer": "Claude (Claude Code session; both images drawn by plot_storm.py and plot_storm.py en from the same results recomputed with f_opening_dynamic = 3 on 2026-11-02, compared side by side: same plotted data and layout, labels translated)",
+      "source_sha256": "ca40257c6349aa4518be1b9453c7cebae3be853185bf47221054e47adf6d6472",
+      "target_sha256": "37ab0f19c55ecf8e502771c5ca92e1ebfe5d0fe8b87005859a68fd7f0e53140c",
+      "reviewer": "Claude (Claude Code session; English figure drawn by the same script with the en switch from the same results of 2026-11-10; compared side by side: same plotted data and layout, labels translated)",
       "method": "assistant",
-      "reviewed_on": "2026-11-02"
+      "reviewed_on": "2026-11-10"
     },
     {
       "source": "examples/badland_storm/figs/series_wet.png",
       "target": "examples/badland_storm/en/figs/series_wet.png",
-      "source_sha256": "21e8a1f76034de703a2e3439c1cdea1a16058aba695e213ab591eb202601a540",
-      "target_sha256": "0e72e9a989cb6cf4b77ccde8ebae15fb7cf76404f41e2e936a39faa315537198",
-      "reviewer": "Claude (Claude Code session; both images drawn by plot_storm.py and plot_storm.py en from the same results recomputed with f_opening_dynamic = 3 on 2026-11-02, compared side by side: same plotted data and layout, labels translated)",
+      "source_sha256": "dc5c1fc985ee8e26afc82ce4b66b37c53c49224d1b3bb902b3b6217b3b5b5a41",
+      "target_sha256": "f657985fcbfbfecf840ed380b2e1b2bc3249641cce98edb1fb392af0937650ac",
+      "reviewer": "Claude (Claude Code session; English figure drawn by the same script with the en switch from the same results of 2026-11-10; compared side by side: same plotted data and layout, labels translated)",
       "method": "assistant",
-      "reviewed_on": "2026-11-02"
+      "reviewed_on": "2026-11-10"
     },
     {
       "source": "examples/badland_storm/figs/setup.png",

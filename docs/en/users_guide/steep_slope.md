@@ -602,7 +602,14 @@ gradient is used for these reasons:
   37,500 to 20,800 m³ (−45 %) and the deepest incision from 16.6 to 11.2 m. For the
   same discharge, 1 over-estimates the bed shear by $`\cos^{-0.7}\theta`$ (1.50 at 56°),
   and threshold erosion laws and the positive feedback of gullies widen this to about
-  a factor of 2 (developer.md §93).
+  a factor of 2 (developer.md §93). On the flat plateau of the same example (result 1,
+  weak wet erosion) it also acts in another direction, through the switch between dry
+  and wet: the thin flow on the cliff face is close to the switching depth dd = 1 mm,
+  and when friction along the slope makes it slightly thicker, more of the cliff face
+  exceeds dd (in a two-cycle diagnostic run the wet fraction of the cliff face during the
+  downpour is 0.26 to 0.35 with 1 and 0.57 to 0.72 with 2), dry-slope erosion stops for
+  longer and the valleys on the cliff hardly grow (the mean lowering of the cliff face
+  over two cycles with 2 is 0.7 times that with 1).
 - **Impact of the field-gradient $`g_e`$ (2026-11-04)**: in test/chichibu the maximum
   unit discharge $`Q_{max}`$ rises by 0.72 % in the rising limb of the flood. In
   examples/debris_fan, the arrival at the fan apex with four neighbours, which had been
