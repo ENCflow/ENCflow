@@ -12,7 +12,8 @@ n は水路の軸からの横断距離。斜面 2 × 800 m(勾配 0.05、水路�
 200 m 続け、その先に水路だけの延長 3 セルと海セル(吸い込み)3 セルを置く(斜面が終わる所の手前の数セルで
 水路の水深が上がる影響を、出口の計測面から離すため)。地形・粗度・マスクはセル中心で評価する。45° では
 水路の軸がセル中心を通り、出口の計測面がセル中心の斜めの列に重なるように格子の原点を置く。
-プローブ P2 は左岸側の斜面の水路から 2 列目(脚の列の隣)の中央。
+プローブ P2 は左岸側の斜面で水路の軸から 72 m(縁から 62 m)に最も近い列の中央(水路に接する 1〜2 列は水路との辺の
+粗度で水が溜まるので、その外で理論と比べる)。
 catch.txt は流域(斜面と水路。下流の区間・延長・海を除く)のセルが 1 で、Check_vshaped.py が収支に使う。
 """
 import math
@@ -25,6 +26,7 @@ S_C, S_S, S_O = 0.02, 0.05, 0.0      # 水路の縦断勾配、斜面の横断�
 D_UP, Z_OUT, H_SEA = 1.0, 8.0, 1.0   # 上流端の水路の深さ、出口の水路床の標高、海セルの水深
 N_S, N_C = 0.015, 0.15               # 粗度(斜面・水路)
 L_EXT = 200.0                        # 流域の下流に同じ断面を続ける区間の長さ (m)
+N_P2 = 72.0                          # P2 を置く列の水路の軸からの距離の目標 (m)
 N_EXT, N_SEA = 3, 3                  # その先の水路だけの延長と海のセル数
 DX = 20.0
 WH = W / 2 + B
@@ -80,7 +82,7 @@ def to_enc(i, j, ny):
 
 def records(theta, nx, ny, cells):
     """出口の計測面(全幅)・斜面の脚の計測線・プローブ 2 点のセル番号(examples の make_inputs.records と同じ規則。
-    P2 は左岸側の斜面の水路から 2 列目の、s = L/2 に最も近いセル)。"""
+    P2 は左岸側の斜面で軸から N_P2 に最も近い列の、s = L/2 に最も近いセル)。"""
     # 出口の列: 45° では s = L − Δx/(2√2) の斜めの列(i − j 一定)、0° では s = L − Δx/2 の列
     s_face = L - DX / 2 / (math.sqrt(2) if theta == 45.0 else 1.0)
     nx_, ny_, ox, oy, c, sn, _ = frame(theta)
@@ -100,7 +102,7 @@ def records(theta, nx, ny, cells):
     foot.sort(key=lambda ij: cells[ij][1])
     footline = to_enc(*foot[0], ny) + to_enc(*foot[-1], ny)
     p1 = to_enc(i0, j0, ny)
-    n2 = sorted(set(round(v[2], 6) for _, v in hill))[1]
+    n2 = min(set(round(v[2], 6) for _, v in hill), key=lambda v: (abs(v - N_P2), -v))
     second = [ij for ij, v in hill if abs(v[2] - n2) < 1e-6]
     km = min(second, key=lambda ij: abs(cells[ij][1] - L / 2))
     p2 = to_enc(*km, ny)

@@ -428,8 +428,8 @@
     {
       "source": "docs/users_guide/passage_width.md",
       "target": "docs/en/users_guide/passage_width.md",
-      "source_sha256": "e204222e1e12f2513ac2fc4d42fbb101c5e07d5d8bb1007710a90d70b871174f",
-      "target_sha256": "fdb623dae835e89873866a8a3f3dd5cf51387aa348f7465acd2a8fa87e75789e",
+      "source_sha256": "ab280f4bc95c0633aa632b19714af40a2cc3ee0949528504d68642c86fd7112f",
+      "target_sha256": "4070d3027cc91a97512995e6c828b788c545a66d7ad178d91d20b65adc84a5d7",
       "reviewer": "Claude (Claude Code session; wrote and read both versions side by side: structure, numbers, tables, links and captions)",
       "method": "assistant",
       "reviewed_on": "2026-11-10"
@@ -1337,8 +1337,8 @@
     {
       "source": "examples/benchmark/README.md",
       "target": "examples/benchmark/en/README.md",
-      "source_sha256": "e6c25e1d0602714d296089c6e446dcf3461ad7afacc76ca5ce9a2349daa40348",
-      "target_sha256": "8a21170a44576e542577c30329324e3a60a26fd971f340a6c0a5303749d8d49e",
+      "source_sha256": "320fe31077efb62bdafa3c4d4c4e980b9146877cdbe2a8daed9b1ee5d2ee33f3",
+      "target_sha256": "6be2f01bc2d3d617d47a05c497a0c53f37b838bdd5d619df54424e649bb25461",
       "reviewer": "Claude (Claude Code session; wrote and read both versions side by side: structure, numbers, tables, links and captions)",
       "method": "assistant",
       "reviewed_on": "2026-11-10"
@@ -1346,8 +1346,8 @@
     {
       "source": "examples/benchmark/v-shaped/README.md",
       "target": "examples/benchmark/v-shaped/en/README.md",
-      "source_sha256": "0f28886fa35ba326ebf5f1271e257b15d63dfeaf159e6e5c4d4d64f52e3faff5",
-      "target_sha256": "d09912c858192c9fee5761fea02830ca95c19a2d890542f0814b982f1adece20",
+      "source_sha256": "410642a9ffa065766b714b90f92bfb762c04f439abe9f24b220a6b7c0174464e",
+      "target_sha256": "d32293869764944c3b70c69679feade06e8b5680b3bf36ea0dce3bc93ae351d9",
       "reviewer": "Claude (Claude Code session; wrote and read both versions side by side: structure, numbers, tables, links and captions)",
       "method": "assistant",
       "reviewed_on": "2026-11-10"

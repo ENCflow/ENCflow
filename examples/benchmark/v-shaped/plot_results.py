@@ -217,9 +217,9 @@ def fig_maps():
 
 
 def fig_depths():
-    """出口の水路のセル(P1)と、斜面の水路から 2 列目のセル(P2、s = 500 m)の水深の時系列。理論は運動学的波の
-    時系列(出口は data/analytic.csv の h_out、斜面は hill_h を 20 m の P2 の位置 x = 770 m で評価。10・5 m の P2
-    (785・792.5 m)では平衡の水深が 1〜2 % 深い)。"""
+    """出口の水路のセル(P1)と、斜面の水路の縁から 60 m ほどの列のセル(P2、s = 500 m)の水深の時系列。理論は
+    運動学的波の時系列(出口は data/analytic.csv の h_out、斜面は hill_h を 20 m の P2 の位置 x = 730 m で評価。
+    ほかの格子の P2(尾根から 725〜740 m)では平衡の水深が ±1 %)。"""
     fig, axes = plt.subplots(1, 2, figsize=(12, 4.2))
     for th in (0.0, 45.0):
         for dx in (20.0, 10.0, 5.0):
@@ -231,12 +231,12 @@ def fig_depths():
             axes[1].plot(c["p2"][:, 1], c["p2"][:, 3] * 1000, color=COL[dx], ls="-" if th == 0 else ":", lw=1.3, label=lab)
     a = np.loadtxt("data/analytic.csv", delimiter=",", comments="#")
     axes[0].plot(a[:, 0], a[:, 4], "k", lw=1.2, label=T("理論(運動学的波。等流水深 0.443 m)", "theory (kinematic wave; uniform depth 0.443 m)"))
-    x2 = M.B - 1.5 * 20.0
+    x2 = M.B - 70.0
     axes[1].plot(a[:, 0], A.hill_h(a[:, 0] * 60.0, x2) * 1000, "k", lw=1.2,
                  label=T(f"理論(尾根から {x2:g} m = 20 m の P2 の位置。平衡 {C.h_hill_th(x2) * 1000:.1f} mm)",
                          f"theory (at {x2:g} m from the ridge = P2 of the 20 m grid; equilibrium {C.h_hill_th(x2) * 1000:.1f} mm)"))
     axes[0].set_title(T("出口の水路のセルの水深(P1)", "Depth in the outlet channel cell (P1)"), fontsize=10)
-    axes[1].set_title(T("斜面の水路から 2 列目のセルの水深(P2、s = 500 m)", "Depth in the second hillslope cell from the channel (P2, s = 500 m)"), fontsize=10)
+    axes[1].set_title(T("斜面の水路の縁から 60 m ほどのセルの水深(P2、s = 500 m)", "Depth in the hillslope cell about 60 m from the channel (P2, s = 500 m)"), fontsize=10)
     axes[0].set_ylabel(T("水深 (m)", "depth (m)"))
     axes[1].set_ylabel(T("水深 (mm)", "depth (mm)"))
     axes[0].set_ylim(0, 0.75)

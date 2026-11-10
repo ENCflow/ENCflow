@@ -54,7 +54,7 @@ def panel_plan(ax):
     ax.plot([M.L - 5, M.L - 5], [-M.WH + 5, M.WH - 5], color="#c0392b", lw=2.0, label=T("出口の計測面(全幅)", "outlet face (full width)"))
     ax.plot([5, M.L - 5], [M.W / 2 + 10, M.W / 2 + 10], color="#2b8a3e", lw=2.0, label=T("斜面の脚の計測線(左岸側)", "hillslope-foot line (left side)"))
     ax.plot(M.L - 5, 0, "o", ms=6, color="k", mfc="w", label=T("P1 出口の水路の水深", "P1 depth in the outlet channel cell"))
-    ax.plot(M.L / 2, M.W / 2 + 30, "s", ms=6, color="k", mfc="w", label=T("P2 斜面の水路から 2 列目の水深", "P2 depth in the second hillslope cell from the channel"))
+    ax.plot(M.L / 2, M.N_P2, "s", ms=6, color="k", mfc="w", label=T("P2 斜面の水深(水路の縁から 60 m ほど)", "P2 hillslope depth (about 60 m from the channel)"))
     ax.legend(loc="lower left", fontsize=7, framealpha=0.9)
     ax.annotate("", xy=(s_hill + 118, 0), xytext=(s_hill + 60, 0), arrowprops=dict(arrowstyle="-|>", color="w"))
     ax.text(M.L + M.L_EXT / 2, -M.WH / 2 + 80, T("下流の区間 200 m(同じ断面。雨も降る。流域には数えない)", "downstream section 200 m (same cross-section, rained on; not part of the catchment)"), fontsize=7, ha="center", va="center", rotation=90)
