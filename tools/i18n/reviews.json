@@ -293,9 +293,9 @@
     {
       "source": "docs/users_guide/geomorph.md",
       "target": "docs/en/users_guide/geomorph.md",
-      "source_sha256": "c7d8f51bdc7ff091510308db88ba1a7b0faea9caebd24535c9994fbca814c8d2",
-      "target_sha256": "2406f6ea21c445a1b71c64e90dab9b450abd44dd3c4d853699c996c3a3214839",
-      "reviewer": "Claude (Claude Code session; fn_wave usage paragraph: cannot be combined with wf_flow >= 1 or f_wfsed of the wave field (stops at start); both versions edited together and read side by side)",
+      "source_sha256": "aa9cc8d14e384de3ab625a1aa767398110f04dd6b71bb06f6edc3072840f6964",
+      "target_sha256": "12c8fa9ba8f8ada190f5291b68e0bbee7ce1f8cc910a63fe8cae8065cabe897d",
+      "reviewer": "Claude (Claude Code session; fn_wave section intro: link to the usage table in the wave-field chapter; both versions read side by side, anchor checked)",
       "method": "assistant",
       "reviewed_on": "2026-11-10"
     },
@@ -563,9 +563,9 @@
     {
       "source": "docs/users_guide/wavefield.md",
       "target": "docs/en/users_guide/wavefield.md",
-      "source_sha256": "694f65280207cfdd1355eaeee3d1e4d3461f346b3262e1d2003a19d118ce6a0e",
-      "target_sha256": "e4d07731166840b42640e30e9037abbec5e4c7b7e2406d873f9bb1e11599229b",
-      "reviewer": "Claude (Claude Code session; added the stop of fn_wave longshore transport with wf_flow >= 1: paragraph in the wf_flow section and a bullet in the restrictions list; both versions edited together, anchors checked, read side by side)",
+      "source_sha256": "4044b898c9d27f9b0ffda314976723ffccc73ed149601ea37d6346593c263ef1",
+      "target_sha256": "223afcb6c7f3ce1b7ccb602f07b1a57e8a0be24023f385beb41cbeea345f7e2a",
+      "reviewer": "Claude (Claude Code session; new section comparing the wave field with fn_wave (table and paragraph) replacing the one-sentence note; claims checked against test/wave_shore, test/wfsed, examples/delta and the code stops; both versions read side by side, anchors and rendering checked)",
       "method": "assistant",
       "reviewed_on": "2026-11-10"
     },

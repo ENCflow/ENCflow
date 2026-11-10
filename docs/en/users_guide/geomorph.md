@@ -826,7 +826,8 @@ surf zone (the shape is set by the ratio R = Q_r/Q_w of the river supply to
 the transport the waves can carry; design: [docs/wave_plan.md](../../wave_plan.md),
 Japanese; decision: developer.md §84.15). This simple mode does not solve the
 waves (solving the waves for process-based transport is `f_wfsed` in the next
-section). Give the offshore wave (significant height H0, period T, direction of travel
+section; how to choose between the two is tabulated in the
+[coastal wave field chapter](wavefield.md#wave-field-or-wave-driven-longshore-transport-fn_wave)). Give the offshore wave (significant height H0, period T, direction of travel
 phi0) in `fn_wave` (&list_wave) and every landform update does the following.
 
 1. The breaking depth h_b/gamma (H_b = 0.39 g^{1/5} (T H0^2)^{2/5}, gamma = 0.78)

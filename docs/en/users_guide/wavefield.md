@@ -30,15 +30,36 @@ of these default to 0 (no action).
 With `wf_flow = 0` and `f_wfsed = 0` the shallow water and bed results are the same
 whether or not `fn_wavefield` is written.
 
-It is a different feature from "longshore transport by waves" in the
-[sediment and morphology chapter](geomorph.md) (`fn_wave`, a simplified mode that does
-not solve the waves and gives the longshore transport in the shoreline band from the
-offshore waves with a CERC-type formula).
-
 The governing equations, numerical methods and basis of the defaults, the distinction
 between the other models it draws on (XBeach, SnapWave and others) and the parts
 original to ENCflow, and the references are in
 [Coastal wave field explained](wavefield_models.md).
+
+## Wave field or wave-driven longshore transport (fn_wave)
+
+"Wave-driven longshore transport" (`fn_wave`) in the
+[sediment and landform change chapter](geomorph.md#wave-driven-longshore-transport-fn_wave) is a
+separate feature that does not solve the waves and gives the longshore transport in the shoreline
+band from the offshore waves with a CERC-type formula. The two treat waves at different levels of
+detail, and neither one covers the other.
+
+| | Coastal wave field (this chapter) | Wave-driven longshore transport (`fn_wave`) |
+|---|---|---|
+| Waves | Solves the distribution of wave height and direction (shoaling, refraction, breaking, shadows; no diffraction) | Not solved. The transport rate comes from the offshore waves and the shoreline orientation taken from the depth gradient |
+| Action on the flow | Setup, longshore currents, undertow (`wf_flow`); usable without landform change | None |
+| Action on sediment | Stirring and transport (longshore transport, beach erosion and recovery; `f_wfsed`), swash-zone transport (`f_wfswash`) | Longshore transport in the shoreline band only (rides the bed-load path; `f_fluvial = 1` is required) |
+| Basis of the transport rate | Derived from the processes. On the straight coast of test/wfsed about 1.6 times CERC (the coefficients are calibration quantities). The decay and growth of shoreline undulations (the instability under high-angle waves) is not tested | The CERC rate itself. The decay and growth of shoreline undulations agree with linear theory (Ashton & Murray 2006; test/wave_shore) |
+| Suited to | Wave height and shadows, wave-driven water level and currents, beach erosion and recovery, waves and currents at river mouths, spreading of mud | Long-term landforms where the only effect of the waves is carrying sand along the shoreline (delta planform, spits, shoreline smoothing) |
+| Cost | Memory for the directional bins (about 0.64 kB per cell with 40 bins in double precision) and iterations; adjusted with the update interval `dt_wave` | Little added, since the waves are not solved |
+
+The longshore transport of fn_wave cannot be combined with the sediment transport of the wave field
+(`f_wfsed`) or with the wave-driven flow (`wf_flow` ≥ 1) (the run stops at the start: the CERC rate
+already includes the transport by the wave-driven longshore current, so the same transport would be
+counted twice). With the same river, sediment supply and waves, the two give different shorelines
+(stages 4 and 5 of [examples/delta](../../../examples/delta/en/README.md): with fn_wave a spit grows
+downdrift from the river-mouth bar; with f_wfsed a shallow arcuate platform spreads in front of the
+mouth). The land formed with f_wfsed depends on the coefficients of the swash-zone transport, so when
+discussing the shoreline planform, read it alongside the fn_wave result.
 
 ## Trying it out (minimal input)
 
