@@ -3065,20 +3065,20 @@
     {
       "source": "examples/tsunami_town/README.md",
       "target": "examples/tsunami_town/en/README.md",
-      "source_sha256": "b88c3e11f531f642c1d930290b79e38d861791b67c2d24444a86cd830a7bdced",
-      "target_sha256": "668ecfa73c9726e644e722e67b9312faae82a1e41c2db44588a3c4111c0f8721",
-      "reviewer": "Claude (Claude Code session; corrected both versions in parallel against the inputs, scripts and source (param files, plot scripts, list/source definitions), and compared the edited passages and numbers)",
+      "source_sha256": "bf31f349d218f8a652ca4f5beae17af6d122bda9a992250afa566b419abc3b14",
+      "target_sha256": "56d6464baba9b21ad2378498f91a9faf72fc6644e02851faaad070afe52be4dd",
+      "reviewer": "Claude (Claude Code session; rewrite for the high-ground terrain of 2026-11-10: setup table, tsunami paragraph, results table and bullets, stripes note, limits and supplement compared sentence by sentence with the Japanese source and the printed table of plot_results.py; no model execution)",
       "method": "assistant",
-      "reviewed_on": "2026-11-08"
+      "reviewed_on": "2026-11-10"
     },
     {
       "source": "examples/tsunami_town/figs/maps.png",
       "target": "examples/tsunami_town/en/figs/maps.png",
-      "source_sha256": "80f84a66f42b74d414a68fe218df53771ea947ae656f0703e31187e116c43975",
-      "target_sha256": "bfef281d287057886b050485d534566b5969636958848f495ea3158ed9f9d0a7",
-      "reviewer": "Claude (Claude Code session; recomputed 2026-11-05: both drawn by plot_results.py from the same results, labels compared with the Japanese figure)",
+      "source_sha256": "eacf96c84d0490fca6452d60bc7b73acba68cf8fd6914ee59968f0245a9eaa00",
+      "target_sha256": "b2eeb992ab3c53d496c67724c6c20a3665ed74d60627442836af4969bcb8d8b8",
+      "reviewer": "Claude (Claude Code session; English figure drawn by the same script with the en switch from the same results of 2026-11-10; compared side by side: same plotted data and layout, labels translated)",
       "method": "assistant",
-      "reviewed_on": "2026-11-05"
+      "reviewed_on": "2026-11-10"
     },
     {
       "source": "examples/tsunami_town/figs/mechanism.png",
@@ -3092,38 +3092,38 @@
     {
       "source": "examples/tsunami_town/figs/series.png",
       "target": "examples/tsunami_town/en/figs/series.png",
-      "source_sha256": "d0032c1644d02541f218f5aacd202fc8a3703261a50a4c7837d05efffbb0308b",
-      "target_sha256": "f7b3875022cb922a9cd7ba98f91ba4a52929a780624d8e8a378ce5d8e4600c47",
-      "reviewer": "Claude (Claude Code session; recomputed 2026-11-05: both drawn by plot_results.py from the same results, labels compared with the Japanese figure)",
+      "source_sha256": "db4b383ae284a77d21376c599ed88f49a638fa39384c7fde9f322798d846e3f8",
+      "target_sha256": "20a91c0a4ead2349b94aee062ba753adba8e892aa7b46a585461c54a94b85355",
+      "reviewer": "Claude (Claude Code session; English figure drawn by the same script with the en switch from the same results of 2026-11-10; compared side by side: same plotted data and layout, labels translated)",
       "method": "assistant",
-      "reviewed_on": "2026-11-05"
+      "reviewed_on": "2026-11-10"
     },
     {
       "source": "examples/tsunami_town/figs/setup.png",
       "target": "examples/tsunami_town/en/figs/setup.png",
-      "source_sha256": "45b4014bc5a4dbc8573fc0a37c7d33b879a69813ffaa2de82e2b0b9ee7ff92b7",
-      "target_sha256": "a63bb5909c562f53988e1412f67c5b1f2b1967625dfcf818c6cfaf8bc0ddc64d",
-      "reviewer": "Claude (Claude Code session; example reruns with f_opening_dynamic default 3)",
+      "source_sha256": "d0c0aec578289efb1585efd19356ac655d9259e004a0d433d3ae5c49f0be1f28",
+      "target_sha256": "53dcce44dabb0c461ab4e593ac294d5451169d17f79af95eed917a85905aaedd",
+      "reviewer": "Claude (Claude Code session; English figure drawn by the same script with the en switch from the same results of 2026-11-10; compared side by side: same plotted data and layout, labels translated)",
       "method": "assistant",
-      "reviewed_on": "2026-10-31"
+      "reviewed_on": "2026-11-10"
     },
     {
       "source": "examples/tsunami_town/figs/supp_damage.png",
       "target": "examples/tsunami_town/en/figs/supp_damage.png",
-      "source_sha256": "6ced7330ca23bf4117bfc6be6945aa318a967417fa256477c1906c990da3506e",
-      "target_sha256": "ad401d624bf9fe6dd8241d2fb243bca755f35e94a969a4f98dade6ca2ebbf017",
-      "reviewer": "Claude (Claude Code session; recomputed 2026-11-05: both drawn by plot_results.py from the same results, labels compared with the Japanese figure)",
+      "source_sha256": "d2d7753333a33f2bfcd4f5189dc5d25e3246f2c299a5142bcf0fe97df8e3d139",
+      "target_sha256": "e2b156c2aa9f7863b70fa7e2679cd27082e3eab611b044e34e1cd1c77071397d",
+      "reviewer": "Claude (Claude Code session; English figure drawn by the same script with the en switch from the same results of 2026-11-10; compared side by side: same plotted data and layout, labels translated)",
       "method": "assistant",
-      "reviewed_on": "2026-11-05"
+      "reviewed_on": "2026-11-10"
     },
     {
       "source": "examples/tsunami_town/figs/supp_ledger.png",
       "target": "examples/tsunami_town/en/figs/supp_ledger.png",
-      "source_sha256": "e128ea6d665c72a7758bb06b01c34485929a580f171091d39411fde975a415fe",
-      "target_sha256": "becbe89b3067294eb73445ca99c6b6937de0dbb9b75d88c125f8fb61e859f8d0",
-      "reviewer": "Claude (Claude Code session; recomputed 2026-11-05: both drawn by plot_results.py from the same results, labels compared with the Japanese figure)",
+      "source_sha256": "b4f3f589b63d524bcde1593a1b9229a9b5e79abcc8cd6d87c9d50919af983009",
+      "target_sha256": "82012efbb407895c7bfb64ee9a77f1b910d54195d6df914c03c5c4f1cf5ba7b5",
+      "reviewer": "Claude (Claude Code session; English figure drawn by the same script with the en switch from the same results of 2026-11-10; compared side by side: same plotted data and layout, labels translated)",
       "method": "assistant",
-      "reviewed_on": "2026-11-05"
+      "reviewed_on": "2026-11-10"
     },
     {
       "source": "examples/vz_tani2023/README.md",

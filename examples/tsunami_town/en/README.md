@@ -70,12 +70,17 @@ Right: tsunami waveforms (offshore level) and seawall crests.
 | 10-150 | 2-15 | z = −5 m | sea (ordinary cells + initial water level) |
 | 150-250 | 16-25 | z = −2 → 0 m | beach |
 | 250-270 | 26-27 | z = +2.0 m | seawall. The central y = 240-360 m (j = 25-36) is an **opening at z = +0.5 m** (where a land lock, sluice gate or road gap is open) |
-| 270-1,200 | 28-120 | z = +0.5 → +3.0 m | town. Building porosity 0.6 (buildings occupy 40 %). House stock 0.3 m³/m² × wooden share (100 % seaward → 40 % inland) = 117,180 m³ in total |
+| 270-1,000 | 28-100 | z = +0.5 → +2.46 m (slope 0.27 %) | town. Building porosity 0.6 (buildings occupy 40 %). House stock 0.3 m³/m² × wooden share (100 % seaward → 40 % inland, up onto the high ground) = 117,180 m³ in total |
+| 1,000-1,200 | 101-120 | z = +2.46 → +10 m (slope 3.8 %) | the town continues up a slope to high ground, which stops the inundation on land (see "Tsunami" below) |
 
 - **Tsunami**: the offshore level rises from 5 minutes to +4 m (or +3 m) in 10 minutes, stays
   for 10 minutes and returns in 10 minutes (a single idealised wave). The initial water level is
   0 m, so the sea and the beach are under water and the land is dry. The east, north and south
-  edges are closed (the town is a closed lowland).
+  edges are closed. The east of the town is high ground well above the tsunami, so the inundation
+  does not reach the east edge (even the +4 m tsunami stops at x 1,095 m, ground +6.2 m). If the
+  east edge were lower than the tsunami, the town would fill like a bathtub and the flow stopped
+  by the wall at the edge would come back as a bore, so the results would be set by how the
+  domain is closed.
 - **House destruction**: houses start to break once the inundation exceeds 1 m and break fastest
   above 3 m (a rate at which 0.3 m³/m² of house stock is fully destroyed in 10 minutes). 30 % of
   the destroyed amount settles on the spot (tiles, foundations and so on) and 70 % rides the flow
@@ -116,39 +121,55 @@ backwash). Right: where the debris is at 60 minutes (1000 m³).
 
 | Case | Max inundation depth in the town (max / mean) | Area flooded ≥ 2 m | Houses destroyed (all / seaward / middle / inland) | Deposited in the town | Deposited on the beach and sea | Carried offshore |
 |---|---:|---:|---:|---:|---:|---:|
-| Tsunami +4 m, seawall +2 m | 4.79 / 3.61 m | 100 % | 96 / 100 / 100 / 89 % | 79,238 m³ | 9,539 m³ | 23,155 m³ |
-| Tsunami +3 m, seawall +2 m | 2.79 / 1.75 m | 35 % | 50 / 95 / 48 / 6 % | 28,008 m³ | 4,281 m³ | 24,773 m³ |
-| Seawall +3 m, opening open | 3.84 / 2.70 m | 83 % | 90 / 100 / 100 / 70 % | 49,808 m³ | 2,211 m³ | 49,999 m³ |
-| Seawall +3 m, opening closed | 2.89 / 1.85 m | 41 % | 71 / 100 / 97 / 13 % (60 / 100 / 68 / 10 % at 35 min) | 83,017 m³ | 0 | 0 |
+| Tsunami +4 m, seawall +2 m | 4.40 / 2.98 m | 82 % | 87 / 100 / 100 / 59 % | 72,558 m³ | 4,143 m³ | 23,489 m³ |
+| Tsunami +3 m, seawall +2 m | 3.26 / 1.74 m | 51 % | 48 / 92 / 45 / 8 % | 26,254 m³ | 6,330 m³ | 23,136 m³ |
+| Seawall +3 m, opening open | 3.96 / 2.32 m | 78 % | 84 / 100 / 100 / 51 % | 48,712 m³ | 1,905 m³ | 44,351 m³ |
+| Seawall +3 m, opening closed | 3.06 / 1.78 m | 49 % | 72 / 100 / 98 / 16 % (63 / 100 / 74 / 13 % at 35 min) | 84,626 m³ | 33 m³ | 0 |
 
-Seaward = x 270-500 m, middle = 500-800 m, inland = 800-1,200 m. "Houses destroyed" is the
-fraction of the house stock turned into debris by 60 minutes. Debris is in the same units as
-the house stock (m³); the amount still floating at 60 minutes (hundreds to thousands of m³) is
-left out of the table.
+Seaward = x 270-500 m, middle = 500-800 m, inland = 800-1,200 m (including the part of the
+high ground that is not flooded). "Houses destroyed" is the fraction of the house stock turned
+into debris by 60 minutes. Debris is in the same units as the house stock (m³); the amount still
+floating at 60 minutes (0 to thousands of m³) is left out of the table.
 
-- **With a +4 m tsunami almost the whole town is destroyed**: the tsunami overtops the seawall
-  by 2 m and the whole town is flooded 2 m or more. Houses on the seaward side and in the middle
-  are all destroyed, and even inland, where reinforced concrete buildings are more common, 89 %
-  of the wooden houses break. Most of the destroyed houses (79 thousand m³) settle in the town,
-  and 23 thousand m³ (21 % of the destroyed amount) goes offshore with the backwash.
-- **A tsunami 1 m lower destroys half as many houses**: with a +3 m tsunami, only 35 % of the
-  town, mainly on the seaward side, is flooded 2 m or more. The seaward side is 95 % destroyed,
-  but the middle falls to 48 % and inland to 6 %. Because damage rises sharply around 2 m of
-  inundation, a small difference in tsunami height changes the extent of the damage a lot. The
-  destroyed houses are close to the sea, so 40 % of the debris (25 thousand m³) goes offshore
-  with the backwash.
+- **With a +4 m tsunami the town is destroyed up to the foot of the high ground**: the tsunami
+  overtops the seawall by 2 m, runs up the slope of the high ground to ground level +6.2 m
+  (x 1,095 m), and 82 % of the town is flooded 2 m or more. Houses on the seaward side and in the
+  middle are all destroyed, and inland (including the high ground) 59 % break. Most of the
+  destroyed houses (73 thousand m³) settle in the town, and 23 thousand m³ (23 % of the destroyed
+  amount) goes offshore with the backwash.
+- **The maximum depth exceeds the limit set by the offshore level**: if the town only filled
+  quietly, the depth could not exceed 3.5 m, the difference between the offshore level +4 m and
+  the lowest part of the town +0.5 m, but the maximum is 4.40 m. The water flowing inland runs up
+  the slope of the high ground more than 2 m above the offshore level, and a reflected wave about
+  1 m high comes back seaward around 20 minutes. The 4.40 m is the value when this wave passes
+  just behind the opening.
+- **A tsunami 1 m lower destroys half as many houses**: with a +3 m tsunami, 51 % of the town,
+  mainly on the seaward side, is flooded 2 m or more. The seaward side is 92 % destroyed, but the
+  middle falls to 45 % and inland to 8 %. Because damage rises sharply around 2 m of inundation, a
+  small difference in tsunami height changes the extent of the damage a lot. The destroyed houses
+  are close to the sea, so 40 % of the debris (23 thousand m³) goes offshore with the backwash.
 - **Raising the seawall does little while the opening is open**: even with the crest raised to
-  +3 m, the tsunami enters through the 120 m opening, 83 % of the town is flooded 2 m or more and
-  90 % of the houses break. The backwash also gathers at the opening and flows out fast, carrying
-  half of the debris (50 thousand m³) offshore.
+  +3 m, the tsunami enters through the 120 m opening, 78 % of the town is flooded 2 m or more and
+  84 % of the houses break. The backwash also gathers at the opening and flows out fast, carrying
+  nearly half of the debris (44 thousand m³) offshore.
 - **Closing the opening as well protects the inland area**: only the water overtopping the
-  seawall by 1 m enters, and the inland destruction falls to 13 %. All the debris stays behind
-  the seawall and none goes offshore. However, the water that entered stays behind the closed
-  seawall (1.3 m on average over the town at 60 minutes), and in this model houses keep breaking
-  while they stay flooded. The destruction at 35 minutes, when the backwash ends, is 60 % (68 %
-  in the middle), and it grows to 71 % (97 % in the middle) during the standing water that
-  follows. Houses standing in still water are rarely swept away in reality, so this increase is
-  an overestimate (see "What this model cannot represent" below).
+  seawall by 1 m enters, and the inland destruction falls to 16 %. The debris stays almost
+  entirely behind the seawall and none goes offshore. However, the water that entered stays
+  behind the closed seawall (1.2 m on average over the town at 60 minutes), and in this model
+  houses keep breaking while they stay flooded. The destruction at 35 minutes, when the backwash
+  ends, is 63 % (74 % in the middle), and it grows to 72 % (98 % in the middle) during the
+  standing water that follows. Houses standing in still water are rarely swept away in reality,
+  so this increase is an overestimate (see "What this model cannot represent" below).
+- **Stripes of debris behind the closed seawall**: in this case the deposit (bottom right of the
+  maps) shows streaks along the flow about 60 m (6 cells) apart. Where the fast flow over the
+  seawall (about 2 m/s) plunges into the standing water, only the velocity develops a sideways
+  disturbance that grows, and the debris, which stops where the flow is slow, traces its pattern
+  (the destroyed share of houses stays uniform across). The disturbance starts earlier near the
+  north and south edges of the domain, but the stripes grow just as strongly when the edges are
+  treated as if the same terrain continued outside. The position and spacing of the stripes have
+  no meaning (whether this is a physical instability or a numerical one has not been separated;
+  as the spacing is 6 cells, it likely depends on the grid), and the amount of debris and the
+  destroyed share change by only about 2 % when the edge treatment is changed.
 
 ## What this model cannot represent (differences from real phenomena)
 
@@ -169,8 +190,11 @@ left out of the table.
   made by earlier ones.
 - **The seawall does not fail**: erosion of the ground on the landward side of the seawall by
   overtopping, which can make the seawall fail, and ground subsidence are not treated.
-- **Scale**: the domain is 1.2 km × 0.6 km, and the town is a closed lowland. The values are
-  schematic.
+- **Edge of the domain**: the east edge is a closed wall, and the high ground to the east of the
+  town stops the inundation before it. The reflection from the slope of the high ground ("The
+  maximum depth exceeds the limit..." above) is an effect of the terrain; in a real town the
+  run-up height and the returning wave depend on the inland terrain.
+- **Scale**: the domain is 1.2 km × 0.6 km. The values are schematic.
 
 ## Notes
 
@@ -224,31 +248,34 @@ From the ledger (bldgdebris.csv), left: remaining house stock; right: floating d
 
 | Case | Houses destroyed (all / seaward / middle / inland) | Max inundation depth in the town (max / mean) | Debris carried offshore |
 |---|---:|---:|---:|
-| Main (depth criterion) | 96 / 100 / 100 / 89 % | 4.79 / 3.61 m | 23,155 m³ |
-| Porosity not raised by destruction | 100 / 100 / 100 / 100 % | 5.58 / 4.41 m | 33,977 m³ |
-| Load hV² criterion | 60 / 82 / 66 / 30 % | 4.62 / 3.64 m | 19,433 m³ |
-| Load criterion + driftwood | 60 / 83 / 66 / 30 % | 4.62 / 3.64 m | 19,558 m³ |
+| Main (depth criterion) | 87 / 100 / 100 / 59 % | 4.40 / 2.98 m | 23,489 m³ |
+| Porosity not raised by destruction | 88 / 100 / 100 / 63 % | 5.28 / 3.55 m | 24,550 m³ |
+| Load hV² criterion | 52 / 84 / 64 / 8 % | 4.61 / 3.03 m | 14,258 m³ |
+| Load criterion + driftwood | 52 / 84 / 64 / 8 % | 4.61 / 3.03 m | 14,347 m³ |
 
 - **Porosity feedback**: when the sites of destroyed houses let the flow through, the water
-  spreads over a larger area, the level falls and inland destruction decreases (inland 100 % →
-  89 %; 100 % → 96 % overall). Without the feedback the town fills as a "narrow container with
-  0.6 porosity" and the maximum inundation depth reaches 5.58 m. With the feedback, the debris
-  going offshore with the backwash is also only two thirds (23 thousand against 34 thousand m³).
+  spreads over a larger area and the level falls (maximum inundation depth 5.28 → 4.40 m, mean
+  3.55 → 2.98 m). Without the feedback the town fills as a "narrow container with 0.6 porosity"
+  and the water also runs higher up the slope of the high ground (ground +7.0 m against +6.2 m).
+  The difference in destroyed houses is small (88 % against 87 % overall, 63 % against 59 %
+  inland), and the debris going offshore is also about the same (25 thousand against 23 thousand
+  m³).
   Which is closer to a real disaster area depends on whether the sites of destroyed houses become
   "open ground that lets the flow through" or stay "blocked by debris" (this model assumes the
   former).
 - **Destruction criterion**: with the load hV² criterion, destruction concentrates where the flow
   is strong (the path of the flow entering through the opening, where water falls over the
-  seawall) and decreases inland (60 % in all). Houses do not break in standing water. The
-  thresholds of 1.0-4.0 m³/s² are calibration values set from the water-only maximum load of this
-  example (F9999 of the main case; median 8.2 m³/s² over the town, 5.5 inland), not practical values. The depth
+  seawall) and decreases inland (52 % in all, 8 % inland). Houses do not break in standing water.
+  The thresholds of 1.0-4.0 m³/s² are calibration values set from the water-only maximum load of
+  this example (F9999 of the main case; median over the flooded cells 8.3 m³/s² in the town, 3.6
+  inland), not practical values. The depth
   criterion links directly to the fragility functions used in practice; the load criterion is for
   looking at the force of the flow and the chain with driftwood and debris.
 - **Driftwood adds a few percent**: 36,000 of the 60,000 m³ of timber on the beach floats away,
-  but the maximum load including driftwood (Fd9999) is only up to 5 % (3 % on average) larger
+  but the maximum load including driftwood (Fd9999) is only up to 4 % (2 % on average) larger
   than the water-only load (F9999), and the houses destroyed increase by less than 1 point. Spread
   over the flooded area (about 56 ha), the timber is only about 0.06 m³/m² as a column, a few
-  percent of the weight of 3-5 m of water. Driftwood gathering by snagging on buildings is not
+  percent of the weight of water about 3 m deep. Driftwood gathering by snagging on buildings is not
   represented (a limit stated in the driftwood chapter).
 
 ## References
