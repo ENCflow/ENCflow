@@ -2741,9 +2741,9 @@
     {
       "source": "examples/timberyard/README.md",
       "target": "examples/timberyard/en/README.md",
-      "source_sha256": "93cceb51299950ca1a8fb43b8a4593598cad8d628f985db130df45338bb780c0",
-      "target_sha256": "9ebef074f03f3f014bad76dd5b3849b99018871a39a23bad20e55bd2cdf3bbb3",
-      "reviewer": "Claude (Claude Code session; values updated to reruns with the default f_advection_donor = 3: main and supplement tables (m3 values), Japanese and English edited together and compared; prose values pending a check against f_advection_donor = 0 controls)",
+      "source_sha256": "ebe5fc0b9c58aa3acb23718d7ad909e5e32d4e2b225b81b06b6721cef060d042",
+      "target_sha256": "7e0fe36d139b3dc63b5cc04e8447eb63269dbc33d944d2bd2db393670db7119b",
+      "reviewer": "Claude (Claude Code session; values updated to reruns with the default f_advection_donor = 3: main and supplement tables (m3 values) and the Ise Bay type load at the opening (1.5 -> 1.4 m3/s2, ratio 'more than twice'); other prose values checked against f_advection_donor = 0 controls and unchanged; Japanese and English edited together and compared)",
       "method": "assistant",
       "reviewed_on": "2026-11-10"
     },

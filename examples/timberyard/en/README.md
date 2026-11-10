@@ -161,8 +161,8 @@ There is 60,000 m³ of timber in total. The rest is on the seawall (3-1,900 m³)
 - **Raising the seawall does not keep the timber out if the gate is left open**: the surge does
   not overtop the +4 m seawall, but the town floods through the 120 m opening (maximum depth
   3.08 m), and the timber rides the fast flow through the opening (up to 2.2 m/s) to reach 88 %
-  of the town. The load at the opening (up to 3.2 m³/s²) is twice that of the Ise Bay type
-  (1.5 m³/s²). The building drag keeps the flow in the town slow, below 0.02 m/s at the surge
+  of the town. The load at the opening (up to 3.2 m³/s²) is more than twice that of the Ise Bay type
+  (1.4 m³/s²). The building drag keeps the flow in the town slow, below 0.02 m/s at the surge
   peak (150-160 minutes), so the floating timber stops in the town during the peak and none is
   carried offshore by the ebb; 38,000 m³ stays in the town after 4 hours. With the opening
   closed as well, this surge (+3.5 m) does not enter the town.
