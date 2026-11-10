@@ -161,7 +161,7 @@ downstream of the breach. Right: inundation depth at the cell in the centre of h
 |---|---:|---:|---:|---:|---:|---:|---:|---:|
 | Overtopping only | 0.20 million m³ | 24 m³/s | 1,136 m³/s | 0 ha | 0.28 m | 0 / 0 / 0 % | 0.16 / 0.14 m | — |
 | Breach by overtopping | 4.92 million m³ | 651 m³/s | 784 m³/s | 247 ha | 1.77 m | 69 / 0 / 0 % | 0.79 / 0.63 m | 226 min |
-| Breach 1 hour later | 2.68 million m³ | 492 m³/s | 784 m³/s | 166 ha | 1.71 m | 48 / 0 / 0 % | 0.66 / 0.51 m | 286 min |
+| Breach 1 hour later | 2.68 million m³ | 492 m³/s | 784 m³/s | 165 ha | 1.70 m | 48 / 0 / 0 % | 0.66 / 0.51 m | 286 min |
 | Breach + secondary levee | 4.49 million m³ | 652 m³/s | 790 m³/s | 269 ha | 2.64 m | 69 / 0 / 0 % | 2.04 / 0.24 m | 223 min |
 
 The upstream discharge peaks at 1,600 m³/s. "Houses swept away" is the fraction of the house
@@ -329,7 +329,7 @@ initial terrain z.txt of the resolved levee; the same in both rows).
 | Case | Peak discharge through the opening (m³/s) / time (min) | Flood volume (10⁴ m³) | Inundated area (ha; h > 0.01 m) | Maximum inundation depth (m) | Start of inundation at the toe (min) |
 |---|---:|---:|---:|---:|---:|
 | Resolved levee + prescribed bed motion | 153 / 120 | 40.3 | 71.4 | 1.13 | 76 |
-| Virtual wall + &list_channel_breach (f_br_diag = 1) | 150 / 116 | 41.2 | 70.3 | 1.00 | 76 |
+| Virtual wall + &list_channel_breach (f_br_diag = 1) | 150 / 119 | 41.3 | 70.4 | 1.00 | 76 |
 
 - With the resolved levee, once the levee cells drop to the floor the opening becomes
   ordinary cells and the shallow-water equations solve the flow directly (all links of the
@@ -347,7 +347,7 @@ initial terrain z.txt of the resolved levee; the same in both rows).
 
 **Breach width and discharge** (same terrain with different breach widths, failing all at
 once at 70-80 minutes; steady discharge at 100 minutes compared; this table was computed with
-f_opening_dynamic = 2; the default is 3):
+f_opening_dynamic = 2 and f_advection_donor = 0; the default of both is 3):
 
 | Width (cells / sites) | Resolved levee Q (m³/s) | Broad-crested weir 1.7·B·H^1.5 (m³/s) | Virtual wall f_br_diag = 0 Q / ratio to resolved | f_br_diag = 1 Q / ratio to resolved |
 |---:|---:|---:|---:|---:|

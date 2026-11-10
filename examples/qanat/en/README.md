@@ -77,7 +77,7 @@ as ΔH → 0, and the explicit time step could not be set). It is a simple appro
 free-surface flow that makes the square-root pipe law proportional to the filling ratio f.
 The head difference of uniform flow on the floor gradient of 0.004, 0.04 m, lies on the
 square-root branch, so the tunnel flow in this example is 1.31 L/s per cm of depth. The qanat
-flow of 3.5 L/s before pumping corresponds to a depth of 2.7 cm, the same as the 2.7 cm in the
+flow of 3.6 L/s before pumping corresponds to a depth of 2.7 cm, the same as the 2.7 cm in the
 conveyance section of the water-depth panel of the results. No water flows out of a cell 1 cm deep or less (gwc_eps). (c) Open outfall on land.
 The smaller of the orifice C_dA √(2gΔH) (C_dA = 0.15 m²) and the per-step limit that lowers
 the tunnel level to the surface water level of the outlet cell flows out, with no backflow.
@@ -160,27 +160,27 @@ dot = pumping well.
 
 | Case (period) | Qanat flow | Pumping | Groundwater seeping into the drain | Storage loss | Tunnel below the water table |
 |---|---:|---:|---:|---:|---:|
-| Before pumping (days 130-150) | 3.54 L/s | — | 6.46 L/s | 0.00 L/s | 150 m |
+| Before pumping (days 130-150) | 3.60 L/s | — | 6.40 L/s | 0.00 L/s | 150 m |
 | Well 2 L/s (days 280-300) | 1.71 L/s | 2.00 L/s | 6.29 L/s | 0.00 L/s | 140 m |
 | Well 5 L/s (days 280-300) | 0 | 5.00 L/s | 5.07 L/s | 0.07 L/s | 70 m |
 
 The values are 20-day means. The qanat-only case stays almost the same as before pumping up
-to day 300 (qanat flow 3.53 L/s over days 280-300). The groundwater seeping into the drain is
+to day 300 (qanat flow 3.60 L/s over days 280-300). The groundwater seeping into the drain is
 what remains of the recharge after subtracting the qanat flow and the pumping and adding the
 storage loss (it agrees within 0.2 L/s with the mean of the east-edge transect; the flow over
 the plain pulsates, so the transect is read as a 20-day mean).
 
-- **Once the water table is in equilibrium, 35 % of the recharge comes out of the qanat**:
+- **Once the water table is in equilibrium, 36 % of the recharge comes out of the qanat**:
   because the initial water table is high, 14 L/s comes out in the first few days, settling
-  to 3.5 L/s in about 50 days. The remaining 6.5 L/s bypasses the tunnel and seeps out into
+  to 3.6 L/s in about 50 days. The remaining 6.4 L/s bypasses the tunnel and seeps out into
   the drain at the foot of the fan. Over most of the collection section the water table is
   held 3-4 cm above the tunnel floor, at almost the same height as the water in the tunnel
   (the tunnel collects water by lowering the surrounding water table to its own level). The
   water in the tunnel is up to 4 cm deep in the collection section and 2.7 cm deep in the
   conveyance section.
 - **Most of the pumped water comes out of the qanat flow**: when pumping at 2 L/s starts, the
-  qanat flow falls from 3.5 to 1.7 L/s in about 30 days. The 1.83 L/s lost is 92 % of the
-  pumping rate; the groundwater flowing to the drain falls by only 0.17 L/s. While the tunnel
+  qanat flow falls from 3.6 to 1.7 L/s in about 30 days. The 1.89 L/s lost is 94 % of the
+  pumping rate; the groundwater flowing to the drain falls by only 0.12 L/s. While the tunnel
   is collecting groundwater, the water in the tunnel holds up the surrounding water table, so
   the water table falls mainly on the well's (north) side (on the north-south line through the
   well, 0.23 m at the north edge against 0.03 m at the south edge). The well pumps groundwater
@@ -189,7 +189,7 @@ the plain pulsates, so the transect is read as a 20-day mean).
   qanats) (Theis 1940). In this example, that outflow is above all the qanat.
 - **The qanat dries up once pumping exceeds its flow**: at 5 L/s the qanat stops flowing
   about 7 days after pumping starts (day 156.75). The 5 L/s of pumping is made up of the qanat flow
-  3.5 L/s, a decrease of 1.4 L/s in the groundwater flowing to the drain, and a storage loss of
+  3.6 L/s, a decrease of 1.3 L/s in the groundwater flowing to the drain, and a storage loss of
   0.07 L/s. The water table falls by 0.2-0.8 m over the lower part of the collection section,
   and only the upper 70 m of the tunnel stays below the water table. Groundwater still enters
   the tunnel there, but further down, at x = 85-155 m, the tunnel lies above the water table;
@@ -261,7 +261,7 @@ the plain pulsates, so the transect is read as a 20-day mean).
 - `RECH_LS` (gen_data.py; recharge) and `gw2_ksh_mmh` (hydraulic conductivity): set the
   height and gradient of the water table and change the shares of the qanat and the drain.
 - `gwp_val` (pumping rate) and `gwp_cell` (well position): whether the pumping rate is below
-  or above the qanat flow (3.5 L/s) decides whether the flow only falls or dries up. Moving
+  or above the qanat flow (3.6 L/s) decides whether the flow only falls or dries up. Moving
   the well away from the tunnel delays its effect.
 
 ## References
