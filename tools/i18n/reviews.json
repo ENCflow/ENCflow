@@ -13,11 +13,11 @@
     {
       "source": "README.ja.md",
       "target": "README.md",
-      "source_sha256": "e4ffa137eaad863b8c64210d07411635b84c534266aa66974daa2c3c0a14f68c",
-      "target_sha256": "d8931537627a6759698c0b5b9b0daacb45a6761a065f5bd1efa5300cf28d1b1d",
-      "reviewer": "Claude (Claude Code session; reviewed the Japanese source against the English mirror after adding the link to the chained-process examples, 2026-11-02)",
+      "source_sha256": "411a4a1b420e4602c7e5a30939e341b3a4c83f9ec4a7dce3dfaf5a29714ce5a4",
+      "target_sha256": "41c6fd1ee2db170984af3aa48c5726a2ee2faab346420380fcb94932e05b932d",
+      "reviewer": "Claude (Claude Code session; user-requested edits: examples link in the top link row, removed the bit-identity conditions, the 'barrier to trying' sentence and the CI-consistency sentence, merged the AI-automation sentences; both versions edited together and read side by side)",
       "method": "assistant",
-      "reviewed_on": "2026-11-02"
+      "reviewed_on": "2026-11-10"
     },
     {
       "source": "TRADEMARKS.md",
