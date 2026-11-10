@@ -212,7 +212,7 @@ for r, c in enumerate(cases):
         ax.contour(x, y, z, levels=np.arange(2, 21, 2), colors="orange", linewidths=0.4)
         ax.contour(x, y, z, levels=[ZCAP], colors="red", linewidths=0.8)
         ax.set_title("%s  T_geo = %.1e s" % (c["name"], t), fontsize=9)
-fig.suptitle(T("赤線 = キャップ上面(z = 17 m)の輪郭", "Red line = outline of the cap top (z = 17 m)"), fontsize=10)
+fig.suptitle(T("赤線 = 帽岩の下面の高さ(z = 17 m)の等高線 = 帽岩が残る範囲の輪郭", "Red line = contour at the base of the cap rock (z = 17 m) = outline of the remaining cap rock"), fontsize=10)
 fig.tight_layout(); fig.savefig("%s/maps%s.png" % (FIGDIR, SUF), dpi=110); plt.close(fig)
 
 # --- 横断

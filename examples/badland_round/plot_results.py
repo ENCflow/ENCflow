@@ -49,7 +49,7 @@ if MODE == "strata":
     HARD = {"d0_strata": HARD15, "d1e-6_strata": HARD15}
 elif MODE == "strata3":
     CASES = [("param_d0_strata3.txt", T("クリープなし・硬軟互層 (3 m, 倍率 1/0.3)", "no creep, beds 3 m (×1/0.3)")),
-             ("param_d3e-7_strata3.txt", T("D = 3e-7 m²/s (L ≈ 2 m)・硬軟互層 (3 m)", "D = 3e-7 m²/s (L ≈ 2 m), beds 3 m")),
+             ("param_d3e-7_strata3.txt", T("D = 3e-7 m²/s (L ≈ 2.4 m)・硬軟互層 (3 m)", "D = 3e-7 m²/s (L ≈ 2.4 m), beds 3 m")),
              ("param_d1e-6.txt", T("D = 1e-6 m²/s (L ≈ 8 m)・層理なし", "D = 1e-6 m²/s (L ≈ 8 m), no strata")),
              ("param_d1e-6_strata.txt", T("D = 1e-6 m²/s (L ≈ 8 m)・硬軟互層 (1.5 m)", "D = 1e-6 m²/s (L ≈ 8 m), beds 1.5 m")),
              ("param_d1e-6_strata3.txt", T("D = 1e-6 m²/s (L ≈ 8 m)・硬軟互層 (3 m)", "D = 1e-6 m²/s (L ≈ 8 m), beds 3 m"))]
@@ -57,7 +57,7 @@ elif MODE == "strata3":
     HARD = {"d0_strata3": HARD3, "d3e-7_strata3": HARD3, "d1e-6_strata": HARD15, "d1e-6_strata3": HARD3}
 else:
     CASES = [("param_d0.txt", T("クリープなし (D = 0)", "no creep (D = 0)")),
-             ("param_d3e-7.txt", "D = 3e-7 m²/s (L ≈ 2 m)"),
+             ("param_d3e-7.txt", "D = 3e-7 m²/s (L ≈ 2.4 m)"),
              ("param_d1e-6.txt", "D = 1e-6 m²/s (L ≈ 8 m)"),
              ("param_d3e-6.txt", "D = 3e-6 m²/s (L ≈ 24 m)")]
     SUF = ""

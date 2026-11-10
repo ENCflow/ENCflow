@@ -282,7 +282,7 @@ def profile(k):
         s = slice(0, I_COAST)
         ax.fill_between(XK[s], base[s], z[s], color="#e8d9b5", label=T("帯水層(河床下)", "aquifer (below bed)"))
         ax.fill_between(XK[s], base[s], base[s] + hgs[s] / SY, color="#c0392b", alpha=0.6,
-                        label=T("帯水層の塩水 zone", "salt zone of the aquifer"))
+                        label=T("帯水層の塩水", "salt water in the aquifer"))
         ax.fill_between(XK[s], z[s], z[s] + hss[s], color="#1f4e9c", alpha=0.7,
                         label=T("河道の底層塩水", "bottom salt layer in the river"))
         ax.fill_between(XK[s], z[s] + hss[s], e[s], color="#9ecae1", alpha=0.6,
@@ -357,8 +357,11 @@ def series():
     axs[0].legend(fontsize=8, loc="upper center", bbox_to_anchor=(0.5, -0.14), ncol=2)
     axs[0].text(1.0, axs[0].get_ylim()[1] * 0.5, T("出水+強雨", "flood + rain"), fontsize=8, ha="center",
                 rotation=90)
-    axs[1].axhline(X_MOUTH - (I_WEIR - 1) * DX / 1000, color="k", ls=":", lw=1)
-    axs[1].text(19.8, X_MOUTH - (I_WEIR - 1) * DX / 1000 + 0.05, T("堰の位置", "barrage"), ha="right", fontsize=8)
+    # 堰のセル(河口から 0.48〜0.52 km)。先端の距離はセルの上流側の面で測るので、堰で止まったくさびは 0.48 km
+    wd, wu = X_MOUTH - I_WEIR * DX / 1000, X_MOUTH - (I_WEIR - 1) * DX / 1000
+    axs[1].axhspan(wd, wu, color="0.55", alpha=0.6, lw=0)
+    axs[1].text(19.8, wu + 0.05, T(f"堰のセル({wd:.2f}〜{wu:.2f} km)", f"barrage cell ({wd:.2f}–{wu:.2f} km)"),
+                ha="right", fontsize=8)
     axs[1].set_ylabel(T("塩水くさびの先端の河口からの距離 (km)", "salt-wedge tip distance from mouth (km)"))
     axs[1].set_ylim(0, 3.1)
     axs[1].legend(fontsize=8, loc="upper center", bbox_to_anchor=(0.5, -0.14), ncol=3)

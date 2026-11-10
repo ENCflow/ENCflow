@@ -21,7 +21,7 @@ import numpy as np
 import matplotlib
 matplotlib.use("Agg")
 import matplotlib.pyplot as plt
-from matplotlib.colors import LightSource, LogNorm
+from matplotlib.colors import LightSource, LogNorm, Normalize
 EN = "en" in sys.argv[1:]
 STEADY = "steady" in sys.argv[1:]          # 準定常強制(param_steady.txt): 地形時間 = 水理時間 × morfac
 ARGS = [a for a in sys.argv[1:] if a not in ("en", "steady")]
@@ -162,12 +162,20 @@ ax.contour(x, y, z0, levels=np.arange(5, 45, 5), colors="tab:blue", linewidths=0
 ax.set_title(T("初期地形(等高線 5 m)", "Initial terrain (contours 5 m)"))
 ax = axes[0, 1]
 ax.imshow(hillshade(zf, dx), cmap="gray", extent=ext, origin="lower", vmin=0, vmax=1)
-ax.contour(x, y, zf, levels=np.arange(-10, 45, 5), colors="tab:blue", linewidths=0.5)
-ax.set_title(T("最終地形(地形時間 %.0f 年)", "Final terrain (morphological time %.0f yr)") % tend)
+cstep = 5 if zf.max() - zf.min() < 60 else 10      # 準定常強制などで起伏の範囲が広いときは間隔を広げる
+ax.contour(x, y, zf, levels=np.arange(np.floor(zf.min() / cstep) * cstep, zf.max() + cstep, cstep), colors="tab:blue",
+           linewidths=0.5, linestyles="solid")
+ax.set_title(T("最終地形(地形時間 %.0f 年、等高線 %d m)", "Final terrain (morphological time %.0f yr, contours %d m)") % (tend, cstep))
 ax = axes[1, 0]
-im = ax.imshow(np.maximum(d, 1e-3), extent=ext, origin="lower", cmap="magma_r",
-               norm=LogNorm(vmin=0.1, vmax=max(d.max(), 1.0)))
-plt.colorbar(im, ax=ax, label=T("削剥深 z0 − z (m。対数。負 = 岩屑の堆積は 0 で表示)", "Denudation depth z0 − z (m, log;\nnegative = debris deposition, shown as 0)"))
+if d.min() > 0 and d.max() / d.min() < 10:
+    # 全面が深く削られた(準定常強制などで平野が 100 m 以上下がる): 対数では色が飽和するので線形で範囲いっぱいに
+    im = ax.imshow(d, extent=ext, origin="lower", cmap="magma_r",
+                   norm=Normalize(vmin=np.floor(d.min()), vmax=np.ceil(d.max())))
+    plt.colorbar(im, ax=ax, label=T("削剥深 z0 − z (m)", "Denudation depth z0 − z (m)"))
+else:
+    im = ax.imshow(np.maximum(d, 1e-3), extent=ext, origin="lower", cmap="magma_r",
+                   norm=LogNorm(vmin=0.1, vmax=max(d.max(), 1.0)))
+    plt.colorbar(im, ax=ax, label=T("削剥深 z0 − z (m。対数。負 = 岩屑の堆積は 0 で表示)", "Denudation depth z0 − z (m, log;\nnegative = debris deposition, shown as 0)"))
 ax.set_title(T("削剥深(平野 %.1f m、裾はより深い)", "Denudation depth\n(plain %.1f m, deeper at the foot)") % dp)
 ax = axes[1, 1]
 im = ax.imshow(sdf, extent=ext, origin="lower", cmap="YlOrBr", vmin=0, vmax=max(sdf.max(), 1.0))

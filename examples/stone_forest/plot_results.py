@@ -190,7 +190,7 @@ plt.savefig("%s/sections.png" % FIGDIR, dpi=130)
 plt.close()
 
 # ---------------------------------------------------------------- 図: stats
-ts = np.array([s[0] for s in series])
+ts = np.array([s[0] for s in series]) / 1000.0      # 千年(年のままでは目盛の数字が続いて読めない)
 fig, axes = plt.subplots(1, 3, figsize=(14, 3.8))
 axes[0].plot(ts, [s[2] for s in series], "-o", ms=3)
 axes[0].set_ylabel(T("溝の深さ (m。台地面 − 節理セル)", "cleft depth (m; plateau − joint cells)"))
@@ -199,7 +199,7 @@ axes[1].set_ylabel(T("柱の数(台地面 − 5 m より高い連結領域)", "n
 axes[2].plot(ts, [s[4] for s in series], "-o", ms=3)
 axes[2].set_ylabel(T("崖錐の体積 (m³)", "talus volume (m³)"))
 for ax in axes:
-    ax.set_xlabel(T("地形時間 (年。定常強制)", "Morphological time (yr; steady forcing)"))
+    ax.set_xlabel(T("地形時間 (千年。定常強制)", "Morphological time (kyr; steady forcing)"))
     ax.grid(alpha=0.3)
 plt.tight_layout()
 plt.savefig("%s/stats.png" % FIGDIR, dpi=130)
