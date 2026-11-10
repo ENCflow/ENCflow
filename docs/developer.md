@@ -19713,6 +19713,40 @@ fig_wavefield.py(make_guide_figs.py wavefield。章の 2 枚)と fig_wavefield_m
 ない旨を図と本文に書いた)。matplotlib 3.11.2・IPAGothic で 2 回生成してバイト一致。コード・reference・既定値の
 変更はない。
 
+### 90.26 fn_wave の沿岸漂砂と波による流れ(wf_flow ≥ 1)の併用の停止(2026-11-10 挙動変更。利用者「全て推奨で」)
+
+**経緯**: ユーザーガイドの機能一覧に「沿岸の波浪場は波浪による沿岸漂砂(fn_wave)の上位互換」と書けるかを
+検討し、上位互換ではないと整理した(fn_wave は CERC 式の漂砂量そのもので、汀線の擾乱の減衰・成長が線形理論に
+一致することを test/wave_shore で検定済み。波浪場の漂砂は過程から求める量で test/wfsed の直線海岸で CERC の
+約 1.6 倍、高角の波の汀線の不安定は未検定。examples/delta の段 4・段 5 で汀線の形が異なる。使い分けは
+wavefield.md の冒頭の表)。その過程で、波浪場を流れだけに使い(`wf_flow` ≥ 1・`f_wfsed = 0`)、漂砂は fn_wave で
+与える組み合わせが、コードで止まらず、文書にも検証にもないことがわかった。
+
+**問題**: CERC 式の量は、斜めの砕波が起こす沿岸流による輸送を含む沿岸漂砂の総量である。`wf_flow` ≥ 1 では波で
+起きた沿岸流が浅水流に入り、fn_wave の前提の掃流砂(`f_fluvial = 1`)がその流れで砂を運ぶので、CERC の量に
+上乗せされ、同じ輸送の一部を二重に数える(fn_wave と過程の漂砂 f_wfsed を同時に有効にしない D4 と同じ理由)。
+
+**決定**: 開始時に停止する。代案の「注意書きだけ」は、もっともらしい結果を出せてしまうので採らない(§0 方針 13)。
+波による流れと漂砂を組むときは f_wfsed を使う。
+
+**実装**: m_geomorph_init が fn_wave の沿岸漂砂(`f_wave_longshore = 1`)を有効にしたとき共有状態の旗
+`s%wv_cerc` を立て(init の順は geomorph → wavefield。要求 `s%wv_sed` と同じ型)、m_wavefield_init が setup_params
+の後(`wf_flow` の既定の解決と検査の後)に `s%wv_cerc .and. wf%flow >= 1` なら par_stop する(全ランク同一の
+namelist 値による判定 = collective 安全)。`f_wavefield = 0` では流れに作用しないので止めない。f_wfsed = 1 と fn_wave
+の組み合わせは従来どおり m_geomorph_init が先に止める(test/wfsed の param_bad2 のメッセージは変わらない)。
+旗は論理値 1 個で、fn_wave と fn_wavefield を使わない計算の結果には関わらない。
+
+**検定**: test/wfsed に param_bad6(param_bad2 から f_wfsed を外した設定 = `wf_flow = 2` と fn_wave の沿岸漂砂)を
+足し、Run.sh の stop_check で停止とメッセージを確かめる。既存の test・examples・tutorials でこの組み合わせを使う
+ものはない(fn_wave と fn_wavefield を両方書くのは param_bad2 だけ)。文書は wavefield.md の「流れへの作用」と
+「適用範囲と併用の制限」、geomorph.md の fn_wave の「使い方」(日英)。
+
+**検証(2026-11-10、gfortran 13.2、逐次)**: CI の 17 ケースが合格。wave・dambreak・frost・pump・conduit・salt・
+vzcol・vzzone・wfshoal・wfshadow は reference とビット一致、wfcurrent・wfsed は reference を作ったマシンとの CPU の
+差の許容内(§90.18)で、同じマシンで変更前のソースから作った実行ファイルと比べると両ケースの全出力(88・134
+ファイル)がバイト一致(prmap・wfswash・gwlateral・gwtani・stg は検定型)。test/wfsed の param_bad6 は新しい
+メッセージで停止し、param_bad2 は従来のメッセージのまま。
+
 ## 91. 急勾配の重力補正の cos²θ を地盤の勾配の大きさで求める(格子の向きによる有効重力の偏りの修正。2026-11-04 挙動変更)
 
 (定式化・ステンシル(どの辺にどのセルの地盤を使うか)・既往研究との比較・限界をまとめた

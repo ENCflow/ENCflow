@@ -23,7 +23,7 @@ developer.md §90.18。同じマシンでは
 | 高波浪・低波浪 | `param_storm.txt` / `param_calm.txt` | 基本の海浜に直角入射の H_m0 = 2 m・T = 8 s(侵食)と H_m0 = 0.6 m・T = 12 s(回復)。30 分 |
 | 砕波の乱れ | `param_turb.txt` | 基本に砕波の乱れによる攪拌(`f_wfsed_turb = 1`。XBeach の turb = wave_averaged の形)を加える |
 | 再開 | `param_rt1.txt` → `param_rt2.txt` | 基本を 1530 s(波浪場の更新と地形の更新の間)で保存し、復元して 3600 s まで |
-| 不正な設定 | `param_bad1.txt`〜`param_bad5.txt` | `fn_wavefield` なし、fn_wave の沿岸漂砂と同時、`f_wfsed = 2`、`f_wavefield = 0`、`f_wfsed = 0` で `f_wfsed_turb = 1`(どれも停止すること) |
+| 不正な設定 | `param_bad1.txt`〜`param_bad6.txt` | `fn_wavefield` なし、fn_wave の沿岸漂砂と同時、`f_wfsed = 2`、`f_wavefield = 0`、`f_wfsed = 0` で `f_wfsed_turb = 1`、波による流れ(`wf_flow = 2`)と fn_wave の沿岸漂砂を同時(どれも停止すること) |
 
 ## 検定(Check_wfsed.py)
 

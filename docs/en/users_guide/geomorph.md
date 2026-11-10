@@ -867,7 +867,10 @@ Panel (a) is an illustrative delta shoreline showing the surf zone, the angle α
 | wave_vmax | −1 (off) | river-mouth rule: cells with \|V\| above this (m/s) are neither a wave source nor surf zone (shadow). Required at river mouths with a mobile bed |
 
 **Usage**: bed load `f_fluvial = 1` is required (longshore transport rides the
-bed-load path). Represent the sea as ordinary cells + an initial water level
+bed-load path). It cannot be combined with the wave-driven flow (`wf_flow` ≥ 1) or the sediment
+transport (`f_wfsed`) of the [coastal wave field](wavefield.md) (the run stops at the start: the CERC
+transport already includes the transport by the wave-driven longshore current, so it would be
+counted twice). Represent the sea as ordinary cells + an initial water level
 ([river-mouth deltas](geomorph_applications.md#2-river-mouth-deltas) on the applications page). Low-angle waves (|alpha| < 45 deg) smooth the
 shoreline (diffusion), high-angle waves grow the bulges (spits, asymmetric
 cusps). For a delta the shape follows the ratio of the river supply to Q_s;

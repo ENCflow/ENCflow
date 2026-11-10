@@ -7,7 +7,7 @@
 # 土砂の保存)・param_storm と param_calm(高波浪の侵食と低波浪の回復)・param_turb(砕波の乱れに
 # よる攪拌)は Check_wfsed.py の検定のみ(reference 非依存)。param_rt1 → param_rt2 の
 # 再開の継続が通し計算(param.txt)と state.dat・swflow_enc.dat・wavefield.dat・最終分布で
-# バイト一致すること、param_bad1〜5(不正な設定)が停止することを確かめる
+# バイト一致すること、param_bad1〜6(不正な設定)が停止することを確かめる
 # reference を作ったマシン(AVX-512 の Xeon)と CPU の違うマシン(CI のランナー)では、-march=native の
 # ベクトル化の差で最終桁がずれ、波と流れの双方向の連成で Log.txt の S が相対 1e-7 程度、出力が
 # 印字の最終桁 1 つ変わる(developer.md §90.18)。比較は ULP=1・RTOL=1e-6 にし、その差で変わる
@@ -60,5 +60,6 @@ stop_check param_bad2.txt "f_wfsed cannot be combined with the longshore transpo
 stop_check param_bad3.txt "f_wfsed must be 0 or 1"
 stop_check param_bad4.txt "f_wfsed of fn_geomorph requires f_wavefield=1"
 stop_check param_bad5.txt "f_wfsed_turb requires f_wfsed=1"
+stop_check param_bad6.txt "wf_flow >= 1 cannot be combined with the longshore transport of fn_wave"
 
 echo "=== wfsed verification PASS ==="

@@ -293,11 +293,11 @@
     {
       "source": "docs/users_guide/geomorph.md",
       "target": "docs/en/users_guide/geomorph.md",
-      "source_sha256": "0428676fd3414b42dc8725304880a7c1b33917890f7e6a1b29e83c73570d06a9",
-      "target_sha256": "489ca967563f3437739824772caa87250f816d55fc2010ef2f50c9bd58123cff",
-      "reviewer": "Claude (Claude Code session; added the hillslope-erosion (f_wash) figure with its caption paragraph and compared the Japanese source with the English mirror for the added text; the rest of the pair is unchanged since the previous record)",
+      "source_sha256": "c7d8f51bdc7ff091510308db88ba1a7b0faea9caebd24535c9994fbca814c8d2",
+      "target_sha256": "2406f6ea21c445a1b71c64e90dab9b450abd44dd3c4d853699c996c3a3214839",
+      "reviewer": "Claude (Claude Code session; fn_wave usage paragraph: cannot be combined with wf_flow >= 1 or f_wfsed of the wave field (stops at start); both versions edited together and read side by side)",
       "method": "assistant",
-      "reviewed_on": "2026-11-08"
+      "reviewed_on": "2026-11-10"
     },
     {
       "source": "docs/users_guide/geomorph_applications.md",
@@ -563,11 +563,11 @@
     {
       "source": "docs/users_guide/wavefield.md",
       "target": "docs/en/users_guide/wavefield.md",
-      "source_sha256": "d19f7786ba198c214a437910dd686b832c63fbbc5f0f6bf44f05cf7a6cbd21d9",
-      "target_sha256": "a073b7218b8cd074b046a48e45964334fe3b40ac281cdfad841579d8f1e50cb0",
-      "reviewer": "Claude (Claude Code session; compared the added figure references and explanatory paragraphs (plan view, cross-shore profile) and the cross-reference in the calibration section in both languages; the rest is unchanged from the recorded version)",
+      "source_sha256": "694f65280207cfdd1355eaeee3d1e4d3461f346b3262e1d2003a19d118ce6a0e",
+      "target_sha256": "e4d07731166840b42640e30e9037abbec5e4c7b7e2406d873f9bb1e11599229b",
+      "reviewer": "Claude (Claude Code session; added the stop of fn_wave longshore transport with wf_flow >= 1: paragraph in the wf_flow section and a bullet in the restrictions list; both versions edited together, anchors checked, read side by side)",
       "method": "assistant",
-      "reviewed_on": "2026-11-07"
+      "reviewed_on": "2026-11-10"
     },
     {
       "source": "docs/users_guide/wavefield_models.md",
@@ -4676,11 +4676,11 @@
     {
       "source": "test/wfsed/README.md",
       "target": "test/wfsed/en/README.md",
-      "source_sha256": "70155b1facbbfe61ee77a32ae3f51bcf3e542ca8aed98cae9199378d8c0ce1c1",
-      "target_sha256": "0c44eab105ce32779a3d18ce919bc09b7fca78ab861f2cc8cee168507d647fbe",
-      "reviewer": "Claude (Claude Code session; f_opening_dynamic default switch)",
+      "source_sha256": "a5b40c8e9ed3e3cd9cc5f8c0d664c771ce84fc18bb3061c6fef4dc0e233de554",
+      "target_sha256": "2232251d72038c6e0be09871016aec6054c6e6a062780fa9ca681b28b4fe58b6",
+      "reviewer": "Claude (Claude Code session; invalid-settings row extended to param_bad6 (wf_flow = 2 with fn_wave longshore transport); both versions read side by side)",
       "method": "assistant",
-      "reviewed_on": "2026-10-31"
+      "reviewed_on": "2026-11-10"
     },
     {
       "source": "test/wfshadow/README.md",

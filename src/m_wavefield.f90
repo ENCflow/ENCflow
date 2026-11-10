@@ -218,6 +218,15 @@ subroutine m_wavefield_init(wf, p, g, s, multi)
   end if
 
   call setup_params(wf, p, g, list)
+  ! fn_wave の沿岸漂砂(CERC 型。要求 s%wv_cerc は m_geomorph_init が立てる)は波による流れと組まない。
+  ! CERC 式の量は波で起きた沿岸流による輸送を含むので、その沿岸流が掃流砂として運ぶ分が上乗せされ、
+  ! 同じ輸送を二重に数える(f_wfsed と fn_wave を組まないのと同じ理由。developer.md §90.26)。
+  ! 全ランク同一の namelist 値による判定なので collective 安全
+  if (s%wv_cerc .and. wf%flow >= 1) then
+    call par_stop("list_wavefield: wf_flow >= 1 cannot be combined with the longshore transport of fn_wave" &
+                  // " (f_wave_longshore=1): the wave-driven longshore current would also carry bed load," &
+                  // " counting the CERC transport twice; use f_wfsed=1 instead of fn_wave, or wf_flow=0")
+  end if
   call setup_bins(wf, g)
   call setup_static_mask(wf, g)
 

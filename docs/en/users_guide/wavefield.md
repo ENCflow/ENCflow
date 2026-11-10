@@ -252,6 +252,12 @@ theory of setup); the friction is then determined by the current velocity alone.
 the friction of a flow close to rest is weak and the oscillation at the start lasts long
 (see "Ramp-up of the force" below).
 
+The wave-driven flow cannot be combined with the longshore transport of fn_wave (CERC type;
+[sediment and landform change](geomorph.md#wave-driven-longshore-transport-fn_wave)); the run stops at
+the start. The CERC transport already includes the transport by the wave-driven longshore current, so
+the bed load that this current carries would be counted twice. To combine the wave-driven flow with
+sediment transport, use the [action on sediment](#action-on-sediment-f_wfsed) (`f_wfsed`).
+
 The wave force (the gradient of the radiation stress) raises and lowers the mean water level,
 and the breaking of obliquely incident waves becomes an alongshore force that drives the
 longshore current. With `wf_flow = 2` the shallow water velocity is read as the Lagrangian mean
@@ -646,6 +652,9 @@ approaches 0 as `wf_tol` is reduced. The unsteady imbalance is (change of storag
 - **Sea-mask cells (sw) are outside the wave domain.** Represent the offshore by ordinary
   cells with sea-bed topography and place the incident boundary on the outer sides.
 - **It cannot be combined with the STG grid or with nesting** (the run stops at the start).
+- **The longshore transport of fn_wave (CERC type) cannot be combined with the wave-driven flow
+  (`wf_flow` ≥ 1) or with the action on sediment (`f_wfsed`)** (the run stops at the start, so that
+  the same transport is not counted twice).
 - Cells with a building porosity gv < 1 and sub-grid channel width / cross-section cells
   absorb waves.
 - Cost: the model holds N_θ planes, and one update is N_θ scalar transports plus a

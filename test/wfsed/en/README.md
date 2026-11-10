@@ -27,7 +27,7 @@ machine, `ULP=0 RTOL=0 FILES="Log.txt wavefield.csv Z9998.txt Hs9998.txt" ./Run.
 | High and low waves | `param_storm.txt` / `param_calm.txt` | Normally incident H_m0 = 2 m, T = 8 s (erosion) and H_m0 = 0.6 m, T = 12 s (recovery) on the base beach. 30 minutes |
 | Breaking turbulence | `param_turb.txt` | The base case with the stirring by the turbulence of wave breaking (`f_wfsed_turb = 1`; the form of turb = wave_averaged of XBeach) |
 | Restart | `param_rt1.txt` → `param_rt2.txt` | The base case saved at 1530 s (between the wave-field updates and the bed updates), restored and continued to 3600 s |
-| Invalid settings | `param_bad1.txt` to `param_bad5.txt` | No `fn_wavefield`, together with the longshore transport of fn_wave, `f_wfsed = 2`, `f_wavefield = 0`, `f_wfsed_turb = 1` with `f_wfsed = 0` (each must stop) |
+| Invalid settings | `param_bad1.txt` to `param_bad6.txt` | No `fn_wavefield`, together with the longshore transport of fn_wave, `f_wfsed = 2`, `f_wavefield = 0`, `f_wfsed_turb = 1` with `f_wfsed = 0`, wave-driven flow (`wf_flow = 2`) together with the longshore transport of fn_wave (each must stop) |
 
 ## Checks (Check_wfsed.py)
 
