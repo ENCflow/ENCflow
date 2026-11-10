@@ -56,13 +56,21 @@ compared with observations).
   of rainwater on slopes as Manning-type overland flow and gives the roughness a value larger
   than that of the real ground surface (the equivalent roughness), so that it also covers the
   delay caused by the passage through the soil. The amount of rain that becomes runoff (the
-  effective rainfall) is determined separately. A document of the Ministry of Land,
-  Infrastructure, Transport and Tourism that quotes the table of the Technical Criteria for
-  River Works (draft) uses an equivalent roughness of 0.6 m⁻¹ᐟ³ s for mountains (confirmed
-  from a search excerpt; the original was not checked). Manning's roughness of the thin sheet
-  flow that actually runs over the ground is tabulated as 0.15–0.41 for grass and 0.4–0.8 for
-  woods (Table 3-1 of USDA 1986, compiled from Engman 1986; values confirmed from a search
-  excerpt, the table itself was not checked).
+  effective rainfall) is determined separately. According to documents of the Ministry of
+  Land, Infrastructure, Transport and Tourism that quote the table of the Technical Criteria
+  for River Works (survey volume), the standard value of the equivalent roughness is 0.4–0.8
+  m⁻¹ᐟ³ s for mountain catchments with good forest cover, and one application uses 0.6 for
+  mountains (both confirmed from search excerpts; the originals were not checked). Manning's
+  roughness of the thin sheet flow that actually runs over the ground is tabulated as
+  0.15–0.41 for grass and 0.4–0.8 for woods (Table 3-1 of USDA 1986, compiled from Engman
+  1986; values confirmed from a search excerpt, the table itself was not checked).
+- **A yardstick for the speed of storm runoff**: an empirical formula for the flood
+  concentration time of small and medium rivers (the time for rain on the most distant part
+  of the catchment to reach the outlet) is tp = C A^0.22 re^-0.35 of Kadoya & Fukushima (1976)
+  (tp in minutes, A the catchment area in km², re the effective rainfall intensity in mm/h;
+  C = 290 for forested hills and mountains). For the catchment (38 km²) and the rain
+  (10 mm/h) of this example it gives 4.8 hours (the formula and the coefficient were confirmed
+  from a search excerpt of a paper that quotes them; the original was not checked).
 
 ## Mechanisms needed to reproduce it
 
@@ -148,7 +156,7 @@ cells of the extracted catchment. (c) Rainfall.
 | Process run | `param.txt` | Infiltration + lateral flow in the soil. Slope roughness 0.3 |
 | Vertical infiltration only | `param_vertical.txt` | No lateral flow. Slope roughness 0.3 |
 | No infiltration | `param_surface.txt` | No groundwater. Slope roughness 0.3 |
-| Sweep (13 cases) | `param_sweep_<case>.txt` (made by `sweep.py` from the three above) | No infiltration with slope roughness 1, 3, 5, 10, 30; no infiltration as a diffusion wave with roughness 0.3, 3, 10; vertical infiltration only with roughness 3; the process run with slope roughness 1, as a diffusion wave, with lateral conductivity 10000 mm/h, and with soil depth 1 m |
+| Sweep (15 cases) | `param_sweep_<case>.txt` (made by `sweep.py` from the three above) | No infiltration with slope roughness 1, 3, 5, 10, 30; no infiltration as a diffusion wave with roughness 0.3, 3, 10; vertical infiltration only with roughness 3; the process run with slope roughness 1, as a diffusion wave, with lateral conductivity 10000, 36000 and 100000 mm/h, and with soil depth 1 m |
 
 ## How to run
 
@@ -156,7 +164,7 @@ cells of the extracted catchment. (c) Rainfall.
 cd examples/source_area
 make                      # links and inputs (make_catchment.py; a few seconds)
 make run                  # the three basic cases, one after another
-make sweep                # the 13 sweep cases, one after another
+make sweep                # the 15 sweep cases, one after another
 python3 plot_results.py   # figs/*.png and tables (argument en writes English figures to en/figs/)
 ```
 
@@ -165,8 +173,8 @@ minutes with 3 threads. With 1 thread, the process run takes 20–30 minutes, ve
 infiltration only 20–40 minutes and no infiltration 40–60 minutes (no infiltration, and
 vertical infiltration only once the soil is full, are heavy because water lies on every cell;
 the larger the roughness, the longer the water stays and the longer the run). To run cases side
-by side, use `make -j 4 run OMP_NUM_THREADS=1` and `make -j 4 sweep OMP_NUM_THREADS=1` (about
-3 hours for the 16 cases). The results do not depend on the number of threads (the process run
+by side, use `make -j 4 run OMP_NUM_THREADS=1` and `make -j 4 sweep OMP_NUM_THREADS=1` (a
+little over 3 hours for the 18 cases). The results do not depend on the number of threads (the process run
 with 1 thread and with 3 threads gives byte-identical transect discharge, Log and groundwater
 storage field at 12 h). `mechanism.png` and `setup.png` do not use computed results, so they
 can be drawn after `make`, before any run. If the sweep is not finished, the figures and tables
@@ -249,6 +257,34 @@ upslope area (on the flow tree, counting the cell itself) is as follows.
   the runoff in 48 hours equals the rain, 120 mm (97.5 mm in the first storm; the difference of
   22 mm is the water that first filled the dry soil and channels).
 
+Where the water in the catchment is (catchment-mean depth in mm; 52 h and 56 h are the fourth
+and the eighth hour of the second storm):
+
+| Time (h) | Runoff (mm/h) | Soil water | of which in saturated cells | Surface water | of which on channel cells | Total |
+|---:|---:|---:|---:|---:|---:|---:|
+| 4 | 0.00 | 40.0 | 0.1 | 0.0 | 0.0 | 40.0 |
+| 8 | 0.05 | 65.5 | 30.3 | 14.5 | 9.9 | 80.0 |
+| 12 | 8.51 | 72.0 | 42.6 | 24.6 | 17.6 | 96.6 |
+| 24 | 2.05 | 36.3 | 20.1 | 10.2 | 8.2 | 46.5 |
+| 48 | 0.46 | 18.1 | 11.5 | 4.5 | 3.9 | 22.6 |
+| 52 | 1.54 | 48.2 | 16.9 | 11.5 | 9.0 | 59.7 |
+| 56 | 5.41 | 66.2 | 32.1 | 19.8 | 14.4 | 85.9 |
+| 60 | 8.62 | 72.1 | 42.8 | 24.8 | 17.7 | 96.9 |
+
+- **With water running in the channels, the catchment holds 23 mm**: just before the second
+  storm (36 hours after the rain) the outlet carries 0.46 mm/h (4.9 m³/s) and the catchment
+  holds 22.6 mm of water: 18.1 mm in the soil (11.5 mm of it in the saturated cells of the
+  valleys) and 4.5 mm on the surface (3.9 mm of it on channel cells). The difference in runoff
+  between the first and the second storm (22 mm) is the water that first built up this
+  storage. The amount is not constant: after the rain it decreases together with the runoff
+  (46.5 mm and 2.05 mm/h 12 hours after the rain).
+- **With the same water in the soil, a dry catchment does not yet deliver it to the outlet**:
+  at 8 h of the first storm the soil holds 65.5 mm and the surface 14.5 mm, but the runoff is
+  0.05 mm/h. In the eighth hour of the second storm (56 h) the soil water is almost the same,
+  66.2 mm, the surface water is 19.8 mm, and the runoff is 5.4 mm/h. In the first storm the
+  dry valleys and channels are still being filled (9.9 mm of the 14.5 mm on the surface is on
+  channel cells).
+
 Changing one setting of the process run at a time gives the following (`process_*` of
 `make sweep`).
 
@@ -262,6 +298,10 @@ Changing one setting of the process run at a time gives the following (`process_
 | surface flow as a diffusion wave | 2 | 3.3 | 8.71 | 12.3 | 2.04 | 119.9 | 42.8 |
 | lateral conductivity 3600 → 10000 mm/h | 1 | 6.5 | 9.80 | 12.3 | 1.35 | 108.4 | 27.0 |
 | lateral conductivity 3600 → 10000 mm/h | 2 | 4.0 | 9.80 | 12.3 | 1.35 | 119.9 | 27.0 |
+| lateral conductivity 3600 → 36000 mm/h | 1 | 4.7 | 10.00 | 12.0 | 0.69 | 114.1 | 15.5 |
+| lateral conductivity 3600 → 36000 mm/h | 2 | 3.7 | 10.00 | 12.0 | 0.69 | 120.0 | 15.5 |
+| lateral conductivity 3600 → 100000 mm/h | 1 | 3.7 | 10.00 | 11.2 | 0.44 | 116.3 | 10.0 |
+| lateral conductivity 3600 → 100000 mm/h | 2 | 3.2 | 10.00 | 11.2 | 0.44 | 119.9 | 10.0 |
 | soil depth 0.5 → 1 m | 1 | 11.3 | 5.47 | 13.3 | 2.52 | 81.1 | 22.3 |
 | soil depth 0.5 → 1 m | 2 | 2.8 | 6.64 | 12.7 | 2.56 | 119.8 | 23.4 |
 
@@ -273,10 +313,12 @@ Changing one setting of the process run at a time gives the following (`process_
 - **The conductivity and the depth of the soil change the runoff a great deal**: with a lateral
   conductivity about three times larger, groundwater reaches the valleys sooner, the rise
   advances from 8.3 to 6.5 hours and the peak rises to 9.8 mm/h (98 % of the rain). Because
-  the slopes drain well, the maximum saturated area decreases from 43 % to 27 %. With a soil
-  depth of 1 m, twice as much water is needed to fill the soil, the rise is delayed to 11.3
-  hours, and in a 12-hour storm the runoff does not rise fully: the peak is 5.5 mm/h (maximum
-  saturated area 22 %).
+  the slopes drain well, the maximum saturated area decreases from 43 % to 27 %. With 10 and
+  about 28 times the conductivity (36000 and 100000 mm/h) the rise comes at 4.7 and 3.7
+  hours, the runoff balances the rain during the storm (10 mm/h), and the saturated area
+  stays on the valley floors, 15.5 % and 10 %. With a soil depth of 1 m, twice as much water
+  is needed to fill the soil, the rise is delayed to 11.3 hours, and in a 12-hour storm the
+  runoff does not rise fully: the peak is 5.5 mm/h (maximum saturated area 22 %).
 
 ### Comparison with no infiltration and vertical infiltration only
 
@@ -335,6 +377,8 @@ the depth on the cells other than channel cells at the end of each storm).
 | process run | 1 | 30.8 | 14.2 | 2.37 | 14.3 |
 | process run (diffusion wave) | 0.3 | 24.2 | 7.4 | 2.23 | 7.4 |
 | process run (lateral 10000 mm/h) | 0.3 | 24.9 | 6.7 | 2.54 | 6.7 |
+| process run (lateral 36000 mm/h) | 0.3 | 23.8 | 5.4 | 2.56 | 5.4 |
+| process run (lateral 100000 mm/h) | 0.3 | 22.9 | 4.4 | 2.54 | 4.4 |
 | process run (soil 1 m) | 0.3 | 20.2 | 4.6 | 1.70 | 5.2 |
 | no infiltration | 0.3 | 30.0 | 11.6 | 2.60 | 11.6 |
 | no infiltration | 1 | 40.9 | 23.0 | 2.68 | 23.0 |
@@ -360,14 +404,35 @@ the depth on the cells other than channel cells at the end of each storm).
   recession. Of the six values tried, the closest to the process run is roughness 10 for the
   first storm (dry soil; fit 0.75) and roughness 5 for the second storm (wet soil; 0.86).
   Roughness 30 overshoots (the first peak is 1.8 mm/h, 18 hours after the end of the rain).
-- **The roughness needed is 17–33 times that of the ground surface**: a roughness of 5–10 is
-  17–33 times the slope roughness 0.3 of the process run, an order of magnitude away from both
-  the roughness of thin sheet flow (0.4–0.8 for woods) and the equivalent roughness used in
-  practice (0.6 for mountains). At the end of the rain the slope cells then carry 6–9 cm of
-  water on average, and the catchment-mean surface water reaches 78–107 mm. This is about the
-  same as the sum of the soil water (72 mm) and the surface water (25 mm) of the process run at
-  the end of the rain, 97 mm. A large roughness delays the runoff by storing, as a thick layer
-  of water on the surface, the water that the soil was storing.
+- **The roughness needed is 5–10, an order of magnitude above the equivalent roughness used in
+  practice**: a roughness of 5–10 is 17–33 times the slope roughness 0.3 of the process run,
+  an order of magnitude away from both the roughness of thin sheet flow (0.4–0.8 for woods)
+  and the equivalent roughness used in practice for mountains (about 0.4–0.8). At the end of
+  the rain the slope cells then carry 6–9 cm of water on average, and the catchment-mean
+  surface water reaches 78–107 mm. This is about the same as the sum of the soil water (72 mm)
+  and the surface water (25 mm) of the process run at the end of the rain, 97 mm. A large
+  roughness delays the runoff by storing, as a thick layer of water on the surface, the water
+  that the soil was storing.
+- **The roughness needed is set by the amount of water the soil stores**: in the
+  no-infiltration runs the depth on the slopes at the end of the rain grows with the 0.6th
+  power of the roughness (table below; the normal depth of Manning flow, h = (n q / √I)^0.6,
+  with q the discharge per unit width and I the slope). At the end of the rain the process run
+  holds 78 mm on the slopes (cells other than channel cells), soil and surface together, and
+  the roughness that holds this on the surface alone is 0.3 × (78 / 11.6)^(5/3) = 7.2. The
+  fitted roughness of 5–10 is what this relation gives. Storing twice the water takes 3.2
+  times the roughness, so the roughness needed rises steeply with the water the soil stores.
+
+| Slope roughness | 0.3 | 1 | 3 | 5 | 10 | 30 |
+|---|---:|---:|---:|---:|---:|---:|
+| Time to reach 50 % of the rain (h) | 3.0 | 4.0 | 6.0 | 7.7 | 11.3 | — |
+| Time to reach 90 % of the rain (h) | 3.7 | 5.0 | 8.2 | 10.5 | — | — |
+| Mean depth on the slopes at 12 h (mm) | 11.6 | 23.0 | 44.9 | 62.0 | 93.0 | 117.6 |
+| Depth for roughness 0.3 × (n / 0.3)^0.6 (mm) | 11.6 | 23.8 | 46.0 | 62.5 | 94.8 | 183.3 |
+
+Values for the first storm of the no-infiltration runs (— = not reached during the rain). For
+roughness 10 and 30 the runoff has not yet balanced the rain at the end of the storm, so the
+depth is below the 0.6-power relation.
+
 - **The shape still does not match**: roughness 5 matches the time of the peak (12.3 h), but
   the peak is 13 % too high, the rise is too early (5.8 mm/h at 8 h, against 0.05 mm/h in the
   process run) and the recession is too fast (1.5 mm/h 12 hours after the rain, against
@@ -386,22 +451,10 @@ the depth on the cells other than channel cells at the end of each storm).
   advances from 5.5 to 4.7 hours). The difference in the process run (from 8.3 to 3.5 hours) is
   larger: roughness 10, which fits the first storm, is too slow for the second, and roughness
   5, which fits the second, is too fast for the first.
-- **The fitting roughness also changes with the soil**: the next table shows, for each variant
-  of the process run, how close the no-infiltration run of each roughness is, as the fit for
-  the first / second storm. The process run with a lateral conductivity of 10000 mm/h is
-  matched by roughness 3–5 (0.90–0.98), and roughness 10 is too slow for it. The first storm
-  of the process run with 1 m of soil (11 hours without runoff) is matched no better than 0.31
-  by any roughness. The fitted roughness is not a property of the ground surface: it stands in
-  for the depth and conductivity of the soil and its wetness before the rain, and has to be
-  refitted when these change.
-
-| Process-run variant | n = 0.3 | n = 1 | n = 3 | n = 5 | n = 10 | n = 30 |
-|---|---:|---:|---:|---:|---:|---:|
-| base (soil 0.5 m, lateral 3600 mm/h, slope roughness 0.3) | -1.62 / -0.37 | -1.02 / 0.10 | 0.06 / 0.69 | 0.64 / 0.86 | 0.75 / 0.73 | -0.24 / 0.13 |
-| slope roughness 1 | -2.26 / -0.81 | -1.55 / -0.24 | -0.31 / 0.53 | 0.45 / 0.82 | 0.85 / 0.84 | -0.23 / 0.19 |
-| lateral 10000 mm/h | 0.06 / 0.42 | 0.41 / 0.71 | 0.90 / 0.98 | 0.95 / 0.95 | 0.52 / 0.62 | -0.28 / 0.05 |
-| soil 1 m | -7.89 / -2.51 | -6.55 / -1.64 | -4.04 / -0.40 | -2.22 / 0.22 | 0.31 / 0.71 | -0.07 / 0.29 |
-
+- **The fitting roughness changes with the soil**: the fitted roughness is not a property of
+  the ground surface. It stands in for the conductivity and depth of the soil and its wetness
+  before the rain, and has to be refitted when these change
+  ([next section](#soil-conductivity-and-the-equivalent-roughness)).
 - **Vertical infiltration only gives nothing until the soil is full, then runoff from the
   whole catchment, and the water that went in never returns**: without lateral flow in the
   soil, the soil of every cell fills at the same rate, and all cells saturate at the same time,
@@ -426,13 +479,77 @@ the depth on the cells other than channel cells at the end of each storm).
   and the discharges of this example, the treatment of the soil and the roughness matter far
   more than whether the advection term is included.
 
+### Soil conductivity and the equivalent roughness
+
+![Comparison for each lateral conductivity](figs/equivalent.png)
+
+The process run (black) with a lateral saturated conductivity of (a) 3600 mm/h (base), (b)
+10000, (c) 36000 and (d) 100000 mm/h, each overlaid with the closest no-infiltration runs
+(orange). Grey is the rain.
+
+| Lateral conductivity (mm/h) | Max. saturated area (%) | Water on the slopes at the end of the rain (mm) | Roughness that stores the same water on the surface | Time when runoff reaches 90 % of the rain (h) | Closest roughness (fit): storm 1 | storm 2 |
+|---:|---:|---:|---:|---:|---:|---:|
+| 3600 (base) | 42.8 | 77.9 | 7.2 | — / — | 10 (0.75) | 5 (0.86) |
+| 10000 | 27.0 | 53.5 | 3.9 | 9.3 / 9.3 | 5 (0.95) | 3 (0.98) |
+| 36000 | 15.5 | 29.9 | 1.5 | 6.0 / 6.0 | 3 (0.93) | 1 (0.97) |
+| 100000 | 10.0 | 18.9 | 0.7 | 4.8 / 4.7 | 1 (0.99) | 1 (0.99) |
+
+"Water on the slopes at the end of the rain" is the sum of the soil water and the surface water
+on the cells other than channel cells at 12 h; the "roughness that stores the same water on the
+surface" converts it to a roughness with the 0.6-power relation above. The times are for the
+first / second storm, and — means not reached during the rain. The fit of the no-infiltration
+run of each roughness to each variant of the process run (first / second storm) is as follows.
+
+| Process-run variant | n = 0.3 | n = 1 | n = 3 | n = 5 | n = 10 | n = 30 |
+|---|---:|---:|---:|---:|---:|---:|
+| base (soil 0.5 m, lateral 3600 mm/h, slope roughness 0.3) | -1.62 / -0.37 | -1.02 / 0.10 | 0.06 / 0.69 | 0.64 / 0.86 | 0.75 / 0.73 | -0.24 / 0.13 |
+| slope roughness 1 | -2.26 / -0.81 | -1.55 / -0.24 | -0.31 / 0.53 | 0.45 / 0.82 | 0.85 / 0.84 | -0.23 / 0.19 |
+| lateral 10000 mm/h | 0.06 / 0.42 | 0.41 / 0.71 | 0.90 / 0.98 | 0.95 / 0.95 | 0.52 / 0.62 | -0.28 / 0.05 |
+| lateral 36000 mm/h | 0.70 / 0.82 | 0.91 / 0.97 | 0.93 / 0.92 | 0.72 / 0.75 | 0.19 / 0.36 | -0.31 / -0.04 |
+| lateral 100000 mm/h | 0.89 / 0.94 | 0.99 / 0.99 | 0.79 / 0.80 | 0.54 / 0.61 | 0.04 / 0.23 | -0.32 / -0.07 |
+| soil 1 m | -7.89 / -2.51 | -6.55 / -1.64 | -4.04 / -0.40 | -2.22 / 0.22 | 0.31 / 0.71 | -0.07 / 0.29 |
+
+- **The better the soil conducts water, the smaller the fitting roughness and the better the
+  shape matches**: a larger lateral conductivity reduces the water stored in the soil and the
+  saturated area, and the runoff comes earlier. The closest roughness falls from 10 and 5
+  (first and second storm) at 3600 mm/h to 5 and 3 at 10000, 3 and 1 at 36000 and 1 and 1 at
+  100000, and the fit rises from 0.75 and 0.86 to 0.99 and 0.99. In every case the closest
+  roughness is near the "roughness that stores the same water on the surface" (7.2, 3.9, 1.5,
+  0.7). In the process run with 100000 mm/h only the valley floors saturate (10 %); the soil
+  water moves quickly down the slopes and seeps out in the valleys, and the hydrograph almost
+  coincides with that of no infiltration with roughness 1. The effect of the wetness before
+  the rain also becomes small (the runoff exceeds 1 mm/h after 3.7 hours in the first storm
+  and 3.2 hours in the second).
+- **The equivalent roughness used in practice corresponds to a soil that conducts water
+  fast**: in the no-infiltration runs the runoff reaches 90 % of the rain after 3.7 hours
+  with roughness 0.3 and 5.0 hours with roughness 1. The equivalent roughness used in practice
+  for mountains (about 0.4–0.8) lies in between, and agrees with the value of the empirical
+  flood concentration time for this catchment (4.8 hours). The process run is this fast when
+  the lateral conductivity is 36000–100000 mm/h (6.0 and 4.8 hours); the base value of
+  3600 mm/h does not reach 90 % during the 12 hours of rain. The equivalent roughness came
+  out as large as 5–10 because the soil of the base setting releases water more slowly than
+  this yardstick of real storm runoff. 36000–100000 mm/h (0.01–0.03 m/s) is beyond the range
+  the user guide suggests (1000–10000 mm/h); it is not flow in the soil matrix but an
+  effective value that lumps fast paths such as pipes. The equivalent roughness used in
+  practice is tied to how the slope length is taken, and the definition of the flood
+  concentration time is not the same as "the time to reach 90 % of the rain", so this
+  correspondence is only a guide.
+- **Soil depth and the wetness before the rain are hard to replace with a roughness**: the
+  first storm of the process run with 1 m of soil (11 hours without runoff) is matched no
+  better than a fit of 0.31 by any roughness. The rain that does not run off until the soil
+  has filled is what practice handles with the effective rainfall (losses); the roughness
+  covers the delay of the water that does become runoff.
+
 ## What this model does not represent (differences from the real phenomenon)
 
 - **The soil is a uniform schematic layer**: the soil depth of 0.5 m, the effective porosity of
   0.2 and the conductivities are the same everywhere. Real soil depth varies from place to
   place, and thin soil fills first and sets the timing of the runoff (Tani 1997). A
   distribution of soil depth can be given with `fn_sd`. The results depend strongly on the
-  soil values (soil 1 m and lateral 10000 mm/h in the table above).
+  soil values (soil 1 m and the runs with other lateral conductivities above). The runoff of
+  the base setting (lateral 3600 mm/h) is on the slow side of the empirical flood
+  concentration time
+  ([Soil conductivity and the equivalent roughness](#soil-conductivity-and-the-equivalent-roughness)).
 - **The unsaturated zone is not solved**: infiltrated water joins the saturated zone at the
   base of the soil in the same step. The wetness of the soil before the rain, the time needed
   to pass through the unsaturated zone, and the water retained in the soil after the rain are
@@ -463,8 +580,12 @@ the depth on the cells other than channel cells at the end of each storm).
   represented with the subgrid channel width (`fn_width` in
   [Channels](../../../docs/en/users_guide/channel.md)), which this example does not use.
   Valleys without the channel mask (upslope area up to 1.3 km²) flow with the slope roughness.
-- **The rain is a uniform block**: neither a variation of intensity in time nor a distribution
-  of rain within the catchment is given.
+- **The rain is a uniform block of a single intensity**: neither a variation of intensity in
+  time nor a distribution of rain within the catchment is given, and the intensity is always
+  10 mm/h. The normal depth of surface flow grows with the 0.6th power of (rain intensity ×
+  roughness) and the thickness of the saturated zone in the soil in proportion to the rain
+  intensity, so the fitting roughness should also change with the rain intensity; this has not
+  been examined.
 - **Nothing is compared with observations**: the values are schematic, and whether the timing
   of the rise, the peak and the recession match a real catchment has not been checked. What
   this example shows is how the mechanisms are linked and in which direction the response
@@ -518,8 +639,9 @@ the depth on the cells other than channel cells at the end of each storm).
 
 The bibliographic details of Mosley (1979), Beven & Germann (1982) and Tani (1997) are those of
 [Groundwater models](../../../docs/en/users_guide/gwflow_models.md); the others were confirmed by
-search. The texts were not checked; the summaries of their contents rely on abstracts and
-secondary sources.
+search (for Kadoya & Fukushima (1976) only the formula and the coefficient were confirmed, from
+a search excerpt of a paper that quotes them; its bibliographic details were not checked). The
+texts were not checked; the summaries of their contents rely on abstracts and secondary sources.
 
 - Barnes, R., Lehman, C. and Mulla, D. (2014): Priority-flood: An optimal depression-filling
   and watershed-labeling algorithm for digital elevation models. Computers & Geosciences, 62,
@@ -547,8 +669,16 @@ secondary sources.
   stormflow: 2. The fill and spill hypothesis. Water Resources Research, 42, W02411.
 - USDA Soil Conservation Service (1986): Urban hydrology for small watersheds. Technical
   Release 55 (TR-55), 2nd ed.
+- Kadoya, M. and Fukushima, A. (1976): Chūshō kasen no kōzui tōtatsu jikan [Flood
+  concentration time of small and medium rivers]. Annuals of the Disaster Prevention Research
+  Institute, Kyoto University, 19(B-2), 143–152 (in Japanese).
 - A document of the river basin committee of the Wakayama Office of River and National
   Highway, Kinki Regional Development Bureau, Ministry of Land, Infrastructure, Transport and
   Tourism (it quotes the table of equivalent roughness from the Technical Criteria for River
   Works (draft) and uses N = 0.6 for present mountain land; in Japanese):
   https://www-2.kkr.mlit.go.jp/wakayama/ryuiki_iinkai/ryuiki/comm08/pdf/data1/refe-data1_2.pdf
+- A document of the Hokkaido Regional Development Bureau, Ministry of Land, Infrastructure,
+  Transport and Tourism (it quotes the table of standard values of the equivalent roughness
+  from the Technical Criteria for River Works, survey volume (June 2012 edition): 0.4–0.8 for
+  mountain catchments with good forest cover; in Japanese):
+  https://www.hkd.mlit.go.jp/ky/kn/kawa_kei/splaat0000017ws4-att/splaat0000017wum.pdf

@@ -13,7 +13,8 @@
 #   vertical_n3                   鉛直浸透のみ。rn0 = 3
 #   process_n1                    過程計算。rn0 = 1(地表の粗度への感度)
 #   process_dif                   過程計算 + 地表の流れを拡散波
-#   process_k10000                過程計算。側方飽和透水係数 gw_ksh_mmh = 10000 mm/h
+#   process_k10000・k36000・k100000  過程計算。側方飽和透水係数 gw_ksh_mmh = 10000・36000・100000 mm/h
+#                                 (基本は 3600 mm/h。等価粗度が土層の通しやすさでどう変わるかを見る)
 #   process_sd1                   過程計算。土層厚 sd0 = 1 m(基本は 0.5 m)
 # 変えるのは下の CASES の項目と出力先だけで、地形・河道・降雨・計測・時間刻みは元の設定と同じ。
 import glob
@@ -35,6 +36,8 @@ CASES = {
     "process_n1": ("param.txt", {"rn0": "1.0"}),
     "process_dif": ("param.txt", {"f_govequation": "1"}),
     "process_k10000": ("param.txt", {"gw_ksh_mmh": "10000.0"}),
+    "process_k36000": ("param.txt", {"gw_ksh_mmh": "36000.0"}),
+    "process_k100000": ("param.txt", {"gw_ksh_mmh": "100000.0"}),
     "process_sd1": ("param.txt", {"sd0": "1.0"}),
 }
 NOTE = {"rn0": "斜面の粗度", "f_govequation": "地表の流れ(1: 拡散波)", "gw_ksh_mmh": "側方飽和透水係数 (mm/h)",
