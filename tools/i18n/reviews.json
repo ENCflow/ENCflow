@@ -1940,11 +1940,20 @@
     {
       "source": "examples/landslide_tsunami/README.md",
       "target": "examples/landslide_tsunami/en/README.md",
-      "source_sha256": "62e98f2a41c0b90910e9e0beba17f690cedff57faf400e8d324978da02912e45",
-      "target_sha256": "9a10e3a8540e6a1fed620ed9771edb0fbb77c275c979fe6f972e4294a043faed",
-      "reviewer": "Claude (Claude Code session; removed development history from both versions in parallel and compared the edited passages, headings, tables and numbers; no model execution)",
+      "source_sha256": "038208f763a554281c131db1cc7c815e667289210146820aff7e47707e424bfa",
+      "target_sha256": "5e0210cb8e386d2210528520a9e50c9d1125073dd0dc0f275b70401888298235",
+      "reviewer": "Claude (Claude Code session; recomputation of 2026-11-10: the changed table cells (B, B0, A_nh0, A_nh, C_nh), the shoreline-zone volume in the text, the run line and the figure links now pointing to en/figs compared against the Japanese source and the printed tables of plot_results.py; no model execution)",
       "method": "assistant",
-      "reviewed_on": "2026-11-08"
+      "reviewed_on": "2026-11-10"
+    },
+    {
+      "source": "examples/landslide_tsunami/figs/deposit.png",
+      "target": "examples/landslide_tsunami/en/figs/deposit.png",
+      "source_sha256": "3540dee8e3b25b6d9a3bfd92c3c78874230a111324aee05a7aed3c57feb43298",
+      "target_sha256": "d1fc06a591f87acb234dde44d9903e037cd89fc26a15810d25115e3051282b3c",
+      "reviewer": "Claude (Claude Code session; English figure drawn by the same script with the en switch from the same results of 2026-11-10; compared side by side: same plotted data and layout, labels translated)",
+      "method": "assistant",
+      "reviewed_on": "2026-11-10"
     },
     {
       "source": "examples/landslide_tsunami/figs/mechanism.png",
@@ -1963,6 +1972,33 @@
       "reviewer": "Claude (Claude Code session; schematic drawn by plot_schematic.py from the input files and closed-form expressions only (no model execution); viewed the Japanese and English images side by side: same shapes, values and layout, labels translated)",
       "method": "assistant",
       "reviewed_on": "2026-11-08"
+    },
+    {
+      "source": "examples/landslide_tsunami/figs/nonhydro.png",
+      "target": "examples/landslide_tsunami/en/figs/nonhydro.png",
+      "source_sha256": "a3a4ae38a9590b9d63b69f1063d121b5056b17e277cf8de03f6e9f55816c55f7",
+      "target_sha256": "f949e955df7f4e406890e8b193f2c627cd4cba89a4ec1a57dfac9158bb8f9d0a",
+      "reviewer": "Claude (Claude Code session; English figure drawn by the same script with the en switch from the same results of 2026-11-10; compared side by side: same plotted data and layout, labels translated)",
+      "method": "assistant",
+      "reviewed_on": "2026-11-10"
+    },
+    {
+      "source": "examples/landslide_tsunami/figs/probes.png",
+      "target": "examples/landslide_tsunami/en/figs/probes.png",
+      "source_sha256": "1864e09104b9c1300bfcfc5a5ec068b8f989f50279ae6b175113afb9ced62bb6",
+      "target_sha256": "4d89163f7988dbfae4e54713759cef538a2df425a4f5bb529b4320762e603651",
+      "reviewer": "Claude (Claude Code session; English figure drawn by the same script with the en switch from the same results of 2026-11-10; compared side by side: same plotted data and layout, labels translated)",
+      "method": "assistant",
+      "reviewed_on": "2026-11-10"
+    },
+    {
+      "source": "examples/landslide_tsunami/figs/profiles.png",
+      "target": "examples/landslide_tsunami/en/figs/profiles.png",
+      "source_sha256": "8b99d5e6fd8beaa2831bfd48c728c390230bd92609c9745447d56b1458aa33fb",
+      "target_sha256": "afb3861ee4d64c86cd86d89d819632f38f147d4b855d3752998e38cce6809664",
+      "reviewer": "Claude (Claude Code session; English figure drawn by the same script with the en switch from the same results of 2026-11-10; compared side by side: same plotted data and layout, labels translated)",
+      "method": "assistant",
+      "reviewed_on": "2026-11-10"
     },
     {
       "source": "examples/landslide_tsunami/figs/properties.png",
