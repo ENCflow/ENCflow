@@ -1,0 +1,7 @@
+# make_inputs.py が生成する入力と設定(雛形 param.txt は残す)、計算結果
+data_*/
+param_s*.txt
+result_*/
+Screen_*.log
+encflow
+encflow_mpi
