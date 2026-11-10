@@ -301,7 +301,7 @@ belong to specialized models
   third-party code; zero dependencies also means a clean, unambiguous
   copyright provenance. Licensed under Apache-2.0, commercial use
   included.
-- **Accountable through sources, verification, and consistency** —
+- **Accountable through sources and verification** —
   the sources of each model, governing equation, and parameter are
   cited wherever possible, and simplifications of our own that rest on
   no literature are labelled as such. Behaviour with an analytical
