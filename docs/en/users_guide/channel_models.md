@@ -234,7 +234,7 @@ through a wall edge follows the Honma weir formula.
 **Coupling of the diagonal edges (f_br_diag).** With f_br_diag = 0 the
 edges that are not sites (the diagonal links included) remain walls. The
 passage-width share of a normal edge is $`1 - p_{\mathrm{diag}} = 0.414`$,
-and the measured effective width is 0.38 dx per site. With f_br_diag = 1 a
+and the measured discharge is 0.40–0.45 times that of the resolved levee (table below). With f_br_diag = 1 a
 diagonal edge (c, l) is lowered to the minimum effective crest of the
 sites whose channel cell is c and whose landside cell is a 4-neighbour of
 l, or whose landside cell is l and whose channel cell is a 4-neighbour of
@@ -246,16 +246,16 @@ default advection scheme 3):
 
 | Breach width (cells) | Resolved levee Q (m³/s) | f_br_diag = 0 Q / ratio | f_br_diag = 1 Q / ratio |
 |---:|---:|---:|---:|
-| 1 | 37 | 15 / 0.41 | 61 / 1.66 |
-| 2 | 74 | 30 / 0.40 | 86 / 1.17 |
-| 3 | 105 | 43 / 0.41 | 109 / 1.03 |
-| 5 | 152 | 68 / 0.44 | 149 / 0.98 |
+| 1 | 37 | 15 / 0.41 | 61 / 1.64 |
+| 2 | 75 | 30 / 0.40 | 86 / 1.15 |
+| 3 | 106 | 44 / 0.42 | 108 / 1.03 |
+| 5 | 153 | 69 / 0.45 | 149 / 0.98 |
 
 The broad-crested weir estimate $`Q = 1.7\,B\,H^{3/2}`$ (B = cells × dx,
 H = river level − floor) matches the resolved levee (37 vs 37 for one
-cell, 162 vs 152 for five; for wider openings the weir formula falls
+cell, 162 vs 153 for five; for wider openings the weir formula falls
 below as the landside level rises), and f_br_diag = 1 is nearly equal to
-the resolved levee at 3–5 cells. The factor 1.7 at one cell comes from
+the resolved levee at 3–5 cells. The factor 1.6 at one cell comes from
 the two end diagonals (0.59 cell widths) added to it (with advection
 scheme 1 it was closest at 2–3 cells and 0.85 times at 5 cells).
 Switching the wall off once the

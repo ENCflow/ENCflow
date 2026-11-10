@@ -341,28 +341,30 @@ initial terrain z.txt of the resolved levee; the same in both rows).
   passage width per breached cell is one cell width (normal 0.414 + diagonals 2 × 0.293), and
   with 5 cells the discharge is 0.98 times that of the resolved levee. With `f_br_diag = 0`,
   which lowers only the normal edges of the sites, the diagonal links between neighbouring
-  sites remain walls and the discharge stays at 0.44 times (table below). Use the
+  sites remain walls and the discharge stays at 0.45 times (table below). Use the
   virtual-wall breach for openings narrower than a cell or on coarse grids, and prescribed
   bed motion when the levee is represented with cells.
 
-**Breach width and discharge** (same terrain with different breach widths, failing all at
-once at 70-80 minutes; steady discharge at 100 minutes compared; this table was computed with
-f_opening_dynamic = 2 and f_advection_donor = 0; the default of both is 3):
+**Breach width and discharge** (same terrain with breach widths of 1, 2, 3 and 5 cells (rows 50,
+49-50, 49-51 and 48-52), failing all at once at 70-80 minutes; the discharge at transect 1 at
+100 minutes compared; H of the broad-crested weir is the water level in the channel in front of
+the breach (probe 2) minus the floor. These runs are not part of make: they change the opening
+and the times in param_supp.txt and param_supp_vwall.txt):
 
 | Width (cells / sites) | Resolved levee Q (m³/s) | Broad-crested weir 1.7·B·H^1.5 (m³/s) | Virtual wall f_br_diag = 0 Q / ratio to resolved | f_br_diag = 1 Q / ratio to resolved |
 |---:|---:|---:|---:|---:|
-| 1 | 36.5 | 37 | 15.1 / 0.41 | 60.8 / 1.66 |
-| 2 | 73.7 | 70 | 29.5 / 0.40 | 86.1 / 1.17 |
-| 3 | 105.1 | 102 | 43.1 / 0.41 | 108.5 / 1.03 |
-| 5 | 152.3 | 162 | 67.5 / 0.44 | 149.2 / 0.98 |
+| 1 | 37.0 | 37 | 15.2 / 0.41 | 60.8 / 1.64 |
+| 2 | 74.5 | 71 | 29.9 / 0.40 | 85.9 / 1.15 |
+| 3 | 105.7 | 101 | 43.9 / 0.42 | 108.4 / 1.03 |
+| 5 | 152.8 | 162 | 69.1 / 0.45 | 149.2 / 0.98 |
 
 The resolved levee follows the broad-crested weir estimate (B = cells × dx, H = river level
 − floor ≈ 1.5-1.7 m), falling below the weir formula as the opening widens because the
-landside water level rises (152 against 162 for 5 cells). The virtual wall with
-f_br_diag = 0 is proportional to the number of sites, with an effective width of 0.38 dx per
-site (the passage-width share of the normal edge is 0.414); f_br_diag = 1 is nearly the same
-as the resolved levee for 3-5 cells (1.03 and 0.98 times), and too large for one cell (1.66
-times) by the two diagonals at both ends (0.59 cell widths). The f_br_diag = 1 result agrees
+landside water level rises (153 against 162 for 5 cells). The discharge of the virtual wall
+with f_br_diag = 0 is nearly proportional to the number of sites and stays at 0.40-0.45 times
+that of the resolved levee (close to the passage-width share of the normal edge, 0.414);
+f_br_diag = 1 is nearly the same as the resolved levee for 3-5 cells (1.03 and 0.98 times),
+and too large for one cell (1.64 times) by the two diagonals at both ends (0.59 cell widths). The f_br_diag = 1 result agrees
 with a run that adds the diagonal pairs explicitly as sites (largest difference 0.35 m³/s,
 because the reference ground of the diagonal sites themselves differs by 1 cm). How the
 effective crest of the breach sites and the linkage of the diagonal edges work is explained in
