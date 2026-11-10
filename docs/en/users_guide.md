@@ -143,16 +143,16 @@ The additional features below stay disabled unless you specify their `fn_XXX` en
 
 | Feature | Configuration-file entry | namelist group |
 |---|---|---|
-| [Nesting](users_guide/nest.md) (multi-level grids) | `fn_nest` | &list_nest |
+| [Nesting](users_guide/nest.md) | `fn_nest` | &list_nest |
 | [Tide and sea surface](users_guide/tide.md) | `fn_tide` | &list_tide |
-| [Coastal wave field](users_guide/wavefield.md) (distribution of wave height and direction) | `fn_wavefield` | &list_wavefield |
-| [Wave-driven longshore transport](users_guide/geomorph.md#wave-driven-longshore-transport-fn_wave) (arcuate and cuspate deltas, shoreline smoothing) | `fn_wave` | &list_wave (needs f_fluvial=1 in fn_geomorph) |
+| [Coastal wave field](users_guide/wavefield.md) | `fn_wavefield` | &list_wavefield |
+| [Wave-driven longshore transport](users_guide/geomorph.md#wave-driven-longshore-transport-fn_wave) | `fn_wave` | &list_wave (needs f_fluvial=1 in fn_geomorph) |
 | [Internal hydraulic structures](users_guide/structure.md) | `fn_structure` | &list_struct_pump / culvert / diversion / dam |
 | [Ponds](users_guide/geoinfo.md#ponds) | `fn_rscap` in the geographic information (`fn_reservoir` is not used in the computation) | &list_geoinfo |
 | [Channels](users_guide/channel.md) | `fn_channel` | &list_channel (+ breach) |
 | [Precipitation](users_guide/forcing.md#precipitation-list_precip) | `fn_precip` | &list_precip |
 | [Rainfall interception](users_guide/forcing.md#rainfall-interception-list_intercept) | `fn_intercept` | &list_intercept (+ model-specific) |
-| [Weather forcing fields](users_guide/forcing.md#meteorological-forcing-field-list_meteo) (air temperature etc.) | `fn_meteo` | &list_meteo |
+| [Weather forcing fields](users_guide/forcing.md#meteorological-forcing-field-list_meteo) | `fn_meteo` | &list_meteo |
 | [Evapotranspiration](users_guide/forcing.md#evapotranspiration-list_evap) | `fn_evap` | &list_evap |
 | [Snow accumulation and snowmelt](users_guide/forcing.md#snowpack-and-snowmelt-list_snow) | `fn_snow` | &list_snow |
 | [Glaciers](users_guide/glacier.md) | `fn_glacier` | &list_glacier |
@@ -163,10 +163,10 @@ The additional features below stay disabled unless you specify their `fn_XXX` en
 | [Sediment and landform change](users_guide/geomorph.md) | `fn_geomorph` | &list_geomorph |
 | [Driftwood](users_guide/driftwood.md) | `fn_driftwood` | &list_driftwood |
 | [Building destruction and debris](users_guide/bldgdebris.md) | `fn_bldgdebris` | &list_bldgdebris |
-| [Water quality](users_guide/wq.md) (load runoff) | `fn_wq` | &list_wq |
+| [Water quality](users_guide/wq.md) | `fn_wq` | &list_wq |
 | [Soil Water Index](users_guide/swi.md) | `fn_swi` | &list_swi |
-| [Vertical unsaturated flow (VZ) runoff](users_guide/vz.md) | `fn_vz` | &list_vz (+ &list_vz_column / &list_vz_zone) |
-| [Measurement](users_guide/record.md) (probes, transects) | `fn_record` | &list_record |
+| [Vertical unsaturated flow runoff](users_guide/vz.md) | `fn_vz` | &list_vz (+ &list_vz_column / &list_vz_zone) |
+| [Measurement](users_guide/record.md) | `fn_record` | &list_record |
 
 For examples to build on, see the [working setup in test/wave](../../test/wave/en/README.md)
 or the [annotated parameter list](../../examples/List_samples/en/list_sysparam.txt).

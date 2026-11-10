@@ -137,16 +137,16 @@ ENCflow は地表の水の流れを計算するモデルです。必要に応じ
 
 | 機能 | 設定ファイルの指定 | namelist グループ |
 |---|---|---|
-| [ネスティング](users_guide/nest.md)(多段格子) | `fn_nest` | &list_nest |
+| [ネスティング](users_guide/nest.md) | `fn_nest` | &list_nest |
 | [潮位・海面](users_guide/tide.md) | `fn_tide` | &list_tide |
-| [沿岸の波浪場](users_guide/wavefield.md)(波高・波向の分布) | `fn_wavefield` | &list_wavefield |
-| [波浪による沿岸漂砂](users_guide/geomorph.md#波浪による沿岸漂砂fn_wave)(弧状・カスプ状デルタ、汀線の均し) | `fn_wave` | &list_wave(fn_geomorph の f_fluvial=1 が必須) |
+| [沿岸の波浪場](users_guide/wavefield.md) | `fn_wavefield` | &list_wavefield |
+| [波浪による沿岸漂砂](users_guide/geomorph.md#波浪による沿岸漂砂fn_wave) | `fn_wave` | &list_wave(fn_geomorph の f_fluvial=1 が必須) |
 | [内部水理構造物](users_guide/structure.md) | `fn_structure` | &list_struct_pump / culvert / diversion / dam |
 | [ため池](users_guide/geoinfo.md#ため池) | 地理情報の `fn_rscap`(`fn_reservoir` は計算に使われない) | &list_geoinfo |
 | [河道](users_guide/channel.md) | `fn_channel` | &list_channel(+ breach) |
 | [降水](users_guide/forcing.md#降水list_precip) | `fn_precip` | &list_precip |
 | [降雨遮断](users_guide/forcing.md#降雨遮断list_intercept) | `fn_intercept` | &list_intercept(+ モデル固有) |
-| [気象強制場](users_guide/forcing.md#気象強制場list_meteo)(気温ほか) | `fn_meteo` | &list_meteo |
+| [気象強制場](users_guide/forcing.md#気象強制場list_meteo) | `fn_meteo` | &list_meteo |
 | [蒸発散](users_guide/forcing.md#蒸発散list_evap) | `fn_evap` | &list_evap |
 | [積雪・融雪](users_guide/forcing.md#積雪融雪list_snow) | `fn_snow` | &list_snow |
 | [氷河](users_guide/glacier.md) | `fn_glacier` | &list_glacier |
@@ -157,10 +157,10 @@ ENCflow は地表の水の流れを計算するモデルです。必要に応じ
 | [土砂・地形変化](users_guide/geomorph.md) | `fn_geomorph` | &list_geomorph |
 | [流木](users_guide/driftwood.md) | `fn_driftwood` | &list_driftwood |
 | [家屋破壊・瓦礫](users_guide/bldgdebris.md) | `fn_bldgdebris` | &list_bldgdebris |
-| [水質](users_guide/wq.md)(負荷流出) | `fn_wq` | &list_wq |
+| [水質](users_guide/wq.md) | `fn_wq` | &list_wq |
 | [土壌雨量指数](users_guide/swi.md) | `fn_swi` | &list_swi |
-| [鉛直不飽和浸透(VZ)流出](users_guide/vz.md) | `fn_vz` | &list_vz(+ &list_vz_column / &list_vz_zone) |
-| [計測](users_guide/record.md)(プローブ・測線) | `fn_record` | &list_record |
+| [鉛直不飽和浸透流出](users_guide/vz.md) | `fn_vz` | &list_vz(+ &list_vz_column / &list_vz_zone) |
+| [計測](users_guide/record.md) | `fn_record` | &list_record |
 
 書き方に迷ったら、[動く設定例（test/wave）](../test/wave/) や
 [全設定の記述例](../examples/List_samples/list_sysparam.txt) を参考にしてください。

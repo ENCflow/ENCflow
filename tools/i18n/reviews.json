@@ -104,9 +104,9 @@
     {
       "source": "docs/users_guide.md",
       "target": "docs/en/users_guide.md",
-      "source_sha256": "123356d8a5863a1644b4bb9bc2ecaaadfb43871ce12042d15c163431b55b223f",
-      "target_sha256": "bfd42658e28d79da0bcb371fdc0158ebd89236f32b41061dba35bae86b67988d",
-      "reviewer": "Claude (Claude Code session; fn_* section: unfolded the features table, linked every feature and geographic input, added the fn_nest and fn_vz rows, pond row set to fn_rscap with fn_reservoir unused (checked in src); both versions edited together, anchors checked against the target headings, rendering checked with cmark-gfm and a browser)",
+      "source_sha256": "b90ab959267a9002d84123f79cd76a70be3102fb3a4360815b05d1b5d6ba4064",
+      "target_sha256": "54987ef44e8c8adc4ab9b17b5a62083d5dad8291342a96dec97e541474732b30",
+      "reviewer": "Claude (Claude Code session; features table: removed the parenthetical notes from the Feature column in both versions (nesting, wave field, longshore transport, weather forcing, water quality, VZ runoff, measurement); links and other columns unchanged; read side by side)",
       "method": "assistant",
       "reviewed_on": "2026-11-10"
     },
