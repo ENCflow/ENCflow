@@ -332,8 +332,8 @@ history and roadmap.
 - **Researchers** — process interactions such as slope failure leading
   to debris flow, channel blockage and inundation, or weathering
   leading to soil and erosion, in a single model. With all the source
-  open and no external dependencies, you can add your own equations or
-  processes and test them in combination with the existing ones.
+  open, you can add your own equations or processes with the help of AI
+  and test them in combination with the existing ones.
 - **Practitioners** — inundation analysis, structure operation,
   sediment hazards, and water quality in one input system, with no
   tool-switching between projects, and a direct path to large runs on
