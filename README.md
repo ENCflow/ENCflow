@@ -158,50 +158,32 @@ two-dimensional world. The following are out of scope by design and
 belong to specialized models
 ([comparison](docs/en/comparison.md)).
 
-- **Wave hindcasting and phase-resolving short waves** — the growth of
-  waves by wind (wave hindcasting) and phase-resolving computation of
-  short-period waves, which follows the rise and fall of the water
-  surface wave by wave, are the realm of dedicated models. Storm surge
-  and tsunami are long waves and can be solved, and the non-hydrostatic
-  correction covers the dispersion of long waves. The coastal waves
-  above are also covered, but as a phase-averaged estimate with one
-  representative period, taking the offshore waves as given at the
-  boundary and without frequency spreading or nonlinear wave–wave
-  interactions.
+- **Wave hindcasting and phase-resolving short waves** — neither the
+  growth of waves by wind nor computation that follows the water
+  surface wave by wave. The coastal waves above are a phase-averaged
+  estimate with one representative period, taking the offshore waves as
+  given.
 - **Pyroclastic surges, eruption plumes, and atmospheric ash
   transport** — compressible, three-dimensional atmospheric phenomena
-  outside the shallow-water approximation. The volcanic density flows
-  above are covered, and if ash-fall deposit distributions are given to
-  the terrain and soil layer in preprocessing, their rainfall-triggered
-  secondary lahars can be analyzed.
+  outside the shallow-water approximation. If ash-fall deposits are
+  given to the terrain and soil layer in preprocessing, the
+  rainfall-triggered secondary lahars can be analyzed.
 - **Water temperature** — no energy balance is solved, so water
-  temperature itself is not predicted. Temperature corrections for
-  snowmelt, evapotranspiration, and water quality are handled via air
-  temperature.
+  temperature is not predicted.
 - **The dynamics of density currents and stratification** — the
-  momentum equations keep a constant density. Fresh/salt two-layer
-  phenomena are handled with a sharp-interface approximation, but
-  mixing and entrainment, internal waves, and reservoir thermal
-  stratification cannot be reproduced. Vertical structure itself is not
-  resolved either: secondary flow in bends is not carried as a vertical
-  velocity profile, only its effect on the bed-load direction enters,
-  through an equilibrium parameterisation.
+  momentum equations keep a constant density, and vertical structure is
+  not resolved. Apart from a sharp-interface approximation of fresh and
+  salt water layers, mixing and entrainment, internal waves, and
+  reservoir thermal stratification cannot be reproduced.
 - **Individual sewer pipes and operational control** — tracking
   individual pipes, and network analyses involving control structures
-  driven by operating rules, are the realm of dedicated 1-D pipe-network
-  models. Standalone structures are covered by the internal hydraulic
-  structures, and the areal drainage capacity, pressurized flow, and
-  eruption of dense street-level networks by the conduit continuum
-  layer; being a continuum approximation, it cannot identify which
-  manhole erupts.
-  Systems dominated by a single trunk main also belong to network
-  models.
-- **Deep groundwater** — ENCflow's groundwater is a shallow two-layer
-  system for runoff analysis. The "confined" state of the conduit layer
-  is an artificial confinement representing pipe-full pressurized flow;
-  the hydraulics of natural regional confined aquifers belong to 3-D
-  groundwater models. Pumping is given as a cell-scale sink, and
-  borehole-scale hydraulics are not represented.
+  driven by operating rules, belong to 1-D pipe-network models. Urban
+  sewers are treated as an areal continuum, so which manhole erupts
+  cannot be identified, and systems dominated by a single trunk main
+  are not a good fit.
+- **Deep groundwater** — the groundwater is a shallow two-layer system
+  for runoff analysis. Regional confined aquifers and borehole-scale
+  hydraulics are not represented.
 
 ## Why choose ENCflow
 
