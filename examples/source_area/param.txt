@@ -1,0 +1,59 @@
+!======================================================================
+! source_area 過程計算: 浸透 → 土層の側方流 → 飽和域(流出寄与域)→ 河道
+!   山地の源流域(秩父の 50 m 格子から切り出した 38 km2)に 10 mm/h × 12 時間の
+!   雨を 2 回降らせる。雨は全量が土層にしみ込み、土層の中を斜面の下へ流れて
+!   谷に集まる。土層が満ちたセル(飽和域)では雨がしみ込めずに地表を流れ、
+!   斜面の上から来た地下水も湧き出して、河道へ出ていく。飽和域は雨の間に
+!   谷から斜面へ広がり、雨が止むと縮む。
+!   詳細と結果は README.md。入力は make(make_catchment.py)が data/ に作る
+!======================================================================
+&list_sysparam
+  dt = 3.0                  ! 時間刻み (s)
+  tt_c = "96h"              ! 計算終了時刻(4 日)
+  dt_disp_c = "1h"          ! 画面表示の間隔
+  dt_file_c = "1h"          ! 分布ファイル出力の間隔
+  dt_recrd_c = "10m"        ! プローブ・測線の記録間隔
+  fn_geoinfo = '-'
+  fn_gwflow = '-'
+  fn_precip = 'param_common.txt'    ! 共通設定(降雨・計測・出口)
+  fn_record = 'param_common.txt'
+  fn_boundary = 'param_common.txt'
+  dir_data = 'data'
+  dir_result = 'result_process'
+  f_govequation = 0         ! 地表の流れは力学波
+  f_out_hg = 1              ! 地下貯留 Hg の分布(飽和域の判定に使う)
+  f_output_mode = 2         ! 分布は bil
+  dd = 0.0001               ! 限界水深 (m)。斜面の薄い流れを止めない
+  dv = 0.0001               ! 摩擦項の水深の下限 (m)
+/
+
+&list_geoinfo
+  nx = 192
+  ny = 143
+  dx = 50.0
+  dy = 50.0
+  f_ztype = 1               ! 地盤高ファイル
+  fn_z = 'z.txt'
+  f_masktype = 1            ! 領域マスクファイル(集水域)
+  fn_mask = 'mask.txt'
+  fn_rw = 'rw.txt'          ! 河道マスク(落水線でつないだもの)
+  f_rntype = 0
+  rn0 = 0.3                 ! 斜面の粗度(林床の薄い表面流)
+  rn0_rw = 0.05             ! 河道セルの粗度(礫・巨礫の渓流)
+  sd0 = 0.5                 ! 土層厚 (m)。急斜面の薄い土層(貯められる水は sd0 × sy0 = 100 mm)
+  sy0 = 0.2                 ! 有効間隙率
+/
+
+&list_gwflow
+  f_gwvertical = 2          ! Green-Ampt の浸透
+  f_gwlateral = 1           ! 土層の側方流(非線形 Boussinesq)
+/
+
+&list_gwflow_greenampt
+  gw_ksv_mmh = 200.0        ! 鉛直飽和透水係数 (mm/h)。森林土壌(雨 10 mm/h は全量しみ込む)
+  gw_psif = 0.0             ! 一定浸透能
+/
+
+&list_gwflow_lateral
+  gw_ksh_mmh = 3600.0       ! 側方飽和透水係数 (mm/h) = 1e-3 m/s(大きな孔隙・パイプを含む実効値)
+/
