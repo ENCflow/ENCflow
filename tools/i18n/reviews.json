@@ -1436,29 +1436,29 @@
     {
       "source": "examples/debris_bedrock/README.md",
       "target": "examples/debris_bedrock/en/README.md",
-      "source_sha256": "2306fb3cfe9a3e930b446c87e181f242dd39311fd97a0a6e3b66609751e8e13c",
-      "target_sha256": "e3803bd9c0be51459f92c59f27acbf21a674abb92558371e6def4fdd95f6c394",
-      "reviewer": "Claude (Claude Code session; corrected both versions in parallel against the inputs, scripts and committed figures, and compared the edited passages and numbers)",
+      "source_sha256": "a89a790d67fae7647981cb2b6ba502deaeb4f54b44e4fb44951a1c231a272cdb",
+      "target_sha256": "bcbbb29597563f7355c2fd080fb1eeeb2b3ac7ce0ed114796f11b9f805a30428",
+      "reviewer": "Claude (Claude Code session; recomputation of 2026-11-10: the six changed numbers (C_b and C_c table cells and ledger, C_b deposit at 120 m, C_c mobile layer and erosion at 101 m, the 91 cm of the long chain) compared against the Japanese source, the printed tables of plot_results.py and the 1 s output analysis; no model execution)",
       "method": "assistant",
-      "reviewed_on": "2026-11-08"
+      "reviewed_on": "2026-11-10"
     },
     {
       "source": "examples/debris_bedrock/figs/cover.png",
       "target": "examples/debris_bedrock/en/figs/cover.png",
-      "source_sha256": "bf9a08bdeb83e11e61de3a7b13b0c4423a948aa75df6c0de8626260021ee2199",
-      "target_sha256": "3e451ead78b7a9231e56a8c11ccf45696f5d1e0d51d9271f338bf71c9ea31eb9",
-      "reviewer": "Claude (Claude Code session; viewed both images side by side: same mobile-layer and rock-erosion series at 21, 61 and 101 m for T_c and C_c; titles, legends and axis labels translated)",
+      "source_sha256": "a9174f17df5fa5916e6fe835067bb779d2e973e97324369e8dcf2aca563e753d",
+      "target_sha256": "fa8361943e216e7695703add76fd65d5f49e02cfb7be03997336afa7131c5d01",
+      "reviewer": "Claude (Claude Code session; English figure drawn by the same script with the en switch from the same results of 2026-11-10; compared side by side: same plotted data and layout, labels translated)",
       "method": "assistant",
-      "reviewed_on": "2026-11-06"
+      "reviewed_on": "2026-11-10"
     },
     {
       "source": "examples/debris_bedrock/figs/erosion.png",
       "target": "examples/debris_bedrock/en/figs/erosion.png",
-      "source_sha256": "46a9b3e77b5627e72ecd21b02cd4f9b120b32d33a576c2bc44264955314f12ae",
-      "target_sha256": "1aa4d81679a91bd4f5e202d573b81420d9c01457103478ed34829dc05c7131cf",
-      "reviewer": "Claude (Claude Code session; viewed both images side by side: same bed profile, erosion profiles for bare rock and cover, and final mobile layer; panel titles, legends, axis labels and the initial-deposit note translated)",
+      "source_sha256": "bebcd3a454791f853f764a5dd7fd6a96f017b819a4e3d23f1e37782755cea02d",
+      "target_sha256": "b59fe89b75982d0fc81fe1b1dc1389238048527ae8e959a203b99e12a201a77f",
+      "reviewer": "Claude (Claude Code session; English figure drawn by the same script with the en switch from the same results of 2026-11-10; compared side by side: same plotted data and layout, labels translated)",
       "method": "assistant",
-      "reviewed_on": "2026-11-06"
+      "reviewed_on": "2026-11-10"
     },
     {
       "source": "examples/debris_bedrock/figs/long_cover.png",
@@ -1517,11 +1517,11 @@
     {
       "source": "examples/debris_bedrock/figs/threshold.png",
       "target": "examples/debris_bedrock/en/figs/threshold.png",
-      "source_sha256": "f35797cb7ab1b110dd360c0a8f3cabbf79ce0649786e72e5e2cae0fb41a3e51c",
-      "target_sha256": "18ad55fee337b52cb03b4ffebfe3d502525cae349b214158b52e7a75199114ff",
-      "reviewer": "Claude (Claude Code session; viewed both images side by side: same erosion profiles for tau_cd = 0.5, 1 and 2 kPa; title and axis labels translated)",
+      "source_sha256": "1345af074613e5f710c0346967117ec86583ccb77735eea8fbe3f2e0aa91e17f",
+      "target_sha256": "643922e4f53b65203a557debb390a11db08f329f9b7187eaee175efb4dda38e3",
+      "reviewer": "Claude (Claude Code session; English figure drawn by the same script with the en switch from the same results of 2026-11-10; compared side by side: same plotted data and layout, labels translated)",
       "method": "assistant",
-      "reviewed_on": "2026-11-06"
+      "reviewed_on": "2026-11-10"
     },
     {
       "source": "examples/debris_fan/README.md",
