@@ -62,6 +62,26 @@ def hill_q(t):
     return q, te
 
 
+def hill_h(t, x):
+    """斜面の尾根から x (m) の位置の水深 (m)(x = B が脚。hill_q と同じ式で、位置を変えたもの。
+    plot_results.py が斜面の 2 列目のプローブと比べる)。t は配列可。"""
+    t = np.asarray(t, dtype=float)
+    te = (x / (ALPHA_S * I ** (G_M - 1.0))) ** (1.0 / G_M)
+    he = (I * x / ALPHA_S) ** (1.0 / G_M)
+    h = np.where(t < te, I * np.clip(t, 0.0, None), he)
+    rec = t > T_R
+    if rec.any():
+        tr = t[rec] - T_R
+        lo, hi = np.zeros_like(tr), np.full_like(tr, he)
+        for _ in range(80):
+            mid = 0.5 * (lo + hi)
+            f = x - ALPHA_S * mid ** G_M / I - G_M * ALPHA_S * mid ** (G_M - 1.0) * tr
+            lo = np.where(f > 0.0, mid, lo)
+            hi = np.where(f > 0.0, hi, mid)
+        h[rec] = 0.5 * (lo + hi)
+    return h
+
+
 def chan_Q(h):
     """水路の流量 Q(h) (m3/s)。既定は広幅(径深 h)、--rect で矩形断面(径深 Wh/(W + 2h))。"""
     h = np.clip(h, 0.0, None)

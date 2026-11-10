@@ -7,8 +7,11 @@
   hydrographs.png  出口と斜面の脚の流量: 8 近傍の 20・10・5 m と理論解(向き 0° と 45°)
   fournb.png       4 近傍(p_diagratio = 0)の 20・10・5 m と理論解(0° と 45°)
   goveq.png        基礎式の比較(10 m): 力学波・拡散波・運動波と理論解
-  maps.png         60 分の水深: 45° の 20 m の出口付近のセル(8 近傍と 4 近傍)と、水路の軸に沿う縦断(20・10・5 m)
-  depths.png       出口の水路と斜面の脚の水深の時系列(8 近傍)と理論の等流水深
+  maps.png         60 分の水深: 45° の 20 m の出口付近のセル(8 近傍と 4 近傍。下流の区間と海まで)と、
+                   水路の軸に沿う縦断(20・10・5 m)
+  depths.png       出口の水路と斜面の 2 列目の水深の時系列(8 近傍)と理論(運動学的波の時系列)
+  subgrid.png      追補: 水路(20 m)より粗い 40 m の格子で、河道マスク + サブグリッド河道幅 20 m の有無を比べる
+                   (出口の流量と、90 分の水路の軸に沿う水深。0° と 45°)
 数値の表は check.py が出す。
 """
 import os
@@ -20,6 +23,7 @@ import matplotlib.pyplot as plt
 from matplotlib.colors import LogNorm
 import make_inputs as M
 import check as C
+import analytic as A
 
 EN = "en" in sys.argv[1:]
 
@@ -155,7 +159,7 @@ def fig_maps():
         H = np.loadtxt(path)[::-1]
         nx, ny, ox, oy, c, sn, _ = M.frame(dx, 45.0)
         _, kind, s, n = M.grid(dx, 45.0)
-        sel = (kind > 0) & (s > M.L - 320) & (s < M.L + 140) & (np.abs(n) < 220)
+        sel = (kind > 0) & (s > M.L - 260) & (s < M.L + 300) & (np.abs(n) < 220)
         jj, ii = np.nonzero(sel)
         cmap = plt.get_cmap("viridis")
         for i, j in zip(ii, jj):
@@ -171,10 +175,11 @@ def fig_maps():
             else:
                 fc = cmap(np.clip(H[j, i] / 1.0, 0, 1))
             ax.add_patch(Polygon(np.c_[ss, nn], closed=True, facecolor=fc, edgecolor="0.6", lw=0.3))
-        ax.plot([M.L, M.L], [-220, 220], "k--", lw=0.8)
+        ax.plot([M.L, M.L], [-220, 220], "k--", lw=0.8)                       # 出口の計測面
+        ax.plot([M.L + M.L_EXT, M.L + M.L_EXT], [-220, 220], "k:", lw=0.8)     # 下流の区間の終わり(斜面が終わる所)
         ax.axhline(M.W / 2, color="#1f3f8b", lw=0.6)
         ax.axhline(-M.W / 2, color="#1f3f8b", lw=0.6)
-        ax.set_xlim(M.L - 320, M.L + 140)
+        ax.set_xlim(M.L - 260, M.L + 300)
         ax.set_ylim(-220, 220)
         ax.set_aspect("equal")
         ax.set_xlabel("s (m)")
@@ -212,6 +217,9 @@ def fig_maps():
 
 
 def fig_depths():
+    """出口の水路のセル(P1)と、斜面の水路から 2 列目のセル(P2、s = 500 m)の水深の時系列。理論は運動学的波の
+    時系列(出口は data/analytic.csv の h_out、斜面は hill_h を 20 m の P2 の位置 x = 770 m で評価。10・5 m の P2
+    (785・792.5 m)では平衡の水深が 1〜2 % 深い)。"""
     fig, axes = plt.subplots(1, 2, figsize=(12, 4.2))
     for th in (0.0, 45.0):
         for dx in (20.0, 10.0, 5.0):
@@ -221,20 +229,81 @@ def fig_depths():
             lab = f"Δx = {dx:g} m, {th:g}°"
             axes[0].plot(c["p1"][:, 1], c["p1"][:, 3], color=COL[dx], ls="-" if th == 0 else ":", lw=1.3, label=lab)
             axes[1].plot(c["p2"][:, 1], c["p2"][:, 3] * 1000, color=COL[dx], ls="-" if th == 0 else ":", lw=1.3, label=lab)
-    axes[0].axhline(C.H_OUT_TH, color="k", lw=1.0, label=T("理論の等流水深 0.443 m(広幅)", "theory 0.443 m (wide channel)"))
-    axes[1].axhline(C.H_FOOT_TH * 1000, color="k", lw=1.0, label=T("理論の等流水深 5.3 mm", "theory 5.3 mm"))
+    a = np.loadtxt("data/analytic.csv", delimiter=",", comments="#")
+    axes[0].plot(a[:, 0], a[:, 4], "k", lw=1.2, label=T("理論(運動学的波。等流水深 0.443 m)", "theory (kinematic wave; uniform depth 0.443 m)"))
+    x2 = M.B - 1.5 * 20.0
+    axes[1].plot(a[:, 0], A.hill_h(a[:, 0] * 60.0, x2) * 1000, "k", lw=1.2,
+                 label=T(f"理論(尾根から {x2:g} m = 20 m の P2 の位置。平衡 {C.h_hill_th(x2) * 1000:.1f} mm)",
+                         f"theory (at {x2:g} m from the ridge = P2 of the 20 m grid; equilibrium {C.h_hill_th(x2) * 1000:.1f} mm)"))
     axes[0].set_title(T("出口の水路のセルの水深(P1)", "Depth in the outlet channel cell (P1)"), fontsize=10)
-    axes[1].set_title(T("水路に接する斜面のセルの水深(P2、s = 500 m)", "Depth in the hillslope cell next to the channel (P2, s = 500 m)"), fontsize=10)
+    axes[1].set_title(T("斜面の水路から 2 列目のセルの水深(P2、s = 500 m)", "Depth in the second hillslope cell from the channel (P2, s = 500 m)"), fontsize=10)
     axes[0].set_ylabel(T("水深 (m)", "depth (m)"))
     axes[1].set_ylabel(T("水深 (mm)", "depth (mm)"))
+    axes[0].set_ylim(0, 0.75)
+    axes[1].set_ylim(0, 8.0)
     for ax in axes:
         ax.axvspan(0, M.T_RAIN, color="#9ecae1", alpha=0.25)
         ax.set_xlabel(T("時間 (分)", "time (min)"))
         ax.set_xlim(0, 180)
         ax.grid(alpha=0.3)
-        ax.legend(fontsize=7)
+        ax.legend(fontsize=7, loc="upper right")
     fig.tight_layout()
     fig.savefig(f"{FIGDIR}/depths.png", dpi=110)
+    plt.close(fig)
+
+
+def fig_subgrid():
+    """追補: 水路(20 m)より粗い 40 m の格子で、河道マスク fn_rw + サブグリッド河道幅 20 m の有無を比べる。
+    上: 出口の流量(0°・45°。灰色は 20 m の 8 近傍)、下: 90 分(H0003)の水路の軸に沿う水深と理論の等流水深。"""
+    fig, axes = plt.subplots(2, 2, figsize=(12, 8))
+    col = {"": "#c0392b", "_sgc": "#1f5f8b"}
+    ls = {"": "--", "_sgc": "-"}
+    lab = {"": T("40 m、幅なし(水路のセルを解像扱い)", "40 m, no width (channel cells as resolved)"),
+           "_sgc": T("40 m、fn_rw + 幅 20 m", "40 m, fn_rw + width 20 m")}
+    ref_lab = T("20 m(参考)", "20 m (reference)")
+    he = C.H_OUT_TH
+    for k, th in enumerate((0.0, 45.0)):
+        ax, axd = axes[0, k], axes[1, k]
+        theory_line(ax, "out")
+        ref = case(M.case_name(20.0, th))
+        if ref is not None:
+            ax.plot(ref["t"], ref["q"], color="0.55", lw=1.0, label=ref_lab)
+        for suf in ("", "_sgc"):
+            c = case(M.case_name(40.0, th, suf))
+            if c is None:
+                continue
+            ax.plot(c["t"], c["q"], color=col[suf], ls=ls[suf], lw=1.6, label=lab[suf])
+        ax.axvspan(0, M.T_RAIN, color="#9ecae1", alpha=0.25)
+        ax.set_title(T(f"向き {th:g}°: 出口の流量(8 近傍)", f"Orientation {th:g}°: outlet discharge (8-neighbour)"), fontsize=10)
+        ax.set_xlabel(T("時間 (分)", "time (min)"))
+        ax.set_xlim(0, 180)
+        ax.set_ylim(0, 5.5)
+        ax.grid(alpha=0.3)
+        ax.legend(fontsize=8)
+        ss_ = np.linspace(1, M.L, 200)
+        axd.plot(ss_, he * (ss_ / M.L) ** 0.6, "k", lw=1.2, label=T("理論の等流水深 h_e (s/L)^0.6", "theory, uniform depth h_e (s/L)^0.6"))
+        for dx, suf, c_, l_, w_, lb in ((20.0, "", "0.55", "-", 1.0, ref_lab), (40.0, "", col[""], ls[""], 1.6, lab[""]),
+                                        (40.0, "_sgc", col["_sgc"], ls["_sgc"], 1.6, lab["_sgc"])):
+            path = f"result_{M.case_name(dx, th, suf)}/{C.H_MAP}"
+            if not os.path.isfile(path):
+                continue
+            H = np.loadtxt(path)[::-1]
+            _, kind, s, n = M.grid(dx, th)
+            axis = C.axis_cells(kind, n)
+            kk = np.argsort(s[axis])
+            axd.plot(s[axis][kk], H[axis][kk], color=c_, ls=l_, lw=w_, label=lb)
+        axd.set_xlabel("s (m)")
+        axd.set_ylabel(T("水路の軸のセルの水深 (m)", "depth in the channel-axis cells (m)"))
+        axd.set_title(T(f"向き {th:g}°: 90 分の水路の縦断", f"Orientation {th:g}°: along the channel at 90 min"), fontsize=10)
+        axd.set_xlim(0, M.L)
+        axd.set_ylim(0, 0.8)
+        axd.grid(alpha=0.3)
+        axd.legend(fontsize=8)
+    axes[0, 0].set_ylabel(T("流量 (m³/s)", "discharge (m³/s)"))
+    fig.suptitle(T("追補: 水路(20 m)より粗い 40 m の格子と、河道マスク + サブグリッド河道幅の有無",
+                   "Supplement: the 40 m grid, coarser than the channel (20 m), with and without the channel mask + sub-grid width"), fontsize=11)
+    fig.tight_layout()
+    fig.savefig(f"{FIGDIR}/subgrid.png", dpi=110)
     plt.close(fig)
 
 
@@ -244,7 +313,8 @@ def main():
     fig_goveq()
     fig_maps()
     fig_depths()
-    print(f"{FIGDIR}/hydrographs.png fournb.png goveq.png maps.png depths.png")
+    fig_subgrid()
+    print(f"{FIGDIR}/hydrographs.png fournb.png goveq.png maps.png depths.png subgrid.png")
 
 
 if __name__ == "__main__":

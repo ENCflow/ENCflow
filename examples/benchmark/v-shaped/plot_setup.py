@@ -4,7 +4,7 @@
   python3 plot_setup.py        日本語 → figs/setup.png
   python3 plot_setup.py en     英語   → en/figs/setup.png
 
-(a) 流域の平面(流域の座標 s, n。色 = 地盤高)と計測線・プローブ、(b) 横断と縦断、
+(a) 流域の平面(流域の座標 s, n。色 = 地盤高)と下流の区間・延長・海、計測線・プローブ、(b) 横断と縦断、
 (c) 格子 20 m を流域に 0° と 45° で重ねたときの出口付近のセル(水路は 45° で斜めの 1 列)、
 (d) 運動学的波の理論解(出口と斜面の脚)。寸法と式は make_inputs.py・analytic.py のもの。
 """
@@ -29,31 +29,36 @@ FIGDIR = "en/figs" if EN else "figs"
 matplotlib.rcParams["font.family"] = ["DejaVu Sans"] if EN else ["IPAGothic", "DejaVu Sans"]
 matplotlib.rcParams["axes.unicode_minus"] = False
 os.makedirs(FIGDIR, exist_ok=True)
-C_HILL, C_CHAN, C_EXT, C_SEA, C_OUT = "#d9c9a3", "#4a90c2", "#86b8d8", "#1f3f8b", "#f2f2f2"
+C_HILL, C_CHAN, C_EXT, C_SEA, C_OUT, C_HILL2 = "#d9c9a3", "#4a90c2", "#86b8d8", "#1f3f8b", "#f2f2f2", "#ece2c9"
 
 
 def kind_color(kind):
-    return {0: C_OUT, 1: C_HILL, 2: C_CHAN, 3: C_EXT, 4: C_SEA}[kind]
+    return {0: C_OUT, 1: C_HILL, 2: C_CHAN, 3: C_EXT, 4: C_SEA, 5: C_HILL2}[kind]
 
 
 def panel_plan(ax):
     ds = 5.0
-    s = np.arange(0, M.L, ds) + ds / 2
+    s_hill = M.L + M.L_EXT
+    s = np.arange(0, s_hill, ds) + ds / 2
     n = np.arange(-M.WH, M.WH, ds) + ds / 2
     S, N = np.meshgrid(s, n)
     inch = np.abs(N) < M.W / 2
     Z = np.where(inch, M.Z_OUT + M.S_C * (M.L - S), M.Z_OUT + M.S_C * M.L + M.D_UP + M.S_S * (np.abs(N) - M.W / 2))
-    im = ax.imshow(Z, origin="lower", extent=[0, M.L, -M.WH, M.WH], cmap="YlOrBr", vmin=0, vmax=70, aspect="equal")
-    ax.axhspan(-M.W / 2, M.W / 2, color=C_CHAN, alpha=0.9)
-    ax.add_patch(Rectangle((M.L, -M.W / 2), 60, M.W, color=C_EXT))
-    ax.add_patch(Rectangle((M.L + 60, -M.W / 2), 60, M.W, color=C_SEA))
+    im = ax.imshow(Z, origin="lower", extent=[0, s_hill, -M.WH, M.WH], cmap="YlOrBr", vmin=0, vmax=75, aspect="equal")
+    ax.axhspan(-M.W / 2, M.W / 2, xmin=0.0, xmax=1.0, color=C_CHAN, alpha=0.9)
+    ax.add_patch(Rectangle((M.L, -M.W / 2), M.L_EXT, M.W, color=C_EXT))
+    ax.add_patch(Rectangle((s_hill, -M.W / 2), 60, M.W, color=C_EXT))
+    ax.add_patch(Rectangle((s_hill + 60, -M.W / 2), 60, M.W, color=C_SEA))
+    ax.plot([M.L, M.L], [-M.WH, M.WH], color="k", lw=0.8, ls="--")
+    ax.plot([s_hill, s_hill], [-M.WH, M.WH], color="k", lw=0.8, ls=":")
     ax.plot([M.L - 5, M.L - 5], [-M.WH + 5, M.WH - 5], color="#c0392b", lw=2.0, label=T("出口の計測面(全幅)", "outlet face (full width)"))
     ax.plot([5, M.L - 5], [M.W / 2 + 10, M.W / 2 + 10], color="#2b8a3e", lw=2.0, label=T("斜面の脚の計測線(左岸側)", "hillslope-foot line (left side)"))
     ax.plot(M.L - 5, 0, "o", ms=6, color="k", mfc="w", label=T("P1 出口の水路の水深", "P1 depth in the outlet channel cell"))
-    ax.plot(M.L / 2, M.W / 2 + 10, "s", ms=6, color="k", mfc="w", label=T("P2 斜面の脚の水深", "P2 depth at the hillslope foot"))
+    ax.plot(M.L / 2, M.W / 2 + 30, "s", ms=6, color="k", mfc="w", label=T("P2 斜面の水路から 2 列目の水深", "P2 depth in the second hillslope cell from the channel"))
     ax.legend(loc="lower left", fontsize=7, framealpha=0.9)
-    ax.annotate("", xy=(M.L + 118, 0), xytext=(M.L + 60, 0), arrowprops=dict(arrowstyle="-|>", color="w"))
-    ax.text(M.L + 10, 120, T("延長 + 海(吸い込み)", "extension + sea (sink)"), fontsize=7, rotation=90, va="bottom")
+    ax.annotate("", xy=(s_hill + 118, 0), xytext=(s_hill + 60, 0), arrowprops=dict(arrowstyle="-|>", color="w"))
+    ax.text(M.L + M.L_EXT / 2, -M.WH / 2 + 80, T("下流の区間 200 m(同じ断面。雨も降る。流域には数えない)", "downstream section 200 m (same cross-section, rained on; not part of the catchment)"), fontsize=7, ha="center", va="center", rotation=90)
+    ax.text(s_hill + 10, 120, T("延長 + 海(吸い込み)", "extension + sea (sink)"), fontsize=7, rotation=90, va="bottom")
     for y, txt in ((M.WH / 2 + 150, T("斜面: 水路へ S_S = 0.05、水路方向 S_O = 0\nn = 0.015", "hillslope: S_S = 0.05 toward the channel, S_O = 0 along it\nn = 0.015")),
                    (-M.WH / 2 - 150, T("斜面(同じ)", "hillslope (same)"))):
         ax.text(M.L / 2 + 60, y, txt, ha="center", fontsize=8)
@@ -66,7 +71,7 @@ def panel_plan(ax):
     ax.text(200, 30, "s", fontsize=9, ha="center")
     ax.annotate("", xy=(100, 200), xytext=(100, 0), arrowprops=dict(arrowstyle="-|>", color="k"))
     ax.text(120, 180, "n", fontsize=9)
-    ax.set_xlim(-130, M.L + 130)
+    ax.set_xlim(-130, s_hill + 130)
     ax.set_ylim(-M.WH - 120, M.WH + 20)
     ax.set_xlabel("s (m)")
     ax.set_ylabel("n (m)")
@@ -81,23 +86,26 @@ def panel_sections(ax1, ax2):
     ax1.fill_between(n, 0, z, color=C_HILL)
     ax1.plot(n, z, color="#6b4f2a", lw=1.2)
     ax1.text(0, zc + 6, T("水路(s = 500 m)", "channel (s = 500 m)"), ha="center", fontsize=8)
-    ax1.text(420, 50, "1 : 20", fontsize=8)
+    ax1.text(420, 56, "1 : 20", fontsize=8)
     ax1.set_xlabel("n (m)")
     ax1.set_ylabel(T("標高 (m)", "elevation (m)"))
     ax1.set_title(T("(b) 横断(s = 500 m)と縦断", "(b) Cross-section (s = 500 m) and long profile"), fontsize=9)
-    ax1.set_ylim(0, 70)
-    s = np.linspace(0, M.L + 120, 500)
+    ax1.set_ylim(0, 75)
+    s_hill = M.L + M.L_EXT
+    s = np.linspace(0, s_hill + 120, 700)
     zch = M.Z_OUT + M.S_C * (M.L - s)
     zft = np.full_like(s, M.Z_OUT + M.S_C * M.L + M.D_UP)
     ax2.plot(s[s <= M.L], zch[s <= M.L], color="#1f3f8b", lw=1.4, label=T("水路床(1 : 50)", "channel bed (1 : 50)"))
-    ax2.plot(s[s <= M.L], zft[s <= M.L], color="#6b4f2a", lw=1.4, label=T("斜面の脚(水平)", "hillslope foot (level)"))
-    ax2.plot(s[s > M.L], zch[s > M.L], color=C_EXT, lw=1.4, label=T("延長", "extension"))
+    ax2.plot(s[s <= s_hill], zft[s <= s_hill], color="#6b4f2a", lw=1.4, label=T("斜面の脚(水平)", "hillslope foot (level)"))
+    ax2.plot(s[(s > M.L) & (s <= s_hill + 60)], zch[(s > M.L) & (s <= s_hill + 60)], color=C_EXT, lw=1.4, label=T("下流の区間と延長", "downstream section and extension"))
     ax2.axhline(M.H_SEA, color=C_SEA, lw=1.4, ls="--", label=T("海の水位 1 m", "sea level 1 m"))
-    ax2.annotate("1 m", xy=(0, 22.5), xytext=(60, 27), fontsize=8, arrowprops=dict(arrowstyle="-", color="k", lw=0.5))
-    ax2.annotate("21 m", xy=(M.L - 30, 13), fontsize=8)
+    ax2.axvline(M.L, color="k", lw=0.8, ls="--")
+    ax2.axvline(s_hill, color="k", lw=0.8, ls=":")
+    ax2.annotate("1 m", xy=(0, M.Z_OUT + M.S_C * M.L + 0.5), xytext=(60, M.Z_OUT + M.S_C * M.L + 4), fontsize=8, arrowprops=dict(arrowstyle="-", color="k", lw=0.5))
+    ax2.annotate("21 m", xy=(M.L - 110, M.Z_OUT + 10), fontsize=8)
     ax2.set_xlabel("s (m)")
     ax2.set_ylabel(T("標高 (m)", "elevation (m)"))
-    ax2.set_ylim(0, 30)
+    ax2.set_ylim(0, 35)
     ax2.legend(fontsize=7, loc="upper right")
     ax2.grid(alpha=0.3)
 
@@ -117,7 +125,6 @@ def panel_grid(ax, theta, dx=20.0):
     for nn in (-M.W / 2, M.W / 2):
         ax.plot(*zip(xy(M.L - 170, nn), xy(M.L + 120, nn)), color="#1f3f8b", lw=1.0)
     ax.plot(*zip(xy(M.L, -190), xy(M.L, 190)), color="k", lw=1.0, ls="--")
-    ax.plot(*zip(xy(M.L + 3 * dx, -M.W / 2), xy(M.L + 3 * dx, M.W / 2)), color="k", lw=1.0, ls=":")
     xs, ys = xy(np.array([M.L - 170, M.L + 120, M.L + 120, M.L - 170]), np.array([-190, -190, 190, 190]))
     ax.set_xlim(xs.min(), xs.max())
     ax.set_ylim(ys.min(), ys.max())

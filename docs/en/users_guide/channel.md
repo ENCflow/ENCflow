@@ -350,6 +350,7 @@ written as fields.
 
 - [test/bendloss](../../../test/bendloss/en/README.md): straight, bent and diagonal channels, subgrid width and opening correction, assessed against Manning uniform flow or a straight-channel comparison.
 - [test/chichibu](../../../test/chichibu/en/README.md): real-terrain examples comparing channel masks, roughness, width and levee settings through flood-wave behaviour.
+- The supplement of [examples/benchmark/v-shaped](../../../examples/benchmark/v-shaped/en/README.md): a 20 m wide channel on a 40 m grid, with and without the channel mask and the sub-grid channel width (fn_width), compared with the kinematic-wave theory in the outlet discharge and the channel depth (an example of the rise and the depth approaching the theory on a grid coarser than the channel).
 - Format samples: [examples/List_samples/list_channel.txt](../../../examples/List_samples/en/list_channel.txt)
 - Seawalls (fn_seawall) are the coastal application of the same
   virtual-wall mechanism, configured in the [geographic information

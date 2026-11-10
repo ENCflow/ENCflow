@@ -17,10 +17,10 @@ settings are the defaults.
 
 | Item | Value |
 |---|---|
-| Terrain | hillslopes 2 × 800 m (slope 0.05 toward the channel, 0 along it, n = 0.015), channel 1000 m × 20 m (slope 0.02, n = 0.15; 1 m below the hillslope foot at the upstream end, 21 m at the outlet). Beyond the outlet, 3 cells of channel extension and 3 sea cells (sink at elevation 0 m and depth 1 m). Outside the rectangle of the catchment is outside the domain |
-| Grid | Δx = 20 m. `param_r0.txt` has the channel along a grid axis (0°, 58 × 83); `param_r45.txt` has the catchment rotated by 45° (100 × 100; the channel is a single diagonal row of cells that touch only at their corners) |
+| Terrain | hillslopes 2 × 800 m (slope 0.05 toward the channel, 0 along it, n = 0.015), channel 1000 m × 20 m (slope 0.02, n = 0.15; 1 m below the hillslope foot at the upstream end, 21 m at the outlet). Downstream of the catchment the same cross-section (hillslopes and channel, rained on) continues for 200 m, followed by 3 cells of channel extension and 3 sea cells (sink at elevation 0 m and depth 1 m). The channel depth rises in the few cells before the hillslopes end, and this section keeps the outlet face clear of that effect. Outside the rectangles of the catchment and the downstream section is outside the domain |
+| Grid | Δx = 20 m. `param_r0.txt` has the channel along a grid axis (0°, 68 × 83); `param_r45.txt` has the catchment rotated by 45° (107 × 107; the channel is a single diagonal row of cells that touch only at their corners) |
 | Rain and time | 10.8 mm/h everywhere for 90 min, 3 hours computed. dt = 2 s |
-| Measurement | outlet: a transect across the downstream row of the catchment from ridge to ridge (edge-flux method, full width). Hillslope foot: the row of left-side hillslope cells next to the channel. Every minute |
+| Measurement | outlet: a transect across the downstream row of the catchment from ridge to ridge (edge-flux method, full width). Hillslope foot: the row of left-side hillslope cells next to the channel. Every minute. The depth probes (the outlet channel cell and the second hillslope cell from the channel) are not used in the verdict |
 | Input generation | `make_init.py` (standard library only) evaluates the equations in the catchment coordinates at the cell centres and writes `data_r0/` and `data_r45/`. An implementation independent of the examples' `make_inputs.py` (NumPy), with identical output |
 
 Theory (computed by `Check_vshaped.py` with the standard library only): the closed-form kinematic
@@ -54,22 +54,22 @@ The grid ratio uses the catchment area on the grid because at 45° the area assi
 
 | Case | NRMSE outlet | NRMSE hillslope | peak (m³/s) | grid ratio | t50 (min) | balance | verdict |
 |---|---|---|---|---|---|---|---|
-| 0° (`param_r0.txt`) | 0.020 | 0.021 | 4.860 | 1.000 | 40 | 0.998 | PASS |
-| 45° (`param_r45.txt`) | 0.016 | 0.023 | 4.898 | 1.000 | 38 | 0.999 | PASS |
+| 0° (`param_r0.txt`) | 0.019 | 0.021 | 4.860 | 1.000 | 40 | 0.998 | PASS |
+| 45° (`param_r45.txt`) | 0.020 | 0.025 | 4.898 | 1.000 | 37 | 0.999 | PASS |
 
 - In both orientations the outlet discharge follows the theory, and rotating the catchment by 45° does
   not change the result (the diagonal edges of the eight neighbours connect the single diagonal row of
-  channel cells). The NRMSE of 0.02 comes from a rise 1 to 2 min late and from the approximation on the
-  theory side (kinematic wave).
+  channel cells). The NRMSE of 0.02 comes from a shift of the rise by 1 to 2 min (late at 0°, early at 45°)
+  and from the approximation on the theory side (kinematic wave).
 - With four neighbours (`p_diagratio = 0`) at 45° the channel cells touch only at corners and the runoff
   is zero. That property is shown by the comparison cases of examples/benchmark/v-shaped (it is not part
   of this check).
 
 What it does not do: the theory is the kinematic-wave approximation, not an exact solution of the
 shallow-water equations, so the guide values check that the difference from the theory stays below this
-level. Depths (1.3 times the theory in the single diagonal row of channel cells, 1.5 times in the
-hillslope cell next to the channel) are not part of the verdict. Grid convergence, the governing
-equations and four neighbours are examined on the examples side.
+level. Depths (1.3 times the theory in the single diagonal row of channel cells, 1.5 to 1.8 times in the
+first hillslope cell next to the channel) are not part of the verdict. Grid convergence, the governing
+equations, four neighbours and the sub-grid channel width are examined on the examples side.
 
 ## Related
 

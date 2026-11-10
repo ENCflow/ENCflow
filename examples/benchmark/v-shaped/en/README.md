@@ -13,7 +13,8 @@ examine the dependence on grid orientation and spacing. Here all shallow-water s
 their defaults, and grid spacings of 20, 10 and 5 m, catchment orientations of 0° and 45° to the
 grid, and the ENC eight neighbours (default) versus four neighbours (`p_diagratio = 0`) are
 compared. As a supplement the governing equations (dynamic, diffusive and kinematic wave) are
-compared too.
+compared, and an addendum shows the effect of the sub-grid channel width on a 40 m grid, coarser
+than the channel (20 m).
 
 **What this example shows**
 
@@ -44,22 +45,24 @@ compared too.
 
 (a) Plan in the catchment coordinates (s, n): s runs down the channel, n across it from the channel axis
 (the positive side is called the left side). The red line is the outlet face, the green line the
-hillslope-foot line, P1 and P2 the depth probes. (b) Cross-section (s = 500 m) and long profile. The
-hillslope foot is level; the channel is cut 1 m below it at the upstream end and 21 m at the outlet.
-(c) Cells near the outlet when the 20 m grid is laid over the catchment at 0° and 45°. At 45° the channel
-(blue) is a single diagonal row, and neighbouring channel cells touch only at their corners. The black
-dashed line is the outlet, the dotted line the boundary between the extension and the sea. (d) The
-kinematic-wave theory. Drawn from the inputs and the equations; not a computed result.
+hillslope-foot line, P1 and P2 the depth probes (P2 is the second hillslope cell from the channel).
+Beyond the outlet (dashed line) the same cross-section continues for 200 m up to the dotted line (not
+counted in the catchment), followed by the channel extension and the sea. (b) Cross-section (s = 500 m)
+and long profile. The hillslope foot is level; the channel is cut 1 m below it at the upstream end and
+21 m at the outlet. (c) Cells near the outlet when the 20 m grid is laid over the catchment at 0° and
+45°. At 45° the channel (blue) is a single diagonal row, and neighbouring channel cells touch only at
+their corners. The black dashed line is the outlet; the lighter cells beyond it are the downstream
+section. (d) The kinematic-wave theory. Drawn from the inputs and the equations; not a computed result.
 
 | Item | Value |
 |---|---|
 | Hillslopes | width B = 800 m on both sides, slope S_S = 0.05 toward the channel, slope S_O = 0 along it, Manning's n = 0.015 |
 | Channel | length L = 1000 m, width W = 20 m, bed slope S_C = 0.02, n = 0.15. The bed is 1 m below the hillslope foot at the upstream end and 21 m at the outlet |
 | Rain | 10.8 mm/h (3 × 10⁻⁶ m/s) everywhere for 90 min. The computation runs for 3 hours |
-| Grids | Δx = 20, 10 and 5 m. Outside the rectangle of the catchment is outside the domain (wall). Orientations 0° (channel along a grid axis) and 45° |
-| Time step | dt = 0.1 Δx (2, 1, 0.5 s). The maximum Courant number is at most 0.3 |
-| Outlet | the channel is extended by 3 cells, and the 3 cells beyond are sea cells (a sink fixed at elevation 0 m and depth 1 m) |
-| Measurement | outlet: a transect across the downstream row of the catchment from ridge to ridge (edge-flux method; full width). Hillslope foot: the row of left-side hillslope cells next to the channel (upstream end to outlet). Depths: the outlet channel cell (P1) and the foot cell at s = 500 m (P2) |
+| Grids | Δx = 20, 10 and 5 m (40 m in the addendum). Outside the rectangles of the catchment and the downstream section is outside the domain (wall). Orientations 0° (channel along a grid axis) and 45° |
+| Time step | dt = 0.1 Δx (2, 1, 0.5 s; 4 s at 40 m). The maximum Courant number is at most 0.3 |
+| Outlet | the outlet face is at s = L. Downstream of the catchment the same cross-section (hillslopes and channel, rained on) continues for 200 m, followed by 3 cells of channel extension and 3 sea cells (a sink fixed at elevation 0 m and depth 1 m). The channel bed at the outlet is at 8 m |
+| Measurement | outlet: a transect across the downstream row of the catchment from ridge to ridge (edge-flux method; full width). Hillslope foot: the row of left-side hillslope cells next to the channel (upstream end to outlet). Depths: the outlet channel cell (P1) and the second hillslope cell from the channel at s = 500 m (P2; the first cell, the foot, is read from the distributed output) |
 | Shallow water | all defaults: dynamic wave, steep-slope gravity correction 2, momentum-conserving advection with MUSCL, opening reassignment 3, adaptive Runge-Kutta, `p_diagratio` = 2/(2+√2) (equal passage widths of the eight edges). Only the four-neighbour cases set `p_diagratio = 0` |
 
 Terrain, roughness and masks are given by evaluating the equations in the catchment coordinates at
@@ -69,14 +72,20 @@ cell centres and the outlet face coincides with a diagonal row of cell centres; 
 a diagonal row of cells 1 cell wide at 20 m, 3 at 10 m and 5 at 5 m, and the catchment area on the grid
 differs from 1.62 km² by +0.8 % (20 m), −0.3 % (10 m) and +0.2 % (5 m).
 
-Sea cells are used as the sink because at 45° the outlet lies inside the domain and an edge boundary
-condition cannot be used. A sea cell is fixed at elevation 0 m and depth 1 m (water level 1 m), and
-water that enters it disappears. The bed at the end of the extension (1.8 m at 20 m) is above the sea
-level, so there is no backwater, and because the sea cells hold water, the depth on the edge at the
-drop is set by the upstream depth (with a dry sea the cap by the two-sided average would halve the edge
-depth and water would pile up before the drop). The outlet face spans the full width because a short
-transect across the channel alone would leave the diagonal edges at the corners of the outlet outside
-its range and not count them.
+The same cross-section continues for 200 m downstream of the outlet because the channel depth rises to
+1.8 times the theory in the few cells (3 cells at 20 m, 45°; 2 cells at 40 m) before the place where the
+hillslopes end and the neighbours of the channel-axis cells become walls (outside the domain). This rise
+is not a backwater from the drop but belongs to the end of the hillslopes (extending the channel alone
+does not move it), so the hillslopes are continued for 200 m and the outlet face and the outlet probe P1
+stay upstream of it. The runoff of the rain on that section enters the channel downstream of the face
+and is not counted in the outlet discharge. Sea cells are used as the sink because at 45° the outlet
+lies inside the domain and an edge boundary condition cannot be used. A sea cell is fixed at elevation
+0 m and depth 1 m (water level 1 m), and water that enters it disappears. The bed at the end of the
+extension (3.0 m at 20 m) is above the sea level, so there is no backwater, and because the sea cells
+hold water, the depth on the edge at the drop is set by the upstream depth (with a dry sea the cap by
+the two-sided average would halve the edge depth and water would pile up before the drop). The outlet
+face spans the full width because a short transect across the channel alone would leave the diagonal
+edges at the corners of the outlet outside its range and not count them.
 
 ## Theory (kinematic wave)
 
@@ -103,8 +112,9 @@ its range and not count them.
 ```bash
 cd examples/benchmark/v-shaped
 make                     # links, inputs data_dx*/, parameter files param_*.txt, theory data/analytic.csv
-make run                 # all 19 cases (about 40 min with 4 threads; the five 5 m cases take most of it)
-make main                # only the 6 main cases with eight neighbours (about 16 min)
+make run                 # all 23 cases (about RUNTIME_ALL min with 4 threads; the five 5 m cases take most of it)
+make main                # only the 6 main cases with eight neighbours (about RUNTIME_MAIN min)
+make supp                # the 4 addendum cases (40 m; with and without the channel mask + sub-grid width; 3 s each)
 python3 check.py         # tables of the differences from the theory and of the water balance (pass/fail for the main cases)
 python3 plot_results.py  # figures figs/*.png (the argument en writes the English versions to en/figs/)
 python3 plot_setup.py    # set-up figure figs/setup.png (can be drawn before computing)
@@ -116,6 +126,7 @@ python3 plot_setup.py    # set-up figure figs/setup.png (can be drawn before com
 | `*_4nb` | four neighbours (`p_diagratio = 0`), all six grids |
 | `dx10_r0_dif` `dx10_r45_dif` / `*_kin` | diffusive wave (`f_govequation = 1`, no advection term) / kinematic wave (`= 2`, no pressure term either) |
 | `dx20_r0_od2` `dx10_r0_od2` `dx5_r0_od2` | former default of the opening reassignment `f_opening_dynamic = 2` (the values in the table of [Passage-width adjustment](../../../../docs/en/users_guide/passage_width.md)) |
+| `dx40_r0` `dx40_r45` / `*_sgc` | addendum: the 40 m grid, coarser than the channel (20 m). `_sgc` gives the channel mask `fn_rw` and the sub-grid channel width `fn_width` (20 m on the channel cells) ([channel chapter](../../../../docs/en/users_guide/channel.md)) |
 
 One case takes 7 s at 20 m, 1 min at 10 m and 5 to 7 min at 5 m (gfortran 13.3, 4 threads).
 The output of all cases is about 250 MB (`make clean` removes it).
@@ -132,11 +143,11 @@ Circles are the theory.
 Table of `check.py` (main cases). NRMSE is the root-mean-square error divided by the theoretical peak
 (outlet 4.86, hillslope 2.40 m³/s); the grid ratio is the peak divided by rainfall intensity × catchment
 area on the grid; t50 is the time at which half of the theoretical peak is first reached (theory 39 min);
-the depth ratios are the depths at 80 min divided by the theoretical uniform depths (outlet 0.443 m, foot
-5.3 mm); the balance is (water through the outlet + water left in the catchment at the end) / rain on the
-catchment.
+the depth ratios are the depths at 80 min divided by the theoretical uniform depth at that position
+(outlet 0.443 m, second hillslope cell 5.2 mm); the balance is (water through the outlet + water left in
+the catchment at the end) / rain on the catchment.
 
-| Case | NRMSE outlet | peak ratio | grid ratio | t50 (min) | NRMSE hillslope | depth ratio outlet | depth ratio foot | balance | verdict |
+| Case | NRMSE outlet | peak ratio | grid ratio | t50 (min) | NRMSE hillslope | depth ratio outlet (P1) | depth ratio 2nd hillslope cell (P2) | balance | verdict |
 |---|---|---|---|---|---|---|---|---|---|
 | 20 m, 0° | 0.020 | 1.000 | 1.000 | 40 | 0.021 | 1.06 | 1.46 | 0.998 | PASS |
 | 10 m, 0° | 0.020 | 1.000 | 1.000 | 40 | 0.022 | 1.05 | 1.13 | 1.000 | PASS |
@@ -165,8 +176,10 @@ The guide values for passing are NRMSE ≤ 0.04, |grid ratio − 1| ≤ 0.01, |t
 
 ![Depth time series](figs/depths.png)
 
-Left: depth in the outlet channel cell (P1); right: depth in the hillslope cell next to the channel
-(P2, s = 500 m). The black line is the theoretical uniform depth.
+Left: depth in the outlet channel cell (P1); right: depth in the second hillslope cell from the channel
+(P2, s = 500 m). The black line is the time series of the kinematic-wave theory (on the right evaluated
+at the P2 position of the 20 m grid, 770 m from the ridge; at the P2 positions of the 10 and 5 m grids
+the equilibrium depth is 1 to 2 % larger).
 
 - **The channel depth is set by the width of the channel on the grid.** The depth along the channel
   (average over s = 200 to 800 m) relative to the theoretical uniform depth h_e (s/L)^0.6 is 1.02 to 1.05
@@ -197,9 +210,11 @@ neighbours at 10 m.
 
 ![Depth at 60 min](figs/maps.png)
 
-Top: depth at 60 min in the cells near the outlet at 45°, 20 m (left eight neighbours, right four; drawn in the
-catchment coordinates; navy = sea cells). Bottom: depth along the channel axis at 60 min (45°; 20, 10 and 5 m)
-and the theoretical uniform depth h_e (s/L)^0.6.
+Top: depth at 60 min in the cells from near the outlet to the sea at 45°, 20 m (left eight neighbours, right
+four; drawn in the catchment coordinates; dashed line = outlet face, dotted line = end of the downstream section,
+navy = sea cells. With eight neighbours the few cells at the end of the downstream section are deep: the rise
+before the place where the hillslopes end). Bottom: depth along the channel axis of the catchment at 60 min
+(45°; 20, 10 and 5 m; from the upstream end to the outlet) and the theoretical uniform depth h_e (s/L)^0.6.
 
 | Case | NRMSE outlet | peak ratio | t50 (min) | volume ratio | balance |
 |---|---|---|---|---|---|
@@ -278,8 +293,11 @@ These values appear in the table of [Passage-width adjustment](../../../../docs/
 - The roughness on the edge between the hillslope foot and the channel is the average of the two sides.
   Where a flow crosses a boundary between very different roughnesses, the depth of the one cell at the
   boundary departs from the uniform-flow value.
-- Infiltration, interception, the channel features (fn_channel) and structures are not used. There is no
-  comparison with observations of a real catchment.
+- In the few cells before the place where the hillslopes end at the downstream end of the domain, the
+  channel depth rises (the downstream section keeps that effect away from the outlet face). The depth of
+  a channel that touches the edge of the domain depends in this way on how the edge is treated.
+- Infiltration, interception and structures are not used; of the channel features only the sub-grid
+  channel width of the addendum. There is no comparison with observations of a real catchment.
 - There is no regression reference. The verdict of `check.py` follows the guide values above, and the
   last digits change with rounding and the machine (the two 20 m cases are checked in CI by test/vshaped
   with the same guide values).
@@ -292,7 +310,8 @@ These values appear in the table of [Passage-width adjustment](../../../../docs/
   kinematic wave, and the V-shaped catchment on coarse 100 m and 10 m grids (comparison of advection schemes).
 - [Passage-width adjustment](../../../../docs/en/users_guide/passage_width.md): the list of checks of opening
   reassignment 2 and 3 (uses the `_od2` values of this example). [Diagonal share](../../../../docs/en/users_guide/diagratio.md):
-  the meaning of `p_diagratio` and four neighbours.
+  the meaning of `p_diagratio` and four neighbours. [Channel](../../../../docs/en/users_guide/channel.md): the channel
+  mask and the sub-grid channel width used in the addendum.
 - The supplements of [examples/debris_fan](../../../debris_fan/en/README.md) and
   [tutorials/chichibu](../../../../tutorials/chichibu/en/README.md): eight versus four neighbours for a debris
   flow and on real terrain.
