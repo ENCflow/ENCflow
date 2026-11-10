@@ -2822,18 +2822,18 @@
     {
       "source": "examples/timberyard/figs/setup.png",
       "target": "examples/timberyard/en/figs/setup.png",
-      "source_sha256": "856cfb9e1dac44e0428bcdc1b9844c9c7e4fd0d86960e149064dddc625ad6075",
+      "source_sha256": "b0e4f82d392aa5ee09e9e6467c6d8e76f3dd92e4f87c6784e0cc72e729f29619",
       "target_sha256": "95bae175664ac00b8005b19360d420396a7f04a945b880085e195874aeaad8e0",
-      "reviewer": "Claude (Claude Code session; example reruns with f_opening_dynamic default 3)",
+      "reviewer": "Claude (Claude Code session; the Japanese figure was redrawn with Japanese labels (the committed one had English labels); compared side by side with the English figure: same terrain, levels and layout, labels translated)",
       "method": "assistant",
-      "reviewed_on": "2026-10-31"
+      "reviewed_on": "2026-11-10"
     },
     {
       "source": "examples/timberyard/figs/supp.png",
       "target": "examples/timberyard/en/figs/supp.png",
-      "source_sha256": "7bb95f9574dc2eb8472ea7b08b529f0c945d1d89072a3d772e7565e8bb46978d",
-      "target_sha256": "78df59de436abe02e5376e80984c89fbc051b48a18112413d3623d0116a7c76c",
-      "reviewer": "Claude (Claude Code session; recomputed 2026-11-10 with the default f_advection_donor = 3: drawn by the example's plot script (Japanese and English from the same results, script unchanged); Japanese and English images compared)",
+      "source_sha256": "38d810907793f811d43d8fafc04fb4bcbf84a677c90d80a42492f451075bf045",
+      "target_sha256": "081a1d7e95308f4016a191786d2f977aef3afcc5606cbf9b7ba61e3a08e8c315",
+      "reviewer": "Claude (Claude Code session; English figure drawn by the same script with the en switch from the same results of 2026-11-10, with the two-line panel titles; compared side by side: same plotted data and layout, labels translated)",
       "method": "assistant",
       "reviewed_on": "2026-11-10"
     },
