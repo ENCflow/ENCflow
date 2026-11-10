@@ -60,17 +60,17 @@ the basis of the defaults, detailed settings).
 | Field (chapter page) | Explanation pages |
 |---|---|
 | [Time management](users_guide/time.md) | [Courant number and how to choose the time step](users_guide/courant.md) (primer), [Time-step design policy](users_guide/timestep_policy.md) |
-| [Shallow water computation](users_guide/swflow.md) | [ENC grid and time integration](users_guide/encgrid.md), [Passage-width adjustment](users_guide/passage_width.md), [Advection](users_guide/advection.md), [Diffusion](users_guide/diffusion.md), [Non-hydrostatic correction](users_guide/nonhydrostatic.md) |
-| [Structures](users_guide/structure.md), [Boundary conditions](users_guide/boundary.md), [Channels](users_guide/channel.md) | [Hydraulic laws of structures and boundaries](users_guide/hydraulics.md) |
-| [Groundwater](users_guide/gwflow.md) | [Groundwater models](users_guide/gwflow_models.md) |
-| [Sediment and landform change](users_guide/geomorph.md) | [Sediment transport, hillslope and long-term processes](users_guide/sediment.md), [Debris flow, slope failure and moving bed layer](users_guide/massflow.md) |
-| [Coastal wave field](users_guide/wavefield.md) | [Coastal wave field explained](users_guide/wavefield_models.md) |
-| [Water quality](users_guide/wq.md) | [Water-quality models](users_guide/wq_models.md) |
-| [Rainfall and meteorology](users_guide/forcing.md) | [Rainfall and meteorology models](users_guide/forcing_models.md) |
-| [Channels](users_guide/channel.md) | [Channels explained](users_guide/channel_models.md) |
 | [Nesting](users_guide/nest.md) | [Nesting explained](users_guide/nest_models.md) |
-| [Prescribed bed motion](users_guide/bedmotion.md) | [Prescribed bed motion explained](users_guide/bedmotion_models.md) |
+| [Shallow water computation](users_guide/swflow.md) | [ENC grid and time integration](users_guide/encgrid.md), [Passage-width adjustment](users_guide/passage_width.md), [Steep-slope gravity correction](users_guide/steep_slope.md), [Advection](users_guide/advection.md), [One-cell-wide channels and the upwind donors of the advection term](users_guide/advection_donor.md), [Numerical diffusion by diagonal-edge fluxes](users_guide/diagonal_diffusion.md), [Choosing the diagonal share d](users_guide/diagratio.md), [Non-hydrostatic correction](users_guide/nonhydrostatic.md), [Diffusion](users_guide/diffusion.md) |
+| [Coastal wave field](users_guide/wavefield.md) | [Coastal wave field explained](users_guide/wavefield_models.md) |
+| [Structures](users_guide/structure.md), [Boundary conditions](users_guide/boundary.md), [Channels](users_guide/channel.md) | [Hydraulic laws of structures and boundaries](users_guide/hydraulics.md) |
+| [Channels](users_guide/channel.md) | [Channels explained](users_guide/channel_models.md) |
+| [Rainfall and meteorology](users_guide/forcing.md) | [Rainfall and meteorology models](users_guide/forcing_models.md) |
+| [Groundwater](users_guide/gwflow.md) | [Groundwater models](users_guide/gwflow_models.md) |
+| [Sediment and landform change](users_guide/geomorph.md) | [Sediment transport, hillslope and long-term processes](users_guide/sediment.md), [Debris flow, slope failure and moving bed layer](users_guide/massflow.md), [Applications of sediment and landform change](users_guide/geomorph_applications.md) |
 | [Driftwood](users_guide/driftwood.md), [Building destruction and debris](users_guide/bldgdebris.md) | [Driftwood models](users_guide/driftwood_models.md), [Building destruction and debris models](users_guide/bldgdebris_models.md) |
+| [Prescribed bed motion](users_guide/bedmotion.md) | [Prescribed bed motion explained](users_guide/bedmotion_models.md) |
+| [Water quality](users_guide/wq.md) | [Water-quality models](users_guide/wq_models.md) |
 
 Your reason for using ENCflow may be that you want to **chain several
 processes in one run** (rainfall → runoff → sediment → channel; tsunami

@@ -95,11 +95,11 @@
     {
       "source": "docs/tutorial.md",
       "target": "docs/en/tutorial.md",
-      "source_sha256": "c2ed36863c75d275d97b763ca31c8ca7b6d79169aac5ad9533403461865374e9",
-      "target_sha256": "112ab86148ba0842517054309c86351ded8503fb90edb8ba2f937d38baed4578",
-      "reviewer": "Claude (Claude Code session; the deleted topic 'tuning numerical settings' removed from the chichibu row of the tutorial list in both versions; unchanged text as in the previous record)",
+      "source_sha256": "e1fdda637873c9363f9a846d98eb52e920d7096f28955d7fb4760b1149d32d2e",
+      "target_sha256": "6bca3b224a8fb3e0978058925d5c20ddd3e448bc017b99a62ad22e17c507e370",
+      "reviewer": "Claude (Claude Code session; chapter/explanation table: added the five missing explanation pages (steep slope, advection donor, diagonal diffusion, diagonal share d, landform-change applications) and put the rows in the guide's table-of-contents order in both versions; tools/consistency/check.py guide passes; read side by side)",
       "method": "assistant",
-      "reviewed_on": "2026-11-09"
+      "reviewed_on": "2026-11-10"
     },
     {
       "source": "docs/users_guide.md",
