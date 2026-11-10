@@ -25,6 +25,7 @@ Replacing each field's specialist models is not the goal.
 [Installation](docs/en/install.md) /
 [Tutorial](docs/en/tutorial.md) /
 [User's Guide](docs/en/users_guide.md) /
+[Examples](examples/README.en.md) /
 [Comparison with other models](docs/en/comparison.md)
 
 ---
@@ -275,20 +276,14 @@ belong to specialized models
   of threads or MPI ranks is the rule of ENCflow's parallelization,
   checked by the regression tests. Restarts match uninterrupted runs
   exactly. This directly serves research reproducibility and
-  professional accountability. Bitwise agreement holds under
-  conditions: build settings (optimization flags, real precision) and
-  the enabled features impose limits (e.g. multi-threaded OpenMP runs
-  of the non-hydrostatic solver, or BMI runs through the shared
-  library). See [Parallel execution](docs/en/users_guide/parallel.md)
-  and the known issues in each release note.
+  professional accountability.
 - **Progressive refinement by design** — start from minimal "it just
   runs" parameters and refine step by step as data becomes available.
   Every feature is built with this philosophy.
 - **A gateway to the field next door** — estimate with a simple model
   whether a process matters, and move on to a specialist model of that
   field only once you know it does. ENCflow is also a common ground
-  for that first step. What it lowers is the barrier to trying;
-  interpreting the results still takes the knowledge of the field.
+  for that first step.
 - **Simple text input and output** — matrix text, namelists, and CSV,
   plus GeoTIFF for practical work. Pre- and post-process with GIS,
   Python, Excel, whatever you prefer.
@@ -297,27 +292,24 @@ belong to specialized models
   Python, run them in batch, and diff or aggregate the text outputs,
   all from shell scripts alone. This suits sensitivity analysis,
   calibration, and bulk scenario runs. The same property extends
-  directly to advanced automation by AI: since the input and output are
-  pure text, AI agents can drive case generation, execution,
-  verification, and analysis directly. Much of the development and
-  verification of ENCflow itself is carried out in collaboration with
-  AI agents, and this project is the demonstration.
+  directly to advanced automation by AI, letting AI agents drive case
+  generation, execution, verification, and analysis directly. Much of
+  the development and verification of ENCflow itself is carried out in
+  collaboration with AI agents, and this project is the demonstration.
 - **Full source code available** — inspect it, verify it. The
   computational code is written entirely from scratch and contains no
   third-party code; zero dependencies also means a clean, unambiguous
   copyright provenance. Licensed under Apache-2.0, commercial use
   included.
-- **Accountable through sources, verification, and consistency** —
+- **Accountable through sources and verification** —
   the sources of each model, governing equation, and parameter are
   cited wherever possible, and simplifications of our own that rest on
   no literature are labelled as such. Behaviour with an analytical
   solution or a conservation law is checked by self-judging
   verification scripts, separately from the regression against
-  reference results. Agreement between code and documentation, between
-  originals and translations, and between tests and their references
-  is checked mechanically by CI. Keeping the state in which a third
-  party can trace "why this result" is a basic policy alongside full
-  source disclosure ([docs/developer.md](docs/developer.md) §0; English
+  reference results. Keeping the state in which a third party can trace
+  "why this result" is a basic policy alongside full source disclosure
+  ([docs/developer.md](docs/developer.md) §0; English
   translation of §0 in [docs/en/developer.md](docs/en/developer.md)).
 - **Sustainability as a project** — everything from the reasoning
   behind each design decision ([docs/developer.md](docs/developer.md),
