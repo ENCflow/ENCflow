@@ -25,14 +25,18 @@ compared too.
   the closed-form solution with an NRMSE of 0.02.
 - **Independent of orientation**: on the grid rotated by 45° the results are at the same level as at 0°,
   and even on the 20 m grid, where the channel becomes a single diagonal row of cells, the discharge
-  follows the theory (the depth is 1.8 times larger because the channel looks Δx/√2 wide).
+  follows the theory (the depth is 1.3 times larger because the channel looks Δx/√2 wide).
 - **Difference from four neighbours**: with four neighbours the results at 0° are the same as with eight,
   but on the 20 m grid at 45° the channel cells touch only at corners, so the four neighbours of every
   channel cell are hillslope cells 1 to 21 m higher, and the runoff stays zero for the whole 3 hours (the
-  same result as the staggered grid of Tada 2026). At 10 m 〔TBD〕, and at 5 m 〔TBD〕.
+  same result as the staggered grid of Tada 2026). At 10 m (channel 3 cells wide) the rise is 5 min late
+  with an NRMSE of 0.080, and at 5 m (5 cells) 3 min late with 0.033, approaching eight neighbours as the
+  grid is refined.
 - **The governing equations differ little**: at 10 m the outlet discharges of the dynamic, diffusive and
-  kinematic waves differ by 〔TBD〕; the kinematic wave is closest to the theory, showing that the
-  advection and pressure terms contribute little in the thin flow on the hillslopes.
+  kinematic waves differ by at most 0.09 m³/s (2 % of the peak) and the timing of the rise is the same. The
+  kinematic wave is closest to the theory (NRMSE 0.018 against 0.020 for the dynamic wave), but only
+  slightly, so the remaining difference from the theory comes from the discretisation, not from the
+  physics of the pressure and advection terms.
 
 ## Set-up
 
@@ -53,7 +57,7 @@ kinematic-wave theory. Drawn from the inputs and the equations; not a computed r
 | Channel | length L = 1000 m, width W = 20 m, bed slope S_C = 0.02, n = 0.15. The bed is 1 m below the hillslope foot at the upstream end and 21 m at the outlet |
 | Rain | 10.8 mm/h (3 × 10⁻⁶ m/s) everywhere for 90 min. The computation runs for 3 hours |
 | Grids | Δx = 20, 10 and 5 m. Outside the rectangle of the catchment is outside the domain (wall). Orientations 0° (channel along a grid axis) and 45° |
-| Time step | dt = 0.1 Δx (2, 1, 0.5 s). The maximum Courant number is 0.28 to 0.30 |
+| Time step | dt = 0.1 Δx (2, 1, 0.5 s). The maximum Courant number is at most 0.3 |
 | Outlet | the channel is extended by 3 cells, and the 3 cells beyond are sea cells (a sink fixed at elevation 0 m and depth 1 m) |
 | Measurement | outlet: a transect across the downstream row of the catchment from ridge to ridge (edge-flux method; full width). Hillslope foot: the row of left-side hillslope cells next to the channel (upstream end to outlet). Depths: the outlet channel cell (P1) and the foot cell at s = 500 m (P2) |
 | Shallow water | all defaults: dynamic wave, steep-slope gravity correction 2, momentum-conserving advection with MUSCL, opening reassignment 3, adaptive Runge-Kutta, `p_diagratio` = 2/(2+√2) (equal passage widths of the eight edges). Only the four-neighbour cases set `p_diagratio = 0` |
@@ -100,7 +104,7 @@ its range and not count them.
 cd examples/benchmark/v-shaped
 make                     # links, inputs data_dx*/, parameter files param_*.txt, theory data/analytic.csv
 make run                 # all 19 cases (about 40 min with 4 threads; the five 5 m cases take most of it)
-make main                # only the 6 main cases with eight neighbours (about 20 min)
+make main                # only the 6 main cases with eight neighbours (about 16 min)
 python3 check.py         # tables of the differences from the theory and of the water balance (pass/fail for the main cases)
 python3 plot_results.py  # figures figs/*.png (the argument en writes the English versions to en/figs/)
 python3 plot_setup.py    # set-up figure figs/setup.png (can be drawn before computing)
@@ -113,7 +117,7 @@ python3 plot_setup.py    # set-up figure figs/setup.png (can be drawn before com
 | `dx10_r0_dif` `dx10_r45_dif` / `*_kin` | diffusive wave (`f_govequation = 1`, no advection term) / kinematic wave (`= 2`, no pressure term either) |
 | `dx20_r0_od2` `dx10_r0_od2` `dx5_r0_od2` | former default of the opening reassignment `f_opening_dynamic = 2` (the values in the table of [Passage-width adjustment](../../../../docs/en/users_guide/passage_width.md)) |
 
-One case takes 7 s at 20 m, 1 to 1.5 min at 10 m and 7 to 10 min at 5 m (gfortran 13.3, 4 threads).
+One case takes 7 s at 20 m, 1 min at 10 m and 5 to 7 min at 5 m (gfortran 13.3, 4 threads).
 The output of all cases is about 250 MB (`make clean` removes it).
 
 ## Results (gfortran 13.3, serial with 4 threads)
@@ -139,18 +143,22 @@ catchment.
 | 5 m, 0° | 0.018 | 1.000 | 1.000 | 40 | 0.024 | 1.05 | 0.88 | 1.002 | PASS |
 | 20 m, 45° | 0.016 | 1.008 | 1.000 | 38 | 0.023 | 1.82 | 1.83 | 0.999 | PASS |
 | 10 m, 45° | 0.016 | 0.997 | 1.000 | 39 | 0.021 | 0.99 | 1.14 | 1.000 | PASS |
-| 5 m, 45° | 〔TBD〕 | | | | | | | | |
+| 5 m, 45° | 0.016 | 1.002 | 1.000 | 38 | 0.023 | 1.12 | 0.79 | 1.000 | PASS |
 
 The guide values for passing are NRMSE ≤ 0.04, |grid ratio − 1| ≤ 0.01, |t50 − theory| ≤ 3 min and
 |balance − 1| ≤ 0.01.
 
 - **The discharge follows the theory.** The NRMSE at the outlet is 0.016 to 0.020 and hardly changes with
-  grid refinement. Most of the difference comes from the theory being a kinematic wave (the water-surface
-  slope replaced by the bed slope): the shallow-water solution rounds the corner at equilibrium and
-  recedes slightly faster at first. The discharge at the hillslope foot also follows the closed form in
-  its rise, equilibrium and recession (NRMSE 0.021 to 0.024), with an equilibrium of 0.99 to 1.00 times
-  the theory (slightly low because the diagonal edge from the downstream end of the line toward the
-  extension lies outside the range of the line).
+  grid refinement. The difference consists of a rise 1 to 2 min later than the theory (3.7 against
+  3.9 m³/s at 45 min), a rounded corner at equilibrium and a slightly later start of the recession.
+  Switching to the kinematic wave equation (supplement below) leaves the size of the difference unchanged,
+  so the remainder is not the physics of the pressure and advection terms but the discretisation (the
+  storage in the foot cells where the hillslopes enter the channel, the representation of the channel on
+  the grid with a depth 2 to 5 % above the theory) together with the approximation on the theory side
+  (water-surface slope replaced by the bed slope). The discharge at the hillslope foot also follows the
+  closed form in its rise, equilibrium and recession (NRMSE 0.021 to 0.024), with an equilibrium of 0.99
+  to 1.00 times the theory (slightly low because the diagonal edge from the downstream end of the line
+  toward the extension lies outside the range of the line).
 - **The peak equals the rain.** At 45° the catchment area on the grid differs from 1.62 km² by up to
   0.8 %, and the peak scales with it (grid ratio 1.000). The water balance closes within 0.2 %.
 - **The timing of the rise** is 38 to 40 min against the theoretical 39 min.
@@ -160,10 +168,12 @@ The guide values for passing are NRMSE ≤ 0.04, |grid ratio − 1| ≤ 0.01, |t
 Left: depth in the outlet channel cell (P1); right: depth in the hillslope cell next to the channel
 (P2, s = 500 m). The black line is the theoretical uniform depth.
 
-- **The outlet depth** is 0.99 to 1.06 times the theory at 0° and at 10 m, 45°, but **1.8 times at
-  20 m, 45°**. The channel is represented by a single diagonal row of cells and behaves as a channel
-  Δx/√2 = 14.1 m wide, so it is deeper for the same discharge. The discharge is right; the depth depends
-  on the grid.
+- **The channel depth is set by the width of the channel on the grid.** The depth along the channel
+  (average over s = 200 to 800 m) relative to the theoretical uniform depth h_e (s/L)^0.6 is 1.02 to 1.05
+  at 0°, and at 45° 1.28 at 20 m (a single diagonal row = Δx/√2 = 14.1 m wide), 1.00 at 10 m (3 rows =
+  21.2 m) and 1.12 at 5 m (5 rows = 17.7 m). The depth in the outlet cell (P1) adds the backwater of the
+  one or two cells before the drop into the sink, reaching 1.8 times at 20 m, 45°. The discharge is right;
+  the depth depends on the grid.
 - **The depth in the hillslope-foot cell** is 0.9 to 1.5 times the theory (1.8 at 20 m, 45°), and only
   that one cell is deeper. The roughness on the edge between the hillslope (n 0.015) and the channel
   (n 0.15) is the average of the two, 0.0825, so the velocity on the edge from the foot cell into the
@@ -182,20 +192,32 @@ neighbours at 10 m.
 
 ![Depth at 60 min](figs/maps.png)
 
-Depth at 60 min at 45° (log scale). Top 20 m, bottom 10 m; left eight neighbours, right four.
+Top: depth at 60 min in the cells near the outlet at 45°, 20 m (left eight neighbours, right four; drawn in the
+catchment coordinates; navy = sea cells). Bottom: depth along the channel axis at 60 min (45°; 20, 10 and 5 m)
+and the theoretical uniform depth h_e (s/L)^0.6.
 
 | Case | NRMSE outlet | peak ratio | t50 (min) | volume ratio | balance |
 |---|---|---|---|---|---|
-| 〔TBD: the 6 four-neighbour cases〕 | | | | | |
+| 20 m, 0° | 0.019 | 1.000 | 39 | 0.985 | 0.998 |
+| 10 m, 0° | 0.019 | 1.000 | 40 | 0.984 | 0.999 |
+| 5 m, 0° | 0.017 | 1.000 | 39 | 0.984 | 1.002 |
+| 20 m, 45° | 0.615 | 0.000 | — | 0.000 | 0.998 |
+| 10 m, 45° | 0.080 | 0.997 | 44 | 0.969 | 1.000 |
+| 5 m, 45° | 0.033 | 1.002 | 41 | 0.984 | 1.001 |
 
-- **At 0° four neighbours give the same result as eight** (〔TBD〕). The flow follows the grid axes, so
-  the diagonal edges do not matter.
+- **At 0° four neighbours give the same result as eight** (NRMSE 0.017 to 0.019 against 0.018 to 0.020,
+  t50 39 to 40 min). The flow follows the grid axes, so the diagonal edges do not matter.
 - **At 20 m, 45° the four-neighbour runoff stays zero.** The channel cells touch only at corners and the
   four neighbours of every channel cell are hillslope cells (the foot is 1 m higher at the upstream end
-  and 21 m at the outlet), so the channel is a row of deep depressions. The rain in 3 hours is 16,000 m³,
-  while the depressions hold 220,000 m³ and never fill. This is the same result as the 20 m staggered grid
+  and 21 m at the outlet), so the channel is a row of deep depressions. The rain in 90 min is 26,000 m³,
+  while the depressions hold 160,000 m³ and never fill. This is the same result as the 20 m staggered grid
   of Tada (2026).
-- **At 10 m, 45°** (channel 3 cells wide) 〔TBD〕; **at 5 m** (5 cells) 〔TBD〕.
+- **At 10 m, 45°** (channel 3 cells wide) the runoff is not blocked but delayed, because the channel flow
+  follows a diagonal staircase: t50 is 44 min (eight neighbours 39 min), 90 % of the theoretical peak is
+  reached at 55 min (49 min), the runoff volume by 180 min is 0.90 of the rain (0.92 with eight
+  neighbours), the channel depth is 1.20 times the theory (1.00) and the NRMSE is 0.080. **At 5 m**
+  (5 cells) the difference shrinks to t50 41 min, NRMSE 0.033 and a channel depth of 1.25 times (1.12 with
+  eight neighbours), but stays larger than eight neighbours at 20 m (0.016).
 - Eight neighbours connect the channel cells directly through the diagonal edges, so the runoff does not
   stop even when the channel is narrower than the grid.
 
@@ -205,14 +227,29 @@ Depth at 60 min at 45° (log scale). Top 20 m, bottom 10 m; left eight neighbour
 
 | Case | NRMSE outlet | peak ratio | t50 (min) | depth ratio outlet |
 |---|---|---|---|---|
-| 〔TBD: the 4 cases〕 | | | | |
+| 10 m, 0°, dynamic (default) | 0.020 | 1.000 | 40 | 1.05 |
+| 10 m, 0°, diffusive | 0.019 | 1.000 | 40 | 1.05 |
+| 10 m, 0°, kinematic | 0.018 | 1.001 | 40 | 1.09 |
+| 10 m, 45°, dynamic (default) | 0.016 | 0.997 | 39 | 0.99 |
+| 10 m, 45°, diffusive | 0.014 | 0.997 | 39 | 0.97 |
+| 10 m, 45°, kinematic | 0.014 | 0.997 | 39 | 0.97 |
 
-- 〔TBD〕
+- The outlet discharges of the three equations differ by at most 0.09 m³/s (2 % of the peak) and t50 is
+  the same. The hillslope flow is thin and slow (depth 5 mm, velocity 0.4 m/s), so the inertia and
+  pressure terms are small, and in the channel the flow is close to uniform. The kinematic wave is closest
+  to the theory (the same kinematic wave), but a difference of NRMSE 0.014 to 0.018 remains; this
+  remainder is due to the discretisation (see the eight-neighbour section above).
+- The diffusive and kinematic waves are settings for comparison. For inundation and run-up with wetting
+  and drying, use the dynamic wave (default) ([Shallow-water chapter](../../../../docs/en/users_guide/swflow.md)).
 
 ### Comparison with opening reassignment 2 (supplement, 0°)
 
-With `f_opening_dynamic = 2` (the default until October 2026) the NRMSE at the outlet is 〔TBD〕 at 20, 10
-and 5 m (0.020, 0.020 and 0.018 with 3). 〔TBD〕
+With `f_opening_dynamic = 2` (the default before the opening reassignment) the NRMSE at the outlet becomes
+0.016, 0.027 and 0.028 at 20, 10 and 5 m (0.020, 0.020 and 0.018 with the default 3). With 2 the hillslope
+flow is too fast, the rise comes 1 to 2 min earlier than the theory (t50 37 to 38 min; 40 min with 3) and
+the NRMSE of the hillslope-foot discharge is 0.034 to 0.045 (0.021 to 0.024 with 3). On the coarsest grid,
+20 m, the outlet error of 2 is smaller; refining the grid increases the error of 2 and decreases that of 3.
+These values appear in the table of [Passage-width adjustment](../../../../docs/en/users_guide/passage_width.md).
 
 ## What it cannot do and the limits of accuracy
 
@@ -220,9 +257,9 @@ and 5 m (0.020, 0.020 and 0.018 with 3). 〔TBD〕
   The NRMSE of 0.02 includes the approximation on the theory side (the sharp corner at equilibrium, the
   shape of the recession) and is not purely a model error.
 - The depth depends on the grid. The depth in a channel represented by a single diagonal row of cells is
-  1.8 times the theory, and that of the single hillslope cell next to the channel 1.1 to 1.5 times. These
-  do not affect the comparison of discharge, but when depths are to be read, resolve the channel with
-  three or more cells across.
+  1.3 times the theory (1.8 in the cell before the sink), and that of the single hillslope cell next to
+  the channel 1.1 to 1.5 times. These do not affect the comparison of discharge, but when depths are to
+  be read, resolve the channel with three or more cells across.
 - Water thinner than the limit depth dd = 1 mm does not flow, so the end of the recession (after about
   130 min on the hillslopes) reaches zero earlier than the theory.
 - The roughness on the edge between the hillslope foot and the channel is the average of the two sides.

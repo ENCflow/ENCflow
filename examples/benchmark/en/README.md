@@ -23,7 +23,7 @@ The way of running is the same as in the other examples.
 ```bash
 cd examples/benchmark/v-shaped     # or v-valley
 make                               # links, inputs, parameter files (and the theory for v-shaped)
-make run                           # all cases (v-shaped: 19 cases, about 15 min; v-valley: 19 cases, about 10 min; 4 threads)
+make run                           # all cases (v-shaped: 19 cases, about 40 min; v-valley: 19 cases, about 25 min; 4 threads)
 python3 check.py                   # tables of the differences from the theory or the reference and of the water balance (with pass/fail)
 python3 plot_results.py            # figures figs/*.png (the argument en writes the English versions to en/figs/)
 ```

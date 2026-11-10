@@ -1,7 +1,7 @@
 # ENCflow/examples/benchmark/v-shaped/Makefile
 #   make          ../../../bin/ の実行ファイルへのリンクと、全格子の入力・全ケースの設定(make_inputs.py)、
 #                 理論解 data/analytic.csv(analytic.py)を作る
-#   make run      全 19 ケースを計算する(4 スレッドで 15 分ほど。5 m の 45° が大半)
+#   make run      全 19 ケースを計算する(4 スレッドで 40 分ほど。5 m の 5 ケースが大半)
 #   make main     8 近傍の主ケース 6 つだけ計算する
 #   make clean    リンクと生成物を削除する
 #
