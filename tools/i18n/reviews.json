@@ -473,11 +473,11 @@
     {
       "source": "docs/users_guide/steep_slope.md",
       "target": "docs/en/users_guide/steep_slope.md",
-      "source_sha256": "975eee929d781597a99b20fc9ccaa471975e6b64391224af5511d405da9785cd",
-      "target_sha256": "29ac3859cc786d9f435e2d2464551aa9b83919a4a9968a415bbf2c8fe1567414",
-      "reviewer": "Claude (Claude Code session; lateral-inflow test of test/bendloss: f_gravity_correction = 0 made explicit, current results, pass/fail in Run.sh, and the inactive-neighbour limitation of option 2 in the steep-slope chapter; Japanese and English edited together and read side by side)",
+      "source_sha256": "a95171bb20c4a1727c78ae0e53dddd0fdce739a87df189575bde78bba568ea87",
+      "target_sha256": "05c83794ea6112d9bf32a162700232eb011b501f57fc9759885413d6fd95925a",
+      "reviewer": "Claude (Claude Code session; compared the Japanese source with the English mirror for the added sentence on the non-hydrostatic combination in §6.2 (1.92 m with 2 and 2.80 m with 3 in test/nhbottom) and the row for 3 in the table of §7 (not made the default, 2026-11-10); rest unchanged since the previous record)",
       "method": "assistant",
-      "reviewed_on": "2026-11-08"
+      "reviewed_on": "2026-11-10"
     },
     {
       "source": "docs/users_guide/structure.md",
