@@ -242,7 +242,9 @@ upslope area (on the flow tree, counting the cell itself) is as follows.
   4.3 mm/h in one hour and 8.6 mm/h (86 % of the rain) in four hours. For a little over three
   hours after the saturated area starts to form at 5 h, the water leaving it infiltrates into
   downstream cells that are not yet full and travels down while filling the valleys and
-  channels (the catchment-mean surface water is 14.5 mm at 8 h and 24.6 mm at 12 h; see
+  channels (the catchment-mean surface water is 14.5 mm at 8 h and 24.6 mm at 12 h). About one
+  hour of this delay, and the abruptness of the rise, come from water ponding on the flat
+  reach just upstream of the outlet (see
   [What this model does not represent](#what-this-model-does-not-represent-differences-from-the-real-phenomenon)).
 - **Three quarters of the runoff is water that passed through the soil**: the rain that fell on
   the saturated area is 21 mm in the first storm and 30 mm in the second, 22 % and 25 % of the
@@ -571,13 +573,24 @@ run of each roughness to each variant of the process run (first / second storm) 
 - **Channels are 50 m wide cells, and water ponds on flat reaches**: a channel cell is as wide
   as the grid, 50 m, so the flow is wider and shallower than in real mountain streams (a few
   metres to a little over ten metres). In addition, the depression-filled elevations keep
-  flat reaches (48 % of the 11.7 km of main stem that runs on channel cells and 17 % of the
-  49 km channel network, including the 1.5 km just upstream of the outlet), where water flows
-  only by the slope of the water surface and therefore ponds. The catchment-mean surface water
-  reaches 25 mm (18 mm of it on channel cells), and the little over three hours between the
-  formation of the saturated area and the rise of the outlet runoff are mostly the time needed
-  to fill this storage. Real streams probably route the water faster. Narrow channels can be
-  represented with the subgrid channel width (`fn_width` in
+  flat reaches as steps (48 % of the 11.7 km of main stem that runs on channel cells and 17 %
+  of the 49 km channel network), where water flows only by the slope of the water surface and
+  therefore ponds. Of the 25 mm of surface water at the end of the rain, 18 mm is on channel
+  cells, and 70 % of that (13 mm) lies on the channel cells of the flat reaches. The largest
+  one is the 1.5 km just upstream of the outlet (44 cells, 0.3 % of the catchment): at the end
+  of the rain it holds water 1.3–2.4 m deep, 6 mm as a catchment mean, and in the maps it
+  appears as a band of saturated area 2–4 cells wide along the channel. This pond delays the
+  outlet runoff by about one hour and makes its rise abrupt. With the outlet moved upstream of
+  this reach ([Starting points for sensitivity experiments](#starting-points-for-sensitivity-experiments)),
+  the runoff exceeds 1 mm/h after 7.5 instead of 8.3 hours in the first storm and after 2.5
+  instead of 3.5 hours in the second, and it rises gradually from 6.7 h. The maximum surface
+  water decreases from 25 to 18 mm, while the saturated fraction, the peak (8.6 → 8.7 mm/h)
+  and the closest roughness (10 and 5, compared among the no-infiltration runs with roughness
+  0.3, 5 and 10) do not change. The remaining two hours or so between
+  the formation of the saturated area and the rise of the outlet runoff are the time the small
+  runoff from a still narrow saturated area needs to supply the water that the flow in the
+  valleys and channels requires. Real streams probably route the water faster. Narrow
+  channels can be represented with the subgrid channel width (`fn_width` in
   [Channels](../../../docs/en/users_guide/channel.md)), which this example does not use.
   Valleys without the channel mask (upslope area up to 1.3 km²) flow with the slope roughness.
 - **The rain is a uniform block of a single intensity**: neither a variation of intensity in
@@ -631,7 +644,10 @@ run of each roughness to each variant of the process run (first / second storm) 
   it to `CASES` in `plot_results.py` as well.
 - `make_catchment.py --outlet I J` (the outlet cell, numbered on the source grid): cuts out
   another catchment. Adjust the grid size, the stage cell, the transect and the probe in the
-  parameter files to the `nx`, `ny`, `outlet_ij` and `gauge_ij` it prints.
+  parameter files to the `nx`, `ny`, `outlet_ij` and `gauge_ij` it prints. `--outlet 307 308`
+  gives the 34.7 km² that excludes the flat reach just upstream of the outlet and the two
+  tributaries (right and left bank) that enter it (`nx = 172`, stage cell (153, 39), probe
+  (152, 39), transect (152, 40)–(152, 36)).
 - Adding the weathered bedrock layer (`f_gwlayer2`), evapotranspiration (`fn_evap`) and
   interception (`fn_intercept`) brings in baseflow and the drying between storms.
 
