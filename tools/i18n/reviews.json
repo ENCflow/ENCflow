@@ -13,9 +13,9 @@
     {
       "source": "README.ja.md",
       "target": "README.md",
-      "source_sha256": "c07d5a7ad29988db206c80be7f6f2e7fe8d61c7208a87f30538985c666114dcc",
-      "target_sha256": "4785a4a38b22364631a6e452ad31bc4278cecca7ca52b0c5dac27d3775e8bbbe",
-      "reviewer": "Claude (Claude Code session; 'What it deliberately does not do' shortened in both versions; kept only the 'can do' notes that bound or explain a limit (coastal-wave estimate, ash-fall preprocessing, fresh/salt sharp interface, sewer continuum); read side by side)",
+      "source_sha256": "3e1b0119a3b89dab115c9c2e575ac8e529ecb9fb07e6e55b2a6ffc2ecb3faaf1",
+      "target_sha256": "44e5b6b4bd4ecdfc73f65fb0c97bcda9bdc0459786a7a726bd5aec001abae741",
+      "reviewer": "Claude (Claude Code session; split the AI-automation sentences of the script-automation item into a separate item (AI agents) in both versions, text otherwise unchanged; read side by side)",
       "method": "assistant",
       "reviewed_on": "2026-11-10"
     },
