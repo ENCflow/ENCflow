@@ -2615,11 +2615,11 @@
     {
       "source": "examples/sewer_hybrid/figs/sewer_hybrid_outfall.png",
       "target": "examples/sewer_hybrid/en/figs/sewer_hybrid_outfall.png",
-      "source_sha256": "32471b48f96b09c28a12683720bebb39398e05b5256fecc127a329e51ad6e6cd",
-      "target_sha256": "98eb7b7d2db0d1d2f6f0842ff42bc58b9009191aa7691f4919937103c5ed551d",
-      "reviewer": "Claude (Claude Code session; compared the Japanese and English figure images side by side: same plotted data and layout from the same script and the same results (runs A–F rerun with the current build), labels translated)",
+      "source_sha256": "1649516fe295514c442a57ad31318abff6ab7193e2436b7e1c29a6be7989f1f4",
+      "target_sha256": "d116494c92bf97ef90bc87e0bd786589fb016f07247aa156ced2d8ca7d9f932b",
+      "reviewer": "Claude (Claude Code session; English figure drawn by the same script with the en switch from the same results of 2026-11-10; compared side by side: same plotted data and layout, labels translated)",
       "method": "assistant",
-      "reviewed_on": "2026-11-08"
+      "reviewed_on": "2026-11-10"
     },
     {
       "source": "examples/sewer_hybrid/figs/sewer_hybrid_result.png",
