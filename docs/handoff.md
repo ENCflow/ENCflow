@@ -73,10 +73,9 @@ architecture.md。このメモは「現在進行中・未完了の項目」だ�
        のは ℓ = 4 m だけになった)、debris_bedrock(cover.png を 300 s まで)、timberyard(補足の図の題を
        ケース名と量の 2 行に。日本語版の setup・supp のラベルが英語だったのも直した)、shield_volcano
        (「格子」の項を 8 近傍の 9 点に、縦の拡大を軸の実寸から計算。溶岩ドームは約 6.4 倍)、badland_round
-       (図の題の L ≈ 2.4 m を本文に揃えた)。
-     - mesa: maps の題「キャップ上面(z = 17 m)」(17 m は帽岩の下面。README の説明は直した)。
-       series_bench.png(README に未掲載)では、bench の大きい台地は 5×10⁷ s 以降に崩れる
-       (8.6×10⁷ s で約 2 m。bench2 は 17.8 m)。README の補足 1 は 4.3×10⁷ s の値だけを書いている
+       (図の題の L ≈ 2.4 m を本文に揃えた)、mesa(maps の題の 17 m を帽岩の下面の高さに)。
+     - mesa: series_bench.png(README に未掲載)では、bench の大きい台地は 5×10⁷ s 以降に崩れる
+       (8.6×10⁷ s で約 2 m。bench2 は 19.6 m)。README の補足 1 は 4.3×10⁷ s の値だけを書いている
        ので、終盤を書くなら数表を出す。
      - tower_karst: maps_steady の色が飽和している。
      - stone_forest: 英語版の stats の横軸の目盛の数字が続いて読めない。図 3 組(maps・sections・
@@ -195,9 +194,10 @@ architecture.md。このメモは「現在進行中・未完了の項目」だ�
    - (a) `creep_diagratio`・`spl_diagratio` の既定を 1/3 にした(2026-11-05。利用者の決定。developer.md §96)。12 の
      test は PASS、reference(splash・splashsat・splashstrata)は identical で更新不要。badland は 2026-11-10 に
      回し直して README(日英)と図を更新した(格子の曲率と ℓ = 1 m のケースが台地を貫通しなくなった。83f3b23)。
-     badland_round も同日に更新した(数値の小さな変化だけ。結論は同じ)。**残り**: 例題 badland_storm・mesa
-     (乾式侵食)と mountain_valley・mesa(クリープ)の README の数値と図の回し直し((f) の一括の回し直しで計算中。
-     結果を利用者が目視確認してから README を更新する)。
+     badland_round も同日に更新した(数値の小さな変化だけ。結論は同じ)。mesa・badland_storm も同日に更新した(mesa は
+     数値の小さな変化だけ。badland_storm は既定 f_gravity_correction = 2 の効きで結果 1・5 の本文を書き直した。
+     developer.md §93)。**残り**: 例題 mountain_valley(クリープ)の README の数値と図の回し直し((f) の一括の回し直しで
+     計算中。結果を利用者が目視確認してから README を更新する)。
    - (b) 段 2(済 2026-11-05。developer.md §97): 溶岩の温度の熱の移流に MUSCL(`f_lvtemp_scheme = 3`)を足し、
      既定を 3 にした(2026-11-05。利用者の決定)。test/lava は全構成 PASS(構成 9 の長さの比 2.64 → 2.90)、
      reference はなく更新不要。**残り**: examples/stratovolcano の最後の段(run_flow.py の温度モードの溶岩流)の
@@ -228,10 +228,10 @@ architecture.md。このメモは「現在進行中・未完了の項目」だ�
        検定を 4 スレッドのワーカー 1 本で回している(コンテナが数時間ごとに作り直されるので、ジョブを例題・ケース
        ごとに分け、完了の印を残して再開できる形にした)。README と図まで済んだもの(利用者の了承の後): stratovolcano・
        tsunami_town(東端を高台にした地形に変更)・landslide_tsunami・tsunami_coast・sewer_hybrid・ashfall_lahar・
-       debris_bedrock・shield_volcano・badland・timberyard・badland_round。回し直して変化がなかったもの: tsunami_fault・
-       bedrock_cover・nest_reflect(図もビット一致)。計算済みで照合中: tower_karst の基準面(残りの構成の後に
-       README を照合する)。計算待ち: badland_storm・glacier_valley・mountain_valley・catchment_metal・
-       estuary_barrage・mesa・karst・tower_karst の残り・stone_forest・delta と検定(00m の wave_shore を含む)。
+       debris_bedrock・shield_volcano・badland・timberyard・badland_round・mesa・badland_storm。回し直して変化がなかった
+       もの: tsunami_fault・bedrock_cover・nest_reflect(図もビット一致)。計算済みで照合中: tower_karst の基準面(残りの
+       構成の後に README を照合する)。計算中: glacier_valley。計算待ち: mountain_valley・catchment_metal・
+       estuary_barrage・karst・tower_karst の残り・stone_forest・delta と検定(00m の wave_shore を含む)。
      - **中断中(2026-11-05。利用者の指示「一旦中断」)**(2026-11-10 に再開。上の項)。起動前に止めた。main の側でも同じ日に、このブランチに
        関わらない例題を再計算して main に入れてあった(00l。landslide_tsunami ほか 12 例題を更新、stone_forest・
        levee_breach は変化なし)。このブランチを main に入れた後の残り: このブランチの既定(creep・spl・gl・lv・
