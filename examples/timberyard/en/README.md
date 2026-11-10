@@ -134,10 +134,10 @@ Right: where the timber is after 4 hours (1000 m³).
 
 | Case | Timber floats away | Timber starts entering the town | Maximum timber in the town | Reach (share of the town / farthest point) | Left in the town after 4 hours | Left in the yard area and harbour | Carried offshore |
 |---|---:|---:|---:|---:|---:|---:|---:|
-| Ise Bay typhoon type | 65-105 min | 70 min | 47,931 m³ | 87 % / x 1,125 m | 47,931 m³ | 11,089 m³ | 0 |
-| Release delayed | 115-160 min | 120 min | 12,641 m³ | 35 % / x 655 m | 12,641 m³ | 45,419 m³ | 0 |
-| Timber yard moved away | 65-125 min | 120 min | 11,886 m³ | 32 % / x 735 m | 11,886 m³ | 46,209 m³ | 401 m³ |
-| Seawall +4 m, gate left open | 65-105 min | 70 min | 38,214 m³ | 88 % / x 1,125 m | 38,214 m³ | 21,782 m³ | 0 |
+| Ise Bay typhoon type | 65-105 min | 70 min | 47,954 m³ | 87 % / x 1,125 m | 47,954 m³ | 11,051 m³ | 0 |
+| Release delayed | 115-160 min | 120 min | 12,640 m³ | 35 % / x 655 m | 12,640 m³ | 45,420 m³ | 0 |
+| Timber yard moved away | 65-125 min | 120 min | 11,888 m³ | 32 % / x 735 m | 11,888 m³ | 46,207 m³ | 401 m³ |
+| Seawall +4 m, gate left open | 65-105 min | 70 min | 38,221 m³ | 88 % / x 1,125 m | 38,221 m³ | 21,776 m³ | 0 |
 
 There is 60,000 m³ of timber in total. The rest is on the seawall (3-1,900 m³).
 
@@ -161,8 +161,8 @@ There is 60,000 m³ of timber in total. The rest is on the seawall (3-1,900 m³)
 - **Raising the seawall does not keep the timber out if the gate is left open**: the surge does
   not overtop the +4 m seawall, but the town floods through the 120 m opening (maximum depth
   3.08 m), and the timber rides the fast flow through the opening (up to 2.2 m/s) to reach 88 %
-  of the town. The load at the opening (up to 3.2 m³/s²) is twice that of the Ise Bay type
-  (1.5 m³/s²). The building drag keeps the flow in the town slow, below 0.02 m/s at the surge
+  of the town. The load at the opening (up to 3.2 m³/s²) is more than twice that of the Ise Bay type
+  (1.4 m³/s²). The building drag keeps the flow in the town slow, below 0.02 m/s at the surge
   peak (150-160 minutes), so the floating timber stops in the town during the peak and none is
   carried offshore by the ebb; 38,000 m³ stays in the town after 4 hours. With the opening
   closed as well, this surge (+3.5 m) does not enter the town.
@@ -237,9 +237,9 @@ the town, and "afloat seaward" is the timber afloat seaward of the town.
 
 | Case | Maximum timber in the town | Reach (share of the town) | Left in the town after 4 hours (stopped + floating) | Afloat in the harbour and yard area | Carried offshore |
 |---|---:|---:|---:|---:|---:|
-| Main (Ise Bay type) | 47,931 m³ | 87 % | 47,931 m³ | 0 | 0 |
-| Does not stop in slow flow | 56,542 m³ | 97 % | 663 m³ | 48,248 m³ | 6,912 m³ |
-| Stopped timber floats off again | 58,476 m³ | 92 % | 259 m³ | 39,533 m³ | 7,289 m³ |
+| Main (Ise Bay type) | 47,954 m³ | 87 % | 47,954 m³ | 0 | 0 |
+| Does not stop in slow flow | 56,544 m³ | 97 % | 669 m³ | 48,237 m³ | 6,912 m³ |
+| Stopped timber floats off again | 58,479 m³ | 92 % | 261 m³ | 39,546 m³ | 7,284 m³ |
 
 - **The reach does not depend on the stopping rules**: in every case, 48,000-58,000 m³ is in the
   town at some point, and the timber reaches about 90 % of the town.

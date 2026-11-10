@@ -1985,11 +1985,11 @@
     {
       "source": "examples/levee_breach/README.md",
       "target": "examples/levee_breach/en/README.md",
-      "source_sha256": "9b78843557f5a2971b01fa1e846e14c0dce5a14d6cb43f59eea433f85ae5520b",
-      "target_sha256": "e0b41f73bd9e979b2afb397850aa6a9b225732fb17f9c50f35bdebaff207edd7",
-      "reviewer": "Claude (Claude Code session; added one sensitivity item from a verification run in both versions and compared them)",
+      "source_sha256": "832556eb05bba7fd9c5bbf9b25c72405308d590367cd4de0374cc0e74d272d7b",
+      "target_sha256": "4153ed2d3c45d59561c2c18d0c2124215820bdfd0b0bf99202b93c9c625031d4",
+      "reviewer": "Claude (Claude Code session; values updated to reruns with the default f_advection_donor = 3: delayed-breach row (165 ha, 1.70 m), south-edge outflow 4.69 -> 4.68 and 1.79 -> 1.78 million m3, virtual-wall supplement row (150 / 119, 41.3, 70.4), the breach-width table qualified as computed with f_opening_dynamic = 2 and f_advection_donor = 0; other prose values checked against f_advection_donor = 0 controls and unchanged; Japanese and English edited together and compared)",
       "method": "assistant",
-      "reviewed_on": "2026-11-08"
+      "reviewed_on": "2026-11-10"
     },
     {
       "source": "examples/levee_breach/figs/laws.png",
@@ -2003,11 +2003,11 @@
     {
       "source": "examples/levee_breach/figs/maps.png",
       "target": "examples/levee_breach/en/figs/maps.png",
-      "source_sha256": "a367b3774699918573313843bf7f17cef3e55a745127f33aa291186577fb0381",
-      "target_sha256": "15b449e8024362e3cf99fd209e857cfa909d61135028534e2d543c8b1b49254a",
-      "reviewer": "Claude (Claude Code session; both drawn by the same script from the same results; compared every label and value)",
+      "source_sha256": "a9fc2445e084744c9ffa26d69bdf810d369109b342fb6aaf968d833d76afccc9",
+      "target_sha256": "ea5bdb9ade212fd56e42608d8c822fbdff11e46db7c4bfd8cc486d6b9d43fc21",
+      "reviewer": "Claude (Claude Code session; recomputed 2026-11-10 with the default f_advection_donor = 3: drawn by the example's plot script (Japanese and English from the same results, script unchanged); Japanese and English images compared)",
       "method": "assistant",
-      "reviewed_on": "2026-11-08"
+      "reviewed_on": "2026-11-10"
     },
     {
       "source": "examples/levee_breach/figs/mechanism.png",
@@ -2021,11 +2021,11 @@
     {
       "source": "examples/levee_breach/figs/series.png",
       "target": "examples/levee_breach/en/figs/series.png",
-      "source_sha256": "e6da91bee4fb76212128e4b7312a8ebc8d1e3ad9e309f6c58090a7c60e98f716",
-      "target_sha256": "d13fd47ee33e2262cee4d99031fc7df4be8b06090e142600e763ab9a7a9be543",
-      "reviewer": "Claude (Claude Code session; both drawn by the same script from the same results; compared every label and value)",
+      "source_sha256": "163bcc11c41f77ab5749992a6c8bf605d739eb94dfc9ca70fabdb7d8094be501",
+      "target_sha256": "25f9ebf2adc7c60b8623f335e561cae757a57e61176d3b9b419f58f72467746b",
+      "reviewer": "Claude (Claude Code session; recomputed 2026-11-10 with the default f_advection_donor = 3: drawn by the example's plot script (Japanese and English from the same results, script unchanged); Japanese and English images compared)",
       "method": "assistant",
-      "reviewed_on": "2026-11-08"
+      "reviewed_on": "2026-11-10"
     },
     {
       "source": "examples/levee_breach/figs/setup.png",
@@ -2039,11 +2039,11 @@
     {
       "source": "examples/levee_breach/figs/supp_inundation.png",
       "target": "examples/levee_breach/en/figs/supp_inundation.png",
-      "source_sha256": "57824e6700e9b3275761dff849f0db8d2ea0711596dc8ead0876215cec216634",
-      "target_sha256": "9986fd3ff7019416c2c09b2ebec3154dfb7f7d883c8bb213c062504c1a717b38",
-      "reviewer": "Claude (assistant)",
+      "source_sha256": "05edfb2a7b09d927c3f8bc4ee863017b2d544c0a45170d5c84422776547bd749",
+      "target_sha256": "c645f4744e65c3b1e69ee31174c46b12c0944c6561646e2f48fd23de1038e86c",
+      "reviewer": "Claude (Claude Code session; recomputed 2026-11-10 with the default f_advection_donor = 3: drawn by the example's plot script (Japanese and English from the same results, script unchanged); Japanese and English images compared)",
       "method": "assistant",
-      "reviewed_on": "2026-11-02"
+      "reviewed_on": "2026-11-10"
     },
     {
       "source": "examples/levee_breach/figs/supp_setup.png",
@@ -2057,11 +2057,11 @@
     {
       "source": "examples/levee_breach/figs/supp_timeseries.png",
       "target": "examples/levee_breach/en/figs/supp_timeseries.png",
-      "source_sha256": "17929b9c02df5ea5a0e80233c838bb2f8b05f2f843f838ee5fa81af2931b4947",
-      "target_sha256": "37c3622e9027646456b1754b21aa8f189209257d6906fe199ca504656af09b06",
-      "reviewer": "Claude (assistant)",
+      "source_sha256": "d42fbc174706182d8eda5ecad6b8ae6243cbcf8d9b312ccfe9feb183f9c6ad62",
+      "target_sha256": "e61fcd4eec082176e40b7900c9164057c93c4694cd722504519e0ff308b52d3f",
+      "reviewer": "Claude (Claude Code session; recomputed 2026-11-10 with the default f_advection_donor = 3: drawn by the example's plot script (Japanese and English from the same results, script unchanged); Japanese and English images compared)",
       "method": "assistant",
-      "reviewed_on": "2026-11-02"
+      "reviewed_on": "2026-11-10"
     },
     {
       "source": "examples/meander/README.md",
@@ -2489,11 +2489,11 @@
     {
       "source": "examples/qanat/README.md",
       "target": "examples/qanat/en/README.md",
-      "source_sha256": "0aec398d008c0cee66b1c837b826cc9092f93c575201f89071fbe3030d67adbf",
-      "target_sha256": "3f87310e7b5f5f50d4552b37530142c82abfdfcbbddb9be1164bc7f6851e84fa",
-      "reviewer": "Claude (Claude Code session; reran all cases with the old and new settings, checked that the old settings reproduce the previous README, and replaced each number from the new results in both versions)",
+      "source_sha256": "4938e4002f232838ee96785e5de45ee7fc94a1a4bdfddd0d16bacfe2778702de",
+      "target_sha256": "ee19a7fcc3be1658aa16d7800fd046b4d5de16b0a7b517c96964ea74d581e812",
+      "reviewer": "Claude (Claude Code session; values updated to reruns with the default f_advection_donor = 3: qanat flow 3.54 -> 3.60 L/s and the shares and breakdowns derived from it, the east-edge transect agreement 0.2 -> 0.5 L/s; other prose values checked against f_advection_donor = 0 controls and unchanged; Japanese and English edited together and compared)",
       "method": "assistant",
-      "reviewed_on": "2026-11-08"
+      "reviewed_on": "2026-11-10"
     },
     {
       "source": "examples/qanat/figs/laws.png",
@@ -2525,20 +2525,20 @@
     {
       "source": "examples/qanat/figs/profile.png",
       "target": "examples/qanat/en/figs/profile.png",
-      "source_sha256": "3b9c271e5a8b84eefd2fbc7c9021a9e3b53334d444dee7b9e8d534ae002236be",
-      "target_sha256": "cf5fce0e7742306eecee931ce85c586610e581c5c32dcd18e8dbaf6be027d65e",
-      "reviewer": "Claude (Claude Code session; both drawn by the same script from the same results; compared every label and value)",
+      "source_sha256": "090d560387d9152cbe42847da2a65f4771ff072d801c597a6c7eb3389d0431f6",
+      "target_sha256": "b65eda5105ec072c9984c1260b32545ccf0fab8333c708a1046f70ec21caa0f9",
+      "reviewer": "Claude (Claude Code session; recomputed 2026-11-10 with the default f_advection_donor = 3: drawn by the example's plot script (Japanese and English from the same results, script unchanged); Japanese and English images compared)",
       "method": "assistant",
-      "reviewed_on": "2026-11-08"
+      "reviewed_on": "2026-11-10"
     },
     {
       "source": "examples/qanat/figs/series.png",
       "target": "examples/qanat/en/figs/series.png",
-      "source_sha256": "7e1d61e45ad4755b6de7df0f6f2a543824daf62f4493a6f8a57d174974cfa2e5",
-      "target_sha256": "747d38063ac4dd02665729fdd206052859a8a109ffac066df23a9cbd77a45352",
-      "reviewer": "Claude (Claude Code session; both drawn by the same script from the same results; compared every label and value)",
+      "source_sha256": "39c8fa3618079df759d8424289fbf0e3b961964a29e9956d33e7cd337b838d32",
+      "target_sha256": "0ddd9cde4837b4963436419406a6b1501f852ebca97979a87006b8264c154ba9",
+      "reviewer": "Claude (Claude Code session; recomputed 2026-11-10 with the default f_advection_donor = 3: drawn by the example's plot script (Japanese and English from the same results, script unchanged); Japanese and English images compared)",
       "method": "assistant",
-      "reviewed_on": "2026-11-08"
+      "reviewed_on": "2026-11-10"
     },
     {
       "source": "examples/qanat/figs/setup.png",
@@ -2741,11 +2741,11 @@
     {
       "source": "examples/timberyard/README.md",
       "target": "examples/timberyard/en/README.md",
-      "source_sha256": "7cbadab82c22c54c10a958e44163f47129f1319b6228609f8613e17b1a972c86",
-      "target_sha256": "3cc11089d31be084a4abc28efdddc16c0b9d385d29c07cf6e5baaf8af402ca13",
-      "reviewer": "Claude (Claude Code session; reran all cases with the old and new settings, checked that the old settings reproduce every number of the previous README, and replaced each number from the new tables in both versions)",
+      "source_sha256": "ebe5fc0b9c58aa3acb23718d7ad909e5e32d4e2b225b81b06b6721cef060d042",
+      "target_sha256": "7e0fe36d139b3dc63b5cc04e8447eb63269dbc33d944d2bd2db393670db7119b",
+      "reviewer": "Claude (Claude Code session; values updated to reruns with the default f_advection_donor = 3: main and supplement tables (m3 values) and the Ise Bay type load at the opening (1.5 -> 1.4 m3/s2, ratio 'more than twice'); other prose values checked against f_advection_donor = 0 controls and unchanged; Japanese and English edited together and compared)",
       "method": "assistant",
-      "reviewed_on": "2026-11-08"
+      "reviewed_on": "2026-11-10"
     },
     {
       "source": "examples/timberyard/figs/laws.png",
@@ -2759,11 +2759,11 @@
     {
       "source": "examples/timberyard/figs/maps.png",
       "target": "examples/timberyard/en/figs/maps.png",
-      "source_sha256": "5e7e19188f5d5c76604b9a3f2cb88be56fafd8e2aed5ef7647679312eefb9569",
-      "target_sha256": "3355660df98e177d86b32f38ed6807064b31593fab8c536728c1ab3e23c654c3",
-      "reviewer": "Claude (Claude Code session; both drawn by the same script from the same results; compared every label and value)",
+      "source_sha256": "be2612ede8b6fdc58162e03e22d522dc00a870d760c4bde35d80fdc368c1fa11",
+      "target_sha256": "70ca60483baf13910ca8d0cf9eb0688c94691f1c655653d9875631634bce12cd",
+      "reviewer": "Claude (Claude Code session; recomputed 2026-11-10 with the default f_advection_donor = 3: drawn by the example's plot script (Japanese and English from the same results, script unchanged); Japanese and English images compared)",
       "method": "assistant",
-      "reviewed_on": "2026-11-08"
+      "reviewed_on": "2026-11-10"
     },
     {
       "source": "examples/timberyard/figs/mechanism.png",
@@ -2777,11 +2777,11 @@
     {
       "source": "examples/timberyard/figs/series.png",
       "target": "examples/timberyard/en/figs/series.png",
-      "source_sha256": "58d2d8c14a0aa389b4b7a309d4fdae3eecaea600257a9abc8016f2bb761edeea",
-      "target_sha256": "e0e05db77a73048d4593aab2693fbc221943af61e68a230caa08891d796e4dc7",
-      "reviewer": "Claude (Claude Code session; both drawn by the same script from the same results; compared every label and value)",
+      "source_sha256": "16eac6ca9a56a0c6c122f4dc47eda5158eb2fcfbdf7aba3f36be7d6ef2ddec1f",
+      "target_sha256": "25742fb13951c02f7ff8be08c19a73aa42eeeb6bdd53763227f697dd8ccf0a29",
+      "reviewer": "Claude (Claude Code session; recomputed 2026-11-10 with the default f_advection_donor = 3: drawn by the example's plot script (Japanese and English from the same results, script unchanged); Japanese and English images compared)",
       "method": "assistant",
-      "reviewed_on": "2026-11-08"
+      "reviewed_on": "2026-11-10"
     },
     {
       "source": "examples/timberyard/figs/setup.png",
@@ -2795,11 +2795,11 @@
     {
       "source": "examples/timberyard/figs/supp.png",
       "target": "examples/timberyard/en/figs/supp.png",
-      "source_sha256": "f1d524221de351a02330ddfa816e9e68cdc9166e7b46b9df5b184321d7bf15fb",
-      "target_sha256": "a1c5f6ec9f137f4f062636d87754bb18c69a6ef2dd7698137a5a43547f8e6c4e",
-      "reviewer": "Claude (Claude Code session; both drawn by the same script from the same results; compared every label and value)",
+      "source_sha256": "7bb95f9574dc2eb8472ea7b08b529f0c945d1d89072a3d772e7565e8bb46978d",
+      "target_sha256": "78df59de436abe02e5376e80984c89fbc051b48a18112413d3623d0116a7c76c",
+      "reviewer": "Claude (Claude Code session; recomputed 2026-11-10 with the default f_advection_donor = 3: drawn by the example's plot script (Japanese and English from the same results, script unchanged); Japanese and English images compared)",
       "method": "assistant",
-      "reviewed_on": "2026-11-08"
+      "reviewed_on": "2026-11-10"
     },
     {
       "source": "examples/tower_karst/README.md",
