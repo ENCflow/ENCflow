@@ -1346,11 +1346,11 @@
     {
       "source": "examples/benchmark/v-shaped/README.md",
       "target": "examples/benchmark/v-shaped/en/README.md",
-      "source_sha256": "410642a9ffa065766b714b90f92bfb762c04f439abe9f24b220a6b7c0174464e",
-      "target_sha256": "d32293869764944c3b70c69679feade06e8b5680b3bf36ea0dce3bc93ae351d9",
+      "source_sha256": "ccaafdb6be57d45abe5b3c65296244c66c5af9028cbda172b9e2ef1f7f8b8f3c",
+      "target_sha256": "4ffb015bd0e7b9e88dd0bce07f3b51028f7a59fc928b94f2a82089c7f9448071",
       "reviewer": "Claude (Claude Code session; wrote and read both versions side by side: structure, numbers, tables, links and captions)",
       "method": "assistant",
-      "reviewed_on": "2026-11-10"
+      "reviewed_on": "2026-11-11"
     },
     {
       "source": "examples/benchmark/v-valley/README.md",

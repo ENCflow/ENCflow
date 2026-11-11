@@ -153,12 +153,12 @@ the outlet + water left in the catchment at the end) / rain on the catchment.
 
 | Case | NRMSE outlet | peak ratio | grid ratio | t50 (min) | NRMSE hillslope | depth ratio outlet (P1) | depth ratio hillslope (P2) | balance | verdict |
 |---|---|---|---|---|---|---|---|---|---|
-| 20 m, 0° | 0.019 | 1.000 | 1.000 | 40 | 0.021 | 1.01 | «P2_20_0» | 0.998 | PASS |
-| 10 m, 0° | 0.020 | 1.000 | 1.000 | 40 | 0.022 | 1.04 | «P2_10_0» | 0.999 | PASS |
-| 5 m, 0° | 0.018 | 1.000 | 1.000 | 40 | 0.024 | 1.04 | «P2_5_0» | 1.002 | PASS |
-| 20 m, 45° | 0.020 | 1.008 | 1.000 | 37 | 0.025 | 1.25 | «P2_20_45» | 0.999 | PASS |
-| 10 m, 45° | 0.016 | 0.997 | 1.000 | 39 | 0.021 | 1.00 | «P2_10_45» | 1.000 | PASS |
-| 5 m, 45° | 0.016 | 1.002 | 1.000 | 38 | 0.023 | 1.12 | «P2_5_45» | 1.000 | PASS |
+| 20 m, 0° | 0.019 | 1.000 | 1.000 | 40 | 0.021 | 1.01 | 1.01 | 0.998 | PASS |
+| 10 m, 0° | 0.020 | 1.000 | 1.000 | 40 | 0.022 | 1.04 | 1.00 | 0.999 | PASS |
+| 5 m, 0° | 0.018 | 1.000 | 1.000 | 40 | 0.024 | 1.04 | 1.00 | 1.002 | PASS |
+| 20 m, 45° | 0.020 | 1.008 | 1.000 | 37 | 0.025 | 1.25 | 1.02 | 0.999 | PASS |
+| 10 m, 45° | 0.016 | 0.997 | 1.000 | 39 | 0.021 | 1.00 | 1.00 | 1.000 | PASS |
+| 5 m, 45° | 0.016 | 1.002 | 1.000 | 38 | 0.023 | 1.12 | 1.00 | 1.000 | PASS |
 
 The guide values for passing are NRMSE ≤ 0.04, |grid ratio − 1| ≤ 0.01, |t50 − theory| ≤ 3 min and
 |balance − 1| ≤ 0.01.
@@ -192,7 +192,7 @@ the ridge, where the equilibrium depth differs by ±1 %).
   21.2 m) and 1.12 at 5 m (5 rows = 17.7 m). The depth in the outlet cell (P1) has the same values (1.01
   to 1.04 at 0°, 1.25 at 20 m, 45°). The discharge is right; the depth depends on the grid.
 - **The hillslope depth follows the theory except in the one or two rows next to the channel.** P2 (60 to
-  75 m from the channel) is «P2_RANGE» times the theory, and in the distributed output at 90 min every row
+  75 m from the channel) is 1.00 to 1.02 times the theory, and in the distributed output at 90 min every row
   more than 30 m from the channel is 0.97 to 1.05 times. Only the first row next to the channel, the foot,
   is 0.8 to 1.9 times the theory (1.49, 1.16 and 0.90 at 0°; 1.87, 1.17 and 0.83 at 45°), and the second
   row is 1.1 times at 45° and at 5 m, 0°. The roughness on the edge between the hillslope (n 0.015) and
@@ -322,8 +322,9 @@ The theoretical t50 is 39 min and 90 % of the peak is reached at 47 min (eight n
   much.
 - **The width works only where the channel on the grid is wider than the real one.** A cell whose width
   is not smaller than the cell size is treated as a resolved channel, so giving a width of 20 m on grids
-  of 20 m or finer changes nothing (checked at 20 m: identical results). At 45° the channel looks N Δx/√2
-  wide (N = number of diagonal rows of channel cells = 2⌊14.1 m / Δx⌋ + 1: 14.1 m at 20 m, 21.2 at 10 m,
+  of 20 m or finer changes almost nothing (checked at 20 m: the outlet discharge differs by at most 0.2 %
+  of the peak, the depth by 3 mm or less). At 45° the channel looks N Δx/√2 wide (N = number of diagonal
+  rows of channel cells = 2⌊14.1 m / Δx⌋ + 1: 14.1 m at 20 m, 21.2 at 10 m,
   17.7 at 5 m, 28.3 at 40 m), and because the width mechanism can only narrow the conveyance, the depth
   on the single-row grids whose apparent width is narrower than 20 m (14.1 < Δx ≤ 28.3 m; 1.28 times at
   20 m) cannot be corrected. Within that band the depth is largest just above Δx = 14.1 m (apparent width
