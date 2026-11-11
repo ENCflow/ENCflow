@@ -294,6 +294,7 @@ fn_rn(f_rntype=1)に河道セルごとの n を入れてください(掘り込�
 
 - [test/bendloss](../../test/bendloss/): 直線・屈曲・対角河道、サブグリッド幅、開口補正を、Manning等流解や直線水路との比較で検証。
 - [test/chichibu](../../test/chichibu/): 実地形の河道マスク・粗度・河道幅・堤防設定と洪水波の比較例。
+- [examples/benchmark/v-shaped](../../examples/benchmark/v-shaped/README.md) の追補: 幅 20 m の水路を 40 m の格子に乗せ、河道マスクとサブグリッド河道幅(fn_width)の有無で、運動学的波の理論解との差と水路の水深を比べる(水路がセルより狭い格子で立ち上がりと水深が理論に近づく例)。
 - 書式の実例: [examples/List_samples/list_channel.txt](../../examples/List_samples/list_channel.txt)
 - 海岸堤防(fn_seawall)は同じ仮想壁面機構の海岸応用で、
   [地理情報の章](geoinfo.md)の設定です。

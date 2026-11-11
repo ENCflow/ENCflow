@@ -111,8 +111,9 @@ exists).
   without the argument the script behaves as before).
 - The README of every `examples/<case>/` (phenomenon-specific example) is in
   scope as well (§34.2 amended on 2026-10-23). Parameter files, plotting
-  scripts and figures are shared; English comments are optional. The
-  `list_*.txt` files of benchmark are out of scope.
+  scripts and figures are shared; English comments are optional. The README
+  of each `examples/benchmark/<case>/` is treated the same way, with the
+  translation in that case's `en/`.
 
 ### Presentation assets
 

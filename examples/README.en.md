@@ -20,7 +20,7 @@ python3 plot_results.py   # plotting (where provided)
 | Directory | Contents | Main features |
 |---|---|---|
 | [List_samples/](List_samples/) | Annotated samples of every namelist (one file per group); a dictionary of settings and defaults (English in en/) | All features |
-| [benchmark/](benchmark/) | Three rainfall-runoff problems (plane slope, V-shaped catchment, V-shaped valley) checked against analytical solutions | Shallow water, rainfall |
+| [benchmark/](benchmark/en/README.md) | Two reference problems of rainfall runoff: the outlet discharge of a V-shaped catchment against the kinematic-wave theory, and a V-shaped valley without a channel that shows the pseudo-depressions of a valley floor oblique to the grid. Grids of 20, 10 and 5 m, orientations 0° and 45°, ENC eight and four neighbours | Shallow water, rainfall (default settings), diagonal share p_diagratio, sub-grid channel width (addendum) |
 | [vz_tani2023/](vz_tani2023/en/README.md) | Reproduction of the VZ runoff model of Tani (2023): runoff rates and pressure heads of all seven events compared with the paper | Vertical unsaturated flow (VZ) runoff fn_vz (shared column, linear distribution of soil depth) |
 | [source_area/](source_area/en/README.md) | A headwater catchment on the real terrain of Chichibu: how rain passes through the soil and reaches the stream from the saturated valley floors, and how the saturated (runoff source) area grows and shrinks; also whether overland flow without infiltration and a large (equivalent) roughness can stand in for it, and how that roughness changes with the soil conductivity and the rain intensity | Green-Ampt, lateral flow in the soil f_gwlateral (seepage in the saturated area), layer 2 f_gwlayer2, stage cell (catchment outlet), extraction of a catchment from real terrain, sweep of the slope roughness, diffusion wave f_govequation |
 | [badland/](badland/en/README.md) | Badland formation as rainfall carves valleys into a plateau and scarp: self-organised valleys, their spacing rule and sharp ridges | Dry hillslope erosion f_splash (spl_lc, spl_zbase) |
@@ -82,7 +82,7 @@ one run" (for reference after reading the chapters).
 - Recharge from the mountains → fan groundwater → qanat collection and outflow (dwindling with a pumping well): [qanat/](qanat/en/README.md).
 - Rain → infiltration → lateral flow in the soil → growth and shrinkage of the saturated (runoff source) area on the valley floors → seepage and overland flow on the saturated area → channel → outlet hydrograph (compared with overland flow without infiltration and a large roughness): [source_area/](source_area/en/README.md).
 - Rain → surface runoff and infiltration → groundwater flow → seepage (baseflow) → heavy-metal concentration in the river (changed by sorption delay, tanks, settling of particulate metal and evapotranspiration): [catchment_metal/](catchment_metal/en/README.md).
-- Single-feature analytical benchmarks: [benchmark/](benchmark/).
+- Reference problems of rainfall runoff with a theoretical solution, and the check of valley orientation and neighbour count: [benchmark/](benchmark/en/README.md).
 - Slope failure → debris flow → residential area on the fan (dependence on the grid spacing and the valley orientation; eight versus four neighbours on coarse grids): [debris_fan/](debris_fan/en/README.md).
 - Grid refinement (nesting): [nest_reflect/](nest_reflect/en/README.md).
 

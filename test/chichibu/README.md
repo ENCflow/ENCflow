@@ -17,7 +17,7 @@ reference を持つ回帰ケース、ほかの `param*.txt` は §68 の実験�
 | 領域・格子 | 56 km × 30 km、560 × 300 セル(Δx = 100 m)。`data_chichibu/`(標高 `Chichibu_100m_filled2.txt`(窪地処理済み)、流域マスク、河道マスク) |
 | 粗度 | 斜面 n = 0.15、河道セル(fn_rw)n = 0.02 |
 | 降雨 | 0〜30 min に 200 mm/h、以後 0(プロセスは地表流のみ。浸透・遮断なし) |
-| 計算 | 動的波(f_govequation = 0)、既定の ENC 設定(f_advection_scheme = 3、f_opening_dynamic = 3(2026-10-18 に 1 から 2 へ、2026-10-31 に 2 から 3 へ変更。§68.38・§68.41)、f_dry_head_cap = 1、f_advection_donor = 3(2026-11-09 に 0 から変更。§102))。`p_adv_upwind_index = 0.1`、dt = 2.5 s、6 h |
+| 計算 | 動的波([力学波](../../docs/users_guide/shallow_water.md)。f_govequation = 0)、既定の ENC 設定(f_advection_scheme = 3、f_opening_dynamic = 3(2026-10-18 に 1 から 2 へ、2026-10-31 に 2 から 3 へ変更。§68.38・§68.41)、f_dry_head_cap = 1、f_advection_donor = 3(2026-11-09 に 0 から変更。§102))。`p_adv_upwind_index = 0.1`、dt = 2.5 s、6 h |
 | 記録 | 測線 1〜4(本流の上流から下流。x = 16.5 / 21.5 / 29.6 / 43.3 km)の流量、プローブ 2 点(測線 1・2 上の河道セル)の水深 |
 
 | ファイル | 内容 |
@@ -83,7 +83,7 @@ python3 Fig.py    # figs/chichibu.png(引数 en で英語版を en/figs/ に)
 いずれも reference を持たず、`./encflow param_xxx.txt` で実行して
 `result_xxx/` に出力します(`dir_result` が設定済み)。名前の接尾辞:
 `_s1` / `_s3` = f_advection_scheme 1 / 3、`_noadv` = 移流項なし
-(f_govequation = 1)、`base` = 開口補正なし、`dyn` = f_opening_dynamic = 1。
+(f_govequation = 1。局所慣性方程式)、`base` = 開口補正なし、`dyn` = f_opening_dynamic = 1。
 
 | 群 | ファイル | 内容 | 記録 |
 |---|---|---|---|

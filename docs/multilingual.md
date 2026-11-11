@@ -94,7 +94,7 @@ utils/<tool>/README.md                → utils/<tool>/en/README.md
 - `examples/List_samples/` は注釈自体がリファレンスなので全件を対象にする。
 - `examples/<case>/` の README(現象別例題)も全件を対象にする(2026-10-23 に
   §34.2 を改定)。param・図化スクリプト・図は共有し、コメント英訳は任意。
-  benchmark の list_*.txt は対象外。
+  `examples/benchmark/<case>/` の README も同じ扱いで、訳は各ケースの `en/` に置く。
 
 ### 表示用資産
 

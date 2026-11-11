@@ -42,6 +42,9 @@ Rainfall runoff, river floods, inundation, storm surges and ordinary
 long-wave tsunamis do not need it. The default is the hydrostatic ENC; when
 the option is off no array is allocated and nothing is called, so the
 results are bitwise identical to before.
+An elementary account of where the hydrostatic assumption breaks down is
+in the primer, under
+[Limits of the hydrostatic approximation](shallow_water.md#hydrostatic).
 
 **Numerical versus physical dispersion.** A finite-difference grid has
 "numerical dispersion" of its own: on a one-dimensional C grid the long-wave

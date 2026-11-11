@@ -347,7 +347,7 @@ both in Japanese).
 | Same | $`\tau_b/\rho g h S`$ in the columns along the walls | 1.006 to 1.124 | 0.9999 |
 | Sheet flow (T10; slope 0.05, rain 100 mm/h) | local balance $`\tau_b/\rho g h S`$ (0° along the grid / 45° diagonal) | 1.34 to 1.38 / 1.29 to 1.34 | 0.96 to 0.99 / 0.95 to 0.99 |
 | Uniform flow in channels one and five cells wide ([test/uniflow](../../../test/uniflow/en/README.md)) | difference of depth and velocity from Manning | 1e-3 or less | 2e-4 or less |
-| Rainfall-runoff of a V-shaped catchment (v-shaped in [examples/benchmark](../../../examples/benchmark/)) | error of the outlet discharge from the theoretical value (grid 20, 10, 5 m) | 0.018, 0.025, 0.028 | 0.024, 0.020, 0.016 |
+| Rainfall-runoff of a V-shaped catchment (v-shaped in [examples/benchmark](../../../examples/benchmark/)) | error of the outlet discharge from the theoretical value (grid 20, 10, 5 m) | 0.017, 0.027, 0.028 | 0.019, 0.020, 0.018 |
 
 T9 and T10 are configurations of [test/rockinc](../../../test/rockinc/en/README.md).
 The error of the V-shaped catchment is the root-mean-square error divided by
@@ -355,10 +355,11 @@ the peak discharge.
 
 - 3 matches uniform flow and the local balance regardless of the slope and
   the grid orientation.
-- In the V-shaped catchment the error of 3 decreases as the grid is refined,
-  and the rise time matches the theory (with 2 the hillslope flow is too fast
-  and the rise comes 2 to 3 minutes early). On the coarsest grid, 20 m, 2 has
-  the smaller error: 3 is not "always closer" but "gets closer with
+- In the V-shaped catchment the error of 3 decreases as the grid is refined
+  (0.019 to 0.018), and the rise comes at 40 min against the theoretical
+  39 min (with 2 the hillslope flow is too fast, the rise comes 1 to 2 minutes
+  early at 37 to 38 min, and the error grows with refinement). On the coarsest
+  grid, 20 m, 2 has the smaller error: 3 is not "always closer" but "gets closer with
   refinement".
 - In channels between high banks, 3 is nearly the same as 2.
 
@@ -483,7 +484,7 @@ conveyance.
   of the [channel models page](channel_models.md);
   [docs/channel_model.md](../../channel_model.md) §1 and §3, in Japanese).
 - **Sheet flow on coarse grids**: on the 20 m grid of the V-shaped catchment,
-  the error of 3 (0.024) was larger than that of 2 (0.018) (§5.4). Also, in
+  the error of 3 (0.019) is larger than that of 2 (0.017) (§5.4). Also, in
   sheet flow running diagonally on a slope, the unit discharge obtained from
   depth and velocity remains 0.91 to 0.93 of the value from the rainfall,
   with both 2 and 3 (T10 of test/rockinc; not yet investigated).
