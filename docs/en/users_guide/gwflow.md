@@ -565,6 +565,18 @@ small K_sh. A K_sh of this size is not a value of the soil matrix: it is an effe
 that lumps fast paths such as pipes together with the fast response that travels through
 layers of small specific yield.
 
+**K_sh of a single layer is an equivalent value of the model**: fitting the storm response
+determines K_sh / sy0 and K_sh × soil depth, and K_sh has a value only once the soil depth and
+sy0 are fixed (in the example above, a single layer with one tenth the K_sh and sy0 and ten
+times the soil depth gives almost the same storm runoff). Just as the equivalent roughness of
+the kinematic wave method is not a measurement of the roughness of the ground surface, it is
+not a quantity to compare with measurements on samples or with field permeameter tests. If the
+soil depth or sy0 is changed, K_sh has to be determined again. Other distributed models also
+treat the lateral conductivity as a value to be calibrated. The discussion of what to call it
+and of how other models treat it is in
+[Supplement 2](../../../examples/source_area/en/README.md#supplement-2-what-the-lateral-saturated-conductivity-of-a-single-layer-is-equivalent-to)
+of the example.
+
 ## Output and monitoring
 
 The three ways a field gets written (automatic / flag / riding on a flag) and the area basis of column quantities are explained in [Input and output formats](io.md#how-state-variables-are-written); a reverse lookup from the quantity you want to the output is at the end of that section.

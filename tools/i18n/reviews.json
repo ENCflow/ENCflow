@@ -320,9 +320,9 @@
     {
       "source": "docs/users_guide/gwflow.md",
       "target": "docs/en/users_guide/gwflow.md",
-      "source_sha256": "e994e3fb22962964b44d67296fabf02a89fb04cdc85d567ae2a17f9a6a4b7bd0",
-      "target_sha256": "f86dbe8c58e73e968cac88cb33280833f2ec6d38414d84febe156d6c60e80ada",
-      "reviewer": "Claude (Claude Code session; a note on the lateral conductivity and the speed of storm runoff added below the guidance table, and one table remark and the source_area line extended, in both languages; the rest unchanged since the previous record)",
+      "source_sha256": "0aef35b09ee20d84c04d4b79b4c04995e7285a3ab527dafe6eb69d11b140cc91",
+      "target_sha256": "769edadada025b9a72ad680980ddc97e09d942241fd65114dc50293d9b3e1a23",
+      "reviewer": "Claude (Claude Code session; one paragraph added below the note on lateral conductivity in both languages (K_sh of a single layer is an equivalent value of the model, with a link to Supplement 2 of examples/source_area); the rest unchanged since the previous record)",
       "method": "assistant",
       "reviewed_on": "2026-11-11"
     },
@@ -473,9 +473,9 @@
     {
       "source": "docs/users_guide/sfm.md",
       "target": "docs/en/users_guide/sfm.md",
-      "source_sha256": "f2333c78079e5ee4ae28f0b891e4f1828e2da7ed978f4e32982477dad7368a9c",
-      "target_sha256": "652706768281e872dd688fafb751288c33404ee912bb1f48b244ad634c2af0ea",
-      "reviewer": "Claude (Claude Code session; two interception ratios of the initial loss and the separation of effective rainfall for the storage function method (§106.8): Japanese and English edited together and the changed passages compared, no model execution)",
+      "source_sha256": "8bb5e28a23800a2c8b39807bf6afbafb4317743fe17f3d871c2e295161f13733",
+      "target_sha256": "324deec0ac5d4ecd835bf347f99f866830d3a36de621563cb4835fac69cb1071",
+      "reviewer": "Claude (Claude Code session; the examples/source_area bullet in the list of tests and examples updated in both languages (four tanks, the lag-time tank); the rest unchanged since the previous record)",
       "method": "assistant",
       "reviewed_on": "2026-11-11"
     },
@@ -2696,9 +2696,9 @@
     {
       "source": "examples/source_area/README.md",
       "target": "examples/source_area/en/README.md",
-      "source_sha256": "7148d9ccb90d2f34676b8132327d9c41099a2172cc19cfd8fa3b9a1ba679797e",
-      "target_sha256": "ce49bcd2a1aca81e308dac656c2f4f4dc2524842d5f3f8cf23feb1a3cb8d85ce",
-      "reviewer": "Claude (Claude Code session; lag time sfm_tl_h of the storage function runoff (§106.6): Japanese and English edited together and the changed passages compared, no model execution)",
+      "source_sha256": "d37184b7bd0377eefe7d3c57de817ce1fe3c9a1fad8f83632d6c8ebc6c99e74d",
+      "target_sha256": "7814e55e50f35a87b0ef844b08667b7d7b353c30983899b7f9fdff1ca5a9d093",
+      "reviewer": "Claude (Claude Code session; added in both languages: Supplement 2 (what the lateral saturated conductivity of a single layer is equivalent to: five subsections, two tables from plot_results.py, a table of other models, bullets), a bullet in 'What this example shows', the sweep case process_thick (23 cases), tank 4 with a lag time in 'Relation to the storage function method' (definition, caption, table, one bullet), and references; the added and changed text, its numbers, the table rows and the in-page links were compared, and headings, bullets, table rows and figures were counted in both files; the rest unchanged since the previous record)",
       "method": "assistant",
       "reviewed_on": "2026-11-11"
     },
@@ -2777,9 +2777,9 @@
     {
       "source": "examples/source_area/figs/sfm_tank.png",
       "target": "examples/source_area/en/figs/sfm_tank.png",
-      "source_sha256": "15695d91573dacbd78317dc540beef253c85b3e850004792993de506b0fc5a9b",
-      "target_sha256": "15d6e7bc1578fb25647476dc5a8c0a019252a343109d8549aa8cadac39b28d85",
-      "reviewer": "Claude (Claude Code session; drawn by plot_results.py from the same results with and without the en argument; the English figure was viewed for labels and overlaps)",
+      "source_sha256": "f5e5712cf50ee378b67b6422898790ddf46215095afced02d13c72b33a1621e4",
+      "target_sha256": "5500f01dc43feadcff60cf4c049a291413494d2a6fc60e3f3f7923d5c2cf955f",
+      "reviewer": "Claude (Claude Code session; redrawn by plot_results.py from the same results with and without the en argument after adding tank 4 and moving the legends below the panels; the English figure was viewed for labels and overlaps)",
       "method": "assistant",
       "reviewed_on": "2026-11-11"
     },
