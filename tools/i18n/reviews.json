@@ -1760,20 +1760,20 @@
     {
       "source": "examples/estuary_barrage/figs/profile.png",
       "target": "examples/estuary_barrage/en/figs/profile.png",
-      "source_sha256": "c0705ac42d41f4de02bf3f898cda365c8770ae7ab9b9ac0f6e2fb38e741043ef",
-      "target_sha256": "31f7bb1b05371df88f1dc98092cef4f4a88ccd81e37994feed054d57b254ccc2",
-      "reviewer": "Claude (Claude Code session; recomputed 2026-11-09 with the current defaults including f_advection_donor = 3: all drawn by plot_results.py (python3 plot_results.py and python3 plot_results.py en; script unchanged) from the same results of the eight cases; Japanese and English plan and series viewed, labels compared; profile and cross differ only in their data)",
+      "source_sha256": "037bda4e9bb7fe8493eb227cc6a22210e701ef02110236de19fd46025894e41b",
+      "target_sha256": "75e812672be3e2d058953d60601b2e8a4132152085ed37a92aeda9284a07d19e",
+      "reviewer": "Claude (Claude Code session; English figure drawn by the same script with the en switch from the same results of 2026-11-11 (legend without the English word, the barrage drawn as the band of its cell 0.48-0.52 km); compared side by side: same plotted data and layout, labels translated)",
       "method": "assistant",
-      "reviewed_on": "2026-11-09"
+      "reviewed_on": "2026-11-11"
     },
     {
       "source": "examples/estuary_barrage/figs/series.png",
       "target": "examples/estuary_barrage/en/figs/series.png",
-      "source_sha256": "78b4938b20aa5a1a3ee3142a185ef0bf5ed88220e18cebbe1e177c0c5524ebb9",
-      "target_sha256": "09f3f2581981b2e3d3aaa2914e05c2a03dbdcce2ea3d6dc04c9c1a284bcfc02f",
-      "reviewer": "Claude (Claude Code session; recomputed 2026-11-09 with the current defaults including f_advection_donor = 3: all drawn by plot_results.py (python3 plot_results.py and python3 plot_results.py en; script unchanged) from the same results of the eight cases; Japanese and English plan and series viewed, labels compared; profile and cross differ only in their data)",
+      "source_sha256": "04086eea7545aa97dc76fcc40fedfce40f2709ff5cf03e10e164ccd4ad4a2199",
+      "target_sha256": "631c7d259fdb5306a36f448851b24935fa5c6689405d4c78169a49d0f8df6ccf",
+      "reviewer": "Claude (Claude Code session; English figure drawn by the same script with the en switch from the same results of 2026-11-11 (legend without the English word, the barrage drawn as the band of its cell 0.48-0.52 km); compared side by side: same plotted data and layout, labels translated)",
       "method": "assistant",
-      "reviewed_on": "2026-11-09"
+      "reviewed_on": "2026-11-11"
     },
     {
       "source": "examples/estuary_barrage/figs/setup.png",
