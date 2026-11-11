@@ -38,10 +38,11 @@ than the channel (20 m).
   kinematic wave is closest to the theory (NRMSE 0.018 against 0.020 for the dynamic wave), but only
   slightly, so the remaining difference from the theory comes from the discretisation, not from the
   physics of the pressure and advection terms.
-- **On a grid coarser than the channel the sub-grid channel width works** (addendum): on the 40 m grid
-  the channel cells look 2 times (0°) or 1.4 times (45°) too wide, the rise is 5 to 7 min late and the
-  depth is 0.7 to 0.8 times the theory; with the channel mask and a width of 20 m the delay shrinks to
-  1 to 2 min and the depth becomes 1.03 to 1.05 times.
+- **A channel narrower than the grid can be represented while staying raster** (addendum): without
+  coupling a one-dimensional channel model, giving the channel cells a width distribution is enough for
+  the rise and the depth of a 20 m wide channel to follow the theory even on a 40 m grid (without the
+  width the rise is 5 to 7 min late and the depth 0.7 to 0.8 times the theory; with it the delay is 1 to
+  2 min and the depth 1.03 to 1.05 times).
 
 ## Set-up
 
@@ -282,11 +283,19 @@ These values appear in the table of [Passage-width adjustment](../../../../docs/
 ## Addendum: the sub-grid channel width on a grid coarser than the channel (40 m)
 
 The comparisons above resolve the 20 m wide channel on grids no coarser than the channel (20, 10, 5 m).
-Here, conversely, the same catchment is laid on a 40 m grid, coarser than the channel, and with the
-eight-neighbour default settings the cases with and without the channel mask `fn_rw` (channel and
-extension cells) plus the sub-grid channel width `fn_width` (20 m on the channel cells;
-[channel chapter](../../../../docs/en/users_guide/channel.md)) are compared (`make supp`; cases `dx40_r0`,
-`dx40_r45` and `*_sgc`). Without the width the channel cells flow as a channel 40 m wide at 0° and, at 45°,
+In real catchments, rivers narrower than the grid that covers the whole catchment are the rule. ENCflow
+handles them without a one-dimensional channel model or a vector representation of the channel network:
+it stays raster. When the channel cells are given a width distribution (`fn_width`), the conveyance and
+storage of such a cell are computed for the channel part of the cell only, while the flow equations are
+the same two-dimensional shallow-water equations as on the hillslopes and the exchange with the
+neighbouring cells goes through the same cell edges (there is no other model and no coupling; when the
+river width crosses the cell size there is no switch of model, and one width distribution connects the
+headwater rills to the large river; [channel chapter](../../../../docs/en/users_guide/channel.md)). Here
+the same catchment is laid on a 40 m grid, coarser than the channel, and with the eight-neighbour default
+settings the cases with and without the channel mask `fn_rw` (channel and extension cells) plus the
+sub-grid channel width `fn_width` (20 m on the channel cells) are compared, to show that the flow of a
+20 m wide channel can be represented by 40 m cells (`make supp`; cases `dx40_r0`, `dx40_r45` and `*_sgc`).
+Without the width the channel cells flow as a channel 40 m wide at 0° and, at 45°,
 as a single diagonal row Δx/√2 = 28.3 m wide. With the width, conveyance and storage are computed for the
 20 m wide part of the cell only (no levee, so natural banks; the incision of the channel stays in the
 elevation). At 0° the grid origin is placed so that the channel axis passes through cell centres (the
@@ -320,6 +329,13 @@ The theoretical t50 is 39 min and 90 % of the peak is reached at 47 min (eight n
   at 45° because more water pools in the one or two hillslope rows next to the channel (up to 50 m from
   the channel at 40 m; depth ratio of the foot row 2.3 against 1.8 at 0°), which delays the rise by that
   much.
+- **A channel below the resolution is represented while staying raster.** The rise and the depth of the
+  20 m wide channel follow the theory in 40 m cells because the channel width is a property of the cell,
+  solved on the same grid with the same equations as the hillslopes. A diagonal channel is connected by
+  the diagonal edges of the eight neighbours, so the width works alike at 0° and 45°. Since the channel
+  network is not held as vectors, the preprocessing is only painting the width distribution on the raster.
+  The condition is that the river runs smoothly at the resolution of the grid (it is not suited to a river
+  that meanders within one cell; [channel chapter](../../../../docs/en/users_guide/channel.md)).
 - **The width works only where the channel on the grid is wider than the real one.** A cell whose width
   is not smaller than the cell size is treated as a resolved channel, so giving a width of 20 m on grids
   of 20 m or finer changes almost nothing (checked at 20 m: the outlet discharge differs by at most 0.2 %

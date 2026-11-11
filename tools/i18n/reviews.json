@@ -1337,8 +1337,8 @@
     {
       "source": "examples/benchmark/README.md",
       "target": "examples/benchmark/en/README.md",
-      "source_sha256": "6e276548ed0ef7ed2ab99b8885c4ba43da76cf6e049917551db224787ea272b8",
-      "target_sha256": "419128f422c8b6067a620a3c07abee3f65ed222a76a73d3eff32f3b3e832aa71",
+      "source_sha256": "29aca80ea6425c0338fd9276bd4b8b4a5f92f635ff208bc5f9995d0982cf9de6",
+      "target_sha256": "292005e53d93180aca27d552674b82e154ad7617925b750a8a14afd25b7c748a",
       "reviewer": "Claude (Claude Code session; wrote and read both versions side by side: structure, numbers, tables, links and captions)",
       "method": "assistant",
       "reviewed_on": "2026-11-11"
@@ -1346,8 +1346,8 @@
     {
       "source": "examples/benchmark/v-shaped/README.md",
       "target": "examples/benchmark/v-shaped/en/README.md",
-      "source_sha256": "b615b892392411d611d4d7f5c15e75bb1579e13909b9080d3068a0fa8e573e90",
-      "target_sha256": "64d2ab2d45fe44f1e7a0515914f3686ed4d4adca2c229df7c6d2c52024abf505",
+      "source_sha256": "5b5f06a5c08112945379d19a95673572b613aca9d86353633bce72a5d6ff7ed5",
+      "target_sha256": "075c06a40563065f6f159fabb3be6266e38d68b4ec3ef0bc3e7f5db617a675e9",
       "reviewer": "Claude (Claude Code session; wrote and read both versions side by side: structure, numbers, tables, links and captions)",
       "method": "assistant",
       "reviewed_on": "2026-11-11"
