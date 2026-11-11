@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
-"""source_area の図と数表(事前に make run。比較の図と表は make sweep の結果も、VZ 流出の土壌柱の
-図と表は make vz の結果も使う)。
+"""source_area の図と数表(事前に make run。比較の図と表は make sweep の結果も、VZ 流出の土壌柱と
+貯留関数法のタンクの図と表は make vz・make sfm の結果も使う)。
 
   figs/mechanism.png    3 つの計算(過程計算・浸透なし・鉛直浸透のみ)の違いの模式図(データを使わない)
   figs/setup.png        集水域の位置、地形と河道、降雨
@@ -12,6 +12,7 @@
   figs/intensity.png    雨の強さ(10 mm/h と 30 mm/h)による、流出と飽和域の違い
   figs/layer2.png       土層の側方を遅くして比湧水量の小さい第 2 層を置いた計算と、単層の計算の比較
   figs/vz_column.png    VZ 流出の土壌柱の排水(鉛直の不飽和浸透だけ)と、過程計算の斜面からの出力・出口の流出
+  figs/sfm_tank.png     貯留関数法のタンクの流出と、過程計算の出口の流出・VZ 流出の土壌柱の排水
 引数 en で英語ラベル版を en/figs/ に描く(データと描画処理は共通)。
 数表(README の表)は標準出力に書く。計算が済んでいないケースは飛ばす。
 """
@@ -174,6 +175,11 @@ R30_MMH = max(float(v) for v in re.findall(r"^\s*prval\(:,\s*\d+\)\s*=\s*[-0-9.]
 # VZ 流出の土壌柱(make vz。鉛直の不飽和浸透だけの遅れ): ケース名 → (結果のディレクトリ, 雨の強さ mm/h)
 VZ = {"vz": ("result_vz", RAIN_MMH), "vz_r30": ("result_vz_r30", R30_MMH)}
 VZ_RAMP = ("#fc7faf", "#c44c7e", "#911953")              # 柱の深さの順(浅い → 深い。1 色相の明→暗)
+# 貯留関数法のタンク(make sfm。流域を 1 つのタンク S = K q^P とみなした流出): ケース名 → (結果のディレクトリ, 雨)
+SFM = {"sfm": ("result_sfm", RAIN_MMH), "sfm_r30": ("result_sfm_r30", R30_MMH)}
+SFM_COL = "#6250d6"                                      # タンクの線
+SFM_VS = {1: "P", 2: "P", 3: "V"}                        # タンク(区画番号)の比べる相手: P 過程計算の出口の流出、V VZ の土壌柱の排水
+P_DEFAULT = 0.6                                          # sfm_p を書かないときの既定(貯留関数法の慣用の値)
 
 
 def rain_of(case):
@@ -382,22 +388,28 @@ def vz_column(case):
     return _VZCOL[case]
 
 
-def vz_rain(case, t):
-    """柱に降る雨の、各記録間隔の平均 (mm/h)。"""
+def interval_rain(rmm, t):
+    """強さ rmm の雨の、各記録間隔(端の時刻 t)の平均 (mm/h)。"""
     fine = np.linspace(0.0, TEND, int(TEND) * 60 + 1)
-    rf = rain(fine) * VZ[case][1] / RAIN_MMH
+    rf = rain(fine) * rmm / RAIN_MMH
     cumr = np.concatenate([[0.0], np.cumsum(0.5 * (rf[1:] + rf[:-1]) * np.diff(fine))])
     return np.diff(np.interp(t, fine, cumr)) / np.diff(t)
 
 
-def vz_lag(case, depth, storm=1):
-    """柱の排水の、雨からの遅れ (h): 雨 1 回分の 48 時間の、雨と排水の重心の差(stages と同じ区間)。"""
-    t, q = vz_column(case)
+def centroid_lag(t, q, rmm, storm=1):
+    """記録間隔ごとの流出 q(端の時刻 t)の、雨からの遅れ (h): 雨 1 回分の 48 時間の、雨と流出の重心の差
+    (stages と同じ区間)。"""
     tm = 0.5 * (t[1:] + t[:-1])
     a = np.floor(STORMS[storm][0])
     k = (tm >= a) & (tm <= a + CYCLE)
     cen = lambda v: float(np.sum(tm[k] * v[k]) / np.sum(v[k]))
-    return cen(q[depth]) - cen(vz_rain(case, t))
+    return cen(q) - cen(interval_rain(rmm, t))
+
+
+def vz_lag(case, depth, storm=1):
+    """柱の排水の、雨からの遅れ (h)。"""
+    t, q = vz_column(case)
+    return centroid_lag(t, q[depth], VZ[case][1], storm)
 
 
 def vz_reach(case, depth, storm, level):
@@ -406,6 +418,75 @@ def vz_reach(case, depth, storm, level):
     a, b = np.floor(STORMS[storm][0]), STORMS[storm][1]
     k = np.where((t[1:] > a) & (t[1:] <= b + 1e-9) & (q[depth] >= level))[0]
     return float(t[1:][k[0]] - a) if len(k) else np.nan
+
+
+def vz_storage_fit(depth, case="vz"):
+    """VZ 流出の土壌柱の、雨のあとの貯留と排水の関係に合う貯留関数 S = K q^P の (K, P)。
+    貯留は、その深さより上の、残留含水率より上の水 (mm)。1 回目の雨が止んで 0.5 時間後から 2 回目の雨の前までの
+    記録に、両対数の最小二乗で合わせる。残留含水率は画面の出力(Screen_vz.log)の採用値。
+    返り値: K、P、合わせた範囲での ln S のずれの最大。"""
+    f = f"{VZ[case][0]}/vz_column.csv"
+    hdr = open(f).readline().strip().split(",")
+    a = np.genfromtxt(f, delimiter=",", skip_header=1)
+    j = [k for k, h in enumerate(hdr) if re.match(rf"D@0*{depth:.4f}\(m\)", h)][0]
+    m = re.search(r"vz_thetar\(1\)\s*=\s*([0-9.]+)", open("Screen_vz.log", encoding="utf-8").read()) if os.path.exists("Screen_vz.log") else None
+    thr = float(m.group(1)) if m else 0.230
+    t = a[:, 0] / 3600.0
+    tm = 0.5 * (t[1:] + t[:-1])
+    q = np.diff(a[:, j]) * 1000.0 / np.diff(t)
+    sd = 0.5 * (a[1:, j + 1] + a[:-1, j + 1]) * 1000.0 - depth * 1000.0 * thr
+    k = (tm > STORMS[0][1] + 0.5) & (tm < np.floor(STORMS[1][0]))
+    c = np.polyfit(np.log(q[k]), np.log(sd[k]), 1)
+    return float(np.exp(c[1])), float(c[0]), float(np.abs(np.log(sd[k]) - np.polyval(c, np.log(q[k]))).max())
+
+
+def process_states():
+    """過程計算の貯留(Log の S_total。mm)と出口の流出 (mm/h) の 2 つの状態:
+    雨と釣り合ったとき(1 回目の雨の終わり)と、2 回目の雨の直前。"""
+    L = logtab("process")
+    tr, qr = hydro("process")
+    out = []
+    for th in (np.floor(STORMS[0][1]), np.floor(STORMS[1][0])):
+        out.append((1000.0 * L[int(np.argmin(np.abs(L[:, 0] - th))), 4], float(np.interp(th, tr, qr))))
+    return out
+
+
+def have_sfm(case):
+    f = f"{SFM[case][0]}/sfm_zone.csv"
+    if not os.path.exists(f):
+        return False
+    rows = [line for line in open(f) if line.strip()]
+    return len(rows) > 2 and float(rows[-1].split(",")[0]) / 3600.0 >= TEND - 1e-6
+
+
+def sfm_params():
+    """param_sfm.txt のタンクの設定: {区画番号: (K, P)}(P を書いていなければ既定の 0.6)。"""
+    txt = re.sub(r"!.*", "", open("param_sfm.txt", encoding="utf-8").read())
+    ks = {int(i): float(v) for i, v in re.findall(r"sfm_k\((\d+)\)\s*=\s*([-+0-9.eE]+)", txt)}
+    ps = {int(i): float(v) for i, v in re.findall(r"sfm_p\((\d+)\)\s*=\s*([-+0-9.eE]+)", txt)}
+    return {z: (k, ps.get(z, P_DEFAULT)) for z, k in sorted(ks.items())}
+
+
+_SFMTANK = {}
+
+
+def sfm_tanks(case):
+    """貯留関数法のタンクの流出と貯留(sfm_zone.csv)。
+    返り値: 記録間隔の端の時刻 (h。0 から)、{区画番号: (各間隔の流出 mm/h, 記録時刻の流出強度 q mm/h, 記録時刻の貯留 S mm)}。
+    各間隔の流出は、累積の流出 vdrain の時間差分を区画の面積で割った値。"""
+    if case not in _SFMTANK:
+        f = f"{SFM[case][0]}/sfm_zone.csv"
+        hdr = [h.split("(")[0] for h in open(f).readline().strip().split(",")]
+        a = np.genfromtxt(f, delimiter=",", skip_header=1)
+        iz, ia, iq, isx, iv = (hdr.index(n) for n in ("zone", "area", "q", "S", "vdrain"))
+        out, t = {}, None
+        for z in np.unique(a[:, iz]).astype(int):
+            b = a[a[:, iz] == z]
+            t = np.concatenate([[0.0], b[:, 0] / 3600.0])
+            qm = np.diff(np.concatenate([[0.0], b[:, iv]])) / b[0, ia] * 1000.0 / np.diff(t)
+            out[int(z)] = (qm, b[:, iq], b[:, isx])
+        _SFMTANK[case] = (t, out)
+    return _SFMTANK[case]
 
 
 def xy(ij):
@@ -1074,6 +1155,59 @@ def fig_vz():
     plt.close(fig)
 
 
+# ================================================================ 貯留関数法のタンク
+def fig_sfm():
+    """貯留関数法のタンクの流出を、K と P を合わせた相手(上段: 過程計算の出口の流出、下段: VZ 流出の土壌柱の排水)に
+    重ねる。2 回目の雨。横軸は雨の開始からの時間。"""
+    if not all(have_sfm(c) for c in SFM):
+        return
+    prm = sfm_params()
+    sd = param_value("param.txt", "sd0")
+    t0 = float(np.floor(STORMS[1][0]))
+    x0, x1 = -1.0, 30.0
+    style = {1: dict(ls="-", lw=2.0), 2: dict(ls=(0, (4, 2)), lw=1.8)}
+    fig, axs = plt.subplots(2, 2, figsize=(13.0, 7.8), sharex=True)
+    for m, (case, ref, vz) in enumerate((("sfm", "process", "vz"), ("sfm_r30", R30_PROCESS, "vz_r30"))):
+        rmm = SFM[case][1]
+        t, tk = sfm_tanks(case)
+        tf = np.linspace(t0 + x0, t0 + x1, int((x1 - x0) * 60) + 1)
+        for row, kind in enumerate("PV"):
+            ax = axs[row, m]
+            ax.fill_between(tf - t0, 0.0, rain(tf) * rmm / RAIN_MMH, color=RAINC, lw=0, zorder=1, label=T("雨", "rain"))
+            if kind == "P" and have(ref):
+                tq, qq = hydro(ref)
+                kq = (tq >= t0 + x0) & (tq <= t0 + x1)
+                ax.plot(tq[kq] - t0, qq[kq], color=INK, lw=2.2, zorder=3, label=T("過程計算: 出口の流出", "process run: runoff at the outlet"))
+            if kind == "V" and have_vz(vz) and sd in vz_column(vz)[1]:
+                tv, qv = vz_column(vz)
+                tm = 0.5 * (tv[1:] + tv[:-1])
+                kv = (tm >= t0 + x0) & (tm <= t0 + x1)
+                ax.plot(tm[kv] - t0, qv[sd][kv], color=VZ_RAMP[min(sorted(qv).index(sd), len(VZ_RAMP) - 1)], lw=2.0, zorder=3,
+                        label=T(f"VZ の土壌柱: 深さ {sd:g} m の排水", f"VZ soil column: drainage at {sd:g} m"))
+            n = 0
+            for z, (kk, pp) in prm.items():
+                if SFM_VS.get(z) != kind or z not in tk:
+                    continue
+                n += 1
+                kt = (t[1:] >= t0 + x0) & (t[1:] <= t0 + x1)
+                ax.plot(t[1:][kt] - t0, tk[z][1][kt], color=SFM_COL, zorder=4, **style[min(n, 2)],
+                        label=T(f"タンク {z}(K = {kk:g}、P = {pp:g})", f"tank {z} (K = {kk:g}, P = {pp:g})"))
+            ax.set_xlim(x0, x1)
+            ax.set_xticks(np.arange(0, x1 + 1, 6))
+            ax.set_ylim(0, rmm * 1.12)
+            if row == 1:
+                ax.set_xlabel(T("2 回目の雨の開始からの時間 (h)", "time since the start of the second storm (h)"))
+            if m == 0:
+                ax.set_ylabel(T("雨・流出高 (mm/h)", "rain, runoff (mm/h)") if row == 0 else T("雨・排水・流出高 (mm/h)", "rain, drainage, runoff (mm/h)"))
+                ax.legend(loc="upper right", ncol=1, fontsize=8)
+            what = (T("過程計算の貯留に合わせたタンク", "Tanks matched to the storage of the process run") if row == 0
+                    else T("VZ 流出の土壌柱に合わせたタンク", "Tank matched to the VZ soil column"))
+            panel_label(ax, T(f"({'abcd'[2 * row + m]}) {what}: 雨 {rmm:g} mm/h", f"({'abcd'[2 * row + m]}) {what}: rain {rmm:g} mm/h"))
+    fig.subplots_adjust(left=0.055, right=0.985, top=0.95, bottom=0.075, wspace=0.14, hspace=0.2)
+    fig.savefig(f"{FIGDIR}/sfm_tank.png")
+    plt.close(fig)
+
+
 # ================================================================ 数表
 def kind_label(case):
     _, kind, n, dif = CASES[case]
@@ -1429,6 +1563,109 @@ def tables(ser):
         print(T("柱の排水(雨 ", "column drainage (rain ") + f"{RAIN_MMH:g} mm/h, {dref:g} m): " + ", ".join(
             f"{th:g} h {np.interp(th, 0.5 * (tz[1:] + tz[:-1]), qz[dref]):.2f}" for th in (12, 14, 24, 48)) + " mm/h")
 
+    # 貯留関数法のタンク(流域を 1 つのタンクとみなした流出)
+    if all(have_sfm(c) for c in SFM):
+        prm = sfm_params()
+        sd = param_value("param.txt", "sd0")
+        (ca, (da, ra)), (cb, (db, rb)) = list(SFM.items())
+        prc, vzc = {ca: "process", cb: R30_PROCESS}, {ca: "vz", cb: "vz_r30"}
+        s2 = STORMS[1]
+
+        def fit_interval(tm, q, qref):
+            out = []
+            for a, b in STORMS:
+                k = (tm >= np.floor(a)) & (tm <= np.floor(a) + CYCLE)
+                out.append(1.0 - np.sum((q[k] - qref[k]) ** 2) / np.sum((qref[k] - qref[k].mean()) ** 2))
+            return out
+
+        def tank_row(z, c):
+            """タンク z のケース c での (遅れ, 1 mm/h を超える時刻, 雨の 90 % に達する時刻, 適合度の組)。"""
+            r = SFM[c][1]
+            t, tk = sfm_tanks(c)
+            qm, qi, sx = tk[z]
+            fits = None
+            if SFM_VS.get(z) == "P" and have(prc[c]):
+                tr, qr = hydro(prc[c])
+                fits = [nse(tr, np.interp(tr, t[1:], qi), qr, a) for a, b in STORMS]
+            if SFM_VS.get(z) == "V" and have_vz(vzc[c]) and sd in vz_column(vzc[c])[1]:
+                fits = fit_interval(0.5 * (t[1:] + t[:-1]), qm, vz_column(vzc[c])[1][sd])
+            return centroid_lag(t, qm, r), reach(t[1:], qi, s2, 1.0 / r, r), reach(t[1:], qi, s2, 0.9, r), fits
+
+        def ref_row(kind, c):
+            r = SFM[c][1]
+            if kind == "P":
+                if not have(prc[c]):
+                    return None
+                tr, qr = hydro(prc[c])
+                return sum(stages(prc[c])[:2]), reach(tr, qr, s2, 1.0 / r, r), reach(tr, qr, s2, 0.9, r)
+            if not (have_vz(vzc[c]) and sd in vz_column(vzc[c])[1]):
+                return None
+            return vz_lag(vzc[c], sd), vz_reach(vzc[c], sd, 1, 1.0), vz_reach(vzc[c], sd, 1, 0.9 * r)
+
+        ff = lambda v: "—" if v is None else " / ".join("%.2f" % x for x in v)
+        print(T("\n## 貯留関数法のタンク(make sfm): 流出の、雨からの遅れ(2 回目の雨の 48 時間の重心の差)、立ち上がり(2 回目の雨)、"
+                "適合度(1 回目 / 2 回目の雨。タンク 1・2 は過程計算の出口の流出、タンク 3 は VZ の土壌柱の排水に対して)",
+                "\n## Tanks of the storage function method (make sfm): lag of the runoff behind the rain (difference of the centroids over the 48 h of "
+                "the second storm), rise (second storm) and fit (storm 1 / storm 2; tanks 1 and 2 against the outlet runoff of the process run, "
+                "tank 3 against the drainage of the VZ soil column)"))
+        print(T(f"| 計算 | K | P | 雨 {ra:g} mm/h: 遅れ (h) | 1 mm/h を超える時刻 (h) | 雨の 90 % に達する時刻 (h) | 適合度 | 雨 {rb:g} mm/h: 遅れ (h) | 適合度 | 遅れの比 |",
+                f"| Run | K | P | Rain {ra:g} mm/h: lag (h) | Time above 1 mm/h (h) | Time to reach 90 % of the rain (h) | Fit | Rain {rb:g} mm/h: lag (h) | Fit | Ratio of the lags |"))
+        print("|---|---:|---:|---:|---:|---:|---:|---:|---:|---:|")
+        how = {1: T("過程計算と同じ貯留", "same storage as the process run"), 2: T("過程計算の 2 つの状態", "two states of the process run"),
+               3: T("VZ の土壌柱の逓減", "recession of the VZ soil column")}
+        for kind in "PV":
+            for z, (kk, pp) in prm.items():
+                if SFM_VS.get(z) != kind:
+                    continue
+                la, oa, ta, fa = tank_row(z, ca)
+                lb, ob, tb, fb = tank_row(z, cb)
+                print(f"| {T(f'タンク {z}({how.get(z, chr(8212))})', f'tank {z} ({how.get(z, chr(8212))})')} | {kk:g} | {pp:g} | {la:.1f} | {fmt(oa, '%.1f')} | "
+                      f"{fmt(ta, '%.1f')} | {ff(fa)} | {lb:.1f} | {ff(fb)} | {lb / la:.2f} |")
+            ra_, rb_ = ref_row(kind, ca), ref_row(kind, cb)
+            name = (T("過程計算: 出口の流出", "process run: runoff at the outlet") if kind == "P"
+                    else T(f"VZ の土壌柱: 深さ {sd:g} m の排水", f"VZ soil column: drainage at {sd:g} m"))
+            if ra_ and rb_:
+                print(f"| {name} | — | — | {ra_[0]:.1f} | {fmt(ra_[1], '%.1f')} | {fmt(ra_[2], '%.1f')} | — | {rb_[0]:.1f} | — | {rb_[0] / ra_[0]:.2f} |")
+        # K と P の根拠(結果から求め直した値)と、設定の値
+        print(T("タンクの K と P(結果から求め直した値。括弧は param_sfm.txt の設定):", "K and P of the tanks (recomputed from the results; settings of param_sfm.txt in parentheses):"))
+        if have("process"):
+            (sa, qa), (sb, qb) = process_states()
+            pb = np.log(sa / sb) / np.log(qa / qb)
+            print(T(f"  過程計算: 雨と釣り合ったとき 貯留 {sa:.1f} mm・流出 {qa:.2f} mm/h、2 回目の雨の直前 {sb:.1f} mm・{qb:.3f} mm/h",
+                    f"  process run: {sa:.1f} mm and {qa:.2f} mm/h in balance with the rain, {sb:.1f} mm and {qb:.3f} mm/h just before the second storm"))
+            print(f"  {T('タンク', 'tank')} 1: K = {sa:.1f} / {qa:.2f}^{P_DEFAULT:g} = {sa / qa ** P_DEFAULT:.2f}" + (f" ({prm[1][0]:g}, P {prm[1][1]:g})" if 1 in prm else ""))
+            print(f"  {T('タンク', 'tank')} 2: P = {pb:.3f}, K = {sa / qa ** pb:.2f}" + (f" ({prm[2][0]:g}, P {prm[2][1]:g})" if 2 in prm else ""))
+        if have_vz("vz"):
+            for dep in sorted(vz_column("vz")[1]):
+                kf, pf, dev = vz_storage_fit(dep)
+                print(f"  {T('VZ の土壌柱', 'VZ soil column')} {dep:g} m: S = {kf:.2f} q^{pf:.4f} ({T('ln S のずれの最大', 'largest deviation of ln S')} {dev:.3f})"
+                      + (f"  -> {T('タンク', 'tank')} 3 ({prm[3][0]:g}, P {prm[3][1]:g})" if dep == sd and 3 in prm else ""))
+        print(T(f"雨を {rb / ra:g} 倍にしたときの、雨と釣り合った貯留 ÷ 雨 の比 {rb / ra:g}^(P − 1): ", f"ratio of (storage in balance) / rain when the rain is {rb / ra:g} times, {rb / ra:g}^(P - 1): ")
+              + ", ".join(f"P = {pp:g}: {(rb / ra) ** (pp - 1):.2f}" for z, (kk, pp) in prm.items()))
+        pairs = [(a, b) for a, b in zip(("surface", "surface_n1", "surface_n3"), R30_SDYN) if have(a) and have(b)]
+        if pairs:
+            print(T("浸透なしの斜面の段の遅れの比(同じ粗度の、強い雨 ÷ 基本の雨): ", "ratio of the slope-stage lags of the no-infiltration runs (heavier rain / base rain, same roughness): ")
+                  + ", ".join(f"n = {nlabel(CASES[a][2])}: {stages(b)[0] / stages(a)[0]:.2f}" for a, b in pairs)
+                  + (T("; 過程計算の斜面の段: ", "; slope stage of the process run: ") + f"{stages(R30_PROCESS)[0] / stages('process')[0]:.2f}"
+                     if have("process") and have(R30_PROCESS) else ""))
+        for c in SFM:
+            r = SFM[c][1]
+            t, tk = sfm_tanks(c)
+            te = STORMS[0][1]
+            vals = [f"{T('タンク', 'tank')} {z}: " + " / ".join(f"{np.interp(te + dh, t[1:], tk[z][1]):.2f}" for dh in (2, 12, 36)) for z in prm if z in tk]
+            if have(prc[c]):
+                tr, qr = hydro(prc[c])
+                vals.append(T("過程計算: ", "process run: ") + " / ".join(f"{np.interp(te + dh, tr, qr):.2f}" for dh in (2, 12, 36)))
+            if have_vz(vzc[c]) and sd in vz_column(vzc[c])[1]:
+                tv, qv = vz_column(vzc[c])
+                vals.append(T("VZ の土壌柱: ", "VZ soil column: ") + " / ".join(f"{np.interp(te + dh, 0.5 * (tv[1:] + tv[:-1]), qv[sd]):.2f}" for dh in (2, 12, 36)))
+            print(T(f"雨 {r:g} mm/h の、雨の 2 / 12 / 36 時間後の流出 (mm/h): ", f"runoff 2 / 12 / 36 h after the rain of {r:g} mm/h (mm/h): ") + "; ".join(vals))
+        t, tk = sfm_tanks(cb)
+        print(T(f"雨 {rb:g} mm/h の立ち上がり(2 回目の雨。1 mm/h を超える時刻 / 雨の 90 % に達する時刻): ",
+                f"rise under {rb:g} mm/h (second storm; time above 1 mm/h / time to reach 90 % of the rain): ")
+              + "; ".join(f"{T('タンク', 'tank')} {z}: {fmt(reach(t[1:], tk[z][1], s2, 1.0 / rb, rb), '%.1f')} / {fmt(reach(t[1:], tk[z][1], s2, 0.9, rb), '%.1f')}" for z in prm if z in tk)
+              + "".join(f"; {nm}: {fmt(rr[1], '%.1f')} / {fmt(rr[2], '%.1f')}" for nm, rr in ((T("過程計算", "process run"), ref_row("P", cb)), (T("VZ の土壌柱", "VZ soil column"), ref_row("V", cb))) if rr))
+
     # 地表に載る水(流域平均の貯留高と、河道セル以外の水深)
     print(T("\n## 地表の水(流域平均の貯留高の最大と、雨の終わりの河道セル以外の水深)",
             "\n## Surface water (maximum catchment-mean storage, and depth on non-channel cells at the end of each storm)"))
@@ -1471,6 +1708,7 @@ def main():
     fig_intensity()
     fig_layer2()
     fig_vz()
+    fig_sfm()
 
 
 if __name__ == "__main__":

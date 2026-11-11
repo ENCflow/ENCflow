@@ -322,6 +322,15 @@ The labels in the Basis column are explained in [How to read the basis of a defa
   averaging; stop of the strict mode; baseflow; display of defaults; synchronisation
   interval `dt_sfm = 60` s; save → restart agreement (including the middle of an
   interval); combination with VZ and stop on overlapping zones.
+- [examples/source_area](../../../examples/source_area/en/README.md): a supplement of the
+  example of a mountain catchment on real terrain. The rain of the catchment runs is put on
+  three tanks (`make sfm`), and their runoff is laid over the outlet runoff of the run that
+  produces the delay by lateral flow in the soil and over the drainage of a VZ soil column.
+  K and P are determined from the "relation between storage and runoff" of each calculation
+  (not calibrated against observations). The tank matched to the relation between storage
+  and drainage in the recession of the VZ soil column coincides with the recession of the
+  column drainage, and rises earlier than the column, which gives nothing until the wetting
+  front arrives.
 - Results are bit-identical regardless of the number of MPI processes (the tanks are
   computed identically on all ranks, and only the owner rank adds to the outlets).
 

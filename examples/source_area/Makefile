@@ -6,6 +6,7 @@
 #                 -j を付けるとケースを並べて計算する(run も同じ。所要時間は README.md)
 #   make vz       VZ 流出の土壌柱の計算(雨 10 mm/h と 30 mm/h の 2 ケース。流域の入力は使わず、
 #                 数秒で終わる。追補の比較用)
+#   make sfm      貯留関数法のタンクの計算(同じく 2 ケース。数秒。追補の比較用)
 #   make clean    リンクと生成物を削除する
 
 TOPDIR	= ../..
@@ -13,6 +14,7 @@ BINDIR	= $(TOPDIR)/bin
 SRCDIR	= $(TOPDIR)/src
 CASES	= process vertical surface
 VZCASES	= vz vz_r30
+SFMCASES	= sfm sfm_r30
 
 all: links inputs
 
@@ -43,6 +45,10 @@ sweep: all
 vz: links
 	@$(MAKE) --no-print-directory $(addprefix run-,$(VZCASES))
 
+# 貯留関数法のタンク(param_sfm.txt と param_sfm_r30.txt。入力は data_sfm/ の区画番号のラスタだけ)
+sfm: links
+	@$(MAKE) --no-print-directory $(addprefix run-,$(SFMCASES))
+
 run-process:
 	./encflow param.txt | tee Screen_process.log
 
@@ -55,4 +61,4 @@ clean:
 	rm -rf result_* data
 	rm -f encflow encflow_mpi a.out Screen*.log param_sweep_*.txt
 
-.PHONY: all links inputs run sweep vz install clean
+.PHONY: all links inputs run sweep vz sfm install clean
