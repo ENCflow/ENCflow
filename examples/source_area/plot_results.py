@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
-"""source_area の図と数表(事前に make run。比較の図と表は make sweep の結果も使う)。
+"""source_area の図と数表(事前に make run。比較の図と表は make sweep の結果も、VZ 流出の土壌柱の
+図と表は make vz の結果も使う)。
 
   figs/mechanism.png    3 つの計算(過程計算・浸透なし・鉛直浸透のみ)の違いの模式図(データを使わない)
   figs/setup.png        集水域の位置、地形と河道、降雨
@@ -10,6 +11,7 @@
   figs/equivalent.png   過程計算の側方の透水係数ごとの、最も近い粗度の浸透なしとの比較
   figs/intensity.png    雨の強さ(10 mm/h と 30 mm/h)による、流出と飽和域の違い
   figs/layer2.png       土層の側方を遅くして比湧水量の小さい第 2 層を置いた計算と、単層の計算の比較
+  figs/vz_column.png    VZ 流出の土壌柱の排水(鉛直の不飽和浸透だけ)と、過程計算の斜面からの出力・出口の流出
 引数 en で英語ラベル版を en/figs/ に描く(データと描画処理は共通)。
 数表(README の表)は標準出力に書く。計算が済んでいないケースは飛ばす。
 """
@@ -169,6 +171,10 @@ R30_SDYN = ("surface_r30_n03", "surface_r30_n1", "surface_r30_n3")
 R30_MMH = max(float(v) for v in re.findall(r"^\s*prval\(:,\s*\d+\)\s*=\s*[-0-9.]+\s*,\s*([-0-9.]+)",
                                            open("param_rain30.txt", encoding="utf-8").read(), re.M))
 
+# VZ 流出の土壌柱(make vz。鉛直の不飽和浸透だけの遅れ): ケース名 → (結果のディレクトリ, 雨の強さ mm/h)
+VZ = {"vz": ("result_vz", RAIN_MMH), "vz_r30": ("result_vz_r30", R30_MMH)}
+VZ_RAMP = ("#fc7faf", "#c44c7e", "#911953")              # 柱の深さの順(浅い → 深い。1 色相の明→暗)
+
 
 def rain_of(case):
     """そのケースの雨の強さ (mm/h)。"""
@@ -301,11 +307,11 @@ def stages(case, storm=1):
     return _STAGES[(case, storm)]
 
 
-def stages_calc(case, storm=1):
-    """雨から出口までの遅れ(雨 1 回分の 48 時間の重心の差。h)を、斜面の段(雨 → 河道セルへの流入)と
-    河道の段(河道セルへの流入 → 出口)に分ける。河道セルへの流入は、1 時間ごとの分布の水収支
+def channel_inflow(case):
+    """河道セルへの流入(斜面からの出力)の 1 時間ごとの値。1 時間ごとの分布の水収支
     (雨 − 斜面のセルにある水の増加)で求める。
-    返り値: (斜面の段, 河道の段, 雨の終わりに斜面のセルにある水(斜面のセルの平均の水深 mm))。"""
+    返り値: 各 1 時間の中央の時刻 (h)、河道セルへの流入・雨・出口の流出(1 時間の量。流域平均 mm)、
+    各正時に斜面のセルにある水(流域平均 mm)。"""
     ft = dict((round(tt), k) for k, tt in file_times(case))
     hours = np.arange(0, int(TEND) + 1)
     st = np.array([slope_water(case, ft[h]) for h in hours])
@@ -316,7 +322,15 @@ def stages_calc(case, storm=1):
     rh = np.array([np.trapezoid(rf[(fine >= h) & (fine <= h + 1)], fine[(fine >= h) & (fine <= h + 1)]) for h in hours[:-1]])
     qh = np.array([np.trapezoid(q[(t >= h - 1e-9) & (t <= h + 1 + 1e-9)], t[(t >= h - 1e-9) & (t <= h + 1 + 1e-9)])
                    for h in hours[:-1]])
-    inflow = rh - np.diff(st)
+    return tm, rh - np.diff(st), rh, qh, st
+
+
+def stages_calc(case, storm=1):
+    """雨から出口までの遅れ(雨 1 回分の 48 時間の重心の差。h)を、斜面の段(雨 → 河道セルへの流入)と
+    河道の段(河道セルへの流入 → 出口)に分ける。河道セルへの流入は、1 時間ごとの分布の水収支
+    (雨 − 斜面のセルにある水の増加)で求める。
+    返り値: (斜面の段, 河道の段, 雨の終わりに斜面のセルにある水(斜面のセルの平均の水深 mm))。"""
+    tm, inflow, rh, qh, st = channel_inflow(case)
     a = STORMS[storm][0]
     k = (tm >= np.floor(a)) & (tm <= np.floor(a) + CYCLE)
     cen = lambda v: float(np.sum(tm[k] * v[k]) / np.sum(v[k]))
@@ -333,6 +347,65 @@ def same_lag_roughness(lag, cands):
     ly = np.log(lag)
     i = 0 if ly <= y[0] else (len(y) - 2 if ly >= y[-1] else int(np.searchsorted(y, ly)) - 1)
     return float(np.exp(x[i] + (ly - y[i]) * (x[i + 1] - x[i]) / (y[i + 1] - y[i])))
+
+
+def lag_cands(rmm):
+    """遅れを粗度に直すときに使う、同じ雨の浸透なしのケース(粗度 30 は 48 時間で水が出きらないので除く)。"""
+    return [c for c in (SDYN if rmm == RAIN_MMH else R30_SDYN) if CASES[c][2] <= 10.0 and have(c)]
+
+
+def have_vz(case):
+    f = f"{VZ[case][0]}/vz_column.csv"
+    if not os.path.exists(f):
+        return False
+    rows = [line for line in open(f) if line.strip()]
+    return len(rows) > 2 and float(rows[-1].split(",")[0]) / 3600.0 >= TEND - 1e-6
+
+
+_VZCOL = {}
+
+
+def vz_column(case):
+    """VZ 流出の土壌柱の排水。vz_column.csv の累積排水 D(その深さを下向きに通った水。m)の時間差分。
+    返り値: 記録間隔の端の時刻 (h。0 から)、{深さ (m): 各間隔の排水 (mm/h)}。"""
+    if case not in _VZCOL:
+        f = f"{VZ[case][0]}/vz_column.csv"
+        hdr = open(f).readline().strip().split(",")
+        a = np.genfromtxt(f, delimiter=",", skip_header=1)
+        t = np.concatenate([[0.0], a[:, 0] / 3600.0])
+        q = {}
+        for j, h in enumerate(hdr):
+            m = re.match(r"D@([0-9.]+)\(m\)", h)
+            if m:
+                q[float(m.group(1))] = np.diff(np.concatenate([[0.0], a[:, j]])) * 1000.0 / np.diff(t)
+        _VZCOL[case] = (t, q)
+    return _VZCOL[case]
+
+
+def vz_rain(case, t):
+    """柱に降る雨の、各記録間隔の平均 (mm/h)。"""
+    fine = np.linspace(0.0, TEND, int(TEND) * 60 + 1)
+    rf = rain(fine) * VZ[case][1] / RAIN_MMH
+    cumr = np.concatenate([[0.0], np.cumsum(0.5 * (rf[1:] + rf[:-1]) * np.diff(fine))])
+    return np.diff(np.interp(t, fine, cumr)) / np.diff(t)
+
+
+def vz_lag(case, depth, storm=1):
+    """柱の排水の、雨からの遅れ (h): 雨 1 回分の 48 時間の、雨と排水の重心の差(stages と同じ区間)。"""
+    t, q = vz_column(case)
+    tm = 0.5 * (t[1:] + t[:-1])
+    a = np.floor(STORMS[storm][0])
+    k = (tm >= a) & (tm <= a + CYCLE)
+    cen = lambda v: float(np.sum(tm[k] * v[k]) / np.sum(v[k]))
+    return cen(q[depth]) - cen(vz_rain(case, t))
+
+
+def vz_reach(case, depth, storm, level):
+    """雨の開始から、柱の排水が level (mm/h) に達するまでの時間 (h)。雨の間に達しなければ nan。"""
+    t, q = vz_column(case)
+    a, b = np.floor(STORMS[storm][0]), STORMS[storm][1]
+    k = np.where((t[1:] > a) & (t[1:] <= b + 1e-9) & (q[depth] >= level))[0]
+    return float(t[1:][k[0]] - a) if len(k) else np.nan
 
 
 def xy(ij):
@@ -956,6 +1029,51 @@ def fig_layer2():
     plt.close(fig)
 
 
+# ================================================================ VZ 流出の土壌柱(鉛直の不飽和浸透だけ)
+def fig_vz():
+    """VZ 流出の土壌柱の排水(鉛直の不飽和浸透だけの遅れ)を、過程計算の斜面からの出力(河道セルへの流入)と
+    出口の流出に重ねる。2 回目の雨。横軸は雨の開始からの時間。"""
+    if not all(have_vz(c) for c in VZ):
+        return
+    t0 = float(np.floor(STORMS[1][0]))
+    x0, x1 = -1.0, 30.0
+    fig, axs = plt.subplots(1, 2, figsize=(13.0, 5.2))
+    for m, (case, ref) in enumerate((("vz", "process"), ("vz_r30", R30_PROCESS))):
+        ax = axs[m]
+        rmm = VZ[case][1]
+        tf = np.linspace(t0 + x0, t0 + x1, int((x1 - x0) * 60) + 1)
+        ax.fill_between(tf - t0, 0.0, rain(tf) * rmm / RAIN_MMH, color=RAINC, lw=0, zorder=1, label=T("雨", "rain"))
+        t, q = vz_column(case)
+        tm = 0.5 * (t[1:] + t[:-1])
+        k = (tm >= t0 + x0) & (tm <= t0 + x1)
+        for n, dep in enumerate(sorted(q)):
+            ax.plot(tm[k] - t0, q[dep][k], color=VZ_RAMP[min(n, len(VZ_RAMP) - 1)], lw=2.0, zorder=3,
+                    label=T(f"VZ の土壌柱: 深さ {dep:g} m の排水", f"VZ soil column: drainage at {dep:g} m"))
+        if have(ref):
+            th, inflow = channel_inflow(ref)[:2]
+            kk = (th >= t0 + x0) & (th <= t0 + x1)
+            edges = np.append(th[kk] - 0.5, th[kk][-1] + 0.5) - t0
+            ax.step(edges, np.append(inflow[kk], inflow[kk][-1]), where="post", color=INK, lw=1.4, ls=(0, (4, 2)), zorder=4,
+                    label=T("過程計算: 河道セルへの流入(斜面からの出力。1 時間ごと)",
+                            "process run: inflow to the channel cells (output of the slopes, hourly)"))
+            tq, qq = hydro(ref)
+            kq = (tq >= t0 + x0) & (tq <= t0 + x1)
+            ax.plot(tq[kq] - t0, qq[kq], color=INK, lw=2.2, zorder=5, label=T("過程計算: 出口の流出", "process run: runoff at the outlet"))
+        ax.set_xlim(x0, x1)
+        ax.set_xticks(np.arange(0, x1 + 1, 6))
+        ax.set_ylim(0, rmm * 1.12)
+        ax.set_xlabel(T("2 回目の雨の開始からの時間 (h)", "time since the start of the second storm (h)"))
+        if m == 0:
+            ax.set_ylabel(T("雨・排水・流出高 (mm/h)", "rain, drainage, runoff (mm/h)"))
+        panel_label(ax, T(f"({'ab'[m]}) 雨 {rmm:g} mm/h × 12 時間{'(基本)' if m == 0 else ''}",
+                          f"({'ab'[m]}) Rain {rmm:g} mm/h for 12 h{' (base)' if m == 0 else ''}"))
+    h, lab = axs[0].get_legend_handles_labels()            # 凡例は 2 つの図に共通(線に重ならないよう図の下に置く)
+    fig.legend(h, lab, loc="lower center", ncol=3, fontsize=8.5, bbox_to_anchor=(0.5, 0.0), columnspacing=2.2)
+    fig.subplots_adjust(left=0.055, right=0.985, top=0.925, bottom=0.215, wspace=0.14)
+    fig.savefig(f"{FIGDIR}/vz_column.png")
+    plt.close(fig)
+
+
 # ================================================================ 数表
 def kind_label(case):
     _, kind, n, dif = CASES[case]
@@ -1263,6 +1381,54 @@ def tables(ser):
             print(f"| {th} | {np.interp(th, t2, q2):.2f} | {100 * (hg2[MASK] >= cap2 - SAT_TOL).mean():.1f} | {100 * (hg[MASK] >= CAP - SAT_TOL).mean():.1f} | "
                   f"{1000 * hg2[MASK].mean():.1f} | {1000 * hg[MASK].mean():.1f} | {1000 * h[MASK].mean():.1f} |")
 
+    # VZ 流出の土壌柱(鉛直の不飽和浸透だけの遅れ)
+    if all(have_vz(c) for c in VZ):
+        depths = sorted(vz_column("vz")[1])
+        refs = {"vz": "process", "vz_r30": R30_PROCESS}
+        print(T("\n## VZ 流出の土壌柱(make vz): 排水の、雨からの遅れ(2 回目の雨の 48 時間の重心の差)と、同じ遅れになる浸透なしの粗度",
+                "\n## Soil column of VZ runoff (make vz): lag of the drainage behind the rain (difference of the centroids over the 48 h of the "
+                "second storm) and the no-infiltration roughness with the same lag"))
+        print("| " + T("計算", "Run") + " | " + " | ".join(
+            T(f"雨 {r:g} mm/h: 遅れ (h) | 同じ遅れになる粗度", f"Rain {r:g} mm/h: lag (h) | Roughness with the same lag") for d, r in VZ.values()) + " |")
+        print("|---|" + "---:|---:|" * len(VZ))
+        for dep in depths:
+            cells = []
+            for c, (d, r) in VZ.items():
+                lag = vz_lag(c, dep)
+                cells += [f"{lag:.1f}", fmt(same_lag_roughness(lag, lag_cands(r)), "%.1f")]
+            print(f"| {T(f'VZ の土壌柱: 深さ {dep:g} m の排水', f'VZ soil column: drainage at {dep:g} m')} | " + " | ".join(cells) + " |")
+        cells = []
+        for c, (d, r) in VZ.items():
+            if have(refs[c]):
+                a1 = stages(refs[c])[0]
+                cells += [f"{a1:.1f}", fmt(same_lag_roughness(a1, lag_cands(r)), "%.1f")]
+            else:
+                cells += ["—", "—"]
+        sd = param_value("param.txt", "sd0")
+        print(f"| {T(f'過程計算(土層 {sd:g} m): 斜面の段', f'process run ({sd:g} m soil): slope stage')} | " + " | ".join(cells) + " |")
+        print(T("柱の排水が 1 mm/h を超える時刻 / 雨の 90 % に達する時刻(雨の開始から。h): ",
+                "time for the column drainage to exceed 1 mm/h / to reach 90 % of the rain (from the start of the storm, h): "))
+        for c, (d, r) in VZ.items():
+            for dep in depths:
+                print(f"  {T('雨', 'rain')} {r:g} mm/h, {dep:g} m: " + ", ".join(
+                    f"{T('雨', 'storm')} {n + 1}: {fmt(vz_reach(c, dep, n, 1.0), '%.1f')} / {fmt(vz_reach(c, dep, n, 0.9 * r), '%.1f')}" for n in range(len(STORMS))))
+        (ca, (da, ra)), (cb, (db, rb)) = list(VZ.items())
+        print(T("雨を強くしたときの遅れの比: ", "ratio of the lags under the heavier rain: ") + ", ".join(
+            f"{dep:g} m {vz_lag(cb, dep) / vz_lag(ca, dep):.2f}" for dep in depths)
+            + (T("、過程計算の斜面の段 ", ", slope stage of the process run ") + f"{stages(R30_PROCESS)[0] / stages('process')[0]:.2f}"
+               if have("process") and have(R30_PROCESS) else ""))
+        t0 = int(np.floor(STORMS[1][0]))
+        for c, (d, r) in VZ.items():
+            if have(refs[c]):
+                th, inflow = channel_inflow(refs[c])[:2]
+                print(T(f"過程計算の河道セルへの流入(雨 {r:g} mm/h。2 回目の雨の 1〜8 時間目の各 1 時間。mm/h): ",
+                        f"inflow to the channel cells of the process run (rain {r:g} mm/h; each of hours 1 to 8 of the second storm, mm/h): ")
+                      + ", ".join(f"{v:.1f}" for v in inflow[t0:t0 + 8]))
+        tz, qz = vz_column("vz")
+        dref = sd if sd in qz else depths[0]
+        print(T("柱の排水(雨 ", "column drainage (rain ") + f"{RAIN_MMH:g} mm/h, {dref:g} m): " + ", ".join(
+            f"{th:g} h {np.interp(th, 0.5 * (tz[1:] + tz[:-1]), qz[dref]):.2f}" for th in (12, 14, 24, 48)) + " mm/h")
+
     # 地表に載る水(流域平均の貯留高と、河道セル以外の水深)
     print(T("\n## 地表の水(流域平均の貯留高の最大と、雨の終わりの河道セル以外の水深)",
             "\n## Surface water (maximum catchment-mean storage, and depth on non-channel cells at the end of each storm)"))
@@ -1304,6 +1470,7 @@ def main():
     fig_equivalent()
     fig_intensity()
     fig_layer2()
+    fig_vz()
 
 
 if __name__ == "__main__":

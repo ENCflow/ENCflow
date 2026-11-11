@@ -563,11 +563,11 @@
     {
       "source": "docs/users_guide/vz.md",
       "target": "docs/en/users_guide/vz.md",
-      "source_sha256": "032e0fc7b650ddd924c4a36942fa7621f810e85f988077ecec1fe565368205da",
-      "target_sha256": "7d082e2c4f41c6d8cc377f0d302a8c56865ca5f7eca039dfb954b34315bf7b06",
-      "reviewer": "Claude (Claude Code session; reviewed the changed sections (added reference sections, footnotes and citation markers) of the Japanese source against the English mirror, 2026-10-30)",
+      "source_sha256": "e929c7b0d8c106645887814254ed27fad67cc5b82b0ed5249918f723ed57827e",
+      "target_sha256": "481ae40bf002a44aa1bcae0e3aed79d249f5c1919ee9d082846a985b8d7832d9",
+      "reviewer": "Claude (Claude Code session; one bullet added to the list of tests and examples in both languages (examples/source_area: the soil column under the rain of the catchment runs); the rest unchanged since the previous record)",
       "method": "assistant",
-      "reviewed_on": "2026-10-30"
+      "reviewed_on": "2026-11-11"
     },
     {
       "source": "docs/users_guide/wavefield.md",
@@ -869,9 +869,9 @@
     {
       "source": "examples/README.md",
       "target": "examples/README.en.md",
-      "source_sha256": "d180e744fde8e12b2bf8aa117c7aa43fa52f154ca198a698ace1804a4181fd3e",
-      "target_sha256": "e4ba584054a09cc9409b01eec15424ef061722df273e18cda8bdbbff60d599b9",
-      "reviewer": "Claude (Claude Code session; merge of two reviewed changes: the benchmark row and process-chain line from main and the source_area row from this branch, each in both languages; the rest unchanged)",
+      "source_sha256": "d2c94c4ce7f847b61eea9d7107061289d52ebcfd2dc8a85f1b559a89192d3a7c",
+      "target_sha256": "c81d87c608e0f4f5963267a2bc8f9182c77a1a97e3f12918ab94608e96d090f3",
+      "reviewer": "Claude (Claude Code session; the source_area row extended in both languages (the supplement comparing a soil column of VZ runoff, and the feature list); the rest unchanged since the previous record)",
       "method": "assistant",
       "reviewed_on": "2026-11-11"
     },
@@ -2678,9 +2678,9 @@
     {
       "source": "examples/source_area/README.md",
       "target": "examples/source_area/en/README.md",
-      "source_sha256": "39652ec22cc7068b661a5b380db198e7e33dba79d11879c4fe815879cb9bbaf6",
-      "target_sha256": "92994db2eaab5daecb4ba215835859ea22e7b7a1fb243b93630e4db997133a75",
-      "reviewer": "Claude (Claude Code session; number pairs and lists joined by a middle dot in the Japanese text were rewritten (pairs for the two storms as 'A と B', lists with commas) without changing any value; the two reworded bullets of \"What this example shows\" and two sentences of the supplement were adjusted in English to match; the changed sentences and their numbers were compared in both languages, the rest unchanged since the previous record)",
+      "source_sha256": "39d4e9ee1d415968a93fe9c31818708483e8de99883144b3d31bcc642c7431eb",
+      "target_sha256": "ab5bb1bae21d7e587157123a9eff793ae11882f48667f6eb446b8bcde9f8f65a",
+      "reviewer": "Claude (Claude Code session; the VZ soil-column case added in both languages: a bullet in 'What this example shows', a row in the settings table, 'make vz' in 'How to run', the rewritten section 'Relation to vertical unsaturated infiltration (VZ)' with a figure, a table and four bullets, one bullet of the sensitivity list and one clause in the limitations; the changed text, its numbers, the table rows and the in-page links were compared, and headings, bullets, table rows and figures were counted in both files; the rest unchanged since the previous record)",
       "method": "assistant",
       "reviewed_on": "2026-11-11"
     },
@@ -2761,6 +2761,15 @@
       "target": "examples/source_area/en/figs/source_area.png",
       "source_sha256": "fb9a8956aa5b2749e7e827a55738dd2677d8bcf057c168f02a301273c32aa50a",
       "target_sha256": "91e843843a9b7f3e932b90493d17639edc994f12b43a257328a1e8045fde940a",
+      "reviewer": "Claude (Claude Code session; drawn by plot_results.py from the same results with and without the en argument; the English figure was viewed for labels and overlaps)",
+      "method": "assistant",
+      "reviewed_on": "2026-11-11"
+    },
+    {
+      "source": "examples/source_area/figs/vz_column.png",
+      "target": "examples/source_area/en/figs/vz_column.png",
+      "source_sha256": "303feeaa2a725dff48a53e0edc17b5ded3c1d6abd391833bfde6ab34607b7973",
+      "target_sha256": "71d08f52081df8c5f9adc5935f7b2cba3d373c9c8558ceee2d5bc41cdc4fb213",
       "reviewer": "Claude (Claude Code session; drawn by plot_results.py from the same results with and without the en argument; the English figure was viewed for labels and overlaps)",
       "method": "assistant",
       "reviewed_on": "2026-11-11"

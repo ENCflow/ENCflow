@@ -535,6 +535,12 @@ S_e for ψ = −1 cm to −100 m, and the largest ratio of K where K_r ≥ 10⁻
   the baseflow and compared with the values calculated in the paper (with the
   separated baseflow added). The numbers of the paper are extracted from the figures
   of the PDF obtained by the user (not shipped).
+- [examples/source_area](../../../examples/source_area/en/README.md): a supplement of
+  the example of a mountain catchment on real terrain. The rain of the catchment runs
+  is put on a single column (the trial default; `make vz`), and the lag of the
+  drainage at each depth is compared with the slope lag of the run that produces the
+  delay by lateral flow in the soil, and converted to the overland-flow roughness with
+  the same lag (the equivalent roughness).
 - The results are bit-identical regardless of the number of MPI processes (every
   rank computes the columns identically, and only the owning rank adds to an
   outlet).

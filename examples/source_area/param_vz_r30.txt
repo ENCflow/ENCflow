@@ -1,0 +1,19 @@
+!======================================================================
+! source_area VZ 流出の土壌柱(雨 30 mm/h): param_vz.txt の雨だけを強くする
+!   格子・土層厚(&list_geoinfo)と VZ 流出の設定(&list_vz・&list_vz_zone)は
+!   param_vz.txt のものを読む(グループは名前で読まれるので、別のファイルを
+!   指せる)。降雨は param_rain30.txt(30 mm/h × 12 時間 × 2 回)。
+!   実行は make vz
+!======================================================================
+&list_sysparam
+  dt = 5.0                  ! 時間刻み (s)
+  tt_c = "96h"              ! 計算終了時刻(4 日)
+  dt_disp_c = "12h"         ! 画面表示の間隔
+  dt_file_c = "96h"         ! 分布ファイル出力の間隔(分布は使わない)
+  dt_recrd_c = "10m"        ! vz_column.csv の記録間隔
+  fn_geoinfo = 'param_vz.txt'       ! 格子・土層厚は param_vz.txt と同じ
+  fn_precip = 'param_rain30.txt'    ! 降雨(30 mm/h × 12 時間 × 2 回)
+  fn_vz = 'param_vz.txt'            ! VZ 流出の設定は param_vz.txt と同じ
+  dir_data = 'data_vz'
+  dir_result = 'result_vz_r30'
+/
