@@ -1,7 +1,7 @@
 # ENCflow/examples/source_area/Makefile
 #   make          ../../bin/ の実行ファイルへのリンクと入力(data/。make_catchment.py)を作る
 #   make run      基本の 3 ケース(過程計算・鉛直浸透のみ・浸透なし)を順に計算する
-#   make sweep    斜面の粗度などを変えた 15 ケース(sweep.py が設定を作る)を順に計算する
+#   make sweep    斜面の粗度・土層・雨の強さなどを変えた 22 ケース(sweep.py が設定を作る)を順に計算する
 #   make -j 4 sweep OMP_NUM_THREADS=1
 #                 -j を付けるとケースを並べて計算する(run も同じ。所要時間は README.md)
 #   make clean    リンクと生成物を削除する

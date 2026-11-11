@@ -8,6 +8,8 @@
   figs/compare.png      過程計算と、浸透なし・鉛直浸透のみのハイドログラフ
   figs/roughness.png    浸透なしの計算の斜面の粗度と、ピーク・立ち上がり・適合度
   figs/equivalent.png   過程計算の側方の透水係数ごとの、最も近い粗度の浸透なしとの比較
+  figs/intensity.png    雨の強さ(10 mm/h と 30 mm/h)による、流出と飽和域の違い
+  figs/layer2.png       土層の側方を遅くして比湧水量の小さい第 2 層を置いた計算と、単層の計算の比較
 引数 en で英語ラベル版を en/figs/ に描く(データと描画処理は共通)。
 数表(README の表)は標準出力に書く。計算が済んでいないケースは飛ばす。
 """
@@ -40,8 +42,8 @@ INK, INK2, MUTED = "#0b0b0b", "#52514e", "#898781"      # 文字・過程計算�
 GRID, AXIS = "#e1e0d9", "#c3c2b7"
 BLUE, BLUE_D = "#2a78d6", "#1c5cab"                      # 土層の水・飽和域
 RAINC = "#d9d7d0"                                        # 雨(淡い面)
-S_RAMP = {0.3: "#f8986c", 1.0: "#ed7940", 3.0: "#d75e16", 5.0: "#b84800", 10.0: "#923400",
-          30.0: "#662703"}                               # 浸透なし(粗度の順。1 色相の明→暗)
+S_RAMP = {0.3: "#f8986c", 0.6: "#f38956", 1.0: "#ed7940", 2.0: "#e26b2b", 3.0: "#d75e16", 5.0: "#b84800",
+          10.0: "#923400", 30.0: "#662703"}              # 浸透なし(粗度の順。1 色相の明→暗)
 V_RAMP = {0.3: "#1baf7a", 3.0: "#0d6e4c"}                # 鉛直浸透のみ
 matplotlib.rcParams.update({
     "axes.edgecolor": AXIS, "axes.linewidth": 0.8, "axes.labelcolor": INK2, "axes.titlesize": 10,
@@ -130,7 +132,9 @@ CASES = {
     "process": ("result_process", "P", 0.3, False),
     "surface": ("result_surface", "S", 0.3, False),
     "vertical": ("result_vertical", "V", 0.3, False),
+    "surface_n06": ("result_sweep_surface_n06", "S", 0.6, False),
     "surface_n1": ("result_sweep_surface_n1", "S", 1.0, False),
+    "surface_n2": ("result_sweep_surface_n2", "S", 2.0, False),
     "surface_n3": ("result_sweep_surface_n3", "S", 3.0, False),
     "surface_n5": ("result_sweep_surface_n5", "S", 5.0, False),
     "surface_n10": ("result_sweep_surface_n10", "S", 10.0, False),
@@ -141,17 +145,34 @@ CASES = {
     "vertical_n3": ("result_sweep_vertical_n3", "V", 3.0, False),
     "process_n1": ("result_sweep_process_n1", "P", 1.0, False),
     "process_dif": ("result_sweep_process_dif", "P", 0.3, True),
+    "process_k3600": ("result_sweep_process_k3600", "P", 0.3, False),
     "process_k10000": ("result_sweep_process_k10000", "P", 0.3, False),
-    "process_k36000": ("result_sweep_process_k36000", "P", 0.3, False),
     "process_k100000": ("result_sweep_process_k100000", "P", 0.3, False),
     "process_sd1": ("result_sweep_process_sd1", "P", 0.3, False),
+    "process_l2": ("result_sweep_process_l2", "P", 0.3, False),
+    "process_r30": ("result_sweep_process_r30", "P", 0.3, False),
+    "surface_r30_n03": ("result_sweep_surface_r30_n03", "S", 0.3, False),
+    "surface_r30_n1": ("result_sweep_surface_r30_n1", "S", 1.0, False),
+    "surface_r30_n3": ("result_sweep_surface_r30_n3", "S", 3.0, False),
 }
 
 
 # 側方飽和透水係数を変えた過程計算(mm/h。基本は param.txt の値)と、粗度を変えた浸透なし(力学波)
-KSH = {"process_k10000": 10000, "process_k36000": 36000, "process_k100000": 100000}
-SDYN = ("surface", "surface_n1", "surface_n3", "surface_n5", "surface_n10", "surface_n30")
-STORE_TIMES = [4, 6, 8, 12, 24, 48, 54, 56, 60]  # 貯留の内訳の表の時刻 (h)
+KSH = {"process_k3600": 3600, "process_k10000": 10000, "process_k100000": 100000}
+KBASE = int(round(param_value("param.txt", "gw_ksh_mmh")))
+KREFS = sorted([("process", KBASE)] + list(KSH.items()), key=lambda v: v[1])     # 透水係数の小さい順
+SDYN = ("surface", "surface_n06", "surface_n1", "surface_n2", "surface_n3", "surface_n5", "surface_n10", "surface_n30")
+STORE_TIMES = [2, 3, 4, 6, 12, 14, 24, 48, 50, 51, 60]  # 貯留の内訳の表の時刻 (h)
+# 雨を強くしたケース(降雨は param_rain30.txt。時刻は param_common.txt と同じ)
+R30_PROCESS = "process_r30"
+R30_SDYN = ("surface_r30_n03", "surface_r30_n1", "surface_r30_n3")
+R30_MMH = max(float(v) for v in re.findall(r"^\s*prval\(:,\s*\d+\)\s*=\s*[-0-9.]+\s*,\s*([-0-9.]+)",
+                                           open("param_rain30.txt", encoding="utf-8").read(), re.M))
+
+
+def rain_of(case):
+    """そのケースの雨の強さ (mm/h)。"""
+    return R30_MMH if "_r30" in case else RAIN_MMH
 
 
 def rdir(case):
@@ -200,8 +221,10 @@ def file_times(case):
 def case_cap(case):
     """そのケースの土層の容量 (m)。結果のディレクトリに写された設定から読む。"""
     for fn in sorted(os.listdir(rdir(case))):
-        if fn.startswith("param") and fn.endswith(".txt") and fn != "param_common.txt":
-            return param_value(f"{rdir(case)}/{fn}", "sd0") * param_value(f"{rdir(case)}/{fn}", "sy0")
+        if fn.startswith("param") and fn.endswith(".txt"):
+            txt = open(f"{rdir(case)}/{fn}", encoding="utf-8").read()
+            if re.search(r"^\s*sd0\s*=", txt, re.M) and re.search(r"^\s*sy0\s*=", txt, re.M):   # 降雨・共通設定の写しは飛ばす
+                return param_value(f"{rdir(case)}/{fn}", "sd0") * param_value(f"{rdir(case)}/{fn}", "sy0")
     return CAP
 
 
@@ -236,22 +259,80 @@ def nse(t, q, qref, t0):
     return 1.0 - np.sum((q[k] - qref[k]) ** 2) / np.sum((qref[k] - qref[k].mean()) ** 2)
 
 
-def reach(t, q, storm, frac):
-    """雨の間に流出高が雨の強さの frac 倍に達する時刻(雨の開始から。達しなければ nan)。"""
+def reach(t, q, storm, frac, rmm=None):
+    """雨の間に流出高が雨の強さ(rmm。既定は基本の雨)の frac 倍に達する時刻(雨の開始から。達しなければ nan)。"""
     a, b = storm
     k = (t >= a - 1e-9) & (t <= b + 1e-9)
-    i = np.where(q[k] >= frac * RAIN_MMH)[0]
+    i = np.where(q[k] >= frac * (RAIN_MMH if rmm is None else rmm))[0]
     return float(t[k][i[0]] - a) if len(i) else np.nan
 
 
-def best_roughness(ref):
+def best_roughness(ref, cands=None):
     """過程計算 ref に最も近い浸透なし(力学波)のケースを雨ごとに返す: [(適合度, ケース名), …]。"""
     tr, qr = hydro(ref)
     out = []
     for a, b in STORMS:
-        fits = [(float(nse(*hydro(c), qr, a)), c) for c in SDYN if have(c)]
+        fits = [(float(nse(*hydro(c), qr, a)), c) for c in (SDYN if cands is None else cands) if have(c)]
         out.append(max(fits) if fits else (np.nan, None))
     return out
+
+
+def has_var(case, var):
+    return os.path.exists(f"{rdir(case)}/{var}0000.bil")
+
+
+def slope_water(case, k):
+    """斜面のセル(河道セル以外)にある水(地表 + 土層 + 第 2 層)を流域平均の水深 (mm) で返す。"""
+    slope = MASK & ~RW
+    v = bil(case, "H", k)[slope].sum()
+    for var in ("Hg", "Hg2"):
+        if has_var(case, var):
+            v += bil(case, var, k)[slope].sum()
+    return 1000.0 * v / NCELL
+
+
+_STAGES = {}
+
+
+def stages(case, storm=1):
+    """stages_calc の結果を覚えておく(分布を 100 枚近く読むので)。"""
+    if (case, storm) not in _STAGES:
+        _STAGES[(case, storm)] = stages_calc(case, storm)
+    return _STAGES[(case, storm)]
+
+
+def stages_calc(case, storm=1):
+    """雨から出口までの遅れ(雨 1 回分の 48 時間の重心の差。h)を、斜面の段(雨 → 河道セルへの流入)と
+    河道の段(河道セルへの流入 → 出口)に分ける。河道セルへの流入は、1 時間ごとの分布の水収支
+    (雨 − 斜面のセルにある水の増加)で求める。
+    返り値: (斜面の段, 河道の段, 雨の終わりに斜面のセルにある水(斜面のセルの平均の水深 mm))。"""
+    ft = dict((round(tt), k) for k, tt in file_times(case))
+    hours = np.arange(0, int(TEND) + 1)
+    st = np.array([slope_water(case, ft[h]) for h in hours])
+    tm = hours[:-1] + 0.5
+    fine = np.linspace(0.0, TEND, int(TEND) * 60 + 1)
+    rf = rain(fine) * rain_of(case) / RAIN_MMH
+    t, q = hydro(case)
+    rh = np.array([np.trapezoid(rf[(fine >= h) & (fine <= h + 1)], fine[(fine >= h) & (fine <= h + 1)]) for h in hours[:-1]])
+    qh = np.array([np.trapezoid(q[(t >= h - 1e-9) & (t <= h + 1 + 1e-9)], t[(t >= h - 1e-9) & (t <= h + 1 + 1e-9)])
+                   for h in hours[:-1]])
+    inflow = rh - np.diff(st)
+    a = STORMS[storm][0]
+    k = (tm >= np.floor(a)) & (tm <= np.floor(a) + CYCLE)
+    cen = lambda v: float(np.sum(tm[k] * v[k]) / np.sum(v[k]))
+    nslope = float((MASK & ~RW).sum())
+    return cen(inflow) - cen(rh), cen(qh) - cen(inflow), float(st[int(round(STORMS[storm][1]))]) * NCELL / nslope
+
+
+def same_lag_roughness(lag, cands):
+    """斜面の段の遅れ lag (h) と同じ遅れになる浸透なしの粗度(cands の遅れを両対数で内挿・外挿)。"""
+    pts = sorted((CASES[c][2], stages(c)[0]) for c in cands if have(c))
+    if len(pts) < 2:
+        return np.nan
+    x, y = np.log([v[0] for v in pts]), np.log([v[1] for v in pts])
+    ly = np.log(lag)
+    i = 0 if ly <= y[0] else (len(y) - 2 if ly >= y[-1] else int(np.searchsorted(y, ly)) - 1)
+    return float(np.exp(x[i] + (ly - y[i]) * (x[i + 1] - x[i]) / (y[i + 1] - y[i])))
 
 
 def xy(ij):
@@ -467,7 +548,7 @@ def fig_setup():
 
 
 # ================================================================ 飽和域の分布
-MAP_TIMES = [5, 7, 12, 24, 48, 60]
+MAP_TIMES = [2, 3, 12, 16, 24, 48]
 
 
 def fig_source_area():
@@ -475,9 +556,9 @@ def fig_source_area():
     ft = dict((round(t), k) for k, t in file_times(case))
     gray = LinearSegmentedColormap.from_list("soil", ["#f6f5f2", "#a3a19a"])
     fig, axs = plt.subplots(2, 3, figsize=(13.0, 7.0))
-    note = {5: T("1 回目の雨の途中", "during storm 1"), 7: T("1 回目の雨の途中", "during storm 1"),
-            12: T("1 回目の雨の終わり", "end of storm 1"), 24: T("雨の 12 時間後", "12 h after the rain"),
-            48: T("2 回目の雨の直前", "just before storm 2"), 60: T("2 回目の雨の終わり", "end of storm 2")}
+    note = {2: T("1 回目の雨の途中", "during storm 1"), 3: T("1 回目の雨の途中", "during storm 1"),
+            12: T("1 回目の雨の終わり", "end of storm 1"), 16: T("雨の 4 時間後", "4 h after the rain"),
+            24: T("雨の 12 時間後", "12 h after the rain"), 48: T("2 回目の雨の直前", "just before storm 2")}
     for ax, th in zip(axs.ravel(), MAP_TIMES):
         hg = bil(case, "Hg", ft[th])
         ratio = np.where(MASK, np.clip(hg / CAP, 0.0, 1.0), np.nan)
@@ -535,8 +616,7 @@ def fig_series():
     ax2 = fig.add_subplot(gs[1], sharex=ax1)
     shade_storms(ax2)
     ax2.plot(ts, 100 * fs, color=BLUE_D, lw=2.0)
-    ax2.set_ylim(0, 100)
-    ax2.set_yticks(np.arange(0, 101, 25))
+    ax2.set_ylim(0, 5.0 * np.ceil(1.2 * 100 * fs.max() / 5.0))      # 最大の少し上の切りのよい値まで
     ax2.set_ylabel(T("飽和域の割合 (%)", "saturated area (%)"))
     panel_label(ax2, T("(b) 飽和域(流出寄与域)の割合", "(b) Saturated (source) area fraction"))
 
@@ -544,14 +624,16 @@ def fig_series():
     shade_storms(ax3)
     ax3.plot(lg[:, 0], 1000 * lg[:, 3], color=BLUE, lw=2.0, label=T("土層の水(地下貯留)", "soil water (groundwater storage)"))
     ax3.plot(lg[:, 0], 1000 * lg[:, 2], color="#eb6834", lw=2.0, label=T("地表の水", "surface water"))
-    ax3.axhline(cap, color=MUTED, lw=1.0, ls=(0, (4, 3)), zorder=1)
-    ax3.text(30.0, cap - 3.0, T(f"土層の容量 {cap:.0f} mm", f"soil capacity {cap:.0f} mm"), fontsize=8, color=INK2,
-             ha="center", va="top")
-    ax3.set_ylim(0, 1.08 * cap)
-    ax3.set_yticks(np.arange(0, cap + 1, 25))
+    stop = 10.0 * np.ceil(1.15 * 1000 * max(lg[:, 3].max(), lg[:, 2].max()) / 10.0)
+    if stop >= cap:                               # 土層の容量が図の範囲に入るときは、線で示す
+        ax3.axhline(cap, color=MUTED, lw=1.0, ls=(0, (4, 3)), zorder=1)
+        ax3.text(30.0, cap - 3.0, T(f"土層の容量 {cap:.0f} mm", f"soil capacity {cap:.0f} mm"), fontsize=8, color=INK2,
+                 ha="center", va="top")
+        stop = 1.08 * cap
+    ax3.set_ylim(0, stop)
     ax3.set_ylabel(T("貯留高 (mm)", "storage (mm)"))
     ax3.legend(loc="upper right", ncol=2, fontsize=8, bbox_to_anchor=(1.0, 1.16))
-    panel_label(ax3, T("(c) 流域平均の貯留", "(c) Catchment-mean storage"))
+    panel_label(ax3, T(f"(c) 流域平均の貯留(土層の容量は {cap:.0f} mm)", f"(c) Catchment-mean storage (soil capacity {cap:.0f} mm)"))
 
     ax4 = fig.add_subplot(gs[3], sharex=ax1)
     shade_storms(ax4)
@@ -566,11 +648,13 @@ def fig_series():
     for a in (ax1, ax2, ax3):
         plt.setp(a.get_xticklabels(), visible=False)
 
-    # (e) 貯留と飽和域の関係(発達と縮小の経路)。軸は土層の容量と全域(100 %)まで取る。
-    # 飽和したセルは容量いっぱいの水を持つので、飽和域の割合は「土層の水 / 容量」を超えない(点線)
+    # (e) 貯留と飽和域の関係(発達と縮小の経路)。軸は原点から取り、横(土層の水 ÷ 容量)と縦(飽和域の割合)を
+    # 同じ比率にする(容量と全域(100 %)を上限に、経路の最大の少し上の切りのよい値まで)。
+    # 飽和したセルは容量いっぱいの水を持つので、飽和域の割合は「土層の水 / 容量」を超えない(点線 = 図の対角線)
     ax5 = fig.add_subplot(gr[0])
     sg = np.interp(ts, lg[:, 0], 1000 * lg[:, 3])
-    ax5.plot([0, cap], [0, 100], color=MUTED, lw=1.0, ls=(0, (1.5, 2.5)), zorder=1,
+    lim = min(cap, 10.0 * np.ceil(1.1 * max(sg.max(), fs.max() * cap) / 10.0))     # 横軸の上限 (mm)
+    ax5.plot([0, lim], [0, 100 * lim / cap], color=MUTED, lw=1.0, ls=(0, (1.5, 2.5)), zorder=1,
              label=T("上限(土層の水がすべて飽和域にある)", "upper bound (all soil water in saturated cells)"))
     seg = [(12, 48, T("雨の後(縮小)", "after the rain (shrinking)"), MUTED, "-"), (60, 96, None, MUTED, "-"),
            (0, 12, T("1 回目の雨(発達)", "storm 1 (growth)"), BLUE_D, "-"),
@@ -578,20 +662,21 @@ def fig_series():
     for a, b, lab, col, ls in seg:
         k = (ts >= a - 1e-9) & (ts <= b + 1e-9)
         ax5.plot(sg[k], 100 * fs[k], color=col, lw=2.0, ls=ls, label=lab)
-    off = {6: ((8, -4), "left"), 12: ((8, -12), "left"), 16: ((-7, 3), "right"), 24: ((-7, 3), "right"),
-           48: ((5, -13), "left"), 60: ((8, 2), "left")}
-    for th in (6, 12, 16, 24, 48, 60):
+    off = {2: ((7, -9), "left"), 3: ((8, -3), "left"), 12: ((7, 3), "left"), 16: ((-7, 4), "right"), 24: ((-7, 4), "right"),
+           48: ((7, -10), "left")}
+    for th in MAP_TIMES:                          # 丸は分布の図と同じ時刻
         k = int(np.argmin(np.abs(ts - th)))
         ax5.plot([sg[k]], [100 * fs[k]], marker="o", ms=5.5, mfc="white", mec=INK, mew=1.2, ls="none", zorder=5,
                  clip_on=False)
-        ax5.annotate(f"{th} h", (sg[k], 100 * fs[k]), textcoords="offset points", xytext=off[th][0], fontsize=8,
-                     color=INK2, ha=off[th][1])
+        ax5.annotate(f"{th} h", (sg[k], 100 * fs[k]), textcoords="offset points", xytext=off.get(th, ((7, 3), "left"))[0],
+                     fontsize=8, color=INK2, ha=off.get(th, ((7, 3), "left"))[1])
     ax5.set_xlabel(T("土層の水(流域平均。mm)", "soil water, catchment mean (mm)"))
     ax5.set_ylabel(T("飽和域の割合 (%)", "saturated area (%)"))
-    ax5.set_xlim(0, cap)
-    ax5.set_ylim(0, 100)
-    ax5.set_xticks(np.arange(0, cap + 1, 20))
-    ax5.set_yticks(np.arange(0, 101, 20))
+    ax5.set_xlim(0, lim)
+    ax5.set_ylim(0, 100 * lim / cap)
+    step = 10.0 if lim <= 50.0 else 20.0
+    ax5.set_xticks(np.arange(0, lim + 1, step))
+    ax5.set_yticks(np.arange(0, 100 * lim / cap + 1, 100 * step / cap))
     ax5.legend(loc="upper left", fontsize=8)
     panel_label(ax5, T("(e) 貯留と飽和域(発達と縮小の経路)", "(e) Storage vs saturated area"))
 
@@ -635,7 +720,7 @@ def fig_compare():
     # (a) 浸透なし(斜面の粗度を変える)
     ax = axs[0]
     rain_fill(ax)
-    for case in ("surface", "surface_n1", "surface_n3", "surface_n5", "surface_n10", "surface_n30"):
+    for case in ("surface", "surface_n1", "surface_n2", "surface_n3", "surface_n5", "surface_n10"):
         if not have(case):
             continue
         n = CASES[case][2]
@@ -699,7 +784,7 @@ def fig_roughness(stats):
     rows = [("peak", T("ピークの流出高 (mm/h)", "peak runoff (mm/h)")),
             ("onset", T("流出高が 1 mm/h を超える時刻 (h)", "time when runoff exceeds 1 mm/h (h)")),
             ("nse", T("過程計算との適合度(Nash–Sutcliffe)", "fit to the process run (Nash–Sutcliffe)"))]
-    sd = [c for c in ("surface", "surface_n1", "surface_n3", "surface_n5", "surface_n10", "surface_n30") if c in stats]
+    sd = [c for c in SDYN if c in stats]
     sf = [c for c in ("surface_dif_n03", "surface_dif_n3", "surface_dif_n10") if c in stats]
     vv = [c for c in ("vertical", "vertical_n3") if c in stats]
     orange, aqua = "#cf5604", "#1baf7a"
@@ -720,8 +805,8 @@ def fig_roughness(stats):
                 ax.plot([CASES[k][2] for k in vv], [stats[k][c][key] for k in vv], color=aqua, lw=0, marker="s",
                         ms=7, mec="white", mew=1.2, zorder=4)
             ax.set_xscale("log")
-            ax.set_xticks([0.3, 1, 3, 5, 10, 30])
-            ax.set_xticklabels(["0.3", "1", "3", "5", "10", "30"])
+            ax.set_xticks([0.3, 0.6, 1, 2, 3, 5, 10, 30])
+            ax.set_xticklabels(["0.3", "0.6", "1", "2", "3", "5", "10", "30"])
             ax.set_xlim(0.2, 45)
             ax.minorticks_off()
             if c == 0:
@@ -731,7 +816,8 @@ def fig_roughness(stats):
                                f"storm {c + 1} ({'dry soil' if c == 0 else 'wet soil'})"), fontsize=10, color=INK)
             if r == 2:
                 ax.set_xlabel(T("斜面の粗度 n (m$^{-1/3}$ s)", "slope roughness n (m$^{-1/3}$ s)"))
-                ax.set_ylim(-2.0, 1.1)
+                low = min(stats[k][j]["nse"] for k in sd + sf + vv for j in range(2))
+                ax.set_ylim(min(-0.5, 0.5 * np.floor(2.0 * (low - 0.1))), 1.1)      # 両方の雨で同じ範囲
             else:
                 ax.set_ylim(0, None)
     h = [Line2D([], [], color=INK, lw=1.6, label=T("過程計算(斜面の粗度 0.3)", "process run (slope roughness 0.3)")),
@@ -748,8 +834,7 @@ def fig_roughness(stats):
 # ================================================================ 側方の透水係数と等価粗度
 def fig_equivalent():
     """過程計算の側方飽和透水係数ごとに、最も近い粗度の浸透なし(力学波)と重ねる。"""
-    kbase = int(round(param_value("param.txt", "gw_ksh_mmh")))
-    refs = [(c, k) for c, k in [("process", kbase)] + list(KSH.items()) if have(c)]
+    refs = [(c, k) for c, k in KREFS if have(c)]
     if len(refs) < 2 or not any(have(c) for c in SDYN):
         return
     height = 2.75 * len(refs) + 0.7
@@ -787,6 +872,90 @@ def fig_equivalent():
     plt.close(fig)
 
 
+# ================================================================ 雨の強さ
+def fig_intensity():
+    """基本の雨(10 mm/h)と強い雨(30 mm/h)で、過程計算と浸透なしの流出、飽和域の割合を比べる。"""
+    if not have(R30_PROCESS):
+        return
+    fig, axs = plt.subplots(3, 1, figsize=(13.0, 9.2), sharex=True)
+    tf = np.linspace(0.0, TEND, 5761)
+    rows = [(RAIN_MMH, "process", ("surface", "surface_n1", "surface_n3")), (R30_MMH, R30_PROCESS, R30_SDYN)]
+    for m, (rmm, ref, cands) in enumerate(rows):
+        ax = axs[m]
+        ax.fill_between(tf, 0.0, rain(tf) * rmm / RAIN_MMH, color=RAINC, lw=0, zorder=1, label=T("雨", "rain"))
+        for c in cands:
+            if not have(c):
+                continue
+            n = CASES[c][2]
+            t, q = hydro(c)
+            ax.plot(t, q, color=S_RAMP[n], lw=1.8, zorder=3, label=T(f"浸透なし n = {nlabel(n)}", f"no infiltration, n = {nlabel(n)}"))
+        t, q = hydro(ref)
+        ax.plot(t, q, color=INK, lw=2.2, zorder=4, label=T("過程計算", "process run"))
+        ax.set_ylim(0, rmm * 1.12)
+        ax.set_ylabel(T("雨・流出高 (mm/h)", "rain, runoff (mm/h)"))
+        ax.legend(loc="upper right", ncol=1, fontsize=8)
+        panel_label(ax, T(f"({'ab'[m]}) 雨 {rmm:g} mm/h × 12 時間{'(基本)' if m == 0 else ''}",
+                          f"({'ab'[m]}) Rain {rmm:g} mm/h for 12 h{' (base)' if m == 0 else ''}"))
+    ax = axs[2]
+    shade_storms(ax)
+    for ref, rmm, col in (("process", RAIN_MMH, BLUE), (R30_PROCESS, R30_MMH, "#12447f")):
+        ts, fs = sat_series(ref)
+        ax.plot(ts, 100 * fs, color=col, lw=2.0, label=T(f"雨 {rmm:g} mm/h(最大 {100 * fs.max():.0f} %)",
+                                                         f"rain {rmm:g} mm/h (maximum {100 * fs.max():.0f} %)"))
+    ax.set_ylim(0, 10.0 * np.ceil(1.15 * max(100 * sat_series(r)[1].max() for r in ("process", R30_PROCESS)) / 10.0))
+    ax.set_ylabel(T("飽和域の割合 (%)", "saturated area (%)"))
+    ax.legend(loc="upper right", ncol=1, fontsize=8)
+    panel_label(ax, T("(c) 過程計算の飽和域(流出寄与域)の割合", "(c) Saturated (source) area fraction of the process runs"))
+    time_axis(ax)
+    fig.subplots_adjust(left=0.055, right=0.985, top=0.96, bottom=0.06, hspace=0.22)
+    fig.savefig(f"{FIGDIR}/intensity.png")
+    plt.close(fig)
+
+
+# ================================================================ 第 2 層を伝わる波
+def fig_layer2():
+    """土層の側方を遅くして比湧水量の小さい第 2 層を置いた計算を、単層の 2 つの計算と比べる。"""
+    if not (have("process_l2") and have("process_k3600")):
+        return
+    k_slow = KSH["process_k3600"]
+    sy2 = param_value("param.txt", "gw2_sy")
+    runs = [("process_k3600", MUTED, 1.8, T(f"単層: 側方 {k_slow} mm/h", f"single layer, lateral {k_slow} mm/h")),
+            ("process", INK, 2.2, T(f"単層: 側方 {KBASE} mm/h(基本)", f"single layer, lateral {KBASE} mm/h (base)")),
+            ("process_l2", BLUE, 2.0, T(f"2 層: 側方 {k_slow} mm/h + 第 2 層({k_slow} mm/h、比湧水量 {sy2:g})",
+                                        f"two layers: {k_slow} mm/h + layer 2 ({k_slow} mm/h, specific yield {sy2:g})"))]
+    fig, axs = plt.subplots(2, 1, figsize=(13.0, 6.6), sharex=True)
+    ax = axs[0]
+    rain_fill(ax)
+    for c, col, lw, lab in runs:
+        t, q = hydro(c)
+        ax.plot(t, q, color=col, lw=lw, zorder=3 if c != "process" else 4, label=lab)
+    ax.set_ylim(0, RAIN_MMH * 1.12)
+    ax.set_ylabel(T("雨・流出高 (mm/h)", "rain, runoff (mm/h)"))
+    ax.legend(loc="upper center", ncol=1, fontsize=8, bbox_to_anchor=(0.315, 1.0))     # 2 回の雨の間の空いた所
+    panel_label(ax, T("(a) 流域からの流出", "(a) Runoff from the catchment"))
+    ax = axs[1]
+    shade_storms(ax)
+    for c, col, lw, lab in runs:
+        ts, fs = sat_series(c)
+        ax.plot(ts, 100 * fs, color=col, lw=lw, zorder=3)
+    cap2 = param_value("param.txt", "gw2_depth") * param_value("param.txt", "gw2_sy")
+    ts2, f2 = [], []
+    for k, tt in file_times("process_l2"):
+        ts2.append(tt)
+        f2.append(100.0 * float((bil("process_l2", "Hg2", k)[MASK] >= cap2 - SAT_TOL).mean()))
+    ax.plot(ts2, f2, color=BLUE, lw=1.6, ls=(0, (4, 2)), zorder=3)
+    h = [Line2D([], [], color=INK2, lw=1.8, label=T("実線: 土層が満ちたセル(飽和域)", "solid: cells with the soil full (saturated area)")),
+         Line2D([], [], color=BLUE, lw=1.6, ls=(0, (4, 2)), label=T("破線: 第 2 層が満ちたセル(2 層の計算)", "dashed: cells with layer 2 full (two-layer run)"))]
+    ax.legend(handles=h, loc="upper right", ncol=1, fontsize=8)
+    ax.set_ylim(0, 50)
+    ax.set_ylabel(T("セルの割合 (%)", "share of cells (%)"))
+    panel_label(ax, T("(b) 満ちたセルの割合(線の色は (a) と同じ)", "(b) Share of full cells (line colours as in (a))"))
+    time_axis(ax)
+    fig.subplots_adjust(left=0.055, right=0.985, top=0.945, bottom=0.085, hspace=0.22)
+    fig.savefig(f"{FIGDIR}/layer2.png")
+    plt.close(fig)
+
+
 # ================================================================ 数表
 def kind_label(case):
     _, kind, n, dif = CASES[case]
@@ -797,6 +966,10 @@ def kind_label(case):
         extra.append(T(f"側方 {KSH[case]} mm/h", f"lateral {KSH[case]} mm/h"))
     if case == "process_sd1":
         extra.append(T("土層 1 m", "soil 1 m"))
+    if case == "process_l2":
+        extra.append(T(f"側方 {KSH['process_k3600']} mm/h + 第 2 層", f"lateral {KSH['process_k3600']} mm/h + layer 2"))
+    if "_r30" in case:
+        extra.append(T(f"雨 {R30_MMH:g} mm/h", f"rain {R30_MMH:g} mm/h"))
     if dif:
         extra.append(T("拡散波", "diffusion wave"))
     return base + ("(" + "、".join(extra) + ")" if (extra and not EN) else (" (" + ", ".join(extra) + ")" if extra else ""))
@@ -869,6 +1042,16 @@ def tables(ser):
         surf, surf_ch = 1000 * h[MASK].sum() / NCELL, 1000 * h[RW & MASK].sum() / NCELL
         print(f"| {th} | {np.interp(th, t, q):.2f} | {soil:.1f} | {soil_sat:.1f} | {surf:.1f} | {surf_ch:.1f} | {soil + surf:.1f} |")
 
+    print(T("\n## 過程計算: 1 時間ごとの流出 (mm/h)・飽和域の割合 (%)・土層の水と地表の水 (mm)",
+            "\n## Process run: hourly runoff (mm/h), saturated area (%), soil water and surface water (mm)"))
+    for h0 in (0, 12, 48, 60):
+        hh = list(range(h0, h0 + 13))
+        print("t (h)     " + " ".join(f"{h:6d}" for h in hh))
+        print("runoff    " + " ".join(f"{np.interp(h, t, q):6.2f}" for h in hh))
+        print("saturated " + " ".join(f"{100 * np.interp(h, ts, fs):6.1f}" for h in hh))
+        print("soil      " + " ".join(f"{1000 * np.interp(h, lg[:, 0], lg[:, 3]):6.1f}" for h in hh))
+        print("surface   " + " ".join(f"{1000 * np.interp(h, lg[:, 0], lg[:, 2]):6.1f}" for h in hh))
+
     print(T("\n## 過程計算: 河道セルの水(流域平均の水深 mm)と、そのうち平らな段の河道セルの水、水深の最大",
             "\n## Process run: water on channel cells (catchment-mean depth, mm), the part on the channel cells of flat steps, and the maximum depth"))
     for th in (8, 12, 48):
@@ -891,9 +1074,8 @@ def tables(ser):
     stats = {}
     head = T("| ケース | 斜面の粗度 | 雨 | 1 mm/h を超える時刻 (h) | ピーク (mm/h) | ピークの時刻 (h) | 雨の 12 時間後の流出高 (mm/h) | 48 時間の流出高 (mm) | 適合度 |",
              "| Case | Slope roughness | Storm | Time above 1 mm/h (h) | Peak (mm/h) | Time of peak (h) | Runoff 12 h after the rain (mm/h) | Runoff in 48 h (mm) | Fit |")
-    order = ["process", "process_n1", "process_dif", "process_k10000", "process_k36000", "process_k100000", "process_sd1",
-             "surface", "surface_n1", "surface_n3", "surface_n5", "surface_n10", "surface_n30", "surface_dif_n03",
-             "surface_dif_n3", "surface_dif_n10", "vertical", "vertical_n3"]
+    pvar = ["process", "process_n1", "process_dif", "process_k3600", "process_k10000", "process_k100000", "process_sd1", "process_l2"]
+    order = pvar + list(SDYN) + ["surface_dif_n03", "surface_dif_n3", "surface_dif_n10", "vertical", "vertical_n3"]
     for case in order:
         if not have(case):
             continue
@@ -919,10 +1101,12 @@ def tables(ser):
     print("|---|---:|---:|---:|---:|---:|---:|---:|")
     vlab = {"process": T("基本", "base"), "process_n1": T("斜面の粗度 0.3 → 1", "slope roughness 0.3 → 1"),
             "process_dif": T("地表の流れを拡散波に", "surface flow as a diffusion wave"),
-            "process_sd1": T("土層厚 0.5 → 1 m", "soil depth 0.5 → 1 m")}
+            "process_sd1": T("土層厚 0.5 → 1 m", "soil depth 0.5 → 1 m"),
+            "process_l2": T(f"側方飽和透水係数 {KBASE} → {KSH['process_k3600']} mm/h + 第 2 層",
+                            f"lateral conductivity {KBASE} → {KSH['process_k3600']} mm/h + layer 2")}
     for case, kval in KSH.items():
-        vlab[case] = T(f"側方飽和透水係数 3600 → {kval} mm/h", f"lateral conductivity 3600 → {kval} mm/h")
-    for case in ("process", "process_n1", "process_dif", "process_k10000", "process_k36000", "process_k100000", "process_sd1"):
+        vlab[case] = T(f"側方飽和透水係数 {KBASE} → {kval} mm/h", f"lateral conductivity {KBASE} → {kval} mm/h")
+    for case in pvar:
         if case not in stats:
             continue
         tsc, fsc = sat_series(case)
@@ -935,8 +1119,7 @@ def tables(ser):
             "\n## No infiltration and vertical infiltration only versus the process run (time from the start of each storm; fit = Nash–Sutcliffe efficiency against the process run)"))
     print(head)
     print("|---|---:|---:|---:|---:|---:|---:|---:|---:|")
-    rows(["process", "surface", "surface_n1", "surface_n3", "surface_n5", "surface_n10", "surface_n30", "surface_dif_n03",
-          "surface_dif_n3", "surface_dif_n10", "vertical", "vertical_n3"])
+    rows(["process"] + list(SDYN) + ["surface_dif_n03", "surface_dif_n3", "surface_dif_n10", "vertical", "vertical_n3"])
 
     # 過程計算の条件を変えたとき、どの粗度の「浸透なし」が最も近いか
     print(T("\n## 過程計算の条件ごとの、浸透なし(力学波)の適合度(1 回目 / 2 回目の雨)",
@@ -944,7 +1127,7 @@ def tables(ser):
     sdyn = [c for c in SDYN if have(c)]
     print(T("| 過程計算の条件 | ", "| Process-run variant | ") + " | ".join(f"n = {nlabel(CASES[c][2])}" for c in sdyn) + " |")
     print("|---|" + "---:|" * len(sdyn))
-    for ref in ("process", "process_n1", "process_k10000", "process_k36000", "process_k100000", "process_sd1"):
+    for ref in ("process", "process_n1", "process_k3600", "process_k10000", "process_k100000", "process_sd1", "process_l2"):
         if not have(ref):
             continue
         tr, qr = hydro(ref)
@@ -952,9 +1135,11 @@ def tables(ser):
         for c in sdyn:
             tc, qc = hydro(c)
             cells.append(" / ".join("%.2f" % nse(tc, qc, qr, a) for a, b in STORMS))
-        lab = {"process": T("基本(土層 0.5 m、側方 3600 mm/h、斜面の粗度 0.3)", "base (soil 0.5 m, lateral 3600 mm/h, slope roughness 0.3)"),
+        lab = {"process": T(f"基本(土層 0.5 m、側方 {KBASE} mm/h、斜面の粗度 0.3)", f"base (soil 0.5 m, lateral {KBASE} mm/h, slope roughness 0.3)"),
                "process_n1": T("斜面の粗度 1", "slope roughness 1"),
-               "process_sd1": T("土層 1 m", "soil 1 m")}.get(ref) or T(f"側方 {KSH[ref]} mm/h", f"lateral {KSH[ref]} mm/h")
+               "process_sd1": T("土層 1 m", "soil 1 m"),
+               "process_l2": T(f"側方 {KSH['process_k3600']} mm/h + 第 2 層", f"lateral {KSH['process_k3600']} mm/h + layer 2")}.get(ref) \
+            or T(f"側方 {KSH[ref]} mm/h", f"lateral {KSH[ref]} mm/h")
         print(f"| {lab} | " + " | ".join(cells) + " |")
 
     # 側方の透水係数と、最も近い粗度
@@ -967,18 +1152,43 @@ def tables(ser):
     print(T("| 側方飽和透水係数 (mm/h) | 飽和域の最大 (%) | 雨の終わりに斜面にある水 (mm) | 同じ水を地表に貯める粗度 | 流出が雨の 90 % に達する時刻 (h) | 最も近い粗度(適合度): 1 回目の雨 | 2 回目の雨 |",
             "| Lateral conductivity (mm/h) | Max. saturated area (%) | Water on the slopes at the end of the rain (mm) | Roughness that stores the same water on the surface | Time when runoff reaches 90 % of the rain (h) | Closest roughness (fit): storm 1 | storm 2 |"))
     print("|---:|---:|---:|---:|---:|---:|---:|")
-    kbase = int(round(param_value("param.txt", "gw_ksh_mmh")))
-    for ref, kval in [("process", kbase)] + list(KSH.items()):
+    for ref, kval in KREFS + [("process_l2", None)]:
         if not have(ref):
             continue
         tr, qr = hydro(ref)
         tsc, fsc = sat_series(ref)
         ftr = dict((round(tt), k) for k, tt in file_times(ref))
-        store = 1000 * (bil(ref, "Hg", ftr[12])[slope].mean() + bil(ref, "H", ftr[12])[slope].mean())
+        store = 1000 * sum(bil(ref, v, ftr[12])[slope].mean() for v in ("H", "Hg", "Hg2") if has_var(ref, v))
         neq = "—" if s0 is None else "%.1f" % (CASES["surface"][2] * (store / s0) ** (5.0 / 3.0))
         t90 = " / ".join(fmt(reach(tr, qr, st, 0.9), "%.1f") for st in STORMS)
         best = " | ".join(("—" if c is None else f"{nlabel(CASES[c][2])} ({fit:.2f})") for fit, c in best_roughness(ref))
-        print(f"| {kval}{T('(基本)', ' (base)') if ref == 'process' else ''} | {100 * fsc.max():.1f} | {store:.1f} | {neq} | {t90} | {best} |")
+        klab = (T(f"{KSH['process_k3600']} + 第 2 層", f"{KSH['process_k3600']} + layer 2") if kval is None
+                else f"{kval}{T('(基本)', ' (base)') if ref == 'process' else ''}")
+        print(f"| {klab} | {100 * fsc.max():.1f} | {store:.1f} | {neq} | {t90} | {best} |")
+
+    # 遅れの内訳(斜面の段と河道の段)
+    print(T("\n## 雨から出口までの遅れの内訳(2 回目の雨。雨と流出の重心の差を、河道セルへの流入を境に分ける)",
+            "\n## Split of the lag from rain to the outlet (storm 2; the difference of the centroids, split at the inflow to the channel cells)"))
+    print(T("| 計算 | 斜面の段 (h) | 河道の段 (h) | 合計 (h) | 雨の終わりに斜面にある水 (mm) | 斜面の段が同じになる粗度 |",
+            "| Run | Slope stage (h) | Channel stage (h) | Total (h) | Water on the slopes at the end of the rain (mm) | Roughness with the same slope stage |"))
+    print("|---|---:|---:|---:|---:|---:|")
+    slag = [c for c in sdyn if CASES[c][2] <= 10.0]         # 粗度 30 は 48 時間で出きらないので除く
+    for c in slag:
+        a1, a2, st = stages(c)
+        print(f"| {T('浸透なし', 'no infiltration')} n = {nlabel(CASES[c][2])} | {a1:.1f} | {a2:.1f} | {a1 + a2:.1f} | {st:.1f} | — |")
+    for ref, kval in KREFS + [("process_l2", None)]:
+        if not have(ref):
+            continue
+        a1, a2, st = stages(ref)
+        klab = (T(f"側方 {KSH['process_k3600']} mm/h + 第 2 層", f"lateral {KSH['process_k3600']} mm/h + layer 2") if kval is None
+                else T(f"側方 {kval} mm/h{'(基本)' if ref == 'process' else ''}", f"lateral {kval} mm/h{' (base)' if ref == 'process' else ''}"))
+        print(f"| {T('過程計算', 'process run')} {klab} | {a1:.1f} | {a2:.1f} | {a1 + a2:.1f} | {st:.1f} | {fmt(same_lag_roughness(a1, slag), '%.1f')} |")
+    lags = [stages(c)[0] for c in slag]
+    ns = [CASES[c][2] for c in slag]
+    if len(slag) >= 2:
+        ex = [np.log(lags[i + 1] / lags[i]) / np.log(ns[i + 1] / ns[i]) for i in range(len(ns) - 1)]
+        print(T(f"浸透なしの斜面の段の遅れは、粗度のほぼ {min(ex):.2f}〜{max(ex):.2f} 乗",
+                f"the slope-stage lag of the no-infiltration runs grows as roughness to the power {min(ex):.2f}-{max(ex):.2f}"))
 
     # 浸透なし: 雨と釣り合うまでの時刻と、斜面の水深(マニングの等流なら粗度の 0.6 乗に比例)
     if sdyn:
@@ -997,9 +1207,61 @@ def tables(ser):
         if s0 is not None:
             print(T("| 粗度 0.3 の水深 × (n / 0.3)^0.6 (mm) | ", "| Depth for roughness 0.3 × (n / 0.3)^0.6 (mm) | ")
                   + " | ".join(f"{s0 * (CASES[c][2] / CASES['surface'][2]) ** 0.6:.1f}" for c in sdyn) + " |")
-    tp = 290.0 * (AREA / 1e6) ** 0.22 * RAIN_MMH ** -0.35 / 60.0
-    print(T(f"\n角屋・福島の洪水到達時間 tp = 290 A^0.22 re^-0.35 (分): A = {AREA / 1e6:.1f} km2、re = {RAIN_MMH:g} mm/h で {tp:.1f} 時間",
-            f"\nFlood concentration time of Kadoya & Fukushima, tp = 290 A^0.22 re^-0.35 (min): {tp:.1f} h for A = {AREA / 1e6:.1f} km2 and re = {RAIN_MMH:g} mm/h"))
+    kf = lambda rmm: 290.0 * (AREA / 1e6) ** 0.22 * rmm ** -0.35 / 60.0
+    print(T(f"\n角屋・福島の洪水到達時間 tp = 290 A^0.22 re^-0.35 (分): A = {AREA / 1e6:.1f} km2、re = {RAIN_MMH:g} mm/h で {kf(RAIN_MMH):.1f} 時間、"
+            f"re = {R30_MMH:g} mm/h で {kf(R30_MMH):.1f} 時間",
+            f"\nFlood concentration time of Kadoya & Fukushima, tp = 290 A^0.22 re^-0.35 (min): {kf(RAIN_MMH):.1f} h for A = {AREA / 1e6:.1f} km2 "
+            f"and re = {RAIN_MMH:g} mm/h, {kf(R30_MMH):.1f} h for re = {R30_MMH:g} mm/h"))
+
+    # 雨の強さ(基本の雨と強い雨。粗度は両方にある 0.3・1・3 で比べる)
+    if have(R30_PROCESS):
+        common = {RAIN_MMH: [c for c in ("surface", "surface_n1", "surface_n3") if have(c)], R30_MMH: [c for c in R30_SDYN if have(c)]}
+        print(T("\n## 雨の強さと過程計算(時刻は雨の開始から、1 回目 / 2 回目の雨。同じ遅れになる粗度は 0.3・1・3 の遅れから内挿)",
+                "\n## Rain intensity and the process run (times from the start of each storm, storm 1 / storm 2; the roughness with the same lag is interpolated from the lags for 0.3, 1 and 3)"))
+        print(T("| 雨 (mm/h) | 飽和域の最大 (%) | 雨の 10 % に達する時刻 (h) | 50 % (h) | 90 % (h) | 48 時間の流出高 ÷ 雨 (%) | 12 h の土層の水 (mm) | 斜面の段の遅れ (h) | 同じ遅れになる粗度 | 洪水到達時間の式 (h) |",
+                "| Rain (mm/h) | Max. saturated area (%) | Time to reach 10 % of the rain (h) | 50 % (h) | 90 % (h) | Runoff in 48 h / rain (%) | Soil water at 12 h (mm) | Slope-stage lag (h) | Roughness with the same lag | Concentration-time formula (h) |"))
+        print("|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|")
+        for rmm, ref in ((RAIN_MMH, "process"), (R30_MMH, R30_PROCESS)):
+            tr, qr = hydro(ref)
+            tsc, fsc = sat_series(ref)
+            ftr = dict((round(tt), k) for k, tt in file_times(ref))
+            rr = lambda f: " / ".join(fmt(reach(tr, qr, st, f, rmm), "%.1f") for st in STORMS)
+            vol = " / ".join("%.0f" % (100 * event(tr, qr, a)["vol"] / (rmm * (b - a + 1.0 / 60.0))) for a, b in STORMS)
+            a1, a2, st = stages(ref)
+            print(f"| {rmm:g} | {100 * fsc.max():.1f} | {rr(0.1)} | {rr(0.5)} | {rr(0.9)} | {vol} | {1000 * bil(ref, 'Hg', ftr[12])[MASK].mean():.1f} | "
+                  f"{a1:.1f} | {fmt(same_lag_roughness(a1, common[rmm]), '%.1f')} | {kf(rmm):.1f} |")
+        print(T("\n## 雨の強さと浸透なし(1 回目 / 2 回目の雨の適合度は、同じ雨の過程計算に対するもの)",
+                "\n## Rain intensity and the no-infiltration runs (fits for storm 1 / storm 2 are against the process run under the same rain)"))
+        print(T("| 雨 (mm/h) | 斜面の粗度 | 雨の 50 % に達する時刻 (h) | 90 % (h) | 12 h の斜面の水深の平均 (mm) | 斜面の段の遅れ (h) | 河道の段の遅れ (h) | 適合度 |",
+                "| Rain (mm/h) | Slope roughness | Time to reach 50 % of the rain (h) | 90 % (h) | Mean depth on the slopes at 12 h (mm) | Slope-stage lag (h) | Channel-stage lag (h) | Fit |"))
+        print("|---:|---:|---:|---:|---:|---:|---:|---:|")
+        for rmm, ref in ((RAIN_MMH, "process"), (R30_MMH, R30_PROCESS)):
+            tr, qr = hydro(ref)
+            for c in common[rmm]:
+                tc, qc = hydro(c)
+                d12 = 1000 * bil(c, "H", dict((round(tt), k) for k, tt in file_times(c))[12])[slope].mean()
+                a1, a2, st = stages(c)
+                print(f"| {rmm:g} | {nlabel(CASES[c][2])} | {fmt(reach(tc, qc, STORMS[0], 0.5, rmm), '%.1f')} | {fmt(reach(tc, qc, STORMS[0], 0.9, rmm), '%.1f')} | "
+                      f"{d12:.1f} | {a1:.1f} | {a2:.1f} | " + " / ".join("%.2f" % nse(tc, qc, qr, a) for a, b in STORMS) + " |")
+        a1, a2, st = stages(R30_PROCESS)
+        b1, b2, sb = stages("process")
+        print(T(f"過程計算の河道の段の遅れ: 雨 {RAIN_MMH:g} mm/h で {b2:.1f} 時間、{R30_MMH:g} mm/h で {a2:.1f} 時間。雨の終わりに斜面にある水: {sb:.1f} mm と {st:.1f} mm",
+                f"channel-stage lag of the process run: {b2:.1f} h under {RAIN_MMH:g} mm/h, {a2:.1f} h under {R30_MMH:g} mm/h; water on the slopes at the end of the rain: {sb:.1f} mm and {st:.1f} mm"))
+
+    # 第 2 層を置いた計算: 土層と第 2 層の満ちたセルの割合と、貯まっている水
+    if have("process_l2"):
+        cap2 = param_value("param.txt", "gw2_depth") * param_value("param.txt", "gw2_sy")
+        ft2 = dict((round(tt), k) for k, tt in file_times("process_l2"))
+        print(T("\n## 第 2 層を置いた計算(process_l2): 満ちたセルの割合 (%) と、流域平均の水 (mm)",
+                "\n## Run with layer 2 (process_l2): share of full cells (%) and catchment-mean water (mm)"))
+        print(T("| 時刻 (h) | 流出 (mm/h) | 第 2 層が満ちたセル | 土層が満ちたセル(飽和域) | 第 2 層の水 | 土層の水 | 地表の水 |",
+                "| Time (h) | Runoff (mm/h) | Cells with layer 2 full | Cells with the soil full (saturated area) | Water in layer 2 | Soil water | Surface water |"))
+        print("|---:|---:|---:|---:|---:|---:|---:|")
+        t2, q2 = hydro("process_l2")
+        for th in (2, 3, 4, 6, 12, 24, 48):
+            h, hg, hg2 = (bil("process_l2", v, ft2[th]) for v in ("H", "Hg", "Hg2"))
+            print(f"| {th} | {np.interp(th, t2, q2):.2f} | {100 * (hg2[MASK] >= cap2 - SAT_TOL).mean():.1f} | {100 * (hg[MASK] >= CAP - SAT_TOL).mean():.1f} | "
+                  f"{1000 * hg2[MASK].mean():.1f} | {1000 * hg[MASK].mean():.1f} | {1000 * h[MASK].mean():.1f} |")
 
     # 地表に載る水(流域平均の貯留高と、河道セル以外の水深)
     print(T("\n## 地表の水(流域平均の貯留高の最大と、雨の終わりの河道セル以外の水深)",
@@ -1007,7 +1269,7 @@ def tables(ser):
     print(T("| ケース | 斜面の粗度 | 地表の水の最大 (mm) | 12 h の水深の平均 (mm) | 12 h の水深の最大 (m) | 60 h の水深の平均 (mm) |",
             "| Case | Slope roughness | Max. surface water (mm) | Mean depth at 12 h (mm) | Max. depth at 12 h (m) | Mean depth at 60 h (mm) |"))
     print("|---|---:|---:|---:|---:|---:|")
-    for case in order:
+    for case in order + [R30_PROCESS] + list(R30_SDYN):
         if not have(case):
             continue
         L = logtab(case)
@@ -1019,7 +1281,7 @@ def tables(ser):
 
     # 計算の様子(Cn・最大水深)
     print(T("\n## 計算の様子(Log の列の最大)", "\n## Run diagnostics (maxima of the Log columns)"))
-    for case in order:
+    for case in order + [R30_PROCESS] + list(R30_SDYN):
         if not have(case):
             continue
         L = logtab(case)
@@ -1040,6 +1302,8 @@ def main():
     fig_compare()
     fig_roughness(stats)
     fig_equivalent()
+    fig_intensity()
+    fig_layer2()
 
 
 if __name__ == "__main__":

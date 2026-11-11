@@ -536,7 +536,7 @@ it is smaller than the table, about 0.1-0.2)
 
 | Type | Configuration | sd0 (m) | K_sv (mm/h) | K_sh (mm/h) | Layer 2 | Notes |
 |---|---|---|---|---|---|---|
-| Event flood in a forested catchment | Green-Ampt + lateral | 0.5-1.5 | 50-300 | 1000-10000 | - | Forest soils infiltrate strongly; runoff is mainly lateral (interflow). K_sh is 1-2 orders above the matrix because of pipe flow |
+| Event flood in a forested catchment | Green-Ampt + lateral | 0.5-1.5 | 50-300 | 1000-10000 | - | Forest soils infiltrate strongly; runoff is mainly lateral (interflow). K_sh is 1-2 orders above the matrix because of pipe flow. Matching the speed of storm runoff can require still larger values (see below the table) |
 | Forested catchment down to low flow / baseflow | The above + layer 2 | as above | as above | as above | thickness 2-10 m, sy 0.02-0.1, infiltration 0.1-1 mm/h, lateral 10-100 mm/h | Lateral flow of layer 2 defaults to 0 (capacity only). For baseflow set gw2_ksh_mmh > 0 and gw2_sat0 (or spin up) |
 | Infiltration loss on farmland / grassland | Green-Ampt only | 0.5-1 | texture table | - | - | psi_f also from the texture table. Compacted fields: 1/3-1/10 |
 | Urban pluvial flooding (sewers) | Conduit layer (+ Green-Ampt) | 0.5-1 | 10 on green space only (0 on pavement via fn_gw_ksv) | - | - | gwc_inlet 0.005-0.02 /m2; cnd and cap converted from pipe data in preprocessing (see "Converting pipe data to parameters" above) |
@@ -546,6 +546,24 @@ it is smaller than the table, about 0.1-0.2)
 | River-aquifer exchange (return of floodplain ponding, losing reaches, lined channels) | lateral + streambed exchange limit (+ Green-Ampt) | 1-5 | 10-50 | 360-36000 | - | k_bed: clogged sand bed 1-100 mm/h, gravel bed 100-3600 mm/h, concrete channel 0. No default (required) |
 | Coastal aquifer saltwater wedge | Lateral + [fresh/salt two-layer](salt.md) | 5-20 | - | 3600-36000 | - | Sandy aquifer K 1e-3-1e-2 m/s, sy0 0.2-0.3 |
 | Simplest loss (calibration-driven) | Bucket | - | 5-50 (infil) | - | - | capacity 0.05-0.3 m. The SCS S (0.06-0.17 m for CN 60-80) is a guide |
+
+**Lateral conductivity and the speed of storm runoff**: the K_sh values in the table are a guide
+to the effective value of hillslope soil; matching the speed of catchment storm runoff (the
+flood concentration time, or the equivalent roughness of the kinematic wave method used in
+practice) can require larger values.
+In [examples/source_area](../../../examples/source_area/en/README.md) (35 km² cut out of the
+50 m grid of Chichibu; soil 0.5 m, sy0 = 0.2), the runoff is close to an empirical formula for
+the flood concentration time when K_sh = 36000-100000 mm/h, and the roughness that represents
+the same runoff with surface flow alone is 2-1 (the equivalent roughness used for mountains in
+practice, 0.4-0.8, is matched by 100000 mm/h). With 3600 mm/h the lag before slope water
+reaches the channels is 8.7 hours (3.3 hours with 36000 mm/h), and this roughness is 5-10, an
+order of magnitude above the values used in practice. The speed
+at which the response travels down a slope is proportional to K_sh / sy0, and the most water
+the soil can carry to K_sh × soil depth, so a layer with a small specific yield (layer 2 with
+a small gw2_sy and a gw2_infil_mmh larger than the rain) gives a fast response even with a
+small K_sh. A K_sh of this size is not a value of the soil matrix: it is an effective value
+that lumps fast paths such as pipes together with the fast response that travels through
+layers of small specific yield.
 
 ## Output and monitoring
 
@@ -623,7 +641,7 @@ see [the rainfall and meteorology chapter](forcing.md).
 - [test/gwbed](../../../test/gwbed/en/README.md): throttled gaining flow, the k_bed = 0 cut-off and the replacement of the vertical infiltration capacity by the streambed exchange limit, compared with analytical values.
 - [test/gwlateral](../../../test/gwlateral/en/README.md): lateral flow compared with the linearised Boussinesq equation (spreading of a Gaussian mound at 4D), confirming that the transfer of blocked diagonal shares (the default) makes the conductance along walls equal to the interior value (0.71 times without the transfer).
 - [test/gwtani](../../../test/gwtani/en/README.md): constant rain on a steep slope with a thin soil layer; the time of saturation is set by the vertical arrival time (vertical infiltration dominates) and the steady saturated extent by the contributing recharge and the lateral transmissivity (lateral flow dominates), compared with kinematic predictions. A restart round trip with lateral flow enabled is also checked.
-- [examples/source_area](../../../examples/source_area/en/README.md): an example on a real headwater catchment (35 km² cut out of the 50 m grid of Chichibu) that shows the growth and shrinkage of the saturated (runoff source) area and the outlet hydrograph with Green-Ampt and lateral flow, and compares them with runs without infiltration and with vertical infiltration only.
+- [examples/source_area](../../../examples/source_area/en/README.md): an example on a real headwater catchment (35 km² cut out of the 50 m grid of Chichibu) that shows the growth and shrinkage of the saturated (runoff source) area and the outlet hydrograph with Green-Ampt and lateral flow, and compares them with runs without infiltration and with vertical infiltration only. It also shows how the surface-flow roughness that represents the same runoff (the equivalent roughness) changes with the lateral conductivity and the rain intensity, and that a layer 2 with a small specific yield gives equally fast runoff.
 - [examples/sewer_hybrid](../../../examples/sewer_hybrid/en/README.md): example settings and input generation that represent a trunk and a branch network in the same conduit layer.
 - [examples/qanat](../../../examples/qanat/en/README.md): an example combining the conduit layer with layer 2 to represent the collection, conveyance and outlet flow of a qanat (tunnel) that collects the groundwater of a fan, and to compare how a nearby pumping well reduces and dries up the flow.
 

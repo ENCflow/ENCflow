@@ -47,6 +47,7 @@
 &list_gwflow
   f_gwvertical = 2          ! Green-Ampt の浸透
   f_gwlateral = 1           ! 土層の側方流(非線形 Boussinesq)
+  f_gwlayer2 = 0            ! 第 2 層は使わない(make sweep の process_l2 だけが 1 にする)
 /
 
 &list_gwflow_greenampt
@@ -55,5 +56,15 @@
 /
 
 &list_gwflow_lateral
-  gw_ksh_mmh = 3600.0       ! 側方飽和透水係数 (mm/h) = 1e-3 m/s(大きな孔隙・パイプを含む実効値)
+  gw_ksh_mmh = 36000.0      ! 側方飽和透水係数 (mm/h) = 1e-2 m/s(パイプなどの速い経路をまとめた実効値)
+/
+
+! 第 2 層(土層の下の層)。f_gwlayer2 = 1 のときだけ読まれ、基本の計算では使わない。
+! make sweep の process_l2 が、土層の側方を 3600 mm/h に下げたうえでこの層を使う
+&list_gwflow_layer2
+  gw2_depth = 5.0           ! 層厚 (m)
+  gw2_sy = 0.02             ! 比湧水量(貯められる水は 5 m × 0.02 = 100 mm で、土層と同じ)
+  gw2_infil_mmh = 200.0     ! 土層 → 第 2 層の浸透能 (mm/h)。雨より大きく、しみ込んだ水はすぐ第 2 層へ移る
+  gw2_ksh_mmh = 3600.0      ! 第 2 層の側方飽和透水係数 (mm/h) = 1e-3 m/s
+  gw2_sat0 = 0.0            ! 最初は空
 /
