@@ -2678,9 +2678,9 @@
     {
       "source": "examples/source_area/README.md",
       "target": "examples/source_area/en/README.md",
-      "source_sha256": "522a18c99475d2fe9cca6071a2248ecd49c71325e6aa35fc612c6916dbd0a37f",
-      "target_sha256": "87afdf3f7446887ce47bf3ad1f45b6783b8fc5cbd4bf21573798b2442dc5543c",
-      "reviewer": "Claude (Claude Code session; one sentence added to the Computation bullet in both languages (the note that the diffusion wave of f_govequation = 1 is strictly the local inertia equation, with a link to the primer); the rest unchanged since the previous record, in which headings, bullets, table rows and the numbers of every paragraph were compared)",
+      "source_sha256": "39652ec22cc7068b661a5b380db198e7e33dba79d11879c4fe815879cb9bbaf6",
+      "target_sha256": "92994db2eaab5daecb4ba215835859ea22e7b7a1fb243b93630e4db997133a75",
+      "reviewer": "Claude (Claude Code session; number pairs and lists joined by a middle dot in the Japanese text were rewritten (pairs for the two storms as 'A と B', lists with commas) without changing any value; the two reworded bullets of \"What this example shows\" and two sentences of the supplement were adjusted in English to match; the changed sentences and their numbers were compared in both languages, the rest unchanged since the previous record)",
       "method": "assistant",
       "reviewed_on": "2026-11-11"
     },

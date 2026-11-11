@@ -28,6 +28,51 @@ The terrain is a real catchment, but the soil layer, the conductivities and the 
 schematic uniform values; this is not a reproduction of the runoff of this catchment (nothing is
 compared with observations).
 
+**What this example shows**
+
+- **The runoff source area (saturated area) extends up the valleys and shrinks back downstream
+  after the rain**: the saturated area appears in the valleys in the second hour of rain, covers
+  11 % of the catchment after 3 hours and 15 % at most. What saturates is the valleys and
+  hollows with a large upslope area; the ridges and slopes (83 % of the cells) hardly saturate.
+  After the rain it shrinks to 9 % in 4 hours and to 3 % in 36 hours. For the same storage the
+  saturated area differs between growth and shrinkage
+  ([Process run](#process-run-growth-and-shrinkage-of-the-saturated-area)).
+- **The runoff is mainly water that passed through the soil, and it rises abruptly once the
+  saturated area has connected along the valleys**: nearly nine tenths of the runoff is water
+  that infiltrated, flowed through the soil and seeped out in the saturated area. On dry soil
+  there is no runoff for a little over 3 hours, and then it reaches nine tenths of the rain in
+  less than 2 hours. In the second storm, on wet soil, it rises one hour earlier.
+- **Even with surface flow alone, a larger slope roughness (an equivalent roughness) makes the
+  hydrograph nearly coincide**: the run that routes all the rain over the surface coincides with
+  the process run, with a fit of 0.99, when the slope roughness is 2 (7 times the 0.3 of the
+  process run). It cannot represent the difference between dry and wet soil, the steepness of
+  the rise, or the extent of the saturated area. With vertical infiltration only, without
+  lateral flow in the soil, the water that entered the soil never comes out, and the runoff of
+  the first storm is only 20 mm (115 mm in the process run)
+  ([Comparison with no infiltration and vertical infiltration only](#comparison-with-no-infiltration-and-vertical-infiltration-only)).
+- **The equivalent roughness changes by an order of magnitude with how fast the soil conducts
+  water**: as the lateral conductivity is lowered from 100000 mm/h to 3600 mm/h, the closest
+  roughness rises from 1 to 10 for the first storm and 5 for the second (it is 2 for the base
+  value of 36000 mm/h). One order of magnitude in roughness corresponds to a factor of 4 in
+  the lag before slope water reaches the channels, and that lag is proportional to the water
+  stored on the slopes. The equivalent roughness used in practice for mountains (about
+  0.4–0.8) is matched at 100000 mm/h; the roughness 2 that fits the base value of 36000 mm/h
+  is several times the values used in practice
+  ([Soil conductivity and the equivalent roughness](#soil-conductivity-and-the-equivalent-roughness),
+  [Supplement](#supplement-equivalent-roughness-and-the-soil-conductivity)).
+- **Heavier rain widens the saturated area, but the equivalent roughness changes little**: with
+  three times the rain, 30 mm/h, the maximum saturated area widens from 15 % to 25 %, and the
+  time for the runoff to reach nine tenths of the rain advances from 5.5 to 3.3 hours. The
+  roughness with the same slope lag changes from 1.7 to 1.6
+  ([Rain intensity, the saturated area and the equivalent roughness](#rain-intensity-the-saturated-area-and-the-equivalent-roughness)).
+- **Fast storm runoff does not need fast water; it needs a response that travels fast**: the
+  speed at which the response travels down a slope is set by conductivity × slope / specific
+  yield. When a layer 2 with a small specific yield is placed below a poorly conducting soil
+  (3600 mm/h), layer 2 fills the valleys as fast as a soil with ten times the conductivity,
+  and the closest roughness falls from 10 for the first storm and 5 for the second to 3 for
+  both storms
+  ([Supplement](#supplement-equivalent-roughness-and-the-soil-conductivity)).
+
 ## What happens in real mountain catchments
 
 - **Rain infiltrates and flows inside the soil**: forest soils have a high infiltration
@@ -663,8 +708,9 @@ The no-infiltration roughness closest to the base process run is 2, several time
 equivalent roughness used in practice for mountains (about 0.4–0.8). This correspondence is
 obtained with a lateral conductivity of the soil of 36000 mm/h (1e-2 m/s), larger than the
 range the user guide suggests for forested catchments (1000–10000 mm/h). With 3600 mm/h, which
-is within that range, the closest roughness is 10 and 5, an order of magnitude above the
-values used in practice; with 100000 mm/h it is 1 and overlaps the values used in practice.
+is within that range, the closest roughness is 10 and 5 (first and second storm), an order of
+magnitude above the values used in practice; with 100000 mm/h it is 1 and overlaps the values
+used in practice.
 This section sorts out this relation between the roughness and the conductivity from the
 computed results.
 
@@ -787,10 +833,10 @@ layer 2).
   the rain after 7.3 hours, earlier than the single layer with 3600 mm/h (not reached during
   the 12 hours of rain) and later than the base run (5.5 hours). The slope-stage lag is 4.8
   hours (8.7 hours for the single layer with 3600 mm/h, 3.3 hours for the base run), and the
-  closest roughness is 3 and 3 (10 and 5 for the single layer with 3600 mm/h). It is later
-  than the base run because, in the cells where layer 2 is full, the soil above it (capacity
-  100 mm) also has to fill before water comes out at the surface (the cells with the soil
-  full are 2.3 % at 3 h and 13.7 % at 12 h).
+  closest roughness is 3 for both storms (10 and 5 for the single layer with 3600 mm/h). It
+  is later than the base run because, in the cells where layer 2 is full, the soil above it
+  (capacity 100 mm) also has to fill before water comes out at the surface (the cells with
+  the soil full are 2.3 % at 3 h and 13.7 % at 12 h).
 - **A large conductivity is not the same as fast water**: water particles move at
   K × slope / porosity, while the response travels at K × slope / specific yield, so the
   smaller the specific yield (the water needed to raise the water table), the further the wave
