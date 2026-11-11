@@ -473,9 +473,9 @@
     {
       "source": "docs/users_guide/sfm.md",
       "target": "docs/en/users_guide/sfm.md",
-      "source_sha256": "1cffefc6200481170514d3a9ba8679bf4cd67fcbe8df103b78810dba52d1c616",
-      "target_sha256": "13b3853b3c3e11872aab88568ff972612524669fb616e55283b01340035dca99",
-      "reviewer": "Claude (Claude Code session; storage function runoff fn_sfm (§106): Japanese and English written together, full text and changed passages compared, no model execution)",
+      "source_sha256": "70b6f87b9d357221f10af68718b9e7c74fb16cd76a1b50c8bd1e3d25aea8db2e",
+      "target_sha256": "0892f1d0b1fdbd01041a996b434d5bd4612c0fa028f3b3865939851e2874239d",
+      "reviewer": "Claude (Claude Code session; one bullet added to the list of tests and examples in both languages (examples/source_area: tanks under the rain of the catchment runs); the rest unchanged since the previous record)",
       "method": "assistant",
       "reviewed_on": "2026-11-11"
     },
@@ -887,9 +887,9 @@
     {
       "source": "examples/README.md",
       "target": "examples/README.en.md",
-      "source_sha256": "d2c94c4ce7f847b61eea9d7107061289d52ebcfd2dc8a85f1b559a89192d3a7c",
-      "target_sha256": "c81d87c608e0f4f5963267a2bc8f9182c77a1a97e3f12918ab94608e96d090f3",
-      "reviewer": "Claude (Claude Code session; the source_area row extended in both languages (the supplement comparing a soil column of VZ runoff, and the feature list); the rest unchanged since the previous record)",
+      "source_sha256": "31054116fc32b463e91fdf1d1ecf4ec64064b7333ae270c167fa6606d0e6cd9d",
+      "target_sha256": "d15cde81b999cdd95424e8126ce38d011ebfd856c73bc1d08f423d6a26c96910",
+      "reviewer": "Claude (Claude Code session; the source_area row extended in both languages (the storage function method in the supplement, and the feature list); the rest unchanged since the previous record)",
       "method": "assistant",
       "reviewed_on": "2026-11-11"
     },
@@ -2696,9 +2696,9 @@
     {
       "source": "examples/source_area/README.md",
       "target": "examples/source_area/en/README.md",
-      "source_sha256": "39d4e9ee1d415968a93fe9c31818708483e8de99883144b3d31bcc642c7431eb",
-      "target_sha256": "ab5bb1bae21d7e587157123a9eff793ae11882f48667f6eb446b8bcde9f8f65a",
-      "reviewer": "Claude (Claude Code session; the VZ soil-column case added in both languages: a bullet in 'What this example shows', a row in the settings table, 'make vz' in 'How to run', the rewritten section 'Relation to vertical unsaturated infiltration (VZ)' with a figure, a table and four bullets, one bullet of the sensitivity list and one clause in the limitations; the changed text, its numbers, the table rows and the in-page links were compared, and headings, bullets, table rows and figures were counted in both files; the rest unchanged since the previous record)",
+      "source_sha256": "1da1cdef79dc7a0a9af72e6446189976a72f81de4a1b1919d315d710746e1181",
+      "target_sha256": "2e80a8e90a3955ad1f3e289c32b662554cefc05fa0a7eadebc77c495318b8017",
+      "reviewer": "Claude (Claude Code session; the storage-function tank case added in both languages: a bullet in 'What this example shows', a row in the settings table, 'make sfm' in 'How to run', the new section 'Relation to the storage function method' with three tank definitions, a figure, a table and four bullets, one bullet of the sensitivity list and one reference; the added text, its numbers, the table rows and the in-page links were compared, and headings, bullets, table rows and figures were counted in both files; the rest unchanged since the previous record)",
       "method": "assistant",
       "reviewed_on": "2026-11-11"
     },
@@ -2771,6 +2771,15 @@
       "source_sha256": "18c64115ef65300f0101b26b88c5c95530ab673145db4046e4868e4969246b26",
       "target_sha256": "e3683bf011b87c7398ef8c397fbf6274a096ad1cdc5d0ce52e15557e522d4b2f",
       "reviewer": "Claude (Claude Code session; both drawn by plot_results.py from the same results, labels switched by the en argument; both images viewed)",
+      "method": "assistant",
+      "reviewed_on": "2026-11-11"
+    },
+    {
+      "source": "examples/source_area/figs/sfm_tank.png",
+      "target": "examples/source_area/en/figs/sfm_tank.png",
+      "source_sha256": "15695d91573dacbd78317dc540beef253c85b3e850004792993de506b0fc5a9b",
+      "target_sha256": "15d6e7bc1578fb25647476dc5a8c0a019252a343109d8549aa8cadac39b28d85",
+      "reviewer": "Claude (Claude Code session; drawn by plot_results.py from the same results with and without the en argument; the English figure was viewed for labels and overlaps)",
       "method": "assistant",
       "reviewed_on": "2026-11-11"
     },

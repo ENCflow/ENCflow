@@ -1,0 +1,19 @@
+!======================================================================
+! source_area 貯留関数法のタンク(雨 30 mm/h): param_sfm.txt の雨だけを強くする
+!   格子(&list_geoinfo)とタンクの設定(&list_sfm・&list_sfm_zone)は
+!   param_sfm.txt のものを読む(グループは名前で読まれるので、別のファイルを
+!   指せる)。K と P は雨 10 mm/h のケースと同じ値のまま。降雨は
+!   param_rain30.txt(30 mm/h × 12 時間 × 2 回)。実行は make sfm
+!======================================================================
+&list_sysparam
+  dt = 5.0                  ! 時間刻み (s)
+  tt_c = "96h"              ! 計算終了時刻(4 日)
+  dt_disp_c = "12h"         ! 画面表示の間隔
+  dt_file_c = "96h"         ! 分布ファイル出力の間隔(分布は使わない)
+  dt_recrd_c = "10m"        ! sfm_zone.csv の記録間隔
+  fn_geoinfo = 'param_sfm.txt'      ! 格子は param_sfm.txt と同じ
+  fn_precip = 'param_rain30.txt'    ! 降雨(30 mm/h × 12 時間 × 2 回)
+  fn_sfm = 'param_sfm.txt'          ! タンクの設定は param_sfm.txt と同じ
+  dir_data = 'data_sfm'
+  dir_result = 'result_sfm_r30'
+/

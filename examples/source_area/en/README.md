@@ -79,6 +79,13 @@ compared with observations).
   in the soil (3.3 hours). The soil of the column is that of another experimental site, so
   this is a rough comparison
   ([Relation to vertical unsaturated infiltration (VZ)](#relation-to-vertical-unsaturated-infiltration-vz)).
+- **The storage function method, which treats the catchment as a single tank, matches the lag
+  but not the rise**: a tank with the same storage as the process run (storage S and runoff q
+  related by S = K·q^0.6) has a lag of 5.3 hours (5.1 hours in the process run) and fits of
+  0.92 and 0.96. Its runoff increases from the start of the rain, so it cannot represent a rise
+  that waits until water has been stored. The exponent sets how much the lag shrinks under
+  heavier rain; overland flow corresponds to 0.6 and the VZ soil column to 0.17
+  ([Relation to the storage function method](#relation-to-the-storage-function-method)).
 
 ## What happens in real mountain catchments
 
@@ -233,6 +240,7 @@ cells of the extracted catchment. (c) Rainfall.
 | No infiltration | `param_surface.txt` | No groundwater. Slope roughness 0.3 |
 | Sweep (22 cases) | `param_sweep_<case>.txt` (made by `sweep.py` from the three above) | No infiltration with slope roughness 0.6, 1, 2, 3, 5, 10, 30; no infiltration as a diffusion wave with roughness 0.3, 3, 10; vertical infiltration only with roughness 3; the process run with slope roughness 1, as a diffusion wave, with lateral conductivity 3600, 10000 and 100000 mm/h, with soil depth 1 m, and with layer 2 (a layer of small specific yield below a soil with lateral conductivity 3600 mm/h); the process run and no infiltration (roughness 0.3, 1, 3) with the rain raised to 30 mm/h (rainfall in `param_rain30.txt`, dt = 2 s) |
 | Soil column of VZ runoff (2 cases) | `param_vz.txt`, `param_vz_r30.txt` | The terrain of the catchment is not used; the same rain (10 mm/h and 30 mm/h) is put on a single reference column of VZ runoff. The soil is the trial default of VZ runoff (the soil of Tatsunokuchi-yama of Tani (2023)). For the comparison in the [supplement](#relation-to-vertical-unsaturated-infiltration-vz) |
+| Tanks of the storage function method (2 cases) | `param_sfm.txt`, `param_sfm_r30.txt` | The terrain of the catchment is not used; the same rain (10 mm/h and 30 mm/h) is put on three tanks of the storage function method. K and P are determined from the "relation between storage and runoff" of the process run and of the VZ soil column. For the comparison in the [supplement](#relation-to-the-storage-function-method) |
 
 ## How to run
 
@@ -242,6 +250,7 @@ make                      # links and inputs (make_catchment.py; a few seconds)
 make run                  # the three basic cases, one after another
 make sweep                # the 22 sweep cases, one after another
 make vz                   # the 2 soil-column cases of VZ runoff (for the supplement; a few seconds)
+make sfm                  # the 2 tank cases of the storage function method (for the supplement; a few seconds)
 python3 plot_results.py   # figs/*.png and tables (argument en writes English figures to en/figs/)
 ```
 
@@ -256,9 +265,11 @@ hours for the 25 cases). The results do not depend on the number of threads (the
 with 1 thread and with 3 threads gives byte-identical transect discharge, Log and fields at
 all output times). `mechanism.png` and `setup.png` do not use computed results, so they can be
 drawn after `make`, before any run. If the sweep is not finished, the figures and tables are
-made from the cases that are. The figure and table of the VZ soil column appear after
-`make vz` (it does not use the catchment inputs, so it can be run before the other cases; the
-conversion to a roughness uses the no-infiltration results of the sweep).
+made from the cases that are. The figures and tables of the VZ soil column and of the tanks of
+the storage function method appear after `make vz` and `make sfm` (they do not use the
+catchment inputs, so they can be run before the other cases; the conversion to a roughness
+uses the no-infiltration results of the sweep, and the comparison with the tanks uses the
+results of the process run and of the VZ soil column).
 
 ## Results
 
@@ -945,6 +956,92 @@ groundwater (`fn_gwflow`), so no run combines vertical unsaturated infiltration 
 lateral flow in the soil. Nor is VZ runoff applied to this catchment to compare the
 hydrographs at the outlet.
 
+### Relation to the storage function method
+
+The storage function method (Kimura 1961) treats the catchment as a single tank and obtains
+the runoff from a relation between the storage S and the runoff q, S = K·q^P, and the
+continuity equation dS/dt = rain − q
+([zone runoff by the storage function method](../../../docs/en/users_guide/sfm.md) in ENCflow,
+which has neither the lag time nor the separation of effective rainfall of Kimura's method).
+Tanks matched to the "relation between storage and runoff" of the other calculations of this
+example are given the same rain, to see what agrees and what does not (`make sfm`; the
+settings are `param_sfm.txt` and, for a rain of 30 mm/h, `param_sfm_r30.txt`). There are three
+tanks (S in mm, q in mm/h).
+
+- **Tank 1 (K = 11.3, P = 0.6)**: a tank with the same storage as the process run. P is the
+  value conventionally used in the storage function method; it corresponds to the relation
+  that, for overland flow with Manning's law, the storage in balance with the rain is
+  proportional to the 0.6th power of the runoff. K is taken from the 45.1 mm of water in the
+  catchment when the process run is in balance with a rain of 10 mm/h, as K = 45.1 / 10^0.6.
+- **Tank 2 (K = 15.6, P = 0.46)**: the K and P that pass through two states of the process run
+  (45.1 mm and 10 mm/h in balance with the rain; 5.2 mm and 0.09 mm/h just before the second
+  storm).
+- **Tank 3 (K = 37, P = 0.167)**: the K and P fitted to the relation between the storage (the
+  water above the residual water content) and the drainage at a depth of 0.5 m of the VZ soil
+  column after the rain has stopped.
+
+![Runoff of the tanks of the storage function method](figs/sfm_tank.png)
+
+The second storm. Top: tank 1 (purple, solid) and tank 2 (purple, dashed) over the runoff at
+the outlet of the process run (black). Bottom: tank 3 (purple) over the drainage at 0.5 m of
+the VZ soil column (red-purple). Left: rain of 10 mm/h; right: 30 mm/h (with the same K and
+P). Grey is the rain.
+
+| Run | K | P | Rain 10 mm/h: lag (h) | Time above 1 mm/h (h) | Time to reach 90 % of the rain (h) | Fit | Rain 30 mm/h: lag (h) | Fit | Ratio of the lags |
+|---|---:|---:|---:|---:|---:|---:|---:|---:|---:|
+| tank 1 (same storage as the process run) | 11.3 | 0.6 | 5.3 | 1.0 | 8.5 | 0.92 / 0.96 | 3.4 | 0.96 / 0.97 | 0.65 |
+| tank 2 (two states of the process run) | 15.6 | 0.46 | 5.2 | 1.1 | 7.5 | 0.92 / 0.96 | 2.9 | 0.96 / 0.98 | 0.57 |
+| process run: runoff at the outlet | — | — | 5.1 | 2.8 | 5.3 | — | 3.0 | — | 0.59 |
+| tank 3 (recession of the VZ soil column) | 37 | 0.167 | 4.1 | 1.1 | 4.6 | 0.96 / 0.96 | 1.8 | 0.99 / 0.99 | 0.45 |
+| VZ soil column: drainage at 0.5 m | — | — | 4.4 | 3.0 | 3.7 | — | 1.8 | — | 0.40 |
+
+The "lag" is the difference of the centroids of the rain and the runoff over the 48 hours of
+the second storm, and the times are from the start of the second storm. The fits are for the
+first / second storm; for tanks 1 and 2 they are against the runoff at the outlet of the
+process run, for tank 3 against the drainage of the VZ soil column. The "ratio of the lags" is
+the lag under 30 mm/h divided by the lag under 10 mm/h. The initial runoff of the tanks is the
+default, 0.1 mm/h.
+
+- **A tank with the same storage as the process run matches the lag but not the rise**: the
+  lag of tank 1 is 5.3 hours, almost the same as the 5.1 hours of the process run. The fits
+  are 0.92 and 0.96, and with the same K they are 0.96 and 0.97 under 30 mm/h. What does not
+  match is the shape of the rise. The runoff of the tank increases from the start of the rain
+  (it exceeds 1 mm/h after 1.0 hours, against 2.8 hours in the process run) and reaches nine
+  tenths of the rain late (8.5 hours, against 5.3 hours). Because the runoff of a tank
+  increases as soon as its storage does, it cannot represent the rise of the process run,
+  which gives nothing until the saturated area has connected and then grows abruptly. Tank 2,
+  with P matched to the process run, is the same. The no-infiltration run under the same rain
+  fits better (0.99 and 0.99 with roughness 2) because the overland-flow calculation contains
+  the time the water takes to travel down the slopes and the channels.
+- **The exponent P sets how much the lag shrinks under heavier rain**: in a storage function,
+  the storage in balance with the rain divided by the rain is K·rain^(P − 1), so with three
+  times the rain it becomes 3^(P − 1) times (0.64 times for P = 0.6, 0.55 for 0.46, 0.40 for
+  0.167). The ratios of the lags of the tanks (0.65, 0.57, 0.45) follow this closely. The
+  ratios for the other calculations of this example are 0.63–0.64 for the slope stage of the
+  no-infiltration runs, 0.59 for the process run and 0.40 for the VZ soil column; in turn they
+  correspond to the tank with P = 0.6, to between 0.46 and 0.6, and to the tank with 0.17. The
+  roughness with the same lag stays the same under a different rain intensity only for a flow
+  that corresponds to P = 0.6. This is why the roughness that fits the process run changes
+  little with the rain intensity, while for the VZ soil column it becomes smaller as the rain
+  gets heavier (2.7 → 1.4).
+- **The relation between storage and drainage of the VZ soil column corresponds to a storage
+  function with an exponent of 0.17**: after the rain has stopped, the storage and the
+  drainage of the column follow S = 37.0 q^0.167 within 2 % (at depths of 0.25 m and 1 m the
+  exponent is 0.165 and 0.169, and K is nearly proportional to the depth). Tank 3, with this K
+  and P, coincides with the recession of the column drainage (both 0.51 mm/h 12 hours after
+  the rain) and has a similar lag (4.1 and 4.4 hours for 10 mm/h; 1.8 hours for both under
+  30 mm/h). The fit is 0.96 for 10 mm/h and 0.99 for 30 mm/h. What differs is the rise: the
+  drainage of the column does not increase until the wetting front arrives after 3.0 hours,
+  whereas the runoff of the tank exceeds 1 mm/h after 1.1 hours. A storage function represents
+  the "relation between storage and runoff" of vertical unsaturated infiltration, but not the
+  time the front takes to pass down through the soil.
+- **The values are a guide**: K and P are determined from the results of this example, not
+  calibrated against observations (`plot_results.py` prints the values recomputed from the
+  results after the table). The storage of the process run is that of the whole catchment,
+  the water in the soil, on the surface and in the channels together, and a tank represents
+  it by a single quantity. When the storage function method is applied to a real catchment, K
+  and P are calibrated against observed hydrographs.
+
 ## What this model does not represent (differences from the real phenomenon)
 
 - **The soil is a uniform schematic layer**: the soil depth of 0.5 m, the effective porosity of
@@ -1074,13 +1171,21 @@ hydrographs at the outlet.
   `vz_sigma`) and the initial condition (`vz_q0_mmh`); without it the trial default is used
   ([VZ runoff](../../../docs/en/users_guide/vz.md)). `param_vz_r30.txt`, for a rain of
   30 mm/h, reads the grid and the VZ runoff settings from `param_vz.txt`.
+- `param_sfm.txt` (the tanks of the storage function method;
+  [Relation to the storage function method](#relation-to-the-storage-function-method) in the
+  supplement): `sfm_k` (the storage coefficient K) and `sfm_p` (the exponent P; 0.6 if not
+  given) change the response of a tank. `sfm_q0_mmh` is the initial runoff (0.1 mm/h if not
+  given). To add a tank, add a zone to the zone raster `data_sfm/zone.txt` (which calculation
+  it is compared with in the figure and the table is set by `SFM_VS` in `plot_results.py`).
 
 ## References
 
 The bibliographic details of Mosley (1979), Beven & Germann (1982) and Tani (1997) are those of
 [Groundwater models](../../../docs/en/users_guide/gwflow_models.md), and the bibliographic
 details and the summary of Tani (2023) are those of
-[VZ runoff](../../../docs/en/users_guide/vz.md); the others were confirmed by search (for
+[VZ runoff](../../../docs/en/users_guide/vz.md), and those of Kimura (1961) are those of
+[zone runoff by the storage function method](../../../docs/en/users_guide/sfm.md) (the original
+was not checked); the others were confirmed by search (for
 Kadoya & Fukushima (1976) only the formula and the coefficient were confirmed, from a search
 excerpt of a paper that quotes them; its bibliographic details were not checked). Except for
 Tani (2023), the texts were not checked; the summaries of their contents rely on abstracts and
@@ -1115,6 +1220,9 @@ secondary sources.
 - Kadoya, M. and Fukushima, A. (1976): Chūshō kasen no kōzui tōtatsu jikan [Flood
   concentration time of small and medium rivers]. Annuals of the Disaster Prevention Research
   Institute, Kyoto University, 19(B-2), 143–152 (in Japanese).
+- Kimura, T. (1961): Chōryū kansū hō ni yoru kōzui ryūshutsu tsuisekihō [Flood runoff routing
+  by the storage function method]. Public Works Research Institute, Ministry of Construction
+  (in Japanese).
 - Tani, M. (2023): Reevaluating the runoff mechanisms of small mountainous catchments by
   applying a new storm-runoff model based on the vertical unsaturated flow. Journal of Japan
   Society of Hydrology and Water Resources, 36(1), 20–51 (in Japanese with English abstract).
