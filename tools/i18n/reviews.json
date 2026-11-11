@@ -473,9 +473,9 @@
     {
       "source": "docs/users_guide/shallow_water.md",
       "target": "docs/en/users_guide/shallow_water.md",
-      "source_sha256": "a832477db31af391013830c428417a9b4794a9b768c0cb979ffebbb1c945f034",
-      "target_sha256": "8b0eb680d3ed8a626ff6a35afda90c3e0c467698fa387c448691aaf9f6eb0b00",
-      "reviewer": "Claude (Claude Code session; wrote the Japanese primer and its English mirror and read both side by side: headings, table rows, anchors, footnotes, equations, numbers, links and figure references match; the English figures are drawn by the same script with the en switch)",
+      "source_sha256": "b7f39083497154619e521e717703dbc32589cf7fc954ae5da812cb8e6a3d6546",
+      "target_sha256": "4c0e460b1fa755225e3cd7a0eb81d333945da0684d3e851e19ade4d03393c38b",
+      "reviewer": "Claude (Claude Code session; wrote the Japanese primer and its English mirror and read both side by side: headings, table rows, anchors, footnotes, equations, numbers, links and figure references match; the English figures are drawn by the same script with the en switch; two statements of the examples table reworded in both versions)",
       "method": "assistant",
       "reviewed_on": "2026-11-11"
     },
