@@ -152,8 +152,10 @@
   ! ---- Computation scheme and numerical constants (normally no need to
   !      change. users_guide/swflow.md) ----
   !f_gridsystem = 0         ! 0: ENC grid (default), 1: STG (for comparison)
-  !f_govequation = 0        ! 0: dynamic wave (default), 1: diffusive wave,
-                            !   2: kinematic wave
+  !f_govequation = 0        ! 0: dynamic wave (default), 1: local inertia
+                            !   (no advection term; formerly written
+                            !   "diffusive wave"), 2: kinematic wave
+                            !   (users_guide/shallow_water.md)
   !f_check_cfl = 1          ! Courant number monitoring (0: monitor only,
                             !   1: stop when Cn>1 (default), 2: judge and stop
                             !   by the advective Courant number)

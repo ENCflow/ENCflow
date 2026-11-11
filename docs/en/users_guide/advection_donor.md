@@ -321,8 +321,9 @@ the grid spacing and the number of cells that represent the channel.
   terrain, not the wet/dry switch, so treat the terrain first
   ([supplement of the Chichibu tutorial](../../../tutorials/chichibu/en/README.md)).
 - **Faces where it does not apply.** It does not apply to the boundary faces
-  of lateral Neumann sides (the same value as 0). The diffusion wave
-  (`f_govequation = 1`) has no advection term, so it is not affected.
+  of lateral Neumann sides (the same value as 0). The local-inertia setting
+  (`f_govequation = 1`; formerly written "diffusion wave") has no advection
+  term, so it is not affected.
 - **Removed options.** 1 (donors limited to channel cells on edges between
   channel cells) and 2 (an average weighted by the fluxes of all inflow
   links) were removed on 2026-11-07. Setting them stops the run. Most of the
