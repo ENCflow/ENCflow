@@ -2678,9 +2678,9 @@
     {
       "source": "examples/source_area/README.md",
       "target": "examples/source_area/en/README.md",
-      "source_sha256": "522a18c99475d2fe9cca6071a2248ecd49c71325e6aa35fc612c6916dbd0a37f",
-      "target_sha256": "87afdf3f7446887ce47bf3ad1f45b6783b8fc5cbd4bf21573798b2442dc5543c",
-      "reviewer": "Claude (Claude Code session; one sentence added to the Computation bullet in both languages (the note that the diffusion wave of f_govequation = 1 is strictly the local inertia equation, with a link to the primer); the rest unchanged since the previous record, in which headings, bullets, table rows and the numbers of every paragraph were compared)",
+      "source_sha256": "e712b5766f484b7be9c0b12a8b6766f0c9eb91994d2088a8761cd5d014bba8af",
+      "target_sha256": "7107f859d75661af85598b8dc1ee7c1d3d03055173b5fcde1512524c2907c42f",
+      "reviewer": "Claude (Claude Code session; the block \"What this example shows\" (one bold line and six bullets after the introduction) added in both languages; the six bullets, their numbers and their section links were compared, and headings, bullets, table rows and figures were counted in both files; the rest unchanged since the previous record)",
       "method": "assistant",
       "reviewed_on": "2026-11-11"
     },
