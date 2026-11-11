@@ -320,11 +320,11 @@
     {
       "source": "docs/users_guide/gwflow.md",
       "target": "docs/en/users_guide/gwflow.md",
-      "source_sha256": "b9fd1c948b00ea6da5671f369a22b0345ea69c7ed577edfb5aadc418d829bc6c",
-      "target_sha256": "edff9480a0a1b91d41bb087a7684d34b3f5950b1e8fef9ea01d4ff5dbaadf19b",
-      "reviewer": "Claude (Claude Code session; reviewed the text on the new default 1/3 of gw_diagratio and salt_diagratio and the values that change with it (developer.md sec. 98) in the Japanese source against the English mirror, 2026-11-05)",
+      "source_sha256": "e994e3fb22962964b44d67296fabf02a89fb04cdc85d567ae2a17f9a6a4b7bd0",
+      "target_sha256": "f86dbe8c58e73e968cac88cb33280833f2ec6d38414d84febe156d6c60e80ada",
+      "reviewer": "Claude (Claude Code session; a note on the lateral conductivity and the speed of storm runoff added below the guidance table, and one table remark and the source_area line extended, in both languages; the rest unchanged since the previous record)",
       "method": "assistant",
-      "reviewed_on": "2026-11-05"
+      "reviewed_on": "2026-11-11"
     },
     {
       "source": "docs/users_guide/gwflow_models.md",
@@ -545,11 +545,11 @@
     {
       "source": "docs/users_guide/usecases.md",
       "target": "docs/en/users_guide/usecases.md",
-      "source_sha256": "38bdc569aa9b9b8eee70cd5bb09737314fbce0cb1b4201c52315d6025bdbd0a7",
-      "target_sha256": "fcef78f52c0e2d25a2184dbbb9e45e04b2a7a984ef36c6d24dc6520d8ffd6b84",
-      "reviewer": "Claude (Claude Code session; geomorph chapter split, step 1: the six application setups moved to users_guide/geomorph_applications.md; compared the Japanese source with the English mirror for the moved text, the new pointer paragraphs and the re-targeted links; the rest of the pair is unchanged since the previous record)",
+      "source_sha256": "53d136e092d7191560d80fc1256595ce8172d10afc4a7c4e9d08304122ddb48b",
+      "target_sha256": "6916e557d50ee1074dd15881413cd0cc353fb170c7731a41d20370c7845e3d81",
+      "reviewer": "Claude (Claude Code session; one row added for the runoff source area example in both languages; the rest unchanged since the previous record)",
       "method": "assistant",
-      "reviewed_on": "2026-11-07"
+      "reviewed_on": "2026-11-10"
     },
     {
       "source": "docs/users_guide/user_routines.md",
@@ -869,11 +869,11 @@
     {
       "source": "examples/README.md",
       "target": "examples/README.en.md",
-      "source_sha256": "ed5017f5838f55425d76393d1aeba4df8684c2b45cd44508f5d420790dcc998a",
-      "target_sha256": "408a09915239c089b36b73af0ddb168f15dd1bc5a5087299a2427590eea53886",
-      "reviewer": "Claude (Claude Code session; wrote and read both versions side by side: structure, numbers, tables, links and captions)",
+      "source_sha256": "d180e744fde8e12b2bf8aa117c7aa43fa52f154ca198a698ace1804a4181fd3e",
+      "target_sha256": "e4ba584054a09cc9409b01eec15424ef061722df273e18cda8bdbbff60d599b9",
+      "reviewer": "Claude (Claude Code session; merge of two reviewed changes: the benchmark row and process-chain line from main and the source_area row from this branch, each in both languages; the rest unchanged)",
       "method": "assistant",
-      "reviewed_on": "2026-11-10"
+      "reviewed_on": "2026-11-11"
     },
     {
       "source": "examples/ashfall_lahar/README.md",
@@ -2674,6 +2674,96 @@
       "reviewer": "Claude (Claude Code session; English figure drawn by the same script with the en switch; visual check)",
       "method": "assistant",
       "reviewed_on": "2026-11-03"
+    },
+    {
+      "source": "examples/source_area/README.md",
+      "target": "examples/source_area/en/README.md",
+      "source_sha256": "522a18c99475d2fe9cca6071a2248ecd49c71325e6aa35fc612c6916dbd0a37f",
+      "target_sha256": "87afdf3f7446887ce47bf3ad1f45b6783b8fc5cbd4bf21573798b2442dc5543c",
+      "reviewer": "Claude (Claude Code session; one sentence added to the Computation bullet in both languages (the note that the diffusion wave of f_govequation = 1 is strictly the local inertia equation, with a link to the primer); the rest unchanged since the previous record, in which headings, bullets, table rows and the numbers of every paragraph were compared)",
+      "method": "assistant",
+      "reviewed_on": "2026-11-11"
+    },
+    {
+      "source": "examples/source_area/figs/compare.png",
+      "target": "examples/source_area/en/figs/compare.png",
+      "source_sha256": "da8d2a39c3c1ceec32acfcf3cc2d865ef123d7d054fdeaed6e24bcde996bd6a7",
+      "target_sha256": "8bcfa657ae1b83cbc8d100f26df644ae0a1640ebd29ef199d1b1543b22ecc911",
+      "reviewer": "Claude (Claude Code session; drawn by plot_results.py from the same results with and without the en argument; the English figure was viewed for labels and overlaps)",
+      "method": "assistant",
+      "reviewed_on": "2026-11-11"
+    },
+    {
+      "source": "examples/source_area/figs/equivalent.png",
+      "target": "examples/source_area/en/figs/equivalent.png",
+      "source_sha256": "1055ff4887e8afb77830af7482bd607df8ca83e28a2adc80d335a6312500312d",
+      "target_sha256": "bdd11a83e3482c3aca15696fd838d54f585462a56a934a5e7e34a8f0b7c1cf53",
+      "reviewer": "Claude (Claude Code session; drawn by plot_results.py from the same results with and without the en argument; the English figure was viewed for labels and overlaps)",
+      "method": "assistant",
+      "reviewed_on": "2026-11-11"
+    },
+    {
+      "source": "examples/source_area/figs/intensity.png",
+      "target": "examples/source_area/en/figs/intensity.png",
+      "source_sha256": "9a30feff797103d583474490e9e9f1e45611cf32adaa9a8bd80193efda4458fd",
+      "target_sha256": "0f4a2f5e83cc174a55fe7978728154ee6631b7b8159cdff25aa8349b3a1f947e",
+      "reviewer": "Claude (Claude Code session; drawn by plot_results.py from the same results with and without the en argument; the English figure was viewed for labels and overlaps)",
+      "method": "assistant",
+      "reviewed_on": "2026-11-11"
+    },
+    {
+      "source": "examples/source_area/figs/layer2.png",
+      "target": "examples/source_area/en/figs/layer2.png",
+      "source_sha256": "6556aebe312967f90ccfd238b6f8f5c4af72edb9dceeb17c83774552030c45b0",
+      "target_sha256": "025fccdc2c985ddea9d25f186a2a114f635aad8214d6b7fc652b2227d3655260",
+      "reviewer": "Claude (Claude Code session; drawn by plot_results.py from the same results with and without the en argument; the English figure was viewed for labels and overlaps)",
+      "method": "assistant",
+      "reviewed_on": "2026-11-11"
+    },
+    {
+      "source": "examples/source_area/figs/mechanism.png",
+      "target": "examples/source_area/en/figs/mechanism.png",
+      "source_sha256": "c5a900f3cc1d149a41dd18db71aa3d157e5a01752a24c3aeb89f8cdf726fa688",
+      "target_sha256": "970026011418c766a150ff26e356e6ea18188b678b3734d38c5949982749841b",
+      "reviewer": "Claude (Claude Code session; both drawn by plot_results.py from the same results, labels switched by the en argument; both images viewed)",
+      "method": "assistant",
+      "reviewed_on": "2026-11-10"
+    },
+    {
+      "source": "examples/source_area/figs/roughness.png",
+      "target": "examples/source_area/en/figs/roughness.png",
+      "source_sha256": "8b2468bf969a938980f5569ac4fa29227434b952fafa2812ff73127788a9dfc1",
+      "target_sha256": "f75968367bf3188ec09788d4ba073a21be46cc00cd8e5141625801b34ff97d03",
+      "reviewer": "Claude (Claude Code session; drawn by plot_results.py from the same results with and without the en argument; the English figure was viewed for labels and overlaps)",
+      "method": "assistant",
+      "reviewed_on": "2026-11-11"
+    },
+    {
+      "source": "examples/source_area/figs/series.png",
+      "target": "examples/source_area/en/figs/series.png",
+      "source_sha256": "2e89c00e01dcf4189bfad0d74d129afabb212bc58f14684317fb9a168dad0537",
+      "target_sha256": "1e95e686714b76b678ce36e629ecfe2f5305db114d5ec59464a9570bbba49f4f",
+      "reviewer": "Claude (Claude Code session; drawn by plot_results.py from the same results with and without the en argument; the English figure was viewed for labels and overlaps)",
+      "method": "assistant",
+      "reviewed_on": "2026-11-11"
+    },
+    {
+      "source": "examples/source_area/figs/setup.png",
+      "target": "examples/source_area/en/figs/setup.png",
+      "source_sha256": "18c64115ef65300f0101b26b88c5c95530ab673145db4046e4868e4969246b26",
+      "target_sha256": "e3683bf011b87c7398ef8c397fbf6274a096ad1cdc5d0ce52e15557e522d4b2f",
+      "reviewer": "Claude (Claude Code session; both drawn by plot_results.py from the same results, labels switched by the en argument; both images viewed)",
+      "method": "assistant",
+      "reviewed_on": "2026-11-11"
+    },
+    {
+      "source": "examples/source_area/figs/source_area.png",
+      "target": "examples/source_area/en/figs/source_area.png",
+      "source_sha256": "fb9a8956aa5b2749e7e827a55738dd2677d8bcf057c168f02a301273c32aa50a",
+      "target_sha256": "91e843843a9b7f3e932b90493d17639edc994f12b43a257328a1e8045fde940a",
+      "reviewer": "Claude (Claude Code session; drawn by plot_results.py from the same results with and without the en argument; the English figure was viewed for labels and overlaps)",
+      "method": "assistant",
+      "reviewed_on": "2026-11-11"
     },
     {
       "source": "examples/stone_forest/README.md",

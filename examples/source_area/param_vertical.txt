@@ -1,0 +1,54 @@
+!======================================================================
+! source_area 鉛直浸透のみ: 土層の側方流を切る(過程計算との比較)
+!   過程計算(param.txt)から f_gwlateral だけを 0 にする。雨はしみ込んで
+!   各セルの土層に貯まるだけで、斜面の下へ動かない。土層が満ちたセルに
+!   降った雨が地表を流れる。土層厚が一様なので、全セルが同じ時刻(積算の雨が
+!   土層の容量 sd0 × sy0 = 100 mm に達したとき)に満ちる。
+!   地形・河道・降雨・計測は過程計算と同じ
+!======================================================================
+&list_sysparam
+  dt = 3.0                  ! 時間刻み (s)
+  tt_c = "96h"              ! 計算終了時刻(4 日)
+  dt_disp_c = "1h"          ! 画面表示の間隔
+  dt_file_c = "1h"          ! 分布ファイル出力の間隔
+  dt_recrd_c = "10m"        ! プローブ・測線の記録間隔
+  fn_geoinfo = '-'
+  fn_gwflow = '-'
+  fn_precip = 'param_common.txt'    ! 共通設定(降雨・計測・出口)
+  fn_record = 'param_common.txt'
+  fn_boundary = 'param_common.txt'
+  dir_data = 'data'
+  dir_result = 'result_vertical'
+  f_govequation = 0         ! 地表の流れは力学波
+  f_out_hg = 1              ! 地下貯留 Hg の分布
+  f_output_mode = 2         ! 分布は bil
+  dd = 0.0001               ! 限界水深 (m)。斜面の薄い流れを止めない
+  dv = 0.0001               ! 摩擦項の水深の下限 (m)
+/
+
+&list_geoinfo
+  nx = 172
+  ny = 143
+  dx = 50.0
+  dy = 50.0
+  f_ztype = 1               ! 地盤高ファイル
+  fn_z = 'z.txt'
+  f_masktype = 1            ! 領域マスクファイル(集水域)
+  fn_mask = 'mask.txt'
+  fn_rw = 'rw.txt'          ! 河道マスク(落水線でつないだもの)
+  f_rntype = 0
+  rn0 = 0.3                 ! 斜面の粗度(過程計算と同じ値。掃引で変える)
+  rn0_rw = 0.05             ! 河道セルの粗度(礫・巨礫の渓流)
+  sd0 = 0.5                 ! 土層厚 (m)。急斜面の薄い土層(貯められる水は sd0 × sy0 = 100 mm)
+  sy0 = 0.2                 ! 有効間隙率
+/
+
+&list_gwflow
+  f_gwvertical = 2          ! Green-Ampt の浸透
+  f_gwlateral = 0           ! 土層の側方流なし  <- 過程計算との違い
+/
+
+&list_gwflow_greenampt
+  gw_ksv_mmh = 200.0        ! 鉛直飽和透水係数 (mm/h)。森林土壌(雨 10 mm/h は全量しみ込む)
+  gw_psif = 0.0             ! 一定浸透能
+/

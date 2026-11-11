@@ -1,0 +1,39 @@
+!======================================================================
+! source_area 浸透なし: 雨の全量を地表の流れにする(過程計算との比較)
+!   地下水を有効にしない(fn_gwflow を書かない)。降った雨はそのまま全セルの
+!   地表を流れ、斜面の粗度 rn0 だけが流出を遅らせる。rn0 を大きくした計算
+!   (等価粗度)は make sweep(sweep.py)がこのファイルから作る。
+!   地形・河道・降雨・計測は過程計算(param.txt)と同じ
+!======================================================================
+&list_sysparam
+  dt = 3.0                  ! 時間刻み (s)
+  tt_c = "96h"              ! 計算終了時刻(4 日)
+  dt_disp_c = "1h"          ! 画面表示の間隔
+  dt_file_c = "1h"          ! 分布ファイル出力の間隔
+  dt_recrd_c = "10m"        ! プローブ・測線の記録間隔
+  fn_geoinfo = '-'
+  fn_precip = 'param_common.txt'    ! 共通設定(降雨・計測・出口)
+  fn_record = 'param_common.txt'
+  fn_boundary = 'param_common.txt'
+  dir_data = 'data'
+  dir_result = 'result_surface'
+  f_govequation = 0         ! 地表の流れは力学波(1 にすると拡散波)
+  f_output_mode = 2         ! 分布は bil
+  dd = 0.0001               ! 限界水深 (m)。斜面の薄い流れを止めない
+  dv = 0.0001               ! 摩擦項の水深の下限 (m)
+/
+
+&list_geoinfo
+  nx = 172
+  ny = 143
+  dx = 50.0
+  dy = 50.0
+  f_ztype = 1               ! 地盤高ファイル
+  fn_z = 'z.txt'
+  f_masktype = 1            ! 領域マスクファイル(集水域)
+  fn_mask = 'mask.txt'
+  fn_rw = 'rw.txt'          ! 河道マスク(落水線でつないだもの)
+  f_rntype = 0
+  rn0 = 0.3                 ! 斜面の粗度(過程計算と同じ値。掃引で変える)
+  rn0_rw = 0.05             ! 河道セルの粗度(礫・巨礫の渓流)
+/
