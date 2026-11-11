@@ -15,6 +15,8 @@
 #   param_steady.txt      一定の雨 48 h で q → r、S = K·r^P
 #   param_lag.txt         遅れ時間(遅らせた雨に対する厳密解・参照解、移動中の水 vlag、収支)。
 #                         sed で保存 → 再開、同期間隔 60 s(同期区間の途中の保存 → 再開を含む)も確かめる
+#   param_et.txt          蒸発散をタンクから引く(ステップごとの参照解・収支。sed で保存 → 再開)。
+#   param_et_steady.txt   蒸発散ありの定常(q → r − E、線形低減の区画は r = q + E·S/S_lim の解)
 #   param_mosaic.txt      VZ との併用(貯留関数の区画と受水セルが param.txt と一致、全体の収支)。
 #                         sed で区画の重なり・出口が VZ のセルにある構成・P > 1 の停止も確かめる
 # reference 比較は Log.txt(ULP=0)。sfm_zone.csv は 16 桁で書くため CPU(-march=native の
@@ -103,6 +105,18 @@ run lag_psave "$tmp"
 variant param_lag.txt result_lag_prestart "$lagsync;s/f_state_restore = 0 /f_state_restore = 1 /" > "$tmp"
 run lag_prestart "$tmp"
 python3 Check_sfzone.py partial result_lag_sync result_lag_prestart || exit 1
+
+# 蒸発散をタンクから引く(param_et.txt)と、その保存 → 再開、蒸発散ありの定常
+rm -rf save_et
+run et param_et.txt
+python3 Check_sfzone.py et result_et || exit 1
+variant param_et.txt result_et_save "s/^  tt = 43200 /  tt = 21600 /;s/f_state_save = 0 /f_state_save = 1 /" > "$tmp"
+run et_save "$tmp"
+variant param_et.txt result_et_restart "s/f_state_restore = 0 /f_state_restore = 1 /" > "$tmp"
+run et_restart "$tmp"
+python3 Check_sfzone.py restart result_et result_et_restart || exit 1
+run et_steady param_et_steady.txt
+python3 Check_sfzone.py et_steady result_et_steady || exit 1
 
 run steady param_steady.txt
 python3 Check_sfzone.py steady result_steady || exit 1

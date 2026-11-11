@@ -199,6 +199,8 @@ wq_calc                       水質(発生源・浸透/湧出/ため池の同�
                               ダム完全混合プール。移流本体は swflow_calc・地下横輸送は
                               gwflow_calc 内)
 evap_calc                     蒸発散(h・遮断貯留・hg からの蒸発)
+sfm_evap                      貯留関数法の区画セルに残った蒸発散の要求(s%sfe)を区画ごとにタンクから引く
+                                (fn_sfm と fn_evap の両方が有効なときのみ。§106.7)
 swflow_post                   ステップ確定処理(σ・河道幅有効時の u,v 正規化)
 wq_derive                     導出濃度場の更新(確定 h に対して)
 geomorph_calc                 地形変化(s%z, s%e 更新+z のハロ交換)

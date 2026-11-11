@@ -104,9 +104,9 @@
     {
       "source": "docs/users_guide.md",
       "target": "docs/en/users_guide.md",
-      "source_sha256": "69773d56e8e71120f76eb1040ce8c772ae648cbe76bef421350609e324f5b160",
-      "target_sha256": "1ba73843cd8231701f7cafb45e3e3322ae0732d0418f602f5a77f069b76b43ff",
-      "reviewer": "Claude (Claude Code session; lag time sfm_tl_h of the storage function runoff (§106.6): Japanese and English edited together and the changed passages compared, no model execution)",
+      "source_sha256": "301a5e32b9695e4222a5750563ee4c92227ee4873e3c92fc9ff8d954b17091ae",
+      "target_sha256": "7aa84932c836ad940d26a90d1a9ce0d5704259b3b82674a153339ed85667eb95",
+      "reviewer": "Claude (Claude Code session; evapotranspiration from the storage function tanks (§106.7): Japanese and English edited together and the changed passages compared, no model execution)",
       "method": "assistant",
       "reviewed_on": "2026-11-11"
     },
@@ -266,11 +266,11 @@
     {
       "source": "docs/users_guide/forcing.md",
       "target": "docs/en/users_guide/forcing.md",
-      "source_sha256": "a77dc8490cbf1b979b0d388fb7c9c526e913fa9e4e485cb30cf37b1aa7128025",
-      "target_sha256": "2c74ad73a447e852eb0a27a1f478fbfb639b0a08ea258d83e5393c00f47738df",
-      "reviewer": "Claude (Claude Code session; full-text content and lexical review, no model execution)",
+      "source_sha256": "1c06bfa846cf6f8f7c5a1ff03f8b6fc1850a0b17b7e6f0ed534c26b2605bad2b",
+      "target_sha256": "7eea305b83dbb0c6e00cf17310356c2fac9ed53354b6473f13c557060425a9a0",
+      "reviewer": "Claude (Claude Code session; evapotranspiration from the storage function tanks (§106.7): Japanese and English edited together and the changed passages compared, no model execution)",
       "method": "assistant",
-      "reviewed_on": "2026-11-04"
+      "reviewed_on": "2026-11-11"
     },
     {
       "source": "docs/users_guide/forcing_models.md",
@@ -419,9 +419,9 @@
     {
       "source": "docs/users_guide/params_index.md",
       "target": "docs/en/users_guide/params_index.md",
-      "source_sha256": "8e8f6488e62d1222ccac530b15b3d39b706d1944c5934fd906189f15727be00d",
-      "target_sha256": "3e61441f2c86ec6d4b3d26f0e75fbec402915ba8b61471358fd49a9562d8863d",
-      "reviewer": "Claude (Claude Code session; lag time sfm_tl_h of the storage function runoff (§106.6): Japanese and English edited together and the changed passages compared, no model execution)",
+      "source_sha256": "00545d4ae83a36bc4afebbd5b9b3d89a84cc5bcd53a2671411704723567883b1",
+      "target_sha256": "555440bc1591a631ff4027f149aaa8cff538b242e8ad2c92876443a88661f3e1",
+      "reviewer": "Claude (Claude Code session; evapotranspiration from the storage function tanks (§106.7): Japanese and English edited together and the changed passages compared, no model execution)",
       "method": "assistant",
       "reviewed_on": "2026-11-11"
     },
@@ -473,9 +473,9 @@
     {
       "source": "docs/users_guide/sfm.md",
       "target": "docs/en/users_guide/sfm.md",
-      "source_sha256": "7c1e6789b7a02119dcc79fc7caad1b125e1d57116ac25706e2551330afd2a31f",
-      "target_sha256": "77e1795902ae922b79533f580cac58685124684ce4ca464656a9fa99ef5ca462",
-      "reviewer": "Claude (Claude Code session; lag time sfm_tl_h of the storage function runoff (§106.6): Japanese and English edited together and the changed passages compared, no model execution)",
+      "source_sha256": "2118eb68263466f075908fa2338ee186a2f0dae076633350db14285052d50250",
+      "target_sha256": "925212675726bef505e45c5d5252562c297061d497e5dd8121d56ae54460d091",
+      "reviewer": "Claude (Claude Code session; evapotranspiration from the storage function tanks (§106.7): Japanese and English edited together and the changed passages compared, no model execution)",
       "method": "assistant",
       "reviewed_on": "2026-11-11"
     },
@@ -554,9 +554,9 @@
     {
       "source": "docs/users_guide/usecases.md",
       "target": "docs/en/users_guide/usecases.md",
-      "source_sha256": "1b28ff8dc45cfad14527dfbb3c4b82adaa2ab99b36b78defb7bb4869e06cd6dd",
-      "target_sha256": "15cf5912a155b6192971c56878746e84ef4d333d1843a5e08bdaad4b65baf998",
-      "reviewer": "Claude (Claude Code session; lag time sfm_tl_h of the storage function runoff (§106.6): Japanese and English edited together and the changed passages compared, no model execution)",
+      "source_sha256": "d0d0c6d7628667ef4921f0695de36b325f0e35841f9be6d3cf1d96345e9c5a0b",
+      "target_sha256": "3a4e2d33124016f01805d48eee26b08428209ab743a1e80cc68881644be1334a",
+      "reviewer": "Claude (Claude Code session; evapotranspiration from the storage function tanks (§106.7): Japanese and English edited together and the changed passages compared, no model execution)",
       "method": "assistant",
       "reviewed_on": "2026-11-11"
     },
@@ -797,9 +797,9 @@
     {
       "source": "examples/List_samples/list_sfm.txt",
       "target": "examples/List_samples/en/list_sfm.txt",
-      "source_sha256": "e460a9050c31c2ba03a1ec5473399db360de3ce34c1ffad1ecddab7fa447b46f",
-      "target_sha256": "0d13f14816f2c9d35dcb7641f84097fea75b443e4f8e3a612e25543047e372a9",
-      "reviewer": "Claude (Claude Code session; lag time sfm_tl_h of the storage function runoff (§106.6): Japanese and English edited together and the changed passages compared, no model execution)",
+      "source_sha256": "b54d9081d0f2a22267062d879151ba67a9b235b0b6e6d385c2720c3548ee0072",
+      "target_sha256": "70bcdca0ff1a5d0e686d6e49739ef23fdf6213c7ec9b63886d6be6614a5bc37a",
+      "reviewer": "Claude (Claude Code session; evapotranspiration from the storage function tanks (§106.7): Japanese and English edited together and the changed passages compared, no model execution)",
       "method": "assistant",
       "reviewed_on": "2026-11-11"
     },
@@ -3308,9 +3308,9 @@
     {
       "source": "test/README.md",
       "target": "test/README.en.md",
-      "source_sha256": "bde0b47b5addb41f88b86bad12323e7d66f60d9cf7ac90fef105afaf906af19b",
-      "target_sha256": "40105776917e58673eb3615b9356391880e2337ef94e0a7cf88252bc9c09dfdd",
-      "reviewer": "Claude (Claude Code session; lag time sfm_tl_h of the storage function runoff (§106.6): Japanese and English edited together and the changed passages compared, no model execution)",
+      "source_sha256": "dcbf420a32b2fa06775a2168e59b9f4d2ae4b23842a9721000121708d1c0cef8",
+      "target_sha256": "dd99e1a9d89c7c826c256500c8a4d51b22814e96bc1c439b8ad1dda3c6cb8519",
+      "reviewer": "Claude (Claude Code session; evapotranspiration from the storage function tanks (§106.7): Japanese and English edited together and the changed passages compared, no model execution)",
       "method": "assistant",
       "reviewed_on": "2026-11-11"
     },
@@ -4397,9 +4397,9 @@
     {
       "source": "test/sfzone/README.md",
       "target": "test/sfzone/en/README.md",
-      "source_sha256": "99dbc5a07fefa350f809450d692f62c33be56ab0e67e0ec7f0da491d4a58110c",
-      "target_sha256": "3d5180d41537171f90f37042340161f6f3bc4eac9071bf554362e4dd731d18e0",
-      "reviewer": "Claude (Claude Code session; lag time sfm_tl_h of the storage function runoff (§106.6): Japanese and English edited together and the changed passages compared, no model execution)",
+      "source_sha256": "d5cf68bb5eb011c988c289060c93cf4904241f5767b350f039487a38d0a5b267",
+      "target_sha256": "b0d8d322427a444e4f932f0a8be31e0d8b320b472af2a6bcc44f7234a4355bf8",
+      "reviewer": "Claude (Claude Code session; evapotranspiration from the storage function tanks (§106.7): Japanese and English edited together and the changed passages compared, no model execution)",
       "method": "assistant",
       "reviewed_on": "2026-11-11"
     },

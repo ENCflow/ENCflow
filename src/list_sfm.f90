@@ -32,6 +32,7 @@ module list_sfm
     real :: sfm_p(1:sfm_nzonemax) = -9999.0       ! 貯留指数 P
     real :: sfm_q0_mmh(1:sfm_nzonemax) = -9999.0  ! 初期条件: 初期の流出強度 (mm/h)
     real :: sfm_tl_h(1:sfm_nzonemax) = -9999.0    ! 遅れ時間 T_L (h。未指定 = 0)
+    real :: sfm_elim_mm(1:sfm_nzonemax) = -9999.0 ! 蒸発散の線形低減を始める貯留 (mm。未指定 = 供給制限のみ)
     integer :: sfm_out_kind(1:sfm_nzonemax) = -9999 ! 出口 1: 地表セルへ移送 / 2: 系外流出
     integer :: sfm_out_cell(1:2, 1:sfm_noutmax, 1:sfm_nzonemax) = -9999  ! 出口セル (i, j)
     real :: sfm_out_w(1:sfm_noutmax, 1:sfm_nzonemax) = -9999.0          ! 出口の配分率
@@ -57,6 +58,7 @@ subroutine list_sfm_read(p, list)
   integer :: f_sfm_rain
   real :: sfm_tol, sfm_dt_min
   real :: sfm_k(1:sfm_nzonemax), sfm_p(1:sfm_nzonemax), sfm_q0_mmh(1:sfm_nzonemax), sfm_tl_h(1:sfm_nzonemax)
+  real :: sfm_elim_mm(1:sfm_nzonemax)
   integer :: sfm_out_kind(1:sfm_nzonemax)
   integer :: sfm_out_cell(1:2, 1:sfm_noutmax, 1:sfm_nzonemax)
   real :: sfm_out_w(1:sfm_noutmax, 1:sfm_nzonemax)
@@ -64,7 +66,7 @@ subroutine list_sfm_read(p, list)
   character(len=maxpathlen) :: fn_sfm_base(1:sfm_nzonemax)
 
   namelist /list_sfm/ f_sfm, fn_sfm_zone, dt_sfm, f_sfm_rain, sfm_tol, sfm_dt_min
-  namelist /list_sfm_zone/ sfm_k, sfm_p, sfm_q0_mmh, sfm_tl_h, sfm_out_kind, sfm_out_cell, sfm_out_w, &
+  namelist /list_sfm_zone/ sfm_k, sfm_p, sfm_q0_mmh, sfm_tl_h, sfm_elim_mm, sfm_out_kind, sfm_out_cell, sfm_out_w, &
                            sfm_base, fn_sfm_base
 
   f_sfm = list%f_sfm
@@ -77,6 +79,7 @@ subroutine list_sfm_read(p, list)
   sfm_p = list%sfm_p
   sfm_q0_mmh = list%sfm_q0_mmh
   sfm_tl_h = list%sfm_tl_h
+  sfm_elim_mm = list%sfm_elim_mm
   sfm_out_kind = list%sfm_out_kind
   sfm_out_cell = list%sfm_out_cell
   sfm_out_w = list%sfm_out_w
@@ -103,6 +106,7 @@ subroutine list_sfm_read(p, list)
   list%sfm_p = sfm_p
   list%sfm_q0_mmh = sfm_q0_mmh
   list%sfm_tl_h = sfm_tl_h
+  list%sfm_elim_mm = sfm_elim_mm
   list%sfm_out_kind = sfm_out_kind
   list%sfm_out_cell = sfm_out_cell
   list%sfm_out_w = sfm_out_w

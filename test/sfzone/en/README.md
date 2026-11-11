@@ -5,7 +5,7 @@
 [日本語](../README.md)
 
 A check of the solution of the tanks, the input of the zones, the transfer to outlets, the
-handling of rain, baseflow, synchronisation, restart, lag time and the combination with VZ of the
+handling of rain, baseflow, synchronisation, restart, lag time, evapotranspiration and the combination with VZ of the
 storage function runoff of zones ([the chapter of the User's
 Guide](../../../docs/en/users_guide/sfm.md), developer.md §106). `Check_sfzone.py` compares
 with analytic solutions, reference solutions and conservation laws, and the results of
@@ -41,6 +41,7 @@ dt = 5 s, dt_sfm = 0 (every step), 12 h.
 | synchronisation interval | `param_sync.txt` | dt_sfm = 60 s. Run.sh also checks with sed save → restart in the middle of an interval (21625 s) |
 | steady state | `param_steady.txt` | constant rain of 10 mm/h for 48 h |
 | lag time | `param_lag.txt` | lag times of 0.5, 1 and 0.2501 h for zones 1, 2 and 3 (zone 3 is rounded to a multiple of dt = 5 s, 0.25 h = 180 steps). Run.sh also checks with sed save → restart at 6 h, a run with dt_sfm = 60 s, and save → restart in the middle of its interval (21625 s) |
+| evapotranspiration | `param_et.txt` / `param_et_steady.txt` | PET of 48 mm/day (2 mm/h) is added and the demand left on the zones is drawn from the tanks. Zone 1 has the supply limit only, zone 2 sfm_elim_mm = 5 mm, and zone 3 20 mm with a lag time of 0.25 h. The steady configuration has a rain of 10 mm/h for 48 h (zone 3 with sfm_elim_mm = 100 mm). Run.sh also checks save → restart with sed |
 | combination with VZ | `param_mosaic.txt` (`zone_mosaic.txt`, `vzzone_mosaic.txt`) | rows 6–8 are a VZ zone (trial default column, soil depth 1 m, outflow from the system) and the storage function has zones 1 and 2. Run.sh also checks with sed the stops for overlapping zones (`vzzone_overlap.txt`), a storage function outlet on a VZ cell, and P > 1 |
 
 ## Checks (Check_sfzone.py)
@@ -83,6 +84,14 @@ each step is made in Python following the rule of rainfall updates (every dt_pru
   run without lag; balance residual (including the water in transit) at the rounding level;
   S_total balance of the Log. Save → restart is bit-identical to the continuous run. The
   storage with dt_sfm = 60 s agrees with the reference solution within sfm_tol.
+- **Evapotranspiration**: the storage and the cumulative evapotranspiration (vevap) are
+  compared with the reference solution that follows "advance the tank → draw
+  evapotranspiration (supply limit, or the amount of E·min(1, S/S_lim) solved exactly within
+  a step)" step by step. Balance residual (including the water in transit and the
+  evapotranspiration); S_total of the Log = S0 + rain − (outflow from the system + ev_total of
+  evap.csv + Σ vevap) / total area. Save → restart is bit-identical. In the steady state q →
+  r − E = 8 mm/h for zones 1 and 2, and zone 3 is the solution of r = q + E·S/S_lim
+  (S = K·q^P) (allowing a relative difference of about 1e-4 due to the order of drawing).
 - **Combination with VZ**: sfm_zone.csv of storage function zones 1 and 2 and the probes of the
   receiving cells agree with `param.txt`; S_total balance of the Log (including the VZ storage
   and outflow from the system).

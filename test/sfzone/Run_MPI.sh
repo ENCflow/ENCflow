@@ -4,7 +4,8 @@
 # 逐次 reference との比較は Log.txt を ULP=0、sfm_zone.csv は np=1 とバイト比較(タンクは全ランクで
 # 冗長に解く。出口は所有ランクだけが加える)。面積平均モード(行部分和の決定的総和)、厳密モードの停止
 # (全ランク同時の par_stop)、保存 → 再開、同期区間の途中での保存 → 再開(np=1 とバイト比較)、
-# VZ との併用と区画の重なりの停止(全ランク同時)、遅れ時間(param_lag.txt)も MPI で確かめる。行は 8 なので np <= 4
+# VZ との併用と区画の重なりの停止(全ランク同時)、遅れ時間(param_lag.txt)、蒸発散(param_et.txt)も MPI で確かめる。
+# 行は 8 なので np <= 4
 sdir=$(dirname "$(readlink -f "$0")")
 export ULP=0
 export MPIRUN_OPTS="--bind-to none"
@@ -95,6 +96,15 @@ done
 cmp -s save_lagp/sfm.dat save_lagp1/sfm.dat \
     || { echo "ERROR: sfm.dat with lag saved in the middle of an interval differs between np=$np and np=1" >&2; exit 1; }
 echo "  ok   sfm.dat with lag saved in the middle of an interval identical between np=$np and np=1"
+
+# 蒸発散をタンクから引く(区画ごとの要求の決定的総和): np=1 と出力がバイト一致
+run "$np" et param_et.txt
+python3 Check_sfzone.py et result_et || exit 1
+if [ "$np" != 1 ]; then
+    variant param_et.txt result_et_np1 "" > "$tmp"
+    run 1 et_np1 "$tmp"
+    same_as_np1 result_et result_et_np1 sfm_zone.csv Log.txt evap.csv
+fi
 
 # VZ との併用と、区画の重なりの停止
 run "$np" mosaic param_mosaic.txt

@@ -27,6 +27,12 @@ module m_sfm
   !   細かい枝)を採る。流出量は S0 + h·r − S1 で定義するので、タンクの水収支は
   !   構造的に閉じる(丸めを除く)。P は 0 < P ≤ 1(P = 1 は線形貯留で直接解く)。
   !
+  ! 【蒸発散】(fn_evap と併用時。§106.7)m_evap が樹冠・地表水・ため池・地下水の順に引いた
+  !   残りの要求を区画セルから s%sfe で受け取り、毎ステップ(m_evap_calc の直後)に区画ごとの
+  !   面積平均の要求をその時刻のタンクの貯留から引く(遅れ列の中の雨は移動中なので引かない)。
+  !   既定は供給制限のみ(貯留があるだけ引く)。sfm_elim_mm を与えた区画は、貯留 S がそれより
+  !   少ないとき E·min(1, S/S_lim) に減らす(地下水の evap_hglim と同じ線形低減をステップ内で
+  !   厳密に解く。§27.2)。引いた量は vevap(sfm_zone.csv)に数える。
   ! 【同期】dt_sfm(既定 0 = 毎ステップ)ごとに、区間の各ステップの雨を区分一定で
   !   与えてタンクを進め、区間の流出を区間末にまとめて出口へ渡す(VZ と同じ意味論)。
   ! 【並列】全ランクが全タンクを冗長に解く(スカラーなので計算は無視できる)。通信は
@@ -49,17 +55,18 @@ module m_sfm
                            zr_gather_carry, zr_report_outlets, zr_check_disjoint, zr_dispose
   use m_sysdep_util, only : sysdep_mkdir
   use m_util, only : param_default, itoa, es_out
-  use m_parallel, only : par_info, par_stop, dcp, is_root
+  use m_parallel, only : par_info, par_stop, dcp, is_root, par_sum_rows
   implicit none
   private
   public :: t_sfm
   public :: m_sfm_init
   public :: m_sfm_calc
+  public :: m_sfm_evap
   public :: m_sfm_record
   public :: m_sfm_dispose
 
-  integer, parameter :: save_version = 2026111102 ! sfm.dat の形式の版(形式変更日 2026-11-11 の 2 回目
-                                                   ! = §7 の "b"。遅れ列を加えた)
+  integer, parameter :: save_version = 2026111103 ! sfm.dat の形式の版(形式変更日 2026-11-11 の 3 回目
+                                                   ! = §7 の "c"。遅れ列と蒸発散の累積を加えた)
   real(real64), parameter :: mmh = 3.6e6_real64    ! mm/h ↔ m/s の換算(1 m/s = 3.6e6 mm/h)
   real(real64), parameter :: s_abs = 1.0e-9_real64 ! 時間誤差の尺度の下限 (m)
 
@@ -89,6 +96,9 @@ module m_sfm
     real(real64), allocatable :: qr(:)         ! 遅れ列の区間の雨 (m/s。先頭が次にタンクへ入る)
     integer, allocatable :: qn(:)              ! 遅れ列の区間のステップ数(合計 = nlag)
     real(real64) :: vlag = 0.0_real64          ! 移動中の水 = 遅れ列の雨の体積 A_g·Σ r·n·dt (m3)
+    ! 蒸発散(§106.7)
+    real(real64) :: elim = 0.0_real64          ! 線形低減を始める貯留 S_lim (m。0 = 供給制限のみ)
+    real(real64) :: vevap = 0.0_real64         ! タンクから引いた蒸発散の累積 (m3)
   end type
 
   !-------------------------------------------
@@ -102,6 +112,7 @@ module m_sfm
     real(real64) :: tol = 0.0_real64           ! 時間誤差の相対許容(流出強度に対する比)
     real(real64) :: dtmin = 0.0_real64         ! 内部刻みの下限 (s)
     logical :: have_lag = .false.              ! 遅れ時間のある区画があるか(sfm_zone.csv の vlag 列)
+    logical :: et = .false.                    ! 蒸発散をタンクから引くか(fn_evap と併用。vevap 列)
     real(real64), allocatable :: dvz(:)        ! (1:nzone) 直近の同期区間の区画の流出 (m3。作業)
     integer :: un_zone = 0                     ! CSV 装置番号(rank0)
     logical :: initialized = .false.
@@ -114,8 +125,9 @@ contains
 ! 初期化(fn_sfm 未指定・f_sfm = 0 なら何もしない)
 !   multi: 複数インスタンス(ネスト等)で実行中か(初版は非対応)
 !   vzr  : VZ 流出の共通部(VZ が有効なら区画の重なりと出口を検査する)
+!   evap_on: 蒸発散(fn_evap)が有効か(有効ならタンクから引く。§106.7)
 !----------------------------------------------------------------------
-subroutine m_sfm_init(sf, p, g, b, s, multi, vzr)
+subroutine m_sfm_init(sf, p, g, b, s, multi, vzr, evap_on)
   type(t_sfm), intent(out) :: sf
   type(t_sysparam), intent(in) :: p
   type(t_geoinfo), intent(in) :: g
@@ -123,6 +135,7 @@ subroutine m_sfm_init(sf, p, g, b, s, multi, vzr)
   type(t_state), intent(inout) :: s
   logical, intent(in) :: multi
   type(t_zonerunoff), intent(in) :: vzr
+  logical, intent(in) :: evap_on
   type(t_list_sfm) :: list
   integer :: z
 
@@ -151,6 +164,15 @@ subroutine m_sfm_init(sf, p, g, b, s, multi, vzr)
 
   allocate(s%sfp(dcp%ish:dcp%ieh, dcp%jsh:dcp%jeh), source = 0.0)
   s%sf_active = .true.
+  ! 蒸発散の受け渡し口(fn_evap と併用時だけ確保 = m_evap が残りの要求を書く)
+  if (evap_on) then
+    allocate(s%sfe(dcp%ish:dcp%ieh, dcp%jsh:dcp%jeh), source = 0.0)
+    sf%et = .true.
+    call par_info("sfm: evapotranspiration (fn_evap) left after canopy, surface water, ponds and groundwater" &
+                  //" is taken from the tanks")
+  else if (any(sf%tanks(:)%elim > 0.0_real64)) then
+    call par_info("sfm: sfm_elim_mm is not used because fn_evap is not enabled")
+  end if
   call zr_alloc_interval(sf%zr)
   allocate(sf%dvz(1:sf%zr%nzone), source = 0.0_real64)
 
@@ -192,12 +214,54 @@ end subroutine
 
 
 !----------------------------------------------------------------------
+! 毎ステップ(m_evap_calc の直後): m_evap が区画セルに残した蒸発散の要求 s%sfe を
+! 区画ごとに集め(行部分和 → par_sum_rows で決定的。collective)、面積平均の要求を
+! その時刻のタンクの貯留から引く(§106.7)。判定 sf%et は全ランク同一
+!----------------------------------------------------------------------
+subroutine m_sfm_evap(sf, g, s)
+  type(t_sfm), intent(inout) :: sf
+  type(t_geoinfo), intent(in) :: g
+  type(t_state), intent(inout) :: s
+  integer :: i, j, z
+  real(real64) :: tot, d, w
+  real(real64), allocatable :: rows(:,:), r1(:)
+
+  if (.not. sf%enabled) return
+  if (.not. sf%et) return
+  allocate(rows(dcp%js:dcp%je, 1:sf%zr%nzone), source = 0.0_real64)
+  allocate(r1(dcp%js:dcp%je))
+  do j = dcp%js, dcp%je
+    do i = g%wx(1,j), g%wx(2,j)
+      z = sf%zr%zid(i,j)
+      if (z > 0) rows(j,z) = rows(j,z) + real(s%sfe(i,j), real64)
+    end do
+  end do
+  s%sfe(:,:) = 0.0
+  do z = 1, sf%zr%nzone
+    associate (tk => sf%tanks(z), area => sf%zr%zones(z)%area)
+      r1(:) = rows(:,z)
+      call par_sum_rows(r1, tot)
+      d = tot * sf%zr%dxdy / area            ! 区画の面積平均の要求 (m)
+      if (d > 0.0_real64) then
+        w = tank_et_draw(tk%s, d, tk%elim)
+        tk%s = tk%s - w
+        tk%vevap = tk%vevap + area * w
+        tk%vstore = area * tk%s
+      end if
+    end associate
+  end do
+  s%sfstore = total_storage(sf)
+end subroutine
+
+
+!----------------------------------------------------------------------
 ! 区画の時系列 CSV sfm_zone.csv(dt_record 間隔。値は全ランク同値で rank0 が書く。
 ! 直近の同期時刻の値)
 !   rain: 直近ステップの雨 (mm/h。地上の雨。遅れ時間があるとタンクへはその T_L 後に入る)、
 !   q: タンクの流出強度 (mm/h)、S: 貯留 (mm)、区画の累積水量 (m3) と収支残差
 !   (貯留と移動中の水の変化 − (入力 − 流出))。遅れ時間のある区画があれば vlag
-!   (移動中の水 m3)の列を residual の後に置く(基底流の vbase はその後 = 最後)
+!   (移動中の水 m3)の列を residual の後に置く。蒸発散をタンクから引くときは vevap(累積 m3)を
+!   その後に置き、残差に含める(基底流の vbase はその後 = 最後)
 !----------------------------------------------------------------------
 subroutine m_sfm_record(sf, s)
   type(t_sfm), intent(in) :: sf
@@ -213,10 +277,12 @@ subroutine m_sfm_record(sf, s)
       ! 遅れのある区画だけ別に足す)
       res = tk%vstore - tk%vstore0 - tk%vin + tk%vdrain
       if (tk%nlag > 0) res = res + tk%vlag
+      if (sf%et) res = res + tk%vevap
       write(sf%un_zone, '(f0.2,",",i0,10(",",es23.15))', advance='no') s%t, z, &
             es_out([zc%area, sf%zr%rlast(z) * mmh, qfun(tk, tk%s) * mmh, tk%s * 1.0e3_real64, &
                     tk%vin, tk%vstore, tk%vdrain, zc%vint, zc%vext, res])
       if (sf%have_lag) write(sf%un_zone, '(",",es23.15)', advance='no') es_out(tk%vlag)
+      if (sf%et) write(sf%un_zone, '(",",es23.15)', advance='no') es_out(tk%vevap)
       if (sf%zr%have_base) write(sf%un_zone, '(",",es23.15)', advance='no') es_out(zc%vbase)
       write(sf%un_zone, '(a)') ""
     end associate
@@ -336,7 +402,7 @@ subroutine setup_zones(sf, p, g, b, list)
   real, parameter :: q0_default_mmh = 0.1  ! 降雨前の流出率の目安(経験値。VZ と同じ)
   integer, allocatable :: zmap(:,:), grp(:)
   integer :: z, nzn
-  real :: kk, pp, q0, tl
+  real :: kk, pp, q0, tl, el
   real(real64) :: tla
   character(len=16) :: tag
   character(len=256) :: line
@@ -346,7 +412,8 @@ subroutine setup_zones(sf, p, g, b, list)
   nzn = sf%zr%nzone
   do z = nzn + 1, sfm_nzonemax
     if (list%sfm_out_kind(z) > -9998 .or. list%sfm_k(z) > -9998.0 .or. list%sfm_p(z) > -9998.0 .or. &
-        list%sfm_q0_mmh(z) > -9998.0 .or. list%sfm_tl_h(z) > -9998.0 .or. list%sfm_base(1,1,z) > -9998.0 .or. &
+        list%sfm_q0_mmh(z) > -9998.0 .or. list%sfm_tl_h(z) > -9998.0 .or. list%sfm_elim_mm(z) > -9998.0 .or. &
+        list%sfm_base(1,1,z) > -9998.0 .or. &
         len_trim(list%fn_sfm_base(z)) > 0) then
       call par_stop("list_sfm_zone: zone "//itoa(z)//" is set but absent from fn_sfm_zone")
     end if
@@ -374,6 +441,11 @@ subroutine setup_zones(sf, p, g, b, list)
     tl = param_default("sfm", "sfm_tl_h"//trim(tag), list%sfm_tl_h(z), 0.0, " h", unset = -9999.0)
     if (.not. (q0 >= 0.0)) call par_stop("list_sfm_zone: sfm_q0_mmh"//trim(tag)//" must be >= 0")
     if (.not. (tl >= 0.0)) call par_stop("list_sfm_zone: sfm_tl_h"//trim(tag)//" must be >= 0 (h)")
+    el = 0.0
+    if (list%sfm_elim_mm(z) > -9998.0) then
+      el = param_default("sfm", "sfm_elim_mm"//trim(tag), list%sfm_elim_mm(z), 0.0, " mm", unset = -9999.0)
+      if (.not. (el > 0.0)) call par_stop("list_sfm_zone: sfm_elim_mm"//trim(tag)//" must be > 0 (mm)")
+    end if
     associate (tk => sf%tanks(z))
       tk%k = real(kk, real64)
       tk%p = real(pp, real64)
@@ -382,6 +454,7 @@ subroutine setup_zones(sf, p, g, b, list)
       tk%q0mmh = real(q0, real64)
       tk%s = tk%k * tk%q0mmh**tk%p * 1.0e-3_real64     ! S0 [m] = K·q0^P [mm] / 1000
       tk%hnext = real(p%dt, real64)
+      tk%elim = real(el, real64) * 1.0e-3_real64
       ! 遅れ時間: dt の整数倍に丸める。遅れ列の初期値は q0 の定常
       tk%tlh = real(tl, real64)
       tk%nlag = nint(tk%tlh * 3600.0_real64 / real(p%dt, real64))
@@ -674,6 +747,35 @@ end function
 
 
 !----------------------------------------------------------------------
+! タンクから引く蒸発散の量 (m。§106.7)。d はそのステップの要求 E·dt。
+!   el = 0: 供給制限のみ(min(S, d))。
+!   el > 0: dS/dt = −E·min(1, S/el) をステップ内で E 一定として厳密に解いた減少量
+!   (地下水の段の hg_draw と同じ式。§27.2。タンクの状態は real64 なので real64 で書く)。
+!   結果は S を超えない
+!----------------------------------------------------------------------
+pure real(real64) function tank_et_draw(s, d, el) result(w)
+  real(real64), intent(in) :: s, d, el
+  real(real64) :: lin, x
+  if (s <= 0.0_real64) then
+    w = 0.0_real64
+  else if (el <= 0.0_real64) then
+    w = min(s, d)
+  else if (s - d >= el) then
+    w = d                                     ! ステップの間ずっと抑制なし
+  else
+    lin = max(s - el, 0.0_real64)             ! el まで線形に引ける分(時間 lin/E)
+    x = (d - lin) / el
+    if (x < 1.0e-2_real64) then               ! 1 − exp(−x) の桁落ち対策(hg_draw と同じ級数)
+      w = lin + (s - lin) * (x * (1.0_real64 - 0.5_real64 * x * (1.0_real64 - x / 3.0_real64 &
+          * (1.0_real64 - 0.25_real64 * x * (1.0_real64 - 0.2_real64 * x)))))
+    else
+      w = lin + (s - lin) * (1.0_real64 - exp(-x))
+    end if
+  end if
+end function
+
+
+!----------------------------------------------------------------------
 ! 流出強度 q(S) = c·S^m (m/s。S [m])
 !----------------------------------------------------------------------
 pure real(real64) function qfun(tk, s) result(q)
@@ -718,6 +820,10 @@ subroutine report_zones(sf)
             ", area ", zc%area, " m2, K ", tk%k, ", P ", tk%p, ", initial q ", tk%q0mmh, " mm/h (S ", &
             tk%s * 1.0e3_real64, " mm)"
       call par_info(trim(line))
+      if (tk%elim > 0.0_real64) then
+        write(line, '(a,g0.6,a)') "    evapotranspiration reduced linearly below S = ", tk%elim * 1.0e3_real64, " mm"
+        call par_info(trim(line))
+      end if
       if (tk%nlag > 0) then
         write(line, '(a,g0.8,a,i0,a)') "    lag time T_L ", tk%tlah, " h (", tk%nlag, &
               " steps of dt; the rain enters the tank T_L later)"
@@ -740,6 +846,7 @@ subroutine open_csv(sf, p)
   write(sf%un_zone, '(a)', advance='no') "time(s),zone,area(m2),rain(mm/h),q(mm/h),S(mm),vin(m3)," // &
                                          "vstore(m3),vdrain(m3),vsurface(m3),vexternal(m3),residual(m3)"
   if (sf%have_lag) write(sf%un_zone, '(a)', advance='no') ",vlag(m3)"
+  if (sf%et) write(sf%un_zone, '(a)', advance='no') ",vevap(m3)"
   if (sf%zr%have_base) write(sf%un_zone, '(a)', advance='no') ",vbase(m3)"
   write(sf%un_zone, '(a)') ""
 end subroutine
@@ -765,7 +872,7 @@ subroutine save_state(sf, p)
   do z = 1, sf%zr%nzone
     associate (tk => sf%tanks(z), zc => sf%zr%zones(z))
       write(un) tk%s, tk%hnext, tk%nacc, tk%nrej, sf%zr%rlast(z), tk%vin, tk%vdrain, zc%vint, zc%vext, &
-                tk%vstore0, tk%dvlast, zc%vbase
+                tk%vstore0, tk%dvlast, zc%vbase, tk%vevap
       write(un) tk%nq                  ! 遅れ列(遅れなしなら 0 で中身なし)
       if (tk%nq > 0) write(un) tk%qr(1:tk%nq), tk%qn(1:tk%nq)
     end associate
@@ -820,7 +927,7 @@ subroutine restore_state(sf, p)
   do z = 1, nzn
     associate (tk => sf%tanks(z), zc => sf%zr%zones(z))
       read(un) tk%s, tk%hnext, tk%nacc, tk%nrej, sf%zr%rlast(z), tk%vin, tk%vdrain, zc%vint, zc%vext, &
-               tk%vstore0, tk%dvlast, zc%vbase
+               tk%vstore0, tk%dvlast, zc%vbase, tk%vevap
       read(un) nq
       tk%nq = 0
       if (nq > 0) then

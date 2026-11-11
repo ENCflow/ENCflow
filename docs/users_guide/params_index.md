@@ -2,7 +2,7 @@
 
 [ユーザーガイド目次へ](../users_guide.md)
 
-namelist パラメータ名から章を引く索引です(アルファベット順、全 797 項目)。
+namelist パラメータ名から章を引く索引です(アルファベット順、全 798 項目)。
 この索引は list_*.f90 の namelist 宣言から機械抽出で生成されています
 (developer.md §35.1)。
 
@@ -644,6 +644,7 @@ namelist パラメータ名から章を引く索引です(アルファベット�
 | sec_vmin | &list_geomorph | [土砂・地形変化](geomorph.md) |
 | sfm_base | &list_sfm_zone | [貯留関数法の区画流出](sfm.md) |
 | sfm_dt_min | &list_sfm | [貯留関数法の区画流出](sfm.md) |
+| sfm_elim_mm | &list_sfm_zone | [貯留関数法の区画流出](sfm.md) |
 | sfm_k | &list_sfm_zone | [貯留関数法の区画流出](sfm.md) |
 | sfm_out_cell | &list_sfm_zone | [貯留関数法の区画流出](sfm.md) |
 | sfm_out_kind | &list_sfm_zone | [貯留関数法の区画流出](sfm.md) |
