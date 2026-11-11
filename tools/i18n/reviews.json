@@ -869,11 +869,11 @@
     {
       "source": "examples/README.md",
       "target": "examples/README.en.md",
-      "source_sha256": "ed5017f5838f55425d76393d1aeba4df8684c2b45cd44508f5d420790dcc998a",
-      "target_sha256": "408a09915239c089b36b73af0ddb168f15dd1bc5a5087299a2427590eea53886",
-      "reviewer": "Claude (Claude Code session; wrote and read both versions side by side: structure, numbers, tables, links and captions)",
+      "source_sha256": "d180e744fde8e12b2bf8aa117c7aa43fa52f154ca198a698ace1804a4181fd3e",
+      "target_sha256": "e4ba584054a09cc9409b01eec15424ef061722df273e18cda8bdbbff60d599b9",
+      "reviewer": "Claude (Claude Code session; merge of two reviewed changes: the benchmark row and process-chain line from main and the source_area row from this branch, each in both languages; the rest unchanged)",
       "method": "assistant",
-      "reviewed_on": "2026-11-10"
+      "reviewed_on": "2026-11-11"
     },
     {
       "source": "examples/ashfall_lahar/README.md",
@@ -2678,9 +2678,9 @@
     {
       "source": "examples/source_area/README.md",
       "target": "examples/source_area/en/README.md",
-      "source_sha256": "dd6876a11a0abc76d6702624ef67dee6305794ba3f180a53d36e9bff845994bf",
-      "target_sha256": "9594c1c50af936c422b77fd0cfb723dd08d7a3b4693c6bbf5f9ff3a9a553563b",
-      "reviewer": "Claude (Claude Code session; rewritten in both languages for the base lateral conductivity of 36000 mm/h, with new sections on rain intensity and a supplement on the equivalent roughness and the soil conductivity; headings, bullets, table rows and the numbers of every paragraph compared between the two files)",
+      "source_sha256": "522a18c99475d2fe9cca6071a2248ecd49c71325e6aa35fc612c6916dbd0a37f",
+      "target_sha256": "87afdf3f7446887ce47bf3ad1f45b6783b8fc5cbd4bf21573798b2442dc5543c",
+      "reviewer": "Claude (Claude Code session; one sentence added to the Computation bullet in both languages (the note that the diffusion wave of f_govequation = 1 is strictly the local inertia equation, with a link to the primer); the rest unchanged since the previous record, in which headings, bullets, table rows and the numbers of every paragraph were compared)",
       "method": "assistant",
       "reviewed_on": "2026-11-11"
     },

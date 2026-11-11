@@ -169,7 +169,10 @@ cells of the extracted catchment. (c) Rainfall.
   from the first.
 - **Computation**: dynamic wave at the surface, dt = 3 s, 96 hours. The limit depth `dd` and
   the lower bound of the depth in the friction term `dv` are 0.1 mm (so that thin flow on the
-  slopes is not stopped; the default is 1 mm). Fields are written every hour.
+  slopes is not stopped; the default is 1 mm). Fields are written every hour. The sweep also
+  includes runs with the surface flow as a diffusion wave (`f_govequation = 1`, no advection
+  term; the local term remains, so strictly the local inertia equation; for the terms see
+  [The shallow water equations and the dynamic, diffusion and kinematic waves](../../../docs/en/users_guide/shallow_water.md#encflow)).
 
 | Case | Parameter file | Contents |
 |---|---|---|
