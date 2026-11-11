@@ -2678,9 +2678,9 @@
     {
       "source": "examples/source_area/README.md",
       "target": "examples/source_area/en/README.md",
-      "source_sha256": "e712b5766f484b7be9c0b12a8b6766f0c9eb91994d2088a8761cd5d014bba8af",
-      "target_sha256": "7107f859d75661af85598b8dc1ee7c1d3d03055173b5fcde1512524c2907c42f",
-      "reviewer": "Claude (Claude Code session; the block \"What this example shows\" (one bold line and six bullets after the introduction) added in both languages; the six bullets, their numbers and their section links were compared, and headings, bullets, table rows and figures were counted in both files; the rest unchanged since the previous record)",
+      "source_sha256": "39652ec22cc7068b661a5b380db198e7e33dba79d11879c4fe815879cb9bbaf6",
+      "target_sha256": "92994db2eaab5daecb4ba215835859ea22e7b7a1fb243b93630e4db997133a75",
+      "reviewer": "Claude (Claude Code session; number pairs and lists joined by a middle dot in the Japanese text were rewritten (pairs for the two storms as 'A と B', lists with commas) without changing any value; the two reworded bullets of \"What this example shows\" and two sentences of the supplement were adjusted in English to match; the changed sentences and their numbers were compared in both languages, the rest unchanged since the previous record)",
       "method": "assistant",
       "reviewed_on": "2026-11-11"
     },

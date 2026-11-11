@@ -51,13 +51,13 @@ compared with observations).
   the first storm is only 20 mm (115 mm in the process run)
   ([Comparison with no infiltration and vertical infiltration only](#comparison-with-no-infiltration-and-vertical-infiltration-only)).
 - **The equivalent roughness changes by an order of magnitude with how fast the soil conducts
-  water**: as the lateral conductivity is lowered from 100000 to 36000 (base), 10000 and
-  3600 mm/h, the closest roughness rises from 1 to 2, to 5 and 3 (first and second storm) and
-  to 10 and 5. One order of magnitude in roughness corresponds to a factor of 4 in the lag
-  before slope water reaches the channels, and that lag is proportional to the water stored on
-  the slopes. The equivalent roughness used in practice for mountains (about 0.4–0.8) is
-  matched at 100000 mm/h; the roughness 2 that fits the base value of 36000 mm/h is several
-  times the values used in practice
+  water**: as the lateral conductivity is lowered from 100000 mm/h to 3600 mm/h, the closest
+  roughness rises from 1 to 10 for the first storm and 5 for the second (it is 2 for the base
+  value of 36000 mm/h). One order of magnitude in roughness corresponds to a factor of 4 in
+  the lag before slope water reaches the channels, and that lag is proportional to the water
+  stored on the slopes. The equivalent roughness used in practice for mountains (about
+  0.4–0.8) is matched at 100000 mm/h; the roughness 2 that fits the base value of 36000 mm/h
+  is several times the values used in practice
   ([Soil conductivity and the equivalent roughness](#soil-conductivity-and-the-equivalent-roughness),
   [Supplement](#supplement-equivalent-roughness-and-the-soil-conductivity)).
 - **Heavier rain widens the saturated area, but the equivalent roughness changes little**: with
@@ -69,7 +69,8 @@ compared with observations).
   speed at which the response travels down a slope is set by conductivity × slope / specific
   yield. When a layer 2 with a small specific yield is placed below a poorly conducting soil
   (3600 mm/h), layer 2 fills the valleys as fast as a soil with ten times the conductivity,
-  and the closest roughness falls from 10 and 5 to 3 and 3
+  and the closest roughness falls from 10 for the first storm and 5 for the second to 3 for
+  both storms
   ([Supplement](#supplement-equivalent-roughness-and-the-soil-conductivity)).
 
 ## What happens in real mountain catchments
@@ -707,8 +708,9 @@ The no-infiltration roughness closest to the base process run is 2, several time
 equivalent roughness used in practice for mountains (about 0.4–0.8). This correspondence is
 obtained with a lateral conductivity of the soil of 36000 mm/h (1e-2 m/s), larger than the
 range the user guide suggests for forested catchments (1000–10000 mm/h). With 3600 mm/h, which
-is within that range, the closest roughness is 10 and 5, an order of magnitude above the
-values used in practice; with 100000 mm/h it is 1 and overlaps the values used in practice.
+is within that range, the closest roughness is 10 and 5 (first and second storm), an order of
+magnitude above the values used in practice; with 100000 mm/h it is 1 and overlaps the values
+used in practice.
 This section sorts out this relation between the roughness and the conductivity from the
 computed results.
 
@@ -831,10 +833,10 @@ layer 2).
   the rain after 7.3 hours, earlier than the single layer with 3600 mm/h (not reached during
   the 12 hours of rain) and later than the base run (5.5 hours). The slope-stage lag is 4.8
   hours (8.7 hours for the single layer with 3600 mm/h, 3.3 hours for the base run), and the
-  closest roughness is 3 and 3 (10 and 5 for the single layer with 3600 mm/h). It is later
-  than the base run because, in the cells where layer 2 is full, the soil above it (capacity
-  100 mm) also has to fill before water comes out at the surface (the cells with the soil
-  full are 2.3 % at 3 h and 13.7 % at 12 h).
+  closest roughness is 3 for both storms (10 and 5 for the single layer with 3600 mm/h). It
+  is later than the base run because, in the cells where layer 2 is full, the soil above it
+  (capacity 100 mm) also has to fill before water comes out at the surface (the cells with
+  the soil full are 2.3 % at 3 h and 13.7 % at 12 h).
 - **A large conductivity is not the same as fast water**: water particles move at
   K × slope / porosity, while the response travels at K × slope / specific yield, so the
   smaller the specific yield (the water needed to raise the water table), the further the wave
