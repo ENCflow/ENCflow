@@ -871,11 +871,31 @@ downslope delay can be left out corresponds to a large celerity of the lateral f
 short slope-stage lag. With slow lateral flow, as in the single layer with 3600 mm/h (slope
 stage 8.7 hours), the premise does not hold.
 
+How much delay vertical unsaturated infiltration alone produces can be seen by putting the
+rain of this example on a single soil column of VZ runoff (a calculation that is not among the
+cases of the example; the soil is the trial default of VZ runoff, the soil of Tatsunokuchi-yama
+of Tani (2023), and the initial condition is steady drainage at 0.1 mm/h; for the settings see
+[Starting points for sensitivity experiments](#starting-points-for-sensitivity-experiments)).
+The lag from the rain of the water passing downward through a depth of 0.5 m (the drainage of
+a cell with a 0.5 m soil; the difference of the centroids of the rain and the drainage over
+the 48 hours of the second storm) is 4.4 hours for a rain of 10 mm/h and 1.8 hours for
+30 mm/h. Converted to the no-infiltration roughness with the same lag, these are 2.7 and 1.4.
+They are of the same order as the slope stage of the base run of this example (3.3 and 2.0
+hours; roughness 1.7 and 1.6): even with no delay in the downslope transfer, vertical
+unsaturated infiltration alone produces a delay of the same size. The lag is longer for a
+greater depth (for 10 mm/h, 2.4 hours at 0.25 m and 8.0 hours at 1 m) and shorter for heavier
+rain. With three times the rain it shrinks more (to 0.4 times) than in the process run of this
+example (to 0.6 times), so the roughness with the same lag, unlike in the process run
+(1.7 → 1.6), becomes smaller as the rain gets heavier. The soil of Tatsunokuchi-yama is not
+the soil of this catchment, so the values are a guide.
+
 The equivalent roughness used in practice (a slope lag of about 2 hours), the large lateral
 conductivity of this example, and the "no downslope delay" of VZ runoff assign the delay of
 the water inside the slope to different places, but they have in common that the response
 travels fast in the downslope direction. VZ runoff in ENCflow cannot be combined with
-groundwater (`fn_gwflow`), so the two are not compared in this example.
+groundwater (`fn_gwflow`), so no run combines vertical unsaturated infiltration with the
+lateral flow in the soil. Nor is VZ runoff applied to this catchment to compare the
+hydrographs at the outlet.
 
 ## What this model does not represent (differences from the real phenomenon)
 
@@ -997,6 +1017,15 @@ groundwater (`fn_gwflow`), so the two are not compared in this example.
   between storms. With a smaller infiltration capacity and lateral conductivity (the values
   the user guide suggests for a weathered bedrock layer), layer 2 becomes a layer that yields
   baseflow.
+- The soil column calculation of VZ runoff
+  ([Relation to vertical unsaturated infiltration (VZ)](#relation-to-vertical-unsaturated-infiltration-vz)
+  in the supplement): copy `param_dflt.txt` of [test/vzcol](../../../test/vzcol/) (the trial
+  default column, with the column settings left out), replace its `&list_precip` with that of
+  `param_common.txt` of this example (`param_rain30.txt` for 30 mm/h), and set `tt` to 345600
+  (96 hours), `vz_out_depth` to `0.25, 0.5, 1.0` and `dir_result` to another name. Run it in
+  test/vzcol with `./encflow <the copied file>` after `make`; `vz_column.csv` then holds the
+  cumulative drainage D (m) at each depth every 10 minutes, and its time difference is the
+  drainage.
 
 ## References
 
