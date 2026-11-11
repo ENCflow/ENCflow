@@ -438,13 +438,15 @@ The labels in the Basis column are explained in [How to read the basis of a defa
   the closed form (1 − a1)·min(R, R_f) + (1 − a2)·max(R − R_f, 0) within 10⁻¹² relative.
 - [examples/source_area](../../../examples/source_area/en/README.md): a supplement of the
   example of a mountain catchment on real terrain. The rain of the catchment runs is put on
-  three tanks (`make sfm`), and their runoff is laid over the outlet runoff of the run that
+  four tanks (`make sfm`), and their runoff is laid over the outlet runoff of the run that
   produces the delay by lateral flow in the soil and over the drainage of a VZ soil column.
-  K and P are determined from the "relation between storage and runoff" of each calculation
-  (not calibrated against observations). The tank matched to the relation between storage
-  and drainage in the recession of the VZ soil column coincides with the recession of the
-  column drainage, and rises earlier than the column, which gives nothing until the wetting
-  front arrives.
+  K, P and the lag time are determined from the "relation between storage and runoff" of each
+  calculation and from the split of the lag (not calibrated against observations). The tank
+  matched to the relation between storage and drainage in the recession of the VZ soil column
+  coincides with the recession of the column drainage, and rises earlier than the column,
+  which gives nothing until the wetting front arrives. The tank whose lag time is the lag of
+  channel routing matches the start of the rise, but no longer fits when the rain intensity
+  is changed (the lag time does not depend on the rain intensity).
 - Results are bit-identical regardless of the number of MPI processes (the tanks are
   computed identically on all ranks, and only the owner rank adds to the outlets).
 

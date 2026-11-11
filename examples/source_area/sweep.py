@@ -17,6 +17,9 @@
 #   process_k3600・k10000・k100000  過程計算。側方飽和透水係数 gw_ksh_mmh = 3600・10000・100000 mm/h
 #                                 (基本は 36000 mm/h。等価粗度が土層の通しやすさでどう変わるかを見る)
 #   process_sd1                   過程計算。土層厚 sd0 = 1 m(基本は 0.5 m)
+#   process_thick                 過程計算。側方飽和透水係数と有効間隙率を 1/10(3600 mm/h、sy0 = 0.02)、土層厚を
+#                                 10 倍(sd0 = 5 m)にした 1 層(透水係数 ÷ 有効間隙率、透水係数 × 土層厚、貯められる
+#                                 水は基本と同じ。透水係数だけでは応答が決まらないことを見る)
 #   process_l2                    過程計算。土層の側方を 3600 mm/h に下げ、その下に比湧水量の小さい第 2 層
 #                                 (f_gwlayer2 = 1。param.txt の &list_gwflow_layer2)を置く
 #   process_r30                   過程計算。雨を 30 mm/h に(降雨を param_rain30.txt に差し替え、dt = 2 s)
@@ -47,6 +50,7 @@ CASES = {
     "process_k10000": ("param.txt", {"gw_ksh_mmh": "10000.0"}),
     "process_k100000": ("param.txt", {"gw_ksh_mmh": "100000.0"}),
     "process_sd1": ("param.txt", {"sd0": "1.0"}),
+    "process_thick": ("param.txt", {"gw_ksh_mmh": "3600.0", "sy0": "0.02", "sd0": "5.0"}),
     "process_l2": ("param.txt", {"gw_ksh_mmh": "3600.0", "f_gwlayer2": "1"}),
     "process_r30": ("param.txt", {"fn_precip": "'param_rain30.txt'", "dt": "2.0"}),
     "surface_r30_n03": ("param_surface.txt", {"fn_precip": "'param_rain30.txt'", "dt": "2.0"}),
@@ -54,7 +58,7 @@ CASES = {
     "surface_r30_n3": ("param_surface.txt", {"rn0": "3.0", "fn_precip": "'param_rain30.txt'", "dt": "2.0"}),
 }
 NOTE = {"rn0": "斜面の粗度", "f_govequation": "地表の流れ(1: 拡散波)", "gw_ksh_mmh": "側方飽和透水係数 (mm/h)",
-        "sd0": "土層厚 (m)", "f_gwlayer2": "第 2 層(1: 使う。設定は &list_gwflow_layer2)",
+        "sd0": "土層厚 (m)", "sy0": "有効間隙率", "f_gwlayer2": "第 2 層(1: 使う。設定は &list_gwflow_layer2)",
         "fn_precip": "降雨(30 mm/h × 12 時間 × 2 回)", "dt": "時間刻み (s)"}
 
 

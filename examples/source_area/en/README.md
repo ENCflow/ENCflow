@@ -83,9 +83,18 @@ compared with observations).
   but not the rise**: a tank with the same storage as the process run (storage S and runoff q
   related by S = K·q^0.6) has a lag of 5.3 hours (5.1 hours in the process run) and fits of
   0.92 and 0.96. Its runoff increases from the start of the rain, so it cannot represent a rise
-  that waits until water has been stored. The exponent sets how much the lag shrinks under
+  that waits until water has been stored. Adding a lag time matches the start of the rise, but
+  no longer fits when the rain intensity changes. The exponent sets how much the lag shrinks under
   heavier rain; overland flow corresponds to 0.6 and the VZ soil column to 0.17
   ([Relation to the storage function method](#relation-to-the-storage-function-method)).
+- **The lateral saturated conductivity of a single layer is an equivalent value of the model,
+  determined together with the soil depth and the effective porosity**: a single layer with
+  one tenth the lateral saturated conductivity and effective porosity and ten times the soil
+  depth gives almost the same storm runoff as the base run (fit 1.000). What fitting the storm
+  runoff determines is not the conductivity itself, and it is not a quantity that can be
+  compared with soil measurements. Other distributed models also treat the lateral
+  conductivity as a value to be calibrated
+  ([Supplement 2](#supplement-2-what-the-lateral-saturated-conductivity-of-a-single-layer-is-equivalent-to)).
 
 ## What happens in real mountain catchments
 
@@ -238,9 +247,9 @@ cells of the extracted catchment. (c) Rainfall.
 | Process run | `param.txt` | Infiltration + lateral flow in the soil. Slope roughness 0.3 |
 | Vertical infiltration only | `param_vertical.txt` | No lateral flow. Slope roughness 0.3 |
 | No infiltration | `param_surface.txt` | No groundwater. Slope roughness 0.3 |
-| Sweep (22 cases) | `param_sweep_<case>.txt` (made by `sweep.py` from the three above) | No infiltration with slope roughness 0.6, 1, 2, 3, 5, 10, 30; no infiltration as a diffusion wave with roughness 0.3, 3, 10; vertical infiltration only with roughness 3; the process run with slope roughness 1, as a diffusion wave, with lateral conductivity 3600, 10000 and 100000 mm/h, with soil depth 1 m, and with layer 2 (a layer of small specific yield below a soil with lateral conductivity 3600 mm/h); the process run and no infiltration (roughness 0.3, 1, 3) with the rain raised to 30 mm/h (rainfall in `param_rain30.txt`, dt = 2 s) |
+| Sweep (23 cases) | `param_sweep_<case>.txt` (made by `sweep.py` from the three above) | No infiltration with slope roughness 0.6, 1, 2, 3, 5, 10, 30; no infiltration as a diffusion wave with roughness 0.3, 3, 10; vertical infiltration only with roughness 3; the process run with slope roughness 1, as a diffusion wave, with lateral conductivity 3600, 10000 and 100000 mm/h, with soil depth 1 m, with layer 2 (a layer of small specific yield below a soil with lateral conductivity 3600 mm/h), and as a single layer with 1/10 the lateral saturated conductivity and effective porosity and 10 times the soil depth; the process run and no infiltration (roughness 0.3, 1, 3) with the rain raised to 30 mm/h (rainfall in `param_rain30.txt`, dt = 2 s) |
 | Soil column of VZ runoff (2 cases) | `param_vz.txt`, `param_vz_r30.txt` | The terrain of the catchment is not used; the same rain (10 mm/h and 30 mm/h) is put on a single reference column of VZ runoff. The soil is the trial default of VZ runoff (the soil of Tatsunokuchi-yama of Tani (2023)). For the comparison in the [supplement](#relation-to-vertical-unsaturated-infiltration-vz) |
-| Tanks of the storage function method (2 cases) | `param_sfm.txt`, `param_sfm_r30.txt` | The terrain of the catchment is not used; the same rain (10 mm/h and 30 mm/h) is put on three tanks of the storage function method. K and P are determined from the "relation between storage and runoff" of the process run and of the VZ soil column. For the comparison in the [supplement](#relation-to-the-storage-function-method) |
+| Tanks of the storage function method (2 cases) | `param_sfm.txt`, `param_sfm_r30.txt` | The terrain of the catchment is not used; the same rain (10 mm/h and 30 mm/h) is put on four tanks of the storage function method. K, P and the lag time are determined from the "relation between storage and runoff" of the process run and of the VZ soil column and from the split of the lag. For the comparison in the [supplement](#relation-to-the-storage-function-method) |
 
 ## How to run
 
@@ -248,7 +257,7 @@ cells of the extracted catchment. (c) Rainfall.
 cd examples/source_area
 make                      # links and inputs (make_catchment.py; a few seconds)
 make run                  # the three basic cases, one after another
-make sweep                # the 22 sweep cases, one after another
+make sweep                # the 23 sweep cases, one after another
 make vz                   # the 2 soil-column cases of VZ runoff (for the supplement; a few seconds)
 make sfm                  # the 2 tank cases of the storage function method (for the supplement; a few seconds)
 python3 plot_results.py   # figs/*.png and tables (argument en writes English figures to en/figs/)
@@ -261,7 +270,7 @@ vertical infiltration only 23–30 minutes and no infiltration 25–37 minutes; 
 and vertical infiltration only once the soil is full, are heavy because water lies on every
 cell; the 30 mm/h cases take longer because of the smaller time step). To run cases side by
 side, use `make -j 4 run OMP_NUM_THREADS=1` and `make -j 4 sweep OMP_NUM_THREADS=1` (about 3
-hours for the 25 cases). The results do not depend on the number of threads (the process run
+hours for the 26 cases). The results do not depend on the number of threads (the process run
 with 1 thread and with 3 threads gives byte-identical transect discharge, Log and fields at
 all output times). `mechanism.png` and `setup.png` do not use computed results, so they can be
 drawn after `make`, before any run. If the sweep is not finished, the figures and tables are
@@ -822,7 +831,10 @@ quantities set the response.
 
 Neither is set by K alone. If K is reduced to one tenth, s_y to one tenth and the layer is made
 ten times thicker, the celerity, the most water the layer can carry and the water it can store
-(s_y × thickness) all stay the same. `process_l2` checks this: the lateral conductivity of the
+(s_y × thickness) all stay the same (the run that changes a single layer in this way is
+`process_thick` in
+[Supplement 2](#supplement-2-what-the-lateral-saturated-conductivity-of-a-single-layer-is-equivalent-to)).
+`process_l2` places such a layer below a poorly conducting soil: the lateral conductivity of the
 soil is lowered to 3600 mm/h, and a layer 2 with a thickness of 5 m, a specific yield of 0.02
 and a lateral conductivity of 3600 mm/h is placed below it (the infiltration capacity from the
 soil into layer 2 is 200 mm/h, so infiltrated water moves to layer 2 at once; where layer 2 is
@@ -963,10 +975,10 @@ the runoff from a relation between the storage S and the runoff q, S = K·q^P, a
 continuity equation dS/dt = rain − q
 ([zone runoff by the storage function method](../../../docs/en/users_guide/sfm.md) in ENCflow,
 which does not have the separation of effective rainfall of Kimura's method; the lag time
-`sfm_tl_h` is not used here).
+`sfm_tl_h` is used only by tank 4).
 Tanks matched to the "relation between storage and runoff" of the other calculations of this
 example are given the same rain, to see what agrees and what does not (`make sfm`; the
-settings are `param_sfm.txt` and, for a rain of 30 mm/h, `param_sfm_r30.txt`). There are three
+settings are `param_sfm.txt` and, for a rain of 30 mm/h, `param_sfm_r30.txt`). There are four
 tanks (S in mm, q in mm/h).
 
 - **Tank 1 (K = 11.3, P = 0.6)**: a tank with the same storage as the process run. P is the
@@ -980,25 +992,31 @@ tanks (S in mm, q in mm/h).
 - **Tank 3 (K = 37, P = 0.167)**: the K and P fitted to the relation between the storage (the
   water above the residual water content) and the drainage at a depth of 0.5 m of the VZ soil
   column after the rain has stopped.
+- **Tank 4 (K = 6.8, P = 0.6, lag time 1.8 hours)**: a tank that uses the lag time. The rain
+  enters the tank delayed by the lag time. The lag time is set to the channel-stage lag of the
+  process run (1.8 hours). K is obtained by splitting the same storage as tank 1, 45.1 mm,
+  between the water in transit during the lag time (10 mm/h × 1.8 hours = 18 mm) and the
+  tank, as K = (45.1 − 18) / 10^0.6.
 
 ![Runoff of the tanks of the storage function method](figs/sfm_tank.png)
 
-The second storm. Top: tank 1 (purple, solid) and tank 2 (purple, dashed) over the runoff at
-the outlet of the process run (black). Bottom: tank 3 (purple) over the drainage at 0.5 m of
-the VZ soil column (red-purple). Left: rain of 10 mm/h; right: 30 mm/h (with the same K and
-P). Grey is the rain.
+The second storm. Top: tank 1 (purple, solid), tank 2 (purple, dashed) and tank 4 (purple,
+dotted) over the runoff at the outlet of the process run (black). Bottom: tank 3 (purple) over
+the drainage at 0.5 m of the VZ soil column (red-purple). Left: rain of 10 mm/h; right:
+30 mm/h (with the same K, P and lag time). Grey is the rain.
 
-| Run | K | P | Rain 10 mm/h: lag (h) | Time above 1 mm/h (h) | Time to reach 90 % of the rain (h) | Fit | Rain 30 mm/h: lag (h) | Fit | Ratio of the lags |
-|---|---:|---:|---:|---:|---:|---:|---:|---:|---:|
-| tank 1 (same storage as the process run) | 11.3 | 0.6 | 5.3 | 1.0 | 8.5 | 0.92 / 0.96 | 3.4 | 0.96 / 0.97 | 0.65 |
-| tank 2 (two states of the process run) | 15.6 | 0.46 | 5.2 | 1.1 | 7.5 | 0.92 / 0.96 | 2.9 | 0.96 / 0.98 | 0.57 |
-| process run: runoff at the outlet | — | — | 5.1 | 2.8 | 5.3 | — | 3.0 | — | 0.59 |
-| tank 3 (recession of the VZ soil column) | 37 | 0.167 | 4.1 | 1.1 | 4.6 | 0.96 / 0.96 | 1.8 | 0.99 / 0.99 | 0.45 |
-| VZ soil column: drainage at 0.5 m | — | — | 4.4 | 3.0 | 3.7 | — | 1.8 | — | 0.40 |
+| Run | K | P | Lag time (h) | Rain 10 mm/h: lag (h) | Time above 1 mm/h (h) | Time to reach 90 % of the rain (h) | Fit | Rain 30 mm/h: lag (h) | Fit | Ratio of the lags |
+|---|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|
+| tank 1 (same storage as the process run) | 11.3 | 0.6 | 0 | 5.3 | 1.0 | 8.5 | 0.92 / 0.96 | 3.4 | 0.96 / 0.97 | 0.65 |
+| tank 2 (two states of the process run) | 15.6 | 0.46 | 0 | 5.2 | 1.1 | 7.5 | 0.92 / 0.96 | 2.9 | 0.96 / 0.98 | 0.57 |
+| tank 4 (same storage, split between the lag time and the tank) | 6.8 | 0.6 | 1.8 | 4.9 | 2.5 | 7.0 | 0.94 / 0.97 | 3.8 | 0.92 / 0.91 | 0.77 |
+| process run: runoff at the outlet | — | — | — | 5.1 | 2.8 | 5.3 | — | 3.0 | — | 0.59 |
+| tank 3 (recession of the VZ soil column) | 37 | 0.167 | 0 | 4.1 | 1.1 | 4.6 | 0.96 / 0.96 | 1.8 | 0.99 / 0.99 | 0.45 |
+| VZ soil column: drainage at 0.5 m | — | — | — | 4.4 | 3.0 | 3.7 | — | 1.8 | — | 0.40 |
 
 The "lag" is the difference of the centroids of the rain and the runoff over the 48 hours of
 the second storm, and the times are from the start of the second storm. The fits are for the
-first / second storm; for tanks 1 and 2 they are against the runoff at the outlet of the
+first / second storm; for tanks 1, 2 and 4 they are against the runoff at the outlet of the
 process run, for tank 3 against the drainage of the VZ soil column. The "ratio of the lags" is
 the lag under 30 mm/h divided by the lag under 10 mm/h. The initial runoff of the tanks is the
 default, 0.1 mm/h.
@@ -1014,10 +1032,19 @@ default, 0.1 mm/h.
   with P matched to the process run, is the same. The no-infiltration run under the same rain
   fits better (0.99 and 0.99 with roughness 2) because the overland-flow calculation contains
   the time the water takes to travel down the slopes and the channels.
+- **Adding a lag time matches the start of the rise, but no longer fits when the rain
+  intensity changes**: with tank 4, whose lag time is the channel-stage lag, the runoff
+  exceeds 1 mm/h after 2.5 hours, close to the 2.8 hours of the process run. The fits also
+  rise to 0.94 and 0.97. The time to reach nine tenths of the rain, 7.0 hours, is still late.
+  Under 30 mm/h, with the same lag time, the lag becomes 3.8 hours (3.0 hours in the process
+  run) and the fits fall to 0.92 and 0.91 (0.96 and 0.97 for tank 1, without a lag time). The
+  channel-stage lag of the process run shrinks from 1.8 hours to 1.0 hours under the heavier
+  rain, whereas the lag time is a constant shift that does not depend on the rain intensity.
 - **The exponent P sets how much the lag shrinks under heavier rain**: in a storage function,
   the storage in balance with the rain divided by the rain is K·rain^(P − 1), so with three
   times the rain it becomes 3^(P − 1) times (0.64 times for P = 0.6, 0.55 for 0.46, 0.40 for
-  0.167). The ratios of the lags of the tanks (0.65, 0.57, 0.45) follow this closely. The
+  0.167). The ratios of the lags of tanks 1, 2 and 3, which have no lag time (0.65, 0.57,
+  0.45), follow this closely. The
   ratios for the other calculations of this example are 0.63–0.64 for the slope stage of the
   no-infiltration runs, 0.59 for the process run and 0.40 for the VZ soil column; in turn they
   correspond to the tank with P = 0.6, to between 0.46 and 0.6, and to the tank with 0.17. The
@@ -1036,12 +1063,180 @@ default, 0.1 mm/h.
   whereas the runoff of the tank exceeds 1 mm/h after 1.1 hours. A storage function represents
   the "relation between storage and runoff" of vertical unsaturated infiltration, but not the
   time the front takes to pass down through the soil.
-- **The values are a guide**: K and P are determined from the results of this example, not
-  calibrated against observations (`plot_results.py` prints the values recomputed from the
+- **The values are a guide**: K, P and the lag time are determined from the results of this
+  example, not calibrated against observations (`plot_results.py` prints the values recomputed from the
   results after the table). The storage of the process run is that of the whole catchment,
   the water in the soil, on the surface and in the channels together, and a tank represents
-  it by a single quantity. When the storage function method is applied to a real catchment, K
-  and P are calibrated against observed hydrographs.
+  it by a single quantity. When the storage function method is applied to a real catchment, K,
+  P and the lag time are calibrated against observed hydrographs.
+
+## Supplement 2: what the lateral saturated conductivity of a single layer is equivalent to
+
+The [supplement](#supplement-equivalent-roughness-and-the-soil-conductivity) showed that, for a
+single soil layer to give the empirical speed of storm runoff, the lateral saturated
+conductivity has to be 36000–100000 mm/h (0.01–0.03 m/s), larger than the range the user guide
+suggests for forested catchments (1000–10000 mm/h). This value is not a measurement of the
+soil; it is set by the structure of the model (a single layer, with its depth and effective
+porosity). It is an "equivalent value" in the same sense in which the equivalent roughness of
+overland flow stands in for the delay caused by the passage through the soil. This section
+sorts out what this value stands in for, what it is equivalent to, what to call it, and how
+other models treat it.
+
+### What it stands in for
+
+The lateral saturated conductivity of a single layer that gives the same slope-stage lag as
+the other calculations of this example is as follows (as a single layer 0.5 m thick with an
+effective porosity of 0.2; second storm of the 10 mm/h rain).
+
+| Calculation compared | Slope-stage lag (h) | Lateral saturated conductivity with the same lag (mm/h) | (m/s) |
+|---|---:|---:|---:|
+| no infiltration: slope roughness 0.6 | 1.7 | 130000 (extrapolated) | 0.036 |
+| no infiltration: slope roughness 1 | 2.3 | 70000 | 0.019 |
+| no infiltration: slope roughness 2 | 3.6 | 29000 | 0.0082 |
+| VZ soil column: drainage at 0.25 m | 2.3 | 68000 | 0.019 |
+| VZ soil column: drainage at 0.5 m | 4.4 | 19000 | 0.0053 |
+| VZ soil column: drainage at 1 m | 8.0 | 4600 | 0.0013 |
+| two layers: soil with lateral 3600 mm/h + layer 2 | 4.8 | 16000 | 0.0045 |
+
+The values are interpolated in log-log from the lags of the single-layer process runs with
+different lateral conductivities (slope-stage lags of 8.7, 6.0, 3.3 and 1.9 hours for 3600,
+10000, 36000 and 100000 mm/h). "Extrapolated" marks a value outside the computed range.
+
+- **In place of the equivalent roughness of overland flow**: the same lag as overland flow
+  with roughness 0.6, which lies within the equivalent roughness used in practice for
+  mountains (about 0.4–0.8), needs 130000 mm/h (extrapolated); roughness 1 needs 70000 mm/h.
+- **In place of vertical unsaturated infiltration**: the soil column of VZ runoff takes the
+  downslope transfer as having no delay, yet producing the same lag as its drainage at 0.5 m
+  with lateral flow in a single layer takes 19000 mm/h (68000 mm/h for a depth of 0.25 m and
+  4600 mm/h for 1 m).
+- **In place of a wave travelling through a layer of small specific yield**: in the two-layer
+  run both layers have a lateral saturated conductivity of 3600 mm/h, but the single layer
+  with the same lag has 16000 mm/h.
+- **Not only the flow through fast paths**: besides the flow through fast paths such as
+  pipes, the large lateral saturated conductivity of a single layer also stands in for
+  processes other than the speed at which the soil conducts water, such as a wave travelling
+  through a layer of small specific yield or the time taken by vertical infiltration. A large
+  value cannot be read as water moving fast
+  ([supplement](#what-a-large-conductivity-means-fast-water-or-a-fast-wave)).
+
+### What it is equivalent to: the conductivity alone does not set it
+
+The response of lateral flow in a single layer is set by the speed at which the response
+travels (conductivity × slope / effective porosity) and by the most water the layer can carry
+(conductivity × soil depth × slope). To check this, a single layer with one tenth the lateral
+saturated conductivity and effective porosity and ten times the soil depth is computed
+(`process_thick` of `make sweep`). Conductivity / effective porosity, conductivity × soil
+depth and the water that can be stored (100 mm) are the same as in the base run.
+
+| Run | Lateral saturated conductivity (mm/h) | Effective porosity | Soil depth (m) | Time above 1 mm/h (h) | Time to reach 90 % of the rain (h) | Slope-stage lag (h) | Max. saturated area (%) | Fit to the base run |
+|---|---:|---:|---:|---:|---:|---:|---:|---:|
+| base | 36000 | 0.2 | 0.5 | 3.8 / 2.8 | 5.5 / 5.3 | 3.3 | 15.3 | — |
+| thick layer with a small porosity | 3600 | 0.02 | 5 | 3.8 / 2.8 | 5.5 / 5.5 | 3.4 | 14.7 | 1.000 / 1.000 |
+
+Times are from the start of each storm (first / second storm), and the fit is against the base
+run.
+
+- **With a conductivity that differs by a factor of 10, the storm runoff is almost the
+  same**: the runoff exceeds 1 mm/h at the same times as in the base run (3.8 and 2.8 hours),
+  and the fit to the base run is 1.000. The runoff differs by 0.69 mm/h at most, the
+  slope-stage lag is 3.4 hours (3.3 hours in the base run) and the maximum saturated area is
+  14.7 % (15.3 % in the base run).
+- **The remaining difference comes from the slope of the water table**: lateral flow follows
+  the ground slope plus the slope of the water table. In a thick layer with a small effective
+  porosity the same amount of water raises the water table ten times as high, so the slope of
+  the water table has more effect (an explanation from the equations of this calculation). In
+  this catchment, with its steep slopes, the difference is small.
+- **What the storm runoff determines is not the conductivity itself**: fitting the storm
+  response determines conductivity / effective porosity and conductivity × soil depth; the
+  conductivity has a value only once the soil depth and the effective porosity are fixed. It
+  is the same as the equivalent roughness being paired with the choice of slope length. As
+  far as the storm runoff is concerned, 36000 mm/h with a soil depth of 0.5 m and an
+  effective porosity of 0.2 and 3600 mm/h with 5 m and 0.02 are the same single layer. What
+  differs is the height of the water table, and telling them apart takes observations of
+  groundwater levels.
+
+### What to call it: "equivalent" and "effective"
+
+- **Correspondence with the equivalent roughness**: the equivalent roughness of the
+  kinematic wave method is not a measurement of the roughness of the ground surface; it is
+  the value obtained when the delay of the runoff of the slopes is represented by overland
+  flow. The lateral saturated conductivity of a single layer is likewise the value obtained
+  when the delay of the water inside the slopes is represented by lateral flow in a single
+  layer, and has the same character.
+- **Terms of groundwater hydrology**: studies that replace a heterogeneous formation by a
+  uniform medium distinguish an effective property, intrinsic to the medium and emerging when
+  the medium is large enough, from an equivalent (or block) value, which depends on the size
+  of the domain and the conditions and is not intrinsic to the medium (Renard & de Marsily
+  1997; Renard & Ababou 2022). The value of this example depends on the structure of the
+  model, so in this distinction it is on the "equivalent" side.
+- **Terms of geotechnical engineering**: the conductivity of the uniform, isotropic ground
+  that replaces a layered or anisotropic ground is called the equivalent hydraulic
+  conductivity (a textbook usage; this README does not identify a source). For flow along the
+  layers it is the average weighted by the layer thicknesses. In this sense the equivalent
+  conductivity of the two-layer run stays at 3600 mm/h (both layers have 3600 mm/h). The
+  16000 mm/h of the table above is the value that gives the same lag in a single layer 0.5 m
+  thick with an effective porosity of 0.2; what it is equivalent to is different.
+- **Treatment in this example and in the ENCflow documents**: the parameter keeps the name
+  lateral saturated conductivity (`gw_ksh_mmh`), and the documents explain that the value
+  used in a single layer is an equivalent value of the model. The term "equivalent lateral
+  saturated conductivity" is not defined, for three reasons. The only basis is this schematic
+  calculation (there is no comparison with observations, and the soil of VZ runoff and the
+  values of layer 2 are schematic too). The value changes with what it is equivalent to (lag,
+  discharge, groundwater level) and is not determined until the soil depth and the effective
+  porosity are fixed. And the term equivalent hydraulic conductivity is already in use with
+  other meanings, as above.
+
+### How other models treat it
+
+Treating the lateral conductivity as a value to be calibrated rather than a measurement is
+also done in other distributed models. They give it no special name: they either treat it as a
+calibrated value or make the ratio to a measurable value a separate parameter.
+
+| Model or study | Treatment of the lateral conductivity |
+|---|---|
+| TOPMODEL (Beven & Kirkby 1979) | The lateral transmissivity (the quantity corresponding to conductivity × thickness) and its decay with depth are calibrated for each catchment |
+| DHSVM (Wigmosta et al. 1994) | Has a lateral saturated conductivity separate from the vertical one, and its rate of decrease with depth. Both are listed among the most sensitive soil parameters (Cuo et al. 2011) |
+| wflow_sbm (van Verseveld et al. 2024) | Makes the ratio multiplying the vertical saturated conductivity (KsatHorFrac) a separate parameter that is calibrated. A default of 100 is used, and a range of 1–10000 has been tested |
+| tRIBS (Ivanov et al. 2004) | Has a saturated anisotropy ratio (lateral / vertical) among its soil parameters |
+| RRI (Sayama et al. 2012) | The lateral saturated conductivity is calibrated. In an application to a mountain dam catchment in Hokkaido (Yano & Igo 2021), combinations of 0.05–0.20 m/s (180000–720000 mm/h) with soil depths of 0.9–1.2 m are reported to reproduce floods well |
+| Hillslope-scale measurement (Brooks et al. 2004) | The lateral saturated conductivity obtained at the hillslope scale was 3.2–13.7 times the values measured on small cores |
+| Measurement methods and a catchment model (Davis et al. 1999) | The saturated conductivity measured on large cores was one to three orders of magnitude larger than that from small cores or a well permeameter, and reproduced the discharge of the catchment model well |
+| Values obtained from catchment models (as summarised by Pirastru et al. 2022) | The lateral saturated conductivity obtained from catchment models can be several orders of magnitude larger than point-scale measurements |
+| Calibration of a dual-permeability model (Hopp et al. 2020) | When a three-dimensional dual-permeability model was calibrated at the catchment scale, the saturated conductivity of the macropore domain became close to that of the matrix, and the model did not outperform a single-domain model |
+
+This table relies on abstracts, model documentation and search excerpts; the full texts were
+not checked.
+
+- **The values of this example are within the range used in practice**: the 36000–
+  100000 mm/h (0.01–0.03 m/s) of this example is an order of magnitude below the values of
+  the RRI application (0.05–0.20 m/s).
+- **There are two reasons for the large values**: one is the scale of measurement; small
+  samples hardly capture fast paths, and hillslope-scale values are several times to more
+  than an order of magnitude larger than sample values (Brooks et al. 2004; Davis et al.
+  1999). The other is compensation for the structure of the model: a calibrated value also
+  stands in for processes the model does not solve (in Hopp et al. 2020 the effect of the
+  macropore domain did not survive calibration). The standing-in for a layer of small
+  specific yield and for vertical infiltration seen in this example belongs to the latter.
+
+### Notes on use
+
+- **Do not compare with measurements, and do not enter measurements as they are**: the
+  saturated conductivity of samples or of field permeameter tests is no guide to the lateral
+  saturated conductivity of a single layer. Conversely, a fitted value cannot be read as a
+  property of the soil.
+- **Determine it together with the soil depth and the effective porosity**: if the soil depth
+  or the effective porosity is changed, the lateral saturated conductivity has to be
+  determined again. Even with the same storm response, the groundwater level and the extent
+  of the saturated area change with the choice of the set.
+- **State what the value was fitted to**: an equivalent value changes with what it is fitted
+  to (the lag of the storm runoff, the hydrograph, the groundwater level, the saturated
+  area). The value of this example is a schematic value chosen so that the storm runoff
+  comes close to the empirical flood concentration time; it is not calibrated against
+  observations.
+- **Solving the processes separately needs smaller values**: in the run with layer 2, both
+  layers keep 3600 mm/h and the response corresponds to 16000 mm/h in a single layer. When a
+  value becomes unnaturally large, it is a hint to suspect the processes the single layer is
+  standing in for (a layer of small specific yield, the unsaturated zone).
 
 ## What this model does not represent (differences from the real phenomenon)
 
@@ -1175,9 +1370,10 @@ default, 0.1 mm/h.
 - `param_sfm.txt` (the tanks of the storage function method;
   [Relation to the storage function method](#relation-to-the-storage-function-method) in the
   supplement): `sfm_k` (the storage coefficient K) and `sfm_p` (the exponent P; 0.6 if not
-  given) change the response of a tank. `sfm_q0_mmh` is the initial runoff (0.1 mm/h if not
-  given). To add a tank, add a zone to the zone raster `data_sfm/zone.txt` (which calculation
-  it is compared with in the figure and the table is set by `SFM_VS` in `plot_results.py`).
+  given) change the response of a tank. `sfm_tl_h` is the lag time (0 if not given) and
+  `sfm_q0_mmh` the initial runoff (0.1 mm/h if not given). To add a tank, add a zone to the
+  zone raster `data_sfm/zone.txt` (which calculation it is compared with in the figure and the
+  table is set by `SFM_VS` in `plot_results.py`).
 
 ## References
 
@@ -1190,7 +1386,10 @@ was not checked); the others were confirmed by search (for
 Kadoya & Fukushima (1976) only the formula and the coefficient were confirmed, from a search
 excerpt of a paper that quotes them; its bibliographic details were not checked). Except for
 Tani (2023), the texts were not checked; the summaries of their contents rely on abstracts and
-secondary sources.
+secondary sources. The contents of the references listed under "How other models treat it" in
+Supplement 2 rely on abstracts, model documentation and search excerpts (the article number of
+Ivanov et al. (2004) and the volume and pages of Sayama et al. (2012) were not confirmed by
+search).
 
 - Barnes, R., Lehman, C. and Mulla, D. (2014): Priority-flood: An optimal depression-filling
   and watershed-labeling algorithm for digital elevation models. Computers & Geosciences, 62,
@@ -1199,6 +1398,14 @@ secondary sources.
   Research, 18, 1311–1325.
 - Beven, K. J. and Kirkby, M. J. (1979): A physically based, variable contributing area model of
   basin hydrology. Hydrological Sciences Bulletin, 24(1), 43–69.
+- Brooks, E. S., Boll, J. and McDaniel, P. A. (2004): A hillslope-scale experiment to measure
+  lateral saturated hydraulic conductivity. Water Resources Research, 40, W04208.
+- Cuo, L., Giambelluca, T. W. and Ziegler, A. D. (2011): Lumped parameter sensitivity analysis
+  of a distributed hydrological model within tropical and temperate catchments. Hydrological
+  Processes, 25(15), 2405–2421.
+- Davis, S. H., Vertessy, R. A. and Silberstein, R. P. (1999): The sensitivity of a catchment
+  model to soil hydraulic properties obtained by using different measurement techniques.
+  Hydrological Processes, 13(5), 677–688.
 - Dunne, T. and Black, R. D. (1970): Partial area contributions to storm runoff in a small New
   England watershed. Water Resources Research, 6(5), 1296–1311.
 - Engman, E. T. (1986): Roughness coefficients for routing surface runoff. Journal of
@@ -1206,18 +1413,40 @@ secondary sources.
 - Hewlett, J. D. and Hibbert, A. R. (1967): Factors affecting the response of small watersheds
   to precipitation in humid areas. In: Sopper, W. E. and Lull, H. W. (eds.), Forest Hydrology,
   Pergamon Press, 275–290.
+- Hopp, L., Glaser, B., Klaus, J. and Schramm, T. (2020): The relevance of preferential flow in
+  catchment scale simulations: Calibrating a 3D dual-permeability model using DREAM.
+  Hydrological Processes, 34(5), 1237–1254.
+- Ivanov, V. Y., Vivoni, E. R., Bras, R. L. and Entekhabi, D. (2004): Catchment hydrologic
+  response with a fully distributed triangulated irregular network model. Water Resources
+  Research, 40, W11102.
 - Mosley, M. P. (1979): Streamflow generation in a forested watershed, New Zealand. Water
   Resources Research, 15, 795–806.
 - Nash, J. E. and Sutcliffe, J. V. (1970): River flow forecasting through conceptual models
   part I — A discussion of principles. Journal of Hydrology, 10(3), 282–290.
 - O'Callaghan, J. F. and Mark, D. M. (1984): The extraction of drainage networks from digital
   elevation data. Computer Vision, Graphics, and Image Processing, 28(3), 323–344.
+- Pirastru, M., Iovino, M., Marrosu, R., Di Prima, S., Giadrossich, F. and Awada, H. (2022):
+  Large-scale lateral saturated soil hydraulic conductivity as a metric for the connectivity of
+  subsurface flow paths at hillslope scale. Hydrological Processes, 36(8),
+  doi:10.1002/hyp.14649.
+- Renard, P. and Ababou, R. (2022): Equivalent permeability tensor of heterogeneous media:
+  upscaling methods and criteria (review and analyses). Geosciences, 12(7), 269.
+- Renard, P. and de Marsily, G. (1997): Calculating equivalent permeability: a review. Advances
+  in Water Resources, 20(5–6), 253–278.
+- Sayama, T., Ozawa, G., Kawakami, T., Nabesaka, S. and Fukami, K. (2012): Rainfall–runoff–
+  inundation analysis of the 2010 Pakistan flood in the Kabul River basin. Hydrological
+  Sciences Journal, 57(2), 298–312.
 - Tani, M. (1997): Runoff generation processes estimated from hydrological observations on a
   steep forested hillslope with a thin soil layer. Journal of Hydrology, 200, 84–109.
 - Tromp-van Meerveld, H. J. and McDonnell, J. J. (2006): Threshold relations in subsurface
   stormflow: 2. The fill and spill hypothesis. Water Resources Research, 42, W02411.
 - USDA Soil Conservation Service (1986): Urban hydrology for small watersheds. Technical
   Release 55 (TR-55), 2nd ed.
+- van Verseveld, W. J. et al. (2024): Wflow_sbm v0.7.3, a spatially distributed hydrological
+  model: from global data to local applications. Geoscientific Model Development, 17,
+  doi:10.5194/gmd-17-3199-2024.
+- Wigmosta, M. S., Vail, L. W. and Lettenmaier, D. P. (1994): A distributed hydrology-vegetation
+  model for complex terrain. Water Resources Research, 30(6), 1665–1679.
 - Kadoya, M. and Fukushima, A. (1976): Chūshō kasen no kōzui tōtatsu jikan [Flood
   concentration time of small and medium rivers]. Annuals of the Disaster Prevention Research
   Institute, Kyoto University, 19(B-2), 143–152 (in Japanese).
@@ -1227,6 +1456,15 @@ secondary sources.
 - Tani, M. (2023): Reevaluating the runoff mechanisms of small mountainous catchments by
   applying a new storm-runoff model based on the vertical unsaturated flow. Journal of Japan
   Society of Hydrology and Water Resources, 36(1), 20–51 (in Japanese with English abstract).
+- Yano, M. and Igo, A. (2021): Iwaonai damu ni okeru RRI moderu ni yoru ryūshutsu yosoku no
+  saigensei kōjō [Improving the reproducibility of runoff prediction by the RRI model at the
+  Iwaonai Dam]. Paper of the 65th Hokkaido Development Technology Research Presentation
+  Meeting (fiscal 2021) (in Japanese).
+- Abstracts of the EGU General Assembly 2024 on the ratio of horizontal conductivity in
+  wflow_sbm (EGU24-8347, EGU24-11384; the default value and the range tested).
+- Documentation of the tRIBS model (Model Parameters and Forcings; the saturated anisotropy
+  ratio among the soil parameters):
+  https://tribshms.readthedocs.io/en/latest/man/Model_Parameters_Forcings.html
 - A document of the river basin committee of the Wakayama Office of River and National
   Highway, Kinki Regional Development Bureau, Ministry of Land, Infrastructure, Transport and
   Tourism (it quotes the table of equivalent roughness from the Technical Criteria for River
