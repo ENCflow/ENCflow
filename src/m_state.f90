@@ -148,6 +148,13 @@ module m_state
     logical :: vz_active = .false.  ! VZ の有効化(m_vzflow_init が設定)
     real, allocatable :: vzp(:,:)   ! 回収済み・未同期の雨 (m。セル面積基底 pre·dt の積算。
                                     ! 確保は m_vzflow_init(有効時のみ)、同期でゼロ戻し)
+    ! 貯留関数法の区画流出(§106)の台帳。sf_active は m_sfm_init が立てる。
+    ! タンクの貯留は区画ごとのスカラー(sfstore は全ランク同値)。sfp は同期前の回収済み雨量
+    real(real64) :: sfstore = 0.0_real64  ! タンク貯留の総和 Σ S_g·A_g/(dx·dy) (m。同期時に更新)
+    real :: sfmean = 0.0     ! 領域平均のタンク貯留(m。回収済み未同期の雨を含む)。sf_active 時のみ更新
+    logical :: sf_active = .false.  ! 貯留関数法の有効化(m_sfm_init が設定)
+    real, allocatable :: sfp(:,:)   ! 回収済み・未同期の雨 (m。セル面積基底 pre·dt の積算。
+                                    ! 確保は m_sfm_init(有効時のみ)、同期でゼロ戻し)
     ! 沿岸の波浪場(fn_wavefield。§90)の診断量。確保と wv_active の設定は m_wavefield_init
     ! (有効時のみ)。状態(ビン別のエネルギー)は t_wavefield の私有で、ここは書き出しと
     ! 他プロセスへの受け渡し用の導出量(帯 js..je を更新ごとに上書き)
@@ -679,6 +686,7 @@ subroutine m_state_calcstat(s, p, g)
   real(real64) :: swesum_j(dcp%js:dcp%je), swesum
   real(real64) :: hisum_j(dcp%js:dcp%je), hisum
   real(real64) :: vzsum_j(dcp%js:dcp%je), vzsum
+  real(real64) :: sfsum_j(dcp%js:dcp%je), sfsum
   real :: qcumf
   real :: dtpdx     ! dt / min(dx, dy)
   real :: cosdir
@@ -837,6 +845,18 @@ subroutine m_state_calcstat(s, p, g)
     call par_sum_rows(vzsum_j, vzsum)
     s%vzmean = (vzsum + s%vzstore) / s%n_valcells
   end if
+  ! 貯留関数法のタンク貯留(§106)。VZ と同じく別ループ(無効時は何もしない)
+  if (s%sf_active) then
+    sfsum_j(:) = 0.0
+    do j = dcp%js, dcp%je
+      do i = g%wx(1,j), g%wx(2,j)
+        if (g%x(i,j) == 0 .or. g%sw(i,j) > 0) cycle
+        if (s%sfp(i,j) > 0.0) sfsum_j(j) = sfsum_j(j) + s%sfp(i,j)
+      end do
+    end do
+    call par_sum_rows(sfsum_j, sfsum)
+    s%sfmean = (sfsum + s%sfstore) / s%n_valcells
+  end if
   rmax = [hmax, vvmax, qqmax, cnmax]
   call par_allreduce_max(rmax)
   hmax  = rmax(1)
@@ -915,6 +935,16 @@ subroutine m_state_printstate(p, s)
     end if
     sblk(2) = sblk(2) + s%vzmean
     sblk(3) = sblk(3) + s%vzmean
+  end if
+  ! 貯留関数法のタンク貯留も S_grnd に算入(§106。無効時は既存の式に触れない別枝)
+  if (s%sf_active) then
+    if (ns == 1) then
+      sblk(2) = 0.0
+      sblk(3) = hmean
+      ns = 3
+    end if
+    sblk(2) = sblk(2) + s%sfmean
+    sblk(3) = sblk(3) + s%sfmean
   end if
 
   ! --- 保存量列の書式 ---
@@ -1034,6 +1064,7 @@ subroutine m_state_dispose(s, p)
   if (allocated(s%bp)) deallocate(s%bp)
   if (allocated(s%hg2)) deallocate(s%hg2)
   if (allocated(s%vzp)) deallocate(s%vzp)
+  if (allocated(s%sfp)) deallocate(s%sfp)
   if (allocated(s%wvh)) deallocate(s%wvh)
   if (allocated(s%wvdir)) deallocate(s%wvdir)
   if (allocated(s%wvub)) deallocate(s%wvub)

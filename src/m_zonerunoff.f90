@@ -525,8 +525,14 @@ subroutine zr_collect_input(zr, p)
   real(real64) :: tot, h
   real(real64), allocatable :: rows(:)
   character(len=512) :: msg
+  character(len=96) :: advice
 
   nk = zr%kstep
+  if (trim(zr%grpword) == "column") then
+    advice = "split the zone so that each column receives identical rainfall"
+  else
+    advice = "split the zone into parts that receive identical rainfall"
+  end if
   if (zr%rainmode == 0) then
     ! 局所の max と −min を全ランクの max に揃え、群内の一致を検査する
     allocate(buf(1:2*nk*zr%ngrp))
@@ -540,8 +546,7 @@ subroutine zr_collect_input(zr, p)
         if (zr%rmx(k,c) /= -zr%rmn(k,c)) then
           write(msg, '(a,a,i0,a,es12.4,a,es12.4,a)') trim(zr%tag)//": ground rainfall differs within ", &
                 trim(zr%grpword)//" ", c, " (min ", -zr%rmn(k,c), ", max ", zr%rmx(k,c), " m/s); set f_" &
-                // trim(zr%tag)//"_rain=1 (area average) or split the zone so that each "//trim(zr%grpword) &
-                // " receives identical rainfall"
+                // trim(zr%tag)//"_rain=1 (area average) or "//trim(advice)
           call par_stop(trim(msg))
         end if
         zr%rstep(k,c) = real(zr%rmx(k,c), real64)

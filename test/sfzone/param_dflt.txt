@@ -1,0 +1,94 @@
+!======================================================================
+! sfzone: 貯留関数法の区画・タンク・出口の検定(developer.md §106)
+!
+!   7 × 8 セル(Δx = Δy = 10 m)。列 1〜5 が区画セル(行 1〜3 = 区画 1、
+!   行 4〜5 = 区画 2、行 6〜8 = 区画 3)、列 6 は領域外、列 7 は行 1・3・5 だけが
+!   領域内の孤立した受水セル O_a・O_b・O_c(周囲を領域外で囲み、地表水が
+!   動かない)。test/vzzone と同じ格子と雨。
+!   タンク(S [mm] = K·q[mm/h]^P): 区画 1 は K = 10、P = 0.6、q0 = 0.1 mm/h、
+!   区画 2 は K = 2(h)、P = 1(線形貯留)、q0 = 1 mm/h、区画 3 は K = 20、
+!   P = 0.4、q0 = 0(乾いた状態から)。値は検定用の例示値。
+!   出口: 区画 1 は O_a へ 0.6・O_b へ 0.4、区画 2 は O_a へ 1.0(区画 1 と同じ
+!   受水セル)、区画 3 は系外流出。O_c は雨だけを受ける対照。
+!   降雨は 0〜60 分 1 mm/h、61〜180 分 50 mm/h、以後 0 を全セル一様に与える。
+!   確認事項(Check_sfzone.py base): 区画 2 の貯留 = 線形貯留の厳密解、区画 1・3 =
+!   同じ雨の常微分方程式を細かい刻みの RK4 で解いた参照解、雨の後の逓減 = 解析解、
+!   区画の収支、受水セルの水深 = 配分どおりの移送量 + 雨、Log の S_total の収支。
+!
+!   param_dflt.txt: 区画 1 の sfm_p・sfm_q0_mmh と &list_sfm の数値制御を書かない構成。
+!   既定(P = 0.6、q0 = 0.1 mm/h、dt_sfm = 0、sfm_tol = 1e-4、sfm_dt_min = 1e-3 s)が
+!   "(default)" 付きで表示され、結果が param.txt(同じ値を明示)とビット一致することを確かめる
+!======================================================================
+&list_sysparam
+  f_gridsystem = 0
+  dt = 5.0
+  t0 = 0
+  tt = 43200                ! 12 h
+  dt_disp = 1800
+  dt_file = 43200
+  dt_recrd = 600
+  fn_geoinfo = '-'
+  fn_initial = '-'
+  fn_precip = '-'
+  fn_sfm = '-'
+  fn_record = '-'
+  dir_data = 'data_sfzone'
+  dir_result = 'result_dflt'
+  f_disp_debug = 1
+  f_check_cfl = 0
+/
+
+&list_initial
+  f_htype = 0
+  h0 = 0.0
+/
+
+&list_geoinfo
+  nx = 7
+  ny = 8                    ! np = 4 でもランクあたり 2 行
+  dx = 10.0
+  dy = 10.0
+  f_ztype = 0
+  z0 = 0.0
+  f_masktype = 1
+  fn_mask = 'mask.txt'      ! 列 6 と列 7 の偶数行・行 7〜8 は領域外
+  f_rntype = 0
+  rn0 = 0.05
+/
+
+&list_bound
+/
+
+&list_record
+  pbxytype = 0              ! プローブ = セル番号 (i, j)
+  pbxy(:,1) = 7, 1          ! O_a
+  pbxy(:,2) = 7, 3          ! O_b
+  pbxy(:,3) = 7, 5          ! O_c
+/
+
+&list_precip
+  prtype = 1
+  prval(1:2,1) = 0, 1
+  prval(1:2,2) = 60, 1
+  prval(1:2,3) = 61, 50
+  prval(1:2,4) = 180, 50
+  prval(1:2,5) = 181, 0
+  prval(1:2,6) = 9999, 0
+/
+
+&list_sfm
+  fn_sfm_zone = 'zone.txt'
+/
+
+&list_sfm_zone
+  sfm_k(1) = 10.0                           ! P と q0 は既定(0.6、0.1 mm/h)
+  sfm_out_kind(1) = 1
+  sfm_out_cell(:,1,1) = 7, 1                ! O_a
+  sfm_out_cell(:,2,1) = 7, 3                ! O_b
+  sfm_out_w(1:2,1) = 0.6, 0.4
+  sfm_k(2) = 2.0, sfm_p(2) = 1.0, sfm_q0_mmh(2) = 1.0
+  sfm_out_kind(2) = 1
+  sfm_out_cell(:,1,2) = 7, 1                ! O_a(区画 1 と同じ受水セル)
+  sfm_k(3) = 20.0, sfm_p(3) = 0.4, sfm_q0_mmh(3) = 0.0
+  sfm_out_kind(3) = 2                       ! 系外流出
+/

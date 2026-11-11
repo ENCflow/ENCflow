@@ -99,11 +99,12 @@ phenomenon-specific setups. Individual chapters also link to relevant cases.
   </details>
 - [Soil Water Index](users_guide/swi.md) (&list_swi) - the operational sediment-disaster warning index (JMA 3-tank model; dedicated runs)
 - [Vertical unsaturated flow (VZ) runoff](users_guide/vz.md) (&list_vz / &list_vz_column / &list_vz_zone) - the rainfall-runoff response of mountain hillslopes from the one-dimensional Richards equation on shared reference columns (the VZ model of Tani 2023; direct drainage of zones to outlet cells)
+- [Storage function runoff of zones](users_guide/sfm.md) (&list_sfm / &list_sfm_zone) - rainfall runoff from a tank S = K·q^P per zone (Kimura 1961; outlets and baseflow as in VZ; can be combined with VZ in separate zones)
 - [Measurement](users_guide/record.md) (&list_record) -- probes, flux transects
 - [Use cases](users_guide/usecases.md) -- lookup from phenomenon names to feature combinations (unsupported phenomena are listed too)
 
 **Appendix**
-- [Full parameter index](users_guide/params_index.md) -- reverse lookup from all 781 parameter names to their chapters
+- [Full parameter index](users_guide/params_index.md) -- reverse lookup from all 796 parameter names to their chapters
 
 ---
 
@@ -167,6 +168,7 @@ The additional features below stay disabled unless you specify their `fn_XXX` en
 | [Water quality](users_guide/wq.md) | `fn_wq` | &list_wq |
 | [Soil Water Index](users_guide/swi.md) | `fn_swi` | &list_swi |
 | [Vertical unsaturated flow runoff](users_guide/vz.md) | `fn_vz` | &list_vz (+ &list_vz_column / &list_vz_zone) |
+| [Storage function runoff of zones](users_guide/sfm.md) | `fn_sfm` | &list_sfm (+ &list_sfm_zone) |
 | [Measurement](users_guide/record.md) | `fn_record` | &list_record |
 
 For examples to build on, see the [working setup in test/wave](../../test/wave/en/README.md)
@@ -291,6 +293,7 @@ settings, including unsupported phenomena), see
 | Dispersive tsunamis and waves (soliton fission of river-intruding tsunamis, undular bores, solitary waves) | [Shallow water flow](users_guide/swflow.md) (non-hydrostatic correction f_nonhydrostatic) |
 | Rainfall runoff (catchment hydrology) | [Rainfall and weather](users_guide/forcing.md) (+ groundwater) |
 | Rainfall runoff of mountain hillslopes from vertical unsaturated infiltration (Tani's VZ model) | [Vertical unsaturated flow (VZ) runoff](users_guide/vz.md) + [Rainfall and weather](users_guide/forcing.md) |
+| Rainfall runoff of small catchments by the storage function method (S = K·q^P) | [Storage function runoff of zones](users_guide/sfm.md) + [Rainfall and weather](users_guide/forcing.md) |
 | Urban pluvial flooding (sewer drainage and surcharge) | [Groundwater](users_guide/gwflow.md) (conduit continuum layer) + [Rainfall and weather](users_guide/forcing.md) |
 | Seawater intrusion, salt wedges, freshwater lenses | [Fresh and salt water layers](users_guide/salt.md) + [Tide and sea surface](users_guide/tide.md) |
 | Sediment transport / debris flow | [Sediment and landform change](users_guide/geomorph.md) |

@@ -324,6 +324,9 @@ initialisation): groundwater (`fn_gwflow`), snow (`fn_snow`), glaciers
 water quality (`fn_wq`), the fresh/salt two-layer model (`fn_salt`), nesting and
 the STG grid. Coexistence of VZ and groundwater (splitting ownership by zone) is a
 future extension.
+VZ can be combined with the [storage function runoff of zones](sfm.md) (`fn_sfm`) as
+long as the cells of the zones do not overlap and no outlet of one is on a zone cell
+of the other (checked at initialisation; the run stops otherwise).
 
 **What cannot be on VZ cells**: channel (fn_rw), sea (fn_sw), boundary condition,
 injection and structure cells. The soil depth must be 0 or more and not greater

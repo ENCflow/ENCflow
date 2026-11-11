@@ -1,5 +1,5 @@
 # ENCflow CI: ビルド+回帰テスト(基準 Log とのビット/ULP 照合)
-#   高速な 18 ケースを毎 push で回す(chichibu は実行時間の都合で対象外。
+#   高速な 19 ケースを毎 push で回す(chichibu は実行時間の都合で対象外。
 #   ローカルで test/chichibu/Run.sh を実行すること)。prmap・wfswash・gwlateral・gwtani・stg・vshaped は
 #   reference を持たない検定型(Check_*.py・再開と並列のバイト比較。Run.sh の終了コードで判定。
 #   stg は STG 格子の動作確認で、MPI の 2 ランクでは初期化で止まることを確かめる。vshaped は
@@ -29,7 +29,7 @@ jobs:
       - name: Regression tests
         run: |
           set -e
-          for c in wave dambreak frost pump conduit salt vzcol vzzone prmap wfshoal wfshadow wfcurrent wfsed wfswash gwlateral gwtani stg vshaped; do
+          for c in wave dambreak frost pump conduit salt vzcol vzzone sfzone prmap wfshoal wfshadow wfcurrent wfsed wfswash gwlateral gwtani stg vshaped; do
             echo "===== test/$c ====="
             (cd "test/$c" && ./Run.sh)
           done
@@ -50,7 +50,7 @@ jobs:
         run: |
           set -e
           export OMP_NUM_THREADS=1
-          for c in wave dambreak frost pump conduit salt vzcol vzzone prmap wfshoal wfshadow wfcurrent wfsed wfswash gwlateral gwtani stg vshaped; do
+          for c in wave dambreak frost pump conduit salt vzcol vzzone sfzone prmap wfshoal wfshadow wfcurrent wfsed wfswash gwlateral gwtani stg vshaped; do
             echo "===== test/$c (np=2) ====="
             (cd "test/$c" && ./Run_MPI.sh 2)
           done
