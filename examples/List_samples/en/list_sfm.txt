@@ -1,0 +1,98 @@
+!======================================================================
+! English mirror of examples/List_samples/list_sfm.txt.
+! The Japanese file is the master copy; edit it first.
+!======================================================================
+!
+! Example of storage function runoff settings &list_sfm / &list_sfm_zone
+!
+!   Use this file by specifying, in the system parameters &list_sysparam,
+!     fn_sfm = "list_sfm.txt"
+!   (if fn_sfm is not specified, the feature is completely inactive).
+!
+!   The basic form of the storage function method of Kimura (1961): solves one
+!   tank dS/dt = r − q, S [mm] = K·q[mm/h]^P for each zone of the zone number
+!   raster and moves the runoff of the zone instantaneously to outlet cells (or
+!   out of the system). All cells of a zone have the same runoff (per unit
+!   area), and there are no per-cell parameters. The outlets and the baseflow
+!   are given in the same way as for VZ runoff (list_vz.txt)
+!   (users_guide/sfm.md, developer.md §106).
+!
+!   Required inputs:
+!     - zone number raster fn_sfm_zone (under dir_data; 0 = not applied)
+!     - storage coefficient sfm_k of each zone (required; calibrated for each
+!       catchment, no default)
+!     - outlet sfm_out_kind of each zone (required)
+!   The storage exponent sfm_p (default 0.6) and the initial runoff rate
+!   sfm_q0_mmh (default 0.1 mm/h) can be omitted; then the adopted values are
+!   displayed with (default) and used
+!
+!   Features that cannot be combined in the first version (the run stops):
+!   fn_gwflow, fn_snow, fn_glacier, fn_geomorph, fn_wq, fn_salt, nesting,
+!   STG grid. It can be combined with VZ runoff (fn_vz) if the zones do not
+!   overlap
+!
+!   Not included: lag time T_L, primary runoff ratio f1, saturation rainfall
+!   R_sa, two-valued storage functions, losses (all rain enters the tank and
+!   eventually runs off)
+!
+!   Output: sfm_zone.csv (rain, runoff rate and storage of each zone,
+!   cumulative water volumes, balance residual). The storage of the tanks is
+!   counted in S_grnd of the Log
+!
+!======================================================================
+&list_sfm
+  ! temporary disabling (0 with fn_sfm still written makes it completely inactive)
+  f_sfm = 1
+
+  ! zone number raster (integer; 0 = not applied, 1, 2, … = consecutive zone numbers)
+  fn_sfm_zone = "sfm_zone.asc"
+
+  ! synchronisation interval for advancing the tanks (s). 0 = every step
+  ! (default; the cost of the tanks is negligible)
+  !dt_sfm = 0.0
+
+  ! handling of the input (rain) of the tanks
+  !   0: require identical ground rainfall on the cells of the zone (stops otherwise; default)
+  !   1: area average over all cells of the zone (when rain has a distribution)
+  !f_sfm_rain = 0
+
+  ! numerical control (normally keep the defaults; to check results, compare with
+  ! a rerun with the tolerance made 1/10)
+  !sfm_tol = 1.0e-4         ! relative tolerance of the time error of the internal steps (ratio to the runoff rate)
+  !sfm_dt_min = 0.001       ! lower limit of the internal step (s; stops below it)
+/
+
+&list_sfm_zone
+  ! zones (indexed by the zone number z; up to 50)
+  ! storage coefficient K (required. S [mm] = K·q[mm/h]^P; unit mm^(1−P)·h^P;
+  ! calibrated with observations. A measure of the response time is K·P·q^(P−1)
+  ! hours. The value below only shows the form)
+  sfm_k(1) = 30.0
+
+  ! storage exponent P (0 < P ≤ 1; default 0.6; 1 = linear reservoir with a time constant of K hours)
+  !sfm_p(1) = 0.6
+
+  ! initial runoff rate (mm/h; default 0.1; the initial storage is S0 = K·q0^P; 0 = dry)
+  !sfm_q0_mmh(1) = 0.1
+
+  ! outlet (required) 1: move to surface cells / 2: out of the system
+  sfm_out_kind(1) = 1
+
+  ! outlet cells (i, j) (sfm_out_kind = 1; up to 99; not zone cells, sea cells,
+  ! water level boundary cells, or VZ cells when combined with VZ)
+  sfm_out_cell(:,1,1) = 120, 80
+  !sfm_out_cell(:,2,1) = 121, 80
+
+  ! distribution ratios of the outlets (sum 1; may be omitted for one cell; all required for several cells)
+  !sfm_out_w(1:2,1) = 0.6, 0.4
+
+  ! baseflow (optional; time series in mm/h per zone area. (time (min), mm/h) pairs
+  ! are interpolated linearly and the end values are held outside the range.
+  ! Integrated for each synchronisation interval and passed to the same outlet as the
+  ! runoff. An external supply that does not enter the storage of the tank. The
+  ! namelist holds up to 100 points per zone)
+  !sfm_base(:,1,1) = 0, 0.1
+  !sfm_base(:,2,1) = 1440, 0.5
+  ! long series in a file (relative to dir_data; one line "time(min) mm/h"; takes precedence over the namelist)
+  !fn_sfm_base(1) = 'base_zone1.txt'
+/

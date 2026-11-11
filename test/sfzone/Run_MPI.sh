@@ -1,0 +1,87 @@
+#!/bin/bash
+# sfzone: MPI 実行 + 回帰テスト + 解析検定(貯留関数法の区画・タンク・出口。developer.md §106)
+#   ./Run_MPI.sh [ランク数] [-u]
+# 逐次 reference との比較は Log.txt を ULP=0、sfm_zone.csv は np=1 とバイト比較(タンクは全ランクで
+# 冗長に解く。出口は所有ランクだけが加える)。面積平均モード(行部分和の決定的総和)、厳密モードの停止
+# (全ランク同時の par_stop)、保存 → 再開、同期区間の途中での保存 → 再開(np=1 とバイト比較)、
+# VZ との併用と区画の重なりの停止(全ランク同時)も MPI で確かめる。行は 8 なので np <= 4
+sdir=$(dirname "$(readlink -f "$0")")
+export ULP=0
+export MPIRUN_OPTS="--bind-to none"
+export SKIPCOLS=6
+export FILES=${FILES:-Log.txt}
+"$sdir/../Scripts/Run_case.sh" mpi "$@" || exit 1
+
+python3 Check_sfzone.py base result || exit 1
+
+np=2
+for a in "$@"; do case $a in -u) ;; *) np=$a ;; esac; done
+
+variant() {   # variant <元の設定> <dir_result> <追加の sed 式> > 出力
+    sed -e "s/^  dir_result = '[a-z_0-9]*'/  dir_result = '$2'/" -e "$3" "$1"
+}
+run() {   # run <ランク数> <タグ> <設定ファイル>: 実行(失敗したら終了)
+    rm -rf "result_$2"
+    mpirun -np "$1" $MPIRUN_OPTS ./encflow_mpi "$3" > "Screen_$2.log" 2>&1 \
+        || { echo "ERROR: $3 run failed (np=$1)" >&2; exit 1; }
+}
+expect_stop() {   # expect_stop <タグ> <設定ファイル> <停止の文言>
+    rm -rf "result_$1"
+    if timeout 300 mpirun -np "$np" $MPIRUN_OPTS ./encflow_mpi "$2" > "Screen_$1.log" 2>&1; then
+        echo "ERROR: $1 should stop ($3)" >&2; exit 1
+    fi
+    grep -q -- "$3" "Screen_$1.log" || { echo "ERROR: $1 stopped for another reason (or hung)" >&2; exit 1; }
+    echo "  ok   $1 stops on all ranks: $3"
+}
+same_as_np1() {   # same_as_np1 <np の結果> <np=1 の結果> <ファイル...>
+    local a=$1 b=$2; shift 2
+    for f in "$@"; do
+        cmp -s "$a/$f" "$b/$f" || { echo "ERROR: $a/$f differs between np=$np and np=1" >&2; exit 1; }
+        echo "  ok   $f identical between np=$np and np=1 ($a)"
+    done
+}
+tmp=$(mktemp -p .)
+trap 'rm -f "$tmp"' EXIT
+
+# sfm_zone.csv の並列数不変性: 同じバイナリの np=1 とバイト比較する(同一ホスト・同一バイナリ
+# なので CPU 差の影響を受けない厳密な検査。reference との比較は Log.txt だけ = Run.sh の注記)
+if [ "$np" != 1 ]; then
+    variant param.txt result_np1 "" > "$tmp"
+    run 1 np1 "$tmp"
+    same_as_np1 result result_np1 sfm_zone.csv
+fi
+
+run "$np" avg param_avg.txt
+python3 Check_sfzone.py avg result_avg || exit 1
+expect_stop strictfail param_strictfail.txt "rainfall differs within zone"
+
+rm -rf save
+run "$np" save param_save.txt
+run "$np" restart param_restart.txt
+python3 Check_sfzone.py restart result result_restart || exit 1
+
+# 同期区間の途中(21625 s)での保存 → 再開: np=1 と保存ファイル・出力がバイト一致
+rm -rf save_psync save_psync1
+for sfx in "" 1; do
+    n=$np; [ "$sfx" = 1 ] && n=1
+    variant param_sync.txt "result_psync_save$sfx" \
+        "s/^  tt = 43200 .*/  tt = 21625/;s|^  dir_result = 'result_psync_save$sfx'|&\n  dir_save = 'save_psync$sfx'\n  f_state_save = 1|" > "$tmp"
+    run "$n" "psync_save$sfx" "$tmp"
+    variant param_sync.txt "result_psync_restart$sfx" \
+        "s|^  dir_result = 'result_psync_restart$sfx'|&\n  dir_save = 'save_psync$sfx'\n  f_state_restore = 1|" > "$tmp"
+    run "$n" "psync_restart$sfx" "$tmp"
+done
+cmp -s save_psync/sfm.dat save_psync1/sfm.dat \
+    || { echo "ERROR: sfm.dat saved in the middle of an interval differs between np=$np and np=1" >&2; exit 1; }
+echo "  ok   sfm.dat saved in the middle of an interval identical between np=$np and np=1"
+same_as_np1 result_psync_restart result_psync_restart1 sfm_zone.csv Log.txt
+
+# VZ との併用と、区画の重なりの停止
+run "$np" mosaic param_mosaic.txt
+python3 Check_sfzone.py mosaic result result_mosaic || exit 1
+variant param_mosaic.txt result_overlap "s/'vzzone_mosaic.txt'/'vzzone_overlap.txt'/" > "$tmp"
+expect_stop overlap "$tmp" "a cell belongs to both a VZ zone and a SFM zone"
+variant param_mosaic.txt result_outvz "s/^  sfm_out_cell(:,1,2) = 7, 1 /  sfm_out_cell(:,1,2) = 3, 7 /" > "$tmp"
+expect_stop outvz "$tmp" "list_sfm_zone: an outlet cell is a VZ cell"
+
+echo "=== sfzone MPI verification PASS ==="

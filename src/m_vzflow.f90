@@ -58,23 +58,28 @@ module m_vzflow
   ! 【初版の併用制限】fn_gwflow・fn_snow・fn_glacier・fn_geomorph・fn_wq・
   !   fn_salt・ネスト・STG は init で停止(vz_plan.md §4.10)。VZ セルは河道・
   !   海・境界・ソース・構造物のセルに置けず、出口は VZ セル・海セル・
-  !   水位規定セルに置けない。
+  !   水位規定セルに置けない。貯留関数(fn_sfm。§106)とは区画が重ならなければ
+  !   併用できる(検査は m_sfm_init)。
+  !
+  ! 【共通基盤】区画番号ラスタ・雨の回収と柱の入力の集約・出口・基底流は
+  !   m_zonerunoff(t_zonerunoff を成分 zr に持つ。入力群 = 柱)。本モジュールは
+  !   柱の前進・区画の重み W/M による集約・貯留・保存ファイルを受け持つ
+  !   (§106.2 で移した。等価リファクタ)。
   ! ====================================================================
   use, intrinsic :: iso_fortran_env, only : real64, int64
   use m_sysparam, only : t_sysparam
   use m_geoinfo, only : t_geoinfo, m_geoinfo_require_sd
-  use m_state, only : t_state, sect_cell, sect_vh, sect_add_vh
-  use m_boundary, only : t_boundary, read_val_file2
-  use m_swflow_enc, only : chn
-  use list_vz, only : t_list_vz, list_vz_read, vz_ncolmax, vz_nzonemax, vz_noutmax, vz_ndepmax, &
-                      vz_nbasemax
+  use m_state, only : t_state
+  use m_boundary, only : t_boundary
+  use list_vz, only : t_list_vz, list_vz_read, vz_ncolmax, vz_nzonemax, vz_ndepmax
   use m_vzflow_column, only : t_vzcol, t_vzctl, t_vzgeo, vzcol_init, vzcol_advance, vzcol_props, &
                               vzcol_dispose, vzcol_steady_psi, vz_ok, vz_fail_time, vz_fail_ponding
-  use m_fileio, only : fileio_read_matrix
+  use m_zonerunoff, only : t_zonerunoff, zr_read_map, zr_set_groups, zr_setup_outlets, zr_setup_baseflow, &
+                           zr_alloc_interval, zr_recover_rain, zr_collect_input, zr_deliver, &
+                           zr_gather_carry, zr_report_outlets, zr_dispose
   use m_sysdep_util, only : sysdep_mkdir
   use m_util, only : param_default, itoa, es_out
-  use m_parallel, only : par_info, par_stop, dcp, is_root, par_gather_to, par_bcast_cell, &
-                         par_bcast_cell_i, par_allreduce_max, par_allreduce_sumi, par_sum_rows
+  use m_parallel, only : par_info, par_stop, dcp, is_root, par_gather_to, par_bcast_cell
   implicit none
   private
   public :: t_vzflow
@@ -87,27 +92,17 @@ module m_vzflow
   integer, parameter :: save_version = 20261027   ! vzflow.dat の形式の版(形式変更日。§7)
 
   !-------------------------------------------
-  ! VZ 区画
+  ! VZ 区画の柱に固有の量(セル数・面積・出口・基底流・移送の累積は
+  ! 共通基盤 zr%zones(z))
   !-------------------------------------------
   type t_vzzone
-    integer :: col = 0                         ! 参照する柱
-    integer :: ncell = 0                       ! セル数(全域)
-    real(real64) :: area = 0.0_real64          ! 面積 A_g (m2)
+    integer :: col = 0                         ! 参照する柱(= zr%zones(z)%grp)
     real(real64), allocatable :: w(:)          ! 界面重み W_{g,j} (0:nz。m2)
     real(real64), allocatable :: m(:)          ! 層重み M_{g,k} (1:nz。m3)
     real(real64) :: sdmin = 0.0_real64, sdmax = 0.0_real64, sdmean = 0.0_real64  ! 土層厚の統計 (m)
-    integer :: kind = 0                        ! 出口 1: 地表セル / 2: 系外
-    integer :: nout = 0                        ! 出口セル数(kind = 1)
-    integer, allocatable :: oidx(:)            ! 出口セルの通し番号(t_vzflow の ocell の添字)
-    real(real64), allocatable :: ow(:)         ! 配分率(和 = 1 に正規化済み)
-    integer :: nbase = 0                       ! 基底流の時系列の点数(0 = 基底流なし)
-    real(real64), allocatable :: bt(:), bq(:)  ! 基底流の時系列(時刻 s、強度 m/s。区画面積基底)
     ! 診断(累積 m3。全ランク同値)
     real(real64) :: vin = 0.0_real64           ! 上端入力 A_g·F_0
     real(real64) :: vdrain = 0.0_real64        ! 底面排水 Σ W F
-    real(real64) :: vint = 0.0_real64          ! 地表セルへの移送(排水 + 基底流)
-    real(real64) :: vext = 0.0_real64          ! 系外流出(排水 + 基底流)
-    real(real64) :: vbase = 0.0_real64         ! 基底流(外部供給。貯留・収支残差には入らない)
     real(real64) :: vcorr = 0.0_real64         ! 負の排水(丸め規模)を 0 に切った補正量
     real(real64) :: vstore0 = 0.0_real64       ! 計算開始時の貯留 (m3)
     real(real64) :: vstore = 0.0_real64        ! 現在の貯留 Σ M θ (m3)
@@ -120,42 +115,17 @@ module m_vzflow
   !-------------------------------------------
   type t_vzflow
     logical :: enabled = .false.
-    integer :: ncol = 0, nzone = 0
-    logical :: have_base = .false.             ! 基底流を与えた区画があるか(vz_zone.csv の vbase 列)
+    integer :: ncol = 0
+    type(t_zonerunoff) :: zr                   ! 区画・雨の回収と柱の入力・出口・基底流(入力群 = 柱)
     type(t_vzctl) :: ctl                       ! 数値制御(全柱共通)
     type(t_vzcol), allocatable :: cols(:)      ! 共有参照柱
-    type(t_vzzone), allocatable :: zones(:)    ! VZ 区画
-    integer, allocatable :: zid(:,:)           ! 区画番号(帯 ish:ieh, jsh:jeh。0 = 適用外)
-    integer, allocatable :: colncell(:)        ! 柱を参照するセル数(全域)
-    integer :: rainmode = 0                    ! 0: 柱内で一致を要求 / 1: 柱内面積平均
-    integer :: idt = 1                         ! 同期間隔(ステップ数)
-    real(real64) :: dxdy = 0.0_real64          ! セル面積 (m2)
-    integer :: kstep = 0                       ! 現在の同期区間に積算済みのステップ数
-    ! 厳密一致モードの区間内履歴(ステップ × 柱。局所の max と −min。PREC = s%pre と同じ)
-    real, allocatable :: rmx(:,:), rmn(:,:)
-    ! 面積平均モード: 局所の行部分和の変化点スナップショット
-    integer, allocatable :: chg(:)             ! (1:idt) 局所で入力が変わったステップ
-    real(real64), allocatable :: rsnow(:,:)    ! (js:je, 1:ncol) このステップの行部分和
-    real(real64), allocatable :: rsprev(:,:)   ! 直前のスナップショット
-    integer :: nsnap = 0
-    integer, allocatable :: snapk(:)           ! スナップショットのステップ
-    real(real64), allocatable :: snap(:,:,:)   ! (js:je, 1:ncol, 1:nsnap)
-    ! 区間の区分一定入力(柱ごと)
-    real(real64), allocatable :: rstep(:,:)    ! (1:idt, 1:ncol) 各ステップの上端流束 (m/s)
-    integer, allocatable :: nseg(:)
-    real(real64), allocatable :: segl(:,:), segr(:,:)   ! (1:idt, 1:ncol)
+    type(t_vzzone), allocatable :: zones(:)    ! VZ 区画の柱に固有の量
     ! 柱の積算流束(直近の同期区間・累積)
     integer :: nzmax = 0
     real(real64), allocatable :: fsum(:,:)     ! (0:nzmax, 1:ncol) 直近の同期区間 (m)
     real(real64), allocatable :: fcum(:,:)     ! (0:nzmax, 1:ncol) 計算開始からの累積 (m)
-    real(real64), allocatable :: rlast(:)      ! 直近ステップの上端流束 (m/s)
     integer, allocatable :: stat(:)            ! 前進の結果(柱ごと)
-    ! 出口セル(全区画で重複を除いた一覧)
-    integer :: nocell = 0
-    integer, allocatable :: ocell(:,:)         ! (1:2, 1:nocell)
-    real(real64), allocatable :: ovol(:)       ! 同期区間の移送量 (m3。作業)
-    real(real64), allocatable :: ocarry(:)     ! 繰越(要求と実際に加わった体積の差 m3。所有ランクのみ意味を持つ)
-    real(real64), allocatable :: ovcum(:)      ! 累積の移送量 (m3。全ランク同値)
+    real(real64), allocatable :: dvz(:)        ! (1:nzone) 直近の同期区間の区画の排水 (m3。作業)
     ! 診断出力
     integer :: ndep = 0
     real(real64) :: odep(1:vz_ndepmax) = 0.0_real64
@@ -196,6 +166,10 @@ subroutine m_vzflow_init(vz, p, g, b, s, multi)
       call par_stop("list_vz: f_vz must be 0 or 1: " // itoa(list%f_vz))
   end select
 
+  vz%zr%tag = "vz"
+  vz%zr%label = "VZ"
+  vz%zr%nml = "list_vz_zone"
+  vz%zr%grpword = "column"
   call check_combinations(p, multi)
   call setup_control(vz, p, list)
   call setup_columns(vz, list)
@@ -205,30 +179,19 @@ subroutine m_vzflow_init(vz, p, g, b, s, multi)
   s%vz_active = .true.
 
   ! 区間の作業配列
-  allocate(vz%rstep(1:vz%idt, 1:vz%ncol), source = 0.0_real64)
-  allocate(vz%nseg(1:vz%ncol), source = 0)
-  allocate(vz%segl(1:vz%idt, 1:vz%ncol), vz%segr(1:vz%idt, 1:vz%ncol), source = 0.0_real64)
-  if (vz%rainmode == 0) then
-    allocate(vz%rmx(1:vz%idt, 1:vz%ncol), vz%rmn(1:vz%idt, 1:vz%ncol), source = 0.0)
-  else
-    allocate(vz%chg(1:vz%idt), source = 0)
-    allocate(vz%rsnow(dcp%js:dcp%je, 1:vz%ncol), vz%rsprev(dcp%js:dcp%je, 1:vz%ncol), &
-             source = 0.0_real64)
-    allocate(vz%snapk(1:2), source = 0)
-    allocate(vz%snap(dcp%js:dcp%je, 1:vz%ncol, 1:2), source = 0.0_real64)
-  end if
+  call zr_alloc_interval(vz%zr)
   vz%nzmax = 0
   do c = 1, vz%ncol
     vz%nzmax = max(vz%nzmax, vz%cols(c)%geo%nz)
   end do
   allocate(vz%fsum(0:vz%nzmax, 1:vz%ncol), vz%fcum(0:vz%nzmax, 1:vz%ncol), source = 0.0_real64)
-  allocate(vz%rlast(1:vz%ncol), source = 0.0_real64)
   allocate(vz%stat(1:vz%ncol), source = vz_ok)
+  allocate(vz%dvz(1:vz%zr%nzone), source = 0.0_real64)
 
   if (p%f_state_restore > 0) call restore_state(vz, p)
 
   ! 貯留の初期値(restore 時は復元した柱の状態から)
-  do z = 1, vz%nzone
+  do z = 1, vz%zr%nzone
     vz%zones(z)%vstore = zone_storage(vz, z)
     if (p%f_state_restore <= 0) vz%zones(z)%vstore0 = vz%zones(z)%vstore
   end do
@@ -253,8 +216,8 @@ subroutine m_vzflow_calc(vz, p, g, s, it)
   integer, intent(in) :: it
 
   if (.not. vz%enabled) return
-  call recover_rain(vz, p, g, s)
-  if (mod(it, vz%idt) == 0) call sync_interval(vz, p, s)
+  call zr_recover_rain(vz%zr, p, g, s, s%vzp)
+  if (mod(it, vz%zr%idt) == 0) call sync_interval(vz, p, s)
 end subroutine
 
 
@@ -273,13 +236,13 @@ subroutine m_vzflow_record(vz, s)
 
   if (.not. vz%enabled) return
   if (.not. is_root) return
-  do z = 1, vz%nzone
-    associate (zz => vz%zones(z))
+  do z = 1, vz%zr%nzone
+    associate (zz => vz%zones(z), zc => vz%zr%zones(z))
       ! 区画の収支残差 = 貯留変化 − (入力 − 排水) − 補正(非線形残差の集積と丸め)
       res = zz%vstore - zz%vstore0 - zz%vin + zz%vdrain - zz%vcorr
       write(vz%un_zone, '(f0.2,",",i0,",",i0,8(",",es23.15))', advance='no') s%t, z, zz%col, &
-            es_out([zz%area, zz%vin, zz%vstore, zz%vdrain, zz%vint, zz%vext, zz%vcorr, res])
-      if (vz%have_base) write(vz%un_zone, '(",",es23.15)', advance='no') es_out(zz%vbase)
+            es_out([zc%area, zz%vin, zz%vstore, zz%vdrain, zc%vint, zc%vext, zz%vcorr, res])
+      if (vz%zr%have_base) write(vz%un_zone, '(",",es23.15)', advance='no') es_out(zc%vbase)
       write(vz%un_zone, '(a)') ""
     end associate
   end do
@@ -292,7 +255,7 @@ subroutine m_vzflow_record(vz, s)
         bsum(k) = bsum(k-1) + col%th(k) * geo%dzl(k)
       end do
       write(vz%un_col, '(f0.2,",",i0,3(",",es23.15))', advance='no') s%t, c, &
-            es_out([vz%rlast(c), vz%fcum(0, c), vz%fcum(geo%nz, c)])
+            es_out([vz%zr%rlast(c), vz%fcum(0, c), vz%fcum(geo%nz, c)])
       do k = 1, vz%ndep
         call depth_index(geo, vz%odep(k), jf, alpha)
         if (jf < geo%nz) then
@@ -354,8 +317,8 @@ subroutine m_vzflow_dispose(vz, p, s)
   integer :: c
   if (.not. vz%enabled) return
   if (p%f_state_save > 0) then
-    if (vz%kstep > 0) then
-      call par_info("vz: syncing the partial interval of "//itoa(vz%kstep)//" steps before saving")
+    if (vz%zr%kstep > 0) then
+      call par_info("vz: syncing the partial interval of "//itoa(vz%zr%kstep)//" steps before saving")
       call sync_interval(vz, p, s)
     end if
     call save_state(vz, p)
@@ -369,6 +332,7 @@ subroutine m_vzflow_dispose(vz, p, s)
   end do
   if (allocated(vz%cols)) deallocate(vz%cols)
   if (allocated(vz%zones)) deallocate(vz%zones)
+  call zr_dispose(vz%zr)
   vz%enabled = .false.
   vz%initialized = .false.
 end subroutine
@@ -416,15 +380,15 @@ subroutine setup_control(vz, p, list)
   dtv = param_default("vz", "dt_vz", list%dt_vz, 60.0, " s", unset = -9999.0)
   if (dtv < 0.0) call par_stop("list_vz: dt_vz must be >= 0 (0 = every step)")
   if (dtv == 0.0) then
-    vz%idt = 1
+    vz%zr%idt = 1
   else
-    vz%idt = max(1, nint(dtv / p%dt))
+    vz%zr%idt = max(1, nint(dtv / p%dt))
   end if
-  if (vz%idt > 1) call par_info("vz: columns are synchronised every "//itoa(vz%idt)//" steps")
+  if (vz%zr%idt > 1) call par_info("vz: columns are synchronised every "//itoa(vz%zr%idt)//" steps")
 
   select case (list%f_vz_rain)
     case (0, 1)
-      vz%rainmode = list%f_vz_rain
+      vz%zr%rainmode = list%f_vz_rain
     case default
       call par_stop("list_vz: f_vz_rain must be 0(identical within a column) or 1(area average): " &
                     // itoa(list%f_vz_rain))
@@ -638,7 +602,8 @@ end subroutine
 
 
 !----------------------------------------------------------------------
-! 区画: 区画番号マップ・土層厚・重み W/M・出口・帯の区画番号・検査
+! 区画: 区画番号マップ(共通基盤)・参照柱・土層厚・重み W/M・出口と基底流
+! (共通基盤)・検査
 !   マップと土層厚は全ランクが全域で持ち(rank0 読み+配布)、重みを同じ順序
 !   (j 昇順・i 昇順)で冗長に計算する(全ランクでビット同一)
 !----------------------------------------------------------------------
@@ -648,41 +613,17 @@ subroutine setup_zones(vz, p, g, b, list)
   type(t_geoinfo), intent(inout) :: g
   type(t_boundary), intent(in) :: b
   type(t_list_vz), intent(in) :: list
-  integer, allocatable :: zmap(:,:), hist(:,:)
+  integer, allocatable :: zmap(:,:), hist(:,:), grp(:)
   real, allocatable :: sdf(:,:)
   real(real64), allocatable :: part(:,:)
-  integer :: i, j, z, c, nz, jf, k, nzn, nzmx
+  integer :: i, j, z, c, nz, jf, k, nzn, nzmx, ncell
   real(real64) :: d, alpha, a, wsum, msum, adsum
   logical :: used
-  character(:), allocatable :: fname
 
-  if (len_trim(list%fn_vz_zone) == 0) call par_stop("list_vz: fn_vz_zone (zone number raster) is required")
-  vz%dxdy = real(g%dx, real64) * real(g%dy, real64)
-  a = vz%dxdy
-
-  ! --- 区画番号マップ(整数。rank0 読み → 全ランクへ) ---
-  allocate(zmap(1:g%nx, 1:g%ny), source = 0)
-  fname = trim(p%dir_data) // "/" // trim(list%fn_vz_zone)
-  call par_info(" reading " // fname)
-  if (is_root) call fileio_read_matrix(fname, g%nx, g%ny, zmap, p%f_input_mode)
-  call par_bcast_cell_i(zmap)
-  nzn = 0
-  do j = 1, g%ny
-    do i = 1, g%nx
-      if (g%x(i,j) <= 0) then
-        zmap(i,j) = 0                  ! 領域外の値は使わない
-        cycle
-      end if
-      if (zmap(i,j) < 0) call stop_at("vz: negative zone number", i, j)
-      if (zmap(i,j) == 0) cycle
-      if (g%sw(i,j) > 0) call stop_at("vz: a VZ cell is on a sea cell", i, j)
-      if (g%rw(i,j) > 0) call stop_at("vz: a VZ cell is on a channel cell (rw)", i, j)
-      nzn = max(nzn, zmap(i,j))
-    end do
-  end do
-  if (nzn == 0) call par_stop("vz: fn_vz_zone has no VZ cell (all zone numbers are 0 in the domain)")
-  if (nzn > vz_nzonemax) call par_stop("vz: zone numbers must be <= "//itoa(vz_nzonemax))
-  vz%nzone = nzn
+  ! --- 区画番号マップ(共通基盤: 読み込み・セルの検査・セル数と面積・帯の区画番号) ---
+  call zr_read_map(vz%zr, p, g, b, list%fn_vz_zone, "fn_vz_zone", vz_nzonemax, zmap)
+  nzn = vz%zr%nzone
+  a = vz%zr%dxdy
   allocate(vz%zones(1:nzn))
   do z = nzn + 1, vz_nzonemax
     if (list%vz_out_kind(z) > -9998 .or. list%vz_zone_col(z) > -9998 .or. &
@@ -690,7 +631,6 @@ subroutine setup_zones(vz, p, g, b, list)
       call par_stop("list_vz_zone: zone "//itoa(z)//" is set but absent from fn_vz_zone")
     end if
   end do
-  call check_vz_cells(b, zmap)
 
   ! --- 区画の参照柱 ---
   do z = 1, nzn
@@ -713,6 +653,11 @@ subroutine setup_zones(vz, p, g, b, list)
     end do
     if (.not. used) call par_stop("list_vz_column: column "//itoa(c)//" is not referenced by any zone")
   end do
+  allocate(grp(1:nzn))
+  do z = 1, nzn
+    grp(z) = vz%zones(z)%col
+  end do
+  call zr_set_groups(vz%zr, grp, vz%ncol)    ! 入力群 = 柱(柱を参照するセル数も)
 
   ! --- 土層厚(geoinfo の sd。既定なし: VZ の読み出し深さは与件) ---
   call m_geoinfo_require_sd(g)
@@ -748,7 +693,6 @@ subroutine setup_zones(vz, p, g, b, list)
           call stop_at("vz: soil depth exceeds the column depth vz_depth (deepen the column)", i, j)
         end if
         call depth_index(geo, d, jf, alpha)
-        zz%ncell = zz%ncell + 1
         zz%w(jf) = zz%w(jf) + a * (1.0_real64 - alpha)
         if (alpha > 0.0_real64) zz%w(jf+1) = zz%w(jf+1) + a * alpha
         hist(jf, z) = hist(jf, z) + 1
@@ -761,9 +705,8 @@ subroutine setup_zones(vz, p, g, b, list)
   end do
   do z = 1, nzn
     associate (zz => vz%zones(z), geo => vz%cols(vz%zones(z)%col)%geo)
-      if (zz%ncell == 0) call par_stop("vz: zone "//itoa(z)//" has no cell in fn_vz_zone")
-      zz%area = a * real(zz%ncell, real64)
-      zz%sdmean = zz%sdmean / real(zz%ncell, real64)
+      ncell = vz%zr%zones(z)%ncell
+      zz%sdmean = zz%sdmean / real(ncell, real64)
       ! M_k = A·Δζ_k·(d が ζ_k 以上のセル数) + 部分層
       jf = 0
       do k = geo%nz, 1, -1
@@ -773,417 +716,44 @@ subroutine setup_zones(vz, p, g, b, list)
       ! 整合の検査: Σ W = A_g、Σ M = Σ A d
       wsum = sum(zz%w)
       msum = sum(zz%m)
-      adsum = a * zz%sdmean * real(zz%ncell, real64)
-      if (abs(wsum - zz%area) > 1.0e-10_real64 * zz%area .or. &
+      adsum = a * zz%sdmean * real(ncell, real64)
+      if (abs(wsum - vz%zr%zones(z)%area) > 1.0e-10_real64 * vz%zr%zones(z)%area .or. &
           abs(msum - adsum) > 1.0e-10_real64 * adsum) then
         call par_stop("vz: inconsistent depth weights in zone "//itoa(z)//" (internal check)")
       end if
     end associate
   end do
-  allocate(vz%colncell(1:vz%ncol), source = 0)
-  do z = 1, nzn
-    vz%colncell(vz%zones(z)%col) = vz%colncell(vz%zones(z)%col) + vz%zones(z)%ncell
-  end do
 
-  ! --- 出口と基底流 ---
-  call setup_outlets(vz, g, b, list, zmap)
-  call setup_baseflow(vz, p, list)
-
-  ! --- 帯の区画番号(時間ループ用) ---
-  allocate(vz%zid(dcp%ish:dcp%ieh, dcp%jsh:dcp%jeh), source = 0)
-  do j = max(dcp%jsh, 1), min(dcp%jeh, g%ny)
-    do i = max(dcp%ish, 1), min(dcp%ieh, g%nx)
-      vz%zid(i,j) = zmap(i,j)
-    end do
-  end do
+  ! --- 出口と基底流(共通基盤) ---
+  call zr_setup_outlets(vz%zr, g, b, list%vz_out_kind, list%vz_out_cell, list%vz_out_w, zmap)
+  call zr_setup_baseflow(vz%zr, p, list%vz_base, list%fn_vz_base)
 end subroutine
 
 
 !----------------------------------------------------------------------
-! VZ セルが境界・ソース・構造物のセルと重ならないこと(雨の回収量が
-! boundary_h の式と一致する前提。vz_plan.md §4.10)
-!----------------------------------------------------------------------
-subroutine check_vz_cells(b, zmap)
-  type(t_boundary), intent(in) :: b
-  integer, intent(in) :: zmap(:,:)
-  integer :: k, n
-  do k = 1, b%nsrc
-    do n = 1, b%src(k)%ncell
-      call chk(b%src(k)%cell(1,n), b%src(k)%cell(2,n), "an injection/extraction source")
-    end do
-  end do
-  do k = 1, b%nstage
-    do n = 1, b%stage(k)%ncell
-      call chk(b%stage(k)%cell(1,n), b%stage(k)%cell(2,n), "a water level boundary")
-    end do
-  end do
-  do k = 1, b%ninflow
-    do n = 1, b%inflow(k)%ncell
-      call chk(b%inflow(k)%cell(1,n), b%inflow(k)%cell(2,n), "an inflow boundary")
-    end do
-  end do
-  do k = 1, b%nstruct
-    do n = 1, b%struct(k)%ncin
-      call chk(b%struct(k)%cin(1,n), b%struct(k)%cin(2,n), "a structure")
-    end do
-    do n = 1, b%struct(k)%ncout
-      call chk(b%struct(k)%cout(1,n), b%struct(k)%cout(2,n), "a structure")
-    end do
-  end do
-contains
-  subroutine chk(i, j, what)
-    integer, intent(in) :: i, j
-    character(len=*), intent(in) :: what
-    if (i < 1 .or. i > size(zmap,1) .or. j < 1 .or. j > size(zmap,2)) return
-    if (zmap(i,j) > 0) call stop_at("vz: a VZ cell overlaps "//what//" cell", i, j)
-  end subroutine
-end subroutine
-
-
-!----------------------------------------------------------------------
-! 出口(区画ごとの種別・セル・配分率)と、全区画で重複を除いたセル一覧
-!----------------------------------------------------------------------
-subroutine setup_outlets(vz, g, b, list, zmap)
-  type(t_vzflow), intent(inout) :: vz
-  type(t_geoinfo), intent(in) :: g
-  type(t_boundary), intent(in) :: b
-  type(t_list_vz), intent(in) :: list
-  integer, intent(in) :: zmap(:,:)
-  integer :: z, k, kk, n, i, j, q, st, ns
-  integer :: tmpcell(1:2, 1:vz_noutmax * vz_nzonemax)
-  real(real64) :: wsum
-  character(len=16) :: tag
-
-  vz%nocell = 0
-  do z = 1, vz%nzone
-    write(tag, '("(",i0,")")') z
-    associate (zz => vz%zones(z))
-      n = 0
-      do k = 1, vz_noutmax
-        if (list%vz_out_cell(1,k,z) <= -9998) exit
-        n = k
-      end do
-      select case (list%vz_out_kind(z))
-        case (1)
-          if (n == 0) call par_stop("list_vz_zone: vz_out_kind"//trim(tag)//"=1 requires vz_out_cell(:,:,"// &
-                                    itoa(z)//")")
-        case (2)
-          if (n > 0) call par_stop("list_vz_zone: vz_out_kind"//trim(tag)//"=2 (outflow from the system)" &
-                                   //" takes no vz_out_cell")
-        case default
-          call par_stop("list_vz_zone: vz_out_kind"//trim(tag)//" must be given: 1(surface cells) or" &
-                        //" 2(outflow from the system)")
-      end select
-      zz%kind = list%vz_out_kind(z)
-      zz%nout = n
-      if (n == 0) cycle
-      allocate(zz%oidx(1:n), zz%ow(1:n))
-      do k = 1, n
-        i = list%vz_out_cell(1,k,z)
-        j = list%vz_out_cell(2,k,z)
-        if (i < 1 .or. i > g%nx .or. j < 1 .or. j > g%ny) then
-          call par_stop("list_vz_zone: outlet cell out of the grid in zone "//itoa(z)//": ("// &
-                        itoa(i)//","//itoa(j)//")")
-        end if
-        if (g%x(i,j) <= 0) call stop_at("list_vz_zone: an outlet cell is outside the domain", i, j)
-        if (g%sw(i,j) > 0) call stop_at("list_vz_zone: an outlet cell is a sea cell (use vz_out_kind=2" &
-                                        //" for outflow from the system)", i, j)
-        if (zmap(i,j) > 0) call stop_at("list_vz_zone: an outlet cell is a VZ cell", i, j)
-        do kk = 1, k - 1
-          if (list%vz_out_cell(1,kk,z) == i .and. list%vz_out_cell(2,kk,z) == j) then
-            call stop_at("list_vz_zone: duplicate outlet cell in zone "//itoa(z), i, j)
-          end if
-        end do
-        do st = 1, b%nstage
-          do ns = 1, b%stage(st)%ncell
-            if (b%stage(st)%cell(1,ns) == i .and. b%stage(st)%cell(2,ns) == j) then
-              call stop_at("list_vz_zone: an outlet cell is a water level boundary cell", i, j)
-            end if
-          end do
-        end do
-        ! 重複を除いた一覧へ登録
-        q = 0
-        do kk = 1, vz%nocell
-          if (tmpcell(1,kk) == i .and. tmpcell(2,kk) == j) q = kk
-        end do
-        if (q == 0) then
-          vz%nocell = vz%nocell + 1
-          q = vz%nocell
-          tmpcell(1,q) = i
-          tmpcell(2,q) = j
-        end if
-        zz%oidx(k) = q
-        ! 配分率: 1 セルなら省略可(= 1)。複数なら全て必須(暗黙の等分配はしない)
-        if (list%vz_out_w(k,z) <= -9998.0) then
-          if (n == 1) then
-            zz%ow(k) = 1.0_real64
-          else
-            call par_stop("list_vz_zone: vz_out_w(:,"//itoa(z)//") is required for every outlet cell" &
-                          //" when a zone has more than one")
-          end if
-        else
-          if (.not. (list%vz_out_w(k,z) >= 0.0)) then
-            call par_stop("list_vz_zone: vz_out_w(:,"//itoa(z)//") must be >= 0")
-          end if
-          zz%ow(k) = real(list%vz_out_w(k,z), real64)
-        end if
-      end do
-      wsum = sum(zz%ow)
-      if (abs(wsum - 1.0_real64) > 1.0e-6_real64) then
-        call par_stop("list_vz_zone: vz_out_w(:,"//itoa(z)//") must sum to 1")
-      end if
-      zz%ow(:) = zz%ow(:) / wsum       ! 丸め規模の差だけ正規化(採用値は区画確認表に出す)
-    end associate
-  end do
-  allocate(vz%ocell(1:2, 1:max(vz%nocell,1)), source = 0)
-  if (vz%nocell > 0) vz%ocell(:, 1:vz%nocell) = tmpcell(:, 1:vz%nocell)
-  allocate(vz%ovol(1:max(vz%nocell,1)), vz%ocarry(1:max(vz%nocell,1)), vz%ovcum(1:max(vz%nocell,1)), &
-           source = 0.0_real64)
-end subroutine
-
-
-!----------------------------------------------------------------------
-! 基底流の時系列(区画ごと。ファイル指定が namelist より優先 = 境界の時系列と
-! 同じ規約)。時刻は分 → 秒、強度は mm/h → m/s。時刻は減らないこと
-! (同じ時刻の 2 点で段差を表せる)、強度は 0 以上
-!----------------------------------------------------------------------
-subroutine setup_baseflow(vz, p, list)
-  type(t_vzflow), intent(inout) :: vz
-  type(t_sysparam), intent(in) :: p
-  type(t_list_vz), intent(in) :: list
-  integer :: z, k, n
-  real, allocatable :: val(:,:)
-  character(len=16) :: tag
-
-  do z = 1, vz%nzone
-    write(tag, '("(",i0,")")') z
-    if (len_trim(list%fn_vz_base(z)) > 0) then
-      call par_info(" reading "//trim(p%dir_data)//"/"//trim(list%fn_vz_base(z)))
-      call read_val_file2(trim(p%dir_data)//"/"//trim(list%fn_vz_base(z)), n, val)
-      if (n == 0) call par_stop("list_vz_zone: fn_vz_base"//trim(tag)//" has no data")
-    else
-      n = 0
-      do k = 1, vz_nbasemax
-        if (list%vz_base(1,k,z) <= -9998.0) exit    ! 番兵で終端
-        n = k
-      end do
-      if (n == 0) cycle
-      allocate(val(1:2, 1:n))
-      val(1,1:n) = list%vz_base(1,1:n,z) * 60     ! 分を秒に(ファイルの読み込みと同じ演算)
-      val(2,1:n) = list%vz_base(2,1:n,z)
-    end if
-    associate (zz => vz%zones(z))
-      zz%nbase = n
-      allocate(zz%bt(1:n), zz%bq(1:n))
-      do k = 1, n
-        if (.not. (val(2,k) >= 0.0)) then
-          call par_stop("list_vz_zone: the baseflow of zone "//itoa(z)//" must be >= 0 (mm/h)")
-        end if
-        if (k > 1) then
-          if (val(1,k) < val(1,k-1)) then
-            call par_stop("list_vz_zone: the baseflow times of zone "//itoa(z)//" must not decrease")
-          end if
-        end if
-        zz%bt(k) = real(val(1,k), real64)
-        zz%bq(k) = real(val(2,k), real64) / 3.6e6_real64
-      end do
-    end associate
-    deallocate(val)
-    vz%have_base = .true.
-  end do
-end subroutine
-
-
-!----------------------------------------------------------------------
-! 基底流の区分線形の時系列(範囲外は端の値を保持)の [ta, tb] の積分 (m)
-!----------------------------------------------------------------------
-pure real(real64) function base_integral(zz, ta, tb) result(v)
-  type(t_vzzone), intent(in) :: zz
-  real(real64), intent(in) :: ta, tb
-  integer :: k, n
-  real(real64) :: a, b, fa, fb
-  n = zz%nbase
-  v = 0.0_real64
-  if (ta < zz%bt(1)) v = v + (min(tb, zz%bt(1)) - ta) * zz%bq(1)
-  do k = 1, n - 1
-    a = max(ta, zz%bt(k))
-    b = min(tb, zz%bt(k+1))
-    if (b <= a) cycle                  ! 区間外(同じ時刻の 2 点の段差も含む)
-    fa = zz%bq(k) + (zz%bq(k+1) - zz%bq(k)) * (a - zz%bt(k)) / (zz%bt(k+1) - zz%bt(k))
-    fb = zz%bq(k) + (zz%bq(k+1) - zz%bq(k)) * (b - zz%bt(k)) / (zz%bt(k+1) - zz%bt(k))
-    v = v + (b - a) * 0.5_real64 * (fa + fb)
-  end do
-  if (tb > zz%bt(n)) v = v + (tb - max(ta, zz%bt(n))) * zz%bq(n)
-end function
-
-
-!----------------------------------------------------------------------
-! 毎ステップ: VZ セルに入った雨を s%h から回収し、柱の入力として記録する
-!   回収量は boundary_h の加算と同じ式 pre·dt/gv(VZ セルは河道セルでない
-!   ので wfrac は掛からない)。上流から流れ込んだ水は回収しない。
-!   h を 0 で切らない(浅水流の連続式は前ステップの水深で流出を決め、
-!   run-on のある VZ セルでは雨を加える前の水深が微小な負になりうる。
-!   0 で切ると回収した雨 pre·dt より取り除いた水が少なく、水を作る)
-!----------------------------------------------------------------------
-subroutine recover_rain(vz, p, g, s)
-  type(t_vzflow), intent(inout) :: vz
-  type(t_sysparam), intent(in) :: p
-  type(t_geoinfo), intent(in) :: g
-  type(t_state), intent(inout) :: s
-  integer :: i, j, z, c, k
-  real :: pr, dh
-  real :: lmx(1:vz%ncol), lmn(1:vz%ncol)
-  logical :: changed
-
-  vz%kstep = vz%kstep + 1
-  k = vz%kstep
-  lmx(:) = -huge(1.0)
-  lmn(:) = -huge(1.0)
-  if (vz%rainmode == 1) vz%rsnow(:,:) = 0.0_real64
-  !$omp parallel do schedule(static) private(i, j, z, c, pr, dh) reduction(max: lmx, lmn)
-  do j = dcp%js, dcp%je
-    do i = g%wx(1,j), g%wx(2,j)
-      z = vz%zid(i,j)
-      if (z == 0) cycle
-      c = vz%zones(z)%col
-      pr = s%pre(i,j)
-      dh = s%pre(i,j) * p%dt / s%gv(i,j)
-      s%h(i,j) = s%h(i,j) - dh
-      s%e(i,j) = s%z(i,j) + s%h(i,j)
-      s%vzp(i,j) = s%vzp(i,j) + pr * p%dt
-      lmx(c) = max(lmx(c), pr)
-      lmn(c) = max(lmn(c), -pr)
-      if (vz%rainmode == 1) vz%rsnow(j,c) = vz%rsnow(j,c) + real(pr, real64)
-    end do
-  end do
-  !$omp end parallel do
-
-  if (vz%rainmode == 0) then
-    vz%rmx(k,:) = lmx(:)
-    vz%rmn(k,:) = lmn(:)
-  else
-    ! 局所の入力が直前のスナップショットから変わったステップを記録する
-    changed = (k == 1)
-    if (.not. changed) changed = any(vz%rsnow /= vz%rsprev)
-    if (changed) then
-      vz%chg(k) = 1
-      vz%rsprev(:,:) = vz%rsnow(:,:)
-      call push_snapshot(vz, k)
-    else
-      vz%chg(k) = 0
-    end if
-  end if
-end subroutine
-
-
-!----------------------------------------------------------------------
-! 面積平均モードの行部分和のスナップショットを積む(容量は倍々に伸ばす)
-!----------------------------------------------------------------------
-subroutine push_snapshot(vz, k)
-  type(t_vzflow), intent(inout) :: vz
-  integer, intent(in) :: k
-  real(real64), allocatable :: tmp(:,:,:)
-  integer, allocatable :: tk(:)
-  integer :: ncap
-  ncap = size(vz%snapk)
-  if (vz%nsnap == ncap) then
-    allocate(tmp(dcp%js:dcp%je, 1:vz%ncol, 1:2*ncap), source = 0.0_real64)
-    allocate(tk(1:2*ncap), source = 0)
-    tmp(:, :, 1:ncap) = vz%snap(:, :, 1:ncap)
-    tk(1:ncap) = vz%snapk(1:ncap)
-    call move_alloc(tmp, vz%snap)
-    call move_alloc(tk, vz%snapk)
-  end if
-  vz%nsnap = vz%nsnap + 1
-  vz%snapk(vz%nsnap) = k
-  vz%snap(:, :, vz%nsnap) = vz%rsnow(:, :)
-end subroutine
-
-
-!----------------------------------------------------------------------
-! 同期: 区間の上端流束を確定し、全柱を進め、区画へ集約し、出口へ渡す
-!   (collective。全ランクが同じ順で呼ぶ)
+! 同期: 区間の上端流束を確定し(共通基盤)、全柱を進め、区画へ集約し、
+! 出口へ渡す(共通基盤)。collective(全ランクが同じ順で呼ぶ)
 !----------------------------------------------------------------------
 subroutine sync_interval(vz, p, s)
   type(t_vzflow), intent(inout) :: vz
   type(t_sysparam), intent(in) :: p
   type(t_state), intent(inout) :: s
-  integer :: nk, c, k, z, q, j, jf, isn, kk
-  real, allocatable :: buf(:)
-  integer, allocatable :: gchg(:)
-  real(real64) :: tot, dv, dvb, h, thr, ta, tb
-  real(real64), allocatable :: rows(:)
+  integer :: nk, c, z, jf
+  real(real64) :: dv, h, thr
   character(len=512) :: msg
 
-  nk = vz%kstep
+  nk = vz%zr%kstep
   if (nk == 0) return
 
-  ! --- 区間の各ステップの上端流束(柱ごと) ---
-  if (vz%rainmode == 0) then
-    ! 局所の max と −min を全ランクの max に揃え、柱内の一致を検査する
-    allocate(buf(1:2*nk*vz%ncol))
-    buf(1:nk*vz%ncol) = reshape(vz%rmx(1:nk, :), [nk*vz%ncol])
-    buf(nk*vz%ncol+1:) = reshape(vz%rmn(1:nk, :), [nk*vz%ncol])
-    call par_allreduce_max(buf)
-    vz%rmx(1:nk, :) = reshape(buf(1:nk*vz%ncol), [nk, vz%ncol])
-    vz%rmn(1:nk, :) = reshape(buf(nk*vz%ncol+1:), [nk, vz%ncol])
-    do c = 1, vz%ncol
-      do k = 1, nk
-        if (vz%rmx(k,c) /= -vz%rmn(k,c)) then
-          write(msg, '(a,i0,a,es12.4,a,es12.4,a)') "vz: ground rainfall differs within column ", c, &
-                " (min ", -vz%rmn(k,c), ", max ", vz%rmx(k,c), " m/s); set f_vz_rain=1 (area average)" &
-                // " or split the zone so that each column receives identical rainfall"
-          call par_stop(trim(msg))
-        end if
-        vz%rstep(k,c) = real(vz%rmx(k,c), real64)
-      end do
-    end do
-    deallocate(buf)
-  else
-    ! 全ランクの変化点を揃え、変化したステップだけ行部分和を決定的に総和する
-    allocate(gchg(1:nk))
-    gchg(:) = vz%chg(1:nk)
-    call par_allreduce_sumi(gchg)
-    allocate(rows(dcp%js:dcp%je))
-    do k = 1, nk
-      if (k > 1 .and. gchg(k) == 0) then
-        vz%rstep(k,:) = vz%rstep(k-1,:)
-        cycle
-      end if
-      isn = 0
-      do kk = 1, vz%nsnap
-        if (vz%snapk(kk) <= k) isn = kk     ! 局所で k 以前の最新のスナップショット
-      end do
-      do c = 1, vz%ncol
-        rows(:) = vz%snap(:, c, isn)
-        call par_sum_rows(rows, tot)
-        vz%rstep(k,c) = tot / real(vz%colncell(c), real64)
-      end do
-    end do
-    deallocate(rows, gchg)
-  end if
+  ! --- 区間の各ステップの上端流束(柱ごと)を確定し、区分一定の区間に圧縮する ---
+  call zr_collect_input(vz%zr, p)
 
-  ! --- 区分一定の区間に圧縮して全柱を進める(柱ごとに独立 = OpenMP) ---
+  ! --- 全柱を進める(柱ごとに独立 = OpenMP) ---
   h = real(p%dt, real64)
-  do c = 1, vz%ncol
-    vz%nseg(c) = 0
-    do k = 1, nk
-      if (vz%nseg(c) > 0) then
-        if (vz%segr(vz%nseg(c), c) == vz%rstep(k,c)) then
-          vz%segl(vz%nseg(c), c) = vz%segl(vz%nseg(c), c) + h
-          cycle
-        end if
-      end if
-      vz%nseg(c) = vz%nseg(c) + 1
-      vz%segl(vz%nseg(c), c) = h
-      vz%segr(vz%nseg(c), c) = vz%rstep(k,c)
-    end do
-    vz%rlast(c) = vz%rstep(nk,c)
-  end do
   vz%fsum(:,:) = 0.0_real64
   !$omp parallel do schedule(dynamic)
   do c = 1, vz%ncol
-    call vzcol_advance(vz%cols(c), vz%ctl, vz%nseg(c), vz%segl(:,c), vz%segr(:,c), &
+    call vzcol_advance(vz%cols(c), vz%ctl, vz%zr%nseg(c), vz%zr%segl(:,c), vz%zr%segr(:,c), &
                        vz%fsum(0:vz%cols(c)%geo%nz, c), vz%stat(c))
   end do
   !$omp end parallel do
@@ -1203,13 +773,8 @@ subroutine sync_interval(vz, p, s)
     vz%fcum(:,c) = vz%fcum(:,c) + vz%fsum(:,c)
   end do
 
-  ! --- 区画へ集約(上向きの有意な排水は適用外)。基底流は区間 [ta, tb] の積分を
-  !     排水に加えて出口へ渡す(区間端は s%t と同じ t0 + dt·it の式で、隣の区間と
-  !     継ぎ目が一致する) ---
-  tb = real(p%t0, real64) + real(p%dt, real64) * real(s%it, real64)
-  ta = real(p%t0, real64) + real(p%dt, real64) * real(s%it - nk, real64)
-  vz%ovol(:) = 0.0_real64
-  do z = 1, vz%nzone
+  ! --- 区画へ集約(上向きの有意な排水は適用外) ---
+  do z = 1, vz%zr%nzone
     associate (zz => vz%zones(z), geo => vz%cols(vz%zones(z)%col)%geo)
       c = zz%col
       thr = vz%ctl%tol_q_a * real(nk, real64) * h
@@ -1224,75 +789,23 @@ subroutine sync_interval(vz, p, s)
       do jf = 0, geo%nz
         dv = dv + zz%w(jf) * vz%fsum(jf, c)
       end do
-      zz%vin = zz%vin + zz%area * vz%fsum(0, c)
+      zz%vin = zz%vin + vz%zr%zones(z)%area * vz%fsum(0, c)
       if (dv < 0.0_real64) then
         zz%vcorr = zz%vcorr - dv       ! 丸め規模の負の排水は 0 に切り、補正量として記録
         dv = 0.0_real64
       end if
       zz%vdrain = zz%vdrain + dv
       zz%dvlast = dv
-      dvb = 0.0_real64
-      if (zz%nbase > 0) then
-        dvb = zz%area * base_integral(zz, ta, tb)
-        zz%vbase = zz%vbase + dvb
-      end if
-      if (zz%kind == 2) then
-        zz%vext = zz%vext + (dv + dvb)
-      else
-        zz%vint = zz%vint + (dv + dvb)
-        do k = 1, zz%nout
-          vz%ovol(zz%oidx(k)) = vz%ovol(zz%oidx(k)) + zz%ow(k) * (dv + dvb)
-        end do
-      end if
+      vz%dvz(z) = dv
       zz%vstore = zone_storage(vz, z)
     end associate
   end do
 
-  ! --- 出口セルへの移送(所有ランクのみ。同じセルへの複数区画の量は合計済み) ---
-  do q = 1, vz%nocell
-    vz%ovcum(q) = vz%ovcum(q) + vz%ovol(q)
-    j = vz%ocell(2,q)
-    if (j < dcp%js .or. j > dcp%je) cycle
-    call add_to_surface(vz, s, q)
-  end do
+  ! --- 基底流を加えて出口へ渡し、区間を閉じる(s%vzp も 0 に戻す) ---
+  call zr_deliver(vz%zr, p, s, vz%dvz, s%vzp)
 
-  ! --- 台帳と区間のリセット ---
+  ! --- 台帳 ---
   s%vzstore = total_storage(vz)
-  s%vzp(:,:) = 0.0
-  vz%kstep = 0
-  vz%nsnap = 0
-end subroutine
-
-
-!----------------------------------------------------------------------
-! 出口セル q へ体積を加える(雨・境界ソースと同じ換算 V/(dx·dy)/gv/wfrac)。
-! 実際に加わった体積との差は繰越(単精度ビルドで微小な量が丸めで消えない)
-!----------------------------------------------------------------------
-subroutine add_to_surface(vz, s, q)
-  type(t_vzflow), intent(inout) :: vz
-  type(t_state), intent(inout) :: s
-  integer, intent(in) :: q
-  integer :: i, j
-  real :: hold, wf
-  real(real64) :: vreq, fac
-  i = vz%ocell(1,q)
-  j = vz%ocell(2,q)
-  wf = 1.0
-  if (chn%have_width) wf = chn%wfrac(i,j)
-  vreq = vz%ovol(q) + vz%ocarry(q)
-  fac = vz%dxdy * real(s%gv(i,j), real64) * real(wf, real64)
-  if (sect_cell(s, i, j)) then
-    ! 断面形 σ のセルは体積(矩形換算水深)で足し、繰越も体積の差で数える(§26.2)
-    hold = sect_vh(s, i, j, s%h(i,j))
-    call sect_add_vh(s, i, j, real(vreq / fac))
-    s%e(i,j) = s%z(i,j) + s%h(i,j)
-    vz%ocarry(q) = vreq - real(sect_vh(s, i, j, s%h(i,j)) - hold, real64) * fac
-    return
-  end if
-  hold = s%h(i,j)
-  s%h(i,j) = s%h(i,j) + real(vreq / fac)
-  s%e(i,j) = s%z(i,j) + s%h(i,j)
-  vz%ocarry(q) = vreq - real(s%h(i,j) - hold, real64) * fac
 end subroutine
 
 
@@ -1319,10 +832,10 @@ real(real64) function total_storage(vz)
   type(t_vzflow), intent(in) :: vz
   integer :: z
   total_storage = 0.0_real64
-  do z = 1, vz%nzone
+  do z = 1, vz%zr%nzone
     total_storage = total_storage + vz%zones(z)%vstore
   end do
-  total_storage = total_storage / vz%dxdy
+  total_storage = total_storage / vz%zr%dxdy
 end function
 
 
@@ -1358,30 +871,15 @@ end subroutine
 !----------------------------------------------------------------------
 subroutine report_zones(vz)
   type(t_vzflow), intent(in) :: vz
-  integer :: z, k
+  integer :: z
   character(len=512) :: line
-  call par_info("vz: "//itoa(vz%ncol)//" column(s), "//itoa(vz%nzone)//" zone(s)")
-  do z = 1, vz%nzone
-    associate (zz => vz%zones(z))
+  call par_info("vz: "//itoa(vz%ncol)//" column(s), "//itoa(vz%zr%nzone)//" zone(s)")
+  do z = 1, vz%zr%nzone
+    associate (zz => vz%zones(z), zc => vz%zr%zones(z))
       write(line, '(a,i0,a,i0,a,i0,a,es11.4,a,3f9.4)') "  zone ", z, ": column ", zz%col, ", cells ", &
-            zz%ncell, ", area ", zz%area, " m2, soil depth min/mean/max", zz%sdmin, zz%sdmean, zz%sdmax
+            zc%ncell, ", area ", zc%area, " m2, soil depth min/mean/max", zz%sdmin, zz%sdmean, zz%sdmax
       call par_info(trim(line))
-      if (zz%kind == 2) then
-        call par_info("    outlet: outflow from the system")
-      else
-        do k = 1, zz%nout
-          write(line, '(a,i0,a,i0,a,f8.5)') "    outlet cell (", vz%ocell(1,zz%oidx(k)), ",", &
-                vz%ocell(2,zz%oidx(k)), ") weight ", zz%ow(k)
-          call par_info(trim(line))
-        end do
-      end if
-      if (zz%nbase > 0) then
-        write(line, '(a,i0,a,2(f0.1,a,g0.6,a))') "    baseflow: ", zz%nbase, " point(s), from (", &
-              zz%bt(1) / 60.0_real64, " min, ", zz%bq(1) * 3.6e6_real64, " mm/h) to (", &
-              zz%bt(zz%nbase) / 60.0_real64, " min, ", zz%bq(zz%nbase) * 3.6e6_real64, &
-              " mm/h), added at the outlet"
-        call par_info(trim(line))
-      end if
+      call zr_report_outlets(vz%zr, z)
     end associate
   end do
 end subroutine
@@ -1399,7 +897,7 @@ subroutine open_csv(vz, p)
   open(newunit=vz%un_zone, file=trim(p%dir_result)//"/vz_zone.csv", status='replace')
   write(vz%un_zone, '(a)', advance='no') "time(s),zone,column,area(m2),vin(m3),vstore(m3),vdrain(m3)," // &
                                          "vsurface(m3),vexternal(m3),vcorr(m3),residual(m3)"
-  if (vz%have_base) write(vz%un_zone, '(a)', advance='no') ",vbase(m3)"
+  if (vz%zr%have_base) write(vz%un_zone, '(a)', advance='no') ",vbase(m3)"
   write(vz%un_zone, '(a)') ""
   open(newunit=vz%un_col, file=trim(p%dir_result)//"/vz_column.csv", status='replace')
   write(vz%un_col, '(a)', advance='no') "time(s),column,rate(m/s),F0(m),Fbottom(m)"
@@ -1414,45 +912,37 @@ end subroutine
 
 !----------------------------------------------------------------------
 ! 保存(私有ファイル vzflow.dat。rank0 が書く。読み並びは restore_state と対)
-!   出口の繰越は所有ランクだけが持つので、その行だけが非 0 の行部分和を
-!   par_sum_rows で集める(寄与が 1 つなので総和は厳密。real64 のまま
-!   集めるので単精度ビルドでも繰越が丸められない)
+!   出口の繰越は所有ランクだけが持つので、共通基盤の zr_gather_carry で
+!   全ランク同値に集めてから書く(collective)
 !----------------------------------------------------------------------
 subroutine save_state(vz, p)
   type(t_vzflow), intent(in) :: vz
   type(t_sysparam), intent(in) :: p
-  integer :: un, c, z, q, j
-  real(real64), allocatable :: carry(:), rowv(:)
-  allocate(carry(1:max(vz%nocell,1)), source = 0.0_real64)
-  allocate(rowv(dcp%js:dcp%je))
-  do q = 1, vz%nocell
-    rowv(:) = 0.0_real64
-    j = vz%ocell(2,q)
-    if (j >= dcp%js .and. j <= dcp%je) rowv(j) = vz%ocarry(q)
-    call par_sum_rows(rowv, carry(q))
-  end do
+  integer :: un, c, z
+  real(real64), allocatable :: carry(:)
+  call zr_gather_carry(vz%zr, carry)
   if (.not. is_root) return
   call sysdep_mkdir(p%dir_save)
   open(newunit=un, file=trim(p%dir_save)//'/vzflow.dat', form='unformatted', status='replace')
-  write(un) save_version, vz%ncol, vz%nzone, vz%nocell
+  write(un) save_version, vz%ncol, vz%zr%nzone, vz%zr%nocell
   do c = 1, vz%ncol
     write(un) vz%cols(c)%geo%nz, vz%cols(c)%geo%depth, vz%cols(c)%geo%ks, vz%cols(c)%geo%ths
   end do
-  do z = 1, vz%nzone
-    write(un) vz%zones(z)%col, vz%zones(z)%ncell, vz%zones(z)%sdmean
+  do z = 1, vz%zr%nzone
+    write(un) vz%zones(z)%col, vz%zr%zones(z)%ncell, vz%zones(z)%sdmean
   end do
   do c = 1, vz%ncol
     write(un) vz%cols(c)%psi, vz%cols(c)%dtnext, vz%cols(c)%nacc, vz%cols(c)%nrej, vz%cols(c)%nit, &
-              vz%cols(c)%dtlast, vz%rlast(c)
+              vz%cols(c)%dtlast, vz%zr%rlast(c)
     write(un) vz%fcum(0:vz%cols(c)%geo%nz, c)
   end do
-  do z = 1, vz%nzone
-    write(un) vz%zones(z)%vin, vz%zones(z)%vdrain, vz%zones(z)%vint, vz%zones(z)%vext, &
-              vz%zones(z)%vcorr, vz%zones(z)%vstore0, vz%zones(z)%dvlast, vz%zones(z)%vbase
+  do z = 1, vz%zr%nzone
+    write(un) vz%zones(z)%vin, vz%zones(z)%vdrain, vz%zr%zones(z)%vint, vz%zr%zones(z)%vext, &
+              vz%zones(z)%vcorr, vz%zones(z)%vstore0, vz%zones(z)%dvlast, vz%zr%zones(z)%vbase
   end do
-  if (vz%nocell > 0) then
-    write(un) vz%ocell(:, 1:vz%nocell)
-    write(un) carry(1:vz%nocell), vz%ovcum(1:vz%nocell)
+  if (vz%zr%nocell > 0) then
+    write(un) vz%zr%ocell(:, 1:vz%zr%nocell)
+    write(un) carry(1:vz%zr%nocell), vz%zr%ovcum(1:vz%zr%nocell)
   end if
   close(un)
 end subroutine
@@ -1485,7 +975,7 @@ subroutine restore_state(vz, p)
     call par_stop("vz: state file format version "//itoa(ver)//" does not match the version this " &
                   //"executable reads ("//itoa(save_version)//"): "//fname)
   end if
-  if (nc /= vz%ncol .or. nzn /= vz%nzone .or. noc /= vz%nocell) then
+  if (nc /= vz%ncol .or. nzn /= vz%zr%nzone .or. noc /= vz%zr%nocell) then
     mismatch = .true.
   else
     do c = 1, nc
@@ -1495,7 +985,7 @@ subroutine restore_state(vz, p)
     end do
     do z = 1, nzn
       read(un) col, ncell, sdmean
-      if (col /= vz%zones(z)%col .or. ncell /= vz%zones(z)%ncell .or. sdmean /= vz%zones(z)%sdmean) &
+      if (col /= vz%zones(z)%col .or. ncell /= vz%zr%zones(z)%ncell .or. sdmean /= vz%zones(z)%sdmean) &
         mismatch = .true.
     end do
   end if
@@ -1506,24 +996,24 @@ subroutine restore_state(vz, p)
   end if
   do c = 1, nc
     associate (col_ => vz%cols(c))
-      read(un) col_%psi, col_%dtnext, col_%nacc, col_%nrej, col_%nit, col_%dtlast, vz%rlast(c)
+      read(un) col_%psi, col_%dtnext, col_%nacc, col_%nrej, col_%nit, col_%dtlast, vz%zr%rlast(c)
       call refresh_theta(col_)
       read(un) vz%fcum(0:col_%geo%nz, c)
     end associate
   end do
   do z = 1, nzn
-    read(un) vz%zones(z)%vin, vz%zones(z)%vdrain, vz%zones(z)%vint, vz%zones(z)%vext, &
-             vz%zones(z)%vcorr, vz%zones(z)%vstore0, vz%zones(z)%dvlast, vz%zones(z)%vbase
+    read(un) vz%zones(z)%vin, vz%zones(z)%vdrain, vz%zr%zones(z)%vint, vz%zr%zones(z)%vext, &
+             vz%zones(z)%vcorr, vz%zones(z)%vstore0, vz%zones(z)%dvlast, vz%zr%zones(z)%vbase
   end do
   if (noc > 0) then
     allocate(oc(1:2, 1:noc), tmp(1:noc))
     read(un) oc
-    if (any(oc /= vz%ocell(:, 1:noc))) then
+    if (any(oc /= vz%zr%ocell(:, 1:noc))) then
       close(un)
       call par_stop("vz: the outlet cells differ from the saved state "//fname)
     end if
-    read(un) tmp, vz%ovcum(1:noc)
-    vz%ocarry(1:noc) = tmp
+    read(un) tmp, vz%zr%ovcum(1:noc)
+    vz%zr%ocarry(1:noc) = tmp
   end if
   close(un)
 end subroutine
