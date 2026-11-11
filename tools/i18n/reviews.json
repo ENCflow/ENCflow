@@ -58,11 +58,11 @@
     {
       "source": "docs/comparison.md",
       "target": "docs/en/comparison.md",
-      "source_sha256": "2e99fd225111cad7d15e64f0ac930cfb6bfaee046ab1e56b2063ddbb491b1639",
-      "target_sha256": "05345c1934793d0af61e9ccf1163fb111406cf6b783b4e6372cc3cc5a01799ce",
-      "reviewer": "Claude (Claude Code session; lava temperature mode f_lvtemp, developer.md Sec. 51.7: changed passages compared side by side with the Japanese source, unchanged parts as recorded earlier)",
+      "source_sha256": "2802af26b43b34c50e7d8af4e8cfc24fdeaaacd5c639537bde6b61edd8c34e12",
+      "target_sha256": "05953287918ffd63fbb0a5f1231bdee7ac9dab9b3d6f804ef054bac24f4309d4",
+      "reviewer": "Claude (Claude Code session; links to the shallow-water primer and the renaming of f_govequation = 1 to local inertia (note at first mention in tutorials, examples and tests): Japanese and English edited together and the changed passages compared)",
       "method": "assistant",
-      "reviewed_on": "2026-11-04"
+      "reviewed_on": "2026-11-11"
     },
     {
       "source": "docs/developer.md",
@@ -95,38 +95,38 @@
     {
       "source": "docs/tutorial.md",
       "target": "docs/en/tutorial.md",
-      "source_sha256": "e1fdda637873c9363f9a846d98eb52e920d7096f28955d7fb4760b1149d32d2e",
-      "target_sha256": "6bca3b224a8fb3e0978058925d5c20ddd3e448bc017b99a62ad22e17c507e370",
-      "reviewer": "Claude (Claude Code session; chapter/explanation table: added the five missing explanation pages (steep slope, advection donor, diagonal diffusion, diagonal share d, landform-change applications) and put the rows in the guide's table-of-contents order in both versions; tools/consistency/check.py guide passes; read side by side)",
+      "source_sha256": "a21be09cfdc8b06b159974f3e33aabcfe197bf04b422caac07e619866d250ab2",
+      "target_sha256": "7c55cc33407f2cbea64242b00f4176c47e3e1f69f670e03bba7e93d0662576f4",
+      "reviewer": "Claude (Claude Code session; links to the shallow-water primer and the renaming of f_govequation = 1 to local inertia (note at first mention in tutorials, examples and tests): Japanese and English edited together and the changed passages compared)",
       "method": "assistant",
-      "reviewed_on": "2026-11-10"
+      "reviewed_on": "2026-11-11"
     },
     {
       "source": "docs/users_guide.md",
       "target": "docs/en/users_guide.md",
-      "source_sha256": "a9546b98ef352870fd84116be8bd8b2a4f3ac8a1e9488bad91b9188a0743b47d",
-      "target_sha256": "8743abf6d424db5c5ec57e616f69fe6b1be57876e4f713c69e7e0ccb2ac9a8c0",
-      "reviewer": "Claude (Claude Code session; fn_reservoir removed: pond row now only fn_rscap, parameter count 781 in both versions; read side by side)",
+      "source_sha256": "c4fd52b217e4f020e349d4ace0a97d3e1c5ba1cda5da1851ce8af21b1d9ff62b",
+      "target_sha256": "f20be39a856cd5acc85e20b54f3295e96e43faea4c2d9e53380ec0745142fa0e",
+      "reviewer": "Claude (Claude Code session; links to the shallow-water primer and the renaming of f_govequation = 1 to local inertia (note at first mention in tutorials, examples and tests): Japanese and English edited together and the changed passages compared)",
       "method": "assistant",
-      "reviewed_on": "2026-11-10"
+      "reviewed_on": "2026-11-11"
     },
     {
       "source": "docs/users_guide/advection.md",
       "target": "docs/en/users_guide/advection.md",
-      "source_sha256": "0f6c41edcfc3aa026470e0f44ebf6451bc764138fdaa09c931364d60eb6d0957",
-      "target_sha256": "3a3b6ee8bf5588584bb2ff17164ff8454117b367ec03aa720a35e2297929e3ff",
-      "reviewer": "Claude (Claude Code session; f_advection_donor bullets of section 4.4 condensed to a summary with a link to advection_donor.md (details moved there), links added in the introduction, section 4.3, the guidance and the parameter table; Japanese and English edited together and compared)",
+      "source_sha256": "0511b6ec152cd8fb1ba4e94b7212ef07713e9420678be3089f1bf211faffb03f",
+      "target_sha256": "11034cf28db54e3562419f4e487f140f43f093b93b5ea4df38eff008de56343e",
+      "reviewer": "Claude (Claude Code session; links to the shallow-water primer and the renaming of f_govequation = 1 to local inertia (note at first mention in tutorials, examples and tests): Japanese and English edited together and the changed passages compared)",
       "method": "assistant",
-      "reviewed_on": "2026-11-09"
+      "reviewed_on": "2026-11-11"
     },
     {
       "source": "docs/users_guide/advection_donor.md",
       "target": "docs/en/users_guide/advection_donor.md",
-      "source_sha256": "f90550a01c88144d3ba7d7a137c3c1517a36a6833dc077549734a4d954e6779e",
-      "target_sha256": "30f5c401b0e902195a7ed91fbd5c3dea88122b20b18a7d82b127c46a01a67c32",
-      "reviewer": "Claude (Claude Code session; new users guide page on f_advection_donor (physical vs artificial braking, cell arrangement at bends, Chichibu 0 vs 3, verification, limits) with four figures from docs/figs/guide/fig_advection_donor.py; Japanese written first, English mirror translated and compared section by section including figure captions, numbers and links)",
+      "source_sha256": "cc44ba48fdc1118f14b80ef633023aa86b433376f9f128a62a967d81342fe99c",
+      "target_sha256": "cfa21f812c03c1d2b1693a98dea1572c3eeb7a2013796d1d272e07e016dc28d9",
+      "reviewer": "Claude (Claude Code session; links to the shallow-water primer and the renaming of f_govequation = 1 to local inertia (note at first mention in tutorials, examples and tests): Japanese and English edited together and the changed passages compared)",
       "method": "assistant",
-      "reviewed_on": "2026-11-09"
+      "reviewed_on": "2026-11-11"
     },
     {
       "source": "docs/users_guide/bedmotion.md",
@@ -257,11 +257,11 @@
     {
       "source": "docs/users_guide/encgrid.md",
       "target": "docs/en/users_guide/encgrid.md",
-      "source_sha256": "452681d125b3ef1884c17b39776061cd7f23fe7481e0485354c6fac379d6869b",
-      "target_sha256": "174c8958188a71d36b1bdd822dc6776f55e68b47f935db4cec6b5e754ac54340",
-      "reviewer": "Claude (Claude Code session; merged main into the branch and compared both versions of the two changed passages: section 2 passage width and section 9 STG limits)",
+      "source_sha256": "47713699b5122dfbe8b750f7135ae053078fb5084208beb5bff65d03324d37cc",
+      "target_sha256": "928d6383391419544e6461395d6bc43a69eb0e978164010b5819fbf94cae4066",
+      "reviewer": "Claude (Claude Code session; links to the shallow-water primer and the renaming of f_govequation = 1 to local inertia (note at first mention in tutorials, examples and tests): Japanese and English edited together and the changed passages compared)",
       "method": "assistant",
-      "reviewed_on": "2026-11-08"
+      "reviewed_on": "2026-11-11"
     },
     {
       "source": "docs/users_guide/forcing.md",
@@ -401,11 +401,11 @@
     {
       "source": "docs/users_guide/nonhydrostatic.md",
       "target": "docs/en/users_guide/nonhydrostatic.md",
-      "source_sha256": "51feb44dccdbffcf1baf9d50acc7ea7556f28d9ad729d8411d3a80f09caef609",
-      "target_sha256": "e8979f36354fe0c1783d84cfa632dfbe1d1ed80944ffd5ff77e2baa2d5f32474",
-      "reviewer": "Claude (Claude Code session; updated the tsunami_fault citation in both versions in parallel to match the corrected example README, and compared the edited passages)",
+      "source_sha256": "72cd544325afc950ea581794778a64dbe873ec9102c5079de3ca682f949c6905",
+      "target_sha256": "3bf4c76f1aac2183955b6ee028ec11ca03e30c8ce506d4c516b0a3c007cc18e6",
+      "reviewer": "Claude (Claude Code session; links to the shallow-water primer and the renaming of f_govequation = 1 to local inertia (note at first mention in tutorials, examples and tests): Japanese and English edited together and the changed passages compared)",
       "method": "assistant",
-      "reviewed_on": "2026-11-08"
+      "reviewed_on": "2026-11-11"
     },
     {
       "source": "docs/users_guide/parallel.md",
@@ -471,6 +471,15 @@
       "reviewed_on": "2026-11-08"
     },
     {
+      "source": "docs/users_guide/shallow_water.md",
+      "target": "docs/en/users_guide/shallow_water.md",
+      "source_sha256": "a832477db31af391013830c428417a9b4794a9b768c0cb979ffebbb1c945f034",
+      "target_sha256": "8b0eb680d3ed8a626ff6a35afda90c3e0c467698fa387c448691aaf9f6eb0b00",
+      "reviewer": "Claude (Claude Code session; wrote the Japanese primer and its English mirror and read both side by side: headings, table rows, anchors, footnotes, equations, numbers, links and figure references match; the English figures are drawn by the same script with the en switch)",
+      "method": "assistant",
+      "reviewed_on": "2026-11-11"
+    },
+    {
       "source": "docs/users_guide/steep_slope.md",
       "target": "docs/en/users_guide/steep_slope.md",
       "source_sha256": "975eee929d781597a99b20fc9ccaa471975e6b64391224af5511d405da9785cd",
@@ -491,11 +500,11 @@
     {
       "source": "docs/users_guide/swflow.md",
       "target": "docs/en/users_guide/swflow.md",
-      "source_sha256": "281357632687051b031253dfc3f14df597dac742b0c7ecb796c4489bafc11b2b",
-      "target_sha256": "cdd760692a466707aa8464acbc47340c8fb9a0e7f41c940fee65e0eb730eeca0",
-      "reviewer": "Claude (Claude Code session; f_advection_donor bullet condensed to a summary with a link to advection_donor.md and the parameter-table references pointed there; Japanese and English edited together and compared)",
+      "source_sha256": "8129888e31c1034a1037b40f4192d1f89908381bfa5aa115fad829d93e80d47b",
+      "target_sha256": "93dca6d87c4cb0c4c70c541fc9a9cab897ea9427b117f24e007f4cbe335448f5",
+      "reviewer": "Claude (Claude Code session; links to the shallow-water primer and the renaming of f_govequation = 1 to local inertia (note at first mention in tutorials, examples and tests): Japanese and English edited together and the changed passages compared)",
       "method": "assistant",
-      "reviewed_on": "2026-11-09"
+      "reviewed_on": "2026-11-11"
     },
     {
       "source": "docs/users_guide/swi.md",
@@ -806,11 +815,11 @@
     {
       "source": "examples/List_samples/list_sysparam.txt",
       "target": "examples/List_samples/en/list_sysparam.txt",
-      "source_sha256": "6221f2f158f890e253db26da838eb7332bdaeee45adf16128891fb9f7779806b",
-      "target_sha256": "eb1c6e89837280f0fc30ffb1d7c05727cc33f781d6fb8a722cbaaf25db40d3aa",
-      "reviewer": "Claude (Claude Code session; removed the commented-out fn_reservoir line from both versions; values, identifiers and enabled state of the other lines unchanged; tools/consistency/check.py passes)",
+      "source_sha256": "802c5604f7714447fabc140b31bb3e7560fc258d9bbc628e0dc7e5f1be2ae916",
+      "target_sha256": "884b5c4e3ea73219c57165c8dab74c28db929fb131eaedfd7e4a6aac4786bf9c",
+      "reviewer": "Claude (Claude Code session; comment of f_govequation renamed to local inertia with the former wording noted, in both versions; values, identifiers and enabled state unchanged; tools/consistency/check.py passes)",
       "method": "assistant",
-      "reviewed_on": "2026-11-10"
+      "reviewed_on": "2026-11-11"
     },
     {
       "source": "examples/List_samples/list_tide.txt",
@@ -1337,27 +1346,27 @@
     {
       "source": "examples/benchmark/README.md",
       "target": "examples/benchmark/en/README.md",
-      "source_sha256": "29aca80ea6425c0338fd9276bd4b8b4a5f92f635ff208bc5f9995d0982cf9de6",
-      "target_sha256": "292005e53d93180aca27d552674b82e154ad7617925b750a8a14afd25b7c748a",
-      "reviewer": "Claude (Claude Code session; wrote and read both versions side by side: structure, numbers, tables, links and captions)",
+      "source_sha256": "16bf8bcf532607c15f8c555ed974a8c31215b76d6b53ac6b134422b069b0073f",
+      "target_sha256": "6df740a99d0be94291c91bda273351420e518183eae6465aa1ed16f94829d5cd",
+      "reviewer": "Claude (Claude Code session; links to the shallow-water primer and the renaming of f_govequation = 1 to local inertia (note at first mention in tutorials, examples and tests): Japanese and English edited together and the changed passages compared)",
       "method": "assistant",
       "reviewed_on": "2026-11-11"
     },
     {
       "source": "examples/benchmark/v-shaped/README.md",
       "target": "examples/benchmark/v-shaped/en/README.md",
-      "source_sha256": "9fbe45859645ddced74d6e2a65b48bfc92c8f18fbe751136cad36e03d55744a2",
-      "target_sha256": "fb195504bd46ec79ee63107aa6d9fb6843e3b7417fd832b3cddfbf555eca8c02",
-      "reviewer": "Claude (Claude Code session; wrote and read both versions side by side: structure, numbers, tables, links and captions)",
+      "source_sha256": "934c395be11345daecf91c08901410d01682fe03d38e7095c9cdd31e011337f7",
+      "target_sha256": "6c4c688e0b83d902d57e6355e07bb023f222d9e933b15d997d559150ae9ca24d",
+      "reviewer": "Claude (Claude Code session; links to the shallow-water primer and the renaming of f_govequation = 1 to local inertia (note at first mention in tutorials, examples and tests): Japanese and English edited together and the changed passages compared)",
       "method": "assistant",
       "reviewed_on": "2026-11-11"
     },
     {
       "source": "examples/benchmark/v-valley/README.md",
       "target": "examples/benchmark/v-valley/en/README.md",
-      "source_sha256": "97e0061f0d62593f960f871b1547ca0039b0aae9743fdfd8966f72e2c61d9a4b",
-      "target_sha256": "f6b698872c7fd25534460cb891a0d7444b538a6029335a75ba1f7f28fee54d10",
-      "reviewer": "Claude (Claude Code session; wrote and read both versions side by side: structure, numbers, tables, links and captions)",
+      "source_sha256": "b99ef7f06f4623f9bca32769cc2e5f5f51db7db64acd390499c4ff4e3dbe97cb",
+      "target_sha256": "f7e12cc52d9220908ed13c58c4348f415da1cd6c8b5f24033bd7d3ff97e7b8ad",
+      "reviewer": "Claude (Claude Code session; links to the shallow-water primer and the renaming of f_govequation = 1 to local inertia (note at first mention in tutorials, examples and tests): Japanese and English edited together and the changed passages compared)",
       "method": "assistant",
       "reviewed_on": "2026-11-11"
     },
@@ -3254,11 +3263,11 @@
     {
       "source": "test/bendloss/README.md",
       "target": "test/bendloss/en/README.md",
-      "source_sha256": "c2d26e734601cec2d931434bddfb5da130362826cb65c29af3053fd49e55bf4e",
-      "target_sha256": "adc03699d9a7a42451eaa00707affa1ee3d8992794e7516b56225289f1bb4518",
-      "reviewer": "Claude (Claude Code session; lateral-inflow test of test/bendloss: f_gravity_correction = 0 made explicit, current results, pass/fail in Run.sh, and the inactive-neighbour limitation of option 2 in the steep-slope chapter; Japanese and English edited together and read side by side)",
+      "source_sha256": "44ad50764401d75d4d81b8cf78a9a225b2502f2ca54881870aa6265f27a69a36",
+      "target_sha256": "2a6462a5756bd95a99aa1c1d1ea2fa20ae10b3ea448cbdefd1b5b6374ea17f81",
+      "reviewer": "Claude (Claude Code session; links to the shallow-water primer and the renaming of f_govequation = 1 to local inertia (note at first mention in tutorials, examples and tests): Japanese and English edited together and the changed passages compared)",
       "method": "assistant",
-      "reviewed_on": "2026-11-08"
+      "reviewed_on": "2026-11-11"
     },
     {
       "source": "test/bendloss/figs/bendloss.png",
@@ -3326,11 +3335,11 @@
     {
       "source": "test/chichibu/README.md",
       "target": "test/chichibu/en/README.md",
-      "source_sha256": "2b2412ec83b3f04be5ba79482e5cae2e68dc3c5891bade5296638372d7d1f5ec",
-      "target_sha256": "af243d7cc807d1d4264a56b7d67f496b1aa2f611a9cf55bf48e68db4a1fb7f86",
-      "reviewer": "Claude (Claude Code session; reference for f_advection_donor changed from users_guide/advection.md section 4.4 to the new page advection_donor.md in both versions; unchanged text as in the previous record)",
+      "source_sha256": "b8f4bc7fa1e99c0af54f024378261922177f82d6ed409e7d40cdb3fbfac836b9",
+      "target_sha256": "9e485a09483f1b154fd2a678eefc97cd025fa5fd17c8accdde588378d902d85a",
+      "reviewer": "Claude (Claude Code session; links to the shallow-water primer and the renaming of f_govequation = 1 to local inertia (note at first mention in tutorials, examples and tests): Japanese and English edited together and the changed passages compared)",
       "method": "assistant",
-      "reviewed_on": "2026-11-09"
+      "reviewed_on": "2026-11-11"
     },
     {
       "source": "test/chichibu/data_chichibu/README.md",
@@ -3839,11 +3848,11 @@
     {
       "source": "test/hillslope/README.md",
       "target": "test/hillslope/en/README.md",
-      "source_sha256": "83e96c5a6e1c5f488c8be5e543fee73fe11b3753ceaf239f72b4b83aa51c8d93",
-      "target_sha256": "431edfc930bcced6a4596667289fb7da046e0dceb459ab17b6e316e5b5759cb8",
-      "reviewer": "Claude (Claude Code session; developer.md section of f_advection_donor renumbered from 100 to 102 to avoid the collision with the 100 and 101 sections on main; references updated in Japanese and English alike)",
+      "source_sha256": "2db1cef1c2d84eeb0fa1dbb24587ac8111087376b687d56c6989761cb0f03bd2",
+      "target_sha256": "6a82957a94b5a789f06f3ce40fdc97cb700a0d4431e154e260d4d4263772e72d",
+      "reviewer": "Claude (Claude Code session; links to the shallow-water primer and the renaming of f_govequation = 1 to local inertia (note at first mention in tutorials, examples and tests): Japanese and English edited together and the changed passages compared)",
       "method": "assistant",
-      "reviewed_on": "2026-11-08"
+      "reviewed_on": "2026-11-11"
     },
     {
       "source": "test/hillslope/figs/plane.png",
@@ -4388,11 +4397,11 @@
     {
       "source": "test/stg/README.md",
       "target": "test/stg/en/README.md",
-      "source_sha256": "8f51ac00a5664a377a40d7cdceeb3ac7ce3658943b71996ec315413cf0e96e30",
-      "target_sha256": "a350b747a3b85dcba8619f173a680feb5a4ff329bdfa2ffcdff269b935d28e25",
-      "reviewer": "Claude (Claude Code session; STG grid: domain mask and two or more MPI processes unsupported and stopped at initialization, new test/stg; Japanese and English edited together and read side by side)",
+      "source_sha256": "43d6423c5af816bd774b48f11b22a5a898411a75d277421779850369ff684716",
+      "target_sha256": "a260124650a615ee2e0b5bf52387db89498eca83355fdf39bbad0abd0dd44f83",
+      "reviewer": "Claude (Claude Code session; links to the shallow-water primer and the renaming of f_govequation = 1 to local inertia (note at first mention in tutorials, examples and tests): Japanese and English edited together and the changed passages compared)",
       "method": "assistant",
-      "reviewed_on": "2026-11-08"
+      "reviewed_on": "2026-11-11"
     },
     {
       "source": "test/sublattice/README.md",
@@ -4532,9 +4541,9 @@
     {
       "source": "test/vshaped/README.md",
       "target": "test/vshaped/en/README.md",
-      "source_sha256": "a6876deb566d65fe729e0cabd149e1402eb75c63ab8d8000777ca02924c50fc9",
-      "target_sha256": "6aa2ca0c213980e64e7a0e566e65ea45523c4054457390b0a4abce597bd3ed4b",
-      "reviewer": "Claude (Claude Code session; wrote and read both versions side by side: structure, numbers, tables, links and captions)",
+      "source_sha256": "a821ca5e0fc80bada71a115bad07b7faaf0d550afe1d0d3e4fa225dcb861f764",
+      "target_sha256": "7d2685c36fcb9ecff9b769c75d4f52327bc6deba779b2a1c747682aabc498489",
+      "reviewer": "Claude (Claude Code session; links to the shallow-water primer and the renaming of f_govequation = 1 to local inertia (note at first mention in tutorials, examples and tests): Japanese and English edited together and the changed passages compared)",
       "method": "assistant",
       "reviewed_on": "2026-11-11"
     },
@@ -4838,11 +4847,11 @@
     {
       "source": "tutorials/chichibu/README.md",
       "target": "tutorials/chichibu/en/README.md",
-      "source_sha256": "ef935e0a942e47e0939932e18085cf4e4677167e330266db488dd2d14bc8f134",
-      "target_sha256": "510f44471f34d6f53c4da28953e17a7d7500e5618376abb4b1123ffa75613793",
-      "reviewer": "Claude (Claude Code session; chichibu tutorial restructured for the default f_advection_donor = 3: old Step 4 (numerical settings) removed and Steps 5-7 renumbered to 4-6, Step 3 shows the default, ex_flux explained in Step 1, oscillation supplement without the dd item and the 1-min/moving-average comparison, links to the new users guide page advection_donor.md; Japanese and English edited together and compared)",
+      "source_sha256": "38de8b33254a9e7df2c2ac76491e64335d3627a1eebc94870683f65d8c73ba3c",
+      "target_sha256": "5fbbd2241c2e8b2be6244367bc4b5e83f4939fd08571bbe2b94d3da2c939a5a1",
+      "reviewer": "Claude (Claude Code session; links to the shallow-water primer and the renaming of f_govequation = 1 to local inertia (note at first mention in tutorials, examples and tests): Japanese and English edited together and the changed passages compared)",
       "method": "assistant",
-      "reviewed_on": "2026-11-09"
+      "reviewed_on": "2026-11-11"
     },
     {
       "source": "tutorials/chichibu/figs/step1_hend.png",
@@ -5108,11 +5117,11 @@
     {
       "source": "tutorials/wave/README.md",
       "target": "tutorials/wave/en/README.md",
-      "source_sha256": "0ef88205a089a84907c0c6b804941ad687f997906ab3e48bd1fa80637bb9a9ad",
-      "target_sha256": "9c33436d074d75acd6026896aa344df229e247c7a7f4c5694e84f1ed5b86a22e",
-      "reviewer": "Claude (Claude Code session; full-text content and lexical review, no model execution)",
+      "source_sha256": "17204e850b35e22815d3d130c7af95601e0af4ea292c5f1968e74fd71f76f9dc",
+      "target_sha256": "89cebaf3e931c665286be7d4ea111e7083f13e5710ebb462ee8100fdc497a55d",
+      "reviewer": "Claude (Claude Code session; links to the shallow-water primer and the renaming of f_govequation = 1 to local inertia (note at first mention in tutorials, examples and tests): Japanese and English edited together and the changed passages compared)",
       "method": "assistant",
-      "reviewed_on": "2026-10-24"
+      "reviewed_on": "2026-11-11"
     },
     {
       "source": "tutorials/wave/param_step1.txt",

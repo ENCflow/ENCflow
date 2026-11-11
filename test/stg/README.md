@@ -13,7 +13,7 @@ STG 格子(`f_gridsystem = 1`)は、ENC 格子と比べるために残してい�
 |---|---|
 | 格子 | 40 × 24、Δx = Δy = 10 m。領域マスクなし |
 | 地形 | 東へ下る勾配 0.02 の斜面。外周の 1 列は標高 20 m の壁 |
-| 雨・計算 | 60 mm/h を 30 分間(全期間一定)。力学波(`f_govequation = 0`)、dt = 0.5 s |
+| 雨・計算 | 60 mm/h を 30 分間(全期間一定)。[力学波](../../docs/users_guide/shallow_water.md)(`f_govequation = 0`)、dt = 0.5 s |
 | 出力 | 水深 H をテキストと float32 の bil で(`f_output_mode = 3`) |
 
 `p_stgmask.txt` は、同じ設定に領域マスク(`f_masktype = 1`。北東の隅の 4 × 4 セルを外す)を

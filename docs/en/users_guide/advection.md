@@ -48,8 +48,11 @@ depending on the settings. The advection term is the term by which the flow
 carries its own momentum. It matters wherever the velocity changes in space:
 bores, hydraulic jumps, sudden contractions and expansions, bends and
 confluences. On gentle hillslopes and in wide-area inundation its
-contribution is small, and the diffusive-wave approximation
-(`f_govequation = 1`) drops it.
+contribution is small, and the local-inertia setting
+(`f_govequation = 1`; formerly written "diffusive wave") drops it.
+The meaning of each term and the kinds of approximation that drop terms
+are in the primer
+[The shallow water equations and the dynamic, diffusion and kinematic waves](shallow_water.md).
 
 Combined with the continuity equation, the same momentum equation can also be
 written in **conservative form** (as a momentum flux).

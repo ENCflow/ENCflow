@@ -11,7 +11,10 @@ rather than from the channel (developer.md §68.18, §68.20). On three kinds
 of idealized terrain — a smooth slope, a stepped slope and a V-shaped
 catchment — scheme 1 (the former default: cell-centre gradient,
 non-conservative form), scheme 3 (the default: momentum-conservative form +
-MUSCL) and no advection term (diffusive wave `f_govequation = 1`) are
+MUSCL) and no advection term (`f_govequation = 1`; the setting so far written
+"diffusive wave", strictly the local inertia equation because the local term
+remains; for the terms see
+[The shallow water equations and the dynamic, diffusion and kinematic waves](../../../docs/en/users_guide/shallow_water.md#encflow)) are
 compared. The conclusion is "**no difference appears in hillslope flow**;
 the difference in chichibu arises where the deep, fast channel flow drops
 over steps", and this case is its basis. No regression comparison with a
@@ -123,3 +126,4 @@ the outlet), not from the schemes.
 - developer.md §68.18 (restriction of the upwind donor to channels, f_advection_donor = 1, and the diagnosis of chichibu; option 1 was removed on 2026-11-07, §102), §68.20 (mechanism of the dissipation and momentum exchange at steps; the stepped-slope follow-up)
 - [test/dambreak](../../dambreak/en/README.md) (jump condition of the bore), [test/bendloss](../../bendloss/en/README.md) (stepped one-cell channel)
 - [docs/users_guide/swflow.md](../../../docs/en/users_guide/swflow.md) — `f_advection_scheme`, `f_govequation`
+- [The shallow water equations and the dynamic, diffusion and kinematic waves](../../../docs/en/users_guide/shallow_water.md) — how the kinematic wave, the diffusion wave, local inertia and the dynamic wave differ (primer)

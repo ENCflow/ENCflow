@@ -604,7 +604,10 @@ you only want the conclusions, read the "Summary" at the end.
 ### What is happening
 
 The initial mound is 1 m high on 1 m of water. In the hydrostatic
-shallow water equations a wave as high as the depth steepens at its
+shallow water equations (for the terms of the equations and the meaning
+of "hydrostatic", see the primer
+[The shallow water equations and the dynamic, diffusion and kinematic waves](../../../docs/en/users_guide/shallow_water.md))
+a wave as high as the depth steepens at its
 front as it travels and eventually becomes a bore (a discontinuity).
 The discretization can only represent this steep front over a few
 cells, and there the short-wavelength components travel at the wrong
@@ -651,7 +654,8 @@ bore. Step by step:
    steepens the front and the dispersion that spreads it balance, and the
    front settles into a gentle shape (eventually a train of waves).
 3. The hydrostatic shallow water equations assume hydrostatic pressure and
-   therefore **do not account for** the vertical acceleration. So however fine the grid, what
+   therefore **do not account for** the vertical acceleration
+   ([Limits of the hydrostatic approximation](../../../docs/en/users_guide/shallow_water.md#hydrostatic)). So however fine the grid, what
    they converge to is a bore, not the real front. The nx = 1400 result of
    the previous subsection is the "correct solution of the equations", but
    not "reality".

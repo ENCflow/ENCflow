@@ -15,6 +15,10 @@ the terms of the momentum equation, the adaptive Runge-Kutta scheme, the
 Courant number and the numerical constants are in
 [ENC grid and time integration](encgrid.md); the advection term, the
 diffusion term and the non-hydrostatic correction have their own pages.
+The meaning of each term of the shallow water equations and the
+differences between the dynamic wave, local inertia, the diffusion wave
+and the kinematic wave are summarized in the primer
+[The shallow water equations and the dynamic, diffusion and kinematic waves](shallow_water.md).
 
 ![ENC grid and adaptive Runge-Kutta](../../figs/swflow_enc_en.png)
 
@@ -55,12 +59,17 @@ safe combination for tsunamis, inundation and flood runoff alike.
 | Parameter | Default | Meaning |
 |---|---|---|
 | f_gridsystem | 0 | 0: ENC grid (default), 1: STG (staggered grid; legacy-compatible, for comparison only. New features, restart, the domain mask and two or more MPI processes are not supported; a domain mask or two or more processes stop the run at initialization) |
-| f_govequation | 0 | 0: dynamic wave (advection + pressure; default), 1: diffusive wave (pressure only), 2: kinematic wave |
+| f_govequation | 0 | Governing equations. 0: dynamic wave (all terms; default), 1: local inertia (no advection term; formerly written "diffusive wave"), 2: kinematic wave (no advection term and no depth-gradient part of the pressure term). With 1 and 2 the local term (the time change of the velocity) remains ([primer](shallow_water.md#encflow)) |
 | f_check_cfl | 1 | Courant number monitoring. 0: monitor only (no stop), 1: display the state and stop when Cn > 1 (default), 2: judge and stop on the advective Courant number ignoring the wave speed (the definition of the Cn column and Cn output also switches to the advective Cn) ([explanation](encgrid.md) §7) |
 
-The diffusive and kinematic waves are for sensitivity experiments and
-comparison with other models. For inundation and runup involving
-wetting and drying, keep the dynamic wave.
+Local inertia (1) and the kinematic wave (2) are for sensitivity
+experiments and comparison with other models. For inundation and runup
+involving wetting and drying, keep the dynamic wave. Setting 1 was long
+called the "diffusive wave", and that wording remains in the text and
+figures of the examples. The meaning of the terms, the kinds of
+approximation and the phenomena they are used for, and the reason the
+dynamic wave is the default are in
+[The shallow water equations and the dynamic, diffusion and kinematic waves](shallow_water.md).
 
 ## Numerical constants (&list_sysparam)
 
@@ -292,7 +301,7 @@ flat-bed one-layer model).
 | Steep mountain floods, debris flows | f_gravity_correction=2 (default); dt such that Cn_max stays below about 0.5 | Corrects the slope-direction gravity term and evaluates friction and sediment shear along the slope. Use 1 with a Manning's n calibrated in a horizontally projected model. Sediment is in [landform change](geomorph.md) |
 | River low flow, velocity distribution of gentle flow | f_diffusion_term=2 (no coefficient needed) | Flow-scaled eddy viscosity smooths the transverse velocity distribution |
 | Urban inundation (building clusters) | Defaults + fn_gv/fn_bb ([geographic information](geoinfo.md)); cm/cd/kk at the defaults | Storage loss and drag are expressed on the geographic side |
-| Wide-area / long runs (cost first) | p_adprunge_thresh 2-3, f_friction_fastmath 3-5, f_govequation=1 (diffusive wave) if needed | Cuts the recomputation rate and the friction cost. The diffusive wave ignores inertia, so not for inundation fronts or tsunamis |
+| Wide-area / long runs (cost first) | p_adprunge_thresh 2-3, f_friction_fastmath 3-5, f_govequation=1 (local inertia; no advection term) if needed | Cuts the recomputation rate and the friction cost. f_govequation=1 only skips the computation of the advection term and leaves the limit on the time step unchanged, so the saving is small (4 % in Step 1 of tutorials/wave). It cannot represent the supercritical flow, hydraulic jumps and bores carried by the advection term, so not for inundation fronts or tsunamis ([primer](shallow_water.md#encflow)) |
 | Accuracy checks, numerical experiments | p_adprunge_thresh 1.1, f_friction_fastmath 0, dt such that Cn_max stays below about 0.5 | High-accuracy side; a few tens of percent more cost. Reducing dt is more reliable than lowering the threshold (the threshold cannot close the gap between dt 0.01 and 0.05; tutorials/wave Step 2) |
 | Bores, hydraulic jumps, tsunami run-up (flows with discontinuities) | default (f_advection_scheme 3) | Momentum-conservative advection: correct bore speed and no oscillations behind the bore. The former default 1 lags the bore and oscillates behind it |
 | Steep mountain streams and sheet flow on hillslopes (velocity and bed shear stress as in uniform flow) | the default (f_opening_dynamic 3) | the default 2 of 2026-10-18 to 31 also counted the upslope ground of a uniform slope as a partial wall, and τ_b came out 29 % too large at slope 0.2 with a 1 m grid and 0.3 m depth (T9 of test/rockinc). 3 agrees with uniform flow within 1 ± 0.5 % and is nearly the same as 2 in channels with high banks. Sediment running down steep slopes (landslides, debris flows) travels less far than with 2 |

@@ -15,7 +15,7 @@ support. There is no reference; `Check_stg.py`, `Run.sh` and `Run_MPI.sh` judge 
 |---|---|
 | Grid | 40 × 24, Δx = Δy = 10 m. No domain mask |
 | Terrain | A slope descending eastward with gradient 0.02. The outermost row of cells is a wall 20 m high |
-| Rain, run | 60 mm/h for 30 minutes (constant throughout). Dynamic wave (`f_govequation = 0`), dt = 0.5 s |
+| Rain, run | 60 mm/h for 30 minutes (constant throughout). [Dynamic wave](../../../docs/en/users_guide/shallow_water.md) (`f_govequation = 0`), dt = 0.5 s |
 | Output | Depth H as text and as float32 bil (`f_output_mode = 3`) |
 
 `p_stgmask.txt` is the same setup with a domain mask (`f_masktype = 1`; the 4 × 4 cells in the

@@ -947,6 +947,15 @@ the treatment of advection changes the resolution dependence (`./Fig_supp.sh`
 runs them as `result_supp_*_noadv` / `result_supp_*_s1` / `result_supp_*_s1u` /
 `result_supp_*_s1f`).
 
+> **A note on terms.** This setting drops only the advection term and keeps
+> the term for the time change of the velocity (the local term), so strictly
+> it is not the diffusion wave but the local inertia equation. Below it is
+> still written "diffusion wave", following the earlier usage. The meaning
+> of each term of the momentum equation and the differences between the
+> dynamic wave, local inertia, the diffusion wave and the kinematic wave are
+> in the primer of the user's guide,
+> [The shallow water equations and the dynamic, diffusion and kinematic waves](../../../docs/en/users_guide/shallow_water.md).
+
 ![Supplement: advection treatment and resolution dependence](figs/supp_hydro_adv.png)
 
 From top: no advection; scheme 1 (upwind index 0.5 = default); scheme 1
@@ -1081,7 +1090,10 @@ and friction (kinematic wave), or the diffusion wave that adds the surface
 slope, reproduces **the propagation of the wave at the reach scale** well.
 Known quantitative criteria are the kinematic flow number of Woolhiser &
 Liggett (1967), k = S₀L/(h Fr²) > 20 for the kinematic approximation, and the
-condition of Ponce et al. (1978), T·S₀·√(g/h) ≥ 30 for the diffusion wave;
+condition of Ponce et al. (1978), T·S₀·√(g/h) ≥ 30 for the diffusion wave
+(how to read the criteria:
+[Rules of thumb for choosing](../../../docs/en/users_guide/shallow_water.md#phenomena)
+in the primer);
 mountain runoff, with steep slopes and a wave time scale T of hours much
 longer than the time scale of the flow depth, satisfies them.
 These statements, however, treat the bed and the flow as **smooth at the

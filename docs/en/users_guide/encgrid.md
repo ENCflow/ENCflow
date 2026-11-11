@@ -42,6 +42,11 @@ vector by the reconstruction of §4 is what characterises the ENC
 models that are standard in Japan[^iwasa80], and it belongs to the same
 family as the conservative staggered schemes[^sd03].
 
+The physical meaning of each term and the basics of the approximations
+that drop terms (local inertia, diffusion wave, kinematic wave) are in the
+primer
+[The shallow water equations and the dynamic, diffusion and kinematic waves](shallow_water.md).
+
 ## 2. Geometry of the ENC grid
 
 ![Passage widths of the ENC grid and the cell-velocity reconstruction](../../figs/encgrid_geometry_en.png)
