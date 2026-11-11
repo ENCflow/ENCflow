@@ -1,6 +1,6 @@
 # ENCflow/examples/benchmark/v-valley/Makefile
 #   make          ../../../bin/ の実行ファイルへのリンクと、全格子の入力・全ケースの設定(make_inputs.py)を作る
-#   make run      全 19 ケースを計算する(4 スレッドで 75 分ほど。5 m の 3 ケースが大半)
+#   make run      全 19 ケースを計算する(75 分ほど。5 m の 3 ケースが大半)
 #   make clean    リンクと生成物を削除する
 #
 #   計算の後:  python3 check.py        0° との差・疑似窪地の貯留・水収支の表

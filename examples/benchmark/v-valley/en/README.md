@@ -79,7 +79,7 @@ eight neighbours the water flows directly to the diagonal downstream neighbour (
 ```bash
 cd examples/benchmark/v-valley
 make                     # links, inputs data_s*/, parameter files param_*.txt
-make run                 # all 19 cases (about 75 min with 4 threads; the three 5 m cases take most of it)
+make run                 # all 19 cases (about 75 min; the three 5 m cases take most of it)
 python3 check.py         # tables of the difference from 0°, the residual, the depression estimate and the water balance (pass/fail for 45° with eight neighbours)
 python3 plot_results.py  # figures figs/*.png (the argument en writes the English versions to en/figs/)
 python3 plot_setup.py    # set-up and mechanism figure figs/setup.png (can be drawn before computing)
@@ -94,7 +94,7 @@ python3 plot_setup.py    # set-up and mechanism figure figs/setup.png (can be dr
 
 The case names are `s<S_S × 100>_dx<Δx>_r<orientation>[_4nb]`.
 
-## Results (gfortran 13.3, serial with 4 threads)
+## Results
 
 ### Hillslope slope (10 m grid)
 

@@ -18,7 +18,7 @@
 ```bash
 cd examples/benchmark/v-shaped     # または v-valley
 make                               # リンク・入力・設定(v-shaped は理論解も)
-make run                           # 全ケース(v-shaped は 23 ケースで 40 分、v-valley は 19 ケースで 75 分ほど。4 スレッド)
+make run                           # 全ケース(v-shaped は 23 ケースで 40 分、v-valley は 19 ケースで 75 分ほど)
 python3 check.py                   # 理論解・基準との差と水収支の表(合否つき)
 python3 plot_results.py            # 図 figs/*.png(引数 en で英語版を en/figs/ に)
 ```

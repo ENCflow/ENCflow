@@ -1337,17 +1337,17 @@
     {
       "source": "examples/benchmark/README.md",
       "target": "examples/benchmark/en/README.md",
-      "source_sha256": "320fe31077efb62bdafa3c4d4c4e980b9146877cdbe2a8daed9b1ee5d2ee33f3",
-      "target_sha256": "6be2f01bc2d3d617d47a05c497a0c53f37b838bdd5d619df54424e649bb25461",
+      "source_sha256": "6e276548ed0ef7ed2ab99b8885c4ba43da76cf6e049917551db224787ea272b8",
+      "target_sha256": "419128f422c8b6067a620a3c07abee3f65ed222a76a73d3eff32f3b3e832aa71",
       "reviewer": "Claude (Claude Code session; wrote and read both versions side by side: structure, numbers, tables, links and captions)",
       "method": "assistant",
-      "reviewed_on": "2026-11-10"
+      "reviewed_on": "2026-11-11"
     },
     {
       "source": "examples/benchmark/v-shaped/README.md",
       "target": "examples/benchmark/v-shaped/en/README.md",
-      "source_sha256": "ccaafdb6be57d45abe5b3c65296244c66c5af9028cbda172b9e2ef1f7f8b8f3c",
-      "target_sha256": "4ffb015bd0e7b9e88dd0bce07f3b51028f7a59fc928b94f2a82089c7f9448071",
+      "source_sha256": "b615b892392411d611d4d7f5c15e75bb1579e13909b9080d3068a0fa8e573e90",
+      "target_sha256": "64d2ab2d45fe44f1e7a0515914f3686ed4d4adca2c229df7c6d2c52024abf505",
       "reviewer": "Claude (Claude Code session; wrote and read both versions side by side: structure, numbers, tables, links and captions)",
       "method": "assistant",
       "reviewed_on": "2026-11-11"
@@ -1355,11 +1355,11 @@
     {
       "source": "examples/benchmark/v-valley/README.md",
       "target": "examples/benchmark/v-valley/en/README.md",
-      "source_sha256": "adb695c6bae15f00c1214967521551ff55777a5dc63d0ea3055c111afd829e41",
-      "target_sha256": "acf9fc6ccaf4393f8985f4bcfde2629fbcf6b663e8bd4140fe1db99338e70962",
+      "source_sha256": "97e0061f0d62593f960f871b1547ca0039b0aae9743fdfd8966f72e2c61d9a4b",
+      "target_sha256": "f6b698872c7fd25534460cb891a0d7444b538a6029335a75ba1f7f28fee54d10",
       "reviewer": "Claude (Claude Code session; wrote and read both versions side by side: structure, numbers, tables, links and captions)",
       "method": "assistant",
-      "reviewed_on": "2026-11-10"
+      "reviewed_on": "2026-11-11"
     },
     {
       "source": "examples/catchment_metal/README.md",
@@ -4532,11 +4532,11 @@
     {
       "source": "test/vshaped/README.md",
       "target": "test/vshaped/en/README.md",
-      "source_sha256": "39fbce212e8ad479bde8934034c097daf634057ae0be52d2bd058252eea39084",
-      "target_sha256": "631b91ed6327cfe589e403937c6925ff2e7d92ae3ba93456979874b0abfbdc8b",
+      "source_sha256": "a6876deb566d65fe729e0cabd149e1402eb75c63ab8d8000777ca02924c50fc9",
+      "target_sha256": "6aa2ca0c213980e64e7a0e566e65ea45523c4054457390b0a4abce597bd3ed4b",
       "reviewer": "Claude (Claude Code session; wrote and read both versions side by side: structure, numbers, tables, links and captions)",
       "method": "assistant",
-      "reviewed_on": "2026-11-10"
+      "reviewed_on": "2026-11-11"
     },
     {
       "source": "test/vzcol/README.md",

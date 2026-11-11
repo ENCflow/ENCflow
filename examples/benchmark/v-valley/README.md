@@ -69,7 +69,7 @@ H_p = (√2/2)(S_S − S_V) Δx
 ```bash
 cd examples/benchmark/v-valley
 make                     # リンク、入力 data_s*/、設定 param_*.txt
-make run                 # 全 19 ケース(4 スレッドで 75 分ほど。5 m の 3 ケースが大半)
+make run                 # 全 19 ケース(75 分ほど。5 m の 3 ケースが大半)
 python3 check.py         # 0° との差・残留・窪地の見積もり・水収支の表(45° の 8 近傍は合否つき)
 python3 plot_results.py  # 図 figs/*.png(引数 en で英語版を en/figs/ に)
 python3 plot_setup.py    # 設定と仕組みの図 figs/setup.png(計算の前に描ける)
@@ -84,7 +84,7 @@ python3 plot_setup.py    # 設定と仕組みの図 figs/setup.png(計算の前�
 
 ケース名は `s<S_S × 100>_dx<Δx>_r<向き>[_4nb]`。
 
-## 結果(gfortran 13.3、逐次 4 スレッド)
+## 結果
 
 ### 斜面の勾配(格子 10 m)
 

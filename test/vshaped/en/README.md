@@ -50,7 +50,7 @@ make
 The grid ratio uses the catchment area on the grid because at 45° the area assigned by cell centres is
 0.8 % larger than 1.62 km² and the peak scales with it.
 
-## Findings (gfortran 13.3, serial with 4 threads)
+## Findings
 
 | Case | NRMSE outlet | NRMSE hillslope | peak (m³/s) | grid ratio | t50 (min) | balance | verdict |
 |---|---|---|---|---|---|---|---|

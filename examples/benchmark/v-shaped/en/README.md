@@ -116,7 +116,7 @@ edges at the corners of the outlet outside its range and not count them.
 ```bash
 cd examples/benchmark/v-shaped
 make                     # links, inputs data_dx*/, parameter files param_*.txt, theory data/analytic.csv
-make run                 # all 23 cases (about 40 min with 4 threads; the five 5 m cases take most of it)
+make run                 # all 23 cases (about 40 min; the five 5 m cases take most of it)
 make main                # only the 6 main cases with eight neighbours (about 17 min)
 make supp                # the 4 addendum cases (40 m; with and without the channel mask + sub-grid width; 3 s each)
 python3 check.py         # tables of the differences from the theory and of the water balance (pass/fail for the main cases)
@@ -132,10 +132,10 @@ python3 plot_setup.py    # set-up figure figs/setup.png (can be drawn before com
 | `dx20_r0_od2` `dx10_r0_od2` `dx5_r0_od2` | former default of the opening reassignment `f_opening_dynamic = 2` (the values in the table of [Passage-width adjustment](../../../../docs/en/users_guide/passage_width.md)) |
 | `dx40_r0` `dx40_r45` / `*_sgc` | addendum: the 40 m grid, coarser than the channel (20 m). `_sgc` gives the channel mask `fn_rw` and the sub-grid channel width `fn_width` (20 m on the channel cells) ([channel chapter](../../../../docs/en/users_guide/channel.md)) |
 
-One case takes 2 s at 40 m, 8 s at 20 m, 1 min at 10 m and 5 to 8 min at 5 m (gfortran 13.3, 4 threads).
+One case takes 2 s at 40 m, 8 s at 20 m, 1 min at 10 m and 5 to 8 min at 5 m.
 The output of all cases is about 120 MB (`make clean` removes it).
 
-## Results (gfortran 13.3, serial with 4 threads)
+## Results
 
 ### Eight neighbours and the theory
 

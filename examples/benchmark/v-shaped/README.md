@@ -93,7 +93,7 @@ Di Giammarco ら (1996) 以来、2 次元の降雨流出モデルの検証に広
 ```bash
 cd examples/benchmark/v-shaped
 make                     # リンク、入力 data_dx*/、設定 param_*.txt、理論解 data/analytic.csv
-make run                 # 全 23 ケース(4 スレッドで 40 分ほど。5 m の 5 ケースが大半)
+make run                 # 全 23 ケース(40 分ほど。5 m の 5 ケースが大半)
 make main                # 8 近傍の主ケース 6 つだけ(17 分ほど)
 make supp                # 追補の 4 ケース(40 m。河道マスク + サブグリッド河道幅の有無。各 3 秒)
 python3 check.py         # 理論解との差と水収支の表(主ケースは合否つき)
@@ -109,10 +109,10 @@ python3 plot_setup.py    # 設定の図 figs/setup.png(計算の前に描ける)
 | `dx20_r0_od2` `dx10_r0_od2` `dx5_r0_od2` | 開口の振り替えの旧既定 `f_opening_dynamic = 2`([通過幅の調整](../../../docs/users_guide/passage_width.md)の表の値) |
 | `dx40_r0` `dx40_r45` / `*_sgc` | 追補: 水路(20 m)より粗い 40 m の格子。`_sgc` は河道マスク `fn_rw` とサブグリッド河道幅 `fn_width`(水路のセルに 20 m)を与える([河道の章](../../../docs/users_guide/channel.md)) |
 
-1 ケースの計算時間は 40 m で 2 秒、20 m で 8 秒、10 m で 1 分、5 m で 5〜8 分(gfortran 13.3、4 スレッド)。
+1 ケースの計算時間は 40 m で 2 秒、20 m で 8 秒、10 m で 1 分、5 m で 5〜8 分です。
 出力は全ケースで 120 MB ほどです(`make clean` で消せます)。
 
-## 結果(gfortran 13.3、逐次 4 スレッド)
+## 結果
 
 ### 8 近傍と理論解
 
