@@ -2399,29 +2399,29 @@
     {
       "source": "examples/mountain_valley/README.md",
       "target": "examples/mountain_valley/en/README.md",
-      "source_sha256": "79b13f61552cdc7f1308b96662b70c946f4e43d5d82de77fab98bbe0310ada0f",
-      "target_sha256": "7ca216792a81b46595a5787c28ab48c686baa950381cd5d5763e40a44adb882b",
-      "reviewer": "Claude (Claude Code session; corrected both versions in parallel against the inputs, scripts and committed figures, and compared the edited passages and numbers)",
+      "source_sha256": "0974cd853ce4523acc1b13a4737f51d5e00518da3a6e1a670a6c753ca4c9e65d",
+      "target_sha256": "bfa077d6e6910088652504d31f6a17e692cb867645e53c37b12f9ac84b684c01",
+      "reviewer": "Claude (Claude Code session; recomputation of 2026-11-10/11 with the current defaults: the changed values of the hillslope, stream and resolution sections, the run-time estimates, the rewritten V_a_tp section (default 2 results, the gravity-correction 1 run kept as the sensitivity near the threshold, the run from the V_a terrain) compared line by line against the Japanese source and the plot_results.py tables; the rest unchanged since the previous record)",
       "method": "assistant",
-      "reviewed_on": "2026-11-08"
+      "reviewed_on": "2026-11-11"
     },
     {
       "source": "examples/mountain_valley/figs/channel.png",
       "target": "examples/mountain_valley/en/figs/channel.png",
-      "source_sha256": "e2dce766e1827ce22d5fa03475785000dcfa6474ac3c25e944202d791883e011",
-      "target_sha256": "062fe88274e92bff8278e3d84d07fe520a9ce107bfbf617a2ce3aa572c519dec",
-      "reviewer": "Claude (Claude Code session; English figure drawn by the same script with the en switch from the same saved results; visual check of both rendered figures: same layout, values and geometry, labels translated)",
+      "source_sha256": "eec1bc64f1d1e3300faaaba4b6b517c83d0ee372e01da6275f49ce2aded207b0",
+      "target_sha256": "571f0d7f00b4da53453c150f1d54a60915a9ef9f34aebdb9e577d7740254ca18",
+      "reviewer": "Claude (Claude Code session; English figure drawn by the same script with the en switch from the same results of 2026-11-10/11; compared side by side: same plotted data and layout, labels translated)",
       "method": "assistant",
-      "reviewed_on": "2026-10-28"
+      "reviewed_on": "2026-11-11"
     },
     {
       "source": "examples/mountain_valley/figs/drop.png",
       "target": "examples/mountain_valley/en/figs/drop.png",
-      "source_sha256": "cc12dc5905ec2e6d107542086eb23147293b8928e77e19689919b1b7cddf2796",
-      "target_sha256": "fa0a784646d1efecab09650796e5896ea225066254c0fb56839842b38576380e",
-      "reviewer": "Claude (Claude Code session; English figure drawn by the same script with the en switch from the same saved results; visual check of both rendered figures: same layout, values and geometry, labels translated)",
+      "source_sha256": "17c065053fe8ea8df65d8a8f985b9187679a8c36d9827b50890ed19624b4751b",
+      "target_sha256": "acde11f2013f2bf8ccabd52b2e41887f631bb14443ab689b895a2f1eb368fb81",
+      "reviewer": "Claude (Claude Code session; English figure drawn by the same script with the en switch from the same results of 2026-11-10/11; compared side by side: same plotted data and layout, labels translated)",
       "method": "assistant",
-      "reviewed_on": "2026-10-28"
+      "reviewed_on": "2026-11-11"
     },
     {
       "source": "examples/mountain_valley/figs/mechanism.png",
@@ -2435,11 +2435,11 @@
     {
       "source": "examples/mountain_valley/figs/pulse.png",
       "target": "examples/mountain_valley/en/figs/pulse.png",
-      "source_sha256": "e4f1ae8f313a83beb1087208a7606a76156067b8c54f73e615a0b6bcae0446b3",
-      "target_sha256": "e25abe9125d9ee01bdf46aed2f468288e498cbd79e95c0e9f4e7b2c1acb12a7e",
-      "reviewer": "Claude (Claude Code session; English figure drawn by the same script with the en switch from the same saved results; visual check of both rendered figures: same layout, values and geometry, labels translated)",
+      "source_sha256": "bb3d7258989dc65edd31dbd1f3b2914d8541c47753102b4698cbdf7252e6bf01",
+      "target_sha256": "5ccb356a6545c2af2c0d2dcf5b025c2eebf8dbebcba331ab790d1e0aa292cde6",
+      "reviewer": "Claude (Claude Code session; English figure drawn by the same script with the en switch from the same results of 2026-11-10/11; compared side by side: same plotted data and layout, labels translated)",
       "method": "assistant",
-      "reviewed_on": "2026-10-28"
+      "reviewed_on": "2026-11-11"
     },
     {
       "source": "examples/mountain_valley/figs/setup.png",
@@ -2453,11 +2453,11 @@
     {
       "source": "examples/mountain_valley/figs/valley.png",
       "target": "examples/mountain_valley/en/figs/valley.png",
-      "source_sha256": "6993b002a4f1f98b8650e911ce3c15f7a992aa8a35a6db167fadcba01ad7aedb",
-      "target_sha256": "48d9d11ed2c4427debcc71bb5f57aa9b5321ba76a895cf957fc8f375100ab3dd",
-      "reviewer": "Claude (Claude Code session; English figure drawn by the same script with the en switch from the same saved results; visual check of both rendered figures: same layout, values and geometry, labels translated)",
+      "source_sha256": "92d9ee07c902852c122b8ef0ec3a13f9000e133fa7910be317fcf79a0ebab795",
+      "target_sha256": "d4aed39e5792e986bf8a135b456030bc8a81864597c11839fa0963df06ec7ecc",
+      "reviewer": "Claude (Claude Code session; English figure drawn by the same script with the en switch from the same results of 2026-11-10/11; compared side by side: same plotted data and layout, labels translated)",
       "method": "assistant",
-      "reviewed_on": "2026-10-28"
+      "reviewed_on": "2026-11-11"
     },
     {
       "source": "examples/nest_reflect/README.md",
