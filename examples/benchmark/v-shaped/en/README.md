@@ -290,13 +290,14 @@ storage of such a cell are computed for the channel part of the cell only, while
 the same two-dimensional shallow-water equations as on the hillslopes and the exchange with the
 neighbouring cells goes through the same cell edges (there is no other model and no coupling; when the
 river width crosses the cell size there is no switch of model, and one width distribution connects the
-headwater rills to the large river; [channel chapter](../../../../docs/en/users_guide/channel.md)). Here
-the same catchment is laid on a 40 m grid, coarser than the channel, and with the eight-neighbour default
-settings the cases with and without the channel mask `fn_rw` (channel and extension cells) plus the
-sub-grid channel width `fn_width` (20 m on the channel cells) are compared, to show that the flow of a
-20 m wide channel can be represented by 40 m cells (`make supp`; cases `dx40_r0`, `dx40_r45` and `*_sgc`).
-Without the width the channel cells flow as a channel 40 m wide at 0° and, at 45°,
-as a single diagonal row Δx/√2 = 28.3 m wide. With the width, conveyance and storage are computed for the
+headwater rills to the large river; [channel chapter](../../../../docs/en/users_guide/channel.md)).
+
+Here the same catchment is laid on a 40 m grid, coarser than the channel, and with the eight-neighbour
+default settings the cases with and without the channel mask `fn_rw` (channel and extension cells) plus
+the sub-grid channel width `fn_width` (20 m on the channel cells) are compared, to show that the flow of
+a 20 m wide channel can be represented by 40 m cells (`make supp`; cases `dx40_r0`, `dx40_r45` and
+`*_sgc`). Without the width the channel cells flow as a channel 40 m wide at 0° and, at 45°, as a single
+diagonal row Δx/√2 = 28.3 m wide. With the width, conveyance and storage are computed for the
 20 m wide part of the cell only (no levee, so natural banks; the incision of the channel stays in the
 elevation). At 0° the grid origin is placed so that the channel axis passes through cell centres (the
 channel is one row; the catchment area on the grid is 1.64 km², +1.2 %), and at 45° the rule is the same
