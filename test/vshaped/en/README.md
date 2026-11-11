@@ -76,4 +76,5 @@ equations, four neighbours and the sub-grid channel width are examined on the ex
 - [examples/benchmark/v-shaped](../../../examples/benchmark/v-shaped/en/README.md): grids of 20, 10 and 5 m, four
   neighbours, governing equations, figures; the equations and sources of the theory.
 - [test/hillslope](../../hillslope/en/README.md): the kinematic wave on a uniform plane slope and a V-shaped catchment on coarse grids.
+- [The shallow water equations and the dynamic, diffusion and kinematic waves](../../../docs/en/users_guide/shallow_water.md): how the kinematic wave and the dynamic wave differ (primer).
 - [Passage-width adjustment](../../../docs/en/users_guide/passage_width.md), [Diagonal share](../../../docs/en/users_guide/diagratio.md).

@@ -12,7 +12,9 @@ Chang et al. 2022 among others), and the original paper of the ENC grid, Tada (2
 examine the dependence on grid orientation and spacing. Here all shallow-water settings stay at
 their defaults, and grid spacings of 20, 10 and 5 m, catchment orientations of 0° and 45° to the
 grid, and the ENC eight neighbours (default) versus four neighbours (`p_diagratio = 0`) are
-compared. As a supplement the governing equations (dynamic, diffusive and kinematic wave) are
+compared. As a supplement the governing equations (dynamic, diffusive and kinematic wave; for the
+meaning of the words see the primer
+[The shallow water equations and the dynamic, diffusion and kinematic waves](../../../../docs/en/users_guide/shallow_water.md)) are
 compared, and an addendum shows the effect of the sub-grid channel width on a 40 m grid, coarser
 than the channel (20 m).
 
@@ -68,7 +70,7 @@ section. (d) The kinematic-wave theory. Drawn from the inputs and the equations;
 | Time step | dt = 0.1 Δx (2, 1, 0.5 s; 4 s at 40 m). The maximum Courant number is at most 0.3 |
 | Outlet | the outlet face is at s = L. Downstream of the catchment the same cross-section (hillslopes and channel, rained on) continues for 200 m, followed by 3 cells of channel extension and 3 sea cells (a sink fixed at elevation 0 m and depth 1 m). The channel bed at the outlet is at 8 m |
 | Measurement | outlet: a transect across the downstream row of the catchment from ridge to ridge (edge-flux method; full width). Hillslope foot: the row of left-side hillslope cells next to the channel (upstream end to outlet). Depths: the outlet channel cell (P1) and the hillslope cell in the row about 60 m from the channel at s = 500 m (P2; the one or two rows next to the channel are read from the distributed output) |
-| Shallow water | all defaults: dynamic wave, steep-slope gravity correction 2, momentum-conserving advection with MUSCL, opening reassignment 3, adaptive Runge-Kutta, `p_diagratio` = 2/(2+√2) (equal passage widths of the eight edges). Only the four-neighbour cases set `p_diagratio = 0` |
+| Shallow water | all defaults: [dynamic wave](../../../../docs/en/users_guide/shallow_water.md), steep-slope gravity correction 2, momentum-conserving advection with MUSCL, opening reassignment 3, adaptive Runge-Kutta, `p_diagratio` = 2/(2+√2) (equal passage widths of the eight edges). Only the four-neighbour cases set `p_diagratio = 0` |
 
 Terrain, roughness and masks are given by evaluating the equations in the catchment coordinates at
 the cell centres of each grid (no interpolation; a cell is assigned wholly to the channel or to a
@@ -108,7 +110,7 @@ edges at the corners of the outlet outside its range and not count them.
   bank friction (the rectangular radius R = Wh/(W + 2h) delays the rise by at most 2 %;
   `python3 analytic.py --rect`). The outlet peak 4.86 m³/s = i (2BL + WL) does not depend on the channel
   equation; half of the theoretical peak is reached at 39 min and the uniform depth is 0.443 m.
-- The kinematic wave replaces the water-surface slope by the bed slope and is not an exact solution of
+- The kinematic wave ([section 6 of the primer](../../../../docs/en/users_guide/shallow_water.md#wave-models)) replaces the water-surface slope by the bed slope and is not an exact solution of
   the shallow-water equations. It gives the equilibrium discharge and the timing of the rise; the
   "theory" in the comparisons below means this approximate solution.
 
@@ -129,7 +131,7 @@ python3 plot_setup.py    # set-up figure figs/setup.png (can be drawn before com
 |---|---|
 | `dx20_r0` `dx10_r0` `dx5_r0` `dx20_r45` `dx10_r45` `dx5_r45` | main cases (eight neighbours, defaults). `dx10_r0` is the annotated template `param.txt`; for the others `make_inputs.py` replaces the lines of grid, time step, measurement and input/output |
 | `*_4nb` | four neighbours (`p_diagratio = 0`), all six grids |
-| `dx10_r0_dif` `dx10_r45_dif` / `*_kin` | diffusive wave (`f_govequation = 1`, no advection term) / kinematic wave (`= 2`, no pressure term either) |
+| `dx10_r0_dif` `dx10_r45_dif` / `*_kin` | diffusive wave (`f_govequation = 1`, no advection term; the local term remains, so strictly the local inertia equation) / kinematic wave (`= 2`, no depth-gradient part of the pressure term either) |
 | `dx20_r0_od2` `dx10_r0_od2` `dx5_r0_od2` | former default of the opening reassignment `f_opening_dynamic = 2` (the values in the table of [Passage-width adjustment](../../../../docs/en/users_guide/passage_width.md)) |
 | `dx40_r0` `dx40_r45` / `*_sgc` | addendum: the 40 m grid, coarser than the channel (20 m). `_sgc` gives the channel mask `fn_rw` and the sub-grid channel width `fn_width` (20 m on the channel cells) ([channel chapter](../../../../docs/en/users_guide/channel.md)) |
 
@@ -268,6 +270,12 @@ before the place where the hillslopes end). Bottom: depth along the channel axis
   pressure terms are small, and in the channel the flow is close to uniform. The kinematic wave is closest
   to the theory (the same kinematic wave), but a difference of NRMSE 0.014 to 0.018 remains; this
   remainder is due to the discretisation (see the eight-neighbour section above).
+- What is written "diffusive wave" here is `f_govequation = 1` (no advection term). The term for the time
+  change of the velocity (the local term) remains, so strictly it is not the diffusion wave but the local
+  inertia equation. In a thin, slowly varying flow like that of this catchment the local term is about a
+  thousandth of the gravity and friction terms, so no difference from the diffusion wave is expected (for
+  the meaning of each term and the differences between the approximations see
+  [The shallow water equations and the dynamic, diffusion and kinematic waves](../../../../docs/en/users_guide/shallow_water.md#encflow)).
 - The diffusive and kinematic waves are settings for comparison. For inundation and run-up with wetting
   and drying, use the dynamic wave (default) ([Shallow-water chapter](../../../../docs/en/users_guide/swflow.md)).
 

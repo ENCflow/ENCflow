@@ -23,7 +23,7 @@ experiments of §68. The tutorial on the same catchment at 200 m grid is
 | Domain and grid | 56 km × 30 km, 560 × 300 cells (Δx = 100 m). `data_chichibu/` (elevation `Chichibu_100m_filled2.txt` (depression-filled), catchment mask, channel mask) |
 | Roughness | Slopes n = 0.15, channel cells (fn_rw) n = 0.02 |
 | Rainfall | 200 mm/h from 0 to 30 min, 0 thereafter (surface flow is the only process; no infiltration or interception) |
-| Computation | Dynamic wave (f_govequation = 0), the default ENC settings (f_advection_scheme = 3, f_opening_dynamic = 3 (changed from 1 to 2 on 2026-10-18 and from 2 to 3 on 2026-10-31; §68.38, §68.41), f_dry_head_cap = 1, f_advection_donor = 3 (changed from 0 on 2026-11-09; §102)). `p_adv_upwind_index = 0.1`, dt = 2.5 s, 6 h |
+| Computation | [Dynamic wave](../../../docs/en/users_guide/shallow_water.md) (f_govequation = 0), the default ENC settings (f_advection_scheme = 3, f_opening_dynamic = 3 (changed from 1 to 2 on 2026-10-18 and from 2 to 3 on 2026-10-31; §68.38, §68.41), f_dry_head_cap = 1, f_advection_donor = 3 (changed from 0 on 2026-11-09; §102)). `p_adv_upwind_index = 0.1`, dt = 2.5 s, 6 h |
 | Records | Discharge at transects 1–4 (the main stem from upstream to downstream; x = 16.5 / 21.5 / 29.6 / 43.3 km), depth at 2 probes (channel cells on transects 1 and 2) |
 
 | File | Contents |
@@ -101,7 +101,7 @@ of the collection from the hillslopes.
 None of them has a reference; run them with `./encflow param_xxx.txt` and
 the output goes to `result_xxx/` (`dir_result` is set). Name suffixes:
 `_s1` / `_s3` = f_advection_scheme 1 / 3, `_noadv` = no advection term
-(f_govequation = 1), `base` = no opening correction,
+(f_govequation = 1; the local inertia equation), `base` = no opening correction,
 `dyn` = f_opening_dynamic = 1.
 
 | Group | Files | Contents | Record |

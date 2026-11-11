@@ -68,4 +68,5 @@ examples 側で見ます。
 - [examples/benchmark/v-shaped](../../examples/benchmark/v-shaped/README.md): 格子 20・10・5 m、4 近傍、
   基礎式の比較、図。理論解の式と出典。
 - [test/hillslope](../hillslope/README.md): 一様平面斜面の運動学的波と粗い格子の V 字集水域。
+- [浅水方程式と力学波・拡散波・運動波](../../docs/users_guide/shallow_water.md): 運動学的波(運動波)と力学波の違い(入門)。
 - [通過幅の調整](../../docs/users_guide/passage_width.md)、[斜めの配分比](../../docs/users_guide/diagratio.md)。

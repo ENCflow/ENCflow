@@ -49,7 +49,7 @@ with four neighbours. Drawn from the inputs and the equations; not a computed re
 | Time step | dt = 0.1 Δx (2, 1, 0.5 s) |
 | Outlet | the 2 cells beyond the downstream end (s = L), over the full width, are sea cells (a sink fixed at elevation 0 m and depth 1 m) |
 | Measurement | a transect across the downstream row from ridge to ridge (edge-flux method; full width). Depths: the floor cell at the downstream end (P1) and the floor cell at s = 500 m (P2) |
-| Shallow water | all defaults (dynamic wave, steep-slope gravity correction 2, momentum-conserving advection with MUSCL, opening reassignment 3, adaptive Runge-Kutta, `p_diagratio` = 2/(2+√2)). Only the four-neighbour cases set `p_diagratio = 0` |
+| Shallow water | all defaults ([dynamic wave](../../../../docs/en/users_guide/shallow_water.md), steep-slope gravity correction 2, momentum-conserving advection with MUSCL, opening reassignment 3, adaptive Runge-Kutta, `p_diagratio` = 2/(2+√2)). Only the four-neighbour cases set `p_diagratio = 0` |
 
 The terrain and masks are given by evaluating the equations in the valley coordinates at the cell
 centres of each grid (no interpolation). At 45° the grid origin is placed so that the valley axis passes

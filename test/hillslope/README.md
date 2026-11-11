@@ -7,7 +7,8 @@ chichibu(実地形)で移流スキーム 1 と 3 の流出が大きく違うこ�
 ケース群です(developer.md §68.18、§68.20)。滑らかな斜面・階段斜面・
 V 字集水域の 3 種類の理想地形で、スキーム 1(旧既定: セル中心勾配、
 非保存形)とスキーム 3(既定: 運動量保存形 + MUSCL)、および移流項なし
-(拡散波 `f_govequation = 1`)を比べます。結論は「**斜面流では差が出ない**。
+(`f_govequation = 1`。これまで「拡散波」と書いてきた設定で、局所項が残るので
+厳密には局所慣性方程式。用語は[浅水方程式と力学波・拡散波・運動波](../../docs/users_guide/shallow_water.md#encflow))を比べます。結論は「**斜面流では差が出ない**。
 chichibu の差は深く速い河道の流れが段差を落ちるところで生じる」で、
 その根拠がこのケースです。reference との回帰比較はせず、解析解・格子
 収束・スキーム間の一致を見ます。
@@ -103,3 +104,4 @@ V 字集水域の出口流量。Δx = 100 m と 10 m で波形が変わります
 - developer.md §68.18(風上供給元の河道限定 f_advection_donor = 1 と chichibu の診断。1 は 2026-11-07 に廃止。§102)、§68.20(段差での散逸と運動量交換の機構。階段斜面の追試)
 - [test/dambreak](../dambreak/)(段波の跳躍条件)、[test/bendloss](../bendloss/)(階段状 1 セル水路)
 - [docs/users_guide/swflow.md](../../docs/users_guide/swflow.md) — `f_advection_scheme`、`f_govequation`
+- [浅水方程式と力学波・拡散波・運動波](../../docs/users_guide/shallow_water.md) — 運動学的波(運動波)・拡散波・局所慣性・力学波の違い(入門)

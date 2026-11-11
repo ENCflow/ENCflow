@@ -273,7 +273,7 @@ cell has a median slope of 0.12, with 8 steps over 2 m per km) is mimicked
 with a one-cell channel. stair has 1 m every 200 m (mean slope 0.005, the
 same as wave10), stair3 has 3 m every 100 m (mean 0.03). The treads are
 horizontal. The inflow is the same triangular wave 40 → 200 → 40 m³/s as
-param_wave. No advection term (f_govequation=1), scheme 1 and scheme 3
+param_wave. No advection term (f_govequation=1; the local inertia equation), scheme 1 and scheme 3
 (copied with sed) are compared to confirm that the advection term carries
 the dissipation at the steps (developer.md §68.20).
 For stair3, combinations of roughness and discharge were also prepared:
