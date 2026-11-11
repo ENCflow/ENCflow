@@ -32,6 +32,28 @@ P_{out} = P - \frac{\Delta S}{\Delta t}
 蒸発散で樹冠保水が減ると再び遮断できるようになり、蒸発散を使わなければ
 空き容量は回復しません)。
 
+**2 段の遮断率(任意)。** 満杯までの遮断率 $`a_1`$(`ic_alpha_fill`)と満杯後の遮断率
+$`a_2`$(`ic_alpha_full`)を与えると、満杯まで雨の $`a_1`$ を蓄え、満杯の後は雨の
+$`a_2`$ を損失として取り除きます(蓄えない)。1 ステップの雨 $`R = P\,\Delta t`$ と
+残容量 $`C = S_{\max} - S`$ について、満杯に要る雨 $`R_f = C/a_1`$ を境に
+
+```math
+\Delta S = \begin{cases} a_1 R & (R \le R_f) \\ C & (R > R_f) \end{cases},
+\qquad
+L = a_2 \max(R - R_f,\ 0),
+\qquad
+P_{out} = \frac{R - \Delta S - L}{\Delta t}
+```
+
+です($`C = 0`$ なら $`R_f = 0`$)。既定の $`a_1 = 1`$・$`a_2 = 0`$ は上の初期損失そのものです。
+初期損失と固定遮断率を順に当てる組み合わせ(初期損失の後に固定遮断率:
+$`a_1 = 1`$、$`a_2 = \alpha`$)は本モデル独自の組み立てです。同じ式で、貯留関数法の有効雨量の
+分離(木村の一次流出率 $`f_1`$・飽和雨量 $`R_{sa}`$[^kimura1961]。累積雨量が $`R_{sa}`$ に達する
+までは雨の $`f_1`$ だけが流出に寄与し、以後は全量)も、$`a_1 = 1 - f_1`$、
+$`S_{\max} = (1 - f_1) R_{sa}`$、$`a_2 = 0`$ で表せます(満杯に要る累積雨量が
+$`S_{\max}/a_1 = R_{sa}`$)。容量は蒸発散でしか回復しないので、出水ごとに
+$`R_{sa}`$ を数え直す木村の方法とは、出水の間の回復の仕方が違います。
+
 **既定値の根拠。** $`\alpha`$ = 0.15、$`S_{\max}`$ = 1.5 mm は、Crockford &
 Richardson のレビュー(遮断損失は針葉樹林 20〜40 %、広葉樹林 10〜25 %、
 草地 5〜10 %。樹冠貯留 0.3〜3 mm)[^crockford00]の広葉樹・混交林の代表値で、
@@ -186,6 +208,8 @@ $`T \le`$ `snow_t_snow` は全雪、$`T \ge`$ `snow_t_rain` は全雨で、そ�
 |---|---:|---|---|
 | ic_alpha | 0.15 | 固定遮断率 $`\alpha`$ | **文献値** 広葉樹・混交林の遮断損失 10〜25 %[^crockford00] |
 | ic_smax_mm | 1.5 mm | 初期損失の最大貯留 $`S_{\max}`$ | **文献値** 樹冠貯留 0.3〜3 mm[^crockford00]。市街地の窪地貯留 1.3〜2.5 mm[^rossman15]と同程度 |
+| ic_alpha_fill | 1 | 満杯までの遮断率 $`a_1`$(0 < $`a_1`$ ≤ 1。与えたときだけ 2 段の遮断率) | **方式** 1 は従来の初期損失 |
+| ic_alpha_full | 0 | 満杯後の遮断率 $`a_2`$(0 ≤ $`a_2`$ ≤ 1) | **方式** 0 は満杯後の素通し(従来の初期損失) |
 | temp_lapse | 0.65 ℃/100 m | 気温減率 | **慣用値** 標準大気の気温減率 |
 | prec_lapse | 0 | 降水の増率 | **与件** 既定は補正なし |
 | evap0 | 3 mm/day | 一定 PET | **文献値** 温帯湿潤の暖候期 $`ET_0`$ 3〜5 の下寄り[^allen98] |
@@ -211,6 +235,7 @@ $`T \le`$ `snow_t_snow` は全雪、$`T \ge`$ `snow_t_rain` は全雨で、そ�
 ## 6. 検証ケース
 
 - [test/icevap](../../test/icevap/): 固定遮断率・初期損失・一定蒸発散について、最小入力と既定値を明示した入力の同値を検定。
+- [test/sfzone](../../test/sfzone/): 初期損失の 2 段の遮断率(木村の f1・R_sa と、初期損失の後の固定遮断率)を通した有効雨量が閉じた形 $`(1 - a_1)\min(R, R_f) + (1 - a_2)\max(R - R_f, 0)`$ に一致、分布ファイルと一様指定のビット一致、保存 → 再開。
 - [test/evapdry](../../test/evapdry/): 土の乾き具合による抑制。平らな閉領域で、雨の後の地下の貯留が $`dh_g/dt = -E\min(1, h_g/h_{lim})`$ の解析解に丸めの範囲で一致。
 - [test/frost](../../test/frost/): 一定気温による凍結指数の増加と浸透抑制を解析値と比較。
 - [test/chichibu](../../test/chichibu/): 実地形流域への一様降雨の回帰ケース。
@@ -224,4 +249,5 @@ $`T \le`$ `snow_t_snow` は全雪、$`T \ge`$ `snow_t_rain` は全雨で、そ�
 [^allen98]: Allen, R. G., Pereira, L. S., Raes, D. and Smith, M. (1998): Crop Evapotranspiration: Guidelines for Computing Crop Water Requirements. *FAO Irrigation and Drainage Paper*, 56.
 [^hock03]: Hock, R. (2003): Temperature index melt modelling in mountain areas. *J. Hydrol.*, 282, 104–115.
 [^bergstrom95]: Bergström, S. (1995): The HBV model. In: Singh, V. P. (ed.), *Computer Models of Watershed Hydrology*, Water Resources Publications, 443–476.
+[^kimura1961]: 木村俊晃 (1961): 貯留関数法による洪水流出追跡法. 建設省土木研究所.(一次流出率・飽和雨量による有効雨量の分離。書誌はウェブ検索の結果による。本文は未照合)
 [^harbaugh05]: Harbaugh, A. W. (2005): MODFLOW-2005, the U.S. Geological Survey modular ground-water model — the Ground-Water Flow Process. *U.S. Geological Survey Techniques and Methods*, 6-A16.

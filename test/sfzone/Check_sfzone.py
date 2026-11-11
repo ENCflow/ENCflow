@@ -14,6 +14,7 @@ Python 標準ライブラリのみ。使い方:
   python3 Check_sfzone.py lag     result result_lag [tol] # 遅れ時間(param_lag.txt。tol は参照解との許容)
   python3 Check_sfzone.py et      result_et               # 蒸発散をタンクから引く(param_et.txt)
   python3 Check_sfzone.py et_steady result_et_steady      # 蒸発散ありの定常(param_et_steady.txt)
+  python3 Check_sfzone.py ic res a1 smax_mm a2           # 降雨遮断の 2 段の遮断率で有効雨量(param_ic.txt)
 
 タンク(単位面積): dS/dt = r − q、S [mm] = K·q[mm/h]^P。SI では q = c·S^m
 (m = 1/P、c = (1000/K)^m / 3.6e6、S [m]、q [m/s])。
@@ -694,6 +695,83 @@ def check_et_steady(res):
           % (qm, q, abs(qm - q) / q))
 
 
+def effective_rates(rates, a1, smax, a2):
+    """初期損失モデルの 2 段の遮断率(m_intercept_initloss の step_two_phase と同じ手順)を通した
+    地上雨量 (m/s)。smax は m"""
+    st, out = 0.0, []
+    for r in rates:
+        if not r > 0.0:
+            out.append(r)
+            continue
+        rr = r * DT
+        cap = max(smax - st, 0.0)
+        d = ls = 0.0
+        if cap > 0.0:
+            rf = cap / a1
+            if rr <= rf:
+                d = a1 * rr
+            else:
+                d = cap
+                ls = a2 * (rr - rf)
+        else:
+            ls = a2 * rr
+        st += d
+        out.append(r * (max(rr - d - ls, 0.0) / rr))
+    return out
+
+
+def check_ic(res, a1, smax_mm, a2):
+    """降雨遮断の 2 段の遮断率(全セル一様)を通した有効雨量でタンクが動くこと"""
+    print("== sfzone interception (a1 = %g, smax = %g mm, a2 = %g): %s" % (a1, smax_mm, a2, res))
+    hz, zone = zone_rows(res)
+    zr = by_zone(hz, zone)
+    it, iS, ivin, iarea, ivext = (hz.index("time(s)"), hz.index("S(mm)"), hz.index("vin(m3)"), hz.index("area(m2)"),
+                                  hz.index("vexternal(m3)"))
+    tend = zr[1][-1][it]
+    nstep = int(round(tend / DT))
+    rates = rain_steps(nstep)
+    eff = effective_rates(rates, a1, smax_mm / 1000.0, a2)
+    worst = 0.0
+    for z in (1, 2, 3):
+        for r in zr[z]:
+            n = int(round(r[it] / DT))
+            exp_ = r[iarea] * sum(x * DT for x in eff[:n])
+            worst = max(worst, abs(r[ivin] - exp_) / exp_ if exp_ > 0.0 else abs(r[ivin]))
+    check(worst < 1e-12, "zone input = area x effective rainfall after the two-phase interception (worst rel %.1e)"
+          % worst)
+    # 閉じた形: 満杯に要る雨 R_f = smax/a1 までは (1 − a1) 倍、以後は (1 − a2) 倍が通る
+    # (木村の f1・R_sa は a1 = 1 − f1・smax = (1 − f1) R_sa・a2 = 0 で f1 min(R, R_sa) + max(R − R_sa, 0)、
+    # 初期損失・比例損失型は a1 = 1 で (1 − a2) max(R − smax, 0))
+    rtot = rain_total(tend)
+    rf = smax_mm / 1000.0 / a1
+    exp_ = (1.0 - a1) * min(rtot, rf) + (1.0 - a2) * max(rtot - rf, 0.0)
+    got = zr[1][-1][ivin] / zr[1][-1][iarea]
+    check(abs(got - exp_) / exp_ < 1e-12, "cumulative effective rainfall %.6f mm = (1 - a1) min(R, R_f) + (1 - a2) "
+          "max(R - R_f, 0) = %.6f mm (R = %.3f mm, R_f = smax/a1 = %g mm)" % (got * 1e3, exp_ * 1e3, rtot * 1e3, rf * 1e3))
+    for z in (1, 2, 3):
+        k, p, q0 = TANK[z]
+        sref = linear_storage(k, q0, eff) if p == 1.0 else reference_storage(k, p, q0, eff)
+        ws = 0.0
+        for r in zr[z]:
+            n = int(round(r[it] / DT))
+            if sref[n] > 0.0:
+                ws = max(ws, abs(r[iS] / 1000.0 - sref[n]) / sref[n])
+        check(ws < 1e-6, "zone %d storage = reference solution for the effective rainfall (worst rel %.2e)" % (z, ws))
+    log = read_log(os.path.join(res, "Log.txt"))
+    rows = {}
+    for r in zone:
+        rows.setdefault(round(r[it]), {})[int(r[hz.index("zone")])] = r
+    s0, worst = log[0][2], 0.0
+    for t, v in log.items():
+        if t == 0 or t not in rows:
+            continue
+        n = int(round(t / DT))
+        exp_ = s0 + sum(x * DT for x in eff[:n]) - sum(rows[t][z][ivext] for z in rows[t]) / (NVAL * A)
+        worst = max(worst, abs(v[2] - exp_))
+    check(worst < 2e-12, "Log S_total = S0 + effective rain - outflow/area (interception is a loss; max abs err %.2e m)"
+          % worst)
+
+
 def main():
     mode = sys.argv[1]
     if mode == "base":
@@ -718,6 +796,9 @@ def main():
         check_et(sys.argv[2])
     elif mode == "et_steady":
         check_et_steady(sys.argv[2])
+    elif mode == "ic":
+        a = [float(x) for x in sys.argv[3:]]
+        check_ic(sys.argv[2], a[0], a[1], a[2])
     elif mode == "lag":
         check_lag(sys.argv[2], sys.argv[3], float(sys.argv[4]) if len(sys.argv) > 4 else 1e-6)
     else:

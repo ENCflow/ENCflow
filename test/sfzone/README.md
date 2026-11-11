@@ -3,7 +3,7 @@
 [English](en/README.md)
 
 貯留関数法の区画流出([ユーザーガイドの章](../../docs/users_guide/sfm.md)、developer.md §106)の
-タンクの解・区画の入力・出口への受け渡し・雨の扱い・基底流・同期・再開・遅れ時間・蒸発散・VZ との併用の検定です。
+タンクの解・区画の入力・出口への受け渡し・雨の扱い・基底流・同期・再開・遅れ時間・蒸発散・降雨遮断による有効雨量の分離・VZ との併用の検定です。
 `Check_sfzone.py` で解析解・参照解・保存則と比べ、`param.txt` の結果は reference の
 Log.txt とも比較します(ULP=0。CSV を比較に入れない理由は [test/vzcol](../vzcol/README.md) と同じ)。
 
@@ -35,6 +35,7 @@ O_c は雨だけを受ける対照です。K・P は検定用の例示値です�
 | 定常 | `param_steady.txt` | 一定の雨 10 mm/h を 48 h |
 | 遅れ時間 | `param_lag.txt` | 区画 1・2・3 に遅れ時間 0.5・1・0.2501 h(区画 3 は dt = 5 s の倍数に丸めて 0.25 h = 180 ステップ)。Run.sh が sed で 6 h の保存 → 再開、dt_sfm = 60 s の計算と、その同期区間の途中(21625 s)の保存 → 再開も確かめる |
 | 蒸発散 | `param_et.txt` / `param_et_steady.txt` | PET 48 mm/day(2 mm/h)を加え、区画に残った要求をタンクから引く。区画 1 は供給制限のみ、区画 2 は sfm_elim_mm = 5 mm、区画 3 は 20 mm と遅れ時間 0.25 h。定常の構成は雨 10 mm/h を 48 h(区画 3 は sfm_elim_mm = 100 mm)。Run.sh が sed で保存 → 再開も確かめる |
+| 有効雨量の分離 | `param_ic.txt`(分布ファイルは `data_sfzone/icfill.txt`・`icfull.txt`) | 降雨遮断の初期損失の 2 段の遮断率で木村の f1 = 0.5・R_sa = 40 mm(満杯まで 0.5、最大貯留 20 mm、満杯後 0。全セル一様)。Run.sh が sed で初期損失 10 mm の後に遮断率 0.3、同じ値の分布ファイル、範囲外の値の停止、保存 → 再開も確かめる |
 | VZ との併用 | `param_mosaic.txt`(`zone_mosaic.txt`・`vzzone_mosaic.txt`) | 行 6〜8 を VZ の区画(試算用の既定の柱、土層厚 1 m、系外流出)、貯留関数は区画 1・2。Run.sh が sed で区画の重なり(`vzzone_overlap.txt`)・貯留関数の出口が VZ のセルにある構成・P > 1 の停止も確かめる |
 
 ## 検定(Check_sfzone.py)
@@ -70,6 +71,10 @@ O_c は雨だけを受ける対照です。K・P は検定用の例示値です�
   比べる。収支残差(移動中の水と蒸発散を含む)、Log の S_total = S0 + 雨 − (系外流出 + evap.csv の
   ev_total + Σ vevap)/全面積。保存 → 再開はビット一致。定常では区画 1・2 の q → r − E = 8 mm/h、
   区画 3 は r = q + E·S/S_lim(S = K·q^P)の解(引く順序による相対 1e-4 程度の差を許す)。
+- **有効雨量の分離**: 初期損失の 2 段の遮断率の手順を Python でなぞった有効雨量 × 面積 = 区画の入力、
+  累積の有効雨量 = 閉じた形 (1 − a1)·min(R, R_f) + (1 − a2)·max(R − R_f, 0)(R_f = smax/a1。木村の形では
+  f1·min(R, R_sa) + max(R − R_sa, 0))、有効雨量に対するタンクの参照解、Log の S_total = S0 + 有効雨量 −
+  系外流出(遮断は系外への損失)。分布ファイルは一様指定とビット一致、保存 → 再開はビット一致。
 - **VZ との併用**: 貯留関数の区画 1・2 の sfm_zone.csv と受水セルのプローブが `param.txt` と一致、
   Log の S_total の収支(VZ の貯留と系外流出を含む)。
 

@@ -5,7 +5,7 @@
 [日本語](../README.md)
 
 A check of the solution of the tanks, the input of the zones, the transfer to outlets, the
-handling of rain, baseflow, synchronisation, restart, lag time, evapotranspiration and the combination with VZ of the
+handling of rain, baseflow, synchronisation, restart, lag time, evapotranspiration, separation of effective rainfall by interception and the combination with VZ of the
 storage function runoff of zones ([the chapter of the User's
 Guide](../../../docs/en/users_guide/sfm.md), developer.md §106). `Check_sfzone.py` compares
 with analytic solutions, reference solutions and conservation laws, and the results of
@@ -42,6 +42,7 @@ dt = 5 s, dt_sfm = 0 (every step), 12 h.
 | steady state | `param_steady.txt` | constant rain of 10 mm/h for 48 h |
 | lag time | `param_lag.txt` | lag times of 0.5, 1 and 0.2501 h for zones 1, 2 and 3 (zone 3 is rounded to a multiple of dt = 5 s, 0.25 h = 180 steps). Run.sh also checks with sed save → restart at 6 h, a run with dt_sfm = 60 s, and save → restart in the middle of its interval (21625 s) |
 | evapotranspiration | `param_et.txt` / `param_et_steady.txt` | PET of 48 mm/day (2 mm/h) is added and the demand left on the zones is drawn from the tanks. Zone 1 has the supply limit only, zone 2 sfm_elim_mm = 5 mm, and zone 3 20 mm with a lag time of 0.25 h. The steady configuration has a rain of 10 mm/h for 48 h (zone 3 with sfm_elim_mm = 100 mm). Run.sh also checks save → restart with sed |
+| separation of effective rainfall | `param_ic.txt` (maps `data_sfzone/icfill.txt`, `icfull.txt`) | Kimura's f1 = 0.5 and R_sa = 40 mm by the two interception ratios of the initial loss (0.5 until full, maximum storage 20 mm, 0 after full; uniform over all cells). Run.sh also checks with sed a ratio of 0.3 after an initial loss of 10 mm, maps with the same values, the stop for an out-of-range value, and save → restart |
 | combination with VZ | `param_mosaic.txt` (`zone_mosaic.txt`, `vzzone_mosaic.txt`) | rows 6–8 are a VZ zone (trial default column, soil depth 1 m, outflow from the system) and the storage function has zones 1 and 2. Run.sh also checks with sed the stops for overlapping zones (`vzzone_overlap.txt`), a storage function outlet on a VZ cell, and P > 1 |
 
 ## Checks (Check_sfzone.py)
@@ -92,6 +93,13 @@ each step is made in Python following the rule of rainfall updates (every dt_pru
   evap.csv + Σ vevap) / total area. Save → restart is bit-identical. In the steady state q →
   r − E = 8 mm/h for zones 1 and 2, and zone 3 is the solution of r = q + E·S/S_lim
   (S = K·q^P) (allowing a relative difference of about 1e-4 due to the order of drawing).
+- **Separation of effective rainfall**: input of the zones = effective rainfall following the
+  procedure of the two interception ratios in Python × area; cumulative effective rainfall =
+  the closed form (1 − a1)·min(R, R_f) + (1 − a2)·max(R − R_f, 0) (R_f = smax/a1; in Kimura's
+  form f1·min(R, R_sa) + max(R − R_sa, 0)); reference solution of the tanks for the effective
+  rainfall; S_total of the Log = S0 + effective rainfall − outflow from the system
+  (interception is a loss out of the system). Maps are bit-identical to the uniform values,
+  and save → restart is bit-identical.
 - **Combination with VZ**: sfm_zone.csv of storage function zones 1 and 2 and the probes of the
   receiving cells agree with `param.txt`; S_total balance of the Log (including the VZ storage
   and outflow from the system).

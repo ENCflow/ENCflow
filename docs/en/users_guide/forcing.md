@@ -174,6 +174,18 @@ value, mm; default 1.5) or `fn_icsmax` (distribution). ET through
 `fn_evap` reduces the canopy water and restores capacity (without ET the
 spare capacity does not recover).
 
+Optionally, **two interception ratios** can be given: `ic_alpha_fill` (the
+fraction of the rain intercepted and stored until the storage is full;
+default 1) and `ic_alpha_full` (the fraction of the rain removed as a loss
+after the storage is full; default 0; not stored). Distributions are
+`fn_icalpha_fill` and `fn_icalpha_full`. If neither is given, it is the
+usual initial loss. They represent a fixed interception ratio after the
+initial loss (`ic_alpha_fill = 1`, `ic_alpha_full = α`) and the separation
+of effective rainfall of the [storage function method](sfm.md) (Kimura's
+primary runoff ratio f1 and saturation rainfall R_sa:
+`ic_alpha_fill = 1 − f1`, `ic_smax_mm = (1 − f1)·R_sa`,
+`ic_alpha_full = 0`) (equations in [the explanation](forcing_models.md) §1).
+
 When the uniform value is unspecified the default is adopted and
 printed with "(default)" (the minimal input is f_icmodel and an empty
 model group). The equations and the basis of the defaults are in

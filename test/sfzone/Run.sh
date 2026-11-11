@@ -17,6 +17,9 @@
 #                         sed で保存 → 再開、同期間隔 60 s(同期区間の途中の保存 → 再開を含む)も確かめる
 #   param_et.txt          蒸発散をタンクから引く(ステップごとの参照解・収支。sed で保存 → 再開)。
 #   param_et_steady.txt   蒸発散ありの定常(q → r − E、線形低減の区画は r = q + E·S/S_lim の解)
+#   param_ic.txt          有効雨量の分離を降雨遮断(初期損失モデルの 2 段の遮断率)で。木村の f1・R_sa の
+#                         閉じた形、有効雨量に対する参照解、収支。sed で初期損失 → 固定遮断率、分布ファイルと
+#                         一様指定のビット一致、範囲外の値の停止も確かめる
 #   param_mosaic.txt      VZ との併用(貯留関数の区画と受水セルが param.txt と一致、全体の収支)。
 #                         sed で区画の重なり・出口が VZ のセルにある構成・P > 1 の停止も確かめる
 # reference 比較は Log.txt(ULP=0)。sfm_zone.csv は 16 桁で書くため CPU(-march=native の
@@ -117,6 +120,28 @@ run et_restart "$tmp"
 python3 Check_sfzone.py restart result_et result_et_restart || exit 1
 run et_steady param_et_steady.txt
 python3 Check_sfzone.py et_steady result_et_steady || exit 1
+
+# 有効雨量の分離を降雨遮断で(初期損失モデルの 2 段の遮断率)。木村の f1 = 0.5・R_sa = 40 mm、
+# 初期損失 → 固定遮断率、同じ値の分布ファイルが一様指定とビット一致、範囲外の値の停止
+run ic param_ic.txt
+python3 Check_sfzone.py ic result_ic 0.5 20 0 || exit 1
+variant param_ic.txt result_ic2 "s/^  ic_alpha_fill = 0.5 .*/  ic_alpha_fill = 1.0/;s/^  ic_smax_mm = 20.0 .*/  ic_smax_mm = 10.0/;s/^  ic_alpha_full = 0.0 .*/  ic_alpha_full = 0.3/" > "$tmp"
+run ic2 "$tmp"
+python3 Check_sfzone.py ic result_ic2 1 10 0.3 || exit 1
+variant param_ic.txt result_icmap "s/^  ic_alpha_fill = 0.5 .*/  fn_icalpha_fill = 'icfill.txt'/;s/^  ic_alpha_full = 0.0 .*/  fn_icalpha_full = 'icfull.txt'/" > "$tmp"
+run icmap "$tmp"
+for f in sfm_zone.csv Log.txt; do
+    cmp -s "result_ic/$f" "result_icmap/$f" || { echo "ERROR: result_icmap/$f differs from the uniform values" >&2; exit 1; }
+done
+echo "  ok   the interception ratios given by maps are bit-identical to the same uniform values"
+rm -rf save_ic
+variant param_ic.txt result_ic_save "s|^  dir_result = 'result_ic_save'|&\n  dir_save = 'save_ic'\n  f_state_save = 1|;s/^  tt = 43200 .*/  tt = 21600/" > "$tmp"
+run ic_save "$tmp"
+variant param_ic.txt result_ic_restart "s|^  dir_result = 'result_ic_restart'|&\n  dir_save = 'save_ic'\n  f_state_restore = 1|" > "$tmp"
+run ic_restart "$tmp"
+python3 Check_sfzone.py restart result_ic result_ic_restart || exit 1
+variant param_ic.txt result_icbad "s/^  ic_alpha_fill = 0.5 .*/  ic_alpha_fill = 0.0/" > "$tmp"
+expect_stop icbad "$tmp" "ic_alpha_fill must satisfy 0 < a <= 1"
 
 run steady param_steady.txt
 python3 Check_sfzone.py steady result_steady || exit 1

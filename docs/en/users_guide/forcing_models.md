@@ -39,6 +39,33 @@ drainage and evaporation in time are left to the evapotranspiration module
 (evapotranspiration through `fn_evap` reduces the canopy water and restores
 capacity; without it the spare capacity does not recover).
 
+**Two interception ratios (optional).** When the ratio until full $`a_1`$
+(`ic_alpha_fill`) and the ratio after full $`a_2`$ (`ic_alpha_full`) are given,
+the fraction $`a_1`$ of the rain is stored until the storage is full, and after it is
+full the fraction $`a_2`$ of the rain is removed as a loss (not stored). For the rain
+of a step $`R = P\,\Delta t`$ and the spare capacity $`C = S_{\max} - S`$, with the
+rain needed to fill $`R_f = C/a_1`$ as the boundary,
+
+```math
+\Delta S = \begin{cases} a_1 R & (R \le R_f) \\ C & (R > R_f) \end{cases},
+\qquad
+L = a_2 \max(R - R_f,\ 0),
+\qquad
+P_{out} = \frac{R - \Delta S - L}{\Delta t}
+```
+
+($`R_f = 0`$ when $`C = 0`$). The defaults $`a_1 = 1`$ and $`a_2 = 0`$ are the initial
+loss above. Applying the initial loss and a fixed interception ratio in turn (a fixed
+interception ratio after the initial loss: $`a_1 = 1`$, $`a_2 = \alpha`$) is a
+construction of this model. With the same equation, the separation of effective
+rainfall of the storage function method (Kimura's primary runoff ratio $`f_1`$ and
+saturation rainfall $`R_{sa}`$[^kimura1961]: until the cumulative rainfall reaches
+$`R_{sa}`$ only the fraction $`f_1`$ of the rain contributes to runoff, and all of it
+afterwards) is represented by $`a_1 = 1 - f_1`$, $`S_{\max} = (1 - f_1) R_{sa}`$ and
+$`a_2 = 0`$ (the cumulative rainfall needed to fill is $`S_{\max}/a_1 = R_{sa}`$).
+The capacity recovers only by evapotranspiration, so the recovery between floods
+differs from Kimura's method, which counts $`R_{sa}`$ again for each flood.
+
 **Basis of the defaults.** $`\alpha`$ = 0.15 and $`S_{\max}`$ = 1.5 mm are
 the broadleaf/mixed-forest values of the review of Crockford &
 Richardson[^crockford00] (interception loss 20–40 % for conifers, 10–25 %
@@ -229,6 +256,8 @@ The labels in the Basis column are explained in [How to read the basis of a defa
 |---|---:|---|---|
 | ic_alpha | 0.15 | fixed interception ratio $`\alpha`$ | **literature value** interception loss 10–25 % of broadleaf and mixed forests[^crockford00] |
 | ic_smax_mm | 1.5 mm | maximum storage $`S_{\max}`$ of the initial loss | **literature value** canopy storage 0.3–3 mm[^crockford00]; comparable with the urban depression storage 1.3–2.5 mm[^rossman15] |
+| ic_alpha_fill | 1 | interception ratio until full $`a_1`$ (0 < $`a_1`$ ≤ 1; two ratios only when given) | **method** 1 is the usual initial loss |
+| ic_alpha_full | 0 | interception ratio after full $`a_2`$ (0 ≤ $`a_2`$ ≤ 1) | **method** 0 passes everything after full (the usual initial loss) |
 | temp_lapse | 0.65 °C/100 m | temperature lapse rate | **customary value** lapse rate of the standard atmosphere |
 | prec_lapse | 0 | precipitation gradient | **given** no correction by default |
 | evap0 | 3 mm/day | constant PET | **literature value** lower side of the warm-season $`ET_0`$ 3–5 of a humid temperate climate[^allen98] |
@@ -255,6 +284,7 @@ The labels in the Basis column are explained in [How to read the basis of a defa
 ## 6. Verification cases
 
 - [test/icevap](../../../test/icevap/en/README.md): equivalence of minimal input and explicitly specified defaults for fixed-rate interception, initial loss and constant evapotranspiration.
+- [test/sfzone](../../../test/sfzone/en/README.md): the effective rainfall through the two interception ratios of the initial loss (Kimura's f1 and R_sa, and a fixed interception ratio after the initial loss) agrees with the closed form $`(1 - a_1)\min(R, R_f) + (1 - a_2)\max(R - R_f, 0)`$; maps are bit-identical to the same uniform values; save → restart.
 - [test/evapdry](../../../test/evapdry/en/README.md): reduction by the dryness of the soil. In a flat closed domain, the subsurface storage after rain matches the analytical solution of $`dh_g/dt = -E\min(1, h_g/h_{lim})`$ to rounding.
 - [test/frost](../../../test/frost/en/README.md): comparison with analytical values for the freezing index and infiltration suppression under constant air temperature.
 - [test/chichibu](../../../test/chichibu/en/README.md): regression case of uniform rainfall on a real-terrain catchment.
@@ -268,4 +298,5 @@ The labels in the Basis column are explained in [How to read the basis of a defa
 [^allen98]: Allen, R. G., Pereira, L. S., Raes, D. and Smith, M. (1998): Crop Evapotranspiration: Guidelines for Computing Crop Water Requirements. *FAO Irrigation and Drainage Paper*, 56.
 [^hock03]: Hock, R. (2003): Temperature index melt modelling in mountain areas. *J. Hydrol.*, 282, 104–115.
 [^bergstrom95]: Bergström, S. (1995): The HBV model. In: Singh, V. P. (ed.), *Computer Models of Watershed Hydrology*, Water Resources Publications, 443–476.
+[^kimura1961]: Kimura, T. (1961): Flood runoff routing by the storage function method (in Japanese: 貯留関数法による洪水流出追跡法). Public Works Research Institute, Ministry of Construction. (Separation of effective rainfall by the primary runoff ratio and the saturation rainfall. The bibliography is from web search results; the text has not been checked.)
 [^harbaugh05]: Harbaugh, A. W. (2005): MODFLOW-2005, the U.S. Geological Survey modular ground-water model — the Ground-Water Flow Process. *U.S. Geological Survey Techniques and Methods*, 6-A16.

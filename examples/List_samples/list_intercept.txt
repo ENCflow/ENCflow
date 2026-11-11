@@ -68,4 +68,16 @@
   ! 値はセルごとに 0 以上(0 = 遮断なし)
   !fn_icsmax = "icsmax.txt"
 
+  ! 2 段の遮断率(任意。どちらも書かなければ従来の初期損失):
+  !   ic_alpha_fill: 満杯までに遮断して蓄える雨の割合(0 < a ≤ 1。既定 1)
+  !   ic_alpha_full: 満杯の後に損失として取り除く雨の割合(0 ≤ a ≤ 1。既定 0。蓄えない)
+  ! 例: 初期損失の後に固定遮断率 0.3 → ic_alpha_fill = 1.0, ic_alpha_full = 0.3
+  !     貯留関数法の木村の f1 = 0.5・R_sa = 40 mm → ic_alpha_fill = 0.5,
+  !     ic_smax_mm = 20.0(= (1 − f1)·R_sa), ic_alpha_full = 0.0
+  !ic_alpha_fill = 1.0
+  !ic_alpha_full = 0.3
+  ! 分布ファイル(無次元。指定すると一様値は使われない)
+  !fn_icalpha_fill = "icalpha_fill.txt"
+  !fn_icalpha_full = "icalpha_full.txt"
+
 /

@@ -2,7 +2,7 @@
 
 [ユーザーガイド目次へ](../users_guide.md)
 
-namelist パラメータ名から章を引く索引です(アルファベット順、全 798 項目)。
+namelist パラメータ名から章を引く索引です(アルファベット順、全 802 項目)。
 この索引は list_*.f90 の namelist 宣言から機械抽出で生成されています
 (developer.md §35.1)。
 
@@ -405,6 +405,8 @@ namelist パラメータ名から章を引く索引です(アルファベット�
 | fn_gwp_val | &list_gwflow_pump | [地下水](gwflow.md) |
 | fn_hinit | &list_initial | [初期条件](initial.md) |
 | fn_icalpha | &list_intercept_fixed | [降雨・気象](forcing.md) |
+| fn_icalpha_fill | &list_intercept_initloss | [降雨・気象](forcing.md) |
+| fn_icalpha_full | &list_intercept_initloss | [降雨・気象](forcing.md) |
 | fn_icsmax | &list_intercept_initloss | [降雨・気象](forcing.md) |
 | fn_inflow_cell | &list_bound_inflow | [境界条件](boundary.md) |
 | fn_inflow_cs | &list_bound_inflow | [境界条件](boundary.md) |
@@ -524,6 +526,8 @@ namelist パラメータ名から章を引く索引です(アルファベット�
 | h0_rw | &list_initial | [初期条件](initial.md) |
 | hsea0 | &list_tide | [潮位・海面](tide.md) |
 | ic_alpha | &list_intercept_fixed | [降雨・気象](forcing.md) |
+| ic_alpha_fill | &list_intercept_initloss | [降雨・気象](forcing.md) |
+| ic_alpha_full | &list_intercept_initloss | [降雨・気象](forcing.md) |
 | ic_smax_mm | &list_intercept_initloss | [降雨・気象](forcing.md) |
 | inflow_cell | &list_bound_inflow | [境界条件](boundary.md) |
 | inflow_cs | &list_bound_inflow | [境界条件](boundary.md) |

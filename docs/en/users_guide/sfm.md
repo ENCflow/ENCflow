@@ -117,8 +117,9 @@ explanation given in this guide).
 All the ground rainfall on the cells of a zone enters the tank. The **separation of
 effective rainfall with the primary runoff ratio f1 and the saturation rainfall R_sa**
 (treating part of the rain as a loss that does not contribute to runoff) of the full form
-of Kimura's method and **two-valued storage functions** (Prasad type, Hoshi and Yamaoka
-type) are not included
+of Kimura's method is not handled by the tank but given before the ground rainfall by
+**rainfall interception** (section below). **Two-valued storage functions** (Prasad type,
+Hoshi and Yamaoka type) are not included
 ([Scope and restrictions on combinations](#scope-and-restrictions-on-combinations)).
 The lag time T_L and the decrease of the storage of the tank by evapotranspiration are
 included (sections below).
@@ -181,6 +182,33 @@ the canopy and the surface water).
 - Because the tank is advanced first and then drawn, the runoff rate has a difference of
   the order of the time step (in the steady state of constant rain r and potential
   evapotranspiration E, q agrees with r − E to about 10⁻⁴ relative).
+
+### Separation of effective rainfall (by interception)
+
+A separation of effective rainfall such as Kimura's primary runoff ratio f1 and saturation
+rainfall R_sa (until the cumulative rainfall reaches R_sa only the fraction f1 of the rain
+contributes to runoff, and all of it afterwards) is given by
+[rainfall interception](forcing.md#rainfall-interception-list_intercept) (`fn_intercept`).
+The rain after interception (the ground rainfall) enters the tank, so no setting is needed
+on the storage function side.
+
+| Separation | Interception settings |
+|---|---|
+| Kimura's f1 and R_sa | two interception ratios of the initial loss (`f_icmodel = 2`): `ic_alpha_fill = 1 − f1`, `ic_smax_mm = (1 − f1)·R_sa`, `ic_alpha_full = 0` |
+| a constant runoff ratio f after an initial loss | likewise `ic_alpha_fill = 1`, `ic_smax_mm` = initial loss, `ic_alpha_full = 1 − f` |
+| initial loss only | initial loss (`ic_smax_mm`) |
+| a constant runoff ratio f | fixed interception ratio (`f_icmodel = 1`), `ic_alpha = 1 − f` |
+
+- Interception acts on all the cells where it is given. To make it act only on the zones,
+  use maps (`fn_icsmax`, `fn_icalpha_fill`, `fn_icalpha_full`, or `fn_icalpha` for the fixed
+  ratio) that pass everything outside the zones (maximum storage 0 and ratio after full 0).
+- In the strict mode (`f_sfm_rain = 0`), use the same value within a zone so that the rain
+  after interception is identical within the zone (use `f_sfm_rain = 1` for different
+  values).
+- The intercepted water is a loss out of the system and is not in S_total. The capacity of
+  the initial loss recovers only by evapotranspiration (`fn_evap`), so the recovery between
+  floods differs from Kimura's method, which counts R_sa again for each flood (use
+  evapotranspiration together in continuous computations).
 
 ### Handling of rain
 
@@ -310,9 +338,10 @@ boundary conditions, sources and structures.
 
 **What it cannot do and the limits of accuracy**
 
-- There is no separation of effective rainfall (f1, R_sa) and no two-valued storage
-  function. Hysteresis (different storage at the same discharge in the rising and falling
-  limbs) cannot be represented. The lag time T_L is only a shift in time, and rain falling
+- There is no two-valued storage function. Hysteresis (different storage at the same
+  discharge in the rising and falling limbs) cannot be represented. The separation of
+  effective rainfall is given by interception, not by the tank
+  ([section above](#separation-of-effective-rainfall-by-interception)). The lag time T_L is only a shift in time, and rain falling
   anywhere in the zone is lagged by the same amount.
 - There is no loss by deep percolation. Without evapotranspiration, all rain enters the
   tank and eventually runs off, so in long computations the total runoff is overestimated.
@@ -404,7 +433,9 @@ The labels in the Basis column are explained in [How to read the basis of a defa
   reference solution that follows "advance the tank → draw evapotranspiration" step by step
   (within 4×10⁻⁷ relative), the balance (S_total including `evap.csv` and vevap), save →
   restart, and steady states (q → r − E and r = q + E·S/S_lim for a zone with the linear
-  reduction).
+  reduction). The input of the zones through the two interception ratios (Kimura's
+  f1 = 0.5 and R_sa = 40 mm, and a ratio of 0.3 after an initial loss of 10 mm) agrees with
+  the closed form (1 − a1)·min(R, R_f) + (1 − a2)·max(R − R_f, 0) within 10⁻¹² relative.
 - [examples/source_area](../../../examples/source_area/en/README.md): a supplement of the
   example of a mountain catchment on real terrain. The rain of the catchment runs is put on
   three tanks (`make sfm`), and their runoff is laid over the outlet runoff of the run that

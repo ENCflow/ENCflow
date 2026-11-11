@@ -58,9 +58,9 @@
     {
       "source": "docs/comparison.md",
       "target": "docs/en/comparison.md",
-      "source_sha256": "6e417b31084cc252530ab993629b849669e4be751cc543947f593d8325cba003",
-      "target_sha256": "8ff8f7f6e74bb1f139b9919475123f6be5a65da506625ef3844ffef148e2123f",
-      "reviewer": "Claude (Claude Code session; lag time sfm_tl_h of the storage function runoff (§106.6): Japanese and English edited together and the changed passages compared, no model execution)",
+      "source_sha256": "9465e75875de261453d8319397d8e65207c6e9c4df7d2aa6b370b85d4df7a141",
+      "target_sha256": "6ac08335c404b979ffc21ed835a3b75fc2c113dc06a43a9ea606634f4c2bfe64",
+      "reviewer": "Claude (Claude Code session; two interception ratios of the initial loss and the separation of effective rainfall for the storage function method (§106.8): Japanese and English edited together and the changed passages compared, no model execution)",
       "method": "assistant",
       "reviewed_on": "2026-11-11"
     },
@@ -104,9 +104,9 @@
     {
       "source": "docs/users_guide.md",
       "target": "docs/en/users_guide.md",
-      "source_sha256": "301a5e32b9695e4222a5750563ee4c92227ee4873e3c92fc9ff8d954b17091ae",
-      "target_sha256": "7aa84932c836ad940d26a90d1a9ce0d5704259b3b82674a153339ed85667eb95",
-      "reviewer": "Claude (Claude Code session; evapotranspiration from the storage function tanks (§106.7): Japanese and English edited together and the changed passages compared, no model execution)",
+      "source_sha256": "127f623d98cb74bd2d2364597cfba2edf727e4cae4e18e2e1d6cbcc5a74f47b5",
+      "target_sha256": "df32aea79f00b7abd14f8ef02600b77281a8f21879dfb853890fd65133a365b6",
+      "reviewer": "Claude (Claude Code session; two interception ratios of the initial loss and the separation of effective rainfall for the storage function method (§106.8): Japanese and English edited together and the changed passages compared, no model execution)",
       "method": "assistant",
       "reviewed_on": "2026-11-11"
     },
@@ -266,20 +266,20 @@
     {
       "source": "docs/users_guide/forcing.md",
       "target": "docs/en/users_guide/forcing.md",
-      "source_sha256": "1c06bfa846cf6f8f7c5a1ff03f8b6fc1850a0b17b7e6f0ed534c26b2605bad2b",
-      "target_sha256": "7eea305b83dbb0c6e00cf17310356c2fac9ed53354b6473f13c557060425a9a0",
-      "reviewer": "Claude (Claude Code session; evapotranspiration from the storage function tanks (§106.7): Japanese and English edited together and the changed passages compared, no model execution)",
+      "source_sha256": "a3d0c3a879ca2d9a81369f2f4a933558ee3f2e6964cf7188c467d849657e36e2",
+      "target_sha256": "e958ade2a66cc54af7a448f017d21af65bd10c42aedc1dc718a8865a79673bb8",
+      "reviewer": "Claude (Claude Code session; two interception ratios of the initial loss and the separation of effective rainfall for the storage function method (§106.8): Japanese and English edited together and the changed passages compared, no model execution)",
       "method": "assistant",
       "reviewed_on": "2026-11-11"
     },
     {
       "source": "docs/users_guide/forcing_models.md",
       "target": "docs/en/users_guide/forcing_models.md",
-      "source_sha256": "1ef6a1e0da33191f8b04855444f9e3b918e6fcfab35b3a6909a7c317e8708511",
-      "target_sha256": "cec1f13751bb3497d458f5ecc9b972c5f95474a73fbc22596c23fec8f4026d0d",
-      "reviewer": "Claude (Claude Code session; full-text content and lexical review, no model execution)",
+      "source_sha256": "30a68b45f6f1fbd27c897febd8da4d43d759a57033744af9319811750c705268",
+      "target_sha256": "9d6e74f973293353b77080616c8391b4b0304763041b4c4028c72726b2e99274",
+      "reviewer": "Claude (Claude Code session; two interception ratios of the initial loss and the separation of effective rainfall for the storage function method (§106.8): Japanese and English edited together and the changed passages compared, no model execution)",
       "method": "assistant",
-      "reviewed_on": "2026-11-04"
+      "reviewed_on": "2026-11-11"
     },
     {
       "source": "docs/users_guide/geoinfo.md",
@@ -419,9 +419,9 @@
     {
       "source": "docs/users_guide/params_index.md",
       "target": "docs/en/users_guide/params_index.md",
-      "source_sha256": "00545d4ae83a36bc4afebbd5b9b3d89a84cc5bcd53a2671411704723567883b1",
-      "target_sha256": "555440bc1591a631ff4027f149aaa8cff538b242e8ad2c92876443a88661f3e1",
-      "reviewer": "Claude (Claude Code session; evapotranspiration from the storage function tanks (§106.7): Japanese and English edited together and the changed passages compared, no model execution)",
+      "source_sha256": "56cb1e2f35c15ebf475358e6cd05b363ae62578fe86f9cad508b2957d22a3f40",
+      "target_sha256": "0fd92c5305d433a73fa75dcd589564bd54f5d572832dcd6eac858c27f1f278da",
+      "reviewer": "Claude (Claude Code session; two interception ratios of the initial loss and the separation of effective rainfall for the storage function method (§106.8): Japanese and English edited together and the changed passages compared, no model execution)",
       "method": "assistant",
       "reviewed_on": "2026-11-11"
     },
@@ -473,9 +473,9 @@
     {
       "source": "docs/users_guide/sfm.md",
       "target": "docs/en/users_guide/sfm.md",
-      "source_sha256": "2118eb68263466f075908fa2338ee186a2f0dae076633350db14285052d50250",
-      "target_sha256": "925212675726bef505e45c5d5252562c297061d497e5dd8121d56ae54460d091",
-      "reviewer": "Claude (Claude Code session; evapotranspiration from the storage function tanks (§106.7): Japanese and English edited together and the changed passages compared, no model execution)",
+      "source_sha256": "f2333c78079e5ee4ae28f0b891e4f1828e2da7ed978f4e32982477dad7368a9c",
+      "target_sha256": "652706768281e872dd688fafb751288c33404ee912bb1f48b244ad634c2af0ea",
+      "reviewer": "Claude (Claude Code session; two interception ratios of the initial loss and the separation of effective rainfall for the storage function method (§106.8): Japanese and English edited together and the changed passages compared, no model execution)",
       "method": "assistant",
       "reviewed_on": "2026-11-11"
     },
@@ -734,11 +734,11 @@
     {
       "source": "examples/List_samples/list_intercept.txt",
       "target": "examples/List_samples/en/list_intercept.txt",
-      "source_sha256": "a4993277006241f7d66a7dd95b333676334aba82a7d02a3f02c79e9a180bbb88",
-      "target_sha256": "888406dc5d017994ac40df44d5ee5859f53b5e6244e74da7f98c2b9706e84d3c",
-      "reviewer": "Claude (Claude Code session; full-text content and lexical review, no model execution)",
+      "source_sha256": "d69ca40b0a9c122518e85602c46c7ab1f845f678df2c3c46e4cbfecb80373b20",
+      "target_sha256": "7fab8527b9103e2378496ae8f19d95fba8a141f8edb0ac33623a2d8fd537ea55",
+      "reviewer": "Claude (Claude Code session; two interception ratios of the initial loss and the separation of effective rainfall for the storage function method (§106.8): Japanese and English edited together and the changed passages compared, no model execution)",
       "method": "assistant",
-      "reviewed_on": "2026-10-24"
+      "reviewed_on": "2026-11-11"
     },
     {
       "source": "examples/List_samples/list_lavaflow.txt",
@@ -3308,9 +3308,9 @@
     {
       "source": "test/README.md",
       "target": "test/README.en.md",
-      "source_sha256": "dcbf420a32b2fa06775a2168e59b9f4d2ae4b23842a9721000121708d1c0cef8",
-      "target_sha256": "dd99e1a9d89c7c826c256500c8a4d51b22814e96bc1c439b8ad1dda3c6cb8519",
-      "reviewer": "Claude (Claude Code session; evapotranspiration from the storage function tanks (§106.7): Japanese and English edited together and the changed passages compared, no model execution)",
+      "source_sha256": "494223cc04ecfb7dc13a20d22336ba2ec389dc9abd227365823812238ce56bac",
+      "target_sha256": "41167a7f6af7760f7b5b6ac38df62ec89072053bc0cf514de4390c9df3a33d43",
+      "reviewer": "Claude (Claude Code session; two interception ratios of the initial loss and the separation of effective rainfall for the storage function method (§106.8): Japanese and English edited together and the changed passages compared, no model execution)",
       "method": "assistant",
       "reviewed_on": "2026-11-11"
     },
@@ -4397,9 +4397,9 @@
     {
       "source": "test/sfzone/README.md",
       "target": "test/sfzone/en/README.md",
-      "source_sha256": "d5cf68bb5eb011c988c289060c93cf4904241f5767b350f039487a38d0a5b267",
-      "target_sha256": "b0d8d322427a444e4f932f0a8be31e0d8b320b472af2a6bcc44f7234a4355bf8",
-      "reviewer": "Claude (Claude Code session; evapotranspiration from the storage function tanks (§106.7): Japanese and English edited together and the changed passages compared, no model execution)",
+      "source_sha256": "fadb1e00b14e2cf20ca9f3b892e23aa52d7e136597c109d59a82ea5ce0859122",
+      "target_sha256": "3dadd47c1d862633cbc3d75ecd88ef50efd890f168295df6f1cb556dacaafa56",
+      "reviewer": "Claude (Claude Code session; two interception ratios of the initial loss and the separation of effective rainfall for the storage function method (§106.8): Japanese and English edited together and the changed passages compared, no model execution)",
       "method": "assistant",
       "reviewed_on": "2026-11-11"
     },
