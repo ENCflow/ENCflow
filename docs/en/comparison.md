@@ -219,7 +219,11 @@ user's guide chapters, not in this table.
   raster grid, simple input and output -- and shares the "compound
   flooding" orientation of handling storm surge, waves, rainfall, river
   inflow and structures within the same time evolution. The differences
-  lie in the equations and in the scope. SFINCS specialises by default in
+  lie in the equations and in the scope (for the basics of how the dynamic
+  wave, local inertia, the diffusion wave and the kinematic wave differ,
+  see the primer of the user's guide,
+  [The shallow water equations and the dynamic, diffusion and kinematic waves](users_guide/shallow_water.md)).
+  SFINCS specialises by default in
   **fast computation of coastal lowlands** with the local inertia equations
   (no advection term) + subgrid topography + quadtree (GPU-capable; track
   record in global-scale compound-flood assessment); its catchment

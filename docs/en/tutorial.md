@@ -43,6 +43,12 @@ If the Courant number (the `Cn_max` column) and the choice of the time step
 `dt` in Step 1 of wave puzzle you, read
 [Courant number and how to choose the time step](users_guide/courant.md)
 (a primer for newcomers to the numerical computation of flow).
+If words that appear in the tutorials and examples, such as "dynamic
+wave", "diffusion wave", "kinematic wave" and "advection term", puzzle
+you, read
+[The shallow water equations and the dynamic, diffusion and kinematic waves](users_guide/shallow_water.md)
+(also a primer: the meaning of each term of the equations and why ENCflow
+uses the dynamic wave by default).
 
 To assemble your own case, the "just try it (minimal input)" sections
 of [Geographic information](users_guide/geoinfo.md),
@@ -61,7 +67,7 @@ the basis of the defaults, detailed settings).
 |---|---|
 | [Time management](users_guide/time.md) | [Courant number and how to choose the time step](users_guide/courant.md) (primer), [Time-step design policy](users_guide/timestep_policy.md) |
 | [Nesting](users_guide/nest.md) | [Nesting explained](users_guide/nest_models.md) |
-| [Shallow water computation](users_guide/swflow.md) | [ENC grid and time integration](users_guide/encgrid.md), [Passage-width adjustment](users_guide/passage_width.md), [Steep-slope gravity correction](users_guide/steep_slope.md), [Advection](users_guide/advection.md), [One-cell-wide channels and the upwind donors of the advection term](users_guide/advection_donor.md), [Numerical diffusion by diagonal-edge fluxes](users_guide/diagonal_diffusion.md), [Choosing the diagonal share d](users_guide/diagratio.md), [Non-hydrostatic correction](users_guide/nonhydrostatic.md), [Diffusion](users_guide/diffusion.md) |
+| [Shallow water computation](users_guide/swflow.md) | [The shallow water equations and the dynamic, diffusion and kinematic waves](users_guide/shallow_water.md) (primer), [ENC grid and time integration](users_guide/encgrid.md), [Passage-width adjustment](users_guide/passage_width.md), [Steep-slope gravity correction](users_guide/steep_slope.md), [Advection](users_guide/advection.md), [One-cell-wide channels and the upwind donors of the advection term](users_guide/advection_donor.md), [Numerical diffusion by diagonal-edge fluxes](users_guide/diagonal_diffusion.md), [Choosing the diagonal share d](users_guide/diagratio.md), [Non-hydrostatic correction](users_guide/nonhydrostatic.md), [Diffusion](users_guide/diffusion.md) |
 | [Coastal wave field](users_guide/wavefield.md) | [Coastal wave field explained](users_guide/wavefield_models.md) |
 | [Structures](users_guide/structure.md), [Boundary conditions](users_guide/boundary.md), [Channels](users_guide/channel.md) | [Hydraulic laws of structures and boundaries](users_guide/hydraulics.md) |
 | [Channels](users_guide/channel.md) | [Channels explained](users_guide/channel_models.md) |
