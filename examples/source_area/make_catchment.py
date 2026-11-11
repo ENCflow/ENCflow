@@ -22,10 +22,12 @@
 #   mask.txt  領域マスク(1: 集水域)
 #   rw.txt    河道マスク(1: 河道セル。落水線でつないだもの)
 #   acc.txt   落水線の集水面積(セル数。自セルを含む。図化用で、計算には使わない)
-#   catchment.txt  切り出しの記録(元の格子での位置、出口セル、面積など。図化と確認用)
+#   catchment.txt  切り出しの記録(元の格子での位置、出口セル、面積、勾配と河道の統計。図化と確認用)
 #
-# 既定の出口セルは元の格子の (i, j) = (344, 302)(1 始まり。i は西から、j は北から)。流域の西端の
-# 源流域にある 2 本の支川の合流点のすぐ上流で、南側(右岸側)の支川の谷にあたる。出口を変えたら、
+# 既定の出口セルは元の格子の (i, j) = (307, 308)(1 始まり。i は西から、j は北から)。流域の西端の
+# 源流域にある 2 本の支川のうち、南側(右岸側)の支川を合流点から 2.3 km さかのぼった谷のセルで、
+# 右岸と左岸から小さな支川が入るすぐ上流にあたる。そこから合流点までの下流には、窪地処理でできた
+# 長さ 1.5 km の平らな区間があって水がたまるので、その上流を出口にしている。出口を変えたら、
 # 設定ファイルの nx・ny、水位規定セル、測線、プローブを、このスクリプトが表示する値に合わせる。
 import argparse
 import heapq
@@ -95,7 +97,7 @@ def flow_tree(z, valid):
 
 def main():
     ap = argparse.ArgumentParser()
-    ap.add_argument("--outlet", type=int, nargs=2, default=(344, 302), metavar=("I", "J"),
+    ap.add_argument("--outlet", type=int, nargs=2, default=(307, 308), metavar=("I", "J"),
                     help="出口セル(元の格子の列 i・行 j。1 始まり)")
     ap.add_argument("--margin", type=int, default=2, help="外接矩形の外に付ける領域外のセル数")
     ap.add_argument("--out", default="data", help="出力ディレクトリ")
@@ -147,6 +149,32 @@ def main():
                 break
             rw[j, i] = True
 
+    # 統計: 落水線の勾配(最急勾配)、河道網と本川の長さ、そのうち平らな区間(窪地処理の段)の割合
+    lj, li = np.where(m & (rcv_j >= 0) & ~((np.arange(ny)[:, None] == jo) & (np.arange(nx)[None, :] == io)))
+    ld = DX * np.hypot(rcv_j[lj, li] - lj, rcv_i[lj, li] - li)               # 流下先までの距離
+    ls = (z[lj, li] - z[rcv_j[lj, li], rcv_i[lj, li]]) / ld                  # 流下先への勾配
+    ch = rw[lj, li]
+    net_km = ld[ch].sum() / 1000.0
+    net_flat = 100.0 * ld[ch & (ls <= 1e-9)].sum() / ld[ch].sum()
+    # 本川: 出口から、集水面積が最大の上流の河道セルへさかのぼる
+    j, i, main, main_flat, run, longest = jo, io, 0.0, 0.0, 0.0, 0.0
+    while True:
+        up = [(acc[j + DJ[k], i + DI[k]], j + DJ[k], i + DI[k]) for k in range(8)
+              if 0 <= j + DJ[k] < ny and 0 <= i + DI[k] < nx and rw[j + DJ[k], i + DI[k]]
+              and (rcv_j[j + DJ[k], i + DI[k]], rcv_i[j + DJ[k], i + DI[k]]) == (j, i)]
+        if not up:
+            break
+        _, jn, im = max(up)
+        d = DX * np.hypot(jn - j, im - i)
+        main += d
+        if z[jn, im] - z[j, i] <= 1e-9:
+            main_flat += d
+            run += d
+            longest = max(longest, run)
+        else:
+            run = 0.0
+        j, i = jn, im
+
     # 切り出し
     js, is_ = np.where(m)
     j1, j2 = js.min() - a.margin, js.max() + a.margin + 1
@@ -178,6 +206,13 @@ def main():
         f"river_cells_source_mask = {nrw0}",
         f"river_cells_connected = {int(rw.sum())}",
         f"cells_raised_by_priority_flood = {nfill}",
+        f"slope_median_p10_p90 = {np.median(ls):.2f} {np.percentile(ls, 10):.2f} {np.percentile(ls, 90):.2f}",
+        f"channel_km = {net_km:.1f}",
+        f"channel_flat_percent = {net_flat:.0f}",
+        f"main_stem_km = {main / 1000.0:.1f}",
+        f"main_stem_flat_percent = {100.0 * main_flat / main:.0f}",
+        f"longest_flat_reach_m = {longest:.0f}",
+        f"largest_area_without_channel_km2 = {acc[m & ~rw].max() * DX * DX / 1e6:.2f}",
     ]
     with open(f"{a.out}/catchment.txt", "w", encoding="utf-8") as f:
         f.write("\n".join(lines) + "\n")

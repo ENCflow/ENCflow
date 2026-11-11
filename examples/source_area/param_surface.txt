@@ -24,7 +24,7 @@
 /
 
 &list_geoinfo
-  nx = 192
+  nx = 172
   ny = 143
   dx = 50.0
   dy = 50.0

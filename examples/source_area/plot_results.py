@@ -74,6 +74,22 @@ RW = np.loadtxt("data/rw.txt") > 0
 Z = np.loadtxt("data/z.txt")
 ACC = np.loadtxt("data/acc.txt")
 NCELL = int(MASK.sum())
+
+
+def flat_channel():
+    """窪地処理でできた平らな段の河道セル: 8 近傍の河道セルのどれかと標高が同じ河道セル。"""
+    ch = RW & MASK
+    zp = np.pad(np.where(ch, Z, np.nan), 1, constant_values=np.nan)
+    out = np.zeros(Z.shape, dtype=bool)
+    for dj in (-1, 0, 1):
+        for di in (-1, 0, 1):
+            if dj or di:
+                with np.errstate(invalid="ignore"):
+                    out |= np.abs(zp[1 + dj:1 + dj + NY, 1 + di:1 + di + NX] - Z) < 1e-6
+    return out & ch
+
+
+FLATCH = flat_channel()
 AREA = NCELL * DX * DX                       # 集水域の面積 (m2)
 EXT = [0, NX * KM, 0, NY * KM]               # x 東向き、y 北向き (km)。行 1 が北端
 OUTLET = tuple(int(v) for v in INFO["outlet_ij"].split())
@@ -135,7 +151,7 @@ CASES = {
 # 側方飽和透水係数を変えた過程計算(mm/h。基本は param.txt の値)と、粗度を変えた浸透なし(力学波)
 KSH = {"process_k10000": 10000, "process_k36000": 36000, "process_k100000": 100000}
 SDYN = ("surface", "surface_n1", "surface_n3", "surface_n5", "surface_n10", "surface_n30")
-STORE_TIMES = [4, 8, 12, 24, 48, 52, 56, 60]     # 貯留の内訳の表の時刻 (h)
+STORE_TIMES = [4, 6, 8, 12, 24, 48, 54, 56, 60]  # 貯留の内訳の表の時刻 (h)
 
 
 def rdir(case):
@@ -399,7 +415,7 @@ def fig_setup():
     ax.set_ylabel("y (km)")
     ax.grid(False)
     ax.set_aspect("equal")
-    ax.legend(handles=[Patch(fc=BLUE, label=T("この例題の集水域(38 km²)", "catchment of this example (38 km²)")),
+    ax.legend(handles=[Patch(fc=BLUE, label=T(f"この例題の集水域({AREA / 1e6:.0f} km²)", f"catchment of this example ({AREA / 1e6:.0f} km²)")),
                        Patch(fc="#e7e5df", label=T("秩父の流域(test/chichibu)", "Chichibu basin (test/chichibu)")),
                        Patch(fc="#a9a79f", label=T("河道マスク", "river mask"))],
               loc="lower right", fontsize=8, handlelength=1.2)
@@ -418,8 +434,8 @@ def fig_setup():
     ax.imshow(rw, cmap=ListedColormap([BLUE]), extent=EXT, interpolation="nearest")
     xo, yo = xy(OUTLET)
     ax.plot([xo], [yo], marker="o", ms=8, mfc="white", mec=INK, mew=1.6, zorder=5, ls="none")
-    ax.annotate(T("出口(排水口セル)。\nすぐ上流の列で流量を測る", "outlet (drain cell);\ndischarge is measured\nin the column just upstream"),
-                (xo, yo), (EXT[1] - 0.03, yo + 0.85), fontsize=8.5, color=INK, ha="right", va="bottom",
+    ax.annotate(T("出口(排水口セル)。\nすぐ上流の列で\n流量を測る", "outlet (drain cell);\ndischarge is measured\nin the column\njust upstream"),
+                (xo, yo), (EXT[1] - 0.03, yo + 1.0), fontsize=8.5, color=INK, ha="right", va="bottom",
                 arrowprops=dict(arrowstyle="-", color=INK2, lw=0.7))
     ax.set_xlabel("x (km)")
     ax.set_ylabel("y (km)")
@@ -795,6 +811,18 @@ def tables(ser):
     print(T("\n## 集水域", "\n## Catchment"))
     print(f"cells = {NCELL}, area = {AREA / 1e6:.2f} km2, z = {Z[MASK].min():.1f} .. {Z[MASK].max():.1f} m, "
           f"channel cells = {int((RW & MASK).sum())} ({100 * (RW & MASK).sum() / NCELL:.1f} %), capacity = {1000 * CAP:.0f} mm")
+    if "slope_median_p10_p90" in INFO:
+        sm, s10, s90 = (float(v) for v in INFO["slope_median_p10_p90"].split())
+        print(T(f"最急勾配の中央値 {sm:.2f}({np.degrees(np.arctan(sm)):.0f}°。セルの 8 割が {s10:.2f}〜{s90:.2f})、"
+                f"河道網 {INFO['channel_km']} km(平らな区間 {INFO['channel_flat_percent']} %)、"
+                f"本川 {INFO['main_stem_km']} km(平らな区間 {INFO['main_stem_flat_percent']} %、最長 {INFO['longest_flat_reach_m']} m)、"
+                f"河道マスクのない谷の集水面積は {INFO['largest_area_without_channel_km2']} km2 まで、"
+                f"平らな段の河道セル {int(FLATCH.sum())}(河道セルの {100 * FLATCH.sum() / (RW & MASK).sum():.0f} %)",
+                f"median steepest slope {sm:.2f} ({np.degrees(np.arctan(sm)):.0f} deg; 80 % of the cells within {s10:.2f}-{s90:.2f}), "
+                f"channel network {INFO['channel_km']} km (flat reaches {INFO['channel_flat_percent']} %), "
+                f"main stem {INFO['main_stem_km']} km (flat reaches {INFO['main_stem_flat_percent']} %, longest {INFO['longest_flat_reach_m']} m), "
+                f"valleys without the channel mask up to {INFO['largest_area_without_channel_km2']} km2, "
+                f"channel cells on flat steps {int(FLATCH.sum())} ({100 * FLATCH.sum() / (RW & MASK).sum():.0f} % of the channel cells)"))
 
     # 過程計算の指標
     print(T("\n## 過程計算: 雨 1 回ごとの指標(時刻は雨の開始から)", "\n## Process run: per-storm indices (time from the start of each storm)"))
@@ -840,6 +868,13 @@ def tables(ser):
         soil, soil_sat = 1000 * hg[MASK].sum() / NCELL, 1000 * hg[sat].sum() / NCELL
         surf, surf_ch = 1000 * h[MASK].sum() / NCELL, 1000 * h[RW & MASK].sum() / NCELL
         print(f"| {th} | {np.interp(th, t, q):.2f} | {soil:.1f} | {soil_sat:.1f} | {surf:.1f} | {surf_ch:.1f} | {soil + surf:.1f} |")
+
+    print(T("\n## 過程計算: 河道セルの水(流域平均の水深 mm)と、そのうち平らな段の河道セルの水、水深の最大",
+            "\n## Process run: water on channel cells (catchment-mean depth, mm), the part on the channel cells of flat steps, and the maximum depth"))
+    for th in (8, 12, 48):
+        h = bil("process", "H", ftp[th])
+        print(f"t = {th:2d} h: channel {1000 * h[RW & MASK].sum() / NCELL:.1f} mm, flat steps {1000 * h[FLATCH].sum() / NCELL:.1f} mm "
+              f"(mean depth {h[FLATCH].mean():.2f} m), other channel cells mean depth {h[RW & MASK & ~FLATCH].mean():.2f} m, max depth {h[MASK].max():.2f} m")
 
     # 地形の位置ごとの飽和
     print(T("\n## 過程計算: 上流の集水面積(落水線)の階級ごとの、飽和したセルの割合 (%)",
