@@ -72,6 +72,13 @@ compared with observations).
   and the closest roughness falls from 10 for the first storm and 5 for the second to 3 for
   both storms
   ([Supplement](#supplement-equivalent-roughness-and-the-soil-conductivity)).
+- **Vertical unsaturated infiltration alone also gives a delay of the same order**: when the
+  same rain is put on a soil column of the VZ runoff of Tani (2023) (a model that takes the
+  downslope transfer as having no delay), the drainage at a depth of 0.5 m lags the rain by
+  4.4 hours, the same order as the slope lag that the process run produces with lateral flow
+  in the soil (3.3 hours). The soil of the column is that of another experimental site, so
+  this is a rough comparison
+  ([Relation to vertical unsaturated infiltration (VZ)](#relation-to-vertical-unsaturated-infiltration-vz)).
 
 ## What happens in real mountain catchments
 
@@ -225,6 +232,7 @@ cells of the extracted catchment. (c) Rainfall.
 | Vertical infiltration only | `param_vertical.txt` | No lateral flow. Slope roughness 0.3 |
 | No infiltration | `param_surface.txt` | No groundwater. Slope roughness 0.3 |
 | Sweep (22 cases) | `param_sweep_<case>.txt` (made by `sweep.py` from the three above) | No infiltration with slope roughness 0.6, 1, 2, 3, 5, 10, 30; no infiltration as a diffusion wave with roughness 0.3, 3, 10; vertical infiltration only with roughness 3; the process run with slope roughness 1, as a diffusion wave, with lateral conductivity 3600, 10000 and 100000 mm/h, with soil depth 1 m, and with layer 2 (a layer of small specific yield below a soil with lateral conductivity 3600 mm/h); the process run and no infiltration (roughness 0.3, 1, 3) with the rain raised to 30 mm/h (rainfall in `param_rain30.txt`, dt = 2 s) |
+| Soil column of VZ runoff (2 cases) | `param_vz.txt`, `param_vz_r30.txt` | The terrain of the catchment is not used; the same rain (10 mm/h and 30 mm/h) is put on a single reference column of VZ runoff. The soil is the trial default of VZ runoff (the soil of Tatsunokuchi-yama of Tani (2023)). For the comparison in the [supplement](#relation-to-vertical-unsaturated-infiltration-vz) |
 
 ## How to run
 
@@ -233,6 +241,7 @@ cd examples/source_area
 make                      # links and inputs (make_catchment.py; a few seconds)
 make run                  # the three basic cases, one after another
 make sweep                # the 22 sweep cases, one after another
+make vz                   # the 2 soil-column cases of VZ runoff (for the supplement; a few seconds)
 python3 plot_results.py   # figs/*.png and tables (argument en writes English figures to en/figs/)
 ```
 
@@ -247,7 +256,9 @@ hours for the 25 cases). The results do not depend on the number of threads (the
 with 1 thread and with 3 threads gives byte-identical transect discharge, Log and fields at
 all output times). `mechanism.png` and `setup.png` do not use computed results, so they can be
 drawn after `make`, before any run. If the sweep is not finished, the figures and tables are
-made from the cases that are.
+made from the cases that are. The figure and table of the VZ soil column appear after
+`make vz` (it does not use the catchment inputs, so it can be run before the other cases; the
+conversion to a roughness uses the no-infiltration results of the sweep).
 
 ## Results
 
@@ -871,23 +882,60 @@ downslope delay can be left out corresponds to a large celerity of the lateral f
 short slope-stage lag. With slow lateral flow, as in the single layer with 3600 mm/h (slope
 stage 8.7 hours), the premise does not hold.
 
-How much delay vertical unsaturated infiltration alone produces can be seen by putting the
-rain of this example on a single soil column of VZ runoff (a calculation that is not among the
-cases of the example; the soil is the trial default of VZ runoff, the soil of Tatsunokuchi-yama
-of Tani (2023), and the initial condition is steady drainage at 0.1 mm/h; for the settings see
-[Starting points for sensitivity experiments](#starting-points-for-sensitivity-experiments)).
-The lag from the rain of the water passing downward through a depth of 0.5 m (the drainage of
-a cell with a 0.5 m soil; the difference of the centroids of the rain and the drainage over
-the 48 hours of the second storm) is 4.4 hours for a rain of 10 mm/h and 1.8 hours for
-30 mm/h. Converted to the no-infiltration roughness with the same lag, these are 2.7 and 1.4.
-They are of the same order as the slope stage of the base run of this example (3.3 and 2.0
-hours; roughness 1.7 and 1.6): even with no delay in the downslope transfer, vertical
-unsaturated infiltration alone produces a delay of the same size. The lag is longer for a
-greater depth (for 10 mm/h, 2.4 hours at 0.25 m and 8.0 hours at 1 m) and shorter for heavier
-rain. With three times the rain it shrinks more (to 0.4 times) than in the process run of this
-example (to 0.6 times), so the roughness with the same lag, unlike in the process run
-(1.7 → 1.6), becomes smaller as the rain gets heavier. The soil of Tatsunokuchi-yama is not
-the soil of this catchment, so the values are a guide.
+How much delay vertical unsaturated infiltration alone produces is examined by putting the
+rain of this example on a single soil column of VZ runoff (`make vz`; the settings are
+`param_vz.txt` and, for a rain of 30 mm/h, `param_vz_r30.txt`). The terrain of the catchment
+is not used; what is looked at is the water passing downward through depths of 0.25, 0.5 and
+1 m of the column (the drainage of a cell with that soil depth). The soil is the trial default
+of VZ runoff (the soil of Tatsunokuchi-yama of Tani (2023)), and the initial condition is
+steady drainage at 0.1 mm/h.
+
+![Drainage of the VZ soil column](figs/vz_column.png)
+
+The second storm, for a rain of (a) 10 mm/h and (b) 30 mm/h. The red-purple lines are the
+drainage of the column (from the lightest: depths of 0.25, 0.5 and 1 m). The black dashed line
+is the inflow to the channel cells of the process run (the output of the slopes, hourly), the
+black solid line the runoff at the outlet of the process run, and grey the rain.
+
+| Run | Rain 10 mm/h: lag (h) | Roughness with the same lag | Rain 30 mm/h: lag (h) | Roughness with the same lag |
+|---|---:|---:|---:|---:|
+| VZ soil column: drainage at 0.25 m | 2.3 | 1.0 | 0.9 | 0.5 |
+| VZ soil column: drainage at 0.5 m | 4.4 | 2.7 | 1.8 | 1.4 |
+| VZ soil column: drainage at 1 m | 8.0 | 6.8 | 3.4 | 3.5 |
+| process run (0.5 m soil): slope stage | 3.3 | 1.7 | 2.0 | 1.6 |
+
+The "lag" is the difference of the centroids of the rain and the drainage (for the process
+run, the inflow to the channel cells) over the 48 hours of the second storm. The drainage of
+the column is the difference of the cumulative value recorded every 10 minutes. The "roughness
+with the same lag" is interpolated from the slope-stage lags of the no-infiltration runs under
+the same rain (for 30 mm/h from the three values 0.3, 1 and 3, so the value for a depth of 1 m
+is extrapolated beyond roughness 3).
+
+- **Vertical unsaturated infiltration alone gives a delay of the same order**: the lag of the
+  drainage at 0.5 m is 4.4 hours for a rain of 10 mm/h and 1.8 hours for 30 mm/h, the same
+  order as the slope stage of the process run (3.3 and 2.0 hours). The roughness with the same
+  lag is 2.7 and 1.4 (1.7 and 1.6 for the process run). Even with no delay in the downslope
+  transfer, vertical unsaturated infiltration alone produces a delay of the same size.
+- **The shape of the response differs**: the drainage of the column does not increase until
+  the wetting front reaches that depth, and then reaches nine tenths of the rain in 30 to 40
+  minutes (for 10 mm/h at 0.5 m it exceeds 1 mm/h after 3.0 hours and reaches nine tenths of
+  the rain after 3.5 hours; first storm). The output of the slopes in the process run increases
+  little by little from the start of the rain (1.5 mm/h in the first hour of the second storm,
+  6.9 mm/h in the fourth), because the rain on the saturated area of the valleys and on the
+  channels comes out at once and more comes as the saturated area spreads. The recession after
+  the rain is much the same for the drainage at 0.5 m and the runoff at the outlet of the
+  process run (0.51 and 0.57 mm/h 12 hours after the rain).
+- **The lag is longer for a greater depth and shrinks strongly with heavier rain**: for
+  10 mm/h the lag is 2.3 hours at a depth of 0.25 m and 8.0 hours at 1 m. With three times the
+  rain the lag falls to 0.4 times, more than the slope stage of the process run (0.6 times).
+  The roughness with the same lag therefore hardly changes in the process run (1.7 → 1.6),
+  but becomes smaller for the column as the rain gets heavier (2.7 → 1.4 at 0.5 m).
+- **The values are a guide**: the soil of Tatsunokuchi-yama is not the soil of this catchment.
+  The column is a deep uniform soil, with no base of the soil (bedrock surface) below 0.5 m.
+  The initial condition is a wet state with 0.1 mm/h flowing before the rain, and the
+  responses to the first and the second storm are almost the same (at 0.5 m the drainage
+  exceeds 1 mm/h after 3.0 hours in both). Channel routing (1.4–1.9 hours in this example) is
+  not included.
 
 The equivalent roughness used in practice (a slope lag of about 2 hours), the large lateral
 conductivity of this example, and the "no downslope delay" of VZ runoff assign the delay of
@@ -915,7 +963,8 @@ hydrographs at the outlet.
   (a little under 40 mm in this example) is set by the initial groundwater storage of zero and
   by this treatment. The feature that solves vertical unsaturated flow
   ([VZ runoff](../../../docs/en/users_guide/vz.md)) cannot be combined with groundwater
-  (`fn_gwflow`).
+  (`fn_gwflow`); for a comparison with a soil column calculation alone see the
+  [supplement](#relation-to-vertical-unsaturated-infiltration-vz).
 - **Bedrock, evapotranspiration and interception are not included**: infiltration into the
   weathered bedrock below the soil and the baseflow from it, evapotranspiration and canopy
   interception are not enabled. Between storms the soil water decreases only by drainage to
@@ -1017,15 +1066,14 @@ hydrographs at the outlet.
   between storms. With a smaller infiltration capacity and lateral conductivity (the values
   the user guide suggests for a weathered bedrock layer), layer 2 becomes a layer that yields
   baseflow.
-- The soil column calculation of VZ runoff
-  ([Relation to vertical unsaturated infiltration (VZ)](#relation-to-vertical-unsaturated-infiltration-vz)
-  in the supplement): copy `param_dflt.txt` of [test/vzcol](../../../test/vzcol/) (the trial
-  default column, with the column settings left out), replace its `&list_precip` with that of
-  `param_common.txt` of this example (`param_rain30.txt` for 30 mm/h), and set `tt` to 345600
-  (96 hours), `vz_out_depth` to `0.25, 0.5, 1.0` and `dir_result` to another name. Run it in
-  test/vzcol with `./encflow <the copied file>` after `make`; `vz_column.csv` then holds the
-  cumulative drainage D (m) at each depth every 10 minutes, and its time difference is the
-  drainage.
+- `param_vz.txt` (the soil column of VZ runoff;
+  [Relation to vertical unsaturated infiltration (VZ)](#relation-to-vertical-unsaturated-infiltration-vz)
+  in the supplement): `vz_out_depth` gives the depths at which the drainage is read
+  (`vz_column.csv` holds the cumulative drainage D at each depth). Adding `&list_vz_column`
+  changes the soil (the Kosugi parameters `vz_ks_mmh`, `vz_thetas`, `vz_thetar`, `vz_psim`,
+  `vz_sigma`) and the initial condition (`vz_q0_mmh`); without it the trial default is used
+  ([VZ runoff](../../../docs/en/users_guide/vz.md)). `param_vz_r30.txt`, for a rain of
+  30 mm/h, reads the grid and the VZ runoff settings from `param_vz.txt`.
 
 ## References
 
