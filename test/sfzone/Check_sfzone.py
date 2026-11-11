@@ -11,6 +11,7 @@ Python 標準ライブラリのみ。使い方:
   python3 Check_sfzone.py partial result_sync result_psync_restart   # 同期区間の途中で保存 → 再開
   python3 Check_sfzone.py steady  result_steady           # 一定の雨での定常 q → r
   python3 Check_sfzone.py mosaic  result result_mosaic    # VZ との併用
+  python3 Check_sfzone.py lag     result result_lag [tol] # 遅れ時間(param_lag.txt。tol は参照解との許容)
 
 タンク(単位面積): dS/dt = r − q、S [mm] = K·q[mm/h]^P。SI では q = c·S^m
 (m = 1/P、c = (1000/K)^m / 3.6e6、S [m]、q [m/s])。
@@ -42,6 +43,7 @@ A = 10.0 * 10.0
 NVAL = 43                       # 領域内セル数(区画 40 + 受水 3)
 RAIN_TABLE = [(0, 1), (60, 1), (61, 50), (180, 50), (181, 0), (9999, 0)]   # (min, mm/h)
 TANK = {1: (10.0, 0.6, 0.1), 2: (2.0, 1.0, 1.0), 3: (20.0, 0.4, 0.0)}      # K, P, q0 (mm/h)
+NLAG = {1: 360, 2: 720, 3: 180}  # param_lag.txt の遅れ時間のステップ数(0.5 h、1 h、0.2501 h → 0.25 h)
 KIND = {1: 1, 2: 1, 3: 2}       # 出口 1: 地表セル / 2: 系外
 # param_bflow.txt の区画 1 の基底流(namelist)。区画 3 は data_sfzone/base3.txt から読む
 BASE1 = [(30.5, 0.0), (90.0, 2.0), (90.0, 4.0), (300.25, 1.0)]             # (min, mm/h)
@@ -116,6 +118,11 @@ def tank_coef(k, p):
 
 def qfun(s, m, c):
     return c * s ** m if s > 0.0 else 0.0
+
+
+def lagged(rates, nlag, q0):
+    """雨を nlag ステップ遅らせた入力(開始前は初期の流出強度 q0 の定常 = 遅れ列の初期値)"""
+    return [q0 / 3.6e6] * nlag + rates[:len(rates) - nlag]
 
 
 def reference_storage(k, p, q0, rates, nsub=10):
@@ -514,6 +521,54 @@ def check_mosaic(res0, res):
     check(worst < 2e-12 + 1e-11 * tend, "Log S_total = S0 + rain - VZ outflow/area (max abs err %.2e m)" % worst)
 
 
+def check_lag(res0, res, tol=1e-6):
+    """遅れ時間(param_lag.txt): 雨を T_L 遅らせた入力に対する厳密解・参照解、移動中の水、収支"""
+    print("== sfzone lag: %s vs %s" % (res0, res))
+    h0, _ = zone_rows(res0)
+    hz, zone = zone_rows(res)
+    check("vlag(m3)" not in h0 and hz[:len(h0)] == h0 and hz[len(h0):] == ["vlag(m3)"],
+          "sfm_zone.csv has the vlag column only when a zone has a lag time (after residual)")
+    zr = by_zone(hz, zone)
+    it, iS, iq, ivin, iarea = (hz.index("time(s)"), hz.index("S(mm)"), hz.index("q(mm/h)"),
+                               hz.index("vin(m3)"), hz.index("area(m2)"))
+    ires, ivst, ilag = hz.index("residual(m3)"), hz.index("vstore(m3)"), hz.index("vlag(m3)")
+    tend = zr[1][-1][it]
+    nstep = int(round(tend / DT))
+    rates = rain_steps(nstep)
+    # 入力(地上の雨)は遅れによらない
+    _, z0 = zone_rows(res0)
+    win = max(abs(a[ivin] - b[ivin]) / a[ivin] for a, b in zip(z0, zone)) if len(z0) == len(zone) else 1.0
+    check(win < 1e-12, "zone input vin = the run without lag (the lag acts after the recovery of the rain; "
+          "worst rel %.1e)" % win)
+    for z in (1, 2, 3):
+        k, p, q0 = TANK[z]
+        lr = lagged(rates, NLAG[z], q0)
+        sref = linear_storage(k, q0, lr) if p == 1.0 else reference_storage(k, p, q0, lr)
+        m, c = tank_coef(k, p)
+        ws = wq = wl = 0.0
+        for r in zr[z]:
+            n = int(round(r[it] / DT))
+            if sref[n] > 0.0:
+                ws = max(ws, abs(r[iS] / 1000.0 - sref[n]) / sref[n])
+                qr = qfun(sref[n], m, c) * 3.6e6
+                wq = max(wq, abs(r[iq] - qr) / qr)
+            # 移動中の水 = 直近 nlag ステップの(遅らせる前の)雨 + 開始時の定常分
+            exp_ = r[iarea] * (sum(x * DT for x in rates[max(0, n - NLAG[z]):n])
+                               + max(0, NLAG[z] - n) * DT * q0 / 3.6e6)
+            if exp_ > 0.0:
+                wl = max(wl, abs(r[ilag] - exp_) / exp_)
+            elif r[ilag] != 0.0:
+                wl = max(wl, abs(r[ilag]))
+        check(ws < tol and wq < 2 * tol, "zone %d (T_L = %d steps) storage and outflow = %s for the lagged rain "
+              "(worst rel %.2e, %.2e)" % (z, NLAG[z], "exact solution" if p == 1.0 else "RK4 reference", ws, wq))
+        check(wl < 1e-12, "zone %d in-transit water vlag = rain of the last T_L (and the initial steady part) x area "
+              "(worst rel %.1e)" % (z, wl))
+    worst = max(abs(r[ires]) / max(r[ivin], r[ivst] + r[ilag]) for r in zone)
+    check(worst < 1e-12, "zone water balance residual (storage + in-transit) at rounding level (worst rel %.1e)" % worst)
+    log = read_log(os.path.join(res, "Log.txt"))
+    check_total(log, hz, zone, None, "(lag)")
+
+
 def main():
     mode = sys.argv[1]
     if mode == "base":
@@ -534,6 +589,8 @@ def main():
         check_steady(sys.argv[2])
     elif mode == "mosaic":
         check_mosaic(sys.argv[2], sys.argv[3])
+    elif mode == "lag":
+        check_lag(sys.argv[2], sys.argv[3], float(sys.argv[4]) if len(sys.argv) > 4 else 1e-6)
     else:
         sys.exit("unknown mode " + mode)
     if failed:

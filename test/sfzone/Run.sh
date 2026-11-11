@@ -13,6 +13,8 @@
 #   param_sync.txt        同期間隔 dt_sfm = 60 s(参照解との一致・収支)。sed で同期区間の
 #                         途中(21625 s)で保存 → 再開も確かめる
 #   param_steady.txt      一定の雨 48 h で q → r、S = K·r^P
+#   param_lag.txt         遅れ時間(遅らせた雨に対する厳密解・参照解、移動中の水 vlag、収支)。
+#                         sed で保存 → 再開、同期間隔 60 s(同期区間の途中の保存 → 再開を含む)も確かめる
 #   param_mosaic.txt      VZ との併用(貯留関数の区画と受水セルが param.txt と一致、全体の収支)。
 #                         sed で区画の重なり・出口が VZ のセルにある構成・P > 1 の停止も確かめる
 # reference 比較は Log.txt(ULP=0)。sfm_zone.csv は 16 桁で書くため CPU(-march=native の
@@ -82,6 +84,25 @@ variant param_sync.txt result_psync_restart \
     "s|^  dir_result = 'result_psync_restart'|&\n  dir_save = 'save_psync'\n  f_state_restore = 1|" > "$tmp"
 run psync_restart "$tmp"
 python3 Check_sfzone.py partial result_sync result_psync_restart || exit 1
+
+# 遅れ時間(param_lag.txt)と、その保存 → 再開、同期間隔 60 s(同期区間の途中の保存 → 再開を含む)
+rm -rf save_lag save_lagsync
+run lag param_lag.txt
+python3 Check_sfzone.py lag result result_lag || exit 1
+variant param_lag.txt result_lag_save "s/^  tt = 43200 /  tt = 21600 /;s/f_state_save = 0 /f_state_save = 1 /" > "$tmp"
+run lag_save "$tmp"
+variant param_lag.txt result_lag_restart "s/f_state_restore = 0 /f_state_restore = 1 /" > "$tmp"
+run lag_restart "$tmp"
+python3 Check_sfzone.py restart result_lag result_lag_restart || exit 1
+lagsync="s|^  fn_sfm_zone = 'zone.txt'|&\n  dt_sfm = 60.0|;s/'save_lag'/'save_lagsync'/"
+variant param_lag.txt result_lag_sync "$lagsync" > "$tmp"
+run lag_sync "$tmp"
+python3 Check_sfzone.py lag result result_lag_sync 1e-4 || exit 1
+variant param_lag.txt result_lag_psave "$lagsync;s/^  tt = 43200 .*/  tt = 21625/;s/f_state_save = 0 /f_state_save = 1 /" > "$tmp"
+run lag_psave "$tmp"
+variant param_lag.txt result_lag_prestart "$lagsync;s/f_state_restore = 0 /f_state_restore = 1 /" > "$tmp"
+run lag_prestart "$tmp"
+python3 Check_sfzone.py partial result_lag_sync result_lag_prestart || exit 1
 
 run steady param_steady.txt
 python3 Check_sfzone.py steady result_steady || exit 1

@@ -3,7 +3,7 @@ module list_sfm
   ! (層契約 §12)。生の値を t_list_sfm に運ぶだけで、解釈・検証・既定値の
   ! 適用・導出は m_sfm の init が行う(developer.md §106)。
   !   &list_sfm      : 共通設定(有効化・区画番号マップ・同期間隔・雨の扱い・数値制御)
-  !   &list_sfm_zone : 区画ごとの貯留関数のパラメータ・初期条件・出口・基底流
+  !   &list_sfm_zone : 区画ごとの貯留関数のパラメータ・遅れ時間・初期条件・出口・基底流
   !                    (配列。区画番号で添字。出口と基底流の指定は &list_vz_zone と同じ形)
   ! 未指定の番兵は実数 −9999、整数 −9999。グループ不在は全番兵のまま(init が判定)。
   use m_sysparam, only : t_sysparam
@@ -31,6 +31,7 @@ module list_sfm
     real :: sfm_k(1:sfm_nzonemax) = -9999.0       ! 貯留係数 K(S[mm] = K·q[mm/h]^P)
     real :: sfm_p(1:sfm_nzonemax) = -9999.0       ! 貯留指数 P
     real :: sfm_q0_mmh(1:sfm_nzonemax) = -9999.0  ! 初期条件: 初期の流出強度 (mm/h)
+    real :: sfm_tl_h(1:sfm_nzonemax) = -9999.0    ! 遅れ時間 T_L (h。未指定 = 0)
     integer :: sfm_out_kind(1:sfm_nzonemax) = -9999 ! 出口 1: 地表セルへ移送 / 2: 系外流出
     integer :: sfm_out_cell(1:2, 1:sfm_noutmax, 1:sfm_nzonemax) = -9999  ! 出口セル (i, j)
     real :: sfm_out_w(1:sfm_noutmax, 1:sfm_nzonemax) = -9999.0          ! 出口の配分率
@@ -55,7 +56,7 @@ subroutine list_sfm_read(p, list)
   real :: dt_sfm
   integer :: f_sfm_rain
   real :: sfm_tol, sfm_dt_min
-  real :: sfm_k(1:sfm_nzonemax), sfm_p(1:sfm_nzonemax), sfm_q0_mmh(1:sfm_nzonemax)
+  real :: sfm_k(1:sfm_nzonemax), sfm_p(1:sfm_nzonemax), sfm_q0_mmh(1:sfm_nzonemax), sfm_tl_h(1:sfm_nzonemax)
   integer :: sfm_out_kind(1:sfm_nzonemax)
   integer :: sfm_out_cell(1:2, 1:sfm_noutmax, 1:sfm_nzonemax)
   real :: sfm_out_w(1:sfm_noutmax, 1:sfm_nzonemax)
@@ -63,7 +64,7 @@ subroutine list_sfm_read(p, list)
   character(len=maxpathlen) :: fn_sfm_base(1:sfm_nzonemax)
 
   namelist /list_sfm/ f_sfm, fn_sfm_zone, dt_sfm, f_sfm_rain, sfm_tol, sfm_dt_min
-  namelist /list_sfm_zone/ sfm_k, sfm_p, sfm_q0_mmh, sfm_out_kind, sfm_out_cell, sfm_out_w, &
+  namelist /list_sfm_zone/ sfm_k, sfm_p, sfm_q0_mmh, sfm_tl_h, sfm_out_kind, sfm_out_cell, sfm_out_w, &
                            sfm_base, fn_sfm_base
 
   f_sfm = list%f_sfm
@@ -75,6 +76,7 @@ subroutine list_sfm_read(p, list)
   sfm_k = list%sfm_k
   sfm_p = list%sfm_p
   sfm_q0_mmh = list%sfm_q0_mmh
+  sfm_tl_h = list%sfm_tl_h
   sfm_out_kind = list%sfm_out_kind
   sfm_out_cell = list%sfm_out_cell
   sfm_out_w = list%sfm_out_w
@@ -100,6 +102,7 @@ subroutine list_sfm_read(p, list)
   list%sfm_k = sfm_k
   list%sfm_p = sfm_p
   list%sfm_q0_mmh = sfm_q0_mmh
+  list%sfm_tl_h = sfm_tl_h
   list%sfm_out_kind = sfm_out_kind
   list%sfm_out_cell = sfm_out_cell
   list%sfm_out_w = sfm_out_w

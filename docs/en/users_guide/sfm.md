@@ -17,7 +17,7 @@ following three parts.
   zone have the same runoff** (per unit area).
 - **Tank**: solves the relation S = K·q^P between the storage S per unit area and the
   runoff rate q (S in mm, q in mm/h) together with the continuity equation
-  dS/dt = r − q.
+  dS/dt = r − q. When a lag time T_L is given, the rain enters the tank T_L later.
 - **Outlets**: state explicitly whether the runoff of a zone is moved to surface cells
   (a channel, a valley floor, etc.) or out of the system. The delay of the movement
   from the zone to the outlet is not solved (**instantaneous delivery**). The outlets
@@ -48,6 +48,7 @@ are two groups.
   sfm_k(1) = 30.0           ! storage coefficient K (S [mm] = K·q[mm/h]^P); required
   sfm_p(1) = 0.6            ! storage exponent P (0.6 when omitted)
   sfm_q0_mmh(1) = 0.1       ! initial runoff rate (mm/h; 0.1 when omitted)
+  !sfm_tl_h(1) = 0.5         ! lag time T_L (h; 0 = no lag when omitted)
   sfm_out_kind(1) = 1       ! outlet 1: move to surface cells / 2: out of the system
   sfm_out_cell(:,1,1) = 120, 80   ! outlet cell (i, j)
 /
@@ -113,12 +114,12 @@ depth on the slope (storage per unit area) is proportional to the 3/5 power of t
 runoff rate (S ∝ q^{0.6}). P = 0.6 corresponds to this relation (this derivation is an
 explanation given in this guide).
 
-All rain enters the tank and there is no loss. The **lag time T_L**, the **separation
-of effective rainfall with the primary runoff ratio f1 and the saturation rainfall
-R_sa** (treating part of the rain as a loss that does not contribute to runoff) of the
-full form of Kimura's method, and **two-valued storage functions** (Prasad type, Hoshi
-and Yamaoka type) are not included
-([Scope and restrictions on combinations](#scope-and-restrictions-on-combinations)).
+All rain enters the tank and there is no loss. The **separation of effective rainfall
+with the primary runoff ratio f1 and the saturation rainfall R_sa** (treating part of the
+rain as a loss that does not contribute to runoff) of the full form of Kimura's method
+and **two-valued storage functions** (Prasad type, Hoshi and Yamaoka type) are not
+included ([Scope and restrictions on combinations](#scope-and-restrictions-on-combinations)).
+The lag time T_L is included (next section).
 
 The numerical solution is backward Euler (a scalar Newton method protected by bisection
 of the interval). The internal time step is adjusted automatically from the difference of
@@ -128,6 +129,32 @@ choice of ENCflow). Because the runoff is defined as "previous storage + rain �
 storage", the water balance of the tank closes except for rounding. The time accuracy is
 checked by comparison with analytic and reference solutions
 ([Verification](#verification-and-examples)).
+
+### Lag time
+
+The lag time T_L of Kimura's method means that the runoff of the tank appears at the end
+of the catchment T_L later (q_l(t) = q(t + T_L), where q_l is the runoff of the tank and q
+the runoff at the end of the catchment). ENCflow represents the same thing by **letting
+the rain enter the tank T_L later**.
+
+```math
+\frac{dS}{dt} = r(t - T_L) - q
+```
+
+It is given for each zone by `sfm_tl_h` (hours; 0 = no lag when omitted).
+
+- If the initial state is steady, the time series of the runoff at the outlet is the same
+  as with delaying the runoff of the tank. In this form, q in `sfm_zone.csv` is directly
+  the runoff rate reaching the outlet.
+- The rain during the lag is counted as "water in transit" (S_grnd of the Log and vlag of
+  `sfm_zone.csv`; the water balance closes). At the start, the state before the start is
+  regarded as steady at the initial runoff rate q0, and the water in transit is q0·T_L
+  (the runoff at the outlet continues at q0 right from the start).
+- T_L is rounded to an integer multiple of the time step dt (the error is dt/2 or less).
+  The adopted value is shown on the screen.
+- The lag is only a shift in time and does not change the shape of the hydrograph (the
+  attenuation and spreading of the peak are represented by K and P). The baseflow is a
+  quantity given at the outlet and is not lagged.
 
 ### Handling of rain
 
@@ -204,7 +231,8 @@ even at every step.
 
 - The **storage of the tanks is counted in S_grnd** of the Log (Σ S·A of the zones
   divided by the number of cells, as a column-equivalent depth, including the rain
-  recovered and waiting for the next synchronisation). Watching the conservation of
+  recovered and waiting for the next synchronisation and the water in transit during the
+  lag time). Watching the conservation of
   S_total checks the water balance including the tanks. S_total decreases by the
   outflow from the system (`sfm_out_kind = 2`). The storage of the tanks is a different
   quantity from the groundwater `hg` and is not in the Hg distribution output.
@@ -214,25 +242,27 @@ synchronisation)
 
 | File | Contents |
 |---|---|
-| sfm_zone.csv | per zone: rain (rain of the latest step, mm/h), q (runoff rate, mm/h), S (storage, mm), and cumulative water volumes (m³): vin (rain × zone area), vstore (current storage), vdrain (runoff of the zone), vsurface (transfer to surface cells), vexternal (outflow from the system), residual (balance residual = vstore − vstore₀ − vin + vdrain). When a zone has a baseflow, vbase is added as the last column, and vsurface and vexternal are runoff + baseflow |
+| sfm_zone.csv | per zone: rain (ground rain of the latest step, mm/h; with a lag time it enters the tank T_L later), q (runoff rate, mm/h), S (storage, mm), and cumulative water volumes (m³): vin (rain × zone area), vstore (current storage), vdrain (runoff of the zone), vsurface (transfer to surface cells), vexternal (outflow from the system), residual (balance residual = vstore + vlag − (vstore₀ + vlag₀) − vin + vdrain). When a zone has a lag time, vlag (water in transit) is added after residual, and when a zone has a baseflow, vbase is added as the last column, and vsurface and vexternal are runoff + baseflow |
 
 The runoff of a zone [m³/s] is q × zone area / 3.6×10⁶, or the time difference of vdrain
 divided by the recording interval. Check that residual is at the rounding level (about
 10⁻¹² of the input).
 
 **Screen**: at initialisation, a zone check table is shown (per zone: number of cells,
-area, K, P, initial q and S, outlets and distribution ratios, number of baseflow points
-and the first and last values).
+area, K, P, initial q and S, adopted lag time, outlets and distribution ratios, number of
+baseflow points and the first and last values).
 
-**Restart**: the storage of the tanks, the internal step, the cumulative diagnostics
-(including the baseflow) and the carry-over of the outlets are saved to and restored
+**Restart**: the storage of the tanks, the internal step, the rain during the lag time
+(water in transit), the cumulative diagnostics (including the baseflow) and the
+carry-over of the outlets are saved to and restored
 from `sfm.dat`. When saving at a synchronisation time (a step that is a multiple of
 `dt_sfm`), the computation after the restart is bit-identical to the continuous one.
 When a computation ending in the middle of an interval is saved, the rest is
 synchronised before saving (the recovered rain is not discarded). If fn_sfm is removed
 at a restart while `sfm.dat` remains, the computation stops (so as not to discard the
-storage of the tanks silently). It also stops if the configuration of zones, K, P or
-outlets differs from the time of saving.
+storage of the tanks silently). It also stops if the configuration of zones, K, P, the
+number of lag steps or outlets differs from the time of saving (changing the time step dt
+changes the number of lag steps).
 
 ## Scope and restrictions on combinations
 
@@ -248,9 +278,10 @@ boundary conditions, sources and structures.
 
 **What it cannot do and the limits of accuracy**
 
-- There is no lag time T_L, no separation of effective rainfall (f1, R_sa) and no
-  two-valued storage function. A delay of the rise and hysteresis (different storage at
-  the same discharge in the rising and falling limbs) cannot be represented.
+- There is no separation of effective rainfall (f1, R_sa) and no two-valued storage
+  function. Hysteresis (different storage at the same discharge in the rising and falling
+  limbs) cannot be represented. The lag time T_L is only a shift in time, and rain falling
+  anywhere in the zone is lagged by the same amount.
 - All rain enters the tank and eventually runs off. There is no loss by
   evapotranspiration or deep percolation, so in long computations the total runoff is
   overestimated (suited to event computations).
@@ -287,6 +318,7 @@ The labels in the Basis column are explained in [How to read the basis of a defa
 | sfm_k(z) | none | storage coefficient K (S [mm] = K·q[mm/h]^P; unit mm^{1−P}·h^P) | **Calibrated** required; changes by orders of magnitude between catchments |
 | sfm_p(z) | 0.6 | storage exponent P (0 < P ≤ 1; 1 = linear reservoir) | **Conventional** the value conventionally used in the storage function method[^kimura1961]; corresponds to S ∝ q^{0.6} of the steady kinematic wave with Manning's law ([The tank](#the-tank-storage-function)) |
 | sfm_q0_mmh(z) | 0.1 mm/h | initial runoff rate; the initial storage is S0 = K·q0^P (0 = dry) | **Empirical** a guide to the runoff rate before rain (the same as `vz_q0_mmh` of VZ) |
+| sfm_tl_h(z) | 0 h | lag time T_L (the rain enters the tank T_L later; rounded to an integer multiple of dt) | **Calibrated** 0 is no lag ([Lag time](#lag-time)) |
 | sfm_out_kind(z) | none | outlet 1: surface cells / 2: out of the system | **Given** required |
 | sfm_out_cell(1:2, k, z) | none | outlet cells (i, j) (up to 99) | **Given** required with sfm_out_kind = 1 |
 | sfm_out_w(k, z) | 1 (one cell) | distribution ratios of the outlets (sum 1) | **Given** required with several cells |
@@ -303,6 +335,10 @@ The labels in the Basis column are explained in [How to read the basis of a defa
   (the smaller P, the faster the response to large floods and the slower to small ones).
   P = 1 is a linear reservoir with a constant time constant K [h] independent of the
   runoff.
+- The lag time `sfm_tl_h` represents the part of the delay from the start of rain to the
+  rise of the runoff that does not depend on the size of the runoff. The delay that
+  changes with the size of the runoff is represented by K and P, so fit both to the
+  observed hydrograph.
 - The initial runoff rate `sfm_q0_mmh` affects the response to the first rain. If the
   discharge before rain is observed, give it divided by the zone area. A long spin-up
   that is saved and used as the initial state through a restart is also possible
@@ -321,7 +357,10 @@ The labels in the Basis column are explained in [How to read the basis of a defa
   by the distribution ratios + rain; S_total balance; rain distribution and area
   averaging; stop of the strict mode; baseflow; display of defaults; synchronisation
   interval `dt_sfm = 60` s; save → restart agreement (including the middle of an
-  interval); combination with VZ and stop on overlapping zones.
+  interval); combination with VZ and stop on overlapping zones. The lag time (0.5, 1 and
+  0.25 h) is checked by the exact and reference solutions for the lagged rain (within
+  3×10⁻⁷ relative), water in transit = rain of the last T_L × area, the balance, save →
+  restart, and a synchronisation interval of 60 s.
 - [examples/source_area](../../../examples/source_area/en/README.md): a supplement of the
   example of a mountain catchment on real terrain. The rain of the catchment runs is put on
   three tanks (`make sfm`), and their runoff is laid over the outlet runoff of the run that

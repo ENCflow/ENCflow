@@ -5,14 +5,20 @@ module m_sfm
   ! VZ 流出(§87)と同じで、共通部は m_zonerunoff(入力群 = 区画)。
   !
   ! 【モデル】区画 g のタンク(単位面積あたりの量):
-  !     dS/dt = r(t) − q,   S = K·q^P
+  !     dS/dt = r(t − T_L) − q,   S = K·q^P
   !   S [mm]・q [mm/h] の慣用の単位で K を与える(K の次元は mm^(1−P)·h^P)。
   !   r は区画に降った地上雨量(f_sfm_rain = 0: 区画内のセルで一致を要求、
   !   = 1: 区画内の面積平均 = 独自の近似)。区画のすべてのセルが同じ単位面積
   !   流出を持ち、セルごとのパラメータはない。区画の流出 q·A_g は出口
   !   (地表セル / 系外)へ瞬間的に移す(側方の遅れは解かない。VZ と同じ近似)。
-  !   雨はすべてタンクに入り、損失はない。遅れ時間 T_L・一次流出率 f1・飽和雨量
-  !   R_sa・2 価の貯留関数(Prasad 型・星・山岡型)は初版に含めない(§106.1)。
+  !   雨はすべてタンクに入り、損失はない。一次流出率 f1・飽和雨量 R_sa・2 価の
+  !   貯留関数(Prasad 型・星・山岡型)は持たない(§106.1)。
+  ! 【遅れ時間】(sfm_tl_h。§106.6)木村の q_l(t) = q(t + T_L)(タンクの流出が T_L 後に
+  !   流域末端に現れる)を、雨を T_L 遅らせてタンクに入れる形で表す(初期状態が定常なら
+  !   出口の流出の時系列は同じ)。T_L は時間刻み dt の整数倍 nlag に丸める。遅れの間の
+  !   雨は区画ごとの「遅れ列」(区分一定の区間の並び = 連長圧縮。メモリは dt に依らない)
+  !   に置き、移動中の水として台帳に数える。計算開始時の遅れ列は初期の流出強度 q0 の
+  !   定常(移動中の水 = q0·T_L)。T_L = 0 は遅れ列を持たず、従来と同じ演算をする。
   !
   ! 【解法】(独自の選択)後退 Euler: S1 + h·q(S1) = S0 + h·r をスカラーの Newton 法
   !   (区間 [0, S0 + h·r] の二分法で保護。q は S の増加関数なので解は一意)で解く。
@@ -52,7 +58,8 @@ module m_sfm
   public :: m_sfm_record
   public :: m_sfm_dispose
 
-  integer, parameter :: save_version = 20261111   ! sfm.dat の形式の版(形式変更日。§7)
+  integer, parameter :: save_version = 2026111102 ! sfm.dat の形式の版(形式変更日 2026-11-11 の 2 回目
+                                                   ! = §7 の "b"。遅れ列を加えた)
   real(real64), parameter :: mmh = 3.6e6_real64    ! mm/h ↔ m/s の換算(1 m/s = 3.6e6 mm/h)
   real(real64), parameter :: s_abs = 1.0e-9_real64 ! 時間誤差の尺度の下限 (m)
 
@@ -74,6 +81,14 @@ module m_sfm
     real(real64) :: vstore0 = 0.0_real64       ! 計算開始時の貯留 (m3)
     real(real64) :: vstore = 0.0_real64        ! 現在の貯留 A_g·S (m3)
     real(real64) :: dvlast = 0.0_real64        ! 直近の同期区間の流出 (m3)
+    ! 遅れ時間(§106.6)
+    real(real64) :: tlh = 0.0_real64           ! 遅れ時間の入力値 (h)
+    real(real64) :: tlah = 0.0_real64          ! 採用した遅れ時間 nlag·dt (h)
+    integer :: nlag = 0                        ! 遅れのステップ数(T_L を dt の倍数に丸めた値。0 = 遅れなし)
+    integer :: nq = 0                          ! 遅れ列の区間数
+    real(real64), allocatable :: qr(:)         ! 遅れ列の区間の雨 (m/s。先頭が次にタンクへ入る)
+    integer, allocatable :: qn(:)              ! 遅れ列の区間のステップ数(合計 = nlag)
+    real(real64) :: vlag = 0.0_real64          ! 移動中の水 = 遅れ列の雨の体積 A_g·Σ r·n·dt (m3)
   end type
 
   !-------------------------------------------
@@ -86,6 +101,7 @@ module m_sfm
     type(t_sfmtank), allocatable :: tanks(:)   ! 区画のタンク
     real(real64) :: tol = 0.0_real64           ! 時間誤差の相対許容(流出強度に対する比)
     real(real64) :: dtmin = 0.0_real64         ! 内部刻みの下限 (s)
+    logical :: have_lag = .false.              ! 遅れ時間のある区画があるか(sfm_zone.csv の vlag 列)
     real(real64), allocatable :: dvz(:)        ! (1:nzone) 直近の同期区間の区画の流出 (m3。作業)
     integer :: un_zone = 0                     ! CSV 装置番号(rank0)
     logical :: initialized = .false.
@@ -140,10 +156,11 @@ subroutine m_sfm_init(sf, p, g, b, s, multi, vzr)
 
   if (p%f_state_restore > 0) call restore_state(sf, p)
 
-  ! 貯留の初期値(restore 時は復元したタンクの状態から)
+  ! 貯留の初期値(restore 時は復元したタンクの状態と遅れ列から)。vstore0 は移動中の水を含む
   do z = 1, sf%zr%nzone
     sf%tanks(z)%vstore = sf%zr%zones(z)%area * sf%tanks(z)%s
-    if (p%f_state_restore <= 0) sf%tanks(z)%vstore0 = sf%tanks(z)%vstore
+    sf%tanks(z)%vlag = sf%zr%zones(z)%area * lag_volume(sf%tanks(z), real(p%dt, real64))
+    if (p%f_state_restore <= 0) sf%tanks(z)%vstore0 = sf%tanks(z)%vstore + sf%tanks(z)%vlag
   end do
   s%sfstore = total_storage(sf)
 
@@ -177,8 +194,10 @@ end subroutine
 !----------------------------------------------------------------------
 ! 区画の時系列 CSV sfm_zone.csv(dt_record 間隔。値は全ランク同値で rank0 が書く。
 ! 直近の同期時刻の値)
-!   rain: 直近ステップの雨 (mm/h)、q: タンクの流出強度 (mm/h)、S: 貯留 (mm)、
-!   区画の累積水量 (m3) と収支残差(貯留変化 − (入力 − 流出))
+!   rain: 直近ステップの雨 (mm/h。地上の雨。遅れ時間があるとタンクへはその T_L 後に入る)、
+!   q: タンクの流出強度 (mm/h)、S: 貯留 (mm)、区画の累積水量 (m3) と収支残差
+!   (貯留と移動中の水の変化 − (入力 − 流出))。遅れ時間のある区画があれば vlag
+!   (移動中の水 m3)の列を residual の後に置く(基底流の vbase はその後 = 最後)
 !----------------------------------------------------------------------
 subroutine m_sfm_record(sf, s)
   type(t_sfm), intent(in) :: sf
@@ -190,10 +209,14 @@ subroutine m_sfm_record(sf, s)
   if (.not. is_root) return
   do z = 1, sf%zr%nzone
     associate (tk => sf%tanks(z), zc => sf%zr%zones(z))
+      ! 遅れなしの区画は従来と同じ式(-Ofast の並べ替えで丸めが変わらないよう、移動中の水は
+      ! 遅れのある区画だけ別に足す)
       res = tk%vstore - tk%vstore0 - tk%vin + tk%vdrain
+      if (tk%nlag > 0) res = res + tk%vlag
       write(sf%un_zone, '(f0.2,",",i0,10(",",es23.15))', advance='no') s%t, z, &
             es_out([zc%area, sf%zr%rlast(z) * mmh, qfun(tk, tk%s) * mmh, tk%s * 1.0e3_real64, &
                     tk%vin, tk%vstore, tk%vdrain, zc%vint, zc%vext, res])
+      if (sf%have_lag) write(sf%un_zone, '(",",es23.15)', advance='no') es_out(tk%vlag)
       if (sf%zr%have_base) write(sf%un_zone, '(",",es23.15)', advance='no') es_out(zc%vbase)
       write(sf%un_zone, '(a)') ""
     end associate
@@ -299,7 +322,9 @@ end subroutine
 ! 区画: 区画番号マップ(共通基盤)・タンクのパラメータと初期条件・出口と基底流
 !   K は必須(流域ごとに桁で変わり、根拠を示せる一般の既定がない)。P の既定は
 !   木村(1961)の標準値 0.6、初期の流出強度 q0 の既定は VZ と同じ 0.1 mm/h
-!   (経験値。§87.7)。採用値は必ず表示する
+!   (経験値。§87.7)、遅れ時間 T_L の既定は 0(遅れなし)。採用値は必ず表示する。
+!   T_L は dt の整数倍 nlag に丸め(誤差 dt/2 以下)、丸めた値も表示する。遅れ列の
+!   初期値は q0 の定常(区間 1 つ = 雨 q0 が nlag ステップ)
 !----------------------------------------------------------------------
 subroutine setup_zones(sf, p, g, b, list)
   type(t_sfm), intent(inout) :: sf
@@ -311,15 +336,17 @@ subroutine setup_zones(sf, p, g, b, list)
   real, parameter :: q0_default_mmh = 0.1  ! 降雨前の流出率の目安(経験値。VZ と同じ)
   integer, allocatable :: zmap(:,:), grp(:)
   integer :: z, nzn
-  real :: kk, pp, q0
+  real :: kk, pp, q0, tl
+  real(real64) :: tla
   character(len=16) :: tag
+  character(len=256) :: line
 
   ! --- 区画番号マップ(共通基盤: 読み込み・セルの検査・セル数と面積・帯の区画番号) ---
   call zr_read_map(sf%zr, p, g, b, list%fn_sfm_zone, "fn_sfm_zone", sfm_nzonemax, zmap)
   nzn = sf%zr%nzone
   do z = nzn + 1, sfm_nzonemax
     if (list%sfm_out_kind(z) > -9998 .or. list%sfm_k(z) > -9998.0 .or. list%sfm_p(z) > -9998.0 .or. &
-        list%sfm_q0_mmh(z) > -9998.0 .or. list%sfm_base(1,1,z) > -9998.0 .or. &
+        list%sfm_q0_mmh(z) > -9998.0 .or. list%sfm_tl_h(z) > -9998.0 .or. list%sfm_base(1,1,z) > -9998.0 .or. &
         len_trim(list%fn_sfm_base(z)) > 0) then
       call par_stop("list_sfm_zone: zone "//itoa(z)//" is set but absent from fn_sfm_zone")
     end if
@@ -344,7 +371,9 @@ subroutine setup_zones(sf, p, g, b, list)
                        unset = -9999.0)
     if (.not. (kk > 0.0)) call par_stop("list_sfm_zone: sfm_k"//trim(tag)//" must be > 0")
     if (.not. (pp > 0.0 .and. pp <= 1.0)) call par_stop("list_sfm_zone: sfm_p"//trim(tag)//" must satisfy 0 < P <= 1")
+    tl = param_default("sfm", "sfm_tl_h"//trim(tag), list%sfm_tl_h(z), 0.0, " h", unset = -9999.0)
     if (.not. (q0 >= 0.0)) call par_stop("list_sfm_zone: sfm_q0_mmh"//trim(tag)//" must be >= 0")
+    if (.not. (tl >= 0.0)) call par_stop("list_sfm_zone: sfm_tl_h"//trim(tag)//" must be >= 0 (h)")
     associate (tk => sf%tanks(z))
       tk%k = real(kk, real64)
       tk%p = real(pp, real64)
@@ -353,6 +382,26 @@ subroutine setup_zones(sf, p, g, b, list)
       tk%q0mmh = real(q0, real64)
       tk%s = tk%k * tk%q0mmh**tk%p * 1.0e-3_real64     ! S0 [m] = K·q0^P [mm] / 1000
       tk%hnext = real(p%dt, real64)
+      ! 遅れ時間: dt の整数倍に丸める。遅れ列の初期値は q0 の定常
+      tk%tlh = real(tl, real64)
+      tk%nlag = nint(tk%tlh * 3600.0_real64 / real(p%dt, real64))
+      tla = real(tk%nlag, real64) * real(p%dt, real64) / 3600.0_real64
+      tk%tlah = tla
+      if (tl > 0.0) then
+        write(line, '(a,i0,a,g0.8,a,i0,a)') "sfm: zone ", z, " lag time T_L adopted as ", tla, &
+              " h (", tk%nlag, " steps of dt)"
+        if (abs(tla - tk%tlh) > 1.0e-9_real64 * tk%tlh) then
+          write(line, '(a,a,g0.8,a)') trim(line), "; rounded from ", tk%tlh, " h to a multiple of dt"
+        end if
+        call par_info(trim(line))
+      end if
+      if (tk%nlag > 0) then
+        allocate(tk%qr(1:4), tk%qn(1:4))
+        tk%nq = 1
+        tk%qr(1) = tk%q0mmh / mmh
+        tk%qn(1) = tk%nlag
+        sf%have_lag = .true.
+      end if
     end associate
   end do
 
@@ -370,12 +419,14 @@ subroutine sync_interval(sf, p, s)
   type(t_sfm), intent(inout) :: sf
   type(t_sysparam), intent(in) :: p
   type(t_state), intent(inout) :: s
-  integer :: z, k
-  real(real64) :: rin, vout
+  integer :: z, k, ntseg
+  real(real64) :: rin, vout, h
+  real(real64), allocatable :: tsegl(:), tsegr(:)
   logical :: ok
   character(len=512) :: msg
 
   if (sf%zr%kstep == 0) return
+  h = real(p%dt, real64)
 
   ! --- 区間の各ステップの雨(区画ごと)を確定し、区分一定の区間に圧縮する ---
   call zr_collect_input(sf%zr, p)
@@ -391,7 +442,15 @@ subroutine sync_interval(sf, p, s)
         end if
         rin = rin + sf%zr%segl(k,z) * sf%zr%segr(k,z)
       end do
-      call tank_advance(tk, sf%zr%nseg(z), sf%zr%segl(:,z), sf%zr%segr(:,z), sf%tol, sf%dtmin, vout, ok)
+      if (tk%nlag == 0) then
+        call tank_advance(tk, sf%zr%nseg(z), sf%zr%segl(:,z), sf%zr%segr(:,z), sf%tol, sf%dtmin, vout, ok)
+      else
+        ! 遅れ時間: 区間の雨を遅れ列の末尾に足し、先頭から区間と同じステップ数を取り出して
+        ! タンクの入力にする(遅れ列の長さは nlag ステップのまま)
+        call lag_shift(tk, sf%zr%nseg(z), sf%zr%segl(:,z), sf%zr%segr(:,z), h, ntseg, tsegl, tsegr)
+        call tank_advance(tk, ntseg, tsegl, tsegr, sf%tol, sf%dtmin, vout, ok)
+        tk%vlag = area * lag_volume(tk, h)
+      end if
       if (.not. ok) then
         write(msg, '(a,i0,a,f0.1,a,es10.3,a)') "sfm: zone ", z, " cannot advance at t=", s%t, &
               " s (internal time step fell below sfm_dt_min=", sf%dtmin, " s)"
@@ -411,6 +470,100 @@ subroutine sync_interval(sf, p, s)
   ! --- 台帳 ---
   s%sfstore = total_storage(sf)
 end subroutine
+
+
+!----------------------------------------------------------------------
+! 遅れ列の更新(§106.6): 区間の区分一定の雨(segl [s]・segr [m/s])をステップ数に
+! 直して遅れ列の末尾に足し(直前の区間と同じ雨なら継ぎ足す)、先頭から区間と同じ
+! ステップ数を取り出してタンクの入力の区間 tl [s]・tr [m/s] を返す。遅れ列の長さは
+! nlag ステップに保たれる(区間の数は雨の変化の数で決まり、dt に依らない)
+!----------------------------------------------------------------------
+subroutine lag_shift(tk, nseg, segl, segr, h, nt, tl, tr)
+  type(t_sfmtank), intent(inout) :: tk
+  integer, intent(in) :: nseg
+  real(real64), intent(in) :: segl(:), segr(:)
+  real(real64), intent(in) :: h
+  integer, intent(out) :: nt
+  real(real64), allocatable, intent(out) :: tl(:), tr(:)
+  integer :: k, n, nk, i, take, j
+
+  ! --- 末尾に足す ---
+  nk = 0
+  do k = 1, nseg
+    n = nint(segl(k) / h)
+    nk = nk + n
+    if (tk%nq > 0) then
+      if (tk%qr(tk%nq) == segr(k)) then
+        tk%qn(tk%nq) = tk%qn(tk%nq) + n
+        cycle
+      end if
+    end if
+    call lag_grow(tk, tk%nq + 1)
+    tk%nq = tk%nq + 1
+    tk%qr(tk%nq) = segr(k)
+    tk%qn(tk%nq) = n
+  end do
+
+  ! --- 先頭から nk ステップを取り出す ---
+  allocate(tl(1:tk%nq), tr(1:tk%nq))
+  nt = 0
+  i = 1
+  do while (nk > 0)
+    take = min(tk%qn(i), nk)
+    nt = nt + 1
+    tl(nt) = real(take, real64) * h
+    tr(nt) = tk%qr(i)
+    tk%qn(i) = tk%qn(i) - take
+    nk = nk - take
+    if (tk%qn(i) == 0) i = i + 1
+  end do
+  ! 取り出し終えた区間を詰める
+  j = 0
+  do k = i, tk%nq
+    j = j + 1
+    tk%qr(j) = tk%qr(k)
+    tk%qn(j) = tk%qn(k)
+  end do
+  tk%nq = j
+end subroutine
+
+
+!----------------------------------------------------------------------
+! 遅れ列の容量を n 以上にする(倍々に伸ばす)
+!----------------------------------------------------------------------
+subroutine lag_grow(tk, n)
+  type(t_sfmtank), intent(inout) :: tk
+  integer, intent(in) :: n
+  real(real64), allocatable :: tr(:)
+  integer, allocatable :: tn(:)
+  integer :: ncap
+  if (.not. allocated(tk%qr)) then
+    allocate(tk%qr(1:max(n, 4)), tk%qn(1:max(n, 4)))
+    return
+  end if
+  ncap = size(tk%qr)
+  if (n <= ncap) return
+  ncap = max(n, 2 * ncap)
+  allocate(tr(1:ncap), tn(1:ncap))
+  tr(1:tk%nq) = tk%qr(1:tk%nq)
+  tn(1:tk%nq) = tk%qn(1:tk%nq)
+  call move_alloc(tr, tk%qr)
+  call move_alloc(tn, tk%qn)
+end subroutine
+
+
+!----------------------------------------------------------------------
+! 遅れ列の雨の量(単位面積 m。移動中の水)= Σ r·n·dt
+!----------------------------------------------------------------------
+pure real(real64) function lag_volume(tk, h) result(v)
+  type(t_sfmtank), intent(in) :: tk
+  real(real64), intent(in) :: h
+  integer :: i
+  v = 0.0_real64
+  do i = 1, tk%nq
+    v = v + tk%qr(i) * real(tk%qn(i), real64) * h
+  end do
+end function
 
 
 !----------------------------------------------------------------------
@@ -537,14 +690,15 @@ end function
 
 
 !----------------------------------------------------------------------
-! 全区画のタンク貯留を柱状換算の総和で返す(Σ S_g·A_g/(dx·dy)。calcstat 用)
+! 全区画のタンク貯留と移動中の水を柱状換算の総和で返す
+! (Σ (S_g·A_g + 遅れ列の水)/(dx·dy)。calcstat 用。遅れなしなら vlag = 0)
 !----------------------------------------------------------------------
 real(real64) function total_storage(sf)
   type(t_sfm), intent(in) :: sf
   integer :: z
   total_storage = 0.0_real64
   do z = 1, sf%zr%nzone
-    total_storage = total_storage + sf%tanks(z)%vstore
+    total_storage = total_storage + (sf%tanks(z)%vstore + sf%tanks(z)%vlag)
   end do
   total_storage = total_storage / sf%zr%dxdy
 end function
@@ -564,6 +718,11 @@ subroutine report_zones(sf)
             ", area ", zc%area, " m2, K ", tk%k, ", P ", tk%p, ", initial q ", tk%q0mmh, " mm/h (S ", &
             tk%s * 1.0e3_real64, " mm)"
       call par_info(trim(line))
+      if (tk%nlag > 0) then
+        write(line, '(a,g0.8,a,i0,a)') "    lag time T_L ", tk%tlah, " h (", tk%nlag, &
+              " steps of dt; the rain enters the tank T_L later)"
+        call par_info(trim(line))
+      end if
       call zr_report_outlets(sf%zr, z)
     end associate
   end do
@@ -580,6 +739,7 @@ subroutine open_csv(sf, p)
   open(newunit=sf%un_zone, file=trim(p%dir_result)//"/sfm_zone.csv", status='replace')
   write(sf%un_zone, '(a)', advance='no') "time(s),zone,area(m2),rain(mm/h),q(mm/h),S(mm),vin(m3)," // &
                                          "vstore(m3),vdrain(m3),vsurface(m3),vexternal(m3),residual(m3)"
+  if (sf%have_lag) write(sf%un_zone, '(a)', advance='no') ",vlag(m3)"
   if (sf%zr%have_base) write(sf%un_zone, '(a)', advance='no') ",vbase(m3)"
   write(sf%un_zone, '(a)') ""
 end subroutine
@@ -600,12 +760,14 @@ subroutine save_state(sf, p)
   open(newunit=un, file=trim(p%dir_save)//'/sfm.dat', form='unformatted', status='replace')
   write(un) save_version, sf%zr%nzone, sf%zr%nocell
   do z = 1, sf%zr%nzone
-    write(un) sf%zr%zones(z)%ncell, sf%tanks(z)%k, sf%tanks(z)%p
+    write(un) sf%zr%zones(z)%ncell, sf%tanks(z)%k, sf%tanks(z)%p, sf%tanks(z)%nlag
   end do
   do z = 1, sf%zr%nzone
     associate (tk => sf%tanks(z), zc => sf%zr%zones(z))
       write(un) tk%s, tk%hnext, tk%nacc, tk%nrej, sf%zr%rlast(z), tk%vin, tk%vdrain, zc%vint, zc%vext, &
                 tk%vstore0, tk%dvlast, zc%vbase
+      write(un) tk%nq                  ! 遅れ列(遅れなしなら 0 で中身なし)
+      if (tk%nq > 0) write(un) tk%qr(1:tk%nq), tk%qn(1:tk%nq)
     end associate
   end do
   if (sf%zr%nocell > 0) then
@@ -625,7 +787,7 @@ subroutine restore_state(sf, p)
   type(t_sysparam), intent(in) :: p
   character(:), allocatable :: fname
   logical :: found, mismatch
-  integer :: un, ver, nzn, noc, z, ncell, ios
+  integer :: un, ver, nzn, noc, z, ncell, ios, nlag, nq
   real(real64) :: kk, pp
   real(real64), allocatable :: tmp(:)
   integer, allocatable :: oc(:,:)
@@ -646,18 +808,26 @@ subroutine restore_state(sf, p)
     mismatch = .true.
   else
     do z = 1, nzn
-      read(un) ncell, kk, pp
-      if (ncell /= sf%zr%zones(z)%ncell .or. kk /= sf%tanks(z)%k .or. pp /= sf%tanks(z)%p) mismatch = .true.
+      read(un) ncell, kk, pp, nlag
+      if (ncell /= sf%zr%zones(z)%ncell .or. kk /= sf%tanks(z)%k .or. pp /= sf%tanks(z)%p .or. &
+          nlag /= sf%tanks(z)%nlag) mismatch = .true.
     end do
   end if
   if (mismatch) then
     close(un)
-    call par_stop("sfm: the configuration (zones, K, P or outlets) differs from the saved state "//fname)
+    call par_stop("sfm: the configuration (zones, K, P, lag steps or outlets) differs from the saved state "//fname)
   end if
   do z = 1, nzn
     associate (tk => sf%tanks(z), zc => sf%zr%zones(z))
       read(un) tk%s, tk%hnext, tk%nacc, tk%nrej, sf%zr%rlast(z), tk%vin, tk%vdrain, zc%vint, zc%vext, &
                tk%vstore0, tk%dvlast, zc%vbase
+      read(un) nq
+      tk%nq = 0
+      if (nq > 0) then
+        call lag_grow(tk, nq)
+        read(un) tk%qr(1:nq), tk%qn(1:nq)
+        tk%nq = nq
+      end if
     end associate
   end do
   if (noc > 0) then

@@ -29,7 +29,8 @@ main.f90 ─ m_main.f90(組み立て・時間ループ・終了処理。複数�
   │                  各セルの土層厚の深さで流束を読み出して区画で集約、出口セルか系外へ
   │                  直接排水。VZ 貯留は hg と別物。fn_vz。§87)
   │    m_sfm         貯留関数法の区画流出(木村 1961 の S = K·q^P。区画ごとに 1 つのタンクを
-  │                  全ランク冗長に解き、流出を出口セルか系外へ直接移す。fn_sfm。§106)
+  │                  全ランク冗長に解き、流出を出口セルか系外へ直接移す。遅れ時間 T_L は雨の
+  │                  遅れ列 = 区分一定の区間の並び。fn_sfm。§106)
   │    m_zonerunoff  区画流出の共通基盤(VZ と貯留関数が共有: 区画番号ラスタ・雨の回収と
   │                  入力群ごとの集約・出口・基底流。モデルの容器の成分 zr。§106.2)
   │    m_geomorph    土砂・地形変化(加算: creep / fluvial / suspend / wash / splash / debris /
@@ -225,7 +226,7 @@ calcstat                      統計(S 台帳・max 類。決定的総和)
 |---|---|---|---|
 | p | t_sysparam | m_sysparam | 実行制御。init 後は全モジュール読み取り専用 |
 | g | t_geoinfo | m_geoinfo | 地形 z(入力)・粗度 rn・家屋 gv/bb/lm(入力)・マスク x/sw/rw・格子。原則不変(動的な標高は s%z、動的な空隙率は s%gv/s%lm。g%gv/g%lm の帯は band_shrink で解放)。例外は BMI の P 区分: set_value('rn') が g%rn の帯を上書きする(§77) |
-| s | t_state | m_state | **時間発展する場の正本**: h, e(=z+h), u, v, m, n, vv, s%z(計算標高), sd(土層厚), hg(地下貯留), hg2(風化基岩層), hgc(管路連続体層), hss/hgs(塩水層厚), hs(土砂), hb(動く底層。z・sd の内数), sf(河床の細粒分の厚さ), fx(植生定着度), ht(崖錐の厚さ), cq/cg/crs(輸送物質の地表・地下・ため池プール), hd/wd(流動・堆積流木), hbd/wbd(流動・堆積瓦礫), gv/lm(空隙率と有効慣性係数。§63), swe(積雪), hi(氷河の氷厚), hl(溶岩厚), hrs(ため池), vzp/vzstore(VZ の台帳 = 回収済み未同期の雨と区画の VZ 貯留の総和。柱の状態 ψ は t_vzflow 私有。§87)、sfp/sfstore(貯留関数法の台帳 = 回収済み未同期の雨とタンクの貯留の総和。タンクの状態は t_sfm 私有。§106)、wvh/wvdir/wvub/wvdw(沿岸の波浪場の診断量 = 波高・平均波向・軌道流速・砕波散逸。方向ビンの状態 E_m(流れの作用ありは作用量 N_m)は t_wavefield 私有。§90)、wvfx/wvfy・wvus/wvvs・wvsp・wver(波→流れ = 外力・Stokes 輸送・波・流れの摩擦の速さ・ローラーのエネルギー。y 成分は流れと同じく南が正。wf_flow >= 1 のときだけ確保。§90)、wvex/wvey・wvae・wvua(波→土砂 = 平均波向の単位ベクトル・軌道の振幅・岸向きの速度。geomorph の f_wfsed = 1 の要求 wv_sed のときだけ m_wavefield が確保して帯±ハロを書く)・wvnub(砕波による渦動粘性 ν_w。swflow の wf_break_visc > 0 の要求 wv_visc のときだけ)・wvub0/wvkb(乱れを含まない u_rms と底面の乱れ k_b。geomorph の f_wfsed_turb = 1 の要求 wv_turb のときだけ。このとき wvub は攪拌の速さ)・sqbx/sqby・sqsx/sqsy(漂砂の推定。m_geomorph が帯に書く。§90)、最大値統計。save/restore は m_state が束ねる(hg2・swe・hi・hb・VZ の柱・貯留関数のタンク等のモジュール私有 save は各 dispose。契約5) |
+| s | t_state | m_state | **時間発展する場の正本**: h, e(=z+h), u, v, m, n, vv, s%z(計算標高), sd(土層厚), hg(地下貯留), hg2(風化基岩層), hgc(管路連続体層), hss/hgs(塩水層厚), hs(土砂), hb(動く底層。z・sd の内数), sf(河床の細粒分の厚さ), fx(植生定着度), ht(崖錐の厚さ), cq/cg/crs(輸送物質の地表・地下・ため池プール), hd/wd(流動・堆積流木), hbd/wbd(流動・堆積瓦礫), gv/lm(空隙率と有効慣性係数。§63), swe(積雪), hi(氷河の氷厚), hl(溶岩厚), hrs(ため池), vzp/vzstore(VZ の台帳 = 回収済み未同期の雨と区画の VZ 貯留の総和。柱の状態 ψ は t_vzflow 私有。§87)、sfp/sfstore(貯留関数法の台帳 = 回収済み未同期の雨とタンクの貯留・遅れ時間の間の移動中の水の総和。タンクの状態と遅れ列は t_sfm 私有。§106)、wvh/wvdir/wvub/wvdw(沿岸の波浪場の診断量 = 波高・平均波向・軌道流速・砕波散逸。方向ビンの状態 E_m(流れの作用ありは作用量 N_m)は t_wavefield 私有。§90)、wvfx/wvfy・wvus/wvvs・wvsp・wver(波→流れ = 外力・Stokes 輸送・波・流れの摩擦の速さ・ローラーのエネルギー。y 成分は流れと同じく南が正。wf_flow >= 1 のときだけ確保。§90)、wvex/wvey・wvae・wvua(波→土砂 = 平均波向の単位ベクトル・軌道の振幅・岸向きの速度。geomorph の f_wfsed = 1 の要求 wv_sed のときだけ m_wavefield が確保して帯±ハロを書く)・wvnub(砕波による渦動粘性 ν_w。swflow の wf_break_visc > 0 の要求 wv_visc のときだけ)・wvub0/wvkb(乱れを含まない u_rms と底面の乱れ k_b。geomorph の f_wfsed_turb = 1 の要求 wv_turb のときだけ。このとき wvub は攪拌の速さ)・sqbx/sqby・sqsx/sqsy(漂砂の推定。m_geomorph が帯に書く。§90)、最大値統計。save/restore は m_state が束ねる(hg2・swe・hi・hb・VZ の柱・貯留関数のタンク等のモジュール私有 save は各 dispose。契約5) |
 | sx | t_enc_status | m_swflow_enc 私有 | エッジ流速 uv・流量 mn(前ステップ確定)・mn1(更新中)。他モジュールから不可視。NH の状態(圧力 φ・活性集合・砕波状態・zprev 等)も submodule 私有で、リスタート保存なし(φ は現在状態から再構築。f_nh_bottom の z̈ だけ再開直後の 1 ステップが異なる。§69) |
 | r, b, … | 各 t_* | 各モジュール | モジュール私有。各過程の作業台帳・サブモデルの状態も `t_*` の成分として持つ(モジュール変数に状態を置くのは m_swflow_enc 系(7 つの変数群 opt/nhp/bcs/dbr/chn/sct/geo と submodule の私有状態)・m_ffactor・dcp だけで、これらは複数インスタンス時に `*_ctx_swap` で枠へ退避・復帰する。§71)。リスタートは各自の save ファイル(契約5)。例外: m_bedmotion は私有 save を持たず、再開時刻の変位を表から求めて「適用済み」とする(§70) |
 
