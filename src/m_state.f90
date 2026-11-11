@@ -155,6 +155,9 @@ module m_state
     logical :: sf_active = .false.  ! 貯留関数法の有効化(m_sfm_init が設定)
     real, allocatable :: sfp(:,:)   ! 回収済み・未同期の雨 (m。セル面積基底 pre·dt の積算。
                                     ! 確保は m_sfm_init(有効時のみ)、同期でゼロ戻し)
+    real, allocatable :: sfe(:,:)   ! タンクへ渡す蒸発散の要求 (m。セル面積基底。そのステップの
+                                    ! m_evap の残りの要求。確保は m_sfm_init(fn_sfm と fn_evap の
+                                    ! 両方が有効なときのみ)、m_sfm_evap が引いてゼロ戻し。§106.7)
     ! 沿岸の波浪場(fn_wavefield。§90)の診断量。確保と wv_active の設定は m_wavefield_init
     ! (有効時のみ)。状態(ビン別のエネルギー)は t_wavefield の私有で、ここは書き出しと
     ! 他プロセスへの受け渡し用の導出量(帯 js..je を更新ごとに上書き)
@@ -1065,6 +1068,7 @@ subroutine m_state_dispose(s, p)
   if (allocated(s%hg2)) deallocate(s%hg2)
   if (allocated(s%vzp)) deallocate(s%vzp)
   if (allocated(s%sfp)) deallocate(s%sfp)
+  if (allocated(s%sfe)) deallocate(s%sfe)
   if (allocated(s%wvh)) deallocate(s%wvh)
   if (allocated(s%wvdir)) deallocate(s%wvdir)
   if (allocated(s%wvub)) deallocate(s%wvub)

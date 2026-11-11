@@ -11,6 +11,10 @@ Python 標準ライブラリのみ。使い方:
   python3 Check_sfzone.py partial result_sync result_psync_restart   # 同期区間の途中で保存 → 再開
   python3 Check_sfzone.py steady  result_steady           # 一定の雨での定常 q → r
   python3 Check_sfzone.py mosaic  result result_mosaic    # VZ との併用
+  python3 Check_sfzone.py lag     result result_lag [tol] # 遅れ時間(param_lag.txt。tol は参照解との許容)
+  python3 Check_sfzone.py et      result_et               # 蒸発散をタンクから引く(param_et.txt)
+  python3 Check_sfzone.py et_steady result_et_steady      # 蒸発散ありの定常(param_et_steady.txt)
+  python3 Check_sfzone.py ic res a1 smax_mm a2           # 降雨遮断の 2 段の遮断率で有効雨量(param_ic.txt)
 
 タンク(単位面積): dS/dt = r − q、S [mm] = K·q[mm/h]^P。SI では q = c·S^m
 (m = 1/P、c = (1000/K)^m / 3.6e6、S [m]、q [m/s])。
@@ -42,6 +46,7 @@ A = 10.0 * 10.0
 NVAL = 43                       # 領域内セル数(区画 40 + 受水 3)
 RAIN_TABLE = [(0, 1), (60, 1), (61, 50), (180, 50), (181, 0), (9999, 0)]   # (min, mm/h)
 TANK = {1: (10.0, 0.6, 0.1), 2: (2.0, 1.0, 1.0), 3: (20.0, 0.4, 0.0)}      # K, P, q0 (mm/h)
+NLAG = {1: 360, 2: 720, 3: 180}  # param_lag.txt の遅れ時間のステップ数(0.5 h、1 h、0.2501 h → 0.25 h)
 KIND = {1: 1, 2: 1, 3: 2}       # 出口 1: 地表セル / 2: 系外
 # param_bflow.txt の区画 1 の基底流(namelist)。区画 3 は data_sfzone/base3.txt から読む
 BASE1 = [(30.5, 0.0), (90.0, 2.0), (90.0, 4.0), (300.25, 1.0)]             # (min, mm/h)
@@ -116,6 +121,11 @@ def tank_coef(k, p):
 
 def qfun(s, m, c):
     return c * s ** m if s > 0.0 else 0.0
+
+
+def lagged(rates, nlag, q0):
+    """雨を nlag ステップ遅らせた入力(開始前は初期の流出強度 q0 の定常 = 遅れ列の初期値)"""
+    return [q0 / 3.6e6] * nlag + rates[:len(rates) - nlag]
 
 
 def reference_storage(k, p, q0, rates, nsub=10):
@@ -514,6 +524,254 @@ def check_mosaic(res0, res):
     check(worst < 2e-12 + 1e-11 * tend, "Log S_total = S0 + rain - VZ outflow/area (max abs err %.2e m)" % worst)
 
 
+def check_lag(res0, res, tol=1e-6):
+    """遅れ時間(param_lag.txt): 雨を T_L 遅らせた入力に対する厳密解・参照解、移動中の水、収支"""
+    print("== sfzone lag: %s vs %s" % (res0, res))
+    h0, _ = zone_rows(res0)
+    hz, zone = zone_rows(res)
+    check("vlag(m3)" not in h0 and hz[:len(h0)] == h0 and hz[len(h0):] == ["vlag(m3)"],
+          "sfm_zone.csv has the vlag column only when a zone has a lag time (after residual)")
+    zr = by_zone(hz, zone)
+    it, iS, iq, ivin, iarea = (hz.index("time(s)"), hz.index("S(mm)"), hz.index("q(mm/h)"),
+                               hz.index("vin(m3)"), hz.index("area(m2)"))
+    ires, ivst, ilag = hz.index("residual(m3)"), hz.index("vstore(m3)"), hz.index("vlag(m3)")
+    tend = zr[1][-1][it]
+    nstep = int(round(tend / DT))
+    rates = rain_steps(nstep)
+    # 入力(地上の雨)は遅れによらない
+    _, z0 = zone_rows(res0)
+    win = max(abs(a[ivin] - b[ivin]) / a[ivin] for a, b in zip(z0, zone)) if len(z0) == len(zone) else 1.0
+    check(win < 1e-12, "zone input vin = the run without lag (the lag acts after the recovery of the rain; "
+          "worst rel %.1e)" % win)
+    for z in (1, 2, 3):
+        k, p, q0 = TANK[z]
+        lr = lagged(rates, NLAG[z], q0)
+        sref = linear_storage(k, q0, lr) if p == 1.0 else reference_storage(k, p, q0, lr)
+        m, c = tank_coef(k, p)
+        ws = wq = wl = 0.0
+        for r in zr[z]:
+            n = int(round(r[it] / DT))
+            if sref[n] > 0.0:
+                ws = max(ws, abs(r[iS] / 1000.0 - sref[n]) / sref[n])
+                qr = qfun(sref[n], m, c) * 3.6e6
+                wq = max(wq, abs(r[iq] - qr) / qr)
+            # 移動中の水 = 直近 nlag ステップの(遅らせる前の)雨 + 開始時の定常分
+            exp_ = r[iarea] * (sum(x * DT for x in rates[max(0, n - NLAG[z]):n])
+                               + max(0, NLAG[z] - n) * DT * q0 / 3.6e6)
+            if exp_ > 0.0:
+                wl = max(wl, abs(r[ilag] - exp_) / exp_)
+            elif r[ilag] != 0.0:
+                wl = max(wl, abs(r[ilag]))
+        check(ws < tol and wq < 2 * tol, "zone %d (T_L = %d steps) storage and outflow = %s for the lagged rain "
+              "(worst rel %.2e, %.2e)" % (z, NLAG[z], "exact solution" if p == 1.0 else "RK4 reference", ws, wq))
+        check(wl < 1e-12, "zone %d in-transit water vlag = rain of the last T_L (and the initial steady part) x area "
+              "(worst rel %.1e)" % (z, wl))
+    worst = max(abs(r[ires]) / max(r[ivin], r[ivst] + r[ilag]) for r in zone)
+    check(worst < 1e-12, "zone water balance residual (storage + in-transit) at rounding level (worst rel %.1e)" % worst)
+    log = read_log(os.path.join(res, "Log.txt"))
+    check_total(log, hz, zone, None, "(lag)")
+
+
+ET_E = 48.0 / 1000.0 / 86400.0   # param_et.txt の PET (m/s)
+ET_ZONE = {1: (0.0, 0), 2: (5.0e-3, 0), 3: (20.0e-3, 180)}   # (S_lim m, 遅れのステップ数)
+
+
+def et_draw(s, d, el):
+    """m_sfm の tank_et_draw と同じ式(el = 0 は供給制限のみ)"""
+    if s <= 0.0:
+        return 0.0
+    if el <= 0.0:
+        return min(s, d)
+    if s - d >= el:
+        return d
+    lin = max(s - el, 0.0)
+    return lin + (s - lin) * (1.0 - math.exp(-(d - lin) / el))
+
+
+def replica_et(k, p, q0, rates, el, nsub=10):
+    """ステップごとに「タンクを進める(RK4、P = 1 は厳密)→ 蒸発散を引く」をなぞる。
+    各ステップ末の S と、累積の蒸発散 (m) を返す"""
+    m, c = tank_coef(k, p)
+    s = k * q0 ** p / 1000.0
+    d = ET_E * DT
+    out, ev, cum = [s], [0.0], 0.0
+    for r in rates:
+        if p == 1.0:
+            tau = 3600.0 * k
+            seq = tau * r
+            s = seq + (s - seq) * math.exp(-DT / tau)
+        else:
+            h = DT / nsub
+            for _ in range(nsub):
+                k1 = r - qfun(s, m, c)
+                k2 = r - qfun(max(s + 0.5 * h * k1, 0.0), m, c)
+                k3 = r - qfun(max(s + 0.5 * h * k2, 0.0), m, c)
+                k4 = r - qfun(max(s + h * k3, 0.0), m, c)
+                s = s + h * (k1 + 2 * k2 + 2 * k3 + k4) / 6.0
+        w = et_draw(s, d, el)
+        s -= w
+        cum += w
+        out.append(s)
+        ev.append(cum)
+    return out, ev
+
+
+def read_evap_total(res):
+    out = {}
+    with open(os.path.join(res, "evap.csv")) as f:
+        rows = list(csv.reader(f))
+    head = [h.strip() for h in rows[0]]
+    it, iv = head.index("time_s"), head.index("ev_total_m3")
+    for r in rows[1:]:
+        if r:
+            out[round(float(r[it]))] = float(r[iv])
+    return out
+
+
+def check_et(res):
+    """蒸発散をタンクから引く(param_et.txt)"""
+    print("== sfzone et: " + res)
+    hz, zone = zone_rows(res)
+    check(hz[-2:] == ["vlag(m3)", "vevap(m3)"], "sfm_zone.csv has vevap after vlag (the lag time of zone 3)")
+    zr = by_zone(hz, zone)
+    it, iS, ivin, ivst, ires, ilag, iev, iarea = (hz.index("time(s)"), hz.index("S(mm)"), hz.index("vin(m3)"),
+        hz.index("vstore(m3)"), hz.index("residual(m3)"), hz.index("vlag(m3)"), hz.index("vevap(m3)"),
+        hz.index("area(m2)"))
+    tend = zr[1][-1][it]
+    nstep = int(round(tend / DT))
+    rates = rain_steps(nstep)
+    for z in (1, 2, 3):
+        k, p, q0 = TANK[z]
+        el, nl = ET_ZONE[z]
+        sref, eref = replica_et(k, p, q0, lagged(rates, nl, q0) if nl > 0 else rates, el)
+        ws = we = 0.0
+        for r in zr[z]:
+            n = int(round(r[it] / DT))
+            ws = max(ws, abs(r[iS] / 1000.0 - sref[n]) / max(sref[n], 1e-6))
+            we = max(we, abs(r[iev] - r[iarea] * eref[n]) / max(r[iarea] * eref[n], 1e-30))
+        check(ws < 2e-6 and we < 2e-6, "zone %d (S_lim = %g mm, lag %d steps) storage and cumulative "
+              "evapotranspiration = step-by-step reference (advance, then draw) (worst rel %.2e, %.2e)"
+              % (z, el * 1e3, nl, ws, we))
+    worst = max(abs(r[ires]) / max(r[ivin], r[ivst] + r[ilag] + r[iev]) for r in zone)
+    check(worst < 1e-12, "zone water balance residual (storage + in-transit + evapotranspiration) at rounding "
+          "level (worst rel %.1e)" % worst)
+    # Log の S_total = S0 + 雨 − (系外流出 + evap.csv の蒸発散 + タンクの蒸発散)/全面積
+    log = read_log(os.path.join(res, "Log.txt"))
+    evt = read_evap_total(res)
+    rows = {}
+    for r in zone:
+        rows.setdefault(round(r[it]), {})[int(r[hz.index("zone")])] = r
+    s0, worst = log[0][2], 0.0
+    for t, v in log.items():
+        if t == 0 or t not in rows or t not in evt:
+            continue
+        out = sum(rows[t][z][hz.index("vexternal(m3)")] + rows[t][z][iev] for z in rows[t]) + evt[t]
+        exp_ = s0 + rain_total(t) - out / (NVAL * A)
+        worst = max(worst, abs(v[2] - exp_))
+    check(worst < 1e-10, "Log S_total = S0 + rain - (outflow + evap.csv + tank evapotranspiration)/area "
+          "(max abs err %.2e m)" % worst)
+
+
+def check_et_steady(res):
+    """一定の雨 10 mm/h と PET 2 mm/h: q → r − E(区画 1・2)、区画 3 は r = q + E·S/S_lim"""
+    print("== sfzone et steady: " + res)
+    hz, zone = zone_rows(res)
+    zr = by_zone(hz, zone)
+    iq = hz.index("q(mm/h)")
+    for z in (1, 2):
+        q = zr[z][-1][iq]
+        check(abs(q - 8.0) / 8.0 < 2e-4, "zone %d at 48 h: q = %.6f mm/h -> r - E = 8 (rel %.1e; the step "
+              "splitting of the tank and the draw)" % (z, q, abs(q - 8.0) / 8.0))
+    k, p, q0 = TANK[3]
+    lo, hi = 0.0, 10.0
+    for _ in range(200):                         # r = q + E·S/S_lim、S = K·q^P (mm, mm/h)
+        q = 0.5 * (lo + hi)
+        if q + 2.0 * (k * q ** p) / 100.0 > 10.0:
+            hi = q
+        else:
+            lo = q
+    qm = zr[3][-1][iq]
+    check(abs(qm - q) / q < 2e-4, "zone 3 at 48 h: q = %.6f mm/h = solution of r = q + E S/S_lim (%.6f, rel %.1e)"
+          % (qm, q, abs(qm - q) / q))
+
+
+def effective_rates(rates, a1, smax, a2):
+    """初期損失モデルの 2 段の遮断率(m_intercept_initloss の step_two_phase と同じ手順)を通した
+    地上雨量 (m/s)。smax は m"""
+    st, out = 0.0, []
+    for r in rates:
+        if not r > 0.0:
+            out.append(r)
+            continue
+        rr = r * DT
+        cap = max(smax - st, 0.0)
+        d = ls = 0.0
+        if cap > 0.0:
+            rf = cap / a1
+            if rr <= rf:
+                d = a1 * rr
+            else:
+                d = cap
+                ls = a2 * (rr - rf)
+        else:
+            ls = a2 * rr
+        st += d
+        out.append(r * (max(rr - d - ls, 0.0) / rr))
+    return out
+
+
+def check_ic(res, a1, smax_mm, a2):
+    """降雨遮断の 2 段の遮断率(全セル一様)を通した有効雨量でタンクが動くこと"""
+    print("== sfzone interception (a1 = %g, smax = %g mm, a2 = %g): %s" % (a1, smax_mm, a2, res))
+    hz, zone = zone_rows(res)
+    zr = by_zone(hz, zone)
+    it, iS, ivin, iarea, ivext = (hz.index("time(s)"), hz.index("S(mm)"), hz.index("vin(m3)"), hz.index("area(m2)"),
+                                  hz.index("vexternal(m3)"))
+    tend = zr[1][-1][it]
+    nstep = int(round(tend / DT))
+    rates = rain_steps(nstep)
+    eff = effective_rates(rates, a1, smax_mm / 1000.0, a2)
+    worst = 0.0
+    for z in (1, 2, 3):
+        for r in zr[z]:
+            n = int(round(r[it] / DT))
+            exp_ = r[iarea] * sum(x * DT for x in eff[:n])
+            worst = max(worst, abs(r[ivin] - exp_) / exp_ if exp_ > 0.0 else abs(r[ivin]))
+    check(worst < 1e-12, "zone input = area x effective rainfall after the two-phase interception (worst rel %.1e)"
+          % worst)
+    # 閉じた形: 満杯に要る雨 R_f = smax/a1 までは (1 − a1) 倍、以後は (1 − a2) 倍が通る
+    # (木村の f1・R_sa は a1 = 1 − f1・smax = (1 − f1) R_sa・a2 = 0 で f1 min(R, R_sa) + max(R − R_sa, 0)、
+    # 初期損失・比例損失型は a1 = 1 で (1 − a2) max(R − smax, 0))
+    rtot = rain_total(tend)
+    rf = smax_mm / 1000.0 / a1
+    exp_ = (1.0 - a1) * min(rtot, rf) + (1.0 - a2) * max(rtot - rf, 0.0)
+    got = zr[1][-1][ivin] / zr[1][-1][iarea]
+    check(abs(got - exp_) / exp_ < 1e-12, "cumulative effective rainfall %.6f mm = (1 - a1) min(R, R_f) + (1 - a2) "
+          "max(R - R_f, 0) = %.6f mm (R = %.3f mm, R_f = smax/a1 = %g mm)" % (got * 1e3, exp_ * 1e3, rtot * 1e3, rf * 1e3))
+    for z in (1, 2, 3):
+        k, p, q0 = TANK[z]
+        sref = linear_storage(k, q0, eff) if p == 1.0 else reference_storage(k, p, q0, eff)
+        ws = 0.0
+        for r in zr[z]:
+            n = int(round(r[it] / DT))
+            if sref[n] > 0.0:
+                ws = max(ws, abs(r[iS] / 1000.0 - sref[n]) / sref[n])
+        check(ws < 1e-6, "zone %d storage = reference solution for the effective rainfall (worst rel %.2e)" % (z, ws))
+    log = read_log(os.path.join(res, "Log.txt"))
+    rows = {}
+    for r in zone:
+        rows.setdefault(round(r[it]), {})[int(r[hz.index("zone")])] = r
+    s0, worst = log[0][2], 0.0
+    for t, v in log.items():
+        if t == 0 or t not in rows:
+            continue
+        n = int(round(t / DT))
+        exp_ = s0 + sum(x * DT for x in eff[:n]) - sum(rows[t][z][ivext] for z in rows[t]) / (NVAL * A)
+        worst = max(worst, abs(v[2] - exp_))
+    check(worst < 2e-12, "Log S_total = S0 + effective rain - outflow/area (interception is a loss; max abs err %.2e m)"
+          % worst)
+
+
 def main():
     mode = sys.argv[1]
     if mode == "base":
@@ -534,6 +792,15 @@ def main():
         check_steady(sys.argv[2])
     elif mode == "mosaic":
         check_mosaic(sys.argv[2], sys.argv[3])
+    elif mode == "et":
+        check_et(sys.argv[2])
+    elif mode == "et_steady":
+        check_et_steady(sys.argv[2])
+    elif mode == "ic":
+        a = [float(x) for x in sys.argv[3:]]
+        check_ic(sys.argv[2], a[0], a[1], a[2])
+    elif mode == "lag":
+        check_lag(sys.argv[2], sys.argv[3], float(sys.argv[4]) if len(sys.argv) > 4 else 1e-6)
     else:
         sys.exit("unknown mode " + mode)
     if failed:

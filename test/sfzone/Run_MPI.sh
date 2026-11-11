@@ -4,7 +4,9 @@
 # 逐次 reference との比較は Log.txt を ULP=0、sfm_zone.csv は np=1 とバイト比較(タンクは全ランクで
 # 冗長に解く。出口は所有ランクだけが加える)。面積平均モード(行部分和の決定的総和)、厳密モードの停止
 # (全ランク同時の par_stop)、保存 → 再開、同期区間の途中での保存 → 再開(np=1 とバイト比較)、
-# VZ との併用と区画の重なりの停止(全ランク同時)も MPI で確かめる。行は 8 なので np <= 4
+# VZ との併用と区画の重なりの停止(全ランク同時)、遅れ時間(param_lag.txt)、蒸発散(param_et.txt)、
+# 降雨遮断の 2 段の遮断率(param_ic.txt)も MPI で確かめる。
+# 行は 8 なので np <= 4
 sdir=$(dirname "$(readlink -f "$0")")
 export ULP=0
 export MPIRUN_OPTS="--bind-to none"
@@ -75,6 +77,47 @@ cmp -s save_psync/sfm.dat save_psync1/sfm.dat \
     || { echo "ERROR: sfm.dat saved in the middle of an interval differs between np=$np and np=1" >&2; exit 1; }
 echo "  ok   sfm.dat saved in the middle of an interval identical between np=$np and np=1"
 same_as_np1 result_psync_restart result_psync_restart1 sfm_zone.csv Log.txt
+
+# 遅れ時間: np=1 と出力がバイト一致。同期間隔 60 s の同期区間の途中(21625 s)の保存(遅れ列を含む
+# sfm.dat)が np=1 とバイト一致
+run "$np" lag param_lag.txt
+python3 Check_sfzone.py lag result result_lag || exit 1
+if [ "$np" != 1 ]; then
+    variant param_lag.txt result_lag_np1 "" > "$tmp"
+    run 1 lag_np1 "$tmp"
+    same_as_np1 result_lag result_lag_np1 sfm_zone.csv Log.txt
+fi
+rm -rf save_lagp save_lagp1
+for sfx in "" 1; do
+    n=$np; [ "$sfx" = 1 ] && n=1
+    variant param_lag.txt "result_lag_psave$sfx" \
+        "s|^  fn_sfm_zone = 'zone.txt'|&\n  dt_sfm = 60.0|;s/'save_lag'/'save_lagp$sfx'/;s/^  tt = 43200 .*/  tt = 21625/;s/f_state_save = 0 /f_state_save = 1 /" > "$tmp"
+    run "$n" "lag_psave$sfx" "$tmp"
+done
+cmp -s save_lagp/sfm.dat save_lagp1/sfm.dat \
+    || { echo "ERROR: sfm.dat with lag saved in the middle of an interval differs between np=$np and np=1" >&2; exit 1; }
+echo "  ok   sfm.dat with lag saved in the middle of an interval identical between np=$np and np=1"
+
+# 蒸発散をタンクから引く(区画ごとの要求の決定的総和): np=1 と出力がバイト一致
+run "$np" et param_et.txt
+python3 Check_sfzone.py et result_et || exit 1
+if [ "$np" != 1 ]; then
+    variant param_et.txt result_et_np1 "" > "$tmp"
+    run 1 et_np1 "$tmp"
+    same_as_np1 result_et result_et_np1 sfm_zone.csv Log.txt evap.csv
+fi
+
+# 降雨遮断の 2 段の遮断率(一様と分布ファイル): np=1 と出力がバイト一致、分布ファイルは一様指定と一致
+run "$np" ic param_ic.txt
+python3 Check_sfzone.py ic result_ic 0.5 20 0 || exit 1
+variant param_ic.txt result_icmap "s/^  ic_alpha_fill = 0.5 .*/  fn_icalpha_fill = 'icfill.txt'/;s/^  ic_alpha_full = 0.0 .*/  fn_icalpha_full = 'icfull.txt'/" > "$tmp"
+run "$np" icmap "$tmp"
+same_as_np1 result_icmap result_ic sfm_zone.csv Log.txt
+if [ "$np" != 1 ]; then
+    variant param_ic.txt result_ic_np1 "" > "$tmp"
+    run 1 ic_np1 "$tmp"
+    same_as_np1 result_ic result_ic_np1 sfm_zone.csv Log.txt
+fi
 
 # VZ との併用と、区画の重なりの停止
 run "$np" mosaic param_mosaic.txt

@@ -8,6 +8,15 @@ module m_intercept_initloss
   ! 最大貯留量は一様値(ic_smax_mm)または分布ファイル(fn_icsmax)で
   ! 与える(いずれも mm。fn_icsmax 指定時は ic_smax_mm を使わない)。
   !
+  ! 【2 段の遮断率】(任意。2026-11-11。developer.md §106.8)満杯までの遮断率 a1
+  ! (ic_alpha_fill。既定 1)と満杯後の遮断率 a2(ic_alpha_full。既定 0)を与えると、
+  ! 満杯まで雨の a1 を遮断して樹冠に蓄え(容量を満たすのに要る雨は残容量/a1)、満杯の
+  ! 後は雨の a2 を損失として取り除く(固定遮断率モデルと同じく蓄えない)。既定の
+  ! a1 = 1・a2 = 0 は従来の初期損失そのもので、どちらも与えなければ従来と同じ式で計算する。
+  !   初期損失 → 固定遮断率(初期損失・比例損失型): a1 = 1、a2 = α
+  !   木村の一次流出率 f1・飽和雨量 R_sa: a1 = 1 − f1、smax = (1 − f1)·R_sa、a2 = 0
+  ! 一様値または分布ファイル(fn_icalpha_fill・fn_icalpha_full)で与える。
+  !
   ! 【貯留型モデルの契約(m_intercept_fixed の契約に追加)】
   !  (A) 原雨量の私有保管: calc(降雨更新直後)は s%pre / s%prh を
   !      変更せず、私有配列 pr0 / prh0 に写し取るだけにする。
@@ -51,6 +60,10 @@ module m_intercept_initloss
     private
     real :: smax = 0.0                     ! 最大貯留量 (m)(一様指定時)
     real, allocatable :: smaxmap(:,:)      ! 最大貯留量の分布 (m)(分布指定時のみ確保。帯)
+    logical :: two = .false.               ! 2 段の遮断率を使うか(ic_alpha_fill・ic_alpha_full の指定)
+    real :: afill = 1.0, afull = 0.0       ! 満杯まで・満杯後の遮断率(一様指定時)
+    real, allocatable :: afillmap(:,:)     ! 満杯までの遮断率の分布(分布指定時のみ確保。帯)
+    real, allocatable :: afullmap(:,:)     ! 満杯後の遮断率の分布(分布指定時のみ確保。帯)
     real, allocatable :: st(:,:)           ! 累積遮断量 (m)(内部状態。帯)
     real, allocatable :: pr0(:,:)          ! 原雨量 (m/s)(私有保管。帯)
     real, allocatable :: prh0(:,:)         ! 原雨量 (mm/h)(私有保管。帯)
@@ -68,12 +81,17 @@ subroutine intercept_initloss_init(ici, p, g)
   type(t_sysparam), intent(in) :: p
   type(t_geoinfo), intent(in) :: g
   integer :: un, ios
-  real :: ic_smax_mm
-  character(len=256) :: fn_icsmax
-  namelist /list_intercept_initloss/ ic_smax_mm, fn_icsmax
+  real :: ic_smax_mm, ic_alpha_fill, ic_alpha_full
+  character(len=256) :: fn_icsmax, fn_icalpha_fill, fn_icalpha_full
+  namelist /list_intercept_initloss/ ic_smax_mm, fn_icsmax, ic_alpha_fill, ic_alpha_full, &
+                                     fn_icalpha_fill, fn_icalpha_full
 
   ic_smax_mm = -1.0
   fn_icsmax = ""
+  ic_alpha_fill = -9999.0
+  ic_alpha_full = -9999.0
+  fn_icalpha_fill = ""
+  fn_icalpha_full = ""
 
   call par_info("reading list_intercept_initloss in " // trim(p%fn_intercept))
   open(newunit=un, file=trim(p%fn_intercept), status='old', action='read', iostat=ios)
@@ -92,6 +110,31 @@ subroutine intercept_initloss_init(ici, p, g)
       call par_stop("list_intercept_initloss: ic_smax_mm must be > 0 (or specify fn_icsmax)")
     end if
     ici%smax = ic_smax_mm / 1000.0         ! mm -> m
+  end if
+
+  ! 2 段の遮断率(任意。どれも与えなければ従来の初期損失。既定の表示もしない = 従来の
+  ! 最小入力の画面と同じ。与えたときは 2 つの採用値を表示する)
+  ici%two = (ic_alpha_fill > -9998.0 .or. ic_alpha_full > -9998.0 .or. &
+             len_trim(fn_icalpha_fill) > 0 .or. len_trim(fn_icalpha_full) > 0)
+  if (ici%two) then
+    if (len_trim(fn_icalpha_fill) > 0) then
+      call read_ratio_map(p, g, trim(fn_icalpha_fill), "fn_icalpha_fill", .false., ici%afillmap)
+    else
+      ici%afill = param_default("intercept", "ic_alpha_fill", ic_alpha_fill, 1.0, "", unset=-9999.0)
+      if (.not. (ici%afill > 0.0 .and. ici%afill <= 1.0)) then
+        call par_stop("list_intercept_initloss: ic_alpha_fill must satisfy 0 < a <= 1")
+      end if
+    end if
+    if (len_trim(fn_icalpha_full) > 0) then
+      call read_ratio_map(p, g, trim(fn_icalpha_full), "fn_icalpha_full", .true., ici%afullmap)
+    else
+      ici%afull = param_default("intercept", "ic_alpha_full", ic_alpha_full, 0.0, "", unset=-9999.0)
+      if (.not. (ici%afull >= 0.0 .and. ici%afull <= 1.0)) then
+        call par_stop("list_intercept_initloss: ic_alpha_full must satisfy 0 <= a <= 1")
+      end if
+    end if
+    call par_info("intercept: two-phase initial loss (ic_alpha_fill until the storage is full," &
+                  //" ic_alpha_full after it is full)")
   end if
 
   allocate(ici%st(dcp%ish:dcp%ieh, dcp%jsh:dcp%jeh), source = 0.0)
@@ -154,6 +197,53 @@ end subroutine
 
 
 !----------------------------------------------------------------------
+! 遮断率の分布ファイルを読む(無次元。read_smax_map と同型)。zero_ok なら 0 <= a <= 1、
+! そうでなければ 0 < a <= 1 を使用セルで検査する
+!----------------------------------------------------------------------
+subroutine read_ratio_map(p, g, fn, name, zero_ok, amap)
+  type(t_sysparam), intent(in) :: p
+  type(t_geoinfo), intent(in) :: g
+  character(len=*), intent(in) :: fn, name
+  logical, intent(in) :: zero_ok
+  real, allocatable, intent(out) :: amap(:,:)
+  real, allocatable :: smap(:,:)
+  real :: dum(1,1)
+  character(:), allocatable :: fname
+  character(len=1024) :: msg
+  logical :: found, bad
+  integer :: i, j
+
+  fname = trim(p%dir_data) // "/" // trim(fn)
+  inquire(file=fname, exist=found)
+  if (.not. found) call par_stop("list_intercept_initloss: "//name//" not found: " // fname)
+  allocate(amap(dcp%ish:dcp%ieh, dcp%jsh:dcp%jeh))
+  if (is_root) then
+    allocate(smap(1:g%nx, 1:g%ny))
+    call par_info(" reading " // fname)
+    call fileio_read_matrix(fname, g%nx, g%ny, smap, p%f_input_mode)
+    do j = 1, g%ny
+      do i = 1, g%nx
+        if (g%x(i,j) <= 0 .or. g%sw(i,j) > 0) cycle
+        if (zero_ok) then
+          bad = .not. (smap(i,j) >= 0.0 .and. smap(i,j) <= 1.0)
+        else
+          bad = .not. (smap(i,j) > 0.0 .and. smap(i,j) <= 1.0)
+        end if
+        if (bad) then
+          write(msg,'(a,a,2i7,es12.4)') "list_intercept_initloss: ", name//" is out of range at cell", &
+                i, j, smap(i,j)
+          call par_abort(trim(msg))
+        end if
+      end do
+    end do
+    call par_scatter_cell(smap, amap)
+  else
+    call par_scatter_cell(dum, amap)
+  end if
+end subroutine
+
+
+!----------------------------------------------------------------------
 ! 降雨更新直後: 原雨量を私有配列に写し取る(契約A。s%pre は変更しない)
 !----------------------------------------------------------------------
 subroutine intercept_initloss_calc(ici, p, g, s, it)
@@ -190,6 +280,10 @@ subroutine intercept_initloss_step(ici, p, g, s, it)
   if (it < 0) continue         ! 引数未使用の警告を抑制
 
   use_map = allocated(ici%smaxmap)
+  if (ici%two) then
+    call step_two_phase(ici, p, g, s, use_map)
+    return
+  end if
 
   !$omp parallel do schedule(static) private(i, j, pr, cap, d, f)
   do j = dcp%js, dcp%je
@@ -225,6 +319,63 @@ end subroutine
 !   需要 dem (m) のうち累積遮断量 st から引けた量を返し、st を減じる
 !   (=遮断容量の乾き戻り)。呼び出し側(m_evap)は自帯の使用セルのみを
 !   渡す契約(範囲検査はしない)。st は h と同じ柱状量基底 (m)
+!----------------------------------------------------------------------
+! 2 段の遮断率の 1 ステップ(§106.8)。雨 R = P·dt、残容量 cap、満杯までの遮断率 a1、
+! 満杯後の遮断率 a2 として、満杯に要る雨 R_f = cap/a1 まで a1·R を蓄え、残り R − R_f の
+! a2 を取り除く(蓄えない)。通過分 R − d − 損失の比で s%pre・s%prh を減じる(契約1)
+!----------------------------------------------------------------------
+subroutine step_two_phase(ici, p, g, s, use_map)
+  type(t_icinit), intent(inout) :: ici
+  type(t_sysparam), intent(in) :: p
+  type(t_geoinfo), intent(in) :: g
+  type(t_state), intent(inout) :: s
+  logical, intent(in) :: use_map
+  integer :: i, j
+  real :: pr, rr, cap, a1, a2, rf, d, ls, f
+
+  !$omp parallel do schedule(static) private(i, j, pr, rr, cap, a1, a2, rf, d, ls, f)
+  do j = dcp%js, dcp%je
+    do i = g%wx(1,j), g%wx(2,j)
+      if (g%x(i,j) <= 0 .or. g%sw(i,j) > 0) cycle
+      pr = ici%pr0(i,j)
+      if (.not. (pr > 0.0)) then                 ! 無降雨: 素通し
+        s%pre(i,j) = pr
+        s%prh(i,j) = ici%prh0(i,j)
+        cycle
+      end if
+      if (use_map) then
+        cap = max(ici%smaxmap(i,j) - ici%st(i,j), 0.0)
+      else
+        cap = max(ici%smax - ici%st(i,j), 0.0)
+      end if
+      a1 = ici%afill
+      if (allocated(ici%afillmap)) a1 = ici%afillmap(i,j)
+      a2 = ici%afull
+      if (allocated(ici%afullmap)) a2 = ici%afullmap(i,j)
+      rr = pr * p%dt
+      d = 0.0
+      ls = 0.0
+      if (cap > 0.0) then
+        rf = cap / a1                            ! 満杯に要る雨
+        if (rr <= rf) then
+          d = a1 * rr                            ! 満たしている途中
+        else
+          d = cap                                ! このステップで満杯になる
+          ls = a2 * (rr - rf)
+        end if
+      else
+        ls = a2 * rr                             ! 満杯
+      end if
+      ici%st(i,j) = ici%st(i,j) + d
+      f = max(rr - d - ls, 0.0) / rr             ! 通過率
+      s%pre(i,j) = pr * f
+      s%prh(i,j) = ici%prh0(i,j) * f
+    end do
+  end do
+  !$omp end parallel do
+end subroutine
+
+
 !----------------------------------------------------------------------
 function intercept_initloss_draw(ici, i, j, dem) result(w)
   type(t_icinit), intent(inout) :: ici

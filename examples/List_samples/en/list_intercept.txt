@@ -80,4 +80,16 @@
   ! Values are 0 or more per cell (0 = no interception)
   !fn_icsmax = "icsmax.txt"
 
+  ! Two interception ratios (optional; if neither is written, the usual initial loss):
+  !   ic_alpha_fill: fraction of the rain intercepted and stored until full (0 < a <= 1; default 1)
+  !   ic_alpha_full: fraction of the rain removed as a loss after full (0 <= a <= 1; default 0; not stored)
+  ! Examples: a fixed interception ratio of 0.3 after the initial loss -> ic_alpha_fill = 1.0, ic_alpha_full = 0.3
+  !     Kimura's f1 = 0.5 and R_sa = 40 mm of the storage function method -> ic_alpha_fill = 0.5,
+  !     ic_smax_mm = 20.0 (= (1 - f1)*R_sa), ic_alpha_full = 0.0
+  !ic_alpha_fill = 1.0
+  !ic_alpha_full = 0.3
+  ! distribution files (dimensionless; if specified, the uniform value is not used)
+  !fn_icalpha_fill = "icalpha_fill.txt"
+  !fn_icalpha_full = "icalpha_full.txt"
+
 /

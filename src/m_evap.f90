@@ -12,6 +12,9 @@ module m_evap
   !           推奨する(疎な系列も線形補間・端値保持で機能する)
   !   減算:   樹冠保水(貯留型遮断の draw 口)→ 地表水 h → ため池 hrs →
   !           地下水 hg の順に「あるだけ引く」(供給制限のみ。乾燥抑制なし)。
+  !           貯留関数法(fn_sfm)の区画セルでは、残りの要求を s%sfe に渡し、
+  !           m_sfm_evap が区画ごとにタンクから引く(s%sfe は両方が有効なときだけ
+  !           確保される = 無効時は何もしない。§106.7)。
   !           地表水は水面の面積の分だけ蒸発し、河道幅のセルの陸の部分と
   !           σ のセルの水面の外の要求は hrs・hg へ渡す(§27.1)。
   !           evap_hglim を与えると、地下水の段だけ土の乾き具合で抑える
@@ -211,7 +214,7 @@ subroutine m_evap_calc(ev, p, g, b, s, ic, mt, it)
   integer :: i, j, day
   real :: dem, w, hb, dv
   real(real64) :: acell
-  logical :: canopy
+  logical :: canopy, to_tank
 
   if (it < 0 .or. allocated(b%struct)) continue  ! 引数未使用の警告を抑制
   if (.not. ev%enabled) return
@@ -221,6 +224,7 @@ subroutine m_evap_calc(ev, p, g, b, s, ic, mt, it)
   if (day /= ev%curday) call update_pet(ev, p, g, s, day, mt)
 
   canopy = ic%enabled .and. associated(ic%draw)
+  to_tank = allocated(s%sfe)
   acell = real(g%dx, real64) * real(g%dy, real64)
 
   ! 優先順位付き減算: 樹冠保水 → 地表水 h → hrs → 地下水 hg(§27)。
@@ -281,7 +285,11 @@ subroutine m_evap_calc(ev, p, g, b, s, ic, mt, it)
         end if
         s%hg(i,j) = s%hg(i,j) - w
         ev%vrow(j,4) = ev%vrow(j,4) + real(w, real64) * real(s%gv(i,j), real64) * acell
+        dem = dem - w
       end if
+      ! (5) 貯留関数法のタンク(fn_sfm と併用時のみ。残りの要求を gv 面積からセル面積の
+      !     水深に直して渡す。区画外のセルの値は m_sfm_evap が使わずに 0 に戻す。§106.7)
+      if (to_tank .and. dem > 0.0) s%sfe(i,j) = s%sfe(i,j) + dem * s%gv(i,j)
     end do
   end do
   !$omp end parallel do

@@ -31,9 +31,16 @@
 !   STG grid. It can be combined with VZ runoff (fn_vz) if the zones do not
 !   overlap
 !
-!   Not included: lag time T_L, primary runoff ratio f1, saturation rainfall
-!   R_sa, two-valued storage functions, losses (all rain enters the tank and
-!   eventually runs off)
+!   When a lag time T_L (sfm_tl_h) is given, the rain enters the tank T_L
+!   later (the rain during the lag is counted as water in transit in the ledger
+!   and in vlag of sfm_zone.csv)
+!
+!   Combined with evapotranspiration (fn_evap), the demand left on the zone
+!   cells is drawn from the tanks (it can be reduced when the storage is low
+!   with sfm_elim_mm; the amount drawn is vevap in sfm_zone.csv)
+!
+!   Not included: primary runoff ratio f1, saturation rainfall R_sa,
+!   two-valued storage functions, losses by deep percolation
 !
 !   Output: sfm_zone.csv (rain, runoff rate and storage of each zone,
 !   cumulative water volumes, balance residual). The storage of the tanks is
@@ -74,6 +81,16 @@
 
   ! initial runoff rate (mm/h; default 0.1; the initial storage is S0 = K·q0^P; 0 = dry)
   !sfm_q0_mmh(1) = 0.1
+
+  ! lag time T_L (h; default 0 = no lag; the rain enters the tank T_L later; rounded to an
+  ! integer multiple of the time step dt and the adopted value is displayed; the water
+  ! during the lag at the start is the steady state of the initial runoff rate)
+  !sfm_tl_h(1) = 0.5
+
+  ! evapotranspiration (with fn_evap): the demand left after the canopy, surface water, etc.
+  ! is drawn from the storage of the tank. It is reduced to the fraction S/sfm_elim_mm when
+  ! the storage is smaller than this value (mm) (not given = supply limit only)
+  !sfm_elim_mm(1) = 10.0
 
   ! outlet (required) 1: move to surface cells / 2: out of the system
   sfm_out_kind(1) = 1

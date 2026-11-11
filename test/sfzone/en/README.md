@@ -5,7 +5,7 @@
 [日本語](../README.md)
 
 A check of the solution of the tanks, the input of the zones, the transfer to outlets, the
-handling of rain, baseflow, synchronisation, restart and the combination with VZ of the
+handling of rain, baseflow, synchronisation, restart, lag time, evapotranspiration, separation of effective rainfall by interception and the combination with VZ of the
 storage function runoff of zones ([the chapter of the User's
 Guide](../../../docs/en/users_guide/sfm.md), developer.md §106). `Check_sfzone.py` compares
 with analytic solutions, reference solutions and conservation laws, and the results of
@@ -40,6 +40,9 @@ dt = 5 s, dt_sfm = 0 (every step), 12 h.
 | defaults | `param_dflt.txt` | sfm_p and sfm_q0_mmh of zone 1 and the numerical controls are not written. Run.sh also checks with sed that a configuration without K stops |
 | synchronisation interval | `param_sync.txt` | dt_sfm = 60 s. Run.sh also checks with sed save → restart in the middle of an interval (21625 s) |
 | steady state | `param_steady.txt` | constant rain of 10 mm/h for 48 h |
+| lag time | `param_lag.txt` | lag times of 0.5, 1 and 0.2501 h for zones 1, 2 and 3 (zone 3 is rounded to a multiple of dt = 5 s, 0.25 h = 180 steps). Run.sh also checks with sed save → restart at 6 h, a run with dt_sfm = 60 s, and save → restart in the middle of its interval (21625 s) |
+| evapotranspiration | `param_et.txt` / `param_et_steady.txt` | PET of 48 mm/day (2 mm/h) is added and the demand left on the zones is drawn from the tanks. Zone 1 has the supply limit only, zone 2 sfm_elim_mm = 5 mm, and zone 3 20 mm with a lag time of 0.25 h. The steady configuration has a rain of 10 mm/h for 48 h (zone 3 with sfm_elim_mm = 100 mm). Run.sh also checks save → restart with sed |
+| separation of effective rainfall | `param_ic.txt` (maps `data_sfzone/icfill.txt`, `icfull.txt`) | Kimura's f1 = 0.5 and R_sa = 40 mm by the two interception ratios of the initial loss (0.5 until full, maximum storage 20 mm, 0 after full; uniform over all cells). Run.sh also checks with sed a ratio of 0.3 after an initial loss of 10 mm, maps with the same values, the stop for an out-of-range value, and save → restart |
 | combination with VZ | `param_mosaic.txt` (`zone_mosaic.txt`, `vzzone_mosaic.txt`) | rows 6–8 are a VZ zone (trial default column, soil depth 1 m, outflow from the system) and the storage function has zones 1 and 2. Run.sh also checks with sed the stops for overlapping zones (`vzzone_overlap.txt`), a storage function outlet on a VZ cell, and P > 1 |
 
 ## Checks (Check_sfzone.py)
@@ -75,6 +78,28 @@ each step is made in Python following the rule of rainfall updates (every dt_pru
   synchronisation. The storage after save → restart in the middle of an interval agrees with
   the continuous run (within the tolerance), and the balance residual is at the rounding level.
 - **Steady state**: after 48 h, q → 10 mm/h and S = K·r^P.
+- **Lag time**: for the input with the rain lagged by the number of lag steps (the initial
+  runoff rate q0 before the start), the exact solution of the linear reservoir for zone 2
+  and the RK4 reference solution for zones 1 and 3. Column vlag = rain of the last T_L
+  (including the steady part of q0 just after the start) × zone area; input vin equals the
+  run without lag; balance residual (including the water in transit) at the rounding level;
+  S_total balance of the Log. Save → restart is bit-identical to the continuous run. The
+  storage with dt_sfm = 60 s agrees with the reference solution within sfm_tol.
+- **Evapotranspiration**: the storage and the cumulative evapotranspiration (vevap) are
+  compared with the reference solution that follows "advance the tank → draw
+  evapotranspiration (supply limit, or the amount of E·min(1, S/S_lim) solved exactly within
+  a step)" step by step. Balance residual (including the water in transit and the
+  evapotranspiration); S_total of the Log = S0 + rain − (outflow from the system + ev_total of
+  evap.csv + Σ vevap) / total area. Save → restart is bit-identical. In the steady state q →
+  r − E = 8 mm/h for zones 1 and 2, and zone 3 is the solution of r = q + E·S/S_lim
+  (S = K·q^P) (allowing a relative difference of about 1e-4 due to the order of drawing).
+- **Separation of effective rainfall**: input of the zones = effective rainfall following the
+  procedure of the two interception ratios in Python × area; cumulative effective rainfall =
+  the closed form (1 − a1)·min(R, R_f) + (1 − a2)·max(R − R_f, 0) (R_f = smax/a1; in Kimura's
+  form f1·min(R, R_sa) + max(R − R_sa, 0)); reference solution of the tanks for the effective
+  rainfall; S_total of the Log = S0 + effective rainfall − outflow from the system
+  (interception is a loss out of the system). Maps are bit-identical to the uniform values,
+  and save → restart is bit-identical.
 - **Combination with VZ**: sfm_zone.csv of storage function zones 1 and 2 and the probes of the
   receiving cells agree with `param.txt`; S_total balance of the Log (including the VZ storage
   and outflow from the system).
@@ -91,7 +116,9 @@ make
 
 Relative 3.2e-7 from the exact solution of the linear reservoir, 4e-8 (storage) and 1.1e-7
 (runoff rate) from the RK4 reference solution of the nonlinear tanks, and within 3.6e-7 of the
-analytic recession. The balance residual of the zones is 4e-14 of the input, the total surface
+analytic recession. The lag-time run is within 2.8e-7 of the exact solution and 1.1e-7 of the
+reference solution for the lagged rain, and the water in transit agrees to 4e-16 (relative).
+The balance residual of the zones is 4e-14 of the input, the total surface
 water 5e-14 (relative), and the S_total balance 6.7e-15 m. With dt_sfm = 60 s the storage is
 within 1.5e-5 of the reference solution, and the steady q is within 4.4e-9 of 10 mm/h. MPI
 np = 1, 2, 4 match the serial reference with ULP=0, and sfm_zone.csv and the state file saved in

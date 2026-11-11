@@ -962,7 +962,8 @@ The storage function method (Kimura 1961) treats the catchment as a single tank 
 the runoff from a relation between the storage S and the runoff q, S = K·q^P, and the
 continuity equation dS/dt = rain − q
 ([zone runoff by the storage function method](../../../docs/en/users_guide/sfm.md) in ENCflow,
-which has neither the lag time nor the separation of effective rainfall of Kimura's method).
+which does not have the separation of effective rainfall of Kimura's method; the lag time
+`sfm_tl_h` is not used here).
 Tanks matched to the "relation between storage and runoff" of the other calculations of this
 example are given the same rain, to see what agrees and what does not (`make sfm`; the
 settings are `param_sfm.txt` and, for a rain of 30 mm/h, `param_sfm_r30.txt`). There are three

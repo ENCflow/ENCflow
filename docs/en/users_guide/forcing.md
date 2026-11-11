@@ -174,6 +174,18 @@ value, mm; default 1.5) or `fn_icsmax` (distribution). ET through
 `fn_evap` reduces the canopy water and restores capacity (without ET the
 spare capacity does not recover).
 
+Optionally, **two interception ratios** can be given: `ic_alpha_fill` (the
+fraction of the rain intercepted and stored until the storage is full;
+default 1) and `ic_alpha_full` (the fraction of the rain removed as a loss
+after the storage is full; default 0; not stored). Distributions are
+`fn_icalpha_fill` and `fn_icalpha_full`. If neither is given, it is the
+usual initial loss. They represent a fixed interception ratio after the
+initial loss (`ic_alpha_fill = 1`, `ic_alpha_full = α`) and the separation
+of effective rainfall of the [storage function method](sfm.md) (Kimura's
+primary runoff ratio f1 and saturation rainfall R_sa:
+`ic_alpha_fill = 1 − f1`, `ic_smax_mm = (1 − f1)·R_sa`,
+`ic_alpha_full = 0`) (equations in [the explanation](forcing_models.md) §1).
+
 When the uniform value is unspecified the default is adopted and
 printed with "(default)" (the minimal input is f_icmodel and an empty
 model group). The equations and the basis of the defaults are in
@@ -270,7 +282,10 @@ passes on to the storage and the groundwater
 for canopy, surface, storage and groundwater, plus their total, are written
 to `evap.csv` in the result directory (accumulated from the start of the
 run; reset on restart). Missing requirements (e.g.
-mode 2 without a calendar) stop initialization.
+mode 2 without a calendar) stop initialization. On the zone cells of the
+[storage function method](sfm.md), the remaining demand is drawn from the
+storage of the tank of each zone (that amount is counted in vevap of
+`sfm_zone.csv`, not in `evap.csv`).
 
 **Reduction by the dryness of the soil (evap_hglim).** By default, the
 evapotranspiration taken from groundwater stays at the rate of the potential

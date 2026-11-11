@@ -24,7 +24,7 @@ module m_main
   use m_swi, only : t_swi, m_swi_init, m_swi_calc, m_swi_dispose
   use m_vzflow, only : t_vzflow, m_vzflow_init, m_vzflow_calc, m_vzflow_record, m_vzflow_outprof, &
                       m_vzflow_dispose
-  use m_sfm, only : t_sfm, m_sfm_init, m_sfm_calc, m_sfm_record, m_sfm_dispose
+  use m_sfm, only : t_sfm, m_sfm_init, m_sfm_calc, m_sfm_evap, m_sfm_record, m_sfm_dispose
   use m_wavefield, only : t_wavefield, m_wavefield_init, m_wavefield_calc, m_wavefield_record, &
                           m_wavefield_dispose
   use m_glacier, only : t_glacier, m_glacier_init, m_glacier_calc, m_glacier_dispose
@@ -338,9 +338,10 @@ subroutine init_instance(fn_param, align)
     call m_vzflow_init(vz, p, g, b, s, ninst > 1)  ! VZ 流出を初期化(fn_vz 指定時のみ有効。
                                             ! 併用検査に他モジュールの fn_*、セル検査に
                                             ! ゾーン2の全域マスクと境界の一覧を使う。§87)
-    call m_sfm_init(sf, p, g, b, s, ninst > 1, vz%zr)  ! 貯留関数法を初期化(fn_sfm 指定時のみ
+    call m_sfm_init(sf, p, g, b, s, ninst > 1, vz%zr, ev%enabled)  ! 貯留関数法を初期化(fn_sfm 指定時のみ
                                             ! 有効。VZ と同じ検査に加え、VZ との区画の
-                                            ! 重なりを検査するため VZ init より後に。§106)
+                                            ! 重なりを検査するため VZ init より後に。蒸発散を
+                                            ! タンクから引くかを決めるため evap init より後に。§106)
     call m_wavefield_init(wf, p, g, s, ninst > 1)  ! 沿岸の波浪場を初期化(fn_wavefield 指定時のみ
                                             ! 有効。swflow init より後 = 河道の幅・断面形の
                                             ! 有無が確定、静的な波浪セルの判定にゾーン2の
@@ -1300,6 +1301,10 @@ subroutine run_step(p, g, b, pr, ti, ic, s, r, sw, gm, gw, sl, ev, mt, wq, dw, b
   ! 蒸発散を適用(fn_evap 未指定なら no-op。樹冠→地表水→hrs→地下水の
   ! 優先順位減算とダム湛水面蒸発。浸透後の状態に作用させる。§27)
   call m_evap_calc(ev, p, g, b, s, ic, mt, it)
+
+  ! 貯留関数法のタンクの蒸発散(fn_sfm と fn_evap の両方が有効なときのみ。evap が区画セルに
+  ! 残した要求 s%sfe を区画ごとに集めてタンクから引く。遅れ時間の間の雨には作用しない。§106.7)
+  call m_sfm_evap(sf, g, s)
 
   ! ステップ末尾パス: σ 有効時の u,v 正規化を最終確定 h で行う
   ! (gwflow・evap の後、geomorph・統計・出力の前。σ 無効・STG では
