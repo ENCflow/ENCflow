@@ -628,7 +628,7 @@ def summary():
     ax.set_yticklabels([])
     ax.invert_yaxis()
     ax.set_xscale("log")
-    ax.set_xlim(0.01, 1000)                 # ステップ 6・6b の G3 の 0.01 kg の桁の棒も見えるように
+    ax.set_xlim(0.001, 1000)                # ステップ 6・6b の G3 の 0.01 kg の桁の棒も見えるように
     ax.set_xlabel(T("180 日の累積 (kg)", "cumulative over 180 days (kg)"))
     ax.legend(fontsize=7.5, loc="lower center", bbox_to_anchor=(0.5, 1.0), ncol=1, frameon=False)
     ax.set_title(T("(b) 農地の支川と海への流出", "(b) Farm tributary and export to the sea"), fontsize=10,

@@ -73,7 +73,9 @@ architecture.md。このメモは「現在進行中・未完了の項目」だ�
        のは ℓ = 4 m だけになった)、debris_bedrock(cover.png を 300 s まで)、timberyard(補足の図の題を
        ケース名と量の 2 行に。日本語版の setup・supp のラベルが英語だったのも直した)、shield_volcano
        (「格子」の項を 8 近傍の 9 点に、縦の拡大を軸の実寸から計算。溶岩ドームは約 6.4 倍)、badland_round
-       (図の題の L ≈ 2.4 m を本文に揃えた)、mesa(maps の題の 17 m を帽岩の下面の高さに)。
+       (図の題の L ≈ 2.4 m を本文に揃えた)、mesa(maps の題の 17 m を帽岩の下面の高さに)、catchment_metal
+       (ステップ 6・6b の流量に G1 の線。まとめの (b) の対数軸の下限は 4b2021c の 0.01 kg ではステップ 6・6b の
+       G3 の 0.0106 kg の棒が見えなかったので 0.001 kg にした)。
      - mesa: series_bench.png(README に未掲載)では、bench の大きい台地は 5×10⁷ s 以降に崩れる
        (8.6×10⁷ s で約 2 m。bench2 は 19.6 m)。README の補足 1 は 4.3×10⁷ s の値だけを書いている
        ので、終盤を書くなら数表を出す。
@@ -83,8 +85,6 @@ architecture.md。このメモは「現在進行中・未完了の項目」だ�
      - delta: fixation.png の題の陸化 66 と表の 67(この図を描くスクリプトはリポジトリになかった。00g。
        2026-11-10 に比較の図と指標のスクリプト plot_compare.py・参考ケース 2 つ・アンサンブルの生成を
        足した〔111b376。例題に含めることは利用者の了承済み〕。delta の再計算の結果で描いて README を直す)。
-     - catchment_metal: まとめの図 (b) の対数軸の下限が 0.1 kg で、ステップ 6・6b の 0.01 kg の棒が
-       見えない。ステップ 6・6b の図に本文が引く G1 の値が描かれていない。
      - vz_tani2023: TY2 KT の p90 が 2 つの表で 0.021 と 0.020。
      - estuary_barrage: 凡例「帯水層の塩水 zone」に英単語。図の堰の線(0.52 km)と表の 0.48 km。
    - **要確認**(tsunami_town の 2 点は 2026-11-10 に解決): 最大浸水深 4.79 m が沖の水位から決まる上限
@@ -231,8 +231,9 @@ architecture.md。このメモは「現在進行中・未完了の項目」だ�
        debris_bedrock・shield_volcano・badland・timberyard・badland_round・mesa・badland_storm・glacier_valley(補足の
        湖と合流点の段は gl_diagratio = 1/3 で変わった。developer.md §99)・mountain_valley(補足 V_a_tp は既定 2 で
        厚い被覆から抜けるようになった。§89.30。計算時間の目安を実測に合わせた)。回し直して変化がなかった
-       もの: tsunami_fault・bedrock_cover・nest_reflect(図もビット一致)。計算済みで照合中: tower_karst の基準面(残りの
-       構成の後に README を照合する)・catchment_metal。計算中: estuary_barrage。計算待ち:
+       もの: tsunami_fault・bedrock_cover・nest_reflect(図もビット一致)・catchment_metal(計算は 11-09 と同じ。
+       監査 00o の図の直し(G1 の線、まとめの (b) の対数軸の下限 0.001 kg)で図 3 枚だけ描き直した)。計算済みで
+       照合中: tower_karst の基準面(残りの構成の後に README を照合する)。計算中: estuary_barrage。計算待ち:
        karst・tower_karst の残り・stone_forest・delta。検定は済: reference を持たない
        自己検定 48 本(wave_shore を含む)がすべて PASS し、README の値と食い違った 32 検定の README(日英)と
        図 12 組を今の値に直した(利用者の了承「案 1・全件」。丸め誤差の水準の残差は「〜程度以下(丸め誤差)」と

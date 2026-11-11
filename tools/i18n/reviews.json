@@ -1409,29 +1409,29 @@
     {
       "source": "examples/catchment_metal/figs/step6.png",
       "target": "examples/catchment_metal/en/figs/step6.png",
-      "source_sha256": "6888a887154ef4392b495e01973f9272b4bb4762360eb5a18eda7b861a0bd6dd",
-      "target_sha256": "fb93bafe287b6bf9948ecad5fd3881960c48efe00ce4b07b0a397b39b27d6b61",
-      "reviewer": "Claude (Claude Code session; recomputed 2026-11-09 with the current defaults including f_advection_donor = 3: all drawn by plot_results.py (python3 plot_results.py and python3 plot_results.py en; script unchanged) from the same results of the eight cases; Japanese step4, step6 and summary and English step4 and summary viewed, labels compared; the other step figures differ only in their data)",
+      "source_sha256": "477d530ab70c8619484bf6c22208f6f4fd5f015afddf671d5615fc86a3729d18",
+      "target_sha256": "73eb19dece63c56362cbc9aadc722c2d1671f0b299eb808260644e063d50a202",
+      "reviewer": "Claude (Claude Code session; English figure drawn by the same script with the en switch from the same results of 2026-11-11 (the G1 line in the discharge panel and the summary axis down to 0.001 kg); compared side by side: same plotted data and layout, labels translated)",
       "method": "assistant",
-      "reviewed_on": "2026-11-09"
+      "reviewed_on": "2026-11-11"
     },
     {
       "source": "examples/catchment_metal/figs/step6b.png",
       "target": "examples/catchment_metal/en/figs/step6b.png",
-      "source_sha256": "4bd06f1b70f81687a34cc5320ad816f4b6e1d73d65811383b822565e1b9f4197",
-      "target_sha256": "9b70db9aa094a4186bded3a8728fc863c812cf105b87ece787d5179c4f1c731f",
-      "reviewer": "Claude (Claude Code session; recomputed 2026-11-09 with the current defaults including f_advection_donor = 3: all drawn by plot_results.py (python3 plot_results.py and python3 plot_results.py en; script unchanged) from the same results of the eight cases; Japanese step4, step6 and summary and English step4 and summary viewed, labels compared; the other step figures differ only in their data)",
+      "source_sha256": "1256bc2d3e74e84036468cc3baf011b560e42eb04079d8f2538fbd328c4c545d",
+      "target_sha256": "d1306748d87683e9d7bd6fc0c04a1fe4fcf816ad2212008957e8c75cf302e3db",
+      "reviewer": "Claude (Claude Code session; English figure drawn by the same script with the en switch from the same results of 2026-11-11 (the G1 line in the discharge panel and the summary axis down to 0.001 kg); compared side by side: same plotted data and layout, labels translated)",
       "method": "assistant",
-      "reviewed_on": "2026-11-09"
+      "reviewed_on": "2026-11-11"
     },
     {
       "source": "examples/catchment_metal/figs/summary.png",
       "target": "examples/catchment_metal/en/figs/summary.png",
-      "source_sha256": "f20de1880e50f5a6a2a369a584175933e33c3a159bc014e7a1311d7afabc5db4",
-      "target_sha256": "e6b031b9ba679a3c389f1b579fd805b1b192480d5a2ffcde41b578a6455b9cea",
-      "reviewer": "Claude (Claude Code session; recomputed 2026-11-09 with the current defaults including f_advection_donor = 3: all drawn by plot_results.py (python3 plot_results.py and python3 plot_results.py en; script unchanged) from the same results of the eight cases; Japanese step4, step6 and summary and English step4 and summary viewed, labels compared; the other step figures differ only in their data)",
+      "source_sha256": "7fe60611bc258a84cf5152211bd3f8f1d293554f8e6ebfbd4c342c2407ca1834",
+      "target_sha256": "e2d09ea3933a7a9c1f1af185e60a2bc1e4e6895208591bf11ff0af622c94b528",
+      "reviewer": "Claude (Claude Code session; English figure drawn by the same script with the en switch from the same results of 2026-11-11 (the G1 line in the discharge panel and the summary axis down to 0.001 kg); compared side by side: same plotted data and layout, labels translated)",
       "method": "assistant",
-      "reviewed_on": "2026-11-09"
+      "reviewed_on": "2026-11-11"
     },
     {
       "source": "examples/debris_bedrock/README.md",
