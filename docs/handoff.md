@@ -228,10 +228,11 @@ architecture.md。このメモは「現在進行中・未完了の項目」だ�
        検定を 4 スレッドのワーカー 1 本で回している(コンテナが数時間ごとに作り直されるので、ジョブを例題・ケース
        ごとに分け、完了の印を残して再開できる形にした)。README と図まで済んだもの(利用者の了承の後): stratovolcano・
        tsunami_town(東端を高台にした地形に変更)・landslide_tsunami・tsunami_coast・sewer_hybrid・ashfall_lahar・
-       debris_bedrock・shield_volcano・badland・timberyard・badland_round・mesa・badland_storm。回し直して変化がなかった
+       debris_bedrock・shield_volcano・badland・timberyard・badland_round・mesa・badland_storm・glacier_valley(補足の
+       湖と合流点の段は gl_diagratio = 1/3 で変わった。developer.md §99)。回し直して変化がなかった
        もの: tsunami_fault・bedrock_cover・nest_reflect(図もビット一致)。計算済みで照合中: tower_karst の基準面(残りの
-       構成の後に README を照合する)。計算中: glacier_valley。計算待ち: mountain_valley・catchment_metal・
-       estuary_barrage・karst・tower_karst の残り・stone_forest・delta。検定は済: reference を持たない
+       構成の後に README を照合する)。計算中: mountain_valley(補足 3 本は済、本番の後に V_b2)。計算待ち:
+       catchment_metal・estuary_barrage・karst・tower_karst の残り・stone_forest・delta。検定は済: reference を持たない
        自己検定 48 本(wave_shore を含む)がすべて PASS し、README の値と食い違った 32 検定の README(日英)と
        図 12 組を今の値に直した(利用者の了承「案 1・全件」。丸め誤差の水準の残差は「〜程度以下(丸め誤差)」と
        上限で書く。users guide の advection・sediment が引く sublattice・creep の値も直した)。

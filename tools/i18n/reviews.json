@@ -1787,20 +1787,20 @@
     {
       "source": "examples/glacier_valley/README.md",
       "target": "examples/glacier_valley/en/README.md",
-      "source_sha256": "6a87647ce8f135e905ff450b50e55922f80ef1b58f76266d579ba8db3fe3a8ec",
-      "target_sha256": "d0c5d13029d02d2172b646d9be795770b46f95813d85167c323a387a501d1bb4",
-      "reviewer": "Claude (Claude Code session; checked the figures' rules against src and param files, and compared the added captions sentence by sentence)",
+      "source_sha256": "48470bbebfa8f47d4313c4e44db9566777fe83894fc76ba6db133d8bc36b1ed6",
+      "target_sha256": "43fa45b493f894e6f008eab9bb85cfa4e885488485e282b4b6f37cb1bd754bfa",
+      "reviewer": "Claude (Claude Code session; recomputation of 2026-11-10 with the current defaults, gl_diagratio = 1/3: the changed values of the main run, the supplement and the lakes, the run-time estimates, the shoulder-edge lakes and the new caution on the sensitivity of the basin depth to the discretization of the ice flow compared line by line against the Japanese source and the measured values; the rest unchanged since the previous record)",
       "method": "assistant",
-      "reviewed_on": "2026-11-08"
+      "reviewed_on": "2026-11-11"
     },
     {
       "source": "examples/glacier_valley/figs/glacier.png",
       "target": "examples/glacier_valley/en/figs/glacier.png",
-      "source_sha256": "ee9e20b4c98c041dae06204ca4079947bf4c334383d26dd3c17cb59717b3ea6a",
-      "target_sha256": "c90bb35544d1b433400dd9dc1d8dc05315e1c0251e2e94f80c1b9897e6a0a409",
-      "reviewer": "Claude (Claude Code session; English figure drawn by plot_results.py en from the same results as the Japanese figure (2026-11-04); titles, labels and legends compared, same data and layout)",
+      "source_sha256": "a7ad8665d34327d6b99984724015d3f3d0921bce41b9a7732310799e67b58111",
+      "target_sha256": "67b8ac23354e659a0bf8b97a349d45b3a63a16cc3214cd3ee45682d35438569a",
+      "reviewer": "Claude (Claude Code session; English figure drawn by the same script with the en switch from the same results of 2026-11-10; compared side by side: same plotted data and layout, labels translated)",
       "method": "assistant",
-      "reviewed_on": "2026-11-04"
+      "reviewed_on": "2026-11-11"
     },
     {
       "source": "examples/glacier_valley/figs/mechanism.png",
@@ -1823,20 +1823,20 @@
     {
       "source": "examples/glacier_valley/figs/valley.png",
       "target": "examples/glacier_valley/en/figs/valley.png",
-      "source_sha256": "bdc513789bf6cc485baf49e54f0be63469a98a8ff8c01b23f1c1890483b341f6",
-      "target_sha256": "f438ef7818061f53d70142737728ae3a01af257d6647ca8f16a2645f2e26dcc6",
-      "reviewer": "Claude (Claude Code session; English figure drawn by plot_results.py en from the same results as the Japanese figure (2026-11-04); titles, labels and legends compared, same data and layout)",
+      "source_sha256": "8bc5cf47ad8e6772d5e62a77aa399f458e89688fce424499eddd97bf87e3d3da",
+      "target_sha256": "ca7b3f30056f5ee82f286194e5afa0c624e886e50a54900fde1ae2058ca4563c",
+      "reviewer": "Claude (Claude Code session; English figure drawn by the same script with the en switch from the same results of 2026-11-10; compared side by side: same plotted data and layout, labels translated)",
       "method": "assistant",
-      "reviewed_on": "2026-11-04"
+      "reviewed_on": "2026-11-11"
     },
     {
       "source": "examples/glacier_valley/figs/x10.png",
       "target": "examples/glacier_valley/en/figs/x10.png",
-      "source_sha256": "691e13d7221502248abce3656ef51e42dec93bb768aa5c9c6d3899186bd221d2",
-      "target_sha256": "2985a926020e53b9b8706aee822a2083cf0704e19210bea4bc719e678c52203c",
-      "reviewer": "Claude (Claude Code session; English figure drawn by plot_results.py en from the same results as the Japanese figure (2026-11-04); titles, labels and legends compared, same data and layout)",
+      "source_sha256": "b71dd342577b8f742e279d51a0df859bb06a864b77950ca39f2e2dac7c36ff30",
+      "target_sha256": "70e0567ff3cd02c16084948e6eced3934139523e6bbc16b97307babdac0ba85f",
+      "reviewer": "Claude (Claude Code session; English figure drawn by the same script with the en switch from the same results of 2026-11-10; compared side by side: same plotted data and layout, labels translated)",
       "method": "assistant",
-      "reviewed_on": "2026-11-04"
+      "reviewed_on": "2026-11-11"
     },
     {
       "source": "examples/karst/README.md",
