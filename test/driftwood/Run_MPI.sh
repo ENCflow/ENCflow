@@ -41,4 +41,16 @@ echo ""
 python3 "$sdir/Check_driftwood.py" save_flood || rc=1
 compare_serial save_flood "構成2"
 
+# 構成5: 構造物での捕捉と集積、集積の抵抗(fn_dwtrap。集積流木 s%wj のハロ交換を通る)
+python3 "$sdir/make_jam.py" z > jam_z.txt
+python3 "$sdir/make_jam.py" h > jam_h.txt
+python3 "$sdir/make_jam.py" stock > jam_stock.txt
+python3 "$sdir/make_jam.py" trap 1.0 > jam_trap_1.txt
+set -o pipefail
+mpirun -np "$NP" $MPIRUN_OPTS ./encflow_mpi param_jam.txt | tee -a Screen.log || exit 1
+set +o pipefail
+echo ""
+python3 "$sdir/Check_woodjam.py" jam result_jam save_jam || rc=1
+compare_serial save_jam "構成5"
+
 exit $rc

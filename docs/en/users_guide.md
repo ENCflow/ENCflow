@@ -83,8 +83,8 @@ phenomenon-specific setups. Individual chapters also link to relevant cases.
   - [Debris flow, slope failure and moving bed layer](users_guide/massflow.md) -- single-layer mixture, five resistance laws, erosion/deposition laws, curvature term, safety factor, moving bed layer, with equations and the models referred to (supplement)
   - [Applications of sediment and landform change](users_guide/geomorph_applications.md) -- setups for tsunami deposits, river-mouth deltas, volcanic flows, lahars, snow avalanches and sabo facilities
   </details>
-- [Driftwood](users_guide/driftwood.md) (&list_driftwood) -- wood recruitment (hydraulic washout / erosion entrainment), transport and deposition (raster-field estimate) <details><summary>Explanations (1)</summary>
-  - [Driftwood models explained](users_guide/driftwood_models.md) -- transfer rules of the three ledgers, draft, area bases and volume budget, sources of the practical values and basis of the defaults (supplement to driftwood)
+- [Driftwood](users_guide/driftwood.md) (&list_driftwood) -- wood recruitment (hydraulic washout / erosion entrainment), transport and deposition, and backwater from capture and jamming at structures (raster-field estimate) <details><summary>Explanations (1)</summary>
+  - [Driftwood models explained](users_guide/driftwood_models.md) -- transfer rules of the three ledgers, draft, area bases and volume budget, sources of the practical values and basis of the defaults, the capture rule at structures and the drag of the jam (supplement to driftwood)
   </details>
 - [Building destruction and debris](users_guide/bldgdebris.md) (&list_bldgdebris) -- destruction of wooden houses by inundation flows and driftwood, debris transport and deposition, feedback to the void ratio (raster-field estimate) <details><summary>Explanations (1)</summary>
   - [Building destruction and debris models explained](users_guide/bldgdebris_models.md) -- destruction criterion and ramp, destruction rate, void-ratio feedback, volume budget, thresholds versus the literature and the basis of the defaults (supplement to building destruction and debris)
@@ -104,7 +104,7 @@ phenomenon-specific setups. Individual chapters also link to relevant cases.
 - [Use cases](users_guide/usecases.md) -- lookup from phenomenon names to feature combinations (unsupported phenomena are listed too)
 
 **Appendix**
-- [Full parameter index](users_guide/params_index.md) -- reverse lookup from all 802 parameter names to their chapters
+- [Full parameter index](users_guide/params_index.md) -- reverse lookup from all 808 parameter names to their chapters
 
 ---
 

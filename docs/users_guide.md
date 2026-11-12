@@ -77,8 +77,8 @@ ENCflow の設定と実行のリファレンスです。初めての方はまず
   - [土石流・斜面崩壊・動く底層の解説](users_guide/massflow.md) — 単層混合体・5 つの抵抗則・侵食堆積則・曲率項・安全率・動く底層の式と参考にした他モデル(土砂・地形変化の補足)
   - [土砂・地形変化の適用例](users_guide/geomorph_applications.md) — 津波堆積物・河口デルタ・火山流動・ラハール・雪崩・砂防施設の組み方
   </details>
-- [流木](users_guide/driftwood.md)(&list_driftwood)— 流木化(水理的流失・侵食連行)・輸送・堆積(ラスタ場の概算) <details><summary>解説(1 件)</summary>
-  - [流木モデルの解説](users_guide/driftwood_models.md) — 3 台帳の移送則・喫水・面積基準と材積収支・実務値の出典・既定値の根拠(流木の補足)
+- [流木](users_guide/driftwood.md)(&list_driftwood)— 流木化(水理的流失・侵食連行)・輸送・堆積、構造物での捕捉と集積による堰上げ(ラスタ場の概算) <details><summary>解説(1 件)</summary>
+  - [流木モデルの解説](users_guide/driftwood_models.md) — 3 台帳の移送則・喫水・面積基準と材積収支・実務値の出典・既定値の根拠、構造物での捕捉の規則と集積の抵抗(流木の補足)
   </details>
 - [家屋破壊・瓦礫](users_guide/bldgdebris.md)(&list_bldgdebris)— 氾濫流・流木による木造家屋の破壊・瓦礫の輸送・堆積・空隙率への帰還(ラスタ場の概算) <details><summary>解説(1 件)</summary>
   - [家屋破壊・瓦礫モデルの解説](users_guide/bldgdebris_models.md) — 破壊判定量とランプ・破壊レート・空隙率への帰還・材積収支・閾値の文献対応と既定値の根拠(家屋破壊・瓦礫の補足)
@@ -98,7 +98,7 @@ ENCflow の設定と実行のリファレンスです。初めての方はまず
 - [用途集](users_guide/usecases.md)— 現象名から機能の組み合わせを引く(未対応の現象も明示)
 
 **付録**
-- [全パラメータ索引](users_guide/params_index.md) — 全 802 パラメータの名前→章の逆引き
+- [全パラメータ索引](users_guide/params_index.md) — 全 808 パラメータの名前→章の逆引き
 
 ---
 

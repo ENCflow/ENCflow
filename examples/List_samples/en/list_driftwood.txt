@@ -6,14 +6,16 @@
 ! Driftwood sample (&list_driftwood; developer.md §50)
 !   Enable with fn_driftwood = "this file" or "-" in the main parameter
 !   file. Estimates driftwood as a raster field of wood volume per cell
-!   (m3/m2); individual-log tracking and geometric jamming at bridges
-!   are out of scope.
+!   (m3/m2); individual-log tracking and the geometric judgement of
+!   whether a log gets caught are out of scope.
 !   Ledgers: standing stock -> (hydraulic washout / erosion
 !   entrainment) -> floating wood -> (grounding / drying) -> deposited
-!   wood (refloat optional).
+!   wood (refloat optional). With the capture-ratio map fn_dwtrap,
+!   floating wood -> (capture at structures) -> jammed wood is added and
+!   the jam raises the water upstream.
 !   Output: f_out_hd (floating Hd0001...), f_out_wd (deposited
-!   Wd0001... + maximum arrival Wd9999), result/driftwood.csv (volume
-!   ledger).
+!   Wd0001... + maximum arrival Wd9999), f_out_wj (jammed Wj0001...),
+!   result/driftwood.csv (volume ledger).
 !   NOTE: thresholds and rates are calibration parameters (no
 !   established standard values).
 !   Properties, thresholds and rates have defaults: an empty
@@ -57,4 +59,19 @@
   !dw_wfloat = 0.01                 ! refloat rate (m/s; >0 enables)
   !dw_rfloat = 1.5                  ! buoyancy margin (refloat when depth > rfloat*draft; >1)
   !dw_vfloat = 0.1                  ! refloat velocity threshold (m/s; >= dw_vstop)
+
+  ! ---- capture and jamming at structures (enabled by fn_dwtrap; bridges, open check dams) ----
+  !fn_dwtrap = "trap.txt"           ! map of the capture ratio E (0-1; the share of the wood
+                                    !   passing a capture cell once that is caught; 0 = no
+                                    !   capture; same matrix format as the terrain; the ratio is
+                                    !   a given, the module does not judge whether a log is caught)
+  !f_dwjam = 1                      ! effect of the jam on the flow (0: ledger only,
+                                    !   1: drag in the cells holding the jam)
+  !dw_jamcd = 1.0                   ! drag coefficient C_D of the jam (calibration value;
+                                    !   the default 1.0 is provisional)
+  !dw_jamphi = 0.3                  ! packing ratio of the jam (solid / bulk volume; 0-1;
+                                    !   calibration value; acts through (1-phi)^3 in the drag
+                                    !   coefficient 2 C_D/(pi d (1-phi)^3))
+  !dw_jamgrow = 0.05                ! cells whose jammed amount (m3/m2) exceeds this get a
+                                    !   capture ratio of 1 (not given = constant capture ratio)
 /

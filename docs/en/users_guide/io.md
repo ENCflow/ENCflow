@@ -161,6 +161,7 @@ lists the main outputs.
 | f_out_hs | 0 | Hs | sediment column (m) (requires an active sediment process; for visualizing the concentration C = hs/(h+hs)) |
 | f_out_hd | 0 | Hd | floating driftwood volume (m³/m²) (requires [Driftwood](driftwood.md)) |
 | f_out_wd | 0 | Wd / Wd9999 | deposited driftwood (m³/m²) and the maximum arrival max(floating+deposited) over the run (the driftwood hazard map) |
+| f_out_wj | 0 | Wj | driftwood jammed at structures (m³/m²) (when the capture cells `fn_dwtrap` of [Driftwood](driftwood.md) are given) |
 | f_out_hbd | 0 | Bf | floating building-debris volume (m³/m²) (requires [Building destruction and debris](bldgdebris.md)) |
 | f_out_wbd | 0 | Bd / Bd9999 | deposited debris (m³/m²) and the maximum arrival max(floating+deposited) over the run (the debris hazard map) |
 | f_out_bds | 0 | Bs | destroyed fraction of buildings 1 − remaining/initial stock (0-1; the final frame is the damage-ratio map) |
@@ -336,7 +337,7 @@ come from `FILENUMBER.csv`.
 | Soil Water Index | automatic | Swi / Swi9999 / Swit9999 | mm ([Soil Water Index](swi.md)) |
 | Sediment column / concentration / flow depth | flag or computed | Hs (f_out_hs), D9999 / Dt9999 (f_out_dmax family) | volume concentration = Hs / (H + Hs); instantaneous flow depth = H + Hs, run maximum D9999 |
 | Slope safety factor | flag | Fs / Fs9999 (f_out_fs) | −1 = not evaluated |
-| Driftwood / debris distribution and reach | flag | Hd / Wd / Wd9999 (f_out_hd, wd), Bf / Bd / Bd9999 / Bs (f_out_hbd, wbd, bds) | reach = Wd9999 / Bd9999 (run maximum of moving + deposited) |
+| Driftwood / debris distribution and reach | flag | Hd / Wd / Wd9999 (f_out_hd, wd), Wj (f_out_wj), Bf / Bd / Bd9999 / Bs (f_out_hbd, wbd, bds) | reach = Wd9999 / Bd9999 (run maximum of moving + deposited); wood jammed at structures is Wj |
 | Water-quality concentration / pools | automatic (Cg by flag) | C, B, Cg (f_out_hg) | run-maximum concentration from the C series in post-processing; total mass from `wq.csv`, point time series from probes ([Water Quality](wq.md)) |
 | Surface / subsurface salt water | flag | Hss (f_out_h), Hgs (f_out_hg) | with [Salt Water](salt.md) enabled |
 | Retention-pond depth | flag | Hrs (f_out_hrs) | — |

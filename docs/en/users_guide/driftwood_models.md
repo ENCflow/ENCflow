@@ -7,9 +7,10 @@
 This page gives the transfer rules of the three-ledger model of the
 [driftwood chapter](driftwood.md), the draft of the representative log, the
 area bases and the volume budget, the sources of the practical values and
-the basis of the defaults. The implementation is in `src/m_driftwood.f90`;
-the design history and literature checks are in developer.md §50 (in
-Japanese).
+the basis of the defaults, and capture and jamming at structures (the fourth
+ledger; §6). The implementation is in `src/m_driftwood.f90` (the drag term of the
+jam in `src/m_swflow_enc.f90`); the design history and literature checks are in
+developer.md §50 (in Japanese).
 
 ## 1. Ledgers and transfer rules
 
@@ -34,8 +35,8 @@ remaining amount $`S`$ of the source ledger:
 \Delta = \min\left(w\,\Delta t,\ S\right)
 ```
 
-After advection and landform updates the local order is ② → ① → ③ → ④ →
-dam capture → period-maximum update. A cell passing the dry-cell test is
+After advection and landform updates the local order is ② → ① → (⑤ capture at
+structures; §6) → ③ → ④ → dam capture → period-maximum update. A cell passing the dry-cell test is
 still tested for refloating in ④ if enabled. The entrainment test uses the
 net lowering from the reference elevation $`z_{ref}`$ (at initialisation;
 the saved value on restart), not the accumulated erosion increments, and
@@ -71,7 +72,9 @@ Recruitment subtracts $`\Delta w`$ from $`w_{st}`$ and adds $`\Delta w / f`$
 to $`h_d`$. The rate dw_wrec uses the geometric area; dw_wstop and
 dw_wfloat use the effective area (m³/m²/s). In a closed domain without dam
 capture the sum of the current stocks $`Q`$ preserves the initial volume
-(apart from numerical error).
+(apart from numerical error). The jammed wood $`w_j`$ (§6) is a column quantity per the
+same effective area as $`h_d`$ and $`w_d`$; when capture cells are given,
+$`f_{ij}\,w_{j,ij}`$ joins the sum.
 
 ## 4. Sources of the practical values
 
@@ -120,6 +123,10 @@ The labels in the Basis column are explained in [How to read the basis of a defa
 | dw_vstop / dw_wfloat | 0 / 0 | slow-flow deposition and refloat | **empirical** depth criterion only and no refloat = upper bound of reach (conservative) |
 | dw_rfloat | 1.5 | refloat buoyancy margin | **literature value** on the stable side of the onset of motion ≈ 1.2 × draft[^braudrick00] |
 | the two recruitment paths | both default when neither is given | dw_wrec / dw_droot | **method** erosion entrainment never fires unless the terrain moves, so it is harmless; giving only one disables the other (explicit intent respected) |
+| fn_dwtrap | — (enables when given) | map of the capture ratio E | **given** set by the log length and the opening width; the module carries no length (§6) |
+| f_dwjam | 1 | effect of the jam on the flow | **method** 1 = drag in the cells holding the jam; 0 is the ledger only (the flow equals a run without driftwood; for comparison) |
+| dw_jamcd / dw_jamphi | 1.0 / 0.3 | drag coefficient and packing ratio of the jam | **empirical** the structure of the coefficient follows the porous-obstruction formula[^follett20]; the values are provisional, checked neither against the original text nor against measured backwater; to be calibrated (§6) |
+| dw_jamgrow | none | cells whose jammed amount exceeds it get a capture ratio of 1 | **given** approximates wood catching more easily once a jam has started; not given = constant capture ratio |
 
 **Where to look when revising the defaults**
 
@@ -136,9 +143,83 @@ Verification (developer.md §50.6): in [test/driftwood](../../../test/driftwood/
 an empty &list_driftwood and a configuration with every default written
 explicitly give byte-identical saved states.
 
-## 6. Verification cases
+## 6. Capture and jamming at structures
 
-- [test/driftwood](../../../test/driftwood/en/README.md): volume conservation, transport and deposition for both erosion entrainment and hydraulic recruitment, and comparison of saved states from split and uninterrupted runs.
+Giving the map of the capture ratio `fn_dwtrap` enables path ⑤, from the moving wood
+$`h_d`$ to the jammed wood $`w_j`$, and the drag of the jam. $`w_j`$ is an immobile ledger
+that only grows.
+
+**Capture rule (own).** The capture ratio $`E`$ is "the share of the driftwood passing a
+capture cell once that is caught". The computation stays inside the cell. In a well-mixed
+cell, if capture proceeds at a constant rate $`k`$ during the residence time
+$`\Delta x / |V|`$, the captured share of the passing wood is $`k\tau/(1 + k\tau)`$. Setting
+$`k\tau = E/(1-E)`$ so that this equals $`E`$, the amount captured in one step is
+
+```math
+\Delta = h_d\,\frac{r}{1+r},\qquad r = \frac{E}{1-E}\,\frac{|V|\,\Delta t}{\Delta x}
+```
+
+($`\Delta x`$ is the shorter side of the cell). $`E \ge 1`$ takes all of $`h_d`$ at that
+moment; applied after the advection, it means "stop all the wood that has entered". Cells
+whose jammed amount exceeds `dw_jamgrow` are treated as $`E = 1`$. Capture is applied after
+the recruitment (① ②) and before the grounding deposition (③). In a steady uniform flow
+along a grid axis, the captured share equals $`E`$ even with the discretization that applies
+advection and capture in turn. With changing or oblique flow it is an approximation; the
+verification case gives 0.304 for $`E = 0.3`$.
+
+**Drag of the jam.** The jam is treated as a porous obstruction. Following the idea that the
+momentum loss by a wood jam is a drag proportional to the log diameter, the degree of packing
+and the length of the jam[^follett20], a drag of the same form as its structural coefficient
+$`C_A = L\,C_D\,a/(1-\varphi)^3`$ ($`L`$: length of the jam, $`a`$: frontal area per unit
+volume, $`\varphi`$: solid volume fraction; $`a = 4\varphi/(\pi d)`$ for cylinders) is put
+into the semi-implicit term of the momentum equation (the discretization is ENCflow's own).
+The pore velocity inside the jam is $`u/(1-\varphi)`$, so the deceleration with respect to
+the superficial velocity $`u`$ is $`\dfrac{C_D\,a}{2(1-\varphi)^3}|u|u`$. Assuming that the
+jam of a cell occupies the whole depth with the packing ratio $`\varphi`$ and blocks the
+fraction $`(w_j/h)/\varphi`$ of the cell length, the drag term of an edge becomes
+
+```math
+F_{\text{jam}} = -\,\kappa_0 \min\!\left(\frac{w_e}{h_f},\ \varphi\right)|\mathbf{V}|_e,
+\qquad \kappa_0 = \frac{2\,C_D}{\pi\,d\,(1-\varphi)^3}\ \ [\mathrm{m^{-1}}]
+```
+
+$`w_e`$ is the mean of $`w_j`$ of the two cells of the edge, $`h_f`$ the same edge depth as
+in the friction term and $`|\mathbf{V}|_e`$ the speed on the edge. The $`\min`$ expresses
+that wood that does not fit in the water column adds no drag. Being a semi-implicit term, it
+adds no time-step restriction. In cells with a channel width (`fn_width`) the velocity is the
+in-channel velocity and the jammed amount is per plan area of the channel, so the same
+expression applies unchanged.
+
+In steady one-dimensional flow this adds one term to the gradually-varied-flow equation,
+which is the analytical solution used for verification.
+
+```math
+\frac{dh}{dx} = \frac{S_0 - \dfrac{n^2 q^2}{h^{10/3}} - \kappa_0 \min\!\left(\dfrac{w}{h},\ \varphi\right)\dfrac{q^2}{g\,h^2}}{1 - \dfrac{q^2}{g\,h^3}}
+```
+
+**Coefficients and limits.**
+
+- $`C_D`$ and $`\varphi`$ are calibration values. $`\varphi`$ acts through
+  $`(1-\varphi)^3`$, so the sensitivity is large, and flume experiments report that the share
+  of branches, leaves and fine organic matter changes the backwater greatly[^schalko18]. The
+  defaults 1.0 and 0.3 are provisional. The original texts of the two references could not be
+  obtained in this work; the form of the formula and the statements come from secondary
+  material. The lumped formula of the literature (relating the depths upstream and downstream
+  of the jam) and the integral of the distributed drag used here need not give the same
+  backwater for the same coefficient, so calibrated values from the literature cannot be
+  carried over as they are. The model has not yet been compared with measured backwater.
+- The drag is set by the solid volume of the jam. For the same solid volume per unit channel
+  width, changing the placement and the grid spacing changed the backwater by less than 1 %
+  (trial computations during development).
+- The drag of the jam is not included in the bed shear (sediment transport), because it is a
+  form drag, not a shear acting on the grains.
+- What it cannot do (judging whether a log gets caught, the shape and collapse of the jam,
+  pressure flow under a deck, blockage of openings narrower than a cell, and so on) is listed
+  in [the driftwood chapter](driftwood.md#capture-and-jamming-at-structures-fn_dwtrap).
+
+## 7. Verification cases
+
+- [test/driftwood](../../../test/driftwood/en/README.md): volume conservation, transport and deposition for both erosion entrainment and hydraulic recruitment, and comparison of saved states from split and uninterrupted runs. Capture and jamming at structures are checked in a straight channel: volume conservation (including the jam), agreement of the backwater from the drag of the jam with the solution of the gradually-varied-flow equation above (ratio of the rises 1.003; 0.982 where the packing limit is active), the capture ratio (0.304 for 0.3), byte identity of the flow with `f_dwjam = 0` with a run without driftwood, and split continuation.
 - [examples/timberyard](../../../examples/timberyard/en/README.md): timber influx from a log yard by storm surge (comparison of countermeasures: delaying the release, moving the yard away, raising the seawall; a supplement compares the deposition parameters; the impact-force postprocessing).
 - [examples/tsunami_town](../../../examples/tsunami_town/en/README.md): coastal forest and log yard in a tsunami, chained with house destruction (supplement).
 
@@ -147,3 +228,5 @@ explicitly give byte-identical saved states.
 [^braudrick00]: Braudrick, C. A. and Grant, G. E. (2000): When do logs move in rivers? *Water Resour. Res.*, 36(2), 571–583. (flume experiments on draft and onset of motion)
 [^nilim904]: NILIM (2016): Guidelines for sabo master planning (debris flow and driftwood), commentary. *NILIM Technical Note*, No. 904 (in Japanese; title translated). (practical values and generation mechanisms)
 [^nilim905]: NILIM (2016): Technical standard for the design of debris-flow and driftwood countermeasures, commentary. *NILIM Technical Note*, No. 905 (in Japanese; title translated). (log impact force, §4.3)
+[^follett20]: Follett, E., Schalko, I. and Nepf, H. (2020): Momentum and energy predict the backwater rise generated by a large wood jam. *Geophys. Res. Lett.*, 47(17), e2020GL089346. (momentum equation treating a jam as a porous obstruction and its structural coefficient; original text not checked)
+[^schalko18]: Schalko, I., Schmocker, L., Weitbrecht, V. and Boes, R. M. (2018): Backwater rise due to large wood accumulations. *J. Hydraul. Eng.*, 144(9), 04018056. (flume experiments on the backwater due to accumulations; original text not checked)

@@ -294,4 +294,10 @@ sketches, not computed results.
   [Driftwood](driftwood.md) (culverts carry no wood either, so the
   trapping is likewise an upper-bound estimate; geometric size-selective
   trapping by member spacing vs. log length is out of scope of the
-  driftwood module as well).
+  driftwood module as well). For a dam whose open part can be represented
+  by cells (grid type and the like), making the cells of the open part capture
+  cells for driftwood lets the jam of captured wood raise the water, slow the
+  flow upstream and so retain sediment as well
+  ([capture and jamming at structures](driftwood.md#capture-and-jamming-at-structures-fn_dwtrap)
+  in the driftwood chapter; the capture ratio is a given, and with a single grain
+  size blockage by boulders cannot be represented).

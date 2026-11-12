@@ -32,7 +32,9 @@ take, at the concentration of the intake cell (with Kd partitioning only the
 dissolved part; the particulate part stays on the intake side with the
 suspended sediment). Sediment such as suspended load, the salt layer (bottom
 salt water), driftwood and debris are not carried and stay on the intake
-side. A pump drawing from a pond carries the substance of the pond, and a
+side (driftwood piled up on the intake side does not obstruct the flow through a
+culvert; a driftwood jam acts only on the grid flow through the capture cells of
+[Driftwood](driftwood.md)). A pump drawing from a pond carries the substance of the pond, and a
 pump drawing from the conduit layer (`f_pump_src=1`) carries the fixed
 concentration `wq_gwc_conc` of the conduit water. The substance taken out of
 the system by pumps without an outlet and by out-of-domain diversions goes

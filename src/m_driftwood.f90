@@ -30,17 +30,31 @@ module m_driftwood
   !           §50.5)。発生は両方未指定なら水理的流失・侵食連行とも既定で有効、
   !           片方だけ指定なら他方は無効(明示の尊重)。最小入力は fn_driftwood
   !           (空の &list_driftwood)だけ(§50.6)
-  !   運動量: 流木の運動量・抵抗への算入はしない(第1段。§50)
+  !   運動量: 流動流木 hd・堆積流木 wd は、運動量・抵抗に算入しない(§50)
+  !   集積:   捕捉率 E の分布 fn_dwtrap を与えると、捕捉セルを通る流動流木を
+  !           集積流木 s%wj(柱状量。hd と同じ基底。動かない)へ移す。よく混ざった
+  !           セルの滞留時間 Δx/|V| に対して、1 ステップの捕捉量は
+  !           hd·r/(1+r)、r = E/(1−E)·|V|Δt/Δx(E >= 1 は全量。捕捉の規則は【独自】)。
+  !           集積量が dw_jamgrow を超えたセルは E = 1(任意)。f_dwjam = 1(既定)
+  !           では、集積を多孔質の障害物として、辺の半陰の抗力項
+  !           −κ0·min(w_e/h_f, φ)·|V|、κ0 = 2 C_D/(π d (1−φ)³) を swflow_enc が足す
+  !           (係数の構造は Follett ら 2020 の C_A = L C_D a/(1−φ)³。離散化は【独自】。
+  !           C_D・φ は校正値。本モジュールは係数と有効フラグを s%dw_jamk・
+  !           s%dw_jamphi・s%dw_jam に書く。§50.7・docs/woodjam_plan.md)。
+  !           fn_dwtrap を与えなければ、確保も分岐の中の計算もしない
   !   ダム:   捕捉帯セルは毎ステップ全量吸収されるため、流動流木 hd も
   !           同伴してダム別台帳へ移す(m_wq と同じ契約。放流流木 0 =
   !           既知の妥協。堆積 wd は接地済みのため残す)
   !   save:   s%hd, s%wd, wst, zref をモジュール私有ファイル driftwood.dat
-  !           で保存(§7 の契約C。state.dat の形式は不変)
+  !           で保存(§7 の契約C。state.dat の形式は不変)。fn_dwtrap を与えた
+  !           ときだけ、末尾に集積の印(整数 1)と s%wj を追記する
   !   診断:   result/driftwood.csv(発生・堆積・再流動・ダム捕捉の累積と
   !           現在貯留。系外流出は収支残差。rank0、dt_recrd 間隔。
-  !           総和は par_sum_rows = 決定的)
+  !           総和は par_sum_rows = 決定的)。fn_dwtrap を与えたときだけ、捕捉の
+  !           累積 trap_m3 と現在の集積 vol_jam_m3 の 2 列が末尾に増える
   !   出力:   f_out_hd(流動 Hd0001…)、f_out_wd(堆積 Wd0001… +
-  !           期間最大到達量 Wd9999 = max(hd+wd)。統計は save 対象外)
+  !           期間最大到達量 Wd9999 = max(hd+wd)。統計は save 対象外)、
+  !           f_out_wj(集積 Wj0001…。fn_dwtrap 必須)
   ! ================================================================
   use iso_fortran_env, only : real64
   use m_sysparam, only : t_sysparam
@@ -54,7 +68,7 @@ module m_driftwood
   use m_sysdep_util, only : sysdep_mkdir
   use m_parallel, only : dcp, is_root, par_info, par_stop, par_abort, par_sum_rows, &
                          par_gather_to, par_scatter_cell, par_allreduce_sumi
-  use m_util, only : itoa, param_default, es_out
+  use m_util, only : itoa, rtoa, param_default, es_out
   implicit none
   private
   public :: t_driftwood
@@ -93,12 +107,17 @@ module m_driftwood
                                          !   セル内材積 wst×A。帯 jsh:jeh で確保
                                          !   するが更新・参照は js:je のみ)
     real, allocatable :: zref(:,:)       ! 侵食連行の基準地形 (m。init 時 z の写し)
+    logical :: have_trap = .false.       ! 捕捉セルあり(fn_dwtrap の指定)
+    real, allocatable :: trap(:,:)       ! 捕捉率 E(0〜1。have_trap のときだけ確保)
+    real :: jamgrow = -1.0               ! 集積量 (m3/m2) がこれを超えたセルは E = 1
+                                         !   (<= 0 は無効 = 捕捉率は一定)
     integer :: ndam = 0
     type(t_dwdam), allocatable :: dam(:)
     ! 診断(行部分和 real64。材積 m3)
-    real(real64), allocatable :: vrow(:,:)  ! (js:je, 1:5) 1=水理的流失 2=侵食連行
+    real(real64), allocatable :: vrow(:,:)  ! (js:je, 1:6) 1=水理的流失 2=侵食連行
                                             !   3=堆積(hd→wd) 4=再流動(wd→hd)
-                                            !   5=ダム捕捉
+                                            !   5=ダム捕捉 6=構造物での捕捉(hd→wj。
+                                            !   have_trap のときだけ集計・出力する)
     integer :: un = 0                    ! CSV 装置番号(rank0)
   end type
 
@@ -125,8 +144,8 @@ subroutine m_driftwood_init(dw, p, g, b, s)
 
   if (len_trim(p%fn_driftwood) == 0) then
     ! 流木出力は本モジュールが前提(§28.9 の f_out_hs と同じ様式)
-    if (p%f_out_hd > 0 .or. p%f_out_wd > 0) then
-      call par_stop("list_sysparam: f_out_hd/f_out_wd require the driftwood module " &
+    if (p%f_out_hd > 0 .or. p%f_out_wd > 0 .or. p%f_out_wj > 0) then
+      call par_stop("list_sysparam: f_out_hd/f_out_wd/f_out_wj require the driftwood module " &
                     //"(fn_driftwood)")
     end if
     return
@@ -138,8 +157,8 @@ subroutine m_driftwood_init(dw, p, g, b, s)
 
   call list_driftwood_read(p, list)
   if (list%f_dw == 0) then      ! fn を書いたまま一時無効化する経路
-    if (p%f_out_hd > 0 .or. p%f_out_wd > 0) then
-      call par_stop("list_sysparam: f_out_hd/f_out_wd require the driftwood module " &
+    if (p%f_out_hd > 0 .or. p%f_out_wd > 0 .or. p%f_out_wj > 0) then
+      call par_stop("list_sysparam: f_out_hd/f_out_wd/f_out_wj require the driftwood module " &
                     //"(f_dw=0 disables it)")
     end if
     return
@@ -273,19 +292,33 @@ subroutine m_driftwood_init(dw, p, g, b, s)
     dw%zref(:,j) = s%z(:,j)
   end do
 
+  ! --- 構造物での捕捉と集積(fn_dwtrap の指定で有効。§50.7)---
+  if (len_trim(list%fn_dwtrap) > 0) then
+    call setup_jam(dw, p, g, s, list, dlog)
+  else if (p%f_out_wj > 0) then
+    call par_stop("list_sysparam: f_out_wj requires the capture cells of the driftwood " &
+                  //"module (fn_dwtrap in list_driftwood)")
+  end if
+
   ! --- ダム捕捉台帳(全ダム・湖沼が対象。m_wq と同型) ---
   call setup_dams(dw, b)
 
   ! --- リスタート ---
   if (p%f_state_restore > 0) call restore_state(dw, p, g, s)
 
-  allocate(dw%vrow(dcp%js:dcp%je, 1:5), source = 0.0_real64)
+  allocate(dw%vrow(dcp%js:dcp%je, 1:6), source = 0.0_real64)
 
-  ! --- 診断 CSV(rank0。累積はラン先頭からの積算 = restore でリセット) ---
+  ! --- 診断 CSV(rank0。累積はラン先頭からの積算 = restore でリセット)。捕捉セルを
+  !     与えたときだけ、捕捉の累積と現在の集積の 2 列を末尾に足す(§50.7) ---
   if (is_root) then
     open(newunit=dw%un, file=trim(p%dir_result)//"/driftwood.csv", status='replace')
-    write(dw%un, '(a)') "time_s,rec_hyd_m3,rec_ero_m3,deposit_m3,refloat_m3,to_dam_m3," &
-                        //"vol_stock_m3,vol_float_m3,vol_deposit_m3"
+    if (dw%have_trap) then
+      write(dw%un, '(a)') "time_s,rec_hyd_m3,rec_ero_m3,deposit_m3,refloat_m3,to_dam_m3," &
+                          //"vol_stock_m3,vol_float_m3,vol_deposit_m3,trap_m3,vol_jam_m3"
+    else
+      write(dw%un, '(a)') "time_s,rec_hyd_m3,rec_ero_m3,deposit_m3,refloat_m3,to_dam_m3," &
+                          //"vol_stock_m3,vol_float_m3,vol_deposit_m3"
+    end if
   end if
 
   s%dw_active = .true.
@@ -341,24 +374,76 @@ end function
 
 
 !----------------------------------------------------------------------
-! 立木ストック分布の読み込み(rank0 読み+帯 scatter。使用セルの負値は
-! エラー。m_wq の read_map_scatter と同型)
+! 構造物での捕捉と集積の初期化(fn_dwtrap 指定時のみ。§50.7。docs/woodjam_plan.md)
+!   捕捉率 E の分布を読み(使用セルで 0〜1 を検査)、集積流木 s%wj を確保する。
+!   f_dwjam = 1 では、集積の抵抗の係数 κ0 = 2 C_D/(π d (1−φ)³) と充填率 φ を
+!   s%dw_jamk・s%dw_jamphi に書き、s%dw_jam を立てる(swflow_enc が読む)。
+!   係数の構造は Follett ら(2020)の多孔質の障害物の係数 C_A = L C_D a/(1−φ)³
+!   (円柱で a = 4φ/(π d))で、C_D・φ は校正値(既定 1.0・0.3 は仮の値)
 !----------------------------------------------------------------------
-subroutine read_stock_scatter(p, g, fn, a)
+subroutine setup_jam(dw, p, g, s, list, dlog)
+  type(t_driftwood), intent(inout) :: dw
+  type(t_sysparam), intent(in) :: p
+  type(t_geoinfo), intent(in) :: g
+  type(t_state), intent(inout) :: s
+  type(t_list_driftwood), intent(in) :: list
+  real, intent(in) :: dlog               ! 流木の代表直径 (m。採用値)
+  real :: cd, phi
+
+  if (list%f_dwjam /= 0 .and. list%f_dwjam /= 1) then
+    call par_stop("list_driftwood: f_dwjam must be 0 (ledger only) or 1 (drag of the jam)")
+  end if
+  allocate(dw%trap(dcp%ish:dcp%ieh, dcp%jsh:dcp%jeh), source = 0.0)
+  call read_stock_scatter(p, g, list%fn_dwtrap, dw%trap, name = "fn_dwtrap", vmax = 1.0)
+  allocate(s%wj(dcp%ish:dcp%ieh, dcp%jsh:dcp%jeh), source = 0.0)
+  dw%have_trap = .true.
+
+  ! 集積が進むと捕捉率が 1 になる集積量(任意。与えたときだけ採用値を表示する)
+  if (list%dw_jamgrow > -9998.0) then
+    dw%jamgrow = dw_param("dw_jamgrow", list%dw_jamgrow, 0.0, " m3/m2")
+    if (dw%jamgrow <= 0.0) call par_stop("list_driftwood: dw_jamgrow must be > 0")
+  end if
+
+  if (list%f_dwjam == 1) then
+    cd = dw_param("dw_jamcd", list%dw_jamcd, 1.0, "")
+    if (cd <= 0.0) call par_stop("list_driftwood: dw_jamcd must be > 0")
+    phi = dw_param("dw_jamphi", list%dw_jamphi, 0.3, "")
+    if (phi <= 0.0 .or. phi >= 1.0) call par_stop("list_driftwood: dw_jamphi must be in (0,1)")
+    s%dw_jamk = 2.0 * cd / (acos(-1.0) * dlog * (1.0 - phi)**3)
+    s%dw_jamphi = phi
+    s%dw_jam = .true.
+    call par_info("driftwood: jam drag coefficient 2 C_D/(pi d (1-phi)^3) = " &
+                  //rtoa(s%dw_jamk)//" 1/m")
+  else
+    call par_info("driftwood: f_dwjam = 0 (jammed wood is a ledger only; no drag on the flow)")
+  end if
+end subroutine
+
+
+!----------------------------------------------------------------------
+! 立木ストック分布・捕捉率の分布の読み込み(rank0 読み+帯 scatter。使用セルの
+! 負値と、vmax を与えたときはそれを超える値はエラー。m_wq の read_map_scatter と
+! 同型。name は表示用の namelist 名で、省略時は fn_dwstock)
+!----------------------------------------------------------------------
+subroutine read_stock_scatter(p, g, fn, a, name, vmax)
   type(t_sysparam), intent(in) :: p
   type(t_geoinfo), intent(in) :: g
   character(len=*), intent(in) :: fn
   real, intent(inout) :: a(dcp%ish:, dcp%jsh:)
+  character(len=*), intent(in), optional :: name
+  real, intent(in), optional :: vmax
   real, allocatable :: wk(:,:)
   real :: dum(1,1)
-  character(:), allocatable :: fname
+  character(:), allocatable :: fname, nm
   character(len=1024) :: msg
   logical :: found
   integer :: i, j
 
+  nm = "fn_dwstock"
+  if (present(name)) nm = name
   fname = trim(p%dir_data)//"/"//trim(fn)
   inquire(file=fname, exist=found)
-  if (.not. found) call par_stop("list_driftwood: fn_dwstock not found: "//fname)
+  if (.not. found) call par_stop("list_driftwood: "//nm//" not found: "//fname)
 
   if (is_root) then
     allocate(wk(1:g%nx, 1:g%ny))
@@ -368,9 +453,16 @@ subroutine read_stock_scatter(p, g, fn, a)
       do i = 1, g%nx
         if (g%x(i,j) <= 0) cycle
         if (wk(i,j) < 0.0) then
-          write(msg,'(a,2i7,es12.4)') "list_driftwood: fn_dwstock has a negative " &
+          write(msg,'(a,2i7,es12.4)') "list_driftwood: "//nm//" has a negative " &
                                       //"value at cell", i, j, wk(i,j)
           call par_abort(trim(msg))
+        end if
+        if (present(vmax)) then
+          if (wk(i,j) > vmax) then
+            write(msg,'(a,es12.4,a,2i7,es12.4)') "list_driftwood: "//nm//" exceeds ", vmax, &
+                                                 " at cell", i, j, wk(i,j)
+            call par_abort(trim(msg))
+          end if
         end if
       end do
     end do
@@ -426,8 +518,8 @@ end subroutine
 !----------------------------------------------------------------------
 ! 流木過程を適用する(毎ステップ。run_main が geomorph calc の後に呼ぶ =
 ! 同一ステップの z 更新を見た侵食連行)。
-!   順序: (1) 侵食連行 (2) 水理的流失 (3) 接地・乾燥堆積 (4) 再流動
-!         (5) ダム捕捉 (6) 到達量統計
+!   順序: (1) 侵食連行 (2) 水理的流失 (2b) 構造物での捕捉(fn_dwtrap)
+!         (3) 接地・乾燥堆積 (4) 再流動 (5) ダム捕捉 (6) 到達量統計
 !   更新は自帯 js..je のセル内交換のみ(owner-compute。近傍を読まない
 !   ため 2 パス不要 = §28.2 の適用外)。
 !   無効時は no-op。冒頭の return 判定は全ランクで同一 = collective 安全
@@ -439,12 +531,12 @@ subroutine m_driftwood_calc(dw, p, g, s, it)
   type(t_state), intent(inout) :: s
   integer, intent(in) :: it
   integer :: i, j, k, nd
-  real :: hh, w
+  real :: hh, w, ee
 
   if (it < 0) continue  ! 引数未使用の警告を抑制
   if (.not. dw%enabled) return
 
-  !$omp parallel do schedule(dynamic) private(i, j, hh, w)
+  !$omp parallel do schedule(dynamic) private(i, j, hh, w, ee)
   do j = dcp%js, dcp%je
     do i = g%wx(1,j), g%wx(2,j)
       if (g%x(i,j) <= 0) cycle
@@ -471,6 +563,29 @@ subroutine m_driftwood_calc(dw, p, g, s, it)
           dw%wst(i,j) = dw%wst(i,j) - w
           s%hd(i,j) = s%hd(i,j) + w / colfac(s, i, j)
           dw%vrow(j,1) = dw%vrow(j,1) + vol_geo(g, w)
+        end if
+      end if
+
+      ! (2b) 構造物での捕捉(§50.7): 捕捉セルの流動流木を、セルを 1 回通過するうちの割合 E で
+      !      集積流木へ移す。よく混ざったセルの滞留時間 Δx/|V| に対して r = E/(1−E)·|V|Δt/Δx、
+      !      1 ステップの捕捉量は hd·r/(1+r)(規則は【独自】)。E >= 1 と、集積量が dw_jamgrow を
+      !      超えたセルは全量(移流の後に呼ばれるので「入った流木をすべて止める」になる)。
+      !      集積は動かない。残った hd は下の接地・乾燥堆積の対象になる
+      if (dw%have_trap) then
+        if (dw%trap(i,j) > 0.0 .and. s%hd(i,j) > 0.0) then
+          ee = dw%trap(i,j)
+          if (dw%jamgrow > 0.0) then
+            if (s%wj(i,j) > dw%jamgrow) ee = 1.0
+          end if
+          if (ee >= 1.0) then
+            w = s%hd(i,j)
+          else
+            w = ee / (1.0 - ee) * s%vv(i,j) * p%dt / min(g%dx, g%dy)
+            w = s%hd(i,j) * w / (1.0 + w)
+          end if
+          s%hd(i,j) = s%hd(i,j) - w
+          s%wj(i,j) = s%wj(i,j) + w
+          dw%vrow(j,6) = dw%vrow(j,6) + vol_col(g, s, i, j, w)
         end if
       end if
 
@@ -576,8 +691,9 @@ subroutine m_driftwood_record(dw, p, g, s)
   type(t_sysparam), intent(in) :: p
   type(t_geoinfo), intent(in) :: g
   type(t_state), intent(in) :: s
-  real(real64) :: v(1:5), vstk, vflt, vdep
+  real(real64) :: v(1:5), vstk, vflt, vdep, vtrap, vjam
   real(real64) :: rows(dcp%js:dcp%je), rows2(dcp%js:dcp%je), rows3(dcp%js:dcp%je)
+  real(real64) :: rows4(dcp%js:dcp%je)
   integer :: i, j, k
   if (p%initialized) continue  ! 引数未使用の警告を抑制
   if (.not. dw%enabled) return
@@ -600,8 +716,25 @@ subroutine m_driftwood_record(dw, p, g, s)
   call par_sum_rows(rows2, vflt)
   call par_sum_rows(rows3, vdep)
 
+  ! 構造物での捕捉の累積と現在の集積(捕捉セルを与えたときだけ。判定は全ランクで同一)
+  if (dw%have_trap) then
+    call par_sum_rows(dw%vrow(:,6), vtrap)
+    rows4(:) = 0.0_real64
+    do j = dcp%js, dcp%je
+      do i = g%wx(1,j), g%wx(2,j)
+        if (g%x(i,j) <= 0) cycle
+        rows4(j) = rows4(j) + vol_col(g, s, i, j, s%wj(i,j))
+      end do
+    end do
+    call par_sum_rows(rows4, vjam)
+  end if
+
   if (is_root .and. dw%un /= 0) then
-    write(dw%un, '(f0.2,8(",",es15.7))') s%t, es_out([v(1:5), vstk, vflt, vdep])
+    if (dw%have_trap) then
+      write(dw%un, '(f0.2,10(",",es15.7))') s%t, es_out([v(1:5), vstk, vflt, vdep, vtrap, vjam])
+    else
+      write(dw%un, '(f0.2,8(",",es15.7))') s%t, es_out([v(1:5), vstk, vflt, vdep])
+    end if
     flush(dw%un)
   end if
 end subroutine
@@ -609,7 +742,10 @@ end subroutine
 
 !----------------------------------------------------------------------
 ! 内部状態の保存・復元(モジュール私有ファイル driftwood.dat。契約C。§7)
-!   保存対象: s%hd, s%wd, wst, zref(4成分固定)。wdmax は統計 = 対象外
+!   保存対象: s%hd, s%wd, wst, zref(4成分固定)。wdmax は統計 = 対象外。
+!   捕捉セルを与えたとき(fn_dwtrap)だけ、末尾に集積の印(整数 1)と s%wj を
+!   追記する(§50.7)。与えないときのファイルは従来とバイト同一で、save_version は
+!   変えない(印のないファイルは「集積なし」として読める)
 !----------------------------------------------------------------------
 subroutine save_state(dw, p, g, s)
   type(t_driftwood), intent(in) :: dw
@@ -629,6 +765,10 @@ subroutine save_state(dw, p, g, s)
   call restart_write_cell(un, s%wd)
   call restart_write_cell(un, dw%wst)
   call restart_write_cell(un, dw%zref)
+  if (dw%have_trap) then
+    if (is_root) write(un) 1
+    call restart_write_cell(un, s%wj)
+  end if
   if (is_root) close(un)
 end subroutine
 
@@ -640,7 +780,8 @@ subroutine restore_state(dw, p, g, s)
   type(t_state), intent(inout) :: s
   character(:), allocatable :: fname
   logical :: found
-  integer :: un
+  integer :: un, ios
+  integer :: njam(1)
   if (g%initialized) continue  ! 引数未使用の警告を抑制
 
   ! 版・格子・精度の検証は m_state(check_save_info)が済ませている。
@@ -657,6 +798,26 @@ subroutine restore_state(dw, p, g, s)
   call restart_read_cell(un, s%wd)
   call restart_read_cell(un, dw%wst)
   call restart_read_cell(un, dw%zref)
+  ! 集積流木(§50.7): 保存した側が捕捉セルを与えていれば、末尾に印 1 と表がある。
+  ! 印は rank0 が読み、和で全ランクに共有する(rank0 以外は 0 を持ち寄る。
+  ! swflow_enc の動的振り替えの表と同じ手順)。印のないファイルは読めずに 0 になる
+  njam(1) = 0
+  if (is_root) then
+    read(un, iostat=ios) njam(1)
+    if (ios /= 0) njam(1) = 0
+  end if
+  call par_allreduce_sumi(njam)
+  if (dw%have_trap) then
+    if (njam(1) == 1) then
+      call restart_read_cell(un, s%wj)
+    else
+      call par_info("driftwood: the save holds no jammed wood (fn_dwtrap was not given " &
+                    //"when saving); the jam starts from zero")
+    end if
+  else if (njam(1) == 1) then
+    call par_info("driftwood: the jammed wood in the save is not restored because fn_dwtrap " &
+                  //"is not given (its volume leaves the ledger)")
+  end if
   if (is_root) close(un)
 end subroutine
 
@@ -675,6 +836,7 @@ subroutine m_driftwood_dispose(dw, p, g, s)
   dw%un = 0
   if (allocated(dw%wst)) deallocate(dw%wst)
   if (allocated(dw%zref)) deallocate(dw%zref)
+  if (allocated(dw%trap)) deallocate(dw%trap)
   if (allocated(dw%dam)) deallocate(dw%dam)
   if (allocated(dw%vrow)) deallocate(dw%vrow)
   dw%enabled = .false.

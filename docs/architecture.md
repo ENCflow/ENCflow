@@ -45,7 +45,9 @@ main.f90 ─ m_main.f90(組み立て・時間ループ・終了処理。複数�
   │                  下げ剥離物を sd へ(§89)。creep は既定で z の線形拡散、creep_hstar > 0 で
   │                  土層だけが動く深さ依存クリープ(§89.8))
   │    m_driftwood   流木(材積のラスタ場3台帳: 立木 wst → 流動 s%hd → 堆積 s%wd。
-  │                  発生・停止・再流動を担う。移流は swflow_enc の advect_scalar)
+  │                  発生・停止・再流動を担う。移流は swflow_enc の advect_scalar。
+  │                  fn_dwtrap 指定時は 4 つ目の台帳 = 構造物での集積 s%wj を持ち、
+  │                  集積の抵抗の係数を t_state に書く(抗力の項は swflow_enc。§50.7))
   │    m_bldgdebris  家屋破壊・瓦礫(家屋ストック wbs → 流動 s%hbd → 堆積 s%wbd。
   │                  破壊判定(浸水深/荷重に流木・瓦礫を算入)・停止・再流動と
   │                  空隙率 s%gv への帰還。移流は advect_scalar。§63)
@@ -204,7 +206,7 @@ sfm_evap                      貯留関数法の区画セルに残った蒸発�
 swflow_post                   ステップ確定処理(σ・河道幅有効時の u,v 正規化)
 wq_derive                     導出濃度場の更新(確定 h に対して)
 geomorph_calc                 地形変化(s%z, s%e 更新+z のハロ交換)
-driftwood_calc                流木(発生・停止・再流動・ダム捕捉。← geomorph の後 =
+driftwood_calc                流木(発生・構造物での捕捉・停止・再流動・ダム捕捉。← geomorph の後 =
                                 同一ステップの z 更新を見た侵食連行。移流自体は
                                 swflow_calc 内の advect_scalar が hs/cq と同様に実行)
 bldgdebris_calc               家屋破壊・瓦礫(破壊・停止・再流動・ダム捕捉・空隙率の
@@ -228,7 +230,7 @@ calcstat                      統計(S 台帳・max 類。決定的総和)
 |---|---|---|---|
 | p | t_sysparam | m_sysparam | 実行制御。init 後は全モジュール読み取り専用 |
 | g | t_geoinfo | m_geoinfo | 地形 z(入力)・粗度 rn・家屋 gv/bb/lm(入力)・マスク x/sw/rw・格子。原則不変(動的な標高は s%z、動的な空隙率は s%gv/s%lm。g%gv/g%lm の帯は band_shrink で解放)。例外は BMI の P 区分: set_value('rn') が g%rn の帯を上書きする(§77) |
-| s | t_state | m_state | **時間発展する場の正本**: h, e(=z+h), u, v, m, n, vv, s%z(計算標高), sd(土層厚), hg(地下貯留), hg2(風化基岩層), hgc(管路連続体層), hss/hgs(塩水層厚), hs(土砂), hb(動く底層。z・sd の内数), sf(河床の細粒分の厚さ), fx(植生定着度), ht(崖錐の厚さ), cq/cg/crs(輸送物質の地表・地下・ため池プール), hd/wd(流動・堆積流木), hbd/wbd(流動・堆積瓦礫), gv/lm(空隙率と有効慣性係数。§63), swe(積雪), hi(氷河の氷厚), hl(溶岩厚), hrs(ため池), vzp/vzstore(VZ の台帳 = 回収済み未同期の雨と区画の VZ 貯留の総和。柱の状態 ψ は t_vzflow 私有。§87)、sfp/sfstore(貯留関数法の台帳 = 回収済み未同期の雨とタンクの貯留・遅れ時間の間の移動中の水の総和。タンクの状態と遅れ列は t_sfm 私有。§106)、wvh/wvdir/wvub/wvdw(沿岸の波浪場の診断量 = 波高・平均波向・軌道流速・砕波散逸。方向ビンの状態 E_m(流れの作用ありは作用量 N_m)は t_wavefield 私有。§90)、wvfx/wvfy・wvus/wvvs・wvsp・wver(波→流れ = 外力・Stokes 輸送・波・流れの摩擦の速さ・ローラーのエネルギー。y 成分は流れと同じく南が正。wf_flow >= 1 のときだけ確保。§90)、wvex/wvey・wvae・wvua(波→土砂 = 平均波向の単位ベクトル・軌道の振幅・岸向きの速度。geomorph の f_wfsed = 1 の要求 wv_sed のときだけ m_wavefield が確保して帯±ハロを書く)・wvnub(砕波による渦動粘性 ν_w。swflow の wf_break_visc > 0 の要求 wv_visc のときだけ)・wvub0/wvkb(乱れを含まない u_rms と底面の乱れ k_b。geomorph の f_wfsed_turb = 1 の要求 wv_turb のときだけ。このとき wvub は攪拌の速さ)・sqbx/sqby・sqsx/sqsy(漂砂の推定。m_geomorph が帯に書く。§90)、最大値統計。save/restore は m_state が束ねる(hg2・swe・hi・hb・VZ の柱・貯留関数のタンク等のモジュール私有 save は各 dispose。契約5) |
+| s | t_state | m_state | **時間発展する場の正本**: h, e(=z+h), u, v, m, n, vv, s%z(計算標高), sd(土層厚), hg(地下貯留), hg2(風化基岩層), hgc(管路連続体層), hss/hgs(塩水層厚), hs(土砂), hb(動く底層。z・sd の内数), sf(河床の細粒分の厚さ), fx(植生定着度), ht(崖錐の厚さ), cq/cg/crs(輸送物質の地表・地下・ため池プール), hd/wd(流動・堆積流木), wj(構造物に集積した流木。§50.7), hbd/wbd(流動・堆積瓦礫), gv/lm(空隙率と有効慣性係数。§63), swe(積雪), hi(氷河の氷厚), hl(溶岩厚), hrs(ため池), vzp/vzstore(VZ の台帳 = 回収済み未同期の雨と区画の VZ 貯留の総和。柱の状態 ψ は t_vzflow 私有。§87)、sfp/sfstore(貯留関数法の台帳 = 回収済み未同期の雨とタンクの貯留・遅れ時間の間の移動中の水の総和。タンクの状態と遅れ列は t_sfm 私有。§106)、wvh/wvdir/wvub/wvdw(沿岸の波浪場の診断量 = 波高・平均波向・軌道流速・砕波散逸。方向ビンの状態 E_m(流れの作用ありは作用量 N_m)は t_wavefield 私有。§90)、wvfx/wvfy・wvus/wvvs・wvsp・wver(波→流れ = 外力・Stokes 輸送・波・流れの摩擦の速さ・ローラーのエネルギー。y 成分は流れと同じく南が正。wf_flow >= 1 のときだけ確保。§90)、wvex/wvey・wvae・wvua(波→土砂 = 平均波向の単位ベクトル・軌道の振幅・岸向きの速度。geomorph の f_wfsed = 1 の要求 wv_sed のときだけ m_wavefield が確保して帯±ハロを書く)・wvnub(砕波による渦動粘性 ν_w。swflow の wf_break_visc > 0 の要求 wv_visc のときだけ)・wvub0/wvkb(乱れを含まない u_rms と底面の乱れ k_b。geomorph の f_wfsed_turb = 1 の要求 wv_turb のときだけ。このとき wvub は攪拌の速さ)・sqbx/sqby・sqsx/sqsy(漂砂の推定。m_geomorph が帯に書く。§90)、最大値統計。save/restore は m_state が束ねる(hg2・swe・hi・hb・VZ の柱・貯留関数のタンク等のモジュール私有 save は各 dispose。契約5) |
 | sx | t_enc_status | m_swflow_enc 私有 | エッジ流速 uv・流量 mn(前ステップ確定)・mn1(更新中)。他モジュールから不可視。NH の状態(圧力 φ・活性集合・砕波状態・zprev 等)も submodule 私有で、リスタート保存なし(φ は現在状態から再構築。f_nh_bottom の z̈ だけ再開直後の 1 ステップが異なる。§69) |
 | r, b, … | 各 t_* | 各モジュール | モジュール私有。各過程の作業台帳・サブモデルの状態も `t_*` の成分として持つ(モジュール変数に状態を置くのは m_swflow_enc 系(7 つの変数群 opt/nhp/bcs/dbr/chn/sct/geo と submodule の私有状態)・m_ffactor・dcp だけで、これらは複数インスタンス時に `*_ctx_swap` で枠へ退避・復帰する。§71)。リスタートは各自の save ファイル(契約5)。例外: m_bedmotion は私有 save を持たず、再開時刻の変位を表から求めて「適用済み」とする(§70) |
 
@@ -333,7 +335,7 @@ boundary_h と m_gwflow_pump が同じ記録場の列 6 へ積む(wq.csv の out
 | 使い方(利用者視点) | docs/users_guide.md・tutorials/・users_guide/usecases.md(現象→機能) |
 | 前処理・後処理の道具 | utils/*/README.md(fault2disp・out2vtk 等) |
 | 他モデルとの立ち位置 | docs/comparison.md |
-| 個別機能の設計文書 | docs/*_plan.md(geomorph・debris・splash・glacier・boundary・geotiff・gwconduit・swi・driftwood・lava・landslide_tsunami・nonhydrostatic・bedmotion・bmi〔実装済み。設計解説と実績の記録として保持〕、delta〔河口デルタ形成の試行の記録。構成法・結果・機構の議論・他モデルとの対応〕、lake・wq_metal・xwindow・meander・wave・vz・mountain_stream・wavefield・landslide_dam・woodjam〔検討メモ。meander = 蛇行発達・側岸侵食・流砂方向補正の段階計画、wave = 波浪による沿岸漂砂と攪拌(弧状・カスプ状デルタ)、vz = 谷(2023)の鉛直不飽和浸透(VZ)流出モデル = 共有参照柱の 1 次元 Richards。2026-10-26 合意・段階実装中、mountain_stream = 山地渓流の地形発達(流水による岩盤下刻・被覆・研磨と深さ依存クリープの段階計画。2026-10-27 合意・段階実装中)、wavefield = 沿岸の波浪場(代表周波数・方向分割の位相平均の作用量平衡)と波・流れ・土砂の連成。2026-10-27 合意・段階実装中、landslide_dam = 天然ダム例題(豪雨→斜面崩壊→天然ダム→決壊洪水)に要る連成の点検と追加機構の下書き。2026-10-29 起案・未合意・中断中、woodjam = 流木の集積(橋・透過型堰堤・カルバートでの捕捉)と流れへの作用の実装方法の比較と試作。2026-11-12 起案・未合意〕)・channel_model.md。家屋破壊・瓦礫は plan を消し込み済みで developer.md §63 が正本。非静水圧は developer.md §69、規定底面運動は §70 が規約の正本 |
+| 個別機能の設計文書 | docs/*_plan.md(geomorph・debris・splash・glacier・boundary・geotiff・gwconduit・swi・driftwood・lava・landslide_tsunami・nonhydrostatic・bedmotion・bmi〔実装済み。設計解説と実績の記録として保持〕、delta〔河口デルタ形成の試行の記録。構成法・結果・機構の議論・他モデルとの対応〕、lake・wq_metal・xwindow・meander・wave・vz・mountain_stream・wavefield・landslide_dam・woodjam〔検討メモ。meander = 蛇行発達・側岸侵食・流砂方向補正の段階計画、wave = 波浪による沿岸漂砂と攪拌(弧状・カスプ状デルタ)、vz = 谷(2023)の鉛直不飽和浸透(VZ)流出モデル = 共有参照柱の 1 次元 Richards。2026-10-26 合意・段階実装中、mountain_stream = 山地渓流の地形発達(流水による岩盤下刻・被覆・研磨と深さ依存クリープの段階計画。2026-10-27 合意・段階実装中)、wavefield = 沿岸の波浪場(代表周波数・方向分割の位相平均の作用量平衡)と波・流れ・土砂の連成。2026-10-27 合意・段階実装中、landslide_dam = 天然ダム例題(豪雨→斜面崩壊→天然ダム→決壊洪水)に要る連成の点検と追加機構の下書き。2026-10-29 起案・未合意・中断中、woodjam = 流木の集積(橋・透過型堰堤・カルバートでの捕捉)と流れへの作用の実装方法の比較と試作。2026-11-12 起案・同日合意、第 1 段は実装済み(developer.md §50.7)〕)・channel_model.md。家屋破壊・瓦礫は plan を消し込み済みで developer.md §63 が正本。非静水圧は developer.md §69、規定底面運動は §70 が規約の正本 |
 | 「まず動かしてみる」最小入力と型別の推奨値 | users_guide/geomorph.md・driftwood.md・bldgdebris.md・gwflow.md・forcing.md(遮断・蒸発散・積雪)・glacier.md・lavaflow.md の各「パターン別の推奨値」、wq.md「物質別の代表値」(根拠は developer.md §62・§50.6・§63.9・§64〜§67。共通ヘルパは m_util の param_default)。既定値を置かない章(浅水流・河道・境界・潮位・初期条件・地理情報の粗度・淡塩・SWI・構造物・計測・降雨)にも「とりあえず動かしてみる」最小入力と型別の目安表がある |
 | モジュール実装の作法 | src/m_gwflow_bucket.f90 のヘッダ |
 | ビルドの仕組み | make.inc・docs/install.md・§1/§3 |

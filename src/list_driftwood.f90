@@ -35,6 +35,17 @@ module list_driftwood
     real :: dw_wfloat = 0.0                        ! 再流動レート (m/s。0=再流動なし)
     real :: dw_rfloat = 1.5                        ! 浮遊余裕率(再流動水深 = rfloat×喫水)
     real :: dw_vfloat = -9999.0                    ! 再流動の流速閾値 (m/s。wfloat>0 で必須)
+    ! ---- 構造物での捕捉と集積(fn_dwtrap の指定で有効。§50.7)----
+    character(len=maxpathlen) :: fn_dwtrap = ""    ! 捕捉率 E の分布(0〜1。捕捉セルを
+                                                   !   通過する流木のうち捕捉される割合。
+                                                   !   0 = 捕捉しない)
+    integer :: f_dwjam = 1                         ! 集積の流れへの作用(0: 台帳だけ、
+                                                   !   1: 集積したセルの抵抗)
+    real :: dw_jamcd = -9999.0                     ! 集積体の抗力係数 C_D(校正値。既定 1.0)
+    real :: dw_jamphi = -9999.0                    ! 集積体の充填率 φ(実材積 / 見かけの
+                                                   !   体積。0<φ<1。校正値。既定 0.3)
+    real :: dw_jamgrow = -9999.0                   ! 集積量 (m3/m2) がこれを超えたセルは
+                                                   !   捕捉率 1(未指定 = 捕捉率は一定)
   end type
 
 contains
@@ -53,6 +64,9 @@ subroutine list_driftwood_read(p, list)
   real :: dw_wrec, dw_hrec, dw_vrec, dw_droot
   real :: dw_wstop, dw_vstop
   real :: dw_wfloat, dw_rfloat, dw_vfloat
+  character(len=maxpathlen) :: fn_dwtrap
+  integer :: f_dwjam
+  real :: dw_jamcd, dw_jamphi, dw_jamgrow
   integer :: un
   integer :: ios
   character(len=1024) :: iom
@@ -60,7 +74,8 @@ subroutine list_driftwood_read(p, list)
   namelist /list_driftwood/ f_dw, fn_dwstock, dw_stock0, dw_dlog, dw_sglog, &
                             dw_wrec, dw_hrec, dw_vrec, dw_droot, &
                             dw_wstop, dw_vstop, &
-                            dw_wfloat, dw_rfloat, dw_vfloat
+                            dw_wfloat, dw_rfloat, dw_vfloat, &
+                            fn_dwtrap, f_dwjam, dw_jamcd, dw_jamphi, dw_jamgrow
 
   ! ネームリストにありながらファイルに記述のなかった変数は、
   ! 事前に保存されていた値がそのまま保持される
@@ -78,6 +93,11 @@ subroutine list_driftwood_read(p, list)
   dw_wfloat = list%dw_wfloat
   dw_rfloat = list%dw_rfloat
   dw_vfloat = list%dw_vfloat
+  fn_dwtrap = list%fn_dwtrap
+  f_dwjam = list%f_dwjam
+  dw_jamcd = list%dw_jamcd
+  dw_jamphi = list%dw_jamphi
+  dw_jamgrow = list%dw_jamgrow
 
   call par_info("reading list_driftwood in "//trim(p%fn_driftwood))
   open(newunit=un, file=trim(p%fn_driftwood), status='old', iostat=ios, iomsg=iom)
@@ -101,6 +121,11 @@ subroutine list_driftwood_read(p, list)
   list%dw_wfloat = dw_wfloat
   list%dw_rfloat = dw_rfloat
   list%dw_vfloat = dw_vfloat
+  list%fn_dwtrap = fn_dwtrap
+  list%f_dwjam = f_dwjam
+  list%dw_jamcd = dw_jamcd
+  list%dw_jamphi = dw_jamphi
+  list%dw_jamgrow = dw_jamgrow
 
 end subroutine
 

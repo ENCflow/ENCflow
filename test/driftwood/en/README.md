@@ -12,6 +12,9 @@ developer.md §50), which represents driftwood by three raster fields,
 run in one configuration, and volume conservation, activity and arrival
 below the slope break are checked with `Check_driftwood.py`. Split
 continuation by restart and the equivalence of the defaults are also checked.
+Capture and jamming at structures (`fn_dwtrap`: the jammed wood wj and the drag of
+the jam; developer.md §50.7) are checked by configuration 5, a straight channel,
+with `Check_woodjam.py`.
 
 ## Configuration
 
@@ -32,12 +35,50 @@ volume ledger closes), standing stock 0.01 m³/m², representative diameter
 | `Check_driftwood.py <save> [stock0]` | (1) volume conservation \|Σhd + Σwd + Σwst − stock₀ nx ny\| < 1e-9, (2) activity: recruitment > 1e-3 and deposition > 1e-3 m·cell, (3) arrival: max(hd + wd) > 0 on the flat part (i ≥ 30) |
 | `Fig.py` | The figure `en/figs/driftwood.png` below (`python3 Fig.py en`; `figs/driftwood.png` is the Japanese version) |
 
+### Configuration 5: capture and jamming at structures (fn_dwtrap)
+
+A straight channel 4 cells (20 m) wide between dry high ground (length 800 m, Δx = 5 m,
+slope 0.002, n = 0.03). The discharge of the uniform depth of 2.0 m, 94.65 m³/s, is given as a
+reach inflow at the west end, and the east edge is a free outflow. 20 m³ of standing trees in
+the channel upstream (columns 21–30) become driftwood by hydraulic recruitment and reach the
+capture cells, the 4 cells of column 100 (the position of a bridge or an open-type check dam).
+Representative diameter 0.3 m, wood specific gravity 0.5; 40 minutes. The inputs are written by
+`make_jam.py`.
+
+| Configuration | File | Capture ratio E | Effect on the flow | What is checked |
+|---|---|---|---|---|
+| 5 | `param_jam.txt` | 1 | yes (`dw_jamcd`, `dw_jamphi` at the defaults 1.0, 0.3) | volume conservation, ledger, analytical backwater |
+| 5a | `param_jamcap.txt` | 1 | yes (`dw_jamcd = 2.0`, `dw_jamphi = 0.02`) | backwater where the packing limit min(w/h, φ) is active |
+| 5b → 5c | `param_jamrt1.txt` → `param_jamrt2.txt` | 1 | yes | configuration 5 saved at 20 minutes and continued; byte comparison with the continuous `save_jam/` |
+| 5d | `param_jamoff.txt` | 0.3 | no (`f_dwjam = 0`) | the jammed share equals E |
+| 5e | `param_jamnone.txt` | — (no driftwood) | — | byte identity with the flow of 5d (H, V, Log.txt) |
+| 5f | `param_jamgrow.txt` | 0.3 (`dw_jamgrow = 1e-4`) | no | the capture ratio becomes 1 as the jam grows |
+
+| File | Contents |
+|---|---|
+| `Check_woodjam.py jam <result> <save> [cd phi]` | (1) volume conservation \|Σ(wst + hd + wd + wj)·A − 20 m³\| < 1e-9 relative, (2) `trap_m3` and `vol_jam_m3` of driftwood.csv are 20 m³, (3) steady state (depths at 30 and 40 minutes differ by < 1 mm), (4) backwater: the depth one cell upstream of the jam cell equals the value obtained by integrating the gradually-varied-flow equation over the jam section (length 2Δx) from the depth of the uniform reach downstream (ratio of the rises 1 ± 0.03) |
+| `Check_woodjam.py ratio <result> <E>` | the jammed share `trap_m3 / rec_hyd_m3` equals E within ±3 %, and no moving driftwood is left at the end |
+| `Check_woodjam.py grow <result>` | the jammed share is larger than 0.99 |
+
+The gradually-varied-flow equation of (4) is the steady one-dimensional equation with the
+drag of the jam added.
+
+```math
+\frac{dh}{dx} = \frac{S_0 - \dfrac{n^2 q^2}{h^{10/3}} - \kappa_0 \min\!\left(\dfrac{w}{h},\ \varphi\right)\dfrac{q^2}{g\,h^2}}{1 - \dfrac{q^2}{g\,h^3}},
+\qquad \kappa_0 = \frac{2\,C_D}{\pi\,d\,(1-\varphi)^3}
+```
+
+$`w`$ is the mean of the jammed amounts of the two cells of an edge, so $`w_j/2`$ acts on each of
+the two edges of the jam cell (length $`2\Delta x`$). $`d`$ is the representative diameter,
+$`\varphi`$ the packing ratio and $`C_D`$ the drag coefficient
+([driftwood models explained](../../../docs/en/users_guide/driftwood_models.md) §6).
+
 ## Running
 
 ```bash
 make
-./Run.sh          # configuration 1 → 2 → split restart → equivalence of defaults; PASS if all pass (a few seconds)
-./Run_MPI.sh 4    # MPI; state.dat and driftwood.dat are byte-identical to the serial run (with the -O2 strict-math build)
+./Run.sh          # configuration 1 → 2 → split restart → equivalence of defaults → configuration 5; PASS if all pass (about 45 seconds)
+./Run_MPI.sh 4    # MPI (configurations 1, 2 and 5); state.dat and driftwood.dat are byte-identical to the serial run (with the -O2 strict-math build)
 python3 Fig.py en # en/figs/driftwood.png
 ```
 
@@ -66,6 +107,15 @@ of the flat part (center).
 | 3 split continuation by restart | driftwood.dat and state.dat byte-identical to the continuous run | | | PASS |
 | 4 equivalence of defaults | save_min and save_minx byte-identical ((1)–(3) also PASS with stock₀ = 0.001) | | | PASS |
 
+| Configuration | Result | Verdict |
+|---|---|---|
+| 5 capture ratio 1 and the drag of the jam | volume conservation 4.9e-13 m³, jam 20.000000 m³ (0.200 m³/m² per cell). Downstream 1.994 m, upstream 3.000 m, analytical 2.997 m; ratio of the rises 1.003 | PASS |
+| 5a packing limit | w/h of the edges = 0.040 > φ = 0.02. Downstream 1.994 m, upstream 2.486 m, analytical 2.495 m; ratio of the rises 0.982 | PASS |
+| 5b → 5c split continuation by restart | driftwood.dat (including the jammed wood), state.dat and swflow_enc.dat byte-identical to the continuous run | PASS |
+| 5d capture ratio 0.3 | jam 6.080 m³ / recruited 20 m³ = 0.304 | PASS |
+| 5e no driftwood | all outputs of H and V and Log.txt (14 files) byte-identical to 5d | PASS |
+| 5f dw_jamgrow | jammed share 0.9992 | PASS |
+
 - The wood volume (stock + moving + deposited) is conserved to machine
   precision in the closed domain.
 - The values of the table and the figures were recomputed with the
@@ -82,13 +132,21 @@ of the flat part (center).
   §50.4).
 - Driftwood is one-way with respect to the hydraulics (flow → driftwood),
   and the driftwood ledger is unchanged even when enabled together with
-  building debris [test/bldgdebris](../../bldgdebris/en/README.md).
+  building debris [test/bldgdebris](../../bldgdebris/en/README.md). Only the drag of
+  the jammed wood in the capture cells (`fn_dwtrap` with `f_dwjam = 1`) acts on the flow.
+- The backwater of configuration 5 is about 1.0 m (against the uniform depth of 2.0 m) and comes
+  from the 20 m³ of solid wood in the jam (1.0 m² per unit channel width). The 1–2 % difference
+  of the rise from the analytical value comes from the discretization that represents the jam
+  section by two edges. The jammed share of 0.304 in the configuration with a capture ratio of
+  0.3 comes from the capture rule being an approximation computed inside the cell (the
+  residence time of a well-mixed cell).
 - MPI np = 1, 2, 4 are byte-identical to the serial run with the -O2
-  strict-math build. With -Ofast, fast-math ULP differences appear between
+  strict-math build (for configuration 5, state.dat and driftwood.dat of np = 2 and 4 are
+  byte-identical to the serial run with the -Og -fcheck=all build). With -Ofast, fast-math ULP differences appear between
   the serial and MPI builds, so the serial comparison in `Run_MPI.sh` is
   treated as a warning (§50.3).
 
 ## Related documents
 
-- [docs/users_guide/driftwood.md](../../../docs/en/users_guide/driftwood.md) — the two recruitment paths, stopping and refloating, recommended values by pattern
-- developer.md §50 (design, verification records, comparison with the literature), §62 (defaults)
+- [docs/users_guide/driftwood.md](../../../docs/en/users_guide/driftwood.md) — the two recruitment paths, stopping and refloating, capture and jamming at structures, recommended values by pattern
+- developer.md §50 (design, verification records, comparison with the literature; jamming in §50.7), §62 (defaults), docs/woodjam_plan.md (record of the study of jamming; in Japanese)

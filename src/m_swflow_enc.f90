@@ -1236,6 +1236,8 @@ subroutine m_swflow_enc_calc(p, g, b, s, ierror)
   ! 輸送物質柱状量(浮遊砂と同じ理由でステップ頭交換。§30)
   if (s%wq_active) call par_halo_cell(s%cq)
   if (s%dw_active) call par_halo_cell(s%hd)
+  ! 集積流木(辺の抗力項が両側のセルの値を読む。捕捉による更新は前ステップの m_driftwood。§50.7)
+  if (s%dw_jam) call par_halo_cell(s%wj)
   if (s%bd_active) call par_halo_cell(s%hbd)
   ! 地表塩水層厚(同上。§47)
   if (s%salt_active) call par_halo_cell(s%hss)
@@ -2782,6 +2784,12 @@ subroutine calc_kth_flux(p, g, s, sx, uve0, tae0, i, j, k, in, jn, f_runge, uve1
     !   フラックスの式の項を流速で書いたときだけ)。2026-11-12 までここに hhe を掛けて
     !   いて、次元が合わなかった(developer.md §107)
     tfe = tfe - p%kk * p%cd / bbe * (1 - gve) * vve / 2
+
+    ! 集積流木の抵抗(fn_dwtrap と f_dwjam = 1。§50.7)
+    !   集積を多孔質の障害物として、半陰の抗力 κ0·min(w_e/h_f, φ)·|V| を足す。
+    !   κ0 = 2 C_D/(π d (1−φ)³)(1/m)、w_e は辺の両側のセルの集積流木の平均、
+    !   min は水柱に入りきらない分が抵抗を増やさないことを表す
+    if (s%dw_jam) tfe = tfe - s%dw_jamk * min(0.5 * (s%wj(i,j) + s%wj(in,jn)) / hhe, s%dw_jamphi) * vve
 
     ! 土石流の降伏抵抗(db_res>=1)
     !   速度非依存の降伏減速度 a_y を半陰解法に合成(÷|V| で次元を合わせる)

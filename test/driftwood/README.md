@@ -7,7 +7,8 @@
 developer.md §50)の検定です。発生の 2 経路(土石流の侵食連行、洪水の
 水理的流失)をそれぞれ 1 構成で走らせ、材積保存・活性・遷緩点下への
 到達を `Check_driftwood.py` で検定します。あわせてリスタートの分割継続と
-既定値の同値検定を行います。
+既定値の同値検定を行います。構造物での捕捉と集積(`fn_dwtrap`。集積流木 wj と、
+集積の抵抗。developer.md §50.7)は、直線水路の構成 5 を `Check_woodjam.py` で検定します。
 
 ## 構成
 
@@ -27,12 +28,46 @@ developer.md §50)の検定です。発生の 2 経路(土石流の侵食連行�
 | `Check_driftwood.py <save> [stock0]` | (1) 材積保存 \|Σhd + Σwd + Σwst − stock₀ nx ny\| < 1e-9、(2) 活性: 流木化 > 1e-3 かつ堆積 > 1e-3 m·cell、(3) 到達: 平坦部(i ≥ 30)の max(hd + wd) > 0 |
 | `Fig.py` | 下の図 `figs/driftwood.png` |
 
+### 構成 5: 構造物での捕捉と集積(fn_dwtrap)
+
+乾いた高い地盤に挟まれた幅 4 セル(20 m)の直線水路(長さ 800 m、Δx = 5 m、勾配 0.002、
+n = 0.03)。等流水深 2.0 m の流量 94.65 m³/s を西端の区間流入で与え、東辺は自由流出です。
+上流の水路(列 21〜30)の立木 20 m³ が水理的流失で流木になり、列 100 の 4 セルの捕捉セル
+(橋や透過型堰堤の位置)に届きます。代表直径 0.3 m、材比重 0.5。40 分。入力は
+`make_jam.py` が作ります。
+
+| 構成 | ファイル | 捕捉率 E | 流れへの作用 | 確かめること |
+|---|---|---|---|---|
+| 5 | `param_jam.txt` | 1 | あり(`dw_jamcd`・`dw_jamphi` は既定の 1.0・0.3) | 材積保存、台帳、堰上げの解析解 |
+| 5a | `param_jamcap.txt` | 1 | あり(`dw_jamcd = 2.0`、`dw_jamphi = 0.02`) | 充填率の上限 min(w/h, φ) が効く条件の堰上げ |
+| 5b → 5c | `param_jamrt1.txt` → `param_jamrt2.txt` | 1 | あり | 構成 5 を 20 分で保存して継続。通しの `save_jam/` とバイト比較 |
+| 5d | `param_jamoff.txt` | 0.3 | なし(`f_dwjam = 0`) | 集積した割合が E に一致 |
+| 5e | `param_jamnone.txt` | —(流木なし) | — | 5d の流れ(H・V・Log.txt)とバイト一致 |
+| 5f | `param_jamgrow.txt` | 0.3(`dw_jamgrow = 1e-4`) | なし | 集積が進むと捕捉率が 1 になる |
+
+| ファイル | 内容 |
+|---|---|
+| `Check_woodjam.py jam <result> <save> [cd phi]` | (1) 材積保存 \|Σ(wst + hd + wd + wj)·A − 20 m³\| < 1e-9 相対、(2) driftwood.csv の `trap_m3`・`vol_jam_m3` が 20 m³、(3) 定常(30 分と 40 分の水深の差 < 1 mm)、(4) 堰上げ: 集積のセルの 1 つ上流の水深が、下流の一様な区間の水深から漸変流の式を集積の区間(長さ 2Δx)について積分した値に一致(上昇量の比が 1 ± 0.03) |
+| `Check_woodjam.py ratio <result> <E>` | 集積した割合 `trap_m3 / rec_hyd_m3` が E に ±3 % で一致し、終了時に流動流木が残っていない |
+| `Check_woodjam.py grow <result>` | 集積した割合が 0.99 より大きい |
+
+(4) の漸変流の式は、集積の抵抗を足した定常の 1 次元の式です。
+
+```math
+\frac{dh}{dx} = \frac{S_0 - \dfrac{n^2 q^2}{h^{10/3}} - \kappa_0 \min\!\left(\dfrac{w}{h},\ \varphi\right)\dfrac{q^2}{g\,h^2}}{1 - \dfrac{q^2}{g\,h^3}},
+\qquad \kappa_0 = \frac{2\,C_D}{\pi\,d\,(1-\varphi)^3}
+```
+
+$`w`$ は辺の両側のセルの集積量の平均で、集積のセルの両側の辺(長さ $`2\Delta x`$)に $`w_j/2`$ ずつ
+掛かります。$`d`$ は代表直径、$`\varphi`$ は充填率、$`C_D`$ は抗力係数です
+([流木モデルの解説](../../docs/users_guide/driftwood_models.md) §6)。
+
 ## 実行
 
 ```bash
 make
-./Run.sh          # 構成 1 → 2 → リスタート分割 → 既定値の同値。すべて通れば PASS(数秒)
-./Run_MPI.sh 4    # MPI。state.dat・driftwood.dat が逐次とバイト一致(-O2 厳密数学ビルドで)
+./Run.sh          # 構成 1 → 2 → リスタート分割 → 既定値の同値 → 構成 5。すべて通れば PASS(約 45 秒)
+./Run_MPI.sh 4    # MPI(構成 1・2・5)。state.dat・driftwood.dat が逐次とバイト一致(-O2 厳密数学ビルドで)
 python3 Fig.py    # figs/driftwood.png(引数 en で英語版を en/figs/ に)
 ```
 
@@ -57,6 +92,15 @@ python3 Fig.py    # figs/driftwood.png(引数 en で英語版を en/figs/ に)
 | 3 リスタート分割継続 | driftwood.dat・state.dat が通しとバイト一致 | | | PASS |
 | 4 既定値の同値 | save_min と save_minx がバイト一致(stock₀ = 0.001 で (1)〜(3) も PASS) | | | PASS |
 
+| 構成 | 結果 | 判定 |
+|---|---|---|
+| 5 捕捉率 1 と集積の抵抗 | 材積保存 4.9e-13 m³、集積 20.000000 m³(1 セル 0.200 m³/m²)。下流 1.994 m、上流 3.000 m、解析 2.997 m で、上昇量の比 1.003 | PASS |
+| 5a 充填率の上限 | 辺の w/h = 0.040 > φ = 0.02。下流 1.994 m、上流 2.486 m、解析 2.495 m で、上昇量の比 0.982 | PASS |
+| 5b → 5c リスタート分割継続 | driftwood.dat(集積流木を含む)・state.dat・swflow_enc.dat が通しとバイト一致 | PASS |
+| 5d 捕捉率 0.3 | 集積 6.080 m³ / 発生 20 m³ = 0.304 | PASS |
+| 5e 流木なし | 5d と H・V の全出力・Log.txt(14 ファイル)がバイト一致 | PASS |
+| 5f dw_jamgrow | 集積した割合 0.9992 | PASS |
+
 - 材積(ストック + 流動 + 堆積)は閉領域で機械精度で保存されます。
 - 表と図の値は、急勾配の重力補正を既定の 2(斜面に沿う摩擦と流砂のせん断。2026-11-05。
   developer.md §93)にして計算し直したものです。斜面上の摩擦が強まり、1 を明示した値(従来の
@@ -66,12 +110,18 @@ python3 Fig.py    # figs/driftwood.png(引数 en で英語版を en/figs/ に)
   (sg = 0.5 では線形近似 hf = sg·D と一致するためこのケースの数値は
   不変。§50.4)。
 - 流木は水理に片方向(流れ → 流木)で、家屋瓦礫 [test/bldgdebris](../bldgdebris/)
-  との同時有効化でも流木台帳は不変です。
-- MPI np = 1, 2, 4 は -O2 厳密数学ビルドで逐次とバイト一致します。
+  との同時有効化でも流木台帳は不変です。流れに作用するのは、捕捉セルの集積流木の抵抗
+  (`fn_dwtrap` と `f_dwjam = 1`)だけです。
+- 構成 5 の堰上げは約 1.0 m(等流水深 2.0 m に対して)で、集積の実材積 20 m³(水路の幅あたり
+  1.0 m²)によります。上昇量が解析解と 1〜2 % 違うのは、集積の区間を 2 つの辺で表す離散化に
+  よります。捕捉率 0.3 の構成で集積した割合が 0.304 になるのは、捕捉の規則がセルの中だけで
+  計算する近似(よく混ざったセルの滞留時間)だからです。
+- MPI np = 1, 2, 4 は -O2 厳密数学ビルドで逐次とバイト一致します(構成 5 は -Og -fcheck=all の
+  ビルドの np = 2・4 で、state.dat・driftwood.dat が逐次とバイト一致)。
   -Ofast では逐次と MPI のビルド間に fast-math の ULP 差が出るため、
   `Run_MPI.sh` の逐次比較は警告扱いです(§50.3)。
 
 ## 関連文書
 
-- [docs/users_guide/driftwood.md](../../docs/users_guide/driftwood.md) — 発生 2 経路、停止・再流動、パターン別の推奨値
-- developer.md §50(設計・検証記録・文献照合)、§62(既定値)
+- [docs/users_guide/driftwood.md](../../docs/users_guide/driftwood.md) — 発生 2 経路、停止・再流動、構造物での捕捉と集積、パターン別の推奨値
+- developer.md §50(設計・検証記録・文献照合。集積は §50.7)、§62(既定値)、docs/woodjam_plan.md(集積の検討の記録)

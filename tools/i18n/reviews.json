@@ -58,11 +58,11 @@
     {
       "source": "docs/comparison.md",
       "target": "docs/en/comparison.md",
-      "source_sha256": "9465e75875de261453d8319397d8e65207c6e9c4df7d2aa6b370b85d4df7a141",
-      "target_sha256": "6ac08335c404b979ffc21ed835a3b75fc2c113dc06a43a9ea606634f4c2bfe64",
-      "reviewer": "Claude (Claude Code session; two interception ratios of the initial loss and the separation of effective rainfall for the storage function method (§106.8): Japanese and English edited together and the changed passages compared, no model execution)",
+      "source_sha256": "6c35ad14f2d7840f8e252be04ab7f3bd834489977303cf5fdd284d4d01c53f56",
+      "target_sha256": "ca79f12ad04b7f109c28e4ff49d269e96610dacca946cd871d0ff7b578889936",
+      "reviewer": "Claude (Claude Code session; capture and jamming of driftwood at structures (fn_dwtrap; developer.md §50.7): row 'Driftwood blockage' in the process coverage table; Japanese and English edited together and compared; rest unchanged since the previous record)",
       "method": "assistant",
-      "reviewed_on": "2026-11-11"
+      "reviewed_on": "2026-11-12"
     },
     {
       "source": "docs/developer.md",
@@ -104,11 +104,11 @@
     {
       "source": "docs/users_guide.md",
       "target": "docs/en/users_guide.md",
-      "source_sha256": "127f623d98cb74bd2d2364597cfba2edf727e4cae4e18e2e1d6cbcc5a74f47b5",
-      "target_sha256": "df32aea79f00b7abd14f8ef02600b77281a8f21879dfb853890fd65133a365b6",
-      "reviewer": "Claude (Claude Code session; two interception ratios of the initial loss and the separation of effective rainfall for the storage function method (§106.8): Japanese and English edited together and the changed passages compared, no model execution)",
+      "source_sha256": "b0a1216894f539972e1fced2dfde3baf89809e43779871bbffa26a5943126028",
+      "target_sha256": "fe7ba327716df00d5c36b64853ab0caadfea9068a3df7435ec012c7963532ea3",
+      "reviewer": "Claude (Claude Code session; capture and jamming of driftwood at structures (fn_dwtrap; developer.md §50.7): the driftwood entries of the chapter list mention capture and jamming, and the parameter count is 808; Japanese and English edited together and compared; rest unchanged since the previous record)",
       "method": "assistant",
-      "reviewed_on": "2026-11-11"
+      "reviewed_on": "2026-11-12"
     },
     {
       "source": "docs/users_guide/advection.md",
@@ -239,20 +239,20 @@
     {
       "source": "docs/users_guide/driftwood.md",
       "target": "docs/en/users_guide/driftwood.md",
-      "source_sha256": "4e75a927e05d34bcf2022693fdc1f4dc4e2ee4561a0fe1fbb3ec43ed1287ff98",
-      "target_sha256": "868d0652ca5a2f8242563e7e8e5f75984bd1420378e7ba8a28b3f101be4682ec",
-      "reviewer": "Claude (Claude Code session; geomorph chapter split, step 1: the six application setups moved to users_guide/geomorph_applications.md; compared the Japanese source with the English mirror for the moved text, the new pointer paragraphs and the re-targeted links; the rest of the pair is unchanged since the previous record)",
+      "source_sha256": "4eb1b60a6ba86caa6bfc65684ca1003b14fd45c9d7c7a84538b6d0fbc1ea7b64",
+      "target_sha256": "0ea1075c0e1d2e840f95f713f2747a0875822e21ac8c1a544b3a188a95376da3",
+      "reviewer": "Claude (Claude Code session; capture and jamming of driftwood at structures (fn_dwtrap; developer.md §50.7): new section 'Capture and jamming at structures' (rule, where to put capture cells, drag formula and coefficients, what it cannot do), five parameters, the Wj output, the two CSV columns, restart, combinations and the 'not modeled' paragraph; Japanese and English written together and compared paragraph by paragraph; rest unchanged since the previous record)",
       "method": "assistant",
-      "reviewed_on": "2026-11-07"
+      "reviewed_on": "2026-11-12"
     },
     {
       "source": "docs/users_guide/driftwood_models.md",
       "target": "docs/en/users_guide/driftwood_models.md",
-      "source_sha256": "184c3a3d7e1ca9e056a280d94810853200986a1fd3c1ea08f8255b4111451b0d",
-      "target_sha256": "e258176c91290c60f6cfa02665b79aaf265d1a50e216b4effc68d7dce929b8ab",
-      "reviewer": "Claude (Claude Code session; reviewed the Japanese source against the English mirror; figures from the same results and drawing code with label changes only, 2026-10-31)",
+      "source_sha256": "e791f910d4f45a6bb2efd69337a0c5ec4c48fcc0f8842bdcdc99ec54fa372be6",
+      "target_sha256": "9757610c6413a79d8eb0e1f21abf4a5eabb86b0dfc6d45ed8e897d07cf439f87",
+      "reviewer": "Claude (Claude Code session; capture and jamming of driftwood at structures (fn_dwtrap; developer.md §50.7): new §6 (capture rule, drag of the jam, gradually-varied-flow equation, coefficients and limits), parameter grounds, the two references marked as not checked against the original text, verification cases renumbered to §7; Japanese and English written together and the equations and numbers compared; rest unchanged since the previous record)",
       "method": "assistant",
-      "reviewed_on": "2026-10-31"
+      "reviewed_on": "2026-11-12"
     },
     {
       "source": "docs/users_guide/encgrid.md",
@@ -302,11 +302,11 @@
     {
       "source": "docs/users_guide/geomorph_applications.md",
       "target": "docs/en/users_guide/geomorph_applications.md",
-      "source_sha256": "2a30003e46c927d0c6c5b34aad6c6fae37f82dafc44616669bcff1e6f824d152",
-      "target_sha256": "a50d4abb6701ea622d50b17d49aef42a7f50db93d5e177252e5e4bc6d3654fdd",
-      "reviewer": "Claude (Claude Code session; added four setup figures (river-mouth delta, volcanic mass flows and lahars, dense snow avalanche, sabo facilities) with caption paragraphs and two pointers (to the chapter's sea figure in §1, to the figure at the end of §4 in §3); compared the Japanese source with the English mirror for the added text; the rest of the pair is unchanged since the previous record)",
+      "source_sha256": "7367e584c7c8ed6916f70183c30d9e96eecd43ef8297956ca93a3e2bea4941a5",
+      "target_sha256": "cfd37f4d7b97dfbaa24cbff03d972be16ef47fde828bc986b5b3ad624fb08c9f",
+      "reviewer": "Claude (Claude Code session; capture and jamming of driftwood at structures (fn_dwtrap; developer.md §50.7): sentence on open check dams whose open part is represented by capture cells; Japanese and English edited together and compared; rest unchanged since the previous record)",
       "method": "assistant",
-      "reviewed_on": "2026-11-08"
+      "reviewed_on": "2026-11-12"
     },
     {
       "source": "docs/users_guide/glacier.md",
@@ -356,11 +356,11 @@
     {
       "source": "docs/users_guide/io.md",
       "target": "docs/en/users_guide/io.md",
-      "source_sha256": "c8440d6e71c211ade1682cb6a9962631a435c742e38955fc634d50a3a5a4cfc7",
-      "target_sha256": "d47b976b11c418b756643546f630a71a038a91b40aaa05da2438ca38954cbf77",
-      "reviewer": "Claude (Claude Code session; f_out_hrs row: pond depth is output when fn_rscap is given (fn_reservoir is unused, checked in src); Japanese and English edited together and read side by side)",
+      "source_sha256": "47b22583bd4e5361057b199aa78f2a785b46961ac9018e503e9931c9c0329a1d",
+      "target_sha256": "97fe13750db5e325c78e81ab9504f04dc7570f4b87eeb804db550e1323d2f1ba",
+      "reviewer": "Claude (Claude Code session; capture and jamming of driftwood at structures (fn_dwtrap; developer.md §50.7): row for f_out_wj and the reverse-lookup row; Japanese and English edited together and compared; rest unchanged since the previous record)",
       "method": "assistant",
-      "reviewed_on": "2026-11-10"
+      "reviewed_on": "2026-11-12"
     },
     {
       "source": "docs/users_guide/lavaflow.md",
@@ -419,11 +419,11 @@
     {
       "source": "docs/users_guide/params_index.md",
       "target": "docs/en/users_guide/params_index.md",
-      "source_sha256": "56cb1e2f35c15ebf475358e6cd05b363ae62578fe86f9cad508b2957d22a3f40",
-      "target_sha256": "0fd92c5305d433a73fa75dcd589564bd54f5d572832dcd6eac858c27f1f278da",
-      "reviewer": "Claude (Claude Code session; two interception ratios of the initial loss and the separation of effective rainfall for the storage function method (§106.8): Japanese and English edited together and the changed passages compared, no model execution)",
+      "source_sha256": "9791a931c4f62643cd5e19b99a21b4faea1c9d24f4b4eb2123613a92f55a4a87",
+      "target_sha256": "dfd2d9a24e94548c4e54056ed3429e8f02f05c7aa391d20ca1b6444802672ce6",
+      "reviewer": "Claude (Claude Code session; capture and jamming of driftwood at structures (fn_dwtrap; developer.md §50.7): six entries added in alphabetical order (dw_jamcd, dw_jamgrow, dw_jamphi, f_dwjam, f_out_wj, fn_dwtrap) and the count 808; checked by tools/params_index/check.py and by comparing the added rows)",
       "method": "assistant",
-      "reviewed_on": "2026-11-11"
+      "reviewed_on": "2026-11-12"
     },
     {
       "source": "docs/users_guide/passage_width.md",
@@ -500,11 +500,11 @@
     {
       "source": "docs/users_guide/structure.md",
       "target": "docs/en/users_guide/structure.md",
-      "source_sha256": "f9cb31e6f15713db5203e689956855f421bc56da6547c91b69f8aa9cdcdc5d9a",
-      "target_sha256": "77c74bd0c8f0d94f7e335861231909880a4b8314662970db3a04229f507807a8",
-      "reviewer": "Claude (Claude Code session; compared the Japanese and English changes for the water-quality substance carried by structures and withdrawals, 2026-11-04)",
+      "source_sha256": "f4419583df4f0f3dda2d305bd696118d3ff7bf6dfcf7ef62c18e4552d54aa15d",
+      "target_sha256": "70c88de297f5b3db46c36b5bc3239bb528ce541851c9b0d276044accd240de64",
+      "reviewer": "Claude (Claude Code session; capture and jamming of driftwood at structures (fn_dwtrap; developer.md §50.7): note that driftwood on the intake side does not obstruct a culvert; Japanese and English edited together and compared; rest unchanged since the previous record)",
       "method": "assistant",
-      "reviewed_on": "2026-11-04"
+      "reviewed_on": "2026-11-12"
     },
     {
       "source": "docs/users_guide/swflow.md",
@@ -554,11 +554,11 @@
     {
       "source": "docs/users_guide/usecases.md",
       "target": "docs/en/users_guide/usecases.md",
-      "source_sha256": "d0d0c6d7628667ef4921f0695de36b325f0e35841f9be6d3cf1d96345e9c5a0b",
-      "target_sha256": "3a4e2d33124016f01805d48eee26b08428209ab743a1e80cc68881644be1334a",
-      "reviewer": "Claude (Claude Code session; evapotranspiration from the storage function tanks (§106.7): Japanese and English edited together and the changed passages compared, no model execution)",
+      "source_sha256": "27c9649a36db9e0fb9ae751cba94414df43f6bce85c76feabb4b2994748ecd81",
+      "target_sha256": "77ba6929ad8e35828c6a1c122d064275f0213499a2ea00010e01407ff639775f",
+      "reviewer": "Claude (Claude Code session; capture and jamming of driftwood at structures (fn_dwtrap; developer.md §50.7): row for backwater and bypass flooding by driftwood jams, and the wording of the limits in the driftwood row; Japanese and English edited together and compared; rest unchanged since the previous record)",
       "method": "assistant",
-      "reviewed_on": "2026-11-11"
+      "reviewed_on": "2026-11-12"
     },
     {
       "source": "docs/users_guide/user_routines.md",
@@ -662,11 +662,11 @@
     {
       "source": "examples/List_samples/list_driftwood.txt",
       "target": "examples/List_samples/en/list_driftwood.txt",
-      "source_sha256": "fbe9fb5934781d2bb62eaaa9a1394a12435524e0235f3a8c45b4e9a4e269cc9d",
-      "target_sha256": "c2065fb054e10db2252cd87eaa04b338640818c9553575258eba4052d2357204",
-      "reviewer": "Claude (Claude Code session; full-text content and lexical review, no model execution)",
+      "source_sha256": "b563cef0480ac26c74a0919999b236b44f3ddcb995e2d35f166de8ff8c1f9ab6",
+      "target_sha256": "a7984a4d403156aeced2070a83283668d87824bbe4a440a6ecfd2c6265c85d03",
+      "reviewer": "Claude (Claude Code session; capture and jamming of driftwood at structures (fn_dwtrap; developer.md §50.7): header lines and the block of five commented-out parameters; comments translated, names, values and commented-out state identical; checked line by line)",
       "method": "assistant",
-      "reviewed_on": "2026-10-24"
+      "reviewed_on": "2026-11-12"
     },
     {
       "source": "examples/List_samples/list_enc.txt",
@@ -3308,9 +3308,9 @@
     {
       "source": "test/README.md",
       "target": "test/README.en.md",
-      "source_sha256": "b1309beec1260d42896dc7bce17814438b33774369f40301387cfa3a5a300d61",
-      "target_sha256": "49a97419dced6f2c753b576d6abe12e5801e8f4a51730e515109212b5be9ef22",
-      "reviewer": "Claude (Claude Code session; row for the new case bldgdrag (uniform flow in a channel with buildings, §107) added in both languages in the same place; the added rows compared; rest unchanged since the previous record)",
+      "source_sha256": "505e778411fdb177ef76231ea80b19df460ad247484caeec035259e749a20699",
+      "target_sha256": "47694e0d661a9300956447c338137a6eed59f4616398294baab527bc3714e73e",
+      "reviewer": "Claude (Claude Code session; capture and jamming of driftwood at structures (fn_dwtrap; developer.md §50.7): driftwood row extended with the jam checks in both languages; rest unchanged since the previous record)",
       "method": "assistant",
       "reviewed_on": "2026-11-12"
     },
@@ -3749,11 +3749,11 @@
     {
       "source": "test/driftwood/README.md",
       "target": "test/driftwood/en/README.md",
-      "source_sha256": "a3ddd12696a0c3262d03b54901c74a3b7ffa2d080ba741668c280b39307341ef",
-      "target_sha256": "e9dba80dd35d17929b5ae4fdc90b861027bfeea64d4977df99b9adf22890d065",
-      "reviewer": "Claude (Claude Code session; tests aligned to the default f_gravity_correction = 2 (developer.md sec. 93) and recomputed 2026-11-05: the tables, the values in the text and the added recompute note compared with the Japanese source, rest unchanged since the previous record)",
+      "source_sha256": "ba43d345727b8d2914e629305e733fb80d15a28b4c340a7b6cc857babaaa1da2",
+      "target_sha256": "654c300794c4c64a63d7a59bb0d9ecdef52cac6b4779376cfbdba5cbda2cf5ab",
+      "reviewer": "Claude (Claude Code session; capture and jamming of driftwood at structures (fn_dwtrap; developer.md §50.7): configuration 5 (table of six configurations, Check_woodjam.py, the gradually-varied-flow equation, results table, findings); Japanese and English written together; every number compared with the output of the final build)",
       "method": "assistant",
-      "reviewed_on": "2026-11-05"
+      "reviewed_on": "2026-11-12"
     },
     {
       "source": "test/driftwood/figs/driftwood.png",
