@@ -325,8 +325,9 @@ save_info.txt の時刻の行だけ)。抵抗の項は、`if (s%dj_active)` で�
   (src/m_swflow_enc.f90 の `tfe = tfe - p%kk * p%cd * hhe / bbe * (1 - gve) * vve / 2`)は、半陰の
   係数(1/s)としては長さの次元が 1 つ余る。STG(src/m_swflow_stg.f90 の
   `FC=FC+KK*CD/DC/BBC*SQRT(MMC**2.0+NNC**2.0)*(1.0-GVC)`)は k C_D (1 − g_v) |V| / B で、次元が合う。
-  ENC の値は STG の h/2 倍(h は m 単位の水深)にあたり、水深 2 m で一致する。意図した式かどうかは
-  確かめていない(原論文と照合していない)。集積の抗力項は §5.2 のとおり 1/s の次元で書く。
+  ENC の値は STG の h/2 倍(h は m 単位の水深)にあたり、水深 2 m で一致する。h は 2026-01-14 の
+  コミット af151189 で入った(初版は h なし)。調査と影響の記録は handoff.md の 00t。集積の抗力項は
+  §5.2 のとおり 1/s の次元で書く。
 
 ---
 
