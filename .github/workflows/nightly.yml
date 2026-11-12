@@ -1,5 +1,5 @@
 # ENCflow Nightly: フル回帰+MPI np=1,2,4+debug(-fcheck=all)+BMI 適合性
-#   毎 push の CI(ci.yml: 高速 19 ケース×逐次/np=2)を補う夜間の全数検査。
+#   毎 push の CI(ci.yml: 高速 20 ケース×逐次、うち 19 ケース×np=2)を補う夜間の全数検査。
 #   4 ジョブ構成:
 #     full-serial : release 逐次で reference 全 22 ケース(chichibu 含む)
 #                   +トップレベル make(utils の追随漏れ検出。developer.md §10)

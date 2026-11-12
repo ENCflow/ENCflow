@@ -420,6 +420,11 @@ lose water at the band boundaries). Operation without a mask on one process
 is checked through the conservation of the continuity equation by
 [test/stg](../../../test/stg/en/README.md).
 
+The drag of buildings (§5) has the coefficient $`k\,C_D`$ in STG, twice the
+$`k\,C_D/2`$ of ENC. With the same `cd`, `kk` and `fn_bb`, the building drag is
+twice as large in STG (multiplying the pressure and friction terms by $`g_v`$ and
+using $`\lambda_m`$ for the inertia are the same as in ENC).
+
 ## 10. Parameters
 
 | Parameter | Default | Meaning | Basis |
