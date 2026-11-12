@@ -887,11 +887,11 @@
     {
       "source": "examples/README.md",
       "target": "examples/README.en.md",
-      "source_sha256": "31054116fc32b463e91fdf1d1ecf4ec64064b7333ae270c167fa6606d0e6cd9d",
-      "target_sha256": "d15cde81b999cdd95424e8126ce38d011ebfd856c73bc1d08f423d6a26c96910",
-      "reviewer": "Claude (Claude Code session; the source_area row extended in both languages (the storage function method in the supplement, and the feature list); the rest unchanged since the previous record)",
+      "source_sha256": "7c01de3a999b13b4e0911742bf31d7fc732c02c7ab10301e78cb1a3aa6d1b3f4",
+      "target_sha256": "a17c8ecf34728c0011c39b7a09300eb00b28a15b0f2f3e1b19a5a1703674e59d",
+      "reviewer": "Claude (Claude Code session; contents column: benchmark and source_area shortened to about 60 characters (source_area now names the equivalent-roughness, VZ and storage-function comparisons briefly; the feature column keeps main's extended list), and the source_area entry of the chained-process list shortened, in both versions; read side by side)",
       "method": "assistant",
-      "reviewed_on": "2026-11-11"
+      "reviewed_on": "2026-11-12"
     },
     {
       "source": "examples/ashfall_lahar/README.md",
