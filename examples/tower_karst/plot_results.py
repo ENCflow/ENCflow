@@ -165,7 +165,7 @@ ax.imshow(hillshade(zf, dx), cmap="gray", extent=ext, origin="lower", vmin=0, vm
 cstep = 5 if zf.max() - zf.min() < 60 else 10      # 準定常強制などで起伏の範囲が広いときは間隔を広げる
 ax.contour(x, y, zf, levels=np.arange(np.floor(zf.min() / cstep) * cstep, zf.max() + cstep, cstep), colors="tab:blue",
            linewidths=0.5, linestyles="solid")
-ax.set_title(T("最終地形(地形時間 %.0f 年、等高線 %d m)", "Final terrain (morphological time %.0f yr, contours %d m)") % (tend, cstep))
+ax.set_title(T("最終地形(地形時間 %.0f 年、等高線 %d m)", "Final terrain\n(morphological time %.0f yr, contours %d m)") % (tend, cstep))
 ax = axes[1, 0]
 if d.min() > 0 and d.max() / d.min() < 10:
     # 全面が深く削られた(準定常強制などで平野が 100 m 以上下がる): 対数では色が飽和するので線形で範囲いっぱいに

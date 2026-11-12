@@ -2867,56 +2867,56 @@
     {
       "source": "examples/tower_karst/README.md",
       "target": "examples/tower_karst/en/README.md",
-      "source_sha256": "a304485f2afac1d05e5f35f8cda651cd979f07478efdbc360bbdeccc3c6e5ffd",
-      "target_sha256": "9331a2a07d99de82030a8037e686bae2db771075254864c814d16a3be6a6bca0",
-      "reviewer": "Claude (Claude Code session; checked the figures' rules against src and param files, and compared the added captions sentence by sentence)",
+      "source_sha256": "88da6c4ae7445e09fec804b5026289ebdb7eb657286522670df052fb4644cedf",
+      "target_sha256": "fb8ed74c59685bc7c758040ca4a2e375cdae79dedf7f033af25a7623cb01fc3d",
+      "reviewer": "Claude (Claude Code session; compared the Japanese source with the English mirror after replacing the values of all four configurations with the 2026-11-10/12 recomputation, correcting the uplift total to 197.1 m and the run-time estimates, 2026-11-12)",
       "method": "assistant",
-      "reviewed_on": "2026-11-08"
+      "reviewed_on": "2026-11-12"
     },
     {
       "source": "examples/tower_karst/figs/hydrograph.png",
       "target": "examples/tower_karst/en/figs/hydrograph.png",
-      "source_sha256": "2274f8cd61fac2f5d84078201d29c255f3d699e093b236b85be525ef0f753e2e",
-      "target_sha256": "2415b791302ba6063f2b935b7adc744c76765f30102a403db8b071765cdb31a3",
-      "reviewer": "Claude (Claude Code session; compared the Japanese source with the English mirror after the karst dissolution updates of 2026-11-03/04: talus dissolution, dissol_src 4/5, fn_dissol multiplier, tests H/I/talus, steady and stone-forest examples)",
+      "source_sha256": "189ca63b1aa3658f7554eff7de3ab2ecccbb2a064779ab591af8623389adeffa",
+      "target_sha256": "65c567d39efd562753078fc0f53c1c9105d3e16d208bd7eda5e74f1a41fd115a",
+      "reviewer": "Claude (Claude Code session; compared the Japanese and English figures redrawn from the 2026-11-10/12 recomputation, with the English final-terrain title on two lines, 2026-11-12)",
       "method": "assistant",
-      "reviewed_on": "2026-11-04"
+      "reviewed_on": "2026-11-12"
     },
     {
       "source": "examples/tower_karst/figs/maps.png",
       "target": "examples/tower_karst/en/figs/maps.png",
-      "source_sha256": "08262a30c7844f43d936c194fd23327217ee467004cdee0fdb64aae17d8bd9d7",
-      "target_sha256": "a5835d0e4d4419eeab6fc0b31d779d61c8d8539b7f014830f202e0957f369ae4",
-      "reviewer": "Claude (Claude Code session; compared the Japanese source with the English mirror after the karst dissolution updates of 2026-11-03/04: talus dissolution, dissol_src 4/5, fn_dissol multiplier, tests H/I/talus, steady and stone-forest examples)",
+      "source_sha256": "7bb5f6177709f038c99dd810b92f521471e4122b52ff3af4ddddfbbc389b4015",
+      "target_sha256": "220f6fdc49999d48e9a1cfa8a1f22ade242faf03b436095f11e1e8d9ee8932b1",
+      "reviewer": "Claude (Claude Code session; compared the Japanese and English figures redrawn from the 2026-11-10/12 recomputation, with the English final-terrain title on two lines, 2026-11-12)",
       "method": "assistant",
-      "reviewed_on": "2026-11-04"
+      "reviewed_on": "2026-11-12"
     },
     {
       "source": "examples/tower_karst/figs/maps_base.png",
       "target": "examples/tower_karst/en/figs/maps_base.png",
-      "source_sha256": "08f721c521ba3249151275148c9bf7becdf52f01c6ed6526b03b2177c95176d6",
-      "target_sha256": "d82d3dace0a849c12916b2e67f9baabd215a73dbce3a711f9b96c05c6d01fa65",
-      "reviewer": "Claude (Claude Code session; compared the Japanese source with the English mirror after adding the base-level section of tower_karst and correcting the water-table statement of dissol_src 4/5, 2026-11-04)",
+      "source_sha256": "1795fb88678d8b46355e5fcb526b444eefeadfd5af2cdd7682f26a083be843ae",
+      "target_sha256": "9901491926e14cc3b53fd27e754860466f212262016e56d9f6a58ba9bdaed6a6",
+      "reviewer": "Claude (Claude Code session; compared the Japanese and English figures redrawn from the 2026-11-10/12 recomputation, with the English final-terrain title on two lines, 2026-11-12)",
       "method": "assistant",
-      "reviewed_on": "2026-11-04"
+      "reviewed_on": "2026-11-12"
     },
     {
       "source": "examples/tower_karst/figs/maps_base_hc50.png",
       "target": "examples/tower_karst/en/figs/maps_base_hc50.png",
-      "source_sha256": "06f81bd4abc9cd7c95251d38d055e35baa0522036bd38f7196ea8aa9fb0fda7a",
-      "target_sha256": "bb7213ce07a2ea019e1c92b1ef196d10ed6d1742c362eafb1e7e3f2a951a8069",
-      "reviewer": "Claude (Claude Code session; compared the Japanese source with the English mirror after adding the rf_hc = 50 m sensitivity subsection of tower_karst, 2026-11-04)",
+      "source_sha256": "a1e3a86b9baea027ea63c1b0867066143a1ac29eeed66272c18316dae14848dd",
+      "target_sha256": "9544fe3b9bd5cd61a67f6360120be6145d279531442fdebed0b939598b55385f",
+      "reviewer": "Claude (Claude Code session; compared the Japanese and English figures redrawn from the 2026-11-10/12 recomputation, with the English final-terrain title on two lines, 2026-11-12)",
       "method": "assistant",
-      "reviewed_on": "2026-11-04"
+      "reviewed_on": "2026-11-12"
     },
     {
       "source": "examples/tower_karst/figs/maps_steady.png",
       "target": "examples/tower_karst/en/figs/maps_steady.png",
-      "source_sha256": "a14502580a117f4c6225d243f9cd2fd5e9af4e11b7fedbac41fa6c4670e34137",
-      "target_sha256": "9eb5987b908738f6990806b14d0650859d5e23a6fb59b28b8276d49eef614e97",
-      "reviewer": "Claude (Claude Code session; compared the Japanese and English figure images side by side: same plotted data and layout, labels translated)",
+      "source_sha256": "32831e5619e8ef083868468719adfbba841168c6fd2ef09a39c956193cbf5e55",
+      "target_sha256": "db3482646ee2260df91165f19087c73ffb5563683d4044e1dcdce470e365e4e9",
+      "reviewer": "Claude (Claude Code session; compared the Japanese and English figures redrawn from the 2026-11-10/12 recomputation, with the English final-terrain title on two lines, 2026-11-12)",
       "method": "assistant",
-      "reviewed_on": "2026-11-08"
+      "reviewed_on": "2026-11-12"
     },
     {
       "source": "examples/tower_karst/figs/mechanism.png",
@@ -2930,38 +2930,38 @@
     {
       "source": "examples/tower_karst/figs/sections.png",
       "target": "examples/tower_karst/en/figs/sections.png",
-      "source_sha256": "c1c359764338a194427267180922938b3d999ddca215f4aa77719b2e52c7f60c",
-      "target_sha256": "0c5539af21fdd59d952b45251b2688f59665164ba4a5f078518d3616908a2523",
-      "reviewer": "Claude (Claude Code session; both images drawn by plot_results.py and plot_results.py en from the same results recomputed with f_opening_dynamic = 3 on 2026-11-02, compared side by side: same plotted data and layout, labels translated)",
+      "source_sha256": "3afe734bd8eb6b6a6fabb637cb39607a0d3f253ab8019a4069730449c70cdf53",
+      "target_sha256": "19f9e33c247888dadd4add00fb49b1acd4a8da60c87ca0b165d0dbf5042dc1c5",
+      "reviewer": "Claude (Claude Code session; compared the Japanese and English figures redrawn from the 2026-11-10/12 recomputation, with the English final-terrain title on two lines, 2026-11-12)",
       "method": "assistant",
-      "reviewed_on": "2026-11-02"
+      "reviewed_on": "2026-11-12"
     },
     {
       "source": "examples/tower_karst/figs/sections_base.png",
       "target": "examples/tower_karst/en/figs/sections_base.png",
-      "source_sha256": "3c68a38d5ff3bebdb8fd87da4653da9c89325702267e50228064a73bd85a27ff",
-      "target_sha256": "dfbe1ad2b94c580b2d930002e46c898cd2f8a1ac59971317d868a5e1c8c8fec7",
-      "reviewer": "Claude (Claude Code session; compared the Japanese source with the English mirror after adding the base-level section of tower_karst and correcting the water-table statement of dissol_src 4/5, 2026-11-04)",
+      "source_sha256": "984cf292f87c40f064ed3f407a48b7cd23a45083afbd4804e695c8fae252b4f8",
+      "target_sha256": "50811b199f9b5c0ce497a457563543256104313b5f75401a35169912e1c9da14",
+      "reviewer": "Claude (Claude Code session; compared the Japanese and English figures redrawn from the 2026-11-10/12 recomputation, with the English final-terrain title on two lines, 2026-11-12)",
       "method": "assistant",
-      "reviewed_on": "2026-11-04"
+      "reviewed_on": "2026-11-12"
     },
     {
       "source": "examples/tower_karst/figs/sections_base_hc50.png",
       "target": "examples/tower_karst/en/figs/sections_base_hc50.png",
-      "source_sha256": "e4d1b70407ce356c5408951c950128fda8e85d95bfe77698568bcceb94045a66",
-      "target_sha256": "af6467b3c1930649f14c54316b4c121d09abb4c5ec81120ca5c013d16e543edc",
-      "reviewer": "Claude (Claude Code session; compared the Japanese source with the English mirror after adding the rf_hc = 50 m sensitivity subsection of tower_karst, 2026-11-04)",
+      "source_sha256": "bb13aec276d4cabf3c69960cabf625050ec02cf06699c93dae1c3712fcf6bdfe",
+      "target_sha256": "36d2ab639e357cdd709e8f96e445af5fd1c0ee69d1d6e5b559a522ed87944a16",
+      "reviewer": "Claude (Claude Code session; compared the Japanese and English figures redrawn from the 2026-11-10/12 recomputation, with the English final-terrain title on two lines, 2026-11-12)",
       "method": "assistant",
-      "reviewed_on": "2026-11-04"
+      "reviewed_on": "2026-11-12"
     },
     {
       "source": "examples/tower_karst/figs/sections_steady.png",
       "target": "examples/tower_karst/en/figs/sections_steady.png",
-      "source_sha256": "e473276d26e507f381404cfe824f5e2cdce150143eb9ba2acca45e4b1ed17764",
-      "target_sha256": "39b899e6b4d71cc85cc51bb2d502b506434d72f793b3319c53d36b14a0bed470",
-      "reviewer": "Claude (Claude Code session; compared the Japanese and English figure images side by side: same plotted data and layout, labels translated)",
+      "source_sha256": "c7187b1223efdea37e00f9531459d09445a5c3e1d30c81137411a54b991a6e59",
+      "target_sha256": "a3dd88bf74da19f1a7bea9abff335adf24e178af4f27a661ca02a5dee66269d0",
+      "reviewer": "Claude (Claude Code session; compared the Japanese and English figures redrawn from the 2026-11-10/12 recomputation, with the English final-terrain title on two lines, 2026-11-12)",
       "method": "assistant",
-      "reviewed_on": "2026-11-08"
+      "reviewed_on": "2026-11-12"
     },
     {
       "source": "examples/tower_karst/figs/setup.png",
@@ -2984,38 +2984,38 @@
     {
       "source": "examples/tower_karst/figs/towers.png",
       "target": "examples/tower_karst/en/figs/towers.png",
-      "source_sha256": "d4066c59b5a8a4f82983d4e54aa3840f7e248667e8039518524a1883145989bd",
-      "target_sha256": "8cc797a96e8d92ed60f051ef21530f4d510695aa448f0629056140498ffef778",
-      "reviewer": "Claude (Claude Code session; compared the Japanese source with the English mirror after the karst dissolution updates of 2026-11-03/04: talus dissolution, dissol_src 4/5, fn_dissol multiplier, tests H/I/talus, steady and stone-forest examples)",
+      "source_sha256": "03291a4aac122bcad8d6c2ad07d361f6de229c2d1aba52f4c741313a7ef9041c",
+      "target_sha256": "3106fdead10887c0599d472f23413e6622b094f97806df2b3a89fd0c98057202",
+      "reviewer": "Claude (Claude Code session; compared the Japanese and English figures redrawn from the 2026-11-10/12 recomputation, with the English final-terrain title on two lines, 2026-11-12)",
       "method": "assistant",
-      "reviewed_on": "2026-11-04"
+      "reviewed_on": "2026-11-12"
     },
     {
       "source": "examples/tower_karst/figs/towers_base.png",
       "target": "examples/tower_karst/en/figs/towers_base.png",
-      "source_sha256": "78ff76b0339f6f34b26e668e68aec1b62a41180c9085e58c1def714c23e95eef",
-      "target_sha256": "53c68962a6fa367f8ccfabe51c36e6bfeca0f1ec300a86144a85cefb13dcdf32",
-      "reviewer": "Claude (Claude Code session; compared the Japanese source with the English mirror after adding the base-level section of tower_karst and correcting the water-table statement of dissol_src 4/5, 2026-11-04)",
+      "source_sha256": "980b18506e0bd38f8d9e3a17bfc519162c9a12a247d5e80c874e0891c5fc64e8",
+      "target_sha256": "30a49dc5e9746b5de8eeb6ec9335ff2ce7ba518cb29da3c62b5a6df111247d91",
+      "reviewer": "Claude (Claude Code session; compared the Japanese and English figures redrawn from the 2026-11-10/12 recomputation, with the English final-terrain title on two lines, 2026-11-12)",
       "method": "assistant",
-      "reviewed_on": "2026-11-04"
+      "reviewed_on": "2026-11-12"
     },
     {
       "source": "examples/tower_karst/figs/towers_base_hc50.png",
       "target": "examples/tower_karst/en/figs/towers_base_hc50.png",
-      "source_sha256": "1b540a6edcadc7fcfc0201525a842c5852515d673b56113c8b2ffa02277a400c",
-      "target_sha256": "52a20a150ee6b0c802e71f37cb4088953690f1f13f1c3c466b45f3053492bc56",
-      "reviewer": "Claude (Claude Code session; compared the Japanese source with the English mirror after adding the rf_hc = 50 m sensitivity subsection of tower_karst, 2026-11-04)",
+      "source_sha256": "64f59852b3f9f143a0c457a5bb597511d2478a6ffcbdd84be8d11f42e9d09dc9",
+      "target_sha256": "facaa24d255813f1ac342fee5c15a39467e6945b5fc47e91ed90fbb21ec7c1f3",
+      "reviewer": "Claude (Claude Code session; compared the Japanese and English figures redrawn from the 2026-11-10/12 recomputation, with the English final-terrain title on two lines, 2026-11-12)",
       "method": "assistant",
-      "reviewed_on": "2026-11-04"
+      "reviewed_on": "2026-11-12"
     },
     {
       "source": "examples/tower_karst/figs/towers_steady.png",
       "target": "examples/tower_karst/en/figs/towers_steady.png",
-      "source_sha256": "20848628f86c60ca0833aa3a359301de3ddef32fd93bdb98940923033a376851",
-      "target_sha256": "32fc72b67536f4196a21c845abb62657ac8b21bf2a01b776ce41fc8b63b8e642",
-      "reviewer": "Claude (Claude Code session; compared the Japanese and English figure images side by side: same plotted data and layout, labels translated)",
+      "source_sha256": "f9a9f309d4114ba08a258906ae750b8186793e36058ffe561d32a0082d7cfb36",
+      "target_sha256": "15c9b06131b5e3fb7407d96f9aedf36a26c8f151d92be0bca454f711bacb41b4",
+      "reviewer": "Claude (Claude Code session; compared the Japanese and English figures redrawn from the 2026-11-10/12 recomputation, with the English final-terrain title on two lines, 2026-11-12)",
       "method": "assistant",
-      "reviewed_on": "2026-11-08"
+      "reviewed_on": "2026-11-12"
     },
     {
       "source": "examples/tsunami_coast/README.md",

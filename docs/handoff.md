@@ -81,7 +81,6 @@ architecture.md。このメモは「現在進行中・未完了の項目」だ�
      - mesa: series_bench.png(README に未掲載)では、bench の大きい台地は 5×10⁷ s 以降に崩れる
        (8.6×10⁷ s で約 2 m。bench2 は 19.6 m)。README の補足 1 は 4.3×10⁷ s の値だけを書いている
        ので、終盤を書くなら数表を出す。
-     - tower_karst: maps_steady の色が飽和している。
      - delta: fixation.png の題の陸化 66 と表の 67(この図を描くスクリプトはリポジトリになかった。00g。
        2026-11-10 に比較の図と指標のスクリプト plot_compare.py・参考ケース 2 つ・アンサンブルの生成を
        足した〔111b376。例題に含めることは利用者の了承済み〕。delta の再計算の結果で描いて README を直す)。
@@ -229,14 +228,19 @@ architecture.md。このメモは「現在進行中・未完了の項目」だ�
        tsunami_town(東端を高台にした地形に変更)・landslide_tsunami・tsunami_coast・sewer_hybrid・ashfall_lahar・
        debris_bedrock・shield_volcano・badland・timberyard・badland_round・mesa・badland_storm・glacier_valley(補足の
        湖と合流点の段は gl_diagratio = 1/3 で変わった。developer.md §99)・mountain_valley(補足 V_a_tp は既定 2 で
-       厚い被覆から抜けるようになった。§89.30。計算時間の目安を実測に合わせた)。回し直して変化がなかった
+       厚い被覆から抜けるようになった。§89.30。計算時間の目安を実測に合わせた)・tower_karst(4 構成とも振る舞いは
+       同じで細かな値だけが変わった。元からの丸めも直した: 隆起の総量は 200 m でなく 197.1 m、基準面の平野の溶食は
+       213 でなく 210 mm/kyr〔developer.md §86.8 に訂正の注記〕、hc50 の頂の低下は 6 mm/kyr。steady の削剥深の色の
+       飽和は 4b2021c で直り、英語版の最終地形の題を 2 行にした。計算時間の目安を実測に合わせた)。回し直して変化がなかった
        もの: tsunami_fault・bedrock_cover・nest_reflect(図もビット一致)・catchment_metal(計算は 11-09 と同じ。
        監査 00o の図の直し(G1 の線、まとめの (b) の対数軸の下限 0.001 kg)で図 3 枚だけ描き直した)・
        estuary_barrage(計算は 11-09 と同じ。監査 00o の図の直しで profile・series だけ描き直した)・karst(3 ケースとも
        値は同じで、崩落の補足の崖錐として溶けた岩だけ 623 → 622 m³。図は見分けられない差なので描き直さない)・
        stone_forest(値は同じ。監査 00o の直しで stats と英語版 maps だけ描き直した)。
-       計算済みで照合中: tower_karst(本番・steady・基準面。base_hc50 の後に README を照合する)。計算中: delta(20 本)と
-       tower_karst の base_hc50。検定は済: reference を持たない
+       照合中: delta(20 本。README が引く確かめの 3 本 — wfsed の遡上域の輸送なし、tidedom の morfac 120・60 — も
+       回し直している。利用者の了承「全て推奨で」: 構成はそのままで値と記述を新しい結果に、実現ごとの違いの記述を
+       アンサンブルの幅に、図化スクリプトの直し、段 1〜4 とアンサンブルの英語版の図、README に載っていない図 5 枚の
+       削除)。検定は済: reference を持たない
        自己検定 48 本(wave_shore を含む)がすべて PASS し、README の値と食い違った 32 検定の README(日英)と
        図 12 組を今の値に直した(利用者の了承「案 1・全件」。丸め誤差の水準の残差は「〜程度以下(丸め誤差)」と
        上限で書く。users guide の advection・sediment が引く sublattice・creep の値も直した)。
@@ -1210,14 +1214,15 @@ architecture.md。このメモは「現在進行中・未完了の項目」だ�
      溶食(§86.7。準定常の試走で崖錐が不死身の「コンベア」を実検出)、岩への
      涵養を水量にする dissol_src = 4/5(§86.8。基準面つきの試走で穴に底がなく
      発散したのを実検出。2026-11-04)。同日、裾の基準面(吐口 + f_uplift)の例題
-     tower_karst/param_base.txt(0.99 Myr: 隆起 200 と平野の溶食 213 mm/kyr が釣り合い、
+     tower_karst/param_base.txt(0.99 Myr: 隆起 200 と平野の溶食 210 mm/kyr が釣り合い、
      塔は比高 66〜69 m の安息角の円錐として残る。地下水面は残渣の土層に吸われて
      −5 → −9.5 m、平野の基岩は地下水面の 24 m 下まで溶ける = 地下水面は基準面に
      ならない。README の「基準面」の節・§86.8 の実測)と、節理地図の例題
      examples/stone_forest(19.7 kyr)を完了。残:
      - param_base の感度: rf_hc = 50 m は計算済み(param_base_hc50.txt。比高 240 m・壁 75° の
-       柱になるが、頂の残渣 0.2 m が dissol_sdsurf を超えて表面流源を止め、頂の低下が 9 mm/kyr
-       しかない副作用あり → 急な裸岩に残渣を残さない(または流出水で運ぶ)扱いの設計が要る)。
+       柱になるが、頂の残渣(164 kyr で 0.18 m、1 Myr で 0.67 m)が dissol_sdsurf を超えて表面流源を
+       止め、頂の低下が 6 mm/kyr(涵養源だけ)しかない副作用あり → 急な裸岩に残渣を残さない(または
+       流出水で運ぶ)扱いの設計が要る)。
        未計算: dissol_fres = 0(残渣が地下水面を下げる副作用の切り分け)、uplift0、sdsurf
      - 飽和帯(基岩面 < 管路水頭)で面的溶食を止める/減衰させる項(溶食平野を
        地下水面で止める。第 4 段の飽和減衰 c_eq − c と同じ場所)、残渣の河川による除去
@@ -1418,7 +1423,7 @@ architecture.md。このメモは「現在進行中・未完了の項目」だ�
       その旨を README(日英)に注記。回し方は各 README のとおりで、plot スクリプトの数表と README を比べて
       更新する。badland_storm は結果 5 の wet_lw の 3 構成と result_wet2 の手計算も要る。main 側の文書の組み直しの branch(2026-11-02 に取り込み)で
       この 3 例題は f_opening_dynamic = 2 のまま再計算され README は新しい構成になったので、注記を付け直した。
-      既定 3 での再計算は引き続き未了)。
+      既定 3 での再計算は、2026-11-10〜12 の一括の回し直しで 3 例題とも済ませ、README と図を更新した。00m(f))。
       切り替え後に test/wfcurrent の海浜の沿岸流の運動量の検定が 3 で通らないと分かり(積分の比 0.95。
       Δx 20/10/5 m で 0.899/0.953/0.976 と一次で収束、2 は 0.993/1.000/0.999)、海浜の構成は 2 を明示した。
       **斜面に沿う流れで開いた斜めの開口が持つ一次の摩擦の偏りの原因の特定と対策は未着手**(§68.41)。
