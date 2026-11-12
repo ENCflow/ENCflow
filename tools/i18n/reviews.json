@@ -869,11 +869,11 @@
     {
       "source": "examples/README.md",
       "target": "examples/README.en.md",
-      "source_sha256": "10f2a7953bde6ad5a08cf077fde8d175cea66be2a34e74f3002681670b4fd7db",
-      "target_sha256": "25642c1b6afcb9ba4353b67362598f6b97e69f8f263995240047ef7f30bf0ea7",
-      "reviewer": "Claude (Claude Code session; contents column: shortened the benchmark and source_area rows to about 60 characters (grid details and the equivalent-roughness detail left to the case READMEs) in both versions; read side by side)",
+      "source_sha256": "b288ed892b334c165aecf8a77d73cebb1329804b17afd7443ddf6be12f0c7dfb",
+      "target_sha256": "8db57d5bf126b6dcc5cee238b8cb411bb25b4f017f3a66e7728aacf451bdfa36",
+      "reviewer": "Claude (Claude Code session; contents column shortened to about 60 characters (benchmark, source_area) and the source_area entry of the chained-process list shortened in both versions; read side by side)",
       "method": "assistant",
-      "reviewed_on": "2026-11-11"
+      "reviewed_on": "2026-11-12"
     },
     {
       "source": "examples/ashfall_lahar/README.md",
