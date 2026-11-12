@@ -123,5 +123,6 @@ water 5e-14 (relative), and the S_total balance 6.7e-15 m. With dt_sfm = 60 s th
 within 1.5e-5 of the reference solution, and the steady q is within 4.4e-9 of 10 mm/h. MPI
 np = 1, 2, 4 match the serial reference with ULP=0, and sfm_zone.csv and the state file saved in
 the middle of an interval are byte-identical to np = 1. With `-Og -fcheck=all`, all outputs of
-serial and np = 2, 4 agree. The reference was placed provisionally on the basis of the analytic
-checks (to be confirmed by human visual inspection).
+serial and np = 2, 4 agree. The reference was placed on the basis of the analytic checks and
+was confirmed on 2026-11-12 at the user's instruction (Log.txt and sfm_zone.csv are
+byte-identical to the output of main at the time of confirmation).

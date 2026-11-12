@@ -22278,7 +22278,10 @@ Check_sfzone.py(標準ライブラリのみ):
   作成時と CPU が違う)で、変更前のコミット(726791b)を同じホストでビルドした出力とは全ファイルがバイト一致。
 - reference(sfzone の Log.txt と sfm_zone.csv)は解析検定の合格を根拠に暫定で置いた。人間の目視確認で確定する
   (規律 1。handoff)。比較の範囲は vzzone と同じく Log.txt(ULP = 0)。CI(ci.yml の逐次・MPI np = 2)と
-  nightly.yml の REF_CASES に登録した。
+  nightly.yml の REF_CASES に登録した。→ 2026-11-12 に利用者の指示で確定した。ファイルは更新していない
+  (-u を使っていない): 確定の時点の main(72552b6。遅れ時間・蒸発散・2 段の遮断率を含む)でビルドした
+  逐次 release の `ULP=0 RTOL=0 FILES="Log.txt sfm_zone.csv" ./Run.sh` で、Log.txt・sfm_zone.csv とも
+  2026-11-11 の作成時の reference とバイト一致し、Run.sh の全検定が合格した(作成と同じ作業ホスト)。
 
 ### 106.5 できないことと精度の限界(users guide にも記載)
 
