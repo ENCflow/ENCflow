@@ -53,4 +53,17 @@ echo ""
 python3 "$sdir/Check_woodjam.py" jam result_jam save_jam || rc=1
 compare_serial save_jam "構成5"
 
+# 構成6a: カルバートの流入口の集積流木と流量則の損失(culv_jam。取水セル群 3 セルの実材積を
+#   帯をまたいで集める。np = 2・4 では 3 セルが 2 つのランクに分かれる)
+python3 "$sdir/make_jam.py" cz > jam_cz.txt
+python3 "$sdir/make_jam.py" ch > jam_ch.txt
+python3 "$sdir/make_jam.py" cstock3 > jam_cstock3.txt
+python3 "$sdir/make_jam.py" cstage > jam_cstage.txt
+set -o pipefail
+mpirun -np "$NP" $MPIRUN_OPTS ./encflow_mpi param_jamculv3.txt | tee -a Screen.log || exit 1
+set +o pipefail
+echo ""
+python3 "$sdir/Check_woodjam.py" culv result_jamculv3 0.06 both || rc=1
+compare_serial save_jamculv3 "構成6a"
+
 exit $rc

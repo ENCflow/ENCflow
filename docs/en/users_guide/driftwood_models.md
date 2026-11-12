@@ -147,7 +147,9 @@ explicitly give byte-identical saved states.
 
 Giving the map of the capture ratio `fn_dwtrap` enables path ⑤, from the moving wood
 $`h_d`$ to the jammed wood $`w_j`$, and the drag of the jam. $`w_j`$ is an immobile ledger
-that only grows.
+that only grows. A culvert, whose opening is narrower than a cell, takes the jam at its inlet
+as a loss in its discharge law with the per-culvert selector `culv_jam = 1` ("Loss at a culvert
+inlet" in this section).
 
 **Capture rule (own).** The capture ratio $`E`$ is "the share of the driftwood passing a
 capture cell once that is caught". The computation stays inside the cell. In a well-mixed
@@ -197,6 +199,66 @@ which is the analytical solution used for verification.
 \frac{dh}{dx} = \frac{S_0 - \dfrac{n^2 q^2}{h^{10/3}} - \kappa_0 \min\!\left(\dfrac{w}{h},\ \varphi\right)\dfrac{q^2}{g\,h^2}}{1 - \dfrac{q^2}{g\,h^3}}
 ```
 
+**Loss at a culvert inlet (own).** The opening of a [culvert](structure.md) is narrower than a
+cell, and the cell flow converging on the inlet is far slower than the flow inside the opening,
+so the edge drag above cannot express the blockage of the opening (the loss scales with the
+square of the velocity; in a trial with a 10 m grid and a 1 m × 1 m opening, a jam of 100 m³
+placed in the inlet cell reduced the discharge by only 0.1 %). A culvert with `culv_jam = 1`
+therefore takes the jam as a loss coefficient on the velocity in the opening.
+
+- **Capture.** A culvert passes no driftwood, so the moving wood $`h_d`$ of the cell group on
+  the side the culvert is drawing from in that step (the intake cell group for a positive
+  discharge, the outlet cell group for a negative one) is all transferred to $`w_j`$. Nothing
+  is transferred in a step with zero discharge.
+- **Loss coefficient.** Consider a jam of thickness $`L`$ and packing ratio $`\varphi`$
+  covering the section $`B \times D`$ of the opening. Its solid volume is
+  $`V_j = \varphi L B D`$, so the structural coefficient of the same form as above becomes
+
+  ```math
+  C_A = \frac{L\,C_D\,a}{(1-\varphi)^3} = \frac{4\,C_D}{\pi d\,(1-\varphi)^3}\,\frac{V_j}{BD}
+      = 2\,\kappa_0\,\frac{V_j}{BD}
+  ```
+
+  $`V_j`$ is the sum of the solid volumes of $`w_j`$ in the cell group on the higher-water
+  side (m³).
+- **Full pipe.** $`C_A`$ is added to the sum of losses of the energy equation:
+  $`Q_p = BD\sqrt{2g\,\Delta\eta' / (1 + c_e + f_L + C_A)}`$.
+- **Free surface (weir).** A loss $`C_A u_c^2/2g`$ is assumed just upstream of the
+  critical-flow section. With the upstream head $`H`$ and the critical depth $`y_c`$,
+  $`H = y_c + (1 + C_A)\,u_c^2/2g`$ and $`u_c^2 = g\,y_c`$ give $`y_c = H/(1.5 + C_A/2)`$.
+  The discharge is proportional to $`y_c^{3/2}`$, so it becomes
+
+  ```math
+  \left(\frac{1.5}{1.5 + C_A/2}\right)^{3/2} = \left(1 + \frac{C_A}{3}\right)^{-3/2}
+  ```
+
+  times the discharge without the loss. This multiplier is applied to the weir discharge of
+  the Honma formula (free and submerged overflow). The critical depth $`d_c`$ used for the
+  downstream head of the pipe formula is computed from the discharge after the multiplier is
+  applied.
+
+With the default coefficients ($`d`$ = 0.3 m, $`\varphi`$ = 0.3, $`C_D`$ = 1, giving
+$`\kappa_0`$ = 6.19 m⁻¹), $`c_e`$ = 0.5 and conduit length 0, a 1 m × 1 m opening gives
+$`C_A`$ = 0.74 for a solid volume of 0.06 m³ (weir × 0.72, full pipe × 0.82) and $`C_A`$ = 6.2
+for 0.5 m³ (weir × 0.19, full pipe × 0.44).
+
+The limits of this formulation are as follows.
+
+- The loss is a function of $`V_j/(BD)`$ only. The ratio of the log length to the size of the
+  opening, the shape of the jam and the position of the jam relative to the water level are not
+  considered.
+- The weir multiplier rests on the assumption that the loss is estimated with the velocity
+  $`u_c`$ at the critical-flow section. The jam sits in the deeper water in front of the
+  opening, so the loss comes out larger than if it were estimated with the velocity there. For
+  a large $`C_A`$ the weir multiplier (proportional to $`C_A^{-3/2}`$) falls faster than the
+  full-pipe multiplier (proportional to $`C_A^{-1/2}`$). No measurement to compare it with is
+  available yet.
+- All the wood that enters the intake cell group jams, whatever share of the flow heads for the
+  culvert. In cells from which only part of the flow heads for the culvert (a sluice pipe whose
+  intake cells are cells of the main river channel), the blockage is overestimated.
+- The jam never shrinks, and the discharge does not fall to zero. When the flow reverses, only
+  the jam in the cell group on the higher-water side is read.
+
 **Coefficients and limits.**
 
 - $`C_D`$ and $`\varphi`$ are calibration values. $`\varphi`$ acts through
@@ -219,7 +281,7 @@ which is the analytical solution used for verification.
 
 ## 7. Verification cases
 
-- [test/driftwood](../../../test/driftwood/en/README.md): volume conservation, transport and deposition for both erosion entrainment and hydraulic recruitment, and comparison of saved states from split and uninterrupted runs. Capture and jamming at structures are checked in a straight channel: volume conservation (including the jam), agreement of the backwater from the drag of the jam with the solution of the gradually-varied-flow equation above (ratio of the rises 1.003; 0.982 where the packing limit is active), the capture ratio (0.304 for 0.3), byte identity of the flow with `f_dwjam = 0` with a run without driftwood, and split continuation.
+- [test/driftwood](../../../test/driftwood/en/README.md): volume conservation, transport and deposition for both erosion entrainment and hydraulic recruitment, and comparison of saved states from split and uninterrupted runs. Capture and jamming at structures are checked in a straight channel: volume conservation (including the jam), agreement of the backwater from the drag of the jam with the solution of the gradually-varied-flow equation above (ratio of the rises 1.003; 0.982 where the packing limit is active), the capture ratio (0.304 for 0.3), byte identity of the flow with `f_dwjam = 0` with a run without driftwood, and split continuation. The loss at a culvert inlet is checked in a set-up that drains an upstream pool through a single culvert: the discharge obtained from the decrease of the storage agrees with the discharge law including the loss (within 0.02 % in the weir regime with $`C_A`$ = 6.2, and within 0.12 % through the full-pipe and weir regimes with $`C_A`$ = 0.74), the flow with `culv_jam = 0` and with `f_dwjam = 0` is byte-identical to a run without driftwood, and split continuation.
 - [examples/timberyard](../../../examples/timberyard/en/README.md): timber influx from a log yard by storm surge (comparison of countermeasures: delaying the release, moving the yard away, raising the seawall; a supplement compares the deposition parameters; the impact-force postprocessing).
 - [examples/tsunami_town](../../../examples/tsunami_town/en/README.md): coastal forest and log yard in a tsunami, chained with house destruction (supplement).
 

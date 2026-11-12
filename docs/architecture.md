@@ -47,7 +47,9 @@ main.f90 ─ m_main.f90(組み立て・時間ループ・終了処理。複数�
   │    m_driftwood   流木(材積のラスタ場3台帳: 立木 wst → 流動 s%hd → 堆積 s%wd。
   │                  発生・停止・再流動を担う。移流は swflow_enc の advect_scalar。
   │                  fn_dwtrap 指定時は 4 つ目の台帳 = 構造物での集積 s%wj を持ち、
-  │                  集積の抵抗の係数を t_state に書く(抗力の項は swflow_enc。§50.7))
+  │                  集積の抵抗の係数を t_state に書く(抗力の項は swflow_enc。§50.7)。
+  │                  culv_jam = 1 のカルバートの流入口でも s%wj へ捕捉し、損失は
+  │                  structure_makebdc が s%wj を読んで流量則に入れる(§50.8))
   │    m_bldgdebris  家屋破壊・瓦礫(家屋ストック wbs → 流動 s%hbd → 堆積 s%wbd。
   │                  破壊判定(浸水深/荷重に流木・瓦礫を算入)・停止・再流動と
   │                  空隙率 s%gv への帰還。移流は advect_scalar。§63)
@@ -208,7 +210,9 @@ wq_derive                     導出濃度場の更新(確定 h に対して)
 geomorph_calc                 地形変化(s%z, s%e 更新+z のハロ交換)
 driftwood_calc                流木(発生・構造物での捕捉・停止・再流動・ダム捕捉。← geomorph の後 =
                                 同一ステップの z 更新を見た侵食連行。移流自体は
-                                swflow_calc 内の advect_scalar が hs/cq と同様に実行)
+                                swflow_calc 内の advect_scalar が hs/cq と同様に実行。culv_jam = 1 の
+                                カルバートの流入口の捕捉は、このステップの目標流量 b%struct%q の符号で
+                                取水している側を決める。§50.8)
 bldgdebris_calc               家屋破壊・瓦礫(破壊・停止・再流動・ダム捕捉・空隙率の
                                 帰還+gv/lm のハロ交換。← driftwood の後 = 同一ステップの
                                 hd を荷重に見る。移流は swflow_calc 内)

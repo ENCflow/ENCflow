@@ -32,9 +32,11 @@ take, at the concentration of the intake cell (with Kd partitioning only the
 dissolved part; the particulate part stays on the intake side with the
 suspended sediment). Sediment such as suspended load, the salt layer (bottom
 salt water), driftwood and debris are not carried and stay on the intake
-side (driftwood piled up on the intake side does not obstruct the flow through a
-culvert; a driftwood jam acts only on the grid flow through the capture cells of
-[Driftwood](driftwood.md)). A pump drawing from a pond carries the substance of the pond, and a
+side (by default, driftwood piled up on the intake side does not obstruct the flow through a
+culvert; only a culvert with `culv_jam = 1` puts the loss of the wood piled up at its inlet
+into the discharge law -- see [Culverts](#culverts-list_struct_culvert) below; the effect on
+the grid flow is the drag in the capture cells of [Driftwood](driftwood.md)). A pump drawing
+from a pond carries the substance of the pond, and a
 pump drawing from the conduit layer (`f_pump_src=1`) carries the fixed
 concentration `wq_gwc_conc` of the conduit water. The substance taken out of
 the system by pumps without an outlet and by out-of-domain diversions goes
@@ -177,6 +179,35 @@ full conduit (orifice + conduit friction).
 /
 ```
 
+**Driftwood jam at the inlet (culv_jam)**
+
+```
+  culv_jam(1) = 1                   ! put the loss of the wood jammed at the inlet into the discharge law
+/
+```
+
+When used with the [Driftwood](driftwood.md) module, a culvert with `culv_jam(n) = 1` loses
+discharge to the wood piled up at its inlet. A culvert passes no driftwood, so the moving
+driftwood that reaches the cell group on the side it is drawing from (`culv_in_cell` in forward
+flow, `culv_out_cell` in reverse flow) all becomes jammed wood `wj`. From the solid volume
+$`V_j`$ (m³) of the jam in the cell group on the higher-water side, a loss coefficient
+$`C_A = 2\kappa_0 V_j/(BD)`$ is formed; the free-surface (weir) discharge is multiplied by
+$`(1 + C_A/3)^{-3/2}`$ and $`C_A`$ is added to the sum of losses of the full conduit
+($`\kappa_0`$ is the drag coefficient of a driftwood jam, set by `dw_dlog`, `dw_jamcd` and
+`dw_jamphi` of the driftwood module; the formula, orders of magnitude and what it cannot do are
+in [the driftwood chapter](driftwood.md#capture-and-jamming-at-structures-fn_dwtrap), the
+discharge law in [the supplement](hydraulics.md#2-culverts-sluices)).
+
+- It cannot be used unless the driftwood module (`fn_driftwood`) is enabled (the run stops at
+  initialisation with an error). With `f_dwjam = 0` of the driftwood module the jam is a ledger
+  only and the discharge is not reduced.
+- Without a jam (including `culv_jam = 0`), the discharge is bit-identical to the law without
+  this option.
+- All the wood that enters the intake cell group jams at the inlet. Use it on culverts whose
+  intake cells are cells from which all the flow heads for the culvert (just upstream of the
+  outlet of a slit dam, the mouth of a buried conduit). On a sluice pipe whose intake cells are
+  cells of the main river channel, the blockage is overestimated.
+
 Constraints: cannot connect to pond cells. The downstream side cannot
 be omitted (no out-of-domain drainage; use a pump for that). The
 transfer carries no sediment (it passes only the water and the dissolved
@@ -200,9 +231,10 @@ diverge -- use realistic dimensions.
 | culv_flap(n) | 0 | 1: flap gate (an unpowered check valve blocking reverse flow out -> in) |
 | culv_gate_rule(:,k,n) | none | Gate opening polyline (reference water level eta m, opening 0-1). Omitted = always fully open. The opening is a linear multiplier on the discharge |
 | culv_gate_ref(n) | 1 | Reference cell of the opening rule (0: in-side representative, 1: out-side representative = river side) |
+| culv_jam(n) | 0 | 1: put the loss of the driftwood jammed at the inlet into the discharge law (needs the [Driftwood](driftwood.md) module) |
 | fn_culv_in_cell(n) / fn_culv_out_cell(n) | "" | File specification of the cell sets (from dir_data; each line "i j") |
 
-**Outputs for this section**: no throughput ledger, and nothing on transects. Use the difference of transect Q upstream and downstream, or the head difference between probes, to check the three regimes ([Output and monitoring](#output-and-monitoring)).
+**Outputs for this section**: no throughput ledger, and nothing on transects. Use the difference of transect Q upstream and downstream, or the head difference between probes, to check the three regimes ([Output and monitoring](#output-and-monitoring)). The jam at the inlet with `culv_jam = 1` is read from `Wj0001...` of the driftwood module (`f_out_wj = 1`) and from `trap_m3` and `vol_jam_m3` of `driftwood.csv`.
 
 ## Diversions (&list_struct_diversion)
 
@@ -509,6 +541,7 @@ For levee overtopping and breach and channel conveyance, see the
 
 - [test/coastal_drain](../../../test/coastal_drain/en/README.md): drainage with a pumping station drawing directly from the conduit layer (`f_pump_src=1`) and an outfall into sea cells.
 - [test/damwq](../../../test/damwq/en/README.md): dam capture, constant release and reservoir storage coupled with water quality, checked against mass balances and analytical complete-mixing values.
+- [test/driftwood](../../../test/driftwood/en/README.md) (configuration 6): checks that the discharge of a culvert with `culv_jam = 1` agrees with the discharge law including the loss of the wood jammed at the inlet (both the weir and the full-pipe regimes), and that the flow with `culv_jam = 0` and with `f_dwjam = 0` is byte-identical to a run without driftwood.
 - [test/wqstruct](../../../test/wqstruct/en/README.md): checks that pumps (in the domain, out of the domain, from a pond, from the conduit layer), culverts (forward and reverse flow), diversions (in and out of the domain), sinks of internal sources and well pumping carry the water-quality substance with the water (water at 1 mg/L stays at 1 wherever it moves, closure of the ledger, `out_intake_g` = volume of water leaving the system × concentration).
 
 ## References

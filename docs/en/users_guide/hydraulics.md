@@ -88,6 +88,29 @@ harmonic mean of the effective plan areas Σgv·Δx·Δy of the two cell groups;
 the channel width fn_width is not included). The cap prevents back-and-forth
 oscillation at coarse Δt (developer.md §22, Japanese).
 
+**Loss of driftwood jammed at the inlet (`culv_jam = 1`).** When the [Driftwood](driftwood.md)
+module is used and a culvert has `culv_jam = 1`, a loss coefficient
+$`C_A = 2\kappa_0 V_j/(BD)`$ is formed from the solid volume $`V_j`$ of the wood jammed in the
+cell group on the higher-water side and enters the two discharges above:
+
+```math
+Q_w \to Q_w\left(1 + \frac{C_A}{3}\right)^{-3/2},
+\qquad
+C_p \to BD\sqrt{\frac{2g}{1 + c_e + f_L + C_A}}
+```
+
+$`d_c`$ is computed from $`Q_w`$ after the multiplier is applied.
+$`\kappa_0 = 2C_D/(\pi d(1-\varphi)^3)`$ is the drag coefficient of a driftwood jam. The
+full-pipe form adds $`C_A`$ to the sum of losses of the energy equation. The weir multiplier is
+the ratio of discharges when a loss $`C_A u_c^2/2g`$ occurs just upstream of the critical-flow
+section, and the same multiplier is applied to submerged weir flow. Both are **ENCflow's own**
+formulations; the derivation and the limits are in
+[Driftwood models explained](driftwood_models.md) §6. With $`C_A = 0`$ (no jam, or
+`culv_jam = 0`) the multiplication and the addition themselves are skipped, and the discharge
+is bit-identical to the formulas above (configuration 6 of
+[test/driftwood](../../../test/driftwood/en/README.md) checks the agreement with the
+discharge law).
+
 ## 3. Pumps and diversions
 
 Pumps and diversions have no hydraulic law: they are given as a
@@ -254,6 +277,7 @@ The labels in the Basis column are explained in [How to read the basis of a defa
 | culv_manning | 0.02 | pipe roughness $`n`$ | **customary value** upper practical value of concrete pipes |
 | culv_ce | 0.5 | entrance loss coefficient $`c_e`$ | **literature value** square-edged entrance[^fhwa12] |
 | culv_flap / culv_gate_rule / culv_gate_ref | 0 / none / 1 | flap, opening rule, reference side | **given** the opening is a linear multiplier (approximation) |
+| culv_jam | 0 | put the loss of the driftwood jammed at the inlet into the discharge law (§2) | **method** enabled with 1; the loss formula is ENCflow's own ([Driftwood models explained](driftwood_models.md) §6) |
 | pump_q0 / pump_rule / f_pump_ref | — | constant discharge / operation rule / reference (§3) | **given** operation rule |
 | div_q0 / div_rule | — | constant discharge / rating (§3) | **given** |
 | dam_hv / dam_hmin / dam_hsur | — | HV curve / linear HV floor and surcharge (§4) | **given** project data; a lake of unknown depth: normal level − 5 m (empirical) |

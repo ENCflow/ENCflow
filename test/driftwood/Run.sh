@@ -2,7 +2,7 @@
 # driftwood: 流木ラスタ場の疎通・保存則・リスタート往復検定(逐次実行)
 #   ./Run.sh
 # 合否は Check_driftwood.py(材積保存・流木化/堆積の活性・平坦部到達)と、
-# 集積流木の構成 5 の Check_woodjam.py(材積保存・堰上げの解析解・捕捉率)。
+# 集積流木の構成 5・6 の Check_woodjam.py(材積保存・堰上げの解析解・捕捉率・カルバートの流量則)。
 # 実行後の save 系は save*_serial/ にも複製する(Run_MPI.sh のバイト比較用)
 
 sdir=$(dirname "$(readlink -f "$0")")
@@ -98,6 +98,68 @@ for f in result_jamnone/H[0-9]*.txt result_jamnone/V[0-9]*.txt result_jamnone/Lo
     fi
 done
 [ $rc -eq 0 ] && echo "=== f_dwjam = 0: the flow ($nf files of H, V and Log.txt) is bit-identical to the run without driftwood ==="
+
+# 構成6: カルバートの流入口の集積流木と、流量則の損失(culv_jam。developer.md §50.8)
+#   test/culvert と同じ排水試験(入力 jam_c*.txt は make_jam.py が作る)。6 = 大きい集積(堰の倍率)、
+#   6a = 小さい集積・取水セル群 3 セル(満管と堰の両方のレジーム)、6b = culv_jam = 0、
+#   6c = culv_jam = 1・f_dwjam = 0、6d = 流木なし(6b・6c と流れがバイト一致)、
+#   6e = 流木モジュールなしの culv_jam = 1(停止)、6f・6g = リスタートの分割継続
+python3 "$sdir/make_jam.py" cz > jam_cz.txt
+python3 "$sdir/make_jam.py" ch > jam_ch.txt
+python3 "$sdir/make_jam.py" cstock > jam_cstock.txt
+python3 "$sdir/make_jam.py" cstock3 > jam_cstock3.txt
+python3 "$sdir/make_jam.py" cstage > jam_cstage.txt
+rm -rf save_jamculvrt
+set -o pipefail
+for c in jamculv jamculv3 jamculvoff jamculvled jamculvnone jamculvrt1 jamculvrt2; do
+    ./encflow param_$c.txt | tee -a Screen.log || exit 1
+done
+set +o pipefail
+echo ""
+python3 "$sdir/Check_woodjam.py" culv result_jamculv 0.5 || rc=1
+python3 "$sdir/Check_woodjam.py" culv result_jamculv3 0.06 both || rc=1
+rm -rf save_jamculv3_serial && cp -r save_jamculv3 save_jamculv3_serial
+for f in driftwood.dat state.dat swflow_enc.dat; do
+    if cmp -s save_jamculvrt/$f save_jamculv3/$f; then
+        echo "=== culvert jam restart continuation: $f is bit-identical to the straight run ==="
+    else
+        echo "FAIL: culvert jam restart continuation differs from the straight run: $f" >&2
+        rc=1
+    fi
+done
+for c in jamculvoff jamculvled; do
+    nf=0
+    ok=1
+    for f in result_jamculvnone/H[0-9]*.txt result_jamculvnone/V[0-9]*.txt result_jamculvnone/Log.txt; do
+        nf=$((nf + 1))
+        if ! cmp -s "$f" "result_$c/$(basename "$f")"; then
+            echo "FAIL: the flow of param_$c.txt differs from the run without driftwood: $(basename "$f")" >&2
+            ok=0
+            rc=1
+        fi
+    done
+    [ $ok -eq 1 ] && echo "=== param_$c.txt: the flow ($nf files of H, V and Log.txt) is bit-identical to the run without driftwood ==="
+done
+python3 - <<'PYEOF' || rc=1
+import sys
+def last(rdir):
+    lines = [ln for ln in open(rdir + "/driftwood.csv").read().split("\n") if ln.strip()]
+    return dict(zip(lines[0].split(","), [float(v) for v in lines[-1].split(",")]))
+led, off = last("result_jamculvled"), last("result_jamculvoff")
+ok = abs(led["trap_m3"] - 0.06) < 1.0e-8 and "trap_m3" not in off and off["vol_float_m3"] + off["vol_deposit_m3"] > 0.0599
+print("f_dwjam = 0: 集積 %.6f m3(台帳だけ)、culv_jam = 0: 流動 + 堆積 %.6f m3(集積の列なし) : %s"
+      % (led["trap_m3"], off["vol_float_m3"] + off["vol_deposit_m3"], "PASS" if ok else "FAIL"))
+sys.exit(0 if ok else 1)
+PYEOF
+if ./encflow param_jamculvbad.txt > Screen_jamculvbad.log 2>&1; then
+    echo "FAIL: param_jamculvbad.txt should stop (culv_jam = 1 without the driftwood module)" >&2
+    rc=1
+elif grep -q "culv_jam = 1 requires the driftwood module" Screen_jamculvbad.log; then
+    echo "=== culv_jam = 1 without the driftwood module stops at the initialization ==="
+else
+    echo "FAIL: param_jamculvbad.txt stopped for another reason" >&2
+    rc=1
+fi
 
 if [ $rc -eq 0 ]; then
     echo "=== driftwood verification PASS ==="

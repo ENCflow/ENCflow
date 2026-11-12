@@ -1,0 +1,76 @@
+!======================================================================
+! driftwood 構成6: カルバートの流入口の集積流木と、流量則の損失(culv_jam。developer.md §50.8)
+!   test/culvert と同じ排水試験。平坦な上流槽 10×11 セル(Δx = 10 m)の水深 3 m を、盛土を横断する
+!   1 m × 1 m のカルバート (10,6) → (12,6) だけで排水する(下流の列 12 は完全排水口)。
+!   流入口のセル (10,6) の立木 0.5 m3 が流木になり、カルバートが取水している間に全量が流入口に
+!   集積する。集積の実材積 V_j から損失係数 C_A = 2 κ0 V_j/(B D) = 6.19 が流量則に入り、
+!   堰の流量が (1 + C_A/3)^(−3/2) 倍、満管の損失の和が 1.5 から 1.5 + C_A になる。
+!   検定(Check_woodjam.py culv): Log の S から求めた流量 Q = −A dS/dt が、上流水深 h1 の全域で
+!   集積の損失を入れた流量則に一致すること、集積の実材積が 0.5 m3 であること。
+!   入力(jam_c*.txt)は make_jam.py が作る。値は検定用で、実地の推奨値ではない
+!======================================================================
+&list_sysparam
+  f_gridsystem = 0
+  dt = 0.5
+  t0 = 0
+  tt = 43200                ! 集積で流量が約 1/4 になるので、test/culvert の 3 倍の時間
+  dt_disp = 600
+  dt_file = 43200
+  dt_recrd = 600
+  fn_geoinfo = '-'
+  fn_initial = '-'
+  fn_boundary = '-'
+  fn_structure = '-'
+  fn_driftwood = '-'
+  dir_result = 'result_jamculv'
+  f_disp_debug = 1          ! S 列を全有効桁で表示(流量の復元に使う)
+  f_check_cfl = 0
+  f_out_wj = 1
+/
+
+&list_initial
+  f_htype = 1
+  fn_hinit = 'jam_ch.txt'   ! 上流槽 3.0 m、その他 0
+/
+
+&list_geoinfo
+  lx = 120.0
+  ly = 110.0
+  nx = 12
+  ny = 11
+  f_ztype = 1
+  fn_z = 'jam_cz.txt'       ! 上流槽 0 / 盛土 10 / 下流列 0
+  f_rntype = 0
+  rn0 = 0.03
+/
+
+&list_bound_edge
+/
+
+&list_bound_stage
+  fn_stage_cell(1) = 'jam_cstage.txt'   ! (12, 1..11)
+  stage_eta(1) = -999.0                 ! 河床より低い水位 = 完全排水口
+/
+
+&list_struct_culvert
+  culv_in_cell(:,1,1)  = 10, 6
+  culv_out_cell(:,1,1) = 12, 6
+  culv_width(1)  = 1.0
+  culv_height(1) = 1.0
+  culv_zin(1)  = 0.0
+  culv_zout(1) = 0.0
+  culv_length(1) = 0.0
+  culv_ce(1) = 0.5
+  culv_jam(1) = 1                  ! 流入口の集積流木の損失を流量則に入れる
+/
+
+&list_driftwood
+  fn_dwstock = 'jam_cstock.txt'    ! 立木ストック(流入口のセルに 0.005 m3/m2 = 0.5 m3)
+  dw_dlog = 0.3
+  dw_sglog = 0.5
+  dw_wrec = 1.0                    ! 水理的流失(最初のステップで全量)
+  dw_hrec = 0.5
+  dw_vrec = 0.0
+  dw_wstop = 0.01
+  dw_vstop = 0.0
+/

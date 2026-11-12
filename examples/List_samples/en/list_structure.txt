@@ -137,6 +137,16 @@
 !     culv_length(n)  : pipe length L (m). Default 0 (no friction loss)
 !     culv_manning(n) : in-pipe roughness n. Default 0.02
 !     culv_ce(n)      : entrance loss coefficient. Default 0.5
+!     culv_jam(n) = 1 : put the loss of the driftwood jammed at the inlet into
+!                       the discharge law (default 0; needs the driftwood module
+!                       fn_driftwood). All the wood reaching the cell set on the
+!                       side the culvert draws from jams at the inlet; from its
+!                       solid volume V_j, C_A = 2*kappa0*V_j/(B*D) is formed, the
+!                       weir discharge is multiplied by (1+C_A/3)^(-3/2) and C_A
+!                       is added to the sum of losses of the full pipe (kappa0
+!                       from dw_dlog, dw_jamcd and dw_jamphi of the driftwood
+!                       module; the formula is ENCflow's own). Use it on culverts
+!                       whose intake cells send all their flow to the culvert
 !   Constraints: cannot connect to pond (rscap>0) cells. The downstream
 !   side cannot be omitted (out of the domain) either (for out-of-domain
 !   drainage use the pump pump_q0). The transfer carries no sediment
@@ -157,6 +167,8 @@
 !  culv_zin(1)  = 12.50                  ! upstream invert elevation (m)
 !  culv_zout(1) = 12.30                  ! downstream invert elevation (m)
 !  culv_length(1) = 25.0                 ! pipe length (m)
+!  !culv_jam(1) = 1                      ! put the loss of the driftwood jammed at the inlet
+!                                        !   into the discharge law (with the driftwood module)
 !  ! Culvert 2: a sluice gate (landside = in side -> river = out side).
 !  ! A flap prevents reverse flow and, in addition, an operated gate
 !  ! closes at river levels 8.0-8.5 m

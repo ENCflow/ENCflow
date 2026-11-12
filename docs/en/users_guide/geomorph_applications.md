@@ -294,7 +294,11 @@ sketches, not computed results.
   [Driftwood](driftwood.md) (culverts carry no wood either, so the
   trapping is likewise an upper-bound estimate; geometric size-selective
   trapping by member spacing vs. log length is out of scope of the
-  driftwood module as well). For a dam whose open part can be represented
+  driftwood module as well). Setting `culv_jam = 1` on the culvert of the
+  outlet lets the wood piled up at the outlet reduce the conveyance and raise
+  the water upstream of the dam (inlet loss;
+  [capture and jamming at structures](driftwood.md#capture-and-jamming-at-structures-fn_dwtrap)
+  in the driftwood chapter). For a dam whose open part can be represented
   by cells (grid type and the like), making the cells of the open part capture
   cells for driftwood lets the jam of captured wood raise the water, slow the
   flow upstream and so retain sediment as well

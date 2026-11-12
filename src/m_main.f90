@@ -1321,7 +1321,7 @@ subroutine run_step(p, g, b, pr, ti, ic, s, r, sw, gm, gw, sl, ev, mt, wq, dw, b
   ! 流木過程を適用(fn_driftwood 未指定なら no-op。発生・停止・再流動・
   ! ダム捕捉。geomorph の後 = 同一ステップの z 更新を見た侵食連行。
   ! セル局所のみでハロ交換なし。§50)
-  call m_driftwood_calc(dw, p, g, s, it)
+  call m_driftwood_calc(dw, p, g, s, b, it)
 
   ! 家屋破壊・瓦礫過程を適用(fn_bldgdebris 未指定なら no-op。破壊・停止・
   ! 再流動・ダム捕捉。driftwood の後 = 同一ステップの hd を荷重に見る。

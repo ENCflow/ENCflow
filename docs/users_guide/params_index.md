@@ -2,7 +2,7 @@
 
 [ユーザーガイド目次へ](../users_guide.md)
 
-namelist パラメータ名から章を引く索引です(アルファベット順、全 808 項目)。
+namelist パラメータ名から章を引く索引です(アルファベット順、全 809 項目)。
 この索引は list_*.f90 の namelist 宣言から機械抽出で生成されています
 (developer.md §35.1)。
 
@@ -56,6 +56,7 @@ namelist パラメータ名から章を引く索引です(アルファベット�
 | culv_gate_rule | &list_struct_culvert | [構造物](structure.md) |
 | culv_height | &list_struct_culvert | [構造物](structure.md) |
 | culv_in_cell | &list_struct_culvert | [構造物](structure.md) |
+| culv_jam | &list_struct_culvert | [構造物](structure.md) |
 | culv_length | &list_struct_culvert | [構造物](structure.md) |
 | culv_manning | &list_struct_culvert | [構造物](structure.md) |
 | culv_out_cell | &list_struct_culvert | [構造物](structure.md) |

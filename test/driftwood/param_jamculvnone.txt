@@ -1,0 +1,68 @@
+!======================================================================
+! driftwood 構成6d: 流木を使わない同じ排水試験(param_jamculvoff.txt・param_jamculvled.txt との比較用)
+!======================================================================
+&list_sysparam
+  f_gridsystem = 0
+  dt = 0.5
+  t0 = 0
+  tt = 21600
+  dt_disp = 600
+  dt_file = 21600
+  dt_recrd = 600
+  fn_geoinfo = '-'
+  fn_initial = '-'
+  fn_boundary = '-'
+  fn_structure = '-'
+  dir_result = 'result_jamculvnone'
+  f_disp_debug = 1          ! S 列を全有効桁で表示(流量の復元に使う)
+  f_check_cfl = 0
+  f_out_vv = 1              ! 流速 V0001…(6b・6c と 6d の流れの比較に使う)
+/
+
+&list_initial
+  f_htype = 1
+  fn_hinit = 'jam_ch.txt'   ! 上流槽 3.0 m、その他 0
+/
+
+&list_geoinfo
+  lx = 120.0
+  ly = 110.0
+  nx = 12
+  ny = 11
+  f_ztype = 1
+  fn_z = 'jam_cz.txt'       ! 上流槽 0 / 盛土 10 / 下流列 0
+  f_rntype = 0
+  rn0 = 0.03
+/
+
+&list_bound_edge
+/
+
+&list_bound_stage
+  fn_stage_cell(1) = 'jam_cstage.txt'   ! (12, 1..11)
+  stage_eta(1) = -999.0                 ! 河床より低い水位 = 完全排水口
+/
+
+&list_struct_culvert
+  culv_in_cell(:,1,1)  = 10, 6     ! 代表セル(先頭)
+  culv_in_cell(:,2,1)  = 10, 5
+  culv_in_cell(:,3,1)  = 10, 7
+  culv_out_cell(:,1,1) = 12, 6
+  culv_width(1)  = 1.0
+  culv_height(1) = 1.0
+  culv_zin(1)  = 0.0
+  culv_zout(1) = 0.0
+  culv_length(1) = 0.0
+  culv_ce(1) = 0.5
+/
+
+&list_driftwood
+  fn_dwstock = 'jam_cstock3.txt'   ! 立木ストック(取水セル群の 3 セルに 0.0002 m3/m2 ずつ = 0.06 m3)
+  dw_dlog = 0.3
+  dw_sglog = 0.5
+  dw_wrec = 1.0                    ! 水理的流失(最初のステップで全量)
+  dw_hrec = 0.5
+  dw_vrec = 0.0
+  dw_wstop = 0.01
+  dw_vstop = 0.0
+/

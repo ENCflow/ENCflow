@@ -12,7 +12,8 @@
 !   entrainment) -> floating wood -> (grounding / drying) -> deposited
 !   wood (refloat optional). With the capture-ratio map fn_dwtrap,
 !   floating wood -> (capture at structures) -> jammed wood is added and
-!   the jam raises the water upstream.
+!   the jam raises the water upstream (the jam at a culvert inlet is
+!   enabled by culv_jam = 1 in &list_struct_culvert).
 !   Output: f_out_hd (floating Hd0001...), f_out_wd (deposited
 !   Wd0001... + maximum arrival Wd9999), f_out_wj (jammed Wj0001...),
 !   result/driftwood.csv (volume ledger).
@@ -74,4 +75,7 @@
                                     !   coefficient 2 C_D/(pi d (1-phi)^3))
   !dw_jamgrow = 0.05                ! cells whose jammed amount (m3/m2) exceeds this get a
                                     !   capture ratio of 1 (not given = constant capture ratio)
+  ! The jam at a culvert inlet (structures whose opening is narrower than a cell) is enabled
+  ! by culv_jam(n) = 1 in &list_struct_culvert (fn_dwtrap is not needed; f_dwjam, dw_jamcd
+  ! and dw_jamphi are shared)
 /

@@ -41,7 +41,11 @@ module m_driftwood
   !           (係数の構造は Follett ら 2020 の C_A = L C_D a/(1−φ)³。離散化は【独自】。
   !           C_D・φ は校正値。本モジュールは係数と有効フラグを s%dw_jamk・
   !           s%dw_jamphi・s%dw_jam に書く。§50.7・docs/woodjam_plan.md)。
-  !           fn_dwtrap を与えなければ、確保も分岐の中の計算もしない
+  !           fn_dwtrap を与えなければ、確保も分岐の中の計算もしない。
+  !           カルバートの流入口(&list_struct_culvert の culv_jam = 1。§50.8): その
+  !           カルバートが取水している側のセル群の流動流木を、全量、集積流木へ移す
+  !           (カルバートは流木を通さないので、届いた流木は流入口に溜まる)。集積の損失は
+  !           m_boundary の structure_makebdc が s%wj を読んで流量則に入れる
   !   ダム:   捕捉帯セルは毎ステップ全量吸収されるため、流動流木 hd も
   !           同伴してダム別台帳へ移す(m_wq と同じ契約。放流流木 0 =
   !           既知の妥協。堆積 wd は接地済みのため残す)
@@ -60,7 +64,7 @@ module m_driftwood
   use m_sysparam, only : t_sysparam
   use m_geoinfo, only : t_geoinfo
   use m_state, only : t_state
-  use m_boundary, only : t_boundary, e_struct_dam
+  use m_boundary, only : t_boundary, e_struct_dam, e_struct_culvert
   use list_driftwood, only : t_list_driftwood, list_driftwood_read
   use m_swflow_enc, only : chn
   use m_fileio, only : fileio_read_matrix
@@ -107,8 +111,13 @@ module m_driftwood
                                          !   セル内材積 wst×A。帯 jsh:jeh で確保
                                          !   するが更新・参照は js:je のみ)
     real, allocatable :: zref(:,:)       ! 侵食連行の基準地形 (m。init 時 z の写し)
+    logical :: have_jam = .false.        ! 集積流木 s%wj あり(fn_dwtrap の指定、または
+                                         !   culv_jam = 1 のカルバート。台帳の列・保存の対象)
     logical :: have_trap = .false.       ! 捕捉セルあり(fn_dwtrap の指定)
     real, allocatable :: trap(:,:)       ! 捕捉率 E(0〜1。have_trap のときだけ確保)
+    integer :: nculv = 0                 ! 流入口で流木を捕捉するカルバートの数
+    type(t_dwdam), allocatable :: culv(:)   ! そのセル(自帯内。cells(3,k) = 1: 取水セル群 cin、
+                                         !   2: 吐口セル群 cout。ist は b%struct の番号)
     real :: jamgrow = -1.0               ! 集積量 (m3/m2) がこれを超えたセルは E = 1
                                          !   (<= 0 は無効 = 捕捉率は一定)
     integer :: ndam = 0
@@ -117,7 +126,7 @@ module m_driftwood
     real(real64), allocatable :: vrow(:,:)  ! (js:je, 1:6) 1=水理的流失 2=侵食連行
                                             !   3=堆積(hd→wd) 4=再流動(wd→hd)
                                             !   5=ダム捕捉 6=構造物での捕捉(hd→wj。
-                                            !   have_trap のときだけ集計・出力する)
+                                            !   have_jam のときだけ集計・出力する)
     integer :: un = 0                    ! CSV 装置番号(rank0)
   end type
 
@@ -148,6 +157,10 @@ subroutine m_driftwood_init(dw, p, g, b, s)
       call par_stop("list_sysparam: f_out_hd/f_out_wd/f_out_wj require the driftwood module " &
                     //"(fn_driftwood)")
     end if
+    if (njam_culverts(b) > 0) then
+      call par_stop("list_struct_culvert: culv_jam = 1 requires the driftwood module " &
+                    //"(fn_driftwood)")
+    end if
     return
   end if
   if (p%f_gridsystem /= 0) then
@@ -159,6 +172,10 @@ subroutine m_driftwood_init(dw, p, g, b, s)
   if (list%f_dw == 0) then      ! fn を書いたまま一時無効化する経路
     if (p%f_out_hd > 0 .or. p%f_out_wd > 0 .or. p%f_out_wj > 0) then
       call par_stop("list_sysparam: f_out_hd/f_out_wd/f_out_wj require the driftwood module " &
+                    //"(f_dw=0 disables it)")
+    end if
+    if (njam_culverts(b) > 0) then
+      call par_stop("list_struct_culvert: culv_jam = 1 requires the driftwood module " &
                     //"(f_dw=0 disables it)")
     end if
     return
@@ -292,12 +309,14 @@ subroutine m_driftwood_init(dw, p, g, b, s)
     dw%zref(:,j) = s%z(:,j)
   end do
 
-  ! --- 構造物での捕捉と集積(fn_dwtrap の指定で有効。§50.7)---
-  if (len_trim(list%fn_dwtrap) > 0) then
+  ! --- 構造物での捕捉と集積(fn_dwtrap の指定、または culv_jam = 1 のカルバートで有効。
+  !     §50.7・§50.8)---
+  call setup_culv(dw, b)
+  if (len_trim(list%fn_dwtrap) > 0 .or. dw%nculv > 0) then
     call setup_jam(dw, p, g, s, list, dlog)
   else if (p%f_out_wj > 0) then
-    call par_stop("list_sysparam: f_out_wj requires the capture cells of the driftwood " &
-                  //"module (fn_dwtrap in list_driftwood)")
+    call par_stop("list_sysparam: f_out_wj requires capture cells of the driftwood module " &
+                  //"(fn_dwtrap in list_driftwood, or a culvert with culv_jam = 1)")
   end if
 
   ! --- ダム捕捉台帳(全ダム・湖沼が対象。m_wq と同型) ---
@@ -312,7 +331,7 @@ subroutine m_driftwood_init(dw, p, g, b, s)
   !     与えたときだけ、捕捉の累積と現在の集積の 2 列を末尾に足す(§50.7) ---
   if (is_root) then
     open(newunit=dw%un, file=trim(p%dir_result)//"/driftwood.csv", status='replace')
-    if (dw%have_trap) then
+    if (dw%have_jam) then
       write(dw%un, '(a)') "time_s,rec_hyd_m3,rec_ero_m3,deposit_m3,refloat_m3,to_dam_m3," &
                           //"vol_stock_m3,vol_float_m3,vol_deposit_m3,trap_m3,vol_jam_m3"
     else
@@ -374,8 +393,9 @@ end function
 
 
 !----------------------------------------------------------------------
-! 構造物での捕捉と集積の初期化(fn_dwtrap 指定時のみ。§50.7。docs/woodjam_plan.md)
-!   捕捉率 E の分布を読み(使用セルで 0〜1 を検査)、集積流木 s%wj を確保する。
+! 構造物での捕捉と集積の初期化(fn_dwtrap の指定、または culv_jam = 1 のカルバートが
+! あるとき。§50.7・§50.8。docs/woodjam_plan.md)
+!   fn_dwtrap があれば捕捉率 E の分布を読み(使用セルで 0〜1 を検査)、集積流木 s%wj を確保する。
 !   f_dwjam = 1 では、集積の抵抗の係数 κ0 = 2 C_D/(π d (1−φ)³) と充填率 φ を
 !   s%dw_jamk・s%dw_jamphi に書き、s%dw_jam を立てる(swflow_enc が読む)。
 !   係数の構造は Follett ら(2020)の多孔質の障害物の係数 C_A = L C_D a/(1−φ)³
@@ -393,10 +413,17 @@ subroutine setup_jam(dw, p, g, s, list, dlog)
   if (list%f_dwjam /= 0 .and. list%f_dwjam /= 1) then
     call par_stop("list_driftwood: f_dwjam must be 0 (ledger only) or 1 (drag of the jam)")
   end if
-  allocate(dw%trap(dcp%ish:dcp%ieh, dcp%jsh:dcp%jeh), source = 0.0)
-  call read_stock_scatter(p, g, list%fn_dwtrap, dw%trap, name = "fn_dwtrap", vmax = 1.0)
+  if (len_trim(list%fn_dwtrap) > 0) then
+    allocate(dw%trap(dcp%ish:dcp%ieh, dcp%jsh:dcp%jeh), source = 0.0)
+    call read_stock_scatter(p, g, list%fn_dwtrap, dw%trap, name = "fn_dwtrap", vmax = 1.0)
+    dw%have_trap = .true.
+  end if
   allocate(s%wj(dcp%ish:dcp%ieh, dcp%jsh:dcp%jeh), source = 0.0)
-  dw%have_trap = .true.
+  dw%have_jam = .true.
+  if (dw%nculv > 0) then
+    call par_info("driftwood: "//itoa(dw%nculv)//" culvert(s) capture driftwood at the inlet " &
+                  //"(culv_jam = 1)")
+  end if
 
   ! 集積が進むと捕捉率が 1 になる集積量(任意。与えたときだけ採用値を表示する)
   if (list%dw_jamgrow > -9998.0) then
@@ -474,6 +501,65 @@ end subroutine
 
 
 !----------------------------------------------------------------------
+! 流入口で流木を捕捉するカルバート(culv_jam = 1。§50.8)の数。b%struct は namelist 由来で
+! 全ランク同一
+!----------------------------------------------------------------------
+function njam_culverts(b) result(n)
+  type(t_boundary), intent(in) :: b
+  integer :: n, ist
+  n = 0
+  if (.not. allocated(b%struct)) return
+  do ist = 1, size(b%struct)
+    if (b%struct(ist)%kind == e_struct_culvert .and. b%struct(ist)%jam == 1) n = n + 1
+  end do
+end function
+
+
+!----------------------------------------------------------------------
+! 流入口で流木を捕捉するカルバートのセルの一覧(自帯分のみ。setup_dams と同型)
+!   cells(1:2,k) = セル、cells(3,k) = 1: 取水セル群 cin、2: 吐口セル群 cout。
+!   捕捉するのは、そのステップに取水している側だけ(m_driftwood_calc)
+!----------------------------------------------------------------------
+subroutine setup_culv(dw, b)
+  type(t_driftwood), intent(inout) :: dw
+  type(t_boundary), intent(in) :: b
+  integer :: ist, nc, n, k, kk, i, j, pass
+
+  dw%nculv = njam_culverts(b)
+  if (dw%nculv == 0) return
+
+  allocate(dw%culv(1:dw%nculv))
+  nc = 0
+  do ist = 1, size(b%struct)
+    if (b%struct(ist)%kind /= e_struct_culvert .or. b%struct(ist)%jam /= 1) cycle
+    nc = nc + 1
+    dw%culv(nc)%ist = ist
+    do pass = 1, 2                       ! 1: 数える、2: 格納する
+      n = 0
+      do k = 1, b%struct(ist)%ncin + b%struct(ist)%ncout
+        if (k <= b%struct(ist)%ncin) then
+          i = b%struct(ist)%cin(1,k)
+          j = b%struct(ist)%cin(2,k)
+          kk = 1
+        else
+          i = b%struct(ist)%cout(1,k-b%struct(ist)%ncin)
+          j = b%struct(ist)%cout(2,k-b%struct(ist)%ncin)
+          kk = 2
+        end if
+        if (j < dcp%js .or. j > dcp%je) cycle
+        n = n + 1
+        if (pass == 2) dw%culv(nc)%cells(1:3,n) = [i, j, kk]
+      end do
+      if (pass == 1) then
+        dw%culv(nc)%nc = n
+        allocate(dw%culv(nc)%cells(1:3, 1:max(n,1)), source = 0)
+      end if
+    end do
+  end do
+end subroutine
+
+
+!----------------------------------------------------------------------
 ! ダム捕捉台帳の構築(全ダムの捕捉帯セル。自帯分のみ。m_wq と同型)
 !----------------------------------------------------------------------
 subroutine setup_dams(dw, b)
@@ -518,23 +604,45 @@ end subroutine
 !----------------------------------------------------------------------
 ! 流木過程を適用する(毎ステップ。run_main が geomorph calc の後に呼ぶ =
 ! 同一ステップの z 更新を見た侵食連行)。
-!   順序: (1) 侵食連行 (2) 水理的流失 (2b) 構造物での捕捉(fn_dwtrap)
-!         (3) 接地・乾燥堆積 (4) 再流動 (5) ダム捕捉 (6) 到達量統計
+!   順序: (0) カルバートの流入口での捕捉(culv_jam) (1) 侵食連行 (2) 水理的流失
+!         (2b) 構造物での捕捉(fn_dwtrap) (3) 接地・乾燥堆積 (4) 再流動
+!         (5) ダム捕捉 (6) 到達量統計
 !   更新は自帯 js..je のセル内交換のみ(owner-compute。近傍を読まない
 !   ため 2 パス不要 = §28.2 の適用外)。
 !   無効時は no-op。冒頭の return 判定は全ランクで同一 = collective 安全
 !----------------------------------------------------------------------
-subroutine m_driftwood_calc(dw, p, g, s, it)
+subroutine m_driftwood_calc(dw, p, g, s, b, it)
   type(t_driftwood), intent(inout) :: dw
   type(t_sysparam), intent(in) :: p
   type(t_geoinfo), intent(in) :: g
   type(t_state), intent(inout) :: s
+  type(t_boundary), intent(in) :: b      ! カルバートの目標流量 q(取水している側の判定)
   integer, intent(in) :: it
-  integer :: i, j, k, nd
+  integer :: i, j, k, nd, side
   real :: hh, w, ee
 
   if (it < 0) continue  ! 引数未使用の警告を抑制
   if (.not. dw%enabled) return
+
+  ! (0) カルバートの流入口での捕捉(culv_jam = 1。§50.8): カルバートは流木を通さないので、
+  !     取水している側のセル群に届いた流動流木を、全量、集積流木へ移す。取水している側は、
+  !     このステップの目標流量 q(makebdc の値。全ランク同値)の符号で決める(q > 0: 取水セル群、
+  !     q < 0: 吐口セル群。q = 0 は捕捉しない = 水を引いていない流入口には掛からない)
+  do nd = 1, dw%nculv
+    if (b%struct(dw%culv(nd)%ist)%q == 0.0) cycle
+    side = 2
+    if (b%struct(dw%culv(nd)%ist)%q > 0.0) side = 1
+    do k = 1, dw%culv(nd)%nc
+      if (dw%culv(nd)%cells(3,k) /= side) cycle
+      i = dw%culv(nd)%cells(1,k)
+      j = dw%culv(nd)%cells(2,k)
+      if (s%hd(i,j) <= 0.0) cycle
+      w = s%hd(i,j)
+      s%hd(i,j) = 0.0
+      s%wj(i,j) = s%wj(i,j) + w
+      dw%vrow(j,6) = dw%vrow(j,6) + vol_col(g, s, i, j, w)
+    end do
+  end do
 
   !$omp parallel do schedule(dynamic) private(i, j, hh, w, ee)
   do j = dcp%js, dcp%je
@@ -716,8 +824,8 @@ subroutine m_driftwood_record(dw, p, g, s)
   call par_sum_rows(rows2, vflt)
   call par_sum_rows(rows3, vdep)
 
-  ! 構造物での捕捉の累積と現在の集積(捕捉セルを与えたときだけ。判定は全ランクで同一)
-  if (dw%have_trap) then
+  ! 構造物での捕捉の累積と現在の集積(集積流木を持つときだけ。判定は全ランクで同一)
+  if (dw%have_jam) then
     call par_sum_rows(dw%vrow(:,6), vtrap)
     rows4(:) = 0.0_real64
     do j = dcp%js, dcp%je
@@ -730,7 +838,7 @@ subroutine m_driftwood_record(dw, p, g, s)
   end if
 
   if (is_root .and. dw%un /= 0) then
-    if (dw%have_trap) then
+    if (dw%have_jam) then
       write(dw%un, '(f0.2,10(",",es15.7))') s%t, es_out([v(1:5), vstk, vflt, vdep, vtrap, vjam])
     else
       write(dw%un, '(f0.2,8(",",es15.7))') s%t, es_out([v(1:5), vstk, vflt, vdep])
@@ -765,7 +873,7 @@ subroutine save_state(dw, p, g, s)
   call restart_write_cell(un, s%wd)
   call restart_write_cell(un, dw%wst)
   call restart_write_cell(un, dw%zref)
-  if (dw%have_trap) then
+  if (dw%have_jam) then
     if (is_root) write(un) 1
     call restart_write_cell(un, s%wj)
   end if
@@ -807,16 +915,16 @@ subroutine restore_state(dw, p, g, s)
     if (ios /= 0) njam(1) = 0
   end if
   call par_allreduce_sumi(njam)
-  if (dw%have_trap) then
+  if (dw%have_jam) then
     if (njam(1) == 1) then
       call restart_read_cell(un, s%wj)
     else
-      call par_info("driftwood: the save holds no jammed wood (fn_dwtrap was not given " &
-                    //"when saving); the jam starts from zero")
+      call par_info("driftwood: the save holds no jammed wood (no capture cells when " &
+                    //"saving); the jam starts from zero")
     end if
   else if (njam(1) == 1) then
-    call par_info("driftwood: the jammed wood in the save is not restored because fn_dwtrap " &
-                  //"is not given (its volume leaves the ledger)")
+    call par_info("driftwood: the jammed wood in the save is not restored because this run " &
+                  //"has no capture cells (its volume leaves the ledger)")
   end if
   if (is_root) close(un)
 end subroutine
@@ -837,6 +945,7 @@ subroutine m_driftwood_dispose(dw, p, g, s)
   if (allocated(dw%wst)) deallocate(dw%wst)
   if (allocated(dw%zref)) deallocate(dw%zref)
   if (allocated(dw%trap)) deallocate(dw%trap)
+  if (allocated(dw%culv)) deallocate(dw%culv)
   if (allocated(dw%dam)) deallocate(dw%dam)
   if (allocated(dw%vrow)) deallocate(dw%vrow)
   dw%enabled = .false.

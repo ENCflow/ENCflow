@@ -161,7 +161,7 @@ lists the main outputs.
 | f_out_hs | 0 | Hs | sediment column (m) (requires an active sediment process; for visualizing the concentration C = hs/(h+hs)) |
 | f_out_hd | 0 | Hd | floating driftwood volume (m³/m²) (requires [Driftwood](driftwood.md)) |
 | f_out_wd | 0 | Wd / Wd9999 | deposited driftwood (m³/m²) and the maximum arrival max(floating+deposited) over the run (the driftwood hazard map) |
-| f_out_wj | 0 | Wj | driftwood jammed at structures (m³/m²) (when the capture cells `fn_dwtrap` of [Driftwood](driftwood.md) are given) |
+| f_out_wj | 0 | Wj | driftwood jammed at structures (m³/m²) (when the capture cells `fn_dwtrap` of [Driftwood](driftwood.md) are given, or a culvert has `culv_jam = 1`) |
 | f_out_hbd | 0 | Bf | floating building-debris volume (m³/m²) (requires [Building destruction and debris](bldgdebris.md)) |
 | f_out_wbd | 0 | Bd / Bd9999 | deposited debris (m³/m²) and the maximum arrival max(floating+deposited) over the run (the debris hazard map) |
 | f_out_bds | 0 | Bs | destroyed fraction of buildings 1 − remaining/initial stock (0-1; the final frame is the damage-ratio map) |

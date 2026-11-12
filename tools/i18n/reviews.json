@@ -58,9 +58,9 @@
     {
       "source": "docs/comparison.md",
       "target": "docs/en/comparison.md",
-      "source_sha256": "6c35ad14f2d7840f8e252be04ab7f3bd834489977303cf5fdd284d4d01c53f56",
-      "target_sha256": "ca79f12ad04b7f109c28e4ff49d269e96610dacca946cd871d0ff7b578889936",
-      "reviewer": "Claude (Claude Code session; capture and jamming of driftwood at structures (fn_dwtrap; developer.md §50.7): row 'Driftwood blockage' in the process coverage table; Japanese and English edited together and compared; rest unchanged since the previous record)",
+      "source_sha256": "2ddc545f15aae9efa2ef7b2fbfaeae38c28a11770393409997409da7a29832d1",
+      "target_sha256": "4dd9cf2a92450ff4d7541a062a21f33305f0cd17debee284ebfb4c1a29a483e4",
+      "reviewer": "Claude (Claude Code session; the culv_jam additions of the Japanese master and the English mirror compared passage by passage, numbers cross-checked)",
       "method": "assistant",
       "reviewed_on": "2026-11-12"
     },
@@ -104,9 +104,9 @@
     {
       "source": "docs/users_guide.md",
       "target": "docs/en/users_guide.md",
-      "source_sha256": "b0a1216894f539972e1fced2dfde3baf89809e43779871bbffa26a5943126028",
-      "target_sha256": "fe7ba327716df00d5c36b64853ab0caadfea9068a3df7435ec012c7963532ea3",
-      "reviewer": "Claude (Claude Code session; capture and jamming of driftwood at structures (fn_dwtrap; developer.md §50.7): the driftwood entries of the chapter list mention capture and jamming, and the parameter count is 808; Japanese and English edited together and compared; rest unchanged since the previous record)",
+      "source_sha256": "046a77483f7b97360e59dabe4e18c34fdb58712c3def64598ee4b0890f41bc43",
+      "target_sha256": "743412b86c11225308abadfbfac39806949c79fe1d4189e63984013868627c51",
+      "reviewer": "Claude (Claude Code session; the culv_jam additions of the Japanese master and the English mirror compared passage by passage, numbers cross-checked)",
       "method": "assistant",
       "reviewed_on": "2026-11-12"
     },
@@ -239,18 +239,18 @@
     {
       "source": "docs/users_guide/driftwood.md",
       "target": "docs/en/users_guide/driftwood.md",
-      "source_sha256": "4eb1b60a6ba86caa6bfc65684ca1003b14fd45c9d7c7a84538b6d0fbc1ea7b64",
-      "target_sha256": "0ea1075c0e1d2e840f95f713f2747a0875822e21ac8c1a544b3a188a95376da3",
-      "reviewer": "Claude (Claude Code session; capture and jamming of driftwood at structures (fn_dwtrap; developer.md §50.7): new section 'Capture and jamming at structures' (rule, where to put capture cells, drag formula and coefficients, what it cannot do), five parameters, the Wj output, the two CSV columns, restart, combinations and the 'not modeled' paragraph; Japanese and English written together and compared paragraph by paragraph; rest unchanged since the previous record)",
+      "source_sha256": "f347e04bb1a61b54b657dc4fdacc9105e2c98cf5d1aa18b4bfed408c90f74093",
+      "target_sha256": "e61c59cf8ac6d67ea21ed8e90f389bd6bc27690a9dce35965f81f58da1d01ec9",
+      "reviewer": "Claude (Claude Code session; the culv_jam additions of the Japanese master and the English mirror compared passage by passage, numbers cross-checked)",
       "method": "assistant",
       "reviewed_on": "2026-11-12"
     },
     {
       "source": "docs/users_guide/driftwood_models.md",
       "target": "docs/en/users_guide/driftwood_models.md",
-      "source_sha256": "e791f910d4f45a6bb2efd69337a0c5ec4c48fcc0f8842bdcdc99ec54fa372be6",
-      "target_sha256": "9757610c6413a79d8eb0e1f21abf4a5eabb86b0dfc6d45ed8e897d07cf439f87",
-      "reviewer": "Claude (Claude Code session; capture and jamming of driftwood at structures (fn_dwtrap; developer.md §50.7): new §6 (capture rule, drag of the jam, gradually-varied-flow equation, coefficients and limits), parameter grounds, the two references marked as not checked against the original text, verification cases renumbered to §7; Japanese and English written together and the equations and numbers compared; rest unchanged since the previous record)",
+      "source_sha256": "63f5ca185d9ebfc52117d6105bef47d888c6b65c1fe956be61521d1a3ff9c7bb",
+      "target_sha256": "d4d0a80fff4cd169a4736960fdbee82c756b883bc3d15b0e4cef6444de90c3f6",
+      "reviewer": "Claude (Claude Code session; the culv_jam additions of the Japanese master and the English mirror compared passage by passage, numbers cross-checked)",
       "method": "assistant",
       "reviewed_on": "2026-11-12"
     },
@@ -302,9 +302,9 @@
     {
       "source": "docs/users_guide/geomorph_applications.md",
       "target": "docs/en/users_guide/geomorph_applications.md",
-      "source_sha256": "7367e584c7c8ed6916f70183c30d9e96eecd43ef8297956ca93a3e2bea4941a5",
-      "target_sha256": "cfd37f4d7b97dfbaa24cbff03d972be16ef47fde828bc986b5b3ad624fb08c9f",
-      "reviewer": "Claude (Claude Code session; capture and jamming of driftwood at structures (fn_dwtrap; developer.md §50.7): sentence on open check dams whose open part is represented by capture cells; Japanese and English edited together and compared; rest unchanged since the previous record)",
+      "source_sha256": "2b8ce5d676fa69cecc67c6f127f6cb1d29847249a8558daf91325b709e2f4ada",
+      "target_sha256": "19117ccf82e89a0d4bd814cdd20f23130929d00b9b73ab7812b672412f8c5214",
+      "reviewer": "Claude (Claude Code session; the culv_jam additions of the Japanese master and the English mirror compared passage by passage, numbers cross-checked)",
       "method": "assistant",
       "reviewed_on": "2026-11-12"
     },
@@ -338,11 +338,11 @@
     {
       "source": "docs/users_guide/hydraulics.md",
       "target": "docs/en/users_guide/hydraulics.md",
-      "source_sha256": "87d67c7c0d42cdfe35ef322ea682fa3fa97bc82328fdf6bede6afdd42679747d",
-      "target_sha256": "06136dfe3ed64c4a70f7f415c7893574adfb7fc3aa0af3a5c307b6a4ea3819ca",
-      "reviewer": "Claude (Claude Code session; full-text content and lexical review, no model execution)",
+      "source_sha256": "0c23ab0ee6d67ad70a7c5c697ce6899c2946246b47b30cb1286afc875b51e4f9",
+      "target_sha256": "b8b866d36d44909056dd5558284edccf078bc3646e1952b64e6a2d72b8acc9d7",
+      "reviewer": "Claude (Claude Code session; the culv_jam additions of the Japanese master and the English mirror compared passage by passage, numbers cross-checked)",
       "method": "assistant",
-      "reviewed_on": "2026-10-28"
+      "reviewed_on": "2026-11-12"
     },
     {
       "source": "docs/users_guide/initial.md",
@@ -356,9 +356,9 @@
     {
       "source": "docs/users_guide/io.md",
       "target": "docs/en/users_guide/io.md",
-      "source_sha256": "47b22583bd4e5361057b199aa78f2a785b46961ac9018e503e9931c9c0329a1d",
-      "target_sha256": "97fe13750db5e325c78e81ab9504f04dc7570f4b87eeb804db550e1323d2f1ba",
-      "reviewer": "Claude (Claude Code session; capture and jamming of driftwood at structures (fn_dwtrap; developer.md §50.7): row for f_out_wj and the reverse-lookup row; Japanese and English edited together and compared; rest unchanged since the previous record)",
+      "source_sha256": "de1a13ef1ab8d2d6ac5494c9fd8019215194e9ba45374311ca9e0cf644101c6f",
+      "target_sha256": "df3614f6a8700db0056d2f11d5bf7c2b96a9bc03d2cf942311d7e9a636063155",
+      "reviewer": "Claude (Claude Code session; the culv_jam additions of the Japanese master and the English mirror compared passage by passage, numbers cross-checked)",
       "method": "assistant",
       "reviewed_on": "2026-11-12"
     },
@@ -419,9 +419,9 @@
     {
       "source": "docs/users_guide/params_index.md",
       "target": "docs/en/users_guide/params_index.md",
-      "source_sha256": "9791a931c4f62643cd5e19b99a21b4faea1c9d24f4b4eb2123613a92f55a4a87",
-      "target_sha256": "dfd2d9a24e94548c4e54056ed3429e8f02f05c7aa391d20ca1b6444802672ce6",
-      "reviewer": "Claude (Claude Code session; capture and jamming of driftwood at structures (fn_dwtrap; developer.md §50.7): six entries added in alphabetical order (dw_jamcd, dw_jamgrow, dw_jamphi, f_dwjam, f_out_wj, fn_dwtrap) and the count 808; checked by tools/params_index/check.py and by comparing the added rows)",
+      "source_sha256": "968d6192af8b9cdbe52c63e6f8016bedd65dc21292a12a44f01e5f14f0f9ddaf",
+      "target_sha256": "86d7849fd55229971e0d9bb701472c63dfae05717f3e83c47fef23f7ada77175",
+      "reviewer": "Claude (Claude Code session; the culv_jam additions of the Japanese master and the English mirror compared passage by passage, numbers cross-checked)",
       "method": "assistant",
       "reviewed_on": "2026-11-12"
     },
@@ -500,9 +500,9 @@
     {
       "source": "docs/users_guide/structure.md",
       "target": "docs/en/users_guide/structure.md",
-      "source_sha256": "f4419583df4f0f3dda2d305bd696118d3ff7bf6dfcf7ef62c18e4552d54aa15d",
-      "target_sha256": "70c88de297f5b3db46c36b5bc3239bb528ce541851c9b0d276044accd240de64",
-      "reviewer": "Claude (Claude Code session; capture and jamming of driftwood at structures (fn_dwtrap; developer.md §50.7): note that driftwood on the intake side does not obstruct a culvert; Japanese and English edited together and compared; rest unchanged since the previous record)",
+      "source_sha256": "32eb2d7b7efee3ca37da271e1bc65950a68fd71e25b777f9a77dbbc0c2d829ce",
+      "target_sha256": "e304489cbe4b0d68ccd9a27a959f51319423361fe56dd75a24a6d688be03ba4d",
+      "reviewer": "Claude (Claude Code session; the culv_jam additions of the Japanese master and the English mirror compared passage by passage, numbers cross-checked)",
       "method": "assistant",
       "reviewed_on": "2026-11-12"
     },
@@ -554,9 +554,9 @@
     {
       "source": "docs/users_guide/usecases.md",
       "target": "docs/en/users_guide/usecases.md",
-      "source_sha256": "27c9649a36db9e0fb9ae751cba94414df43f6bce85c76feabb4b2994748ecd81",
-      "target_sha256": "77ba6929ad8e35828c6a1c122d064275f0213499a2ea00010e01407ff639775f",
-      "reviewer": "Claude (Claude Code session; capture and jamming of driftwood at structures (fn_dwtrap; developer.md §50.7): row for backwater and bypass flooding by driftwood jams, and the wording of the limits in the driftwood row; Japanese and English edited together and compared; rest unchanged since the previous record)",
+      "source_sha256": "2e863f524ad80434254a115cf2d5bae95ddc543129dd765c3076f62791bf8a68",
+      "target_sha256": "b6e38ccb043f9b701ed35d379d151625c291dd87c16a3c2965a6823c41f53d2b",
+      "reviewer": "Claude (Claude Code session; the culv_jam additions of the Japanese master and the English mirror compared passage by passage, numbers cross-checked)",
       "method": "assistant",
       "reviewed_on": "2026-11-12"
     },
@@ -662,9 +662,9 @@
     {
       "source": "examples/List_samples/list_driftwood.txt",
       "target": "examples/List_samples/en/list_driftwood.txt",
-      "source_sha256": "b563cef0480ac26c74a0919999b236b44f3ddcb995e2d35f166de8ff8c1f9ab6",
-      "target_sha256": "a7984a4d403156aeced2070a83283668d87824bbe4a440a6ecfd2c6265c85d03",
-      "reviewer": "Claude (Claude Code session; capture and jamming of driftwood at structures (fn_dwtrap; developer.md §50.7): header lines and the block of five commented-out parameters; comments translated, names, values and commented-out state identical; checked line by line)",
+      "source_sha256": "267bc63aca14de71362504a4eb276e80c899e0772f3d582ef5b1ac0a3ba0346e",
+      "target_sha256": "4fffde104c874b2df43c50467b8b1d4655593725379bbd6b032a566ce945392b",
+      "reviewer": "Claude (Claude Code session; the culv_jam additions of the Japanese master and the English mirror compared passage by passage, numbers cross-checked)",
       "method": "assistant",
       "reviewed_on": "2026-11-12"
     },
@@ -815,11 +815,11 @@
     {
       "source": "examples/List_samples/list_structure.txt",
       "target": "examples/List_samples/en/list_structure.txt",
-      "source_sha256": "b7aca236d3ef671b78164eaff4f07aa7301c22293c5c07ece5c965be7bb0ded3",
-      "target_sha256": "de53dca00a4ff0fa82f70d84102622bae2f911733d0b4490149d612268fcf19f",
-      "reviewer": "Claude (Claude Code session; compared the Japanese and English changes for the water-quality substance carried by structures and withdrawals, 2026-11-04)",
+      "source_sha256": "9ff553b808cd63bb969c1c97e4b5201e626d039dfe4295c28b61ec7252d03871",
+      "target_sha256": "715a416a54d3942f2098c9e5765b0c07ca0c0936cb36779be6e5d69c923035f4",
+      "reviewer": "Claude (Claude Code session; the culv_jam additions of the Japanese master and the English mirror compared passage by passage, numbers cross-checked)",
       "method": "assistant",
-      "reviewed_on": "2026-11-04"
+      "reviewed_on": "2026-11-12"
     },
     {
       "source": "examples/List_samples/list_swi.txt",
@@ -3308,9 +3308,9 @@
     {
       "source": "test/README.md",
       "target": "test/README.en.md",
-      "source_sha256": "505e778411fdb177ef76231ea80b19df460ad247484caeec035259e749a20699",
-      "target_sha256": "47694e0d661a9300956447c338137a6eed59f4616398294baab527bc3714e73e",
-      "reviewer": "Claude (Claude Code session; capture and jamming of driftwood at structures (fn_dwtrap; developer.md §50.7): driftwood row extended with the jam checks in both languages; rest unchanged since the previous record)",
+      "source_sha256": "95c0d168791e7cff429a9c3455f945446dd9b0c69b85108f152547b1196d3d5e",
+      "target_sha256": "8892d7c3e0689742b9aea02bcfff180b25e30d0f5778d5bd48591d3ff276a139",
+      "reviewer": "Claude (Claude Code session; the culv_jam additions of the Japanese master and the English mirror compared passage by passage, numbers cross-checked)",
       "method": "assistant",
       "reviewed_on": "2026-11-12"
     },
@@ -3749,9 +3749,9 @@
     {
       "source": "test/driftwood/README.md",
       "target": "test/driftwood/en/README.md",
-      "source_sha256": "ba43d345727b8d2914e629305e733fb80d15a28b4c340a7b6cc857babaaa1da2",
-      "target_sha256": "654c300794c4c64a63d7a59bb0d9ecdef52cac6b4779376cfbdba5cbda2cf5ab",
-      "reviewer": "Claude (Claude Code session; capture and jamming of driftwood at structures (fn_dwtrap; developer.md §50.7): configuration 5 (table of six configurations, Check_woodjam.py, the gradually-varied-flow equation, results table, findings); Japanese and English written together; every number compared with the output of the final build)",
+      "source_sha256": "2c5bb4926d4a05ffd97322087b7ca8a9065eccb8b6a8641635e7ad5a315f867a",
+      "target_sha256": "e613d899391f5ea2264003d59d3d31a65e53eb260eba650f72893da55f4b36ef",
+      "reviewer": "Claude (Claude Code session; the culv_jam additions of the Japanese master and the English mirror compared passage by passage, numbers cross-checked)",
       "method": "assistant",
       "reviewed_on": "2026-11-12"
     },

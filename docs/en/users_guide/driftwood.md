@@ -43,9 +43,10 @@ rules, the draft, the area conversion and the basis of the defaults are in
 
 Driftwood caught and piled up at structures such as bridges and open-type check dams, which
 raises the water upstream, is handled by a fourth ledger, the **jammed wood `wj`**, which
-works only when the map of the capture ratio `fn_dwtrap` is given
+works only when the map of the capture ratio `fn_dwtrap` is given (or when a
+[culvert](structure.md) has `culv_jam = 1`)
 ([Capture and jamming at structures](#capture-and-jamming-at-structures-fn_dwtrap)). Without
-it, driftwood does not act on the flow.
+either, driftwood does not act on the flow.
 
 ![Three driftwood ledgers, transfer conditions, draft and volume accounting](../../figs/driftwood_ledgers_en.png)
 
@@ -122,6 +123,9 @@ parameters:
 | dw_jamphi | 0.3 | packing ratio φ of the jam (solid volume / bulk volume; 0 < φ < 1; calibration value) |
 | dw_jamgrow | — | cells whose jammed amount (m³/m²) exceeds this capture all the wood (not given = the capture ratio stays constant) |
 
+The jam at a culvert inlet is enabled per culvert by the selector `culv_jam`
+(`&list_struct_culvert`; [Internal hydraulic structures](structure.md#culverts-list_struct_culvert)).
+
 For the two recruitment paths (dw_wrec / dw_droot), **both take their
 defaults when neither is given (erosion entrainment never fires unless
 the terrain moves, so it is harmless), and giving only one disables the
@@ -133,7 +137,9 @@ dw_hrec / dw_vrec takes the default thresholds.
 Driftwood that is caught and piles up at bridges, open-type check dams and driftwood
 catchers, obstructs the flow and raises the water upstream is estimated with **capture
 cells** and the **ledger of jammed wood `wj`**. Whether a log gets caught is not judged;
-the capture ratio is given by the user.
+the capture ratio is given by the user. Structures whose opening is narrower than a cell (the
+outlet of a slit dam, a buried conduit or a sluice pipe represented by a culvert) are handled
+not by capture cells but by `culv_jam = 1` of the culvert ("Jam at a culvert inlet" below).
 
 - **⑤ Capture (`hd → wj`)**: in a cell with a capture ratio E (0–1), the share E of the
   moving driftwood passing through the cell is transferred to the jammed wood `wj`. `wj` does
@@ -159,7 +165,7 @@ the capture ratio is given by the user.
 | Bridge (channel resolved by cells, or with the channel width `fn_width`) | abutments, approach embankments and levees as terrain and levees; no deck | the row of cells crossing the channel at the bridge | given by the user (note below) |
 | Grid-type (steel) open check dam, driftwood catcher | wings as terrain | the row of cells of the open part | close to 1, as these works are meant to stop driftwood (a given) |
 | Slit dam (slit resolved by cells) | dam body as terrain, the slit as a gap of 1–2 cells | the slit cells | given by the user |
-| Slit dam, culvert, sluice pipe (opening narrower than a cell) | dam body as terrain, the opening as a [culvert](structure.md) | — | no effect with this function ("What it cannot do" below) |
+| Slit dam, culvert, sluice pipe (opening narrower than a cell) | dam body as terrain, the opening as a [culvert](structure.md) | not needed; the cell group on the side a culvert with `culv_jam = 1` is drawing from ("Jam at a culvert inlet" below) | all of it (fixed) |
 
 - Connect the row of capture cells by four-neighbour links so that no diagonal path is left
   open (the same caution as for the capture zone of a dam). Capture ratios given on cells of
@@ -205,6 +211,66 @@ the water column (piled above the surface) adds no drag. The derivation and the 
   blockage. The start time of the blockage, the water level upstream of the bridge and the
   discharge bypassing the bridge can be read from `driftwood.csv`, probes and transects.
 
+**Jam at a culvert inlet (culv_jam)**
+
+The opening of a [culvert](structure.md#culverts-list_struct_culvert) is narrower than a cell,
+and the cell flow converging on the inlet is far slower than the flow inside the opening (in a
+trial with a 10 m grid and a 1 m × 1 m opening, about 0.1 m/s on the cell edges against several
+m/s inside the opening), so the cell drag above cannot express the blockage of the opening.
+Setting `culv_jam = 1` on a culvert puts the loss of the wood piled up at its inlet into the
+discharge law of the culvert.
+
+```
+&list_struct_culvert
+  culv_in_cell(:,1,1)  = 150, 60
+  culv_out_cell(:,1,1) = 152, 60
+  culv_width(1)  = 1.0
+  culv_height(1) = 1.0
+  culv_zin(1)  = 12.50
+  culv_zout(1) = 12.30
+  culv_jam(1) = 1          ! put the loss of the wood jammed at the inlet into the discharge law (needs the driftwood module)
+/
+```
+
+- **Capture**: a culvert passes no driftwood. The moving driftwood that reaches the cell group
+  on the side a culvert with `culv_jam = 1` is drawing from (`culv_in_cell` in forward flow,
+  `culv_out_cell` in reverse flow) is all transferred to the jammed wood `wj`. Nothing is
+  captured while the culvert discharge is zero. `fn_dwtrap` is not needed (the two can be
+  combined).
+- **Loss**: from the solid volume $`V_j`$ (m³) of the jam in the cell group on the
+  higher-water side, a loss coefficient on the velocity in the opening is formed,
+
+  ```math
+  C_A = 2\,\kappa_0\,\frac{V_j}{B\,D}
+  ```
+
+  ($`\kappa_0`$ as in the formula above, $`B`$ and $`D`$ the width and height of the section).
+  The free-surface (weir) discharge is multiplied by $`(1 + C_A/3)^{-3/2}`$, and the full-pipe
+  discharge follows the pipe formula with $`C_A`$ added to the sum of losses
+  $`1 + c_e + f_L`$ (derivation in [the explanation](driftwood_models.md) §6; the formulation
+  is ENCflow's own).
+- **Order of magnitude** (default coefficients d = 0.3 m, φ = 0.3, C_D = 1; entrance loss
+  c_e = 0.5; conduit length 0):
+
+  | Opening B × D | Solid volume of the jam V_j | C_A | Weir discharge | Full-pipe discharge |
+  |---|---:|---:|---:|---:|
+  | 1 m × 1 m | 0.06 m³ | 0.74 | × 0.72 | × 0.82 |
+  | 1 m × 1 m | 0.5 m³ | 6.2 | × 0.19 | × 0.44 |
+  | 2 m × 2 m | 0.5 m³ | 1.5 | × 0.54 | × 0.70 |
+
+  The loss is set by $`V_j/(B D)`$, so the smaller the opening, the less wood it takes to
+  block it.
+- With `f_dwjam = 0` the jam at the inlet is also a ledger only and does not enter the
+  discharge law.
+- The cell drag above also acts in the inlet cells, but the flow converging on the inlet is
+  slow, so it has almost no effect.
+- **Choose intake cells from which all the flow heads for the culvert** (just upstream of the
+  outlet of a slit dam, the mouth of a conduit crossing a road embankment, and the like). All
+  the wood that enters the intake cell group jams at the inlet, whatever share of the flow
+  heads for the culvert. On a sluice pipe or an intake whose intake cells are cells of the
+  main river channel, even the wood that only passes along the channel piles up at the inlet,
+  and the blockage is overestimated.
+
 **What it cannot do**
 
 - Judging whether a log gets caught. The capture ratio is a given.
@@ -214,9 +280,19 @@ the water column (piled above the surface) adds no drag. The derivation and the 
 - Collapse and re-release of the jam, and the loss of the bridge. The jam does not move.
 - Pressure flow under the deck and overflow over the deck. The bridge has no deck.
 - The displacement of water by the wood.
-- Blockage of openings narrower than a cell (slits and sluice pipes represented by culverts).
-  The drag of the capture cells acts on the flow across cell edges and does not enter the
-  discharge law of a culvert. Wood piled up in front of a culvert inlet does not act on the flow.
+- Blockage of openings narrower than a cell (slits and sluice pipes represented by culverts)
+  is handled only by culverts with `culv_jam = 1`. The drag of the capture cells acts on the
+  flow across cell edges and does not enter the discharge law of a culvert. Wood piled up in
+  front of the inlet of a culvert without `culv_jam` does not act on the flow.
+- The loss at a culvert inlet is set only by the solid volume of the jam and the section area
+  of the opening. The ratio of the log length to the size of the opening, the shape of the jam
+  and the position of the jam relative to the water level are not considered. The jam never
+  shrinks, so the loss only grows. The discharge does not fall to zero (a complete blockage is
+  not expressed). The multiplier of the weir regime rests on ENCflow's own assumption
+  (the loss is estimated with the velocity at the critical-flow section), and no measurement
+  to compare it with is available yet. When the flow reverses, only the jam in the cell group
+  on the higher-water side is read (wood jammed on the other side being flushed away by the
+  reverse flow is not expressed).
 - Wood that stops in the slack water upstream of the jam (`dw_vstop`) goes to the deposit
   `wd` and is not counted in the drag.
 - The drag of the jam is not included in the bed shear (sediment transport). Sediment tends
@@ -237,6 +313,7 @@ the practical values are in [the explanation](driftwood_models.md) §4):
 | Upper-bound reach (hazard map) | per case | as above | as above | dw_vstop 0, dw_wfloat 0 | use Wd9999; the remaining amount is sensitive to dw_vstop and dw_wfloat (timberyard README) |
 | Trapping by works (two-case comparison) | per case | as above | as above | as above | difference of Wd9999 with and without dams, sand basins or culverts |
 | Blockage and backwater at bridges and open check dams | per case | as above | as above | dw_vstop 0 (no stopping in the slack water upstream of the jam) or the value of the case | capture ratio (a given) in `fn_dwtrap`; compare three cases, `f_dwjam` 0 and 1 and no driftwood; look at Wj and the water level upstream |
+| Blockage of the outlet of a slit dam or the mouth of a buried conduit | per case | as above | as above | as above | the opening as a [culvert](structure.md) with `culv_jam = 1`; compare `f_dwjam` 0 and 1; look at `vol_jam_m3` and the water level upstream |
 
 **Practical guidance** (from the Japanese sabo planning manual; sources
 and conversion formulas in [the explanation](driftwood_models.md) §4):
@@ -264,7 +341,7 @@ The three ways a field gets written (automatic / flag / riding on a flag) and th
 | Hd0001... | f_out_hd = 1 | moving driftwood `hd` (m³/m² per effective area) |
 | Wd0001... | f_out_wd = 1 | deposited driftwood `wd` (m³/m² per effective area) |
 | Wd9999 | f_out_wd = 1 | per-cell run maximum `maxₜ(hd + wd)` (the driftwood hazard map) |
-| Wj0001... | f_out_wj = 1 | jammed wood `wj` (m³/m² per effective area; needs `fn_dwtrap`) |
+| Wj0001... | f_out_wj = 1 | jammed wood `wj` (m³/m² per effective area; needs `fn_dwtrap` or a culvert with `culv_jam = 1`) |
 
 `Wd9999` is the maximum of `hd + wd` after the local processes and the dam
 capture of each step. It is neither the cumulative passing volume nor the
@@ -279,8 +356,9 @@ field.
   `deposit_m3`, `refloat_m3` and `to_dam_m3` (dam capture), and the
   current stores `vol_stock_m3` (standing), `vol_float_m3` (moving) and
   `vol_deposit_m3` (deposited), all in m³ after the area conversion.
-  Only when `fn_dwtrap` is given, two columns are added at the end: the cumulative `trap_m3`
-  (capture at structures) and the current store `vol_jam_m3` (jam).
+  Only when `fn_dwtrap` is given (or a culvert has `culv_jam = 1`), two columns are added at
+  the end: the cumulative `trap_m3` (capture at structures) and the current store `vol_jam_m3`
+  (jam). There is no breakdown per culvert (read it from the inlet cells of `Wj0001...`).
 - Log.txt has no driftwood column.
 
 **Measurements** (probe and transect columns)
@@ -292,8 +370,8 @@ field.
 
 - Handled automatically by the private file `driftwood.dat` (fn_driftwood
   must have been enabled at save time). The jammed wood `wj` is in the save only when the
-  run that saved had `fn_dwtrap`. Restarting with `fn_dwtrap` from a state saved without it
-  starts the jam from zero.
+  run that saved had `fn_dwtrap` (or a culvert with `culv_jam = 1`). Restarting with either of
+  them added from a state saved with neither starts the jam from zero.
 
 **How to read and check**
 
@@ -301,7 +379,7 @@ field.
   **effective** area as the water. A plain sum `wst + hd + wd` closes only
   when the area factor is 1 (conversion in [the explanation](driftwood_models.md) §3).
 - In a closed domain without dam capture the sum of the current stores
-  `vol_stock + vol_float + vol_deposit` (`+ vol_jam` when `fn_dwtrap` is given) conserves the
+  `vol_stock + vol_float + vol_deposit` (`+ vol_jam` when the jam columns exist) conserves the
   initial volume (up to numerical error). Driftwood that leaves into the sea cells of the sea
   mask (fn_sw) or through an edge boundary disappears outside the system
   and has no column in `driftwood.csv`, so obtain it as the residual
@@ -325,12 +403,17 @@ field.
   so wood accumulates upstream of such works (= upper-bound estimate of
   trapping; usable for with/without two-case comparisons in the same
   manner as [representing sabo facilities](geomorph_applications.md#6-sabo-facilities-sediment-retarding-basins-check-dams)).
-  The accumulated wood does not obstruct the flow through the culvert.
-- Driftwood acts on the flow only through the drag of the jammed wood of
+  By default the accumulated wood does not obstruct the flow through the culvert. On a culvert
+  with `culv_jam = 1`, the wood piled up at the inlet reduces the discharge
+  ([jam at a culvert inlet](#capture-and-jamming-at-structures-fn_dwtrap)). `culv_jam = 1`
+  cannot be used unless the driftwood module is enabled (the run stops at initialisation with
+  an error).
+- Driftwood acts on the flow only through the jammed wood of
   [capture and jamming at structures](#capture-and-jamming-at-structures-fn_dwtrap)
-  (`fn_dwtrap` with `f_dwjam = 1`). The moving driftwood `hd` and the deposited driftwood `wd`
+  (with `f_dwjam = 1`: the drag in the capture cells of `fn_dwtrap`, and the inlet loss of
+  culverts with `culv_jam = 1`). The moving driftwood `hd` and the deposited driftwood `wd`
   do not act on the flow.
-- Save/restore preserves `hd`, `wd`, `wst` and `zref` (and `wj` when `fn_dwtrap` is given) in
+- Save/restore preserves `hd`, `wd`, `wst` and `zref` (and `wj` when there is jammed wood) in
   `driftwood.dat`. **The `Wd9999` maximum and cumulative process volumes
   in the CSV are not restored**. Do not read whole-period statistics or
   budgets from the post-restart output alone; keep the results before and
@@ -343,7 +426,11 @@ deposition for both erosion entrainment and hydraulic recruitment, and compares
 saved states from split and uninterrupted runs. Capture and jamming at structures are checked
 in a straight channel: volume conservation, the backwater from the drag of the jam (agreement
 with the solution of the gradually-varied-flow equation), the capture ratio, and byte identity
-of the flow with `f_dwjam = 0` with a run without driftwood.
+of the flow with `f_dwjam = 0` with a run without driftwood. The jam at a culvert inlet is
+checked in a set-up that drains an upstream pool through a single culvert: agreement of the
+discharge with the discharge law including the loss of the jam (both the weir and the
+full-pipe regimes), and byte identity of the flow with `culv_jam = 0` and with `f_dwjam = 0`
+with a run without driftwood.
 
 ## Worked example: timber influx from a coastal log yard by storm surge
 
@@ -373,8 +460,8 @@ by an opening of a given width), and impact forces are out of scope (an explicit
 limit of the raster representation policy). The **effect** of blockage is estimated,
 with the capture ratio as a given, by
 [capture and jamming at structures](#capture-and-jamming-at-structures-fn_dwtrap) (its limits
-are under "What it cannot do" in that section). For openings narrower than a cell (culverts),
-give the blockage as a scenario (a narrowed culvert) and compare two cases.
+are under "What it cannot do" in that section). The blockage of openings narrower than a cell
+(culverts) is estimated by `culv_jam = 1` of the culvert.
 **Impact forces** are evaluated in postprocessing: feeding the maximum
 velocity V9999 (or velocity frames) and the representative log properties
 into the practical impact formula gives a standard-consistent impact-force

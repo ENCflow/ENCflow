@@ -14,7 +14,9 @@ below the slope break are checked with `Check_driftwood.py`. Split
 continuation by restart and the equivalence of the defaults are also checked.
 Capture and jamming at structures (`fn_dwtrap`: the jammed wood wj and the drag of
 the jam; developer.md §50.7) are checked by configuration 5, a straight channel,
-with `Check_woodjam.py`.
+with `Check_woodjam.py`. The jam at a culvert inlet and the loss in the discharge law
+(`culv_jam`; developer.md §50.8) are checked by configuration 6, a drainage test, with the
+same script.
 
 ## Configuration
 
@@ -73,12 +75,52 @@ the two edges of the jam cell (length $`2\Delta x`$). $`d`$ is the representativ
 $`\varphi`$ the packing ratio and $`C_D`$ the drag coefficient
 ([driftwood models explained](../../../docs/en/users_guide/driftwood_models.md) §6).
 
+### Configuration 6: jam at a culvert inlet and the loss in the discharge law (culv_jam)
+
+The same drainage test as [test/culvert](../../culvert/en/README.md). A flat upstream pool of
+10 × 11 cells (Δx = 10 m) with a depth of 3 m is drained only through one 1 m × 1 m culvert
+crossing an embankment, into a downstream column that always stays dry (entrance loss
+c_e = 0.5, conduit length 0). The standing trees in the inlet cells become driftwood in the
+first step, and since the culvert is drawing water, all of it jams at the inlet. The downstream
+side is dry, so the discharge is a function of the upstream depth h₁ alone, and the discharge
+obtained from the storage S of the log can be compared directly with the discharge law
+including the loss of the jam. Representative diameter 0.3 m; default coefficients
+(C_D = 1.0 and φ = 0.3, giving κ₀ = 6.19 m⁻¹). The inputs are written by `make_jam.py`.
+
+| Configuration | File | Jam | What is checked |
+|---|---|---|---|
+| 6 | `param_jamculv.txt` | 0.5 m³ in the single inlet cell (C_A = 6.19); 12 hours | discharge law (the weir governs throughout; multiplier 0.187) |
+| 6a | `param_jamculv3.txt` | 0.02 m³ in each of the 3 intake cells = 0.06 m³ (C_A = 0.74); 6 hours | discharge law (both full pipe and weir); the sum of the solid volumes of the 3 cells (across bands with MPI) |
+| 6b | `param_jamculvoff.txt` | layout of 6a with `culv_jam = 0` | the flow is byte-identical to 6d (the wood only floats at the inlet) |
+| 6c | `param_jamculvled.txt` | layout of 6a with `culv_jam = 1` and `f_dwjam = 0` | the flow is byte-identical to 6d, and the jam of 0.06 m³ enters the ledger |
+| 6d | `param_jamculvnone.txt` | — (no driftwood) | reference for the comparison with 6b and 6c |
+| 6e | `param_jamculvbad.txt` | `culv_jam = 1` without the driftwood module | stops at initialisation |
+| 6f → 6g | `param_jamculvrt1.txt` → `param_jamculvrt2.txt` | 6a saved at 3 hours and continued | byte comparison with the continuous `save_jamculv3/` |
+
+| File | Contents |
+|---|---|
+| `Check_woodjam.py culv <result> <V_j> [both]` | (1) `trap_m3` and `vol_jam_m3` of driftwood.csv equal V_j, and no moving driftwood or standing stock is left, (2) Q = −A_total ΔS/Δt agrees within ±0.5 % with the discharge law including the loss (Simpson mean over the interval) in every interval except the first output interval, (3) the ratio to the discharge law without a jam is below 0.95 in every interval. With `both`, there must be intervals governed by the full pipe and intervals governed by the weir |
+
+The discharge law is that of [test/culvert](../../culvert/en/README.md) with the loss
+coefficient $`C_A = 2\kappa_0 V_j/(BD)`$ ($`V_j`$: solid volume of the jam, $`B`$ and $`D`$:
+width and height of the section).
+
+```math
+Q_w = 0.35\,B\,h_1\sqrt{2 g h_1}\left(1 + \frac{C_A}{3}\right)^{-3/2},
+\qquad
+Q_p = BD\sqrt{\frac{2g}{1 + c_e + C_A}}\ \sqrt{h_1 - \frac{d_c + D}{2}},
+\quad d_c = \min\!\left(D,\ \left(\frac{Q_w^2}{g B^2}\right)^{1/3}\right)
+```
+
+$`Q = Q_w`$ for $`h_1 < D`$ and $`\min(Q_w, Q_p)`$ for $`h_1 \ge D`$
+([driftwood models explained](../../../docs/en/users_guide/driftwood_models.md) §6).
+
 ## Running
 
 ```bash
 make
-./Run.sh          # configuration 1 → 2 → split restart → equivalence of defaults → configuration 5; PASS if all pass (about 45 seconds)
-./Run_MPI.sh 4    # MPI (configurations 1, 2 and 5); state.dat and driftwood.dat are byte-identical to the serial run (with the -O2 strict-math build)
+./Run.sh          # configuration 1 → 2 → split restart → equivalence of defaults → configuration 5 → configuration 6; PASS if all pass (about 80 seconds)
+./Run_MPI.sh 4    # MPI (configurations 1, 2, 5 and 6a); state.dat and driftwood.dat are byte-identical to the serial run (with the -O2 strict-math build)
 python3 Fig.py en # en/figs/driftwood.png
 ```
 
@@ -115,6 +157,11 @@ of the flat part (center).
 | 5d capture ratio 0.3 | jam 6.080 m³ / recruited 20 m³ = 0.304 | PASS |
 | 5e no driftwood | all outputs of H and V and Log.txt (14 files) byte-identical to 5d | PASS |
 | 5f dw_jamgrow | jammed share 0.9992 | PASS |
+| 6 culvert inlet (large jam) | jam 0.500000 m³. Over the 71 intervals of h₁ = 2.88 → 0.77 m the largest difference from the discharge law is 0.016 % (the weir governs throughout). Ratio to the discharge law without a jam 0.19–0.29 | PASS |
+| 6a small jam, 3 intake cells | jam 0.060000 m³. Over the 35 intervals of h₁ = 2.67 → 0.38 m the largest difference is 0.11 % (full pipe governs 5 intervals, weir 30). Ratio 0.72–0.83 | PASS |
+| 6b culv_jam = 0, 6c f_dwjam = 0 | in both, the outputs of H and V and Log.txt (8 files) are byte-identical to 6d (no driftwood). In 6c the jam of 0.06 m³ enters the ledger | PASS |
+| 6e culv_jam = 1 without the driftwood module | stops at initialisation | PASS |
+| 6f → 6g split continuation by restart | driftwood.dat, state.dat and swflow_enc.dat byte-identical to the continuous run (6a) | PASS |
 
 - The wood volume (stock + moving + deposited) is conserved to machine
   precision in the closed domain.
@@ -132,16 +179,22 @@ of the flat part (center).
   §50.4).
 - Driftwood is one-way with respect to the hydraulics (flow → driftwood),
   and the driftwood ledger is unchanged even when enabled together with
-  building debris [test/bldgdebris](../../bldgdebris/en/README.md). Only the drag of
-  the jammed wood in the capture cells (`fn_dwtrap` with `f_dwjam = 1`) acts on the flow.
+  building debris [test/bldgdebris](../../bldgdebris/en/README.md). Only the jammed wood
+  acts on the flow (with `f_dwjam = 1`: the drag in the capture cells of `fn_dwtrap`, and the
+  inlet loss of culverts with `culv_jam = 1`).
 - The backwater of configuration 5 is about 1.0 m (against the uniform depth of 2.0 m) and comes
   from the 20 m³ of solid wood in the jam (1.0 m² per unit channel width). The 1–2 % difference
   of the rise from the analytical value comes from the discretization that represents the jam
   section by two edges. The jammed share of 0.304 in the configuration with a capture ratio of
   0.3 comes from the capture rule being an approximation computed inside the cell (the
   residence time of a well-mixed cell).
+- In configuration 6, 0.5 m³ of wood at the inlet (a bulk volume of 1.7 m³) reduces the
+  discharge to 0.19–0.29 of the value without a jam. A 1 m × 1 m opening is heavily blocked by
+  little wood. The differences from the discharge law (0.02–0.11 %) come from the difference
+  between the water level of the representative cell and the mean level of the pool, and from
+  the change of the discharge within an output interval.
 - MPI np = 1, 2, 4 are byte-identical to the serial run with the -O2
-  strict-math build (for configuration 5, state.dat and driftwood.dat of np = 2 and 4 are
+  strict-math build (for configurations 5 and 6a, state.dat and driftwood.dat of np = 2 and 4 are
   byte-identical to the serial run with the -Og -fcheck=all build). With -Ofast, fast-math ULP differences appear between
   the serial and MPI builds, so the serial comparison in `Run_MPI.sh` is
   treated as a warning (§50.3).
@@ -149,4 +202,4 @@ of the flat part (center).
 ## Related documents
 
 - [docs/users_guide/driftwood.md](../../../docs/en/users_guide/driftwood.md) — the two recruitment paths, stopping and refloating, capture and jamming at structures, recommended values by pattern
-- developer.md §50 (design, verification records, comparison with the literature; jamming in §50.7), §62 (defaults), docs/woodjam_plan.md (record of the study of jamming; in Japanese)
+- developer.md §50 (design, verification records, comparison with the literature; jamming in §50.7, the loss at a culvert inlet in §50.8), §62 (defaults), docs/woodjam_plan.md (record of the study of jamming; in Japanese)
