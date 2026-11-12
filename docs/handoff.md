@@ -233,9 +233,10 @@ architecture.md。このメモは「現在進行中・未完了の項目」だ�
        厚い被覆から抜けるようになった。§89.30。計算時間の目安を実測に合わせた)。回し直して変化がなかった
        もの: tsunami_fault・bedrock_cover・nest_reflect(図もビット一致)・catchment_metal(計算は 11-09 と同じ。
        監査 00o の図の直し(G1 の線、まとめの (b) の対数軸の下限 0.001 kg)で図 3 枚だけ描き直した)・
-       estuary_barrage(計算は 11-09 と同じ。監査 00o の図の直しで profile・series だけ描き直した)。計算済みで
-       照合中: tower_karst の基準面(残りの構成の後に README を照合する)。計算中: delta(20 本)。計算待ち:
-       karst・tower_karst の残り・stone_forest。検定は済: reference を持たない
+       estuary_barrage(計算は 11-09 と同じ。監査 00o の図の直しで profile・series だけ描き直した)・karst(3 ケースとも
+       値は同じで、崩落の補足の崖錐として溶けた岩だけ 623 → 622 m³。図は見分けられない差なので描き直さない)。
+       計算済みで照合中: tower_karst の基準面(残りの構成の後に README を照合する)。計算中: delta(20 本)と
+       tower_karst の残り。計算待ち: stone_forest。検定は済: reference を持たない
        自己検定 48 本(wave_shore を含む)がすべて PASS し、README の値と食い違った 32 検定の README(日英)と
        図 12 組を今の値に直した(利用者の了承「案 1・全件」。丸め誤差の水準の残差は「〜程度以下(丸め誤差)」と
        上限で書く。users guide の advection・sediment が引く sublattice・creep の値も直した)。

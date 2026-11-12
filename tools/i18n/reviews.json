@@ -1841,11 +1841,11 @@
     {
       "source": "examples/karst/README.md",
       "target": "examples/karst/en/README.md",
-      "source_sha256": "8fedc8dfd9dd8782dc00a982cdf29a75f9a907a766eec00853875f82c7acf4ca",
-      "target_sha256": "56d37bdfe9800828d4d435048eddf533e4847cd81490cff120823a5354b6cc6d",
-      "reviewer": "Claude (Claude Code session; corrected both versions in parallel against the inputs, scripts and committed figures, and compared the edited passages and numbers)",
+      "source_sha256": "3f7782ba998dfbba3f1393cbfc21953e2f5cc4e5acd9a33677b07598507b44bd",
+      "target_sha256": "7022aa93ade4606e157a907302a08010c55ce33e98a68e2ab5b4cb9fb85db6ab",
+      "reviewer": "Claude (Claude Code session; recomputation of 2026-11-11/12 with the current defaults: the talus dissolved in the rockfall supplement updated 623 -> 622 m3 in both files, compared against the Japanese source and the Screen_rock.log ledger; all other values unchanged and checked against plot_results.py; the rest unchanged since the previous record)",
       "method": "assistant",
-      "reviewed_on": "2026-11-08"
+      "reviewed_on": "2026-11-12"
     },
     {
       "source": "examples/karst/figs/evolution.png",
