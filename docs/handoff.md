@@ -695,8 +695,8 @@ architecture.md。このメモは「現在進行中・未完了の項目」だ�
      (evolution_* など)は置かない。
 
 00r. **貯留関数法の区画流出 fn_sfm(2026-11-11。developer.md §106)の残り**
-   - **reference の確定**: test/sfzone の reference(Log.txt・sfm_zone.csv)は解析検定の合格を根拠に
-     暫定で置いた。人間が結果の妥当性を目視で確かめてから確定する(CLAUDE.md の規律 1)。
+   - **reference の確定(済 2026-11-12)**: test/sfzone の reference(Log.txt・sfm_zone.csv)は利用者の指示で
+     確定した(ファイルは作成時のまま。確定時の main の出力とバイト一致。developer.md §106.4)。
    - **遅れ時間 T_L(2026-11-11 実装。§106.6)**: `sfm_tl_h`(時間)。雨を T_L 遅らせてタンクに入れる形、
      dt の倍数に丸め、開始時は q0 の定常。test/sfzone の reference(T_L = 0 の構成)は変わらない。
      遅れのある計算(param_lag.txt)は Check_sfzone.py の検定だけで、reference には入れていない。

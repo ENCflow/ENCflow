@@ -4397,11 +4397,11 @@
     {
       "source": "test/sfzone/README.md",
       "target": "test/sfzone/en/README.md",
-      "source_sha256": "fadb1e00b14e2cf20ca9f3b892e23aa52d7e136597c109d59a82ea5ce0859122",
-      "target_sha256": "3dadd47c1d862633cbc3d75ecd88ef50efd890f168295df6f1cb556dacaafa56",
-      "reviewer": "Claude (Claude Code session; two interception ratios of the initial loss and the separation of effective rainfall for the storage function method (§106.8): Japanese and English edited together and the changed passages compared, no model execution)",
+      "source_sha256": "23959c5b1c8b166c3814c7860d7800e171206657581f334940b4b6692e85415a",
+      "target_sha256": "92fe1082629f62c181dabe9dae3a68462106db7c4e1364d9bd1ef0b9dd15595b",
+      "reviewer": "Claude (Claude Code session; confirmation of the test/sfzone reference: Japanese and English edited together and the changed passage compared, no model execution)",
       "method": "assistant",
-      "reviewed_on": "2026-11-11"
+      "reviewed_on": "2026-11-12"
     },
     {
       "source": "test/slide/README.md",
