@@ -73,9 +73,9 @@ nearly over. (b) In a cell where buildings occupy 30 % (porosity gv = 0.7), wate
 outside the buildings, so the same volume of water stands 1/0.7 = 1.43 times deeper. The passage
 widths of the edges are not narrowed by gv; the momentum equation has the inertia
 λm = gv + (1 − gv)·cm = 1.3 and multiplies the pressure and friction terms by gv. In addition, the
-building drag (k C_D/2)(h/B)(1 − gv)|V| (k = 0.5, C_D = 1, mean building size B = 10 m) slows the
+building drag (k C_D/2)(1 − gv)|V|/B (k = 0.5, C_D = 1, mean building size B = 10 m) slows the
 flow; against the ground friction of the residential areas (roughness 0.03) it is 1.2 times at a
-depth of 1 m and 6 times at 2 m ([ENC grid](../../../docs/en/users_guide/encgrid.md) §3, §5). As houses are destroyed, gv rises
+depth of 1 m and 3 times at 2 m ([ENC grid](../../../docs/en/users_guide/encgrid.md) §3, §5). As houses are destroyed, gv rises
 in proportion to the destroyed fraction d from 0.7 to 1, and the depth falls with the water
 volume kept. (c) Houses start to break when the load X = (h + bd_sg·hbd)V² (hbd: floating debris)
 exceeds bd_fcrit = 2 m³/s², and the house stock of 0.2 m³/m² decreases at the rate bd_wdes·a,
@@ -159,10 +159,10 @@ downstream of the breach. Right: inundation depth at the cell in the centre of h
 
 | Case | Water into the landside | Peak flow | Minimum river discharge downstream (150-330 min) | Inundated ≥ 0.5 m | Maximum depth | Houses swept away A / B / C | Maximum depth within houses B / C | Centre of B reaches 0.5 m |
 |---|---:|---:|---:|---:|---:|---:|---:|---:|
-| Overtopping only | 0.20 million m³ | 24 m³/s | 1,136 m³/s | 0 ha | 0.28 m | 0 / 0 / 0 % | 0.16 / 0.14 m | — |
-| Breach by overtopping | 4.92 million m³ | 651 m³/s | 784 m³/s | 247 ha | 1.77 m | 69 / 0 / 0 % | 0.79 / 0.63 m | 226 min |
-| Breach 1 hour later | 2.68 million m³ | 492 m³/s | 784 m³/s | 165 ha | 1.70 m | 48 / 0 / 0 % | 0.66 / 0.51 m | 286 min |
-| Breach + secondary levee | 4.49 million m³ | 652 m³/s | 790 m³/s | 269 ha | 2.64 m | 69 / 0 / 0 % | 2.04 / 0.24 m | 223 min |
+| Overtopping only | 0.20 million m³ | 24 m³/s | 1,136 m³/s | 0 ha | 0.29 m | 0 / 0 / 0 % | 0.16 / 0.14 m | — |
+| Breach by overtopping | 4.92 million m³ | 651 m³/s | 784 m³/s | 247 ha | 1.77 m | 69 / 0 / 0 % | 0.80 / 0.64 m | 225 min |
+| Breach 1 hour later | 2.68 million m³ | 491 m³/s | 784 m³/s | 168 ha | 1.70 m | 48 / 0 / 0 % | 0.67 / 0.52 m | 285 min |
+| Breach + secondary levee | 4.49 million m³ | 652 m³/s | 790 m³/s | 269 ha | 2.64 m | 69 / 0 / 0 % | 2.04 / 0.25 m | 223 min |
 
 The upstream discharge peaks at 1,600 m³/s. "Houses swept away" is the fraction of the house
 stock of each area destroyed into debris.
@@ -177,7 +177,7 @@ stock of each area destroyed into debris.
   from 270 minutes). Inundation of 0.5 m or more spreads over 247 ha, and houses B and C are
   flooded 0.6-0.8 m deep.
 - **Houses are swept away only right behind the breach**: the flow out of the breach is
-  fast (up to 4.8 m/s), and 70 % of the houses in area A are swept away. The load hV² at
+  fast (up to 4.7 m/s), and 70 % of the houses in area A are swept away. The load hV² at
   which houses start to break (2 m³/s²) is exceeded only within about 260 m of the breach,
   and B and C are flooded without breaking. This matches the way the government maps the
   "zone of house collapse by flood flow" as a strip along the levee.
@@ -185,11 +185,11 @@ stock of each area destroyed into debris.
   breach starts at 240 minutes, the flood peak is nearly over; the water entering the
   landside falls from 4.92 to 2.68 million m³ (46 % less), and the houses swept away in A
   from 69 to 48 %. The centre of houses B reaches 0.5 m, the depth at which evacuation
-  becomes difficult, at 286 instead of 226 minutes, exactly one hour later. This is the
+  becomes difficult, at 285 instead of 225 minutes, exactly one hour later. This is the
   effect of a levee that lengthens the time to failure even when overtopped.
 - **The secondary levee deepens the flood in front and protects what is behind**: houses B
-  in front of the secondary levee are flooded deeper, from 0.79 to 2.04 m, and houses C
-  behind it shallower, from 0.63 to 0.24 m. The water leaving downstream through the south
+  in front of the secondary levee are flooded deeper, from 0.80 to 2.04 m, and houses C
+  behind it shallower, from 0.64 to 0.25 m. The water leaving downstream through the south
   edge falls from 4.68 to 1.78 million m³. Water held in front of the secondary levee flows
   back into the river through the breach when the river falls (the negative flow from about
   400 minutes in the left panel).

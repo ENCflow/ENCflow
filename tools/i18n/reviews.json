@@ -2039,29 +2039,29 @@
     {
       "source": "examples/levee_breach/README.md",
       "target": "examples/levee_breach/en/README.md",
-      "source_sha256": "d86be4b60464dc25f0fb76b22a80e31662f2a601c8a3b5905da846e0ae2ad66e",
-      "target_sha256": "da4120191a832cd2e0ec15bfb31277e7cdb77a979bcff3bb5395ff034f74fdba",
-      "reviewer": "Claude (Claude Code session; make sweep and sweep_width.py added for the breach-width table: command line in the supplement block and the table heading point to them; table values unchanged and reproduced by make sweep; Japanese and English edited together and compared)",
+      "source_sha256": "119596ae1989f83b0467d09cb7d9af688c99cfa4548c72eae382492a2b03b0ca",
+      "target_sha256": "454ea4e3af04a1c5b69eae7cfae9dd319a8ff8f4c941027ea736d5bdee78ef92",
+      "reviewer": "Claude (Claude Code session; rerun 2026-11-12 after the building drag fix (developer.md §107): drag formula in the caption of the laws figure ((k C_D/2)(1 - gv)|V|/B; ratio to the ground friction 1.2 at 1 m and 3 at 2 m), result table (4 cases) and prose values (maximum velocity 4.7 m/s, times 225/285 min, depths of houses B and C); Japanese and English edited together and every changed value compared; rest unchanged since the previous record)",
       "method": "assistant",
-      "reviewed_on": "2026-11-10"
+      "reviewed_on": "2026-11-12"
     },
     {
       "source": "examples/levee_breach/figs/laws.png",
       "target": "examples/levee_breach/en/figs/laws.png",
-      "source_sha256": "5145e57a8f975870c28f157b076fabbcd4c10a8c31c2bcc5da0de137f4659531",
-      "target_sha256": "875484fed3db6af566e2e7dba68c60ad76dcb10535a6e03a901e62aeae4174a4",
-      "reviewer": "Claude (Claude Code session; both drawn by the same script from the same results; compared every label and value)",
+      "source_sha256": "cda5a9b381b82ceaebb41672e6dcef4a6b90d71718199ddd76a2ae14112242dc",
+      "target_sha256": "5abb00fd5e61fad41d94eb6c7969c3472c7d169ec551f7ff611f739ed55bfe7d",
+      "reviewer": "Claude (Claude Code session; redrawn 2026-11-12 after the building drag fix (developer.md §107) by the example's plot script, Japanese and English from the same results and inputs; both images viewed: same data and layout, labels translated)",
       "method": "assistant",
-      "reviewed_on": "2026-11-08"
+      "reviewed_on": "2026-11-12"
     },
     {
       "source": "examples/levee_breach/figs/maps.png",
       "target": "examples/levee_breach/en/figs/maps.png",
-      "source_sha256": "a9fc2445e084744c9ffa26d69bdf810d369109b342fb6aaf968d833d76afccc9",
-      "target_sha256": "ea5bdb9ade212fd56e42608d8c822fbdff11e46db7c4bfd8cc486d6b9d43fc21",
-      "reviewer": "Claude (Claude Code session; recomputed 2026-11-10 with the default f_advection_donor = 3: drawn by the example's plot script (Japanese and English from the same results, script unchanged); Japanese and English images compared)",
+      "source_sha256": "44757c12e25d2c73f07fa18afc130c1f8e86cc9718e7e7739403e808f1ca086d",
+      "target_sha256": "762750b120ad25d885b9b9929c48af78414b5940c8eaf6f4a678cc01894b9bf4",
+      "reviewer": "Claude (Claude Code session; redrawn 2026-11-12 after the building drag fix (developer.md §107) by the example's plot script, Japanese and English from the same results and inputs; both images viewed: same data and layout, labels translated)",
       "method": "assistant",
-      "reviewed_on": "2026-11-10"
+      "reviewed_on": "2026-11-12"
     },
     {
       "source": "examples/levee_breach/figs/mechanism.png",
@@ -2075,11 +2075,11 @@
     {
       "source": "examples/levee_breach/figs/series.png",
       "target": "examples/levee_breach/en/figs/series.png",
-      "source_sha256": "163bcc11c41f77ab5749992a6c8bf605d739eb94dfc9ca70fabdb7d8094be501",
-      "target_sha256": "25f9ebf2adc7c60b8623f335e561cae757a57e61176d3b9b419f58f72467746b",
-      "reviewer": "Claude (Claude Code session; recomputed 2026-11-10 with the default f_advection_donor = 3: drawn by the example's plot script (Japanese and English from the same results, script unchanged); Japanese and English images compared)",
+      "source_sha256": "0d413d44a578fa4069d2985386e04239ab75bc333fa7ed50ddbf780811e76f81",
+      "target_sha256": "8f36a787b5d10cf84706ba0f6c9f0d2d419f46ee1e82568a1afe2383ce6c5aa3",
+      "reviewer": "Claude (Claude Code session; redrawn 2026-11-12 after the building drag fix (developer.md §107) by the example's plot script, Japanese and English from the same results and inputs; both images viewed: same data and layout, labels translated)",
       "method": "assistant",
-      "reviewed_on": "2026-11-10"
+      "reviewed_on": "2026-11-12"
     },
     {
       "source": "examples/levee_breach/figs/setup.png",
@@ -2903,11 +2903,11 @@
     {
       "source": "examples/timberyard/README.md",
       "target": "examples/timberyard/en/README.md",
-      "source_sha256": "ebe5fc0b9c58aa3acb23718d7ad909e5e32d4e2b225b81b06b6721cef060d042",
-      "target_sha256": "7e0fe36d139b3dc63b5cc04e8447eb63269dbc33d944d2bd2db393670db7119b",
-      "reviewer": "Claude (Claude Code session; values updated to reruns with the default f_advection_donor = 3: main and supplement tables (m3 values) and the Ise Bay type load at the opening (1.5 -> 1.4 m3/s2, ratio 'more than twice'); other prose values checked against f_advection_donor = 0 controls and unchanged; Japanese and English edited together and compared)",
+      "source_sha256": "59bcfcabf03ab77e30cbc1ba63cd87788253e927b8cd72eca882ecf8b1d94fdf",
+      "target_sha256": "81c1c8fe59113b1c7e0b4af99ee40fcdf0448b1046624694a37dd93a70dacfb0",
+      "reviewer": "Claude (Claude Code session; rerun 2026-11-12 after the building drag fix (developer.md §107): main and supplement tables (m3 values, reach) and prose values (seawall +4 m case: maximum depth 3.10 m, velocity 2.1 m/s and load 3.8 m3/s2 at the opening, slow-flow area at the surge peak, 14 m3 carried offshore); Japanese and English edited together and every changed value compared; rest unchanged since the previous record)",
       "method": "assistant",
-      "reviewed_on": "2026-11-10"
+      "reviewed_on": "2026-11-12"
     },
     {
       "source": "examples/timberyard/figs/laws.png",
@@ -2921,11 +2921,11 @@
     {
       "source": "examples/timberyard/figs/maps.png",
       "target": "examples/timberyard/en/figs/maps.png",
-      "source_sha256": "be2612ede8b6fdc58162e03e22d522dc00a870d760c4bde35d80fdc368c1fa11",
-      "target_sha256": "70ca60483baf13910ca8d0cf9eb0688c94691f1c655653d9875631634bce12cd",
-      "reviewer": "Claude (Claude Code session; recomputed 2026-11-10 with the default f_advection_donor = 3: drawn by the example's plot script (Japanese and English from the same results, script unchanged); Japanese and English images compared)",
+      "source_sha256": "d67f0fc1ea96bc18f466798f9c4aba1689cde35322b9c35004de0c9869a4a2f1",
+      "target_sha256": "4b75a0858e7a533f4756ed727b570fd227752a5f65515004592493a8304bbd34",
+      "reviewer": "Claude (Claude Code session; redrawn 2026-11-12 after the building drag fix (developer.md §107) by the example's plot script, Japanese and English from the same results; both images viewed: same data and layout, labels translated)",
       "method": "assistant",
-      "reviewed_on": "2026-11-10"
+      "reviewed_on": "2026-11-12"
     },
     {
       "source": "examples/timberyard/figs/mechanism.png",
@@ -2939,11 +2939,11 @@
     {
       "source": "examples/timberyard/figs/series.png",
       "target": "examples/timberyard/en/figs/series.png",
-      "source_sha256": "16eac6ca9a56a0c6c122f4dc47eda5158eb2fcfbdf7aba3f36be7d6ef2ddec1f",
-      "target_sha256": "25742fb13951c02f7ff8be08c19a73aa42eeeb6bdd53763227f697dd8ccf0a29",
-      "reviewer": "Claude (Claude Code session; recomputed 2026-11-10 with the default f_advection_donor = 3: drawn by the example's plot script (Japanese and English from the same results, script unchanged); Japanese and English images compared)",
+      "source_sha256": "79278fb13efd17e0bdb038be12f31c37324a1c0b7ca33406ec401784c53015bd",
+      "target_sha256": "d430eded454e8458cfd8bb84e76429825070c77ff3e708a0233ce2498c5a13fb",
+      "reviewer": "Claude (Claude Code session; redrawn 2026-11-12 after the building drag fix (developer.md §107) by the example's plot script, Japanese and English from the same results; both images viewed: same data and layout, labels translated)",
       "method": "assistant",
-      "reviewed_on": "2026-11-10"
+      "reviewed_on": "2026-11-12"
     },
     {
       "source": "examples/timberyard/figs/setup.png",
@@ -2957,11 +2957,11 @@
     {
       "source": "examples/timberyard/figs/supp.png",
       "target": "examples/timberyard/en/figs/supp.png",
-      "source_sha256": "7bb95f9574dc2eb8472ea7b08b529f0c945d1d89072a3d772e7565e8bb46978d",
-      "target_sha256": "78df59de436abe02e5376e80984c89fbc051b48a18112413d3623d0116a7c76c",
-      "reviewer": "Claude (Claude Code session; recomputed 2026-11-10 with the default f_advection_donor = 3: drawn by the example's plot script (Japanese and English from the same results, script unchanged); Japanese and English images compared)",
+      "source_sha256": "49e33382a221eb177a96f6221b49ef28904db10edf62247184b563627735a1de",
+      "target_sha256": "a4c18b41d8d12bebc329b36d70d5b41502afcb3f2ce5396fea1956dbab6917f5",
+      "reviewer": "Claude (Claude Code session; redrawn 2026-11-12 after the building drag fix (developer.md §107) by the example's plot script, Japanese and English from the same results; both images viewed: same data and layout, labels translated)",
       "method": "assistant",
-      "reviewed_on": "2026-11-10"
+      "reviewed_on": "2026-11-12"
     },
     {
       "source": "examples/tower_karst/README.md",
