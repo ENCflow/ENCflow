@@ -629,8 +629,6 @@ def pget(key, default):
 DX = pget("lx", 1000.0) / pget("nx", 200.0)
 MORFAC = pget("morfac", 100.0)
 DT_FILE = pget("dt_file", 3600.0)
-LCH = {"base": 150.0, "baseqb": 150.0, "wave": 150.0, "wfsed": 150.0, "tide": 150.0, "notide": 150.0, "tidedom": 150.0, "smallq": 150.0}.get(case, 200.0)
-ZSEA = {"base": -2.0, "baseqb": -2.0, "wave": -2.0, "wfsed": -2.0, "tide": -2.0, "notide": -2.0, "tidedom": -2.0, "smallq": -2.0}.get(case, -1.5)
 
 frames = []
 fn = os.path.join(d, "FILENUMBER.csv")
@@ -648,6 +646,8 @@ if case in ("tide", "tidedom"):   # 潮の 1/4 周期ごとの出力: 平均潮�
     frames = [(n, t) for n, t in frames if n % TIDE_PH == 0]
 z0 = np.loadtxt(os.path.join(d, "Z0000.txt"))
 ny, nx = z0.shape
+LCH = DX * int(np.argmin(np.isclose(z0[0], 1.5)))   # 河道の長さ = 西側の陸(+1.5 m)が続く列の数(plot_compare.py と同じ)
+ZSEA = round(float(np.median(z0[:, -1])), 1)        # 海盆の海底(東端の列の中央値)。最終地形の図の色の下限
 x = (np.arange(nx) + 0.5) * DX; y = (np.arange(ny) + 0.5) * DX
 ext = [0, nx * DX, ny * DX, 0]
 

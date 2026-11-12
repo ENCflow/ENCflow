@@ -104,9 +104,10 @@ architecture.md。このメモは「現在進行中・未完了の項目」だ�
      mesa(補足 3 を結論から先に書く形に。比較の図を 1 枚に)、catchment_metal(結論を前に。ステップ 6・6b を
      1 つの節に)。
    - **README に載っていない図**: mesa 29 枚、badland_round 3 枚(maps_strata3・rounding_strata・
-     rounding_strata3)、badland_storm 1 枚(flow_tilt)、delta 5 枚(mud・sand・wave_a45・wave_capfeed・
-     wave_headon の *_evolution)。載せるか生成をやめるかを決める(00g の mesa の英語図の残りは、
-     README に載っていない図なので英語化は要らない)。
+     rounding_strata3)、badland_storm 1 枚(flow_tilt)。載せるか生成をやめるかを決める(00g の mesa の
+     英語図の残りは、README に載っていない図なので英語化は要らない)。delta の 5 枚(mud・sand・wave_a45・
+     wave_capfeed・wave_headon の *_evolution)は 2026-11-12 に消した(利用者の了承。wave_* の 3 枚は設定が
+     もうなく描き直せない。developer.md が引く 2 枚は git の履歴を指すように直した)。
 
 00n. **運動量保存形移流の風上供給元 f_advection_donor(developer.md §102。2026-11-09 に既定を 0 から 3 に変更。2026-11-07 に 3 を追加して 1・2 を廃止、同日 3 に側方面の乾湿判定の連続化を追加。2026-11-08 に 3 の流向面の判定を薄い供給元に限定)の残り**
    - 背景: tutorials/chichibu Step 3 の逓減部の跳ね(232 min +435 m³/s)は、河岸の薄い水膜(213,39)が本川の辺の

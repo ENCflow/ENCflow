@@ -40,7 +40,11 @@ def T(ja, en):
 
 
 if not EN:
-    matplotlib.rcParams["font.family"] = ["IPAGothic", "IPAexGothic", "Noto Sans CJK JP", "DejaVu Sans"]
+    import matplotlib.font_manager as fm
+    for f in ("IPAPGothic", "IPAGothic", "Noto Sans CJK JP", "WenQuanYi Zen Hei"):   # 日本語ラベル(plot_results.py と同じ。無ければ既定フォント)
+        if any(x.name == f for x in fm.fontManager.ttflist):
+            matplotlib.rcParams["font.family"] = f
+            break
 matplotlib.rcParams["axes.unicode_minus"] = False
 
 H_LAND, V_CH = 0.05, 0.1                  # 陸の判定の水深 (m)、分流路とみなす流速 (m/s)

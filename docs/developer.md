@@ -16248,13 +16248,15 @@ R = Q_r/Q_w)が無かった。設計の比較と不採用案は docs/wave_plan.m
   持つ)と合わせて設計する(handoff.md 00e)。
 - **入射角 45°(dir = 135°)は不安定の閾値**: 同じ例題で河口から波の峰に沿う砂嘴が
   海盆へ 600 m 伸び続け、河口の洗掘で入口の供給が base の 2 倍になった
-  (examples/delta/figs/wave_a45_evolution.png)。CEM の flying spit に相当する挙動で
+  (図は examples/delta/figs/wave_a45_evolution.png にあった。2026-11-12 に例題から外し、4bf7629 までの
+  git の履歴に残る)。CEM の flying spit に相当する挙動で
   機構としては妥当だが、例題の意図(ローブを均す)には拡散的な入射角(< 42°。例題は
   30° = dir 150°)を使う。
 - **容量給砂 fluv_bcfeed = 1 と波は併用しない**: 入射角 30° でも、波が河口の砂を岸沿いに
   運び去って河口砂州が育たず、入口の流砂能力が落ちないため入口の供給が base の 11 倍
   (44 万 m³ 対 3.9 万 m³)になり、海盆が波の峰に平行な前線で埋まった
-  (figs/wave_capfeed_evolution.png)。河川と波の比 R = Q_r/Q_w を制御するには掃流砂を
+  (図は examples/delta/figs/wave_capfeed_evolution.png にあった。上と同じく git の履歴に残る)。
+  河川と波の比 R = Q_r/Q_w を制御するには掃流砂を
   固定給砂(inflow_qb。§84.9)で与える。例題は base の容量給砂の実績平均 0.00715 m³/s
   (固体)を固定給砂にした(基準は同じ給砂の base)が、下の理由で例題は保留。
 - **河道の深みは波の源**: 河川の流下水深が h_b を超える(例題は 1.2〜2.2 m > 1.07 m)と
