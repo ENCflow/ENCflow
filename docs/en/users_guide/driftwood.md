@@ -432,6 +432,18 @@ discharge with the discharge law including the loss of the jam (both the weir an
 full-pipe regimes), and byte identity of the flow with `culv_jam = 0` and with `f_dwjam = 0`
 with a run without driftwood.
 
+## Worked example: backwater and bypass flooding from driftwood jammed at a bridge
+
+[examples/bridge_wood_jam](../../../examples/bridge_wood_jam/en/README.md) is a schematic experiment
+in which driftwood carried by a flood jams at a bridge (a row of capture cells), the water backs up,
+leaves the channel onto the floodplain and flows around the bridge (`make && make run` for the three
+base cases; about 6 minutes in total). The README explains the comparison of three cases (no
+driftwood, a jam that does not act on the flow with `f_dwjam = 0`, and a jam with drag), the spread
+of the results when the capture assumption (a constant capture ratio, or `dw_jamgrow`) and the
+packing ratio are changed, the relation between the jam volume and the backwater (the
+gradually-varied-flow formula and the simulation), the outputs to read (`vol_jam_m3` of
+`driftwood.csv`, probes and transects) and the limits of accuracy.
+
 ## Worked example: timber influx from a coastal log yard by storm surge
 
 An idealized experiment of the Isewan-typhoon type — timber floating in

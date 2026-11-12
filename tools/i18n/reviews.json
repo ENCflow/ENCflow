@@ -239,18 +239,18 @@
     {
       "source": "docs/users_guide/driftwood.md",
       "target": "docs/en/users_guide/driftwood.md",
-      "source_sha256": "f347e04bb1a61b54b657dc4fdacc9105e2c98cf5d1aa18b4bfed408c90f74093",
-      "target_sha256": "e61c59cf8ac6d67ea21ed8e90f389bd6bc27690a9dce35965f81f58da1d01ec9",
-      "reviewer": "Claude (Claude Code session; the culv_jam additions of the Japanese master and the English mirror compared passage by passage, numbers cross-checked)",
+      "source_sha256": "7699832b6a38bd17793536a8014eeaa2e8e1b89a4a2c58ad0a3f5fd5514290cf",
+      "target_sha256": "3457cf5a477c4811cbce87dbfaa172af6fad519cdec72d1ab15431ddda057679",
+      "reviewer": "Claude (Claude Code session; pointer to the new example bridge_wood_jam added in the Japanese master and the English mirror; rest unchanged since the previous record)",
       "method": "assistant",
       "reviewed_on": "2026-11-12"
     },
     {
       "source": "docs/users_guide/driftwood_models.md",
       "target": "docs/en/users_guide/driftwood_models.md",
-      "source_sha256": "63f5ca185d9ebfc52117d6105bef47d888c6b65c1fe956be61521d1a3ff9c7bb",
-      "target_sha256": "d4d0a80fff4cd169a4736960fdbee82c756b883bc3d15b0e4cef6444de90c3f6",
-      "reviewer": "Claude (Claude Code session; the culv_jam additions of the Japanese master and the English mirror compared passage by passage, numbers cross-checked)",
+      "source_sha256": "67641db8086d88b18ade9e8d6572e3bd07383b18605455028faed4afd679c80c",
+      "target_sha256": "ed498a846f4e7fd95d263ca162148ea93ac61dfa8c071e203c744f8b660679b1",
+      "reviewer": "Claude (Claude Code session; pointer to the new example bridge_wood_jam added in the Japanese master and the English mirror; rest unchanged since the previous record)",
       "method": "assistant",
       "reviewed_on": "2026-11-12"
     },
@@ -554,9 +554,9 @@
     {
       "source": "docs/users_guide/usecases.md",
       "target": "docs/en/users_guide/usecases.md",
-      "source_sha256": "2e863f524ad80434254a115cf2d5bae95ddc543129dd765c3076f62791bf8a68",
-      "target_sha256": "b6e38ccb043f9b701ed35d379d151625c291dd87c16a3c2965a6823c41f53d2b",
-      "reviewer": "Claude (Claude Code session; the culv_jam additions of the Japanese master and the English mirror compared passage by passage, numbers cross-checked)",
+      "source_sha256": "2b4ac49d32c64b466a4928862fc710d60a75b790d452fb9d333930acc850eab8",
+      "target_sha256": "e86941ed35ef0fa5663dd0bbffb574b64aeb54ec965544eec9036d3e0896c655",
+      "reviewer": "Claude (Claude Code session; pointer to the new example bridge_wood_jam added in the Japanese master and the English mirror; rest unchanged since the previous record)",
       "method": "assistant",
       "reviewed_on": "2026-11-12"
     },
@@ -887,9 +887,9 @@
     {
       "source": "examples/README.md",
       "target": "examples/README.en.md",
-      "source_sha256": "7c01de3a999b13b4e0911742bf31d7fc732c02c7ab10301e78cb1a3aa6d1b3f4",
-      "target_sha256": "a17c8ecf34728c0011c39b7a09300eb00b28a15b0f2f3e1b19a5a1703674e59d",
-      "reviewer": "Claude (Claude Code session; contents column: benchmark and source_area shortened to about 60 characters (source_area now names the equivalent-roughness, VZ and storage-function comparisons briefly; the feature column keeps main's extended list), and the source_area entry of the chained-process list shortened, in both versions; read side by side)",
+      "source_sha256": "977a740723b3d0746c15ee31f5bf94f54b84185a6e607018794cac117cc2ba3f",
+      "target_sha256": "2f3b59fd2a15a35d866dbad5c882df1cd7d2fcbe1c65b595499cb9736604b3f4",
+      "reviewer": "Claude (Claude Code session; pointer to the new example bridge_wood_jam added in the Japanese master and the English mirror; rest unchanged since the previous record)",
       "method": "assistant",
       "reviewed_on": "2026-11-12"
     },
@@ -1387,6 +1387,60 @@
       "reviewer": "Claude (Claude Code session; links to the shallow-water primer and the renaming of f_govequation = 1 to local inertia (note at first mention in tutorials, examples and tests): Japanese and English edited together and the changed passages compared)",
       "method": "assistant",
       "reviewed_on": "2026-11-11"
+    },
+    {
+      "source": "examples/bridge_wood_jam/README.md",
+      "target": "examples/bridge_wood_jam/en/README.md",
+      "source_sha256": "b08c36353964c9e7f0671afb8bf02218660e5c9de030ae2b45de738c287b85fc",
+      "target_sha256": "56385c998b90f1470f09291bb7335051d4051d491568dda8d330ed2574211d86",
+      "reviewer": "Claude (Claude Code session; new example bridge_wood_jam: Japanese README and English mirror written together and compared section by section, every number checked against the results; figures rendered from the same script with the en switch and each English figure inspected)",
+      "method": "assistant",
+      "reviewed_on": "2026-11-12"
+    },
+    {
+      "source": "examples/bridge_wood_jam/figs/laws.png",
+      "target": "examples/bridge_wood_jam/en/figs/laws.png",
+      "source_sha256": "4acaad7a006934078191ba94ec3961dea8eec023376e3f9d958b8e57ed68113e",
+      "target_sha256": "04718c05a2dddf143c38125fcd04b1af28bac8d17329f59c52535500fbfd2aef",
+      "reviewer": "Claude (Claude Code session; new example bridge_wood_jam: Japanese README and English mirror written together and compared section by section, every number checked against the results; figures rendered from the same script with the en switch and each English figure inspected)",
+      "method": "assistant",
+      "reviewed_on": "2026-11-12"
+    },
+    {
+      "source": "examples/bridge_wood_jam/figs/maps.png",
+      "target": "examples/bridge_wood_jam/en/figs/maps.png",
+      "source_sha256": "7c2bfb73f8ab3bdcdc0105c2f4b8d78467031c83454834c5c0a41e7cfe6304cc",
+      "target_sha256": "e6d885d08c0758dc93d108f6e0cb0f2642dbade7aa8054b0c089291df3b7ac98",
+      "reviewer": "Claude (Claude Code session; new example bridge_wood_jam: Japanese README and English mirror written together and compared section by section, every number checked against the results; figures rendered from the same script with the en switch and each English figure inspected)",
+      "method": "assistant",
+      "reviewed_on": "2026-11-12"
+    },
+    {
+      "source": "examples/bridge_wood_jam/figs/sens.png",
+      "target": "examples/bridge_wood_jam/en/figs/sens.png",
+      "source_sha256": "c3af42430a5114dbe0485f51c1692aff7c59008dfa79639301889da6a01118e2",
+      "target_sha256": "650fe46750a59c48b0e8227111558b6b5e4be30dfc2d476d80a77ea80a5cf03b",
+      "reviewer": "Claude (Claude Code session; new example bridge_wood_jam: Japanese README and English mirror written together and compared section by section, every number checked against the results; figures rendered from the same script with the en switch and each English figure inspected)",
+      "method": "assistant",
+      "reviewed_on": "2026-11-12"
+    },
+    {
+      "source": "examples/bridge_wood_jam/figs/series.png",
+      "target": "examples/bridge_wood_jam/en/figs/series.png",
+      "source_sha256": "938bf3581178e9e0a4f1b44c01673960caa292999b06f672fcf62333e5c2c407",
+      "target_sha256": "7d737dcf5dfd44fd277e63488acfb1484de15b08516d3eb681f590c91c5cc893",
+      "reviewer": "Claude (Claude Code session; new example bridge_wood_jam: Japanese README and English mirror written together and compared section by section, every number checked against the results; figures rendered from the same script with the en switch and each English figure inspected)",
+      "method": "assistant",
+      "reviewed_on": "2026-11-12"
+    },
+    {
+      "source": "examples/bridge_wood_jam/figs/setup.png",
+      "target": "examples/bridge_wood_jam/en/figs/setup.png",
+      "source_sha256": "37c7e4597a701436b66294f0ff74688b5b3777c0418708e5cdc1c9c831323a63",
+      "target_sha256": "efad5e173b536670a5258520bf9026bcd500eb65909fd3f9aee91786adc098f1",
+      "reviewer": "Claude (Claude Code session; new example bridge_wood_jam: Japanese README and English mirror written together and compared section by section, every number checked against the results; figures rendered from the same script with the en switch and each English figure inspected)",
+      "method": "assistant",
+      "reviewed_on": "2026-11-12"
     },
     {
       "source": "examples/catchment_metal/README.md",
