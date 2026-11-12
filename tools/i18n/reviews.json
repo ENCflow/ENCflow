@@ -257,11 +257,11 @@
     {
       "source": "docs/users_guide/encgrid.md",
       "target": "docs/en/users_guide/encgrid.md",
-      "source_sha256": "47713699b5122dfbe8b750f7135ae053078fb5084208beb5bff65d03324d37cc",
-      "target_sha256": "928d6383391419544e6461395d6bc43a69eb0e978164010b5819fbf94cae4066",
-      "reviewer": "Claude (Claude Code session; links to the shallow-water primer and the renaming of f_govequation = 1 to local inertia (note at first mention in tutorials, examples and tests): Japanese and English edited together and the changed passages compared)",
+      "source_sha256": "a04a309613034807cef052f2480a855c4a1b59d2c52a232249dcd632622d4414",
+      "target_sha256": "4fdbb3053c0124fc98bfbce5aafdf6b18415959194adc833a7a15155d009bc66",
+      "reviewer": "Claude (Claude Code session; building drag in §5 corrected to (k C_D/2)(1 - g_v)|V|/B (the depth removed; developer.md §107) with the derivation paragraph, the note on runs without fn_bb and the pointer to test/bldgdrag, and a row for test/bldgdrag in §11: Japanese and English edited together and the changed passages compared; rest unchanged since the previous record)",
       "method": "assistant",
-      "reviewed_on": "2026-11-11"
+      "reviewed_on": "2026-11-12"
     },
     {
       "source": "docs/users_guide/forcing.md",
@@ -3308,11 +3308,11 @@
     {
       "source": "test/README.md",
       "target": "test/README.en.md",
-      "source_sha256": "494223cc04ecfb7dc13a20d22336ba2ec389dc9abd227365823812238ce56bac",
-      "target_sha256": "41167a7f6af7760f7b5b6ac38df62ec89072053bc0cf514de4390c9df3a33d43",
-      "reviewer": "Claude (Claude Code session; two interception ratios of the initial loss and the separation of effective rainfall for the storage function method (§106.8): Japanese and English edited together and the changed passages compared, no model execution)",
+      "source_sha256": "b1309beec1260d42896dc7bce17814438b33774369f40301387cfa3a5a300d61",
+      "target_sha256": "49a97419dced6f2c753b576d6abe12e5801e8f4a51730e515109212b5be9ef22",
+      "reviewer": "Claude (Claude Code session; row for the new case bldgdrag (uniform flow in a channel with buildings, §107) added in both languages in the same place; the added rows compared; rest unchanged since the previous record)",
       "method": "assistant",
-      "reviewed_on": "2026-11-11"
+      "reviewed_on": "2026-11-12"
     },
     {
       "source": "test/avalanche/README.md",
@@ -3439,6 +3439,15 @@
       "reviewer": "Claude (Claude Code session; tests aligned to the default f_gravity_correction = 2 and recomputed 2026-11-05: both drawn by the case's figure script with and without the en switch from the same results; English figure viewed, labels compared with the Japanese figure)",
       "method": "assistant",
       "reviewed_on": "2026-11-05"
+    },
+    {
+      "source": "test/bldgdrag/README.md",
+      "target": "test/bldgdrag/en/README.md",
+      "source_sha256": "766bb95dee727201355271dabef392bb435a3012b373636ca933ff064fddc331",
+      "target_sha256": "0b4295d222fad0937cf2f2bc1ea7fabb81f302a4515e180352e9a1fcee482938",
+      "reviewer": "Claude (Claude Code session; new verification case for the building drag term (developer.md §107): Japanese and English written together; theory equations, settings, the table of the three configurations and the five checks compared line by line; values taken from the measured runs of Check_bldgdrag.py)",
+      "method": "assistant",
+      "reviewed_on": "2026-11-12"
     },
     {
       "source": "test/bmi_nest/README.md",

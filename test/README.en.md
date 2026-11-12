@@ -128,6 +128,7 @@ analytical-solution or conservation check by Check_*.py.
 | [driftwood/](driftwood/en/README.md) | Mixed debris-flow and driftwood surge, washout by a flood, remobilisation | Driftwood fn_driftwood | analytic |
 | [bldgdebris/](bldgdebris/en/README.md) | Building destruction by flood flow and debris: smoke test and conservation; combination with driftwood, void-ratio feedback | Building destruction fn_bldgdebris | analytic |
 | [gvchange/](gvchange/en/README.md) | Unit test of the void-ratio change procedure (volume conservation; no time loop) | m_state_set_gv | unit test |
+| [bldgdrag/](bldgdrag/en/README.md) | Uniform flow in a channel with buildings: the depth and velocity in a channel given the void ratio and the mean building size match the theoretical balance of the momentum equation including the building drag (three configurations: shallow flow, deep flow, changed coefficients; §107) | Building-group drag fn_gv, fn_bb, cd, kk | analytic |
 | **Water quality** | | | |
 | [damwq/](damwq/en/README.md) | Steady-state check of completely mixed dam release and pond entrainment | Water quality, dams | ref, analytic |
 | [tracer/](tracer/en/README.md) | Numerical diffusion of the first-order upwind scalar transport: spreading of a clean-water front (longitudinal) and lateral variance of a steady plume, against the modified-equation values | Water quality (scalar advection) | ref, analytic |

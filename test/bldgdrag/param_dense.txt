@@ -1,0 +1,64 @@
+!======================================================================
+! bldgdrag: 家屋のある水路の等流(家屋の抗力項の検定。developer.md §107)
+!   空隙率 0.5・家屋の平均寸法 20 m・抗力係数 cd = 2(単位幅流量 8 m2/s、等流水深 4.15 m)
+!   乾いた高い地盤に挟まれた幅 4 セルの直線水路(長さ 2000 m、Δx = 5 m、勾配 0.01、n = 0.03)の
+!   全体に家屋を置く(空隙率 gv = 0.5、家屋の平均寸法 B = 20 m)。西端の区間流入
+!   Q = 160 m3/s、東辺は自由流出。初期水深 1 m から定常まで計算し、x = 300〜900 m の水深と
+!   流速を、運動方程式の定常の釣り合い
+!       gv g S = [ gv g n2 / h^(4/3) + (kk cd / 2)(1 - gv) / B ] V2,   q = V h
+!   の解と比べる(Check_bldgdrag.py)
+!======================================================================
+&list_sysparam
+  f_gridsystem = 0
+  f_govequation = 0
+  dt = 0.2
+  t0 = 0
+  tt = 5400
+  dt_disp = 900
+  dt_file = 2700            ! 定常の確認のため、後半の 2 時刻を出力する
+  fn_geoinfo = '-'
+  fn_initial = '-'
+  fn_enc = '-'
+  fn_boundary = '-'
+  dir_result = 'result_dense'
+  f_state_save = 0
+  f_check_cfl = 1
+  f_out_z = 0
+  f_out_vv = 1
+  cd = 2.0                  ! 家屋の抗力係数(既定 1.0)
+  kk = 0.5                  ! 抗力の補正係数(既定 0.5)
+/
+
+&list_enc
+/
+
+&list_initial
+  f_htype = 1
+  fn_hinit = 'hinit.txt'
+/
+
+&list_geoinfo
+  lx = 2000.0
+  ly = 60.0
+  nx = 400
+  ny = 12
+  f_ztype = 1
+  fn_z = 'zinit.txt'
+  f_rntype = 0
+  rn0 = 0.03
+  fn_gv = 'gv_dense.txt'      ! 家屋の空隙率(水路のセルに 0.5)
+  fn_bb = 'bb_dense.txt'      ! 家屋の平均寸法 (m。一様に 20)
+/
+
+&list_bound_edge
+  f_bc_e = 1                ! 東辺は自由流出
+/
+&list_bound_inflow
+  inflow_cell(1:2,1,1) = 1, 5
+  inflow_cell(1:2,2,1) = 1, 6
+  inflow_cell(1:2,3,1) = 1, 7
+  inflow_cell(1:2,4,1) = 1, 8
+  inflow_val(1:2,1,1) = 0, 160
+  inflow_val(1:2,2,1) = 9999, 160
+  inflow_dist(1) = 0
+/

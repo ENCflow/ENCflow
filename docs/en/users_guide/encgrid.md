@@ -261,8 +261,19 @@ mean building size $`B`$ (`gv` and `bb` of the geographic information) a
 drag is added in the same semi-implicit form as the friction.
 
 ```math
-F_{\text{bldg}} = -\,\frac{k\,C_D}{2}\,\frac{h_f}{B}\,(1 - g_v)\,|\mathbf{V}|_e
+F_{\text{bldg}} = -\,\frac{k\,C_D}{2}\,\frac{1 - g_v}{B}\,|\mathbf{V}|_e
 ```
+
+With $`(1 - g_v)/B^2`$ buildings per unit area and a submerged frontal area $`B\,h`$
+per building, the drag per unit area is
+$`\tfrac12\rho\,C_D\,(1 - g_v)(h/B)\,|\mathbf V|\mathbf V`$. The velocity equation divides
+this by the mass of the water column $`\rho h`$, so the coefficient does not contain
+the depth. Its ratio to the bed friction is proportional to $`h^{4/3}`$, so the building
+drag dominates in deeper flow. A run without the mean building size `fn_bb` uses
+$`B = 10^{10}`$ m, so the drag is negligible (the void ratio $`g_v`$ acts on the storage,
+on the coefficients of the pressure and friction terms and on the effective inertia
+coefficient $`\lambda_m`$). Uniform flow including this term is compared with the
+theoretical value in [test/bldgdrag](../../../test/bldgdrag/en/README.md).
 
 $`C_D`$ (`cd`, default 1.0) is a typical drag coefficient of a square
 column, $`k`$ (`kk`, default 0.5) a reduction factor for the shielding
@@ -436,6 +447,7 @@ non-hydrostatic correction are in the tables of their own pages.
 | [test/chichibu](../../../test/chichibu/en/README.md) | flood on real terrain | grid convergence and MPI agreement of the default settings |
 | [test/diffusion](../../../test/diffusion/en/README.md) | Gaussian jet | size of the smoothing $`(p_d/4)\Delta^2 u''`$ of the velocity reconstruction (§4) and the consistency of the initial flux (§6) |
 | [test/nhwave](../../../test/nhwave/en/README.md) | standing waves in a closed tank | numerical dispersion of the hydrostatic ENC below 1% |
+| [test/bldgdrag](../../../test/bldgdrag/en/README.md) | uniform flow in a channel with buildings | depth and velocity of the uniform flow including the building drag match the theoretical values (§5) |
 
 ## References
 
