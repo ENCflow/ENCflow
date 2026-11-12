@@ -76,13 +76,12 @@ architecture.md。このメモは「現在進行中・未完了の項目」だ�
        (図の題の L ≈ 2.4 m を本文に揃えた)、mesa(maps の題の 17 m を帽岩の下面の高さに)、catchment_metal
        (ステップ 6・6b の流量に G1 の線。まとめの (b) の対数軸の下限は 4b2021c の 0.01 kg ではステップ 6・6b の
        G3 の 0.0106 kg の棒が見えなかったので 0.001 kg にした)、estuary_barrage(profile の凡例の英単語を除き、
-       series の堰を堰のセル 0.48〜0.52 km の帯に)。
+       series の堰を堰のセル 0.48〜0.52 km の帯に)、stone_forest(stats の横軸を千年に。図 3 組の日英を確かめて記録し、
+       英語版 maps の右下の題がカラーバーに重なっていたので英語の題を 2 行に)。
      - mesa: series_bench.png(README に未掲載)では、bench の大きい台地は 5×10⁷ s 以降に崩れる
        (8.6×10⁷ s で約 2 m。bench2 は 19.6 m)。README の補足 1 は 4.3×10⁷ s の値だけを書いている
        ので、終盤を書くなら数表を出す。
      - tower_karst: maps_steady の色が飽和している。
-     - stone_forest: 英語版の stats の横軸の目盛の数字が続いて読めない。図 3 組(maps・sections・
-       stats)は i18n の確認記録がない。
      - delta: fixation.png の題の陸化 66 と表の 67(この図を描くスクリプトはリポジトリになかった。00g。
        2026-11-10 に比較の図と指標のスクリプト plot_compare.py・参考ケース 2 つ・アンサンブルの生成を
        足した〔111b376。例題に含めることは利用者の了承済み〕。delta の再計算の結果で描いて README を直す)。
@@ -234,9 +233,10 @@ architecture.md。このメモは「現在進行中・未完了の項目」だ�
        もの: tsunami_fault・bedrock_cover・nest_reflect(図もビット一致)・catchment_metal(計算は 11-09 と同じ。
        監査 00o の図の直し(G1 の線、まとめの (b) の対数軸の下限 0.001 kg)で図 3 枚だけ描き直した)・
        estuary_barrage(計算は 11-09 と同じ。監査 00o の図の直しで profile・series だけ描き直した)・karst(3 ケースとも
-       値は同じで、崩落の補足の崖錐として溶けた岩だけ 623 → 622 m³。図は見分けられない差なので描き直さない)。
-       計算済みで照合中: tower_karst の基準面(残りの構成の後に README を照合する)。計算中: delta(20 本)と
-       tower_karst の残り。計算待ち: stone_forest。検定は済: reference を持たない
+       値は同じで、崩落の補足の崖錐として溶けた岩だけ 623 → 622 m³。図は見分けられない差なので描き直さない)・
+       stone_forest(値は同じ。監査 00o の直しで stats と英語版 maps だけ描き直した)。
+       計算済みで照合中: tower_karst(本番・steady・基準面。base_hc50 の後に README を照合する)。計算中: delta(20 本)と
+       tower_karst の base_hc50。検定は済: reference を持たない
        自己検定 48 本(wave_shore を含む)がすべて PASS し、README の値と食い違った 32 検定の README(日英)と
        図 12 組を今の値に直した(利用者の了承「案 1・全件」。丸め誤差の水準の残差は「〜程度以下(丸め誤差)」と
        上限で書く。users guide の advection・sediment が引く sublattice・creep の値も直した)。

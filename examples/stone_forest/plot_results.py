@@ -166,7 +166,7 @@ ax.set_title(T("最終の基岩面(柱と溝)", "Final bedrock surface (pillars 
 ax = axes[1, 1]
 im = ax.imshow(sdf, extent=ext, origin="lower", cmap="YlOrBr", vmin=0, vmax=max(sdf.max(), 1.0))
 plt.colorbar(im, ax=ax, label=T("土層 + 崖錐 sd (m)", "soil + talus sd (m)"))
-ax.set_title(T("最終の土層厚(溝に沈んだ土層・崖錐の残り)", "Final soil thickness (soil sunk into the clefts, remaining talus)"))
+ax.set_title(T("最終の土層厚(溝に沈んだ土層・崖錐の残り)", "Final soil thickness\n(soil sunk into the clefts, remaining talus)"))
 for ax in axes.flat:
     ax.set_xlabel("x (m)")
     ax.set_ylabel("y (m)")

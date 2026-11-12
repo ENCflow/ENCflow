@@ -2685,6 +2685,15 @@
       "reviewed_on": "2026-11-08"
     },
     {
+      "source": "examples/stone_forest/figs/maps.png",
+      "target": "examples/stone_forest/en/figs/maps.png",
+      "source_sha256": "3302ae18833074d379741f736e3c75b06443ef27e7ea1295f212d534ba62b8b7",
+      "target_sha256": "f15a249f712542e9bbe6b1859f061086cd4ce558101e17edb65d39c212fadf08",
+      "reviewer": "Claude (Claude Code session; English figure drawn by the same script with the en switch from the results of 2026-11-12 (stats with the time axis in kyr, the English soil-thickness title in two lines so that it no longer runs into the colour bar); compared side by side: same plotted data and layout, labels translated)",
+      "method": "assistant",
+      "reviewed_on": "2026-11-12"
+    },
+    {
       "source": "examples/stone_forest/figs/mechanism.png",
       "target": "examples/stone_forest/en/figs/mechanism.png",
       "source_sha256": "083520848388f80add5964f89a4eb9cf6b1bfcf19b710800c440a72f980e4177",
@@ -2694,6 +2703,15 @@
       "reviewed_on": "2026-11-08"
     },
     {
+      "source": "examples/stone_forest/figs/sections.png",
+      "target": "examples/stone_forest/en/figs/sections.png",
+      "source_sha256": "4cd3a0a45a5d44af173a8ecf88d8df5b9d24830d0e4fbd6d4d7953bb047edc42",
+      "target_sha256": "c8ef30b9d663bdacf11a25c49e5647d830f165e1e587fd72de8a06276e93f728",
+      "reviewer": "Claude (Claude Code session; English figure drawn by the same script with the en switch from the results of 2026-11-12 (stats with the time axis in kyr, the English soil-thickness title in two lines so that it no longer runs into the colour bar); compared side by side: same plotted data and layout, labels translated)",
+      "method": "assistant",
+      "reviewed_on": "2026-11-12"
+    },
+    {
       "source": "examples/stone_forest/figs/setup.png",
       "target": "examples/stone_forest/en/figs/setup.png",
       "source_sha256": "e8b1b3f6240403065878c246a84c7210cf32cbde74b5a67a11a98ddfc10e3441",
@@ -2701,6 +2719,15 @@
       "reviewer": "Claude (Claude Code session; both drawn by the same script from the same inputs; compared every label and value)",
       "method": "assistant",
       "reviewed_on": "2026-11-08"
+    },
+    {
+      "source": "examples/stone_forest/figs/stats.png",
+      "target": "examples/stone_forest/en/figs/stats.png",
+      "source_sha256": "c60efceb62d6647a0efff8c9c9352d8da6f69960ba1244d781e3cbd3e386cdcc",
+      "target_sha256": "60008f4511981a04376c566543b9f5f6d6a6a3f40a9070fd8a367741cd13b10f",
+      "reviewer": "Claude (Claude Code session; English figure drawn by the same script with the en switch from the results of 2026-11-12 (stats with the time axis in kyr, the English soil-thickness title in two lines so that it no longer runs into the colour bar); compared side by side: same plotted data and layout, labels translated)",
+      "method": "assistant",
+      "reviewed_on": "2026-11-12"
     },
     {
       "source": "examples/stratovolcano/README.md",
