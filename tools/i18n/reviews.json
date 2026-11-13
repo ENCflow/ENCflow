@@ -3020,11 +3020,11 @@
     {
       "source": "examples/timberyard/README.md",
       "target": "examples/timberyard/en/README.md",
-      "source_sha256": "59bcfcabf03ab77e30cbc1ba63cd87788253e927b8cd72eca882ecf8b1d94fdf",
+      "source_sha256": "39ee8e14ab03d78b7aa9eedb761df44f7a4494bb9784f749cadbffd78644deeb",
       "target_sha256": "81c1c8fe59113b1c7e0b4af99ee40fcdf0448b1046624694a37dd93a70dacfb0",
-      "reviewer": "Claude (Claude Code session; rerun 2026-11-12 after the building drag fix (developer.md §107): main and supplement tables (m3 values, reach) and prose values (seawall +4 m case: maximum depth 3.10 m, velocity 2.1 m/s and load 3.8 m3/s2 at the opening, slow-flow area at the surge peak, 14 m3 carried offshore); Japanese and English edited together and every changed value compared; rest unchanged since the previous record)",
+      "reviewer": "Claude (Claude Code session; 2026-11-13: the Japanese caption of the supplementary figure now quotes the panel title as drawn (the second quoted label); the English caption already quotes the English title; the caption paragraphs read side by side, the rest of the pair unchanged since the record of 2026-11-12)",
       "method": "assistant",
-      "reviewed_on": "2026-11-12"
+      "reviewed_on": "2026-11-13"
     },
     {
       "source": "examples/timberyard/figs/laws.png",
