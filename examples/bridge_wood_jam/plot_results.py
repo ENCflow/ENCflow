@@ -1,11 +1,11 @@
 #!/usr/bin/env python3
-"""bridge_wood_jam の図と数表(事前に make run と make sens で 7 ケースを計算しておく)。
+"""bridge_wood_jam の図と数表(事前に make run と make sens で 8 ケースを計算しておく)。
 
   figs/setup.png   平面の配置(河道・氾濫原・台地・橋・流木の供給の区間・プローブ・測線)と出水の波形
   figs/laws.png    集積の実材積と堰上げの関係(式の積分。あふれないとした場合)と、計算の値
   figs/series.png  橋に集積した流木、橋のすぐ上流の水深、橋の断面を通る流量の時間変化
   figs/maps.png    出水のピークの河道の縦断(水面形)、最大浸水深、流木が残った場所
-  figs/sens.png    捕捉の仮定と集積の抵抗の係数を変えた比較
+  figs/sens.png    捕捉の仮定(集積が進むと掛かりやすくなる速さ・捕捉率)と集積の抵抗の係数を変えた比較
 引数 en で英語ラベル版を en/figs/ に描く(データと描画処理は共通)。引数 table で README 用の数表を出す。
 """
 import glob
@@ -56,7 +56,8 @@ LX, LY = NX * DX, NY * DX
 EXT = [0, LX, LY, 0]                    # 行 1 = 北を上に
 X_BR = (I_BR - 0.5) * DX                # 橋の x (m)
 Y_CH1, Y_CH2 = (J_CH1 - 1) * DX, J_CH2 * DX
-SENS = [("jam", T("基本(捕捉率 0.3、集積が進むと全量)", "base (capture 0.3, then all)")),
+SENS = [("jam", T("基本(捕捉率 0.3 → 1 層で全量)", "base (capture 0.3, all at 1 layer)")),
+        ("slow", T("捕捉率 0.3 → 10 層で全量", "capture 0.3, all at 10 layers")),
         ("e03", T("捕捉率 0.3 のまま", "capture ratio stays 0.3")),
         ("e01", T("捕捉率 0.1 のまま", "capture ratio stays 0.1")),
         ("loose", T("基本で、すき間の多い集積(φ = 0.2)", "base, loose jam (φ = 0.2)")),
@@ -362,7 +363,7 @@ def laws():
     ax.text(198, lim + 0.06, T("この上昇で氾濫原の高さに届く(%.1f m)", "the rise that reaches the floodplain level (%.1f m)") % lim,
             ha="right", fontsize=9, color=INK2)
     done = False
-    for c, phi in (("e01", 0.3), ("e03", 0.3), ("jam", 0.3), ("loose", 0.2), ("dense", 0.4)):
+    for c, phi in (("e01", 0.3), ("e03", 0.3), ("slow", 0.3), ("jam", 0.3), ("loose", 0.2), ("dense", 0.4)):
         if not have(c):
             continue
         m = metrics(c)
@@ -412,6 +413,7 @@ def table():
     """README 用の数表(Markdown)"""
     names = {"nowood": T("流木なし", "no driftwood"), "ledger": T("台帳だけ", "ledger only"),
              "jam": T("集積の抵抗あり(基本)", "with the drag of the jam (base)"),
+             "slow": T("10 層で全量", "all at 10 layers"),
              "e03": T("捕捉率 0.3 のまま", "capture ratio stays 0.3"), "e01": T("捕捉率 0.1 のまま", "capture ratio stays 0.1"),
              "loose": T("すき間の多い集積(φ = 0.2)", "loose jam (φ = 0.2)"), "dense": T("詰まった集積(φ = 0.4)", "dense jam (φ = 0.4)")}
     cases = [c for c in names if have(c)]
@@ -423,7 +425,7 @@ def table():
         m = ms[c]
         print("| %s (`%s`) | %s | %.2f | %s | %.0f | %.1f | %.2f |"
               % (names[c], c, ("%.0f" % m["jam"]) if "jam" in m else "—", m["hmax"],
-                 ("%.0f" % m["t_by"] + T(" 分", " min")) if m["t_by"] is not None else "—", m["qby"], m["area"], m["hfp"]))
+                 ("%d" % int(m["t_by"] + 0.5) + T(" 分", " min")) if m["t_by"] is not None else "—", m["qby"], m["area"], m["hfp"]))
     print()
     print(T("| ケース | 流木になった量 (m³) | 橋に集積 (m³) | 氾濫原に堆積 (m³) | 領域の外へ (m³) |",
             "| Case | Recruited (m³) | Jammed at the bridge (m³) | Deposited on the floodplain (m³) | Left the domain (m³) |"))

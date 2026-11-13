@@ -1391,56 +1391,56 @@
     {
       "source": "examples/bridge_wood_jam/README.md",
       "target": "examples/bridge_wood_jam/en/README.md",
-      "source_sha256": "b08c36353964c9e7f0671afb8bf02218660e5c9de030ae2b45de738c287b85fc",
-      "target_sha256": "56385c998b90f1470f09291bb7335051d4051d491568dda8d330ed2574211d86",
-      "reviewer": "Claude (Claude Code session; new example bridge_wood_jam: Japanese README and English mirror written together and compared section by section, every number checked against the results; figures rendered from the same script with the en switch and each English figure inspected)",
+      "source_sha256": "ef86f0e61de521458abbf442aac26f752f0dea07c79853ec52ed5e7b581d1bb3",
+      "target_sha256": "5152d094111bdce5e35b709613dab1a40c51998ea1e29c70252300dbbd0f8759",
+      "reviewer": "Claude (Claude Code session; example bridge_wood_jam rerun with the continuous capture law (one-layer saturation in the base cases, new case slow): Japanese README and English mirror updated together, every changed number checked against the rerun results; figures re-rendered from the same script and the changed English figures inspected)",
       "method": "assistant",
-      "reviewed_on": "2026-11-12"
+      "reviewed_on": "2026-11-13"
     },
     {
       "source": "examples/bridge_wood_jam/figs/laws.png",
       "target": "examples/bridge_wood_jam/en/figs/laws.png",
-      "source_sha256": "4acaad7a006934078191ba94ec3961dea8eec023376e3f9d958b8e57ed68113e",
-      "target_sha256": "04718c05a2dddf143c38125fcd04b1af28bac8d17329f59c52535500fbfd2aef",
-      "reviewer": "Claude (Claude Code session; new example bridge_wood_jam: Japanese README and English mirror written together and compared section by section, every number checked against the results; figures rendered from the same script with the en switch and each English figure inspected)",
+      "source_sha256": "5de90c24021cb3522f00ceefee2af1b95e5cb39dd5b9837d51722013a0ce9427",
+      "target_sha256": "a6d0309c77f26de7bf1015a37993d027c296cc1dd6ad9773e573fdbef98bc959",
+      "reviewer": "Claude (Claude Code session; example bridge_wood_jam rerun with the continuous capture law (one-layer saturation in the base cases, new case slow): Japanese README and English mirror updated together, every changed number checked against the rerun results; figures re-rendered from the same script and the changed English figures inspected)",
       "method": "assistant",
-      "reviewed_on": "2026-11-12"
+      "reviewed_on": "2026-11-13"
     },
     {
       "source": "examples/bridge_wood_jam/figs/maps.png",
       "target": "examples/bridge_wood_jam/en/figs/maps.png",
-      "source_sha256": "7c2bfb73f8ab3bdcdc0105c2f4b8d78467031c83454834c5c0a41e7cfe6304cc",
-      "target_sha256": "e6d885d08c0758dc93d108f6e0cb0f2642dbade7aa8054b0c089291df3b7ac98",
-      "reviewer": "Claude (Claude Code session; new example bridge_wood_jam: Japanese README and English mirror written together and compared section by section, every number checked against the results; figures rendered from the same script with the en switch and each English figure inspected)",
+      "source_sha256": "e84e18997654ee415f78d7c03743e839a5d47ac1a8364735a59898d213d3e554",
+      "target_sha256": "0f5cd31b8bcdaaa92ada363bfb603ae2553b2f350bde4f949f1cf260f5926d05",
+      "reviewer": "Claude (Claude Code session; example bridge_wood_jam rerun with the continuous capture law (one-layer saturation in the base cases, new case slow): Japanese README and English mirror updated together, every changed number checked against the rerun results; figures re-rendered from the same script and the changed English figures inspected)",
       "method": "assistant",
-      "reviewed_on": "2026-11-12"
+      "reviewed_on": "2026-11-13"
     },
     {
       "source": "examples/bridge_wood_jam/figs/sens.png",
       "target": "examples/bridge_wood_jam/en/figs/sens.png",
-      "source_sha256": "c3af42430a5114dbe0485f51c1692aff7c59008dfa79639301889da6a01118e2",
-      "target_sha256": "650fe46750a59c48b0e8227111558b6b5e4be30dfc2d476d80a77ea80a5cf03b",
-      "reviewer": "Claude (Claude Code session; new example bridge_wood_jam: Japanese README and English mirror written together and compared section by section, every number checked against the results; figures rendered from the same script with the en switch and each English figure inspected)",
+      "source_sha256": "1d3ca8653847361bdb79010f3b114d301856e1e8850625108d03d42d70c6c8fa",
+      "target_sha256": "e38dc6401be8831244d1b2978ec57fcd4428c4b9b0ac684a4d9ad3a27125a53c",
+      "reviewer": "Claude (Claude Code session; example bridge_wood_jam rerun with the continuous capture law (one-layer saturation in the base cases, new case slow): Japanese README and English mirror updated together, every changed number checked against the rerun results; figures re-rendered from the same script and the changed English figures inspected)",
       "method": "assistant",
-      "reviewed_on": "2026-11-12"
+      "reviewed_on": "2026-11-13"
     },
     {
       "source": "examples/bridge_wood_jam/figs/series.png",
       "target": "examples/bridge_wood_jam/en/figs/series.png",
-      "source_sha256": "938bf3581178e9e0a4f1b44c01673960caa292999b06f672fcf62333e5c2c407",
-      "target_sha256": "7d737dcf5dfd44fd277e63488acfb1484de15b08516d3eb681f590c91c5cc893",
-      "reviewer": "Claude (Claude Code session; new example bridge_wood_jam: Japanese README and English mirror written together and compared section by section, every number checked against the results; figures rendered from the same script with the en switch and each English figure inspected)",
+      "source_sha256": "680942fa64303a4e90d20eb7a18726410ad336aee01ce5fe090091e8049df225",
+      "target_sha256": "030a77e8ae1d21ba6f066ea78dbd46b81dbcc6c2bedaffbfc062de758e8a795e",
+      "reviewer": "Claude (Claude Code session; example bridge_wood_jam rerun with the continuous capture law (one-layer saturation in the base cases, new case slow): Japanese README and English mirror updated together, every changed number checked against the rerun results; figures re-rendered from the same script and the changed English figures inspected)",
       "method": "assistant",
-      "reviewed_on": "2026-11-12"
+      "reviewed_on": "2026-11-13"
     },
     {
       "source": "examples/bridge_wood_jam/figs/setup.png",
       "target": "examples/bridge_wood_jam/en/figs/setup.png",
       "source_sha256": "37c7e4597a701436b66294f0ff74688b5b3777c0418708e5cdc1c9c831323a63",
       "target_sha256": "efad5e173b536670a5258520bf9026bcd500eb65909fd3f9aee91786adc098f1",
-      "reviewer": "Claude (Claude Code session; new example bridge_wood_jam: Japanese README and English mirror written together and compared section by section, every number checked against the results; figures rendered from the same script with the en switch and each English figure inspected)",
+      "reviewer": "Claude (Claude Code session; example bridge_wood_jam rerun with the continuous capture law (one-layer saturation in the base cases, new case slow): Japanese README and English mirror updated together, every changed number checked against the rerun results; figures re-rendered from the same script and the changed English figures inspected)",
       "method": "assistant",
-      "reviewed_on": "2026-11-12"
+      "reviewed_on": "2026-11-13"
     },
     {
       "source": "examples/catchment_metal/README.md",

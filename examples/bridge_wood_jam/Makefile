@@ -1,14 +1,14 @@
 # ENCflow/examples/bridge_wood_jam/Makefile
 #   make        ../../bin/ の実行ファイルへのリンクと入力(make_terrain.py)を作る
 #   make run    基本の 3 ケース(流木なし・台帳だけ・集積の抵抗あり)を順に計算する
-#   make sens   捕捉の仮定と抵抗の係数を変えた 4 ケースを計算する
+#   make sens   捕捉の仮定と抵抗の係数を変えた 5 ケースを計算する
 #   make clean  リンクと生成物を削除する
 
 TOPDIR	= ../..
 BINDIR	= $(TOPDIR)/bin
 SRCDIR	= $(TOPDIR)/src
 CASES	= nowood ledger jam
-SENS	= e03 e01 loose dense
+SENS	= slow e03 e01 loose dense
 
 all: links inputs
 

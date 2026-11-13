@@ -33,7 +33,7 @@ phenomenon easy to see; they do not reproduce any particular river or bridge.
 | A flood brings driftwood from upstream | Standing stock placed in the channel of an upstream reach turns into moving driftwood when the depth and the velocity exceed thresholds (a stand-in for the supply from upstream) | `fn_dwstock`, `dw_hrec`, `dw_vrec`, `dw_wrec` |
 | Driftwood is carried by the flow | The amount of moving driftwood is transported with the same flow as the water | (automatic) |
 | Driftwood gets caught at the bridge | The cells crossing the channel at the bridge are capture cells; the share E (capture ratio) of the wood passing them is transferred to immobile jammed wood. Whether a log gets caught is not solved (E is a given) | `fn_dwtrap` |
-| Once wood starts to catch, the following wood catches one after another | Capture cells whose jammed amount exceeds a threshold stop all arriving wood | `dw_jamgrow` |
+| Once wood starts to catch, the following wood catches one after another | The capture ratio rises from E to 1 in proportion to the jammed amount of the capture cell; cells whose jammed amount has reached the given amount stop all arriving wood | `dw_jamgrow` |
 | The jam obstructs the flow | The jam is treated as a porous obstruction and a drag is added on the edges of the cells that hold it; the more wood, the larger the drag | `f_dwjam`, `dw_jamcd`, `dw_jamphi` |
 | Water leaves the channel and bypasses the bridge | The shallow-water computation itself (the floodplain is terrain) | `fn_z` |
 | Driftwood stops in shallow water | Moving driftwood becomes deposited driftwood where the water is shallower than the draft | `dw_wstop` |
@@ -61,7 +61,7 @@ the uniform base flow.
 | Flood | base flow 30 m³/s (uniform depth 1.00 m) → peak 137.3 m³/s (2.50 m) at 40 min → falling from 100 min, back to the base flow at 130 min |
 | Boundaries | inflow at the 4 channel cells of the west end, free outflow on the east edge, walls on the north and south edges |
 | Wood supply | standing stock of 0.03 m³/m² (180 m³) in the channel at x = 300–600 m; above a depth of 2 m and a velocity of 1 m/s all of it becomes driftwood within 1000 s |
-| Bridge | x = 1200 m; the 4 cells crossing the channel are capture cells (capture ratio 0.3); cells whose jammed amount exceeds 0.05 m³/m² (1.25 m³ per cell) capture everything; no deck, piers or approach embankments |
+| Bridge | x = 1200 m; the 4 cells crossing the channel are capture cells; the capture ratio starts at 0.3 and rises as the jam grows; cells whose jammed amount has reached 0.09 m³/m² (one layer of logs = packing ratio 0.3 × diameter 0.3 m; 2.25 m³ per cell) capture everything; no deck, piers or approach embankments |
 | Wood properties | representative diameter 0.3 m, specific gravity 0.5 (draft 0.15 m) |
 | Drag of the jam | drag coefficient 1.0, packing ratio 0.3 (defaults; coefficient κ₀ = 6.19 m⁻¹) |
 | Time | dt = 0.2 s, 150 min |
@@ -76,6 +76,7 @@ is not flooded.
 | `nowood` | `param_nowood.txt` | no driftwood (reference) |
 | `ledger` | `param_ledger.txt` | wood jams at the bridge but does not act on the flow (`f_dwjam = 0`) |
 | `jam` | `param.txt` | with the drag of the jam (base) |
+| `slow` | `param_slow.txt` | the capture ratio rises slowly (everything at 0.9 m³/m², ten layers of logs) |
 | `e03` | `param_e03.txt` | capture ratio stays 0.3 (no `dw_jamgrow`) |
 | `e01` | `param_e01.txt` | capture ratio stays 0.1 (no `dw_jamgrow`) |
 | `loose` | `param_loose.txt` | base with a loose jam (packing ratio 0.2; κ₀ = 4.1 m⁻¹) |
@@ -86,7 +87,7 @@ is not flooded.
 ```bash
 make            # links to the executables and the inputs (data/)
 make run        # the three base cases (nowood, ledger, jam; about 6 minutes in total on 4 threads)
-make sens       # the four cases with other capture assumptions and coefficients (about 11 minutes)
+make sens       # the five cases with other capture assumptions and coefficients (about 14 minutes)
 python3 plot_results.py en      # en/figs/*.png (without the argument, the Japanese version goes to figs/)
 python3 plot_results.py table en  # the tables below
 ```
@@ -99,20 +100,21 @@ python3 plot_results.py table en  # the tables below
 
 - **Wood supply and jam**: from 31 min, when the depth in the upstream reach exceeds 2 m, the
   standing trees start to become driftwood, and all 180 m³ is released by 49 min. The wood starts to
-  reach the bridge at 36 min, and the jam at the bridge reaches half of its final volume at 45 min.
+  reach the bridge at about 36 min, and the jam at the bridge reaches half of its final volume at
+  about 45 min.
   The jam does not move, so it remains after the flood has receded.
-- **The case without effect on the flow (`ledger`)**: 169 m³ jams at the bridge, but the depth
+- **The case without effect on the flow (`ledger`)**: 174 m³ jams at the bridge, but the depth
   and the discharge are the same as without driftwood (the outputs are byte-identical). This case
   shows only how much wood is carried and retained.
-- **With the drag of the jam (`jam`)**: the depth 10 m upstream of the bridge rises to 4.18 m,
-  against 2.50 m without driftwood. The level exceeds the floodplain level (3.5 m) at 42 min, the
-  flow over the floodplain starts to bypass the bridge at 43 min, and while the peak discharge
-  lasts, 60 m³/s of the 137 m³/s goes around over the floodplain and 74 m³/s passes under the bridge
-  (the two transects add up to 134 m³/s; the rest passes over the bank at the joint of the two
-  transects). The jam is 135 m³, less than in `ledger`, because the wood that goes around over the
-  floodplain does not pass the bridge.
+- **With the drag of the jam (`jam`)**: the depth 10 m upstream of the bridge rises to 4.19 m,
+  against 2.50 m without driftwood. The level exceeds the floodplain level (3.5 m) at about 42 min,
+  the flow over the floodplain starts to bypass the bridge at about 43 min, and while the peak
+  discharge lasts, 60 m³/s of the 137 m³/s goes around over the floodplain and 73 m³/s passes under
+  the bridge (the two transects add up to 134 m³/s; the rest passes over the bank at the joint of
+  the two transects). The jam is 138 m³, less than in `ledger`, because the wood that goes around
+  over the floodplain does not pass the bridge.
 - **After the flood has receded**: at 150 min (the discharge is the base flow of 30 m³/s) the
-  depth upstream of the bridge is still 2.77 m (1.01 m without driftwood). The jam remains, so the
+  depth upstream of the bridge is still 2.78 m (1.01 m without driftwood). The jam remains, so the
   backwater continues at the base flow.
 
 ### Water surface profile, extent of flooding and where the wood went
@@ -120,27 +122,28 @@ python3 plot_results.py table en  # the tables below
 ![Water surface along the channel, maximum depth and where driftwood passed](figs/maps.png)
 
 - **(a) Water surface profile**: the water surface drops by 1.5 m at the bridge, and the backwater
-  extends far upstream. The depth is 3.48 m (just below the floodplain level) 400 m upstream of the
+  extends far upstream. The depth is 3.49 m (just below the floodplain level) 400 m upstream of the
   bridge, and even at the upstream end (1200 m upstream of the bridge) the level is 0.46 m higher
   than without driftwood. The water leaves the channel over a reach of about 400 m upstream of the
   bridge.
 - **(b) Maximum depth**: of the 38.4 ha of floodplain, 17.4 ha is flooded by 0.1 m or more and
-  9.8 ha by 0.3 m or more. The maximum is 0.70 m on the bank just upstream of the bridge; beside the
+  10.0 ha by 0.3 m or more. The maximum is 0.70 m on the bank just upstream of the bridge; beside the
   bridge, 45 m from the channel (probe 4), the maximum is 0.50 m with a velocity of 0.76 m/s, and
   200 m downstream of the bridge (probe 5) it is 0.32 m. The water that has left the channel flows
   east over the floodplain and leaves through the east edge while returning to the channel
   downstream of the bridge.
-- **(c) Where the wood went**: of the 180 m³ of driftwood, 135 m³ jams at the bridge, 23 m³ is
-  deposited in the shallow parts of the floodplain and 22 m³ leaves the domain.
+- **(c) Where the wood went**: of the 180 m³ of driftwood, 138 m³ jams at the bridge, 24 m³ is
+  deposited in the shallow parts of the floodplain and 18 m³ leaves the domain.
 
 | Case | Recruited (m³) | Jammed at the bridge (m³) | Deposited on the floodplain (m³) | Left the domain (m³) |
 |---|---:|---:|---:|---:|
-| ledger only (`ledger`) | 180 | 169 | 0 | 11 |
-| with the drag of the jam (base) (`jam`) | 180 | 135 | 23 | 22 |
+| ledger only (`ledger`) | 180 | 174 | 0 | 6 |
+| with the drag of the jam (base) (`jam`) | 180 | 138 | 24 | 18 |
+| all at 10 layers (`slow`) | 180 | 99 | 15 | 66 |
 | capture ratio stays 0.3 (`e03`) | 180 | 53 | 8 | 119 |
 | capture ratio stays 0.1 (`e01`) | 180 | 18 | 0 | 162 |
-| loose jam (φ = 0.2) (`loose`) | 180 | 146 | 19 | 15 |
-| dense jam (φ = 0.4) (`dense`) | 180 | 123 | 28 | 29 |
+| loose jam (φ = 0.2) (`loose`) | 180 | 150 | 20 | 10 |
+| dense jam (φ = 0.4) (`dense`) | 180 | 125 | 30 | 25 |
 
 ### Jam volume and backwater
 
@@ -153,10 +156,10 @@ jam section; no simulation results are used). The dots are the simulation.
 - The case with a capture ratio of 0.1 (jam of 18 m³) hardly overflows, so the formula (1.10 m) and
   the simulation (1.12 m) almost agree. Even 18 m³ brings the level up to the floodplain level.
 - With more wood, the simulated backwater levels off at 1.5–1.7 m, because the water that leaves
-  the channel escapes over the floodplain and the discharge under the bridge falls. The 135 m³ of
+  the channel escapes over the floodplain and the discharge under the bridge falls. The 138 m³ of
   the base case would correspond to a backwater of 3.0 m (a depth of 5.5 m) without overflow.
 - The difference of the levels across the bridge agrees with the formula when the discharge and the
-  downstream depth of the simulation are used (base case at 90 min: simulation 1.56 m, formula
+  downstream depth of the simulation are used (base case at 90 min: simulation 1.57 m, formula
   1.48 m).
 
 ### Spread from the capture assumption and the coefficient
@@ -166,22 +169,25 @@ jam section; no simulation results are used). The dots are the simulation.
 | Case | Jammed at the bridge (m³) | Max depth 10 m upstream of the bridge (m) | Bypass starts | Peak bypass discharge (m³/s) | Flooded floodplain area (ha) | Max depth on the floodplain (m) |
 |---|---:|---:|---:|---:|---:|---:|
 | no driftwood (`nowood`) | — | 2.50 | — | 0 | 0.0 | 0.00 |
-| ledger only (`ledger`) | 169 | 2.50 | — | 0 | 0.0 | 0.00 |
-| with the drag of the jam (base) (`jam`) | 135 | 4.18 | 43 min | 60 | 17.4 | 0.70 |
+| ledger only (`ledger`) | 174 | 2.50 | — | 0 | 0.0 | 0.00 |
+| with the drag of the jam (base) (`jam`) | 138 | 4.19 | 43 min | 60 | 17.4 | 0.70 |
+| all at 10 layers (`slow`) | 99 | 4.13 | 45 min | 50 | 16.7 | 0.65 |
 | capture ratio stays 0.3 (`e03`) | 53 | 4.00 | 46 min | 30 | 14.7 | 0.52 |
-| capture ratio stays 0.1 (`e01`) | 18 | 3.62 | 58 min | 4 | 1.2 | 0.31 |
-| loose jam (φ = 0.2) (`loose`) | 146 | 4.12 | 44 min | 47 | 16.4 | 0.63 |
-| dense jam (φ = 0.4) (`dense`) | 123 | 4.23 | 42 min | 70 | 18.1 | 0.75 |
+| capture ratio stays 0.1 (`e01`) | 18 | 3.62 | 59 min | 4 | 1.2 | 0.31 |
+| loose jam (φ = 0.2) (`loose`) | 150 | 4.12 | 44 min | 48 | 16.5 | 0.63 |
+| dense jam (φ = 0.4) (`dense`) | 125 | 4.23 | 42 min | 71 | 18.1 | 0.75 |
 
-- **The capture assumption changes the results greatly.** With the capture ratio kept at 0.3 (three
-  tenths of the wood passing the bridge keep getting caught) the jam is 53 m³ and the bypass
-  discharge is 30 m³/s, half of the base case. Kept at 0.1, the jam is 18 m³, the bypass is 4 m³/s
-  and the flooding is almost confined to the bank. Whether a log gets caught is not solved in this
-  model, so the way the capture ratio and `dw_jamgrow` are given is directly the spread of the
-  results.
+- **The capture assumption changes the results greatly.** In the base case the capture ratio rises
+  from 0.3 to 1 by the time the jam reaches one layer of logs. If everything is caught only at ten
+  layers (`slow`), the jam is 99 m³ and the bypass discharge is 50 m³/s. With the capture ratio kept
+  at 0.3 (three tenths of the wood passing the bridge keep getting caught) the jam is 53 m³ and the
+  bypass discharge is 30 m³/s, half of the base case. Kept at 0.1, the jam is 18 m³, the bypass is
+  4 m³/s and the flooding is almost confined to the bank. Whether a log gets caught is not solved in
+  this model, so the way the initial capture ratio and the speed at which wood catches more easily
+  as the jam grows (`dw_jamgrow`) are given is directly the spread of the results.
 - **The drag coefficient matters less.** Changing the packing ratio from 0.2 to 0.4 (κ₀ from 4.1 to
-  9.8 m⁻¹, a factor of 2.4) gives maximum depths of 4.12–4.23 m, bypass discharges of 47–70 m³/s
-  and flooded areas of 16.4–18.1 ha. Once the water has started to leave the channel, the level is
+  9.8 m⁻¹, a factor of 2.4) gives maximum depths of 4.12–4.23 m, bypass discharges of 48–71 m³/s
+  and flooded areas of 16.5–18.1 ha. Once the water has started to leave the channel, the level is
   set by the overflow onto the floodplain. Where the water cannot leave the channel (a channel with
   high levees, for example), the difference of the coefficient becomes directly a difference of the
   level, as the lines in the figure above show.
@@ -195,8 +201,10 @@ jam section; no simulation results are used). The dots are the simulation.
   example).
 - **The capture ratio is a given.** Decide it from observations or experimental knowledge, or show
   a range with several cases under different assumptions, as in this example. `dw_jamgrow`
-  approximates "once wood starts to pile up, the following wood gets caught one after another";
-  whether it is given changes the jam volume greatly.
+  approximates "once wood starts to pile up, the following wood gets caught one after another" by
+  raising the capture ratio to 1 in proportion to the jammed amount. The packing ratio times the
+  representative diameter (0.09 m³/m² in this example) is a guide for one layer of logs; how many
+  layers it takes to stop everything is also a given.
 - **Compare three cases.** Comparing no driftwood, `f_dwjam = 0` (wood carried without acting on the
   flow) and `f_dwjam = 1` (a growing blockage) with the same settings isolates the effect of the
   blockage.
@@ -222,9 +230,11 @@ jam section; no simulation results are used). The dots are the simulation.
   that [the advection explanation](../../../docs/en/users_guide/advection_donor.md) §7 lists for
   oblique channels, but the cause has not been identified). In a control run with four neighbours
   (`fn_enc = '-'` in `&list_sysparam` and `p_diagratio = 0.0` in `&list_enc`) the depth 10 m
-  downstream of the bridge falls from 2.67 m to 2.35 m, while the maximum depth upstream of the
-  bridge (4.18 → 4.23 m), the peak bypass discharge (still 60 m³/s) and the flooded area
-  (17.4 → 17.3 ha) hardly change. Under conditions close to the threshold of overflow (the case
+  downstream of the bridge falls from 2.67 m to 2.31 m, while the maximum depth upstream of the
+  bridge (4.19 → 4.23 m) and the peak bypass discharge (still 60 m³/s) hardly change. The area
+  flooded by 0.1 m or more around the bridge (x > 800 m) goes from 17.1 ha to 15.9 ha (the
+  four-neighbour run has another disturbance near the inflow at the upstream end, so that part is
+  excluded from the comparison). Under conditions close to the threshold of overflow (the case
   with a capture ratio of 0.1), this difference can decide the outcome.
 - **In the map of the maximum depth, the thin strip along the bank far upstream of the bridge
   (0.1–0.2 m deep) and the patch at the upstream end are numerical.** Once a bank cell is wet, water
@@ -249,7 +259,7 @@ jam section; no simulation results are used). The dots are the simulation.
 | `make_terrain.py` | writes the inputs (elevation, initial depth, roughness, standing stock and capture-ratio maps in `data/`) |
 | `param.txt` | the base case `jam` |
 | `param_nowood.txt`, `param_ledger.txt` | no driftwood, ledger only |
-| `param_e03.txt`, `param_e01.txt`, `param_loose.txt`, `param_dense.txt` | cases with other capture assumptions and coefficients |
+| `param_slow.txt`, `param_e03.txt`, `param_e01.txt`, `param_loose.txt`, `param_dense.txt` | cases with other capture assumptions and coefficients |
 | `plot_results.py` | figures and tables |
 
 ## Related documents
