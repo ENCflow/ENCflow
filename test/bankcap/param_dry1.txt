@@ -1,0 +1,54 @@
+!======================================================================
+! bankcap 構成 4: 乾いた河岸(f_dry_head_cap = 1)。構成 3 とバイト比較する
+!======================================================================
+&list_sysparam
+  f_gridsystem = 0
+  dt = 0.2
+  t0 = 0
+  tt = 900
+  dt_disp = 300
+  dt_file = 300
+  dt_recrd = 300
+  fn_geoinfo = '-'
+  fn_initial = '-'
+  fn_boundary = '-'
+  fn_enc = '-'
+  dir_result = 'result_dry1'
+  f_out_h = 1
+  f_out_vv = 1              ! 流速 V0001…(構成 3・4 のバイト比較に使う)
+/
+
+&list_enc
+  f_dry_head_cap = 1
+/
+
+&list_initial
+  f_htype = 1
+  fn_hinit = 'bc_h_dry.txt'   ! 河道 2.50 m、氾濫原 乾燥
+  u0 = 2.745949             ! 等流の流速(流れを最初から定常に近づける)
+/
+
+&list_geoinfo
+  nx = 80
+  ny = 16
+  dx = 5.0
+  dy = 5.0
+  f_ztype = 1
+  fn_z = 'bc_z.txt'         ! 河道(行 9〜12)10 − 0.002 x、氾濫原(行 1〜8)+3.5 m、台地(行 13〜16)+7 m
+  f_rntype = 1
+  fn_rn = 'bc_rn.txt'       ! 河道 0.03、氾濫原と台地 0.05
+/
+
+&list_bound_edge
+  f_bc_e = 1                ! 東辺は自由流出
+/
+
+&list_bound_inflow
+  inflow_cell(:,1,1) = 1, 9
+  inflow_cell(:,2,1) = 1, 10
+  inflow_cell(:,3,1) = 1, 11
+  inflow_cell(:,4,1) = 1, 12
+  inflow_val(:,1,1) = 0, 137.3
+  inflow_val(:,2,1) = 9999, 137.3
+  inflow_dist(1) = 2
+/

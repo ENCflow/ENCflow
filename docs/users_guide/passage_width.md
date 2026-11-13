@@ -457,7 +457,7 @@ T9・T10 は [test/rockinc](../../test/rockinc/README.md) の構成です。V �
 | f_bank_opening | 1 | 堤防壁で塞がれた開口の静的な振り替え | [河道の解説](channel_models.md) §1 |
 | f_br_diag | 0 | 破堤口の両端の斜めの開口の連動 | [河道の解説](channel_models.md) §4 |
 | fn_width | — | サブグリッド河道幅(通水の上限と貯留の面積率) | [河道の解説](channel_models.md) §2 |
-| f_dry_head_cap | 1 | 乾いた高い地盤へ向かうエッジの水深をエネルギー頭で頭打ち(乾いた河岸を壁と同じに扱う) | [移流項](advection.md) §5 |
+| f_dry_head_cap | 1 | 乾いた高い地盤へ向かうエッジの水深をエネルギー頭で頭打ち(乾いた河岸を壁と同じに扱う)。2 は、薄く濡れた河岸にも、その地盤が送り手の水位より高ければ同じ頭打ち | [移流項](advection.md) §5 |
 | fluv_diagratio | 2/(2+√2) | 掃流砂の斜めの配分(`p_diagratio` と同じ値のまま使う) | [土砂・地形変化](geomorph.md) |
 
 <a id="verification"></a>

@@ -45,7 +45,10 @@ module list_enc
                                               !   頭打ち (0:なし, 1:有効(既定))。受け手が乾燥の
                                               !   とき he ≤ max(η + u_n²/2g − z_受け手, 0) とし、
                                               !   水面+速度水頭より高い地盤へは流さない
-                                              !   (developer.md §68.16)
+                                              !   (developer.md §68.16)。2: 1 に加えて、受け手が
+                                              !   濡れていても、その地盤が送り手の水位より高ければ
+                                              !   同じ頭打ちを掛ける(薄く濡れた河岸へ、水位の低い
+                                              !   河道の水が登らない。§108)
     integer :: f_opening_dynamic = 3          ! 塞がれた開口の動的振り替え (0:なし,
                                               !   1:河道セル間のエッジのみ(河道マスク fn_rw が
                                               !   なければ対象エッジがなく無効。2026-10-18 までの
@@ -131,7 +134,7 @@ subroutine list_enc_read(p, list)
   integer :: f_friction_fastmath        ! 摩擦項計算の高速化
   integer :: f_advection_scheme         ! 移流項のスキーム
   integer :: f_opening_dynamic          ! 塞がれた開口の動的振り替え (0:なし, 1:河道, 2:全域)
-  integer :: f_dry_head_cap             ! 乾燥セルへのエッジ水深のエネルギー頭による頭打ち (0/1)
+  integer :: f_dry_head_cap             ! 乾燥セルへのエッジ水深のエネルギー頭による頭打ち (0/1/2)
   integer :: f_advection_donor          ! 運動量保存形移流の風上供給元 (0:線 k 上の湿潤セル,
                                         !   3(既定):線 k の薄い供給元を u_e へ寄せ、側方面の乾湿
                                         !   判定を連続に。1・2 は廃止)

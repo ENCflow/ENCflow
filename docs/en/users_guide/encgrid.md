@@ -284,7 +284,9 @@ reproducing urban inundation ([geographic information](geoinfo.md)).
 
 **Flux and wet/dry rules.** The updated velocity is multiplied by the edge
 depth, $`q = u_n h_e`$. Towards a dry cell $`h_e`$ is capped by the energy
-head $`\eta_c + u_n^2/2g - z_n`$ (`f_dry_head_cap`), and an edge whose
+head $`\eta_c + u_n^2/2g - z_n`$ (`f_dry_head_cap`; with 2 the same cap also
+applies on edges towards a wet cell whose bed is above the water level of the
+sender), and an edge whose
 sender is completely dry gets $`u_n = q = 0`$. When the outflow of one step
 would use up the water of the cell (`f_exflux_reduction = 1`, default), the
 flux of that edge is first scaled by $`(h_c - d_d)/\Delta h_c`$, edge by

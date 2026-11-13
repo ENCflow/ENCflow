@@ -1,13 +1,15 @@
 # ENCflow CI: ビルド+回帰テスト(基準 Log とのビット/ULP 照合)
-#   高速な 21 ケースを毎 push で回す(chichibu は実行時間の都合で対象外。
+#   高速な 22 ケースを毎 push で回す(chichibu は実行時間の都合で対象外。
 #   ローカルで test/chichibu/Run.sh を実行すること)。prmap・wfswash・gwlateral・gwtani・stg・vshaped・
-#   bldgdrag・driftwood は reference を持たない検定型(Check_*.py・再開と並列のバイト比較。Run.sh の
+#   bldgdrag・driftwood・bankcap は reference を持たない検定型(Check_*.py・再開と並列のバイト比較。Run.sh の
 #   終了コードで判定。stg は STG 格子の動作確認で、MPI の 2 ランクでは初期化で止まることを確かめる。
 #   vshaped は V 字流域の降雨流出の運動学的波の理論解との比較。bldgdrag は家屋の抗力項を含む等流の
 #   理論値との比較で、逐次のジョブだけで回す(辺ごとの局所の式で、MPI のジョブは同じ式を通るだけなので
 #   足さない)。driftwood は流木の材積保存・集積の抵抗による堰上げの解析解・カルバートの流量則と流入口の
 #   捕捉の検定で、逐次のジョブだけで回す(Run_MPI.sh の逐次の保存状態とのバイト比較は、-Ofast のビルド間の
-#   差で警告扱いになるので、MPI のジョブには足さない))
+#   差で警告扱いになるので、MPI のジョブには足さない)。bankcap は、エッジ水深の頭打ち f_dry_head_cap = 2 で
+#   河道の水が濡れた河岸へ登らないことの検定で、逐次と MPI の両方で回す(np = 2 では河岸の列と河道の間が
+#   帯の境界になる))
 #   フル回帰・MPI np=1,2,4・-fcheck=all・BMI 適合性は夜間の nightly.yml で回す
 name: CI
 
@@ -33,7 +35,7 @@ jobs:
       - name: Regression tests
         run: |
           set -e
-          for c in wave dambreak frost pump conduit salt vzcol vzzone sfzone prmap wfshoal wfshadow wfcurrent wfsed wfswash gwlateral gwtani stg vshaped bldgdrag driftwood; do
+          for c in wave dambreak frost pump conduit salt vzcol vzzone sfzone prmap wfshoal wfshadow wfcurrent wfsed wfswash gwlateral gwtani stg vshaped bldgdrag driftwood bankcap; do
             echo "===== test/$c ====="
             (cd "test/$c" && ./Run.sh)
           done
@@ -54,7 +56,7 @@ jobs:
         run: |
           set -e
           export OMP_NUM_THREADS=1
-          for c in wave dambreak frost pump conduit salt vzcol vzzone sfzone prmap wfshoal wfshadow wfcurrent wfsed wfswash gwlateral gwtani stg vshaped; do
+          for c in wave dambreak frost pump conduit salt vzcol vzzone sfzone prmap wfshoal wfshadow wfcurrent wfsed wfswash gwlateral gwtani stg vshaped bankcap; do
             echo "===== test/$c (np=2) ====="
             (cd "test/$c" && ./Run_MPI.sh 2)
           done

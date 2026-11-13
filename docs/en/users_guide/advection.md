@@ -546,7 +546,21 @@ listed in the [shallow water chapter](swflow.md).
 - `f_dry_head_cap`: the pressure term stops water from climbing onto dry
   ground above the water surface, but where the advection term wins, water
   can leak over at bore fronts and in incised channels. Capping the edge
-  depth toward a dry cell by the energy head prevents it.
+  depth toward a dry cell by the energy head prevents it. The default 1 caps
+  only while the receiving cell is dry. Once the cells of a bank or of the
+  land behind it are thinly wet (rain, the film left after the water has
+  receded), the cap is lifted, and channel water whose level is below the
+  bank can climb onto the wet bank (in a flowing incised channel, the bank
+  row with a 2 cm film rises to 7–15 cm;
+  [test/bankcap](../../../test/bankcap/en/README.md)). 2 applies the same cap
+  also when the receiver is wet, as long as its bed is above the water level
+  of the sender, and stops this (it is not applied to a submerged step, that
+  is, where the bed of the receiver is below the water level of the sender).
+  Both are ENCflow's own rules built on the Bernoulli relation "water does not
+  climb onto ground above its energy head".
+  2 is not the default: in runs where thin flow runs over steep terrain
+  (rainfall runoff on a real DEM and the like) the results can differ from 1.
+  Try it when an unnatural strip of inundation appears along a bank.
 - `f_hcap_upwind = 2`: with schemes 2 and 3 the edge depth of the
   continuity equation, $`h_e = (h_c + h_n)/2`$, is small at the bore front and
   water can pile up in the one cell behind it (a spike). Using the upwind

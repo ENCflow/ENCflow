@@ -107,9 +107,11 @@ module m_swflow_enc
                                             !   だけ移流項 0, 2:1 + そのエッジの流速のエネルギー
                                             !   上限。§68.40)
     integer :: f_dry_head_cap                 ! 乾燥セルへ向かうエッジ水深をエネルギー頭
-                                            !   η + u_n²/2g − z_受け手 で頭打ち (0:なし, 1:有効。
-                                            !   §68.16。水面+速度水頭より高い乾いた地盤へは
-                                            !   流さず、流せないエッジの流速も 0 にする)
+                                            !   η + u_n²/2g − z_受け手 で頭打ち (0:なし, 1:受け手が
+                                            !   乾燥のとき。§68.16。水面+速度水頭より高い乾いた
+                                            !   地盤へは流さず、流せないエッジの流速も 0 にする,
+                                            !   2:1 に加えて、受け手が濡れていても、その地盤が
+                                            !   送り手の水位より高いとき。§108)
     integer :: f_bank_mode                    ! 堤防の水理モード(下の e_bank_*)
     integer :: f_diffusion_term               ! 拡散項の計算 (0:無効, 1:定数, 2:ゼロ方程式)
     logical :: have_diff = .false.            ! 拡散項を計算する(f_diffusion_term > 0、nh_break_visc > 0
@@ -1039,8 +1041,9 @@ subroutine m_swflow_enc_init(p, g, b, s)
                   //"and is shallower than p_adv_donor_eps times the face cell; " &
                   //"side-face wet/dry tests weighted by min(1, h/dd))")
   end if
-  if (opt%f_dry_head_cap < 0 .or. opt%f_dry_head_cap > 1) then
-    call par_stop("list_enc: f_dry_head_cap must be 0(off) or 1(cap edge depth toward dry cells by energy head)")
+  if (opt%f_dry_head_cap < 0 .or. opt%f_dry_head_cap > 2) then
+    call par_stop("list_enc: f_dry_head_cap must be 0(off), 1(cap edge depth toward dry cells by energy head) " &
+                  //"or 2(1 + also toward wet cells whose bed is above the water level of the sending cell)")
   end if
   if (opt%f_inflow_edge < 0 .or. opt%f_inflow_edge > 2) then
     call par_stop("list_enc: f_inflow_edge must be 0(no advection on edges touching inflow cells), " &
@@ -1656,6 +1659,9 @@ subroutine init_enc_status(p, g, s, sx)
             he = min(he, max(s%z(i,j) + hc + uve**2 / (2 * p%gg) - s%z(in,jn), 0.0))
           else if (uve < 0.0 .and. hc < p%dd) then
             he = min(he, max(s%z(in,jn) + hn + uve**2 / (2 * p%gg) - s%z(i,j), 0.0))
+          else if (opt%f_dry_head_cap >= 2) then
+            ! 濡れた受け手でも、その地盤が送り手の水位より高ければ頭打ち(§108。calc_kth_flux と同じ規則)
+            he = cap_he_wet(he, uve, hc, hn, s%z(i,j), s%z(in,jn), p%gg)
           end if
         end if
         if ((uve > 0.0 .and. hc <= 0.0) .or. (uve < 0.0 .and. hn <= 0.0)) he = 0.0
@@ -2475,6 +2481,30 @@ pure function cap_he_upwind(he, hc, hn, uve) result(he_corr)
 end function
 
 
+!----------------------------------------------------------------------
+! 濡れた受け手へ向かうエッジ水深のエネルギー頭による頭打ち(f_dry_head_cap = 2。§108)
+!   受け手(流向の下流側)の地盤が送り手の水位より高い(z_受 > z_送 + h_送)とき、エッジ水深を、
+!   送り手のエネルギー頭が受け手の地盤を超える分 max(z_送 + h_送 + u_n²/2g − z_受, 0) で
+!   頭打ちする(乾いた受け手への頭打ち §68.16 と同じ式)。受け手の地盤が送り手の水位より低い
+!   (水に浸かった段)ときと、流速 0 のエッジは he のまま。0 を返したエッジの流速は、呼び出し側が
+!   0 にする。乾いた受け手(従来の 2 つの分岐)を通らなかったエッジにだけ呼ぶ
+!----------------------------------------------------------------------
+pure function cap_he_wet(he, uve, hc, hn, zc, zn, gg) result(he_corr)
+  real, intent(in) :: he          ! セル境界水深(ここまでの規則を通した後)
+  real, intent(in) :: uve         ! セル境界の流速(中心→近傍が正)
+  real, intent(in) :: hc, hn      ! 中心セル・近傍セルの水深
+  real, intent(in) :: zc, zn      ! 中心セル・近傍セルの地盤
+  real, intent(in) :: gg          ! 重力加速度(補正前。Bernoulli の速度水頭)
+  real :: he_corr
+  he_corr = he
+  if (uve > 0.0) then             ! 中心セルが送り手、近傍セルが受け手
+    if (zn > zc + hc) he_corr = min(he, max(zc + hc + uve**2 / (2 * gg) - zn, 0.0))
+  else if (uve < 0.0) then        ! 近傍セルが送り手、中心セルが受け手
+    if (zc > zn + hn) he_corr = min(he, max(zn + hn + uve**2 / (2 * gg) - zc, 0.0))
+  end if
+end function
+
+
 subroutine calc_kth_flux(p, g, s, sx, uve0, tae0, i, j, k, in, jn, f_runge, uve1, mne1, hee)
   type(t_sysparam), intent(in) :: p
   type(t_geoinfo), intent(in) :: g
@@ -2822,12 +2852,24 @@ subroutine calc_kth_flux(p, g, s, sx, uve0, tae0, i, j, k, in, jn, f_runge, uve1
     !   流速も 0 にして、再構成・移流に幻の流速が残らないようにする。
     !   移流項が圧力項に勝って水面より高い乾いた地盤へ水が登る漏れ
     !   (§68.15 の掘込水路の発散)を物理条件で塞ぐ
+    !   f_dry_head_cap = 2(§108): 受け手が濡れていても、受け手の地盤が送り手の水位より
+    !   高ければ(z_受 > z_送 + h_送)同じ頭打ちを掛ける。河岸のセルが薄く濡れると 1 の
+    !   頭打ちが外れ、水位が河岸より低い河道の水が、移流項で生じたエッジ流速 × 両側の
+    !   平均水深で河岸へ登る(§50.9)のを塞ぐ。受け手の地盤が送り手の水位より低い
+    !   (水に浸かった段)ときは掛けない(地盤の高低だけを条件にすると、濡れた斜面を
+    !   登る流れ全般に効いて、波の伝播や潮の遡上が変わる。§108 の試験)
+    !   2 の分岐は、従来の 2 つの分岐(受け手が乾燥)の後ろに別の手続きで置く。従来の分岐の条件に
+    !   同じ和 z + h を書き足すと、-Ofast が頭打ちの式の足し算の順序を変え、1 の結果が最終桁で
+    !   動く(丸めに敏感な遡上の検定で確認。§108.4)
     if (opt%f_dry_head_cap > 0) then
       if (uve1 > 0.0 .and. hn < p%dd) then
         he = min(he, max(s%z(i,j) + hc + uve1**2 / (2 * p%gg) - s%z(in,jn), 0.0))
         if (he <= 0.0) uve1 = 0.0
       else if (uve1 < 0.0 .and. hc < p%dd) then
         he = min(he, max(s%z(in,jn) + hn + uve1**2 / (2 * p%gg) - s%z(i,j), 0.0))
+        if (he <= 0.0) uve1 = 0.0
+      else if (opt%f_dry_head_cap >= 2) then
+        he = cap_he_wet(he, uve1, hc, hn, s%z(i,j), s%z(in,jn), p%gg)
         if (he <= 0.0) uve1 = 0.0
       end if
     end if

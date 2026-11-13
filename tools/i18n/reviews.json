@@ -113,11 +113,11 @@
     {
       "source": "docs/users_guide/advection.md",
       "target": "docs/en/users_guide/advection.md",
-      "source_sha256": "0511b6ec152cd8fb1ba4e94b7212ef07713e9420678be3089f1bf211faffb03f",
-      "target_sha256": "11034cf28db54e3562419f4e487f140f43f093b93b5ea4df38eff008de56343e",
-      "reviewer": "Claude (Claude Code session; links to the shallow-water primer and the renaming of f_govequation = 1 to local inertia (note at first mention in tutorials, examples and tests): Japanese and English edited together and the changed passages compared)",
+      "source_sha256": "1e0bcec9dd587a5994c598dd174fe542cf742e158e36b1ac6710431c5ff906ea",
+      "target_sha256": "907ae2009694815da6ec54a94c9e723ad1c06a7feac47eefec88f4a6dbb979dc",
+      "reviewer": "Claude (Claude Code session; f_dry_head_cap = 2 added (energy-head cap also toward wet cells whose bed is above the water level of the sender; developer.md §108): the added passages of the Japanese master and the English mirror compared one by one, numbers cross-checked; rest unchanged since the previous record)",
       "method": "assistant",
-      "reviewed_on": "2026-11-11"
+      "reviewed_on": "2026-11-13"
     },
     {
       "source": "docs/users_guide/advection_donor.md",
@@ -257,11 +257,11 @@
     {
       "source": "docs/users_guide/encgrid.md",
       "target": "docs/en/users_guide/encgrid.md",
-      "source_sha256": "090a665841df82f73404a8deb8ea7362bf765c3f8bf733823de39ebe99a9a6f4",
-      "target_sha256": "57b0fe929f869eafc847fec635be4238baeee677a5ddd3f47c612b517c729b95",
-      "reviewer": "Claude (Claude Code session; note in §9 that the STG building drag coefficient k C_D is twice the k C_D/2 of ENC (developer.md §107): Japanese and English edited together and the added paragraph compared; rest unchanged since the previous record)",
+      "source_sha256": "3ea413f4e923ff569910a04799369400a1028954895282695983b0ffb521855b",
+      "target_sha256": "096e8fa187012267edc057198d59a5697ec871bfb66eec9dcafcf873bcde43f5",
+      "reviewer": "Claude (Claude Code session; f_dry_head_cap = 2 added (energy-head cap also toward wet cells whose bed is above the water level of the sender; developer.md §108): the added passages of the Japanese master and the English mirror compared one by one, numbers cross-checked; rest unchanged since the previous record)",
       "method": "assistant",
-      "reviewed_on": "2026-11-12"
+      "reviewed_on": "2026-11-13"
     },
     {
       "source": "docs/users_guide/forcing.md",
@@ -428,11 +428,11 @@
     {
       "source": "docs/users_guide/passage_width.md",
       "target": "docs/en/users_guide/passage_width.md",
-      "source_sha256": "ab280f4bc95c0633aa632b19714af40a2cc3ee0949528504d68642c86fd7112f",
-      "target_sha256": "4070d3027cc91a97512995e6c828b788c545a66d7ad178d91d20b65adc84a5d7",
-      "reviewer": "Claude (Claude Code session; wrote and read both versions side by side: structure, numbers, tables, links and captions)",
+      "source_sha256": "bc89b65003c3cc0416b2d85fc09e300e1ddad1922cc111ba3f1c368d1be82814",
+      "target_sha256": "c1b331d68045cacb2026e1cd69094aa4448a7dda5bb5e84d29ae371f369660cc",
+      "reviewer": "Claude (Claude Code session; f_dry_head_cap = 2 added (energy-head cap also toward wet cells whose bed is above the water level of the sender; developer.md §108): the added passages of the Japanese master and the English mirror compared one by one, numbers cross-checked; rest unchanged since the previous record)",
       "method": "assistant",
-      "reviewed_on": "2026-11-10"
+      "reviewed_on": "2026-11-13"
     },
     {
       "source": "docs/users_guide/record.md",
@@ -509,11 +509,11 @@
     {
       "source": "docs/users_guide/swflow.md",
       "target": "docs/en/users_guide/swflow.md",
-      "source_sha256": "8129888e31c1034a1037b40f4192d1f89908381bfa5aa115fad829d93e80d47b",
-      "target_sha256": "93dca6d87c4cb0c4c70c541fc9a9cab897ea9427b117f24e007f4cbe335448f5",
-      "reviewer": "Claude (Claude Code session; links to the shallow-water primer and the renaming of f_govequation = 1 to local inertia (note at first mention in tutorials, examples and tests): Japanese and English edited together and the changed passages compared)",
+      "source_sha256": "4d5bc8c5b67b2afe6e2450b021b67c9911984b68d3a6ed927a83f04ac8042935",
+      "target_sha256": "c6ee60a6a08d544bc62091cb1ecd54dd64ff6b34ea282afaef4065a1be5c4094",
+      "reviewer": "Claude (Claude Code session; f_dry_head_cap = 2 added (energy-head cap also toward wet cells whose bed is above the water level of the sender; developer.md §108): the added passages of the Japanese master and the English mirror compared one by one, numbers cross-checked; rest unchanged since the previous record)",
       "method": "assistant",
-      "reviewed_on": "2026-11-11"
+      "reviewed_on": "2026-11-13"
     },
     {
       "source": "docs/users_guide/swi.md",
@@ -671,11 +671,11 @@
     {
       "source": "examples/List_samples/list_enc.txt",
       "target": "examples/List_samples/en/list_enc.txt",
-      "source_sha256": "5d2346bf57f910a06fc7fcdf91d69b5a961141a5bce5b318160b370b856d2e9d",
-      "target_sha256": "a1ba1a88cbf5b2b33cd7879c5bbd6e5446086e52b9e8dd6ddf00f6d81f293530",
-      "reviewer": "Claude (Claude Code session; reference for f_advection_donor changed from users_guide/advection.md section 4.4 to the new page advection_donor.md in both versions; unchanged text as in the previous record)",
+      "source_sha256": "3742750bc1dfee1b5cbb0f189ef608376948148ee8dfc297d9ad3490689de742",
+      "target_sha256": "51146e0805ad9fc2a3f175f7d77c8b7632494982bb9f2d9d576b632dafa9ab69",
+      "reviewer": "Claude (Claude Code session; f_dry_head_cap = 2 added (energy-head cap also toward wet cells whose bed is above the water level of the sender; developer.md §108): the added passages of the Japanese master and the English mirror compared one by one, numbers cross-checked; rest unchanged since the previous record)",
       "method": "assistant",
-      "reviewed_on": "2026-11-09"
+      "reviewed_on": "2026-11-13"
     },
     {
       "source": "examples/List_samples/list_evap.txt",
@@ -3362,9 +3362,9 @@
     {
       "source": "test/README.md",
       "target": "test/README.en.md",
-      "source_sha256": "cfd23712bc6e1129d213282baae9dea3eaa139964966d2c37aba77f8b752c344",
-      "target_sha256": "0704f8e4c60f989ab00057c81686243d874e52b460c01f770e6e049fe61e2f10",
-      "reviewer": "Claude (Claude Code session; the capture at a culvert inlet changed from all the wood to the share of the water drawn by the culvert (developer.md §50.11): the rewritten passages of the Japanese master and the English mirror compared one by one, numbers cross-checked; rest unchanged since the previous record)",
+      "source_sha256": "cfa198b838021cf25bb6398925854905cb24cf7efdae0841c39f7d7815e72220",
+      "target_sha256": "c31e8c37998597daec513376e44530ba824a87839a5f63b0d49dc28807a9cc3a",
+      "reviewer": "Claude (Claude Code session; f_dry_head_cap = 2 added (energy-head cap also toward wet cells whose bed is above the water level of the sender; developer.md §108): the added passages of the Japanese master and the English mirror compared one by one, numbers cross-checked; rest unchanged since the previous record)",
       "method": "assistant",
       "reviewed_on": "2026-11-13"
     },
@@ -3385,6 +3385,15 @@
       "reviewer": "Claude (Claude Code session; viewed the regenerated Japanese and English figures drawn by the same script from the same results of the slope-parallel mixture-resistance computation (developer.md §101); labels translated, data identical)",
       "method": "assistant",
       "reviewed_on": "2026-11-06"
+    },
+    {
+      "source": "test/bankcap/README.md",
+      "target": "test/bankcap/en/README.md",
+      "source_sha256": "2daea43126dc471ad775f7c91fc638962cbb199af7cbfb32ef796a10a2cd0f0c",
+      "target_sha256": "fd83c206d2eaeee0a6653755ce4209f3f901ffcef354abd0bb276682d7806b63",
+      "reviewer": "Claude (Claude Code session; new test test/bankcap (developer.md §108): the Japanese master and the English mirror written together and compared section by section, numbers cross-checked against the output of Check_bankcap.py)",
+      "method": "assistant",
+      "reviewed_on": "2026-11-13"
     },
     {
       "source": "test/bankface/README.md",
