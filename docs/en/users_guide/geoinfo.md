@@ -165,6 +165,19 @@ that include lakes and floodplains does not give sufficient quality, so
 rasterizing river centerlines in GIS is recommended (background:
 developer.md Sec. 40).
 
+A rasterized channel line is in places one cell off the valley line of the
+elevation data (on the 50–500 m grids of the Chichibu catchment, four tenths of
+the channel-mask cells were valley-wall cells off the valley line). In such
+cells the channel roughness (`rn0_rw`) and the carving (`depth_rw`) are applied
+to the valley wall and not to the valley-line cells where the water actually
+flows. The bundled [utils/river_flowline](../../../utils/river_flowline/en/README.md)
+moves a channel mask onto the flow lines of the elevation data (the drainage
+paths given by the steepest descent among the 8 neighbours). In a computation
+that gives the channel a smaller roughness than the slopes, the peak discharge
+and its arrival time change with the move (in the 100 m regression case of the
+Chichibu catchment the peaks become 2–9 % smaller and 2–12 min later;
+[test/chichibu](../../../test/chichibu/en/README.md)).
+
 ## Drag of building clusters (urban inundation)
 
 | Parameter | Default | Meaning |

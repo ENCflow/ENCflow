@@ -7,10 +7,15 @@
 - `Chichibu_100m.txt` — 標高(原データ)
 - `Chichibu_100m_filled2.txt` — 標高(窪地処理済み。計算に使用)
 - `Chichibu_100m_basin.txt` — 流域マスク
-- `Chichibu_100m_river.txt` — 河道マスク
+- `Chichibu_100m_river.txt` — 河道マスク(元のデータ。9,582 セル。developer.md §68 の派生実験の
+  param_*.txt が使う)
+- `Chichibu_100m_river_flowline.txt` — 河道マスクを、窪地処理済みの標高の落水線に載せ直したもの
+  (6,515 セル。[utils/river_flowline](../../../utils/river_flowline/README.md)。回帰ケース param.txt と
+  test/chichibu_icmap が使う)
 
 データの由来: 標高データ(および流域マスク)は国土地理院の基盤地図情報
 数値標高モデルより作成、河道マスクは国土数値情報河川データから作成された
 河道位数データ
 ([DOI:10.3178/jjshwr.36.1812](https://doi.org/10.3178/jjshwr.36.1812))
-より作成しています。
+より作成しています。河道位数データをラスタにした河道マスクは、セルの 38 % が標高の谷線(落水線)から
+外れた谷壁のセルで、谷線の上で切れている所が 529 セルあります(developer.md §109)。

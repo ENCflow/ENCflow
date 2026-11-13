@@ -15,6 +15,8 @@ param50_*.txt.
 - `Chichibu_50m_basin.txt` — catchment mask (285,843 cells)
 - `Chichibu_50m_river.txt` — channel mask (19,714 cells; every 100 m channel cell
   contains a 50 m channel cell)
+- `Chichibu_50m_river_flowline.txt` — the channel mask moved onto the flow lines of the elevation (14,361 cells;
+  [utils/river_flowline](../../../../utils/river_flowline/en/README.md), developer.md §109)
 
 The source is the same as data_chichibu (provided by the user on 2026-10-03).
 
@@ -31,5 +33,7 @@ so the resolution comparison uses `Chichibu_500m_river_from100m.txt`
 mask as is (param500_*.txt) treat the upstream part as slopes with roughness
 0.15 and the peak drops to 1/3–1/6, so they are not used for the scheme
 comparison.
+`Chichibu_500m_river_flowline.txt` (123 cells) is the provided channel mask (192 cells) moved onto the
+flow lines of the elevation, and is used by test/nest_identity and test/nest_twin.
 
 The 200 m grid references tutorials/chichibu/data_chichibu through dir_data (param200_*.txt).

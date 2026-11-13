@@ -9,6 +9,8 @@
 - `Chichibu_50m_basin.txt` — 流域マスク(285,843 セル)
 - `Chichibu_50m_river.txt` — 河道マスク(19,714 セル。100 m の河道セルはすべて
   50 m の河道セルを含む)
+- `Chichibu_50m_river_flowline.txt` — 河道マスクを標高の落水線に載せ直したもの(14,361 セル。
+  [utils/river_flowline](../../../utils/river_flowline/README.md)、developer.md §109)
 
 出典は data_chichibu と同じ(2026-10-03 に利用者から提供)。
 
@@ -22,5 +24,7 @@
 `Chichibu_500m_river_from100m.txt`(1,270 セル)を使う(param500r_*.txt)。
 提供マスクのままの結果(param500_*.txt)は上流が粗度 0.15 の斜面扱いになり
 ピークが 1/3〜1/6 に落ちるので、スキーム比較には使わない。
+`Chichibu_500m_river_flowline.txt`(123 セル)は、提供された河道マスク(192 セル)を標高の落水線に
+載せ直したもので、test/nest_identity と test/nest_twin が使う。
 
 200 m は tutorials/chichibu/data_chichibu を dir_data で参照する(param200_*.txt)。

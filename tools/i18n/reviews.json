@@ -284,11 +284,11 @@
     {
       "source": "docs/users_guide/geoinfo.md",
       "target": "docs/en/users_guide/geoinfo.md",
-      "source_sha256": "5861062308c72756210aca912a570da864a06e4ee9a4633a9ad374487689271e",
-      "target_sha256": "27dba2a556cadc9811db7d273550b61963f9d63bd33778916a8ad994145918af",
+      "source_sha256": "61ed6b442000617a6477d3f89fbed3befb012726185b91c888289ccdf603b1d3",
+      "target_sha256": "e9659d65020a28367ac3c31eb0327ae15745e4785f2f45b7fa543804c84311af",
       "reviewer": "Claude (Claude Code session; full-text content and lexical review, no model execution)",
       "method": "assistant",
-      "reviewed_on": "2026-10-24"
+      "reviewed_on": "2026-11-13"
     },
     {
       "source": "docs/users_guide/geomorph.md",
@@ -3605,29 +3605,29 @@
     {
       "source": "test/chichibu/data_chichibu/README.md",
       "target": "test/chichibu/en/data_chichibu/README.md",
-      "source_sha256": "7ad23a0906a3ac1cf0435b7d2038b0374618038d80ffb14440602173aa93b641",
-      "target_sha256": "d4b527123684f76b0dbc69f464e8e1a67c0e74183a3260ce04c385ce6f896629",
+      "source_sha256": "26544a4cd73d1d27d704c7254aeb1e3ac2c624032469fdff047a79541aef7bfe",
+      "target_sha256": "cadf0a7595d580dcc8278447e2343d0dbddd44b6097ced440c19279c2b23fa4c",
       "reviewer": "Claude (Claude Code session; full-text content and lexical review, no model execution)",
       "method": "assistant",
-      "reviewed_on": "2026-10-23"
+      "reviewed_on": "2026-11-13"
     },
     {
       "source": "test/chichibu/data_chichibu_200m/README.md",
       "target": "test/chichibu/en/data_chichibu_200m/README.md",
-      "source_sha256": "fda36df1c0d85c950ff323fe9ff352dff09e0f93883f6008c07e4fbd9bbd4056",
-      "target_sha256": "aa3f6e8943f93826dba547ce15c8dc07b41704ee56d904f009209006430ef326",
+      "source_sha256": "c74920cc22b0f7131784bd975d8e6c80c8cacf62acbf5b162f57e7a68fe8dca8",
+      "target_sha256": "c3abb81de5a0b06059916234841e4c0d1457953c924b0591f01a29008bda2eff",
       "reviewer": "Claude (Claude Code session; full-text content and lexical review, no model execution)",
       "method": "assistant",
-      "reviewed_on": "2026-10-23"
+      "reviewed_on": "2026-11-13"
     },
     {
       "source": "test/chichibu/data_chichibu_50m/README.md",
       "target": "test/chichibu/en/data_chichibu_50m/README.md",
-      "source_sha256": "aaeb17c56a8f8f6b2e884418913c6bd304cec44d867e53a6df40442e852292c6",
-      "target_sha256": "c9eab08943082dde3f79ab829efe424c5fe355697bd7766abd3b201703a5e787",
+      "source_sha256": "f9d84a6e74aaaf787ea0414d5b26d7bad8075e8391169980201df17341beaef9",
+      "target_sha256": "68638534ff1ba181a6beb51a13fa66a16034dbad4e00e9bed309ed0f86328514",
       "reviewer": "Claude (Claude Code session; full-text content and lexical review, no model execution)",
       "method": "assistant",
-      "reviewed_on": "2026-10-23"
+      "reviewed_on": "2026-11-13"
     },
     {
       "source": "test/chichibu/figs/chichibu.png",
@@ -5446,6 +5446,15 @@
       "reviewer": "Claude (Claude Code session; full-text content and lexical review, no model execution)",
       "method": "assistant",
       "reviewed_on": "2026-10-24"
+    },
+    {
+      "source": "utils/river_flowline/README.md",
+      "target": "utils/river_flowline/en/README.md",
+      "source_sha256": "d467393b524b7172760e887a910509ba767aed284317db5bb61fb5a34b748ea5",
+      "target_sha256": "9977d5912ce972f2d7118b1d9f99f62dfc0cbf1e9a5b0488d1c393067dd108f1",
+      "reviewer": "Claude (Claude Code session; full-text content and lexical review, no model execution)",
+      "method": "assistant",
+      "reviewed_on": "2026-11-13"
     }
   ]
 }

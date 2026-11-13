@@ -11,4 +11,5 @@ added. Referenced by test/chichibu/param200_*.txt (developer.md §68.24).
 | File | Contents |
 |---|---|
 | Chichibu_200m_filled.txt / _basin.txt / _river.txt | Identical to tutorials/chichibu/data_chichibu |
+| Chichibu_200m_river_flowline.txt | The channel mask (2,327 cells) moved onto the flow lines of the elevation (1,473 cells; utils/river_flowline; identical to tutorials/chichibu/data_chichibu) |
 | width200_50.txt / width200_100.txt | Uniform channel width of 50 m / 100 m on the channel cells (wall-less sub-grid channel) |
