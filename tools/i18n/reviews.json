@@ -5072,29 +5072,29 @@
     {
       "source": "tutorials/bmi/README.md",
       "target": "tutorials/bmi/en/README.md",
-      "source_sha256": "17299a97deea9ac9b47cf8890b4663223cee2e555b300d4361c0f2cb8f734bc8",
-      "target_sha256": "4910a18994559db0dc2af314ec7d3dc98f3e4909e8e4c7bcf06bcbcf17fb0f85",
-      "reviewer": "Claude (Claude Code session; chichibu tutorial step numbers updated after removing the old Step 4 (Step 7 -> 6, Step 6 -> 5, param_step5 -> param_step4) in both versions; unchanged text as in the previous record)",
+      "source_sha256": "6c365f5279592f8590a7a9b7eacb0608ca9b749aa42366c22bb91fcb8c39ba29",
+      "target_sha256": "16af1d254d01f7e93a9d73d3cc9c8dd126f427883356a3fc6a7fef01075a416a",
+      "reviewer": "Claude (Claude Code session; full-text content and lexical review, no model execution)",
       "method": "assistant",
-      "reviewed_on": "2026-11-09"
+      "reviewed_on": "2026-11-13"
     },
     {
       "source": "tutorials/bmi/param.txt",
       "target": "tutorials/bmi/en/param.txt",
-      "source_sha256": "15aeae53f925f92dfd2e228d034aedf2a80eb571b981a8f738451fcd0ea42521",
-      "target_sha256": "f3a4fb96dca99484d29de25327cd573177a23d67b5a37dfab7b0efad28e2a07d",
-      "reviewer": "Claude (assistant)",
+      "source_sha256": "624bf4f5c647eec92ea9b174c622389a059f9ad2a42e3dcbf57e9937ccd04959",
+      "target_sha256": "1b51728bfe4dc6d133ce07df08f56cd3d1e27c71a28febbfe184b79200cf2ee2",
+      "reviewer": "Claude (Claude Code session; full-text content and lexical review, no model execution)",
       "method": "assistant",
-      "reviewed_on": "2026-10-24"
+      "reviewed_on": "2026-11-13"
     },
     {
       "source": "tutorials/bmi/param_norain.txt",
       "target": "tutorials/bmi/en/param_norain.txt",
-      "source_sha256": "8ed3d61ba6f6c9b06aa50f3e1b2a256f1c76992e85604696be5399dbc65f027f",
-      "target_sha256": "86a9b38afcf97fc0dc423d570bd4d13c51ca1b060f9da42aa2f4c7b50727605a",
-      "reviewer": "Claude (assistant)",
+      "source_sha256": "71f365d32d1caa44ab734abe2b0fd6e888a79052664ae7409a2576aaa27c441b",
+      "target_sha256": "b39ed382bb30ab66828ee78bd1c72265af07f9659c0b59a98e03e05095c44a27",
+      "reviewer": "Claude (Claude Code session; full-text content and lexical review, no model execution)",
       "method": "assistant",
-      "reviewed_on": "2026-10-24"
+      "reviewed_on": "2026-11-13"
     },
     {
       "source": "tutorials/chichibu/Fig_chichibu.plt",

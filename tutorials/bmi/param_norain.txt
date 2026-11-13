@@ -39,9 +39,9 @@
   rn0 = 0.05           ! 粗度係数固定値(山地斜面)
   rn0_rw = 0.02        ! 河道マスク部の固定粗度係数
 
-  fn_z = "Chichibu_200m_filled.tif"        ! 地盤高ファイル名
-  fn_mask = "Chichibu_200m_basin.tif"      ! 領域マスクファイル名
-  fn_rw = "Chichibu_200m_river.tif"        ! 河道マスクファイル名
+  fn_z = "Chichibu_200m_filled.tif"          ! 地盤高ファイル名
+  fn_mask = "Chichibu_200m_basin.tif"        ! 領域マスクファイル名
+  fn_rw = "Chichibu_200m_river_flowline.tif" ! 河道マスクファイル名
 /
 
 !======================================================================

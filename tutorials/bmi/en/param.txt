@@ -43,9 +43,9 @@
   rn0 = 0.05           ! constant roughness coefficient (mountain slopes)
   rn0_rw = 0.02        ! constant roughness coefficient on channel-mask cells
 
-  fn_z = "Chichibu_200m_filled.tif"        ! ground elevation file
-  fn_mask = "Chichibu_200m_basin.tif"      ! domain mask file
-  fn_rw = "Chichibu_200m_river.tif"        ! channel mask file
+  fn_z = "Chichibu_200m_filled.tif"          ! ground elevation file
+  fn_mask = "Chichibu_200m_basin.tif"        ! domain mask file
+  fn_rw = "Chichibu_200m_river_flowline.tif" ! channel mask file
 /
 
 !======================================================================
