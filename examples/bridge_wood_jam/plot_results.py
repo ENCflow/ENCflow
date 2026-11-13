@@ -306,10 +306,6 @@ def maps():
     _zones(ax)
     hmax = rd("result_jam/H9999.txt")
     _classed(ax, hmax, [0.01, 0.1, 0.3, 1.0, 2.0], DEPTH_RAMP, T("最大浸水深 (m)", "maximum depth (m)"))
-    ax.annotate(T("河岸沿いの薄い筋と上流端のにじみは計算上のもの(本文の「精度の限界」)",
-                  "the thin strip along the bank and the patch at the upstream end are numerical (see \"Limits of accuracy\")"),
-                (300, Y_CH1 - 12), xytext=(60, 110), fontsize=9, color=INK2, va="center",
-                arrowprops=dict(arrowstyle="-", color=MUTED, lw=0.8), zorder=7)
     ax.set_title(T("(b) 最大浸水深(集積の抵抗あり。流木なしでは河道の外は浸水しない)",
                    "(b) Maximum depth with the drag of the jam (without driftwood only the channel is wet)"))
 

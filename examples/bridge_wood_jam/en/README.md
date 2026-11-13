@@ -64,6 +64,7 @@ the uniform base flow.
 | Bridge | x = 1200 m; the 4 cells crossing the channel are capture cells; the capture ratio starts at 0.3 and rises as the jam grows; cells whose jammed amount has reached 0.09 m³/m² (one layer of logs = packing ratio 0.3 × diameter 0.3 m; 2.25 m³ per cell) capture everything; no deck, piers or approach embankments |
 | Wood properties | representative diameter 0.3 m, specific gravity 0.5 (draft 0.15 m) |
 | Drag of the jam | drag coefficient 1.0, packing ratio 0.3 (defaults; coefficient κ₀ = 6.19 m⁻¹) |
+| Grid settings | defaults, except the edge-depth cap `f_dry_head_cap = 2` (channel water below the bank does not climb onto a wet bank; see "Limits of accuracy") |
 | Time | dt = 0.2 s, 150 min |
 
 Without driftwood the peak discharge stays in the channel at a depth of 2.50 m, and the floodplain
@@ -110,7 +111,7 @@ python3 plot_results.py table en  # the tables below
   against 2.50 m without driftwood. The level exceeds the floodplain level (3.5 m) at about 42 min,
   the flow over the floodplain starts to bypass the bridge at about 43 min, and while the peak
   discharge lasts, 60 m³/s of the 137 m³/s goes around over the floodplain and 73 m³/s passes under
-  the bridge (the two transects add up to 134 m³/s; the rest passes over the bank at the joint of
+  the bridge (the two transects add up to 133 m³/s; the rest passes over the bank at the joint of
   the two transects). The jam is 138 m³, less than in `ledger`, because the wood that goes around
   over the floodplain does not pass the bridge.
 - **After the flood has receded**: at 150 min (the discharge is the base flow of 30 m³/s) the
@@ -122,28 +123,28 @@ python3 plot_results.py table en  # the tables below
 ![Water surface along the channel, maximum depth and where driftwood passed](figs/maps.png)
 
 - **(a) Water surface profile**: the water surface drops by 1.5 m at the bridge, and the backwater
-  extends far upstream. The depth is 3.49 m (just below the floodplain level) 400 m upstream of the
-  bridge, and even at the upstream end (1200 m upstream of the bridge) the level is 0.46 m higher
-  than without driftwood. The water leaves the channel over a reach of about 400 m upstream of the
+  extends far upstream. The depth is 3.54 m (slightly above the floodplain level) 400 m upstream of
+  the bridge, and even at the upstream end (1200 m upstream of the bridge) the level is 0.20 m higher
+  than without driftwood. The water leaves the channel over a reach of about 430 m upstream of the
   bridge.
-- **(b) Maximum depth**: of the 38.4 ha of floodplain, 17.4 ha is flooded by 0.1 m or more and
-  10.0 ha by 0.3 m or more. The maximum is 0.70 m on the bank just upstream of the bridge; beside the
+- **(b) Maximum depth**: of the 38.4 ha of floodplain, 17.3 ha is flooded by 0.1 m or more and
+  10.0 ha by 0.3 m or more. The maximum is 0.69 m on the bank just upstream of the bridge; beside the
   bridge, 45 m from the channel (probe 4), the maximum is 0.50 m with a velocity of 0.76 m/s, and
   200 m downstream of the bridge (probe 5) it is 0.32 m. The water that has left the channel flows
   east over the floodplain and leaves through the east edge while returning to the channel
   downstream of the bridge.
-- **(c) Where the wood went**: of the 180 m³ of driftwood, 138 m³ jams at the bridge, 24 m³ is
-  deposited in the shallow parts of the floodplain and 18 m³ leaves the domain.
+- **(c) Where the wood went**: of the 180 m³ of driftwood, 138 m³ jams at the bridge, 23 m³ is
+  deposited in the shallow parts of the floodplain and 19 m³ leaves the domain.
 
 | Case | Recruited (m³) | Jammed at the bridge (m³) | Deposited on the floodplain (m³) | Left the domain (m³) |
 |---|---:|---:|---:|---:|
 | ledger only (`ledger`) | 180 | 174 | 0 | 6 |
-| with the drag of the jam (base) (`jam`) | 180 | 138 | 24 | 18 |
+| with the drag of the jam (base) (`jam`) | 180 | 138 | 23 | 19 |
 | all at 10 layers (`slow`) | 180 | 99 | 15 | 66 |
 | capture ratio stays 0.3 (`e03`) | 180 | 53 | 8 | 119 |
 | capture ratio stays 0.1 (`e01`) | 180 | 18 | 0 | 162 |
-| loose jam (φ = 0.2) (`loose`) | 180 | 150 | 20 | 10 |
-| dense jam (φ = 0.4) (`dense`) | 180 | 125 | 30 | 25 |
+| loose jam (φ = 0.2) (`loose`) | 180 | 150 | 20 | 11 |
+| dense jam (φ = 0.4) (`dense`) | 180 | 125 | 28 | 27 |
 
 ### Jam volume and backwater
 
@@ -154,7 +155,7 @@ leaves the channel (the gradually-varied-flow equation with the drag of the jam,
 jam section; no simulation results are used). The dots are the simulation.
 
 - The case with a capture ratio of 0.1 (jam of 18 m³) hardly overflows, so the formula (1.10 m) and
-  the simulation (1.12 m) almost agree. Even 18 m³ brings the level up to the floodplain level.
+  the simulation (1.13 m) almost agree. Even 18 m³ brings the level up to the floodplain level.
 - With more wood, the simulated backwater levels off at 1.5–1.7 m, because the water that leaves
   the channel escapes over the floodplain and the discharge under the bridge falls. The 138 m³ of
   the base case would correspond to a backwater of 3.0 m (a depth of 5.5 m) without overflow.
@@ -170,12 +171,12 @@ jam section; no simulation results are used). The dots are the simulation.
 |---|---:|---:|---:|---:|---:|---:|
 | no driftwood (`nowood`) | — | 2.50 | — | 0 | 0.0 | 0.00 |
 | ledger only (`ledger`) | 174 | 2.50 | — | 0 | 0.0 | 0.00 |
-| with the drag of the jam (base) (`jam`) | 138 | 4.19 | 43 min | 60 | 17.4 | 0.70 |
-| all at 10 layers (`slow`) | 99 | 4.13 | 45 min | 50 | 16.7 | 0.65 |
-| capture ratio stays 0.3 (`e03`) | 53 | 4.00 | 46 min | 30 | 14.7 | 0.52 |
-| capture ratio stays 0.1 (`e01`) | 18 | 3.62 | 59 min | 4 | 1.2 | 0.31 |
-| loose jam (φ = 0.2) (`loose`) | 150 | 4.12 | 44 min | 48 | 16.5 | 0.63 |
-| dense jam (φ = 0.4) (`dense`) | 125 | 4.23 | 42 min | 71 | 18.1 | 0.75 |
+| with the drag of the jam (base) (`jam`) | 138 | 4.19 | 43 min | 60 | 17.3 | 0.69 |
+| all at 10 layers (`slow`) | 99 | 4.13 | 45 min | 50 | 16.6 | 0.64 |
+| capture ratio stays 0.3 (`e03`) | 53 | 4.00 | 46 min | 30 | 14.6 | 0.51 |
+| capture ratio stays 0.1 (`e01`) | 18 | 3.63 | 56 min | 4 | 1.1 | 0.29 |
+| loose jam (φ = 0.2) (`loose`) | 150 | 4.12 | 44 min | 48 | 16.4 | 0.63 |
+| dense jam (φ = 0.4) (`dense`) | 125 | 4.23 | 42 min | 71 | 18.0 | 0.74 |
 
 - **The capture assumption changes the results greatly.** In the base case the capture ratio rises
   from 0.3 to 1 by the time the jam reaches one layer of logs. If everything is caught only at ten
@@ -187,7 +188,7 @@ jam section; no simulation results are used). The dots are the simulation.
   as the jam grows (`dw_jamgrow`) are given is directly the spread of the results.
 - **The drag coefficient matters less.** Changing the packing ratio from 0.2 to 0.4 (κ₀ from 4.1 to
   9.8 m⁻¹, a factor of 2.4) gives maximum depths of 4.12–4.23 m, bypass discharges of 48–71 m³/s
-  and flooded areas of 16.5–18.1 ha. Once the water has started to leave the channel, the level is
+  and flooded areas of 16.4–18.0 ha. Once the water has started to leave the channel, the level is
   set by the overflow onto the floodplain. Where the water cannot leave the channel (a channel with
   high levees, for example), the difference of the coefficient becomes directly a difference of the
   level, as the lines in the figure above show.
@@ -211,6 +212,9 @@ jam section; no simulation results are used). The dots are the simulation.
 - **The wood supply from upstream** is replaced by standing stock placed in an upstream reach,
   because there is no function to feed driftwood through an inflow boundary. With `dw_hrec` larger
   than the base-flow depth, the wood is released around the flood peak.
+- **Set the edge-depth cap to `f_dry_head_cap = 2`** (`&list_enc`). Once the bank cells get wet
+  during the flood, the default 1 lets channel water whose level is below the bank climb onto the
+  bank, and a strip of inundation grows along the bank (see "Limits of accuracy").
 - **Outputs to read**: the jam at the bridge from `vol_jam_m3` of `driftwood.csv` and the field
   `Wj0001...`, the level upstream of the bridge from a probe, the discharges under the bridge and
   over the floodplain from transects, and the extent of flooding from `H9999`.
@@ -229,19 +233,24 @@ jam section; no simulation results are used). The dots are the simulation.
   default eight-neighbour grid; it seems to be of the same family as the "side-face deceleration"
   that [the advection explanation](../../../docs/en/users_guide/advection_donor.md) §7 lists for
   oblique channels, but the cause has not been identified). In a control run with four neighbours
-  (`fn_enc = '-'` in `&list_sysparam` and `p_diagratio = 0.0` in `&list_enc`) the depth 10 m
-  downstream of the bridge falls from 2.67 m to 2.31 m, while the maximum depth upstream of the
-  bridge (4.19 → 4.23 m) and the peak bypass discharge (still 60 m³/s) hardly change. The area
-  flooded by 0.1 m or more around the bridge (x > 800 m) goes from 17.1 ha to 15.9 ha (the
-  four-neighbour run has another disturbance near the inflow at the upstream end, so that part is
-  excluded from the comparison). Under conditions close to the threshold of overflow (the case
-  with a capture ratio of 0.1), this difference can decide the outcome.
-- **In the map of the maximum depth, the thin strip along the bank far upstream of the bridge
-  (0.1–0.2 m deep) and the patch at the upstream end are numerical.** Once a bank cell is wet, water
-  from the channel can move onto it even though the channel level is lower; this is not a real
-  overflow (in this reach the channel level is 0.2–0.9 m below the bank). Of the area flooded by
-  0.1 m or more, 0.25 ha is this strip. The backwater at the upstream end (0.46 m) is also
-  somewhat too large because of this.
+  (`p_diagratio = 0.0` added to `&list_enc`) the depth 10 m downstream of the bridge falls from
+  2.66 m to 2.32 m, while the maximum depth upstream of the bridge (4.19 → 4.22 m) and the peak
+  bypass discharge (60 → 59 m³/s) hardly change. The area flooded by 0.1 m or more around the
+  bridge (x > 800 m) goes from 17.3 ha to 15.8 ha (the four-neighbour run has another disturbance
+  near the inflow at the upstream end, so that part is excluded from the comparison). Under
+  conditions close to the threshold of overflow (the case with a capture ratio of 0.1), this
+  difference can decide the outcome.
+- **With the edge-depth cap left at the default (`f_dry_head_cap = 1`), a numerical strip of
+  inundation appears along the bank far upstream of the bridge.** The default cap is applied only
+  while the receiving cell is dry, so once a bank cell is wet, water from the channel can move onto
+  it even though the channel level is lower (in this reach the channel level is 0.2–0.9 m below
+  the bank; this is not a real overflow). With the default, the map of the maximum depth shows a
+  thin strip 0.1–0.2 m deep and a patch at the upstream end (0.25 ha of the area flooded by 0.1 m
+  or more), and the backwater at the upstream end is somewhat too large at 0.46 m. The maximum depth
+  upstream of the bridge (4.19 m), the peak bypass discharge (60 m³/s) and the flooded area
+  (17.4 ha) are almost the same. This example sets 2, so the strip does not appear. 2 is not the
+  default ([Advection schemes](../../../docs/en/users_guide/advection.md) §5; verified in
+  [test/bankcap](../../../test/bankcap/en/README.md)).
 - **The inflow boundary** prescribes the discharge, and the backwater reaches the upstream end. The
   level at the upstream end is a result of the computation, and the results depend slightly on the
   length of the upstream reach.
@@ -270,7 +279,8 @@ jam section; no simulation results are used). The dots are the simulation.
   basis of the coefficients)
 - Verification: [test/driftwood](../../../test/driftwood/en/README.md) (agreement of the backwater
   from the drag of the jam with the solution of the gradually-varied-flow equation, the capture
-  ratio, volume conservation)
+  ratio, volume conservation); [test/bankcap](../../../test/bankcap/en/README.md) (channel water
+  does not climb onto a wet bank)
 - Storm surge and timber: [timberyard](../../timberyard/en/README.md); tsunami, houses and
   driftwood: [tsunami_town](../../tsunami_town/en/README.md)
 

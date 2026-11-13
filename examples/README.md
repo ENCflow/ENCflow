@@ -38,7 +38,7 @@ python3 plot_results.py   # 図化(用意されている例題のみ)
 | [nest_reflect/](nest_reflect/) | 比 3・5 の双方向ネスト格子の界面をガウス波が横切るときの誤差と反射率を、一様細格子と比べて確かめる | ネスティング fn_nest(docs/users_guide/nest.md) |
 | [tsunami_town/](tsunami_town/) | 津波で木造家屋が壊れ、瓦礫が内陸へ運ばれて積もり、引き波で海へ出る過程と、防潮堤かさ上げの効果を見る | 家屋破壊・瓦礫 fn_bldgdebris(浸水深判定・空隙率への帰還)、建物空隙率 fn_gv、潮位 fn_tide、流木 fn_driftwood(補足) |
 | [timberyard/](timberyard/) | 高潮で貯木場の材木が流れ出し、防潮壁を越えて市街地へ入る過程(伊勢湾台風型)と、流出対策の効果を見る | 流木 fn_driftwood(水理的流失・堆積・再流動)、建物空隙率 fn_gv、潮位 fn_tide |
-| [bridge_wood_jam/](bridge_wood_jam/) | 出水の流木が橋に詰まって上流が堰き上がり、あふれた水が橋を迂回して氾濫原を流れる過程と、捕捉の仮定・集積の抵抗の係数による結果の幅を見る | 流木 fn_driftwood(構造物での捕捉と集積 fn_dwtrap・dw_jamgrow、集積の抵抗 f_dwjam・dw_jamphi)、区間流入の時系列、プローブと測線 |
+| [bridge_wood_jam/](bridge_wood_jam/) | 出水の流木が橋に詰まって上流が堰き上がり、あふれた水が橋を迂回して氾濫原を流れる過程と、捕捉の仮定・集積の抵抗の係数による結果の幅を見る | 流木 fn_driftwood(構造物での捕捉と集積 fn_dwtrap・dw_jamgrow、集積の抵抗 f_dwjam・dw_jamphi)、区間流入の時系列、プローブと測線、エッジ水深の頭打ち f_dry_head_cap = 2 |
 | [sewer_hybrid/](sewer_hybrid/) | 幹線 1 本と枝管網を同じ管路連続体層で表し、都市の雨水が下水道を流れて噴出・排水される様子を見る模式実験 | 管路連続体層 f_gwconduit |
 | [qanat/](qanat/) | 山麓の扇状地の地下水を集めるカナート(横坑)の湧出と、近くの揚水井でそれが細り枯れる過程を見る | 管路連続体層 f_gwconduit(交換能のマップ fn_gwc_leak・開放の吐口 fn_gwc_outfall)、層2 f_gwlayer2、井戸揚水 f_gwpump |
 | [catchment_metal/](catchment_metal/) | 流域の重金属(鉱山の排水・農地の負荷)の行き先と川の濃度を、機構を一つずつ加えて比べ、ため池と蒸発散の効果を見る | 水質 fn_wq(点源・面源・浸透同伴・遅延化係数 wq_rg・沈降 wq_vs・再懸濁 wq_wash_kf・海への流出の台帳)、Green-Ampt、地下水の側方流、サブグリッド河道幅、海域マスク、蒸発散 fn_evap(evap_hglim) |

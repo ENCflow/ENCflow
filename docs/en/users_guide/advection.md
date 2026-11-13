@@ -560,7 +560,8 @@ listed in the [shallow water chapter](swflow.md).
   climb onto ground above its energy head".
   2 is not the default: in runs where thin flow runs over steep terrain
   (rainfall runoff on a real DEM and the like) the results can differ from 1.
-  Try it when an unnatural strip of inundation appears along a bank.
+  Try it when an unnatural strip of inundation appears along a bank (the example
+  [bridge_wood_jam](../../../examples/bridge_wood_jam/en/README.md) uses this setting).
 - `f_hcap_upwind = 2`: with schemes 2 and 3 the edge depth of the
   continuity equation, $`h_e = (h_c + h_n)/2`$, is small at the bore front and
   water can pile up in the one cell behind it (a spike). Using the upwind
