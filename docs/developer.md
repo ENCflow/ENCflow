@@ -8719,6 +8719,14 @@ w_j = w_full + (A − A*)(A > A*)。一様な流れで全量が捕捉セルを 1
 - CI と同じ条件(追跡しているファイルだけの写し、numpy を読めない Python)で、test/driftwood の Run.sh が
   合格(77 s)。
 
+**CI**(2026-11-13。利用者の判断「推奨で」): 毎 push の ci.yml の逐次のジョブに test/driftwood を足した
+(高速な 21 ケース)。それまで test/driftwood は、毎 push の ci.yml にも夜間の nightly.yml(REF_CASES =
+reference を持つ 22 ケース)にも入っておらず、手元の回帰だけで確かめていた。検定のスクリプト
+(Check_driftwood.py・Check_woodjam.py・make_jam.py と、Run.sh の中の短いスクリプト)は標準ライブラリだけで
+書いてあり、上のとおり numpy を読めない Python で通る(§10 の注)。MPI のジョブ(np = 2)には足していない
+(Run_MPI.sh の保存状態の比較は逐次の実行結果を相手にするので、MPI だけをビルドするジョブでは比べる相手が
+なく、-Ofast のビルド間の差は警告扱いでもある。手元の np = 1・2・4 は上のとおり逐次とバイト一致)。
+
 ## 51. 溶岩流モジュール m_lavaflow(fn_lavaflow。2026-08-23 実装)
 
 噴火口セル群からの湧き出し・深さ平均 Bingham 粘性重力流・停止セルの
