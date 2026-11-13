@@ -69,24 +69,8 @@ architecture.md。このメモは「現在進行中・未完了の項目」だ�
      param_chichibu*.txt 11 本と cut_chichibu.py、test/nest_twin の param_chichibu.txt)、利用者ガイド
      geoinfo(日英)の注意書き。nest_identity・nest_twin は新しいマスクで合格。ずれの大きさ・作り方の比較・
      結果への効きは §109。
-   - **(a) reference の更新が利用者の確認待ち**(規律 1): test/chichibu と test/chichibu_icmap は、param.txt が
-     reference の控えと違うので、Run.sh は比較を飛ばして終了コード 2 で終わる(計算は正常終了)。既定 2 の
-     更新(00u)と 1 回にまとめる(元のマスク・既定 2 の中間の値は §109.4 の表に残した)。新旧の比較の図は
-     利用者に渡してある。確認の後にすること:
-     - 2 ケースで `./Run.sh -u`。MPI の np = 1・2・4 が新しい reference と一致することを確かめる。
-     - test/chichibu の README(日英)を新しい reference の値に直す: 測線 1〜4 のピーク 1159 @ 0.87 h・
-       2862 @ 1.00 h・4316 @ 1.67 h・5328 m³/s @ 3.28 h、プローブ 1・2 の水深のピーク 0.85 h・1.00 h、測線 4 の
-       6 h の水深 5.63 m、「3 h の池の水位 130 m」は「3.3 h の池の水位 131 m」(出口の 6 h の水深 34 m・
-       水位 141.4 m と、背水の上流端 x = 41.6 km は同じ)、既定の一覧の f_dry_head_cap、param_cap.txt の行
-       (「現在は既定。reference とバイト一致」ではなくなる)、所見の「reference は…」の段落、構成の表の
-       河道マスクのファイル。図 figs/chichibu.png(日英)は、Fig.py の河道マスクの重ね描きを新しいファイルに
-       替えて描き直す。
-     - **同じ README と図の、雨の記述の誤り(前からのもの)も直す**: 雨は prval の線形補間で、0 分に 0、30 分に
-       200 mm/h、60 分に 0 の三角形(総雨量 100 mm。Log の S は 1 時間で 0.1 m になる)。README の構成の
-       表は「0〜30 min に 200 mm/h、以後 0」、図の説明は「降雨終了(0.5 h)」と書き、Fig.py は 0〜0.5 h の
-       一定の雨を描いている(題も「0.5 h × 200 mm/h」)。tutorials/chichibu の README は「雨が終わる
-       t = 1:00」と正しく書いてある。
-     - test/chichibu_icmap の README(日英)の目安の値: h_max ≈ 6.8 m、Q_max ≈ 29 m²/s(S ≈ 0.0568 m は同じ)。
+   - (a) 済(2026-11-13。利用者の承認「reference も更新で」。§109.7): test/chichibu と test/chichibu_icmap の
+     reference を、既定 2 と新しいマスクの結果で更新し、README(日英)と図を直した(雨の記述の誤りも)。
    - **(b) 教材の切り替えと回し直し(途中)**: tutorials/bmi は済み(param・README の出力と数値・図。日英)。
      tutorials/chichibu は、param(Step 2〜6 と補足の 3 本。en のミラーも)と図のスクリプト
      (Fig_chichibu.plt・Fig_supp.plt)を新しいマスクに切り替え、Step 1〜6 の README の値と図(日英)を既定
@@ -113,7 +97,8 @@ architecture.md。このメモは「現在進行中・未完了の項目」だ�
    - (d) **道具の言語と置き場所**: utils/river_flowline は Python のスクリプト(utils のほかの道具は
      libencflow.a をリンクする Fortran のプログラム)。Fortran に書き直す(bil・GeoTIFF も読み書きできる)か、
      置き場所を変えるか、このままにするかは利用者の判断。マスクのファイルは道具の言語によらない。
-   - (e) 順番: main に入れるのは reference の更新の後(00u と同じ理由。夜間の CI が chichibu を回す)。
+   - (e) 順番: reference は更新済みなので、main に入れても夜間の CI は通る。tutorials/chichibu の補足の値が
+     古いまま((b))なので、補足を直してから入れるのがよい。
 
 00s. **流木の集積(構造物での捕捉・集積と流れへの作用。2026-11-12 合意・第 1 段と第 2 段を実装。
    developer.md §50.7・§50.8、docs/woodjam_plan.md)の残り**
@@ -177,14 +162,9 @@ architecture.md。このメモは「現在進行中・未完了の項目」だ�
      頭打ち)を入れ(§108。検定は test/bankcap)、利用者の決定で既定にした(§108.8)。土石流が有効な計算では、
      送り手の水位に固体の厚さを入れる(初めの実装は水深だけを見ていて、既定を 2 にする準備の全検定で
      test/volcano が不合格になって見つかった。§108.7)。**残り**:
-     - **reference の更新が利用者の承認待ち**(規律 1)。既定 2 で chichibu・chichibu_icmap・gwsect・damwq・
-       wqbound の 5 ケースが reference と一致しない(差は §108.8。新旧の比較の図は利用者に渡してある)。
-       承認の後に `./Run.sh -u` で更新し、test/chichibu の README の表・本文・図(日英)を既定 2 の値に直す
-       (測線 1〜4 のピークは 1181 @ 0.83 h・3005 @ 0.95 h・4432 @ 1.62 h・5821 m³/s @ 3.08 h。既定の一覧の
-       f_dry_head_cap = 1 と、param_cap.txt の行の「現在は既定」も直す)。夜間の CI(nightly.yml の
-       REF_CASES)は damwq と chichibu を含むので、reference を更新するまで main に入れない。gwsect・damwq・
-       wqbound は既定 2 だけの差。chichibu と chichibu_icmap は、河道マスクの載せ直し(00v)も入れた 1 回の
-       更新にまとめる(上の既定 2 の値は元のマスクでの中間の値。README に入れる値は 00v (a))。
+     - reference の更新は済み(2026-11-13。利用者の承認。§109.7): gwsect・damwq・wqbound は既定 2 だけ、
+       chichibu・chichibu_icmap は河道マスクの載せ直し(00v)と合わせた 1 回の更新。夜間の CI の
+       REF_CASES(damwq・chichibu)は新しい reference と合う。
      - 例題と教材の回し直し(別ブランチの一括の回し直しで、結果が変わるものを洗い出して回す。
        tutorials/chichibu と tutorials/bmi は、河道マスクの切り替え(00v (b))と 1 回にまとめる)。土石流を使う例題(ashfall_lahar・
        debris_bedrock・debris_fan・landslide_tsunami)は、§108.7 の修正の後の版で回すこと。

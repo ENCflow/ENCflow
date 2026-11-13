@@ -23189,7 +23189,8 @@ hsc・hsn と同じ。確保・通信は増えない(s%hs は、土石流が有�
   の 1 個(45 分の 0.0173 → 0.0144 m/s)ほか 2 個、wqbound が貯留 S の 7 桁目。台帳 wq.csv の相対差は、
   gwsect が 1.3e-3 以下、wqbound が 2e-4 以下、damwq が 4e-7 以下。自身の検定(wqbound の 4 項目、
   damwq の 2 項目、gwsect の 6 構成 20 項目)は既定 2 で合格する(§108.2 の注。結果は、そのときのビルドと
-  バイト一致)。reference の更新は、利用者が新旧の差を確かめた後に行う(規律 1)。
+  バイト一致)。reference の更新は、利用者が新旧の差を確かめた後に行う(規律 1。→ 同日に承認を得て更新した。
+  chichibu と chichibu_icmap は、河道マスクの載せ直しと合わせた 1 回の更新。§109.7)。
 - **README が引く値が変わった検定**(README と、変化の見える図を日英とも直した):
   avalanche(連行固体 54.8 → 54.5 m·cell。連行の比 2.53 は同じ。残存 0.092 → 0.089、最大堆積
   0.85 → 0.83 m)、volcano(構成 2 の残存 0.005 → 0.004。平坦部の堆積 0.044 m は同じ)、slide(構成 2 の
@@ -23368,7 +23369,32 @@ test/bankcap・test/dambreak の README(日英)を既定 2 の記述に直した
 - test/nest_twin・test/nest_identity(release の逐次。Run.sh): 合格(nest_identity は 8 項目とも PASS)。
 - test/chichibu・test/chichibu_icmap: param.txt が reference の控えと違うので、Run.sh は比較を飛ばして
   終了コード 2 で終わる(「SKIP: param.txt differs from the reference」)。計算は正常終了。reference の
-  更新は、利用者が新旧の結果を確かめた後(handoff 00v・00u)。
+  更新は、利用者が新旧の結果を確かめた後(→ 同日に承認を得て更新した。§109.7)。
 - MPI(release。Run_MPI.sh。新しいマスク): test/chichibu の np = 2・4 と test/chichibu_icmap の np = 2 の
   Log.txt が、逐次の Log.txt とバイト一致(reference との比較は、逐次と同じく param.txt の違いで飛ばされる)。
 - params_index・consistency・i18n(--recorded-only --strict-recorded --links)の 3 つの検査が通る。
+
+### 109.7 reference の更新(2026-11-13。利用者の承認「reference も更新で」)
+
+既定 f_dry_head_cap = 2(§108.8)と河道マスクの載せ直しで reference と合わなくなっていた 5 ケースを、
+利用者が新旧の比較(測線の流量、期間最大水深の差、Log.txt の値の図)を確かめた後に `./Run.sh -u` で
+更新した。
+
+| ケース | reference に入った変更 | 新しい reference の値(主なもの) |
+|---|---|---|
+| chichibu | 既定 2 と、落水線に載せ直した河道マスク(1 回の更新。分解は §109.4 の表) | 測線 1〜4 のピーク 1159 @ 0.87 h・2862 @ 1.00 h・4316 @ 1.67 h・5328 m³/s @ 3.28 h |
+| chichibu_icmap | 同上 | 1 時間の S 0.0568 m、h_max 6.77 m、Q_max 28.8 m²/s |
+| gwsect・damwq・wqbound | 既定 2 だけ(差は §108.8) | — |
+
+- 新しい reference は、利用者に示した結果とバイト一致(chichibu・chichibu_icmap は新しいマスクで回した
+  ときの Log.txt、gwsect・damwq・wqbound は全検定を既定 2 で回したときの Log.txt と wq.csv)。
+- 更新の後: 5 ケースの Run.sh の自己検定(gwsect・damwq・wqbound)が合格。Run_MPI.sh 2 は chichibu_icmap・
+  gwsect・damwq・wqbound が合格。chichibu は np = 1 の Run_MPI.sh が合格(Log.txt が一致)で、np = 2・4 の
+  Log.txt(§109.6)も新しい reference とバイト一致。
+- test/chichibu の README(日英)の表・本文・図を新しい reference の値に直した(それまでの値との差と、
+  既定の分・マスクの分の内訳も書いた)。test/chichibu_icmap の README の目安の値も直した。
+- **README と図の、雨の記述の誤りを直した**(前からのもの): 雨は prval の線形補間で、0 分に 0、30 分に
+  200 mm/h、60 分に 0 の三角形(総雨量 100 mm。Log の S は 1 時間で 0.1 m になる)。README は「0〜30 min に
+  200 mm/h、以後 0」「降雨終了(0.5 h)」と書き、Fig.py は 0〜0.5 h の一定の雨を描いていた。Fig.py は
+  prval の折れ線を描くようにし、河道マスクの重ね描きを載せ直したマスクに替え、凡例と雨の注記が曲線に
+  重ならないように縦軸の上を空けた。test/chichibu_icmap の README の「200 mm/h × 30 分」も直した。

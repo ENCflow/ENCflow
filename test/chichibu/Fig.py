@@ -5,7 +5,8 @@
 
 左: 6 時間の最大水深(10 分ごとの出力 H*.txt の最大。流域マスク外は灰色)。
     河道マスクを細線で重ね、測線 1〜4 とプローブを描く。
-中: 測線 1〜4 のハイドログラフ(fluxes/flux000N.csv の Q)と降雨。
+中: 測線 1〜4 のハイドログラフ(fluxes/flux000N.csv の Q)と降雨(param.txt の prval の折れ線。
+    0 → 200 mm/h(30 分)→ 0(60 分)の三角形、総雨量 100 mm)。
 右: プローブ 2 点の水深。
 """
 import glob, os, re, sys
@@ -30,7 +31,7 @@ def grid(path):
     return np.loadtxt(path)
 
 z = grid(os.path.join(data, "Chichibu_100m_filled2.txt"))
-rw = grid(os.path.join(data, "Chichibu_100m_river.txt")) > 0
+rw = grid(os.path.join(data, "Chichibu_100m_river_flowline.txt")) > 0
 mask = grid(os.path.join(data, "Chichibu_100m_basin.txt")) > 0
 ny, nx = z.shape
 
@@ -71,12 +72,13 @@ for n in range(1, 5):
     ax.plot(t, q, lw=1.6, label=T(f"測線{n}", f"transect {n}"))
     k = np.argmax(q); peaks.append((n, q[k], t[k]))
 ax.set_xlabel(T("時間 (h)", "time (h)")); ax.set_ylabel(T("流量 Q (m³/s)", "discharge Q (m³/s)"))
-ax.set_xlim(0, 6); ax.grid(alpha=0.4); ax.legend(loc=T("upper left", "upper right"))  # 英語版は凡例が長く降雨の注記と重なるため右上
+ax.set_xlim(0, 6); ax.grid(alpha=0.4); ax.legend(loc="upper right")    # 左上は降雨とその注記
+ax.set_ylim(top=1.32 * max(q for _, q, _ in peaks))                  # 上に凡例と降雨の帯を空ける
 ax2 = ax.twinx()
-ax2.bar([0.25], [200], width=0.5, color="steelblue", alpha=0.25, align="center")
+ax2.fill([0.0, 0.5, 1.0], [0, 200, 0], color="steelblue", alpha=0.25, lw=0)      # 降雨(prval の折れ線)
 ax2.set_ylim(800, 0); ax2.set_yticks([0, 200]); ax2.tick_params(axis="y", colors="steelblue", labelsize=8)
-ax2.text(0.55, 100, T("降雨 200 mm/h", "rainfall 200 mm/h"), color="steelblue", fontsize=9, va="center")
-ax.set_title(T("測線の流量(0.5 h × 200 mm/h)", "Discharge at the transects (0.5 h × 200 mm/h)"))
+ax2.text(1.05, 100, T("降雨(ピーク 200 mm/h、\n総雨量 100 mm)", "rainfall (peak 200 mm/h,\n100 mm in total)"), color="steelblue", fontsize=9, va="center")
+ax.set_title(T("測線の流量と降雨", "Discharge at the transects and rainfall"))
 
 ax = fig.add_subplot(gs[2])
 for n in range(1, 3):

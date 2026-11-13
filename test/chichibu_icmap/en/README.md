@@ -9,7 +9,7 @@ The same Chichibu basin 100 m grid as [test/chichibu](../../chichibu/en/README.m
 rows) is given the **interception-ratio map of the fixed-interception-ratio
 model** `Chichibu_100m_icalpha.txt` (a gradient in the x direction,
 α(i) = 0.8 (i−1)/(nx−1)), and 1 hour is computed with rainfall of
-200 mm/h × 30 minutes.
+100 mm in total (a triangle 0 → 200 mm/h → 0 over one hour).
 
 ## Purpose
 
@@ -37,5 +37,5 @@ make
 
 The reference is created and updated with `./Run.sh -u` after a person has
 confirmed the results (absolute rule 1 of CLAUDE.md). Expected behaviour as a
-guide: at 1 hour, S ≈ 0.0568 m, h_max ≈ 6.9 m, Q_max ≈ 31 m²/s (smaller than
+guide: at 1 hour, S ≈ 0.0568 m, h_max ≈ 6.8 m, Q_max ≈ 29 m²/s (smaller than
 chichibu without interception).

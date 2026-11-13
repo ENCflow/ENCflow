@@ -3596,11 +3596,11 @@
     {
       "source": "test/chichibu/README.md",
       "target": "test/chichibu/en/README.md",
-      "source_sha256": "b8f4bc7fa1e99c0af54f024378261922177f82d6ed409e7d40cdb3fbfac836b9",
-      "target_sha256": "9e485a09483f1b154fd2a678eefc97cd025fa5fd17c8accdde588378d902d85a",
-      "reviewer": "Claude (Claude Code session; links to the shallow-water primer and the renaming of f_govequation = 1 to local inertia (note at first mention in tutorials, examples and tests): Japanese and English edited together and the changed passages compared)",
+      "source_sha256": "6d5432cb2a942b3bca7ae1cb0ed36cff57aa21e77b472f7412ecc135d48be36e",
+      "target_sha256": "b715e541ae269b482baaa39f81c52d0ba69e8e2d5afd37b66669fefaff0ff0f7",
+      "reviewer": "Claude (Claude Code session; full-text content and lexical review, no model execution)",
       "method": "assistant",
-      "reviewed_on": "2026-11-11"
+      "reviewed_on": "2026-11-13"
     },
     {
       "source": "test/chichibu/data_chichibu/README.md",
@@ -3632,20 +3632,20 @@
     {
       "source": "test/chichibu/figs/chichibu.png",
       "target": "test/chichibu/en/figs/chichibu.png",
-      "source_sha256": "46ce7980e8332cf2de067f4ce57abe2a99c859b0e3ef762d14d0c8983af7763c",
-      "target_sha256": "7292e781ea93641dbc2191d3e88a9294e330e20373db33a7cead3466969b86e0",
-      "reviewer": "Claude (Claude Code session; recomputed 2026-11-09 with the default f_advection_donor = 3: both drawn by Fig.py (python3 Fig.py and python3 Fig.py en, script unchanged) from the same result of param.txt; Japanese and English figures viewed, labels compared)",
+      "source_sha256": "9f63938bda56f350f09936346a96afe40f3c53633ff43a8dbe1f6c0c85aedb46",
+      "target_sha256": "29688e7c20e2b9ebd0aa67e5b41261c51c3d0574ab24a34aa797941d35dd5a88",
+      "reviewer": "Claude (Claude Code session; full-text content and lexical review, no model execution)",
       "method": "assistant",
-      "reviewed_on": "2026-11-09"
+      "reviewed_on": "2026-11-13"
     },
     {
       "source": "test/chichibu_icmap/README.md",
       "target": "test/chichibu_icmap/en/README.md",
-      "source_sha256": "e79773f4be1907759814336c1cd0800da03a2809f975813ce0a5679e4ac0bbea",
-      "target_sha256": "1f29760fc2b19e4d8b1b5b68232cffad3418103afea77da94218095fbfc9d262",
+      "source_sha256": "545f6e9fe40f01fe892288baaee13d88938161914a149297a047fbe17dac2c0d",
+      "target_sha256": "c142d3e0ff03321814a92fe2116171a64bef8640524937f24ccf8c3f93d32a4d",
       "reviewer": "Claude (Claude Code session; full-text content and lexical review, no model execution)",
       "method": "assistant",
-      "reviewed_on": "2026-11-09"
+      "reviewed_on": "2026-11-13"
     },
     {
       "source": "test/coastal_drain/README.md",
