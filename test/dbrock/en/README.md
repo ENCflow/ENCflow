@@ -32,7 +32,7 @@ water of 0.5 m³/s and sediment with concentration h_s/h = 0.5 (C = 1/3) enter a
 the north end, and the south edge is a free outflow. The mixture without exchange
 (`f_dbed = 0`) and with Manning resistance becomes steady in about 60 s, so the
 first landform update is placed at t = 100 s and all updates see the same steady
-hydraulics. k_d = 1e-3 m/s, τ_cd = 300 Pa (the steady τ_d ≈ 660 Pa), m_d = 1.5,
+hydraulics. k_d = 1e-3 m/s, τ_cd = 300 Pa (the steady τ_d ≈ 680 Pa), m_d = 1.5,
 H* = 0.05 m. The initial cover (repeating 0, 0.02, 0.04 and 0.06 m) and the
 erodibility multiplier (0 to 2, shifting with a period of 9 rows) vary by row.
 
@@ -63,30 +63,31 @@ python3 make_init.py   # regenerate the inputs (bundled; only when changed)
 ./Run_MPI.sh 4      # MPI (after Run.sh; byte comparison with save_*_serial)
 ```
 
-## Verification record (2026-10-27; rerun on 2026-10-28 after the changes of the flow-direction slope and of the depth floor of the inflow face; gfortran 13.3 / Open MPI 4.1, default -Ofast build)
+## Verification record (2026-10-27; rerun on 2026-10-28 after the changes of the flow-direction slope and of the depth floor of the inflow face; gfortran 13.3 / Open MPI 4.1, default -Ofast build; the current values are in the last item, of 2026-11-10)
 
-- DB1: the largest relative difference to the analytical solution is 1.3e-15
-  (tolerance 1e-9). τ_d = 660.2 Pa, C = 1/3. The largest relative
-  difference of sd to the configuration with the doubled update interval is
-  2.2e-16. The 5 rows with multiplier 0 have Ri = 0. z of the channel changes by
-  3.6e-15 m.
+- DB1: the largest relative difference to the analytical solution is about
+  1e-14 or less (round-off; tolerance 1e-9). τ_d = 660.2 Pa, C = 1/3. The
+  largest relative difference of sd to the configuration with the doubled
+  update interval is also at round-off level. The 5 rows with multiplier 0 have
+  Ri = 0. z of the channel changes by about 1e-14 m or less.
 - DB3: outside the concentration and velocity gates, Ri and the change of sd are
   both 0.
-- DB2: total solids 5.1e-14 m³. The relative difference between the mobile-layer
-  solids and (1 − λ) × the ledger is 4.4e-10 (the ledger is printed with 9
-  digits). The largest (sd − sd0) − (z − z0) − Ri is 1.9e-14 m. Rock eroded by
-  debris flows: 0.76 m³ (largest Ri 8.6 mm).
+- DB2: total solids about 1e-13 m³ or less (round-off). The relative
+  difference between the mobile-layer solids and (1 − λ) × the ledger is
+  4.4e-10 (the ledger is printed with 9 digits). The largest
+  (sd − sd0) − (z − z0) − Ri is about 1e-13 m or less. Rock eroded by debris
+  flows: 0.76 m³ (largest Ri 8.6 mm).
 - DB5: the continuation from the save at 10 s is byte-identical to the straight run in
   state.dat and geomorph_rockinc.dat. In the alternating runs, the largest relative
   difference between Σ ΔRi A of a stage and its ledger is 1.4e-9 (ledgers: flood 1.23, debris
   flow 2.91, flood 0.397 m³). The initialization of the third stage deposited 4.56 m³ of solids,
   within 4.4e-10 (relative) of the restored Σh_s A. h_s is 0 at the end. The largest
-  |ΔR + ΔRi| of a stage is 5.5e-14 m.
+  |ΔR + ΔRi| of a stage is about 1e-13 m or less (round-off).
 - DB7: all 5 configurations stop at the initialization.
-- DB8: the largest relative difference to the analytical solution is 1.0e-15
-  (τ_d = 634 to 689 Pa). Σ(−1)^j Ri / ΣRi = +0.037 (the bumps erode more). With
-  the executable before the change (central difference), the values were 0.14
-  and −0.0050, and both judgements failed.
+- DB8: the largest relative difference to the analytical solution is about
+  1e-14 or less (τ_d = 634 to 689 Pa). Σ(−1)^j Ri / ΣRi = +0.037 (the bumps
+  erode more). With the executable before the change (central difference), the
+  values were 0.14 and −0.0050, and both judgements failed.
 - The change of the flow-direction slope (2026-10-28; developer.md §89.24, in
   Japanese) changed the values of DB2 and DB5 (before: rock of DB2 0.74 m³ with
   largest Ri 6.0 mm; ledgers of DB5 debris flow 3.21 and flood 0.378 m³). The
@@ -107,9 +108,14 @@ python3 make_init.py   # regenerate the inputs (bundled; only when changed)
   12.2 → 14.5 mm; ledgers of DB5: debris flow 2.91 → 2.95, flood 0.397 → 0.396 m³). The
   analytical solution of DB8 was brought to the new definition (the ground slope of the
   effective gravity is the minmod of the differences to the two neighbours): largest relative
-  difference 1.3e-15 (τ_d = 634 to 694 Pa), Σ(−1)^j Ri / ΣRi = +0.040 (the old executable fails
+  difference at round-off level (τ_d = 634 to 694 Pa), Σ(−1)^j Ri / ΣRi = +0.040 (the old executable fails
   the new analytical solution by 2.0e-2). DB1 has a uniform slope, so only rounding differences
-  remain (1.6e-15). All configurations pass, and MPI np = 2 is byte-identical to the serial run.
+  remain. All configurations pass, and MPI np = 2 is byte-identical to the serial run.
+- Rerun on 2026-11-10 with the current defaults (including the default 2 of the steep-slope gravity
+  correction; not separated out): τ_d of DB1 = 677.2 Pa; rock eroded by debris flows in DB2 1.24 m³
+  with largest Ri 14.5 mm; ledgers of DB5 flood 1.20, debris flow 3.05 and flood 0.382 m³, with 4.65 m³
+  deposited at the initialization of the third stage; τ_d of DB8 = 648 to 711 Pa and
+  Σ(−1)^j Ri / ΣRi = +0.0385. All configurations pass.
 - MPI (DB4): no run-time errors with -fcheck=all at np = 2. With the -O2 build,
   the state.dat and geomorph_rockinc.dat of np = 1, 2 and 4 are byte-identical to
   the serial run. With the default -Ofast, Run_MPI.sh 2 and 4 are also

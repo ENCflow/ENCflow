@@ -56,8 +56,8 @@ python3 make_init.py z > zinit.txt   # regenerate the inputs (bundled; only when
 ## Verification record (2026-10-27; rerun on 2026-10-28 after the change of the depth floor of the inflow face; gfortran 13.3 / Open MPI 4.1, the default -Ofast build)
 
 - T2: in 60 cells (H = 0.0961 m, uniform) the maximum relative error from the
-  analytic solution is 1.9e-8 (rounding of the single-precision hydraulic
-  output). cover_dtg and cover_mf agree with cover to 2.0e-14 (the difference is
+  analytic solution is 4.1e-8 (rounding of the single-precision hydraulic
+  output). cover_dtg and cover_mf agree with cover to 1.6e-10 (the difference is
   the slow adjustment that the hydraulics continue in double precision; B/H*
   per update is 0.7 to 1.1, so an explicit scheme would differ by orders of
   magnitude).
@@ -65,10 +65,10 @@ python3 make_init.py z > zinit.txt   # regenerate the inputs (bundled; only when
   recursion 4.0e-4. Comparing with the stored thickness instead of the thickness
   just after plucking is off by the plucking of one update (B_p/H* ≈ 1e-3).
 - T7: the cumulative incision of pluck_mf5 and mf20 agrees with pluck to
-  relative 5.6e-4 and 1.10e-3 (the difference is proportional to dts = first
+  relative 5.6e-4 and 1.11e-3 (the difference is proportional to dts = first
   order).
 - Hump of T3: at r = 0.2, 0.5 and 0.8 the incision rate agrees with the theory
-  to 4.5e-6, 9.7e-7 and 1.3e-4, and the cover fraction to 5.4e-6, 2.3e-5 and
+  to 4.5e-6, 5.5e-7 and 1.3e-4, and the cover fraction to 5.7e-6, 2.4e-5 and
   4.6e-5. For r = 1.2 the bed is fully covered at 0.013 of the top of the hump
   (the cover keeps thickening). The cover at r = 0.8 is 1.41 cm in the inflow
   cell and uniform at 1.57 cm from the second cell.
@@ -85,7 +85,7 @@ python3 make_init.py z > zinit.txt   # regenerate the inputs (bundled; only when
   are 1.5 %, 0.82 %, 0.53 % and 0.77 %. More supply steepens the slope through
   the cover (T8 with r = 0 has 0.00768 to 0.00861), and adding abrasion makes the
   supply act as tools, so the slope is gentler for the same supply. Steadiness
-  3.2e-5 U or less; the sediment budget closes within relative 4e-10 (the digits
+  3.2e-5 U or less; the sediment budget closes within relative 5e-10 (the digits
   printed in the ledgers).
 - Before the change of the depth floor of the inflow face (2026-10-28;
   developer.md §89.25, in Japanese), the inflow cell flowed slowly (face
@@ -94,7 +94,7 @@ python3 make_init.py z > zinit.txt   # regenerate the inputs (bundled; only when
   (the capacity of the edge leaving the inflow cell was 0.72 of the interior),
   and just below the inflow cell of T8 a 2-cell step pattern formed that decayed
   by about −0.7 per cell (second differences +237, −176, +98 mm, …).
-- T4: Σ(z − z0) A = −0.236045 m³ (abraded volume), Σ(sd − sd0) A = 0.693455 m³
+- T4: Σ(z − z0) A = −0.235911 m³ (abraded volume), Σ(sd − sd0) A = 0.693168 m³
   (plucked volume) and Σ Ri A = their sum agree with the ledger within 2e-9;
   Ri = 0 in the rows with multiplier 0.
 - T5: the run saved at 150 s from bare rock and continued is byte-identical to

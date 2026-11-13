@@ -140,9 +140,9 @@ of 0.04 and a hillslope gradient of 0.25.
 ```
 cd examples/mountain_valley
 make                     # links and inputs (make_init.py writes the terrain, initial depth, soil depth, multiplier maps, supply series and param_*.txt)
-make run                 # V_a, V_b and V_c in turn (V_c restarts from the save of V_b; about 15 minutes in total)
-make run-2m              # V_b2 (Δx = 2 m; about 30 minutes with mpirun -np 4)
-make run-supp            # the supplements V_a_tp (about 10 minutes) and P_p, P_a (about 2 minutes each)
+make run                 # V_a, V_b and V_c in turn (V_c restarts from the save of V_b; about 60 minutes in total)
+make run-2m              # V_b2 (Δx = 2 m; mpirun -np 4; about 80 minutes as one process with 4 OpenMP threads)
+make run-supp            # the supplements V_a_tp (about 20 minutes) and P_p, P_a (about 6 minutes each)
 python3 plot_setup.py    # figs/mechanism.png and setup.png (no results needed)
 python3 plot_results.py  # figs/*.png and the tables (argument en for the English figures in en/figs/)
 ```
@@ -164,9 +164,9 @@ on the right).
 - From the bare-rock V, the soil made by weathering is carried by creep to the stream, and the
   hillslopes approach a parabolic form. After 200,000 years (about 4 times the adjustment time of
   the hillslopes, L²/D_eff ≈ 48,000 years), the heights averaged over the middle half of the rows
-  are within 0.14 % of the prediction (0.951, 1.713, 2.284, 2.665 and 2.856 m against 0.953 to
+  are within 0.15 % of the prediction (0.951, 1.713, 2.284, 2.665 and 2.855 m against 0.953 to
   2.858 m) and the soil depth is 0.548 to 0.549 m (H_ss = 0.549 m). The initial V has a higher
-  ridge than the prediction, so the hillslopes approach the prediction from above (ridge 3.29 m at
+  ridge than the prediction, so the hillslopes approach the prediction from above (ridge 3.30 m at
   50,000 years and 2.96 m at 100,000 years).
 
 ### Stream: the supply from the hillslopes changes the slope and what does the incision
@@ -180,9 +180,9 @@ each configuration.
 
 | Configuration | Stream slope (excluding the head row) | Prediction | Cover thickness | Share of abrasion |
 |---|---|---|---|---|
-| V_a no hillslope supply | 0.0289 to 0.0298 | 0.0289 to 0.0298 (within 0.01 %) | 0.1 to 2.3 cm | 4 % |
-| V_b with hillslope supply | 0.0292 to 0.0366 | 0.0293 to 0.0367 (within 0.4 %) | 1.0 to 16.1 cm | 24 % |
-| V_b2 the same with Δx = 2 m (stream 2 m wide) | 0.0161 to 0.0232 | 0.0162 to 0.0233 (within 0.7 %) | 0.9 to 24.0 cm | 34 % |
+| V_a no hillslope supply | 0.0289 to 0.0298 | 0.0289 to 0.0298 (within 0.05 %) | 0.1 to 2.3 cm | 4 % |
+| V_b with hillslope supply | 0.0293 to 0.0366 | 0.0293 to 0.0367 (within 0.4 %) | 0.9 to 16.0 cm | 24 % |
+| V_b2 the same with Δx = 2 m (stream 2 m wide) | 0.0161 to 0.0232 | 0.0162 to 0.0233 (within 0.8 %) | 0.9 to 24.0 cm | 34 % |
 
 - Without supply from the hillslopes, the sediment of the stream is only its own plucked rock, the
   cover is thin and the slope is nearly uniform (0.029). The incision is almost all plucking.
@@ -197,14 +197,15 @@ each configuration.
 
 V_b2 is V_b with half the grid spacing, so the stream one cell wide is also 2 m wide. The same
 discharge gathers in a narrower channel, raising the unit discharge and the transport capacity, so
-the stream slope is gentler than with Δx = 4 m (0.016 to 0.023), but it agrees within 0.7 % with
+the stream slope is gentler than with Δx = 4 m (0.016 to 0.023), but it agrees within 0.8 % with
 the prediction for its own grid (share of abrasion 34 %, bedrock origin of the bedload at the
 outlet 3 %). The hillslopes agree with the prediction within 0.06 % in height and the soil depth
 within 0.4 % of H_ss (divide height 2.62 m; the difference from 2.86 m with Δx = 4 m comes from
 the positions of the hillslope cell centres, and both follow the discrete prediction). The balance
 equations hold whatever the grid, but in a stream one cell wide the grid spacing sets the width of
-the stream, so the slope itself depends on the grid. "max thin-layer drainage rate x dts" at the
-end is 0.84, but that is a transient value; in the stream cells at the end it is 0.10 or less.
+the stream, so the slope itself depends on the grid. "max thin-layer drainage rate x dts" printed at
+the end (the maximum over the whole run) is 0.45, below the guide value of 0.5 (0.10 or less in the
+stream cells at the end).
 
 ### Base-level fall: the stream responds quickly, the hillslopes slowly
 
@@ -244,15 +245,25 @@ valley floor is set to 0.15, close to the prediction of the steady-state equatio
 
 | Configuration | Stream slope (excluding the head row) | Prediction | Cover | Plucking (200 kyr) | Bedload at the outlet |
 |---|---|---|---|---|---|
-| V_a_tp with partitioning, initial slope 0.15 | 0.124 to 2.70 (a step just above the outlet row) | 0.134 to 0.178 | 1.2 to 1.8 m | 1,853 m³ (12 % of V_a) | 9 m³ (0.1 % of V_a) |
+| V_a_tp with partitioning, initial slope 0.15 | 0.11 to 0.16 (mean 0.13) | 0.134 to 0.178 | 0.7 to 3.1 m | 10,000 m³ (63 % of V_a) | 5,006 m³ (53 % of V_a) |
 
-- With the partitioning this stream cannot carry its plucked rock. The τ* with the factor stays
-  near the threshold (0.054 against 0.05) at a slope of 0.15 and hardly grows with the slope (in
-  uniform flow τ* ∝ S^0.7, but the factor falls as the flow gets shallower, and for h < D84,
-  φ τ* ∝ S^0.33). The cover grows thicker than 1 m, plucking stops, and a step forms between the
-  valley floor lifted by the uplift and the fixed outlet row. Starting from the terrain of V_a
-  (slope 0.04) gives the same (cover 1.0–1.4 m, plucking 828 m³); the steady root of the equation
-  (0.13–0.18) is not reached (there is no way back from a thick cover).
+- With the partitioning, the τ* with the factor stays just above the threshold (0.054 against
+  0.05) at a slope of 0.15 and hardly grows with the slope (in uniform flow τ* ∝ S^0.7, but the
+  factor falls as the flow gets shallower, and for h < D84, φ τ* ∝ S^0.33). The stream takes a
+  slope 4–5 times that with the total resistance (0.029) and barely carries its plucked rock under
+  a thick cover. The slope and the cover swing with periods of tens of thousands of years (mean
+  slope 0.13–0.17, mean cover 0.3–1.1 m) and are not steady after 200,000 years. The slope is near
+  the steady root of the equation (the prediction in the table, without the factor of the
+  slope-parallel sediment shear).
+- Because the balance is just above the threshold, a few percent of τ* changes the behaviour.
+  With the steep-slope gravity correction set to 1 (friction and sediment shear evaluated in
+  horizontal coordinates; at this slope τ* is 2–3 % smaller than with the default 2), the cover
+  grows thicker than 1 m and plucking stops (cover 1.1–1.8 m, plucking 1,849 m³, bedload at the
+  outlet 9 m³), and a step (slope 2.7) forms between the valley floor lifted by the uplift and the
+  fixed outlet row (there is no way back from a thick cover). With the default 2, starting from
+  the terrain of V_a (slope 0.04), a steep reach (slope 0.12–0.14) climbs upstream from the outlet
+  and nearly reaches the valley head by 200,000 years (plucking 6,705 m³; upstream of the steep
+  reach the slope stays 0.04 under a cover about 1 m thick).
 - So the steady slope of 0.029 and the result "incision is mostly plucking" of this example rest
   on evaluating the transport with the total-resistance τ*. With the partitioning, the combination
   of flood discharge, grain size and slope has to be reconsidered (not included in the figure).

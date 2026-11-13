@@ -127,7 +127,7 @@ def fig_threshold(ri):
 def fig_cover():
     """堆積層ありの構成の、急な区間の 3 地点の可動層と岩盤侵食の推移"""
     rows = [10, 30, 50]                        # 谷頭から 21・61・101 m のセル行(0 始まり)
-    kmax = int(round(150.0 / DTF))
+    kmax = KEND                                # 計算の終わり(300 s)まで。本文は 300 s の値を引く
     tt = [k * DTF for k in range(kmax + 1)]
     fig, axs = plt.subplots(2, 2, figsize=(7.4, 5.2), sharex=True, sharey="row")
     for col, (c, ttl) in enumerate((("T_c", T("高橋・中川則・堆積層 0.3 m", "Takahashi–Nakagawa, 0.3 m deposit")),

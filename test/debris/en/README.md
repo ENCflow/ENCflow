@@ -152,19 +152,22 @@ slope break, and a thin water film on the flat are seen.
 
 | Configuration | Total solids Σhs + (1 − λ)Σdz | Co-moving update | Activity (min dz / arrival) | Water ledger |
 |---|---|---|---|---|
-| 1 | −4.6e-13 | 3.6e-14 | −0.28 cm / deposition below the slope break +0.20 cm | — |
-| 2 Egashira | −1.6e-13 | 4.1e-14 | −0.19 cm / max hs 0.03 cm | — |
-| 3 Takahashi–Nakagawa (120 s) | −5.0e-13 | 1.3e-13 | −1.4 cm / max hs 1.2 cm | — |
-| 4 + pore-water entrainment | −1.3e-14 | 7.2e-14 | −1.6 cm / max hs 0.053 cm | −5.9e-14 |
-| 5 + bed load | −1.8e-12 | 9.8e-14 | −0.20 cm / deposition below the slope break +0.06 cm | — |
-| 6 + pore water with the groundwater computation | 5.2e-14 | 3.9e-14 | −0.28 cm / deposition below the slope break +0.21 cm | −5.8e-14 (Σh + Σhg) |
+| 1 | round-off | round-off | −0.28 cm / deposition below the slope break +0.20 cm | — |
+| 2 Egashira | round-off | round-off | −0.19 cm / max hs 0.03 cm | — |
+| 3 Takahashi–Nakagawa (120 s) | round-off | round-off | −1.4 cm / max hs 1.2 cm | — |
+| 4 + pore-water entrainment | round-off | round-off | −1.6 cm / max hs 0.053 cm | round-off |
+| 5 + bed load | round-off | round-off | −0.20 cm / deposition below the slope break +0.06 cm | — |
+| 6 + pore water with the groundwater computation | round-off | round-off | −0.27 cm / deposition below the slope break +0.21 cm | round-off (Σh + Σhg) |
 
-- The total solids and the co-moving update hold at machine precision in all
-  6 configurations. The E-D exchange amounts are obtained from the field at
-  time n in two passes and then applied (the lesson of the real OpenMP race
-  bug of §28.2), and the state.dat of np = 1, 2, 4 is byte-identical to the
-  serial run (with the -O2 strict-math build; with -Ofast there are ULP
-  differences between builds; §28.5).
+- The total solids and the co-moving update (and the water ledger of
+  configurations 4 and 6) hold at machine precision in all 6 configurations
+  (round-off of about 1e-11 m·cell or less for the total solids, 1e-12 m or less
+  for the co-moving update and 1e-12 m·cell or less for the water ledger). The
+  E-D exchange amounts are obtained from the field at time n in two passes and
+  then applied (the lesson of the real OpenMP race bug of §28.2), and the
+  state.dat of np = 1, 2, 4 is byte-identical to the serial run (with the -O2
+  strict-math build; with -Ofast there are ULP differences between builds;
+  §28.5).
 - Configuration 5 was added on 2026-10-27. With the executable before the fix,
   the state.dat of np = 2, 3 and 4 differed from np = 1 (developer.md §28.13).
   After the fix, np = 1, 2 and 4 are byte-identical to the serial run with the
@@ -216,6 +219,8 @@ slope break, and a thin water film on the flat are seen.
   Configurations 1, 5 and 6 with Coulomb + Manning (the yield factor is 1 for flow in
   the direction of steepest descent) and configuration 7 with Manning only are the same
   in the printed digits, and the ledger values move within machine precision.
+  Rerun on 2026-11-10 with the current defaults, min dz of configuration 6 went
+  from −0.28 to −0.27 cm and the others are the same in the printed digits.
 - In the deposits on the flat of configuration 6, max|hg − sy0·sd| = 1e-20 m
   (machine precision; the pores are filled with surface water). Back with
   `f_dbwet = 0` it becomes 1.2e-4 m and (5) fails.

@@ -104,13 +104,13 @@ make run                                    # main case (1 to 2 hours)
 python3 plot_setup.py                       # figs/mechanism.png, setup.png (does not use the results)
 python3 plot_results.py | tee analysis.txt  # figs/maps, sections, towers, hydrograph.png and the tables
 python3 make_terrain.py --steady            # infiltration map ksv_steady.txt for the quasi-steady forcing (section "1 Myr" below)
-./encflow param_steady.txt > Screen_steady.log          # 0.99 Myr with quasi-steady forcing (about 1 hour)
+./encflow param_steady.txt > Screen_steady.log          # 0.99 Myr with quasi-steady forcing (about 20 minutes)
 python3 plot_results.py param_steady.txt steady | tee analysis_steady.txt   # figs/*_steady.png
 python3 make_terrain.py --steady --base     # inputs with the base level: z_base, gwc_bot, gwc_outfall, uplift, sol_base, ksv_base.txt (section "base level" below)
 python3 plot_setup.py                       # with these inputs it also draws figs/setup_base.png (base-level configuration and the four configurations; does not use the results)
-./encflow param_base.txt > Screen_base.log  # 0.99 Myr with a base level (water table) and uplift (about 3 hours on 4 threads)
+./encflow param_base.txt > Screen_base.log  # 0.99 Myr with a base level (water table) and uplift (about 1.5 hours on 4 threads)
 python3 plot_results.py param_base.txt steady | tee analysis_base.txt       # figs/*_base.png
-./encflow param_base_hc50.txt > Screen_base_hc50.log   # sensitivity variant rf_hc = 50 m (shared inputs; about 3 hours)
+./encflow param_base_hc50.txt > Screen_base_hc50.log   # sensitivity variant rf_hc = 50 m (shared inputs; about 1.5 hours)
 python3 plot_results.py param_base_hc50.txt steady | tee analysis_base_hc50.txt   # figs/*_base_hc50.png
 ```
 
@@ -145,11 +145,11 @@ Budget check (tables of `plot_results.py`; landform time 6000 years = 300,000 st
 | Item | Value |
 |---|---|
 | Water balance | final S_total = 2.400 m = cumulative rain 40 mm × 60 days (mass conserved; near the end part of the ponding remains until the next day) |
-| Dissolved rock (ledger) | 1 465 645 m³ (of which 2 153 m³ dissolved as talus) |
-| Rock moved by collapse (ledger; bulk) | 2 440 m³ (45,000 edge updates). Final talus Σht Δx² = 30 m³ (up to 0.05 m; talus dissolves, developer.md §86.7) |
-| Loss of surface volume | Σ(z₀ − z)Δx² = 1 319 080 m³ = dissolution × (1 − 0.1) = 1 319 080 m³ (all digits agree; collapse conserves volume and does not contribute) |
+| Dissolved rock (ledger) | 1 466 035 m³ (of which 2 107 m³ dissolved as talus) |
+| Rock moved by collapse (ledger; bulk) | 2 388 m³ (44,000 edge updates). Final talus Σht Δx² = 31 m³ (up to 0.06 m; talus dissolves, developer.md §86.7) |
+| Loss of surface volume | Σ(z₀ − z)Δx² = 1 319 431 m³ = dissolution × (1 − 0.1) = 1 319 431 m³ (all digits agree; collapse conserves volume and does not contribute) |
 | Denudation of the plain (cells that did not pond) | median 1.30 m = 216 mm/kyr |
-| Denudation of the feet (258 plain cells that ponded) | median 2.7 m, maximum 12.1 m |
+| Denudation of the feet (256 plain cells that ponded) | median 2.7 m, maximum 12.1 m |
 | Soil (debris and residue) | plain 1.14 m (initially 1 m), bare-rock area 0.04 m (initially 0.001 m), up to 2.5 m (residue of the talus at the feet) |
 
 | Landform time (years) | Plain (m) | Top height of towers 1–4 (m) | Relative height of towers 1–4 (m) | Relative height of small hills 5, 6 (m) | Maximum slope angle of the bedrock surface |
@@ -162,8 +162,8 @@ Budget check (tables of `plot_results.py`; landform time 6000 years = 300,000 st
 
 - **Differential dissolution increases the relative height**: the plain is lowered uniformly at
   216 mm/kyr, while the tower tops are lowered by dissolution with runoff on bare rock (0.3 × runoff)
-  at only 50 mm/kyr (0.3 m in 6000 years), so the relative height grows by the difference of 1.0 m.
-  The equivalent radius hardly changes, and the changes of form concentrate at the feet.
+  at only about 60 mm/kyr (0.35 m in 6000 years), so the relative height grows by the difference of
+  1.0 m. The equivalent radius hardly changes, and the changes of form concentrate at the feet.
 - **Moats and holes at the feet**: the tower rain gathers into the lowest cells at the feet and soaks
   in, so the ring at the feet goes down twice as much as the plain (3 m), and a few cells with much
   inflow go down by 10 m or so (the black dots around the towers in the denudation map; the streaks
@@ -173,11 +173,11 @@ Budget check (tables of `plot_results.py`; landform time 6000 years = 300,000 st
   angle of the bedrock surface 29 to 35° → 37 to 44°). Collapse occurs only where the exposed face
   exceeds H_c = 10 m (walls of cells where the holes at the feet reached about 10 m); the moved rock is
   0.2 % of the dissolution (2.4 thousand m³); the talus dissolves in the holes and does not remain (up
-  to 0.05 m), leaving its residue in the soil. The tower walls have not retreated yet (in 6000 years
+  to 0.06 m), leaving its residue in the soil. The tower walls have not retreated yet (in 6000 years
   the undercut at the feet is a few metres, and most of the walls are below H_c). With a smaller H_c
   or a longer landform time, the stage in which the walls collapse and retreat begins.
 - **Ponding**: at first, the ponding just after each storm (3.5 mm domain mean) soaks in and disappears
-  within a few hours. Near the end the ponding no longer disappears within a day, and about 7 mm
+  within a few hours. Near the end the ponding no longer disappears within a day, and 6.4 mm
   (domain mean) remains before the next storm (apparently because the water in the deep holes at the
   feet cannot soak in within a day at an infiltration capacity of 40 mm/h).
 - **The small hills** (20 m high) do not disappear in 6000 years either. The disappearance of towers and
@@ -204,10 +204,10 @@ infiltrates at the feet, the surface source on the tower faces, and collapse. Sa
 |---|---|
 | Landform time | 985,626 years (60 days × 6×10⁶) |
 | Lowering of the plain | median 212.8 m = 216 mm/kyr (the same rate as the main case, as it is linear) |
-| Tower tops | 40 → −165 m (205 m lower; not the 70 mm/kyr of the surface source but consumption by collapse) |
-| Height above the plain | 40 → 62 m (164 kyr) → 48 m (1 Myr). Equivalent radius 79 → 55 m, walls 35° → 85° |
-| Foot pits | the surface is only 38 m below the plain, but the bedrock z − sd is at −463 m under 215 m of residue |
-| Rock moved by collapse | 46.5 million m³ (19 % of the 240 million m³ dissolved), of which 22.5 million m³ dissolved as talus (almost no talus remains). Valve fired in 28,596 cell updates |
+| Tower tops | 40 → −163 to −165 m (203 to 205 m lower; not the 70 mm/kyr of the surface source but consumption by collapse) |
+| Height above the plain | 40 → 61 to 63 m (164 kyr) → 48 to 50 m (1 Myr). Equivalent radius 79 → 56 m, walls 35° → 85° |
+| Foot pits | the surface is only 38 m below the plain, but the bedrock z − sd is at −468 m under 221 m of residue |
+| Rock moved by collapse | 46.6 million m³ (19 % of the 240 million m³ dissolved), of which 22.5 million m³ dissolved as talus (almost no talus remains). Valve fired in 48,198 cell updates |
 
 ![Terrain, denudation depth and soil thickness with quasi-steady forcing](figs/maps_steady.png)
 ![Sections through tower 1 with quasi-steady forcing](figs/sections_steady.png)
@@ -219,18 +219,18 @@ of tower 1 (every 164,271 years; dashed = final bedrock surface z − sd), and, 
 height above the plain, the equivalent radius of the part higher than the plain + 5 m and the
 maximum slope angle of the bedrock surface.
 
-**What can be read off.** Numerically, a million years runs stably in an hour. The plain keeps
-lowering at 216 mm/kyr, the relative height grows from 40 to 62 m in the first 164 kyr, so the
-mechanism "the lowering plain leaves the towers standing" works. After that, however, the towers
-are **consumed by collapse** and the relative height decreases. The cause is the following two
-points that the steady forcing lays bare, not the coefficients.
+**What can be read off.** Numerically, a million years runs stably in about 20 minutes of
+computation. The plain keeps lowering at 216 mm/kyr, the relative height grows from 40 m to 61–63 m
+in the first 164 kyr, so the mechanism "the lowering plain leaves the towers standing" works. After
+that, however, the towers are **consumed by collapse** and the relative height decreases. The cause
+is the following two points that the steady forcing lays bare, not the coefficients.
 
 1. **The bedrock keeps dissolving under the residue of the collapsed rock.** Limestone debris
    dissolves as fast as the bedrock, so the water of dissolution is spent on the talus ht piled at
    the feet first and then on the bedrock (developer.md §86.7). The talus dissolves away, but its
-   residue (insoluble, residue fraction 0.1) piles up 215 m in the foot cells and the bedrock below
+   residue (insoluble, residue fraction 0.1) piles up 221 m in the foot cells and the bedrock below
    keeps dissolving at the valve's 0.3 m per update, so a "conveyor" forms into which the tower
-   collapses (bedrock surface at −463 m, dashed line in the sections). The root cause is item 2.
+   collapses (bedrock surface at −468 m, dashed line in the sections). The root cause is item 2.
 2. **No base level (water table) at the feet.** The conduit layer is a sink 1000 m deep with a
    capacity of 2000 m, so the foot pits have no bottom. The feet of real towers stand at the water
    table, which is the base level of the rivers; the pits stop at the water surface and dissolution
@@ -238,7 +238,7 @@ points that the steady forcing lays bare, not the coefficients.
    water table with an outfall head and raising the land against it by uplift (`f_uplift`) is the
    configuration param_base.txt (next section).
 
-In addition, whereas the ponding at the feet spreads over 258 cells under the repeated storms (main
+In addition, whereas the ponding at the feet spreads over 256 cells under the repeated storms (main
 case), the thin steady film gathers all of the water into the few lowest cells of each tower, which
 makes the concentration at the feet extreme (a side effect of the steady forcing).
 
@@ -277,14 +277,14 @@ else is as in param_steady.txt.
 
 | Item | Value |
 |---|---|
-| Landform time | 985,626 years (60 days × 6×10⁶). Uplift 200 m |
-| Plain | dissolution 209.5 m (213 mm/kyr) − uplift 200 m = net lowering 9.5 m (median). Residue soil 1 → 24 m, median bedrock surface −33 m |
-| Tower tops | 40.3 → 57.3 to 59.4 m (uplift 200 m − lowering 181 to 183 m). 80 mm/kyr in the first 164 kyr, then the same rate as the plain |
+| Landform time | 985,626 years (60 days × 6×10⁶). Uplift 197 m (0.2 mm/yr × 985,626 years) |
+| Plain | lowering of the surface by dissolution 206.6 m (210 mm/kyr; one tenth of the 230 m of dissolved rock remains as residue) − uplift 197.1 m = net lowering 9.5 m (median). Residue soil 1 → 24 m, median bedrock surface −33 m |
+| Tower tops | 39.3 to 40.3 → 56.4 to 59.4 m (uplift 197 m − lowering 178 to 181 m). 62 to 74 mm/kyr in the first 164 kyr, then the same rate as the plain |
 | Height above the plain | 40 → 66 to 69 m (reached at 164 kyr, constant afterwards; the small hills 20 → 36 m). Equivalent radius 79 → 82 m (unchanged) |
 | Tower shape | paraboloid hill → cone of 37 to 41° (close to the talus angle of repose 35°). The maximum bedrock slope of 82° is the wall of the foot pits |
 | Foot pits | the surface is at about the plain level (buried in residue; sd up to 92 m); the bedrock surface is at −94 m |
 | Water table | −5 → −7.8 to −9.5 m (outfall discharge 0 m³; the residue soil soaks up the conduit water) |
-| Rock moved by collapse | 32.2 million m³ (14 % of the 226 million m³ dissolved), of which 17.7 million m³ dissolved as talus (5,000 m³ of talus remains). Valve fired in 6.5 million cell updates (750 cells per update on average: the feet and the flow paths) |
+| Rock moved by collapse | 32.3 million m³ (14 % of the 226 million m³ dissolved), of which 17.7 million m³ dissolved as talus (5,000 m³ of talus remains). Valve fired in 6.5 million cell updates (750 cells per update on average: the feet and the flow paths) |
 
 ![Terrain, denudation depth and soil thickness with base level and uplift](figs/maps_base.png)
 ![Sections through tower 1 with base level and uplift](figs/sections_base.png)
@@ -296,16 +296,16 @@ of the base level.
 
 **What can be read off.** With uplift the towers are not consumed: they survive the million years as
 cones 66 to 69 m high and 82 m in radius (with the configuration of the previous section the height
-keeps falling to 48 m). The plain dissolves at 213 mm/kyr by the recharge under the soil (all of the
-rain), which almost balances the uplift of 200 mm/kyr; the towers go down at the rate of the surface
-source (80 mm/kyr ≈ 2.5 % infiltration + 0.3 × runoff) only during the first 164 kyr, gaining
-relative height, and afterwards their feet are cut by the concentrated dissolution at the feet (the
-valve fires in 750 cells per update on average) and they go down at the same rate as the plain,
-collapsing into cones at the angle of repose of the talus. There are two stages: relative height
-grows as "lowering of the plain − lowering of the towers", then collapse makes the towers follow the
-plain. They do not become vertical-walled pillars like those of Guilin. The wall form is set by
-`rf_hc` (critical height 10 m = weak rock that fails at a one-cell drop), so with the 50 m of massive
-limestone the walls stand without failing (next subsection).
+keeps falling to 48–50 m). Dissolution by the recharge under the soil (all of the rain) lowers the
+plain at 210 mm/kyr, which almost balances the uplift of 200 mm/kyr; the towers go down at the rate
+of the surface source (62 to 74 mm/kyr ≈ the 70 mm/kyr of 2.5 % infiltration + 0.3 × runoff) only
+during the first 164 kyr, gaining relative height, and afterwards their feet are cut by the
+concentrated dissolution at the feet (the valve fires in 750 cells per update on average) and they
+go down at the same rate as the plain, collapsing into cones at the angle of repose of the talus.
+There are two stages: relative height grows as "lowering of the plain − lowering of the towers", then
+collapse makes the towers follow the plain. They do not become vertical-walled pillars like those of
+Guilin. The wall form is set by `rf_hc` (critical height 10 m = weak rock that fails at a one-cell
+drop), so with the 50 m of massive limestone the walls stand without failing (next subsection).
 
 **What does not work.**
 
@@ -322,7 +322,7 @@ limestone the walls stand without failing (next subsection).
    is below the water table (24 m below on the plain). There is no mechanism "no dissolution in the
    saturated zone (the corrosion plain stops at the water table)", and the expectation that the plain
    clings to the base level is realised only through the balance of uplift and dissolution rate
-   (213 against 200 mm/kyr).
+   (210 against 200 mm/kyr).
 3. **The residue is not carried away.** On real corrosion plains the rivers remove the residue, but
    bedload and suspended load are not enabled here, so 24 m pile up on the plain and the surface
    (−9.5 m) ends below the river (−5 m) (there is no ponding, because the surface water infiltrates
@@ -338,9 +338,9 @@ until a one-cell drop of 50 m = 79°); the inputs are shared (`./encflow param_b
 
 | Item | Value |
 |---|---|
-| Plain | dissolution 209 m − uplift 200 m = net lowering 9.4 m (as with rf_hc = 10 m). Residue soil 24 m, water table −5 → −7.4 to −9.5 m |
-| Tower tops | 40 → 231 m (uplift 200 m − lowering 9 m). The small hills 20 → 149 m (capped by collapse after 821 kyr) |
-| Height above the plain | 40 → 240 m (linear growth; small hills 158 m). Equivalent radius 79 → 82 m (unchanged) |
+| Plain | net lowering 9.3 m (almost the same as with rf_hc = 10 m; the uplift of 197 m almost cancels the 206 m lowering of the surface by dissolution). Residue soil 24 m, water table −5 → −7.4 to −9.5 m |
+| Tower tops | 40 → 231 m (uplift 197 m − lowering 6 m). The small hills 20 → 149 m (capped by collapse after 821 kyr) |
+| Height above the plain | 40 → 240 m (linear growth; small hills 158 m). Equivalent radius 79 → 82 m (79 m until 657 kyr) |
 | Tower shape | flat top and walls of 69 to 75° (maximum bedrock slope 83°), with a step every H_c = 50 m |
 | Rock moved by collapse | 12.5 million m³ (6 % of the 217 million m³ dissolved; 14 % with rf_hc = 10 m), of which 8.3 million m³ dissolved as talus |
 
@@ -359,14 +359,15 @@ disappears, and the relative height grows linearly as "uplift − lowering of th
 the walls are the staircase that the collapse rule (only the excess of a free face over H_c fails)
 produces on a 10 m grid: a model form set by the ratio of H_c to the cell size.
 
-**Caution (a side effect of the model, not of the coefficients).** The tops go down only 9 mm/kyr
+**Caution (a side effect of the model, not of the coefficients).** The tops go down only 6 mm/kyr
 (the 70 mm/kyr of the surface source is not acting) because the residue that accumulates on the top
-(one tenth of the dissolved rock, 0.2 m) exceeds `dissol_sdsurf = 0.1 m`, removes the "bare rock"
-classification and switches the surface source off (the infiltration map is static, so infiltration
-stays at 2.5 % and only the 6 mm/kyr of the recharge source remains). On real bare-rock towers the
-residue is washed away, so this growth of relief (almost the uplift rate) is an overestimate; with
-the surface source still acting it would be about 200 − 76 = 124 mm/kyr. The model has no treatment
-that leaves no residue on steep bare rock (or carries it away with the runoff).
+(one tenth of the dissolved rock; 0.18 m at 164 kyr and 0.67 m at 1 Myr) exceeds
+`dissol_sdsurf = 0.1 m`, removes the "bare rock" classification and switches the surface source off
+(the infiltration map is static, so infiltration stays at 2.5 % and only the 6 mm/kyr of the recharge
+source remains). On real bare-rock towers the residue is washed away, so this growth of relief
+(almost the uplift rate) is an overestimate; with the surface source still acting it would be about
+200 − 76 = 124 mm/kyr. The model has no treatment that leaves no residue on steep bare rock (or
+carries it away with the runoff).
 
 ## What this model cannot represent (differences from the real phenomenon)
 
@@ -415,7 +416,7 @@ that leaves no residue on steep bare rock (or carries it away with the runoff).
   50 m pillars with 75° walls (param_base_hc50.txt, section above). Values in between, and a larger
   `dissol_sdsurf` so that the residue on the tops does not switch the surface source off. `dissol_fres = 0`:
   isolates the side effect of the residue soil lowering the water table. `uplift0`: the balance of uplift
-  and the dissolution of the plain (213 mm/kyr).
+  and the dissolution of the plain (210 mm/kyr).
 
 ## References
 

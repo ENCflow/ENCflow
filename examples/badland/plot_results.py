@@ -305,16 +305,26 @@ if cases:
             mt = metrics(zz, z0, dx, hp)
             if mt and mt["relief"] >= 2.0:
                 grown = (t, zz); break
-        if grown is None:
+        reached = grown is not None
+        if grown is None:                    # 起伏 2 m に届かないケースは最終の出力で代える(図では白抜き)
             grown = c["snaps"][-1]
         me = metrics(early[1], z0, dx, hp); mm = metrics(grown[1], z0, dx, hp); mm["t"] = grown[0]; mf = metrics(c["zf"], z0, dx, hp)
+        mm["reached"] = reached
         tab.append((c, early[0], me, mm, mf))
     print("## 谷間隔の選択則と格子収束")
     print("| ケース | spl_lc (m) | Δx (m) | T_geo = 1.8e6 s: Δz の重心波長 / 谷間隔 (m) / 平均低下 (m) | 起伏 2 m 到達時(T_geo): 重心波長 / 谷間隔 (m) / 本数 / 平均低下 (m) | 最終: 起伏 (m) / 最大下刻 / 平均低下 (m) / 谷頭 x (m) |")
     print("|---|---|---|---|---|---|")
     for c, te, me, mm, mf in tab:
-        print("| %s | %g | %g | %.1f / %s / %.1f | (%.1e s) %.1f / %s / %s / %.1f | %.2f / %.1f / %.1f / %.1f |" % (
-            c["name"], c["lc"], c["dx"], me["lam"], fmt(me["spacing"]), me["mean_inc"], mm["t"], mm["lam"], fmt(mm["spacing"]), fmt(mm["nvalleys"], "%.0f"), mm["mean_inc"], mf["relief"], mf["max_inc"], mf["mean_inc"], mf["xhead"]))
+        print("| %s | %g | %g | %.1f / %s / %.1f | (%s%.1e s) %.1f / %s / %s / %.1f | %.2f / %.1f / %.1f / %.1f |" % (
+            c["name"], c["lc"], c["dx"], me["lam"], fmt(me["spacing"]), me["mean_inc"], "" if mm["reached"] else "未到達・最終 ",
+            mm["t"], mm["lam"], fmt(mm["spacing"]), fmt(mm["nvalleys"], "%.0f"), mm["mean_inc"], mf["relief"], mf["max_inc"], mf["mean_inc"], mf["xhead"]))
+
+    def open_unreached(a, ln, xs, ys, flags):
+        """起伏 2 m に届かない(最終の出力で代えた)点を白抜きで重ねる。"""
+        pts = [(x, y) for x, y, f in zip(xs, ys, flags) if not f and y is not None and np.isfinite(y)]
+        if pts:
+            a.plot(*zip(*pts), ls="none", marker=ln.get_marker(), ms=8, mfc="white", mec=ln.get_color(), mew=1.5, zorder=5)
+    LAB_OPEN = T("白抜き = 起伏 2 m に届かず、最終の出力の値", "open marker = relief 2 m not reached (last output)")
 
     fig, ax = plt.subplots(2, 4, figsize=(17, 8))
     # 上段: 地図(grid, lc1, lc2, lc4)
@@ -332,8 +342,15 @@ if cases:
     a = ax[1, 0]
     lcs = [c["lc"] for c, te, me, mm, mf in tab if c["dx"] == 1.0 and c["lc"] > 0]
     a.plot(lcs, [me["lam"] for c, te, me, mm, mf in tab if c["dx"] == 1.0 and c["lc"] > 0], "o-", label=T("T_geo = 1.8e6 s(Δz の重心波長)", "T_geo = 1.8e6 s (centroid wavelength of Δz)"))
-    a.plot(lcs, [mm["lam"] for c, te, me, mm, mf in tab if c["dx"] == 1.0 and c["lc"] > 0], "s--", label=T("起伏 2 m 到達時(重心波長)", "at relief 2 m (centroid wavelength)"))
-    a.plot(lcs, [mm["spacing"] for c, te, me, mm, mf in tab if c["dx"] == 1.0 and c["lc"] > 0], "^:", label=T("起伏 2 m 到達時(谷間隔)", "at relief 2 m (valley spacing)"))
+    sel = [(c, mm) for c, te, me, mm, mf in tab if c["dx"] == 1.0 and c["lc"] > 0]
+    flags = [mm["reached"] for c, mm in sel]
+    for key, st, lab in (("lam", "s--", T("起伏 2 m 到達時(重心波長)", "at relief 2 m (centroid wavelength)")),
+                         ("spacing", "^:", T("起伏 2 m 到達時(谷間隔)", "at relief 2 m (valley spacing)"))):
+        ys = [mm[key] for c, mm in sel]
+        ln, = a.plot(lcs, ys, st, label=lab)
+        open_unreached(a, ln, lcs, ys, flags)
+    if not all(flags):
+        a.plot([], [], ls="none", marker="o", mfc="white", mec="0.3", label=LAB_OPEN)
     ll = np.linspace(0.5, 4.5, 20)
     a.plot(ll, 4.4 * ll, color="0.5", lw=2, label=T("線形理論 λ* = 4.4 ℓ", "linear theory λ* = 4.4 ℓ"))
     g = [mm for c, te, me, mm, mf in tab if c["lc"] == 0]
@@ -345,8 +362,14 @@ if cases:
     dxs = sorted(set(c["dx"] for c, te, me, mm, mf in tab if c["lc"] == 2.0))
     for key, lab, st, which in [("lam", T("重心波長 (m), 1.8e6 s", "centroid wavelength (m), 1.8e6 s"), "o-", 2), ("lam", T("重心波長 (m), 起伏 2 m 到達時", "centroid wavelength (m), at relief 2 m"), "o--", 3), ("spacing", T("谷間隔 (m), 起伏 2 m 到達時", "valley spacing (m), at relief 2 m"), "s--", 3),
                                 ("mean_inc", T("崖面帯の平均低下 (m), 1.8e6 s", "mean lowering of the cliff-face zone (m), 1.8e6 s"), "^:", 2), ("mean_inc", T("崖面帯の平均低下 (m), 最終", "mean lowering of the cliff-face zone (m), final"), "^-.", 4)]:
-        a.plot(dxs, [[t[which][key] for t in tab if t[0]["lc"] == 2.0 and t[0]["dx"] == d][0] for d in dxs], st, label=lab)
-    a.set_xscale("log"); a.set_xticks(dxs); a.set_xticklabels(["%g" % d for d in dxs]); a.set_xlabel(T("Δx (m)(spl_lc = 2 m)", "Δx (m) (spl_lc = 2 m)")); a.legend(fontsize=7); a.set_title(T("格子収束", "Grid convergence"), fontsize=9)
+        rows2 = [[t for t in tab if t[0]["lc"] == 2.0 and t[0]["dx"] == d][0] for d in dxs]
+        ys = [r[which][key] for r in rows2]
+        ln, = a.plot(dxs, ys, st, label=lab)
+        if which == 3:
+            open_unreached(a, ln, dxs, ys, [r[3]["reached"] for r in rows2])
+    if not all(t[3]["reached"] for t in tab if t[0]["lc"] == 2.0):
+        a.plot([], [], ls="none", marker="o", mfc="white", mec="0.3", label=LAB_OPEN)
+    a.set_xscale("log"); a.set_xticks(dxs); a.set_xticklabels(["%g" % d for d in dxs]); a.minorticks_off(); a.set_xlabel(T("Δx (m)(spl_lc = 2 m)", "Δx (m) (spl_lc = 2 m)")); a.legend(fontsize=7); a.set_title(T("格子収束", "Grid convergence"), fontsize=9)
     # 下段右 2 枚: Δx = 0.5 と 2 の地図
     for k, nm in enumerate(["param_lc2_dx05", "param_lc2_dx2"]):
         cc = [c for c in cases if c["name"] == nm]

@@ -33,7 +33,7 @@ s = (−1)^(i+j)) and a_sm (the smooth gyre), and estimates the e-folding times.
 The pass criterion is that 50 % or more of the smooth gyre remains after
 1 hour in smooth and mixed (the background flow is not destroyed). The decay
 time of the sub-lattice mode is reported as measured (1094 s even under a
-background flow before the fix of the conservative form, 88 s after it).
+background flow before the fix of the conservative form, 87 s after it).
 
 ## Running
 
@@ -67,7 +67,7 @@ alternating mode after 60 min went from 0.07 to 0.04 and τ from 2240 to 1610 s 
   decay is linear, and after the fix the mode vanishes within 5 minutes.
 - Before the fix the sub-lattice mode interfered with the background gyre
   without decaying and cost the background gyre 28 %. After the fix the loss is
-  comparable to smooth (11 %).
+  8 % (2 % for smooth).
 - Because the initial velocity is given at the cell centers, the component that
   does not fit on the normal edges is lost in the first 5 minutes (the step in
   which the KE of alternating drops to 0.33 or 0.06). This is the consistency

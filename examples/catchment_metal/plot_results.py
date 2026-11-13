@@ -396,8 +396,9 @@ PREV_LS = ["--", ":"]                    # 比べる観測点が 2 つのとき�
 
 
 def series_q(ax, case, prev):
-    for g, k in (("G3", 3), ("G5", 5)):
-        d = flux(case, k)
+    own = (["G1"] if "G1" in PREV_GAUGE.get(case, []) else []) + ["G3", "G5"]   # 6・6b は本文が引く G1 も
+    for g in own:
+        d = flux(case, GAUGES.index(g) + 1)
         ax.plot(d[:, 0] / 24, np.maximum(d[:, 2], 1e-4), color=GCOL[g], lw=0.9, label=GDESC[g])
     if prev:
         for g, ls in zip(PREV_GAUGE[case], PREV_LS):
@@ -585,6 +586,10 @@ def numbers(case):
     out["g5_max"] = float(np.max(p[:, 11])) * MG2UG
     d5 = flux(case, 5)
     out["q5_dry"] = float(np.mean(d5[d5[:, 0] / 24 >= 120, 2]))
+    p1, d1 = probe(case, 1), flux(case, 1)          # 鉱山の 1.5 km 下流 G1 の乾季(120 日目以降)
+    dry1 = (p1[:, 0] / 24 >= 120) & (p1[:, 3] > 1e-3)
+    out["g1_dry"] = float(np.mean(p1[dry1, 11])) * MG2UG if dry1.any() else np.nan
+    out["q1_dry"] = float(np.mean(d1[d1[:, 0] / 24 >= 120, 2]))
     return out
 
 
@@ -623,7 +628,7 @@ def summary():
     ax.set_yticklabels([])
     ax.invert_yaxis()
     ax.set_xscale("log")
-    ax.set_xlim(0.1, 1000)
+    ax.set_xlim(0.001, 1000)                # ステップ 6・6b の G3 の 0.01 kg の桁の棒も見えるように
     ax.set_xlabel(T("180 日の累積 (kg)", "cumulative over 180 days (kg)"))
     ax.legend(fontsize=7.5, loc="lower center", bbox_to_anchor=(0.5, 1.0), ncol=1, frameon=False)
     ax.set_title(T("(b) 農地の支川と海への流出", "(b) Farm tributary and export to the sea"), fontsize=10,
@@ -642,7 +647,8 @@ def summary():
               f"| {r['g5_dry']:.2f} | {r['g5_max']:.1f} | {r['q5_dry']:.3f} | {r['resid']:.1e} |")
     for c, r in rows:
         print(f"{c}: to_gw {r['togw'] * kg:.1f} kg, seep {r['seep'] * kg:.1f} kg, river wet at G5 in dry season "
-              f"{100 * r['g5_dryfrac']:.0f} %")
+              f"{100 * r['g5_dryfrac']:.0f} %, G1 in dry season (day >= 120) {r['q1_dry']:.3f} m3/s, "
+              f"{r['g1_dry']:.0f} ug/L")
 
 
 def main():

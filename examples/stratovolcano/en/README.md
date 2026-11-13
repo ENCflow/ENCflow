@@ -80,12 +80,12 @@ south-southeast and 710 m southwest of the summit).
   "Notes" of [shield_volcano](../../shield_volcano/en/README.md)). The effusion rate is 20 m³/s.
 - The lava stage is computed until 10⁷ s (about 116 days) after the end of the effusion. Lava still
   flowing at that time (the fronts of thick lobes keep advancing slowly) is taken as solidified in
-  place, added to the bed elevation, and buries the ash beneath. Its amount is 5.9% of all the lava
+  place, added to the bed elevation, and buries the ash beneath. Its amount is 3.0% of all the lava
   in P, 3.2% in L and 4.3% in P0 (`molten_frozen_m3` of the ledger ledger.csv).
 - The erosion stage is computed for 2 hours with dt = 1 s (10 minutes without rain, 60 minutes of
   rain, 50 minutes of recession). To resolve the thin flows on the slopes, the minimum moving water
   depth is 0.2 mm (as in [ashfall_lahar](../../ashfall_lahar/en/README.md)). The steep-slope gravity
-  correction is `f_gravity_correction = 1` (effective gravity g cos²θ; the default is 2; see
+  correction is the default `f_gravity_correction = 2` (friction and sediment shear along the slope; see
   [Steep-slope gravity correction](../../../docs/en/users_guide/steep_slope.md)).
 
 ## How to run
@@ -119,13 +119,13 @@ slopes.
 
 | Shape numbers | P (pyroclast-rich + erosion) | L (lava-rich + erosion) | P0 (same eruptions as P, no erosion) |
 |---|---:|---:|---:|
-| Height (highest point) | 127 m | 116 m | 145 m |
+| Height (highest point) | 125 m | 127 m | 145 m |
 | Distance at which the profile falls to 10% of the height | 1.02 km | 0.88 km | 0.93 km |
-| Mean slope (0.1–0.5 km from the summit) | 8.2° | 8.2° | 10.6° |
-| Mean slope (0.5–1.0 km) | 4.1° | 4.7° | 4.8° |
+| Mean slope (0.1–0.5 km from the summit) | 8.1° | 8.7° | 10.7° |
+| Mean slope (0.5–1.0 km) | 4.2° | 4.7° | 4.8° |
 | Mean slope (1.0–1.5 km) | 1.1° | 0.5° | 0.9° |
 | Erupted lava / fallen ash | 4.1 / 10.8 ×10⁷ m³ | 8.2 / 2.0 ×10⁷ m³ | 4.1 / 10.8 ×10⁷ m³ |
-| Ash buried by lava | 3.9×10⁷ m³ | 0.9×10⁷ m³ | 4.5×10⁷ m³ |
+| Ash buried by lava | 4.0×10⁷ m³ | 0.8×10⁷ m³ | 4.6×10⁷ m³ |
 | Ash moved by storms (fraction of the fallen ash) | 1.8×10⁷ m³ (16%) | 1.2×10⁷ m³ (58%) | — |
 | Of which left the domain | 0.5% | 0.03% | — |
 
@@ -135,15 +135,15 @@ slopes.
 - **The concave shape comes mainly from the ashfall pattern**: P0, without erosion, is also concave.
   Ash that thins exponentially from the vent piles up into an edifice that is steeper toward the
   summit.
-- **Erosion lowers the summit and moves ash to the foot**: with the same eruptions, P is 18 m lower
-  at the summit than P0, and the slope near the summit eases from 10.6° to 8.2°. The moved ash (16%
+- **Erosion lowers the summit and moves ash to the foot**: with the same eruptions, P is 20 m lower
+  at the summit than P0, and the slope near the summit eases from 10.7° to 8.1°. The moved ash (16%
   of the fallen ash) is deposited at 0.7–1.5 km where the slope eases, and the slope at 1.0–1.5 km
   increases from 0.9° to 1.1° (erosion figure below).
 - **The style of eruption changes the interior**: in P, lenses of lava are interbedded in ash; in L,
   thin ash is interbedded in thick lava. In L the ash lies only thinly on the lava, so 58% of the
-  fallen ash is moved by the storms. The mounds of the flank eruptions stand 16–22 m above their
-  surroundings at the same distance from the summit in L and 11–15 m in P (13–19 m in P0 without
-  erosion).
+  fallen ash is moved by the storms. The mounds of the flank eruptions stand 17–23 m above their
+  surroundings at the same distance from the summit in L and 8–13 m in P (13–18 m in P0 without
+  erosion; table of `plot_results.py`).
 - The azimuthal-mean profiles of P and L are much alike; the difference shows mainly in the internal
   layering and the plan shape.
 
@@ -176,7 +176,7 @@ terrain and how the lava stops as it cools.
 
 | Item | Setting |
 |---|---|
-| Terrain | the bed elevation of P after 10 cycles (`result_P/data/z_10.txt`; 5 km square, 50 m grid, 127 m high). The soil layer (ash) is not read |
+| Terrain | the bed elevation of P after 10 cycles (`result_P/data/z_10.txt`; 5 km square, 50 m grid, 125 m high). The soil layer (ash) is not read |
 | Vents | S: the summit (the highest cell of the final terrain), E: 300 m east of the summit, S4: the summit |
 | Effusion | S and E: 50 m³/s for 6 hours. S4: the same volume at 4 times the rate (200 m³/s for 1.5 hours). The volume is 1.08 million m³ in all three |
 | Lava (illustrative) | viscosity 1×10⁴ Pa·s and yield stress 1×10³ Pa at the eruption temperature 1100 °C, temperature sensitivities 0.03 1/K (10 times after cooling by 77 K), solidification temperature 950 °C, effective emissivity 0.95, convective heat transfer coefficient 70 W/m²/K, specific heat 1150 J/kg/K, air temperature 15 °C |
@@ -198,26 +198,27 @@ runs pass them.
 
 | | S (summit) | E (300 m east of the summit) | S4 (summit, 4 times the rate) |
 |---|---:|---:|---:|
-| Reach (from the vent, to cells 5 cm thick or more) | 0.71 km | 0.81 km | 0.85 km |
-| Area | 0.17 km² | 0.15 km² | 0.30 km² |
-| Maximum thickness | 17 m | 19 m | 10 m |
-| Time when all lava has solidified | 11 h | 12 h | 5 h |
-| Heat lost by radiation and convection (relative to the erupted heat) | 9.7%, 4.9% | 9.7%, 4.9% | 9.4%, 4.5% |
+| Reach (from the vent, to cells 5 cm thick or more) | 0.75 km | 0.60 km | 0.77 km |
+| Area | 0.20 km² | 0.17 km² | 0.36 km² |
+| Maximum thickness | 16 m | 17 m | 12 m |
+| Time when all lava has solidified | 11 h | 11 h | 6 h |
+| Heat lost by radiation and convection (relative to the erupted heat) | 10.1%, 5.5% | 9.8%, 5.0% | 9.5%, 4.7% |
 
-- **The path is set by the unevenness of the terrain**: the lava from the summit vent (a) splits into two
-  valleys, to the north and to the west. Moving the vent 300 m east (b) gives a single flow along the
+- **The path is set by the unevenness of the terrain**: the lava from the summit vent (a) flows along the
+  northern valley. Moving the vent 300 m east (b) gives a single flow along the
   eastern valley. The rises and valleys made by the lava flows, ashfall and erosion of the 10 cycles
   decide where the lava goes.
 - **It stops as it cools**: in every run the front advances while the effusion continues and stops
   within an hour after the effusion ends ((e) in the figure below). The lava stops by cooling from its
-  front, and lava piles up behind it and thickens (19 m near the front of E).
-- **A higher effusion rate flows further and wider**: erupting the same volume at 4 times the rate (c)
-  extends the reach from 0.71 km to 0.85 km and the area 1.8 times, and the maximum thickness becomes 60%.
+  front, and lava piles up behind it and thickens (17 m near the front of E).
+- **A higher effusion rate flows wider**: erupting the same volume at 4 times the rate (c) splits the flow
+  to the north and the southeast, the area becomes 1.8 times and the maximum thickness 70%. The reach
+  hardly grows (0.75 km to 0.77 km).
   The difference is likely smaller than in the check on a uniform slope (test/lava configuration 9; the
   reach 2.07 times) because on the volcano the flow splits into valleys and spreads sideways.
 - **Thin, wide flows solidify early**: the amount of molten lava is largest around the end of the
-  effusion (58% of the erupted volume in S, 90% in S4) and then decreases as the lava cools. S4 spreads
-  thinly and has all solidified in 5 hours; S and E take 11–12 hours.
+  effusion (54% of the erupted volume in S, 82% in S4) and then decreases as the lava cools. S4 spreads
+  thinly and has all solidified in 6 hours; S and E take 11 hours.
 - The solidified lava becomes ground still holding about 85% of the erupted heat (it solidifies once it
   has cooled to the solidification temperature 950 °C, and its cooling afterwards is not computed).
 
@@ -244,7 +245,7 @@ and the margins. (e) Distance from the vent to the flow front. (f) Amount of lav
 - **Erosion, weathering and collapse of lava**: lava is treated as non-erodible bedrock. Flank
   collapse, calderas and summit craters do not form.
 - **One soil layer**: ash buried under lava is treated as bedrock even if later erosion exposes it.
-- **Remaining lava**: lava still flowing at the end of a lava stage (3–6% of the total) is taken as
+- **Remaining lava**: lava still flowing at the end of a lava stage (3–4% of the total) is taken as
   solidified in place.
 - **Size**: 10 eruptions make a small young volcano 120–150 m high. Real stratovolcanoes are built by
   far more eruptions. On the 50 m grid, the width of valleys is set by the cell size.

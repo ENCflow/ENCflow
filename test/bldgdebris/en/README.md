@@ -67,15 +67,15 @@ without feedback.
 
 | Configuration | Volume conservation | Destruction / deposition (m·cell) | Arrival on the flat part | Result |
 |---|---|---|---|---|
-| 1 depth criterion | 2.3e-14 | 0.021 / 0.0063 | 0.39 mm | PASS |
-| 2 driftwood + debris (load criterion) | 3.6e-15 | 0.051 / 0.019 | 0.40 mm | PASS. state.dat and driftwood.dat byte-identical to 2′ |
+| 1 depth criterion | round-off | 0.021 / 0.0063 | 0.39 mm | PASS |
+| 2 driftwood + debris (load criterion) | round-off | 0.051 / 0.019 | 0.40 mm | PASS. state.dat and driftwood.dat byte-identical to 2′ |
 | 3 restart | bldgdebris.dat and state.dat byte-identical to the continuous run | | | PASS |
-| 4 void-ratio feedback | 5.7e-14 | 0.082 / 0.075 | 0.87 mm | PASS. S(t) agrees with 4′ |
-| 5 defaults | −1.0e-11 | 15.3 / 5.8 | 0.13 m | PASS. Byte-identical to 5′ |
+| 4 void-ratio feedback | round-off | 0.082 / 0.075 | 0.87 mm | PASS. S(t) agrees with 4′ |
+| 5 defaults | round-off | 15.3 / 5.8 | 0.13 m | PASS. Byte-identical to 5′ |
 
-- The volume, weighted by gv, is conserved to machine precision, and it is
-  also confirmed that the change of the void ratio conserves water volume
-  (§63.6 B2).
+- The volume, weighted by gv, is conserved to machine precision (round-off of
+  about 1e-10 m·cell or less), and it is also confirmed that the change of the
+  void ratio conserves water volume (§63.6 B2).
 - The only action of debris → flow is the void-ratio feedback, and
   driftwood → debris is one-way through the added mass in the load criterion
   (the agreement of 2 and 2′ is the proof).

@@ -135,9 +135,9 @@ plucked").
 | Configuration | Slope 0.35 | 0.20 | 0.10 | 0.04 | 0.01 | Ledger (m³) |
 |---|---|---|---|---|---|---|
 | T_b Takahashi–Nakagawa, bare rock | 2.48 | 1.22 | 0.008 | 0 | 0 | 42.1 |
-| C_b Coulomb + Manning, bare rock | 2.91 | 0.77 | 0 | 0 | 0 | 42.6 |
+| C_b Coulomb + Manning, bare rock | 2.91 | 0.75 | 0 | 0 | 0 | 42.4 |
 | T_c Takahashi–Nakagawa, deposit | 0.65 | 0.005 | 0 | 0 | 0 | 7.8 |
-| C_c Coulomb + Manning, deposit | 0.87 | 0.001 | 0 | 0 | 0 | 10.4 |
+| C_c Coulomb + Manning, deposit | 0.87 | 0.0005 | 0 | 0 | 0 | 10.4 |
 | T_b05 threshold 0.5 kPa | 7.30 | 3.47 | 0.32 | 0 | 0 | 124.9 |
 | T_b20 threshold 2 kPa | 0.59 | 0.15 | 0 | 0 | 0 | 8.6 |
 | W clear water, same discharge (fluvial plucking) | 0.28 | 0.022 | 0 | 0 | 0 | 3.5 |
@@ -164,7 +164,7 @@ plucked").
   until the cover becomes thick. This is a property of the adopted law, not a behaviour confirmed
   by observations.
 - **Mobile layer at the end**: the steep reach is almost swept clean (0 for T_b), and the sediment
-  deposits at the slope breaks (1.4 m for T_b at the slope break at 220 m; 0.90 m for C_b at the
+  deposits at the slope breaks (1.4 m for T_b at the slope break at 220 m; 0.91 m for C_b at the
   slope break at 120 m and 0.49 m at 220 m). The eroded rock enters the mobile layer 1:1, and the
   erosion–deposition equation decides whether the flow takes it up or leaves it as cover.
 - **Rock-derived sediment**: the solids of the eroded rock are 25.2 m³ for T_b (5.2 % of the
@@ -203,8 +203,8 @@ evaluation with the quasi-static stress (0.22 cm).
   stripped; it remains or thickens.
 - With Coulomb + Manning and the deposit (C_c), the slow and thick flow upstream of the slope break
   lasts long, so the rock keeps eroding without the mobile layer being stripped completely. At 101 m
-  from the head, the mobile layer never becomes thinner than 13.6 cm (16.2 cm at the end; exposure
-  exp(−sd/H*) 7 % or less) and 1.46 cm is eroded by 300 s. Upstream at 83 m the layer is stripped
+  from the head, the mobile layer never becomes thinner than 13.6 cm (16.1 cm at the end; exposure
+  exp(−sd/H*) 7 % or less) and 1.47 cm is eroded by 300 s. Upstream at 83 m the layer is stripped
   completely and 3.5 cm is eroded, the largest in the reach.
 - The H* = 0.05 m of the exposure exp(−sd/H*) follows the observation that a deposit about 5 cm
   thick protects the bed from impacts (McCoy et al. 2013).
@@ -298,7 +298,7 @@ interval between debris flows (once in how many years) is chosen by the user.
   frequency (the floods cannot move the boulders).
 - At slope 0.20, once in 30 years, the growth slows and reaches 49 cm after 10 cycles (approaching
   the thickness where what the floods carry balances what the debris flows leave). Once in 10 years
-  the deposit grows to 88 cm and is still growing. Once in 100 years it levels off just under 5 cm
+  the deposit grows to 91 cm and is still growing. Once in 100 years it levels off just under 5 cm
   and then thins slightly (3.7 cm at the end).
 - From slope 0.25 up no deposit remains (0.1 cm).
 

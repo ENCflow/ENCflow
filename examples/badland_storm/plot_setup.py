@@ -64,7 +64,7 @@ def _rain(ax, ncyc=1):
 
 
 def _profile(ax):
-    """豪雨のあとの縦断。台地(平坦)には水が残り、崖面は数分で乾く。"""
+    """豪雨のあとの縦断。台地(平坦)には水が残り、崖面は縁を越えて流れ落ちる水膜でしばらく濡れる。"""
     x = np.linspace(0, 120, 601)
     z = np.where(x < 60, 30.0, np.maximum(30.0 - 1.5 * (x - 60), 0.0))
     ax.fill_between(x, -5, z, color=C_GROUND)
@@ -80,7 +80,7 @@ def _profile(ax):
         zi = 30 - 1.5 * (xi - 60)
         ax.add_patch(plt.Circle((xi + 0.9, zi + 1.0), 0.7, color=C_DRY, zorder=4))
         _arrow(ax, xi + 1.7, zi - 0.2, xi + 3.8, zi - 3.4, C_DRY, lw=1.2, ms=8)
-    ax.text(79, 21, T("崖面は数分で乾き、乾いた時間に\n乾式斜面侵食が続く", "the cliff face dries within minutes;\ndry-slope erosion goes on while dry"),
+    ax.text(79, 21, T("崖面は豪雨のあとしばらく濡れ\n(平坦な台地で 40 分ほど)、\n乾いた時間に乾式斜面侵食が続く", "the cliff face stays wet for a while\n(about 40 min on the flat plateau);\ndry-slope erosion goes on while dry"),
             fontsize=8, color=C_DRY)
     _arrow(ax, 55, 29.5, 66, 23.5, C_WATER, lw=2.0)
     ax.text(41, 22.0, T("傾いた台地では水が谷頭へ\n排水され、谷頭が長く湿る", "on a tilted plateau the water drains\nthrough the valley heads, which stay wet"),

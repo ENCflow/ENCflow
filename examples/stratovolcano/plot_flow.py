@@ -153,6 +153,9 @@ for r in RUNS:
         molten.append(hl.sum() * DX * DX / erupted * 100.0)
         tt.append(float(k))
     lab = RNAME[r].replace("\n", T("、", ", "))
+    if not EN:                       # 本文の「溶けている溶岩の量は噴出が終わる頃に最も多く」の値
+        km = int(np.argmax(molten))
+        print(f"  {r}: molten lava max {molten[km]:.0f}% of erupted at {tt[km]:.0f} h")
     ax1.plot(tt, np.array(reach) / 1000, "-o", ms=3, color=RCOL[r], label=lab)
     ax2.plot(tt, molten, "-o", ms=3, color=RCOL[r], label=lab)
     ax1.axvline(hours, color=RCOL[r], lw=0.8, ls=":")

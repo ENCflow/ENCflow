@@ -89,11 +89,11 @@ released amount (99.5% has been fixed to the bed).
 
 | Check | Computed value | Verdict |
 |---|---|---|
-| Configuration 1 (1) water ledger Σh − Q tt | 4.0e-13 m·cell | PASS (machine precision) |
-| Configuration 1 (2) solid ledger Σhs + (1 − λ)Σdz − cs Q tt | −1.3e-12 m·cell | PASS |
+| Configuration 1 (1) water ledger Σh − Q tt | about 1e-11 m·cell or less (round-off) | PASS (machine precision) |
+| Configuration 1 (2) solid ledger Σhs + (1 − λ)Σdz − cs Q tt | about 1e-11 m·cell or less (round-off) | PASS |
 | Configuration 1 (3) <h_t> versus the analytical solution | 0.3525 / 0.3525 m (0.0%), CV 0.000, C 0.444 (theory 0.444) | PASS |
-| Configuration 2 (1) solid ledger | 1.6e-11 m·cell | PASS |
-| Configuration 2 (2) activity | release area min dz = −1.55 m, flat max dz = 0.031 m | PASS |
+| Configuration 2 (1) solid ledger | about 1e-10 m·cell or less (round-off) | PASS |
+| Configuration 2 (2) activity | release area min dz = −1.55 m, flat max dz = 0.044 m | PASS |
 | Configuration 2 (3) stopping | remaining Σhs / released solids = 0.005 (< 0.3) | PASS |
 
 - The Voellmy uniform flow agrees with the analytical solution to 4 digits, and
@@ -138,8 +138,9 @@ released amount (99.5% has been fixed to the bed).
   the flat part changed 0.028 → 0.031 m and the remaining fraction 0.004 → 0.005 (the
   yield factor is 1 in the direction of steepest descent but grows for flow spreading
   obliquely across the slope). The differences of the ledger values are machine-precision
-  rounding. The values of the table and the text and the figures are from this
-  computation.
+  rounding. Rerun on 2026-11-10 with the current defaults, the deposit on the flat part of
+  configuration 2 is 0.044 m (remaining fraction 0.005; not separated out). The values of
+  the table and the text and the figures are from this computation.
 
 ## Related documents
 

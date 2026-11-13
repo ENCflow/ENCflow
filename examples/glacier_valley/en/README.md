@@ -137,10 +137,10 @@ main valley and the tributary, are cut (wall slope 0.4; `make_terrain.py`).
 ```
 cd examples/glacier_valley
 make               # links to the executables in bin/ and the initial terrain (make_terrain.py)
-make run           # main run (about 10 minutes with 4 threads)
-make run-x10       # supplement (about 5 minutes)
+make run           # main run (about 20 minutes with 4 threads)
+make run-x10       # supplement (about 10 minutes)
 make run-lakes     # lake stage (prep_lakes.py copies the final terrain of the supplement to data/z_glacial.txt; about 3 minutes)
-make run-noero     # control (about 10 minutes)
+make run-noero     # control (about 20 minutes)
 make plot          # figs/*.png and en/figs/*.png
 python3 plot_schematic.py   # explanatory figure figs/mechanism.png only (no results needed; en: English)
 ```
@@ -164,20 +164,20 @@ with the control).
 
 - **Growth of the glacier**: within about 1000 years, snow builds ice about 150 m thick that covers the
   plateaus on both sides, and a valley glacier (up to about 370 m thick) that extends to x ≈ 15.3 km; its
-  terminus advances to 15.7 km by 2000 years. In the tributary, a small glacier about 60 m thick forms at
+  terminus advances to 15.7 km by 2000 years. In the tributary, a small glacier about 70 m thick forms at
   its head, and the ice of the main valley pushes a little over 1 km into the mouth of the tributary.
-- **Distribution of erosion**: after 6000 years the erosion is at most 76 m on the steep slopes of the
+- **Distribution of erosion**: after 6000 years the erosion is at most 73 m on the steep slopes of the
   valley head, 30–60 m at the shoulder edges where plateau ice flows down into the valley, and 16–42 m on
   the floor of the main valley. On steep slopes, even thin ice has a large basal shear stress, so sliding
   and erosion are fast.
-- **How fast**: the erosion rate of the main valley floor (averaged over 2000–6000 years) is 5.0 mm a
+- **How fast**: the erosion rate of the main valley floor (averaged over 2000–6000 years) is 4.8 mm a
   year on average under the ice and 7.4 mm a year at most (x ≈ 8 km, where the ice discharge is largest).
   This lies between small temperate glaciers in the Alps (1 mm/yr) and large glaciers in southeast Alaska
   (10–100 mm/yr), within the measured range (Hallet et al. 1996). Erosion decreases towards the terminus,
   and the valley below the terminus does not change.
 - **Erosion makes the glacier shorter**: in the control without erosion, the glacier becomes steady by
-  2000 years and its terminus stays at 16.1 km. The terminus of the main run retreats from 15.7 km at
-  2000 years to 14.5 km at 6000 years, and the ice volume decreases by 12%. Erosion lowers the
+  3000 years and its terminus stays at 16.3 km. The terminus of the main run retreats from 15.7 km at
+  2000 years to 14.5 km at 6000 years, and the ice volume decreases by 11%. Erosion lowers the
   accumulation area (the slopes of the valley head and the shoulders), so the glacier becomes shorter
   under the same climate (Kaplan et al. 2009; Anderson et al. 2012).
 
@@ -187,11 +187,11 @@ with the control).
 main valley and the tributary, and ice thickness (the tributary is plotted with the distance north of the
 confluence leftwards).
 
-- **The beginning of a hanging valley**: the main valley floor at the confluence is lowered by 31 m, while
+- **The beginning of a hanging valley**: the main valley floor at the confluence is lowered by 29 m, while
   the tributary floor 1.7 km upstream does not change. Only the mouth of the tributary, where the ice of the
   main valley pushes in, is cut.
-- **No U shape**: at x = 6 km the upper valley walls (around 45 m) are cut more than the floor (35 m),
-  and at x = 12 km the floor (29 m) is cut the most, so the V deepens. No U-shaped cross-section forms (see
+- **No U shape**: at x = 6 km the upper valley walls (around 45 m) are cut more than the floor (36 m),
+  and at x = 12 km the floor (25 m) is cut the most, so the V deepens. No U-shaped cross-section forms (see
   "What this model cannot represent" below).
 - **No closed basin yet**: no closed basin forms in the long profile, and when the same rain as in the
   lake stage falls on the terrain after 6000 years, all the water drains away (check with
@@ -214,16 +214,17 @@ erosion). It does not mean that the erosion rate itself matches measurements.
 
 - **Closed basins and lakes**: two closed basins form on the floor of the main valley, and after the
   lake stage lakes remain in them: 17 m deep at the foot of the slope of the valley head
-  (x ≈ 2.5–3.5 km) and 31 m deep at x ≈ 5.7–6.9 km. Three more small lakes 2–6 m deep form, and the
-  water totals 14.5 million m³.
-- **Step at the confluence**: the main valley floor at the confluence is lowered by 57 m, while the
-  tributary floor 1.7 km upstream of the confluence hardly changes (0.7 m): the beginning of the step of
+  (x ≈ 2.5–3.5 km) and 14 m deep at x ≈ 5.7–6.7 km. Four more small lakes 0.6–8 m deep form, and the
+  water totals 9.0 million m³.
+- **Step at the confluence**: the main valley floor at the confluence is lowered by 47 m, while the
+  tributary floor 1.7 km upstream of the confluence hardly changes (0.8 m): the beginning of the step of
   a hanging valley.
-- **Retreat of the glacier**: the terminus retreats from 14.3 km at 1000 years to 6.1 km at 6000 years,
+- **Retreat of the glacier**: the terminus retreats from 14.3 km at 1000 years to 6.3 km at 6000 years,
   and the main-valley ice that had pushed into the tributary is gone by 3000 years (the small glacier at
-  the tributary head remains). The feedback by which erosion lowers the accumulation area proceeds ten times faster than in the
-  main run. The bed is lowered by up to 437 m at the shoulder edges and by 235 m at the head of the main
-  valley.
+  the tributary head remains). The feedback by which erosion lowers the accumulation area proceeds
+  ten times faster than in the main run. The bed is lowered by up to 434 m in the north and south edge
+  rows of the slopes of the valley head, by 424 m at the shoulder edges and by 234 m at the head of the
+  main valley.
 - **Limits of the interpretation**: in reality the climate is not constant for 60,000 years; glacials and
   interglacials alternate. Basins form where erosion decreases sharply downstream, and where that happens
   changes with the way the glacier size changes.
@@ -260,8 +261,14 @@ erosion). It does not mean that the erosion rate itself matches measurements.
   reach the tributary confluence).
 - **Update interval**: one glacier update is 0.19 years of landform time. Lengthening the interval to tens
   of years of landform time gives unnatural results from the time splitting (aim for one year or less).
-- **Small lakes**: among the lakes of the supplement, the 6 m deep lakes at the shoulder edges are 1–3
+- **Small lakes**: among the lakes of the supplement, the 0.6–8 m deep lakes at the shoulder edges are 1–3
   cells in size, close to the grid resolution.
+- **Basin depth is sensitive to the discretization of the ice flow**: with the 4-neighbour flow
+  (`gl_diagratio = 0`) the downstream lake of the supplement is 31 m deep (14 m with the default 1/3) and
+  the step at the confluence is 57 m (47 m). Where the basins form and the lake at the foot of the valley
+  head (17 m) stay the same, and the retreat of the terminus is nearly the same (6.1 and 6.3 km at
+  6000 years). Read the basin depths and the size of the step as quantities that change by 20 % to a
+  factor of two with the discretization.
 - Verification is in [test/glacier](../../../test/glacier/en/README.md) (the SIA analytical solution, the
   check of the erosion coupling length, and others).
 

@@ -48,8 +48,8 @@ depth of the flow, the inflow cell flows slower than the uniform flow
 6. `f_opening_dynamic = 3` (configurations w1_on3 and w5_on3; checks 1 and 2
    are also applied): as in check 3, h/h_n and V/V_n are 1 ± 0.5 % in all
    rows. Both banks are high, so the blockage is counted nearly as with 2 and the
-   agreement with Manning is kept (on 2026-10-29 the differences were 1e-4 in
-   depth and 2e-4 in velocity at width 1, and 2e-4 and 2e-4 at width 5).
+   agreement with Manning is kept (on 2026-11-10 the differences were 1e-4 in
+   depth and 1e-4 in velocity at width 1, and 2e-4 and 2e-4 at width 5).
 
 ## Usage
 

@@ -69,6 +69,14 @@ def morph(dep, z1):
             "V": dep.sum() * DX * DX}
 
 
+def vexag(ax, xm=1.0):
+    """描いた軸の縦の拡大率(横 1 m の長さに対する縦 1 m の長さの比)。xm は横軸の単位を m にする係数。
+    レイアウトを決めた後(tight_layout の後)に呼ぶ。"""
+    bb = ax.get_window_extent()
+    (x0, x1), (y0, y1) = ax.get_xlim(), ax.get_ylim()
+    return ((x1 - x0) * xm / bb.width) / ((y1 - y0) / bb.height)
+
+
 def radial(dep, ic, jc):
     n = dep.shape[0]
     jj, ii = np.mgrid[0:n, 0:n]
@@ -202,7 +210,7 @@ for (case, tauy, lab), col in zip(CASES, ["C0", "C1"]):
 ax.set_xlim(0, 5); ax.set_ylim(0, None); ax.grid(alpha=0.3); ax.legend(fontsize=8)
 ax.set_xlabel(T("中心からの距離 (km)", "distance from the center (km)"))
 ax.set_ylabel(T("溶岩の厚さ(方位平均) (m)", "lava thickness, azimuthal mean (m)"))
-ax.set_title(T("(c) 方位平均の断面(縦は約 25 倍に拡大)", "(c) azimuthal mean profiles (vertical exaggeration about 25×)"), fontsize=9)
+ax_c = ax
 ax = fig.add_subplot(2, 2, 4)
 z0 = load("S1", "Z0000")
 vv = vents("S1")
@@ -221,7 +229,12 @@ ax.set_xlim(0, 5); ax.set_ylim(0, None); ax.grid(alpha=0.3); ax.legend(fontsize=
 ax.set_xlabel(T("中心からの距離 (km)", "distance from the center (km)"))
 ax.set_ylabel(T("固化した溶岩の厚さ(方位平均) (m)", "solidified lava, azimuthal mean (m)"))
 ax.set_title(T("(d) S1 の成長(固化した分)", "(d) growth of S1 (solidified part)"), fontsize=9)
-fig.tight_layout(); fig.savefig(f"{FIGDIR}/shield.png", dpi=90); plt.close(fig)
+ax_c.set_title(T("(c) 方位平均の断面(縦は約 25 倍に拡大)", "(c) azimuthal mean profiles (vertical exaggeration about 25×)"), fontsize=9)
+fig.tight_layout()
+ex = vexag(ax_c, 1000.0)
+ax_c.set_title(T(f"(c) 方位平均の断面(縦は約 {ex:.0f} 倍に拡大)", f"(c) azimuthal mean profiles (vertical exaggeration about {ex:.0f}×)"),
+               fontsize=9)
+fig.savefig(f"{FIGDIR}/shield.png", dpi=90); plt.close(fig)
 
 # ---------------------------------------------------------------- 溶岩ドーム
 ND, DXD, TAUY = 101, 10.0, 1.0e5
@@ -266,6 +279,10 @@ ax.plot(xs, ds[c, :], "--", color="C3", lw=1.5, label=T("固化あり(lv_vsol = 
 ax.set_xlim(-300, 300); ax.set_ylim(0, 1.6 * H)
 ax.grid(alpha=0.3); ax.legend(fontsize=7, loc="upper right")
 ax.set_xlabel(T("中心からの距離 (m)(縦は約 3 倍に拡大)", "distance from the center (m) (vertical exaggeration about 3×)"))
+ax_b = ax
 ax.set_ylabel(T("溶岩の厚さ (m)", "lava thickness (m)"))
 ax.set_title(T("(b) 断面と解析解(τ_y = 10⁵ Pa、体積 2×10⁶ m³)", "(b) profiles and the analytic solution (τ_y = 10⁵ Pa, volume 2×10⁶ m³)"), fontsize=9)
-fig.tight_layout(); fig.savefig(f"{FIGDIR}/dome.png", dpi=100); plt.close(fig)
+fig.tight_layout()
+ex = vexag(ax_b)
+ax_b.set_xlabel(T(f"中心からの距離 (m)(縦は約 {ex:.1f} 倍に拡大)", f"distance from the center (m) (vertical exaggeration about {ex:.1f}×)"))
+fig.savefig(f"{FIGDIR}/dome.png", dpi=100); plt.close(fig)

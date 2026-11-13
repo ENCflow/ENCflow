@@ -86,7 +86,7 @@ make                                   # link to ../../bin/encflow and inputs (z
 ./encflow param_rockslide_nh.txt
 ./encflow param_submarine_nh0.txt
 ./encflow param_submarine_nh.txt
-python3 plot_results.py                # figs/*.png and tables
+python3 plot_results.py en             # en/figs/*.png (without en: Japanese labels in figs/ and the tables)
 python3 plot_schematic.py en          # explanatory figures en/figs/setup, mechanism, properties, nh_theory.png (no results needed; without en: Japanese labels in figs/)
 ```
 
@@ -98,19 +98,19 @@ time series in probes/.
 
 ## Results: the four hydrostatic patterns (gfortran, dt = 0.05 s)
 
-![Profiles](../figs/profiles.png)
+![Profiles](figs/profiles.png)
 
 Left: evolution of the ground and the free surface z+h+hs along the central
 section (y = 97.5 m). The dashed line is the terrain at t = 120 s. Right:
 enlargement of the lake surface.
 
-![Probes](../figs/probes.png)
+![Probes](figs/probes.png)
 
 Water-surface time series at three points in the lake (slope foot x = 298,
 lake center 398, far-shore side 548 m). The propagation speed is
 √(g·40) ≈ 20 m/s.
 
-![Terrain change](../figs/deposit.png)
+![Terrain change](figs/deposit.png)
 
 Terrain change at t = 120 s. In A, B and C the deposition gathers at the edge
 of the flat lake bottom (x ≈ 300 m); in B0 (mixture only) it piles up within
@@ -119,8 +119,8 @@ of the flat lake bottom (x ≈ 300 m); in B0 (mixture only) it piles up within
 | Case | Deposition in the shoreline zone (x 200–275 m) | Lake bottom (275–350 m) | Runout | Leading wave x=298 m | x=548 m |
 |---|---|---|---|---|---|
 | A debris avalanche | 213 m³ | 18,820 m³ | 332 m | +1.41 m (13 s) | +0.76 m (25 s) |
-| B debris flow → handover | 780 m³ | 17,363 m³ | 338 m | +1.10 m (22 s) | +0.54 m (34 s) |
-| B0 mixture only | 8,820 m³ | 0 m³ | 232 m | +0.75 m (22 s) | +0.34 m (35 s) |
+| B debris flow → handover | 795 m³ | 17,352 m³ | 338 m | +1.08 m (22 s) | +0.52 m (34 s) |
+| B0 mixture only | 8,757 m³ | 0 m³ | 232 m | +0.75 m (22 s) | +0.35 m (35 s) |
 | C submarine landslide | 1 m³ | 17,508 m³ | 348 m | +1.57 m (2 s) / −1.21 m | +0.71 m (15 s) / −0.54 m |
 
 Interpretation:
@@ -128,7 +128,7 @@ Interpretation:
 - **A and B have almost the same underwater runout** (332 / 338 m). A moves at the
   terminal velocity from right after release, so it reaches the shoreline
   early (8 s); B flows down the land as a mixture with inertia and hands
-  over after plunging (15 s). B leaves 780 m³ in the shoreline zone before
+  over after plunging (15 s). B leaves 795 m³ in the shoreline zone before
   the handover, and its leading wave is +1.1 m against +1.4 m for A.
 - **B0 does not run underwater.** The mixture loses its driving once the
   water surface becomes flat, so a wave from the increase in column height
@@ -148,7 +148,7 @@ Interpretation:
 
 ## Results: comparison with the non-hydrostatic versions
 
-![Non-hydrostatic](../figs/nonhydro.png)
+![Non-hydrostatic](figs/nonhydro.png)
 
 Top: lake surface along the central section (thin lines = hydrostatic, thick
 lines = non-hydrostatic + acceleration term). Middle and bottom:
@@ -159,11 +159,11 @@ acceleration term, blue/green = non-hydrostatic + acceleration term).
 | Case | x=212 m | x=298 m | x=398 m | x=548 m | Underwater bed layer: stopped / moving (m³) |
 |---|---|---|---|---|---|
 | A hydrostatic | +1.55@8s / -1.10 | +1.41@13s / -0.39 | +1.01@18s / -0.26 | +0.76@25s / -0.25 | 18,394 / 716 |
-| A non-hydrostatic (no acceleration term) | +1.60@8s / -1.09 | +1.65@15s / -1.36 | +0.72@20s / -0.65 | +0.40@27s / -0.37 | 18,295 / 815 |
-| A non-hydrostatic + acceleration term | +1.55@8s / -1.07 | +1.07@15s / -0.72 | +0.64@20s / -0.53 | +0.36@27s / -0.30 | 15,900 / 3,210 |
+| A non-hydrostatic (no acceleration term) | +1.60@8s / -1.09 | +1.65@15s / -1.36 | +0.72@20s / -0.65 | +0.40@27s / -0.37 | 18,386 / 724 |
+| A non-hydrostatic + acceleration term | +1.55@8s / -1.07 | +1.07@15s / -0.72 | +0.64@20s / -0.53 | +0.36@27s / -0.30 | 15,811 / 3,299 |
 | C hydrostatic | +1.79@13s / -2.74 | +1.57@2s / -1.21 | +1.15@7s / -0.63 | +0.71@15s / -0.54 | 19,099 / 11 |
 | C non-hydrostatic (no acceleration term) | +1.88@14s / -3.00 | +1.96@2s / -2.09 | +0.65@18s / -0.91 | +0.44@25s / -0.50 | 19,087 / 23 |
-| C non-hydrostatic + acceleration term | +1.63@13s / -2.39 | +1.03@12s / -1.30 | +0.54@17s / -0.78 | +0.36@25s / -0.43 | 16,001 / 3,109 |
+| C non-hydrostatic + acceleration term | +1.64@13s / -2.39 | +1.03@12s / -1.30 | +0.54@17s / -0.78 | +0.36@25s / -0.43 | 16,003 / 3,107 |
 
 Each entry is maximum@time / minimum (m). The bed-layer column gives the
 stopped and moving volumes at 120 s.

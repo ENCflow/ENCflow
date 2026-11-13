@@ -98,25 +98,25 @@ the random seed and so on, change the arguments of `make_param.py` and regenerat
 ![Shield volcano results](figs/shield.png)
 
 (a)(b) Final topography (shading and contours). (c) Azimuthal mean profiles (vertical
-exaggeration about 25×). (d) Time evolution of the profile of solidified lava in S1.
+exaggeration about 28×). (d) Time evolution of the profile of solidified lava in S1.
 
 | Shape numbers | S1 (τ_y = 2×10³ Pa) | S2 (τ_y = 2×10⁴ Pa) | Median of Icelandic shields (Rossi 1996) |
 |---|---:|---:|---:|
 | Volume | 0.68 km³ | 0.68 km³ | 0.2 km³ |
-| Height (highest point; mean within 200 m of the center) | 85 m (60 m) | 131 m (124 m) | 60 m |
+| Height (highest point; mean within 200 m of the center) | 82 m (60 m) | 141 m (124 m) | 60 m |
 | Diameter (equivalent diameter of the area thicker than 0.5 m) | 6.6 km | 4.3 km | 3.6 km |
-| Height/diameter | 0.013 | 0.030 | 0.019 |
+| Height/diameter | 0.012 | 0.033 | 0.019 |
 | Slope (median over covered cells) | 1.0° | 3.5° | 2.7° |
-| Lava still flowing at the end of the run | 0.3% of the erupted volume | 1.7% | — |
+| Lava still flowing at the end of the run | 0.2% of the erupted volume | 3.4% | — |
 
 - **Lava flows pile up into a shield**: both cases make a nearly circular gentle rise (the ratio
-  of the area-equivalent radii of the sectors along the grid axes and the diagonals is 1.02 for
-  S1 and 0.98 for S2). New lava spreads while filling the low parts of the solidified lava, so
+  of the area-equivalent radii of the sectors along the grid axes and the diagonals is 0.97 for
+  S1 and 1.02 for S2). New lava spreads while filling the low parts of the solidified lava, so
   the whole edifice stays round even though the vents are scattered. As in (d), the center rises
   with each eruption (22 m after 4 eruptions → 58 m after 17) and the base widens. Because the
   vents are scattered by ±400 m, the summit is flat.
 - **The yield stress sets the shape**: with the same eruptions, S2 with a ten times larger
-  yield stress has 2/3 of the diameter, 1.5 times the height and 3.5 times the slope. Lava
+  yield stress has 2/3 of the diameter, 1.7 times the height and 3.5 times the slope. Lava
   spreads until it thins to the stop thickness h∞ = τ_y/(ρ g tanθ) and then stops, so a larger
   yield stress piles up thicker, shorter flows into a steeper rise.
 - **Comparison with real shields**: with a yield stress within the measured range for basaltic
@@ -133,8 +133,8 @@ exaggeration about 25×). (d) Time evolution of the profile of solidified lava i
 - **Effect of the stop-detection threshold**: the shape also depends on the threshold
   `lv_vsol` below which lava is considered stopped, not only on the yield stress. With a ten
   times smaller threshold for S2 (5×10⁻⁷ m/s), lava is slow to be judged stopped and does not
-  finish stopping within the same run time (21% of the erupted volume is still flowing at the
-  end). The slope at that time is 2.8°, gentler than the 3.5° with a threshold of 5×10⁻⁶ m/s.
+  finish stopping within the same run time (30% of the erupted volume is still flowing at the
+  end). The slope at that time is 2.5°, gentler than the 3.5° with a threshold of 5×10⁻⁶ m/s.
   The shape after the lava has fully stopped has not been checked. The effect is smaller than
   that of the tenfold yield stress (slopes 1.0° and 3.5°), but the numbers are a rough guide
   that includes the choice of the threshold.
@@ -149,7 +149,7 @@ and the analytic plastic dome; the red dashed line is the case with solidificati
 - Erupting 2×10⁶ m³ of viscous lava (τ_y = 10⁵ Pa) from one vent piles the lava up around the
   vent into a dome 38 m high and 354 m in diameter (height/diameter 0.11). The shape at rest
   agrees with the analytic plastic dome held by the yield stress, h(r)² = (2τ_y/ρg)(R − r)
-  (Blake 1990), to +1.3% in height and −1.0% in radius, and the profiles along the grid axes and
+  (Blake 1990), to +1.4% in height and −0.6% in radius, and the profiles along the grid axes and
   the diagonals overlap.
 - The height/diameter of a plastic dome is proportional to the yield stress to the power 0.6
   and inversely proportional to the volume to the power 0.2. With the yield stress of S1
@@ -157,10 +157,10 @@ and the analytic plastic dome; the red dashed line is the case with solidificati
   flat even from one vent.
 - **The solidification criterion changes the shape (dome_sol)**: with solidification
   (lv_vsol = 10⁻⁶ m/s), the slowing margins solidify while the eruption continues and hold the
-  lava back, so the center becomes 43 m (16% higher than the analytic solution). This is the
+  lava back, so the center becomes 41 m (10% higher than the analytic solution). This is the
   effect of a numerical closure, the stop-detection threshold, not a computation of cooling and
   solidification. A smaller threshold approaches the shape without solidification, but takes
-  longer to finish stopping (with lv_vsol = 10⁻⁷ m/s, 46% of the erupted volume has still not
+  longer to finish stopping (with lv_vsol = 10⁻⁷ m/s, 27% of the erupted volume has still not
   solidified at 6×10⁶ s).
 
 ## What this model cannot represent (differences from the real phenomena)
@@ -182,9 +182,9 @@ and the analytic plastic dome; the red dashed line is the case with solidificati
   collapse-depth distribution `fn_dbinit`).
 - **Time**: the viscosity is larger than real and the repose is shortened, so the days inside
   the computation are not the duration of real eruptions.
-- **Grid**: on the 100 m grid one lava lobe is a few cells wide. The computation uses the
-  4-neighbor grid (yield and stopping are judged on the gradient magnitude, so the shape at rest
-  does not depend on the grid orientation).
+- **Grid**: on the 100 m grid one lava lobe is a few cells wide. The flow is computed with
+  the 8-neighbour 9-point stencil (`lv_diagratio = 1/3`, the default; yield and stopping are judged
+  on the gradient magnitude, so the shape at rest does not depend on the grid orientation).
 - **Number of eruptions**: one run can use at most 20 vents. To pile up more eruptions, save the
   state (`f_state_save`) and restart (`f_state_restore`) with settings in which the vents are
   rewritten.
