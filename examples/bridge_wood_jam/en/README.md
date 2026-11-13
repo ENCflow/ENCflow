@@ -64,7 +64,7 @@ the uniform base flow.
 | Bridge | x = 1200 m; the 4 cells crossing the channel are capture cells; the capture ratio starts at 0.3 and rises as the jam grows; cells whose jammed amount has reached 0.09 m³/m² (one layer of logs = packing ratio 0.3 × diameter 0.3 m; 2.25 m³ per cell) capture everything; no deck, piers or approach embankments |
 | Wood properties | representative diameter 0.3 m, specific gravity 0.5 (draft 0.15 m) |
 | Drag of the jam | drag coefficient 1.0, packing ratio 0.3 (defaults; coefficient κ₀ = 6.19 m⁻¹) |
-| Grid settings | defaults, except the edge-depth cap `f_dry_head_cap = 2` (channel water below the bank does not climb onto a wet bank; see "Limits of accuracy") |
+| Grid settings | defaults |
 | Time | dt = 0.2 s, 150 min |
 
 Without driftwood the peak discharge stays in the channel at a depth of 2.50 m, and the floodplain
@@ -212,9 +212,6 @@ jam section; no simulation results are used). The dots are the simulation.
 - **The wood supply from upstream** is replaced by standing stock placed in an upstream reach,
   because there is no function to feed driftwood through an inflow boundary. With `dw_hrec` larger
   than the base-flow depth, the wood is released around the flood peak.
-- **Set the edge-depth cap to `f_dry_head_cap = 2`** (`&list_enc`). Once the bank cells get wet
-  during the flood, the default 1 lets channel water whose level is below the bank climb onto the
-  bank, and a strip of inundation grows along the bank (see "Limits of accuracy").
 - **Outputs to read**: the jam at the bridge from `vol_jam_m3` of `driftwood.csv` and the field
   `Wj0001...`, the level upstream of the bridge from a probe, the discharges under the bridge and
   over the floodplain from transects, and the extent of flooding from `H9999`.
@@ -240,16 +237,17 @@ jam section; no simulation results are used). The dots are the simulation.
   near the inflow at the upstream end, so that part is excluded from the comparison). Under
   conditions close to the threshold of overflow (the case with a capture ratio of 0.1), this
   difference can decide the outcome.
-- **With the edge-depth cap left at the default (`f_dry_head_cap = 1`), a numerical strip of
-  inundation appears along the bank far upstream of the bridge.** The default cap is applied only
-  while the receiving cell is dry, so once a bank cell is wet, water from the channel can move onto
-  it even though the channel level is lower (in this reach the channel level is 0.2–0.9 m below
-  the bank; this is not a real overflow). With the default, the map of the maximum depth shows a
-  thin strip 0.1–0.2 m deep and a patch at the upstream end (0.25 ha of the area flooded by 0.1 m
-  or more), and the backwater at the upstream end is somewhat too large at 0.46 m. The maximum depth
-  upstream of the bridge (4.19 m), the peak bypass discharge (60 m³/s) and the flooded area
-  (17.4 ha) are almost the same. This example sets 2, so the strip does not appear. 2 is not the
-  default ([Advection schemes](../../../docs/en/users_guide/advection.md) §5; verified in
+- **With the edge-depth cap set to `f_dry_head_cap = 1` (`&list_enc`; applied only while the
+  receiving cell is dry), a numerical strip of inundation appears along the bank far upstream of
+  the bridge.** The cap of 1 is applied only while the receiving cell is dry, so once a bank cell is
+  wet, water from the channel can move onto it even though the channel level is lower (in this
+  reach the channel level is 0.2–0.9 m below the bank; this is not a real overflow). With 1, the
+  map of the maximum depth shows a thin strip 0.1–0.2 m deep and a patch at the upstream end
+  (0.25 ha of the area flooded by 0.1 m or more), and the backwater at the upstream end is
+  somewhat too large at 0.46 m. The maximum depth upstream of the bridge (4.19 m), the peak bypass
+  discharge (60 m³/s) and the flooded area (17.4 ha) are almost the same. The default 2 also caps
+  toward a wet receiver whose bed is above the water level of the sender, so the strip does not
+  appear ([Advection schemes](../../../docs/en/users_guide/advection.md) §5; verified in
   [test/bankcap](../../../test/bankcap/en/README.md)).
 - **The inflow boundary** prescribes the discharge, and the backwater reaches the upstream end. The
   level at the upstream end is a result of the computation, and the results depend slightly on the

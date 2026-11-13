@@ -83,9 +83,9 @@ to the flat part of the lake bed (−40 m) at x ≥ 300 m and deposits 5.2 m
 distribution of the terrain change; lowering of the source area (blue) and
 deposition on the lake bed (red). Bottom left and right: water-surface
 displacement. The drawdown behind the plunge point and the leading wave
-spreading across the lake (maximum 0.86 m at 60 s in the lake part x ≥ 250 m)
+spreading across the lake (maximum 0.88 m at 60 s in the lake part x ≥ 250 m)
 are visible. The run-up in the corner of the shoreline and the side wall reaches
-1.3 m at 60 s (before the fix of the steep-slope gravity correction of 2026-11-04,
+1.2 m at 60 s (before the fix of the steep-slope gravity correction of 2026-11-04,
 developer.md §91, the lake part reached 0.92 m and the run-up in the corner was
 lower than that).
 
@@ -94,7 +94,7 @@ lower than that).
 Configuration 4 (left) and the control (right). The mass that flowed over
 land as a debris flow (mixture) becomes, with the handover, a bed layer in
 the cells with a ponded depth of 2 m or more and runs along the lake bed
-(deposit 5.1 m, handover 17,596 m³ = 92 % of the release); without the
+(deposit 5.1 m, handover 17,589 m³ = 92 % of the release); without the
 handover it stops near the shoreline and does not reach the lake bed
 (deposit on the flat part 0 m).
 
@@ -106,10 +106,10 @@ handover it stops near the shoreline and does not reach the lake bed
 | Configuration 1: cross-section passage speed | 7.519 m/s (−2.9% = agrees with the boundary layer 2·ld/ny of the 2 wall rows) | PASS |
 | Configuration 2: interior Vb | 7.736–7.746 m/s (0.14%) | PASS |
 | Configuration 2: cross-section passage speed | 7.175 m/s (−7.4%; wall ends + staircase cross-section) | PASS |
-| Configuration 3: ledger / Σh | Σdz and max\|Δ(z − sd)\| both about 1e-10 or less (round-off) / Σh unchanged (−1.3e-3 m·cell) | PASS |
-| Configuration 3: lake-bed deposition / wave generation | flat lake bed max dz 5.16 m / water-surface maximum 0.51 m (flat part of the lake bed) | PASS |
-| Configuration 3: release ledger | released 19,110 = stopped 16,680 + moving 2,430 m³ | PASS |
-| Configuration 4: handover | 17,596 m³, lake-bed max dz 5.12 m; control 0.00 m | PASS |
+| Configuration 3: ledger / Σh | Σdz and max\|Δ(z − sd)\| both about 1e-10 or less (round-off) / Σh unchanged (−2.6e-3 m·cell) | PASS |
+| Configuration 3: lake-bed deposition / wave generation | flat lake bed max dz 5.16 m / water-surface maximum 0.50 m (flat part of the lake bed) | PASS |
+| Configuration 3: release ledger | released 19,110 = stopped 16,679 + moving 2,431 m³ | PASS |
+| Configuration 4: handover | 17,589 m³, lake-bed max dz 5.10 m; control 0.00 m | PASS |
 
 (Values recomputed on 2026-11-05 with the steep-slope gravity correction aligned to the default 2 (friction
 along the slope; developer.md §93). Only the rounding values of the ledger of configuration 3 and the handover of
@@ -120,7 +120,11 @@ and the speed of the mixture at handover (volume-weighted mean) 3.2 → 2.9 m/s 
 Voellmy on land grows and the mixture becomes slower). Configurations 1–3, which use only the bed
 layer, do not change.
 Rerun on 2026-11-10 with the current defaults: the handover of configuration 4 is 17,596 m³ and the
-speed of the mixture 2.95 m/s.)
+speed of the mixture 2.95 m/s. After the default of the edge-depth cap became f_dry_head_cap = 2 on
+2026-11-13: the water-surface maximum of configuration 3 goes from 0.51 to 0.50 m (the leading wave
+in the lake part from 0.86 to 0.88 m, the run-up in the corner of the shoreline from 1.3 to 1.2 m),
+the handover of configuration 4 is 17,589 m³ and its lake-bed deposit goes from 5.12 to 5.10 m (the
+speed of the mixture stays at 2.95 m/s); developer.md §108.)
 
 - The 45°-rotated benchmark is a detector for a wrong normalization of the
   8-direction distribution, which makes the passage speed come out √2 times

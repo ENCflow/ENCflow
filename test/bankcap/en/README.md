@@ -27,8 +27,8 @@ energy head".
 | f_dry_head_cap | When the cap is applied |
 |---|---|
 | 0 | never |
-| 1 (default) | the receiver is dry ($`h_r < d_d`$) |
-| 2 | as 1, and also when the receiver is wet but its bed is above the water level of the sender ($`z_r > \eta_s`$) |
+| 1 | the receiver is dry ($`h_r < d_d`$) |
+| 2 (default) | as 1, and also when the receiver is wet but its bed is above the water level of the sender ($`z_r > \eta_s`$) |
 
 With 1, the cap is lifted as soon as a bank cell is thinly wet, and the edge depth of the
 continuity equation returns to the mean of the two cells (the mean of a deep channel and a thin
@@ -96,9 +96,10 @@ make
   (2.61 m as the mean over x = 100–300 m; 2.50 m with a dry bank). This is a property of the
   advection term on the 8-neighbour stencil (developer.md §50.9) and outside the scope of this
   check. `f_dry_head_cap = 2` does not change it.
-- `f_dry_head_cap = 2` is not the default. In runs where thin flow runs over steep terrain the
-  results can change ([test/chichibu](../../chichibu/en/README.md) and others; developer.md
-  §108), and the default 1 keeps the previous results.
+- The default is `f_dry_head_cap = 2` (it was 1 until 2026-11-13). In rain-wetted steep valleys
+  and at run-up fronts the results differ between 1 and 2
+  ([test/chichibu](../../chichibu/en/README.md) and others; developer.md §108). Set 1
+  explicitly to reproduce results of the versions up to then.
 
 ## Related documents
 

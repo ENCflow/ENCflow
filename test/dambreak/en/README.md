@@ -138,7 +138,7 @@ the mask wall and the incised terrain give the same values):
 - That the one-cell channel + reassignment returns to the values of the
   wide channel supports the way the ENC is used to route one-cell-wide
   channels as a raster (tutorials/chichibu).
-- With `f_dry_head_cap` (default 1), the dry high landside of the incised
+- With `f_dry_head_cap` (on by default; the cap toward a dry receiver is the same with 1 and 2), the dry high landside of the incised
   terrain is treated strictly equivalently to the mask wall. Before its
   introduction, scheme 1 on the incised terrain and scheme 3 in the
   two-cell channel diverged through the leak of "water climbing onto dry

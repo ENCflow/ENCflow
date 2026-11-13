@@ -82,8 +82,8 @@ Left: the release area with collapse depth D = 2 m. Centre: the terrain change
 after 90 s. The release area is lowered by up to 1.55 m, and a fan-shaped deposit
 lies on the slope from directly below it to the slope break (with a retarding
 stress of 4000 Pa the flow stops on the slope). Right: the remaining sediment
-in motion hs is only a thin fringe of about a mm beyond the slope break, 0.5% of the
-released amount (99.5% has been fixed to the bed).
+in motion hs is only a thin fringe of about a mm beyond the slope break, 0.4% of the
+released amount (99.6% has been fixed to the bed).
 
 ## Findings
 
@@ -94,7 +94,7 @@ released amount (99.5% has been fixed to the bed).
 | Configuration 1 (3) <h_t> versus the analytical solution | 0.3525 / 0.3525 m (0.0%), CV 0.000, C 0.444 (theory 0.444) | PASS |
 | Configuration 2 (1) solid ledger | about 1e-10 m·cell or less (round-off) | PASS |
 | Configuration 2 (2) activity | release area min dz = −1.55 m, flat max dz = 0.044 m | PASS |
-| Configuration 2 (3) stopping | remaining Σhs / released solids = 0.005 (< 0.3) | PASS |
+| Configuration 2 (3) stopping | remaining Σhs / released solids = 0.004 (< 0.3) | PASS |
 
 - The Voellmy uniform flow agrees with the analytical solution to 4 digits, and
   the water and solid ledgers close at machine precision. These are the
@@ -139,7 +139,9 @@ released amount (99.5% has been fixed to the bed).
   yield factor is 1 in the direction of steepest descent but grows for flow spreading
   obliquely across the slope). The differences of the ledger values are machine-precision
   rounding. Rerun on 2026-11-10 with the current defaults, the deposit on the flat part of
-  configuration 2 is 0.044 m (remaining fraction 0.005; not separated out). The values of
+  configuration 2 is 0.044 m (remaining fraction 0.005; not separated out). After the default of
+  the edge-depth cap became f_dry_head_cap = 2 on 2026-11-13, the deposit on the flat part stays
+  at 0.044 m and the remaining fraction is 0.004 (developer.md §108). The values of
   the table and the text and the figures are from this computation.
 
 ## Related documents

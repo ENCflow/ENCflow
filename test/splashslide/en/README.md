@@ -93,7 +93,9 @@ for the unconsolidated cliff it decays × 0.78.
   evaluates the resistance laws of mixture flows along the slope (developer.md
   §101), the unconsolidated cliff goes from × 0.77 to × 0.78 (sediment leaving
   the cliff 32.3 → 31.1 m³). Rerun on 2026-11-10 with the current defaults it stays at
-  × 0.78 and the sediment leaving the cliff is 32.3 m³ (not separated out). The table and
+  × 0.78 and the sediment leaving the cliff is 32.3 m³ (not separated out). After the default of
+  the edge-depth cap became f_dry_head_cap = 2 on 2026-11-13 the factors stay at × 1.24 and × 0.78,
+  and the sediment leaving the cliff is 32.0 m³ (developer.md §108). The table and
   the figures show these values.
 
 ## Related documents

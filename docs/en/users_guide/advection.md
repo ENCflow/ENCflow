@@ -517,8 +517,10 @@ has the figures, tables and the list of derived cases).
 - Bores, hydraulic jumps, tsunami run-up and other flows with
   discontinuities: the default (3).
 - Rainfall runoff on a real DEM with a channel mask: 3 +
-  `f_opening_dynamic = 3` + `f_dry_head_cap = 1` + `f_advection_donor = 3`
+  `f_opening_dynamic = 3` + `f_dry_head_cap = 2` + `f_advection_donor = 3`
   (the defaults). Roughness calibrated with scheme 1 needs recalibration. To
+  reproduce cases calibrated with the default until 2026-11-13,
+  `f_dry_head_cap = 1`, set 1 explicitly (the `f_dry_head_cap` item below). To
   reproduce cases calibrated with the default before 2026-11-09,
   `f_advection_donor = 0`, set 0 explicitly
   ([One-cell-wide channels and the upwind donors of the advection term](advection_donor.md)).
@@ -543,25 +545,29 @@ listed in the [shallow water chapter](swflow.md).
   counts the upslope ground of a uniform slope as blocking and makes the flow
   too fast; use 3 (blockage measured above the local plane) there. The idea
   and its history are in [Passage-width adjustment](passage_width.md).
-- `f_dry_head_cap`: the pressure term stops water from climbing onto dry
+- `f_dry_head_cap`: the pressure term stops water from climbing onto
   ground above the water surface, but where the advection term wins, water
   can leak over at bore fronts and in incised channels. Capping the edge
-  depth toward a dry cell by the energy head prevents it. The default 1 caps
+  depth toward high ground by the energy head prevents it. 1 caps
   only while the receiving cell is dry. Once the cells of a bank or of the
   land behind it are thinly wet (rain, the film left after the water has
   receded), the cap is lifted, and channel water whose level is below the
   bank can climb onto the wet bank (in a flowing incised channel, the bank
   row with a 2 cm film rises to 7–15 cm;
-  [test/bankcap](../../../test/bankcap/en/README.md)). 2 applies the same cap
+  [test/bankcap](../../../test/bankcap/en/README.md)). The default 2 applies the same cap
   also when the receiver is wet, as long as its bed is above the water level
   of the sender, and stops this (it is not applied to a submerged step, that
-  is, where the bed of the receiver is below the water level of the sender).
+  is, where the bed of the receiver is below the water level of the sender; in
+  runs with the debris-flow model `f_debris`, the surface of the flow = bed +
+  water depth + solid thickness is used in place of the water level of the
+  sender).
   Both are ENCflow's own rules built on the Bernoulli relation "water does not
   climb onto ground above its energy head".
-  2 is not the default: in runs where thin flow runs over steep terrain
-  (rainfall runoff on a real DEM and the like) the results can differ from 1.
-  Try it when an unnatural strip of inundation appears along a bank (the example
-  [bridge_wood_jam](../../../examples/bridge_wood_jam/en/README.md) uses this setting).
+  The default was 1 until 2026-11-13. In rain-wetted steep valleys (rainfall
+  runoff on a real DEM) and at run-up fronts the results differ between 1 and 2,
+  so set 1 explicitly to reproduce cases computed or calibrated with the
+  versions up to then (the differences in the Chichibu regression case are in
+  [test/chichibu](../../../test/chichibu/en/README.md)).
 - `f_hcap_upwind = 2`: with schemes 2 and 3 the edge depth of the
   continuity equation, $`h_e = (h_c + h_n)/2`$, is small at the bore front and
   water can pile up in the one cell behind it (a spike). Using the upwind

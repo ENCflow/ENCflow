@@ -43,12 +43,12 @@ morphology.
    (measured: amplitude 6.0 → 3.10 → 1.52 m, ratio 1.03).
 2. High angle (α = 60°): the same amplitude grows as exp(+|D| k² t), and the
    growth rate is 0.5–1.5 times the theoretical value (measured
-   6.0 → 10.2 → 13.0 m, ratio 0.75). In addition, in the spectrum of the
+   6.0 → 10.2 → 12.9 m, ratio 0.74). In addition, in the spectrum of the
    irregularities of the depth contour on the offshore side of the surf zone
    (h = 0.8 m), the power at wavelengths below 10 m is under 15 % (measured
    4 %; no grid-scale bars).
    2b. high0 (the former cell-radius kernel): the same power is 20 % or more
-   (measured 26 %).
+   (measured 27 %).
 3. Volume conservation (closed domain; rounding at the printed precision is
    tolerated).
 4. The state.dat of off and nowave are byte-identical (cmp in Run.sh).

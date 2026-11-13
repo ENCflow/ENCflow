@@ -71,7 +71,7 @@ without feedback.
 | 2 driftwood + debris (load criterion) | round-off | 0.051 / 0.019 | 0.40 mm | PASS. state.dat and driftwood.dat byte-identical to 2′ |
 | 3 restart | bldgdebris.dat and state.dat byte-identical to the continuous run | | | PASS |
 | 4 void-ratio feedback | round-off | 0.082 / 0.075 | 0.87 mm | PASS. S(t) agrees with 4′ |
-| 5 defaults | round-off | 15.3 / 5.8 | 0.13 m | PASS. Byte-identical to 5′ |
+| 5 defaults | round-off | 15.4 / 5.7 | 0.14 m | PASS. Byte-identical to 5′ |
 
 - The volume, weighted by gv, is conserved to machine precision (round-off of
   about 1e-10 m·cell or less), and it is also confirmed that the change of the
@@ -102,6 +102,9 @@ without feedback.
   0.075). The former values of configuration 5 (15.3 / 6.6, 0.12 m) are
   15.3 / 5.9, 0.14 m even with 1; they had been left uncorrected after the
   earlier changes.
+- The values of configuration 5 are those after the default of the edge-depth cap became
+  f_dry_head_cap = 2 (2026-11-13; with 1 they are 15.3 / 5.8, 0.13 m; the values of
+  configurations 1–4 are the same; developer.md §108).
 
 ## Related documents
 

@@ -94,18 +94,18 @@
                             !   all inflow links) were removed (the run stops
                             !   if they are set. users_guide/
                             !   advection_donor.md)
-  !f_dry_head_cap = 1       ! cap the edge depth toward a dry cell by the
+  !f_dry_head_cap = 2       ! cap the edge depth toward high ground by the
                             !   energy head eta + u_n^2/2g - z_receiver
-                            !   (0: off, 1: on = default). Water cannot climb
-                            !   onto dry ground above the water surface plus
-                            !   velocity head (fixes leaks at bore fronts and
-                            !   in 1-2 cell wide incised channels).
-                            !   2: as 1, and also cap when the receiver is wet
-                            !   but its bed is above the water level of the
-                            !   sender (channel water below the bank does not
-                            !   climb onto a thinly wet bank; in runs where thin
-                            !   flow runs over steep terrain the results can
-                            !   differ from 1)
+                            !   (0: off, 1: only while the receiver is dry.
+                            !   Water cannot climb onto dry ground above the
+                            !   water surface plus velocity head (fixes leaks
+                            !   at bore fronts and in 1-2 cell wide incised
+                            !   channels), 2: as 1, and also cap when the
+                            !   receiver is wet but its bed is above the water
+                            !   level of the sender (channel water below the
+                            !   bank does not climb onto a thinly wet bank or
+                            !   valley wall) = default). The default was 1
+                            !   until 2026-11-13
   !f_opening_dynamic = 3    ! dynamic reassignment of blocked openings
                             !   (0: off, 1: edges between channel cells only
                             !   (inactive without fn_rw), 2: all edges (the
