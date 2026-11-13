@@ -12,6 +12,10 @@
 - `Chichibu_100m_river_flowline.txt` — 河道マスクを、窪地処理済みの標高の落水線に載せ直したもの
   (6,515 セル。[utils/river_flowline](../../../utils/river_flowline/README.md)。回帰ケース param.txt と
   test/chichibu_icmap が使う)
+- `width_chichibu50.txt` / `width_chichibu100.txt` — 元の河道マスクのセルに一様 50 m / 100 m の河道幅
+  (サブグリッド河道の派生実験 param_w*.txt が使う)
+- `width_chichibu50_flowline.txt` — 載せ直した河道マスクのセルに一様 50 m の河道幅(tutorials/chichibu の
+  補足の W = 50 の計算が使う)
 
 データの由来: 標高データ(および流域マスク)は国土地理院の基盤地図情報
 数値標高モデルより作成、河道マスクは国土数値情報河川データから作成された

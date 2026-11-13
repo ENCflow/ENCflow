@@ -11,6 +11,8 @@
   50 m の河道セルを含む)
 - `Chichibu_50m_river_flowline.txt` — 河道マスクを標高の落水線に載せ直したもの(14,361 セル。
   [utils/river_flowline](../../../utils/river_flowline/README.md)、developer.md §109)
+- `width50_50.txt` / `width50_50_flowline.txt` — 元の河道マスク / 載せ直した河道マスクのセルに一様 50 m の
+  河道幅(後者は tutorials/chichibu の補足の W = 50 の計算が使う)
 
 出典は data_chichibu と同じ(2026-10-03 に利用者から提供)。
 

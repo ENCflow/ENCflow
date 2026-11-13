@@ -3605,8 +3605,8 @@
     {
       "source": "test/chichibu/data_chichibu/README.md",
       "target": "test/chichibu/en/data_chichibu/README.md",
-      "source_sha256": "26544a4cd73d1d27d704c7254aeb1e3ac2c624032469fdff047a79541aef7bfe",
-      "target_sha256": "cadf0a7595d580dcc8278447e2343d0dbddd44b6097ced440c19279c2b23fa4c",
+      "source_sha256": "e580c1f1f630388915175b4fabc8ae9e82d857a8d01ad6b9e6b76741b5dfb263",
+      "target_sha256": "4db1f5fece43fa719b9b2e470a4db5b50b225d4ea5a10ff18c9e8bda90974419",
       "reviewer": "Claude (Claude Code session; full-text content and lexical review, no model execution)",
       "method": "assistant",
       "reviewed_on": "2026-11-13"
@@ -3614,8 +3614,8 @@
     {
       "source": "test/chichibu/data_chichibu_200m/README.md",
       "target": "test/chichibu/en/data_chichibu_200m/README.md",
-      "source_sha256": "c74920cc22b0f7131784bd975d8e6c80c8cacf62acbf5b162f57e7a68fe8dca8",
-      "target_sha256": "c3abb81de5a0b06059916234841e4c0d1457953c924b0591f01a29008bda2eff",
+      "source_sha256": "d29f7ce3f128ec0578a821683c2fc853c3e3683c1d1ce6bae81b91ac06cf4aff",
+      "target_sha256": "16e803420adaafa0c5bef29ecf196638caf918e5e07c92d78ff5417217512d3d",
       "reviewer": "Claude (Claude Code session; full-text content and lexical review, no model execution)",
       "method": "assistant",
       "reviewed_on": "2026-11-13"
@@ -3623,8 +3623,8 @@
     {
       "source": "test/chichibu/data_chichibu_50m/README.md",
       "target": "test/chichibu/en/data_chichibu_50m/README.md",
-      "source_sha256": "f9d84a6e74aaaf787ea0414d5b26d7bad8075e8391169980201df17341beaef9",
-      "target_sha256": "68638534ff1ba181a6beb51a13fa66a16034dbad4e00e9bed309ed0f86328514",
+      "source_sha256": "5cbe9a24eaf013c168ee6dfcf6a6ded7904713ba459b7d88d04562be3549b96a",
+      "target_sha256": "a8d4192b1db2a2e565815aa0cb4136d1e0205ee5994ad5c705c4cb1400d8934b",
       "reviewer": "Claude (Claude Code session; full-text content and lexical review, no model execution)",
       "method": "assistant",
       "reviewed_on": "2026-11-13"

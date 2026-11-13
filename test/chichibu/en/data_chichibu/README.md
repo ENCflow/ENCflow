@@ -17,6 +17,10 @@ at a different resolution).
 - `Chichibu_100m_river_flowline.txt` — the channel mask moved onto the flow lines of the depression-filled
   elevation (6,515 cells; [utils/river_flowline](../../../../utils/river_flowline/en/README.md); used by the
   regression case param.txt and by test/chichibu_icmap)
+- `width_chichibu50.txt` / `width_chichibu100.txt` — uniform channel width of 50 m / 100 m on the cells of the
+  original channel mask (used by the derived sub-grid channel experiments param_w*.txt)
+- `width_chichibu50_flowline.txt` — uniform channel width of 50 m on the cells of the moved channel mask (used
+  by the W = 50 computations of the supplement of tutorials/chichibu)
 
 Origin of the data: the elevation data (and the catchment mask) were made
 from the Fundamental Geospatial Data digital elevation model of the

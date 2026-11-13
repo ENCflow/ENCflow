@@ -17,6 +17,8 @@ param50_*.txt.
   contains a 50 m channel cell)
 - `Chichibu_50m_river_flowline.txt` — the channel mask moved onto the flow lines of the elevation (14,361 cells;
   [utils/river_flowline](../../../../utils/river_flowline/en/README.md), developer.md §109)
+- `width50_50.txt` / `width50_50_flowline.txt` — uniform channel width of 50 m on the cells of the original /
+  the moved channel mask (the latter is used by the W = 50 computations of the supplement of tutorials/chichibu)
 
 The source is the same as data_chichibu (provided by the user on 2026-10-03).
 
