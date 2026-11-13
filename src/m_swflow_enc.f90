@@ -1660,8 +1660,14 @@ subroutine init_enc_status(p, g, s, sx)
           else if (uve < 0.0 .and. hc < p%dd) then
             he = min(he, max(s%z(in,jn) + hn + uve**2 / (2 * p%gg) - s%z(i,j), 0.0))
           else if (opt%f_dry_head_cap >= 2) then
-            ! 濡れた受け手でも、その地盤が送り手の水位より高ければ頭打ち(§108。calc_kth_flux と同じ規則)
-            he = cap_he_wet(he, uve, hc, hn, s%z(i,j), s%z(in,jn), p%gg)
+            ! 濡れた受け手でも、その地盤が送り手の水位より高ければ頭打ち(§108。calc_kth_flux と同じ規則。
+            ! 土石流が有効なら、水位は流れの表面 z + h + hs)
+            if (s%debris_active) then
+              he = cap_he_wet(he, uve, hc + max(s%hs(i,j), 0.0), hn + max(s%hs(in,jn), 0.0), &
+                              s%z(i,j), s%z(in,jn), p%gg)
+            else
+              he = cap_he_wet(he, uve, hc, hn, s%z(i,j), s%z(in,jn), p%gg)
+            end if
           end if
         end if
         if ((uve > 0.0 .and. hc <= 0.0) .or. (uve < 0.0 .and. hn <= 0.0)) he = 0.0
@@ -2487,12 +2493,14 @@ end function
 !   送り手のエネルギー頭が受け手の地盤を超える分 max(z_送 + h_送 + u_n²/2g − z_受, 0) で
 !   頭打ちする(乾いた受け手への頭打ち §68.16 と同じ式)。受け手の地盤が送り手の水位より低い
 !   (水に浸かった段)ときと、流速 0 のエッジは he のまま。0 を返したエッジの流速は、呼び出し側が
-!   0 にする。乾いた受け手(従来の 2 つの分岐)を通らなかったエッジにだけ呼ぶ
+!   0 にする。乾いた受け手(従来の 2 つの分岐)を通らなかったエッジにだけ呼ぶ。
+!   土石流が有効な計算では、呼び出し側が hc・hn に固体の柱状量 hs を足して渡す(流れの表面は
+!   z + h + hs。圧力項・flowdepth と同じ)
 !----------------------------------------------------------------------
 pure function cap_he_wet(he, uve, hc, hn, zc, zn, gg) result(he_corr)
   real, intent(in) :: he          ! セル境界水深(ここまでの規則を通した後)
   real, intent(in) :: uve         ! セル境界の流速(中心→近傍が正)
-  real, intent(in) :: hc, hn      ! 中心セル・近傍セルの水深
+  real, intent(in) :: hc, hn      ! 中心セル・近傍セルの流れの深さ(水深。土石流では + hs)
   real, intent(in) :: zc, zn      ! 中心セル・近傍セルの地盤
   real, intent(in) :: gg          ! 重力加速度(補正前。Bernoulli の速度水頭)
   real :: he_corr
@@ -2869,7 +2877,14 @@ subroutine calc_kth_flux(p, g, s, sx, uve0, tae0, i, j, k, in, jn, f_runge, uve1
         he = min(he, max(s%z(in,jn) + hn + uve1**2 / (2 * p%gg) - s%z(i,j), 0.0))
         if (he <= 0.0) uve1 = 0.0
       else if (opt%f_dry_head_cap >= 2) then
-        he = cap_he_wet(he, uve1, hc, hn, s%z(i,j), s%z(in,jn), p%gg)
+        ! 土石流が有効なら、送り手の水位は流れの表面 z + h + hs(圧力項と同じ。hsc・hsn は時刻 n の値)。
+        ! 水深 h だけで判定すると、固体の厚い流れが、流れの表面より低い地盤へも進めなくなる
+        ! (test/volcano の平坦部の堆積が 44 mm → 3 mm。§108.7)
+        if (have_db) then
+          he = cap_he_wet(he, uve1, hc + hsc, hn + hsn, s%z(i,j), s%z(in,jn), p%gg)
+        else
+          he = cap_he_wet(he, uve1, hc, hn, s%z(i,j), s%z(in,jn), p%gg)
+        end if
         if (he <= 0.0) uve1 = 0.0
       end if
     end if
