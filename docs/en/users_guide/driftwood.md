@@ -165,7 +165,7 @@ not by capture cells but by `culv_jam = 1` of the culvert ("Jam at a culvert inl
 | Bridge (channel resolved by cells, or with the channel width `fn_width`) | abutments, approach embankments and levees as terrain and levees; no deck | the row of cells crossing the channel at the bridge | given by the user (note below) |
 | Grid-type (steel) open check dam, driftwood catcher | wings as terrain | the row of cells of the open part | close to 1, as these works are meant to stop driftwood (a given) |
 | Slit dam (slit resolved by cells) | dam body as terrain, the slit as a gap of 1–2 cells | the slit cells | given by the user |
-| Slit dam, culvert, sluice pipe (opening narrower than a cell) | dam body as terrain, the opening as a [culvert](structure.md) | not needed; the cell group on the side a culvert with `culv_jam = 1` is drawing from ("Jam at a culvert inlet" below) | all of it (fixed) |
+| Slit dam, culvert, sluice pipe (opening narrower than a cell) | dam body as terrain, the opening as a [culvert](structure.md) | not needed; the cell group on the side a culvert with `culv_jam = 1` is drawing from ("Jam at a culvert inlet" below) | the share of the water drawn by the culvert (fixed) |
 
 - Connect the row of capture cells by four-neighbour links so that no diagonal path is left
   open (the same caution as for the capture zone of a dam). Capture ratios given on cells of
@@ -248,9 +248,16 @@ discharge law of the culvert.
 /
 ```
 
-- **Capture**: a culvert passes no driftwood. The moving driftwood that reaches the cell group
-  on the side a culvert with `culv_jam = 1` is drawing from (`culv_in_cell` in forward flow,
-  `culv_out_cell` in reverse flow) is all transferred to the jammed wood `wj`. Nothing is
+- **Capture**: a culvert passes no driftwood. Of the moving driftwood in the cell group on the
+  side a culvert with `culv_jam = 1` is drawing from (`culv_in_cell` in forward flow,
+  `culv_out_cell` in reverse flow), the same share as the water drawn by the culvert is
+  transferred to the jammed wood `wj` (the wood that would have entered with the water piles
+  up at the inlet; with $`\Delta h`$ the depth drawn from the cell in one step and $`h`$ the
+  depth after drawing, the share $`\Delta h/(h + \Delta h)`$ of the moving driftwood of the
+  cell). Where all the water of the cells heads for the culvert (the mouth of a conduit
+  crossing an embankment, just upstream of the outlet of a slit dam), all the wood that
+  arrives jams. Where the culvert draws part of the main flow (a sluice pipe, an intake), only
+  the share of the water drawn jams and the rest flows on along the main channel. Nothing is
   captured while the culvert discharge is zero. `fn_dwtrap` is not needed (the two can be
   combined).
 - **Loss**: from the solid volume $`V_j`$ (m³) of the jam in the cell group on the
@@ -280,12 +287,16 @@ discharge law of the culvert.
   discharge law.
 - The cell drag above also acts in the inlet cells, but the flow converging on the inlet is
   slow, so it has almost no effect.
-- **Choose intake cells from which all the flow heads for the culvert** (just upstream of the
-  outlet of a slit dam, the mouth of a conduit crossing a road embankment, and the like). All
-  the wood that enters the intake cell group jams at the inlet, whatever share of the flow
-  heads for the culvert. On a sluice pipe or an intake whose intake cells are cells of the
-  main river channel, even the wood that only passes along the channel piles up at the inlet,
-  and the blockage is overestimated.
+- **The jam builds up gradually.** The wood of an intake cell piles up at the inlet over about
+  the time it takes the culvert to replace the water of the cell (the water volume of the cell
+  ÷ the discharge the culvert draws from that cell). Drawing 3 m³/s from a cell of a 10 m grid
+  with a depth of 3 m takes about 100 s.
+- **On a culvert whose intake cells are cells of the main channel (a sluice pipe, an
+  intake)**, what jams at the inlet is, of the wood flowing along the main channel, the share
+  of the water drawn by the culvert. In a steady flow it is the ratio of the culvert discharge
+  to the discharge entering the intake cells from upstream. Differences between the motion of
+  water and wood, such as wood floating at the surface and passing in front of the inlet or
+  being drawn towards the inlet, are not considered.
 
 **What it cannot do**
 
@@ -300,6 +311,10 @@ discharge law of the culvert.
   is handled only by culverts with `culv_jam = 1`. The drag of the capture cells acts on the
   flow across cell edges and does not enter the discharge law of a culvert. Wood piled up in
   front of the inlet of a culvert without `culv_jam` does not act on the flow.
+- The capture at a culvert inlet assumes that the wood heads for the inlet in the same share as
+  the water (a well-mixed cell). The user cannot give the captured share. Wood floating at the
+  surface and passing over the inlet, wood stopped by a screen in front of the inlet, and thin
+  wood passing through are not expressed.
 - The loss at a culvert inlet is set only by the solid volume of the jam and the section area
   of the opening. The ratio of the log length to the size of the opening, the shape of the jam
   and the position of the jam relative to the water level are not considered. The jam never
@@ -446,7 +461,9 @@ of the flow with `f_dwjam = 0` with a run without driftwood. The jam at a culver
 checked in a set-up that drains an upstream pool through a single culvert: agreement of the
 discharge with the discharge law including the loss of the jam (both the weir and the
 full-pipe regimes), and byte identity of the flow with `culv_jam = 0` and with `f_dwjam = 0`
-with a run without driftwood.
+with a run without driftwood. In a set-up with a culvert that draws part of the main flow,
+the share that jams at the inlet is checked against the share of the water drawn by the
+culvert.
 
 ## Worked example: backwater and bypass flooding from driftwood jammed at a bridge
 

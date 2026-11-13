@@ -44,10 +44,11 @@ module m_driftwood
   !           C_D・φ は校正値。本モジュールは係数と有効フラグを s%dw_jamk・
   !           s%dw_jamphi・s%dw_jam に書く。§50.7・docs/woodjam_plan.md)。
   !           fn_dwtrap を与えなければ、確保も分岐の中の計算もしない。
-  !           カルバートの流入口(&list_struct_culvert の culv_jam = 1。§50.8): その
-  !           カルバートが取水している側のセル群の流動流木を、全量、集積流木へ移す
-  !           (カルバートは流木を通さないので、届いた流木は流入口に溜まる)。集積の損失は
-  !           m_boundary の structure_makebdc が s%wj を読んで流量則に入れる
+  !           カルバートの流入口(&list_struct_culvert の culv_jam = 1。§50.8・§50.11): その
+  !           カルバートが取水している側のセル群の流動流木のうち、このステップに
+  !           カルバートが引いた水と同じ割合を、集積流木へ移す(カルバートは流木を通さない
+  !           ので、水と一緒に入るはずだった流木が流入口に溜まる。水質の転送と同じ割合)。
+  !           集積の損失は m_boundary の structure_makebdc が s%wj を読んで流量則に入れる
   !   ダム:   捕捉帯セルは毎ステップ全量吸収されるため、流動流木 hd も
   !           同伴してダム別台帳へ移す(m_wq と同じ契約。放流流木 0 =
   !           既知の妥協。堆積 wd は接地済みのため残す)
@@ -65,7 +66,7 @@ module m_driftwood
   use iso_fortran_env, only : real64
   use m_sysparam, only : t_sysparam
   use m_geoinfo, only : t_geoinfo
-  use m_state, only : t_state
+  use m_state, only : t_state, sect_cell, sect_vh
   use m_boundary, only : t_boundary, e_struct_dam, e_struct_culvert
   use list_driftwood, only : t_list_driftwood, list_driftwood_read
   use m_swflow_enc, only : chn
@@ -522,7 +523,7 @@ end function
 !----------------------------------------------------------------------
 ! 流入口で流木を捕捉するカルバートのセルの一覧(自帯分のみ。setup_dams と同型)
 !   cells(1:2,k) = セル、cells(3,k) = 1: 取水セル群 cin、2: 吐口セル群 cout。
-!   捕捉するのは、そのステップに取水している側だけ(m_driftwood_calc)
+!   捕捉するのは、そのステップに取水している側の、カルバートが引いた水の割合だけ(m_driftwood_calc)
 !----------------------------------------------------------------------
 subroutine setup_culv(dw, b)
   type(t_driftwood), intent(inout) :: dw
@@ -622,27 +623,42 @@ subroutine m_driftwood_calc(dw, p, g, s, b, it)
   type(t_state), intent(inout) :: s
   type(t_boundary), intent(in) :: b      ! カルバートの目標流量 q(取水している側の判定)
   integer, intent(in) :: it
-  integer :: i, j, k, nd, side
-  real :: hh, w, ee
+  integer :: i, j, k, nd, side, ncs
+  real :: hh, w, ee, qcell, dht
 
   if (it < 0) continue  ! 引数未使用の警告を抑制
   if (.not. dw%enabled) return
 
-  ! (0) カルバートの流入口での捕捉(culv_jam = 1。§50.8): カルバートは流木を通さないので、
-  !     取水している側のセル群に届いた流動流木を、全量、集積流木へ移す。取水している側は、
-  !     このステップの目標流量 q(makebdc の値。全ランク同値)の符号で決める(q > 0: 取水セル群、
-  !     q < 0: 吐口セル群。q = 0 は捕捉しない = 水を引いていない流入口には掛からない)
+  ! (0) カルバートの流入口での捕捉(culv_jam = 1。§50.8・§50.11): カルバートは流木を通さないので、
+  !     水と一緒に入るはずだった流木が流入口に溜まる。取水している側のセルの流動流木のうち、
+  !     このステップにカルバートが引いた水と同じ割合を、集積流木へ移す(よく混ざったセル。水質の
+  !     転送 intake_cq と同じ割合。規則は【独自】)。引いた水深は、boundary_h の汎用転送と同じ式
+  !     (目標の体積 |q|Δt をセル群に等分)の dht で、割合は dht/(h + dht)(h は引いた後の水深。
+  !     断面形 σ のセルは矩形換算水深 = 体積。水が足りずに汲み切ったセルは h = 0 で全量)。
+  !     本流のセルを取水セル群にしたカルバートでも、捕捉されるのは引いた水の割合だけで、残りは
+  !     流動流木のまま下流へ流れる。取水している側は、このステップの目標流量 q(makebdc の値。
+  !     全ランク同値)の符号で決める(q > 0: 取水セル群、q < 0: 吐口セル群。q = 0 は捕捉しない =
+  !     水を引いていない流入口には掛からない)
   do nd = 1, dw%nculv
     if (b%struct(dw%culv(nd)%ist)%q == 0.0) cycle
-    side = 2
-    if (b%struct(dw%culv(nd)%ist)%q > 0.0) side = 1
+    if (b%struct(dw%culv(nd)%ist)%q > 0.0) then
+      side = 1
+      ncs = b%struct(dw%culv(nd)%ist)%ncin
+    else
+      side = 2
+      ncs = b%struct(dw%culv(nd)%ist)%ncout
+    end if
+    qcell = abs(b%struct(dw%culv(nd)%ist)%q) * p%dt / (ncs * g%dx * g%dy)
     do k = 1, dw%culv(nd)%nc
       if (dw%culv(nd)%cells(3,k) /= side) cycle
       i = dw%culv(nd)%cells(1,k)
       j = dw%culv(nd)%cells(2,k)
       if (s%hd(i,j) <= 0.0) cycle
-      w = s%hd(i,j)
-      s%hd(i,j) = 0.0
+      dht = qcell / colfac(s, i, j)
+      hh = max(s%h(i,j), 0.0)
+      if (sect_cell(s, i, j)) hh = max(sect_vh(s, i, j, s%h(i,j)), 0.0)
+      w = s%hd(i,j) * (dht / (hh + dht))
+      s%hd(i,j) = s%hd(i,j) - w
       s%wj(i,j) = s%wj(i,j) + w
       dw%vrow(j,6) = dw%vrow(j,6) + vol_col(g, s, i, j, w)
     end do

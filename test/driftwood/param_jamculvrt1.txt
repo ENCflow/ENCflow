@@ -8,7 +8,7 @@
   tt = 10800
   dt_disp = 600
   dt_file = 21600
-  dt_recrd = 600
+  dt_recrd = 300            ! param_jamculv3.txt と同じ記録間隔
   fn_geoinfo = '-'
   fn_initial = '-'
   fn_boundary = '-'

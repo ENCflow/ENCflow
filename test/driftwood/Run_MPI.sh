@@ -66,4 +66,13 @@ echo ""
 python3 "$sdir/Check_woodjam.py" culv result_jamculv3 0.06 both || rc=1
 compare_serial save_jamculv3 "構成6a"
 
+# 構成6h: 本流の水の一部を引くカルバートの流入口の捕捉(取水セル群の 4 セルは行 3〜6。
+#   np = 2・4 では 2 つのランクに分かれ、各ランクが自帯のセルの「引いた水の割合」を捕捉する)
+set -o pipefail
+mpirun -np "$NP" $MPIRUN_OPTS ./encflow_mpi param_jamculvshare.txt | tee -a Screen.log || exit 1
+set +o pipefail
+echo ""
+python3 "$sdir/Check_woodjam.py" share result_jamculvshare || rc=1
+compare_serial save_jamculvshare "構成6h"
+
 exit $rc

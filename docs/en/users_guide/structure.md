@@ -187,9 +187,10 @@ full conduit (orifice + conduit friction).
 ```
 
 When used with the [Driftwood](driftwood.md) module, a culvert with `culv_jam(n) = 1` loses
-discharge to the wood piled up at its inlet. A culvert passes no driftwood, so the moving
-driftwood that reaches the cell group on the side it is drawing from (`culv_in_cell` in forward
-flow, `culv_out_cell` in reverse flow) all becomes jammed wood `wj`. From the solid volume
+discharge to the wood piled up at its inlet. A culvert passes no driftwood, so of the moving
+driftwood in the cell group on the side it is drawing from (`culv_in_cell` in forward
+flow, `culv_out_cell` in reverse flow), the same share as the water drawn by the culvert
+becomes jammed wood `wj`. From the solid volume
 $`V_j`$ (m³) of the jam in the cell group on the higher-water side, a loss coefficient
 $`C_A = 2\kappa_0 V_j/(BD)`$ is formed; the free-surface (weir) discharge is multiplied by
 $`(1 + C_A/3)^{-3/2}`$ and $`C_A`$ is added to the sum of losses of the full conduit
@@ -203,10 +204,11 @@ discharge law in [the supplement](hydraulics.md#2-culverts-sluices)).
   only and the discharge is not reduced.
 - Without a jam (including `culv_jam = 0`), the discharge is bit-identical to the law without
   this option.
-- All the wood that enters the intake cell group jams at the inlet. Use it on culverts whose
-  intake cells are cells from which all the flow heads for the culvert (just upstream of the
-  outlet of a slit dam, the mouth of a buried conduit). On a sluice pipe whose intake cells are
-  cells of the main river channel, the blockage is overestimated.
+- What jams at the inlet is, of the wood in the intake cell group, the share of the water
+  drawn by the culvert. Where all the water of the cells heads for the culvert (just upstream
+  of the outlet of a slit dam, the mouth of a buried conduit), all the wood that arrives jams;
+  where the culvert draws part of the main flow (a sluice pipe, an intake), only the share of
+  the water drawn jams.
 
 Constraints: cannot connect to pond cells. The downstream side cannot
 be omitted (no out-of-domain drainage; use a pump for that). The
@@ -541,7 +543,7 @@ For levee overtopping and breach and channel conveyance, see the
 
 - [test/coastal_drain](../../../test/coastal_drain/en/README.md): drainage with a pumping station drawing directly from the conduit layer (`f_pump_src=1`) and an outfall into sea cells.
 - [test/damwq](../../../test/damwq/en/README.md): dam capture, constant release and reservoir storage coupled with water quality, checked against mass balances and analytical complete-mixing values.
-- [test/driftwood](../../../test/driftwood/en/README.md) (configuration 6): checks that the discharge of a culvert with `culv_jam = 1` agrees with the discharge law including the loss of the wood jammed at the inlet (both the weir and the full-pipe regimes), and that the flow with `culv_jam = 0` and with `f_dwjam = 0` is byte-identical to a run without driftwood.
+- [test/driftwood](../../../test/driftwood/en/README.md) (configuration 6): checks that the discharge of a culvert with `culv_jam = 1` agrees with the discharge law including the loss of the wood jammed at the inlet (both the weir and the full-pipe regimes), that the share jamming at the inlet agrees with the share of the water drawn by the culvert, and that the flow with `culv_jam = 0` and with `f_dwjam = 0` is byte-identical to a run without driftwood.
 - [test/wqstruct](../../../test/wqstruct/en/README.md): checks that pumps (in the domain, out of the domain, from a pond, from the conduit layer), culverts (forward and reverse flow), diversions (in and out of the domain), sinks of internal sources and well pumping carry the water-quality substance with the water (water at 1 mg/L stays at 1 wherever it moves, closure of the ledger, `out_intake_g` = volume of water leaving the system × concentration).
 
 ## References

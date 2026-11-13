@@ -24,15 +24,28 @@
 #   Check_woodjam.py culv <result_dir> <V_j> [both]
 #     カルバートの流入口の集積(culv_jam = 1。上流槽を 1 本のカルバートで排水する test/culvert の配置)
 #     (1) 台帳: 捕捉の累積 trap_m3 と現在の集積 vol_jam_m3 が V_j (m3) に一致し、流動流木と立木が
-#         残っていない(流入口に届いた流木は全量が集積する)
+#         残っていない(上流槽の水は全部がカルバートを通るので、流木も全量が流入口に集積する)
 #     (2) 流量則: Log.txt の S(平均水深。f_disp_debug = 1)から求めた流量 Q = −A_total ΔS/Δt が、
-#         集積の損失 C_A = 2 κ0 V_j/(B D) を入れた流量則に、最初の出力間隔を除く全区間で ±TOL_Q で
-#         一致する。上流水深は h1 = S·A_total/A_up、流量則は区間の両端と中点のシンプソン平均
+#         その時刻の集積 V_j(t) の損失 C_A(t) = 2 κ0 V_j(t)/(B D) を入れた流量則に、最初の出力間隔を
+#         除く全区間で ±TOL_Q で一致する。流入口の集積は、引いた水の割合ずつ捕捉するので数分〜数十分
+#         かけて出来上がる。V_j(t) は driftwood.csv の vol_jam_m3(dt_recrd を dt_disp の半分にして、
+#         区間の両端と中点の値を読む)。上流水深は h1 = S·A_total/A_up、流量則は区間の両端と中点の
+#         シンプソン平均
 #           堰:   Q_w = 0.35 B h1 √(2g h1)·(1 + C_A/3)^(−3/2)
 #           満管: Q_p = B D √(2g/(1 + c_e + C_A))·√(h1 − (d_c + D)/2)、d_c = min(D, (Q_w²/(g B²))^(1/3))
 #           Q = Q_w(h1 < D)、min(Q_w, Q_p)(h1 >= D)
 #     (3) 感度: 集積のない流量則(C_A = 0)に対する比 Q/Q_0 が全区間で SENS より小さい(集積の損失が
 #         効いている)。both を付けると、満管が支配する区間と堰が支配する区間の両方があること
+#   Check_woodjam.py share <result_dir>
+#     本流の水の一部を引くカルバートの流入口の捕捉(culv_jam = 1・f_dwjam = 0。developer.md §50.11)。
+#     取水セル群の流動流木のうち、カルバートが引いた水と同じ割合が集積する。流れが定常なら、
+#     取水セル群の濃度は上流から来る濃度に等しく、集積する割合は流量の比になる:
+#       trap_m3 / rec_hyd_m3 = Q_c / Q_in
+#     (1) 集積した割合が Q_c/Q_in に ±TOL_SHARE で一致。Q_in = 取水セル群の上流の断面流量
+#         (fluxes/flux0001.csv)、Q_c = Q_in − 取水セル群と吐口セル群の間の断面流量(flux0002.csv)。
+#         どちらも最後の記録(定常)。Q_c/Q_in が SHARE_MIN〜SHARE_MAX にあること(全量でも 0 でもない
+#         条件の検定になっている)と、吐口セル群の下流の断面流量(flux0003.csv)が Q_in に戻ることも見る
+#     (2) 終了時に流動流木が残っていない
 import sys, os, math, struct
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 from make_jam import NX, NY, DX, S, N, G, W, I_TRAP, Q_UNIT, rows, total_stock
@@ -41,6 +54,7 @@ from make_jam import C_BW, C_D, C_CE, C_ATOT, C_AUP
 D_LOG = 0.3                       # dw_dlog(param_jam*.txt と対)
 TOL_VOL, TOL_STEADY, TOL_RISE, TOL_E = 1.0e-9, 1.0e-3, 0.03, 0.03
 TOL_Q, SENS = 0.005, 0.95         # カルバートの流量則との一致、集積なしの流量則に対する比の上限
+TOL_SHARE, SHARE_MIN, SHARE_MAX = 0.01, 0.05, 0.5   # 引いた水の割合との一致、検定に使う割合の範囲
 
 
 def read_rec(f):
@@ -76,6 +90,20 @@ def ledger_last(rdir):
     names = lines[0].split(",")
     vals = [float(v) for v in [ln for ln in lines if ln.strip()][-1].split(",")]
     return dict(zip(names, vals))
+
+
+def ledger_series(rdir, name):
+    lines = [ln for ln in open(rdir + "/driftwood.csv").read().split("\n") if ln.strip()]
+    names = lines[0].split(",")
+    it, iv = names.index("time_s"), names.index(name)
+    rows_ = [ln.split(",") for ln in lines[1:]]
+    return [float(r[it]) for r in rows_], [float(r[iv]) for r in rows_]
+
+
+def flux_last(rdir, k):
+    """断面流量の記録 fluxes/flux000k.csv の最後の行の流量 (m3/s)"""
+    lines = [ln for ln in open("%s/fluxes/flux%04d.csv" % (rdir, k)) if ln.strip() and not ln.startswith("#")]
+    return float(lines[-1].split(",")[2])
 
 
 def nframes(rdir):
@@ -208,7 +236,7 @@ def read_log(rdir):
 def check_culv(rdir, vj, both, cd=1.0, phi=0.3):
     led = ledger_last(rdir)
     g1 = (abs(led["trap_m3"] - vj) < 1.0e-6 * vj and abs(led["vol_jam_m3"] - vj) < 1.0e-6 * vj
-          and led["vol_float_m3"] == 0.0 and led["vol_stock_m3"] == 0.0)
+          and led["vol_float_m3"] < 1.0e-6 * vj and led["vol_stock_m3"] == 0.0)
     print("(1) 台帳: trap_m3 = %.6f、vol_jam_m3 = %.6f(期待 %.6f m3)、流動 %.1e・立木 %.1e m3 : %s"
           % (led["trap_m3"], led["vol_jam_m3"], vj, led["vol_float_m3"], led["vol_stock_m3"],
              "PASS" if g1 else "FAIL"))
@@ -216,29 +244,56 @@ def check_culv(rdir, vj, both, cd=1.0, phi=0.3):
     kap = 2.0 * cd / (math.pi * D_LOG * (1.0 - phi) ** 3)
     ca = 2.0 * kap * vj / (C_BW * C_D)
     t, s = read_log(rdir)
+    tl, vl = ledger_series(rdir, "vol_jam_m3")
+
+    def ca_at(tt):                                       # その時刻の集積の損失係数 C_A(t)
+        for a, v in zip(tl, vl):
+            if abs(a - tt) < 1.0e-6:
+                return 2.0 * kap * v / (C_BW * C_D)
+        sys.exit("driftwood.csv に時刻 %g s の記録がない(dt_recrd を dt_disp の半分にする)" % tt)
+
     emax, rmin, rmax, nreg = 0.0, 1.0e30, 0.0, {"weir": 0, "pipe": 0}
     hmax, hmin = 0.0, 1.0e30
-    for k in range(1, len(t) - 1):                       # 最初の出力間隔(集積の前と立ち上がり)を除く
+    for k in range(1, len(t) - 1):                       # 最初の出力間隔(流れと集積の立ち上がり)を除く
         qn = -C_ATOT * (s[k + 1] - s[k]) / (t[k + 1] - t[k])
         ha, hb = s[k] * C_ATOT / C_AUP, s[k + 1] * C_ATOT / C_AUP
         hm = 0.5 * (ha + hb)
-        qm, reg = culv_law(hm, ca)
-        ql = (culv_law(ha, ca)[0] + 4.0 * qm + culv_law(hb, ca)[0]) / 6.0
+        qm, reg = culv_law(hm, ca_at(0.5 * (t[k] + t[k + 1])))
+        ql = (culv_law(ha, ca_at(t[k]))[0] + 4.0 * qm + culv_law(hb, ca_at(t[k + 1]))[0]) / 6.0
         q0 = (culv_law(ha, 0.0)[0] + 4.0 * culv_law(hm, 0.0)[0] + culv_law(hb, 0.0)[0]) / 6.0
         nreg[reg] += 1
         emax = max(emax, abs(qn / ql - 1.0))
         rmin, rmax = min(rmin, qn / q0), max(rmax, qn / q0)
         hmax, hmin = max(hmax, hm), min(hmin, hm)
     g2 = emax < TOL_Q
-    print("(2) 流量則: κ0 = %.4f 1/m、C_A = 2 κ0 V_j/(B D) = %.4f(堰の倍率 %.4f、満管の倍率 %.4f)"
+    print("(2) 流量則: κ0 = %.4f 1/m、出来上がった集積の C_A = 2 κ0 V_j/(B D) = %.4f(堰の倍率 %.4f、満管の倍率 %.4f)"
           % (kap, ca, (1.0 + ca / 3.0) ** (-1.5), math.sqrt((1.0 + C_CE) / (1.0 + C_CE + ca))))
-    print("    h1 = %.3f → %.3f m の %d 区間で |Q/Q_law − 1| の最大 %.4f %% (< %.1f %%) : %s"
+    print("    集積 V_j(t) は最初の区間の終わり(%.0f s)で %.2f %%、次の区間の終わりで %.3f %% まで出来上がる"
+          % (t[1], 100.0 * ca_at(t[1]) / ca, 100.0 * ca_at(t[2]) / ca))
+    print("    h1 = %.3f → %.3f m の %d 区間で |Q/Q_law(V_j(t)) − 1| の最大 %.4f %% (< %.1f %%) : %s"
           % (hmax, hmin, len(t) - 2, 100.0 * emax, 100.0 * TOL_Q, "PASS" if g2 else "FAIL"))
     g3 = rmax < SENS and (not both or (nreg["pipe"] > 0 and nreg["weir"] > 0))
     print("(3) 感度: 集積のない流量則に対する比 Q/Q_0 = %.3f〜%.3f (< %.2f)、満管が支配 %d 区間・堰が支配 %d 区間%s : %s"
           % (rmin, rmax, SENS, nreg["pipe"], nreg["weir"], "(両方が必要)" if both else "",
              "PASS" if g3 else "FAIL"))
     return g1 and g2 and g3
+
+
+def check_share(rdir):
+    led = ledger_last(rdir)
+    frac = led["trap_m3"] / led["rec_hyd_m3"]
+    qin, qmid, qdn = flux_last(rdir, 1), flux_last(rdir, 2), flux_last(rdir, 3)
+    share = (qin - qmid) / qin
+    g1 = (abs(frac / share - 1.0) < TOL_SHARE and SHARE_MIN < share < SHARE_MAX
+          and abs(qdn / qin - 1.0) < 1.0e-4)
+    print("(1) 引いた水の割合: Q_in = %.4f、取水と吐口の間 %.4f、吐口の下流 %.4f m3/s → Q_c/Q_in = %.5f(%g〜%g の範囲)"
+          % (qin, qmid, qdn, share, SHARE_MIN, SHARE_MAX))
+    print("    集積 %.4f m3 / 発生 %.4f m3 = %.5f、比 %.4f (1 ± %.2f) : %s"
+          % (led["trap_m3"], led["rec_hyd_m3"], frac, frac / share, TOL_SHARE, "PASS" if g1 else "FAIL"))
+    g2 = led["vol_float_m3"] < 1.0e-6 * total_stock() and led["vol_stock_m3"] == 0.0
+    print("(2) 終了時の流動流木 %.3e m3、立木 %.3e m3(全部が取水セル群を通った) : %s"
+          % (led["vol_float_m3"], led["vol_stock_m3"], "PASS" if g2 else "FAIL"))
+    return g1 and g2
 
 
 if __name__ == "__main__":
@@ -251,6 +306,8 @@ if __name__ == "__main__":
         ok = check_ratio(rdir, float(sys.argv[3]))
     elif mode == "culv":
         ok = check_culv(rdir, float(sys.argv[3]), "both" in sys.argv[4:])
+    elif mode == "share":
+        ok = check_share(rdir)
     else:
         ok = check_grow(rdir, float(sys.argv[3]), float(sys.argv[4]))
     print("== woodjam 検定(%s %s): %s ==" % (mode, rdir, "PASS" if ok else "FAIL"))

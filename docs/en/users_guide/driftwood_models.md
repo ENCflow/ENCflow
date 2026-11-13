@@ -240,10 +240,28 @@ square of the velocity; in a trial with a 10 m grid and a 1 m × 1 m opening, a 
 placed in the inlet cell reduced the discharge by only 0.1 %). A culvert with `culv_jam = 1`
 therefore takes the jam as a loss coefficient on the velocity in the opening.
 
-- **Capture.** A culvert passes no driftwood, so the moving wood $`h_d`$ of the cell group on
+- **Capture (ENCflow's own).** A culvert passes no driftwood, so the wood that would have
+  entered with the water is taken to pile up at the inlet. In each cell of the cell group on
   the side the culvert is drawing from in that step (the intake cell group for a positive
-  discharge, the outlet cell group for a negative one) is all transferred to $`w_j`$. Nothing
-  is transferred in a step with zero discharge.
+  discharge, the outlet cell group for a negative one), the same share of the moving wood
+  $`h_d`$ as the water drawn by the culvert is transferred to $`w_j`$. With $`\Delta h`$ the
+  depth drawn from the cell (the culvert discharge split equally over the cell group) and
+  $`h`$ the depth after drawing,
+
+  ```math
+  \Delta w_j = h_d\,\frac{\Delta h}{h + \Delta h}
+  ```
+
+  (cells with a cross-section shape σ are counted by volume, i.e. the rectangular-equivalent
+  depth; this is the same share with which structures carry the substance of
+  [water quality](wq.md)). Nothing is transferred in a step with zero discharge. The capture
+  does not change the concentration of wood in the cell (per volume of water), so in a steady
+  flow the concentration of the intake cells equals the concentration arriving from upstream,
+  and the jammed share is the ratio $`Q_c/Q_{\text{in}}`$ of the culvert discharge $`Q_c`$ to
+  the discharge $`Q_{\text{in}}`$ entering the intake cell group from upstream. Where all the
+  water of the cells heads for the culvert ($`Q_c = Q_{\text{in}}`$) all the wood jams, at a
+  pace set by the time it takes to replace the water of the cell (the water volume of the cell
+  ÷ the discharge drawn).
 - **Loss coefficient.** Consider a jam of thickness $`L`$ and packing ratio $`\varphi`$
   covering the section $`B \times D`$ of the opening. Its solid volume is
   $`V_j = \varphi L B D`$, so the structural coefficient of the same form as above becomes
@@ -287,9 +305,11 @@ The limits of this formulation are as follows.
   a large $`C_A`$ the weir multiplier (proportional to $`C_A^{-3/2}`$) falls faster than the
   full-pipe multiplier (proportional to $`C_A^{-1/2}`$). No measurement to compare it with is
   available yet.
-- All the wood that enters the intake cell group jams, whatever share of the flow heads for the
-  culvert. In cells from which only part of the flow heads for the culvert (a sluice pipe whose
-  intake cells are cells of the main river channel), the blockage is overestimated.
+- The capture assumes that the wood heads for the inlet in the same share as the water (a
+  well-mixed cell). Differences between the motion of water and wood, such as wood floating at
+  the surface and passing in front of the inlet, being drawn towards the inlet, being stopped
+  by a screen, or thin wood passing through, are not expressed. The captured share cannot be
+  given.
 - The jam never shrinks, and the discharge does not fall to zero. When the flow reverses, only
   the jam in the cell group on the higher-water side is read.
 
@@ -315,7 +335,7 @@ The limits of this formulation are as follows.
 
 ## 7. Verification cases
 
-- [test/driftwood](../../../test/driftwood/en/README.md): volume conservation, transport and deposition for both erosion entrainment and hydraulic recruitment, and comparison of saved states from split and uninterrupted runs. Capture and jamming at structures are checked in a straight channel: volume conservation (including the jam), agreement of the backwater from the drag of the jam with the solution of the gradually-varied-flow equation above (ratio of the rises 1.003; 0.982 where the packing limit is active), the capture ratio (0.304 for 0.3), the capture ratio rising with the jam through `dw_jamgrow` (jammed shares 0.439 and 0.933 for the solutions 0.4345 and 0.928 above), byte identity of the flow with `f_dwjam = 0` with a run without driftwood, and split continuation. The loss at a culvert inlet is checked in a set-up that drains an upstream pool through a single culvert: the discharge obtained from the decrease of the storage agrees with the discharge law including the loss (within 0.02 % in the weir regime with $`C_A`$ = 6.2, and within 0.12 % through the full-pipe and weir regimes with $`C_A`$ = 0.74), the flow with `culv_jam = 0` and with `f_dwjam = 0` is byte-identical to a run without driftwood, and split continuation.
+- [test/driftwood](../../../test/driftwood/en/README.md): volume conservation, transport and deposition for both erosion entrainment and hydraulic recruitment, and comparison of saved states from split and uninterrupted runs. Capture and jamming at structures are checked in a straight channel: volume conservation (including the jam), agreement of the backwater from the drag of the jam with the solution of the gradually-varied-flow equation above (ratio of the rises 1.003; 0.982 where the packing limit is active), the capture ratio (0.304 for 0.3), the capture ratio rising with the jam through `dw_jamgrow` (jammed shares 0.439 and 0.933 for the solutions 0.4345 and 0.928 above), byte identity of the flow with `f_dwjam = 0` with a run without driftwood, and split continuation. The loss at a culvert inlet is checked in a set-up that drains an upstream pool through a single culvert: the discharge obtained from the decrease of the storage agrees with the discharge law including the loss of the jam at that time (within 0.04 % in the weir regime with $`C_A`$ = 6.2, and within 0.12 % through the full-pipe and weir regimes with $`C_A`$ = 0.74), the flow with `culv_jam = 0` and with `f_dwjam = 0` is byte-identical to a run without driftwood, and split continuation. The capture at the inlet is checked in a set-up with a culvert that draws 15 % of the main flow: the jammed share (0.1503) agrees with the share of the water drawn (0.1505).
 - [examples/bridge_wood_jam](../../../examples/bridge_wood_jam/en/README.md): backwater and bypass flooding from driftwood jammed at a bridge (comparison of no driftwood, a jam that does not act on the flow and a jam with drag; spread from the capture assumption and the packing ratio; the relation between the jam volume and the backwater compared with the gradually-varied-flow formula above).
 - [examples/timberyard](../../../examples/timberyard/en/README.md): timber influx from a log yard by storm surge (comparison of countermeasures: delaying the release, moving the yard away, raising the seawall; a supplement compares the deposition parameters; the impact-force postprocessing).
 - [examples/tsunami_town](../../../examples/tsunami_town/en/README.md): coastal forest and log yard in a tsunami, chained with house destruction (supplement).

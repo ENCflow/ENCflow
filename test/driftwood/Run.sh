@@ -2,7 +2,8 @@
 # driftwood: 流木ラスタ場の疎通・保存則・リスタート往復検定(逐次実行)
 #   ./Run.sh
 # 合否は Check_driftwood.py(材積保存・流木化/堆積の活性・平坦部到達)と、
-# 集積流木の構成 5・6 の Check_woodjam.py(材積保存・堰上げの解析解・捕捉率・カルバートの流量則)。
+# 集積流木の構成 5・6 の Check_woodjam.py(材積保存・堰上げの解析解・捕捉率・カルバートの流量則・
+# カルバートが引いた水の割合の捕捉)。
 # 実行後の save 系は save*_serial/ にも複製する(Run_MPI.sh のバイト比較用)
 
 sdir=$(dirname "$(readlink -f "$0")")
@@ -100,11 +101,12 @@ for f in result_jamnone/H[0-9]*.txt result_jamnone/V[0-9]*.txt result_jamnone/Lo
 done
 [ $rc -eq 0 ] && echo "=== f_dwjam = 0: the flow ($nf files of H, V and Log.txt) is bit-identical to the run without driftwood ==="
 
-# 構成6: カルバートの流入口の集積流木と、流量則の損失(culv_jam。developer.md §50.8)
+# 構成6: カルバートの流入口の集積流木と、流量則の損失(culv_jam。developer.md §50.8・§50.11)
 #   test/culvert と同じ排水試験(入力 jam_c*.txt は make_jam.py が作る)。6 = 大きい集積(堰の倍率)、
 #   6a = 小さい集積・取水セル群 3 セル(満管と堰の両方のレジーム)、6b = culv_jam = 0、
 #   6c = culv_jam = 1・f_dwjam = 0、6d = 流木なし(6b・6c と流れがバイト一致)、
-#   6e = 流木モジュールなしの culv_jam = 1(停止)、6f・6g = リスタートの分割継続
+#   6e = 流木モジュールなしの culv_jam = 1(停止)、6f・6g = リスタートの分割継続、
+#   6h = 本流の水の一部を引くカルバート(構成 5 の水路。集積する割合 = 引いた水の割合)
 python3 "$sdir/make_jam.py" cz > jam_cz.txt
 python3 "$sdir/make_jam.py" ch > jam_ch.txt
 python3 "$sdir/make_jam.py" cstock > jam_cstock.txt
@@ -112,7 +114,7 @@ python3 "$sdir/make_jam.py" cstock3 > jam_cstock3.txt
 python3 "$sdir/make_jam.py" cstage > jam_cstage.txt
 rm -rf save_jamculvrt
 set -o pipefail
-for c in jamculv jamculv3 jamculvoff jamculvled jamculvnone jamculvrt1 jamculvrt2; do
+for c in jamculv jamculv3 jamculvoff jamculvled jamculvnone jamculvrt1 jamculvrt2 jamculvshare; do
     ./encflow param_$c.txt | tee -a Screen.log || exit 1
 done
 set +o pipefail
@@ -120,6 +122,8 @@ echo ""
 python3 "$sdir/Check_woodjam.py" culv result_jamculv 0.5 || rc=1
 python3 "$sdir/Check_woodjam.py" culv result_jamculv3 0.06 both || rc=1
 rm -rf save_jamculv3_serial && cp -r save_jamculv3 save_jamculv3_serial
+python3 "$sdir/Check_woodjam.py" share result_jamculvshare || rc=1
+rm -rf save_jamculvshare_serial && cp -r save_jamculvshare save_jamculvshare_serial
 for f in driftwood.dat state.dat swflow_enc.dat; do
     if cmp -s save_jamculvrt/$f save_jamculv3/$f; then
         echo "=== culvert jam restart continuation: $f is bit-identical to the straight run ==="

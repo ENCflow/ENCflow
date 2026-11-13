@@ -15,8 +15,8 @@ continuation by restart and the equivalence of the defaults are also checked.
 Capture and jamming at structures (`fn_dwtrap`: the jammed wood wj and the drag of
 the jam; developer.md §50.7) are checked by configuration 5, a straight channel,
 with `Check_woodjam.py`. The jam at a culvert inlet and the loss in the discharge law
-(`culv_jam`; developer.md §50.8) are checked by configuration 6, a drainage test, with the
-same script.
+(`culv_jam`; developer.md §50.8 and §50.11) are checked by configuration 6, a drainage test
+and a culvert that draws part of the main flow, with the same script.
 
 ## Configuration
 
@@ -98,11 +98,20 @@ The same drainage test as [test/culvert](../../culvert/en/README.md). A flat ups
 10 × 11 cells (Δx = 10 m) with a depth of 3 m is drained only through one 1 m × 1 m culvert
 crossing an embankment, into a downstream column that always stays dry (entrance loss
 c_e = 0.5, conduit length 0). The standing trees in the inlet cells become driftwood in the
-first step, and since the culvert is drawing water, all of it jams at the inlet. The downstream
-side is dry, so the discharge is a function of the upstream depth h₁ alone, and the discharge
+first step and jam at the inlet in the same share as the water the culvert draws. All the
+water of the upstream pool passes through this culvert, so all of the wood has jammed after
+about 30 minutes. The downstream side is dry, so the discharge is a function of the upstream
+depth h₁ and the jam V_j(t) at that time alone, and the discharge
 obtained from the storage S of the log can be compared directly with the discharge law
 including the loss of the jam. Representative diameter 0.3 m; default coefficients
 (C_D = 1.0 and φ = 0.3, giving κ₀ = 6.19 m⁻¹). The inputs are written by `make_jam.py`.
+
+Configuration 6h checks the capture rule itself and uses the straight channel of
+configuration 5. A culvert 10 m wide and 1 m high, with the 4 channel cells of column 100 as
+its intake cells and the 4 cells of column 140, 200 m downstream, as its outlet cells, draws
+about 15 % of the main flow and returns it downstream. Of the moving driftwood in the intake
+cells, only the same share as the water drawn by the culvert jams at the inlet; the rest
+flows on down the main channel and leaves through the east edge.
 
 | Configuration | File | Jam | What is checked |
 |---|---|---|---|
@@ -113,10 +122,12 @@ including the loss of the jam. Representative diameter 0.3 m; default coefficien
 | 6d | `param_jamculvnone.txt` | — (no driftwood) | reference for the comparison with 6b and 6c |
 | 6e | `param_jamculvbad.txt` | `culv_jam = 1` without the driftwood module | stops at initialisation |
 | 6f → 6g | `param_jamculvrt1.txt` → `param_jamculvrt2.txt` | 6a saved at 3 hours and continued | byte comparison with the continuous `save_jamculv3/` |
+| 6h | `param_jamculvshare.txt` | channel of configuration 5 with a culvert drawing about 15 % of the main flow; `f_dwjam = 0`, the initial velocity is the uniform flow, the wood is released over 2000 s; 1 hour | jammed share = share of the water drawn by the culvert |
 
 | File | Contents |
 |---|---|
-| `Check_woodjam.py culv <result> <V_j> [both]` | (1) `trap_m3` and `vol_jam_m3` of driftwood.csv equal V_j, and no moving driftwood or standing stock is left, (2) Q = −A_total ΔS/Δt agrees within ±0.5 % with the discharge law including the loss (Simpson mean over the interval) in every interval except the first output interval, (3) the ratio to the discharge law without a jam is below 0.95 in every interval. With `both`, there must be intervals governed by the full pipe and intervals governed by the weir |
+| `Check_woodjam.py culv <result> <V_j> [both]` | (1) the last `trap_m3` and `vol_jam_m3` of driftwood.csv equal V_j, and no moving driftwood or standing stock is left, (2) Q = −A_total ΔS/Δt agrees within ±0.5 % with the discharge law including the loss of the jam V_j(t) at that time (`vol_jam_m3` of driftwood.csv; Simpson mean over the two ends and the midpoint of the interval) in every interval except the first output interval, (3) the ratio to the discharge law without a jam is below 0.95 in every interval. With `both`, there must be intervals governed by the full pipe and intervals governed by the weir |
+| `Check_woodjam.py share <result>` | (1) the jammed share `trap_m3` / `rec_hyd_m3` agrees within ±1 % with the share of the water drawn by the culvert, Q_c/Q_in (Q_in: the transect discharge upstream of the intake cells; Q_c: Q_in minus the transect discharge between the intake and outlet cells; last record). Q_c/Q_in lies in 0.05–0.5 and the transect discharge downstream of the outlet cells returns to Q_in, (2) no moving driftwood is left at the end |
 
 The discharge law is that of [test/culvert](../../culvert/en/README.md) with the loss
 coefficient $`C_A = 2\kappa_0 V_j/(BD)`$ ($`V_j`$: solid volume of the jam, $`B`$ and $`D`$:
@@ -132,12 +143,27 @@ Q_p = BD\sqrt{\frac{2g}{1 + c_e + C_A}}\ \sqrt{h_1 - \frac{d_c + D}{2}},
 $`Q = Q_w`$ for $`h_1 < D`$ and $`\min(Q_w, Q_p)`$ for $`h_1 \ge D`$
 ([driftwood models explained](../../../docs/en/users_guide/driftwood_models.md) §6).
 
+The capture at the inlet moves, of the moving driftwood $`h_d`$ of an intake cell, the same
+share as the water the culvert draws in one step to the jam. With $`\Delta h`$ the depth drawn
+from the cell and $`h`$ the depth after drawing, the amount moved is
+$`h_d\,\Delta h/(h + \Delta h)`$. The capture does not change the concentration of wood in the
+intake cell (per volume of water), so in a steady flow it equals the concentration arriving
+from upstream, and the jammed share is the ratio of the discharges (configuration 6h).
+
+```math
+\frac{\text{trap}}{\text{rec}} = \frac{Q_c}{Q_{\text{in}}}
+```
+
+$`Q_{\text{in}}`$ is the discharge entering the intake cells from upstream and $`Q_c`$ the
+discharge of the culvert. Configurations 6 and 6a, where one culvert drains the upstream
+pool, correspond to $`Q_c = Q_{\text{in}}`$, and all of the wood jams.
+
 ## Running
 
 ```bash
 make
 ./Run.sh          # configuration 1 → 2 → split restart → equivalence of defaults → configuration 5 → configuration 6; PASS if all pass (about 80 seconds)
-./Run_MPI.sh 4    # MPI (configurations 1, 2, 5 and 6a); state.dat and driftwood.dat are byte-identical to the serial run (with the -O2 strict-math build)
+./Run_MPI.sh 4    # MPI (configurations 1, 2, 5, 6a and 6h); state.dat and driftwood.dat are byte-identical to the serial run (with the -O2 strict-math build)
 python3 Fig.py en # en/figs/driftwood.png
 ```
 
@@ -175,11 +201,12 @@ of the flat part (center).
 | 5e no driftwood | all outputs of H and V and Log.txt (14 files) byte-identical to 5d | PASS |
 | 5f dw_jamgrow = 0.2 | jammed share 0.4390 (solution 0.4345; 0.30 if the capture ratio stayed 0.3) | PASS |
 | 5g dw_jamgrow = 0.02 | jammed share 0.9326 (solution 0.9280) | PASS |
-| 6 culvert inlet (large jam) | jam 0.500000 m³. Over the 71 intervals of h₁ = 2.88 → 0.77 m the largest difference from the discharge law is 0.016 % (the weir governs throughout). Ratio to the discharge law without a jam 0.19–0.29 | PASS |
-| 6a small jam, 3 intake cells | jam 0.060000 m³. Over the 35 intervals of h₁ = 2.67 → 0.38 m the largest difference is 0.11 % (full pipe governs 5 intervals, weir 30). Ratio 0.72–0.83 | PASS |
+| 6 culvert inlet (large jam) | the jam is 97.8 % complete after 10 minutes and 99.9 % after 20 minutes, and ends at 0.500000 m³. Over the 71 intervals of h₁ = 2.86 → 0.77 m the largest difference from the discharge law is 0.038 % (the weir governs throughout). Ratio to the discharge law without a jam 0.19–0.29 | PASS |
+| 6a small jam, 3 intake cells | the jam is 94.9 % complete after 10 minutes and 99.7 % after 20 minutes, and ends at 0.060000 m³. Over the 35 intervals of h₁ = 2.66 → 0.38 m the largest difference is 0.11 % (full pipe governs 5 intervals, weir 30). Ratio 0.72–0.83 | PASS |
 | 6b culv_jam = 0, 6c f_dwjam = 0 | in both, the outputs of H and V and Log.txt (8 files) are byte-identical to 6d (no driftwood). In 6c the jam of 0.06 m³ enters the ledger | PASS |
 | 6e culv_jam = 1 without the driftwood module | stops at initialisation | PASS |
 | 6f → 6g split continuation by restart | driftwood.dat, state.dat and swflow_enc.dat byte-identical to the continuous run (6a) | PASS |
+| 6h culvert drawing part of the main flow | Q_in = 94.65 and Q_c = 14.24 m³/s, so the share of the water drawn is 0.1505. Jam 3.006 m³ / recruited 20 m³ = 0.1503 (ratio 0.999) | PASS |
 
 - The wood volume (stock + moving + deposited) is conserved to machine
   precision in the closed domain.
@@ -208,11 +235,16 @@ of the flat part (center).
   residence time of a well-mixed cell).
 - In configuration 6, 0.5 m³ of wood at the inlet (a bulk volume of 1.7 m³) reduces the
   discharge to 0.19–0.29 of the value without a jam. A 1 m × 1 m opening is heavily blocked by
-  little wood. The differences from the discharge law (0.02–0.11 %) come from the difference
+  little wood. The differences from the discharge law (0.04–0.11 %) come from the difference
   between the water level of the representative cell and the mean level of the pool, and from
   the change of the discharge within an output interval.
+- In configuration 6h the jammed share is 0.1 % smaller than the share of the water drawn
+  because of the wood that arrived in the first few minutes of the run. From the moment the
+  culvert starts working until the flow settles, the share of the water drawn rises from 0.148
+  to 0.150. If the wood is released in 200 s, most of it passes the inlet during this time and
+  the difference becomes 0.9 %.
 - MPI np = 1, 2, 4 are byte-identical to the serial run with the -O2
-  strict-math build (for configurations 5 and 6a, state.dat and driftwood.dat of np = 2 and 4 are
+  strict-math build (for configurations 5, 6a and 6h, state.dat and driftwood.dat of np = 2 and 4 are
   byte-identical to the serial run with the -Og -fcheck=all build). With -Ofast, fast-math ULP differences appear between
   the serial and MPI builds, so the serial comparison in `Run_MPI.sh` is
   treated as a warning (§50.3).
