@@ -122,11 +122,11 @@
     {
       "source": "docs/users_guide/advection_donor.md",
       "target": "docs/en/users_guide/advection_donor.md",
-      "source_sha256": "cc44ba48fdc1118f14b80ef633023aa86b433376f9f128a62a967d81342fe99c",
-      "target_sha256": "cfa21f812c03c1d2b1693a98dea1572c3eeb7a2013796d1d272e07e016dc28d9",
-      "reviewer": "Claude (Claude Code session; links to the shallow-water primer and the renaming of f_govequation = 1 to local inertia (note at first mention in tutorials, examples and tests): Japanese and English edited together and the changed passages compared)",
+      "source_sha256": "88b56adcc8816eaac693294e7eb126873387c595aa55f91793be0b51f98d3125",
+      "target_sha256": "6181444769d5e9e5f638532b55d91eca2e303fa0aace8d3307da637f18a10b5e",
+      "reviewer": "Claude (Claude Code session; full-text content and lexical review, no model execution)",
       "method": "assistant",
-      "reviewed_on": "2026-11-11"
+      "reviewed_on": "2026-11-13"
     },
     {
       "source": "docs/users_guide/bedmotion.md",

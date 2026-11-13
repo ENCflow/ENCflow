@@ -128,7 +128,7 @@ below the threshold depth dd (default 1 mm). With 0, which has no
 countermeasure, a film below dd is treated as "dry" and drops out of the
 donors; the brake is released all at once and the water held back is let go.
 This is the jump in the recession limb of the hydrograph (at transect 4 on
-the 200 m grid of Chichibu, +434 m³/s in one minute at 232 min). The jumps
+the 200 m grid of Chichibu, +159 m³/s in one minute at 274 min). The jumps
 appear mostly in the recession because after the rain the films on the
 hillslopes and banks all decrease slowly together and drop below dd one
 after another at many places.
@@ -209,18 +209,18 @@ no losses), 0 and 3 are compared.
 outlet). (b) Water level of the main river around the entrance of the flat
 reach (pond) created by depression filling, just upstream of transect 4.
 
-- With 0, jumps appear in the recession at 232 and 316 min. At the pond
-  entrance the film on the bank (1.5 mm at 180 min) becomes the donor on
-  line k and creates a 1.23 m water-surface step in the pond, holding back
-  water. After the film drops below dd (0.9 mm at 240 min) the step is
-  released. The moment of release is the jump at 232 min.
+- With 0, jumps appear in the recession at 274 and 285 min. At the pond
+  entrance the film on the bank (2.0 mm at 180 min) becomes the donor on
+  line k and creates a 1.18 m water-surface step in the pond, holding back
+  water. After the film drops below dd (0.9 mm at 300 min) the step is
+  released. The moment of release is the jump at 274 min.
 - With 0 and dd and dv reduced to 1/10 (0.0001 m), no jumps appear, but the
-  peak is 5,391 m³/s and the holding back remains.
+  peak is 5,385 m³/s and the holding back remains.
 - With 3 there are no jumps and no step forms. Because the artificial
   braking at many places along the main river is removed, the peak is
-  6,279 m³/s, 13 % larger than the 5,546 m³/s of 0, and 20 minutes earlier
+  6,237 m³/s, 13 % larger than the 5,509 m³/s of 0, and 24 minutes earlier
   (+20 % on the 100 m grid; test/chichibu). The change of the peak when dd is
-  divided by 10 is 5 m³/s with 3, compared with 155 m³/s with 0.
+  divided by 10 is 4 m³/s with 3, compared with 124 m³/s with 0.
 
 To reproduce this, add `fn_enc = "-"` to `&list_sysparam` in
 `en/param_step3.txt` of tutorials/chichibu, append the following
