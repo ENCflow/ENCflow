@@ -239,20 +239,20 @@
     {
       "source": "docs/users_guide/driftwood.md",
       "target": "docs/en/users_guide/driftwood.md",
-      "source_sha256": "7699832b6a38bd17793536a8014eeaa2e8e1b89a4a2c58ad0a3f5fd5514290cf",
-      "target_sha256": "3457cf5a477c4811cbce87dbfaa172af6fad519cdec72d1ab15431ddda057679",
-      "reviewer": "Claude (Claude Code session; pointer to the new example bridge_wood_jam added in the Japanese master and the English mirror; rest unchanged since the previous record)",
+      "source_sha256": "c7cdaebf36a921457070f3cc9a0efbd1f71994c331c6d795ff9759248dbed391",
+      "target_sha256": "5b53d9fe35ce3c57696b085b1523182dbb5e310b673bc9e548c6f75e6ed99be7",
+      "reviewer": "Claude (Claude Code session; dw_jamgrow changed from a step to a continuous function of the jammed amount (developer.md §50.10): the rewritten passages of the Japanese master and the English mirror compared one by one, numbers cross-checked; rest unchanged since the previous record)",
       "method": "assistant",
-      "reviewed_on": "2026-11-12"
+      "reviewed_on": "2026-11-13"
     },
     {
       "source": "docs/users_guide/driftwood_models.md",
       "target": "docs/en/users_guide/driftwood_models.md",
-      "source_sha256": "67641db8086d88b18ade9e8d6572e3bd07383b18605455028faed4afd679c80c",
-      "target_sha256": "ed498a846f4e7fd95d263ca162148ea93ac61dfa8c071e203c744f8b660679b1",
-      "reviewer": "Claude (Claude Code session; pointer to the new example bridge_wood_jam added in the Japanese master and the English mirror; rest unchanged since the previous record)",
+      "source_sha256": "6338285586735cb4231fe78248d4841926fbdc3d153d3ba1b84df886dc7b68ed",
+      "target_sha256": "2a3eceef42a5741f66e0946f6690729e48e525c18eefc3a7811460c02136b70b",
+      "reviewer": "Claude (Claude Code session; dw_jamgrow changed from a step to a continuous function of the jammed amount (developer.md §50.10): the rewritten passages of the Japanese master and the English mirror compared one by one, numbers cross-checked; rest unchanged since the previous record)",
       "method": "assistant",
-      "reviewed_on": "2026-11-12"
+      "reviewed_on": "2026-11-13"
     },
     {
       "source": "docs/users_guide/encgrid.md",
@@ -662,11 +662,11 @@
     {
       "source": "examples/List_samples/list_driftwood.txt",
       "target": "examples/List_samples/en/list_driftwood.txt",
-      "source_sha256": "267bc63aca14de71362504a4eb276e80c899e0772f3d582ef5b1ac0a3ba0346e",
-      "target_sha256": "4fffde104c874b2df43c50467b8b1d4655593725379bbd6b032a566ce945392b",
-      "reviewer": "Claude (Claude Code session; the culv_jam additions of the Japanese master and the English mirror compared passage by passage, numbers cross-checked)",
+      "source_sha256": "288cf4a77f0fd91c0b8f8603e476c36bf3a1e0f06c537c63b67a36530b646276",
+      "target_sha256": "8d520f5244121d4a3642279a4fb9d25eeab85f3f90d6ebbf518ea30ce8298020",
+      "reviewer": "Claude (Claude Code session; dw_jamgrow changed from a step to a continuous function of the jammed amount (developer.md §50.10): the rewritten passages of the Japanese master and the English mirror compared one by one, numbers cross-checked; rest unchanged since the previous record)",
       "method": "assistant",
-      "reviewed_on": "2026-11-12"
+      "reviewed_on": "2026-11-13"
     },
     {
       "source": "examples/List_samples/list_enc.txt",
@@ -3803,11 +3803,11 @@
     {
       "source": "test/driftwood/README.md",
       "target": "test/driftwood/en/README.md",
-      "source_sha256": "2c5bb4926d4a05ffd97322087b7ca8a9065eccb8b6a8641635e7ad5a315f867a",
-      "target_sha256": "e613d899391f5ea2264003d59d3d31a65e53eb260eba650f72893da55f4b36ef",
-      "reviewer": "Claude (Claude Code session; the culv_jam additions of the Japanese master and the English mirror compared passage by passage, numbers cross-checked)",
+      "source_sha256": "290f880fb90d9fa934d3c25542f0ad406dabb239ff0751e707332cfb870dbd0f",
+      "target_sha256": "eea4d225df84b97c98b12897bb1963ee4ea0d3e570c08f6b69a255719ade5e82",
+      "reviewer": "Claude (Claude Code session; dw_jamgrow changed from a step to a continuous function of the jammed amount (developer.md §50.10): the rewritten passages of the Japanese master and the English mirror compared one by one, numbers cross-checked; rest unchanged since the previous record)",
       "method": "assistant",
-      "reviewed_on": "2026-11-12"
+      "reviewed_on": "2026-11-13"
     },
     {
       "source": "test/driftwood/figs/driftwood.png",

@@ -126,7 +126,7 @@ The labels in the Basis column are explained in [How to read the basis of a defa
 | fn_dwtrap | — (enables when given) | map of the capture ratio E | **given** set by the log length and the opening width; the module carries no length (§6) |
 | f_dwjam | 1 | effect of the jam on the flow | **method** 1 = drag in the cells holding the jam; 0 is the ledger only (the flow equals a run without driftwood; for comparison) |
 | dw_jamcd / dw_jamphi | 1.0 / 0.3 | drag coefficient and packing ratio of the jam | **empirical** the structure of the coefficient follows the porous-obstruction formula[^follett20]; the values are provisional, checked neither against the original text nor against measured backwater; to be calibrated (§6) |
-| dw_jamgrow | none | cells whose jammed amount exceeds it get a capture ratio of 1 | **given** approximates wood catching more easily once a jam has started; not given = constant capture ratio |
+| dw_jamgrow | none | cells whose jammed amount reaches it get a capture ratio of 1; until then the capture ratio rises in proportion to the jammed amount | **given** approximates wood catching more easily once a jam has started (§6); the guide is a multiple of the packing ratio times the representative diameter (one layer of logs); not given = constant capture ratio |
 
 **Where to look when revising the defaults**
 
@@ -162,12 +162,46 @@ $`k\tau = E/(1-E)`$ so that this equals $`E`$, the amount captured in one step i
 ```
 
 ($`\Delta x`$ is the shorter side of the cell). $`E \ge 1`$ takes all of $`h_d`$ at that
-moment; applied after the advection, it means "stop all the wood that has entered". Cells
-whose jammed amount exceeds `dw_jamgrow` are treated as $`E = 1`$. Capture is applied after
+moment; applied after the advection, it means "stop all the wood that has entered". Capture
+is applied after
 the recruitment (① ②) and before the grounding deposition (③). In a steady uniform flow
 along a grid axis, the captured share equals $`E`$ even with the discretization that applies
 advection and capture in turn. With changing or oblique flow it is an approximation; the
 verification case gives 0.304 for $`E = 0.3`$.
+
+**Wood catching more easily as the jam grows (own).** Logs that are already caught hold the
+logs that follow, so the capture ratio rises as the jam grows. When `dw_jamgrow` is given, the
+capture ratio becomes a function of the jammed amount $`w_j`$ of the cell.
+
+```math
+E_{\text{eff}}(w_j) = E + (1 - E)\,\min\!\left(\frac{w_j}{w_{\text{full}}},\ 1\right),
+\qquad w_{\text{full}} = \texttt{dw\_jamgrow}
+```
+
+Without a jam it is the given $`E`$, it is 1 once the jammed amount has reached
+$`w_{\text{full}}`$, and it is linear in between. The argument is the jammed amount (the
+amount covering the water surface) because driftwood arrives at the surface; with the share of
+the water column occupied, $`w_j/(\varphi h)`$, as the argument, wood would catch less easily
+as the water rises. $`\varphi d`$ (the packing ratio times the representative diameter)
+corresponds to the amount with which the jam covers the water surface with one layer of logs.
+The functional form and this guide are ENCflow's own simplifications, not formulas from the
+literature. A flume experiment is reported in which the captured share is small while few logs
+have been caught and all the logs fed are caught once the number caught exceeds a certain
+value[^mlit23]; the original text has not been checked.
+
+With $`A`$ the cumulative wood that has arrived per area of the capture cells,
+$`dw_j/dA = E_{\text{eff}}(w_j)`$, and the solution is
+
+```math
+w_j = \frac{E\,w_{\text{full}}}{1-E}\left[\exp\!\left(\frac{(1-E)\,A}{w_{\text{full}}}\right) - 1\right]
+\quad (A \le A^*),
+\qquad
+w_j = w_{\text{full}} + (A - A^*) \quad (A > A^*),
+\qquad A^* = \frac{w_{\text{full}}}{1-E}\ln\frac{1}{E}
+```
+
+$`A^*`$ is the amount that arrives before the capture ratio becomes 1. In the verification
+cases the jammed share agrees with this solution within 1 % (§7).
 
 **Drag of the jam.** The jam is treated as a porous obstruction. Following the idea that the
 momentum loss by a wood jam is a drag proportional to the log diameter, the degree of packing
@@ -281,7 +315,7 @@ The limits of this formulation are as follows.
 
 ## 7. Verification cases
 
-- [test/driftwood](../../../test/driftwood/en/README.md): volume conservation, transport and deposition for both erosion entrainment and hydraulic recruitment, and comparison of saved states from split and uninterrupted runs. Capture and jamming at structures are checked in a straight channel: volume conservation (including the jam), agreement of the backwater from the drag of the jam with the solution of the gradually-varied-flow equation above (ratio of the rises 1.003; 0.982 where the packing limit is active), the capture ratio (0.304 for 0.3), byte identity of the flow with `f_dwjam = 0` with a run without driftwood, and split continuation. The loss at a culvert inlet is checked in a set-up that drains an upstream pool through a single culvert: the discharge obtained from the decrease of the storage agrees with the discharge law including the loss (within 0.02 % in the weir regime with $`C_A`$ = 6.2, and within 0.12 % through the full-pipe and weir regimes with $`C_A`$ = 0.74), the flow with `culv_jam = 0` and with `f_dwjam = 0` is byte-identical to a run without driftwood, and split continuation.
+- [test/driftwood](../../../test/driftwood/en/README.md): volume conservation, transport and deposition for both erosion entrainment and hydraulic recruitment, and comparison of saved states from split and uninterrupted runs. Capture and jamming at structures are checked in a straight channel: volume conservation (including the jam), agreement of the backwater from the drag of the jam with the solution of the gradually-varied-flow equation above (ratio of the rises 1.003; 0.982 where the packing limit is active), the capture ratio (0.304 for 0.3), the capture ratio rising with the jam through `dw_jamgrow` (jammed shares 0.439 and 0.933 for the solutions 0.4345 and 0.928 above), byte identity of the flow with `f_dwjam = 0` with a run without driftwood, and split continuation. The loss at a culvert inlet is checked in a set-up that drains an upstream pool through a single culvert: the discharge obtained from the decrease of the storage agrees with the discharge law including the loss (within 0.02 % in the weir regime with $`C_A`$ = 6.2, and within 0.12 % through the full-pipe and weir regimes with $`C_A`$ = 0.74), the flow with `culv_jam = 0` and with `f_dwjam = 0` is byte-identical to a run without driftwood, and split continuation.
 - [examples/bridge_wood_jam](../../../examples/bridge_wood_jam/en/README.md): backwater and bypass flooding from driftwood jammed at a bridge (comparison of no driftwood, a jam that does not act on the flow and a jam with drag; spread from the capture assumption and the packing ratio; the relation between the jam volume and the backwater compared with the gradually-varied-flow formula above).
 - [examples/timberyard](../../../examples/timberyard/en/README.md): timber influx from a log yard by storm surge (comparison of countermeasures: delaying the release, moving the yard away, raising the seawall; a supplement compares the deposition parameters; the impact-force postprocessing).
 - [examples/tsunami_town](../../../examples/tsunami_town/en/README.md): coastal forest and log yard in a tsunami, chained with house destruction (supplement).
@@ -292,4 +326,5 @@ The limits of this formulation are as follows.
 [^nilim904]: NILIM (2016): Guidelines for sabo master planning (debris flow and driftwood), commentary. *NILIM Technical Note*, No. 904 (in Japanese; title translated). (practical values and generation mechanisms)
 [^nilim905]: NILIM (2016): Technical standard for the design of debris-flow and driftwood countermeasures, commentary. *NILIM Technical Note*, No. 905 (in Japanese; title translated). (log impact force, §4.3)
 [^follett20]: Follett, E., Schalko, I. and Nepf, H. (2020): Momentum and energy predict the backwater rise generated by a large wood jam. *Geophys. Res. Lett.*, 47(17), e2020GL089346. (momentum equation treating a jam as a porous obstruction and its structural coefficient; original text not checked)
+[^mlit23]: Report of the regional-issue (sabo) programme of the river and sabo technology research and development of the Ministry of Land, Infrastructure, Transport and Tourism, Japan (https://www.mlit.go.jp/river/gijutsu/tiiki_sabou/pdf/r5_tiiki_report4.pdf). The statement on the flume experiment (number of logs caught and captured share) comes from a search summary; the original text has not been checked (title and authors not confirmed either)
 [^schalko18]: Schalko, I., Schmocker, L., Weitbrecht, V. and Boes, R. M. (2018): Backwater rise due to large wood accumulations. *J. Hydraul. Eng.*, 144(9), 04018056. (flume experiments on the backwater due to accumulations; original text not checked)

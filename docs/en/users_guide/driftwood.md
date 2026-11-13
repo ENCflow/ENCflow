@@ -121,7 +121,7 @@ parameters:
 | f_dwjam | 1 | effect of the jam on the flow. 0: ledger only (no effect on the flow), 1: drag in the cells holding the jam |
 | dw_jamcd | 1.0 | drag coefficient C_D of the jam (calibration value) |
 | dw_jamphi | 0.3 | packing ratio φ of the jam (solid volume / bulk volume; 0 < φ < 1; calibration value) |
-| dw_jamgrow | — | cells whose jammed amount (m³/m²) exceeds this capture all the wood (not given = the capture ratio stays constant) |
+| dw_jamgrow | — | cells whose jammed amount (m³/m²) reaches this capture all the wood; until then the capture ratio rises from E to 1 in proportion to the jammed amount (not given = the capture ratio stays constant) |
 
 The jam at a culvert inlet is enabled per culvert by the selector `culv_jam`
 (`&list_struct_culvert`; [Internal hydraulic structures](structure.md#culverts-list_struct_culvert)).
@@ -154,7 +154,7 @@ not by capture cells but by `culv_jam = 1` of the culvert ("Jam at a culvert inl
   fn_dwstock = 'stock.txt'
   dw_dlog = 0.3
   fn_dwtrap = 'trap.txt'    ! map of the capture ratio E (0.3 on the row of bridge cells, 0 elsewhere)
-  dw_jamgrow = 0.05         ! cells with more than 0.05 m3/m2 of jammed wood stop all arriving wood (optional)
+  dw_jamgrow = 0.09         ! the capture ratio rises as the jam grows; all arriving wood is stopped at 0.09 m3/m2 (one layer of logs) (optional)
 /
 ```
 
@@ -177,7 +177,23 @@ not by capture cells but by `culv_jam = 1` of the culvert ("Jam at a culvert inl
   observations or experimental knowledge, or show a range with several cases of E (for
   example 0.1, 0.3 and 1).
 - `dw_jamgrow` approximates "once wood starts to pile up, the following logs get caught one
-  after another". Cells whose jammed amount exceeds it stop all arriving wood.
+  after another". When it is given, the capture ratio rises in proportion to the jammed amount
+  $`w_j`$ of the cell,
+
+  ```math
+  E_{\text{eff}} = E + (1 - E)\,\min\!\left(\frac{w_j}{w_{\text{full}}},\ 1\right),
+  \qquad w_{\text{full}} = \texttt{dw\_jamgrow}
+  ```
+
+  and cells whose jammed amount has reached `dw_jamgrow` stop all arriving wood. The packing
+  ratio times the representative diameter (`dw_jamphi` × `dw_dlog`; 0.09 m³/m² with the
+  defaults) is a guide for the amount with which the jam covers the water surface with one
+  layer of logs. How many layers it takes to stop everything is a given. Up to a few layers
+  the result is close to "everything at once"; with ten layers or more it lies between that and
+  a constant capture ratio (the comparison in
+  [the example](../../../examples/bridge_wood_jam/en/README.md)). The functional form is
+  ENCflow's own simplification; the log length and the remaining width of the opening are not
+  considered.
 - The resistance of the structure itself (piers, dam members) is given by the roughness
   `fn_rn`, the terrain and the channel width.
 

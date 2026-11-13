@@ -13,8 +13,14 @@
 #         κ0 = 2 C_D / (π d (1 − φ)³)(cd・phi の省略時は既定の 1.0・0.3)
 #   Check_woodjam.py ratio <result_dir> <E>
 #     集積した割合 trap_m3 / rec_hyd_m3 が E に ±TOL_E で一致し、終了時に流動流木が残っていない
-#   Check_woodjam.py grow <result_dir>
-#     集積した割合が 0.99 より大きい(dw_jamgrow で捕捉率が 1 になる)
+#   Check_woodjam.py grow <result_dir> <E> <dw_jamgrow>
+#     集積が進むほど捕捉率が上がる dw_jamgrow(developer.md §50.10)。捕捉率は
+#       E_eff(w) = E + (1 − E)·w/w_full(w < w_full)、1(w >= w_full)   (w: セルの集積量、w_full = dw_jamgrow)
+#     捕捉セルの面積あたりに届いた流木の累積を A とすると dw/dA = E_eff(w) で、
+#       w = E w_full/(1 − E)·[exp((1 − E) A/w_full) − 1]      (A <= A* = w_full/(1 − E)·ln(1/E))
+#       w = w_full + (A − A*)                                   (A > A*)
+#     集積した割合 trap_m3 / rec_hyd_m3 が w(A_tot)/A_tot に ±TOL_E で一致し、終了時に流動流木が残っていない。
+#     A_tot = 発生した流木の全量 / 捕捉セルの面積(流れへの作用なし = 一様な流れで、全量が捕捉セルを 1 回通る)
 #   Check_woodjam.py culv <result_dir> <V_j> [both]
 #     カルバートの流入口の集積(culv_jam = 1。上流槽を 1 本のカルバートで排水する test/culvert の配置)
 #     (1) 台帳: 捕捉の累積 trap_m3 と現在の集積 vol_jam_m3 が V_j (m3) に一致し、流動流木と立木が
@@ -144,13 +150,30 @@ def check_ratio(rdir, e):
     return g1 and g2
 
 
-def check_grow(rdir):
+def grow_share(e, wfull, atot):
+    """dw/dA = E_eff(w) の解から、届いた流木のうち集積する割合"""
+    astar = wfull / (1.0 - e) * math.log(1.0 / e)
+    if atot <= astar:
+        w = e * wfull / (1.0 - e) * (math.exp((1.0 - e) * atot / wfull) - 1.0)
+    else:
+        w = wfull + (atot - astar)
+    return w / atot, astar
+
+
+def check_grow(rdir, e, wfull):
     led = ledger_last(rdir)
     frac = led["trap_m3"] / led["rec_hyd_m3"]
-    g1 = frac > 0.99
-    print("(1) dw_jamgrow: 集積 %.4f m3 / 発生 %.4f m3 = %.4f (> 0.99) : %s"
-          % (led["trap_m3"], led["rec_hyd_m3"], frac, "PASS" if g1 else "FAIL"))
-    return g1
+    atot = led["rec_hyd_m3"] / (W * DX * DX)             # 捕捉セル(幅 W セル × 1 列)の面積あたりに届く量
+    ana, astar = grow_share(e, wfull, atot)
+    g1 = abs(frac / ana - 1.0) < TOL_E
+    g2 = led["vol_float_m3"] < 1.0e-6 * total_stock() and led["vol_stock_m3"] == 0.0
+    print("(1) dw_jamgrow: 集積 %.4f m3 / 発生 %.4f m3 = %.4f、解 %.4f(E = %g、dw_jamgrow = %g、届く量 %.3f m3/m2、"
+          "飽和に要る量 %.3f m3/m2 = %s。±%.0f%%) : %s"
+          % (led["trap_m3"], led["rec_hyd_m3"], frac, ana, e, wfull, atot, astar,
+             "途中で飽和" if atot > astar else "飽和しない", 100 * TOL_E, "PASS" if g1 else "FAIL"))
+    print("(2) 終了時の流動流木 %.3e m3、立木 %.3e m3(全部が捕捉セルを通った) : %s"
+          % (led["vol_float_m3"], led["vol_stock_m3"], "PASS" if g2 else "FAIL"))
+    return g1 and g2
 
 
 def culv_law(h1, ca):
@@ -229,6 +252,6 @@ if __name__ == "__main__":
     elif mode == "culv":
         ok = check_culv(rdir, float(sys.argv[3]), "both" in sys.argv[4:])
     else:
-        ok = check_grow(rdir)
+        ok = check_grow(rdir, float(sys.argv[3]), float(sys.argv[4]))
     print("== woodjam 検定(%s %s): %s ==" % (mode, rdir, "PASS" if ok else "FAIL"))
     sys.exit(0 if ok else 1)

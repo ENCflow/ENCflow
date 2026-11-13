@@ -54,13 +54,14 @@ Representative diameter 0.3 m, wood specific gravity 0.5; 40 minutes. The inputs
 | 5b → 5c | `param_jamrt1.txt` → `param_jamrt2.txt` | 1 | yes | configuration 5 saved at 20 minutes and continued; byte comparison with the continuous `save_jam/` |
 | 5d | `param_jamoff.txt` | 0.3 | no (`f_dwjam = 0`) | the jammed share equals E |
 | 5e | `param_jamnone.txt` | — (no driftwood) | — | byte identity with the flow of 5d (H, V, Log.txt) |
-| 5f | `param_jamgrow.txt` | 0.3 (`dw_jamgrow = 1e-4`) | no | the capture ratio becomes 1 as the jam grows |
+| 5f | `param_jamgrow.txt` | 0.3 (`dw_jamgrow = 0.2`) | no | the capture ratio rises as the jam grows (an amount that is not reached); the jammed share equals the solution |
+| 5g | `param_jamgrow2.txt` | 0.3 (`dw_jamgrow = 0.02`) | no | the same with an amount at which the capture ratio reaches 1 midway |
 
 | File | Contents |
 |---|---|
 | `Check_woodjam.py jam <result> <save> [cd phi]` | (1) volume conservation \|Σ(wst + hd + wd + wj)·A − 20 m³\| < 1e-9 relative, (2) `trap_m3` and `vol_jam_m3` of driftwood.csv are 20 m³, (3) steady state (depths at 30 and 40 minutes differ by < 1 mm), (4) backwater: the depth one cell upstream of the jam cell equals the value obtained by integrating the gradually-varied-flow equation over the jam section (length 2Δx) from the depth of the uniform reach downstream (ratio of the rises 1 ± 0.03) |
 | `Check_woodjam.py ratio <result> <E>` | the jammed share `trap_m3 / rec_hyd_m3` equals E within ±3 %, and no moving driftwood is left at the end |
-| `Check_woodjam.py grow <result>` | the jammed share is larger than 0.99 |
+| `Check_woodjam.py grow <result> <E> <dw_jamgrow>` | the jammed share equals the solution for the capture ratio $`E + (1 - E)\,w_j/w_{\text{full}}`$ (formula below) within ±3 %, and no moving driftwood is left at the end |
 
 The gradually-varied-flow equation of (4) is the steady one-dimensional equation with the
 drag of the jam added.
@@ -74,6 +75,22 @@ $`w`$ is the mean of the jammed amounts of the two cells of an edge, so $`w_j/2`
 the two edges of the jam cell (length $`2\Delta x`$). $`d`$ is the representative diameter,
 $`\varphi`$ the packing ratio and $`C_D`$ the drag coefficient
 ([driftwood models explained](../../../docs/en/users_guide/driftwood_models.md) §6).
+
+When `dw_jamgrow` ($`w_{\text{full}}`$) is given, the capture ratio rises from $`E`$ to 1 in
+proportion to the jammed amount $`w_j`$ of the cell. With $`A`$ the cumulative wood that has arrived per
+area of the capture cells, $`dw_j/dA = E + (1-E)\,w_j/w_{\text{full}}`$, and the jammed amount is
+
+```math
+w_j = \frac{E\,w_{\text{full}}}{1-E}\left[\exp\!\left(\frac{(1-E)\,A}{w_{\text{full}}}\right) - 1\right]
+\ (A \le A^*),
+\qquad
+w_j = w_{\text{full}} + (A - A^*)\ (A > A^*),
+\qquad A^* = \frac{w_{\text{full}}}{1-E}\ln\frac{1}{E}
+```
+
+In this configuration 20 m³ arrives on 100 m² of capture cells, so $`A`$ = 0.2 m³/m², and the jammed
+share $`w_j/A`$ is 0.4345 for `dw_jamgrow = 0.2` (the amount needed to saturate, $`A^*`$ = 0.344 m³/m²,
+is not reached) and 0.928 for 0.02 (saturation at $`A^*`$ = 0.034 m³/m², everything after that).
 
 ### Configuration 6: jam at a culvert inlet and the loss in the discharge law (culv_jam)
 
@@ -156,7 +173,8 @@ of the flat part (center).
 | 5b → 5c split continuation by restart | driftwood.dat (including the jammed wood), state.dat and swflow_enc.dat byte-identical to the continuous run | PASS |
 | 5d capture ratio 0.3 | jam 6.080 m³ / recruited 20 m³ = 0.304 | PASS |
 | 5e no driftwood | all outputs of H and V and Log.txt (14 files) byte-identical to 5d | PASS |
-| 5f dw_jamgrow | jammed share 0.9992 | PASS |
+| 5f dw_jamgrow = 0.2 | jammed share 0.4390 (solution 0.4345; 0.30 if the capture ratio stayed 0.3) | PASS |
+| 5g dw_jamgrow = 0.02 | jammed share 0.9326 (solution 0.9280) | PASS |
 | 6 culvert inlet (large jam) | jam 0.500000 m³. Over the 71 intervals of h₁ = 2.88 → 0.77 m the largest difference from the discharge law is 0.016 % (the weir governs throughout). Ratio to the discharge law without a jam 0.19–0.29 | PASS |
 | 6a small jam, 3 intake cells | jam 0.060000 m³. Over the 35 intervals of h₁ = 2.67 → 0.38 m the largest difference is 0.11 % (full pipe governs 5 intervals, weir 30). Ratio 0.72–0.83 | PASS |
 | 6b culv_jam = 0, 6c f_dwjam = 0 | in both, the outputs of H and V and Log.txt (8 files) are byte-identical to 6d (no driftwood). In 6c the jam of 0.06 m³ enters the ledger | PASS |

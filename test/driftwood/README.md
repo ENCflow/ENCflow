@@ -45,13 +45,14 @@ n = 0.03)。等流水深 2.0 m の流量 94.65 m³/s を西端の区間流入で
 | 5b → 5c | `param_jamrt1.txt` → `param_jamrt2.txt` | 1 | あり | 構成 5 を 20 分で保存して継続。通しの `save_jam/` とバイト比較 |
 | 5d | `param_jamoff.txt` | 0.3 | なし(`f_dwjam = 0`) | 集積した割合が E に一致 |
 | 5e | `param_jamnone.txt` | —(流木なし) | — | 5d の流れ(H・V・Log.txt)とバイト一致 |
-| 5f | `param_jamgrow.txt` | 0.3(`dw_jamgrow = 1e-4`) | なし | 集積が進むと捕捉率が 1 になる |
+| 5f | `param_jamgrow.txt` | 0.3(`dw_jamgrow = 0.2`) | なし | 集積が進むほど捕捉率が上がる(飽和しない量)。集積した割合が解に一致 |
+| 5g | `param_jamgrow2.txt` | 0.3(`dw_jamgrow = 0.02`) | なし | 同、途中で捕捉率が 1 に達する量 |
 
 | ファイル | 内容 |
 |---|---|
 | `Check_woodjam.py jam <result> <save> [cd phi]` | (1) 材積保存 \|Σ(wst + hd + wd + wj)·A − 20 m³\| < 1e-9 相対、(2) driftwood.csv の `trap_m3`・`vol_jam_m3` が 20 m³、(3) 定常(30 分と 40 分の水深の差 < 1 mm)、(4) 堰上げ: 集積のセルの 1 つ上流の水深が、下流の一様な区間の水深から漸変流の式を集積の区間(長さ 2Δx)について積分した値に一致(上昇量の比が 1 ± 0.03) |
 | `Check_woodjam.py ratio <result> <E>` | 集積した割合 `trap_m3 / rec_hyd_m3` が E に ±3 % で一致し、終了時に流動流木が残っていない |
-| `Check_woodjam.py grow <result>` | 集積した割合が 0.99 より大きい |
+| `Check_woodjam.py grow <result> <E> <dw_jamgrow>` | 集積した割合が、捕捉率 $`E + (1 - E)\,w_j/w_{\text{full}}`$ の解(下の式)に ±3 % で一致し、終了時に流動流木が残っていない |
 
 (4) の漸変流の式は、集積の抵抗を足した定常の 1 次元の式です。
 
@@ -63,6 +64,22 @@ n = 0.03)。等流水深 2.0 m の流量 94.65 m³/s を西端の区間流入で
 $`w`$ は辺の両側のセルの集積量の平均で、集積のセルの両側の辺(長さ $`2\Delta x`$)に $`w_j/2`$ ずつ
 掛かります。$`d`$ は代表直径、$`\varphi`$ は充填率、$`C_D`$ は抗力係数です
 ([流木モデルの解説](../../docs/users_guide/driftwood_models.md) §6)。
+
+`dw_jamgrow`($`w_{\text{full}}`$)を与えると、捕捉率はセルの集積量 $`w_j`$ に比例して $`E`$ から 1 へ
+上がります。捕捉セルの面積あたりに届いた流木の累積を $`A`$ とすると $`dw_j/dA = E + (1-E)\,w_j/w_{\text{full}}`$
+で、集積量は
+
+```math
+w_j = \frac{E\,w_{\text{full}}}{1-E}\left[\exp\!\left(\frac{(1-E)\,A}{w_{\text{full}}}\right) - 1\right]
+\ (A \le A^*),
+\qquad
+w_j = w_{\text{full}} + (A - A^*)\ (A > A^*),
+\qquad A^* = \frac{w_{\text{full}}}{1-E}\ln\frac{1}{E}
+```
+
+です。この構成では 20 m³ が捕捉セル 100 m² に届くので $`A`$ = 0.2 m³/m² で、集積する割合 $`w_j/A`$ は
+`dw_jamgrow = 0.2` で 0.4345(飽和に要る量 $`A^*`$ = 0.344 m³/m² に届かない)、0.02 で 0.928
+($`A^*`$ = 0.034 m³/m² で飽和し、その後は全量)です。
 
 ### 構成 6: カルバートの流入口の集積と流量則の損失(culv_jam)
 
@@ -137,7 +154,8 @@ python3 Fig.py    # figs/driftwood.png(引数 en で英語版を en/figs/ に)
 | 5b → 5c リスタート分割継続 | driftwood.dat(集積流木を含む)・state.dat・swflow_enc.dat が通しとバイト一致 | PASS |
 | 5d 捕捉率 0.3 | 集積 6.080 m³ / 発生 20 m³ = 0.304 | PASS |
 | 5e 流木なし | 5d と H・V の全出力・Log.txt(14 ファイル)がバイト一致 | PASS |
-| 5f dw_jamgrow | 集積した割合 0.9992 | PASS |
+| 5f dw_jamgrow = 0.2 | 集積した割合 0.4390(解 0.4345。捕捉率が 0.3 のままなら 0.30) | PASS |
+| 5g dw_jamgrow = 0.02 | 集積した割合 0.9326(解 0.9280) | PASS |
 | 6 カルバートの流入口(大きい集積) | 集積 0.500000 m³。h₁ = 2.88 → 0.77 m の 71 区間で、流量則との差の最大 0.016 %(全区間で堰が支配)。集積のない流量則に対する比 0.19〜0.29 | PASS |
 | 6a 小さい集積・取水セル群 3 セル | 集積 0.060000 m³。h₁ = 2.67 → 0.38 m の 35 区間で、差の最大 0.11 %(満管が支配 5 区間、堰が支配 30 区間)。比 0.72〜0.83 | PASS |
 | 6b culv_jam = 0、6c f_dwjam = 0 | どちらも 6d(流木なし)と H・V の出力・Log.txt(8 ファイル)がバイト一致。6c は集積 0.06 m³ が台帳に入る | PASS |

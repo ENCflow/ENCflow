@@ -73,8 +73,11 @@
   !dw_jamphi = 0.3                  ! packing ratio of the jam (solid / bulk volume; 0-1;
                                     !   calibration value; acts through (1-phi)^3 in the drag
                                     !   coefficient 2 C_D/(pi d (1-phi)^3))
-  !dw_jamgrow = 0.05                ! cells whose jammed amount (m3/m2) exceeds this get a
-                                    !   capture ratio of 1 (not given = constant capture ratio)
+  !dw_jamgrow = 0.09                ! cells whose jammed amount (m3/m2) reaches this get a
+                                    !   capture ratio of 1; until then the capture ratio rises from
+                                    !   E to 1 in proportion to the jammed amount (not given =
+                                    !   constant capture ratio). Guide: a multiple of
+                                    !   dw_jamphi x dw_dlog (one layer of logs)
   ! The jam at a culvert inlet (structures whose opening is narrower than a cell) is enabled
   ! by culv_jam(n) = 1 in &list_struct_culvert (fn_dwtrap is not needed; f_dwjam, dw_jamcd
   ! and dw_jamphi are shared)

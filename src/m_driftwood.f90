@@ -35,7 +35,9 @@ module m_driftwood
   !           集積流木 s%wj(柱状量。hd と同じ基底。動かない)へ移す。よく混ざった
   !           セルの滞留時間 Δx/|V| に対して、1 ステップの捕捉量は
   !           hd·r/(1+r)、r = E/(1−E)·|V|Δt/Δx(E >= 1 は全量。捕捉の規則は【独自】)。
-  !           集積量が dw_jamgrow を超えたセルは E = 1(任意)。f_dwjam = 1(既定)
+  !           dw_jamgrow を与えると(任意)、集積が進むほど掛かりやすくなる効果として、
+  !           捕捉率を集積量 w_j に比例して E から 1 へ上げる(E + (1−E)·w_j/dw_jamgrow。
+  !           w_j が dw_jamgrow に達したセルは全量。関数形は【独自】。§50.10)。f_dwjam = 1(既定)
   !           では、集積を多孔質の障害物として、辺の半陰の抗力項
   !           −κ0·min(w_e/h_f, φ)·|V|、κ0 = 2 C_D/(π d (1−φ)³) を swflow_enc が足す
   !           (係数の構造は Follett ら 2020 の C_A = L C_D a/(1−φ)³。離散化は【独自】。
@@ -118,7 +120,8 @@ module m_driftwood
     integer :: nculv = 0                 ! 流入口で流木を捕捉するカルバートの数
     type(t_dwdam), allocatable :: culv(:)   ! そのセル(自帯内。cells(3,k) = 1: 取水セル群 cin、
                                          !   2: 吐口セル群 cout。ist は b%struct の番号)
-    real :: jamgrow = -1.0               ! 集積量 (m3/m2) がこれを超えたセルは E = 1
+    real :: jamgrow = -1.0               ! 集積量 (m3/m2) がこの値に達したセルは E = 1。それまでは
+                                         !   集積量に比例して E を 1 へ上げる(§50.10)
                                          !   (<= 0 は無効 = 捕捉率は一定)
     integer :: ndam = 0
     type(t_dwdam), allocatable :: dam(:)
@@ -425,7 +428,8 @@ subroutine setup_jam(dw, p, g, s, list, dlog)
                   //"(culv_jam = 1)")
   end if
 
-  ! 集積が進むと捕捉率が 1 になる集積量(任意。与えたときだけ採用値を表示する)
+  ! 捕捉率が 1 になる集積量(任意。与えたときだけ採用値を表示する。それまでは集積量に比例して
+  ! 捕捉率を上げる。§50.10)
   if (list%dw_jamgrow > -9998.0) then
     dw%jamgrow = dw_param("dw_jamgrow", list%dw_jamgrow, 0.0, " m3/m2")
     if (dw%jamgrow <= 0.0) call par_stop("list_driftwood: dw_jamgrow must be > 0")
@@ -676,14 +680,20 @@ subroutine m_driftwood_calc(dw, p, g, s, b, it)
 
       ! (2b) 構造物での捕捉(§50.7): 捕捉セルの流動流木を、セルを 1 回通過するうちの割合 E で
       !      集積流木へ移す。よく混ざったセルの滞留時間 Δx/|V| に対して r = E/(1−E)·|V|Δt/Δx、
-      !      1 ステップの捕捉量は hd·r/(1+r)(規則は【独自】)。E >= 1 と、集積量が dw_jamgrow を
-      !      超えたセルは全量(移流の後に呼ばれるので「入った流木をすべて止める」になる)。
+      !      1 ステップの捕捉量は hd·r/(1+r)(規則は【独自】)。E >= 1 は全量(移流の後に呼ばれる
+      !      ので「入った流木をすべて止める」になる)。dw_jamgrow を与えたときは、集積が進むほど
+      !      掛かりやすくなる効果として、捕捉率を集積量 w_j に比例して上げる:
+      !      E_eff = E + (1 − E)·w_j/dw_jamgrow、w_j >= dw_jamgrow は 1(関数形は【独自】。§50.10)。
       !      集積は動かない。残った hd は下の接地・乾燥堆積の対象になる
       if (dw%have_trap) then
         if (dw%trap(i,j) > 0.0 .and. s%hd(i,j) > 0.0) then
           ee = dw%trap(i,j)
           if (dw%jamgrow > 0.0) then
-            if (s%wj(i,j) > dw%jamgrow) ee = 1.0
+            if (s%wj(i,j) >= dw%jamgrow) then
+              ee = 1.0
+            else
+              ee = ee + (1.0 - ee) * (s%wj(i,j) / dw%jamgrow)
+            end if
           end if
           if (ee >= 1.0) then
             w = s%hd(i,j)
