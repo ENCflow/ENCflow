@@ -37,7 +37,8 @@ files from there as `./encflow en/param_step1.txt` etc.
 | `Chichibu_200m_filled.*` | Ground elevation (m), with D8 depression filling applied in GIS software |
 | `Chichibu_200m_raw.tif` | Ground elevation (m), original data without depression filling (for a comparison experiment) |
 | `Chichibu_200m_basin.*` | Catchment mask (1: inside the catchment, 0: outside) |
-| `Chichibu_200m_river.*` | Channel mask (1: channel cell) |
+| `Chichibu_200m_river_flowline.*` | Channel mask (1: channel cell). The computations use this one |
+| `Chichibu_200m_river.*` | Original data of the channel mask (the river lines rasterized) |
 
 All of them sit on the same grid of **280 x 150 cells (dx = dy =
 200 m)** (a 56 km x 30 km domain). Each dataset is provided with the
@@ -50,7 +51,13 @@ Information Authority of Japan (GSI); the channel mask was derived from
 stream-order data
 ([DOI:10.3178/jjshwr.36.1812](https://doi.org/10.3178/jjshwr.36.1812))
 built from the river data of Kokudo Suuchi Jouhou (National Land
-Numerical Information).
+Numerical Information). The channel mask rasterized from the river lines
+(`Chichibu_200m_river`) is in places one cell off the valley line of the
+elevation data (903 of its 2,327 cells lie on the valley-wall side), so the
+computations use the mask moved onto the flow lines of the elevation (the
+drainage paths given by the steepest descent among the 8 neighbours) with the
+bundled [utils/river_flowline](../../../utils/river_flowline/en/README.md)
+(`Chichibu_200m_river_flowline`; 1,473 cells).
 
 ![Terrain (inside the catchment mask)](figs/step1_z.png)
 
@@ -85,9 +92,9 @@ time, progress, S(m), Runge, ex_flux, Cn_max, h_max(m), V_max(m/s)
   0:30:00.00   8.3%    0.0487  97.7%      0    0.1907    1.2869    4.0483
   1:00:00.00  16.7%    0.1000   6.2%      0    0.3446    4.9054    8.4385
   1:30:00.00  25.0%    0.1000   3.4%      0    0.4433    7.0997    9.2601
-  2:00:00.00  33.3%    0.1000   0.9%      0    0.4253    6.9333    9.1495
+  2:00:00.00  33.3%    0.1000   0.9%      0    0.4253    6.9377    9.1145
   ...
-  6:00:00.00 100.0%    0.1000   0.6%      0    0.5149   29.8791    4.1599
+  6:00:00.00 100.0%    0.1000   0.6%      0    0.5150   29.8830    4.1601
 main: program terminated normally
 ```
 
@@ -275,9 +282,9 @@ channel mask and roughness.
   rn0 = 0.05           ! constant roughness value
   rn0_rw = 0.02        ! constant roughness for channel-mask cells
 
-  fn_z = "Chichibu_200m_filled.tif"        ! ground elevation file name
-  fn_mask = "Chichibu_200m_basin.tif"      ! domain mask file name
-  fn_rw = "Chichibu_200m_river.tif"        ! channel mask file name
+  fn_z = "Chichibu_200m_filled.tif"          ! ground elevation file name
+  fn_mask = "Chichibu_200m_basin.tif"        ! domain mask file name
+  fn_rw = "Chichibu_200m_river_flowline.tif" ! channel mask file name
 /
 ```
 
@@ -298,7 +305,7 @@ channel mask and roughness.
 Drawn as figures, the two masks look like this (only cells with value
 1 are colored).
 
-| catchment mask `Chichibu_200m_basin` | channel mask `Chichibu_200m_river` |
+| catchment mask `Chichibu_200m_basin` | channel mask `Chichibu_200m_river_flowline` |
 |---|---|
 | ![basin](figs/step2_mask_basin.png) | ![river](figs/step2_mask_river.png) |
 
@@ -306,7 +313,9 @@ The colored cells of the catchment mask are the computed cells; the
 `number of valid cells: 17885` printed in Step 1 is the number of these
 cells. The channel mask gives the channel network as **lines one cell
 wide**, and only these cells get the roughness `rn0_rw`. Both are
-plain 1-or-0 rasters, passed on as they were made in a GIS (they carry
+plain 1-or-0 rasters made in a GIS (the channel mask has been moved onto
+the valley lines of the elevation in preprocessing; see "A look at the
+data". They carry
 no channel width or bed elevation: on a 200 m grid the channels are
 narrower than a cell, so we only say *which* cells are channel and
 express the channel through its roughness).
@@ -458,11 +467,11 @@ changes from one column to **three columns**.
 ```
 time, progress, S_surf(m), S_grnd(m), S_total(m), Runge, ex_flux, Cn_max, h_max(m), V_max(m/s)
   0:00:00.00   0.0%    0.0000     0.0000     0.0000    0.0%      0    0.0000    0.0000    0.0000
-  0:30:00.00   8.3%    0.0365     0.0024     0.0389   97.7%      0    0.2667    1.0095    6.8095
-  1:00:00.00  16.7%    0.0751     0.0049     0.0800    5.8%      0    0.5473    5.4907   13.8013
-  1:30:00.00  25.0%    0.0728     0.0072     0.0800    2.8%      0    0.5976    5.8963   14.9089
+  0:30:00.00   8.3%    0.0365     0.0024     0.0389   97.7%      0    0.2519    0.9217    6.3966
+  1:00:00.00  16.7%    0.0751     0.0049     0.0800    6.2%      0    0.4812    5.3251   12.9868
+  1:30:00.00  25.0%    0.0728     0.0072     0.0800    3.0%      0    0.5916    5.9769   16.9188
   ...
-  6:00:00.00 100.0%    0.0694     0.0106     0.0800    0.1%      2    0.5058   28.8113    5.2328
+  6:00:00.00 100.0%    0.0693     0.0107     0.0800    0.0%      0    0.5056   28.7982    5.1019
 ```
 
 - `S_surf` is surface water, `S_grnd` is subsurface storage, and
@@ -473,15 +482,11 @@ time, progress, S_surf(m), S_grnd(m), S_total(m), Runge, ex_flux, Cn_max, h_max(
   moves between the surface and the subsurface.
 - S_surf decreases and S_grnd increases over time -- you can read the
   progress of infiltration directly.
-- ex_flux shows 2 limitations each in the rows at 3 and 6 hours. They do
-  not occur continuously and mass is conserved, so this much is no
-  problem (as explained in Step 1, continuous occurrence is the sign of
-  a rough computation).
 
 ![Step 4: effect of interception and infiltration](figs/step4_hydro.png)
 
-In the hydrograph the peak discharge drops by about a third (6,279
-to 4,086 m^3/s). Interception cuts the total by 20%, and infiltration keeps
+In the hydrograph the peak discharge drops by about a third (6,237
+to 4,047 m^3/s). Interception cuts the total by 20%, and infiltration keeps
 sucking up the thinly spread hillslope water, so both the rising limb
 and the recession drop.
 
@@ -521,13 +526,13 @@ immediately). Running it gives:
 ```
 time, progress, S_surf(m), S_grnd(m), S_total(m), Runge, ex_flux, Cn_max, h_max(m), V_max(m/s)
   ...
-  3:00:00.00  50.0%    0.0584     0.0092     0.0676    0.1%      2    0.4937    6.8747   12.6585
-  6:00:00.00 100.0%    0.0221     0.0106     0.0327    0.0%      2    0.3091    3.5666    6.6476
+  3:00:00.00  50.0%    0.0584     0.0093     0.0677    0.1%      0    0.4773    6.8822   11.9815
+  6:00:00.00 100.0%    0.0221     0.0107     0.0328    0.0%      0    0.3121    3.6600    6.7346
 ```
 
 - S_total now decreases -- that is the water that left the system
   through the outlet.
-- h_max drops from 30 m to 3.6 m. The disappearance of the ponding can
+- h_max drops from 30 m to 3.7 m. The disappearance of the ponding can
   also be confirmed in the depth distribution.
 
 | Step 4 (no outlet) | Step 5 (perfect drain) |

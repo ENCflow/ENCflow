@@ -28,7 +28,7 @@ splot 'wrk_zmask.txt' matrix using (kx($1)):(kx($2)):($3 < -9000 ? NaN : $3) wit
 # 図では、流域を薄い灰色、河道を青で描く
 DIR = "data_chichibu"
 BASIN = DIR."/Chichibu_200m_basin.txt"
-RIVER = DIR."/Chichibu_200m_river.txt"
+RIVER = DIR."/Chichibu_200m_river_flowline.txt"
 set view map
 set size ratio -1
 set xlabel "x (km)"
@@ -44,7 +44,7 @@ set title "流域マスク Chichibu_200m_basin(1: 流域内 = 計算対象セル
 plot BASIN matrix using (kx($1)):(kx($2)):($3 > 0 ? 1 : NaN) with image notitle
 
 set output "figs/step2_mask_river.png"
-set title "河道マスク Chichibu_200m_river(1: 河道セル。幅 1 セルの線)" noenhanced
+set title "河道マスク Chichibu_200m_river_flowline(1: 河道セル。幅 1 セルの線)" noenhanced
 plot RIVER matrix using (kx($1)):(kx($2)):($3 > 0 ? 2 : NaN) with image notitle
 
 # ---- Step 3: 河道マスクに測線とプローブを重ねる ----

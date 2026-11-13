@@ -53,9 +53,9 @@
   rn0 = 0.05           ! fixed roughness
   rn0_rw = 0.02        ! fixed roughness on channel-mask cells
 
-  fn_z = "Chichibu_200m_filled.txt"        ! ground elevation file name
-  fn_mask = "Chichibu_200m_basin.txt"      ! domain mask file name
-  fn_rw = "Chichibu_200m_river.txt"        ! channel mask file name
+  fn_z = "Chichibu_200m_filled.txt"          ! ground elevation file name
+  fn_mask = "Chichibu_200m_basin.txt"        ! domain mask file name
+  fn_rw = "Chichibu_200m_river_flowline.txt" ! channel mask file name
 /
 
 !======================================================================

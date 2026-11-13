@@ -53,9 +53,9 @@
   rn0 = 0.05           ! fixed roughness
   rn0_rw = 0.02        ! fixed roughness on channel-mask cells
 
-  fn_z = "Chichibu_100m_filled2.txt"        ! ground elevation file name
-  fn_mask = "Chichibu_100m_basin.txt"      ! domain mask file name
-  fn_rw = "Chichibu_100m_river.txt"        ! channel mask file name
+  fn_z = "Chichibu_100m_filled2.txt"         ! ground elevation file name
+  fn_mask = "Chichibu_100m_basin.txt"        ! domain mask file name
+  fn_rw = "Chichibu_100m_river_flowline.txt" ! channel mask file name
 /
 
 !======================================================================
@@ -77,8 +77,8 @@
   ! probe position type (0: cell indices, 1: real coordinates (m))
   ! probe positions (x, y)
   pbxytype = 0
-  pbxy(:,1) =  164,  210
-  pbxy(:,2) =  214,  203
+  pbxy(:,1) =  164,  211
+  pbxy(:,2) =  214,  202
   pbxy(:,3) =  294,  207
   pbxy(:,4) =  432,   78
 

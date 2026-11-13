@@ -87,13 +87,17 @@ architecture.md。このメモは「現在進行中・未完了の項目」だ�
        一定の雨を描いている(題も「0.5 h × 200 mm/h」)。tutorials/chichibu の README は「雨が終わる
        t = 1:00」と正しく書いてある。
      - test/chichibu_icmap の README(日英)の目安の値: h_max ≈ 6.8 m、Q_max ≈ 29 m²/s(S ≈ 0.0568 m は同じ)。
-   - **(b) 教材の切り替えと回し直し**: tutorials/chichibu(param_step2〜6 = 200 m の tif、param_supp_* = 50・
-     100・200 m の txt、Fig_chichibu.plt・Fig_supp.plt の河道マスクのパス。en のミラーも)と tutorials/bmi
-     (param.txt・param_norain.txt。日英)。データは置いてある。全ステップの値と図が変わるので、回し直し
-     (Fig_chichibu.sh は数分、Fig_supp.sh は 4 コアで 3〜4 時間。gnuplot が要る)と README(日英)の更新を
-     同じ作業で行う。既定 f_dry_head_cap = 2 の回し直し(00u)と 1 回にまとめる。補足の 100 m のプローブ
-     1・2((164, 210)・(214, 203))は、載せ直した河道セルから 1 セル外れるので (164, 211)・(214, 202) へ
-     移す(200 m と 50 m の測線・プローブは、載せ直した河道セルの上にある)。
+   - **(b) 教材の切り替えと回し直し(途中)**: tutorials/bmi は済み(param・README の出力と数値・図。日英)。
+     tutorials/chichibu は、param(Step 2〜6 と補足の 3 本。en のミラーも)と図のスクリプト
+     (Fig_chichibu.plt・Fig_supp.plt)を新しいマスクに切り替え、Step 1〜6 の README の値と図(日英)を既定
+     f_dry_head_cap = 2 の結果に直した(Step 3 の測線 4 のピーク 6,279 → 6,237 m³/s。Step 6 の 3D 図も
+     Fig_step6.py で描き直した)。**補足(解像度・4 近傍・河道幅・移流項の扱い。Fig_supp.sh の 21 本。
+     4 コアで 3〜4 時間)は計算の途中で、README の補足の表・本文・図 supp_*.png は、元のマスク・既定 1 の
+     ときの値のまま**。補足の 100 m のプローブ 1・2 は (164, 211)・(214, 202) へ移してある。計算が
+     済んだら、補足の表・本文・図(日英)を直し、本文が触れている現象(50 m の測線 3 の凹み、河道幅
+     50 m の 200 m の静振、スキーム 1 の発散の時刻など)が今の結果でも成り立つかを確かめる。本文の
+     試算(地形を直した計算、測線をずらした計算、dt = 4 s の幅なしの 200 m)は Fig_supp.sh に入って
+     いないので、残すなら回し直す。
    - (c) **元のマスクのままにしたもの**: test/chichibu の派生実験 param_*.txt(§68 の記録の数値が元のマスクの
      もの)、examples/source_area(50 m の元のマスクから、自前の make_catchment.py で対象の流域のマスクを
      作る。元のセルを残して切れ目だけをつなぐ方式)、500 m の「100 m のマスクから集約」のマスク。派生実験も

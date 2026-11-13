@@ -48,9 +48,9 @@
   rn0 = 0.05           ! constant roughness value
   rn0_rw = 0.02        ! constant roughness for channel-mask cells
 
-  fn_z = "Chichibu_200m_filled.tif"        ! ground elevation file name
-  fn_mask = "Chichibu_200m_basin.tif"      ! domain mask file name
-  fn_rw = "Chichibu_200m_river.tif"        ! channel mask file name
+  fn_z = "Chichibu_200m_filled.tif"          ! ground elevation file name
+  fn_mask = "Chichibu_200m_basin.tif"        ! domain mask file name
+  fn_rw = "Chichibu_200m_river_flowline.tif" ! channel mask file name
 /
 
 !======================================================================

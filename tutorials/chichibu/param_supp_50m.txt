@@ -51,9 +51,9 @@
   rn0 = 0.05           ! 粗度係数固定値
   rn0_rw = 0.02        ! 河道マスク部の固定粗度係数
 
-  fn_z = "Chichibu_50m_filled.txt"        ! 地盤高ファイル名
-  fn_mask = "Chichibu_50m_basin.txt"      ! 領域マスクファイル名
-  fn_rw = "Chichibu_50m_river.txt"        ! 河道マスクファイル名
+  fn_z = "Chichibu_50m_filled.txt"          ! 地盤高ファイル名
+  fn_mask = "Chichibu_50m_basin.txt"        ! 領域マスクファイル名
+  fn_rw = "Chichibu_50m_river_flowline.txt" ! 河道マスクファイル名
 /
 
 !======================================================================

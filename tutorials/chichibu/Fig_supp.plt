@@ -15,8 +15,8 @@ $T200 << EOD
 4  216  43  216  37   216  39
 EOD
 $T100 << EOD
-1  164 214  164 205   164 210
-2  214 206  214 199   214 203
+1  164 214  164 205   164 211
+2  214 206  214 199   214 202
 3  294 210  294 203   294 207
 4  432  86  432  73   432  78
 EOD
@@ -28,9 +28,9 @@ $T50 << EOD
 EOD
 array LBL[3]   = [ "200 m", "100 m", "50 m" ]
 array HALF[3]  = [ 7.5, 15, 30 ]       # 拡大窓の半幅(セル)= ±1.5 km
-array RIVER[3] = [ "data_chichibu/Chichibu_200m_river.txt", \
-                   "../../test/chichibu/data_chichibu/Chichibu_100m_river.txt", \
-                   "../../test/chichibu/data_chichibu_50m/Chichibu_50m_river.txt" ]
+array RIVER[3] = [ "data_chichibu/Chichibu_200m_river_flowline.txt", \
+                   "../../test/chichibu/data_chichibu/Chichibu_100m_river_flowline.txt", \
+                   "../../test/chichibu/data_chichibu_50m/Chichibu_50m_river_flowline.txt" ]
 array BASIN[3] = [ "data_chichibu/Chichibu_200m_basin.txt", \
                    "../../test/chichibu/data_chichibu/Chichibu_100m_basin.txt", \
                    "../../test/chichibu/data_chichibu_50m/Chichibu_50m_basin.txt" ]
