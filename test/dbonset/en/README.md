@@ -49,7 +49,7 @@ drive and the yield).
   ($`a_y/\max(|\mathbf{V}|, v_v)`$ in the denominator), and the resulting delay of
   the onset is proportional to the time step. The speed at 1.1 μ after 2 s was
   0.80 times the analytic value with dt = 0.01 s, 0.96 times with 0.002 s and
-  0.995 times with 0.0005 s. With the time steps of ordinary runs the onset is
+  0.9996 times with 0.0005 s. With the time steps of ordinary runs the onset is
   delayed by about this much.
 - The configurations with the gravity correction check that its cos²θ is set by
   the inclination of the ground (the steepest slope) alone and does not depend on

@@ -1,9 +1,9 @@
 # ENCflow/examples/glacier_valley/Makefile
 #   make            ../../bin/ の実行ファイルへのリンクと初期地形(make_terrain.py)を作る
-#   make run        本番(param_glacial.txt。既定の侵食係数で地形時間 6000 年。4 スレッドで約 10 分)
-#   make run-x10    補足(param_glacial_x10.txt。侵食係数 10 倍。約 5 分)
+#   make run        本番(param_glacial.txt。既定の侵食係数で地形時間 6000 年。4 スレッドで約 20 分)
+#   make run-x10    補足(param_glacial_x10.txt。侵食係数 10 倍。約 10 分)
 #   make run-lakes  湖の段(補足の最終の地形に雨を降らせる。約 3 分)
-#   make run-noero  対照(param_glacial_noero.txt。侵食なし。約 10 分)
+#   make run-noero  対照(param_glacial_noero.txt。侵食なし。約 20 分)
 #   make plot       図(figs/*.png と en/figs/*.png。説明図 mechanism.png だけなら計算の前に python3 plot_schematic.py)
 #   make clean      リンクと生成物を削除する
 

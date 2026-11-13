@@ -5,3 +5,4 @@ save_*/
 timeseries_*.csv
 sw_tide.txt
 tide_m2.txt
+param_ens_*.txt

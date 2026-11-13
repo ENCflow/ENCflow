@@ -44,13 +44,13 @@ make
 ./Run_MPI.sh 4    # MPI. The rule is that state.dat is byte-identical to the serial run
 ```
 
-## Findings (2026-10-24; gfortran 13.3, -Ofast)
+## Findings (2026-11-10; gfortran 13.3, -Ofast)
 
 | Check | sd₀ = 10 m | sd₀ = 0.5 mm |
 |---|---|---|
-| (1) Σ(z − z₀) | −5.3e-13 | −3.3e-13 (the supply limiter acted in 332,120 cell updates) |
+| (1) Σ(z − z₀) | about 1e-12 or less (round-off) | about 1e-12 or less (round-off; the supply limiter acted in 326,305 cell updates) |
 | (2) max\|z − z₀\| of the dry banks | 0 | 0 |
-| (3) co-moving update | 1.8e-15 | 5.2e-14 |
+| (3) co-moving update | about 1e-13 or less (round-off) | about 1e-13 or less (round-off) |
 | (4) max\|z − z₀\| in the channel | 11.5 mm | 6.1 mm |
 | (5) min sd | 9.99 m | 0 (bedrock exposed; the floor is not broken through) |
 

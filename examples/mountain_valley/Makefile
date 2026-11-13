@@ -1,8 +1,8 @@
 # ENCflow/examples/mountain_valley/Makefile
 #   make           ../../bin/ の実行ファイルへのリンクと入力(make_init.py)を作る
-#   make run       主ケース V_a・V_b・V_c を順に計算する(V_c は V_b の save から再開。合わせて約 15 分)
-#   make run-2m    解像度の確認 V_b2(Δx = 2 m。mpirun -np $(NP) で約 30 分)
-#   make run-supp  補足の V_a_tp(約 10 分)と P_p・P_a(各約 2 分)
+#   make run       主ケース V_a・V_b・V_c を順に計算する(V_c は V_b の save から再開。合わせて約 60 分)
+#   make run-2m    解像度の確認 V_b2(Δx = 2 m。mpirun -np $(NP)。OpenMP 4 スレッドの 1 プロセスでは約 80 分)
+#   make run-supp  補足の V_a_tp(約 20 分)と P_p・P_a(各約 6 分)
 #   make clean     リンクと生成物を削除する
 
 TOPDIR	= ../..

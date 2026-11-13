@@ -176,15 +176,15 @@ cliff-face zone; the more negative, the sharper).
 
 | Quantity | Initial | Final (T_geo = 9×10⁶ s) |
 |---|---|---|
-| y-direction relief of the cliff-face zone (m) | 0.44 | 5.50 (maximum 7.83 at T_geo 4.5×10⁶ s) |
-| Valley spacing (m) (prominence of Δz ≥ 1 m) | – | 1.8×10⁶ s: 13.6 ± 8.1 (15 valleys / 240 m), final: 12.2 ± 6.8 (18) |
-| Wavelength of the spectral centroid of Δz (m) | – | 1.8×10⁶ s: 11.5, 3.6×10⁶ s: 14.6, final: 12.4 |
-| Maximum incision / mean lowering of the cliff-face zone (m) | – | 29.0 / 18.0 |
-| Position x of the valley head (m) (plateau edge 60 m) | 60.5 | 12.5 (retreat of 48 m; almost constant rate ≈ 7 m / 10⁶ s after T_geo 3.6×10⁶ s) |
-| y-direction curvature of the ridges (1/m): median / minimum | – | −4.2 / −16.5 |
-| Fraction of land cells with slope > 1.0 | 0.24 | 0.34 |
-| Sediment that left the domain (solid volume, m³) | – | 160,371 (loss of surface volume Σ(z₀ − z)Δx² ≈ 2.7×10⁵ m³ = solid ÷ (1 − porosity 0.4)) |
-| Number of times capped by spl_dzmax (cumulative cell-updates) | – | 3.8×10⁴ |
+| y-direction relief of the cliff-face zone (m) | 0.44 | 5.61 (maximum 7.96 at T_geo 4.5×10⁶ s) |
+| Valley spacing (m) (prominence of Δz ≥ 1 m) | – | 1.8×10⁶ s: 13.6 ± 8.1 (15 valleys / 240 m), final: 11.8 ± 5.9 (19) |
+| Wavelength of the spectral centroid of Δz (m) | – | 1.8×10⁶ s: 11.5, 3.6×10⁶ s: 14.4, final: 11.4 |
+| Maximum incision / mean lowering of the cliff-face zone (m) | – | 29.0 / 18.5 |
+| Position x of the valley head (m) (plateau edge 60 m) | 60.5 | 13.5 (retreat of 47 m; almost constant rate ≈ 7 m / 10⁶ s after T_geo 3.6×10⁶ s) |
+| y-direction curvature of the ridges (1/m): median / minimum | – | −4.5 / −15.4 |
+| Fraction of land cells with slope > 1.0 | 0.24 | 0.36 |
+| Sediment that left the domain (solid volume, m³) | – | 164,676 (loss of surface volume Σ(z₀ − z)Δx² ≈ 2.7×10⁵ m³ = solid ÷ (1 − porosity 0.4)) |
+| Number of times capped by spl_dzmax (cumulative cell-updates) | – | 6.0×10⁴ |
 
 (The table is printed by `python3 plot_results.py`.)
 
@@ -197,7 +197,7 @@ cliff-face zone; the more negative, the sharper).
   12 m afterwards.
 - **Sharp ridges**: the ridges are 2–4 cells wide, and their crests are also lowered by
   the slopes on both sides.
-- **Peak of relief**: the relief grows as the valleys deepen (maximum ≈ 7.8 m) and falls
+- **Peak of relief**: the relief grows as the valleys deepen (maximum ≈ 8.0 m) and falls
   as the plateau is dissected.
 
 ### What sets the valley spacing
@@ -210,43 +210,42 @@ larger ℓ, so the stage of growth is aligned instead of the time). Lower left: 
 spacing-selection rule (centroid wavelength of Δz and valley spacing at T_geo = 1.8×10⁶ s
 and when the relief reaches 2 m, against ℓ; the grey line is the linear theory
 λ* = 4.4 ℓ). Lower centre: grid convergence for spl_lc = 2 m (Δx = 0.5 / 1 / 2 m). Lower
-right: terrain for Δx = 0.5 m and 2 m (T_geo = 3.6×10⁶ s). For ℓ = 4 m and Δx = 2 m the
-relief does not reach 2 m before the end of the run (final 0.53 m and 1.96 m), so the map
-and points "when the relief reaches 2 m" for these two cases are the values at the end
-(T_geo = 2.2×10⁷ s and 5.4×10⁶ s).
+right: terrain for Δx = 0.5 m and 2 m (T_geo = 3.6×10⁶ s). For ℓ = 4 m the relief does not
+reach 2 m before the end of the run (final 0.55 m), so the map and points (open markers)
+"when the relief reaches 2 m" for this case are the values at the end (T_geo = 2.2×10⁷ s).
 
 | Case | ℓ (m) | Δx (m) | T_geo = 1.8×10⁶ s: centroid wavelength of Δz / valley spacing / mean lowering (m) | When relief reaches 2 m (T_geo): centroid wavelength / valley spacing (m) / number / mean lowering (m) | Final: relief / maximum incision / mean lowering / valley head x (m) |
 |---|---|---|---|---|---|
-| param_grid | 0 | 1 | 3.3 / 3.5 / 7.5 | (9×10⁵ s) 3.4 / 3.5 / 66 / 4.9 | 1.02 / 15.0 / 12.5 / 0.5 (through the plateau) |
-| param_lc1 | 1 | 1 | 6.8 / 6.7 / 4.6 | (9×10⁵ s) 5.5 / 6.0 / 39 / 3.0 | 4.10 / 14.8 / 8.1 / 0.5 (through the plateau) |
-| param_lc2 | 2 | 1 | 10.1 / 14.5 / 3.0 | (2.7×10⁶ s) 10.9 / 13.2 / 17 / 4.6 | 3.74 / 14.5 / 6.5 / 30.5 |
-| param_lc4 (to T_geo 2.2×10⁷ s) | 4 | 1 | 4.2 / – / 1.7 (not yet grown) | (2.2×10⁷ s; end of run, 2 m not reached) 22.5 / 24.5 / 4 / 10.3 | 0.53 / 14.7 / 10.3 / 30.5 |
-| param_lc2_dx05 | 2 | 0.5 | 9.6 / 11.8 / 3.8 | (2.7×10⁶ s) 10.4 / 11.8 / 19 / 5.4 | 4.55 / 14.5 / 7.9 / 22.8 |
-| param_lc2_dx2 | 2 | 2 | 10.8 / 15.4 / 2.0 | (5.4×10⁶ s; end of run, 2 m not reached) 12.8 / 15.1 / 14 / 4.9 | 1.96 / 13.9 / 4.9 / 37.0 |
+| param_grid | 0 | 1 | 3.5 / 3.2 / 6.4 | (9×10⁵ s) 3.3 / 2.9 / 82 / 4.8 | 1.76 / 15.0 / 9.1 / 25.5 |
+| param_lc1 | 1 | 1 | 6.5 / 5.8 / 5.0 | (9×10⁵ s) 5.4 / 5.4 / 44 / 3.2 | 2.76 / 14.9 / 9.3 / 21.5 |
+| param_lc2 | 2 | 1 | 10.0 / 14.2 / 3.0 | (2.7×10⁶ s) 10.8 / 12.9 / 17 / 4.7 | 3.78 / 14.5 / 6.6 / 30.5 |
+| param_lc4 (to T_geo 2.2×10⁷ s) | 4 | 1 | 4.2 / 63.0 (0.4 valleys per column) / 1.7 (not yet grown) | (2.2×10⁷ s; end of run, 2 m not reached) 22.4 / 23.1 / 4 / 10.3 | 0.55 / 14.7 / 10.3 / 30.5 |
+| param_lc2_dx05 | 2 | 0.5 | 9.5 / 11.8 / 3.8 | (2.7×10⁶ s) 10.4 / 12.1 / 18 / 5.1 | 4.57 / 14.5 / 7.9 / 22.8 |
+| param_lc2_dx2 | 2 | 2 | 10.2 / 15.8 / 2.0 | (4.5×10⁶ s) 11.4 / 12.7 / 16 / 4.7 | 2.05 / 14.0 / 4.9 / 37.0 |
 
 The plateau edge is at x = 40 m. The final time is T_geo = 5.4×10⁶ s except for param_lc4.
 "When relief reaches 2 m" is the first output at which the relief of the cliff-face zone
-exceeds 2 m; for the cases whose relief does not reach 2 m before the end of the run
-(param_lc4, param_lc2_dx2), `plot_results.py` uses the last output.
+exceeds 2 m; for the case whose relief does not reach 2 m before the end of the run
+(param_lc4), `plot_results.py` uses the last output.
 
 - **With the grid curvature the spacing sticks to the grid**: with spl_lc = 0 the centroid
-  wavelength is 3.4 m (≈ 3Δx), a checkerboard of bumps rises and an erosion front two cells
-  wide cuts through the plateau. The hollow amplification acts more strongly at shorter
+  wavelength is 3.3 m (≈ 3Δx), and narrow grooves about three cells apart line the cliff
+  face. The hollow amplification acts more strongly at shorter
   wavelengths (linearised, the growth rate ∝ k²), so the shortest wavelength grows fastest
   (the same as the "infinite wavenumber" problem of Smith and Bretherton 1972). Adding a
   diffusion term (hillslope creep) does not help: diffusion is also proportional to k²,
   so it only changes whether growth occurs and does not select a spacing.
 - **With ℓ the spacing is proportional to ℓ**: the centroid wavelength when the relief
-  reaches 2 m is 5.5 / 10.9 m for ℓ = 1 / 2 m (≈ 5–6 ℓ; linear theory λ* = 4.4 ℓ). Growth
+  reaches 2 m is 5.4 / 10.8 m for ℓ = 1 / 2 m (≈ 5–6 ℓ; linear theory λ* = 4.4 ℓ). Growth
   is slower for larger ℓ (maximum growth rate ∝ 1/ℓ²): for ℓ = 4 m the relief is still only
-  0.53 m at the end of the run, T_geo = 2.2×10⁷ s (about 8 times the time at which ℓ = 2 m
+  0.55 m at the end of the run, T_geo = 2.2×10⁷ s (about 8 times the time at which ℓ = 2 m
   reaches a relief of 2 m), and the valleys have not yet grown. The centroid wavelength of
-  22.5 m and the valley spacing of 24.5 m (4 valleys) for ℓ = 4 m are values at this end
+  22.4 m and the valley spacing of 23.1 m (4 valleys) for ℓ = 4 m are values at this end
   time, not at the 2 m stage, and do not compare the same stage of growth as ℓ = 1 / 2 m.
 - **Grid convergence**: solving ℓ = 2 m with Δx = 0.5 / 1 / 2 m, the centroid wavelength
-  when the valleys form (T_geo = 1.8×10⁶ s) agrees at 9.6 / 10.1 / 10.8 m (the
+  when the valleys form (T_geo = 1.8×10⁶ s) agrees at 9.5 / 10.0 / 10.2 m (the
   spacing-selection rule does not depend on the grid). On the other hand, the mean lowering
-  is 3.8 / 3.0 / 2.0 m and finally 7.9 / 6.5 / 4.9 m: once the valleys are deep, they develop
+  is 3.8 / 3.0 / 2.0 m and finally 7.9 / 6.6 / 4.9 m: once the valleys are deep, they develop
   faster on finer grids and **do not fully converge**. This erosion law has no upper bound
   on the slope, and a valley wall can steepen to a one-cell step (S ≈ Δz/Δx), so the 99th
   percentile of the slope is 11 / 6.5 / 3.3 for Δx = 0.5 / 1 / 2 m, inversely proportional to
@@ -267,11 +266,11 @@ sea cells" at the end).
 
 | Quantity (T_geo = 9×10⁶ s) | Main case | With collapse |
 |---|---|---|
-| Sediment that left the domain by dry-slope erosion (solid m³) | 160,371 | 40,495 |
-| Volume moved by collapse (bulk m³, cumulative) / of which into the sea | – | 25,465 / 192 |
-| Total talus (m³, final) | – | 754 |
-| y-direction relief / mean lowering of the cliff-face zone (m) | 5.50 / 18.0 | 3.37 / 7.8 |
-| Position x of the valley head (m) (plateau edge 60 m) | 12.5 | 42.5 |
+| Sediment that left the domain by dry-slope erosion (solid m³) | 164,676 | 40,522 |
+| Volume moved by collapse (bulk m³, cumulative) / of which into the sea | – | 25,006 / 186 |
+| Total talus (m³, final) | – | 731 |
+| y-direction relief / mean lowering of the cliff-face zone (m) | 5.61 / 18.5 | 3.39 / 7.8 |
+| Position x of the valley head (m) (plateau edge 60 m) | 13.5 | 42.5 |
 
 (The table is printed by `python3 plot_results.py`. The relief and the mean lowering use
 the same definitions as the table of the main case, with the cliff-face zone chosen from
@@ -281,10 +280,10 @@ Ht9998 × Δx².)
 - The collapse brings the 56° cliff face (drop within the window > 15 m) down to the angle
   of repose, and the talus covers the face, so the driving force of dry-slope erosion
   (S^1.5 and the hollow amplification) drops: the retreat of the valley head falls from
-  48 m to 18 m (from the initial valley head at 60.5 m), the relief of the cliff-face zone
-  from 5.50 to 3.37 m, its mean lowering from 18.0 to 7.8 m, and the export by dry-slope
+  47 m to 18 m (from the initial valley head at 60.5 m), the relief of the cliff-face zone
+  from 5.61 to 3.39 m, its mean lowering from 18.5 to 7.8 m, and the export by dry-slope
   erosion to a quarter.
-- The collapse into the sea is small (192 m³) because in this terrain the foot of the cliff
+- The collapse into the sea is small (186 m³) because in this terrain the foot of the cliff
   meets the sea cells at sea level (z = 0), so the step facing the sea is small (a vertical
   sea cliff placed directly against the sea cells would make the export to the sea dominant).
 - The collapse parameters are not calibrated. This example does not decide whether a real
@@ -324,9 +323,9 @@ Ht9998 × Δx².)
   premise of no overland flow breaks down. This is why the base level of erosion is given
   by `spl_zbase` and not by the soil thickness.
 - **Cap on erosion per update**: `spl_dzmax = 0.2` m is a safety valve that acts on some
-  cells in the stage when the valley heads retreat fastest (3.8×10⁴ cell-updates in total).
-  With 0.5 m the time series does not change, but with 0.1 m the final position of the
-  valley head becomes 12.5 → 29.5 m, bound by this cap.
+  cells in the stage when the valley heads retreat fastest (6.0×10⁴ cell-updates in total).
+  With 0.5 m the time series hardly changes (the valley head moves by one cell at most), but
+  with 0.1 m the final position of the valley head becomes 13.5 → 29.5 m, bound by this cap.
 - **Slope evaluation**: the slope is evaluated by steepest descent to the eight neighbours
   (`spl_sgrad = 1`, default). With central differences (0), the slopes on both sides
   cancel at a ridge crest and one-cell-wide ridges remain uneroded.

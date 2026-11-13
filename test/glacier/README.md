@@ -143,7 +143,7 @@ python3 Fig.py    # figs/halfar.png, figs/cirque.png, figs/avalanche.png, figs/l
 | Halfar 最大絶対誤差 | 12.2 m(氷縁) | < 45 m(縁 1.5 セルずれ相当) | PASS |
 | Halfar 中心誤差 | 0.14 m | < 6 m(流れないと 23 m) | PASS |
 | Halfar 等方性(斜め/軸の扇形の氷の体積比の、解析解の比との差) | +0.41% | < 2%(修正前のコードで −5.49%) | PASS |
-| 氷体積 S_total の相対変化 | 〜1e-15 | 機械精度 | PASS |
+| 氷体積 S_total の相対変化 | 1e-14 程度以下(丸め誤差) | 機械精度 | PASS |
 | カール: max Hi / min dz / max dz | 92.7 m / −0.012 m / 0 | > 1 m / < −0.01 m / ≤ 0 | PASS |
 | 雪崩: 半径 800〜1600 m の円周上の SWE の変動係数 | 0.017〜0.042 | < 0.08(修正前のコードで 0.230〜0.350) | PASS |
 | 雪崩: 半径 400 m の平均 SWE | 408 mm | < 900 mm(初期 1000 mm の 90%) | PASS |

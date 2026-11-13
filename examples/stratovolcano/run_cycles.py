@@ -197,7 +197,7 @@ def ero_param(case, k, morfac, data, res):
   dd = 0.0002               ! 移動限界水深 (m)。斜面の薄いシート流を解くため(ashfall_lahar と同じ)
 /
 &list_enc
-  f_gravity_correction = 1  ! 急勾配の重力補正
+  f_gravity_correction = 2  ! 急勾配の重力補正(既定の 2。斜面に沿う摩擦と流砂のせん断)
 /
 &list_initial
   f_htype = 0

@@ -34,7 +34,7 @@ d50 = 3 mm, morfac = 10 (cseq: suspended sediment 0.2 mm, morfac = 1).
 1. No feed: Δz of the inlet cells < −0.2 m.
 2. Capacity feed (factor 1): |Δz| of the inlet cells < 1e-9 (checked on z in
    save; exactly 0 since supply = net outflow), mean |Δz| over the upstream
-   reach x = 20–120 m < 0.03 m (0.075 without feed).
+   reach x = 20–120 m < 0.03 m (0.073 without feed).
 3. Factor 0.5: the lowering of the inlet cells is smaller than without feed.
 4. The inflow_qb ledger closes to relative 1e-9 (z of save_qb/state.dat).
 5. Equilibrium-concentration feed: hs/h in the inflow column agrees within

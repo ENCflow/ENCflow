@@ -84,10 +84,11 @@ python3 make_init.py wmap > wmap.txt   # regenerate the input (bundled; only whe
   (largest at the cell next to the stream; the heights above the stream in
   row 12 are 0.4987, 0.8983, 1.1979, 1.3976 and 1.4974 m against the
   analytical 0.5, 0.9, 1.2, 1.4 and 1.5 m); steadiness 1.2e-3 U and 2.0e-4 U;
-  the sediment budget closes to 3e-10 and 1e-10 of the uplifted volume; the
-  bedrock surface of the stream changes by 6e-13 m. With dts = 100 s (morfac
-  1000) the fluv_dzmax limit of the bed load in the stream fired and the foot
-  of the hillslopes collapsed. The C2 restart round trip is bit-identical.
+  the sediment budget closes to about 1e-9 of the uplifted volume or less; the
+  bedrock surface of the stream changes by about 1e-12 m or less (round-off).
+  With dts = 100 s (morfac 1000) the fluv_dzmax limit of the bed load in the
+  stream fired and the foot of the hillslopes collapsed. The C2 restart round
+  trip is bit-identical.
 - np = 1, 2 and 4 are bit-identical to the serial run and pass the same checks.
   np = 2 with -fcheck=all also passes.
 - The path without fn_wthr gives a state.dat bit-identical to the executable

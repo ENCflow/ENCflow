@@ -37,12 +37,12 @@ make
 ./Run_MPI.sh 4    # MPI. The rule is that state.dat is byte-identical to the serial run
 ```
 
-## Findings (2026-10-24; gfortran 13.3, -Ofast)
+## Findings (2026-11-10; gfortran 13.3, -Ofast)
 
 | Check | on | off (control) |
 |---|---|---|
-| Mean Δz, outer bank − inner bank (left = right) | −0.075 m | +0.004 m |
-| Mirror difference max\|Δz_left − flipud(Δz_right)\| | 5.3e-15 m | 7.1e-15 m |
+| Mean Δz, outer bank − inner bank (left = right) | −0.0765 m | +0.004 m |
+| Mirror difference max\|Δz_left − flipud(Δz_right)\| | about 1e-14 m or less (round-off) | about 1e-14 m or less (round-off) |
 | max\|Δz\| of the dry banks | 0 | 0 |
 
 - Without correction the depth-averaged flow accelerates on the inner-bank
@@ -50,9 +50,9 @@ make
   and the outer-bank side deepens (with the revision of §84.3 that evaluates
   the bed-slope term by direct differences on the edges, this became clear at
   −0.224 m, from −0.098 m with the first version using central differences;
-  with the current code (2026-10-24) it is −0.075 m).
+  with the current code (2026-11-10) it is −0.0765 m).
 - The mirror difference is at round-off level both with and without
-  correction (5.3e-15 / 7.1e-15), within the tolerance 1e-4 (with the -O2
+  correction (about 1e-14 or less), within the tolerance 1e-4 (with the -O2
   strict-math build of 2026-10-17 it was 2.2e-5 with correction, because the
   positive feedback of morphological change amplifies round-off differences).
 - The segment-inflow cells (west end) receive no sediment feed and scour down

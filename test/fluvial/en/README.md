@@ -56,8 +56,8 @@ soil depth changes by exactly the amount the bed moves).
 
 | Check | Computed | Result |
 |---|---|---|
-| (1) Σ(z − z₀) | 4.2e-17 m·cell | PASS (machine precision) |
-| (2) max\|(sd − sd₀) − (z − z₀)\| | 1.3e-14 m | PASS |
+| (1) Σ(z − z₀) | about 1e-15 m·cell or less (round-off) | PASS (machine precision) |
+| (2) max\|(sd − sd₀) − (z − z₀)\| | about 1e-13 m or less (round-off) | PASS |
 | (3) max\|z − z₀\| | 1.86 mm | PASS (> 0.1 mm) |
 
 - Because the Exner update sums the antisymmetric fluxes edge by edge, the
@@ -74,7 +74,7 @@ soil depth changes by exactly the amount the bed moves).
   edges at an MPI band interface differ between the two ranks. On
   2026-10-27 this was detected with np = 2 as Σ(z − z₀) = 2.5e-5 m·cell and
   a mismatch with the serial run, and fixed by exchanging the z halo before
-  creep (developer.md §19.9). After the fix Σ(z − z₀) = −6.2e-18 and
+  creep (developer.md §19.9). After the fix Σ(z − z₀) is at round-off level and
   np = 2, 4 are byte-identical to the serial run.
 - `param_creep_hs.txt` (bedload + depth-dependent creep) checks all of
   (1)–(3) (depth-dependent creep also updates z and sd together;
@@ -83,7 +83,7 @@ soil depth changes by exactly the amount the bed moves).
   with z. With a build that omits this exchange, np = 2 was confirmed not to
   match the serial run (2026-10-27). H_c = 20 m is a test value chosen so that
   the availability 1 − e^{−sd/H_c} is sensitive to changes of sd. The result
-  is Σ(z − z₀) = 3.5e-17 m·cell and co-update 1.4e-14 m, and np = 2, 4 are
+  is Σ(z − z₀) and co-update both at round-off level, and np = 2, 4 are
   byte-identical to the serial run.
 - For the handling of the conveying cross-section with a channel mask (rw),
   see the subgrid channel of

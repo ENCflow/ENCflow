@@ -78,8 +78,8 @@ judge-only mode).
 
 | Configuration | Total solid | Co-moving update | Water budget / activity | Result |
 |---|---|---|---|---|
-| 1 release | 4e-14 | 4e-14 | Σh = 52.8000 (expected λ relsat ΣD = 52.8000) / collapse area min dz −0.98 m, deposition outside the area +0.28 m | PASS |
-| 2 fslide | 9e-12 (tolerance 1e-8: rounding accumulated over about 20 000 cell conversions) | 9e-14 | slope min sd = 0 (428 cells failed) / min Fs9999 0.493, D9999 ≥ H9999 | PASS |
+| 1 release | about 1e-12 or less | about 1e-13 or less | Σh = 52.8000 (expected λ relsat ΣD = 52.8000) / collapse area min dz −0.98 m, deposition outside the area +0.28 m | PASS |
+| 2 fslide | about 1e-11 or less (tolerance 1e-8: rounding accumulated over about 20 000 cell conversions) | about 1e-13 or less | slope min sd = 0 (428 cells failed) / min Fs9999 0.493, D9999 ≥ H9999 | PASS |
 | 3 fsdiag | — | — | z, sd and hs unchanged; min Fs 0.943 < 1 detected (600 cells evaluated) | PASS |
 
 - The mobilization fires only once, by a time-crossing test, and does not

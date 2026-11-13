@@ -215,7 +215,7 @@ the erupted volume) (developer.md §51.5).
 | Configuration 7 (1) difference between the output Tl and the backward-Euler recursion | max 4.2e-5 °C (uniform over all cells) | PASS |
 | Configuration 7 (2) difference of the temperature drop from the exact solution | 9.4e-4 relative (tolerance 1%) | PASS |
 | Configuration 7 (3) solidification by temperature | all cells solidify at the 499th update (t = 4990 s, 799.60 °C), dz = 1 m | PASS |
-| Configuration 7 (4) residual of the heat ledger | −2.9e-16 (relative to the erupted heat); erupted 1.0525e11 J = radiated 1.8562e10 + convected 1.0180e10 + solidified 7.6505e10 J | PASS |
+| Configuration 7 (4) residual of the heat ledger | about 1e-15 or less (relative to the erupted heat; round-off); erupted 1.0525e11 J = radiated 1.8562e10 + convected 1.0180e10 + solidified 7.6505e10 J | PASS |
 | Configuration 7m air temperature from fn_meteo | save byte-identical to configuration 7 | PASS |
 | Configuration 8 (1) ledger Σhl·A − V_in | −1.1e-13 m³ (V_in = 599.5 m³) | PASS |
 | Configuration 8 (2) conservation of heat | Σhl·Tl·A = Σ V_k T_k to −1.8e-16 relative; residual on the screen −1.2e-15 | PASS |

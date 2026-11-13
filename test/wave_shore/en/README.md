@@ -40,15 +40,15 @@ morphology.
    the central 2 wavelengths (x = 200–600 m) decays as exp(−D k² t), and the
    decay rate agrees within ±35 % with D k² of the linear theory,
    D = Q_s'(α)/h_b, Q_s'(α) = K₂ H₀^{12/5} T^{1/5} cos^{1/5}α (cos²α − 1.2 sin²α)
-   (measured: amplitude 6.0 → 3.10 → 1.52 m, ratio 1.02).
+   (measured: amplitude 6.0 → 3.10 → 1.52 m, ratio 1.03).
 2. High angle (α = 60°): the same amplitude grows as exp(+|D| k² t), and the
    growth rate is 0.5–1.5 times the theoretical value (measured
-   6.0 → 10.3 → 13.1 m, ratio 0.76). In addition, in the spectrum of the
+   6.0 → 10.2 → 13.0 m, ratio 0.75). In addition, in the spectrum of the
    irregularities of the depth contour on the offshore side of the surf zone
    (h = 0.8 m), the power at wavelengths below 10 m is under 15 % (measured
    4 %; no grid-scale bars).
    2b. high0 (the former cell-radius kernel): the same power is 20 % or more
-   (measured 28 %).
+   (measured 26 %).
 3. Volume conservation (closed domain; rounding at the printed precision is
    tolerated).
 4. The state.dat of off and nowave are byte-identical (cmp in Run.sh).

@@ -94,7 +94,7 @@ lower than that).
 Configuration 4 (left) and the control (right). The mass that flowed over
 land as a debris flow (mixture) becomes, with the handover, a bed layer in
 the cells with a ponded depth of 2 m or more and runs along the lake bed
-(deposit 5.1 m, handover 17,609 m³ = 92 % of the release); without the
+(deposit 5.1 m, handover 17,596 m³ = 92 % of the release); without the
 handover it stops near the shoreline and does not reach the lake bed
 (deposit on the flat part 0 m).
 
@@ -106,10 +106,10 @@ handover it stops near the shoreline and does not reach the lake bed
 | Configuration 1: cross-section passage speed | 7.519 m/s (−2.9% = agrees with the boundary layer 2·ld/ny of the 2 wall rows) | PASS |
 | Configuration 2: interior Vb | 7.736–7.746 m/s (0.14%) | PASS |
 | Configuration 2: cross-section passage speed | 7.175 m/s (−7.4%; wall ends + staircase cross-section) | PASS |
-| Configuration 3: ledger / Σh | Σdz 1.6e-11, max\|Δ(z − sd)\| 9e-13 / Σh unchanged (−2.4e-3 m·cell) | PASS |
+| Configuration 3: ledger / Σh | Σdz and max\|Δ(z − sd)\| both about 1e-10 or less (round-off) / Σh unchanged (−1.3e-3 m·cell) | PASS |
 | Configuration 3: lake-bed deposition / wave generation | flat lake bed max dz 5.16 m / water-surface maximum 0.51 m (flat part of the lake bed) | PASS |
 | Configuration 3: release ledger | released 19,110 = stopped 16,680 + moving 2,430 m³ | PASS |
-| Configuration 4: handover | 17,609 m³, lake-bed max dz 5.13 m; control 0.00 m | PASS |
+| Configuration 4: handover | 17,596 m³, lake-bed max dz 5.12 m; control 0.00 m | PASS |
 
 (Values recomputed on 2026-11-05 with the steep-slope gravity correction aligned to the default 2 (friction
 along the slope; developer.md §93). Only the rounding values of the ledger of configuration 3 and the handover of
@@ -118,7 +118,9 @@ Recomputed on 2026-11-06 after the change by which 2 also evaluates the resistan
 flows along the slope (developer.md §101): the handover of configuration 4 changed 17,804 → 17,609 m³
 and the speed of the mixture at handover (volume-weighted mean) 3.2 → 2.9 m/s (the turbulent term of
 Voellmy on land grows and the mixture becomes slower). Configurations 1–3, which use only the bed
-layer, do not change.)
+layer, do not change.
+Rerun on 2026-11-10 with the current defaults: the handover of configuration 4 is 17,596 m³ and the
+speed of the mixture 2.95 m/s.)
 
 - The 45°-rotated benchmark is a detector for a wrong normalization of the
   8-direction distribution, which makes the passage speed come out √2 times

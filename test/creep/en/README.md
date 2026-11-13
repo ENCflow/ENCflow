@@ -24,7 +24,7 @@ creep, in which only the soil layer moves (`creep_hstar`, developer.md §89.8;
 |---|---|
 | Domain and grid | 101 m × 101 m, 101 × 101 cells (Δx = 1 m), walls on all four sides |
 | Initial terrain | Gaussian hill z = A exp(−r²/2σ²), A = 1 m, σ = 10 m (user_geoinfo `gaussian_hill`; center cell (51, 51)) |
-| Creep | Diffusion coefficient D = 1 m²/s, updated every step (dts = dt = 0.1 s). Explicit stability condition D dts (1/dx² + 1/dy²) ≤ 1/2 → dts ≤ 0.25 s |
+| Creep | Diffusion coefficient D = 1 m²/s, updated every step (dts = dt = 0.1 s). The curvature uses the default 9-point stencil (`creep_diagratio = 1/3`). Explicit stability condition with 9 points dts ≤ 0.3 dx²/D = 0.3 s (with 5 points D dts (1/dx² + 1/dy²) ≤ 1/2 → 0.25 s) |
 | Time | dt = 0.1 s, 50 s (`param.txt`, morfac = 1) / 25 s (`param_morfac2.txt`, morfac = 2; the morphological time is the same 50 s) |
 | Measurement | 4 probes: the hill center r = 0, r = 10, 20 m in the x direction, r = 20 m in the y direction. z recorded every 1 s |
 
@@ -65,31 +65,42 @@ solution (lines). All 4 points lie on the lines, and the morfac = 2 result
 (×; drawn in morphological time by doubling the hydraulic time) also
 coincides with the same curves. Center: the analytical profiles
 (τ = 0, 25, 50 s) and the computed values at the probes (○). Right: the
-evolution of computed − analytical. The maximum is 7.9e-5 m (0.008% of the
-hill height) for morfac = 1 and 2.3e-4 m for morfac = 2, both within the
-range of the O(dts) time discretization (morfac doubles the effective time
-step, so the error is about 3 times larger).
+evolution of computed − analytical. The maximum is 2.0e-4 m (0.02% of the
+hill height) for morfac = 1 and 1.0e-4 m for morfac = 2 (the breakdown of
+the error is in the findings below).
 
 ## Findings
 
 | Case | Maximum absolute error (4 probes) | Result (tolerance 5e-3 m) |
 |---|---|---|
-| morfac = 1, 50 s | 7.76e-5 m (r = 0), 3.3e-5 (r = 10), 1.9e-5 (r = 20) | PASS |
-| morfac = 2, 25 s | 2.29e-4 m (r = 0), 7.6e-5 (r = 10), 7.9e-5 (r = 20) | PASS |
+| morfac = 1, 50 s | 2.00e-4 m (r = 0), 7.3e-5 (r = 10), 4.4e-5 (r = 20) | PASS |
+| morfac = 2, 25 s | 1.01e-4 m (r = 0), 3.6e-5 (r = 10), 2.5e-5 (r = 20) | PASS |
 
-- Creep is a conservative 4-neighbor flux (5-point Laplacian) that is
-  exactly consistent with isotropic linear diffusion, so it can be compared
-  directly with the analytical solution. It can also be confirmed that the
-  r = 20 m probes in the x and y directions give the same value (isotropy).
+- Creep is a conservative flux whose curvature uses the default 9-point
+  stencil (the 4 neighbors plus the 4 diagonal neighbors with the weight
+  `creep_diagratio = 1/3`). It is consistent with isotropic linear diffusion,
+  so it can be compared directly with the analytical solution. It can also be
+  confirmed that the r = 20 m probes in the x and y directions give the same
+  value (isotropy).
+- The error is the difference of the leading terms of the spatial and time
+  discretizations. The truncation error of the 9-point curvature is the
+  isotropic (Δx²/12) D∇⁴z, which weakens the diffusion, and the time error of
+  the explicit scheme is (dts/2) D²∇⁴z, which strengthens it. With D = 1 m²/s
+  and Δx = 1 m the coefficient of D∇⁴z is 0.083 − 0.05 = +0.033 m² for
+  morfac = 1 (effective time step 0.1 s) and 0.083 − 0.1 = −0.017 m² for
+  morfac = 2 (0.2 s); the ratio 2 : 1 of their magnitudes matches the ratio of
+  the errors (2.0e-4 : 1.0e-4 m). (With the 4-neighbor 5-point curvature,
+  `creep_diagratio = 0`, the ratio at the hill center is 1 : 3 and the error of
+  morfac = 2 is the larger.)
 - The sediment volume is conserved to machine precision by the summation of
   antisymmetric fluxes.
 - The equivalence of morfac is the basis of the interpretation "one
   computation = the landform change of morfac identical events". The only
   difference is the O(dts) time discretization.
-- This case is also a detector for a future extension to 8 neighbors: if the
-  normalization of the weights is wrong, the effective diffusion coefficient
-  deviates from D, which shows up immediately in the comparison with the
-  analytical solution (§19).
+- This case is also a detector for the diagonal weights: if the
+  normalization of the 9-point weights is wrong, the effective diffusion
+  coefficient deviates from D, which shows up immediately in the comparison
+  with the analytical solution (§19, §96).
 - The probe CSVs of MPI np = 1, 2, 4 are bit-identical to the serial run
   (verification record of §19).
 
@@ -113,10 +124,10 @@ all four sides), (c) sd ≥ 0, and for the items of each configuration.
 Verification record (2026-10-27; gfortran 13.3 / Open MPI 4.1, default -Ofast
 build):
 
-- Thick soil: max|Δz| = 1.8e-15 m against the conventional linear diffusion
-  (the rounding of converting the flux to solid volume and back); the error
-  against the analytical solution at the probes is 7.76e-5 m, the same as
-  before. Bedrock surface unchanged to 4.4e-14 m.
+- Thick soil: max|Δz| about 1e-14 m or less against the conventional linear
+  diffusion (the rounding of converting the flux to solid volume and back); the
+  error against the analytical solution at the probes is 7.76e-5 m, the same as
+  before. Bedrock surface unchanged to about 1e-13 m or less (round-off).
 - Thin soil: sd at the hilltop 9.6e-7 m (the lowering of the hilltop stops at
   the initial soil depth of 2 cm), max sd = 3.66 cm.
 - Supply limiter: fired in 226300 cell-updates (warning "fluvial supply
@@ -131,6 +142,11 @@ build):
   -Ofast are also bit-identical to the serial run (the count of the supply
   limiter is printed per rank; 116228 + 110072 of np = 2 equals the serial
   226300).
+- Rerun on 2026-11-10 with the current defaults (9-point curvature): the error
+  of the thick soil against the analytical solution is 2.00e-4 m (the same as
+  the linear diffusion), sd at the hilltop of the thin soil is 9.7e-7 m and
+  max sd 3.61 cm, the supply limiter fired in 234432 cell-updates (serial),
+  and (a)–(c) and the checks of each configuration all PASS.
 
 ## Related documents
 

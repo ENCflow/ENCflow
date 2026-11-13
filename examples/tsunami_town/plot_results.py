@@ -166,13 +166,14 @@ def setup():
     st = rd("bdstock.txt")
     fig, axs = plt.subplots(1, 3, figsize=(16, 4.2), gridspec_kw=dict(width_ratios=[1.35, 1.35, 1]), constrained_layout=True)
     ax = axs[0]
-    im = ax.imshow(z, extent=EXT, cmap="terrain", vmin=-6, vmax=6)
+    im = ax.imshow(z, extent=EXT, cmap="terrain", vmin=-6, vmax=10)
     draw_wall(ax)
     ax.text(75, 300, T("海\n−5 m", "sea\n−5 m"), ha="center", va="center", fontsize=8)
     ax.text(205, 300, T("浜", "beach"), ha="center", va="center", fontsize=8)
     ax.annotate(T("開口部(幅 120 m、+0.5 m)", "opening (120 m wide, +0.5 m)"), xy=(265, 300), xytext=(420, 330), fontsize=8,
                 arrowprops=dict(arrowstyle="-", lw=0.8))
-    ax.text(740, 80, T("市街地 +0.5 → +3.0 m", "town +0.5 → +3.0 m"), ha="center", fontsize=8)
+    ax.text(640, 80, T("市街地 +0.5 → +2.5 m", "town +0.5 → +2.5 m"), ha="center", fontsize=8)
+    ax.text(1100, 80, T("高台へ\n→ +10 m", "rising to\nhigh ground\n+10 m"), ha="center", fontsize=8)
     ax.set_title(T("地形と防潮堤(天端 +2 m。黒)", "Terrain and seawall (crest +2 m, black)"), fontsize=10)
     fig.colorbar(im, ax=ax, shrink=0.85).set_label(T("地盤高 (m)", "ground elevation (m)"))
     ax = axs[1]

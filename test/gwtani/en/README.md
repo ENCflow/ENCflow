@@ -108,7 +108,7 @@ the stream, where the water table drops. Right: fraction of saturated cells over
 |---|---|---|
 | Uniform rise early in the rain (12000 s, cells 25–34) | within 1.7e-9 m of hg = r t = 0.03333333 m (all cases) | PASS |
 | Time of saturation = T_v (case 1: cells 19–38) | within +1.46 % of 27360 s (cells 24–37 within 0.1 %) | PASS |
-| Time of saturation = T_v (case 3: cells 35–38; case 4: cells 29–38) | within −2.22 % (case 3) and −1.76 % (case 4) | PASS |
+| Time of saturation = T_v (case 3: cells 35–38; case 4: cells 29–38) | within −2.22 % (case 3) and −1.77 % (case 4) | PASS |
 | Time of saturation with K halved (cases 3 and 4, cells 35–38) | difference within 0.79 % | PASS |
 | Steady water table (unsaturated cells) | within 9.9e-4 of the prediction h = g·i·Δ (divide cell) | PASS |
 | Cells saturated at steady state | case 1: 14–39, 2: none, 3: 32–39, 4: 25–39 (match the prediction) | PASS |

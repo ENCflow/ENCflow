@@ -97,7 +97,7 @@ $`D`$ = 0.005 m²/yr is the middle of the published range of hillslope
 diffusivities, 0.001 to 0.05 m²/yr[^fernandes97]. It is a quantity of
 morphological time, to be read together with `morfac`. Verification:
 [test/creep](../../../test/creep/en/README.md) (Gaussian hill, maximum error
-7.8e-5 m against the analytical solution, `morfac` = 2 equivalence 2.3e-4 m).
+2.0e-4 m against the analytical solution, `morfac` = 2 equivalence 1.0e-4 m).
 
 **8-neighbour 9-point stencil (`creep_diagratio`, default 1/3)**: the 5-point Laplacian
 (`creep_diagratio = 0`, the default before 2026-11-05) is

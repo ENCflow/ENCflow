@@ -602,7 +602,14 @@ gradient is used for these reasons:
   37,500 to 20,800 m³ (−45 %) and the deepest incision from 16.6 to 11.2 m. For the
   same discharge, 1 over-estimates the bed shear by $`\cos^{-0.7}\theta`$ (1.50 at 56°),
   and threshold erosion laws and the positive feedback of gullies widen this to about
-  a factor of 2 (developer.md §93).
+  a factor of 2 (developer.md §93). On the flat plateau of the same example (result 1,
+  weak wet erosion) it also acts in another direction, through the switch between dry
+  and wet: the thin flow on the cliff face is close to the switching depth dd = 1 mm,
+  and when friction along the slope makes it slightly thicker, more of the cliff face
+  exceeds dd (in a two-cycle diagnostic run the wet fraction of the cliff face during the
+  downpour is 0.26 to 0.35 with 1 and 0.57 to 0.72 with 2), dry-slope erosion stops for
+  longer and the valleys on the cliff hardly grow (the mean lowering of the cliff face
+  over two cycles with 2 is 0.7 times that with 1).
 - **Impact of the field-gradient $`g_e`$ (2026-11-04)**: in test/chichibu the maximum
   unit discharge $`Q_{max}`$ rises by 0.72 % in the rising limb of the flood. In
   examples/debris_fan, the arrival at the fan apex with four neighbours, which had been
@@ -801,7 +808,10 @@ the maximum velocity V9999) with speeds along the slope needs a conversion.
   evaluated with $`g'`$ (as in Yuan et al.; smaller at fronts and larger at tails and in
   hollows where the surface is gentler than the bed), but there is no analytic check in
   combination with debris flows. The combination with the non-hydrostatic model
-  (`fn_nh`) has not been verified.
+  (`fn_nh`) has not been verified (in the configuration of the submarine landslide on a
+  steep lake shore in test/nhbottom, the highest water level just beyond the shoreline
+  with the non-hydrostatic model is 1.92 m with 2 and 2.80 m with 3, a large difference,
+  and which is right has not been checked; developer.md §100, in Japanese).
 - **Steps and free overfalls**: at a step of a single edge (wall, kerb, step in the
   DEM) the water falls and the shallow-water assumptions do not hold. 2 treats a step
   as with 1 (§3.4). With 0, 1 and 2 alike, at a free overfall (the edge of a roof, the
@@ -838,7 +848,7 @@ the maximum velocity V9999) with speeds along the slope needs a conversion.
 | 2 (default) | flow and erosion on steep slopes; computations that use a literature value of Manning's $`n`$ (measured in mild-slope channels; a value for slope-parallel quantities) or literature values for mixture flows (such as the $`\mu`$ and $`\xi`$ of RAMMS) as they are |
 | 1 | computations with a Manning's $`n`$ or parameters of the resistance laws of mixture flows calibrated in a horizontally projected model, and reproducing computations made before 2026-11-05 (before 2026-11-06 for mixture flows); a notice is printed at start-up |
 | 0 | computations dominated by deep water over a steep bed (lakes, reservoirs, tsunamis on steep coasts; §6.2), and comparisons with the classical shallow water equations |
-| 3 (experimental) | computations with both flow on steep slopes and waves in deep water over steep lake shores or coasts (a landslide entering a lake, etc.; §2.6). Whether to make it the default is under consideration (indications of its impact in §4) |
+| 3 (experimental) | computations with both flow on steep slopes and waves in deep water over steep lake shores or coasts (a landslide entering a lake, etc.; §2.6). It is not made the default (2026-11-10: on gentle slopes the difference from 2 is very small, and there is no check for the situations where it matters; developer.md §100, in Japanese) |
 
 On gentle slopes the differences between 0, 1 and 2 are very small (at a gradient of
 0.1 = 1:10, $`g_e/g = 0.990`$ and the friction factor of 2 for flow in the direction of

@@ -160,8 +160,8 @@ Measures for each hill (T_geo = 1.44×10⁷ s, from the azimuthally averaged rad
 
 | Case | Hill H₀ (m) | Top height (m) | Maximum side slope | Top curvature −∂²z/∂r² (1/m) |
 |---|---|---|---|---|
-| D = 0 | 24 / 15 / 9 / 5 | 21.1 / 12.1 / 5.9 / 2.2 | 3.80 / 1.51 / 1.11 / 0.56 | 1.27 / 0.27 / 0.31 / 0.11 |
-| D = 3×10⁻⁷ | same | 19.4 / 10.4 / 4.3 / 1.3 | 1.67 / 1.25 / 0.61 / 0.20 | 0.19 / 0.21 / 0.19 / 0.07 |
+| D = 0 | 24 / 15 / 9 / 5 | 21.1 / 12.1 / 5.9 / 2.2 | 4.08 / 1.46 / 1.12 / 0.57 | 1.45 / 0.30 / 0.31 / 0.11 |
+| D = 3×10⁻⁷ | same | 19.4 / 10.4 / 4.3 / 1.3 | 1.62 / 1.24 / 0.61 / 0.20 | 0.19 / 0.21 / 0.19 / 0.07 |
 | D = 1×10⁻⁶ | same | 17.2 / 8.2 / 2.8 / 1.1 | 1.02 / 0.64 / 0.27 / 0.08 | 0.12 / 0.12 / 0.07 / 0.001 |
 | D = 3×10⁻⁶ | same | 13.4 / 5.1 / 2.1 / 1.0 | 0.57 / 0.27 / 0.09 / 0.05 | 0.065 / 0.042 / 0.001 / 0.006 |
 
@@ -169,10 +169,10 @@ Budget check (24 hours):
 
 | Case | Maximum surface water depth (m) | Final groundwater storage (m) | Cumulative rain (m) | Loss of surface volume Σ(z₀−z)Δx² (m³) | Sediment that left the domain (solid m³) | Ratio |
 |---|---|---|---|---|---|---|
-| D = 0 | 0 | 0.2400 | 0.2400 | 28169 | 16901 | 1.6667 |
-| D = 3×10⁻⁷ | 0 | 0.2400 | 0.2400 | 25503 | 15302 | 1.6667 |
-| D = 1×10⁻⁶ | 0 | 0.2400 | 0.2400 | 19725 | 11835 | 1.6667 |
-| D = 3×10⁻⁶ | 0 | 0.2400 | 0.2400 | 11531 | 6919 | 1.6667 |
+| D = 0 | 0 | 0.2400 | 0.2400 | 28161 | 16896 | 1.6667 |
+| D = 3×10⁻⁷ | 0 | 0.2400 | 0.2400 | 25488 | 15293 | 1.6667 |
+| D = 1×10⁻⁶ | 0 | 0.2400 | 0.2400 | 19713 | 11828 | 1.6667 |
+| D = 3×10⁻⁶ | 0 | 0.2400 | 0.2400 | 11532 | 6919 | 1.6667 |
 
 Overland flow is zero throughout, and the groundwater storage equals the cumulative rain
 (10 mm/h × 24 h = 0.24 m). The loss of surface volume equals the sediment that left the domain
@@ -180,8 +180,8 @@ Overland flow is zero throughout, and the groundwater storage equals the cumulat
 (conservative form).
 
 - **No creep (advective only)**: the hills shrink with their crests kept sharp, and the sides
-  of the 24 / 15 / 9 m hills even steepen (initial 0.8 → 1.1 to 3.8; the smallest, 5 m hill
-  eases to 0.56). After T_geo ≈ 1.4×10⁷ s the hollow feedback lets gullies cut the hills
+  of the 24 / 15 / 9 m hills even steepen (initial 0.8 → 1.1 to 4.1; the smallest, 5 m hill
+  eases to 0.57). After T_geo ≈ 1.4×10⁷ s the hollow feedback lets gullies cut the hills
   radially, and the hills are dissected, leaving a pinnacle in the centre (sharp badlands of
   the Mancos type). That the gullies align with the grid axes and diagonals is an artefact
   of grid anisotropy.
@@ -221,9 +221,9 @@ Azimuthally averaged radial profile of each hill (grey bands = hard beds).
 
 | Quantity | D = 0, no strata | D = 0, strata | D = 1×10⁻⁶, no strata | D = 1×10⁻⁶, strata |
 |---|---|---|---|---|
-| Sediment that left the domain (solid m³, 24 hours) | 16901 | 16650 | 11835 | 8145 |
-| Top height of the 24 m hill (m) (T_geo 1.44×10⁷ / 4.3×10⁷ s) | 21.1 / 1.5 | 22.0 / 5.9 | 17.2 / 7.9 | 17.8 / 12.4 |
-| Maximum side slope (T_geo 1.44×10⁷ s, 24 m hill) | 3.80 | 1.77 | 1.02 | 0.82 |
+| Sediment that left the domain (solid m³, 24 hours) | 16896 | 16660 | 11828 | 8138 |
+| Top height of the 24 m hill (m) (T_geo 1.44×10⁷ / 4.3×10⁷ s) | 21.1 / 1.6 | 22.0 / 6.8 | 17.2 / 7.9 | 17.8 / 12.1 |
+| Maximum side slope (T_geo 1.44×10⁷ s, 24 m hill) | 4.08 | 1.76 | 1.02 | 0.82 |
 
 - **No creep + strata**: the sides become **stepped**. The soft beds erode quickly down to the
   top of the hard bed below, where a flat step (bench) forms, and the face of the hard bed
@@ -235,7 +235,7 @@ Azimuthally averaged radial profile of each hill (grey bands = hard beds).
 - **Creep + strata**: the steps are smoothed by creep into **gently undulating bands**, while
   the overall rounded form (convex top, gentle sides) is kept (the slope eases slightly at the
   hard beds). The total erosion falls to 70 % of the case without strata, and the hills stay
-  higher (final top of the 24 m hill 12.4 m, 7.9 m without strata). "Hills with bands but
+  higher (final top of the 24 m hill 12.1 m, 7.9 m without strata). "Hills with bands but
   without steps" correspond to this combination: the hard/soft contrast makes the bands and
   the diffusive process erases the steps.
 - Whether the beds show as steps is set by the ratio of the step height (bed thickness) to
@@ -259,7 +259,7 @@ max/min ratio and relative variation of the local slope over the part of the sid
 | Case | Bed thickness (m) | L (m) | Slope max/min (24 m hill) | Relative variation (24 m / 15 m hill) |
 |---|---|---|---|---|
 | No creep, strata | 3 | 0 | 4.6 | 0.42 / 0.39 |
-| D = 3×10⁻⁷, strata | 3 | 2.4 | 2.5 | 0.28 / 0.22 |
+| D = 3×10⁻⁷, strata | 3 | 2.4 | 2.5 | 0.28 / 0.23 |
 | D = 1×10⁻⁶, no strata | – | 8 | 1.6 | 0.14 / 0.15 |
 | D = 1×10⁻⁶, strata | 1.5 | 8 | 1.5 | 0.09 / 0.09 |
 | D = 1×10⁻⁶, strata | 3 | 8 | 1.4 | 0.11 / 0.14 |

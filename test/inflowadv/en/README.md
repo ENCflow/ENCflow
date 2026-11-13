@@ -59,7 +59,7 @@ For side and steep the inflow section crosses a band boundary at MPI np = 2 and 
 
 | Rule | 1 (5 / 3 columns) | 2 (difference of energy head) | 3 (osc5 / osc3 / jet3) | 4 (inflow-column depth / uniform-flow depth) |
 |---|---|---|---|---|
-| Zero advection only on the edges into the section + velocity cap (current rule; f_opening_dynamic = 3; after the lateral-face flux of §68.42) | 0.000 / 0.000 % | −0.021 m | +0.064 / −0.166 / −0.178 m | 1.030 |
+| Zero advection only on the edges into the section + velocity cap (current rule; f_opening_dynamic = 3; after the lateral-face flux of §68.42) | 0.000 / 0.000 % | −0.029 m | +0.064 / −0.166 / −0.178 m | 1.032 |
 | No cap (first revision of 2026-10-29) | 0.000 / 0.000 % | +0.002 m | +0.227 / +5.198 m / stopped at 39 s | 1.030 |
 | Zero advection on all edges touching the inflow cells (2026-10-24 to 29) | 0.000 / 0.000 % | +1.218 m | +0.092 / +5.198 m / stopped at 39 s | 1.014 |
 | As above, but keeping the edges that leave the section (option compared on 2026-10-29) | 0.000 / 0.000 % | +0.258 m | +0.092 / +5.198 m / stopped at 39 s | 1.014 |
