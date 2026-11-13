@@ -22968,6 +22968,22 @@ he = (hc + hn)/2 で、エネルギー頭による頭打ち(§68.16)は受け手
 | Log が変わるケース | 27 | 12(上の 6 と、bldgdebris・driftwood・salt・wfswash・berode・wave_river の一部の構成) |
 | 差の大きさ | 平均水深 S が最大 1.0 %(coastal_drain)、0.4 %(tide)。最大水深が数 %、最大流速が数十 % 変わるケースがある | S は最大 0.02 %(salt の 1 構成)。chichibu は S が同じで、最大水深 +3.7 %、最大流速 +15 %、最大単位幅流量 +14 %(出力時刻ごとの差の最大) |
 
+**注(2026-11-13 追記)**:
+- Run.sh は、reference の比較が不一致だと、その後の自身の検定(台帳の閉合・解析解)を実行しない。案 B で
+  reference と不一致になったうち wqbound・damwq・gwsect の 3 ケースは、上の回帰では自身の検定が走って
+  いなかった(表の「検定の判定に落ちる 0」は、この 3 ケースについては未確認だった)。最終のコードで既定だけ
+  2 にしたビルドで個別に実行し、wqbound(閉合・経路・逆流の 4 項目)、damwq(閉合・一様の 2 項目)、
+  gwsect(6 構成の 20 項目)が全て合格することを確かめた。挙動を変える試験の回帰では、reference と
+  不一致になったケースの検定を個別に回すこと。案 A の 14 ケースは確かめていない(不採用のため)。
+- 上の表は、規則を常に有効にした作業用ビルド(従来の分岐の条件に書き足す形。§108.4)の結果。最終の
+  コードで既定だけ 2 にしたビルドでは、reference の不一致は damwq・chichibu・chichibu_icmap・gwsect・
+  wqbound の 5 ケースで、nhbreak は許容差内に収まる(丸めに敏感なケースで、書き方による最終桁の違いが
+  判定を分ける)。
+- 回していない自己検定が 36 本ある(avalanche・bedfines・bedslide・bendsed・bmi_nest・bmi_vars・creep・
+  curvature・dbonset・dbrock・dbslope・diffusion・fixation・fluvial・glacier・gtif・gwdefault・hillsoil・
+  icevap・lava・nest_identity・nest_twin・repose・rockfall・sedfeed・sedinflow・slide・splashlc・splashslide・
+  stencil9・suspend・swi・volcano・wash・wave_shore・wetlw)。既定を 2 にする前に、全検定を既定 2 で回す。
+
 案 B で結果が変わるケースの型:
 - **雨で濡れた急な地形の谷**(chichibu・chichibu_icmap。gwsect・damwq・wqbound も河道・貯水池の縁): 降雨中は
   谷壁のセルも濡れているので、1 の頭打ちは一度も掛からない(§68.16 の検証)。谷底のセルの水位より地盤が高い
@@ -23014,7 +23030,7 @@ he = (hc + hn)/2 で、エネルギー頭による頭打ち(§68.16)は受け手
 
 ### 108.5 既定を 1 のままにした理由と、残り
 
-案 B を既定にすると、chichibu(実地形の降雨流出の回帰ケース)ほか 6 ケースの reference が変わる。chichibu の
+案 B を既定にすると、chichibu(実地形の降雨流出の回帰ケース)を含む 5〜6 ケースの reference が変わる(§108.2 の注)。chichibu の
 最大流速・単位幅流量が 1 割ほど上がるのは、谷底の水が谷壁の濡れたセルへ登って戻る出入りが止まるためと
 みられるが、どちらが実測に近いかは確かめていない。河道の粗度を 1 の結果で校正したケースは、2 で流れが
 速くなる。既定の切り替えは、利用者が reference の差(下の検証の測線の流量)を確かめてから決める(handoff)。
