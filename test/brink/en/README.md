@@ -10,7 +10,11 @@ varied flow profiles). It also checks the upwind value used on the edge right af
 momentum-conserving advection (`f_advection_bend` of `&list_enc`;
 [Advection schemes](../../../docs/en/users_guide/advection.md) §4.4; developer.md §110). When the
 channel shifts diagonally by one row just before the overfall, the default 0 gives the flow on the
-apron an energy head 9–29 m above that of the pond it comes from. With 1 it does not exceed it.
+apron an energy head 9–29 m above that of the pond it comes from. With 1 it does not exceed it. In
+a channel with a pond below the overfall, the supercritical flow that has dropped turns into a
+hydraulic jump inside the pond. When the channel shifts diagonally by one row at the foot of the
+overfall, the supercritical reach disappears with 0, while with 1 the jump stands at the same
+position as in the straight channel.
 
 ## Rule
 
@@ -71,6 +75,13 @@ cells at the upstream end of the pond gives the discharge in three stages, 2,000
 30 minutes (the run is 120 minutes). The values at the end of each stage (40, 80 and 120 minutes)
 are compared.
 
+**Channel with a pond below the drop** (51 × 12 cells): upper pond (bed 20 m, 12 cells) → step of
+3 m → level lower pond (20 cells) → step of 3 m → level apron (5 cells) → outflow reach. The three
+discharge stages are the same as in the overfall channel. In the lower pond there is the
+supercritical flow that has dropped over the step and the subcritical flow that extends upstream
+from the second step, with a hydraulic jump between them. Below, the first cell below the step is
+called the "foot cell".
+
 **Staircase channel in uniform flow** (80 × 39 cells): slope 0.005 (along the path), n = 0.03. East
 and north-east links alternate. Reach inflow of 200 m³/s at the west end, free outflow on the east
 side, 75 minutes.
@@ -83,6 +94,11 @@ side, 75 minutes.
 | dg1 | `param_dg1.txt` | same | 1 | the energy head on the apron does not exceed that of the pond; pond depth within ±6 % of the theory |
 | sr0 | `param_sr0.txt` | staircase channel in uniform flow | 0 | — |
 | sr1 | `param_sr1.txt` | same | 1 | same depth as sr0 |
+| ps1 | `param_ps1.txt` | pond below the drop; straight | 1 | the position of the jump and the depth downstream of it agree with the theory |
+| pf0 | `param_pf0.txt` | same; shifts diagonally by one row just after the foot cell | 0 | the supercritical reach disappears (record of the behaviour with 0) |
+| pf1 | `param_pf1.txt` | same | 1 | same profile as the straight channel (ps1) |
+| pb0 | `param_pb0.txt` | same; shifts diagonally by one row just before the first step | 0 | the jump is swept downstream (record of the behaviour with 0) |
+| pb1 | `param_pb1.txt` | same | 1 | the energy head in the lower pond does not exceed that of the upper pond, and the jump is not farther downstream than in the straight channel |
 
 ## Theory (one-dimensional, steady; wide rectangular section, Manning)
 
@@ -101,6 +117,19 @@ is $`E = z + h + (q/h)^2/2g`$. These are standard relations of open-channel hydr
 Chow 1959, *Open-Channel Hydraulics*; the original text has not been checked). `make_brink.py`
 integrates them numerically.
 
+In the channel with a pond below the drop, a hydraulic jump stands between the supercritical flow
+from the foot (H3) and the subcritical flow that extends upstream from the second step (H2). The
+jump is where the momentum function (specific force per unit width)
+
+```math
+M = \frac{q^2}{g h} + \frac{h^2}{2}
+```
+
+is equal on both sides (momentum is conserved across the jump; also a standard relation). With the
+settings of this check it is 154, 306 and 458 m from the foot (in the order of the three discharge
+stages). The position of the jump in the model is measured as the point where the Froude number,
+interpolated linearly between the cell centres of the lower pond, becomes 1.
+
 ## Check items (Check_brink.py)
 
 1. st0: the transect discharge is within ±1.5 % of the source discharge.
@@ -118,6 +147,21 @@ integrates them numerically.
    (confirmation that item 6 distinguishes this difference).
 10. sr0 and sr1: the mean depth over 40–80 % of the path agrees between 0 and 1 within ±1 %.
 11. sr1: the range of the depth (maximum − minimum) ÷ mean over the same reach is 4 % or less.
+12. ps1: the position of the jump is between 150 m upstream and 25 m downstream of the theoretical
+    position.
+13. ps1: the subcritical depth downstream of the jump is within ±2 % of the H2 theory (from 3 cells
+    downstream of the cell containing the jump to 125 m upstream of the second step).
+14. ps1: the foot cell is supercritical and its depth is 0.95–1.18 times the H3 theory.
+15. pf1: same profile as the straight channel (ps1). The position of the jump differs by 50 m or
+    less, the depth of the foot cell agrees within ±5 %, the depth downstream of the jump within
+    ±1.5 %, and the depth of the upper pond within ±1 %.
+16. pf0: the foot cell is subcritical and its depth is more than 1.5 times that of the foot cell of
+    the straight channel (confirmation that item 15 distinguishes this difference).
+17. pb1: the energy head in the 1st to 4th cells of the lower pond does not exceed that of the upper
+    pond (325 m upstream of the step) by more than 0.2 m. The jump is inside the lower pond and not
+    more than 50 m downstream of its position in the straight channel.
+18. pb0: the jump is more than 250 m downstream of its position in the straight channel, or not
+    inside the lower pond.
 
 ## Results
 
@@ -134,6 +178,15 @@ integrates them numerically.
 | 9 dg0 first apron cell − pond energy head | +8.6, +19.5, +29.5 m | PASS (record of the default behaviour) |
 | 10 sr1 ÷ sr0 mean depth − 1 | −0.31 % (1.5191 m and 1.5238 m) | PASS |
 | 11 sr1 depth range ÷ mean | 2.3 % (2.9 % for sr0) | PASS |
+| 12 ps1 position of the jump (theory) | 104 m (154 m), 218 m (307 m), 347 m (459 m) | PASS |
+| 13 ps1 depth downstream of the jump ÷ theory − 1 | +0.3 to +1.1, +0.1 to +0.5, −1.2 to +0.3 % | PASS |
+| 14 ps1 foot cell depth ÷ theory; Froude number | 1.14, 1.05, 1.04; 1.78, 1.75, 1.65 | PASS |
+| 15 pf1 position of the jump (difference from ps1) | 125 m (+21 m), 213 m (−5 m), 328 m (−19 m) | PASS |
+| 15 pf1 ÷ ps1 depth − 1 | foot cell +2.9, +2.5, +1.7 %; downstream of the jump within 0.6 %; upper pond within 0.2 % | PASS |
+| 16 pf0 foot cell depth (ps1) | 7.84 m (3.73 m), 11.59 m (5.98 m), 14.61 m (8.14 m); subcritical | PASS (record of the behaviour with 0) |
+| 17 pb1 lower pond − upper pond energy head | −3.3 to −2.5, −3.3 to −2.5, −3.3 to −2.6 m | PASS |
+| 17 pb1 position of the jump (ps1) | 47 m (104 m), 61 m (218 m), 74 m (347 m) | PASS |
+| 18 pb0 position of the jump | 636 m, not inside the lower pond, not inside the lower pond | PASS (record of the behaviour with 0) |
 
 Side by side for a unit-width discharge of 80 m²/s (the second stage; critical depth 8.67 m; the
 theory is for the straight channel):
@@ -144,6 +197,18 @@ theory is for the straight channel):
 | st0 (straight) | 10.24 m | 6.01 m, 13.3 m/s | −1.6 m |
 | dg1 (diagonal, 1) | 9.86 m | 6.64 m, 12.0 m/s | −2.5 m |
 | dg0 (diagonal, 0 = default) | 9.63 m | 3.15 m, 25.4 m/s | **+19.5 m** |
+
+The depths in the lower pond for a unit-width discharge of 80 m²/s (the second stage), listed from
+the foot cell, are as follows (the theoretical jump is 307 m from the foot, inside the 7th cell).
+
+| | Depth in the 1st to 10th cells (m) | Position of the jump |
+|---|---|---|
+| Theory | 5.68 5.84 5.99 6.16 6.33 6.50 11.11 11.02 10.94 10.85 | 307 m |
+| ps1 (straight) | 5.98 6.19 6.57 7.40 8.94 10.41 11.00 11.05 10.97 10.86 | 218 m |
+| pf1 (diagonal just after the foot, 1) | 6.13 6.39 6.68 7.55 9.14 10.53 11.03 11.04 10.97 10.86 | 213 m |
+| pf0 (diagonal just after the foot, 0) | 11.59 11.43 11.43 11.35 11.25 11.18 11.15 11.09 10.96 10.83 | at the foot (no supercritical reach) |
+| pb1 (diagonal just before the step, 1) | 7.54 9.21 10.72 11.24 11.27 11.22 11.12 11.03 10.96 10.88 | 61 m |
+| pb0 (diagonal just before the step, 0) | 3.18 3.31 3.43 3.56 3.69 3.83 3.98 4.14 4.29 4.42 | not inside the lower pond |
 
 ## How to read it, and limits
 
@@ -160,6 +225,22 @@ theory is for the straight channel):
   deeper than in the straight channel and its energy head is 0.4–1.4 m lower (the loss due to the
   bend). The pond depth is 0.2–4.2 % smaller than the theory. There is no coefficient for tuning
   the bend loss.
+- **In the straight channel with a pond below the drop, the jump is 50–112 m (1–2 cells) upstream
+  of the theory.** Because of the head lost at the overfall the supercritical flow at the foot is
+  4–14 % deeper (slower) than the theory, and the numerical jump is 3–4 cells wide. The depth
+  downstream of the jump is within ±1.2 % of the theory.
+- **Even when the channel shifts diagonally just after the foot, 1 gives the same profile as the
+  straight channel.** The position of the jump differs by 21 m or less, and the foot cell is
+  1.7–2.9 % deeper. With 0, the edge right after the bend at the foot does not receive the momentum
+  of the flow that has dropped. The foot cell becomes subcritical and piles up 0.06–0.20 m above the
+  cell downstream of it, and the supercritical reach disappears. The first step is also drowned, and
+  the depth of the cell just before the step becomes 5.1, 8.7 and 11.8 m (3.5, 5.9 and 8.0 m in the
+  straight channel).
+- **When the channel shifts diagonally just before the step, even 1 does not give the same result as
+  the straight channel.** The loss due to the bend weakens the supercritical flow, and the jump
+  stands 47–74 m from the foot (57–273 m upstream of its position in the straight channel). With 0,
+  the supercritical flow that has gained energy head at the bend just before the step sweeps the
+  jump away (the jump is at 636 m, or outside the lower pond).
 - 1 changes only the inflow faces in the flow direction. The treatment of the lateral faces, in
   which slow flow on a wet bank is counted as a brake on the main stream entering from the side
   ([One-cell-wide channels and the upwind donors of the advection term](../../../docs/en/users_guide/advection_donor.md) §7),
@@ -171,7 +252,7 @@ theory is for the straight channel):
 
 ```
 make
-./Run.sh            # serial (about 20 s for the six runs)
+./Run.sh            # serial (about 40 s for the eleven runs)
 ./Run_MPI.sh 2      # MPI
 ```
 

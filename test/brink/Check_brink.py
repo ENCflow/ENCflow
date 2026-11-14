@@ -29,10 +29,36 @@
 #     (10) 路の 40〜80 % の区間の平均水深が、0 と 1 で ±TOL_ST(斜めのリンクは通過幅が 0.707 倍で流速が
 #          1.41 倍になるが、1 はこの幅の違いを加減速に数えない)
 #     (11) 1 の同じ区間の水深の幅 (最大 − 最小) / 平均が RANGE_ST 以下
+#   落差の先の池の構成(result_ps1・pf0・pf1・pb0・pb1。上の池 → 段差 → 水平な下の池 → 段差 → 棚)も、流量の
+#   3 段の終わりの値を読む。下の池には、段差を落ちた射流(H3)と、2 つ目の段差から上流へ延びる常流(H2)が
+#   あり、その間に跳水が立つ。理論の跳水の位置は、両者の運動量関数 q²/(g h) + h²/2 が等しくなる所
+#   (make_brink.py の jump_position)。モデルの跳水の位置は、下の池のセル中心のフルード数を線形に内挿して
+#   1 になる所(足元からの距離)。
+#   構成 ps1(直線。f_advection_bend = 1。直線の水路は 0 でも同じ = (5)):
+#     (12) 跳水の位置が、理論の位置の JUMP_UP 上流〜JUMP_DN 下流の範囲(段落ちで水頭を失う分と、数値の跳水の
+#          幅で、理論より 1〜2 セル上流に出る)
+#     (13) 跳水より下流の常流の水深が H2 の理論に ±TOL_SUB(跳水の位置のセルから N_SKIP セル下流〜2 つ目の
+#          段差の 125 m 上流)
+#     (14) 足元のセルが射流で、水深が H3 の理論の FOOT_LO〜FOOT_HI 倍
+#   構成 pf1(1 つ目の段差の足元のセルの直後で水路が斜めに 1 行ずれる。f_advection_bend = 1):
+#     (15) 直線の水路と同じ水面形: 跳水の位置の差が TOL_JUMP_SAME 以下、足元のセルの水深が ±TOL_FOOT_SAME、
+#          跳水より下流の水深が ±TOL_SUB_SAME、上の池の水深が ±TOL_UP_SAME(落ちてきた流れの勢いが、
+#          足元の屈曲を越えて残る。屈曲は格子に載せたときの向きの違いで、水路は同じ)
+#   構成 pf0(同じ水路。f_advection_bend = 0。0 の性質の記録):
+#     (16) 足元のセルが常流で、水深が直線の水路の足元の FOOT_DROWN 倍より大きい(足元の屈曲の直後の辺が
+#          落ちてきた流れの運動量を受け取らず、射流の区間が消える。(15) がこの違いを見分けていることの確認)
+#   構成 pb1(1 つ目の段差の直前で水路が斜めに 1 行ずれる。f_advection_bend = 1):
+#     (17) 下の池の 1〜4 番目のセルのエネルギー水頭が上の池を TOL_E を超えて上回らず、跳水が下の池の中に
+#          あって、直線の水路の位置より TOL_JUMP_SAME を超えて下流にない(屈曲の分の損失で、射流の区間は
+#          直線より短い)
+#   構成 pb0(同じ水路。f_advection_bend = 0。0 の性質の記録):
+#     (18) 跳水が直線の水路より JUMP_SWEEP を超えて下流にあるか、下の池の中にない(段差の直前の屈曲で
+#          エネルギー水頭を得た射流が、跳水を押し流す。(9) と同じ性質)
 import sys, os, glob
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 from make_brink import (G, DX, NX, I_BRINK, N_APRON, Z_POOL, Q_LEVELS, T_RAMP, T_HOLD,
-                        bed_brink, hcrit, pool_depth, apron_depth, path_stair)
+                        bed_brink, hcrit, pool_depth, apron_depth, path_stair,
+                        NX_PL, N_MID, I_DROP1, I_DROP2, bed_pool, jump_position)
 
 TOL_Q = 0.015                     # (1) 流量の一致
 TOL_POOL, TOL_POOL75 = 0.02, 0.04 # (2) 池の水深と理論の一致(125 m 以上上流、75 m 上流)
@@ -47,6 +73,14 @@ TOL_ST, RANGE_ST = 0.01, 0.04     # (10)(11) 等流の階段状の水路
 X_POOL = [75.0, 125.0, 225.0, 475.0, 725.0]     # (2)(7) 池の水深を比べる位置(段落ちから上流へ。m)
 X_EPOOL = 475.0                   # (6)(9) 池のエネルギー水頭を取る位置
 N_CHK = 4                         # (3)(4)(6)(8) 棚の先頭から比べるセル数(最後のセルは流出区間の引き込みの中)
+JUMP_UP, JUMP_DN = 150.0, 25.0    # (12) 直線の水路の跳水の位置 − 理論の位置の範囲(上流側・下流側。m)
+TOL_SUB, N_SKIP = 0.02, 3         # (13) 跳水より下流の水深と H2 の理論の一致、跳水の位置から飛ばすセル数
+FOOT_LO, FOOT_HI = 0.95, 1.18     # (14) 足元のセルの水深 / H3 の理論
+TOL_JUMP_SAME = 50.0              # (15)(17) 直線の水路との跳水の位置の差 (m)
+TOL_FOOT_SAME, TOL_SUB_SAME, TOL_UP_SAME = 0.05, 0.015, 0.01     # (15) 足元・跳水より下流・上の池の水深(直線との比 − 1)
+FOOT_DROWN = 1.5                  # (16) 0 の足元のセルの水深 / 直線の水路の足元の水深 の下限
+JUMP_SWEEP = 250.0                # (18) 0 の跳水が直線の水路より下流へ押し出される距離の下限 (m)
+X_EPOOL_PL = 325.0                # (17) 上の池のエネルギー水頭を取る位置(1 つ目の段差から上流へ。m)
 
 nfail = 0
 
@@ -154,6 +188,118 @@ def check_diag():
               % (t, c0.q(t), de, E_EXCESS, c0.h(I_BRINK + 1, t), c0.q(t) / c0.h(I_BRINK + 1, t)))
 
 
+class PoolCase:
+    """落差の先の池の構成の結果(プローブ n は列 n + 2 の水路のセル。測線は棚の 2 番目のセルの列)"""
+    def __init__(self, name):
+        self.name = name
+        self.pb = [series("result_%s/probes/probe%04d.csv" % (name, n)) for n in range(1, NX_PL - 1)]
+        self.fl = series("result_%s/fluxes/flux0001.csv" % name)
+
+    def q(self, t):
+        return at(self.fl, t, 2) / DX
+
+    def h(self, i, t):
+        return at(self.pb[i - 3], t, 3)
+
+    def mid(self, t):
+        """下の池の水深(足元のセルから 2 つ目の段差の直前のセルまで)"""
+        return [self.h(i, t) for i in range(I_DROP1 + 1, I_DROP2 + 1)]
+
+    def energy(self, i, t):
+        h = self.h(i, t)
+        return bed_pool(i) + h + (self.q(t) / h) ** 2 / (2 * G)
+
+    def jump(self, t):
+        """下の池で流れが射流から常流へ変わる位置(足元から。m)。セル中心のフルード数を線形に内挿して
+        1 になる所。足元のセルが常流なら 0、下の池の終わりまで射流なら None"""
+        q = self.q(t)
+        fr = [q / h / (G * h) ** 0.5 for h in self.mid(t)]
+        if fr[0] < 1.0:
+            return 0.0
+        for j in range(1, len(fr)):
+            if fr[j] < 1.0:
+                return (j - 0.5 + (fr[j - 1] - 1.0) / (fr[j - 1] - fr[j])) * DX
+        return None
+
+
+def fmt_x(x):
+    return "none" if x is None else "%.0f m" % x
+
+
+def check_pool():
+    print("=== ps1: pond - drop - lower pond - drop, straight channel (f_advection_bend = 1) vs 1-D theory ===")
+    ps = PoolCase("ps1")
+    ref = {}
+    for t, q_in in levels():
+        q = ps.q(t)
+        xj, xm = jump_position(q), ps.jump(t)
+        mid = ps.mid(t)
+        ok = xj is not None and xm is not None and -JUMP_UP <= xm - xj <= JUMP_DN
+        check(ok, "(12) t = %3.0f min (q = %.1f m2/s): hydraulic jump at %s from the foot of the drop, theory %s "
+              "(difference within -%.0f..+%.0f m)" % (t, q, fmt_x(xm), fmt_x(xj), JUMP_UP, JUMP_DN))
+        if xm is None:
+            continue
+        c0 = int(xm / DX) + 1 + N_SKIP                     # 比べ始めるセル(下の池の中の番号。1 始まり)
+        dev = [mid[c - 1] / pool_depth(q, (N_MID - c + 0.5) * DX) - 1.0 for c in range(c0, N_MID - 1)]
+        check(len(dev) > 0 and max(abs(d) for d in dev) <= TOL_SUB,
+              "(13) subcritical depth / H2 theory - 1 in cells %d-%d of the lower pond: %+.3f..%+.3f (within %.2f)"
+              % (c0, N_MID - 2, min(dev), max(dev), TOL_SUB))
+        r = mid[0] / apron_depth(q, 0.5 * DX)
+        fr = q / mid[0] / (G * mid[0]) ** 0.5
+        check(FOOT_LO <= r <= FOOT_HI and fr > 1.0,
+              "(14) first cell below the drop: depth / H3 theory = %.3f (allowed %.2f-%.2f), Fr = %.2f (> 1)"
+              % (r, FOOT_LO, FOOT_HI, fr))
+        ref[t] = (xm, c0, mid, [ps.h(i, t) for i in range(5, I_DROP1 - 1)])
+    print("=== pf1: one diagonal link just after the first cell below the drop, f_advection_bend = 1 ===")
+    c = PoolCase("pf1")
+    for t, q_in in levels():
+        if t not in ref:
+            check(False, "(15) t = %3.0f min: no jump in the straight channel to compare with" % t)
+            continue
+        xs, c0, mids, ups = ref[t]
+        xm, mid = c.jump(t), c.mid(t)
+        dfoot = mid[0] / mids[0] - 1.0
+        dsub = max(abs(mid[k - 1] / mids[k - 1] - 1.0) for k in range(c0, N_MID + 1))
+        dup = max(abs(c.h(i, t) / u - 1.0) for i, u in zip(range(5, I_DROP1 - 1), ups))
+        ok = (xm is not None and abs(xm - xs) <= TOL_JUMP_SAME and abs(dfoot) <= TOL_FOOT_SAME
+              and dsub <= TOL_SUB_SAME and dup <= TOL_UP_SAME)
+        check(ok, "(15) t = %3.0f min: same profile as the straight channel: jump at %s (straight %s, within %.0f m), "
+              "first cell %+.3f (within %.2f), cells %d-%d %.4f (within %.3f), upper pond %.4f (within %.2f)"
+              % (t, fmt_x(xm), fmt_x(xs), TOL_JUMP_SAME, dfoot, TOL_FOOT_SAME, c0, N_MID, dsub, TOL_SUB_SAME,
+                 dup, TOL_UP_SAME))
+    print("=== pf0: same channel, f_advection_bend = 0 (record of the behaviour with 0) ===")
+    c0_ = PoolCase("pf0")
+    for t, q_in in levels():
+        if t not in ref:
+            continue
+        xm, mid = c0_.jump(t), c0_.mid(t)
+        r = mid[0] / ref[t][2][0]
+        check(xm == 0.0 and r > FOOT_DROWN,
+              "(16) t = %3.0f min: the first cell below the drop is subcritical (jump at %s) and %.2f times as deep "
+              "as in the straight channel (> %.1f; %.2f m vs %.2f m)" % (t, fmt_x(xm), r, FOOT_DROWN, mid[0], ref[t][2][0]))
+    print("=== pb1: one diagonal link just before the drop, f_advection_bend = 1 ===")
+    c = PoolCase("pb1")
+    ip = I_DROP1 - int(round((X_EPOOL_PL - 0.5 * DX) / DX))
+    for t, q_in in levels():
+        if t not in ref:
+            continue
+        xm = c.jump(t)
+        de = [c.energy(I_DROP1 + k, t) - c.energy(ip, t) for k in range(1, N_CHK + 1)]
+        ok = max(de) <= TOL_E and xm is not None and xm <= ref[t][0] + TOL_JUMP_SAME
+        check(ok, "(17) t = %3.0f min: energy head of lower-pond cells 1-%d - upper pond = %s m (<= %.1f); jump at %s "
+              "(straight %s; not farther downstream)"
+              % (t, N_CHK, " ".join("%+.2f" % d for d in de), TOL_E, fmt_x(xm), fmt_x(ref[t][0])))
+    print("=== pb0: same channel, f_advection_bend = 0 (record of the behaviour with 0) ===")
+    c0_ = PoolCase("pb0")
+    for t, q_in in levels():
+        if t not in ref:
+            continue
+        xm = c0_.jump(t)
+        check(xm is None or xm - ref[t][0] > JUMP_SWEEP,
+              "(18) t = %3.0f min: the jump is swept downstream: at %s (straight %s; more than %.0f m farther, or none)"
+              % (t, fmt_x(xm), fmt_x(ref[t][0]), JUMP_SWEEP))
+
+
 def last_depth(rdir):
     fs = sorted(f for f in glob.glob(rdir + "/H[0-9][0-9][0-9][0-9].txt") if int(f[-8:-4]) < 9000)
     return [[float(v) for v in ln.split()] for ln in open(fs[-1])]
@@ -179,6 +325,7 @@ if __name__ == "__main__":
     check_straight()
     check_diag()
     check_stair()
+    check_pool()
     if nfail:
         print("=== Check_brink.py: FAIL (%d) ===" % nfail)
         sys.exit(1)

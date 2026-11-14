@@ -743,7 +743,11 @@ The labels in the Basis column are explained in [How to read the basis of a defa
   of a straight channel with the 1-D theory (critical flow, gradually varied
   flow), and checks that in a channel whose last link before the drop is
   diagonal the energy head on the apron does not exceed that of the pond
-  (`f_advection_bend = 1`) (`Check_brink.py`).
+  (`f_advection_bend = 1`). In a channel with a pond below the overfall it
+  compares the position of the hydraulic jump with the momentum relation
+  (theory), and checks that a channel whose link at the foot of the overfall
+  is diagonal gives the same profile as the straight channel with
+  `f_advection_bend = 1` (`Check_brink.py`).
 - **[test/hillslope](../../../test/hillslope/en/README.md)** -- smooth hillslope and V-shaped catchment. Confirms
   that schemes 1 and 3 agree.
 - **[test/chichibu](../../../test/chichibu/en/README.md)** -- real terrain (100 m). The place for grid convergence
