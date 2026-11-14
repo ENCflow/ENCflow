@@ -41,6 +41,17 @@ module list_enc
                                               !   同じ)。1(河道セル間のエッジの供給元を河道セルに
                                               !   限る。§68.18)と 2(全流入リンクの流量で重み付け)
                                               !   は 2026-11-07 に廃止(指定すると停止)
+    integer :: f_advection_bend = 0           ! 運動量保存形移流(スキーム 2, 3)で、流向面の風上側の
+                                              !   供給元が壁・乾床(f_advection_donor = 3 では薄い
+                                              !   水膜も)のときの風上値 (0:検査体積自身の流速 u_e
+                                              !   (既定。壁は運動量を供給しない。§68.8),
+                                              !   1:面のセルへ実際に流入する水が、この辺の幅で、
+                                              !   流入時の水深のまま流れたときの流速)。0 は屈曲の
+                                              !   直後の辺が上流からの慣性を持たず、屈曲が急な
+                                              !   加速部(池の出口・段落ちの直前)に重なると流れが
+                                              !   加速しすぎる。1 は経路に沿う水深の変化の分の
+                                              !   慣性を入れる(等流の屈曲は 0 と同じ。ENCflow 独自。
+                                              !   developer.md §110)
     integer :: f_dry_head_cap = 2             ! 高い地盤へ向かうエッジ水深のエネルギー頭による
                                               !   頭打ち (0:なし, 1:受け手が乾燥のとき(2026-11-13
                                               !   までの既定), 2:1 に加えて、受け手が濡れていても、
@@ -78,7 +89,9 @@ module list_enc
                                               !   最大の流入リンクの ε 倍未満で、供給元の水深も
                                               !   面のセルの水深の ε 倍未満なら、重み
                                               !   max(r/ε, (h_d/h_c)/ε) で風上値を u_e へ寄せる。
-                                              !   経験値。developer.md §102)
+                                              !   経験値。developer.md §102)。f_advection_bend = 1
+                                              !   では、面のセルへの流入が流出の ε 倍未満のとき、
+                                              !   その比で経路の値を u_e へ寄せるのにも使う(§110)
     real :: p_adprunge_thresh = 1.5           ! threshold of adaptive Runge-Kutta (1.1~)
     real :: p_diffusion_nu = 0.0              ! 拡散項の動粘性係数 (m2/s。モデル2では
                                               !   加算のバックグラウンド粘性)
@@ -141,6 +154,7 @@ subroutine list_enc_read(p, list)
   integer :: f_advection_donor          ! 運動量保存形移流の風上供給元 (0:線 k 上の湿潤セル,
                                         !   3(既定):線 k の薄い供給元を u_e へ寄せ、側方面の乾湿
                                         !   判定を連続に。1・2 は廃止)
+  integer :: f_advection_bend           ! 供給元が壁・乾床の流向面の風上値 (0:u_e, 1:経路の値。§110)
   integer :: f_inflow_edge              ! 区間流入の外縁セルに接するエッジの扱い (0/1/2)
   integer :: f_scalar_scheme            ! スカラー輸送の移流スキーム (1:1次風上, 3:MUSCL)
   integer :: f_rivermouth_drop          ! 河口から海へ段落ち
@@ -181,7 +195,7 @@ subroutine list_enc_read(p, list)
   namelist /list_enc/ f_gravity_correction, f_exflux_reduction, f_hcap_upwind, &
                       f_friction_fastmath, f_advection_scheme, &
                       f_rivermouth_drop, f_opening_dynamic, f_dry_head_cap, f_advection_donor, &
-                      f_inflow_edge, f_scalar_scheme, &
+                      f_advection_bend, f_inflow_edge, f_scalar_scheme, &
                       f_adaptive_runge, p_diagratio, p_adv_upwind_index, p_adv_donor_eps, p_adprunge_thresh, &
                       f_diffusion_term, p_diffusion_nu, p_diffusion_alpha, &
                       f_nonhydrostatic, nh_hmin, nh_solver, nh_itmax, nh_tol, &
@@ -200,6 +214,7 @@ subroutine list_enc_read(p, list)
   f_opening_dynamic = list%f_opening_dynamic
   f_dry_head_cap = list%f_dry_head_cap
   f_advection_donor = list%f_advection_donor
+  f_advection_bend = list%f_advection_bend
   f_inflow_edge = list%f_inflow_edge
   f_scalar_scheme = list%f_scalar_scheme
   f_diffusion_term = list%f_diffusion_term
@@ -252,6 +267,7 @@ subroutine list_enc_read(p, list)
   list%f_opening_dynamic = f_opening_dynamic
   list%f_dry_head_cap = f_dry_head_cap
   list%f_advection_donor = f_advection_donor
+  list%f_advection_bend = f_advection_bend
   list%f_inflow_edge = f_inflow_edge
   list%f_scalar_scheme = f_scalar_scheme
   list%f_diffusion_term = f_diffusion_term

@@ -310,11 +310,13 @@ the grid spacing and the number of cells that represent the channel.
   and a bump in the discharge (±1,200 m³/s per minute at transect 3 on the
   50 m grid of Chichibu; item 3 (a) of the
   [supplement of the Chichibu tutorial](../../../tutorials/chichibu/en/README.md)).
-  In a prototype that gives inertia to the edge just after a bend and then
-  removes this braking, the 50 m grid ran to the end without diverging, and
-  the peak at transect 3 became 26 % larger and 8 minutes earlier
-  (developer.md §110, in Japanese). This indicates how much this braking
-  slows the flow in one-cell-wide channels on fine grids.
+  Giving inertia to the edge just after a bend with `f_advection_bend = 1`
+  removes the over-accelerating side, and this dip and bump decrease to
+  +680 and −390 m³/s (the lateral-face braking remains). In a prototype that
+  then also removes this braking, the 50 m grid ran to the end without
+  diverging, and the peak at transect 3 became 26 % larger and 8 minutes
+  earlier (developer.md §110, in Japanese). This indicates how much this
+  braking slows the flow in one-cell-wide channels on fine grids.
 - **Films thinner than dd are also counted according to their thickness.**
   Therefore, in bent channels whose banks are wetted by rain, the water level
   of the bend cells changes slightly from 0 (in the polyline channel of
@@ -325,7 +327,11 @@ the grid spacing and the number of cells that represent the channel.
   treats thin donors as neutral; it does not use the momentum of the main
   flow entering through a diagonal link as the upwind value of the
   flow-direction face. The advective acceleration or deceleration at that
-  face is not counted.
+  face is not counted. With `f_advection_bend = 1` the neutral part uses the
+  velocity the water entering the face cell would have at the width of this
+  edge and at the depth it arrived with, and the acceleration or deceleration
+  for the change of depth along the path is counted (the default is 0;
+  [the advection page](advection.md) §4.4).
 - **Wobbles caused by the terrain.** In flat reaches created by depression
   filling and in subgrid channels narrower than the cell, fine wobbles due to
   hydraulic jumps or seiches can appear. Some also appear with 0, and some

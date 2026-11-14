@@ -94,6 +94,25 @@
                             !   all inflow links) were removed (the run stops
                             !   if they are set. users_guide/
                             !   advection_donor.md)
+  !f_advection_bend = 0     ! upwind value of the momentum-conservative
+                            !   advection (schemes 2, 3) on a flow-direction
+                            !   face whose upwind donor is a wall or dry (with
+                            !   f_advection_donor = 3 also a thin film)
+                            !   (0: the velocity of the control volume itself
+                            !   = default, 1: the velocity the water that
+                            !   actually enters the face cell would have at the
+                            !   width of this edge and at the depth it arrived
+                            !   with). 0 creates no loss at a bend in uniform
+                            !   flow, but where a bend coincides with a sharp
+                            !   acceleration (the outlet of a pond, just before
+                            !   a drop) the edge just after the bend carries no
+                            !   inertia from upstream and the flow accelerates
+                            !   beyond the energy head of the upstream pond.
+                            !   1 adds the inertia for the change of depth
+                            !   along the path (the same as 0 at a bend in
+                            !   uniform flow; the lateral faces are unchanged.
+                            !   test/brink, users_guide/advection.md
+                            !   section 4.4)
   !f_dry_head_cap = 2       ! cap the edge depth toward high ground by the
                             !   energy head eta + u_n^2/2g - z_receiver
                             !   (0: off, 1: only while the receiver is dry.
@@ -139,7 +158,11 @@
                             !   (0 < eps <= 1; used for both the flux ratio
                             !   and the depth ratio; empirical; the peak is
                             !   nearly the same for 0.1-0.2 and changed by
-                            !   4 % at 0.05 in one case; advection_donor.md §7)
+                            !   4 % at 0.05 in one case; advection_donor.md §7).
+                            !   With f_advection_bend = 1 it is also the
+                            !   threshold below which the value is pulled
+                            !   toward neutral when the inflow into the face
+                            !   cell is less than eps times its outflow
   !f_diffusion_term = 0     ! diffusion term (0: none, 1: constant viscosity,
                             !   2: zero-equation model nu = nu0 + alpha*(u*)*h).
                             !   For a first try, 2 is handy (no coefficient to

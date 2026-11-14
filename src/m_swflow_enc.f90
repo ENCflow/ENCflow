@@ -102,6 +102,9 @@ module m_swflow_enc
                                             !   (§102)。1(河道セル間のエッジでは河道セルのみ。
                                             !   §68.18)と 2(流入面を全流入リンクの流量で
                                             !   重み付け)は 2026-11-07 に廃止)
+    integer :: f_advection_bend = 0           ! 供給元が壁・乾床(3 では薄い水膜も)の流向面の風上値
+                                            !   (0:u_e = 中立。§68.8, 1:面のセルへ流入する水が
+                                            !   この辺の幅・流入時の水深で流れたときの流速。§110)
     integer :: f_inflow_edge                  ! 区間流入の外縁セルに接するエッジの扱い (0:接する
                                             !   エッジすべての移流項 0, 1:区間の内側へ向かうエッジ
                                             !   だけ移流項 0, 2:1 + そのエッジの流速のエネルギー
@@ -121,7 +124,8 @@ module m_swflow_enc
     real :: wf_break_visc = 0.0               ! 波浪場の砕波による水平混合の係数 M(§90)
     real :: p_diagratio != 2 / (2 + sqrt(2.))  ! ratio of diagonal component
     real :: p_adv_upwind_index != 0.0          ! upwind index of advection term
-    real :: p_adv_donor_eps = 0.1             ! f_advection_donor = 3 のしきい値 ε(§102)
+    real :: p_adv_donor_eps = 0.1             ! f_advection_donor = 3 のしきい値 ε(§102)。f_advection_bend = 1 の
+                                            !   流入の割合のしきい値にも使う(§110)
     real :: p_adprunge_thresh != 2.0           ! threshold of adaptive Runge-Kutta
     real :: p_diffusion_nu != 0.0              ! 拡散項の動粘性係数 (m2/s。モデル2では
                                             !   加算のバックグラウンド粘性)
@@ -886,6 +890,7 @@ subroutine m_swflow_enc_init(p, g, b, s)
   opt%f_opening_dynamic = list%f_opening_dynamic
   opt%f_dry_head_cap = list%f_dry_head_cap
   opt%f_advection_donor = list%f_advection_donor
+  opt%f_advection_bend = list%f_advection_bend
   opt%f_inflow_edge = list%f_inflow_edge
   opt%f_scalar_scheme = list%f_scalar_scheme
   select case (opt%f_advection_scheme)
@@ -1040,6 +1045,27 @@ subroutine m_swflow_enc_init(p, g, b, s)
                   //"less than p_adv_donor_eps = "//rtoa(opt%p_adv_donor_eps)//" of the largest inflow link " &
                   //"and is shallower than p_adv_donor_eps times the face cell; " &
                   //"side-face wet/dry tests weighted by min(1, h/dd))")
+  end if
+  ! f_advection_bend(§110): 流向面の風上側の供給元が壁・乾床(f_advection_donor = 3 では薄い水膜も)のとき、
+  ! 風上値を u_e(中立。§68.8)でなく、面のセルへ実際に流入する水の経路の値にする。スキーム 1 には
+  ! 該当する面がないので無効果
+  if (opt%f_advection_bend < 0 .or. opt%f_advection_bend > 1) then
+    call par_stop("list_enc: f_advection_bend must be 0(neutral u_e on faces whose edge-line donor is a wall " &
+                  //"or dry) or 1(velocity of the actual inflow at this edge's width and the inflow depth)")
+  end if
+  ! 1 は、面のセルへの流入が流出の p_adv_donor_eps 倍に満たないときに中立へ寄せる(path_value)ので、
+  ! f_advection_donor が 3 でなくても ε の範囲を確かめる
+  if (opt%f_advection_bend == 1 .and. (opt%p_adv_donor_eps <= 0.0 .or. opt%p_adv_donor_eps > 1.0)) then
+    call par_stop("list_enc: p_adv_donor_eps must satisfy 0 < p_adv_donor_eps <= 1 (f_advection_bend = 1 uses it too)")
+  end if
+  if (opt%f_advection_bend == 1) then
+    if (opt%f_advection_scheme >= 2) then
+      call par_info("swflow_enc: f_advection_bend = 1 (faces whose edge-line donor is a wall, dry or a thin film " &
+                    //"take the velocity the actual inflow of the face cell would have at this edge's width and " &
+                    //"the inflow depth, instead of u_e)")
+    else
+      call par_info("swflow_enc: f_advection_bend = 1 has no effect with f_advection_scheme = 1")
+    end if
   end if
   if (opt%f_dry_head_cap < 0 .or. opt%f_dry_head_cap > 2) then
     call par_stop("list_enc: f_dry_head_cap must be 0(off), 1(cap edge depth toward dry cells by energy head) " &

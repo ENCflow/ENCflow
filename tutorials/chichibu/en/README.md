@@ -754,8 +754,15 @@ you notice them, consider them in this order.
    change the total runoff. Overlay a moving average when you read the
    hydrograph. Regrading the flat reach and the steps downstream of the
    pond outlet to a uniform slope lowers the largest change per minute
-   from 1,210 to 780 m^3/s (this run is not part of `Fig_supp.sh`). For
-   the mechanism and its limits, see §4.4 of
+   from 1,210 to 780 m^3/s. With `f_advection_bend = 1` in `&list_enc`,
+   the cell boundary just after a change of channel direction also gets
+   an inertia built from the upstream flow. The flow in the gorge then no
+   longer exceeds the energy of the pond, and the largest change per
+   minute falls to 680 m^3/s (the peak becomes 2 % larger; the brake by
+   the thin flow over the valley wall remains, so the switch between the
+   shallow and the deep state takes place gently over 4 to 8 minutes).
+   Neither run is part of `Fig_supp.sh`. For the mechanism and its limits,
+   see §4.4 of
    [Advection schemes](../../../docs/en/users_guide/advection.md) in the
    users guide.
 

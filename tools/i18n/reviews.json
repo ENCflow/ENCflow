@@ -104,17 +104,17 @@
     {
       "source": "docs/users_guide.md",
       "target": "docs/en/users_guide.md",
-      "source_sha256": "046a77483f7b97360e59dabe4e18c34fdb58712c3def64598ee4b0890f41bc43",
-      "target_sha256": "743412b86c11225308abadfbfac39806949c79fe1d4189e63984013868627c51",
-      "reviewer": "Claude (Claude Code session; the culv_jam additions of the Japanese master and the English mirror compared passage by passage, numbers cross-checked)",
+      "source_sha256": "33b369e6b05a62a7a423d6d03a3c9cdfd3b0ab4f0d7344145193675b977bfde0",
+      "target_sha256": "a5ccc44e530f4764ed19124178c8fa2f3db24b11d7b2f4d1af2b3993067630b5",
+      "reviewer": "Claude (Claude Code session; full-text content and lexical review, no model execution)",
       "method": "assistant",
-      "reviewed_on": "2026-11-12"
+      "reviewed_on": "2026-11-14"
     },
     {
       "source": "docs/users_guide/advection.md",
       "target": "docs/en/users_guide/advection.md",
-      "source_sha256": "12820928d6a0a9b9dc085daab7879bd1735758cedf4d49479959c573b0b8e769",
-      "target_sha256": "46a27ee1fdb908689138b2b164c75f014d5cf3eac6fd1140f555cb75eb99f4a4",
+      "source_sha256": "b6559787a8d60e3c8b89cd2a403b262ae1afd25cdd5df48f967c7c50ef8677ad",
+      "target_sha256": "9be89a4ddb9ddaec4781a12ea9f4174137d52e56dd50d355fc43efa0976a90d7",
       "reviewer": "Claude (Claude Code session; full-text content and lexical review, no model execution)",
       "method": "assistant",
       "reviewed_on": "2026-11-14"
@@ -122,8 +122,8 @@
     {
       "source": "docs/users_guide/advection_donor.md",
       "target": "docs/en/users_guide/advection_donor.md",
-      "source_sha256": "f1c1499144378163d3ff4e3fa8642344253e9a7940dca4ad5fa0ab394dcf5879",
-      "target_sha256": "54453b4f819f423c470f27bf3e57ab7de57510ec80fc55595b2f2849cdd2f2b3",
+      "source_sha256": "67ef8d92097fea6280eba93857862995b62ca0cbcd27061f7ee22c9d0daa7948",
+      "target_sha256": "3a870cf5d398e0c04ae9e55ae41b84d83fafb5686c7c66d365d86492455d9984",
       "reviewer": "Claude (Claude Code session; full-text content and lexical review, no model execution)",
       "method": "assistant",
       "reviewed_on": "2026-11-14"
@@ -419,11 +419,11 @@
     {
       "source": "docs/users_guide/params_index.md",
       "target": "docs/en/users_guide/params_index.md",
-      "source_sha256": "968d6192af8b9cdbe52c63e6f8016bedd65dc21292a12a44f01e5f14f0f9ddaf",
-      "target_sha256": "86d7849fd55229971e0d9bb701472c63dfae05717f3e83c47fef23f7ada77175",
-      "reviewer": "Claude (Claude Code session; the culv_jam additions of the Japanese master and the English mirror compared passage by passage, numbers cross-checked)",
+      "source_sha256": "a989af75b4e5686a0004a95cca7357fb19a1db13a79ed5344209c6ef9c54cec4",
+      "target_sha256": "0c4c08c4cd45604f35f0a1a4d82f547f8c0ed8f720a545d1933411f1faaccb24",
+      "reviewer": "Claude (Claude Code session; full-text content and lexical review, no model execution)",
       "method": "assistant",
-      "reviewed_on": "2026-11-12"
+      "reviewed_on": "2026-11-14"
     },
     {
       "source": "docs/users_guide/passage_width.md",
@@ -509,8 +509,8 @@
     {
       "source": "docs/users_guide/swflow.md",
       "target": "docs/en/users_guide/swflow.md",
-      "source_sha256": "e17a7a127e8c375e2ee56b66bf72884e14c606d44dc3a24ef5172368310d03cd",
-      "target_sha256": "6916741e2f8f949e0892c8735e85b1c2e9c69c1ba0c354be3b251cfefe904134",
+      "source_sha256": "e4e9f19ba4724eef2affb6f329a22d2e2b0ec70114e4d75d76cdd755a54e8bb6",
+      "target_sha256": "9485949e530a7b037348769bdecb497746000f5a6791fb01ba7e78a6613ca7b9",
       "reviewer": "Claude (Claude Code session; full-text content and lexical review, no model execution)",
       "method": "assistant",
       "reviewed_on": "2026-11-14"
@@ -671,8 +671,8 @@
     {
       "source": "examples/List_samples/list_enc.txt",
       "target": "examples/List_samples/en/list_enc.txt",
-      "source_sha256": "4f63b1b78260601b42e2c7eee8182e7b0e26546cd2fed9a99c0eae8f13c7c264",
-      "target_sha256": "98175c7ec0c272cd4e46a446cca10d18b652d24da461a4155a28d15e9adcc81f",
+      "source_sha256": "d7c543f0da0dcda5aa88ed8bd874ff3fa8853feb6d3453867c203b6b2b3836a0",
+      "target_sha256": "674b3b36f7a024216f1fd9bfaa86b8cad5b9738de3e123861eba668f38795181",
       "reviewer": "Claude (Claude Code session; full-text content and lexical review, no model execution)",
       "method": "assistant",
       "reviewed_on": "2026-11-14"
@@ -3425,8 +3425,8 @@
     {
       "source": "test/README.md",
       "target": "test/README.en.md",
-      "source_sha256": "03d29dad898cbda44edad4c5f134bef9358a1608d1d33dc5e36ed13aa2390381",
-      "target_sha256": "9254385c8be80a45f401b0483eec2522952b237d40052712e41ca7aef9e91328",
+      "source_sha256": "04f2d415c3a9f78fffe75975063f517493a3558508ea185f4f9587583b579147",
+      "target_sha256": "7e67d80d7a13d925dfedfdf7f26d9ea85e06fc77184d96c4147d68d13948a7c3",
       "reviewer": "Claude (Claude Code session; full-text content and lexical review, no model execution)",
       "method": "assistant",
       "reviewed_on": "2026-11-14"
@@ -3592,6 +3592,15 @@
       "reviewer": "Claude (Claude Code session; full-text content and lexical review, no model execution)",
       "method": "assistant",
       "reviewed_on": "2026-10-24"
+    },
+    {
+      "source": "test/brink/README.md",
+      "target": "test/brink/en/README.md",
+      "source_sha256": "543710702fdd27ddaedb868514ac1b3bee9286b95df913529d97892f7b855092",
+      "target_sha256": "c8b7d609ce21b34c495b70c4046a63f25e76f66d191fd14430cbe83194d3adb9",
+      "reviewer": "Claude (Claude Code session; full-text content and lexical review, no model execution)",
+      "method": "assistant",
+      "reviewed_on": "2026-11-14"
     },
     {
       "source": "test/chichibu/README.md",
@@ -5126,8 +5135,8 @@
     {
       "source": "tutorials/chichibu/README.md",
       "target": "tutorials/chichibu/en/README.md",
-      "source_sha256": "a569d1207e6385241f34bd05da3fd17c202136cf32810c1e4fba2231c7e08fd7",
-      "target_sha256": "470c7d73eecf88c4ff170087eb6858474796382310cee67d0d7c5202962bba70",
+      "source_sha256": "c9124b2c9dab7814849090c51d36820fe3e92b5802a9429e9e3901d4630a5dc0",
+      "target_sha256": "f9b278f77a9652f8793aeff485514d6a4042a054548e1b8effec332df86d0b6a",
       "reviewer": "Claude (Claude Code session; full-text content and lexical review, no model execution)",
       "method": "assistant",
       "reviewed_on": "2026-11-14"
