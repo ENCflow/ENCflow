@@ -457,6 +457,16 @@ With the default `f_advection_donor = 3` the wet/dry test of the parallel edge b
     with 0). Edges without an advection term (the "Excluded edges" below, the
     outer cells of a reach inflow) are the same as with 0. It has no effect
     on scheme 1.
+  - Known defect: 1 is a treatment intended for bends of one-cell-wide
+    channels. In a pond cell from which the inflow continues straight ahead (a
+    water surface two or more cells wide), the same inflow is also counted on
+    the edges that turn away, so a surface oscillation can grow in a
+    confluence pond into which a shallow, fast flow drops (in a run on the
+    100 m grid of Chichibu with a channel roughness of 0.02, a flat pond of
+    six cells developed an oscillation with a period of about 90 s and a range
+    of 1.5 m, and the discharge at the transect downstream showed a dip of 5 %
+    of the peak; it does not appear with 0; developer.md §110.14, in
+    Japanese).
   - The default is 0. With 1 the results change in computations that contain
     places where the flow turns next to a wall or a dry cell. In the Chichibu
     catchment (channel roughness 0.02; the settings of
