@@ -25,6 +25,7 @@ SUBDIRS	= src \
 	  utils/out2vtk \
 	  utils/prep_flux_transect \
 	  utils/rerecord \
+	  utils/river_flowline \
 	  utils/rmdepress_river
 
 # テスト用ディレクトリ
@@ -55,9 +56,9 @@ all: $(SUBDIRS)
 $(SUBDIRS):
 	$(MAKE) -C $@
 
-# utils/lu2mask, utils/out2vtk, utils/rerecord, utils/rmdepress_river は
+# utils/lu2mask, utils/out2vtk, utils/rerecord, utils/river_flowline, utils/rmdepress_river は
 # src の成果物に依存
-utils/lu2mask utils/out2vtk utils/rerecord utils/rmdepress_river utils/fault2disp: src
+utils/lu2mask utils/out2vtk utils/rerecord utils/river_flowline utils/rmdepress_river utils/fault2disp: src
 
 
 install: all

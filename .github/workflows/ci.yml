@@ -1,5 +1,5 @@
 # ENCflow CI: ビルド+回帰テスト(基準 Log とのビット/ULP 照合)
-#   高速な 22 ケースを毎 push で回す(chichibu は実行時間の都合で対象外。
+#   高速な 23 ケースを毎 push で回す(chichibu は実行時間の都合で対象外。
 #   ローカルで test/chichibu/Run.sh を実行すること)。prmap・wfswash・gwlateral・gwtani・stg・vshaped・
 #   bldgdrag・driftwood・bankcap は reference を持たない検定型(Check_*.py・再開と並列のバイト比較。Run.sh の
 #   終了コードで判定。stg は STG 格子の動作確認で、MPI の 2 ランクでは初期化で止まることを確かめる。
@@ -10,6 +10,9 @@
 #   差で警告扱いになるので、MPI のジョブには足さない)。bankcap は、エッジ水深の頭打ち f_dry_head_cap = 2 で
 #   河道の水が濡れた河岸へ登らないことの検定で、逐次と MPI の両方で回す(np = 2 では河岸の列と河道の間が
 #   帯の境界になる))
+#   river_flowline は、前処理 utils/river_flowline(河道マスクを標高の落水線に載せ直す)が、秩父の 4 つの格子の
+#   置いてある載せ直し済みのマスクをバイト一致で作り直すことの検定で、逐次のジョブだけで回す(encflow は
+#   使わない。Run.sh が utils/river_flowline をビルドする)
 #   フル回帰・MPI np=1,2,4・-fcheck=all・BMI 適合性は夜間の nightly.yml で回す
 name: CI
 
@@ -35,7 +38,7 @@ jobs:
       - name: Regression tests
         run: |
           set -e
-          for c in wave dambreak frost pump conduit salt vzcol vzzone sfzone prmap wfshoal wfshadow wfcurrent wfsed wfswash gwlateral gwtani stg vshaped bldgdrag driftwood bankcap; do
+          for c in wave dambreak frost pump conduit salt vzcol vzzone sfzone prmap wfshoal wfshadow wfcurrent wfsed wfswash gwlateral gwtani stg vshaped bldgdrag driftwood bankcap river_flowline; do
             echo "===== test/$c ====="
             (cd "test/$c" && ./Run.sh)
           done

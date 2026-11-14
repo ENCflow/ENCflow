@@ -3425,11 +3425,11 @@
     {
       "source": "test/README.md",
       "target": "test/README.en.md",
-      "source_sha256": "cfa198b838021cf25bb6398925854905cb24cf7efdae0841c39f7d7815e72220",
-      "target_sha256": "c31e8c37998597daec513376e44530ba824a87839a5f63b0d49dc28807a9cc3a",
-      "reviewer": "Claude (Claude Code session; f_dry_head_cap = 2 added (energy-head cap also toward wet cells whose bed is above the water level of the sender; developer.md §108): the added passages of the Japanese master and the English mirror compared one by one, numbers cross-checked; rest unchanged since the previous record)",
+      "source_sha256": "03d29dad898cbda44edad4c5f134bef9358a1608d1d33dc5e36ed13aa2390381",
+      "target_sha256": "9254385c8be80a45f401b0483eec2522952b237d40052712e41ca7aef9e91328",
+      "reviewer": "Claude (Claude Code session; full-text content and lexical review, no model execution)",
       "method": "assistant",
-      "reviewed_on": "2026-11-13"
+      "reviewed_on": "2026-11-14"
     },
     {
       "source": "test/avalanche/README.md",
@@ -4449,6 +4449,15 @@
       "reviewed_on": "2026-10-24"
     },
     {
+      "source": "test/river_flowline/README.md",
+      "target": "test/river_flowline/en/README.md",
+      "source_sha256": "907ff98b74360a83d49c0c30dbe27dd3e9e39951a8b6a91ad9573a91512e093f",
+      "target_sha256": "89ec1ebfcfc50658e9095557c69839496b38556f0600977270ed9d76a41d2974",
+      "reviewer": "Claude (Claude Code session; full-text content and lexical review, no model execution)",
+      "method": "assistant",
+      "reviewed_on": "2026-11-14"
+    },
+    {
       "source": "test/rockfall/README.md",
       "target": "test/rockfall/en/README.md",
       "source_sha256": "e8140eb825c4043e8afaec8bf4dbdeb62e0fd774f93be5511acdffd773143859",
@@ -5459,8 +5468,8 @@
     {
       "source": "utils/river_flowline/README.md",
       "target": "utils/river_flowline/en/README.md",
-      "source_sha256": "64d19d8aade373faecca1eb2e26b6a4a8f39ef2fc0668b258d80ca3ce6fdc967",
-      "target_sha256": "2390d1bbb7e7fbe6a4f2f806133bf1081a48ee4e9ff6231a9aae6c290fc7fc51",
+      "source_sha256": "67b1cf3ed857299c0a827e7eb0ca4b80e79fa13af426d8a1c2f8071f51cb475b",
+      "target_sha256": "61455f3749517e0fb1f0e79f5648eb1176595af2d977395a8fcd7c4ff481aec1",
       "reviewer": "Claude (Claude Code session; full-text content and lexical review, no model execution)",
       "method": "assistant",
       "reviewed_on": "2026-11-14"

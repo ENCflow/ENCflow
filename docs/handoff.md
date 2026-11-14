@@ -96,7 +96,8 @@ architecture.md。このメモは「現在進行中・未完了の項目」だ�
 
 00v. **秩父の河道マスクを標高の落水線に載せ直した(2026-11-13。利用者の指摘と決定「河道マスクは、全ての解像度で
    落水線ベースで。ただし、元のファイルは保存しておく」。developer.md §109)の残り**
-   - 済み: 道具 utils/river_flowline(Python と numpy。README 日英)、50・100・200・500 m の載せ直したマスク
+   - 済み: 道具 utils/river_flowline(Fortran。2026-11-14 に Python のスクリプトから書き換えた。README 日英。§109.10)、
+     50・100・200・500 m の載せ直したマスク
      (元のファイルの隣の `…_river_flowline.txt`。tutorials/chichibu/data_chichibu には 200 m の txt・bil・hdr・
      tif)、検定の切り替え(test/chichibu と test/chichibu_icmap の param.txt、test/nest_identity の
      param_chichibu*.txt 11 本と cut_chichibu.py、test/nest_twin の param_chichibu.txt)、利用者ガイド
@@ -117,9 +118,11 @@ architecture.md。このメモは「現在進行中・未完了の項目」だ�
      もの)、examples/source_area(50 m の元のマスクから、自前の make_catchment.py で対象の流域のマスクを
      作る。元のセルを残して切れ目だけをつなぐ方式)、500 m の「100 m のマスクから集約」のマスク。派生実験も
      新しいマスクで回し直すなら、§68 の記録との対応の残し方を先に決める。
-   - (d) **道具の言語と置き場所**: utils/river_flowline は Python のスクリプト(utils のほかの道具は
-     libencflow.a をリンクする Fortran のプログラム)。Fortran に書き直す(bil・GeoTIFF も読み書きできる)か、
-     置き場所を変えるか、このままにするかは利用者の判断。マスクのファイルは道具の言語によらない。
+   - (d) 済(2026-11-14。利用者の決定「utils/river_flowlineはFortranに書き換えて」。§109.10): Fortran の
+     プログラムにした(lu2mask と同じ流儀。パラメータファイルの f_input_mode に従ってテキスト・bil・GeoTIFF を
+     読み書きする)。Python 版と同じマスクを作る(秩父の 4 つの格子でバイト一致。乱数の地形 420 件でも一致)。
+     検定 test/river_flowline(毎 push の CI)が、置いてあるマスクを作り直せることを確かめる。残り: 単精度の
+     ビルドでの一致は確かめていない。
    - (e) 順番: 頭打ち 2 の境目のつなぎ(§108.9。00u (1))の reference の更新と、(b) の回し直しは済み
      (2026-11-14)。main に入れるときは、このブランチの 1338dc3c5(つなぎ)より後の状態を入れる(つなぎの
      ない 2 は main に入れない)。

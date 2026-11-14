@@ -3,27 +3,47 @@
 [English](en/README.md)
 
 河道マスク([fn_rw](../../docs/users_guide/geoinfo.md))を、標高データの落水線(標高が決める流下の道筋)に
-載せ直す前処理のスクリプトです。Python と numpy だけを使います。
+載せ直す前処理のプログラムです(Fortran。計算本体と同じ読み書きの手続きを使い、テキスト・bil・GeoTIFF を
+扱います)。
 
 河川の中心線をラスタにした河道マスクは、標高の谷線から 1 セルずれる所があります。ずれたセルは
 谷壁のセルで、河道の粗度(`rn0_rw`)や掘り込み(`depth_rw`)が谷壁に付き、水が実際に流れる谷線の
-セルには付きません。このスクリプトは、河道マスクの各セルから落水線をたどり、通ったセルを新しい
+セルには付きません。このプログラムは、河道マスクの各セルから落水線をたどり、通ったセルを新しい
 河道マスクにします。
 
 ```bash
-cd utils/river_flowline
-python3 river_flowline.py Z MASK RIVER OUT [--acc ACC]
+make install               # ENCflow 直下で(src と utils をビルドして bin/ に置く)
+bin/river_flowline parameterfile zfile maskfile riverfile outfile [accfile]
 ```
 
 | 引数 | 内容 |
 |---|---|
-| `Z` | 標高(窪地処理済み)。テキスト行列、行は北から南(`fn_z` と同じ) |
-| `MASK` | 領域マスク(0 より大きい値が計算するセル。`fn_mask` と同じ)。全域を使うなら `-` |
-| `RIVER` | 元の河道マスク(0 より大きい値が河道セル。`fn_rw` と同じ) |
-| `OUT` | 載せ直した河道マスク(0 / 1)の出力先 |
-| `--acc ACC` | 落水線の集水面積(セル数。自セルを含む)も書く(確認と図化用) |
+| `parameterfile` | 計算に使うシステムパラメータファイル。`f_input_mode`(入出力の形式)と、`fn_geoinfo` 経由の `nx`・`ny` を計算本体と同じ解釈で読む |
+| `zfile` | 標高(窪地処理済み。`fn_z` と同じ) |
+| `maskfile` | 領域マスク(0 より大きい値が計算するセル。`fn_mask` と同じ)。全域を使うなら `-` |
+| `riverfile` | 元の河道マスク(0 より大きい値が河道セル。`fn_rw` と同じ) |
+| `outfile` | 載せ直した河道マスク(0 / 1)の出力先 |
+| `accfile` | 落水線の集水面積(セル数。自セルを含む)の出力先(省略可。確認と図化用) |
+
+ファイルは、書いたとおりの場所を読み書きします(`dir_data` は付けません)。パラメータファイルの
+`fn_geoinfo` が別ファイルを指すときは、計算と同じく、そのファイルが見える場所(ケースのディレクトリ)で
+実行します。
+
+入出力の形式は `f_input_mode` に従います。
+
+| `f_input_mode` | 形式 | 格子数 | 出力 |
+|---:|---|---|---|
+| 1 | テキスト | `&list_geoinfo` の `nx`・`ny` が必須 | 1 行に 1 行分の値を空白 1 つで区切って書く |
+| 2 | bil | `riverfile` と同じ場所に hdr があれば、そこから補う(`nx`・`ny` も指定していれば一致を確かめる) | 4 バイト整数。hdr から座標が分かれば hdr も書く |
+| 4 | GeoTIFF | `riverfile` から読む(同上) | `riverfile` の位置情報タグを引き継ぐ(タグがなければ止まる) |
 
 実行すると、元の河道マスクのうち落水線に載っていたセル、外したセル、足したセルの数を表示します。
+
+```
+domain 71486 cells, cells without a lower neighbour 1468 (2.05 %), flowline end points 1
+original channel mask 9582 cells -> re-mapped channel mask 6515 cells
+  on the flowlines 5986 (62 % of the original), removed 3596 (median 24.6 m above the receiving cell), added 529
+```
 
 ## 手順
 
@@ -34,6 +54,9 @@ python3 river_flowline.py Z MASK RIVER OUT [--acc ACC]
 2. **河道マスクを載せ直す。** 元の河道マスクの各セルから落水線を終点までたどり、通ったセルを
    河道にします。出発したセル自身は、ほかの河道セルからの落水線が通るときだけ河道になります。
    谷線から外れたセルは河道から外れ、谷線の上で元のマスクが切れていたセルは河道に入ります。
+
+同じ勾配の隣が複数あるときは、北西から東へ・北から南への順で先のセルを採ります。同じ標高のセルは、
+Priority-Flood に先に入った順に取り出します。同じ入力からは、いつも同じマスクができます。
 
 落水線の手続きは、例題 [source_area](../../examples/source_area/README.md) の `make_catchment.py` と
 同じです(source_area は、元のマスクのセルを残したまま、切れ目だけを落水線でつなぎます)。
@@ -50,13 +73,15 @@ test/chichibu と tutorials/chichibu の河道マスク(国土数値情報の河
 | 200 m | 2,327 | 1,473 | 1,424(61 %) | 903(28.6 m) | 49 |
 | 500 m | 192 | 123 | 110(57 %) | 82(23.8 m) | 13 |
 
-100 m のマスクは、次のコマンドで作ったものです(ほかの格子も、それぞれのディレクトリの標高・流域マスク・
-河道マスクから同じに作ります)。
+100 m のマスクは、次のコマンドで作れます(ほかの格子も、それぞれのディレクトリの標高・流域マスク・
+河道マスクから同じに作れます。[test/river_flowline](../../test/river_flowline/README.md) が、4 つの格子で
+置いてあるマスクとバイト一致することを確かめます)。
 
 ```bash
-T=../../test/chichibu/data_chichibu
-python3 river_flowline.py $T/Chichibu_100m_filled2.txt $T/Chichibu_100m_basin.txt \
-    $T/Chichibu_100m_river.txt $T/Chichibu_100m_river_flowline.txt
+cd test/river_flowline
+T=../chichibu/data_chichibu
+../../bin/river_flowline param_100m.txt $T/Chichibu_100m_filled2.txt $T/Chichibu_100m_basin.txt \
+    $T/Chichibu_100m_river.txt wrk_100m.txt
 ```
 
 河道の粗度を斜面より小さく与える計算では、載せ直しで結果が変わります。test/chichibu の回帰ケース
@@ -70,14 +95,16 @@ python3 river_flowline.py $T/Chichibu_100m_filled2.txt $T/Chichibu_100m_basin.tx
   落水線が通る範囲が残ります)。
 - 窪地処理で埋めた平坦面の中の落水線は、Priority-Flood の取り出し順で決まり、地形の情報を持ち
   ません(秩父の 100 m の格子では、低い隣のないセルは領域の 2 %。その 9 割は元の河道マスクのセル)。
-- 各河道の最上流の 1 セルは、ほかの河道セルからの落水線が通らないので河道から外れます。
+- 各河道の最上流の 1 セルは、ほかの河道セルからの落水線が通らないので河道から外れます。載せ直した
+  マスクをもう一度載せ直すと、最上流がさらに 1 セル短くなります。元のマスクから 1 回だけ使ってください。
 - 標高データに窪地が残っていても動きますが、窪地の中の落水線は溢れる向きへ逆勾配で進みます。
   窪地処理済みの標高を使ってください。
 - 河道マスクの線が谷から 2 セル以上離れている所では、そのセルから谷までの斜面の落水線が河道に
   入ります。結果は GIS などで元のマスク・標高と重ねて確かめてください。
 - 河道セルが 1 セル動く所があるので、プローブや測線を河道セルに合わせて置いた設定は、載せ直した
   マスクで位置を確かめてください。
-- 読み書きするのはテキストのラスタだけです(bil・GeoTIFF は扱いません)。
+- 置いてあるマスクは、倍精度(既定の `PREC=double`)のビルドの出力です。単精度のビルド(標高を単精度で
+  読む)で同じマスクになることは確かめていません。
 
 ## 文献
 

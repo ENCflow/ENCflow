@@ -1,0 +1,15 @@
+!======================================================================
+! river_flowline の検定: 秩父の 200 m 格子(bil。tutorials/chichibu/data_chichibu)
+!   utils/river_flowline が読むのは f_input_mode(入出力の形式)と nx・ny だけ(計算は回さない)。
+!   dt・tt は、パラメータファイルの必須の項目なので書いてある
+!======================================================================
+&list_sysparam
+  dt = 1.0
+  tt = 1.0
+  fn_geoinfo = "-"
+  f_input_mode = 2          ! 入出力の形式(1: テキスト, 2: bil, 4: GeoTIFF)
+/
+
+&list_geoinfo
+  ! nx・ny は、元の河道マスクのファイル(bil の hdr・GeoTIFF のタグ)から読む
+/

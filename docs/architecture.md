@@ -318,8 +318,8 @@ boundary_h と m_gwflow_pump が同じ記録場の列 6 へ積む(wq.csv の out
   時刻歴ラスタ(規定底面運動)は「時刻 ファイル名 [窓]」の表で与える。
 - 前処理ユーティリティ utils/ は本体の層ではなく libencflow.a をリンクする
   独立プログラム(fault2disp: 断層パラメータ→地盤変位の時刻歴〔Okada、
-  経緯度・地理参照〕、rmdepress_river・calc_catchmentarea・lu2mask など)。
-  河道マスクを標高の落水線に載せ直す river_flowline だけは Python のスクリプト(§109)。
+  経緯度・地理参照〕、river_flowline: 河道マスクを標高の落水線に載せ直す〔§109〕、
+  rmdepress_river・calc_catchmentarea・lu2mask など)。
   公開インターフェースを変えたらトップレベル make で追随漏れを検出(§10)。
 - 出力: result/ に分布(H0001 等+FILENUMBER.csv。領域マスク X0000 は
   常時出力 §44)、fluxes/・probes/ の CSV、Log.txt、パラメータ控え、
