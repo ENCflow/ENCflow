@@ -15,7 +15,7 @@ python3 "$sdir/make_bankcap.py" h dry > bc_h_dry.txt
 export ENCFLOW_EXPECT_NP="$NP"
 set -o pipefail
 : > Screen.log
-for c in wet2 wet1 dry2 dry1; do
+for c in wet2 wet1 dry2 dry1 cross; do
     mpirun -np "$NP" $MPIRUN_OPTS ./encflow_mpi param_$c.txt | tee -a Screen.log || exit 1
 done
 set +o pipefail

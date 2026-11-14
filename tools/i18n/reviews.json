@@ -113,11 +113,11 @@
     {
       "source": "docs/users_guide/advection.md",
       "target": "docs/en/users_guide/advection.md",
-      "source_sha256": "57ddf0fccb379b63dd9cd462b428e40eed3b5d46e7487d6b20dbc1dafb129ccf",
-      "target_sha256": "4e69d21c97d613555f765955b84f83e0f0371210d054c171ae819cf8b1c8bb85",
-      "reviewer": "Claude (Claude Code session; default of f_dry_head_cap changed to 2 (developer.md §108.8), 2026-11-13: the rewritten sentences, table rows and annotations of the Japanese master and the English mirror compared passage by passage; values and identifiers unchanged apart from the default)",
+      "source_sha256": "b552e0e6a806f7df7678e1f9d3ea6f1f575b8c59cd3150ecf9ccfe4b873ff0ee",
+      "target_sha256": "975920ced8c141f089abfc07178a5e9cd0c92e1b94e73004781b8b0278deef24",
+      "reviewer": "Claude (Claude Code session; full-text content and lexical review, no model execution)",
       "method": "assistant",
-      "reviewed_on": "2026-11-13"
+      "reviewed_on": "2026-11-14"
     },
     {
       "source": "docs/users_guide/advection_donor.md",
@@ -257,11 +257,11 @@
     {
       "source": "docs/users_guide/encgrid.md",
       "target": "docs/en/users_guide/encgrid.md",
-      "source_sha256": "f16ac4d9cd05d3c57d8b3951f51e704f581636d4336ebe6599e8f00ee1c533da",
-      "target_sha256": "7b8a4de2c938eb5d48c53b60f4d8fa42dbd02c72892bcd666f2da1a1973a68dc",
-      "reviewer": "Claude (Claude Code session; default of f_dry_head_cap changed to 2 (developer.md §108.8), 2026-11-13: the rewritten sentences, table rows and annotations of the Japanese master and the English mirror compared passage by passage; values and identifiers unchanged apart from the default)",
+      "source_sha256": "24550e4408c87373411132653adec9c61d04357f7b2fc83f5a87f026d58b11b7",
+      "target_sha256": "4a32ee10f4193b9ca3d6450b52fd8004a0fa4dd4acc864633e805c67c2fa6d07",
+      "reviewer": "Claude (Claude Code session; full-text content and lexical review, no model execution)",
       "method": "assistant",
-      "reviewed_on": "2026-11-13"
+      "reviewed_on": "2026-11-14"
     },
     {
       "source": "docs/users_guide/forcing.md",
@@ -509,11 +509,11 @@
     {
       "source": "docs/users_guide/swflow.md",
       "target": "docs/en/users_guide/swflow.md",
-      "source_sha256": "7d0f1f331ab7fd16ad5c56f8dd57de9fdf3cb320bc2a2785b2dfd94263f4b66c",
-      "target_sha256": "033f22298a35b8318f21ca370f3867987199fe9086d5314aa0b45bf210cedf0e",
-      "reviewer": "Claude (Claude Code session; default of f_dry_head_cap changed to 2 (developer.md §108.8), 2026-11-13: the rewritten sentences, table rows and annotations of the Japanese master and the English mirror compared passage by passage; values and identifiers unchanged apart from the default)",
+      "source_sha256": "e1193f43d64d509900ab54548542b0f40cefb92bc24149b3de9dde4f16609e61",
+      "target_sha256": "a1d01d551fffd6c2896cad7f27a187a3b5db32fe9d53897208d74ab8c0e71ffd",
+      "reviewer": "Claude (Claude Code session; full-text content and lexical review, no model execution)",
       "method": "assistant",
-      "reviewed_on": "2026-11-13"
+      "reviewed_on": "2026-11-14"
     },
     {
       "source": "docs/users_guide/swi.md",
@@ -671,11 +671,11 @@
     {
       "source": "examples/List_samples/list_enc.txt",
       "target": "examples/List_samples/en/list_enc.txt",
-      "source_sha256": "f7b927aa5c8e792431f926d29b21fc8e4895d8ec59d2f6852967be93a2cbb80a",
-      "target_sha256": "3f57c38ca792aef4199741b1f0a5f7168d7664c5c5374355daab76392ab73d6d",
-      "reviewer": "Claude (Claude Code session; default of f_dry_head_cap changed to 2 (developer.md §108.8), 2026-11-13: the rewritten sentences, table rows and annotations of the Japanese master and the English mirror compared passage by passage; values and identifiers unchanged apart from the default)",
+      "source_sha256": "ceccaf55a9854102f6b96a9babebcaabc7515d1649ed1fcce0cf020b5eb37af8",
+      "target_sha256": "1667421993b7f867155a59b3e2a2cf4d4ee4de1b86b372c1c06f3ec17fbbf17c",
+      "reviewer": "Claude (Claude Code session; full-text content and lexical review, no model execution)",
       "method": "assistant",
-      "reviewed_on": "2026-11-13"
+      "reviewed_on": "2026-11-14"
     },
     {
       "source": "examples/List_samples/list_evap.txt",
@@ -3452,11 +3452,11 @@
     {
       "source": "test/bankcap/README.md",
       "target": "test/bankcap/en/README.md",
-      "source_sha256": "3a801f453183fc4ec87b648545ce3932dbc82f14cdbba8ea09226689108f96a6",
-      "target_sha256": "49db6260290295cbed2ecf0730f90f231bd0fdadc456a39abef8652579c397c2",
-      "reviewer": "Claude (Claude Code session; default of f_dry_head_cap changed to 2 (developer.md §108.8), 2026-11-13: the rewritten sentences, table rows and annotations of the Japanese master and the English mirror compared passage by passage; values and identifiers unchanged apart from the default)",
+      "source_sha256": "bdaad89d6b9e4be392afda94fb97f749083257b8dc666d399bf9609cf3612132",
+      "target_sha256": "48ab0482e3312fb093c972a8718fbdf3be1f9ef40b806d5c69b08fda70c4fbea",
+      "reviewer": "Claude (Claude Code session; full-text content and lexical review, no model execution)",
       "method": "assistant",
-      "reviewed_on": "2026-11-13"
+      "reviewed_on": "2026-11-14"
     },
     {
       "source": "test/bankface/README.md",

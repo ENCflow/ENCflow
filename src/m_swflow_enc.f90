@@ -1664,9 +1664,11 @@ subroutine init_enc_status(p, g, s, sx)
             ! 土石流が有効なら、水位は流れの表面 z + h + hs)
             if (s%debris_active) then
               he = cap_he_wet(he, uve, hc + max(s%hs(i,j), 0.0), hn + max(s%hs(in,jn), 0.0), &
-                              s%z(i,j), s%z(in,jn), p%gg)
+                              s%z(i,j), s%z(in,jn), p%gg, &
+                              cap_m2(i, j, k, s%gv(i,j)), cap_m2(in, jn, k, s%gv(in,jn)))
             else
-              he = cap_he_wet(he, uve, hc, hn, s%z(i,j), s%z(in,jn), p%gg)
+              he = cap_he_wet(he, uve, hc, hn, s%z(i,j), s%z(in,jn), p%gg, &
+                          cap_m2(i, j, k, s%gv(i,j)), cap_m2(in, jn, k, s%gv(in,jn)))
             end if
           end if
         end if
@@ -2489,27 +2491,80 @@ end function
 
 !----------------------------------------------------------------------
 ! 濡れた受け手へ向かうエッジ水深のエネルギー頭による頭打ち(f_dry_head_cap = 2。§108)
-!   受け手(流向の下流側)の地盤が送り手の水位より高い(z_受 > z_送 + h_送)とき、エッジ水深を、
-!   送り手のエネルギー頭が受け手の地盤を超える分 max(z_送 + h_送 + u_n²/2g − z_受, 0) で
-!   頭打ちする(乾いた受け手への頭打ち §68.16 と同じ式)。受け手の地盤が送り手の水位より低い
-!   (水に浸かった段)ときと、流速 0 のエッジは he のまま。0 を返したエッジの流速は、呼び出し側が
-!   0 にする。乾いた受け手(従来の 2 つの分岐)を通らなかったエッジにだけ呼ぶ。
+!   受け手(流向の下流側)の地盤が送り手の水位より d 高い(d = z_受 − (z_送 + h_送) > 0)とき、
+!   エッジ水深を
+!     he ← max( max(u_n²/2g − d, 0),  he − κ d / (|u_n| m_送) )
+!   で頭打ちする。
+!   第 1 項は、送り手のエネルギー頭が受け手の地盤を超える分(乾いた受け手への頭打ち §68.16 と
+!   同じ式)。
+!   第 2 項は、境目 d = 0(頭打ちなし)と第 1 項の間のつなぎ(§108.9)。単位幅流量 |u_n| he を
+!   κ d / m_送 だけ減らす形で、m_送(cap_m2)は、この辺の単位幅流量を送り手の 1 ステップの水深変化に
+!   直す係数なので、「この辺の流れが 1 ステップに送り手の水位を下げる量を、頭打ちなしのときより
+!   κ d だけ少なくする」という意味になる。つなぎがないと、送り手の水位が受け手の地盤の高さにある
+!   とき、頭打ちが効く(流出が減って水位が上がる)・効かない(流出が増えて水位が下がる)を数ステップ
+!   ごとに行き来する。κ = 1/4 なら、同じ高さの受け手へ向かう辺が 4 本あっても、水位の 1 ステップの
+!   応答が境目をまたがない。つなぎの幅は辺の法線方向の Courant 数に比例し、時間刻みを縮めると
+!   第 1 項だけの規則に収束する(つなぎは ENCflow 独自)
+!   受け手の地盤が送り手の水位より低い(水に浸かった段)ときと、流速 0 のエッジは he のまま。
+!   0 を返したエッジの流速は、呼び出し側が 0 にする。乾いた受け手(従来の 2 つの分岐)を通らなかった
+!   エッジにだけ呼ぶ。
 !   土石流が有効な計算では、呼び出し側が hc・hn に固体の柱状量 hs を足して渡す(流れの表面は
 !   z + h + hs。圧力項・flowdepth と同じ)
 !----------------------------------------------------------------------
-pure function cap_he_wet(he, uve, hc, hn, zc, zn, gg) result(he_corr)
+pure function cap_he_wet(he, uve, hc, hn, zc, zn, gg, m2c, m2n) result(he_corr)
   real, intent(in) :: he          ! セル境界水深(ここまでの規則を通した後)
   real, intent(in) :: uve         ! セル境界の流速(中心→近傍が正)
   real, intent(in) :: hc, hn      ! 中心セル・近傍セルの流れの深さ(水深。土石流では + hs)
   real, intent(in) :: zc, zn      ! 中心セル・近傍セルの地盤
   real, intent(in) :: gg          ! 重力加速度(補正前。Bernoulli の速度水頭)
+  real, intent(in) :: m2c, m2n    ! 単位幅流量を、中心セル・近傍セルの 1 ステップの水深変化に直す係数(cap_m2)
   real :: he_corr
+  real, parameter :: kappa = 0.25 ! つなぎの係数 κ(§108.9)
+  real :: d                       ! 受け手の地盤 − 送り手の水位
+  real :: c2                      ! エネルギー頭による頭打ちの値(第 1 項)
+  real :: red, flx
   he_corr = he
+  ! 次の行は呼び出し側の判定と重なるが、外さないこと。外すと、-Ofast がこの関数を呼び出し側の式と
+  ! 組み替えて、濡れた受け手への頭打ちが一度も掛からない計算でも結果が最終桁で変わる(coastal_drain・
+  ! tracer・wfdoppler の reference とのバイト比較で確認。§108.9。§108.4 と同じ種類の注意)
+  if (opt%f_dry_head_cap < 2) return
   if (uve > 0.0) then             ! 中心セルが送り手、近傍セルが受け手
-    if (zn > zc + hc) he_corr = min(he, max(zc + hc + uve**2 / (2 * gg) - zn, 0.0))
+    if (zn > zc + hc) then
+      d = zn - (zc + hc)
+      c2 = max(uve**2 / (2 * gg) - d, 0.0); red = kappa * d; flx = uve * m2c
+      ! つなぎの項 he − κ d / flx は、flx が小さいと割り算が大きくなるので、c2 を上回るときだけ割る
+      if ((he - c2) * flx > red) then
+        he_corr = he - red / flx
+      else
+        he_corr = min(he, c2)
+      end if
+    end if
   else if (uve < 0.0) then        ! 近傍セルが送り手、中心セルが受け手
-    if (zc > zn + hn) he_corr = min(he, max(zn + hn + uve**2 / (2 * gg) - zc, 0.0))
+    if (zc > zn + hn) then
+      d = zc - (zn + hn)
+      c2 = max(uve**2 / (2 * gg) - d, 0.0); red = kappa * d; flx = -uve * m2n
+      if ((he - c2) * flx > red) then
+        he_corr = he - red / flx
+      else
+        he_corr = min(he, c2)
+      end if
+    end if
   end if
+end function
+
+
+!----------------------------------------------------------------------
+! 辺 k の単位幅流量を、セル (i, j) の 1 ステップの水深変化に直す係数(cap_he_wet のつなぎ用)
+!   連続式(continuous)が水深の更新に使う geo%mn2dh(k) / gv / 河道の平面積率 と同じ。開口の比
+!   (frw・fwd ≤ 1)は入れない(入れないほうが係数が大きく、つなぎが広い側 = 安全側)
+!----------------------------------------------------------------------
+pure function cap_m2(i, j, k, gv) result(m2)
+  integer, intent(in) :: i, j     ! セルのインデックス
+  integer, intent(in) :: k        ! 辺の方位
+  real, intent(in) :: gv          ! セルの空隙率(家屋を除いた割合)
+  real :: m2
+  m2 = geo%mn2dh(k) / max(gv, 1.0e-6)
+  if (chn%have_width) m2 = m2 / chn%wfrac(i,j)
 end function
 
 
@@ -2865,7 +2920,10 @@ subroutine calc_kth_flux(p, g, s, sx, uve0, tae0, i, j, k, in, jn, f_runge, uve1
     !   頭打ちが外れ、水位が河岸より低い河道の水が、移流項で生じたエッジ流速 × 両側の
     !   平均水深で河岸へ登る(§50.9)のを塞ぐ。受け手の地盤が送り手の水位より低い
     !   (水に浸かった段)ときは掛けない(地盤の高低だけを条件にすると、濡れた斜面を
-    !   登る流れ全般に効いて、波の伝播や潮の遡上が変わる。§108 の試験)
+    !   登る流れ全般に効いて、波の伝播や潮の遡上が変わる。§108 の試験)。送り手の水位が
+    !   受け手の地盤のすぐ下にあるときは、頭打ちの値を「頭打ちなし」へ向けてつなぐ(1 ステップで
+    !   水位が境目をまたがない勾配。つなぎがないと、効く・効かないを数ステップごとに行き来する。
+    !   cap_he_wet と §108.9)
     !   2 の分岐は、従来の 2 つの分岐(受け手が乾燥)の後ろに別の手続きで置く。従来の分岐の条件に
     !   同じ和 z + h を書き足すと、-Ofast が頭打ちの式の足し算の順序を変え、1 の結果が最終桁で
     !   動く(丸めに敏感な遡上の検定で確認。§108.4)
@@ -2881,9 +2939,11 @@ subroutine calc_kth_flux(p, g, s, sx, uve0, tae0, i, j, k, in, jn, f_runge, uve1
         ! 水深 h だけで判定すると、固体の厚い流れが、流れの表面より低い地盤へも進めなくなる
         ! (test/volcano の平坦部の堆積が 44 mm → 3 mm。§108.7)
         if (have_db) then
-          he = cap_he_wet(he, uve1, hc + hsc, hn + hsn, s%z(i,j), s%z(in,jn), p%gg)
+          he = cap_he_wet(he, uve1, hc + hsc, hn + hsn, s%z(i,j), s%z(in,jn), p%gg, &
+                          cap_m2(i, j, k, s%gv(i,j)), cap_m2(in, jn, k, s%gv(in,jn)))
         else
-          he = cap_he_wet(he, uve1, hc, hn, s%z(i,j), s%z(in,jn), p%gg)
+          he = cap_he_wet(he, uve1, hc, hn, s%z(i,j), s%z(in,jn), p%gg, &
+                          cap_m2(i, j, k, s%gv(i,j)), cap_m2(in, jn, k, s%gv(in,jn)))
         end if
         if (he <= 0.0) uve1 = 0.0
       end if

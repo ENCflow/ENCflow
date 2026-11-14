@@ -1,8 +1,8 @@
 #!/bin/bash
-# bankcap: 薄く濡れた河岸と、流れている掘込河道(逐次実行。4 構成)
+# bankcap: 薄く濡れた河岸と、流れている掘込河道(逐次実行。5 構成)
 #   ./Run.sh
-# 合否は Check_bankcap.py(河道の水が、水位より高い濡れた河岸へ登らないこと)と、乾いた河岸の
-# 構成の f_dry_head_cap = 1 と 2 のバイト比較
+# 合否は Check_bankcap.py(河道の水が、水位より高い濡れた河岸へ登らないこと、水位が河岸の高さを
+# 横切るときに流量が行き来しないこと)と、乾いた河岸の構成の f_dry_head_cap = 1 と 2 のバイト比較
 
 sdir=$(dirname "$(readlink -f "$0")")
 ../Scripts/Check_mode.sh serial || exit 1
@@ -14,7 +14,7 @@ python3 "$sdir/make_bankcap.py" h dry > bc_h_dry.txt
 
 set -o pipefail
 : > Screen.log
-for c in wet2 wet1 dry2 dry1; do
+for c in wet2 wet1 dry2 dry1 cross; do
     ./encflow param_$c.txt | tee -a Screen.log || exit 1
 done
 set +o pipefail

@@ -104,7 +104,9 @@
                             !   receiver is wet but its bed is above the water
                             !   level of the sender (channel water below the
                             !   bank does not climb onto a thinly wet bank or
-                            !   valley wall) = default). The default was 1
+                            !   valley wall; the cap is relaxed while the
+                            !   water level is just below the bed of the
+                            !   receiver) = default). The default was 1
                             !   until 2026-11-13
   !f_opening_dynamic = 3    ! dynamic reassignment of blocked openings
                             !   (0: off, 1: edges between channel cells only

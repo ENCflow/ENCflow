@@ -8,7 +8,9 @@ A check of the energy-head cap on the edge depth (`f_dry_head_cap` of `&list_enc
 [Advection schemes](../../../docs/en/users_guide/advection.md) §5; developer.md §68.16 and §108).
 `f_dry_head_cap = 2` applies the cap also when the receiving cell is wet, as long as its bed is
 above the water level of the sending cell. It is checked with a flowing incised channel and a
-thinly wet bank.
+thinly wet bank. A further configuration makes the channel water level cross the height of the bank
+and checks that the discharge does not flip back and forth at the threshold of the cap
+(configuration 5).
 
 ## Rule
 
@@ -29,6 +31,29 @@ energy head".
 | 0 | never |
 | 1 | the receiver is dry ($`h_r < d_d`$) |
 | 2 (default) | as 1, and also when the receiver is wet but its bed is above the water level of the sender ($`z_r > \eta_s`$) |
+
+When 2 is applied to a wet receiver, the cap is relaxed while the water level of the sender is
+just below the bed of the receiver. With the bed of the receiver $`d = z_r - \eta_s`$ above the
+water level of the sender, the edge depth becomes
+
+```math
+h_e \leftarrow \max\!\left(\max\!\left(\frac{u_n^2}{2g} - d,\ 0\right),\ h_e - \frac{\kappa\,d}{|u_n|\,m_s}\right),\qquad \kappa = \frac{1}{4}
+```
+
+The first term is the energy-head cap of the formula above. The second term is a transition
+between $`d = 0`$ (no cap) and the first term: it reduces the unit-width discharge $`|u_n| h_e`$
+by $`\kappa d / m_s`$. $`m_s`$ is the factor that converts the unit-width discharge on this edge
+into the change of depth of the sender in one time step (the same
+$`l_k \Delta t / (\Delta x \Delta y)`$ as in the continuity equation, divided by the porosity and by
+the plan-area fraction of the channel), so the term means "the flow on this edge lowers the water
+level of the sender in one step by $`\kappa d`$ less than it would without the cap". Without the
+transition, when the water level sits at the height of the bed of the receiver, the cap flips on
+(the outflow drops and the level rises) and off (the outflow grows and the level falls) every few
+steps. The width of the transition is proportional to the Courant number of the normal velocity
+on the edge, so it is narrow, and the rule converges to the first term alone as the time step is
+reduced. $`\kappa = 1/4`$ is the value with which the one-step response of the water level does
+not overshoot the threshold even when four edges lead to receivers of the same height. The
+transition is also ENCflow's own treatment (developer.md §108.9).
 
 With 1, the cap is lifted as soon as a bank cell is thinly wet, and the edge depth of the
 continuity equation returns to the mean of the two cells (the mean of a deep channel and a thin
@@ -52,6 +77,7 @@ The inputs are written by `make_bankcap.py`.
 | 2 | `param_wet1.txt` | 2 cm film | 1 | it climbs (the check of configuration 1 tells the difference) |
 | 3 | `param_dry2.txt` | dry | 2 | the bank stays dry and the channel is in uniform flow; byte-identical to configuration 4 |
 | 4 | `param_dry1.txt` | dry | 1 | as above |
+| 5 | `param_cross.txt` | 2 cm film | 2 | the discharge is raised and lowered as 137.3 → 330 → 137.3 m³/s over 10 minutes each (the run lasts 30 minutes), so that the channel water level crosses the height of the bank; the discharge across the bank line is recorded every step to see that it does not flip back and forth |
 
 ## Checks (Check_bankcap.py and Run.sh)
 
@@ -66,6 +92,15 @@ The inputs are written by `make_bankcap.py`.
    of the uniform depth.
 7. The depth and velocity outputs and Log.txt of configurations 3 and 4 are byte-identical (with
    a dry receiver, 1 and 2 are the same).
+8. Configuration 5: the maximum second difference, from step to step, of the discharge across the
+   bank line (between the channel and the floodplain, x = 100–300 m) is below 2.0 m³/s (the first
+   60 seconds are excluded). With a rule without the transition, the discharge jumps by
+   17–36 m³/s from step to step while the water level is at the height of the bank.
+9. Configuration 5: while the channel water level is above the bed of the bank, the mean discharge
+   onto the floodplain exceeds 3 m³/s (the water does go over when it should).
+10. Configuration 5: on the rising limb, until the channel water level comes within 0.3 m below
+    the bed of the bank, the depth of the bank row does not exceed the initial film (the
+    transition is narrower than 0.3 m).
 
 ## Results
 
@@ -77,12 +112,15 @@ The inputs are written by `make_bankcap.py`.
 | 4 depth of the bank row, configuration 2 | maximum over the run 0.153 m, 0.071 m at the end | PASS |
 | 5 and 6 configurations 3 and 4 | maximum floodplain depth over the run 0; channel depth 2.5006 m (1.0002 times the uniform depth) | PASS |
 | 7 configurations 3 and 4 | the 12 files of H and V outputs and Log.txt are byte-identical | PASS |
+| 8 second difference of the step-by-step discharge, configuration 5 | maximum 0.50 m³/s (at 302 s) | PASS |
+| 9 discharge onto the floodplain, configuration 5 | mean 7.55 m³/s over 364–1,044 s, while the water level is above the bank | PASS |
+| 10 depth of the bank row on the rising limb, configuration 5 | 0.0200 m (the initial film) until 239 s, when the water level comes within 0.3 m below the bank | PASS |
 
 ## Usage
 
 ```bash
 make
-./Run.sh            # serial (4 runs, about 10 seconds)
+./Run.sh            # serial (5 runs, about 20 seconds)
 ./Run_MPI.sh 2      # MPI (the boundary between the bank row and the channel is a band boundary)
 ```
 
@@ -96,6 +134,13 @@ make
   (2.61 m as the mean over x = 100–300 m; 2.50 m with a dry bank). This is a property of the
   advection term on the 8-neighbour stencil (developer.md §50.9) and outside the scope of this
   check. `f_dry_head_cap = 2` does not change it.
+- In configuration 5 the channel depth reaches 3.93 m (0.43 m above the bank) and the depth of the
+  bank row reaches 0.62 m. Within the width of the transition, water starts to go onto the bank
+  while the water level is still below it, but in this set-up the width is about 2 cm (the
+  "bed of the bank − channel water level" at the time the depth of the bank row has risen by 1 cm
+  is 0.04 m without the transition and 0.06 m with it). The width is proportional to the normal
+  velocity and to the time step, so it widens where the flow toward the bank is fast or the time
+  step is large (the amount that goes over never exceeds that of 1).
 - The default is `f_dry_head_cap = 2` (it was 1 until 2026-11-13). In rain-wetted steep valleys
   and at run-up fronts the results differ between 1 and 2
   ([test/chichibu](../../chichibu/en/README.md) and others; developer.md §108). Set 1

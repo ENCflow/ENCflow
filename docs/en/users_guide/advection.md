@@ -560,7 +560,15 @@ listed in the [shallow water chapter](swflow.md).
   is, where the bed of the receiver is below the water level of the sender; in
   runs with the debris-flow model `f_debris`, the surface of the flow = bed +
   water depth + solid thickness is used in place of the water level of the
-  sender).
+  sender). While the water level of the sender is just below the bed of the
+  receiver, the cap is joined to "no cap" by a transition (with a slope such
+  that the water level does not overshoot the threshold in one step; without
+  it, when the water level sits at the height of the bed of the receiver, the
+  cap flips on and off every few steps. The width of the transition is
+  proportional to the normal velocity and to the time step, and within it a
+  small amount flows while the water level is still below the bed of the
+  receiver. The formula is in
+  [test/bankcap](../../../test/bankcap/en/README.md)).
   Both are ENCflow's own rules built on the Bernoulli relation "water does not
   climb onto ground above its energy head".
   The default was 1 until 2026-11-13. In rain-wetted steep valleys (rainfall
