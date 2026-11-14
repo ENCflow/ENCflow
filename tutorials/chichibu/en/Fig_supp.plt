@@ -140,6 +140,7 @@ do for [t=1:2] {
   set title TLBW[t] noenhanced
   set xrange [0:(t == 1 ? 150 : 360)]
   set yrange [0:(t == 1 ? 1600 : 8000)]
+  if (t == 1) { set key top right font ",11" } else { set key top left Left reverse samplen 2 font ",9" }   # downstream: a smaller legend at the top left, where no curve passes
   plot sprintf("result_supp_200m/fluxes/flux000%d.csv", TRNW[t])     using 2:3 with lines lw 1.2 dt 2 lc rgb '#9467bd' title "200 m, no width", \
        sprintf("result_supp_200m_w50/fluxes/flux000%d.csv", TRNW[t]) using 2:3 with lines lw 1.8      lc rgb '#9467bd' title "200 m W = 50", \
        sprintf("result_supp_100m/fluxes/flux000%d.csv", TRNW[t])     using 2:3 with lines lw 1.2 dt 2 lc rgb '#2ca02c' title "100 m, no width", \
@@ -149,39 +150,54 @@ do for [t=1:2] {
 }
 unset multiplot
 
-# ---- 図 2d: 地形が原因の細かい振動(測線 3 の 1 分値。README の補足「ハイドログラフの細かい振動について」の 3 の例) ----
-# 左: 50 m 格子は測線のすぐ上流の 10 m の段差の下の跳水が逓減部(93〜95 分)に凹みを作り、100 m・200 m 格子(破線)は滑らか。
-# 右: 河道幅 50 m の 200 m 格子は上流の平坦な区間の静振で上下し、幅なし(破線)は滑らか。
-# 下段は 1 分ごとの流量の変化(振動が見やすい)。立ち上がりの急な前線(3 の性質)を外して 70 分から描く
+# ---- Figure 2d: a dip and a bump in the 1-minute values (transect 3 of the 50 m grid; example of item 2 of the
+#      supplement "On fine oscillations in hydrographs") ----
+# In the stepped gorge just upstream of the transect the flow in the flat reach switches between a shallow, fast state
+# and a deep, slow state within 1-2 minutes; the water stored and released makes the dip on the rising limb (69 min)
+# and the bump on the recession (122 min). The 100 m and 200 m grids (dashed) are smooth. Lower panel: change per minute
 reset
 set datafile separator comma
-set terminal pngcairo size 1000,700 font ",11"
+set terminal pngcairo size 900,640 font ",11"
 set output "en/figs/supp_t3_osc.png"
-set multiplot layout 2,2 title "Fine oscillations caused by the terrain (1-minute values at transect 3)" noenhanced
+set multiplot layout 2,1 title "A dip and a bump at transect 3 of the 50 m grid (flow regime switching in the gorge upstream)" noenhanced
 set grid
 set xlabel "time (min)"
 set key top right
+set xrange [55:135]
 set ylabel "discharge (m^3/s)"
-set xrange [70:135]
-set title "50 m grid (jump below the step just upstream)" noenhanced
-set yrange [1500:6500]
+set yrange [0:6500]
 plot "result_supp_50m/fluxes/flux0003.csv"  using 2:3 with lines lw 1.6      lc rgb '#1f9fd0' title "50 m", \
      "result_supp_100m/fluxes/flux0003.csv" using 2:3 with lines lw 1.2 dt 2 lc rgb '#2ca02c' title "100 m", \
      "result_supp_200m/fluxes/flux0003.csv" using 2:3 with lines lw 1.2 dt 2 lc rgb '#9467bd' title "200 m"
-set title "200 m grid, 50 m wide channel (seiche in upstream flats)" noenhanced
-set yrange [1500:5000]
-plot "result_supp_200m_w50/fluxes/flux0003.csv" using 2:3 with lines lw 1.6      lc rgb '#9467bd' title "200 m W = 50", \
-     "result_supp_200m/fluxes/flux0003.csv"     using 2:3 with lines lw 1.2 dt 2 lc rgb '#9467bd' title "200 m no width"
-# 下段: 1 分ごとの変化 = 当該行の流量 − 前の行の流量(各曲線の先頭で前値を NaN に戻す)
+# Lower panel: change per minute = discharge of the row - discharge of the previous row (reset to NaN at the head of each curve)
 set ylabel "change per minute (m^3/s)"
-set title "Same, change per minute" noenhanced
-set yrange [-300:500]
+set yrange [-1400:1400]
 plot p = NaN, "result_supp_50m/fluxes/flux0003.csv"  using 2:(d = $3 - p, p = $3, d) with lines lw 1.6      lc rgb '#1f9fd0' title "50 m", \
      p = NaN, "result_supp_100m/fluxes/flux0003.csv" using 2:(d = $3 - p, p = $3, d) with lines lw 1.2 dt 2 lc rgb '#2ca02c' title "100 m", \
      p = NaN, "result_supp_200m/fluxes/flux0003.csv" using 2:(d = $3 - p, p = $3, d) with lines lw 1.2 dt 2 lc rgb '#9467bd' title "200 m"
-set yrange [-200:400]
-plot p = NaN, "result_supp_200m_w50/fluxes/flux0003.csv" using 2:(d = $3 - p, p = $3, d) with lines lw 1.6      lc rgb '#9467bd' title "200 m W = 50", \
-     p = NaN, "result_supp_200m/fluxes/flux0003.csv"     using 2:(d = $3 - p, p = $3, d) with lines lw 1.2 dt 2 lc rgb '#9467bd' title "200 m no width"
+unset multiplot
+
+# ---- Figure 2e: a step when water starts to spill onto the bank (transect 4 of the 200 m grid with a 50 m wide
+#      channel; example of item 3 of the same supplement) ----
+# At 101 min, when the channel water starts to enter a bank cell, the discharge downstream drops by about a tenth in
+# one minute. It does not appear without the width (dashed)
+reset
+set datafile separator comma
+set terminal pngcairo size 900,640 font ",11"
+set output "en/figs/supp_t4_step.png"
+set multiplot layout 2,1 title "A step at transect 4 of the 200 m grid with a 50 m wide channel (when water starts to spill onto the bank)" noenhanced
+set grid
+set xlabel "time (min)"
+set key top left
+set xrange [80:130]
+set ylabel "discharge (m^3/s)"
+set yrange [2000:7000]
+plot "result_supp_200m_w50/fluxes/flux0004.csv" using 2:3 with lines lw 1.6      lc rgb '#9467bd' title "200 m W = 50", \
+     "result_supp_200m/fluxes/flux0004.csv"     using 2:3 with lines lw 1.2 dt 2 lc rgb '#9467bd' title "200 m no width"
+set ylabel "change per minute (m^3/s)"
+set yrange [-800:600]
+plot p = NaN, "result_supp_200m_w50/fluxes/flux0004.csv" using 2:(d = $3 - p, p = $3, d) with lines lw 1.6      lc rgb '#9467bd' title "200 m W = 50", \
+     p = NaN, "result_supp_200m/fluxes/flux0004.csv"     using 2:(d = $3 - p, p = $3, d) with lines lw 1.2 dt 2 lc rgb '#9467bd' title "200 m no width"
 unset multiplot
 
 # ---- 図 3: 6 時間後の水深分布。左 ENC、右 4 近傍(行: 200 / 100 / 50 m) ----

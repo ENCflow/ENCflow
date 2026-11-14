@@ -589,7 +589,7 @@ listed in the [shallow water chapter](swflow.md).
   within 1 %).
   When steps in the 1-minute values are a concern, halve the time step and
   check whether the result changes.
-  Both are ENCflow's own rules built on the Bernoulli relation "water does not
+  Both 1 and 2 are ENCflow's own rules built on the Bernoulli relation "water does not
   climb onto ground above its energy head".
   The default was 1 until 2026-11-13. In rain-wetted steep valleys (rainfall
   runoff on a real DEM) and at run-up fronts the results differ between 1 and 2,
