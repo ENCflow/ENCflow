@@ -283,8 +283,10 @@ the grid spacing and the number of cells that represent the channel.
   the bed); the peak of the 1-minute values becomes 3.9 % larger (the maximum
   before the shortcut opens is 0.7 % smaller than with the default). The steps
   in the discharge when the run-up starts and stops are a property of the cap
-  on the edge depth ([the advection page](advection.md) §5). Values outside
-  0.05–0.2 have not been checked.
+  on the edge depth ([the advection page](advection.md) §5); with the time
+  step reduced from 6 s to 3 s the shortcut does not open, and the peak with
+  0.05 is within 0.2 % of the default. Values outside 0.05–0.2 have not been
+  checked.
 - **Reproducing earlier results.** To reproduce results computed with the
   default before 2026-11-09 (0) (including cases whose roughness was
   calibrated with 0), add `fn_enc = "-"` to `&list_sysparam` and set
