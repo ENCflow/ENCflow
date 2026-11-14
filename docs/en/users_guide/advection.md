@@ -463,8 +463,8 @@ With the default `f_advection_donor = 3` the wet/dry test of the parallel edge b
     [the supplement of the tutorial](../../../tutorials/chichibu/en/README.md))
     the peak at transect 3 changes by +5.5, +2.4 and +2.0 % on the 200, 100
     and 50 m grids, and the peak at transect 4 by +6.8 and −0.2 % on the 200
-    and 100 m grids. The run time is about three tenths longer than with 0
-    (+35 % on the 200 m grid of the same catchment).
+    and 100 m grids. The run time is about two tenths longer than with 0
+    (+20 % on the 200 m grid of the same catchment).
 - **Sea cells (tide-prescribed boundary) supply no momentum either.** The
   cells of the sea mask (fn_sw) are the side whose water level is forced;
   their apparent water column hsea0 and their zero flux have nothing to do

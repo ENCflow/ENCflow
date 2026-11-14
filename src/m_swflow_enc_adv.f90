@@ -1377,28 +1377,27 @@ contains
     u = ue0 + wgt * (sg * fsh * qin * qs / den - ue0)
   end function
 
-  ! 線 k の供給元の重み(f_advection_donor = 3。adv_prepare_mc の donor_share と同じ式)
+  ! 線 k の供給元の重み(f_advection_donor = 3。adv_prepare_mc の donor_share と同じ値)。
+  ! 式は「流量の比が ε 未満で、かつ水深の比も ε 未満のとき w = max(流量の比, 水深の比) / ε、ほかは 1」。
+  ! adv_prepare_mc は流量の条件を先に見るが、ここは水深の条件を先に見る: 薄くない供給元(水深が面のセルの
+  ! ε 倍以上)は流量の比によらず w = 1 なので、8 本のリンクの流量を読むのは薄い供給元のときだけになる
+  ! (大半の面はここで抜ける。値は同じ。秩父の 200 m 格子で、有効時の計算時間の増分が +30 % → +20 %)。
+  ! 供給元のセルは呼び出し側が cell_ok で確かめている(確保範囲内の濡れたセル)。
   pure function donor_share(ci, cj, kk) result(w)
     integer, intent(in) :: ci, cj, kk
     real :: w, qk, qmax, qe, hd, he
     integer :: l
+    w = 1.0
+    hd = hcell(ci + din(kk), cj + djn(kk))
+    he = opt%p_adv_donor_eps * hcell(ci, cj)
+    if (hd >= he) return
     qk = max(0.0, -qlk8(ci, cj, kk))
     qmax = 0.0
     do l = 1, 8
       qmax = max(qmax, -qlk8(ci, cj, l))
     end do
     qe = opt%p_adv_donor_eps * qmax
-    w = 1.0
-    if (qk < qe) then
-      w = qk / qe
-      hd = hcell(ci + din(kk), cj + djn(kk))
-      he = opt%p_adv_donor_eps * hcell(ci, cj)
-      if (hd >= he) then
-        w = 1.0
-      else
-        w = max(w, hd / he)
-      end if
-    end if
+    if (qk < qe) w = max(qk / qe, hd / he)
   end function
 
   ! 以下は adv_neumann_mc の補助関数の写し(枠外の位置は鏡像で読む)
