@@ -175,7 +175,7 @@ moves a channel mask onto the flow lines of the elevation data (the drainage
 paths given by the steepest descent among the 8 neighbours). In a computation
 that gives the channel a smaller roughness than the slopes, the peak discharge
 and its arrival time change with the move (in the 100 m regression case of the
-Chichibu catchment the peaks become 2–9 % smaller and 2–12 min later;
+Chichibu catchment the peaks become 2–9 % smaller and 1–19 min later;
 [test/chichibu](../../../test/chichibu/en/README.md)).
 
 ## Drag of building clusters (urban inundation)

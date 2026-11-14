@@ -51,7 +51,7 @@ deep form in the channel cells (black dots) of the main stem and the
 tributaries. Inundation (around 1 m) also spreads over the lowlands of the
 valley floor. Middle: discharge at transects 1–4 and the rainfall. The peak becomes larger
 and later from upstream to downstream, and at the most downstream transect
-4 it is 5328 m³/s @ 3.28 h. Right: depth at the probes. Even after the
+4 it is 5315 m³/s @ 3.33 h. Right: depth at the probes. Even after the
 peak of the rainfall (0.5 h) the channel depth keeps increasing for 0.35–0.5 hours
 (the peak is at 0.85 h at probe 1 and 1.00 h at probe 2), showing the delay
 of the collection from the hillslopes.
@@ -62,19 +62,19 @@ of the collection from the hillslopes.
 |---|---|---|---|
 | 1 | Uppermost main stem (x = 16.5 km) | 1159 | 0.87 |
 | 2 | x = 21.5 km | 2862 | 1.00 |
-| 3 | x = 29.6 km | 4316 | 1.67 |
-| 4 | 4.6 km upstream of the catchment outlet (x = 43.3 km) | 5328 | 3.28 |
+| 3 | x = 29.6 km | 4299 | 1.63 |
+| 4 | 4.6 km upstream of the catchment outlet (x = 43.3 km) | 5315 | 3.33 |
 
 - The reference is the Log of the default settings (scheme 3, dynamic
   opening correction, f_advection_donor = 3, f_dry_head_cap = 2). The table and figure above are the
   values after the default of the edge-depth cap became f_dry_head_cap = 2 and the channel mask was
   moved onto the flow lines of the elevation on 2026-11-13; compared with the values before (original
   channel mask, default 1; 1179 @ 0.83 h, 2956 @ 0.97 h, 4474 @ 1.60 h and 5759 m³/s @ 3.08 h at
-  transects 1–4), the peaks are 1.7–7.5 % smaller and 2–12 minutes later. The switch of the default
-  alone accounts for −0.9 to +1.7 % and at most one minute (with 1, channel water climbed onto
-  rain-wetted valley-wall cells above its level), and the rest is due to the channel mask (the
-  valley-wall cells that carried the channel roughness return to the slope roughness;
-  developer.md §108.8, §109.4).
+  transects 1–4), the peaks are 1.7–7.7 % smaller and 2–15 minutes later. The switch of the cap
+  accounts for +0.2 to +2.0 % and at most 4 minutes, compared on the moved channel mask (with 1,
+  channel water climbed onto rain-wetted valley-wall cells above its level), and the rest is due to
+  the channel mask (the valley-wall cells that carried the channel roughness return to the slope
+  roughness; developer.md §108.8, §108.9, §109.4).
   The values before are those after the default became f_advection_donor = 3 on 2026-11-09; compared with
   the default 0 before that (1197 @ 0.82 h, 2862 @ 0.98 h, 3974 @ 1.77 h and
   4830 m³/s @ 3.53 h at transects 1–4), the peaks at transects 3 and 4 are 13 and
@@ -94,7 +94,7 @@ of the collection from the hillslopes.
   in the channel cell (479, 35) at the outlet, reaching a depth of 34 m (water
   level 141.4 m) at 6 h, and the backwater runs up the main stem to x = 41.6 km,
   including transect 4 (the 6 h depth of 5.63 m at transect 4 is a value in the
-  backwater zone). The peak (3.28 h) is before this influence (the pond level of
+  backwater zone). The peak (3.33 h) is before this influence (the pond level of
   131 m at 3.3 h is below the bed of transect 4, 137 m). In practical
   computations place a free-outflow boundary (`&list_bound`) at the outlet.
 - This case is also a guide to convergence: on the 50 / 100 / 200 m grids of
@@ -129,7 +129,7 @@ opening correction (scheme 3: 3773 → 4857 m³/s), and with
 f_advection_donor = 1 it approached further, to 5656 m³/s (100 m), the value
 of the 50 m grid (both with the code of that time; option 1 was removed on
 2026-11-07 and replaced by 3, which contains most of its effect; with the
-current code `param_dyn_s3_donor3.txt` gives 5,745 m³/s; §102). The walled natural banks (lev1) complete the 6 h but are
+current code `param_dyn_s3_donor3.txt` gives 5,741 m³/s; §102). The walled natural banks (lev1) complete the 6 h but are
 rough, with Runge 12% and frequent ex_flux; for natural banks the wall-less
 width mode is recommended (§68.25, §68.29).
 

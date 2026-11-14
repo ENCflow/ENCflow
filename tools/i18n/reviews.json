@@ -284,11 +284,11 @@
     {
       "source": "docs/users_guide/geoinfo.md",
       "target": "docs/en/users_guide/geoinfo.md",
-      "source_sha256": "61ed6b442000617a6477d3f89fbed3befb012726185b91c888289ccdf603b1d3",
-      "target_sha256": "e9659d65020a28367ac3c31eb0327ae15745e4785f2f45b7fa543804c84311af",
+      "source_sha256": "9aa5422703efaeda904bda3687ee03d2daf70693c6e06e3b14b800c5dac65f49",
+      "target_sha256": "2b6410df29e3660f32ea7c7e49090a54112218e76bbf697b0626da9300414afa",
       "reviewer": "Claude (Claude Code session; full-text content and lexical review, no model execution)",
       "method": "assistant",
-      "reviewed_on": "2026-11-13"
+      "reviewed_on": "2026-11-14"
     },
     {
       "source": "docs/users_guide/geomorph.md",
@@ -3596,11 +3596,11 @@
     {
       "source": "test/chichibu/README.md",
       "target": "test/chichibu/en/README.md",
-      "source_sha256": "6d5432cb2a942b3bca7ae1cb0ed36cff57aa21e77b472f7412ecc135d48be36e",
-      "target_sha256": "b715e541ae269b482baaa39f81c52d0ba69e8e2d5afd37b66669fefaff0ff0f7",
+      "source_sha256": "174779ac950c3fc4d356c0b774566343fd0216bdc4af1ec58675231ec6cd285f",
+      "target_sha256": "556fe6aa8e69b9395937fc687e4e9052c71425131e848e2dda868f3cc2bff8ed",
       "reviewer": "Claude (Claude Code session; full-text content and lexical review, no model execution)",
       "method": "assistant",
-      "reviewed_on": "2026-11-13"
+      "reviewed_on": "2026-11-14"
     },
     {
       "source": "test/chichibu/data_chichibu/README.md",
@@ -3632,11 +3632,11 @@
     {
       "source": "test/chichibu/figs/chichibu.png",
       "target": "test/chichibu/en/figs/chichibu.png",
-      "source_sha256": "9f63938bda56f350f09936346a96afe40f3c53633ff43a8dbe1f6c0c85aedb46",
-      "target_sha256": "29688e7c20e2b9ebd0aa67e5b41261c51c3d0574ab24a34aa797941d35dd5a88",
+      "source_sha256": "63453719bb44f7d93bda0b2b10aa68025c949761398388600d5fc4d96ad6b0cb",
+      "target_sha256": "6df85a99c5808bafc3eacd157b5811131a3e064b83142085a4df92598ebcab5c",
       "reviewer": "Claude (Claude Code session; full-text content and lexical review, no model execution)",
       "method": "assistant",
-      "reviewed_on": "2026-11-13"
+      "reviewed_on": "2026-11-14"
     },
     {
       "source": "test/chichibu_icmap/README.md",
@@ -4937,11 +4937,11 @@
     {
       "source": "test/wave_shore/README.md",
       "target": "test/wave_shore/en/README.md",
-      "source_sha256": "51731ccfddeae1c764b38fcc6e9ec654f89f72f65dc7054a6aca1ab3acf022ff",
-      "target_sha256": "958411571f5159fecacd4cff675f39758c36234b45043f21e206450326401716",
-      "reviewer": "Claude (Claude Code session; values after the default of f_dry_head_cap became 2 (developer.md §108.8), 2026-11-13: the changed numbers and the added history sentence of the Japanese master and the English mirror compared one by one and cross-checked against the output of the check script)",
+      "source_sha256": "e600a232c7ddec916e5abfbbba8a5a8d934031fe54f11df388d61816c2b894b9",
+      "target_sha256": "a4cedb656b75228928ce70979694145b6a715550ff7858a8a17d3776fa984b98",
+      "reviewer": "Claude (Claude Code session; full-text content and lexical review, no model execution)",
       "method": "assistant",
-      "reviewed_on": "2026-11-13"
+      "reviewed_on": "2026-11-14"
     },
     {
       "source": "test/wetbank/README.md",
@@ -5450,11 +5450,11 @@
     {
       "source": "utils/river_flowline/README.md",
       "target": "utils/river_flowline/en/README.md",
-      "source_sha256": "d467393b524b7172760e887a910509ba767aed284317db5bb61fb5a34b748ea5",
-      "target_sha256": "9977d5912ce972f2d7118b1d9f99f62dfc0cbf1e9a5b0488d1c393067dd108f1",
+      "source_sha256": "64d19d8aade373faecca1eb2e26b6a4a8f39ef2fc0668b258d80ca3ce6fdc967",
+      "target_sha256": "2390d1bbb7e7fbe6a4f2f806133bf1081a48ee4e9ff6231a9aae6c290fc7fc51",
       "reviewer": "Claude (Claude Code session; full-text content and lexical review, no model execution)",
       "method": "assistant",
-      "reviewed_on": "2026-11-13"
+      "reviewed_on": "2026-11-14"
     }
   ]
 }
