@@ -586,7 +586,8 @@ listed in the [shallow water chapter](swflow.md).
   while the channel level is still 1.3 m below the bed of the bank, and the
   step in which the downstream discharge drops by a tenth in one minute comes
   13 minutes earlier than in a run with a time step of 1 s (the peaks agree
-  within 1 %).
+  within 1 %; item 3 of
+  [the supplement of the chichibu tutorial](../../../tutorials/chichibu/en/README.md#supplement-fine-oscillations-in-the-hydrograph)).
   When steps in the 1-minute values are a concern, halve the time step and
   check whether the result changes.
   Both 1 and 2 are ENCflow's own rules built on the Bernoulli relation "water does not

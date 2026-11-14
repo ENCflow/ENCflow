@@ -989,34 +989,40 @@ spans twice the others.** Peak discharge
 
 | advection | 200 m | 100 m | 50 m |
 |---|---|---|---|
-| none (diffusion wave) | 10,009 @111 | 16,025 @100 | 18,252 @91 |
-| scheme 1 (old, upwind 0.5 = default) | 5,866 @157 | 6,012 @165 | 5,912 @179 |
-| scheme 1 (upwind 0.1) | 7,053 @134 | 7,854 @138 | diverged (56 min, before the peak) |
-| scheme 1 (upwind 1.0) | 4,480 @203 | 4,445 @228 | 4,856 @220 |
-| scheme 3 (default) | 6,279 @153 | 6,753 @157 | 7,480 @161 |
+| none (diffusion wave) | 9,326 @113 | 15,123 @102 | 17,079 @92 |
+| scheme 1 (old, upwind 0.5 = default) | 5,780 @158 | 5,863 @167 | 5,906 @182 |
+| scheme 1 (upwind 0.1) | 6,982 @136 | 8,152 @135 | diverged (63 min, before the peak) |
+| scheme 1 (upwind 1.0) | 4,351 @199 | 4,312 @228 | 4,832 @224 |
+| scheme 3 (default) | 6,208 @152 | 6,827 @159 | 7,536 @155 |
 
 For reference, the maximum velocity of each computation (V_max in the Log)
-on the 100 m grid was 42 m/s without advection, 27 m/s with scheme 1
-(upwind 0.5), 18 m/s with scheme 1 (upwind 1.0) and 27 m/s with scheme 3. The 50 m case without advection
-diverges after 54 minutes, during the rainfall, at dt = 0.75 s (the velocity
-reaches 59 m/s at bed steps and the Courant number exceeds 1), so that one run
-uses dt = 0.4 s. Scheme 1 with upwind 0.1 stops on the 200 m and 100 m grids
-during the recession (5.5 and 2.9 hours, when the ponded water at the outlet
-exceeds 35 m) and on the 50 m grid during the rising limb (56 minutes), with
-the velocity diverging. On the 100 m grid, reducing dt from 1.5 to 1.0 s
-hardly changes the time it stops (2.6 → 2.9 h), so this is not a time-step
-issue; we take it as an instability of the non-conservative, weakly upwinded
-scheme in deep still water and at steep steps. The 200 m and 100 m peaks
-(2.2 to 2.3 hours) come before the stop, so they are listed in the table, and
-the curves end early in the figure.
+on the 100 m grid was 42 m/s without advection, 26 m/s with scheme 1
+(upwind 0.5), 18 m/s with scheme 1 (upwind 1.0) and 27 m/s with scheme 3. The 50 m run without
+advection completes at dt = 0.75 s, but at the end of the rainfall (first
+hour) the velocity reaches 59 m/s at bed steps and the Courant number 0.98,
+leaving no margin, so that one run uses dt = 0.4 s (the peak at transect 4
+differs by 0.1%). The 50 m run with scheme 1 (upwind 0.5) is at the limit of
+stability in the third hour (when the ponded water at the outlet is 25 to
+27 m deep): the velocity reaches 64 m/s and the Courant number 1.00. A run
+with dt reduced to 0.5 s diverged at about the same time, with the velocity
+reaching 93 m/s, and stopped (an instability of the scheme, not a time-step
+issue). `Fig_supp.sh` continues even if this run stops on the way. Scheme 1
+with upwind 0.1 stops on the 100 m grid during the recession (3.9 hours, when the ponded
+water at the outlet is 33 m deep) and on the 50 m grid during the rising limb
+(63 minutes), with the velocity diverging (it completes on the 200 m grid). On
+the 100 m grid, reducing dt from 1.5 to 1.0 s hardly changes the time it stops
+(4.1 → 3.9 h), so this is not a time-step issue; we take it as an instability
+of the non-conservative, weakly upwinded scheme in deep still water and at
+steep steps. The 100 m peak (135 minutes) comes before the stop, so it is
+listed in the table, and the curve ends early in the figure.
 
 #### Dropping the advection term makes the peak larger and earlier on finer grids
 
 Without the advection term (diffusion wave, local inertia equation), the peak
-at transect 4 goes 10,009 → 16,025 → 18,252 m³/s and 111 → 100 → 91 min from 200 m to 100 m to 50 m: **the finer the grid,
+at transect 4 goes 9,326 → 15,123 → 17,079 m³/s and 113 → 102 → 92 min from 200 m to 100 m to 50 m: **the finer the grid,
 the larger and earlier the peak**. The resolution dependence is far
-stronger than with the default scheme 3 (6,279 → 6,753 → 7,480 at
-153 → 157 → 161 min), and the values themselves are 1.6 to 2.4
+stronger than with the default scheme 3 (6,208 → 6,827 → 7,536 at
+152 → 159 → 155 min), and the values themselves are 1.5 to 2.3
 times larger. Let us follow the reasons step by step.
 
 1. **The velocity of a diffusion wave is set by the local slope alone.** In
@@ -1162,23 +1168,23 @@ the numerical viscosity of its upwind weighting (`p_adv_upwind_index`) scales
 with Δx and therefore with resolution. The upwind index changed the result a
 great deal.
 
-- **Upwind 0.5 (default)**: the transect 4 peak goes 5,866 → 6,012 → 5,912
-  m³/s, within 2.5% across the three resolutions, but 7%, 11% and 21%
-  smaller than scheme 3 and 4, 8 and 18 minutes later. On the 50 m grid the
-  maximum velocity reaches 57 m/s (37 m/s with scheme 3) and an oscillation
-  appears on the recession at transect 4 (270 to 300 min), visible in the
+- **Upwind 0.5 (default)**: the transect 4 peak goes 5,780 → 5,863 → 5,906
+  m³/s, within 2.2% across the three resolutions, but 7%, 14% and 22%
+  smaller than scheme 3 and 6, 8 and 27 minutes later. On the 50 m grid the
+  maximum velocity reaches 64 m/s (35 m/s with scheme 3) and an oscillation
+  appears on the recession at transect 4 (290 to 310 min), visible in the
   figure.
-- **Upwind 0.1**: 7,053 → 7,854 m³/s (200 m → 100 m), 12% and 16% larger
-  than scheme 3 and 19 and 19 minutes earlier. The 50 m grid diverged during
-  the rising limb at 56 minutes, with velocities above 90 m/s, before
+- **Upwind 0.1**: 6,982 → 8,152 m³/s (200 m → 100 m), 12% and 19% larger
+  than scheme 3 and 16 and 24 minutes earlier. The 50 m grid diverged during
+  the rising limb at 63 minutes, with velocities above 90 m/s, before
   reaching the peak (the transect 1 peak of 1,442 m³/s comes before that and
-  is 2% above the 1,410 of scheme 3). **The finer the grid, the further it
+  is 1.5% above the 1,421 of scheme 3). **The finer the grid, the further it
   moves away from scheme 3 toward the run without advection.**
-- **Upwind 1.0 (full upwind)**: 4,480 → 4,445 → 4,856 m³/s, 29%, 34% and 35%
-  smaller than scheme 3 and 50, 71 and 59 minutes later; even the upstream
-  transect 1 is 4 to 7% smaller. On the same grid the two ends of the upwind
-  weight (0.1 and 1.0) give peaks of 7,053 vs 4,480 at 200 m and 7,854 vs
-  4,445 at 100 m, a factor of 1.6 to 1.8. The gap does not close with
+- **Upwind 1.0 (full upwind)**: 4,351 → 4,312 → 4,832 m³/s, 30%, 37% and 36%
+  smaller than scheme 3 and 47, 69 and 69 minutes later; even the upstream
+  transect 1 is 5 to 7% smaller. On the same grid the two ends of the upwind
+  weight (0.1 and 1.0) give peaks of 6,982 vs 4,351 at 200 m and 8,152 vs
+  4,312 at 100 m, a factor of 1.6 to 1.9. The gap does not close with
   refinement (100 m is the lowest), presumably because the velocity resolved
   on the finer grid offsets part of the smaller Δx, so the numerical
   viscosity Δx·u decreases less than the grid spacing.

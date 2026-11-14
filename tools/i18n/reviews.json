@@ -113,8 +113,8 @@
     {
       "source": "docs/users_guide/advection.md",
       "target": "docs/en/users_guide/advection.md",
-      "source_sha256": "76d7963fee65547e0be7d7f5a519bf1771e8965720ae790d659c6d66668d1978",
-      "target_sha256": "5dbba7244e4c170ed26d3f432416ff3fa9179c628f5af5dadd8147ea652789d1",
+      "source_sha256": "e596eb724e6580c62babc0b1c2da767f3c9d8ab33aba228fa2f0bca426b08707",
+      "target_sha256": "4376fe96ced4ba6b5796f244f8b819f651adbac4df21d8340068dcea84276dfc",
       "reviewer": "Claude (Claude Code session; full-text content and lexical review, no model execution)",
       "method": "assistant",
       "reviewed_on": "2026-11-14"
@@ -482,11 +482,11 @@
     {
       "source": "docs/users_guide/shallow_water.md",
       "target": "docs/en/users_guide/shallow_water.md",
-      "source_sha256": "b7f39083497154619e521e717703dbc32589cf7fc954ae5da812cb8e6a3d6546",
-      "target_sha256": "4c0e460b1fa755225e3cd7a0eb81d333945da0684d3e851e19ade4d03393c38b",
-      "reviewer": "Claude (Claude Code session; wrote the Japanese primer and its English mirror and read both side by side: headings, table rows, anchors, footnotes, equations, numbers, links and figure references match; the English figures are drawn by the same script with the en switch; two statements of the examples table reworded in both versions)",
+      "source_sha256": "16a0346a0da919146d493d5aeaf31be37a7208f2417fba625bf09d02ec0aa218",
+      "target_sha256": "5727146295108b0ae4baa758502e12acb7625c1b01ec40773c4892ffe96549ce",
+      "reviewer": "Claude (Claude Code session; full-text content and lexical review, no model execution)",
       "method": "assistant",
-      "reviewed_on": "2026-11-11"
+      "reviewed_on": "2026-11-14"
     },
     {
       "source": "docs/users_guide/steep_slope.md",
@@ -5117,8 +5117,8 @@
     {
       "source": "tutorials/chichibu/README.md",
       "target": "tutorials/chichibu/en/README.md",
-      "source_sha256": "7db9f85661a09e719677971bf79bf554498396f32866091c5854a0df7808c880",
-      "target_sha256": "1691bd4e7948e47816a7cc302d7f86e2578b9ff804c1b08235f3811f55512191",
+      "source_sha256": "8b7f77662701dca883924cf81da0954fd7cc39141f7097011278a4afcf5d09d9",
+      "target_sha256": "7f9c89c2e75cc2fb213c5d63e4fb0049658aecf791b1736d4c6863a3e0dd5a14",
       "reviewer": "Claude (Claude Code session; full-text content and lexical review, no model execution)",
       "method": "assistant",
       "reviewed_on": "2026-11-14"
@@ -5270,11 +5270,11 @@
     {
       "source": "tutorials/chichibu/figs/supp_hydro_adv.png",
       "target": "tutorials/chichibu/en/figs/supp_hydro_adv.png",
-      "source_sha256": "dd0f6a29ee51c17df1dd26d002dc2ed64d0cca7eeed3667bb1b23b45cac4ecb3",
-      "target_sha256": "02fa7a12e95a65c0b7f70dbe2dd92697117807f6bc55d298a637aa35d6c6c686",
+      "source_sha256": "a346a11778cba815bd19e14b6cde15dde61b35489afdaf7ce37dbc10e82b2f6c",
+      "target_sha256": "5d570e149de861d4e10684b0b68b611615f08e753242e3101907d7bb415e7240",
       "reviewer": "Claude (Claude Code session; full-text content and lexical review, no model execution)",
       "method": "assistant",
-      "reviewed_on": "2026-11-08"
+      "reviewed_on": "2026-11-14"
     },
     {
       "source": "tutorials/chichibu/figs/supp_hydro_w50.png",
