@@ -6,7 +6,7 @@
 
 We cover the Chichibu catchment in the upper Arakawa River basin
 (about 715 km^2) with a 200 m grid, apply a heavy rainstorm
-(200 mm/h x 30 min), and compute rainfall runoff and flood wave
+(100 mm in one hour, peak 200 mm/h), and compute rainfall runoff and flood wave
 propagation. You will learn the standard workflow of a practical
 computation with real terrain data, in the following order.
 
@@ -94,7 +94,7 @@ time, progress, S(m), Runge, ex_flux, Cn_max, h_max(m), V_max(m/s)
   1:30:00.00  25.0%    0.1000   3.4%      0    0.4433    7.0997    9.2601
   2:00:00.00  33.3%    0.1000   0.9%      0    0.4253    6.9377    9.1145
   ...
-  6:00:00.00 100.0%    0.1000   0.6%      0    0.5150   29.8830    4.1601
+  6:00:00.00 100.0%    0.1000   0.6%      0    0.5151   29.8812    4.1601
 main: program terminated normally
 ```
 
@@ -165,8 +165,8 @@ The screen output tells us the following.
   give 0.05, typical of mountain slopes, and in Step 2 override it for
   the channel cells only.
 - The S column grows with the rain and, at t = 1:00 when the rain ends,
-  stops exactly at **0.1000** m (= 200 mm/h x 30 min = total rainfall
-  of 100 mm averaged over the catchment), remaining constant
+  stops exactly at **0.1000** m (= the total rainfall of 100 mm, from rain that
+  goes 0 -> 200 -> 0 mm/h over 30 minutes each, averaged over the catchment), remaining constant
   afterwards. By default the outer rim of the computational domain is
   an impermeable wall, so this catchment is a **closed vessel with no
   water outlet**; the constant S column confirms mass conservation.
@@ -469,9 +469,9 @@ time, progress, S_surf(m), S_grnd(m), S_total(m), Runge, ex_flux, Cn_max, h_max(
   0:00:00.00   0.0%    0.0000     0.0000     0.0000    0.0%      0    0.0000    0.0000    0.0000
   0:30:00.00   8.3%    0.0365     0.0024     0.0389   97.7%      0    0.2519    0.9217    6.3966
   1:00:00.00  16.7%    0.0751     0.0049     0.0800    6.2%      0    0.4812    5.3251   12.9868
-  1:30:00.00  25.0%    0.0728     0.0072     0.0800    3.0%      0    0.5916    5.9769   16.9188
+  1:30:00.00  25.0%    0.0728     0.0072     0.0800    3.0%      0    0.5916    5.9769   16.9196
   ...
-  6:00:00.00 100.0%    0.0693     0.0107     0.0800    0.0%      0    0.5056   28.7982    5.1019
+  6:00:00.00 100.0%    0.0693     0.0107     0.0800    0.0%      0    0.5056   28.7971    5.1019
 ```
 
 - `S_surf` is surface water, `S_grnd` is subsurface storage, and
@@ -485,8 +485,8 @@ time, progress, S_surf(m), S_grnd(m), S_total(m), Runge, ex_flux, Cn_max, h_max(
 
 ![Step 4: effect of interception and infiltration](figs/step4_hydro.png)
 
-In the hydrograph the peak discharge drops by about a third (6,237
-to 4,047 m^3/s). Interception cuts the total by 20%, and infiltration keeps
+In the hydrograph the peak discharge drops by about a third (6,208
+to 4,048 m^3/s). Interception cuts the total by 20%, and infiltration keeps
 sucking up the thinly spread hillslope water, so both the rising limb
 and the recession drop.
 
@@ -526,8 +526,8 @@ immediately). Running it gives:
 ```
 time, progress, S_surf(m), S_grnd(m), S_total(m), Runge, ex_flux, Cn_max, h_max(m), V_max(m/s)
   ...
-  3:00:00.00  50.0%    0.0584     0.0093     0.0677    0.1%      0    0.4773    6.8822   11.9815
-  6:00:00.00 100.0%    0.0221     0.0107     0.0328    0.0%      0    0.3121    3.6600    6.7346
+  3:00:00.00  50.0%    0.0584     0.0093     0.0677    0.1%      0    0.4773    6.8809   11.9815
+  6:00:00.00 100.0%    0.0221     0.0107     0.0328    0.0%      0    0.3121    3.6595    6.7336
 ```
 
 - S_total now decreases -- that is the water that left the system

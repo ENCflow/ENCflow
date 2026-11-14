@@ -107,7 +107,7 @@ python3 plot_results.py table en  # the tables below
 - **The case without effect on the flow (`ledger`)**: 174 m³ jams at the bridge, but the depth
   and the discharge are the same as without driftwood (the outputs are byte-identical). This case
   shows only how much wood is carried and retained.
-- **With the drag of the jam (`jam`)**: the depth 10 m upstream of the bridge rises to 4.19 m,
+- **With the drag of the jam (`jam`)**: the depth 10 m upstream of the bridge rises to 4.18 m,
   against 2.50 m without driftwood. The level exceeds the floodplain level (3.5 m) at about 42 min,
   the flow over the floodplain starts to bypass the bridge at about 43 min, and while the peak
   discharge lasts, 60 m³/s of the 137 m³/s goes around over the floodplain and 73 m³/s passes under
@@ -127,7 +127,7 @@ python3 plot_results.py table en  # the tables below
   the bridge, and even at the upstream end (1200 m upstream of the bridge) the level is 0.20 m higher
   than without driftwood. The water leaves the channel over a reach of about 430 m upstream of the
   bridge.
-- **(b) Maximum depth**: of the 38.4 ha of floodplain, 17.3 ha is flooded by 0.1 m or more and
+- **(b) Maximum depth**: of the 38.4 ha of floodplain, 17.4 ha is flooded by 0.1 m or more and
   10.0 ha by 0.3 m or more. The maximum is 0.69 m on the bank just upstream of the bridge; beside the
   bridge, 45 m from the channel (probe 4), the maximum is 0.50 m with a velocity of 0.76 m/s, and
   200 m downstream of the bridge (probe 5) it is 0.32 m. The water that has left the channel flows
@@ -171,11 +171,11 @@ jam section; no simulation results are used). The dots are the simulation.
 |---|---:|---:|---:|---:|---:|---:|
 | no driftwood (`nowood`) | — | 2.50 | — | 0 | 0.0 | 0.00 |
 | ledger only (`ledger`) | 174 | 2.50 | — | 0 | 0.0 | 0.00 |
-| with the drag of the jam (base) (`jam`) | 138 | 4.19 | 43 min | 60 | 17.3 | 0.69 |
+| with the drag of the jam (base) (`jam`) | 138 | 4.18 | 43 min | 60 | 17.4 | 0.69 |
 | all at 10 layers (`slow`) | 99 | 4.13 | 45 min | 50 | 16.6 | 0.64 |
-| capture ratio stays 0.3 (`e03`) | 53 | 4.00 | 46 min | 30 | 14.6 | 0.51 |
-| capture ratio stays 0.1 (`e01`) | 18 | 3.63 | 56 min | 4 | 1.1 | 0.29 |
-| loose jam (φ = 0.2) (`loose`) | 150 | 4.12 | 44 min | 48 | 16.4 | 0.63 |
+| capture ratio stays 0.3 (`e03`) | 53 | 4.00 | 46 min | 30 | 14.7 | 0.51 |
+| capture ratio stays 0.1 (`e01`) | 18 | 3.63 | 57 min | 5 | 1.2 | 0.28 |
+| loose jam (φ = 0.2) (`loose`) | 150 | 4.12 | 44 min | 48 | 16.5 | 0.63 |
 | dense jam (φ = 0.4) (`dense`) | 125 | 4.23 | 42 min | 71 | 18.0 | 0.74 |
 
 - **The capture assumption changes the results greatly.** In the base case the capture ratio rises
@@ -183,12 +183,12 @@ jam section; no simulation results are used). The dots are the simulation.
   layers (`slow`), the jam is 99 m³ and the bypass discharge is 50 m³/s. With the capture ratio kept
   at 0.3 (three tenths of the wood passing the bridge keep getting caught) the jam is 53 m³ and the
   bypass discharge is 30 m³/s, half of the base case. Kept at 0.1, the jam is 18 m³, the bypass is
-  4 m³/s and the flooding is almost confined to the bank. Whether a log gets caught is not solved in
+  5 m³/s and the flooding is almost confined to the bank. Whether a log gets caught is not solved in
   this model, so the way the initial capture ratio and the speed at which wood catches more easily
   as the jam grows (`dw_jamgrow`) are given is directly the spread of the results.
 - **The drag coefficient matters less.** Changing the packing ratio from 0.2 to 0.4 (κ₀ from 4.1 to
   9.8 m⁻¹, a factor of 2.4) gives maximum depths of 4.12–4.23 m, bypass discharges of 48–71 m³/s
-  and flooded areas of 16.4–18.0 ha. Once the water has started to leave the channel, the level is
+  and flooded areas of 16.5–18.0 ha. Once the water has started to leave the channel, the level is
   set by the overflow onto the floodplain. Where the water cannot leave the channel (a channel with
   high levees, for example), the difference of the coefficient becomes directly a difference of the
   level, as the lines in the figure above show.
@@ -231,8 +231,8 @@ jam section; no simulation results are used). The dots are the simulation.
   that [the advection explanation](../../../docs/en/users_guide/advection_donor.md) §7 lists for
   oblique channels, but the cause has not been identified). In a control run with four neighbours
   (`p_diagratio = 0.0` added to `&list_enc`) the depth 10 m downstream of the bridge falls from
-  2.66 m to 2.32 m, while the maximum depth upstream of the bridge (4.19 → 4.22 m) and the peak
-  bypass discharge (60 → 59 m³/s) hardly change. The area flooded by 0.1 m or more around the
+  2.66 m to 2.32 m, while the maximum depth upstream of the bridge (4.18 → 4.22 m) and the peak
+  bypass discharge (60 → 58 m³/s) hardly change. The area flooded by 0.1 m or more around the
   bridge (x > 800 m) goes from 17.3 ha to 15.8 ha (the four-neighbour run has another disturbance
   near the inflow at the upstream end, so that part is excluded from the comparison). Under
   conditions close to the threshold of overflow (the case with a capture ratio of 0.1), this

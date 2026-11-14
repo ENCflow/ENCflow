@@ -13,8 +13,8 @@ component.
 
 This tutorial aims at letting **people who are not Python users "just try
 it"**, running one very short script at a time. The subject is the same
-Chichibu catchment as the chichibu tutorial (200 m grid, 200 mm/h x 30 min
-of rain). Each step's computation takes about 20--30 seconds on a 4-core PC.
+Chichibu catchment as the chichibu tutorial (200 m grid, 100 mm of rain in
+one hour with a peak of 200 mm/h). Each step's computation takes about 20--30 seconds on a 4-core PC.
 
 - **Step 0**: Preparation -- building the library and setting up Python (uv and others)
 - **Step 1**: Start and finish, nothing else (initialize / finalize)
@@ -243,7 +243,7 @@ t =    2400 s  (11.1%)
   1:00:00.00  16.7%    0.0999   5.5%      0    0.5647    7.4736   15.5721
 t =    4200 s  (19.4%)
   ...
-  6:00:00.00 100.0%    0.0260   0.5%      0    0.3330    4.1229    7.3101
+  6:00:00.00 100.0%    0.0260   0.5%      0    0.3331    4.1230    7.3102
 t =   21600 s  (100.0%)
 main: program terminated normally
 finished
@@ -325,15 +325,15 @@ probe cell (i=147, j=104) -> h[46, 146],  z = 400.7 m
     1800       0.471      1.365       17002
     3600       1.262      7.474        9671
     5400       4.392      7.265        3822
-    7200       3.569      7.245        2608
-    9000       2.726      8.484        2094
-   10800       2.192      8.825        1814
-   12600       1.837      7.902        1602
-   14400       1.582      6.676        1461
-   16200       1.389      5.604        1362
-   18000       1.246      4.765        1301
-   19800       1.129      4.125        1231
-   21600       1.035      3.627        1167
+    7200       3.569      7.241        2608
+    9000       2.726      8.466        2094
+   10800       2.191      8.819        1814
+   12600       1.837      7.913        1602
+   14400       1.583      6.682        1461
+   16200       1.389      5.606        1362
+   18000       1.246      4.767        1301
+   19800       1.129      4.125        1230
+   21600       1.035      3.627        1166
 ```
 (ENCflow's own lines every 30 minutes are omitted)
 
@@ -538,7 +538,7 @@ python3 step6_rain.py               # with B--D (venv / conda / OS packages)
 run A: rain from param.txt
    set(VAR_PRECIP) refused as expected: BMI set_value(atmosphere_water__precipitation_leq-volume_flux) failed (status=1)
 run B: rain supplied from Python (uniform)
-   max |h_B - h_A| = 6.661e-15 m
+   max |h_B - h_A| = 5.329e-15 m
 run C: rain only on the western half
    max h: A = 3.63 m,  C = 3.25 m
 ```
@@ -559,7 +559,7 @@ so the next one is `initialize`d after `finalize`):
   straight lines (a triangle 0 -> 200 mm/h -> 0, 100 mm in total) once a
   minute (the default `dt_prupdate`) at the end time of that step, so the
   Python side sets the same value at the same times. The difference in the
-  depth at the end is **7 x 10^-15 m, the rounding level of double
+  depth at the end is **5 x 10^-15 m, the rounding level of double
   precision**, so run B effectively matches run A -- a check that the
   computation is the same whichever way the rain is given (the last-digit
   difference comes from the different order of floating-point operations in

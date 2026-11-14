@@ -569,6 +569,17 @@ listed in the [shallow water chapter](swflow.md).
   small amount flows while the water level is still below the bed of the
   receiver. The formula is in
   [test/bankcap](../../../test/bankcap/en/README.md)).
+  In a deep, fast channel solved with a large time step the width of the
+  transition reaches several tens of centimetres. Once the inflow onto a higher
+  cell starts, the normal velocity rises and the transition widens, so the
+  water levels at which the inflow starts and stops differ, and the discharge
+  can change like a step within one or two minutes when it starts or stops (an
+  example on the 200 m grid of Chichibu, time step 6 s, at a bend of a channel
+  7 m deep: the inflow onto the high cell on the outer side started with the
+  channel level 0.16 m below the bed of the receiver and continued for
+  13 minutes until it was 0.5 m below, and the discharge at a transect 600 m
+  upstream rose by 4 % in two minutes;
+  [One-cell-wide channels and the upwind donors of the advection term](advection_donor.md) §7).
   Both are ENCflow's own rules built on the Bernoulli relation "water does not
   climb onto ground above its energy head".
   The default was 1 until 2026-11-13. In rain-wetted steep valleys (rainfall
@@ -608,7 +619,7 @@ The labels in the Basis column are explained in [How to read the basis of a defa
 | f_advection_scheme | 3 | scheme of the advection term (1: cell-centre gradient, 2: conservative + first-order upwind, 3: conservative + MUSCL) | **verification case** bore position error +1.1% in [test/dambreak](../../../test/dambreak/en/README.md), depth ratio 0.992 with lateral inflow in [test/bendloss](../../../test/bendloss/en/README.md), grid convergence in [test/chichibu](../../../test/chichibu/en/README.md) (table above) |
 | p_adv_upwind_index | 0.5 | upwinding index of scheme 1 (0: central, 1: first-order upwind) | **empirical** halfway between central and first-order upwind. The bore lag grows with $`p`$ (§3) |
 | f_advection_donor | 3 | upwind donors (3: the upwind value is pulled toward u_e only on faces where the real flux of the line-k donor is below ε times the largest inflow link of the face cell and the donor's depth is also below ε times the face cell's depth, and the wet/dry tests of the lateral faces become a continuous weight below dd; 0: wet cells on line k (the default until 2026-11-09); 1 and 2 were removed) | **method** reduces the artificial brake when the banks of a raster channel oblique to the grid are wet (in [test/wetbank](../../../test/wetbank/en/README.md) the increase of the channel depth beyond the rain inflow drops from 10–40% with 0 to 6–17%); the lateral-inflow, vortex and wall tests stay the same as 0; the flood wave becomes faster and larger than with 0; 0 reproduces earlier results ([explanation](advection_donor.md)) |
-| p_adv_donor_eps | 0.1 | threshold ε of `f_advection_donor = 3` (used for both the real flux of the line-k donor / largest real flux of the links entering the face cell and the donor's depth / face cell's depth) | **empirical** the peak at transect 4 of the 200 m grid of Chichibu differs by less than 0.5% between 0.05 and 0.2; values outside this range have not been checked ([explanation](advection_donor.md)) |
+| p_adv_donor_eps | 0.1 | threshold ε of `f_advection_donor = 3` (used for both the real flux of the line-k donor / largest real flux of the links entering the face cell and the donor's depth / face cell's depth) | **empirical** the peak at transect 4 of the 200 m grid of Chichibu changes by 0.1% at 0.2, and by 3.9% at 0.05 (a slightly higher level opens a shortcut at a bend; explanation §7); values outside 0.05–0.2 have not been checked ([explanation](advection_donor.md)) |
 | limiter $`\psi`$ (fixed) | van Leer | flux limiter of scheme 3 | **literature value** van Leer[^vanleer79]; inside Sweby's TVD region[^sweby84] (§4.3) |
 | f_scalar_scheme | 3 | face value of the scalar transport (suspended sediment, water quality, saline layer, driftwood, building debris) (1: first-order upwind, 3: link-wise MUSCL) | **verification case** measured numerical diffusion in [test/tracer](../../../test/tracer/en/README.md) (longitudinal D 1/3–1/5, lateral Dy 1/14; §7). First order is not the default because its numerical diffusion is proportional to the grid spacing |
 

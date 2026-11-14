@@ -200,8 +200,8 @@ The method is **original to ENCflow** (developer.md §102, in Japanese).
 
 With the settings of Step 3 of the
 [Chichibu tutorial](../../../tutorials/chichibu/en/README.md) (the Chichibu
-catchment of the upper Arakawa, 200 m grid, 200 mm/h of rain for 30 minutes,
-no losses), 0 and 3 are compared.
+catchment of the upper Arakawa, 200 m grid, 100 mm of rain in total (peak
+200 mm/h, one hour), no losses), 0 and 3 are compared.
 
 ![Difference between 0 and 3 in Chichibu](../../figs/advection_donor_chichibu_en.png)
 
@@ -209,18 +209,18 @@ no losses), 0 and 3 are compared.
 outlet). (b) Water level of the main river around the entrance of the flat
 reach (pond) created by depression filling, just upstream of transect 4.
 
-- With 0, jumps appear in the recession at 274 and 285 min. At the pond
+- With 0, jumps appear in the recession at 276 and 286 min. At the pond
   entrance the film on the bank (2.0 mm at 180 min) becomes the donor on
-  line k and creates a 1.18 m water-surface step in the pond, holding back
+  line k and creates a 1.21 m water-surface step in the pond, holding back
   water. After the film drops below dd (0.9 mm at 300 min) the step is
-  released. The moment of release is the jump at 274 min.
+  released. The moment of release is the jump at 276 min.
 - With 0 and dd and dv reduced to 1/10 (0.0001 m), no jumps appear, but the
-  peak is 5,385 m³/s and the holding back remains.
+  peak is 5,346 m³/s and the holding back remains.
 - With 3 there are no jumps and no step forms. Because the artificial
   braking at many places along the main river is removed, the peak is
-  6,237 m³/s, 13 % larger than the 5,509 m³/s of 0, and 24 minutes earlier
-  (+20 % on the 100 m grid; test/chichibu). The change of the peak when dd is
-  divided by 10 is 4 m³/s with 3, compared with 124 m³/s with 0.
+  6,208 m³/s, 13 % larger than the 5,490 m³/s of 0, and 23 minutes earlier
+  (+19 % on the 100 m grid; test/chichibu). The change of the peak when dd is
+  divided by 10 is 4 m³/s with 3, compared with 144 m³/s with 0.
 
 To reproduce this, add `fn_enc = "-"` to `&list_sysparam` in
 `en/param_step3.txt` of tutorials/chichibu, append the following
@@ -275,9 +275,16 @@ the grid spacing and the number of cells that represent the channel.
 ## 7. Usage and limits
 
 - **The default works as is.** No setting is needed. The threshold
-  `p_adv_donor_eps` (default 0.1) is empirical; the peak at transect 4 on the
-  200 m grid of Chichibu changes by less than 0.5 % between 0.05 and 0.2
-  (values outside this range have not been checked).
+  `p_adv_donor_eps` (default 0.1) is empirical. The peak at transect 4 on the
+  200 m grid of Chichibu changes by only 0.1 % when it is set to 0.2. With
+  0.05 the water level around the peak rises by 0.1 m, and at a bend 600 m
+  downstream of the transect a shortcut opens for about 13 minutes, in which
+  the channel water runs up onto the high cell on the outer side (7 m above
+  the bed); the peak of the 1-minute values becomes 3.9 % larger (the maximum
+  before the shortcut opens is 0.7 % smaller than with the default). The steps
+  in the discharge when the run-up starts and stops are a property of the cap
+  on the edge depth ([the advection page](advection.md) §5). Values outside
+  0.05–0.2 have not been checked.
 - **Reproducing earlier results.** To reproduce results computed with the
   default before 2026-11-09 (0) (including cases whose roughness was
   calibrated with 0), add `fn_enc = "-"` to `&list_sysparam` and set
