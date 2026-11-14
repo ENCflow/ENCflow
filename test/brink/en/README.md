@@ -16,6 +16,11 @@ hydraulic jump inside the pond. When the channel shifts diagonally by one row at
 overfall, the supercritical reach disappears with 0, while with 1 the jump stands at the same
 position as in the straight channel.
 
+Places wider than one cell are checked too. Uniform flow in a channel two cells wide has the Manning
+depth with both 0 and 1. At a junction where two streams drop into a pond with a dead-end bay, some
+combinations do not settle to a steady water surface even though the inflow is constant (a known
+defect of 1 and a property of 0; see "How to read it, and limits").
+
 ## Rule
 
 The momentum-conserving advection (schemes 2 and 3) takes the velocity $`\bar u`$ on the face
@@ -86,6 +91,37 @@ called the "foot cell".
 and north-east links alternate. Reach inflow of 200 m³/s at the west end, free outflow on the east
 side, 75 minutes.
 
+**Straight channel two cells wide** (80 × 8 cells): slope 0.005, n = 0.03. Reach inflow of 400 m³/s
+into the two cells at the west end (200 m³/s per cell), free outflow on the east side, 75 minutes.
+In a channel two or more cells wide the upwind side of the diagonal links along the banks is a wall,
+so the path value of 1 is used even inside uniform flow.
+
+**Junction pond** (18 × 13 cells, Δx = 100 m, n = 0.02, banks at the pond bed + 300 m): the level
+pond has three cells A, B and C in one row from the west, and D to the south of B. A is the head of
+a dead-end bay. The shallow, fast flow of the west channel (slope 0.2; depth 0.12–0.29 m, velocity
+5–9 m/s) drops over a step of 15 m into A. The main channel (slope 0.1) drops over a step of 36 m
+into D. The outlet of the pond bends diagonally twice, from C to E on its north-east and to F on
+the south-east of E, and drops over a step of 26 m east of F. Sources at the upstream ends of the
+west channel and of the main channel give the discharge in three stages (west 60, 130 and 250 m³/s;
+main 150, 450 and 450 m³/s; each raised over 10 minutes and held for 30 minutes), and the mean and
+the range (maximum − minimum) of the depth in the four pond cells (A–D) over the last 10 minutes of
+each stage are compared. The main channel enters in two ways.
+
+```
+jpond (main stream enters diagonally from the south-west)   jtee (main stream enters straight from the south)
+            E                                                          E
+ W → A  B  C     F → step → outflow reach                   W → A  B  C     F → step → outflow reach
+     S  D                                                             D
+     M  N                                                             M
+  M                                                                   M
+  M                                                                   M
+```
+
+W is the west channel and M the main channel. jpond has a shelf S, 9 m above the pond, south of A
+and west of D, and a shelf N, 6 m above the pond, south of D; part of the main stream passes over
+them and drops into the pond. In jtee the main stream runs from D into B to its north, where it
+meets the bank and turns east.
+
 | Configuration | File | Channel | f_advection_bend | What is checked |
 |---|---|---|---:|---|
 | st0 | `param_st0.txt` | straight overfall | 0 | the pond profile and the apron depth agree with the theory |
@@ -99,6 +135,12 @@ side, 75 minutes.
 | pf1 | `param_pf1.txt` | same | 1 | same profile as the straight channel (ps1) |
 | pb0 | `param_pb0.txt` | same; shifts diagonally by one row just before the first step | 0 | the jump is swept downstream (record of the behaviour with 0) |
 | pb1 | `param_pb1.txt` | same | 1 | the energy head in the lower pond does not exceed that of the upper pond, and the jump is not farther downstream than in the straight channel |
+| wd0 | `param_wd0.txt` | uniform flow in a straight channel two cells wide | 0 | the Manning normal depth |
+| wd1 | `param_wd1.txt` | same | 1 | same depth as wd0 |
+| jp0 | `param_jp0.txt` | junction pond; main stream enters diagonally (jpond) | 0 | the water surface settles to a steady state |
+| jp1 | `param_jp1.txt` | same | 1 | the water surface oscillates and the head of the bay is drawn down (record of a known defect) |
+| jt0 | `param_jt0.txt` | junction pond; main stream enters straight (jtee) | 0 | the water surface oscillates (record of the behaviour with 0) |
+| jt1 | `param_jt1.txt` | same | 1 | the water surface oscillates in the first stage (record of a known defect) |
 
 ## Theory (one-dimensional, steady; wide rectangular section, Manning)
 
@@ -162,6 +204,14 @@ interpolated linearly between the cell centres of the lower pond, becomes 1.
     more than 50 m downstream of its position in the straight channel.
 18. pb0: the jump is more than 250 m downstream of its position in the straight channel, or not
     inside the lower pond.
+19. wd0, wd1: the depth over 40–80 % of the path is within ±0.2 % of the Manning normal depth with
+    both 0 and 1, and 0 and 1 differ by 0.01 % or less.
+20. jp0: over the last 10 minutes of each stage, the transect discharge is within ±1.5 % of the sum
+    of the sources and the depth range in the four pond cells is 0.05 m or less (steady).
+21. jp1: in the first stage the depth range at the head of the bay (A) exceeds 0.3 m, and in the
+    third stage the depth of A is more than 0.4 m below that of jp0 (record of a known defect).
+22. jt0: the depth range of A exceeds 0.3 m in all three stages (record of the behaviour with 0).
+23. jt1: the depth range of A exceeds 0.3 m in the first stage (record of a known defect).
 
 ## Results
 
@@ -187,6 +237,12 @@ interpolated linearly between the cell centres of the lower pond, becomes 1.
 | 17 pb1 lower pond − upper pond energy head | −3.3 to −2.5, −3.3 to −2.5, −3.3 to −2.6 m | PASS |
 | 17 pb1 position of the jump (ps1) | 47 m (104 m), 61 m (218 m), 74 m (347 m) | PASS |
 | 18 pb0 position of the jump | 636 m, not inside the lower pond, not inside the lower pond | PASS (record of the behaviour with 0) |
+| 19 wd0, wd1 depth ÷ normal depth − 1 | +0.003 %, +0.003 % (1.37350 m; normal depth 1.37347 m); difference between 0 and 1: 0 | PASS |
+| 20 jp0 discharge difference, depth range | 0.00 %, 0.00 m (all three stages) | PASS |
+| 21 jp1 depth range of A | 0.66, 0.62, 0.10 m | PASS (record of a known defect) |
+| 21 jp1 depth of A (jp0) | 1.28 m (1.40 m), 1.90 m (2.15 m), 1.57 m (2.25 m) | PASS (record of a known defect) |
+| 22 jt0 depth range of A | 0.51, 0.73, 1.47 m | PASS (record of the behaviour with 0) |
+| 23 jt1 depth range of A | 0.53, 0.02, 0.04 m | PASS (record of a known defect) |
 
 Side by side for a unit-width discharge of 80 m²/s (the second stage; critical depth 8.67 m; the
 theory is for the straight channel):
@@ -209,6 +265,24 @@ the foot cell, are as follows (the theoretical jump is 307 m from the foot, insi
 | pf0 (diagonal just after the foot, 0) | 11.59 11.43 11.43 11.35 11.25 11.18 11.15 11.09 10.96 10.83 | at the foot (no supercritical reach) |
 | pb1 (diagonal just before the step, 1) | 7.54 9.21 10.72 11.24 11.27 11.22 11.12 11.03 10.96 10.88 | 61 m |
 | pb0 (diagonal just before the step, 0) | 3.18 3.31 3.43 3.56 3.69 3.83 3.98 4.14 4.29 4.42 | not inside the lower pond |
+
+Mean depth and its range (in brackets) in the junction pond over the last 10 minutes of each stage
+(m):
+
+| Configuration | Stage (west + main, m³/s) | A (head of the bay) | B | C | D |
+|---|---|---|---|---|---|
+| jp0 | 60 + 150 | 1.40 (0.00) | 1.62 (0.00) | 1.58 (0.00) | 1.27 (0.00) |
+| | 130 + 450 | 2.15 (0.00) | 2.60 (0.00) | 2.50 (0.00) | 1.79 (0.00) |
+| | 250 + 450 | 2.25 (0.00) | 3.04 (0.00) | 2.92 (0.00) | 2.11 (0.00) |
+| jp1 | 60 + 150 | 1.28 (0.66) | 1.60 (0.44) | 1.56 (0.49) | 1.29 (0.16) |
+| | 130 + 450 | 1.90 (0.62) | 2.55 (0.45) | 2.51 (0.42) | 1.89 (0.14) |
+| | 250 + 450 | 1.57 (0.10) | 2.86 (0.10) | 2.82 (0.07) | 2.16 (0.00) |
+| jt0 | 60 + 150 | 1.93 (0.51) | 2.11 (0.29) | 1.86 (0.28) | 1.68 (0.17) |
+| | 130 + 450 | 3.42 (0.73) | 3.81 (0.56) | 3.24 (0.40) | 2.95 (0.10) |
+| | 250 + 450 | 3.74 (1.47) | 4.40 (1.01) | 3.63 (0.85) | 3.36 (0.28) |
+| jt1 | 60 + 150 | 1.90 (0.53) | 2.13 (0.34) | 1.90 (0.30) | 1.73 (0.15) |
+| | 130 + 450 | 3.47 (0.02) | 3.89 (0.02) | 3.37 (0.01) | 3.08 (0.00) |
+| | 250 + 450 | 3.59 (0.04) | 4.40 (0.03) | 3.77 (0.02) | 3.52 (0.01) |
 
 ## How to read it, and limits
 
@@ -245,14 +319,39 @@ the foot cell, are as follows (the theoretical jump is 307 m from the foot, insi
   which slow flow on a wet bank is counted as a brake on the main stream entering from the side
   ([One-cell-wide channels and the upwind donors of the advection term](../../../docs/en/users_guide/advection_donor.md) §7),
   is unchanged.
-- The check covers channels one cell wide only. In two-dimensional flow along a wall, 1 also acts
-  on faces whose upwind side is a wall and which receive inflow.
+- **Uniform flow in a channel two cells wide has the Manning depth with both 0 and 1.** The path
+  value equals $`u_e`$ whenever inflow and outflow balance and the depth is uniform, so it creates
+  no loss on the diagonal links along the banks either.
+- **In the junction pond, 1 pushes extra water out of the bay and makes the water surface oscillate
+  (a known defect).** The shallow, fast inflow that drops into the head of the bay A continues
+  through A to B on the same line. Its momentum is carried to the edge A–B by the ordinary upwind
+  value. The path value of 1 counts the same inflow again on the edge that leaves A diagonally
+  towards D (whose upwind side is a wall). The more of the deep, slow pond water passes through
+  that edge, the more water the fast velocity, matched to the shallow inflow depth, is applied to,
+  and the water of the bay is pushed out. In jp1 the pond that is steady with 0 keeps oscillating in
+  the first and second stages with a range of 0.62–0.66 m (period 100–130 s; A and C in antiphase);
+  in the third stage the oscillation is small, but the depth at the head of the bay is 0.69 m (three
+  tenths) lower than with 0. On real terrain the same oscillation appears in a junction pond of the
+  100 m grid of Chichibu (developer.md §110.14).
+- **Depending on the shape of the pond, 0 does not settle to a steady state either.** In jt0, where
+  the main stream enters straight and turns where it meets the bank, the surface keeps oscillating
+  in all three stages with a range of 0.51–1.47 m (period 80–115 s). With 1 the same pond
+  oscillates by 0.53 m in the first stage and is nearly steady (0.02–0.04 m) in the second and
+  third. The inflow is constant, so both oscillations are produced by the computation.
+- There is no theory to compare the depths of the junction pond with. What is checked is whether
+  the water surface settles to a steady state under steady inflow, and the difference between 0 and
+  1. Even with 0 the head of the bay is 0.22–0.79 m lower than B (the momentum of the dropping flow
+  turns into a rise of the water surface from the head of the bay towards the pond).
+- The check covers channels one cell wide, the two pond shapes above and uniform flow two cells
+  wide only. In two-dimensional flow along a wall, 1 acts on faces whose upwind side is a wall and
+  which receive inflow. The oscillation of a pond whose banks are wet with a thin film
+  (developer.md §110.15) is not part of this check.
 
 ## Usage
 
 ```
 make
-./Run.sh            # serial (about 40 s for the eleven runs)
+./Run.sh            # serial (about 20 s for the seventeen runs)
 ./Run_MPI.sh 2      # MPI
 ```
 
@@ -260,4 +359,4 @@ make
 
 - [Advection schemes](../../../docs/en/users_guide/advection.md) §4.4 — treatment of walls and dry cells, and `f_advection_bend`
 - [test/bendloss](../../bendloss/en/README.md) — loss at bends in uniform flow (K = 0.00 with the default 0)
-- developer.md §110 — background (the regime switch on the 50 m grid of Chichibu), the forms tried, verification
+- developer.md §110 — background (the regime switch on the 50 m grid of Chichibu), the forms tried, verification, the oscillation of junction ponds

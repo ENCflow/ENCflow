@@ -466,7 +466,14 @@ With the default `f_advection_donor = 3` the wet/dry test of the parallel edge b
     six cells developed an oscillation with a period of about 90 s and a range
     of 1.5 m, and the discharge at the transect downstream showed a dip of 5 %
     of the peak; it does not appear with 0; developer.md §110.14, in
-    Japanese).
+    Japanese). It also appears in an idealised pond (in a check where two
+    streams drop at constant discharge into a pond with a dead-end bay, an
+    oscillation with a range of 0.6 m persists, or the depth at the head of
+    the bay becomes 0.7 m lower than with 0; the junction pond of
+    [test/brink](../../../test/brink/en/README.md)). In the pond of the same
+    check where the main stream enters straight and turns where it meets the
+    bank, it is 0 that does not settle to a steady state and keeps oscillating
+    with a range of 0.5–1.5 m.
   - The default is 0. With 1 the results change in computations that contain
     places where the flow turns next to a wall or a dry cell. In the Chichibu
     catchment (channel roughness 0.02; the settings of
@@ -757,7 +764,11 @@ The labels in the Basis column are explained in [How to read the basis of a defa
   compares the position of the hydraulic jump with the momentum relation
   (theory), and checks that a channel whose link at the foot of the overfall
   is diagonal gives the same profile as the straight channel with
-  `f_advection_bend = 1` (`Check_brink.py`).
+  `f_advection_bend = 1`. It also checks that uniform flow in a channel two
+  cells wide has the Manning depth with both 0 and 1, and whether the water
+  surface settles to a steady state when two streams drop into a junction
+  pond with a dead-end bay (records of a known defect of 1 and of the
+  behaviour with 0) (`Check_brink.py`).
 - **[test/hillslope](../../../test/hillslope/en/README.md)** -- smooth hillslope and V-shaped catchment. Confirms
   that schemes 1 and 3 agree.
 - **[test/chichibu](../../../test/chichibu/en/README.md)** -- real terrain (100 m). The place for grid convergence

@@ -1,20 +1,21 @@
 #!/bin/bash
-# brink: 池の出口の段落ち(1 セル幅の水路)と、屈曲直後の辺の風上値 f_advection_bend(逐次実行。11 構成)
+# brink: 池の出口の段落ち(1 セル幅の水路)と、屈曲直後の辺の風上値 f_advection_bend(逐次実行。17 構成)
 #   ./Run.sh
 # 合否は Check_brink.py(直線の水路は限界流と不等流の理論、段落ちの直前が斜めの水路は棚のエネルギー水頭が
-# 池を超えないこと、等流の階段状の水路は f_advection_bend の 0 と 1 で水深が変わらないこと、落差の先の池は
-# 跳水の位置が理論と合い、足元の直後が斜めの水路が直線の水路と同じ水面形になること)
+# 池を超えないこと、等流の階段状の水路と幅 2 セルの水路は f_advection_bend の 0 と 1 で水深が変わらないこと、
+# 落差の先の池は跳水の位置が理論と合い、足元の直後が斜めの水路が直線の水路と同じ水面形になること、合流部の
+# 池は、定常な流入に対して水面が定常に落ち着くかどうか)
 
 sdir=$(dirname "$(readlink -f "$0")")
 ../Scripts/Check_mode.sh serial || exit 1
 
-for k in straight diag stair pstraight pfoot pbrink; do
+for k in straight diag stair pstraight pfoot pbrink wide jpond jtee; do
     python3 "$sdir/make_brink.py" z $k > br_z_$k.txt || exit 1
 done
 
 set -o pipefail
 : > Screen.log
-for c in st0 st1 dg0 dg1 sr0 sr1 ps1 pf0 pf1 pb0 pb1; do
+for c in st0 st1 dg0 dg1 sr0 sr1 ps1 pf0 pf1 pb0 pb1 wd0 wd1 jp0 jp1 jt0 jt1; do
     ./encflow param_$c.txt | tee -a Screen.log || exit 1
 done
 set +o pipefail

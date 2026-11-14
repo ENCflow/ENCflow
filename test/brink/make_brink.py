@@ -11,7 +11,13 @@
 #   構成 pstraight: 水路は 1 行の直線。
 #   構成 pfoot    : 1 つ目の段差の足元のセルの直後で、水路が斜めに 1 行ずれる(足元のセルまでが 1 行南)。
 #   構成 pbrink   : 1 つ目の段差の直前のセルの手前で、水路が斜めに 1 行ずれる(diag と同じ位置)。
-#   python3 make_brink.py z straight|diag|stair|pstraight|pfoot|pbrink > br_z_<構成>.txt
+#   構成 wide     : 一様な勾配 S_ST の、幅 2 セルの直線の水路(1 セル幅より広い水路の等流の確認用)。
+#   「合流部の池」(Δx = DX_JP): 行き止まりの湾を持つ水平な池(A・B・C が 1 行に並び、B の南に D)へ、西の急な
+#   水路の浅く速い流れが段差 ZW_JP を落ちて湾の奥 A に入り、本流の水路が段差 ZM_JP を落ちて D に入る。出口は
+#   C から斜めに 2 回折れて(E・F)、段差 DROP_JP を落ちる。
+#   構成 jpond    : 本流が南西から D へ斜めに入る。A の南・D の西に、本流の一部が通る低い棚 S、D の南に N。
+#   構成 jtee     : 本流が南から D へまっすぐ入り、突き当たりの B で東へ折れる(棚はない)。
+#   python3 make_brink.py z straight|diag|stair|pstraight|pfoot|pbrink|wide|jpond|jtee > br_z_<構成>.txt
 import sys, math
 
 G = 9.81
@@ -34,6 +40,24 @@ I_DROP2 = I_DROP1 + N_MID       # 2 つ目の段差の直前のセルの列(下�
 # ---- 等流の階段状の水路(stair)----
 NX_ST, N_ST = 80, 80            # 列数 = 水路のセル数(列ごとに 1 セル)
 S_ST, N_ST_MAN, Q_ST = 0.005, 0.03, 200.0
+# ---- 幅 2 セルの直線の水路の等流(wide)。勾配・粗度・セルあたりの流量は stair と同じ ----
+NX_WD, NY_WD = 80, 8
+ROWS_WD = (4, 5)                # 水路の行
+# ---- 合流部の池(jpond・jtee)。標高は池の河床 Z_JP からの高さで与える ----
+DX_JP = 100.0
+NX_JP, NY_JP = 18, 13
+Z_JP = 100.0                    # 池の河床 (m)
+JP_A, JP_B, JP_C, JP_D = (6, 6), (7, 6), (8, 6), (7, 7)     # 池: 湾の奥 A・B・C(行 6)と、B の南の D
+JP_E, JP_F = (9, 5), (10, 6)    # 池の出口(C の北東の E、その南東の F。F の東が段差)
+I_OUT_JP = 11                   # 出口の段差の直下のセルの列(行 6)
+DROP_JP, S_OUT_JP = 26.0, 0.1   # 出口の段差 (m) と、その先の流出区間の勾配
+ZW_JP, S_W_JP = 15.0, 0.2       # 西の水路(行 6 の列 1〜5): 湾の奥へ落ちる段差 (m) と勾配
+JP_W = (5, 6)                   # 西の水路の最後のセル(A へ落ちる直前)
+ZM_JP, S_M_JP = 36.0, 0.1       # 本流の水路: 池へ落ちる段差 (m) と勾配(5 セル)
+ZS_JP, ZN_JP = 9.0, 6.0         # jpond の棚 S(A の南・D の西)と N(D の南)の高さ (m)
+BANK_JP = 300.0                 # 岸の高さ(池の河床から。m)
+QW_LEVELS = [60.0, 130.0, 250.0]        # 西の水路の流量の段 (m3/s)。段の時刻は T_RAMP・T_HOLD
+QM_LEVELS = [150.0, 450.0, 450.0]       # 本流の流量の段 (m3/s)
 
 
 def bed_brink(i):
@@ -91,7 +115,42 @@ def ny_stair():
     return max(c[1] for c in path_stair()) + 2
 
 
+def cells_junction(kind):
+    """合流部の池の構成の、水路と池のセル {(列, 行): 河床 (m)}"""
+    c = {}
+    for ij in (JP_A, JP_B, JP_C, JP_D, JP_E, JP_F):
+        c[ij] = Z_JP
+    for i in range(I_OUT_JP, NX_JP + 1):                    # 出口の段差の先の流出区間
+        c[(i, JP_A[1])] = Z_JP - DROP_JP - S_OUT_JP * DX_JP * (i - I_OUT_JP)
+    for i in range(1, JP_W[0] + 1):                         # 西の水路
+        c[(i, JP_W[1])] = Z_JP + ZW_JP + S_W_JP * DX_JP * (JP_W[0] - i)
+    for k, ij in enumerate(main_junction(kind)):            # 本流の水路(池の側から上流へ)
+        c[ij] = Z_JP + ZM_JP + S_M_JP * DX_JP * k
+    if kind == "jpond":
+        c[(JP_A[0], JP_A[1] + 1)] = Z_JP + ZS_JP            # S
+        c[(JP_D[0], JP_D[1] + 1)] = Z_JP + ZN_JP            # N
+    return c
+
+
+def main_junction(kind):
+    """本流の水路のセル(池の側から上流へ 5 セル。最後のセルに湧き出し)"""
+    i, j = JP_D
+    if kind == "jpond":         # D の南西から斜めに入り、その上流は 1 列西を南へ延びる
+        return [(i - 1, j + 1), (i - 2, j + 2), (i - 2, j + 3), (i - 2, j + 4), (i - 2, j + 5)]
+    return [(i, j + k) for k in range(1, 6)]                # jtee: D の南からまっすぐ
+
+
 def main(kind):
+    if kind == "wide":
+        for j in range(1, NY_WD + 1):
+            print(" ".join("%.4f" % (100.0 - S_ST * DX * (i - 1) + (0.0 if j in ROWS_WD else BANK))
+                           for i in range(1, NX_WD + 1)))
+        return
+    if kind in ("jpond", "jtee"):
+        c = cells_junction(kind)
+        for j in range(1, NY_JP + 1):
+            print(" ".join("%.3f" % c.get((i, j), Z_JP + BANK_JP) for i in range(1, NX_JP + 1)))
+        return
     if kind in ("straight", "diag"):
         for j in range(1, NY + 1):
             print(" ".join("%.3f" % (bed_brink(i) + (0.0 if j == row_brink(i, kind) else BANK))
@@ -179,7 +238,7 @@ def jump_position(q, length=N_MID * DX, n=N_MAN, drop=DROP, dx=0.25):
     return None
 
 
-KINDS = ("straight", "diag", "stair", "pstraight", "pfoot", "pbrink")
+KINDS = ("straight", "diag", "stair", "pstraight", "pfoot", "pbrink", "wide", "jpond", "jtee")
 
 if __name__ == "__main__":
     if len(sys.argv) != 3 or sys.argv[1] != "z" or sys.argv[2] not in KINDS:

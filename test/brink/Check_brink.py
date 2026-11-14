@@ -54,11 +54,30 @@
 #   構成 pb0(同じ水路。f_advection_bend = 0。0 の性質の記録):
 #     (18) 跳水が直線の水路より JUMP_SWEEP を超えて下流にあるか、下の池の中にない(段差の直前の屈曲で
 #          エネルギー水頭を得た射流が、跳水を押し流す。(9) と同じ性質)
+#   構成 wd0・wd1(幅 2 セルの直線の水路の等流。f_advection_bend = 0・1):
+#     (19) 路の 40〜80 % の区間の水深が、0 も 1 もマニングの等流の水深に ±TOL_WD で、0 と 1 の差が TOL_WD_SAME
+#          以下(幅が 2 セル以上の水路では、岸沿いの斜めのリンクの風上側が壁になり、1 の経路の値が等流の中でも
+#          使われる。経路の値は等流で u_e に一致して、損失を作らない)
+#   合流部の池の構成(result_jp0・jp1・jt0・jt1。行き止まりの湾を持つ水平な池に、落差から 2 本の流れが入る)は、
+#   流量の 3 段それぞれの終わりの 10 分(30〜40・70〜80・110〜120 分)の、池の 4 セル(湾の奥 A、B、C、D)の
+#   水深の平均と振れ幅(最大 − 最小)を読む。流入は一定なので、定常な水面に落ち着くのが正しい。
+#   構成 jp0(本流が斜めに入る池。f_advection_bend = 0):
+#     (20) 測線の流量が湧き出しの合計に ±TOL_Q で、池の 4 セルの水深の振れ幅が RANGE_JP 以下(定常)
+#   構成 jp1(同じ池。f_advection_bend = 1。既知の不備の記録):
+#     (21) 1 段目で湾の奥 A の水深の振れ幅が RANGE_JP_DEF より大きく、3 段目で A の水深が jp0 より DRAW_JP_DEF
+#          より大きく低い(湾の奥へ落ちてくる浅く速い流入は、同じ線の先の池のセルへ通常の風上で運ばれるのに、
+#          経路の値が、同じ流入を、池の中で曲がって出る辺にも数える。湾の水が余分に押し出され、水面が揺れる。
+#          developer.md §110.14)
+#   構成 jt0(本流が南からまっすぐ入る T 字の合流。f_advection_bend = 0。0 の性質の記録):
+#     (22) 3 段とも、A の水深の振れ幅が RANGE_JP_DEF より大きい(0 も、この形の池では定常に落ち着かない)
+#   構成 jt1(同じ池。f_advection_bend = 1。既知の不備の記録):
+#     (23) 1 段目で A の水深の振れ幅が RANGE_JP_DEF より大きい
 import sys, os, glob
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 from make_brink import (G, DX, NX, I_BRINK, N_APRON, Z_POOL, Q_LEVELS, T_RAMP, T_HOLD,
                         bed_brink, hcrit, pool_depth, apron_depth, path_stair,
-                        NX_PL, N_MID, I_DROP1, I_DROP2, bed_pool, jump_position)
+                        NX_PL, N_MID, I_DROP1, I_DROP2, bed_pool, jump_position,
+                        NX_WD, ROWS_WD, S_ST, N_ST_MAN, Q_ST, QW_LEVELS, QM_LEVELS)
 
 TOL_Q = 0.015                     # (1) 流量の一致
 TOL_POOL, TOL_POOL75 = 0.02, 0.04 # (2) 池の水深と理論の一致(125 m 以上上流、75 m 上流)
@@ -81,6 +100,12 @@ TOL_FOOT_SAME, TOL_SUB_SAME, TOL_UP_SAME = 0.05, 0.015, 0.01     # (15) 足元�
 FOOT_DROWN = 1.5                  # (16) 0 の足元のセルの水深 / 直線の水路の足元の水深 の下限
 JUMP_SWEEP = 250.0                # (18) 0 の跳水が直線の水路より下流へ押し出される距離の下限 (m)
 X_EPOOL_PL = 325.0                # (17) 上の池のエネルギー水頭を取る位置(1 つ目の段差から上流へ。m)
+TOL_WD, TOL_WD_SAME = 0.002, 1.0e-4     # (19) 幅 2 セルの等流の水深と理論の一致、0 と 1 の差(比 − 1)
+T_WIN = 10.0                      # (20)〜(23) 各段の終わりの、水深の平均と振れ幅を取る時間 (min)
+RANGE_JP = 0.05                   # (20) 定常とみなす水深の振れ幅の上限 (m)
+RANGE_JP_DEF = 0.3                # (21)(22)(23) 揺れの記録の、振れ幅の下限 (m)
+DRAW_JP_DEF = 0.4                 # (21) 湾の奥の水深が 0 より低くなる量の記録の下限 (m)
+JP_NAMES = "ABCD"                 # 合流部の池のプローブ 1〜4 のセル
 
 nfail = 0
 
@@ -321,11 +346,108 @@ def check_stair():
     check(rng <= RANGE_ST, "(11) depth range (max - min) / mean with 1 = %.4f (<= %.2f)" % (rng, RANGE_ST))
 
 
+def check_wide():
+    print("=== wd0, wd1: uniform flow in a straight channel two cells wide ===")
+    hn = (Q_ST / DX * N_ST_MAN / S_ST ** 0.5) ** 0.6       # マニングの等流の水深(広い矩形断面)
+    a, b = int(0.4 * NX_WD), int(0.8 * NX_WD)
+    mean = {}
+    for name in ("wd0", "wd1"):
+        hh = last_depth("result_" + name)
+        seg = [hh[j - 1][i] for j in ROWS_WD for i in range(a, b)]
+        mean[name] = sum(seg) / len(seg)
+        print("  %s: mean depth %.5f m (min %.5f, max %.5f), normal depth %.5f m"
+              % (name, mean[name], min(seg), max(seg), hn))
+    d0, d1, ds = mean["wd0"] / hn - 1.0, mean["wd1"] / hn - 1.0, mean["wd1"] / mean["wd0"] - 1.0
+    check(abs(d0) <= TOL_WD and abs(d1) <= TOL_WD and abs(ds) <= TOL_WD_SAME,
+          "(19) depth / normal depth - 1 = %+.5f with 0, %+.5f with 1 (within %.3f); 1 / 0 - 1 = %+.1e (within %.0e)"
+          % (d0, d1, TOL_WD, ds, TOL_WD_SAME))
+
+
+class JunctionCase:
+    """合流部の池の構成の結果(プローブ 1〜4 は池の A・B・C・D。測線は流出区間)"""
+    def __init__(self, name):
+        self.name = name
+        self.pb = [series("result_%s/probes/probe%04d.csv" % (name, n)) for n in range(1, 5)]
+        self.fl = series("result_%s/fluxes/flux0001.csv" % name)
+
+    def stat(self, t):
+        """t (min) までの T_WIN 分間の、池の 4 セルの水深の (平均, 振れ幅) の並び"""
+        out = []
+        for rows in self.pb:
+            seg = [r[3] for r in rows if t - T_WIN <= r[1] <= t]
+            out.append((sum(seg) / len(seg), max(seg) - min(seg)))
+        return out
+
+    def discharge(self, t):
+        seg = [r[2] for r in self.fl if t - T_WIN <= r[1] <= t]
+        return sum(seg) / len(seg)
+
+
+def stages():
+    t = 0.0
+    for qw, qm in zip(QW_LEVELS, QM_LEVELS):
+        t += T_RAMP + T_HOLD
+        yield t, qw, qm
+
+
+def fmt_stat(st):
+    return " ".join("%s %.2f (%.2f)" % (n, m, r) for n, (m, r) in zip(JP_NAMES, st))
+
+
+def check_junction():
+    print("=== jp0: pond with a dead-end bay, main stream entering diagonally (f_advection_bend = 0) ===")
+    j0 = JunctionCase("jp0")
+    ref = {}
+    for t, qw, qm in stages():
+        st, q = j0.stat(t), j0.discharge(t)
+        ref[t] = st
+        print("  t = %3.0f min (inflow %.0f + %.0f m3/s): depth m (range m) %s" % (t, qw, qm, fmt_stat(st)))
+        check(abs(q / (qw + qm) - 1.0) <= TOL_Q and max(r for _, r in st) <= RANGE_JP,
+              "(20) steady: outflow / inflow - 1 = %+.4f (within %.3f), largest depth range %.3f m (<= %.2f)"
+              % (q / (qw + qm) - 1.0, TOL_Q, max(r for _, r in st), RANGE_JP))
+    print("=== jp1: same pond, f_advection_bend = 1 (record of a known defect) ===")
+    j1 = JunctionCase("jp1")
+    last = None
+    for t, qw, qm in stages():
+        st = j1.stat(t)
+        print("  t = %3.0f min (inflow %.0f + %.0f m3/s): depth m (range m) %s" % (t, qw, qm, fmt_stat(st)))
+        if last is None:
+            check(st[0][1] > RANGE_JP_DEF,
+                  "(21) the water surface keeps oscillating: depth range in the bay cell A %.2f m (> %.1f)"
+                  % (st[0][1], RANGE_JP_DEF))
+        last = (t, st)
+    t, st = last
+    check(ref[t][0][0] - st[0][0] > DRAW_JP_DEF,
+          "(21) the bay is drawn down: depth of A %.2f m, %.2f m lower than with 0 (> %.1f)"
+          % (st[0][0], ref[t][0][0] - st[0][0], DRAW_JP_DEF))
+    print("=== jt0: pond with a dead-end bay, main stream entering straight (f_advection_bend = 0; record) ===")
+    t0 = JunctionCase("jt0")
+    for t, qw, qm in stages():
+        st = t0.stat(t)
+        print("  t = %3.0f min (inflow %.0f + %.0f m3/s): depth m (range m) %s" % (t, qw, qm, fmt_stat(st)))
+        check(st[0][1] > RANGE_JP_DEF,
+              "(22) the water surface keeps oscillating with 0: depth range in the bay cell A %.2f m (> %.1f)"
+              % (st[0][1], RANGE_JP_DEF))
+    print("=== jt1: same pond, f_advection_bend = 1 (record of a known defect) ===")
+    t1 = JunctionCase("jt1")
+    first = True
+    for t, qw, qm in stages():
+        st = t1.stat(t)
+        print("  t = %3.0f min (inflow %.0f + %.0f m3/s): depth m (range m) %s" % (t, qw, qm, fmt_stat(st)))
+        if first:
+            check(st[0][1] > RANGE_JP_DEF,
+                  "(23) the water surface keeps oscillating: depth range in the bay cell A %.2f m (> %.1f)"
+                  % (st[0][1], RANGE_JP_DEF))
+        first = False
+
+
 if __name__ == "__main__":
     check_straight()
     check_diag()
     check_stair()
     check_pool()
+    check_wide()
+    check_junction()
     if nfail:
         print("=== Check_brink.py: FAIL (%d) ===" % nfail)
         sys.exit(1)
