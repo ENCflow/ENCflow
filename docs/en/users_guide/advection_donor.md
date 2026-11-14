@@ -303,7 +303,18 @@ the grid spacing and the number of cells that represent the channel.
   raised the peak at transect 4 on the 200 m grid of Chichibu by 6–12 %, and
   on the 100 m and 50 m grids the discharge became rough or diverged. On real
   terrain this braking also provides damping for the computation, so it has
-  not been removed (developer.md §102, in Japanese).
+  not been removed (developer.md §102, in Japanese). This braking switches
+  on and off when the water of a pond starts and stops overtopping a low
+  valley wall; it then alternates with the over-acceleration at the edge just
+  after a bend ([the advection page](advection.md) §4.4) and can make a dip
+  and a bump in the discharge (±1,200 m³/s per minute at transect 3 on the
+  50 m grid of Chichibu; item 3 (a) of the
+  [supplement of the Chichibu tutorial](../../../tutorials/chichibu/en/README.md)).
+  In a prototype that gives inertia to the edge just after a bend and then
+  removes this braking, the 50 m grid ran to the end without diverging, and
+  the peak at transect 3 became 26 % larger and 8 minutes earlier
+  (developer.md §110, in Japanese). This indicates how much this braking
+  slows the flow in one-cell-wide channels on fine grids.
 - **Films thinner than dd are also counted according to their thickness.**
   Therefore, in bent channels whose banks are wetted by rain, the water level
   of the bend cells changes slightly from 0 (in the polyline channel of
@@ -318,16 +329,11 @@ the grid spacing and the number of cells that represent the channel.
 - **Wobbles caused by the terrain.** In flat reaches created by depression
   filling and in subgrid channels narrower than the cell, fine wobbles due to
   hydraulic jumps or seiches can appear. Some also appear with 0, and some
-  become more visible with the small dissipation of 3. At transect 3 on the
-  50 m grid of Chichibu, the hydraulic jump below a 10 m step just upstream
-  is temporarily pushed up and returns at 93–95 min in the recession, which
-  makes a −330/+330 m³/s notch in the one-minute discharge (about
-  −145 m³/s at the same step with 0). On the 200 m grid with a 50 m wide
-  subgrid channel, a seiche with a period of about 4 minutes remains in a
-  flat reach, and the one-minute discharge deviates from the 11-minute moving
-  average by about ±60 m³/s (it does not appear with 0 or without the width,
-  and disappears with terrain without the flat reach). The cause is the
-  terrain, not the wet/dry switch, so treat the terrain first
+  become more visible with the small dissipation of 3. At transect 3 of the
+  run on the 200 m grid of Chichibu with a 50 m wide subgrid channel, the
+  one-minute discharge in the recession (90–130 min) deviates from the
+  11-minute moving average by about ±20 m³/s (±10 m³/s without the width).
+  The cause is the terrain, not the wet/dry switch, so treat the terrain first
   ([supplement of the Chichibu tutorial](../../../tutorials/chichibu/en/README.md)).
 - **Faces where it does not apply.** It does not apply to the boundary faces
   of lateral Neumann sides (the same value as 0). The local-inertia setting

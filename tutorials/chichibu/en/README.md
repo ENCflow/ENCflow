@@ -702,29 +702,8 @@ you notice them, consider them in this order.
    river water surface, a gorge, or a reservoir as flat, or where a
    depression was filled in). In the computation, a "pond" several meters
    deep forms on a flat reach and the flow suddenly speeds up at a step;
-   the motion of the pond surface, fluctuating overtopping and switching
-   of the flow state can seed oscillations, dips and bumps. The figure
-   below shows an example at transect 3 on the 50 m grid computed in the
-   next supplement (effect of resolution) (the lower panel is the change
-   of the discharge per minute).
-
-   ![A dip and a bump at transect 3 of the 50 m grid](figs/supp_t3_osc.png)
-
-   A deep dip appears at 69 minutes on the rising limb (the discharge
-   falls by 920 m^3/s in one minute and rises by 1,210 m^3/s in the next),
-   and a bump at 122 minutes on the recession (it rises by 890 m^3/s and
-   falls by 1,190 m^3/s). Just upstream of the transect is a stepped gorge
-   in which the bed drops 14 m over 400 m (flat reaches and steps of 1 to
-   7 m; the valley walls on both sides are more than 10 m above the bed).
-   At first the flow passes through it in a shallow, fast state (depth 3
-   to 4 m, velocity about 20 m/s). At 69 minutes, when the discharge has
-   grown, the flat reach above the step (200 m long) and the reach
-   upstream of it switch to a deep, slow state (depth 11 to 15 m, velocity
-   5 to 10 m/s) within one or two minutes, and the discharge downstream
-   dips by the water stored in the reach (about 100,000 m^3). At
-   122 minutes on the recession the opposite switch occurs and the stored
-   water comes out as a bump. The 100 m and 200 m grids (dashed) smooth
-   these steps over 2 to 4 cells, and their curves are smooth.
+   the motion of the pond surface and fluctuating overtopping can seed
+   oscillations.
 
    Preprocessing the channels so that the longitudinal profile is
    monotone (eliminating the flat reaches and the steps), or moving the
@@ -736,9 +715,52 @@ you notice them, consider them in this order.
    oscillation at the transect has decreased (for placing transects, see
    item 4).
 
-3. **When water starts to spill onto a bank, the discharge can change
-   like a step.** This comes not from the terrain but from a rule of the
-   computation. The figure below shows transect 4 of the run in which a
+3. **Two kinds come from rules of the computation.** Neither is a change
+   of the real flow.
+
+   **(a) Where the channel turns at the outlet of a pond, a dip and a bump
+   can appear in the discharge.** The figure below shows transect 3 on the
+   50 m grid computed in the next supplement (effect of resolution) (the
+   lower panel is the change of the discharge per minute).
+
+   ![A dip and a bump at transect 3 of the 50 m grid](figs/supp_t3_osc.png)
+
+   A deep dip appears at 69 minutes on the rising limb (the discharge
+   falls by 920 m^3/s in one minute and rises by 1,210 m^3/s in the next),
+   and a bump at 122 minutes on the recession (it rises by 890 m^3/s and
+   falls by 1,190 m^3/s). 400 m upstream of the transect, a pond formed on
+   a flat reach (14 to 18 m deep around the peak) drains into a stepped
+   gorge (the bed drops 14 m over 400 m; the valley walls on both sides
+   are more than 10 m above the bed), and the channel turns diagonally at
+   this outlet. The advection term of ENCflow does not count, at the cell
+   edge just after a change of the channel direction, the momentum
+   (inertia) carried in from upstream. This is correct at a bend where the
+   velocity is nearly uniform, but where the flow accelerates sharply, as
+   at the outlet of a pond, the velocity at that edge becomes too high and
+   the flow in the gorge becomes too shallow and fast (depth 3 to 4 m,
+   velocity about 20 m/s; the energy set by the pond level can drive a
+   flow of only about 5 m depth and 16 m/s). At 69 minutes, when the
+   discharge has grown and the pond level reaches a low part of the
+   neighbouring valley wall (12 to 14 m above the bed), the slow velocity
+   of the thin flow over the wall is counted as a brake on the main flow,
+   and the upstream part of the gorge switches to a deep, slow state
+   (depth 11 to 15 m, velocity 5 to 10 m/s) within one or two minutes; the
+   discharge downstream dips by the water stored in the reach (about
+   100,000 m^3). At 122 minutes on the recession the opposite switch
+   occurs and the stored water comes out as a bump. They do not appear on
+   the 100 m and 200 m grids (dashed).
+
+   The dip and the bump only release stored water later, so they do not
+   change the total runoff. Overlay a moving average when you read the
+   hydrograph. Regrading the flat reach and the steps downstream of the
+   pond outlet to a uniform slope lowers the largest change per minute
+   from 1,210 to 780 m^3/s (this run is not part of `Fig_supp.sh`). For
+   the mechanism and its limits, see §4.4 of
+   [Advection schemes](../../../docs/en/users_guide/advection.md) in the
+   users guide.
+
+   **(b) When water starts to spill onto a bank, the discharge can change
+   like a step.** The figure below shows transect 4 of the run in which a
    50 m wide channel is given inside the cells of the 200 m grid in the
    next supplement (a subgrid channel; see
    [the channel chapter of the users guide](../../../docs/en/users_guide/channel.md)).
@@ -907,13 +929,14 @@ tabulated below (in parentheses: change from the next coarser grid).
   69 minutes on the rising limb and a bump at 122 minutes on the recession
   (−920 and +1,210 m^3/s, and +890 and −1,190 m^3/s per minute). In the
   stepped gorge just upstream of the transect, water is stored and
-  released when the flow state switches; this is the example of item 2 of
-  the previous supplement. The 1-minute values at transect 3 on the 100 m
+  released when the flow state switches; this is the example of item 3 (a)
+  of the previous supplement (it comes from a rule of the computation,
+  not from a change of the real flow). The 1-minute values at transect 3 on the 100 m
   and 200 m grids are smooth.
 - Transect 4 of the 200 m run with W = 50 shows a step at 101 minutes, in
   which the discharge drops by 670 m^3/s in one minute (the moment the
-  channel water starts to spill onto a bank cell; the example of item 3 of
-  the previous supplement). Transect 4 of the 100 m run without the width
+  channel water starts to spill onto a bank cell; the example of item 3 (b)
+  of the previous supplement). Transect 4 of the 100 m run without the width
   also has small steps of +410 m^3/s at 106 minutes and −220 m^3/s at
   209 minutes. They occur at the threshold of the same cap
   (`f_dry_head_cap = 2`) and do not appear in a run with

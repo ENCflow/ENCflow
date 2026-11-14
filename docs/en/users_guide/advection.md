@@ -370,6 +370,25 @@ With the default `f_advection_donor = 3` the wet/dry test of the parallel edge b
   instead would mean "still water flows in from the wall side", and in a
   one-cell-wide raster channel every bend would lose about 0.55 m of
   artificial head (developer.md §68.8; the bend cases of [test/bendloss](../../../test/bendloss/en/README.md)).
+  This treatment is correct at a bend where the velocity is nearly uniform
+  along the path, but **where a bend coincides with a sharp acceleration (the
+  outlet of a pond, just before a drop), the flow accelerates too much (a
+  known limitation)**. The edge just after the bend carries no inertia from
+  upstream, so its velocity rises until the surface slope balances the
+  friction, and it sends downstream a supercritical flow whose energy head
+  exceeds the one set by the level of the upstream pond (by 17–27 m in a
+  one-cell-wide verification channel whose last link before the drop is
+  diagonal; a straight channel agrees with theory). On the 50 m grid of
+  Chichibu (channel roughness 0.02), at the outlet where a pond drains into
+  a gorge, the flow in the gorge becomes 4 m deep and 22 m/s fast (the
+  energy of the pond can drive only about 5 m depth and 16 m/s). It does not
+  appear in a run with a channel roughness of 0.04. The same holds for the
+  thin-film donors of the following items. This over-acceleration can
+  alternate with the lateral-face braking by wet banks
+  ([One-cell-wide channels and the upwind donors of the advection term](advection_donor.md) §7)
+  and make a dip and a bump in the discharge (an example is in item 3 (a) of
+  [the supplement of the chichibu tutorial](../../../tutorials/chichibu/en/README.md#supplement-fine-oscillations-in-the-hydrograph)).
+  A remedy is under study (developer.md §110, in Japanese).
 - **Sea cells (tide-prescribed boundary) supply no momentum either.** The
   cells of the sea mask (fn_sw) are the side whose water level is forced;
   their apparent water column hsea0 and their zero flux have nothing to do
@@ -586,7 +605,7 @@ listed in the [shallow water chapter](swflow.md).
   while the channel level is still 1.3 m below the bed of the bank, and the
   step in which the downstream discharge drops by a tenth in one minute comes
   13 minutes earlier than in a run with a time step of 1 s (the peaks agree
-  within 1 %; item 3 of
+  within 1 %; item 3 (b) of
   [the supplement of the chichibu tutorial](../../../tutorials/chichibu/en/README.md#supplement-fine-oscillations-in-the-hydrograph)).
   When steps in the 1-minute values are a concern, halve the time step and
   check whether the result changes.

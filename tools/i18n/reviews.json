@@ -113,8 +113,8 @@
     {
       "source": "docs/users_guide/advection.md",
       "target": "docs/en/users_guide/advection.md",
-      "source_sha256": "e596eb724e6580c62babc0b1c2da767f3c9d8ab33aba228fa2f0bca426b08707",
-      "target_sha256": "4376fe96ced4ba6b5796f244f8b819f651adbac4df21d8340068dcea84276dfc",
+      "source_sha256": "12820928d6a0a9b9dc085daab7879bd1735758cedf4d49479959c573b0b8e769",
+      "target_sha256": "46a27ee1fdb908689138b2b164c75f014d5cf3eac6fd1140f555cb75eb99f4a4",
       "reviewer": "Claude (Claude Code session; full-text content and lexical review, no model execution)",
       "method": "assistant",
       "reviewed_on": "2026-11-14"
@@ -122,8 +122,8 @@
     {
       "source": "docs/users_guide/advection_donor.md",
       "target": "docs/en/users_guide/advection_donor.md",
-      "source_sha256": "58d9b67244c0160d3342ff9520d8800931e47dc27411455aa6b8a567e104aa2d",
-      "target_sha256": "6424805d31ddb77125fa9e2ab0829f709420ee543414af51bc6f9f61ab2e6422",
+      "source_sha256": "f1c1499144378163d3ff4e3fa8642344253e9a7940dca4ad5fa0ab394dcf5879",
+      "target_sha256": "54453b4f819f423c470f27bf3e57ab7de57510ec80fc55595b2f2849cdd2f2b3",
       "reviewer": "Claude (Claude Code session; full-text content and lexical review, no model execution)",
       "method": "assistant",
       "reviewed_on": "2026-11-14"
@@ -5108,8 +5108,8 @@
     {
       "source": "tutorials/chichibu/Fig_supp.plt",
       "target": "tutorials/chichibu/en/Fig_supp.plt",
-      "source_sha256": "aaad551554d4386e91728e7a1acfeb3b5fc780f6dc9b80313cd64a5d6bce3399",
-      "target_sha256": "abc0401e9481907beabdafa61988c9da24c9ed0e1a61cd677943b8a7a42dcb61",
+      "source_sha256": "44898668753e2a8caaf38ec86c18b0668bc935bbdddfcce3fe714a2aa2dbbe8d",
+      "target_sha256": "9fbba7dbd0805a8bf3392e00d186714148a72238358d9372aeb5717c1a25fe64",
       "reviewer": "Claude (Claude Code session; full-text content and lexical review, no model execution)",
       "method": "assistant",
       "reviewed_on": "2026-11-14"
@@ -5117,8 +5117,8 @@
     {
       "source": "tutorials/chichibu/README.md",
       "target": "tutorials/chichibu/en/README.md",
-      "source_sha256": "8b7f77662701dca883924cf81da0954fd7cc39141f7097011278a4afcf5d09d9",
-      "target_sha256": "7f9c89c2e75cc2fb213c5d63e4fb0049658aecf791b1736d4c6863a3e0dd5a14",
+      "source_sha256": "a569d1207e6385241f34bd05da3fd17c202136cf32810c1e4fba2231c7e08fd7",
+      "target_sha256": "470c7d73eecf88c4ff170087eb6858474796382310cee67d0d7c5202962bba70",
       "reviewer": "Claude (Claude Code session; full-text content and lexical review, no model execution)",
       "method": "assistant",
       "reviewed_on": "2026-11-14"

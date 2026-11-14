@@ -150,10 +150,10 @@ do for [t=1:2] {
 }
 unset multiplot
 
-# ---- Figure 2d: a dip and a bump in the 1-minute values (transect 3 of the 50 m grid; example of item 2 of the
+# ---- Figure 2d: a dip and a bump in the 1-minute values (transect 3 of the 50 m grid; example of item 3 (a) of the
 #      supplement "On fine oscillations in hydrographs") ----
-# In the stepped gorge just upstream of the transect the flow in the flat reach switches between a shallow, fast state
-# and a deep, slow state within 1-2 minutes; the water stored and released makes the dip on the rising limb (69 min)
+# At the pond outlet and the stepped gorge upstream of the transect the flow switches between a shallow, fast state
+# and a deep, slow state within 1-2 minutes (this comes from a rule of the computation, not from a change of the real flow); the water stored and released makes the dip on the rising limb (69 min)
 # and the bump on the recession (122 min). The 100 m and 200 m grids (dashed) are smooth. Lower panel: change per minute
 reset
 set datafile separator comma
@@ -178,7 +178,7 @@ plot p = NaN, "result_supp_50m/fluxes/flux0003.csv"  using 2:(d = $3 - p, p = $3
 unset multiplot
 
 # ---- Figure 2e: a step when water starts to spill onto the bank (transect 4 of the 200 m grid with a 50 m wide
-#      channel; example of item 3 of the same supplement) ----
+#      channel; example of item 3 (b) of the same supplement) ----
 # At 101 min, when the channel water starts to enter a bank cell, the discharge downstream drops by about a tenth in
 # one minute. It does not appear without the width (dashed)
 reset
