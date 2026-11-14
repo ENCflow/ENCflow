@@ -140,7 +140,10 @@ make
   "bed of the bank − channel water level" at the time the depth of the bank row has risen by 1 cm
   is 0.04 m without the transition and 0.06 m with it). The width is proportional to the normal
   velocity and to the time step, so it widens where the flow toward the bank is fast or the time
-  step is large (the amount that goes over never exceeds that of 1).
+  step is large (several tens of centimetres in deep channels on real terrain, and more than 1 m in
+  one case with a narrow channel given by its width;
+  [the advection page](../../../docs/en/users_guide/advection.md) §5; the amount that goes over never
+  exceeds that of 1).
 - The default is `f_dry_head_cap = 2` (it was 1 until 2026-11-13). In rain-wetted steep valleys
   and at run-up fronts the results differ between 1 and 2
   ([test/chichibu](../../chichibu/en/README.md) and others; developer.md §108). Set 1

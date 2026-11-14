@@ -569,18 +569,24 @@ listed in the [shallow water chapter](swflow.md).
   small amount flows while the water level is still below the bed of the
   receiver. The formula is in
   [test/bankcap](../../../test/bankcap/en/README.md)).
-  In a deep, fast channel solved with a large time step the width of the
-  transition reaches several tens of centimetres. Once the inflow onto a higher
+  In a deep, fast channel solved with a large time step the transition becomes
+  wide (on the 200 m grid of Chichibu with a time step of 6 s and a channel 7 m
+  deep, 0.2 m per 1 m/s of normal velocity; with a 50 m wide sub-grid channel
+  on the same grid and a time step of 4 s, 0.7 m). Once the inflow onto a higher
   cell starts, the normal velocity rises and the transition widens, so the
   water levels at which the inflow starts and stops differ, and the discharge
-  can change like a step within one or two minutes when it starts or stops (an
-  example on the 200 m grid of Chichibu, time step 6 s, at a bend of a channel
-  7 m deep: the inflow onto the high cell on the outer side started with the
-  channel level 0.16 m below the bed of the receiver and continued for
-  13 minutes until it was 0.5 m below, and the discharge at a transect 600 m
-  upstream rose by 4 % in two minutes; with a time step of 3 s this inflow
-  does not start;
+  can change like a step within one or two minutes when it starts or stops.
+  Examples: (1) the inflow onto the high cell on the outer side of a channel
+  bend starts with the channel level 0.16 m below the bed of the receiver and
+  continues for 13 minutes until it is 0.5 m below, and the discharge at a
+  transect 600 m upstream rises by 4 % in two minutes (with a time step of 3 s
+  it does not start;
   [One-cell-wide channels and the upwind donors of the advection term](advection_donor.md) §7).
+  (2) With a 50 m wide sub-grid channel, water starts to enter a bank cell
+  while the channel level is still 1.3 m below the bed of the bank, and the
+  step in which the downstream discharge drops by a tenth in one minute comes
+  13 minutes earlier than in a run with a time step of 1 s (the peaks agree
+  within 1 %).
   When steps in the 1-minute values are a concern, halve the time step and
   check whether the result changes.
   Both are ENCflow's own rules built on the Bernoulli relation "water does not
