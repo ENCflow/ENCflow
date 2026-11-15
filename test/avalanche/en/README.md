@@ -51,11 +51,11 @@ Top left: fracture depth D = 0.5 m of the release area. Top right: thickness
 of the entrained snow sd₀ − sd. Along the path from the release area to the
 slope break the snow is scoured through its full depth (0.5 m). Bottom left:
 change of the snow surface z − z₀. The path is negative from scouring, and
-stopped debris deposits up to 0.83 m around the slope break (x = 30 m) at
+stopped debris deposits up to 0.92 m around the slope break (x = 30 m) at
 x = 24–42 m. Bottom right: longitudinal profile (average over all rows).
 That the two curves z − z₀ and −(sd₀ − sd) coincide is the co-update
 identity itself (z and sd move by the same amount), and some snow that
-is still flowing (remaining hs) is left near the slope break (8.9 % of the
+is still flowing (remaining hs) is left near the slope break (10.1 % of the
 total).
 
 ## Findings
@@ -65,11 +65,11 @@ total).
 | (1) Solid ledger | about 1e-13 m·cell or less (round-off) | PASS |
 | (2) Co-update | about 1e-14 m or less (round-off) | PASS |
 | (3) Entrainment activity | path min(sd − sd₀) = −0.500 m (full depth) | PASS |
-| (4) Growth | entrained solid 54.5 / released solid 21.6 = 2.53 times | PASS |
-| (5) Stopping | remaining Σhs / (released + entrained) = 0.089 | PASS |
+| (4) Growth | entrained solid 53.2 / released solid 21.6 = 2.46 times | PASS |
+| (5) Stopping | remaining Σhs / (released + entrained) = 0.101 | PASS |
 
 - By entrainment the avalanche grows to about 3.5 times the released amount,
-  and 91 % stops and deposits around the slope break. The ledger and the
+  and 90 % stops and deposits around the slope break. The ledger and the
   co-update are at machine precision.
 - The entrainable layer is given by reinterpreting the existing soil depth
   sd, and the co-update, ledger, clamp and two-pass MPI structure are all
@@ -101,7 +101,10 @@ total).
   later f_advection_donor = 3 and others; not separated out) it is 2.53 (remaining 0.092, largest
   deposit 0.85 m). After the default of the edge-depth cap became f_dry_head_cap = 2 on 2026-11-13
   it stays at 2.53 (entrained solid 54.8 → 54.5, remaining 0.089, largest deposit 0.83 m;
-  developer.md §108). The table, the values in the text and the figures are from this computation.
+  developer.md §108). After the default of the upwind value on the edge just after a bend became
+  f_advection_bend = 1 on 2026-11-15 it is 2.46 (entrained solid 53.2, remaining 0.101, largest deposit
+  0.92 m; developer.md §110). The table, the values in the text and the figures are from this
+  computation.
 
 ## Related documents
 

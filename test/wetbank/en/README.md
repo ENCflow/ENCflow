@@ -61,38 +61,40 @@ How far E departs from 0 in the oblique channels (table below) is shown as a lim
 | Orientation θ | Δx | Channel width | Depth with dry banks h (m) | h / h_n | Increase from rain inflow | E(0) | E(3) |
 |---|---|---|---|---|---|---|---|
 | 0° | 50 m | 1 cell | 1.997 | 0.969 | 1.5 % | 0.2 % | 0.2 % |
-| 10° | 50 m | 1 cell | 2.201 | 1.175 | 1.4 % | 13.7 % | 8.5 % |
-| 22.5° | 50 m | 1 cell | 2.030 | 1.169 | 1.4 % | 32.4 % | 10.9 % |
-| 30° | 50 m | 1 cell | 1.730 | 1.025 | 1.4 % | 37.9 % | 17.0 % |
+| 10° | 50 m | 1 cell | 2.224 | 1.186 | 1.4 % | 12.5 % | 7.4 % |
+| 22.5° | 50 m | 1 cell | 2.024 | 1.166 | 1.4 % | 32.8 % | 10.2 % |
+| 30° | 50 m | 1 cell | 1.718 | 1.018 | 1.4 % | 38.9 % | 17.2 % |
 | 45° | 50 m | 1 cell | 1.554 | 0.941 | 1.4 % | 9.6 % | 8.6 % |
-| 22.5° | 100 m | 1 cell | 1.865 | 1.085 | 0.8 % | 23.1 % | 10.4 % |
-| 22.5° | 25 m | 1 cell | 2.413 | 1.362 | 2.7 % | 40.4 % | 5.9 % |
-| 22.5° | 50 m | 2 cells | 1.811 | 1.054 | 0.8 % | 18.7 % | 8.4 % |
-| 22.5° | 25 m | 4 cells | 1.755 | 1.021 | 0.8 % | 12.2 % | 6.6 % |
+| 22.5° | 100 m | 1 cell | 1.853 | 1.078 | 0.8 % | 23.9 % | 10.3 % |
+| 22.5° | 25 m | 1 cell | 2.427 | 1.369 | 2.7 % | 39.6 % | 4.3 % |
+| 22.5° | 50 m | 2 cells | 1.807 | 1.051 | 0.8 % | 18.9 % | 8.4 % |
+| 22.5° | 25 m | 4 cells | 1.754 | 1.021 | 0.8 % | 12.3 % | 6.6 % |
 
 h_n is Manning's uniform-flow depth of a rectangular section of width ω.
 
 - In the grid-aligned channel, wetting the banks changes the depth only by the rain inflow (E = 0.2 % with both 0 and 3).
 - In the oblique channels, `f_advection_donor = 0` makes the channel 10–40 % too deep. The amount depends on the
   orientation (largest around 30°) and grows when the grid is refined with the channel kept one cell wide (at 22.5°,
-  23, 32 and 40 % for Δx = 100, 50 and 25 m, because the number of steps per km grows inversely with Δx and the whole
+  24, 33 and 40 % for Δx = 100, 50 and 25 m, because the number of steps per km grows inversely with Δx and the whole
   discharge passes every step). Resolving the same 100 m wide channel with 2 and 4 cells reduces it slowly, to 19 and
   12 %.
-- `f_advection_donor = 3` reduces this to 6–17 %, smaller than 0 in every geometry, but not to zero. The main remaining
+- `f_advection_donor = 3` reduces this to 4–17 %, smaller than 0 in every geometry, but not to zero. The main remaining
   cause is the side faces: when the parallel neighbouring link is a bank film (at or above dd), its slow velocity
   becomes the inflow value of the side face (on the side faces, option 3 only smooths the wet/dry switching of films
   thinner than dd). A work build that also
-  applies the thin-donor test to the side faces gave 3.6 % or less in every geometry (developer.md §102; not in the
-  model).
+  applies the thin-donor test to the side faces gave 3.8 % or less in every geometry. It is not in the model: this
+  braking also carries the dilution of the main-stream momentum by water entering from the side at a confluence, and
+  removing it makes the water level upstream of a confluence 6–7 % lower than the momentum theory and the floods on
+  fine grids too fast and too large (developer.md §110.19, in Japanese).
 - The rain intensity hardly matters. Once the banks are wet above dd, rain of 2 mm/h (bank film about 3 mm) gives almost
-  the same E as 20 mm/h (about 1 cm): at 22.5° and Δx 50 m, 32.1 / 32.4 % with 0 and 9.1 / 10.9 % with 3
+  the same E as 20 mm/h (about 1 cm): at 22.5° and Δx 50 m, 32.5 / 32.8 % with 0 and 8.3 / 10.2 % with 3
   (developer.md §102). Setting dd to 0.1 mm gives the same values (the films are thicker than dd), so this case does not
   look at the effect of the dd value.
 
 ## Limitations
 
 - Even with dry banks, the depth of an oblique one-cell staircase differs from that of a grid-aligned channel
-  (h / h_n = 0.94–1.36; at 22.5° it becomes deeper when the grid is refined with the channel kept one cell wide). This is
+  (h / h_n = 0.94–1.37; at 22.5° it becomes deeper when the grid is refined with the channel kept one cell wide). This is
   a difference in conveyance of the raster staircase itself, independent of `f_advection_donor`, and outside the scope of
   this case.
 - Rain falls uniformly on the banks and the channel, and the rainwater on the banks enters the channel at once. The

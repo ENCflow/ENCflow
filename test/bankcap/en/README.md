@@ -112,8 +112,8 @@ The inputs are written by `make_bankcap.py`.
 | 4 depth of the bank row, configuration 2 | maximum over the run 0.153 m, 0.071 m at the end | PASS |
 | 5 and 6 configurations 3 and 4 | maximum floodplain depth over the run 0; channel depth 2.5006 m (1.0002 times the uniform depth) | PASS |
 | 7 configurations 3 and 4 | the 12 files of H and V outputs and Log.txt are byte-identical | PASS |
-| 8 second difference of the step-by-step discharge, configuration 5 | maximum 0.50 m³/s (at 302 s) | PASS |
-| 9 discharge onto the floodplain, configuration 5 | mean 7.55 m³/s over 364–1,044 s, while the water level is above the bank | PASS |
+| 8 second difference of the step-by-step discharge, configuration 5 | maximum 0.49 m³/s (at 310 s) | PASS |
+| 9 discharge onto the floodplain, configuration 5 | mean 7.54 m³/s over 364–1,045 s, while the water level is above the bank | PASS |
 | 10 depth of the bank row on the rising limb, configuration 5 | 0.0200 m (the initial film) until 239 s, when the water level comes within 0.3 m below the bank | PASS |
 
 ## Usage

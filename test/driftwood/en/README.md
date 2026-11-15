@@ -194,8 +194,8 @@ of the flat part (center).
 
 | Configuration | Result | Verdict |
 |---|---|---|
-| 5 capture ratio 1 and the drag of the jam | volume conservation 4.9e-13 m³, jam 20.000000 m³ (0.200 m³/m² per cell). Downstream 1.994 m, upstream 3.000 m, analytical 2.997 m; ratio of the rises 1.003 | PASS |
-| 5a packing limit | w/h of the edges = 0.040 > φ = 0.02. Downstream 1.994 m, upstream 2.486 m, analytical 2.495 m; ratio of the rises 0.982 | PASS |
+| 5 capture ratio 1 and the drag of the jam | volume conservation 4.8e-13 m³, jam 20.000000 m³ (0.200 m³/m² per cell). Downstream 1.993 m, upstream 3.001 m, analytical 2.997 m; ratio of the rises 1.005 | PASS |
+| 5a packing limit | w/h of the edges = 0.040 > φ = 0.02. Downstream 1.993 m, upstream 2.488 m, analytical 2.495 m; ratio of the rises 0.986 | PASS |
 | 5b → 5c split continuation by restart | driftwood.dat (including the jammed wood), state.dat and swflow_enc.dat byte-identical to the continuous run | PASS |
 | 5d capture ratio 0.3 | jam 6.080 m³ / recruited 20 m³ = 0.304 | PASS |
 | 5e no driftwood | all outputs of H and V and Log.txt (14 files) byte-identical to 5d | PASS |
@@ -206,7 +206,7 @@ of the flat part (center).
 | 6b culv_jam = 0, 6c f_dwjam = 0 | in both, the outputs of H and V and Log.txt (8 files) are byte-identical to 6d (no driftwood). In 6c the jam of 0.06 m³ enters the ledger | PASS |
 | 6e culv_jam = 1 without the driftwood module | stops at initialisation | PASS |
 | 6f → 6g split continuation by restart | driftwood.dat, state.dat and swflow_enc.dat byte-identical to the continuous run (6a) | PASS |
-| 6h culvert drawing part of the main flow | Q_in = 94.65 and Q_c = 14.24 m³/s, so the share of the water drawn is 0.1505. Jam 3.006 m³ / recruited 20 m³ = 0.1503 (ratio 0.999) | PASS |
+| 6h culvert drawing part of the main flow | Q_in = 94.65 and Q_c = 14.31 m³/s, so the share of the water drawn is 0.1512. Jam 3.019 m³ / recruited 20 m³ = 0.1510 (ratio 0.998) | PASS |
 
 - The wood volume (stock + moving + deposited) is conserved to machine
   precision in the closed domain.
@@ -228,7 +228,7 @@ of the flat part (center).
   acts on the flow (with `f_dwjam = 1`: the drag in the capture cells of `fn_dwtrap`, and the
   inlet loss of culverts with `culv_jam = 1`).
 - The backwater of configuration 5 is about 1.0 m (against the uniform depth of 2.0 m) and comes
-  from the 20 m³ of solid wood in the jam (1.0 m² per unit channel width). The 1–2 % difference
+  from the 20 m³ of solid wood in the jam (1.0 m² per unit channel width). The 0.5–1.4 % difference
   of the rise from the analytical value comes from the discretization that represents the jam
   section by two edges. The jammed share of 0.304 in the configuration with a capture ratio of
   0.3 comes from the capture rule being an approximation computed inside the cell (the
@@ -238,10 +238,10 @@ of the flat part (center).
   little wood. The differences from the discharge law (0.04–0.11 %) come from the difference
   between the water level of the representative cell and the mean level of the pool, and from
   the change of the discharge within an output interval.
-- In configuration 6h the jammed share is 0.1 % smaller than the share of the water drawn
+- In configuration 6h the jammed share is 0.2 % smaller than the share of the water drawn
   because of the wood that arrived in the first few minutes of the run. From the moment the
   culvert starts working until the flow settles, the share of the water drawn rises from 0.148
-  to 0.150. If the wood is released in 200 s, most of it passes the inlet during this time and
+  to 0.151. If the wood is released in 200 s, most of it passes the inlet during this time and
   the difference becomes 0.9 %.
 - MPI np = 1, 2, 4 are byte-identical to the serial run with the -O2
   strict-math build (for configurations 5, 6a and 6h, state.dat and driftwood.dat of np = 2 and 4 are
