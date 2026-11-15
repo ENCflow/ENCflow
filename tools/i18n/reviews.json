@@ -284,11 +284,11 @@
     {
       "source": "docs/users_guide/geoinfo.md",
       "target": "docs/en/users_guide/geoinfo.md",
-      "source_sha256": "9aa5422703efaeda904bda3687ee03d2daf70693c6e06e3b14b800c5dac65f49",
-      "target_sha256": "2b6410df29e3660f32ea7c7e49090a54112218e76bbf697b0626da9300414afa",
+      "source_sha256": "67c791c7ea28e295e9f6cea32b94e75e435e927792f6b0f43b650e0ac0c9a1f4",
+      "target_sha256": "0958d2fc333d67e38b9e5c4a9cd4c6116bb725c0ea246277e03bdf3f7a9fb4ce",
       "reviewer": "Claude (Claude Code session; full-text content and lexical review, no model execution)",
       "method": "assistant",
-      "reviewed_on": "2026-11-14"
+      "reviewed_on": "2026-11-15"
     },
     {
       "source": "docs/users_guide/geomorph.md",
@@ -5477,11 +5477,11 @@
     {
       "source": "utils/river_flowline/README.md",
       "target": "utils/river_flowline/en/README.md",
-      "source_sha256": "67b1cf3ed857299c0a827e7eb0ca4b80e79fa13af426d8a1c2f8071f51cb475b",
-      "target_sha256": "61455f3749517e0fb1f0e79f5648eb1176595af2d977395a8fcd7c4ff481aec1",
+      "source_sha256": "2f770e66f18d482ffe3c83c0b42d313dba6617484220394b0d9ca90c0187009c",
+      "target_sha256": "4d46234b14998b7cae0441a559eb786756662f7fb5992723d4b88393836fbda7",
       "reviewer": "Claude (Claude Code session; full-text content and lexical review, no model execution)",
       "method": "assistant",
-      "reviewed_on": "2026-11-14"
+      "reviewed_on": "2026-11-15"
     }
   ]
 }

@@ -97,7 +97,7 @@ T=../chichibu/data_chichibu
 
 In a computation that gives the channel a smaller roughness than the slopes, the results change with the
 move. In the regression case of test/chichibu (100 m; slopes n = 0.15, channel n = 0.02) the peak discharges
-at the four transects of the main stem became 2–9 % smaller and 1–19 min later (the valley-wall cells that
+at the four transects of the main stem became 2–9 % smaller and 2–22 min later (the valley-wall cells that
 carried the channel roughness return to the slope roughness).
 
 ## Limits of accuracy and what it cannot do
