@@ -131,8 +131,17 @@
                             !   bank does not climb onto a thinly wet bank or
                             !   valley wall; the cap is relaxed while the
                             !   water level is just below the bed of the
-                            !   receiver) = default). The default was 1
-                            !   until 2026-11-13
+                            !   receiver) = default, 3: cap on climbing edges
+                            !   (the bed of the receiver above the bed of the
+                            !   sender), dry or wet receiver, by the energy
+                            !   head that also counts the velocity head of the
+                            !   flow entering the sending cell (the time and
+                            !   amount at which channel water starts to spill
+                            !   onto a bank do not depend on the time step;
+                            !   submerged steps keep the harmonic mean of the
+                            !   depths on both sides as a floor; test/bankspill,
+                            !   users_guide/advection.md section 5)).
+                            !   The default was 1 until 2026-11-13
   !f_opening_dynamic = 3    ! dynamic reassignment of blocked openings
                             !   (0: off, 1: edges between channel cells only
                             !   (inactive without fn_rw), 2: all edges (the

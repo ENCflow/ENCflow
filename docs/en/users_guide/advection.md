@@ -736,9 +736,52 @@ listed in the [shallow water chapter](swflow.md).
   within 1 %; item 3 (b) of
   [the supplement of the chichibu tutorial](../../../tutorials/chichibu/en/README.md#supplement-fine-oscillations-in-the-hydrograph)).
   When steps in the 1-minute values are a concern, halve the time step and
-  check whether the result changes.
-  Both 1 and 2 are ENCflow's own rules built on the Bernoulli relation "water does not
-  climb onto ground above its energy head".
+  check whether the result changes, or use 3 below.
+  3 caps the edge depth on climbing edges (edges where the bed of the receiver is
+  above the bed of the sender), whether the receiver is dry or wet, by
+  $`h_e \le \max(w\,h_\mathrm{harm},\ \sigma + u_\mathrm{in}^2/2g,\ 0)`$. Here $`\sigma`$ is the water level
+  of the sender minus the bed of the receiver (the thickness of the water that
+  goes over), $`u_\mathrm{in}`$ is the larger of the velocity of this edge and the speed of
+  the flow entering the sending cell along the same line (the unit-width
+  discharge of the next edge upstream divided by the depth of the sender),
+  $`h_\mathrm{harm}`$ is the harmonic mean of the depths on both sides, and
+  $`w = \min(\max(\sigma/h_r, 0), 1)`$ ($`h_r`$ is the depth of the receiver). 1 and 2 take the
+  velocity head from the velocity of the edge itself, but the velocity of an
+  edge closed by the cap is reset to 0 every step, so whether the edge opens
+  depends on the time step, and water enters all at once at the moment it opens
+  (the steps of (1) and (2) above). 3 uses the velocity head of the entering
+  flow, which has a value even while the edge is closed, so water starts to
+  enter thinly when the energy head of the sender reaches the bed of the
+  receiver and increases continuously with the water level. There is no
+  transition. For a bank pocket directly ahead of the flow, the difference in
+  the water level at the onset of spilling between time steps of 6 s and 1.5 s
+  is 0.001 m against 0.14 m with 2, and the rise of the depth in the minute of
+  opening is 0.08 m against 0.5–0.9 m
+  ([test/bankspill](../../../test/bankspill/en/README.md)). The first term is a floor for
+  submerged steps (the harmonic mean when the water level of the receiver is not
+  above that of the sender; nearly the mean of both sides for a gentle step, and
+  close to 0 when the receiver holds only a thin film; without the floor a wave
+  travelling up a gentle slope becomes slower). In a flow parallel to the bank
+  there is no velocity head toward the bank, so, as with 2, water does not climb
+  onto a bank above the water level
+  ([test/bankcap](../../../test/bankcap/en/README.md)).
+  Limits of 3: how much the water surface rises at the outer bank of a bend
+  cannot be resolved by a one-cell-wide channel; what is satisfied is only that
+  the level in the pocket does not exceed the energy head upstream. In runs
+  where a movable bed reaches a free-outflow boundary, erosion from the
+  downstream end advances more easily than with 2 (with 2, the flow that crosses
+  the sill of sediment deposited at the downstream end with the mean depth of
+  both sides keeps the sill). Make the last few columns at the downstream end a
+  non-erodible bed (a distribution with soil thickness 0; `f_sdtype = 1` and
+  `fn_sd`).
+  3 is optional and the default remains 2 (with 3 the results change; for
+  example, the downstream peak falls by the amount that the step at the onset of
+  spilling had added).
+  1, 2 and 3 are all ENCflow's own rules built on the Bernoulli relation "water does not
+  climb onto ground above its energy head" ($`\sigma`$ of 3 is the same quantity as
+  the flow depth between cells taken as "the higher water level minus the higher
+  bed level" in flood inundation models[^bates10]; taking the velocity head from
+  the entering flow and the harmonic-mean floor are ENCflow's own).
   The default was 1 until 2026-11-13. In rain-wetted steep valleys (rainfall
   runoff on a real DEM) and at run-up fronts the results differ between 1 and 2,
   so set 1 explicitly to reproduce cases computed or calibrated with the
@@ -885,3 +928,4 @@ verification in developer.md §78). Groundwater transport is not covered
 [^vanleer79]: van Leer, B. (1979): Towards the ultimate conservative difference scheme V. A second-order sequel to Godunov's method. *J. Comput. Phys.*, 32, 101–136. (MUSCL and the limiter)
 [^sweby84]: Sweby, P. K. (1984): High resolution schemes using flux limiters for hyperbolic conservation laws. *SIAM J. Numer. Anal.*, 21, 995–1011. (TVD region)
 [^stoker57]: Stoker, J. J. (1957): *Water Waves*. Interscience, New York. (analytical solution of the wet-bed dam break)
+[^bates10]: Bates, P. D., Horritt, M. S. and Fewtrell, T. J. (2010): A simple inertial formulation of the shallow water equations for efficient two-dimensional flood inundation modelling. *J. Hydrol.*, 387, 33–45. (the flow depth between cells taken as the higher water level minus the higher bed level; the original has not been checked)

@@ -15,7 +15,7 @@ python3 "$sdir/make_bankcap.py" h dry > bc_h_dry.txt
 export ENCFLOW_EXPECT_NP="$NP"
 set -o pipefail
 : > Screen.log
-for c in wet2 wet1 dry2 dry1 cross; do
+for c in wet2 wet1 dry2 dry1 cross wet3 dry3 cross3; do
     mpirun -np "$NP" $MPIRUN_OPTS ./encflow_mpi param_$c.txt | tee -a Screen.log || exit 1
 done
 set +o pipefail
@@ -34,6 +34,18 @@ for f in result_dry1/H[0-9]*.txt result_dry1/V[0-9]*.txt result_dry1/Log.txt; do
     fi
 done
 [ $ok -eq 1 ] && echo "=== dry bank: f_dry_head_cap = 2 is bit-identical to 1 ($nf files of H, V and Log.txt) ==="
+# 乾いた河岸に平行な流れでは、3 も 2 と同じ結果になる(河岸へ向かう流れの速度水頭がなく、頭打ちの値が同じ)
+nf=0
+ok=1
+for f in result_dry2/H[0-9]*.txt result_dry2/V[0-9]*.txt result_dry2/Log.txt; do
+    nf=$((nf + 1))
+    if ! cmp -s "$f" "result_dry3/$(basename "$f")"; then
+        echo "FAIL: dry bank: f_dry_head_cap = 3 differs from 2: $(basename "$f")" >&2
+        ok=0
+        rc=1
+    fi
+done
+[ $ok -eq 1 ] && echo "=== dry bank: f_dry_head_cap = 3 is bit-identical to 2 ($nf files of H, V and Log.txt) ==="
 if [ $rc -eq 0 ]; then
     echo "=== bankcap MPI verification PASS ==="
 else

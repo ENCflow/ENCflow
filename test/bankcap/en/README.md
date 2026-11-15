@@ -1,4 +1,4 @@
-# test/bankcap — Channel water below the bank does not climb onto a thinly wet bank (check of f_dry_head_cap = 2)
+# test/bankcap — Channel water below the bank does not climb onto a thinly wet bank (check of f_dry_head_cap = 2 and 3)
 
 > English mirror of test/bankcap/README.md. The Japanese file is the master copy.
 
@@ -10,7 +10,9 @@ A check of the energy-head cap on the edge depth (`f_dry_head_cap` of `&list_enc
 above the water level of the sending cell. It is checked with a flowing incised channel and a
 thinly wet bank. A further configuration makes the channel water level cross the height of the bank
 and checks that the discharge does not flip back and forth at the threshold of the cap
-(configuration 5).
+(configuration 5). `f_dry_head_cap = 3` (caps climbing edges by the energy head that also counts the
+velocity head of the flow entering the sending cell; developer.md §110.24) is checked to satisfy the
+same items in the same set-up (configurations 6–8).
 
 ## Rule
 
@@ -31,6 +33,7 @@ energy head".
 | 0 | never |
 | 1 | the receiver is dry ($`h_r < d_d`$) |
 | 2 (default) | as 1, and also when the receiver is wet but its bed is above the water level of the sender ($`z_r > \eta_s`$) |
+| 3 | whether the receiver is dry or wet, when its bed is above the bed of the sender ($`z_r > z_s`$; a climbing edge). The formula is given below |
 
 When 2 is applied to a wet receiver, the cap is relaxed while the water level of the sender is
 just below the bed of the receiver. With the bed of the receiver $`d = z_r - \eta_s`$ above the
@@ -62,6 +65,23 @@ cell and the bank cell gives a normal velocity, so channel water whose level is 
 climbs onto the bank. 2 is not applied to a submerged step ($`z_r < \eta_s`$): ordinary flow up a
 wet slope is the same as with 1.
 
+3 caps the edge depth on climbing edges by the following value. It has no transition.
+
+```math
+h_e \leftarrow \min\!\left(h_e,\ \max\!\left(w\,h_\mathrm{harm},\ \sigma + \frac{u_\mathrm{in}^2}{2g},\ 0\right)\right),\qquad
+\sigma = \eta_s - z_r,\quad h_\mathrm{harm} = \frac{2 h_s h_r}{h_s + h_r},\quad w = \min\!\left(\max\!\left(\frac{\sigma}{h_r},\ 0\right),\ 1\right)
+```
+
+$`u_\mathrm{in}`$ is the larger of the normal velocity on this edge and the speed of the flow entering
+the sending cell along the same line (the unit-width discharge of the next edge upstream divided by
+the depth of the sender). The second term is the same energy-head cap as in 1 and 2, with the
+velocity head taken from the entering flow, which has a value even while the edge is closed. The
+first term is a floor for submerged steps (the harmonic mean of the depths on both sides when the
+water level of the receiver is not above that of the sender). In the set-up of this check the
+channel flow is parallel to the bank and there is no velocity head toward the bank, so 3, like 2,
+does not let water climb onto the bank. The difference at a bank directly ahead of the flow is
+examined by [test/bankspill](../../bankspill/en/README.md). It is ENCflow's own rule.
+
 ## Set-up
 
 Length 400 m, Δx = 5 m, slope 0.002. An incised channel 4 cells (20 m) wide with n = 0.03 carries
@@ -78,6 +98,9 @@ The inputs are written by `make_bankcap.py`.
 | 3 | `param_dry2.txt` | dry | 2 | the bank stays dry and the channel is in uniform flow; byte-identical to configuration 4 |
 | 4 | `param_dry1.txt` | dry | 1 | as above |
 | 5 | `param_cross.txt` | 2 cm film | 2 | the discharge is raised and lowered as 137.3 → 330 → 137.3 m³/s over 10 minutes each (the run lasts 30 minutes), so that the channel water level crosses the height of the bank; the discharge across the bank line is recorded every step to see that it does not flip back and forth |
+| 6 | `param_wet3.txt` | 2 cm film | 3 | as configuration 1 |
+| 7 | `param_dry3.txt` | dry | 3 | as configuration 3; byte-identical to configuration 3 |
+| 8 | `param_cross3.txt` | 2 cm film | 3 | as configuration 5 |
 
 ## Checks (Check_bankcap.py and Run.sh)
 
@@ -101,6 +124,11 @@ The inputs are written by `make_bankcap.py`.
 10. Configuration 5: on the rising limb, until the channel water level comes within 0.3 m below
     the bed of the bank, the depth of the bank row does not exceed the initial film (the
     transition is narrower than 0.3 m).
+11. Configuration 6 (`f_dry_head_cap = 3`): the same as items 1–3.
+12. Configuration 7: the same as items 5 and 6. The depth and velocity outputs and Log.txt are
+    byte-identical to configuration 3 (in a flow parallel to a dry bank, 3 is the same as 2).
+13. Configuration 8: the same as items 8–10 (3 has no transition, but the value of the cap rises
+    continuously from 0, so the discharge does not flip back and forth).
 
 ## Results
 
@@ -115,12 +143,15 @@ The inputs are written by `make_bankcap.py`.
 | 8 second difference of the step-by-step discharge, configuration 5 | maximum 0.49 m³/s (at 310 s) | PASS |
 | 9 discharge onto the floodplain, configuration 5 | mean 7.54 m³/s over 364–1,045 s, while the water level is above the bank | PASS |
 | 10 depth of the bank row on the rising limb, configuration 5 | 0.0200 m (the initial film) until 239 s, when the water level comes within 0.3 m below the bank | PASS |
+| 11 configuration 6 | maximum depth over the run in the bank row 0.0200 m, 0.0042 m at the end; water volume on the floodplain 320.0 → 237.8 → 204.1 → 178.4 m³ | PASS |
+| 12 configuration 7 | maximum floodplain depth over the run 0; channel depth 2.5006 m; the 12 files are byte-identical to configuration 3 | PASS |
+| 13 configuration 8 | maximum second difference of the step-by-step discharge 0.003 m³/s (at 1,079 s); mean 8.68 m³/s over 368–1,013 s, while the water level is above the bank; 0.0200 m until 240 s, when the water level comes within 0.3 m below the bank | PASS |
 
 ## Usage
 
 ```bash
 make
-./Run.sh            # serial (5 runs, about 20 seconds)
+./Run.sh            # serial (8 runs, about 40 seconds)
 ./Run_MPI.sh 2      # MPI (the boundary between the bank row and the channel is a band boundary)
 ```
 
@@ -144,6 +175,9 @@ make
   one case with a narrow channel given by its width;
   [the advection page](../../../docs/en/users_guide/advection.md) §5; the amount that goes over never
   exceeds that of 1).
+- In configuration 8 (3), without a transition at the threshold, the second difference of the
+  step-by-step discharge falls from 0.49 m³/s in configuration 5 to 0.003 m³/s. The value of the cap
+  rises continuously from 0 where the water level of the sender reaches the bed of the bank.
 - The default is `f_dry_head_cap = 2` (it was 1 until 2026-11-13). In rain-wetted steep valleys
   and at run-up fronts the results differ between 1 and 2
   ([test/chichibu](../../chichibu/en/README.md) and others; developer.md §108). Set 1
@@ -153,5 +187,6 @@ make
 
 - [docs/en/users_guide/advection.md](../../../docs/en/users_guide/advection.md) §5 — switches around the advection term
 - [docs/en/users_guide/swflow.md](../../../docs/en/users_guide/swflow.md) — parameter list of `&list_enc`
-- developer.md §68.16 (cap toward dry receivers), §108 (extension to wet receivers), §50.9 (how it was found with the example bridge_wood_jam)
+- developer.md §68.16 (cap toward dry receivers), §108 (extension to wet receivers), §110.24 (cap 3 on climbing edges), §50.9 (how it was found with the example bridge_wood_jam)
+- [test/bankspill](../../bankspill/en/README.md) — onset of spilling into a bank pocket directly ahead of the flow (the difference between 2 and 3)
 - [examples/bridge_wood_jam](../../../examples/bridge_wood_jam/en/README.md) — backwater and bypass flooding from driftwood jammed at a bridge

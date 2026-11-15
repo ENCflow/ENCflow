@@ -1,9 +1,11 @@
 #!/bin/bash
-# bankspill: 河岸のくぼみへのあふれ始め(逐次実行。濡れた・乾いたくぼみ × 時間刻み 6 s・1.5 s = 4 構成)
+# bankspill: 河岸のくぼみへのあふれ始め(逐次実行。濡れた・乾いたくぼみ × 時間刻み 6 s・1.5 s の 4 構成を、
+# f_dry_head_cap = 2 と 3 で = 8 構成)
 #   ./Run.sh
 # 合否は Check_bankspill.py(まっすぐな区間の脇のくぼみは、隣の河道の水位が地盤に届く時に、時間刻みに
 # よらずにあふれ始めること。屈曲の正面のくぼみは、上流のエネルギー水頭が地盤に届く前には入らないこと)。
-# 屈曲の正面のくぼみのあふれ始めの水位の時間刻み依存と、あふれ始めの段は、判定せずに記録する(現行の限界。README)
+# 屈曲の正面のくぼみのあふれ始めの水位の時間刻み依存と、あふれ始めの段は、3 では判定し、2 では記録する
+# (2 の限界。README)
 
 sdir=$(dirname "$(readlink -f "$0")")
 ../Scripts/Check_mode.sh serial || exit 1
@@ -12,7 +14,7 @@ python3 "$sdir/make_bankspill.py" z > bs_z.txt
 
 set -o pipefail
 : > Screen.log
-for c in wet_dt6 wet_dt15 dry_dt6 dry_dt15; do
+for c in wet_dt6 wet_dt15 dry_dt6 dry_dt15 c3_wet_dt6 c3_wet_dt15 c3_dry_dt6 c3_dry_dt15; do
     ./encflow param_$c.txt | tee -a Screen.log || exit 1
 done
 set +o pipefail
