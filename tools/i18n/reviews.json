@@ -113,8 +113,8 @@
     {
       "source": "docs/users_guide/advection.md",
       "target": "docs/en/users_guide/advection.md",
-      "source_sha256": "9681bd98619ab6f698365b19f2f5020e916d56653337b129fcd07da614cae0e1",
-      "target_sha256": "7174c1833e0d232dc762c0d6982d6c52ff5c9ef3190d75e888ccceba576519f3",
+      "source_sha256": "be22de0b4ffd9da1a6802c672995b0f8a9625a3d609864f87034ab6f50bbe9a2",
+      "target_sha256": "30eab21d54c49757f7680ebcc4b775902a4e6a5d4963b2c387a65c72c095c368",
       "reviewer": "Claude (Claude Code session; full-text content and lexical review, no model execution)",
       "method": "assistant",
       "reviewed_on": "2026-11-15"
@@ -122,8 +122,8 @@
     {
       "source": "docs/users_guide/advection_donor.md",
       "target": "docs/en/users_guide/advection_donor.md",
-      "source_sha256": "6548d0f024c0fd8bfa1938f951cbc19d933667c65d1a74baa4d9d47d0c0d449f",
-      "target_sha256": "19420ff103199b645e378e52fd3d95620136366c854176644f7c454cd45f559b",
+      "source_sha256": "76efb51e83270d55468cbfc26f7803b40f94151ce90e59fbcf00449387a84cdb",
+      "target_sha256": "8bd5b42d241ec69960e700091f1b78356674c7b0c62798b38257b16b476f44e0",
       "reviewer": "Claude (Claude Code session; full-text content and lexical review, no model execution)",
       "method": "assistant",
       "reviewed_on": "2026-11-15"
@@ -509,8 +509,8 @@
     {
       "source": "docs/users_guide/swflow.md",
       "target": "docs/en/users_guide/swflow.md",
-      "source_sha256": "d1b6d8404302638a27c932787bcaf39ff8094e4cf2eef12de365483203172d97",
-      "target_sha256": "6a75024507b23ab6a8f3fc4bd9b068406eb61072b1439cf050549e859daef85f",
+      "source_sha256": "ca669b29f74355efdc0367cd4f43e93fc67408f1ab05e62c0b2c8d6448a81a47",
+      "target_sha256": "ba393273ed1dcfb63fb0514915d6fe892f3c6745798c1e9f38a22d9468254618",
       "reviewer": "Claude (Claude Code session; full-text content and lexical review, no model execution)",
       "method": "assistant",
       "reviewed_on": "2026-11-15"
@@ -671,8 +671,8 @@
     {
       "source": "examples/List_samples/list_enc.txt",
       "target": "examples/List_samples/en/list_enc.txt",
-      "source_sha256": "40bdf65d653282175fc103510718d0340af1f73bc0de52c15b00ab5d6fa43549",
-      "target_sha256": "8a2c09aa747d28c0bb70e8e7c2420468195da0369cb90fb13c48736dbfe4a139",
+      "source_sha256": "2a4fdd3364a3ec836cd12147360ca6de60374d4f96f0094370db89a8e5764d4e",
+      "target_sha256": "5d2d81c0164a262f2223f869f906ba37e5ae6ba1cc3947371ab9dbcd16382b7e",
       "reviewer": "Claude (Claude Code session; full-text content and lexical review, no model execution)",
       "method": "assistant",
       "reviewed_on": "2026-11-15"

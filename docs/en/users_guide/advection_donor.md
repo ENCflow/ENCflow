@@ -48,7 +48,7 @@ with many cells, the places where the upstream edge lands on the bank become
 relatively fewer and the effect becomes small. The decrease is slow, however.
 In the check with a straight channel oblique to the grid (§6), representing a
 100 m wide channel with 1, 2 and 4 cells gave an extra depth caused by
-rain-wetted banks of 23, 19 and 12 % (with 0, which has no countermeasure).
+rain-wetted banks of 24, 19 and 12 % (with 0, which has no countermeasure).
 
 Without a countermeasure, the resolution of the channel as seen by the
 advection term is not the resolution of the terrain data (one cell) but the
@@ -128,7 +128,8 @@ below the threshold depth dd (default 1 mm). With 0, which has no
 countermeasure, a film below dd is treated as "dry" and drops out of the
 donors; the brake is released all at once and the water held back is let go.
 This is the jump in the recession limb of the hydrograph (at transect 4 on
-the 200 m grid of Chichibu, +159 m³/s in one minute at 274 min). The jumps
+the 200 m grid of Chichibu, +147 m³/s in one minute at 276 min and
++205 m³/s at 286 min). The jumps
 appear mostly in the recession because after the rain the films on the
 hillslopes and banks all decrease slowly together and drop below dd one
 after another at many places.
@@ -224,16 +225,25 @@ reach (pond) created by depression filling, just upstream of transect 4.
 
 - With 0, jumps appear in the recession at 276 and 286 min. At the pond
   entrance the film on the bank (2.0 mm at 180 min) becomes the donor on
-  line k and creates a 1.21 m water-surface step in the pond, holding back
+  line k and creates a 1.23 m water-surface step in the pond, holding back
   water. After the film drops below dd (0.9 mm at 300 min) the step is
   released. The moment of release is the jump at 276 min.
 - With 0 and dd and dv reduced to 1/10 (0.0001 m), no jumps appear, but the
   peak is 5,346 m³/s and the holding back remains.
 - With 3 there are no jumps and no step forms. Because the artificial
   braking at many places along the main river is removed, the peak is
-  6,208 m³/s, 13 % larger than the 5,490 m³/s of 0, and 23 minutes earlier
-  (+19 % on the 100 m grid; test/chichibu). The change of the peak when dd is
-  divided by 10 is 4 m³/s with 3, compared with 144 m³/s with 0.
+  6,607 m³/s, 21 % larger than the 5,478 m³/s of 0, and 24 minutes earlier
+  (+18 % on the 100 m grid; test/chichibu). The change of the peak when dd is
+  divided by 10 is less than 1 m³/s with 3, compared with 132 m³/s with 0.
+- There are small steps on the peak of 3 (the rings in Figure 3 (a):
+  +269 m³/s at 150–151 min and −274 m³/s at 167–168 min). They do not come
+  from the wet/dry switch but from the threshold of the cap on the edge depth,
+  and they depend on the time step (§7). With the time step reduced from 6 s
+  to 3 s the peak of 3 is 6,362 m³/s (153 min).
+- The difference between 0 and 3 also contains the part by which the default
+  `f_advection_bend = 1` uses the path value for the neutral treatment of 3
+  (§4). With `f_advection_bend = 0` in both, 3 gives 6,208 m³/s and 0 gives
+  5,490 m³/s (+13 %).
 
 To reproduce this, add `fn_enc = "-"` to `&list_sysparam` in
 `en/param_step3.txt` of tutorials/chichibu, append the following
@@ -259,7 +269,7 @@ braking of a type known to be artificial from the checks with known answers
   the discharge of the channel slightly, and the channel depth should change
   only by that amount. The extra depth E after subtracting the increase due
   to the rain inflow (theoretical value 0) was 0.2 % for both 0 and 3 in a
-  grid-aligned channel, and 10–40 % with 0 and 6–17 % with 3 in oblique
+  grid-aligned channel, and 10–40 % with 0 and 4–17 % with 3 in oblique
   channels (Figure 4). In every geometry 3 is the same as 0 or closer to the
   theoretical value than 0.
 - **Confirming that physical braking remains.** The channels of
@@ -289,17 +299,23 @@ the grid spacing and the number of cells that represent the channel.
 
 - **The default works as is.** No setting is needed. The threshold
   `p_adv_donor_eps` (default 0.1) is empirical. The peak at transect 4 on the
-  200 m grid of Chichibu changes by only 0.1 % when it is set to 0.2. With
-  0.05 the water level around the peak rises by 0.1 m, and at a bend 600 m
-  downstream of the transect a shortcut opens for about 13 minutes, in which
-  the channel water runs up onto the high cell on the outer side (7 m above
-  the bed); the peak of the 1-minute values becomes 3.9 % larger (the maximum
-  before the shortcut opens is 0.7 % smaller than with the default). The steps
-  in the discharge when the run-up starts and stops are a property of the cap
-  on the edge depth ([the advection page](advection.md) §5); with the time
-  step reduced from 6 s to 3 s the shortcut does not open, and the peak with
-  0.05 is within 0.2 % of the default. Values outside 0.05–0.2 have not been
-  checked.
+  200 m grid of Chichibu becomes 1.8 % smaller when it is set to 0.05 and
+  0.8 % larger when it is set to 0.2 (the peaks at transects 1–3 differ by
+  1.2 % or less). Values outside 0.05–0.2 have not been checked.
+- **Small steps that depend on the time step can appear on the peak.** In the
+  run with 3 of §5 (time step 6 s), the discharge at transect 4 rises by 4 %
+  in two minutes at 150–151 min and falls by the same amount at 167–168 min.
+  At a bend 600 m downstream of the transect the channel water runs up onto
+  the high cell on the outer side (7 m above the bed), and a flow that
+  shortcuts the bend stays open for about 18 minutes (during that time the
+  water level in the channel is 0.2–0.5 m below the ground of that cell). The
+  steps in the discharge when the run-up starts and stops are a property of
+  the cap on the edge depth ([the advection page](advection.md) §5). With the
+  time step reduced to 3 s the shortcut does not open and the peak is 4 %
+  smaller, 6,362 m³/s (with the threshold set to 0.05, steps of the same
+  shape appear even at 3 s).
+  If steps in the one-minute values matter, halve the time step and check
+  whether the result changes.
 - **Reproducing earlier results.** To reproduce results computed with the
   default before 2026-11-09 (0) (including cases whose roughness was
   calibrated with 0), add `fn_enc = "-"` to `&list_sysparam` and set
@@ -307,34 +323,73 @@ the grid spacing and the number of cells that represent the channel.
 - **Faster flow.** Compared with 0, flood waves become faster and larger, and
   the Courant number rises. A time step that ran to the end with 0 may need
   to be reduced (Chichibu on the 200 m grid with a 50 m wide subgrid channel:
-  dt 6 s → 4 s). Check Cn_max on the screen. The run time is about 8 %
-  longer than with 0 (Chichibu, 200 m grid, 4 threads).
-- **Lateral-face braking remains.** When a bank with a film of dd or more
-  enters the parallel link, its slow velocity becomes the inflow value of the
-  main flow turning in from the side; this braking remains with 3 as with 0
-  (the main cause of the 6–17 % in test/wetbank). Removing it in a prototype
-  raised the peak at transect 4 on the 200 m grid of Chichibu by 6–12 %, and
-  on the 100 m and 50 m grids the discharge became rough or diverged. On real
-  terrain this braking also provides damping for the computation, so it has
-  not been removed (developer.md §102, in Japanese). This braking switches
-  on and off when the water of a pond starts and stops overtopping a low
-  valley wall, and can then make a dip and a bump in the discharge (+430 and
-  −210 m³/s per minute at transect 3 on the 50 m grid of Chichibu; item 3 (a)
-  of the
+  dt 6 s → 4 s). Check Cn_max on the screen. The run time is about a tenth
+  longer than with 0 (Chichibu, 200 m grid).
+- **Lateral-face braking remains.** The velocity of the water entering the
+  control volume from the side is taken from the parallel link beyond the
+  face ([Advection schemes](advection.md) §4.2 and §4.3). When the bank cells
+  are wet with a film of dd or more, the slow velocity of the film link
+  (nearly 0) is applied to all the water that crosses the face. On lateral
+  faces 3 only changes the weight of films thinner than dd, so this braking
+  remains with 3 as with 0 (the main cause of the 4–17 % in test/wetbank).
+  Two parts of different nature are mixed in this braking.
+  - **The artificial part.** The film velocity, which has nothing to do with
+    the exchange of water, is applied to a main flow that turns or that
+    passes along the edge of a pond. Whether the banks are wet then changes
+    the depth of oblique channels and ponds (4–17 % in a one-cell-wide
+    channel oblique to the grid; in ponds fed over a drop, wetting a single
+    bank cell thinly raised the pond depth from 2.6 to 2.8 m in the
+    junction-pond geometry of test/brink and from 2.4 to 3.3 m in a
+    computation cut out around the pond of Chichibu). With the same terrain
+    and roughness, the resistance of the channel thus differs between a run
+    with rain and a run without rain (inflow from upstream only).
+  - **The part by which momentum is diluted at a junction.** The water of a
+    tributary carries no momentum in the direction of the main river, so the
+    reach upstream of a junction is backed up in reality as well. ENCflow
+    counts this backwater only when the banks are wet (the nearly zero
+    velocity of the film link happens to stand in for "water entering from
+    the side carries no momentum in the direction of the main river"; it is
+    not an intended rule). In a one-cell-wide T-junction (grid spacing 50 m,
+    slope 1/500, roughness 0.03, 1,000 m³/s after the junction, three ratios
+    of main-river to tributary discharge), the depth of the main river just
+    upstream of the junction was +0.00 to +0.21 m relative to the momentum
+    theory with wet banks, and −0.34 to −0.41 m with dry banks (6–7 %
+    shallower, close to a flow without loss). **At a junction with dry banks
+    (for example a run without rain), almost no backwater from the junction
+    appears.**
+
+  In a prototype that removes both parts (the parallel link is moved to
+  neutral when it is thin compared with the water crossing the face), the
+  result no longer depends on whether the banks carry a film (3.8 % or less
+  in test/wetbank), but the backwater of a junction with wet banks also
+  becomes the same as with dry banks (6–7 % shallower than the theory). The
+  peaks at transects 3 and 4 of Chichibu rose by 4 and 10 % on the 200 m
+  grid, by 13 and 19 % on the 100 m grid and by 17 % at transect 3 on the
+  50 m grid, and the difference between grids widened (the maximum velocity
+  on the 50 m grid went from 30 to 60 m/s). A prototype that counts only the
+  junction part regardless of the wetness of the banks made the water
+  surface of the junction pond oscillate, so it has not been adopted
+  (developer.md §110.19, in Japanese). **A rule that counts the junction
+  loss regardless of the wetness of the banks is future work.** Until then,
+  in computations that read the water level upstream of a junction or the
+  depth of ponds and oblique channels in detail, note that the result can
+  change with how wet the banks are (rain or no rain, dd).
+
+  This braking switches on and off when the water of a pond starts and stops
+  overtopping a low valley wall, and can then make dips or bumps in the
+  discharge (at transect 3 on the 50 m grid of Chichibu, small dips just
+  before the peak in which the discharge falls by 180–210 m³/s in one minute
+  and recovers at once; item 3 (a) of the
   [supplement of the Chichibu tutorial](../../../tutorials/chichibu/en/README.md)).
   With `f_advection_bend = 0` (the default until 2026-11-15) the
   over-acceleration at the edge just after a bend
   ([the advection page](advection.md) §4.4) alternates with this braking, and
-  the dip and bump become ±1,200 m³/s. In a prototype that also removes this
-  braking, the 50 m grid ran to the end without
-  diverging, and the peak at transect 3 became 26 % larger and 8 minutes
-  earlier (developer.md §110, in Japanese). This indicates how much this
-  braking slows the flow in one-cell-wide channels on fine grids.
+  they become a dip and a bump of ±1,200 m³/s per minute.
 - **Films thinner than dd are also counted according to their thickness.**
   Therefore, in bent channels whose banks are wetted by rain, the water level
   of the bend cells changes slightly from 0 (in the polyline channel of
-  test/bendloss with 2 mm/h of rain on the floodplain, bend 1 goes from 1.50
-  to 1.68 m and bends 2–4 from 1.73 to 1.68 m; 0 with dd divided by 10 gives
+  test/bendloss with 2 mm/h of rain on the floodplain, bend 1 goes from 1.46
+  to 1.64 m and bends 2–4 from 1.73 to 1.65 m; 0 with dd divided by 10 gives
   2.02 m; the mean depth of the reach does not change).
 - **The velocity of a main flow entering obliquely is not used as it is.**
   3 only treats thin donors as neutral; it does not use the velocity of the
@@ -350,8 +405,9 @@ the grid spacing and the number of cells that represent the channel.
   hydraulic jumps or seiches can appear. Some also appear with 0, and some
   become more visible with the small dissipation of 3. At transect 3 of the
   run on the 200 m grid of Chichibu with a 50 m wide subgrid channel, the
-  one-minute discharge in the recession (90–130 min) deviates from the
-  11-minute moving average by about ±20 m³/s (±10 m³/s without the width).
+  one-minute discharge in the recession (100–130 min) deviates from the
+  11-minute moving average by up to 24 m³/s (within 11 m³/s without the
+  width).
   The cause is the terrain, not the wet/dry switch, so treat the terrain first
   ([supplement of the Chichibu tutorial](../../../tutorials/chichibu/en/README.md)).
 - **Faces where it does not apply.** It does not apply to the boundary faces

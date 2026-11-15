@@ -162,9 +162,9 @@
                             !   0: central difference, 1: first-order upwind)
   !p_adv_donor_eps = 0.1    ! threshold eps of f_advection_donor = 3
                             !   (0 < eps <= 1; used for both the flux ratio
-                            !   and the depth ratio; empirical; the peak is
-                            !   nearly the same for 0.1-0.2 and changed by
-                            !   4 % at 0.05 in one case; advection_donor.md §7).
+                            !   and the depth ratio; empirical; the peak
+                            !   differed by 2 % or less for 0.05-0.2 in one
+                            !   case; advection_donor.md §7).
                             !   With f_advection_bend = 1 it is also the
                             !   threshold below which the value is pulled
                             !   toward neutral when the inflow into the face
