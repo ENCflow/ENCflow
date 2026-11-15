@@ -95,8 +95,8 @@ architecture.md。このメモは「現在進行中・未完了の項目」だ�
      h_max が 0:50 に −14.6 %)、nhbreak の引き波の V_max の 1 時刻(−20 %。最大遡上高 R_max/H = 0.568 は同じ)、
      wqstruct の V_max の 1 時刻(+17.7 %)。ほかは 5 % 以下か、1e-3 m/s の桁の残りの流速の数量子。比較で止まる
      検定の先の検定スクリプト(tide・dambreak・damwq・gwsect・gwseep・gwwidth・wqbound・wqstruct・nhbottom と
-     Run_theory.sh)は、作業用ツリーで比較だけを通して回し、全て合格(reference は触っていない。wfdoppler は
-     実行中)。秩父の 100 m(test/chichibu)は、測線 1〜4 のピークが +0.2・+0.8・+1.8・−1.0 %、総量が +0.01〜
+     Run_theory.sh・wfdoppler)は、作業用ツリーで比較だけを通して(wfdoppler は比較を飛ばして)回し、全て合格
+     (reference は触っていない)。秩父の 100 m(test/chichibu)は、測線 1〜4 のピークが +0.2・+0.8・+1.8・−1.0 %、総量が +0.01〜
      +0.15 % で、河道の落差の足元のセルの水深が数 m 変わる(|Δh| > 0.5 m のセルが 50〜120 分に 44〜91 個。最大
      −5.5 m・+3.5 m。足元の直後で流れが折れるセルは、0 が下流の池より 4 m 高く盛り上がり、1 は池より 1 m 低い =
      test/brink の pf0・pf1 と同じ向きの違い)。
@@ -143,10 +143,10 @@ architecture.md。このメモは「現在進行中・未完了の項目」だ�
      (c) 既定の切り替えのコミット(list_enc.f90 の既定、起動時の表示、利用者ガイド・設定例・解説・test/brink の
      文面。日英)。下書きは作業用ツリーにあり、リポジトリには入れていない。確認のあとで (b) と続けて行う。
      (d) 既定で値の変わる README・教材・例題の数値と図の回し直し(test/chichibu の README と図、tutorials/chichibu の
-     本編と補足、advection_donor.md の実例など。例題は一括の回し直しに合わせる)。(e) 一覧の外の長い検定 9 本
-     (dbonset・fixation・nest_identity・sedfeed・slopefric・uniflow・wave_river・wave_shore・wetbank。reference を
-     持たない)の、既定 0(式の変更の前後のバイト一致)と既定 1(合否)は、2026-11-15 に回し始めた(未了)。
-     (f) wfdoppler の、比較の先の検定スクリプト(実行中)。
+     本編と補足、advection_donor.md の実例など。例題は一括の回し直しに合わせる)。(e) 一覧の外の長い検定 9 本の
+     うち 8 本(dbonset・fixation・nest_identity・sedfeed・slopefric・uniflow・wave_river・wetbank。reference を
+     持たない)は済: 既定 0 は結果ファイル 352 個が以前の既定 0 とバイト一致、既定 1 は全て合格(§110.17)。
+     wave_shore(1〜2 時間)は、既定 0・既定 1 とも実行中(未了)。
    - **調査の途中で見えた、f_advection_bend と別の 2 点**(§110.15 の (1)(5)。未精査): (i) 2 行幅の池から 1 セル幅の
      出口へ絞られる形で、池が浅く出る(0 でも 1 でも同じ。池のエネルギー水頭が、出口の限界流に要る値に届かず、
      水深が 12〜23 % 浅い。絞りの直後のセルへ入る通過幅の和が 1.41Δ になることが効いていると見られる。手計算で、
