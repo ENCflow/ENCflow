@@ -3425,8 +3425,8 @@
     {
       "source": "test/README.md",
       "target": "test/README.en.md",
-      "source_sha256": "c57e1d84e3e2b0a9f4363343e948edb89c194c858b6f79028e1ffb7c20a52281",
-      "target_sha256": "acdb5692aad0d32e47846cd55db460e87dab77fbd69a7c756e0a183fb4a4c5a5",
+      "source_sha256": "297b073b78e9d5c191dc4aa257e0b6207ca6e4ec7c7a3c4a56ebdfe0333520eb",
+      "target_sha256": "5834e6fdf7ad957c6f25b899554584d7443c7dc5e67bb7eb68e7d820518f35f0",
       "reviewer": "Claude (Claude Code session; full-text content and lexical review, no model execution)",
       "method": "assistant",
       "reviewed_on": "2026-11-15"
@@ -3466,6 +3466,15 @@
       "reviewer": "Claude (Claude Code session; rerun of 2026-11-10 with the current defaults: the heading date and the round-off rows written as bounds (with the limiter count 326,305) compared against the Japanese source; the rest unchanged since the previous record)",
       "method": "assistant",
       "reviewed_on": "2026-11-10"
+    },
+    {
+      "source": "test/bankspill/README.md",
+      "target": "test/bankspill/en/README.md",
+      "source_sha256": "039023b22c8c2b684f32d50ce4f733bff6de8bf998ab0713a09920603025e34e",
+      "target_sha256": "2f5ebb4f0d6c08cc00567a84243672af696f5cedadbdc5e7206e57fcbca9de81",
+      "reviewer": "Claude (Claude Code session; full-text content and lexical review, no model execution)",
+      "method": "assistant",
+      "reviewed_on": "2026-11-15"
     },
     {
       "source": "test/bedfines/README.md",
@@ -4771,6 +4780,15 @@
       "reviewer": "Claude (Claude Code session; English figure drawn by the same script with the en switch; visual check)",
       "method": "assistant",
       "reviewed_on": "2026-10-24"
+    },
+    {
+      "source": "test/tjunction/README.md",
+      "target": "test/tjunction/en/README.md",
+      "source_sha256": "0d9924dc490589a4ba7f1c08b6560dc7e4c9bdf59385419de4e6f8894786c845",
+      "target_sha256": "08402ac4ff903dcb93998f3278e7593ddf36d078670949fff9a2d2638e8a24b7",
+      "reviewer": "Claude (Claude Code session; full-text content and lexical review, no model execution)",
+      "method": "assistant",
+      "reviewed_on": "2026-11-15"
     },
     {
       "source": "test/tracer/README.md",

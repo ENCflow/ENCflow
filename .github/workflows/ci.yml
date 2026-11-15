@@ -1,7 +1,7 @@
 # ENCflow CI: ビルド+回帰テスト(基準 Log とのビット/ULP 照合)
-#   高速な 24 ケースを毎 push で回す(chichibu は実行時間の都合で対象外。
+#   高速な 26 ケースを毎 push で回す(chichibu は実行時間の都合で対象外。
 #   ローカルで test/chichibu/Run.sh を実行すること)。prmap・wfswash・gwlateral・gwtani・stg・vshaped・
-#   bldgdrag・driftwood・bankcap・brink は reference を持たない検定型(Check_*.py・再開と並列のバイト比較。Run.sh の
+#   bldgdrag・driftwood・bankcap・brink・bankspill・tjunction は reference を持たない検定型(Check_*.py・再開と並列のバイト比較。Run.sh の
 #   終了コードで判定。stg は STG 格子の動作確認で、MPI の 2 ランクでは初期化で止まることを確かめる。
 #   vshaped は V 字流域の降雨流出の運動学的波の理論解との比較。bldgdrag は家屋の抗力項を含む等流の
 #   理論値との比較で、逐次のジョブだけで回す(辺ごとの局所の式で、MPI のジョブは同じ式を通るだけなので
@@ -15,6 +15,11 @@
 #   なること、合流部の池に落差から流れが入る構成で 1 の水面が定常に落ち着くことの検定(0 が揺れ続ける形の
 #   池の記録を含む)。
 #   逐次と MPI の両方で回す(np = 2 では、段落ちの直前・足元の直後の斜めの辺と、合流部の池が帯の境界をまたぐ))
+#   bankspill は、河道の水が河岸のくぼみへあふれ始める水位が、まっすぐな区間では時間刻みによらないことの検定
+#   (屈曲の正面のくぼみの時間刻み依存は、現行の限界として記録)。tjunction は、1 セル幅の T 字の合流の上流の
+#   水深を運動量の理論と比べる検定(定常・質量の収支・エネルギーが増えないことを判定し、合流の損失が岸の
+#   濡れているときだけ数えられることは、現行の限界として記録)。どちらも逐次と MPI の両方で回す(np = 2 では、
+#   屈曲の斜めの辺・合流の周りの辺が帯の境界をまたぐ)
 #   river_flowline は、前処理 utils/river_flowline(河道マスクを標高の落水線に載せ直す)が、秩父の 4 つの格子の
 #   置いてある載せ直し済みのマスクをバイト一致で作り直すことの検定で、逐次のジョブだけで回す(encflow は
 #   使わない。Run.sh が utils/river_flowline をビルドする)
@@ -43,7 +48,7 @@ jobs:
       - name: Regression tests
         run: |
           set -e
-          for c in wave dambreak frost pump conduit salt vzcol vzzone sfzone prmap wfshoal wfshadow wfcurrent wfsed wfswash gwlateral gwtani stg vshaped bldgdrag driftwood bankcap brink river_flowline; do
+          for c in wave dambreak frost pump conduit salt vzcol vzzone sfzone prmap wfshoal wfshadow wfcurrent wfsed wfswash gwlateral gwtani stg vshaped bldgdrag driftwood bankcap brink bankspill tjunction river_flowline; do
             echo "===== test/$c ====="
             (cd "test/$c" && ./Run.sh)
           done
@@ -64,7 +69,7 @@ jobs:
         run: |
           set -e
           export OMP_NUM_THREADS=1
-          for c in wave dambreak frost pump conduit salt vzcol vzzone sfzone prmap wfshoal wfshadow wfcurrent wfsed wfswash gwlateral gwtani stg vshaped bankcap brink; do
+          for c in wave dambreak frost pump conduit salt vzcol vzzone sfzone prmap wfshoal wfshadow wfcurrent wfsed wfswash gwlateral gwtani stg vshaped bankcap brink bankspill tjunction; do
             echo "===== test/$c (np=2) ====="
             (cd "test/$c" && ./Run_MPI.sh 2)
           done
