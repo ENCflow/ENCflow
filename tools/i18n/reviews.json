@@ -3605,11 +3605,11 @@
     {
       "source": "test/chichibu/README.md",
       "target": "test/chichibu/en/README.md",
-      "source_sha256": "174779ac950c3fc4d356c0b774566343fd0216bdc4af1ec58675231ec6cd285f",
-      "target_sha256": "556fe6aa8e69b9395937fc687e4e9052c71425131e848e2dda868f3cc2bff8ed",
+      "source_sha256": "9910e736eb53b4dd0b8f917e9e99b11ac72d9cdec86a803e109da7f05e724d38",
+      "target_sha256": "2239a2b4a13d9223f5898958aabed0e2c098faf47e1e7a34289cbcb11ca98328",
       "reviewer": "Claude (Claude Code session; full-text content and lexical review, no model execution)",
       "method": "assistant",
-      "reviewed_on": "2026-11-14"
+      "reviewed_on": "2026-11-15"
     },
     {
       "source": "test/chichibu/data_chichibu/README.md",
@@ -3641,11 +3641,11 @@
     {
       "source": "test/chichibu/figs/chichibu.png",
       "target": "test/chichibu/en/figs/chichibu.png",
-      "source_sha256": "63453719bb44f7d93bda0b2b10aa68025c949761398388600d5fc4d96ad6b0cb",
-      "target_sha256": "6df85a99c5808bafc3eacd157b5811131a3e064b83142085a4df92598ebcab5c",
+      "source_sha256": "65fe47efe6944ba13a83a4f8d843945eb1b99d14e881223a79e2d644f0f337a3",
+      "target_sha256": "c916ff89b7f320ae672d69a22fa178209beb4d71b601410492d49b255dd370cc",
       "reviewer": "Claude (Claude Code session; full-text content and lexical review, no model execution)",
       "method": "assistant",
-      "reviewed_on": "2026-11-14"
+      "reviewed_on": "2026-11-15"
     },
     {
       "source": "test/chichibu_icmap/README.md",
@@ -4064,11 +4064,11 @@
     {
       "source": "test/gwsect/README.md",
       "target": "test/gwsect/en/README.md",
-      "source_sha256": "77dfc918c6dd593346f0d2d150432437742031ae1bf6683b3377c886feaeecd1",
-      "target_sha256": "a5926c237c3f2797750d5f714fd3a1de824e8502fb4aa976058163e8232486af",
-      "reviewer": "Claude (Claude Code session; reviewed the text on the new default 1/3 of gw_diagratio and salt_diagratio and the values that change with it (developer.md sec. 98) in the Japanese source against the English mirror, 2026-11-05)",
+      "source_sha256": "668bfebdc7d7c05077684a25347d0974c8ff88ec71fd00f8e4137524509e3e9d",
+      "target_sha256": "a0b4c9859ffc11b366428c28df8db711719e04447da7623e40c2efa657561af5",
+      "reviewer": "Claude (Claude Code session; full-text content and lexical review, no model execution)",
       "method": "assistant",
-      "reviewed_on": "2026-11-05"
+      "reviewed_on": "2026-11-15"
     },
     {
       "source": "test/gwseep/README.md",

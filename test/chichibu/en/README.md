@@ -23,7 +23,7 @@ experiments of §68. The tutorial on the same catchment at 200 m grid is
 | Domain and grid | 56 km × 30 km, 560 × 300 cells (Δx = 100 m). `data_chichibu/` (elevation `Chichibu_100m_filled2.txt` (depression-filled), catchment mask, channel mask `Chichibu_100m_river_flowline.txt` (moved onto the flow lines of the elevation)) |
 | Roughness | Slopes n = 0.15, channel cells (fn_rw) n = 0.02 |
 | Rainfall | A triangle of 0 at 0 min, 200 mm/h at 30 min and 0 at 60 min (100 mm in total; surface flow is the only process; no infiltration or interception) |
-| Computation | [Dynamic wave](../../../docs/en/users_guide/shallow_water.md) (f_govequation = 0), the default ENC settings (f_advection_scheme = 3, f_opening_dynamic = 3 (changed from 1 to 2 on 2026-10-18 and from 2 to 3 on 2026-10-31; §68.38, §68.41), f_dry_head_cap = 2 (changed from 1 on 2026-11-13; §108), f_advection_donor = 3 (changed from 0 on 2026-11-09; §102)). `p_adv_upwind_index = 0.1`, dt = 2.5 s, 6 h |
+| Computation | [Dynamic wave](../../../docs/en/users_guide/shallow_water.md) (f_govequation = 0), the default ENC settings (f_advection_scheme = 3, f_opening_dynamic = 3 (changed from 1 to 2 on 2026-10-18 and from 2 to 3 on 2026-10-31; §68.38, §68.41), f_dry_head_cap = 2 (changed from 1 on 2026-11-13; §108), f_advection_donor = 3 (changed from 0 on 2026-11-09; §102), f_advection_bend = 1 (changed from 0 on 2026-11-15; §110)). `p_adv_upwind_index = 0.1`, dt = 2.5 s, 6 h |
 | Records | Discharge at transects 1–4 (the main stem from upstream to downstream; x = 16.5 / 21.5 / 29.6 / 43.3 km), depth at 2 probes (channel cells on transects 1 and 2) |
 
 | File | Contents |
@@ -51,31 +51,42 @@ deep form in the channel cells (black dots) of the main stem and the
 tributaries. Inundation (around 1 m) also spreads over the lowlands of the
 valley floor. Middle: discharge at transects 1–4 and the rainfall. The peak becomes larger
 and later from upstream to downstream, and at the most downstream transect
-4 it is 5315 m³/s @ 3.33 h. Right: depth at the probes. Even after the
+4 it is 5261 m³/s @ 3.35 h. Right: depth at the probes. Even after the
 peak of the rainfall (0.5 h) the channel depth keeps increasing for 0.35–0.5 hours
-(the peak is at 0.85 h at probe 1 and 1.00 h at probe 2), showing the delay
+(the peak is at 0.85 h at probe 1 and 0.98 h at probe 2), showing the delay
 of the collection from the hillslopes.
 
 ## Findings
 
 | Transect | Position | Peak discharge (m³/s) | Peak time (h) |
 |---|---|---|---|
-| 1 | Uppermost main stem (x = 16.5 km) | 1159 | 0.87 |
-| 2 | x = 21.5 km | 2862 | 1.00 |
-| 3 | x = 29.6 km | 4299 | 1.63 |
-| 4 | 4.6 km upstream of the catchment outlet (x = 43.3 km) | 5315 | 3.33 |
+| 1 | Uppermost main stem (x = 16.5 km) | 1161 | 0.85 |
+| 2 | x = 21.5 km | 2885 | 0.98 |
+| 3 | x = 29.6 km | 4376 | 1.67 |
+| 4 | 4.6 km upstream of the catchment outlet (x = 43.3 km) | 5261 | 3.35 |
 
 - The reference is the Log of the default settings (scheme 3, dynamic
-  opening correction, f_advection_donor = 3, f_dry_head_cap = 2). The table and figure above are the
-  values after the default of the edge-depth cap became f_dry_head_cap = 2 and the channel mask was
-  moved onto the flow lines of the elevation on 2026-11-13; compared with the values before (original
-  channel mask, default 1; 1179 @ 0.83 h, 2956 @ 0.97 h, 4474 @ 1.60 h and 5759 m³/s @ 3.08 h at
-  transects 1–4), the peaks are 1.7–7.7 % smaller and 2–15 minutes later. The switch of the cap
+  opening correction, f_advection_donor = 3, f_dry_head_cap = 2, f_advection_bend = 1). The table and
+  figure above are the values after the default of the upwind value on the edge just after a bend
+  became f_advection_bend = 1 on 2026-11-15; compared with the values before (default 0; 1159 @ 0.87 h,
+  2862 @ 1.00 h, 4299 @ 1.63 h and 5315 m³/s @ 3.33 h at transects 1–4), the peaks differ by +0.2,
+  +0.8, +1.8 and −1.0 % and the peak times by at most 2 minutes. The transect discharges are almost
+  the same, but the depth of the channel cells at the foot of drops changes by several metres (with
+  0, in a cell where the flow turns right after a drop, the momentum of the falling flow is lost and
+  the water surface is heaped up above the pond downstream; the cells that differ by more than 0.5 m
+  number 44–91 between 50 and 120 minutes; developer.md §110.17, in Japanese;
+  [test/brink](../../brink/en/README.md)).
+  The values before are those after the default of the edge-depth cap became f_dry_head_cap = 2 and
+  the channel mask was moved onto the flow lines of the elevation on 2026-11-13; compared with the
+  values before that (original channel mask, default 1; 1179 @ 0.83 h, 2956 @ 0.97 h, 4474 @ 1.60 h
+  and 5759 m³/s @ 3.08 h at transects 1–4), the peaks are 1.7–7.7 % smaller and 2–15 minutes later.
+  The switch of the cap
   accounts for +0.2 to +2.0 % and at most 4 minutes, compared on the moved channel mask (with 1,
   channel water climbed onto rain-wetted valley-wall cells above its level), and the rest is due to
   the channel mask (the valley-wall cells that carried the channel roughness return to the slope
   roughness; developer.md §108.8, §108.9, §109.4).
-  The values before are those after the default became f_advection_donor = 3 on 2026-11-09; compared with
+  The values with the original channel mask and default 1 are those after the default became
+  f_advection_donor = 3 on 2026-11-09; compared with
   the default 0 before that (1197 @ 0.82 h, 2862 @ 0.98 h, 3974 @ 1.77 h and
   4830 m³/s @ 3.53 h at transects 1–4), the peaks at transects 3 and 4 are 13 and
   19 % larger and 0.2 and 0.5 hours earlier (the artificial brake from thin films
@@ -93,8 +104,8 @@ of the collection from the hillslopes.
   of the Log is constant at the total rainfall of 100 mm). Water accumulates
   in the channel cell (479, 35) at the outlet, reaching a depth of 34 m (water
   level 141.4 m) at 6 h, and the backwater runs up the main stem to x = 41.6 km,
-  including transect 4 (the 6 h depth of 5.63 m at transect 4 is a value in the
-  backwater zone). The peak (3.33 h) is before this influence (the pond level of
+  including transect 4 (the 6 h depth of 5.64 m at transect 4 is a value in the
+  backwater zone). The peak (3.35 h) is before this influence (the pond level of
   131 m at 3.3 h is below the bed of transect 4, 137 m). In practical
   computations place a free-outflow boundary (`&list_bound`) at the outlet.
 - This case is also a guide to convergence: on the 50 / 100 / 200 m grids of
@@ -129,7 +140,7 @@ opening correction (scheme 3: 3773 → 4857 m³/s), and with
 f_advection_donor = 1 it approached further, to 5656 m³/s (100 m), the value
 of the 50 m grid (both with the code of that time; option 1 was removed on
 2026-11-07 and replaced by 3, which contains most of its effect; with the
-current code `param_dyn_s3_donor3.txt` gives 5,741 m³/s; §102). The walled natural banks (lev1) complete the 6 h but are
+current code `param_dyn_s3_donor3.txt` gives 5,648 m³/s; §102). The walled natural banks (lev1) complete the 6 h but are
 rough, with Runge 12% and frequent ex_flux; for natural banks the wall-less
 width mode is recommended (§68.25, §68.29).
 
