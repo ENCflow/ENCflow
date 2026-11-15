@@ -897,11 +897,11 @@ is worth remembering when choosing a resolution. The procedure for choosing
 the design reasons for ENCflow's fixed step are in the
 [time-step design policy](../../../docs/en/users_guide/timestep_policy.md#fixed-time-step).
 
-| grid | computed cells | dt | steps | run time (ENC, 4 threads) |
+| grid | computed cells | dt | steps | approximate run time (ENC, 4 threads) |
 |---|---|---|---|---|
-| 200 m | 17,885 | 6 s | 3,600 | 17 s |
-| 100 m | 71,486 | 1.5 s | 14,400 | 219 s |
-| 50 m | 285,843 | 0.75 s | 28,800 | 1,337 s |
+| 200 m | 17,885 | 6 s | 3,600 | about 22 s |
+| 100 m | 71,486 | 1.5 s | 14,400 | about 280 s |
+| 50 m | 285,843 | 0.75 s | 28,800 | about 1,700 s |
 
 ### Result 1: changing the resolution (ENC)
 

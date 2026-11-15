@@ -461,7 +461,7 @@ and the time series passes its peak (about 1.4 h) and recedes.
   PNG (you can make a movie with e.g.
   `ffmpeg -i frames/frame_%04d.png step5.mp4`).
 - A finer display interval makes the motion smoother, but the drawing then
-  takes longer than the computing. The computation alone takes about 15 s
+  takes longer than the computing. The computation alone takes about 20 s
   for the 6 hours; with a display every 5 minutes it is 73 frames and about
   a minute.
 - The same idea, implemented with more options (automatic display

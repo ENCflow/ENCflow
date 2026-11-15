@@ -5090,8 +5090,8 @@
     {
       "source": "tutorials/bmi/README.md",
       "target": "tutorials/bmi/en/README.md",
-      "source_sha256": "60cf371f4fab5e4307ae46537b0195240604b94ef80dbafc270f52e242f22d5a",
-      "target_sha256": "0ecd0a1cf0d01997c2911e980aacf3245e90220fd292cf9a215fcb10f1db17c1",
+      "source_sha256": "c00a9377b68435439e66fb4bcad16af669af3f2427ee7c95499b84107bd588ee",
+      "target_sha256": "ef99512ea7b52cc1080d8a36600313d2fb553c275b654ce8cc4961a40d0d46e0",
       "reviewer": "Claude (Claude Code session; full-text content and lexical review, no model execution)",
       "method": "assistant",
       "reviewed_on": "2026-11-15"
@@ -5135,8 +5135,8 @@
     {
       "source": "tutorials/chichibu/README.md",
       "target": "tutorials/chichibu/en/README.md",
-      "source_sha256": "ecec6dc5aa328300cd2903b93d1a8952e04737867be3649e4a6fe5cdff6b701d",
-      "target_sha256": "1d41f4eb46aff35dc99646f7f2f0bcc360023df76018dc352214186d180bab1a",
+      "source_sha256": "b697e1feac7bcd9bd5187fe550cf45226f0343aa188aeeebeb8fd6075cdaf7bf",
+      "target_sha256": "5a8530bcdec47c630e4ae8946efe7bc6a88b1206a73209593706107fc6faaf25",
       "reviewer": "Claude (Claude Code session; full-text content and lexical review, no model execution)",
       "method": "assistant",
       "reviewed_on": "2026-11-15"
