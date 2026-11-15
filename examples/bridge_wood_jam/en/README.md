@@ -227,12 +227,14 @@ jam section; no simulation results are used). The dots are the simulation.
   overflow over it, and the displacement of water by the wood are not represented.
 - **The depth in the channel downstream of the bridge comes out 0.2–0.3 m too deep.** When the bank
   cells are wet, the flow in the adjacent channel slows down numerically (it appears with the
-  default eight-neighbour grid; it seems to be of the same family as the "side-face deceleration"
-  that [the advection explanation](../../../docs/en/users_guide/advection_donor.md) §7 lists for
-  oblique channels, but the cause has not been identified). In a control run with four neighbours
+  default eight-neighbour grid; part of it is the "lateral-face braking" that
+  [the advection explanation](../../../docs/en/users_guide/advection_donor.md) §7 lists. In a
+  prototype that removes this braking (not part of the model), the depth 10 m downstream of the
+  bridge falls from 2.66 m to 2.51 m. The cause of the rest has not been identified). In a control
+  run with four neighbours
   (`p_diagratio = 0.0` added to `&list_enc`) the depth 10 m downstream of the bridge falls from
   2.66 m to 2.32 m, while the maximum depth upstream of the bridge (4.18 → 4.22 m) and the peak
-  bypass discharge (60 → 58 m³/s) hardly change. The area flooded by 0.1 m or more around the
+  bypass discharge (60 → 59 m³/s) hardly change. The area flooded by 0.1 m or more around the
   bridge (x > 800 m) goes from 17.3 ha to 15.8 ha (the four-neighbour run has another disturbance
   near the inflow at the upstream end, so that part is excluded from the comparison). Under
   conditions close to the threshold of overflow (the case with a capture ratio of 0.1), this
@@ -243,8 +245,8 @@ jam section; no simulation results are used). The dots are the simulation.
   wet, water from the channel can move onto it even though the channel level is lower (in this
   reach the channel level is 0.2–0.9 m below the bank; this is not a real overflow). With 1, the
   map of the maximum depth shows a thin strip 0.1–0.2 m deep and a patch at the upstream end
-  (0.25 ha of the area flooded by 0.1 m or more), and the backwater at the upstream end is
-  somewhat too large at 0.46 m. The maximum depth upstream of the bridge (4.19 m), the peak bypass
+  (0.24 ha of the area flooded by 0.1 m or more), and the backwater at the upstream end is
+  somewhat too large at 0.42 m. The maximum depth upstream of the bridge (4.19 m), the peak bypass
   discharge (60 m³/s) and the flooded area (17.4 ha) are almost the same. The default 2 also caps
   toward a wet receiver whose bed is above the water level of the sender, so the strip does not
   appear ([Advection schemes](../../../docs/en/users_guide/advection.md) §5; verified in

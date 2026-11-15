@@ -1391,11 +1391,11 @@
     {
       "source": "examples/bridge_wood_jam/README.md",
       "target": "examples/bridge_wood_jam/en/README.md",
-      "source_sha256": "fbb53433399e12d16f7fdf52ba4fbad95223d0a541d8d2e1ffeab1095bd470f7",
-      "target_sha256": "b8715ada048f4d9cf9977ff091e4e609273cf1964e6659c9f41cab47b965dea6",
+      "source_sha256": "1f537b596c847c4f0e1e6d827cedeb35596b83d6af999ca466c49acafab8c1c4",
+      "target_sha256": "cd27ba5800815c719c1d6d6953a2b49fc233ebc9bb986430165d95b681a810d0",
       "reviewer": "Claude (Claude Code session; full-text content and lexical review, no model execution)",
       "method": "assistant",
-      "reviewed_on": "2026-11-14"
+      "reviewed_on": "2026-11-15"
     },
     {
       "source": "examples/bridge_wood_jam/figs/laws.png",
