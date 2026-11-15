@@ -397,8 +397,8 @@ The following computations support this view.
    [supplement of the chichibu tutorial](../../../tutorials/chichibu/en/README.md#supplement-effect-of-resolution-and-the-character-of-the-enc-grid),
    the same catchment computed on the ENC grid and on a 4-neighbour grid
    (`p_diagratio = 0`) gives a peak discharge at the transect near the outlet
-   of 6,208 m³/s with the ENC grid at 200 m, against 4 at 200 m, 23 at 100 m
-   and 430 m³/s at 50 m with the 4-neighbour grid. Even a four times finer
+   of 6,607 m³/s with the ENC grid at 200 m, against 4 at 200 m, 23 at 100 m
+   and 420 m³/s at 50 m with the 4-neighbour grid. Even a four times finer
    grid does not reconnect the channel network of the 4-neighbour grid,
    which is cut wherever it runs diagonally.
 2. **One-cell-wide channels carried correctly in any orientation.** With the

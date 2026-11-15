@@ -150,52 +150,71 @@ do for [t=1:2] {
 }
 unset multiplot
 
-# ---- Figure 2d: a dip and a bump in the 1-minute values (transect 3 of the 50 m grid; example of item 3 (a) of the
-#      supplement "On fine oscillations in hydrographs") ----
-# At the pond outlet and the stepped gorge upstream of the transect the flow switches between a shallow, fast state
-# and a deep, slow state within 1-2 minutes (this comes from a rule of the computation, not from a change of the real flow); the water stored and released makes the dip on the rising limb (69 min)
-# and the bump on the recession (122 min). The 100 m and 200 m grids (dashed) are smooth. Lower panel: change per minute
+# ---- Figure 2d: a dip and a wobble in the 1-minute values (transects 2 and 3 of the 50 m grid; example of item 3 (a)
+#      of the supplement "On fine oscillations in hydrographs") ----
+# Transect 2 (left): a one-minute dip at 42 min, when the reach at the foot of a drop upstream switches from a
+# shallow, fast flow to a deep flow.
+# Transect 3 (right): a wobble of about +-200 m3/s around 71-75 min, when the pond upstream reaches a low valley wall.
+# Both are water stored and released in a reach and do not change the total runoff. The 100 m and 200 m grids
+# (dashed) are smooth.
+# Lower panels: change per minute
 reset
 set datafile separator comma
-set terminal pngcairo size 900,640 font ",11"
+set terminal pngcairo size 1100,640 font ",11"
 set output "en/figs/supp_t3_osc.png"
-set multiplot layout 2,1 title "A dip and a bump at transect 3 of the 50 m grid (flow regime switching in the gorge upstream)" noenhanced
+set multiplot layout 2,2 title "A dip and a wobble at transects 2 and 3 of the 50 m grid (flow regime switching at the foot of a drop and at a pond outlet upstream)" noenhanced
 set grid
 set xlabel "time (min)"
-set key top right
-set xrange [55:135]
+set key top left
+array TR2[2]  = [ 2, 3 ]
+array X0[2]   = [ 30, 55 ]
+array X1[2]   = [ 60, 150 ]
+array YQ[2]   = [ 4500, 7000 ]
+# Upper panels: discharge
 set ylabel "discharge (m^3/s)"
-set yrange [0:6500]
-plot "result_supp_50m/fluxes/flux0003.csv"  using 2:3 with lines lw 1.6      lc rgb '#1f9fd0' title "50 m", \
-     "result_supp_100m/fluxes/flux0003.csv" using 2:3 with lines lw 1.2 dt 2 lc rgb '#2ca02c' title "100 m", \
-     "result_supp_200m/fluxes/flux0003.csv" using 2:3 with lines lw 1.2 dt 2 lc rgb '#9467bd' title "200 m"
-# Lower panel: change per minute = discharge of the row - discharge of the previous row (reset to NaN at the head of each curve)
+do for [c=1:2] {
+  if (c == 1) { set key top left } else { set key top right }
+  set xrange [X0[c]:X1[c]]
+  set yrange [0:YQ[c]]
+  set title sprintf("transect %d", TR2[c])
+  plot sprintf("result_supp_50m/fluxes/flux%04d.csv", TR2[c])  using 2:3 with lines lw 1.6      lc rgb '#1f9fd0' title "50 m", \
+       sprintf("result_supp_100m/fluxes/flux%04d.csv", TR2[c]) using 2:3 with lines lw 1.2 dt 2 lc rgb '#2ca02c' title "100 m", \
+       sprintf("result_supp_200m/fluxes/flux%04d.csv", TR2[c]) using 2:3 with lines lw 1.2 dt 2 lc rgb '#9467bd' title "200 m"
+}
+# Lower panels: change per minute = discharge of the row - discharge of the previous row (reset to NaN at the head of each curve)
 set ylabel "change per minute (m^3/s)"
-set yrange [-1400:1400]
-plot p = NaN, "result_supp_50m/fluxes/flux0003.csv"  using 2:(d = $3 - p, p = $3, d) with lines lw 1.6      lc rgb '#1f9fd0' title "50 m", \
-     p = NaN, "result_supp_100m/fluxes/flux0003.csv" using 2:(d = $3 - p, p = $3, d) with lines lw 1.2 dt 2 lc rgb '#2ca02c' title "100 m", \
-     p = NaN, "result_supp_200m/fluxes/flux0003.csv" using 2:(d = $3 - p, p = $3, d) with lines lw 1.2 dt 2 lc rgb '#9467bd' title "200 m"
+unset title
+do for [c=1:2] {
+  if (c == 1) { set key top left } else { set key top right }
+  set xrange [X0[c]:X1[c]]
+  set yrange [-600:1000]
+  plot p = NaN, sprintf("result_supp_50m/fluxes/flux%04d.csv", TR2[c])  using 2:(d = $3 - p, p = $3, d) with lines lw 1.6      lc rgb '#1f9fd0' title "50 m", \
+       p = NaN, sprintf("result_supp_100m/fluxes/flux%04d.csv", TR2[c]) using 2:(d = $3 - p, p = $3, d) with lines lw 1.2 dt 2 lc rgb '#2ca02c' title "100 m", \
+       p = NaN, sprintf("result_supp_200m/fluxes/flux%04d.csv", TR2[c]) using 2:(d = $3 - p, p = $3, d) with lines lw 1.2 dt 2 lc rgb '#9467bd' title "200 m"
+}
 unset multiplot
 
-# ---- Figure 2e: a step when water starts to spill onto the bank (transect 4 of the 200 m grid with a 50 m wide
-#      channel; example of item 3 (b) of the same supplement) ----
-# At 101 min, when the channel water starts to enter a bank cell, the discharge downstream drops by about a tenth in
-# one minute. It does not appear without the width (dashed)
+# ---- Figure 2e: steps when water starts to spill onto a higher cell (transect 4 of the 200 m grid; example of
+#      item 3 (b) of the same supplement) ----
+# With a 50 m wide channel (solid): at 104 min, when the channel water starts to enter a bank cell, the discharge
+# downstream drops by about a fifth in one minute.
+# Without the width (dashed; the same run as Step 3): around the peak, a shortcut over the cell on the outside of
+# a bend downstream opens at 150-151 min (+4 % in two minutes) and closes at 167-168 min. Both depend on the time step
 reset
 set datafile separator comma
 set terminal pngcairo size 900,640 font ",11"
 set output "en/figs/supp_t4_step.png"
-set multiplot layout 2,1 title "A step at transect 4 of the 200 m grid with a 50 m wide channel (when water starts to spill onto the bank)" noenhanced
+set multiplot layout 2,1 title "Steps at transect 4 of the 200 m grid (when channel water starts to spill onto a higher neighbouring cell)" noenhanced
 set grid
 set xlabel "time (min)"
 set key top left
-set xrange [80:130]
+set xrange [80:180]
 set ylabel "discharge (m^3/s)"
 set yrange [2000:7000]
 plot "result_supp_200m_w50/fluxes/flux0004.csv" using 2:3 with lines lw 1.6      lc rgb '#9467bd' title "200 m W = 50", \
      "result_supp_200m/fluxes/flux0004.csv"     using 2:3 with lines lw 1.2 dt 2 lc rgb '#9467bd' title "200 m no width"
 set ylabel "change per minute (m^3/s)"
-set yrange [-800:600]
+set yrange [-1200:600]
 plot p = NaN, "result_supp_200m_w50/fluxes/flux0004.csv" using 2:(d = $3 - p, p = $3, d) with lines lw 1.6      lc rgb '#9467bd' title "200 m W = 50", \
      p = NaN, "result_supp_200m/fluxes/flux0004.csv"     using 2:(d = $3 - p, p = $3, d) with lines lw 1.2 dt 2 lc rgb '#9467bd' title "200 m no width"
 unset multiplot

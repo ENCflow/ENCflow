@@ -46,7 +46,7 @@ for r in 200m 100m 50m; do
     sed -e '/dir_data/i\  fn_channel = "-"           ! 河道条件設定ファイル' \
         -e "s#^  dir_data = \".*\"#  dir_data = \"$wdir\"#" "param_supp_$r.txt" > "wrk_supp_param_${r}_w50.txt"
     printf '\n&list_channel\n  fn_width = "%s"   ! 河道幅 (m): 河道セルに一様 50 m(壁なし=自然河岸)\n/\n' "$wfile" >> "wrk_supp_param_${r}_w50.txt"
-    # 200 m は流れが幅 50 m の河道に集まり、dt 6 s では 1.5 時間目に Courant 数 1 を超える
+    # 200 m は流れが幅 50 m の河道に集まり、dt 6 s では 75 分に Courant 数 1 を超える
     # (流速 29 m/s)ので dt = 4 s にする
     if [ "$r" = 200m ]; then sed -i 's/^  dt = 6.0 /  dt = 4.0 /' "wrk_supp_param_${r}_w50.txt"; grep -q 'dt = 4.0' "wrk_supp_param_${r}_w50.txt"; fi
     rm -rf result

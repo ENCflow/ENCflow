@@ -414,7 +414,10 @@ visual inspection of results; run them from there).
 
 We obtained catchment-scale flood routing at 1-minute resolution, with
 the flood wave growing and lagging from upstream transect 1 to
-downstream transect 4.
+downstream transect 4. The small step on the peak of transect 4 (up at
+about 150 min, down at about 168 min) is not a change of the real flow
+but comes from a rule of the computation (item 3 (b) of the supplement
+[Fine oscillations in the hydrograph](#supplement-fine-oscillations-in-the-hydrograph)).
 
 The distributed outputs can be surveyed with `Plot_step3.plt`, which
 arranges six maps of the final-time and maximum fields on one screen:
@@ -687,7 +690,7 @@ supplement covers how to read and deal with fine oscillations on the
 the effect of resolution and the character of the ENC grid.
 
 The 1-minute hydrographs of real-terrain computations can carry fine
-oscillations (short ups and downs) as well as dips, bumps and steps. When
+oscillations (short ups and downs) as well as dips and steps. When
 you notice them, consider them in this order.
 
 1. **Small oscillations can often be left as they are.** If
@@ -715,81 +718,124 @@ you notice them, consider them in this order.
    oscillation at the transect has decreased (for placing transects, see
    item 4).
 
-3. **Two kinds come from rules of the computation.** Neither is a change
-   of the real flow.
+3. **Two kinds come from rules of the computation and from the grid.**
+   Neither should be read as a change of the discharge of the real river.
 
-   **(a) Where the channel turns at the outlet of a pond, a dip and a bump
-   can appear in the discharge.** The figure below shows transect 3 on the
-   50 m grid computed in the next supplement (effect of resolution) (the
-   lower panel is the change of the discharge per minute).
+   **(a) At the foot of a drop in the channel or at the outlet of a pond,
+   short dips and wobbles can appear in the discharge.** The figure below
+   shows transects 2 and 3 on the 50 m grid computed in the next supplement
+   (effect of resolution) (the lower panels are the change of the discharge
+   per minute).
 
-   ![A dip and a bump at transect 3 of the 50 m grid](figs/supp_t3_osc.png)
+   ![A dip and a wobble at transects 2 and 3 of the 50 m grid](figs/supp_t3_osc.png)
 
-   A deep dip appears at 69 minutes on the rising limb (the discharge
-   falls by 920 m^3/s in one minute and rises by 1,210 m^3/s in the next),
-   and a bump at 122 minutes on the recession (it rises by 890 m^3/s and
-   falls by 1,190 m^3/s). 400 m upstream of the transect, a pond formed on
-   a flat reach (14 to 18 m deep around the peak) drains into a stepped
-   gorge (the bed drops 14 m over 400 m; the valley walls on both sides
-   are more than 10 m above the bed), and the channel turns diagonally at
-   this outlet. The advection term of ENCflow does not count, at the cell
-   edge just after a change of the channel direction, the momentum
-   (inertia) carried in from upstream. This is correct at a bend where the
-   velocity is nearly uniform, but where the flow accelerates sharply, as
-   at the outlet of a pond, the velocity at that edge becomes too high and
-   the flow in the gorge becomes too shallow and fast (depth 3 to 4 m,
-   velocity about 20 m/s; the energy set by the pond level can drive a
-   flow of only about 5 m depth and 16 m/s). At 69 minutes, when the
-   discharge has grown and the pond level reaches a low part of the
-   neighbouring valley wall (12 to 14 m above the bed), the slow velocity
-   of the thin flow over the wall is counted as a brake on the main flow,
-   and the upstream part of the gorge switches to a deep, slow state
-   (depth 11 to 15 m, velocity 5 to 10 m/s) within one or two minutes; the
-   discharge downstream dips by the water stored in the reach (about
-   100,000 m^3). At 122 minutes on the recession the opposite switch
-   occurs and the stored water comes out as a bump. They do not appear on
-   the 100 m and 200 m grids (dashed).
+   At transect 2 there is a dip that lasts one minute at 42 minutes on the
+   rising limb (the discharge falls by 400 m^3/s in one minute and rises by
+   800 m^3/s in the next). 150 m upstream of the transect the channel falls
+   diagonally over a drop into a level reach (the entrance of a pond created
+   by depression filling). At the foot of the drop the falling flow stays
+   shallow and fast (about 4 m deep), but when the discharge grows and the
+   water level downstream rises, it switches within one or two minutes to a
+   deep flow about 10 m deep. The discharge downstream dips for one minute
+   by the water stored in that reach. A shallow, fast flow switching to a
+   deep flow also happens in real rivers, but the one-minute speed of the
+   switch and the size of the dip are set by the grid: water is stored in a
+   reach of a few cells (grid spacing 50 m) at the foot.
 
-   The dip and the bump only release stored water later, so they do not
+   At transect 3 there are two small dips at 71 to 75 minutes, just before
+   the peak, in which the discharge falls by 180 to 210 m^3/s in one minute
+   and recovers at once. 400 m upstream of the transect, a pond formed on a
+   flat reach (14 to 18 m deep around the peak) drains into a stepped gorge
+   (the bed drops 14 m over 400 m; the valley walls on both sides are more
+   than 10 m above the bed). When the discharge has grown and the pond level
+   reaches a low part of the neighbouring valley wall (12 to 14 m above the
+   bed), the slow velocity of the thin flow over the wall is counted as a
+   brake on the main flow (this comes from a rule of the computation; see
+   "Lateral-face braking" in §7 of
+   [One-cell-wide channels and the upwind donors of the advection term](../../../docs/en/users_guide/advection_donor.md)
+   in the users guide), and the upstream part of the gorge moves from a
+   shallow, fast state to a deep, slow state over a few minutes. The dips
+   are the water stored in the reach during that time. At 122 to 144
+   minutes on the recession there are also small wobbles of 100 to
+   200 m^3/s per minute (for example +50, +50 and -220 m^3/s at 142 to
+   144 minutes; probably when the same reach returns from the deep, slow
+   state to the shallow, fast state). Transect 1 also has a
+   one-minute dip of the same kind as transect 2 (100 m^3/s) at 38 minutes
+   on the rising limb. None of these appears on the 100 m and 200 m grids
+   (dashed).
+
+   The dips and wobbles only release stored water later, so they do not
    change the total runoff. Overlay a moving average when you read the
-   hydrograph. Regrading the flat reach and the steps downstream of the
-   pond outlet to a uniform slope lowers the largest change per minute
-   from 1,210 to 780 m^3/s. With `f_advection_bend = 1` in `&list_enc`,
-   the cell boundary just after a change of channel direction also gets
-   an inertia built from the upstream flow. The flow in the gorge then no
-   longer exceeds the energy of the pond, and the largest change per
-   minute falls to 430 m^3/s (the peak becomes 1 % larger; the brake by
-   the thin flow over the valley wall remains, so the switch between the
-   shallow and the deep state takes place gently over 4 to 8 minutes).
-   Neither run is part of `Fig_supp.sh`. For the mechanism and its limits,
+   hydrograph.
+
+   With `f_advection_bend = 0` in `&list_enc` (the default until
+   2026-11-15), the cell edge just after a change of the channel direction
+   no longer counts the momentum (inertia) carried in from upstream. At a
+   bend where the velocity is nearly uniform the result is the same, but
+   where the flow accelerates sharply, as at the outlet of a pond, the
+   velocity at that edge becomes too high and the flow in the gorge exceeds
+   what the energy set by the pond level can drive (depth 3 to 4 m, velocity
+   about 20 m/s; the energy can drive only about 5 m depth and 16 m/s). In
+   that run the dips at transect 3 become a deep dip at 69 minutes (the
+   discharge falls by 920 m^3/s in one minute and rises by 1,210 m^3/s in
+   the next), and a bump appears at 122 minutes on the recession (it rises
+   by 890 m^3/s and falls by 1,190 m^3/s) (the dip at 42 minutes at transect
+   2 does not appear; the rise of the discharge only slows for one minute).
+   That run is not part of `Fig_supp.sh`. For the mechanism and its limits,
    see §4.4 of
    [Advection schemes](../../../docs/en/users_guide/advection.md) in the
    users guide.
 
-   **(b) When water starts to spill onto a bank, the discharge can change
-   like a step.** The figure below shows transect 4 of the run in which a
-   50 m wide channel is given inside the cells of the 200 m grid in the
-   next supplement (a subgrid channel; see
-   [the channel chapter of the users guide](../../../docs/en/users_guide/channel.md)).
+   **(b) When channel water starts to spill onto a higher neighbouring
+   cell, the discharge can change like a step.** The figure below shows
+   transect 4 on the 200 m grid. The solid line is the run of the next
+   supplement in which a 50 m wide channel is given inside the cells (a
+   subgrid channel; see
+   [the channel chapter of the users guide](../../../docs/en/users_guide/channel.md)),
+   and the dashed line is the run without the width (the same run as
+   Step 3).
 
-   ![A step at transect 4 of the 200 m grid with a 50 m wide channel](figs/supp_t4_step.png)
+   ![Steps at transect 4 of the 200 m grid](figs/supp_t4_step.png)
 
-   At 101 minutes the discharge drops by 670 m^3/s (15%) in one minute
-   and recovers over a few minutes. This is the moment when, 200 m
-   upstream of the transect, the channel water starts to enter a
-   neighbouring bank cell (12 m above the bed). ENCflow stops water from
-   climbing onto wet cells above its level with a cap on the edge depth
-   (`f_dry_head_cap = 2`). Around the threshold where the cap is released
-   the amount of water entering the bank cell rises suddenly, and the
-   discharge downstream drops by that amount. The time of the step
-   depends on the time step (101 minutes with dt = 4 s as in this run,
-   111 minutes with 2 s and 114 minutes with 1 s; the peaks agree within
-   1%; the runs with other time steps are not part of `Fig_supp.sh`).
+   In the run with the 50 m wide channel (solid), the discharge drops by
+   1,060 m^3/s (23%) in one minute at 104 minutes and recovers over a few
+   minutes. This is the moment when, 200 m upstream of the transect, the
+   channel water starts to enter a neighbouring bank cell (12 m above the
+   bed). ENCflow stops water from climbing onto wet cells above its level
+   with a cap on the edge depth (`f_dry_head_cap = 2`). Around the threshold
+   where the cap is released the amount of water entering the bank cell
+   rises suddenly, and the discharge downstream drops by that amount (in
+   that minute the depth of one bank cell rises from 0.1 to 1.6 m; on a
+   200 m cell this is 60,000 m^3, equivalent to 1,000 m^3/s and about the
+   same as the drop in discharge. The velocity in the channel changes by
+   only 4%: the flow is not braked; the water is stored on the bank). At the
+   threshold there is a "transition" that lets a small amount through
+   slightly before the water level reaches the ground of the higher cell,
+   and its width is proportional to the time step, so the time and the size
+   of the step depend on the time step (-1,060 m^3/s at 104 minutes with
+   dt = 4 s as in this run, -400 m^3/s at 117 minutes with 2 s, and three
+   drops of -350 to -370 m^3/s at 121 to 124 minutes with 1 s; the peaks
+   agree within 1%; the runs with other time steps are not part of
+   `Fig_supp.sh`).
+
+   The run without the width (dashed), that is, transect 4 of Step 3, has
+   steps of the same kind. On the peak, the discharge rises by 270 m^3/s
+   (4%) in two minutes at 150 to 151 minutes and falls by the same amount at
+   167 to 168 minutes. At a bend 600 m downstream of the transect the
+   channel water starts to enter the high cell on the outer side (7 m above
+   the bed), and a flow that shortcuts the bend exists for about 18 minutes
+   (during that time the water level in the channel is 0.2 to 0.5 m below
+   the ground of that cell). With the time step reduced from 6 s to 3 s the
+   shortcut does not form and the peak at transect 4 is 6,362 m^3/s
+   (153 minutes) (the peaks at transects 1 to 3 do not change). In other
+   words, the peak of 6,607 m^3/s at transect 4 in Step 3 is 4% too large by
+   an amount that depends on the time step.
+
    When such a step affects how you read the results, halve the time step
-   and check whether the results change (for the mechanism and its
-   limits, see the item on `f_dry_head_cap` in §5 of
+   and check whether the results change (for the mechanism and its limits,
+   see the item on `f_dry_head_cap` in §5 of
    [Advection schemes](../../../docs/en/users_guide/advection.md) in the
-   users guide). It does not appear without the width (dashed).
+   users guide).
 
 4. The choice of measurement locations also mitigates it. A transect
    placed on a flat reach (pond) several meters deep picks up the
@@ -840,10 +886,10 @@ check: at every resolution each transect (red) crosses the channel
 The time step is 6 s at 200 m, 1.5 s at 100 m and 0.75 s at 50 m.
 Shrinking it only in proportion to the grid (3 s and 1.5 s) leaves no
 margin at 100 m, where the Courant number (Cn_max on the screen) rises to
-0.98, and at 50 m it would exceed 1 and stop the run (it is 0.62 with
+0.93, and at 50 m it would exceed 1 and stop the run (it is 0.55 with
 0.75 s). A
 finer grid resolves the valleys of steep tributaries and the maximum
-velocity grows (18 m/s at 200 m, 27 m/s at 100 m, 35 m/s at 50 m), so
+velocity grows (18 m/s at 200 m, 26 m/s at 100 m, 30 m/s at 50 m), so
 **the cost of a finer grid grows faster than "cells x steps"**, which
 is worth remembering when choosing a resolution. The procedure for choosing
 `dt` from the cell width and the estimated maximum velocity and depth is in
@@ -866,14 +912,14 @@ tabulated below (in parentheses: change from the next coarser grid).
 
 | transect (upstream to downstream) | 200 m | 100 m | 50 m |
 |---|---|---|---|
-| 1 (small catchment area) | 1,209 | 1,385 (+15%) | 1,421 (+3%) |
-| 2 | 3,005 | 3,455 (+15%) | 3,624 (+5%) |
-| 3 | 4,526 | 4,917 (+9%) | 5,964 (+21%) |
-| 4 (near the catchment outlet) | 6,208 | 6,827 (+10%) | 7,536 (+10%) |
+| 1 (small catchment area) | 1,202 | 1,387 (+15%) | 1,428 (+3%) |
+| 2 | 3,019 | 3,574 (+18%) | 3,610 (+1%) |
+| 3 | 4,712 | 5,047 (+7%) | 6,027 (+19%) |
+| 4 (near the catchment outlet) | 6,607 | 6,787 (+3%) | 7,472 (+10%) |
 
 - **Upstream (transects 1 and 2)**: the coarser the grid, the smaller
-  the peak. It changes by 15% from 200 to 100 m but only by
-  3 to 5% from 100 to 50 m, i.e. it has almost converged at 100 m and below. We
+  the peak. It changes by 15 to 18% from 200 to 100 m but only by
+  1 to 3% from 100 to 50 m, i.e. it has almost converged at 100 m and below. We
   attribute the smaller runoff on the coarse grid to two things: in a
   200 m cell the valley floor and the hillslopes are mixed in one cell,
   which blunts the concentration of water from the slopes into the
@@ -881,13 +927,16 @@ tabulated below (in parentheses: change from the next coarser grid).
   one or two cells); and the channel width becomes the cell width,
   which increases channel storage and damps the short hydrographs of
   small catchments the most.
-- **Downstream (transects 3 and 4)**: the peaks grow by 9 to 10% from
-  200 to 100 m and by another 10 to 21% from 100 to 50 m, so they have not
-  converged the way the upstream ones have. The peak times do not change
-  much across the three resolutions (152 to 159 min at transect 4). On a raster
+- **Downstream (transects 3 and 4)**: the peaks grow by 3 to 7% from
+  200 to 100 m and by another 10 to 19% from 100 to 50 m, so they have not
+  converged the way the upstream ones have (the peak at transect 4 on the
+  200 m grid is 4% too large because of a step that depends on the time
+  step; see item 3 (b) of the previous supplement. Relative to the
+  6,362 m³/s obtained with a time step of 3 s, 100 m is +7%). The peak times do not change
+  much across the three resolutions (151 to 160 min at transect 4). On a raster
   the channel width equals the cell width, so a finer grid makes the
-  channel narrower and deeper (the maximum depth at probe 4 is 7.4,
-  10.9 and 16.7 m). To check whether narrowing the channel on the coarse
+  channel narrower and deeper (the maximum depth at probe 4 is 7.5,
+  11.0 and 17.0 m). To check whether narrowing the channel on the coarse
   grids brings them closer to the 50 m grid, we used subgrid channels
   (`fn_channel`,
   [the channel chapter of the users guide](../../../docs/en/users_guide/channel.md))
@@ -895,17 +944,17 @@ tabulated below (in parentheses: change from the next coarser grid).
   50 m grid (`./Fig_supp.sh` runs these as `result_supp_*_w50`. At 200 m the flow gathers in the 50 m wide
   channel and becomes faster, so the Courant number exceeds 1 with dt = 6 s
   and dt = 4 s is used; running the 200 m grid without the width at dt = 4 s changes the
-  peak at transect 4 by only 0.03%).
-  The peaks at transects 3 and 4 become 5,255 / 5,835 at 200 m and
-  4,442 / 5,975 at 100 m: **equalizing the channel width does not bring
-  them closer to the 50 m grid (5,964 / 7,536)**. The peak at transect 4
-  near the catchment outlet falls by 6% at 200 m and by 12% at 100 m
-  relative to the runs without the width, and arrives 15 to 18 minutes
-  later (21 to 23% smaller and 15 to 19 minutes later than on the 50 m
-  grid). At transect 3 the peak rises by 16% at 200 m but falls by 10% at
+  peak at transect 4 by only 0.4%).
+  The peaks at transects 3 and 4 become 5,401 / 5,869 at 200 m and
+  4,611 / 6,060 at 100 m: **equalizing the channel width does not bring
+  them closer to the 50 m grid (6,027 / 7,472)**. The peak at transect 4
+  near the catchment outlet falls by 11% at both 200 m and 100 m
+  relative to the runs without the width, and arrives 15 to 20 minutes
+  later (19 to 21% smaller and 11 to 14 minutes later than on the 50 m
+  grid). At transect 3 the peak rises by 15% at 200 m but falls by 9% at
   100 m. With the widths equalized, the difference between 200 m and
-  100 m at transect 4 shrinks from 10% to 2%, but at transect 3 it grows
-  (100 m is 9% larger without the width; 200 m is 18% larger with W = 50).
+  100 m at transect 4 stays at 3%, and at transect 3 it grows
+  (100 m is 7% larger without the width; 200 m is 17% larger with W = 50).
 
   ![Supplement: comparison with the channel width equalized to 50 m](figs/supp_hydro_w50.png)
 
@@ -915,10 +964,10 @@ tabulated below (in parentheses: change from the next coarser grid).
   (dashed) (at the upstream transect 1 the effect of the width is within
   7%). Incidentally, the run that gives the 50 m grid W = 50 m (= the cell
   width; the light blue dashed line in the figure) overlaps the 50 m grid
-  with a resolved channel, with peaks agreeing within 0.05%. The
-  difference in discharge is 34 to 45 m^3/s at the moments when the flow
-  state switches (68 and 147 minutes at transect 3) and within 10 m^3/s
-  otherwise at every transect. When the width
+  with a resolved channel, with peaks agreeing within 0.03%. The
+  difference in discharge is 14 m^3/s at the dip on the rising limb at
+  transect 2 (42 minutes) and within 10 m^3/s otherwise at every
+  transect. When the width
   equals the cell width, the subgrid channel degenerates into the
   resolved representation as designed (not to the last digit; small
   differences such as the treatment of diagonal edges remain).
@@ -932,21 +981,24 @@ tabulated below (in parentheses: change from the next coarser grid).
   flow from the start. Even with the same channel representation, **the
   difference in how the valley floor and the hillslopes are resolved**
   remains.
-- The 1-minute values at transect 3 on the 50 m grid show a dip at
-  69 minutes on the rising limb and a bump at 122 minutes on the recession
-  (−920 and +1,210 m^3/s, and +890 and −1,190 m^3/s per minute). In the
-  stepped gorge just upstream of the transect, water is stored and
-  released when the flow state switches; this is the example of item 3 (a)
-  of the previous supplement (it comes from a rule of the computation,
-  not from a change of the real flow). The 1-minute values at transect 3 on the 100 m
-  and 200 m grids are smooth.
-- Transect 4 of the 200 m run with W = 50 shows a step at 101 minutes, in
-  which the discharge drops by 670 m^3/s in one minute (the moment the
+- The 1-minute values on the 50 m grid show a one-minute dip at 42 minutes
+  on the rising limb at transect 2 (−400 and +800 m^3/s per minute) and
+  small dips at 71 to 75 minutes, just before the peak, at transect 3
+  (−180 to −210 m^3/s, twice). At the foot of a drop and at a pond outlet
+  upstream of the transects, water is stored when the flow state switches;
+  these are the examples of item 3 (a) of the previous supplement (not to
+  be read as changes of the discharge of the real river). The 1-minute
+  values at transects 2 and 3 on the 100 m and 200 m grids are smooth.
+- Transect 4 of the 200 m run with W = 50 shows a step at 104 minutes, in
+  which the discharge drops by 1,060 m^3/s in one minute (the moment the
   channel water starts to spill onto a bank cell; the example of item 3 (b)
-  of the previous supplement). Transect 4 of the 100 m run without the width
-  also has small steps of +410 m^3/s at 106 minutes and −220 m^3/s at
-  209 minutes. They occur at the threshold of the same cap
-  (`f_dry_head_cap = 2`) and do not appear in a run with
+  of the previous supplement). The steps on the peak at transect 4 of the
+  200 m run without the width (+270 m^3/s at 150 to 151 minutes and
+  −270 m^3/s at 167 to 168 minutes) are another example. Transect 4 of the
+  100 m run without the width also has small steps of +290 m^3/s at
+  93 minutes, +290 and +190 m^3/s at 104 to 105 minutes and −170 m^3/s at
+  210 minutes. They occur at the threshold of the same cap
+  (`f_dry_head_cap = 2`) and do not appear in a run of the 100 m grid with
   `f_dry_head_cap = 1`.
 - At every resolution the S column stays at 0.1000 m after the rain.
   The total volume is the same; only **the distribution and the speed
@@ -961,14 +1013,14 @@ of the ENC panels above), with the following peaks.
 |---|---|---|---|
 | 1 | 52 | 52 | 46 |
 | 2 | 40 | 46 | 57 |
-| 3 | 0 | 666 | 250 |
-| 4 | 4 | 23 | 430 |
+| 3 | 0 | 667 | 251 |
+| 4 | 4 | 23 | 420 |
 
 At 200 m only 4 m³/s (0.1% of ENC) reaches transect 4 near the
 catchment outlet; at 100 m it is 23 m³/s, and on the 50 m grid, where
-the channel cells are 50 m wide, it finally reaches 430 m³/s (6% of
+the channel cells are 50 m wide, it finally reaches 420 m³/s (6% of
 ENC). **Even with a grid four times finer, the channel network stays
-essentially cut into pieces with 4 neighbors.** The 666 m³/s at
+essentially cut into pieces with 4 neighbors.** The 667 m³/s at
 transect 3 on the 100 m grid seems to appear because, over about 1 km
 upstream of this transect, the channel follows grid rows in runs of 3
 to 5 cells: reaches aligned with the axes pass water, diagonal reaches
@@ -1023,11 +1075,11 @@ spans twice the others.** Peak discharge
 | scheme 1 (old, upwind 0.5 = default) | 5,780 @158 | 5,863 @167 | 5,906 @182 |
 | scheme 1 (upwind 0.1) | 6,982 @136 | 8,152 @135 | diverged (63 min, before the peak) |
 | scheme 1 (upwind 1.0) | 4,351 @199 | 4,312 @228 | 4,832 @224 |
-| scheme 3 (default) | 6,208 @152 | 6,827 @159 | 7,536 @155 |
+| scheme 3 (default) | 6,607 @151 | 6,787 @159 | 7,472 @160 |
 
 For reference, the maximum velocity of each computation (V_max in the Log)
 on the 100 m grid was 42 m/s without advection, 26 m/s with scheme 1
-(upwind 0.5), 18 m/s with scheme 1 (upwind 1.0) and 27 m/s with scheme 3. The 50 m run without
+(upwind 0.5), 18 m/s with scheme 1 (upwind 1.0) and 26 m/s with scheme 3. The 50 m run without
 advection completes at dt = 0.75 s, but at the end of the rainfall (first
 hour) the velocity reaches 59 m/s at bed steps and the Courant number 0.98,
 leaving no margin, so that one run uses dt = 0.4 s (the peak at transect 4
@@ -1051,8 +1103,8 @@ listed in the table, and the curve ends early in the figure.
 Without the advection term (diffusion wave, local inertia equation), the peak
 at transect 4 goes 9,326 → 15,123 → 17,079 m³/s and 113 → 102 → 92 min from 200 m to 100 m to 50 m: **the finer the grid,
 the larger and earlier the peak**. The resolution dependence is far
-stronger than with the default scheme 3 (6,208 → 6,827 → 7,536 at
-152 → 159 → 155 min), and the values themselves are 1.5 to 2.3
+stronger than with the default scheme 3 (6,607 → 6,787 → 7,472 at
+151 → 159 → 160 min), and the values themselves are 1.4 to 2.3
 times larger. Let us follow the reasons step by step.
 
 1. **The velocity of a diffusion wave is set by the local slope alone.** In
@@ -1084,7 +1136,7 @@ times larger. Let us follow the reasons step by step.
    the wave form**, not the mean speed. Without the advection term
    (inertia) the velocity follows changes of the water-surface slope
    instantly, and at a step, where the surface slope is large, the velocity
-   shoots up (V_max 42 m/s on the 100 m grid against 27 m/s with scheme 3).
+   shoots up (V_max 42 m/s on the 100 m grid against 26 m/s with scheme 3).
    In reality hydraulic jumps and turbulence dissipate this acceleration;
    the equations have no term for it. Deeper water travels faster (wave
    speed ≈ 5/3 u), so the front steepens into a bore, and a steeper front
@@ -1135,7 +1187,7 @@ splits into three parts.
    artificial part, in which a thin film on a bank that carries almost no
    water becomes the donor and slows the main flow, is removed by the default
    treatment (for how it works, and for the fact that this treatment alone
-   moves the transect 4 peak by about 13%, see
+   moves the transect 4 peak by about a fifth, see
    [one-cell-wide channels and the upwind donors of the advection term](../../../docs/en/users_guide/advection_donor.md)
    in the users guide). On a finer grid the
    main river fits within the channel cells and this exchange shrinks, consistent with
@@ -1181,7 +1233,7 @@ wants from a model that claims to be physically based (convergence), but
 there is no guarantee that the converged value matches observations (a
 detail of the advection discretization alone
 ([the treatment of the upwind donors](../../../docs/en/users_guide/advection_donor.md))
-moves the 200 m peak by about 13%, for instance). This
+moves the 200 m peak by about a fifth, for instance). This
 tutorial catchment has no comparison with observations, and **closeness to
 reality is unverified**. Conversely, a diffusion wave calibrated with a
 roughness coefficient per resolution can surely be made to match
@@ -1199,19 +1251,19 @@ with Δx and therefore with resolution. The upwind index changed the result a
 great deal.
 
 - **Upwind 0.5 (default)**: the transect 4 peak goes 5,780 → 5,863 → 5,906
-  m³/s, within 2.2% across the three resolutions, but 7%, 14% and 22%
-  smaller than scheme 3 and 6, 8 and 27 minutes later. On the 50 m grid the
-  maximum velocity reaches 64 m/s (35 m/s with scheme 3) and an oscillation
+  m³/s, within 2.2% across the three resolutions, but 13%, 14% and 21%
+  smaller than scheme 3 and 7, 8 and 22 minutes later. On the 50 m grid the
+  maximum velocity reaches 64 m/s (30 m/s with scheme 3) and an oscillation
   appears on the recession at transect 4 (290 to 310 min), visible in the
   figure.
-- **Upwind 0.1**: 6,982 → 8,152 m³/s (200 m → 100 m), 12% and 19% larger
-  than scheme 3 and 16 and 24 minutes earlier. The 50 m grid diverged during
+- **Upwind 0.1**: 6,982 → 8,152 m³/s (200 m → 100 m), 6% and 20% larger
+  than scheme 3 and 15 and 24 minutes earlier. The 50 m grid diverged during
   the rising limb at 63 minutes, with velocities above 90 m/s, before
   reaching the peak (the transect 1 peak of 1,442 m³/s comes before that and
-  is 1.5% above the 1,421 of scheme 3). **The finer the grid, the further it
+  is 1.0% above the 1,428 of scheme 3). **The finer the grid, the further it
   moves away from scheme 3 toward the run without advection.**
-- **Upwind 1.0 (full upwind)**: 4,351 → 4,312 → 4,832 m³/s, 30%, 37% and 36%
-  smaller than scheme 3 and 47, 69 and 69 minutes later; even the upstream
+- **Upwind 1.0 (full upwind)**: 4,351 → 4,312 → 4,832 m³/s, 34%, 36% and 35%
+  smaller than scheme 3 and 48, 69 and 64 minutes later; even the upstream
   transect 1 is 5 to 7% smaller. On the same grid the two ends of the upwind
   weight (0.1 and 1.0) give peaks of 6,982 vs 4,351 at 200 m and 8,152 vs
   4,312 at 100 m, a factor of 1.6 to 1.9. The gap does not close with
@@ -1249,8 +1301,9 @@ computations should differ much less; checking this is left to the reader
 ### What to take away about the ENC grid
 
 - **Weak grid dependence**: from 200 to 50 m (16 times the cells, 80
-  times the run time) the peaks changed by +18 to 21% upstream and +21 to 32%
-  downstream, with the peak times within 5 minutes. For an
+  times the run time) the peaks changed by +19 to 20% upstream and +13 to 28%
+  downstream (+17% at transect 4 without the step that depends on the time
+  step on the 200 m grid), with the peak times within 9 minutes. For an
   estimate of the flood wave over the whole catchment a 200 m grid is
   enough; go to 100 m and below when the absolute values in small
   upstream catchments matter. For an example with another phenomenon,
