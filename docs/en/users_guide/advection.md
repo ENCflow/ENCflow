@@ -450,7 +450,11 @@ With the default `f_advection_donor = 3` the wet/dry test of the parallel edge b
     inflow faces in the flow direction change; the treatment of the lateral
     faces, in which slow flow on a wet bank is counted as a brake on the main
     stream ([the explanation page](advection_donor.md) §7), is unchanged, so
-    where the flow regime alternates a smaller dip and bump remain. Inflow
+    where the flow regime alternates a smaller dip and bump remain. When the
+    reach at the foot of a drop switches from shallow, fast flow to deep flow,
+    the discharge just downstream can also dip for one minute (at transect 2
+    of the 50 m grid of Chichibu, −305 m³/s at 42 minutes on the rising limb;
+    with 0 the growth of the discharge merely slows at the same switch). Inflow
     from sea cells is not counted in $`Q_\mathrm{in}`$, and the fraction of
     the inflow that does not come from sea cells is applied as a factor to
     the degree of pulling (a face cell fed only from the sea is the same as

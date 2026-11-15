@@ -113,11 +113,11 @@
     {
       "source": "docs/users_guide/advection.md",
       "target": "docs/en/users_guide/advection.md",
-      "source_sha256": "dd7b3c5268fad71fe4d670fb93e68fd8ee678845943ffa2a0e5dfb4d5373827b",
-      "target_sha256": "bec1b0ce3978df3e4316c10ad6c5a82ec92e4c8c94c47ad3a112b130859ad059",
+      "source_sha256": "52bb4f03bf94dba9d65784034c23542e43b26f828720f1d86686863e90bb079f",
+      "target_sha256": "7fe2f8222ab67b06b29c0323645e70ddb992e665654cf3a0baad10224cf3c38b",
       "reviewer": "Claude (Claude Code session; full-text content and lexical review, no model execution)",
       "method": "assistant",
-      "reviewed_on": "2026-11-14"
+      "reviewed_on": "2026-11-15"
     },
     {
       "source": "docs/users_guide/advection_donor.md",
