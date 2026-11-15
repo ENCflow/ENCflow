@@ -236,7 +236,8 @@ form has two merits.
   the velocity on the inflow side) an outflow face has $`\bar u_f = u_e`$ and
   contributes nothing; only the inflow faces pull $`u_e`$ toward the velocity
   of the water that enters. Nothing flows in from a wall or a dry bed
-  (§4.4), so they contribute nothing either.
+  (§4.4 describes a face that the flow enters by turning in from the side,
+  with a wall behind it).
 
 ### 4.2 Control volume and faces (figures (b), (c))
 
@@ -364,36 +365,20 @@ With the default `f_advection_donor = 3` the wet/dry test of the parallel edge b
 
 ### 4.4 Walls, dry cells and boundaries
 
-- **Walls and dry beds supply no momentum.** If the upwind donor cell is
-  outside the domain, invalid (outside the mask) or dry ($`h < dd`$), the face
-  takes $`\bar u = u_e`$ and contributes nothing. Reading the stored value 0
-  instead would mean "still water flows in from the wall side", and in a
-  one-cell-wide raster channel every bend would lose about 0.55 m of
-  artificial head (developer.md §68.8; the bend cases of [test/bendloss](../../../test/bendloss/en/README.md)).
-  This treatment is correct at a bend where the velocity is nearly uniform
-  along the path, but **where a bend coincides with a sharp acceleration (the
-  outlet of a pond, just before a drop), the flow accelerates too much**. The
-  edge just after the bend carries no inertia from upstream, so its velocity
-  rises until the surface slope balances the friction, and it sends
-  downstream a supercritical flow whose energy head exceeds the one set by
-  the level of the upstream pond (in a one-cell-wide channel whose last link
-  before the drop is diagonal, the energy head on the apron is 9–29 m above
-  that of the pond; a straight channel agrees with theory;
-  [test/brink](../../../test/brink/en/README.md)). On the 50 m grid of
-  Chichibu (channel roughness 0.02), at the outlet where a pond drains into
-  a gorge, the flow in the gorge becomes 4 m deep and 22 m/s fast (the
-  energy of the pond can drive only about 5 m depth and 16 m/s). It does not
-  appear in a run with a channel roughness of 0.04. The same holds for the
-  thin-film donors of the following items. This over-acceleration can
-  alternate with the lateral-face braking by wet banks
-  ([One-cell-wide channels and the upwind donors of the advection term](advection_donor.md) §7)
-  and make a dip and a bump in the discharge (an example is in item 3 (a) of
-  [the supplement of the chichibu tutorial](../../../tutorials/chichibu/en/README.md#supplement-fine-oscillations-in-the-hydrograph)).
-  `f_advection_bend = 1` of the next item removes it.
-- **Inertia of the edge just after a bend (`f_advection_bend`; default 0).**
-  With 1, the upwind value on a flow-direction face whose donor is a wall or
-  dry is not $`u_e`$ but a value built from the water that actually enters
-  the face cell (ENCflow's own treatment; developer.md §110, in Japanese).
+- **Walls and dry beds supply no momentum.** On a face whose upwind donor
+  cell is outside the domain, invalid (outside the mask) or dry
+  ($`h < dd`$), reading the stored value 0 would mean "still water flows in
+  from the wall side", and in a one-cell-wide raster channel every bend
+  would lose about 0.55 m of artificial head (developer.md §68.8; the bend
+  cases of [test/bendloss](../../../test/bendloss/en/README.md)). The upwind
+  value of such a face is therefore not taken from the wall side but built
+  from the water that actually enters the face cell (next item).
+- **Upwind value on the edge just after a bend (`f_advection_bend`; default
+  1).** A flow-direction face whose donor is a wall or dry is a face that the
+  flow enters by turning in from the side (the edge just after a bend of a
+  one-cell-wide channel). Its upwind value is built from the water that
+  actually enters the face cell (ENCflow's own treatment; developer.md §110,
+  in Japanese).
 
   ```math
   \bar u = u_e + f\left(\sigma\,\frac{f\,Q_\mathrm{in}}{W_e\,\breve h_\mathrm{in}} - u_e\right),\qquad
@@ -410,10 +395,10 @@ With the default `f_advection_donor = 3` the wet/dry test of the parallel edge b
   in the parentheses is "the velocity the part of the inflow that turns into
   this edge would have at the width of this edge and at the depth it arrived
   with".
-  - When the depth does not change along the path, $`\bar u = u_e`$, the
-    same as 0 (no loss is created at a bend in uniform flow; the loss of the
-    zigzag channel of [test/bendloss](../../../test/bendloss/en/README.md) is
-    K = 0.00 as with 0). Where the depth decreases along the path (the flow
+  - When the depth does not change along the path, $`\bar u = u_e`$ (no
+    contribution): no loss is created at a bend in uniform flow (the loss of
+    the zigzag channel of [test/bendloss](../../../test/bendloss/en/README.md)
+    is K = 0.00). Where the depth decreases along the path (the flow
     accelerates), it is smaller than $`u_e`$, and the difference is the
     inertia the acceleration needs. Where the depth increases (the flow
     decelerates), it is larger than $`u_e`$, and the momentum from upstream
@@ -423,12 +408,12 @@ With the default `f_advection_donor = 3` the wet/dry test of the parallel edge b
     so the velocity is 1.41 times larger even in uniform flow. The difference
     in width is not counted as acceleration or deceleration (in a channel in
     uniform flow where east and north-east links alternate, the depth
-    differs from that of 0 by 0.3 %).
+    differs from that of `f_advection_bend = 0` by 0.3 %).
   - An edge that carries only part of the outflow of the face cell
     ($`f \ll 1`$), such as an edge spilling sideways from the main stream
-    onto a bank, stays almost the same as with 0. The same value is used for
-    the part that `f_advection_donor = 3` of the next item pulls toward
-    $`u_e`$ for a thin-film donor.
+    onto a bank, stays almost at $`u_e`$. The same value is used for the part
+    that `f_advection_donor = 3` of the next item pulls toward $`u_e`$ for a
+    thin-film donor.
   - When the line of an inflow continues beyond the face cell (the neighbour
     on the opposite side of inflow link $`l`$ belongs to the same water body
     as the face cell), the momentum of that inflow is carried to the next
@@ -456,51 +441,76 @@ With the default `f_advection_donor = 3` the wet/dry test of the parallel edge b
     constant discharge into a pond with a dead-end bay; the junction pond of
     [test/brink](../../../test/brink/en/README.md); without this treatment an
     oscillation with a range of 0.6 m persists, or the depth at the head of
-    the bay becomes 0.7 m lower than with 0). In the pond of the same check
-    where the main stream enters straight and turns where it meets the bank,
-    0 does not settle to a steady state and keeps oscillating with a range of
-    0.5–1.5 m (1 is steady). Uniform flow in a channel two or more cells wide
-    has the same depth as with 0.
+    the bay becomes 0.7 m lower than with `f_advection_bend = 0`). Uniform
+    flow in a channel two or more cells wide has the same depth as with
+    `f_advection_bend = 0`.
   - When the inflow into the face cell is less than $`\varepsilon`$ times its
     outflow (`p_adv_donor_eps`, default 0.1), the $`f`$ in front of the
     parentheses is multiplied by
     $`Q_\mathrm{in}/(\varepsilon\,Q_\mathrm{out})`$, which joins the value
     continuously to $`u_e`$. A face cell without inflow (a cell fed only by a
-    source or by rain, the tip of a receding front) is the same as with 0.
+    source or by rain, the tip of a receding front) has $`\bar u = u_e`$.
     The formula counts the part of the outflow that is not supplied by inflow
     as "water starting from rest"; this treatment keeps the value from
     jumping depending on whether a tiny inflow exists or not.
-  - In a channel whose last link before the drop is diagonal, the energy
-    head on the apron no longer exceeds that of the pond (2.5–3.3 m below
-    the pond; 0.4–1.4 m below the straight channel, which is the loss due to
-    the bend; [test/brink](../../../test/brink/en/README.md)). On the 50 m
-    grid of Chichibu the energy head in the gorge does not exceed that of
-    the pond, and the largest one-minute changes of the discharge at
-    transect 3 decrease from +1,209 and −1,193 m³/s to +434 and −211 m³/s
-    (the peak changes by +1 %).
-  - Limits: there is no coefficient for tuning the bend loss. Only the
-    inflow faces in the flow direction change; the treatment of the lateral
-    faces, in which slow flow on a wet bank is counted as a brake on the main
-    stream ([the explanation page](advection_donor.md) §7), is unchanged, so
-    where the flow regime alternates a smaller dip and bump remain. When the
-    reach at the foot of a drop switches from shallow, fast flow to deep flow,
-    the discharge just downstream can also dip for one minute (at transect 2
-    of the 50 m grid of Chichibu, −401 m³/s at 42 minutes on the rising limb;
-    with 0 the growth of the discharge merely slows at the same switch). Inflow
-    from sea cells is not counted in $`Q_\mathrm{in}`$, and the fraction of
-    the inflow that does not come from sea cells is applied as a factor to
-    the degree of pulling (a face cell fed only from the sea is the same as
-    with 0). Edges without an advection term (the "Excluded edges" below, the
-    outer cells of a reach inflow) are the same as with 0. It has no effect
-    on scheme 1.
-  - The default is 0. With 1 the results change in computations that contain
-    places where the flow turns next to a wall or a dry cell. In the Chichibu
-    catchment (channel roughness 0.02; the settings of
+  - **`f_advection_bend = 0`** sets $`\bar u = u_e`$ (no contribution) on
+    these faces (the default until 2026-11-15). At a bend where the velocity
+    is nearly uniform along the path it is the same as 1, but where a bend
+    coincides with an accelerating or a decelerating reach, the edge just
+    after the bend does not receive the momentum of the upstream flow. In an
+    accelerating reach (the outlet of a pond, just before a drop) its
+    velocity rises until the surface slope balances the friction, and it
+    sends downstream a supercritical flow whose energy head exceeds the one
+    set by the level of the upstream pond (in a one-cell-wide channel whose
+    last link before the drop is diagonal, the energy head on the apron is
+    9–29 m above that of the pond; with 1 it is 2.5–3.3 m below the pond). In
+    a decelerating reach (the foot of a drop) the momentum of the falling
+    flow is lost, the supercritical reach disappears and the water surface
+    at the foot is heaped up (in a channel with a pond below the drop whose
+    link at the foot is diagonal; with 1 the jump stands at the same position
+    as in the straight channel). In a confluence pond where the main stream
+    enters straight and turns where it meets the bank, the water surface does
+    not settle to a steady state under constant inflow and keeps oscillating
+    with a range of 0.5–1.5 m (1 is steady). All three are checked by
+    [test/brink](../../../test/brink/en/README.md). On the 50 m grid of
+    Chichibu (channel roughness 0.02), with 0 the flow in the gorge at the
+    outlet where a pond drains into it becomes 4 m deep and 22 m/s fast (the
+    energy of the pond can drive only about 5 m depth and 16 m/s), and this
+    alternates with the lateral-face braking by wet banks
+    ([One-cell-wide channels and the upwind donors of the advection term](advection_donor.md) §7),
+    so that the largest one-minute changes of the discharge at transect 3
+    are +1,209 and −1,193 m³/s (with 1: +434 and −211 m³/s, and the peak
+    changes by +1 %). It does not appear in a run with a channel roughness of
+    0.04.
+  - Limits: there is no coefficient for tuning the bend loss. When there is
+    a bend just before a drop, the supercritical flow has an energy head
+    0.4–1.4 m below that of the straight channel (the loss due to the bend),
+    and the jump beyond it stands one to five cells upstream of that of the
+    straight channel (test/brink). Only the inflow faces in the flow
+    direction change; the treatment of the lateral faces, in which slow flow
+    on a wet bank is counted as a brake on the main stream
+    ([the explanation page](advection_donor.md) §7), is unchanged, so where
+    the flow regime alternates a smaller dip and bump remain. When the reach
+    at the foot of a drop switches from shallow, fast flow to deep flow, the
+    discharge just downstream can also dip for one minute (at transect 2 of
+    the 50 m grid of Chichibu, −401 m³/s at 42 minutes on the rising limb;
+    with 0 the growth of the discharge merely slows at the same switch).
+    Inflow from sea cells is not counted in $`Q_\mathrm{in}`$, and the
+    fraction of the inflow that does not come from sea cells is applied as a
+    factor to the degree of pulling (a face cell fed only from the sea has
+    $`\bar u = u_e`$). It has no effect on edges without an advection term
+    (the "Excluded edges" below, the outer cells of a reach inflow), nor on
+    scheme 1.
+  - The results of 0 and 1 differ in computations that contain places where
+    the flow turns next to a wall or a dry cell. In the Chichibu catchment
+    (channel roughness 0.02; the settings of
     [the supplement of the tutorial](../../../tutorials/chichibu/en/README.md))
-    the peak at transect 3 changes by +4.1, +2.6 and +1.1 % on the 200, 100
-    and 50 m grids, and the peak at transect 4 by +6.4 and −0.6 % on the 200
-    and 100 m grids. The run time is two to three tenths longer than with 0
-    (+25 % on the 200 m grid of the same catchment).
+    1 changes the peak at transect 3 by +4.1, +2.6 and +1.1 % on the 200, 100
+    and 50 m grids relative to 0, and the peak at transect 4 by +6.4 and
+    −0.6 % on the 200 and 100 m grids. The depth of individual channel cells
+    can change by several metres, for example at the foot of a drop. The run
+    time is two to three tenths longer than with 0 (+25 % on the 200 m grid
+    of the same catchment).
 - **Sea cells (tide-prescribed boundary) supply no momentum either.** The
   cells of the sea mask (fn_sw) are the side whose water level is forced;
   their apparent water column hsea0 and their zero flux have nothing to do
@@ -648,8 +658,10 @@ has the figures, tables and the list of derived cases).
 - Bores, hydraulic jumps, tsunami run-up and other flows with
   discontinuities: the default (3).
 - Rainfall runoff on a real DEM with a channel mask: 3 +
-  `f_opening_dynamic = 3` + `f_dry_head_cap = 2` + `f_advection_donor = 3`
-  (the defaults). Roughness calibrated with scheme 1 needs recalibration. To
+  `f_opening_dynamic = 3` + `f_dry_head_cap = 2` + `f_advection_donor = 3` +
+  `f_advection_bend = 1` (the defaults). Roughness calibrated with scheme 1
+  needs recalibration. To reproduce cases calibrated with the default until
+  2026-11-15, `f_advection_bend = 0`, set 0 explicitly (§4.4). To
   reproduce cases calibrated with the default until 2026-11-13,
   `f_dry_head_cap = 1`, set 1 explicitly (the `f_dry_head_cap` item below). To
   reproduce cases calibrated with the default before 2026-11-09,
@@ -760,8 +772,8 @@ The labels in the Basis column are explained in [How to read the basis of a defa
 | f_advection_scheme | 3 | scheme of the advection term (1: cell-centre gradient, 2: conservative + first-order upwind, 3: conservative + MUSCL) | **verification case** bore position error +1.1% in [test/dambreak](../../../test/dambreak/en/README.md), depth ratio 0.992 with lateral inflow in [test/bendloss](../../../test/bendloss/en/README.md), grid convergence in [test/chichibu](../../../test/chichibu/en/README.md) (table above) |
 | p_adv_upwind_index | 0.5 | upwinding index of scheme 1 (0: central, 1: first-order upwind) | **empirical** halfway between central and first-order upwind. The bore lag grows with $`p`$ (§3) |
 | f_advection_donor | 3 | upwind donors (3: the upwind value is pulled toward u_e only on faces where the real flux of the line-k donor is below ε times the largest inflow link of the face cell and the donor's depth is also below ε times the face cell's depth, and the wet/dry tests of the lateral faces become a continuous weight below dd; 0: wet cells on line k (the default until 2026-11-09); 1 and 2 were removed) | **method** reduces the artificial brake when the banks of a raster channel oblique to the grid are wet (in [test/wetbank](../../../test/wetbank/en/README.md) the increase of the channel depth beyond the rain inflow drops from 10–40% with 0 to 6–17%); the lateral-inflow, vortex and wall tests stay the same as 0; the flood wave becomes faster and larger than with 0; 0 reproduces earlier results ([explanation](advection_donor.md)) |
-| p_adv_donor_eps | 0.1 | threshold ε of `f_advection_donor = 3` (used for both the real flux of the line-k donor / largest real flux of the links entering the face cell and the donor's depth / face cell's depth). With `f_advection_bend = 1` it is also the threshold for inflow / outflow of the face cell (§4.4) | **empirical** the peak at transect 4 of the 200 m grid of Chichibu changes by 0.1% at 0.2, and by 3.9% at 0.05 (a slightly higher level opens a shortcut at a bend; with half the time step it does not open and the change is 0.2%; explanation §7); values outside 0.05–0.2 have not been checked ([explanation](advection_donor.md)) |
-| f_advection_bend | 0 | upwind value on a flow-direction face whose donor is a wall or dry (0: the velocity u_e of the control volume itself, 1: the velocity the water entering the face cell would have at the width of this edge and at the depth it arrived with; §4.4) | **compatibility** 0 keeps the results obtained so far. 1 keeps the flow from exceeding the energy head of the upstream pond where a bend coincides with a sharp acceleration (the outlet of a pond, just before a drop) ([test/brink](../../../test/brink/en/README.md): energy head on the apron − pond is +9 to +29 m with 0 and −2.5 to −3.3 m with 1). The same as 0 at a bend in uniform flow |
+| p_adv_donor_eps | 0.1 | threshold ε of `f_advection_donor = 3` (used for both the real flux of the line-k donor / largest real flux of the links entering the face cell and the donor's depth / face cell's depth). With `f_advection_bend = 1` it is also the threshold for inflow / outflow of the face cell and the threshold that decides whether the cell beyond the face cell on the line of an inflow belongs to the same water body (its depth is at least ε times that of the face cell) (§4.4) | **empirical** the peak at transect 4 of the 200 m grid of Chichibu changes by 0.1% at 0.2, and by 3.9% at 0.05 (a slightly higher level opens a shortcut at a bend; with half the time step it does not open and the change is 0.2%; explanation §7); values outside 0.05–0.2 have not been checked ([explanation](advection_donor.md)) |
+| f_advection_bend | 1 | upwind value on a flow-direction face whose donor is a wall or dry (1: the velocity the water entering the face cell would have at the width of this edge and at the depth it arrived with; 0: the velocity u_e of the control volume itself = the default until 2026-11-15; §4.4) | **method** lets the edge just after a bend receive the momentum of the flow from upstream ([test/brink](../../../test/brink/en/README.md): in a channel whose last link before the drop is diagonal, energy head on the apron − pond goes from +9 to +29 m with 0 to −2.5 to −3.3 m; in a channel whose link at the foot of a drop is diagonal, the hydraulic jump stands at the same position as in the straight channel, while with 0 the supercritical reach disappears; a junction pond settles to a steady state). The same as 0 at a bend in uniform flow. 0 is for reproducing earlier results |
 | limiter $`\psi`$ (fixed) | van Leer | flux limiter of scheme 3 | **literature value** van Leer[^vanleer79]; inside Sweby's TVD region[^sweby84] (§4.3) |
 | f_scalar_scheme | 3 | face value of the scalar transport (suspended sediment, water quality, saline layer, driftwood, building debris) (1: first-order upwind, 3: link-wise MUSCL) | **verification case** measured numerical diffusion in [test/tracer](../../../test/tracer/en/README.md) (longitudinal D 1/3–1/5, lateral Dy 1/14; §7). First order is not the default because its numerical diffusion is proportional to the grid spacing |
 

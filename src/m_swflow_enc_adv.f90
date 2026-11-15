@@ -1147,7 +1147,7 @@ end subroutine
 !     Δtae = −(q_n Δū_n − q_c Δū_c) / w8dr / max(h̄, dd/2) · lm
 !   で足す(q_c・q_n・h̄・lm は adv_prepare_mc と同じ量)。側方面は変えない。
 !   - adv_prepare_mc・adv_neumann_mc の中へ分岐を足さず、別の手続きにしている: 足すと -Ofast が既存の式の
-!     計算の順序を変え、f_advection_bend = 0(既定)の結果が最終桁で動く(coastal_drain が 14 桁目で 1、
+!     計算の順序を変え、f_advection_bend = 0(当時の既定)の結果が最終桁で動く(coastal_drain が 14 桁目で 1、
 !     dambreak・gwsect も reference と不一致。§110)。
 !   - 面と除外の条件は adv_prepare_mc(無効な近傍・通過幅ゼロ・海セル・区間流入・両側乾燥)と
 !     adv_neumann_mc(put_neumann_faces の面、鏡像セル)に合わせる。境界面には、従来どおり薄い供給元の

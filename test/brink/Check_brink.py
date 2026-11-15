@@ -22,7 +22,7 @@
 #     (7) 池の水深が H2 の理論に、125 m 以上上流で ±TOL_POOL_DG
 #     (8) 棚の 1〜4 番目のセルの水深が H3 の理論の 1〜APRON_HI_DG 倍(屈曲の損失は直線より大きいが、
 #         限られる)で、射流(フルード数 > FR_DG)
-#   構成 dg0(同じ水路。f_advection_bend = 0。既定の性質の記録):
+#   構成 dg0(同じ水路。f_advection_bend = 0。0 の性質の記録):
 #     (9) 棚の先頭のセルのエネルギー水頭が、池を E_EXCESS より大きく上回る(屈曲の直後の辺が上流からの
 #         慣性を持たず、流速が水面勾配と摩擦の釣り合いまで上がる。(6) がこの違いを見分けていることの確認)
 #   構成 sr0・sr1(東と北東のリンクが交互に並ぶ水路の等流。f_advection_bend = 0・1):
@@ -87,7 +87,7 @@ TOL_SAME = 1.0e-9                 # (5) 直線の 0 と 1 の水深の差 (m)
 TOL_E = 0.2                       # (6) 棚のエネルギー水頭が池を上回ってよい幅 (m)
 TOL_POOL_DG = 0.06                # (7) 斜めの構成の池の水深と理論の一致
 APRON_HI_DG, FR_DG = 1.30, 1.1    # (8) 斜めの構成の棚の水深 / 理論の上限、フルード数の下限
-E_EXCESS = 5.0                    # (9) 既定(0)の棚のエネルギー水頭の超過の下限 (m)
+E_EXCESS = 5.0                    # (9) 0 の棚のエネルギー水頭の超過の下限 (m)
 TOL_ST, RANGE_ST = 0.01, 0.04     # (10)(11) 等流の階段状の水路
 X_POOL = [75.0, 125.0, 225.0, 475.0, 725.0]     # (2)(7) 池の水深を比べる位置(段落ちから上流へ。m)
 X_EPOOL = 475.0                   # (6)(9) 池のエネルギー水頭を取る位置
@@ -204,7 +204,7 @@ def check_diag():
         check(all(1.0 <= r <= APRON_HI_DG for r in rat) and min(fr) > FR_DG,
               "(8) apron depth / H3 theory: %s (allowed 1.00-%.2f), Fr = %s (> %.1f)"
               % (" ".join("%.3f" % r for r in rat), APRON_HI_DG, " ".join("%.2f" % f for f in fr), FR_DG))
-    print("=== dg0: same channel, f_advection_bend = 0 (record of the default behaviour) ===")
+    print("=== dg0: same channel, f_advection_bend = 0 (record of the behaviour with 0) ===")
     c0 = Case("dg0")
     for t, q_in in levels():
         de = c0.energy(I_BRINK + 1, t) - c0.energy(ip, t)

@@ -104,7 +104,9 @@ module m_swflow_enc
                                             !   重み付け)は 2026-11-07 に廃止)
     integer :: f_advection_bend = 0           ! 供給元が壁・乾床(3 では薄い水膜も)の流向面の風上値
                                             !   (0:u_e = 中立。§68.8, 1:面のセルへ流入する水が
-                                            !   この辺の幅・流入時の水深で流れたときの流速。§110)
+                                            !   この辺の幅・流入時の水深で流れたときの流速。§110)。
+                                            !   値は init が list_enc(既定 1)から写す。ここの
+                                            !   初期値 0 は init の前の値
     integer :: f_inflow_edge                  ! 区間流入の外縁セルに接するエッジの扱い (0:接する
                                             !   エッジすべての移流項 0, 1:区間の内側へ向かうエッジ
                                             !   だけ移流項 0, 2:1 + そのエッジの流速のエネルギー
@@ -1060,14 +1062,18 @@ subroutine m_swflow_enc_init(p, g, b, s)
   if (opt%f_advection_bend == 1 .and. (opt%p_adv_donor_eps <= 0.0 .or. opt%p_adv_donor_eps > 1.0)) then
     call par_stop("list_enc: p_adv_donor_eps must satisfy 0 < p_adv_donor_eps <= 1 (f_advection_bend = 1 uses it too)")
   end if
-  if (opt%f_advection_bend == 1) then
-    if (opt%f_advection_scheme >= 2) then
-      call par_info("swflow_enc: f_advection_bend = 1 (faces whose edge-line donor is a wall, dry or a thin film " &
-                    //"take the velocity the actual inflow of the face cell would have at this edge's width and " &
-                    //"the inflow depth, instead of u_e)")
-    else
-      call par_info("swflow_enc: f_advection_bend = 1 has no effect with f_advection_scheme = 1")
-    end if
+  ! 0 は 2026-11-15 までの既定(中立 ū = u_e)。屈曲の直後の辺が上流の流れの運動量を受け取らず、屈曲が急な
+  ! 加速部では流れが加速しすぎ、段落ちの足元では運動量を失う(test/brink。§110)ので、0 の実行は起動時に
+  ! 知らせる。スキーム 1 には該当する面がないので、どちらの値でも知らせない
+  if (opt%f_advection_bend == 0 .and. opt%f_advection_scheme >= 2) then
+    call par_info("swflow_enc: f_advection_bend = 0 (neutral u_e on faces whose edge-line donor is a wall, dry " &
+                  //"or a thin film; the default until 2026-11-15. The default 1 uses the velocity of the actual " &
+                  //"inflow of the face cell)")
+  end if
+  if (opt%f_advection_bend == 1 .and. opt%f_advection_scheme >= 2) then
+    call par_info("swflow_enc: f_advection_bend = 1 (faces whose edge-line donor is a wall, dry or a thin film " &
+                  //"take the velocity the actual inflow of the face cell would have at this edge's width and " &
+                  //"the inflow depth, instead of u_e)")
   end if
   if (opt%f_dry_head_cap < 0 .or. opt%f_dry_head_cap > 2) then
     call par_stop("list_enc: f_dry_head_cap must be 0(off), 1(cap edge depth toward dry cells by energy head) " &

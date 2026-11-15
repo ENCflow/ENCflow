@@ -94,28 +94,30 @@
                             !   all inflow links) were removed (the run stops
                             !   if they are set. users_guide/
                             !   advection_donor.md)
-  !f_advection_bend = 0     ! upwind value of the momentum-conservative
+  !f_advection_bend = 1     ! upwind value of the momentum-conservative
                             !   advection (schemes 2, 3) on a flow-direction
                             !   face whose upwind donor is a wall or dry (with
                             !   f_advection_donor = 3 also a thin film)
                             !   (0: the velocity of the control volume itself
-                            !   = default, 1: the velocity the water that
-                            !   actually enters the face cell would have at the
-                            !   width of this edge and at the depth it arrived
-                            !   with; when the line of an inflow continues into
-                            !   the same water body beyond the face cell, the
-                            !   depth of that inflow is counted with a lower
-                            !   bound at the depth of this edge). 0 creates no
-                            !   loss at a bend in uniform
-                            !   flow, but where a bend coincides with a sharp
-                            !   acceleration (the outlet of a pond, just before
-                            !   a drop) the edge just after the bend carries no
-                            !   inertia from upstream and the flow accelerates
-                            !   beyond the energy head of the upstream pond.
-                            !   1 adds the inertia for the change of depth
-                            !   along the path (the same as 0 at a bend in
-                            !   uniform flow; the lateral faces are unchanged.
-                            !   test/brink, users_guide/advection.md
+                            !   (the default until 2026-11-15), 1: the velocity
+                            !   the water that actually enters the face cell
+                            !   would have at the width of this edge and at the
+                            !   depth it arrived with = default; when the line
+                            !   of an inflow continues into the same water body
+                            !   beyond the face cell, the depth of that inflow
+                            !   is counted with a lower bound at the depth of
+                            !   this edge). With 1 the edge just after a bend
+                            !   receives the acceleration or deceleration for
+                            !   the change of depth along the path (creates no
+                            !   loss at a bend in uniform flow; the lateral
+                            !   faces are unchanged). With 0, where a bend
+                            !   coincides with a sharp acceleration (the outlet
+                            !   of a pond, just before a drop) the flow
+                            !   accelerates beyond the energy head of the
+                            !   upstream pond, and where it coincides with the
+                            !   foot of a drop the momentum of the flow that has
+                            !   dropped is lost
+                            !   (test/brink, users_guide/advection.md
                             !   section 4.4)
   !f_dry_head_cap = 2       ! cap the edge depth toward high ground by the
                             !   energy head eta + u_n^2/2g - z_receiver

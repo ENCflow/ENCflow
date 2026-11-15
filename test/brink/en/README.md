@@ -9,8 +9,9 @@ with the one-dimensional theory of open channels (critical flow at a free overfa
 varied flow profiles). It also checks the upwind value used on the edge right after a bend in the
 momentum-conserving advection (`f_advection_bend` of `&list_enc`;
 [Advection schemes](../../../docs/en/users_guide/advection.md) §4.4; developer.md §110). When the
-channel shifts diagonally by one row just before the overfall, the default 0 gives the flow on the
-apron an energy head 9–29 m above that of the pond it comes from. With 1 it does not exceed it. In
+channel shifts diagonally by one row just before the overfall, 0 (the default until 2026-11-15)
+gives the flow on the apron an energy head 9–29 m above that of the pond it comes from. With the
+default 1 it does not exceed it. In
 a channel with a pond below the overfall, the supercritical flow that has dropped turns into a
 hydraulic jump inside the pond. When the channel shifts diagonally by one row at the foot of the
 overfall, the supercritical reach disappears with 0, while with 1 the jump stands at the same
@@ -25,14 +26,17 @@ the pond where the main stream enters straight.
 
 The momentum-conserving advection (schemes 2 and 3) takes the velocity $`\bar u`$ on the face
 through which the flow enters the control volume of an edge from the edge one step upstream on the
-same line. When the cell upstream of it (the donor) is a wall or dry, the default (0) sets
-$`\bar u = u_e`$ (the velocity of the control volume itself). This treats a wall as supplying no
-momentum; it is correct for a bend along which the velocity does not change and creates no loss at
-the bend ([test/bendloss](../../bendloss/en/README.md)). But when a bend coincides with a strongly
-accelerating reach, that edge carries no inertia brought from upstream, and its velocity rises to
-the balance between the surface slope and friction.
+same line. A face whose upstream cell (the donor) is a wall or dry is a face that the flow enters
+by turning in from the side (the edge just after a bend). `f_advection_bend = 0` sets
+$`\bar u = u_e`$ (the velocity of the control volume itself) on such a face. This treats a wall as
+supplying no momentum; it is correct for a bend along which the velocity does not change and
+creates no loss at the bend ([test/bendloss](../../bendloss/en/README.md)). But when a bend
+coincides with an accelerating or a decelerating reach, that edge does not receive the momentum of
+the upstream flow. In a strongly accelerating reach (the outlet of a pond, just before an overfall)
+its velocity rises to the balance between the surface slope and friction. In a decelerating reach
+(the foot of an overfall) the momentum of the flow that has dropped is lost.
 
-`f_advection_bend = 1` uses the following value in place of $`u_e`$.
+The default `f_advection_bend = 1` uses the following value in place of $`u_e`$.
 
 ```math
 \bar u = u_e + f\left(\sigma\,\frac{f\,Q_\mathrm{in}}{W_e\,\breve h_\mathrm{in}} - u_e\right),\qquad
@@ -143,7 +147,7 @@ meets the bank and turns east.
 |---|---|---|---:|---|
 | st0 | `param_st0.txt` | straight overfall | 0 | the pond profile and the apron depth agree with the theory |
 | st1 | `param_st1.txt` | straight overfall | 1 | same result as st0 |
-| dg0 | `param_dg0.txt` | shifts diagonally by one row just before the overfall | 0 | the energy head on the apron far exceeds that of the pond (record of the default behaviour) |
+| dg0 | `param_dg0.txt` | shifts diagonally by one row just before the overfall | 0 | the energy head on the apron far exceeds that of the pond (record of the behaviour with 0) |
 | dg1 | `param_dg1.txt` | same | 1 | the energy head on the apron does not exceed that of the pond; pond depth within ±6 % of the theory |
 | sr0 | `param_sr0.txt` | staircase channel in uniform flow | 0 | — |
 | sr1 | `param_sr1.txt` | same | 1 | same depth as sr0 |
@@ -242,7 +246,7 @@ interpolated linearly between the cell centres of the lower pond, becomes 1.
 | 6 dg1 apron − pond energy head | −2.6 to −3.3, −2.5 to −3.1, −2.5 to −3.0 m | PASS |
 | 7 dg1 pond depth ÷ theory − 1 | −2.3 to −0.2, −3.5 to −0.5, −4.2 to −0.6 % | PASS |
 | 8 dg1 apron depth ÷ theory; Froude number | 1.21–1.25, 1.17–1.20, 1.16–1.18; 1.27–1.62 | PASS |
-| 9 dg0 first apron cell − pond energy head | +8.6, +19.5, +29.5 m | PASS (record of the default behaviour) |
+| 9 dg0 first apron cell − pond energy head | +8.6, +19.5, +29.5 m | PASS (record of the behaviour with 0) |
 | 10 sr1 ÷ sr0 mean depth − 1 | −0.31 % (1.5191 m and 1.5238 m) | PASS |
 | 11 sr1 depth range ÷ mean | 2.3 % (2.9 % for sr0) | PASS |
 | 12 ps1 position of the jump (theory) | 104 m (154 m), 218 m (307 m), 347 m (459 m) | PASS |
@@ -268,7 +272,7 @@ theory is for the straight channel):
 | Theory | 10.14 m | 5.67 m, 14.1 m/s | −0.8 m (the friction in between) |
 | st0 (straight) | 10.24 m | 6.01 m, 13.3 m/s | −1.6 m |
 | dg1 (diagonal, 1) | 9.86 m | 6.64 m, 12.0 m/s | −2.5 m |
-| dg0 (diagonal, 0 = default) | 9.63 m | 3.15 m, 25.4 m/s | **+19.5 m** |
+| dg0 (diagonal, 0) | 9.63 m | 3.15 m, 25.4 m/s | **+19.5 m** |
 
 The depths in the lower pond for a unit-width discharge of 80 m²/s (the second stage), listed from
 the foot cell, are as follows (the theoretical jump is 307 m from the foot, inside the 7th cell).
@@ -306,7 +310,7 @@ Mean depth and its range (in brackets) in the junction pond over the last 10 min
   (2.5 cells) upstream. The cell just before the overfall is inside the drawdown and its depth is
   0.63–0.70 times the critical depth (not compared). On the apron the depth comes out 4–10 % larger
   than the loss-free theory (0.6–0.9 m of head is lost at the overfall).
-- **The default (0) creates energy head in the diagonal channel.** The diagonal edge and the
+- **0 creates energy head in the diagonal channel.** The diagonal edge and the
   overfall edge after it have a wall on their upstream side, so their advection term is 0 and their
   velocity is set by the balance between the surface slope and friction. On the apron the depth
   becomes 2.1–4.0 m and the velocity 19–30 m/s, and the energy head is 9–29 m above that of the
@@ -372,5 +376,5 @@ make
 ## Related documents
 
 - [Advection schemes](../../../docs/en/users_guide/advection.md) §4.4 — treatment of walls and dry cells, and `f_advection_bend`
-- [test/bendloss](../../bendloss/en/README.md) — loss at bends in uniform flow (K = 0.00 with the default 0)
+- [test/bendloss](../../bendloss/en/README.md) — loss at bends in uniform flow (K = 0.00 with both 0 and 1)
 - developer.md §110 — background (the regime switch on the 50 m grid of Chichibu), the forms tried, verification, the oscillation of junction ponds

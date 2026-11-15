@@ -164,9 +164,22 @@ w = \min\!\left(1,\ \frac{\max(Q_k/Q_\mathrm{max},\ h_d/h_c)}{\varepsilon}\right
 
 w = 0 is the neutral treatment, regarding the incoming water as moving at
 the same speed as the control volume; it neither decelerates nor
-accelerates. The momentum of the water of other links is not brought in.
-Because w changes continuously with the discharge and the depth, no jump
+accelerates. The velocity of the water of other links itself is not brought
+in. Because w changes continuously with the discharge and the depth, no jump
 appears at the moment of switching either.
+
+With the default `f_advection_bend = 1` the value is pulled not toward
+$`u_e`$ itself but toward $`\bar u_p`$, a value built from the velocity the
+water that actually enters the face cell would have at the width of this
+edge and at the depth it arrived with
+($`\bar u = \bar u_p + w\,(\bar u_k - \bar u_p)`$;
+[the advection page](advection.md) §4.4). When the depth does not change
+along the path, $`\bar u_p = u_e`$ and the formula above is unchanged. Only
+at bends where the depth changes (the outlet of a pond, the foot of a drop)
+is the corresponding acceleration or deceleration added. An edge that
+carries only part of the outflow of the face cell (an edge spilling sideways
+from the main stream onto a bank) keeps $`\bar u_p \approx u_e`$.
+`f_advection_bend = 0` pulls toward $`u_e`$.
 
 **Why the depth condition.** Judged by the discharge share alone, in the
 stagnant water of flat reaches created by depression filling (deep, but with
@@ -305,15 +318,15 @@ the grid spacing and the number of cells that represent the channel.
   terrain this braking also provides damping for the computation, so it has
   not been removed (developer.md §102, in Japanese). This braking switches
   on and off when the water of a pond starts and stops overtopping a low
-  valley wall; it then alternates with the over-acceleration at the edge just
-  after a bend ([the advection page](advection.md) §4.4) and can make a dip
-  and a bump in the discharge (±1,200 m³/s per minute at transect 3 on the
-  50 m grid of Chichibu; item 3 (a) of the
+  valley wall, and can then make a dip and a bump in the discharge (+430 and
+  −210 m³/s per minute at transect 3 on the 50 m grid of Chichibu; item 3 (a)
+  of the
   [supplement of the Chichibu tutorial](../../../tutorials/chichibu/en/README.md)).
-  Giving inertia to the edge just after a bend with `f_advection_bend = 1`
-  removes the over-accelerating side, and this dip and bump decrease to
-  +430 and −210 m³/s (the lateral-face braking remains). In a prototype that
-  then also removes this braking, the 50 m grid ran to the end without
+  With `f_advection_bend = 0` (the default until 2026-11-15) the
+  over-acceleration at the edge just after a bend
+  ([the advection page](advection.md) §4.4) alternates with this braking, and
+  the dip and bump become ±1,200 m³/s. In a prototype that also removes this
+  braking, the 50 m grid ran to the end without
   diverging, and the peak at transect 3 became 26 % larger and 8 minutes
   earlier (developer.md §110, in Japanese). This indicates how much this
   braking slows the flow in one-cell-wide channels on fine grids.
@@ -323,14 +336,14 @@ the grid spacing and the number of cells that represent the channel.
   test/bendloss with 2 mm/h of rain on the floodplain, bend 1 goes from 1.50
   to 1.68 m and bends 2–4 from 1.73 to 1.68 m; 0 with dd divided by 10 gives
   2.02 m; the mean depth of the reach does not change).
-- **The momentum of a main flow entering obliquely is not counted.** 3 only
-  treats thin donors as neutral; it does not use the momentum of the main
-  flow entering through a diagonal link as the upwind value of the
-  flow-direction face. The advective acceleration or deceleration at that
-  face is not counted. With `f_advection_bend = 1` the neutral part uses the
-  velocity the water entering the face cell would have at the width of this
-  edge and at the depth it arrived with, and the acceleration or deceleration
-  for the change of depth along the path is counted (the default is 0;
+- **The velocity of a main flow entering obliquely is not used as it is.**
+  3 only treats thin donors as neutral; it does not use the velocity of the
+  main flow entering through a diagonal link itself as the upwind value of
+  the flow-direction face. For the neutral part, `f_advection_bend = 1` (the
+  default) uses the velocity the water entering the face cell would have at
+  the width of this edge and at the depth it arrived with, and counts the
+  acceleration or deceleration for the change of depth along the path (with
+  `f_advection_bend = 0` it is not counted;
   [the advection page](advection.md) §4.4).
 - **Wobbles caused by the terrain.** In flat reaches created by depression
   filling and in subgrid channels narrower than the cell, fine wobbles due to

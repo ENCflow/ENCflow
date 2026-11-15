@@ -22,7 +22,7 @@
 /
 
 &list_enc
-  f_advection_bend = 0      ! 供給元が壁・乾床の流向面の風上値(0: u_e = 既定、1: 経路の値)
+  f_advection_bend = 0      ! 供給元が壁・乾床の流向面の風上値(0: u_e、1: 経路の値 = 既定)
 /
 
 &list_geoinfo
