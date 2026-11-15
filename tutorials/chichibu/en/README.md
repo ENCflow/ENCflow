@@ -89,12 +89,12 @@ main: real precision: 64 bit
 main: number of valid cells: 17885
 time, progress, S(m), Runge, ex_flux, Cn_max, h_max(m), V_max(m/s)
   0:00:00.00   0.0%    0.0000   0.0%      0    0.0000    0.0000    0.0000
-  0:30:00.00   8.3%    0.0487  97.7%      0    0.1907    1.2869    4.0483
-  1:00:00.00  16.7%    0.1000   6.2%      0    0.3446    4.9054    8.4385
-  1:30:00.00  25.0%    0.1000   3.4%      0    0.4433    7.0997    9.2601
-  2:00:00.00  33.3%    0.1000   0.9%      0    0.4253    6.9377    9.1145
+  0:30:00.00   8.3%    0.0487  97.7%      0    0.1908    1.2869    4.0486
+  1:00:00.00  16.7%    0.1000   6.2%      0    0.3456    4.7250    8.4359
+  1:30:00.00  25.0%    0.1000   3.4%      0    0.4363    7.2473    9.2050
+  2:00:00.00  33.3%    0.1000   0.9%      0    0.4200    6.9460    8.9475
   ...
-  6:00:00.00 100.0%    0.1000   0.6%      0    0.5151   29.8812    4.1601
+  6:00:00.00 100.0%    0.1000   0.6%      0    0.5151   29.9007    4.1172
 main: program terminated normally
 ```
 
@@ -467,11 +467,11 @@ changes from one column to **three columns**.
 ```
 time, progress, S_surf(m), S_grnd(m), S_total(m), Runge, ex_flux, Cn_max, h_max(m), V_max(m/s)
   0:00:00.00   0.0%    0.0000     0.0000     0.0000    0.0%      0    0.0000    0.0000    0.0000
-  0:30:00.00   8.3%    0.0365     0.0024     0.0389   97.7%      0    0.2519    0.9217    6.3966
-  1:00:00.00  16.7%    0.0751     0.0049     0.0800    6.2%      0    0.4812    5.3251   12.9868
-  1:30:00.00  25.0%    0.0728     0.0072     0.0800    3.0%      0    0.5916    5.9769   16.9196
+  0:30:00.00   8.3%    0.0365     0.0024     0.0389   97.7%      0    0.2519    0.8952    6.3970
+  1:00:00.00  16.7%    0.0751     0.0049     0.0800    6.2%      0    0.4737    5.6431   13.2483
+  1:30:00.00  25.0%    0.0728     0.0072     0.0800    3.0%      0    0.5450    6.1849   15.3478
   ...
-  6:00:00.00 100.0%    0.0693     0.0107     0.0800    0.0%      0    0.5056   28.7971    5.1019
+  6:00:00.00 100.0%    0.0693     0.0107     0.0800    0.1%      0    0.5062   28.8412    4.9905
 ```
 
 - `S_surf` is surface water, `S_grnd` is subsurface storage, and
@@ -485,8 +485,8 @@ time, progress, S_surf(m), S_grnd(m), S_total(m), Runge, ex_flux, Cn_max, h_max(
 
 ![Step 4: effect of interception and infiltration](figs/step4_hydro.png)
 
-In the hydrograph the peak discharge drops by about a third (6,208
-to 4,048 m^3/s). Interception cuts the total by 20%, and infiltration keeps
+In the hydrograph the peak discharge drops by nearly 40 % (6,607
+to 4,129 m^3/s). Interception cuts the total by 20%, and infiltration keeps
 sucking up the thinly spread hillslope water, so both the rising limb
 and the recession drop.
 
@@ -526,8 +526,8 @@ immediately). Running it gives:
 ```
 time, progress, S_surf(m), S_grnd(m), S_total(m), Runge, ex_flux, Cn_max, h_max(m), V_max(m/s)
   ...
-  3:00:00.00  50.0%    0.0584     0.0093     0.0677    0.1%      0    0.4773    6.8809   11.9815
-  6:00:00.00 100.0%    0.0221     0.0107     0.0328    0.0%      0    0.3121    3.6595    6.7336
+  3:00:00.00  50.0%    0.0586     0.0093     0.0679    0.1%      0    0.4798    7.0325   11.2452
+  6:00:00.00 100.0%    0.0220     0.0107     0.0327    0.0%      0    0.3014    3.7378    6.1290
 ```
 
 - S_total now decreases -- that is the water that left the system
