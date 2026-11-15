@@ -125,7 +125,8 @@ module m_swflow_enc
     real :: p_diagratio != 2 / (2 + sqrt(2.))  ! ratio of diagonal component
     real :: p_adv_upwind_index != 0.0          ! upwind index of advection term
     real :: p_adv_donor_eps = 0.1             ! f_advection_donor = 3 のしきい値 ε(§102)。f_advection_bend = 1 の
-                                            !   流入の割合のしきい値にも使う(§110)
+                                            !   流入の割合のしきい値と、流入の線の先のセルが同じ水体かの
+                                            !   水深の比のしきい値にも使う(§110)
     real :: p_adprunge_thresh != 2.0           ! threshold of adaptive Runge-Kutta
     real :: p_diffusion_nu != 0.0              ! 拡散項の動粘性係数 (m2/s。モデル2では
                                             !   加算のバックグラウンド粘性)
@@ -1053,8 +1054,9 @@ subroutine m_swflow_enc_init(p, g, b, s)
     call par_stop("list_enc: f_advection_bend must be 0(neutral u_e on faces whose edge-line donor is a wall " &
                   //"or dry) or 1(velocity of the actual inflow at this edge's width and the inflow depth)")
   end if
-  ! 1 は、面のセルへの流入が流出の p_adv_donor_eps 倍に満たないときに中立へ寄せる(path_value)ので、
-  ! f_advection_donor が 3 でなくても ε の範囲を確かめる
+  ! 1 は、面のセルへの流入が流出の p_adv_donor_eps 倍に満たないときに中立へ寄せ、流入の線の先のセルが同じ
+  ! 水体か(水深が面のセルの p_adv_donor_eps 倍以上か)も見る(path_value)ので、f_advection_donor が 3 で
+  ! なくても ε の範囲を確かめる
   if (opt%f_advection_bend == 1 .and. (opt%p_adv_donor_eps <= 0.0 .or. opt%p_adv_donor_eps > 1.0)) then
     call par_stop("list_enc: p_adv_donor_eps must satisfy 0 < p_adv_donor_eps <= 1 (f_advection_bend = 1 uses it too)")
   end if

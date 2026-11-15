@@ -17,9 +17,9 @@ overfall, the supercritical reach disappears with 0, while with 1 the jump stand
 position as in the straight channel.
 
 Places wider than one cell are checked too. Uniform flow in a channel two cells wide has the Manning
-depth with both 0 and 1. At a junction where two streams drop into a pond with a dead-end bay, some
-combinations do not settle to a steady water surface even though the inflow is constant (a known
-defect of 1 and a property of 0; see "How to read it, and limits").
+depth with both 0 and 1. At a junction where two streams drop at constant discharge into a pond with
+a dead-end bay, the water surface settles to a steady state with 1. With 0 it keeps oscillating in
+the pond where the main stream enters straight.
 
 ## Rule
 
@@ -63,6 +63,23 @@ would have at the width of this edge and at the depth it arrived with".
   without inflow (a cell fed only by a source, the tip of a receding front) is the same as with 0.
   Inflow from sea cells is not counted in $`Q_\mathrm{in}`$, and the fraction of the inflow that
   does not come from sea cells is applied as a factor in the same way.
+- When the line of an inflow continues beyond the face cell (the neighbour on the opposite side of
+  inflow link $`l`$ belongs to the same water body as the face cell), the momentum of that inflow is
+  carried to the next edge on the same line by the ordinary upwind value. So that the same momentum
+  is not added again to this edge, which turns away, the depth of that inflow is counted with a
+  lower bound at the depth of this edge, $`h_e = Q_e/(W_e\,|u_e|)`$.
+
+  ```math
+  h'_{e,l} = \beta_l\,h_{e,l} + (1-\beta_l)\max(h_{e,l},\,h_e),\qquad
+  \beta_l = 1 - \min\!\left(1,\ \frac{h_o}{\varepsilon\,h_c}\right)
+  ```
+
+  $`h_o`$ is the depth of the neighbour on the opposite side and $`h_c`$ the depth of the face cell
+  (when the opposite side is a wall or dry, $`\beta_l = 1`$ and the inflow is counted as it is). The
+  part in which the inflow is shallower than this edge (a decelerating bend, where $`\bar u`$ would
+  exceed $`u_e`$) is not counted; the part in which the inflow is deeper than this edge (the inertia
+  needed in an accelerating bend) is counted as it is. In a channel one cell wide the line of the
+  inflow ends at a wall, so the formula above applies unchanged.
 - The same value is used for the part that `f_advection_donor = 3` pulls toward $`u_e`$ for a
   thin-film donor.
 - This is ENCflow's own treatment. It changes only the inflow faces in the flow direction (on the
@@ -138,9 +155,9 @@ meets the bank and turns east.
 | wd0 | `param_wd0.txt` | uniform flow in a straight channel two cells wide | 0 | the Manning normal depth |
 | wd1 | `param_wd1.txt` | same | 1 | same depth as wd0 |
 | jp0 | `param_jp0.txt` | junction pond; main stream enters diagonally (jpond) | 0 | the water surface settles to a steady state |
-| jp1 | `param_jp1.txt` | same | 1 | the water surface oscillates and the head of the bay is drawn down (record of a known defect) |
-| jt0 | `param_jt0.txt` | junction pond; main stream enters straight (jtee) | 0 | the water surface oscillates (record of the behaviour with 0) |
-| jt1 | `param_jt1.txt` | same | 1 | the water surface oscillates in the first stage (record of a known defect) |
+| jp1 | `param_jp1.txt` | same | 1 | same result as jp0 (steady) |
+| jt0 | `param_jt0.txt` | junction pond; main stream enters straight (jtee) | 0 | the water surface keeps oscillating (record of the behaviour with 0) |
+| jt1 | `param_jt1.txt` | same | 1 | the water surface settles to a steady state |
 
 ## Theory (one-dimensional, steady; wide rectangular section, Manning)
 
@@ -208,10 +225,10 @@ interpolated linearly between the cell centres of the lower pond, becomes 1.
     both 0 and 1, and 0 and 1 differ by 0.01 % or less.
 20. jp0: over the last 10 minutes of each stage, the transect discharge is within ±1.5 % of the sum
     of the sources and the depth range in the four pond cells is 0.05 m or less (steady).
-21. jp1: in the first stage the depth range at the head of the bay (A) exceeds 0.3 m, and in the
-    third stage the depth of A is more than 0.4 m below that of jp0 (record of a known defect).
+21. jp1: same result as jp0. The depth range in the four pond cells is 0.05 m or less, and the
+    depths are within ±0.10 m of jp0.
 22. jt0: the depth range of A exceeds 0.3 m in all three stages (record of the behaviour with 0).
-23. jt1: the depth range of A exceeds 0.3 m in the first stage (record of a known defect).
+23. jt1: the depth range in the four pond cells is 0.10 m or less in all three stages (steady).
 
 ## Results
 
@@ -239,10 +256,9 @@ interpolated linearly between the cell centres of the lower pond, becomes 1.
 | 18 pb0 position of the jump | 636 m, not inside the lower pond, not inside the lower pond | PASS (record of the behaviour with 0) |
 | 19 wd0, wd1 depth ÷ normal depth − 1 | +0.003 %, +0.003 % (1.37350 m; normal depth 1.37347 m); difference between 0 and 1: 0 | PASS |
 | 20 jp0 discharge difference, depth range | 0.00 %, 0.00 m (all three stages) | PASS |
-| 21 jp1 depth range of A | 0.66, 0.62, 0.10 m | PASS (record of a known defect) |
-| 21 jp1 depth of A (jp0) | 1.28 m (1.40 m), 1.90 m (2.15 m), 1.57 m (2.25 m) | PASS (record of a known defect) |
+| 21 jp1 depth range, depth difference from jp0 | 0.00 m (all three stages); +0.03 to +0.04, +0.03 to +0.06, +0.05 to +0.07 m | PASS |
 | 22 jt0 depth range of A | 0.51, 0.73, 1.47 m | PASS (record of the behaviour with 0) |
-| 23 jt1 depth range of A | 0.53, 0.02, 0.04 m | PASS (record of a known defect) |
+| 23 jt1 depth range | 0.04, 0.00, 0.00 m | PASS |
 
 Side by side for a unit-width discharge of 80 m²/s (the second stage; critical depth 8.67 m; the
 theory is for the straight channel):
@@ -274,15 +290,15 @@ Mean depth and its range (in brackets) in the junction pond over the last 10 min
 | jp0 | 60 + 150 | 1.40 (0.00) | 1.62 (0.00) | 1.58 (0.00) | 1.27 (0.00) |
 | | 130 + 450 | 2.15 (0.00) | 2.60 (0.00) | 2.50 (0.00) | 1.79 (0.00) |
 | | 250 + 450 | 2.25 (0.00) | 3.04 (0.00) | 2.92 (0.00) | 2.11 (0.00) |
-| jp1 | 60 + 150 | 1.28 (0.66) | 1.60 (0.44) | 1.56 (0.49) | 1.29 (0.16) |
-| | 130 + 450 | 1.90 (0.62) | 2.55 (0.45) | 2.51 (0.42) | 1.89 (0.14) |
-| | 250 + 450 | 1.57 (0.10) | 2.86 (0.10) | 2.82 (0.07) | 2.16 (0.00) |
+| jp1 | 60 + 150 | 1.43 (0.00) | 1.65 (0.00) | 1.62 (0.00) | 1.30 (0.00) |
+| | 130 + 450 | 2.18 (0.00) | 2.63 (0.00) | 2.56 (0.00) | 1.82 (0.00) |
+| | 250 + 450 | 2.32 (0.00) | 3.10 (0.00) | 3.00 (0.00) | 2.17 (0.00) |
 | jt0 | 60 + 150 | 1.93 (0.51) | 2.11 (0.29) | 1.86 (0.28) | 1.68 (0.17) |
 | | 130 + 450 | 3.42 (0.73) | 3.81 (0.56) | 3.24 (0.40) | 2.95 (0.10) |
 | | 250 + 450 | 3.74 (1.47) | 4.40 (1.01) | 3.63 (0.85) | 3.36 (0.28) |
-| jt1 | 60 + 150 | 1.90 (0.53) | 2.13 (0.34) | 1.90 (0.30) | 1.73 (0.15) |
-| | 130 + 450 | 3.47 (0.02) | 3.89 (0.02) | 3.37 (0.01) | 3.08 (0.00) |
-| | 250 + 450 | 3.59 (0.04) | 4.40 (0.03) | 3.77 (0.02) | 3.52 (0.01) |
+| jt1 | 60 + 150 | 1.97 (0.04) | 2.17 (0.03) | 1.91 (0.02) | 1.73 (0.02) |
+| | 130 + 450 | 3.58 (0.00) | 3.97 (0.00) | 3.36 (0.00) | 3.07 (0.00) |
+| | 250 + 450 | 3.92 (0.00) | 4.58 (0.00) | 3.76 (0.00) | 3.50 (0.00) |
 
 ## How to read it, and limits
 
@@ -322,30 +338,28 @@ Mean depth and its range (in brackets) in the junction pond over the last 10 min
 - **Uniform flow in a channel two cells wide has the Manning depth with both 0 and 1.** The path
   value equals $`u_e`$ whenever inflow and outflow balance and the depth is uniform, so it creates
   no loss on the diagonal links along the banks either.
-- **In the junction pond, 1 pushes extra water out of the bay and makes the water surface oscillate
-  (a known defect).** The shallow, fast inflow that drops into the head of the bay A continues
-  through A to B on the same line. Its momentum is carried to the edge A–B by the ordinary upwind
-  value. The path value of 1 counts the same inflow again on the edge that leaves A diagonally
-  towards D (whose upwind side is a wall). The more of the deep, slow pond water passes through
-  that edge, the more water the fast velocity, matched to the shallow inflow depth, is applied to,
-  and the water of the bay is pushed out. In jp1 the pond that is steady with 0 keeps oscillating in
-  the first and second stages with a range of 0.62–0.66 m (period 100–130 s; A and C in antiphase);
-  in the third stage the oscillation is small, but the depth at the head of the bay is 0.69 m (three
-  tenths) lower than with 0. On real terrain the same oscillation appears in a junction pond of the
-  100 m grid of Chichibu (developer.md §110.14).
-- **Depending on the shape of the pond, 0 does not settle to a steady state either.** In jt0, where
-  the main stream enters straight and turns where it meets the bank, the surface keeps oscillating
-  in all three stages with a range of 0.51–1.47 m (period 80–115 s). With 1 the same pond
-  oscillates by 0.53 m in the first stage and is nearly steady (0.02–0.04 m) in the second and
-  third. The inflow is constant, so both oscillations are produced by the computation.
+- **The junction pond settles to a steady state with 1.** The shallow, fast inflow that drops into
+  the head of the bay A continues through A to B on the same line. Its momentum is carried to the
+  edge A–B by the ordinary upwind value. Because the path value of 1 bounds the depth of an inflow
+  whose line continues from below by the depth of the edge, it does not add the same momentum again
+  to the edge that leaves A diagonally towards D (whose upwind side is a wall). jp1 is steady in all
+  three stages, and the pond is only 0.03–0.07 m deeper than with 0. Without this treatment the
+  same pond keeps oscillating with a range of 0.6 m (period 100–130 s), or the depth at the head of
+  the bay becomes 0.7 m lower than with 0 (the fast velocity matched to the shallow inflow depth is
+  applied to all of the deep, slow pond water and pushes the water of the bay out).
+- **Depending on the shape of the pond, 0 does not settle to a steady state.** In jt0, where the
+  main stream enters straight and turns where it meets the bank, the surface keeps oscillating in
+  all three stages with a range of 0.51–1.47 m (period 80–115 s). The inflow is constant, so this
+  oscillation is produced by the computation. With 1 the same pond is steady (an oscillation of
+  0.04 m remains at the end of the first stage; 0.00 m in the second and third).
 - There is no theory to compare the depths of the junction pond with. What is checked is whether
   the water surface settles to a steady state under steady inflow, and the difference between 0 and
   1. Even with 0 the head of the bay is 0.22–0.79 m lower than B (the momentum of the dropping flow
   turns into a rise of the water surface from the head of the bay towards the pond).
 - The check covers channels one cell wide, the two pond shapes above and uniform flow two cells
   wide only. In two-dimensional flow along a wall, 1 acts on faces whose upwind side is a wall and
-  which receive inflow. The oscillation of a pond whose banks are wet with a thin film
-  (developer.md §110.15) is not part of this check.
+  which receive inflow. The depth and the oscillation of a pond whose banks are wet with a thin film
+  (developer.md §110.15) are not part of this check.
 
 ## Usage
 

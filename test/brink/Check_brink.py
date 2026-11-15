@@ -63,15 +63,15 @@
 #   水深の平均と振れ幅(最大 − 最小)を読む。流入は一定なので、定常な水面に落ち着くのが正しい。
 #   構成 jp0(本流が斜めに入る池。f_advection_bend = 0):
 #     (20) 測線の流量が湧き出しの合計に ±TOL_Q で、池の 4 セルの水深の振れ幅が RANGE_JP 以下(定常)
-#   構成 jp1(同じ池。f_advection_bend = 1。既知の不備の記録):
-#     (21) 1 段目で湾の奥 A の水深の振れ幅が RANGE_JP_DEF より大きく、3 段目で A の水深が jp0 より DRAW_JP_DEF
-#          より大きく低い(湾の奥へ落ちてくる浅く速い流入は、同じ線の先の池のセルへ通常の風上で運ばれるのに、
-#          経路の値が、同じ流入を、池の中で曲がって出る辺にも数える。湾の水が余分に押し出され、水面が揺れる。
-#          developer.md §110.14)
+#   構成 jp1(同じ池。f_advection_bend = 1):
+#     (21) jp0 と同じ結果: 池の 4 セルの水深の振れ幅が RANGE_JP 以下(定常)で、水深が jp0 に ±TOL_JP_SAME
+#          (湾の奥へ落ちてくる浅く速い流入は、同じ線の先の池のセルへ続いている。その運動量は通常の風上が運ぶので、
+#          経路の値は、池の中で曲がって出る辺へ同じ運動量を足さない。足すと、湾の水が余分に押し出されて水面が
+#          揺れる。developer.md §110.14・§110.16)
 #   構成 jt0(本流が南からまっすぐ入る T 字の合流。f_advection_bend = 0。0 の性質の記録):
-#     (22) 3 段とも、A の水深の振れ幅が RANGE_JP_DEF より大きい(0 も、この形の池では定常に落ち着かない)
-#   構成 jt1(同じ池。f_advection_bend = 1。既知の不備の記録):
-#     (23) 1 段目で A の水深の振れ幅が RANGE_JP_DEF より大きい
+#     (22) 3 段とも、A の水深の振れ幅が RANGE_JP_DEF より大きい(0 は、この形の池では定常に落ち着かない)
+#   構成 jt1(同じ池。f_advection_bend = 1):
+#     (23) 3 段とも、池の 4 セルの水深の振れ幅が RANGE_JT 以下(定常)
 import sys, os, glob
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 from make_brink import (G, DX, NX, I_BRINK, N_APRON, Z_POOL, Q_LEVELS, T_RAMP, T_HOLD,
@@ -102,9 +102,10 @@ JUMP_SWEEP = 250.0                # (18) 0 の跳水が直線の水路より下�
 X_EPOOL_PL = 325.0                # (17) 上の池のエネルギー水頭を取る位置(1 つ目の段差から上流へ。m)
 TOL_WD, TOL_WD_SAME = 0.002, 1.0e-4     # (19) 幅 2 セルの等流の水深と理論の一致、0 と 1 の差(比 − 1)
 T_WIN = 10.0                      # (20)〜(23) 各段の終わりの、水深の平均と振れ幅を取る時間 (min)
-RANGE_JP = 0.05                   # (20) 定常とみなす水深の振れ幅の上限 (m)
-RANGE_JP_DEF = 0.3                # (21)(22)(23) 揺れの記録の、振れ幅の下限 (m)
-DRAW_JP_DEF = 0.4                 # (21) 湾の奥の水深が 0 より低くなる量の記録の下限 (m)
+RANGE_JP = 0.05                   # (20)(21) 定常とみなす水深の振れ幅の上限 (m)
+TOL_JP_SAME = 0.10                # (21) jp1 と jp0 の水深の差の上限 (m)
+RANGE_JP_DEF = 0.3                # (22) 揺れの記録の、振れ幅の下限 (m)
+RANGE_JT = 0.10                   # (23) jt1 を定常とみなす水深の振れ幅の上限 (m)
 JP_NAMES = "ABCD"                 # 合流部の池のプローブ 1〜4 のセル
 
 nfail = 0
@@ -405,21 +406,15 @@ def check_junction():
         check(abs(q / (qw + qm) - 1.0) <= TOL_Q and max(r for _, r in st) <= RANGE_JP,
               "(20) steady: outflow / inflow - 1 = %+.4f (within %.3f), largest depth range %.3f m (<= %.2f)"
               % (q / (qw + qm) - 1.0, TOL_Q, max(r for _, r in st), RANGE_JP))
-    print("=== jp1: same pond, f_advection_bend = 1 (record of a known defect) ===")
+    print("=== jp1: same pond, f_advection_bend = 1 ===")
     j1 = JunctionCase("jp1")
-    last = None
     for t, qw, qm in stages():
         st = j1.stat(t)
         print("  t = %3.0f min (inflow %.0f + %.0f m3/s): depth m (range m) %s" % (t, qw, qm, fmt_stat(st)))
-        if last is None:
-            check(st[0][1] > RANGE_JP_DEF,
-                  "(21) the water surface keeps oscillating: depth range in the bay cell A %.2f m (> %.1f)"
-                  % (st[0][1], RANGE_JP_DEF))
-        last = (t, st)
-    t, st = last
-    check(ref[t][0][0] - st[0][0] > DRAW_JP_DEF,
-          "(21) the bay is drawn down: depth of A %.2f m, %.2f m lower than with 0 (> %.1f)"
-          % (st[0][0], ref[t][0][0] - st[0][0], DRAW_JP_DEF))
+        dev = [m - m0 for (m, _), (m0, _) in zip(st, ref[t])]
+        check(max(r for _, r in st) <= RANGE_JP and max(abs(d) for d in dev) <= TOL_JP_SAME,
+              "(21) same as with 0: largest depth range %.3f m (<= %.2f), depth - depth with 0 = %s m (within %.2f)"
+              % (max(r for _, r in st), RANGE_JP, " ".join("%+.2f" % d for d in dev), TOL_JP_SAME))
     print("=== jt0: pond with a dead-end bay, main stream entering straight (f_advection_bend = 0; record) ===")
     t0 = JunctionCase("jt0")
     for t, qw, qm in stages():
@@ -428,17 +423,13 @@ def check_junction():
         check(st[0][1] > RANGE_JP_DEF,
               "(22) the water surface keeps oscillating with 0: depth range in the bay cell A %.2f m (> %.1f)"
               % (st[0][1], RANGE_JP_DEF))
-    print("=== jt1: same pond, f_advection_bend = 1 (record of a known defect) ===")
+    print("=== jt1: same pond, f_advection_bend = 1 ===")
     t1 = JunctionCase("jt1")
-    first = True
     for t, qw, qm in stages():
         st = t1.stat(t)
         print("  t = %3.0f min (inflow %.0f + %.0f m3/s): depth m (range m) %s" % (t, qw, qm, fmt_stat(st)))
-        if first:
-            check(st[0][1] > RANGE_JP_DEF,
-                  "(23) the water surface keeps oscillating: depth range in the bay cell A %.2f m (> %.1f)"
-                  % (st[0][1], RANGE_JP_DEF))
-        first = False
+        check(max(r for _, r in st) <= RANGE_JT,
+              "(23) steady: largest depth range %.3f m (<= %.2f)" % (max(r for _, r in st), RANGE_JT))
 
 
 if __name__ == "__main__":

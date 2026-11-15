@@ -758,7 +758,7 @@ you notice them, consider them in this order.
    the cell boundary just after a change of channel direction also gets
    an inertia built from the upstream flow. The flow in the gorge then no
    longer exceeds the energy of the pond, and the largest change per
-   minute falls to 680 m^3/s (the peak becomes 2 % larger; the brake by
+   minute falls to 430 m^3/s (the peak becomes 1 % larger; the brake by
    the thin flow over the valley wall remains, so the switch between the
    shallow and the deep state takes place gently over 4 to 8 minutes).
    Neither run is part of `Fig_supp.sh`. For the mechanism and its limits,

@@ -102,7 +102,11 @@
                             !   = default, 1: the velocity the water that
                             !   actually enters the face cell would have at the
                             !   width of this edge and at the depth it arrived
-                            !   with). 0 creates no loss at a bend in uniform
+                            !   with; when the line of an inflow continues into
+                            !   the same water body beyond the face cell, the
+                            !   depth of that inflow is counted with a lower
+                            !   bound at the depth of this edge). 0 creates no
+                            !   loss at a bend in uniform
                             !   flow, but where a bend coincides with a sharp
                             !   acceleration (the outlet of a pond, just before
                             !   a drop) the edge just after the bend carries no
@@ -162,7 +166,11 @@
                             !   With f_advection_bend = 1 it is also the
                             !   threshold below which the value is pulled
                             !   toward neutral when the inflow into the face
-                            !   cell is less than eps times its outflow
+                            !   cell is less than eps times its outflow, and
+                            !   the threshold that decides whether the cell
+                            !   beyond the face cell on the line of an inflow
+                            !   belongs to the same water body (its depth is at
+                            !   least eps times that of the face cell)
   !f_diffusion_term = 0     ! diffusion term (0: none, 1: constant viscosity,
                             !   2: zero-equation model nu = nu0 + alpha*(u*)*h).
                             !   For a first try, 2 is handy (no coefficient to

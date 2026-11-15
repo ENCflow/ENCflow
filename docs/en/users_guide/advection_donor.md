@@ -312,7 +312,7 @@ the grid spacing and the number of cells that represent the channel.
   [supplement of the Chichibu tutorial](../../../tutorials/chichibu/en/README.md)).
   Giving inertia to the edge just after a bend with `f_advection_bend = 1`
   removes the over-accelerating side, and this dip and bump decrease to
-  +680 and −390 m³/s (the lateral-face braking remains). In a prototype that
+  +430 and −210 m³/s (the lateral-face braking remains). In a prototype that
   then also removes this braking, the 50 m grid ran to the end without
   diverging, and the peak at transect 3 became 26 % larger and 8 minutes
   earlier (developer.md §110, in Japanese). This indicates how much this

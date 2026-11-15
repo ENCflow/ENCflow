@@ -429,6 +429,38 @@ With the default `f_advection_donor = 3` the wet/dry test of the parallel edge b
     onto a bank, stays almost the same as with 0. The same value is used for
     the part that `f_advection_donor = 3` of the next item pulls toward
     $`u_e`$ for a thin-film donor.
+  - When the line of an inflow continues beyond the face cell (the neighbour
+    on the opposite side of inflow link $`l`$ belongs to the same water body
+    as the face cell), the momentum of that inflow is carried to the next
+    edge on the same line by the ordinary upwind value. So that the same
+    momentum is not added again to this edge, which turns away, the depth of
+    that inflow is counted with a lower bound at the depth of this edge,
+    $`h_e = Q_e/(W_e\,|u_e|)`$.
+
+    ```math
+    h'_{e,l} = \beta_l\,h_{e,l} + (1-\beta_l)\max(h_{e,l},\,h_e),\qquad
+    \beta_l = 1 - \min\!\left(1,\ \frac{h_o}{\varepsilon\,h_c}\right)
+    ```
+
+    $`h_o`$ is the depth of the neighbour on the opposite side, $`h_c`$ the
+    depth of the face cell and $`\varepsilon`$ is `p_adv_donor_eps` (when the
+    opposite side is a wall or dry, $`\beta_l = 1`$ and the inflow is counted
+    as it is). The part in which the inflow is shallower than this edge (a
+    decelerating bend, where $`\bar u`$ would exceed $`u_e`$) is not counted;
+    the part in which the inflow is deeper than this edge (the inertia needed
+    in an accelerating bend) is counted as it is. In a one-cell-wide channel
+    the line of the inflow ends at a wall, so the formula above applies
+    unchanged. With this treatment the water surface settles to a steady
+    state also in a confluence pond (a water surface two or more cells wide)
+    into which a shallow, fast flow drops (a check where two streams drop at
+    constant discharge into a pond with a dead-end bay; the junction pond of
+    [test/brink](../../../test/brink/en/README.md); without this treatment an
+    oscillation with a range of 0.6 m persists, or the depth at the head of
+    the bay becomes 0.7 m lower than with 0). In the pond of the same check
+    where the main stream enters straight and turns where it meets the bank,
+    0 does not settle to a steady state and keeps oscillating with a range of
+    0.5–1.5 m (1 is steady). Uniform flow in a channel two or more cells wide
+    has the same depth as with 0.
   - When the inflow into the face cell is less than $`\varepsilon`$ times its
     outflow (`p_adv_donor_eps`, default 0.1), the $`f`$ in front of the
     parentheses is multiplied by
@@ -444,8 +476,8 @@ With the default `f_advection_donor = 3` the wet/dry test of the parallel edge b
     the bend; [test/brink](../../../test/brink/en/README.md)). On the 50 m
     grid of Chichibu the energy head in the gorge does not exceed that of
     the pond, and the largest one-minute changes of the discharge at
-    transect 3 decrease from +1,209 and −1,193 m³/s to +678 and −391 m³/s
-    (the peak changes by +2 %).
+    transect 3 decrease from +1,209 and −1,193 m³/s to +434 and −211 m³/s
+    (the peak changes by +1 %).
   - Limits: there is no coefficient for tuning the bend loss. Only the
     inflow faces in the flow direction change; the treatment of the lateral
     faces, in which slow flow on a wet bank is counted as a brake on the main
@@ -453,7 +485,7 @@ With the default `f_advection_donor = 3` the wet/dry test of the parallel edge b
     where the flow regime alternates a smaller dip and bump remain. When the
     reach at the foot of a drop switches from shallow, fast flow to deep flow,
     the discharge just downstream can also dip for one minute (at transect 2
-    of the 50 m grid of Chichibu, −305 m³/s at 42 minutes on the rising limb;
+    of the 50 m grid of Chichibu, −401 m³/s at 42 minutes on the rising limb;
     with 0 the growth of the discharge merely slows at the same switch). Inflow
     from sea cells is not counted in $`Q_\mathrm{in}`$, and the fraction of
     the inflow that does not come from sea cells is applied as a factor to
@@ -461,31 +493,14 @@ With the default `f_advection_donor = 3` the wet/dry test of the parallel edge b
     with 0). Edges without an advection term (the "Excluded edges" below, the
     outer cells of a reach inflow) are the same as with 0. It has no effect
     on scheme 1.
-  - Known defect: 1 is a treatment intended for bends of one-cell-wide
-    channels. In a pond cell from which the inflow continues straight ahead (a
-    water surface two or more cells wide), the same inflow is also counted on
-    the edges that turn away, so a surface oscillation can grow in a
-    confluence pond into which a shallow, fast flow drops (in a run on the
-    100 m grid of Chichibu with a channel roughness of 0.02, a flat pond of
-    six cells developed an oscillation with a period of about 90 s and a range
-    of 1.5 m, and the discharge at the transect downstream showed a dip of 5 %
-    of the peak; it does not appear with 0; developer.md §110.14, in
-    Japanese). It also appears in an idealised pond (in a check where two
-    streams drop at constant discharge into a pond with a dead-end bay, an
-    oscillation with a range of 0.6 m persists, or the depth at the head of
-    the bay becomes 0.7 m lower than with 0; the junction pond of
-    [test/brink](../../../test/brink/en/README.md)). In the pond of the same
-    check where the main stream enters straight and turns where it meets the
-    bank, it is 0 that does not settle to a steady state and keeps oscillating
-    with a range of 0.5–1.5 m.
   - The default is 0. With 1 the results change in computations that contain
     places where the flow turns next to a wall or a dry cell. In the Chichibu
     catchment (channel roughness 0.02; the settings of
     [the supplement of the tutorial](../../../tutorials/chichibu/en/README.md))
-    the peak at transect 3 changes by +5.5, +2.4 and +2.0 % on the 200, 100
-    and 50 m grids, and the peak at transect 4 by +6.8 and −0.2 % on the 200
-    and 100 m grids. The run time is about two tenths longer than with 0
-    (+20 % on the 200 m grid of the same catchment).
+    the peak at transect 3 changes by +4.1, +2.6 and +1.1 % on the 200, 100
+    and 50 m grids, and the peak at transect 4 by +6.4 and −0.6 % on the 200
+    and 100 m grids. The run time is two to three tenths longer than with 0
+    (+25 % on the 200 m grid of the same catchment).
 - **Sea cells (tide-prescribed boundary) supply no momentum either.** The
   cells of the sea mask (fn_sw) are the side whose water level is forced;
   their apparent water column hsea0 and their zero flux have nothing to do
@@ -769,10 +784,10 @@ The labels in the Basis column are explained in [How to read the basis of a defa
   (theory), and checks that a channel whose link at the foot of the overfall
   is diagonal gives the same profile as the straight channel with
   `f_advection_bend = 1`. It also checks that uniform flow in a channel two
-  cells wide has the Manning depth with both 0 and 1, and whether the water
-  surface settles to a steady state when two streams drop into a junction
-  pond with a dead-end bay (records of a known defect of 1 and of the
-  behaviour with 0) (`Check_brink.py`).
+  cells wide has the Manning depth with both 0 and 1, and that the water
+  surface settles to a steady state with `f_advection_bend = 1` when two
+  streams drop into a junction pond with a dead-end bay (including a record
+  of the pond shape in which 0 keeps oscillating) (`Check_brink.py`).
 - **[test/hillslope](../../../test/hillslope/en/README.md)** -- smooth hillslope and V-shaped catchment. Confirms
   that schemes 1 and 3 agree.
 - **[test/chichibu](../../../test/chichibu/en/README.md)** -- real terrain (100 m). The place for grid convergence

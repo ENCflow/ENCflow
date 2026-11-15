@@ -1321,6 +1321,16 @@ contains
   ! - 海セルからの流入(海陸エッジの水深は見かけ水柱厚 hsea0 の尺度で、流入の水深に使えない。§68.35)は
   !   Q_in に数えず、寄せる度合いに「流入のうち海セルからでない割合」を掛ける(海からの流入だけの面の
   !   セルは中立のまま。海側のリンクの流れが反転するところで値が飛ばない)。
+  ! - 流入の線が面のセルの先へ続いている(流入リンク l の反対側の隣のセルが、面のセルと同じ水体)とき、その
+  !   流入の運動量は、通常の風上(線 k の供給元)が同じ線の先の辺へ運ぶ。上の式は ū_p − u_e ∝ u_e (r h_e / h̆_in − 1)
+  !   (h_e = Q_e / (W_e │u_e│) はこの辺の水深)なので、流入がこの辺より浅い(h̆_in < h_e)と u_e より大きく、同じ
+  !   運動量を、曲がって出るこの辺にも足すことになる(落差から浅く速い流れが落ち込む合流部の池で、湾の水を
+  !   余分に押し出し、水面の揺れを育てた。§110.14)。そこで、線が続いている流入は、水深を h_e で下から止めて数える:
+  !     h'_l = β_l h_l + (1 − β_l) max(h_l, h_e)、  β_l = 1 − min(1, h_o / (ε h_c))
+  !   h_o は反対側の隣のセルの水深、h_c は面のセルの水深、ε は p_adv_donor_eps(壁・乾床なら β = 1 = そのまま)。
+  !   足す向き(減速する屈曲)には数えず、引く向き(加速する屈曲に要る慣性。中立より運動量を増やさない)は
+  !   そのまま数える。等流(水深が一様で r = 1)では h'_l = h_e で、岸の形によらず中立。流入の線の先が全て壁・
+  !   乾床の 1 セル幅の水路は、この扱いの前と同じ式・同じ演算(§110.15)。
   ! - この辺が面のセルの流出でない(Q_e ≤ 0)ときは u_e(置き換えなし。Q_e → 0 で f → 0 なので連続)。
   ! - 8 本のリンクの和は、格子の対称操作(鏡映・90° 回転)で入れ替わる対(向かい合うリンク)ごとに取る。
   pure function path_value(ci, cj, kout, sg, ue0) result(u)
@@ -1330,8 +1340,8 @@ contains
     real, intent(in) :: ue0           ! この辺の流速 u_e(c → n が正)
     real :: u
     real :: cq(1:8), cs(1:8), cm(1:8), co(1:8), ca(1:8)
-    real :: q, qin, qs, qm, qout, qsea, qe, qth, we, den, fsh, wgt
-    integer :: l, mi, mj
+    real :: q, qin, qs, qm, qout, qsea, qe, qth, we, den, fsh, wgt, se, he, hlim, beta
+    integer :: l, mi, mj, oi, oj
     logical :: sea
     u = ue0
     do l = 1, 8
@@ -1358,6 +1368,21 @@ contains
     end do
     qe = co(kout)
     if (qe <= 0.0) return
+    ! 線が続いている流入の水深を、この辺の水深 h_e で下から止める(Q s h' = cm + (1 − β) max(0, Q s h_e − cm)。
+    ! cm = Q │mn│ = Q s h。β = 1 の流入は cm のまま)
+    se = abs(uvk8(ci, cj, kout))
+    hlim = opt%p_adv_donor_eps * hcell(ci, cj)
+    if (se > 0.0 .and. hlim > 0.0) then
+      he = abs(mnk8(ci, cj, kout)) / se
+      do l = 1, 8
+        if (cq(l) <= 0.0) cycle
+        oi = ci + din(9 - l)
+        oj = cj + djn(9 - l)
+        if (.not. cell_ok(oi, oj)) cycle
+        beta = 1.0 - min(1.0, hcell(oi, oj) / hlim)
+        if (beta < 1.0) cm(l) = cm(l) + (1.0 - beta) * max(0.0, cs(l) * he - cm(l))
+      end do
+    end if
     qin = ((cq(2) + cq(7)) + (cq(4) + cq(5))) + ((cq(1) + cq(8)) + (cq(3) + cq(6)))
     qs = ((cs(2) + cs(7)) + (cs(4) + cs(5))) + ((cs(1) + cs(8)) + (cs(3) + cs(6)))
     qm = ((cm(2) + cm(7)) + (cm(4) + cm(5))) + ((cm(1) + cm(8)) + (cm(3) + cm(6)))
