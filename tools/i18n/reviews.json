@@ -2732,11 +2732,11 @@
     {
       "source": "examples/source_area/README.md",
       "target": "examples/source_area/en/README.md",
-      "source_sha256": "d37184b7bd0377eefe7d3c57de817ce1fe3c9a1fad8f83632d6c8ebc6c99e74d",
-      "target_sha256": "7814e55e50f35a87b0ef844b08667b7d7b353c30983899b7f9fdff1ca5a9d093",
-      "reviewer": "Claude (Claude Code session; added in both languages: Supplement 2 (what the lateral saturated conductivity of a single layer is equivalent to: five subsections, two tables from plot_results.py, a table of other models, bullets), a bullet in 'What this example shows', the sweep case process_thick (23 cases), tank 4 with a lag time in 'Relation to the storage function method' (definition, caption, table, one bullet), and references; the added and changed text, its numbers, the table rows and the in-page links were compared, and headings, bullets, table rows and figures were counted in both files; the rest unchanged since the previous record)",
+      "source_sha256": "6152e67b6cf4d6f34046cea6e25cfb24ec323fb7b656feab1b9c532cb50b8f77",
+      "target_sha256": "ada608ed261b40e1ee6f5d62309405b88ec640acb30ce945558c2211abbb9df7",
+      "reviewer": "Claude (Claude Code session; the content of Tani et al. (2026), Hydrol. Process. 40:e70627, reflected in both languages: two background bullets (old water paradox and the classification of mechanisms; rain over the whole wet catchment becoming storm runoff), the rewritten bullet on response and water velocity, a paragraph after the table of the three runs, a sentence in the results on the meaning of the source area, a paragraph and a sentence in the VZ section, two sentences and one bullet in the storage-function section, the runoff buffering potential paragraph with a table from plot_results.py and one bullet, one bullet and one sentence in Supplement 2, one sentence and one bullet in the limitations, two summary sentences, and ten references with a source note; the added text, its numbers, the table rows and the in-page links were compared, and headings, bullets, table rows and figures were counted in both files; the rest unchanged since the previous record)",
       "method": "assistant",
-      "reviewed_on": "2026-11-11"
+      "reviewed_on": "2026-11-15"
     },
     {
       "source": "examples/source_area/figs/compare.png",

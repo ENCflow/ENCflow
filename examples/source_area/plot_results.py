@@ -1696,6 +1696,20 @@ def tables(ser):
                   + ", ".join(f"n = {nlabel(CASES[a][2])}: {stages(b)[0] / stages(a)[0]:.2f}" for a, b in pairs)
                   + (T("; 過程計算の斜面の段: ", "; slope stage of the process run: ") + f"{stages(R30_PROCESS)[0] / stages('process')[0]:.2f}"
                      if have("process") and have(R30_PROCESS) else ""))
+        # 流出を平らにする度合い: runoff buffering potential R_BP = dS/dq(q = 雨の強さ。Tani 2008)。貯留関数では
+        # K·P·q^(P−1)。雨と釣り合った 貯留 ÷ 雨(= K·q^(P−1))の P 倍
+        print(T("\n## runoff buffering potential R_BP = dS/dq(q = 雨の強さ。Tani 2008。貯留関数では K·P·q^(P−1))と、雨と釣り合った 貯留 ÷ 雨",
+                "\n## Runoff buffering potential R_BP = dS/dq (q = rain intensity; Tani 2008; K·P·q^(P-1) for a storage function) and storage / rain in balance"))
+        print(T(f"| 計算 | K | P | 貯留 ÷ 雨 (h): 雨 {ra:g} mm/h | R_BP (h): 雨 {ra:g} mm/h | 雨 {rb:g} mm/h |",
+                f"| Run | K | P | Storage / rain (h): rain {ra:g} mm/h | R_BP (h): rain {ra:g} mm/h | rain {rb:g} mm/h |"))
+        print("|---|---:|---:|---:|---:|---:|")
+        rbp_rows = [(T(f"タンク {z}", f"tank {z}") + (T(f"(遅れ時間 {tl:g} 時間を除くタンクの部分)", f" (the tank part, without the lag time of {tl:g} h)") if tl > 0 else ""),
+                     kk, pp) for z, (kk, pp, tl) in prm.items()]
+        if have_vz("vz") and sd in vz_column("vz")[1]:
+            kf, pf, dev = vz_storage_fit(sd)
+            rbp_rows.append((T(f"VZ の土壌柱: 深さ {sd:g} m(逓減の当てはめ)", f"VZ soil column: depth {sd:g} m (fit to the recession)"), kf, pf))
+        for name, kk, pp in rbp_rows:
+            print(f"| {name} | {kk:.3g} | {pp:.3g} | {kk * ra ** (pp - 1):.1f} | {kk * pp * ra ** (pp - 1):.2f} | {kk * pp * rb ** (pp - 1):.2f} |")
         for c in SFM:
             r = SFM[c][1]
             t, tk = sfm_tanks(c)

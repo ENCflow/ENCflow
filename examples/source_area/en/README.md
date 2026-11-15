@@ -76,8 +76,10 @@ compared with observations).
   same rain is put on a soil column of the VZ runoff of Tani (2023) (a model that takes the
   downslope transfer as having no delay), the drainage at a depth of 0.5 m lags the rain by
   4.4 hours, the same order as the slope lag that the process run produces with lateral flow
-  in the soil (3.3 hours). The soil of the column is that of another experimental site, so
-  this is a rough comparison
+  in the soil (3.3 hours). From observations on steep hillslopes, Tani et al. (2026) argue that
+  it is this vertical unsaturated flow that controls the storm response of wet hillslopes, and
+  that downslope drainage through preferential pathways is fast. The soil of the column is that
+  of another experimental site, so this is a rough comparison
   ([Relation to vertical unsaturated infiltration (VZ)](#relation-to-vertical-unsaturated-infiltration-vz)).
 - **The storage function method, which treats the catchment as a single tank, matches the lag
   but not the rise**: a tank with the same storage as the process run (storage S and runoff q
@@ -85,7 +87,9 @@ compared with observations).
   0.92 and 0.96. Its runoff increases from the start of the rain, so it cannot represent a rise
   that waits until water has been stored. Adding a lag time matches the start of the rise, but
   no longer fits when the rain intensity changes. The exponent sets how much the lag shrinks under
-  heavier rain; overland flow corresponds to 0.6 and the VZ soil column to 0.17
+  heavier rain; overland flow corresponds to 0.6 and the VZ soil column to 0.17. This agrees
+  with Tani et al. (2026), who seek the basis of the storage function in vertical unsaturated
+  flow rather than in overland flow
   ([Relation to the storage function method](#relation-to-the-storage-function-method)).
 - **The lateral saturated conductivity of a single layer is an equivalent value of the model,
   determined together with the soil depth and the effective porosity**: a single layer with
@@ -121,15 +125,36 @@ compared with observations).
   Georgia, Tromp-van Meerveld & McDonnell (2006) showed that the flow increased by orders of
   magnitude beyond 55 mm of rain, when the depressions of the bedrock surface had filled and
   the saturated patches connected down to the foot of the slope (fill and spill).
+- **Most of the water in storm runoff was already in the catchment before the rain**:
+  observations of water chemistry and tracers show that most of the water in storm runoff was
+  stored in the soil and bedrock before the rain (old water; Sklash & Farvolden 1979 and
+  others). The candidate mechanisms of storm runoff are (a) overland flow of rain exceeding the
+  infiltration capacity, (b) a combination of subsurface flow and saturation overland flow,
+  and (c) fast flow through preferential pathways in the soil; explanations (a) and (b), which
+  take overland flow as the main source of storm runoff, are hard to reconcile with these
+  observations, and this has long been debated as the "old water paradox" (as summarised by
+  Tani et al. 2026).
+- **In a wet catchment, rain over almost the whole catchment becomes storm runoff**: in
+  observations in Japanese mountains, once the cumulative rain exceeds a certain amount (often
+  100–200 mm), most of the subsequent rain becomes storm runoff, and rain over the whole
+  catchment, up to near the ridges, contributes to the peak within a short time (as summarised
+  by Tani et al. 2026).
 - **A fast runoff response is not the same as fast-moving water**: the response of runoff to
   rain can travel faster than the water particles themselves (for the relation in the
   lateral-flow equation of this computation, see the
-  [Supplement](#supplement-equivalent-roughness-and-the-soil-conductivity)). The VZ runoff
-  model of Tani (2023) assumes that efficient drainage through water pathways near the
-  soil-bedrock interface keeps the groundwater level from changing much; it leaves out the
-  delay of downslope subsurface flow and obtains the runoff response of small mountain
-  catchments from vertical unsaturated infiltration alone
-  ([VZ runoff](../../../docs/en/users_guide/vz.md) in ENCflow).
+  [Supplement](#supplement-equivalent-roughness-and-the-soil-conductivity)). Vertical flow in
+  wet unsaturated soil, too, has a very high celerity (the speed at which the response
+  travels) even at low velocities (Torres et al. 1998; McDonnell & Beven 2014; as cited by
+  Tani et al. 2026). From observations on a 42° hillslope at Shigaraki, Shiga Prefecture
+  (Kojima & Tani 2025), Tani et al. (2026) argue that when the soil is wet it is vertical
+  unsaturated flow in the soil layer that converts intense rain into runoff, and that the
+  subsequent downslope drainage is by fast flow through preferential pathways such as
+  fractures in the weathered bedrock (view (c) above). The VZ runoff model of Tani (2023)
+  rests on this view: it leaves out the delay of downslope subsurface flow and obtains the
+  runoff response of small mountain catchments from vertical unsaturated infiltration alone
+  ([VZ runoff](../../../docs/en/users_guide/vz.md) in ENCflow). Besides Shigaraki, it
+  reproduces observations in three steep catchments: Tatsunokuchi-yama, Kiryu and CB1
+  (Oregon, USA) (Tani 2023; Tani et al. 2026).
 - **Engineering runoff calculations often treat hillslope flow as overland flow**: the
   kinematic wave method (also called the equivalent roughness method in Japan) solves the flow
   of rainwater on slopes as Manning-type overland flow and gives the roughness a value larger
@@ -181,6 +206,12 @@ time step; only the treatment of the soil differs.
 | Process run | yes | yes | `param.txt` | — |
 | Vertical infiltration only | yes | no | `param_vertical.txt` | `f_gwlateral = 0` |
 | No infiltration | no | — | `param_surface.txt` | no `fn_gwflow` line (groundwater is not enabled) |
+
+The process run makes storm runoff along view (b) of the previous section (subsurface flow
+and saturation overland flow). No infiltration, which routes all the rain as overland flow, is
+close to (a). How the runs compare with VZ runoff, which rests on view (c) (vertical
+unsaturated flow and fast drainage through preferential pathways), is in the
+[supplement](#relation-to-vertical-unsaturated-infiltration-vz).
 
 The equations and settings of each mechanism are in the user guide:
 [Groundwater](../../../docs/en/users_guide/gwflow.md) and
@@ -361,7 +392,11 @@ itself) is as follows.
   of the runoff in 48 hours. The rest infiltrated, flowed through the soil and seeped out in
   the saturated area. When the rain stops, the runoff falls to 5.7 mm/h in 2 hours and to
   2.8 mm/h in 4 hours; after that it declines slowly with the drainage of the soil (0.57 mm/h
-  12 hours after the rain, 0.09 mm/h after 36 hours).
+  12 hours after the rain, 0.09 mm/h after 36 hours). The runoff source area (saturated area)
+  of this example is where runoff comes out at the surface, not where the rain that becomes
+  runoff falls. What comes out through the soil is rain that fell over almost the whole
+  catchment; in the sense of where the rain that contributes to runoff falls, almost the whole
+  catchment contributes (the runoff in 48 hours is 96 % and 100 % of the rain).
 - **In the second storm, on wet soil, runoff rises one hour earlier**: before the second storm
   the saturated area is still 2.8 % and the soil holds 4 mm. The runoff exceeds 1 mm/h after
   2.8 hours (3.8 hours in the first storm) and is 1.6 mm/h in the third hour (0.04 mm/h in the
@@ -900,7 +935,13 @@ The VZ runoff model of Tani (2023) ([VZ runoff](../../../docs/en/users_guide/vz.
 simplifies in the opposite way. It solves vertical unsaturated infiltration and takes the
 downslope transfer from the base of the soil to the outlet as having no delay (on the view
 that efficient drainage through water pathways near the soil-bedrock interface keeps the
-groundwater level from changing much). In terms of this example, the premise that the
+groundwater level from changing much). According to Tani et al. (2026), this premise has been
+confirmed by observations on the hillslope at Shigaraki (Kojima & Tani 2025) and in three
+catchments, Tatsunokuchi-yama, Kiryu and CB1 (Tani 2023), and the existence of preferential
+pathways (such as fractures in the weathered bedrock) that drain the groundwater quickly
+downslope is a necessary condition for it. They also state that in extreme rain beyond the
+drainage capacity of the pathways, water is forced back from the weathered bedrock into the
+soil layer and triggers shallow landslides. In terms of this example, the premise that the
 downslope delay can be left out corresponds to a large celerity of the lateral flow and a
 short slope-stage lag. With slow lateral flow, as in the single layer with 3600 mm/h (slope
 stage 8.7 hours), the premise does not hold.
@@ -952,7 +993,10 @@ is extrapolated beyond roughness 3).
   10 mm/h the lag is 2.3 hours at a depth of 0.25 m and 8.0 hours at 1 m. With three times the
   rain the lag falls to 0.4 times, more than the slope stage of the process run (0.6 times).
   The roughness with the same lag therefore hardly changes in the process run (1.7 → 1.6),
-  but becomes smaller for the column as the rain gets heavier (2.7 → 1.4 at 0.5 m).
+  but becomes smaller for the column as the rain gets heavier (2.7 → 1.4 at 0.5 m). That the
+  lag changes strongly with the soil depth agrees with the conclusion of Tani et al. (2026),
+  from analyses with the VZ runoff model, that the soil-layer thickness and the soil physical
+  properties strongly affect the storm response.
 - **The values are a guide**: the soil of Tatsunokuchi-yama is not the soil of this catchment.
   The column is a deep uniform soil, with no base of the soil (bedrock surface) below 0.5 m.
   The initial condition is a wet state with 0.1 mm/h flowing before the rain, and the
@@ -984,8 +1028,10 @@ tanks (S in mm, q in mm/h).
 - **Tank 1 (K = 11.3, P = 0.6)**: a tank with the same storage as the process run. P is the
   value conventionally used in the storage function method; it corresponds to the relation
   that, for overland flow with Manning's law, the storage in balance with the rain is
-  proportional to the 0.6th power of the runoff. K is taken from the 45.1 mm of water in the
-  catchment when the process run is in balance with a rain of 10 mm/h, as K = 45.1 / 10^0.6.
+  proportional to the 0.6th power of the runoff (an example of the view that seeks the basis
+  of the storage function in overland flow is Sugiyama et al. 1997, as cited by Tani et al.
+  2026). K is taken from the 45.1 mm of water in the catchment when the process run is in
+  balance with a rain of 10 mm/h, as K = 45.1 / 10^0.6.
 - **Tank 2 (K = 15.6, P = 0.46)**: the K and P that pass through two states of the process run
   (45.1 mm and 10 mm/h in balance with the rain; 5.2 mm and 0.09 mm/h just before the second
   storm).
@@ -1063,12 +1109,51 @@ default, 0.1 mm/h.
   whereas the runoff of the tank exceeds 1 mm/h after 1.1 hours. A storage function represents
   the "relation between storage and runoff" of vertical unsaturated infiltration, but not the
   time the front takes to pass down through the soil.
+- **The basis of the storage function may lie in vertical unsaturated flow rather than in
+  overland flow**: from the old water paradox and observations, Tani et al. (2026) reject the
+  view that takes overland flow as the basis of the storage function and seek its basis in
+  vertical unsaturated flow. In the numerical experiments of Tani et al. (2020) introduced
+  there, the relation between the flux leaving the bottom of the soil layer by vertical
+  unsaturated flow and the storage of the soil layer can be approximated by S = k q^p, and p
+  is not a constant such as 0.6 but is roughly set by the ratio of the soil-layer thickness to
+  a parameter of Kosugi's model of the retention curve. The result for the column of this
+  example (the item above) agrees with this view. In the column of this example, however, p
+  is almost constant (0.165–0.169) for depths of 0.25–1 m, and what changes with depth is K.
+  The column of this example reads the flux at an intermediate depth of a deep reference
+  column (that depth is not a boundary), and how this differs from the setting of Tani et al.
+  (2020) was not checked.
 - **The values are a guide**: K, P and the lag time are determined from the results of this
   example, not calibrated against observations (`plot_results.py` prints the values recomputed from the
   results after the table). The storage of the process run is that of the whole catchment,
   the water in the soil, on the surface and in the channels together, and a tank represents
   it by a single quantity. When the storage function method is applied to a real catchment, K,
   P and the lag time are calibrated against observed hydrographs.
+
+Tani (2008) evaluated how much flatter the runoff peaks are than the rain peaks, when the soil
+is sufficiently wet and the rain intensity fluctuates around a mean r_m, by the runoff
+buffering potential R_BP = dS/dq (at q = r_m) (as cited by Tani et al. 2026; the larger R_BP,
+the lower the peaks). For a storage function, R_BP = K·P·r_m^(P−1), P times the storage /
+rain in balance with the rain.
+
+| Run | K | P | Storage / rain (h): rain 10 mm/h | R_BP (h): rain 10 mm/h | rain 30 mm/h |
+|---|---:|---:|---:|---:|---:|
+| tank 1 | 11.3 | 0.6 | 4.5 | 2.70 | 1.74 |
+| tank 2 | 15.6 | 0.46 | 4.5 | 2.07 | 1.14 |
+| tank 3 | 37 | 0.167 | 5.4 | 0.91 | 0.36 |
+| tank 4 (the tank part, without the lag time of 1.8 h) | 6.8 | 0.6 | 2.7 | 1.62 | 1.05 |
+| VZ soil column: depth 0.5 m (fit to the recession) | 37 | 0.167 | 5.4 | 0.91 | 0.36 |
+
+The values for the tanks are from the K and P of the settings, and the value for the VZ soil
+column is from the fit to the recession at 0.5 m (S = 37.0 q^0.167). For tank 4 the value is
+that of the tank part without the lag time (a lag time only shifts the runoff and does not
+flatten it).
+
+- **With a similar lag, the degree of flattening still differs**: under 10 mm/h the storage /
+  rain is about the same for tank 1 (same storage as the process run, 4.5 hours) and for the
+  VZ soil column (5.4 hours), but R_BP is 2.7 and 0.9 hours, a factor of 3 apart. Vertical
+  unsaturated flow, with its small P, is expected to pass fluctuations of the rain intensity
+  to the outlet with little flattening. The rain of this example is rectangular with a
+  constant intensity, so this difference is not checked by computation.
 
 ## Supplement 2: what the lateral saturated conductivity of a single layer is equivalent to
 
@@ -1217,6 +1302,15 @@ not checked.
   stands in for processes the model does not solve (in Hopp et al. 2020 the effect of the
   macropore domain did not survive calibration). The standing-in for a layer of small
   specific yield and for vertical infiltration seen in this example belongs to the latter.
+- **Models that represent the delay by kinematic-wave-type flow had to back-calibrate their
+  parameters**: Tani et al. (2026) state that models representing overland flow or lateral
+  subsurface flow by kinematic-wave-type equations cannot adequately describe the fast
+  drainage of water that was in steep hillslopes before the rain, so their parameters had to
+  be calibrated backward from observations (citing Gao et al. 2019 and Sayama et al. 2025).
+  Tani (2008) also represented the effect of preferential pathways by assigning large
+  saturated conductivities (as cited by Tani et al. 2026). The large lateral saturated
+  conductivity of this example is likewise a value back-calculated from the empirical speed
+  of storm runoff.
 
 ### Notes on use
 
@@ -1236,7 +1330,11 @@ not checked.
 - **Solving the processes separately needs smaller values**: in the run with layer 2, both
   layers keep 3600 mm/h and the response corresponds to 16000 mm/h in a single layer. When a
   value becomes unnaturally large, it is a hint to suspect the processes the single layer is
-  standing in for (a layer of small specific yield, the unsaturated zone).
+  standing in for (a layer of small specific yield, the unsaturated zone). Tani et al. (2026)
+  argue that representing the storm response by vertical unsaturated flow and fast drainage
+  through preferential pathways brings models closer to needing no back-calibration, with
+  parameters determined from quantities measurable in the field, such as soil-layer thickness
+  and soil physical properties.
 
 ## What this model does not represent (differences from the real phenomenon)
 
@@ -1257,7 +1355,18 @@ not checked.
   by this treatment. The feature that solves vertical unsaturated flow
   ([VZ runoff](../../../docs/en/users_guide/vz.md)) cannot be combined with groundwater
   (`fn_gwflow`); for a comparison with a soil column calculation alone see the
-  [supplement](#relation-to-vertical-unsaturated-infiltration-vz).
+  [supplement](#relation-to-vertical-unsaturated-infiltration-vz). Tani et al. (2026) argue
+  that in wet steep hillslopes this vertical unsaturated flow governs the storm response; the
+  process run of this example has the equivalent conductivity of lateral flow stand in for
+  that delay as well
+  ([Supplement 2](#supplement-2-what-the-lateral-saturated-conductivity-of-a-single-layer-is-equivalent-to)).
+- **Old and new water are not distinguished**: the computation does not track whether water
+  was there before the rain or came with it. The first storm starts from dry soil, so all the
+  water that comes out is rain of that storm. Just before the second storm the catchment holds
+  5.2 mm, 4 % of the runoff in 48 hours (120 mm), so at most 4 % of the runoff can be water
+  that was there before the rain. The observation that most of the water in storm runoff was
+  there before the rain (old water) cannot be represented by the initial condition and the
+  structure of this computation.
 - **Bedrock, evapotranspiration and interception are not included**: infiltration into the
   weathered bedrock below the soil and the baseflow from it, evapotranspiration and canopy
   interception are not enabled. Between storms the soil water decreases only by drainage to
@@ -1385,11 +1494,17 @@ details and the summary of Tani (2023) are those of
 was not checked); the others were confirmed by search (for
 Kadoya & Fukushima (1976) only the formula and the coefficient were confirmed, from a search
 excerpt of a paper that quotes them; its bibliographic details were not checked). Except for
-Tani (2023), the texts were not checked; the summaries of their contents rely on abstracts and
-secondary sources. The contents of the references listed under "How other models treat it" in
-Supplement 2 rely on abstracts, model documentation and search excerpts (the article number of
-Ivanov et al. (2004) and the volume and pages of Sayama et al. (2012) were not confirmed by
-search).
+Tani (2023) and Tani et al. (2026), the texts were not checked; the summaries of their contents
+rely on abstracts and secondary sources. The contents of the references listed under "How
+other models treat it" in Supplement 2 rely on abstracts, model documentation and search
+excerpts (the article number of Ivanov et al. (2004) and the volume and pages of Sayama et al.
+(2012) were not confirmed by search). For the references cited through Tani et al. (2026)
+(Kojima & Tani 2025; Tani 2008; Tani et al. 2020; Sklash & Farvolden 1979; Torres et al.
+1998; McDonnell & Beven 2014; Sugiyama et al. 1997; Gao et al. 2019; Sayama et al. 2025), the
+bibliographic details are from the reference list of Tani et al. (2026), and the summaries of
+their contents follow the text of Tani et al. (2026) (for Tani et al. (2020) the article
+number is given as 124982, confirmed by the DOI and by search, rather than the 123982 of that
+reference list).
 
 - Barnes, R., Lehman, C. and Mulla, D. (2014): Priority-flood: An optimal depression-filling
   and watershed-labeling algorithm for digital elevation models. Computers & Geosciences, 62,
@@ -1410,6 +1525,9 @@ search).
   England watershed. Water Resources Research, 6(5), 1296–1311.
 - Engman, E. T. (1986): Roughness coefficients for routing surface runoff. Journal of
   Irrigation and Drainage Engineering, 112(1), 39–53.
+- Gao, H., Birkel, C., Hrachowitz, M., Tetzlaff, D., Soulsby, C. and Savenije, H. H. G. (2019):
+  A simple topography-driven and calibration-free runoff generation module. Hydrology and Earth
+  System Sciences, 23, 787–809.
 - Hewlett, J. D. and Hibbert, A. R. (1967): Factors affecting the response of small watersheds
   to precipitation in humid areas. In: Sopper, W. E. and Lull, H. W. (eds.), Forest Hydrology,
   Pergamon Press, 275–290.
@@ -1419,6 +1537,12 @@ search).
 - Ivanov, V. Y., Vivoni, E. R., Bras, R. L. and Entekhabi, D. (2004): Catchment hydrologic
   response with a fully distributed triangulated irregular network model. Water Resources
   Research, 40, W11102.
+- Kojima, N. and Tani, M. (2025): Evaluating effects of catchment properties and antecedent
+  moisture conditions on storm runoff responses based on hillslope observations in a small
+  mountainous catchment. Journal of Hydrology, 660, 133464.
+- McDonnell, J. J. and Beven, K. (2014): Debates—The future of hydrological sciences: A (common)
+  path forward? A call to action aimed at understanding velocities, celerities and residence
+  time distributions of the headwater hydrograph. Water Resources Research, 50, 5342–5350.
 - Mosley, M. P. (1979): Streamflow generation in a forested watershed, New Zealand. Water
   Resources Research, 15, 795–806.
 - Nash, J. E. and Sutcliffe, J. V. (1970): River flow forecasting through conceptual models
@@ -1436,8 +1560,26 @@ search).
 - Sayama, T., Ozawa, G., Kawakami, T., Nabesaka, S. and Fukami, K. (2012): Rainfall–runoff–
   inundation analysis of the 2010 Pakistan flood in the Kabul River basin. Hydrological
   Sciences Journal, 57(2), 298–312.
+- Sayama, T., Yamada, M., Yamakita, A. and Sugawara, Y. (2025): Parameter regionalization of
+  large-scale distributed rainfall–runoff models using a conditional probability method.
+  Progress in Earth and Planetary Science, 12, 17.
+- Sklash, M. G. and Farvolden, R. N. (1979): The role of groundwater in storm runoff. Journal of
+  Hydrology, 43, 45–65.
+- Sugiyama, H., Kadoya, M., Nagai, A. and Lansey, K. (1997): Evaluation of the storage function
+  model parameter characteristics. Journal of Hydrology, 191, 332–348.
 - Tani, M. (1997): Runoff generation processes estimated from hydrological observations on a
   steep forested hillslope with a thin soil layer. Journal of Hydrology, 200, 84–109.
+- Tani, M. (2008): Analysis of runoff storage relationships to evaluate the runoff-buffering
+  potential of a sloping permeable domain. Journal of Hydrology, 360, 132–146.
+- Tani, M., Matsushi, Y., Sayama, T., Sidle, R. C. and Kojima, N. (2020): Characterization of
+  vertical unsaturated flow reveals why storm runoff responses can be simulated by simple
+  runoff-storage relationship models. Journal of Hydrology, 588, 124982.
+- Tani, M., Sidle, R. C., Sayama, T., Matsushi, Y. and Kojima, N. (2026): Vertical unsaturated
+  flow governs storm runoff responses: observational and theoretical foundations. Hydrological
+  Processes, 40, e70627, doi:10.1002/hyp.70627.
+- Torres, R., Dietrich, W. E., Montgomery, D. R., Anderson, S. P. and Loague, K. (1998):
+  Unsaturated zone processes and the hydrologic response of a steep, unchanneled catchment.
+  Water Resources Research, 34, 1865–1879.
 - Tromp-van Meerveld, H. J. and McDonnell, J. J. (2006): Threshold relations in subsurface
   stormflow: 2. The fill and spill hypothesis. Water Resources Research, 42, W02411.
 - USDA Soil Conservation Service (1986): Urban hydrology for small watersheds. Technical

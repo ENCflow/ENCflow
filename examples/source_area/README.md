@@ -52,14 +52,17 @@
   ([追補](#追補-等価粗度と土層の透水係数))。
 - **鉛直の不飽和浸透だけでも、同じ桁の遅れになる**: 谷 (2023) の VZ 流出の土壌柱(斜面方向の移動を
   遅れなしとするモデル)に同じ雨を与えると、深さ 0.5 m の排水の、雨からの遅れは 4.4 時間で、
-  過程計算が土層の側方流で作る斜面の遅れ(3.3 時間)と同じ桁です。柱の土壌は別の試験地の値で、
-  目安の比較です([鉛直不飽和浸透(VZ)との関係](#鉛直不飽和浸透vzとの関係))。
+  過程計算が土層の側方流で作る斜面の遅れ(3.3 時間)と同じ桁です。Tani ほか (2026) は、急斜面の
+  観測から、湿った斜面の出水の応答を決めているのはこの鉛直の不飽和浸透で、斜面方向の排水は
+  選択的な経路で速いと論じています。柱の土壌は別の試験地の値で、目安の比較です
+  ([鉛直不飽和浸透(VZ)との関係](#鉛直不飽和浸透vzとの関係))。
 - **流域を 1 つのタンクとみなす貯留関数法では、遅れは合うが、立ち上がりは合わない**: 過程計算と
   同じ貯留になるタンク(貯留 S と流出 q の関係 S = K·q^0.6)は、遅れが 5.3 時間(過程計算は
   5.1 時間)で、適合度は 0.92 と 0.96 です。流出が雨の始めから増えるので、貯まるまで出ない
   立ち上がりは表せません。遅れ時間を足すと立ち上がりの始まりは合いますが、雨の強さが変わると
   合わなくなります。指数は、雨が強くなったときの遅れの縮み方を決め、地表流は 0.6、
-  VZ の土壌柱は 0.17 に当たります([貯留関数法との関係](#貯留関数法との関係))。
+  VZ の土壌柱は 0.17 に当たります。貯留関数の根拠を、地表流ではなく鉛直の不飽和浸透に求める
+  Tani ほか (2026) の議論と合います([貯留関数法との関係](#貯留関数法との関係))。
 - **1 層の側方飽和透水係数は、土層厚・有効間隙率と組で決まる、モデルの等価な値**: 側方飽和透水
   係数と有効間隙率を 1/10、土層厚を 10 倍にした 1 層は、基本とほぼ同じ出水になります(適合度
   1.000)。出水に合わせて決まるのは透水係数そのものではなく、土の測定値と比べられる量でも
@@ -84,12 +87,26 @@
   ことが多く、Tromp-van Meerveld & McDonnell (2006) は、ジョージア州 Panola の斜面で、基岩面の
   凹みが満ちて飽和域が斜面の下端までつながる 55 mm を境に流出が桁違いに増えることを示しました
   (fill and spill)。
+- **出水の水の大部分は、雨の前から流域にあった水**: 水質やトレーサーの観測は、出水の水の大部分が、
+  雨の前から土や基岩にあった水(old water)であることを示しています(Sklash & Farvolden 1979
+  など)。出水の機構の候補には、(a) 浸透能を超える雨の地表流、(b) 地中流と飽和域の地表流の
+  組み合わせ、(c) 土の中の選択的な経路の速い流れ、がありますが、地表流を出水の主な源とする
+  (a) と (b) の説明はこの観測と合いにくく、「old water のパラドックス」として長く議論されて
+  きました(Tani ほか 2026 の整理による)。
+- **湿った流域では、ほぼ全域の雨が出水になる**: 日本の山地の観測では、累積の雨がある量(多くは
+  100〜200 mm)を超えると、その後の雨のほとんどが出水になり、尾根近くまでの全域の雨が短い時間で
+  ピークに寄与します(Tani ほか 2026 の整理による)。
 - **流出の応答が速いことと、水が速く動くことは別**: 雨に対する流出の応答は、水の粒子そのもの
   より速く伝わりえます(この計算の側方流の式での関係は
-  [追補](#追補-等価粗度と土層の透水係数))。谷 (2023) の VZ 流出モデルは、土壌と基岩の境界付近の
-  水みちによる効率的な排水が地下水位の変化を抑えると考え、斜面方向の地下の流れの遅れを省いて、
-  鉛直の不飽和浸透だけから山地小流域の流出の応答を求めます(ENCflow の
-  [VZ 流出](../../docs/users_guide/vz.md))。
+  [追補](#追補-等価粗度と土層の透水係数))。湿った不飽和の土の鉛直の流れも、流速は小さくても、
+  応答が伝わる速さ(波速)が非常に大きくなります(Torres ほか 1998、McDonnell & Beven 2014。
+  Tani ほか 2026 による)。Tani ほか (2026) は、滋賀県の信楽の勾配 42° の斜面の観測
+  (Kojima & Tani 2025)から、土が湿っているとき、強い雨を流出に変えているのは土層の中の鉛直の
+  不飽和浸透で、そのあとの斜面方向の排水は、風化基岩の割れ目などの選択的な経路の速い流れに
+  よると論じています(上の (c) の考え)。谷 (2023) の VZ 流出モデルはこの考えに立ち、斜面方向の
+  地下の流れの遅れを省いて、鉛直の不飽和浸透だけから山地小流域の流出の応答を求めます(ENCflow の
+  [VZ 流出](../../docs/users_guide/vz.md))。信楽のほか、竜ノ口山・桐生・CB1(米国オレゴン州)の
+  3 つの急な流域で観測を再現しています(谷 2023、Tani ほか 2026)。
 - **実務の流出計算は、斜面の流れを地表流に見立てることが多い**: 雨水流法(kinematic wave 法。
   等価粗度法とも呼ぶ)は、斜面の雨水の流れをマニング則の地表流として解き、粗度に実際の地表より
   大きな値(等価粗度)を与えて、土を通ることによる遅れをまとめて表します。流出になる雨の量
@@ -130,6 +147,10 @@
 | 過程計算 | あり | あり | `param.txt` | — |
 | 鉛直浸透のみ | あり | なし | `param_vertical.txt` | `f_gwlateral = 0` |
 | 浸透なし | なし | — | `param_surface.txt` | `fn_gwflow` を書かない(地下水を有効にしない) |
+
+過程計算は、前の節の (b)(地中流と飽和域の地表流)の考えで出水を作る計算です。浸透なしは、雨の
+全量を地表流にする点で (a) に近い計算です。(c) の考え(鉛直の不飽和浸透と、選択的な経路の速い
+排水)に立つ VZ 流出との比べ方は、[追補](#鉛直不飽和浸透vzとの関係)にあります。
 
 各機構の式と設定は、ユーザーガイドの[地下水](../../docs/users_guide/gwflow.md)と
 [地下水モデルの解説](../../docs/users_guide/gwflow_models.md)(Green-Ampt は §3、側方流は §4、
@@ -273,7 +294,10 @@ python3 plot_results.py   # figs/*.png と数表(引数 en で英語版を en/fi
 - **流出の 9 割近くは土層を通ってきた水**: 飽和域に降った雨は 1 回目 14 mm、2 回目 15 mm で、
   48 時間の流出高の 12 % と 13 % です。残りは、いったんしみ込んで土層を流れ、飽和域で湧き出した
   水です。雨が止むと、流出は 2 時間で 5.7 mm/h、4 時間で 2.8 mm/h に減り、その後は土層からの
-  排水でゆっくり減ります(雨の 12 時間後に 0.57 mm/h、36 時間後に 0.09 mm/h)。
+  排水でゆっくり減ります(雨の 12 時間後に 0.57 mm/h、36 時間後に 0.09 mm/h)。この例題の
+  流出寄与域(飽和域)は流出が地表に出る範囲で、雨が流出に寄与する範囲ではありません。土層を
+  通って出てくるのは流域のほぼ全域に降った雨で、雨が流出に寄与するという意味では、流域の
+  ほぼ全域が寄与しています(48 時間の流出高は雨の 96 % と 100 %)。
 - **湿った土に降る 2 回目の雨は、1 時間早く立ち上がる**: 2 回目の雨の前には、飽和域が 2.8 %、
   土層の水が 4 mm 残っています。流出高は 2.8 時間で 1 mm/h を超え(1 回目は 3.8 時間)、
   3 時間目には 1.6 mm/h です(1 回目は 0.04 mm/h)。そのあとは 1 回目と同じ経過をたどり、
@@ -718,6 +742,10 @@ python3 plot_results.py   # figs/*.png と数表(引数 en で英語版を en/fi
 谷 (2023) の VZ 流出モデル(ENCflow の [VZ 流出](../../docs/users_guide/vz.md))は、これと逆の
 割り切りをします。鉛直の不飽和浸透を解き、土層の底から出口までの斜面方向の移動は遅れなしと
 します(土壌と基岩の境界付近の水みちによる効率的な排水が地下水位の変化を抑える、という考え)。
+Tani ほか (2026) によれば、この前提は信楽の斜面の観測(Kojima & Tani 2025)と、竜ノ口山・桐生・
+CB1 の 3 つの流域(谷 2023)で確かめられていて、地下水を斜面の下へ速く抜く選択的な経路(風化
+基岩の割れ目など)があることが、その必要条件です。経路の排水能力を超える極端な雨では、風化
+基岩から土層へ水が押し戻され、表層崩壊の引き金になるとも述べています。
 斜面方向の遅れを省けるという前提は、この例題でいえば、側方流の波速が大きく、斜面の段の遅れが
 短い側に当たります。3600 mm/h の単層(斜面の段 8.7 時間)のように側方流が遅いと、この前提は
 成り立ちません。
@@ -758,7 +786,9 @@ VZ 流出の試算用の既定(谷 (2023) の竜ノ口山の土壌)、初期条�
 - **深いほど遅れ、雨が強いほど大きく縮む**: 遅れは、雨 10 mm/h で、深さ 0.25 m は 2.3 時間、
   1 m は 8.0 時間です。雨を 3 倍にすると遅れは 0.4 倍になり、過程計算の斜面の段(0.6 倍)より
   大きく縮みます。そのため、同じ遅れになる粗度は、過程計算ではほとんど変わらない(1.7 → 1.6)
-  のに対して、柱では雨が強いほど小さくなります(深さ 0.5 m で 2.7 → 1.4)。
+  のに対して、柱では雨が強いほど小さくなります(深さ 0.5 m で 2.7 → 1.4)。遅れが土層厚で
+  大きく変わることは、VZ 流出モデルの解析から、土層厚と土の物理性が出水の応答に強く効くとする
+  Tani ほか (2026) の結論と合います。
 - **値は目安**: 竜ノ口山の土壌は、この流域の土壌ではありません。柱は一様な深い土で、深さ 0.5 m の
   下に土層の底(基岩面)を置いていません。初期条件は、雨の前から 0.1 mm/h が流れている湿った
   状態で、1 回目と 2 回目の雨の応答はほぼ同じです(深さ 0.5 m で、1 mm/h を超える時刻はどちらも
@@ -780,7 +810,8 @@ VZ 流出の試算用の既定(谷 (2023) の竜ノ口山の土壌)、初期条�
 `param_sfm.txt` と、雨 30 mm/h の `param_sfm_r30.txt`)。タンクは 4 つです(S は mm、q は mm/h)。
 
 - **タンク 1(K = 11.3、P = 0.6)**: 過程計算と同じ貯留になるタンクです。P は貯留関数法で慣用の
-  値で、マニングの地表流の、雨と釣り合った貯留が流出の 0.6 乗に比例する関係に当たります。K は、
+  値で、マニングの地表流の、雨と釣り合った貯留が流出の 0.6 乗に比例する関係に当たります(貯留
+  関数の根拠を地表流に求める見方の例は Sugiyama ほか 1997。Tani ほか 2026 による)。K は、
   過程計算が雨 10 mm/h と釣り合ったときに流域にある水 45.1 mm から、K = 45.1 ÷ 10^0.6 と
   しました。
 - **タンク 2(K = 15.6、P = 0.46)**: 過程計算の 2 つの状態(雨と釣り合ったときの 45.1 mm と
@@ -843,10 +874,41 @@ VZ 流出の試算用の既定(谷 (2023) の竜ノ口山の土壌)、初期条�
   違うのは立ち上がりで、柱の排水は浸潤前線が届く 3.0 時間まで増えないのに、タンクの流出は
   1.1 時間で 1 mm/h を超えます。貯留関数は、鉛直の不飽和浸透の「貯留と流出の関係」は表しますが、
   前線が土層を下る時間は表しません。
+- **貯留関数の根拠は、地表流ではなく鉛直の不飽和浸透にありうる**: Tani ほか (2026) は、old water の
+  パラドックスと観測から、地表流を貯留関数の根拠とする見方を退け、鉛直の不飽和浸透に根拠を
+  求めています。そこで紹介されている Tani ほか (2020) の数値実験では、鉛直の不飽和浸透で土層の
+  底から出る流束と、土層の貯留の関係は S = k q^p で近似でき、p は 0.6 のような定数ではなく、
+  土層厚と、小杉の保持曲線のモデルのパラメータの比で、おおむね決まるとされています。この例題の
+  柱の結果(上の項目)は、この見方と合います。ただし、この例題の柱では、p は深さ 0.25〜1 m で
+  ほぼ一定(0.165〜0.169)で、深さで変わったのは K でした。この例題の柱は、深い参照柱の途中の
+  深さで流束を読む(その深さを境界にしない)計算で、Tani ほか (2020) の設定との違いは照合して
+  いません。
 - **値は目安**: K・P・遅れ時間は、この例題の計算結果から決めた値で、観測で校正した値ではありません
   (`plot_results.py` が、結果から求め直した値を表のあとに出します)。過程計算の貯留は、土層・
   地表・河道の水を合わせた流域全体の値で、タンクはこれを 1 つの量で表します。実際の流域に
   貯留関数法を使うときは、K・P・遅れ時間を観測のハイドログラフで校正します。
+
+Tani (2008) は、土が十分に湿って雨の強さが平均 r_m のまわりで変動するとき、流出のピークが雨の
+ピークよりどれだけ平らになるかを、runoff buffering potential R_BP = dS/dq(q = r_m)で評価しました
+(Tani ほか 2026 による。R_BP の大きい流域ほど、ピークが低くなります)。貯留関数では
+R_BP = K·P·r_m^(P−1) で、雨と釣り合ったときの 貯留 ÷ 雨 の P 倍です。
+
+| 計算 | K | P | 貯留 ÷ 雨 (h): 雨 10 mm/h | R_BP (h): 雨 10 mm/h | 雨 30 mm/h |
+|---|---:|---:|---:|---:|---:|
+| タンク 1 | 11.3 | 0.6 | 4.5 | 2.70 | 1.74 |
+| タンク 2 | 15.6 | 0.46 | 4.5 | 2.07 | 1.14 |
+| タンク 3 | 37 | 0.167 | 5.4 | 0.91 | 0.36 |
+| タンク 4(遅れ時間 1.8 時間を除くタンクの部分) | 6.8 | 0.6 | 2.7 | 1.62 | 1.05 |
+| VZ の土壌柱: 深さ 0.5 m(逓減の当てはめ) | 37 | 0.167 | 5.4 | 0.91 | 0.36 |
+
+タンクの値は設定の K と P から、VZ の土壌柱の値は深さ 0.5 m の逓減の当てはめ(S = 37.0 q^0.167)から
+求めました。タンク 4 は、遅れ時間を除くタンクの部分の値です(遅れ時間は流出をずらすだけで、
+平らにはしません)。
+
+- **遅れが同じ程度でも、平らにする度合いは違う**: 雨 10 mm/h の 貯留 ÷ 雨 は、タンク 1(過程計算と
+  同じ貯留)が 4.5 時間、VZ の土壌柱が 5.4 時間と同じくらいですが、R_BP は 2.7 時間と 0.9 時間で、
+  3 倍違います。P の小さい鉛直の不飽和浸透は、雨の強さの変動をあまり平らにせずに出口へ伝えると
+  予想されます。この例題の雨は一定の強さの矩形なので、この違いは計算で確かめていません。
 
 ## 追補 2: 1 層の側方飽和透水係数は、何と等価な値か
 
@@ -962,6 +1024,12 @@ VZ 流出の試算用の既定(谷 (2023) の竜ノ口山の土壌)、初期条�
   1999)。もう 1 つはモデルの組み立ての補償で、校正した値は、モデルが解いていない過程の代わりも
   します(Hopp ほか 2020 では、マクロポア領域を持つモデルを校正しても、その効果は残りません
   でした)。この例題で見た、比湧水量の小さい層や鉛直の浸透の肩代わりは、後者に当たります。
+- **運動波型の流れで遅れを表すモデルは、係数を逆算せざるを得なかった**: Tani ほか (2026) は、
+  地表流や側方の地中流を運動波型の式で表すモデルは、急斜面で雨の前からあった地下水が速く
+  排水される過程を十分に表せず、そのため係数を観測から逆算して合わせざるを得なかったと述べて
+  います(Gao ほか 2019、Sayama ほか 2025 を引く)。Tani (2008) も、選択的な経路の効果を、大きな
+  飽和透水係数を与えて表しました(Tani ほか 2026 による)。この例題の大きな側方飽和透水係数も、
+  経験式の出水の速さから逆算した値です。
 
 ### 使うときの注意
 
@@ -974,7 +1042,9 @@ VZ 流出の試算用の既定(谷 (2023) の竜ノ口山の土壌)、初期条�
   選んだ模式値で、観測で校正した値ではありません。
 - **過程を分けて解けば、値は小さくてすむ**: 第 2 層を置いた計算では、どちらの層も 3600 mm/h の
   まま、1 層の 1.6 万 mm/h に当たる応答になります。値が不自然に大きくなるときは、1 層が
-  肩代わりしている過程(比湧水量の小さい層、不飽和帯)を疑う手がかりになります。
+  肩代わりしている過程(比湧水量の小さい層、不飽和帯)を疑う手がかりになります。Tani ほか (2026)
+  は、出水の応答を鉛直の不飽和浸透と選択的な経路の速い排水で表せば、係数を土層厚や土の物理性
+  といった現地で測れる量から決める、逆算のいらないモデルに近づけると論じています。
 
 ## このモデルで表せないこと(実際の現象との違い)
 
@@ -988,7 +1058,15 @@ VZ 流出の試算用の既定(谷 (2023) の竜ノ口山の土壌)、初期条�
   抜けるまで減り続けます)。乾いた土の最初の雨で流出が出るまでの雨量(この例題で 40 mm 弱)は、
   最初の地下貯留を 0 としたことと、この扱いで決まっています。鉛直の不飽和浸透を解く機能
   ([VZ 流出](../../docs/users_guide/vz.md))は、地下水(`fn_gwflow`)と併用できません
-  (土壌柱だけの計算との比較は[追補](#鉛直不飽和浸透vzとの関係))。
+  (土壌柱だけの計算との比較は[追補](#鉛直不飽和浸透vzとの関係))。Tani ほか (2026) は、湿った
+  急斜面では、この鉛直の不飽和浸透が出水の応答を支配すると論じています。この例題の過程計算は、
+  その遅れも側方流の等価な透水係数で肩代わりしています
+  ([追補 2](#追補-2-1-層の側方飽和透水係数は何と等価な値か))。
+- **水の新旧を区別しない**: 計算は、水が雨の前からあったものか、その雨のものかを追跡しません。
+  1 回目の雨は乾いた土から始まるので、出てくる水はすべてその雨の水です。2 回目の雨の直前に流域に
+  ある水は 5.2 mm で、48 時間の流出高(120 mm)の 4 % なので、雨の前からあった水は多くても 4 % です。
+  出水の水の大部分が雨の前からあった水だという観測(old water)は、この計算の初期条件と組み立てでは
+  表せません。
 - **基岩・蒸発散・遮断は入れていない**: 土層の下の風化基岩への浸透とそこから出る基底流、
   蒸発散、樹冠の遮断は有効にしていません。雨の合間に土の水が減るのは、谷への排水だけです
   (第 2 層は、追補の `process_l2` で、出水を運ぶ層として使っているだけです)。
@@ -1082,9 +1160,14 @@ Mosley (1979)・Beven & Germann (1982)・Tani (1997) の書誌は
 [VZ 流出](../../docs/users_guide/vz.md)のもの、木村 (1961) の書誌は
 [貯留関数法の区画流出](../../docs/users_guide/sfm.md)のもの(原典は未照合)で、ほかの書誌は検索で確認しました
 (角屋・福島 (1976) は、式と係数をこれを引いた論文の検索の抜粋で確認しただけで、書誌は未照合です)。
-谷 (2023) 以外の本文は照合しておらず、内容の紹介は要旨と二次資料によります。追補 2 の
-「ほかのモデルでの扱い」に挙げた文献の内容は、要旨、モデルの文書、検索の抜粋によります
+谷 (2023) と Tani ほか (2026) 以外の本文は照合しておらず、内容の紹介は要旨と二次資料によります。
+追補 2 の「ほかのモデルでの扱い」に挙げた文献の内容は、要旨、モデルの文書、検索の抜粋によります
 (Ivanov ほか (2004) の論文番号と、Sayama ほか (2012) の巻・ページは、検索では確かめていません)。
+Tani ほか (2026) を通して引く文献(Kojima & Tani 2025、Tani 2008、Tani ほか 2020、
+Sklash & Farvolden 1979、Torres ほか 1998、McDonnell & Beven 2014、Sugiyama ほか 1997、
+Gao ほか 2019、Sayama ほか 2025)の書誌は Tani ほか (2026) の文献表により、内容の紹介は
+Tani ほか (2026) の記述によります(Tani ほか (2020) の論文番号は、文献表の 123982 ではなく、
+DOI と検索で確かめた 124982 としました)。
 
 - Barnes, R., Lehman, C. and Mulla, D. (2014): Priority-flood: An optimal depression-filling
   and watershed-labeling algorithm for digital elevation models. Computers & Geosciences, 62,
@@ -1105,6 +1188,9 @@ Mosley (1979)・Beven & Germann (1982)・Tani (1997) の書誌は
   England watershed. Water Resources Research, 6(5), 1296–1311.
 - Engman, E. T. (1986): Roughness coefficients for routing surface runoff. Journal of
   Irrigation and Drainage Engineering, 112(1), 39–53.
+- Gao, H., Birkel, C., Hrachowitz, M., Tetzlaff, D., Soulsby, C. and Savenije, H. H. G. (2019):
+  A simple topography-driven and calibration-free runoff generation module. Hydrology and Earth
+  System Sciences, 23, 787–809.
 - Hewlett, J. D. and Hibbert, A. R. (1967): Factors affecting the response of small watersheds
   to precipitation in humid areas. In: Sopper, W. E. and Lull, H. W. (eds.), Forest Hydrology,
   Pergamon Press, 275–290.
@@ -1114,6 +1200,12 @@ Mosley (1979)・Beven & Germann (1982)・Tani (1997) の書誌は
 - Ivanov, V. Y., Vivoni, E. R., Bras, R. L. and Entekhabi, D. (2004): Catchment hydrologic
   response with a fully distributed triangulated irregular network model. Water Resources
   Research, 40, W11102.
+- Kojima, N. and Tani, M. (2025): Evaluating effects of catchment properties and antecedent
+  moisture conditions on storm runoff responses based on hillslope observations in a small
+  mountainous catchment. Journal of Hydrology, 660, 133464.
+- McDonnell, J. J. and Beven, K. (2014): Debates—The future of hydrological sciences: A (common)
+  path forward? A call to action aimed at understanding velocities, celerities and residence
+  time distributions of the headwater hydrograph. Water Resources Research, 50, 5342–5350.
 - Mosley, M. P. (1979): Streamflow generation in a forested watershed, New Zealand. Water
   Resources Research, 15, 795–806.
 - Nash, J. E. and Sutcliffe, J. V. (1970): River flow forecasting through conceptual models
@@ -1131,8 +1223,26 @@ Mosley (1979)・Beven & Germann (1982)・Tani (1997) の書誌は
 - Sayama, T., Ozawa, G., Kawakami, T., Nabesaka, S. and Fukami, K. (2012): Rainfall–runoff–
   inundation analysis of the 2010 Pakistan flood in the Kabul River basin. Hydrological
   Sciences Journal, 57(2), 298–312.
+- Sayama, T., Yamada, M., Yamakita, A. and Sugawara, Y. (2025): Parameter regionalization of
+  large-scale distributed rainfall–runoff models using a conditional probability method.
+  Progress in Earth and Planetary Science, 12, 17.
+- Sklash, M. G. and Farvolden, R. N. (1979): The role of groundwater in storm runoff. Journal of
+  Hydrology, 43, 45–65.
+- Sugiyama, H., Kadoya, M., Nagai, A. and Lansey, K. (1997): Evaluation of the storage function
+  model parameter characteristics. Journal of Hydrology, 191, 332–348.
 - Tani, M. (1997): Runoff generation processes estimated from hydrological observations on a
   steep forested hillslope with a thin soil layer. Journal of Hydrology, 200, 84–109.
+- Tani, M. (2008): Analysis of runoff storage relationships to evaluate the runoff-buffering
+  potential of a sloping permeable domain. Journal of Hydrology, 360, 132–146.
+- Tani, M., Matsushi, Y., Sayama, T., Sidle, R. C. and Kojima, N. (2020): Characterization of
+  vertical unsaturated flow reveals why storm runoff responses can be simulated by simple
+  runoff-storage relationship models. Journal of Hydrology, 588, 124982.
+- Tani, M., Sidle, R. C., Sayama, T., Matsushi, Y. and Kojima, N. (2026): Vertical unsaturated
+  flow governs storm runoff responses: observational and theoretical foundations. Hydrological
+  Processes, 40, e70627, doi:10.1002/hyp.70627.
+- Torres, R., Dietrich, W. E., Montgomery, D. R., Anderson, S. P. and Loague, K. (1998):
+  Unsaturated zone processes and the hydrologic response of a steep, unchanneled catchment.
+  Water Resources Research, 34, 1865–1879.
 - Tromp-van Meerveld, H. J. and McDonnell, J. J. (2006): Threshold relations in subsurface
   stormflow: 2. The fill and spill hypothesis. Water Resources Research, 42, W02411.
 - USDA Soil Conservation Service (1986): Urban hydrology for small watersheds. Technical
