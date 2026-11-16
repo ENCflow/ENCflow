@@ -13,6 +13,7 @@
   figs/layer2.png       土層の側方を遅くして比湧水量の小さい第 2 層を置いた計算と、単層の計算の比較
   figs/vz_column.png    VZ 流出の土壌柱の排水(鉛直の不飽和浸透だけ)と、過程計算の斜面からの出力・出口の流出
   figs/sfm_tank.png     貯留関数法のタンクの流出と、過程計算の出口の流出・VZ 流出の土壌柱の排水
+  figs/oldwater.png     第 2 層の厚さと比湧水量を変えた計算の流出と、第 2 層の地下水面の上昇(追補 3)
 引数 en で英語ラベル版を en/figs/ に描く(データと描画処理は共通)。
 数表(README の表)は標準出力に書く。計算が済んでいないケースは飛ばす。
 """
@@ -153,6 +154,8 @@ CASES = {
     "process_k100000": ("result_sweep_process_k100000", "P", 0.3, False),
     "process_sd1": ("result_sweep_process_sd1", "P", 0.3, False),
     "process_thick": ("result_sweep_process_thick", "P", 0.3, False),
+    "process_l2_d20": ("result_sweep_process_l2_d20", "P", 0.3, False),
+    "process_l2_d20_sy005": ("result_sweep_process_l2_d20_sy005", "P", 0.3, False),
     "process_l2": ("result_sweep_process_l2", "P", 0.3, False),
     "process_r30": ("result_sweep_process_r30", "P", 0.3, False),
     "surface_r30_n03": ("result_sweep_surface_r30_n03", "S", 0.3, False),
@@ -172,6 +175,13 @@ R30_PROCESS = "process_r30"
 R30_SDYN = ("surface_r30_n03", "surface_r30_n1", "surface_r30_n3")
 R30_MMH = max(float(v) for v in re.findall(r"^\s*prval\(:,\s*\d+\)\s*=\s*[-0-9.]+\s*,\s*([-0-9.]+)",
                                            open("param_rain30.txt", encoding="utf-8").read(), re.M))
+
+# 追補 3(old water): 第 2 層の厚さと比湧水量を変えた計算(遅い順)と、水そのものの速さの見積もりに使う
+# 間隙率の仮定(ENCflow の計算には入らない量。土は全間隙率、風化基岩は割れ目と岩の基質を合わせた間隙率の目安)
+L2RUNS = ("process_l2_d20", "process_l2", "process_l2_d20_sy005")
+L2_RAMP = ("#86b6ef", "#2a78d6", "#104281")              # 第 2 層の計算(遅い → 速い。1 色相の明→暗)
+POR_SOIL = (0.5, 0.6)                                    # 仮定: 森林の土の間隙率
+POR_ROCK = (0.05, 0.1, 0.2)                              # 仮定: 風化基岩の間隙率
 
 # VZ 流出の土壌柱(make vz。鉛直の不飽和浸透だけの遅れ): ケース名 → (結果のディレクトリ, 雨の強さ mm/h)
 VZ = {"vz": ("result_vz", RAIN_MMH), "vz_r30": ("result_vz_r30", R30_MMH)}
@@ -1245,6 +1255,90 @@ def fig_sfm():
     plt.close(fig)
 
 
+# ================================================================ 追補 3: 第 2 層の厚さと比湧水量
+def fig_oldwater():
+    """第 2 層の厚さと比湧水量を変えた計算の流出(上)と、第 2 層の地下水面の上昇(流域平均。下)。"""
+    runs = [c for c in L2RUNS if have(c)]
+    if len(runs) < 2 or not have("process"):
+        return
+    fig, axs = plt.subplots(2, 1, figsize=(13.0, 6.8), sharex=True)
+    ax = axs[0]
+    rain_fill(ax)
+    t, q = hydro("process")
+    ax.plot(t, q, color=INK, lw=2.2, zorder=4, label=T(f"単層: 側方 {KBASE} mm/h(基本)", f"single layer, lateral {KBASE} mm/h (base)"))
+    lab = lambda c: T(f"土層 {KSH['process_k3600']} mm/h + 第 2 層 {case_param(c, 'gw2_depth'):g} m、比湧水量 {case_param(c, 'gw2_sy'):g}",
+                      f"soil {KSH['process_k3600']} mm/h + layer 2 {case_param(c, 'gw2_depth'):g} m, specific yield {case_param(c, 'gw2_sy'):g}")
+    for c in runs:
+        t, q = hydro(c)
+        ax.plot(t, q, color=L2_RAMP[L2RUNS.index(c)], lw=2.0, zorder=3, label=lab(c))
+    ax.set_ylim(0, RAIN_MMH * 1.12)
+    ax.set_ylabel(T("雨・流出高 (mm/h)", "rain, runoff (mm/h)"))
+    ax.legend(loc="upper center", ncol=1, fontsize=8, bbox_to_anchor=(0.315, 1.0))     # 2 回の雨の間の空いた所
+    panel_label(ax, T("(a) 流域からの流出", "(a) Runoff from the catchment"))
+    ax = axs[1]
+    shade_storms(ax)
+    top = 0.0
+    for c in runs:
+        sy2 = case_param(c, "gw2_sy")
+        ts, rise = [], []
+        for k, tt in file_times(c):
+            ts.append(tt)
+            rise.append(float(bil(c, "Hg2", k)[MASK].mean()) / sy2)
+        ax.plot(ts, rise, color=L2_RAMP[L2RUNS.index(c)], lw=2.0, zorder=3)
+        top = max(top, max(rise))
+    ax.set_ylim(0, np.ceil(top * 1.15))
+    ax.set_ylabel(T("地下水面の高さ (m)", "water-table height (m)"))
+    panel_label(ax, T("(b) 第 2 層の地下水面の、第 2 層の底からの高さ(流域平均。線の色は (a) と同じ)",
+                      "(b) Height of the water table of layer 2 above its base (catchment mean; line colours as in (a))"))
+    time_axis(ax)
+    fig.subplots_adjust(left=0.055, right=0.985, top=0.945, bottom=0.085, hspace=0.22)
+    fig.savefig(f"{FIGDIR}/oldwater.png")
+    plt.close(fig)
+
+
+def slope_geometry():
+    """斜面のセルから最も近い河道セルまでの直線距離の中央値 (m) と、斜面のセルの最急勾配の中央値。"""
+    jj, ii = np.nonzero(MASK & ~RW)
+    cj, ci = np.nonzero(MASK & RW)
+    d = np.empty(len(jj))
+    for k in range(0, len(jj), 2000):
+        d[k:k + 2000] = np.sqrt((jj[k:k + 2000, None] - cj[None, :]) ** 2 + (ii[k:k + 2000, None] - ci[None, :]) ** 2).min(axis=1) * DX
+    zp = np.pad(np.where(MASK, Z, np.nan), 1, constant_values=np.nan)
+    best = np.zeros_like(Z)
+    for dj in (-1, 0, 1):
+        for di in (-1, 0, 1):
+            if dj or di:
+                with np.errstate(invalid="ignore"):
+                    sl = (Z - zp[1 + dj:1 + dj + NY, 1 + di:1 + di + NX]) / (DX * np.hypot(dj, di))
+                best = np.fmax(best, np.nan_to_num(sl, nan=0.0))
+    return float(np.median(d)), float(np.median(best[MASK & ~RW]))
+
+
+def vz_displacement(depth, case="vz"):
+    """VZ 流出の土壌柱で、雨の水そのものが下る速さと、応答(湿りの前線)が下る速さの見積もり(2 回目の雨。作業仮定:
+    雨の水は混ざらずに雨の前の水を押し出す)。返り値は辞書。θr は画面の出力の採用値。"""
+    f = f"{VZ[case][0]}/vz_column.csv"
+    hdr = open(f).readline().strip().split(",")
+    a = np.genfromtxt(f, delimiter=",", skip_header=1)
+    j = [k for k, h in enumerate(hdr) if re.match(rf"D@0*{depth:.4f}\(m\)", h)][0]
+    m = re.search(r"vz_thetar\(1\)\s*=\s*([0-9.]+)", open("Screen_vz.log", encoding="utf-8").read()) if os.path.exists("Screen_vz.log") else None
+    thr = float(m.group(1)) if m else 0.230
+    t = a[:, 0] / 3600.0
+    dmm = depth * 1000.0
+    t0 = float(np.floor(STORMS[1][0]))
+    r = VZ[case][1]
+    at = lambda x, v: float(np.interp(x, t, v))
+    s0, s12 = at(t0 + 1.0 / 6.0, a[:, j + 1] * 1000.0), at(t0 + 12.0, a[:, j + 1] * 1000.0)
+    th0, th1 = s0 / dmm, s12 / dmm
+    q0 = (at(t0 + 1.0 / 6.0, a[:, j] * 1000.0) - at(t0, a[:, j] * 1000.0)) * 6.0
+    front = (r - q0) / (th1 - th0)
+    v_all, v_mob = r / th1, r / (th1 - thr)
+    rain_tot = r * (STORMS[1][1] - STORMS[1][0])
+    return dict(thr=thr, th0=th0, th1=th1, front=front, t_front=dmm / front, v_all=v_all, t_all=dmm / v_all,
+                v_mob=v_mob, t_mob=dmm / v_mob, zf_all=rain_tot / th1, s0=s0, mob0=s0 - thr * dmm,
+                d12=at(t0 + 12.0, a[:, j] * 1000.0) - at(t0, a[:, j] * 1000.0), d48=at(t0 + CYCLE, a[:, j] * 1000.0) - at(t0, a[:, j] * 1000.0))
+
+
 # ================================================================ 数表
 def kind_label(case):
     _, kind, n, dif = CASES[case]
@@ -1257,6 +1351,9 @@ def kind_label(case):
         extra.append(T("土層 1 m", "soil 1 m"))
     if case == "process_thick":
         extra.append(T("透水係数と有効間隙率を 1/10、土層厚を 10 倍にした 1 層", "single layer with 1/10 the conductivity and porosity and 10 times the depth"))
+    if case in ("process_l2_d20", "process_l2_d20_sy005"):
+        extra.append(T(f"側方 {KSH['process_k3600']} mm/h + 第 2 層 {case_param(case, 'gw2_depth'):g} m、比湧水量 {case_param(case, 'gw2_sy'):g}",
+                       f"lateral {KSH['process_k3600']} mm/h + layer 2 {case_param(case, 'gw2_depth'):g} m, specific yield {case_param(case, 'gw2_sy'):g}"))
     if case == "process_l2":
         extra.append(T(f"側方 {KSH['process_k3600']} mm/h + 第 2 層", f"lateral {KSH['process_k3600']} mm/h + layer 2"))
     if "_r30" in case:
@@ -1696,6 +1793,20 @@ def tables(ser):
                   + ", ".join(f"n = {nlabel(CASES[a][2])}: {stages(b)[0] / stages(a)[0]:.2f}" for a, b in pairs)
                   + (T("; 過程計算の斜面の段: ", "; slope stage of the process run: ") + f"{stages(R30_PROCESS)[0] / stages('process')[0]:.2f}"
                      if have("process") and have(R30_PROCESS) else ""))
+        # 流出を平らにする度合い: runoff buffering potential R_BP = dS/dq(q = 雨の強さ。Tani 2008)。貯留関数では
+        # K·P·q^(P−1)。雨と釣り合った 貯留 ÷ 雨(= K·q^(P−1))の P 倍
+        print(T("\n## runoff buffering potential R_BP = dS/dq(q = 雨の強さ。Tani 2008。貯留関数では K·P·q^(P−1))と、雨と釣り合った 貯留 ÷ 雨",
+                "\n## Runoff buffering potential R_BP = dS/dq (q = rain intensity; Tani 2008; K·P·q^(P-1) for a storage function) and storage / rain in balance"))
+        print(T(f"| 計算 | K | P | 貯留 ÷ 雨 (h): 雨 {ra:g} mm/h | R_BP (h): 雨 {ra:g} mm/h | 雨 {rb:g} mm/h |",
+                f"| Run | K | P | Storage / rain (h): rain {ra:g} mm/h | R_BP (h): rain {ra:g} mm/h | rain {rb:g} mm/h |"))
+        print("|---|---:|---:|---:|---:|---:|")
+        rbp_rows = [(T(f"タンク {z}", f"tank {z}") + (T(f"(遅れ時間 {tl:g} 時間を除くタンクの部分)", f" (the tank part, without the lag time of {tl:g} h)") if tl > 0 else ""),
+                     kk, pp) for z, (kk, pp, tl) in prm.items()]
+        if have_vz("vz") and sd in vz_column("vz")[1]:
+            kf, pf, dev = vz_storage_fit(sd)
+            rbp_rows.append((T(f"VZ の土壌柱: 深さ {sd:g} m(逓減の当てはめ)", f"VZ soil column: depth {sd:g} m (fit to the recession)"), kf, pf))
+        for name, kk, pp in rbp_rows:
+            print(f"| {name} | {kk:.3g} | {pp:.3g} | {kk * ra ** (pp - 1):.1f} | {kk * pp * ra ** (pp - 1):.2f} | {kk * pp * rb ** (pp - 1):.2f} |")
         for c in SFM:
             r = SFM[c][1]
             t, tk = sfm_tanks(c)
@@ -1766,6 +1877,89 @@ def tables(ser):
         print(T(f"流出高の差の最大: {abs(qc[i] - qb[i]):.2f} mm/h({tb[i]:.1f} 時)。雨の終わりの土層の水: 基本 {1000 * Lb[i12, 3]:.1f} mm、厚い層 {1000 * Lt[i12, 3]:.1f} mm",
                 f"largest difference of the runoff: {abs(qc[i] - qb[i]):.2f} mm/h (at {tb[i]:.1f} h); soil water at the end of the rain: base {1000 * Lb[i12, 3]:.1f} mm, thick layer {1000 * Lt[i12, 3]:.1f} mm"))
 
+    # 追補 3: 雨の前からあった水(old water)
+    if have("process"):
+        print(T("\n## 追補 3: 2 回目の雨の直前に流域にある水と、2 回目の雨の出水に占める、雨の前からあった水の上限(抜ける水だけを数える)",
+                "\n## Supplement 3: water in the catchment just before the second storm, and the upper bound of pre-event water in the storm runoff "
+                "of the second storm (counting only drainable water)"))
+        print(T("| 計算 | 2 回目の雨の直前の水 (mm) | うち第 2 層 | 2 回目の雨の 48 時間の流出高 (mm) | 上限 (%) |",
+                "| Run | Water just before the second storm (mm) | Of which in layer 2 | Runoff in 48 h of the second storm (mm) | Upper bound (%) |"))
+        print("|---|---:|---:|---:|---:|")
+        for c in ("process", "process_k3600", "process_l2", "process_l2_d20", "process_l2_d20_sy005"):
+            if not have(c):
+                continue
+            L = logtab(c)
+            i48 = int(np.argmin(np.abs(L[:, 0] - np.floor(STORMS[1][0]))))
+            pre = 1000.0 * L[i48, 4]
+            ft = dict((round(tt), k) for k, tt in file_times(c))
+            l2 = 1000.0 * bil(c, "Hg2", ft[round(np.floor(STORMS[1][0]))])[MASK].mean() if has_var(c, "Hg2") else 0.0
+            t, q = hydro(c)
+            vol = event(t, q, STORMS[1][0])["vol"]
+            print(f"| {kind_label(c)} | {pre:.1f} | {l2:.1f} | {vol:.1f} | {100.0 * pre / vol:.0f} |")
+    runs = [c for c in L2RUNS if have(c)]
+    if runs and have("process"):
+        print(T("\n## 追補 3: 第 2 層の厚さと比湧水量(土層の側方 3600 mm/h、第 2 層の側方 3600 mm/h)。時刻は雨の開始から、1 回目 / 2 回目の雨",
+                "\n## Supplement 3: thickness and specific yield of layer 2 (soil lateral 3600 mm/h, layer 2 lateral 3600 mm/h); times from the start of each storm, "
+                "storm 1 / storm 2"))
+        print(T("| 第 2 層 | 容量 (mm) | 1 mm/h を超える時刻 (h) | 雨の 90 % に達する時刻 (h) | 斜面の段の遅れ (h) | 同じ遅れの単層 (mm/h) | 基本に対する適合度 | 2 回目の雨の終わりの第 2 層の水 (mm) | 地下水面の高さ (m) |",
+                "| Layer 2 | Capacity (mm) | Time above 1 mm/h (h) | Time to reach 90 % of the rain (h) | Slope-stage lag (h) | Single layer with the same lag (mm/h) | Fit to the base run | Water in layer 2 at the end of the second storm (mm) | Water-table height (m) |"))
+        print("|---|---:|---:|---:|---:|---:|---:|---:|---:|")
+        tb, qb = hydro("process")
+        on = " / ".join(fmt(event(tb, qb, a)["onset"], "%.1f") for a, b in STORMS)
+        t90 = " / ".join(fmt(reach(tb, qb, st, 0.9), "%.1f") for st in STORMS)
+        print(f"| {T(f'なし(基本: 単層 {KBASE} mm/h)', f'none (base: single layer {KBASE} mm/h)')} | — | {on} | {t90} | {stages('process')[0]:.1f} | {KBASE} | — | — | — |")
+        for c in runs:
+            d2, sy2 = case_param(c, "gw2_depth"), case_param(c, "gw2_sy")
+            t, q = hydro(c)
+            on = " / ".join(fmt(event(t, q, a)["onset"], "%.1f") for a, b in STORMS)
+            t90 = " / ".join(fmt(reach(t, q, st, 0.9), "%.1f") for st in STORMS)
+            lag = stages(c)[0]
+            kv, ext = same_lag_ksh(lag)
+            fit = " / ".join("%.2f" % nse(t, q, qb, a) for a, b in STORMS)
+            ft = dict((round(tt), k) for k, tt in file_times(c))
+            h2 = 1000.0 * bil(c, "Hg2", ft[round(STORMS[1][1])])[MASK].mean()
+            print(f"| {T(f'{d2:g} m、比湧水量 {sy2:g}', f'{d2:g} m, specific yield {sy2:g}')} | {1000 * d2 * sy2:.0f} | {on} | {t90} | {lag:.1f} | "
+                  f"{int(float(f'{kv:.2g}'))}{T('(外挿)', ' (extrapolated)') if ext else ''} | {fit} | {h2:.1f} | {h2 / 1000.0 / sy2:.1f} |")
+        dist, sl = slope_geometry()
+        print(T(f"応答と水そのものが流路まで届く時間(斜面のセルから最も近い河道セルまでの直線距離の中央値 {dist:.0f} m、最急勾配の中央値 {sl:.2f}。"
+                f"応答 = 透水係数 × 勾配 ÷ 比湧水量、水 = 透水係数 × 勾配 ÷ 間隙率。間隙率は仮定):",
+                f"time for the response and for the water itself to reach the channels (median straight-line distance from slope cells to the nearest "
+                f"channel cell {dist:.0f} m, median steepest slope {sl:.2f}; response = conductivity x slope / specific yield, water = conductivity x slope / porosity; "
+                f"the porosities are assumptions):"))
+        hrs = lambda kmmh, por: dist / (kmmh / 1000.0 * sl / por)
+        sy1 = param_value("param.txt", "sy0")
+        print(T("  基本の単層", "  base single layer") + f" {KBASE} mm/h: " + T("応答", "response") + f" {hrs(KBASE, sy1):.1f} h, "
+              + ", ".join(T(f"水(間隙率 {n:g})", f"water (porosity {n:g})") + f" {hrs(KBASE, n):.1f} h" for n in POR_SOIL))
+        k2 = case_param("process_l2", "gw2_ksh_mmh") if have("process_l2") else KSH["process_k3600"]
+        for sy2 in sorted({case_param(c, "gw2_sy") for c in runs}, reverse=True):
+            print(T("  第 2 層", "  layer 2") + f" {k2:g} mm/h, " + T("比湧水量", "specific yield") + f" {sy2:g}: " + T("応答", "response") + f" {hrs(k2, sy2):.2f} h, "
+                  + ", ".join(T(f"水(間隙率 {n:g})", f"water (porosity {n:g})") + f" {hrs(k2, n):.1f} h" for n in POR_ROCK))
+        print(T("2 回目の雨の終わりの地下水面の、層の底からの高さ(流域平均)と、地下水面より下の、抜けない水(間隙率 − 比湧水量)× 高さ。間隙率は仮定:",
+                "height of the water table above the base of the layer at the end of the second storm (catchment mean), and the water below the water table "
+                "that does not drain, (porosity - specific yield) x height; the porosities are assumptions:"))
+        lays = [("process", "Hg", sy1, POR_SOIL, T("基本の単層(土層)", "base single layer (soil)"))]
+        lays += [(c, "Hg2", case_param(c, "gw2_sy"), POR_ROCK, T(f"{c} の第 2 層", f"layer 2 of {c}")) for c in runs]
+        for c, var, syv, pors, name in lays:
+            ft = dict((round(tt), k) for k, tt in file_times(c))
+            rise = bil(c, var, ft[round(STORMS[1][1])])[MASK].mean() / syv
+            print(f"  {name}: " + T("高さ", "height") + f" {rise:.2f} m -> " + ", ".join(
+                T(f"間隙率 {n:g} で", f"porosity {n:g}:") + f" {1000.0 * (n - syv) * rise:.0f} mm" for n in pors if n > syv))
+    if have_vz("vz") and param_value("param.txt", "sd0") in vz_column("vz")[1]:
+        sd = param_value("param.txt", "sd0")
+        e = vz_displacement(sd)
+        print(T(f"\n## 追補 3: VZ 流出の土壌柱(深さ {sd:g} m、雨 {RAIN_MMH:g} mm/h、2 回目の雨)の、応答と雨の水そのものの速さ(雨の水は混ざらずに押し出すと仮定)",
+                f"\n## Supplement 3: speed of the response and of the rain water itself in the VZ soil column (depth {sd:g} m, rain {RAIN_MMH:g} mm/h, second storm; "
+                f"assuming the rain water pushes out the water without mixing)"))
+        print(T(f"  体積含水率(深さ {sd:g} m より上の平均): 雨の前 {e['th0']:.3f}、雨の間 {e['th1']:.3f}(残留含水率 {e['thr']:.2f})",
+                f"  volumetric water content (mean above {sd:g} m): before the rain {e['th0']:.3f}, during the rain {e['th1']:.3f} (residual {e['thr']:.2f})"))
+        print(T(f"  湿りの前線: {e['front']:.0f} mm/h、{sd:g} m に {e['t_front']:.1f} 時間", f"  wetting front: {e['front']:.0f} mm/h, {e['t_front']:.1f} h to {sd:g} m"))
+        print(T(f"  雨の水(土の水が全部押し出される場合): {e['v_all']:.0f} mm/h、{sd:g} m に {e['t_all']:.1f} 時間。雨の終わりの先端の深さ {e['zf_all']:.0f} mm",
+                f"  rain water (all soil water is pushed out): {e['v_all']:.0f} mm/h, {e['t_all']:.1f} h to {sd:g} m; front of the rain water at the end of the rain {e['zf_all']:.0f} mm"))
+        print(T(f"  雨の水(残留含水率より上の水だけが動く場合): {e['v_mob']:.0f} mm/h、{sd:g} m に {e['t_mob']:.1f} 時間。押し出される雨の前の水 {e['mob0']:.0f} mm",
+                f"  rain water (only water above the residual content moves): {e['v_mob']:.0f} mm/h, {e['t_mob']:.1f} h to {sd:g} m; pre-event water pushed out {e['mob0']:.0f} mm"))
+        print(T(f"  深さ {sd:g} m を下向きに通る水: 雨の 12 時間に {e['d12']:.0f} mm、48 時間に {e['d48']:.0f} mm。雨の前に {sd:g} m より上にあった水 {e['s0']:.0f} mm",
+                f"  water passing downward through {sd:g} m: {e['d12']:.0f} mm in the 12 h of rain, {e['d48']:.0f} mm in 48 h; water above {sd:g} m before the rain {e['s0']:.0f} mm"))
+
     # 地表に載る水(流域平均の貯留高と、河道セル以外の水深)
     print(T("\n## 地表の水(流域平均の貯留高の最大と、雨の終わりの河道セル以外の水深)",
             "\n## Surface water (maximum catchment-mean storage, and depth on non-channel cells at the end of each storm)"))
@@ -1809,6 +2003,7 @@ def main():
     fig_layer2()
     fig_vz()
     fig_sfm()
+    fig_oldwater()
 
 
 if __name__ == "__main__":
