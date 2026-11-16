@@ -3425,8 +3425,8 @@
     {
       "source": "test/README.md",
       "target": "test/README.en.md",
-      "source_sha256": "021b8d31e4adb1d1a89551a8b80750ff061abd24b5e65b8a854f0201aa90acee",
-      "target_sha256": "3f54953b11d3bcb73ba76ebbe7652da9fb5b65bad5c51c442b815a033eed81a8",
+      "source_sha256": "b00a1c38f2adcb0e3222e5abb6ad01b2af1fb2984974174f66b9bb9fb3b8e452",
+      "target_sha256": "7578a9b6051e6bb5d868c60828d21a5ac235a6913da61b3940373eef3b7d8a26",
       "reviewer": "Claude (Claude Code session; full-text content and lexical review, no model execution)",
       "method": "assistant",
       "reviewed_on": "2026-11-16"
@@ -3610,6 +3610,15 @@
       "reviewer": "Claude (Claude Code session; full-text content and lexical review, no model execution)",
       "method": "assistant",
       "reviewed_on": "2026-11-15"
+    },
+    {
+      "source": "test/cascade/README.md",
+      "target": "test/cascade/en/README.md",
+      "source_sha256": "734f6f5ec9b817dee0fc795c95dfad607a30a78fc4b358f107139e8f7dacf506",
+      "target_sha256": "13c6f8e9c0caf69b8dbb29275a878c51288291c899f8ce9ddc1a63a7637b4455",
+      "reviewer": "Claude (Claude Code session; full-text content and lexical review, no model execution)",
+      "method": "assistant",
+      "reviewed_on": "2026-11-16"
     },
     {
       "source": "test/chichibu/README.md",
