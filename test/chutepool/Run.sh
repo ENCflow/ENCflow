@@ -1,8 +1,7 @@
 #!/bin/bash
 # chutepool: 落差のあとの池へ落ち込む流れ(逐次実行。f_dry_head_cap = 2 と 3 の 2 構成)
 #   ./Run.sh
-# 合否は Check_chutepool.py(池の中の測線の流量が、与えた流量に合い、揺れないこと)。
-# 揺れの項目は、2 では判定し、3 では記録する(3 の限界。README)
+# 合否は Check_chutepool.py(池の中の測線の流量が、与えた流量に合い、揺れないこと。2 と 3 のどちらも判定)
 # 入力は、test/chichibu のデータから make_chutepool.py が切り出す
 
 sdir=$(dirname "$(readlink -f "$0")")

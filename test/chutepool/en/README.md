@@ -1,4 +1,4 @@
-# test/chutepool — flow plunging into a pool below a drop (check that the discharge does not oscillate, and record of the limit of f_dry_head_cap = 3)
+# test/chutepool — flow plunging into a pool below a drop (check that the discharge in the pool does not oscillate)
 
 English mirror of test/chutepool/README.md
 
@@ -9,12 +9,13 @@ turns and plunges into a deep pool. Directly ahead of the flow in the cell below
 higher than the water level. The test checks that the discharge at a transect in the pool matches the given
 discharge and does not oscillate. Its subject is the cap on the edge depth of the continuity equation
 (`f_dry_head_cap` in `&list_enc`; §5 of [Advection schemes](../../../docs/en/users_guide/advection.md),
-developer.md §110.24 and §110.26).
+developer.md §110.24, §110.26 and §110.27).
 
-**With the default `f_dry_head_cap = 2`, the discharge in the pool does not oscillate. With
-`f_dry_head_cap = 3`, the discharge in the pool oscillates with a period of about one minute while the
-discharge is being raised.** The test runs the same computation with 2 and 3 and judges, for 2, that there is
-no oscillation. For 3 it is displayed as "the limit of 3" (not judged).
+`f_dry_head_cap = 3` counts water as able to climb a high cell ahead by the velocity head of the flow entering
+the sending cell. In a supercritical flow this velocity head changes greatly with slight changes in depth. So 3
+counts the velocity head of the entering flow only up to half the depth of the sender (the velocity head of
+critical flow). This test looks at a situation where that limit takes effect. **The discharge in the pool does
+not oscillate with either the default 2 or 3.**
 
 ## Setup
 
@@ -48,13 +49,10 @@ At a discharge of 4,000 m³/s, the flow in the cell below the drop has a depth o
 
 ## Check items (Check_chutepool.py)
 
-Item judged with both 2 and 3:
+Items judged (with both 2 and 3):
 
 1. Mass balance: the mean discharge at the transect over the last 5 minutes is within ±1 % of the given
    discharge of 5,000 m³/s.
-
-Item judged with 2 and displayed with 3 (the limit of 3):
-
 2. The discharge at the transect does not oscillate after 45 minutes: the largest deviation of the 10-second
    values from their 1-minute moving average (7 points) is below 80 m³/s, and there are no consecutive changes
    in opposite directions (both exceeding 20 m³/s).
@@ -68,30 +66,34 @@ Item displayed:
 | Configuration | Final discharge (m³/s) | Largest deviation from the 1-minute moving average (m³/s) | Consecutive changes in opposite directions | Maximum depth of the hillslope cell (m) |
 |---|---:|---:|---|---:|
 | c2 (`f_dry_head_cap = 2`) | 4,993.5 | 34 | none | 0.00 |
-| c3 (`f_dry_head_cap = 3`) | 4,993.2 | 323 (at 141 min) | 121 (46–146 min) | 1.93 |
+| c3 (`f_dry_head_cap = 3`) | 4,993.2 | 29 | none | 0.00 |
 
-- **2 does not let water climb the hillslope ahead, which is higher than the water level.** The discharge at
-  the transect increases smoothly, following the rise of the given discharge.
-- **With 3, the discharge in the pool oscillates while the given discharge is between 2,600 and 4,300 m³/s
-  (46–146 minutes).** 3 counts water as able to climb the high cell ahead by the velocity head of the flow
-  entering the cell below the drop (the depth of the hillslope cell reaches 1.9 m). That velocity head is taken
-  from "the unit-width discharge of the entering edge divided by the depth of this cell", so in a supercritical
-  flow a slight rise in depth lowers the velocity head greatly (for the same discharge, the gradient of the
+- **Neither 2 nor 3 lets water climb the hillslope ahead, which is higher than the water level.** The discharge
+  at the transect increases smoothly, following the rise of the given discharge.
+- **The velocity head 3 counts is at most half the depth.** The velocity head of the flow in the cell below the
+  drop is 12 m and exceeds the height of the hillslope ahead (8.6 m above the water level), but 3 counts only
+  up to half the depth, 1.3 m, so the edge toward the hillslope stays closed.
+- **Without the limit, the discharge in the pool keeps oscillating.** 3 takes the speed of the entering flow
+  from "the unit-width discharge of the entering edge divided by the depth of this cell". In a supercritical
+  flow a slight rise in depth lowers this velocity head greatly (for the same discharge, the gradient of the
   specific energy $`h + q^2/2gh^2`$ with respect to depth is $`1 - Fr^2`$, which is −8 at a Froude number
-  of 3). The amount of water climbing the hillslope changes greatly with slight changes in the depth of the
-  cell below the drop, the water entering the pool by way of the hillslope increases and decreases, and the
-  oscillation of the discharge in the pool continues (developer.md §110.26).
+  of 3). If the velocity head is counted as it is, the amount of water climbing the hillslope changes greatly
+  with slight changes in the depth of the cell below the drop, the water entering the pool by way of the
+  hillslope increases and decreases, and the discharge in the pool keeps oscillating by up to 320 m³/s with a
+  period of about one minute while the given discharge is between 2,600 and 4,300 m³/s (the depth of the
+  hillslope cell reaches 1.9 m; developer.md §110.26).
 
 ## Limits and how to read the results
 
 - The test is a cut-out of one place in real terrain. Item 2 means "no oscillation for this terrain and this
   way of raising the discharge"; it does not mean that there is no oscillation in other terrain.
 - The roughness of 0.02 for the channel-mask cells is small for a mountain stream with successive drops, and
-  the velocity (15 m/s) is larger than in reality. Whether the oscillation appears depends on the size of the
-  velocity head this velocity produces.
+  the velocity (15 m/s) is larger than in reality. The oscillation that appears without the limit depends on
+  the size of the velocity head this velocity produces.
 - The hydraulic jump, the air entrainment and the splash onto the hillslope ahead where the flow that has
-  fallen over the drop enters the pool cannot be represented by depth-averaged equations.
-- Item 2 is not judged for 3, so the test passing does not mean that the discharge does not oscillate with 3.
+  fallen over the drop enters the pool cannot be represented by depth-averaged equations. 3 errs on the side
+  of not counting the height to which a supercritical flow runs up the hillslope ahead (up to the water level
+  plus half the depth).
 
 ## Running
 

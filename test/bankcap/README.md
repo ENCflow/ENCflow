@@ -55,13 +55,18 @@ h_e \leftarrow \max\!\left(\max\!\left(\frac{u_n^2}{2g} - d,\ 0\right),\ h_e - \
 3 は、登る辺のエッジ水深を、次の値で頭打ちします。つなぎは持ちません。
 
 ```math
-h_e \leftarrow \min\!\left(h_e,\ \max\!\left(w\,h_\mathrm{harm},\ \sigma + \frac{u_\mathrm{in}^2}{2g},\ 0\right)\right),\qquad
+h_e \leftarrow \min\!\left(h_e,\ \max\!\left(w\,h_\mathrm{harm},\ \sigma + v_h,\ 0\right)\right),\qquad
+v_h = \max\!\left(\frac{u_n^2}{2g},\ \min\!\left(\frac{u_a^2}{2g},\ \frac{h_s}{2}\right)\right)
+```
+
+```math
 \sigma = \eta_s - z_r,\quad h_\mathrm{harm} = \frac{2 h_s h_r}{h_s + h_r},\quad w = \min\!\left(\max\!\left(\frac{\sigma}{h_r},\ 0\right),\ 1\right)
 ```
 
-$`u_\mathrm{in}`$ は、この辺の法線流速と、送り手のセルへ同じ線に沿って入ってくる流れの速さ(1 つ上流の辺の
-単位幅流量 ÷ 送り手の水深)の大きい方です。第 2 項は 1・2 と同じエネルギー頭の頭打ちで、速度水頭を、
-辺が閉じていても値を持つ「入ってくる流れ」から取ります。第 1 項は、水に浸かった段の下限です(受け手の
+$`v_h`$ は速度水頭で、$`u_n`$ はこの辺の法線流速、$`u_a`$ は送り手のセルへ同じ線に沿って入ってくる流れの
+速さ(1 つ上流の辺の単位幅流量 ÷ 送り手の水深)です。入ってくる流れの速度水頭は、送り手の水深の半分
+(限界流の速度水頭)までを数えます。第 2 項は 1・2 と同じエネルギー頭の頭打ちで、速度水頭を、
+辺が閉じていても値を持つ「入ってくる流れ」からも取ります。第 1 項は、水に浸かった段の下限です(受け手の
 水位が送り手の水位以下なら、両側の水深の調和平均)。この検定の配置では、河道の流れは河岸に平行で、
 河岸へ向かう流れの速度水頭がないので、3 は 2 と同じく水を河岸へ登らせません。流れの正面にある河岸での
 違いは [test/bankspill](../bankspill/README.md) が見ます。ENCflow 独自の規則です。

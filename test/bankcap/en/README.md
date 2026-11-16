@@ -68,14 +68,20 @@ wet slope is the same as with 1.
 3 caps the edge depth on climbing edges by the following value. It has no transition.
 
 ```math
-h_e \leftarrow \min\!\left(h_e,\ \max\!\left(w\,h_\mathrm{harm},\ \sigma + \frac{u_\mathrm{in}^2}{2g},\ 0\right)\right),\qquad
+h_e \leftarrow \min\!\left(h_e,\ \max\!\left(w\,h_\mathrm{harm},\ \sigma + v_h,\ 0\right)\right),\qquad
+v_h = \max\!\left(\frac{u_n^2}{2g},\ \min\!\left(\frac{u_a^2}{2g},\ \frac{h_s}{2}\right)\right)
+```
+
+```math
 \sigma = \eta_s - z_r,\quad h_\mathrm{harm} = \frac{2 h_s h_r}{h_s + h_r},\quad w = \min\!\left(\max\!\left(\frac{\sigma}{h_r},\ 0\right),\ 1\right)
 ```
 
-$`u_\mathrm{in}`$ is the larger of the normal velocity on this edge and the speed of the flow entering
-the sending cell along the same line (the unit-width discharge of the next edge upstream divided by
-the depth of the sender). The second term is the same energy-head cap as in 1 and 2, with the
-velocity head taken from the entering flow, which has a value even while the edge is closed. The
+$`v_h`$ is the velocity head: $`u_n`$ is the normal velocity on this edge and $`u_a`$ is the speed of the
+flow entering the sending cell along the same line (the unit-width discharge of the next edge upstream
+divided by the depth of the sender). The velocity head of the entering flow is counted up to half the
+depth of the sender (the velocity head of critical flow). The second term is the same energy-head cap as
+in 1 and 2, with the velocity head taken also from the entering flow, which has a value even while the
+edge is closed. The
 first term is a floor for submerged steps (the harmonic mean of the depths on both sides when the
 water level of the receiver is not above that of the sender). In the set-up of this check the
 channel flow is parallel to the bank and there is no velocity head toward the bank, so 3, like 2,

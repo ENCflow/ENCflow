@@ -808,11 +808,14 @@ listed in the [shallow water chapter](swflow.md).
   check whether the result changes, or use 3 below.
   3 caps the edge depth on climbing edges (edges where the bed of the receiver is
   above the bed of the sender), whether the receiver is dry or wet, by
-  $`h_e \le \max(w\,h_\mathrm{harm},\ \sigma + u_\mathrm{in}^2/2g,\ 0)`$. Here $`\sigma`$ is the water level
+  $`h_e \le \max(w\,h_\mathrm{harm},\ \sigma + v_h,\ 0)`$. Here $`\sigma`$ is the water level
   of the sender minus the bed of the receiver (the thickness of the water that
-  goes over), $`u_\mathrm{in}`$ is the larger of the velocity of this edge and the speed of
-  the flow entering the sending cell along the same line (the unit-width
-  discharge of the next edge upstream divided by the depth of the sender),
+  goes over), and $`v_h = \max(u_n^2/2g,\ \min(u_a^2/2g,\ h_s/2))`$ is the velocity head
+  ($`u_n`$ is the velocity of this edge and $`u_a`$ is the speed of the flow
+  entering the sending cell along the same line, i.e. the unit-width discharge
+  of the next edge upstream divided by the depth of the sender $`h_s`$; the
+  velocity head of the entering flow is counted up to half the depth of the
+  sender, the velocity head of critical flow).
   $`h_\mathrm{harm}`$ is the harmonic mean of the depths on both sides, and
   $`w = \min(\max(\sigma/h_r, 0), 1)`$ ($`h_r`$ is the depth of the receiver). 1 and 2 take the
   velocity head from the velocity of the edge itself, but the velocity of an
@@ -836,21 +839,23 @@ listed in the [shallow water chapter](swflow.md).
   ([test/bankcap](../../../test/bankcap/en/README.md)).
   Limits of 3: how much the water surface rises at the outer bank of a bend
   cannot be resolved by a one-cell-wide channel; what is satisfied is only that
-  the level in the pocket does not exceed the energy head upstream. In a steep
-  channel, where a supercritical flow (a Froude number well above 1) meets a
-  high cell head-on, for example at a bend just below a drop, 3 lets water run
-  up by its velocity head onto a cell several metres above the water level; the
-  edge then opens and closes, and the discharge nearby can oscillate with a
-  period of 1–2 minutes (the "speed of the incoming flow" is taken as the
-  discharge divided by the depth of the sending cell, so in a supercritical flow
-  a slight change in depth changes the velocity head greatly. In a run of
-  Chichibu on the 100 m grid with a hillslope roughness of 0.15, where a flow
-  with a Froude number of 2.2 meets a hillslope cell 7.9 m above the water
-  level, the discharge at a transect in the pool just downstream oscillates by
-  ±300–600 m³/s; it does not appear in a run with a hillslope roughness of
-  0.05. [test/chutepool](../../../test/chutepool/en/README.md) is a test cut
-  out of this place). If the discharge oscillates in terrain with steep channels and large
-  velocities, use 2. In runs
+  the level in the pocket does not exceed the energy head upstream. Where a
+  supercritical flow (a Froude number above 1) meets a high cell head-on, for
+  example at a bend just below a drop, the velocity head of the entering flow
+  is counted only up to half the depth of the sender, so water does not climb
+  until the water level plus half the depth reaches the bed of the receiver.
+  After that the velocity head of the edge's own velocity takes effect, and
+  water enters like a step within a few minutes (the run-up of a supercritical
+  flow onto a bank directly ahead starts late and discontinuously). The limit
+  is there because the "speed of the entering flow" is taken as the discharge
+  divided by the depth of the sender. For the same discharge, the gradient of
+  the specific energy $`h + q^2/2gh^2`$ with respect to depth is $`1 - Fr^2`$,
+  which is negative in a supercritical flow, so a slight change in depth changes
+  the velocity head greatly in the opposite direction. Without the limit, where
+  a flow that has fallen over a drop meets a hillslope cell 8 m above the water
+  level, the edge opens and closes and the discharge in the pool just
+  downstream oscillates
+  ([test/chutepool](../../../test/chutepool/en/README.md)). In runs
   where a movable bed reaches a free-outflow boundary, erosion from the
   downstream end advances more easily than with 2 (with 2, the flow that crosses
   the sill of sediment deposited at the downstream end with the mean depth of
@@ -864,7 +869,7 @@ listed in the [shallow water chapter](swflow.md).
   climb onto ground above its energy head" ($`\sigma`$ of 3 is the same quantity as
   the flow depth between cells taken as "the higher water level minus the higher
   bed level" in flood inundation models[^bates10]; taking the velocity head from
-  the entering flow and the harmonic-mean floor are ENCflow's own).
+  the entering flow, its limit, and the harmonic-mean floor are ENCflow's own).
   The default was 1 until 2026-11-13. In rain-wetted steep valleys (rainfall
   runoff on a real DEM) and at run-up fronts the results differ between 1 and 2,
   so set 1 explicitly to reproduce cases computed or calibrated with the

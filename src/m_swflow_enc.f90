@@ -1109,7 +1109,8 @@ subroutine m_swflow_enc_init(p, g, b, s)
   if (opt%f_dry_head_cap == 3) then
     call par_info("swflow_enc: f_dry_head_cap = 3 (edge depth on climbing edges, dry or wet, is capped by the energy head " &
                   //"of the sending cell above the receiving bed, with the velocity head of the flow approaching along " &
-                  //"the edge line, and by a harmonic-mean floor for submerged steps)")
+                  //"the edge line counted up to half the depth of the sending cell, and by a harmonic-mean floor for " &
+                  //"submerged steps)")
   end if
   if (opt%f_inflow_edge < 0 .or. opt%f_inflow_edge > 2) then
     call par_stop("list_enc: f_inflow_edge must be 0(no advection on edges touching inflow cells), " &
@@ -2660,11 +2661,12 @@ end function
 ! 登る辺のエッジ水深の頭打ち(f_dry_head_cap = 3。§110.23・§110.24)
 !   受け手(流向の下流側)の地盤が送り手の地盤より高い辺(登る辺。z_受 > z_送)で、受け手の乾湿に
 !   よらず、エッジ水深を
-!     he ← min( he, max( w·h_harm,  σ + u_in²/2g,  0 ) )
+!     he ← min( he, max( w·h_harm,  σ + v_h,  0 ) )
 !   で頭打ちする。
 !     σ      = 送り手の水位 − 受け手の地盤(越える水の厚さ。負なら、水位は地盤に届いていない)
-!     u_in   = max(|u_n|, u_a)。u_n はこの辺の法線流速、u_a は送り手のセルへ同じ線に沿って入ってくる
-!              流れの速さ(cap_approach。時刻 n)
+!     v_h    = max( u_n²/2g,  min(u_a²/2g, h_送/2) )(速度水頭)。u_n はこの辺の法線流速、u_a は送り手の
+!              セルへ同じ線に沿って入ってくる流れの速さ(cap_approach。時刻 n)。u_a の速度水頭は、送り手の
+!              流れの深さの半分(限界流の速度水頭。Fr_a = u_a/√(g h_送) ≤ 1)までしか数えない(下の注)
 !     h_harm = 2 h_送 h_受/(h_送 + h_受)(両側の流れの深さの調和平均)
 !     w      = clamp(σ/h_受, 0, 1)(受け手の水位が送り手の水位以下なら 1。受け手が乾いていれば 0)
 !   第 2 項: 水は、送り手のエネルギー水頭が受け手の地盤を越える分より厚くは登れない(Bernoulli。乾いた
@@ -2682,6 +2684,13 @@ end function
 !   平均へ寄る(差は水深の差の 2 次)。摩擦に支配される流れで、深さの違う 2 つの半セルを直列につないだ
 !   等価な水深が浅い側に寄ること(h_eq^(−10/3) = (h_送^(−10/3) + h_受^(−10/3))/2)にも合う。
 !   速度水頭を送り手へ入ってくる流れから取ること、調和平均を下限に使うこと、w の形は ENCflow 独自。
+!   u_a の速度水頭の上限 h_送/2(§110.26・§110.27。独自): u_a は「上流の辺の流量 ÷ 送り手の水深」なので、
+!   流量が同じなら d(σ + u_a²/2g)/dh_送 = 1 − Fr_a²。射流(Fr_a > 1)では負で、送り手の水深のわずかな変化が
+!   逆向きに増幅されて頭打ちに入る(あふれる → 水深が下がる → 速度水頭が増える → もっとあふれる)。落差の
+!   あとで射流が正面の斜面に当たる所で、辺が開閉して下流の池の流量が揺れ、水位より 8 m 高い斜面のセルへ
+!   水が乗った(test/chutepool)。上限を掛けると、頭打ちの値は送り手の水深について単調に増える(常流で 1 − Fr_a²、
+!   射流で 1.5)。常流の値は上限なしと同じ。射流が正面の岸へ乗り上げる高さは数えない側に倒している
+!   (水位 + 水深の半分が地盤に届くまで開かない。開いたあとは、この辺自身の流速 u_n の速度水頭が効く)
 !   登らない辺(z_受 ≤ z_送)と、流速 0 のエッジは he のまま。0 を返したエッジの流速は、呼び出し側が
 !   0 にする。土石流が有効な計算では、呼び出し側が hc・hn に固体の柱状量 hs を足して渡す(流れの表面は
 !   z + h + hs。cap_he_wet と同じ)
@@ -2696,18 +2705,20 @@ pure function cap_he_climb(he, uve, hc, hn, zc, zn, gg, uac, uan) result(he_corr
   real :: he_corr
   he_corr = he
   if (uve > 0.0) then             ! 中心セルが送り手、近傍セルが受け手
-    if (zn > zc) he_corr = min(he, climb_limit(hc, hn, zc + hc - zn, max(uve, uac)))
+    if (zn > zc) he_corr = min(he, climb_limit(hc, hn, zc + hc - zn, uve, uac))
   else if (uve < 0.0) then        ! 近傍セルが送り手、中心セルが受け手
-    if (zc > zn) he_corr = min(he, climb_limit(hn, hc, zn + hn - zc, max(-uve, uan)))
+    if (zc > zn) he_corr = min(he, climb_limit(hn, hc, zn + hn - zc, -uve, uan))
   end if
 contains
-  ! 登る辺のエッジ水深の上限 max(w·h_harm, σ + u_in²/2g, 0)
-  pure function climb_limit(hs, hr, sig, uin) result(c)
+  ! 登る辺のエッジ水深の上限 max(w·h_harm, σ + v_h, 0)
+  pure function climb_limit(hs, hr, sig, un, ua) result(c)
     real, intent(in) :: hs, hr    ! 送り手・受け手の流れの深さ
     real, intent(in) :: sig       ! σ = 送り手の水位 − 受け手の地盤
-    real, intent(in) :: uin       ! u_in
+    real, intent(in) :: un        ! この辺の法線流速の大きさ |u_n|
+    real, intent(in) :: ua        ! 送り手へ線に沿って入ってくる流れの速さ u_a(0 以上)
     real :: c
     real :: w, harm
+    real :: vh                    ! 速度水頭 v_h
     w = 0.0
     harm = 0.0
     if (hs > 0.0 .and. hr > 0.0) then
@@ -2719,7 +2730,9 @@ contains
       end if
       harm = 2.0 * hs * hr / (hs + hr)
     end if
-    c = max(w * harm, sig + uin**2 / (2 * gg), 0.0)
+    ! u_a の速度水頭は、送り手の流れの深さの半分(限界流の速度水頭)まで。u_n の速度水頭はそのまま
+    vh = max(un**2 / (2 * gg), min(ua**2 / (2 * gg), 0.5 * hs))
+    c = max(w * harm, sig + vh, 0.0)
   end function
 end function
 
