@@ -26188,3 +26188,21 @@ u_n(この辺自身の流速)の速度水頭は変えない(1・2 と同じ。�
 
 **文書**: 利用者ガイドの移流項の章 §5(3 の式・「3 の限界」)、浅水流の章のパラメータ表、設定例 list_enc.txt、
 検定 bankcap・bankspill・chutepool の README と検定の一覧(いずれも日英)、ci.yml の注記。
+
+### 110.28 f_advection_lateral = 1 の、f_advection_donor が 3 でないときの扱いと、計算時間の等価変換(2026-11-16。利用者の決定 §110.27 の (2)(3))
+
+**(2) f_advection_donor が 3 でないとき = 効かない(挙動変更。停止をやめた)**: f_advection_lateral = 1 は、
+f_advection_donor = 3 の側方面の重み(wet_weight)の上に働く。§110.25 では、スキーム 2・3 で donor が 3 でなければ
+停止していた。1 を既定にすると、donor = 0〜2 を指定している設定(3 より前の既定の再現、test/wetbank・test/brink の
+比較の構成)が、f_advection_lateral = 0 を 1 行足さないと止まることになる。停止をやめ、3 でなければ 0 と同じ扱いにして、
+起動時に「f_advection_lateral = 1 has no effect unless f_advection_donor = 3 (treated as 0)」と表示する
+(m_swflow_enc.f90 の検証の所で opt%f_advection_lateral を 0 に戻すので、幅 2 のハロ交換も行わない)。スキーム 1 は、
+従来どおり表示なしで無効果(側方面がない)。
+
+- 確かめ: test/tjunction の l1_m500_wet(30 分まで)に f_advection_donor = 0 を足した計算が、止まらずに終わり、
+  表示が出て、f_advection_lateral = 0・f_advection_donor = 0 の計算と結果 26 ファイルがバイト一致。
+  f_advection_donor = 3 の計算は、従来どおり 1 の表示が出る。reference を持つ 6 ケース(wave・dambreak・tide・
+  coastal_drain・culvert・pump)が identical(43 ケースの回帰は、下の等価変換を重ねた状態で行った)。
+- 検定は足していない。既定を 1 にすると、donor = 0 を指定する既存の検定(wetbank・brink)が、この経路を通る。
+- 文書: 利用者ガイドの移流項の章 §4.4 とパラメータ表、浅水流の章の表、設定例 list_enc.txt(いずれも日英)の
+  「f_advection_donor = 3 が前提」を「3 のときだけ働く(3 でなければ 0 と同じ)」に改めた。

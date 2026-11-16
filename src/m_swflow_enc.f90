@@ -1092,8 +1092,12 @@ subroutine m_swflow_enc_init(p, g, b, s)
                   //"or 1(parallel links much thinner than the entering water are not used, and water joining " &
                   //"the flow along the edge line from another direction is charged its momentum deficit)")
   end if
+  ! f_advection_lateral = 1 は、f_advection_donor = 3 の側方面の重みの上に働く。3 でなければ効かない(0 と
+  ! 同じ扱いにして、そう表示する。停止はしない: f_advection_donor = 0〜2 を指定した設定が、f_advection_lateral の
+  ! 値によらず動くように。§110.28)
   if (opt%f_advection_lateral == 1 .and. opt%f_advection_scheme >= 2 .and. opt%f_advection_donor /= 3) then
-    call par_stop("list_enc: f_advection_lateral = 1 requires f_advection_donor = 3")
+    opt%f_advection_lateral = 0
+    call par_info("swflow_enc: f_advection_lateral = 1 has no effect unless f_advection_donor = 3 (treated as 0)")
   end if
   if (opt%f_advection_lateral == 1 .and. opt%f_advection_scheme >= 2) then
     call par_info("swflow_enc: f_advection_lateral = 1 (on side faces, parallel links thinner than " &

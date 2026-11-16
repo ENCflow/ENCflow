@@ -98,7 +98,8 @@
                             !   岸に接する河道を減速する。1 は、岸の濡れによらず
                             !   数える(直角の合流の堰上げは、運動量の理論の
                             !   6〜8 割で、格子の向きで変わる)。1 は
-                            !   f_advection_donor = 3 が前提
+                            !   f_advection_donor = 3 のときだけ働く(3 で
+                            !   なければ 0 と同じ)
                             !   (test/tjunction、users_guide/advection.md §4.4)
   !f_dry_head_cap = 2       ! 高い地盤へ向かうエッジ水深をエネルギー頭
                             !   η + u_n²/2g − z_受け手 で頭打ち(0: なし,
