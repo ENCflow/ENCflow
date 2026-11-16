@@ -113,8 +113,8 @@
     {
       "source": "docs/users_guide/advection.md",
       "target": "docs/en/users_guide/advection.md",
-      "source_sha256": "711317f8ec86c60a3d65701d3ce8d57fedeb0de324eaf815240724a15bb21e64",
-      "target_sha256": "31a14e79f2ea46317a3163857aa81c63f75165caf2ed6412ea81a14198b2f19f",
+      "source_sha256": "9dd0ea64c7bd93b71bcc368735123d1540894f984a045dfdcaea94f0f0e899a7",
+      "target_sha256": "24c414df54a13d3eb24c38f61a4cbd44c61542720926b7f14ca1b9a67353a09b",
       "reviewer": "Claude (Claude Code session; full-text content and lexical review, no model execution)",
       "method": "assistant",
       "reviewed_on": "2026-11-16"
@@ -3425,8 +3425,8 @@
     {
       "source": "test/README.md",
       "target": "test/README.en.md",
-      "source_sha256": "1e74afe75b6e5691ee7633a84d9e67765cb1f9f803cad59f3ece379bc57cabb6",
-      "target_sha256": "3c4d727f7206db1cc096398d71add6b13d811f7317826d9e1e76c61f366f781e",
+      "source_sha256": "1af1fdbe4d07b37ba64bb13822a8ac48d4d7ccd6b0f9fbbdb441ecbb9629ed01",
+      "target_sha256": "7910bdf9f14a4ee0da5fd11b02907ba04c6dfcdebeea5106adba991812645b14",
       "reviewer": "Claude (Claude Code session; full-text content and lexical review, no model execution)",
       "method": "assistant",
       "reviewed_on": "2026-11-16"
@@ -3664,6 +3664,15 @@
       "reviewer": "Claude (Claude Code session; full-text content and lexical review, no model execution)",
       "method": "assistant",
       "reviewed_on": "2026-11-15"
+    },
+    {
+      "source": "test/chutepool/README.md",
+      "target": "test/chutepool/en/README.md",
+      "source_sha256": "ac63ca9852d546f07ad405a9ab4328be01705d1c15068990e98a75da46942e8a",
+      "target_sha256": "9f370cd96610983974222b5874b1bd28a98ff8796113b721b66154c3cb95542e",
+      "reviewer": "Claude (Claude Code session; full-text content and lexical review, no model execution)",
+      "method": "assistant",
+      "reviewed_on": "2026-11-16"
     },
     {
       "source": "test/coastal_drain/README.md",

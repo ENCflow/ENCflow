@@ -848,7 +848,8 @@ listed in the [shallow water chapter](swflow.md).
   with a Froude number of 2.2 meets a hillslope cell 7.9 m above the water
   level, the discharge at a transect in the pool just downstream oscillates by
   ±300–600 m³/s; it does not appear in a run with a hillslope roughness of
-  0.05). If the discharge oscillates in terrain with steep channels and large
+  0.05. [test/chutepool](../../../test/chutepool/en/README.md) is a test cut
+  out of this place). If the discharge oscillates in terrain with steep channels and large
   velocities, use 2. In runs
   where a movable bed reaches a free-outflow boundary, erosion from the
   downstream end advances more easily than with 2 (with 2, the flow that crosses
