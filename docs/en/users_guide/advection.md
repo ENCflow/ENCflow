@@ -611,6 +611,75 @@ With the default `f_advection_donor = 3` the wet/dry test of the parallel edge b
   To reproduce results computed with the default before 2026-11-09 (0), set
   `f_advection_donor = 0` explicitly. Options 1 and 2 were removed on
   2026-11-07 (setting them stops the run).
+- **Water entering through the lateral faces (`f_advection_lateral`, default 0).**
+  The inflow value of a lateral face is the velocity of the parallel adjacent
+  edge (the parallel link). The default 0 treats the face as neutral
+  ($`\bar u_t = u_e`$) when the end cells of the parallel link are dry, and uses
+  its velocity when they are at least `dd` deep. As a result, (1) in a channel
+  beside a bank thinly wetted by rain, the slow velocity of the film on the bank
+  is applied to all the water entering from the side and brakes the channel
+  artificially (the depth of a one-cell-wide channel oblique to the grid rises
+  by up to 17 %; [test/wetbank](../../../test/wetbank/en/README.md)), and (2) at a
+  junction, the loss needed to accelerate the tributary water in the direction
+  of the main channel is counted only while the banks are wet (with dry banks
+  the flow is close to a flow without loss;
+  [test/tjunction](../../../test/tjunction/en/README.md)).
+  `f_advection_lateral = 1` changes three things (`f_advection_donor = 3` is
+  required; $`\varepsilon`$ is `p_adv_donor_eps`).
+  1. **Representativeness of the parallel link.** The weight of the parallel
+     link is multiplied by
+     $`R' = \sum_l Q_l \min\bigl(1,\ h_p / (\varepsilon \min(h_{o,l}, h_e))\bigr) / \sum_l Q_l`$.
+     Here $`l`$ runs over the links entering across the face, $`Q_l`$ is their
+     discharge, $`h_p`$ is the shallower of the end cells of the parallel link,
+     $`h_{o,l}`$ is the depth of the cell the water comes from, and $`h_e`$ is
+     the shallower of the end cells of this edge. When the water of the parallel
+     link is thinner than $`\varepsilon`$ times both the cell the entering water
+     comes from and this edge itself, its velocity is regarded as not
+     representing the entering water. Water entering from the film on a bank
+     (the entering water itself is thin) and the fronts of bores and run-up
+     (this edge itself is thin) are treated as with 0.
+  2. **Momentum deficit of joining water.** The part not represented by the
+     parallel link is counted, for each entering link, as
+     $`\bar u_l - u_e = -\omega_X (1 - \omega_o)(1 - \cos\theta_l)\,u_e`$. $`\omega_X`$ is the
+     degree to which the cell the water enters has a flow along the line of this
+     edge (if 0, the flow that turns in is itself the flow of this edge = a
+     bend, and the face stays neutral). $`\omega_o`$ is the degree to which the
+     cell the water comes from has a flow in the same direction (if 1, the water
+     moves between rows of water flowing side by side, and the face stays
+     neutral; this keeps the property of carrying the staircase of the grid as a
+     straight channel). $`\theta_l`$ is the angle between the entering link and
+     the edge: 90° for a perpendicular link ($`\cos\theta = 0`$ = no momentum in
+     the direction of the edge, the standard treatment of open-channel
+     junctions[^taylor44]) and 45°, regardless of direction, for a diagonal link
+     crossing the face of an axis edge.
+  3. **Opening fraction of the lateral faces of diagonal edges.** The weight of
+     whether the cell beyond an axis link crossing the face is open is also
+     multiplied by the same $`R'`$ ($`h_p`$ = the depth of that cell). An axis
+     link through a film-covered bank is not counted as carrying the same
+     unit-width discharge as the tributary.
+
+  With 1 the backwater of a right-angle junction is 60 % (junction along the
+  grid axes) to 80 % (junction rotated 45° to the grid) of that of the momentum
+  theory, regardless of the wetness of the banks (test/tjunction; the difference
+  between wet and dry banks is below 0.01 m, against 0.14–1.09 m with 0). The
+  increase in depth caused by banks wetted by rain becomes −0.4 to 3.7 %
+  (test/wetbank; 0.2–17.2 % with 0), the water surface of a junction pond stays steady and the loss
+  at bends stays 0 (test/brink, test/bendloss).
+  Limits of 1: the backwater of a junction is smaller than that of the momentum
+  theory and changes with the grid orientation, because an eight-neighbour grid
+  represents a right-angle junction as a combination of perpendicular links and
+  diagonal links, and the water of the diagonal links is counted as carrying
+  cos 45° times the momentum of the main-channel velocity (counting it as
+  carrying no momentum brings the result closer to the theory, but a junction
+  pond then keeps oscillating). Junctions where a narrow tributary enters a
+  main channel several cells wide, junctions that are not at a right angle and
+  the separation zone downstream of a junction are not tested. Lateral Neumann
+  boundary faces are treated as with 0. The run time increases by 20–30 % (+24 %
+  for the 200 m Chichibu run). 1 is
+  optional and the default remains 0 (with 1 the results change; for example,
+  flood waves through oblique channels become faster because the brake of wet
+  banks is removed). The construction of $`R'`$, $`\omega`$ and $`\cos\theta`$ is
+  ENCflow's own.
 - **Excluded edges.** Edges excluded from the momentum equation (invalid
   neighbour, zero passage width, both cells dry) have $`A_e = 0`$. With
   `f_channel_advection = 0` the term is also dropped on edges touching a
@@ -821,6 +890,7 @@ The labels in the Basis column are explained in [How to read the basis of a defa
 | f_advection_donor | 3 | upwind donors (3: the upwind value is pulled toward u_e only on faces where the real flux of the line-k donor is below ε times the largest inflow link of the face cell and the donor's depth is also below ε times the face cell's depth, and the wet/dry tests of the lateral faces become a continuous weight below dd; 0: wet cells on line k (the default until 2026-11-09); 1 and 2 were removed) | **method** reduces the artificial brake when the banks of a raster channel oblique to the grid are wet (in [test/wetbank](../../../test/wetbank/en/README.md) the increase of the channel depth beyond the rain inflow drops from 10–40% with 0 to 4–17%); the lateral-inflow, vortex and wall tests stay the same as 0; the flood wave becomes faster and larger than with 0; 0 reproduces earlier results ([explanation](advection_donor.md)) |
 | p_adv_donor_eps | 0.1 | threshold ε of `f_advection_donor = 3` (used for both the real flux of the line-k donor / largest real flux of the links entering the face cell and the donor's depth / face cell's depth). With `f_advection_bend = 1` it is also the threshold for inflow / outflow of the face cell and the threshold that decides whether the cell beyond the face cell on the line of an inflow belongs to the same water body (its depth is at least ε times that of the face cell) (§4.4) | **empirical** the peak at transect 4 of the 200 m grid of Chichibu changes by −1.8% at 0.05 and by +0.8% at 0.2 (explanation §7); values outside 0.05–0.2 have not been checked ([explanation](advection_donor.md)) |
 | f_advection_bend | 1 | upwind value on a flow-direction face whose donor is a wall or dry (1: the velocity the water entering the face cell would have at the width of this edge and at the depth it arrived with; 0: the velocity u_e of the control volume itself = the default until 2026-11-15; §4.4) | **method** lets the edge just after a bend receive the momentum of the flow from upstream ([test/brink](../../../test/brink/en/README.md): in a channel whose last link before the drop is diagonal, energy head on the apron − pond goes from +9 to +29 m with 0 to −2.5 to −3.3 m; in a channel whose link at the foot of a drop is diagonal, the hydraulic jump stands at the same position as in the straight channel, while with 0 the supercritical reach disappears; a junction pond settles to a steady state). The same as 0 at a bend in uniform flow. 0 is for reproducing earlier results |
+| f_advection_lateral | 0 | treatment of water entering through the lateral faces (0: the velocity of the parallel link, neutral when it is dry; 1: a parallel link that is a film thinner than ε times the entering water is not used, and the momentum deficit (1 − cos θ) u_e of water joining the flow along the line of the edge from another direction is counted; the opening fraction of the lateral faces of diagonal edges uses the same test; requires `f_advection_donor = 3`; §4.4) | **method** counts the junction loss regardless of the wetness of the banks and removes the artificial brake of banks wetted by rain ([test/tjunction](../../../test/tjunction/en/README.md): the backwater of a right-angle junction is 60–80 % of that of the momentum theory regardless of the wetness of the banks; with 0 it differs by 0.14–1.09 m between wet and dry banks). The backwater of a junction is smaller than the theory and changes with the grid orientation. 1 is optional |
 | limiter $`\psi`$ (fixed) | van Leer | flux limiter of scheme 3 | **literature value** van Leer[^vanleer79]; inside Sweby's TVD region[^sweby84] (§4.3) |
 | f_scalar_scheme | 3 | face value of the scalar transport (suspended sediment, water quality, saline layer, driftwood, building debris) (1: first-order upwind, 3: link-wise MUSCL) | **verification case** measured numerical diffusion in [test/tracer](../../../test/tracer/en/README.md) (longitudinal D 1/3–1/5, lateral Dy 1/14; §7). First order is not the default because its numerical diffusion is proportional to the grid spacing |
 
@@ -847,6 +917,14 @@ The labels in the Basis column are explained in [How to read the basis of a defa
   surface settles to a steady state with `f_advection_bend = 1` when two
   streams drop into a junction pond with a dead-end bay (including a record
   of the pond shape in which 0 keeps oscillating) (`Check_brink.py`).
+- **[test/tjunction](../../../test/tjunction/en/README.md)** — T-junction of
+  one-cell-wide channels (a junction along the grid axes and one rotated 45°).
+  The depth in the main channel just upstream of the junction is compared with
+  the one-dimensional momentum theory and the no-loss theory. With
+  `f_advection_lateral = 1` the test judges that the backwater of the junction
+  does not depend on the wetness of the banks, its position within the theory,
+  and that mirrored grid orientations give the same values; the values with 0
+  are displayed as limits (`Check_tjunction.py`).
 - **[test/hillslope](../../../test/hillslope/en/README.md)** -- smooth hillslope and V-shaped catchment. Confirms
   that schemes 1 and 3 agree.
 - **[test/chichibu](../../../test/chichibu/en/README.md)** -- real terrain (100 m). The place for grid convergence
@@ -929,3 +1007,4 @@ verification in developer.md §78). Groundwater transport is not covered
 [^sweby84]: Sweby, P. K. (1984): High resolution schemes using flux limiters for hyperbolic conservation laws. *SIAM J. Numer. Anal.*, 21, 995–1011. (TVD region)
 [^stoker57]: Stoker, J. J. (1957): *Water Waves*. Interscience, New York. (analytical solution of the wet-bed dam break)
 [^bates10]: Bates, P. D., Horritt, M. S. and Fewtrell, T. J. (2010): A simple inertial formulation of the shallow water equations for efficient two-dimensional flood inundation modelling. *J. Hydrol.*, 387, 33–45. (the flow depth between cells taken as the higher water level minus the higher bed level; the original has not been checked)
+[^taylor44]: Taylor, E. H. (1944): Flow characteristics at rectangular open-channel junctions. *Trans. ASCE*, 109, 893–902. (the treatment that applies the momentum equation to a junction and takes the water entering from the side as carrying no momentum in the direction of the main channel; the original has not been checked; the bibliographic data follow the ASCE Library record and citing papers)

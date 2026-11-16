@@ -107,6 +107,10 @@ module m_swflow_enc
                                             !   この辺の幅・流入時の水深で流れたときの流速。§110)。
                                             !   値は init が list_enc(既定 1)から写す。ここの
                                             !   初期値 0 は init の前の値
+    integer :: f_advection_lateral = 0        ! 側方面で横から入る水の扱い (0:平行リンクの流速(乾いて
+                                            !   いれば中立), 1:平行リンクが入ってくる水に比べて薄い
+                                            !   水膜なら代表させず、合流の不足分 (1 − cos θ) u_e を
+                                            !   数える。斜めエッジの開口率も同じ判定。§110.25)
     integer :: f_inflow_edge                  ! 区間流入の外縁セルに接するエッジの扱い (0:接する
                                             !   エッジすべての移流項 0, 1:区間の内側へ向かうエッジ
                                             !   だけ移流項 0, 2:1 + そのエッジの流速のエネルギー
@@ -898,6 +902,7 @@ subroutine m_swflow_enc_init(p, g, b, s)
   opt%f_dry_head_cap = list%f_dry_head_cap
   opt%f_advection_donor = list%f_advection_donor
   opt%f_advection_bend = list%f_advection_bend
+  opt%f_advection_lateral = list%f_advection_lateral
   opt%f_inflow_edge = list%f_inflow_edge
   opt%f_scalar_scheme = list%f_scalar_scheme
   select case (opt%f_advection_scheme)
@@ -1079,6 +1084,23 @@ subroutine m_swflow_enc_init(p, g, b, s)
                   //"take the velocity the actual inflow of the face cell would have at this edge's width and " &
                   //"the inflow depth, instead of u_e)")
   end if
+  ! f_advection_lateral(§110.25): 側方面で、平行リンクが入ってくる水に比べて薄い水膜のときは代表させず、
+  ! 辺の線に沿う流れへ別の向きから入る水の運動量の不足を数える。f_advection_donor = 3 の連続な重みの上に
+  ! 組み立てているので、3 が前提。スキーム 1 には側方面がないので無効果
+  if (opt%f_advection_lateral < 0 .or. opt%f_advection_lateral > 1) then
+    call par_stop("list_enc: f_advection_lateral must be 0(side faces take the velocity of the parallel link) " &
+                  //"or 1(parallel links much thinner than the entering water are not used, and water joining " &
+                  //"the flow along the edge line from another direction is charged its momentum deficit)")
+  end if
+  if (opt%f_advection_lateral == 1 .and. opt%f_advection_scheme >= 2 .and. opt%f_advection_donor /= 3) then
+    call par_stop("list_enc: f_advection_lateral = 1 requires f_advection_donor = 3")
+  end if
+  if (opt%f_advection_lateral == 1 .and. opt%f_advection_scheme >= 2) then
+    call par_info("swflow_enc: f_advection_lateral = 1 (on side faces, parallel links thinner than " &
+                  //"p_adv_donor_eps = "//rtoa(opt%p_adv_donor_eps)//" of the entering water are not used, and " &
+                  //"water joining the flow along the edge line from another direction is charged the momentum " &
+                  //"deficit (1 - cos(theta)) u_e)")
+  end if
   if (opt%f_dry_head_cap < 0 .or. opt%f_dry_head_cap > 3) then
     call par_stop("list_enc: f_dry_head_cap must be 0(off), 1(cap edge depth toward dry cells by energy head), " &
                   //"2(1 + also toward wet cells whose bed is above the water level of the sending cell) " &
@@ -1164,6 +1186,9 @@ subroutine m_swflow_enc_init(p, g, b, s)
   call bc_init(p, g, b)
 
   if (chn%have_frw) call build_channel_frw(g)
+  ! f_advection_lateral = 1 は、エッジ行 js − 3 の frw も読む(line_flow の実流量。§110.25)。build_channel_frw の
+  ! 冗長構築は行 jsh .. jeh − 1 なので、行 jsh − 1 を隣のランクの値で埋める(静的。1 回だけ)
+  if (chn%have_frw .and. opt%f_advection_lateral == 1 .and. opt%f_advection_scheme >= 2) call par_halo_edge(chn%frw, 2)
   if (chn%have_width) then
     call build_wfrac(g)
     ! 地下の貯留から地表水への受け渡しの水深換算(gw_to_h。§26.1)用の写し
@@ -1267,7 +1292,13 @@ subroutine m_swflow_enc_calc(p, g, b, s, ierror)
   call par_halo_cell(s%v)
   call par_halo_cell(s%z)
   call par_halo_cell(s%vv)
-  call par_halo_edge(sx_mod%mn)
+  ! f_advection_lateral = 1 は、側方面の流入元のセルの 8 リンクの流量を読む(line_flow)。斜めエッジの
+  ! n 側の流入元は行 j − 2 にあり、その南のリンクはエッジ行 j − 3 なので、mn を幅 2 で交換する(§110.25)
+  if (opt%f_advection_lateral == 1 .and. opt%f_advection_scheme >= 2) then
+    call par_halo_edge(sx_mod%mn, 2)
+  else
+    call par_halo_edge(sx_mod%mn)
+  end if
   ! 運動量保存形移流(§68.6)は線 k 上の ±2 エッジ流速と、両セル・側方
   ! セルの流量 m, n を読む: uv をエッジ幅2、m, n をセル幅2で交換する
   ! (スキーム1では呼ばない=通信ゼロ追加。判定は namelist 由来で
@@ -1301,6 +1332,9 @@ subroutine m_swflow_enc_calc(p, g, b, s, ierror)
   ! 塞がれた開口の動的振り替え表をステップ頭の h, z(ハロ交換済み)から
   ! 構築する(§68.14。無効時は呼ばない=ゼロ追加)
   if (chn%have_fwd) call build_fwd(p, g, s)
+  ! 同上: 実流量(mn·l8·frw·fwd)に使う fwd も、行 js − 3(成分 1〜3)と行 js − 2 の成分 4 を、隣のランクの
+  ! 値で埋める(build_fwd の冗長構築は、読み手のあった範囲 = 行 js − 2 の成分 1〜3 まで)
+  if (chn%have_fwd .and. opt%f_advection_lateral == 1 .and. opt%f_advection_scheme >= 2) call par_halo_edge(chn%fwd, 2)
   if (chn%have_cwd) call build_cwd(g, s)
 
   ! 非静水圧補正: ステップ頭のエッジ流速 u^n を複製する(NH ON のみ)

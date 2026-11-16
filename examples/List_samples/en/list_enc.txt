@@ -119,6 +119,29 @@
                             !   dropped is lost
                             !   (test/brink, users_guide/advection.md
                             !   section 4.4)
+  !f_advection_lateral = 0  ! treatment of water entering through the lateral
+                            !   faces of the momentum-conservative advection
+                            !   (schemes 2, 3) (0: the velocity of the parallel
+                            !   link (neutral when it is dry; its velocity when
+                            !   it holds a film of at least dd) = default,
+                            !   1: a parallel link that is a film thinner than
+                            !   p_adv_donor_eps times the water entering across
+                            !   the face is not used, and the deficit
+                            !   (1 - cos(theta)) u_e of momentum in the
+                            !   direction of the edge of water joining the flow
+                            !   along the line of the edge from another
+                            !   direction is counted; the opening fraction of
+                            !   the lateral faces of diagonal edges uses the
+                            !   same test of thinness). With 0 the junction
+                            !   loss is counted only while the banks are wet,
+                            !   and a channel beside a bank wetted by rain is
+                            !   braked. With 1 it is counted regardless of the
+                            !   wetness of the banks (the backwater of a
+                            !   right-angle junction is 60-80 % of that of the
+                            !   momentum theory and changes with the grid
+                            !   orientation). 1 requires f_advection_donor = 3
+                            !   (test/tjunction, users_guide/advection.md
+                            !   section 4.4)
   !f_dry_head_cap = 2       ! cap the edge depth toward high ground by the
                             !   energy head eta + u_n^2/2g - z_receiver
                             !   (0: off, 1: only while the receiver is dry.

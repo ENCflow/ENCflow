@@ -358,21 +358,29 @@ the grid spacing and the number of cells that represent the channel.
     (for example a run without rain), almost no backwater from the junction
     appears.**
 
-  In a prototype that removes both parts (the parallel link is moved to
-  neutral when it is thin compared with the water crossing the face), the
-  result no longer depends on whether the banks carry a film (3.8 % or less
-  in test/wetbank), but the backwater of a junction with wet banks also
-  becomes the same as with dry banks (6–7 % shallower than the theory). The
-  peaks at transects 3 and 4 of Chichibu rose by 4 and 10 % on the 200 m
-  grid, by 13 and 19 % on the 100 m grid and by 17 % at transect 3 on the
-  50 m grid, and the difference between grids widened (the maximum velocity
-  on the 50 m grid went from 30 to 60 m/s). A prototype that counts only the
-  junction part regardless of the wetness of the banks made the water
-  surface of the junction pond oscillate, so it has not been adopted
-  (developer.md §110.19, in Japanese). **A rule that counts the junction
-  loss regardless of the wetness of the banks is future work.** Until then,
-  in computations that read the water level upstream of a junction or the
-  depth of ponds and oblique channels in detail, note that the result can
+  **`f_advection_lateral = 1` (optional) treats these two parts
+  separately** ([Advection schemes](advection.md) §4.4). When the parallel
+  link is a film thin compared with the water crossing the face, its velocity
+  is not used (the artificial part is removed), and water entering the flow
+  along the line of the edge from another direction is charged its deficit of
+  momentum in the direction of the edge (the junction part is counted
+  regardless of the wetness of the banks). The increase in depth caused by
+  banks wetted by rain (test/wetbank) becomes −0.4 to 3.7 % (0.2–17.2 % with
+  0), and the backwater of a right-angle junction is 60–80 % of that of the
+  momentum theory regardless of the wetness of the banks (test/tjunction; the
+  difference between wet and dry banks is below 0.01 m, against 0.14–1.09 m
+  with 0). The water surface of a junction pond stays steady. The peaks at
+  transects 3 and 4 of Chichibu rise by 3.5 and 6.7 % on the 200 m grid
+  (10 minutes earlier) and by 13.7 and 18.6 % (9 to 22 minutes earlier) on
+  the 100 m grid, and the difference between grids widens (the brake of the
+  film on the banks acted more strongly on finer grids, where the staircase
+  has more steps). That the backwater of a
+  junction is smaller than the theory and changes with the grid orientation
+  (an eight-neighbour grid represents a right-angle junction as a combination
+  of perpendicular links and diagonal links) and that the form loss of bends
+  is not counted remain limits with 1 as well. **The default remains 0.**
+  With 0, in computations that read the water level upstream of a junction or
+  the depth of ponds and oblique channels in detail, note that the result can
   change with how wet the banks are (rain or no rain, dd).
 
   This braking switches on and off when the water of a pond starts and stops

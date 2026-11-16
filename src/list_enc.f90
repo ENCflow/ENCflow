@@ -55,6 +55,20 @@ module list_enc
                                               !   重なると落ちてきた流れの運動量を失う。1 は経路に
                                               !   沿う水深の変化の分の加減速を入れる(等流の屈曲は
                                               !   0 と同じ。ENCflow 独自。developer.md §110)
+    integer :: f_advection_lateral = 0        ! 運動量保存形移流(スキーム 2, 3。f_advection_donor = 3)の
+                                              !   側方面で、横から入る水の扱い (0:平行リンクの流速
+                                              !   (乾いていれば中立。dd 以上の水膜があれば、その
+                                              !   流速。既定), 1:平行リンクが、面を横切って入って
+                                              !   くる水に比べて p_adv_donor_eps 倍より薄い水膜の
+                                              !   ときは代表させず、辺の線に沿う流れへ別の向き
+                                              !   から入る水の、辺の向きの運動量の不足
+                                              !   (1 − cos θ) u_e を数える。斜めエッジの側方面の
+                                              !   開口率も、同じ薄さの判定で数える)。0 は、合流の
+                                              !   損失を、岸が濡れているときだけ数え、雨で濡れた
+                                              !   岸に接する河道を減速する(test/tjunction・
+                                              !   test/wetbank)。1 は、岸の濡れによらず数える
+                                              !   (直角の合流で、運動量の理論の 6〜8 割の堰上げ。
+                                              !   ENCflow 独自。developer.md §110.25)
     integer :: f_dry_head_cap = 2             ! 高い地盤へ向かうエッジ水深のエネルギー頭による
                                               !   頭打ち (0:なし, 1:受け手が乾燥のとき(2026-11-13
                                               !   までの既定), 2:1 に加えて、受け手が濡れていても、
@@ -167,6 +181,8 @@ subroutine list_enc_read(p, list)
                                         !   3(既定):線 k の薄い供給元を u_e へ寄せ、側方面の乾湿
                                         !   判定を連続に。1・2 は廃止)
   integer :: f_advection_bend           ! 供給元が壁・乾床の流向面の風上値 (0:u_e, 1:経路の値。§110)
+  integer :: f_advection_lateral        ! 側方面で横から入る水の扱い (0:平行リンクの流速, 1:代表性と
+                                        !   合流の不足分。§110.25)
   integer :: f_inflow_edge              ! 区間流入の外縁セルに接するエッジの扱い (0/1/2)
   integer :: f_scalar_scheme            ! スカラー輸送の移流スキーム (1:1次風上, 3:MUSCL)
   integer :: f_rivermouth_drop          ! 河口から海へ段落ち
@@ -207,7 +223,7 @@ subroutine list_enc_read(p, list)
   namelist /list_enc/ f_gravity_correction, f_exflux_reduction, f_hcap_upwind, &
                       f_friction_fastmath, f_advection_scheme, &
                       f_rivermouth_drop, f_opening_dynamic, f_dry_head_cap, f_advection_donor, &
-                      f_advection_bend, f_inflow_edge, f_scalar_scheme, &
+                      f_advection_bend, f_advection_lateral, f_inflow_edge, f_scalar_scheme, &
                       f_adaptive_runge, p_diagratio, p_adv_upwind_index, p_adv_donor_eps, p_adprunge_thresh, &
                       f_diffusion_term, p_diffusion_nu, p_diffusion_alpha, &
                       f_nonhydrostatic, nh_hmin, nh_solver, nh_itmax, nh_tol, &
@@ -227,6 +243,7 @@ subroutine list_enc_read(p, list)
   f_dry_head_cap = list%f_dry_head_cap
   f_advection_donor = list%f_advection_donor
   f_advection_bend = list%f_advection_bend
+  f_advection_lateral = list%f_advection_lateral
   f_inflow_edge = list%f_inflow_edge
   f_scalar_scheme = list%f_scalar_scheme
   f_diffusion_term = list%f_diffusion_term
@@ -280,6 +297,7 @@ subroutine list_enc_read(p, list)
   list%f_dry_head_cap = f_dry_head_cap
   list%f_advection_donor = f_advection_donor
   list%f_advection_bend = f_advection_bend
+  list%f_advection_lateral = f_advection_lateral
   list%f_inflow_edge = f_inflow_edge
   list%f_scalar_scheme = f_scalar_scheme
   list%f_diffusion_term = f_diffusion_term
