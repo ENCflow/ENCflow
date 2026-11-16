@@ -677,17 +677,20 @@ With the default `f_advection_donor = 3` the wet/dry test of the parallel edge b
   the separation zone downstream of a junction are not tested. Lateral Neumann
   boundary faces are treated as with 0. Once the brake of wet banks is removed,
   the flow in a steep channel becomes the same as when the banks are dry. On
-  the 50 m grid of Chichibu (a run with rain), (1) at the outlet of a pool along
-  the channel, a shallow fast flow (supercritical) and a deep slow flow switch
-  within one to a few minutes around a discharge of 4,100–5,100 m³/s, and each
-  time the one-minute discharge at a transect 400 m downstream moves up and
-  down by 500–1,400 m³/s (the peak is 7,200 m³/s; with 0 the brake of the water
-  film makes the outlet deep from early on and the oscillation is small, while
-  in a run without rain, with dry banks, 0 oscillates more). (2) The maximum
-  velocity in the domain rises from 30 to 48 m/s (with `f_dry_head_cap` 2 as
-  well as 3) and the head of the flow in steep reaches exceeds the water level
-  upstream (a limit on the side of the cap rule that then appears in runs with
-  rain as well; see the `f_dry_head_cap` item in §5). The run time increases by
+  the 50 m grid of Chichibu (a run with rain; `f_dry_head_cap` at the default
+  2), (1) at the outlet of a pool along the channel, a shallow fast flow
+  (supercritical) and a deep slow flow switch within one to a few minutes
+  around a discharge of 4,100–4,800 m³/s, and in the first 125 minutes of the
+  run the one-minute discharge at a transect 400 m downstream shows 16
+  reversals in which both successive changes exceed 100 m³/s (the largest
+  change is 1,700 m³/s; the peak is 7,800 m³/s; with 0 the brake of the water
+  film makes the outlet deep from early on and there are 4, while in a run
+  without rain, with dry banks, 0 oscillates more). (2) The maximum velocity in the domain rises from 30 to
+  48 m/s, and the head of the flow in steep reaches exceeds the water level
+  upstream (a limit of cap 2 that then appears in runs with rain as well; it
+  is not exceeded when combined with `f_dry_head_cap = 3`; see the
+  `f_dry_head_cap` item in §5 and
+  [test/cascade](../../../test/cascade/en/README.md)). The run time increases by
   about 20 % (a Chichibu run on the 200 m grid). 1 is
   optional and the default remains 0 (with 1 the results change; for example,
   flood waves through oblique channels become faster because the brake of wet
@@ -823,12 +826,14 @@ listed in the [shallow water chapter](swflow.md).
   above the bed of the sender), whether the receiver is dry or wet, by
   $`h_e \le \max(w\,h_\mathrm{harm},\ \sigma + v_h,\ 0)`$. Here $`\sigma`$ is the water level
   of the sender minus the bed of the receiver (the thickness of the water that
-  goes over), and $`v_h = \max(u_n^2/2g,\ \min(u_a^2/2g,\ h_s/2))`$ is the velocity head
-  ($`u_n`$ is the velocity of this edge and $`u_a`$ is the speed of the flow
-  entering the sending cell along the same line, i.e. the unit-width discharge
-  of the next edge upstream divided by the depth of the sender $`h_s`$; the
-  velocity head of the entering flow is counted up to half the depth of the
-  sender, the velocity head of critical flow).
+  goes over), and $`v_h = \max(u_n^2/2g,\ v_a)`$ is the velocity head
+  ($`u_n`$ is the velocity of this edge; $`v_a`$ is the part of the flow
+  entering the sending cell along the same line: when its speed $`u_a`$, i.e. the
+  unit-width discharge of the next edge upstream divided by the depth of the
+  sender $`h_s`$, is subcritical ($`u_a^2 \le g h_s`$), it is the velocity head
+  $`u_a^2/2g`$, and when it is supercritical, it is the specific energy of the
+  critical flow of the same discharge minus the depth of the sender,
+  $`\tfrac{3}{2}h_c - h_s`$, where $`h_c = (u_a^2 h_s^2/g)^{1/3}`$ is the critical depth).
   $`h_\mathrm{harm}`$ is the harmonic mean of the depths on both sides, and
   $`w = \min(\max(\sigma/h_r, 0), 1)`$ ($`h_r`$ is the depth of the receiver). 1 and 2 take the
   velocity head from the velocity of the edge itself, but the velocity of an
@@ -854,36 +859,38 @@ listed in the [shallow water chapter](swflow.md).
   cannot be resolved by a one-cell-wide channel; what is satisfied is only that
   the level in the pocket does not exceed the energy head upstream. Where a
   supercritical flow (a Froude number above 1) meets a high cell head-on, for
-  example at a bend just below a drop, the velocity head of the entering flow
-  is counted only up to half the depth of the sender, so water does not climb
-  until the water level plus half the depth reaches the bed of the receiver.
-  After that the velocity head of the edge's own velocity takes effect, and
-  water enters like a step within a few minutes (the run-up of a supercritical
-  flow onto a bank directly ahead starts late and discontinuously). The limit
-  is there because the "speed of the entering flow" is taken as the discharge
-  divided by the depth of the sender. For the same discharge, the gradient of
-  the specific energy $`h + q^2/2gh^2`$ with respect to depth is $`1 - Fr^2`$,
-  which is negative in a supercritical flow, so a slight change in depth changes
-  the velocity head greatly in the opposite direction. Without the limit, where
-  a flow that has fallen over a drop meets a hillslope cell 8 m above the water
-  level, the edge opens and closes and the discharge in the pool just
-  downstream oscillates
+  example at a bend just below a drop, the entering flow is counted not by its
+  velocity head itself but by the specific energy of the critical flow of the
+  same discharge (which is determined by the discharge alone and is smaller
+  than the actual specific energy; the height to which a supercritical flow
+  runs up a bank directly ahead is counted on the low side). The velocity head
+  is not counted as it is because the "speed of the entering flow" is taken as
+  the discharge divided by the depth of the sender. For the same discharge, the
+  gradient of the specific energy $`h + q^2/2gh^2`$ with respect to depth is
+  $`1 - Fr^2`$, which is negative in a supercritical flow, so a slight change in
+  depth changes the velocity head greatly in the opposite direction. If it is
+  counted as it is, where a flow that has fallen over a drop meets a hillslope
+  cell 8 m above the water level, the edge opens and closes and the discharge
+  in the pool just downstream oscillates
   ([test/chutepool](../../../test/chutepool/en/README.md)).
-  Limits of 2 and 3 (steep stepped channels): where a supercritical flow runs
-  up onto a low bank directly ahead or on the inside of a bend (a cell 10–15 m
+  A limit of 2 (steep stepped channels): where a supercritical flow runs up
+  onto a low bank directly ahead or on the inside of a bend (a cell 10–15 m
   above the bed) and returns to the channel, the head of the flow can exceed
   the water level upstream (the velocity becomes too large). In a run on a
   reach cut out of the 50 m grid of Chichibu, where the bed descends from 354 m
-  to 268 m, with a discharge of up to 8,000 m³/s given at the upstream end, the
-  bed elevation plus the velocity head exceeds the water level at the upstream
-  end by 14 m with 3, and by 25–31 m with 3 and `f_advection_lateral = 1`
-  (maximum velocity 42–45 m/s). With 2 it exceeds it by 45 m when the banks are
-  dry (49 m/s); when the banks are wet from rain, the brake of the water film
-  under `f_advection_lateral = 0` acts and there is no excess (24 m/s). On a
-  terrain where the bank cells are turned into walls the excess is within 6 m.
-  It appears with rules that restrict the run-up onto banks strongly (2 counts
-  only the edge's own velocity; 3 counts the velocity head of the entering flow
-  only up to half the depth) (developer.md §110.29). In runs
+  to 268 m, with a discharge of up to 8,000 m³/s given at the upstream end, with
+  2 and dry banks the bed elevation plus the velocity head exceeds the water
+  level at the upstream end by 45 m (maximum velocity 49 m/s). When the banks
+  are wet from rain, the brake of the water film under
+  `f_advection_lateral = 0` acts and there is no excess (24 m/s), but
+  `f_advection_lateral = 1` does not count the water film, so the head
+  exceeds it by 22 m even with rain (44 m/s; §4.4). With 3 the excess is within 5 m whether the
+  banks are dry or wet and whatever `f_advection_lateral` is, about the same as
+  on a terrain where the bank cells are turned into walls (6 m)
+  ([test/cascade](../../../test/cascade/en/README.md)). It appears when the
+  run-up onto banks is counted by the edge's own velocity alone (a strong
+  restriction), but why it does so has not been identified
+  (developer.md §110.29). In runs
   where a movable bed reaches a free-outflow boundary, erosion from the
   downstream end advances more easily than with 2 (with 2, the flow that crosses
   the sill of sediment deposited at the downstream end with the mean depth of

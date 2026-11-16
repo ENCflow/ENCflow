@@ -12,10 +12,10 @@ increase along the flow). The test looks at how far the "bed elevation plus the 
 velocity over the run" in each cell exceeds the water level in the cell where the discharge is given. Its
 subjects are the cap on the edge depth of the continuity equation (`f_dry_head_cap` in `&list_enc`) and the
 treatment of water entering through side faces (`f_advection_lateral`) (§4.4 and §5 of
-[Advection schemes](../../../docs/en/users_guide/advection.md), developer.md §110.29).
+[Advection schemes](../../../docs/en/users_guide/advection.md), developer.md §110.29 and §110.30).
 
-**With the present rules the head exceeds the water level at the upstream end in every configuration (by
-14–64 m).** The excess is only recorded; what is judged is the mass balance.
+**With `f_dry_head_cap = 3` the excess is within 5 m, about the same as on a terrain whose banks are turned into
+walls. With the default 2 the head exceeds it by 45 m when the banks are dry (recorded as a limit of 2).**
 
 ## Setup
 
@@ -51,47 +51,64 @@ recorded every 10 seconds.
 
 ## Check items (Check_cascade.py)
 
-Items that are judged (all three configurations):
+Items that are judged:
 
-1. Mass balance: the mean discharge at the transect over the last 10 minutes is within ±1 % of the given
-   discharge, 8,000 m³/s.
+1. Mass balance (all three configurations): the mean discharge at the transect over the last 10 minutes is
+   within ±1 % of the given discharge, 8,000 m³/s.
+2. The maximum excess (c3 and c3j) is below 10 m. The excess is "bed elevation plus the velocity head of the
+   maximum velocity over the run" in each cell minus the maximum water level over the run in the cell where the
+   discharge is given (cells whose maximum depth over the run is at least 0.5 m, including cells outside the
+   river mask). The depth is not counted, so this is a lower bound of the excess of the head. The limit of 10 m
+   is set at a little under twice the value on the terrain whose banks are turned into walls (5.7 m, below); it
+   is not derived from theory.
 
 Items that are recorded:
 
-2. The maximum excess: the maximum of "bed elevation plus the velocity head of the maximum velocity over the
-   run" in each cell minus the maximum water level over the run in the cell where the discharge is given (cells
-   whose maximum depth over the run is at least 0.5 m, including cells outside the river mask). The depth is not
-   counted, so this is a lower bound of the excess of the head.
-3. The largest maximum velocity over the run, and where it occurs.
+- The maximum excess of c2 (a limit of 2).
+- The largest maximum velocity over the run, and where it occurs.
 
 ## Values
 
 | Configuration | Discharge at the end (m³/s) | Maximum water level in the cell where the discharge is given (m) | Maximum excess (m) | Its cell (bed, velocity) | Maximum velocity (m/s) |
 |---|---:|---:|---:|---|---:|
 | c2 (cap 2, side faces 0) | 7,998 | 368.3 | +45.1 | (629, 371) (290.5 m, 49.1 m/s) | 49.1 |
-| c3 (cap 3, side faces 0) | 7,997 | 368.3 | +14.0 | (623, 375) (293.8 m, 41.7 m/s) | 41.7 |
-| c3j (cap 3, side faces 1) | 7,996 | 368.2 | +63.9 | (624, 374) (293.8 m, 52.1 m/s) | 52.1 |
+| c3 (cap 3, side faces 0) | 7,979 | 369.5 | +4.4 | (615, 408) (372.4 m, 5.4 m/s) | 36.5 |
+| c3j (cap 3, side faces 1) | 7,980 | 368.8 | +4.9 | (618, 400) (336.1 m, 27.1 m/s) | 38.4 |
 
-- **In all three configurations the head exceeds the water level at the upstream end.** It does so in the part
-  of the flat reach with the bed at 290.5–293.8 m that runs obliquely to the grid. The drop from the water level
-  at the upstream end to the bed of this reach is 75–78 m, so even without any loss the velocity should be at
-  most 38–39 m/s, but 42–52 m/s appears.
-- **When the bank cells are turned into walls, the excess becomes small.** On a terrain where the cells outside
-  the river mask are raised by 300 m (no run-up onto banks), the maximum excess is +5.7 m (cell (620, 399) at
-  the foot of the reach of successive drops; 33.5 m/s), the same for c2 and c3j (this run is not included in
-  Run.sh). The excess appears where the supercritical flow runs up onto low banks and returns to the channel.
-- **When the banks are wet from rain, c2 does not exceed it.** With rain (20 mm/h) added to the same run, the
-  maximum velocity of c2 is 24 m/s and there is no excess (`f_advection_lateral = 0` uses the slow velocity of
-  the water film on the banks as the velocity of the water entering from the side, which brakes the flow in the
-  channel; the same holds for c3). `f_advection_lateral = 1` does not count the water film, so c3j exceeds it
-  even with rain (maximum velocity 47 m/s, excess +36 m). This run is not included in Run.sh either.
+- **With 2, when the banks are dry, the head exceeds the water level at the upstream end by a large amount.**
+  It does so in the reaches with the bed at 290.5–312.8 m, where 7 cells exceed it by 10 m or more. The drop
+  from the water level at the upstream end to the reach with the bed at 290.5 m is 78 m, so even without any
+  loss the velocity should be at most 39 m/s, but 49 m/s appears.
+- **With 3 it hardly exceeds it.** Four cells have a positive excess: cells in the reach of successive drops
+  ((618, 400) and (617, 404); +1.8 to 4.9 m), a bank cell whose bed is above the water level at the upstream end
+  ((615, 408); bed 372.4 m; 0.6 m of water climbs onto it; +4.4 to 4.8 m), and one cell beside the upstream flat
+  reach (+0.1 to 0.6 m). The maximum velocity in the reach with the bed at 290.5–293.8 m is 36–38 m/s, with no
+  excess.
+- **Even when the bank cells are turned into walls, it exceeds it by 5.7 m.** On a terrain where the cells
+  outside the river mask are raised by 300 m (no run-up onto banks), the maximum excess is +5.7 m in all three
+  configurations (cell (620, 399) at the foot of the reach of successive drops; 33.5 m/s). The values of 3 are
+  about the same as this value (this run is not included in Run.sh). The large excess of 2 appears where the
+  supercritical flow runs up onto low banks and returns to the channel.
+- **When the banks are wet from rain, 2 does not exceed it either.** With rain (20 mm/h) added to the same run,
+  the maximum velocity of c2 is 24 m/s and there is no excess (`f_advection_lateral = 0` uses the slow velocity
+  of the water film on the banks as the velocity of the water entering from the side, which brakes the flow in
+  the channel; the same holds for c3). c3j (`f_advection_lateral = 1`, which does not count the water film) has
+  a maximum velocity of 36 m/s and no excess even with rain. When `f_advection_lateral = 1` is combined with
+  2, there is no brake of the water film, so the head exceeds it by +22 m even with rain (44 m/s; +53 m with
+  dry banks). These runs are not included in Run.sh either.
+- **The difference between 2 and 3 is how the run-up onto banks is counted.** 2 takes the velocity head of the
+  cap from the velocity of the edge toward the bank itself. 3 also counts the flow entering the sending cell
+  (for a supercritical flow, up to the specific energy of the critical flow of the same discharge). The more
+  strongly the run-up is restricted, the larger the excess becomes (in a form that restricts the part of the
+  entering flow to half the depth, c3 gives +14 m and c3j +64 m; developer.md §110.29).
 
 ## Limits and how to read the results
 
 - This is a test on one reach cut out of a real terrain. It does not imply that no excess appears on other
   terrains.
-- Why the excess arises (which term adds the momentum) has not been identified. What is known is that its size
-  changes with how the run-up onto banks is counted (developer.md §110.29).
+- Why the excess arises when the run-up onto banks is restricted strongly (which term adds the momentum) has
+  not been identified. What is known is that its size changes with how the run-up is counted
+  (developer.md §110.29).
 - The roughness of 0.02 for river-mask cells is small for a mountain stream with successive drops, and the
   velocity is larger than in reality. The size of the excess depends on this velocity.
 - The hydraulic jump at the foot of a drop, the air entrainment and the splash onto the banks cannot be

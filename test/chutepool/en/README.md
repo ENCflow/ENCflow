@@ -9,13 +9,14 @@ turns and plunges into a deep pool. Directly ahead of the flow in the cell below
 higher than the water level. The test checks that the discharge at a transect in the pool matches the given
 discharge and does not oscillate. Its subject is the cap on the edge depth of the continuity equation
 (`f_dry_head_cap` in `&list_enc`; §5 of [Advection schemes](../../../docs/en/users_guide/advection.md),
-developer.md §110.24, §110.26 and §110.27).
+developer.md §110.24, §110.26 and §110.30).
 
 `f_dry_head_cap = 3` counts water as able to climb a high cell ahead by the velocity head of the flow entering
 the sending cell. In a supercritical flow this velocity head changes greatly with slight changes in depth. So 3
-counts the velocity head of the entering flow only up to half the depth of the sender (the velocity head of
-critical flow). This test looks at a situation where that limit takes effect. **The discharge in the pool does
-not oscillate with either the default 2 or 3.**
+counts a flow entering supercritically not by its velocity head itself but by the specific energy of the
+critical flow of the same discharge (which is determined by the discharge alone). This test looks at a
+situation where that way of counting takes effect. **The discharge in the pool does not oscillate with either
+the default 2 or 3.**
 
 ## Setup
 
@@ -70,10 +71,12 @@ Item displayed:
 
 - **Neither 2 nor 3 lets water climb the hillslope ahead, which is higher than the water level.** The discharge
   at the transect increases smoothly, following the rise of the given discharge.
-- **The velocity head 3 counts is at most half the depth.** The velocity head of the flow in the cell below the
-  drop is 12 m and exceeds the height of the hillslope ahead (8.6 m above the water level), but 3 counts only
-  up to half the depth, 1.3 m, so the edge toward the hillslope stays closed.
-- **Without the limit, the discharge in the pool keeps oscillating.** 3 takes the speed of the entering flow
+- **For a supercritical flow, 3 counts up to the specific energy of the critical flow of the same discharge.**
+  The velocity head of the flow in the cell below the drop is 12 m and exceeds the height of the hillslope ahead
+  (8.6 m above the water level), but the critical flow of the same discharge (37 m²/s per unit width) has a
+  depth of 5.2 m and a specific energy of 7.8 m, so what 3 counts is that minus the depth of 2.6 m, 5.2 m. The
+  edge toward the hillslope stays closed.
+- **If the velocity head is counted as it is, the discharge in the pool keeps oscillating.** 3 takes the speed of the entering flow
   from "the unit-width discharge of the entering edge divided by the depth of this cell". In a supercritical
   flow a slight rise in depth lowers this velocity head greatly (for the same discharge, the gradient of the
   specific energy $`h + q^2/2gh^2`$ with respect to depth is $`1 - Fr^2`$, which is −8 at a Froude number
@@ -81,19 +84,20 @@ Item displayed:
   with slight changes in the depth of the cell below the drop, the water entering the pool by way of the
   hillslope increases and decreases, and the discharge in the pool keeps oscillating by up to 320 m³/s with a
   period of about one minute while the given discharge is between 2,600 and 4,300 m³/s (the depth of the
-  hillslope cell reaches 1.9 m; developer.md §110.26).
+  hillslope cell reaches 1.9 m; developer.md §110.26). The specific energy of the critical flow is determined
+  by the discharge alone, so the height counted does not change when the depth changes.
 
 ## Limits and how to read the results
 
 - The test is a cut-out of one place in real terrain. Item 2 means "no oscillation for this terrain and this
   way of raising the discharge"; it does not mean that there is no oscillation in other terrain.
 - The roughness of 0.02 for the channel-mask cells is small for a mountain stream with successive drops, and
-  the velocity (15 m/s) is larger than in reality. The oscillation that appears without the limit depends on
-  the size of the velocity head this velocity produces.
+  the velocity (15 m/s) is larger than in reality. The oscillation that appears when the velocity head is
+  counted as it is depends on the size of the velocity head this velocity produces.
 - The hydraulic jump, the air entrainment and the splash onto the hillslope ahead where the flow that has
   fallen over the drop enters the pool cannot be represented by depth-averaged equations. 3 errs on the side
-  of not counting the height to which a supercritical flow runs up the hillslope ahead (up to the water level
-  plus half the depth).
+  of counting the height to which a supercritical flow runs up the hillslope ahead lower than its actual
+  specific energy (up to the bed elevation plus the specific energy of the critical flow of the same discharge).
 
 ## Running
 

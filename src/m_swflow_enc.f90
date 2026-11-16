@@ -1112,9 +1112,9 @@ subroutine m_swflow_enc_init(p, g, b, s)
   end if
   if (opt%f_dry_head_cap == 3) then
     call par_info("swflow_enc: f_dry_head_cap = 3 (edge depth on climbing edges, dry or wet, is capped by the energy head " &
-                  //"of the sending cell above the receiving bed, with the velocity head of the flow approaching along " &
-                  //"the edge line counted up to half the depth of the sending cell, and by a harmonic-mean floor for " &
-                  //"submerged steps)")
+                  //"of the sending cell above the receiving bed, with the flow approaching along the edge line counted " &
+                  //"by its velocity head (a supercritical approach flow by the specific energy of the critical flow of " &
+                  //"the same discharge), and by a harmonic-mean floor for submerged steps)")
   end if
   if (opt%f_inflow_edge < 0 .or. opt%f_inflow_edge > 2) then
     call par_stop("list_enc: f_inflow_edge must be 0(no advection on edges touching inflow cells), " &
@@ -2662,15 +2662,15 @@ end function
 
 
 !----------------------------------------------------------------------
-! 登る辺のエッジ水深の頭打ち(f_dry_head_cap = 3。§110.23・§110.24)
+! 登る辺のエッジ水深の頭打ち(f_dry_head_cap = 3。§110.23・§110.24・§110.30)
 !   受け手(流向の下流側)の地盤が送り手の地盤より高い辺(登る辺。z_受 > z_送)で、受け手の乾湿に
 !   よらず、エッジ水深を
 !     he ← min( he, max( w·h_harm,  σ + v_h,  0 ) )
 !   で頭打ちする。
 !     σ      = 送り手の水位 − 受け手の地盤(越える水の厚さ。負なら、水位は地盤に届いていない)
-!     v_h    = max( u_n²/2g,  min(u_a²/2g, h_送/2) )(速度水頭)。u_n はこの辺の法線流速、u_a は送り手の
-!              セルへ同じ線に沿って入ってくる流れの速さ(cap_approach。時刻 n)。u_a の速度水頭は、送り手の
-!              流れの深さの半分(限界流の速度水頭。Fr_a = u_a/√(g h_送) ≤ 1)までしか数えない(下の注)
+!     v_h    = max( u_n²/2g,  v_a )(速度水頭)。u_n はこの辺の法線流速。v_a は、送り手のセルへ同じ線に沿って
+!              入ってくる流れ(速さ u_a。cap_approach。時刻 n)の分で、常流(Fr_a = u_a/√(g h_送) ≤ 1)は
+!              u_a²/2g、射流は 1.5 h_c − h_送(h_c = (u_a² h_送²/g)^(1/3) は、同じ流量の限界水深。下の注)
 !     h_harm = 2 h_送 h_受/(h_送 + h_受)(両側の流れの深さの調和平均)
 !     w      = clamp(σ/h_受, 0, 1)(受け手の水位が送り手の水位以下なら 1。受け手が乾いていれば 0)
 !   第 2 項: 水は、送り手のエネルギー水頭が受け手の地盤を越える分より厚くは登れない(Bernoulli。乾いた
@@ -2688,13 +2688,19 @@ end function
 !   平均へ寄る(差は水深の差の 2 次)。摩擦に支配される流れで、深さの違う 2 つの半セルを直列につないだ
 !   等価な水深が浅い側に寄ること(h_eq^(−10/3) = (h_送^(−10/3) + h_受^(−10/3))/2)にも合う。
 !   速度水頭を送り手へ入ってくる流れから取ること、調和平均を下限に使うこと、w の形は ENCflow 独自。
-!   u_a の速度水頭の上限 h_送/2(§110.26・§110.27。独自): u_a は「上流の辺の流量 ÷ 送り手の水深」なので、
-!   流量が同じなら d(σ + u_a²/2g)/dh_送 = 1 − Fr_a²。射流(Fr_a > 1)では負で、送り手の水深のわずかな変化が
-!   逆向きに増幅されて頭打ちに入る(あふれる → 水深が下がる → 速度水頭が増える → もっとあふれる)。落差の
-!   あとで射流が正面の斜面に当たる所で、辺が開閉して下流の池の流量が揺れ、水位より 8 m 高い斜面のセルへ
-!   水が乗った(test/chutepool)。上限を掛けると、頭打ちの値は送り手の水深について単調に増える(常流で 1 − Fr_a²、
-!   射流で 1.5)。常流の値は上限なしと同じ。射流が正面の岸へ乗り上げる高さは数えない側に倒している
-!   (水位 + 水深の半分が地盤に届くまで開かない。開いたあとは、この辺自身の流速 u_n の速度水頭が効く)
+!   射流の v_a(§110.26・§110.29・§110.30。独自): u_a は「上流の辺の流量 q_a ÷ 送り手の水深」なので、速度水頭を
+!   そのまま数えると、流量が同じなら d(σ + u_a²/2g)/dh_送 = 1 − Fr_a²。射流(Fr_a > 1)では負で、送り手の水深の
+!   わずかな変化が逆向きに増幅されて頭打ちに入る(あふれる → 水深が下がる → 速度水頭が増える → もっと
+!   あふれる)。落差のあとで射流が正面の斜面に当たる所で、辺が開閉して下流の池の流量が揺れ、水位より 8 m
+!   高い斜面のセルへ水が乗った(test/chutepool)。射流では、入ってくる流れの比エネルギー h_送 + u_a²/2g の
+!   代わりに、その流量 q_a を流せる最小の比エネルギー(限界流の 1.5 h_c。h_c = (q_a²/g)^(1/3))を数える:
+!   σ + v_a = z_送 + 1.5 h_c − z_受 で、流量が同じなら送り手の水深に依らない(頭打ちの値は、送り手の水深に
+!   ついて減らない: 勾配は常流で 1 − Fr_a² ≥ 0、射流で 0)。Fr_a = 1 で常流の式と同じ値(h_送/2)になり、連続。
+!   射流が正面の岸へ乗り上げる高さは、実際の比エネルギーより低く数える側に倒している(1.5 h_c ≤ h_送 + u_a²/2g)。
+!   v_a を h_送/2(限界流の速度水頭)までに絞る形(2026-11-16 の一時の形。§110.27)は、test/chutepool の揺れは
+!   止めるが、急な段々の河道で、射流が低い岸へ乗り上げて河道へ戻る所の流れの水頭が、上流の水位を数十 m
+!   超える(test/cascade。秩父の 50 m 格子で領域の最大流速が 48.5 m/s。§110.29)。乗り上げを強く絞ると超える
+!   仕組みは、突き止めていない
 !   登らない辺(z_受 ≤ z_送)と、流速 0 のエッジは he のまま。0 を返したエッジの流速は、呼び出し側が
 !   0 にする。土石流が有効な計算では、呼び出し側が hc・hn に固体の柱状量 hs を足して渡す(流れの表面は
 !   z + h + hs。cap_he_wet と同じ)
@@ -2723,6 +2729,7 @@ contains
     real :: c
     real :: w, harm
     real :: vh                    ! 速度水頭 v_h
+    real :: va                    ! 送り手へ入ってくる流れの分 v_a
     w = 0.0
     harm = 0.0
     if (hs > 0.0 .and. hr > 0.0) then
@@ -2734,8 +2741,15 @@ contains
       end if
       harm = 2.0 * hs * hr / (hs + hr)
     end if
-    ! u_a の速度水頭は、送り手の流れの深さの半分(限界流の速度水頭)まで。u_n の速度水頭はそのまま
-    vh = max(un**2 / (2 * gg), min(ua**2 / (2 * gg), 0.5 * hs))
+    ! 入ってくる流れの分 v_a: 常流(u_a² ≤ g h_送)は速度水頭 u_a²/2g。射流は、同じ流量の限界流の比エネルギー
+    ! 1.5 h_c から送り手の流れの深さを引いた分(h_c = (u_a² h_送²/g)^(1/3)。Fr_a = 1 で h_送/2 に一致して連続)。
+    ! u_n の速度水頭はそのまま
+    if (ua**2 <= gg * hs) then
+      va = ua**2 / (2 * gg)
+    else
+      va = 1.5 * (ua**2 * hs**2 / gg)**(1.0 / 3.0) - hs
+    end if
+    vh = max(un**2 / (2 * gg), va)
     c = max(w * harm, sig + vh, 0.0)
   end function
 end function

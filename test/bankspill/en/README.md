@@ -124,9 +124,9 @@ With 3:
 - **The level and time of opening do not depend on the time step or on whether the pocket is wet**
   (the differences are 0.001 m and 0 minutes). 3 takes the velocity head not from the velocity of the
   closed edge but from the flow entering the sending cell along the same line (the unit-width
-  discharge of the next edge upstream divided by the depth of the sender; counted up to half the depth
-  of the sender, the velocity head of critical flow. The flow in this test is subcritical and does not
-  reach the limit). Water starts to enter very
+  discharge of the next edge upstream divided by the depth of the sender; a flow entering
+  supercritically is counted up to the specific energy of the critical flow of the same discharge. The
+  flow in this test is subcritical, and its velocity head is counted as it is). Water starts to enter very
   thinly when the energy head upstream reaches the pocket ground (the channel level is then 0.76 m
   below the ground).
 - **Water does not enter all at once; it increases continuously with the water level** (the largest

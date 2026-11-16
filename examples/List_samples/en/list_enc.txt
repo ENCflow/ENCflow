@@ -159,8 +159,10 @@
                             !   (the bed of the receiver above the bed of the
                             !   sender), dry or wet receiver, by the energy
                             !   head that also counts the velocity head of the
-                            !   flow entering the sending cell, up to half the
-                            !   depth of the sender (the time and
+                            !   flow entering the sending cell (for a
+                            !   supercritical flow, up to the specific energy
+                            !   of the critical flow of the same discharge)
+                            !   (the time and
                             !   amount at which channel water starts to spill
                             !   onto a bank do not depend on the time step;
                             !   submerged steps keep the harmonic mean of the

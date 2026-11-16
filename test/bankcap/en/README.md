@@ -69,7 +69,9 @@ wet slope is the same as with 1.
 
 ```math
 h_e \leftarrow \min\!\left(h_e,\ \max\!\left(w\,h_\mathrm{harm},\ \sigma + v_h,\ 0\right)\right),\qquad
-v_h = \max\!\left(\frac{u_n^2}{2g},\ \min\!\left(\frac{u_a^2}{2g},\ \frac{h_s}{2}\right)\right)
+v_h = \max\!\left(\frac{u_n^2}{2g},\ v_a\right),\qquad
+v_a = \begin{cases} u_a^2/2g & (u_a^2 \le g h_s) \\ \tfrac{3}{2} h_c - h_s & (u_a^2 > g h_s) \end{cases},\qquad
+h_c = \left(\frac{u_a^2 h_s^2}{g}\right)^{1/3}
 ```
 
 ```math
@@ -78,8 +80,9 @@ v_h = \max\!\left(\frac{u_n^2}{2g},\ \min\!\left(\frac{u_a^2}{2g},\ \frac{h_s}{2
 
 $`v_h`$ is the velocity head: $`u_n`$ is the normal velocity on this edge and $`u_a`$ is the speed of the
 flow entering the sending cell along the same line (the unit-width discharge of the next edge upstream
-divided by the depth of the sender). The velocity head of the entering flow is counted up to half the
-depth of the sender (the velocity head of critical flow). The second term is the same energy-head cap as
+divided by the depth of the sender). The part of the entering flow, $`v_a`$, is its velocity head for a
+subcritical flow and, for a supercritical flow, the specific energy of the critical flow of the same
+discharge, $`\tfrac{3}{2}h_c`$, minus the depth of the sender ($`h_c`$ is the critical depth). The second term is the same energy-head cap as
 in 1 and 2, with the velocity head taken also from the entering flow, which has a value even while the
 edge is closed. The
 first term is a floor for submerged steps (the harmonic mean of the depths on both sides when the
