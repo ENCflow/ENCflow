@@ -675,8 +675,20 @@ With the default `f_advection_donor = 3` the wet/dry test of the parallel edge b
   pond then keeps oscillating). Junctions where a narrow tributary enters a
   main channel several cells wide, junctions that are not at a right angle and
   the separation zone downstream of a junction are not tested. Lateral Neumann
-  boundary faces are treated as with 0. The run time increases by about 20 % (a
-  Chichibu run on the 200 m grid). 1 is
+  boundary faces are treated as with 0. Once the brake of wet banks is removed,
+  the flow in a steep channel becomes the same as when the banks are dry. On
+  the 50 m grid of Chichibu (a run with rain), (1) at the outlet of a pool along
+  the channel, a shallow fast flow (supercritical) and a deep slow flow switch
+  within one to a few minutes around a discharge of 4,100–5,100 m³/s, and each
+  time the one-minute discharge at a transect 400 m downstream moves up and
+  down by 500–1,400 m³/s (the peak is 7,200 m³/s; with 0 the brake of the water
+  film makes the outlet deep from early on and the oscillation is small, while
+  in a run without rain, with dry banks, 0 oscillates more). (2) The maximum
+  velocity in the domain rises from 30 to 48 m/s (with `f_dry_head_cap` 2 as
+  well as 3) and the head of the flow in steep reaches exceeds the water level
+  upstream (a limit on the side of the cap rule that then appears in runs with
+  rain as well; see the `f_dry_head_cap` item in §5). The run time increases by
+  about 20 % (a Chichibu run on the 200 m grid). 1 is
   optional and the default remains 0 (with 1 the results change; for example,
   flood waves through oblique channels become faster because the brake of wet
   banks is removed). The construction of $`R'`$, $`\omega`$ and $`\cos\theta`$ is
@@ -856,7 +868,22 @@ listed in the [shallow water chapter](swflow.md).
   a flow that has fallen over a drop meets a hillslope cell 8 m above the water
   level, the edge opens and closes and the discharge in the pool just
   downstream oscillates
-  ([test/chutepool](../../../test/chutepool/en/README.md)). In runs
+  ([test/chutepool](../../../test/chutepool/en/README.md)).
+  Limits of 2 and 3 (steep stepped channels): where a supercritical flow runs
+  up onto a low bank directly ahead or on the inside of a bend (a cell 10–15 m
+  above the bed) and returns to the channel, the head of the flow can exceed
+  the water level upstream (the velocity becomes too large). In a run on a
+  reach cut out of the 50 m grid of Chichibu, where the bed descends from 354 m
+  to 268 m, with a discharge of up to 8,000 m³/s given at the upstream end, the
+  bed elevation plus the velocity head exceeds the water level at the upstream
+  end by 14 m with 3, and by 25–31 m with 3 and `f_advection_lateral = 1`
+  (maximum velocity 42–45 m/s). With 2 it exceeds it by 45 m when the banks are
+  dry (49 m/s); when the banks are wet from rain, the brake of the water film
+  under `f_advection_lateral = 0` acts and there is no excess (24 m/s). On a
+  terrain where the bank cells are turned into walls the excess is within 6 m.
+  It appears with rules that restrict the run-up onto banks strongly (2 counts
+  only the edge's own velocity; 3 counts the velocity head of the entering flow
+  only up to half the depth) (developer.md §110.29). In runs
   where a movable bed reaches a free-outflow boundary, erosion from the
   downstream end advances more easily than with 2 (with 2, the flow that crosses
   the sill of sediment deposited at the downstream end with the mean depth of
