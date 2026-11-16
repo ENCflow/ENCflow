@@ -675,8 +675,8 @@ With the default `f_advection_donor = 3` the wet/dry test of the parallel edge b
   pond then keeps oscillating). Junctions where a narrow tributary enters a
   main channel several cells wide, junctions that are not at a right angle and
   the separation zone downstream of a junction are not tested. Lateral Neumann
-  boundary faces are treated as with 0. The run time increases by 20–30 % (+24 %
-  for the 200 m Chichibu run). 1 is
+  boundary faces are treated as with 0. The run time increases by about 20 % (a
+  Chichibu run on the 200 m grid). 1 is
   optional and the default remains 0 (with 1 the results change; for example,
   flood waves through oblique channels become faster because the brake of wet
   banks is removed). The construction of $`R'`$, $`\omega`$ and $`\cos\theta`$ is

@@ -846,17 +846,15 @@ contains
   pure function lateral_join(ci, cj, kk, sgn, ue0) result(d)
     integer, intent(in) :: ci, cj, kk, sgn
     real, intent(in) :: ue0
-    real :: d, q, qs, qd, om(0:1), cs, wt(1:4)
+    real :: d, q, qs, qd, om(0:1), cs, wt(1:4), lf
     integer :: l, nl, oc(1:4), kl(1:4), kb, xi, xj, oi, oj
+    logical :: have_om
     kb = 9 - kk                                   ! この辺の流れの上流側の、線上の隣の 8 近傍番号
     if (ue0 < 0.0) kb = kk
-    om(0) = join_share(ci, cj, kb)
-    om(1) = join_share(ci + din(kk), cj + djn(kk), kb)
-    if (ue0 >= 0.0) then                          ! 下流側のセルへ入る分には、上流側のセルの度合いも掛ける
-      om(1) = om(1) * om(0)
-    else
-      om(0) = om(0) * om(1)
-    end if
+    ! ω_X(join_share。セルの 8 リンクを 2 回読む)は、ω_o < 1 のリンクが初めて出たときに数える。ω_o = 1 の
+    ! リンクの項は ω_X によらず 0 なので、それまでは 1 を置いておく(結果は同じ。§110.28)
+    have_om = .false.
+    om(:) = 1.0
     call lateral_links(kk, sgn, nl, oc, kl, wt)
     qs = 0.0
     qd = 0.0
@@ -871,7 +869,18 @@ contains
       if (.not. cell_ok(oi, oj)) cycle
       cs = 0.0                                    ! cos θ_l(直交するリンクは 0)
       if (l >= 3) cs = abs(geo%n8x(kk) * geo%n8x(kl(l)) + geo%n8y(kk) * geo%n8y(kl(l)))
-      qd = qd + q * om(oc(l)) * (1.0 - line_flow(oi, oj, kb)) * (cs - 1.0) * ue0
+      lf = line_flow(oi, oj, kb)
+      if (lf < 1.0 .and. .not. have_om) then
+        om(0) = join_share(ci, cj, kb)
+        om(1) = join_share(ci + din(kk), cj + djn(kk), kb)
+        if (ue0 >= 0.0) then                      ! 下流側のセルへ入る分には、上流側のセルの度合いも掛ける
+          om(1) = om(1) * om(0)
+        else
+          om(0) = om(0) * om(1)
+        end if
+        have_om = .true.
+      end if
+      qd = qd + q * om(oc(l)) * (1.0 - lf) * (cs - 1.0) * ue0
     end do
     d = 0.0
     if (qs > 0.0) d = qd / qs
@@ -911,10 +920,21 @@ contains
     call mirror_cell(ci, cj, mi, mj)
     qk = max(0.0, -qlk(mi, mj, kk))
     qmax = 0.0
+    w = 0.0
+    if (qk <= 0.0) then
+      ! 線の上流の隣からの流入がない: ε × 最大 が正になるリンクが 1 本でもあれば 0(8 本を読み切らない。
+      ! 同じ値。§110.28)。流入が全くなければ 0。ε × 最大 が 0 にアンダーフローするほど小さいときだけ、
+      ! 下の式と同じく 1
+      do l = 1, 8
+        qmax = max(qmax, -qlk(mi, mj, l))
+        if (opt%p_adv_donor_eps * qmax > 0.0) return
+      end do
+      if (qmax > 0.0) w = 1.0
+      return
+    end if
     do l = 1, 8
       qmax = max(qmax, -qlk(mi, mj, l))
     end do
-    w = 0.0
     if (qmax > 0.0) then
       qe = opt%p_adv_donor_eps * qmax
       w = 1.0
