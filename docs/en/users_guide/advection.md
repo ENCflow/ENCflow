@@ -836,7 +836,20 @@ listed in the [shallow water chapter](swflow.md).
   ([test/bankcap](../../../test/bankcap/en/README.md)).
   Limits of 3: how much the water surface rises at the outer bank of a bend
   cannot be resolved by a one-cell-wide channel; what is satisfied is only that
-  the level in the pocket does not exceed the energy head upstream. In runs
+  the level in the pocket does not exceed the energy head upstream. In a steep
+  channel, where a supercritical flow (a Froude number well above 1) meets a
+  high cell head-on, for example at a bend just below a drop, 3 lets water run
+  up by its velocity head onto a cell several metres above the water level; the
+  edge then opens and closes, and the discharge nearby can oscillate with a
+  period of 1–2 minutes (the "speed of the incoming flow" is taken as the
+  discharge divided by the depth of the sending cell, so in a supercritical flow
+  a slight change in depth changes the velocity head greatly. In a run of
+  Chichibu on the 100 m grid with a hillslope roughness of 0.15, where a flow
+  with a Froude number of 2.2 meets a hillslope cell 7.9 m above the water
+  level, the discharge at a transect in the pool just downstream oscillates by
+  ±300–600 m³/s; it does not appear in a run with a hillslope roughness of
+  0.05). If the discharge oscillates in terrain with steep channels and large
+  velocities, use 2. In runs
   where a movable bed reaches a free-outflow boundary, erosion from the
   downstream end advances more easily than with 2 (with 2, the flow that crosses
   the sill of sediment deposited at the downstream end with the mean depth of
