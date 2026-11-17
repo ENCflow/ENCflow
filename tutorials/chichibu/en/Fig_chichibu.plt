@@ -157,8 +157,8 @@ set terminal pngcairo size 760,440 font ",11"
 set grid
 set xlabel "time (min)"
 set ylabel "discharge (m^3/s)"
-# 測線 4 を含むハイドログラフの縦軸の上限は 9000 m3/s にそろえる(補足の図と同じ。4 近傍の図を除く)
-set yrange [-1000:9000]
+# 測線 4 を含むハイドログラフの縦軸の上限は 8000 m3/s にそろえる(50 m 格子を含む補足の図は 9000。4 近傍の図を除く)
+set yrange [-1000:8000]
 set ytics 1000
 
 # ---- Step 3: 4 本の測線(上流→下流の流量の成長) ----
