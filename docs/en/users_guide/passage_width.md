@@ -549,7 +549,7 @@ The master tables of defaults and their basis are on the linked pages.
 | f_bank_opening | 1 | static reassignment of openings blocked by levee walls | [channel models page](channel_models.md) §1 |
 | f_br_diag | 0 | linkage of the diagonal openings at both ends of a breach | [channel models page](channel_models.md) §4 |
 | fn_width | -- | subgrid channel width (conveyance cap and storage area fraction) | [channel models page](channel_models.md) §2 |
-| f_dry_head_cap | 3 | caps the depth on edges towards high ground by the energy head (treats a bank above the water level like a wall). 1 caps toward a dry bank only (the default until 2026-11-13); 2 applies the same cap to a thinly wet bank as well, as long as its bed is above the water level of the sender (the default until 2026-11-16); 3 caps climbing edges, whether the receiver is dry or wet, counting also the velocity head of the entering flow | [advection](advection.md) §5 |
+| f_dry_head_cap | 3 | caps the depth on edges towards high ground by the energy head (treats a bank above the water level like a wall). 1 caps toward a dry bank only (the default until 2026-11-13); 2 applies the same cap to a thinly wet bank as well, as long as its bed is above the water level of the sender (the default until 2026-11-16); 3 caps climbing edges, whether the receiver is dry or wet, counting also the velocity head of the entering flow | [cap on the edge depth](dry_head_cap.md) |
 | fluv_diagratio | 2/(2+√2) | diagonal split of bedload (keep it equal to `p_diagratio`) | [sediment and geomorphology](geomorph.md) |
 
 <a id="verification"></a>

@@ -5,7 +5,7 @@
 [日本語](../README.md)
 
 A check of the energy-head cap on the edge depth (`f_dry_head_cap` of `&list_enc`;
-[Advection schemes](../../../docs/en/users_guide/advection.md) §5; developer.md §68.16 and §108).
+[The cap on the edge depth toward higher ground](../../../docs/en/users_guide/dry_head_cap.md); developer.md §68.16 and §108).
 `f_dry_head_cap = 2` applies the cap also when the receiving cell is wet, as long as its bed is
 above the water level of the sending cell. It is checked with a flowing incised channel and a
 thinly wet bank. A further configuration makes the channel water level cross the height of the bank
@@ -189,7 +189,7 @@ make
   velocity and to the time step, so it widens where the flow toward the bank is fast or the time
   step is large (several tens of centimetres in deep channels on real terrain, and more than 1 m in
   one case with a narrow channel given by its width;
-  [the advection page](../../../docs/en/users_guide/advection.md) §5; the amount that goes over never
+  §5.2 of [The cap on the edge depth toward higher ground](../../../docs/en/users_guide/dry_head_cap.md); the amount that goes over never
   exceeds that of 1).
 - In configuration 8 (3), without a transition at the threshold, the second difference of the
   step-by-step discharge falls from 0.69 m³/s in configuration 5 to 0.002 m³/s. The value of the cap
@@ -202,6 +202,7 @@ make
 
 ## Related documents
 
+- [docs/en/users_guide/dry_head_cap.md](../../../docs/en/users_guide/dry_head_cap.md) — the rule of the cap on the edge depth (`f_dry_head_cap`), the differences between its options and its limits
 - [docs/en/users_guide/advection.md](../../../docs/en/users_guide/advection.md) §5 — switches around the advection term
 - [docs/en/users_guide/swflow.md](../../../docs/en/users_guide/swflow.md) — parameter list of `&list_enc`
 - developer.md §68.16 (cap toward dry receivers), §108 (extension to wet receivers), §110.24 (cap 3 on climbing edges), §50.9 (how it was found with the example bridge_wood_jam)

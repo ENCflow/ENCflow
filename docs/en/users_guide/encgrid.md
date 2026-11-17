@@ -120,7 +120,8 @@ q_k = u_{n,k}\,h_{e,k}
 
 $`h_{e,k}`$ is the edge depth: the mean of the two cells, capped by the
 upwind depth (`f_hcap_upwind`) and by the energy head towards high ground
-(`f_dry_head_cap`); the rules are in [Advection schemes](advection.md) §5.
+(`f_dry_head_cap`); the rules are in [Advection schemes](advection.md) §5 and
+in [The cap on the edge depth toward higher ground](dry_head_cap.md).
 The upwind side is decided by the direction of the new velocity of the step
 (the denominator of the semi-implicit friction term in §5 is at least 1 and
 friction does not change the direction, so the direction is fixed by the sign
@@ -290,7 +291,7 @@ in the velocity head $`v_h`$, the flow entering the sending cell, and keeps
 the harmonic mean of the depths on both sides as a floor on submerged steps;
 1 and 2 cap, by the velocity head $`u_n^2/2g`$ of the edge itself, edges
 towards a dry cell (2 also edges towards a wet cell whose bed is above the
-water level of the sender); [Advection schemes](advection.md) §5), and an edge whose
+water level of the sender); [The cap on the edge depth toward higher ground](dry_head_cap.md)), and an edge whose
 sender is completely dry gets $`u_n = q = 0`$. When the outflow of one step
 would use up the water of the cell (`f_exflux_reduction = 1`, default), the
 flux of that edge is first scaled by $`(h_c - d_d)/\Delta h_c`$, edge by

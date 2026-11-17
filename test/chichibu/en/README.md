@@ -74,7 +74,8 @@ of the collection from the hillslopes.
   larger and 0, 1, 5 and 11 minutes earlier (the brake on the main channel, caused by the slow
   velocity of the thin film on rain-wetted banks being used as the velocity of the water entering
   the channel from the side, is removed; [Advection schemes](../../../docs/en/users_guide/advection.md)
-  §4.4 and §5, [test/wetbank](../../wetbank/en/README.md), developer.md §110.31 and §110.32, in
+  §4.4, [The cap on the edge depth toward higher ground](../../../docs/en/users_guide/dry_head_cap.md),
+  [test/wetbank](../../wetbank/en/README.md), developer.md §110.31 and §110.32, in
   Japanese). The values before are those after the default of the upwind value on the edge just after
   a bend became f_advection_bend = 1 on 2026-11-15; compared with the values before that (default 0;
   1159 @ 0.87 h, 2862 @ 1.00 h, 4299 @ 1.63 h and 5315 m³/s @ 3.33 h at transects 1–4), the peaks

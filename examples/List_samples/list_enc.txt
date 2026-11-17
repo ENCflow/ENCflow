@@ -120,7 +120,7 @@
                             !   頭打ち(河道の水が岸へあふれ始める時刻と量が
                             !   時間刻みに依らない。
                             !   浸かった段は両側の水深の調和平均が下限。
-                            !   test/bankspill、users_guide/advection.md §5)
+                            !   test/bankspill、users_guide/dry_head_cap.md)
                             !   = 既定)。2026-11-13 までの既定は 1
   !f_opening_dynamic = 3    ! 塞がれた開口の動的振り替え(0: なし,
                             !   1: 河道セル間のエッジのみ(fn_rw がなければ

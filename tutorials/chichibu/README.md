@@ -665,8 +665,8 @@ ENC 格子の特性を扱います。
    動くことは、実際の川でも起きますが、切り替わる流量と速さ、揺れの大きさは、数セル(格子幅 50 m)の
    区間の貯留と、移流項のセル境界の値の取り方で決まるものです。池の出口の切り替わりで流量が揺れることは、
    既定の規則の限界として、ユーザーガイドの[移流項のスキーム](../../docs/users_guide/advection.md) §4.4 の
-   `f_advection_lateral` の項に書いてあります。同じ章の選択肢(`f_advection_lateral`・`f_advection_bend`、
-   §5 の `f_dry_head_cap`)を変えると、揺れの出る時刻と大きさが変わります。
+   `f_advection_lateral` の項に書いてあります。同じ章の選択肢(`f_advection_lateral`・`f_advection_bend`)や、
+   エッジ水深の頭打ち(`f_dry_head_cap`。[解説](../../docs/users_guide/dry_head_cap.md))を変えると、揺れの出る時刻と大きさが変わります。
 
 4. 計測位置の選び方でも軽減できます。水深数 m の平坦区間(池)に
    置いた測線は池の水面の揺れを直接拾うので、**縦断勾配のある通常の

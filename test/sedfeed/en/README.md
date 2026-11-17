@@ -31,8 +31,8 @@ the capacity feed becomes 0.083 m; the shape of the downstream end, which is
 not the subject of the test, then decides the reach where the balance of the
 feed is examined). In runs where a movable bed reaches a free-outflow
 boundary, make the last few columns at the downstream end a non-erodible bed
-in the same way (the `f_dry_head_cap` item in §5 of
-[Advection schemes](../../../docs/en/users_guide/advection.md)).
+in the same way (§4 of
+[The cap on the edge depth toward higher ground](../../../docs/en/users_guide/dry_head_cap.md)).
 
 | Configuration | Settings | Role |
 |---|---|---|

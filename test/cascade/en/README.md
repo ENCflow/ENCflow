@@ -11,7 +11,8 @@ $`z + h + V^2/2g`$, should not exceed the water level in the cell where the disc
 increase along the flow). The test looks at how far the "bed elevation plus the velocity head of the maximum
 velocity over the run" in each cell exceeds the water level in the cell where the discharge is given. Its
 subjects are the cap on the edge depth of the continuity equation (`f_dry_head_cap` in `&list_enc`) and the
-treatment of water entering through side faces (`f_advection_lateral`) (§4.4 and §5 of
+treatment of water entering through side faces (`f_advection_lateral`)
+([The cap on the edge depth toward higher ground](../../../docs/en/users_guide/dry_head_cap.md), §4.4 of
 [Advection schemes](../../../docs/en/users_guide/advection.md), developer.md §110.29 and §110.30).
 
 **With `f_dry_head_cap = 3` (the default) the excess is within 5 m, about the same as on a terrain whose banks are
@@ -128,7 +129,8 @@ make
 - The terrain is part of the 50 m grid data of [test/chichibu](../../chichibu/en/README.md) (for the origin of
   the elevation data see [tutorials/chichibu](../../../tutorials/chichibu/en/README.md)).
 - The rule of the cap on the edge depth (`f_dry_head_cap`) and the treatment of side faces
-  (`f_advection_lateral`) are ENCflow's own (§4.4 and §5 of
+  (`f_advection_lateral`) are ENCflow's own
+  ([The cap on the edge depth toward higher ground](../../../docs/en/users_guide/dry_head_cap.md) and §4.4 of
   [Advection schemes](../../../docs/en/users_guide/advection.md) in the users guide). That the head of a
   steady flow with losses does not increase along the flow (Bernoulli's theorem and head loss) is standard
   open-channel hydraulics.

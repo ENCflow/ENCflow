@@ -23,6 +23,9 @@ How the upwind donor of the advection term is treated when it falls on a thin
 film on the bank of a one-cell-wide channel oblique to the grid
 (`f_advection_donor`) is explained with figures in
 [One-cell-wide channels and the upwind donors of the advection term](advection_donor.md).
+The rule and the limits of the cap on the edge depth toward ground above the
+water surface (`f_dry_head_cap`) are in
+[The cap on the edge depth toward higher ground](dry_head_cap.md).
 
 ## 1. Equations and the role of the advection term
 
@@ -695,7 +698,8 @@ With the default `f_advection_donor = 3` the wet/dry test of the parallel edge b
   more). The maximum velocity in the domain of the same run rises from 30 to
   37 m/s (the head of the flow does not exceed the head upstream; when 1 is
   combined with `f_dry_head_cap = 2` it becomes 48 m/s and does exceed it = a
-  limit of cap 2; see the `f_dry_head_cap` item in §5 and
+  limit of cap 2; see §5.3 of
+  [The cap on the edge depth toward higher ground](dry_head_cap.md) and
   [test/cascade](../../../test/cascade/en/README.md)).
   Compared with 0, flood waves through oblique channels become faster and larger
   (the peak at the downstream transect of the Chichibu basin is 5–15 % higher and
@@ -762,11 +766,12 @@ has the figures, tables and the list of derived cases).
   `f_advection_bend = 1` + `f_advection_lateral = 1` (the defaults). Roughness
   calibrated with scheme 1 needs recalibration. To reproduce cases calibrated
   with the defaults until 2026-11-16, `f_dry_head_cap = 2` and
-  `f_advection_lateral = 0`, set 2 and 0 explicitly (the `f_dry_head_cap` item
-  below and §4.4). To reproduce cases calibrated with the default until
+  `f_advection_lateral = 0`, set 2 and 0 explicitly (§6 of
+  [The cap on the edge depth toward higher ground](dry_head_cap.md) and
+  §4.4). To reproduce cases calibrated with the default until
   2026-11-15, `f_advection_bend = 0`, set 0 explicitly (§4.4). To
   reproduce cases calibrated with the default until 2026-11-13,
-  `f_dry_head_cap = 1`, set 1 explicitly (the `f_dry_head_cap` item below). To
+  `f_dry_head_cap = 1`, set 1 explicitly (§6 of the same page). To
   reproduce cases calibrated with the default before 2026-11-09,
   `f_advection_donor = 0`, set 0 explicitly
   ([One-cell-wide channels and the upwind donors of the advection term](advection_donor.md)).
@@ -794,141 +799,15 @@ listed in the [shallow water chapter](swflow.md).
 - `f_dry_head_cap`: the pressure term stops water from climbing onto
   ground above the water surface, but where the advection term wins, water
   can leak over at bore fronts and in incised channels. Capping the edge
-  depth toward high ground by the energy head prevents it. 1 caps
-  only while the receiving cell is dry. Once the cells of a bank or of the
-  land behind it are thinly wet (rain, the film left after the water has
-  receded), the cap is lifted, and channel water whose level is below the
-  bank can climb onto the wet bank (in a flowing incised channel, the bank
-  row with a 2 cm film rises to 7–15 cm;
-  [test/bankcap](../../../test/bankcap/en/README.md)). 2 (the default until 2026-11-16) applies the same cap
-  also when the receiver is wet, as long as its bed is above the water level
-  of the sender, and stops this (it is not applied to a submerged step, that
-  is, where the bed of the receiver is below the water level of the sender; in
-  runs with the debris-flow model `f_debris`, the surface of the flow = bed +
-  water depth + solid thickness is used in place of the water level of the
-  sender). While the water level of the sender is just below the bed of the
-  receiver, the cap is joined to "no cap" by a transition (with a slope such
-  that the water level does not overshoot the threshold in one step; without
-  it, when the water level sits at the height of the bed of the receiver, the
-  cap flips on and off every few steps. The width of the transition is
-  proportional to the normal velocity and to the time step, and within it a
-  small amount flows while the water level is still below the bed of the
-  receiver. The formula is in
-  [test/bankcap](../../../test/bankcap/en/README.md)).
-  In a deep, fast channel solved with a large time step the transition becomes
-  wide (on the 200 m grid of Chichibu with a time step of 6 s and a channel 7 m
-  deep, 0.2 m per 1 m/s of normal velocity; with a 50 m wide sub-grid channel
-  on the same grid and a time step of 4 s, 0.7 m). Once the inflow onto a higher
-  cell starts, the normal velocity rises and the transition widens, so the
-  water levels at which the inflow starts and stops differ, and the discharge
-  can change like a step within one or two minutes when it starts or stops.
-  Examples (both computed on the 200 m grid of the catchment of the
-  [chichibu tutorial](../../../tutorials/chichibu/en/README.md) with 2 combined with
-  `f_advection_lateral = 0`, the defaults until 2026-11-16): (1) the inflow onto the high cell on the outer
-  side of a channel bend starts with the channel level 0.2 m below the bed of the receiver and
-  continues for 18 minutes until it is 0.5 m below, and the discharge at a
-  transect 600 m upstream rises by 4 % in two minutes (time step 6 s; with a time step of 3 s it does
-  not start, and the peak at that transect is 4 % lower).
-  (2) With a 50 m wide sub-grid channel, water starts to enter a bank cell
-  while the channel level is still 1.1 m below the bed of the bank, and the
-  step in which the downstream discharge drops by a fifth in one minute comes
-  17 minutes earlier than in a run with a time step of 1 s (time step 4 s; the peaks agree
-  within 1 %).
-  These steps do not appear with the default 3.
-  The default 3 caps the edge depth on climbing edges (edges where the bed of the receiver is
-  above the bed of the sender), whether the receiver is dry or wet, by
-  $`h_e \le \max(w\,h_\mathrm{harm},\ \sigma + v_h,\ 0)`$. Here $`\sigma`$ is the water level
-  of the sender minus the bed of the receiver (the thickness of the water that
-  goes over), and $`v_h = \max(u_n^2/2g,\ v_a)`$ is the velocity head
-  ($`u_n`$ is the velocity of this edge; $`v_a`$ is the part of the flow
-  entering the sending cell along the same line: when its speed $`u_a`$, i.e. the
-  unit-width discharge of the next edge upstream divided by the depth of the
-  sender $`h_s`$, is subcritical ($`u_a^2 \le g h_s`$), it is the velocity head
-  $`u_a^2/2g`$, and when it is supercritical, it is the specific energy of the
-  critical flow of the same discharge minus the depth of the sender,
-  $`\tfrac{3}{2}h_c - h_s`$, where $`h_c = (u_a^2 h_s^2/g)^{1/3}`$ is the critical depth).
-  $`h_\mathrm{harm}`$ is the harmonic mean of the depths on both sides, and
-  $`w = \min(\max(\sigma/h_r, 0), 1)`$ ($`h_r`$ is the depth of the receiver). 1 and 2 take the
-  velocity head from the velocity of the edge itself, but the velocity of an
-  edge closed by the cap is reset to 0 every step, so whether the edge opens
-  depends on the time step, and water enters all at once at the moment it opens
-  (the steps of (1) and (2) above). 3 uses the velocity head of the entering
-  flow, which has a value even while the edge is closed, so water starts to
-  enter thinly when the energy head of the sender reaches the bed of the
-  receiver and increases continuously with the water level. There is no
-  transition. For a bank pocket directly ahead of the flow, the difference in
-  the water level at the onset of spilling between time steps of 6 s and 1.5 s
-  is 0.001 m against 0.14 m with 2, and the rise of the depth in the minute of
-  opening is 0.08 m against 0.5–0.9 m
-  ([test/bankspill](../../../test/bankspill/en/README.md)). The first term is a floor for
-  submerged steps (the harmonic mean when the water level of the receiver is not
-  above that of the sender; nearly the mean of both sides for a gentle step, and
-  close to 0 when the receiver holds only a thin film; without the floor a wave
-  travelling up a gentle slope becomes slower). In a flow parallel to the bank
-  there is no velocity head toward the bank, so, as with 2, water does not climb
-  onto a bank above the water level
-  ([test/bankcap](../../../test/bankcap/en/README.md)).
-  Limits of 3: how much the water surface rises at the outer bank of a bend
-  cannot be resolved by a one-cell-wide channel; what is satisfied is only that
-  the level in the pocket does not exceed the energy head upstream. Where a
-  supercritical flow (a Froude number above 1) meets a high cell head-on, for
-  example at a bend just below a drop, the entering flow is counted not by its
-  velocity head itself but by the specific energy of the critical flow of the
-  same discharge (which is determined by the discharge alone and is smaller
-  than the actual specific energy; the height to which a supercritical flow
-  runs up a bank directly ahead is counted on the low side). The velocity head
-  is not counted as it is because the "speed of the entering flow" is taken as
-  the discharge divided by the depth of the sender. For the same discharge, the
-  gradient of the specific energy $`h + q^2/2gh^2`$ with respect to depth is
-  $`1 - Fr^2`$, which is negative in a supercritical flow, so a slight change in
-  depth changes the velocity head greatly in the opposite direction. If it is
-  counted as it is, where a flow that has fallen over a drop meets a hillslope
-  cell 8 m above the water level, the edge opens and closes and the discharge
-  in the pool just downstream oscillates
-  ([test/chutepool](../../../test/chutepool/en/README.md)). Even when it is
-  counted by the specific energy of the critical flow, where a supercritical
-  flow meets a bank, water climbs onto bank cells above the water level of the
-  channel (in a run on the 100 m grid of the Chichibu basin, there are 3 places
-  where about 1 m of water sits on a cell 3–9 m above the maximum water level of
-  the adjacent channel).
-  A limit of 2 (steep stepped channels): where a supercritical flow runs up
-  onto a low bank directly ahead or on the inside of a bend (a cell 10–15 m
-  above the bed) and returns to the channel, the head of the flow can exceed
-  the water level upstream (the velocity becomes too large). In a run on a
-  reach cut out of the 50 m grid of Chichibu, where the bed descends from 354 m
-  to 268 m, with a discharge of up to 8,000 m³/s given at the upstream end, with
-  2 and dry banks the bed elevation plus the velocity head exceeds the water
-  level at the upstream end by 45 m (maximum velocity 49 m/s). When the banks
-  are wet from rain, the brake of the water film under
-  `f_advection_lateral = 0` acts and there is no excess (24 m/s), but
-  `f_advection_lateral = 1` does not count the water film, so the head
-  exceeds it by 22 m even with rain (44 m/s; §4.4). With 3 the excess is within 5 m whether the
-  banks are dry or wet and whatever `f_advection_lateral` is, about the same as
-  on a terrain where the bank cells are turned into walls (6 m)
-  ([test/cascade](../../../test/cascade/en/README.md)). It appears when the
-  run-up onto banks is counted by the edge's own velocity alone (a strong
-  restriction), but why it does so has not been identified
-  (developer.md §110.29). In runs
-  where a movable bed reaches a free-outflow boundary, with 3 erosion from the
-  downstream end advances more easily than with 2 (with 2, the flow that crosses
-  the sill of sediment deposited at the downstream end with the mean depth of
-  both sides keeps the sill). Make the last few columns at the downstream end a
-  non-erodible bed (a distribution with soil thickness 0; `f_sdtype = 1` and
-  `fn_sd`; [test/sedfeed](../../../test/sedfeed/en/README.md)).
-  Compared with 2, the results with 3 change; for example, the downstream peak
-  falls by the amount that the step at the onset of spilling had added. To
-  reproduce cases computed or calibrated with versions until 2026-11-16, set 2
-  explicitly (together with `f_advection_lateral = 0`; §4.4).
-  1, 2 and 3 are all ENCflow's own rules built on the Bernoulli relation "water does not
-  climb onto ground above its energy head" ($`\sigma`$ of 3 is the same quantity as
-  the flow depth between cells taken as "the higher water level minus the higher
-  bed level" in flood inundation models[^bates10]; taking the velocity head from
-  the entering flow, its limit, and the harmonic-mean floor are ENCflow's own).
-  The default was 1 until 2026-11-13. In rain-wetted steep valleys (rainfall
-  runoff on a real DEM) and at run-up fronts the results differ between 1 and 2,
-  so set 1 explicitly to reproduce cases computed or calibrated with the
-  versions up to then (the differences in the Chichibu regression case are in
-  [test/chichibu](../../../test/chichibu/en/README.md)).
+  depth toward high ground by the energy head prevents it. The default 3 caps
+  climbing edges (edges where the bed of the receiver is above the bed of the
+  sender), whether the receiver is dry or wet, counting also the velocity head
+  of the flow entering the sending cell (the time and amount at which channel
+  water starts to spill onto a bank do not depend on the time step). 1 (the
+  default until 2026-11-13) and 2 (the default until 2026-11-16) are for
+  reproducing earlier results. The formula of the rule, the differences
+  between the options and the limits are in
+  [The cap on the edge depth toward higher ground](dry_head_cap.md).
 - `f_hcap_upwind = 2`: with schemes 2 and 3 the edge depth of the
   continuity equation, $`h_e = (h_c + h_n)/2`$, is small at the bore front and
   water can pile up in the one cell behind it (a spike). Using the upwind
@@ -1079,5 +958,4 @@ verification in developer.md §78). Groundwater transport is not covered
 [^vanleer79]: van Leer, B. (1979): Towards the ultimate conservative difference scheme V. A second-order sequel to Godunov's method. *J. Comput. Phys.*, 32, 101–136. (MUSCL and the limiter)
 [^sweby84]: Sweby, P. K. (1984): High resolution schemes using flux limiters for hyperbolic conservation laws. *SIAM J. Numer. Anal.*, 21, 995–1011. (TVD region)
 [^stoker57]: Stoker, J. J. (1957): *Water Waves*. Interscience, New York. (analytical solution of the wet-bed dam break)
-[^bates10]: Bates, P. D., Horritt, M. S. and Fewtrell, T. J. (2010): A simple inertial formulation of the shallow water equations for efficient two-dimensional flood inundation modelling. *J. Hydrol.*, 387, 33–45. (the flow depth between cells taken as the higher water level minus the higher bed level; the original has not been checked)
 [^taylor44]: Taylor, E. H. (1944): Flow characteristics at rectangular open-channel junctions. *Trans. ASCE*, 109, 893–902. (the treatment that applies the momentum equation to a junction and takes the water entering from the side as carrying no momentum in the direction of the main channel; the original has not been checked; the bibliographic data follow the ASCE Library record and citing papers)

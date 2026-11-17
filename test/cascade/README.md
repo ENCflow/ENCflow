@@ -7,8 +7,8 @@
 $`z + h + V^2/2g`$ は、流量を与えるセルの水位を超えないはずです(エネルギーは、流れに沿って増えない)。
 この検定は、各セルの「河床 + 期間最大流速の速度水頭」が、流量を与えるセルの水位をどれだけ超えるかを見ます。
 連続式のエッジ水深の頭打ち(`&list_enc` の `f_dry_head_cap`)と、側方面で横から入る水の扱い
-(`f_advection_lateral`)が対象です([移流項のスキーム](../../docs/users_guide/advection.md) §4.4・§5、
-developer.md §110.29・§110.30)。
+(`f_advection_lateral`)が対象です([高い地盤へ登るエッジ水深の頭打ち](../../docs/users_guide/dry_head_cap.md)、
+[移流項のスキーム](../../docs/users_guide/advection.md) §4.4、developer.md §110.29・§110.30)。
 
 **`f_dry_head_cap = 3`(既定)は、超える分が 5 m 以内で、岸を壁にした地形と同じ程度です。2(2026-11-16 までの
 既定)は、岸が乾いていると 45 m 超えます(2 の限界として記録)。**
@@ -108,5 +108,6 @@ make
 - 地形は [test/chichibu](../chichibu/README.md) の 50 m 格子のデータの一部です(標高データの由来は
   [tutorials/chichibu](../../tutorials/chichibu/README.md))。
 - エッジ水深の頭打ちの規則(`f_dry_head_cap`)と、側方面の扱い(`f_advection_lateral`)は ENCflow 独自です
-  (利用者ガイドの[移流項のスキーム](../../docs/users_guide/advection.md) §4.4・§5)。定常の流れで、損失のある
+  (利用者ガイドの[高い地盤へ登るエッジ水深の頭打ち](../../docs/users_guide/dry_head_cap.md)、
+  [移流項のスキーム](../../docs/users_guide/advection.md) §4.4)。定常の流れで、損失のある
   流れの水頭が流れに沿って増えないこと(Bernoulli の定理と損失水頭)は、開水路の水理の標準的な内容です。

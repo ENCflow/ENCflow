@@ -26914,3 +26914,28 @@ test/wetbank の 3 構成(0、3 と側方面 0、既定)の棒に替えた。adv
 dt = 0.5 s、test/bendloss の stair3 の派生実験。ほかの examples は、別ブランチの一括の回し直しに合わせる(§110.32)。
 作業用の計算の置き場所は、スクラッチ(regI/。donor・chk・d50・d50b・bwj・wsame)で、リポジトリには入れていない。
 3 つの検査(params_index・consistency・i18n audit)は、各コミットの前に通した。
+
+### 110.34 f_dry_head_cap の解説を、利用者ガイドの別ページに分ける(2026-11-17。利用者の提案。内容は変えていない)
+
+利用者の提案「docs/users_guide/advection.md で、f_dry_head_cap の説明が重たいので、f_opening_dynamic の様に
+別ファイルにしませんか」による。f_opening_dynamic(passage_width.md)・f_advection_donor(advection_donor.md)と
+同じ形の解説ページにした。
+
+- 新しいページ: docs/users_guide/dry_head_cap.md「高い地盤へ登るエッジ水深の頭打ち(f_dry_head_cap)」と、英語ミラー
+  docs/en/users_guide/dry_head_cap.md。advection.md §5 の「移流項と組み合わせて効く周辺のスイッチ」の
+  f_dry_head_cap の項(1 つの箇条書きで、日 73 行・英 138 行)を移して、節に分けた: 要点、1 何を防ぐ規則か、
+  2 選択肢(0〜3 の表)、3 既定の 3 の式と考え方、4 3 の限界、5 1 と 2(以前の既定。5.2 に境目のつなぎと
+  あふれ始めの段の例、5.3 に急な段々の河道での 2 の限界)、6 以前の結果を再現するには、7 検証ケース。
+- 内容と数値は変えていない。移した文の数値・リンク・数式が、新しいページに全てあることを機械的に照合した
+  (増えたのは、節の番号・既定だった期間・developer.md の節の参照だけ)。足したのは、選択肢の表(swflow.md の
+  パラメータ表と同じ内容)、再現の表、検定の 1 行ずつの説明。Bates et al. (2010) の脚注は、advection.md では
+  引かなくなったので新しいページへ移した(「原文は未照合」の注記もそのまま)。
+- advection.md §5 には、8 行の要約と新しいページへのリンクを残した(f_opening_dynamic の項と同じ形)。
+  冒頭の案内と、§4.4・§5 からの参照も新しいページへ向けた。
+- 参照の付け替え(日英): encgrid.md・passage_width.md・swflow.md(パラメータ表・再現の表・使い方の要点)、
+  教材 chichibu の補足、検定の README(bankcap・bankspill・cascade・chutepool・sedfeed・chichibu)、例題
+  bridge_wood_jam、設定例 list_enc.txt のコメント。利用者ガイドの目次(users_guide.md。浅水流計算の解説
+  10 → 11 件)と tutorial.md の詳説ページの表に足した。
+- この文書の §108・§110.x の中の「advection.md §5 の f_dry_head_cap の項」という書き方は、その時点の場所の記録
+  なので直していない。今の場所は dry_head_cap.md。
+- 3 つの検査(params_index・consistency・i18n audit --links)は通る。訳は 16 組を記録した(method assistant)。

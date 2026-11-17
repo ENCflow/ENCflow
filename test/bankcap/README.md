@@ -3,7 +3,7 @@
 [English](en/README.md)
 
 エッジ水深のエネルギー頭による頭打ち(`&list_enc` の `f_dry_head_cap`。
-[移流項のスキーム](../../docs/users_guide/advection.md) §5、developer.md §68.16・§108)の検定です。
+[高い地盤へ登るエッジ水深の頭打ち](../../docs/users_guide/dry_head_cap.md)、developer.md §68.16・§108)の検定です。
 `f_dry_head_cap = 2` は、受け手のセルが濡れていても、その地盤が送り手の水位より高ければ頭打ちを
 掛けます。流れている掘込河道と、薄く濡れた河岸で確かめます。河道の水位に河岸の高さを横切らせて、
 頭打ちの境目で流量が行き来しないことも確かめます(構成 5)。`f_dry_head_cap = 3`(登る辺を、送り手の
@@ -155,7 +155,7 @@ make
   この配置では幅が 2 cm ほどです(`f_advection_lateral = 0` での計測で、河岸の列の水深が 1 cm 増える時刻の
   「河岸の地盤 − 河道の水位」が、つなぎなしで 0.04 m、つなぎを入れて 0.06 m)。幅は法線流速と時間刻みに比例するので、河岸へ向かう流れが速い所や
   時間刻みが大きい計算では広がります(実地形の深い河道では数十 cm、幅を与えた狭い河道では 1 m を超えた例が
-  あります。[移流項の解説](../../docs/users_guide/advection.md) §5。載る量は 1 の値を超えません)。
+  あります。[エッジ水深の頭打ちの解説](../../docs/users_guide/dry_head_cap.md) §5.2。載る量は 1 の値を超えません)。
 - 構成 8(3)は、境目のつなぎを持たずに、毎ステップの流量の 2 階差分が構成 5 の 0.69 m³/s から
   0.002 m³/s になります。頭打ちの値が、送り手の水位が河岸の地盤に届いた所で 0 から連続に立ち上がる
   ためです。
@@ -166,6 +166,7 @@ make
 
 ## 関連文書
 
+- [docs/users_guide/dry_head_cap.md](../../docs/users_guide/dry_head_cap.md) — エッジ水深の頭打ち(`f_dry_head_cap`)の規則・選択肢の違い・限界
 - [docs/users_guide/advection.md](../../docs/users_guide/advection.md) §5 — 移流項と組み合わせて効く周辺のスイッチ
 - [docs/users_guide/swflow.md](../../docs/users_guide/swflow.md) — `&list_enc` のパラメータ一覧
 - developer.md §68.16(乾いた受け手への頭打ち)、§108(濡れた受け手への拡張)、§110.24(登る辺の頭打ち 3)、§50.9(例題 bridge_wood_jam で見つけた経緯)

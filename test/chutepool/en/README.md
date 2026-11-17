@@ -8,7 +8,8 @@ This test looks at a place in a steep channel where a fast (supercritical) flow 
 turns and plunges into a deep pool. Directly ahead of the flow in the cell below the drop lies a hillslope cell
 higher than the water level. The test checks that the discharge at a transect in the pool matches the given
 discharge and does not oscillate. Its subject is the cap on the edge depth of the continuity equation
-(`f_dry_head_cap` in `&list_enc`; §5 of [Advection schemes](../../../docs/en/users_guide/advection.md),
+(`f_dry_head_cap` in `&list_enc`;
+[The cap on the edge depth toward higher ground](../../../docs/en/users_guide/dry_head_cap.md),
 developer.md §110.24, §110.26 and §110.30).
 
 `f_dry_head_cap = 3` counts water as able to climb a high cell ahead by the velocity head of the flow entering
@@ -111,6 +112,6 @@ make
 
 - The terrain is part of the data of [test/chichibu](../../chichibu/en/README.md) (100 m grid; for the origin of
   the elevation data see [tutorials/chichibu](../../../tutorials/chichibu/en/README.md)).
-- The rule of the cap on the edge depth (`f_dry_head_cap`) is ENCflow's own (§5 of
-  [Advection schemes](../../../docs/en/users_guide/advection.md) in the users guide). The relation between
+- The rule of the cap on the edge depth (`f_dry_head_cap`) is ENCflow's own
+  ([The cap on the edge depth toward higher ground](../../../docs/en/users_guide/dry_head_cap.md) in the users guide). The relation between
   specific energy and critical flow is standard open-channel hydraulics.

@@ -250,7 +250,7 @@ jam section; no simulation results are used). The dots are the simulation.
   bridge (4.18 m) and the peak bypass discharge (59 m³/s) are almost the same, and the flooded
   area is 17.8 ha (17.1 ha with the default). The default 3 caps water climbing onto a bank above
   the channel by the energy head on the channel side, whether the receiver is dry or wet, so the
-  strip does not appear ([Advection schemes](../../../docs/en/users_guide/advection.md) §5; verified in
+  strip does not appear ([The cap on the edge depth toward higher ground](../../../docs/en/users_guide/dry_head_cap.md); verified in
   [test/bankcap](../../../test/bankcap/en/README.md)).
 - **The inflow boundary** prescribes the discharge, and the backwater reaches the upstream end. The
   level at the upstream end is a result of the computation, and the results depend slightly on the

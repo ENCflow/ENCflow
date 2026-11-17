@@ -7,7 +7,7 @@ English mirror of test/bankspill/README.md
 This test examines what happens when the water level in a channel rises slowly and water starts to
 spill into a low bank cell adjoining the channel (a bank pocket). Its subject is the edge depth of the
 continuity equation and its cap (`f_dry_head_cap` in `&list_enc`;
-[Advection schemes](../../../docs/en/users_guide/advection.md) §5, developer.md §68.16, §108 and §110.24).
+[The cap on the edge depth toward higher ground](../../../docs/en/users_guide/dry_head_cap.md), developer.md §68.16, §108 and §110.24).
 
 In real-terrain computations (the 200 m grid of the Chichibu basin), with the cap `f_dry_head_cap = 2`
 the discharge downstream changes like a step at the moment channel water starts to spill onto a higher

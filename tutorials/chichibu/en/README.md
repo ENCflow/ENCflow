@@ -777,8 +777,9 @@ you notice them, consider them in this order.
    `f_advection_lateral` item in §4.4 of
    [Advection schemes](../../../docs/en/users_guide/advection.md) in the
    users guide. Changing the options of that chapter (`f_advection_lateral`,
-   `f_advection_bend`, and `f_dry_head_cap` in §5) changes when the wobbles
-   appear and how large they are.
+   `f_advection_bend`) or the cap on the edge depth (`f_dry_head_cap`;
+   [explanation](../../../docs/en/users_guide/dry_head_cap.md)) changes when
+   the wobbles appear and how large they are.
 
 4. The choice of measurement locations also mitigates it. A transect
    placed on a flat reach (pond) several meters deep picks up the

@@ -170,7 +170,7 @@
                             !   onto a bank do not depend on the time step;
                             !   submerged steps keep the harmonic mean of the
                             !   depths on both sides as a floor; test/bankspill,
-                            !   users_guide/advection.md section 5)
+                            !   users_guide/dry_head_cap.md)
                             !   = default).
                             !   The default was 1 until 2026-11-13
   !f_opening_dynamic = 3    ! dynamic reassignment of blocked openings
