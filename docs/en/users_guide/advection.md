@@ -473,7 +473,8 @@ With the default `f_advection_donor = 3` the wet/dry test of the parallel edge b
     not settle to a steady state under constant inflow and keeps oscillating
     with a range of 0.5–1.5 m (1 is steady). All three are checked by
     [test/brink](../../../test/brink/en/README.md). On the 50 m grid of
-    Chichibu (channel roughness 0.02), with 0 the flow in the gorge at the
+    Chichibu (channel roughness 0.02; computed in combination with
+    `f_advection_lateral = 0` and `f_dry_head_cap = 2`), with 0 the flow in the gorge at the
     outlet where a pond drains into it becomes 4 m deep and 22 m/s fast (the
     energy of the pond can drive only about 5 m depth and 16 m/s), and this
     alternates with the lateral-face braking by wet banks
@@ -487,14 +488,16 @@ With the default `f_advection_donor = 3` the wet/dry test of the parallel edge b
     0.4–1.4 m below that of the straight channel (the loss due to the bend),
     and the jump beyond it stands one to five cells upstream of that of the
     straight channel (test/brink). Only the inflow faces in the flow
-    direction change; the treatment of the lateral faces, in which slow flow
-    on a wet bank is counted as a brake on the main stream
-    ([the explanation page](advection_donor.md) §7), is unchanged, so where
-    the flow regime alternates a smaller dip and bump remain. When the reach
-    at the foot of a drop switches from shallow, fast flow to deep flow, the
-    discharge just downstream can also dip for one minute (at transect 2 of
-    the 50 m grid of Chichibu, −401 m³/s at 42 minutes on the rising limb;
-    with 0 the growth of the discharge merely slows at the same switch).
+    direction change; the treatment of the lateral faces is set by
+    `f_advection_lateral` (the item below). Dips and wobbles of the discharge
+    when the flow at a pond outlet or at the foot of a drop switches between
+    a shallow, fast state and a deep state remain with 1 (on the 50 m grid of
+    Chichibu computed in combination with `f_advection_lateral = 0` and
+    `f_dry_head_cap = 2`, a smaller dip and bump remain at transect 3, and a
+    one-minute dip of −401 m³/s appears at transect 2 at 42 minutes on the
+    rising limb, where with 0 the growth of the discharge merely slows at the
+    same switch; for the wobble that remains with the default combination, see
+    the limits in the `f_advection_lateral` item below).
     Inflow from sea cells is not counted in $`Q_\mathrm{in}`$, and the
     fraction of the inflow that does not come from sea cells is applied as a
     factor to the degree of pulling (a face cell fed only from the sea has
@@ -505,13 +508,9 @@ With the default `f_advection_donor = 3` the wet/dry test of the parallel edge b
     the flow turns next to a wall or a dry cell. In the Chichibu catchment
     (channel roughness 0.02; the settings of
     [the supplement of the tutorial](../../../tutorials/chichibu/en/README.md))
-    1 changes the peak at transect 3 by +4.1, +2.6 and +1.1 % on the 200, 100
-    and 50 m grids relative to 0, and the peak at transect 4 by +6.4 and
-    −0.6 % on the 200 and 100 m grids (of the +6.4 % at transect 4 on the
-    200 m grid, 3.9 points come from a shortcut across a bend downstream that
-    opens around the peak in the run with 1; it depends on the time step, and
-    between runs with the time step reduced from 6 s to 3 s the change is
-    +2.5 %; see the `f_dry_head_cap` item in §5). The depth of individual channel cells
+    1 changes the peak at transect 3 by +1.5 and +5.4 % on the 200 and 100 m
+    grids relative to 0, and the peak at transect 4 by +1.2 and −4.6 %
+    (transects 1 and 2: −0.6 to +2.8 %). The depth of individual channel cells
     can change by several metres, for example at the foot of a drop. The run
     time is two to three tenths longer than with 0 (+25 % on the 200 m grid
     of the same catchment).
@@ -818,18 +817,18 @@ listed in the [shallow water chapter](swflow.md).
   cell starts, the normal velocity rises and the transition widens, so the
   water levels at which the inflow starts and stops differ, and the discharge
   can change like a step within one or two minutes when it starts or stops.
-  Examples: (1) the inflow onto the high cell on the outer side of a channel
-  bend starts with the channel level 0.2 m below the bed of the receiver and
+  Examples (both computed on the 200 m grid of the catchment of the
+  [chichibu tutorial](../../../tutorials/chichibu/en/README.md) with 2 combined with
+  `f_advection_lateral = 0`, the defaults until 2026-11-16): (1) the inflow onto the high cell on the outer
+  side of a channel bend starts with the channel level 0.2 m below the bed of the receiver and
   continues for 18 minutes until it is 0.5 m below, and the discharge at a
-  transect 600 m upstream rises by 4 % in two minutes (200 m grid of Chichibu,
-  time step 6 s; with a time step of 3 s it does not start;
-  [One-cell-wide channels and the upwind donors of the advection term](advection_donor.md) §7).
+  transect 600 m upstream rises by 4 % in two minutes (time step 6 s; with a time step of 3 s it does
+  not start, and the peak at that transect is 4 % lower).
   (2) With a 50 m wide sub-grid channel, water starts to enter a bank cell
   while the channel level is still 1.1 m below the bed of the bank, and the
   step in which the downstream discharge drops by a fifth in one minute comes
-  17 minutes earlier than in a run with a time step of 1 s (the peaks agree
-  within 1 %; item 3 (b) of
-  [the supplement of the chichibu tutorial](../../../tutorials/chichibu/en/README.md#supplement-fine-oscillations-in-the-hydrograph)).
+  17 minutes earlier than in a run with a time step of 1 s (time step 4 s; the peaks agree
+  within 1 %).
   These steps do not appear with the default 3.
   The default 3 caps the edge depth on climbing edges (edges where the bed of the receiver is
   above the bed of the sender), whether the receiver is dry or wet, by
