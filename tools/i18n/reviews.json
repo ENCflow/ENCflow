@@ -3623,8 +3623,8 @@
     {
       "source": "test/chichibu/README.md",
       "target": "test/chichibu/en/README.md",
-      "source_sha256": "2012a5e9f62f626f856048c608f1a32fa58b8b9785ea5e02ba98822c5137c32a",
-      "target_sha256": "09104335258d8ecf5574914df5e887fde9aeed581f11948db274397fdf41b901",
+      "source_sha256": "504b5a4d9741cef5622032d15d24ffab39070172b9939b615d78acc3f9c5f72a",
+      "target_sha256": "5b780fc783346d9e83c6d5ced0cb1a03e0b3d71a3233e490083419fd46193fe0",
       "reviewer": "Claude (Claude Code session; full-text content and lexical review, no model execution)",
       "method": "assistant",
       "reviewed_on": "2026-11-17"
@@ -4307,20 +4307,20 @@
     {
       "source": "test/nhbreak/README.md",
       "target": "test/nhbreak/en/README.md",
-      "source_sha256": "1531a58cf2f2befedd3f62910303985c3d35423404e3d55b72b557208bb28ee0",
-      "target_sha256": "543f5e57680e149724509a022f901ae2665da7fa2ccad35508c00024398eeca1",
-      "reviewer": "Claude (Claude Code session; f_opening_dynamic default switch)",
+      "source_sha256": "85dc8ab75d7da40b52dcd6b138c73fd90ad31335d1f414e9b74713eda7aa9200",
+      "target_sha256": "4c8ba2d3fec205bc79e95cd313784321c14b658e60eef32676abd38e159d0503",
+      "reviewer": "Claude (Claude Code session; full-text content and lexical review, no model execution)",
       "method": "assistant",
-      "reviewed_on": "2026-10-31"
+      "reviewed_on": "2026-11-17"
     },
     {
       "source": "test/nhbreak/figs/runup.png",
       "target": "test/nhbreak/en/figs/runup.png",
-      "source_sha256": "aef39731d6050036ce8a2e6f785363e257225cc2d32b7fab0a45d146d6edadcd",
-      "target_sha256": "72624edac9fc74acfd1ed931668557f9354280653d0af5bebfcb1efdb68ba98e",
-      "reviewer": "Claude (Claude Code session; f_opening_dynamic default switch)",
+      "source_sha256": "ff5d674915d298ef290d3365052064d2f233d5ce9ebb93630b0eac8a9355192f",
+      "target_sha256": "65099c4320c32815f630f1cbb22c772159ea4784802dca0c76c3383ec6521d9d",
+      "reviewer": "Claude (Claude Code session; full-text content and lexical review, no model execution)",
       "method": "assistant",
-      "reviewed_on": "2026-10-31"
+      "reviewed_on": "2026-11-17"
     },
     {
       "source": "test/nhbreak/figs/runup_diag.png",
@@ -4361,20 +4361,20 @@
     {
       "source": "test/nhshelf/README.md",
       "target": "test/nhshelf/en/README.md",
-      "source_sha256": "74d5bfbfd06506b06688ac31c5c1806246435eab6e7dc8c5194978090bb65b52",
-      "target_sha256": "94e65d2ebc3719d71393dd8413debde260f1570d25e4b217cf65404ef0eed3da",
-      "reviewer": "Claude (Claude Code session; f_opening_dynamic default switch)",
+      "source_sha256": "edf4d418868c23cdfe321a05bad0adae83ccad7fd4938f9f443bcd4459f247aa",
+      "target_sha256": "886a23b9ec028e5e3fb00eeb92ec70cf804ce7f1763f9324282493f585e95c5b",
+      "reviewer": "Claude (Claude Code session; full-text content and lexical review, no model execution)",
       "method": "assistant",
-      "reviewed_on": "2026-10-31"
+      "reviewed_on": "2026-11-17"
     },
     {
       "source": "test/nhshelf/figs/fission.png",
       "target": "test/nhshelf/en/figs/fission.png",
-      "source_sha256": "1a5797351f693b455b2e0c9b8266c530651b4d88da1527a63adecdabf99ad10d",
-      "target_sha256": "b2e232013bf7a5257e9d7839623ef668bfa6a73bb7a96734041099f53b53ce4a",
-      "reviewer": "Claude (Claude Code session; f_opening_dynamic default switch)",
+      "source_sha256": "2f237755fac19721df705f674a6d2cba4b4115c98cc732738bd63d63da8b2903",
+      "target_sha256": "03ba915faa3ab74dc3b8eab5fff24a57fbca0a79c8e2807b1198189372558e34",
+      "reviewer": "Claude (Claude Code session; full-text content and lexical review, no model execution)",
       "method": "assistant",
-      "reviewed_on": "2026-10-31"
+      "reviewed_on": "2026-11-17"
     },
     {
       "source": "test/nhsolitary/README.md",
@@ -4523,11 +4523,11 @@
     {
       "source": "test/salt/figs/salt.png",
       "target": "test/salt/en/figs/salt.png",
-      "source_sha256": "bb0d6e638c6f2ff8159dabf02fee5facfd9c19ac5c29618f59aa7312d16d05ea",
-      "target_sha256": "2281800d87ba4e7035852171cc811af308705094e1fe7b497855bddcd3ad630d",
-      "reviewer": "Claude (Claude Code session; f_opening_dynamic default switch)",
+      "source_sha256": "aa3b2918453b58c4e9b5904cd2b1398ff023d5bbc3a2d4e75d86518e53b627c1",
+      "target_sha256": "924063cae5493f52630f835f830758a0c12973fcda3a5b43690b7d9c414c820d",
+      "reviewer": "Claude (Claude Code session; full-text content and lexical review, no model execution)",
       "method": "assistant",
-      "reviewed_on": "2026-10-31"
+      "reviewed_on": "2026-11-17"
     },
     {
       "source": "test/sedfeed/README.md",

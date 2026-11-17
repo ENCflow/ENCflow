@@ -119,7 +119,7 @@ python3 Fig.py    # figs/chichibu.png(引数 en で英語版を en/figs/ に)
 動的開口補正で縮まり(3 の 3773 → 4857 m³/s)、f_advection_donor = 1 で
 さらに 5656 m³/s(100 m)と 50 m 格子の値へ近づきました(いずれも当時の
 コード。1 は 2026-11-07 に廃止し、効果の大部分を含む 3 に置き換えた。
-現行コードの `param_dyn_s3_donor3.txt` では 5,648 m³/s。§102)。壁付き自然河岸
+2026-11-16 の既定(f_dry_head_cap = 3・f_advection_lateral = 1)の `param_dyn_s3_donor3.txt` では 6,075 m³/s、その前の既定では 5,648 m³/s。§102)。壁付き自然河岸
 (lev1)は 6 h 完走しますが Runge 12%・ex_flux 多発と荒く、自然河岸には
 壁なしの幅モードを使うのが推奨です(§68.25、§68.29)。
 

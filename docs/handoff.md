@@ -294,11 +294,10 @@ architecture.md。このメモは「現在進行中・未完了の項目」だ�
      steepwave の波の到達時刻 −0.8〜+0.1 %(以上は頭打ち 3 の側)、brink の合流部の池(jt1)が 0.04〜0.38 m 浅くなる
      (側方面 1 の側)。
      **残り(このブランチで続ける)**: (a) 教材 tutorials/chichibu(Step 1〜6・補足の 21 本)・tutorials/bmi、解説
-     advection.md・advection_donor.md の実例の数値、例題 bridge_wood_jam の回し直し(日英)。(b) Run.sh が回さない
-     構成を図・表に使う検定(test/nhbreak の静水圧・スイッチなし、test/nhshelf の V1・静水圧)の回し直しと、
-     test/chichibu の派生実験 param_dyn_s3_donor3.txt の値(README の「現行コードでは 5,648 m³/s」)、
-     test/wave_shore(リポジトリでは回していない)、test/wetbank の実行時間(README の「約 9 分」は見積もり)。
-     (c) ほかの examples は、別ブランチの一括の回し直しに合わせる。
+     advection.md・advection_donor.md の実例の数値、例題 bridge_wood_jam の回し直し(日英)。(b) test/wave_shore
+     (リポジトリでは回していない)、test/wetbank の実行時間(README の「約 9 分」は見積もり)。Run.sh が回さない
+     構成を図・表に使う検定(test/nhbreak・nhshelf・salt)と test/chichibu の派生実験の値は、2026-11-17 に
+     回し直して直した(§110.32 の末尾)。(c) ほかの examples は、別ブランチの一括の回し直しに合わせる。
      **次の検討の種**(この見直しのあと): 急な区間で、岸への乗り上げを強く絞ると水頭が上流の水位を超える仕組み
      (どの項が運動量を足しているか。test/cascade の c2 で再現する。2026-11-16 までの既定 2 の、乾いた岸での限界)。
      屈曲の直後の辺の風上の供給元が、尾根を越えた薄い水に切り替わるときの池の出口の流れの切り替わり
@@ -309,7 +308,8 @@ architecture.md。このメモは「現在進行中・未完了の項目」だ�
      (最終の地形を比べただけ。§110.32)。
      **気づいた図の古さ(この切り替えとは別)**: test/curvature の figs/profile.png は、今のコードの結果と違う
      (変更前の既定の結果で描いても同じ違い。流入端の助走と、円弧の区間の on − off の細かい振れ)。test/salt の
-     figs/salt.png の B の枠は、b17c5e918 から空(param_sea.txt の結果 result_sea を回さずに作り直されている)。
+     figs/salt.png の B の枠は、b17c5e918 から空だった(param_sea.txt の結果 result_sea を回さずに作り直されて
+     いた)ので、2026-11-17 に result_sea を回して作り直した。
      図を作り直すときは、Fig.py が Run.sh の回さない構成の結果を要る検定(bendloss・nhbreak・nhshelf・nhbottom・salt)に
      注意する(結果がないと、枠や曲線が欠けた図になる)。
      **作業用の写しで検定を回すときの注意**: 写しは追跡ファイルだけから作る(git archive)。cp -r だと、

@@ -148,7 +148,7 @@ opening correction (scheme 3: 3773 → 4857 m³/s), and with
 f_advection_donor = 1 it approached further, to 5656 m³/s (100 m), the value
 of the 50 m grid (both with the code of that time; option 1 was removed on
 2026-11-07 and replaced by 3, which contains most of its effect; with the
-current code `param_dyn_s3_donor3.txt` gives 5,648 m³/s; §102). The walled natural banks (lev1) complete the 6 h but are
+defaults of 2026-11-16 (f_dry_head_cap = 3, f_advection_lateral = 1) `param_dyn_s3_donor3.txt` gives 6,075 m³/s, against 5,648 m³/s with the defaults before; §102). The walled natural banks (lev1) complete the 6 h but are
 rough, with Runge 12% and frequent ex_flux; for natural banks the wall-less
 width mode is recommended (§68.25, §68.29).
 

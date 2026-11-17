@@ -26703,6 +26703,9 @@ README の値(日英)を新しい既定の結果に直した検定と、主な�
   一致(Log.txt と E9998・v9998、Z9998・Hs9998 が identical)。途中でコンテナが再起動したので、13 本目のあとから
   回し直した(結果は同じ手順)。np = 1・4 と -fcheck=all は、f_dry_head_cap = 3 と f_advection_lateral = 1 の実装の
   ときに確かめてある(§110.24・§110.25・§110.30)。既定の切り替えは MPI の経路を変えない。
+  コミット(88dbc5981・36f7523e9)のあとに、追加で `./Run_MPI.sh 4`(wave・wfcurrent・wfsed・brink・tjunction・
+  chutepool・bankspill・bankcap・cascade)と `./Run_MPI.sh 1`(wave・wfcurrent・wfsed・brink・chutepool・bankspill)も
+  回して、すべて合格。
 - 3 つの検査(tools/params_index/check.py、tools/consistency/check.py、tools/i18n/check.py audit
   --recorded-only --strict-recorded --links)が通る。
 - 検定を改めた 3 本は、変更前の既定のビルド(c0d02e386)でも確かめた: sedfeed は 8 項目とも合格、brink は合格
@@ -26711,3 +26714,23 @@ README の値(日英)を新しい既定の結果に直した検定と、主な�
 **まだ回していないもの**(handoff 00w): test/wave_shore(リポジトリでは回していない。§110.31 の作業用の写しでは合格)、
 教材 tutorials/chichibu(Step 1〜6・補足の 21 本)・tutorials/bmi、解説 advection.md・advection_donor.md の実例、
 例題 bridge_wood_jam の回し直し。ほかの examples は、別ブランチの一括の回し直しに合わせる。
+
+**Run.sh が回さない構成を図・表に使う検定(2026-11-17 に回し直した)**
+
+- test/nhbreak(3 つの設定は f_dry_head_cap = 1 を明示。変わるのは側方面の分だけ): 静水圧(param_h.txt)0.404・
+  param.txt 0.568 は変わらず、スイッチなし(param.txt の f_nh_breaking = 0)は README の 0.694 → 0.719。
+  f_advection_lateral = 0 を明示しても 0.719 なので、スイッチなしの変化は、2026-10-31 の記録のあとの既定の変更
+  (f_advection_donor = 3・f_advection_bend = 1 など)の分で、今回の切り替えの分ではない(切り分けていない)。
+  図(3 本の曲線)を作り直した。
+- test/nhshelf: V1(param_v1.txt)の先頭の高さ η/H₂ が 0.175 → 0.174、NH(0.172)と静水圧(0.114)は同じ。
+  図を作り直した。
+- test/salt: 図の B の枠(海水浸入の静的平衡)が b17c5e918 から空だった(param_sea.txt の結果 result_sea を回さずに
+  図を作り直していた)。result_sea を回して図を作り直した(Hg は全陸セルで 0.5000 m)。
+- test/chichibu の派生実験 param_dyn_s3_donor3.txt(元の河道マスク・f_opening_dynamic = 1): 測線 4 のピークが
+  5,648 → 6,075 m³/s @ 160 分。
+- 図を作り直すときの注意: Fig.py が、Run.sh の回さない構成の結果を要る検定(bendloss・nhbreak・nhshelf・nhbottom・
+  salt)は、その結果がないと、枠や曲線の欠けた図になる(エラーにはならない)。画素の差だけでは、図の配置の
+  数画素のずれ(描画環境の違い)と区別できないので、変更前の既定の結果で描いた図とも比べて、既定の切り替えで
+  変わった図だけを差し替えた(avalanche・volcano・bedslide・slide・splashslide・coastal_drain・wqbound・chichibu・
+  nhbreak・nhshelf・salt)。test/curvature の figs/profile.png は、今のコードの結果と違うが、変更前の既定の結果で
+  描いても同じ違いなので(この切り替えより前からの古さ)、差し替えていない(handoff)。
