@@ -126,7 +126,7 @@ o3l0 and E(3) of o3.
 
 ```bash
 make         # links to the executables
-./Run.sh     # runs the 54 cases and checks them (about 9 minutes with one thread)
+./Run.sh     # runs the 54 cases and checks them (about 11 minutes with one thread)
 ```
 
 Related: developer.md §102 (the formulation of f_advection_donor) and §110.25 (the formulation of

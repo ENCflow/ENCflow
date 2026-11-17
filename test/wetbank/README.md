@@ -107,7 +107,7 @@ h_n は太さ ω の矩形断面のマニングの等流水深です。E(0) = o0
 
 ```bash
 make         # 実行ファイルへのリンク
-./Run.sh     # 54 ケースを実行して判定(1 スレッドで約 9 分)
+./Run.sh     # 54 ケースを実行して判定(1 スレッドで約 11 分)
 ```
 
 関連: developer.md §102(f_advection_donor の定式)・§110.25(f_advection_lateral の定式)、

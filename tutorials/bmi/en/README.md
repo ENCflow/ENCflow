@@ -14,7 +14,7 @@ component.
 This tutorial aims at letting **people who are not Python users "just try
 it"**, running one very short script at a time. The subject is the same
 Chichibu catchment as the chichibu tutorial (200 m grid, 100 mm of rain in
-one hour with a peak of 200 mm/h). Each step's computation takes about 20--30 seconds on a 4-core PC.
+one hour with a peak of 200 mm/h). Each step's computation takes about 30 seconds on a 4-core PC.
 
 - **Step 0**: Preparation -- building the library and setting up Python (uv and others)
 - **Step 1**: Start and finish, nothing else (initialize / finalize)
@@ -238,12 +238,12 @@ python3 step2_time.py               # with B--D (venv / conda / OS packages)
   0:00:00.00   0.0%    0.0001   0.0%      0    0.1097    1.3650    0.0000
 after update():       t = 6 s
 after update_until(): t = 600 s
-  0:30:00.00   8.3%    0.0488  97.6%      0    0.3117    2.0856    8.0553
+  0:30:00.00   8.3%    0.0488  97.6%      0    0.3117    2.0789    8.0537
 t =    2400 s  (11.1%)
-  1:00:00.00  16.7%    0.0999   5.5%      0    0.5494    7.8262   15.7779
+  1:00:00.00  16.7%    0.0999   5.5%      0    0.6239    7.9464   17.5100
 t =    4200 s  (19.4%)
   ...
-  6:00:00.00 100.0%    0.0260   0.5%      0    0.3197    4.2170    6.5653
+  6:00:00.00 100.0%    0.0252   0.5%      0    0.3114    3.9401    6.3689
 t =   21600 s  (100.0%)
 main: program terminated normally
 finished
@@ -322,25 +322,25 @@ variables you can get:
 elevation: 92 .. 2449 m
 probe cell (i=147, j=104) -> h[46, 146],  z = 400.7 m
  time(s)   h_probe(m)   h_max(m)   wet cells
-    1800       0.471      1.365       17003
-    3600       1.236      7.826        9672
-    5400       4.192      7.237        3826
-    7200       2.945      7.364        2607
-    9000       2.153      8.638        2095
-   10800       1.740      9.067        1819
-   12600       1.483      8.239        1605
-   14400       1.302      6.929        1460
-   16200       1.160      5.792        1362
-   18000       1.056      4.888        1296
-   19800       0.970      4.219        1229
-   21600       0.899      3.700        1166
+    1800       0.471      1.365       17002
+    3600       1.425      7.946        9677
+    5400       3.954      7.769        3833
+    7200       2.747      7.668        2622
+    9000       2.061      9.149        2094
+   10800       1.687      8.919        1818
+   12600       1.446      7.618        1605
+   14400       1.277      6.228        1457
+   16200       1.146      5.254        1357
+   18000       1.045      4.501        1296
+   19800       0.964      3.942        1227
+   21600       0.895      3.504        1168
 ```
 (ENCflow's own lines every 30 minutes are omitted)
 
-During the rain (up to 3600 s) the number of wet cells reaches 17,003
+During the rain (up to 3600 s) the number of wet cells reaches 17,002
 (nearly every cell of the catchment); once the rain stops it drops quickly
 and the water gathers in the channels (about 1,170 cells). At the cell in
-the middle main stem the depth peaks after the rain stops (4.2 m at 5400 s
+the middle main stem the depth peaks after the rain stops (4.0 m at 5400 s
 is the largest in this half-hourly table) and then recedes slowly.
 
 - `model.get2d(name)` returns a **copy of a field** such as the depth as a
@@ -453,7 +453,7 @@ at the cell `(147, 104)` in the middle main stem. Every 5 minutes
 (`INTERVAL`) the computation pauses and the picture is refreshed. You can
 see the slopes get wet all at once during the one hour of rain, then the
 slopes drain and the water gathers in the channels after the rain stops,
-and the time series passes its peak (about 1.4 h) and recedes.
+and the time series passes its peak (about 1.25 h) and recedes.
 
 - `plt.ion()` (interactive mode) and `plt.pause()` are the Matplotlib
   idiom for "draw without stopping the script". With `--save` the script
@@ -461,7 +461,7 @@ and the time series passes its peak (about 1.4 h) and recedes.
   PNG (you can make a movie with e.g.
   `ffmpeg -i frames/frame_%04d.png step5.mp4`).
 - A finer display interval makes the motion smoother, but the drawing then
-  takes longer than the computing. The computation alone takes about 20 s
+  takes longer than the computing. The computation alone takes about 30 s
   for the 6 hours; with a display every 5 minutes it is 73 frames and about
   a minute.
 - The same idea, implemented with more options (automatic display
@@ -538,9 +538,9 @@ python3 step6_rain.py               # with B--D (venv / conda / OS packages)
 run A: rain from param.txt
    set(VAR_PRECIP) refused as expected: BMI set_value(atmosphere_water__precipitation_leq-volume_flux) failed (status=1)
 run B: rain supplied from Python (uniform)
-   max |h_B - h_A| = 2.665e-15 m
+   max |h_B - h_A| = 3.553e-15 m
 run C: rain only on the western half
-   max h: A = 3.70 m,  C = 3.28 m
+   max h: A = 3.50 m,  C = 3.26 m
 ```
 
 Three runs are executed in sequence (ENCflow holds one model per process,
@@ -559,7 +559,7 @@ so the next one is `initialize`d after `finalize`):
   straight lines (a triangle 0 -> 200 mm/h -> 0, 100 mm in total) once a
   minute (the default `dt_prupdate`) at the end time of that step, so the
   Python side sets the same value at the same times. The difference in the
-  depth at the end is **3 x 10^-15 m, the rounding level of double
+  depth at the end is **4 x 10^-15 m, the rounding level of double
   precision**, so run B effectively matches run A -- a check that the
   computation is the same whichever way the rain is given (the last-digit
   difference comes from the different order of floating-point operations in
@@ -570,7 +570,7 @@ so the next one is `initialize`d after `finalize`):
 - **Run C** is an example only the BMI makes easy: rain falling only on the
   western half of the catchment. Since `pattern` is an `(ny, nx)` array, a
   distribution interpolated from radar rainfall or a weather model can be
-  supplied, replaced at every time. The maximum depth drops from 3.70 m to 3.28 m.
+  supplied, replaced at every time. The maximum depth drops from 3.50 m to 3.26 m.
 
 Mind the units. The BMI precipitation intensity is in **m/s** (CSDMS
 standard name `atmosphere_water__precipitation_leq-volume_flux`), so the
@@ -612,9 +612,9 @@ python3 step7_roughness.py          # with B--D (venv / conda / OS packages)
 ```
 probe cell (i=147, j=104)
  n factor   peak h (m)   time of peak
-    1.0        4.250         85 min
-    1.5        4.321         92 min
-    2.0        4.563        105 min
+    1.0        4.246         75 min
+    1.5        4.406         87 min
+    2.0        4.648        100 min
 ```
 
 - `get2d(VAR_MANNING_N)` returns the roughness field currently in effect

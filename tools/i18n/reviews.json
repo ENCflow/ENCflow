@@ -113,8 +113,8 @@
     {
       "source": "docs/users_guide/advection.md",
       "target": "docs/en/users_guide/advection.md",
-      "source_sha256": "a30d4977a8e2e79085ea97f5dfba944ac65eb2231bf8fa199ee867c8aac11395",
-      "target_sha256": "02cec6e33999d3358f55ff231ae9bab98fbcf9257f2b405c09efd9213c98c5aa",
+      "source_sha256": "5c13f3f0a6742e9b69a60bf82481d2af007112c0647c3475557862f03e38207c",
+      "target_sha256": "f86e25be369098ab082741c91a4a7a032639a88ee897d422591717cc7180050a",
       "reviewer": "Claude (Claude Code session; full-text content and lexical review, no model execution)",
       "method": "assistant",
       "reviewed_on": "2026-11-17"
@@ -122,8 +122,8 @@
     {
       "source": "docs/users_guide/advection_donor.md",
       "target": "docs/en/users_guide/advection_donor.md",
-      "source_sha256": "74b960bd39019194ab2635bef9315423e6b56b7d4adf21083f1fac234c6046b3",
-      "target_sha256": "2d6c912c76090a785566f3836cdb27e6ff4830a64f9fd121034251d3b9df04d4",
+      "source_sha256": "774218b3f8ce08cdb1d038418c2504e630de2864b4c4dc2c38a040f44ae182c4",
+      "target_sha256": "ddf92e9957e23abb9eb9d69553e3a025fc728d037d1b7de13b1e9804166f0440",
       "reviewer": "Claude (Claude Code session; full-text content and lexical review, no model execution)",
       "method": "assistant",
       "reviewed_on": "2026-11-17"
@@ -5000,8 +5000,8 @@
     {
       "source": "test/wetbank/README.md",
       "target": "test/wetbank/en/README.md",
-      "source_sha256": "b675b2a406e72ba916c8cdad9675432b6bfec41a2ebc6f2b878b8021c233b528",
-      "target_sha256": "a7850c93e08900cb9f9488abc9db42040708f5d9412b46a85bb7911592848e3b",
+      "source_sha256": "635ff133d6cc34b4bba44b401e47310617b48f5cc048aa6c2ed2aa84cdac0d76",
+      "target_sha256": "f23c8f81141cfbc5c3fa8cc21399e9f129fe0dd0c0d44970b9feaef3ecfb6642",
       "reviewer": "Claude (Claude Code session; full-text content and lexical review, no model execution)",
       "method": "assistant",
       "reviewed_on": "2026-11-17"
@@ -5126,11 +5126,11 @@
     {
       "source": "tutorials/bmi/README.md",
       "target": "tutorials/bmi/en/README.md",
-      "source_sha256": "c00a9377b68435439e66fb4bcad16af669af3f2427ee7c95499b84107bd588ee",
-      "target_sha256": "ef99512ea7b52cc1080d8a36600313d2fb553c275b654ce8cc4961a40d0d46e0",
+      "source_sha256": "a43f1e90d18a2f49adf86e9b18494be4af0590bcc4b4f299f4aef3921709ca6f",
+      "target_sha256": "4113aab2a741f212abbf363ce08320afa3c374ea7cc1268c71e66ed67c426031",
       "reviewer": "Claude (Claude Code session; full-text content and lexical review, no model execution)",
       "method": "assistant",
-      "reviewed_on": "2026-11-15"
+      "reviewed_on": "2026-11-17"
     },
     {
       "source": "tutorials/bmi/param.txt",

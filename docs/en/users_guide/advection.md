@@ -512,7 +512,7 @@ With the default `f_advection_donor = 3` the wet/dry test of the parallel edge b
     grids relative to 0, and the peak at transect 4 by +1.2 and −4.6 %
     (transects 1 and 2: −0.6 to +2.8 %). The depth of individual channel cells
     can change by several metres, for example at the foot of a drop. The run
-    time is two to three tenths longer than with 0 (+25 % on the 200 m grid
+    time is two to three tenths longer than with 0 (+24 % on the 200 m grid
     of the same catchment).
 - **Sea cells (tide-prescribed boundary) supply no momentum either.** The
   cells of the sea mask (fn_sw) are the side whose water level is forced;

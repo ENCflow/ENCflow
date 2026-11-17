@@ -313,8 +313,10 @@ bars are 0, 3 with `f_advection_lateral = 0`, and the default combination
 - **Faster flow.** Compared with 0, flood waves become faster and larger, and
   the Courant number rises. A time step that ran to the end with 0 may need
   to be reduced (Chichibu on the 200 m grid with a 50 m wide subgrid channel:
-  dt 6 s → 4 s). Check Cn_max on the screen. The run time is about a tenth
-  longer than with 0 (Chichibu, 200 m grid).
+  dt 6 s → 4 s). Check Cn_max on the screen. The run time is about three tenths
+  longer than with 0 (Chichibu, 200 m grid; this includes the default
+  `f_advection_lateral = 1`, which works only with 3. With 3 combined with
+  `f_advection_lateral = 0` it is about a tenth longer than with 0).
 - **Lateral-face braking is handled by `f_advection_lateral`.** The velocity
   of the water entering the control volume from the side is taken from the
   parallel link beyond the face ([Advection schemes](advection.md) §4.2 and
