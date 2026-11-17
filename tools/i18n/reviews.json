@@ -5153,11 +5153,11 @@
     {
       "source": "tutorials/chichibu/Fig_chichibu.plt",
       "target": "tutorials/chichibu/en/Fig_chichibu.plt",
-      "source_sha256": "43aadf1415994fcb9f8408ef1cdf84c4b301c30d23e3d6e3ffb9fd6b1644b4ba",
-      "target_sha256": "b0195a80bb1ec239d5d131ec54b547e7b0768e8f0418d0a7eda6eb3704f2d579",
+      "source_sha256": "7aa5b80d9eebd1d4d78763b8da29d5f5fa2aaa94dd4dbab96bc65d0ed1b97dea",
+      "target_sha256": "460c386087c66345e75e3c676ca402e89adffa5288cfcde699065bed809d07f7",
       "reviewer": "Claude (Claude Code session; full-text content and lexical review, no model execution)",
       "method": "assistant",
-      "reviewed_on": "2026-11-13"
+      "reviewed_on": "2026-11-17"
     },
     {
       "source": "tutorials/chichibu/Fig_supp.plt",
@@ -5252,8 +5252,8 @@
     {
       "source": "tutorials/chichibu/figs/step3_transects.png",
       "target": "tutorials/chichibu/en/figs/step3_transects.png",
-      "source_sha256": "90125967fb7ca3010604b1c218bf95fefcb4ff0b95f6009524219b37c19b4113",
-      "target_sha256": "007cb676d80280181fc5b256e9a5134ebee3214fe68c48eac7188f3263876ddb",
+      "source_sha256": "a69bb5a18c4f3f26837fd6992c23f758bb8abe7643c222328ca68a88a15764bc",
+      "target_sha256": "156c2fe63974f48fed4d026dd3967f3c1c6f67f3b221dffecfdd491f90c50bde",
       "reviewer": "Claude (Claude Code session; full-text content and lexical review, no model execution)",
       "method": "assistant",
       "reviewed_on": "2026-11-17"
@@ -5261,8 +5261,8 @@
     {
       "source": "tutorials/chichibu/figs/step4_hydro.png",
       "target": "tutorials/chichibu/en/figs/step4_hydro.png",
-      "source_sha256": "fde3625a287194e9cdc5f893e392e351cda669ac3356e59829db505c5a6d8316",
-      "target_sha256": "7d1e6dbe8d239dd8b3f69e3467b49053781ce7115c70da37e91f48c436eb2f43",
+      "source_sha256": "8025c8a88c3fe37e42e4870d59320d4fe26f5fd3acf03a412ec6f50fbc2095ef",
+      "target_sha256": "6e94e1be2d05c83d663ad3103dd716d1007e0f3e1a1ca57aba8ba4cae74a968b",
       "reviewer": "Claude (Claude Code session; full-text content and lexical review, no model execution)",
       "method": "assistant",
       "reviewed_on": "2026-11-17"
