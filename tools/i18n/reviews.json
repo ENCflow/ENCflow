@@ -4991,11 +4991,11 @@
     {
       "source": "test/wave_shore/README.md",
       "target": "test/wave_shore/en/README.md",
-      "source_sha256": "c9c7eb35b4def75b0597f176f5eef1536fb5e8342e3237237b2cd6ab2434859a",
-      "target_sha256": "ca51cd5c2c323676c1c4a6d3532f80017a7850fadc3151d703861b34acc0eee1",
+      "source_sha256": "af1ca90ba1d7eca2dce50200f636eb5d210a3a5760481b57009db5ed65e69309",
+      "target_sha256": "519ac5fb982662ae8d65b3a438afae3bd0b42abbc0faf7f60ea316815b53e77a",
       "reviewer": "Claude (Claude Code session; full-text content and lexical review, no model execution)",
       "method": "assistant",
-      "reviewed_on": "2026-11-15"
+      "reviewed_on": "2026-11-17"
     },
     {
       "source": "test/wetbank/README.md",
