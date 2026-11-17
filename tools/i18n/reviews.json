@@ -1391,47 +1391,47 @@
     {
       "source": "examples/bridge_wood_jam/README.md",
       "target": "examples/bridge_wood_jam/en/README.md",
-      "source_sha256": "1f537b596c847c4f0e1e6d827cedeb35596b83d6af999ca466c49acafab8c1c4",
-      "target_sha256": "cd27ba5800815c719c1d6d6953a2b49fc233ebc9bb986430165d95b681a810d0",
+      "source_sha256": "0ffd3b4f7cd7a0c448fbe11935f0fee3cb462f1fb61f65ae04006e0009d3a192",
+      "target_sha256": "10d936face8b4952a8af760248075d8ca6f4e5b7b1781d5a9180327da552c344",
       "reviewer": "Claude (Claude Code session; full-text content and lexical review, no model execution)",
       "method": "assistant",
-      "reviewed_on": "2026-11-15"
+      "reviewed_on": "2026-11-17"
     },
     {
       "source": "examples/bridge_wood_jam/figs/laws.png",
       "target": "examples/bridge_wood_jam/en/figs/laws.png",
-      "source_sha256": "44d5425c11642097c27982030566ab2016101a88b36cacd3c41a993b41b29380",
-      "target_sha256": "b16fa222de100a6ce6568ac0bc21554917450a9a147ef013aa100e656a5d8626",
+      "source_sha256": "21fc84024e06f3e3134d9d92718793da2fa410399aabf5c1522c4e870fa17df3",
+      "target_sha256": "b66c36c3ca41137746cb842f467993f337e91d0684fba03012852bcf3646ce9e",
       "reviewer": "Claude (Claude Code session; full-text content and lexical review, no model execution)",
       "method": "assistant",
-      "reviewed_on": "2026-11-14"
+      "reviewed_on": "2026-11-17"
     },
     {
       "source": "examples/bridge_wood_jam/figs/maps.png",
       "target": "examples/bridge_wood_jam/en/figs/maps.png",
-      "source_sha256": "efecd598d151a20e3fbe60483af1e5a770920518c72210019c2ef33b05ce55ad",
-      "target_sha256": "b62406c7a59a9c7052476f6fb9e456ea3d3862de04d5119fb604ccd2ea589e27",
+      "source_sha256": "2ee6ed9fcff50ce4cb72401896732bd4fa082a9762b02b17b6ccb572a05c1ff8",
+      "target_sha256": "cc03f1e132765495b5f129054fb9ac7b53f91a07737bf7faea7d840d179f680f",
       "reviewer": "Claude (Claude Code session; full-text content and lexical review, no model execution)",
       "method": "assistant",
-      "reviewed_on": "2026-11-14"
+      "reviewed_on": "2026-11-17"
     },
     {
       "source": "examples/bridge_wood_jam/figs/sens.png",
       "target": "examples/bridge_wood_jam/en/figs/sens.png",
-      "source_sha256": "9f75b6560adb9f2da0e44e8cf1620be441d5f7bbdc96d3c7fe96a0d9248323a2",
-      "target_sha256": "f692cbdc53ba28299715b5e6a2ec621119428cb5b4316e90d9f3a65c25f16bfe",
+      "source_sha256": "5a997025feb76209b665f8738dd7b24f2e8dd565a085131b729b39e6507fff22",
+      "target_sha256": "7537bf03726a3f31e0af582ead9ee70ede0da0558c936cf4448f4bef1158dc20",
       "reviewer": "Claude (Claude Code session; full-text content and lexical review, no model execution)",
       "method": "assistant",
-      "reviewed_on": "2026-11-14"
+      "reviewed_on": "2026-11-17"
     },
     {
       "source": "examples/bridge_wood_jam/figs/series.png",
       "target": "examples/bridge_wood_jam/en/figs/series.png",
-      "source_sha256": "d0e21e5f6a4d3aaae8c9af3eaa7f6c3682f0c3817e3a1d231a289ea80b6150fd",
-      "target_sha256": "de7a8fbb1bbe769bab35b33f4266958c9438eac810fb5b182b1b5dd502c1c01c",
+      "source_sha256": "e039e6855615448db216bfad28f20ea867b174c24d480db5f03eea1c252b8612",
+      "target_sha256": "f365535faf2c2d2ac75c0120df694db60093ad8e51baf995949714c58a66c49d",
       "reviewer": "Claude (Claude Code session; full-text content and lexical review, no model execution)",
       "method": "assistant",
-      "reviewed_on": "2026-11-14"
+      "reviewed_on": "2026-11-17"
     },
     {
       "source": "examples/bridge_wood_jam/figs/setup.png",
