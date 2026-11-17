@@ -90,11 +90,11 @@ main: number of valid cells: 17885
 time, progress, S(m), Runge, ex_flux, Cn_max, h_max(m), V_max(m/s)
   0:00:00.00   0.0%    0.0000   0.0%      0    0.0000    0.0000    0.0000
   0:30:00.00   8.3%    0.0487  97.7%      0    0.1908    1.2869    4.0486
-  1:00:00.00  16.7%    0.1000   6.2%      0    0.3456    4.7250    8.4359
-  1:30:00.00  25.0%    0.1000   3.4%      0    0.4363    7.2473    9.2050
-  2:00:00.00  33.3%    0.1000   0.9%      0    0.4200    6.9460    8.9475
+  1:00:00.00  16.7%    0.1000   6.2%      0    0.3461    4.7337    8.4505
+  1:30:00.00  25.0%    0.1000   3.4%      0    0.4418    6.7150    9.7508
+  2:00:00.00  33.3%    0.1000   0.9%      0    0.4156    7.0363    9.5678
   ...
-  6:00:00.00 100.0%    0.1000   0.6%      0    0.5151   29.9007    4.1172
+  6:00:00.00 100.0%    0.1000   0.6%      0    0.5159   29.9526    4.0986
 main: program terminated normally
 ```
 
@@ -223,7 +223,7 @@ downstream, gathering at the single ponded spot at the outlet (which is
 still a wall at this stage). With the raw DEM, color is scattered all
 over the catchment: the water gets trapped in depressions along the way
 and never reaches the outlet. The maximum velocity also drops to
-about 0.9 m/s toward the end, showing that the flow has died across the
+about 1.2 m/s toward the end, showing that the flow has died across the
 whole catchment.
 
 In general, when the terrain slope is steep and the cell size is large,
@@ -414,10 +414,11 @@ visual inspection of results; run them from there).
 
 We obtained catchment-scale flood routing at 1-minute resolution, with
 the flood wave growing and lagging from upstream transect 1 to
-downstream transect 4. The small step on the peak of transect 4 (up at
-about 150 min, down at about 168 min) is not a change of the real flow
-but comes from a rule of the computation (item 3 (b) of the supplement
-[Fine oscillations in the hydrograph](#supplement-fine-oscillations-in-the-hydrograph)).
+downstream transect 4. The small kinks of transect 4 at about 120–135 min on
+the rising limb and at 173–176 min on the recession are fluctuations of
+1–3 % of the discharge. How to read such fine fluctuations is summarized in the
+supplement
+[Fine oscillations in the hydrograph](#supplement-fine-oscillations-in-the-hydrograph).
 
 The distributed outputs can be surveyed with `Plot_step3.plt`, which
 arranges six maps of the final-time and maximum fields on one screen:
@@ -471,10 +472,10 @@ changes from one column to **three columns**.
 time, progress, S_surf(m), S_grnd(m), S_total(m), Runge, ex_flux, Cn_max, h_max(m), V_max(m/s)
   0:00:00.00   0.0%    0.0000     0.0000     0.0000    0.0%      0    0.0000    0.0000    0.0000
   0:30:00.00   8.3%    0.0365     0.0024     0.0389   97.7%      0    0.2519    0.8952    6.3970
-  1:00:00.00  16.7%    0.0751     0.0049     0.0800    6.2%      0    0.4737    5.6431   13.2483
-  1:30:00.00  25.0%    0.0728     0.0072     0.0800    3.0%      0    0.5450    6.1849   15.3478
+  1:00:00.00  16.7%    0.0751     0.0049     0.0800    6.2%      0    0.5097    5.1336   13.8867
+  1:30:00.00  25.0%    0.0728     0.0072     0.0800    3.0%      0    0.5809    6.2382   16.3703
   ...
-  6:00:00.00 100.0%    0.0693     0.0107     0.0800    0.1%      0    0.5062   28.8412    4.9905
+  6:00:00.00 100.0%    0.0693     0.0107     0.0800    0.0%      0    0.5067   28.8374    4.9411
 ```
 
 - `S_surf` is surface water, `S_grnd` is subsurface storage, and
@@ -488,8 +489,8 @@ time, progress, S_surf(m), S_grnd(m), S_total(m), Runge, ex_flux, Cn_max, h_max(
 
 ![Step 4: effect of interception and infiltration](figs/step4_hydro.png)
 
-In the hydrograph the peak discharge drops by nearly 40 % (6,607
-to 4,129 m^3/s). Interception cuts the total by 20%, and infiltration keeps
+In the hydrograph the peak discharge drops by about 40 % (6,960
+to 4,166 m^3/s). Interception cuts the total by 20%, and infiltration keeps
 sucking up the thinly spread hillslope water, so both the rising limb
 and the recession drop.
 
@@ -529,8 +530,8 @@ immediately). Running it gives:
 ```
 time, progress, S_surf(m), S_grnd(m), S_total(m), Runge, ex_flux, Cn_max, h_max(m), V_max(m/s)
   ...
-  3:00:00.00  50.0%    0.0586     0.0093     0.0679    0.1%      0    0.4798    7.0325   11.2452
-  6:00:00.00 100.0%    0.0220     0.0107     0.0327    0.0%      0    0.3014    3.7378    6.1290
+  3:00:00.00  50.0%    0.0578     0.0093     0.0671    0.1%      0    0.4612    7.1684   10.9185
+  6:00:00.00 100.0%    0.0219     0.0107     0.0326    0.0%      0    0.2988    3.6724    6.0666
 ```
 
 - S_total now decreases -- that is the water that left the system

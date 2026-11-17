@@ -293,7 +293,9 @@ architecture.md。このメモは「現在進行中・未完了の項目」だ�
      2.46 → 1.99、volcano の平坦部の堆積 0.04 → 0.43 m(扇の先端が 1 セル進む)、bedslide の湖の先頭波 0.88 → 0.75 m、
      steepwave の波の到達時刻 −0.8〜+0.1 %(以上は頭打ち 3 の側)、brink の合流部の池(jt1)が 0.04〜0.38 m 浅くなる
      (側方面 1 の側)。
-     **残り(このブランチで続ける)**: (a) 教材 tutorials/chichibu(Step 1〜6・補足の 21 本)・tutorials/bmi、解説
+     **残り(このブランチで続ける)**: (a) 教材 tutorials/chichibu の補足(21 本。補足の本文・表・図は、まだ
+     2026-11-16 までの既定の結果。本文の Step 1〜6 は 2026-11-17 に回し直して直した = 測線 1〜4 のピークが
+     1,205・3,042・4,869・6,960 m³/s、Step 4 は 4,166 m³/s)・tutorials/bmi、解説
      advection.md・advection_donor.md の実例の数値、例題 bridge_wood_jam の回し直し(日英)。(b) test/wave_shore
      (リポジトリでは回していない)、test/wetbank の実行時間(README の「約 9 分」は見積もり)。Run.sh が回さない
      構成を図・表に使う検定(test/nhbreak・nhshelf・salt)と test/chichibu の派生実験の値は、2026-11-17 に
