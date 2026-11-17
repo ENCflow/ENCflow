@@ -64,7 +64,7 @@ python3 Fig.py    # figs/wqbound.png(引数 en で英語版を en/figs/ に)
 | param.txt の閉合残差(全行、入力比) | 2.9e-8 | ≤ 1e-6 | PASS |
 | 区間流入から入った量 in_edge_g | 3599.5 g | 0.5 m³/s × 2 g/m³ × 3600 s = 3600 g | 一致(下記) |
 | 点源 in_point_g | 360.00 g | 0.1 g/s × 3600 s | 一致 |
-| 系外への流出 out_sea / out_edge / out_stage | 760.5 / 376.6 / 618.3 g | いずれも正 | PASS |
+| 系外への流出 out_sea / out_edge / out_stage | 763.8 / 367.7 / 620.6 g | いずれも正 | PASS |
 | param_rev.txt の閉合残差 | 2.4e-8 | ≤ 1e-6 | PASS |
 | 全時刻の最大濃度 | 1.0000 mg/L | ≤ 初期値 1 mg/L | PASS |
 | 規定セルに接するセルの最終濃度 | 0.5000 mg/L | 境界濃度 0.5 mg/L | PASS |

@@ -68,8 +68,11 @@
 #          (湾の奥へ落ちてくる浅く速い流入は、同じ線の先の池のセルへ続いている。その運動量は通常の風上が運ぶので、
 #          経路の値は、池の中で曲がって出る辺へ同じ運動量を足さない。足すと、湾の水が余分に押し出されて水面が
 #          揺れる。developer.md §110.14・§110.16)
-#   構成 jt0(本流が南からまっすぐ入る T 字の合流。f_advection_bend = 0。0 の性質の記録):
-#     (22) 3 段とも、A の水深の振れ幅が RANGE_JP_DEF より大きい(0 は、この形の池では定常に落ち着かない)
+#   構成 jt0(本流が南からまっすぐ入る T 字の合流。f_advection_bend = 0・f_advection_lateral = 0。この組み合わせの
+#   性質の記録):
+#     (22) 3 段とも、A の水深の振れ幅が RANGE_JP_DEF より大きい(この組み合わせは、この形の池では定常に
+#          落ち着かない。f_advection_lateral = 1(既定)に f_advection_bend = 0 を組み合わせると、2 段目は
+#          揺れず、1・3 段目は揺れる)
 #   構成 jt1(同じ池。f_advection_bend = 1):
 #     (23) 3 段とも、池の 4 セルの水深の振れ幅が RANGE_JT 以下(定常)
 import sys, os, glob
@@ -415,13 +418,13 @@ def check_junction():
         check(max(r for _, r in st) <= RANGE_JP and max(abs(d) for d in dev) <= TOL_JP_SAME,
               "(21) same as with 0: largest depth range %.3f m (<= %.2f), depth - depth with 0 = %s m (within %.2f)"
               % (max(r for _, r in st), RANGE_JP, " ".join("%+.2f" % d for d in dev), TOL_JP_SAME))
-    print("=== jt0: pond with a dead-end bay, main stream entering straight (f_advection_bend = 0; record) ===")
+    print("=== jt0: pond with a dead-end bay, main stream entering straight (f_advection_bend = 0, f_advection_lateral = 0; record) ===")
     t0 = JunctionCase("jt0")
     for t, qw, qm in stages():
         st = t0.stat(t)
         print("  t = %3.0f min (inflow %.0f + %.0f m3/s): depth m (range m) %s" % (t, qw, qm, fmt_stat(st)))
         check(st[0][1] > RANGE_JP_DEF,
-              "(22) the water surface keeps oscillating with 0: depth range in the bay cell A %.2f m (> %.1f)"
+              "(22) the water surface keeps oscillating with bend 0 and lateral 0: depth range in the bay cell A %.2f m (> %.1f)"
               % (st[0][1], RANGE_JP_DEF))
     print("=== jt1: same pond, f_advection_bend = 1 ===")
     t1 = JunctionCase("jt1")

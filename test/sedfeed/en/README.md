@@ -12,12 +12,27 @@ and of bed load not leaving through the faces of an inflow segment
 ## Setup
 
 A straight channel 5 cells wide (Δx = 1 m, length 300 m, slope 0.002,
-n = 0.03, dry ground at +2 m on both banks, soil thickness 2 m so that the
-whole bed is mobile, and `f_opening_dynamic = 2` so that the uniform flow
+n = 0.03, dry ground at +2 m on both banks, a mobile bed with a soil
+thickness of 2 m, and `f_opening_dynamic = 2` so that the uniform flow
 matches Manning). Segment inflow Q = 2.35 m³/s at the west end (uniform-flow
 depth 0.5 m); free outflow at the east edge (a wall in the qb and qbturn
 configurations).
 d50 = 3 mm, morfac = 10 (cseq: suspended sediment 0.2 mm, morfac = 1).
+
+In the configurations with a free outflow at the east edge (nofeed, feed1,
+feed05, cseq, nofeed_creep), the last 4 columns at the downstream end have a
+soil thickness of 0 (a non-erodible bed; `sdinit.txt`). If the bed is left
+mobile up to the free outflow, a two-cell-periodic roughness of the bed and a
+sill of sediment form at the downstream end, and, depending on the rule of
+the cap on the edge depth of the continuity equation (`f_dry_head_cap`),
+erosion advances from the downstream end and lowers the bed of the upstream
+reach as well (with the default 3, the mean |Δz| of the upstream reach under
+the capacity feed becomes 0.083 m; the shape of the downstream end, which is
+not the subject of the test, then decides the reach where the balance of the
+feed is examined). In runs where a movable bed reaches a free-outflow
+boundary, make the last few columns at the downstream end a non-erodible bed
+in the same way (the `f_dry_head_cap` item in §5 of
+[Advection schemes](../../../docs/en/users_guide/advection.md)).
 
 | Configuration | Settings | Role |
 |---|---|---|
@@ -34,7 +49,7 @@ d50 = 3 mm, morfac = 10 (cseq: suspended sediment 0.2 mm, morfac = 1).
 1. No feed: Δz of the inlet cells < −0.2 m.
 2. Capacity feed (factor 1): |Δz| of the inlet cells < 1e-9 (checked on z in
    save; exactly 0 since supply = net outflow), mean |Δz| over the upstream
-   reach x = 20–120 m < 0.03 m (0.073 without feed).
+   reach x = 20–120 m < 0.03 m (0.005 with the capacity feed, 0.068 without feed).
 3. Factor 0.5: the lowering of the inlet cells is smaller than without feed.
 4. The inflow_qb ledger closes to relative 1e-9 (z of save_qb/state.dat).
 5. Equilibrium-concentration feed: hs/h in the inflow column agrees within

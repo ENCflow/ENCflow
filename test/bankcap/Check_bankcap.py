@@ -104,7 +104,7 @@ def main():
     print("(4) f_dry_head_cap = 1: 河岸の列の期間最大水深 %.4f m、終了時 %.4f m (期間最大 > %.4f = 河道の水が登る) : %s"
           % (r1["bmax"], r1["bend"], 2.0 * FILM, "PASS" if g4 else "FAIL"))
     print("    参考: 河道の水深(x = 100〜300 m の平均) f_dry_head_cap = 2 で %.3f m、1 で %.3f m、3 で %.3f m"
-          "(濡れた河岸に接する河道は等流水深より深く出る。developer.md §50.9 の 2 つ目の性質で、この検定の対象外)"
+          "(濡れた河岸の構成では、自由流出の下流端へ向かって水面が下がり、等流水深と一致しない。この検定の対象外)"
           % (r["hch"], r1["hch"], res["wet3"]["hch"]))
     ok = ok and g4
     for tag in ("dry2", "dry1", "dry3"):

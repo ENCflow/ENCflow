@@ -325,14 +325,16 @@ the grid spacing and the number of cells that represent the channel.
   to be reduced (Chichibu on the 200 m grid with a 50 m wide subgrid channel:
   dt 6 s → 4 s). Check Cn_max on the screen. The run time is about a tenth
   longer than with 0 (Chichibu, 200 m grid).
-- **Lateral-face braking remains.** The velocity of the water entering the
-  control volume from the side is taken from the parallel link beyond the
-  face ([Advection schemes](advection.md) §4.2 and §4.3). When the bank cells
-  are wet with a film of dd or more, the slow velocity of the film link
-  (nearly 0) is applied to all the water that crosses the face. On lateral
-  faces 3 only changes the weight of films thinner than dd, so this braking
-  remains with 3 as with 0 (the main cause of the 4–17 % in test/wetbank).
-  Two parts of different nature are mixed in this braking.
+- **Lateral-face braking is handled by `f_advection_lateral`.** The velocity
+  of the water entering the control volume from the side is taken from the
+  parallel link beyond the face ([Advection schemes](advection.md) §4.2 and
+  §4.3). When the bank cells are wet with a film of dd or more, the slow
+  velocity of the film link (nearly 0) is applied to all the water that
+  crosses the face. On lateral faces `f_advection_donor = 3` only changes the
+  weight of films thinner than dd, so with `f_advection_lateral = 0` (the
+  default until 2026-11-16) this braking remains with 3 as with 0 (the main
+  cause of the 4–17 % in test/wetbank). Two parts of different nature are mixed
+  in this braking.
   - **The artificial part.** The film velocity, which has nothing to do with
     the exchange of water, is applied to a main flow that turns or that
     passes along the edge of a pond. Whether the banks are wet then changes
@@ -345,8 +347,8 @@ the grid spacing and the number of cells that represent the channel.
     with rain and a run without rain (inflow from upstream only).
   - **The part by which momentum is diluted at a junction.** The water of a
     tributary carries no momentum in the direction of the main river, so the
-    reach upstream of a junction is backed up in reality as well. ENCflow
-    counts this backwater only when the banks are wet (the nearly zero
+    reach upstream of a junction is backed up in reality as well.
+    `f_advection_lateral = 0` counts this backwater only when the banks are wet (the nearly zero
     velocity of the film link happens to stand in for "water entering from
     the side carries no momentum in the direction of the main river"; it is
     not an intended rule). In a one-cell-wide T-junction (grid spacing 50 m,
@@ -354,11 +356,11 @@ the grid spacing and the number of cells that represent the channel.
     of main-river to tributary discharge), the depth of the main river just
     upstream of the junction was +0.00 to +0.21 m relative to the momentum
     theory with wet banks, and −0.34 to −0.41 m with dry banks (6–7 %
-    shallower, close to a flow without loss). **At a junction with dry banks
-    (for example a run without rain), almost no backwater from the junction
-    appears.**
+    shallower, close to a flow without loss). **With 0, at a junction with dry
+    banks (for example a run without rain), almost no backwater from the
+    junction appears.**
 
-  **`f_advection_lateral = 1` (optional) treats these two parts
+  **The default `f_advection_lateral = 1` treats these two parts
   separately** ([Advection schemes](advection.md) §4.4). When the parallel
   link is a film thin compared with the water crossing the face, its velocity
   is not used (the artificial part is removed), and water entering the flow
@@ -369,19 +371,21 @@ the grid spacing and the number of cells that represent the channel.
   0), and the backwater of a right-angle junction is 60–80 % of that of the
   momentum theory regardless of the wetness of the banks (test/tjunction; the
   difference between wet and dry banks is below 0.01 m, against 0.14–1.09 m
-  with 0). The water surface of a junction pond stays steady. The peaks at
-  transects 3 and 4 of Chichibu rise by 3.5 and 6.7 % on the 200 m grid
-  (10 minutes earlier) and by 13.7 and 18.6 % (9 to 22 minutes earlier) on
-  the 100 m grid, and the difference between grids widens (the brake of the
-  film on the banks acted more strongly on finer grids, where the staircase
-  has more steps). That the backwater of a
-  junction is smaller than the theory and changes with the grid orientation
-  (an eight-neighbour grid represents a right-angle junction as a combination
-  of perpendicular links and diagonal links) and that the form loss of bends
-  is not counted remain limits with 1 as well. **The default remains 0.**
-  With 0, in computations that read the water level upstream of a junction or
-  the depth of ponds and oblique channels in detail, note that the result can
-  change with how wet the banks are (rain or no rain, dd).
+  with 0). The water surface of a junction pond stays steady. Compared with
+  the defaults until 2026-11-16 (`f_advection_lateral = 0` and
+  `f_dry_head_cap = 2`), the peaks at transects 3 and 4 of Chichibu rise by 3.3
+  and 5.3 % on the 200 m grid (10 and 9 minutes earlier), by 11.7 and 9.4 % on
+  the 100 m grid (8 and 16 minutes earlier) and by 13.0 and 14.1 % on the 50 m
+  grid (3 and 15 minutes earlier), and the difference between grids widens (the
+  brake of the film on the banks acted more strongly on finer grids, where the
+  staircase has more steps; the times of the peak at transect 4 line up at 142,
+  143 and 145 minutes). That the backwater of a junction is smaller than the
+  theory and changes with the grid orientation (an eight-neighbour grid
+  represents a right-angle junction as a combination of perpendicular links and
+  diagonal links) and that the form loss of bends is not counted remain limits
+  with 1 as well. With 0, in computations that read the water level upstream of
+  a junction or the depth of ponds and oblique channels in detail, the result
+  changes with how wet the banks are (rain or no rain, dd).
 
   This braking switches on and off when the water of a pond starts and stops
   overtopping a low valley wall, and can then make dips or bumps in the

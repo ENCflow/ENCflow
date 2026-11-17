@@ -98,7 +98,10 @@ for the unconsolidated cliff it decays × 0.77.
   and the sediment leaving the cliff is 32.0 m³ (developer.md §108). After the default of the upwind
   value on the edge just after a bend became f_advection_bend = 1 on 2026-11-15 the unconsolidated
   cliff goes from × 0.78 to × 0.77 and the sediment leaving the cliff is 32.5 m³ (developer.md §110).
-  The table and the figures show these values.
+  After the default of the edge-depth cap became f_dry_head_cap = 3 and the default of the advection
+  on side faces became f_advection_lateral = 1 on 2026-11-16 they stay at × 1.24 and × 0.77, and the
+  sediment leaving the cliff is 31.4 m³ (developer.md §110.32). The table and the figures show these
+  values.
 
 ## Related documents
 

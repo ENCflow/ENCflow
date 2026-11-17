@@ -1,9 +1,13 @@
 #!/usr/bin/env python3
 # test/sedfeed の入力生成(Check_sedfeed.py / param*.txt と定数を対で保守)
 #   乾いた高い地盤(+BANK)に挟まれた幅 W セルの直線水路(勾配 S、西が高い)。
-#   河床は全域可動(土層厚 sd0 は param)。西端の区間流入 Q = q·W(q は Manning の
+#   河床は可動(土層厚 SD0)。東辺が自由流出の構成は、下流端の N_FIX 列だけ土層厚 0(侵食しない床。
+#   sdinit.txt)にする。動く床のまま自由流出させると、下流端に 2 セル周期の河床のでこぼこと敷居ができ、
+#   検定の対象でない下流端の形が上流の河床を決めてしまう(developer.md §110.23)。東辺が壁の構成
+#   (qb・qbturn)は全域可動(param の sd0)。西端の区間流入 Q = q·W(q は Manning の
 #   等流水深 H0 の単位幅流量)、東辺は自由流出(qb 構成は壁)。
 #   python3 make_init.py z > zinit.txt / python3 make_init.py h > hinit.txt
+#   python3 make_init.py sd > sdinit.txt
 #   qbturn 構成: 流入セルの東隣(i = TURN_I)の行 TURN_J1〜J2 を乾いた高い地盤(+BANK)にして、
 #   流入した水を北の 2 行へ曲げる(流入セルで流れが横に振れる。developer.md §19.12)
 #   python3 make_init.py zturn > zturn.txt / python3 make_init.py hturn > hturn.txt
@@ -16,6 +20,7 @@ S, N, Z0, BANK, H0 = 0.002, 0.03, 10.0, 2.0, 0.5
 Q_UNIT = H0 ** (5.0 / 3.0) * math.sqrt(S) / N      # Manning の単位幅流量 (m2/s)
 X1, X2 = 20, 120                                    # 上流区間(給砂の効果を見る)
 X3, X4 = 150, 200                                   # 参照区間
+SD0, N_FIX = 2.0, 4                                 # 土層厚 (m)、下流端の侵食しない床の列数(自由流出の構成)
 TURN_I, TURN_J1 = 2, J1 + 2                         # qbturn の高い地盤(列 TURN_I、行 TURN_J1〜J2)
 
 
@@ -25,6 +30,10 @@ def z_of(i, j):
 
 def h_of(i, j):
     return H0 if J1 <= j <= J2 else 0.0
+
+
+def sd_of(i, j):
+    return 0.0 if i > NX - N_FIX else SD0
 
 
 def blocked(i, j):
@@ -41,6 +50,6 @@ def h_turn(i, j):
 
 if __name__ == "__main__":
     kind = sys.argv[1]
-    fn = {"z": z_of, "h": h_of, "zturn": z_turn, "hturn": h_turn}[kind]
+    fn = {"z": z_of, "h": h_of, "sd": sd_of, "zturn": z_turn, "hturn": h_turn}[kind]
     for j in range(1, NY + 1):
         print(" ".join("%.6f" % fn(i, j) for i in range(1, NX + 1)))

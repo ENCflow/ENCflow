@@ -32,8 +32,8 @@ energy head".
 |---|---|
 | 0 | never |
 | 1 | the receiver is dry ($`h_r < d_d`$) |
-| 2 (default) | as 1, and also when the receiver is wet but its bed is above the water level of the sender ($`z_r > \eta_s`$) |
-| 3 | whether the receiver is dry or wet, when its bed is above the bed of the sender ($`z_r > z_s`$; a climbing edge). The formula is given below |
+| 2 | as 1, and also when the receiver is wet but its bed is above the water level of the sender ($`z_r > \eta_s`$) |
+| 3 (default) | whether the receiver is dry or wet, when its bed is above the bed of the sender ($`z_r > z_s`$; a climbing edge). The formula is given below |
 
 When 2 is applied to a wet receiver, the cap is relaxed while the water level of the sender is
 just below the bed of the receiver. With the bed of the receiver $`d = z_r - \eta_s`$ above the
@@ -144,17 +144,17 @@ The inputs are written by `make_bankcap.py`.
 | Item | Value | Verdict |
 |---|---|---|
 | 1 maximum depth over the run in the bank row, configuration 1 | 0.0200 m (the initial film) | PASS |
-| 2 depth of the bank row at the end, configuration 1 | 0.0042 m | PASS |
-| 3 water volume on the floodplain, configuration 1 | 320.0 → 237.8 → 204.0 → 178.4 m³ | PASS |
-| 4 depth of the bank row, configuration 2 | maximum over the run 0.153 m, 0.071 m at the end | PASS |
+| 2 depth of the bank row at the end, configuration 1 | 0.0041 m | PASS |
+| 3 water volume on the floodplain, configuration 1 | 320.0 → 237.9 → 204.6 → 179.1 m³ | PASS |
+| 4 depth of the bank row, configuration 2 | maximum over the run 0.154 m, 0.004 m at the end | PASS |
 | 5 and 6 configurations 3 and 4 | maximum floodplain depth over the run 0; channel depth 2.5006 m (1.0002 times the uniform depth) | PASS |
 | 7 configurations 3 and 4 | the 12 files of H and V outputs and Log.txt are byte-identical | PASS |
-| 8 second difference of the step-by-step discharge, configuration 5 | maximum 0.49 m³/s (at 310 s) | PASS |
-| 9 discharge onto the floodplain, configuration 5 | mean 7.54 m³/s over 364–1,045 s, while the water level is above the bank | PASS |
-| 10 depth of the bank row on the rising limb, configuration 5 | 0.0200 m (the initial film) until 239 s, when the water level comes within 0.3 m below the bank | PASS |
-| 11 configuration 6 | maximum depth over the run in the bank row 0.0200 m, 0.0042 m at the end; water volume on the floodplain 320.0 → 237.8 → 204.1 → 178.4 m³ | PASS |
+| 8 second difference of the step-by-step discharge, configuration 5 | maximum 0.69 m³/s (at 415 s) | PASS |
+| 9 discharge onto the floodplain, configuration 5 | mean 7.92 m³/s over 477–1,021 s, while the water level is above the bank | PASS |
+| 10 depth of the bank row on the rising limb, configuration 5 | 0.0200 m (the initial film) until 321 s, when the water level comes within 0.3 m below the bank | PASS |
+| 11 configuration 6 | maximum depth over the run in the bank row 0.0200 m, 0.0041 m at the end; water volume on the floodplain 320.0 → 237.9 → 204.6 → 179.1 m³ | PASS |
 | 12 configuration 7 | maximum floodplain depth over the run 0; channel depth 2.5006 m; the 12 files are byte-identical to configuration 3 | PASS |
-| 13 configuration 8 | maximum second difference of the step-by-step discharge 0.003 m³/s (at 1,079 s); mean 8.68 m³/s over 368–1,013 s, while the water level is above the bank; 0.0200 m until 240 s, when the water level comes within 0.3 m below the bank | PASS |
+| 13 configuration 8 | maximum second difference of the step-by-step discharge 0.002 m³/s (at 1,022 s); mean 9.30 m³/s over 457–996 s, while the water level is above the bank; 0.0200 m until 339 s, when the water level comes within 0.3 m below the bank | PASS |
 
 ## Usage
 
@@ -167,30 +167,38 @@ make
 ## Findings and limits of accuracy
 
 - The water that climbs onto the bank in configuration 2 raises the depth of the bank row from
-  2 cm to at most 15 cm and then keeps it at 7 cm. The channel water level is 1.0 m below the
-  bank and does not reach it even with the velocity head of 0.38 m added, so physically this
-  water cannot climb.
-- A channel next to a wet bank comes out deeper than the uniform depth whichever cap is chosen
-  (2.61 m as the mean over x = 100–300 m; 2.50 m with a dry bank). This is a property of the
-  advection term on the 8-neighbour stencil (developer.md §50.9) and outside the scope of this
-  check. `f_dry_head_cap = 2` does not change it.
-- In configuration 5 the channel depth reaches 3.93 m (0.43 m above the bank) and the depth of the
-  bank row reaches 0.62 m. Within the width of the transition, water starts to go onto the bank
-  while the water level is still below it, but in this set-up the width is about 2 cm (the
-  "bed of the bank − channel water level" at the time the depth of the bank row has risen by 1 cm
-  is 0.04 m without the transition and 0.06 m with it). The width is proportional to the normal
+  2 cm to at most 15 cm early in the run (it recedes to 0.4 cm by the end). The channel water
+  level is 1.0 m below the bank and does not reach it even with the velocity head of 0.38 m added,
+  so physically this water cannot climb.
+- In the configurations with a wet bank (1, 2 and 6), whichever cap is chosen, the channel depth
+  is not uniform along the flow. The depth at the end is 2.49 m at the upstream end, 2.43 m in the
+  middle and 2.24 m at the downstream end (2.42 m as the mean over x = 100–300 m): the water
+  surface falls toward the free outflow at the downstream end. In the configurations with a dry
+  bank (3, 4 and 7) it is the uniform depth of 2.50 m over the whole length. How the wet bank
+  changes the outflow at the downstream end has not been examined (outside the scope of this
+  check). With `f_advection_lateral = 0` (the default until 2026-11-16) the brake of the film on
+  the bank is added, and the depth becomes 2.76 m at the upstream end, 2.61 m in the middle and
+  2.38 m at the downstream end (§4.4 of
+  [Advection schemes](../../../docs/en/users_guide/advection.md)).
+- In configuration 5 the channel depth reaches 3.87 m (0.37 m above the bank; the mean over
+  x = 100–300 m) and the depth of the bank row reaches 0.57 m. Within the width of the transition,
+  water starts to go onto the bank while the water level is still below it, but in this set-up the
+  width is about 2 cm (measured with `f_advection_lateral = 0`: the "bed of the bank − channel
+  water level" at the time the depth of the bank row has risen by 1 cm is 0.04 m without the
+  transition and 0.06 m with it). The width is proportional to the normal
   velocity and to the time step, so it widens where the flow toward the bank is fast or the time
   step is large (several tens of centimetres in deep channels on real terrain, and more than 1 m in
   one case with a narrow channel given by its width;
   [the advection page](../../../docs/en/users_guide/advection.md) §5; the amount that goes over never
   exceeds that of 1).
 - In configuration 8 (3), without a transition at the threshold, the second difference of the
-  step-by-step discharge falls from 0.49 m³/s in configuration 5 to 0.003 m³/s. The value of the cap
+  step-by-step discharge falls from 0.69 m³/s in configuration 5 to 0.002 m³/s. The value of the cap
   rises continuously from 0 where the water level of the sender reaches the bed of the bank.
-- The default is `f_dry_head_cap = 2` (it was 1 until 2026-11-13). In rain-wetted steep valleys
-  and at run-up fronts the results differ between 1 and 2
-  ([test/chichibu](../../chichibu/en/README.md) and others; developer.md §108). Set 1
-  explicitly to reproduce results of the versions up to then.
+- The default is `f_dry_head_cap = 3` (it was 2 until 2026-11-16 and 1 until 2026-11-13). In
+  rain-wetted steep valleys and at run-up fronts the results differ between 1 and 2 or 3
+  (developer.md §108). Where channel water starts to spill onto a bank directly ahead of the flow,
+  the results differ between 2 and 3 ([test/bankspill](../../bankspill/en/README.md);
+  developer.md §110.24). Set 1 or 2 explicitly to reproduce results of the versions up to then.
 
 ## Related documents
 

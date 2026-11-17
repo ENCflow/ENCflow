@@ -14,8 +14,9 @@ subjects are the cap on the edge depth of the continuity equation (`f_dry_head_c
 treatment of water entering through side faces (`f_advection_lateral`) (§4.4 and §5 of
 [Advection schemes](../../../docs/en/users_guide/advection.md), developer.md §110.29 and §110.30).
 
-**With `f_dry_head_cap = 3` the excess is within 5 m, about the same as on a terrain whose banks are turned into
-walls. With the default 2 the head exceeds it by 45 m when the banks are dry (recorded as a limit of 2).**
+**With `f_dry_head_cap = 3` (the default) the excess is within 5 m, about the same as on a terrain whose banks are
+turned into walls. With 2 (the default until 2026-11-16) the head exceeds it by 45 m when the banks are dry (recorded
+as a limit of 2).**
 
 ## Setup
 

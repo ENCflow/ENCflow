@@ -16,7 +16,7 @@ the sending cell. In a supercritical flow this velocity head changes greatly wit
 counts a flow entering supercritically not by its velocity head itself but by the specific energy of the
 critical flow of the same discharge (which is determined by the discharge alone). This test looks at a
 situation where that way of counting takes effect. **The discharge in the pool does not oscillate with either
-the default 2 or 3.**
+2 or the default 3.**
 
 ## Setup
 
@@ -66,8 +66,8 @@ Item displayed:
 
 | Configuration | Final discharge (m³/s) | Largest deviation from the 1-minute moving average (m³/s) | Consecutive changes in opposite directions | Maximum depth of the hillslope cell (m) |
 |---|---:|---:|---|---:|
-| c2 (`f_dry_head_cap = 2`) | 4,993.5 | 34 | none | 0.00 |
-| c3 (`f_dry_head_cap = 3`) | 4,993.2 | 29 | none | 0.00 |
+| c2 (`f_dry_head_cap = 2`) | 4,993.5 | 38 | none | 0.00 |
+| c3 (`f_dry_head_cap = 3`) | 4,992.4 | 4 | none | 0.00 |
 
 - **Neither 2 nor 3 lets water climb the hillslope ahead, which is higher than the water level.** The discharge
   at the transect increases smoothly, following the rise of the given discharge.

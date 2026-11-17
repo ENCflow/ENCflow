@@ -79,7 +79,7 @@ west, but the concentration never exceeds 1 mg/L.
 | Closure residual of param.txt (all rows, relative to the input) | 2.9e-8 | ≤ 1e-6 | PASS |
 | Mass entering from the inflow segment, in_edge_g | 3599.5 g | 0.5 m³/s × 2 g/m³ × 3600 s = 3600 g | agrees (see below) |
 | Point source, in_point_g | 360.00 g | 0.1 g/s × 3600 s | agrees |
-| Outflows out_sea / out_edge / out_stage | 760.5 / 376.6 / 618.3 g | all positive | PASS |
+| Outflows out_sea / out_edge / out_stage | 763.8 / 367.7 / 620.6 g | all positive | PASS |
 | Closure residual of param_rev.txt | 2.4e-8 | ≤ 1e-6 | PASS |
 | Maximum concentration over all times | 1.0000 mg/L | ≤ the initial 1 mg/L | PASS |
 | Final concentration next to the water-level cell | 0.5000 mg/L | boundary concentration 0.5 mg/L | PASS |

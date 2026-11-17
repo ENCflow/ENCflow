@@ -8,6 +8,7 @@ sdir=$(dirname "$(readlink -f "$0")")
 
 python3 "$sdir/make_init.py" z > zinit.txt
 python3 "$sdir/make_init.py" h > hinit.txt
+python3 "$sdir/make_init.py" sd > sdinit.txt
 python3 "$sdir/make_init.py" zturn > zturn.txt
 python3 "$sdir/make_init.py" hturn > hturn.txt
 

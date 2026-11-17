@@ -119,11 +119,12 @@
                             !   dropped is lost
                             !   (test/brink, users_guide/advection.md
                             !   section 4.4)
-  !f_advection_lateral = 0  ! treatment of water entering through the lateral
+  !f_advection_lateral = 1  ! treatment of water entering through the lateral
                             !   faces of the momentum-conservative advection
                             !   (schemes 2, 3) (0: the velocity of the parallel
                             !   link (neutral when it is dry; its velocity when
-                            !   it holds a film of at least dd) = default,
+                            !   it holds a film of at least dd) = the default
+                            !   until 2026-11-16,
                             !   1: a parallel link that is a film thinner than
                             !   p_adv_donor_eps times the water entering across
                             !   the face is not used, and the deficit
@@ -132,20 +133,21 @@
                             !   along the line of the edge from another
                             !   direction is counted; the opening fraction of
                             !   the lateral faces of diagonal edges uses the
-                            !   same test of thinness). With 0 the junction
-                            !   loss is counted only while the banks are wet,
-                            !   and a channel beside a bank wetted by rain is
-                            !   braked. With 1 it is counted regardless of the
-                            !   wetness of the banks (the backwater of a
+                            !   same test of thinness = default). With 0 the
+                            !   junction loss is counted only while the banks
+                            !   are wet, and a channel beside a bank wetted by
+                            !   rain is braked. With 1 it is counted regardless
+                            !   of the wetness of the banks (the backwater of a
                             !   right-angle junction is 60-80 % of that of the
                             !   momentum theory and changes with the grid
                             !   orientation). 1 takes effect only with
                             !   f_advection_donor = 3 (otherwise the same as 0)
-                            !   (test/tjunction, users_guide/advection.md
-                            !   section 4.4)
-  !f_dry_head_cap = 2       ! cap the edge depth toward high ground by the
-                            !   energy head eta + u_n^2/2g - z_receiver
-                            !   (0: off, 1: only while the receiver is dry.
+                            !   (test/tjunction, test/wetbank,
+                            !   users_guide/advection.md section 4.4)
+  !f_dry_head_cap = 3       ! cap the edge depth toward high ground by the
+                            !   energy head
+                            !   (0: off, 1: only while the receiver is dry, by
+                            !   eta + u_n^2/2g - z_receiver.
                             !   Water cannot climb onto dry ground above the
                             !   water surface plus velocity head (fixes leaks
                             !   at bore fronts and in 1-2 cell wide incised
@@ -155,7 +157,8 @@
                             !   bank does not climb onto a thinly wet bank or
                             !   valley wall; the cap is relaxed while the
                             !   water level is just below the bed of the
-                            !   receiver) = default, 3: cap on climbing edges
+                            !   receiver) = the default until 2026-11-16,
+                            !   3: cap on climbing edges
                             !   (the bed of the receiver above the bed of the
                             !   sender), dry or wet receiver, by the energy
                             !   head that also counts the velocity head of the
@@ -167,7 +170,8 @@
                             !   onto a bank do not depend on the time step;
                             !   submerged steps keep the harmonic mean of the
                             !   depths on both sides as a floor; test/bankspill,
-                            !   users_guide/advection.md section 5)).
+                            !   users_guide/advection.md section 5)
+                            !   = default).
                             !   The default was 1 until 2026-11-13
   !f_opening_dynamic = 3    ! dynamic reassignment of blocked openings
                             !   (0: off, 1: edges between channel cells only

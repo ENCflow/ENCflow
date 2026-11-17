@@ -9,14 +9,14 @@ spill into a low bank cell adjoining the channel (a bank pocket). Its subject is
 continuity equation and its cap (`f_dry_head_cap` in `&list_enc`;
 [Advection schemes](../../../docs/en/users_guide/advection.md) §5, developer.md §68.16, §108 and §110.24).
 
-In real-terrain computations (Step 3 and the supplement of tutorials/chichibu), with the default cap
+In real-terrain computations (the 200 m grid of the Chichibu basin), with the cap `f_dry_head_cap = 2`
 the discharge downstream changes like a step at the moment channel water starts to spill onto a higher
 neighbouring cell, and the time and size of the step change with the time step. This test isolates
 that situation in two pockets.
 
-**With the default `f_dry_head_cap = 2`, the onset of spilling into a pocket directly ahead of the
-flow (the cell on the outer side of a bend) depends on the time step. With `f_dry_head_cap = 3` it does
-not.** The test runs the same four computations with 2 and with 3. With 3 it judges that the onset
+**With `f_dry_head_cap = 2` (the default until 2026-11-16), the onset of spilling into a pocket directly
+ahead of the flow (the cell on the outer side of a bend) depends on the time step. With the default
+`f_dry_head_cap = 3` it does not.** The test runs the same four computations with 2 and with 3. With 3 it judges that the onset
 does not depend on the time step, that water does not enter all at once at the moment of opening, and
 that the level in the pocket does not exceed the energy head upstream. With 2 it displays these three
 as "limits of 2" (not judged; developer.md §110.22–§110.24).
@@ -83,7 +83,7 @@ Judged with 3 and recorded with 2 (limits of 2):
 
 ## Results (items 6–8)
 
-`f_dry_head_cap = 2` (default; recorded):
+`f_dry_head_cap = 2` (the default until 2026-11-16; recorded):
 
 | | Wet pocket, dt 6 s | Wet pocket, dt 1.5 s | Dry pocket, dt 6 s | Dry pocket, dt 1.5 s |
 |---|---|---|---|---|
@@ -98,7 +98,7 @@ Judged with 3 and recorded with 2 (limits of 2):
 |---|---|---|---|---|
 | Water level upstream just before the onset at H (from the ground) | −0.76 m (95 min) | −0.76 m (95 min) | −0.76 m (95 min) | −0.76 m (95 min) |
 | Largest one-minute rise of the depth in pocket H | 0.08 m | 0.08 m | 0.08 m | 0.08 m |
-| Roughness of the one-minute change of the downstream discharge | 25 m³/s | 19 m³/s | 25 m³/s | 20 m³/s |
+| Roughness of the one-minute change of the downstream discharge | 24 m³/s | 19 m³/s | 24 m³/s | 20 m³/s |
 | Largest pocket level minus energy head upstream | −0.55 m | −0.55 m | −0.56 m | −0.55 m |
 
 With 2:
@@ -147,9 +147,9 @@ With 3:
   be resolved by a one-cell-wide channel. What 3 satisfies is only that the upper bound (the energy
   head) is not exceeded; this test does not show that the amount entering the pocket is correct
   (there is no theory to compare with).
-- Items 6–8 of the configurations with 2 are not judged. With the default 2, when a step in the
-  one-minute values affects how you read the results, halve the time step and check, or compute with
-  `f_dry_head_cap = 3`.
+- Items 6–8 of the configurations with 2 are not judged. With 2 (the default until 2026-11-16), when a
+  step in the one-minute values affects how you read the results, halve the time step and check, or
+  compute with the default `f_dry_head_cap = 3`.
 
 ## Running
 

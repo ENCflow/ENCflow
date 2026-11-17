@@ -110,7 +110,9 @@ module m_swflow_enc
     integer :: f_advection_lateral = 0        ! 側方面で横から入る水の扱い (0:平行リンクの流速(乾いて
                                             !   いれば中立), 1:平行リンクが入ってくる水に比べて薄い
                                             !   水膜なら代表させず、合流の不足分 (1 − cos θ) u_e を
-                                            !   数える。斜めエッジの開口率も同じ判定。§110.25)
+                                            !   数える。斜めエッジの開口率も同じ判定。§110.25)。
+                                            !   値は init が list_enc(既定 1)から写す。ここの
+                                            !   初期値 0 は init の前の値
     integer :: f_inflow_edge                  ! 区間流入の外縁セルに接するエッジの扱い (0:接する
                                             !   エッジすべての移流項 0, 1:区間の内側へ向かうエッジ
                                             !   だけ移流項 0, 2:1 + そのエッジの流速のエネルギー
@@ -1099,6 +1101,14 @@ subroutine m_swflow_enc_init(p, g, b, s)
     opt%f_advection_lateral = 0
     call par_info("swflow_enc: f_advection_lateral = 1 has no effect unless f_advection_donor = 3 (treated as 0)")
   end if
+  ! 0 は 2026-11-16 までの既定(側方面は平行リンクの流速をそのまま使う)。雨で濡れた岸の水膜の遅い流速が
+  ! 河道の流れを減速し、合流の損失を岸が濡れているときだけ数える(test/wetbank・test/tjunction。§110.25)ので、
+  ! 0 を指定した実行は起動時に知らせる(f_advection_donor = 3 のときだけ。3 でなければ、どちらの値でも同じ)
+  if (list%f_advection_lateral == 0 .and. opt%f_advection_scheme >= 2 .and. opt%f_advection_donor == 3) then
+    call par_info("swflow_enc: f_advection_lateral = 0 (side faces take the velocity of the parallel link, a thin " &
+                  //"film on a wet bank included; the default until 2026-11-16. The default 1 does not use parallel " &
+                  //"links much thinner than the entering water and charges joining water its momentum deficit)")
+  end if
   if (opt%f_advection_lateral == 1 .and. opt%f_advection_scheme >= 2) then
     call par_info("swflow_enc: f_advection_lateral = 1 (on side faces, parallel links thinner than " &
                   //"p_adv_donor_eps = "//rtoa(opt%p_adv_donor_eps)//" of the entering water are not used, and " &
@@ -1109,6 +1119,15 @@ subroutine m_swflow_enc_init(p, g, b, s)
     call par_stop("list_enc: f_dry_head_cap must be 0(off), 1(cap edge depth toward dry cells by energy head), " &
                   //"2(1 + also toward wet cells whose bed is above the water level of the sending cell) " &
                   //"or 3(cap edge depth on climbing edges by the energy head taken with the approach flow)")
+  end if
+  ! 2 は 2026-11-16 までの既定(頭打ちの速度水頭を、この辺自身の流速から取る)。河道の水が岸へあふれ始める
+  ! 時刻と量が時間刻みに依り(test/bankspill)、急な段々の河道で、乾いた岸へ射流が乗り上げる所の流れの水頭が
+  ! 上流の水位を超える(test/cascade。§110.29)ので、2 を指定した実行は起動時に知らせる
+  if (opt%f_dry_head_cap == 2) then
+    call par_info("swflow_enc: f_dry_head_cap = 2 (edge depth toward dry cells, and toward wet cells whose bed is above " &
+                  //"the water level of the sending cell, is capped by the energy head taken with the velocity of the " &
+                  //"edge itself; the default until 2026-11-16. The default 3 caps climbing edges with the approach " &
+                  //"flow counted)")
   end if
   if (opt%f_dry_head_cap == 3) then
     call par_info("swflow_enc: f_dry_head_cap = 3 (edge depth on climbing edges, dry or wet, is capped by the energy head " &

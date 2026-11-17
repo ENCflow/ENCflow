@@ -176,3 +176,15 @@ the checks, the beach configurations (all but param_flat.txt) set f_opening_dyna
 the reference stays that of 2 (byte-identical to the one before the switch; with the release build np = 2 is
 ULP=0 against the serial reference and the whole set of Run_MPI.sh checks passes). The cause of the bias of
 the open diagonal openings itself, and its remedy, are left for later work (developer.md §68.41).
+
+The switch of the defaults of the edge-depth cap and of the advection on side faces (added 2026-11-16;
+`f_dry_head_cap = 3` and `f_advection_lateral = 1`; developer.md §110.32) changes the results slightly (the
+integral ratio of the alongshore momentum Σ τ_y/Σ F_y goes from 1.0018 to 1.0019 without the roller, from
+1.0000 to 1.0001 with the roller, from 1.0001 to 1.0002 with the two-way coupling and from 0.9983 to 0.9984
+with the diffusion term; the maximum of the longshore current stays at 0.2241 m/s without and 0.2289 m/s
+with the roller, the maximum Lagrangian cross-shore velocity without the roller goes from 2.9e-3 to
+2.3e-3 m/s, the differences from the grid rotated by 90° are 1.1e-5 m in E and 6.4e-5 of the maximum in v,
+the change of the wave height by the current effect is at most 0.17% and that of the peak longshore current
+−0.08%, and the spread of the profile with the diffusion term is +5.5%), and the reference was updated. All
+checks pass; with the release build np = 2 agrees with the serial reference (Log.txt, E9998, v9998) and the
+whole set of Run_MPI.sh checks passes.

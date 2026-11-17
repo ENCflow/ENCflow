@@ -15,11 +15,11 @@ There are two junction shapes (a junction along the grid axes and a junction rot
 grid) and two treatments of the water entering through the side faces (`f_advection_lateral = 0`
 and `1`), so four groups are computed.
 
-- **`f_advection_lateral = 0` (the default) counts this loss only while the banks are wet.** Only
+- **`f_advection_lateral = 0` (the default until 2026-11-16) counts this loss only while the banks are wet.** Only
   what both rules satisfy, such as steadiness and the mass balance, is judged; the difference from
   the theory and the difference caused by the wetness of the banks are displayed as "the limit
   of 0".
-- **`f_advection_lateral = 1` counts it regardless of the wetness of the banks.** The difference in
+- **`f_advection_lateral = 1` (the default) counts it regardless of the wetness of the banks.** The difference in
   backwater between wet and dry banks, the position within the theory, and the independence from the
   grid orientation are judged as well.
 

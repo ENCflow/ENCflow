@@ -47,7 +47,8 @@
   fn_z = 'zinit.txt'
   f_rntype = 0
   rn0 = 0.03
-  sd0 = 2.0                 ! 可動層厚(全域可動)
+  f_sdtype = 1              ! 可動層厚はファイル(下流端の 4 列は 0 = 侵食しない床)
+  fn_sd = 'sdinit.txt'
   sy0 = 0.2
 /
 

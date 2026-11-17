@@ -37,11 +37,11 @@ make
 ./Run_MPI.sh 4    # MPI. The rule is that state.dat is byte-identical to the serial run
 ```
 
-## Findings (2026-11-15; gfortran 13.3, -Ofast)
+## Findings (2026-11-16; gfortran 13.3, -Ofast)
 
 | Check | on | off (control) |
 |---|---|---|
-| Mean Δz, outer bank − inner bank (left = right) | −0.0755 m | +0.004 m |
+| Mean Δz, outer bank − inner bank (left = right) | −0.0761 m | +0.005 m |
 | Mirror difference max\|Δz_left − flipud(Δz_right)\| | about 1e-14 m or less (round-off) | about 1e-14 m or less (round-off) |
 | max\|Δz\| of the dry banks | 0 | 0 |
 
@@ -51,7 +51,9 @@ make
   the bed-slope term by direct differences on the edges, this became clear at
   −0.224 m, from −0.098 m with the first version using central differences;
   with the code of 2026-11-10 it is −0.0765 m, and with the code of 2026-11-15, in which the default
-  of the upwind value on the edge just after a bend became f_advection_bend = 1, −0.0755 m).
+  of the upwind value on the edge just after a bend became f_advection_bend = 1, −0.0755 m; with the
+  code of 2026-11-16, in which the defaults of the edge-depth cap and of the advection on side faces
+  became f_dry_head_cap = 3 and f_advection_lateral = 1, −0.0761 m).
 - The mirror difference is at round-off level both with and without
   correction (about 1e-14 or less), within the tolerance 1e-4 (with the -O2
   strict-math build of 2026-10-17 it was 2.2e-5 with correction, because the

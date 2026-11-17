@@ -49,14 +49,14 @@ python3 Fig.py en # en/figs/avalanche.png
 
 Top left: fracture depth D = 0.5 m of the release area. Top right: thickness
 of the entrained snow sd₀ − sd. Along the path from the release area to the
-slope break the snow is scoured through its full depth (0.5 m). Bottom left:
-change of the snow surface z − z₀. The path is negative from scouring, and
-stopped debris deposits up to 0.92 m around the slope break (x = 30 m) at
-x = 24–42 m. Bottom right: longitudinal profile (average over all rows).
-That the two curves z − z₀ and −(sd₀ − sd) coincide is the co-update
-identity itself (z and sd move by the same amount), and some snow that
-is still flowing (remaining hs) is left near the slope break (10.1 % of the
-total).
+slope break the snow is scoured. The depth is at most 0.47 m on the upper
+slope (95 % of the 0.5 m layer) and becomes shallower toward the lower slope.
+Bottom left: change of the snow surface z − z₀. The path is negative from
+scouring, and stopped debris deposits up to 0.56 m around the slope break
+(x = 30 m) at x = 25–43 m. Bottom right: longitudinal profile (average over
+all rows). That the two curves z − z₀ and −(sd₀ − sd) coincide is the
+co-update identity itself (z and sd move by the same amount). At 60 s no
+snow is still flowing (remaining hs).
 
 ## Findings
 
@@ -64,13 +64,13 @@ total).
 |---|---|---|
 | (1) Solid ledger | about 1e-13 m·cell or less (round-off) | PASS |
 | (2) Co-update | about 1e-14 m or less (round-off) | PASS |
-| (3) Entrainment activity | path min(sd − sd₀) = −0.500 m (full depth) | PASS |
-| (4) Growth | entrained solid 53.2 / released solid 21.6 = 2.46 times | PASS |
-| (5) Stopping | remaining Σhs / (released + entrained) = 0.101 | PASS |
+| (3) Entrainment activity | path min(sd − sd₀) = −0.474 m (layer 0.5 m) | PASS |
+| (4) Growth | entrained solid 43.0 / released solid 21.6 = 1.99 times | PASS |
+| (5) Stopping | remaining Σhs / (released + entrained) = 0.000 | PASS |
 
-- By entrainment the avalanche grows to about 3.5 times the released amount,
-  and 90 % stops and deposits around the slope break. The ledger and the
-  co-update are at machine precision.
+- By entrainment the avalanche grows to about 3.0 times the released amount,
+  and all of it stops by 60 s and deposits around the slope break. The ledger
+  and the co-update are at machine precision.
 - The entrainable layer is given by reinterpreting the existing soil depth
   sd, and the co-update, ledger, clamp and two-pass MPI structure are all
   reused (no new state and no new parameters; δe shares `db_delte`). By
@@ -103,8 +103,15 @@ total).
   it stays at 2.53 (entrained solid 54.8 → 54.5, remaining 0.089, largest deposit 0.83 m;
   developer.md §108). After the default of the upwind value on the edge just after a bend became
   f_advection_bend = 1 on 2026-11-15 it is 2.46 (entrained solid 53.2, remaining 0.101, largest deposit
-  0.92 m; developer.md §110). The table, the values in the text and the figures are from this
-  computation.
+  0.92 m; developer.md §110). After the default of the edge-depth cap became f_dry_head_cap = 3 and the
+  default of the advection on side faces became f_advection_lateral = 1 on 2026-11-16 it is 1.99
+  (entrained solid 43.0, remaining 0.000, largest deposit 0.56 m; developer.md §110.32). The change comes
+  from f_dry_head_cap = 3 (with 3 kept and f_advection_lateral = 0 it is 1.97; with f_dry_head_cap = 2
+  restored it is 2.48). Compared on the final snow surface, the path widens (the rows scoured by more
+  than 1 cm go from 8 to 10 in the columns at x = 14.5 and 19.5 m) and the scouring depth on the lower
+  slope becomes smaller (the largest value of each column goes from 0.47, 0.48 and 0.50 m to 0.40, 0.31
+  and 0.13 m at x = 19.5, 24.5 and 28.5 m). The mechanism has not been examined. The table, the values in
+  the text and the figures are from this computation.
 
 ## Related documents
 

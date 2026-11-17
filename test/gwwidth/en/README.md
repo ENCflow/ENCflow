@@ -70,7 +70,7 @@ make
 | Quantity | After the fix | Before the fix (executable of 2026-11-03) |
 |---|---|---|
 | Final total storage of param.txt (m; domain mean) | 0.0508264 (equal to the rain total and to the control without width) | 0.0241 (53 % lost) |
-| Concentration on the valley floor in param.txt (mg/L) | 0.99987–0.99994 | 3.65–6.21 (the seepage water shrinks and looks concentrated) |
+| Concentration on the valley floor in param.txt (mg/L) | 0.99987–0.99993 | 3.65–6.21 (the seepage water shrinks and looks concentrated) |
 | Final total storage of param_gwc.txt (m) | 0.0203306 (equal to the rain total) | 0.0211 (3.6 % created by the inflow) |
 | Concentration in param_gwc.txt (mg/L) | 1.00041–1.00050 | 1.00042–1.00047 |
 
