@@ -1,7 +1,6 @@
-# 補足節(解像度の影響と 4 近傍との比較)の図を figs/supp_*.png に描画する。
-# 事前に Fig_supp.sh が 6 ケースの計算を result_supp_{200m,100m,50m}[_4nb] に
-# 用意していることを前提とする(図 2e は河道幅 50 m の result_supp_200m_w50 も使う。
-# 単体では実行しない)。
+# 補足節(解像度の影響・4 近傍との比較・移流項の扱い)の図を figs/supp_*.png に描画する。
+# 事前に Fig_supp.sh が 21 ケースの計算を result_supp_{200m,100m,50m}[_4nb|_w50|_s1|_s1u|_s1f|_noadv] に
+# 用意していることを前提とする(単体では実行しない)。
 
 set datafile separator whitespace
 set terminal pngcairo size 1100,780 font ",11"
@@ -89,7 +88,7 @@ do for [s=1:2] {
   do for [t=1:2] {
     set title sprintf("%s: %s", SLB[s], TLB[t]) noenhanced
     set xrange [0:(t == 1 ? 150 : 360)]   # 上流は波形が短いので時間軸を縮める
-    set yrange [0:(s == 1 ? (t == 1 ? 1600 : 8000) : (t == 1 ? 200 : 1000))]   # 4 近傍は ENC の 1/8(本文に注記)
+    set yrange [0:(s == 1 ? (t == 1 ? 1600 : 9000) : (t == 1 ? 200 : 1000))]   # 4 近傍は ENC の 1/8(上流)・1/9(下流)。本文に注記
     plot for [r=1:3] sprintf("result_supp_%s%s/fluxes/flux000%d.csv", RES[r], SFX[s], TRN[t]) \
          using 2:3 with lines lw 1.5 title RLB[r]
   }
@@ -101,22 +100,22 @@ reset
 set datafile separator comma
 set terminal pngcairo size 1000,1500 font ",11"
 set output "figs/supp_hydro_adv.png"
-set multiplot layout 5,2 title "移流項の扱いと解像度依存(上から: 移流項なし、スキーム 1 の風上化 0.5 / 0.1 / 1.0、スキーム 3)" noenhanced
+set multiplot layout 5,2 title "移流項の扱いと解像度依存(上から: 移流項なし、スキーム 1 の風上化 0.1 / 0.5 / 1.0、スキーム 3)" noenhanced
 set grid
 set xlabel "時間 (min)"
 set ylabel "流量 (m^3/s)"
 set key top right
 array RESA[3] = [ "200m", "100m", "50m" ]
 array RLBA[3] = [ "200 m", "100 m", "50 m" ]
-array SFXA[5] = [ "_noadv", "_s1", "_s1u", "_s1f", "" ]
-array SLBA[5] = [ "移流項なし", "スキーム 1(風上化 0.5)", "スキーム 1(風上化 0.1)", "スキーム 1(風上化 1.0)", "スキーム 3(既定)" ]
+array SFXA[5] = [ "_noadv", "_s1u", "_s1", "_s1f", "" ]   # スキーム 1 は、風上化の弱い方から(0.1 → 0.5 = 既定 → 1.0)
+array SLBA[5] = [ "移流項なし", "スキーム 1(風上化 0.1)", "スキーム 1(風上化 0.5 = 既定)", "スキーム 1(風上化 1.0)", "スキーム 3(既定)" ]
 array TRNA[2] = [ 1, 4 ]
 array TLBA[2] = [ "上流(測線 1)", "下流(測線 4)" ]
 do for [s=1:5] {
   do for [t=1:2] {
     set title sprintf("%s: %s", SLBA[s], TLBA[t]) noenhanced
     set xrange [0:(t == 1 ? 150 : 360)]
-    set yrange [0:(t == 1 ? 1800 : (s == 1 ? 20000 : 10000))]  # 移流項なしの下流だけ縦軸の範囲が違う(2 倍)
+    set yrange [0:(t == 1 ? 1800 : (s == 1 ? 18000 : 9000))]  # 移流項なしの下流だけ縦軸の範囲が違う(2 倍)
     plot for [r=1:3] sprintf("result_supp_%s%s/fluxes/flux000%d.csv", RESA[r], SFXA[s], TRNA[t]) \
          using 2:3 with lines lw 1.5 title RLBA[r]
   }
@@ -139,8 +138,8 @@ array TLBW[2] = [ "上流(測線 1)", "下流(測線 4)" ]
 do for [t=1:2] {
   set title TLBW[t] noenhanced
   set xrange [0:(t == 1 ? 150 : 360)]
-  set yrange [0:(t == 1 ? 1600 : 8000)]
-  if (t == 1) { set key top right font ",11" } else { set key top left Left reverse samplen 2 font ",9" }   # 下流は、曲線のない左上に小さめの凡例を置く
+  set yrange [0:(t == 1 ? 1600 : 9000)]
+  if (t == 1) { set key top right font ",11" } else { set key top right Left reverse samplen 2 font ",9" }   # 下流は、曲線のない右上に小さめの凡例を置く
   plot sprintf("result_supp_200m/fluxes/flux000%d.csv", TRNW[t])     using 2:3 with lines lw 1.2 dt 2 lc rgb '#9467bd' title "200 m 幅なし", \
        sprintf("result_supp_200m_w50/fluxes/flux000%d.csv", TRNW[t]) using 2:3 with lines lw 1.8      lc rgb '#9467bd' title "200 m W = 50", \
        sprintf("result_supp_100m/fluxes/flux000%d.csv", TRNW[t])     using 2:3 with lines lw 1.2 dt 2 lc rgb '#2ca02c' title "100 m 幅なし", \
@@ -150,23 +149,24 @@ do for [t=1:2] {
 }
 unset multiplot
 
-# ---- 図 2d: 1 分値に出る凹みと揺れ(50 m 格子の測線 2・3。README の補足「ハイドログラフの細かい振動について」の 3 (a) の例) ----
-# 測線 2(左): 上流の落差の足元の区間が、浅く速い流れから深い流れへ切り替わる 42 分に、1 分だけの凹み。
-# 測線 3(右): 上流の池の水位が低い谷壁に届く頃(71〜75 分)に、±200 m3/s ほどの揺れ。
-# どちらも、区間に水が貯まる・放たれる分で、流出の総量は変えない。100 m・200 m 格子(破線)は滑らか。
+# ---- 図 2d: 1 分値に出る凹みと揺れ(50 m 格子の測線 2・3。README の補足「ハイドログラフの細かい振動について」の 3 の例) ----
+# 測線 2(左): 逓減部の 71・73 分に凹み。約 900 m 上流の、支川が合流する池(平らな区間)の中を波が行き来し、出口の側の水位が下がる時刻に当たる。
+# 測線 3(右): 逓減部の 97〜106 分に揺れ。400 m 上流の池の出口が、深く遅い状態から浅く速い状態へ戻る時刻に当たる
+# (立ち上がりの 63〜65 分に、逆向きの切り替わり)。
+# どちらも、区間に水が貯まる・放たれる分で、流出の総量は変えない。100 m・200 m 格子(破線)には出ない。
 # 下段は 1 分ごとの流量の変化
 reset
 set datafile separator comma
 set terminal pngcairo size 1100,640 font ",11"
 set output "figs/supp_t3_osc.png"
-set multiplot layout 2,2 title "50 m 格子の測線 2・3 に出る凹みと揺れ(上流の落差の足元・池の出口の流況の切り替わり)" noenhanced
+set multiplot layout 2,2 title "50 m 格子の測線 2・3 に出る凹みと揺れ(上流の池の出入口の流況の切り替わり)" noenhanced
 set grid
 set xlabel "時間 (min)"
 set key top left
 array TR2[2]  = [ 2, 3 ]
-array X0[2]   = [ 30, 55 ]
-array X1[2]   = [ 60, 150 ]
-array YQ[2]   = [ 4500, 7000 ]
+array X0[2]   = [ 30, 50 ]
+array X1[2]   = [ 90, 130 ]
+array YQ[2]   = [ 4500, 7500 ]
 # 上段: 流量
 set ylabel "流量 (m^3/s)"
 do for [c=1:2] {
@@ -182,36 +182,13 @@ do for [c=1:2] {
 set ylabel "1 分ごとの変化 (m^3/s)"
 unset title
 do for [c=1:2] {
-  if (c == 1) { set key top left } else { set key top right }
+  if (c == 1) { set key bottom left } else { set key top right }
   set xrange [X0[c]:X1[c]]
-  set yrange [-600:1000]
+  set yrange [-1200:1000]
   plot p = NaN, sprintf("result_supp_50m/fluxes/flux%04d.csv", TR2[c])  using 2:(d = $3 - p, p = $3, d) with lines lw 1.6      lc rgb '#1f9fd0' title "50 m", \
        p = NaN, sprintf("result_supp_100m/fluxes/flux%04d.csv", TR2[c]) using 2:(d = $3 - p, p = $3, d) with lines lw 1.2 dt 2 lc rgb '#2ca02c' title "100 m", \
        p = NaN, sprintf("result_supp_200m/fluxes/flux%04d.csv", TR2[c]) using 2:(d = $3 - p, p = $3, d) with lines lw 1.2 dt 2 lc rgb '#9467bd' title "200 m"
 }
-unset multiplot
-
-# ---- 図 2e: 高いセルへ水があふれ始めるときの段(200 m 格子の測線 4。同じ補足の 3 (b) の例) ----
-# 河道幅 50 m(実線): 河道の水が河岸のセルへ入り始める 104 分に、下流の流量が 1 分で 2 割ほど落ちる。
-# 幅なし(破線。Step 3 と同じ計算): ピークの頃の 150〜151 分に、下流の屈曲の外側のセルを通る近道が開いて流量が
-# 2 分で 4 % 増え、167〜168 分に閉じて同じだけ減る。どちらも時間刻みに依る
-reset
-set datafile separator comma
-set terminal pngcairo size 900,640 font ",11"
-set output "figs/supp_t4_step.png"
-set multiplot layout 2,1 title "200 m 格子の測線 4 に出る段(河道の水が隣の高いセルへあふれ始めるとき)" noenhanced
-set grid
-set xlabel "時間 (min)"
-set key top left
-set xrange [80:180]
-set ylabel "流量 (m^3/s)"
-set yrange [2000:7000]
-plot "result_supp_200m_w50/fluxes/flux0004.csv" using 2:3 with lines lw 1.6      lc rgb '#9467bd' title "200 m W = 50", \
-     "result_supp_200m/fluxes/flux0004.csv"     using 2:3 with lines lw 1.2 dt 2 lc rgb '#9467bd' title "200 m 幅なし"
-set ylabel "1 分ごとの変化 (m^3/s)"
-set yrange [-1200:600]
-plot p = NaN, "result_supp_200m_w50/fluxes/flux0004.csv" using 2:(d = $3 - p, p = $3, d) with lines lw 1.6      lc rgb '#9467bd' title "200 m W = 50", \
-     p = NaN, "result_supp_200m/fluxes/flux0004.csv"     using 2:(d = $3 - p, p = $3, d) with lines lw 1.2 dt 2 lc rgb '#9467bd' title "200 m 幅なし"
 unset multiplot
 
 # ---- 図 3: 6 時間後の水深分布。左 ENC、右 4 近傍(行: 200 / 100 / 50 m) ----

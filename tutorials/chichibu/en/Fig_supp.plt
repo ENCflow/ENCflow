@@ -89,7 +89,7 @@ do for [s=1:2] {
   do for [t=1:2] {
     set title sprintf("%s: %s", SLB[s], TLB[t]) noenhanced
     set xrange [0:(t == 1 ? 150 : 360)]   # 上流は波形が短いので時間軸を縮める
-    set yrange [0:(s == 1 ? (t == 1 ? 1600 : 8000) : (t == 1 ? 200 : 1000))]   # 4 近傍は ENC の 1/8(本文に注記)
+    set yrange [0:(s == 1 ? (t == 1 ? 1600 : 9000) : (t == 1 ? 200 : 1000))]   # 4 近傍は ENC の 1/8(上流)・1/9(下流)。本文に注記
     plot for [r=1:3] sprintf("result_supp_%s%s/fluxes/flux000%d.csv", RES[r], SFX[s], TRN[t]) \
          using 2:3 with lines lw 1.5 title RLB[r]
   }
@@ -101,22 +101,22 @@ reset
 set datafile separator comma
 set terminal pngcairo size 1000,1500 font ",11"
 set output "en/figs/supp_hydro_adv.png"
-set multiplot layout 5,2 title "Advection treatment and resolution dependence (from top: no advection, scheme 1 with upwind 0.5 / 0.1 / 1.0, scheme 3)" noenhanced
+set multiplot layout 5,2 title "Advection treatment and resolution dependence (from top: no advection, scheme 1 with upwind 0.1 / 0.5 / 1.0, scheme 3)" noenhanced
 set grid
 set xlabel "time (min)"
 set ylabel "discharge (m^3/s)"
 set key top right
 array RESA[3] = [ "200m", "100m", "50m" ]
 array RLBA[3] = [ "200 m", "100 m", "50 m" ]
-array SFXA[5] = [ "_noadv", "_s1", "_s1u", "_s1f", "" ]
-array SLBA[5] = [ "no advection", "scheme 1 (upwind 0.5)", "scheme 1 (upwind 0.1)", "scheme 1 (upwind 1.0)", "scheme 3 (default)" ]
+array SFXA[5] = [ "_noadv", "_s1u", "_s1", "_s1f", "" ]   # scheme 1 from the weakest upwinding (0.1 -> 0.5 = default -> 1.0)
+array SLBA[5] = [ "no advection", "scheme 1 (upwind 0.1)", "scheme 1 (upwind 0.5 = default)", "scheme 1 (upwind 1.0)", "scheme 3 (default)" ]
 array TRNA[2] = [ 1, 4 ]
 array TLBA[2] = [ "upstream (transect 1)", "downstream (transect 4)" ]
 do for [s=1:5] {
   do for [t=1:2] {
     set title sprintf("%s: %s", SLBA[s], TLBA[t]) noenhanced
     set xrange [0:(t == 1 ? 150 : 360)]
-    set yrange [0:(t == 1 ? 1800 : (s == 1 ? 20000 : 10000))]  # 移流項なしの下流だけ縦軸の範囲が違う(2 倍)
+    set yrange [0:(t == 1 ? 1800 : (s == 1 ? 18000 : 9000))]  # 移流項なしの下流だけ縦軸の範囲が違う(2 倍)
     plot for [r=1:3] sprintf("result_supp_%s%s/fluxes/flux000%d.csv", RESA[r], SFXA[s], TRNA[t]) \
          using 2:3 with lines lw 1.5 title RLBA[r]
   }
@@ -139,37 +139,38 @@ array TLBW[2] = [ "upstream (transect 1)", "downstream (transect 4)" ]
 do for [t=1:2] {
   set title TLBW[t] noenhanced
   set xrange [0:(t == 1 ? 150 : 360)]
-  set yrange [0:(t == 1 ? 1600 : 8000)]
-  if (t == 1) { set key top right font ",11" } else { set key top left Left reverse samplen 2 font ",9" }   # downstream: a smaller legend at the top left, where no curve passes
+  set yrange [0:(t == 1 ? 1600 : 9000)]
+  if (t == 1) { set key top right font ",11" } else { set key top right Left reverse samplen 2 font ",9" }   # downstream: a smaller legend at the top right, where no curve passes
   plot sprintf("result_supp_200m/fluxes/flux000%d.csv", TRNW[t])     using 2:3 with lines lw 1.2 dt 2 lc rgb '#9467bd' title "200 m, no width", \
        sprintf("result_supp_200m_w50/fluxes/flux000%d.csv", TRNW[t]) using 2:3 with lines lw 1.8      lc rgb '#9467bd' title "200 m W = 50", \
        sprintf("result_supp_100m/fluxes/flux000%d.csv", TRNW[t])     using 2:3 with lines lw 1.2 dt 2 lc rgb '#2ca02c' title "100 m, no width", \
        sprintf("result_supp_100m_w50/fluxes/flux000%d.csv", TRNW[t]) using 2:3 with lines lw 1.8      lc rgb '#2ca02c' title "100 m W = 50", \
-       sprintf("result_supp_50m/fluxes/flux000%d.csv", TRNW[t])      using 2:3 with lines lw 1.8      lc rgb '#1f9fd0' title "50 m (resolved channel)", \
+       sprintf("result_supp_50m/fluxes/flux000%d.csv", TRNW[t])      using 2:3 with lines lw 1.8      lc rgb '#1f9fd0' title "50 m (resolved)", \
        sprintf("result_supp_50m_w50/fluxes/flux000%d.csv", TRNW[t])  using 2:3 with lines lw 1.2 dt 2 lc rgb '#1f9fd0' title "50 m W = 50"
 }
 unset multiplot
 
-# ---- Figure 2d: a dip and a wobble in the 1-minute values (transects 2 and 3 of the 50 m grid; example of item 3 (a)
-#      of the supplement "On fine oscillations in hydrographs") ----
-# Transect 2 (left): a one-minute dip at 42 min, when the reach at the foot of a drop upstream switches from a
-# shallow, fast flow to a deep flow.
-# Transect 3 (right): a wobble of about +-200 m3/s around 71-75 min, when the pond upstream reaches a low valley wall.
-# Both are water stored and released in a reach and do not change the total runoff. The 100 m and 200 m grids
-# (dashed) are smooth.
+# ---- Figure 2d: dips and a wobble in the 1-minute values (transects 2 and 3 of the 50 m grid; example of item 3
+#      of the supplement "Fine oscillations in the hydrograph") ----
+# Transect 2 (left): dips at 71 and 73 min on the recession. Waves travel back and forth in the pond (flat reach) about 900 m upstream,
+# where a tributary joins, and the dips come when the water level on the outlet side falls.
+# Transect 3 (right): a wobble at 97-106 min on the recession, when the outlet of the pond 400 m upstream returns
+# from a deep, slow state to a shallow, fast one (the opposite switch occurs at 63-65 min on the rising limb).
+# Both are water stored and released in a reach and do not change the total runoff. They do not appear on the
+# 100 m and 200 m grids (dashed).
 # Lower panels: change per minute
 reset
 set datafile separator comma
 set terminal pngcairo size 1100,640 font ",11"
 set output "en/figs/supp_t3_osc.png"
-set multiplot layout 2,2 title "A dip and a wobble at transects 2 and 3 of the 50 m grid (flow regime switching at the foot of a drop and at a pond outlet upstream)" noenhanced
+set multiplot layout 2,2 title "Dips and a wobble at transects 2 and 3 of the 50 m grid (flow regime switching at the inlets and outlets of ponds upstream)" noenhanced
 set grid
 set xlabel "time (min)"
 set key top left
 array TR2[2]  = [ 2, 3 ]
-array X0[2]   = [ 30, 55 ]
-array X1[2]   = [ 60, 150 ]
-array YQ[2]   = [ 4500, 7000 ]
+array X0[2]   = [ 30, 50 ]
+array X1[2]   = [ 90, 130 ]
+array YQ[2]   = [ 4500, 7500 ]
 # Upper panels: discharge
 set ylabel "discharge (m^3/s)"
 do for [c=1:2] {
@@ -185,38 +186,13 @@ do for [c=1:2] {
 set ylabel "change per minute (m^3/s)"
 unset title
 do for [c=1:2] {
-  if (c == 1) { set key top left } else { set key top right }
+  if (c == 1) { set key bottom left } else { set key top right }
   set xrange [X0[c]:X1[c]]
-  set yrange [-600:1000]
+  set yrange [-1200:1000]
   plot p = NaN, sprintf("result_supp_50m/fluxes/flux%04d.csv", TR2[c])  using 2:(d = $3 - p, p = $3, d) with lines lw 1.6      lc rgb '#1f9fd0' title "50 m", \
        p = NaN, sprintf("result_supp_100m/fluxes/flux%04d.csv", TR2[c]) using 2:(d = $3 - p, p = $3, d) with lines lw 1.2 dt 2 lc rgb '#2ca02c' title "100 m", \
        p = NaN, sprintf("result_supp_200m/fluxes/flux%04d.csv", TR2[c]) using 2:(d = $3 - p, p = $3, d) with lines lw 1.2 dt 2 lc rgb '#9467bd' title "200 m"
 }
-unset multiplot
-
-# ---- Figure 2e: steps when water starts to spill onto a higher cell (transect 4 of the 200 m grid; example of
-#      item 3 (b) of the same supplement) ----
-# With a 50 m wide channel (solid): at 104 min, when the channel water starts to enter a bank cell, the discharge
-# downstream drops by about a fifth in one minute.
-# Without the width (dashed; the same run as Step 3): around the peak, a shortcut over the cell on the outside of
-# a bend downstream opens at 150-151 min (+4 % in two minutes) and closes at 167-168 min. Both depend on the time step
-reset
-set datafile separator comma
-set terminal pngcairo size 900,640 font ",11"
-set output "en/figs/supp_t4_step.png"
-set multiplot layout 2,1 title "Steps at transect 4 of the 200 m grid (when channel water starts to spill onto a higher neighbouring cell)" noenhanced
-set grid
-set xlabel "time (min)"
-set key top left
-set xrange [80:180]
-set ylabel "discharge (m^3/s)"
-set yrange [2000:7000]
-plot "result_supp_200m_w50/fluxes/flux0004.csv" using 2:3 with lines lw 1.6      lc rgb '#9467bd' title "200 m W = 50", \
-     "result_supp_200m/fluxes/flux0004.csv"     using 2:3 with lines lw 1.2 dt 2 lc rgb '#9467bd' title "200 m no width"
-set ylabel "change per minute (m^3/s)"
-set yrange [-1200:600]
-plot p = NaN, "result_supp_200m_w50/fluxes/flux0004.csv" using 2:(d = $3 - p, p = $3, d) with lines lw 1.6      lc rgb '#9467bd' title "200 m W = 50", \
-     p = NaN, "result_supp_200m/fluxes/flux0004.csv"     using 2:(d = $3 - p, p = $3, d) with lines lw 1.2 dt 2 lc rgb '#9467bd' title "200 m no width"
 unset multiplot
 
 # ---- 図 3: 6 時間後の水深分布。左 ENC、右 4 近傍(行: 200 / 100 / 50 m) ----
