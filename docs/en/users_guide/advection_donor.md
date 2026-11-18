@@ -128,7 +128,7 @@ below the threshold depth dd (default 1 mm). With 0, which has no
 countermeasure, a film below dd is treated as "dry" and drops out of the
 donors; the brake is released all at once and the water held back is let go.
 This is the jump in the recession limb of the hydrograph (at transect 4 on
-the 200 m grid of Chichibu, +147 m³/s in one minute at 276 min and
+the 200 m grid of Chichibu in the setting of §5, +147 m³/s in one minute at 276 min and
 +205 m³/s at 286 min). The jumps
 appear mostly in the recession because after the rain the films on the
 hillslopes and banks all decrease slowly together and drop below dd one
@@ -305,6 +305,9 @@ bars are 0, 3 with `f_advection_lateral = 0`, and the default combination
 
 ## 7. Usage and limits
 
+The Chichibu numbers in this section were measured in the same setting as §5
+(depression-filled elevation, channel roughness 0.02).
+
 - **The default works as is.** No setting is needed. The threshold
   `p_adv_donor_eps` (default 0.1) is empirical. The peak at transect 4 on the
   200 m grid of Chichibu becomes 1.4 % smaller when it is set to 0.05 and
@@ -396,7 +399,8 @@ bars are 0, 3 with `f_advection_lateral = 0`, and the default combination
   the dips before the peak do not appear, but a wobble appears in the recession
   when the flow at the pond outlet switches from a deep, slow state to a
   shallow, fast one (the limit of 1 in [the advection page](advection.md) §4.4;
-  item 3 of "Fine oscillations in the hydrograph" in the
+  for examples of the same kind with the conditioned bed, see item 3 of "Fine
+  oscillations in the hydrograph" in the
   [supplement of the Chichibu tutorial](../../../tutorials/chichibu/en/README.md)).
 - **Films thinner than dd are also counted according to their thickness.**
   Therefore, in bent channels whose banks are wetted by rain, the water level

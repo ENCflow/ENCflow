@@ -58,11 +58,11 @@
     {
       "source": "docs/comparison.md",
       "target": "docs/en/comparison.md",
-      "source_sha256": "2ddc545f15aae9efa2ef7b2fbfaeae38c28a11770393409997409da7a29832d1",
-      "target_sha256": "4dd9cf2a92450ff4d7541a062a21f33305f0cd17debee284ebfb4c1a29a483e4",
-      "reviewer": "Claude (Claude Code session; the culv_jam additions of the Japanese master and the English mirror compared passage by passage, numbers cross-checked)",
+      "source_sha256": "87b9236008656d1f6dab2bf03805ca2ae9a4109643d24ba7666cd77462910343",
+      "target_sha256": "142090c712dec4120d245ddb63a358a28f1a745e4ad1adc2a4e9c1f747f3acbe",
+      "reviewer": "Claude (Claude Code session; full-text content and lexical review, no model execution)",
       "method": "assistant",
-      "reviewed_on": "2026-11-12"
+      "reviewed_on": "2026-11-18"
     },
     {
       "source": "docs/developer.md",
@@ -113,17 +113,17 @@
     {
       "source": "docs/users_guide/advection.md",
       "target": "docs/en/users_guide/advection.md",
-      "source_sha256": "6bef84c143e4863b260b753cda90921b47376c8d26b8fe618c9336259af349b3",
-      "target_sha256": "e050cce97e579f40e80130d5a08bf311e5bef14f622e61a2a575a72a0bea05ac",
+      "source_sha256": "3b0a89eb9e696a558e03ce5ffaa5a0cb08e9cb390fefcc2e600f24e250f5b848",
+      "target_sha256": "05743200c6ae0bda3cdbe28e03d2117b3f0d388f81a398f287da1a00d75a9560",
       "reviewer": "Claude (Claude Code session; full-text content and lexical review, no model execution)",
       "method": "assistant",
-      "reviewed_on": "2026-11-17"
+      "reviewed_on": "2026-11-18"
     },
     {
       "source": "docs/users_guide/advection_donor.md",
       "target": "docs/en/users_guide/advection_donor.md",
-      "source_sha256": "9e174716b907fe3364e17f5c63c6cb99f64e8fc852a60fe8bcc38712f01381db",
-      "target_sha256": "eb761a5a40df7cc93b4f612a3cdfb06d403d0e6a410cd524a99e17a23c607e20",
+      "source_sha256": "23a30b5237177231a50efb5e69c07ce14f419e6ef66bc0006cf848efe4a0c0ca",
+      "target_sha256": "5698f6fa6a76ce45a4b2d82dfa9e4a4f67b014922221bab45aac16978fd89892",
       "reviewer": "Claude (Claude Code session; full-text content and lexical review, no model execution)",
       "method": "assistant",
       "reviewed_on": "2026-11-18"
@@ -437,11 +437,11 @@
     {
       "source": "docs/users_guide/passage_width.md",
       "target": "docs/en/users_guide/passage_width.md",
-      "source_sha256": "3e035a189336dfe2635c433181897d3be04ce5ec3f2c884b5ec9f7aa1c7e576c",
-      "target_sha256": "589c8c2e7f0ed5f3c3063050687f1af2746bf0763c93c8111ba348cfecaf8bbc",
+      "source_sha256": "78b0bbf6b6aebcb69bdc66eb5be20df5254cfa65d1d4a550df1624348f8a8dd4",
+      "target_sha256": "507e935811d8be95536ee97f37d565ad0a873078aaf9d7571357e1ffd0ee1184",
       "reviewer": "Claude (Claude Code session; full-text content and lexical review, no model execution)",
       "method": "assistant",
-      "reviewed_on": "2026-11-17"
+      "reviewed_on": "2026-11-18"
     },
     {
       "source": "docs/users_guide/record.md",
@@ -491,11 +491,11 @@
     {
       "source": "docs/users_guide/shallow_water.md",
       "target": "docs/en/users_guide/shallow_water.md",
-      "source_sha256": "39be611aad4ed02e0db7b01cef0190d574cc55456649282c9e7af44c2be5cb3f",
-      "target_sha256": "e02ce5cdc821ec52ea3b7e17ddee165d67100832c4e4335d3fffaecff82b5746",
+      "source_sha256": "c428165bc0ebd314f4f879d77a4b5ce426c520a50f917e70aad8ba4dceddc81e",
+      "target_sha256": "1e57a9cd663693e3d28d824610f2b011390cff76a233d3577da2c81834b19350",
       "reviewer": "Claude (Claude Code session; full-text content and lexical review, no model execution)",
       "method": "assistant",
-      "reviewed_on": "2026-11-17"
+      "reviewed_on": "2026-11-18"
     },
     {
       "source": "docs/users_guide/steep_slope.md",
@@ -3623,17 +3623,17 @@
     {
       "source": "test/cascade/README.md",
       "target": "test/cascade/en/README.md",
-      "source_sha256": "af11fe3b06932796636710c392802f4c02134a55121bb8e7c77c2ffbe3d9dc5a",
-      "target_sha256": "9aeafd3cd6556ef57b91192ef946b34d47efcb483d179332e6ee8b486a1c12c4",
+      "source_sha256": "a9b68edf6ceb13cfe91cdf0e037e95874ea8089be2ce576a66af3e286e43fa24",
+      "target_sha256": "8d407b0ffc484e81ebcb1b580fdfb87f21ca5741a6f7543aed4aa2db5158e980",
       "reviewer": "Claude (Claude Code session; full-text content and lexical review, no model execution)",
       "method": "assistant",
-      "reviewed_on": "2026-11-17"
+      "reviewed_on": "2026-11-18"
     },
     {
       "source": "test/chichibu/README.md",
       "target": "test/chichibu/en/README.md",
-      "source_sha256": "128b7eb963d845bed6c6d29aa00522e16fb59d7d5bdc17d0c7296397a142670a",
-      "target_sha256": "87bab05d2e325acbfbd730d8bd69a6abb7e203e331531e622f4474315df26fa0",
+      "source_sha256": "7b00f3f7a1af39a21926a37f6162bbc8be93efe976f6ead1edee9c7ff76faaa7",
+      "target_sha256": "4bd97aa5fb48692be95a254d8d0b2a9718e102eee3d0e9c9a364f1870522160f",
       "reviewer": "Claude (Claude Code session; full-text content and lexical review, no model execution)",
       "method": "assistant",
       "reviewed_on": "2026-11-18"

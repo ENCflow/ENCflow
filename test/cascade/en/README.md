@@ -22,10 +22,11 @@ as a limit of 2).**
 ## Setup
 
 A 43 × 55-cell area, columns 603–645 and rows 364–418, is cut out of the 50 m grid data of
-[test/chichibu](../../chichibu/en/README.md) (`make_cascade.py`). The roughness is the same as in the 50 m grid
-runs of [tutorials/chichibu](../../../tutorials/chichibu/en/README.md) (hillslopes 0.05, river-mask cells 0.02),
-and dt = 0.75 s. The channel is one cell (50 m) wide. The cell numbers in the table below are (column, row) of
-the original grid.
+[test/chichibu](../../chichibu/en/README.md) (`make_cascade.py`). The roughness is 0.05 on the hillslopes and
+0.02 in the river-mask cells (the hillslope value is that of
+[tutorials/chichibu](../../../tutorials/chichibu/en/README.md), the channel value that of the regression case of
+test/chichibu), and dt = 0.75 s. The channel is one cell (50 m) wide. The cell numbers in the table below are
+(column, row) of the original grid.
 
 | Reach | Cells | Bed (m) |
 |---|---|---|

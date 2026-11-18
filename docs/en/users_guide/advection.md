@@ -189,10 +189,12 @@ A_e = \tfrac{1}{2}\left(\mathbf{T}_c + \mathbf{T}_n\right)\cdot\mathbf{n}_k
   halved, so wave forms are smeared whether or not upwinding is used. The
   effective stencil is the dashed 4×3 cells of figure (a).
 - **The result on real terrain changes a great deal with the upwind index.**
-  On a stepped river bed, a small index underestimates the dissipation at
-  each step: the runoff gets faster and larger as the grid is refined, and
-  the run blows up on the 50 m grid. A large index makes the runoff slower
-  and smaller through numerical viscosity (the peak discharge near the
+  With a small index the velocity grows on a fine grid and the computation
+  becomes unstable (with index 0.1 on the 50 m grid of Chichibu the maximum
+  velocity reaches 81 m/s and the discharge near the catchment outlet goes up
+  and down by up to 13,000 m³/s from one minute to the next; depending on the
+  time step, the Courant number exceeds 1 and the run stops). A large index
+  makes the runoff slower and smaller (the peak discharge near the
   catchment outlet differs by a factor of 1.6 to 1.8 between the indices 0.1
   and 1.0; table in §5).
 - Kept for reproducing cases calibrated with older versions. Use the default
@@ -683,7 +685,8 @@ With the default `f_advection_donor = 3` the wet/dry test of the parallel edge b
   the separation zone downstream of a junction are not tested. Lateral Neumann
   boundary faces are treated as with 0. Because the brake of wet banks does not
   act, the flow in a steep channel is the same as with dry banks even in runs
-  with rain. On the 50 m grid of Chichibu (a run with rain), at the outlet of a
+  with rain. On the 50 m grid of Chichibu (depression-filled elevation, channel
+  roughness 0.02; a run with rain), at the outlet of a
   pool along the channel, a shallow fast flow (supercritical) and a deep slow
   flow switch within one to a few minutes around a discharge of
   4,100–5,100 m³/s (the depth of the outlet cell goes from 5.6 to 11.1 m at
@@ -701,8 +704,26 @@ With the default `f_advection_donor = 3` the wet/dry test of the parallel edge b
   limit of cap 2; see §5.3 of
   [The cap on the edge depth toward higher ground](dry_head_cap.md) and
   [test/cascade](../../../test/cascade/en/README.md)).
+  On the 50 m grid with the conditioned bed and a channel roughness of 0.04 (the
+  setting of the [supplement of the chichibu tutorial](../../../tutorials/chichibu/en/README.md)),
+  the pools along the channel are gone, but ups and downs of another kind appear
+  when the discharge is large. Ahead of a bend 0.5–1 km downstream of transect 3,
+  the flow goes back and forth between "shallow fast flow + hydraulic jump" and
+  "backed up and deep throughout", and the one-minute discharge at transect 3
+  goes up and down by up to 2,300 m³/s per minute at 63–98 min, around the peak
+  (19 reversals in which both successive changes exceed 100 m³/s; the maximum of
+  the one-minute values is 8,954 m³/s and the 11-minute moving average peaks at
+  8,026 m³/s). In a reach where the channel water has spilled onto the cells on
+  both sides, a neighbouring cell that is deep but hardly flowing is counted as
+  the donor of the whole flow (in a cut-out computation of this reach, turning
+  the non-channel cells into walls removes the ups and downs; developer.md
+  §111.14). They do not appear at the same transect on the 100 m and 200 m
+  grids. On the 100 m grid, transect 4 shows ups and downs of up to 1,200 m³/s
+  per minute at the water level at which the channel water starts to spill onto
+  the cells on both sides. Neither changes the total runoff.
   Compared with 0, flood waves through oblique channels become faster and larger
-  (the peak at the downstream transect of the Chichibu basin is 5–15 % higher and
+  (the peak at the downstream transect of the Chichibu basin (depression-filled
+  elevation, channel roughness 0.02) is 5–15 % higher and
   9–18 min earlier on the 200 to 50 m grids, including the part due to changing
   `f_dry_head_cap` from 2 to 3; which is closer to reality has not been checked
   against observations). The run time is about 20 % longer than with 0 (a
@@ -745,7 +766,7 @@ The essentials of the numerical experiments of developer.md §68 (2026-10).
 | Bore (Stoker) position error / overshoot behind it | −15.5% / 3.2 m | +0.5% / 0.8 m | +1.1% / 0.04 m |
 | Smooth flood wave (1-cell channel, peak at 3.8 km) | 176.5 | 176.5 | 176.5 (all three identical) |
 | Spatially varied flow with lateral inflow (depth ratio to the physical solution) | 1.7–2.0 (no momentum sink; supercritical flow turns subcritical) | about the same as 3 | 0.992 |
-| Grid dependence on real terrain (chichibu) 200 → 100 → 50 m (peak discharge near the catchment outlet; [supplement of tutorials/chichibu](../../../tutorials/chichibu/en/README.md#result-3-the-advection-term-and-resolution-dependence)) | depends on the upwind index (0.1: +13%, then blows up at 50 m; 0.5: +2% and +3%, two to three tenths below 3; 1.0: −1% and +13%, four tenths below 3) | not compared under the default rules (about the same as 3 in the measurements of 2026-10) | +7% and +15% (the upstream transects almost converge at 100 m and below; the peak times agree within 3 minutes) |
+| Grid dependence on real terrain (chichibu; conditioned bed, channel roughness 0.04) 200 → 100 → 50 m (peak discharge near the catchment outlet; [supplement of tutorials/chichibu](../../../tutorials/chichibu/en/README.md#result-3-the-advection-term-and-resolution-dependence)) | depends on the upwind index (0.1: −7%, then the discharge goes up and down violently at 50 m; 0.5: −16% and +3%, one to three tenths below 3; 1.0: −18% and +9%, three to five tenths below 3) | not compared under the default rules (about the same as 3 in the measurements of 2026-10) | +2% and +1% (the three grids agree near the catchment outlet; the upstream transects almost converge at 100 m and below; the transect in the gorge grows by 20% from 200 to 100 m; the 50 m grid has a limit of the discharge going up and down = §4.4) |
 | Stability | blows up on the 50 m DEM (upwind index 0.1) and in 1–2 cell incised channels | upwinding provides the stability | same |
 | Cost (measured with `f_advection_bend = 0`; with the default 1, scheme 3 takes another two to three tenths (the same treatment is added to 2); §4.4) | 1.00 | 1.19 | 1.27 |
 | Role | legacy; reproducing existing calibrations | fallback for 3 (coarse problems that tolerate the overshoot at the bore front) | **default**; best for bores, jumps, lateral inflow and stability (the peak discharge on real terrain changes with the grid; row above) |

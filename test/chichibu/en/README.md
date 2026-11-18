@@ -117,10 +117,12 @@ of the collection from the hillslopes.
   backwater zone). The peak (3.17 h) is before this influence (the pond level of
   131 m at 3.17 h is below the bed of transect 4, 137 m). In practical
   computations place a free-outflow boundary (`&list_bound`) at the outlet.
-- This case is also a guide to convergence: on the 50 / 100 / 200 m grids of
-  the same catchment the most downstream peak changes with resolution
-  (larger for finer grids; the supplement of tutorials/chichibu compares
-  200 / 100 / 50 m). The real representation of the channels (stepped bed,
+- This case is also a guide to convergence: with this input (the
+  depression-filled elevation) the most downstream peak changes with the grid
+  (larger for finer grids; "Is the effect of the conditioned bed the same on
+  another grid?" in the supplement of tutorials/chichibu compares 200 m and
+  100 m with a channel roughness of 0.04, and with the conditioned bed the
+  difference shrinks to 2 %). The real representation of the channels (stepped bed,
   one cell wide) is the main cause of the difference between advection
   schemes; the diagnosis is in §68.14–68.20.
 

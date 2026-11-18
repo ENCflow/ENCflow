@@ -234,8 +234,10 @@ user's guide chapters, not in this table.
   the dynamic wave (momentum-conservative advection) as its default,
   reaches the steep channels of mountain catchments, and puts everything
   from catchment hydrology to sediment and landform change in one run.
-  That the local inertia equations without the advection term depend
-  strongly on resolution on steep real terrain is shown in the supplement
+  That the result of the local inertia equations without the advection
+  term depends strongly on the channel roughness and on resolution on steep
+  real terrain (with some channel roughness the flood wave turns into a
+  bore) is shown in the supplement
   to tutorials/chichibu (result 3), so the two divide into "wide-area,
   fast, coastal lowlands (SFINCS)" and "multi-process from mountains to
   coast (ENCflow)". The quadtree, subgrid topography and GPU of SFINCS are

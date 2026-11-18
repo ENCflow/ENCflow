@@ -16,9 +16,9 @@ $`z + h + V^2/2g`$ は、流量を与えるセルの水位を超えないはず�
 ## 設定
 
 [test/chichibu](../chichibu/README.md) の 50 m 格子のデータから、列 603〜645・行 364〜418 の 43 × 55 セルを
-切り出します(`make_cascade.py`)。粗度は、[tutorials/chichibu](../../tutorials/chichibu/README.md) の 50 m 格子の
-計算と同じ(斜面 0.05、河道マスクのセル 0.02)、dt = 0.75 s。河道は 1 セル幅(50 m)です。下の表のセルの番号は、
-元の格子の(列, 行)です。
+切り出します(`make_cascade.py`)。粗度は、斜面が 0.05、河道マスクのセルが 0.02 です(斜面は
+[tutorials/chichibu](../../tutorials/chichibu/README.md) と、河道は test/chichibu の回帰ケースと同じ値)。
+dt = 0.75 s。河道は 1 セル幅(50 m)です。下の表のセルの番号は、元の格子の(列, 行)です。
 
 | 区間 | セル | 河床 (m) |
 |---|---|---|
