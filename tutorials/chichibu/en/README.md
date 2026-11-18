@@ -12,7 +12,8 @@ computation with real terrain data, in the following order.
 
 - **Step 1**: Minimal configuration with real terrain data; why
   depression filling is necessary
-- **Step 2**: GeoTIFF input/output, channel mask and roughness
+- **Step 2**: GeoTIFF input/output, representing the channel (channel
+  mask, roughness, bed elevation)
 - **Step 3**: Measurement (probes and flux transects) and distributed
   output
 - **Step 4**: Rainfall interception and subsurface infiltration (bucket
@@ -35,6 +36,7 @@ files from there as `./encflow en/param_step1.txt` etc.
 | Data | Contents |
 |---|---|
 | `Chichibu_200m_filled.*` | Ground elevation (m), with D8 depression filling applied in GIS software |
+| `Chichibu_200m_cond.*` | Ground elevation (m): the depression-filled elevation with the height of the channel cells (the bed) conditioned. Used from Step 2 on |
 | `Chichibu_200m_raw.tif` | Ground elevation (m), original data without depression filling (for a comparison experiment) |
 | `Chichibu_200m_basin.*` | Catchment mask (1: inside the catchment, 0: outside) |
 | `Chichibu_200m_river_flowline.*` | Channel mask (1: channel cell). The computations use this one |
@@ -57,7 +59,11 @@ elevation data (903 of its 2,327 cells lie on the valley-wall side), so the
 computations use the mask moved onto the flow lines of the elevation (the
 drainage paths given by the steepest descent among the 8 neighbours) with the
 bundled [utils/river_flowline](../../../utils/river_flowline/en/README.md)
-(`Chichibu_200m_river_flowline`; 1,473 cells).
+(`Chichibu_200m_river_flowline`; 1,473 cells). The elevation with a conditioned
+channel bed (`Chichibu_200m_cond`) is the depression-filled elevation with
+only its channel cells (these 1,473 cells) rebuilt to match the valley-floor
+height read from a 10 m grid elevation of the same area (also derived from
+the GSI Digital Elevation Model); Step 2 explains it.
 
 ![Terrain (inside the catchment mask)](figs/step1_z.png)
 
@@ -200,15 +206,19 @@ the northeast corner.
 Just upstream of the catchment outlet (the northeast corner), ponded
 water over 25 m deep has grown. This ponding of runoff dammed by the
 wall will be resolved in Step 5 by setting a boundary condition. Until
-then we proceed with the outlet ponding as a known artifact (it hardly
-affects the measurements further upstream).
+then we proceed with the outlet ponding as a known artifact (the pond
+grows upstream with time; in the computations from Step 2 on it reaches
+about 12 km up the main stem from the outlet after 6 hours and affects
+the water levels and discharges within that reach -- Steps 3 to 5 look
+at this concretely).
 
 ### Why depression filling is necessary
 
 If you replace `fn_z` in `&list_geoinfo` with `Chichibu_200m_raw.tif`,
 you can run on the original DEM without depression filling (since this
-reads a GeoTIFF, the easiest way is to try it in Step 2's
-`en/param_step2.txt`). Extending the computation to 12 hours
+reads a GeoTIFF, the easiest way is to switch `fn_z` in Step 2's
+`en/param_step2.txt` to the depression-filled `Chichibu_200m_filled.tif`
+and to the unprocessed `Chichibu_200m_raw.tif`). Extending the computation to 12 hours
 (`tt_c = "12 hour"`) so that the channel water has almost all gathered
 in the outlet pond, and comparing the depth distributions after 12
 hours:
@@ -223,7 +233,7 @@ downstream, gathering at the single ponded spot at the outlet (which is
 still a wall at this stage). With the raw DEM, color is scattered all
 over the catchment: the water gets trapped in depressions along the way
 and never reaches the outlet. The maximum velocity also drops to
-about 1.2 m/s toward the end, showing that the flow has died across the
+about 0.8 m/s toward the end, showing that the flow has died across the
 whole catchment.
 
 In general, when the terrain slope is steep and the cell size is large,
@@ -259,15 +269,25 @@ ENC grid, giving a "4-neighbor" computation. Even on the same
 depression-filled DEM, the water now gets stuck on diagonal flow paths:
 the depth distribution after 12 hours is chopped up all over the
 catchment just like with the raw DEM, and the water never reaches the
-outlet (the maximum velocity also drops to about 0.5 m/s toward the end — the flow
+outlet (the maximum velocity also drops to about 0.3 m/s toward the end — the flow
 dies).
 
 ![Step 1: filled DEM computed with 4-neighbor exchange](figs/step1_hend_4nb.png)
 
+Depression filling, however, only guarantees that water can drain all the
+way to the outlet; it does not shape the channels. Where a depression was
+filled, a **flat reach** of cells at the same height remains, with a step at
+its downstream end (in this 200 m elevation, 30 % of the channel cells are at
+the same height as the cell they drain to). Water several meters deep collects
+on a flat reach and slows down, then speeds up abruptly at the step, so the
+flood wave can be delayed and the hydrograph can carry unnatural wiggles.
+Step 2 switches to an elevation whose channel heights have been conditioned.
+
 ## Step 2: GeoTIFF input/output and representing the channel
 
 `en/param_step2.txt` switches the input/output to GeoTIFF and adds the
-channel mask and roughness.
+three pieces of data that represent the channel: the channel mask, the
+channel roughness, and the bed elevation.
 
 ```
 &list_sysparam
@@ -280,9 +300,9 @@ channel mask and roughness.
   ...
   f_rntype = 0         ! roughness type (0: default constant, 1: file)
   rn0 = 0.05           ! constant roughness value
-  rn0_rw = 0.02        ! constant roughness for channel-mask cells
+  rn0_rw = 0.04        ! constant roughness for channel-mask cells
 
-  fn_z = "Chichibu_200m_filled.tif"          ! ground elevation file name
+  fn_z = "Chichibu_200m_cond.tif"            ! ground elevation file name (elevation with a conditioned channel bed)
   fn_mask = "Chichibu_200m_basin.tif"        ! domain mask file name
   fn_rw = "Chichibu_200m_river_flowline.tif" ! channel mask file name
 /
@@ -295,8 +315,13 @@ channel mask and roughness.
   and they overlay on the map**.
 - Roughness is a two-tier setup: the base value `rn0 = 0.05`
   (mountain/wildland-like) is overridden on channel cells by
-  `rn0_rw = 0.02` (channel-like). `rn0_rw` overrides channel cells
-  regardless of how roughness is given (constant or file).
+  `rn0_rw = 0.04` (mountain-channel-like). `rn0_rw` overrides channel cells
+  regardless of how roughness is given (constant or file). The value 0.04
+  is the lower end of the guide range for mountain streams (0.04 to 0.06) in
+  [Recommended values by pattern](../../../docs/en/users_guide/channel.md#recommended-values-by-pattern)
+  of the channel chapter of the users guide.
+- The bed elevation is conditioned on the side of the ground elevation data
+  (`fn_z`); see "Conditioning the bed elevation" below.
 - At this stage the channel mask `fn_rw` is used only to swap the
   roughness. From here you can refine step by step toward incision
   below the terrain (`depth_rw`) or subgrid channels (`fn_channel`)
@@ -315,14 +340,54 @@ cells. The channel mask gives the channel network as **lines one cell
 wide**, and only these cells get the roughness `rn0_rw`. Both are
 plain 1-or-0 rasters made in a GIS (the channel mask has been moved onto
 the valley lines of the elevation in preprocessing; see "A look at the
-data". They carry
-no channel width or bed elevation: on a 200 m grid the channels are
-narrower than a cell, so we only say *which* cells are channel and
-express the channel through its roughness).
+data"). They carry no channel width. On a 200 m grid the channels are
+narrower than a cell, but here we only say *which* cells are channel and
+give their roughness and bed elevation (giving the width as well is what
+subgrid channels do).
 
-When you run it, the numbers on screen change slightly from Step 1
-(because the channel roughness changed). The result directory now contains
-`H0001.tif` and friends.
+### Conditioning the bed elevation
+
+The values of the Step 1 elevation (`Chichibu_200m_filled`) are average
+heights within each cell. Mountain rivers run along valley floors far
+narrower than a 200 m cell, so the elevation of a channel cell is higher
+than the real bed. On top of that, as noted at the end of Step 1, the
+traces of depression filling remain as flat reaches and steps along the
+channels.
+
+`Chichibu_200m_cond` rebuilds the elevation of the channel cells only
+(1,473 cells). From a 10 m grid elevation of the same area, the valley-floor
+height (the minimum within the cell) is read for each 200 m cell and used as
+the height of the channel cell, and the result is conditioned so that the bed
+never rises in the downstream direction. All other cells are identical to
+`Chichibu_200m_filled`. Comparing the two elevations along the main stem:
+
+![Step 2: bed profile along the main stem](figs/step2_bed.png)
+
+- Gray is the depression-filled elevation. Flat reaches of equal height and
+  steps line up like a staircase (of the 1,472 links between channel cells,
+  446 lead to a cell at the same height).
+- Blue is the conditioned bed. Every channel cell is lowered (median 37 m,
+  maximum 135 m), and the flat reaches disappear except at two places that
+  appear to be water surfaces such as a reservoir (the reach at 43 to 44 km in
+  the figure is one of them); 25 links to a cell at the same height remain.
+- Because the bed is now the valley-floor height rather than the cell
+  average, the channel cells cut deeper below the cells on both sides (the
+  median difference between the bed and the lower of the two side cells is
+  48 m).
+
+The procedure and the statistics of this preprocessing are summarized under
+"Elevation with a conditioned channel bed" in the
+[data README](../../../test/chichibu/en/data_chichibu/README.md) (the 10 m
+grid elevation and the preprocessing tool are not bundled). For your own
+catchment, give the heights of the channel cells in the same way, from the
+valley-floor heights of a fine elevation dataset or from surveyed bed levels
+such as a longitudinal profile. How the hydrographs change with and without
+the conditioned bed is compared in Step 3, once the measurements are in place.
+
+When you run it, the numbers on screen change from Step 1 (the channels are
+now lower and smoother, so the water gathers faster: V_max rises from 8 to
+10 m/s to 14 to 15 m/s, and h_max after 6 hours grows from 30 m to 34.5 m).
+The result directory now contains `H0001.tif` and friends.
 
 ## Step 3: Measurement and distributed output
 
@@ -414,11 +479,56 @@ visual inspection of results; run them from there).
 
 We obtained catchment-scale flood routing at 1-minute resolution, with
 the flood wave growing and lagging from upstream transect 1 to
-downstream transect 4. The small kinks of transect 4 at about 120–135 min on
-the rising limb and at 173–176 min on the recession are fluctuations of
-1–3 % of the discharge. How to read such fine fluctuations is summarized in the
-supplement
-[Fine oscillations in the hydrograph](#supplement-fine-oscillations-in-the-hydrograph).
+downstream transect 4. The peaks are, from transect 1 on, 1,254 m³/s
+(47 min), 3,043 m³/s (55 min), 6,530 m³/s (81 min) and 8,477 m³/s (138 min).
+
+- The shoulder of transect 4 at about 110 to 120 min on the rising limb
+  appears because the peak of a tributary that joins about 2 km upstream of
+  the transect (catchment area about 200 km²; 107 min, about 3,400 m³/s)
+  arrives before the peak of the main stem (about 450 km²; 130 min, about
+  6,500 m³/s).
+- From two and a half hours on, the recession of transect 4 is affected by
+  the outlet ponding. The pond grows upstream until it reaches transect 4
+  (the depth at probe 4 is 10 m after 6 hours) and holds the discharge down
+  (by up to about 20 %; the part up to the peak is not affected). Step 5
+  opens the outlet and checks this.
+- The 1-minute values of real-terrain computations can also carry fine
+  fluctuations. How to read them is summarized in the supplement
+  [Fine oscillations in the hydrograph](#supplement-fine-oscillations-in-the-hydrograph).
+
+### Effect of the conditioned bed
+
+Let us check here what conditioning the bed in Step 2 bought. Setting `fn_z`
+in `en/param_step3.txt` back to `Chichibu_200m_filled.tif` (the
+depression-filled elevation) and comparing at the same transects gives the
+following (solid: Step 3; dashed: the run with the elevation set back; the
+channel roughness is 0.04 in both).
+
+![Step 3: hydrographs before and after conditioning the channel bed](figs/step3_bed_effect.png)
+
+| Transect | Depression-filled elevation | Conditioned bed |
+|---|---|---|
+| 1 | 1,077 m³/s (52 min) | 1,254 m³/s (47 min) |
+| 2 | 2,503 m³/s (62 min) | 3,043 m³/s (55 min) |
+| 3 | 3,475 m³/s (91 min) | 6,530 m³/s (81 min) |
+| 4 | 4,488 m³/s (190 min) | 8,477 m³/s (138 min) |
+
+With the depression-filled elevation, water collects on the flat reaches of
+the channel, and the wave is delayed, lower and longer. For example, the
+rising front takes about 20 minutes to travel from transect 2 to transect 3
+(about 10 km downstream) with the conditioned bed, and about 30 minutes with
+the depression-filled elevation. The difference grows downstream: with the
+conditioned bed the peaks at transects 3 and 4 are 1.9 times as large, and the
+peak at transect 4 arrives 52 minutes earlier.
+
+**The way the channel heights are given alone changes the downstream peak by
+almost a factor of two.** Which of the two is closer to the real river is not
+established in this tutorial (there is no comparison with observed
+discharge). The conditioned bed removes a shape that real rivers do not have
+-- the traces of depression filling -- but the channel is still a "200 m wide
+rectangle" in width and cross-section, and the roughness is a guide value. In
+practical work, keep in mind that the channel height, width and roughness
+strongly control the result, and compare with observations.
 
 The distributed outputs can be surveyed with `Plot_step3.plt`, which
 arranges six maps of the final-time and maximum fields on one screen:
@@ -471,11 +581,11 @@ changes from one column to **three columns**.
 ```
 time, progress, S_surf(m), S_grnd(m), S_total(m), Runge, ex_flux, Cn_max, h_max(m), V_max(m/s)
   0:00:00.00   0.0%    0.0000     0.0000     0.0000    0.0%      0    0.0000    0.0000    0.0000
-  0:30:00.00   8.3%    0.0365     0.0024     0.0389   97.7%      0    0.2519    0.8952    6.3970
-  1:00:00.00  16.7%    0.0751     0.0049     0.0800    6.2%      0    0.5097    5.1336   13.8867
-  1:30:00.00  25.0%    0.0728     0.0072     0.0800    3.0%      0    0.5809    6.2382   16.3703
+  0:30:00.00   8.3%    0.0365     0.0024     0.0389   98.4%      0    0.1977    0.7555    4.5406
+  1:00:00.00  16.7%    0.0751     0.0049     0.0800    5.9%      0    0.3947    4.2828   10.1592
+  1:30:00.00  25.0%    0.0728     0.0072     0.0800    3.0%      0    0.4948    6.5865   12.8773
   ...
-  6:00:00.00 100.0%    0.0693     0.0107     0.0800    0.0%      0    0.5067   28.8374    4.9411
+  6:00:00.00 100.0%    0.0696     0.0104     0.0800    0.0%      0    0.5125   29.6268    3.2128
 ```
 
 - `S_surf` is surface water, `S_grnd` is subsurface storage, and
@@ -489,10 +599,16 @@ time, progress, S_surf(m), S_grnd(m), S_total(m), Runge, ex_flux, Cn_max, h_max(
 
 ![Step 4: effect of interception and infiltration](figs/step4_hydro.png)
 
-In the hydrograph the peak discharge drops by about 40 % (6,960
-to 4,166 m³/s). Interception cuts the total by 20%, and infiltration keeps
-sucking up the thinly spread hillslope water, so both the rising limb
-and the recession drop.
+In the hydrograph the peak discharge drops by 35 % (8,477 to 5,487 m³/s)
+and the peak arrives 15 minutes later. Interception cuts the total by 20%,
+and infiltration keeps sucking up the thinly spread hillslope water, so the
+rising limb drops substantially (to about half until the second hour). The
+volume of water passing transect 4 within the 6 hours drops by 30 %. The two
+curves meet and swap places between three and a half and four and a half
+hours on the recession; this is an effect of the outlet ponding (the pond is
+larger in Step 3, which has no losses, and holds the discharge at transect 4
+down more. Compared with the outlet open, as in Step 5, the recession of
+Step 4 is the smaller one as well).
 
 ## Step 5: Boundary condition at the catchment outlet
 
@@ -501,8 +617,8 @@ been turning a blind eye to since Step 1. The catchment outlet is not
 on the outer rim (the four edges) of the computational domain but in
 its interior, so instead of an edge boundary condition we use
 **prescribed-stage cell groups**. `en/param_step5.txt` fixes the water
-level of the two outlet channel cells at a low value, turning them into
-a "drain".
+level of the outlet channel cell and the cell next to it at a low value,
+turning them into a "drain".
 
 ```
 &list_sysparam
@@ -514,38 +630,51 @@ a "drain".
   ! group 1: catchment outlet (level below the bed for perfect drainage)
   stage_cell(:,1,1) = 239, 19
   stage_cell(:,2,1) = 240, 19
-  stage_eta(1) = 111.0
+  stage_eta(1) = 100.0
 /
 ```
 
 The outlet cell indices were determined by overlaying the channel mask
-and the DEM in a GIS and reading off "the most downstream channel cells
-inside the catchment mask" (remember to convert to 1-based indices as
-noted above). `stage_eta` is specified as an elevation. Cells whose
-prescribed level is below the bed are always empty, acting as a
-"perfect drain" (here 111 m, lower than the 113 m bed of the upstream
-neighbor cell, so arriving water is removed from the system
-immediately). Running it gives:
+and the DEM in a GIS, reading off "the most downstream channel cell
+inside the catchment mask", (240, 19), and adding the cell to its west,
+(239, 19) (remember to convert to 1-based indices as noted above).
+`stage_eta` is specified as an elevation. Cells whose prescribed level is
+below the bed are always empty, acting as a "perfect drain" (here 100 m,
+lower than the ground elevations of the two cells, 103.4 m and 113.1 m, so
+arriving water is removed from the system immediately). Running it gives:
 
 ```
 time, progress, S_surf(m), S_grnd(m), S_total(m), Runge, ex_flux, Cn_max, h_max(m), V_max(m/s)
   ...
-  3:00:00.00  50.0%    0.0578     0.0093     0.0671    0.1%      0    0.4612    7.1684   10.9185
-  6:00:00.00 100.0%    0.0219     0.0107     0.0326    0.0%      0    0.2988    3.6724    6.0666
+  3:00:00.00  50.0%    0.0522     0.0092     0.0615    0.1%      0    0.4618    8.9999    6.9492
+  6:00:00.00 100.0%    0.0143     0.0104     0.0247    0.0%      0    0.2439    3.1015    3.2458
 ```
 
 - S_total now decreases -- that is the water that left the system
   through the outlet.
-- h_max drops from 30 m to 3.7 m. The disappearance of the ponding can
+- h_max drops from 30 m to 3.1 m. The disappearance of the ponding can
   also be confirmed in the depth distribution.
 
 | Step 4 (no outlet) | Step 5 (perfect drain) |
 |---|---|
 | ![step4](figs/step5_hend_step4.png) | ![step5](figs/step5_hend.png) |
 
-The hydrographs at the upstream transects 1-4 barely change from Step 4
-(the outlet ponding affects only a very small area at the far
-downstream end).
+The hydrographs at transects 1 to 3 are the same as in Step 4. Transect 4 is
+the same up to the peak (5,487 m³/s at 153 min) and changes on the recession
+from 3 h 20 min on: in Step 4 the outlet pond had grown upstream and reached
+transect 4. The depth at probe 4 shows this well.
+
+![Step 5: depth at probe 4](figs/step5_probe.png)
+
+In Step 4 the depth starts to rise at about four and a half hours. The discharge coming
+from upstream keeps falling, so this is the surface of the pond downstream
+coming up (backwater). In Step 5 the depth keeps falling, and the discharge
+is larger than in Step 4 by up to 130 m³/s (in the fifth hour; 17 % of the
+Step 4 value).
+**Water levels and discharges near the outlet change with the outlet
+boundary condition.** The reliable way to find out whether a measurement
+location is affected by a boundary condition is to change the boundary and
+compare, as done here.
 
 Note that if you prescribe the water level as a time series
 (`stage_val`), this also serves as an open boundary supplying a
@@ -661,7 +790,8 @@ For that procedure and for settings such as the water-film threshold
 
 In this tutorial we went once around the standard workflow of a
 catchment computation with real terrain data: data preparation
-(depression filling) -> minimal configuration -> measurement -> adding
+(depression filling, conditioning the channel heights) -> minimal
+configuration -> measurement -> adding
 physical processes -> boundary conditions -> 3D visualization. From here:
 
 - Refining the groundwater model (Green-Ampt, lateral flow),
@@ -690,6 +820,11 @@ supplement covers how to read and deal with fine oscillations on the
 1-minute hydrographs of real-terrain computations, and the next one covers
 the effect of resolution and the character of the ENC grid.
 
+The computations and figures of the two supplements use the same
+depression-filled elevation as Step 1 (`Chichibu_*_filled`) and a channel
+roughness of 0.02 (not the conditioned bed and the roughness 0.04 used from
+Step 2 on).
+
 The 1-minute hydrographs of real-terrain computations can carry fine
 oscillations (short ups and downs) as well as dips and steps. When
 you notice them, consider them in this order.
@@ -710,7 +845,8 @@ you notice them, consider them in this order.
    oscillations.
 
    Preprocessing the channels so that the longitudinal profile is
-   monotone (eliminating the flat reaches and the steps), or moving the
+   monotone (eliminating the flat reaches and the steps; the conditioned
+   bed of Step 2 is an example), or moving the
    channels to subgrid channels (`fn_channel`) with an independently
    specified bed profile, removes the ponds and steps themselves.
    Depending on how the terrain is changed, a transition to a steep reach
@@ -796,13 +932,14 @@ If you only want the conclusions, read the bold sentences at the end of each
 subsection and "What to take away about the ENC grid".
 
 This tutorial has used a 200 m grid throughout. To see how the results
-change with a finer grid, we move the Step 3 configuration (no losses,
-no outlet) to 100 m and 50 m grids. The terrain
+change with a finer grid, we take the Step 3 configuration (no losses,
+no outlet) with the depression-filled elevation and a channel roughness of
+0.02, and move it to 100 m and 50 m grids. The terrain
 data are the 100 m and
 50 m versions of the same area kept in `test/chichibu/` (text format),
 and the parameter files are `en/param_supp_200m.txt` /
 `en/param_supp_100m.txt` / `en/param_supp_50m.txt` (the 200 m one is
-the Step 3 configuration with text input only). We also run the
+that configuration with text input only). We also run the
 **4-neighbor** computation mentioned at the end of Step 1
 (`p_diagratio = 0.0`, diagonal exchange closed) at the same three
 resolutions, to see what the 8-direction exchange of the ENC grid

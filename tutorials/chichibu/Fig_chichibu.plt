@@ -157,8 +157,8 @@ set terminal pngcairo size 760,440 font ",11"
 set grid
 set xlabel "時間 (min)"
 set ylabel "流量 (m^3/s)"
-# 測線 4 を含むハイドログラフの縦軸の上限は 8000 m3/s にそろえる(50 m 格子を含む補足の図は 9000。4 近傍の図を除く)
-set yrange [-1000:8000]
+# 測線 4 を含むハイドログラフの縦軸の上限は 10000 m3/s にそろえる
+set yrange [-1000:10000]
 set ytics 1000
 
 # ---- Step 3: 4 本の測線(上流→下流の流量の成長) ----
@@ -166,8 +166,48 @@ set output "figs/step3_transects.png"
 set title "Step 3: 各測線のハイドログラフ(上流 1 → 下流 4)"
 plot for [i=1:4] sprintf('result_step3/fluxes/flux000%d.csv', i) using 2:3 with lines lw 1.5 title sprintf("測線 %d", i)
 
+# ---- Step 3: 河床を整えた効果(実線 = 河床を整えた標高、破線 = 窪地除去済みの標高) ----
+set output "figs/step3_bed_effect.png"
+set title "Step 3: 河床を整える前と後のハイドログラフ"
+plot for [i=1:4] sprintf('result_step3/fluxes/flux000%d.csv', i) using 2:3 with lines lw 1.5 lc i title sprintf("測線 %d", i), \
+     for [i=1:4] sprintf('result_step3_filled/fluxes/flux000%d.csv', i) using 2:3 with lines lw 1.5 lc i dt 2 notitle, \
+     keyentry with lines lw 1.5 lc rgb '#000000' title "実線: 河床を整えた標高", \
+     keyentry with lines lw 1.5 lc rgb '#000000' dt 2 title "破線: 窪地除去済みの標高"
+
 # ---- Step 4: 遮断・浸透による流出の減少 ----
 set output "figs/step4_hydro.png"
 set title "Step 4: 降雨遮断と地下浸透の効果(測線 4)"
 plot 'result_step3/fluxes/flux0004.csv' using 2:3 with lines lw 1.5 title "Step 3(損失なし)", \
      'result_step4/fluxes/flux0004.csv' using 2:3 with lines lw 1.5 title "Step 4(遮断+浸透)"
+
+# ---- Step 5: 出口の湛水が測線 4 の位置に及ぼす影響(プローブ 4 の水深。CSV の 4 列目) ----
+set output "figs/step5_probe.png"
+set title "Step 5: 流域出口の境界条件の効果(プローブ 4 の水深)"
+set ylabel "水深 (m)"
+set yrange [0:10]
+set ytics 2
+plot 'result_step4/probes/probe0004.csv' using 2:4 with lines lw 1.5 title "Step 4(出口なし)", \
+     'result_step5/probes/probe0004.csv' using 2:4 with lines lw 1.5 title "Step 5(完全排水口あり)"
+
+# ---- Step 2: 本川の河床の縦断(窪地除去済みの標高と、河床を整えた標高) ----
+# wrk_bed.txt の列: 流域出口からの距離 (km), 窪地除去済みの標高, 河床を整えた標高, セル番号 ix, iy
+# (Fig_chichibu.sh が、本川の源頭から流域出口まで河道セルをたどって作る)。
+# 測線の位置は、param_step3.txt の flxy(測線の列 ix と、iy の範囲)に入る河道セルで示す
+reset
+set datafile separator whitespace
+set terminal pngcairo size 760,440 font ",11"
+set grid
+set xlabel "流域出口からの距離 (km)"
+set ylabel "標高 (m)"
+set xrange [56:0]
+set yrange [0:1000]
+array TI[4]  = [  82, 107, 147, 216 ]
+array TJ1[4] = [ 103, 100, 102,  37 ]
+array TJ2[4] = [ 107, 103, 105,  43 ]
+ontr(k, i, j) = (i == TI[k] && j >= TJ1[k] && j <= TJ2[k])
+set output "figs/step2_bed.png"
+set title "Step 2: 本川の河床の縦断(○ は測線 1〜4 の位置)"
+plot 'wrk_bed.txt' using 1:2 with lines lw 1.5 lc rgb '#888888' title "窪地除去済みの標高(Chichibu_200m_filled)" noenhanced, \
+     '' using 1:3 with lines lw 1.5 lc rgb '#1f5fbf' title "河床を整えた標高(Chichibu_200m_cond)" noenhanced, \
+     for [k=1:4] '' using (ontr(k, $4, $5) ? $1 : NaN):3 with points pt 6 ps 1.5 lw 2 lc rgb '#000000' notitle, \
+     for [k=1:4] '' using (ontr(k, $4, $5) ? $1 : NaN):3:(sprintf("%d", k)) with labels offset 0,-1.3 notitle
