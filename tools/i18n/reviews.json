@@ -3641,29 +3641,29 @@
     {
       "source": "test/chichibu/data_chichibu/README.md",
       "target": "test/chichibu/en/data_chichibu/README.md",
-      "source_sha256": "e580c1f1f630388915175b4fabc8ae9e82d857a8d01ad6b9e6b76741b5dfb263",
-      "target_sha256": "4db1f5fece43fa719b9b2e470a4db5b50b225d4ea5a10ff18c9e8bda90974419",
+      "source_sha256": "8a2671e393a2a6a25367e3c08bdc0bce9a08cc817910a3fa46e7f1e68cd01acd",
+      "target_sha256": "e8233f361adcc1daa53d0782eb420912a4cec14f6e723ed0767bca2008a023e6",
       "reviewer": "Claude (Claude Code session; full-text content and lexical review, no model execution)",
       "method": "assistant",
-      "reviewed_on": "2026-11-13"
+      "reviewed_on": "2026-11-18"
     },
     {
       "source": "test/chichibu/data_chichibu_200m/README.md",
       "target": "test/chichibu/en/data_chichibu_200m/README.md",
-      "source_sha256": "d29f7ce3f128ec0578a821683c2fc853c3e3683c1d1ce6bae81b91ac06cf4aff",
-      "target_sha256": "16e803420adaafa0c5bef29ecf196638caf918e5e07c92d78ff5417217512d3d",
+      "source_sha256": "6f8bf93b103421579446117d821a52f4cbfef2386f19f1e7b4eddf916d4581cc",
+      "target_sha256": "df4d7d07f5a96c3807d5a56c5fc4b0591c2688694d07f40c79c94a64f5683da7",
       "reviewer": "Claude (Claude Code session; full-text content and lexical review, no model execution)",
       "method": "assistant",
-      "reviewed_on": "2026-11-13"
+      "reviewed_on": "2026-11-18"
     },
     {
       "source": "test/chichibu/data_chichibu_50m/README.md",
       "target": "test/chichibu/en/data_chichibu_50m/README.md",
-      "source_sha256": "5cbe9a24eaf013c168ee6dfcf6a6ded7904713ba459b7d88d04562be3549b96a",
-      "target_sha256": "a8d4192b1db2a2e565815aa0cb4136d1e0205ee5994ad5c705c4cb1400d8934b",
+      "source_sha256": "e80260b8ef79dca8443067be175052ed973f7596c98c37ca9d3ec5d8cf6726a7",
+      "target_sha256": "509409eac8c4cf11b8766218e2fe98c42be56c1a8334570d3e0e886cd6015822",
       "reviewer": "Claude (Claude Code session; full-text content and lexical review, no model execution)",
       "method": "assistant",
-      "reviewed_on": "2026-11-13"
+      "reviewed_on": "2026-11-18"
     },
     {
       "source": "test/chichibu/figs/chichibu.png",

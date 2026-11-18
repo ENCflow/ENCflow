@@ -12,6 +12,15 @@ developer.md §68.18 (schemes 1 and 3 × dynamic reallocation). See
 param50_*.txt.
 
 - `Chichibu_50m_filled.txt` — elevation (depression-filled)
+- `Chichibu_50m_cond.txt` — elevation with a conditioned channel bed. The channel cells of
+  `Chichibu_50m_filled.txt` (the 14,361 cells of `Chichibu_50m_river_flowline.txt`) are rebuilt to follow the
+  valley bottom of the 10 m grid elevation (the same procedure as "Elevation with a conditioned channel bed"
+  in the [README of data_chichibu](../data_chichibu/README.md)). 14,168 channel cells are lowered (98.7 %;
+  median lowering 9.5 m, maximum 66.8 m). The 57 channel cells and 39 other cells on the 519.8 m water
+  surface are raised to the level of the surface (at most 2.08 m). The links at the same elevation as the
+  downstream cell go from 3,108 to 242, and there are no links with a reverse slope and no depressions. The
+  median difference between the lowest neighbouring cell and the bed is 11 m (used by the comparison
+  computations of developer.md §111)
 - `Chichibu_50m_basin.txt` — catchment mask (285,843 cells)
 - `Chichibu_50m_river.txt` — channel mask (19,714 cells; every 100 m channel cell
   contains a 50 m channel cell)
