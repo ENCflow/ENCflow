@@ -89,7 +89,7 @@ do for [s=1:2] {
   do for [t=1:2] {
     set title sprintf("%s: %s", SLB[s], TLB[t]) noenhanced
     set xrange [0:(t == 1 ? 150 : 360)]   # 上流は波形が短いので時間軸を縮める
-    set yrange [0:(s == 1 ? (t == 1 ? 1600 : 10000) : (t == 1 ? 200 : 1000))]   # 4 近傍は ENC の 1/8(上流)・1/10(下流)。本文に注記
+    set yrange [0:(s == 1 ? (t == 1 ? 1600 : 10000) : 100)]   # the 4-neighbor panels are 1/16 (upstream) and 1/100 (downstream) of ENC; noted in the text
     plot for [r=1:3] sprintf("result_supp_%s%s/fluxes/flux000%d.csv", RES[r], SFX[s], TRN[t]) \
          using 2:3 with lines lw 1.5 title RLB[r]
   }
@@ -116,14 +116,14 @@ do for [s=1:5] {
   do for [t=1:2] {
     set title sprintf("%s: %s", SLBA[s], TLBA[t]) noenhanced
     set xrange [0:(t == 1 ? 150 : 360)]
-    set yrange [0:(t == 1 ? 1800 : (s == 1 ? 18000 : 9000))]  # 移流項なしの下流だけ縦軸の範囲が違う(2 倍)
+    set yrange [0:(t == 1 ? 1800 : 15000)]   # the right column (transect 4) uses one range for all rows, wider than in the other figures (noted in the text)
     plot for [r=1:3] sprintf("result_supp_%s%s/fluxes/flux000%d.csv", RESA[r], SFXA[s], TRNA[t]) \
          using 2:3 with lines lw 1.5 title RLBA[r]
   }
 }
 unset multiplot
 
-# ---- 図 2b: 河道幅を 50 m に揃えた ENC(測線 1・4)。幅なしを破線で重ねる ----
+# ---- 図 2b: 河道幅を 50 m に揃えた ENC(測線 3・4)。幅なしを破線で重ねる ----
 reset
 set datafile separator comma
 set terminal pngcairo size 1000,360 font ",11"
@@ -134,13 +134,13 @@ set xlabel "time (min)"
 set ylabel "discharge (m^3/s)"
 set xrange [0:360]
 set key top right
-array TRNW[2] = [ 1, 4 ]
-array TLBW[2] = [ "upstream (transect 1)", "downstream (transect 4)" ]
+array TRNW[2] = [ 3, 4 ]
+array TLBW[2] = [ "transect 3", "transect 4" ]
 do for [t=1:2] {
   set title TLBW[t] noenhanced
-  set xrange [0:(t == 1 ? 150 : 360)]
-  set yrange [0:(t == 1 ? 1600 : 10000)]
-  if (t == 1) { set key top right font ",11" } else { set key top right Left reverse samplen 2 font ",9" }   # downstream: a smaller legend at the top right, where no curve passes
+  set xrange [0:(t == 1 ? 240 : 360)]
+  set yrange [0:10000]
+  set key top right Left reverse samplen 2 font ",9"
   plot sprintf("result_supp_200m/fluxes/flux000%d.csv", TRNW[t])     using 2:3 with lines lw 1.2 dt 2 lc rgb '#9467bd' title "200 m, no width", \
        sprintf("result_supp_200m_w50/fluxes/flux000%d.csv", TRNW[t]) using 2:3 with lines lw 1.8      lc rgb '#9467bd' title "200 m W = 50", \
        sprintf("result_supp_100m/fluxes/flux000%d.csv", TRNW[t])     using 2:3 with lines lw 1.2 dt 2 lc rgb '#2ca02c' title "100 m, no width", \
@@ -207,7 +207,7 @@ set multiplot layout 1,2 title "Effect of the conditioned bed (solid: conditione
 set grid
 set xlabel "time (min)"
 set ylabel "discharge (m^3/s)"
-set key top right
+set key top right Left reverse samplen 2 font ",9"   # a smaller legend at the top right, clear of the peaks
 array TRNB[2] = [ 3, 4 ]
 array TLBB[2] = [ "transect 3", "transect 4" ]
 do for [t=1:2] {
@@ -218,6 +218,29 @@ do for [t=1:2] {
        sprintf("result_supp_200m_filled/fluxes/flux000%d.csv", TRNB[t]) using 2:3 with lines lw 1.2 dt 2 lc rgb '#9467bd' title "200 m (depression-filled)", \
        sprintf("result_supp_100m/fluxes/flux000%d.csv", TRNB[t])        using 2:3 with lines lw 1.8      lc rgb '#2ca02c' title "100 m", \
        sprintf("result_supp_100m_filled/fluxes/flux000%d.csv", TRNB[t]) using 2:3 with lines lw 1.2 dt 2 lc rgb '#2ca02c' title "100 m (depression-filled)"
+}
+unset multiplot
+
+# ---- 図 2f: 河道の粗度と移流項(測線 4。200 m・100 m 格子)。粗度 0.02 の移流項なしは、洪水波が段波になる ----
+reset
+set datafile separator comma
+set terminal pngcairo size 1000,360 font ",11"
+set output "en/figs/supp_rough.png"
+set multiplot layout 1,2 title "Channel roughness and the advection term (transect 4; solid: scheme 3, dashed: no advection)" noenhanced
+set grid
+set xlabel "time (min)"
+set ylabel "discharge (m^3/s)"
+set key top right
+set xrange [0:300]
+set yrange [0:30000]   # 段波のピークを収めるため、この図だけ縦軸の範囲が広い(本文に注記)
+array RESR[2] = [ "200m", "100m" ]
+array RLBR[2] = [ "200 m grid", "100 m grid" ]
+do for [r=1:2] {
+  set title RLBR[r] noenhanced
+  plot sprintf("result_supp_%s/fluxes/flux0004.csv", RESR[r])           using 2:3 with lines lw 1.8      lc rgb '#444444' title "n = 0.04, scheme 3", \
+       sprintf("result_supp_%s_noadv/fluxes/flux0004.csv", RESR[r])     using 2:3 with lines lw 1.2 dt 2 lc rgb '#444444' title "n = 0.04, no advection", \
+       sprintf("result_supp_%s_n02/fluxes/flux0004.csv", RESR[r])       using 2:3 with lines lw 1.8      lc rgb '#e08a00' title "n = 0.02, scheme 3", \
+       sprintf("result_supp_%s_n02_noadv/fluxes/flux0004.csv", RESR[r]) using 2:3 with lines lw 1.2 dt 2 lc rgb '#e08a00' title "n = 0.02, no advection"
 }
 unset multiplot
 

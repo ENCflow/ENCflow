@@ -5189,8 +5189,8 @@
     {
       "source": "tutorials/chichibu/Fig_supp.plt",
       "target": "tutorials/chichibu/en/Fig_supp.plt",
-      "source_sha256": "48bec94a1f4ba15455c98ad64f762be02f5b0aaa1fba866372070ece48df8dce",
-      "target_sha256": "2eecccba556c2b576ac5d6597d496d61fd1d844d6855bd0356052fa6bdacac7c",
+      "source_sha256": "55176343fbfd44fed8322b3ccd8a9c2c0cc4b67e7aabc656c6d667e602330fe4",
+      "target_sha256": "7e6eb1d14b8f3d25a7d468e6fdd87376f354b7ad6352a1e29a8c8d9c392c146d",
       "reviewer": "Claude (Claude Code session; full-text content and lexical review, no model execution)",
       "method": "assistant",
       "reviewed_on": "2026-11-18"
@@ -5198,8 +5198,8 @@
     {
       "source": "tutorials/chichibu/README.md",
       "target": "tutorials/chichibu/en/README.md",
-      "source_sha256": "4e21f42886465a5aba28f28b03d41bb9a2c2d76583931e0898d81ac7510d8987",
-      "target_sha256": "b128023220a69502ce181d37d818564b117b05980b57889de9f05487d0ab3f22",
+      "source_sha256": "ad12e8ac6e32d7c486100dae89f140964f9cb1ec0e5689506a43dfc82fe25a92",
+      "target_sha256": "5746aa6d9ec8e1d16cb965ddfcbf08ea23a7e96b4176afdebf0b39f39fa82d2f",
       "reviewer": "Claude (Claude Code session; full-text content and lexical review, no model execution)",
       "method": "assistant",
       "reviewed_on": "2026-11-18"
@@ -5358,49 +5358,67 @@
       "reviewed_on": "2026-11-18"
     },
     {
-      "source": "tutorials/chichibu/figs/supp_hend.png",
-      "target": "tutorials/chichibu/en/figs/supp_hend.png",
-      "source_sha256": "ee16d076c1949c260f607d4c704ed49f2ea2f8d55abbdd77bf6180a40730e45c",
-      "target_sha256": "e4dfdc60b1793071c34d7c18fc1094a70a5d73e136cbd88de6b5cc91f775ec13",
+      "source": "tutorials/chichibu/figs/supp_bed.png",
+      "target": "tutorials/chichibu/en/figs/supp_bed.png",
+      "source_sha256": "15fc6eeabdf4779002c7a5c81f88a53aec536b097f0554685e7a5a5eee07a8f6",
+      "target_sha256": "34c638e7de16a6d5b7cef4c913b4330d714ea6f6bcdb7ec014f76e37cf222074",
       "reviewer": "Claude (Claude Code session; full-text content and lexical review, no model execution)",
       "method": "assistant",
-      "reviewed_on": "2026-11-17"
+      "reviewed_on": "2026-11-18"
+    },
+    {
+      "source": "tutorials/chichibu/figs/supp_hend.png",
+      "target": "tutorials/chichibu/en/figs/supp_hend.png",
+      "source_sha256": "1128e4ce3ac2746bb30a0b0b2f173b9708ae832e7de0ddc58301bf996ff82168",
+      "target_sha256": "c0917c3845b59b4722e1f674670b5b282a6dc2303eaa95774db636b7b58beedb",
+      "reviewer": "Claude (Claude Code session; full-text content and lexical review, no model execution)",
+      "method": "assistant",
+      "reviewed_on": "2026-11-18"
     },
     {
       "source": "tutorials/chichibu/figs/supp_hydro.png",
       "target": "tutorials/chichibu/en/figs/supp_hydro.png",
-      "source_sha256": "c3b26a1c14b314d0c34c17e82571a10061b702d8cd89350e499548fe789b4555",
-      "target_sha256": "1da13ad3c3c454e9fbe0c3e833051e149465ff2b9b16d30df2bcf7ced188cfcd",
+      "source_sha256": "f5bec88545696baff1c6f377800a29101810ab6ad4d048b8fd7f76e2a5aa9206",
+      "target_sha256": "074f23c59f3d6215f6b776d5a8c7096a2b998b8f261513b79568ec0a08e1471c",
       "reviewer": "Claude (Claude Code session; full-text content and lexical review, no model execution)",
       "method": "assistant",
-      "reviewed_on": "2026-11-17"
+      "reviewed_on": "2026-11-18"
     },
     {
       "source": "tutorials/chichibu/figs/supp_hydro_adv.png",
       "target": "tutorials/chichibu/en/figs/supp_hydro_adv.png",
-      "source_sha256": "c56d23017fecd5cd22245f3ad55cc4d885d668ad0b5c82fefec37970034d924f",
-      "target_sha256": "2f6f72fba1b1aedaaa99f7450b358199b7d6674975d7da7579166984fe83ee1f",
+      "source_sha256": "91b165176ce1088cc11d2ace9625761ee13035528ab957adfc2f48a0aff5d89b",
+      "target_sha256": "1fec319e0390dc3a37a35d02afa572c6ddfa7fd5d235c050ed944abccfc085f0",
       "reviewer": "Claude (Claude Code session; full-text content and lexical review, no model execution)",
       "method": "assistant",
-      "reviewed_on": "2026-11-17"
+      "reviewed_on": "2026-11-18"
     },
     {
       "source": "tutorials/chichibu/figs/supp_hydro_w50.png",
       "target": "tutorials/chichibu/en/figs/supp_hydro_w50.png",
-      "source_sha256": "020323471493d517a64f23d08cbd1c5255b8eff635645b6c966e6e3d5739203e",
-      "target_sha256": "4b02f19f8831ce53269893199fccf2f023edbc549be12dec148b869fd8eeef06",
+      "source_sha256": "582bbcc050aa471615e12c7b7ed8207edc28c57e04515b8b28af8b3402b066a5",
+      "target_sha256": "6c3e0a7d6dee29bd36288075de1d20a51b7bcf4e8202fb8d2f08a4802f3631b8",
       "reviewer": "Claude (Claude Code session; full-text content and lexical review, no model execution)",
       "method": "assistant",
-      "reviewed_on": "2026-11-17"
+      "reviewed_on": "2026-11-18"
     },
     {
-      "source": "tutorials/chichibu/figs/supp_t3_osc.png",
-      "target": "tutorials/chichibu/en/figs/supp_t3_osc.png",
-      "source_sha256": "c45c89ea6d3f82cd0afd8c66d0bd2fe03962ecab79a100bf695752538f6777a2",
-      "target_sha256": "b356ba1d8ddc2bf500d666415cc2125f80324e7d0cac2256a4f2d65b93216f1d",
+      "source": "tutorials/chichibu/figs/supp_osc.png",
+      "target": "tutorials/chichibu/en/figs/supp_osc.png",
+      "source_sha256": "1e39e4e449a28cac7e022d660a3d62db1b3ef2c5212e033d87e6aa0a4597063f",
+      "target_sha256": "15394ddfc886cf920ac157b88cb20cc47622810c52200d7198ed67693a3481e3",
       "reviewer": "Claude (Claude Code session; full-text content and lexical review, no model execution)",
       "method": "assistant",
-      "reviewed_on": "2026-11-17"
+      "reviewed_on": "2026-11-18"
+    },
+    {
+      "source": "tutorials/chichibu/figs/supp_rough.png",
+      "target": "tutorials/chichibu/en/figs/supp_rough.png",
+      "source_sha256": "14e494777a196fc1d96bd473703e2d2b4ea820a69f2b946520cbed68e28baead",
+      "target_sha256": "d9a0d52c0a4d14bf6a0ca20addbf4567c36196ffe29169a5c2b94ea9bd6cb648",
+      "reviewer": "Claude (Claude Code session; full-text content and lexical review, no model execution)",
+      "method": "assistant",
+      "reviewed_on": "2026-11-18"
     },
     {
       "source": "tutorials/chichibu/figs/supp_transects.png",

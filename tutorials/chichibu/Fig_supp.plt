@@ -1,6 +1,6 @@
-# 補足節(解像度の影響・4 近傍との比較・移流項の扱い・河床を整えた効果)の図を figs/supp_*.png に描画する。
-# 事前に Fig_supp.sh が 25 ケースの計算を result_supp_{200m,100m,50m}[_4nb|_w50|_filled|_filled_noadv|_s1|_s1u|_s1f|_noadv] に
-# 用意していることを前提とする(_filled・_filled_noadv は 200 m・100 m だけで、_filled_noadv は本文の数値にだけ使う。
+# 補足節(解像度の影響・4 近傍との比較・河床を整えた効果・移流項の扱い・河道の粗度)の図を figs/supp_*.png に描画する。
+# 事前に Fig_supp.sh が 29 ケースの計算を result_supp_{200m,100m,50m}[_4nb|_w50|_filled|_filled_noadv|_s1|_s1u|_s1f|_noadv|_n02|_n02_noadv] に
+# 用意していることを前提とする(_filled・_filled_noadv・_n02・_n02_noadv は 200 m・100 m だけで、_filled_noadv は本文の数値にだけ使う。
 # 単体では実行しない)。
 
 set datafile separator whitespace
@@ -89,7 +89,7 @@ do for [s=1:2] {
   do for [t=1:2] {
     set title sprintf("%s: %s", SLB[s], TLB[t]) noenhanced
     set xrange [0:(t == 1 ? 150 : 360)]   # 上流は波形が短いので時間軸を縮める
-    set yrange [0:(s == 1 ? (t == 1 ? 1600 : 10000) : (t == 1 ? 200 : 1000))]   # 4 近傍は ENC の 1/8(上流)・1/10(下流)。本文に注記
+    set yrange [0:(s == 1 ? (t == 1 ? 1600 : 10000) : 100)]   # 4 近傍は ENC の 1/16(上流)・1/100(下流)。本文に注記
     plot for [r=1:3] sprintf("result_supp_%s%s/fluxes/flux000%d.csv", RES[r], SFX[s], TRN[t]) \
          using 2:3 with lines lw 1.5 title RLB[r]
   }
@@ -116,14 +116,14 @@ do for [s=1:5] {
   do for [t=1:2] {
     set title sprintf("%s: %s", SLBA[s], TLBA[t]) noenhanced
     set xrange [0:(t == 1 ? 150 : 360)]
-    set yrange [0:(t == 1 ? 1800 : (s == 1 ? 18000 : 9000))]  # 移流項なしの下流だけ縦軸の範囲が違う(2 倍)
+    set yrange [0:(t == 1 ? 1800 : 15000)]   # 右の列(測線 4)は、全部の段で同じ範囲(ほかの図より広い。本文に注記)
     plot for [r=1:3] sprintf("result_supp_%s%s/fluxes/flux000%d.csv", RESA[r], SFXA[s], TRNA[t]) \
          using 2:3 with lines lw 1.5 title RLBA[r]
   }
 }
 unset multiplot
 
-# ---- 図 2b: 河道幅を 50 m に揃えた ENC(測線 1・4)。幅なしを破線で重ねる ----
+# ---- 図 2b: 河道幅を 50 m に揃えた ENC(測線 3・4)。幅なしを破線で重ねる ----
 reset
 set datafile separator comma
 set terminal pngcairo size 1000,360 font ",11"
@@ -134,13 +134,13 @@ set xlabel "時間 (min)"
 set ylabel "流量 (m^3/s)"
 set xrange [0:360]
 set key top right
-array TRNW[2] = [ 1, 4 ]
-array TLBW[2] = [ "上流(測線 1)", "下流(測線 4)" ]
+array TRNW[2] = [ 3, 4 ]
+array TLBW[2] = [ "測線 3", "測線 4" ]
 do for [t=1:2] {
   set title TLBW[t] noenhanced
-  set xrange [0:(t == 1 ? 150 : 360)]
-  set yrange [0:(t == 1 ? 1600 : 10000)]
-  if (t == 1) { set key top right font ",11" } else { set key top right Left reverse samplen 2 font ",9" }   # 下流は、曲線のない右上に小さめの凡例を置く
+  set xrange [0:(t == 1 ? 240 : 360)]
+  set yrange [0:10000]
+  set key top right Left reverse samplen 2 font ",9"
   plot sprintf("result_supp_200m/fluxes/flux000%d.csv", TRNW[t])     using 2:3 with lines lw 1.2 dt 2 lc rgb '#9467bd' title "200 m 幅なし", \
        sprintf("result_supp_200m_w50/fluxes/flux000%d.csv", TRNW[t]) using 2:3 with lines lw 1.8      lc rgb '#9467bd' title "200 m W = 50", \
        sprintf("result_supp_100m/fluxes/flux000%d.csv", TRNW[t])     using 2:3 with lines lw 1.2 dt 2 lc rgb '#2ca02c' title "100 m 幅なし", \
@@ -204,7 +204,7 @@ set multiplot layout 1,2 title "河床を整えた効果(実線: 河床を整え
 set grid
 set xlabel "時間 (min)"
 set ylabel "流量 (m^3/s)"
-set key top right
+set key top right Left reverse samplen 2 font ",9"   # ピークに重ならないように、右上に小さめの凡例を置く
 array TRNB[2] = [ 3, 4 ]
 array TLBB[2] = [ "測線 3", "測線 4" ]
 do for [t=1:2] {
@@ -215,6 +215,29 @@ do for [t=1:2] {
        sprintf("result_supp_200m_filled/fluxes/flux000%d.csv", TRNB[t]) using 2:3 with lines lw 1.2 dt 2 lc rgb '#9467bd' title "200 m(窪地除去済み)", \
        sprintf("result_supp_100m/fluxes/flux000%d.csv", TRNB[t])        using 2:3 with lines lw 1.8      lc rgb '#2ca02c' title "100 m", \
        sprintf("result_supp_100m_filled/fluxes/flux000%d.csv", TRNB[t]) using 2:3 with lines lw 1.2 dt 2 lc rgb '#2ca02c' title "100 m(窪地除去済み)"
+}
+unset multiplot
+
+# ---- 図 2f: 河道の粗度と移流項(測線 4。200 m・100 m 格子)。粗度 0.02 の移流項なしは、洪水波が段波になる ----
+reset
+set datafile separator comma
+set terminal pngcairo size 1000,360 font ",11"
+set output "figs/supp_rough.png"
+set multiplot layout 1,2 title "河道の粗度と移流項(測線 4。実線: スキーム 3、破線: 移流項なし)" noenhanced
+set grid
+set xlabel "時間 (min)"
+set ylabel "流量 (m^3/s)"
+set key top right
+set xrange [0:300]
+set yrange [0:30000]   # 段波のピークを収めるため、この図だけ縦軸の範囲が広い(本文に注記)
+array RESR[2] = [ "200m", "100m" ]
+array RLBR[2] = [ "200 m 格子", "100 m 格子" ]
+do for [r=1:2] {
+  set title RLBR[r] noenhanced
+  plot sprintf("result_supp_%s/fluxes/flux0004.csv", RESR[r])           using 2:3 with lines lw 1.8      lc rgb '#444444' title "粗度 0.04・スキーム 3", \
+       sprintf("result_supp_%s_noadv/fluxes/flux0004.csv", RESR[r])     using 2:3 with lines lw 1.2 dt 2 lc rgb '#444444' title "粗度 0.04・移流項なし", \
+       sprintf("result_supp_%s_n02/fluxes/flux0004.csv", RESR[r])       using 2:3 with lines lw 1.8      lc rgb '#e08a00' title "粗度 0.02・スキーム 3", \
+       sprintf("result_supp_%s_n02_noadv/fluxes/flux0004.csv", RESR[r]) using 2:3 with lines lw 1.2 dt 2 lc rgb '#e08a00' title "粗度 0.02・移流項なし"
 }
 unset multiplot
 
