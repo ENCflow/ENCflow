@@ -22,6 +22,9 @@
 #                                 水は基本と同じ。透水係数だけでは応答が決まらないことを見る)
 #   process_l2                    過程計算。土層の側方を 3600 mm/h に下げ、その下に比湧水量の小さい第 2 層
 #                                 (f_gwlayer2 = 1。param.txt の &list_gwflow_layer2)を置く
+#   process_l2_d20                process_l2 の第 2 層を 20 m に厚くする(比湧水量 0.02 のまま。容量 400 mm)
+#   process_l2_d20_sy005          process_l2 の第 2 層を 20 m に厚くし、比湧水量を 0.005 に下げる(容量は
+#                                 process_l2 と同じ 100 mm。追補 3 の old water の議論で使う)
 #   process_r30                   過程計算。雨を 30 mm/h に(降雨を param_rain30.txt に差し替え、dt = 2 s)
 #   surface_r30_n03・n1・n3       浸透なし。雨 30 mm/h で rn0 = 0.3・1・3
 # 変えるのは下の CASES の項目と出力先だけで、地形・河道・計測は元の設定と同じ(降雨と時間刻みは、
@@ -52,6 +55,8 @@ CASES = {
     "process_sd1": ("param.txt", {"sd0": "1.0"}),
     "process_thick": ("param.txt", {"gw_ksh_mmh": "3600.0", "sy0": "0.02", "sd0": "5.0"}),
     "process_l2": ("param.txt", {"gw_ksh_mmh": "3600.0", "f_gwlayer2": "1"}),
+    "process_l2_d20": ("param.txt", {"gw_ksh_mmh": "3600.0", "f_gwlayer2": "1", "gw2_depth": "20.0"}),
+    "process_l2_d20_sy005": ("param.txt", {"gw_ksh_mmh": "3600.0", "f_gwlayer2": "1", "gw2_depth": "20.0", "gw2_sy": "0.005"}),
     "process_r30": ("param.txt", {"fn_precip": "'param_rain30.txt'", "dt": "2.0"}),
     "surface_r30_n03": ("param_surface.txt", {"fn_precip": "'param_rain30.txt'", "dt": "2.0"}),
     "surface_r30_n1": ("param_surface.txt", {"rn0": "1.0", "fn_precip": "'param_rain30.txt'", "dt": "2.0"}),
@@ -59,6 +64,7 @@ CASES = {
 }
 NOTE = {"rn0": "斜面の粗度", "f_govequation": "地表の流れ(1: 拡散波)", "gw_ksh_mmh": "側方飽和透水係数 (mm/h)",
         "sd0": "土層厚 (m)", "sy0": "有効間隙率", "f_gwlayer2": "第 2 層(1: 使う。設定は &list_gwflow_layer2)",
+        "gw2_depth": "第 2 層の層厚 (m)", "gw2_sy": "第 2 層の比湧水量",
         "fn_precip": "降雨(30 mm/h × 12 時間 × 2 回)", "dt": "時間刻み (s)"}
 
 

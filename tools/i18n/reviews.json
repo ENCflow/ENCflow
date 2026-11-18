@@ -2795,11 +2795,11 @@
     {
       "source": "examples/source_area/README.md",
       "target": "examples/source_area/en/README.md",
-      "source_sha256": "d37184b7bd0377eefe7d3c57de817ce1fe3c9a1fad8f83632d6c8ebc6c99e74d",
-      "target_sha256": "7814e55e50f35a87b0ef844b08667b7d7b353c30983899b7f9fdff1ca5a9d093",
-      "reviewer": "Claude (Claude Code session; added in both languages: Supplement 2 (what the lateral saturated conductivity of a single layer is equivalent to: five subsections, two tables from plot_results.py, a table of other models, bullets), a bullet in 'What this example shows', the sweep case process_thick (23 cases), tank 4 with a lag time in 'Relation to the storage function method' (definition, caption, table, one bullet), and references; the added and changed text, its numbers, the table rows and the in-page links were compared, and headings, bullets, table rows and figures were counted in both files; the rest unchanged since the previous record)",
+      "source_sha256": "ed282fad25e1c9f204185b2cfc6b26558fd0b3b876e2fc92870b329b2da463b0",
+      "target_sha256": "f24fd70fbe91c52ab3a9b4d9bf29461cff2115d40bb6eaf831488d2b64ca538e",
+      "reviewer": "Claude (Claude Code session; added Supplement 3 and the related edits in both languages from the same script tables, compared the two sentence by sentence, and checked that the heading, bullet, table, figure and link counts match)",
       "method": "assistant",
-      "reviewed_on": "2026-11-11"
+      "reviewed_on": "2026-11-16"
     },
     {
       "source": "examples/source_area/figs/compare.png",
@@ -2845,6 +2845,15 @@
       "reviewer": "Claude (Claude Code session; both drawn by plot_results.py from the same results, labels switched by the en argument; both images viewed)",
       "method": "assistant",
       "reviewed_on": "2026-11-10"
+    },
+    {
+      "source": "examples/source_area/figs/oldwater.png",
+      "target": "examples/source_area/en/figs/oldwater.png",
+      "source_sha256": "22ab8fcee8227e27989b3894dc3b5fdda049ddeda1c1544100239c81cabfa326",
+      "target_sha256": "6141da88ff5c38f5969b55ce1fd987f5361555cfdc5f40126f8094ab306b52c7",
+      "reviewer": "Claude (Claude Code session; drawn by plot_results.py from the same results with and without the en argument; both figures were viewed for labels and overlaps)",
+      "method": "assistant",
+      "reviewed_on": "2026-11-16"
     },
     {
       "source": "examples/source_area/figs/roughness.png",
