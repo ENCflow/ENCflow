@@ -19,8 +19,8 @@ param50_*.txt.
   median lowering 9.5 m, maximum 66.8 m). The 57 channel cells and 39 other cells on the 519.8 m water
   surface are raised to the level of the surface (at most 2.08 m). The links at the same elevation as the
   downstream cell go from 3,108 to 242, and there are no links with a reverse slope and no depressions. The
-  median difference between the lowest neighbouring cell and the bed is 11 m (used by the comparison
-  computations of developer.md §111)
+  median difference between the lowest neighbouring cell and the bed is 11 m (used by the supplement of
+  tutorials/chichibu)
 - `Chichibu_50m_basin.txt` — catchment mask (285,843 cells)
 - `Chichibu_50m_river.txt` — channel mask (19,714 cells; every 100 m channel cell
   contains a 50 m channel cell)

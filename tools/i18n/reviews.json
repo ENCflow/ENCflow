@@ -3434,11 +3434,11 @@
     {
       "source": "test/README.md",
       "target": "test/README.en.md",
-      "source_sha256": "6e0dcc5bdd65ea9f7447abe4d41620614c56841c8a079e7ed99ac6d5f843bc26",
-      "target_sha256": "81121bbe82da3d4b9828b118ae62c5d014bd37f20e901ca178631c88be00f85f",
+      "source_sha256": "0433ef537a353c0aa001bcfb94501b5fd825b401ca26d34477d30d3d82653308",
+      "target_sha256": "6033e9975511f898cd614739614c9150d29dbe9a31a83645bcf30d6decd2a1d9",
       "reviewer": "Claude (Claude Code session; full-text content and lexical review, no model execution)",
       "method": "assistant",
-      "reviewed_on": "2026-11-17"
+      "reviewed_on": "2026-11-18"
     },
     {
       "source": "test/avalanche/README.md",
@@ -3632,17 +3632,17 @@
     {
       "source": "test/chichibu/README.md",
       "target": "test/chichibu/en/README.md",
-      "source_sha256": "fd6ab89b4360a37b85890efdc2101b99463272667f79f0d2392f2b462372f1cf",
-      "target_sha256": "532df5a47c67390e1f517e75d0fd799f6e6d3ba667d7c332b5eed9a56abdc9ba",
+      "source_sha256": "128b7eb963d845bed6c6d29aa00522e16fb59d7d5bdc17d0c7296397a142670a",
+      "target_sha256": "87bab05d2e325acbfbd730d8bd69a6abb7e203e331531e622f4474315df26fa0",
       "reviewer": "Claude (Claude Code session; full-text content and lexical review, no model execution)",
       "method": "assistant",
-      "reviewed_on": "2026-11-17"
+      "reviewed_on": "2026-11-18"
     },
     {
       "source": "test/chichibu/data_chichibu/README.md",
       "target": "test/chichibu/en/data_chichibu/README.md",
-      "source_sha256": "8a2671e393a2a6a25367e3c08bdc0bce9a08cc817910a3fa46e7f1e68cd01acd",
-      "target_sha256": "e8233f361adcc1daa53d0782eb420912a4cec14f6e723ed0767bca2008a023e6",
+      "source_sha256": "1064bec75f1348e2e9c04478f296d65c8ff90acad91676efbc1d1d7c8c56598a",
+      "target_sha256": "e22a25a7c6bfd44c13ac07e44eda296a5808a1ba7d8a9d262732399b9806cf4d",
       "reviewer": "Claude (Claude Code session; full-text content and lexical review, no model execution)",
       "method": "assistant",
       "reviewed_on": "2026-11-18"
@@ -3650,8 +3650,8 @@
     {
       "source": "test/chichibu/data_chichibu_200m/README.md",
       "target": "test/chichibu/en/data_chichibu_200m/README.md",
-      "source_sha256": "6f8bf93b103421579446117d821a52f4cbfef2386f19f1e7b4eddf916d4581cc",
-      "target_sha256": "df4d7d07f5a96c3807d5a56c5fc4b0591c2688694d07f40c79c94a64f5683da7",
+      "source_sha256": "49a2f4e3b3e463f5e7d304b81fbee24883d00d639649432cb2ac13a730a106e7",
+      "target_sha256": "f5ef28e39369bc384123a4f75636d4e5d8ff506ad3b16916db2d0e2a28529159",
       "reviewer": "Claude (Claude Code session; full-text content and lexical review, no model execution)",
       "method": "assistant",
       "reviewed_on": "2026-11-18"
@@ -3659,8 +3659,8 @@
     {
       "source": "test/chichibu/data_chichibu_50m/README.md",
       "target": "test/chichibu/en/data_chichibu_50m/README.md",
-      "source_sha256": "e80260b8ef79dca8443067be175052ed973f7596c98c37ca9d3ec5d8cf6726a7",
-      "target_sha256": "509409eac8c4cf11b8766218e2fe98c42be56c1a8334570d3e0e886cd6015822",
+      "source_sha256": "1dc45586420145675ccdfc756439c41772747196683372c183fce9f79a2b4b99",
+      "target_sha256": "7e97178b770868ddac6214cfc09cbd24f89828e28d2733e30b60cc6605b6ca2a",
       "reviewer": "Claude (Claude Code session; full-text content and lexical review, no model execution)",
       "method": "assistant",
       "reviewed_on": "2026-11-18"
@@ -3673,6 +3673,24 @@
       "reviewer": "Claude (Claude Code session; full-text content and lexical review, no model execution)",
       "method": "assistant",
       "reviewed_on": "2026-11-17"
+    },
+    {
+      "source": "test/chichibu_cond/README.md",
+      "target": "test/chichibu_cond/en/README.md",
+      "source_sha256": "60db72d855714c0c7fb03d700608d3f2191ae73747ce65ca0ea3ee01ececaf95",
+      "target_sha256": "99447c4d29069a4d32b86e279840b1966defca048898fdb0c75009fd41065465",
+      "reviewer": "Claude (Claude Code session; full-text content and lexical review, no model execution)",
+      "method": "assistant",
+      "reviewed_on": "2026-11-18"
+    },
+    {
+      "source": "test/chichibu_cond/figs/chichibu_cond.png",
+      "target": "test/chichibu_cond/en/figs/chichibu_cond.png",
+      "source_sha256": "ae768bc6df83e13f550410b212e33e4eb279e7ee2dd4e17b06d36bd205daf144",
+      "target_sha256": "3b20b301e48f7ed46b8717b28d71099acf57dc75687d70125ac69a6f02904927",
+      "reviewer": "Claude (Claude Code session; full-text content and lexical review, no model execution)",
+      "method": "assistant",
+      "reviewed_on": "2026-11-18"
     },
     {
       "source": "test/chichibu_icmap/README.md",

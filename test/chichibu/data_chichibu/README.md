@@ -8,7 +8,7 @@
 - `Chichibu_100m_filled2.txt` — 標高(窪地処理済み。計算に使用)
 - `Chichibu_100m_cond.txt` — 標高(河床を整えたもの)。`Chichibu_100m_filled2.txt` の河道セル
   (`Chichibu_100m_river_flowline.txt` の 6,515 セル)だけを、同じ流域の 10 m 格子の標高の谷底に合わせて
-  作り直したもの(下の「河床を整えた標高」。developer.md §111 の比較の計算が使う)
+  作り直したもの(下の「河床を整えた標高」。回帰ケース test/chichibu_cond と、tutorials/chichibu の補足が使う)
 - `Chichibu_100m_basin.txt` — 流域マスク
 - `Chichibu_100m_river.txt` — 河道マスク(元のデータ。9,582 セル。developer.md §68 の派生実験の
   param_*.txt が使う)

@@ -127,5 +127,6 @@ python3 Fig.py    # figs/chichibu.png(引数 en で英語版を en/figs/ に)
 ## 関連文書
 
 - [tutorials/chichibu](../../tutorials/chichibu/README.md) — 同じ流域の 200 m 教材(手順・補足の解像度比較)
+- [test/chichibu_cond](../chichibu_cond/README.md) — この回帰ケースと同じ設定で、入力を、河床を整えた標高と河道の粗度 0.04 に替えた回帰ケース
 - [docs/users_guide/geoinfo.md](../../docs/users_guide/geoinfo.md) — 地形・マスク・河道マスクの入力
 - developer.md §68(ラスタ河道の移流と開口補正の設計記録: §68.7、68.12、68.14、68.16〜68.20、68.24、68.25、68.29)

@@ -35,6 +35,7 @@ analytical-solution or conservation check by Check_*.py.
 | **Shallow water and channels** | | | |
 | [wave/](wave/en/README.md) | A mound of water spreading over still water, the minimal example. Subject of tutorial 1 | Shallow water | ref |
 | [chichibu/](chichibu/en/README.md) | Rain on the real Chichibu catchment. Subject of tutorial 2. Many derived cases for resolution, schemes and levees | Shallow water, channels, rainfall, records | ref |
+| [chichibu_cond/](chichibu_cond/en/README.md) | The Chichibu regression case with the standard inputs (elevation with a conditioned channel bed, channel roughness 0.04); it differs from the regression case of chichibu only in these two inputs | Shallow water, channels, rainfall, records | ref |
 | [chichibu_icmap/](chichibu_icmap/en/README.md) | Chichibu with a gradient map of the fixed interception ratio. Regression for the band distribution of map files when the domain-mask window does not start at the grid origin (§82) | Shallow water, rainfall, interception | ref |
 | [dambreak/](dambreak/en/README.md) | Wet-bed dam break. Verification of the advection schemes against the Stoker solution | Shallow water | ref, analytic |
 | [hillslope/](hillslope/en/README.md) | Comparison of advection schemes for hillslope flow: analytical solution and grid convergence | Shallow water, rainfall | analytic (scripts) |

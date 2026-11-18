@@ -156,5 +156,6 @@ width mode is recommended (§68.25, §68.29).
 ## Related documents
 
 - [tutorials/chichibu](../../../tutorials/chichibu/en/README.md) — the 200 m tutorial on the same catchment (procedure; resolution comparison in the supplement)
+- [test/chichibu_cond](../../chichibu_cond/en/README.md) — a regression case with the same settings as this one, but with the inputs switched to the elevation with a conditioned channel bed and a channel roughness of 0.04
 - [docs/users_guide/geoinfo.md](../../../docs/en/users_guide/geoinfo.md) — input of terrain, masks and the channel mask
 - developer.md §68 (design record of the advection and opening correction for raster channels: §68.7, 68.12, 68.14, 68.16–68.20, 68.24, 68.25, 68.29)
