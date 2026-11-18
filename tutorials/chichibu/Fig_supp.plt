@@ -1,6 +1,7 @@
 # 補足節(解像度の影響・4 近傍との比較・移流項の扱い・河床を整えた効果)の図を figs/supp_*.png に描画する。
-# 事前に Fig_supp.sh が 23 ケースの計算を result_supp_{200m,100m,50m}[_4nb|_w50|_filled|_s1|_s1u|_s1f|_noadv] に
-# 用意していることを前提とする(_filled は 200 m・100 m だけ。単体では実行しない)。
+# 事前に Fig_supp.sh が 25 ケースの計算を result_supp_{200m,100m,50m}[_4nb|_w50|_filled|_filled_noadv|_s1|_s1u|_s1f|_noadv] に
+# 用意していることを前提とする(_filled・_filled_noadv は 200 m・100 m だけで、_filled_noadv は本文の数値にだけ使う。
+# 単体では実行しない)。
 
 set datafile separator whitespace
 set terminal pngcairo size 1100,780 font ",11"

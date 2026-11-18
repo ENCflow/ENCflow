@@ -11,6 +11,7 @@
 #   4nb      4 近傍(&list_enc に p_diagratio = 0.0 を追記)
 #   w50      河道幅を 50 m に揃えたサブグリッド河道
 #   filled   地盤高を、河床を整える前の窪地除去済みの標高に戻したもの(200 m・100 m だけ)
+#   filled_noadv  その標高で、移流項なし(200 m・100 m だけ。段々の河床での移流項の働きを見る)
 #   s1u・s1・s1f  旧移流スキーム(風上化指数 0.1・0.5・1.0)
 #   noadv    移流項なし(拡散波)
 # 200 m → 100 m → 50 m の順に回す。計算済みの result_supp_* があれば計算を飛ばす
@@ -88,7 +89,7 @@ for r in 200m 100m 50m; do
     sed -e '/^&list_enc/a\  f_advection_scheme = 1   ! 旧移流スキーム' \
         -e '/^&list_enc/a\  p_adv_upwind_index = 0.1 ! 風上化指数(既定 0.5 より弱い風上化)' "param_supp_$r.txt" > "wrk_supp_param_${r}_s1u.txt"
     grep -q 'p_adv_upwind_index = 0.1' "wrk_supp_param_${r}_s1u.txt"
-    # 風上化 0.1 は数値粘性が小さく、細かい格子では流速が大きくなるので、100 m は dt 1.0 s、
+    # 風上化 0.1 は数値粘性が小さく、流速が大きくなりやすいので、余裕を見て、100 m は dt 1.0 s、
     # 50 m は 0.5 s で回す
     case $r in
       100m) sed -i 's/^  dt = 1.5 /  dt = 1.0 /' "wrk_supp_param_${r}_s1u.txt"; grep -q 'dt = 1.0' "wrk_supp_param_${r}_s1u.txt" ;;
@@ -105,6 +106,14 @@ for r in 200m 100m 50m; do
     rm -rf result
     ./encflow "wrk_supp_param_${r}_s1f.txt"
     mv result "result_supp_${r}_s1f"
+  fi
+  if [ -n "$zfilled" ] && [ ! -d "result_supp_${r}_filled_noadv" ]; then   # 河床を整える前の標高で、移流項なし
+    sed -e "s#fn_z = \"$zcond\"#fn_z = \"$zfilled\"#" -e 's/f_govequation = 0/f_govequation = 1/' "param_supp_$r.txt" > "wrk_supp_param_${r}_filled_noadv.txt"
+    grep -q "fn_z = \"$zfilled\"" "wrk_supp_param_${r}_filled_noadv.txt"
+    grep -q 'f_govequation = 1' "wrk_supp_param_${r}_filled_noadv.txt"
+    rm -rf result
+    ./encflow "wrk_supp_param_${r}_filled_noadv.txt"
+    mv result "result_supp_${r}_filled_noadv"
   fi
   if [ ! -d "result_supp_${r}_noadv" ]; then    # 移流項なし(拡散波)
     sed -e 's/f_govequation = 0/f_govequation = 1/' "param_supp_$r.txt" > "wrk_supp_param_${r}_noadv.txt"

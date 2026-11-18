@@ -5189,7 +5189,7 @@
     {
       "source": "tutorials/chichibu/Fig_supp.plt",
       "target": "tutorials/chichibu/en/Fig_supp.plt",
-      "source_sha256": "d1f3a5982237bef9477ba79cba079765ed96b6eb6c74a9f561082787cee6fc49",
+      "source_sha256": "48bec94a1f4ba15455c98ad64f762be02f5b0aaa1fba866372070ece48df8dce",
       "target_sha256": "2eecccba556c2b576ac5d6597d496d61fd1d844d6855bd0356052fa6bdacac7c",
       "reviewer": "Claude (Claude Code session; full-text content and lexical review, no model execution)",
       "method": "assistant",
