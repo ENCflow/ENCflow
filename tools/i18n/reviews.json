@@ -5135,8 +5135,8 @@
     {
       "source": "tutorials/bmi/README.md",
       "target": "tutorials/bmi/en/README.md",
-      "source_sha256": "c0adb657f554a765d2a623a243dcb1883125ddb46356f8cc8a3c77a3c7f92e1d",
-      "target_sha256": "24361a5dcf5bb888490d68dba589e2973ccc3bb19318fa322f8dede5067e648a",
+      "source_sha256": "9f87ce32418e2a72b2808842a5306dd61bc0ef9f4a92070ca4f07fe87cd6c482",
+      "target_sha256": "4c5c7c838e99d201a9861de723efd9e7c99375ffa3d3b5bbd69bef3e7caefd91",
       "reviewer": "Claude (Claude Code session; full-text content and lexical review, no model execution)",
       "method": "assistant",
       "reviewed_on": "2026-11-18"
@@ -5144,20 +5144,20 @@
     {
       "source": "tutorials/bmi/param.txt",
       "target": "tutorials/bmi/en/param.txt",
-      "source_sha256": "abf3a87b978a893f9307de209db3da2cf5cb04810ee407ed2f0daf6fae6e453e",
-      "target_sha256": "61852c30ec186781e0b25a975837dd71b08c8a63f4dbb5570cc920f8990f1323",
+      "source_sha256": "6f571039cab26dcdf70ee130d44535869119c9cbbeb0c5f721597ec27e7bf86a",
+      "target_sha256": "c0811010a95343afa582d4973e8ad2bb32c04f777a6723a67d02835d09fab809",
       "reviewer": "Claude (Claude Code session; full-text content and lexical review, no model execution)",
       "method": "assistant",
-      "reviewed_on": "2026-11-14"
+      "reviewed_on": "2026-11-18"
     },
     {
       "source": "tutorials/bmi/param_norain.txt",
       "target": "tutorials/bmi/en/param_norain.txt",
-      "source_sha256": "71f365d32d1caa44ab734abe2b0fd6e888a79052664ae7409a2576aaa27c441b",
-      "target_sha256": "b39ed382bb30ab66828ee78bd1c72265af07f9659c0b59a98e03e05095c44a27",
+      "source_sha256": "2029f634d3ff40bb296d01f7705da08fd16286b61099cbd671daf0e9e45ff2e3",
+      "target_sha256": "4a9a553868441d3aa8a1a414c75cf326baab8340446d35dd2cd268c69547e96f",
       "reviewer": "Claude (Claude Code session; full-text content and lexical review, no model execution)",
       "method": "assistant",
-      "reviewed_on": "2026-11-13"
+      "reviewed_on": "2026-11-18"
     },
     {
       "source": "tutorials/chichibu/Fig_chichibu.plt",
