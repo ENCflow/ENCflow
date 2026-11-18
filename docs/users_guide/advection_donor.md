@@ -142,7 +142,9 @@ min(1, h/dd) にします。0 では水膜が dd を割った瞬間に 1 から 
 ## 5. 実例: 秩父の流域(200 m 格子)
 
 [チュートリアル chichibu](../../tutorials/chichibu/README.md) の Step 3 の設定(荒川上流の
-秩父流域、200 m 格子、総雨量 100 mm(ピーク 200 mm/h、1 時間)の雨、損失なし)で、0 と 3 を比べます。
+秩父流域、200 m 格子、総雨量 100 mm(ピーク 200 mm/h、1 時間)の雨、損失なし)の、地盤高を
+窪地除去済みの標高(`Chichibu_200m_filled.tif`)に、河道の粗度を 0.02 に替えた設定で、0 と 3 を
+比べます(窪地除去でできた平坦区間があり、河岸の水膜の影響がはっきり出る設定です)。
 
 ![秩父での 0 と 3 の違い](../figs/advection_donor_chichibu.png)
 
@@ -164,9 +166,9 @@ min(1, h/dd) にします。0 では水膜が dd を割った瞬間に 1 から 
   3 の中立の扱いに経路の値を使う分(§4)は小さく、`f_advection_bend = 0` どうしでは、3 が
   6,876 m³/s、0 が 5,439 m³/s(+26 %)です。
 
-再現するには、tutorials/chichibu の `param_step3.txt` の `&list_sysparam` に `fn_enc = "-"` を
-加え、次の `&list_enc` を足して実行します(dd の比較は、さらに `&list_sysparam` に
-`dd = 0.0001` と `dv = 0.0001` を加える)。
+再現するには、tutorials/chichibu の `param_step3.txt` の `fn_z` を `"Chichibu_200m_filled.tif"` に、
+`rn0_rw` を 0.02 に替え、`&list_sysparam` に `fn_enc = "-"` を加え、次の `&list_enc` を足して
+実行します(dd の比較は、さらに `&list_sysparam` に `dd = 0.0001` と `dv = 0.0001` を加える)。
 
 ```
 &list_enc

@@ -44,7 +44,7 @@ make
   developer.md §66 の表にあります。既定を変えるときは表と `param_*x.txt`
   を対で更新してください。
 - 遮断・蒸発散の使い方は [tutorials/chichibu](../../tutorials/chichibu/README.md) の
-  Step 5(降雨遮断と地下浸透)が教材です。
+  Step 4(降雨遮断と地下浸透)が教材です。
 
 ## 関連文書
 

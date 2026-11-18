@@ -184,8 +184,10 @@ starts, the normal velocity rises and the transition widens, so the water
 levels at which the inflow starts and stops differ, and the discharge can
 change like a step within one or two minutes when it starts or stops. Examples
 (both computed on the 200 m grid of the catchment of the
-[chichibu tutorial](../../../tutorials/chichibu/en/README.md) with 2 combined
-with `f_advection_lateral = 0`, the defaults until 2026-11-16):
+[chichibu tutorial](../../../tutorials/chichibu/en/README.md), with the
+depression-filled elevation (`Chichibu_200m_filled`) and a channel roughness
+of 0.02, with 2 combined with `f_advection_lateral = 0`, the defaults until
+2026-11-16):
 
 1. The inflow onto the high cell on the outer side of a channel bend starts
    with the channel level 0.2 m below the bed of the receiver and continues

@@ -134,10 +134,13 @@ for C after `conda activate encflow`).
 
 ### The parameter file of this tutorial
 
-`param.txt` is Step 2 of the chichibu tutorial (GeoTIFF input, channel
-mask and roughness) plus only the catchment-outlet drain of Step 5
-(`&list_bound_stage`). The input data are shared with chichibu through
-`dir_data = "../chichibu/data_chichibu"`. Even through the BMI, **the input
+`param.txt` has the same structure as Step 2 of the chichibu tutorial
+(GeoTIFF input, channel mask and roughness) plus a catchment-outlet drain
+like that of Step 5 (`&list_bound_stage`). The input data are shared with
+chichibu through `dir_data = "../chichibu/data_chichibu"` (the ground
+elevation is the depression-filled `Chichibu_200m_filled.tif` and the channel
+roughness is 0.02; these two and the level of the drain differ from Step 2
+onward of chichibu). Even through the BMI, **the input
 files, the result output and the screen display are exactly the same as in
 a standalone run**. You can also run it the usual way (instead of `make`
 creating a link to `encflow`, do `ln -s ../../bin/encflow .` and then

@@ -215,7 +215,11 @@ The method is **original to ENCflow** (developer.md §102, in Japanese).
 With the settings of Step 3 of the
 [Chichibu tutorial](../../../tutorials/chichibu/en/README.md) (the Chichibu
 catchment of the upper Arakawa, 200 m grid, 100 mm of rain in total (peak
-200 mm/h, one hour), no losses), 0 and 3 are compared.
+200 mm/h, one hour), no losses), but with the ground elevation set to the
+depression-filled elevation (`Chichibu_200m_filled.tif`) and the channel
+roughness set to 0.02, 0 and 3 are compared (this setup has the flat reaches
+left by depression filling, where the effect of the water film on the banks
+shows clearly).
 
 ![Difference between 0 and 3 in Chichibu](../../figs/advection_donor_chichibu_en.png)
 
@@ -246,10 +250,10 @@ reach (pond) created by depression filling, just upstream of transect 4.
   `f_advection_bend = 0` in both, 3 gives 6,876 m³/s and 0 gives
   5,439 m³/s (+26 %).
 
-To reproduce this, add `fn_enc = "-"` to `&list_sysparam` in
-`en/param_step3.txt` of tutorials/chichibu, append the following
-`&list_enc`, and run (for the dd comparison, also add `dd = 0.0001` and
-`dv = 0.0001` to `&list_sysparam`).
+To reproduce this, in `en/param_step3.txt` of tutorials/chichibu set `fn_z`
+to `"Chichibu_200m_filled.tif"` and `rn0_rw` to 0.02, add `fn_enc = "-"` to
+`&list_sysparam`, append the following `&list_enc`, and run (for the dd
+comparison, also add `dd = 0.0001` and `dv = 0.0001` to `&list_sysparam`).
 
 ```
 &list_enc

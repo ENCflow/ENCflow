@@ -129,10 +129,11 @@ B〜D の `python3 step1_hello.py` を「または」で毎回併記します。
 
 ### 題材のパラメータファイル
 
-`param.txt` は chichibu チュートリアルの Step 2(GeoTIFF 入力、河道
-マスクと粗度)に、Step 5 の流域出口の排水口(`&list_bound_stage`)だけを
+`param.txt` は chichibu チュートリアルの Step 2 と同じ構成(GeoTIFF 入力、河道
+マスクと粗度)に、Step 5 と同じ流域出口の排水口(`&list_bound_stage`)を
 足したものです。入力データは `dir_data = "../chichibu/data_chichibu"` で
-chichibu のものを共有しています。BMI を使っても**入力ファイル・結果の
+chichibu のものを共有しています(地盤高は窪地除去済みの `Chichibu_200m_filled.tif`、
+河道の粗度は 0.02 で、chichibu の Step 2 以降とは、この 2 つと排水口の水位が違います)。BMI を使っても**入力ファイル・結果の
 出力・画面表示はスタンドアロン実行とまったく同じ**です。試しに
 通常の方法でも実行できます(`make` で `encflow` へのリンクを張る
 代わりに `ln -s ../../bin/encflow .` として `./encflow param.txt`)。

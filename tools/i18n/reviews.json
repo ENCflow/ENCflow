@@ -122,11 +122,11 @@
     {
       "source": "docs/users_guide/advection_donor.md",
       "target": "docs/en/users_guide/advection_donor.md",
-      "source_sha256": "774218b3f8ce08cdb1d038418c2504e630de2864b4c4dc2c38a040f44ae182c4",
-      "target_sha256": "ddf92e9957e23abb9eb9d69553e3a025fc728d037d1b7de13b1e9804166f0440",
+      "source_sha256": "9e174716b907fe3364e17f5c63c6cb99f64e8fc852a60fe8bcc38712f01381db",
+      "target_sha256": "eb761a5a40df7cc93b4f612a3cdfb06d403d0e6a410cd524a99e17a23c607e20",
       "reviewer": "Claude (Claude Code session; full-text content and lexical review, no model execution)",
       "method": "assistant",
-      "reviewed_on": "2026-11-17"
+      "reviewed_on": "2026-11-18"
     },
     {
       "source": "docs/users_guide/bedmotion.md",
@@ -257,11 +257,11 @@
     {
       "source": "docs/users_guide/dry_head_cap.md",
       "target": "docs/en/users_guide/dry_head_cap.md",
-      "source_sha256": "6bcffe624dd76e9e297462a83134ad103f0286c33143d5907fb4b30fd5261b8f",
-      "target_sha256": "b24e4655e91f4a71a6d4523e973889dc8e99becc1642a167b27eae073c3d3230",
+      "source_sha256": "9adadd188b21db1605b4bd8ab539e2724209c6f53a19b33efef65e0b7b3f8188",
+      "target_sha256": "8b0788d590afbd1e54badd6ac2ecffea145e7cb2c7346285d9aaeb97285bab7f",
       "reviewer": "Claude (Claude Code session; full-text content and lexical review, no model execution)",
       "method": "assistant",
-      "reviewed_on": "2026-11-17"
+      "reviewed_on": "2026-11-18"
     },
     {
       "source": "docs/users_guide/encgrid.md",
@@ -4199,11 +4199,11 @@
     {
       "source": "test/icevap/README.md",
       "target": "test/icevap/en/README.md",
-      "source_sha256": "3b80c37687413c97e1777d8d04da11fb612c5aaf45f55fecd5708304ab3c2b68",
-      "target_sha256": "bf088545c0eea338d4f60ec5bfe4524c5946647885c6780bf7b15fb65e84b0a6",
+      "source_sha256": "ec1aecfdc36e3bb1829cd6e1ca44928cc158d34e6d6a2eb5f900220a63bbf46e",
+      "target_sha256": "21516488f9e1e675b9195e4e2dfa4da9f5a957569e3190b00333df5ad682dab4",
       "reviewer": "Claude (Claude Code session; full-text content and lexical review, no model execution)",
       "method": "assistant",
-      "reviewed_on": "2026-10-23"
+      "reviewed_on": "2026-11-18"
     },
     {
       "source": "test/inflowadv/README.md",
@@ -5135,11 +5135,11 @@
     {
       "source": "tutorials/bmi/README.md",
       "target": "tutorials/bmi/en/README.md",
-      "source_sha256": "a43f1e90d18a2f49adf86e9b18494be4af0590bcc4b4f299f4aef3921709ca6f",
-      "target_sha256": "4113aab2a741f212abbf363ce08320afa3c374ea7cc1268c71e66ed67c426031",
+      "source_sha256": "c0adb657f554a765d2a623a243dcb1883125ddb46356f8cc8a3c77a3c7f92e1d",
+      "target_sha256": "24361a5dcf5bb888490d68dba589e2973ccc3bb19318fa322f8dede5067e648a",
       "reviewer": "Claude (Claude Code session; full-text content and lexical review, no model execution)",
       "method": "assistant",
-      "reviewed_on": "2026-11-17"
+      "reviewed_on": "2026-11-18"
     },
     {
       "source": "tutorials/bmi/param.txt",
