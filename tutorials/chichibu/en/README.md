@@ -820,10 +820,13 @@ supplement covers how to read and deal with fine oscillations on the
 1-minute hydrographs of real-terrain computations, and the next one covers
 the effect of resolution and the character of the ENC grid.
 
-The computations and figures of the two supplements use the same
-depression-filled elevation as Step 1 (`Chichibu_*_filled`) and a channel
-roughness of 0.02 (not the conditioned bed and the roughness 0.04 used from
-Step 2 on).
+The numbers and figures in the text of the two supplements were computed
+with the same depression-filled elevation as Step 1 (`Chichibu_*_filled`), a
+channel roughness of 0.02 and no outlet (not the conditioned bed and the
+roughness 0.04 used from Step 2 on). The bundled `param_supp_*.txt` and
+`Fig_supp.sh` are set up with the conditioned bed, a channel roughness of
+0.04 and an open outlet, so running them as they are gives values and
+figures that differ from the text.
 
 The 1-minute hydrographs of real-terrain computations can carry fine
 oscillations (short ups and downs) as well as dips and steps. When
@@ -938,8 +941,9 @@ no outlet) with the depression-filled elevation and a channel roughness of
 data are the 100 m and
 50 m versions of the same area kept in `test/chichibu/` (text format),
 and the parameter files are `en/param_supp_200m.txt` /
-`en/param_supp_100m.txt` / `en/param_supp_50m.txt` (the 200 m one is
-that configuration with text input only). We also run the
+`en/param_supp_100m.txt` / `en/param_supp_50m.txt` with the elevation
+switched to the depression-filled one, the channel roughness set to 0.02
+and the catchment-outlet settings removed. We also run the
 **4-neighbor** computation mentioned at the end of Step 1
 (`p_diagratio = 0.0`, diagonal exchange closed) at the same three
 resolutions, to see what the 8-direction exchange of the ENC grid

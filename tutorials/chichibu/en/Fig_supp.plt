@@ -89,7 +89,7 @@ do for [s=1:2] {
   do for [t=1:2] {
     set title sprintf("%s: %s", SLB[s], TLB[t]) noenhanced
     set xrange [0:(t == 1 ? 150 : 360)]   # 上流は波形が短いので時間軸を縮める
-    set yrange [0:(s == 1 ? (t == 1 ? 1600 : 9000) : (t == 1 ? 200 : 1000))]   # 4 近傍は ENC の 1/8(上流)・1/9(下流)。本文に注記
+    set yrange [0:(s == 1 ? (t == 1 ? 1600 : 10000) : (t == 1 ? 200 : 1000))]   # 4 近傍は ENC の 1/8(上流)・1/10(下流)。本文に注記
     plot for [r=1:3] sprintf("result_supp_%s%s/fluxes/flux000%d.csv", RES[r], SFX[s], TRN[t]) \
          using 2:3 with lines lw 1.5 title RLB[r]
   }
@@ -139,7 +139,7 @@ array TLBW[2] = [ "upstream (transect 1)", "downstream (transect 4)" ]
 do for [t=1:2] {
   set title TLBW[t] noenhanced
   set xrange [0:(t == 1 ? 150 : 360)]
-  set yrange [0:(t == 1 ? 1600 : 9000)]
+  set yrange [0:(t == 1 ? 1600 : 10000)]
   if (t == 1) { set key top right font ",11" } else { set key top right Left reverse samplen 2 font ",9" }   # downstream: a smaller legend at the top right, where no curve passes
   plot sprintf("result_supp_200m/fluxes/flux000%d.csv", TRNW[t])     using 2:3 with lines lw 1.2 dt 2 lc rgb '#9467bd' title "200 m, no width", \
        sprintf("result_supp_200m_w50/fluxes/flux000%d.csv", TRNW[t]) using 2:3 with lines lw 1.8      lc rgb '#9467bd' title "200 m W = 50", \
@@ -150,48 +150,74 @@ do for [t=1:2] {
 }
 unset multiplot
 
-# ---- Figure 2d: dips and a wobble in the 1-minute values (transects 2 and 3 of the 50 m grid; example of item 3
-#      of the supplement "Fine oscillations in the hydrograph") ----
-# Transect 2 (left): dips at 71 and 73 min on the recession. Waves travel back and forth in the pond (flat reach) about 900 m upstream,
-# where a tributary joins, and the dips come when the water level on the outlet side falls.
-# Transect 3 (right): a wobble at 97-106 min on the recession, when the outlet of the pond 400 m upstream returns
-# from a deep, slow state to a shallow, fast one (the opposite switch occurs at 63-65 min on the rising limb).
-# Both are water stored and released in a reach and do not change the total runoff. They do not appear on the
-# 100 m and 200 m grids (dashed).
-# Lower panels: change per minute
+# ---- Figure 2d: fluctuations in the 1-minute values (examples for item 3 of the supplement
+#      "Fine oscillations in the hydrograph") ----
+# Left: transect 4 of the 100 m grid. At a bend 0.4 to 0.8 km upstream of the transect the channel depth becomes
+#     about equal to the height difference between the channel cell and the cells on both sides (water starts to
+#     spill onto, or retreats from, the bank cells), and the flow state switches back and forth.
+#     It does not appear with the 50 m wide subgrid channel or on the 200 m grid (dashed).
+# Right: transect 3 of the 50 m grid. At the upstream end of the deep reach formed by a bend 0.5 to 1 km downstream
+#     of the transect, the boundary where the shallow, fast flow enters the deep flow (a hydraulic jump) moves
+#     back and forth. It does not appear on the 100 m and 200 m grids (dashed).
+# Both are water stored and released in a reach and do not change the total runoff. Lower panels: change per minute
 reset
 set datafile separator comma
 set terminal pngcairo size 1100,640 font ",11"
-set output "en/figs/supp_t3_osc.png"
-set multiplot layout 2,2 title "Dips and a wobble at transects 2 and 3 of the 50 m grid (flow regime switching at the inlets and outlets of ponds upstream)" noenhanced
+set output "en/figs/supp_osc.png"
+set multiplot layout 2,2 title "Examples of fluctuations in the 1-minute values (left: transect 4 of the 100 m grid; right: transect 3 of the 50 m grid)" noenhanced
 set grid
 set xlabel "time (min)"
-set key top left
-array TR2[2]  = [ 2, 3 ]
-array X0[2]   = [ 30, 50 ]
-array X1[2]   = [ 90, 130 ]
-array YQ[2]   = [ 4500, 7500 ]
-# Upper panels: discharge
+array TRO[2]  = [ 4, 3 ]
+array XO0[2]  = [ 90, 40 ]
+array XO1[2]  = [ 250, 130 ]
+# 上段: 流量
 set ylabel "discharge (m^3/s)"
-do for [c=1:2] {
-  if (c == 1) { set key top left } else { set key top right }
-  set xrange [X0[c]:X1[c]]
-  set yrange [0:YQ[c]]
-  set title sprintf("transect %d", TR2[c])
-  plot sprintf("result_supp_50m/fluxes/flux%04d.csv", TR2[c])  using 2:3 with lines lw 1.6      lc rgb '#1f9fd0' title "50 m", \
-       sprintf("result_supp_100m/fluxes/flux%04d.csv", TR2[c]) using 2:3 with lines lw 1.2 dt 2 lc rgb '#2ca02c' title "100 m", \
-       sprintf("result_supp_200m/fluxes/flux%04d.csv", TR2[c]) using 2:3 with lines lw 1.2 dt 2 lc rgb '#9467bd' title "200 m"
-}
-# Lower panels: change per minute = discharge of the row - discharge of the previous row (reset to NaN at the head of each curve)
+set key top right
+set yrange [0:10000]
+set xrange [XO0[1]:XO1[1]]
+set title "transect 4 of the 100 m grid"
+plot "result_supp_100m/fluxes/flux0004.csv"     using 2:3 with lines lw 1.6      lc rgb '#2ca02c' title "100 m", \
+     "result_supp_100m_w50/fluxes/flux0004.csv" using 2:3 with lines lw 1.2 dt 2 lc rgb '#2ca02c' title "100 m W = 50", \
+     "result_supp_200m/fluxes/flux0004.csv"     using 2:3 with lines lw 1.2 dt 2 lc rgb '#9467bd' title "200 m"
+set xrange [XO0[2]:XO1[2]]
+set title "transect 3 of the 50 m grid"
+plot "result_supp_50m/fluxes/flux0003.csv"  using 2:3 with lines lw 1.6      lc rgb '#1f9fd0' title "50 m", \
+     "result_supp_100m/fluxes/flux0003.csv" using 2:3 with lines lw 1.2 dt 2 lc rgb '#2ca02c' title "100 m", \
+     "result_supp_200m/fluxes/flux0003.csv" using 2:3 with lines lw 1.2 dt 2 lc rgb '#9467bd' title "200 m"
+# 下段: 1 分ごとの変化 = 当該行の流量 − 前の行の流量(各曲線の先頭で前値を NaN に戻す)
 set ylabel "change per minute (m^3/s)"
 unset title
-do for [c=1:2] {
-  if (c == 1) { set key bottom left } else { set key top right }
-  set xrange [X0[c]:X1[c]]
-  set yrange [-1200:1000]
-  plot p = NaN, sprintf("result_supp_50m/fluxes/flux%04d.csv", TR2[c])  using 2:(d = $3 - p, p = $3, d) with lines lw 1.6      lc rgb '#1f9fd0' title "50 m", \
-       p = NaN, sprintf("result_supp_100m/fluxes/flux%04d.csv", TR2[c]) using 2:(d = $3 - p, p = $3, d) with lines lw 1.2 dt 2 lc rgb '#2ca02c' title "100 m", \
-       p = NaN, sprintf("result_supp_200m/fluxes/flux%04d.csv", TR2[c]) using 2:(d = $3 - p, p = $3, d) with lines lw 1.2 dt 2 lc rgb '#9467bd' title "200 m"
+set yrange [-3000:3000]
+set xrange [XO0[1]:XO1[1]]
+plot p = NaN, "result_supp_100m/fluxes/flux0004.csv"     using 2:(d = $3 - p, p = $3, d) with lines lw 1.6      lc rgb '#2ca02c' title "100 m", \
+     p = NaN, "result_supp_100m_w50/fluxes/flux0004.csv" using 2:(d = $3 - p, p = $3, d) with lines lw 1.2 dt 2 lc rgb '#2ca02c' title "100 m W = 50", \
+     p = NaN, "result_supp_200m/fluxes/flux0004.csv"     using 2:(d = $3 - p, p = $3, d) with lines lw 1.2 dt 2 lc rgb '#9467bd' title "200 m"
+set xrange [XO0[2]:XO1[2]]
+plot p = NaN, "result_supp_50m/fluxes/flux0003.csv"  using 2:(d = $3 - p, p = $3, d) with lines lw 1.6      lc rgb '#1f9fd0' title "50 m", \
+     p = NaN, "result_supp_100m/fluxes/flux0003.csv" using 2:(d = $3 - p, p = $3, d) with lines lw 1.2 dt 2 lc rgb '#2ca02c' title "100 m", \
+     p = NaN, "result_supp_200m/fluxes/flux0003.csv" using 2:(d = $3 - p, p = $3, d) with lines lw 1.2 dt 2 lc rgb '#9467bd' title "200 m"
+unset multiplot
+
+# ---- 図 2e: 河床を整えた効果(200 m・100 m 格子。実線 = 河床を整えた標高、破線 = 窪地除去済みの標高) ----
+reset
+set datafile separator comma
+set terminal pngcairo size 1000,360 font ",11"
+set output "en/figs/supp_bed.png"
+set multiplot layout 1,2 title "Effect of the conditioned bed (solid: conditioned channel bed, dashed: depression-filled elevation)" noenhanced
+set grid
+set xlabel "time (min)"
+set ylabel "discharge (m^3/s)"
+set key top right
+array TRNB[2] = [ 3, 4 ]
+array TLBB[2] = [ "transect 3", "transect 4" ]
+do for [t=1:2] {
+  set title TLBB[t] noenhanced
+  set xrange [0:(t == 1 ? 240 : 360)]
+  set yrange [0:10000]
+  plot sprintf("result_supp_200m/fluxes/flux000%d.csv", TRNB[t])        using 2:3 with lines lw 1.8      lc rgb '#9467bd' title "200 m", \
+       sprintf("result_supp_200m_filled/fluxes/flux000%d.csv", TRNB[t]) using 2:3 with lines lw 1.2 dt 2 lc rgb '#9467bd' title "200 m (depression-filled)", \
+       sprintf("result_supp_100m/fluxes/flux000%d.csv", TRNB[t])        using 2:3 with lines lw 1.8      lc rgb '#2ca02c' title "100 m", \
+       sprintf("result_supp_100m_filled/fluxes/flux000%d.csv", TRNB[t]) using 2:3 with lines lw 1.2 dt 2 lc rgb '#2ca02c' title "100 m (depression-filled)"
 }
 unset multiplot
 
