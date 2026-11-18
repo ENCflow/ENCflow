@@ -39,11 +39,11 @@
 
   f_rntype = 0         ! roughness coefficient type (0: default constant, 1: file)
   rn0 = 0.05           ! constant roughness coefficient (mountain slopes)
-  rn0_rw = 0.02        ! constant roughness coefficient on channel-mask cells
+  rn0_rw = 0.04        ! constant roughness coefficient on channel-mask cells
 
-  fn_z = "Chichibu_200m_filled.tif"        ! ground elevation file
-  fn_mask = "Chichibu_200m_basin.tif"      ! domain mask file
-  fn_rw = "Chichibu_200m_river.tif"        ! channel mask file
+  fn_z = "Chichibu_200m_cond.tif"            ! ground elevation file (elevation with a conditioned channel bed)
+  fn_mask = "Chichibu_200m_basin.tif"        ! domain mask file
+  fn_rw = "Chichibu_200m_river_flowline.tif" ! channel mask file
 /
 
 !======================================================================
@@ -53,5 +53,5 @@
   ! group 1: catchment outlet (stage below the bed = perfect drain)
   stage_cell(:,1,1) = 239, 19
   stage_cell(:,2,1) = 240, 19
-  stage_eta(1) = 111.0
+  stage_eta(1) = 100.0
 /

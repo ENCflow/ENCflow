@@ -57,13 +57,13 @@ eroded more deeply in the hollows of the perturbation (deepening of
 valleys); on the unconsolidated cliff the whole cliff collapses and deposits
 at the foot of the slope (red). Right: y-direction relief of the columns in
 the cliff-face band. For the consolidated cliff the amplitude grows × 1.24;
-for the unconsolidated cliff it decays × 0.78.
+for the unconsolidated cliff it decays × 0.77.
 
 ## Findings
 
 | Check | Consolidated cliff | Unconsolidated cliff | Result |
 |---|---|---|---|
-| Growth rate of the relief | × 1.24 (≥ 1.15) | × 0.78 (≤ 0.9) | PASS |
+| Growth rate of the relief | × 1.24 (≥ 1.15) | × 0.77 (≤ 0.9) | PASS |
 | Plateau interior \|Δz\| | 0.0 | 0.0 | PASS |
 | Minimum elevation z | 0.00 m | −1.30 m (≥ −1.5) | PASS |
 
@@ -93,8 +93,15 @@ for the unconsolidated cliff it decays × 0.78.
   evaluates the resistance laws of mixture flows along the slope (developer.md
   §101), the unconsolidated cliff goes from × 0.77 to × 0.78 (sediment leaving
   the cliff 32.3 → 31.1 m³). Rerun on 2026-11-10 with the current defaults it stays at
-  × 0.78 and the sediment leaving the cliff is 32.3 m³ (not separated out). The table and
-  the figures show these values.
+  × 0.78 and the sediment leaving the cliff is 32.3 m³ (not separated out). After the default of
+  the edge-depth cap became f_dry_head_cap = 2 on 2026-11-13 the factors stay at × 1.24 and × 0.78,
+  and the sediment leaving the cliff is 32.0 m³ (developer.md §108). After the default of the upwind
+  value on the edge just after a bend became f_advection_bend = 1 on 2026-11-15 the unconsolidated
+  cliff goes from × 0.78 to × 0.77 and the sediment leaving the cliff is 32.5 m³ (developer.md §110).
+  After the default of the edge-depth cap became f_dry_head_cap = 3 and the default of the advection
+  on side faces became f_advection_lateral = 1 on 2026-11-16 they stay at × 1.24 and × 0.77, and the
+  sediment leaving the cliff is 31.4 m³ (developer.md §110.32). The table and the figures show these
+  values.
 
 ## Related documents
 

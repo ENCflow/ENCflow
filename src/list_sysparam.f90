@@ -85,6 +85,7 @@ module list_sysparam
     integer :: f_out_fmax = 0                     ! ファイル出力(最大流体力 (h+hs)・V² のF9999)
     integer :: f_out_hd = 0                       ! ファイル出力(流動流木Hd0001。fn_driftwood 必須。§50)
     integer :: f_out_wd = 0                       ! ファイル出力(堆積流木Wd0001+期間最大到達量Wd9999)
+    integer :: f_out_wj = 0                       ! ファイル出力(集積流木Wj0001。fn_dwtrap 必須。§50.7)
     integer :: f_out_hbd = 0                      ! ファイル出力(流動瓦礫Bf0001。fn_bldgdebris 必須。§63)
     integer :: f_out_wbd = 0                      ! ファイル出力(堆積瓦礫Bd0001+期間最大到達量Bd9999)
     integer :: f_out_bds = 0                      ! ファイル出力(家屋の破壊率Bs0001)
@@ -217,6 +218,7 @@ subroutine list_sysparam_read(list, fn_sysparam)
   integer :: f_out_fmax                      ! ファイル出力(最大流体力F9999)
   integer :: f_out_hd                        ! ファイル出力(流動流木Hd0001)
   integer :: f_out_wd                        ! ファイル出力(堆積流木Wd0001/Wd9999)
+  integer :: f_out_wj                        ! ファイル出力(集積流木Wj0001)
   integer :: f_out_hbd, f_out_wbd, f_out_bds, f_out_fdmax  ! ファイル出力(瓦礫 Bf/Bd/Bs/Fd。§63)
   integer :: f_disp_debug                    ! 画面表示(S 系列を全有効桁で表示)
   integer :: f_disp_h                        ! 画面表示(最大水深 h_max)
@@ -272,7 +274,7 @@ subroutine list_sysparam_read(list, fn_sysparam)
                         f_out_vv, f_out_qq, f_out_qc, f_out_qd, &
                         f_out_hmax, f_out_hmaxt, f_out_vvmax, f_out_qqmax, f_out_qqmaxt, f_out_qqmaxd, &
                         f_out_hs, f_out_fs, f_out_dmax, f_out_dmaxt, f_out_fmax, &
-                        f_out_hd, f_out_wd, f_out_hbd, f_out_wbd, f_out_bds, f_out_fdmax, &
+                        f_out_hd, f_out_wd, f_out_wj, f_out_hbd, f_out_wbd, f_out_bds, f_out_fdmax, &
                         f_disp_debug, f_disp_h, f_disp_vv, f_disp_qq, f_disp_cn, &
                         f_out_ddd, f_out_dda, f_out_pre, f_out_hrs, f_out_fr, f_out_cn, f_out_hg, &
                         fn_geoinfo, fn_initial, fn_precip, fn_reservoir, fn_tide, fn_boundary, &
@@ -349,6 +351,7 @@ subroutine list_sysparam_read(list, fn_sysparam)
   f_out_fmax = list%f_out_fmax
   f_out_hd = list%f_out_hd
   f_out_wd = list%f_out_wd
+  f_out_wj = list%f_out_wj
   f_out_hbd = list%f_out_hbd
   f_out_wbd = list%f_out_wbd
   f_out_bds = list%f_out_bds
@@ -467,6 +470,7 @@ subroutine list_sysparam_read(list, fn_sysparam)
   list%f_out_fmax = f_out_fmax
   list%f_out_hd = f_out_hd
   list%f_out_wd = f_out_wd
+  list%f_out_wj = f_out_wj
   list%f_out_hbd = f_out_hbd
   list%f_out_wbd = f_out_wbd
   list%f_out_bds = f_out_bds

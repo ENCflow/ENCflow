@@ -248,7 +248,7 @@ A whole-catchment computation includes not only thin hillslope flow but also
 the deep, fast flow in the channel (the
 [supplement of the chichibu tutorial](../../../tutorials/chichibu/en/README.md#time-step-and-computational-cost)
 shows a case in which a finer grid raised the maximum velocity in the
-valleys, and a `dt` shrunk in proportion to the grid was not enough). When
+valleys, and a `dt` shrunk in proportion to the grid leaves no margin). When
 adding debris flow, groundwater and so on, check the
 [constraints of each process](#other-limits) as well as this clear-water
 table.

@@ -65,7 +65,7 @@ make            # links to the executables
 ./Run_MPI.sh 2  # MPI (if Run.sh has been run first, state.dat is compared byte by byte with the serial save)
 ```
 
-## Results (2026-11-06)
+## Results (2026-11-16)
 
 | Configuration | Values | Result |
 |---|---|---|
@@ -78,11 +78,12 @@ ratios to the long-wave travel time):
 |---|---:|---:|---:|---:|---:|
 | Depth (m) | 29.5 | 19.5 | 9.5 | 4.0 | 4.0 |
 | $`\int dx/\sqrt{gh}`$ (s) | 2.101 | 3.398 | 5.103 | 9.520 | 19.103 |
-| 0 (s) | 2.133 | 3.429 | 5.154 | 9.537 | 19.207 |
-| 2 (s) | 2.238 | 3.690 | 5.617 | 10.167 | 19.830 |
-| 3 (s) | 2.133 | 3.429 | 5.154 | 9.537 | 19.207 |
-| Ratio, 0 and 3 | 1.015 | 1.009 | 1.010 | 1.002 | 1.005 |
-| Ratio, 2 | 1.065 | 1.086 | 1.101 | 1.068 | 1.038 |
+| 0 (s) | 2.117 | 3.433 | 5.147 | 9.542 | 19.217 |
+| 2 (s) | 2.238 | 3.700 | 5.613 | 10.170 | 19.837 |
+| 3 (s) | 2.117 | 3.433 | 5.147 | 9.542 | 19.208 |
+| Ratio, 0 | 1.0075 | 1.0103 | 1.0086 | 1.0023 | 1.0059 |
+| Ratio, 3 | 1.0075 | 1.0103 | 1.0086 | 1.0023 | 1.0055 |
+| Ratio, 2 | 1.0650 | 1.0888 | 1.1000 | 1.0683 | 1.0384 |
 
 bump (speed at which the distance between the bumps grows; ratio to
 $`2\sqrt{g\cos\theta\,h_n}`$ = 5.8265 m/s of the thin-layer equations):
@@ -95,12 +96,22 @@ $`2\sqrt{g\cos\theta\,h_n}`$ = 5.8265 m/s of the thin-layer equations):
 
 ## Findings
 
-- The wave in deep water over the steep lake bed arrives, with 3, at the same times as
-  with no correction in the printed digits, and with 2 it is late over the slope (10 %
-  beyond the top of the slope, 4–7 % after it has reached the shoal). The departures of
-  0.2–1.5 % of the ratio of 0 and 3 from 1 are common to 0 and 3, and we think they come
-  from the change of the shape of the crest (shoaling and reflection from the slope)
-  and from numerical dispersion.
+- The wave in deep water over the steep lake bed arrives, with 3, at almost the same
+  times as with no correction (the same in the printed digits at four of the five probes,
+  and 0.009 s = 0.05 % apart at the last probe, x = 551 m), and with 2 it is late over the
+  slope (10 % beyond the top of the slope, 4–7 % after it has reached the shoal). The
+  departures of 0.2–1.0 % of the ratio of 0 and 3 from 1 are almost common to 0 and 3, and
+  we think they come from the change of the shape of the crest (shoaling and reflection
+  from the slope) and from numerical dispersion.
+- The arrival times of wave also change with the cap on the edge depth of the continuity
+  equation (`f_dry_head_cap` in `&list_enc`). On a submerged slope the default 3 takes
+  the harmonic mean of the depths on both sides as the upper limit of the edge depth on
+  climbing edges (edges where the bed of the receiving cell is higher than that of the
+  sending cell). Compared with 2, the default until 2026-11-16, the arrival times of 0 and
+  3 move by −0.8 to +0.1 % (2.133 → 2.117 s at the first probe), and the ratio to the
+  long-wave travel time comes closer to 1 at two of the five probes (1.0153 → 1.0075,
+  1.0101 → 1.0086) and moves away by 0.0005–0.0012 at three. All are inside the 2 % of the
+  check.
 - The speed of the waves on the uniform layer on the slope agrees with the thin-layer
   equations within 0.7 % with 3, and 2 and 0 are close to $`1/\cos\theta`$ and
   $`1/\cos^2\theta`$ times as in theory (we think the departure of 1.5 % of 0 is because

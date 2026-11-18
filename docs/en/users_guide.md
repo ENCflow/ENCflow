@@ -46,13 +46,14 @@ phenomenon-specific setups. Individual chapters also link to relevant cases.
 - [Parallel execution](users_guide/parallel.md) -- OpenMP, MPI, reproducibility of results
 
 **Part III: Feature reference**
-- [Shallow water computation](users_guide/swflow.md) (&list_enc, numerical parameters) -- scheme selection, adaptive Runge-Kutta, numerical constants <details><summary>Explanations (10)</summary>
+- [Shallow water computation](users_guide/swflow.md) (&list_enc, numerical parameters) -- scheme selection, adaptive Runge-Kutta, numerical constants <details><summary>Explanations (11)</summary>
   - [The shallow water equations and the dynamic, diffusion and kinematic waves](users_guide/shallow_water.md) -- primer for newcomers to flow computation: continuity and momentum equations, names and meaning of the terms (local, advection, pressure, gravity, friction), subcritical and supercritical flow, how the dynamic wave, local inertia, the diffusion wave and the kinematic wave differ and where each is used, why ENCflow uses the dynamic wave by default, limits of the hydrostatic approximation, correspondence with the Saint-Venant and unsteady-flow equations (primer for the shallow water chapter)
   - [ENC grid and time integration](users_guide/encgrid.md) -- passage widths of the eight-direction grid, continuity, cell-velocity reconstruction, pressure/friction/drag terms, adaptive Runge-Kutta, Courant number, parameters and the basis of their defaults (supplement to the shallow water chapter)
   - [Passage-width adjustment](users_guide/passage_width.md) -- reassignment where the eight-direction passage widths are blocked, how blockage is measured and how the default of f_opening_dynamic came to be 3, the view of the adjustment as effective resolution, and its limits (supplement to the shallow water chapter; intermediate to advanced)
   - [Steep-slope gravity correction](users_guide/steep_slope.md) -- the effective gravity g cos²θ and the slope-parallel friction and sediment shear (f_gravity_correction; default 2): formulation, which gradient each edge uses, verification, comparison with published papers and models, what it cannot do and its accuracy limits (supplement to the shallow water chapter; intermediate to advanced)
   - [Advection schemes](users_guide/advection.md) -- equations, the momentum control volume of the conservative form, stencils, the limiter (supplement to the shallow water chapter)
   - [One-cell-wide channels and the upwind donors of the advection term](users_guide/advection_donor.md) -- the physical and the artificial braking that f_advection_donor (default 3) separates, the cell arrangement at bends, the difference between 0 and 3 in the Chichibu catchment, how it is verified, limits (supplement to the advection chapter)
+  - [The cap on the edge depth toward higher ground](users_guide/dry_head_cap.md) -- what f_dry_head_cap (default 3) prevents, how options 1, 2 and 3 differ, the formula of the default 3 (the velocity head of the entering flow), limits, reproducing earlier results (supplement to the advection chapter)
   - [Numerical diffusion by diagonal-edge fluxes](users_guide/diagonal_diffusion.md) -- how the eight-direction links smooth across the stream and by how much, effects and countermeasures for scalar transport (link-wise MUSCL) and for momentum (first-order lateral faces, the diagonal sub-lattice, consistency of the lateral-face fluxes), the two-link decomposition, choices by case (supplement to the shallow water chapter; intermediate to advanced)
   - [Choosing the diagonal share d](users_guide/diagratio.md) -- what the distribution d of the eight-direction passage widths changes (conveyance of one-cell-wide channels and conduits, direction bias of the error, time-step limit, crosswind numerical diffusion), the best value for each criterion, and the value and recommendation for each process (shallow water, bedload, hillslope creep, curvature, groundwater, conduit layer, glaciers and lava) (supplement; intermediate to advanced)
   - [Non-hydrostatic correction](users_guide/nonhydrostatic.md) -- equations of the one-layer model, projection algorithm, active set, breaking, moving bottom, the models it drew on (supplement to the shallow water chapter)
@@ -83,8 +84,8 @@ phenomenon-specific setups. Individual chapters also link to relevant cases.
   - [Debris flow, slope failure and moving bed layer](users_guide/massflow.md) -- single-layer mixture, five resistance laws, erosion/deposition laws, curvature term, safety factor, moving bed layer, with equations and the models referred to (supplement)
   - [Applications of sediment and landform change](users_guide/geomorph_applications.md) -- setups for tsunami deposits, river-mouth deltas, volcanic flows, lahars, snow avalanches and sabo facilities
   </details>
-- [Driftwood](users_guide/driftwood.md) (&list_driftwood) -- wood recruitment (hydraulic washout / erosion entrainment), transport and deposition (raster-field estimate) <details><summary>Explanations (1)</summary>
-  - [Driftwood models explained](users_guide/driftwood_models.md) -- transfer rules of the three ledgers, draft, area bases and volume budget, sources of the practical values and basis of the defaults (supplement to driftwood)
+- [Driftwood](users_guide/driftwood.md) (&list_driftwood) -- wood recruitment (hydraulic washout / erosion entrainment), transport and deposition, and backwater from capture and jamming at structures (raster-field estimate) <details><summary>Explanations (1)</summary>
+  - [Driftwood models explained](users_guide/driftwood_models.md) -- transfer rules of the three ledgers, draft, area bases and volume budget, sources of the practical values and basis of the defaults, the capture rule at structures and the drag of the jam (supplement to driftwood)
   </details>
 - [Building destruction and debris](users_guide/bldgdebris.md) (&list_bldgdebris) -- destruction of wooden houses by inundation flows and driftwood, debris transport and deposition, feedback to the void ratio (raster-field estimate) <details><summary>Explanations (1)</summary>
   - [Building destruction and debris models explained](users_guide/bldgdebris_models.md) -- destruction criterion and ramp, destruction rate, void-ratio feedback, volume budget, thresholds versus the literature and the basis of the defaults (supplement to building destruction and debris)
@@ -104,7 +105,7 @@ phenomenon-specific setups. Individual chapters also link to relevant cases.
 - [Use cases](users_guide/usecases.md) -- lookup from phenomenon names to feature combinations (unsupported phenomena are listed too)
 
 **Appendix**
-- [Full parameter index](users_guide/params_index.md) -- reverse lookup from all 802 parameter names to their chapters
+- [Full parameter index](users_guide/params_index.md) -- reverse lookup from all 811 parameter names to their chapters
 
 ---
 

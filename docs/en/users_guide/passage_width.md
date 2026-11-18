@@ -397,8 +397,8 @@ The following computations support this view.
    [supplement of the chichibu tutorial](../../../tutorials/chichibu/en/README.md#supplement-effect-of-resolution-and-the-character-of-the-enc-grid),
    the same catchment computed on the ENC grid and on a 4-neighbour grid
    (`p_diagratio = 0`) gives a peak discharge at the transect near the outlet
-   of 5,425 m³/s with the ENC grid at 200 m, against 4 at 200 m, 30 at 100 m
-   and 402 m³/s at 50 m with the 4-neighbour grid. Even a four times finer
+   of 8,477 m³/s with the ENC grid at 200 m, against 33 at 200 m, 2 at 100 m
+   and 78 m³/s at 50 m with the 4-neighbour grid. Even a four times finer
    grid does not reconnect the channel network of the 4-neighbour grid,
    which is cut wherever it runs diagonally.
 2. **One-cell-wide channels carried correctly in any orientation.** With the
@@ -429,7 +429,7 @@ The following computations support this view.
    breaches 3 to 5 cells wide is 0.98 to 1.03 times that of a computation
    with the levee resolved in the DEM ([channel models page](channel_models.md)
    §4). The subgrid channel width reduces to the resolved channel when the
-   width equals the cell width (peak difference within 0.001 % on the 50 m
+   width equals the cell width (peak difference within 0.05 % on the 50 m
    grid of chichibu), and brings the conveyance and storage of channels
    narrower than a cell into a coarse grid.
 
@@ -440,9 +440,9 @@ This does not mean that "any phenomenon can be solved on a coarse grid".
   shape of the bank itself are not resolved.
 - Where the shape of the valley floor and the slopes controls the flow,
   differences remain when the grid is refined. In the chichibu supplement the
-  upstream peaks changed by 9 to 12 % from 200 to 100 m, and the downstream
-  peaks by 13 to 16 % from 100 to 50 m. Giving the coarse grids a channel
-  width did not reach the result of the 50 m grid.
+  upstream peaks changed by 15 % from 200 to 100 m, and the downstream
+  peaks by 10 to 21 % from 100 to 50 m. Giving the coarse grids a channel
+  width did not bring them closer to the result of the 50 m grid.
 - The adjustment itself is a model of ENCflow's own, with the biases of §7.
 
 In practice, as the chichibu supplement recommends, **first get the overall
@@ -549,7 +549,7 @@ The master tables of defaults and their basis are on the linked pages.
 | f_bank_opening | 1 | static reassignment of openings blocked by levee walls | [channel models page](channel_models.md) §1 |
 | f_br_diag | 0 | linkage of the diagonal openings at both ends of a breach | [channel models page](channel_models.md) §4 |
 | fn_width | -- | subgrid channel width (conveyance cap and storage area fraction) | [channel models page](channel_models.md) §2 |
-| f_dry_head_cap | 1 | caps the depth on edges towards high dry ground by the energy head (treats a dry bank like a wall) | [advection](advection.md) §5 |
+| f_dry_head_cap | 3 | caps the depth on edges towards high ground by the energy head (treats a bank above the water level like a wall). 1 caps toward a dry bank only (the default until 2026-11-13); 2 applies the same cap to a thinly wet bank as well, as long as its bed is above the water level of the sender (the default until 2026-11-16); 3 caps climbing edges, whether the receiver is dry or wet, counting also the velocity head of the entering flow | [cap on the edge depth](dry_head_cap.md) |
 | fluv_diagratio | 2/(2+√2) | diagonal split of bedload (keep it equal to `p_diagratio`) | [sediment and geomorphology](geomorph.md) |
 
 <a id="verification"></a>

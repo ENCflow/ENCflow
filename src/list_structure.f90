@@ -55,6 +55,9 @@ module list_structure
     real :: culv_manning(1:nstmax) = 0.02          ! 管内粗度 n
     real :: culv_ce(1:nstmax) = 0.5                ! 流入損失係数
     integer :: culv_flap(1:nstmax) = 0             ! フラップゲート (0:なし, 1:逆流遮断)
+    integer :: culv_jam(1:nstmax) = 0              ! 流入口の集積流木 (0:なし, 1:取水している側の
+                                                   !   セル群で流木を捕捉し、その集積の損失を
+                                                   !   流量則に入れる。fn_driftwood 必須。§50.8)
     real, allocatable :: culv_gate_rule(:,:,:)     ! ゲート開度折れ線 (基準水位η m, 開度0-1)。
                                                    !   未指定=常時全開(樋門の operated gate)
     integer :: culv_gate_ref(1:nstmax) = 1         ! 開度ルールの基準セル
@@ -215,7 +218,7 @@ subroutine read_culvert(un, list)
   real :: culv_width(1:nstmax), culv_height(1:nstmax)
   real :: culv_zin(1:nstmax), culv_zout(1:nstmax)
   real :: culv_length(1:nstmax), culv_manning(1:nstmax), culv_ce(1:nstmax)
-  integer :: culv_flap(1:nstmax), culv_gate_ref(1:nstmax)
+  integer :: culv_flap(1:nstmax), culv_gate_ref(1:nstmax), culv_jam(1:nstmax)
   character(len=maxpathlen) :: fn_culv_in_cell(1:nstmax)
   character(len=maxpathlen) :: fn_culv_out_cell(1:nstmax)
   integer :: ios
@@ -223,7 +226,7 @@ subroutine read_culvert(un, list)
   namelist /list_struct_culvert/ culv_in_cell, culv_out_cell, &
                                  culv_width, culv_height, culv_zin, culv_zout, &
                                  culv_length, culv_manning, culv_ce, &
-                                 culv_flap, culv_gate_rule, culv_gate_ref, &
+                                 culv_flap, culv_gate_rule, culv_gate_ref, culv_jam, &
                                  fn_culv_in_cell, fn_culv_out_cell
 
   culv_in_cell = -9999
@@ -238,6 +241,7 @@ subroutine read_culvert(un, list)
   culv_ce = list%culv_ce
   culv_flap = list%culv_flap
   culv_gate_ref = list%culv_gate_ref
+  culv_jam = list%culv_jam
   fn_culv_in_cell = list%fn_culv_in_cell
   fn_culv_out_cell = list%fn_culv_out_cell
 
@@ -259,6 +263,7 @@ subroutine read_culvert(un, list)
   list%culv_ce = culv_ce
   list%culv_flap = culv_flap
   list%culv_gate_ref = culv_gate_ref
+  list%culv_jam = culv_jam
   list%fn_culv_in_cell = fn_culv_in_cell
   list%fn_culv_out_cell = fn_culv_out_cell
 

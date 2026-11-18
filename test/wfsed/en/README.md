@@ -135,3 +135,13 @@ and cross-shore-direction checks are unchanged), and the reference was updated. 
 is 3% weaker than with 2 because of the first-order bias of the open diagonal openings for a flow along
 a slope (note of 2026-10-31 in the README of test/wfcurrent). All checks pass; with the release build np = 2 is
 ULP=0 against the serial reference and the whole set of Run_MPI.sh checks passes.
+
+The switch of the defaults of the edge-depth cap and of the advection on side faces (added 2026-11-16;
+`f_dry_head_cap = 3` and `f_advection_lateral = 1`; developer.md §110.32) changes the beach results slightly
+(the total longshore transport goes from 4.3130e-2 to 4.3113e-2 m³/s (bed load 1.556e-3, suspended load
+4.156e-2), the row totals differ by 1.6e-6, the row difference of the bed change is 9.5e-7 m, the sum of the
+cross-shore transport in the surf zone is −1.26e-3 m²/s, the longshore transport with the breaking turbulence
+is 4.3935e-2 m³/s (1.019 times the base), and the solids in the closed basin are conserved to 1.6e-14 of the
+total; the stirring, bed-load, asymmetry and cross-shore-direction checks still pass), and the reference was
+updated. All checks pass; with the release build np = 2 agrees with the serial reference (Log.txt, Z9998,
+Hs9998) and the whole set of Run_MPI.sh checks passes.

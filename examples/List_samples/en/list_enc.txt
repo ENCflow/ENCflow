@@ -94,12 +94,85 @@
                             !   all inflow links) were removed (the run stops
                             !   if they are set. users_guide/
                             !   advection_donor.md)
-  !f_dry_head_cap = 1       ! cap the edge depth toward a dry cell by the
-                            !   energy head eta + u_n^2/2g - z_receiver
-                            !   (0: off, 1: on = default). Water cannot climb
-                            !   onto dry ground above the water surface plus
-                            !   velocity head (fixes leaks at bore fronts and
-                            !   in 1-2 cell wide incised channels)
+  !f_advection_bend = 1     ! upwind value of the momentum-conservative
+                            !   advection (schemes 2, 3) on a flow-direction
+                            !   face whose upwind donor is a wall or dry (with
+                            !   f_advection_donor = 3 also a thin film)
+                            !   (0: the velocity of the control volume itself
+                            !   (the default until 2026-11-15), 1: the velocity
+                            !   the water that actually enters the face cell
+                            !   would have at the width of this edge and at the
+                            !   depth it arrived with = default; when the line
+                            !   of an inflow continues into the same water body
+                            !   beyond the face cell, the depth of that inflow
+                            !   is counted with a lower bound at the depth of
+                            !   this edge). With 1 the edge just after a bend
+                            !   receives the acceleration or deceleration for
+                            !   the change of depth along the path (creates no
+                            !   loss at a bend in uniform flow; the lateral
+                            !   faces are unchanged). With 0, where a bend
+                            !   coincides with a sharp acceleration (the outlet
+                            !   of a pond, just before a drop) the flow
+                            !   accelerates beyond the energy head of the
+                            !   upstream pond, and where it coincides with the
+                            !   foot of a drop the momentum of the flow that has
+                            !   dropped is lost
+                            !   (test/brink, users_guide/advection.md
+                            !   section 4.4)
+  !f_advection_lateral = 1  ! treatment of water entering through the lateral
+                            !   faces of the momentum-conservative advection
+                            !   (schemes 2, 3) (0: the velocity of the parallel
+                            !   link (neutral when it is dry; its velocity when
+                            !   it holds a film of at least dd) = the default
+                            !   until 2026-11-16,
+                            !   1: a parallel link that is a film thinner than
+                            !   p_adv_donor_eps times the water entering across
+                            !   the face is not used, and the deficit
+                            !   (1 - cos(theta)) u_e of momentum in the
+                            !   direction of the edge of water joining the flow
+                            !   along the line of the edge from another
+                            !   direction is counted; the opening fraction of
+                            !   the lateral faces of diagonal edges uses the
+                            !   same test of thinness = default). With 0 the
+                            !   junction loss is counted only while the banks
+                            !   are wet, and a channel beside a bank wetted by
+                            !   rain is braked. With 1 it is counted regardless
+                            !   of the wetness of the banks (the backwater of a
+                            !   right-angle junction is 60-80 % of that of the
+                            !   momentum theory and changes with the grid
+                            !   orientation). 1 takes effect only with
+                            !   f_advection_donor = 3 (otherwise the same as 0)
+                            !   (test/tjunction, test/wetbank,
+                            !   users_guide/advection.md section 4.4)
+  !f_dry_head_cap = 3       ! cap the edge depth toward high ground by the
+                            !   energy head
+                            !   (0: off, 1: only while the receiver is dry, by
+                            !   eta + u_n^2/2g - z_receiver.
+                            !   Water cannot climb onto dry ground above the
+                            !   water surface plus velocity head (fixes leaks
+                            !   at bore fronts and in 1-2 cell wide incised
+                            !   channels), 2: as 1, and also cap when the
+                            !   receiver is wet but its bed is above the water
+                            !   level of the sender (channel water below the
+                            !   bank does not climb onto a thinly wet bank or
+                            !   valley wall; the cap is relaxed while the
+                            !   water level is just below the bed of the
+                            !   receiver) = the default until 2026-11-16,
+                            !   3: cap on climbing edges
+                            !   (the bed of the receiver above the bed of the
+                            !   sender), dry or wet receiver, by the energy
+                            !   head that also counts the velocity head of the
+                            !   flow entering the sending cell (for a
+                            !   supercritical flow, up to the specific energy
+                            !   of the critical flow of the same discharge)
+                            !   (the time and
+                            !   amount at which channel water starts to spill
+                            !   onto a bank do not depend on the time step;
+                            !   submerged steps keep the harmonic mean of the
+                            !   depths on both sides as a floor; test/bankspill,
+                            !   users_guide/dry_head_cap.md)
+                            !   = default).
+                            !   The default was 1 until 2026-11-13
   !f_opening_dynamic = 3    ! dynamic reassignment of blocked openings
                             !   (0: off, 1: edges between channel cells only
                             !   (inactive without fn_rw), 2: all edges (the
@@ -129,8 +202,17 @@
                             !   0: central difference, 1: first-order upwind)
   !p_adv_donor_eps = 0.1    ! threshold eps of f_advection_donor = 3
                             !   (0 < eps <= 1; used for both the flux ratio
-                            !   and the depth ratio; empirical; the peak is
-                            !   nearly the same for 0.05-0.2)
+                            !   and the depth ratio; empirical; the peak
+                            !   differed by 2 % or less for 0.05-0.2 in one
+                            !   case; advection_donor.md §7).
+                            !   With f_advection_bend = 1 it is also the
+                            !   threshold below which the value is pulled
+                            !   toward neutral when the inflow into the face
+                            !   cell is less than eps times its outflow, and
+                            !   the threshold that decides whether the cell
+                            !   beyond the face cell on the line of an inflow
+                            !   belongs to the same water body (its depth is at
+                            !   least eps times that of the face cell)
   !f_diffusion_term = 0     ! diffusion term (0: none, 1: constant viscosity,
                             !   2: zero-equation model nu = nu0 + alpha*(u*)*h).
                             !   For a first try, 2 is handy (no coefficient to

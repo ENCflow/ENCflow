@@ -136,7 +136,7 @@ python3 make_init.py z > zinit.txt   # regenerate the inputs (bundled; only when
   at the wall and V / V_eq 1.0000 in the middle, all passing. The recorded 2
   gives 1.014, 1.070, 1.141 and 1.283 in the middle and 1.006, 1.029, 1.059 and
   1.120 in the column at the wall at slopes 0.01, 0.05, 0.1 and 0.2; od0 gives
-  1.030 in the middle and 0.661 in the column at the wall.
+  1.029 in the middle and 0.661 in the column at the wall.
 - T10 (record): τ_b / τ of uniform sheet flow (q = r L) and τ_b / ρ g h S at
   L = 10 to 50 m are 1.25 to 1.27 and 1.34 to 1.38 at 0° with 2, 0.99 to 1.00
   and 0.96 to 0.99 with 3; at 45° they are 1.13 to 1.18 and 1.29 to 1.34 with 2,

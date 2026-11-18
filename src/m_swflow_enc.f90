@@ -102,14 +102,31 @@ module m_swflow_enc
                                             !   (§102)。1(河道セル間のエッジでは河道セルのみ。
                                             !   §68.18)と 2(流入面を全流入リンクの流量で
                                             !   重み付け)は 2026-11-07 に廃止)
+    integer :: f_advection_bend = 0           ! 供給元が壁・乾床(3 では薄い水膜も)の流向面の風上値
+                                            !   (0:u_e = 中立。§68.8, 1:面のセルへ流入する水が
+                                            !   この辺の幅・流入時の水深で流れたときの流速。§110)。
+                                            !   値は init が list_enc(既定 1)から写す。ここの
+                                            !   初期値 0 は init の前の値
+    integer :: f_advection_lateral = 0        ! 側方面で横から入る水の扱い (0:平行リンクの流速(乾いて
+                                            !   いれば中立), 1:平行リンクが入ってくる水に比べて薄い
+                                            !   水膜なら代表させず、合流の不足分 (1 − cos θ) u_e を
+                                            !   数える。斜めエッジの開口率も同じ判定。§110.25)。
+                                            !   値は init が list_enc(既定 1)から写す。ここの
+                                            !   初期値 0 は init の前の値
     integer :: f_inflow_edge                  ! 区間流入の外縁セルに接するエッジの扱い (0:接する
                                             !   エッジすべての移流項 0, 1:区間の内側へ向かうエッジ
                                             !   だけ移流項 0, 2:1 + そのエッジの流速のエネルギー
                                             !   上限。§68.40)
     integer :: f_dry_head_cap                 ! 乾燥セルへ向かうエッジ水深をエネルギー頭
-                                            !   η + u_n²/2g − z_受け手 で頭打ち (0:なし, 1:有効。
-                                            !   §68.16。水面+速度水頭より高い乾いた地盤へは
-                                            !   流さず、流せないエッジの流速も 0 にする)
+                                            !   η + u_n²/2g − z_受け手 で頭打ち (0:なし, 1:受け手が
+                                            !   乾燥のとき。§68.16。水面+速度水頭より高い乾いた
+                                            !   地盤へは流さず、流せないエッジの流速も 0 にする,
+                                            !   2:1 に加えて、受け手が濡れていても、その地盤が
+                                            !   送り手の水位より高いとき。§108,
+                                            !   3:登る辺(受け手の地盤が送り手の地盤より高い辺)を、
+                                            !   受け手の乾湿によらず、送り手へ入ってくる流れの
+                                            !   速度水頭も数えたエネルギー頭と、調和平均の下限で
+                                            !   頭打ち。cap_he_climb。§110.24)
     integer :: f_bank_mode                    ! 堤防の水理モード(下の e_bank_*)
     integer :: f_diffusion_term               ! 拡散項の計算 (0:無効, 1:定数, 2:ゼロ方程式)
     logical :: have_diff = .false.            ! 拡散項を計算する(f_diffusion_term > 0、nh_break_visc > 0
@@ -119,7 +136,9 @@ module m_swflow_enc
     real :: wf_break_visc = 0.0               ! 波浪場の砕波による水平混合の係数 M(§90)
     real :: p_diagratio != 2 / (2 + sqrt(2.))  ! ratio of diagonal component
     real :: p_adv_upwind_index != 0.0          ! upwind index of advection term
-    real :: p_adv_donor_eps = 0.1             ! f_advection_donor = 3 のしきい値 ε(§102)
+    real :: p_adv_donor_eps = 0.1             ! f_advection_donor = 3 のしきい値 ε(§102)。f_advection_bend = 1 の
+                                            !   流入の割合のしきい値と、流入の線の先のセルが同じ水体かの
+                                            !   水深の比のしきい値にも使う(§110)
     real :: p_adprunge_thresh != 2.0           ! threshold of adaptive Runge-Kutta
     real :: p_diffusion_nu != 0.0              ! 拡散項の動粘性係数 (m2/s。モデル2では
                                             !   加算のバックグラウンド粘性)
@@ -884,6 +903,8 @@ subroutine m_swflow_enc_init(p, g, b, s)
   opt%f_opening_dynamic = list%f_opening_dynamic
   opt%f_dry_head_cap = list%f_dry_head_cap
   opt%f_advection_donor = list%f_advection_donor
+  opt%f_advection_bend = list%f_advection_bend
+  opt%f_advection_lateral = list%f_advection_lateral
   opt%f_inflow_edge = list%f_inflow_edge
   opt%f_scalar_scheme = list%f_scalar_scheme
   select case (opt%f_advection_scheme)
@@ -1039,8 +1060,80 @@ subroutine m_swflow_enc_init(p, g, b, s)
                   //"and is shallower than p_adv_donor_eps times the face cell; " &
                   //"side-face wet/dry tests weighted by min(1, h/dd))")
   end if
-  if (opt%f_dry_head_cap < 0 .or. opt%f_dry_head_cap > 1) then
-    call par_stop("list_enc: f_dry_head_cap must be 0(off) or 1(cap edge depth toward dry cells by energy head)")
+  ! f_advection_bend(§110): 流向面の風上側の供給元が壁・乾床(f_advection_donor = 3 では薄い水膜も)のとき、
+  ! 風上値を u_e(中立。§68.8)でなく、面のセルへ実際に流入する水の経路の値にする。スキーム 1 には
+  ! 該当する面がないので無効果
+  if (opt%f_advection_bend < 0 .or. opt%f_advection_bend > 1) then
+    call par_stop("list_enc: f_advection_bend must be 0(neutral u_e on faces whose edge-line donor is a wall " &
+                  //"or dry) or 1(velocity of the actual inflow at this edge's width and the inflow depth)")
+  end if
+  ! 1 は、面のセルへの流入が流出の p_adv_donor_eps 倍に満たないときに中立へ寄せ、流入の線の先のセルが同じ
+  ! 水体か(水深が面のセルの p_adv_donor_eps 倍以上か)も見る(path_value)ので、f_advection_donor が 3 で
+  ! なくても ε の範囲を確かめる
+  if (opt%f_advection_bend == 1 .and. (opt%p_adv_donor_eps <= 0.0 .or. opt%p_adv_donor_eps > 1.0)) then
+    call par_stop("list_enc: p_adv_donor_eps must satisfy 0 < p_adv_donor_eps <= 1 (f_advection_bend = 1 uses it too)")
+  end if
+  ! 0 は 2026-11-15 までの既定(中立 ū = u_e)。屈曲の直後の辺が上流の流れの運動量を受け取らず、屈曲が急な
+  ! 加速部では流れが加速しすぎ、段落ちの足元では運動量を失う(test/brink。§110)ので、0 の実行は起動時に
+  ! 知らせる。スキーム 1 には該当する面がないので、どちらの値でも知らせない
+  if (opt%f_advection_bend == 0 .and. opt%f_advection_scheme >= 2) then
+    call par_info("swflow_enc: f_advection_bend = 0 (neutral u_e on faces whose edge-line donor is a wall, dry " &
+                  //"or a thin film; the default until 2026-11-15. The default 1 uses the velocity of the actual " &
+                  //"inflow of the face cell)")
+  end if
+  if (opt%f_advection_bend == 1 .and. opt%f_advection_scheme >= 2) then
+    call par_info("swflow_enc: f_advection_bend = 1 (faces whose edge-line donor is a wall, dry or a thin film " &
+                  //"take the velocity the actual inflow of the face cell would have at this edge's width and " &
+                  //"the inflow depth, instead of u_e)")
+  end if
+  ! f_advection_lateral(§110.25): 側方面で、平行リンクが入ってくる水に比べて薄い水膜のときは代表させず、
+  ! 辺の線に沿う流れへ別の向きから入る水の運動量の不足を数える。f_advection_donor = 3 の連続な重みの上に
+  ! 組み立てているので、3 が前提。スキーム 1 には側方面がないので無効果
+  if (opt%f_advection_lateral < 0 .or. opt%f_advection_lateral > 1) then
+    call par_stop("list_enc: f_advection_lateral must be 0(side faces take the velocity of the parallel link) " &
+                  //"or 1(parallel links much thinner than the entering water are not used, and water joining " &
+                  //"the flow along the edge line from another direction is charged its momentum deficit)")
+  end if
+  ! f_advection_lateral = 1 は、f_advection_donor = 3 の側方面の重みの上に働く。3 でなければ効かない(0 と
+  ! 同じ扱いにして、そう表示する。停止はしない: f_advection_donor = 0〜2 を指定した設定が、f_advection_lateral の
+  ! 値によらず動くように。§110.28)
+  if (opt%f_advection_lateral == 1 .and. opt%f_advection_scheme >= 2 .and. opt%f_advection_donor /= 3) then
+    opt%f_advection_lateral = 0
+    call par_info("swflow_enc: f_advection_lateral = 1 has no effect unless f_advection_donor = 3 (treated as 0)")
+  end if
+  ! 0 は 2026-11-16 までの既定(側方面は平行リンクの流速をそのまま使う)。雨で濡れた岸の水膜の遅い流速が
+  ! 河道の流れを減速し、合流の損失を岸が濡れているときだけ数える(test/wetbank・test/tjunction。§110.25)ので、
+  ! 0 を指定した実行は起動時に知らせる(f_advection_donor = 3 のときだけ。3 でなければ、どちらの値でも同じ)
+  if (list%f_advection_lateral == 0 .and. opt%f_advection_scheme >= 2 .and. opt%f_advection_donor == 3) then
+    call par_info("swflow_enc: f_advection_lateral = 0 (side faces take the velocity of the parallel link, a thin " &
+                  //"film on a wet bank included; the default until 2026-11-16. The default 1 does not use parallel " &
+                  //"links much thinner than the entering water and charges joining water its momentum deficit)")
+  end if
+  if (opt%f_advection_lateral == 1 .and. opt%f_advection_scheme >= 2) then
+    call par_info("swflow_enc: f_advection_lateral = 1 (on side faces, parallel links thinner than " &
+                  //"p_adv_donor_eps = "//rtoa(opt%p_adv_donor_eps)//" of the entering water are not used, and " &
+                  //"water joining the flow along the edge line from another direction is charged the momentum " &
+                  //"deficit (1 - cos(theta)) u_e)")
+  end if
+  if (opt%f_dry_head_cap < 0 .or. opt%f_dry_head_cap > 3) then
+    call par_stop("list_enc: f_dry_head_cap must be 0(off), 1(cap edge depth toward dry cells by energy head), " &
+                  //"2(1 + also toward wet cells whose bed is above the water level of the sending cell) " &
+                  //"or 3(cap edge depth on climbing edges by the energy head taken with the approach flow)")
+  end if
+  ! 2 は 2026-11-16 までの既定(頭打ちの速度水頭を、この辺自身の流速から取る)。河道の水が岸へあふれ始める
+  ! 時刻と量が時間刻みに依り(test/bankspill)、急な段々の河道で、乾いた岸へ射流が乗り上げる所の流れの水頭が
+  ! 上流の水位を超える(test/cascade。§110.29)ので、2 を指定した実行は起動時に知らせる
+  if (opt%f_dry_head_cap == 2) then
+    call par_info("swflow_enc: f_dry_head_cap = 2 (edge depth toward dry cells, and toward wet cells whose bed is above " &
+                  //"the water level of the sending cell, is capped by the energy head taken with the velocity of the " &
+                  //"edge itself; the default until 2026-11-16. The default 3 caps climbing edges with the approach " &
+                  //"flow counted)")
+  end if
+  if (opt%f_dry_head_cap == 3) then
+    call par_info("swflow_enc: f_dry_head_cap = 3 (edge depth on climbing edges, dry or wet, is capped by the energy head " &
+                  //"of the sending cell above the receiving bed, with the flow approaching along the edge line counted " &
+                  //"by its velocity head (a supercritical approach flow by the specific energy of the critical flow of " &
+                  //"the same discharge), and by a harmonic-mean floor for submerged steps)")
   end if
   if (opt%f_inflow_edge < 0 .or. opt%f_inflow_edge > 2) then
     call par_stop("list_enc: f_inflow_edge must be 0(no advection on edges touching inflow cells), " &
@@ -1117,6 +1210,9 @@ subroutine m_swflow_enc_init(p, g, b, s)
   call bc_init(p, g, b)
 
   if (chn%have_frw) call build_channel_frw(g)
+  ! f_advection_lateral = 1 は、エッジ行 js − 3 の frw も読む(line_flow の実流量。§110.25)。build_channel_frw の
+  ! 冗長構築は行 jsh .. jeh − 1 なので、行 jsh − 1 を隣のランクの値で埋める(静的。1 回だけ)
+  if (chn%have_frw .and. opt%f_advection_lateral == 1 .and. opt%f_advection_scheme >= 2) call par_halo_edge(chn%frw, 2)
   if (chn%have_width) then
     call build_wfrac(g)
     ! 地下の貯留から地表水への受け渡しの水深換算(gw_to_h。§26.1)用の写し
@@ -1220,7 +1316,13 @@ subroutine m_swflow_enc_calc(p, g, b, s, ierror)
   call par_halo_cell(s%v)
   call par_halo_cell(s%z)
   call par_halo_cell(s%vv)
-  call par_halo_edge(sx_mod%mn)
+  ! f_advection_lateral = 1 は、側方面の流入元のセルの 8 リンクの流量を読む(line_flow)。斜めエッジの
+  ! n 側の流入元は行 j − 2 にあり、その南のリンクはエッジ行 j − 3 なので、mn を幅 2 で交換する(§110.25)
+  if (opt%f_advection_lateral == 1 .and. opt%f_advection_scheme >= 2) then
+    call par_halo_edge(sx_mod%mn, 2)
+  else
+    call par_halo_edge(sx_mod%mn)
+  end if
   ! 運動量保存形移流(§68.6)は線 k 上の ±2 エッジ流速と、両セル・側方
   ! セルの流量 m, n を読む: uv をエッジ幅2、m, n をセル幅2で交換する
   ! (スキーム1では呼ばない=通信ゼロ追加。判定は namelist 由来で
@@ -1236,6 +1338,8 @@ subroutine m_swflow_enc_calc(p, g, b, s, ierror)
   ! 輸送物質柱状量(浮遊砂と同じ理由でステップ頭交換。§30)
   if (s%wq_active) call par_halo_cell(s%cq)
   if (s%dw_active) call par_halo_cell(s%hd)
+  ! 集積流木(辺の抗力項が両側のセルの値を読む。捕捉による更新は前ステップの m_driftwood。§50.7)
+  if (s%dw_jam) call par_halo_cell(s%wj)
   if (s%bd_active) call par_halo_cell(s%hbd)
   ! 地表塩水層厚(同上。§47)
   if (s%salt_active) call par_halo_cell(s%hss)
@@ -1252,6 +1356,9 @@ subroutine m_swflow_enc_calc(p, g, b, s, ierror)
   ! 塞がれた開口の動的振り替え表をステップ頭の h, z(ハロ交換済み)から
   ! 構築する(§68.14。無効時は呼ばない=ゼロ追加)
   if (chn%have_fwd) call build_fwd(p, g, s)
+  ! 同上: 実流量(mn·l8·frw·fwd)に使う fwd も、行 js − 3(成分 1〜3)と行 js − 2 の成分 4 を、隣のランクの
+  ! 値で埋める(build_fwd の冗長構築は、読み手のあった範囲 = 行 js − 2 の成分 1〜3 まで)
+  if (chn%have_fwd .and. opt%f_advection_lateral == 1 .and. opt%f_advection_scheme >= 2) call par_halo_edge(chn%fwd, 2)
   if (chn%have_cwd) call build_cwd(g, s)
 
   ! 非静水圧補正: ステップ頭のエッジ流速 u^n を複製する(NH ON のみ)
@@ -1649,11 +1756,32 @@ subroutine init_enc_status(p, g, s, sx)
         end if
         he = (hc + hn) / 2
         if (opt%f_hcap_upwind > 0) he = cap_he_upwind(he, hc, hn, uve)
-        if (opt%f_dry_head_cap > 0) then
+        if (opt%f_dry_head_cap >= 3) then
+          ! 3: 登る辺の頭打ち(§110.24。calc_kth_flux と同じ規則。初期状態には前ステップの流量がないので、
+          ! 送り手へ入ってくる流れの速さは数えず、この辺の流速だけを使う。土石流が有効なら、水位は
+          ! 流れの表面 z + h + hs)
+          if (s%debris_active) then
+            he = cap_he_climb(he, uve, hc + max(s%hs(i,j), 0.0), hn + max(s%hs(in,jn), 0.0), &
+                              s%z(i,j), s%z(in,jn), p%gg, 0.0, 0.0)
+          else
+            he = cap_he_climb(he, uve, hc, hn, s%z(i,j), s%z(in,jn), p%gg, 0.0, 0.0)
+          end if
+        else if (opt%f_dry_head_cap > 0) then
           if (uve > 0.0 .and. hn < p%dd) then
             he = min(he, max(s%z(i,j) + hc + uve**2 / (2 * p%gg) - s%z(in,jn), 0.0))
           else if (uve < 0.0 .and. hc < p%dd) then
             he = min(he, max(s%z(in,jn) + hn + uve**2 / (2 * p%gg) - s%z(i,j), 0.0))
+          else if (opt%f_dry_head_cap >= 2) then
+            ! 濡れた受け手でも、その地盤が送り手の水位より高ければ頭打ち(§108。calc_kth_flux と同じ規則。
+            ! 土石流が有効なら、水位は流れの表面 z + h + hs)
+            if (s%debris_active) then
+              he = cap_he_wet(he, uve, hc + max(s%hs(i,j), 0.0), hn + max(s%hs(in,jn), 0.0), &
+                              s%z(i,j), s%z(in,jn), p%gg, &
+                              cap_m2(i, j, k, s%gv(i,j)), cap_m2(in, jn, k, s%gv(in,jn)))
+            else
+              he = cap_he_wet(he, uve, hc, hn, s%z(i,j), s%z(in,jn), p%gg, &
+                          cap_m2(i, j, k, s%gv(i,j)), cap_m2(in, jn, k, s%gv(in,jn)))
+            end if
           end if
         end if
         if ((uve > 0.0 .and. hc <= 0.0) .or. (uve < 0.0 .and. hn <= 0.0)) he = 0.0
@@ -2473,6 +2601,216 @@ pure function cap_he_upwind(he, hc, hn, uve) result(he_corr)
 end function
 
 
+!----------------------------------------------------------------------
+! 濡れた受け手へ向かうエッジ水深のエネルギー頭による頭打ち(f_dry_head_cap = 2。§108)
+!   受け手(流向の下流側)の地盤が送り手の水位より d 高い(d = z_受 − (z_送 + h_送) > 0)とき、
+!   エッジ水深を
+!     he ← max( max(u_n²/2g − d, 0),  he − κ d / (|u_n| m_送) )
+!   で頭打ちする。
+!   第 1 項は、送り手のエネルギー頭が受け手の地盤を超える分(乾いた受け手への頭打ち §68.16 と
+!   同じ式)。
+!   第 2 項は、境目 d = 0(頭打ちなし)と第 1 項の間のつなぎ(§108.9)。単位幅流量 |u_n| he を
+!   κ d / m_送 だけ減らす形で、m_送(cap_m2)は、この辺の単位幅流量を送り手の 1 ステップの水深変化に
+!   直す係数なので、「この辺の流れが 1 ステップに送り手の水位を下げる量を、頭打ちなしのときより
+!   κ d だけ少なくする」という意味になる。つなぎがないと、送り手の水位が受け手の地盤の高さにある
+!   とき、頭打ちが効く(流出が減って水位が上がる)・効かない(流出が増えて水位が下がる)を数ステップ
+!   ごとに行き来する。κ = 1/4 なら、同じ高さの受け手へ向かう辺が 4 本あっても、水位の 1 ステップの
+!   応答が境目をまたがない。つなぎの幅は辺の法線方向の Courant 数に比例し、時間刻みを縮めると
+!   第 1 項だけの規則に収束する(つなぎは ENCflow 独自)
+!   受け手の地盤が送り手の水位より低い(水に浸かった段)ときと、流速 0 のエッジは he のまま。
+!   0 を返したエッジの流速は、呼び出し側が 0 にする。乾いた受け手(従来の 2 つの分岐)を通らなかった
+!   エッジにだけ呼ぶ。
+!   土石流が有効な計算では、呼び出し側が hc・hn に固体の柱状量 hs を足して渡す(流れの表面は
+!   z + h + hs。圧力項・flowdepth と同じ)
+!----------------------------------------------------------------------
+pure function cap_he_wet(he, uve, hc, hn, zc, zn, gg, m2c, m2n) result(he_corr)
+  real, intent(in) :: he          ! セル境界水深(ここまでの規則を通した後)
+  real, intent(in) :: uve         ! セル境界の流速(中心→近傍が正)
+  real, intent(in) :: hc, hn      ! 中心セル・近傍セルの流れの深さ(水深。土石流では + hs)
+  real, intent(in) :: zc, zn      ! 中心セル・近傍セルの地盤
+  real, intent(in) :: gg          ! 重力加速度(補正前。Bernoulli の速度水頭)
+  real, intent(in) :: m2c, m2n    ! 単位幅流量を、中心セル・近傍セルの 1 ステップの水深変化に直す係数(cap_m2)
+  real :: he_corr
+  real, parameter :: kappa = 0.25 ! つなぎの係数 κ(§108.9)
+  real :: d                       ! 受け手の地盤 − 送り手の水位
+  real :: c2                      ! エネルギー頭による頭打ちの値(第 1 項)
+  real :: red, flx
+  he_corr = he
+  ! 次の行は呼び出し側の判定と重なるが、外さないこと。外すと、-Ofast がこの関数を呼び出し側の式と
+  ! 組み替えて、濡れた受け手への頭打ちが一度も掛からない計算でも結果が最終桁で変わる(coastal_drain・
+  ! tracer・wfdoppler の reference とのバイト比較で確認。§108.9。§108.4 と同じ種類の注意)
+  if (opt%f_dry_head_cap < 2) return
+  if (uve > 0.0) then             ! 中心セルが送り手、近傍セルが受け手
+    if (zn > zc + hc) then
+      d = zn - (zc + hc)
+      c2 = max(uve**2 / (2 * gg) - d, 0.0); red = kappa * d; flx = uve * m2c
+      ! つなぎの項 he − κ d / flx は、flx が小さいと割り算が大きくなるので、c2 を上回るときだけ割る
+      if ((he - c2) * flx > red) then
+        he_corr = he - red / flx
+      else
+        he_corr = min(he, c2)
+      end if
+    end if
+  else if (uve < 0.0) then        ! 近傍セルが送り手、中心セルが受け手
+    if (zc > zn + hn) then
+      d = zc - (zn + hn)
+      c2 = max(uve**2 / (2 * gg) - d, 0.0); red = kappa * d; flx = -uve * m2n
+      if ((he - c2) * flx > red) then
+        he_corr = he - red / flx
+      else
+        he_corr = min(he, c2)
+      end if
+    end if
+  end if
+end function
+
+
+!----------------------------------------------------------------------
+! 辺 k の単位幅流量を、セル (i, j) の 1 ステップの水深変化に直す係数(cap_he_wet のつなぎ用)
+!   連続式(continuous)が水深の更新に使う geo%mn2dh(k) / gv / 河道の平面積率 と同じ。開口の比
+!   (frw・fwd ≤ 1)は入れない(入れないほうが係数が大きく、つなぎが広い側 = 安全側)
+!----------------------------------------------------------------------
+pure function cap_m2(i, j, k, gv) result(m2)
+  integer, intent(in) :: i, j     ! セルのインデックス
+  integer, intent(in) :: k        ! 辺の方位
+  real, intent(in) :: gv          ! セルの空隙率(家屋を除いた割合)
+  real :: m2
+  m2 = geo%mn2dh(k) / max(gv, 1.0e-6)
+  if (chn%have_width) m2 = m2 / chn%wfrac(i,j)
+end function
+
+
+!----------------------------------------------------------------------
+! 登る辺のエッジ水深の頭打ち(f_dry_head_cap = 3。§110.23・§110.24・§110.30)
+!   受け手(流向の下流側)の地盤が送り手の地盤より高い辺(登る辺。z_受 > z_送)で、受け手の乾湿に
+!   よらず、エッジ水深を
+!     he ← min( he, max( w·h_harm,  σ + v_h,  0 ) )
+!   で頭打ちする。
+!     σ      = 送り手の水位 − 受け手の地盤(越える水の厚さ。負なら、水位は地盤に届いていない)
+!     v_h    = max( u_n²/2g,  v_a )(速度水頭)。u_n はこの辺の法線流速。v_a は、送り手のセルへ同じ線に沿って
+!              入ってくる流れ(速さ u_a。cap_approach。時刻 n)の分で、常流(Fr_a = u_a/√(g h_送) ≤ 1)は
+!              u_a²/2g、射流は 1.5 h_c − h_送(h_c = (u_a² h_送²/g)^(1/3) は、同じ流量の限界水深。下の注)
+!     h_harm = 2 h_送 h_受/(h_送 + h_受)(両側の流れの深さの調和平均)
+!     w      = clamp(σ/h_受, 0, 1)(受け手の水位が送り手の水位以下なら 1。受け手が乾いていれば 0)
+!   第 2 項: 水は、送り手のエネルギー水頭が受け手の地盤を越える分より厚くは登れない(Bernoulli。乾いた
+!   受け手への頭打ち §68.16 と同じ考え方。σ は、セル間の流れの深さを「高い方の水位 − 高い方の地盤高」で
+!   取る氾濫モデルの扱いと同じ量 = Bates ら 2010。原文は未照合)。1・2 は速度水頭をこの辺自身の流速から
+!   取るが、頭打ちで閉じた辺の流速は毎ステップ 0 に戻るので、開くかどうかが「1 ステップで辺が得る流速」で
+!   決まって時間刻みに依り、開いた瞬間に、開く条件と開いたあとの釣り合い(上流のエネルギー水頭)の差が
+!   一度に入る(test/bankspill。§110.22)。3 は、閉じていても値を持つ u_a を使うので、開く条件と開いたあとの
+!   釣り合いが同じ式になり、エネルギー水頭が地盤に届いた時から浅く入り始めて連続に増える。境目の
+!   つなぎ(cap_he_wet の第 2 項)は要らない(頭打ちの値が 0 から連続に立ち上がる)。
+!   第 1 項: 段が水に浸かったときの下限。受け手の水位が送り手の水位以下(水面が下がる向きの流れ)なら
+!   調和平均、受け手の水位の方が高い(慣性で登る流れ)なら σ/h_受 で減らして第 2 項に寄せる。下限が
+!   ないと、流速の小さい流れで、登る辺のエッジ水深が受け手の水深そのものになり、ゆるい上り勾配を進む
+!   波が遅くなる(test/steepwave)。調和平均は、受け手が薄い水膜のとき 0 へ、両側の水深が近いとき両側の
+!   平均へ寄る(差は水深の差の 2 次)。摩擦に支配される流れで、深さの違う 2 つの半セルを直列につないだ
+!   等価な水深が浅い側に寄ること(h_eq^(−10/3) = (h_送^(−10/3) + h_受^(−10/3))/2)にも合う。
+!   速度水頭を送り手へ入ってくる流れから取ること、調和平均を下限に使うこと、w の形は ENCflow 独自。
+!   射流の v_a(§110.26・§110.29・§110.30。独自): u_a は「上流の辺の流量 q_a ÷ 送り手の水深」なので、速度水頭を
+!   そのまま数えると、流量が同じなら d(σ + u_a²/2g)/dh_送 = 1 − Fr_a²。射流(Fr_a > 1)では負で、送り手の水深の
+!   わずかな変化が逆向きに増幅されて頭打ちに入る(あふれる → 水深が下がる → 速度水頭が増える → もっと
+!   あふれる)。落差のあとで射流が正面の斜面に当たる所で、辺が開閉して下流の池の流量が揺れ、水位より 8 m
+!   高い斜面のセルへ水が乗った(test/chutepool)。射流では、入ってくる流れの比エネルギー h_送 + u_a²/2g の
+!   代わりに、その流量 q_a を流せる最小の比エネルギー(限界流の 1.5 h_c。h_c = (q_a²/g)^(1/3))を数える:
+!   σ + v_a = z_送 + 1.5 h_c − z_受 で、流量が同じなら送り手の水深に依らない(頭打ちの値は、送り手の水深に
+!   ついて減らない: 勾配は常流で 1 − Fr_a² ≥ 0、射流で 0)。Fr_a = 1 で常流の式と同じ値(h_送/2)になり、連続。
+!   射流が正面の岸へ乗り上げる高さは、実際の比エネルギーより低く数える側に倒している(1.5 h_c ≤ h_送 + u_a²/2g)。
+!   v_a を h_送/2(限界流の速度水頭)までに絞る形(2026-11-16 の一時の形。§110.27)は、test/chutepool の揺れは
+!   止めるが、急な段々の河道で、射流が低い岸へ乗り上げて河道へ戻る所の流れの水頭が、上流の水位を数十 m
+!   超える(test/cascade。秩父の 50 m 格子で領域の最大流速が 48.5 m/s。§110.29)。乗り上げを強く絞ると超える
+!   仕組みは、突き止めていない
+!   登らない辺(z_受 ≤ z_送)と、流速 0 のエッジは he のまま。0 を返したエッジの流速は、呼び出し側が
+!   0 にする。土石流が有効な計算では、呼び出し側が hc・hn に固体の柱状量 hs を足して渡す(流れの表面は
+!   z + h + hs。cap_he_wet と同じ)
+!----------------------------------------------------------------------
+pure function cap_he_climb(he, uve, hc, hn, zc, zn, gg, uac, uan) result(he_corr)
+  real, intent(in) :: he          ! セル境界水深(ここまでの規則を通した後)
+  real, intent(in) :: uve         ! セル境界の流速(中心→近傍が正)
+  real, intent(in) :: hc, hn      ! 中心セル・近傍セルの流れの深さ(水深。土石流では + hs)
+  real, intent(in) :: zc, zn      ! 中心セル・近傍セルの地盤
+  real, intent(in) :: gg          ! 重力加速度(補正前。Bernoulli の速度水頭)
+  real, intent(in) :: uac, uan    ! 中心セル・近傍セルへ、線に沿って入ってくる流れの速さ(cap_approach。0 以上)
+  real :: he_corr
+  he_corr = he
+  if (uve > 0.0) then             ! 中心セルが送り手、近傍セルが受け手
+    if (zn > zc) he_corr = min(he, climb_limit(hc, hn, zc + hc - zn, uve, uac))
+  else if (uve < 0.0) then        ! 近傍セルが送り手、中心セルが受け手
+    if (zc > zn) he_corr = min(he, climb_limit(hn, hc, zn + hn - zc, -uve, uan))
+  end if
+contains
+  ! 登る辺のエッジ水深の上限 max(w·h_harm, σ + v_h, 0)
+  pure function climb_limit(hs, hr, sig, un, ua) result(c)
+    real, intent(in) :: hs, hr    ! 送り手・受け手の流れの深さ
+    real, intent(in) :: sig       ! σ = 送り手の水位 − 受け手の地盤
+    real, intent(in) :: un        ! この辺の法線流速の大きさ |u_n|
+    real, intent(in) :: ua        ! 送り手へ線に沿って入ってくる流れの速さ u_a(0 以上)
+    real :: c
+    real :: w, harm
+    real :: vh                    ! 速度水頭 v_h
+    real :: va                    ! 送り手へ入ってくる流れの分 v_a
+    w = 0.0
+    harm = 0.0
+    if (hs > 0.0 .and. hr > 0.0) then
+      ! w = clamp(σ/h_受, 0, 1)。割り算は 0 < σ < h_受 のときだけ(薄い受け手で商が大きくならないように)
+      if (sig >= hr) then
+        w = 1.0
+      else if (sig > 0.0) then
+        w = sig / hr
+      end if
+      harm = 2.0 * hs * hr / (hs + hr)
+    end if
+    ! 入ってくる流れの分 v_a: 常流(u_a² ≤ g h_送)は速度水頭 u_a²/2g。射流は、同じ流量の限界流の比エネルギー
+    ! 1.5 h_c から送り手の流れの深さを引いた分(h_c = (u_a² h_送²/g)^(1/3)。Fr_a = 1 で h_送/2 に一致して連続)。
+    ! u_n の速度水頭はそのまま
+    if (ua**2 <= gg * hs) then
+      va = ua**2 / (2 * gg)
+    else
+      va = 1.5 * (ua**2 * hs**2 / gg)**(1.0 / 3.0) - hs
+    end if
+    vh = max(un**2 / (2 * gg), va)
+    c = max(w * harm, sig + vh, 0.0)
+  end function
+end function
+
+
+!----------------------------------------------------------------------
+! 登る辺の頭打ち(cap_he_climb)に使う、送り手のセルへ線 k に沿って入ってくる流れの速さ u_a
+!   uac: 中心セル (i, j) が送り手のとき。その (9−k) 近傍(線 k の上流側)から中心セルへ入る辺の、時刻 n の
+!        単位幅流量を、中心セルの時刻 n の水深(σ 有効時は矩形換算水深)で割る
+!   uan: 近傍セル (in, jn) が送り手のとき。その k 近傍から近傍セルへ入る辺で同じ
+!   流量は時刻 n のバッファ sx%mn から読む(時刻 n+1 の値は mn1 に書くので、momentum の並列ループの中で
+!   読んでも競合しない。calc_kth_flux の RK の仮水深と同じ読み方。行は j−2..j = エッジのハロ幅 1 の中で、
+!   mn はステップ頭に幅 1 で交換済み)。辺の流速 sx%uv は自エッジだけを読み書きする単一バッファなので、
+!   隣の辺の流速はここでは読めない(§7)。流量 ÷ 送り手の水深は「送り手のセルへ入ってきた水の、この辺へ
+!   向かう速さ」で、一様な流れでは上流の辺の流速に等しい。
+!   送り手から線の上流側へ出ていく向きの流量は 0 と数える。水深は dd で下から止める(薄い送り手で商が
+!   大きくならないように。そういう辺は上流側の頭打ち cap_he_upwind でほとんど流れない)。
+!   側方 Neumann の境界面(相手が鏡像セル。put_neumann_face が k = 1..8 で呼ぶ)は、線の上流の辺を
+!   持たないので 0(この辺の流速だけで頭打ちする)
+!----------------------------------------------------------------------
+pure subroutine cap_approach(p, s, sx, i, j, k, in, jn, uac, uan)
+  type(t_sysparam), intent(in) :: p
+  type(t_state), intent(in) :: s
+  type(t_enc_status), intent(in) :: sx
+  integer, intent(in) :: i, j     ! 中心セルのインデックス
+  integer, intent(in) :: k        ! 近傍セルの方位
+  integer, intent(in) :: in, jn   ! 近傍セルのインデックス
+  real, intent(out) :: uac, uan   ! 中心セル・近傍セルへ入ってくる流れの速さ(0 以上)
+  real :: hv
+  uac = 0.0
+  uan = 0.0
+  if (k > 4) return
+  if (in /= i + din(k) .or. jn /= j + djn(k)) return
+  hv = s%h(i,j)
+  if (sct%have_sect) hv = sect_v(hv, sct%sdep(i,j))
+  uac = max(sx%mn(k, i+die(9-k), j+dje(9-k)), 0.0) / max(hv, p%dd)
+  hv = s%h(in,jn)
+  if (sct%have_sect) hv = sect_v(hv, sct%sdep(in,jn))
+  uan = max(-sx%mn(k, in+die(k), jn+dje(k)), 0.0) / max(hv, p%dd)
+end subroutine
+
+
 subroutine calc_kth_flux(p, g, s, sx, uve0, tae0, i, j, k, in, jn, f_runge, uve1, mne1, hee)
   type(t_sysparam), intent(in) :: p
   type(t_geoinfo), intent(in) :: g
@@ -2504,6 +2842,7 @@ subroutine calc_kth_flux(p, g, s, sx, uve0, tae0, i, j, k, in, jn, f_runge, uve1
   real :: hc, hn
   real :: dtl
   real :: upre                    ! 新しい流速の向きの予測(半陰解法の分子。上流側の頭打ちに使う。§95)
+  real :: uac, uan                ! 中心セル・近傍セルへ線 k に沿って入ってくる流れの速さ(f_dry_head_cap = 3)
   integer :: l
   ! 土石流(debris_active。debris_plan.md §2.3-2.4)
   logical :: have_db              ! 運動量への hs 算入の有無
@@ -2774,9 +3113,20 @@ subroutine calc_kth_flux(p, g, s, sx, uve0, tae0, i, j, k, in, jn, f_runge, uve1
     ! その分岐に文を足すと、既定の経路の -Ofast の最終桁が波浪場のケースで動いた。§93)
     if (slf > 0.0 .and. fbe <= 0.0) tfe = tfe * slf
 
-    ! セル境界での抗力項
-    !   摩擦項と一緒に半陰解法で計算するため、次元が他の項と異なる(値は常に正)
-    tfe = tfe - p%kk * p%cd * hhe / bbe * (1 - gve) * vve / 2
+    ! セル境界での抗力項(家屋群の抗力)
+    !   摩擦項と一緒に半陰解法で計算するため、次元が他の項と異なる(値は常に正)。
+    !   単位面積あたりの抗力は ½ρ C_D (1−gv)(h/B)|V|V(家屋の数密度 (1−gv)/B² ×
+    !   没水した前面積 B·h)で、流速の式ではこれを水柱の質量 ρh で割るので、係数は
+    !   (kk·C_D/2)(1−gv)|V|/B(1/s)になり、水深を含まない(h/B が現れるのは、流量
+    !   フラックスの式の項を流速で書いたときだけ)。2026-11-12 までここに hhe を掛けて
+    !   いて、次元が合わなかった(developer.md §107)
+    tfe = tfe - p%kk * p%cd / bbe * (1 - gve) * vve / 2
+
+    ! 集積流木の抵抗(fn_dwtrap と f_dwjam = 1。§50.7)
+    !   集積を多孔質の障害物として、半陰の抗力 κ0·min(w_e/h_f, φ)·|V| を足す。
+    !   κ0 = 2 C_D/(π d (1−φ)³)(1/m)、w_e は辺の両側のセルの集積流木の平均、
+    !   min は水柱に入りきらない分が抵抗を増やさないことを表す
+    if (s%dw_jam) tfe = tfe - s%dw_jamk * min(0.5 * (s%wj(i,j) + s%wj(in,jn)) / hhe, s%dw_jamphi) * vve
 
     ! 土石流の降伏抵抗(db_res>=1)
     !   速度非依存の降伏減速度 a_y を半陰解法に合成(÷|V| で次元を合わせる)
@@ -2809,12 +3159,47 @@ subroutine calc_kth_flux(p, g, s, sx, uve0, tae0, i, j, k, in, jn, f_runge, uve1
     !   流速も 0 にして、再構成・移流に幻の流速が残らないようにする。
     !   移流項が圧力項に勝って水面より高い乾いた地盤へ水が登る漏れ
     !   (§68.15 の掘込水路の発散)を物理条件で塞ぐ
-    if (opt%f_dry_head_cap > 0) then
+    !   f_dry_head_cap = 2(§108): 受け手が濡れていても、受け手の地盤が送り手の水位より
+    !   高ければ(z_受 > z_送 + h_送)同じ頭打ちを掛ける。河岸のセルが薄く濡れると 1 の
+    !   頭打ちが外れ、水位が河岸より低い河道の水が、移流項で生じたエッジ流速 × 両側の
+    !   平均水深で河岸へ登る(§50.9)のを塞ぐ。受け手の地盤が送り手の水位より低い
+    !   (水に浸かった段)ときは掛けない(地盤の高低だけを条件にすると、濡れた斜面を
+    !   登る流れ全般に効いて、波の伝播や潮の遡上が変わる。§108 の試験)。送り手の水位が
+    !   受け手の地盤のすぐ下にあるときは、頭打ちの値を「頭打ちなし」へ向けてつなぐ(1 ステップで
+    !   水位が境目をまたがない勾配。つなぎがないと、効く・効かないを数ステップごとに行き来する。
+    !   cap_he_wet と §108.9)
+    !   2 の分岐は、従来の 2 つの分岐(受け手が乾燥)の後ろに別の手続きで置く。従来の分岐の条件に
+    !   同じ和 z + h を書き足すと、-Ofast が頭打ちの式の足し算の順序を変え、1 の結果が最終桁で
+    !   動く(丸めに敏感な遡上の検定で確認。§108.4)
+    !   f_dry_head_cap = 3(§110.24): 登る辺(受け手の地盤が送り手の地盤より高い辺)を、受け手の
+    !   乾湿によらず、送り手へ入ってくる流れの速度水頭も数えたエネルギー頭と、調和平均の下限で
+    !   頭打ちする(cap_he_climb。1・2 の 3 つの分岐を置き換える)
+    if (opt%f_dry_head_cap >= 3) then
+      call cap_approach(p, s, sx, i, j, k, in, jn, uac, uan)
+      if (have_db) then
+        he = cap_he_climb(he, uve1, hc + hsc, hn + hsn, s%z(i,j), s%z(in,jn), p%gg, uac, uan)
+      else
+        he = cap_he_climb(he, uve1, hc, hn, s%z(i,j), s%z(in,jn), p%gg, uac, uan)
+      end if
+      if (he <= 0.0) uve1 = 0.0
+    else if (opt%f_dry_head_cap > 0) then
       if (uve1 > 0.0 .and. hn < p%dd) then
         he = min(he, max(s%z(i,j) + hc + uve1**2 / (2 * p%gg) - s%z(in,jn), 0.0))
         if (he <= 0.0) uve1 = 0.0
       else if (uve1 < 0.0 .and. hc < p%dd) then
         he = min(he, max(s%z(in,jn) + hn + uve1**2 / (2 * p%gg) - s%z(i,j), 0.0))
+        if (he <= 0.0) uve1 = 0.0
+      else if (opt%f_dry_head_cap >= 2) then
+        ! 土石流が有効なら、送り手の水位は流れの表面 z + h + hs(圧力項と同じ。hsc・hsn は時刻 n の値)。
+        ! 水深 h だけで判定すると、固体の厚い流れが、流れの表面より低い地盤へも進めなくなる
+        ! (test/volcano の平坦部の堆積が 44 mm → 3 mm。§108.7)
+        if (have_db) then
+          he = cap_he_wet(he, uve1, hc + hsc, hn + hsn, s%z(i,j), s%z(in,jn), p%gg, &
+                          cap_m2(i, j, k, s%gv(i,j)), cap_m2(in, jn, k, s%gv(in,jn)))
+        else
+          he = cap_he_wet(he, uve1, hc, hn, s%z(i,j), s%z(in,jn), p%gg, &
+                          cap_m2(i, j, k, s%gv(i,j)), cap_m2(in, jn, k, s%gv(in,jn)))
+        end if
         if (he <= 0.0) uve1 = 0.0
       end if
     end if

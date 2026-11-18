@@ -3,7 +3,8 @@
 !======================================================================
 !
 ! Supplement: effect of resolution (200 m)
-!       The Step 3 configuration (no losses, no outlet) moved to the 200 m grid.
+!       The Step 3 configuration (no losses) plus the catchment outlet of Step 5
+!       (a perfect drain), moved to the 200 m grid.
 !       Text input; distributed output is depth only, every hour
 !
 !======================================================================
@@ -24,6 +25,7 @@
   fn_precip  = "-"           ! precipitation settings file
   fn_record  = "-"           ! record settings file
   fn_enc     = "-"           ! ENC settings file
+  fn_boundary = "-"          ! boundary condition settings file
 
   dir_data = "data_chichibu"   ! input data directory
 
@@ -51,11 +53,11 @@
 
   f_rntype = 0         ! roughness type (0: default constant, 1: file)
   rn0 = 0.05           ! fixed roughness
-  rn0_rw = 0.02        ! fixed roughness on channel-mask cells
+  rn0_rw = 0.04        ! fixed roughness on channel-mask cells
 
-  fn_z = "Chichibu_200m_filled.txt"        ! ground elevation file name
-  fn_mask = "Chichibu_200m_basin.txt"      ! domain mask file name
-  fn_rw = "Chichibu_200m_river.txt"        ! channel mask file name
+  fn_z = "Chichibu_200m_cond.txt"            ! ground elevation file name (elevation with a conditioned channel bed)
+  fn_mask = "Chichibu_200m_basin.txt"        ! domain mask file name
+  fn_rw = "Chichibu_200m_river_flowline.txt" ! channel mask file name
 /
 
 !======================================================================
@@ -89,4 +91,14 @@
   flxy(:,2) =  107,  103,   107,  100
   flxy(:,3) =  147,  105,   147,  102
   flxy(:,4) =  216,   43,   216,   37
+/
+
+!======================================================================
+! Prescribed-stage cell group (the catchment outlet of Step 5, as cell
+! numbers of the 200 m grid; a level below the bed makes it a perfect drain)
+!======================================================================
+&list_bound_stage
+  stage_cell(:,1,1) = 239, 19
+  stage_cell(:,2,1) = 240, 19
+  stage_eta(1) = 100.0
 /

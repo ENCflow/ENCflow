@@ -1,0 +1,65 @@
+!======================================================================
+! cascade c3j: 急な段々の河道(f_dry_head_cap = 3、f_advection_lateral = 1)
+!   test/chichibu の 50 m 格子のデータの列 603〜645・行 364〜418 を切り出した 43 × 55 セル。
+!   上流端の河道のセルに、2000 m3/s を 20 分まで、そのあと 120 分かけて 8000 m3/s まで上げ、30 分保つ。
+!   検定は Check_cascade.py。入力 cs_*.txt は make_cascade.py が作る
+!======================================================================
+&list_sysparam
+  f_gridsystem = 0
+  dt = 0.75
+  t0 = 0
+  tt = 10200
+  dt_disp = 3600
+  dt_file = 10200
+  dt_recrd = 10
+  fn_geoinfo = '-'
+  fn_boundary = '-'
+  fn_record = '-'
+  fn_enc = '-'
+  dir_result = 'result_c3j'
+  f_out_h = 1
+  f_out_vvmax = 1           ! 期間最大流速 V9999(検定が読む)
+/
+
+&list_enc
+  f_dry_head_cap = 3        ! 高い地盤へ向かうエッジ水深の頭打ち(この検定の対象)
+  f_advection_lateral = 1   ! 側方面で横から入る水の扱い
+/
+
+&list_geoinfo
+  nx = 43
+  ny = 55
+  dx = 50.0
+  dy = 50.0
+  f_ztype = 1
+  fn_z = 'cs_z.txt'
+  f_masktype = 1
+  fn_mask = 'cs_mask.txt'
+  fn_rw = 'cs_rw.txt'      ! 河道マスク
+  f_rntype = 0
+  rn0 = 0.05               ! 斜面の粗度
+  rn0_rw = 0.02            ! 河道マスクのセルの粗度
+/
+
+&list_bound_edge
+  f_bc_e = 1                ! 東辺は自由流出(本川の出口)
+/
+
+&list_bound_source
+  src_cell(:,1,1) = 4, 52      ! 上流端の河道のセル(時刻は分)
+  src_val(:,1,1) = 0, 0.0
+  src_val(:,2,1) = 5, 2000.0
+  src_val(:,3,1) = 20, 2000.0
+  src_val(:,4,1) = 140, 8000.0
+  src_val(:,5,1) = 170, 8000.0
+/
+
+&list_record
+  pbxytype = 0
+  pbxy(:,1) = 4, 52
+  pbxy(:,2) = 14, 29
+  pbxy(:,3) = 22, 11
+  pbxy(:,4) = 26, 9
+  flxytype = 0
+  flxy(:,1) = 24, 15, 24, 5   ! 下流の測線
+/

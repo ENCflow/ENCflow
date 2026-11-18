@@ -1,0 +1,59 @@
+!======================================================================
+! bankcap 構成 1: 薄く濡れた河岸と、流れている掘込河道(f_dry_head_cap = 2)
+!   幅 20 m(4 セル)の掘込河道を、等流水深 2.50 m(137.3 m3/s)で水が流れる。北の氾濫原は
+!   河床より 3.5 m 高く、河道の水位は河岸より 1 m 低い。氾濫原は初めに 2 cm の水膜で濡れている。
+!   河道の水は河岸へ登れないので、水膜は河道と下流へ抜けて減るだけになる。
+!   検定(Check_bankcap.py): 河岸の列の水深が初期の水膜を超えない、終了時に半分未満、氾濫原の
+!   水量が増えない。入力(bc_*.txt)は make_bankcap.py が作る
+!======================================================================
+&list_sysparam
+  f_gridsystem = 0
+  dt = 0.2
+  t0 = 0
+  tt = 900
+  dt_disp = 300
+  dt_file = 300
+  dt_recrd = 300
+  fn_geoinfo = '-'
+  fn_initial = '-'
+  fn_boundary = '-'
+  fn_enc = '-'
+  dir_result = 'result_wet2'
+  f_out_h = 1
+  f_out_vv = 1              ! 流速 V0001…(構成 3・4 のバイト比較に使う)
+/
+
+&list_enc
+  f_dry_head_cap = 2
+/
+
+&list_initial
+  f_htype = 1
+  fn_hinit = 'bc_h_wet.txt'   ! 河道 2.50 m、氾濫原 2 cm の水膜
+  u0 = 2.745949             ! 等流の流速(流れを最初から定常に近づける)
+/
+
+&list_geoinfo
+  nx = 80
+  ny = 16
+  dx = 5.0
+  dy = 5.0
+  f_ztype = 1
+  fn_z = 'bc_z.txt'         ! 河道(行 9〜12)10 − 0.002 x、氾濫原(行 1〜8)+3.5 m、台地(行 13〜16)+7 m
+  f_rntype = 1
+  fn_rn = 'bc_rn.txt'       ! 河道 0.03、氾濫原と台地 0.05
+/
+
+&list_bound_edge
+  f_bc_e = 1                ! 東辺は自由流出
+/
+
+&list_bound_inflow
+  inflow_cell(:,1,1) = 1, 9
+  inflow_cell(:,2,1) = 1, 10
+  inflow_cell(:,3,1) = 1, 11
+  inflow_cell(:,4,1) = 1, 12
+  inflow_val(:,1,1) = 0, 137.3
+  inflow_val(:,2,1) = 9999, 137.3
+  inflow_dist(1) = 2
+/

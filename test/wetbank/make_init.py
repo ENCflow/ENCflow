@@ -12,8 +12,10 @@
 B 以内のセルで、標高は 河床 + H + SC·(距離 − ω/2)(河道へ向かう横断勾配 SC。雨水はすぐ河道へ入る)。
 それより外は領域外。上流端は区間流入 Q0 = q0·N·Δx(格子に沿う 1 セル幅で水深約 2 m)。
 
-ケース = 形 × 雨(0 = 乾いた河岸、20 mm/h)× f_advection_donor(0・3)。形は Δx = 50 m・1 セル幅の
+ケース = 形 × 雨(0 = 乾いた河岸、20 mm/h)× 移流項の構成(OPTS)。形は Δx = 50 m・1 セル幅の
 θ = 0・10・22.5・30・45°、θ = 22.5° の 1 セル幅の Δx = 100・25 m、幅 100 m を 2・4 セルで表したもの。
+構成は、o0 = f_advection_donor 0、o3 = 3(側方面は既定の f_advection_lateral = 1)、o3l0 = 3 に
+f_advection_lateral = 0 を明示したもの(側方面で、岸の水の流速をそのまま使う)。
 """
 import math, os, sys
 
@@ -24,6 +26,7 @@ RAIN = 20.0                                   # 雨のケースの降雨強度 (
 TT, DT_FILE = 10800.0, 1800.0                 # 計算時間 (s)、出力間隔 (s)
 GEOMS = [(0.0, 50.0, 1), (10.0, 50.0, 1), (22.5, 50.0, 1), (30.0, 50.0, 1), (45.0, 50.0, 1),
          (22.5, 100.0, 1), (22.5, 25.0, 1), (22.5, 50.0, 2), (22.5, 25.0, 4)]
+OPTS = [("o0", 0, None), ("o3", 3, None), ("o3l0", 3, 0)]   # 名前、f_advection_donor、f_advection_lateral(None = 既定)
 
 
 def tag(th, dx, nc):
@@ -31,7 +34,7 @@ def tag(th, dx, nc):
 
 
 def cases():
-    return [f"{tag(*g)}_r{r:g}_o{o}" for g in GEOMS for r in (0.0, RAIN) for o in (0, 3)]
+    return [f"{tag(*g)}_r{r:g}_{o}" for g in GEOMS for r in (0.0, RAIN) for o, _, _ in OPTS]
 
 
 def make_geom(th_deg, dx, nc, out):
@@ -102,8 +105,9 @@ def make_geom(th_deg, dx, nc, out):
     return nx, ny, inflow
 
 
-def write_param(case, geo, dx, nc, nx, ny, inflow, rain, opt):
+def write_param(case, geo, dx, nc, nx, ny, inflow, rain, opt, lat):
     q0 = Q0_UNIT * nc * dx
+    lateral = "" if lat is None else f"\n  f_advection_lateral = {lat}"
     cells = "\n".join(f"  inflow_cell(:,{k + 1},1) = {i}, {j}" for k, (i, j) in enumerate(inflow))
     precip = (f"&list_precip\n  prtype = 1\n  prval(:,1) =    0, {rain:g}\n  prval(:,2) = 6000, {rain:g}\n/\n"
               if rain > 0 else "")
@@ -124,7 +128,7 @@ def write_param(case, geo, dx, nc, nx, ny, inflow, rain, opt):
   f_out_h = 1
 /
 &list_enc
-  f_advection_donor = {opt}
+  f_advection_donor = {opt}{lateral}
 /
 &list_initial
   f_htype = 0
@@ -166,6 +170,6 @@ if __name__ == "__main__":
         geo = tag(th, dx, nc)
         nx, ny, inflow = make_geom(th, dx, nc, f"d_{geo}")
         for rain in (0.0, RAIN):
-            for opt in (0, 3):
-                write_param(f"{geo}_r{rain:g}_o{opt}", geo, dx, nc, nx, ny, inflow, rain, opt)
+            for name, opt, lat in OPTS:
+                write_param(f"{geo}_r{rain:g}_{name}", geo, dx, nc, nx, ny, inflow, rain, opt, lat)
         print(f"d_{geo}: nx {nx}, ny {ny}")

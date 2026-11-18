@@ -19,6 +19,7 @@ examples/*/wrk_*
 test/*/wrk_*
 utils/lu2mask/lu2mask
 utils/rmdepress_river/rmdepress_river
+utils/river_flowline/river_flowline
 utils/rerecord/rerecord
 utils/calc_catchmentarea/calcarea
 utils/calc_catchmentarea/chkdowndir

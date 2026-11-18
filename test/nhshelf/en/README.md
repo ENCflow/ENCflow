@@ -25,15 +25,15 @@ hydrostatic; the terrain is schematic). Bottom: the NH (V2) water surface
 every 20 s. After crossing the slope (grey band) it splits into a leading
 soliton and a trailing train. Generated in `en/figs/fission.png` by `./Fig.py en` (`figs/fission.png` is the Japanese version, `./Fig.py`).
 
-## Findings (2026-10-12; recomputed on 2026-10-31 with the default f_opening_dynamic = 3: the leading peak of V1 goes from 0.176 to 0.175, the rest is unchanged)
+## Findings (2026-10-12; recomputed on 2026-10-31 with the default f_opening_dynamic = 3: the leading peak of V1 goes from 0.176 to 0.175, the rest is unchanged; recomputed on 2026-11-16 with the defaults f_dry_head_cap = 3 and f_advection_lateral = 1: the leading peak of V1 goes from 0.175 to 0.174, the rest is unchanged; the figure is from this computation)
 
 | Configuration | Number of crests on the shelf | Leading η/H₂ | Second η/H₂ |
 |---|---:|---:|---:|
 | NH, with bottom-slope terms (param.txt) | 3 | 0.172 | 0.089 |
-| NH, without slope terms (V1) | 3 | 0.175 | 0.089 |
+| NH, without slope terms (V1) | 3 | 0.174 | 0.089 |
 | Hydrostatic | 1 (bore) | 0.114 | — |
 
 NH reproduces the fission into a leading soliton and a trailing train; the
-hydrostatic run becomes a bore. The effect of the bottom-slope terms is 2%
+hydrostatic run becomes a bore. The effect of the bottom-slope terms is 1%
 at the leading crest. The reflection in front of the shelf is 0.001 m in
 both (0.001 m for the hydrostatic run).

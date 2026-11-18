@@ -125,3 +125,12 @@ and the blocking in the ledger is 118 W. The conservation of the action flux on 
 opposing currents, the agreement of the unsteady run and the agreement with zero current are
 unchanged), and the reference was updated. All checks pass; with the release build np = 2 is ULP=0 against the
 serial reference and the whole set of Run_MPI.sh checks passes.
+
+After the switch of the defaults of the edge-depth cap and of the advection on side faces (added
+2026-11-16; `f_dry_head_cap = 3` and `f_advection_lateral = 1`; developer.md §110.32), the wave height
+on the jet of the river mouth is 0.381 m (0.200 m without the current effect) and the blocking in the
+ledger is 128 W (0.368 m and 103 W just before the switch; the difference from the values of 2026-10-31
+comes from the changes of defaults in between, such as `f_advection_donor = 3`, `f_dry_head_cap = 2`
+and `f_advection_bend = 1`, and has not been separated out), and the largest relative difference on the
+following current with 72 direction bins is 3.23e-5 (ratio 3.26). The other values and the reference
+(the basic configuration) are unchanged, and all checks pass.

@@ -46,11 +46,11 @@
 
   f_rntype = 0         ! 粗度係数タイプ (0:デフォルト固定値, 1:ファイル)
   rn0 = 0.05           ! 粗度係数固定値
-  rn0_rw = 0.02        ! 河道マスク部の固定粗度係数
+  rn0_rw = 0.04        ! 河道マスク部の固定粗度係数
 
-  fn_z = "Chichibu_200m_filled.tif"        ! 地盤高ファイル名
-  fn_mask = "Chichibu_200m_basin.tif"      ! 領域マスクファイル名
-  fn_rw = "Chichibu_200m_river.tif"        ! 河道マスクファイル名
+  fn_z = "Chichibu_200m_cond.tif"            ! 地盤高ファイル名(河床を整えた標高)
+  fn_mask = "Chichibu_200m_basin.tif"        ! 領域マスクファイル名
+  fn_rw = "Chichibu_200m_river_flowline.tif" ! 河道マスクファイル名
 
   !f_sdtype = 0         ! 0: 固定値 sd0(既定), 1: ファイル fn_sd
   !sd0 = 1.0            ! 土層厚固定値 (m)
@@ -159,5 +159,5 @@
   ! 群1: 流域出口(河床より低い水位で完全排水)
   stage_cell(:,1,1) = 239, 19
   stage_cell(:,2,1) = 240, 19
-  stage_eta(1) = 111.0
+  stage_eta(1) = 100.0
 /

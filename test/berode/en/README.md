@@ -38,13 +38,13 @@ make
 ./Run_MPI.sh 4    # MPI; the rule is that state.dat is byte-identical to the serial run
 ```
 
-## Findings (2026-10-17; the numbers were recomputed on 2026-11-10 and differ from the 10-17 values because of changes such as the promotion of f_opening_dynamic = 2 to the default, §68.38)
+## Findings (2026-10-17; the numbers were recomputed on 2026-11-16 and differ from the 10-17 values because of changes such as the promotion of f_opening_dynamic = 2 (§68.38) and of f_advection_bend = 1 (§110) to the default)
 
 | Check | K_b = 1e-5 | K_b = 2e-5 |
 |---|---|---|
 | Σ(z − z₀) | about 1e-12 or less (round-off) | about 1e-12 or less (round-off) |
-| Bank loss volume | 0.367 m·cell | 0.733 m·cell (ratio 1.996) |
-| Minimum Δz of the adjacent banks | −6.0 mm | −12.0 mm |
+| Bank loss volume | 0.366 m·cell | 0.730 m·cell (ratio 1.996) |
+| Minimum Δz of the adjacent banks | −6.0 mm | −11.9 mm |
 
 - While the toe shear stress is the same, the retreat is proportional to K_b
   (ratio 1.996; at twice K_b more sediment deposits at the toe, giving a slight
@@ -54,18 +54,18 @@ make
 - MPI np = 2, 4 are byte-identical to the serial run; -fcheck=all np=2 runs
   normally.
 
-## Findings (2026-10-23; slump blocks; the numbers were recomputed on 2026-11-10)
+## Findings (2026-10-23; slump blocks; the numbers were recomputed on 2026-11-16)
 
 | Check | slump (h_cover = 0.1 m) | slump0 (no shielding) |
 |---|---|---|
-| Rockfall ledger (bulk) | 30.5 m³ | 30.4 m³ |
-| Bank-erosion ledger | 0.002 m³ | 0.271 m³ (kb1 alone gives a bank loss of 0.367 m·cell) |
-| Final talus Σht | 20.4 m³ | — |
+| Rockfall ledger (bulk) | 30.5 m³ | 30.3 m³ |
+| Bank-erosion ledger | 0.002 m³ | 0.267 m³ (kb1 alone gives a bank loss of 0.366 m·cell) |
+| Final talus Σht | 20.6 m³ | — |
 
 - Since the 2 m bank exceeds H_c = 1.5 m it collapses immediately, and talus of 0.25 m
   covers the toe (the rows at both edges of the channel). With shielding, at toes where
   the talus is ≥ h_cover the shear stress does not reach the bank face, and bank erosion
-  is 0.008 times. The talus decreases by 10 m³ in 60 s through the outflow of bedload
+  is 0.007 times. The talus decreases by 10 m³ in 60 s through the outflow of bedload
   (removal).
 - MPI np = 2, 4: state.dat and geomorph_rockfall.dat are byte-identical to the serial run.
 

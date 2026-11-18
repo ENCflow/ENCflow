@@ -119,8 +119,9 @@ q_k = u_{n,k}\,h_{e,k}
 ```
 
 $`h_{e,k}`$ is the edge depth: the mean of the two cells, capped by the
-upwind depth (`f_hcap_upwind`) and by the energy head towards a dry cell
-(`f_dry_head_cap`); the rules are in [Advection schemes](advection.md) §5.
+upwind depth (`f_hcap_upwind`) and by the energy head towards high ground
+(`f_dry_head_cap`); the rules are in [Advection schemes](advection.md) §5 and
+in [The cap on the edge depth toward higher ground](dry_head_cap.md).
 The upwind side is decided by the direction of the new velocity of the step
 (the denominator of the semi-implicit friction term in §5 is at least 1 and
 friction does not change the direction, so the direction is fixed by the sign
@@ -261,8 +262,19 @@ mean building size $`B`$ (`gv` and `bb` of the geographic information) a
 drag is added in the same semi-implicit form as the friction.
 
 ```math
-F_{\text{bldg}} = -\,\frac{k\,C_D}{2}\,\frac{h_f}{B}\,(1 - g_v)\,|\mathbf{V}|_e
+F_{\text{bldg}} = -\,\frac{k\,C_D}{2}\,\frac{1 - g_v}{B}\,|\mathbf{V}|_e
 ```
+
+With $`(1 - g_v)/B^2`$ buildings per unit area and a submerged frontal area $`B\,h`$
+per building, the drag per unit area is
+$`\tfrac12\rho\,C_D\,(1 - g_v)(h/B)\,|\mathbf V|\mathbf V`$. The velocity equation divides
+this by the mass of the water column $`\rho h`$, so the coefficient does not contain
+the depth. Its ratio to the bed friction is proportional to $`h^{4/3}`$, so the building
+drag dominates in deeper flow. A run without the mean building size `fn_bb` uses
+$`B = 10^{10}`$ m, so the drag is negligible (the void ratio $`g_v`$ acts on the storage,
+on the coefficients of the pressure and friction terms and on the effective inertia
+coefficient $`\lambda_m`$). Uniform flow including this term is compared with the
+theoretical value in [test/bldgdrag](../../../test/bldgdrag/en/README.md).
 
 $`C_D`$ (`cd`, default 1.0) is a typical drag coefficient of a square
 column, $`k`$ (`kk`, default 0.5) a reduction factor for the shielding
@@ -272,8 +284,14 @@ published values; calibrate them together with the roughness when
 reproducing urban inundation ([geographic information](geoinfo.md)).
 
 **Flux and wet/dry rules.** The updated velocity is multiplied by the edge
-depth, $`q = u_n h_e`$. Towards a dry cell $`h_e`$ is capped by the energy
-head $`\eta_c + u_n^2/2g - z_n`$ (`f_dry_head_cap`), and an edge whose
+depth, $`q = u_n h_e`$. On edges climbing to a cell with a higher bed, $`h_e`$
+is capped by the part of the energy head of the sender above the bed of the
+receiver, $`\eta_c + v_h - z_n`$ (`f_dry_head_cap`; the default 3 also counts,
+in the velocity head $`v_h`$, the flow entering the sending cell, and keeps
+the harmonic mean of the depths on both sides as a floor on submerged steps;
+1 and 2 cap, by the velocity head $`u_n^2/2g`$ of the edge itself, edges
+towards a dry cell (2 also edges towards a wet cell whose bed is above the
+water level of the sender); [The cap on the edge depth toward higher ground](dry_head_cap.md)), and an edge whose
 sender is completely dry gets $`u_n = q = 0`$. When the outflow of one step
 would use up the water of the cell (`f_exflux_reduction = 1`, default), the
 flux of that edge is first scaled by $`(h_c - d_d)/\Delta h_c`$, edge by
@@ -409,6 +427,11 @@ lose water at the band boundaries). Operation without a mask on one process
 is checked through the conservation of the continuity equation by
 [test/stg](../../../test/stg/en/README.md).
 
+The drag of buildings (§5) has the coefficient $`k\,C_D`$ in STG, twice the
+$`k\,C_D/2`$ of ENC. With the same `cd`, `kk` and `fn_bb`, the building drag is
+twice as large in STG (multiplying the pressure and friction terms by $`g_v`$ and
+using $`\lambda_m`$ for the inertia are the same as in ENC).
+
 ## 10. Parameters
 
 | Parameter | Default | Meaning | Basis |
@@ -436,6 +459,7 @@ non-hydrostatic correction are in the tables of their own pages.
 | [test/chichibu](../../../test/chichibu/en/README.md) | flood on real terrain | grid convergence and MPI agreement of the default settings |
 | [test/diffusion](../../../test/diffusion/en/README.md) | Gaussian jet | size of the smoothing $`(p_d/4)\Delta^2 u''`$ of the velocity reconstruction (§4) and the consistency of the initial flux (§6) |
 | [test/nhwave](../../../test/nhwave/en/README.md) | standing waves in a closed tank | numerical dispersion of the hydrostatic ENC below 1% |
+| [test/bldgdrag](../../../test/bldgdrag/en/README.md) | uniform flow in a channel with buildings | depth and velocity of the uniform flow including the building drag match the theoretical values (§5) |
 
 ## References
 

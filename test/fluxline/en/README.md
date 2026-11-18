@@ -81,7 +81,7 @@ make
 |---|---|---|
 | Wall to wall 0–40° | Q (9.8604–9.8605; equal to Q_in in 4 digits) | Q (9.8604) |
 | Wall to wall 45–85° | Q (9.8604–9.8605; equal to Q_in in 4 digits) | Q − q_end (9.3909–9.3917; ratio 1.0000–1.0008) |
-| Interior 0–40° | F·n̂·L (ratio 1.00000–1.00001) | q (n − δ), δ = 0.5860–0.5867 |
+| Interior 0–40° | F·n̂·L (ratio 1.00000–1.00001) | q (n − δ), δ = 0.5860–0.5868 |
 | Interior 45–85° | F·n̂·L (ratio 1.00000–1.00016) | q \|Δj\| (ratio 1.00004–1.00027) |
 | Parallel | 0.0000 | 0.0001 |
 

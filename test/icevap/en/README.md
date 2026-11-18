@@ -47,7 +47,7 @@ make
 - The basis of the defaults (interception ratio 0.15, initial loss 1.5 mm,
   evapotranspiration 3 mm/day) is in the table of developer.md §66. When
   changing a default, update the table and `param_*x.txt` as a pair.
-- How to use interception and evapotranspiration is taught in Step 5
+- How to use interception and evapotranspiration is taught in Step 4
   (rainfall interception and infiltration) of
   [tutorials/chichibu](../../../tutorials/chichibu/en/README.md).
 

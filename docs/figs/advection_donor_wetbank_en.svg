@@ -842,7 +842,7 @@ z
     </g>
    </g>
    <g id="text_3">
-    <!-- Grid-aligned channel (0°): 0.2 % for both 0 and 3. -->
+    <!-- Grid-aligned channel (0°): 0.2 % for all three. -->
     <g style="fill: #282c30" transform="translate(600 132.893369) scale(0.094 -0.094)">
      <defs>
       <path id="IPAGothic-ed" d="M 2491 325
@@ -944,32 +944,6 @@ Q 2625 84 2625 1013
 Q 2625 1925 2316 1925
 z
 " transform="scale(0.015625)"/>
-      <path id="IPAGothic-d9" d="M 1113 2931
-L 1431 2931
-Q 1841 2931 1994 3047
-Q 2281 3269 2281 3713
-Q 2281 4500 1566 4500
-Q 972 4500 838 3828
-L 331 3828
-Q 400 4250 625 4525
-Q 969 4934 1566 4934
-Q 2066 4934 2391 4647
-Q 2775 4309 2775 3731
-Q 2775 2953 2078 2713
-Q 2919 2388 2919 1528
-Q 2919 978 2606 625
-Q 2231 197 1575 197
-Q 959 197 594 619
-Q 325 928 269 1472
-L 794 1472
-Q 859 638 1575 638
-Q 1906 638 2131 825
-Q 2413 1066 2413 1528
-Q 2413 2522 1431 2522
-L 1113 2522
-L 1113 2931
-z
-" transform="scale(0.015625)"/>
      </defs>
      <use xlink:href="#IPAGothic-ed"/>
      <use xlink:href="#IPAGothic-117" transform="translate(50 0)"/>
@@ -1008,22 +982,19 @@ z
      <use xlink:href="#IPAGothic-114" transform="translate(1750 0)"/>
      <use xlink:href="#IPAGothic-117" transform="translate(1800 0)"/>
      <use xlink:href="#IPAGothic-c6" transform="translate(1850 0)"/>
-     <use xlink:href="#IPAGothic-107" transform="translate(1900 0)"/>
-     <use xlink:href="#IPAGothic-114" transform="translate(1950 0)"/>
-     <use xlink:href="#IPAGothic-119" transform="translate(2000 0)"/>
-     <use xlink:href="#IPAGothic-10d" transform="translate(2050 0)"/>
-     <use xlink:href="#IPAGothic-c6" transform="translate(2100 0)"/>
-     <use xlink:href="#IPAGothic-d6" transform="translate(2150 0)"/>
-     <use xlink:href="#IPAGothic-c6" transform="translate(2200 0)"/>
-     <use xlink:href="#IPAGothic-106" transform="translate(2250 0)"/>
-     <use xlink:href="#IPAGothic-113" transform="translate(2300 0)"/>
-     <use xlink:href="#IPAGothic-109" transform="translate(2350 0)"/>
-     <use xlink:href="#IPAGothic-c6" transform="translate(2400 0)"/>
-     <use xlink:href="#IPAGothic-d9" transform="translate(2450 0)"/>
-     <use xlink:href="#IPAGothic-d4" transform="translate(2500 0)"/>
+     <use xlink:href="#IPAGothic-106" transform="translate(1900 0)"/>
+     <use xlink:href="#IPAGothic-111" transform="translate(1950 0)"/>
+     <use xlink:href="#IPAGothic-111" transform="translate(2000 0)"/>
+     <use xlink:href="#IPAGothic-c6" transform="translate(2050 0)"/>
+     <use xlink:href="#IPAGothic-119" transform="translate(2100 0)"/>
+     <use xlink:href="#IPAGothic-10d" transform="translate(2150 0)"/>
+     <use xlink:href="#IPAGothic-117" transform="translate(2200 0)"/>
+     <use xlink:href="#IPAGothic-10a" transform="translate(2250 0)"/>
+     <use xlink:href="#IPAGothic-10a" transform="translate(2300 0)"/>
+     <use xlink:href="#IPAGothic-d4" transform="translate(2350 0)"/>
     </g>
-    <!-- Oblique channels: 10-40 % with 0 and 6-17 % with 3. -->
-    <g style="fill: #282c30" transform="translate(600 146.523369) scale(0.094 -0.094)">
+    <!-- Oblique channels: 10-40 % with 0, 4-17 % with 3 -->
+    <g style="fill: #282c30" transform="translate(600 146.417619) scale(0.094 -0.094)">
      <defs>
       <path id="IPAGothic-f5" d="M 1600 4934
 Q 2197 4934 2541 4331
@@ -1071,31 +1042,11 @@ L 2034 1869
 L 2034 4109
 z
 " transform="scale(0.015625)"/>
-      <path id="IPAGothic-dc" d="M 2322 3809
-Q 2225 4488 1713 4488
-Q 1269 4488 1028 3950
-Q 803 3447 794 2588
-Q 1159 3119 1725 3119
-Q 2194 3119 2519 2772
-Q 2903 2369 2903 1709
-Q 2903 1159 2641 750
-Q 2284 200 1638 200
-Q 1050 200 697 738
-Q 319 1328 319 2375
-Q 319 3488 650 4172
-Q 1028 4934 1706 4934
-Q 2634 4934 2847 3809
-L 2322 3809
-z
-M 1644 2703
-Q 1272 2703 1047 2363
-Q 875 2094 875 1691
-Q 875 1328 997 1075
-Q 1209 641 1650 641
-Q 2003 641 2219 959
-Q 2409 1241 2409 1697
-Q 2409 2113 2244 2375
-Q 2041 2703 1644 2703
+      <path id="IPAGothic-d2" d="M 1466 1088
+Q 1278 103 775 -738
+L 372 -622
+Q 653 181 713 1088
+L 1466 1088
 z
 " transform="scale(0.015625)"/>
       <path id="IPAGothic-dd" d="M 319 4806
@@ -1106,6 +1057,32 @@ L 947 325
 Q 1434 2050 2328 4319
 L 319 4319
 L 319 4806
+z
+" transform="scale(0.015625)"/>
+      <path id="IPAGothic-d9" d="M 1113 2931
+L 1431 2931
+Q 1841 2931 1994 3047
+Q 2281 3269 2281 3713
+Q 2281 4500 1566 4500
+Q 972 4500 838 3828
+L 331 3828
+Q 400 4250 625 4525
+Q 969 4934 1566 4934
+Q 2066 4934 2391 4647
+Q 2775 4309 2775 3731
+Q 2775 2953 2078 2713
+Q 2919 2388 2919 1528
+Q 2919 978 2606 625
+Q 2231 197 1575 197
+Q 959 197 594 619
+Q 325 928 269 1472
+L 794 1472
+Q 859 638 1575 638
+Q 1906 638 2131 825
+Q 2413 1066 2413 1528
+Q 2413 2522 1431 2522
+L 1113 2522
+L 1113 2931
 z
 " transform="scale(0.015625)"/>
      </defs>
@@ -1141,30 +1118,174 @@ z
      <use xlink:href="#IPAGothic-10d" transform="translate(1450 0)"/>
      <use xlink:href="#IPAGothic-c6" transform="translate(1500 0)"/>
      <use xlink:href="#IPAGothic-d6" transform="translate(1550 0)"/>
-     <use xlink:href="#IPAGothic-c6" transform="translate(1600 0)"/>
-     <use xlink:href="#IPAGothic-106" transform="translate(1650 0)"/>
-     <use xlink:href="#IPAGothic-113" transform="translate(1700 0)"/>
-     <use xlink:href="#IPAGothic-109" transform="translate(1750 0)"/>
-     <use xlink:href="#IPAGothic-c6" transform="translate(1800 0)"/>
-     <use xlink:href="#IPAGothic-dc" transform="translate(1850 0)"/>
-     <use xlink:href="#IPAGothic-d3" transform="translate(1900 0)"/>
-     <use xlink:href="#IPAGothic-d7" transform="translate(1950 0)"/>
-     <use xlink:href="#IPAGothic-dd" transform="translate(2000 0)"/>
-     <use xlink:href="#IPAGothic-c6" transform="translate(2050 0)"/>
-     <use xlink:href="#IPAGothic-cb" transform="translate(2100 0)"/>
-     <use xlink:href="#IPAGothic-c6" transform="translate(2150 0)"/>
-     <use xlink:href="#IPAGothic-11c" transform="translate(2200 0)"/>
-     <use xlink:href="#IPAGothic-10e" transform="translate(2250 0)"/>
-     <use xlink:href="#IPAGothic-119" transform="translate(2300 0)"/>
-     <use xlink:href="#IPAGothic-10d" transform="translate(2350 0)"/>
-     <use xlink:href="#IPAGothic-c6" transform="translate(2400 0)"/>
-     <use xlink:href="#IPAGothic-d9" transform="translate(2450 0)"/>
-     <use xlink:href="#IPAGothic-d4" transform="translate(2500 0)"/>
+     <use xlink:href="#IPAGothic-d2" transform="translate(1600 0)"/>
+     <use xlink:href="#IPAGothic-c6" transform="translate(1650 0)"/>
+     <use xlink:href="#IPAGothic-da" transform="translate(1700 0)"/>
+     <use xlink:href="#IPAGothic-d3" transform="translate(1750 0)"/>
+     <use xlink:href="#IPAGothic-d7" transform="translate(1800 0)"/>
+     <use xlink:href="#IPAGothic-dd" transform="translate(1850 0)"/>
+     <use xlink:href="#IPAGothic-c6" transform="translate(1900 0)"/>
+     <use xlink:href="#IPAGothic-cb" transform="translate(1950 0)"/>
+     <use xlink:href="#IPAGothic-c6" transform="translate(2000 0)"/>
+     <use xlink:href="#IPAGothic-11c" transform="translate(2050 0)"/>
+     <use xlink:href="#IPAGothic-10e" transform="translate(2100 0)"/>
+     <use xlink:href="#IPAGothic-119" transform="translate(2150 0)"/>
+     <use xlink:href="#IPAGothic-10d" transform="translate(2200 0)"/>
+     <use xlink:href="#IPAGothic-c6" transform="translate(2250 0)"/>
+     <use xlink:href="#IPAGothic-d9" transform="translate(2300 0)"/>
+    </g>
+    <!-- combined with f_advection_lateral = 0, and -0.4 to -->
+    <g style="fill: #282c30" transform="translate(600 159.756072) scale(0.094 -0.094)">
+     <defs>
+      <path id="IPAGothic-105" d="M 0 -609
+L 3200 -609
+L 3200 -769
+L 0 -769
+L 0 -609
+z
+" transform="scale(0.015625)"/>
+      <path id="IPAGothic-e3" d="M 313 3263
+L 2884 3263
+L 2884 2816
+L 313 2816
+L 313 3263
+z
+M 313 2047
+L 2884 2047
+L 2884 1600
+L 313 1600
+L 313 2047
+z
+" transform="scale(0.015625)"/>
+     </defs>
+     <use xlink:href="#IPAGothic-108"/>
+     <use xlink:href="#IPAGothic-114" transform="translate(50 0)"/>
+     <use xlink:href="#IPAGothic-112" transform="translate(100 0)"/>
+     <use xlink:href="#IPAGothic-107" transform="translate(150 0)"/>
+     <use xlink:href="#IPAGothic-10e" transform="translate(200 0)"/>
+     <use xlink:href="#IPAGothic-113" transform="translate(250 0)"/>
+     <use xlink:href="#IPAGothic-10a" transform="translate(300 0)"/>
+     <use xlink:href="#IPAGothic-109" transform="translate(350 0)"/>
+     <use xlink:href="#IPAGothic-c6" transform="translate(400 0)"/>
+     <use xlink:href="#IPAGothic-11c" transform="translate(450 0)"/>
+     <use xlink:href="#IPAGothic-10e" transform="translate(500 0)"/>
+     <use xlink:href="#IPAGothic-119" transform="translate(550 0)"/>
+     <use xlink:href="#IPAGothic-10d" transform="translate(600 0)"/>
+     <use xlink:href="#IPAGothic-c6" transform="translate(650 0)"/>
+     <use xlink:href="#IPAGothic-10b" transform="translate(700 0)"/>
+     <use xlink:href="#IPAGothic-105" transform="translate(750 0)"/>
+     <use xlink:href="#IPAGothic-106" transform="translate(800 0)"/>
+     <use xlink:href="#IPAGothic-109" transform="translate(850 0)"/>
+     <use xlink:href="#IPAGothic-11b" transform="translate(900 0)"/>
+     <use xlink:href="#IPAGothic-10a" transform="translate(950 0)"/>
+     <use xlink:href="#IPAGothic-108" transform="translate(1000 0)"/>
+     <use xlink:href="#IPAGothic-119" transform="translate(1050 0)"/>
+     <use xlink:href="#IPAGothic-10e" transform="translate(1100 0)"/>
+     <use xlink:href="#IPAGothic-114" transform="translate(1150 0)"/>
+     <use xlink:href="#IPAGothic-113" transform="translate(1200 0)"/>
+     <use xlink:href="#IPAGothic-105" transform="translate(1250 0)"/>
+     <use xlink:href="#IPAGothic-111" transform="translate(1300 0)"/>
+     <use xlink:href="#IPAGothic-106" transform="translate(1350 0)"/>
+     <use xlink:href="#IPAGothic-119" transform="translate(1400 0)"/>
+     <use xlink:href="#IPAGothic-10a" transform="translate(1450 0)"/>
+     <use xlink:href="#IPAGothic-117" transform="translate(1500 0)"/>
+     <use xlink:href="#IPAGothic-106" transform="translate(1550 0)"/>
+     <use xlink:href="#IPAGothic-111" transform="translate(1600 0)"/>
+     <use xlink:href="#IPAGothic-c6" transform="translate(1650 0)"/>
+     <use xlink:href="#IPAGothic-e3" transform="translate(1700 0)"/>
+     <use xlink:href="#IPAGothic-c6" transform="translate(1750 0)"/>
+     <use xlink:href="#IPAGothic-d6" transform="translate(1800 0)"/>
+     <use xlink:href="#IPAGothic-d2" transform="translate(1850 0)"/>
+     <use xlink:href="#IPAGothic-c6" transform="translate(1900 0)"/>
+     <use xlink:href="#IPAGothic-106" transform="translate(1950 0)"/>
+     <use xlink:href="#IPAGothic-113" transform="translate(2000 0)"/>
+     <use xlink:href="#IPAGothic-109" transform="translate(2050 0)"/>
+     <use xlink:href="#IPAGothic-c6" transform="translate(2100 0)"/>
+     <use xlink:href="#IPAGothic-d3" transform="translate(2150 0)"/>
+     <use xlink:href="#IPAGothic-d6" transform="translate(2200 0)"/>
+     <use xlink:href="#IPAGothic-d4" transform="translate(2250 0)"/>
+     <use xlink:href="#IPAGothic-da" transform="translate(2300 0)"/>
+     <use xlink:href="#IPAGothic-c6" transform="translate(2350 0)"/>
+     <use xlink:href="#IPAGothic-119" transform="translate(2400 0)"/>
+     <use xlink:href="#IPAGothic-114" transform="translate(2450 0)"/>
+    </g>
+    <!-- 3.7 % with the default combination (3 with -->
+    <g style="fill: #282c30" transform="translate(600 173.900869) scale(0.094 -0.094)">
+     <use xlink:href="#IPAGothic-d9"/>
+     <use xlink:href="#IPAGothic-d4" transform="translate(50 0)"/>
+     <use xlink:href="#IPAGothic-dd" transform="translate(100 0)"/>
+     <use xlink:href="#IPAGothic-c6" transform="translate(150 0)"/>
+     <use xlink:href="#IPAGothic-cb" transform="translate(200 0)"/>
+     <use xlink:href="#IPAGothic-c6" transform="translate(250 0)"/>
+     <use xlink:href="#IPAGothic-11c" transform="translate(300 0)"/>
+     <use xlink:href="#IPAGothic-10e" transform="translate(350 0)"/>
+     <use xlink:href="#IPAGothic-119" transform="translate(400 0)"/>
+     <use xlink:href="#IPAGothic-10d" transform="translate(450 0)"/>
+     <use xlink:href="#IPAGothic-c6" transform="translate(500 0)"/>
+     <use xlink:href="#IPAGothic-119" transform="translate(550 0)"/>
+     <use xlink:href="#IPAGothic-10d" transform="translate(600 0)"/>
+     <use xlink:href="#IPAGothic-10a" transform="translate(650 0)"/>
+     <use xlink:href="#IPAGothic-c6" transform="translate(700 0)"/>
+     <use xlink:href="#IPAGothic-109" transform="translate(750 0)"/>
+     <use xlink:href="#IPAGothic-10a" transform="translate(800 0)"/>
+     <use xlink:href="#IPAGothic-10b" transform="translate(850 0)"/>
+     <use xlink:href="#IPAGothic-106" transform="translate(900 0)"/>
+     <use xlink:href="#IPAGothic-11a" transform="translate(950 0)"/>
+     <use xlink:href="#IPAGothic-111" transform="translate(1000 0)"/>
+     <use xlink:href="#IPAGothic-119" transform="translate(1050 0)"/>
+     <use xlink:href="#IPAGothic-c6" transform="translate(1100 0)"/>
+     <use xlink:href="#IPAGothic-108" transform="translate(1150 0)"/>
+     <use xlink:href="#IPAGothic-114" transform="translate(1200 0)"/>
+     <use xlink:href="#IPAGothic-112" transform="translate(1250 0)"/>
+     <use xlink:href="#IPAGothic-107" transform="translate(1300 0)"/>
+     <use xlink:href="#IPAGothic-10e" transform="translate(1350 0)"/>
+     <use xlink:href="#IPAGothic-113" transform="translate(1400 0)"/>
+     <use xlink:href="#IPAGothic-106" transform="translate(1450 0)"/>
+     <use xlink:href="#IPAGothic-119" transform="translate(1500 0)"/>
+     <use xlink:href="#IPAGothic-10e" transform="translate(1550 0)"/>
+     <use xlink:href="#IPAGothic-114" transform="translate(1600 0)"/>
+     <use xlink:href="#IPAGothic-113" transform="translate(1650 0)"/>
+     <use xlink:href="#IPAGothic-c6" transform="translate(1700 0)"/>
+     <use xlink:href="#IPAGothic-ce" transform="translate(1750 0)"/>
+     <use xlink:href="#IPAGothic-d9" transform="translate(1800 0)"/>
+     <use xlink:href="#IPAGothic-c6" transform="translate(1850 0)"/>
+     <use xlink:href="#IPAGothic-11c" transform="translate(1900 0)"/>
+     <use xlink:href="#IPAGothic-10e" transform="translate(1950 0)"/>
+     <use xlink:href="#IPAGothic-119" transform="translate(2000 0)"/>
+     <use xlink:href="#IPAGothic-10d" transform="translate(2050 0)"/>
+    </g>
+    <!-- f_advection_lateral = 1). -->
+    <g style="fill: #282c30" transform="translate(600 187.284853) scale(0.094 -0.094)">
+     <use xlink:href="#IPAGothic-10b"/>
+     <use xlink:href="#IPAGothic-105" transform="translate(50 0)"/>
+     <use xlink:href="#IPAGothic-106" transform="translate(100 0)"/>
+     <use xlink:href="#IPAGothic-109" transform="translate(150 0)"/>
+     <use xlink:href="#IPAGothic-11b" transform="translate(200 0)"/>
+     <use xlink:href="#IPAGothic-10a" transform="translate(250 0)"/>
+     <use xlink:href="#IPAGothic-108" transform="translate(300 0)"/>
+     <use xlink:href="#IPAGothic-119" transform="translate(350 0)"/>
+     <use xlink:href="#IPAGothic-10e" transform="translate(400 0)"/>
+     <use xlink:href="#IPAGothic-114" transform="translate(450 0)"/>
+     <use xlink:href="#IPAGothic-113" transform="translate(500 0)"/>
+     <use xlink:href="#IPAGothic-105" transform="translate(550 0)"/>
+     <use xlink:href="#IPAGothic-111" transform="translate(600 0)"/>
+     <use xlink:href="#IPAGothic-106" transform="translate(650 0)"/>
+     <use xlink:href="#IPAGothic-119" transform="translate(700 0)"/>
+     <use xlink:href="#IPAGothic-10a" transform="translate(750 0)"/>
+     <use xlink:href="#IPAGothic-117" transform="translate(800 0)"/>
+     <use xlink:href="#IPAGothic-106" transform="translate(850 0)"/>
+     <use xlink:href="#IPAGothic-111" transform="translate(900 0)"/>
+     <use xlink:href="#IPAGothic-c6" transform="translate(950 0)"/>
+     <use xlink:href="#IPAGothic-e3" transform="translate(1000 0)"/>
+     <use xlink:href="#IPAGothic-c6" transform="translate(1050 0)"/>
+     <use xlink:href="#IPAGothic-d7" transform="translate(1100 0)"/>
+     <use xlink:href="#IPAGothic-cf" transform="translate(1150 0)"/>
+     <use xlink:href="#IPAGothic-d4" transform="translate(1200 0)"/>
     </g>
    </g>
    <g id="text_4">
     <!-- Refining the grid with the channel kept one cell -->
-    <g style="fill: #282c30" transform="translate(600 170.292987) scale(0.094 -0.094)">
+    <g style="fill: #282c30" transform="translate(600 211.182987) scale(0.094 -0.094)">
      <defs>
       <path id="IPAGothic-f8" d="M 447 4806
 L 1556 4806
@@ -1239,7 +1360,7 @@ z
      <use xlink:href="#IPAGothic-111" transform="translate(2350 0)"/>
     </g>
     <!-- wide increases E for 0 (more steps). What remains -->
-    <g style="fill: #282c30" transform="translate(600 184.285769) scale(0.094 -0.094)">
+    <g style="fill: #282c30" transform="translate(600 225.175769) scale(0.094 -0.094)">
      <defs>
       <path id="IPAGothic-fd" d="M 153 4806
 L 659 4806
@@ -1308,8 +1429,60 @@ z
      <use xlink:href="#IPAGothic-113" transform="translate(2350 0)"/>
      <use xlink:href="#IPAGothic-118" transform="translate(2400 0)"/>
     </g>
-    <!-- with 3 comes mainly from the lateral faces (§7). -->
-    <g style="fill: #282c30" transform="translate(600 197.913566) scale(0.094 -0.094)">
+    <!-- with 3 alone comes mainly from the lateral faces, -->
+    <g style="fill: #282c30" transform="translate(600 238.431238) scale(0.094 -0.094)">
+     <use xlink:href="#IPAGothic-11c"/>
+     <use xlink:href="#IPAGothic-10e" transform="translate(50 0)"/>
+     <use xlink:href="#IPAGothic-119" transform="translate(100 0)"/>
+     <use xlink:href="#IPAGothic-10d" transform="translate(150 0)"/>
+     <use xlink:href="#IPAGothic-c6" transform="translate(200 0)"/>
+     <use xlink:href="#IPAGothic-d9" transform="translate(250 0)"/>
+     <use xlink:href="#IPAGothic-c6" transform="translate(300 0)"/>
+     <use xlink:href="#IPAGothic-106" transform="translate(350 0)"/>
+     <use xlink:href="#IPAGothic-111" transform="translate(400 0)"/>
+     <use xlink:href="#IPAGothic-114" transform="translate(450 0)"/>
+     <use xlink:href="#IPAGothic-113" transform="translate(500 0)"/>
+     <use xlink:href="#IPAGothic-10a" transform="translate(550 0)"/>
+     <use xlink:href="#IPAGothic-c6" transform="translate(600 0)"/>
+     <use xlink:href="#IPAGothic-108" transform="translate(650 0)"/>
+     <use xlink:href="#IPAGothic-114" transform="translate(700 0)"/>
+     <use xlink:href="#IPAGothic-112" transform="translate(750 0)"/>
+     <use xlink:href="#IPAGothic-10a" transform="translate(800 0)"/>
+     <use xlink:href="#IPAGothic-118" transform="translate(850 0)"/>
+     <use xlink:href="#IPAGothic-c6" transform="translate(900 0)"/>
+     <use xlink:href="#IPAGothic-112" transform="translate(950 0)"/>
+     <use xlink:href="#IPAGothic-106" transform="translate(1000 0)"/>
+     <use xlink:href="#IPAGothic-10e" transform="translate(1050 0)"/>
+     <use xlink:href="#IPAGothic-113" transform="translate(1100 0)"/>
+     <use xlink:href="#IPAGothic-111" transform="translate(1150 0)"/>
+     <use xlink:href="#IPAGothic-11e" transform="translate(1200 0)"/>
+     <use xlink:href="#IPAGothic-c6" transform="translate(1250 0)"/>
+     <use xlink:href="#IPAGothic-10b" transform="translate(1300 0)"/>
+     <use xlink:href="#IPAGothic-117" transform="translate(1350 0)"/>
+     <use xlink:href="#IPAGothic-114" transform="translate(1400 0)"/>
+     <use xlink:href="#IPAGothic-112" transform="translate(1450 0)"/>
+     <use xlink:href="#IPAGothic-c6" transform="translate(1500 0)"/>
+     <use xlink:href="#IPAGothic-119" transform="translate(1550 0)"/>
+     <use xlink:href="#IPAGothic-10d" transform="translate(1600 0)"/>
+     <use xlink:href="#IPAGothic-10a" transform="translate(1650 0)"/>
+     <use xlink:href="#IPAGothic-c6" transform="translate(1700 0)"/>
+     <use xlink:href="#IPAGothic-111" transform="translate(1750 0)"/>
+     <use xlink:href="#IPAGothic-106" transform="translate(1800 0)"/>
+     <use xlink:href="#IPAGothic-119" transform="translate(1850 0)"/>
+     <use xlink:href="#IPAGothic-10a" transform="translate(1900 0)"/>
+     <use xlink:href="#IPAGothic-117" transform="translate(1950 0)"/>
+     <use xlink:href="#IPAGothic-106" transform="translate(2000 0)"/>
+     <use xlink:href="#IPAGothic-111" transform="translate(2050 0)"/>
+     <use xlink:href="#IPAGothic-c6" transform="translate(2100 0)"/>
+     <use xlink:href="#IPAGothic-10b" transform="translate(2150 0)"/>
+     <use xlink:href="#IPAGothic-106" transform="translate(2200 0)"/>
+     <use xlink:href="#IPAGothic-108" transform="translate(2250 0)"/>
+     <use xlink:href="#IPAGothic-10a" transform="translate(2300 0)"/>
+     <use xlink:href="#IPAGothic-118" transform="translate(2350 0)"/>
+     <use xlink:href="#IPAGothic-d2" transform="translate(2400 0)"/>
+    </g>
+    <!-- which f_advection_lateral = 1 removes (§7). -->
+    <g style="fill: #282c30" transform="translate(600 252.307253) scale(0.094 -0.094)">
      <defs>
       <path id="IPAGothic-1db" d="M 2431 838
 Q 2481 47 3188 47
@@ -1356,53 +1529,48 @@ z
 " transform="scale(0.015625)"/>
      </defs>
      <use xlink:href="#IPAGothic-11c"/>
-     <use xlink:href="#IPAGothic-10e" transform="translate(50 0)"/>
-     <use xlink:href="#IPAGothic-119" transform="translate(100 0)"/>
-     <use xlink:href="#IPAGothic-10d" transform="translate(150 0)"/>
-     <use xlink:href="#IPAGothic-c6" transform="translate(200 0)"/>
-     <use xlink:href="#IPAGothic-d9" transform="translate(250 0)"/>
-     <use xlink:href="#IPAGothic-c6" transform="translate(300 0)"/>
-     <use xlink:href="#IPAGothic-108" transform="translate(350 0)"/>
-     <use xlink:href="#IPAGothic-114" transform="translate(400 0)"/>
-     <use xlink:href="#IPAGothic-112" transform="translate(450 0)"/>
-     <use xlink:href="#IPAGothic-10a" transform="translate(500 0)"/>
-     <use xlink:href="#IPAGothic-118" transform="translate(550 0)"/>
-     <use xlink:href="#IPAGothic-c6" transform="translate(600 0)"/>
-     <use xlink:href="#IPAGothic-112" transform="translate(650 0)"/>
-     <use xlink:href="#IPAGothic-106" transform="translate(700 0)"/>
-     <use xlink:href="#IPAGothic-10e" transform="translate(750 0)"/>
+     <use xlink:href="#IPAGothic-10d" transform="translate(50 0)"/>
+     <use xlink:href="#IPAGothic-10e" transform="translate(100 0)"/>
+     <use xlink:href="#IPAGothic-108" transform="translate(150 0)"/>
+     <use xlink:href="#IPAGothic-10d" transform="translate(200 0)"/>
+     <use xlink:href="#IPAGothic-c6" transform="translate(250 0)"/>
+     <use xlink:href="#IPAGothic-10b" transform="translate(300 0)"/>
+     <use xlink:href="#IPAGothic-105" transform="translate(350 0)"/>
+     <use xlink:href="#IPAGothic-106" transform="translate(400 0)"/>
+     <use xlink:href="#IPAGothic-109" transform="translate(450 0)"/>
+     <use xlink:href="#IPAGothic-11b" transform="translate(500 0)"/>
+     <use xlink:href="#IPAGothic-10a" transform="translate(550 0)"/>
+     <use xlink:href="#IPAGothic-108" transform="translate(600 0)"/>
+     <use xlink:href="#IPAGothic-119" transform="translate(650 0)"/>
+     <use xlink:href="#IPAGothic-10e" transform="translate(700 0)"/>
+     <use xlink:href="#IPAGothic-114" transform="translate(750 0)"/>
      <use xlink:href="#IPAGothic-113" transform="translate(800 0)"/>
-     <use xlink:href="#IPAGothic-111" transform="translate(850 0)"/>
-     <use xlink:href="#IPAGothic-11e" transform="translate(900 0)"/>
-     <use xlink:href="#IPAGothic-c6" transform="translate(950 0)"/>
-     <use xlink:href="#IPAGothic-10b" transform="translate(1000 0)"/>
-     <use xlink:href="#IPAGothic-117" transform="translate(1050 0)"/>
-     <use xlink:href="#IPAGothic-114" transform="translate(1100 0)"/>
-     <use xlink:href="#IPAGothic-112" transform="translate(1150 0)"/>
-     <use xlink:href="#IPAGothic-c6" transform="translate(1200 0)"/>
-     <use xlink:href="#IPAGothic-119" transform="translate(1250 0)"/>
-     <use xlink:href="#IPAGothic-10d" transform="translate(1300 0)"/>
-     <use xlink:href="#IPAGothic-10a" transform="translate(1350 0)"/>
-     <use xlink:href="#IPAGothic-c6" transform="translate(1400 0)"/>
-     <use xlink:href="#IPAGothic-111" transform="translate(1450 0)"/>
-     <use xlink:href="#IPAGothic-106" transform="translate(1500 0)"/>
-     <use xlink:href="#IPAGothic-119" transform="translate(1550 0)"/>
-     <use xlink:href="#IPAGothic-10a" transform="translate(1600 0)"/>
-     <use xlink:href="#IPAGothic-117" transform="translate(1650 0)"/>
-     <use xlink:href="#IPAGothic-106" transform="translate(1700 0)"/>
-     <use xlink:href="#IPAGothic-111" transform="translate(1750 0)"/>
-     <use xlink:href="#IPAGothic-c6" transform="translate(1800 0)"/>
-     <use xlink:href="#IPAGothic-10b" transform="translate(1850 0)"/>
-     <use xlink:href="#IPAGothic-106" transform="translate(1900 0)"/>
-     <use xlink:href="#IPAGothic-108" transform="translate(1950 0)"/>
-     <use xlink:href="#IPAGothic-10a" transform="translate(2000 0)"/>
-     <use xlink:href="#IPAGothic-118" transform="translate(2050 0)"/>
-     <use xlink:href="#IPAGothic-c6" transform="translate(2100 0)"/>
-     <use xlink:href="#IPAGothic-ce" transform="translate(2150 0)"/>
-     <use xlink:href="#IPAGothic-1db" transform="translate(2200 0)"/>
-     <use xlink:href="#IPAGothic-dd" transform="translate(2300 0)"/>
-     <use xlink:href="#IPAGothic-cf" transform="translate(2350 0)"/>
-     <use xlink:href="#IPAGothic-d4" transform="translate(2400 0)"/>
+     <use xlink:href="#IPAGothic-105" transform="translate(850 0)"/>
+     <use xlink:href="#IPAGothic-111" transform="translate(900 0)"/>
+     <use xlink:href="#IPAGothic-106" transform="translate(950 0)"/>
+     <use xlink:href="#IPAGothic-119" transform="translate(1000 0)"/>
+     <use xlink:href="#IPAGothic-10a" transform="translate(1050 0)"/>
+     <use xlink:href="#IPAGothic-117" transform="translate(1100 0)"/>
+     <use xlink:href="#IPAGothic-106" transform="translate(1150 0)"/>
+     <use xlink:href="#IPAGothic-111" transform="translate(1200 0)"/>
+     <use xlink:href="#IPAGothic-c6" transform="translate(1250 0)"/>
+     <use xlink:href="#IPAGothic-e3" transform="translate(1300 0)"/>
+     <use xlink:href="#IPAGothic-c6" transform="translate(1350 0)"/>
+     <use xlink:href="#IPAGothic-d7" transform="translate(1400 0)"/>
+     <use xlink:href="#IPAGothic-c6" transform="translate(1450 0)"/>
+     <use xlink:href="#IPAGothic-117" transform="translate(1500 0)"/>
+     <use xlink:href="#IPAGothic-10a" transform="translate(1550 0)"/>
+     <use xlink:href="#IPAGothic-112" transform="translate(1600 0)"/>
+     <use xlink:href="#IPAGothic-114" transform="translate(1650 0)"/>
+     <use xlink:href="#IPAGothic-11b" transform="translate(1700 0)"/>
+     <use xlink:href="#IPAGothic-10a" transform="translate(1750 0)"/>
+     <use xlink:href="#IPAGothic-118" transform="translate(1800 0)"/>
+     <use xlink:href="#IPAGothic-c6" transform="translate(1850 0)"/>
+     <use xlink:href="#IPAGothic-ce" transform="translate(1900 0)"/>
+     <use xlink:href="#IPAGothic-1db" transform="translate(1950 0)"/>
+     <use xlink:href="#IPAGothic-dd" transform="translate(2050 0)"/>
+     <use xlink:href="#IPAGothic-cf" transform="translate(2100 0)"/>
+     <use xlink:href="#IPAGothic-d4" transform="translate(2150 0)"/>
     </g>
    </g>
   </g>
@@ -1416,148 +1584,220 @@ z
 " style="fill: #ffffff"/>
    </g>
    <g id="patch_3">
-    <path d="M 76.363636 257.28
-L 95.775328 257.28
-L 95.775328 256.341333
-L 76.363636 256.341333
+    <path d="M 76.363636 244.08
+L 89.767298 244.08
+L 89.767298 243.2
+L 76.363636 243.2
 z
 " clip-path="url(#p6852549f6a)" style="fill: #eb6834"/>
    </g>
    <g id="patch_4">
-    <path d="M 130.285001 257.28
-L 149.696692 257.28
-L 149.696692 192.981333
-L 130.285001 192.981333
+    <path d="M 129.978281 244.08
+L 143.381942 244.08
+L 143.381942 189.08
+L 129.978281 189.08
 z
 " clip-path="url(#p6852549f6a)" style="fill: #eb6834"/>
    </g>
    <g id="patch_5">
-    <path d="M 184.206366 257.28
-L 203.618057 257.28
-L 203.618057 105.216
-L 184.206366 105.216
+    <path d="M 183.592926 244.08
+L 196.996587 244.08
+L 196.996587 100.2
+L 183.592926 100.2
 z
 " clip-path="url(#p6852549f6a)" style="fill: #eb6834"/>
    </g>
    <g id="patch_6">
-    <path d="M 238.12773 257.28
-L 257.539422 257.28
-L 257.539422 79.402667
-L 238.12773 79.402667
+    <path d="M 237.207571 244.08
+L 250.611232 244.08
+L 250.611232 72.92
+L 237.207571 72.92
 z
 " clip-path="url(#p6852549f6a)" style="fill: #eb6834"/>
    </g>
    <g id="patch_7">
-    <path d="M 292.049095 257.28
-L 311.460786 257.28
-L 311.460786 212.224
-L 292.049095 212.224
+    <path d="M 290.822215 244.08
+L 304.225877 244.08
+L 304.225877 201.84
+L 290.822215 201.84
 z
 " clip-path="url(#p6852549f6a)" style="fill: #eb6834"/>
    </g>
    <g id="patch_8">
-    <path d="M 345.97046 257.28
-L 365.382151 257.28
-L 365.382151 148.864
-L 345.97046 148.864
+    <path d="M 344.43686 244.08
+L 357.840521 244.08
+L 357.840521 138.92
+L 344.43686 138.92
 z
 " clip-path="url(#p6852549f6a)" style="fill: #eb6834"/>
    </g>
    <g id="patch_9">
-    <path d="M 399.891824 257.28
-L 419.303516 257.28
-L 419.303516 67.669333
-L 399.891824 67.669333
+    <path d="M 398.051505 244.08
+L 411.455166 244.08
+L 411.455166 69.84
+L 398.051505 69.84
 z
 " clip-path="url(#p6852549f6a)" style="fill: #eb6834"/>
    </g>
    <g id="patch_10">
-    <path d="M 453.813189 257.28
-L 473.22488 257.28
-L 473.22488 169.514667
-L 453.813189 169.514667
+    <path d="M 451.66615 244.08
+L 465.069811 244.08
+L 465.069811 160.92
+L 451.66615 160.92
 z
 " clip-path="url(#p6852549f6a)" style="fill: #eb6834"/>
    </g>
    <g id="patch_11">
-    <path d="M 507.734554 257.28
-L 527.146245 257.28
-L 527.146245 200.021333
-L 507.734554 200.021333
+    <path d="M 505.280794 244.08
+L 518.684455 244.08
+L 518.684455 189.96
+L 505.280794 189.96
 z
 " clip-path="url(#p6852549f6a)" style="fill: #eb6834"/>
    </g>
    <g id="patch_12">
-    <path d="M 96.853755 257.28
-L 116.265446 257.28
-L 116.265446 256.341333
-L 96.853755 256.341333
+    <path d="M 90.83959 244.08
+L 104.243252 244.08
+L 104.243252 243.2
+L 90.83959 243.2
 z
 " clip-path="url(#p6852549f6a)" style="fill: #2a78d6"/>
    </g>
    <g id="patch_13">
-    <path d="M 150.77512 257.28
-L 170.186811 257.28
-L 170.186811 217.386667
-L 150.77512 217.386667
+    <path d="M 144.454235 244.08
+L 157.857896 244.08
+L 157.857896 211.52
+L 144.454235 211.52
 z
 " clip-path="url(#p6852549f6a)" style="fill: #2a78d6"/>
    </g>
    <g id="patch_14">
-    <path d="M 204.696484 257.28
-L 224.108176 257.28
-L 224.108176 206.122667
-L 204.696484 206.122667
+    <path d="M 198.06888 244.08
+L 211.472541 244.08
+L 211.472541 199.2
+L 198.06888 199.2
 z
 " clip-path="url(#p6852549f6a)" style="fill: #2a78d6"/>
    </g>
    <g id="patch_15">
-    <path d="M 258.617849 257.28
-L 278.02954 257.28
-L 278.02954 177.493333
-L 258.617849 177.493333
+    <path d="M 251.683525 244.08
+L 265.087186 244.08
+L 265.087186 168.4
+L 251.683525 168.4
 z
 " clip-path="url(#p6852549f6a)" style="fill: #2a78d6"/>
    </g>
    <g id="patch_16">
-    <path d="M 312.539214 257.28
-L 331.950905 257.28
-L 331.950905 216.917333
-L 312.539214 216.917333
+    <path d="M 305.298169 244.08
+L 318.701831 244.08
+L 318.701831 206.24
+L 305.298169 206.24
 z
 " clip-path="url(#p6852549f6a)" style="fill: #2a78d6"/>
    </g>
    <g id="patch_17">
-    <path d="M 366.460578 257.28
-L 385.87227 257.28
-L 385.87227 208.469333
-L 366.460578 208.469333
+    <path d="M 358.912814 244.08
+L 372.316475 244.08
+L 372.316475 198.76
+L 358.912814 198.76
 z
 " clip-path="url(#p6852549f6a)" style="fill: #2a78d6"/>
    </g>
    <g id="patch_18">
-    <path d="M 420.381943 257.28
-L 439.793634 257.28
-L 439.793634 229.589333
-L 420.381943 229.589333
+    <path d="M 412.527459 244.08
+L 425.93112 244.08
+L 425.93112 225.16
+L 412.527459 225.16
 z
 " clip-path="url(#p6852549f6a)" style="fill: #2a78d6"/>
    </g>
    <g id="patch_19">
-    <path d="M 474.303308 257.28
-L 493.714999 257.28
-L 493.714999 217.856
-L 474.303308 217.856
+    <path d="M 466.142104 244.08
+L 479.545765 244.08
+L 479.545765 207.12
+L 466.142104 207.12
 z
 " clip-path="url(#p6852549f6a)" style="fill: #2a78d6"/>
    </g>
    <g id="patch_20">
-    <path d="M 528.224672 257.28
-L 547.636364 257.28
-L 547.636364 226.304
-L 528.224672 226.304
+    <path d="M 519.756748 244.08
+L 533.16041 244.08
+L 533.16041 215.04
+L 519.756748 215.04
 z
 " clip-path="url(#p6852549f6a)" style="fill: #2a78d6"/>
+   </g>
+   <g id="patch_21">
+    <path d="M 105.315545 244.08
+L 118.719206 244.08
+L 118.719206 243.2
+L 105.315545 243.2
+z
+" clip-path="url(#p6852549f6a)" style="fill: #527d37"/>
+   </g>
+   <g id="patch_22">
+    <path d="M 158.930189 244.08
+L 172.33385 244.08
+L 172.33385 244.96
+L 158.930189 244.96
+z
+" clip-path="url(#p6852549f6a)" style="fill: #527d37"/>
+   </g>
+   <g id="patch_23">
+    <path d="M 212.544834 244.08
+L 225.948495 244.08
+L 225.948495 237.92
+L 212.544834 237.92
+z
+" clip-path="url(#p6852549f6a)" style="fill: #527d37"/>
+   </g>
+   <g id="patch_24">
+    <path d="M 266.159479 244.08
+L 279.56314 244.08
+L 279.56314 227.8
+L 266.159479 227.8
+z
+" clip-path="url(#p6852549f6a)" style="fill: #527d37"/>
+   </g>
+   <g id="patch_25">
+    <path d="M 319.774123 244.08
+L 333.177785 244.08
+L 333.177785 233.52
+L 319.774123 233.52
+z
+" clip-path="url(#p6852549f6a)" style="fill: #527d37"/>
+   </g>
+   <g id="patch_26">
+    <path d="M 373.388768 244.08
+L 386.792429 244.08
+L 386.792429 233.96
+L 373.388768 233.96
+z
+" clip-path="url(#p6852549f6a)" style="fill: #527d37"/>
+   </g>
+   <g id="patch_27">
+    <path d="M 427.003413 244.08
+L 440.407074 244.08
+L 440.407074 245.84
+L 427.003413 245.84
+z
+" clip-path="url(#p6852549f6a)" style="fill: #527d37"/>
+   </g>
+   <g id="patch_28">
+    <path d="M 480.618058 244.08
+L 494.021719 244.08
+L 494.021719 237.92
+L 480.618058 237.92
+z
+" clip-path="url(#p6852549f6a)" style="fill: #527d37"/>
+   </g>
+   <g id="patch_29">
+    <path d="M 534.232702 244.08
+L 547.636364 244.08
+L 547.636364 240.56
+L 534.232702 240.56
+z
+" clip-path="url(#p6852549f6a)" style="fill: #527d37"/>
    </g>
    <g id="matplotlib.axis_1">
     <g id="xtick_1">
@@ -1568,17 +1808,17 @@ L 0 3.5
 " style="stroke: #000000; stroke-width: 0.8"/>
       </defs>
       <g>
-       <use xlink:href="#m6f7ebfceb4" x="96.314541" y="257.28" style="stroke: #000000; stroke-width: 0.8"/>
+       <use xlink:href="#m6f7ebfceb4" x="97.541421" y="257.28" style="stroke: #000000; stroke-width: 0.8"/>
       </g>
      </g>
      <g id="text_5">
       <!-- 0° -->
-      <g transform="translate(89.864541 271.846992) scale(0.086 -0.086)">
+      <g transform="translate(91.091421 271.846992) scale(0.086 -0.086)">
        <use xlink:href="#IPAGothic-d6"/>
        <use xlink:href="#IPAGothic-1ce" transform="translate(50 0)"/>
       </g>
       <!-- 50 m -->
-      <g transform="translate(87.714541 280.446992) scale(0.086 -0.086)">
+      <g transform="translate(88.941421 280.446992) scale(0.086 -0.086)">
        <defs>
         <path id="IPAGothic-db" d="M 566 4806
 L 2691 4806
@@ -1609,7 +1849,7 @@ z
        <use xlink:href="#IPAGothic-112" transform="translate(150 0)"/>
       </g>
       <!-- 1 cell -->
-      <g transform="translate(83.414541 289.046992) scale(0.086 -0.086)">
+      <g transform="translate(84.641421 289.046992) scale(0.086 -0.086)">
        <use xlink:href="#IPAGothic-d7"/>
        <use xlink:href="#IPAGothic-c6" transform="translate(50 0)"/>
        <use xlink:href="#IPAGothic-108" transform="translate(100 0)"/>
@@ -1622,25 +1862,25 @@ z
     <g id="xtick_2">
      <g id="line2d_2">
       <g>
-       <use xlink:href="#m6f7ebfceb4" x="150.235906" y="257.28" style="stroke: #000000; stroke-width: 0.8"/>
+       <use xlink:href="#m6f7ebfceb4" x="151.156066" y="257.28" style="stroke: #000000; stroke-width: 0.8"/>
       </g>
      </g>
      <g id="text_6">
       <!-- 10° -->
-      <g transform="translate(141.635906 271.846992) scale(0.086 -0.086)">
+      <g transform="translate(142.556066 271.846992) scale(0.086 -0.086)">
        <use xlink:href="#IPAGothic-d7"/>
        <use xlink:href="#IPAGothic-d6" transform="translate(50 0)"/>
        <use xlink:href="#IPAGothic-1ce" transform="translate(100 0)"/>
       </g>
       <!-- 50 m -->
-      <g transform="translate(141.635906 280.446992) scale(0.086 -0.086)">
+      <g transform="translate(142.556066 280.446992) scale(0.086 -0.086)">
        <use xlink:href="#IPAGothic-db"/>
        <use xlink:href="#IPAGothic-d6" transform="translate(50 0)"/>
        <use xlink:href="#IPAGothic-c6" transform="translate(100 0)"/>
        <use xlink:href="#IPAGothic-112" transform="translate(150 0)"/>
       </g>
       <!-- 1 cell -->
-      <g transform="translate(137.335906 289.046992) scale(0.086 -0.086)">
+      <g transform="translate(138.256066 289.046992) scale(0.086 -0.086)">
        <use xlink:href="#IPAGothic-d7"/>
        <use xlink:href="#IPAGothic-c6" transform="translate(50 0)"/>
        <use xlink:href="#IPAGothic-108" transform="translate(100 0)"/>
@@ -1653,12 +1893,12 @@ z
     <g id="xtick_3">
      <g id="line2d_3">
       <g>
-       <use xlink:href="#m6f7ebfceb4" x="204.157271" y="257.28" style="stroke: #000000; stroke-width: 0.8"/>
+       <use xlink:href="#m6f7ebfceb4" x="204.770711" y="257.28" style="stroke: #000000; stroke-width: 0.8"/>
       </g>
      </g>
      <g id="text_7">
       <!-- 22.5° -->
-      <g transform="translate(191.257271 271.846992) scale(0.086 -0.086)">
+      <g transform="translate(191.870711 271.846992) scale(0.086 -0.086)">
        <use xlink:href="#IPAGothic-d8"/>
        <use xlink:href="#IPAGothic-d8" transform="translate(50 0)"/>
        <use xlink:href="#IPAGothic-d4" transform="translate(100 0)"/>
@@ -1666,14 +1906,14 @@ z
        <use xlink:href="#IPAGothic-1ce" transform="translate(200 0)"/>
       </g>
       <!-- 50 m -->
-      <g transform="translate(195.557271 280.446992) scale(0.086 -0.086)">
+      <g transform="translate(196.170711 280.446992) scale(0.086 -0.086)">
        <use xlink:href="#IPAGothic-db"/>
        <use xlink:href="#IPAGothic-d6" transform="translate(50 0)"/>
        <use xlink:href="#IPAGothic-c6" transform="translate(100 0)"/>
        <use xlink:href="#IPAGothic-112" transform="translate(150 0)"/>
       </g>
       <!-- 1 cell -->
-      <g transform="translate(191.257271 289.046992) scale(0.086 -0.086)">
+      <g transform="translate(191.870711 289.046992) scale(0.086 -0.086)">
        <use xlink:href="#IPAGothic-d7"/>
        <use xlink:href="#IPAGothic-c6" transform="translate(50 0)"/>
        <use xlink:href="#IPAGothic-108" transform="translate(100 0)"/>
@@ -1686,25 +1926,25 @@ z
     <g id="xtick_4">
      <g id="line2d_4">
       <g>
-       <use xlink:href="#m6f7ebfceb4" x="258.078635" y="257.28" style="stroke: #000000; stroke-width: 0.8"/>
+       <use xlink:href="#m6f7ebfceb4" x="258.385355" y="257.28" style="stroke: #000000; stroke-width: 0.8"/>
       </g>
      </g>
      <g id="text_8">
       <!-- 30° -->
-      <g transform="translate(249.478635 271.846992) scale(0.086 -0.086)">
+      <g transform="translate(249.785355 271.846992) scale(0.086 -0.086)">
        <use xlink:href="#IPAGothic-d9"/>
        <use xlink:href="#IPAGothic-d6" transform="translate(50 0)"/>
        <use xlink:href="#IPAGothic-1ce" transform="translate(100 0)"/>
       </g>
       <!-- 50 m -->
-      <g transform="translate(249.478635 280.446992) scale(0.086 -0.086)">
+      <g transform="translate(249.785355 280.446992) scale(0.086 -0.086)">
        <use xlink:href="#IPAGothic-db"/>
        <use xlink:href="#IPAGothic-d6" transform="translate(50 0)"/>
        <use xlink:href="#IPAGothic-c6" transform="translate(100 0)"/>
        <use xlink:href="#IPAGothic-112" transform="translate(150 0)"/>
       </g>
       <!-- 1 cell -->
-      <g transform="translate(245.178635 289.046992) scale(0.086 -0.086)">
+      <g transform="translate(245.485355 289.046992) scale(0.086 -0.086)">
        <use xlink:href="#IPAGothic-d7"/>
        <use xlink:href="#IPAGothic-c6" transform="translate(50 0)"/>
        <use xlink:href="#IPAGothic-108" transform="translate(100 0)"/>
@@ -1748,12 +1988,12 @@ z
     <g id="xtick_6">
      <g id="line2d_6">
       <g>
-       <use xlink:href="#m6f7ebfceb4" x="365.921365" y="257.28" style="stroke: #000000; stroke-width: 0.8"/>
+       <use xlink:href="#m6f7ebfceb4" x="365.614645" y="257.28" style="stroke: #000000; stroke-width: 0.8"/>
       </g>
      </g>
      <g id="text_10">
       <!-- 22.5° -->
-      <g transform="translate(353.021365 271.846992) scale(0.086 -0.086)">
+      <g transform="translate(352.714645 271.846992) scale(0.086 -0.086)">
        <use xlink:href="#IPAGothic-d8"/>
        <use xlink:href="#IPAGothic-d8" transform="translate(50 0)"/>
        <use xlink:href="#IPAGothic-d4" transform="translate(100 0)"/>
@@ -1761,7 +2001,7 @@ z
        <use xlink:href="#IPAGothic-1ce" transform="translate(200 0)"/>
       </g>
       <!-- 100 m -->
-      <g transform="translate(355.171365 280.446992) scale(0.086 -0.086)">
+      <g transform="translate(354.864645 280.446992) scale(0.086 -0.086)">
        <use xlink:href="#IPAGothic-d7"/>
        <use xlink:href="#IPAGothic-d6" transform="translate(50 0)"/>
        <use xlink:href="#IPAGothic-d6" transform="translate(100 0)"/>
@@ -1769,7 +2009,7 @@ z
        <use xlink:href="#IPAGothic-112" transform="translate(200 0)"/>
       </g>
       <!-- 1 cell -->
-      <g transform="translate(353.021365 289.046992) scale(0.086 -0.086)">
+      <g transform="translate(352.714645 289.046992) scale(0.086 -0.086)">
        <use xlink:href="#IPAGothic-d7"/>
        <use xlink:href="#IPAGothic-c6" transform="translate(50 0)"/>
        <use xlink:href="#IPAGothic-108" transform="translate(100 0)"/>
@@ -1782,12 +2022,12 @@ z
     <g id="xtick_7">
      <g id="line2d_7">
       <g>
-       <use xlink:href="#m6f7ebfceb4" x="419.842729" y="257.28" style="stroke: #000000; stroke-width: 0.8"/>
+       <use xlink:href="#m6f7ebfceb4" x="419.229289" y="257.28" style="stroke: #000000; stroke-width: 0.8"/>
       </g>
      </g>
      <g id="text_11">
       <!-- 22.5° -->
-      <g transform="translate(406.942729 271.846992) scale(0.086 -0.086)">
+      <g transform="translate(406.329289 271.846992) scale(0.086 -0.086)">
        <use xlink:href="#IPAGothic-d8"/>
        <use xlink:href="#IPAGothic-d8" transform="translate(50 0)"/>
        <use xlink:href="#IPAGothic-d4" transform="translate(100 0)"/>
@@ -1795,14 +2035,14 @@ z
        <use xlink:href="#IPAGothic-1ce" transform="translate(200 0)"/>
       </g>
       <!-- 25 m -->
-      <g transform="translate(411.242729 280.446992) scale(0.086 -0.086)">
+      <g transform="translate(410.629289 280.446992) scale(0.086 -0.086)">
        <use xlink:href="#IPAGothic-d8"/>
        <use xlink:href="#IPAGothic-db" transform="translate(50 0)"/>
        <use xlink:href="#IPAGothic-c6" transform="translate(100 0)"/>
        <use xlink:href="#IPAGothic-112" transform="translate(150 0)"/>
       </g>
       <!-- 1 cell -->
-      <g transform="translate(406.942729 289.046992) scale(0.086 -0.086)">
+      <g transform="translate(406.329289 289.046992) scale(0.086 -0.086)">
        <use xlink:href="#IPAGothic-d7"/>
        <use xlink:href="#IPAGothic-c6" transform="translate(50 0)"/>
        <use xlink:href="#IPAGothic-108" transform="translate(100 0)"/>
@@ -1815,12 +2055,12 @@ z
     <g id="xtick_8">
      <g id="line2d_8">
       <g>
-       <use xlink:href="#m6f7ebfceb4" x="473.764094" y="257.28" style="stroke: #000000; stroke-width: 0.8"/>
+       <use xlink:href="#m6f7ebfceb4" x="472.843934" y="257.28" style="stroke: #000000; stroke-width: 0.8"/>
       </g>
      </g>
      <g id="text_12">
       <!-- 22.5° -->
-      <g transform="translate(460.864094 271.846992) scale(0.086 -0.086)">
+      <g transform="translate(459.943934 271.846992) scale(0.086 -0.086)">
        <use xlink:href="#IPAGothic-d8"/>
        <use xlink:href="#IPAGothic-d8" transform="translate(50 0)"/>
        <use xlink:href="#IPAGothic-d4" transform="translate(100 0)"/>
@@ -1828,14 +2068,14 @@ z
        <use xlink:href="#IPAGothic-1ce" transform="translate(200 0)"/>
       </g>
       <!-- 50 m -->
-      <g transform="translate(465.164094 280.446992) scale(0.086 -0.086)">
+      <g transform="translate(464.243934 280.446992) scale(0.086 -0.086)">
        <use xlink:href="#IPAGothic-db"/>
        <use xlink:href="#IPAGothic-d6" transform="translate(50 0)"/>
        <use xlink:href="#IPAGothic-c6" transform="translate(100 0)"/>
        <use xlink:href="#IPAGothic-112" transform="translate(150 0)"/>
       </g>
       <!-- 2 cells -->
-      <g transform="translate(458.714094 289.046992) scale(0.086 -0.086)">
+      <g transform="translate(457.793934 289.046992) scale(0.086 -0.086)">
        <use xlink:href="#IPAGothic-d8"/>
        <use xlink:href="#IPAGothic-c6" transform="translate(50 0)"/>
        <use xlink:href="#IPAGothic-108" transform="translate(100 0)"/>
@@ -1849,12 +2089,12 @@ z
     <g id="xtick_9">
      <g id="line2d_9">
       <g>
-       <use xlink:href="#m6f7ebfceb4" x="527.685459" y="257.28" style="stroke: #000000; stroke-width: 0.8"/>
+       <use xlink:href="#m6f7ebfceb4" x="526.458579" y="257.28" style="stroke: #000000; stroke-width: 0.8"/>
       </g>
      </g>
      <g id="text_13">
       <!-- 22.5° -->
-      <g transform="translate(514.785459 271.846992) scale(0.086 -0.086)">
+      <g transform="translate(513.558579 271.846992) scale(0.086 -0.086)">
        <use xlink:href="#IPAGothic-d8"/>
        <use xlink:href="#IPAGothic-d8" transform="translate(50 0)"/>
        <use xlink:href="#IPAGothic-d4" transform="translate(100 0)"/>
@@ -1862,14 +2102,14 @@ z
        <use xlink:href="#IPAGothic-1ce" transform="translate(200 0)"/>
       </g>
       <!-- 25 m -->
-      <g transform="translate(519.085459 280.446992) scale(0.086 -0.086)">
+      <g transform="translate(517.858579 280.446992) scale(0.086 -0.086)">
        <use xlink:href="#IPAGothic-d8"/>
        <use xlink:href="#IPAGothic-db" transform="translate(50 0)"/>
        <use xlink:href="#IPAGothic-c6" transform="translate(100 0)"/>
        <use xlink:href="#IPAGothic-112" transform="translate(150 0)"/>
       </g>
       <!-- 4 cells -->
-      <g transform="translate(512.635459 289.046992) scale(0.086 -0.086)">
+      <g transform="translate(511.408579 289.046992) scale(0.086 -0.086)">
        <use xlink:href="#IPAGothic-da"/>
        <use xlink:href="#IPAGothic-c6" transform="translate(50 0)"/>
        <use xlink:href="#IPAGothic-108" transform="translate(100 0)"/>
@@ -1890,12 +2130,12 @@ L -3.5 0
 " style="stroke: #000000; stroke-width: 0.8"/>
       </defs>
       <g>
-       <use xlink:href="#me0f38560fb" x="52.8" y="257.28" style="stroke: #000000; stroke-width: 0.8"/>
+       <use xlink:href="#me0f38560fb" x="52.8" y="244.08" style="stroke: #000000; stroke-width: 0.8"/>
       </g>
      </g>
      <g id="text_14">
       <!-- 0 -->
-      <g transform="translate(41.3 261.239473) scale(0.09 -0.09)">
+      <g transform="translate(41.3 248.039473) scale(0.09 -0.09)">
        <use xlink:href="#IPAGothic-d6"/>
       </g>
      </g>
@@ -1903,26 +2143,27 @@ L -3.5 0
     <g id="ytick_2">
      <g id="line2d_11">
       <g>
-       <use xlink:href="#me0f38560fb" x="52.8" y="233.813333" style="stroke: #000000; stroke-width: 0.8"/>
+       <use xlink:href="#me0f38560fb" x="52.8" y="200.08" style="stroke: #000000; stroke-width: 0.8"/>
       </g>
      </g>
      <g id="text_15">
-      <!-- 5 -->
-      <g transform="translate(41.3 237.772806) scale(0.09 -0.09)">
-       <use xlink:href="#IPAGothic-db"/>
+      <!-- 10 -->
+      <g transform="translate(36.8 204.039473) scale(0.09 -0.09)">
+       <use xlink:href="#IPAGothic-d7"/>
+       <use xlink:href="#IPAGothic-d6" transform="translate(50 0)"/>
       </g>
      </g>
     </g>
     <g id="ytick_3">
      <g id="line2d_12">
       <g>
-       <use xlink:href="#me0f38560fb" x="52.8" y="210.346667" style="stroke: #000000; stroke-width: 0.8"/>
+       <use xlink:href="#me0f38560fb" x="52.8" y="156.08" style="stroke: #000000; stroke-width: 0.8"/>
       </g>
      </g>
      <g id="text_16">
-      <!-- 10 -->
-      <g transform="translate(36.8 214.306139) scale(0.09 -0.09)">
-       <use xlink:href="#IPAGothic-d7"/>
+      <!-- 20 -->
+      <g transform="translate(36.8 160.039473) scale(0.09 -0.09)">
+       <use xlink:href="#IPAGothic-d8"/>
        <use xlink:href="#IPAGothic-d6" transform="translate(50 0)"/>
       </g>
      </g>
@@ -1930,102 +2171,32 @@ L -3.5 0
     <g id="ytick_4">
      <g id="line2d_13">
       <g>
-       <use xlink:href="#me0f38560fb" x="52.8" y="186.88" style="stroke: #000000; stroke-width: 0.8"/>
+       <use xlink:href="#me0f38560fb" x="52.8" y="112.08" style="stroke: #000000; stroke-width: 0.8"/>
       </g>
      </g>
      <g id="text_17">
-      <!-- 15 -->
-      <g transform="translate(36.8 190.839473) scale(0.09 -0.09)">
-       <use xlink:href="#IPAGothic-d7"/>
-       <use xlink:href="#IPAGothic-db" transform="translate(50 0)"/>
+      <!-- 30 -->
+      <g transform="translate(36.8 116.039473) scale(0.09 -0.09)">
+       <use xlink:href="#IPAGothic-d9"/>
+       <use xlink:href="#IPAGothic-d6" transform="translate(50 0)"/>
       </g>
      </g>
     </g>
     <g id="ytick_5">
      <g id="line2d_14">
       <g>
-       <use xlink:href="#me0f38560fb" x="52.8" y="163.413333" style="stroke: #000000; stroke-width: 0.8"/>
+       <use xlink:href="#me0f38560fb" x="52.8" y="68.08" style="stroke: #000000; stroke-width: 0.8"/>
       </g>
      </g>
      <g id="text_18">
-      <!-- 20 -->
-      <g transform="translate(36.8 167.372806) scale(0.09 -0.09)">
-       <use xlink:href="#IPAGothic-d8"/>
-       <use xlink:href="#IPAGothic-d6" transform="translate(50 0)"/>
-      </g>
-     </g>
-    </g>
-    <g id="ytick_6">
-     <g id="line2d_15">
-      <g>
-       <use xlink:href="#me0f38560fb" x="52.8" y="139.946667" style="stroke: #000000; stroke-width: 0.8"/>
-      </g>
-     </g>
-     <g id="text_19">
-      <!-- 25 -->
-      <g transform="translate(36.8 143.906139) scale(0.09 -0.09)">
-       <use xlink:href="#IPAGothic-d8"/>
-       <use xlink:href="#IPAGothic-db" transform="translate(50 0)"/>
-      </g>
-     </g>
-    </g>
-    <g id="ytick_7">
-     <g id="line2d_16">
-      <g>
-       <use xlink:href="#me0f38560fb" x="52.8" y="116.48" style="stroke: #000000; stroke-width: 0.8"/>
-      </g>
-     </g>
-     <g id="text_20">
-      <!-- 30 -->
-      <g transform="translate(36.8 120.439473) scale(0.09 -0.09)">
-       <use xlink:href="#IPAGothic-d9"/>
-       <use xlink:href="#IPAGothic-d6" transform="translate(50 0)"/>
-      </g>
-     </g>
-    </g>
-    <g id="ytick_8">
-     <g id="line2d_17">
-      <g>
-       <use xlink:href="#me0f38560fb" x="52.8" y="93.013333" style="stroke: #000000; stroke-width: 0.8"/>
-      </g>
-     </g>
-     <g id="text_21">
-      <!-- 35 -->
-      <g transform="translate(36.8 96.972806) scale(0.09 -0.09)">
-       <use xlink:href="#IPAGothic-d9"/>
-       <use xlink:href="#IPAGothic-db" transform="translate(50 0)"/>
-      </g>
-     </g>
-    </g>
-    <g id="ytick_9">
-     <g id="line2d_18">
-      <g>
-       <use xlink:href="#me0f38560fb" x="52.8" y="69.546667" style="stroke: #000000; stroke-width: 0.8"/>
-      </g>
-     </g>
-     <g id="text_22">
       <!-- 40 -->
-      <g transform="translate(36.8 73.506139) scale(0.09 -0.09)">
+      <g transform="translate(36.8 72.039473) scale(0.09 -0.09)">
        <use xlink:href="#IPAGothic-da"/>
        <use xlink:href="#IPAGothic-d6" transform="translate(50 0)"/>
       </g>
      </g>
     </g>
-    <g id="ytick_10">
-     <g id="line2d_19">
-      <g>
-       <use xlink:href="#me0f38560fb" x="52.8" y="46.08" style="stroke: #000000; stroke-width: 0.8"/>
-      </g>
-     </g>
-     <g id="text_23">
-      <!-- 45 -->
-      <g transform="translate(36.8 50.039473) scale(0.09 -0.09)">
-       <use xlink:href="#IPAGothic-da"/>
-       <use xlink:href="#IPAGothic-db" transform="translate(50 0)"/>
-      </g>
-     </g>
-    </g>
-    <g id="text_24">
+    <g id="text_19">
      <!-- E (%) -->
      <g transform="translate(31.718945 162.93) rotate(-90) scale(0.09 -0.09)">
       <use xlink:href="#IPAGothic-eb"/>
@@ -2036,49 +2207,55 @@ L -3.5 0
      </g>
     </g>
    </g>
-   <g id="line2d_20">
-    <path d="M 338.960682 257.28
-L 338.960682 46.08
+   <g id="line2d_15">
+    <path d="M 52.8 244.08
+L 571.2 244.08
+" clip-path="url(#p6852549f6a)" style="fill: none; stroke: #d8d6d1; stroke-width: 0.8; stroke-linecap: round"/>
+   </g>
+   <g id="line2d_16">
+    <path d="M 338.807322 257.28
+L 338.807322 46.08
 " clip-path="url(#p6852549f6a)" style="fill: none; stroke: #d8d6d1; stroke-linecap: round"/>
    </g>
-   <g id="patch_21">
+   <g id="patch_30">
     <path d="M 52.8 257.28
 L 52.8 46.08
 " style="fill: none; stroke: #000000; stroke-width: 0.8; stroke-linejoin: miter; stroke-linecap: square"/>
    </g>
-   <g id="patch_22">
+   <g id="patch_31">
     <path d="M 52.8 257.28
 L 571.2 257.28
 " style="fill: none; stroke: #000000; stroke-width: 0.8; stroke-linejoin: miter; stroke-linecap: square"/>
    </g>
-   <g id="text_25">
+   <g id="text_20">
     <!-- 0.2 -->
-    <g style="fill: #eb6834" transform="translate(80.219482 252.586667) scale(0.078 -0.078)">
+    <g style="fill: #282c30" transform="translate(77.515467 239.68) scale(0.074 -0.074)">
      <use xlink:href="#IPAGothic-d6"/>
      <use xlink:href="#IPAGothic-d4" transform="translate(50 0)"/>
      <use xlink:href="#IPAGothic-d8" transform="translate(100 0)"/>
     </g>
    </g>
-   <g id="text_26">
-    <!-- 0.2 -->
-    <g style="fill: #2a78d6" transform="translate(100.709601 252.586667) scale(0.078 -0.078)">
-     <use xlink:href="#IPAGothic-d6"/>
-     <use xlink:href="#IPAGothic-d4" transform="translate(50 0)"/>
-     <use xlink:href="#IPAGothic-d8" transform="translate(100 0)"/>
-    </g>
-   </g>
-   <g id="text_27">
-    <!-- 13.7 -->
-    <g style="fill: #eb6834" transform="translate(132.190847 189.226667) scale(0.078 -0.078)">
+   <g id="text_21">
+    <!-- 12.5 -->
+    <g style="fill: #282c30" transform="translate(129.280112 185.56) scale(0.074 -0.074)">
      <use xlink:href="#IPAGothic-d7"/>
-     <use xlink:href="#IPAGothic-d9" transform="translate(50 0)"/>
+     <use xlink:href="#IPAGothic-d8" transform="translate(50 0)"/>
+     <use xlink:href="#IPAGothic-d4" transform="translate(100 0)"/>
+     <use xlink:href="#IPAGothic-db" transform="translate(150 0)"/>
+    </g>
+   </g>
+   <g id="text_22">
+    <!-- 32.7 -->
+    <g style="fill: #282c30" transform="translate(182.894756 96.68) scale(0.074 -0.074)">
+     <use xlink:href="#IPAGothic-d9"/>
+     <use xlink:href="#IPAGothic-d8" transform="translate(50 0)"/>
      <use xlink:href="#IPAGothic-d4" transform="translate(100 0)"/>
      <use xlink:href="#IPAGothic-dd" transform="translate(150 0)"/>
     </g>
    </g>
-   <g id="text_28">
-    <!-- 8.5 -->
-    <g style="fill: #2a78d6" transform="translate(154.630965 213.632) scale(0.078 -0.078)">
+   <g id="text_23">
+    <!-- 38.9 -->
+    <g style="fill: #282c30" transform="translate(236.509401 69.4) scale(0.074 -0.074)">
      <defs>
       <path id="IPAGothic-de" d="M 1050 2741
 Q 403 3056 403 3750
@@ -2115,25 +2292,6 @@ Q 2478 2022 2184 2278
 Q 1947 2497 1594 2497
 z
 " transform="scale(0.015625)"/>
-     </defs>
-     <use xlink:href="#IPAGothic-de"/>
-     <use xlink:href="#IPAGothic-d4" transform="translate(50 0)"/>
-     <use xlink:href="#IPAGothic-db" transform="translate(100 0)"/>
-    </g>
-   </g>
-   <g id="text_29">
-    <!-- 32.4 -->
-    <g style="fill: #eb6834" transform="translate(186.112211 101.461333) scale(0.078 -0.078)">
-     <use xlink:href="#IPAGothic-d9"/>
-     <use xlink:href="#IPAGothic-d8" transform="translate(50 0)"/>
-     <use xlink:href="#IPAGothic-d4" transform="translate(100 0)"/>
-     <use xlink:href="#IPAGothic-da" transform="translate(150 0)"/>
-    </g>
-   </g>
-   <g id="text_30">
-    <!-- 10.9 -->
-    <g style="fill: #2a78d6" transform="translate(206.60233 202.368) scale(0.078 -0.078)">
-     <defs>
       <path id="IPAGothic-df" d="M 909 1363
 Q 988 666 1569 666
 Q 2431 666 2422 2500
@@ -2159,150 +2317,352 @@ Q 1922 4494 1591 4494
 z
 " transform="scale(0.015625)"/>
      </defs>
-     <use xlink:href="#IPAGothic-d7"/>
-     <use xlink:href="#IPAGothic-d6" transform="translate(50 0)"/>
-     <use xlink:href="#IPAGothic-d4" transform="translate(100 0)"/>
-     <use xlink:href="#IPAGothic-df" transform="translate(150 0)"/>
-    </g>
-   </g>
-   <g id="text_31">
-    <!-- 37.9 -->
-    <g style="fill: #eb6834" transform="translate(240.033576 75.648) scale(0.078 -0.078)">
      <use xlink:href="#IPAGothic-d9"/>
-     <use xlink:href="#IPAGothic-dd" transform="translate(50 0)"/>
+     <use xlink:href="#IPAGothic-de" transform="translate(50 0)"/>
      <use xlink:href="#IPAGothic-d4" transform="translate(100 0)"/>
      <use xlink:href="#IPAGothic-df" transform="translate(150 0)"/>
     </g>
    </g>
-   <g id="text_32">
-    <!-- 17 -->
-    <g style="fill: #2a78d6" transform="translate(264.423695 173.738667) scale(0.078 -0.078)">
-     <use xlink:href="#IPAGothic-d7"/>
-     <use xlink:href="#IPAGothic-dd" transform="translate(50 0)"/>
-    </g>
-   </g>
-   <g id="text_33">
+   <g id="text_24">
     <!-- 9.6 -->
-    <g style="fill: #eb6834" transform="translate(295.904941 208.469333) scale(0.078 -0.078)">
+    <g style="fill: #282c30" transform="translate(291.974046 198.32) scale(0.074 -0.074)">
+     <defs>
+      <path id="IPAGothic-dc" d="M 2322 3809
+Q 2225 4488 1713 4488
+Q 1269 4488 1028 3950
+Q 803 3447 794 2588
+Q 1159 3119 1725 3119
+Q 2194 3119 2519 2772
+Q 2903 2369 2903 1709
+Q 2903 1159 2641 750
+Q 2284 200 1638 200
+Q 1050 200 697 738
+Q 319 1328 319 2375
+Q 319 3488 650 4172
+Q 1028 4934 1706 4934
+Q 2634 4934 2847 3809
+L 2322 3809
+z
+M 1644 2703
+Q 1272 2703 1047 2363
+Q 875 2094 875 1691
+Q 875 1328 997 1075
+Q 1209 641 1650 641
+Q 2003 641 2219 959
+Q 2409 1241 2409 1697
+Q 2409 2113 2244 2375
+Q 2041 2703 1644 2703
+z
+" transform="scale(0.015625)"/>
+     </defs>
      <use xlink:href="#IPAGothic-df"/>
      <use xlink:href="#IPAGothic-d4" transform="translate(50 0)"/>
      <use xlink:href="#IPAGothic-dc" transform="translate(100 0)"/>
     </g>
    </g>
-   <g id="text_34">
+   <g id="text_25">
+    <!-- 23.9 -->
+    <g style="fill: #282c30" transform="translate(343.738691 135.4) scale(0.074 -0.074)">
+     <use xlink:href="#IPAGothic-d8"/>
+     <use xlink:href="#IPAGothic-d9" transform="translate(50 0)"/>
+     <use xlink:href="#IPAGothic-d4" transform="translate(100 0)"/>
+     <use xlink:href="#IPAGothic-df" transform="translate(150 0)"/>
+    </g>
+   </g>
+   <g id="text_26">
+    <!-- 39.6 -->
+    <g style="fill: #282c30" transform="translate(397.353335 66.32) scale(0.074 -0.074)">
+     <use xlink:href="#IPAGothic-d9"/>
+     <use xlink:href="#IPAGothic-df" transform="translate(50 0)"/>
+     <use xlink:href="#IPAGothic-d4" transform="translate(100 0)"/>
+     <use xlink:href="#IPAGothic-dc" transform="translate(150 0)"/>
+    </g>
+   </g>
+   <g id="text_27">
+    <!-- 18.9 -->
+    <g style="fill: #282c30" transform="translate(450.96798 157.4) scale(0.074 -0.074)">
+     <use xlink:href="#IPAGothic-d7"/>
+     <use xlink:href="#IPAGothic-de" transform="translate(50 0)"/>
+     <use xlink:href="#IPAGothic-d4" transform="translate(100 0)"/>
+     <use xlink:href="#IPAGothic-df" transform="translate(150 0)"/>
+    </g>
+   </g>
+   <g id="text_28">
+    <!-- 12.3 -->
+    <g style="fill: #282c30" transform="translate(504.582625 186.44) scale(0.074 -0.074)">
+     <use xlink:href="#IPAGothic-d7"/>
+     <use xlink:href="#IPAGothic-d8" transform="translate(50 0)"/>
+     <use xlink:href="#IPAGothic-d4" transform="translate(100 0)"/>
+     <use xlink:href="#IPAGothic-d9" transform="translate(150 0)"/>
+    </g>
+   </g>
+   <g id="text_29">
+    <!-- 0.2 -->
+    <g style="fill: #282c30" transform="translate(91.991421 239.68) scale(0.074 -0.074)">
+     <use xlink:href="#IPAGothic-d6"/>
+     <use xlink:href="#IPAGothic-d4" transform="translate(50 0)"/>
+     <use xlink:href="#IPAGothic-d8" transform="translate(100 0)"/>
+    </g>
+   </g>
+   <g id="text_30">
+    <!-- 7.4 -->
+    <g style="fill: #282c30" transform="translate(145.606066 208) scale(0.074 -0.074)">
+     <use xlink:href="#IPAGothic-dd"/>
+     <use xlink:href="#IPAGothic-d4" transform="translate(50 0)"/>
+     <use xlink:href="#IPAGothic-da" transform="translate(100 0)"/>
+    </g>
+   </g>
+   <g id="text_31">
+    <!-- 10.2 -->
+    <g style="fill: #282c30" transform="translate(197.370711 195.68) scale(0.074 -0.074)">
+     <use xlink:href="#IPAGothic-d7"/>
+     <use xlink:href="#IPAGothic-d6" transform="translate(50 0)"/>
+     <use xlink:href="#IPAGothic-d4" transform="translate(100 0)"/>
+     <use xlink:href="#IPAGothic-d8" transform="translate(150 0)"/>
+    </g>
+   </g>
+   <g id="text_32">
+    <!-- 17.2 -->
+    <g style="fill: #282c30" transform="translate(250.985355 164.88) scale(0.074 -0.074)">
+     <use xlink:href="#IPAGothic-d7"/>
+     <use xlink:href="#IPAGothic-dd" transform="translate(50 0)"/>
+     <use xlink:href="#IPAGothic-d4" transform="translate(100 0)"/>
+     <use xlink:href="#IPAGothic-d8" transform="translate(150 0)"/>
+    </g>
+   </g>
+   <g id="text_33">
     <!-- 8.6 -->
-    <g style="fill: #2a78d6" transform="translate(316.395059 213.162667) scale(0.078 -0.078)">
+    <g style="fill: #282c30" transform="translate(306.45 202.72) scale(0.074 -0.074)">
      <use xlink:href="#IPAGothic-de"/>
      <use xlink:href="#IPAGothic-d4" transform="translate(50 0)"/>
      <use xlink:href="#IPAGothic-dc" transform="translate(100 0)"/>
     </g>
    </g>
-   <g id="text_35">
-    <!-- 23.1 -->
-    <g style="fill: #eb6834" transform="translate(347.876305 145.109333) scale(0.078 -0.078)">
-     <use xlink:href="#IPAGothic-d8"/>
-     <use xlink:href="#IPAGothic-d9" transform="translate(50 0)"/>
+   <g id="text_34">
+    <!-- 10.3 -->
+    <g style="fill: #282c30" transform="translate(358.214645 195.24) scale(0.074 -0.074)">
+     <use xlink:href="#IPAGothic-d7"/>
+     <use xlink:href="#IPAGothic-d6" transform="translate(50 0)"/>
      <use xlink:href="#IPAGothic-d4" transform="translate(100 0)"/>
-     <use xlink:href="#IPAGothic-d7" transform="translate(150 0)"/>
+     <use xlink:href="#IPAGothic-d9" transform="translate(150 0)"/>
+    </g>
+   </g>
+   <g id="text_35">
+    <!-- 4.3 -->
+    <g style="fill: #282c30" transform="translate(413.679289 221.64) scale(0.074 -0.074)">
+     <use xlink:href="#IPAGothic-da"/>
+     <use xlink:href="#IPAGothic-d4" transform="translate(50 0)"/>
+     <use xlink:href="#IPAGothic-d9" transform="translate(100 0)"/>
     </g>
    </g>
    <g id="text_36">
-    <!-- 10.4 -->
-    <g style="fill: #2a78d6" transform="translate(368.366424 204.714667) scale(0.078 -0.078)">
-     <use xlink:href="#IPAGothic-d7"/>
-     <use xlink:href="#IPAGothic-d6" transform="translate(50 0)"/>
-     <use xlink:href="#IPAGothic-d4" transform="translate(100 0)"/>
-     <use xlink:href="#IPAGothic-da" transform="translate(150 0)"/>
-    </g>
-   </g>
-   <g id="text_37">
-    <!-- 40.4 -->
-    <g style="fill: #eb6834" transform="translate(401.79767 63.914667) scale(0.078 -0.078)">
-     <use xlink:href="#IPAGothic-da"/>
-     <use xlink:href="#IPAGothic-d6" transform="translate(50 0)"/>
-     <use xlink:href="#IPAGothic-d4" transform="translate(100 0)"/>
-     <use xlink:href="#IPAGothic-da" transform="translate(150 0)"/>
-    </g>
-   </g>
-   <g id="text_38">
-    <!-- 5.9 -->
-    <g style="fill: #2a78d6" transform="translate(424.237789 225.834667) scale(0.078 -0.078)">
-     <use xlink:href="#IPAGothic-db"/>
-     <use xlink:href="#IPAGothic-d4" transform="translate(50 0)"/>
-     <use xlink:href="#IPAGothic-df" transform="translate(100 0)"/>
-    </g>
-   </g>
-   <g id="text_39">
-    <!-- 18.7 -->
-    <g style="fill: #eb6834" transform="translate(455.719035 165.76) scale(0.078 -0.078)">
-     <use xlink:href="#IPAGothic-d7"/>
-     <use xlink:href="#IPAGothic-de" transform="translate(50 0)"/>
-     <use xlink:href="#IPAGothic-d4" transform="translate(100 0)"/>
-     <use xlink:href="#IPAGothic-dd" transform="translate(150 0)"/>
-    </g>
-   </g>
-   <g id="text_40">
     <!-- 8.4 -->
-    <g style="fill: #2a78d6" transform="translate(478.159153 214.101333) scale(0.078 -0.078)">
+    <g style="fill: #282c30" transform="translate(467.293934 203.6) scale(0.074 -0.074)">
      <use xlink:href="#IPAGothic-de"/>
      <use xlink:href="#IPAGothic-d4" transform="translate(50 0)"/>
      <use xlink:href="#IPAGothic-da" transform="translate(100 0)"/>
     </g>
    </g>
-   <g id="text_41">
-    <!-- 12.2 -->
-    <g style="fill: #eb6834" transform="translate(509.640399 196.266667) scale(0.078 -0.078)">
-     <use xlink:href="#IPAGothic-d7"/>
-     <use xlink:href="#IPAGothic-d8" transform="translate(50 0)"/>
-     <use xlink:href="#IPAGothic-d4" transform="translate(100 0)"/>
-     <use xlink:href="#IPAGothic-d8" transform="translate(150 0)"/>
-    </g>
-   </g>
-   <g id="text_42">
+   <g id="text_37">
     <!-- 6.6 -->
-    <g style="fill: #2a78d6" transform="translate(532.080518 222.549333) scale(0.078 -0.078)">
+    <g style="fill: #282c30" transform="translate(520.908579 211.52) scale(0.074 -0.074)">
      <use xlink:href="#IPAGothic-dc"/>
      <use xlink:href="#IPAGothic-d4" transform="translate(50 0)"/>
      <use xlink:href="#IPAGothic-dc" transform="translate(100 0)"/>
     </g>
    </g>
+   <g id="text_38">
+    <!-- 0.2 -->
+    <g style="fill: #282c30" transform="translate(106.467375 239.68) scale(0.074 -0.074)">
+     <use xlink:href="#IPAGothic-d6"/>
+     <use xlink:href="#IPAGothic-d4" transform="translate(50 0)"/>
+     <use xlink:href="#IPAGothic-d8" transform="translate(100 0)"/>
+    </g>
+   </g>
+   <g id="text_39">
+    <!-- −0.2 -->
+    <g style="fill: #282c30" transform="translate(158.23202 240.56) scale(0.074 -0.074)">
+     <defs>
+      <path id="IPAGothic-2f6d" d="M 313 2663
+L 2884 2663
+L 2884 2203
+L 313 2203
+L 313 2663
+z
+" transform="scale(0.015625)"/>
+     </defs>
+     <use xlink:href="#IPAGothic-2f6d"/>
+     <use xlink:href="#IPAGothic-d6" transform="translate(50 0)"/>
+     <use xlink:href="#IPAGothic-d4" transform="translate(100 0)"/>
+     <use xlink:href="#IPAGothic-d8" transform="translate(150 0)"/>
+    </g>
+   </g>
+   <g id="text_40">
+    <!-- 1.4 -->
+    <g style="fill: #282c30" transform="translate(213.696665 234.4) scale(0.074 -0.074)">
+     <use xlink:href="#IPAGothic-d7"/>
+     <use xlink:href="#IPAGothic-d4" transform="translate(50 0)"/>
+     <use xlink:href="#IPAGothic-da" transform="translate(100 0)"/>
+    </g>
+   </g>
+   <g id="text_41">
+    <!-- 3.7 -->
+    <g style="fill: #282c30" transform="translate(267.311309 224.28) scale(0.074 -0.074)">
+     <use xlink:href="#IPAGothic-d9"/>
+     <use xlink:href="#IPAGothic-d4" transform="translate(50 0)"/>
+     <use xlink:href="#IPAGothic-dd" transform="translate(100 0)"/>
+    </g>
+   </g>
+   <g id="text_42">
+    <!-- 2.4 -->
+    <g style="fill: #282c30" transform="translate(320.925954 230) scale(0.074 -0.074)">
+     <use xlink:href="#IPAGothic-d8"/>
+     <use xlink:href="#IPAGothic-d4" transform="translate(50 0)"/>
+     <use xlink:href="#IPAGothic-da" transform="translate(100 0)"/>
+    </g>
+   </g>
+   <g id="text_43">
+    <!-- 2.3 -->
+    <g style="fill: #282c30" transform="translate(374.540599 230.44) scale(0.074 -0.074)">
+     <use xlink:href="#IPAGothic-d8"/>
+     <use xlink:href="#IPAGothic-d4" transform="translate(50 0)"/>
+     <use xlink:href="#IPAGothic-d9" transform="translate(100 0)"/>
+    </g>
+   </g>
+   <g id="text_44">
+    <!-- −0.4 -->
+    <g style="fill: #282c30" transform="translate(426.305244 240.56) scale(0.074 -0.074)">
+     <use xlink:href="#IPAGothic-2f6d"/>
+     <use xlink:href="#IPAGothic-d6" transform="translate(50 0)"/>
+     <use xlink:href="#IPAGothic-d4" transform="translate(100 0)"/>
+     <use xlink:href="#IPAGothic-da" transform="translate(150 0)"/>
+    </g>
+   </g>
+   <g id="text_45">
+    <!-- 1.4 -->
+    <g style="fill: #282c30" transform="translate(481.769888 234.4) scale(0.074 -0.074)">
+     <use xlink:href="#IPAGothic-d7"/>
+     <use xlink:href="#IPAGothic-d4" transform="translate(50 0)"/>
+     <use xlink:href="#IPAGothic-da" transform="translate(100 0)"/>
+    </g>
+   </g>
+   <g id="text_46">
+    <!-- 0.8 -->
+    <g style="fill: #282c30" transform="translate(535.384533 237.04) scale(0.074 -0.074)">
+     <use xlink:href="#IPAGothic-d6"/>
+     <use xlink:href="#IPAGothic-d4" transform="translate(50 0)"/>
+     <use xlink:href="#IPAGothic-de" transform="translate(100 0)"/>
+    </g>
+   </g>
    <g id="legend_1">
-    <g id="patch_23">
-     <path d="M 488.4 62.098945
-L 506.4 62.098945
-L 506.4 55.798945
-L 488.4 55.798945
+    <g id="patch_32">
+     <path d="M 59.1 38.698594
+L 77.1 38.698594
+L 77.1 32.398594
+L 59.1 32.398594
 z
 " style="fill: #eb6834"/>
     </g>
-    <g id="text_43">
+    <g id="text_47">
      <!-- 0 -->
-     <g style="fill: #282c30" transform="translate(513.6 62.098945) scale(0.09 -0.09)">
+     <g style="fill: #282c30" transform="translate(84.3 38.698594) scale(0.09 -0.09)">
       <use xlink:href="#IPAGothic-d6"/>
      </g>
     </g>
-    <g id="patch_24">
-     <path d="M 488.4 75.598945
-L 506.4 75.598945
-L 506.4 69.298945
-L 488.4 69.298945
+    <g id="patch_33">
+     <path d="M 105 38.698594
+L 123 38.698594
+L 123 32.398594
+L 105 32.398594
 z
 " style="fill: #2a78d6"/>
     </g>
-    <g id="text_44">
-     <!-- 3 (default) -->
-     <g style="fill: #282c30" transform="translate(513.6 75.598945) scale(0.09 -0.09)">
+    <g id="text_48">
+     <!-- 3 with f_advection_lateral = 0 -->
+     <g style="fill: #282c30" transform="translate(130.2 38.698594) scale(0.09 -0.09)">
       <use xlink:href="#IPAGothic-d9"/>
       <use xlink:href="#IPAGothic-c6" transform="translate(50 0)"/>
-      <use xlink:href="#IPAGothic-ce" transform="translate(100 0)"/>
-      <use xlink:href="#IPAGothic-109" transform="translate(150 0)"/>
-      <use xlink:href="#IPAGothic-10a" transform="translate(200 0)"/>
-      <use xlink:href="#IPAGothic-10b" transform="translate(250 0)"/>
-      <use xlink:href="#IPAGothic-106" transform="translate(300 0)"/>
-      <use xlink:href="#IPAGothic-11a" transform="translate(350 0)"/>
-      <use xlink:href="#IPAGothic-111" transform="translate(400 0)"/>
-      <use xlink:href="#IPAGothic-119" transform="translate(450 0)"/>
-      <use xlink:href="#IPAGothic-cf" transform="translate(500 0)"/>
+      <use xlink:href="#IPAGothic-11c" transform="translate(100 0)"/>
+      <use xlink:href="#IPAGothic-10e" transform="translate(150 0)"/>
+      <use xlink:href="#IPAGothic-119" transform="translate(200 0)"/>
+      <use xlink:href="#IPAGothic-10d" transform="translate(250 0)"/>
+      <use xlink:href="#IPAGothic-c6" transform="translate(300 0)"/>
+      <use xlink:href="#IPAGothic-10b" transform="translate(350 0)"/>
+      <use xlink:href="#IPAGothic-105" transform="translate(400 0)"/>
+      <use xlink:href="#IPAGothic-106" transform="translate(450 0)"/>
+      <use xlink:href="#IPAGothic-109" transform="translate(500 0)"/>
+      <use xlink:href="#IPAGothic-11b" transform="translate(550 0)"/>
+      <use xlink:href="#IPAGothic-10a" transform="translate(600 0)"/>
+      <use xlink:href="#IPAGothic-108" transform="translate(650 0)"/>
+      <use xlink:href="#IPAGothic-119" transform="translate(700 0)"/>
+      <use xlink:href="#IPAGothic-10e" transform="translate(750 0)"/>
+      <use xlink:href="#IPAGothic-114" transform="translate(800 0)"/>
+      <use xlink:href="#IPAGothic-113" transform="translate(850 0)"/>
+      <use xlink:href="#IPAGothic-105" transform="translate(900 0)"/>
+      <use xlink:href="#IPAGothic-111" transform="translate(950 0)"/>
+      <use xlink:href="#IPAGothic-106" transform="translate(1000 0)"/>
+      <use xlink:href="#IPAGothic-119" transform="translate(1050 0)"/>
+      <use xlink:href="#IPAGothic-10a" transform="translate(1100 0)"/>
+      <use xlink:href="#IPAGothic-117" transform="translate(1150 0)"/>
+      <use xlink:href="#IPAGothic-106" transform="translate(1200 0)"/>
+      <use xlink:href="#IPAGothic-111" transform="translate(1250 0)"/>
+      <use xlink:href="#IPAGothic-c6" transform="translate(1300 0)"/>
+      <use xlink:href="#IPAGothic-e3" transform="translate(1350 0)"/>
+      <use xlink:href="#IPAGothic-c6" transform="translate(1400 0)"/>
+      <use xlink:href="#IPAGothic-d6" transform="translate(1450 0)"/>
+     </g>
+    </g>
+    <g id="patch_34">
+     <path d="M 281.4 38.698594
+L 299.4 38.698594
+L 299.4 32.398594
+L 281.4 32.398594
+z
+" style="fill: #527d37"/>
+    </g>
+    <g id="text_49">
+     <!-- 3 with f_advection_lateral = 1 (default) -->
+     <g style="fill: #282c30" transform="translate(306.6 38.698594) scale(0.09 -0.09)">
+      <use xlink:href="#IPAGothic-d9"/>
+      <use xlink:href="#IPAGothic-c6" transform="translate(50 0)"/>
+      <use xlink:href="#IPAGothic-11c" transform="translate(100 0)"/>
+      <use xlink:href="#IPAGothic-10e" transform="translate(150 0)"/>
+      <use xlink:href="#IPAGothic-119" transform="translate(200 0)"/>
+      <use xlink:href="#IPAGothic-10d" transform="translate(250 0)"/>
+      <use xlink:href="#IPAGothic-c6" transform="translate(300 0)"/>
+      <use xlink:href="#IPAGothic-10b" transform="translate(350 0)"/>
+      <use xlink:href="#IPAGothic-105" transform="translate(400 0)"/>
+      <use xlink:href="#IPAGothic-106" transform="translate(450 0)"/>
+      <use xlink:href="#IPAGothic-109" transform="translate(500 0)"/>
+      <use xlink:href="#IPAGothic-11b" transform="translate(550 0)"/>
+      <use xlink:href="#IPAGothic-10a" transform="translate(600 0)"/>
+      <use xlink:href="#IPAGothic-108" transform="translate(650 0)"/>
+      <use xlink:href="#IPAGothic-119" transform="translate(700 0)"/>
+      <use xlink:href="#IPAGothic-10e" transform="translate(750 0)"/>
+      <use xlink:href="#IPAGothic-114" transform="translate(800 0)"/>
+      <use xlink:href="#IPAGothic-113" transform="translate(850 0)"/>
+      <use xlink:href="#IPAGothic-105" transform="translate(900 0)"/>
+      <use xlink:href="#IPAGothic-111" transform="translate(950 0)"/>
+      <use xlink:href="#IPAGothic-106" transform="translate(1000 0)"/>
+      <use xlink:href="#IPAGothic-119" transform="translate(1050 0)"/>
+      <use xlink:href="#IPAGothic-10a" transform="translate(1100 0)"/>
+      <use xlink:href="#IPAGothic-117" transform="translate(1150 0)"/>
+      <use xlink:href="#IPAGothic-106" transform="translate(1200 0)"/>
+      <use xlink:href="#IPAGothic-111" transform="translate(1250 0)"/>
+      <use xlink:href="#IPAGothic-c6" transform="translate(1300 0)"/>
+      <use xlink:href="#IPAGothic-e3" transform="translate(1350 0)"/>
+      <use xlink:href="#IPAGothic-c6" transform="translate(1400 0)"/>
+      <use xlink:href="#IPAGothic-d7" transform="translate(1450 0)"/>
+      <use xlink:href="#IPAGothic-c6" transform="translate(1500 0)"/>
+      <use xlink:href="#IPAGothic-ce" transform="translate(1550 0)"/>
+      <use xlink:href="#IPAGothic-109" transform="translate(1600 0)"/>
+      <use xlink:href="#IPAGothic-10a" transform="translate(1650 0)"/>
+      <use xlink:href="#IPAGothic-10b" transform="translate(1700 0)"/>
+      <use xlink:href="#IPAGothic-106" transform="translate(1750 0)"/>
+      <use xlink:href="#IPAGothic-11a" transform="translate(1800 0)"/>
+      <use xlink:href="#IPAGothic-111" transform="translate(1850 0)"/>
+      <use xlink:href="#IPAGothic-119" transform="translate(1900 0)"/>
+      <use xlink:href="#IPAGothic-cf" transform="translate(1950 0)"/>
      </g>
     </g>
    </g>

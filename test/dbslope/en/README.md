@@ -74,16 +74,16 @@ make            # links to the executables
 ./Run_MPI.sh 2  # MPI (if Run.sh has been run first, state.dat is compared byte by byte with the serial save)
 ```
 
-## Results (2026-11-06)
+## Results (2026-11-15)
 
 | Case | Resistance law | Value | $`\langle h_t\rangle`$ (m) | Analytic (m) | Error | Coefficient of variation | Concentration |
 |---|---|---:|---:|---:|---:|---:|---:|
 | voellmy_g1 | Voellmy | 1 | 0.2039 | 0.2040 | −0.01 % | 0.0002 | 0.4444 |
 | voellmy_g2 | Voellmy | 2 | 0.2471 | 0.2471 | +0.00 % | 0.0001 | 0.4444 |
 | egashira_g1 | Egashira | 1 | 0.2185 | 0.2185 | −0.00 % | 0.0003 | 0.4444 |
-| egashira_g2 | Egashira | 2 | 0.2452 | 0.2452 | +0.03 % | 0.0033 | 0.4444 |
-| stony_g1 | Stony type | 1 | 0.2858 | 0.2858 | −0.01 % | 0.0026 | 0.4444 |
-| stony_g2 | Stony type | 2 | 0.3206 | 0.3206 | −0.01 % | 0.0002 | 0.4445 |
+| egashira_g2 | Egashira | 2 | 0.2453 | 0.2452 | +0.04 % | 0.0034 | 0.4445 |
+| stony_g1 | Stony type | 1 | 0.2858 | 0.2858 | −0.00 % | 0.0022 | 0.4444 |
+| stony_g2 | Stony type | 2 | 0.3206 | 0.3206 | −0.00 % | 0.0002 | 0.4444 |
 | collective_g1 | Bedload-like collective flow | 1 | 0.3285 | 0.3285 | −0.00 % | 0.0000 | 0.2000 |
 | collective_g2 | Bedload-like collective flow | 2 | 0.3659 | 0.3659 | −0.01 % | 0.0000 | 0.2001 |
 

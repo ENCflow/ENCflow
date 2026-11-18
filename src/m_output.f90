@@ -162,6 +162,8 @@ subroutine output_state(o, p, g, s, k)
   ! m_driftwood_init。§50)
   if (p%f_out_hd > 0 .and. allocated(s%hd)) call output_matrix(o, p, g, "Hd", s%hd, k)
   if (p%f_out_wd > 0 .and. allocated(s%wd)) call output_matrix(o, p, g, "Wd", s%wd, k)
+  ! 集積流木 (m3/m2。fn_dwtrap 指定時のみ = 前提検証は m_driftwood_init。§50.7)
+  if (p%f_out_wj > 0 .and. allocated(s%wj)) call output_matrix(o, p, g, "Wj", s%wj, k)
   ! 流動瓦礫・堆積瓦礫・家屋の破壊率(fn_bldgdebris 有効時のみ = 前提検証は
   ! m_bldgdebris_init。§63)
   if (p%f_out_hbd > 0 .and. allocated(s%hbd)) call output_matrix(o, p, g, "Bf", s%hbd, k)

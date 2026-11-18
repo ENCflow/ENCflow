@@ -13,8 +13,8 @@ component.
 
 This tutorial aims at letting **people who are not Python users "just try
 it"**, running one very short script at a time. The subject is the same
-Chichibu catchment as the chichibu tutorial (200 m grid, 200 mm/h x 30 min
-of rain). Each step's computation takes about 20--30 seconds on a 4-core PC.
+Chichibu catchment as the chichibu tutorial (200 m grid, 100 mm of rain in
+one hour with a peak of 200 mm/h). Each step's computation takes about 30 seconds on a 4-core PC.
 
 - **Step 0**: Preparation -- building the library and setting up Python (uv and others)
 - **Step 1**: Start and finish, nothing else (initialize / finalize)
@@ -135,9 +135,9 @@ for C after `conda activate encflow`).
 ### The parameter file of this tutorial
 
 `param.txt` is Step 2 of the chichibu tutorial (GeoTIFF input, channel
-mask and roughness) plus only the catchment-outlet drain of Step 5
-(`&list_bound_stage`). The input data are shared with chichibu through
-`dir_data = "../chichibu/data_chichibu"`. Even through the BMI, **the input
+mask and roughness, elevation with a conditioned channel bed) plus only the
+catchment-outlet drain of Step 5 (`&list_bound_stage`). The input data are
+shared with chichibu through `dir_data = "../chichibu/data_chichibu"`. Even through the BMI, **the input
 files, the result output and the screen display are exactly the same as in
 a standalone run**. You can also run it the usual way (instead of `make`
 creating a link to `encflow`, do `ln -s ../../bin/encflow .` and then
@@ -177,7 +177,7 @@ reading list_geoinfo in param.txt
  ...
 main: number of valid cells: 17885
 time, progress, S(m), Runge, ex_flux, Cn_max, h_max(m), V_max(m/s)
-  0:00:00.00   0.0%    0.0001   0.0%      0    0.1097    1.3650    0.0000
+  0:00:00.00   0.0%    0.0000   0.0%      0    0.0000    0.0000    0.0000
 component : ENCflow
 grid      : (150, 280) (ny, nx)
 time      : 0.0 -> 21600.0 s   dt = 6.0 s
@@ -235,15 +235,15 @@ python3 step2_time.py               # with B--D (venv / conda / OS packages)
 ```
 
 ```
-  0:00:00.00   0.0%    0.0001   0.0%      0    0.1097    1.3650    0.0000
+  0:00:00.00   0.0%    0.0000   0.0%      0    0.0000    0.0000    0.0000
 after update():       t = 6 s
 after update_until(): t = 600 s
-  0:30:00.00   8.3%    0.0488  97.6%      0    0.3242    2.0856    8.4123
+  0:30:00.00   8.3%    0.0487  98.4%      0    0.2558    1.2869    5.9935
 t =    2400 s  (11.1%)
-  1:00:00.00  16.7%    0.0999   5.2%      0    0.6833    7.4383   16.9688
+  1:00:00.00  16.7%    0.0999   5.2%      0    0.5419    6.5388   14.1782
 t =    4200 s  (19.4%)
   ...
-  6:00:00.00 100.0%    0.0260   0.4%      0    0.3307    4.0721    7.2590
+  6:00:00.00 100.0%    0.0174   0.5%      0    0.2535    3.3227    3.4506
 t =   21600 s  (100.0%)
 main: program terminated normally
 finished
@@ -320,27 +320,27 @@ variables you can get:
     surface_water_flow__time_max_of_unit_width_volume_flow_rate
     land_surface_water_flow__manning_n_parameter
 elevation: 92 .. 2449 m
-probe cell (i=147, j=104) -> h[46, 146],  z = 400.7 m
+probe cell (i=147, j=104) -> h[46, 146],  z = 353.4 m
  time(s)   h_probe(m)   h_max(m)   wet cells
-    1800       0.468      1.421       16949
-    3600       1.308      7.438        9440
-    5400       3.579      7.076        3668
-    7200       3.100      7.202        2537
-    9000       2.719      8.183        2036
-   10800       2.177      8.690        1770
-   12600       1.819      7.784        1572
-   14400       1.574      6.620        1439
-   16200       1.388      5.568        1348
-   18000       1.237      4.721        1272
-   19800       1.120      4.074        1203
-   21600       1.026      3.599        1151
+    1800       0.514      1.287       16997
+    3600       2.034      6.539        9584
+    5400       6.270      9.678        3524
+    7200       3.949     10.397        2407
+    9000       2.716     11.315        1960
+   10800       2.016     10.514        1679
+   12600       1.583      7.678        1469
+   14400       1.295      5.805        1332
+   16200       1.090      4.679        1240
+   18000       0.937      3.901        1169
+   19800       0.817      3.324        1090
+   21600       0.722      2.883        1045
 ```
 (ENCflow's own lines every 30 minutes are omitted)
 
-During the rain (up to 3600 s) the number of wet cells reaches 16,949
+During the rain (up to 3600 s) the number of wet cells reaches 16,997
 (nearly every cell of the catchment); once the rain stops it drops quickly
-and the water gathers in the channels (about 1,150 cells). At the cell in
-the middle main stem the depth peaks after the rain stops (3.6 m at 5400 s
+and the water gathers in the channels (about 1,050 cells). At the cell in
+the middle main stem the depth peaks after the rain stops (6.3 m at 5400 s
 is the largest in this half-hourly table) and then recedes slowly.
 
 - `model.get2d(name)` returns a **copy of a field** such as the depth as a
@@ -451,9 +451,9 @@ python3 step5_live.py --save frames
 On the left is the depth distribution, on the right the depth time series
 at the cell `(147, 104)` in the middle main stem. Every 5 minutes
 (`INTERVAL`) the computation pauses and the picture is refreshed. You can
-see the slopes get wet all at once during the 30 minutes of rain, then the
+see the slopes get wet all at once during the one hour of rain, then the
 slopes drain and the water gathers in the channels after the rain stops,
-and the time series passes its peak (about 1.4 h) and recedes.
+and the time series passes its peak (about 1.35 h) and recedes.
 
 - `plt.ion()` (interactive mode) and `plt.pause()` are the Matplotlib
   idiom for "draw without stopping the script". With `--save` the script
@@ -461,7 +461,7 @@ and the time series passes its peak (about 1.4 h) and recedes.
   PNG (you can make a movie with e.g.
   `ffmpeg -i frames/frame_%04d.png step5.mp4`).
 - A finer display interval makes the motion smoother, but the drawing then
-  takes longer than the computing. The computation alone takes about 15 s
+  takes longer than the computing. The computation alone takes about 30 s
   for the 6 hours; with a display every 5 minutes it is 73 frames and about
   a minute.
 - The same idea, implemented with more options (automatic display
@@ -538,9 +538,9 @@ python3 step6_rain.py               # with B--D (venv / conda / OS packages)
 run A: rain from param.txt
    set(VAR_PRECIP) refused as expected: BMI set_value(atmosphere_water__precipitation_leq-volume_flux) failed (status=1)
 run B: rain supplied from Python (uniform)
-   max |h_B - h_A| = 3.109e-15 m
+   max |h_B - h_A| = 1.332e-15 m
 run C: rain only on the western half
-   max h: A = 3.60 m,  C = 3.20 m
+   max h: A = 2.88 m,  C = 2.65 m
 ```
 
 Three runs are executed in sequence (ENCflow holds one model per process,
@@ -559,7 +559,7 @@ so the next one is `initialize`d after `finalize`):
   straight lines (a triangle 0 -> 200 mm/h -> 0, 100 mm in total) once a
   minute (the default `dt_prupdate`) at the end time of that step, so the
   Python side sets the same value at the same times. The difference in the
-  depth at the end is **3 x 10^-15 m, the rounding level of double
+  depth at the end is **1 x 10^-15 m, the rounding level of double
   precision**, so run B effectively matches run A -- a check that the
   computation is the same whichever way the rain is given (the last-digit
   difference comes from the different order of floating-point operations in
@@ -570,7 +570,7 @@ so the next one is `initialize`d after `finalize`):
 - **Run C** is an example only the BMI makes easy: rain falling only on the
   western half of the catchment. Since `pattern` is an `(ny, nx)` array, a
   distribution interpolated from radar rainfall or a weather model can be
-  supplied, replaced at every time. The maximum depth drops from 3.60 m to 3.20 m.
+  supplied, replaced at every time. The maximum depth drops from 2.88 m to 2.65 m.
 
 Mind the units. The BMI precipitation intensity is in **m/s** (CSDMS
 standard name `atmosphere_water__precipitation_leq-volume_flux`), so the
@@ -612,9 +612,9 @@ python3 step7_roughness.py          # with B--D (venv / conda / OS packages)
 ```
 probe cell (i=147, j=104)
  n factor   peak h (m)   time of peak
-    1.0        3.667         81 min
-    1.5        4.244         90 min
-    2.0        4.673        102 min
+    1.0        6.889         81 min
+    1.5        6.837        102 min
+    2.0        6.846        123 min
 ```
 
 - `get2d(VAR_MANNING_N)` returns the roughness field currently in effect
@@ -623,13 +623,16 @@ probe cell (i=147, j=104)
   applied to everything at once, but since it is an array you can change
   only the channels or only a certain reach.
 - A larger roughness slows the flow, so a greater depth is needed to pass
-  the same discharge, while the peak comes later and flatter. The numbers
-  in the table show both (with twice the roughness the depth peak is higher
-  and later).
-- Halving the roughness makes the flow faster and, with `dt` = 6 s, breaks
-  the Courant condition (`Courant number exceeds 1.0`; ENCflow stops and
-  Python receives a `BmiError`). The BMI changes nothing about the
-  stability conditions: reduce `dt` in `param.txt` for such experiments.
+  the same discharge, while the flood wave comes later and flatter (the peak
+  discharge drops). At this cell the two effects almost cancel: the depth
+  peak stays at 6.8 to 6.9 m and only its time is delayed, 81 -> 102 ->
+  123 min.
+- Halving the roughness makes the flow faster, and the Courant number
+  (Cn_max on screen) rises from 0.57 to 0.90 (the depth peak is 7.2 m at
+  61 min). Above 1, ENCflow stops with `Courant number exceeds 1.0` and
+  Python receives a `BmiError`. The BMI changes nothing about the stability
+  conditions: in experiments that lower the roughness, watch Cn_max and
+  reduce `dt` in `param.txt` if there is little margin.
 - The roughness `set` is not included in the save files. In a restarted run,
   `set` it again if needed.
 

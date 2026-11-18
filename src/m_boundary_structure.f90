@@ -21,6 +21,7 @@ submodule (m_boundary) m_boundary_structure
   use m_gwflow_conduit, only : t_gwcond, gwflow_conduit_ready, gwflow_conduit_head_of, &
                                gwflow_conduit_cap_of
   use m_util, only : itoa, es_out
+  use m_state, only : wfr_of
   use m_sysdep_util, only : sysdep_mkdir
   use m_fileio, only : fileio_read_matrix
   use list_structure, only : t_list_structure, list_structure_read, &
@@ -192,7 +193,12 @@ end function
 !   基準値(代表セル=各セル群の先頭)は所有ランクだけが読めるため、
 !   「所有ランクのみ非ゼロ+総和 allreduce」で全ランクに共有する(§11。
 !   collective は nstruct が namelist 由来で全ランク同一のため安全)。
-!   評価はステップ開始時点の状態(s%h)による(他族の時系列と同じ時相)
+!   評価はステップ開始時点の状態(s%h)による(他族の時系列と同じ時相)。
+!   流入口の集積流木(culv_jam = 1 のカルバート。§50.8): セル群の集積流木 s%wj の
+!   実材積を、セルごとの値として同じ refs の末尾に載せて共有する(各セルの値は所有ランク
+!   だけが非ゼロなので和は厳密。合計は全ランクが同じ並びで足す = ランク数によらない)。
+!   水位の高い側のセル群の実材積 V_j から損失係数 C_A = 2 κ0 V_j/(B D) を作り、流量則に渡す。
+!   集積の抵抗が無効(s%dw_jam = .false.)か culv_jam = 0 なら C_A = 0 で、従来と同じ
 !----------------------------------------------------------------------
 module subroutine structure_makebdc(b, p, g, s, gwc)
   type(t_boundary), intent(inout) :: b
@@ -201,8 +207,8 @@ module subroutine structure_makebdc(b, p, g, s, gwc)
   type(t_state), intent(in) :: s
   type(t_gwcond), intent(in) :: gwc
   real, allocatable :: refs(:)
-  real :: deta, qcap
-  integer :: ist, i, j
+  real :: deta, qcap, ca, vj
+  integer :: ist, i, j, k, njc, ofs
 
   ! 管路取水ポンプの遅延検査(f_gwconduit の有効性と取水セルの管路有無。
   ! boundary init は gwflow init より先のためここで 1 回だけ行う)
@@ -214,7 +220,34 @@ module subroutine structure_makebdc(b, p, g, s, gwc)
   ! refs(2*ist-1) = 取水(上流)側代表セル、refs(2*ist) = 吐口(下流)側
   ! 代表セルの基準値。値の意味は種別ごと(ポンプ: f_ref に従う片側のみ、
   ! カルバート: 両側の水位η)
-  allocate(refs(1:2*b%nstruct), source = 0.0)
+  !   末尾(2*nstruct+1 以降)は、流入口の集積流木を読むカルバートのセルごとの実材積
+  !   (取水側のセル群、吐口側のセル群の順。該当がなければ長さは従来と同じ)
+  njc = 0
+  if (s%dw_jam) then
+    do ist = 1, b%nstruct
+      if (b%struct(ist)%jam == 1) njc = njc + b%struct(ist)%ncin + b%struct(ist)%ncout
+    end do
+  end if
+  allocate(refs(1:2*b%nstruct+njc), source = 0.0)
+  if (njc > 0) then
+    ofs = 2 * b%nstruct
+    do ist = 1, b%nstruct
+      if (b%struct(ist)%jam /= 1) cycle
+      do k = 1, b%struct(ist)%ncin + b%struct(ist)%ncout
+        if (k <= b%struct(ist)%ncin) then
+          i = b%struct(ist)%cin(1,k)
+          j = b%struct(ist)%cin(2,k)
+        else
+          i = b%struct(ist)%cout(1,k-b%struct(ist)%ncin)
+          j = b%struct(ist)%cout(2,k-b%struct(ist)%ncin)
+        end if
+        if (j >= dcp%js .and. j <= dcp%je) then
+          refs(ofs+k) = s%wj(i,j) * s%gv(i,j) * wfr_of(s, i, j) * g%dx * g%dy
+        end if
+      end do
+      ofs = ofs + b%struct(ist)%ncin + b%struct(ist)%ncout
+    end do
+  end if
   do ist = 1, b%nstruct
     i = b%struct(ist)%cin(1,1)
     j = b%struct(ist)%cin(2,1)
@@ -256,12 +289,29 @@ module subroutine structure_makebdc(b, p, g, s, gwc)
     end if
   end do
   call par_allreduce_sumr(refs)
+  ofs = 2 * b%nstruct
   do ist = 1, b%nstruct
     ! ダムは law 経路を使わない(評価は boundary_h のダム節 → dam_operate。
     ! q は 0 のままで汎用転送節も素通りする)
     if (b%struct(ist)%kind == e_struct_dam) cycle
+    ! 流入口の集積流木の損失係数(§50.8)。水位の高い側のセル群の実材積を、セルの並びの順に足す
+    ca = 0.0
+    if (njc > 0 .and. b%struct(ist)%jam == 1) then
+      vj = 0.0
+      if (refs(2*ist-1) >= refs(2*ist)) then
+        do k = 1, b%struct(ist)%ncin
+          vj = vj + refs(ofs+k)
+        end do
+      else
+        do k = b%struct(ist)%ncin + 1, b%struct(ist)%ncin + b%struct(ist)%ncout
+          vj = vj + refs(ofs+k)
+        end do
+      end if
+      ca = 2.0 * s%dw_jamk * vj / b%struct(ist)%geom(12)
+      ofs = ofs + b%struct(ist)%ncin + b%struct(ist)%ncout
+    end if
     b%struct(ist)%q = b%struct(ist)%law(b%struct(ist)%rule, b%struct(ist)%nrule, &
-                                        b%struct(ist)%geom, refs(2*ist-1), refs(2*ist))
+                                        b%struct(ist)%geom, refs(2*ist-1), refs(2*ist), ca)
     ! 双方向種別の均衡上限(§22): 1ステップの転送量を、代表水位差の
     ! 半分を埋める体積までに制限する(dt に依らず単調に平衡へ向かい、
     ! 粗い dt での往復振動を防ぐ)。geom(7) = 有効平面積の調和平均
@@ -332,18 +382,23 @@ end subroutine
 !   ゲート無しは乗算自体をスキップ(ゲート無しカルバートとビット同一)。
 !   フラップ(geom(8)=1): 逆流(q<0 = out→in)を遮断(無動力の
 !   逆流防止弁)。評価順: 3レジーム流量 → ×開度 → フラップ
+! 流入口の集積流木(culv_jam = 1。§50.8): 損失係数 ca = C_A = 2 κ0 V_j/(B D) > 0 のとき、
+!   堰の流量に (1 + C_A/3)^(−3/2) を掛け、管路の損失の和 Σ = 1 + ce + 2g n²L/R^(4/3)
+!   (geom(13))に C_A を足す(culv_q1)。ca = 0 では乗算・加算そのものを飛ばす
+!   (集積を読まないカルバートとビット同一)
 !----------------------------------------------------------------------
-function law_culvert(rule, nrule, geom, refu, refd) result(q)
+function law_culvert(rule, nrule, geom, refu, refd, ca) result(q)
   real, intent(in) :: rule(:,:)
   integer, intent(in) :: nrule
   real, intent(in) :: geom(:)
   real, intent(in) :: refu, refd
+  real, intent(in) :: ca
   real :: q, c
 
   if (refu >= refd) then
-    q = culv_q1(geom(1), geom(2), geom(3), geom(4), geom(5), geom(6), geom(11), refu, refd)
+    q = culv_q1(geom(1), geom(2), geom(3), geom(4), geom(5), geom(6), geom(11), refu, refd, ca, geom(13))
   else
-    q = -culv_q1(geom(2), geom(1), geom(3), geom(4), geom(5), geom(6), geom(11), refd, refu)
+    q = -culv_q1(geom(2), geom(1), geom(3), geom(4), geom(5), geom(6), geom(11), refd, refu, ca, geom(13))
   end if
   if (geom(10) > 0.5) then
     if (geom(9) > 0.5) then
@@ -362,10 +417,14 @@ end function
 ! カルバートの片方向流量(上流水位 eh >= 下流水位 el を仮定)
 !   zh/zl: 流入側/流出側の敷高、d: 断面高、
 !   cwf/cws: 本間公式の自由/潜り係数(×B×√2g 済)、cp: 管路係数、
-!   gbb: g·B²(限界水深 dc = (Q²/gB²)^(1/3) 用)
+!   gbb: g·B²(限界水深 dc = (Q²/gB²)^(1/3) 用)、
+!   ca: 流入口の集積流木の損失係数 C_A(0 = なし)、sig: 管路の損失の和 Σ = 1 + ce + 摩擦
+!   集積流木の損失(§50.8。導出は独自): 限界流の手前で損失 C_A u_c²/2g が出るとすると、
+!   限界水深が H/(1.5 + C_A/2) になり、堰の流量は (1 + C_A/3)^(−3/2) 倍(潜り越流にも同じ
+!   倍率を掛ける近似)。満管は損失の和に C_A を足すので、管路係数は √(Σ/(Σ + C_A)) 倍
 !----------------------------------------------------------------------
-function culv_q1(zh, zl, d, cwf, cws, cp, gbb, eh, el) result(q)
-  real, intent(in) :: zh, zl, d, cwf, cws, cp, gbb, eh, el
+function culv_q1(zh, zl, d, cwf, cws, cp, gbb, eh, el, ca, sig) result(q)
+  real, intent(in) :: zh, zl, d, cwf, cws, cp, gbb, eh, el, ca, sig
   real :: q
   real :: h1, h2, detap, qw, dc
 
@@ -379,6 +438,7 @@ function culv_q1(zh, zl, d, cwf, cws, cp, gbb, eh, el) result(q)
   else
     qw = cws * h2 * sqrt(h1 - h2)              ! 潜り越流
   end if
+  if (ca > 0.0) qw = qw * (1.0 + ca / 3.0)**(-1.5)   ! 流入口の集積流木の損失(§50.8)
   q = qw                                       ! 流入口が水没しなければ堰支配
   if (h1 >= d) then
     ! 流入口が水没: 満管容量を上限にする。出口非水没時の下流水頭は
@@ -386,7 +446,13 @@ function culv_q1(zh, zl, d, cwf, cws, cp, gbb, eh, el) result(q)
     ! 矩形断面の限界水深で D が上限。満管に近づくと管頂基準に一致)
     dc = min(d, (qw * qw / gbb)**(1.0 / 3.0))
     detap = eh - max(el, zl + 0.5 * (dc + d))
-    if (detap > 0.0) q = min(qw, cp * sqrt(detap))
+    if (detap > 0.0) then
+      if (ca > 0.0) then
+        q = min(qw, cp * sqrt(sig / (sig + ca)) * sqrt(detap))
+      else
+        q = min(qw, cp * sqrt(detap))
+      end if
+    end if
   end if
 
 end function
@@ -396,13 +462,14 @@ end function
 ! 排水ポンプの水理則: 取水側基準値の折れ線(線形補間・範囲外端値)。
 ! 常に非負(一方向。吐口→取水の逆流はない)
 !----------------------------------------------------------------------
-function law_pump(rule, nrule, geom, refu, refd) result(q)
+function law_pump(rule, nrule, geom, refu, refd, ca) result(q)
   real, intent(in) :: rule(:,:)
   integer, intent(in) :: nrule
   real, intent(in) :: geom(:)
   real, intent(in) :: refu, refd
+  real, intent(in) :: ca
   real :: q
-  if (size(geom) < 0 .or. refd > huge(refd)) continue  ! 引数未使用の警告を抑制
+  if (size(geom) < 0 .or. refd > huge(refd) .or. ca > huge(ca)) continue  ! 引数未使用の警告を抑制
 
   q = max(interp_series(rule, nrule, refu), 0.0)
 
@@ -583,6 +650,8 @@ end subroutine
 !     (8)=フラップ (0/1)、(9)=ゲート基準側 (0:in/1:out)、
 !     (10)=ゲート有無 (0/1。1 なら rule = 開度折れ線)
 !     (11)=g B²(満管上限の限界水深 dc = (Q²/gB²)^(1/3) 用。2026-10-12)
+!     (12)=B D(断面積。流入口の集積流木の損失係数 C_A = 2 κ0 V_j/(B D) 用。§50.8)
+!     (13)=Σ = 1+ce+2g n²L/R^(4/3)(管路の損失の和。C_A を足すため。§50.8)
 !   樋管・樋門はゲート付きカルバートとして表す(§22): フラップ
 !   (culv_flap=1)は逆流 out→in の遮断、開度ルール(culv_gate_rule)は
 !   基準側代表水位の折れ線 (η, 開度0-1) による流量乗率。
@@ -619,6 +688,12 @@ subroutine init_culvert(b, p, g, list, ofs, nculv)
                     //itoa(list%culv_gate_ref(ic)))
     end if
     b%struct(ist)%geom(8) = real(list%culv_flap(ic))
+    !--- 流入口の集積流木(§50.8。捕捉は m_driftwood、損失は structure_makebdc)---
+    if (list%culv_jam(ic) < 0 .or. list%culv_jam(ic) > 1) then
+      call par_stop("list_struct_culvert: culv_jam must be 0(none) or 1(driftwood jam at the " &
+                    //"inlet): "//itoa(list%culv_jam(ic)))
+    end if
+    b%struct(ist)%jam = list%culv_jam(ic)
     n = 0
     do k = 1, size(list%culv_gate_rule, 2)
       if (list%culv_gate_rule(1,k,ic) <= -9999) exit   ! 番兵で終端
@@ -715,6 +790,8 @@ subroutine init_culvert(b, p, g, list, ofs, nculv)
     b%struct(ist)%geom(5) = 0.91 * bw * sqrt(2.0 * p%gg)
     b%struct(ist)%geom(6) = a * sqrt(2.0 * p%gg / (1.0 + list%culv_ce(ic) + fric))
     b%struct(ist)%geom(11) = p%gg * bw * bw     ! 限界水深 dc = (Q²/gB²)^(1/3) 用
+    b%struct(ist)%geom(12) = a                  ! 断面積 B D(集積流木の損失係数用)
+    b%struct(ist)%geom(13) = 1.0 + list%culv_ce(ic) + fric   ! 管路の損失の和 Σ
 
     !--- 位置の検証(全域マスク。ゾーン2で全ランク冗長) ---
     do k = 1, b%struct(ist)%ncin + b%struct(ist)%ncout
@@ -795,12 +872,14 @@ end subroutine
 ! 上流側以上なら 0(重力では登れない)。0/1 の粗い遮断で、背水が上流
 ! 水位に迫る状態の漸減は非表現(§22)。域外分水はガードなし
 !----------------------------------------------------------------------
-function law_diversion(rule, nrule, geom, refu, refd) result(q)
+function law_diversion(rule, nrule, geom, refu, refd, ca) result(q)
   real, intent(in) :: rule(:,:)
   integer, intent(in) :: nrule
   real, intent(in) :: geom(:)
   real, intent(in) :: refu, refd
+  real, intent(in) :: ca
   real :: q
+  if (ca > huge(ca)) continue  ! 引数未使用の警告を抑制
 
   q = max(interp_series(rule, nrule, refu), 0.0)
   if (geom(1) > 0.5 .and. refd >= refu) q = 0.0

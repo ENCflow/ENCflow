@@ -58,7 +58,7 @@ wave の Step 1 に出てくるクーラン数(`Cn_max` 列)と時間刻み `dt`
 |---|---|
 | [時刻の管理](users_guide/time.md) | [クーラン数と時間刻みの決め方](users_guide/courant.md)(入門)、[時間刻みの設計方針](users_guide/timestep_policy.md) |
 | [ネスティング](users_guide/nest.md) | [ネスティングの解説](users_guide/nest_models.md) |
-| [浅水流計算](users_guide/swflow.md) | [浅水方程式と力学波・拡散波・運動波](users_guide/shallow_water.md)(入門)、[ENC 格子と時間積分](users_guide/encgrid.md)、[通過幅の調整](users_guide/passage_width.md)、[急勾配の重力補正](users_guide/steep_slope.md)、[移流項](users_guide/advection.md)、[1 セル幅の河道と移流項の風上供給元](users_guide/advection_donor.md)、[斜めエッジの流束による数値拡散](users_guide/diagonal_diffusion.md)、[斜めの配分比 d の決め方](users_guide/diagratio.md)、[非静水圧補正](users_guide/nonhydrostatic.md)、[拡散項](users_guide/diffusion.md) |
+| [浅水流計算](users_guide/swflow.md) | [浅水方程式と力学波・拡散波・運動波](users_guide/shallow_water.md)(入門)、[ENC 格子と時間積分](users_guide/encgrid.md)、[通過幅の調整](users_guide/passage_width.md)、[急勾配の重力補正](users_guide/steep_slope.md)、[移流項](users_guide/advection.md)、[1 セル幅の河道と移流項の風上供給元](users_guide/advection_donor.md)、[高い地盤へ登るエッジ水深の頭打ち](users_guide/dry_head_cap.md)、[斜めエッジの流束による数値拡散](users_guide/diagonal_diffusion.md)、[斜めの配分比 d の決め方](users_guide/diagratio.md)、[非静水圧補正](users_guide/nonhydrostatic.md)、[拡散項](users_guide/diffusion.md) |
 | [沿岸の波浪場](users_guide/wavefield.md) | [沿岸の波浪場の解説](users_guide/wavefield_models.md) |
 | [内部水理構造物](users_guide/structure.md)・[境界条件](users_guide/boundary.md)・[河道](users_guide/channel.md) | [構造物と境界の水理則](users_guide/hydraulics.md) |
 | [河道](users_guide/channel.md) | [河道の解説](users_guide/channel_models.md) |

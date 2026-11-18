@@ -54,7 +54,7 @@
   rn0 = 0.15      ! デフォルト粗度係数
 
   fn_z = 'Chichibu_500m_filled.txt'
-  fn_rw = 'Chichibu_500m_river.txt'
+  fn_rw = 'Chichibu_500m_river_flowline.txt'
   fn_mask = 'Chichibu_500m_basin.txt'
 
   ! Diffusion wave

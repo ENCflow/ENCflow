@@ -53,7 +53,7 @@ module m_boundary
   public :: m_boundary_dam_record
   public :: m_boundary_dam_gwcheck
   public :: m_boundary_dam_gwforce
-  public :: dam_operate, dam_sink, dam_draw, e_struct_dam
+  public :: dam_operate, dam_sink, dam_draw, e_struct_dam, e_struct_culvert
   public :: e_bc_wall, e_bc_outflow, e_bc_radiation, e_bc_neumann, e_bc_inflow
   public :: e_ext_none, e_ext_nest
   public :: e_side_w, e_side_e, e_side_n, e_side_s
@@ -156,12 +156,14 @@ module m_boundary
   ! 引数に t_structure 自身を渡さないのは前方参照の循環を避けるため
   ! (手続きポインタ成分の interface は型定義より前に必要)
   abstract interface
-    function i_struct_law(rule, nrule, geom, refu, refd) result(q)
+    function i_struct_law(rule, nrule, geom, refu, refd, ca) result(q)
       real, intent(in) :: rule(:,:)        ! 運転ルール折れ線(種別ごとの意味)
       integer, intent(in) :: nrule         ! 折れ線の点数
       real, intent(in) :: geom(:)          ! 形状等の定数(種別ごとの意味)
       real, intent(in) :: refu             ! 取水(上流)側の基準値 (m)
       real, intent(in) :: refd             ! 吐口(下流)側の基準値 (m)
+      real, intent(in) :: ca               ! 流入口の集積流木の損失係数 C_A(カルバートの
+                                           !   culv_jam = 1 だけが使う。ほかは 0。§50.8)
       real :: q                            ! 目標流量 (m3/s。符号付き >0 = cin→cout)
     end function
   end interface
@@ -195,7 +197,10 @@ module m_boundary
                                            !   ポンプの一定流量 pump_q0 は1点折れ線に
                                            !   退化。線形補間・範囲外端値(=現在状態の
                                            !   純関数。履歴状態なし)
-    real :: geom(1:11) = 0.0               ! 形状等の定数(種別ごとの意味。ポンプは未使用)
+    real :: geom(1:13) = 0.0               ! 形状等の定数(種別ごとの意味。ポンプは未使用)
+    integer :: jam = 0                     ! カルバートのみ。1: 取水している側のセル群で流木を
+                                           !   捕捉し(m_driftwood)、その集積の損失を流量則に
+                                           !   入れる(structure_makebdc。culv_jam。§50.8)
     procedure(i_struct_law), pointer, nopass :: law => null()  ! 水理則(ダムは不使用=null。
                                            !   評価は boundary_h のダム節 → dam_operate)
     real :: q = 0.0                        ! 現時刻の目標流量 (m3/s。makebdc が更新。

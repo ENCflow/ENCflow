@@ -302,6 +302,16 @@ module m_state
                                         ! swflow_enc がステップ内で s%hd を移流する)
     real :: dw_sg = 0.0                 ! 流木の材比重(m_driftwood_init が設定。
                                         ! m_bldgdebris が荷重の付加質量に使う。§63.3)
+    real, allocatable :: wj(:,:)        ! 集積流木 (m3/m2。柱状量。基底は hd・wd と同じ)。
+                                        ! 捕捉セル(fn_dwtrap)で流動流木から移る台帳で、
+                                        ! 動かない。確保・更新・保存は m_driftwood
+                                        ! (fn_dwtrap 指定時のみ)。§50.7
+    logical :: dw_jam = .false.         ! 集積流木の抵抗を運動方程式に入れる
+                                        ! (m_driftwood_init が設定。swflow_enc が
+                                        ! ステップ頭で s%wj のハロを交換し、辺の半陰の
+                                        ! 抗力項に足す。§50.7)
+    real :: dw_jamk = 0.0               ! 集積の抵抗の係数 κ0 = 2 C_D / (π d (1−φ)³) (1/m)
+    real :: dw_jamphi = 0.0             ! 集積体の充填率 φ(水柱に占める実材積の割合の上限)
     real, allocatable :: hbd(:,:)       ! 流動瓦礫柱状量 (m3/m2 = m。貯留の意味論は
                                         ! h・hd と同一)。移流は swflow_enc がステップ
                                         ! 内で行い(bd_active)、破壊・停止・再流動は
@@ -623,7 +633,7 @@ end subroutine
 
 !----------------------------------------------------------------------
 ! セル (i,j) の空隙率を gvnew に変える(§63.1 A2。空隙率を変える唯一の経路)
-!   空隙面積基底の柱状量(h, hs, hrs と、確保されていれば hd, wd, cq, hss,
+!   空隙面積基底の柱状量(h, hs, hrs と、確保されていれば hd, wd, wj, cq, hss,
 !   hbd, wbd。空隙面積基底の柱状量を新設するモジュールはここに追記する)に
 !   r = gv_old/gv_new を掛け、体積 = 柱状量 × gv × A を機械精度で保存する。s%lm = gv + (1−gv)·cm を再計算し、e = z + h と af(gv の因子
 !   だけ比例更新。wfrac・湿潤率の因子は不変)を追随させる。
@@ -660,6 +670,7 @@ subroutine m_state_set_gv(p, s, i, j, gvnew)
   s%hrs(i,j) = s%hrs(i,j) * r
   if (allocated(s%hd)) s%hd(i,j) = s%hd(i,j) * r
   if (allocated(s%wd)) s%wd(i,j) = s%wd(i,j) * r
+  if (allocated(s%wj)) s%wj(i,j) = s%wj(i,j) * r
   if (allocated(s%cq)) s%cq(i,j) = s%cq(i,j) * r
   if (allocated(s%hss)) s%hss(i,j) = s%hss(i,j) * r
   if (allocated(s%hbd)) s%hbd(i,j) = s%hbd(i,j) * r
@@ -1115,6 +1126,7 @@ subroutine m_state_dispose(s, p)
   if (allocated(s%fdmax)) deallocate(s%fdmax)
   if (allocated(s%wd)) deallocate(s%wd)
   if (allocated(s%wdmax)) deallocate(s%wdmax)
+  if (allocated(s%wj)) deallocate(s%wj)
   if (allocated(s%fxg)) deallocate(s%fxg)
   if (allocated(s%fxs)) deallocate(s%fxs)
   if (allocated(s%cqx)) deallocate(s%cqx)

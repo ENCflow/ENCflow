@@ -75,6 +75,8 @@ module subroutine adv_prepare(p, g, s, sx)
 
   if (opt%f_advection_scheme >= 2) then
     call adv_prepare_mc(p, g, s, sx, tx_mod)
+    ! 屈曲直後の辺の慣性(f_advection_bend = 1。§110)。内部の面の tae に差分を足す
+    if (opt%f_advection_bend > 0) call adv_bend_mc(p, g, s, sx, tx_mod, .false.)
   else
     call adv_prepare_v1(p, g, s, sx, tx_mod)
   end if
@@ -337,8 +339,14 @@ subroutine adv_prepare_mc(p, g, s, sx, tx)
         ! にする(lateral_u_w・wet_weight。dd 以上の水深では 0 と同じ値)。河岸の水膜が dd を割った瞬間に
         ! 平行リンクの遅い流速による減速が一度に外れ、ハイドログラフの跳ねになるのを防ぐ
         ! (tutorials/chichibu 200 m の測線 3 の 120 min・測線 4 の 310 min。§102)
+        ! f_advection_lateral = 1(f_advection_donor = 3 が前提)は、平行リンクが、面を横切って入ってくる水に
+        ! 比べて薄い水膜のとき、その流速を使わず(代表性 R'。lateral_rep)、辺の線に沿う流れへ別の向きから
+        ! 入る水の、辺の向きの運動量の不足を数える(lateral_join)。斜めエッジの開口率 axis_open も、横切る
+        ! 軸リンクの向こうのセルを同じ R' で数える(lateral_u_j。developer.md §110.25)
         if (qtp >= 0) then
           ubtp = ue
+        else if (opt%f_advection_lateral == 1) then
+          ubtp = lateral_u_j(i, j, k, 1, ue, hb)
         else if (opt%f_advection_donor == 3) then
           ubtp = lateral_u_w(i, j, k, 1, ue, hb)
         else
@@ -346,6 +354,8 @@ subroutine adv_prepare_mc(p, g, s, sx, tx)
         end if
         if (qtm >= 0) then
           ubtm = ue
+        else if (opt%f_advection_lateral == 1) then
+          ubtm = lateral_u_j(i, j, k, -1, ue, hb)
         else if (opt%f_advection_donor == 3) then
           ubtm = lateral_u_w(i, j, k, -1, ue, hb)
         else
@@ -639,6 +649,299 @@ contains
     end if
   end function
 
+  ! lateral_u_w の f_advection_lateral = 1 版(developer.md §110.25。ENCflow 独自)。lateral_u_w に 2 つを足す。
+  !   (1) 平行リンクの重み(両端セルの wet_weight の小さい方)に、代表性 R'(lateral_rep。h_p = 平行リンクの
+  !       両端のセルの浅い方)を掛ける。河岸の水膜の遅い流速を、支川や隣の列から入ってくる深い水の流速と
+  !       みなさない(水膜が dd 以上あるだけで平行リンクを使う lateral_u_w は、雨で濡れた岸に接する河道に
+  !       人工的な減速を作り、合流の損失を、岸が濡れているときだけ数える。test/wetbank・test/tjunction)。
+  !   (2) 平行リンクが代表しない分は、合流の不足分 Δ(lateral_join)で数える。
+  !   軸エッジ: ū = u_e + w (u_par − u_e) + (1 − w) Δ。
+  !   斜めエッジ: lateral_u_w の式(重み w1, w2 は R' を掛けたもの)+ (1 − w_rep) Δ。w_rep は平行リンクが面を
+  !     代表する度合い(2 本とも使えれば 1。重みの欠ける分・深さ条件で使えない分だけ小さい)。
+  ! 重みが 1 の面(薄い水膜を含まない一様な流れ)は lateral_u_w・lateral_u と同じ式・同じ値
+  pure function lateral_u_j(ci, cj, kk, sgn, ue0, he) result(u)
+    integer, intent(in) :: ci, cj, kk, sgn
+    real, intent(in) :: ue0, he     ! he: 面(エッジ)の検査体積の水深 h̄
+    real :: u, w1, w2, u1, u2, h1, h2, f1, f2, wrep
+    logical :: ok1, ok2
+    integer :: oi, oj
+    if (kk == 2 .or. kk == 4) then
+      oi = ci + sgn * dti(kk)
+      oj = cj + sgn * dtj(kk)
+      w1 = min(wet_weight(oi, oj), wet_weight(oi + din(kk), oj + djn(kk)))
+      if (w1 > 0.0) w1 = w1 * lateral_rep(ci, cj, kk, sgn, min(hcell(oi, oj), hcell(oi + din(kk), oj + djn(kk))))
+      if (w1 >= 1.0) then
+        u = uvk(oi, oj, kk)
+      else if (w1 > 0.0) then
+        u = ue0 + w1 * (uvk(oi, oj, kk) - ue0)
+        u = u + (1.0 - w1) * lateral_join(ci, cj, kk, sgn, ue0)
+      else
+        u = ue0 + lateral_join(ci, cj, kk, sgn, ue0)
+      end if
+      return
+    end if
+    u1 = ue0
+    h1 = 0.0
+    oi = ci + sgn * dti(kk)
+    oj = cj
+    w1 = min(wet_weight(oi, oj), wet_weight(oi + din(kk), oj + djn(kk)))
+    if (w1 > 0.0) w1 = w1 * lateral_rep(ci, cj, kk, sgn, min(hcell(oi, oj), hcell(oi + din(kk), oj + djn(kk))))
+    if (w1 > 0.0) then
+      u1 = uvk(oi, oj, kk)
+      h1 = 0.5 * (hcell(oi, oj) + hcell(oi + din(kk), oj + djn(kk)))
+    end if
+    u2 = ue0
+    h2 = 0.0
+    oi = ci
+    oj = cj + sgn * dtj(kk)
+    w2 = min(wet_weight(oi, oj), wet_weight(oi + din(kk), oj + djn(kk)))
+    if (w2 > 0.0) w2 = w2 * lateral_rep(ci, cj, kk, sgn, min(hcell(oi, oj), hcell(oi + din(kk), oj + djn(kk))))
+    if (w2 > 0.0) then
+      u2 = uvk(oi, oj, kk)
+      h2 = 0.5 * (hcell(oi, oj) + hcell(oi + din(kk), oj + djn(kk)))
+    end if
+    ok1 = h1 >= 0.5 * he .and. h1 <= 2.0 * he     ! 1 本しか無い面の深さ条件
+    ok2 = h2 >= 0.5 * he .and. h2 <= 2.0 * he
+    wrep = 0.0
+    if (w1 >= 1.0 .and. w2 >= 1.0) then           ! 以下 4 つは lateral_u と同じ
+      u = (u1 + u2) / 2
+      wrep = 1.0
+    else if (w1 >= 1.0 .and. w2 <= 0.0) then
+      u = ue0
+      if (ok1) then
+        u = u1
+        wrep = 1.0
+      end if
+    else if (w1 <= 0.0 .and. w2 >= 1.0) then
+      u = ue0
+      if (ok2) then
+        u = u2
+        wrep = 1.0
+      end if
+    else if (w1 <= 0.0 .and. w2 <= 0.0) then
+      u = ue0
+    else                                          ! 重みが 0 と 1 の間の平行リンクを含む面: 連続に寄せる
+      f1 = w2
+      if (ok1) f1 = 1.0
+      f2 = w1
+      if (ok2) f2 = 1.0
+      u = ue0 + (w1 * f1 * (u1 - ue0) + w2 * f2 * (u2 - ue0)) / max(1.0, w1 + w2)
+      wrep = min(1.0, (w1 * f1 + w2 * f2) / max(1.0, w1 + w2))
+    end if
+    if (wrep < 1.0) u = u + (1.0 - wrep) * lateral_join(ci, cj, kk, sgn, ue0)
+  end function
+
+  ! 側方面を横切って入るリンクの組(lateral_rep・lateral_join が同じ組を使う)。辺 (ci, cj) → kk 近傍
+  ! (kk = 1..4)の sgn = ±1 側の面について、リンクの数 nl、各リンクの「入る先のセル」(oc = 0: c、1: n)、
+  ! 入る先のセルから見たリンクの 8 近傍番号 kl、流量に掛ける係数 wt を返す。
+  !   軸エッジ: c・n の ±t 軸リンク(面の半分ずつ = 0.5)と、面を横切る斜めリンク 2 本(全幅 = 1)。流量は
+  !     実流量 qlk(側方面の流束 qtp・qtm と同じ組・同じ係数)。
+  !   斜めエッジ: c・n の直交する斜めリンク。流量は単位幅流量 mnk(同上)
+  pure subroutine lateral_links(kk, sgn, nl, oc, kl, wt)
+    integer, intent(in) :: kk, sgn
+    integer, intent(out) :: nl, oc(1:4), kl(1:4)
+    real, intent(out) :: wt(1:4)
+    if (kk == 2 .or. kk == 4) then
+      nl = 4
+      if (sgn > 0) then
+        kl = [ kkp(kk), kkp(kk), kdp_c(kk), kdp_n(kk) ]
+      else
+        kl = [ kkm(kk), kkm(kk), kdm_c(kk), kdm_n(kk) ]
+      end if
+      oc = [ 0, 1, 0, 1 ]
+      wt = [ 0.5, 0.5, 1.0, 1.0 ]
+    else
+      nl = 2
+      if (sgn > 0) then
+        kl = [ kkp(kk), kkp(kk), 0, 0 ]
+      else
+        kl = [ kkm(kk), kkm(kk), 0, 0 ]
+      end if
+      oc = [ 0, 1, 0, 0 ]
+      wt = [ 1.0, 1.0, 0.0, 0.0 ]
+    end if
+  end subroutine
+
+  ! 側方面を横切ってセル (xi, xj) へ、その kl 近傍から入る流量(流入が正。軸エッジは実流量 × wt、斜めエッジは
+  ! 単位幅流量)
+  pure function lateral_inflow(xi, xj, kk, kl, wt) result(q)
+    integer, intent(in) :: xi, xj, kk, kl
+    real, intent(in) :: wt
+    real :: q
+    if (kk == 2 .or. kk == 4) then
+      q = -wt * qlk(xi, xj, kl)
+    else
+      q = -mnk(xi, xj, kl)
+    end if
+  end function
+
+  ! 代表性 R'(f_advection_lateral = 1。developer.md §110.25。ENCflow 独自): 面の脇の水(水深 h_p。平行リンクの
+  ! 両端のセルの浅い方か、斜めエッジの面を横切る軸リンクの向こうのセル)が、側方面を横切って入ってくる水を
+  ! 代表する度合い。面を横切るリンク l のうち流入するもの(流量 Q_l、流入元のセル o_l)について
+  !   r_l = min(1, h_p / (ε min(h_o,l, h_e)))     (ε = p_adv_donor_eps、h_e = この辺の両端のセルの浅い方)
+  ! を流量で重み付けして平均する(R' = Σ Q_l r_l / Σ Q_l。流入がなければ 1)。
+  !   = 脇の水が、入ってくる水の元のセルに比べても、この辺自身に比べても、ε 倍より薄いときだけ、代表しないと
+  !     数える。入ってくる水そのものが薄い(岸の水膜からの流入)ときと、この辺自身が薄い(段波・遡上の先端)
+  !     ときは 1 で、従来と同じ扱いになる。
+  ! 流入元が乾燥・無効・海(cell_ok が偽)のリンクは r_l = 1。割り算は h_p < ε min(h_o, h_e) のときだけ行う
+  ! (商は 1 未満。分母が 0 にアンダーフローしても 0 で割らない。donor_share と同じ)。
+  ! h_p ≥ ε h_e なら、どのリンクも r_l = 1(min(h_o, h_e) ≤ h_e)なので、リンクの流量を読まずに 1 を返す
+  ! (同じ値。脇の水が薄い水膜でない大部分の面は、ここで終わる)
+  pure function lateral_rep(ci, cj, kk, sgn, hp) result(r)
+    integer, intent(in) :: ci, cj, kk, sgn
+    real, intent(in) :: hp
+    real :: r, q, qs, qr, hem, ho, wt(1:4)
+    integer :: l, nl, oc(1:4), kl(1:4), xi, xj, oi, oj
+    hem = min(hcell(ci, cj), hcell(ci + din(kk), cj + djn(kk)))
+    r = 1.0
+    if (hp >= opt%p_adv_donor_eps * hem) return
+    call lateral_links(kk, sgn, nl, oc, kl, wt)
+    qs = 0.0
+    qr = 0.0
+    do l = 1, nl
+      xi = ci + oc(l) * din(kk)
+      xj = cj + oc(l) * djn(kk)
+      q = lateral_inflow(xi, xj, kk, kl(l), wt(l))
+      if (q <= 0.0) cycle
+      qs = qs + q
+      oi = xi + din(kl(l))
+      oj = xj + djn(kl(l))
+      ho = 0.0
+      if (cell_ok(oi, oj)) ho = opt%p_adv_donor_eps * min(hcell(oi, oj), hem)
+      if (hp >= ho) then
+        qr = qr + q
+      else
+        qr = qr + q * (hp / ho)
+      end if
+    end do
+    r = 1.0
+    if (qs > 0.0) r = qr / qs
+  end function
+
+  ! 斜めエッジ (ci, cj) → kk の sgn 側の側方面を横切る軸リンクの向こうのセル (oi, oj) が開いている度合い
+  ! (f_advection_lateral = 1 の axis_open)。wet_weight に、代表性 R'(h_p = そのセルの水深)を掛ける
+  pure function open_rep(ci, cj, kk, sgn, oi, oj) result(w)
+    integer, intent(in) :: ci, cj, kk, sgn, oi, oj
+    real :: w
+    w = wet_weight(oi, oj)
+    if (w > 0.0) w = w * lateral_rep(ci, cj, kk, sgn, hcell(oi, oj))
+  end function
+
+  ! 合流の不足分 Δ(f_advection_lateral = 1。developer.md §110.25。ENCflow 独自): 側方面を横切って入る水が、
+  ! この辺の線に沿う流れへ、別の向きから合流する分の、ū_t − u_e に足す量。面を横切るリンク l のうち流入する
+  ! もの(流量 Q_l、流入元のセル o_l、入る先のセル X_l = c か n)について
+  !   Δ = −u_e Σ Q_l ω_X (1 − ω_o) (1 − cos θ_l) / Σ Q_l
+  !   ω_X: 入る先のセルに、この辺の線に沿う流れがある度合い(join_share = donor_share(X, 線の上流側の隣)。0 なら、曲がって
+  !        入ってくる流れそのものがこの辺の流れ = 屈曲で、合流ではない)。この辺の下流側のセルへ入る分には、
+  !        上流側のセルの ω も掛ける(上流側が屈曲なら、下流側のセルへ近道で入る斜めの流入も同じ流れ)。
+  !   ω_o: 流入元のセルに、この辺の線と同じ向きの流れがある度合い(line_flow。1 なら、並んで流れている水の
+  !        列の間の出入りで、合流ではない。格子の階段を直線の河道として流す性質を保つ)。
+  !   θ_l: 入ってくるリンクと辺の線のなす角。直交するリンク(軸エッジの ±t 軸リンク、斜めエッジの直交する
+  !        斜めリンク)は 90°(cos θ = 0 = 辺の向きの運動量を持たない。開水路の合流の標準的な扱い。Taylor 1944)、
+  !        軸エッジの面を横切る斜めリンクは、向きによらず 45°(正方セル。一般には軸と対角線のなす角)。
+  !        8 近傍の格子は、直角の合流を「直交するリンク + 斜めのリンク」の組で表す。斜めのリンクの水を
+  !        運動量 0、または上流側のセルへ入る分を逆向き(135°)と数えると、合流部の池が揺れ続けた(§110.23・
+  !        §110.25)ので、斜めのリンクは cos 45° ぶんの運動量を持つと数える(独自の簡略化)。
+  ! 流入元が乾燥・無効・海(cell_ok が偽)のリンクは不足分 0(流量は分母に数える)。流入がなければ 0
+  pure function lateral_join(ci, cj, kk, sgn, ue0) result(d)
+    integer, intent(in) :: ci, cj, kk, sgn
+    real, intent(in) :: ue0
+    real :: d, q, qs, qd, om(0:1), cs, wt(1:4), lf
+    integer :: l, nl, oc(1:4), kl(1:4), kb, xi, xj, oi, oj
+    logical :: have_om
+    kb = 9 - kk                                   ! この辺の流れの上流側の、線上の隣の 8 近傍番号
+    if (ue0 < 0.0) kb = kk
+    ! ω_X(join_share。セルの 8 リンクを 2 回読む)は、ω_o < 1 のリンクが初めて出たときに数える。ω_o = 1 の
+    ! リンクの項は ω_X によらず 0 なので、それまでは 1 を置いておく(結果は同じ。§110.28)
+    have_om = .false.
+    om(:) = 1.0
+    call lateral_links(kk, sgn, nl, oc, kl, wt)
+    qs = 0.0
+    qd = 0.0
+    do l = 1, nl
+      xi = ci + oc(l) * din(kk)
+      xj = cj + oc(l) * djn(kk)
+      q = lateral_inflow(xi, xj, kk, kl(l), wt(l))
+      if (q <= 0.0) cycle
+      qs = qs + q
+      oi = xi + din(kl(l))
+      oj = xj + djn(kl(l))
+      if (.not. cell_ok(oi, oj)) cycle
+      cs = 0.0                                    ! cos θ_l(直交するリンクは 0)
+      if (l >= 3) cs = abs(geo%n8x(kk) * geo%n8x(kl(l)) + geo%n8y(kk) * geo%n8y(kl(l)))
+      lf = line_flow(oi, oj, kb)
+      if (lf < 1.0 .and. .not. have_om) then
+        om(0) = join_share(ci, cj, kb)
+        om(1) = join_share(ci + din(kk), cj + djn(kk), kb)
+        if (ue0 >= 0.0) then                      ! 下流側のセルへ入る分には、上流側のセルの度合いも掛ける
+          om(1) = om(1) * om(0)
+        else
+          om(0) = om(0) * om(1)
+        end if
+        have_om = .true.
+      end if
+      qd = qd + q * om(oc(l)) * (1.0 - lf) * (cs - 1.0) * ue0
+    end do
+    d = 0.0
+    if (qs > 0.0) d = qd / qs
+  end function
+
+  ! セル (xi, xj) に、その kb 近傍(線の上流側)から、この辺の線に沿う流れが入る度合い(lateral_join の ω_X)。
+  ! donor_share(線 k の供給元の重み)と同じ値。kb 近傍が確保範囲の外(領域の縁の外。側方 Neumann の辺の外は
+  ! 鏡像のセルで判定。cell_ok・wet_weight と同じ条件)のときは、そこからは流れが入らないので 0 を返す。
+  ! donor_share は、供給元のリンクの流量が小さいときに供給元の水深(hcell)を読むので、範囲の外の供給元では
+  ! 呼べない(流向面は、供給元が cell_ok のときだけ donor_share を呼ぶ。ここは、線の上流側が領域の縁に接する
+  ! 辺でも通る。確かめずに呼んでいた初めの形は、-fcheck=all の np = 2 で、向きを変えた 45° の合流の領域の縁の
+  ! 辺が s%h の範囲外を読んで止まった。developer.md §110.25)
+  pure function join_share(xi, xj, kb) result(w)
+    integer, intent(in) :: xi, xj, kb
+    real :: w
+    integer :: mi, mj
+    call mirror_cell(xi + din(kb), xj + djn(kb), mi, mj)
+    w = 0.0
+    if (mi < 1 .or. mi > ubound(s%h, 1) .or. mj < dcp%jsh .or. mj > dcp%jeh) return
+    w = donor_share(xi, xj, kb)
+  end function
+
+  ! セル (ci, cj) に、その kk 近傍(線の上流側)から入る流れがある度合い(lateral_join の ω_o)。流量だけで
+  ! 測る: min(1, kk 近傍からの流入 / (ε × 8 リンクの流入の最大))。流入がなければ 0。
+  ! donor_share と違い、水深による例外(流量が小さくても、供給元が深ければ 1)を持たない: 支川の脇の岸が
+  ! 浸水しただけで、支川の水を「並んで流れている水」と数えないため(§110.23)。
+  ! 側方 Neumann の辺の外のセルは、鏡像のセル(辺の法線方向に枠内へ寄せたセル)の値を読む(cell_ok・hcell と
+  ! 同じ扱い。辺の外は、内側の流れの続きとみなす)。
+  ! 読むエッジは、セルの 8 リンク。斜めエッジの n 側の流入元は行 j − 2 にあるので、行 j − 3 のエッジ(成分
+  ! 1〜3)と行 j − 2 の成分 4 まで読む: mn・fwd・frw を、エッジ幅 2 で交換しておく(m_swflow_enc の
+  ! calc_enc_flux の冒頭と init。f_advection_lateral = 1 のときだけ。§110.25)。
+  ! 割り算は、流入が ε × 最大 に満たないときだけ行う(商は 1 未満。donor_share と同じ)
+  pure function line_flow(ci, cj, kk) result(w)
+    integer, intent(in) :: ci, cj, kk
+    real :: w, qk, qmax, qe
+    integer :: l, mi, mj
+    call mirror_cell(ci, cj, mi, mj)
+    qk = max(0.0, -qlk(mi, mj, kk))
+    qmax = 0.0
+    w = 0.0
+    if (qk <= 0.0) then
+      ! 線の上流の隣からの流入がない: ε × 最大 が正になるリンクが 1 本でもあれば 0(8 本を読み切らない。
+      ! 同じ値。§110.28)。流入が全くなければ 0。ε × 最大 が 0 にアンダーフローするほど小さいときだけ、
+      ! 下の式と同じく 1
+      do l = 1, 8
+        qmax = max(qmax, -qlk(mi, mj, l))
+        if (opt%p_adv_donor_eps * qmax > 0.0) return
+      end do
+      if (qmax > 0.0) w = 1.0
+      return
+    end if
+    do l = 1, 8
+      qmax = max(qmax, -qlk(mi, mj, l))
+    end do
+    if (qmax > 0.0) then
+      qe = opt%p_adv_donor_eps * qmax
+      w = 1.0
+      if (qk < qe) w = qk / qe
+    end if
+  end function
+
   ! セル (ci, cj) からその kk 近傍(kk = 1..8)へ向かう ENC エッジの単位幅流量
   ! (時刻 n の mn。流出が正。確保範囲外は 0)
   pure function mnk(ci, cj, kk) result(q)
@@ -658,10 +961,15 @@ contains
   ! (c 側 1 本、n 側 1 本)の向こうのセルが有効・海でない・湿潤(cell_ok)でなければ、その
   ! リンクが面の流束に占める割合 cwd(正方セルで 0.293)を 1 から引く。全開で 1、両方塞がれば
   ! 1 − 2 cwd = 0.414(斜めリンクの帯だけ)。f_advection_donor = 3 は塞がりを向こうのセルの
-  ! wet_weight で連続に数える(φ = 1 − cwd (1 − w_c) − cwd (1 − w_n)。w が 0 か 1 なら上と同じ値)
+  ! wet_weight で連続に数える(φ = 1 − cwd (1 − w_c) − cwd (1 − w_n)。w が 0 か 1 なら上と同じ値)。
+  ! f_advection_lateral = 1 は、その重みに代表性 R'(lateral_rep。h_p = 向こうのセルの水深)を掛ける:
+  ! 向こうのセルが、面を横切って入ってくる水の元のセルに比べても、この辺自身に比べても ε 倍より薄い
+  ! 水膜なら、塞がれていると数える。wet_weight だけだと、dd 以上の水膜があれば全開(φ = 1)になり、
+  ! 支川が直交する斜めリンクから入る面で、水膜の岸をはさむ軸リンクにも支川と同じ単位幅流量が通ると
+  ! 数えて、面の流束が乾いた岸の 2.4 倍になる(45° 回した合流の堰上げが岸の濡れで変わる。§110.25)
   pure function axis_open(ci, cj, kk, sgn) result(phi)
     integer, intent(in) :: ci, cj, kk, sgn
-    real :: phi
+    real :: phi, wc, wn
     integer :: kc, kn
     if (sgn > 0) then
       kc = pax_c(kk)
@@ -671,6 +979,16 @@ contains
       kn = nax_n(kk)
     end if
     phi = 1.0
+    if (opt%f_advection_lateral == 1) then
+      wc = open_rep(ci, cj, kk, sgn, ci + din(kc), cj + djn(kc))
+      wn = wc       ! c 側と n 側の軸リンクの向こうは同じセル(面の脇の角のセル)。違う表になっても正しいように確かめる
+      if (din(kk) + din(kn) /= din(kc) .or. djn(kk) + djn(kn) /= djn(kc)) then
+        wn = open_rep(ci, cj, kk, sgn, ci + din(kk) + din(kn), cj + djn(kk) + djn(kn))
+      end if
+      phi = phi - tx%cwd * (1.0 - wc)
+      phi = phi - tx%cwd * (1.0 - wn)
+      return
+    end if
     if (opt%f_advection_donor == 3) then
       phi = phi - tx%cwd * (1.0 - wet_weight(ci + din(kc), cj + djn(kc)))
       phi = phi - tx%cwd * (1.0 - wet_weight(ci + din(kk) + din(kn), cj + djn(kk) + djn(kn)))
@@ -760,6 +1078,8 @@ module subroutine adv_neumann(p, g, s, sx)
   type(t_state), intent(in) :: s
   type(t_enc_status), intent(in) :: sx
   call adv_neumann_mc(p, g, s, sx, tx_mod)
+  ! 屈曲直後の辺の慣性(f_advection_bend = 1。§110)。側方 Neumann の境界面の tae に差分を足す
+  if (opt%f_advection_bend > 0) call adv_bend_mc(p, g, s, sx, tx_mod, .true.)
 end subroutine
 
 
@@ -1119,6 +1439,432 @@ contains
       psi = (r + abs(r)) / (1 + abs(r))
       f = up + 0.5 * psi * (dn - up)
     end if
+  end function
+
+end subroutine
+
+
+!----------------------------------------------------------------------
+! 屈曲直後の辺の慣性(運動量保存形 f_advection_scheme = 2, 3 の f_advection_bend = 1。developer.md §110。
+! ENCflow 独自)
+!   adv_prepare_mc(内部の面。boundary = 偽)と adv_neumann_mc(側方 Neumann の境界面。boundary = 真)が tae を
+!   書いた後に呼ぶ(f_advection_bend = 0 では呼ばない = ゼロ追加)。
+!
+!   運動量保存形移流の流向面の流入面は、風上側(線 k 上)の供給元が壁・乾床のとき ū = u_e(中立。§68.8)、
+!   薄い水膜のとき ū = u_e + w (ū_k − u_e)(f_advection_donor = 3。w = donor_share。§102)にしている。中立の
+!   分は「水は、いまの辺の流速ですでに動いて入ってくる」と数えるので、流速が経路に沿って変わらない屈曲では
+!   正しい(屈曲の損失を作らない)が、屈曲が急な加速部(池の出口・段落ちの直前)に重なると、加速に要る慣性を
+!   数えないことになり、その辺の流速は水面勾配と摩擦の釣り合いまで上がって、流れ出す元の池より高い
+!   エネルギー水頭の射流を下流へ送り出す(1 セル幅の水路の段落ちの直前が斜めのつながりのとき、棚の上の
+!   エネルギー水頭が池より 9〜29 m 高い。test/brink)。
+!   ここでは、中立の分 (1 − w) を、面のセルへ実際に流入する水の経路の値 ū_p(path_value)に置き換える:
+!     ū ← ū + (1 − w) (ū_p − u_e)     (w = 0: 供給元が壁・乾床、0 < w < 1: 薄い供給元、w = 1: 置き換えなし)
+!   移流項 tae への差分は、流向面 c・n の流入面の分を
+!     Δtae = −(q_n Δū_n − q_c Δū_c) / w8dr / max(h̄, dd/2) · lm
+!   で足す(q_c・q_n・h̄・lm は adv_prepare_mc と同じ量)。側方面は変えない。
+!   - adv_prepare_mc・adv_neumann_mc の中へ分岐を足さず、別の手続きにしている: 足すと -Ofast が既存の式の
+!     計算の順序を変え、f_advection_bend = 0(当時の既定)の結果が最終桁で動く(coastal_drain が 14 桁目で 1、
+!     dambreak・gwsect も reference と不一致。§110)。
+!   - 面と除外の条件は adv_prepare_mc(無効な近傍・通過幅ゼロ・海セル・区間流入・両側乾燥)と
+!     adv_neumann_mc(put_neumann_faces の面、鏡像セル)に合わせる。境界面には、従来どおり薄い供給元の
+!     重み w を掛けない(供給元が壁・乾床の面だけ)。岸沿いに一様な場では、境界面の差分は一つ内側の面と
+!     同じ値になる。
+!   - 読む量: 面のセル(行 j − 1・j)の 8 リンクの uv・mn・通過幅(時刻 n。エッジ幅 2 の交換済み)、面のセルと
+!     供給元の水深、g%x・g%sw、s%m・s%n・s%lm。donor_share と同じ範囲で、通信・メモリの追加はない。
+!     補助関数は adv_neumann_mc の写し(枠外は鏡像で読む。枠内の面では adv_prepare_mc のものと同じ値)。
+!----------------------------------------------------------------------
+subroutine adv_bend_mc(p, g, s, sx, tx, boundary)
+  type(t_sysparam), intent(in) :: p
+  type(t_geoinfo), intent(in) :: g
+  type(t_state), intent(in) :: s
+  type(t_enc_status), intent(in) :: sx
+  type(t_enc_adv), intent(inout) :: tx
+  logical, intent(in) :: boundary     ! 偽: 内部の面、真: 側方 Neumann の境界面
+  ! 各辺を横切る面の方位(adv_neumann_mc と同じ)
+  integer, parameter :: kfw(1:3) = [4, 1, 6]
+  integer, parameter :: kfe(1:3) = [5, 3, 8]
+  integer, parameter :: kfn(1:3) = [2, 1, 3]
+  integer, parameter :: kfs(1:3) = [7, 6, 8]
+  integer :: i, j, k
+
+  if (.not. boundary) then
+    ! 内部の面(adv_prepare_mc と同じ走査。書き込み先 tae(k, c + de) は (c, k) ごとに一意で競合なし)
+    !$omp parallel do schedule(dynamic) private(i, j, k)
+    do j = dcp%js, dcp%je
+      do i = g%wx(1,j), g%wx(2,j)
+        if (g%x(i,j) <= 0) cycle
+        do k = 1, 4
+          call bend_inner(i, j, k)
+        end do
+      end do
+    end do
+    !$omp end parallel do
+  else
+    ! 側方 Neumann の境界面(adv_neumann_mc と同じ走査)
+    if (bcs%f_bc_side(e_side_w) == e_bc_neumann .and. dcp%ish == 1) then
+      do j = max(dcp%js - 1, 1), min(dcp%je + 1, dcp%ny_g)
+        call bend_boundary(1, j, kfw)
+      end do
+    end if
+    if (bcs%f_bc_side(e_side_e) == e_bc_neumann .and. dcp%ieh == dcp%nx_g) then
+      do j = max(dcp%js - 1, 1), min(dcp%je + 1, dcp%ny_g)
+        call bend_boundary(dcp%nx_g, j, kfe)
+      end do
+    end if
+    if (bcs%f_bc_side(e_side_n) == e_bc_neumann .and. dcp%js <= 1 .and. 1 <= dcp%je) then
+      do i = g%wx(1,1), g%wx(2,1)
+        call bend_boundary(i, 1, kfn)
+      end do
+    end if
+    if (bcs%f_bc_side(e_side_s) == e_bc_neumann .and. dcp%js <= dcp%ny_g .and. dcp%ny_g <= dcp%je) then
+      do i = g%wx(1,dcp%ny_g), g%wx(2,dcp%ny_g)
+        call bend_boundary(i, dcp%ny_g, kfs)
+      end do
+    end if
+  end if
+
+contains
+
+  ! 内部の面 (ci, cj) → k 近傍(k = 1..4)。除外の条件は adv_prepare_mc と同じ
+  subroutine bend_inner(ci, cj, k)
+    integer, intent(in) :: ci, cj, k
+    integer :: in, jn
+    in = ci + din(k)
+    jn = cj + djn(k)
+    if (g%x(in,jn) <= 0) return
+    if (geo%skip8(k)) return
+    if (g%sw(ci,cj) > 0 .or. g%sw(in,jn) > 0) return
+    if (bcs%have_inflow) then
+      if (opt%f_inflow_edge == 0) then
+        if (bc_inflow_cell(ci, cj) .or. bc_inflow_cell(in, jn)) return
+      else
+        if (bc_inflow_inward(ci, cj, in, jn)) return
+      end if
+    end if
+    if (s%h(ci,cj) < p%dd .and. s%h(in,jn) < p%dd) return
+    call bend_face(ci, cj, k, in, jn, in, jn, opt%f_advection_donor == 3)
+  end subroutine
+
+  ! 枠のセル (ci, cj) の境界面(kf の 3 面)。面の選別と除外の条件は adv_neumann_mc と同じ
+  subroutine bend_boundary(ci, cj, kf)
+    integer, intent(in) :: ci, cj
+    integer, intent(in) :: kf(1:3)
+    integer :: mf, k, in, jn, je, im, jm
+    logical :: ok
+    if (g%x(ci,cj) <= 0) return
+    if (g%sw(ci,cj) > 0) return
+    do mf = 1, 3
+      k = kf(mf)
+      in = ci + din(k)
+      jn = cj + djn(k)
+      if (.not. bc_open_face(in, jn)) cycle
+      je = cj + dje(k)
+      if (je < dcp%js - 1 .or. je > dcp%je) cycle
+      call bc_neumann_cell(in, jn, ok, im, jm)
+      if (.not. ok) cycle
+      if (g%x(im,jm) <= 0) cycle
+      if (g%sw(im,jm) > 0) cycle
+      if (geo%skip8(k)) cycle
+      if (bc_inflow_cell(ci, cj) .or. bc_inflow_cell(im, jm)) cycle
+      if (s%h(ci,cj) < p%dd .and. s%h(im,jm) < p%dd) cycle
+      call bend_face(ci, cj, k, in, jn, im, jm, .false.)
+    end do
+  end subroutine
+
+  ! 面 (ci, cj) → (in, jn)(k = 1..8。(im, jm) は n の水理量を読むセル = 内部の面では n 自身、境界面では鏡像)の
+  ! 流向面の流入面の、中立の分を経路の値に置き換える差分を tae に足す。thin が真なら、薄い供給元の重み
+  ! (donor_share)の分も置き換える
+  subroutine bend_face(ci, cj, k, in, jn, im, jm, thin)
+    integer, intent(in) :: ci, cj, k, in, jn, im, jm
+    logical, intent(in) :: thin
+    integer :: ie, je
+    real :: ue, qc, qn, dc, dn, w, hb, lme, ta
+    ie = ci + die(k)
+    je = cj + dje(k)
+    ue = sgn8(k) * sx%uv(ke8(k),ie,je)
+    qc = s%m(ci,cj) * geo%n8x(k) + s%n(ci,cj) * geo%n8y(k)
+    qn = s%m(im,jm) * geo%n8x(k) + s%n(im,jm) * geo%n8y(k)
+    dc = 0.0
+    dn = 0.0
+    if (qc >= 0) then
+      w = 1.0
+      if (.not. cell_ok(ci - din(k), cj - djn(k))) then
+        w = 0.0
+      else if (thin) then
+        w = donor_share(ci, cj, 9 - k)
+      end if
+      if (w < 1.0) dc = (1.0 - w) * (path_value(ci, cj, k, 1.0, ue) - ue)
+    end if
+    if (qn < 0) then
+      w = 1.0
+      if (.not. cell_ok(in + din(k), jn + djn(k))) then
+        w = 0.0
+      else if (thin) then
+        w = donor_share(in, jn, k)
+      end if
+      if (w < 1.0) dn = (1.0 - w) * (path_value(in, jn, 9 - k, -1.0, ue) - ue)
+    end if
+    if (dc == 0.0 .and. dn == 0.0) return
+    hb = (vol_depth(ci, cj) + vol_depth(im, jm)) / 2
+    lme = (s%lm(ci,cj) + s%lm(im,jm)) / 2
+    ta = -(qn * dn - qc * dc) / geo%w8dr(k)
+    tx%tae(ke8(k),ie,je) = tx%tae(ke8(k),ie,je) + sgn8(k) * ta / max(hb, p%dd / 2) * lme
+  end subroutine
+
+  ! 経路の値 ū_p。面のセル (ci, cj) へ実際に水を運ぶリンク l(この辺を除く。実流量 Q_l > 0、速さ s_l、辺の
+  ! 水深 he_l = │mn_l│ / s_l)から
+  !   ū_p = u_e + f g (σ f Q_in / (W_e h̆_in) − u_e)        (g は下の 2 つの重み。ふつうは 1)
+  !   Q_in = Σ Q_l、h̆_in = Σ Q_l s_l he_l / Σ Q_l s_l(流入の水深の、運動量流束 Q s で重み付けした平均。
+  !   Q s he = Q │mn│)、W_e = この辺の通過幅 l8·frw·fwd、f = Q_e / Q_out(面のセルの流出のうち、この辺が占める
+  !   割合)、σ = 面のセルから出る向きを正としたときの、この辺の流速の符号の向き(面 c で +1、面 n で −1)。
+  ! - σ f Q_in / (W_e h̆_in) は「この辺へ曲がる分の流入が、この辺の幅で、流入時の水深のまま流れたときの流速」。
+  !   経路に沿って水深が変わらなければ(定常で Q_in = Q_out)u_e に一致して中立と同じになり、等流の屈曲に
+  !   損失を作らない(§68.8 の性質を保つ)。経路に沿って水深が減る(加速する)ところでは u_e より小さく、
+  !   その差が加速に要る慣性になる。
+  ! - 流入するリンクの流速そのものでなく、幅をそろえた値にするのは、斜めのリンクの通過幅が軸のリンクの
+  !   0.707 倍(1 セル幅の斜めの河道の自然幅)で、等流でも流速が 1.41 倍になるため。流速そのものを使うと、
+  !   軸と斜めが交互に並ぶ河道で幅の違いが加減速に数えられ、等流の水深が ±6〜9 % 動く(§110.6 の試作 1)。
+  ! - f を 2 度掛ける: 流入のうちこの辺へ出る分(f Q_in)を取り、中立から寄せる度合いにも f を使う。本流の
+  !   横から河岸へあふれる辺(f ≪ 1)は中立のまま(本流の運動量を持ち込まない。§102 の旧 2 の失敗の型)。
+  ! - この式は、流出のうち流入で賄われない分(面のセルの貯留・湧き出し・降雨から出る水)を「静止から動き出す
+  !   水」と数える(r = Q_in / Q_out とすると ū_p − u_e = f u_e (r h_e / h̆_in − 1))。池の出口では正しく、流出が
+  !   流入を上回ると強まり、下回ると弱まる(池の水位の揺れを抑える向き)。しかし、流入のリンクがほとんど
+  !   ない面のセル(水が引いていく前線の先端、湧き出しだけのセル)まで同じに扱うと、流入が丸めの大きさで
+  !   あるか・ないかで値が u_e と (1 − f) u_e の間を飛ぶ(test/wfswash の急勾配の構成で、沿岸方向に一様な
+  !   場の行の差が 7e-8 m に育った。§110.10)。そこで、流入が流出の ε(p_adv_donor_eps。f_advection_donor = 3 の
+  !   「ほとんど水を運ばない」のしきい値と同じ)倍に満たないときは、寄せる度合いに r / ε を掛けて中立へ
+  !   連続につなぐ。流入のない面のセルは中立(u_e)のまま = 0 と同じ。
+  ! - 海セルからの流入(海陸エッジの水深は見かけ水柱厚 hsea0 の尺度で、流入の水深に使えない。§68.35)は
+  !   Q_in に数えず、寄せる度合いに「流入のうち海セルからでない割合」を掛ける(海からの流入だけの面の
+  !   セルは中立のまま。海側のリンクの流れが反転するところで値が飛ばない)。
+  ! - 流入の線が面のセルの先へ続いている(流入リンク l の反対側の隣のセルが、面のセルと同じ水体)とき、その
+  !   流入の運動量は、通常の風上(線 k の供給元)が同じ線の先の辺へ運ぶ。上の式は ū_p − u_e ∝ u_e (r h_e / h̆_in − 1)
+  !   (h_e = Q_e / (W_e │u_e│) はこの辺の水深)なので、流入がこの辺より浅い(h̆_in < h_e)と u_e より大きく、同じ
+  !   運動量を、曲がって出るこの辺にも足すことになる(落差から浅く速い流れが落ち込む合流部の池で、湾の水を
+  !   余分に押し出し、水面の揺れを育てた。§110.14)。そこで、線が続いている流入は、水深を h_e で下から止めて数える:
+  !     h'_l = β_l h_l + (1 − β_l) max(h_l, h_e)、  β_l = 1 − min(1, h_o / (ε h_c))
+  !   h_o は反対側の隣のセルの水深、h_c は面のセルの水深、ε は p_adv_donor_eps(壁・乾床なら β = 1 = そのまま)。
+  !   足す向き(減速する屈曲)には数えず、引く向き(加速する屈曲に要る慣性。中立より運動量を増やさない)は
+  !   そのまま数える。等流(水深が一様で r = 1)では h'_l = h_e で、岸の形によらず中立。流入の線の先が全て壁・
+  !   乾床の 1 セル幅の水路は、この扱いの前と同じ式・同じ演算(§110.15)。
+  ! - この辺が面のセルの流出でない(Q_e ≤ 0)ときは u_e(置き換えなし。Q_e → 0 で f → 0 なので連続)。
+  ! - 8 本のリンクの和は、格子の対称操作(鏡映・90° 回転)で入れ替わる対(向かい合うリンク)ごとに取る。
+  pure function path_value(ci, cj, kout, sg, ue0) result(u)
+    integer, intent(in) :: ci, cj     ! 面のセル(境界面の面 n では枠外。リンクは鏡像で読む)
+    integer, intent(in) :: kout       ! 面のセルから見た、この辺の方位(8 近傍番号)
+    real, intent(in) :: sg            ! σ(面 c で +1、面 n で −1)
+    real, intent(in) :: ue0           ! この辺の流速 u_e(c → n が正)
+    real :: u
+    real :: cq(1:8), cs(1:8), cm(1:8), co(1:8), ca(1:8)
+    real :: q, qin, qs, qm, qout, qsea, qe, qth, we, den, fsh, wgt, se, he, hlim, beta
+    integer :: l, mi, mj, oi, oj
+    logical :: sea
+    u = ue0
+    do l = 1, 8
+      cq(l) = 0.0
+      cs(l) = 0.0
+      cm(l) = 0.0
+      co(l) = 0.0
+      ca(l) = 0.0
+      q = qlk8(ci, cj, l)
+      if (q > 0.0) then
+        co(l) = q
+      else if (q < 0.0 .and. l /= kout) then
+        call mirror_cell(ci + din(l), cj + djn(l), mi, mj)
+        sea = .false.
+        if (mi >= 1 .and. mi <= g%nx .and. mj >= 1 .and. mj <= dcp%ny_g) sea = g%sw(mi,mj) > 0
+        if (sea) then
+          ca(l) = -q
+        else
+          cq(l) = -q
+          cs(l) = -q * abs(uvk8(ci, cj, l))
+          cm(l) = -q * abs(mnk8(ci, cj, l))
+        end if
+      end if
+    end do
+    qe = co(kout)
+    if (qe <= 0.0) return
+    ! 線が続いている流入の水深を、この辺の水深 h_e で下から止める(Q s h' = cm + (1 − β) max(0, Q s h_e − cm)。
+    ! cm = Q │mn│ = Q s h。β = 1 の流入は cm のまま)
+    se = abs(uvk8(ci, cj, kout))
+    hlim = opt%p_adv_donor_eps * hcell(ci, cj)
+    if (se > 0.0 .and. hlim > 0.0) then
+      he = abs(mnk8(ci, cj, kout)) / se
+      do l = 1, 8
+        if (cq(l) <= 0.0) cycle
+        oi = ci + din(9 - l)
+        oj = cj + djn(9 - l)
+        if (.not. cell_ok(oi, oj)) cycle
+        beta = 1.0 - min(1.0, hcell(oi, oj) / hlim)
+        if (beta < 1.0) cm(l) = cm(l) + (1.0 - beta) * max(0.0, cs(l) * he - cm(l))
+      end do
+    end if
+    qin = ((cq(2) + cq(7)) + (cq(4) + cq(5))) + ((cq(1) + cq(8)) + (cq(3) + cq(6)))
+    qs = ((cs(2) + cs(7)) + (cs(4) + cs(5))) + ((cs(1) + cs(8)) + (cs(3) + cs(6)))
+    qm = ((cm(2) + cm(7)) + (cm(4) + cm(5))) + ((cm(1) + cm(8)) + (cm(3) + cm(6)))
+    qout = ((co(2) + co(7)) + (co(4) + co(5))) + ((co(1) + co(8)) + (co(3) + co(6)))
+    qsea = ((ca(2) + ca(7)) + (ca(4) + ca(5))) + ((ca(1) + ca(8)) + (ca(3) + ca(6)))
+    if (qin <= 0.0 .or. qs <= 0.0) return
+    we = wlk8(ci, cj, kout)
+    den = we * qm
+    if (den <= 0.0) return
+    fsh = qe / qout
+    ! 中立から寄せる度合い: f ×(流入が流出の ε 倍に満たなければ、その比)×(流入のうち海セルからでない割合)。
+    ! 割り算は qin < qth のときだけ(qth > qin > 0。商は 1 未満)
+    wgt = fsh
+    qth = opt%p_adv_donor_eps * qout
+    if (qin < qth) wgt = wgt * (qin / qth)
+    if (qsea > 0.0) wgt = wgt * (qin / (qin + qsea))
+    u = ue0 + wgt * (sg * fsh * qin * qs / den - ue0)
+  end function
+
+  ! 線 k の供給元の重み(f_advection_donor = 3。adv_prepare_mc の donor_share と同じ値)。
+  ! 式は「流量の比が ε 未満で、かつ水深の比も ε 未満のとき w = max(流量の比, 水深の比) / ε、ほかは 1」。
+  ! adv_prepare_mc は流量の条件を先に見るが、ここは水深の条件を先に見る: 薄くない供給元(水深が面のセルの
+  ! ε 倍以上)は流量の比によらず w = 1 なので、8 本のリンクの流量を読むのは薄い供給元のときだけになる
+  ! (大半の面はここで抜ける。値は同じ。秩父の 200 m 格子で、有効時の計算時間の増分が +30 % → +20 %)。
+  ! 供給元のセルは呼び出し側が cell_ok で確かめている(確保範囲内の濡れたセル)。
+  pure function donor_share(ci, cj, kk) result(w)
+    integer, intent(in) :: ci, cj, kk
+    real :: w, qk, qmax, qe, hd, he
+    integer :: l
+    w = 1.0
+    hd = hcell(ci + din(kk), cj + djn(kk))
+    he = opt%p_adv_donor_eps * hcell(ci, cj)
+    if (hd >= he) return
+    qk = max(0.0, -qlk8(ci, cj, kk))
+    qmax = 0.0
+    do l = 1, 8
+      qmax = max(qmax, -qlk8(ci, cj, l))
+    end do
+    qe = opt%p_adv_donor_eps * qmax
+    if (qk < qe) w = max(qk / qe, hd / he)
+  end function
+
+  ! 以下は adv_neumann_mc の補助関数の写し(枠外の位置は鏡像で読む)
+  pure subroutine mirror_cell(ci, cj, mi, mj)
+    integer, intent(in) :: ci, cj
+    integer, intent(out) :: mi, mj
+    logical :: ok
+    mi = ci
+    mj = cj
+    if (.not. bcs%have_neumann) return
+    if (ci >= 1 .and. ci <= g%nx .and. cj >= 1 .and. cj <= dcp%ny_g) return
+    call bc_neumann_cell(ci, cj, ok, mi, mj)
+    if (.not. ok) then
+      mi = ci
+      mj = cj
+    end if
+  end subroutine
+
+  pure function uvk8(ci, cj, kk) result(u)
+    integer, intent(in) :: ci, cj, kk
+    real :: u
+    integer :: ei, ej, mi, mj
+    mi = ci
+    mj = cj
+    ei = ci + din(kk)
+    ej = cj + djn(kk)
+    if (ei < 1 .or. ei > g%nx .or. ej < 1 .or. ej > dcp%ny_g) call mirror_cell(ci, cj, mi, mj)
+    ei = mi + die(kk)
+    ej = mj + dje(kk)
+    if (ei < lbound(sx%uv, 2) .or. ei > ubound(sx%uv, 2) .or. ej < dcp%jsh - 1 .or. ej > dcp%jeh) then
+      u = 0.0
+    else
+      u = sgn8(kk) * sx%uv(ke8(kk),ei,ej)
+    end if
+  end function
+
+  pure function mnk8(ci, cj, kk) result(q)
+    integer, intent(in) :: ci, cj, kk
+    real :: q
+    integer :: ei, ej, mi, mj
+    mi = ci
+    mj = cj
+    ei = ci + din(kk)
+    ej = cj + djn(kk)
+    if (ei < 1 .or. ei > g%nx .or. ej < 1 .or. ej > dcp%ny_g) call mirror_cell(ci, cj, mi, mj)
+    ei = mi + die(kk)
+    ej = mj + dje(kk)
+    if (ei < lbound(sx%mn, 2) .or. ei > ubound(sx%mn, 2) .or. ej < dcp%jsh - 1 .or. ej > dcp%jeh) then
+      q = 0.0
+    else
+      q = sgn8(kk) * sx%mn(ke8(kk),ei,ej)
+    end if
+  end function
+
+  ! 通過幅 l8·frw·fwd (m)。確保範囲外は 0
+  pure function wlk8(ci, cj, kk) result(w)
+    integer, intent(in) :: ci, cj, kk
+    real :: w
+    integer :: ei, ej, mi, mj
+    mi = ci
+    mj = cj
+    ei = ci + din(kk)
+    ej = cj + djn(kk)
+    if (ei < 1 .or. ei > g%nx .or. ej < 1 .or. ej > dcp%ny_g) call mirror_cell(ci, cj, mi, mj)
+    ei = mi + die(kk)
+    ej = mj + dje(kk)
+    if (ei < lbound(sx%mn, 2) .or. ei > ubound(sx%mn, 2) .or. ej < dcp%jsh - 1 .or. ej > dcp%jeh) then
+      w = 0.0
+    else
+      w = geo%l8(kk)
+      if (chn%have_frw) w = w * chn%frw(ke8(kk), ei, ej)
+      if (chn%have_fwd) w = w * chn%fwd(ke8(kk), ei, ej)
+    end if
+  end function
+
+  ! 実流量 mn·l8·frw·fwd (m3/s。流出が正。adv_neumann_mc の qlk8 と同じ式)
+  pure function qlk8(ci, cj, kk) result(q)
+    integer, intent(in) :: ci, cj, kk
+    real :: q, fw
+    integer :: ei, ej, mi, mj
+    mi = ci
+    mj = cj
+    ei = ci + din(kk)
+    ej = cj + djn(kk)
+    if (ei < 1 .or. ei > g%nx .or. ej < 1 .or. ej > dcp%ny_g) call mirror_cell(ci, cj, mi, mj)
+    ei = mi + die(kk)
+    ej = mj + dje(kk)
+    if (ei < lbound(sx%mn, 2) .or. ei > ubound(sx%mn, 2) .or. ej < dcp%jsh - 1 .or. ej > dcp%jeh) then
+      q = 0.0
+    else
+      fw = 1.0
+      if (chn%have_frw) fw = chn%frw(ke8(kk), ei, ej)
+      if (chn%have_fwd) fw = fw * chn%fwd(ke8(kk), ei, ej)
+      q = sgn8(kk) * sx%mn(ke8(kk),ei,ej) * geo%l8(kk) * fw
+    end if
+  end function
+
+  pure function vol_depth(ci, cj) result(v)
+    integer, intent(in) :: ci, cj
+    real :: v
+    if (sct%have_sect) then
+      v = sect_v(s%h(ci,cj), sct%sdep(ci,cj))
+    else
+      v = s%h(ci,cj)
+    end if
+    if (chn%have_width) v = v * chn%wfrac(ci,cj)
+  end function
+
+  pure function cell_ok(ci, cj) result(ok)
+    integer, intent(in) :: ci, cj
+    logical :: ok
+    integer :: mi, mj
+    call mirror_cell(ci, cj, mi, mj)
+    ok = .false.
+    if (mi < lbound(s%h, 1) .or. mi > ubound(s%h, 1) .or. mj < dcp%jsh .or. mj > dcp%jeh) return
+    if (g%x(mi,mj) <= 0) return
+    if (g%sw(mi,mj) > 0) return
+    ok = s%h(mi,mj) >= p%dd
+  end function
+
+  pure function hcell(ci, cj) result(h)
+    integer, intent(in) :: ci, cj
+    real :: h
+    integer :: mi, mj
+    call mirror_cell(ci, cj, mi, mj)
+    h = s%h(mi,mj)
   end function
 
 end subroutine

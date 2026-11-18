@@ -15,8 +15,8 @@ $T200 << EOD
 4  216  43  216  37   216  39
 EOD
 $T100 << EOD
-1  164 214  164 205   164 210
-2  214 206  214 199   214 203
+1  164 214  164 205   164 211
+2  214 206  214 199   214 202
 3  294 210  294 203   294 207
 4  432  86  432  73   432  78
 EOD
@@ -28,9 +28,9 @@ $T50 << EOD
 EOD
 array LBL[3]   = [ "200 m", "100 m", "50 m" ]
 array HALF[3]  = [ 7.5, 15, 30 ]       # 拡大窓の半幅(セル)= ±1.5 km
-array RIVER[3] = [ "data_chichibu/Chichibu_200m_river.txt", \
-                   "../../test/chichibu/data_chichibu/Chichibu_100m_river.txt", \
-                   "../../test/chichibu/data_chichibu_50m/Chichibu_50m_river.txt" ]
+array RIVER[3] = [ "data_chichibu/Chichibu_200m_river_flowline.txt", \
+                   "../../test/chichibu/data_chichibu/Chichibu_100m_river_flowline.txt", \
+                   "../../test/chichibu/data_chichibu_50m/Chichibu_50m_river_flowline.txt" ]
 array BASIN[3] = [ "data_chichibu/Chichibu_200m_basin.txt", \
                    "../../test/chichibu/data_chichibu/Chichibu_100m_basin.txt", \
                    "../../test/chichibu/data_chichibu_50m/Chichibu_50m_basin.txt" ]
@@ -89,7 +89,7 @@ do for [s=1:2] {
   do for [t=1:2] {
     set title sprintf("%s: %s", SLB[s], TLB[t]) noenhanced
     set xrange [0:(t == 1 ? 150 : 360)]   # 上流は波形が短いので時間軸を縮める
-    set yrange [0:(s == 1 ? (t == 1 ? 1600 : 8000) : (t == 1 ? 200 : 1000))]   # 4 近傍は ENC の 1/8(本文に注記)
+    set yrange [0:(s == 1 ? (t == 1 ? 1600 : 10000) : 100)]   # the 4-neighbor panels are 1/16 (upstream) and 1/100 (downstream) of ENC; noted in the text
     plot for [r=1:3] sprintf("result_supp_%s%s/fluxes/flux000%d.csv", RES[r], SFX[s], TRN[t]) \
          using 2:3 with lines lw 1.5 title RLB[r]
   }
@@ -101,29 +101,29 @@ reset
 set datafile separator comma
 set terminal pngcairo size 1000,1500 font ",11"
 set output "en/figs/supp_hydro_adv.png"
-set multiplot layout 5,2 title "Advection treatment and resolution dependence (from top: no advection, scheme 1 with upwind 0.5 / 0.1 / 1.0, scheme 3)" noenhanced
+set multiplot layout 5,2 title "Advection treatment and resolution dependence (from top: no advection, scheme 1 with upwind 0.1 / 0.5 / 1.0, scheme 3)" noenhanced
 set grid
 set xlabel "time (min)"
 set ylabel "discharge (m^3/s)"
 set key top right
 array RESA[3] = [ "200m", "100m", "50m" ]
 array RLBA[3] = [ "200 m", "100 m", "50 m" ]
-array SFXA[5] = [ "_noadv", "_s1", "_s1u", "_s1f", "" ]
-array SLBA[5] = [ "no advection", "scheme 1 (upwind 0.5)", "scheme 1 (upwind 0.1)", "scheme 1 (upwind 1.0)", "scheme 3 (default)" ]
+array SFXA[5] = [ "_noadv", "_s1u", "_s1", "_s1f", "" ]   # scheme 1 from the weakest upwinding (0.1 -> 0.5 = default -> 1.0)
+array SLBA[5] = [ "no advection", "scheme 1 (upwind 0.1)", "scheme 1 (upwind 0.5 = default)", "scheme 1 (upwind 1.0)", "scheme 3 (default)" ]
 array TRNA[2] = [ 1, 4 ]
 array TLBA[2] = [ "upstream (transect 1)", "downstream (transect 4)" ]
 do for [s=1:5] {
   do for [t=1:2] {
     set title sprintf("%s: %s", SLBA[s], TLBA[t]) noenhanced
     set xrange [0:(t == 1 ? 150 : 360)]
-    set yrange [0:(t == 1 ? 1800 : (s == 1 ? 20000 : 10000))]  # 移流項なしの下流だけ縦軸の範囲が違う(2 倍)
+    set yrange [0:(t == 1 ? 1800 : 15000)]   # the right column (transect 4) uses one range for all rows, wider than in the other figures (noted in the text)
     plot for [r=1:3] sprintf("result_supp_%s%s/fluxes/flux000%d.csv", RESA[r], SFXA[s], TRNA[t]) \
          using 2:3 with lines lw 1.5 title RLBA[r]
   }
 }
 unset multiplot
 
-# ---- 図 2b: 河道幅を 50 m に揃えた ENC(測線 1・4)。幅なしを破線で重ねる ----
+# ---- 図 2b: 河道幅を 50 m に揃えた ENC(測線 3・4)。幅なしを破線で重ねる ----
 reset
 set datafile separator comma
 set terminal pngcairo size 1000,360 font ",11"
@@ -134,54 +134,114 @@ set xlabel "time (min)"
 set ylabel "discharge (m^3/s)"
 set xrange [0:360]
 set key top right
-array TRNW[2] = [ 1, 4 ]
-array TLBW[2] = [ "upstream (transect 1)", "downstream (transect 4)" ]
+array TRNW[2] = [ 3, 4 ]
+array TLBW[2] = [ "transect 3", "transect 4" ]
 do for [t=1:2] {
   set title TLBW[t] noenhanced
-  set xrange [0:(t == 1 ? 150 : 360)]
-  set yrange [0:(t == 1 ? 1600 : 8000)]
+  set xrange [0:(t == 1 ? 240 : 360)]
+  set yrange [0:10000]
+  set key top right Left reverse samplen 2 font ",9"
   plot sprintf("result_supp_200m/fluxes/flux000%d.csv", TRNW[t])     using 2:3 with lines lw 1.2 dt 2 lc rgb '#9467bd' title "200 m, no width", \
        sprintf("result_supp_200m_w50/fluxes/flux000%d.csv", TRNW[t]) using 2:3 with lines lw 1.8      lc rgb '#9467bd' title "200 m W = 50", \
        sprintf("result_supp_100m/fluxes/flux000%d.csv", TRNW[t])     using 2:3 with lines lw 1.2 dt 2 lc rgb '#2ca02c' title "100 m, no width", \
        sprintf("result_supp_100m_w50/fluxes/flux000%d.csv", TRNW[t]) using 2:3 with lines lw 1.8      lc rgb '#2ca02c' title "100 m W = 50", \
-       sprintf("result_supp_50m/fluxes/flux000%d.csv", TRNW[t])      using 2:3 with lines lw 1.8      lc rgb '#1f9fd0' title "50 m (resolved channel)", \
+       sprintf("result_supp_50m/fluxes/flux000%d.csv", TRNW[t])      using 2:3 with lines lw 1.8      lc rgb '#1f9fd0' title "50 m (resolved)", \
        sprintf("result_supp_50m_w50/fluxes/flux000%d.csv", TRNW[t])  using 2:3 with lines lw 1.2 dt 2 lc rgb '#1f9fd0' title "50 m W = 50"
 }
 unset multiplot
 
-# ---- 図 2d: 地形が原因の細かい振動(測線 3 の 1 分値。README の補足「ハイドログラフの細かい振動について」の 3 の例) ----
-# 左: 50 m 格子は測線のすぐ上流の 10 m の段差の下の跳水が逓減部(93〜95 分)に凹みを作り、100 m・200 m 格子(破線)は滑らか。
-# 右: 河道幅 50 m の 200 m 格子は上流の平坦な区間の静振で上下し、幅なし(破線)は滑らか。
-# 下段は 1 分ごとの流量の変化(振動が見やすい)。立ち上がりの急な前線(3 の性質)を外して 70 分から描く
+# ---- Figure 2d: fluctuations in the 1-minute values (examples for item 3 of the supplement
+#      "Fine oscillations in the hydrograph") ----
+# Left: transect 4 of the 100 m grid. At a bend 0.4 to 0.8 km upstream of the transect the channel depth becomes
+#     about equal to the height difference between the channel cell and the cells on both sides (water starts to
+#     spill onto, or retreats from, the bank cells), and the flow state switches back and forth.
+#     It does not appear with the 50 m wide subgrid channel or on the 200 m grid (dashed).
+# Right: transect 3 of the 50 m grid. At the upstream end of the deep reach formed by a bend 0.5 to 1 km downstream
+#     of the transect, the boundary where the shallow, fast flow enters the deep flow (a hydraulic jump) moves
+#     back and forth. It does not appear on the 100 m and 200 m grids (dashed).
+# Both are water stored and released in a reach and do not change the total runoff. Lower panels: change per minute
 reset
 set datafile separator comma
-set terminal pngcairo size 1000,700 font ",11"
-set output "en/figs/supp_t3_osc.png"
-set multiplot layout 2,2 title "Fine oscillations caused by the terrain (1-minute values at transect 3)" noenhanced
+set terminal pngcairo size 1100,640 font ",11"
+set output "en/figs/supp_osc.png"
+set multiplot layout 2,2 title "Examples of fluctuations in the 1-minute values (left: transect 4 of the 100 m grid; right: transect 3 of the 50 m grid)" noenhanced
 set grid
 set xlabel "time (min)"
-set key top right
+array TRO[2]  = [ 4, 3 ]
+array XO0[2]  = [ 90, 40 ]
+array XO1[2]  = [ 250, 130 ]
+# 上段: 流量
 set ylabel "discharge (m^3/s)"
-set xrange [70:135]
-set title "50 m grid (jump below the step just upstream)" noenhanced
-set yrange [1500:6500]
+set key top right
+set yrange [0:10000]
+set xrange [XO0[1]:XO1[1]]
+set title "transect 4 of the 100 m grid"
+plot "result_supp_100m/fluxes/flux0004.csv"     using 2:3 with lines lw 1.6      lc rgb '#2ca02c' title "100 m", \
+     "result_supp_100m_w50/fluxes/flux0004.csv" using 2:3 with lines lw 1.2 dt 2 lc rgb '#2ca02c' title "100 m W = 50", \
+     "result_supp_200m/fluxes/flux0004.csv"     using 2:3 with lines lw 1.2 dt 2 lc rgb '#9467bd' title "200 m"
+set xrange [XO0[2]:XO1[2]]
+set title "transect 3 of the 50 m grid"
 plot "result_supp_50m/fluxes/flux0003.csv"  using 2:3 with lines lw 1.6      lc rgb '#1f9fd0' title "50 m", \
      "result_supp_100m/fluxes/flux0003.csv" using 2:3 with lines lw 1.2 dt 2 lc rgb '#2ca02c' title "100 m", \
      "result_supp_200m/fluxes/flux0003.csv" using 2:3 with lines lw 1.2 dt 2 lc rgb '#9467bd' title "200 m"
-set title "200 m grid, 50 m wide channel (seiche in upstream flats)" noenhanced
-set yrange [1500:5000]
-plot "result_supp_200m_w50/fluxes/flux0003.csv" using 2:3 with lines lw 1.6      lc rgb '#9467bd' title "200 m W = 50", \
-     "result_supp_200m/fluxes/flux0003.csv"     using 2:3 with lines lw 1.2 dt 2 lc rgb '#9467bd' title "200 m no width"
 # 下段: 1 分ごとの変化 = 当該行の流量 − 前の行の流量(各曲線の先頭で前値を NaN に戻す)
 set ylabel "change per minute (m^3/s)"
-set title "Same, change per minute" noenhanced
-set yrange [-300:500]
+unset title
+set yrange [-3000:3000]
+set xrange [XO0[1]:XO1[1]]
+plot p = NaN, "result_supp_100m/fluxes/flux0004.csv"     using 2:(d = $3 - p, p = $3, d) with lines lw 1.6      lc rgb '#2ca02c' title "100 m", \
+     p = NaN, "result_supp_100m_w50/fluxes/flux0004.csv" using 2:(d = $3 - p, p = $3, d) with lines lw 1.2 dt 2 lc rgb '#2ca02c' title "100 m W = 50", \
+     p = NaN, "result_supp_200m/fluxes/flux0004.csv"     using 2:(d = $3 - p, p = $3, d) with lines lw 1.2 dt 2 lc rgb '#9467bd' title "200 m"
+set xrange [XO0[2]:XO1[2]]
 plot p = NaN, "result_supp_50m/fluxes/flux0003.csv"  using 2:(d = $3 - p, p = $3, d) with lines lw 1.6      lc rgb '#1f9fd0' title "50 m", \
      p = NaN, "result_supp_100m/fluxes/flux0003.csv" using 2:(d = $3 - p, p = $3, d) with lines lw 1.2 dt 2 lc rgb '#2ca02c' title "100 m", \
      p = NaN, "result_supp_200m/fluxes/flux0003.csv" using 2:(d = $3 - p, p = $3, d) with lines lw 1.2 dt 2 lc rgb '#9467bd' title "200 m"
-set yrange [-200:400]
-plot p = NaN, "result_supp_200m_w50/fluxes/flux0003.csv" using 2:(d = $3 - p, p = $3, d) with lines lw 1.6      lc rgb '#9467bd' title "200 m W = 50", \
-     p = NaN, "result_supp_200m/fluxes/flux0003.csv"     using 2:(d = $3 - p, p = $3, d) with lines lw 1.2 dt 2 lc rgb '#9467bd' title "200 m no width"
+unset multiplot
+
+# ---- 図 2e: 河床を整えた効果(200 m・100 m 格子。実線 = 河床を整えた標高、破線 = 窪地除去済みの標高) ----
+reset
+set datafile separator comma
+set terminal pngcairo size 1000,360 font ",11"
+set output "en/figs/supp_bed.png"
+set multiplot layout 1,2 title "Effect of the conditioned bed (solid: conditioned channel bed, dashed: depression-filled elevation)" noenhanced
+set grid
+set xlabel "time (min)"
+set ylabel "discharge (m^3/s)"
+set key top right Left reverse samplen 2 font ",9"   # a smaller legend at the top right, clear of the peaks
+array TRNB[2] = [ 3, 4 ]
+array TLBB[2] = [ "transect 3", "transect 4" ]
+do for [t=1:2] {
+  set title TLBB[t] noenhanced
+  set xrange [0:(t == 1 ? 240 : 360)]
+  set yrange [0:10000]
+  plot sprintf("result_supp_200m/fluxes/flux000%d.csv", TRNB[t])        using 2:3 with lines lw 1.8      lc rgb '#9467bd' title "200 m", \
+       sprintf("result_supp_200m_filled/fluxes/flux000%d.csv", TRNB[t]) using 2:3 with lines lw 1.2 dt 2 lc rgb '#9467bd' title "200 m (depression-filled)", \
+       sprintf("result_supp_100m/fluxes/flux000%d.csv", TRNB[t])        using 2:3 with lines lw 1.8      lc rgb '#2ca02c' title "100 m", \
+       sprintf("result_supp_100m_filled/fluxes/flux000%d.csv", TRNB[t]) using 2:3 with lines lw 1.2 dt 2 lc rgb '#2ca02c' title "100 m (depression-filled)"
+}
+unset multiplot
+
+# ---- 図 2f: 河道の粗度と移流項(測線 4。200 m・100 m 格子)。粗度 0.02 の移流項なしは、洪水波が段波になる ----
+reset
+set datafile separator comma
+set terminal pngcairo size 1000,360 font ",11"
+set output "en/figs/supp_rough.png"
+set multiplot layout 1,2 title "Channel roughness and the advection term (transect 4; solid: scheme 3, dashed: no advection)" noenhanced
+set grid
+set xlabel "time (min)"
+set ylabel "discharge (m^3/s)"
+set key top right
+set xrange [0:300]
+set yrange [0:30000]   # 段波のピークを収めるため、この図だけ縦軸の範囲が広い(本文に注記)
+array RESR[2] = [ "200m", "100m" ]
+array RLBR[2] = [ "200 m grid", "100 m grid" ]
+do for [r=1:2] {
+  set title RLBR[r] noenhanced
+  plot sprintf("result_supp_%s/fluxes/flux0004.csv", RESR[r])           using 2:3 with lines lw 1.8      lc rgb '#444444' title "n = 0.04, scheme 3", \
+       sprintf("result_supp_%s_noadv/fluxes/flux0004.csv", RESR[r])     using 2:3 with lines lw 1.2 dt 2 lc rgb '#444444' title "n = 0.04, no advection", \
+       sprintf("result_supp_%s_n02/fluxes/flux0004.csv", RESR[r])       using 2:3 with lines lw 1.8      lc rgb '#e08a00' title "n = 0.02, scheme 3", \
+       sprintf("result_supp_%s_n02_noadv/fluxes/flux0004.csv", RESR[r]) using 2:3 with lines lw 1.2 dt 2 lc rgb '#e08a00' title "n = 0.02, no advection"
+}
 unset multiplot
 
 # ---- 図 3: 6 時間後の水深分布。左 ENC、右 4 近傍(行: 200 / 100 / 50 m) ----

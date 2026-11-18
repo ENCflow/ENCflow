@@ -1,9 +1,36 @@
 # ENCflow CI: ビルド+回帰テスト(基準 Log とのビット/ULP 照合)
-#   高速な 19 ケースを毎 push で回す(chichibu は実行時間の都合で対象外。
-#   ローカルで test/chichibu/Run.sh を実行すること)。prmap・wfswash・gwlateral・gwtani・stg・vshaped は
-#   reference を持たない検定型(Check_*.py・再開と並列のバイト比較。Run.sh の終了コードで判定。
-#   stg は STG 格子の動作確認で、MPI の 2 ランクでは初期化で止まることを確かめる。vshaped は
-#   V 字流域の降雨流出の運動学的波の理論解との比較)
+#   高速な 28 ケースを毎 push で回す(chichibu は実行時間の都合で対象外。
+#   ローカルで test/chichibu/Run.sh を実行すること)。prmap・wfswash・gwlateral・gwtani・stg・vshaped・
+#   bldgdrag・driftwood・bankcap・brink・bankspill・chutepool・cascade・tjunction は reference を持たない検定型(Check_*.py・再開と並列のバイト比較。Run.sh の
+#   終了コードで判定。stg は STG 格子の動作確認で、MPI の 2 ランクでは初期化で止まることを確かめる。
+#   vshaped は V 字流域の降雨流出の運動学的波の理論解との比較。bldgdrag は家屋の抗力項を含む等流の
+#   理論値との比較で、逐次のジョブだけで回す(辺ごとの局所の式で、MPI のジョブは同じ式を通るだけなので
+#   足さない)。driftwood は流木の材積保存・集積の抵抗による堰上げの解析解・カルバートの流量則と流入口の
+#   捕捉の検定で、逐次のジョブだけで回す(Run_MPI.sh の逐次の保存状態とのバイト比較は、-Ofast のビルド間の
+#   差で警告扱いになるので、MPI のジョブには足さない)。bankcap は、エッジ水深の頭打ち f_dry_head_cap = 2・3 で
+#   河道の水が濡れた河岸へ登らないことの検定で、逐次と MPI の両方で回す(np = 2 では河岸の列と河道の間が
+#   帯の境界になる)。brink は、池の出口の段落ちを 1 次元の理論と比べ、屈曲直後の辺の風上値
+#   f_advection_bend = 1 で棚の上のエネルギー水頭が池を超えないこと、段落ちの先の池の跳水の位置が理論と合い、
+#   足元の直後が斜めの水路が直線の水路と同じ水面形になること、幅 2 セルの水路の等流が 0 と 1 で同じ水深に
+#   なること、合流部の池に落差から流れが入る構成で 1 の水面が定常に落ち着くことの検定(0 が揺れ続ける形の
+#   池の記録を含む)。
+#   逐次と MPI の両方で回す(np = 2 では、段落ちの直前・足元の直後の斜めの辺と、合流部の池が帯の境界をまたぐ))
+#   bankspill は、河道の水が河岸のくぼみへあふれ始める水位が、まっすぐな区間では時間刻みによらないことの検定
+#   (屈曲の正面のくぼみの時間刻み依存と、開いた瞬間の段は、f_dry_head_cap = 3(既定)で判定し、2 では限界として
+#   記録)。chutepool は、落差を落ちた射流が池へ落ち込む所(test/chichibu のデータの切り出し)で、池の流量が
+#   揺れないことの検定(f_dry_head_cap = 2・3 で判定。3 は、射流で入ってくる流れを、同じ流量の限界流の
+#   比エネルギーまでしか数えない)。cascade は、急な段々の河道(test/chichibu の 50 m 格子のデータの切り出し)で、
+#   流れの水頭が上流端の水位を超えないことの検定(f_dry_head_cap = 3 の 2 構成で、超える分が 10 m 未満を判定。
+#   2(2026-11-16 までの既定)は、乾いた岸で 45 m 超えることを限界として記録)。
+#   tjunction は、1 セル幅の T 字の合流(格子の軸に沿う合流と 45° 回した
+#   合流)の上流の水深を運動量の理論と比べる検定(定常・質量の収支・エネルギーが増えないことを判定する。合流の
+#   堰上げが岸の濡れによらないこと・理論の中での位置・格子の向きによらないことは、側方面の扱い
+#   f_advection_lateral = 1(既定)で判定し、0 では限界として記録)。この 4 つは逐次と MPI の両方で回す(np = 2 では、
+#   屈曲の斜めの辺・池の北の端・段々の河道・合流の周りの辺が帯の境界をまたぐ。tjunction の 1 は、斜めエッジの流入元のセルの流量を
+#   エッジ行 j − 3 まで読むので、幅 2 のハロ交換を通る)
+#   river_flowline は、前処理 utils/river_flowline(河道マスクを標高の落水線に載せ直す)が、秩父の 4 つの格子の
+#   置いてある載せ直し済みのマスクをバイト一致で作り直すことの検定で、逐次のジョブだけで回す(encflow は
+#   使わない。Run.sh が utils/river_flowline をビルドする)
 #   フル回帰・MPI np=1,2,4・-fcheck=all・BMI 適合性は夜間の nightly.yml で回す
 name: CI
 
@@ -29,7 +56,7 @@ jobs:
       - name: Regression tests
         run: |
           set -e
-          for c in wave dambreak frost pump conduit salt vzcol vzzone sfzone prmap wfshoal wfshadow wfcurrent wfsed wfswash gwlateral gwtani stg vshaped; do
+          for c in wave dambreak frost pump conduit salt vzcol vzzone sfzone prmap wfshoal wfshadow wfcurrent wfsed wfswash gwlateral gwtani stg vshaped bldgdrag driftwood bankcap brink bankspill chutepool cascade tjunction river_flowline; do
             echo "===== test/$c ====="
             (cd "test/$c" && ./Run.sh)
           done
@@ -50,7 +77,7 @@ jobs:
         run: |
           set -e
           export OMP_NUM_THREADS=1
-          for c in wave dambreak frost pump conduit salt vzcol vzzone sfzone prmap wfshoal wfshadow wfcurrent wfsed wfswash gwlateral gwtani stg vshaped; do
+          for c in wave dambreak frost pump conduit salt vzcol vzzone sfzone prmap wfshoal wfshadow wfcurrent wfsed wfswash gwlateral gwtani stg vshaped bankcap brink bankspill chutepool cascade tjunction; do
             echo "===== test/$c (np=2) ====="
             (cd "test/$c" && ./Run_MPI.sh 2)
           done
