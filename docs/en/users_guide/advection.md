@@ -890,10 +890,14 @@ With the default `f_advection_donor = 3` the wet/dry test of the parallel edge b
     by rain).
 
   Limits:
-  - **The computation takes longer.** In a run where rain wets every cell it takes 1.6 to 1.8 times as long as with
-    the default (+60 % on the 200 m grid of the Chichibu basin and +78 % on the 100 m grid; added one at a time on
-    the 200 m grid, `f_advection_donor = 4` costs
-    +28 %, `f_advection_lateral = 2` +20 %, `f_advection_bend = 2` +7 % and `f_dry_head_cap = 4` +2 %).
+  - **The computation takes longer and uses more memory.** In a run where rain wets every cell it takes 1.3 to
+    1.4 times as long as with the default (on 4 threads, +32 % on the 200 m grid of the Chichibu basin and +37 % on
+    the 100 m grid; added one at a time on the 200 m grid, `f_advection_lateral = 2` costs +11 %,
+    `f_advection_donor = 4` +9 %, and `f_advection_bend = 2` and `f_dry_head_cap = 4` a few percent at most, within
+    the scatter of the measurement). As for memory, specifying any of `f_advection_donor = 4`,
+    `f_advection_bend = 2` and `f_advection_lateral = 2` allocates a work array of 8 reals per cell (the table of
+    the discharges of the links from a cell to its 8 neighbours), and `f_advection_donor = 4` allocates a further
+    8 reals per cell (the weights kept for each face).
   - **The backwater caused by corner cells is less than half as large, but it remains.** In the shape with one
     corner cell open on the inside of a stair, the cell just after the stair is 1.9–4.9 m deeper than in the
     walls-only channel, and the discharge keeps oscillating with a standard deviation of 1.5–2.9 % of the given

@@ -489,6 +489,15 @@ module m_swflow_enc
     ! 流れごとの重み(f_advection_donor = 4。§113)の幾何の表(1:8, 1:8)。gst(l, kk) × (l 近傍から面のセルへ入る
     ! 実流量)が、その流入が、kk 近傍(線の上流側の隣)から見て前向きの流向面を通る流量に占める分。有効時だけ確保
     real, allocatable :: gst(:,:)
+    ! 連結の実流量の表(f_advection_donor = 4・f_advection_bend = 2・f_advection_lateral = 2 のどれかの有効時だけ確保。
+    ! §113.7): ql(l, i, j) = セル (i, j) から、その l 近傍(l = 1..8)へ向かう連結の実流量(m3/s。流出が正。
+    ! adv_prepare_mc の qlk と同じ値)。毎ステップ、adv_prepare_mc の頭で、濡れたセルの周りだけ作り、移流項と屈曲の
+    ! 規則が、面ごとに計算し直す代わりに読む
+    real, allocatable :: ql(:,:,:)
+    ! 流れごとの重みの控え(f_advection_donor = 4 で、f_advection_bend が 1 以上のときだけ確保。§113.7):
+    ! wst(1, k, ie, je)・wst(2, k, ie, je) = エッジ (k, ie, je) の流向面 c・n の流入面の重み(adv_prepare_mc が、その
+    ! ステップに計算した値。計算しなかった面は −1)。adv_bend_mc が、同じ重みを計算し直す代わりに読む
+    real, allocatable :: wst(:,:,:,:)
   end type
   type(t_enc_adv), allocatable :: tx_mod    ! 移流項の私有状態(実装は submodule m_swflow_enc_adv)
 

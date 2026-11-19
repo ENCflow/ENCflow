@@ -75,6 +75,14 @@ module subroutine adv_init(p, g)
       end do
       where (abs(tx_mod%gst) <= 1.0e-6 * maxval(abs(tx_mod%gst))) tx_mod%gst = 0.0
     end if
+    ! 連結の実流量の表(毎ステップ adv_prepare_mc が作る。セルの確保範囲。§113.7)
+    if (opt%adv_stream .or. opt%adv_energy .or. opt%adv_latflux) then
+      allocate(tx_mod%ql(1:8, dcp%ish:dcp%ieh, dcp%jsh:dcp%jeh), source = 0.0)
+    end if
+    ! 流れごとの重みの控え(エッジの確保範囲。§113.7)
+    if (opt%adv_stream .and. opt%f_advection_bend > 0) then
+      allocate(tx_mod%wst(1:2, 1:4, dcp%ish-1:dcp%ieh, dcp%jsh-1:dcp%jeh), source = -1.0)
+    end if
     return
   end if
   allocate(tx_mod%taxy(1:2, dcp%ish:dcp%ieh, dcp%jsh:dcp%jeh), source = 0.0)
@@ -131,6 +139,8 @@ module subroutine adv_dispose()
   if (allocated(tx_mod%vlm)) deallocate(tx_mod%vlm)
   if (allocated(tx_mod%tae)) deallocate(tx_mod%tae)
   if (allocated(tx_mod%gst)) deallocate(tx_mod%gst)
+  if (allocated(tx_mod%ql)) deallocate(tx_mod%ql)
+  if (allocated(tx_mod%wst)) deallocate(tx_mod%wst)
 end subroutine
 
 
@@ -186,6 +196,14 @@ subroutine adv_prepare_mc(p, g, s, sx, tx)
   real :: ubc, ubn, ubtp, ubtm
   real :: ta
   real :: wsh                       ! 線 k の供給元の重み(f_advection_donor = 3。§102)
+  logical :: tab                    ! 連結の実流量の表 tx%ql を読むか(§113.7)
+  logical :: wsv                    ! 流れごとの重みを tx%wst に控えるか(adv_bend_mc が読む。§113.7)
+
+  ! 連結の実流量の表(f_advection_donor = 4・f_advection_bend = 2・f_advection_lateral = 2 の有効時だけ。§113.7)と、
+  ! 流れごとの重みの控え(f_advection_donor = 4 で、f_advection_bend が 1 以上のときだけ)
+  tab = allocated(tx%ql)
+  if (tab) call fill_links()
+  wsv = allocated(tx%wst)
 
   !$omp parallel do schedule(dynamic) &
   !$omp private(i, j, k, in, jn, ie, je, hc, hn, hb, lme, ue, um, umm, up, upp, &
@@ -199,6 +217,7 @@ subroutine adv_prepare_mc(p, g, s, sx, tx)
         ie = i + die(k)
         je = j + dje(k)
         tx%tae(k,ie,je) = 0.0
+        if (wsv) tx%wst(1:2,k,ie,je) = -1.0      ! 重みの控えを「計算していない」に戻す(§113.7)
         ! momentum と同じ除外条件(無効近傍・通過幅ゼロ・両側乾燥)
         if (g%x(in,jn) <= 0) cycle
         if (geo%skip8(k)) cycle
@@ -286,7 +305,10 @@ subroutine adv_prepare_mc(p, g, s, sx, tx)
             ubc = face_value(um, ue, umm, far_ok(i - 2 * din(k), j - 2 * djn(k)))
             if (opt%f_advection_donor == 3) then
               wsh = donor_share(i, j, 9 - k)      ! 面のセル c と線 k の供給元 c − d(c の 9 − k 近傍)
-              if (opt%adv_stream) wsh = stream_share(i, j, 9 - k, qc, wsh)
+              if (opt%adv_stream) then
+                wsh = stream_share(i, j, 9 - k, qc, wsh)
+                if (wsv) tx%wst(1,k,ie,je) = wsh
+              end if
               if (wsh < 1.0) ubc = ue + wsh * (ubc - ue)
             end if
           else
@@ -302,7 +324,10 @@ subroutine adv_prepare_mc(p, g, s, sx, tx)
             ubn = face_value(up, ue, upp, far_ok(in + 2 * din(k), jn + 2 * djn(k)))
             if (opt%f_advection_donor == 3) then
               wsh = donor_share(in, jn, k)        ! 面のセル n と線 k の供給元 n + d(n の k 近傍)
-              if (opt%adv_stream) wsh = stream_share(in, jn, k, -qn, wsh)
+              if (opt%adv_stream) then
+                wsh = stream_share(in, jn, k, -qn, wsh)
+                if (wsv) tx%wst(2,k,ie,je) = wsh
+              end if
               if (wsh < 1.0) ubn = ue + wsh * (ubn - ue)
             end if
           else
@@ -347,10 +372,17 @@ subroutine adv_prepare_mc(p, g, s, sx, tx)
         ! 段波を 1.5〜5 % 遅らせる(斜めリンクの族の運動量流入が軸リンクの位置で評価されて
         ! 族ごとに流速が分かれる)ので採らない(§68.43)
         if (k == 2 .or. k == 4) then
-          qtp = (0.5 * (qlk(i, j, kkp(k)) + qlk(in, jn, kkp(k))) &
-                 + qlk(i, j, kdp_c(k)) + qlk(in, jn, kdp_n(k))) / geo%w8dr(k)
-          qtm = (0.5 * (qlk(i, j, kkm(k)) + qlk(in, jn, kkm(k))) &
-                 + qlk(i, j, kdm_c(k)) + qlk(in, jn, kdm_n(k))) / geo%w8dr(k)
+          if (tab) then                 ! 表から読む(同じ値。§113.7)
+            qtp = (0.5 * (tx%ql(kkp(k),i,j) + tx%ql(kkp(k),in,jn)) &
+                   + tx%ql(kdp_c(k),i,j) + tx%ql(kdp_n(k),in,jn)) / geo%w8dr(k)
+            qtm = (0.5 * (tx%ql(kkm(k),i,j) + tx%ql(kkm(k),in,jn)) &
+                   + tx%ql(kdm_c(k),i,j) + tx%ql(kdm_n(k),in,jn)) / geo%w8dr(k)
+          else
+            qtp = (0.5 * (qlk(i, j, kkp(k)) + qlk(in, jn, kkp(k))) &
+                   + qlk(i, j, kdp_c(k)) + qlk(in, jn, kdp_n(k))) / geo%w8dr(k)
+            qtm = (0.5 * (qlk(i, j, kkm(k)) + qlk(in, jn, kkm(k))) &
+                   + qlk(i, j, kdm_c(k)) + qlk(in, jn, kdm_n(k))) / geo%w8dr(k)
+          end if
         else
           qtp = axis_open(i, j, k, 1) * 0.5 * (mnk(i, j, kkp(k)) + mnk(in, jn, kkp(k)))
           qtm = axis_open(i, j, k, -1) * 0.5 * (mnk(i, j, kkm(k)) + mnk(in, jn, kkm(k)))
@@ -399,6 +431,57 @@ subroutine adv_prepare_mc(p, g, s, sx, tx)
 
 contains
 
+  ! 連結の実流量の表 tx%ql を作る(developer.md §113.7。結果を変えない): ql(l, i, j) = qlk(i, j, l)。
+  !   面ごと・関数ごとに qlk を計算し直す代わりに、供給元の重み(donor_share)・斜めの流入元の向き(src_fwd)・
+  !   軸エッジの側方面の流束と流入(lateral_inflow)・line_flow と、adv_bend_mc の経路の値・到着した水の速さ・
+  !   供給元の重みと src_fwd の写しが読む(同じ式・同じ時刻の値。面ごとに計算すると、1 つのセルの 8 本の連結を、
+  !   そのセルを面のセルとする面の数 × 関数の数だけ読み直すことになる)。流れごとの重み stream_share だけは、
+  !   表を読まない(理由は stream_share のコメント)。
+  !   - 作る範囲。表を読むセルは、計算する面のセル(c・n のどちらかが濡れている = 水深が dd 以上)、その 8 近傍の
+  !     セル(src_fwd)、濡れたセル(line_flow)で、どれも、濡れたセルから行・列とも 2 つ以内にある。そこで、行ごとに
+  !     濡れたセルの列の範囲を調べ、行 j − 2 .. j + 2 の範囲を合わせて ± 2 列に広げた所だけを作る(濡れたセルが
+  !     河道だけの計算で、乾いた所の表を作らない)。範囲の外の表は、前のステップの値のまま残るが、読まれない。
+  !   - 行は、セルの確保範囲 jsh .. jeh(表を読むセルの行は js − 2 .. je + 1。側方 Neumann の境界面の屈曲では
+  !     je + 1 の枠のセルも読む)、列は ish .. ieh で切る。確保範囲の外のエッジは、qlk が 0 と読む(面ごとに計算して
+  !     いたときと同じ)。濡れたセルの判定は、面を計算するかどうかの判定(水深 s%h が dd 以上)と同じ
+  subroutine fill_links()
+    integer :: fi, fj, fl, i1, i2, jj
+    integer :: wa(dcp%jsh:dcp%jeh), wb(dcp%jsh:dcp%jeh)     ! 行ごとの、濡れたセルの列の範囲(なければ wa > wb)
+    !$omp parallel private(fi, fj, fl, i1, i2, jj)
+    !$omp do schedule(static)
+    do fj = dcp%jsh, dcp%jeh
+      i1 = dcp%ieh + 1
+      i2 = dcp%ish - 1
+      do fi = g%wx(1,fj), g%wx(2,fj)
+        if (s%h(fi,fj) >= p%dd) then
+          i1 = min(i1, fi)
+          i2 = fi
+        end if
+      end do
+      wa(fj) = i1
+      wb(fj) = i2
+    end do
+    !$omp end do
+    !$omp do schedule(static)
+    do fj = dcp%jsh, dcp%jeh
+      i1 = dcp%ieh + 1
+      i2 = dcp%ish - 1
+      do jj = max(fj - 2, dcp%jsh), min(fj + 2, dcp%jeh)
+        if (wa(jj) <= wb(jj)) then
+          i1 = min(i1, wa(jj) - 2)
+          i2 = max(i2, wb(jj) + 2)
+        end if
+      end do
+      do fi = max(i1, dcp%ish), min(i2, dcp%ieh)
+        do fl = 1, 8
+          tx%ql(fl,fi,fj) = qlk(fi, fj, fl)
+        end do
+      end do
+    end do
+    !$omp end do
+    !$omp end parallel
+  end subroutine
+
   ! 線 k の供給元の重み(f_advection_donor = 3。developer.md §102)。面のセル (ci, cj) へ線 k 上の
   ! 供給元(kk 近傍)から入る実流量 Q_k と、面のセルへの 8 リンクの流入の最大 Q_max の比
   ! r = Q_k/Q_max に対し w_r = min(1, r/ε)(ε = p_adv_donor_eps)。面のセルへの流入がなければ 1。
@@ -418,11 +501,19 @@ contains
     integer, intent(in) :: ci, cj, kk
     real :: w, qk, qmax, qe, hd, he
     integer :: l
-    qk = max(0.0, -qlk(ci, cj, kk))
-    qmax = 0.0
-    do l = 1, 8
-      qmax = max(qmax, -qlk(ci, cj, l))
-    end do
+    if (tab) then                     ! 表から読む(同じ値。§113.7)
+      qk = max(0.0, -tx%ql(kk,ci,cj))
+      qmax = 0.0
+      do l = 1, 8
+        qmax = max(qmax, -tx%ql(l,ci,cj))
+      end do
+    else
+      qk = max(0.0, -qlk(ci, cj, kk))
+      qmax = 0.0
+      do l = 1, 8
+        qmax = max(qmax, -qlk(ci, cj, l))
+      end do
+    end if
     qe = opt%p_adv_donor_eps * qmax
     w = 1.0
     if (qk < qe) then
@@ -462,6 +553,11 @@ contains
   !   読むのは、面のセルの 8 リンクの実流量(donor_share と同じ)と、斜めの流入元のセル(面のセルの隣)の 8 リンクの
   !   実流量(行 j − 3 のエッジまで。mn・fwd・frw をエッジ幅 2 で交換しておく = opt%adv_wide。line_flow と同じ)。
   !   8 本のリンクの和は、格子の対称操作(鏡映・90° 回転)で入れ替わる対ごとに取る(path_value と同じ)
+  !   - この関数は、面のセルの実流量を、連結の実流量の表 tx%ql から読まず、その場で qlk で計算する(adv_bend_mc の
+  !     写しも同じ)。表から読む形と、w = 1 が決まる面を先に抜ける近道を足した形は、どちらも、-Ofast が下の 8 本の和の
+  !     結合の順を変えて、結果の最終桁が動いた(印字の結果は同じで、保存した状態の最終桁が違う。§113.7)。斜めの
+  !     流入元の向き src_fwd は、表から読む(同じ値)。代わりに、呼び出し側が、ここで計算した重みを面ごとに tx%wst に
+  !     控え、adv_bend_mc は、同じ面の重みを計算し直さずに読む(2 つの写しは、同じ面に同じ値を返す。§113.7)
   pure function stream_share(ci, cj, kk, qf, w3) result(w)
     integer, intent(in) :: ci, cj     ! 面のセル
     integer, intent(in) :: kk         ! 面のセルから見た、線 k の供給元の 8 近傍番号
@@ -518,9 +614,7 @@ contains
     integer :: l
     r = 1.0
     if (si < 1 .or. si > g%nx .or. sj < 1 .or. sj > dcp%ny_g) return
-    do l = 1, 8
-      q(l) = max(0.0, -qlk(si, sj, l))
-    end do
+    q(1:8) = max(0.0, -tx%ql(1:8,si,sj))      ! 8 近傍からの流入(連結の実流量の表)
     qa = ((q(2) + q(7)) + (q(4) + q(5))) + ((q(1) + q(8)) + (q(3) + q(6)))
     if (qa <= 0.0) return
     do l = 1, 8
@@ -888,7 +982,11 @@ contains
     real, intent(in) :: wt
     real :: q
     if (kk == 2 .or. kk == 4) then
-      q = -wt * qlk(xi, xj, kl)
+      if (tab) then                   ! 表から読む(同じ値。§113.7)
+        q = -wt * tx%ql(kl,xi,xj)
+      else
+        q = -wt * qlk(xi, xj, kl)
+      end if
     else
       q = -mnk(xi, xj, kl)
     end if
@@ -1101,9 +1199,26 @@ contains
     real :: w, qk, qmax, qe
     integer :: l, mi, mj
     call mirror_cell(ci, cj, mi, mj)
+    w = 0.0
+    if (tab) then
+      ! 表から読む(同じ値。§113.7)。下の、8 本を読み切らない形と同じ場合分け: 線の上流の隣からの流入がなければ、
+      ! ε × 最大 が正なら 0、0 にアンダーフローするほど小さい流入だけなら 1、流入が全くなければ 0
+      qk = max(0.0, -tx%ql(kk,mi,mj))
+      qmax = 0.0
+      do l = 1, 8
+        qmax = max(qmax, -tx%ql(l,mi,mj))
+      end do
+      if (qk <= 0.0) then
+        if (qmax > 0.0 .and. .not. opt%p_adv_donor_eps * qmax > 0.0) w = 1.0
+      else
+        qe = opt%p_adv_donor_eps * qmax
+        w = 1.0
+        if (qk < qe) w = qk / qe
+      end if
+      return
+    end if
     qk = max(0.0, -qlk(mi, mj, kk))
     qmax = 0.0
-    w = 0.0
     if (qk <= 0.0) then
       ! 線の上流の隣からの流入がない: ε × 最大 が正になるリンクが 1 本でもあれば 0(8 本を読み切らない。
       ! 同じ値。§110.28)。流入が全くなければ 0。ε × 最大 が 0 にアンダーフローするほど小さいときだけ、
@@ -1669,7 +1784,11 @@ subroutine adv_bend_mc(p, g, s, sx, tx, boundary)
   integer, parameter :: kfn(1:3) = [2, 1, 3]
   integer, parameter :: kfs(1:3) = [7, 6, 8]
   integer :: i, j, k
+  logical :: tab                      ! 連結の実流量の表 tx%ql を読むか(adv_prepare_mc が同じステップに作った表。§113.7)
+  logical :: wsv                      ! 流れごとの重みの控え tx%wst を読むか(同上。内部の面だけ)
 
+  tab = allocated(tx%ql)
+  wsv = allocated(tx%wst)
   if (.not. boundary) then
     ! 内部の面(adv_prepare_mc と同じ走査。書き込み先 tae(k, c + de) は (c, k) ごとに一意で競合なし)
     !$omp parallel do schedule(dynamic) private(i, j, k)
@@ -1777,8 +1896,14 @@ contains
       if (.not. cell_ok(ci - din(k), cj - djn(k))) then
         w = 0.0
       else if (thin) then
-        w = donor_share(ci, cj, 9 - k)
-        if (opt%adv_stream) w = stream_share(ci, cj, 9 - k, qc, w)
+        ! 流れごとの重みは、adv_prepare_mc が同じ面について計算した控えを読む(同じ式・同じ値。thin が真の面は
+        ! 内部の面で、k = 1..4。控えがない(−1)面は、従来どおり計算する。§113.7)
+        w = -1.0
+        if (wsv) w = tx%wst(1,k,ie,je)
+        if (w < 0.0) then
+          w = donor_share(ci, cj, 9 - k)
+          if (opt%adv_stream) w = stream_share(ci, cj, 9 - k, qc, w)
+        end if
       end if
       if (w < 1.0) dc = (1.0 - w) * (path_value(ci, cj, k, 1.0, ue) - ue)
       if (opt%adv_energy) then
@@ -1790,8 +1915,12 @@ contains
       if (.not. cell_ok(in + din(k), jn + djn(k))) then
         w = 0.0
       else if (thin) then
-        w = donor_share(in, jn, k)
-        if (opt%adv_stream) w = stream_share(in, jn, k, -qn, w)
+        w = -1.0
+        if (wsv) w = tx%wst(2,k,ie,je)
+        if (w < 0.0) then
+          w = donor_share(in, jn, k)
+          if (opt%adv_stream) w = stream_share(in, jn, k, -qn, w)
+        end if
       end if
       if (w < 1.0) dn = (1.0 - w) * (path_value(in, jn, 9 - k, -1.0, ue) - ue)
       if (opt%adv_energy) then
@@ -1869,18 +1998,19 @@ contains
     integer, intent(in) :: kout       ! 面のセルから見た、この辺の方位(8 近傍番号)
     real, intent(in) :: ue0           ! この辺の流速
     real :: e
-    real :: cq(1:8), c2(1:8), co(1:8), ca(1:8)
+    real :: cq(1:8), c2(1:8), co(1:8), ca(1:8), q8(1:8)
     real :: q, qin, q2, qout, qsea, qun, qe, we, wl, fsh, cl, a2
     integer :: l, mi, mj
     logical :: sea
     e = 0.0
     we = wlk8(ci, cj, kout)
     if (we <= 0.0) return
+    call links8(ci, cj, q8)
     do l = 1, 8
       cq(l) = 0.0
       co(l) = 0.0
       ca(l) = 0.0
-      q = qlk8(ci, cj, l)
+      q = q8(l)
       if (q > 0.0) then
         co(l) = q
       else if (q < 0.0 .and. l /= kout) then
@@ -1963,15 +2093,21 @@ contains
     real :: cq(1:8), cs(1:8), cm(1:8), co(1:8), ca(1:8)
     real :: q, qin, qs, qm, qout, qsea, qe, qth, we, den, fsh, wgt, se, he, hlim, beta
     integer :: l, mi, mj, oi, oj
-    logical :: sea
+    logical :: sea, tin
     u = ue0
+    ! 枠内の面のセルは、連結の実流量の表を読む(有効時。qlk8 と同じ値。§113.7)
+    tin = tab .and. ci >= 1 .and. ci <= g%nx .and. cj >= 1 .and. cj <= dcp%ny_g
     do l = 1, 8
       cq(l) = 0.0
       cs(l) = 0.0
       cm(l) = 0.0
       co(l) = 0.0
       ca(l) = 0.0
-      q = qlk8(ci, cj, l)
+      if (tin) then
+        q = tx%ql(l,ci,cj)
+      else
+        q = qlk8(ci, cj, l)
+      end if
       if (q > 0.0) then
         co(l) = q
       else if (q < 0.0 .and. l /= kout) then
@@ -2037,17 +2173,25 @@ contains
     hd = hcell(ci + din(kk), cj + djn(kk))
     he = opt%p_adv_donor_eps * hcell(ci, cj)
     if (hd >= he) return
-    qk = max(0.0, -qlk8(ci, cj, kk))
-    qmax = 0.0
-    do l = 1, 8
-      qmax = max(qmax, -qlk8(ci, cj, l))
-    end do
+    if (tab .and. ci >= 1 .and. ci <= g%nx .and. cj >= 1 .and. cj <= dcp%ny_g) then    ! 表から読む(同じ値。§113.7)
+      qk = max(0.0, -tx%ql(kk,ci,cj))
+      qmax = 0.0
+      do l = 1, 8
+        qmax = max(qmax, -tx%ql(l,ci,cj))
+      end do
+    else
+      qk = max(0.0, -qlk8(ci, cj, kk))
+      qmax = 0.0
+      do l = 1, 8
+        qmax = max(qmax, -qlk8(ci, cj, l))
+      end do
+    end if
     qe = opt%p_adv_donor_eps * qmax
     if (qk < qe) w = max(qk / qe, hd / he)
   end function
 
   ! 流れごとの重み(f_advection_donor = 4。adv_prepare_mc の stream_share・src_fwd と同じ式・同じ値。説明はそちら。
-  ! 実流量は qlk8 で読む: 枠内の面のセルと、枠内の流入元のセルでは、qlk と同じ値)
+  ! 面のセルの実流量は qlk8 で、斜めの流入元のセルの実流量は links8 で読む: 枠内のセルでは、qlk と同じ値)
   pure function stream_share(ci, cj, kk, qf, w3) result(w)
     integer, intent(in) :: ci, cj     ! 面のセル
     integer, intent(in) :: kk         ! 面のセルから見た、線 k の供給元の 8 近傍番号
@@ -2104,9 +2248,8 @@ contains
     integer :: l
     r = 1.0
     if (si < 1 .or. si > g%nx .or. sj < 1 .or. sj > dcp%ny_g) return
-    do l = 1, 8
-      q(l) = max(0.0, -qlk8(si, sj, l))
-    end do
+    call links8(si, sj, q)
+    q(1:8) = max(0.0, -q(1:8))
     qa = ((q(2) + q(7)) + (q(4) + q(5))) + ((q(1) + q(8)) + (q(3) + q(6)))
     if (qa <= 0.0) return
     do l = 1, 8
@@ -2115,6 +2258,23 @@ contains
     qf = ((q(2) + q(7)) + (q(4) + q(5))) + ((q(1) + q(8)) + (q(3) + q(6)))
     r = qf / qa
   end function
+
+  ! セル (ci, cj) から 8 近傍のそれぞれへ向かう連結の実流量(流出が正。qlk8 と同じ値)。有効時、枠内のセルは、
+  ! 連結の実流量の表(adv_prepare_mc の fill_links が同じステップに作った qlk の値)を読む: 枠内のセルでは、qlk8 は
+  ! 鏡像を使わず、qlk と同じエッジを同じ式で読む。枠外のセル(側方 Neumann の境界面の面 n)は、qlk8 が鏡像で読むので、
+  ! その場で計算する(§113.7。結果を変えない)
+  pure subroutine links8(ci, cj, q8)
+    integer, intent(in) :: ci, cj
+    real, intent(out) :: q8(1:8)
+    integer :: l
+    if (tab .and. ci >= 1 .and. ci <= g%nx .and. cj >= 1 .and. cj <= dcp%ny_g) then
+      q8(1:8) = tx%ql(1:8,ci,cj)
+    else
+      do l = 1, 8
+        q8(l) = qlk8(ci, cj, l)
+      end do
+    end if
+  end subroutine
 
   ! 以下は adv_neumann_mc の補助関数の写し(枠外の位置は鏡像で読む)
   pure subroutine mirror_cell(ci, cj, mi, mj)
