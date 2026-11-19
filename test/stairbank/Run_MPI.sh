@@ -7,7 +7,7 @@ NP=${1:-2}
 sdir=$(dirname "$(readlink -f "$0")")
 ../Scripts/Check_mode.sh mpi || exit 1
 
-for g in $(python3 "$sdir/make_stairbank.py" names); do
+for g in $(python3 "$sdir/make_stairbank.py" geoms); do
     python3 "$sdir/make_stairbank.py" z $g > sb_z_$g.txt || exit 1
     python3 "$sdir/make_stairbank.py" rw $g > sb_rw_$g.txt || exit 1
 done

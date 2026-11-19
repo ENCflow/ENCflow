@@ -88,7 +88,19 @@
                             !   its wet/dry test flips (test/wetbank). 0
                             !   reproduces results computed with the previous
                             !   default (with 3 the flow is faster than with 0
-                            !   and dt may need to be reduced). 1 (donors
+                            !   and dt may need to be reduced). 4: as 3, and
+                            !   the face flux is split into the streams of the
+                            !   links entering the face cell, and the velocity
+                            !   of the donor on the edge line is applied only
+                            !   to the streams that link represents (when the
+                            !   donor is a bank or pool cell that is deep but
+                            !   carries hardly any water, its slow velocity is
+                            !   not applied to the whole face flux). Use 4
+                            !   together with f_advection_bend = 2,
+                            !   f_advection_lateral = 2 and f_dry_head_cap = 4
+                            !   (test/stairbank, users_guide/advection.md
+                            !   section 4.4).
+                            !   1 (donors
                             !   limited to channel cells on edges between
                             !   channel cells) and 2 (weighted by the fluxes of
                             !   all inflow links) were removed (the run stops
@@ -118,7 +130,16 @@
                             !   foot of a drop the momentum of the flow that has
                             !   dropped is lost
                             !   (test/brink, users_guide/advection.md
-                            !   section 4.4)
+                            !   section 4.4).
+                            !   2: as 1, and on the same faces the acceleration
+                            !   by which the edge runs faster than the arrival
+                            !   speed a of the water entering the face cell is
+                            !   counted by an advection term in energy-head
+                            !   form, (u_e^2 - a^2)/(2L) (whichever of this and
+                            !   the term of 1 is larger). A cell where inflows
+                            !   merge, or an edge that takes only part of the
+                            !   outflow, does not accelerate beyond the energy
+                            !   of the water that entered (test/stairbank)
   !f_advection_lateral = 1  ! treatment of water entering through the lateral
                             !   faces of the momentum-conservative advection
                             !   (schemes 2, 3) (0: the velocity of the parallel
@@ -140,9 +161,18 @@
                             !   of the wetness of the banks (the backwater of a
                             !   right-angle junction is 60-80 % of that of the
                             !   momentum theory and changes with the grid
-                            !   orientation). 1 takes effect only with
-                            !   f_advection_donor = 3 (otherwise the same as 0)
-                            !   (test/tjunction, test/wetbank,
+                            !   orientation).
+                            !   2: as 1, and when the unit-width discharge of
+                            !   the parallel link exceeds twice the unit-width
+                            !   discharge, in the direction of the edge, of the
+                            !   cell the entering water comes from, the use of
+                            !   the velocity of the parallel link is reduced by
+                            !   that ratio (the momentum of a fast parallel link
+                            !   is not carried into an edge that slow water
+                            !   enters). 1 and 2 take effect only with
+                            !   f_advection_donor = 3 or 4 (otherwise the same
+                            !   as 0)
+                            !   (test/tjunction, test/wetbank, test/stairbank,
                             !   users_guide/advection.md section 4.4)
   !f_dry_head_cap = 3       ! cap the edge depth toward high ground by the
                             !   energy head
@@ -171,7 +201,14 @@
                             !   submerged steps keep the harmonic mean of the
                             !   depths on both sides as a floor; test/bankspill,
                             !   users_guide/dry_head_cap.md)
-                            !   = default).
+                            !   = default, 4: as 3, with the speed of "the flow
+                            !   entering the sending cell" limited from above
+                            !   by the mean velocity of the sending cell
+                            !   projected on the edge (taking the velocity of a
+                            !   diagonal link of a one-cell-wide staircase
+                            !   channel as it is counts the run-up height
+                            !   twice; the same as 3 in a uniform flow and in a
+                            !   straight channel; test/stairbank)).
                             !   The default was 1 until 2026-11-13
   !f_opening_dynamic = 3    ! dynamic reassignment of blocked openings
                             !   (0: off, 1: edges between channel cells only

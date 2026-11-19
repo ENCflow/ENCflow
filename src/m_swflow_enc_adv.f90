@@ -12,6 +12,10 @@ submodule(m_swflow_enc) m_swflow_enc_adv
   !   k=1 d=(-1,-1) → δ+=( 1,-1)   k=2 d=(0,-1) → δ+=(1, 0)
   !   k=3 d=( 1,-1) → δ+=( 1, 1)   k=4 d=(-1,0) → δ+=(0,-1)
   integer, parameter :: ke8(1:8) = [ 1, 2, 3, 4, 4, 3, 2, 1 ]      ! 8 近傍番号 → エッジ成分
+  ! 流れごとの重み(f_advection_donor = 4)と流量の似かより(f_advection_lateral = 2)の、流量の比のしきい κ。
+  ! 「κ 倍までの違いは、同じ流れとみなす」。一様な流れで、流れの向きから ±61° 以内の辺の重みが 1 になる値
+  ! (stream_share の注。ENCflow 独自。developer.md §113)
+  real, parameter :: p_stream_kappa = 2.0
   real, parameter :: sgn8(1:8) = [ 1., 1., 1., 1., -1., -1., -1., -1. ]
   integer, parameter :: kkp(1:4) = [ 3, 5, 8, 2 ]   ! +t 側に隣接するセルの 8 近傍番号
   integer, parameter :: kkm(1:4) = [ 6, 4, 1, 7 ]   ! -t 側
@@ -40,6 +44,7 @@ module subroutine adv_init(p, g)
   type(t_sysparam), intent(in) :: p
   type(t_geoinfo), intent(in) :: g
   real :: dr
+  integer :: l, kk
   if (p%initialized) continue  ! 引数未使用の警告を抑制
   if (opt%f_advection_scheme >= 2) then
     ! 運動量保存形: エッジ上の移流項だけを持つ(taxy/ulm/vlm は不要)
@@ -55,6 +60,21 @@ module subroutine adv_init(p, g)
     ! 斜めエッジの側方面を横切る軸リンク 1 本が面の流束に占める割合(流向の方向平均。
     ! 正方セルで ldx = ldy = p_diagratio/2 = 0.293。§68.43 の開口率)
     tx_mod%cwd = 0.5 * (geo%ldx + geo%ldy)
+    ! 流れごとの重み(f_advection_donor = 4。§113)の幾何の表。面のセルへ l 近傍から入る実流量 Q_l(m³/s)が、
+    ! セルの平均の単位幅流量 (m, n) の、kk 近傍から面のセルへ向かう向きの成分に占める分は
+    ! Q_l (w8mx(l) n8x(kk) + w8my(l) n8y(kk)) / l8(l)(m, n の合成の重みと同じ。calc_continuity)。これに検査体積の
+    ! 横断幅 w8lt を掛けたものが、面の流束(m³/s)に占める分になる。直交する連結の値は、丸めの大きさの数に
+    ! なり得るので、最大の 1e-6 倍に満たない値は 0 にそろえる(前向き・直交・後ろ向きの区別を、丸めで決めない)
+    if (opt%adv_stream) then
+      allocate(tx_mod%gst(1:8, 1:8), source = 0.0)
+      do kk = 1, 8
+        do l = 1, 8
+          if (geo%l8(l) <= 0.0) cycle
+          tx_mod%gst(l,kk) = (geo%w8mx(l) * geo%n8x(kk) + geo%w8my(l) * geo%n8y(kk)) * tx_mod%w8lt(ke8(kk)) / geo%l8(l)
+        end do
+      end do
+      where (abs(tx_mod%gst) <= 1.0e-6 * maxval(abs(tx_mod%gst))) tx_mod%gst = 0.0
+    end if
     return
   end if
   allocate(tx_mod%taxy(1:2, dcp%ish:dcp%ieh, dcp%jsh:dcp%jeh), source = 0.0)
@@ -110,6 +130,7 @@ module subroutine adv_dispose()
   if (allocated(tx_mod%ulm)) deallocate(tx_mod%ulm)
   if (allocated(tx_mod%vlm)) deallocate(tx_mod%vlm)
   if (allocated(tx_mod%tae)) deallocate(tx_mod%tae)
+  if (allocated(tx_mod%gst)) deallocate(tx_mod%gst)
 end subroutine
 
 
@@ -265,6 +286,7 @@ subroutine adv_prepare_mc(p, g, s, sx, tx)
             ubc = face_value(um, ue, umm, far_ok(i - 2 * din(k), j - 2 * djn(k)))
             if (opt%f_advection_donor == 3) then
               wsh = donor_share(i, j, 9 - k)      ! 面のセル c と線 k の供給元 c − d(c の 9 − k 近傍)
+              if (opt%adv_stream) wsh = stream_share(i, j, 9 - k, qc, wsh)
               if (wsh < 1.0) ubc = ue + wsh * (ubc - ue)
             end if
           else
@@ -280,6 +302,7 @@ subroutine adv_prepare_mc(p, g, s, sx, tx)
             ubn = face_value(up, ue, upp, far_ok(in + 2 * din(k), jn + 2 * djn(k)))
             if (opt%f_advection_donor == 3) then
               wsh = donor_share(in, jn, k)        ! 面のセル n と線 k の供給元 n + d(n の k 近傍)
+              if (opt%adv_stream) wsh = stream_share(in, jn, k, -qn, wsh)
               if (wsh < 1.0) ubn = ue + wsh * (ubn - ue)
             end if
           else
@@ -412,6 +435,99 @@ contains
         w = max(w, hd / he)
       end if
     end if
+  end function
+
+  ! 流れごとの重み(f_advection_donor = 4。developer.md §112.3・§113。ENCflow 独自)。
+  !   3 の重み(donor_share)は、線 k の供給元が薄い水膜でなければ 1 で、線 k の連結の流速を、面を通る流束の全量に
+  !   掛ける。面のセルへの水のほとんどが別の連結から来て、線 k の連結が、深くて遅い岸・淵のセルにつながっている
+  !   とき、これは「面の全量 × 遅い連結の流速」の人工的な減速になり、岸や淵が濡れると働くので、同じ流量に 2 つの
+  !   水深ができる(test/stairbank。§112.1)。4 は、面の流束 F を、面のセルへ入ってくる連結 l ごとの流れに分け、
+  !   線 k の連結の流速を、その連結が代表する流れの分だけに掛ける:
+  !     F_l = g_l Q_l + (F − Σ g_l Q_l) Q_l / Σ Q_l      (Q_l: l からの流入の実流量。g_l: 幾何の表 gst。第 2 項は、
+  !                                                        面の流束のうち流出の側の分を、流入の割合で配ったもの)
+  !     w   = Σ ω_l F_l / Σ F_l                         (F_l > 0 の流れについて。0 ≤ w ≤ 1)
+  !     ω_l = 1                                          線 k の連結(l = kk)
+  !         = θ_l + (1 − θ_l)(1 − ω_o) w_3               前向きの斜めの連結(g_l > 0)。θ_l = min(1, κ Q_k / Q_l)
+  !         = w_3                                        直交・後ろ向きの連結(g_l ≤ 0)。w_3 は 3 の重み
+  !   - θ_l: 線 k の連結が、前向きの斜めの流れの 1/κ 以上の流量を運んでいれば、その流れも代表する(θ = 1)。
+  !     一様な流れでは、線 k の連結と前向きの斜めの連結の流量の比は cos φ / cos(φ − 45°)(φ は流れと辺のなす角)で、
+  !     辺が流れの向きから ±45° 以内なら 0.707 以上になる。κ = 2 は、しきいを 0.5(±61° 以内)に置いて、一様で
+  !     ない流れにも余裕を持たせた値(p_stream_kappa。1〜2 で結果はほとんど変わらない。§112.11)。格子で
+  !     解像された流れは w = 1(3・0 と同じ)になり、線 k の連結がほとんど水を運ばない面だけが中立へ寄る。
+  !   - ω_o: 斜めの流入元のセルへの流入のうち、辺の向きに前向きの連結から入った割合(src_fwd)。1 なら、斜めの
+  !     流れは、同じ河道の階段を辺の向きに流れてきた水で、線 k の連結の遅い流速を掛けない。0 なら、別の向きから
+  !     来た水(支川)が斜めに入るので、直交して入る流れと同じ扱い(w_3)にする。これがないと、45° 回した合流で、
+  !     合流の上流の水深が、損失なしの理論より浅くなる(エネルギーが増える。§112.11)。
+  !   - 重みが 1 より小さい分は中立(ū = u_e)で、f_advection_bend が経路の値(と、2 ではエネルギー形の項)を足す。
+  !   読むのは、面のセルの 8 リンクの実流量(donor_share と同じ)と、斜めの流入元のセル(面のセルの隣)の 8 リンクの
+  !   実流量(行 j − 3 のエッジまで。mn・fwd・frw をエッジ幅 2 で交換しておく = opt%adv_wide。line_flow と同じ)。
+  !   8 本のリンクの和は、格子の対称操作(鏡映・90° 回転)で入れ替わる対ごとに取る(path_value と同じ)
+  pure function stream_share(ci, cj, kk, qf, w3) result(w)
+    integer, intent(in) :: ci, cj     ! 面のセル
+    integer, intent(in) :: kk         ! 面のセルから見た、線 k の供給元の 8 近傍番号
+    real, intent(in) :: qf            ! 面を通る単位幅流量(検査体積へ入る向きが正)
+    real, intent(in) :: w3            ! 3 の重み(donor_share)
+    real :: w
+    real :: ql(1:8), fl(1:8), wl(1:8), qin, isg, oh, th, num, den
+    integer :: l
+    w = w3
+    if (qf <= 0.0) return
+    do l = 1, 8
+      ql(l) = max(0.0, -qlk(ci, cj, l))
+      fl(l) = tx%gst(l,kk) * ql(l)
+    end do
+    qin = ((ql(2) + ql(7)) + (ql(4) + ql(5))) + ((ql(1) + ql(8)) + (ql(3) + ql(6)))
+    if (qin <= 0.0) return
+    isg = ((fl(2) + fl(7)) + (fl(4) + fl(5))) + ((fl(1) + fl(8)) + (fl(3) + fl(6)))
+    oh = qf * tx%w8lt(ke8(kk)) - isg
+    do l = 1, 8
+      wl(l) = 0.0
+      if (ql(l) <= 0.0) then
+        fl(l) = 0.0
+        cycle
+      end if
+      fl(l) = fl(l) + oh * (ql(l) / qin)
+      if (fl(l) <= 0.0) then
+        fl(l) = 0.0
+        cycle
+      end if
+      if (l == kk) then
+        wl(l) = fl(l)
+      else if (tx%gst(l,kk) > 0.0) then
+        th = 1.0
+        if (p_stream_kappa * ql(kk) < ql(l)) then
+          th = p_stream_kappa * ql(kk) / ql(l)
+          th = th + (1.0 - th) * (1.0 - src_fwd(ci + din(l), cj + djn(l), kk)) * w3
+        end if
+        wl(l) = fl(l) * th
+      else
+        wl(l) = fl(l) * w3
+      end if
+    end do
+    den = ((fl(2) + fl(7)) + (fl(4) + fl(5))) + ((fl(1) + fl(8)) + (fl(3) + fl(6)))
+    if (den <= 0.0) return
+    num = ((wl(2) + wl(7)) + (wl(4) + wl(5))) + ((wl(1) + wl(8)) + (wl(3) + wl(6)))
+    w = min(1.0, max(0.0, num / den))
+  end function
+
+  ! セル (si, sj) への流入のうち、kk 近傍から面のセルへ向かう向きに前向きの連結(gst > 0)から入る割合
+  ! (stream_share の ω_o)。流入がなければ 1。領域の枠の外のセル(側方 Neumann の辺の外。8 リンクを持たない)も 1
+  pure function src_fwd(si, sj, kk) result(r)
+    integer, intent(in) :: si, sj, kk
+    real :: r, q(1:8), qa, qf
+    integer :: l
+    r = 1.0
+    if (si < 1 .or. si > g%nx .or. sj < 1 .or. sj > dcp%ny_g) return
+    do l = 1, 8
+      q(l) = max(0.0, -qlk(si, sj, l))
+    end do
+    qa = ((q(2) + q(7)) + (q(4) + q(5))) + ((q(1) + q(8)) + (q(3) + q(6)))
+    if (qa <= 0.0) return
+    do l = 1, 8
+      if (tx%gst(l,kk) <= 0.0) q(l) = 0.0
+    end do
+    qf = ((q(2) + q(7)) + (q(4) + q(5))) + ((q(1) + q(8)) + (q(3) + q(6)))
+    r = qf / qa
   end function
 
   ! 枠外の位置 (ci, cj) が側方 Neumann の辺だけの外なら、辺の法線方向に枠内へ寄せた
@@ -670,6 +786,7 @@ contains
       oj = cj + sgn * dtj(kk)
       w1 = min(wet_weight(oi, oj), wet_weight(oi + din(kk), oj + djn(kk)))
       if (w1 > 0.0) w1 = w1 * lateral_rep(ci, cj, kk, sgn, min(hcell(oi, oj), hcell(oi + din(kk), oj + djn(kk))))
+      if (opt%adv_latflux .and. w1 > 0.0) w1 = w1 * lateral_flux(ci, cj, kk, sgn, oi, oj)
       if (w1 >= 1.0) then
         u = uvk(oi, oj, kk)
       else if (w1 > 0.0) then
@@ -686,6 +803,7 @@ contains
     oj = cj
     w1 = min(wet_weight(oi, oj), wet_weight(oi + din(kk), oj + djn(kk)))
     if (w1 > 0.0) w1 = w1 * lateral_rep(ci, cj, kk, sgn, min(hcell(oi, oj), hcell(oi + din(kk), oj + djn(kk))))
+    if (opt%adv_latflux .and. w1 > 0.0) w1 = w1 * lateral_flux(ci, cj, kk, sgn, oi, oj)
     if (w1 > 0.0) then
       u1 = uvk(oi, oj, kk)
       h1 = 0.5 * (hcell(oi, oj) + hcell(oi + din(kk), oj + djn(kk)))
@@ -696,6 +814,7 @@ contains
     oj = cj + sgn * dtj(kk)
     w2 = min(wet_weight(oi, oj), wet_weight(oi + din(kk), oj + djn(kk)))
     if (w2 > 0.0) w2 = w2 * lateral_rep(ci, cj, kk, sgn, min(hcell(oi, oj), hcell(oi + din(kk), oj + djn(kk))))
+    if (opt%adv_latflux .and. w2 > 0.0) w2 = w2 * lateral_flux(ci, cj, kk, sgn, oi, oj)
     if (w2 > 0.0) then
       u2 = uvk(oi, oj, kk)
       h2 = 0.5 * (hcell(oi, oj) + hcell(oi + din(kk), oj + djn(kk)))
@@ -816,6 +935,70 @@ contains
     end do
     r = 1.0
     if (qs > 0.0) r = qr / qs
+  end function
+
+  ! 流量の似かより(f_advection_lateral = 2。developer.md §112.11・§113。ENCflow 独自): 平行リンク(基準セル
+  ! (pi, pj) から kk 近傍へ)の流速を、側方面を横切って入ってくる水の流速として使う度合い。1 の代表性 R'
+  ! (lateral_rep。平行リンクが、入ってくる水より薄い水膜なら使わない)に掛ける。
+  !   平行リンクの単位幅流量 a と、面を横切るリンク l の流入元のセル o_l の、辺の向きの単位幅流量 b_l(セルの
+  !   平均の流量 (m, n) の成分)を比べ、平行リンクの方が κ 倍より多く流していれば、その比で下げる:
+  !     r_l = min(1, κ (│b_l│ + q0) / (│a│ + q0))      a と b_l が同じ向きで │a│ > │b_l│
+  !         = min(1, κ q0 / (max(│a│, │b_l│) + q0))     a と b_l が逆向き
+  !         = 1                                          a と b_l が同じ向きで │a│ ≤ │b_l│
+  !     R  = Σ Q_l r_l / Σ Q_l                           (流入するリンクについて。流入がなければ 1)
+  !     q0 = ε ×(面を横切って入ってくる、単位長さあたりの流量)、ε = p_adv_donor_eps、κ = p_stream_kappa
+  !   = 速い平行リンクの運動量を、遅い水が入ってくる辺へ持ち込まない。角のセル・淵を通る辺へ、隣を走る本流の
+  !     斜めの連結の流速を持ち込むと、角のセルと河道のセルの間を水が回って、エネルギーが増える(test/stairbank の
+  !     sab。§112.8)。a も b_l も、面を横切る流量の ε 倍より小さければ 1(どちらもほとんど流れていない)。一様な
+  !     流れは a = b_l で 1。
+  !   - 平行リンクの方が遅い向き(ブレーキの向き)は、下げない(1 の規則のまま)。この向きも下げると、流れに沿って
+  !     流量が急に変わる所(段波の前面)で、上流側にある流入元のセルと平行リンクの流量の違いを「似ていない」と
+  !     数えてしまい、ダム破壊の段波の位置の誤差が 1.25 → 1.44 % に、行ごとの位置のばらつきが 2 倍に増える
+  !     (test/dambreak。§112.11)。
+  !   読むのは、平行リンクの mn、面を横切るリンクの流量(lateral_rep と同じ)、流入元のセルの m, n(行 j − 2 .. j + 1。
+  !   ステップ頭にセル幅で交換済み)。流入元が乾燥・無効・海(cell_ok が偽)のリンクは r_l = 1
+  pure function lateral_flux(ci, cj, kk, sgn, pi, pj) result(r)
+    integer, intent(in) :: ci, cj, kk, sgn
+    integer, intent(in) :: pi, pj     ! 平行リンクの基準セル
+    real :: r, q, qs, qr, a, b, q0, rl, ql(1:4), wt(1:4)
+    integer :: l, nl, oc(1:4), kl(1:4), xi, xj, oi, oj, mi, mj
+    r = 1.0
+    a = mnk(pi, pj, kk)
+    call lateral_links(kk, sgn, nl, oc, kl, wt)
+    qs = 0.0
+    do l = 1, nl
+      xi = ci + oc(l) * din(kk)
+      xj = cj + oc(l) * djn(kk)
+      ql(l) = max(0.0, lateral_inflow(xi, xj, kk, kl(l), wt(l)))
+      qs = qs + ql(l)
+    end do
+    if (qs <= 0.0) return
+    ! 面を横切って入る、単位長さあたりの流量。軸エッジは実流量の和 ÷ 面の長さ、斜めエッジは単位幅流量の平均
+    ! (側方面の流束 qtp・qtm と同じ取り方)
+    if (kk == 2 .or. kk == 4) then
+      q0 = opt%p_adv_donor_eps * qs / geo%w8dr(kk)
+    else
+      q0 = opt%p_adv_donor_eps * qs / 2
+    end if
+    qr = 0.0
+    do l = 1, nl
+      q = ql(l)
+      if (q <= 0.0) cycle
+      oi = ci + oc(l) * din(kk) + din(kl(l))
+      oj = cj + oc(l) * djn(kk) + djn(kl(l))
+      rl = 1.0
+      if (cell_ok(oi, oj)) then
+        call mirror_cell(oi, oj, mi, mj)
+        b = s%m(mi,mj) * geo%n8x(kk) + s%n(mi,mj) * geo%n8y(kk)
+        if (a * b < 0.0) then
+          if (p_stream_kappa * q0 < max(abs(a), abs(b)) + q0) rl = p_stream_kappa * q0 / (max(abs(a), abs(b)) + q0)
+        else if (abs(a) > abs(b)) then
+          if (p_stream_kappa * (abs(b) + q0) < abs(a) + q0) rl = p_stream_kappa * (abs(b) + q0) / (abs(a) + q0)
+        end if
+      end if
+      qr = qr + q * rl
+    end do
+    r = qr / qs
   end function
 
   ! 斜めエッジ (ci, cj) → kk の sgn 側の側方面を横切る軸リンクの向こうのセル (oi, oj) が開いている度合い
@@ -1579,6 +1762,7 @@ contains
     logical, intent(in) :: thin
     integer :: ie, je
     real :: ue, qc, qn, dc, dn, w, hb, lme, ta
+    real :: ec, en        ! エネルギー形の項(f_advection_bend = 2)の、面 c・n の分((1 − w) × arrival_excess。0 以上)
     ie = ci + die(k)
     je = cj + dje(k)
     ue = sgn8(k) * sx%uv(ke8(k),ie,je)
@@ -1586,14 +1770,20 @@ contains
     qn = s%m(im,jm) * geo%n8x(k) + s%n(im,jm) * geo%n8y(k)
     dc = 0.0
     dn = 0.0
+    ec = 0.0
+    en = 0.0
     if (qc >= 0) then
       w = 1.0
       if (.not. cell_ok(ci - din(k), cj - djn(k))) then
         w = 0.0
       else if (thin) then
         w = donor_share(ci, cj, 9 - k)
+        if (opt%adv_stream) w = stream_share(ci, cj, 9 - k, qc, w)
       end if
       if (w < 1.0) dc = (1.0 - w) * (path_value(ci, cj, k, 1.0, ue) - ue)
+      if (opt%adv_energy) then
+        if (w < 1.0 .and. ue > 0.0) ec = (1.0 - w) * arrival_excess(ci, cj, k, ue)
+      end if
     end if
     if (qn < 0) then
       w = 1.0
@@ -1601,8 +1791,16 @@ contains
         w = 0.0
       else if (thin) then
         w = donor_share(in, jn, k)
+        if (opt%adv_stream) w = stream_share(in, jn, k, -qn, w)
       end if
       if (w < 1.0) dn = (1.0 - w) * (path_value(in, jn, 9 - k, -1.0, ue) - ue)
+      if (opt%adv_energy) then
+        if (w < 1.0 .and. ue < 0.0) en = (1.0 - w) * arrival_excess(in, jn, 9 - k, ue)
+      end if
+    end if
+    if (ec > 0.0 .or. en > 0.0) then
+      call bend_energy(ci, cj, k, im, jm, ie, je, qc, qn, dc, dn, ec, en)
+      return
     end if
     if (dc == 0.0 .and. dn == 0.0) return
     hb = (vol_depth(ci, cj) + vol_depth(im, jm)) / 2
@@ -1610,6 +1808,113 @@ contains
     ta = -(qn * dn - qc * dc) / geo%w8dr(k)
     tx%tae(ke8(k),ie,je) = tx%tae(ke8(k),ie,je) + sgn8(k) * ta / max(hb, p%dd / 2) * lme
   end subroutine
+
+  ! f_advection_bend = 2 の面(エネルギー形の項が正の面)の tae への差分。tc・tn は、面 c・n の項の
+  ! 「辺の正の向きの加速度 × h̄ × w8dr」で、経路の値の項は、面 c が q_c Δū_c、面 n が −q_n Δū_n(1 と同じ)。
+  ! これとエネルギー形の項を、面ごとに、減速の大きい方で取る:
+  !   面 c(u_e > 0 の流れの上流側): tc = min(q_c Δū_c, −e_c h̄)        e_c = (1 − w) φ max(u_e² − a², 0) / 2
+  !   面 n(u_e < 0 の流れの上流側): tn = max(−q_n Δū_n, +e_n h̄)
+  ! どちらも「入ってきた水が、この辺の流速まで加速する分」を数える項なので、足し合わせない(1 本の経路で加速する
+  ! 流れでは、運動量形の経路の値の項 q/h̄·(u_e − ū_p) が、エネルギー形の (u_e + a)/2·(u_e − a) 以上になり、1 と同じ
+  ! 値になる)。h̄ で割る前の形にそろえるため、エネルギー形の項に h̄ を掛けておく
+  subroutine bend_energy(ci, cj, k, im, jm, ie, je, qc, qn, dc, dn, ec, en)
+    integer, intent(in) :: ci, cj, k, im, jm, ie, je
+    real, intent(in) :: qc, qn, dc, dn, ec, en
+    real :: hb, lme, tc, tn
+    hb = (vol_depth(ci, cj) + vol_depth(im, jm)) / 2
+    lme = (s%lm(ci,cj) + s%lm(im,jm)) / 2
+    tc = qc * dc
+    tn = -qn * dn
+    if (ec > 0.0) tc = min(tc, -ec * hb)
+    if (en > 0.0) tn = max(tn, en * hb)
+    tx%tae(ke8(k),ie,je) = tx%tae(ke8(k),ie,je) + sgn8(k) * ((tc + tn) / geo%w8dr(k)) / max(hb, p%dd / 2) * lme
+  end subroutine
+
+  ! 到着した水の速さからの加速(f_advection_bend = 2。developer.md §112.11・§113。ENCflow 独自)。
+  !   経路の値 ū_p = f Q_in / (W_e h̆_in) は、流入のうちこの辺へ出る分が、この辺の幅で流れたときの流速 = 連続式から
+  !   決まる流速で、定常では u_e h_e / h̆_in になる。数えるのは、経路に沿って水深が変わる分の加速だけで、(a) 流入が
+  !   複数の連結から合わさる面のセル(合流・角のセル)で、遅い流れが合わさって速く出ていく加速と、(b) 流出の一部
+  !   だけが出ていく辺(寄せる度合いに f を掛けるので、ほぼ中立)の加速を数えない。こういう辺は、水面勾配と摩擦の
+  !   つり合いの流速まで上がり、角のセルと河道のセルの間を水が回ると、周回のたびにエネルギーが増える
+  !   (test/stairbank の sab。§112.8)。
+  !   ここでは、面のセルへ水を運ぶ連結 l(この辺と、海セルからの流入を除く。実流量 Q_l、流速の大きさ s_l、通過幅
+  !   W_l)から「到着した水の速さ」a を
+  !     a² = Σ Q_l (s_l c_l)² / max(Σ Q_l, ε (Σ Q_l + Q_un))、   c_l = max(f W_l / W_e, min(1, W_l / W_e))、   f = Q_e / Q_out
+  !   で取り、辺の流速がそれを上回る分 φ max(u_e² − a², 0) / 2 を返す。呼び出し側が、中立の分 (1 − w) を掛けて、
+  !   検査体積の長さで割り、エネルギー水頭を保存する形の移流項 (u_e² − a²) / (2 L) として、減速の向きに足す。
+  !   - Q_un = max(Q_out − Σ Q_l − Q_sea, 0) は、流出のうち流入で賄われない分(面のセルの貯留・湧き出し・降雨から
+  !     出る水)。流入が、海セルからでない供給(Σ Q_l + Q_un)の ε(p_adv_donor_eps)倍以上あれば、a は流入の連結の
+  !     速さそのもの(賄われない分も、流れと同じ速さで動いているとみる)。ε 倍に満たなければ、分母を ε 倍で下から
+  !     止める = 流入が減るにつれて a → 0(賄われない分は、静止から動き出す水。経路の値と同じ考え方。§110)。
+  !     流量を湧き出しで与えるセルや、流入のない池の出口の辺は、静止からの加速 u_e² / 2 を数えることになる。
+  !     流入のリンクがないセル(Σ Q_l = 0)も a = 0 で、流入が丸めの大きさであるか・ないかで値が飛ばない。
+  !     経路の値は、流入が流出の ε 倍に満たないとき中立へ寄せる(流入のない面のセルを 0 と同じにする。§110.10)が、
+  !     ここは寄せない: 寄せると、流量を与えるセルから出る辺が中立のままになり、test/stairbank の段のある河道で、
+  !     流量の標準偏差の最大が 10 → 184 m³/s に増えた(§113)。
+  !   - 定常で w = 0 の辺は u_e² = a² + 2g(η_上 − η_下) −(摩擦の分)になり、入ってきた水のエネルギーを超えない。
+  !     流速を頭打ちする形(定常の Bernoulli の上限)は、長波の山の後ろ側(水が、水位の上がる向きへ進みながら
+  !     減速している所)で流速を切ってしまい、走時が解析解から 5〜22 % ずれた(test/steepwave。§112.11)。移流項と
+  !     して入れると、非定常の流れでも運動方程式の項として働く。
+  !   - 辺が到着した水より遅いとき(u_e² ≤ a²)は 0(入ってきた水の運動量で、辺を押さない。§102)。
+  !   - c_l は、連結 l の流速を、この辺の通過幅に直す換算。広い連結へ出るときは、幅の比で遅くなる(対角 → 軸で
+  !     0.707)。狭い連結へ入るときは、流れの全部が入るなら(f = 1)幅の比で速くなる分を数え(軸 → 対角で 1.41。
+  !     階段の「幅の違いは加減速に数えない」取り決め。§110.6。path_value と同じ)、一部が枝分かれして入るなら、
+  !     入ってきた速さのまま。
+  !   - φ = (Σ Q_l + Q_un) / (Σ Q_l + Q_un + Q_sea) は、海セルからの流入(Q_sea)でない割合。海陸エッジの流速は
+  !     見かけ水柱厚の尺度で、到着の速さに使えない(§68.35)ので、海からの流入の分は数えない(path_value と同じ)。
+  !   - この辺が面のセルの流出でない(Q_e ≤ 0)とき、この辺の通過幅が 0 のときは 0。
+  !   読むのは、面のセルの 8 リンクの uv・mn・通過幅(path_value と同じ範囲)。8 本の和は、対称な対ごとに取る
+  pure function arrival_excess(ci, cj, kout, ue0) result(e)
+    integer, intent(in) :: ci, cj     ! 面のセル
+    integer, intent(in) :: kout       ! 面のセルから見た、この辺の方位(8 近傍番号)
+    real, intent(in) :: ue0           ! この辺の流速
+    real :: e
+    real :: cq(1:8), c2(1:8), co(1:8), ca(1:8)
+    real :: q, qin, q2, qout, qsea, qun, qe, we, wl, fsh, cl, a2
+    integer :: l, mi, mj
+    logical :: sea
+    e = 0.0
+    we = wlk8(ci, cj, kout)
+    if (we <= 0.0) return
+    do l = 1, 8
+      cq(l) = 0.0
+      co(l) = 0.0
+      ca(l) = 0.0
+      q = qlk8(ci, cj, l)
+      if (q > 0.0) then
+        co(l) = q
+      else if (q < 0.0 .and. l /= kout) then
+        call mirror_cell(ci + din(l), cj + djn(l), mi, mj)
+        sea = .false.
+        if (mi >= 1 .and. mi <= g%nx .and. mj >= 1 .and. mj <= dcp%ny_g) sea = g%sw(mi,mj) > 0
+        if (sea) then
+          ca(l) = -q
+        else
+          cq(l) = -q
+        end if
+      end if
+    end do
+    qe = co(kout)
+    if (qe <= 0.0) return
+    qin = ((cq(2) + cq(7)) + (cq(4) + cq(5))) + ((cq(1) + cq(8)) + (cq(3) + cq(6)))
+    qout = ((co(2) + co(7)) + (co(4) + co(5))) + ((co(1) + co(8)) + (co(3) + co(6)))
+    qsea = ((ca(2) + ca(7)) + (ca(4) + ca(5))) + ((ca(1) + ca(8)) + (ca(3) + ca(6)))
+    qun = max(qout - qin - qsea, 0.0)
+    if (qin + qun <= 0.0) return      ! 流出の全部が、海セルからの流入で賄われている
+    fsh = qe / qout
+    do l = 1, 8
+      c2(l) = 0.0
+      if (cq(l) <= 0.0) cycle
+      wl = wlk8(ci, cj, l)
+      cl = max(fsh * wl / we, min(1.0, wl / we))
+      c2(l) = cq(l) * (abs(uvk8(ci, cj, l)) * cl)**2
+    end do
+    q2 = ((c2(2) + c2(7)) + (c2(4) + c2(5))) + ((c2(1) + c2(8)) + (c2(3) + c2(6)))
+    a2 = q2 / max(qin, opt%p_adv_donor_eps * (qin + qun))
+    if (ue0**2 <= a2) return
+    e = (ue0**2 - a2) / 2
+    if (qsea > 0.0) e = e * ((qin + qun) / (qin + qun + qsea))
+  end function
 
   ! 経路の値 ū_p。面のセル (ci, cj) へ実際に水を運ぶリンク l(この辺を除く。実流量 Q_l > 0、速さ s_l、辺の
   ! 水深 he_l = │mn_l│ / s_l)から
@@ -1739,6 +2044,76 @@ contains
     end do
     qe = opt%p_adv_donor_eps * qmax
     if (qk < qe) w = max(qk / qe, hd / he)
+  end function
+
+  ! 流れごとの重み(f_advection_donor = 4。adv_prepare_mc の stream_share・src_fwd と同じ式・同じ値。説明はそちら。
+  ! 実流量は qlk8 で読む: 枠内の面のセルと、枠内の流入元のセルでは、qlk と同じ値)
+  pure function stream_share(ci, cj, kk, qf, w3) result(w)
+    integer, intent(in) :: ci, cj     ! 面のセル
+    integer, intent(in) :: kk         ! 面のセルから見た、線 k の供給元の 8 近傍番号
+    real, intent(in) :: qf            ! 面を通る単位幅流量(検査体積へ入る向きが正)
+    real, intent(in) :: w3            ! 3 の重み(donor_share)
+    real :: w
+    real :: ql(1:8), fl(1:8), wl(1:8), qin, isg, oh, th, num, den
+    integer :: l
+    w = w3
+    if (qf <= 0.0) return
+    do l = 1, 8
+      ql(l) = max(0.0, -qlk8(ci, cj, l))
+      fl(l) = tx%gst(l,kk) * ql(l)
+    end do
+    qin = ((ql(2) + ql(7)) + (ql(4) + ql(5))) + ((ql(1) + ql(8)) + (ql(3) + ql(6)))
+    if (qin <= 0.0) return
+    isg = ((fl(2) + fl(7)) + (fl(4) + fl(5))) + ((fl(1) + fl(8)) + (fl(3) + fl(6)))
+    oh = qf * tx%w8lt(ke8(kk)) - isg
+    do l = 1, 8
+      wl(l) = 0.0
+      if (ql(l) <= 0.0) then
+        fl(l) = 0.0
+        cycle
+      end if
+      fl(l) = fl(l) + oh * (ql(l) / qin)
+      if (fl(l) <= 0.0) then
+        fl(l) = 0.0
+        cycle
+      end if
+      if (l == kk) then
+        wl(l) = fl(l)
+      else if (tx%gst(l,kk) > 0.0) then
+        th = 1.0
+        if (p_stream_kappa * ql(kk) < ql(l)) then
+          th = p_stream_kappa * ql(kk) / ql(l)
+          th = th + (1.0 - th) * (1.0 - src_fwd(ci + din(l), cj + djn(l), kk)) * w3
+        end if
+        wl(l) = fl(l) * th
+      else
+        wl(l) = fl(l) * w3
+      end if
+    end do
+    den = ((fl(2) + fl(7)) + (fl(4) + fl(5))) + ((fl(1) + fl(8)) + (fl(3) + fl(6)))
+    if (den <= 0.0) return
+    num = ((wl(2) + wl(7)) + (wl(4) + wl(5))) + ((wl(1) + wl(8)) + (wl(3) + wl(6)))
+    w = min(1.0, max(0.0, num / den))
+  end function
+
+  ! セル (si, sj) への流入のうち、kk 近傍から面のセルへ向かう向きに前向きの連結(gst > 0)から入る割合
+  ! (stream_share の ω_o)。流入がなければ 1。領域の枠の外のセル(側方 Neumann の辺の外。8 リンクを持たない)も 1
+  pure function src_fwd(si, sj, kk) result(r)
+    integer, intent(in) :: si, sj, kk
+    real :: r, q(1:8), qa, qf
+    integer :: l
+    r = 1.0
+    if (si < 1 .or. si > g%nx .or. sj < 1 .or. sj > dcp%ny_g) return
+    do l = 1, 8
+      q(l) = max(0.0, -qlk8(si, sj, l))
+    end do
+    qa = ((q(2) + q(7)) + (q(4) + q(5))) + ((q(1) + q(8)) + (q(3) + q(6)))
+    if (qa <= 0.0) return
+    do l = 1, 8
+      if (tx%gst(l,kk) <= 0.0) q(l) = 0.0
+    end do
+    qf = ((q(2) + q(7)) + (q(4) + q(5))) + ((q(1) + q(8)) + (q(3) + q(6)))
+    r = qf / qa
   end function
 
   ! 以下は adv_neumann_mc の補助関数の写し(枠外の位置は鏡像で読む)
