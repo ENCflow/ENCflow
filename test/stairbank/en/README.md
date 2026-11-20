@@ -103,11 +103,11 @@ in one row.
 | `zs` | 8.05 | 11.97 | 12.87 | 13.78 | 14.60 | 13.78 | 12.87 | 11.97 | 10.37 | 100 | 13.9 |
 | `zs4` | 6.60 | 12.20 | 13.46 | 14.58 | 15.60 | 14.58 | 13.46 | 12.22 | 6.60 | 10 | 13.3 |
 | `ds` | 7.39 | 12.47 | 13.65 | 14.46 | 15.54 | 14.46 | 13.67 | 12.54 | 7.40 | 277 | 13.8 |
-| `ds4` | 7.39 | 11.88 | 14.06 | 14.72 | 15.98 | 14.72 | 14.07 | 12.22 | 7.40 | 80 | 13.1 |
+| `ds4` | 7.39 | 11.91 | 14.07 | 14.71 | 15.98 | 14.72 | 14.07 | 12.21 | 7.40 | 69 | 13.2 |
 | `sa` | 6.19 | 9.39 | 19.41 | 23.59 | 27.45 | 23.60 | 19.42 | 14.73 | 6.22 | 53 | 12.7 |
 | `sa4` | 6.19 | 9.39 | 13.86 | 17.75 | 21.15 | 17.75 | 13.88 | 9.39 | 6.19 | 290 | 12.9 |
 | `sab` | 6.19 | 11.42 | 14.53 | 25.74 | 29.01 | 25.92 | 22.43 | 18.09 | 6.25 | 1,222 | 29.5 |
-| `sab4` | 6.19 | 11.49 | 15.28 | 18.29 | 21.11 | 18.29 | 15.28 | 11.49 | 6.19 | 13 | 12.9 |
+| `sab4` | 6.19 | 11.38 | 15.18 | 18.26 | 21.11 | 18.26 | 15.18 | 11.38 | 6.19 | 13 | 12.9 |
 
 With the default rules:
 
@@ -133,14 +133,14 @@ With the default rules:
 With the combination of the four values:
 
 - **Every shape has the same depth on the rising and falling stages** (item 9). `zs4` at 2,000 m³/s is 6.60 m on
-  both (the same as with walls only). The largest difference is 0.34 m in `ds4` at 4,000 m³/s, where the water
+  both (the same as with walls only). The largest difference is 0.30 m in `ds4` at 4,000 m³/s, where the water
   level is at the height of the shelves and the depth over the last 10 minutes of the rising stage moves within a
-  range of 1.8 m.
+  range of 1.9 m.
 - **Energy is not gained** (item 10). The maximum velocity is 0.79–0.97 times that of the walls-only shape, and no
   water is left on wall cells.
 - **The backwater caused by corner cells is less than half as large, but it remains.** The difference in depth
   from the walls-only shape is +1.9 to 4.9 m in `sa4` (6,000–10,000 m³/s; +7.4 to 11.2 m with the default) and
-  +2.1 to 4.9 m in `sab4` (4,000–10,000 m³/s; +2.0 to 12.8 m with the default). `zs4` is 2.2 m deeper at
+  +2.0 to 4.9 m in `sab4` (4,000–10,000 m³/s; +2.0 to 12.8 m with the default). `zs4` is 2.2 m deeper at
   4,000 m³/s, where the water level is at the height of the shelves, and 1.7 m shallower at 10,000 m³/s by the
   flow over the shelves. In `sa4` the discharge keeps oscillating with a standard deviation of 1.5–2.9 % of the
   given discharge (6,000–10,000 m³/s; 0.5 % in `sa` with the default).

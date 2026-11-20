@@ -498,6 +498,11 @@ module m_swflow_enc
     ! wst(1, k, ie, je)・wst(2, k, ie, je) = エッジ (k, ie, je) の流向面 c・n の流入面の重み(adv_prepare_mc が、その
     ! ステップに計算した値。計算しなかった面は −1)。adv_bend_mc が、同じ重みを計算し直す代わりに読む
     real, allocatable :: wst(:,:,:,:)
+    ! 境界として与えたセルの印(f_advection_bend = 2 か f_advection_lateral = 2 で、水位規定セル群か湧き出しがあるとき
+    ! だけ確保。§113.9): 規定水位に強制するセル(水位規定セル)と、流量を湧き出し・吸い込みで与えるセルが真。
+    ! adv_bend_mc が、そのセルから出る水に、エネルギー形の項を数えないために、adv_prepare_mc が、そのセルの平均の流量を、
+    ! 流量の似かよりの相手にしないために読む(セルの確保範囲。初期化で作り、変えない)
+    logical, allocatable :: gvn(:,:)
   end type
   type(t_enc_adv), allocatable :: tx_mod    ! 移流項の私有状態(実装は submodule m_swflow_enc_adv)
 
@@ -647,9 +652,10 @@ module m_swflow_enc
   ! submodule 実装の手続きインターフェース
   !--------------------------------------------------------------------
   interface
-    module subroutine adv_init(p, g)
+    module subroutine adv_init(p, g, b)
       type(t_sysparam), intent(in) :: p
       type(t_geoinfo), intent(in) :: g
+      type(t_boundary), intent(in) :: b
     end subroutine
     module subroutine adv_prepare(p, g, s, sx)
       type(t_sysparam), intent(in) :: p
@@ -1318,8 +1324,8 @@ subroutine m_swflow_enc_init(p, g, b, s)
   ! 初期条件を設定する
   call init_enc_status(p, g, s, sx_mod)
 
-  ! 移流項計算サブモジュールを初期化する
-  call adv_init(p, g)
+  ! 移流項計算サブモジュールを初期化する(b は、境界として与えたセルの印を作るために渡す。§113.9)
+  call adv_init(p, g, b)
 
   ! 拡散項計算サブモジュールを初期化する(l8/w8dr を使うため
   ! init_weights より後に)
