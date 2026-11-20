@@ -249,7 +249,13 @@
                             !   the threshold that decides whether the cell
                             !   beyond the face cell on the line of an inflow
                             !   belongs to the same water body (its depth is at
-                            !   least eps times that of the face cell)
+                            !   least eps times that of the face cell).
+                            !   With f_advection_donor = 4, f_advection_bend = 2
+                            !   and f_advection_lateral = 2 it is also the
+                            !   threshold below which a discharge that is split
+                            !   or compared counts as negligible (less than eps
+                            !   times the discharge it is measured against;
+                            !   advection.md §4.4)
   !f_diffusion_term = 0     ! diffusion term (0: none, 1: constant viscosity,
                             !   2: zero-equation model nu = nu0 + alpha*(u*)*h).
                             !   For a first try, 2 is handy (no coefficient to

@@ -40,11 +40,12 @@ contains
 !----------------------------------------------------------------------
 ! 移流項の内部場の確保
 !----------------------------------------------------------------------
-module subroutine adv_init(p, g)
+module subroutine adv_init(p, g, b)
   type(t_sysparam), intent(in) :: p
   type(t_geoinfo), intent(in) :: g
+  type(t_boundary), intent(in) :: b
   real :: dr
-  integer :: l, kk
+  integer :: l, kk, n, i, j
   if (p%initialized) continue  ! 引数未使用の警告を抑制
   if (opt%f_advection_scheme >= 2) then
     ! 運動量保存形: エッジ上の移流項だけを持つ(taxy/ulm/vlm は不要)
@@ -82,6 +83,28 @@ module subroutine adv_init(p, g)
     ! 流れごとの重みの控え(エッジの確保範囲。§113.7)
     if (opt%adv_stream .and. opt%f_advection_bend > 0) then
       allocate(tx_mod%wst(1:2, 1:4, dcp%ish-1:dcp%ieh, dcp%jsh-1:dcp%jeh), source = -1.0)
+    end if
+    ! 境界として与えたセル(水位規定セルと、湧き出し・吸い込みのセル)の印(f_advection_bend = 2 か
+    ! f_advection_lateral = 2 で、どちらかがあるときだけ。§113.9)。セルの並びは全ランクが同じものを持つ(m_boundary)
+    ! ので、自分の確保範囲に入るセルだけに印を付ける
+    if ((opt%adv_energy .or. opt%adv_latflux) .and. (b%nstage > 0 .or. b%nsrc > 0)) then
+      allocate(tx_mod%gvn(dcp%ish:dcp%ieh, dcp%jsh:dcp%jeh), source = .false.)
+      do n = 1, b%nstage
+        do l = 1, b%stage(n)%ncell
+          i = b%stage(n)%cell(1,l)
+          j = b%stage(n)%cell(2,l)
+          if (i < dcp%ish .or. i > dcp%ieh .or. j < dcp%jsh .or. j > dcp%jeh) cycle
+          tx_mod%gvn(i,j) = .true.
+        end do
+      end do
+      do n = 1, b%nsrc
+        do l = 1, b%src(n)%ncell
+          i = b%src(n)%cell(1,l)
+          j = b%src(n)%cell(2,l)
+          if (i < dcp%ish .or. i > dcp%ieh .or. j < dcp%jsh .or. j > dcp%jeh) cycle
+          tx_mod%gvn(i,j) = .true.
+        end do
+      end do
     end if
     return
   end if
@@ -141,6 +164,7 @@ module subroutine adv_dispose()
   if (allocated(tx_mod%gst)) deallocate(tx_mod%gst)
   if (allocated(tx_mod%ql)) deallocate(tx_mod%ql)
   if (allocated(tx_mod%wst)) deallocate(tx_mod%wst)
+  if (allocated(tx_mod%gvn)) deallocate(tx_mod%gvn)
 end subroutine
 
 
@@ -550,6 +574,20 @@ contains
   !     来た水(支川)が斜めに入るので、直交して入る流れと同じ扱い(w_3)にする。これがないと、45° 回した合流で、
   !     合流の上流の水深が、損失なしの理論より浅くなる(エネルギーが増える。§112.11)。
   !   - 重みが 1 より小さい分は中立(ū = u_e)で、f_advection_bend が経路の値(と、2 ではエネルギー形の項)を足す。
+  !   - 分ける元の流れが、取るに足らない大きさのときは、w を w_3 へ寄せる(ε = p_adv_donor_eps。§113.9):
+  !       w ← w_3 + (w − w_3) min(1, Σ Q_l / (ε Q_out)) min(1, q_f / (ε │q_e│))
+  !     (Q_out = 面のセルの流出の和、q_f = 面の単位幅流量、q_e = この辺の単位幅流量)。
+  !     (a) 流入が流出の ε 倍に満たない面のセル(水が四方へ出ていくセル、流量を与えるセル): 面の流束を流入の比
+  !         Q_l / Σ Q_l で分けるので、流入が丸めの大きさだと、分け方が丸めで決まり、流入がちょうど 0 のときの値(w_3)
+  !         から飛ぶ。ω_o も、斜めの流入元のセルについて、同じ形で 1(流入がないときの値)へ寄せる(src_fwd)。
+  !     (b) 面の流量が、この辺の流量の ε 倍に満たない面(水が、辺の線の両側へ分かれて出ていくセルの面。面のセルの
+  !         平均の流量の、辺の向きの成分が 0 に近い): 分ける元の面の流束がほとんどないのに、分けた流れの比だけが残り、
+  !         1 未満の重みが、面の流量に比例しない項(f_advection_bend = 2 のエネルギー形の項)に掛かる。q_f の符号
+  !         (流入面かどうか)が丸めで決まる面で、項があるか・ないかが飛ぶ。
+  !     どちらも、対称な流れ(円形の水の盛り上がり)で、丸めの大きさの差を 1 ステップで 4〜6 桁育てた(test/nest_identity の
+  !     非静水圧の項目)。(b) を、エネルギー形の項そのものを面の流量の比で下げる形にはしない: 線の上流側が壁の、
+  !     折り返しのセル(平均の流量は小さいが、辺の流量は大きい)で、要る項まで弱まる(test/cascade で、流れの水頭の
+  !     超過が +3.2 → +7.0 m)。線の上流側が壁・乾床の面(w = 0)は、この関数を通らないので、変わらない
   !   読むのは、面のセルの 8 リンクの実流量(donor_share と同じ)と、斜めの流入元のセル(面のセルの隣)の 8 リンクの
   !   実流量(行 j − 3 のエッジまで。mn・fwd・frw をエッジ幅 2 で交換しておく = opt%adv_wide。line_flow と同じ)。
   !   8 本のリンクの和は、格子の対称操作(鏡映・90° 回転)で入れ替わる対ごとに取る(path_value と同じ)
@@ -564,12 +602,14 @@ contains
     real, intent(in) :: qf            ! 面を通る単位幅流量(検査体積へ入る向きが正)
     real, intent(in) :: w3            ! 3 の重み(donor_share)
     real :: w
-    real :: ql(1:8), fl(1:8), wl(1:8), qin, isg, oh, th, num, den
+    real :: ql(1:8), qo(1:8), fl(1:8), wl(1:8), q, qin, qth, isg, oh, th, num, den
     integer :: l
     w = w3
     if (qf <= 0.0) return
     do l = 1, 8
-      ql(l) = max(0.0, -qlk(ci, cj, l))
+      q = qlk(ci, cj, l)
+      ql(l) = max(0.0, -q)
+      qo(l) = max(0.0, q)
       fl(l) = tx%gst(l,kk) * ql(l)
     end do
     qin = ((ql(2) + ql(7)) + (ql(4) + ql(5))) + ((ql(1) + ql(8)) + (ql(3) + ql(6)))
@@ -604,17 +644,30 @@ contains
     if (den <= 0.0) return
     num = ((wl(2) + wl(7)) + (wl(4) + wl(5))) + ((wl(1) + wl(8)) + (wl(3) + wl(6)))
     w = min(1.0, max(0.0, num / den))
+    ! 流入が流出の ε 倍に満たないとき・面の流量がこの辺(面のセルの 9 − kk 近傍へ向かう辺)の単位幅流量の ε 倍に
+    ! 満たないときは、3 の重みへ寄せる(割り算は、そのときだけ。商は 1 未満)。w = w_3 の面(大半の面)は、寄せても
+    ! 同じ値なので、流出の和と辺の流量を読まない
+    if (w /= w3) then
+      qth = opt%p_adv_donor_eps * (((qo(2) + qo(7)) + (qo(4) + qo(5))) + ((qo(1) + qo(8)) + (qo(3) + qo(6))))
+      if (qin < qth) w = w3 + (w - w3) * (qin / qth)
+      qth = opt%p_adv_donor_eps * abs(mnk(ci, cj, 9 - kk))
+      if (qf < qth) w = w3 + (w - w3) * (qf / qth)
+    end if
   end function
 
   ! セル (si, sj) への流入のうち、kk 近傍から面のセルへ向かう向きに前向きの連結(gst > 0)から入る割合
-  ! (stream_share の ω_o)。流入がなければ 1。領域の枠の外のセル(側方 Neumann の辺の外。8 リンクを持たない)も 1
+  ! (stream_share の ω_o)。流入がなければ 1。流入が、このセルの流出の ε 倍に満たないときは、その比で 1 へ寄せる
+  ! (流入が丸めの大きさであるか・ないかで値が飛ばない。§113.9)。領域の枠の外のセル(側方 Neumann の辺の外。
+  ! 8 リンクを持たない)も 1
   pure function src_fwd(si, sj, kk) result(r)
     integer, intent(in) :: si, sj, kk
-    real :: r, q(1:8), qa, qf
+    real :: r, q(1:8), qa, qf, qth
     integer :: l
     r = 1.0
     if (si < 1 .or. si > g%nx .or. sj < 1 .or. sj > dcp%ny_g) return
-    q(1:8) = max(0.0, -tx%ql(1:8,si,sj))      ! 8 近傍からの流入(連結の実流量の表)
+    q(1:8) = max(0.0, tx%ql(1:8,si,sj))       ! 8 近傍への流出(連結の実流量の表)
+    qth = opt%p_adv_donor_eps * (((q(2) + q(7)) + (q(4) + q(5))) + ((q(1) + q(8)) + (q(3) + q(6))))
+    q(1:8) = max(0.0, -tx%ql(1:8,si,sj))      ! 8 近傍からの流入
     qa = ((q(2) + q(7)) + (q(4) + q(5))) + ((q(1) + q(8)) + (q(3) + q(6)))
     if (qa <= 0.0) return
     do l = 1, 8
@@ -622,6 +675,7 @@ contains
     end do
     qf = ((q(2) + q(7)) + (q(4) + q(5))) + ((q(1) + q(8)) + (q(3) + q(6)))
     r = qf / qa
+    if (qa < qth) r = 1.0 - (1.0 - r) * (qa / qth)
   end function
 
   ! 枠外の位置 (ci, cj) が側方 Neumann の辺だけの外なら、辺の法線方向に枠内へ寄せた
@@ -1040,25 +1094,39 @@ contains
   ! (lateral_rep。平行リンクが、入ってくる水より薄い水膜なら使わない)に掛ける。
   !   平行リンクの単位幅流量 a と、面を横切るリンク l の流入元のセル o_l の、辺の向きの単位幅流量 b_l(セルの
   !   平均の流量 (m, n) の成分)を比べ、平行リンクの方が κ 倍より多く流していれば、その比で下げる:
-  !     r_l = min(1, κ (│b_l│ + q0) / (│a│ + q0))      a と b_l が同じ向きで │a│ > │b_l│
-  !         = min(1, κ q0 / (max(│a│, │b_l│) + q0))     a と b_l が逆向き
-  !         = 1                                          a と b_l が同じ向きで │a│ ≤ │b_l│
+  !     r_l = min(1, κ (b⁺_l + q0) / (│a│ + q0))        b⁺_l = b_l の、a の向きの成分(同じ向きなら │b_l│、逆向きなら 0)
   !     R  = Σ Q_l r_l / Σ Q_l                           (流入するリンクについて。流入がなければ 1)
   !     q0 = ε ×(面を横切って入ってくる、単位長さあたりの流量)、ε = p_adv_donor_eps、κ = p_stream_kappa
   !   = 速い平行リンクの運動量を、遅い水が入ってくる辺へ持ち込まない。角のセル・淵を通る辺へ、隣を走る本流の
   !     斜めの連結の流速を持ち込むと、角のセルと河道のセルの間を水が回って、エネルギーが増える(test/stairbank の
   !     sab。§112.8)。a も b_l も、面を横切る流量の ε 倍より小さければ 1(どちらもほとんど流れていない)。一様な
   !     流れは a = b_l で 1。
+  !   - a と b_l が逆向きのときは、b_l の大きさでは下げない(a の大きさだけで下げる): a → 0 で、同じ向きの側
+  !     (r_l = 1)とつながる。b_l の大きさでも下げていた初めの形 κ q0 / (max(│a│, │b_l│) + q0) は、平行リンクの流量が
+  !     丸めの大きさの面(対称な流れの、対称軸をまたぐリンク)で、a の丸めの符号で r_l が 1 と κ q0 / (│b_l│ + q0) の
+  !     間を飛び、丸めの大きさの差が 1 ステップで 6 桁育った(test/nest_identity の非静水圧の項目。§113.9)。
+  !   - 平行リンクが、この辺と向かい合って流れているときは、下げない: この辺の単位幅流量 q_e を、平行リンクの向きに
+  !     測って、その大きさで割った s = q_e sign(a) / │a│ が負のとき、R ← 1 − (1 − R) max(0, 1 + κ s)(s ≤ −1/κ で
+  !     R = 1。s = 0 = 止まっている辺で、上の R とつながる)。向かい合う平行リンクの流速は、この辺を減速する向き
+  !     (ブレーキ)で、1 の規則のまま使う。これも下げると、(i + j) の偶奇で逆回転する斜めの副格子の循環(セルの
+  !     平均の流量が 0 なので b_l ≈ 0。§68.36)に、移流項の減衰が働かなくなる(test/sublattice の、背景の流れのない
+  !     構成の 60 分後の振幅が 0.04 → 0.22。§113.9)。同じ向きで、辺の方が速いとき(これもブレーキの向き)まで
+  !     下げないことにすると、切り出した秩父の区間で、水深が 3〜7 m 下がり、最大流速が 17 → 22 m/s に上がる
+  !     (エネルギーが増える流れに戻る)ので、向かい合うときだけにする。
   !   - 平行リンクの方が遅い向き(ブレーキの向き)は、下げない(1 の規則のまま)。この向きも下げると、流れに沿って
   !     流量が急に変わる所(段波の前面)で、上流側にある流入元のセルと平行リンクの流量の違いを「似ていない」と
   !     数えてしまい、ダム破壊の段波の位置の誤差が 1.25 → 1.44 % に、行ごとの位置のばらつきが 2 倍に増える
   !     (test/dambreak。§112.11)。
   !   読むのは、平行リンクの mn、面を横切るリンクの流量(lateral_rep と同じ)、流入元のセルの m, n(行 j − 2 .. j + 1。
-  !   ステップ頭にセル幅で交換済み)。流入元が乾燥・無効・海(cell_ok が偽)のリンクは r_l = 1
+  !   ステップ頭にセル幅で交換済み)。流入元が乾燥・無効・海(cell_ok が偽)のリンクは r_l = 1。流入元が、境界として
+  !   与えたセル(水位規定セルと、流量を湧き出しで与えるセル。given_cell)のリンクも r_l = 1: 与えたセルの平均の流量
+  !   (m, n) は、外から入ってくる分の連結を持たないので、流れの向きに、内側の連結の半分ほどにしかならず(壁との
+  !   角では、もっと小さい)、流れが一様でも「平行リンクの方が κ 倍より速い」と数えてしまう(test/nhcurrent の流入の
+  !   角の 4 つの面で 0.70〜0.76。§113.9)
   pure function lateral_flux(ci, cj, kk, sgn, pi, pj) result(r)
     integer, intent(in) :: ci, cj, kk, sgn
     integer, intent(in) :: pi, pj     ! 平行リンクの基準セル
-    real :: r, q, qs, qr, a, b, q0, rl, ql(1:4), wt(1:4)
+    real :: r, q, qs, qr, a, b, bp, q0, rl, sr, ql(1:4), wt(1:4)
     integer :: l, nl, oc(1:4), kl(1:4), xi, xj, oi, oj, mi, mj
     r = 1.0
     a = mnk(pi, pj, kk)
@@ -1085,18 +1153,38 @@ contains
       oi = ci + oc(l) * din(kk) + din(kl(l))
       oj = cj + oc(l) * djn(kk) + djn(kl(l))
       rl = 1.0
-      if (cell_ok(oi, oj)) then
+      if (cell_ok(oi, oj) .and. .not. given_cell(oi, oj)) then
         call mirror_cell(oi, oj, mi, mj)
         b = s%m(mi,mj) * geo%n8x(kk) + s%n(mi,mj) * geo%n8y(kk)
-        if (a * b < 0.0) then
-          if (p_stream_kappa * q0 < max(abs(a), abs(b)) + q0) rl = p_stream_kappa * q0 / (max(abs(a), abs(b)) + q0)
-        else if (abs(a) > abs(b)) then
-          if (p_stream_kappa * (abs(b) + q0) < abs(a) + q0) rl = p_stream_kappa * (abs(b) + q0) / (abs(a) + q0)
+        bp = abs(b)                               ! b_l の、a の向きの成分(逆向きなら 0)
+        if (a * b < 0.0) bp = 0.0
+        if (abs(a) > bp) then
+          if (p_stream_kappa * (bp + q0) < abs(a) + q0) rl = p_stream_kappa * (bp + q0) / (abs(a) + q0)
         end if
       end if
       qr = qr + q * rl
     end do
     r = qr / qs
+    ! 平行リンクが、この辺と向かい合って流れているときは、下げない(r < 1 になるのは │a│ > 0 のときだけ)
+    if (r < 1.0) then
+      sr = mnk(ci, cj, kk) * sign(1.0, a) / abs(a)
+      if (sr < 0.0) r = 1.0 - (1.0 - r) * max(0.0, 1.0 + p_stream_kappa * sr)
+    end if
+  end function
+
+  ! セル (ci, cj) が、境界として与えたセル(水位規定セルか、流量を湧き出しで与えるセル。§113.9)か。印がなければ偽。
+  ! 側方 Neumann の辺の外の位置は、鏡像のセル(辺の法線方向に枠内へ寄せたセル)の印を読む(cell_ok・hcell と同じ
+  ! 規則。読まないと、与えたセルの列が側方 Neumann の辺に接する角で、枠の中の面と境界面の扱いが食い違う。
+  ! §113.9 (7))。確保範囲の外は偽(adv_bend_mc の given_cell と同じ)
+  pure function given_cell(ci, cj) result(r)
+    integer, intent(in) :: ci, cj
+    logical :: r
+    integer :: mi, mj
+    r = .false.
+    if (.not. allocated(tx%gvn)) return
+    call mirror_cell(ci, cj, mi, mj)
+    if (mi < dcp%ish .or. mi > dcp%ieh .or. mj < dcp%jsh .or. mj > dcp%jeh) return
+    r = tx%gvn(mi,mj)
   end function
 
   ! 斜めエッジ (ci, cj) → kk の sgn 側の側方面を横切る軸リンクの向こうのセル (oi, oj) が開いている度合い
@@ -1906,8 +1994,10 @@ contains
         end if
       end if
       if (w < 1.0) dc = (1.0 - w) * (path_value(ci, cj, k, 1.0, ue) - ue)
+      ! エネルギー形の項。面のセルが、境界として与えたセル(水位規定セル・湧き出しのセル)のときは数えない(外から
+      ! 入ってくる水は、流れてきた水。§113.9)
       if (opt%adv_energy) then
-        if (w < 1.0 .and. ue > 0.0) ec = (1.0 - w) * arrival_excess(ci, cj, k, ue)
+        if (w < 1.0 .and. ue > 0.0 .and. .not. given_cell(ci, cj)) ec = (1.0 - w) * arrival_excess(ci, cj, k, ue)
       end if
     end if
     if (qn < 0) then
@@ -1924,7 +2014,7 @@ contains
       end if
       if (w < 1.0) dn = (1.0 - w) * (path_value(in, jn, 9 - k, -1.0, ue) - ue)
       if (opt%adv_energy) then
-        if (w < 1.0 .and. ue < 0.0) en = (1.0 - w) * arrival_excess(in, jn, 9 - k, ue)
+        if (w < 1.0 .and. ue < 0.0 .and. .not. given_cell(in, jn)) en = (1.0 - w) * arrival_excess(in, jn, 9 - k, ue)
       end if
     end if
     if (ec > 0.0 .or. en > 0.0) then
@@ -1959,6 +2049,21 @@ contains
     tx%tae(ke8(k),ie,je) = tx%tae(ke8(k),ie,je) + sgn8(k) * ((tc + tn) / geo%w8dr(k)) / max(hb, p%dd / 2) * lme
   end subroutine
 
+  ! セル (ci, cj) が、境界として与えたセル(水位規定セルか、流量を湧き出しで与えるセル。§113.9)か。印がなければ
+  ! (どちらもない)偽。側方 Neumann の境界面の、枠外の面のセル n は、鏡像のセルの印を読む(境界面の扱いを、枠の
+  ! 中の面とそろえる。枠外を偽にしていた初めの形は、水位規定セルの列が側方 Neumann の辺に接する角で、枠の中の面は
+  ! 「数えない」、境界面は「数える」になり、角の行に岸沿いの流れができて発散した。§113.9 (7))。確保範囲の外は偽
+  pure function given_cell(ci, cj) result(r)
+    integer, intent(in) :: ci, cj
+    logical :: r
+    integer :: mi, mj
+    r = .false.
+    if (.not. allocated(tx%gvn)) return
+    call mirror_cell(ci, cj, mi, mj)
+    if (mi < dcp%ish .or. mi > dcp%ieh .or. mj < dcp%jsh .or. mj > dcp%jeh) return
+    r = tx%gvn(mi,mj)
+  end function
+
   ! 到着した水の速さからの加速(f_advection_bend = 2。developer.md §112.11・§113。ENCflow 独自)。
   !   経路の値 ū_p = f Q_in / (W_e h̆_in) は、流入のうちこの辺へ出る分が、この辺の幅で流れたときの流速 = 連続式から
   !   決まる流速で、定常では u_e h_e / h̆_in になる。数えるのは、経路に沿って水深が変わる分の加速だけで、(a) 流入が
@@ -1975,11 +2080,18 @@ contains
   !     出る水)。流入が、海セルからでない供給(Σ Q_l + Q_un)の ε(p_adv_donor_eps)倍以上あれば、a は流入の連結の
   !     速さそのもの(賄われない分も、流れと同じ速さで動いているとみる)。ε 倍に満たなければ、分母を ε 倍で下から
   !     止める = 流入が減るにつれて a → 0(賄われない分は、静止から動き出す水。経路の値と同じ考え方。§110)。
-  !     流量を湧き出しで与えるセルや、流入のない池の出口の辺は、静止からの加速 u_e² / 2 を数えることになる。
+  !     流入のない池の出口の辺は、静止からの加速 u_e² / 2 を数えることになる。
   !     流入のリンクがないセル(Σ Q_l = 0)も a = 0 で、流入が丸めの大きさであるか・ないかで値が飛ばない。
+  !     ただし、境界として与えたセル(水位規定セルと、流量を湧き出しで与えるセル)から出る水には、この項を数えない
+  !     (呼び出し側が given_cell で外す): 与えたセルから入ってくる水は、外から流れてきた水で、静止から動き出す水
+  !     ではない(海セル・区間流入の面と同じ扱い)。水位規定セルで数えると、流入の水位境界のすぐ内側に、速度水頭
+  !     ぶんの落差ができ、壁ぎわの行(斜めの連結が欠ける)とそれ以外で落差が違うので、横断方向に一様な流れに、
+  !     横断方向の差を作る(test/nhcurrent。§113.9)。湧き出しのセルで数えると、流量を与えるセルが、流出の速度水頭の
+  !     分だけ深くなる(test/brink の直線の水路の上流端で +0.27〜0.63 m。§113.5)。
   !     経路の値は、流入が流出の ε 倍に満たないとき中立へ寄せる(流入のない面のセルを 0 と同じにする。§110.10)が、
-  !     ここは寄せない: 寄せると、流量を与えるセルから出る辺が中立のままになり、test/stairbank の段のある河道で、
-  !     流量の標準偏差の最大が 10 → 184 m³/s に増えた(§113)。
+  !     ここは寄せない: 寄せると、流入が流出の ε 倍に満たないセルから出る辺が、どれも中立のままになり、
+  !     test/stairbank の段のある河道で、流量の標準偏差の最大が 10 → 184 m³/s に増えた(§113。境界として与えた
+  !     セルだけを外す形では、10 m³/s のまま = §113.9)。
   !   - 定常で w = 0 の辺は u_e² = a² + 2g(η_上 − η_下) −(摩擦の分)になり、入ってきた水のエネルギーを超えない。
   !     流速を頭打ちする形(定常の Bernoulli の上限)は、長波の山の後ろ側(水が、水位の上がる向きへ進みながら
   !     減速している所)で流速を切ってしまい、走時が解析解から 5〜22 % ずれた(test/steepwave。§112.11)。移流項と
@@ -2069,6 +2181,12 @@ contains
   !   場の行の差が 7e-8 m に育った。§110.10)。そこで、流入が流出の ε(p_adv_donor_eps。f_advection_donor = 3 の
   !   「ほとんど水を運ばない」のしきい値と同じ)倍に満たないときは、寄せる度合いに r / ε を掛けて中立へ
   !   連続につなぐ。流入のない面のセルは中立(u_e)のまま = 0 と同じ。
+  ! - f_advection_donor = 4 のときは、流出が流入の ε 倍に満たない面のセル(水が四方から入ってくる、溜まるだけの
+  !   セル)も、寄せる度合いに Q_out / (ε Q_in) を掛けて、中立へ連続につなぐ(上の扱いの、逆向きの対)。f = Q_e / Q_out は、
+  !   流出がこの辺の丸めの大きさの流量だけのとき 1 になり、「流入の全部がこの辺へ出る」と数えてしまう。流れごとの
+  !   重み(4)は内部の面でも 1 未満になるので、対称な流れの、流量が 0 の辺(両側のセルから水が寄ってくる辺)に、
+  !   辺の流量の丸めの符号で決まる向きの力が入った(test/nest_identity の非静水圧の項目。§113.9)。f_advection_donor が
+  !   3 以下のときは掛けない(経路の値が効くのは、線の上流側が壁・乾床・薄い水膜の面だけで、その結果を変えない)。
   ! - 海セルからの流入(海陸エッジの水深は見かけ水柱厚 hsea0 の尺度で、流入の水深に使えない。§68.35)は
   !   Q_in に数えず、寄せる度合いに「流入のうち海セルからでない割合」を掛ける(海からの流入だけの面の
   !   セルは中立のまま。海側のリンクの流れが反転するところで値が飛ばない)。
@@ -2155,6 +2273,10 @@ contains
     wgt = fsh
     qth = opt%p_adv_donor_eps * qout
     if (qin < qth) wgt = wgt * (qin / qth)
+    if (opt%adv_stream) then
+      qth = opt%p_adv_donor_eps * qin
+      if (qout < qth) wgt = wgt * (qout / qth)
+    end if
     if (qsea > 0.0) wgt = wgt * (qin / (qin + qsea))
     u = ue0 + wgt * (sg * fsh * qin * qs / den - ue0)
   end function
@@ -2198,12 +2320,14 @@ contains
     real, intent(in) :: qf            ! 面を通る単位幅流量(検査体積へ入る向きが正)
     real, intent(in) :: w3            ! 3 の重み(donor_share)
     real :: w
-    real :: ql(1:8), fl(1:8), wl(1:8), qin, isg, oh, th, num, den
+    real :: ql(1:8), qo(1:8), fl(1:8), wl(1:8), q, qin, qth, isg, oh, th, num, den
     integer :: l
     w = w3
     if (qf <= 0.0) return
     do l = 1, 8
-      ql(l) = max(0.0, -qlk8(ci, cj, l))
+      q = qlk8(ci, cj, l)
+      ql(l) = max(0.0, -q)
+      qo(l) = max(0.0, q)
       fl(l) = tx%gst(l,kk) * ql(l)
     end do
     qin = ((ql(2) + ql(7)) + (ql(4) + ql(5))) + ((ql(1) + ql(8)) + (ql(3) + ql(6)))
@@ -2238,18 +2362,29 @@ contains
     if (den <= 0.0) return
     num = ((wl(2) + wl(7)) + (wl(4) + wl(5))) + ((wl(1) + wl(8)) + (wl(3) + wl(6)))
     w = min(1.0, max(0.0, num / den))
+    ! 流入が流出の ε 倍に満たないとき・面の流量がこの辺(面のセルの 9 − kk 近傍へ向かう辺)の単位幅流量の ε 倍に
+    ! 満たないときは、3 の重みへ寄せる(割り算は、そのときだけ。商は 1 未満)。w = w_3 の面(大半の面)は、寄せても
+    ! 同じ値なので、流出の和と辺の流量を読まない
+    if (w /= w3) then
+      qth = opt%p_adv_donor_eps * (((qo(2) + qo(7)) + (qo(4) + qo(5))) + ((qo(1) + qo(8)) + (qo(3) + qo(6))))
+      if (qin < qth) w = w3 + (w - w3) * (qin / qth)
+      qth = opt%p_adv_donor_eps * abs(mnk8(ci, cj, 9 - kk))
+      if (qf < qth) w = w3 + (w - w3) * (qf / qth)
+    end if
   end function
 
   ! セル (si, sj) への流入のうち、kk 近傍から面のセルへ向かう向きに前向きの連結(gst > 0)から入る割合
   ! (stream_share の ω_o)。流入がなければ 1。領域の枠の外のセル(側方 Neumann の辺の外。8 リンクを持たない)も 1
   pure function src_fwd(si, sj, kk) result(r)
     integer, intent(in) :: si, sj, kk
-    real :: r, q(1:8), qa, qf
+    real :: r, q(1:8), q8(1:8), qa, qf, qth
     integer :: l
     r = 1.0
     if (si < 1 .or. si > g%nx .or. sj < 1 .or. sj > dcp%ny_g) return
-    call links8(si, sj, q)
-    q(1:8) = max(0.0, -q(1:8))
+    call links8(si, sj, q8)
+    q(1:8) = max(0.0, q8(1:8))
+    qth = opt%p_adv_donor_eps * (((q(2) + q(7)) + (q(4) + q(5))) + ((q(1) + q(8)) + (q(3) + q(6))))
+    q(1:8) = max(0.0, -q8(1:8))
     qa = ((q(2) + q(7)) + (q(4) + q(5))) + ((q(1) + q(8)) + (q(3) + q(6)))
     if (qa <= 0.0) return
     do l = 1, 8
@@ -2257,6 +2392,7 @@ contains
     end do
     qf = ((q(2) + q(7)) + (q(4) + q(5))) + ((q(1) + q(8)) + (q(3) + q(6)))
     r = qf / qa
+    if (qa < qth) r = 1.0 - (1.0 - r) * (qa / qth)
   end function
 
   ! セル (ci, cj) から 8 近傍のそれぞれへ向かう連結の実流量(流出が正。qlk8 と同じ値)。有効時、枠内のセルは、
