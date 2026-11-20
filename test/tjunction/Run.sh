@@ -1,10 +1,10 @@
 #!/bin/bash
-# tjunction: 1 セル幅の T 字の合流(逐次実行。軸に沿う合流・45° 回した合流 × f_advection_lateral 0・1 ×
-# 3 つの流量比 × 乾いた岸・濡れた岸 = 24 構成と、向きを変えた 6 構成)
+# tjunction: 1 セル幅の T 字の合流(逐次実行。軸に沿う合流・45° 回した合流 × 移流項の規則 3 つ
+# (f_advection_lateral 0・1、4 つの値の組み合わせ)× 3 つの流量比 × 乾いた岸・濡れた岸 = 36 構成と、向きを変えた 12 構成)
 #   ./Run.sh
 # 合否は Check_tjunction.py(定常・質量の収支・下流の等流・合流でエネルギーが増えないこと。
-# f_advection_lateral = 1 では、合流の堰上げが岸の濡れによらないこと・運動量の理論の中での位置・
-# 格子の向きによらないことも判定する。0 では記録する。README)
+# f_advection_lateral = 1 と、4 つの値の組み合わせでは、合流の堰上げが岸の濡れによらないこと・運動量の理論の中での
+# 位置・格子の向きによらないことも判定する。0 では記録する。README)
 
 sdir=$(dirname "$(readlink -f "$0")")
 ../Scripts/Check_mode.sh serial || exit 1

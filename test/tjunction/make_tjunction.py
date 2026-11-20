@@ -30,10 +30,12 @@ KJ, MT = 35, 25                     # 合流のセルの番号、支川のセル
 LS = math.sqrt(2.0) * DX            # 対角線に沿うセルの間隔
 WD = DX / math.sqrt(2.0)            # 対角 1 セル河道の通過幅(斜めの自然幅 Δx Δy / √(Δx² + Δy²))
 
-# 構成の組: (構成名の接頭辞, 形, f_advection_lateral)
-GROUPS = (("", "ax", 0), ("l1_", "ax", 1), ("r_", "rot", 0), ("rl1_", "rot", 1))
-# 向きを変えた構成(f_advection_lateral = 1 の、本川・支川が同じ流量の濡れた岸。T_SYM まで)
-SYM_BASE = ("l1_m500_wet", "rl1_m500_wet")
+# 構成の組: (構成名の接頭辞, 形, 移流項の規則)。規則 0・1 は f_advection_lateral の値(ほかは既定)、4 は 4 つの値の
+# 組み合わせ(RULE4。深くて遅い隣のセルの扱い)
+GROUPS = (("", "ax", 0), ("l1_", "ax", 1), ("r_", "rot", 0), ("rl1_", "rot", 1), ("c4_", "ax", 4), ("rc4_", "rot", 4))
+RULE4 = ("f_advection_donor = 4", "f_advection_bend = 2", "f_advection_lateral = 2", "f_dry_head_cap = 4")
+# 向きを変えた構成(規則 1・4 の、本川・支川が同じ流量の濡れた岸。T_SYM まで)
+SYM_BASE = ("l1_m500_wet", "rl1_m500_wet", "c4_m500_wet", "rc4_m500_wet")
 ORIS = ("mx", "my", "xy")
 
 
@@ -100,7 +102,7 @@ def nfilm(geom):
 
 
 def parse(name):
-    """構成名 → (接頭辞, 形, f_advection_lateral, 流量の組, 岸, 向き)"""
+    """構成名 → (接頭辞, 形, 移流項の規則, 流量の組, 岸, 向き)"""
     for pre, geom, lat in sorted(GROUPS, key=lambda g: -len(g[0])):
         if name.startswith(pre):
             rest = name[len(pre):].split("_")
@@ -147,8 +149,11 @@ def param(name):
     L.append("!   岸は河床より %.0f m 高い地盤。流量は上流端のセルの湧き出しで与え、10 分で上げて一定にする。" % BANK)
     if wet:
         L.append("!   合流のセルの周りの岸の 5 セルに %.2f m3/s ずつの湧き出しを置いて、岸を薄い水膜で濡らす。" % FILM_Q)
-    L.append("!   側方面で横から入る水の扱いは f_advection_lateral = %d(%s)。"
-             % (lat, "合流の損失を、岸の濡れによらずに数える" if lat == 1 else "平行リンクの流速を使う。合流の損失を、岸が濡れているときだけ数える"))
+    if lat == 4:
+        L.append("!   移流項の規則は、4 つの値の組み合わせ(%s。深くて遅い隣のセルの扱い)。" % "・".join(RULE4))
+    else:
+        L.append("!   側方面で横から入る水の扱いは f_advection_lateral = %d(%s)。"
+                 % (lat, "合流の損失を、岸の濡れによらずに数える" if lat == 1 else "平行リンクの流速を使う。合流の損失を、岸が濡れているときだけ数える"))
     if ori:
         L.append("!   向きを変えた構成(%s。%s)。同じ構成の基本の向きと、%d 分の水深を比べる。"
                  % (ori, {"mx": "東西を反転", "my": "南北を反転", "xy": "東西と南北を反転"}[ori], T_SYM // 60))
@@ -159,7 +164,10 @@ def param(name):
              "  fn_geoinfo = '-'\n  fn_boundary = '-'\n  fn_record = '-'\n  fn_enc = '-'\n  dir_result = 'result_%s'\n  f_out_h = 1\n/\n" % (tt, tt, name))
     L.append("&list_geoinfo\n  nx = %d\n  ny = %d\n  dx = %.1f\n  dy = %.1f\n  f_ztype = 1\n  fn_z = '%s'\n  f_rntype = 0\n  rn0 = %.3f\n/\n"
              % (nx, ny, DX, DX, zfile(geom, ori), RN))
-    L.append("&list_enc\n  f_advection_lateral = %d\n/\n" % lat)
+    if lat == 4:
+        L.append("&list_enc\n%s/\n" % "".join("  %s\n" % x for x in RULE4))
+    else:
+        L.append("&list_enc\n  f_advection_lateral = %d\n/\n" % lat)
     if east:
         L.append("&list_bound_edge\n  f_bc_e = 1                ! 東辺は自由流出\n/\n")
     else:

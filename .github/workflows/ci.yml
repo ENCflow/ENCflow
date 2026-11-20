@@ -1,7 +1,7 @@
 # ENCflow CI: ビルド+回帰テスト(基準 Log とのビット/ULP 照合)
-#   高速な 28 ケースを毎 push で回す(chichibu は実行時間の都合で対象外。
+#   高速な 29 ケースを毎 push で回す(chichibu は実行時間の都合で対象外。
 #   ローカルで test/chichibu/Run.sh を実行すること)。prmap・wfswash・gwlateral・gwtani・stg・vshaped・
-#   bldgdrag・driftwood・bankcap・brink・bankspill・chutepool・cascade・tjunction は reference を持たない検定型(Check_*.py・再開と並列のバイト比較。Run.sh の
+#   bldgdrag・driftwood・bankcap・brink・bankspill・chutepool・cascade・tjunction・stairbank は reference を持たない検定型(Check_*.py・再開と並列のバイト比較。Run.sh の
 #   終了コードで判定。stg は STG 格子の動作確認で、MPI の 2 ランクでは初期化で止まることを確かめる。
 #   vshaped は V 字流域の降雨流出の運動学的波の理論解との比較。bldgdrag は家屋の抗力項を含む等流の
 #   理論値との比較で、逐次のジョブだけで回す(辺ごとの局所の式で、MPI のジョブは同じ式を通るだけなので
@@ -25,9 +25,16 @@
 #   tjunction は、1 セル幅の T 字の合流(格子の軸に沿う合流と 45° 回した
 #   合流)の上流の水深を運動量の理論と比べる検定(定常・質量の収支・エネルギーが増えないことを判定する。合流の
 #   堰上げが岸の濡れによらないこと・理論の中での位置・格子の向きによらないことは、側方面の扱い
-#   f_advection_lateral = 1(既定)で判定し、0 では限界として記録)。この 4 つは逐次と MPI の両方で回す(np = 2 では、
-#   屈曲の斜めの辺・池の北の端・段々の河道・合流の周りの辺が帯の境界をまたぐ。tjunction の 1 は、斜めエッジの流入元のセルの流量を
-#   エッジ行 j − 3 まで読むので、幅 2 のハロ交換を通る)
+#   f_advection_lateral = 1(既定)と、深くて遅い隣のセルの扱いの 4 つの値の組み合わせ(f_advection_donor = 4・
+#   f_advection_bend = 2・f_advection_lateral = 2・f_dry_head_cap = 4)で判定し、0 では限界として記録)。この 4 つは
+#   逐次と MPI の両方で回す(np = 2 では、屈曲の斜めの辺・池の北の端・段々の河道・合流の周りの辺が帯の境界を
+#   またぐ。tjunction の 1 と 4 つの値の組み合わせは、流入元のセルの流量をエッジ行 j − 3 まで読むので、幅 2 の
+#   ハロ交換を通る)
+#   stairbank は、格子に斜めの 1 セル幅の河道と、脇の高いセル(段・階段の角のセル)の検定(岸が壁だけの河道の
+#   定常・質量の収支・流量の上げ下げで同じ水深になることを判定する。段・角のセルのある河道の、同じ流量での
+#   2 つの水深・せき上げ・最大流速は、既定の移流項の規則の限界として記録し、4 つの値の組み合わせの構成では、
+#   上げ下げの一致・最大流速が壁だけの河道を超えないこと・流量の揺れを判定する)。逐次と MPI の両方で回す
+#   (1 つの階段の形は 8 行で、np = 2 では帯の境界が階段のまわりを通る)
 #   river_flowline は、前処理 utils/river_flowline(河道マスクを標高の落水線に載せ直す)が、秩父の 4 つの格子の
 #   置いてある載せ直し済みのマスクをバイト一致で作り直すことの検定で、逐次のジョブだけで回す(encflow は
 #   使わない。Run.sh が utils/river_flowline をビルドする)
@@ -56,7 +63,7 @@ jobs:
       - name: Regression tests
         run: |
           set -e
-          for c in wave dambreak frost pump conduit salt vzcol vzzone sfzone prmap wfshoal wfshadow wfcurrent wfsed wfswash gwlateral gwtani stg vshaped bldgdrag driftwood bankcap brink bankspill chutepool cascade tjunction river_flowline; do
+          for c in wave dambreak frost pump conduit salt vzcol vzzone sfzone prmap wfshoal wfshadow wfcurrent wfsed wfswash gwlateral gwtani stg vshaped bldgdrag driftwood bankcap brink bankspill chutepool cascade tjunction stairbank river_flowline; do
             echo "===== test/$c ====="
             (cd "test/$c" && ./Run.sh)
           done
@@ -77,7 +84,7 @@ jobs:
         run: |
           set -e
           export OMP_NUM_THREADS=1
-          for c in wave dambreak frost pump conduit salt vzcol vzzone sfzone prmap wfshoal wfshadow wfcurrent wfsed wfswash gwlateral gwtani stg vshaped bankcap brink bankspill chutepool cascade tjunction; do
+          for c in wave dambreak frost pump conduit salt vzcol vzzone sfzone prmap wfshoal wfshadow wfcurrent wfsed wfswash gwlateral gwtani stg vshaped bankcap brink bankspill chutepool cascade tjunction stairbank; do
             echo "===== test/$c (np=2) ====="
             (cd "test/$c" && ./Run_MPI.sh 2)
           done

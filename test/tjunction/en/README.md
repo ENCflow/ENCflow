@@ -12,8 +12,9 @@ momentum-conserving advection term (`f_advection_scheme = 3` in `&list_enc`;
 [Advection schemes](../../../docs/en/users_guide/advection.md)).
 
 There are two junction shapes (a junction along the grid axes and a junction rotated 45° to the
-grid) and two treatments of the water entering through the side faces (`f_advection_lateral = 0`
-and `1`), so four groups are computed.
+grid) and three sets of advection rules (the treatments of the water entering through the side faces
+`f_advection_lateral = 0` and `1`, and the combination of four values for deep, slow neighbouring
+cells), so six groups are computed.
 
 - **`f_advection_lateral = 0` (the default until 2026-11-16) counts this loss only while the banks are wet.** Only
   what both rules satisfy, such as steadiness and the mass balance, is judged; the difference from
@@ -22,6 +23,10 @@ and `1`), so four groups are computed.
 - **`f_advection_lateral = 1` (the default) counts it regardless of the wetness of the banks.** The difference in
   backwater between wet and dry banks, the position within the theory, and the independence from the
   grid orientation are judged as well.
+- **The combination of four values (`f_advection_donor = 4`, `f_advection_bend = 2`,
+  `f_advection_lateral = 2`, `f_dry_head_cap = 4`; optional) also counts it regardless of the wetness of
+  the banks.** The same items as with 1 are judged (only the range of the position within the theory
+  for the junction along the axes differs).
 
 ## Setup
 
@@ -41,12 +46,16 @@ natural diagonal width Δx Δy / √(Δx² + Δy²)).
 
 Configuration names are `<group prefix><discharge ratio>_<banks>`.
 
-| Group prefix | Shape | `f_advection_lateral` |
+| Group prefix | Shape | Advection rules |
 |---|---|---|
-| (none) | Junction along the axes | 0 |
-| `l1_` | Junction along the axes | 1 |
-| `r_` | Junction rotated 45° | 0 |
-| `rl1_` | Junction rotated 45° | 1 |
+| (none) | Junction along the axes | `f_advection_lateral = 0` |
+| `l1_` | Junction along the axes | `f_advection_lateral = 1` |
+| `c4_` | Junction along the axes | Combination of four values |
+| `r_` | Junction rotated 45° | `f_advection_lateral = 0` |
+| `rl1_` | Junction rotated 45° | `f_advection_lateral = 1` |
+| `rc4_` | Junction rotated 45° | Combination of four values |
+
+In the groups with `f_advection_lateral = 0` and `1` the other values are the defaults.
 
 | Discharge ratio | Main / tributary discharge (m³/s) |
 |---|---|
@@ -59,9 +68,10 @@ in five bank cells around the junction cell (the two on either side of the tribu
 three on the opposite bank of the main channel), wetting the banks with a thin film (0.03 % of the
 discharge).
 
-In addition, `l1_m500_wet` and `rl1_m500_wet` are computed for 30 minutes in six configurations
-mirrored east–west (`_mx`), north–south (`_my`) and both (`_xy`); in the configurations mirrored
-east–west the west side is the free outflow. There are 30 configurations in total.
+In addition, `l1_m500_wet`, `rl1_m500_wet`, `c4_m500_wet` and `rc4_m500_wet` are computed for
+30 minutes in twelve configurations mirrored east–west (`_mx`), north–south (`_my`) and both (`_xy`);
+in the configurations mirrored east–west the west side is the free outflow. There are
+48 configurations in total.
 
 ## Theory
 
@@ -92,7 +102,7 @@ $`p = (h - h_E)/(h_M - h_E)`$ (0 = no loss, 1 = momentum theory).
 
 ## Check items (Check_tjunction.py)
 
-Items judged in all four groups:
+Items judged in all six groups:
 
 1. Steadiness: the range of the depth over the last 10 minutes is below 0.03 m (the six cells on
    either side of the junction in the main channel and the four cells of the tributary before the
@@ -107,13 +117,13 @@ In the groups with `f_advection_lateral = 0`, the tolerances of items 1 and 2 ar
 with wet banks the backwater of the rotated junction is 1 m higher, and the water stored upstream has
 not finished accumulating after 2 hours.
 
-Items judged in the groups with `f_advection_lateral = 1` and displayed in the groups with 0 (the
-limit of 0):
+Items judged in the groups with `f_advection_lateral = 1` and in the groups with the combination of
+four values, and displayed in the groups with 0 (the limit of 0):
 
 5. The difference in depth at J−1 between wet and dry banks is below 0.02 m (the backwater of the
    junction does not depend on the presence of a film on the banks).
-6. The position $`p`$ is 0.5–0.7 for the junction along the axes and 0.7–0.95 for the rotated
-   junction.
+6. The position $`p`$ is 0.5–0.7 for the junction along the axes (0.4–0.7 with the combination of
+   four values) and 0.7–0.95 for the rotated junction.
 
 Item judged in the mirrored configurations:
 
@@ -130,10 +140,16 @@ Item judged in the mirrored configurations:
 | Along the axes, 1 | 800 / 200 | 5.04 / 5.38 | 5.24, 0.57 | 5.24, 0.58 | +0.003 |
 | | 500 / 500 | 5.32 / 5.87 | 5.67, 0.62 | 5.67, 0.62 | +0.001 |
 | | 200 / 800 | 5.46 / 6.09 | 5.84, 0.61 | 5.84, 0.61 | +0.000 |
+| Along the axes, four values | 800 / 200 | 5.05 / 5.40 | 5.22, 0.47 | 5.22, 0.48 | +0.003 |
+| | 500 / 500 | 5.33 / 5.89 | 5.62, 0.51 | 5.62, 0.51 | +0.002 |
+| | 200 / 800 | 5.47 / 6.11 | 5.83, 0.57 | 5.83, 0.57 | +0.002 |
 | Rotated 45°, 0 | 800 / 200 | 6.28–6.29 / 6.73–6.74 | 6.28, −0.01 | 6.42, 0.32 | +0.14 |
 | | 500 / 500 | 6.63–6.66 / 7.34–7.38 | 6.66, 0.00 | 7.34, 1.00 | +0.68 |
 | | 200 / 800 | 6.80–6.82 / 7.61–7.66 | 6.82, 0.00 | 7.91, 1.37 | +1.09 |
 | Rotated 45°, 1 | 800 / 200 | 6.27 / 6.72 | 6.63, 0.81 | 6.64, 0.82 | +0.003 |
+| | 500 / 500 | 6.64 / 7.36 | 7.24, 0.83 | 7.24, 0.84 | +0.005 |
+| | 200 / 800 | 6.81 / 7.64 | 7.50, 0.84 | 7.51, 0.84 | +0.006 |
+| Rotated 45°, four values | 800 / 200 | 6.27 / 6.72 | 6.63, 0.81 | 6.64, 0.82 | +0.003 |
 | | 500 / 500 | 6.64 / 7.36 | 7.24, 0.83 | 7.24, 0.84 | +0.005 |
 | | 200 / 800 | 6.81 / 7.64 | 7.50, 0.84 | 7.51, 0.84 | +0.006 |
 
@@ -158,11 +174,20 @@ profile of each configuration.)
   banks.** The difference between wet and dry banks is below 0.01 m, and p is 0.57–0.62 for the
   junction along the axes and 0.81–0.84 for the rotated junction. The mirrored configurations give
   the same values as the base orientation (item 7).
+- **With the combination of four values, the backwater of the junction along the axes is 0.01–0.05 m
+  smaller than with 1** (p = 0.47–0.57; 0.57 → 0.47 for the main-channel-dominant junction). The
+  rotated junction gives the same values as with 1. In both shapes no energy is gained at the junction
+  (item 4), the difference between wet and dry banks is below 0.01 m, and the mirrored configurations
+  give the same values as the base orientation. What moves the values of the junction along the axes is
+  `f_advection_bend = 2` (a computation with only this value set to 2 gives the same depths as the
+  combination of four values). A computation with only `f_advection_donor = 4` added falls to p = 0.22
+  for the tributary-dominant junction, and becomes 0.57 when `f_advection_bend = 2` is added (the four
+  values are meant to be used together).
 
 ## Limits and how to read the results
 
-- **The backwater with 1 is smaller than that of the momentum theory and changes with the grid
-  orientation** (p = 0.6 and 0.8). An eight-neighbour grid represents a right-angle junction as a
+- **The backwater with 1 and with the combination of four values is smaller than that of the momentum
+  theory and changes with the grid orientation** (p = 0.5–0.6 and 0.8). An eight-neighbour grid represents a right-angle junction as a
   combination of perpendicular links and diagonal links. At the junction along the axes, water also
   crosses from the last cell of the tributary to the downstream cell of the main channel through a
   diagonal link, and that water is counted as carrying cos 45° times the momentum of the main-channel
@@ -170,7 +195,7 @@ profile of each configuration.)
   only through the perpendicular link. Counting the water of the diagonal links as carrying no
   momentum would bring the result closer to the theory, but the pond at a junction then keeps
   oscillating, so it is not adopted (developer.md §110.23 and §110.25). The depths are 0.08–0.25 m
-  (1–4 %) below the momentum theory.
+  (1–4 %; 0.08–0.28 m with the combination of four values) below the momentum theory.
 - The theory is one-dimensional. The separation zone and contraction downstream of the junction, the
   water-surface profile of the tributary and the effect of the junction angle are not included.
 - Only one-cell-wide channels are examined. A junction where a narrow tributary enters a main channel
@@ -182,7 +207,7 @@ profile of each configuration.)
 
 ```bash
 make
-./Run.sh          # serial (30 configurations; about 2.5 minutes on 4 threads)
+./Run.sh          # serial (48 configurations; about 3.5 minutes on 4 threads)
 ./Run_MPI.sh 2    # MPI (with np = 2 the band boundary of the junction along the axes lies between the main channel and the tributary mouth)
 ```
 
@@ -195,6 +220,6 @@ make
 - Hsu, C.-C., Wu, F.-S., Lee, W.-J. (1998): Flow at 90° equal-width open-channel junction. Journal of
   Hydraulic Engineering, 124(2), 186–191. (Experiments on a right-angle equal-width junction. The
   original has not been checked.)
-- The side-face rule (`f_advection_lateral = 1`) is ENCflow's own (see
-  [Advection schemes](../../../docs/en/users_guide/advection.md) in the users guide and developer.md
-  §110.25).
+- The side-face rule (`f_advection_lateral = 1`) and the rules of the combination of four values are
+  ENCflow's own (see [Advection schemes](../../../docs/en/users_guide/advection.md) in the users guide
+  and developer.md §110.25 and §113).

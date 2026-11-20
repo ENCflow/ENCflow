@@ -731,6 +731,195 @@ With the default `f_advection_donor = 3` the wet/dry test of the parallel edge b
   with the defaults until 2026-11-16, set `f_advection_lateral = 0` and
   `f_dry_head_cap = 2` explicitly. The construction of $`R'`$, $`\omega`$ and
   $`\cos\theta`$ is ENCflow's own.
+- **A deep neighbour cell that hardly flows (`f_advection_donor = 4`, `f_advection_bend = 2`,
+  `f_advection_lateral = 2`; optional).** The three default rules above (3, 1, 1) keep the slow velocity of the cell
+  on the upstream side of line $`k`$, or of the parallel link, from being used when it is a "thin film". When the
+  upstream cell is deep but hardly flowing (a shelf onto which channel water has spilled, a pool at the corner of a
+  bend), the slow velocity of that link is applied to the whole discharge passing the face. In a one-cell-wide
+  channel oblique to the grid this becomes an artificial brake that strengthens as the water level rises, so two
+  depths arise at the same discharge and the discharge moves up and down. An edge for which no inertia is counted
+  (an edge whose line has a wall on its upstream side) accelerates beyond the energy of the water that entered once
+  water circulates among corner cells and channel cells ([test/stairbank](../../../test/stairbank/en/README.md);
+  the ups and downs of the transect discharge on the 50 m grid of the Chichibu basin in the item above have the
+  same mechanism). The following three values, combined with `f_dry_head_cap = 4` of
+  [The cap on the edge depth toward higher ground](dry_head_cap.md), avoid this. **Use the four together**
+  (combinations of one or two of the values have been checked only in some of the tests; with
+  `f_advection_donor = 4` alone the backwater of a tributary-dominant right-angle junction falls to 20 % of that of
+  the momentum theory, and adding `f_dry_head_cap = 4` alone to the default rules made the ups and downs of the
+  discharge larger in one case). All of them are ENCflow's own (developer.md §112 and §113).
+  1. **Weights by stream (`f_advection_donor = 4`).** The flux $`F`$ of a flow-direction face is split into the
+     streams of the links $`l`$ entering the face cell, and the velocity $`\bar u_k`$ of the link on line $`k`$ is
+     applied only to the streams that link represents.
+
+     ```math
+     \bar u = u_e + w(\bar u_k - u_e),\qquad
+     w = \frac{\sum_l \omega_l F_l}{\sum_l F_l},\qquad
+     F_l = g_l Q_l + \Bigl(F - \sum_m g_m Q_m\Bigr)\frac{Q_l}{\sum_m Q_m}
+     ```
+
+     $`Q_l`$ is the discharge entering through link $`l`$, and $`g_l`$ is the geometric coefficient of the share
+     of that inflow in the face flux (the same weights that compose the mean discharge of a cell from the
+     discharges of its eight links). The second term of $`F_l`$ distributes the part of the face flux on the
+     outflow side in proportion to the inflows. $`\omega_l`$ is the degree to which the velocity of the link on
+     line $`k`$ represents stream $`l`$.
+
+     ```math
+     \omega_l = \begin{cases}
+     1 & \text{the link on line } k \\
+     \theta_l + (1-\theta_l)(1-\omega_o)\,w_3,\quad \theta_l = \min\!\left(1,\ \dfrac{\kappa\,Q_k}{Q_l}\right) & \text{an oblique link pointing forward along the edge} \\
+     w_3 & \text{a perpendicular or backward link}
+     \end{cases}
+     ```
+
+     $`w_3`$ is the weight of 3, $`\kappa = 2`$, and $`\omega_o`$ is the fraction of the inflow of the cell the
+     oblique stream comes from that entered through links pointing forward along the edge.
+     - If the link on line $`k`$ carries at least $`1/\kappa`$ of the discharge of a forward-oblique stream, it
+       represents that stream as well. In a uniform flow the ratio of the discharges of the link on line $`k`$ and
+       a forward-oblique link is $`\cos\varphi/\cos(\varphi - 45^\circ)`$ ($`\varphi`$ is the angle between the
+       flow and the edge), so $`w = 1`$ (the same as 3 and 0) as long as the edge is within ±61° of the flow
+       direction. A flow resolved by the grid is unchanged; only faces whose link on line $`k`$ carries hardly any
+       water are pulled toward neutral.
+     - $`\omega_o`$ separates water that has come down the staircase of the same channel ($`\omega_o = 1`$; the
+       slow velocity of the link on line $`k`$ is not applied) from water of a tributary that has come from
+       another direction ($`\omega_o = 0`$; treated like a stream entering at right angles). Without it, in a
+       junction rotated 45° against the grid the depth upstream of the junction becomes smaller than the no-loss
+       theory (energy is gained).
+     - The part of the weight below 1 is neutral and is counted by the path value of `f_advection_bend` (and the
+       next item).
+  2. **Acceleration from the arrival speed of the water (`f_advection_bend = 2`).** The path value of 1 is a
+     velocity set by continuity (the velocity the part of the inflow that leaves through this edge would have at
+     the width of this edge), so it counts only the acceleration due to the change of depth along the path. It does
+     not count the acceleration of inflows from several links that merge and leave faster, or that of an edge that
+     takes only part of the outflow ($`f \ll 1`$). With 2, on the same faces, the acceleration by which the edge
+     runs faster than the "arrival speed" $`a`$ of the water is counted by an advection term in energy-head form.
+
+     ```math
+     \Delta\!\left(\frac{\partial u_e}{\partial t}\right) = -\operatorname{sign}(u_e)\,(1-w)\,\phi\,\frac{\max(u_e^2 - a^2,\ 0)}{2L_e},\qquad
+     a^2 = \frac{\sum_l Q_l\,(s_l c_l)^2}{\max\bigl(\sum_l Q_l,\ \varepsilon(\sum_l Q_l + Q_\mathrm{un})\bigr)},\qquad
+     c_l = \max\!\left(f\,\frac{W_l}{W_e},\ \min\!\left(1,\ \frac{W_l}{W_e}\right)\right)
+     ```
+
+     $`L_e`$ is the length of the control volume, $`s_l`$ and $`W_l`$ are the speed and the passage width of link
+     $`l`$, $`W_e`$ is the passage width of this edge, and $`f = Q_e/Q_\mathrm{out}`$ is the share of this edge in
+     the outflow of the face cell. When the term of the path value of 1 acts to decelerate, the larger of the two
+     is taken (both count the same acceleration, so they are not added).
+     - In a steady state an edge with $`w = 0`$ satisfies $`u_e^2 = a^2 + 2g(\eta_\mathrm{up} - \eta_\mathrm{dn})`$
+       minus the part of friction, and does not exceed the energy of the water that entered. The velocity is not
+       capped; the term enters the momentum equation, so it also acts as it is in unsteady flows (long waves,
+       bores).
+     - When the edge is slower than the arriving water ($`u_e^2 \le a^2`$), nothing is done (the momentum of the
+       entering water does not push the edge).
+     - $`c_l`$ converts the speed of link $`l`$ to the passage width of this edge. Leaving through a wider link,
+       the water slows by the ratio of the widths (0.707 from a diagonal to an axis link). Entering a narrower
+       link, the speed-up by the ratio of the widths is counted if the whole flow enters it ($`f = 1`$; 1.41 from
+       an axis to a diagonal link, the same as "the difference in width is not counted as acceleration" of 1), and
+       the water keeps the speed it arrived with if only a branch enters it.
+     - $`Q_\mathrm{un} = \max(Q_\mathrm{out} - \sum_l Q_l - Q_\mathrm{sea},\ 0)`$ is the part of the outflow not
+       supplied by inflow (water leaving the storage of the face cell, a source, or rain). When the inflow is less
+       than $`\varepsilon`$ (`p_adv_donor_eps`) times the supply not coming from sea cells, $`a`$ approaches 0 (the
+       unsupplied part is water starting from rest). An edge leaving a cell where the discharge is given as a
+       source, or the outlet of a pond with no inflow, is therefore charged the acceleration from rest (the path
+       value of 1 leaves this case neutral). $`\phi`$ is the fraction of the inflow not coming from sea cells
+       ($`Q_\mathrm{sea}`$).
+     - In a flow that accelerates along a single path (one inflow link and $`f = 1`$) the term of the path value of
+       1 is the larger one, and the result is the same as with 1 (bends and drops of a one-cell-wide channel do
+       not change). What changes are face cells where inflows merge and edges that take only part of the outflow.
+  3. **Not bringing in the velocity of a fast parallel link (`f_advection_lateral = 2`).** The representativeness
+     $`R'`$ of 1 (a parallel link that is a thin film is not used) is multiplied by a similarity of discharges.
+     The unit-width discharge $`a_p`$ of the parallel link is compared with the unit-width discharge $`b_l`$, in
+     the direction of the edge, of the cell that link $`l`$ crossing the face comes from (a component of the mean
+     discharge of that cell); when the parallel link carries more than $`\kappa`$ times as much, the use of the
+     velocity of the parallel link is reduced by that ratio.
+
+     ```math
+     r_l = \begin{cases}
+     \min\!\left(1,\ \kappa\,\dfrac{|b_l| + q_0}{|a_p| + q_0}\right) & a_p \text{ and } b_l \text{ in the same direction and } |a_p| > |b_l| \\[2mm]
+     \min\!\left(1,\ \dfrac{\kappa\,q_0}{\max(|a_p|, |b_l|) + q_0}\right) & a_p \text{ and } b_l \text{ in opposite directions} \\[2mm]
+     1 & a_p \text{ and } b_l \text{ in the same direction and } |a_p| \le |b_l|
+     \end{cases}
+     \qquad q_0 = \varepsilon\,q_t
+     ```
+
+     $`q_t`$ is the discharge per unit length entering across the face ($`r_l = 1`$ when both $`a_p`$ and $`b_l`$
+     are smaller than $`\varepsilon`$ times it). The weight of the parallel link is multiplied by
+     $`\sum_l Q_l r_l/\sum_l Q_l`$, and the part it does not represent is counted by the junction deficit, as in 1.
+     - The rule keeps the fast velocity of the main stream running alongside from being brought into an edge
+       through a corner cell or a pool (bringing it in feeds a flow circulating among corner cells and channel
+       cells).
+     - The direction in which the parallel link is the slower one (the braking direction) is left as in 1.
+       Reducing this direction as well would count as "dissimilar" the difference between the discharge of the
+       upstream cell the water comes from and that of the parallel link where the discharge changes sharply along
+       the flow (the front of a bore), and the error of the bore position of the dam break grows from 1.25 to
+       1.44 % (with 2 it is 1.23 %, unchanged from 1).
+
+  What has been checked (the combination of the four values; the runs and values are recorded in
+  developer.md §113):
+  - **A one-cell-wide oblique channel with higher cells beside it
+    ([test/stairbank](../../../test/stairbank/en/README.md)).** In a channel with shelves or corner cells, the
+    depths on the rising and falling stages agree (with the default, 6.6 m and 10.4 m at the same 2,000 m³/s), the
+    maximum velocity in the domain does not exceed that of the walls-only channel (2.1 times with the default), and
+    water does not climb onto wall cells. A channel whose banks are walls only has the same depths as with the
+    default.
+  - **A reach of real terrain.** In a run that gives a constant discharge to a reach cut out around transect 3 of
+    the 50 m grid of the Chichibu basin, the flow is steady at every discharge from 4,000 to 10,000 m³/s (the
+    standard deviation of the discharge is at most 22 m³/s; with the default it is 543–1,627 m³/s at 6,000 m³/s).
+  - **The whole basin (the 50 m grid of the Chichibu basin, 100 mm of rain; the setup of the supplement of the
+    [tutorial](../../../tutorials/chichibu/en/README.md)).** The discharge at transect 3, which goes up and down
+    with the default (the one-minute values deviate from the five-point median by up to 1,250 m³/s and reverse
+    direction 19 times in succession), becomes smooth (deviation at most 130 m³/s, no reversals). The peak at
+    transect 3 goes from 8,954 m³/s at 72 minutes to 7,910 m³/s at 76 minutes, closer to the value of the 100 m
+    grid (7,831 m³/s at 73 minutes). The peak at transect 4 downstream goes from 8,688 to 8,836 m³/s, and the
+    volume of water passing the transects does not change. The maximum velocity in the domain goes from 29.5 to
+    24.3 m/s. On the 100 m grid with the same setup, the oscillation that appears at transect 4 with the default
+    (deviation from the five-point median of up to 921 m³/s, 16 reversals) disappears (deviation at most 8 m³/s,
+    no reversals). The peak at transect 4 then becomes lower and later, from 8,639 m³/s at 134 minutes to
+    7,765 m³/s at 145 minutes (the volume of water is the same). The time agrees with the 50 m grid (146 minutes),
+    but the peak is 12 % lower than on the 50 m grid, and these runs cannot tell which is closer to reality.
+  - **A right-angle junction ([test/tjunction](../../../test/tjunction/en/README.md)).** No energy is gained at
+    the junction, and the backwater is 0.47–0.57 times that of the momentum theory (a junction along the grid axes;
+    0.57–0.62 times with the default) and 0.81–0.84 times (a junction rotated 45°; the same as with the default).
+    The difference between wet and dry banks is below 0.01 m, and mirrored grid orientations give the same values.
+  - **The existing checks computed with the four values.** The dam break (difference from Stoker's solution),
+    uniform flow, the travel time of a long wave, the water-surface profile at a drop, the loss at a bend, and the
+    dependence of the onset of spilling onto a bank on the time step keep the accuracy they have with the default.
+    What moves is the water level at which water starts to get onto a bank
+    ([test/bankcap](../../../test/bankcap/en/README.md); from 0.289 m to 0.302 m below the bank), the depth of a
+    pond where two inflows merge (the pond with a dead-end bay of [test/brink](../../../test/brink/en/README.md);
+    the difference from `f_advection_bend = 0` goes from +0.03–0.07 m to +0.05–0.14 m), and the two items under the
+    limits below (the depth of a cell where the discharge is given, and the depth of a channel beside banks wetted
+    by rain).
+
+  Limits:
+  - **The computation takes longer and uses more memory.** In a run where rain wets every cell it takes 1.3 to
+    1.4 times as long as with the default (on 4 threads, +32 % on the 200 m grid of the Chichibu basin and +37 % on
+    the 100 m grid; added one at a time on the 200 m grid, `f_advection_lateral = 2` costs +11 %,
+    `f_advection_donor = 4` +9 %, and `f_advection_bend = 2` and `f_dry_head_cap = 4` a few percent at most, within
+    the scatter of the measurement). As for memory, specifying any of `f_advection_donor = 4`,
+    `f_advection_bend = 2` and `f_advection_lateral = 2` allocates a work array of 8 reals per cell (the table of
+    the discharges of the links from a cell to its 8 neighbours), and `f_advection_donor = 4` allocates a further
+    8 reals per cell (the weights kept for each face).
+  - **The backwater caused by corner cells is less than half as large, but it remains.** In the shape with one
+    corner cell open on the inside of a stair, the cell just after the stair is 1.9–4.9 m deeper than in the
+    walls-only channel, and the discharge keeps oscillating with a standard deviation of 1.5–2.9 % of the given
+    discharge. This is the acceleration, up to the velocity of the main stream, of water that passes slowly through
+    the corner cell and returns to the channel, and the values are not those of a real flow. It is a limit of
+    counting the exchange of momentum between a one-cell-wide channel and the wet cells beside it by rules for each
+    link of the grid.
+  - **A cell where the discharge is given as a source becomes deeper by the velocity head of its outflow.**
+    `f_advection_bend = 2` counts water leaving a cell that has no inflow as accelerating from rest (in the upstream
+    end cell of the straight channel of test/brink, +0.27–0.63 m for velocities of 2.3–3.5 m/s; downstream of the
+    source cells the depths differ by less than 0.05 m). 1 does not count this acceleration.
+  - **The depth of an oblique channel beside banks thinly wetted by rain changes by −7 to +7 % from the default
+    even with dry banks** (depending on the orientation and spacing of the grid; the ratio to the Manning
+    uniform-flow depth is 0.94–1.27, against 0.94–1.37 with the default; the configurations of
+    [test/wetbank](../../../test/wetbank/en/README.md)).
+  - $`\kappa = 2`$ and the forms of $`\omega`$, $`c_l`$ and $`r_l`$ are not derived from theory (changing
+    $`\kappa`$ between 1 and 2 hardly changes the results).
+  - On the boundary faces of a side Neumann boundary, `f_advection_donor = 4` and `f_advection_lateral = 2` do not
+    act (treated as with 3 and 1).
+  - The idea of using an advection term in energy-head form where the flow contracts strongly is understood to
+    come from the original paper of the momentum-conservative scheme[^sd03], but this has not been checked against
+    the text (unverified).
 - **Excluded edges.** Edges excluded from the momentum equation (invalid
   neighbour, zero passage width, both cells dry) have $`A_e = 0`$. With
   `f_channel_advection = 0` the term is also dropped on edges touching a

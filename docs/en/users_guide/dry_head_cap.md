@@ -7,12 +7,13 @@
 This page explains the rule that caps, by the energy head, the depth on edges
 toward ground above the water surface (banks, the land behind them, valley
 walls). It describes what `f_dry_head_cap` of `&list_enc` (default 3)
-prevents, how options 1, 2 and 3 differ, their limits, and what to set to
+prevents, how options 1, 2, 3 and 4 differ, their limits, and what to set to
 reproduce earlier results. How the edge depth is defined in the first place
 is in [ENC grid and time integration](encgrid.md), the advection schemes are
 in [Advection schemes](advection.md), and the records of the design and the
 numerical experiments (for developers) are in docs/developer.md §68.16 (1),
-§108 (2), and §110.24, §110.30 and §110.32 (3) (in Japanese).
+§108 (2), §110.24, §110.30 and §110.32 (3), and §112.11 and §113 (4) (in
+Japanese).
 
 **Key points**
 
@@ -30,6 +31,11 @@ numerical experiments (for developers) are in docs/developer.md §68.16 (1),
   is above the water level of the sender. Both take the velocity head from the
   velocity of the edge itself, so the onset of spilling depends on the time
   step.
+- 4 (optional) limits the speed of "the flow entering the sending cell" of 3
+  from above by the mean velocity of the sending cell. In a one-cell-wide
+  channel oblique to the grid, it keeps water from getting too early onto a
+  bank that lies ahead of a diagonal link (§4.1; use it together with the
+  three values of the advection term).
 - To reproduce cases computed or calibrated while each was the default, set
   that value explicitly (§6).
 
@@ -55,6 +61,7 @@ are ENCflow's own.
 | 1 | edges whose receiving cell is dry | the velocity of the edge itself, $`u_n^2/2g`$ | 2026-11-13 |
 | 2 | as 1, and also edges whose receiver is wet but has its bed above the water level of the sender (with a transition at the threshold) | the same | 2026-11-16 |
 | 3 | climbing edges (the bed of the receiver above the bed of the sender), whether the receiver is dry or wet | the larger of the velocity of the edge itself and the flow entering the sending cell (for a supercritical flow, up to the specific energy of the critical flow of the same discharge) | current default |
+| 4 | the same as 3 | the same as 3, except that the speed of the entering flow is limited from above by the mean velocity of the sending cell projected on the edge (§4.1) | — (optional) |
 
 1 prevents the leaks and the blow-up at bore fronts and in incised channels.
 It does not act at ordinary wet/dry fronts, where it is the same as 0.
@@ -144,6 +151,54 @@ as with 2, water does not climb onto a bank above the water level
 - **Differences from 2.** Compared with 2, the results with 3 change; for
   example, the downstream peak falls by the amount that the step at the onset
   of spilling had added (how to reproduce earlier results is in §6).
+
+### 4.1 4: the speed of the entering flow limited by the mean velocity of the cell
+
+The "speed of the entering flow" $`u_a`$ of 3 is the unit-width discharge of
+the edge one step upstream divided by the depth of the sender. The unit-width
+discharge of an edge is per passage width of that link, so on a diagonal link
+of a one-cell-wide channel oblique to the grid (passage width 0.707 times the
+grid spacing; [ENC grid and time integration](encgrid.md)) it is 1.41 times
+the velocity of the channel. 3 counts this as it is in the velocity head, so
+in a staircase channel (east and northeast links alternating) the run-up
+height onto a bank cell lying ahead of a diagonal link (on the extension of
+its line) is counted twice. When 2,000 m³/s flows through a staircase channel
+whose banks are 10 m above the bed, a flow with a depth of 6.6 m and a
+velocity head of 1.9 m is counted as having a velocity head of 3.7 m, water
+gets onto the bank before the water level reaches it, and the channel becomes
+deeper (configuration `zs` of
+[test/stairbank](../../../test/stairbank/en/README.md): 8.05 m against 6.60 m
+in the walls-only channel).
+
+4 limits $`u_a`$ from above by the component, in the direction of the edge,
+of the mean discharge $`(M, N)`$ of the sending cell (the unit-width
+discharge in the actual direction of the flow, composed from the discharges
+of the eight links).
+
+```math
+u_a \leftarrow \min\!\left(u_a,\ \frac{\max(M\,n_x + N\,n_y,\ 0)}{h_s}\right)
+```
+
+$`(n_x, n_y)`$ is the unit vector of the edge (from the sender to the
+receiver). In a uniform flow and in a straight axis or diagonal channel the
+two are the same value and nothing changes from 3. In a cell of a staircase
+(entered through a diagonal link and left through an axis link) the mean
+velocity of the cell points in the actual direction of the channel (26.6°),
+and its component along the diagonal is 1.06 times the velocity of the
+channel. The 2,000 m³/s of `zs` above becomes 6.60 m (the same as with walls
+only). The treatment is original to ENCflow (developer.md §112.11 and §113).
+
+Use 4 together with `f_advection_donor = 4`, `f_advection_bend = 2` and
+`f_advection_lateral = 2` of the advection term
+([Advection schemes](advection.md) §4.4). When 4 alone is added to the
+default rules of the advection term, there is a case where the ups and downs
+of the discharge grow instead (in a run that steps the discharge up and down
+on a reach cut out of the 50 m grid of the Chichibu basin, the largest
+standard deviation of the discharge rises from 1,218 to 5,296 m³/s and the
+maximum velocity in the domain from 26.8 to 41.3 m/s; developer.md §113). The
+limits are those of 3 (§4). The height
+to which the flow actually runs up the outer bank of a bend is counted only
+by the component of the mean velocity of the cell.
 
 ## 5. 1 and 2 (the earlier defaults)
 
@@ -248,6 +303,10 @@ restriction), but why it does so has not been identified
 - **[test/cascade](../../../test/cascade/en/README.md)** -- a steep channel
   where drops and flat reaches alternate. The head of the flow does not exceed
   the water level at the upstream end (3); the limit of 2 is recorded (§5.3).
+- **[test/stairbank](../../../test/stairbank/en/README.md)** -- a
+  one-cell-wide channel oblique to the grid and higher cells beside it. Water
+  does not get onto a bank ahead of a diagonal link before the water level
+  reaches it (4; §4.1).
 - **[test/sedfeed](../../../test/sedfeed/en/README.md)** -- a run where a
   movable bed reaches a free-outflow boundary (§4).
 - **[test/chichibu](../../../test/chichibu/en/README.md)** -- the regression
@@ -262,8 +321,8 @@ restriction), but why it does so has not been identified
   continuity equation
 - [Shallow water flow computation](swflow.md) -- the list of the parameters of
   `&list_enc` and their defaults
-- docs/developer.md §68.16, §108, §110.24, §110.30 and §110.32 (records of
-  the design, prototypes and verification; in Japanese)
+- docs/developer.md §68.16, §108, §110.24, §110.30, §110.32, §112.11 and
+  §113 (records of the design, prototypes and verification; in Japanese)
 
 ## References
 

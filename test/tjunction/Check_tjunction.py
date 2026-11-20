@@ -2,7 +2,9 @@
 """test/tjunction の検定: 1 セル幅の T 字の合流の、合流の 1 セル上流の本川の水深を 1 次元の理論と比べる。
 
   2 つの形(格子の軸に沿う合流 ax、格子に対して 45° 回した合流 rot)を、側方面の合流の規則
-  f_advection_lateral = 0 と 1 で見る(4 つの組 × 3 つの流量比 × 乾いた岸・濡れた岸)。
+  f_advection_lateral = 0 と 1(ほかは既定)と、4 つの値の組み合わせ(f_advection_donor = 4・f_advection_bend = 2・
+  f_advection_lateral = 2・f_dry_head_cap = 4。深くて遅い隣のセルの扱い)で見る(6 つの組 × 3 つの流量比 ×
+  乾いた岸・濡れた岸)。
 
   理論(合流の 2 セル下流 J+2 の計算の水深から、合流の 1 セル上流 J−1 の水深を解く。区間 3 セルの河床勾配と
   摩擦は、その計算の水深で台形積分する。矩形断面・単位幅。セルの間隔と通過幅は、ax が Δx と Δx、rot が
@@ -18,10 +20,10 @@
     (2) 質量の収支(合流の 30 セル下流の測線の流量 = 与えた流量の和)
     (3) 合流から離れた下流は等流(水深がマニングの等流水深)
     (4) 合流でエネルギーが増えない(J−1 の水深が、損失なしの理論を下回らない)
-  f_advection_lateral = 1 で判定し、0 では記録する項目(0 の限界):
+  f_advection_lateral = 1 と、4 つの値の組み合わせで判定し、0 では記録する項目(0 の限界):
     (5) 濡れた岸と乾いた岸の J−1 の水深の差が小さい(合流の堰上げが、岸の水膜の有無によらない)
-    (6) p が決まった幅に入る(ax は 0.5〜0.7、rot は 0.7〜0.95)
-  f_advection_lateral = 1 の、向きを変えた構成(東西・南北を反転)で判定する項目:
+    (6) p が決まった幅に入る(1 は ax が 0.5〜0.7、rot が 0.7〜0.95。4 つの値の組み合わせは P_BAND4)
+  f_advection_lateral = 1 と、4 つの値の組み合わせの、向きを変えた構成(東西・南北を反転)で判定する項目:
     (7) 基本の向きと、同じ時刻の水深が同じ(規則が格子の向きによらない)
 標準ライブラリだけ。python3 Check_tjunction.py
 """
@@ -32,12 +34,13 @@ sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 from make_tjunction import S0, RN, G, QTOT, CASES, FILM_Q, GROUPS, SYM_BASE, ORIS, T_SYM, spacing, nfilm
 
 T_AVG = 110.0            # この時刻(分)から終わりまでを平均する
-TOL_STEADY = {0: 0.05, 1: 0.03}        # (1) 終わりの 10 分の水深の振れ幅 (m)。f_advection_lateral ごと
-TOL_MASS = {0: 1.0e-2, 1: 2.0e-3}      # (2) 測線の流量の相対差。同上
+TOL_STEADY = {0: 0.05, 1: 0.03, 4: 0.03}        # (1) 終わりの 10 分の水深の振れ幅 (m)。移流項の規則ごと
+TOL_MASS = {0: 1.0e-2, 1: 2.0e-3, 4: 2.0e-3}    # (2) 測線の流量の相対差。同上
 TOL_UNI = 0.01           # (3) 下流の水深の、等流水深からの相対差
 TOL_GAIN = 0.03          # (4) 損失なしの理論を下回ってよい幅 (m)
 TOL_WD = 0.02            # (5) 濡れた岸 − 乾いた岸 の水深の差 (m)
-P_BAND = {"ax": (0.5, 0.7), "rot": (0.7, 0.95)}      # (6) p の幅
+P_BAND = {"ax": (0.5, 0.7), "rot": (0.7, 0.95)}      # (6) p の幅(f_advection_lateral = 1)
+P_BAND4 = {"ax": (0.4, 0.7), "rot": (0.7, 0.95)}     # (6) p の幅(4 つの値の組み合わせ)
 TOL_SYM = 5.0e-6         # (7) 向きを変えた構成との水深の差 (m)。記録は 10⁻⁶ m の桁まで
 TAGS = ("m800", "m500", "m200")
 
@@ -93,14 +96,15 @@ def theory(h, q1, q3, dl):
 def group(pre, geom, lat):
     """1 つの組(6 構成)を検定する。合格なら True"""
     ok = True
-    strict = lat == 1                 # 項目 (5)(6) を判定するか
+    strict = lat >= 1                 # 項目 (5)(6) を判定するか
+    rule = "4 つの値の組み合わせ" if lat == 4 else "f_advection_lateral = %d" % lat
     dl, width = spacing(geom)
     q3 = QTOT / width
     hn = (q3 * RN / S0 ** 0.5) ** 0.6                 # 合流の下流の等流水深
     res = {}
     worst = {"steady": 0.0, "mass": 0.0, "uni": 0.0, "gain": 9.9}
-    print("--- %s、f_advection_lateral = %d(構成名 %s<流量比>_<岸>。合流の下流は単位幅 %.1f m2/s、等流水深 %.3f m) ---"
-          % ("格子の軸に沿う合流" if geom == "ax" else "45° 回した合流", lat, pre, q3, hn))
+    print("--- %s、%s(構成名 %s<流量比>_<岸>。合流の下流は単位幅 %.1f m2/s、等流水深 %.3f m) ---"
+          % ("格子の軸に沿う合流" if geom == "ax" else "45° 回した合流", rule, pre, q3, hn))
     print("  構成(本川・支川 m3/s、岸)   J−1 の水深   理論: 損失なし / 運動量    位置 p    振れ幅    測線の流量")
     for tag in TAGS:
         q1, q2 = CASES[tag]
@@ -127,7 +131,7 @@ def group(pre, geom, lat):
         print("  %s : %s" % (label, "PASS" if good else "FAIL"))
 
     def note(label, good):
-        """1 では判定、0 では記録(判定しない)"""
+        """1 と、4 つの値の組み合わせでは判定、0 では記録(判定しない)"""
         if strict:
             judge(label, good)
         else:
@@ -145,7 +149,7 @@ def group(pre, geom, lat):
     dwd = [res[(t, "wet")][0] - res[(t, "dry")][0] for t in TAGS]
     note("(5) 濡れた岸 − 乾いた岸 の J−1 の水深の差 %+.3f・%+.3f・%+.3f m (絶対値 < %.2f)" % (dwd[0], dwd[1], dwd[2], TOL_WD),
          max(abs(v) for v in dwd) < TOL_WD)
-    lo, hi = P_BAND[geom]
+    lo, hi = (P_BAND4 if lat == 4 else P_BAND)[geom]
     note("(6) 位置 p(0 = 損失なし、1 = 運動量の理論。本川が主・同じ・支川が主)が %.2f〜%.2f" % (lo, hi),
          all(lo <= v <= hi for v in pd + pw))
     print("        乾いた岸 p = %.2f・%.2f・%.2f(運動量の理論との差 %+.2f・%+.2f・%+.2f m)" % (pd[0], pd[1], pd[2], dm_d[0], dm_d[1], dm_d[2]))
@@ -157,7 +161,7 @@ def symmetry():
     """向きを変えた構成の、T_SYM の水深を、基本の向きの同じ時刻の水深と比べる"""
     ok = True
     t_sym = T_SYM / 60.0
-    print("--- 向きを変えた構成(f_advection_lateral = 1。%.0f 分の、17 プローブの水深を基本の向きと比べる) ---" % t_sym)
+    print("--- 向きを変えた構成(f_advection_lateral = 1 と、4 つの値の組み合わせ。%.0f 分の、17 プローブの水深を基本の向きと比べる) ---" % t_sym)
     for base in SYM_BASE:
         ref = []
         for n in range(1, 18):

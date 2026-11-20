@@ -113,6 +113,20 @@ module m_swflow_enc
                                             !   数える。斜めエッジの開口率も同じ判定。§110.25)。
                                             !   値は init が list_enc(既定 1)から写す。ここの
                                             !   初期値 0 は init の前の値
+    ! 2026-11 に足した 4 つの値(list_enc の f_advection_donor = 4・f_advection_bend = 2・f_advection_lateral = 2・
+    ! f_dry_head_cap = 4。developer.md §113)は、それぞれ 1 つ前の値の規則に、追加の規則を重ねたものである。
+    ! init が「1 つ前の値 + 下のフラグ」に直すので、上の 4 つの整数は従来の値の範囲のまま読める
+    logical :: adv_stream = .false.           ! f_advection_donor = 4: 3 の規則に加えて、線 k の供給元の流速を、
+                                            !   その連結が代表する流れの分だけに掛ける(流れごとの重み。stream_share)
+    logical :: adv_energy = .false.           ! f_advection_bend = 2: 1 の規則に加えて、流向面の中立の分に、到着した
+                                            !   水の速さからの加速を、エネルギー水頭を保存する形の移流項で数える
+    logical :: adv_latflux = .false.          ! f_advection_lateral = 2: 1 の規則に加えて、平行リンクが、入ってくる
+                                            !   水より速いとき、流量の比で、代表させる度合いを下げる(lateral_flux)
+    logical :: cap_cellmean = .false.         ! f_dry_head_cap = 4: 3 の規則の、入ってくる流れの速さ u_a を、送り手の
+                                            !   セルの平均流速の、辺の向きの成分で上から止める(cap_approach)
+    logical :: adv_wide = .false.             ! 運動量保存形移流が、面のセルの隣のセルの 8 リンクの流量を読む
+                                            !   (f_advection_lateral >= 1 の line_flow、f_advection_donor = 4 の
+                                            !   src_fwd)。mn・fwd・frw をエッジ幅 2 で交換する(init が設定)
     integer :: f_inflow_edge                  ! 区間流入の外縁セルに接するエッジの扱い (0:接する
                                             !   エッジすべての移流項 0, 1:区間の内側へ向かうエッジ
                                             !   だけ移流項 0, 2:1 + そのエッジの流速のエネルギー
@@ -472,6 +486,18 @@ module m_swflow_enc
     real :: w8lt(1:4) = 0.0          ! k 方向エッジの運動量検査体積の横断幅
     real :: cwd = 0.0                ! 斜めエッジの側方面を横切る軸リンク 1 本が面の流束に占める割合
                                      ! (方向平均。正方セルで p_diagratio/2 = 0.293。§68.43 の開口率)
+    ! 流れごとの重み(f_advection_donor = 4。§113)の幾何の表(1:8, 1:8)。gst(l, kk) × (l 近傍から面のセルへ入る
+    ! 実流量)が、その流入が、kk 近傍(線の上流側の隣)から見て前向きの流向面を通る流量に占める分。有効時だけ確保
+    real, allocatable :: gst(:,:)
+    ! 連結の実流量の表(f_advection_donor = 4・f_advection_bend = 2・f_advection_lateral = 2 のどれかの有効時だけ確保。
+    ! §113.7): ql(l, i, j) = セル (i, j) から、その l 近傍(l = 1..8)へ向かう連結の実流量(m3/s。流出が正。
+    ! adv_prepare_mc の qlk と同じ値)。毎ステップ、adv_prepare_mc の頭で、濡れたセルの周りだけ作り、移流項と屈曲の
+    ! 規則が、面ごとに計算し直す代わりに読む
+    real, allocatable :: ql(:,:,:)
+    ! 流れごとの重みの控え(f_advection_donor = 4 で、f_advection_bend が 1 以上のときだけ確保。§113.7):
+    ! wst(1, k, ie, je)・wst(2, k, ie, je) = エッジ (k, ie, je) の流向面 c・n の流入面の重み(adv_prepare_mc が、その
+    ! ステップに計算した値。計算しなかった面は −1)。adv_bend_mc が、同じ重みを計算し直す代わりに読む
+    real, allocatable :: wst(:,:,:,:)
   end type
   type(t_enc_adv), allocatable :: tx_mod    ! 移流項の私有状態(実装は submodule m_swflow_enc_adv)
 
@@ -905,6 +931,16 @@ subroutine m_swflow_enc_init(p, g, b, s)
   opt%f_advection_donor = list%f_advection_donor
   opt%f_advection_bend = list%f_advection_bend
   opt%f_advection_lateral = list%f_advection_lateral
+  ! 2026-11 に足した値(§113)を「1 つ前の値 + 追加の規則のフラグ」に直す。以降の検証と、時間ループの中の判定は、
+  ! 従来の値(f_advection_donor = 0・3、f_advection_bend・f_advection_lateral = 0・1、f_dry_head_cap = 0〜3)で読む
+  opt%adv_stream = opt%f_advection_donor == 4
+  if (opt%adv_stream) opt%f_advection_donor = 3
+  opt%adv_energy = opt%f_advection_bend == 2
+  if (opt%adv_energy) opt%f_advection_bend = 1
+  opt%adv_latflux = opt%f_advection_lateral == 2
+  if (opt%adv_latflux) opt%f_advection_lateral = 1
+  opt%cap_cellmean = opt%f_dry_head_cap == 4
+  if (opt%cap_cellmean) opt%f_dry_head_cap = 3
   opt%f_inflow_edge = list%f_inflow_edge
   opt%f_scalar_scheme = list%f_scalar_scheme
   select case (opt%f_advection_scheme)
@@ -1042,8 +1078,9 @@ subroutine m_swflow_enc_init(p, g, b, s)
     call par_stop("list_enc: f_advection_donor=2 (flux-weighted inflow links) was removed;" &
                   //" use f_advection_donor=3 (see developer.md sec.102)")
   else if (opt%f_advection_donor /= 0 .and. opt%f_advection_donor /= 3) then
-    call par_stop("list_enc: f_advection_donor must be 0(wet cells on the edge line) " &
-                  //"or 3(thin edge-line donor carrying little of the inflow ramped toward u_e)")
+    call par_stop("list_enc: f_advection_donor must be 0(wet cells on the edge line), " &
+                  //"3(thin edge-line donor carrying little of the inflow ramped toward u_e) " &
+                  //"or 4(3 + the edge-line donor's velocity used only for the streams it represents)")
   end if
   if (opt%f_advection_donor == 3 .and. (opt%p_adv_donor_eps <= 0.0 .or. opt%p_adv_donor_eps > 1.0)) then
     call par_stop("list_enc: p_adv_donor_eps must satisfy 0 < p_adv_donor_eps <= 1")
@@ -1054,18 +1091,28 @@ subroutine m_swflow_enc_init(p, g, b, s)
     call par_info("swflow_enc: f_advection_donor = 0 (edge-line donor used as is; the default until 2026-11-09. " &
                   //"The default 3 treats thin donors carrying little of the inflow as neutral)")
   end if
-  if (opt%f_advection_donor == 3 .and. opt%f_advection_scheme >= 2) then
+  if (opt%f_advection_donor == 3 .and. .not. opt%adv_stream .and. opt%f_advection_scheme >= 2) then
     call par_info("swflow_enc: f_advection_donor = 3 (edge-line donor ramped toward u_e when it carries " &
                   //"less than p_adv_donor_eps = "//rtoa(opt%p_adv_donor_eps)//" of the largest inflow link " &
                   //"and is shallower than p_adv_donor_eps times the face cell; " &
                   //"side-face wet/dry tests weighted by min(1, h/dd))")
+  end if
+  ! 4(§113): 3 の規則に加えて、面の流束を、面のセルへ入ってくる連結ごとの流れに分け、線 k の供給元の流速を、
+  ! その連結が代表する流れの分だけに掛ける(残りは中立 = f_advection_bend の経路の値)
+  if (opt%adv_stream .and. opt%f_advection_scheme >= 2) then
+    call par_info("swflow_enc: f_advection_donor = 4 (the rule of 3 with p_adv_donor_eps = " &
+                  //rtoa(opt%p_adv_donor_eps)//", and the face flux is split into the streams of " &
+                  //"the inflow links of the face cell: the edge-line donor's velocity is applied to its own stream, " &
+                  //"to forward-oblique streams as far as the donor link carries at least 1/2 of their discharge, " &
+                  //"and to the other streams with the weight of 3)")
   end if
   ! f_advection_bend(§110): 流向面の風上側の供給元が壁・乾床(f_advection_donor = 3 では薄い水膜も)のとき、
   ! 風上値を u_e(中立。§68.8)でなく、面のセルへ実際に流入する水の経路の値にする。スキーム 1 には
   ! 該当する面がないので無効果
   if (opt%f_advection_bend < 0 .or. opt%f_advection_bend > 1) then
     call par_stop("list_enc: f_advection_bend must be 0(neutral u_e on faces whose edge-line donor is a wall " &
-                  //"or dry) or 1(velocity of the actual inflow at this edge's width and the inflow depth)")
+                  //"or dry), 1(velocity of the actual inflow at this edge's width and the inflow depth) " &
+                  //"or 2(1 + acceleration from the arrival speed of the inflow charged in energy-head form)")
   end if
   ! 1 は、面のセルへの流入が流出の p_adv_donor_eps 倍に満たないときに中立へ寄せ、流入の線の先のセルが同じ
   ! 水体か(水深が面のセルの p_adv_donor_eps 倍以上か)も見る(path_value)ので、f_advection_donor が 3 で
@@ -1081,25 +1128,35 @@ subroutine m_swflow_enc_init(p, g, b, s)
                   //"or a thin film; the default until 2026-11-15. The default 1 uses the velocity of the actual " &
                   //"inflow of the face cell)")
   end if
-  if (opt%f_advection_bend == 1 .and. opt%f_advection_scheme >= 2) then
+  if (opt%f_advection_bend == 1 .and. .not. opt%adv_energy .and. opt%f_advection_scheme >= 2) then
     call par_info("swflow_enc: f_advection_bend = 1 (faces whose edge-line donor is a wall, dry or a thin film " &
                   //"take the velocity the actual inflow of the face cell would have at this edge's width and " &
                   //"the inflow depth, instead of u_e)")
+  end if
+  ! 2(§113): 1 の規則に加えて、中立の分に、辺の流速が「到着した水の速さ」を上回る分の加速を、エネルギー水頭を
+  ! 保存する形の移流項で数える(経路の値の項とは、大きい方)
+  if (opt%adv_energy .and. opt%f_advection_scheme >= 2) then
+    call par_info("swflow_enc: f_advection_bend = 2 (the rule of 1 (inflow of the face cell at this edge's width and " &
+                  //"the inflow depth, instead of u_e, on faces whose edge-line donor is a wall, dry or a thin film), " &
+                  //"and on the same faces an edge running faster than the arrival speed a of that inflow is charged " &
+                  //"the acceleration (u_e^2 - a^2) / (2 L) in energy-head form, whichever of the two is larger)")
   end if
   ! f_advection_lateral(§110.25): 側方面で、平行リンクが入ってくる水に比べて薄い水膜のときは代表させず、
   ! 辺の線に沿う流れへ別の向きから入る水の運動量の不足を数える。f_advection_donor = 3 の連続な重みの上に
   ! 組み立てているので、3 が前提。スキーム 1 には側方面がないので無効果
   if (opt%f_advection_lateral < 0 .or. opt%f_advection_lateral > 1) then
-    call par_stop("list_enc: f_advection_lateral must be 0(side faces take the velocity of the parallel link) " &
-                  //"or 1(parallel links much thinner than the entering water are not used, and water joining " &
-                  //"the flow along the edge line from another direction is charged its momentum deficit)")
+    call par_stop("list_enc: f_advection_lateral must be 0(side faces take the velocity of the parallel link), " &
+                  //"1(parallel links much thinner than the entering water are not used, and water joining " &
+                  //"the flow along the edge line from another direction is charged its momentum deficit) " &
+                  //"or 2(1 + parallel links carrying more than the entering water are used in proportion)")
   end if
-  ! f_advection_lateral = 1 は、f_advection_donor = 3 の側方面の重みの上に働く。3 でなければ効かない(0 と
+  ! f_advection_lateral = 1・2 は、f_advection_donor = 3・4 の側方面の重みの上に働く。そうでなければ効かない(0 と
   ! 同じ扱いにして、そう表示する。停止はしない: f_advection_donor = 0〜2 を指定した設定が、f_advection_lateral の
   ! 値によらず動くように。§110.28)
   if (opt%f_advection_lateral == 1 .and. opt%f_advection_scheme >= 2 .and. opt%f_advection_donor /= 3) then
     opt%f_advection_lateral = 0
-    call par_info("swflow_enc: f_advection_lateral = 1 has no effect unless f_advection_donor = 3 (treated as 0)")
+    opt%adv_latflux = .false.
+    call par_info("swflow_enc: f_advection_lateral = 1 or 2 has no effect unless f_advection_donor = 3 or 4 (treated as 0)")
   end if
   ! 0 は 2026-11-16 までの既定(側方面は平行リンクの流速をそのまま使う)。雨で濡れた岸の水膜の遅い流速が
   ! 河道の流れを減速し、合流の損失を岸が濡れているときだけ数える(test/wetbank・test/tjunction。§110.25)ので、
@@ -1109,16 +1166,26 @@ subroutine m_swflow_enc_init(p, g, b, s)
                   //"film on a wet bank included; the default until 2026-11-16. The default 1 does not use parallel " &
                   //"links much thinner than the entering water and charges joining water its momentum deficit)")
   end if
-  if (opt%f_advection_lateral == 1 .and. opt%f_advection_scheme >= 2) then
+  if (opt%f_advection_lateral == 1 .and. .not. opt%adv_latflux .and. opt%f_advection_scheme >= 2) then
     call par_info("swflow_enc: f_advection_lateral = 1 (on side faces, parallel links thinner than " &
                   //"p_adv_donor_eps = "//rtoa(opt%p_adv_donor_eps)//" of the entering water are not used, and " &
                   //"water joining the flow along the edge line from another direction is charged the momentum " &
                   //"deficit (1 - cos(theta)) u_e)")
   end if
+  ! 2(§113): 1 の規則に加えて、平行リンクの単位幅流量が、入ってくる水の出どころのセルの、辺の向きの単位幅流量の
+  ! 2 倍を超えるとき、その比で、平行リンクの流速を使う度合いを下げる(速い平行リンクの運動量を持ち込まない)
+  if (opt%adv_latflux .and. opt%f_advection_scheme >= 2) then
+    call par_info("swflow_enc: f_advection_lateral = 2 (the rule of 1 (thin parallel links not used, joining water " &
+                  //"charged its momentum deficit), and a parallel link whose unit discharge exceeds twice that of " &
+                  //"the cell the entering water comes from, along the edge, is used in proportion to the ratio)")
+  end if
+  ! 面のセルの隣のセルの 8 リンクの流量を読むか(mn・fwd・frw のエッジ幅 2 の交換。§110.25・§113)
+  opt%adv_wide = opt%f_advection_scheme >= 2 .and. (opt%f_advection_lateral == 1 .or. opt%adv_stream)
   if (opt%f_dry_head_cap < 0 .or. opt%f_dry_head_cap > 3) then
     call par_stop("list_enc: f_dry_head_cap must be 0(off), 1(cap edge depth toward dry cells by energy head), " &
-                  //"2(1 + also toward wet cells whose bed is above the water level of the sending cell) " &
-                  //"or 3(cap edge depth on climbing edges by the energy head taken with the approach flow)")
+                  //"2(1 + also toward wet cells whose bed is above the water level of the sending cell), " &
+                  //"3(cap edge depth on climbing edges by the energy head taken with the approach flow) " &
+                  //"or 4(3 + the approach speed limited by the mean velocity of the sending cell)")
   end if
   ! 2 は 2026-11-16 までの既定(頭打ちの速度水頭を、この辺自身の流速から取る)。河道の水が岸へあふれ始める
   ! 時刻と量が時間刻みに依り(test/bankspill)、急な段々の河道で、乾いた岸へ射流が乗り上げる所の流れの水頭が
@@ -1129,11 +1196,18 @@ subroutine m_swflow_enc_init(p, g, b, s)
                   //"edge itself; the default until 2026-11-16. The default 3 caps climbing edges with the approach " &
                   //"flow counted)")
   end if
-  if (opt%f_dry_head_cap == 3) then
+  if (opt%f_dry_head_cap == 3 .and. .not. opt%cap_cellmean) then
     call par_info("swflow_enc: f_dry_head_cap = 3 (edge depth on climbing edges, dry or wet, is capped by the energy head " &
                   //"of the sending cell above the receiving bed, with the flow approaching along the edge line counted " &
                   //"by its velocity head (a supercritical approach flow by the specific energy of the critical flow of " &
                   //"the same discharge), and by a harmonic-mean floor for submerged steps)")
+  end if
+  ! 4(§113): 3 の規則の、入ってくる流れの速さ u_a を、送り手のセルの平均の流量(s%m, s%n)の、辺の向きの成分 ÷
+  ! 水深で上から止める(階段状の河道の対角の連結の流速を、そのまま速度水頭に数えない)
+  if (opt%cap_cellmean) then
+    call par_info("swflow_enc: f_dry_head_cap = 4 (the rule of 3 (edge depth on climbing edges capped by the energy " &
+                  //"head with the approach flow counted, and a harmonic-mean floor), with the speed of the approach " &
+                  //"flow limited by the mean velocity of the sending cell projected on the edge)")
   end if
   if (opt%f_inflow_edge < 0 .or. opt%f_inflow_edge > 2) then
     call par_stop("list_enc: f_inflow_edge must be 0(no advection on edges touching inflow cells), " &
@@ -1212,7 +1286,7 @@ subroutine m_swflow_enc_init(p, g, b, s)
   if (chn%have_frw) call build_channel_frw(g)
   ! f_advection_lateral = 1 は、エッジ行 js − 3 の frw も読む(line_flow の実流量。§110.25)。build_channel_frw の
   ! 冗長構築は行 jsh .. jeh − 1 なので、行 jsh − 1 を隣のランクの値で埋める(静的。1 回だけ)
-  if (chn%have_frw .and. opt%f_advection_lateral == 1 .and. opt%f_advection_scheme >= 2) call par_halo_edge(chn%frw, 2)
+  if (chn%have_frw .and. opt%adv_wide) call par_halo_edge(chn%frw, 2)
   if (chn%have_width) then
     call build_wfrac(g)
     ! 地下の貯留から地表水への受け渡しの水深換算(gw_to_h。§26.1)用の写し
@@ -1318,7 +1392,8 @@ subroutine m_swflow_enc_calc(p, g, b, s, ierror)
   call par_halo_cell(s%vv)
   ! f_advection_lateral = 1 は、側方面の流入元のセルの 8 リンクの流量を読む(line_flow)。斜めエッジの
   ! n 側の流入元は行 j − 2 にあり、その南のリンクはエッジ行 j − 3 なので、mn を幅 2 で交換する(§110.25)
-  if (opt%f_advection_lateral == 1 .and. opt%f_advection_scheme >= 2) then
+  ! f_advection_donor = 4 の src_fwd(斜めの流入元のセルの 8 リンク)も、同じ行まで読む(§113)
+  if (opt%adv_wide) then
     call par_halo_edge(sx_mod%mn, 2)
   else
     call par_halo_edge(sx_mod%mn)
@@ -1329,6 +1404,10 @@ subroutine m_swflow_enc_calc(p, g, b, s, ierror)
   ! 全ランク同一 → collective 安全)
   if (opt%f_advection_scheme >= 2) then
     call par_halo_edge(sx_mod%uv, 2)
+    call par_halo_cell(s%m)
+    call par_halo_cell(s%n)
+  else if (opt%cap_cellmean) then
+    ! f_dry_head_cap = 4 は、スキーム 1 でも、送り手のセル(行 j − 1)の m, n を読む(cap_approach。§113)
     call par_halo_cell(s%m)
     call par_halo_cell(s%n)
   end if
@@ -1358,7 +1437,7 @@ subroutine m_swflow_enc_calc(p, g, b, s, ierror)
   if (chn%have_fwd) call build_fwd(p, g, s)
   ! 同上: 実流量(mn·l8·frw·fwd)に使う fwd も、行 js − 3(成分 1〜3)と行 js − 2 の成分 4 を、隣のランクの
   ! 値で埋める(build_fwd の冗長構築は、読み手のあった範囲 = 行 js − 2 の成分 1〜3 まで)
-  if (chn%have_fwd .and. opt%f_advection_lateral == 1 .and. opt%f_advection_scheme >= 2) call par_halo_edge(chn%fwd, 2)
+  if (chn%have_fwd .and. opt%adv_wide) call par_halo_edge(chn%fwd, 2)
   if (chn%have_cwd) call build_cwd(g, s)
 
   ! 非静水圧補正: ステップ頭のエッジ流速 u^n を複製する(NH ON のみ)
@@ -2788,6 +2867,14 @@ end function
 !   大きくならないように。そういう辺は上流側の頭打ち cap_he_upwind でほとんど流れない)。
 !   側方 Neumann の境界面(相手が鏡像セル。put_neumann_face が k = 1..8 で呼ぶ)は、線の上流の辺を
 !   持たないので 0(この辺の流速だけで頭打ちする)
+!   f_dry_head_cap = 4(opt%cap_cellmean。developer.md §113。ENCflow 独自): u_a を、送り手のセルの平均の流量
+!   (s%m, s%n。時刻 n)の、辺の向きの成分 ÷ 送り手の水深で、上から止める。上流の辺の単位幅流量は、その連結の
+!   通過幅あたりの値なので、1 セル幅の階段状の河道の対角の連結(通過幅が格子幅の 0.707 倍)では、河道の流速の
+!   1.41 倍になる。そのまま速度水頭に数えると、対角の連結の先(線の延長)にある岸のセルへの乗り上げの高さを
+!   2 倍に数え、水位より高い岸に水が載る(test/stairbank の段のある階段の河道。§112.11)。セルの平均の流量は、
+!   8 リンクの流量を、流れの実際の向きに合成した量で、階段のセル(対角の連結から入り、軸の連結から出る)では、
+!   対角の向きの成分が、河道の流速の 1.06 倍になる。一様な流れと、まっすぐな軸・対角の河道では、2 つは同じ値で、
+!   3 と変わらない。m, n はステップ頭にセル幅で交換済み(スキーム 1 でも。calc_enc_flux の冒頭)
 !----------------------------------------------------------------------
 pure subroutine cap_approach(p, s, sx, i, j, k, in, jn, uac, uan)
   type(t_sysparam), intent(in) :: p
@@ -2805,9 +2892,11 @@ pure subroutine cap_approach(p, s, sx, i, j, k, in, jn, uac, uan)
   hv = s%h(i,j)
   if (sct%have_sect) hv = sect_v(hv, sct%sdep(i,j))
   uac = max(sx%mn(k, i+die(9-k), j+dje(9-k)), 0.0) / max(hv, p%dd)
+  if (opt%cap_cellmean) uac = min(uac, max(s%m(i,j) * geo%n8x(k) + s%n(i,j) * geo%n8y(k), 0.0) / max(hv, p%dd))
   hv = s%h(in,jn)
   if (sct%have_sect) hv = sect_v(hv, sct%sdep(in,jn))
   uan = max(-sx%mn(k, in+die(k), jn+dje(k)), 0.0) / max(hv, p%dd)
+  if (opt%cap_cellmean) uan = min(uan, max(-(s%m(in,jn) * geo%n8x(k) + s%n(in,jn) * geo%n8y(k)), 0.0) / max(hv, p%dd))
 end subroutine
 
 
