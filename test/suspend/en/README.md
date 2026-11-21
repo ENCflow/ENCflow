@@ -99,7 +99,7 @@ empirical formulas that presuppose calibration).
 | Configuration | Total solid | Co-update | max hs / max\|dz\| | Result |
 |---|---|---|---|---|
 | 1 linear formula | 0.0 | about 1e-13 or less (round-off) | 0.49 mm / 1.13 mm | PASS |
-| 2 Itakura-Kishi | 0.0 | about 1e-13 or less (round-off) | 1.12 mm / 2.52 mm | PASS |
+| 2 Itakura-Kishi | 0.0 | about 1e-13 or less (round-off) | 1.12 mm / 2.53 mm | PASS |
 
 - At morfac = 1 the E-D exchange is exactly antisymmetric, and the total
   solid is conserved to machine precision (ledger separation of MORFAC: the

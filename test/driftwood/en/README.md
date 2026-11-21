@@ -194,7 +194,7 @@ of the flat part (center).
 
 | Configuration | Result | Verdict |
 |---|---|---|
-| 5 capture ratio 1 and the drag of the jam | volume conservation 4.8e-13 m³, jam 20.000000 m³ (0.200 m³/m² per cell). Downstream 1.993 m, upstream 3.001 m, analytical 2.997 m; ratio of the rises 1.005 | PASS |
+| 5 capture ratio 1 and the drag of the jam | volume conservation 4.7e-13 m³, jam 20.000000 m³ (0.200 m³/m² per cell). Downstream 1.993 m, upstream 3.001 m, analytical 2.997 m; ratio of the rises 1.005 | PASS |
 | 5a packing limit | w/h of the edges = 0.040 > φ = 0.02. Downstream 1.993 m, upstream 2.488 m, analytical 2.495 m; ratio of the rises 0.986 | PASS |
 | 5b → 5c split continuation by restart | driftwood.dat (including the jammed wood), state.dat and swflow_enc.dat byte-identical to the continuous run | PASS |
 | 5d capture ratio 0.3 | jam 6.080 m³ / recruited 20 m³ = 0.304 | PASS |

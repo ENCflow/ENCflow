@@ -145,3 +145,16 @@ is 4.3935e-2 m³/s (1.019 times the base), and the solids in the closed basin ar
 total; the stirring, bed-load, asymmetry and cross-shore-direction checks still pass), and the reference was
 updated. All checks pass; with the release build np = 2 agrees with the serial reference (Log.txt, Z9998,
 Hs9998) and the whole set of Run_MPI.sh checks passes.
+
+The switch of the defaults to the four values of the advection term (added 2026-11-21;
+`f_advection_donor = 4`, `f_advection_bend = 2`, `f_advection_lateral = 2` and `f_dry_head_cap = 4`;
+developer.md §114) changes the beach results slightly (the total longshore transport goes from 4.3113e-2 to
+4.3114e-2 m³/s, the longshore transport with the breaking turbulence is 4.3936e-2 m³/s (1.019 times the
+base), and the solids in the closed basin are conserved to 8.5e-14 of the total; the stirring, bed-load,
+asymmetry and cross-shore-direction checks still pass), and the reference was updated. The row differences
+of quantities that should be uniform alongshore grow from 1.6e-6 to 8.0e-6 in the row totals of the
+longshore transport and from 9.5e-7 to 3.5e-6 m in the bed change (the bounds are 1e-4 and 1e-5 m). These
+differences come from the boundary faces of lateral Neumann sides not using the rules of the four values, a
+limit described in §4.4 of [Advection schemes](../../../docs/en/users_guide/advection.md). All checks pass,
+and with the release build np = 1, 2 and 4 agree with the serial results of the same build (Log.txt, Z9998,
+Hs9998).

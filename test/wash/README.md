@@ -47,7 +47,7 @@ python3 Fig.py    # figs/wash.png(引数 en で英語版を en/figs/ に)
 |---|---|---|
 | 固体総量 Σhs + (1 − λ)Σ(z − z₀) | 0.0(機械精度) | PASS |
 | 共動更新 max\|(sd − sd₀) − (z − z₀)\| | 2.1e-14 m | PASS |
-| 活性 max hs / max\|z − z₀\| | 2.42 mm / 5.58 mm | PASS |
+| 活性 max hs / max\|z − z₀\| | 2.42 mm / 5.59 mm | PASS |
 
 - wash は近傍を読まない 1 パスの地形プロセスなので OpenMP でも安全で、
   np = 1, 2, 4 の state.dat は逐次とバイト一致します(§19)。

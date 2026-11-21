@@ -58,9 +58,9 @@ python3 Fig.py    # figs/coastal_drain.png(引数 en で英語版を en/figs/ �
 
 | 検定 | 計算値 | 解析値 |
 |---|---|---|
-| 最終水位 E | 0.4988〜0.5000 m(陸の全域) | 潮位 0.5 m |
+| 最終水位 E | 0.4986〜0.5000 m(陸の全域) | 潮位 0.5 m |
 | 管路セル hgc(全 25 セル) | 0.1260 m | cap + (0.5 − (−0.8))·slot_sy = 0.1260 m |
-| 吐口の累積放流 | 7.028 m³(画面 "outfall discharge total"。2026-10-18 の既定昇格後の値) | — |
+| 吐口の累積放流 | 7.191 m³(画面 "outfall discharge total") | — |
 | 回帰 | Log.txt が reference に ULP = 0 | PASS |
 
 - 負の管底マップは実装前は par_stop で拒否されていました(§46.5 (7))。

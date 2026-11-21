@@ -82,7 +82,7 @@ Left: the release area with collapse depth D = 2 m. Centre: the terrain change
 after 90 s. The release area is lowered by up to 1.59 m, and a fan-shaped deposit
 lies on the slope from directly below it to the slope break (with a retarding
 stress of 4000 Pa the flow stops almost entirely on the slope). The tip of the fan
-passes the slope break by one or two cells and deposits 0.43 m in the first cell of
+passes the slope break by one or two cells and deposits 0.44 m in the first cell of
 the flat part (the deposit on the flat part is 4 % of the deposited volume).
 Right: the remaining sediment
 in motion hs is only a thin fringe of about a mm beyond the slope break, 0.5% of the
@@ -96,7 +96,7 @@ released amount (99.5% has been fixed to the bed).
 | Configuration 1 (2) solid ledger Σhs + (1 − λ)Σdz − cs Q tt | about 1e-11 m·cell or less (round-off) | PASS |
 | Configuration 1 (3) <h_t> versus the analytical solution | 0.3525 / 0.3525 m (0.0%), CV 0.000, C 0.444 (theory 0.444) | PASS |
 | Configuration 2 (1) solid ledger | about 1e-10 m·cell or less (round-off) | PASS |
-| Configuration 2 (2) activity | release area min dz = −1.59 m, flat max dz = 0.427 m | PASS |
+| Configuration 2 (2) activity | release area min dz = −1.59 m, flat max dz = 0.439 m | PASS |
 | Configuration 2 (3) stopping | remaining Σhs / released solids = 0.005 (< 0.3) | PASS |
 
 - The Voellmy uniform flow agrees with the analytical solution to 4 digits, and
@@ -156,8 +156,12 @@ released amount (99.5% has been fixed to the bed).
   f_dry_head_cap = 3 (with 3 kept and f_advection_lateral = 0 it is still 0.427 m; with
   f_dry_head_cap = 2 restored it is 0.079 m). We think this is because 3 counts the velocity head of
   the flow entering the sending cell in the cap on the edge depth of climbing edges, so that the flow
-  arriving later passes more easily over the deposit that stopped first (not verified). The values of
-  the table and the text and the figures are from this computation.
+  arriving later passes more easily over the deposit that stopped first (not verified). After the four
+  values of the advection term (f_advection_donor = 4, f_advection_bend = 2, f_advection_lateral = 2,
+  f_dry_head_cap = 4) became the default on 2026-11-21, the lowering of the release area stays at 1.59 m
+  and the deposit on the flat part goes from 0.427 to 0.439 m (the next cell from 0.067 to 0.103 m; the
+  volume deposited on the flat part from 3.7 to 4.0 % of the whole), with a remaining fraction of 0.005
+  (developer.md §114). The values of the table and the text and the figures are from this computation.
 
 ## Related documents
 

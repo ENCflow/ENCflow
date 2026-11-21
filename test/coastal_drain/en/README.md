@@ -72,9 +72,9 @@ over the whole domain (h = 0.30 m); the head difference from the sea is
 
 | Check | Computed | Analytical |
 |---|---|---|
-| Final water level E | 0.4988–0.5000 m (all of the land) | Tide level 0.5 m |
+| Final water level E | 0.4986–0.5000 m (all of the land) | Tide level 0.5 m |
 | Conduit cell hgc (all 25 cells) | 0.1260 m | cap + (0.5 − (−0.8))·slot_sy = 0.1260 m |
-| Cumulative outfall discharge | 7.028 m³ (screen "outfall discharge total"; value after the promotion of the defaults on 2026-10-18) | — |
+| Cumulative outfall discharge | 7.191 m³ (screen "outfall discharge total") | — |
 | Regression | Log.txt agrees with the reference at ULP = 0 | PASS |
 
 - Before the implementation, a negative invert map was rejected by par_stop

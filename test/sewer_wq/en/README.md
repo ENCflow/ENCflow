@@ -64,10 +64,10 @@ final water depth. The erupted water flows east down the slope and ponds to
 | Quantity | Computed (t = 1 h) |
 |---|---|
 | Surcharge and outfall in_gwc | 2.0008e7 |
-| Recaptured by inlets to_gwc | 4.884e4 |
+| Recaptured by inlets to_gwc | 4.885e4 |
 | Die-off decay | 1.118e6 |
 | Remaining on the surface mass_surface | 1.884e7 |
-| Closure in − to − decay − surface | +0.64 (relative 3.2e-8 = rounding of the 8 displayed digits) |
+| Closure in − to − decay − surface | −0.49 (relative 2.4e-8 = rounding of the 8 displayed digits) |
 | Water budget S_total(1 h) | Cumulative rainfall 51.67 mm (closed boundaries) |
 | Regression | Log.txt and wq.csv match the reference | 
 

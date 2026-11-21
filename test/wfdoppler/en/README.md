@@ -134,3 +134,12 @@ comes from the changes of defaults in between, such as `f_advection_donor = 3`, 
 and `f_advection_bend = 1`, and has not been separated out), and the largest relative difference on the
 following current with 72 direction bins is 3.23e-5 (ratio 3.26). The other values and the reference
 (the basic configuration) are unchanged, and all checks pass.
+
+After the switch of the defaults to the four values of the advection term (added 2026-11-21;
+`f_advection_donor = 4`, `f_advection_bend = 2`, `f_advection_lateral = 2` and `f_dry_head_cap = 4`;
+developer.md §114), the wave height on the jet of the river mouth is 0.383 m (0.200 m without the current
+effect), the blocking in the ledger is 127 W and the largest relative difference on the following current
+with 72 direction bins is 3.24e-5 (ratio 3.25). The ledger of the blocking by the opposing current
+(blocked 0.92 W), the conservation of the action flux and the agreement of the unsteady run are unchanged
+to the digits shown. The reference was updated. All checks pass, and with the release build np = 1, 2 and
+4 agree with the serial results of the same build.

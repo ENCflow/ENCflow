@@ -46,8 +46,8 @@ python3 Fig.py en # en/figs/kdpart.png
 
 Left: the destinations of the injected 400 g after 8 s (logarithmic axis).
 At Kd = 200 most of it remains in the surface water; the infiltrated
-dissolved phase is 0.045 g and the settled particulate phase 0.66 g. At
-Kd = 2e5 the particulate phase dominates: settling increases to 35.9 g and
+dissolved phase is 0.045 g and the settled particulate phase 0.67 g. At
+Kd = 2e5 the particulate phase dominates: settling increases to 36.0 g and
 infiltration decreases to 0.028 g. In both cases the sum of the three equals
 400.0000 g. Center: the final concentration at Kd = 200, spreading from the
 point source on the ring wave. Right: the particulate phase (the part
@@ -57,9 +57,9 @@ attached to suspended sediment).
 
 | Quantity | Kd = 200 | Kd = 2e5 | Result |
 |---|---|---|---|
-| mass_surface / mass_gw / mass_pool (g) | 399.29 / 0.0445 / 0.664 | 364.07 / 0.0282 / 35.90 | — |
+| mass_surface / mass_gw / mass_pool (g) | 399.28 / 0.0445 / 0.671 | 363.98 / 0.0282 / 35.99 | — |
 | Closure: sum − injected 400 g | 0.000000 | 0.000000 | PASS |
-| Monotonicity settle_g | 0.664 → 35.9 (increase) | | PASS |
+| Monotonicity settle_g | 0.671 → 36.0 (increase) | | PASS |
 | Monotonicity to_gw_g | 4.45e-2 → 2.82e-2 (decrease) | | PASS |
 
 - The dissolved fraction is fd = 1/(1 + Kd·Css); only the dissolved phase

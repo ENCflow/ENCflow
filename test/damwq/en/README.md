@@ -68,7 +68,7 @@ is preserved along the whole pathway.
 |---|---|---|---|
 | Released mass rel_dam (5400 s) | 2700.0000 g | 2700 g | All digits agree |
 | Retention pond to_rs = mass_rs | 120.00000 g | 120 g | All digits agree |
-| to_dam − rel_dam = mass_dam | 4538.5562 − 2700.0000 = 1838.5562 g | mass_dam 1838.5562 | Agree |
+| to_dam − rel_dam = mass_dam | 4538.3737 − 2700.0000 = 1838.3737 g | mass_dam 1838.3737 | Agree |
 | Total mass | 4000.0000 g | 4000 g | PASS |
 | Final concentration (wet cells) | 100.0000 mg/L | 100 | PASS |
 

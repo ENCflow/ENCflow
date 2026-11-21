@@ -83,9 +83,9 @@ to the flat part of the lake bed (−40 m) at x ≥ 300 m and deposits 5.2 m
 distribution of the terrain change; lowering of the source area (blue) and
 deposition on the lake bed (red). Bottom left and right: water-surface
 displacement. The drawdown behind the plunge point and the leading wave
-spreading across the lake (maximum 0.75 m at 60 s in the lake part x ≥ 250 m)
+spreading across the lake (maximum 0.78 m at 60 s in the lake part x ≥ 250 m)
 are visible. The run-up in the corner of the shoreline and the side wall reaches
-1.1 m at 60 s (before the fix of the steep-slope gravity correction of 2026-11-04,
+1.0 m at 60 s (before the fix of the steep-slope gravity correction of 2026-11-04,
 developer.md §91, the lake part reached 0.92 m and the run-up in the corner was
 lower than that).
 
@@ -94,7 +94,7 @@ lower than that).
 Configuration 4 (left) and the control (right). The mass that flowed over
 land as a debris flow (mixture) becomes, with the handover, a bed layer in
 the cells with a ponded depth of 2 m or more and runs along the lake bed
-(deposit 5.1 m, handover 17,597 m³ = 92 % of the release); without the
+(deposit 5.1 m, handover 17,534 m³ = 92 % of the release); without the
 handover it stops near the shoreline and does not reach the lake bed
 (deposit on the flat part 0 m).
 
@@ -106,10 +106,10 @@ handover it stops near the shoreline and does not reach the lake bed
 | Configuration 1: cross-section passage speed | 7.519 m/s (−2.9% = agrees with the boundary layer 2·ld/ny of the 2 wall rows) | PASS |
 | Configuration 2: interior Vb | 7.736–7.746 m/s (0.14%) | PASS |
 | Configuration 2: cross-section passage speed | 7.175 m/s (−7.4%; wall ends + staircase cross-section) | PASS |
-| Configuration 3: ledger / Σh | Σdz and max\|Δ(z − sd)\| both about 1e-10 or less (round-off) / Σh unchanged (−5.0e-4 m·cell) | PASS |
-| Configuration 3: lake-bed deposition / wave generation | flat lake bed max dz 5.20 m / water-surface maximum 0.56 m (flat part of the lake bed) | PASS |
-| Configuration 3: release ledger | released 19,110 = stopped 16,649 + moving 2,461 m³ | PASS |
-| Configuration 4: handover | 17,597 m³, lake-bed max dz 5.12 m; control 0.00 m | PASS |
+| Configuration 3: ledger / Σh | Σdz and max\|Δ(z − sd)\| both about 1e-10 or less (round-off) / Σh unchanged (+2.7e-3 m·cell) | PASS |
+| Configuration 3: lake-bed deposition / wave generation | flat lake bed max dz 5.19 m / water-surface maximum 0.56 m (flat part of the lake bed) | PASS |
+| Configuration 3: release ledger | released 19,110 = stopped 16,678 + moving 2,432 m³ | PASS |
+| Configuration 4: handover | 17,534 m³, lake-bed max dz 5.11 m; control 0.00 m | PASS |
 
 (Values recomputed on 2026-11-05 with the steep-slope gravity correction aligned to the default 2 (friction
 along the slope; developer.md §93). Only the rounding values of the ledger of configuration 3 and the handover of
@@ -137,7 +137,15 @@ to 16,649 m³; in configuration 4 the lake-bed deposit goes from 5.120 to 5.115 
 the mixture from 2.92 to 2.95 m/s (the handover stays at 17,597 m³). In configuration 3 the change
 comes from f_dry_head_cap = 3 (with 3 kept and f_advection_lateral = 0 the lake-bed deposit of
 5.20 m, the water-surface maximum of 0.56 m and the leading wave of 0.75 m are the same);
-developer.md §110.32.)
+developer.md §110.32.) After the four values of the advection term (f_advection_donor = 4,
+f_advection_bend = 2, f_advection_lateral = 2, f_dry_head_cap = 4) became the default on 2026-11-21,
+the lake-bed deposit of configuration 3 goes from 5.20 to 5.19 m, the leading wave in the lake part from
+0.75 to 0.78 m and the run-up in the corner of the shoreline from 1.1 to 1.0 m (the water-surface
+maximum over the flat part of the lake bed stays at 0.56 m), and the stopped volume of the release
+ledger from 16,649 to 16,678 m³; in configuration 4 the handover goes from 17,597 to 17,534 m³, the
+lake-bed deposit from 5.115 to 5.107 m and the speed of the mixture from 2.95 to 2.92 m/s. The change
+of the run-up comes mainly from f_dry_head_cap = 4 (with 3 restored it is 1.10 m), and that of the speed
+of the mixture from f_advection_bend = 2 (with 1 restored it is 2.95 m/s; developer.md §114.)
 
 - The 45°-rotated benchmark is a detector for a wrong normalization of the
   8-direction distribution, which makes the passage speed come out √2 times

@@ -51,7 +51,7 @@ make
 | (1) Σ(z − z₀) | about 1e-12 or less (round-off) | about 1e-12 or less (round-off; the supply limiter acted in 326,305 cell updates) |
 | (2) max\|z − z₀\| of the dry banks | 0 | 0 |
 | (3) co-moving update | about 1e-13 or less (round-off) | about 1e-13 or less (round-off) |
-| (4) max\|z − z₀\| in the channel | 11.5 mm | 6.1 mm |
+| (4) max\|z − z₀\| in the channel | 11.4 mm | 6.0 mm |
 | (5) min sd | 9.99 m | 0 (bedrock exposed; the floor is not broken through) |
 
 With the code before the change, (2) is 0.39 mm / 0.50 mm and (1) for the

@@ -80,13 +80,13 @@ make
 | Transect | Real coordinates | Cell indices |
 |---|---|---|
 | Wall to wall 0–40° | Q (9.8604–9.8605; equal to Q_in in 4 digits) | Q (9.8604) |
-| Wall to wall 45–85° | Q (9.8604–9.8605; equal to Q_in in 4 digits) | Q − q_end (9.3909–9.3917; ratio 1.0000–1.0008) |
-| Interior 0–40° | F·n̂·L (ratio 1.00000–1.00001) | q (n − δ), δ = 0.5860–0.5868 |
-| Interior 45–85° | F·n̂·L (ratio 1.00000–1.00016) | q \|Δj\| (ratio 1.00004–1.00027) |
+| Wall to wall 45–85° | Q (9.8604–9.8605; equal to Q_in in 4 digits) | Q − q_end (9.3909–9.3918; ratio 1.0000–1.0002) |
+| Interior 0–40° | F·n̂·L (ratio 0.99999–1.00001) | q (n − δ), δ = 0.5855–0.5859 |
+| Interior 45–85° | F·n̂·L (ratio 1.00000–1.00011) | q \|Δj\| (ratio 1.00001–1.00017) |
 | Parallel | 0.0000 | 0.0001 |
 
 - The wall-to-wall values are the same at 2100 s and 2400 s (steady state).
-- The interior δ is 0.03 to 0.15 % above d = 0.5858 and is nearly the same for
+- The interior δ differs from d = 0.5858 by −0.05 to +0.02 % and is nearly the same for
   every length (n = 7, 11, 15) and angle.
 - With MPI, np = 1, 2 and 4 all give transect CSVs and final distributions
   identical byte for byte to the serial run (every transect crosses rank

@@ -60,7 +60,7 @@ python3 Fig.py    # figs/bldgdebris.png(引数 en で英語版を en/figs/ に)
 | 2 流木 + 瓦礫(荷重判定) | 丸め誤差 | 0.051 / 0.019 | 0.40 mm | PASS。2′ と state.dat・driftwood.dat がバイト一致 |
 | 3 リスタート | bldgdebris.dat・state.dat が通しとバイト一致 | | | PASS |
 | 4 空隙率帰還 | 丸め誤差 | 0.082 / 0.075 | 0.87 mm | PASS。S(t) が 4′ と一致 |
-| 5 既定値 | 丸め誤差 | 15.3 / 5.6 | 0.13 m | PASS。5′ とバイト一致 |
+| 5 既定値 | 丸め誤差 | 15.4 / 5.6 | 0.10 m | PASS。5′ とバイト一致 |
 
 - 材積は gv の重み付きで機械精度で保存され(差は 1e-10 m·cell 程度以下の
   丸め誤差)、空隙率の変更が水体積を保存することも確かめられます(§63.6 B2)。
@@ -80,10 +80,13 @@ python3 Fig.py    # figs/bldgdebris.png(引数 en で英語版を en/figs/ に)
   すると従来の値)。ほかの構成も少し減ります(構成 1 は 0.023 / 0.0070 → 0.021 / 0.0063、構成 4 は
   0.085 / 0.076 → 0.082 / 0.075)。構成 5 の旧値(15.3 / 6.6、0.12 m)は 1 でも 15.3 / 5.9、0.14 m
   で、それより前の変更の後に直し漏れていたものです。
-- 構成 5 の値は、エッジ水深の頭打ちの既定を f_dry_head_cap = 3、側方面の移流の既定を
-  f_advection_lateral = 1 にした後のものです(2026-11-16。developer.md §110.32)。その前の既定
-  (f_dry_head_cap = 2。2026-11-13。developer.md §108)では 15.4 / 5.6、0.14 m、f_dry_head_cap = 1 では
-  15.3 / 5.8、0.13 m でした。構成 1〜4 の値は、どれでも同じです。
+- 構成 5 の値は、移流項の 4 つの値(f_advection_donor = 4・f_advection_bend = 2・f_advection_lateral = 2・
+  f_dry_head_cap = 4)を既定にした後のものです(2026-11-21。developer.md §114)。平坦部の到達は 0.131 → 0.104 m に
+  下がります。主に f_advection_lateral = 2 の分です(1 に戻すと 0.124 m。f_advection_bend だけ戻すと 0.110 m、
+  f_dry_head_cap だけ戻すと 0.106 m、f_advection_donor だけ戻すと 0.096 m)。その前の既定(f_dry_head_cap = 3・
+  f_advection_lateral = 1。2026-11-16。developer.md §110.32)では 15.3 / 5.6、0.13 m、f_dry_head_cap = 2
+  (2026-11-13。developer.md §108)では 15.4 / 5.6、0.14 m、f_dry_head_cap = 1 では 15.3 / 5.8、0.13 m でした。
+  構成 1〜4 の値は、どれでも表示の桁で同じです。
 
 ## 関連文書
 

@@ -94,7 +94,7 @@ python3 make_init.py z > zinit.txt   # regenerate the inputs (bundled; only when
   (the capacity of the edge leaving the inflow cell was 0.72 of the interior),
   and just below the inflow cell of T8 a 2-cell step pattern formed that decayed
   by about −0.7 per cell (second differences +237, −176, +98 mm, …).
-- T4: Σ(z − z0) A = −0.235911 m³ (abraded volume), Σ(sd − sd0) A = 0.693168 m³
+- T4: Σ(z − z0) A = −0.236067 m³ (abraded volume), Σ(sd − sd0) A = 0.693525 m³
   (plucked volume) and Σ Ri A = their sum agree with the ledger within 2e-9;
   Ri = 0 in the rows with multiplier 0.
 - T5: the run saved at 150 s from bare rock and continued is byte-identical to
