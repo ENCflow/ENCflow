@@ -3758,11 +3758,11 @@
     {
       "source": "test/conduit/figs/lateral.png",
       "target": "test/conduit/en/figs/lateral.png",
-      "source_sha256": "285170d44625df446e0faeb965f5df67ae4ecb9877806e5d4ed75c7e0ea61260",
-      "target_sha256": "408109940124ffcf77e72e8000c0f2f5280766581d9117353233f7c94c0871d2",
-      "reviewer": "Claude (Claude Code session; English figure drawn by the same script with the en switch; visual check)",
+      "source_sha256": "5e6790f76d9f7f1efa30ebd27560ae236d25b0d41b5dddf540cbaa669b25fa26",
+      "target_sha256": "b5f32023dc357f55c549784b05da4261e1cf0f09dcc8c72d8564ef1b276a5cce",
+      "reviewer": "Claude (Claude Code session; Japanese and English figures drawn by the same Fig.py from the same results; labels checked)",
       "method": "assistant",
-      "reviewed_on": "2026-10-24"
+      "reviewed_on": "2026-11-21"
     },
     {
       "source": "test/creep/README.md",
@@ -4424,11 +4424,11 @@
     {
       "source": "test/nhsolitary/figs/profiles.png",
       "target": "test/nhsolitary/en/figs/profiles.png",
-      "source_sha256": "88312a63602ccfcfdc225658263e6e798ca882a0c6e38487d6672459033db542",
-      "target_sha256": "93b3528befa19d01d9fcd04b38ade7ca848672af49dde884b04acf1a7d1e4bfe",
-      "reviewer": "Claude (Claude Code session; English figure drawn by the same script with the en switch; visual check)",
+      "source_sha256": "cfde60df451aa6a08ce5804e5e52a0d3a1764a7f90a8a52d59bb229a44f67a7d",
+      "target_sha256": "1f73b4e187e3f3e907d5ff32d51d83abbbe6c41f088a011bb221af168856d0b9",
+      "reviewer": "Claude (Claude Code session; Japanese and English figures drawn by the same Fig.py from the same results; labels checked)",
       "method": "assistant",
-      "reviewed_on": "2026-10-24"
+      "reviewed_on": "2026-11-21"
     },
     {
       "source": "test/nhwave/Dispersion_result.md",
@@ -4973,29 +4973,29 @@
     {
       "source": "test/wave/figs/log.png",
       "target": "test/wave/en/figs/log.png",
-      "source_sha256": "593d6d18919fc43005d72d757b4efb6c8728c7d4b0264dc8a8a3820556726689",
-      "target_sha256": "2f1be355566eae71c6502aa7924aa76d2f31accc1439bc7666a59c03908fdfe2",
-      "reviewer": "Claude (Claude Code session; English figure drawn by the same script with the en switch; visual check)",
+      "source_sha256": "5b9d3b2810d5966a20bf040b237a46a71adae10242eeed317317b94d8ef3d3e3",
+      "target_sha256": "b846f5fb339dcd579ac6bda0e06bf706aebcc726c178a690dd8ab04f6b416990",
+      "reviewer": "Claude (Claude Code session; Japanese and English figures drawn by the same Fig.py from the same results; labels checked)",
       "method": "assistant",
-      "reviewed_on": "2026-10-24"
+      "reviewed_on": "2026-11-21"
     },
     {
       "source": "test/wave/figs/map.png",
       "target": "test/wave/en/figs/map.png",
-      "source_sha256": "95cfa02aa2f274062ddeeaf57e11a86eacb3de1fbc33702700786076f3793682",
-      "target_sha256": "a2dff96757798ed11e9c6c91fc65a84d47423bf2e58a7103cfe5798041ded948",
-      "reviewer": "Claude (Claude Code session; English figure drawn by the same script with the en switch; visual check)",
+      "source_sha256": "a0461a5ee0e0df5d1fc81f69962d84339e3153a82f55c56bb00bd9b658639bd0",
+      "target_sha256": "bfc49bb67e6770adb6eddfad4e0bd6c8e1a9f3a530b85b58c3553d512dcc17d0",
+      "reviewer": "Claude (Claude Code session; Japanese and English figures drawn by the same Fig.py from the same results; labels checked)",
       "method": "assistant",
-      "reviewed_on": "2026-10-24"
+      "reviewed_on": "2026-11-21"
     },
     {
       "source": "test/wave/figs/profile.png",
       "target": "test/wave/en/figs/profile.png",
-      "source_sha256": "3c5ea7b9087cf683771846418f1ba1c18ab20751643d1545cdcafaa79253b1b0",
-      "target_sha256": "c100b91048c273d45dd01e62cb99b8c417b6f50e1fa9f0056a37ec09812bc070",
-      "reviewer": "Claude (Claude Code session; English figure drawn by the same script with the en switch; visual check)",
+      "source_sha256": "f554bff851fa9d6059dbb2dcdbc495f4a70cdd36c53b55b3499769531fc16b53",
+      "target_sha256": "fd41f10b17ff9371faad8585924a0bdfedce788f291c07fdb23fe28e21d6c012",
+      "reviewer": "Claude (Claude Code session; Japanese and English figures drawn by the same Fig.py from the same results; labels checked)",
       "method": "assistant",
-      "reviewed_on": "2026-10-24"
+      "reviewed_on": "2026-11-21"
     },
     {
       "source": "test/wave/param.txt",
