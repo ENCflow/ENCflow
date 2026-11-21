@@ -4316,20 +4316,20 @@
     {
       "source": "test/nhbottom/README.md",
       "target": "test/nhbottom/en/README.md",
-      "source_sha256": "a6ed5b658fe329667b871e5e3f0d8412c50babdb6bcf910a27ac4bf29f637dba",
-      "target_sha256": "08db77fab2d831fea8cc09099fdf01527d406afae7cdc689b7ead9249c210299",
-      "reviewer": "Claude (Claude Code session; configuration 2 (ls_*) aligned to the default f_gravity_correction = 2 (developer.md sec. 93) and recomputed 2026-11-05: the two tables, the values in the notes (crests and troughs, dt sensitivity, trapped-mode amplitude, volume still moving) and the recompute note compared with the Japanese source, rest unchanged since the previous record)",
+      "source_sha256": "ce0e773a2099b2bbba4055a494c94295e569f0bf1e8ac67cb0aa441da8dc128e",
+      "target_sha256": "2f0c53d6d9121ba177f6c0dc905dd6f27d13b1eb87ca8e0fcad2df1cd05adc1d",
+      "reviewer": "Claude (Claude Code session; changed sections compared side by side with the Japanese source; numbers checked against the test runs)",
       "method": "assistant",
-      "reviewed_on": "2026-11-05"
+      "reviewed_on": "2026-11-21"
     },
     {
       "source": "test/nhbottom/figs/landslide.png",
       "target": "test/nhbottom/en/figs/landslide.png",
-      "source_sha256": "f0d4f1287d089936a11dd38d769abed5d8e6d42ba48f6fe8162a9c9abac35309",
-      "target_sha256": "eae487f3160b689708ef69fdac119bb6736e71adb2eac594505648ac8f16d645",
-      "reviewer": "Claude (Claude Code session; tests aligned to the default f_gravity_correction = 2 and recomputed 2026-11-05: both drawn by the case's figure script with and without the en switch from the same results; English figure viewed, labels compared with the Japanese figure)",
+      "source_sha256": "8f810c10ba6bb9fc83103c90196c5d9fe0e2dcf8e20b3e611738072c7894857c",
+      "target_sha256": "5225a6f2f1bd4cd65a359b544efb701a09d43c69dbfb6239521be5c497baa2bd",
+      "reviewer": "Claude (Claude Code session; Japanese and English figures drawn by the same script from the same results; labels checked)",
       "method": "assistant",
-      "reviewed_on": "2026-11-05"
+      "reviewed_on": "2026-11-21"
     },
     {
       "source": "test/nhbottom/figs/uplift.png",
