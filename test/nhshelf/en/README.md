@@ -25,7 +25,7 @@ hydrostatic; the terrain is schematic). Bottom: the NH (V2) water surface
 every 20 s. After crossing the slope (grey band) it splits into a leading
 soliton and a trailing train. Generated in `en/figs/fission.png` by `./Fig.py en` (`figs/fission.png` is the Japanese version, `./Fig.py`).
 
-## Findings (2026-10-12; recomputed on 2026-10-31 with the default f_opening_dynamic = 3: the leading peak of V1 goes from 0.176 to 0.175, the rest is unchanged; recomputed on 2026-11-16 with the defaults f_dry_head_cap = 3 and f_advection_lateral = 1: the leading peak of V1 goes from 0.175 to 0.174, the rest is unchanged; the figure is from this computation)
+## Findings (2026-10-12; recomputed on 2026-10-31 with the default f_opening_dynamic = 3: the leading peak of V1 goes from 0.176 to 0.175, the rest is unchanged; recomputed on 2026-11-16 with the defaults f_dry_head_cap = 3 and f_advection_lateral = 1: the leading peak of V1 goes from 0.175 to 0.174, the rest is unchanged; recomputed on 2026-11-21 after the four values of the advection term became the defaults: the values in the table are unchanged; the figure is from this computation)
 
 | Configuration | Number of crests on the shelf | Leading η/H₂ | Second η/H₂ |
 |---|---:|---:|---:|

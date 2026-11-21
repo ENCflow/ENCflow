@@ -52,7 +52,7 @@ python3 Fig.py    # figs/fluvial.png(引数 en で英語版を en/figs/ に)
 |---|---|---|
 | (1) Σ(z − z₀) | 1e-15 m·cell 程度以下(丸め誤差) | PASS(機械精度) |
 | (2) max\|(sd − sd₀) − (z − z₀)\| | 1e-13 m 程度以下(丸め誤差) | PASS |
-| (3) max\|z − z₀\| | 1.86 mm | PASS(> 0.1 mm) |
+| (3) max\|z − z₀\| | 1.87 mm | PASS(> 0.1 mm) |
 
 - エッジごとの反対称フラックスを集計する Exner 更新なので、土砂体積は
   機械精度で保存されます。

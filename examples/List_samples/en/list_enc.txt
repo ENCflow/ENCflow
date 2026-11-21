@@ -70,7 +70,7 @@
                             !   blunting concentration fronts, peaks and
                             !   density-driven loads; kept for comparison).
                             !   users_guide/advection.md section 7
-  !f_advection_donor = 3    ! upwind momentum donors of the momentum-
+  !f_advection_donor = 4    ! upwind momentum donors of the momentum-
                             !   conservative advection (schemes 2, 3)
                             !   (0: wet cells on the edge line (the default
                             !   until 2026-11-09),
@@ -82,7 +82,8 @@
                             !   the upwind value is pulled toward the edge's own
                             !   velocity, and the wet/dry tests of the lateral
                             !   faces become a continuous weight below dd =
-                            !   default; no channel mask needed). 3 avoids the
+                            !   the default until 2026-11-21; no channel mask
+                            !   needed). 3 avoids the
                             !   artificial brake of a thin bank film acting as
                             !   donor and the jump of the recession limb when
                             !   its wet/dry test flips (test/wetbank). 0
@@ -95,7 +96,8 @@
                             !   to the streams that link represents (when the
                             !   donor is a bank or pool cell that is deep but
                             !   carries hardly any water, its slow velocity is
-                            !   not applied to the whole face flux). Use 4
+                            !   not applied to the whole face flux) = default.
+                            !   Use 4
                             !   together with f_advection_bend = 2,
                             !   f_advection_lateral = 2 and f_dry_head_cap = 4
                             !   (test/stairbank, users_guide/advection.md
@@ -106,15 +108,16 @@
                             !   all inflow links) were removed (the run stops
                             !   if they are set. users_guide/
                             !   advection_donor.md)
-  !f_advection_bend = 1     ! upwind value of the momentum-conservative
+  !f_advection_bend = 2     ! upwind value of the momentum-conservative
                             !   advection (schemes 2, 3) on a flow-direction
                             !   face whose upwind donor is a wall or dry (with
-                            !   f_advection_donor = 3 also a thin film)
+                            !   f_advection_donor = 3 or 4 also a thin film)
                             !   (0: the velocity of the control volume itself
                             !   (the default until 2026-11-15), 1: the velocity
                             !   the water that actually enters the face cell
                             !   would have at the width of this edge and at the
-                            !   depth it arrived with = default; when the line
+                            !   depth it arrived with = the default until
+                            !   2026-11-21; when the line
                             !   of an inflow continues into the same water body
                             !   beyond the face cell, the depth of that inflow
                             !   is counted with a lower bound at the depth of
@@ -140,7 +143,8 @@
                             !   merge, or an edge that takes only part of the
                             !   outflow, does not accelerate beyond the energy
                             !   of the water that entered (test/stairbank)
-  !f_advection_lateral = 1  ! treatment of water entering through the lateral
+                            !   = default
+  !f_advection_lateral = 2  ! treatment of water entering through the lateral
                             !   faces of the momentum-conservative advection
                             !   (schemes 2, 3) (0: the velocity of the parallel
                             !   link (neutral when it is dry; its velocity when
@@ -154,7 +158,8 @@
                             !   along the line of the edge from another
                             !   direction is counted; the opening fraction of
                             !   the lateral faces of diagonal edges uses the
-                            !   same test of thinness = default). With 0 the
+                            !   same test of thinness = the default until
+                            !   2026-11-21). With 0 the
                             !   junction loss is counted only while the banks
                             !   are wet, and a channel beside a bank wetted by
                             !   rain is braked. With 1 it is counted regardless
@@ -169,12 +174,12 @@
                             !   the velocity of the parallel link is reduced by
                             !   that ratio (the momentum of a fast parallel link
                             !   is not carried into an edge that slow water
-                            !   enters). 1 and 2 take effect only with
+                            !   enters) = default. 1 and 2 take effect only with
                             !   f_advection_donor = 3 or 4 (otherwise the same
                             !   as 0)
                             !   (test/tjunction, test/wetbank, test/stairbank,
                             !   users_guide/advection.md section 4.4)
-  !f_dry_head_cap = 3       ! cap the edge depth toward high ground by the
+  !f_dry_head_cap = 4       ! cap the edge depth toward high ground by the
                             !   energy head
                             !   (0: off, 1: only while the receiver is dry, by
                             !   eta + u_n^2/2g - z_receiver.
@@ -201,14 +206,14 @@
                             !   submerged steps keep the harmonic mean of the
                             !   depths on both sides as a floor; test/bankspill,
                             !   users_guide/dry_head_cap.md)
-                            !   = default, 4: as 3, with the speed of "the flow
+                            !   = the default until 2026-11-21, 4: as 3, with the speed of "the flow
                             !   entering the sending cell" limited from above
                             !   by the mean velocity of the sending cell
                             !   projected on the edge (taking the velocity of a
                             !   diagonal link of a one-cell-wide staircase
                             !   channel as it is counts the run-up height
                             !   twice; the same as 3 in a uniform flow and in a
-                            !   straight channel; test/stairbank)).
+                            !   straight channel; test/stairbank) = default).
                             !   The default was 1 until 2026-11-13
   !f_opening_dynamic = 3    ! dynamic reassignment of blocked openings
                             !   (0: off, 1: edges between channel cells only
@@ -237,12 +242,12 @@
                             !   section 4.4)
   !p_adv_upwind_index = 0.5 ! upwinding index of the advection term (0-1.
                             !   0: central difference, 1: first-order upwind)
-  !p_adv_donor_eps = 0.1    ! threshold eps of f_advection_donor = 3
+  !p_adv_donor_eps = 0.1    ! threshold eps of f_advection_donor = 3 or 4
                             !   (0 < eps <= 1; used for both the flux ratio
                             !   and the depth ratio; empirical; the peak
                             !   differed by 2 % or less for 0.05-0.2 in one
                             !   case; advection_donor.md §7).
-                            !   With f_advection_bend = 1 it is also the
+                            !   With f_advection_bend = 1 or 2 it is also the
                             !   threshold below which the value is pulled
                             !   toward neutral when the inflow into the face
                             !   cell is less than eps times its outflow, and

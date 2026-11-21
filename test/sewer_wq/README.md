@@ -55,10 +55,10 @@ python3 Fig.py    # figs/sewer_wq.png(引数 en で英語版を en/figs/ に)
 | 量 | 計算値(t = 1 h) |
 |---|---|
 | 噴出・吐口 in_gwc | 2.0008e7 |
-| 枡で再取込 to_gwc | 4.884e4 |
+| 枡で再取込 to_gwc | 4.885e4 |
 | 死滅 decay | 1.118e6 |
 | 地表残存 mass_surface | 1.884e7 |
-| 閉合 in − to − decay − surface | +0.64(相対 3.2e-8 = 表示 8 桁の丸め) |
+| 閉合 in − to − decay − surface | −0.49(相対 2.4e-8 = 表示 8 桁の丸め) |
 | 水収支 S_total(1 h) | 積算雨量 51.67 mm(閉境界) |
 | 回帰 | Log.txt・wq.csv が reference と一致 | 
 

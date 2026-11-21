@@ -126,7 +126,10 @@ judge-only mode).
   2026-11-16, the deposit of configuration 1 outside the collapse area goes from +0.28 to +0.31 m (the
   lowering of the collapse area from 0.975 to 0.979 m), and configuration 2 has 426 cells, 0.493 and
   0.46 m (the step from 425 to 426 cells comes from changes of defaults before this switch;
-  developer.md §110.32). The table and the figures show these values.
+  developer.md §110.32). After the four values of the advection term (f_advection_donor = 4,
+  f_advection_bend = 2, f_advection_lateral = 2, f_dry_head_cap = 4) became the default on 2026-11-21, the
+  values are the same to the digits shown (the deposit outside of configuration 1 is +0.31 m; configuration 2
+  has 426 cells, 0.493 and 0.46 m; developer.md §114). The table and the figures show these values.
 
 ## Related documents
 

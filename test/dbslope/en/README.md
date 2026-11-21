@@ -81,7 +81,7 @@ make            # links to the executables
 | voellmy_g1 | Voellmy | 1 | 0.2039 | 0.2040 | −0.01 % | 0.0002 | 0.4444 |
 | voellmy_g2 | Voellmy | 2 | 0.2471 | 0.2471 | +0.00 % | 0.0001 | 0.4444 |
 | egashira_g1 | Egashira | 1 | 0.2185 | 0.2185 | −0.00 % | 0.0003 | 0.4444 |
-| egashira_g2 | Egashira | 2 | 0.2453 | 0.2452 | +0.04 % | 0.0034 | 0.4445 |
+| egashira_g2 | Egashira | 2 | 0.2452 | 0.2452 | +0.04 % | 0.0034 | 0.4444 |
 | stony_g1 | Stony type | 1 | 0.2858 | 0.2858 | −0.00 % | 0.0022 | 0.4444 |
 | stony_g2 | Stony type | 2 | 0.3206 | 0.3206 | −0.00 % | 0.0002 | 0.4444 |
 | collective_g1 | Bedload-like collective flow | 1 | 0.3285 | 0.3285 | −0.00 % | 0.0000 | 0.2000 |

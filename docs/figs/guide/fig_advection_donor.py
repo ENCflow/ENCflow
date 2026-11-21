@@ -2,7 +2,7 @@
 
 Regenerate only this page with make_guide_figs.py advection_donor.
 模式図(図 1・2)はデータ不要。図 3 の数値は tutorials/chichibu の 200 m 格子(Step 3 の設定)を
-f_advection_donor = 0・0 で dd = dv = 0.0001・3(既定)で回した結果(測線 4 の 1 分値と、30 分ごとの
+f_advection_donor = 0・0 で dd = dv = 0.0001・3(2026-11-21 までの既定)で回した結果(測線 4 の 1 分値と、30 分ごとの
 分布出力の本川の水位)、図 4 の数値は test/wetbank の Check_wetbank.py の表を写したもので、
 結果ファイルなしで描ける。計算やその検定が変わったら写し直す。
 """
@@ -108,7 +108,7 @@ T = {'ja': {
  'h_a': '(a) 測線 4 のハイドログラフ(秩父 200 m 格子)',
  'h_b': '(b) 池の入口付近の本川の水位(縦断)',
  'h_x': '時間 (min)', 'h_y': '流量 (m³/s)',
- 'h_o0': '0(2026-11-09 までの既定)', 'h_o0dd': '0 で dd = dv = 0.0001(1/10)', 'h_o3': '3(既定)',
+ 'h_o0': '0(2026-11-09 までの既定)', 'h_o0dd': '0 で dd = dv = 0.0001(1/10)', 'h_o3': '3(2026-11-21 までの既定)',
  'h_jump': '跳ね', 'h_pk3': '6,960 m³/s(142 分)', 'h_pk0': '5,437 m³/s(178 分)',
  'p_x': '本川に沿う距離 (km)', 'p_y': '標高・水位 (m)',
  'p_o0_180': '0、180 分', 'p_o3_180': '3、180 分', 'p_o0_300': '0、300 分', 'p_bed': '河床',
@@ -118,10 +118,10 @@ T = {'ja': {
  'p_note': '窪地除去でできた平坦区間(池)の入口の辺の風上値は、線 k の上流の河岸のセル(池より 27 m 高く、雨の後に 1〜4 mm の水膜が残る)から取られる。',
  # 図 4
  'w_title': 'test/wetbank:雨で濡れた河岸による余分な水深 E(理論値 0)',
- 'w_y': 'E (%)', 'w_o0': '0', 'w_o3l0': '3 と f_advection_lateral = 0', 'w_o3': '3 と f_advection_lateral = 1(既定)', 'w_cells': 'セル', 'w_cell1': 'セル',
+ 'w_y': 'E (%)', 'w_o0': '0', 'w_o3l0': '3 と f_advection_lateral = 0', 'w_o3': '3 と f_advection_lateral = 1(2026-11-21 までの既定)', 'w_cells': 'セル', 'w_cell1': 'セル',
  'w_note': ['格子に斜めの直線水路(ラスタでは階段)の河岸を雨で濡らし、雨の流入による増分を差し引いた余分な水深を測る。',
             '格子に沿う水路(0°)はどれも 0.2 %。斜めの水路では、0 が 10〜40 %、3 に f_advection_lateral = 0 を組み合わせると 4〜17 %、'
-            '既定の組み合わせ(3 と f_advection_lateral = 1)は −0.4〜3.7 %。',
+            '2026-11-21 までの既定の組み合わせ(3 と f_advection_lateral = 1)は −0.4〜3.7 %。',
             '1 セル幅のまま格子を細かくすると 0 は増える(段が増えるため)。3 だけで残る分の主な原因は側方面で、f_advection_lateral = 1 が外す(§7)。'],
 }, 'en': {
  'c_a': '(a) A thin film on the bank becomes the donor (artificial braking)',
@@ -153,7 +153,7 @@ T = {'ja': {
  'h_a': '(a) Hydrograph at transect 4 (Chichibu, 200 m grid)',
  'h_b': '(b) Water level along the main river near the pond entrance',
  'h_x': 'time (min)', 'h_y': 'discharge (m³/s)',
- 'h_o0': '0 (default until 2026-11-09)', 'h_o0dd': '0 with dd = dv = 0.0001 (1/10)', 'h_o3': '3 (default)',
+ 'h_o0': '0 (default until 2026-11-09)', 'h_o0dd': '0 with dd = dv = 0.0001 (1/10)', 'h_o3': '3 (default until 2026-11-21)',
  'h_jump': 'jump', 'h_pk3': '6,960 m³/s (142 min)', 'h_pk0': '5,437 m³/s (178 min)',
  'p_x': 'distance along the main river (km)', 'p_y': 'elevation, water level (m)',
  'p_o0_180': '0, 180 min', 'p_o3_180': '3, 180 min', 'p_o0_300': '0, 300 min', 'p_bed': 'bed',
@@ -162,10 +162,10 @@ T = {'ja': {
  'p_pond': 'flat reach (pond)', 'p_edge': 'pond-entrance edge', 'p_t4': 'transect 4',
  'p_note': 'The upwind value at the entrance edge of the flat reach (pond) left by pit filling is taken from the upstream bank cell on line k (27 m above the pond, keeping a 1-4 mm film after the rain).',
  'w_title': 'test/wetbank: extra depth E caused by rain-wetted banks (theory: 0)',
- 'w_y': 'E (%)', 'w_o0': '0', 'w_o3l0': '3 with f_advection_lateral = 0', 'w_o3': '3 with f_advection_lateral = 1 (default)', 'w_cells': 'cells', 'w_cell1': 'cell',
+ 'w_y': 'E (%)', 'w_o0': '0', 'w_o3l0': '3 with f_advection_lateral = 0', 'w_o3': '3 with f_advection_lateral = 1 (default until 2026-11-21)', 'w_cells': 'cells', 'w_cell1': 'cell',
  'w_note': ['A straight channel oblique to the grid (a staircase on the raster) with banks wetted by rain; the extra depth after removing the rise due to the rain inflow.',
             'Grid-aligned channel (0°): 0.2 % for all three. Oblique channels: 10-40 % with 0, 4-17 % with 3 combined with f_advection_lateral = 0, '
-            'and -0.4 to 3.7 % with the default combination (3 with f_advection_lateral = 1).',
+            'and -0.4 to 3.7 % with the default combination until 2026-11-21 (3 with f_advection_lateral = 1).',
             'Refining the grid with the channel kept one cell wide increases E for 0 (more steps). What remains with 3 alone comes mainly from the lateral faces, which f_advection_lateral = 1 removes (§7).'],
 }}
 
@@ -358,7 +358,7 @@ def build_chichibu(lang):
 
 
 # ------------------------------------------------------------------ 図 4: test/wetbank
-# 列: 向き、格子幅、河道のセル数、E(0)、E(3 と f_advection_lateral = 0)、E(3 と f_advection_lateral = 1 = 既定)
+# 列: 向き、格子幅、河道のセル数、E(0)、E(3 と f_advection_lateral = 0)、E(3 と f_advection_lateral = 1 = 2026-11-21 までの既定)
 WB = [('0°', '50 m', 1, .2, .2, .2), ('10°', '50 m', 1, 12.5, 7.4, -.2), ('22.5°', '50 m', 1, 32.7, 10.2, 1.4),
       ('30°', '50 m', 1, 38.9, 17.2, 3.7), ('45°', '50 m', 1, 9.6, 8.6, 2.4), ('22.5°', '100 m', 1, 23.9, 10.3, 2.3),
       ('22.5°', '25 m', 1, 39.6, 4.3, -.4), ('22.5°', '50 m', 2, 18.9, 8.4, 1.4), ('22.5°', '25 m', 4, 12.3, 6.6, .8)]

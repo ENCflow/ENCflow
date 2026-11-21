@@ -45,16 +45,17 @@ python3 Fig.py en # en/figs/gwseep.png
 
 ![Groundwater pathway of water quality](figs/gwseep.png)
 
-Left: time series of the ledger. The surface mass decreases to 3162 g by
+Left: time series of the ledger. The surface mass decreases to 3156 g by
 infiltration in the first 10 minutes, then increases as seepage returns it
-to the surface, and the subsurface mass decreases from 838 g. The cumulative
-infiltration to_gw and seepage seep both keep increasing beyond the initial
-mass (1.3 times the initial mass passes through the ground by circulation),
-and their difference, 589.98 g, agrees to all output digits with the
-subsurface mass 589.98 g. The total remains 4000.0000 g. With
+to the surface, and the subsurface mass decreases from 844 g. The cumulative
+infiltration to_gw keeps increasing beyond the initial mass (1.03 times the
+initial mass passes through the ground by circulation), and its difference
+from the seepage seep, 598.449 g, agrees with the subsurface mass 598.449 g
+to a relative 2e-7 (the check allows a relative 1e-6, the significant digits
+of the output). The total remains 4000.0000 g. With
 immobilization (dash-dotted line) the subsurface mass keeps increasing,
 equal to to_gw. Center: final concentration. The wet cells at the downstream
-end, where seepage and ponding occur, are at 99.9956–99.9988 mg/L; the
+end, where seepage and ponding occur, are at 99.9922–99.9999 mg/L; the
 concentration is preserved along the whole pathway infiltration → seepage.
 Right: final depth (ponding at the downstream end).
 
@@ -62,11 +63,18 @@ Right: final depth (ponding at the downstream end).
 
 | Check | Computed | Result |
 |---|---|---|
-| to_gw − seep = mass_gw | 5169.703 − 4579.720 = 589.983 g (mass_gw 589.983) | PASS |
+| to_gw − seep = mass_gw | 4133.711 − 3535.262 = 598.449 g (mass_gw 598.449) | PASS |
 | Total mass mass_surface + mass_gw | 4000.0000 g | PASS |
-| Continuity of concentration | wet cells 99.9956–99.9988 mg/L (initial 100) | — |
+| Continuity of concentration | wet cells 99.9922–99.9999 mg/L (initial 100) | — |
 | Immobilization (wq_rg = 1e12) | seep ≈ 0, mass_gw = to_gw agree to all digits | PASS |
 | Regression | Log.txt and wq.csv at ULP = 0 to the reference | PASS |
+
+- The figure and the table are the values after the four values of the advection term
+  (f_advection_donor = 4, f_advection_bend = 2, f_advection_lateral = 2, f_dry_head_cap = 4) became the
+  default (2026-11-21; developer.md §114). Compared with the earlier defaults, the cumulative
+  infiltration and seepage decrease from 5,170 and 4,580 g to 4,134 and 3,535 g. This comes from
+  f_advection_bend = 2 (with 1 restored the earlier values return); the other three have no effect.
+  Why less passes through the ground has not been examined.
 
 - The slight deviation of the concentration (5e-5) is the known
   approximation of the one-step lag on the groundwater side and is

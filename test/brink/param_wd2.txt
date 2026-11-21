@@ -1,0 +1,55 @@
+!======================================================================
+! brink 構成 wd2: 幅 2 セルの直線の水路の等流。f_advection_bend = 2
+!   (新しい組: f_advection_donor・f_advection_lateral・f_dry_head_cap は、4 つの値の組み合わせの 4・2・4)
+!   勾配 0.005、n = 0.03、Δx = 50 m、水路は行 4・5 の 2 セル幅(岸は河床 + 200 m の乾いた地盤)。西端の 2 セルに
+!   区間流入 400 m3/s(1 セルあたり 200 m3/s)、東辺は自由流出。
+!   幅が 2 セル以上の水路では、岸沿いの斜めのリンクの風上側が壁になり、f_advection_bend = 2 の経路の値が
+!   等流の中でも使われる。経路の値が等流で u_e に一致して、損失を作らないこと(0 と同じ、マニングの等流の
+!   水深になること)を確かめる。
+!   検定(Check_brink.py): 終了時の水深(路の 40〜80 % の区間)を、マニングの等流の水深と、0 と 1 で比べる。
+!   入力 br_z_wide.txt は make_brink.py が作る
+!======================================================================
+&list_sysparam
+  f_gridsystem = 0
+  dt = 2.0
+  t0 = 0
+  tt = 4500
+  dt_disp = 1500
+  dt_file = 4500
+  fn_geoinfo = '-'
+  fn_boundary = '-'
+  fn_enc = '-'
+  dir_result = 'result_wd2'
+  f_out_h = 1
+  f_out_hmax = 0
+/
+
+&list_enc
+  f_advection_bend = 2      ! 供給元が壁・乾床の流向面の風上値(0: u_e、1: 経路の値、2: 1 + エネルギー形の移流項)
+  f_advection_donor = 4     ! 残りは、4 つの値の組み合わせ(4・2・2・4)の値
+  f_advection_lateral = 2
+  f_dry_head_cap = 4
+/
+
+&list_geoinfo
+  nx = 80
+  ny = 8
+  dx = 50.0
+  dy = 50.0
+  f_ztype = 1
+  fn_z = 'br_z_wide.txt'
+  f_rntype = 0
+  rn0 = 0.03
+/
+
+&list_bound_edge
+  f_bc_e = 1                ! 東辺は自由流出
+/
+
+&list_bound_inflow            ! 西端の水路の 2 セルに区間流入
+  inflow_cell(:,1,1) = 1, 4
+  inflow_cell(:,2,1) = 1, 5
+  inflow_val(:,1,1) = 0, 400
+  inflow_val(:,2,1) = 9999, 400
+  inflow_dist(1) = 0
+/

@@ -6035,13 +6035,27 @@ L 283.84 85.062969
 " style="fill: none; stroke: #2a78d6; stroke-width: 1.8; stroke-linecap: round"/>
     </g>
     <g id="text_29">
-     <!-- 3(既定) -->
+     <!-- 3(2026-11-21 までの既定) -->
      <g style="fill: #282c30" transform="translate(290.88 88.142969) scale(0.088 -0.088)">
       <use xlink:href="#IPAGothic-d9"/>
       <use xlink:href="#IPAGothic-ce" transform="translate(50 0)"/>
-      <use xlink:href="#IPAGothic-542" transform="translate(100 0)"/>
-      <use xlink:href="#IPAGothic-b11" transform="translate(200 0)"/>
-      <use xlink:href="#IPAGothic-cf" transform="translate(300 0)"/>
+      <use xlink:href="#IPAGothic-d8" transform="translate(100 0)"/>
+      <use xlink:href="#IPAGothic-d6" transform="translate(150 0)"/>
+      <use xlink:href="#IPAGothic-d8" transform="translate(200 0)"/>
+      <use xlink:href="#IPAGothic-dc" transform="translate(250 0)"/>
+      <use xlink:href="#IPAGothic-d3" transform="translate(300 0)"/>
+      <use xlink:href="#IPAGothic-d7" transform="translate(350 0)"/>
+      <use xlink:href="#IPAGothic-d7" transform="translate(400 0)"/>
+      <use xlink:href="#IPAGothic-d3" transform="translate(450 0)"/>
+      <use xlink:href="#IPAGothic-d8" transform="translate(500 0)"/>
+      <use xlink:href="#IPAGothic-d7" transform="translate(550 0)"/>
+      <use xlink:href="#IPAGothic-c6" transform="translate(600 0)"/>
+      <use xlink:href="#IPAGothic-292" transform="translate(650 0)"/>
+      <use xlink:href="#IPAGothic-27b" transform="translate(750 0)"/>
+      <use xlink:href="#IPAGothic-282" transform="translate(850 0)"/>
+      <use xlink:href="#IPAGothic-542" transform="translate(950 0)"/>
+      <use xlink:href="#IPAGothic-b11" transform="translate(1050 0)"/>
+      <use xlink:href="#IPAGothic-cf" transform="translate(1150 0)"/>
      </g>
     </g>
    </g>

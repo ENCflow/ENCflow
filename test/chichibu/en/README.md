@@ -51,32 +51,37 @@ deep form in the channel cells (black dots) of the main stem and the
 tributaries. Inundation (around 1 m) also spreads over the lowlands of the
 valley floor. Middle: discharge at transects 1–4 and the rainfall. The peak becomes larger
 and later from upstream to downstream, and at the most downstream transect
-4 it is 5585 m³/s @ 3.17 h. Right: depth at the probes. Even after the
-peak of the rainfall (0.5 h) the channel depth keeps increasing for 0.35–0.47 hours
-(the peak is at 0.85 h at probe 1 and 0.97 h at probe 2), showing the delay
+4 it is 5826 m³/s @ 3.05 h. Right: depth at the probes. Even after the
+peak of the rainfall (0.5 h) the channel depth keeps increasing for 0.33–0.45 hours
+(the peak is at 0.83 h at probe 1 and 0.95 h at probe 2), showing the delay
 of the collection from the hillslopes.
 
 ## Findings
 
 | Transect | Position | Peak discharge (m³/s) | Peak time (h) |
 |---|---|---|---|
-| 1 | Uppermost main stem (x = 16.5 km) | 1175 | 0.85 |
-| 2 | x = 21.5 km | 2985 | 0.97 |
-| 3 | x = 29.6 km | 4682 | 1.58 |
-| 4 | 4.6 km upstream of the catchment outlet (x = 43.3 km) | 5585 | 3.17 |
+| 1 | Uppermost main stem (x = 16.5 km) | 1182 | 0.83 |
+| 2 | x = 21.5 km | 2962 | 0.95 |
+| 3 | x = 29.6 km | 4827 | 1.53 |
+| 4 | 4.6 km upstream of the catchment outlet (x = 43.3 km) | 5826 | 3.05 |
 
-- The reference is the Log of the default settings (scheme 3, dynamic
-  opening correction, f_advection_donor = 3, f_dry_head_cap = 3, f_advection_bend = 1,
-  f_advection_lateral = 1). The table and figure above are the values after the default of the
+- The reference is the Log of the default settings (scheme 3, dynamic opening correction,
+  f_advection_donor = 4, f_dry_head_cap = 4, f_advection_bend = 2, f_advection_lateral = 2).
+  The table and figure above are the values after the four values of the advection term became the
+  defaults on 2026-11-21; compared with the values before (the old combination of values 3, 1, 1, 3;
+  1175 @ 0.85 h, 2985 @ 0.97 h, 4682 @ 1.58 h and 5585 m³/s @ 3.17 h at transects 1–4), the peaks
+  changed by +0.7, −0.8, +3.1 and +4.3 % and are 1, 1, 3 and 7 minutes earlier (developer.md §114,
+  in Japanese).
+  Those values are the ones after the default of the
   edge-depth cap became f_dry_head_cap = 3 and the default of the advection on side faces became
   f_advection_lateral = 1 on 2026-11-16; compared with the values before (1161 @ 0.85 h, 2885 @ 0.98 h,
-  4376 @ 1.67 h and 5261 m³/s @ 3.35 h at transects 1–4), the peaks are +1.1, +3.5, +7.0 and +6.1 %
+  4376 @ 1.67 h and 5261 m³/s @ 3.35 h at transects 1–4), the peaks were +1.1, +3.5, +7.0 and +6.1 %
   larger and 0, 1, 5 and 11 minutes earlier (the brake on the main channel, caused by the slow
   velocity of the thin film on rain-wetted banks being used as the velocity of the water entering
   the channel from the side, is removed; [Advection schemes](../../../docs/en/users_guide/advection.md)
   §4.4, [The cap on the edge depth toward higher ground](../../../docs/en/users_guide/dry_head_cap.md),
   [test/wetbank](../../wetbank/en/README.md), developer.md §110.31 and §110.32, in
-  Japanese). The values before are those after the default of the upwind value on the edge just after
+  Japanese). The values before them are those after the default of the upwind value on the edge just after
   a bend became f_advection_bend = 1 on 2026-11-15; compared with the values before that (default 0;
   1159 @ 0.87 h, 2862 @ 1.00 h, 4299 @ 1.63 h and 5315 m³/s @ 3.33 h at transects 1–4), the peaks
   differed by +0.2, +0.8, +1.8 and −1.0 % and the peak times by at most 2 minutes. The transect discharges are almost
@@ -112,17 +117,17 @@ of the collection from the hillslopes.
 - **The domain is closed** (outside the catchment mask is wall; the S column
   of the Log is constant at the total rainfall of 100 mm). Water accumulates
   in the channel cell (479, 35) at the outlet, reaching a depth of 34 m (water
-  level 141.5 m) at 6 h, and the backwater runs up the main stem to x = 41.6 km,
-  including transect 4 (the 6 h depth of 5.41 m at transect 4 is a value in the
-  backwater zone). The peak (3.17 h) is before this influence (the pond level of
-  131 m at 3.17 h is below the bed of transect 4, 137 m). In practical
+  level 141.6 m) at 6 h, and the backwater runs up the main stem to x = 41.6 km,
+  including transect 4 (the 6 h depth of 5.29 m at transect 4 is a value in the
+  backwater zone). The peak (3.05 h) is before this influence (the pond level of
+  130 m at 3 h is below the bed of transect 4, 137 m). In practical
   computations place a free-outflow boundary (`&list_bound`) at the outlet.
 - This case is also a guide to convergence: with this input (the
   depression-filled elevation) the most downstream peak changes with the grid
-  (larger for finer grids; "Is the effect of the conditioned bed the same on
-  another grid?" in the supplement of tutorials/chichibu compares 200 m and
+  (larger for finer grids; "Effect of the conditioned bed" in the example
+  examples/chichibu_flood compares 200 m and
   100 m with a channel roughness of 0.04, and with the conditioned bed the
-  difference shrinks to 2 %). The real representation of the channels (stepped bed,
+  difference shrinks to about 10 %). The real representation of the channels (stepped bed,
   one cell wide) is the main cause of the difference between advection
   schemes; the diagnosis is in §68.14–68.20.
 
@@ -157,7 +162,8 @@ width mode is recommended (§68.25, §68.29).
 
 ## Related documents
 
-- [tutorials/chichibu](../../../tutorials/chichibu/en/README.md) — the 200 m tutorial on the same catchment (procedure; resolution comparison in the supplement)
+- [tutorials/chichibu](../../../tutorials/chichibu/en/README.md) — the 200 m tutorial on the same catchment
+- [examples/chichibu_flood](../../../examples/chichibu_flood/en/README.md) — an example on the same catchment that compares ways of giving the terrain, grid resolutions (200, 100 and 50 m), treatments of the advection term and more
 - [test/chichibu_cond](../../chichibu_cond/en/README.md) — a regression case with the same settings as this one, but with the inputs switched to the elevation with a conditioned channel bed and a channel roughness of 0.04
 - [docs/users_guide/geoinfo.md](../../../docs/en/users_guide/geoinfo.md) — input of terrain, masks and the channel mask
 - developer.md §68 (design record of the advection and opening correction for raster channels: §68.7, 68.12, 68.14, 68.16–68.20, 68.24, 68.25, 68.29)

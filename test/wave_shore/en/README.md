@@ -43,12 +43,12 @@ morphology.
    (measured: amplitude 6.0 → 3.10 → 1.51 m, ratio 1.03).
 2. High angle (α = 60°): the same amplitude grows as exp(+|D| k² t), and the
    growth rate is 0.5–1.5 times the theoretical value (measured
-   6.0 → 10.3 → 13.1 m, ratio 0.75). In addition, in the spectrum of the
+   6.0 → 10.2 → 13.3 m, ratio 0.77). In addition, in the spectrum of the
    irregularities of the depth contour on the offshore side of the surf zone
    (h = 0.8 m), the power at wavelengths below 10 m is under 15 % (measured
-   4 %; no grid-scale bars).
+   5 %; no grid-scale bars).
    2b. high0 (the former cell-radius kernel): the same power is 20 % or more
-   (measured 28 %).
+   (measured 27 %).
 3. Volume conservation (closed domain; rounding at the printed precision is
    tolerated).
 4. The state.dat of off and nowave are byte-identical (cmp in Run.sh).
@@ -56,7 +56,7 @@ morphology.
    Σ|Δz| at the centre of the lee (x = 360–440 m, 25 m from the shoreline) is
    at most 0.5 times that without shadowing (measured 16 versus 76 m³ = 0.21),
    the deposition at the updrift edge of the lee (x = 440–500 m) is at least
-   1.5 times (measured 227 versus 101 m³), and the erosion over 100 m downdrift
+   1.5 times (measured 228 versus 101 m³), and the erosion over 100 m downdrift
    is at least 1.5 times (measured 267 versus 110 m³). Since there is no
    diffraction, the sand accumulates not at the centre of the lee but at its
    updrift edge (the same pattern as a detached breakwater in a one-line

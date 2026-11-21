@@ -8,7 +8,9 @@
 #                        河道のセル (IJ, JC+1)・(IJ+1, JC+1) にも接する(屈曲を近道する道になる)
 #   流量は上流端のセルの湧き出しで与え、等流の水位が、くぼみの地盤の下 → 上 → 下 と動くように
 #   ゆっくり上げ下げする。濡れた構成(wet)は、くぼみに FILM_Q の湧き出しを置いて薄い水膜で濡らす。
-#   エッジ水深の頭打ち f_dry_head_cap は、2(接頭辞なし)と 3(接頭辞 c3_)の 2 通り。
+#   エッジ水深の頭打ち f_dry_head_cap は、2(接頭辞なし)・3(接頭辞 c3_)と、4 つの値の組み合わせ(接頭辞 c4_。
+#   f_advection_donor・f_advection_bend・f_advection_lateral・f_dry_head_cap = 4・2・2・4)の 3 通り。移流項の残りの
+#   3 つ(f_advection_donor・f_advection_bend・f_advection_lateral)も、構成ごとに全部明示する(既定によらない)。
 #   python3 make_bankspill.py z > bs_z.txt
 import sys, math
 
@@ -23,7 +25,8 @@ T_SPIN, T_RAMP, T_HOLD = 60.0, 100.0, 20.0    # 助走・上げ(下げ)・保持
 T_END = T_SPIN + 2 * T_RAMP + 2 * T_HOLD      # 計算の長さ(分)= 300
 FILM_Q = 0.05                        # 濡れた構成のくぼみの湧き出し (m3/s)
 BASE = ("wet_dt6", "wet_dt15", "dry_dt6", "dry_dt15")       # くぼみの乾湿 × 時間刻み(6 s・1.5 s)
-CAPS = (("", 2), ("c3_", 3))                                # 構成名の接頭辞と f_dry_head_cap
+CAPS = (("", 2), ("c3_", 3), ("c4_", 4))                    # 構成名の接頭辞と f_dry_head_cap
+OTHERS = {2: (3, 1, 1), 3: (3, 1, 1), 4: (4, 2, 2)}         # f_dry_head_cap → (f_advection_donor, f_advection_bend, f_advection_lateral)
 CASES = {pre + n: (6.0 if n.endswith("dt6") else 1.5, n.startswith("wet"), cap) for pre, cap in CAPS for n in BASE}
 # プローブ: 1 = くぼみ S の上流側の斜め隣の河道のセル、2 = くぼみ S の真横の河道のセル、3 = くぼみ S、
 #           4 = くぼみ H の手前(上流)の河道のセル、5 = くぼみ H、6 = 屈曲の下流の河道の 1 セル目
@@ -58,8 +61,10 @@ def param(name):
     t1, t2, t3, t4 = T_SPIN, T_SPIN + T_RAMP, T_SPIN + T_RAMP + T_HOLD, T_SPIN + 2 * T_RAMP + T_HOLD
     L = []
     L.append("!======================================================================")
-    L.append("! bankspill %s: 河岸のくぼみへのあふれ始め(dt = %g s、くぼみは%s、f_dry_head_cap = %d)"
-             % (name, dt, "薄い水膜で濡れている" if wet else "乾いている", cap))
+    don, bend, lat = OTHERS[cap]
+    L.append("! bankspill %s: 河岸のくぼみへのあふれ始め(dt = %g s、くぼみは%s、f_advection_donor・f_advection_bend・"
+             "f_advection_lateral・f_dry_head_cap = %d・%d・%d・%d)"
+             % (name, dt, "薄い水膜で濡れている" if wet else "乾いている", don, bend, lat, cap))
     L.append("!   1 セル幅の河道(格子幅 %.0f m、勾配 %.4f、n = %.2f)。台地(河床 + %.0f m)のうち 2 セルだけが" % (DX, S0, RN, TER))
     L.append("!   河床より %.1f m 高いくぼみ: まっすぐな区間の脇 (%d, %d) と、屈曲の正面 (%d, %d)。" % (B, IS, JC - 1, IJ, JC))
     L.append("!   流量を %.0f → %.0f → %.0f m3/s(等流水深 %.1f → %.1f → %.1f m)と %.0f 分ずつで上げ下げする。" % (qa, qb, qa, H_LO, H_HI, H_LO, T_RAMP))
@@ -67,7 +72,11 @@ def param(name):
     L.append("!======================================================================")
     L.append("&list_sysparam\n  f_gridsystem = 0\n  dt = %g\n  t0 = 0\n  tt = %d\n  dt_disp = 3600\n  dt_file = %d\n  dt_recrd = 60\n"
              "  fn_geoinfo = '-'\n  fn_boundary = '-'\n  fn_record = '-'\n  fn_enc = '-'\n  dir_result = 'result_%s'\n  f_out_h = 1\n/\n" % (dt, T_END * 60, T_END * 60, name))
-    L.append("&list_enc\n  f_dry_head_cap = %d        ! 高い地盤へ向かうエッジ水深の頭打ち(この検定の対象)\n/\n" % cap)
+    L.append("&list_enc\n  f_dry_head_cap = %d        ! 高い地盤へ向かうエッジ水深の頭打ち(この検定の対象)\n"
+             "  f_advection_donor = %d     ! 流向面の風上の供給元(4 つの値の組み合わせは 4。ほかは 3)\n"
+             "  f_advection_bend = %d      ! 流向面の中立の分(4 つの値の組み合わせは 2。ほかは 1)\n"
+             "  f_advection_lateral = %d   ! 側方面で横から入る水の扱い(4 つの値の組み合わせは 2。ほかは 1)\n/\n"
+             % (cap, don, bend, lat))
     L.append("&list_geoinfo\n  nx = %d\n  ny = %d\n  dx = %.1f\n  dy = %.1f\n  f_ztype = 1\n  fn_z = 'bs_z.txt'\n  f_rntype = 0\n  rn0 = %.3f\n/\n" % (NX, NY, DX, DX, RN))
     L.append("&list_bound_edge\n  f_bc_e = 1                ! 東辺は自由流出\n/\n")
     s = "&list_bound_source\n  src_cell(:,1,1) = 1, %d      ! 河道の上流端(時刻は分)\n" % JC

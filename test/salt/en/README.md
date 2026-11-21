@@ -120,10 +120,10 @@ with the sea it is 0.5000 m in every cell, agreeing with the analytical value
 | B: groundwater level Hg and salt Hgs | Hg = Hgs = 0.5000 m (all land cells; analytical 0.5) | — |
 | C1: final H / Hss / Hg / Hgs | 0.7 / 0.1 / 0.3 / 0.3 (within relative 6e-16 in double precision; Hgs and Hg bit-identical) | Check_exch PASS |
 | C1: salt-water volume Hss + Hgs | 0.4 conserved to all digits | Check_exch PASS |
-| C2: Hss/H of the surface water in the hollow | 0.9997 (0 with f_salt_exch=0) | Check_exch PASS (≥ 0.99) |
+| C2: Hss/H of the surface water in the hollow | 0.9996 (0 with f_salt_exch=0) | Check_exch PASS (≥ 0.99) |
 | C2: salt-water volume | 0.006 % decrease in 2 hours | Check_exch PASS (\|ratio − 1\| < 1e-3) |
-| C3: the same (dt_gwflow = 2 s) | Hss/H 0.999, salt-water volume 0.03 % decrease | Check_exch PASS |
-| C4a, C4b: salt-water volume, Hss/H of the water in the hollow | both conserved to relative 4e-14 or better; Hss/H 0.026 (fresh first) < 0.081 (mixing ratio) | Check_exch PASS |
+| C3: the same (dt_gwflow = 2 s) | Hss/H 0.9985, salt-water volume 0.03 % decrease | Check_exch PASS |
+| C4a, C4b: salt-water volume, Hss/H of the water in the hollow | both conserved to relative 4e-14 or better; Hss/H 0.028 (fresh first) < 0.113 (mixing ratio) | Check_exch PASS |
 | D1, D2: Hss on land / river or sea side, H | 1.2 / 0 to all digits, H unchanged (before the fix: land 0.001–0.028, river 1.18) | Check_wall PASS |
 
 - The dry-cell test and the excess-outflow reduction of the salt zone are
@@ -153,7 +153,15 @@ with the sea it is 0.5000 m in every cell, agreeing with the analytical value
   aquifer along the walls (domain edges) becomes the same as the interior, so
   the composition of the water seeping out into the hollow changes.
 - Hss/H of the hollow in C4 also moves with the defaults of the rules of the
-  surface flow (0.025 and 0.108 with `f_dry_head_cap = 2` and
+  surface flow. The values in the table are those after the four values of the
+  advection term (`f_advection_donor = 4`, `f_advection_bend = 2`,
+  `f_advection_lateral = 2`, `f_dry_head_cap = 4`) became the default
+  (2026-11-21; developer.md §114). With the combination of the old values
+  (3, 1, 1, 3) they are 0.026 and 0.081; restoring the old values one at a time
+  gives 0.023 and 0.084 with `f_advection_donor`, 0.027 and 0.082 with
+  `f_advection_lateral`, 0.060 and 0.111 with `f_advection_bend` and 0.059 and
+  0.112 with `f_dry_head_cap`, so they change much with the combination of the
+  values (0.025 and 0.108 with `f_dry_head_cap = 2` and
   `f_advection_lateral = 0`, the defaults until 2026-11-16; the part due to
   earlier changes of defaults has not been separated out). What the check
   looks at is the conservation of the salt-water volume and that the

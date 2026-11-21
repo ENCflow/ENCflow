@@ -104,7 +104,7 @@ $`2\sqrt{g\cos\theta\,h_n}`$ = 5.8265 m/s of the thin-layer equations):
   we think they come from the change of the shape of the crest (shoaling and reflection
   from the slope) and from numerical dispersion.
 - The arrival times of wave also change with the cap on the edge depth of the continuity
-  equation (`f_dry_head_cap` in `&list_enc`). On a submerged slope the default 3 takes
+  equation (`f_dry_head_cap` in `&list_enc`). On a submerged slope 3 (and the default 4) takes
   the harmonic mean of the depths on both sides as the upper limit of the edge depth on
   climbing edges (edges where the bed of the receiving cell is higher than that of the
   sending cell). Compared with 2, the default until 2026-11-16, the arrival times of 0 and

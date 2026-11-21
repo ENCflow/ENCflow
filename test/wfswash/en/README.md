@@ -59,7 +59,15 @@ stopped).
    builds up and the wet one loses the same (±0.241 m); no other cell changes; the slope of the
    shoreline face goes 0.025 → 0.049 toward the equilibrium slope without passing it; the top of
    the deposit (0.304 m) stays below the runup limit η + R (0.402 m) and above the next dry cell
-   (a berm).
+   (a berm). The change of cells other than the shoreline cells and the difference between rows
+   (uniform alongshore) are judged below 1e-8 m (likewise in steep). With the combination of the four
+   values of the advection rules (`f_advection_donor = 4`, `f_advection_lateral = 2` and the others), the
+   boundary faces of the lateral Neumann sides do not use those rules, so where the flow changes abruptly,
+   at the shoreline, a deterministic difference appears between the boundary rows and the inner rows (a
+   difference between rows of 1.8e-9 m and a change of 4.4e-10 m in cells other than the shoreline cells;
+   4e-16 m and 0 with the combination of the old values). The limit of 1e-8 m is an upper bound for
+   regression with a margin over these values, not derived from theory (a limit in §4.4 of
+   [Advection schemes](../../../docs/en/users_guide/advection.md) in the users guide).
 5. steep: conservation; the dry cell is cut and the wet one gains (±0.260 m); the slope of the
    shoreline face flattens 0.15 → 0.124 without passing the equilibrium slope (the dry cell
    drops below the still water level, the shoreline moves landward, and the next dry cell is

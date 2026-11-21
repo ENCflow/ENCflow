@@ -69,11 +69,12 @@ meteorological inputs can be kept in a single file (recommended layout).
 
 ## Precipitation (&list_precip)
 
-Select how rainfall is given with `prtype`.
+Select how rainfall is given with `prtype`. When `fn_precip` reads a settings file, set one of 1 to 3
+(the run stops if `prtype` is left at its default 0 or set to 0). A run without precipitation only needs
+`fn_precip` to be omitted (or `fn_precip = ""`); no `&list_precip` is needed.
 
 | prtype | How rainfall is given | Parameters used |
 |---|---|---|
-| 0 (default) | No precipitation (temporarily disabled) | - |
 | 1 | Uniform time series | prval |
 | 2 | Fixed distribution x time-series multiplier | fn_prmap, prval (multiplier) |
 | 3 | Series of distribution files (e.g. radar rainfall) | fn_maplist, dt_maplist |

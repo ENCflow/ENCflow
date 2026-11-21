@@ -23,6 +23,9 @@
 
 &list_enc
   f_dry_head_cap = 3
+  f_advection_donor = 3       ! 移流項の残りの 3 つは、古い値の組み合わせ(3・1・1)を明示
+  f_advection_bend = 1
+  f_advection_lateral = 1
 /
 
 &list_initial

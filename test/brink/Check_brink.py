@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 # test/brink の検定(標準ライブラリだけ)。池の出口の段落ちと、運動量保存形移流の屈曲直後の辺の風上値
 # f_advection_bend(developer.md §110)
-#   Check_brink.py
+#   Check_brink.py [old|new](古い値の組み合わせの組・4 つの値の組み合わせの組。下の「組」)
 #   段落ちの構成(result_st0・st1・dg0・dg1)は、流量の 3 段(2,000・4,000・6,000 m3/s)それぞれの終わり
 #   (40・80・120 分)のプローブの水深 h と測線の流量 Q を読む。単位幅流量 q = Q / Δx、
 #   エネルギー水頭 E = z + h + (q/h)²/2g。理論の水面形は make_brink.py(1 次元の定常。広い矩形断面、
@@ -71,7 +71,7 @@
 #   構成 jt0(本流が南からまっすぐ入る T 字の合流。f_advection_bend = 0・f_advection_lateral = 0。この組み合わせの
 #   性質の記録):
 #     (22) 3 段とも、A の水深の振れ幅が RANGE_JP_DEF より大きい(この組み合わせは、この形の池では定常に
-#          落ち着かない。f_advection_lateral = 1(既定)に f_advection_bend = 0 を組み合わせると、2 段目は
+#          落ち着かない。f_advection_lateral = 1(古い値の組み合わせ)に f_advection_bend = 0 を組み合わせると、2 段目は
 #          揺れず、1・3 段目は揺れる)
 #   構成 jt1(同じ池。f_advection_bend = 1):
 #     (23) 3 段とも、池の 4 セルの水深の振れ幅が RANGE_JT 以下(定常)
@@ -106,10 +106,28 @@ X_EPOOL_PL = 325.0                # (17) 上の池のエネルギー水頭を取
 TOL_WD, TOL_WD_SAME = 0.002, 1.0e-4     # (19) 幅 2 セルの等流の水深と理論の一致、0 と 1 の差(比 − 1)
 T_WIN = 10.0                      # (20)〜(23) 各段の終わりの、水深の平均と振れ幅を取る時間 (min)
 RANGE_JP = 0.05                   # (20)(21) 定常とみなす水深の振れ幅の上限 (m)
-TOL_JP_SAME = 0.10                # (21) jp1 と jp0 の水深の差の上限 (m)
+TOL_JP_SAME = 0.10                # (21) jp1 と jp0 の水深の差の上限 (m。古い組)
+TOL_JP_SAME_NEW = 0.20            # (21) 同(新しい組。2 本の流入が合わさって速く出ていく加速を数える分、+0.05〜0.15 m)
 RANGE_JP_DEF = 0.3                # (22) 揺れの記録の、振れ幅の下限 (m)
 RANGE_JT = 0.10                   # (23) jt1 を定常とみなす水深の振れ幅の上限 (m)
 JP_NAMES = "ABCD"                 # 合流部の池のプローブ 1〜4 のセル
+
+# 組(引数。省略は old): old = 古い値の組み合わせ(f_advection_donor・f_advection_lateral・f_dry_head_cap = 3・1・3)の
+# 構成(上の名前)、new = 4 つの値の組み合わせ(4・2・4)の構成(0 の構成は名前の末尾に n、1 の構成は 1 を 2 に替えた名前。
+# f_advection_bend = 1 の項目を 2 で判定する)。どちらも 4 つのスイッチを明示している。jt0・jt0n は f_advection_lateral = 0
+GROUP = sys.argv[1] if len(sys.argv) > 1 else "old"
+if GROUP not in ("old", "new"):
+    sys.exit("usage: Check_brink.py [old|new]")
+BEND = 1 if GROUP == "old" else 2
+if GROUP == "new":
+    TOL_JP_SAME = TOL_JP_SAME_NEW
+
+
+def N(base):
+    """構成名(古い組の名前)→ この組の構成名"""
+    if GROUP == "old":
+        return base
+    return base[:-1] + "2" if base.endswith("1") else base + "n"
 
 nfail = 0
 
@@ -164,8 +182,8 @@ def levels():
 
 
 def check_straight():
-    print("=== st0: straight channel (f_advection_bend = 0) vs 1-D theory ===")
-    c = Case("st0")
+    print("=== %s: straight channel (f_advection_bend = 0) vs 1-D theory ===" % N("st0"))
+    c = Case(N("st0"))
     for t, q_in in levels():
         q = c.q(t)
         check(abs(q * DX / q_in - 1.0) <= TOL_Q,
@@ -181,15 +199,15 @@ def check_straight():
               % (N_CHK, " ".join("%.3f" % r for r in rat), APRON_LO, APRON_HI))
         fr = [c.froude(I_BRINK + k, t) for k in range(1, N_CHK + 1)]
         check(min(fr) > FR_ST, "(4) apron is supercritical: Fr = %s (> %.1f)" % (" ".join("%.2f" % f for f in fr), FR_ST))
-    print("=== st1: straight channel, f_advection_bend = 1 ===")
-    c1 = Case("st1")
+    print("=== %s: straight channel, f_advection_bend = %d ===" % (N("st1"), BEND))
+    c1 = Case(N("st1"))
     dmax = max(abs(a[3] - b[3]) for pa, pb in zip(c.pb, c1.pb) for a, b in zip(pa, pb))
     check(dmax <= TOL_SAME, "(5) same depths as st0 (max difference %.1e m <= %.0e)" % (dmax, TOL_SAME))
 
 
 def check_diag():
-    print("=== dg1: diagonal link just before the brink, f_advection_bend = 1 ===")
-    c = Case("dg1")
+    print("=== %s: diagonal link just before the brink, f_advection_bend = %d ===" % (N("dg1"), BEND))
+    c = Case(N("dg1"))
     ip = col_pool(X_EPOOL)
     for t, q_in in levels():
         q = c.q(t)
@@ -207,8 +225,8 @@ def check_diag():
         check(all(1.0 <= r <= APRON_HI_DG for r in rat) and min(fr) > FR_DG,
               "(8) apron depth / H3 theory: %s (allowed 1.00-%.2f), Fr = %s (> %.1f)"
               % (" ".join("%.3f" % r for r in rat), APRON_HI_DG, " ".join("%.2f" % f for f in fr), FR_DG))
-    print("=== dg0: same channel, f_advection_bend = 0 (record of the behaviour with 0) ===")
-    c0 = Case("dg0")
+    print("=== %s: same channel, f_advection_bend = 0 (record of the behaviour with 0) ===" % N("dg0"))
+    c0 = Case(N("dg0"))
     for t, q_in in levels():
         de = c0.energy(I_BRINK + 1, t) - c0.energy(ip, t)
         check(de > E_EXCESS,
@@ -256,8 +274,8 @@ def fmt_x(x):
 
 
 def check_pool():
-    print("=== ps1: pond - drop - lower pond - drop, straight channel (f_advection_bend = 1) vs 1-D theory ===")
-    ps = PoolCase("ps1")
+    print("=== %s: pond - drop - lower pond - drop, straight channel (f_advection_bend = %d) vs 1-D theory ===" % (N("ps1"), BEND))
+    ps = PoolCase(N("ps1"))
     ref = {}
     for t, q_in in levels():
         q = ps.q(t)
@@ -279,8 +297,8 @@ def check_pool():
               "(14) first cell below the drop: depth / H3 theory = %.3f (allowed %.2f-%.2f), Fr = %.2f (> 1)"
               % (r, FOOT_LO, FOOT_HI, fr))
         ref[t] = (xm, c0, mid, [ps.h(i, t) for i in range(5, I_DROP1 - 1)])
-    print("=== pf1: one diagonal link just after the first cell below the drop, f_advection_bend = 1 ===")
-    c = PoolCase("pf1")
+    print("=== %s: one diagonal link just after the first cell below the drop, f_advection_bend = %d ===" % (N("pf1"), BEND))
+    c = PoolCase(N("pf1"))
     for t, q_in in levels():
         if t not in ref:
             check(False, "(15) t = %3.0f min: no jump in the straight channel to compare with" % t)
@@ -296,8 +314,8 @@ def check_pool():
               "first cell %+.3f (within %.2f), cells %d-%d %.4f (within %.3f), upper pond %.4f (within %.2f)"
               % (t, fmt_x(xm), fmt_x(xs), TOL_JUMP_SAME, dfoot, TOL_FOOT_SAME, c0, N_MID, dsub, TOL_SUB_SAME,
                  dup, TOL_UP_SAME))
-    print("=== pf0: same channel, f_advection_bend = 0 (record of the behaviour with 0) ===")
-    c0_ = PoolCase("pf0")
+    print("=== %s: same channel, f_advection_bend = 0 (record of the behaviour with 0) ===" % N("pf0"))
+    c0_ = PoolCase(N("pf0"))
     for t, q_in in levels():
         if t not in ref:
             continue
@@ -306,8 +324,8 @@ def check_pool():
         check(xm == 0.0 and r > FOOT_DROWN,
               "(16) t = %3.0f min: the first cell below the drop is subcritical (jump at %s) and %.2f times as deep "
               "as in the straight channel (> %.1f; %.2f m vs %.2f m)" % (t, fmt_x(xm), r, FOOT_DROWN, mid[0], ref[t][2][0]))
-    print("=== pb1: one diagonal link just before the drop, f_advection_bend = 1 ===")
-    c = PoolCase("pb1")
+    print("=== %s: one diagonal link just before the drop, f_advection_bend = %d ===" % (N("pb1"), BEND))
+    c = PoolCase(N("pb1"))
     ip = I_DROP1 - int(round((X_EPOOL_PL - 0.5 * DX) / DX))
     for t, q_in in levels():
         if t not in ref:
@@ -318,8 +336,8 @@ def check_pool():
         check(ok, "(17) t = %3.0f min: energy head of lower-pond cells 1-%d - upper pond = %s m (<= %.1f); jump at %s "
               "(straight %s; not farther downstream)"
               % (t, N_CHK, " ".join("%+.2f" % d for d in de), TOL_E, fmt_x(xm), fmt_x(ref[t][0])))
-    print("=== pb0: same channel, f_advection_bend = 0 (record of the behaviour with 0) ===")
-    c0_ = PoolCase("pb0")
+    print("=== %s: same channel, f_advection_bend = 0 (record of the behaviour with 0) ===" % N("pb0"))
+    c0_ = PoolCase(N("pb0"))
     for t, q_in in levels():
         if t not in ref:
             continue
@@ -335,36 +353,36 @@ def last_depth(rdir):
 
 
 def check_stair():
-    print("=== sr0, sr1: uniform flow in a channel of alternating east and north-east links ===")
+    print("=== %s, %s: uniform flow in a channel of alternating east and north-east links ===" % (N("sr0"), N("sr1")))
     cells = path_stair()
     a, b = int(0.4 * len(cells)), int(0.8 * len(cells))
     stat = {}
-    for name in ("sr0", "sr1"):
+    for name in (N("sr0"), N("sr1")):
         hh = last_depth("result_" + name)
         seg = [hh[j - 1][i - 1] for i, j, _ in cells[a:b]]
         stat[name] = (sum(seg) / len(seg), min(seg), max(seg))
         print("  %s: mean depth %.4f m (min %.4f, max %.4f)" % ((name,) + stat[name]))
-    r = stat["sr1"][0] / stat["sr0"][0] - 1.0
-    check(abs(r) <= TOL_ST, "(10) mean depth with f_advection_bend = 1 / 0 - 1 = %+.4f (within %.2f)" % (r, TOL_ST))
-    rng = (stat["sr1"][2] - stat["sr1"][1]) / stat["sr1"][0]
-    check(rng <= RANGE_ST, "(11) depth range (max - min) / mean with 1 = %.4f (<= %.2f)" % (rng, RANGE_ST))
+    r = stat[N("sr1")][0] / stat[N("sr0")][0] - 1.0
+    check(abs(r) <= TOL_ST, "(10) mean depth with f_advection_bend = %d / 0 - 1 = %+.4f (within %.2f)" % (BEND, r, TOL_ST))
+    rng = (stat[N("sr1")][2] - stat[N("sr1")][1]) / stat[N("sr1")][0]
+    check(rng <= RANGE_ST, "(11) depth range (max - min) / mean with %d = %.4f (<= %.2f)" % (BEND, rng, RANGE_ST))
 
 
 def check_wide():
-    print("=== wd0, wd1: uniform flow in a straight channel two cells wide ===")
+    print("=== %s, %s: uniform flow in a straight channel two cells wide ===" % (N("wd0"), N("wd1")))
     hn = (Q_ST / DX * N_ST_MAN / S_ST ** 0.5) ** 0.6       # マニングの等流の水深(広い矩形断面)
     a, b = int(0.4 * NX_WD), int(0.8 * NX_WD)
     mean = {}
-    for name in ("wd0", "wd1"):
+    for name in (N("wd0"), N("wd1")):
         hh = last_depth("result_" + name)
         seg = [hh[j - 1][i] for j in ROWS_WD for i in range(a, b)]
         mean[name] = sum(seg) / len(seg)
         print("  %s: mean depth %.5f m (min %.5f, max %.5f), normal depth %.5f m"
               % (name, mean[name], min(seg), max(seg), hn))
-    d0, d1, ds = mean["wd0"] / hn - 1.0, mean["wd1"] / hn - 1.0, mean["wd1"] / mean["wd0"] - 1.0
+    d0, d1, ds = mean[N("wd0")] / hn - 1.0, mean[N("wd1")] / hn - 1.0, mean[N("wd1")] / mean[N("wd0")] - 1.0
     check(abs(d0) <= TOL_WD and abs(d1) <= TOL_WD and abs(ds) <= TOL_WD_SAME,
-          "(19) depth / normal depth - 1 = %+.5f with 0, %+.5f with 1 (within %.3f); 1 / 0 - 1 = %+.1e (within %.0e)"
-          % (d0, d1, TOL_WD, ds, TOL_WD_SAME))
+          "(19) depth / normal depth - 1 = %+.5f with 0, %+.5f with %d (within %.3f); %d / 0 - 1 = %+.1e (within %.0e)"
+          % (d0, d1, BEND, TOL_WD, BEND, ds, TOL_WD_SAME))
 
 
 class JunctionCase:
@@ -399,8 +417,8 @@ def fmt_stat(st):
 
 
 def check_junction():
-    print("=== jp0: pond with a dead-end bay, main stream entering diagonally (f_advection_bend = 0) ===")
-    j0 = JunctionCase("jp0")
+    print("=== %s: pond with a dead-end bay, main stream entering diagonally (f_advection_bend = 0) ===" % N("jp0"))
+    j0 = JunctionCase(N("jp0"))
     ref = {}
     for t, qw, qm in stages():
         st, q = j0.stat(t), j0.discharge(t)
@@ -409,8 +427,8 @@ def check_junction():
         check(abs(q / (qw + qm) - 1.0) <= TOL_Q and max(r for _, r in st) <= RANGE_JP,
               "(20) steady: outflow / inflow - 1 = %+.4f (within %.3f), largest depth range %.3f m (<= %.2f)"
               % (q / (qw + qm) - 1.0, TOL_Q, max(r for _, r in st), RANGE_JP))
-    print("=== jp1: same pond, f_advection_bend = 1 ===")
-    j1 = JunctionCase("jp1")
+    print("=== %s: same pond, f_advection_bend = %d ===" % (N("jp1"), BEND))
+    j1 = JunctionCase(N("jp1"))
     for t, qw, qm in stages():
         st = j1.stat(t)
         print("  t = %3.0f min (inflow %.0f + %.0f m3/s): depth m (range m) %s" % (t, qw, qm, fmt_stat(st)))
@@ -418,16 +436,16 @@ def check_junction():
         check(max(r for _, r in st) <= RANGE_JP and max(abs(d) for d in dev) <= TOL_JP_SAME,
               "(21) same as with 0: largest depth range %.3f m (<= %.2f), depth - depth with 0 = %s m (within %.2f)"
               % (max(r for _, r in st), RANGE_JP, " ".join("%+.2f" % d for d in dev), TOL_JP_SAME))
-    print("=== jt0: pond with a dead-end bay, main stream entering straight (f_advection_bend = 0, f_advection_lateral = 0; record) ===")
-    t0 = JunctionCase("jt0")
+    print("=== %s: pond with a dead-end bay, main stream entering straight (f_advection_bend = 0, f_advection_lateral = 0; record) ===" % N("jt0"))
+    t0 = JunctionCase(N("jt0"))
     for t, qw, qm in stages():
         st = t0.stat(t)
         print("  t = %3.0f min (inflow %.0f + %.0f m3/s): depth m (range m) %s" % (t, qw, qm, fmt_stat(st)))
         check(st[0][1] > RANGE_JP_DEF,
               "(22) the water surface keeps oscillating with bend 0 and lateral 0: depth range in the bay cell A %.2f m (> %.1f)"
               % (st[0][1], RANGE_JP_DEF))
-    print("=== jt1: same pond, f_advection_bend = 1 ===")
-    t1 = JunctionCase("jt1")
+    print("=== %s: same pond, f_advection_bend = %d ===" % (N("jt1"), BEND))
+    t1 = JunctionCase(N("jt1"))
     for t, qw, qm in stages():
         st = t1.stat(t)
         print("  t = %3.0f min (inflow %.0f + %.0f m3/s): depth m (range m) %s" % (t, qw, qm, fmt_stat(st)))
@@ -443,6 +461,6 @@ if __name__ == "__main__":
     check_wide()
     check_junction()
     if nfail:
-        print("=== Check_brink.py: FAIL (%d) ===" % nfail)
+        print("=== Check_brink.py %s: FAIL (%d) ===" % (GROUP, nfail))
         sys.exit(1)
-    print("=== Check_brink.py: PASS ===")
+    print("=== Check_brink.py %s: PASS ===" % GROUP)

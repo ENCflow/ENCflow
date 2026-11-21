@@ -19,15 +19,15 @@ param50_*.txt.
   median lowering 9.5 m, maximum 66.8 m). The 57 channel cells and 39 other cells on the 519.8 m water
   surface are raised to the level of the surface (at most 2.08 m). The links at the same elevation as the
   downstream cell go from 3,108 to 242, and there are no links with a reverse slope and no depressions. The
-  median difference between the lowest neighbouring cell and the bed is 11 m (used by the supplement of
-  tutorials/chichibu)
+  median difference between the lowest neighbouring cell and the bed is 11 m (used by the example
+  examples/chichibu_flood)
 - `Chichibu_50m_basin.txt` — catchment mask (285,843 cells)
 - `Chichibu_50m_river.txt` — channel mask (19,714 cells; every 100 m channel cell
   contains a 50 m channel cell)
 - `Chichibu_50m_river_flowline.txt` — the channel mask moved onto the flow lines of the elevation (14,361 cells;
   [utils/river_flowline](../../../../utils/river_flowline/en/README.md), developer.md §109)
 - `width50_50.txt` / `width50_50_flowline.txt` — uniform channel width of 50 m on the cells of the original /
-  the moved channel mask (the latter is used by the W = 50 computations of the supplement of tutorials/chichibu)
+  the moved channel mask (the latter is used by the w50 computations of the example examples/chichibu_flood)
 
 The source is the same as data_chichibu (provided by the user on 2026-10-03).
 

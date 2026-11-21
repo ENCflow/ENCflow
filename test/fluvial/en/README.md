@@ -58,7 +58,7 @@ soil depth changes by exactly the amount the bed moves).
 |---|---|---|
 | (1) Σ(z − z₀) | about 1e-15 m·cell or less (round-off) | PASS (machine precision) |
 | (2) max\|(sd − sd₀) − (z − z₀)\| | about 1e-13 m or less (round-off) | PASS |
-| (3) max\|z − z₀\| | 1.86 mm | PASS (> 0.1 mm) |
+| (3) max\|z − z₀\| | 1.87 mm | PASS (> 0.1 mm) |
 
 - Because the Exner update sums the antisymmetric fluxes edge by edge, the
   sediment volume is conserved to machine precision.

@@ -14,7 +14,7 @@ at a different resolution).
 - `Chichibu_100m_cond.txt` — elevation with a conditioned channel bed. Only the channel cells of
   `Chichibu_100m_filled2.txt` (the 6,515 cells of `Chichibu_100m_river_flowline.txt`) are rebuilt to follow
   the valley bottom of a 10 m grid elevation of the same catchment ("Elevation with a conditioned channel bed"
-  below; used by the regression case test/chichibu_cond and by the supplement of tutorials/chichibu)
+  below; used by the regression case test/chichibu_cond and by the example examples/chichibu_flood)
 - `Chichibu_100m_basin.txt` — catchment mask
 - `Chichibu_100m_river.txt` — channel mask (the original data; 9,582 cells; used by the param_*.txt of the
   derived experiments of developer.md §68)
@@ -24,7 +24,7 @@ at a different resolution).
 - `width_chichibu50.txt` / `width_chichibu100.txt` — uniform channel width of 50 m / 100 m on the cells of the
   original channel mask (used by the derived sub-grid channel experiments param_w*.txt)
 - `width_chichibu50_flowline.txt` — uniform channel width of 50 m on the cells of the moved channel mask (used
-  by the W = 50 computations of the supplement of tutorials/chichibu)
+  by the w50 computations of the example examples/chichibu_flood)
 
 Origin of the data: the elevation data (and the catchment mask) were made
 from the Fundamental Geospatial Data digital elevation model of the

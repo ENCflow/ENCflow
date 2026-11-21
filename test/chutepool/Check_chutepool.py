@@ -4,11 +4,13 @@
   test/chichibu のデータから切り出した地形に、流量をゆっくり上げながら与える。本川は、落差を落ちた直後に折れて
   池へ入り、落差の下のセルの流れの正面には、水位より高い斜面のセルがある。池の中の測線の流量(10 秒ごと)を見る。
 
-  エッジ水深の頭打ち f_dry_head_cap = 2(構成 c2)と 3(構成 c3)を見る。3 は、送り手のセルへ射流で入ってくる
+  エッジ水深の頭打ち f_dry_head_cap = 2(構成 c2)・3(c3)と、4 つの値の組み合わせ(c4 = f_advection_donor・
+  f_advection_bend・f_advection_lateral・f_dry_head_cap = 4・2・2・4)を見る(c2・c3 の残りの 3 つは 3・1・1 を明示)。
+  3・4 は、送り手のセルへ射流で入ってくる
   流れを、同じ流量の限界流の比エネルギーまでしか数えない。速度水頭をそのまま数えると、正面の斜面へ水が登り、
   池の流量が揺れ続ける(README)。
 
-  判定する項目(2 と 3 のどちらも):
+  判定する項目(3 構成とも):
     (1) 質量の収支: 終わりの 5 分の測線の流量の平均が、与えた流量に ±TOL_MASS
     (2) 助走のあとの測線の流量が揺れない: 1 分の移動平均からのずれの最大が TOL_DEV 未満で、
         続けて逆向きの変化(どちらも REV_MIN を超える)がない
@@ -62,12 +64,12 @@ def main():
         print("  %s : %s" % (msg, "PASS" if good else "FAIL"))
         ok = ok and good
 
-    for name, cap in CASES.items():
+    for name, (don, bend, lat, cap) in CASES.items():
         d = "result_%s" % name
         fl = read(os.path.join(d, "fluxes", "flux0001.csv"))
         t = [r[1] for r in fl]
         q = [r[2] for r in fl]
-        print("-- f_dry_head_cap = %d(%s)" % (cap, name))
+        print("-- f_dry_head_cap = %d(%s。f_advection_donor・bend・lateral = %d・%d・%d)" % (cap, name, don, bend, lat))
         last = [q[i] for i in range(len(t)) if t[i] >= T_END - 5.0]
         qm = sum(last) / len(last)
         note("(1) 終わりの 5 分の測線の流量の平均 %.1f m3/s(与えた流量 %.0f に %+.2f %%。±%.0f %%)"

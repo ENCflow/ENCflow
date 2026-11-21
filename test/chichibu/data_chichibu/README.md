@@ -8,7 +8,7 @@
 - `Chichibu_100m_filled2.txt` — 標高(窪地処理済み。計算に使用)
 - `Chichibu_100m_cond.txt` — 標高(河床を整えたもの)。`Chichibu_100m_filled2.txt` の河道セル
   (`Chichibu_100m_river_flowline.txt` の 6,515 セル)だけを、同じ流域の 10 m 格子の標高の谷底に合わせて
-  作り直したもの(下の「河床を整えた標高」。回帰ケース test/chichibu_cond と、tutorials/chichibu の補足が使う)
+  作り直したもの(下の「河床を整えた標高」。回帰ケース test/chichibu_cond と、例題 examples/chichibu_flood が使う)
 - `Chichibu_100m_basin.txt` — 流域マスク
 - `Chichibu_100m_river.txt` — 河道マスク(元のデータ。9,582 セル。developer.md §68 の派生実験の
   param_*.txt が使う)
@@ -17,8 +17,8 @@
   test/chichibu_icmap が使う)
 - `width_chichibu50.txt` / `width_chichibu100.txt` — 元の河道マスクのセルに一様 50 m / 100 m の河道幅
   (サブグリッド河道の派生実験 param_w*.txt が使う)
-- `width_chichibu50_flowline.txt` — 載せ直した河道マスクのセルに一様 50 m の河道幅(tutorials/chichibu の
-  補足の W = 50 の計算が使う)
+- `width_chichibu50_flowline.txt` — 載せ直した河道マスクのセルに一様 50 m の河道幅(例題
+  examples/chichibu_flood の w50 の計算が使う)
 
 データの由来: 標高データ(および流域マスク)は国土地理院の基盤地図情報
 数値標高モデルより作成、河道マスクは国土数値情報河川データから作成された

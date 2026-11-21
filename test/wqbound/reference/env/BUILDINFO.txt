@@ -1,8 +1,8 @@
-date      : 2026-11-16 23:51:06
+date      : 2026-11-21 05:49:37
 host      : vm
 user      : 
 pwd       : /home/user/ENCflow/test/wqbound
 exe       : /home/user/ENCflow/bin/encflow
 mode      : serial__double
 modules   : (no modules)
-lib       : 	libgfortran.so.5 => /lib/x86_64-linux-gnu/libgfortran.so.5 (0x00007f4a3b200000)
+lib       : 	libgfortran.so.5 => /lib/x86_64-linux-gnu/libgfortran.so.5 (0x00007f1d22c00000)

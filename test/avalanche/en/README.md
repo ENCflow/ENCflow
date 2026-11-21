@@ -64,11 +64,11 @@ snow is still flowing (remaining hs).
 |---|---|---|
 | (1) Solid ledger | about 1e-13 m·cell or less (round-off) | PASS |
 | (2) Co-update | about 1e-14 m or less (round-off) | PASS |
-| (3) Entrainment activity | path min(sd − sd₀) = −0.474 m (layer 0.5 m) | PASS |
-| (4) Growth | entrained solid 43.0 / released solid 21.6 = 1.99 times | PASS |
+| (3) Entrainment activity | path min(sd − sd₀) = −0.471 m (layer 0.5 m) | PASS |
+| (4) Growth | entrained solid 39.1 / released solid 21.6 = 1.81 times | PASS |
 | (5) Stopping | remaining Σhs / (released + entrained) = 0.000 | PASS |
 
-- By entrainment the avalanche grows to about 3.0 times the released amount,
+- By entrainment the avalanche grows to about 2.8 times the released amount,
   and all of it stops by 60 s and deposits around the slope break. The ledger
   and the co-update are at machine precision.
 - The entrainable layer is given by reinterpreting the existing soil depth
@@ -110,8 +110,13 @@ snow is still flowing (remaining hs).
   restored it is 2.48). Compared on the final snow surface, the path widens (the rows scoured by more
   than 1 cm go from 8 to 10 in the columns at x = 14.5 and 19.5 m) and the scouring depth on the lower
   slope becomes smaller (the largest value of each column goes from 0.47, 0.48 and 0.50 m to 0.40, 0.31
-  and 0.13 m at x = 19.5, 24.5 and 28.5 m). The mechanism has not been examined. The table, the values in
-  the text and the figures are from this computation.
+  and 0.13 m at x = 19.5, 24.5 and 28.5 m). The mechanism has not been examined. After the four values of
+  the advection term (f_advection_donor = 4, f_advection_bend = 2, f_advection_lateral = 2,
+  f_dry_head_cap = 4) became the default on 2026-11-21 it is 1.81 (entrained solid 39.1, remaining 0.000,
+  largest deposit 0.49 m; developer.md §114). The change comes mainly from f_advection_bend = 2 (with 1
+  restored it is 1.95); restoring only f_advection_donor or only f_advection_lateral to the old value gives
+  1.77, and restoring f_dry_head_cap to 3 keeps 1.81. The table, the values in the text and the figures
+  are from this computation.
 
 ## Related documents
 

@@ -71,7 +71,7 @@ without feedback.
 | 2 driftwood + debris (load criterion) | round-off | 0.051 / 0.019 | 0.40 mm | PASS. state.dat and driftwood.dat byte-identical to 2′ |
 | 3 restart | bldgdebris.dat and state.dat byte-identical to the continuous run | | | PASS |
 | 4 void-ratio feedback | round-off | 0.082 / 0.075 | 0.87 mm | PASS. S(t) agrees with 4′ |
-| 5 defaults | round-off | 15.3 / 5.6 | 0.13 m | PASS. Byte-identical to 5′ |
+| 5 defaults | round-off | 15.4 / 5.6 | 0.10 m | PASS. Byte-identical to 5′ |
 
 - The volume, weighted by gv, is conserved to machine precision (round-off of
   about 1e-10 m·cell or less), and it is also confirmed that the change of the
@@ -102,12 +102,16 @@ without feedback.
   0.075). The former values of configuration 5 (15.3 / 6.6, 0.12 m) are
   15.3 / 5.9, 0.14 m even with 1; they had been left uncorrected after the
   earlier changes.
-- The values of configuration 5 are those after the default of the edge-depth cap became
-  f_dry_head_cap = 3 and the default of the advection on side faces became
-  f_advection_lateral = 1 (2026-11-16; developer.md §110.32). With the previous default
-  (f_dry_head_cap = 2; 2026-11-13; developer.md §108) they were 15.4 / 5.6, 0.14 m, and with
-  f_dry_head_cap = 1 they were 15.3 / 5.8, 0.13 m. The values of configurations 1–4 are the
-  same with all of them.
+- The values of configuration 5 are those after the four values of the advection term
+  (f_advection_donor = 4, f_advection_bend = 2, f_advection_lateral = 2, f_dry_head_cap = 4)
+  became the default (2026-11-21; developer.md §114). The reach onto the flat part goes down from
+  0.131 to 0.104 m, mainly because of f_advection_lateral = 2 (with 1 restored it is 0.124 m;
+  restoring only f_advection_bend gives 0.110 m, only f_dry_head_cap 0.106 m and only
+  f_advection_donor 0.096 m). With the previous defaults (f_dry_head_cap = 3 and
+  f_advection_lateral = 1; 2026-11-16; developer.md §110.32) they were 15.3 / 5.6, 0.13 m, with
+  f_dry_head_cap = 2 (2026-11-13; developer.md §108) 15.4 / 5.6, 0.14 m, and with
+  f_dry_head_cap = 1 15.3 / 5.8, 0.13 m. The values of configurations 1–4 are the same to the
+  digits shown with all of them.
 
 ## Related documents
 

@@ -14,8 +14,11 @@ B 以内のセルで、標高は 河床 + H + SC·(距離 − ω/2)(河道へ向
 
 ケース = 形 × 雨(0 = 乾いた河岸、20 mm/h)× 移流項の構成(OPTS)。形は Δx = 50 m・1 セル幅の
 θ = 0・10・22.5・30・45°、θ = 22.5° の 1 セル幅の Δx = 100・25 m、幅 100 m を 2・4 セルで表したもの。
-構成は、o0 = f_advection_donor 0、o3 = 3(側方面は既定の f_advection_lateral = 1)、o3l0 = 3 に
-f_advection_lateral = 0 を明示したもの(側方面で、岸の水の流速をそのまま使う)。
+構成(OPTS)は 2 組。どの構成も、移流項の規則の 4 つのスイッチ(f_advection_donor・f_advection_bend・
+f_advection_lateral・f_dry_head_cap)を全部明示する(既定によらない)。
+  古い組(古い値の組み合わせ 3・1・1・3 の性質): o0 = 0・1・0・3、o3 = 3・1・1・3、o3l0 = 3・1・0・3
+  新しい組(4 つの値の組み合わせ 4・2・2・4 の性質): o0n = 0・2・0・4、o4 = 4・2・2・4、o4l0 = 4・2・0・4
+f_advection_lateral = 0 は、側方面で岸の水の流速をそのまま使う形(f_advection_donor = 0 では、1・2 も 0 と同じ扱い)。
 """
 import math, os, sys
 
@@ -26,7 +29,9 @@ RAIN = 20.0                                   # 雨のケースの降雨強度 (
 TT, DT_FILE = 10800.0, 1800.0                 # 計算時間 (s)、出力間隔 (s)
 GEOMS = [(0.0, 50.0, 1), (10.0, 50.0, 1), (22.5, 50.0, 1), (30.0, 50.0, 1), (45.0, 50.0, 1),
          (22.5, 100.0, 1), (22.5, 25.0, 1), (22.5, 50.0, 2), (22.5, 25.0, 4)]
-OPTS = [("o0", 0, None), ("o3", 3, None), ("o3l0", 3, 0)]   # 名前、f_advection_donor、f_advection_lateral(None = 既定)
+# 名前、f_advection_donor、f_advection_bend、f_advection_lateral、f_dry_head_cap
+OPTS = [("o0", 0, 1, 0, 3), ("o3", 3, 1, 1, 3), ("o3l0", 3, 1, 0, 3),
+        ("o0n", 0, 2, 0, 4), ("o4", 4, 2, 2, 4), ("o4l0", 4, 2, 0, 4)]
 
 
 def tag(th, dx, nc):
@@ -34,7 +39,7 @@ def tag(th, dx, nc):
 
 
 def cases():
-    return [f"{tag(*g)}_r{r:g}_{o}" for g in GEOMS for r in (0.0, RAIN) for o, _, _ in OPTS]
+    return [f"{tag(*g)}_r{r:g}_{o[0]}" for g in GEOMS for r in (0.0, RAIN) for o in OPTS]
 
 
 def make_geom(th_deg, dx, nc, out):
@@ -105,9 +110,9 @@ def make_geom(th_deg, dx, nc, out):
     return nx, ny, inflow
 
 
-def write_param(case, geo, dx, nc, nx, ny, inflow, rain, opt, lat):
+def write_param(case, geo, dx, nc, nx, ny, inflow, rain, rule):
     q0 = Q0_UNIT * nc * dx
-    lateral = "" if lat is None else f"\n  f_advection_lateral = {lat}"
+    don, bend, lat, cap = rule
     cells = "\n".join(f"  inflow_cell(:,{k + 1},1) = {i}, {j}" for k, (i, j) in enumerate(inflow))
     precip = (f"&list_precip\n  prtype = 1\n  prval(:,1) =    0, {rain:g}\n  prval(:,2) = 6000, {rain:g}\n/\n"
               if rain > 0 else "")
@@ -128,7 +133,10 @@ def write_param(case, geo, dx, nc, nx, ny, inflow, rain, opt, lat):
   f_out_h = 1
 /
 &list_enc
-  f_advection_donor = {opt}{lateral}
+  f_advection_donor = {don}
+  f_advection_bend = {bend}
+  f_advection_lateral = {lat}
+  f_dry_head_cap = {cap}
 /
 &list_initial
   f_htype = 0
@@ -170,6 +178,6 @@ if __name__ == "__main__":
         geo = tag(th, dx, nc)
         nx, ny, inflow = make_geom(th, dx, nc, f"d_{geo}")
         for rain in (0.0, RAIN):
-            for name, opt, lat in OPTS:
-                write_param(f"{geo}_r{rain:g}_{name}", geo, dx, nc, nx, ny, inflow, rain, opt, lat)
+            for name, *rule in OPTS:
+                write_param(f"{geo}_r{rain:g}_{name}", geo, dx, nc, nx, ny, inflow, rain, rule)
         print(f"d_{geo}: nx {nx}, ny {ny}")

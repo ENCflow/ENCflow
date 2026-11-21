@@ -33,7 +33,7 @@ s = (−1)^(i+j)) and a_sm (the smooth gyre), and estimates the e-folding times.
 The pass criterion is that 50 % or more of the smooth gyre remains after
 1 hour in smooth and mixed (the background flow is not destroyed). The decay
 time of the sub-lattice mode is reported as measured (1094 s even under a
-background flow before the fix of the conservative form, 87 s after it).
+background flow before the fix of the conservative form, 88 s after it).
 
 ## Running
 
@@ -51,14 +51,20 @@ e-folding time τ.
 
 | Configuration | Scheme 3 (before the fix) | Scheme 3 (after the fix) | Scheme 2 (after the fix) | Scheme 1 |
 |---|---|---|---|---|
-| alternating: after 5 min / 60 min | 0.57 / 0.33 (τ 4570 s) | 0.18 / 0.04 (τ 1610 s) | 0.18 / 0.07 (τ 2200 s) | 0.40 / 0.10 (τ 1940 s) |
-| mixed: τ of the sub-lattice mode | 1094 s (still present after 60 min, changing sign) | **87 s** (0.03 at 5 min) | 87 s | 364 s |
+| alternating: after 5 min / 60 min | 0.57 / 0.33 (τ 4570 s) | 0.18 / 0.03 (τ 1120 s) | 0.18 / 0.07 (τ 2200 s) | 0.40 / 0.10 (τ 1940 s) |
+| mixed: τ of the sub-lattice mode | 1094 s (still present after 60 min, changing sign) | **88 s** (0.03 at 5 min) | 87 s | 364 s |
 | mixed: remaining background gyre (60 min) | 0.72 | 0.92 | 0.89 | 0.92 |
 | smooth: remaining gyre (60 min) | 0.96 | 0.98 | 0.97 | 0.99 |
 
-The column "Scheme 3 (after the fix)" holds the values of 2026-11-01, after the lateral face flux of
-the axis edges was changed to the real discharge of the crossing links (developer.md §68.42): the
-alternating mode after 60 min went from 0.07 to 0.04 and τ from 2240 to 1610 s (faster damping).
+The column "Scheme 3 (after the fix)" holds the values after the four values of the advection term
+(f_advection_donor = 4, f_advection_bend = 2, f_advection_lateral = 2, f_dry_head_cap = 4) became the
+default (2026-11-21; developer.md §114). Compared with the combination of the old values (3, 1, 1, 3), the
+alternating mode after 60 min goes from 0.04 to 0.03 and τ from 1610 to 1120 s (faster damping;
+f_advection_lateral = 2 does not reduce a parallel link flowing against this edge, and reducing it would
+remove the damping of this mode; developer.md §113.9). The earlier values of 2026-11-01 were after the
+lateral face flux of axis edges was taken from the real discharge of the crossing link (developer.md §68.42;
+the alternating mode after 60 min went from 0.07 to 0.04 and τ from 2240 to 1610 s, faster damping). The
+columns of schemes 1 and 2 are the values of 2026-10-18.
 
 - In the configuration with the sub-lattice mode alone (alternating), the
   damping by the advection term is proportional to the flux |q_t|, and since

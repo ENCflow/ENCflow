@@ -13,7 +13,7 @@ python3 "$sdir/make_bankspill.py" z > bs_z.txt
 export ENCFLOW_EXPECT_NP="$NP"
 set -o pipefail
 : > Screen.log
-for c in wet_dt6 wet_dt15 dry_dt6 dry_dt15 c3_wet_dt6 c3_wet_dt15 c3_dry_dt6 c3_dry_dt15; do
+for c in wet_dt6 wet_dt15 dry_dt6 dry_dt15 c3_wet_dt6 c3_wet_dt15 c3_dry_dt6 c3_dry_dt15 c4_wet_dt6 c4_wet_dt15 c4_dry_dt6 c4_dry_dt15; do
     mpirun -np "$NP" $MPIRUN_OPTS ./encflow_mpi param_$c.txt | tee -a Screen.log || exit 1
 done
 set +o pipefail

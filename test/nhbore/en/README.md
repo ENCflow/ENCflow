@@ -31,7 +31,7 @@ splits into a wave train from its head.
 | Configuration | η₁/a (t = 50 / 90 s) | Number of crests (90 s) | Leading-wave speed / √(gH) (second half) |
 |---|---:|---:|---:|
 | Non-hydrostatic a/H = 0.1 | 1.77 / 2.03 | 6 | 1.087 |
-| Non-hydrostatic a/H = 0.2 | 2.27 / 2.59 | 11 | 1.118 |
+| Non-hydrostatic a/H = 0.2 | 2.26 / 2.57 | 11 | 1.118 |
 | Hydrostatic a/H = 0.1 (f_hcap_upwind = 2) | 1.20 / 1.19 | 1 | 1.091 |
 
 - In the non-hydrostatic run the front of the step splits from its head into
@@ -41,7 +41,7 @@ splits into a wave train from its head.
   the leading wave is −1% relative to √(gH)(1 + a/H) = 1.10 for a solitary
   wave of height 2a (including the +0.1% effect of the channel in which the
   diagonal edges are missing at the walls; test/nhsolitary).
-- For a/H = 0.2 the leading wave grows beyond 2a (2.59a at 90 s). Unlike the
+- For a/H = 0.2 the leading wave grows beyond 2a (2.57a at 90 s). Unlike the
   weakly nonlinear KdV, the undular bore of the fully nonlinear one-layer
   model (Serre/Green–Naghdi type) has a leading-wave ratio that exceeds 2 for
   stronger steps (El, Grimshaw & Smyth 2006), and this is consistent with
@@ -67,3 +67,7 @@ splits into a wave train from its head.
   §68.38). With the former default 1 written explicitly it returns to the
   values of 10-12 (1.57a at 90 s, leading wave speed ratio 1.108) (confirmed
   2026-10-24).
+- The η₁/a of a/H = 0.2 is the value rerun on 2026-11-21 with the current defaults (the record of 10-12
+  was 2.27 / 2.59). The code before the four values of the advection term were made the default also
+  gave 2.26 / 2.57, and the switch changes only the 90 s value, by 0.001 (developer.md §114). The figure
+  is drawn from this rerun.

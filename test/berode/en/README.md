@@ -38,7 +38,7 @@ make
 ./Run_MPI.sh 4    # MPI; the rule is that state.dat is byte-identical to the serial run
 ```
 
-## Findings (2026-10-17; the numbers were recomputed on 2026-11-16 and differ from the 10-17 values because of changes such as the promotion of f_opening_dynamic = 2 (§68.38) and of f_advection_bend = 1 (§110) to the default)
+## Findings (2026-10-17; the numbers were recomputed on 2026-11-21 and differ from the 10-17 values because of changes such as the promotion of f_opening_dynamic = 2 (§68.38), of f_advection_bend = 1 (§110) and of the four values of the advection term (§114) to the default)
 
 | Check | K_b = 1e-5 | K_b = 2e-5 |
 |---|---|---|
@@ -54,18 +54,18 @@ make
 - MPI np = 2, 4 are byte-identical to the serial run; -fcheck=all np=2 runs
   normally.
 
-## Findings (2026-10-23; slump blocks; the numbers were recomputed on 2026-11-16)
+## Findings (2026-10-23; slump blocks; the numbers were recomputed on 2026-11-21)
 
 | Check | slump (h_cover = 0.1 m) | slump0 (no shielding) |
 |---|---|---|
-| Rockfall ledger (bulk) | 30.5 m³ | 30.3 m³ |
-| Bank-erosion ledger | 0.002 m³ | 0.267 m³ (kb1 alone gives a bank loss of 0.366 m·cell) |
-| Final talus Σht | 20.6 m³ | — |
+| Rockfall ledger (bulk) | 30.4 m³ | 30.3 m³ |
+| Bank-erosion ledger | 0.001 m³ | 0.266 m³ (kb1 alone gives a bank loss of 0.366 m·cell) |
+| Final talus Σht | 20.7 m³ | — |
 
 - Since the 2 m bank exceeds H_c = 1.5 m it collapses immediately, and talus of 0.25 m
   covers the toe (the rows at both edges of the channel). With shielding, at toes where
   the talus is ≥ h_cover the shear stress does not reach the bank face, and bank erosion
-  is 0.007 times. The talus decreases by 10 m³ in 60 s through the outflow of bedload
+  is 0.006 times. The talus decreases by 10 m³ in 60 s through the outflow of bedload
   (removal).
 - MPI np = 2, 4: state.dat and geomorph_rockfall.dat are byte-identical to the serial run.
 

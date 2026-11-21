@@ -16,8 +16,9 @@ developer.md §110.24, §110.26 and §110.30).
 the sending cell. In a supercritical flow this velocity head changes greatly with slight changes in depth. So 3
 counts a flow entering supercritically not by its velocity head itself but by the specific energy of the
 critical flow of the same discharge (which is determined by the discharge alone). This test looks at a
-situation where that way of counting takes effect. **The discharge in the pool does not oscillate with either
-2 or the default 3.**
+situation where that way of counting takes effect. **The discharge in the pool does not oscillate with 2, with
+3, or with the default combination of the four values for deep, slow neighbouring cells
+(`f_advection_donor = 4`, `f_advection_bend = 2`, `f_advection_lateral = 2`, `f_dry_head_cap = 4`).**
 
 ## Setup
 
@@ -44,14 +45,17 @@ At a discharge of 4,000 m³/s, the flow in the cell below the drop has a depth o
 15 m/s (Froude number 3.0, velocity head 12 m; computed with 2). The ground of the hillslope cell ahead is
 8.6 m above the water level of this cell.
 
-| Configuration | File | f_dry_head_cap |
-|---|---|---:|
-| c2 | `param_c2.txt` | 2 |
-| c3 | `param_c3.txt` | 3 |
+| Configuration | File | f_dry_head_cap | f_advection_donor, bend, lateral |
+|---|---|---:|---|
+| c2 | `param_c2.txt` | 2 | 3, 1, 1 |
+| c3 | `param_c3.txt` | 3 | 3, 1, 1 |
+| c4 | `param_c4.txt` | 4 | 4, 2, 2 (combination of the four values) |
+
+Every configuration states all four switches of the advection rules (none depends on the defaults).
 
 ## Check items (Check_chutepool.py)
 
-Items judged (with both 2 and 3):
+Items judged (in all three configurations):
 
 1. Mass balance: the mean discharge at the transect over the last 5 minutes is within ±1 % of the given
    discharge of 5,000 m³/s.
@@ -69,9 +73,11 @@ Item displayed:
 |---|---:|---:|---|---:|
 | c2 (`f_dry_head_cap = 2`) | 4,993.5 | 38 | none | 0.00 |
 | c3 (`f_dry_head_cap = 3`) | 4,992.4 | 4 | none | 0.00 |
+| c4 (combination of the four values) | 4,993.6 | 1 | none | 0.00 |
 
-- **Neither 2 nor 3 lets water climb the hillslope ahead, which is higher than the water level.** The discharge
-  at the transect increases smoothly, following the rise of the given discharge.
+- **Neither 2, 3 nor the combination of the four values lets water climb the hillslope ahead, which is higher than
+  the water level.** The discharge at the transect increases smoothly, following the rise of the given
+  discharge.
 - **For a supercritical flow, 3 counts up to the specific energy of the critical flow of the same discharge.**
   The velocity head of the flow in the cell below the drop is 12 m and exceeds the height of the hillslope ahead
   (8.6 m above the water level), but the critical flow of the same discharge (37 m²/s per unit width) has a
@@ -104,7 +110,7 @@ Item displayed:
 
 ```bash
 make
-./Run.sh          # serial (2 configurations; a few seconds)
+./Run.sh          # serial (3 configurations; a few seconds)
 ./Run_MPI.sh 2    # MPI (with np = 2 and 4 a band boundary passes the north end of the pool)
 ```
 
@@ -112,6 +118,6 @@ make
 
 - The terrain is part of the data of [test/chichibu](../../chichibu/en/README.md) (100 m grid; for the origin of
   the elevation data see [tutorials/chichibu](../../../tutorials/chichibu/en/README.md)).
-- The rule of the cap on the edge depth (`f_dry_head_cap`) is ENCflow's own
+- The rule of the cap on the edge depth (`f_dry_head_cap`) and the combination of the four values are ENCflow's own
   ([The cap on the edge depth toward higher ground](../../../docs/en/users_guide/dry_head_cap.md) in the users guide). The relation between
   specific energy and critical flow is standard open-channel hydraulics.

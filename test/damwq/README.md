@@ -56,7 +56,7 @@ python3 Fig.py    # figs/damwq.png(引数 en で英語版を en/figs/ に)
 |---|---|---|---|
 | 放流質量 rel_dam(5400 s) | 2700.0000 g | 2700 g | 全桁一致 |
 | ため池 to_rs = mass_rs | 120.00000 g | 120 g | 全桁一致 |
-| to_dam − rel_dam = mass_dam | 4538.5562 − 2700.0000 = 1838.5562 g | mass_dam 1838.5562 | 一致 |
+| to_dam − rel_dam = mass_dam | 4538.3737 − 2700.0000 = 1838.3737 g | mass_dam 1838.3737 | 一致 |
 | 総質量 | 4000.0000 g | 4000 g | PASS |
 | 最終濃度(湿潤セル) | 100.0000 mg/L | 100 | PASS |
 

@@ -20,11 +20,11 @@ cells), so six groups are computed.
   what both rules satisfy, such as steadiness and the mass balance, is judged; the difference from
   the theory and the difference caused by the wetness of the banks are displayed as "the limit
   of 0".
-- **`f_advection_lateral = 1` (the default) counts it regardless of the wetness of the banks.** The difference in
+- **`f_advection_lateral = 1` (the default until 2026-11-21) counts it regardless of the wetness of the banks.** The difference in
   backwater between wet and dry banks, the position within the theory, and the independence from the
   grid orientation are judged as well.
 - **The combination of four values (`f_advection_donor = 4`, `f_advection_bend = 2`,
-  `f_advection_lateral = 2`, `f_dry_head_cap = 4`; optional) also counts it regardless of the wetness of
+  `f_advection_lateral = 2`, `f_dry_head_cap = 4`; the default) also counts it regardless of the wetness of
   the banks.** The same items as with 1 are judged (only the range of the position within the theory
   for the junction along the axes differs).
 
@@ -55,7 +55,9 @@ Configuration names are `<group prefix><discharge ratio>_<banks>`.
 | `rl1_` | Junction rotated 45° | `f_advection_lateral = 1` |
 | `rc4_` | Junction rotated 45° | Combination of four values |
 
-In the groups with `f_advection_lateral = 0` and `1` the other values are the defaults.
+In the groups with `f_advection_lateral = 0` and `1`, the other three switches state the combination of the old values
+(`f_advection_donor = 3`, `f_advection_bend = 1`, `f_dry_head_cap = 3`). Every group states all four switches (none
+depends on the defaults).
 
 | Discharge ratio | Main / tributary discharge (m³/s) |
 |---|---|

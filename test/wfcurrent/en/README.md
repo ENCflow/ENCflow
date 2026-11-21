@@ -188,3 +188,20 @@ the change of the wave height by the current effect is at most 0.17% and that of
 −0.08%, and the spread of the profile with the diffusion term is +5.5%), and the reference was updated. All
 checks pass; with the release build np = 2 agrees with the serial reference (Log.txt, E9998, v9998) and the
 whole set of Run_MPI.sh checks passes.
+
+The switch of the defaults to the four values of the advection term (added 2026-11-21;
+`f_advection_donor = 4`, `f_advection_bend = 2`, `f_advection_lateral = 2` and `f_dry_head_cap = 4`;
+developer.md §114) changes the results slightly (the integral ratio of the alongshore momentum goes from
+1.0019 to 1.0020 without the roller, from 1.0001 to 1.0003 with the roller, from 1.0002 to 1.0003 with the
+two-way coupling and from 0.9984 to 0.9986 with the diffusion term; the maximum of the longshore current
+stays at 0.2241 m/s without and 0.2289 m/s with the roller, the maximum Lagrangian cross-shore velocity
+without the roller stays at 2.3e-3 m/s, the differences from the grid rotated by 90° are 4.3e-6 m in E and
+6.4e-5 of the maximum in v, the change of the wave height by the current effect is at most 0.17% and that
+of the peak longshore current −0.08%, and the spread of the profile with the diffusion term is +5.5%), and
+the reference was updated. In the beach configurations, the row differences of v, which should be uniform
+alongshore, grow from 6.1e-6, 2.7e-5 and 3.2e-5 to 1.3e-4, 2.5e-4 and 2.2e-4 m/s without the roller, with
+the roller and with the two-way coupling (about 0.1 % of the maximum of the longshore current; the bound is
+1 %). These differences come from the boundary faces of lateral Neumann sides not using the rules of the
+four values, a limit described in §4.4 of [Advection schemes](../../../docs/en/users_guide/advection.md).
+All checks pass; with the release build np = 1, 2 and 4 agree with the serial results of the same build
+(Log.txt, E9998, v9998).

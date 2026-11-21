@@ -238,12 +238,12 @@ python3 step2_time.py               # with B--D (venv / conda / OS packages)
   0:00:00.00   0.0%    0.0000   0.0%      0    0.0000    0.0000    0.0000
 after update():       t = 6 s
 after update_until(): t = 600 s
-  0:30:00.00   8.3%    0.0487  98.4%      0    0.2558    1.2869    5.9935
+  0:30:00.00   8.3%    0.0487  98.4%      0    0.2563    1.2870    6.0056
 t =    2400 s  (11.1%)
-  1:00:00.00  16.7%    0.0999   5.2%      0    0.5419    6.5388   14.1782
+  1:00:00.00  16.7%    0.0999   5.2%      0    0.5371    6.5950   14.0557
 t =    4200 s  (19.4%)
   ...
-  6:00:00.00 100.0%    0.0174   0.5%      0    0.2535    3.3227    3.4506
+  6:00:00.00 100.0%    0.0174   0.5%      0    0.2539    3.3342    3.4516
 t =   21600 s  (100.0%)
 main: program terminated normally
 finished
@@ -322,22 +322,22 @@ variables you can get:
 elevation: 92 .. 2449 m
 probe cell (i=147, j=104) -> h[46, 146],  z = 353.4 m
  time(s)   h_probe(m)   h_max(m)   wet cells
-    1800       0.514      1.287       16997
-    3600       2.034      6.539        9584
-    5400       6.270      9.678        3524
-    7200       3.949     10.397        2407
-    9000       2.716     11.315        1960
-   10800       2.016     10.514        1679
-   12600       1.583      7.678        1469
-   14400       1.295      5.805        1332
-   16200       1.090      4.679        1240
-   18000       0.937      3.901        1169
-   19800       0.817      3.324        1090
-   21600       0.722      2.883        1045
+    1800       0.514      1.287       16998
+    3600       2.046      6.595        9585
+    5400       6.303      7.596        3525
+    7200       4.006     10.458        2406
+    9000       2.739     11.191        1960
+   10800       2.019      9.694        1678
+   12600       1.586      7.505        1469
+   14400       1.298      5.783        1333
+   16200       1.092      4.684        1240
+   18000       0.938      3.913        1168
+   19800       0.818      3.336        1090
+   21600       0.723      2.894        1045
 ```
 (ENCflow's own lines every 30 minutes are omitted)
 
-During the rain (up to 3600 s) the number of wet cells reaches 16,997
+During the rain (up to 3600 s) the number of wet cells reaches 16,998
 (nearly every cell of the catchment); once the rain stops it drops quickly
 and the water gathers in the channels (about 1,050 cells). At the cell in
 the middle main stem the depth peaks after the rain stops (6.3 m at 5400 s
@@ -538,9 +538,9 @@ python3 step6_rain.py               # with B--D (venv / conda / OS packages)
 run A: rain from param.txt
    set(VAR_PRECIP) refused as expected: BMI set_value(atmosphere_water__precipitation_leq-volume_flux) failed (status=1)
 run B: rain supplied from Python (uniform)
-   max |h_B - h_A| = 1.332e-15 m
+   max |h_B - h_A| = 1.776e-15 m
 run C: rain only on the western half
-   max h: A = 2.88 m,  C = 2.65 m
+   max h: A = 2.89 m,  C = 2.67 m
 ```
 
 Three runs are executed in sequence (ENCflow holds one model per process,
@@ -570,7 +570,7 @@ so the next one is `initialize`d after `finalize`):
 - **Run C** is an example only the BMI makes easy: rain falling only on the
   western half of the catchment. Since `pattern` is an `(ny, nx)` array, a
   distribution interpolated from radar rainfall or a weather model can be
-  supplied, replaced at every time. The maximum depth drops from 2.88 m to 2.65 m.
+  supplied, replaced at every time. The maximum depth drops from 2.89 m to 2.67 m.
 
 Mind the units. The BMI precipitation intensity is in **m/s** (CSDMS
 standard name `atmosphere_water__precipitation_leq-volume_flux`), so the
@@ -612,9 +612,9 @@ python3 step7_roughness.py          # with B--D (venv / conda / OS packages)
 ```
 probe cell (i=147, j=104)
  n factor   peak h (m)   time of peak
-    1.0        6.889         81 min
-    1.5        6.837        102 min
-    2.0        6.846        123 min
+    1.0        6.842         81 min
+    1.5        6.846        102 min
+    2.0        6.850        123 min
 ```
 
 - `get2d(VAR_MANNING_N)` returns the roughness field currently in effect
@@ -628,8 +628,8 @@ probe cell (i=147, j=104)
   peak stays at 6.8 to 6.9 m and only its time is delayed, 81 -> 102 ->
   123 min.
 - Halving the roughness makes the flow faster, and the Courant number
-  (Cn_max on screen) rises from 0.57 to 0.90 (the depth peak is 7.2 m at
-  61 min). Above 1, ENCflow stops with `Courant number exceeds 1.0` and
+  (Cn_max on screen) rises from 0.57 to 0.83 (the depth peak is 5.8 m at
+  57 min). Above 1, ENCflow stops with `Courant number exceeds 1.0` and
   Python receives a `BmiError`. The BMI changes nothing about the stability
   conditions: in experiments that lower the roughness, watch Cn_max and
   reduce `dt` in `param.txt` if there is little margin.

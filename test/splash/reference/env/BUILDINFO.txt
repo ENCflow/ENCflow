@@ -1,8 +1,8 @@
-date      : 2026-08-20 03:00:19
+date      : 2026-11-21 06:51:26
 host      : vm
 user      : 
 pwd       : /home/user/ENCflow/test/splash
 exe       : /home/user/ENCflow/bin/encflow
 mode      : serial__double
 modules   : (no modules)
-lib       : 	libgfortran.so.5 => /lib/x86_64-linux-gnu/libgfortran.so.5 (0x00007f11c9000000)
+lib       : 	libgfortran.so.5 => /lib/x86_64-linux-gnu/libgfortran.so.5 (0x00007f6283200000)
