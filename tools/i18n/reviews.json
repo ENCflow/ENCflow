@@ -5180,11 +5180,11 @@
     {
       "source": "tutorials/bmi/README.md",
       "target": "tutorials/bmi/en/README.md",
-      "source_sha256": "9f87ce32418e2a72b2808842a5306dd61bc0ef9f4a92070ca4f07fe87cd6c482",
-      "target_sha256": "4c5c7c838e99d201a9861de723efd9e7c99375ffa3d3b5bbd69bef3e7caefd91",
-      "reviewer": "Claude (Claude Code session; full-text content and lexical review, no model execution)",
+      "source_sha256": "fe78e8527555512d401719fceaab9421e08aff5171396eb5f44f47343a3a38e7",
+      "target_sha256": "ea93ec129e058c442d7961c46dc9b2951e5a8ffec4f32cd8d418e56d6d0ca4e8",
+      "reviewer": "Claude (Claude Code session; changed sections compared side by side with the Japanese source; numbers checked against the tutorial runs)",
       "method": "assistant",
-      "reviewed_on": "2026-11-18"
+      "reviewed_on": "2026-11-21"
     },
     {
       "source": "tutorials/bmi/param.txt",
