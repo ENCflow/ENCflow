@@ -59,30 +59,30 @@ are this case, dashed lines the regression case of test/chichibu.
 
 | Transect | Location | test/chichibu (depression-filled elevation, channel 0.02) | This case (conditioned bed, channel 0.04) |
 |---|---|---|---|
-| 1 | uppermost main stem (x = 16.5 km) | 1,175 m³/s, 0.85 h | 1,197 m³/s, 0.82 h |
-| 2 | x = 21.5 km | 2,985 m³/s, 0.97 h | 3,116 m³/s, 0.92 h |
-| 3 | x = 29.6 km | 4,682 m³/s, 1.58 h | 6,555 m³/s, 1.37 h |
-| 4 | 4.6 km upstream of the catchment outlet (x = 43.3 km) | 5,585 m³/s, 3.17 h | 6,185 m³/s, 3.07 h |
+| 1 | uppermost main stem (x = 16.5 km) | 1,182 m³/s, 0.83 h | 1,196 m³/s, 0.80 h |
+| 2 | x = 21.5 km | 2,962 m³/s, 0.95 h | 3,132 m³/s, 0.90 h |
+| 3 | x = 29.6 km | 4,827 m³/s, 1.53 h | 6,481 m³/s, 1.37 h |
+| 4 | 4.6 km upstream of the catchment outlet (x = 43.3 km) | 5,826 m³/s, 3.05 h | 5,923 m³/s, 3.02 h |
 
 - With the conditioned bed the flood wave is faster and larger even though the
-  channel roughness is doubled (the peak at transect 3 is 1.4 times, at
-  transect 4 1.1 times as large). With the depression-filled elevation, water
+  channel roughness is doubled (the peak at transect 3 is 1.3 times as large and
+  10 minutes earlier; at transect 4 it is 2 % larger and 2 minutes earlier). With the depression-filled elevation, water
   collects on the flat reaches of the channel and the wave is delayed. Which of
   the two is closer to reality is not known, because there is no comparison
   with observations.
-- The maximum depths at the probes are 2.07 m (0.80 h) and 4.32 m (0.92 h),
-  deeper than in test/chichibu (1.76 m and 1.82 m); we attribute this to the
+- The maximum depths at the probes are 1.81 m (0.80 h) and 3.87 m (0.90 h),
+  deeper than in test/chichibu (1.05 m and 1.78 m); we attribute this to the
   larger channel roughness and to the channel cells cutting deeper below the
   cells on both sides, which concentrates the flow.
 - With the time step of 2.5 s, Cn_max (the largest value in the 10-minute
-  display) is 0.64 and V_max is 20.1 m/s (0.76 and 25.1 m/s in test/chichibu).
+  display) is 0.65 and V_max is 20.9 m/s (0.76 and 25.4 m/s in test/chichibu).
 - The S column stays constant at 0.10000000000000 m from the end of the rain
   at 1 hour on (mass conservation of a catchment with a closed outlet).
 - Because the outlet is closed, the runoff ponds just upstream of it (36.4 m
   deep after 6 hours). The pond grows upstream and lowers the discharge at
-  transect 4 from 171 min on (at 304 min it is 575 m³/s = 34 % smaller than in
-  a computation with the outlet open). **The peak (184 min) is the same with
-  the outlet open.** To check with the outlet open, add `fn_boundary = "-"` to
+  transect 4 from 163 min on (at 275 min it is 492 m³/s = 22 % smaller than in
+  a computation with the outlet open). **The peak (181 min) changes by only
+  0.1 % with the outlet open.** To check with the outlet open, add `fn_boundary = "-"` to
   `&list_sysparam` and append the following (it turns the two channel cells at
   the catchment outlet into a perfect drain with a level below the bed).
 
@@ -96,9 +96,15 @@ are this case, dashed lines the regression case of test/chichibu.
 
 ## Verification
 
-- The reference is the Log of the default settings until 2026-11-21 (scheme 3,
-  f_opening_dynamic = 3, f_advection_donor = 3, f_dry_head_cap = 3,
-  f_advection_bend = 1, f_advection_lateral = 1).
+- The reference is the Log of the default settings (scheme 3,
+  f_opening_dynamic = 3, f_advection_donor = 4, f_dry_head_cap = 4,
+  f_advection_bend = 2, f_advection_lateral = 2). The table and figure above are
+  the values after the four values of the advection term became the defaults on
+  2026-11-21; compared with the values before (the old combination of values
+  3, 1, 1, 3; 1,197, 3,116, 6,555 and 6,185 m³/s at 0.82, 0.92, 1.37 and 3.07 h at
+  transects 1–4), the peaks changed by −0.0, +0.5, −1.1 and −4.2 %, and those at
+  transects 1, 2 and 4 are 1, 1 and 3 minutes earlier (developer.md §114, in
+  Japanese).
 - The Logs of the serial run and of MPI (np = 1, 2, 4) agree with the reference
   (ULP = 1).
 - The nightly CI runs it like test/chichibu: serial, MPI (np = 1, 2, 4) and a
