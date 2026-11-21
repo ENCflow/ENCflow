@@ -896,9 +896,9 @@
     {
       "source": "examples/README.md",
       "target": "examples/README.en.md",
-      "source_sha256": "e64886f8fa95070115e19c399da6cd966b9dc403e532d3096d8e9ebad2ac08a5",
-      "target_sha256": "d7d04d4051a2c7ca64e4e833dc7e1b844496c8ce91c0e9716e5095e51c320e23",
-      "reviewer": "Claude (Claude Code session; rows reordered to benchmark, chichibu_flood, source_area, vz_tani2023, and the chichibu_flood row given the surface-flow-only framing; both sides compared)",
+      "source_sha256": "f55aad785cce24970defa261107b24479dc507248e701e7998793f5e7558b4af",
+      "target_sha256": "c701db488ed2151398abeefef2b4328d2ccd08d60607833908342215e2442e27",
+      "reviewer": "Claude (Claude Code session; the chichibu_flood row shortened to the length of the other rows (content about 60 characters, main features trimmed); both sides compared)",
       "method": "assistant",
       "reviewed_on": "2026-11-21"
     },
