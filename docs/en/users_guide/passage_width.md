@@ -394,11 +394,11 @@ effective resolution of the ENC grid as higher than its cell size suggests**.
 The following computations support this view.
 
 1. **Connected in eight directions.** In the
-   [supplement of the chichibu tutorial](../../../tutorials/chichibu/en/README.md#supplement-effect-of-resolution-and-the-character-of-the-enc-grid),
+   [example chichibu_flood](../../../examples/chichibu_flood/en/README.md#eight-direction-exchange-and-4-neighbours),
    the same catchment computed on the ENC grid and on a 4-neighbour grid
    (`p_diagratio = 0`) gives a peak discharge at the transect near the outlet
-   of 8,477 m³/s with the ENC grid at 200 m, against 33 at 200 m, 2 at 100 m
-   and 78 m³/s at 50 m with the 4-neighbour grid. Even a four times finer
+   of 8,559 m³/s with the ENC grid at 200 m, against 33 at 200 m, 2 at 100 m
+   and 72 m³/s at 50 m with the 4-neighbour grid. Even a four times finer
    grid does not reconnect the channel network of the 4-neighbour grid,
    which is cut wherever it runs diagonally.
 2. **One-cell-wide channels carried correctly in any orientation.** With the
@@ -439,13 +439,14 @@ This does not mean that "any phenomenon can be solved on a coarse grid".
   distribution inside a cell (across the channel, secondary flow) and the
   shape of the bank itself are not resolved.
 - Where the shape of the valley floor and the slopes controls the flow,
-  differences remain when the grid is refined. In the chichibu supplement the
-  upstream peaks changed by 15 % from 200 to 100 m, and the downstream
-  peaks by 10 to 21 % from 100 to 50 m. Giving the coarse grids a channel
-  width did not bring them closer to the result of the 50 m grid.
+  differences remain when the grid is refined. In the example chichibu_flood the
+  upstream peaks changed by 10 to 20 % from 200 to 100 m, and the downstream
+  peak by about 10 % from 100 to 50 m. Giving the coarse grids a channel
+  width brought the gorge transect closer to the result of the 50 m grid, but
+  moved the downstream transect, where the valley floor is wide, farther away.
 - The adjustment itself is a model of ENCflow's own, with the biases of §7.
 
-In practice, as the chichibu supplement recommends, **first get the overall
+In practice, as the example chichibu_flood recommends, **first get the overall
 picture on a coarse grid, then refine where and as the purpose requires**.
 The passage-width adjustment is the mechanism that, at that coarse stage,
 keeps one-cell-wide terrain connected and carries it with the correct
@@ -515,7 +516,7 @@ conveyance.
 | Reproducing runs calibrated with the default of 2026-10-18 to 31 | `f_opening_dynamic = 2` | the rule of the default in that period |
 | Reassigning only where there is a channel mask | `f_opening_dynamic = 1` | the default until 2026-10-18; has no effect without a channel mask (`fn_rw`) |
 | Reproducing versions before 2026-10-03 | `f_opening_dynamic = 0` (together with `f_advection_scheme = 1` and `f_dry_head_cap = 0`) | the defaults of that time |
-| Comparison with a 4-neighbour grid | `p_diagratio = 0` | closes the diagonal exchange (chichibu supplement) |
+| Comparison with a 4-neighbour grid | `p_diagratio = 0` | closes the diagonal exchange (example chichibu_flood) |
 | Breaches 3 cells wide or more | `f_br_diag = 1` | 0.98 to 1.03 times the discharge of a resolved levee ([channel models page](channel_models.md) §4) |
 | Channels narrower than a cell | `fn_width` (the wall-free width mode if there is no levee) + the default reassignment | the double correction between width cells and slopes is avoided automatically |
 
@@ -566,7 +567,7 @@ The master tables of defaults and their basis are on the linked pages.
 | [test/wfcurrent](../../../test/wfcurrent/en/README.md) | longshore current on a beach of uniform slope | the first-order friction bias of 3 (the beach configurations specify 2) |
 | v-shaped in [examples/benchmark](../../../examples/benchmark/) | theoretical rainfall-runoff of a V-shaped catchment | the error of 3 decreases with grid refinement |
 | [examples/levee_breach](../../../examples/levee_breach/en/README.md) | diagonal linkage of breaches | breaches 3 to 5 cells wide match the discharge of a resolved levee |
-| supplement of [tutorials/chichibu](../../../tutorials/chichibu/en/README.md) | ENC and 4-neighbour grids, 200, 100 and 50 m | the 4-neighbour channel network stays cut even on a four times finer grid |
+| [examples/chichibu_flood](../../../examples/chichibu_flood/en/README.md) | ENC and 4-neighbour grids, 200, 100 and 50 m | the 4-neighbour channel network stays cut even on a four times finer grid |
 
 ## References
 

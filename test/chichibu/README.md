@@ -97,9 +97,9 @@ python3 Fig.py    # figs/chichibu.png(引数 en で英語版を en/figs/ に)
   池の水位 130 m は測線 4 の河床 137 m より低い)。
   実務の計算では流出口に自由流出境界(`&list_bound`)を置いてください。
 - このケースは収束の目安でもあります: この入力(窪地処理済みの標高)では、
-  最下流のピークが格子で変わります(細かいほど大きい。tutorials/chichibu の
-  補足の「河床を整えた効果は、格子を変えても同じか」に、河道の粗度 0.04 での
-  200 m と 100 m の比較があり、河床を整えた標高では差が 2 % に縮みます)。
+  最下流のピークが格子で変わります(細かいほど大きい。例題 examples/chichibu_flood の
+  「河床を整えた効果」に、河道の粗度 0.04 での
+  200 m と 100 m の比較があり、河床を整えた標高では差が 1 割ほどに縮みます)。
   河道の実表現(段差状の河床、1 セル幅)が
   移流スキームの差を生む主因で、§68.14〜68.20 に診断があります。
 
@@ -131,7 +131,8 @@ python3 Fig.py    # figs/chichibu.png(引数 en で英語版を en/figs/ に)
 
 ## 関連文書
 
-- [tutorials/chichibu](../../tutorials/chichibu/README.md) — 同じ流域の 200 m 教材(手順・補足の解像度比較)
+- [tutorials/chichibu](../../tutorials/chichibu/README.md) — 同じ流域の 200 m 教材
+- [examples/chichibu_flood](../../examples/chichibu_flood/README.md) — 同じ流域で、地形の与え方・格子の解像度(200・100・50 m)・移流項の扱いなどを変えて比べる例題
 - [test/chichibu_cond](../chichibu_cond/README.md) — この回帰ケースと同じ設定で、入力を、河床を整えた標高と河道の粗度 0.04 に替えた回帰ケース
 - [docs/users_guide/geoinfo.md](../../docs/users_guide/geoinfo.md) — 地形・マスク・河道マスクの入力
 - developer.md §68(ラスタ河道の移流と開口補正の設計記録: §68.7、68.12、68.14、68.16〜68.20、68.24、68.25、68.29)

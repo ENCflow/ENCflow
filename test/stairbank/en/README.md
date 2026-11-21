@@ -174,9 +174,9 @@ The two depths at the same discharge (`zs`) appear with any of `f_advection_late
 and scheme 1. The oscillation with two corner cells (`sab`) stops with `f_advection_lateral = 0`, but the
 backwater just after the stair (4 m deeper than with walls only at 8,000 m³/s) and a large maximum velocity
 (29.8 m/s) remain (the values in this paragraph come from runs outside the configurations of this test;
-developer.md §112.1 and §112.2). The same mechanism is also involved in the ups and downs of the transect
-discharge at high discharge on the 50 m grid of the Chichibu basin
-([supplement of the chichibu tutorial](../../../tutorials/chichibu/en/README.md); developer.md §111.14).
+developer.md §112.1 and §112.2). The same mechanism was also involved in the ups and downs of the transect
+discharge at high discharge on the 50 m grid of the Chichibu basin with the old combination of the
+advection settings (they do not appear with the current defaults, developer.md §114.7; developer.md §111.14).
 
 Each of the four values changes the following (the formulas are in §4.4 of
 [Advection schemes](../../../docs/en/users_guide/advection.md) and in

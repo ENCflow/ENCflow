@@ -225,7 +225,7 @@ a_{\mathrm{est}} = V_{\mathrm{est}} + \sqrt{g h_{\mathrm{est}}}
 | 深い外洋の津波伝播 | 4,000 m | 1 m/s | 198 m/s | 199 m/s |
 
 流域全体の計算では、薄い斜面流だけでなく、深く速い河道の流れも考えます
-([chichibu チュートリアルの補足](../../tutorials/chichibu/README.md#時間刻みと計算量)では、
+([例題 chichibu_flood](../../examples/chichibu_flood/README.md#時間刻みと計算量)では、
 格子を細かくすると谷筋の最大流速が増え、格子比どおりに縮めた `dt` では
 余裕がなくなる例を示しています)。土石流・地下水などを加える場合は、
 この清水の表だけでなく、[各プロセスの制約](#other-limits)も確認します。

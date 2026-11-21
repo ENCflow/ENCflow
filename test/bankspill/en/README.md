@@ -161,7 +161,7 @@ sending cell; in the flow of this test (subcritical, along the channel) it gives
 - Only a one-cell-wide channel and one-cell pockets are examined. With a subgrid channel
   (`fn_width`), the width of the transition of 2 at the threshold grows by the inverse of the
   plan-area fraction and the step becomes larger (in the 200 m run with a 50 m wide channel in the
-  supplement of the tutorial, the pocket opened while the level was 1.1 m below the bank and gained
+  former supplement of the chichibu tutorial, the pocket opened while the level was 1.1 m below the bank and gained
   1.5 m in one minute). That configuration is not included.
 - How much the water surface rises at the outer bank of a bend (centrifugal force, stagnation) cannot
   be resolved by a one-cell-wide channel. What 3 satisfies is only that the upper bound (the energy

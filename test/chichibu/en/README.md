@@ -124,10 +124,10 @@ of the collection from the hillslopes.
   computations place a free-outflow boundary (`&list_bound`) at the outlet.
 - This case is also a guide to convergence: with this input (the
   depression-filled elevation) the most downstream peak changes with the grid
-  (larger for finer grids; "Is the effect of the conditioned bed the same on
-  another grid?" in the supplement of tutorials/chichibu compares 200 m and
+  (larger for finer grids; "Effect of the conditioned bed" in the example
+  examples/chichibu_flood compares 200 m and
   100 m with a channel roughness of 0.04, and with the conditioned bed the
-  difference shrinks to 2 %). The real representation of the channels (stepped bed,
+  difference shrinks to about 10 %). The real representation of the channels (stepped bed,
   one cell wide) is the main cause of the difference between advection
   schemes; the diagnosis is in §68.14–68.20.
 
@@ -162,7 +162,8 @@ width mode is recommended (§68.25, §68.29).
 
 ## Related documents
 
-- [tutorials/chichibu](../../../tutorials/chichibu/en/README.md) — the 200 m tutorial on the same catchment (procedure; resolution comparison in the supplement)
+- [tutorials/chichibu](../../../tutorials/chichibu/en/README.md) — the 200 m tutorial on the same catchment
+- [examples/chichibu_flood](../../../examples/chichibu_flood/en/README.md) — an example on the same catchment that compares ways of giving the terrain, grid resolutions (200, 100 and 50 m), treatments of the advection term and more
 - [test/chichibu_cond](../../chichibu_cond/en/README.md) — a regression case with the same settings as this one, but with the inputs switched to the elevation with a conditioned channel bed and a channel roughness of 0.04
 - [docs/users_guide/geoinfo.md](../../../docs/en/users_guide/geoinfo.md) — input of terrain, masks and the channel mask
 - developer.md §68 (design record of the advection and opening correction for raster channels: §68.7, 68.12, 68.14, 68.16–68.20, 68.24, 68.25, 68.29)

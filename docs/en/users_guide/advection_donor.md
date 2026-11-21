@@ -427,9 +427,8 @@ The Chichibu numbers in this section were measured in the same setting as §5
   the dips before the peak do not appear, but a wobble appears in the recession
   when the flow at the pond outlet switches from a deep, slow state to a
   shallow, fast one (the limit of 1 in [the advection page](advection.md) §4.4;
-  for examples of the same kind with the conditioned bed, see item 3 of "Fine
-  oscillations in the hydrograph" in the
-  [supplement of the Chichibu tutorial](../../../tutorials/chichibu/en/README.md)).
+  for examples of the same kind with the conditioned bed, see the computations of
+  the former supplement of the Chichibu tutorial recorded in developer.md §114.7).
 - **Films thinner than dd are also counted according to their thickness.**
   Therefore, in bent channels whose banks are wetted by rain, the water level
   of the bend cells changes slightly from 0 (in the polyline channel of
@@ -454,7 +453,7 @@ The Chichibu numbers in this section were measured in the same setting as §5
   11-minute moving average by up to 31 m³/s (within 9 m³/s without the
   width).
   The cause is the terrain, not the wet/dry switch, so treat the terrain first
-  ([supplement of the Chichibu tutorial](../../../tutorials/chichibu/en/README.md)).
+  (["Conditioning the bed elevation" in the Chichibu tutorial](../../../tutorials/chichibu/en/README.md#conditioning-the-bed-elevation)).
 - **Faces where it does not apply.** It does not apply to the boundary faces
   of lateral Neumann sides (the same value as 0). The local-inertia setting
   (`f_govequation = 1`; formerly written "diffusion wave") has no advection

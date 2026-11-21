@@ -13,7 +13,7 @@ ENCflow の使い方を、実行できる例題つきで段階的に学ぶため
 | # | ケース | 学べること |
 |---|---|---|
 | 1 | [wave — 静水に広がる波](../tutorials/wave/README.md) | 最初の実行と出力の読み方 / パラメータファイルの構造 / 時間刻みと精度・適応的ルンゲクッタ法 / 境界条件 / ENC 格子の壁の性質 |
-| 2 | [chichibu — 実地形の流域に降る雨](../tutorials/chichibu/README.md) | 実地形データ(DEM・マスク)と窪地除去 / GeoTIFF 入出力 / 河道マスクと粗度 / 計測(プローブ・測線) / 降雨遮断・地下浸透と水収支 / 流域出口の境界条件 / 実地形データに由来する流量振動の理解 / ParaView での 3D 可視化(アニメーション) |
+| 2 | [chichibu — 実地形の流域に降る雨](../tutorials/chichibu/README.md) | 実地形データ(DEM・マスク)と窪地除去 / GeoTIFF 入出力 / 河道マスクと粗度 / 計測(プローブ・測線) / 降雨遮断・地下浸透と水収支 / 流域出口の境界条件 / ParaView での 3D 可視化(アニメーション) |
 | 3 | [bmi — Python から ENCflow を操る](../tutorials/bmi/README.md) | BMI(CSDMS Basic Model Interface)の入門。Python 環境の準備(uv ほか) / 起動と終了 / 時間を進める / 状態の取り出しと配列の向き / Matplotlib での描画とリアルタイム表示 / 雨の外部供給(set) / 粗度係数の上書き |
 
 **1 と 2 はすべての方に必ず試していただきたい**教材です。**3 の bmi は
@@ -23,7 +23,9 @@ ENCflow の使い方を、実行できる例題つきで段階的に学ぶため
 環境の準備から説明しています。計算本体は 1・2 と同じ Fortran の ENCflow
 です)。以降のチュートリアル(河道の精緻化、長期計算と
 再開など)は順次追加していきます。そのほかは [examples/](../examples/) の
-設定サンプル集と [test/](../test/) の検証済み例題が参考になります。
+設定サンプル集と [test/](../test/) の検証済み例題が参考になります。chichibu を終えたら、同じ流域で地形の与え方・
+雨の損失・格子の細かさ・計算の方法を変えて、結果の違いを読み解く例題
+[examples/chichibu_flood](../examples/chichibu_flood/README.md) に進めます。
 
 ## 学習の道筋
 

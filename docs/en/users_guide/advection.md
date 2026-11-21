@@ -517,7 +517,7 @@ With `f_advection_donor` = 3 or 4 (the default is 4) the wet/dry test of the par
   - The results of 0 and 1 differ in computations that contain places where
     the flow turns next to a wall or a dry cell. In the Chichibu catchment
     (channel roughness 0.02; the settings of
-    [the supplement of the tutorial](../../../tutorials/chichibu/en/README.md);
+    [the example chichibu_flood](../../../examples/chichibu_flood/en/README.md);
     the other three at the old combination `f_advection_donor = 3`,
     `f_advection_lateral = 1`, `f_dry_head_cap = 3`) 1 changes the peak at
     transect 3 by +1.5 and +5.4 % on the 200 and 100 m grids relative to 0,
@@ -711,7 +711,7 @@ With `f_advection_donor` = 3 or 4 (the default is 4) the wet/dry test of the par
   [The cap on the edge depth toward higher ground](dry_head_cap.md) and
   [test/cascade](../../../test/cascade/en/README.md)).
   On the 50 m grid with the conditioned bed and a channel roughness of 0.04 (the
-  setting of the [supplement of the chichibu tutorial](../../../tutorials/chichibu/en/README.md)),
+  setting of the [example chichibu_flood](../../../examples/chichibu_flood/en/README.md)),
   the pools along the channel are gone, but ups and downs of another kind appear
   when the discharge is large. Ahead of a bend 0.5–1 km downstream of transect 3,
   the flow goes back and forth between "shallow fast flow + hydraulic jump" and
@@ -914,8 +914,8 @@ With `f_advection_donor` = 3 or 4 (the default is 4) the wet/dry test of the par
     the 50 m grid of the Chichibu basin, the flow is steady at every discharge from 4,000 to 10,000 m³/s (the
     standard deviation of the discharge is at most 40 m³/s, 0.5 % of the given discharge; with the old values it is
     543–1,627 m³/s at 6,000 m³/s).
-  - **The whole basin (the 50 m grid of the Chichibu basin, 100 mm of rain; the setup of the supplement of the
-    [tutorial](../../../tutorials/chichibu/en/README.md)).** The discharge at transect 3, which goes up and down
+  - **The whole basin (the 50 m grid of the Chichibu basin, 100 mm of rain; the setup of the
+    [example chichibu_flood](../../../examples/chichibu_flood/en/README.md)).** The discharge at transect 3, which goes up and down
     with the old values (the one-minute values deviate from the five-point median by up to 1,250 m³/s and reverse
     direction 19 times in succession), becomes smooth (deviation at most 39 m³/s, no reversals). The peak at
     transect 3 goes from 8,954 m³/s at 72 minutes to 7,560 m³/s at 77 minutes, closer to the value of the 100 m
@@ -1030,14 +1030,14 @@ The essentials of the numerical experiments of developer.md §68 (2026-10).
 | Bore (Stoker) position error / overshoot behind it | −15.5% / 3.2 m | +0.5% / 0.8 m | +1.1% / 0.04 m |
 | Smooth flood wave (1-cell channel, peak at 3.8 km) | 176.5 | 176.5 | 176.5 (all three identical) |
 | Spatially varied flow with lateral inflow (depth ratio to the physical solution) | 1.7–2.0 (no momentum sink; supercritical flow turns subcritical) | about the same as 3 | 0.992 |
-| Grid dependence on real terrain (chichibu; conditioned bed, channel roughness 0.04) 200 → 100 → 50 m (peak discharge near the catchment outlet; [supplement of tutorials/chichibu](../../../tutorials/chichibu/en/README.md#result-3-the-advection-term-and-resolution-dependence)) | depends on the upwind index (0.1: −7%, then the discharge goes up and down violently at 50 m; 0.5: −16% and +3%, one to three tenths below 3; 1.0: −18% and +9%, three to five tenths below 3) | not compared under the default rules (about the same as 3 in the measurements of 2026-10) | +2% and +1% (the three grids agree near the catchment outlet; the upstream transects almost converge at 100 m and below; the transect in the gorge grows by 20% from 200 to 100 m; the 50 m grid has a limit of the discharge going up and down = §4.4) |
+| Grid dependence on real terrain (chichibu; conditioned bed, channel roughness 0.04) 200 → 100 → 50 m (peak discharge near the catchment outlet; [examples/chichibu_flood](../../../examples/chichibu_flood/en/README.md#treatment-of-the-advection-term)) | depends on the upwind index (0.1: −7%, then the discharge goes up and down violently at 50 m; 0.5: −16% and +3%, one to three tenths below 3; 1.0: −18% and +9%, three to five tenths below 3) | not compared under the default rules (about the same as 3 in the measurements of 2026-10) | −9% and +12% (near the catchment outlet only the 100 m grid is about 10% lower = a large tributary delivers its flood differently on each grid, developer.md §113.8; the upstream transects almost converge at 100 m and below; the transect in the gorge grows by 19% from 200 to 100 m) |
 | Stability | blows up on the 50 m DEM (upwind index 0.1) and in 1–2 cell incised channels | upwinding provides the stability | same |
 | Cost (measured with `f_advection_bend = 0`; with `f_advection_bend = 1`, scheme 3 takes another two to three tenths, and with the default four values a further 1.3 to 1.4 times that (the same treatment is added to 2); §4.4) | 1.00 | 1.19 | 1.27 |
 | Role | legacy; reproducing existing calibrations | fallback for 3 (coarse problems that tolerate the overshoot at the bore front) | **default**; best for bores, jumps, lateral inflow and stability (the peak discharge on real terrain changes with the grid; row above) |
 
 Sources of the numbers: the bore from [test/dambreak](../../../test/dambreak/en/README.md), the smooth flood
 wave, lateral inflow and stepped bed from [test/bendloss](../../../test/bendloss/en/README.md), grid
-dependence on real terrain from the [supplement of tutorials/chichibu](../../../tutorials/chichibu/en/README.md#result-3-the-advection-term-and-resolution-dependence),
+dependence on real terrain from the [example chichibu_flood](../../../examples/chichibu_flood/en/README.md#treatment-of-the-advection-term),
 stability and cost on real terrain from [test/chichibu](../../../test/chichibu/en/README.md),
 the agreement on hillslopes from [test/hillslope](../../../test/hillslope/en/README.md) (each README
 has the figures, tables and the list of derived cases).
@@ -1128,7 +1128,7 @@ The labels in the Basis column are explained in [How to read the basis of a defa
 
 | Parameter | Default | Meaning | Basis |
 |---|---:|---|---|
-| f_advection_scheme | 3 | scheme of the advection term (1: cell-centre gradient, 2: conservative + first-order upwind, 3: conservative + MUSCL) | **verification case** bore position error +1.1% in [test/dambreak](../../../test/dambreak/en/README.md), depth ratio 0.992 with lateral inflow in [test/bendloss](../../../test/bendloss/en/README.md), grid dependence on real terrain in the [supplement of tutorials/chichibu](../../../tutorials/chichibu/en/README.md#result-3-the-advection-term-and-resolution-dependence) (table above) |
+| f_advection_scheme | 3 | scheme of the advection term (1: cell-centre gradient, 2: conservative + first-order upwind, 3: conservative + MUSCL) | **verification case** bore position error +1.1% in [test/dambreak](../../../test/dambreak/en/README.md), depth ratio 0.992 with lateral inflow in [test/bendloss](../../../test/bendloss/en/README.md), grid dependence on real terrain in the [example chichibu_flood](../../../examples/chichibu_flood/en/README.md#treatment-of-the-advection-term) (table above) |
 | p_adv_upwind_index | 0.5 | upwinding index of scheme 1 (0: central, 1: first-order upwind) | **empirical** halfway between central and first-order upwind. The bore lag grows with $`p`$ (§3) |
 | f_advection_donor | 4 | upwind donors (4: in addition to 3, the flux of the face is split into the streams of the links entering the face cell, and the velocity of the line-k donor is applied only to the streams that link represents; used together with `f_advection_bend = 2`, `f_advection_lateral = 2` and `f_dry_head_cap = 4`. 3: the upwind value is pulled toward u_e only on faces where the real flux of the line-k donor is below ε times the largest inflow link of the face cell and the donor's depth is also below ε times the face cell's depth, and the wet/dry tests of the lateral faces become a continuous weight below dd (the default until 2026-11-21); 0: wet cells on line k (the default until 2026-11-09); 1 and 2 were removed; §4.4) | **method** 3 reduces the artificial brake when the banks of a raster channel oblique to the grid are wet (in [test/wetbank](../../../test/wetbank/en/README.md) the increase of the channel depth beyond the rain inflow drops from 10–40% with 0 to 4–17%); the lateral-inflow, vortex and wall tests stay the same as 0; the flood wave becomes faster and larger than with 0. 4 does not apply the slow velocity of a deep neighbour cell that hardly flows to the whole discharge of the face (in [test/stairbank](../../../test/stairbank/en/README.md) the two depths at the same discharge and the ups and downs of the discharge in an oblique channel with shelves or corner cells disappear; ENCflow's own). 0 and 3 reproduce earlier results ([explanation](advection_donor.md)) |
 | p_adv_donor_eps | 0.1 | threshold ε of `f_advection_donor` = 3 or 4 (used for both the real flux of the line-k donor / largest real flux of the links entering the face cell and the donor's depth / face cell's depth). With `f_advection_bend` = 1 or 2 it is also the threshold for inflow / outflow of the face cell and the threshold that decides whether the cell beyond the face cell on the line of an inflow belongs to the same water body (its depth is at least ε times that of the face cell). With the four values (`f_advection_donor = 4`, `f_advection_bend = 2`, `f_advection_lateral = 2`) it is also the threshold for whether the discharge being split or compared is negligible (§4.4) | **empirical** with the four values of the default, the peak at transect 4 of the 200 m grid of Chichibu changes by −0.3 % at 0.05 and by +0.5 % at 0.2 (explanation §7); values outside 0.05–0.2 have not been checked ([explanation](advection_donor.md)) |

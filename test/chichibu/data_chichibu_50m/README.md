@@ -11,15 +11,15 @@
   (手順は [data_chichibu の README](../data_chichibu/README.md) の「河床を整えた標高」と同じ)。下げた河道セル
   14,168(98.7 %。下げた量の中央値 9.5 m、最大 66.8 m)。519.8 m の水面に当たる河道セル 57 と、河道以外の
   39 セルは、水面の高さまで上げてある(最大 2.08 m)。流下先と同じ高さのつながりは 3,108 本 → 242 本、
-  逆勾配のつながりと窪地は 0。両脇の最も低いセルと河床の差の中央値は 11 m(tutorials/chichibu の
-  補足が使う)
+  逆勾配のつながりと窪地は 0。両脇の最も低いセルと河床の差の中央値は 11 m(例題
+  examples/chichibu_flood が使う)
 - `Chichibu_50m_basin.txt` — 流域マスク(285,843 セル)
 - `Chichibu_50m_river.txt` — 河道マスク(19,714 セル。100 m の河道セルはすべて
   50 m の河道セルを含む)
 - `Chichibu_50m_river_flowline.txt` — 河道マスクを標高の落水線に載せ直したもの(14,361 セル。
   [utils/river_flowline](../../../utils/river_flowline/README.md)、developer.md §109)
 - `width50_50.txt` / `width50_50_flowline.txt` — 元の河道マスク / 載せ直した河道マスクのセルに一様 50 m の
-  河道幅(後者は tutorials/chichibu の補足の W = 50 の計算が使う)
+  河道幅(後者は例題 examples/chichibu_flood の w50 の計算が使う)
 
 出典は data_chichibu と同じ(2026-10-03 に利用者から提供)。
 
