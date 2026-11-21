@@ -9,28 +9,18 @@
 !   one you want to enable to &list_precip and use it.
 !   The others are ignored, so it is fine to leave them as they are.
 !
+!   A run without precipitation does not need this file (&list_precip).
+!   Omit fn_precip in the system parameters &list_sysparam (or set
+!   fn_precip = "", an empty string) and there is no precipitation.
+!   When fn_precip reads this file, set prtype to 1, 2 or 3 (the run stops
+!   if prtype is left at its default 0 or set to 0).
+!
 !======================================================================
-! Precipitation settings (no precipitation)
-!======================================================================
-&list_precip_0
-  ! Type of precipitation data
-  !  0: no precipitation
-  !  1: time series of a uniform distribution, given in this settings file
-  !  2: distribution file x factors given in this settings file
-  !  3: time-series distribution files (specified by fn_maplist)
-  prtype = 0
-
-  ! For no precipitation, you may instead specify fn_precip="" (an empty
-  ! string) in the system parameters &list_sysparam, or omit fn_precip itself
-/
-
-
 !======================================================================
 ! Precipitation settings (uniform-distribution time series)
 !======================================================================
 &list_precip_1
   ! Type of precipitation data
-  !  0: no precipitation
   !  1: time series of a uniform distribution, given in this settings file
   !  2: distribution file x factors given in this settings file
   !  3: time-series distribution files (specified by fn_maplist)
@@ -62,7 +52,6 @@
 !======================================================================
 &list_precip_2
   ! Type of precipitation data
-  !  0: no precipitation
   !  1: time series of a uniform distribution, given in this settings file
   !  2: distribution file x factors given in this settings file
   !  3: time-series distribution files (specified by fn_maplist)
@@ -101,7 +90,6 @@
 !======================================================================
 &list_precip_3
   ! Type of precipitation data
-  !  0: no precipitation
   !  1: time series of a uniform distribution, given in this settings file
   !  2: distribution file x factors given in this settings file
   !  3: time-series distribution files (specified by fn_maplist)

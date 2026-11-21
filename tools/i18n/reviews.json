@@ -275,11 +275,11 @@
     {
       "source": "docs/users_guide/forcing.md",
       "target": "docs/en/users_guide/forcing.md",
-      "source_sha256": "a3d0c3a879ca2d9a81369f2f4a933558ee3f2e6964cf7188c467d849657e36e2",
-      "target_sha256": "e958ade2a66cc54af7a448f017d21af65bd10c42aedc1dc718a8865a79673bb8",
-      "reviewer": "Claude (Claude Code session; two interception ratios of the initial loss and the separation of effective rainfall for the storage function method (§106.8): Japanese and English edited together and the changed passages compared, no model execution)",
+      "source_sha256": "17e4998899708ee8680fdeec85d563d5ea10f318b2ae56f6f472e4e4871b8ff3",
+      "target_sha256": "474cf6d6327158028a086355ff2b2390f28085c030c8da298bc07fb75d3a6d38",
+      "reviewer": "Claude (Claude Code session; changed sections compared side by side with the Japanese source; behaviour checked with a run)",
       "method": "assistant",
-      "reviewed_on": "2026-11-11"
+      "reviewed_on": "2026-11-21"
     },
     {
       "source": "docs/users_guide/forcing_models.md",
@@ -770,11 +770,11 @@
     {
       "source": "examples/List_samples/list_precip.txt",
       "target": "examples/List_samples/en/list_precip.txt",
-      "source_sha256": "f4395c7db660a5c559fe5e45128317cf3e1db6c7a0b20f3a88cd8e39c22c3d0b",
-      "target_sha256": "3c680b541e9efa839eb37f54ea5edd90f2d3d779c4597a8da7f37ace49ba191c",
-      "reviewer": "Claude (Claude Code session; review of the changed lines against the previously recorded pair, no model execution)",
+      "source_sha256": "277363028321fc2b89706471ec8a8c8df5b287de1aa80c771640eaf9f6dcc0f7",
+      "target_sha256": "f7217a94c2f6bd1cd827b6e6d0704844a78d8d9a56a40d3c7139a3be26cef078",
+      "reviewer": "Claude (Claude Code session; changed sections compared side by side with the Japanese source; behaviour checked with a run)",
       "method": "assistant",
-      "reviewed_on": "2026-10-29"
+      "reviewed_on": "2026-11-21"
     },
     {
       "source": "examples/List_samples/list_record.txt",
