@@ -179,6 +179,7 @@ architecture.md。このメモは「現在進行中・未完了の項目」だ�
 00z. **既定の切り替え: `f_advection_donor` 3 → 4・`f_advection_bend` 1 → 2・`f_advection_lateral` 1 → 2・`f_dry_head_cap` 3 → 4(2026-11-21 に切り替えた。developer.md §114)の残り** —
    切り替え(コミット 34090bde)、検定の改め(8f037c28)、reference の更新(44 本の全部。一致しなくなった 23 本と、
    利用者の追加の指示による残りの 21 本)、検定の README と図、教材 chichibu の本文と補足・教材 bmi、解説の実例、
+   (教材 chichibu の補足は、2026-11-21 に例題 examples/chichibu_flood へ移し、教材は初心者向けに書き直した = developer.md §115)
    例題 bridge_wood_jam の回し直しは済み(§114.7)。残り:
    - 教材 chichibu の Step 6 の 3D 図(Fig_step6.py。VTK と OSMesa が要る)は描き直していない(t = 2 時間の水深は、
      切り替えで少し変わる)。
