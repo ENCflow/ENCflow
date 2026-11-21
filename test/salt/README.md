@@ -96,10 +96,10 @@ python3 Fig.py    # figs/salt.png(引数 en で英語版を en/figs/ に)
 | B: 地下水位 Hg・塩水 Hgs | Hg = Hgs = 0.5000 m(全陸セル。解析 0.5) | — |
 | C1: 終状態 H / Hss / Hg / Hgs | 0.7 / 0.1 / 0.3 / 0.3(倍精度で相対 6e-16 以内。Hgs と Hg はビット一致) | Check_exch PASS |
 | C1: 塩水体積 Hss + Hgs | 0.4 を全桁で保存 | Check_exch PASS |
-| C2: 窪地の地表水の Hss/H | 0.9997(f_salt_exch=0 では 0) | Check_exch PASS(≥ 0.99) |
+| C2: 窪地の地表水の Hss/H | 0.9996(f_salt_exch=0 では 0) | Check_exch PASS(≥ 0.99) |
 | C2: 塩水体積 | 2 時間で 0.006 % 減 | Check_exch PASS(\|比 − 1\| < 1e-3) |
-| C3: 同上(dt_gwflow = 2 s) | Hss/H 0.999、塩水体積 0.03 % 減 | Check_exch PASS |
-| C4a・C4b: 塩水体積、窪地の水の Hss/H | どちらも相対 4e-14 以下で保存、Hss/H 0.026(淡水から先)< 0.081(混合比) | Check_exch PASS |
+| C3: 同上(dt_gwflow = 2 s) | Hss/H 0.9985、塩水体積 0.03 % 減 | Check_exch PASS |
+| C4a・C4b: 塩水体積、窪地の水の Hss/H | どちらも相対 4e-14 以下で保存、Hss/H 0.028(淡水から先)< 0.113(混合比) | Check_exch PASS |
 | D1・D2: 陸 / 河道・海側の Hss、H | 1.2 / 0 を全桁、H 不変(修正前は陸 0.001〜0.028・河道 1.18) | Check_wall PASS |
 
 - 塩水 zone の乾燥判定・過大流出抑制は側方流動と同じ飽和帯厚単位
@@ -119,9 +119,13 @@ python3 Fig.py    # figs/salt.png(引数 en で英語版を en/figs/ に)
   C2 の Hss/H 0.999・塩水体積 0.02 % 減、C3 は同じ桁、C4 の Hss/H 0.051・0.075 でした。
   壁(領域の縁)沿いの帯水層の通水能が内部と同じになるため、窪地へ湧き出す水の組成が
   変わります。
-- C4 の窪地の Hss/H は、地表流の規則の既定でも動きます(2026-11-16 までの既定 `f_dry_head_cap = 2`・
-  `f_advection_lateral = 0` では 0.025・0.108。それより前の既定の変更の分は切り分けていない)。検定が
-  見ているのは、塩水体積の保存と、混合比の配分の方が窪地の塩分が高いことです。
+- C4 の窪地の Hss/H は、地表流の規則の既定でも動きます。表の値は、移流項の 4 つの値(`f_advection_donor = 4`・
+  `f_advection_bend = 2`・`f_advection_lateral = 2`・`f_dry_head_cap = 4`)を既定にした後のものです(2026-11-21。
+  developer.md §114)。古い値の組み合わせ(3・1・1・3)では 0.026・0.081、1 つずつ古い値に戻すと、
+  `f_advection_donor` で 0.023・0.084、`f_advection_lateral` で 0.027・0.082、`f_advection_bend` で 0.060・0.111、
+  `f_dry_head_cap` で 0.059・0.112 と、値の組み合わせで大きく変わります(2026-11-16 までの既定
+  `f_dry_head_cap = 2`・`f_advection_lateral = 0` では 0.025・0.108。それより前の既定の変更の分は切り分けていない)。
+  検定が見ているのは、塩水体積の保存と、混合比の配分の方が窪地の塩分が高いことです。
 - MPI np = 1, 2, 4 の Log はバイト一致、リスタート往復(saltwater.dat)も
   一致します(§47.3)。C1〜C4・D1・D2 も np = 1, 2, 4 が逐次と Log.txt・保存状態まで
   バイト一致します(§47.5・§47.7・§47.8)。井戸揚水による海水の誘引は developer.md §16.3 の

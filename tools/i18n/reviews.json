@@ -4550,11 +4550,11 @@
     {
       "source": "test/salt/README.md",
       "target": "test/salt/en/README.md",
-      "source_sha256": "262285c4cd324868c570df44cdcc4ba8dcc422a9f5b58959e03fcae2ae954910",
-      "target_sha256": "92349406345dbe2d4dc9ea95956a1d1ecc387e722edcda2b3cb75ce1960ffd74",
-      "reviewer": "Claude (Claude Code session; full-text content and lexical review, no model execution)",
+      "source_sha256": "a0309ef90c74ee69bcbaa6893cd2049ae1f611e29dc5e10f1323eee815ada945",
+      "target_sha256": "1bf7b7736ca223da0876f1a050192b6c0b7e049254cd5e13c6be82a64a33e5de",
+      "reviewer": "Claude (Claude Code session; changed sections compared side by side with the Japanese source; numbers checked against the test runs)",
       "method": "assistant",
-      "reviewed_on": "2026-11-17"
+      "reviewed_on": "2026-11-21"
     },
     {
       "source": "test/salt/figs/salt.png",
@@ -5045,11 +5045,11 @@
     {
       "source": "test/wave_shore/README.md",
       "target": "test/wave_shore/en/README.md",
-      "source_sha256": "af1ca90ba1d7eca2dce50200f636eb5d210a3a5760481b57009db5ed65e69309",
-      "target_sha256": "519ac5fb982662ae8d65b3a438afae3bd0b42abbc0faf7f60ea316815b53e77a",
-      "reviewer": "Claude (Claude Code session; full-text content and lexical review, no model execution)",
+      "source_sha256": "d4d0495ca068ded00d0e29a224be43646646015204159dd332cf6beaf614f24f",
+      "target_sha256": "f3ef8621a8ff572b636efedeb3430f0d78fb7181070e3d389e0df99a8a26d8bc",
+      "reviewer": "Claude (Claude Code session; changed sections compared side by side with the Japanese source; numbers checked against the test runs)",
       "method": "assistant",
-      "reviewed_on": "2026-11-17"
+      "reviewed_on": "2026-11-21"
     },
     {
       "source": "test/wetbank/README.md",
