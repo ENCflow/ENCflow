@@ -1400,47 +1400,47 @@
     {
       "source": "examples/bridge_wood_jam/README.md",
       "target": "examples/bridge_wood_jam/en/README.md",
-      "source_sha256": "701655a1b52471d0a68dd9f7830f93b56a3ea57295fd1cdb7e178f7df7907719",
-      "target_sha256": "3e49413fe05b0c9a033984bcbed836ce063bbd020e3a5596847c194856d36fcb",
-      "reviewer": "Claude (Claude Code session; full-text content and lexical review, no model execution)",
+      "source_sha256": "9c49b7594f10ee954deede5a9e6a450d06c957d93bdfdc9ca1b808ca890123c5",
+      "target_sha256": "f0f74b7ee513c7312645cb94f5c946d67e7db928a69f8a9b3948e4b255a85294",
+      "reviewer": "Claude (Claude Code session; changed sections compared side by side with the Japanese source; numbers checked against the example runs)",
       "method": "assistant",
-      "reviewed_on": "2026-11-17"
+      "reviewed_on": "2026-11-21"
     },
     {
       "source": "examples/bridge_wood_jam/figs/laws.png",
       "target": "examples/bridge_wood_jam/en/figs/laws.png",
-      "source_sha256": "21fc84024e06f3e3134d9d92718793da2fa410399aabf5c1522c4e870fa17df3",
-      "target_sha256": "b66c36c3ca41137746cb842f467993f337e91d0684fba03012852bcf3646ce9e",
-      "reviewer": "Claude (Claude Code session; full-text content and lexical review, no model execution)",
+      "source_sha256": "77082d113f34782fb8a322865b40a341012c0aa43818a5a56711847b29a3e375",
+      "target_sha256": "a3ab6ba580931734f0e3d668ac4be29acdee24bef7976cfa45b51f444ad0f3c7",
+      "reviewer": "Claude (Claude Code session; Japanese and English figures drawn by the same script from the same results; labels checked)",
       "method": "assistant",
-      "reviewed_on": "2026-11-17"
+      "reviewed_on": "2026-11-21"
     },
     {
       "source": "examples/bridge_wood_jam/figs/maps.png",
       "target": "examples/bridge_wood_jam/en/figs/maps.png",
-      "source_sha256": "2ee6ed9fcff50ce4cb72401896732bd4fa082a9762b02b17b6ccb572a05c1ff8",
-      "target_sha256": "cc03f1e132765495b5f129054fb9ac7b53f91a07737bf7faea7d840d179f680f",
-      "reviewer": "Claude (Claude Code session; full-text content and lexical review, no model execution)",
+      "source_sha256": "ed423af9dcfbd855a96853d20772f8dc2183a3336bb6e5d035f4e2c52218b136",
+      "target_sha256": "dcae0102a8ca926c285d6dda7fffc92614d75a41566979b651c6296c9ccef4ba",
+      "reviewer": "Claude (Claude Code session; Japanese and English figures drawn by the same script from the same results; labels checked)",
       "method": "assistant",
-      "reviewed_on": "2026-11-17"
+      "reviewed_on": "2026-11-21"
     },
     {
       "source": "examples/bridge_wood_jam/figs/sens.png",
       "target": "examples/bridge_wood_jam/en/figs/sens.png",
-      "source_sha256": "5a997025feb76209b665f8738dd7b24f2e8dd565a085131b729b39e6507fff22",
-      "target_sha256": "7537bf03726a3f31e0af582ead9ee70ede0da0558c936cf4448f4bef1158dc20",
-      "reviewer": "Claude (Claude Code session; full-text content and lexical review, no model execution)",
+      "source_sha256": "75d2ceb609e2f4c93eff68946d7b865b55ff5a125ca89e50de04515d55477607",
+      "target_sha256": "48c75987713818c3b44d64400ed9b114360006ae43e65f4707d073adba7f1a6f",
+      "reviewer": "Claude (Claude Code session; Japanese and English figures drawn by the same script from the same results; labels checked)",
       "method": "assistant",
-      "reviewed_on": "2026-11-17"
+      "reviewed_on": "2026-11-21"
     },
     {
       "source": "examples/bridge_wood_jam/figs/series.png",
       "target": "examples/bridge_wood_jam/en/figs/series.png",
-      "source_sha256": "e039e6855615448db216bfad28f20ea867b174c24d480db5f03eea1c252b8612",
-      "target_sha256": "f365535faf2c2d2ac75c0120df694db60093ad8e51baf995949714c58a66c49d",
-      "reviewer": "Claude (Claude Code session; full-text content and lexical review, no model execution)",
+      "source_sha256": "7e78c24e6dfd9e831d6a0ed1bc195faf013591c47a1919d9a73512c369a650a8",
+      "target_sha256": "4ded950324efbc89bbcdd847dccd7f09d5ca59c3a114470cdf485484d7800aa8",
+      "reviewer": "Claude (Claude Code session; Japanese and English figures drawn by the same script from the same results; labels checked)",
       "method": "assistant",
-      "reviewed_on": "2026-11-17"
+      "reviewed_on": "2026-11-21"
     },
     {
       "source": "examples/bridge_wood_jam/figs/setup.png",
