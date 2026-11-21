@@ -896,9 +896,9 @@
     {
       "source": "examples/README.md",
       "target": "examples/README.en.md",
-      "source_sha256": "cde6843d1685d04286f945b88d9c215455b1a53ba3912e3d907bfe824a3639d0",
-      "target_sha256": "148de0c132ec8135601afc2bc9717a197197a67b2c10bf73c8c721b9a1b3db27",
-      "reviewer": "Claude (Claude Code session; the new chichibu_flood row compared with the Japanese source; the other rows are unchanged)",
+      "source_sha256": "e64886f8fa95070115e19c399da6cd966b9dc403e532d3096d8e9ebad2ac08a5",
+      "target_sha256": "d7d04d4051a2c7ca64e4e833dc7e1b844496c8ce91c0e9716e5095e51c320e23",
+      "reviewer": "Claude (Claude Code session; rows reordered to benchmark, chichibu_flood, source_area, vz_tani2023, and the chichibu_flood row given the surface-flow-only framing; both sides compared)",
       "method": "assistant",
       "reviewed_on": "2026-11-21"
     },
@@ -1553,9 +1553,9 @@
     {
       "source": "examples/chichibu_flood/README.md",
       "target": "examples/chichibu_flood/en/README.md",
-      "source_sha256": "c1fb8d5acf966eb3974d5e55b1bb5e7ac73c2d76fb6ea27d0d31759a79bc713d",
-      "target_sha256": "5b8daa8feee0c30f83acc24c580a93aae2b9662aaff1b0c0dfaa491c72cca920",
-      "reviewer": "Claude (Claude Code session; new example chichibu_flood translated from the Japanese master and compared side by side section by section; headings, tables, numbers, figures and same-language links checked)",
+      "source_sha256": "7fb23cad84c8f48d8e064f9c062fd44d8f7e0df0f7914cca098b622f7b66f58d",
+      "target_sha256": "f1867427a5f21e709d71b120064c6e570567b0c8f726448413ce74fb0ef809bb",
+      "reviewer": "Claude (Claude Code session; opening declaration that the example represents mountain-catchment runoff by surface flow only, with a pointer to examples/source_area for the actual runoff process; the same added to the limits and related documents; both sides compared)",
       "method": "assistant",
       "reviewed_on": "2026-11-21"
     },

@@ -4,6 +4,13 @@
 
 [日本語](../README.md)
 
+**This example is a model that represents the runoff of a real mountain catchment by surface flow only.** Rainwater
+is computed as flowing over the ground and gathering in the rivers; flow that reaches the rivers through the soil is
+not treated. In real mountains, most of the rain that falls soaks into the soil, flows downslope inside the soil
+layer, and comes out into the rivers where the valleys are saturated. If you are interested in this actual runoff
+process, and in how it differs when represented by surface flow only, see
+[examples/source_area](../../source_area/en/README.md).
+
 A one-hour heavy rainstorm falls on the Chichibu catchment in the upper Arakawa River, and we compute how the
 rainwater gathers from the slopes into the rivers and runs down as a flood. Then we change, one at a time, the
 terrain preprocessing, the rainfall losses, the boundary at the catchment outlet, the grid resolution and the
@@ -460,9 +467,11 @@ can check this by changing the rain in the settings and running `run_cases.sh`.
 - **The channel cross-section is a rectangle as wide as the cell** (the subgrid channel appears only in a comparison
   with a uniform width). Valley cross-sections that widen with the water level, levees and structures are not
   represented.
-- **The rain is uniform over the catchment, and the losses are only the two simplest models.** A rainfall
-  distribution, time variation of soil infiltration and groundwater outflow can be added with the models in the
-  chapters of the [users guide](../../../docs/en/users_guide.md).
+- **Runoff is surface flow only.** Flow that reaches the rivers through the soil is not treated, the rain is uniform
+  over the catchment, and the losses are only the two simplest models. Flow inside the soil layer and runoff from
+  the saturated parts of the valleys are treated in [examples/source_area](../../source_area/en/README.md). A
+  rainfall distribution and time variation of infiltration can be added with the models in the chapters of the
+  [users guide](../../../docs/en/users_guide.md).
 - **The rules of the advection term have limits.** The exchange of momentum between a one-cell-wide channel and the
   wet cells beside it is counted by rules per grid connection, so in reaches where the corner cells of a stair-like
   channel are submerged, the water level can come out high
@@ -482,6 +491,9 @@ can check this by changing the rain in the settings and running `run_cases.sh`.
 
 - [tutorials/chichibu](../../../tutorials/chichibu/en/README.md) — the tutorial that builds up the computation step
   by step on the same catchment
+- [examples/source_area](../../source_area/en/README.md) — an example that computes, on a headwater catchment cut out
+  of the Chichibu terrain, how rain passes through the soil layer and comes out into the rivers where the valleys are
+  saturated; it also compares this with surface flow only
 - [test/chichibu](../../../test/chichibu/en/README.md), [test/chichibu_cond](../../../test/chichibu_cond/en/README.md)
   — regression cases of the same catchment (100 m grid)
 - [Advection schemes](../../../docs/en/users_guide/advection.md),
