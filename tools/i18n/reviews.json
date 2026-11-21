@@ -58,9 +58,9 @@
     {
       "source": "docs/comparison.md",
       "target": "docs/en/comparison.md",
-      "source_sha256": "c5fa0fc2a0e961f6b11abafd49c5a0674a9abd3c7fa2ce1fae8d38a915722510",
-      "target_sha256": "7aa1fbfe446a169ece8bbd383c5e2ec6e84cd2ae4a2f3b9b1478c5c848248c74",
-      "reviewer": "Claude (Claude Code session; RSR additions checked passage by passage against the Japanese source, rest of the pair unchanged since the 2026-11-18 record; no model execution)",
+      "source_sha256": "3bcaa55e6235fcef20052cd09d055f22bc0461b6a2c8bcec1057b50f415f0bd1",
+      "target_sha256": "ea3b015117039ca106b875a477a21935064bc64ab68b58b96fded6aa946cbdaa",
+      "reviewer": "Claude (Claude Code session; shortened rows and RSR text checked row by row against the Japanese source, table structure compared; no model execution)",
       "method": "assistant",
       "reviewed_on": "2026-11-21"
     },
