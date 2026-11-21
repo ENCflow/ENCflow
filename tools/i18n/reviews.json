@@ -58,11 +58,11 @@
     {
       "source": "docs/comparison.md",
       "target": "docs/en/comparison.md",
-      "source_sha256": "87b9236008656d1f6dab2bf03805ca2ae9a4109643d24ba7666cd77462910343",
-      "target_sha256": "142090c712dec4120d245ddb63a358a28f1a745e4ad1adc2a4e9c1f747f3acbe",
-      "reviewer": "Claude (Claude Code session; full-text content and lexical review, no model execution)",
+      "source_sha256": "c5fa0fc2a0e961f6b11abafd49c5a0674a9abd3c7fa2ce1fae8d38a915722510",
+      "target_sha256": "7aa1fbfe446a169ece8bbd383c5e2ec6e84cd2ae4a2f3b9b1478c5c848248c74",
+      "reviewer": "Claude (Claude Code session; RSR additions checked passage by passage against the Japanese source, rest of the pair unchanged since the 2026-11-18 record; no model execution)",
       "method": "assistant",
-      "reviewed_on": "2026-11-18"
+      "reviewed_on": "2026-11-21"
     },
     {
       "source": "docs/developer.md",
