@@ -28,6 +28,11 @@ The terrain is a real catchment, but the soil layer, the conductivities and the 
 schematic uniform values; this is not a reproduction of the runoff of this catchment (nothing is
 compared with observations).
 
+An example that computes a heavy-rain flood over the whole Chichibu catchment with a model that
+represents runoff by surface flow only is [examples/chichibu_flood](../../chichibu_flood/en/README.md).
+It compares how the flood wave changes with the way the terrain is given, the grid resolution, the
+computational method and more.
+
 **What this example shows**
 
 - **The runoff source area (saturated area) extends up the valleys and shrinks back downstream

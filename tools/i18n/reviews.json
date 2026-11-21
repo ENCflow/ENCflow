@@ -2912,11 +2912,11 @@
     {
       "source": "examples/source_area/README.md",
       "target": "examples/source_area/en/README.md",
-      "source_sha256": "ed282fad25e1c9f204185b2cfc6b26558fd0b3b876e2fc92870b329b2da463b0",
-      "target_sha256": "f24fd70fbe91c52ab3a9b4d9bf29461cff2115d40bb6eaf831488d2b64ca538e",
-      "reviewer": "Claude (Claude Code session; added Supplement 3 and the related edits in both languages from the same script tables, compared the two sentence by sentence, and checked that the heading, bullet, table, figure and link counts match)",
+      "source_sha256": "04795b0c1a5b0dc0fa70def910dbcc93acad2fa48ab96a912b7350a875bd2816",
+      "target_sha256": "e350df65146207e5fa30a169e0987a8e0a1b9af07b8811a82223fcabc70b4c88",
+      "reviewer": "Claude (Claude Code session; a paragraph pointing to examples/chichibu_flood (whole-catchment flood with surface flow only) added at the end of the introduction; both sides compared)",
       "method": "assistant",
-      "reviewed_on": "2026-11-16"
+      "reviewed_on": "2026-11-21"
     },
     {
       "source": "examples/source_area/figs/compare.png",
