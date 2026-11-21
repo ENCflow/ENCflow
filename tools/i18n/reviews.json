@@ -3542,11 +3542,11 @@
     {
       "source": "test/bendloss/README.md",
       "target": "test/bendloss/en/README.md",
-      "source_sha256": "79d8c11b01e0ced5248590c5df16c8d15dd3aefde3a8c520ce49dc17095f7761",
-      "target_sha256": "90b99f171d47089e76aeb16abafe0a590a3f265b9e207c496d0ca46d554adba9",
-      "reviewer": "Claude (Claude Code session; merge of claude/inspiring-brahmagupta-c5jfsg into main, 2026-11-13: the passages changed on each side (main: f_govequation = 1 as local inertia; branch: values or the f_opening_dynamic default) checked present in both the Japanese and the English merged files)",
+      "source_sha256": "7863c861a2dc7500d8d50a0d117eb86840b7c740988fbc510060ec06e5e58822",
+      "target_sha256": "dd44940f34d01f9882f5c69aecb12c066b7d895f16c73c2e1f479d3c49b41c4a",
+      "reviewer": "Claude (Claude Code session; changed sections compared side by side with the Japanese source; numbers checked against the test runs)",
       "method": "assistant",
-      "reviewed_on": "2026-11-13"
+      "reviewed_on": "2026-11-21"
     },
     {
       "source": "test/bendloss/figs/bendloss.png",
@@ -3821,8 +3821,8 @@
     {
       "source": "test/dambreak/README.md",
       "target": "test/dambreak/en/README.md",
-      "source_sha256": "a509f945065111823363e9f86c87cc993ce6e9203f52f1f7cff7288271994dda",
-      "target_sha256": "3165f2e4f362ea601c2c147b0de9ee3a86aede510470c3465f19e68154298d93",
+      "source_sha256": "e219b483073a7b3a31a5288f678e4a9eca1780fdb7cedc18ad5062ea7456fa7c",
+      "target_sha256": "8bc27c24e0955219172b0e99e258afb4dbb57e27dfb25a1cd7b04d3f9321beb2",
       "reviewer": "Claude (Claude Code session; changed sections compared side by side with the Japanese source; numbers checked against the test runs)",
       "method": "assistant",
       "reviewed_on": "2026-11-21"
@@ -3830,20 +3830,20 @@
     {
       "source": "test/dambreak/figs/incised.png",
       "target": "test/dambreak/en/figs/incised.png",
-      "source_sha256": "e528ba1ecd17a0c445ef827012286677bc23402c7ae10ba16cb776990c7f2779",
-      "target_sha256": "5318af981706a363af3ba64bd13b55f1098801c96ae61e90e2b2929cfcbb78ce",
-      "reviewer": "Claude (Claude Code session; English figure drawn by the same script with the en switch; visual check)",
+      "source_sha256": "afa2c225b2d04cd17695bcb8eefb24b4882b0295eb9dc32d1060dd3f1cca4e36",
+      "target_sha256": "340bd2f03dd2eee27c2929890390616eed1aabbec54e15a7f892bbac1d2811e2",
+      "reviewer": "Claude (Claude Code session; Japanese and English figures drawn by the same script from the same results; labels checked)",
       "method": "assistant",
-      "reviewed_on": "2026-10-24"
+      "reviewed_on": "2026-11-21"
     },
     {
       "source": "test/dambreak/figs/profile.png",
       "target": "test/dambreak/en/figs/profile.png",
-      "source_sha256": "085240d55d429215a6e50d50f0acb64bfa1bbac76bbdd9d1e774dca3bba18007",
-      "target_sha256": "6e54736b5c8f940ee23f0176518d836c6fbe940b497d5498e552dceb765d4b4b",
-      "reviewer": "Claude (Claude Code session; English figure drawn by the same script with the en switch; visual check)",
+      "source_sha256": "d8c4550b2656789ff63a258ec8d7270c5b8a8093fa35f93f79e78669ef59fbae",
+      "target_sha256": "774f42035c13731bedeb14d03b72ddd5ca346ad74b01b9d3797df72acc76d00d",
+      "reviewer": "Claude (Claude Code session; Japanese and English figures drawn by the same script from the same results; labels checked)",
       "method": "assistant",
-      "reviewed_on": "2026-10-24"
+      "reviewed_on": "2026-11-21"
     },
     {
       "source": "test/damwq/README.md",

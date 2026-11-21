@@ -72,7 +72,7 @@ only at the difference between straight and zigzag.
 Right: hydrograph at x = 3.8 km of the flood wave in the straight rw channel
 (landside = bed + 10 m). Without the opening correction (dashed) the peak
 of scheme 3 attenuates more than that of scheme 1 (peaks 182.1 /
-166.1 m³/s), but with the dynamic opening correction (solid), which makes
+166.0 m³/s), but with the dynamic opening correction (solid), which makes
 the edge velocity = the cell velocity, both schemes agree (176.5 /
 176.5 m³/s). This confirms the hypothesis that in a one-cell-wide channel
 lacking the diagonal edges the edge velocity is 1/lpy = 2.4 times the cell
@@ -85,7 +85,7 @@ velocities amplifies the acceleration and deceleration 2.4 times
 | Experiment | Result | Record |
 |---|---|---|
 | 90° bends (straight vs zigzag) | Bend loss 0.000 m, K = 0.00 (both schemes 1 and 3) | §68.8 |
-| Flood-wave peak at 3.8 km (m³/s) | Without opening correction: 182.1 / 166.1; dynamic opening correction: 176.5 / 176.5 (scheme 1 / 3) | §68.13–68.14 |
+| Flood-wave peak at 3.8 km (m³/s) | Without opening correction: 182.1 / 166.0; dynamic opening correction: 176.5 / 176.5 (scheme 1 / 3) | §68.13–68.14 |
 | Subgrid channel width W = 4 m | Scheme 3 agrees exactly with Manning (h 2.380 m, u 4.202 m/s) | §68.9, 68.11 |
 | Diagonal one-cell channel | Agrees with Manning when the width is specified (capped at the natural width 7.07 m) | §68.11 |
 | Channel with lateral inflow | Scheme 3 is within 1% of the analytical solution (`./Run.sh` judges pass or fail at ±2%), scheme 1 is 1.7–2.6 times it (becomes subcritical) | §68.17 |

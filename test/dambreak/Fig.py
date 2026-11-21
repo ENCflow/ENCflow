@@ -127,8 +127,8 @@ if rows:
         ax.set_xticklabels([labels[g] for g in geoms], fontsize=9)
         ax.grid(alpha=0.3, axis="y")
     axes[0].legend(fontsize=8)
-    fig.suptitle(T("1 セル幅・2 セル幅水路でのダム破壊(§68.15。広い水路: スキーム 1 −15.5% / 3.2 m、スキーム 3 +1.3% / 0.00 m)",
-                   "Dam break in one-cell-wide and two-cell-wide channels (§68.15; wide channel: scheme 1 −15.5% / 3.2 m, scheme 3 +1.3% / 0.00 m)"), fontsize=10)
+    fig.suptitle(T("1 セル幅・2 セル幅水路でのダム破壊(§68.15。広い水路: スキーム 1 −15.5% / 3.2 m、スキーム 3 +1.2% / 0.00 m)",
+                   "Dam break in one-cell-wide and two-cell-wide channels (§68.15; wide channel: scheme 1 −15.5% / 3.2 m, scheme 3 +1.2% / 0.00 m)"), fontsize=10)
     fig.tight_layout()
     fig.savefig(f"{FIGDIR}/incised.png", dpi=110)
     plt.close(fig)
