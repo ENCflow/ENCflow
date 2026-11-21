@@ -150,21 +150,20 @@ do for [t=1:2] {
 }
 unset multiplot
 
-# ---- Figure 2d: fluctuations in the 1-minute values (examples for item 3 of the supplement
+# ---- Figure 2d: the two places where the change per minute is checked (item 3 of the supplement
 #      "Fine oscillations in the hydrograph") ----
-# Left: transect 4 of the 100 m grid. At a bend 0.4 to 0.8 km upstream of the transect the channel depth becomes
-#     about equal to the height difference between the channel cell and the cells on both sides (water starts to
-#     spill onto, or retreats from, the bank cells), and the flow state switches back and forth.
-#     It does not appear with the 50 m wide subgrid channel or on the 200 m grid (dashed).
-# Right: transect 3 of the 50 m grid. At the upstream end of the deep reach formed by a bend 0.5 to 1 km downstream
-#     of the transect, the boundary where the shallow, fast flow enters the deep flow (a hydraulic jump) moves
-#     back and forth. It does not appear on the 100 m and 200 m grids (dashed).
-# Both are water stored and released in a reach and do not change the total runoff. Lower panels: change per minute
+# Left: transect 4 of the 100 m grid; right: transect 3 of the 50 m grid. With the old combination of the advection
+#     values (f_advection_donor = 3, f_advection_bend = 1, f_advection_lateral = 1, f_dry_head_cap = 3) the discharge
+#     there went up and down by up to 1,200 and 2,300 m3/s per minute (left: at the water level at which channel
+#     water starts to spill onto, or recede from, the cells on both sides at a bend; right: where a hydraulic jump
+#     moves back and forth ahead of a bend). It does not appear with the current default. Dashed: runs compared
+#     (left: the 50 m wide subgrid channel and the 200 m grid; right: the 100 m and 200 m grids).
+# Lower panels: change of the discharge per minute
 reset
 set datafile separator comma
 set terminal pngcairo size 1100,640 font ",11"
 set output "en/figs/supp_osc.png"
-set multiplot layout 2,2 title "Examples of fluctuations in the 1-minute values (left: transect 4 of the 100 m grid; right: transect 3 of the 50 m grid)" noenhanced
+set multiplot layout 2,2 title "The two places where the change per minute is checked (left: transect 4 of the 100 m grid; right: transect 3 of the 50 m grid)" noenhanced
 set grid
 set xlabel "time (min)"
 array TRO[2]  = [ 4, 3 ]
