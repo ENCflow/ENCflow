@@ -896,11 +896,11 @@
     {
       "source": "examples/README.md",
       "target": "examples/README.en.md",
-      "source_sha256": "977a740723b3d0746c15ee31f5bf94f54b84185a6e607018794cac117cc2ba3f",
-      "target_sha256": "2f3b59fd2a15a35d866dbad5c882df1cd7d2fcbe1c65b595499cb9736604b3f4",
-      "reviewer": "Claude (Claude Code session; default of f_dry_head_cap changed to 2 (developer.md §108.8), 2026-11-13: the rewritten sentences, table rows and annotations of the Japanese master and the English mirror compared passage by passage; values and identifiers unchanged apart from the default)",
+      "source_sha256": "cde6843d1685d04286f945b88d9c215455b1a53ba3912e3d907bfe824a3639d0",
+      "target_sha256": "148de0c132ec8135601afc2bc9717a197197a67b2c10bf73c8c721b9a1b3db27",
+      "reviewer": "Claude (Claude Code session; the new chichibu_flood row compared with the Japanese source; the other rows are unchanged)",
       "method": "assistant",
-      "reviewed_on": "2026-11-13"
+      "reviewed_on": "2026-11-21"
     },
     {
       "source": "examples/ashfall_lahar/README.md",
@@ -1549,6 +1549,123 @@
       "reviewer": "Claude (Claude Code session; English figure drawn by the same script with the en switch from the same results of 2026-11-11 (the G1 line in the discharge panel and the summary axis down to 0.001 kg); compared side by side: same plotted data and layout, labels translated)",
       "method": "assistant",
       "reviewed_on": "2026-11-11"
+    },
+    {
+      "source": "examples/chichibu_flood/README.md",
+      "target": "examples/chichibu_flood/en/README.md",
+      "source_sha256": "c1fb8d5acf966eb3974d5e55b1bb5e7ac73c2d76fb6ea27d0d31759a79bc713d",
+      "target_sha256": "5b8daa8feee0c30f83acc24c580a93aae2b9662aaff1b0c0dfaa491c72cca920",
+      "reviewer": "Claude (Claude Code session; new example chichibu_flood translated from the Japanese master and compared side by side section by section; headings, tables, numbers, figures and same-language links checked)",
+      "method": "assistant",
+      "reviewed_on": "2026-11-21"
+    },
+    {
+      "source": "examples/chichibu_flood/figs/advection.png",
+      "target": "examples/chichibu_flood/en/figs/advection.png",
+      "source_sha256": "472091de8276d5d842f4a7f5adcf9f334f504ac4ba3bd632fcee90678cbda05a",
+      "target_sha256": "efe2e0063cb01ce43c7bb3ddf248aef7daf0f98e7f6f7f9f8462cdfd8716e001",
+      "reviewer": "Claude (Claude Code session; English figure drawn by plot_results.py en from the same results as the Japanese figure; labels, titles and legends checked visually)",
+      "method": "assistant",
+      "reviewed_on": "2026-11-21"
+    },
+    {
+      "source": "examples/chichibu_flood/figs/base.png",
+      "target": "examples/chichibu_flood/en/figs/base.png",
+      "source_sha256": "fa2f0a68a76a2f966872aab04524bdaf759b4abed9294ba731a7007304e5240b",
+      "target_sha256": "45bcf0835c8d3edfa98c0055378aca52f81e67dca13df2994f7dbfee2ba68296",
+      "reviewer": "Claude (Claude Code session; English figure drawn by plot_results.py en from the same results as the Japanese figure; labels, titles and legends checked visually)",
+      "method": "assistant",
+      "reviewed_on": "2026-11-21"
+    },
+    {
+      "source": "examples/chichibu_flood/figs/bed.png",
+      "target": "examples/chichibu_flood/en/figs/bed.png",
+      "source_sha256": "5a616c0377e14971fa3168e404fbec8ebfa2295e1668b9e9014d330c9880a102",
+      "target_sha256": "0e6b32d7d8263ed538a4972d70844cc683c75bb12cf599d9d8550d2199842964",
+      "reviewer": "Claude (Claude Code session; English figure drawn by plot_results.py en from the same results as the Japanese figure; labels, titles and legends checked visually)",
+      "method": "assistant",
+      "reviewed_on": "2026-11-21"
+    },
+    {
+      "source": "examples/chichibu_flood/figs/bed_effect.png",
+      "target": "examples/chichibu_flood/en/figs/bed_effect.png",
+      "source_sha256": "01687bebee2b6fbf65f29116a52b417cea21c5f7c630ddf4f6baf4ccc9c5c12b",
+      "target_sha256": "ae6a867a12bda1e1196befd9b0934cea03653815515cbcc4f7f7d6e62aa5db98",
+      "reviewer": "Claude (Claude Code session; English figure drawn by plot_results.py en from the same results as the Japanese figure; labels, titles and legends checked visually)",
+      "method": "assistant",
+      "reviewed_on": "2026-11-21"
+    },
+    {
+      "source": "examples/chichibu_flood/figs/dem.png",
+      "target": "examples/chichibu_flood/en/figs/dem.png",
+      "source_sha256": "9d771cceb52f0d3c13ab59732191c89ff804065506db4c6ba0a9de4169c4cc49",
+      "target_sha256": "f0d64f6f47c2921d87fcd007c56c92457930716791ed33dfa3dfb99807cf677e",
+      "reviewer": "Claude (Claude Code session; English figure drawn by plot_results.py en from the same results as the Japanese figure; labels, titles and legends checked visually)",
+      "method": "assistant",
+      "reviewed_on": "2026-11-21"
+    },
+    {
+      "source": "examples/chichibu_flood/figs/loss.png",
+      "target": "examples/chichibu_flood/en/figs/loss.png",
+      "source_sha256": "8a6b6b2232ee28f2fda768f56120b665be44a092d096460a5c185f9d97a35129",
+      "target_sha256": "01525bbe3ab6fef822701c018d36fbae42b1ad048c57c22d0817446a1b712ebd",
+      "reviewer": "Claude (Claude Code session; English figure drawn by plot_results.py en from the same results as the Japanese figure; labels, titles and legends checked visually)",
+      "method": "assistant",
+      "reviewed_on": "2026-11-21"
+    },
+    {
+      "source": "examples/chichibu_flood/figs/outlet.png",
+      "target": "examples/chichibu_flood/en/figs/outlet.png",
+      "source_sha256": "082f4fe81467f61d5aed5a14b1cf7cd6621c5fea2159fccd709c8fd1a866d9d6",
+      "target_sha256": "53cadeef7b94f820e2e871605262643fad6b996ac8e4e49107a6a51705477d52",
+      "reviewer": "Claude (Claude Code session; English figure drawn by plot_results.py en from the same results as the Japanese figure; labels, titles and legends checked visually)",
+      "method": "assistant",
+      "reviewed_on": "2026-11-21"
+    },
+    {
+      "source": "examples/chichibu_flood/figs/resolution.png",
+      "target": "examples/chichibu_flood/en/figs/resolution.png",
+      "source_sha256": "c80b23901cb98dec3594a95efca19ccab228548b119b2948ad4975681b2c603d",
+      "target_sha256": "d92764eb1e23a5b8177f77395545bad1e6b5b82967bde5276e11a3a14fb0753f",
+      "reviewer": "Claude (Claude Code session; English figure drawn by plot_results.py en from the same results as the Japanese figure; labels, titles and legends checked visually)",
+      "method": "assistant",
+      "reviewed_on": "2026-11-21"
+    },
+    {
+      "source": "examples/chichibu_flood/figs/roughness.png",
+      "target": "examples/chichibu_flood/en/figs/roughness.png",
+      "source_sha256": "93ba205195acef766c528329e69c7cb8caaed0930a9db1f1d5ee6263dc74107a",
+      "target_sha256": "4dc1baf32fe42ce4fd9354844fce9fa4a4a45a7449197ee52b1a8fa988f13e65",
+      "reviewer": "Claude (Claude Code session; English figure drawn by plot_results.py en from the same results as the Japanese figure; labels, titles and legends checked visually)",
+      "method": "assistant",
+      "reviewed_on": "2026-11-21"
+    },
+    {
+      "source": "examples/chichibu_flood/figs/setup.png",
+      "target": "examples/chichibu_flood/en/figs/setup.png",
+      "source_sha256": "1ab8df72793fa157f94387ad0c6b9d4f28ad07fc384d3b055bb374201145ea37",
+      "target_sha256": "c6a98cf00fa4617067b0e6e1f6a7fd568902e4b5715642ae2efadb24e660b4fc",
+      "reviewer": "Claude (Claude Code session; English figure drawn by plot_results.py en from the same results as the Japanese figure; labels, titles and legends checked visually)",
+      "method": "assistant",
+      "reviewed_on": "2026-11-21"
+    },
+    {
+      "source": "examples/chichibu_flood/figs/transects.png",
+      "target": "examples/chichibu_flood/en/figs/transects.png",
+      "source_sha256": "ce055183ff76a777b1c519e56ccf123b0fc471bfbd2f0e12d7cf221d1f09001e",
+      "target_sha256": "3e4058162e7f5ef590297cf0bd1f0c9888045d6e7de4051f0b490a4ac6a8728e",
+      "reviewer": "Claude (Claude Code session; English figure drawn by plot_results.py en from the same results as the Japanese figure; labels, titles and legends checked visually)",
+      "method": "assistant",
+      "reviewed_on": "2026-11-21"
+    },
+    {
+      "source": "examples/chichibu_flood/figs/width.png",
+      "target": "examples/chichibu_flood/en/figs/width.png",
+      "source_sha256": "fd98dbdebef1465056e9c492873bdc344dffe6f497910b000a6497c465cd857c",
+      "target_sha256": "c68f95435870f84dcf5b75b3a5e5904e7d90af4ea812c8b19ae39d30928c2c3b",
+      "reviewer": "Claude (Claude Code session; English figure drawn by plot_results.py en from the same results as the Japanese figure; labels, titles and legends checked visually)",
+      "method": "assistant",
+      "reviewed_on": "2026-11-21"
     },
     {
       "source": "examples/debris_bedrock/README.md",

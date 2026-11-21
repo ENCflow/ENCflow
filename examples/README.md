@@ -22,6 +22,7 @@ python3 plot_results.py   # 図化(用意されている例題のみ)
 | [benchmark/](benchmark/) | 降雨流出の基準問題 2 題。V 字流域の出口の流量を運動学的波の理論解と比べ、格子に斜めの谷底にできる疑似窪地を見る | 浅水流・降雨(既定の設定)、斜めの配分比 p_diagratio、サブグリッド河道幅(追補) |
 | [vz_tani2023/](vz_tani2023/) | 谷(2023)の VZ 流出モデルの再現。斜面・ゼロ次谷・流域の全 7 事例の流出強度と圧力水頭を論文と比べる | 鉛直不飽和浸透(VZ)流出 fn_vz(柱の共有・土層厚の線形分布) |
 | [source_area/](source_area/) | 源流域で、土層を通った雨が谷の飽和域から川に出る過程と流出寄与域の発達・縮小を見る。等価粗度・VZ・貯留関数法とも比べる | Green-Ampt、土層の側方流 f_gwlateral(飽和域の湧出)、第 2 層 f_gwlayer2、水位規定セル(流域の出口)、実地形の集水域の切り出し、斜面の粗度の掃引、拡散波 f_govequation、VZ 流出 fn_vz の土壌柱、貯留関数法 fn_sfm のタンク |
+| [chichibu_flood/](chichibu_flood/) | 実地形の山地流域(秩父。200・100・50 m 格子)の豪雨の洪水を、地形の前処理・雨の損失・流域出口の境界・格子の解像度・8 方向の交換・移流項の扱いを一つずつ変えて比べる(教材 tutorials/chichibu の発展) | 浅水流・降雨、河床を整えた標高、降雨遮断 fn_intercept とバケツモデル fn_gwflow、水位規定セル(流域の出口)、サブグリッド河道幅 fn_width、4 近傍の対照 p_diagratio、拡散波 f_govequation・旧移流スキーム f_advection_scheme、プローブと測線 |
 | [badland/](badland/) | 台地と急崖への降雨で谷が刻まれるバッドランドの形成。谷の自己形成と谷間隔の選択則、鋭い稜線の発達を見る | 乾式斜面侵食 f_splash(spl_lc・spl_zbase) |
 | [badland_storm/](badland_storm/) | 浸透能が低く豪雨時だけ表面流が現れる崖で、乾式侵食が止まるか、ガリー網に変わるかを見る(badland の対照) | f_splash + f_wash・f_suspend、Green-Ampt、降雨時系列 |
 | [badland_round/](badland_round/) | 稜線が丸い膨潤粘土型のバッドランド。下刻とクリープの比が決める長さ尺度より低い丘からドーム状になることを見る | f_splash + f_creep(+ spl_strata)、Green-Ampt |

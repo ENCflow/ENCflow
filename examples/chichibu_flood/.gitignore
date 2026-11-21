@@ -1,0 +1,5 @@
+result_*/
+wrk_*.txt
+encflow
+encflow_mpi
+__pycache__/
