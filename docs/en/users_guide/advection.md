@@ -517,9 +517,11 @@ With `f_advection_donor` = 3 or 4 (the default is 4) the wet/dry test of the par
   - The results of 0 and 1 differ in computations that contain places where
     the flow turns next to a wall or a dry cell. In the Chichibu catchment
     (channel roughness 0.02; the settings of
-    [the supplement of the tutorial](../../../tutorials/chichibu/en/README.md))
-    1 changes the peak at transect 3 by +1.5 and +5.4 % on the 200 and 100 m
-    grids relative to 0, and the peak at transect 4 by +1.2 and −4.6 %
+    [the supplement of the tutorial](../../../tutorials/chichibu/en/README.md);
+    the other three at the old combination `f_advection_donor = 3`,
+    `f_advection_lateral = 1`, `f_dry_head_cap = 3`) 1 changes the peak at
+    transect 3 by +1.5 and +5.4 % on the 200 and 100 m grids relative to 0,
+    and the peak at transect 4 by +1.2 and −4.6 %
     (transects 1 and 2: −0.6 to +2.8 %). The depth of individual channel cells
     can change by several metres, for example at the foot of a drop. The run
     time is two to three tenths longer than with 0 (+24 % on the 200 m grid

@@ -62,7 +62,7 @@ Bottom right: surface time series at x = x_c + 200 m.
 | Case | η_max ENCflow (m) | t (s) | η_max theory (m) | t (s) | ENC/theory | theory/exact |
 |---|---:|---:|---:|---:|---:|---:|
 | Hydrostatic | 0.1197 | 19.15 | 0.1153 | 19.55 | 1.038 | 1.404 |
-| NH (no acceleration term) | 0.0959 | 22.14 | 0.0950 | 22.45 | 1.010 | 1.156 |
+| NH (no acceleration term) | 0.0960 | 22.14 | 0.0950 | 22.45 | 1.010 | 1.156 |
 | NH (with acceleration term, f_nh_bottom=1) | 0.0861 | 21.96 | 0.0853 | 22.25 | 1.009 | 1.039 |
 | Exact (linear potential flow) | — | — | 0.0821 | 22.45 | — | 1 |
 
@@ -78,7 +78,7 @@ Bottom right: surface time series at x = x_c + 200 m.
   differ by 3 s). The effect of the acceleration term (the ratio of η_max with
   / without it, in which the common discretization and nonlinearity
   differences cancel) must agree with the theoretical ratio 0.8985 within
-  ±1% (measured 0.8974). If the acceleration term did not act, the ratio
+  ±1% (measured 0.8973). If the acceleration term did not act, the ratio
   would be 1, off by 11%.
 - With the acceleration term the difference of the leading wave height from
   the exact solution shrinks from +16% to +3.9% (hydrostatic +40%). In the

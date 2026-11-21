@@ -77,7 +77,7 @@ the amplitude decays to 0.02 cm at x = 60 m and the phase accuracy drops.
 | Following current NH (param) | 0.5 | +x | 0.838 | 0.828 | 0.774 | 1.012 | 1.083 | 1.13 cm |
 | Following current, hydrostatic (param_h) | 0.5 | +x | 0.773 | 0.828 | 0.774 | 0.934 | 0.999 | 0.96 cm |
 | Opposing current NH (param_c) | 0.5 | −x | 1.254 | 1.341 | 1.070 | 0.935 | 1.172 | 0.02 cm |
-| Opposing current, hydrostatic (param_hc) | 0.5 | −x | 1.068 | 1.341 | 1.070 | 0.796 | 0.998 | 0.18 cm |
+| Opposing current, hydrostatic (param_hc) | 0.5 | −x | 1.068 | 1.341 | 1.070 | 0.797 | 0.998 | 0.18 cm |
 
 (Windows: following current 45–95 s, opposing current and still water
 65–100 s. Output of `python3 Current.py`. The reference comparison of the
