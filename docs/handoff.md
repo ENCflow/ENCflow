@@ -183,10 +183,6 @@ architecture.md。このメモは「現在進行中・未完了の項目」だ�
    - 教材 chichibu の Step 6 の 3D 図(Fig_step6.py。VTK と OSMesa が要る)は描き直していない(t = 2 時間の水深は、
      切り替えで少し変わる)。
    - ほかの examples(bridge_wood_jam 以外)は、前回の切り替え(§110.32)と同じく、別ブランチの一括の回し直しに合わせる。
-   - 検定の設定ファイル 59 本(test/chichibu 45・nest_identity 11・chichibu_cond・chichibu_icmap・nest_twin)の
-     `prtype` のコメントに「0:降水なし」が残っている(値は 1〜3 で、コメントだけ。`fn_precip` を与えて 0 にすると
-     止まる)。設定例と利用者ガイドは直した(2026-11-21。利用者の決定 = 案 A。§114.8)。reference の中の設定の写しは
-     触らない(次の reference の更新で入れ替わる)。
    - 切り替えで見つかった、原因を調べていない変化: test/gwseep の湧出の総量 −23 %(`f_advection_bend = 2` の分)、
      test/inflowadv の区間流入の行のエネルギー水頭の低下(急拡損失の向き。§114.4)、教材 bmi のプローブのセルの、
      粗度を半分にしたときの水深のピーク −19 %(§114.7)。

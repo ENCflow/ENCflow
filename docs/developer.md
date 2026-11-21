@@ -29524,7 +29524,10 @@ OMP_NUM_THREADS=1。wave_shore だけ 2〜4 スレッド)
   「`fn_precip` を書かない(または空文字)。`&list_precip` は要らない」という説明に替え、各例のコメントから
   「0:降水なし」を外した。利用者ガイド forcing.md の表の「0(既定)= 降水なし(一時無効化)」も同じ食い違いで、
   同じ形に直した(日英)。確かめたこと: `fn_precip` を与えて `prtype = 0`、または `prtype` を書かないと止まり、
-  `fn_precip = ""` では最後まで回る。検定の設定ファイル 59 本のコメントの「0:降水なし」は残っている(handoff 00z)。
+  `fn_precip = ""` では最後まで回る。続けて(利用者の指示)、検定の設定ファイル 59 本(test/chichibu 45・nest_identity 11・
+  chichibu_cond・chichibu_icmap・nest_twin)の `prtype` のコメントと、utils/rmdepress_river の使い方の説明(ソースの
+  コメント)の設定例を、教材と同じ書き方に直した。reference の中の設定の写し 3 本は触っていない(Compare_ref は
+  ! 以下を除いて比べるので、比較はこれまでどおり行われる。次の reference の更新で入れ替わる)。
 - 1 スレッドで作った reference(44 本)は、複数スレッドの実行と比べていない(CI は 1 スレッドで回す。非静水圧の 4 本は、
   スレッド数で Log の最終桁が 1 つ動く = Compare_ref の許容 ULP = 1 の内側、の見込み)。
 - wave_shore の、コミット 2 のビルドでの全体の回し直し(7 構成のうち 3 構成が未。114.7)。
