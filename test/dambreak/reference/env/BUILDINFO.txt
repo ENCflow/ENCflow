@@ -1,8 +1,8 @@
-date      : 2026-11-15 07:52:16
+date      : 2026-11-21 05:48:05
 host      : vm
 user      : 
 pwd       : /home/user/ENCflow/test/dambreak
 exe       : /home/user/ENCflow/bin/encflow
 mode      : serial__double
 modules   : (no modules)
-lib       : 	libgfortran.so.5 => /lib/x86_64-linux-gnu/libgfortran.so.5 (0x00007f1be8600000)
+lib       : 	libgfortran.so.5 => /lib/x86_64-linux-gnu/libgfortran.so.5 (0x00007f7bc7200000)
