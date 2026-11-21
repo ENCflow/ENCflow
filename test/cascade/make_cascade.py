@@ -4,7 +4,8 @@
 #   上流端の河道のセルに流量を与えて、ゆっくり上げて保つ。東辺は自由流出。
 #     河道は 1 セル幅(50 m)で、落差と平らな区間が交互に続き、格子に斜めの区間と屈曲がある。
 #     両岸には、河床より 10〜15 m 高いセルがあり、射流が乗り上げる。
-#   エッジ水深の頭打ち f_dry_head_cap と、側方面の扱い f_advection_lateral の組み合わせで 3 構成。
+#   移流項の規則の 4 つのスイッチ(f_advection_donor・f_advection_bend・f_advection_lateral・f_dry_head_cap)を、
+#   構成ごとに全部明示する(4 構成。既定によらない)。
 #   python3 make_cascade.py z > cs_z.txt ; ... rw > cs_rw.txt ; ... mask > cs_mask.txt
 import sys, os
 
@@ -18,8 +19,8 @@ DT = 0.75
 Q_LO, Q_HI = 2000.0, 8000.0          # 与える流量の下端と上端 (m3/s)
 T_RISE, T_SPIN, T_RAMP, T_HOLD = 5.0, 20.0, 120.0, 30.0     # 立ち上げ・助走の終わり・上げ・保持(分)
 T_END = T_SPIN + T_RAMP + T_HOLD     # 計算の長さ(分)= 170
-# 構成名 → (f_dry_head_cap, f_advection_lateral)
-CASES = {"c2": (2, 0), "c3": (3, 0), "c3j": (3, 1)}
+# 構成名 → (f_advection_donor, f_advection_bend, f_advection_lateral, f_dry_head_cap)
+CASES = {"c2": (3, 1, 0, 2), "c3": (3, 1, 0, 3), "c3j": (3, 1, 1, 3), "c4": (4, 2, 2, 4)}
 
 
 def loc(ix, iy):
@@ -43,10 +44,11 @@ def cut(kind):
 
 
 def param(name):
-    cap, lat = CASES[name]
+    don, bend, lat, cap = CASES[name]
     L = []
     L.append("!======================================================================")
-    L.append("! cascade %s: 急な段々の河道(f_dry_head_cap = %d、f_advection_lateral = %d)" % (name, cap, lat))
+    L.append("! cascade %s: 急な段々の河道(f_advection_donor・f_advection_bend・f_advection_lateral・f_dry_head_cap = %d・%d・%d・%d)"
+             % (name, don, bend, lat, cap))
     L.append("!   test/chichibu の 50 m 格子のデータの列 %d〜%d・行 %d〜%d を切り出した %d × %d セル。" % (IX0, IX0 + NX - 1, IY0, IY0 + NY - 1, NX, NY))
     L.append("!   上流端の河道のセルに、%.0f m3/s を %.0f 分まで、そのあと %.0f 分かけて %.0f m3/s まで上げ、%.0f 分保つ。" % (Q_LO, T_SPIN, T_RAMP, Q_HI, T_HOLD))
     L.append("!   検定は Check_cascade.py。入力 cs_*.txt は make_cascade.py が作る")
@@ -55,7 +57,9 @@ def param(name):
              "  fn_geoinfo = '-'\n  fn_boundary = '-'\n  fn_record = '-'\n  fn_enc = '-'\n  dir_result = 'result_%s'\n  f_out_h = 1\n"
              "  f_out_vvmax = 1           ! 期間最大流速 V9999(検定が読む)\n/\n" % (DT, T_END * 60, T_END * 60, name))
     L.append("&list_enc\n  f_dry_head_cap = %d        ! 高い地盤へ向かうエッジ水深の頭打ち(この検定の対象)\n"
-             "  f_advection_lateral = %d   ! 側方面で横から入る水の扱い\n/\n" % (cap, lat))
+             "  f_advection_lateral = %d   ! 側方面で横から入る水の扱い\n"
+             "  f_advection_donor = %d     ! 流向面の風上の供給元(4 つの値の組み合わせは 4。ほかは 3)\n"
+             "  f_advection_bend = %d      ! 流向面の中立の分(4 つの値の組み合わせは 2。ほかは 1)\n/\n" % (cap, lat, don, bend))
     L.append("&list_geoinfo\n  nx = %d\n  ny = %d\n  dx = %.1f\n  dy = %.1f\n  f_ztype = 1\n  fn_z = 'cs_z.txt'\n  f_masktype = 1\n  fn_mask = 'cs_mask.txt'\n"
              "  fn_rw = 'cs_rw.txt'      ! 河道マスク\n  f_rntype = 0\n  rn0 = %.2f               ! 斜面の粗度\n  rn0_rw = %.2f            ! 河道マスクのセルの粗度\n/\n" % (NX, NY, DX, DX, RN_LAND, RN_RIVER))
     L.append("&list_bound_edge\n  f_bc_e = 1                ! 東辺は自由流出(本川の出口)\n/\n")

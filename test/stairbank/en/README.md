@@ -8,16 +8,19 @@ This test has a one-cell-wide channel oblique to the grid (8-connected, the same
 cells higher than the bed beside it, onto which water spills when the water level rises. It looks at how the
 momentum-conservative advection term (`f_advection_scheme = 3` in `&list_enc`;
 [Advection schemes](../../../docs/en/users_guide/advection.md)) treats cells beside the channel that are wet but
-hardly flowing. The same shapes are computed with the default rules and with a combination of four values in
+hardly flowing. The same shapes are computed with the combination of the old values (`f_advection_donor = 3`,
+`f_advection_bend = 1`, `f_advection_lateral = 1`, `f_dry_head_cap = 3`) and with a combination of four values in
 `&list_enc` (`f_advection_donor = 4`, `f_advection_bend = 2`, `f_advection_lateral = 2`, `f_dry_head_cap = 4`;
-[Advection schemes](../../../docs/en/users_guide/advection.md) §4.4).
+[Advection schemes](../../../docs/en/users_guide/advection.md) §4.4). Every configuration states all four switches
+(none depends on the defaults).
 
 - **A channel whose banks are all walls that water cannot reach is judged with both sets of rules.** The flow is
   steady, mass is balanced, and the depth is the same when the discharge is raised and when it is lowered. The
-  combination of the four values gives the same depths as the default.
-- **For a channel with shelves or corner cells beside it, the values with the default rules are recorded as limits
-  (not judged).** Three things appear: two depths at the same discharge, a large backwater just after a stair
-  caused by a single corner cell, and a violent oscillation with a gain of energy caused by two corner cells.
+  combination of the four values gives the same depths as the combination of the old values.
+- **For a channel with shelves or corner cells beside it, the values with the combination of the old values are
+  recorded as limits of those rules (not judged).** Three things appear: two depths at the same discharge, a large
+  backwater just after a stair caused by a single corner cell, and a violent oscillation with a gain of energy caused
+  by two corner cells.
 - **With the combination of the four values, the test judges that these three do not appear.** The depth is the
   same on the rising and falling stages, the maximum velocity does not exceed that of the walls-only channel, and
   water does not climb onto wall cells. A difference in depth from the walls-only channel remains and is recorded
@@ -43,8 +46,9 @@ side is a free outflow. The inputs are made by `make_stairbank.py`.
 | `sa` | 51 × 8 | same | only corner cell A is open |
 | `sab` | 51 × 8 | same | corner cells A and B are open |
 
-There are 14 configurations: the 7 shapes × 2 sets of rules. A configuration with the default rules has the name
-of the shape itself (`zs`); one with the combination of the four values has a 4 appended (`zs4`).
+There are 14 configurations: the 7 shapes × 2 sets of rules. A configuration with the combination of the old
+values has the name of the shape itself (`zs`); one with the combination of the four values has a 4 appended
+(`zs4`).
 
 In the single-stair shape, call the channel cell before the stair P and the cell just after it Q. Corner cell A
 is north of P (= west of Q), and B is east of P (= south of Q). A is the neighbour on the upstream side of the
@@ -66,7 +70,7 @@ Items judged for the three walls-only shapes (`zw`, `dw`, `sw`) with both sets o
    0.02 m.
 
 Items recorded for the four shapes with shelves or corner cells (`zs`, `ds`, `sa`, `sab`) computed with the
-default rules (not judged):
+combination of the old values (not judged):
 
 4. The difference in depth at the same discharge between the rising and falling stages, and the difference from
    the walls-only shape.
@@ -77,7 +81,7 @@ default rules (not judged):
 
 Items judged with the combination of the four values (configuration names ending in 4):
 
-8. The walls-only shapes (`zw4`, `dw4`, `sw4`) have the same depths as with the default rules (difference below
+8. The walls-only shapes (`zw4`, `dw4`, `sw4`) have the same depths as with the combination of the old values (difference below
    0.02 m).
 9. In the shapes with shelves or corner cells (`zs4`, `ds4`, `sa4`, `sab4`), the depths at the same discharge on
    the rising and falling stages differ by less than 0.5 m (no two depths at the same discharge).
@@ -109,7 +113,7 @@ in one row.
 | `sab` | 6.19 | 11.42 | 14.53 | 25.74 | 29.01 | 25.92 | 22.43 | 18.09 | 6.25 | 1,222 | 29.5 |
 | `sab4` | 6.19 | 11.38 | 15.18 | 18.26 | 21.11 | 18.26 | 15.18 | 11.38 | 6.19 | 13 | 12.9 |
 
-With the default rules:
+With the combination of the old values:
 
 - **A walls-only channel is steady and has the same depth on the rising and falling stages** (items 1–3). The
   diagonal channel is deeper than the staircase channel because the passage width of a diagonal link is 0.707
@@ -139,11 +143,11 @@ With the combination of the four values:
 - **Energy is not gained** (item 10). The maximum velocity is 0.79–0.97 times that of the walls-only shape, and no
   water is left on wall cells.
 - **The backwater caused by corner cells is less than half as large, but it remains.** The difference in depth
-  from the walls-only shape is +1.9 to 4.9 m in `sa4` (6,000–10,000 m³/s; +7.4 to 11.2 m with the default) and
-  +2.0 to 4.9 m in `sab4` (4,000–10,000 m³/s; +2.0 to 12.8 m with the default). `zs4` is 2.2 m deeper at
+  from the walls-only shape is +1.9 to 4.9 m in `sa4` (6,000–10,000 m³/s; +7.4 to 11.2 m with the old values) and
+  +2.0 to 4.9 m in `sab4` (4,000–10,000 m³/s; +2.0 to 12.8 m with the old values). `zs4` is 2.2 m deeper at
   4,000 m³/s, where the water level is at the height of the shelves, and 1.7 m shallower at 10,000 m³/s by the
   flow over the shelves. In `sa4` the discharge keeps oscillating with a standard deviation of 1.5–2.9 % of the
-  given discharge (6,000–10,000 m³/s; 0.5 % in `sa` with the default).
+  given discharge (6,000–10,000 m³/s; 0.5 % in `sa` with the old values).
 
 ## What is happening
 
@@ -151,7 +155,7 @@ The momentum-conservative advection term takes the velocity of the water enterin
 edge (the upwind value) from the velocity of the link on the upstream side of the line of the edge. When the flow
 is resolved by the grid, this counts it correctly. At a stair of a one-cell-wide channel, most of the water at
 the face comes through a diagonal link, and the link on the upstream side of the line leads only to a bank or a
-corner cell. With the default rules:
+corner cell. With the combination of the old values:
 
 - If the cell on the upstream side of the line is a wall or dry, the advection term is neutral (no loss at a
   bend). If it is wet and at least a tenth as deep as the face cell, the slow velocity of that link is applied to

@@ -12,7 +12,10 @@ thinly wet bank. A further configuration makes the channel water level cross the
 and checks that the discharge does not flip back and forth at the threshold of the cap
 (configuration 5). `f_dry_head_cap = 3` (caps climbing edges by the energy head that also counts the
 velocity head of the flow entering the sending cell; developer.md §110.24) is checked to satisfy the
-same items in the same set-up (configurations 6–8).
+same items in the same set-up (configurations 6–8). The combination of the four values for deep, slow
+neighbouring cells (`f_advection_donor = 4`, `f_advection_bend = 2`, `f_advection_lateral = 2`,
+`f_dry_head_cap = 4`; [Advection schemes](../../../docs/en/users_guide/advection.md) §4.4) is checked with the same
+items as well (configurations 9–11).
 
 ## Rule
 
@@ -110,6 +113,13 @@ The inputs are written by `make_bankcap.py`.
 | 6 | `param_wet3.txt` | 2 cm film | 3 | as configuration 1 |
 | 7 | `param_dry3.txt` | dry | 3 | as configuration 3; byte-identical to configuration 3 |
 | 8 | `param_cross3.txt` | 2 cm film | 3 | as configuration 5 |
+| 9 | `param_wet4.txt` | 2 cm film | 4 (combination of the four values) | as configuration 1 |
+| 10 | `param_dry4.txt` | dry | 4 (same) | as configuration 3 (the banks stay dry and the channel is in uniform flow) |
+| 11 | `param_cross4.txt` | 2 cm film | 4 (same) | as configuration 5 |
+
+Every configuration states all four switches of the advection rules (none depends on the defaults). The other
+three switches (`f_advection_donor`, `f_advection_bend`, `f_advection_lateral`) are 3, 1, 1 (the combination of the
+old values) in configurations 1–8 and 4, 2, 2 in configurations 9–11.
 
 ## Checks (Check_bankcap.py and Run.sh)
 
@@ -138,6 +148,13 @@ The inputs are written by `make_bankcap.py`.
     byte-identical to configuration 3 (in a flow parallel to a dry bank, 3 is the same as 2).
 13. Configuration 8: the same as items 8–10 (3 has no transition, but the value of the cap rises
     continuously from 0, so the discharge does not flip back and forth).
+14. Configurations 9–11 (combination of the four values): the same as items 1–3 (configuration 9), 5 and 6
+    (configuration 10) and 8–10 (configuration 11), except that the margin of item 10 for configuration 11 is
+    0.41 m below the bank ground. 4 counts, in the cap on a climbing edge, up to the velocity head of the
+    component along the edge of the mean velocity of the sending cell, so by its rule water may start to
+    spill onto the bank while the channel level is lower by that much (on a diagonal edge, half the velocity
+    head of the channel flow; 0.41–0.42 m for the channel velocity of 4.0 m/s when water starts to spill onto
+    the bank).
 
 ## Results
 
@@ -155,6 +172,9 @@ The inputs are written by `make_bankcap.py`.
 | 11 configuration 6 | maximum depth over the run in the bank row 0.0200 m, 0.0041 m at the end; water volume on the floodplain 320.0 → 237.9 → 204.6 → 179.1 m³ | PASS |
 | 12 configuration 7 | maximum floodplain depth over the run 0; channel depth 2.5006 m; the 12 files are byte-identical to configuration 3 | PASS |
 | 13 configuration 8 | maximum second difference of the step-by-step discharge 0.002 m³/s (at 1,022 s); mean 9.30 m³/s over 457–996 s, while the water level is above the bank; 0.0200 m until 339 s, when the water level comes within 0.3 m below the bank | PASS |
+| 14 configuration 9 | maximum depth over the run in the bank column 0.0200 m, 0.0039 m at the end; floodplain volume 320.0 → 237.9 → 204.5 → 179.0 m³ | PASS |
+| 14 configuration 10 | maximum depth over the run on the floodplain 0; channel depth 2.5005 m (1.0002 times the normal depth) | PASS |
+| 14 configuration 11 | maximum second difference of the step-by-step discharge 0.002 m³/s (at 1,010 s); mean 8.33 m³/s over 477–987 s, while the water level is above the bank; 0.0200 m until 293 s, when the water level comes within 0.41 m below the bank (water starts to spill at 348 s, when it comes within 0.30 m) | PASS |
 
 ## Usage
 
@@ -194,6 +214,12 @@ make
 - In configuration 8 (3), without a transition at the threshold, the second difference of the
   step-by-step discharge falls from 0.69 m³/s in configuration 5 to 0.002 m³/s. The value of the cap
   rises continuously from 0 where the water level of the sender reaches the bed of the bank.
+- The combination of the four values (configurations 9–11) does not let channel water climb a wet bank either.
+  The channel depth in the configuration with wet banks (mean over x = 100–300 m) is 2.40 m, 0.03 m shallower than
+  the 2.42 m with the combination of the old values. In configuration 11 water starts to spill onto the bank when
+  the channel level comes within 0.30 m below the bank ground (0.29 m in configuration 8), shallower than the
+  velocity head of the component along the diagonal edge of the channel velocity of 4.0 m/s at that time
+  (0.42 m).
 - The default is `f_dry_head_cap = 3` (it was 2 until 2026-11-16 and 1 until 2026-11-13). In
   rain-wetted steep valleys and at run-up fronts the results differ between 1 and 2 or 3
   (developer.md §108). Where channel water starts to spill onto a bank directly ahead of the flow,

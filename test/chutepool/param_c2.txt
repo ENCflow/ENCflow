@@ -1,5 +1,5 @@
 !======================================================================
-! chutepool c2: 落差のあとの池へ落ち込む流れ(f_dry_head_cap = 2)
+! chutepool c2: 落差のあとの池へ落ち込む流れ(f_advection_donor・f_advection_bend・f_advection_lateral・f_dry_head_cap = 3・1・1・2)
 !   test/chichibu のデータ(100 m 格子)の列 285〜316・行 194〜214 を切り出した 32 × 21 セル。
 !   上流端の河道のセルに、2500 m3/s を 40 分まで、そのあと 150 分かけて 5000 m3/s まで上げ、20 分保つ。
 !   検定は Check_chutepool.py。入力 cp_*.txt は make_chutepool.py が作る
@@ -22,6 +22,9 @@
 
 &list_enc
   f_dry_head_cap = 2        ! 高い地盤へ向かうエッジ水深の頭打ち(この検定の対象)
+  f_advection_donor = 3     ! 流向面の風上の供給元(4 つの値の組み合わせは 4。ほかは 3)
+  f_advection_bend = 1      ! 流向面の中立の分(4 つの値の組み合わせは 2。ほかは 1)
+  f_advection_lateral = 1   ! 側方面で横から入る水の扱い(4 つの値の組み合わせは 2。ほかは 1)
 /
 
 &list_geoinfo

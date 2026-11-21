@@ -42,6 +42,7 @@ PORO = 0.4              # fluv_porosity
 DX = DY = 5.0
 DD = 0.001              # 限界水深 dd の既定
 MORFAC = 5.0            # param_flow の morfac
+TOL_UNI = 1.0e-8         # mild・steep: 汀線のセル以外の変化と、行の間の差の上限 (m。check_profile の注記)
 NX = 60
 
 failed = []
@@ -284,11 +285,15 @@ def check_profile(sd, zfile, tag, onshore):
     check(moved > 1.0, "%s: the swash moves sediment (%.3f m3)" % (tag, moved))
     check(abs(tot) < 1e-9 * max(moved, 1.0), "%s: sediment conserved (sum dz dA = %.1e m3)" % (tag, tot))
     # 地形の更新が汀線で作る小さな長波の流れが行の間にごく小さな差を生む(丸めの規模の非対称)。
-    # 汀線の法線がわずかに傾くと沿岸の流束が出て、沖隣のセルもごく小さく動く。1e-9 m まで許す
+    # 汀線の法線がわずかに傾くと沿岸の流束が出て、沖隣のセルもごく小さく動く。移流項の 4 つの値の組み合わせ
+    # (f_advection_donor = 4・f_advection_lateral = 2 ほか)では、側方 Neumann の境界面がその規則を使わないので、
+    # 汀線のように流れが急に変わる所で、境界の行と内側の行の間に決定的な差が出る(mild で 1.8e-9 m・汀線の
+    # セル以外で 4.4e-10 m。利用者ガイド advection.md §4.4 の限界。developer.md §113.9 (8))。TOL_UNI まで許す
+    # (今の値に余裕を見た回帰の上限。理論から出した値ではない)
     other = max(abs(dz[j][i]) for j in range(ny) for i in range(NX) if i not in (w, d))
-    check(other < 1e-9, "%s: only the shoreline cells change (others max |dz| = %.1e < 1e-9)" % (tag, other))
+    check(other < TOL_UNI, "%s: only the shoreline cells change (others max |dz| = %.1e < %.0e)" % (tag, other, TOL_UNI))
     spread = max(abs(dz[j][i] - dz[3][i]) for j in range(ny) for i in (w, d))
-    check(spread < 1e-9, "%s: uniform alongshore (row difference %.1e < 1e-9)" % (tag, spread))
+    check(spread < TOL_UNI, "%s: uniform alongshore (row difference %.1e < %.0e)" % (tag, spread, TOL_UNI))
     if onshore:
         check(dz[3][d] > 0.0 and dz[3][w] < 0.0, "%s: onshore (the dry cell gains, the wet cell loses)" % tag)
     else:

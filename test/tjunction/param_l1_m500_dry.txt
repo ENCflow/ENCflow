@@ -2,7 +2,8 @@
 ! tjunction l1_m500_dry: 1 セル幅の T 字の合流(本川 500 m3/s、支川 500 m3/s、乾いた岸)
 !   本川は行 13 を東へ、支川は列 40 の行 1〜12 を本川へ向かう。勾配 0.002、n = 0.03、格子幅 50 m。
 !   岸は河床より 30 m 高い地盤。流量は上流端のセルの湧き出しで与え、10 分で上げて一定にする。
-!   側方面で横から入る水の扱いは f_advection_lateral = 1(合流の損失を、岸の濡れによらずに数える)。
+!   側方面で横から入る水の扱いは f_advection_lateral = 1(合流の損失を、岸の濡れによらずに数える)。ほかの 3 つは古い値の組み合わせ
+!   (f_advection_donor = 3・f_advection_bend = 1・f_dry_head_cap = 3)。
 !   検定は Check_tjunction.py(合流の 1 セル上流の本川の水深を、1 次元の理論と比べる)。
 !   入力 tj_z.txt は make_tjunction.py が作る
 !======================================================================
@@ -34,7 +35,10 @@
 /
 
 &list_enc
+  f_advection_donor = 3
+  f_advection_bend = 1
   f_advection_lateral = 1
+  f_dry_head_cap = 3
 /
 
 &list_bound_edge

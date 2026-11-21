@@ -23,6 +23,14 @@ a dead-end bay, the water surface settles to a steady state with 1. With 0 it os
 the pond where the main stream enters straight (combined with `f_advection_lateral = 0` for the lateral
 faces, it keeps oscillating at every discharge).
 
+There are two groups of configurations. The old group (17 configurations) states the combination of the old
+values, 3, 1, 3, for the other three switches of the advection rules (`f_advection_donor`, `f_advection_lateral`,
+`f_dry_head_cap`) and compares 0 and 1 of `f_advection_bend`. The new group (17 configurations) uses the
+combination of the four values for deep, slow neighbouring cells (`f_advection_donor = 4`,
+`f_advection_lateral = 2`, `f_dry_head_cap = 4`) and compares 0 and 2 of `f_advection_bend` (2 is the rule of 1
+plus the acceleration from the arrival speed of the water, charged by an advection term in energy-head form;
+[Advection schemes](../../../docs/en/users_guide/advection.md) §4.4). The same items are judged in both groups.
+
 ## Rule
 
 The momentum-conserving advection (schemes 2 and 3) takes the velocity $`\bar u`$ on the face
@@ -164,6 +172,12 @@ meets the bank and turns east.
 | jt0 | `param_jt0.txt` | junction pond; main stream enters straight (jtee) | 0 (`f_advection_lateral = 0` is also set) | the water surface keeps oscillating (record of the combination of 0 with 0 for the lateral faces) |
 | jt1 | `param_jt1.txt` | same | 1 | the water surface settles to a steady state |
 
+The table above is the old group. The configurations of the new group are named with an n appended to the
+configurations of 0 (`st0n`, `dg0n`, `sr0n`, `pf0n`, `pb0n`, `wd0n`, `jp0n`, `jt0n`) and with the 1 of the
+configurations of 1 replaced by 2 (`st2`, `dg2`, `sr2`, `ps2`, `pf2`, `pb2`, `wd2`, `jp2`, `jt2`;
+`f_advection_bend = 2`). Every configuration states all four switches of the advection rules (none depends on the
+defaults).
+
 ## Theory (one-dimensional, steady; wide rectangular section, Manning)
 
 A flow of discharge $`q`$ per unit width passes through the critical depth
@@ -236,6 +250,12 @@ interpolated linearly between the cell centres of the lower pond, becomes 1.
     faces): the depth range of A exceeds 0.3 m in all three stages (record of the behaviour of this combination).
 23. jt1: the depth range in the four pond cells is 0.10 m or less in all three stages (steady).
 
+The new group (`Check_brink.py new`) judges items 1–23 with the configurations of 0 read as those with an n
+appended and the configurations of 1 read as those of 2. The limits are the same, except 0.20 m for item 21 (jp2
+is 0.05–0.15 m deeper than jp0n: the acceleration at the outlet of the pond, where two inflows join and leave
+faster, charged by the energy-head term of 2; the water surface stays steady. This is an upper bound for
+regression with a margin over the present values, not derived from theory).
+
 ## Results
 
 | Item | Value (in the order of the three discharge stages) | Verdict |
@@ -305,6 +325,22 @@ Mean depth and its range (in brackets) in the junction pond over the last 10 min
 | jt1 | 60 + 150 | 1.90 (0.01) | 2.10 (0.01) | 1.87 (0.01) | 1.66 (0.00) |
 | | 130 + 450 | 3.30 (0.00) | 3.77 (0.00) | 3.29 (0.00) | 2.74 (0.00) |
 | | 250 + 450 | 3.55 (0.00) | 4.25 (0.00) | 3.68 (0.00) | 3.12 (0.00) |
+
+New group (combination of the four values; all pass):
+
+- **The straight channel (st2) has exactly the same depths as st0n** (item 5; difference 0). A cell where the
+  discharge is given by a source is treated like a stage-prescribed cell: the acceleration from rest is not
+  counted (developer.md §113.9 (9)).
+- The energy head on the apron of the channel shifted diagonally just before the overfall (dg2) is 2.8–3.5 m
+  below the pond (item 6), while dg0n with 0 exceeds it by +8.6, +19.5 and +29.5 m (item 9). The hydraulic jump in
+  the pond below the drop stands at 104, 218 and 347 m in the straight channel (ps2), at 125, 213 and 328 m with
+  a diagonal link just after the foot (pf2), and at 39–47 m with a diagonal link just before the drop (pb2), as in
+  the old group (items 12, 15 and 17). The depths in the uniform flow in the stepped channel (sr2) and in the
+  channel two cells wide (wd2) are the same as with 0 (items 10 and 19).
+- In the junction ponds, the pond where the main stream enters diagonally (jp2) is 0.05–0.15 m deeper than jp0n
+  (item 21), and the pond where it enters straight (jt2) is steady (range at most 0.005 m; cell A at 120 minutes is
+  3.08 m, 0.47 m shallower than the 3.55 m of jt1 in the old group). jt0n, with 0 and lateral 0, keeps
+  oscillating as in the old group (range in cell A 0.45, 0.78 and 1.31 m).
 
 ## How to read it, and limits
 
@@ -381,7 +417,7 @@ Mean depth and its range (in brackets) in the junction pond over the last 10 min
 
 ```
 make
-./Run.sh            # serial (about 20 s for the seventeen runs)
+./Run.sh            # serial (about 40 s for the thirty-four runs)
 ./Run_MPI.sh 2      # MPI
 ```
 

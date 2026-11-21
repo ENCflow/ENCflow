@@ -1,0 +1,66 @@
+!======================================================================
+! chutepool c4: 落差のあとの池へ落ち込む流れ(f_advection_donor・f_advection_bend・f_advection_lateral・f_dry_head_cap = 4・2・2・4)
+!   test/chichibu のデータ(100 m 格子)の列 285〜316・行 194〜214 を切り出した 32 × 21 セル。
+!   上流端の河道のセルに、2500 m3/s を 40 分まで、そのあと 150 分かけて 5000 m3/s まで上げ、20 分保つ。
+!   検定は Check_chutepool.py。入力 cp_*.txt は make_chutepool.py が作る
+!======================================================================
+&list_sysparam
+  f_gridsystem = 0
+  dt = 2.5
+  t0 = 0
+  tt = 12600
+  dt_disp = 3600
+  dt_file = 12600
+  dt_recrd = 10
+  fn_geoinfo = '-'
+  fn_boundary = '-'
+  fn_record = '-'
+  fn_enc = '-'
+  dir_result = 'result_c4'
+  f_out_h = 1
+/
+
+&list_enc
+  f_dry_head_cap = 4        ! 高い地盤へ向かうエッジ水深の頭打ち(この検定の対象)
+  f_advection_donor = 4     ! 流向面の風上の供給元(4 つの値の組み合わせは 4。ほかは 3)
+  f_advection_bend = 2      ! 流向面の中立の分(4 つの値の組み合わせは 2。ほかは 1)
+  f_advection_lateral = 2   ! 側方面で横から入る水の扱い(4 つの値の組み合わせは 2。ほかは 1)
+/
+
+&list_geoinfo
+  nx = 32
+  ny = 21
+  dx = 100.0
+  dy = 100.0
+  f_ztype = 1
+  fn_z = 'cp_z.txt'
+  f_masktype = 1
+  fn_mask = 'cp_mask.txt'
+  fn_rw = 'cp_rw.txt'      ! 河道マスク
+  f_rntype = 0
+  rn0 = 0.15               ! 斜面の粗度
+  rn0_rw = 0.02            ! 河道マスクのセルの粗度
+/
+
+&list_bound_edge
+  f_bc_n = 1                ! 北辺は自由流出(本川の出口)
+/
+
+&list_bound_source
+  src_cell(:,1,1) = 1, 7      ! 上流端の河道のセル(時刻は分)
+  src_val(:,1,1) = 0, 0.0
+  src_val(:,2,1) = 5, 2500.0
+  src_val(:,3,1) = 40, 2500.0
+  src_val(:,4,1) = 190, 5000.0
+  src_val(:,5,1) = 210, 5000.0
+/
+
+&list_record
+  pbxytype = 0
+  pbxy(:,1) = 9, 15
+  pbxy(:,2) = 10, 15
+  pbxy(:,3) = 10, 14
+  pbxy(:,4) = 12, 13
+  flxytype = 0
+  flxy(:,1) = 12, 14, 12, 11   ! 池の中の測線
+/

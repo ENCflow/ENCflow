@@ -28,7 +28,10 @@
 /
 
 &list_enc
-  f_advection_bend = 1      ! 供給元が壁・乾床の流向面の風上値(0: u_e、1: 経路の値)
+  f_advection_bend = 1      ! 供給元が壁・乾床の流向面の風上値(0: u_e、1: 経路の値、2: 1 + エネルギー形の移流項)
+  f_advection_donor = 3     ! 残りは、古い値の組み合わせ(3・1・1・3)の値
+  f_advection_lateral = 1
+  f_dry_head_cap = 3
 /
 
 &list_geoinfo

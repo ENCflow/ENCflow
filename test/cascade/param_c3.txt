@@ -1,5 +1,5 @@
 !======================================================================
-! cascade c3: 急な段々の河道(f_dry_head_cap = 3、f_advection_lateral = 0)
+! cascade c3: 急な段々の河道(f_advection_donor・f_advection_bend・f_advection_lateral・f_dry_head_cap = 3・1・0・3)
 !   test/chichibu の 50 m 格子のデータの列 603〜645・行 364〜418 を切り出した 43 × 55 セル。
 !   上流端の河道のセルに、2000 m3/s を 20 分まで、そのあと 120 分かけて 8000 m3/s まで上げ、30 分保つ。
 !   検定は Check_cascade.py。入力 cs_*.txt は make_cascade.py が作る
@@ -24,6 +24,8 @@
 &list_enc
   f_dry_head_cap = 3        ! 高い地盤へ向かうエッジ水深の頭打ち(この検定の対象)
   f_advection_lateral = 0   ! 側方面で横から入る水の扱い
+  f_advection_donor = 3     ! 流向面の風上の供給元(4 つの値の組み合わせは 4。ほかは 3)
+  f_advection_bend = 1      ! 流向面の中立の分(4 つの値の組み合わせは 2。ほかは 1)
 /
 
 &list_geoinfo

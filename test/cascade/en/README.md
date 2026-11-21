@@ -10,14 +10,17 @@ discharge is given at the upstream-end cell with zero velocity, so the head of a
 $`z + h + V^2/2g`$, should not exceed the water level in the cell where the discharge is given (energy does not
 increase along the flow). The test looks at how far the "bed elevation plus the velocity head of the maximum
 velocity over the run" in each cell exceeds the water level in the cell where the discharge is given. Its
-subjects are the cap on the edge depth of the continuity equation (`f_dry_head_cap` in `&list_enc`) and the
-treatment of water entering through side faces (`f_advection_lateral`)
+subjects are the cap on the edge depth of the continuity equation (`f_dry_head_cap` in `&list_enc`), the
+treatment of water entering through side faces (`f_advection_lateral`), and the combination of the four values
+for deep, slow neighbouring cells (`f_advection_donor = 4`, `f_advection_bend = 2`, `f_advection_lateral = 2`,
+`f_dry_head_cap = 4`)
 ([The cap on the edge depth toward higher ground](../../../docs/en/users_guide/dry_head_cap.md), §4.4 of
-[Advection schemes](../../../docs/en/users_guide/advection.md), developer.md §110.29 and §110.30).
+[Advection schemes](../../../docs/en/users_guide/advection.md), developer.md §110.29, §110.30 and §113.9).
 
-**With `f_dry_head_cap = 3` (the default) the excess is within 5 m, about the same as on a terrain whose banks are
-turned into walls. With 2 (the default until 2026-11-16) the head exceeds it by 45 m when the banks are dry (recorded
-as a limit of 2).**
+**With `f_dry_head_cap = 3` (the default) and with the combination of the four values the excess is within 5 m,
+and does not exceed the value on a terrain whose banks are turned into walls (5.7 m for the configurations of 3,
+8.8 m for the combination of the four values). With 2 (the default until 2026-11-16) the head exceeds it by 45 m
+when the banks are dry (recorded as a limit of 2).**
 
 ## Setup
 
@@ -46,19 +49,24 @@ The discharge is given by a source in cell (606, 415): 2,000 m³/s is held until
 the main channel). The transect is column 626 (rows 368–378), crossing the reach with the bed at 290.5 m, and is
 recorded every 10 seconds.
 
-| Configuration | File | f_dry_head_cap | f_advection_lateral |
-|---|---|---:|---:|
-| c2 | `param_c2.txt` | 2 | 0 |
-| c3 | `param_c3.txt` | 3 | 0 |
-| c3j | `param_c3j.txt` | 3 | 1 |
+| Configuration | File | f_dry_head_cap | f_advection_lateral | f_advection_donor | f_advection_bend |
+|---|---|---:|---:|---:|---:|
+| c2 | `param_c2.txt` | 2 | 0 | 3 | 1 |
+| c3 | `param_c3.txt` | 3 | 0 | 3 | 1 |
+| c3j | `param_c3j.txt` | 3 | 1 | 3 | 1 |
+| c4 | `param_c4.txt` | 4 | 2 | 4 | 2 |
+
+Every configuration states all four switches of the advection rules (none depends on the defaults). c2, c3 and
+c3j change only `f_dry_head_cap` and `f_advection_lateral` of the combination of the old values (3, 1, 1, 3); c4 is
+the combination of the four values.
 
 ## Check items (Check_cascade.py)
 
 Items that are judged:
 
-1. Mass balance (all three configurations): the mean discharge at the transect over the last 10 minutes is
+1. Mass balance (all four configurations): the mean discharge at the transect over the last 10 minutes is
    within ±1 % of the given discharge, 8,000 m³/s.
-2. The maximum excess (c3 and c3j) is below 10 m. The excess is "bed elevation plus the velocity head of the
+2. The maximum excess (c3, c3j and c4) is below 10 m. The excess is "bed elevation plus the velocity head of the
    maximum velocity over the run" in each cell minus the maximum water level over the run in the cell where the
    discharge is given (cells whose maximum depth over the run is at least 0.5 m, including cells outside the
    river mask). The depth is not counted, so this is a lower bound of the excess of the head. The limit of 10 m
@@ -77,6 +85,7 @@ Items that are recorded:
 | c2 (cap 2, side faces 0) | 7,998 | 368.3 | +45.1 | (629, 371) (290.5 m, 49.1 m/s) | 49.1 |
 | c3 (cap 3, side faces 0) | 7,979 | 369.5 | +4.4 | (615, 408) (372.4 m, 5.4 m/s) | 36.5 |
 | c3j (cap 3, side faces 1) | 7,980 | 368.8 | +4.9 | (618, 400) (336.1 m, 27.1 m/s) | 38.4 |
+| c4 (combination of the four values) | 7,999 | 370.1 | +4.5 | (618, 400) (336.1 m, 27.5 m/s) | 27.5 |
 
 - **With 2, when the banks are dry, the head exceeds the water level at the upstream end by a large amount.**
   It does so in the reaches with the bed at 290.5–312.8 m, where 7 cells exceed it by 10 m or more. The drop
@@ -87,11 +96,18 @@ Items that are recorded:
   ((615, 408); bed 372.4 m; 0.6 m of water climbs onto it; +4.4 to 4.8 m), and one cell beside the upstream flat
   reach (+0.1 to 0.6 m). The maximum velocity in the reach with the bed at 290.5–293.8 m is 36–38 m/s, with no
   excess.
-- **Even when the bank cells are turned into walls, it exceeds it by 5.7 m.** On a terrain where the cells
-  outside the river mask are raised by 300 m (no run-up onto banks), the maximum excess is +5.7 m in all three
-  configurations (cell (620, 399) at the foot of the reach of successive drops; 33.5 m/s). The values of 3 are
-  about the same as this value (this run is not included in Run.sh). The large excess of 2 appears where the
-  supercritical flow runs up onto low banks and returns to the channel.
+- **With the combination of the four values, the maximum velocity in the domain falls to 27.5 m/s** (36–38 m/s
+  with the configurations of 3). The maximum excess is +4.5 m, in the same cell (618, 400) as with c3j (the
+  acceleration of edges whose inertia is not counted is charged by the advection term in energy-head form from
+  the arrival speed of the water; §4.4 of [Advection schemes](../../../docs/en/users_guide/advection.md)).
+- **Even when the bank cells are turned into walls, it is exceeded.** On a terrain where the cells outside the
+  river mask are raised by 300 m (no run-up onto banks), the maximum excess is +5.7 m with c2, c3 and c3j and
+  +8.8 m with c4 (in every case cell (620, 399) at the foot of the reach of successive drops; 33.4–33.5 m/s). With
+  c4 the velocity at the foot is the same and the maximum water level in the cell where the discharge is given is
+  3.6 m lower (378.0 m; 381.6 m in the others), so the excess is larger. The values of the configurations of 3
+  (+4.4 to 4.9 m) are about the same as the value with walls, and the value of the combination of the four values
+  (+4.5 m) is smaller than its value with walls (this run is not included in Run.sh). The large excess of 2
+  appears where the supercritical flow runs up onto low banks and returns to the channel.
 - **When the banks are wet from rain, 2 does not exceed it either.** With rain (20 mm/h) added to the same run,
   the maximum velocity of c2 is 24 m/s and there is no excess (`f_advection_lateral = 0` uses the slow velocity
   of the water film on the banks as the velocity of the water entering from the side, which brakes the flow in
@@ -121,7 +137,7 @@ Items that are recorded:
 
 ```bash
 make
-./Run.sh          # serial (3 configurations; about 20 seconds)
+./Run.sh          # serial (4 configurations; about 30 seconds)
 ./Run_MPI.sh 2    # MPI (with np = 2 and 4 a band boundary crosses the channel)
 ```
 
@@ -129,8 +145,8 @@ make
 
 - The terrain is part of the 50 m grid data of [test/chichibu](../../chichibu/en/README.md) (for the origin of
   the elevation data see [tutorials/chichibu](../../../tutorials/chichibu/en/README.md)).
-- The rule of the cap on the edge depth (`f_dry_head_cap`) and the treatment of side faces
-  (`f_advection_lateral`) are ENCflow's own
+- The rule of the cap on the edge depth (`f_dry_head_cap`), the treatment of side faces
+  (`f_advection_lateral`) and the combination of the four values are ENCflow's own
   ([The cap on the edge depth toward higher ground](../../../docs/en/users_guide/dry_head_cap.md) and §4.4 of
   [Advection schemes](../../../docs/en/users_guide/advection.md) in the users guide). That the head of a
   steady flow with losses does not increase along the flow (Bernoulli's theorem and head loss) is standard

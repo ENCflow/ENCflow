@@ -6,14 +6,14 @@
   セルの水位を超えないはず(エネルギーは流れに沿って増えない)。各セルの「河床 + 期間最大流速の速度水頭」
   (水深を数えない、水頭の下限)が、流量を与えるセルの期間最大の水位を超える分(超過)を見る。
 
-  エッジ水深の頭打ち f_dry_head_cap と側方面の扱い f_advection_lateral の組み合わせで 3 構成
-  (c2 = 2・0、c3 = 3・0、c3j = 3・1)。射流が低い岸へ乗り上げて河道へ戻る所で、乗り上げの数え方によって
-  超過が出る(README)。3 は、岸を壁にした地形と同じ程度に収まる。2 は、岸が乾いていると大きく超える
-  (2 の限界として記録)。
+  移流項の規則の 4 つのスイッチ(f_advection_donor・f_advection_bend・f_advection_lateral・f_dry_head_cap)を全部
+  明示した 4 構成(c2 = 3・1・0・2、c3 = 3・1・0・3、c3j = 3・1・1・3、c4 = 4・2・2・4 = 4 つの値の組み合わせ)。
+  射流が低い岸へ乗り上げて河道へ戻る所で、乗り上げの数え方によって超過が出る(README)。頭打ち 3・4 は、岸を
+  壁にした地形と同じ程度に収まる。2 は、岸が乾いていると大きく超える(2 の限界として記録)。
 
   判定する項目:
-    (1) 質量の収支(3 構成とも): 終わりの 10 分の下流の測線の流量の平均が、与えた流量に ±TOL_MASS
-    (2) 超過の最大(c3・c3j): TOL_EXCESS 未満(河道マスクの外のセルを含む。期間最大水深が H_WET 以上のセル)
+    (1) 質量の収支(4 構成とも): 終わりの 10 分の下流の測線の流量の平均が、与えた流量に ±TOL_MASS
+    (2) 超過の最大(c3・c3j・c4): TOL_EXCESS 未満(河道マスクの外のセルを含む。期間最大水深が H_WET 以上のセル)
   記録する項目:
     (2) c2 の超過の最大と、その場所・流速
     (3) 期間最大流速の最大と、その場所
@@ -28,7 +28,7 @@ from make_cascade import CASES, IX0, IY0, SOURCE, Q_HI, T_END
 GG = 9.8                 # 速度水頭に使う重力加速度 (m/s2。計算の既定と同じ)
 TOL_MASS = 0.01          # (1) 終わりの 10 分の流量の平均の、与えた流量からの相対差
 H_WET = 0.5              # (2) 超過を見るセルの、期間最大水深の下限 (m)
-JUDGE = ("c3", "c3j")    # (2) を判定する構成(c2 は記録)
+JUDGE = ("c3", "c3j", "c4")    # (2) を判定する構成(c2 は記録)
 TOL_EXCESS = 10.0        # (2) 超過の上限 (m。岸を壁にした地形の値 5.7 m の 2 倍弱)
 
 
@@ -52,9 +52,10 @@ def main():
 
     z = read("cs_z.txt")
     si, sj = SOURCE
-    for name, (cap, lat) in CASES.items():
+    for name, (don, bend, lat, cap) in CASES.items():
         d = "result_%s" % name
-        print("-- f_dry_head_cap = %d、f_advection_lateral = %d(%s)" % (cap, lat, name))
+        print("-- f_advection_donor・f_advection_bend・f_advection_lateral・f_dry_head_cap = %d・%d・%d・%d(%s)"
+              % (don, bend, lat, cap, name))
         fl = read(os.path.join(d, "fluxes", "flux0001.csv"))
         last = [abs(r[2]) for r in fl if r[1] >= T_END - 10.0]
         qm = sum(last) / len(last)

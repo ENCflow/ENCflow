@@ -3470,11 +3470,11 @@
     {
       "source": "test/bankcap/README.md",
       "target": "test/bankcap/en/README.md",
-      "source_sha256": "404498ee12bf326ae822dd6038a2ececc127f3c3ba41a1887ceb14f8bf596426",
-      "target_sha256": "ca50d1d5e862db7869c47c2b890617cc25c47162096eb880dc7003c784e1e7f8",
-      "reviewer": "Claude (Claude Code session; full-text content and lexical review, no model execution)",
+      "source_sha256": "c99fe702e810c9f58f530da797a849167cbf5c1e003828517450f86b77864fd8",
+      "target_sha256": "aa3bf63a29896484c2a4d0e4db91be7f2b4158b15d969a710da19d422641d96b",
+      "reviewer": "Claude (Claude Code session; changed sections compared side by side with the Japanese source; numbers checked against the test runs)",
       "method": "assistant",
-      "reviewed_on": "2026-11-17"
+      "reviewed_on": "2026-11-21"
     },
     {
       "source": "test/bankface/README.md",
@@ -3488,11 +3488,11 @@
     {
       "source": "test/bankspill/README.md",
       "target": "test/bankspill/en/README.md",
-      "source_sha256": "3df47d693d9c1a470b66a0b39c55d0a8e2b517b93354ce82ec220a6438cc1d4a",
-      "target_sha256": "6e97acda8b33c65228cf49c986b3c7a2cf2841cce03e0ea6d6dd7a3686deae26",
-      "reviewer": "Claude (Claude Code session; full-text content and lexical review, no model execution)",
+      "source_sha256": "1a8a95d8129ad38338dcae78bf3b3e7b26dee556bb932ed9436eb721d7115336",
+      "target_sha256": "242c7bdda19d5a9bac3bc4ef4b90f65231f3183c444b07e65e88d55fb6186b5c",
+      "reviewer": "Claude (Claude Code session; changed sections compared side by side with the Japanese source; numbers checked against the test runs)",
       "method": "assistant",
-      "reviewed_on": "2026-11-17"
+      "reviewed_on": "2026-11-21"
     },
     {
       "source": "test/bedfines/README.md",
@@ -3623,20 +3623,20 @@
     {
       "source": "test/brink/README.md",
       "target": "test/brink/en/README.md",
-      "source_sha256": "c2ee7402091057ab84250e1aa593b6fbd2350df368302516a98b7b1be1188cd0",
-      "target_sha256": "e0f2f9794af8ac01c855119602562755a9d9d6ee7676ad5bcfa28b42ff3718a7",
-      "reviewer": "Claude (Claude Code session; full-text content and lexical review, no model execution)",
+      "source_sha256": "4350778592f6cd878dfb219247e3439906bf012db70ba64f480cf31b63f46098",
+      "target_sha256": "3fc1c967dfaec96faa8528d7e24678a10452c5f2f165885e2f98929cc69b67fc",
+      "reviewer": "Claude (Claude Code session; changed sections compared side by side with the Japanese source; numbers checked against the test runs)",
       "method": "assistant",
-      "reviewed_on": "2026-11-17"
+      "reviewed_on": "2026-11-21"
     },
     {
       "source": "test/cascade/README.md",
       "target": "test/cascade/en/README.md",
-      "source_sha256": "a9b68edf6ceb13cfe91cdf0e037e95874ea8089be2ce576a66af3e286e43fa24",
-      "target_sha256": "8d407b0ffc484e81ebcb1b580fdfb87f21ca5741a6f7543aed4aa2db5158e980",
-      "reviewer": "Claude (Claude Code session; full-text content and lexical review, no model execution)",
+      "source_sha256": "c79515e8bd5f85f216ece8b3ad6c70c876718f994c30027b21a90a106543ee42",
+      "target_sha256": "bc7457eeaedcc7720b9d17211803c228f75a6744465465bf61e7154a93e00d0e",
+      "reviewer": "Claude (Claude Code session; changed sections compared side by side with the Japanese source; numbers checked against the test runs)",
       "method": "assistant",
-      "reviewed_on": "2026-11-18"
+      "reviewed_on": "2026-11-21"
     },
     {
       "source": "test/chichibu/README.md",
@@ -3713,11 +3713,11 @@
     {
       "source": "test/chutepool/README.md",
       "target": "test/chutepool/en/README.md",
-      "source_sha256": "8f4944d33fdabc52da35b554a15d5b41fac989bb45c7aa30157840f123994b0c",
-      "target_sha256": "42272c70269cc798c2a9c9be9a2ec32c3554e7c0514ed62384c4caff1bd71047",
-      "reviewer": "Claude (Claude Code session; full-text content and lexical review, no model execution)",
+      "source_sha256": "ecdd7b32621e7a5ddf7eeb27b52eb4e9084e6c700706a8cd013e76cf8e66ad00",
+      "target_sha256": "2d9377c6acc7ed1434aab5282e987571c2d501e6ee1427c7bb1244bce6f33ef2",
+      "reviewer": "Claude (Claude Code session; changed sections compared side by side with the Japanese source; numbers checked against the test runs)",
       "method": "assistant",
-      "reviewed_on": "2026-11-17"
+      "reviewed_on": "2026-11-21"
     },
     {
       "source": "test/coastal_drain/README.md",
@@ -4739,11 +4739,11 @@
     {
       "source": "test/stairbank/README.md",
       "target": "test/stairbank/en/README.md",
-      "source_sha256": "91ed348a853f2207ec3d74c76ba1c4d70b1f2d88ba673d0d06c45cf0216de717",
-      "target_sha256": "dc9da6f0d5ae633236c7a4c21d3044202404c22e833ea371e6af4f480053f757",
-      "reviewer": "Claude (Claude Code session; full-text content and lexical review, no model execution)",
+      "source_sha256": "e8f8bdce208aa556d926acb56af8912c2a1ebb1af42a6abba5ef7e6da9740d1c",
+      "target_sha256": "8d8a3826d6389583a75efa73303ce6b50efb6ecbd5c2bb298c009181766cd44b",
+      "reviewer": "Claude (Claude Code session; changed sections compared side by side with the Japanese source; numbers checked against the test runs)",
       "method": "assistant",
-      "reviewed_on": "2026-11-20"
+      "reviewed_on": "2026-11-21"
     },
     {
       "source": "test/steepwave/README.md",
@@ -4856,11 +4856,11 @@
     {
       "source": "test/tjunction/README.md",
       "target": "test/tjunction/en/README.md",
-      "source_sha256": "3c33a756549ef38c7fc522df099f339144a5b29452cc29049774b0fdbdcc79a6",
-      "target_sha256": "4f06b60ca782bd3ab4dfbd2c91c997f7f12fe4029b0b8c93ff58b7fe07732a92",
-      "reviewer": "Claude (Claude Code session; full-text content and lexical review, no model execution)",
+      "source_sha256": "bbe651481cbfe6ae4a1b247c0642939e28904b2d5f7cf83db4f006fccd6a3ea7",
+      "target_sha256": "c4ff419e2aac0b879b338de8a7841461a36b3c60b2b7f4b94fba0e350bfac312",
+      "reviewer": "Claude (Claude Code session; changed sections compared side by side with the Japanese source; numbers checked against the test runs)",
       "method": "assistant",
-      "reviewed_on": "2026-11-20"
+      "reviewed_on": "2026-11-21"
     },
     {
       "source": "test/tracer/README.md",
@@ -5054,11 +5054,11 @@
     {
       "source": "test/wetbank/README.md",
       "target": "test/wetbank/en/README.md",
-      "source_sha256": "635ff133d6cc34b4bba44b401e47310617b48f5cc048aa6c2ed2aa84cdac0d76",
-      "target_sha256": "f23c8f81141cfbc5c3fa8cc21399e9f129fe0dd0c0d44970b9feaef3ecfb6642",
-      "reviewer": "Claude (Claude Code session; full-text content and lexical review, no model execution)",
+      "source_sha256": "9a6ab59ff193380cdbb94f2c2e67c37f40bf96f0d7bd51e726037705ce58aa80",
+      "target_sha256": "16c965e3eb149505c3bf0756b9229485d4d9825d1028443508576e9e24818fe5",
+      "reviewer": "Claude (Claude Code session; changed sections compared side by side with the Japanese source; numbers checked against the test runs)",
       "method": "assistant",
-      "reviewed_on": "2026-11-17"
+      "reviewed_on": "2026-11-21"
     },
     {
       "source": "test/wetlw/README.md",
@@ -5126,11 +5126,11 @@
     {
       "source": "test/wfswash/README.md",
       "target": "test/wfswash/en/README.md",
-      "source_sha256": "06b16ac88385ad7b5c9615bbf10909390c9e1e376f8a6522d1245d5e2cef7e0a",
-      "target_sha256": "3e3f0eca66bf20a016d2af14b799543a1044543c4aae192e8c1a499bd9febbe2",
-      "reviewer": "Claude (Claude Code session; rerun of 2026-11-10 with the current defaults: the round-off values of items 1, 4 and 8 written as bounds and the measured 2.5e-6 of item 6 compared line by line against the Japanese source; the rest unchanged since the previous record)",
+      "source_sha256": "1bde2da4ab7b9834e93e3ad318abf2423c25f0dd4e6541c41f15cbb6afa9f848",
+      "target_sha256": "89ad0e9ed97af7f9f7df8d8faa44eb4a1b7f98a97ac5ea248aa782cb04f1f708",
+      "reviewer": "Claude (Claude Code session; changed sections compared side by side with the Japanese source; numbers checked against the test runs)",
       "method": "assistant",
-      "reviewed_on": "2026-11-10"
+      "reviewed_on": "2026-11-21"
     },
     {
       "source": "test/wqbound/README.md",

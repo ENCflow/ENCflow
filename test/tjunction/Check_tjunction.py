@@ -2,7 +2,8 @@
 """test/tjunction の検定: 1 セル幅の T 字の合流の、合流の 1 セル上流の本川の水深を 1 次元の理論と比べる。
 
   2 つの形(格子の軸に沿う合流 ax、格子に対して 45° 回した合流 rot)を、側方面の合流の規則
-  f_advection_lateral = 0 と 1(ほかは既定)と、4 つの値の組み合わせ(f_advection_donor = 4・f_advection_bend = 2・
+  f_advection_lateral = 0 と 1(ほかの 3 つは古い値の組み合わせ f_advection_donor = 3・f_advection_bend = 1・
+  f_dry_head_cap = 3 を明示)と、4 つの値の組み合わせ(f_advection_donor = 4・f_advection_bend = 2・
   f_advection_lateral = 2・f_dry_head_cap = 4。深くて遅い隣のセルの扱い)で見る(6 つの組 × 3 つの流量比 ×
   乾いた岸・濡れた岸)。
 

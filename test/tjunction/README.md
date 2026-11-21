@@ -43,7 +43,8 @@
 | `rl1_` | 45° 回した合流 | `f_advection_lateral = 1` |
 | `rc4_` | 45° 回した合流 | 4 つの値の組み合わせ |
 
-`f_advection_lateral = 0`・`1` の組は、ほかの値が既定です。
+`f_advection_lateral = 0`・`1` の組は、ほかの 3 つに古い値の組み合わせ(`f_advection_donor = 3`・`f_advection_bend = 1`・
+`f_dry_head_cap = 3`)を明示しています。どの組も、4 つのスイッチを全部明示しています(既定によりません)。
 
 | 流量比 | 本川・支川の流量 (m³/s) |
 |---|---|

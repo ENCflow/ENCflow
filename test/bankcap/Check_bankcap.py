@@ -27,6 +27,10 @@
 #   構成 6・7・8(result_wet3・result_dry3・result_cross3。f_dry_head_cap = 3): 構成 1 の (1)〜(3)、
 #     構成 3 の (5)(6)、構成 5 の (8)〜(10) と同じ項目(3 は境目のつなぎを持たないが、頭打ちの値が 0 から
 #     連続に立ち上がるので (8) を満たす)
+#   構成 9・10・11(result_wet4・result_dry4・result_cross4。4 つの値の組み合わせ f_advection_donor・
+#     f_advection_bend・f_advection_lateral・f_dry_head_cap = 4・2・2・4): 構成 6・7・8 と同じ項目。(10) の
+#     余裕だけ MARGIN4(頭打ちが数える速度水頭の上限 = 河道の流れの、斜めの辺の向きの成分の速度水頭)
+#   構成 1〜8 の、移流項の残りの 3 つ(f_advection_donor・f_advection_bend・f_advection_lateral)は 3・1・1(明示)
 import sys, os
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 from make_bankcap import NX, DX, J_FP2, J_CH1, J_CH2, H0, U0, FILM, D_BANK, G
@@ -37,7 +41,9 @@ I1, I2 = 21, 60                   # (6) 河道の水深を平均する列(x = 10
 TOL_D2 = 2.0                      # (8) 毎ステップの流量の 2 階差分の上限 (m3/s)
 T_SKIP = 60.0                     # (8) 初めの過渡を除く時間 (s)
 Q_OVER = 3.0                      # (9) 水位が河岸より高い間の平均の流量の下限 (m3/s)
-MARGIN = 0.3                      # (10) 河岸の地盤からの余裕 (m)
+MARGIN = 0.3                      # (10) 河岸の地盤からの余裕 (m。構成 5・8)
+MARGIN4 = 0.41                    # (10) 同(構成 11。河道の流れの、斜めの辺の向きの成分の速度水頭 = 頭打ちが数える上限。
+                                  #   河岸へ水が載り始めるころの河道の流速 4.0 m/s で 0.41〜0.42 m)
 
 
 def load(rdir, name):
@@ -81,12 +87,12 @@ def main():
     print("河道: 等流水深 H0 = %.3f m、流速 %.3f m/s(流速水頭 %.2f m)。河岸の地盤は河道の水位より %.2f m 高い。"
           "水膜 FILM = %g m" % (H0, U0, U0 * U0 / (2.0 * G), D_BANK - H0, FILM))
     res = {}
-    for tag in ("wet2", "wet1", "wet3"):
+    for tag in ("wet2", "wet1", "wet3", "wet4"):
         fr = frames("result_" + tag)
         hm = load("result_" + tag, "H9999")
         res[tag] = dict(bmax=bank_max(hm), bend=bank_max(fr[-1]), vol=[fp_volume(h) for h in fr],
                         hch=channel_depth(fr[-1]))
-    for tag, cap in (("wet2", 2), ("wet3", 3)):
+    for tag, cap in (("wet2", 2), ("wet3", 3), ("wet4", 4)):
         r = res[tag]
         g1 = r["bmax"] <= FILM + TOL_FILM
         g2 = r["bend"] < 0.5 * FILM
@@ -103,11 +109,12 @@ def main():
     g4 = r1["bmax"] > 2.0 * FILM
     print("(4) f_dry_head_cap = 1: 河岸の列の期間最大水深 %.4f m、終了時 %.4f m (期間最大 > %.4f = 河道の水が登る) : %s"
           % (r1["bmax"], r1["bend"], 2.0 * FILM, "PASS" if g4 else "FAIL"))
-    print("    参考: 河道の水深(x = 100〜300 m の平均) f_dry_head_cap = 2 で %.3f m、1 で %.3f m、3 で %.3f m"
+    print("    参考: 河道の水深(x = 100〜300 m の平均) f_dry_head_cap = 2 で %.3f m、1 で %.3f m、3 で %.3f m、"
+          "4 つの値の組み合わせで %.3f m"
           "(濡れた河岸の構成では、自由流出の下流端へ向かって水面が下がり、等流水深と一致しない。この検定の対象外)"
-          % (r["hch"], r1["hch"], res["wet3"]["hch"]))
+          % (r["hch"], r1["hch"], res["wet3"]["hch"], res["wet4"]["hch"]))
     ok = ok and g4
-    for tag in ("dry2", "dry1", "dry3"):
+    for tag in ("dry2", "dry1", "dry3", "dry4"):
         fr = frames("result_" + tag)
         hm = load("result_" + tag, "H9999")
         fpmax = max(max(hm[j]) for j in range(J_FP2))
@@ -117,8 +124,8 @@ def main():
         print("(5)(6) %s: 氾濫原の期間最大水深 %.1e m (= 0)、河道の水深 %.4f m / H0 = %.4f (1 ± %.2f) : %s"
               % (tag, fpmax, hch, hch / H0, TOL_H, "PASS" if (g5 and g6) else "FAIL"))
         ok = ok and g5 and g6
-    # 構成 5・8: 河道の水位に河岸の高さを横切らせる(毎ステップの記録)
-    for tag in ("cross", "cross3"):
+    # 構成 5・8・11: 河道の水位に河岸の高さを横切らせる(毎ステップの記録)
+    for tag, margin in (("cross", MARGIN), ("cross3", MARGIN), ("cross4", MARGIN4)):
         rd = "result_" + tag
         _, fl = series(rd + "/fluxes/flux0001.csv")
         hc, pc = series(rd + "/probes/probe0001.csv")         # 河岸に接する河道のセル
@@ -132,7 +139,7 @@ def main():
         over = [qq for qq, g in zip(q, gap) if g < 0.0]
         qover = sum(over) / len(over) if over else 0.0
         t_over = [tt for tt, g in zip(t, gap) if g < 0.0]
-        i_near = next((i for i, g in enumerate(gap) if g < MARGIN), len(gap))
+        i_near = next((i for i, g in enumerate(gap) if g < margin), len(gap))
         film_max = max(r[3] for r in pb[:i_near])
         g8 = d2max < TOL_D2
         g9 = len(over) > 0 and qover > Q_OVER
@@ -141,8 +148,8 @@ def main():
               % (tag, d2max, td2, TOL_D2, "PASS" if g8 else "FAIL"))
         print("(9) %s: 河道の水位が河岸の地盤より高い間(%.0f〜%.0f 秒)の、氾濫原へ載る流量の平均 %.2f m3/s (> %.1f) : %s"
               % (tag, t_over[0] if t_over else 0.0, t_over[-1] if t_over else 0.0, qover, Q_OVER, "PASS" if g9 else "FAIL"))
-        print("(10) %s: 立ち上がりで水位が河岸の %.1f m 下に届く(%.0f 秒)までの、河岸の列の水深の最大 %.4f m (<= %.4f) : %s"
-              % (tag, MARGIN, t[i_near] if i_near < len(t) else t[-1], film_max, FILM + TOL_FILM, "PASS" if g10 else "FAIL"))
+        print("(10) %s: 立ち上がりで水位が河岸の %.2f m 下に届く(%.0f 秒)までの、河岸の列の水深の最大 %.4f m (<= %.4f) : %s"
+              % (tag, margin, t[i_near] if i_near < len(t) else t[-1], film_max, FILM + TOL_FILM, "PASS" if g10 else "FAIL"))
         ok = ok and g8 and g9 and g10
     print("== bankcap 検定: %s ==" % ("PASS" if ok else "FAIL"))
     return 0 if ok else 1

@@ -6,16 +6,17 @@
   くぼみの地盤から測る(η − z_p。負 = 水位が地盤より低いうちに入り始めた)。隣の河道のセルは、S では上流側の
   斜め隣(河床勾配の分だけ水位が高い)、H では手前(上流)のセル。
 
-  エッジ水深の頭打ち f_dry_head_cap = 2(構成名の接頭辞なし)と 3(接頭辞 c3_)の、それぞれ 4 構成
-  (濡れた・乾いたくぼみ × 時間刻み 6 s・1.5 s)を見る。
+  エッジ水深の頭打ち f_dry_head_cap = 2(構成名の接頭辞なし)・3(接頭辞 c3_)と、4 つの値の組み合わせ(接頭辞 c4_。
+  f_advection_donor・f_advection_bend・f_advection_lateral・f_dry_head_cap = 4・2・2・4)の、それぞれ 4 構成(濡れた・
+  乾いたくぼみ × 時間刻み 6 s・1.5 s)を見る。2 と 3 の構成の、移流項の残りの 3 つは 3・1・1(明示)。
 
-  どちらでも判定する項目:
+  どの組でも判定する項目:
     (1) 助走の終わりに、河道が等流(水深がマニングの等流水深)
     (2) S: あふれ始めが、隣の河道のセルの水位がくぼみの地盤に届く時(η − z_p が ±TOL_S)
     (3) S: あふれ始めの水位と時刻が時間刻みによらない
     (4) H: 上流のエネルギー水頭(η + u²/2g)がくぼみの地盤に届く前には入らない
     (5) H: 開いたあと(T_SAME から、流量を下げ始めて 20 分後まで)のくぼみの水深が時間刻みによらない
-  3 では判定し、2 では記録する項目(2 の限界):
+  3 と 4 つの値の組み合わせでは判定し、2 では記録する項目(2 の限界):
     (6) H: あふれ始めの水位と時刻が時間刻みによらない
     (7) H: あふれ始めの 1 分のくぼみの水深の増加が小さい(下流の流量の 1 分の変化の乱れは、どちらも記録)
     (8) H: 流量を上げて保持している間の、くぼみの水位が、上流のエネルギー水頭を超えない
@@ -25,7 +26,7 @@ import sys
 import os
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
-from make_bankspill import G, B, IS, IJ, T_SPIN, T_RAMP, T_HOLD, bed, H_LO, BASE, CAPS
+from make_bankspill import G, B, IS, IJ, T_SPIN, T_RAMP, T_HOLD, bed, H_LO, BASE, CAPS, OTHERS
 
 RISE = 0.01              # あふれ始めの判定: くぼみの水深が水膜より増える量 (m)
 TOL_UNI = 0.01           # (1) 助走の終わりの河道の水深の、等流水深からの相対差
@@ -83,7 +84,7 @@ def group(pre, cap):
     names = [pre + n for n in BASE]
     wet6, wet15, dry6, dry15 = names
     res = {}
-    print("--- f_dry_head_cap = %d(%s) ---" % (cap, "・".join(names)))
+    print("--- f_dry_head_cap = %d(%s。f_advection_donor・bend・lateral = %d・%d・%d) ---" % ((cap, "・".join(names)) + OTHERS[cap]))
     print("  構成             くぼみ S: 時刻  水位(地盤から)  | くぼみ H: 時刻  水位(地盤から)  エネルギー水頭  1 分の増加  水位 − エネルギー水頭")
     worst_uni = 0.0
     for name in names:

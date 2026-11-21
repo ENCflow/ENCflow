@@ -55,7 +55,9 @@ Configuration names are `<group prefix><discharge ratio>_<banks>`.
 | `rl1_` | Junction rotated 45° | `f_advection_lateral = 1` |
 | `rc4_` | Junction rotated 45° | Combination of four values |
 
-In the groups with `f_advection_lateral = 0` and `1` the other values are the defaults.
+In the groups with `f_advection_lateral = 0` and `1`, the other three switches state the combination of the old values
+(`f_advection_donor = 3`, `f_advection_bend = 1`, `f_dry_head_cap = 3`). Every group states all four switches (none
+depends on the defaults).
 
 | Discharge ratio | Main / tributary discharge (m³/s) |
 |---|---|

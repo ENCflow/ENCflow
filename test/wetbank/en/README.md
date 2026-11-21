@@ -22,7 +22,9 @@ developer.md §102 and §110.25).
   entering water represent it.
 
 This case measures how much extra depth the brake gives the channel, varying the channel orientation, the grid spacing
-and the number of cells across the channel, and judges that it is small with the default combination. Pass or fail is
+and the number of cells across the channel, and judges that it is small with the combination of the old values (3, 1,
+1, 3) and with the combination of the four values for deep, slow neighbouring cells (4, 2, 2, 4;
+[Advection schemes](../../../docs/en/users_guide/advection.md) §4.4). Pass or fail is
 decided by the self-check `Check_wetbank.py`, not by a reference comparison.
 
 ## Setup
@@ -33,7 +35,7 @@ decided by the self-check `Check_wetbank.py`, not by a reference comparison.
 | Banks | A 250 m strip on each side of the channel. Ground at bed + 6 m (high enough not to overflow), with a 2 % cross slope towards the channel (rainwater enters the channel at once). Outside is outside the domain |
 | Flow | A constant inflow Q0 = 6 m²/s × N·Δx at the upstream end (about 2 m deep in a grid-aligned one-cell channel). Rain cases get a constant 20 mm/h over the whole domain. 3 hours (steady after 1.5 h) |
 | Geometries (9) | θ = 0°, 10°, 22.5°, 30°, 45° with Δx = 50 m and one cell; θ = 22.5° one cell with Δx = 100 and 25 m (the channel width is also Δx); θ = 22.5° with a 100 m wide channel resolved by 2 and 4 cells (Δx = 50 and 25 m) |
-| Cases (54) | geometry × dry banks (no rain) or rain 20 mm/h × three configurations of the advection term. The configurations are `o0` = `f_advection_donor = 0`, `o3` = 3 (lateral faces at the default `f_advection_lateral = 1`; the default combination) and `o3l0` = 3 with `f_advection_lateral = 0` set. Names like `a22p5_dx50_n1_r20_o3` = 22.5°, Δx 50 m, one cell, rain 20 mm/h, o3 |
+| Cases (108) | geometry × dry banks (no rain) or rain 20 mm/h × six configurations of the advection term (two groups). Old group (properties of the combination of the old values): `o0` = 0, 1, 0, 3, `o3` = 3, 1, 1, 3, `o3l0` = 3, 1, 0, 3. New group (properties of the combination of the four values): `o0n` = 0, 2, 0, 4, `o4` = 4, 2, 2, 4, `o4l0` = 4, 2, 0, 4 (the values are `f_advection_donor`, `f_advection_bend`, `f_advection_lateral`, `f_dry_head_cap` in this order; every configuration states all four, none depends on the defaults; with `f_advection_donor = 0`, 1 and 2 of `f_advection_lateral` are treated as 0). Names like `a22p5_dx50_n1_r20_o3` = 22.5°, Δx 50 m, one cell, rain 20 mm/h, o3 |
 
 | File | Contents |
 |---|---|
@@ -58,37 +60,43 @@ Pass or fail:
    mean stays within 0.1 mm)
 2. Confined to the channel: the depth on the bank cells of the measured reach is below 0.1 m (an assumption of the check)
 3. With dry banks, o0 and o3l0 give the same depth in every cell (`f_advection_donor = 3` itself does not change the
-   flow with dry banks)
+   flow with dry banks). In the new group this is not judged; the largest difference in a cell between o0n and o4l0
+   is recorded (the stream weights of `f_advection_donor = 4` also change the weight of deep donors, so the property
+   itself does not exist)
 4. In the grid-aligned channel (θ = 0°), |E| ≤ 1 % with every configuration
-5. `f_advection_donor = 3` is not worse than 0: E(o3l0) ≤ E(o0) + 0.5 % and E(o3) ≤ E(o0) + 0.5 % (every geometry)
-6. With dry banks, the reach-mean depth of the default (o3) agrees with o0 within ±0.1 % (the largest difference in a
-   single cell is recorded)
-7. With the default (o3) the extra depth caused by wet banks is small: |E(o3)| ≤ 5 % in every geometry
+5. Not worse than 0: E(o3l0), E(o3) ≤ E(o0) + 0.5 %, and in the new group E(o4l0), E(o4) ≤ E(o0n) + 0.5 % (every
+   geometry)
+6. With dry banks, the reach-mean depth of o3 agrees with o0, and in the new group that of o4 with o4l0, within ±0.1 %
+   (the lateral-face rule does not change the flow with dry banks; the largest difference in a single cell is
+   recorded)
+7. With the combinations themselves (o3, o4) the extra depth caused by wet banks is small: |E| ≤ 5 % in every geometry
 
-How far E departs from 0 with o0 and o3l0 (table below) is shown as a limitation and is not used for pass or fail. The
-0.1 % of item 6 and the 5 % of item 7 are regression bounds set with a margin above the present values (below 0.001 %,
-and −0.4 to 3.7 %); they are not derived from theory (the theoretical value is 0).
+How far E departs from 0 with o0, o3l0, o0n and o4l0 (table below) is shown as a limitation and is not used for pass or
+fail. The 0.1 % of item 6 and the 5 % of item 7 are regression bounds set with a margin above the present values (at
+most 0.006 %; −0.4 to 3.7 % with o3 and 0.2 to 2.0 % with o4); they are not derived from theory (the theoretical value
+is 0).
 
 ## Results
 
-| Orientation θ | Δx | Channel width | Depth with dry banks h (m) | h / h_n | Increase from rain inflow | E(0) | E(3, lateral 0) | E(3) = default |
-|---|---|---|---|---|---|---|---|---|
-| 0° | 50 m | 1 cell | 1.997 | 0.969 | 1.5 % | 0.2 % | 0.2 % | 0.2 % |
-| 10° | 50 m | 1 cell | 2.224 | 1.186 | 1.4 % | 12.5 % | 7.4 % | -0.2 % |
-| 22.5° | 50 m | 1 cell | 2.024 | 1.166 | 1.4 % | 32.7 % | 10.2 % | 1.4 % |
-| 30° | 50 m | 1 cell | 1.718 | 1.018 | 1.4 % | 38.9 % | 17.2 % | 3.7 % |
-| 45° | 50 m | 1 cell | 1.554 | 0.941 | 1.4 % | 9.6 % | 8.6 % | 2.4 % |
-| 22.5° | 100 m | 1 cell | 1.853 | 1.078 | 0.8 % | 23.9 % | 10.3 % | 2.3 % |
-| 22.5° | 25 m | 1 cell | 2.427 | 1.369 | 2.7 % | 39.6 % | 4.3 % | -0.4 % |
-| 22.5° | 50 m | 2 cells | 1.807 | 1.051 | 0.8 % | 18.9 % | 8.4 % | 1.4 % |
-| 22.5° | 25 m | 4 cells | 1.754 | 1.021 | 0.8 % | 12.3 % | 6.6 % | 0.8 % |
+| Orientation θ | Δx | Channel width | Increase from rain inflow | h / h_n (old group) | E(0) | E(3, lateral 0) | E(3) | h / h_n (new group) | E(0) | E(4, lateral 0) | E(4) |
+|---|---|---|---|---|---|---|---|---|---|---|---|
+| 0° | 50 m | 1 cell | 1.5 % | 0.969 | 0.2 % | 0.2 % | 0.2 % | 0.969 | 0.2 % | 0.2 % | 0.2 % |
+| 10° | 50 m | 1 cell | 1.4 % | 1.186 | 12.5 % | 7.4 % | -0.2 % | 1.201 | 11.1 % | 2.0 % | 0.7 % |
+| 22.5° | 50 m | 1 cell | 1.4 % | 1.166 | 32.7 % | 10.2 % | 1.4 % | 1.174 | 31.8 % | 9.1 % | 0.5 % |
+| 30° | 50 m | 1 cell | 1.4 % | 1.018 | 38.9 % | 17.2 % | 3.7 % | 1.091 | 29.5 % | 10.9 % | 0.6 % |
+| 45° | 50 m | 1 cell | 1.4 % | 0.941 | 9.6 % | 8.6 % | 2.4 % | 0.941 | 9.6 % | 8.6 % | 2.0 % |
+| 22.5° | 100 m | 1 cell | 0.8 % | 1.078 | 23.9 % | 10.3 % | 2.3 % | 1.114 | 19.9 % | 6.2 % | 0.7 % |
+| 22.5° | 25 m | 1 cell | 2.7 % | 1.369 | 39.6 % | 4.3 % | -0.4 % | 1.269 | 50.9 % | 13.3 % | 0.7 % |
+| 22.5° | 50 m | 2 cells | 0.8 % | 1.051 | 18.9 % | 8.4 % | 1.4 % | 1.066 | 17.3 % | 8.6 % | 1.0 % |
+| 22.5° | 25 m | 4 cells | 0.8 % | 1.021 | 12.3 % | 6.6 % | 0.8 % | 1.029 | 11.3 % | 6.9 % | 0.6 % |
 
-h_n is Manning's uniform-flow depth of a rectangular section of width ω. E(0) is the value of o0, E(3, lateral 0) of
-o3l0 and E(3) of o3.
+h_n is Manning's uniform-flow depth of a rectangular section of width ω. The left four columns (h / h_n, E(0),
+E(3, lateral 0), E(3)) are the values of o0, o3l0 and o3 of the old group; the right four are those of o0n, o4l0 and
+o4 of the new group.
 
 - In the grid-aligned channel one cell wide, wetting the banks changes the depth only by the rain inflow (E = 0.2 %
   with every configuration). Even when grid-aligned, in channels 2 and 4 cells wide (Δx = 50 and 25 m) E is 7.5 and
-  9.9 % with 0, 4.6 and 4.7 % with 3 and lateral 0, and 1.8 and 1.3 % with the default (these two geometries are not
+  9.9 % with 0, 4.6 and 4.7 % with 3 and lateral 0, and 1.8 and 1.3 % with the combination of the old values (these two geometries are not
   included in Run.sh).
 - In the oblique channels, `f_advection_donor = 0` makes the channel 10–40 % too deep. The amount depends on the
   orientation (largest around 30°) and grows when the grid is refined with the channel kept one cell wide (at 22.5°,
@@ -99,24 +107,33 @@ o3l0 and E(3) of o3.
   to zero. The main remaining cause is the lateral faces: when the parallel neighbouring link is a bank film (at or
   above dd), its slow velocity becomes the inflow value of the lateral face (on the lateral faces, option 3 only
   smooths the wet/dry switching of films thinner than dd).
-- **With the default combination (3 and `f_advection_lateral = 1`) it is −0.4 to 3.7 %.** A link of a film that is thin
+- **With the combination of the old values (3 and `f_advection_lateral = 1`) it is −0.4 to 3.7 %.** A link of a film that is thin
   compared with the entering water is not used as the inflow value of the lateral face. The dilution of the
   main-stream momentum by water entering from the side at a confluence is counted by a separate term that does not
   depend on the wetness of the banks ([test/tjunction](../../tjunction/en/README.md)).
-- With dry banks, the reach-mean depth of the default combination is the same as with `f_advection_donor = 0` (the
+- With dry banks, the reach-mean depth of the combination of the old values is the same as with `f_advection_donor = 0` (the
   difference is below 0.001 %). The depth of individual cells differs by up to 0.05, 0.03 and 0.02 m in the 45°
   staircase and in the channels 2 and 4 cells wide (because `f_advection_lateral = 1` also acts on the lateral faces
   between channel cells). In the other 6 geometries every cell agrees to the printed digits.
 - The rain intensity hardly matters. Once the banks are wet above dd, rain of 2 mm/h (bank film 2 mm on average and
   4 mm at most) gives almost the same E as 20 mm/h (6 mm on average and 11 mm at most): at 22.5° and Δx 50 m, 32.5 /
-  32.7 % with 0, 8.3 / 10.2 % with 3 and lateral 0, and 0.5 / 1.4 % with the default (the 2 mm/h runs are not included
+  32.7 % with 0, 8.3 / 10.2 % with 3 and lateral 0, and 0.5 / 1.4 % with the combination of the old values (the 2 mm/h runs are not included
   in Run.sh). Setting dd to 0.1 mm gives the same values with 0 and with 3 (lateral 0) (the films are thicker than dd;
   developer.md §102), so this case does not look at the effect of the dd value.
+
+- **With the combination of the four values (o4) it is 0.2 to 2.0 %.** The depth with dry banks (h / h_n) is 0.94–1.27,
+  varying less with the orientation and spacing of the grid than the 0.94–1.37 of the old group (one cell wide at 22.5°
+  and Δx 25 m: 1.37 → 1.27; 30°: 1.02 → 1.09). This comes from `f_advection_bend = 2`, which acts with dry banks as well;
+  o0n has the same values.
+- In the new group, o0n and o4l0 do not agree in every cell even with dry banks (the largest difference in a cell is
+  0.15 m at 22.5° and Δx 25 m, 0.04 m at 10°). The reach-mean depths of o4 and o4l0 differ by at most 0.006 % (the
+  largest difference in a cell is 0.06 m in the 45° staircase).
 
 ## Limitations
 
 - Even with dry banks, the depth of an oblique one-cell staircase differs from that of a grid-aligned channel
-  (h / h_n = 0.94–1.37; at 22.5° it becomes deeper when the grid is refined with the channel kept one cell wide). This is
+  (h / h_n = 0.94–1.37 with the combination of the old values and 0.94–1.27 with the combination of the four values;
+  at 22.5° it becomes deeper when the grid is refined with the channel kept one cell wide). This is
   a difference in conveyance of the raster staircase itself, independent of the configuration of the advection term,
   and outside the scope of this case.
 - Rain falls uniformly on the banks and the channel, and the rainwater on the banks enters the channel at once. The
@@ -126,7 +143,7 @@ o3l0 and E(3) of o3.
 
 ```bash
 make         # links to the executables
-./Run.sh     # runs the 54 cases and checks them (about 11 minutes with one thread)
+./Run.sh     # runs the 108 cases and checks them (about 25 minutes with one thread)
 ```
 
 Related: developer.md §102 (the formulation of f_advection_donor) and §110.25 (the formulation of
