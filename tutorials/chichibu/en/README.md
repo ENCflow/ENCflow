@@ -95,12 +95,12 @@ main: real precision: 64 bit
 main: number of valid cells: 17885
 time, progress, S(m), Runge, ex_flux, Cn_max, h_max(m), V_max(m/s)
   0:00:00.00   0.0%    0.0000   0.0%      0    0.0000    0.0000    0.0000
-  0:30:00.00   8.3%    0.0487  97.7%      0    0.1908    1.2869    4.0486
-  1:00:00.00  16.7%    0.1000   6.2%      0    0.3461    4.7337    8.4505
-  1:30:00.00  25.0%    0.1000   3.4%      0    0.4418    6.7150    9.7508
-  2:00:00.00  33.3%    0.1000   0.9%      0    0.4156    7.0363    9.5678
+  0:30:00.00   8.3%    0.0487  97.7%      0    0.1910    1.2871    4.0483
+  1:00:00.00  16.7%    0.1000   6.2%      0    0.3464    4.7535    8.4467
+  1:30:00.00  25.0%    0.1000   3.4%      0    0.4357    6.9561    9.5765
+  2:00:00.00  33.3%    0.1000   0.9%      0    0.4130    6.9710    9.4047
   ...
-  6:00:00.00 100.0%    0.1000   0.6%      0    0.5159   29.9526    4.0986
+  6:00:00.00 100.0%    0.1000   0.6%      0    0.5155   29.9470    4.1028
 main: program terminated normally
 ```
 
@@ -149,7 +149,7 @@ file names below are relative to it).
 ! Precipitation settings
 !======================================================================
 &list_precip
-  ! precipitation data type (0: no precipitation, 1: uniform, time series)
+  ! precipitation data type (1: uniform time series, 2: map × factor, 3: series of maps; for no precipitation, omit fn_precip)
   prtype = 1
   ! precipitation time series (time (min), intensity (mm/h))
   prval(:,1) =   0,   0
@@ -479,13 +479,13 @@ visual inspection of results; run them from there).
 
 We obtained catchment-scale flood routing at 1-minute resolution, with
 the flood wave growing and lagging from upstream transect 1 to
-downstream transect 4. The peaks are, from transect 1 on, 1,254 m³/s
-(47 min), 3,043 m³/s (55 min), 6,530 m³/s (81 min) and 8,477 m³/s (138 min).
+downstream transect 4. The peaks are, from transect 1 on, 1,255 m³/s
+(47 min), 3,047 m³/s (54 min), 6,420 m³/s (81 min) and 8,559 m³/s (136 min).
 
 - The shoulder of transect 4 at about 110 to 120 min on the rising limb
   appears because the peak of a tributary that joins about 2 km upstream of
-  the transect (catchment area about 200 km²; 107 min, about 3,400 m³/s)
-  arrives before the peak of the main stem (about 450 km²; 130 min, about
+  the transect (catchment area about 200 km²; 108 min, about 3,400 m³/s)
+  arrives before the peak of the main stem (about 450 km²; 132 min, about
   6,500 m³/s).
 - From two and a half hours on, the recession of transect 4 is affected by
   the outlet ponding. The pond grows upstream until it reaches transect 4
@@ -508,10 +508,10 @@ channel roughness is 0.04 in both).
 
 | Transect | Depression-filled elevation | Conditioned bed |
 |---|---|---|
-| 1 | 1,077 m³/s (52 min) | 1,254 m³/s (47 min) |
-| 2 | 2,503 m³/s (62 min) | 3,043 m³/s (55 min) |
-| 3 | 3,475 m³/s (91 min) | 6,530 m³/s (81 min) |
-| 4 | 4,488 m³/s (190 min) | 8,477 m³/s (138 min) |
+| 1 | 1,077 m³/s (52 min) | 1,255 m³/s (47 min) |
+| 2 | 2,500 m³/s (62 min) | 3,047 m³/s (54 min) |
+| 3 | 3,430 m³/s (91 min) | 6,420 m³/s (81 min) |
+| 4 | 4,456 m³/s (190 min) | 8,559 m³/s (136 min) |
 
 With the depression-filled elevation, water collects on the flat reaches of
 the channel, and the wave is delayed, lower and longer. For example, the
@@ -519,7 +519,7 @@ rising front takes about 20 minutes to travel from transect 2 to transect 3
 (about 10 km downstream) with the conditioned bed, and about 30 minutes with
 the depression-filled elevation. The difference grows downstream: with the
 conditioned bed the peaks at transects 3 and 4 are 1.9 times as large, and the
-peak at transect 4 arrives 52 minutes earlier.
+peak at transect 4 arrives 54 minutes earlier.
 
 **The way the channel heights are given alone changes the downstream peak by
 almost a factor of two.** Which of the two is closer to the real river is not
@@ -581,11 +581,11 @@ changes from one column to **three columns**.
 ```
 time, progress, S_surf(m), S_grnd(m), S_total(m), Runge, ex_flux, Cn_max, h_max(m), V_max(m/s)
   0:00:00.00   0.0%    0.0000     0.0000     0.0000    0.0%      0    0.0000    0.0000    0.0000
-  0:30:00.00   8.3%    0.0365     0.0024     0.0389   98.4%      0    0.1977    0.7555    4.5406
-  1:00:00.00  16.7%    0.0751     0.0049     0.0800    5.9%      0    0.3947    4.2828   10.1592
-  1:30:00.00  25.0%    0.0728     0.0072     0.0800    3.0%      0    0.4948    6.5865   12.8773
+  0:30:00.00   8.3%    0.0365     0.0024     0.0389   98.4%      0    0.1979    0.7556    4.5477
+  1:00:00.00  16.7%    0.0751     0.0049     0.0800    5.9%      0    0.3935    4.3328   10.1322
+  1:30:00.00  25.0%    0.0728     0.0072     0.0800    3.0%      0    0.4913    5.6149   12.7808
   ...
-  6:00:00.00 100.0%    0.0696     0.0104     0.0800    0.0%      0    0.5125   29.6268    3.2128
+  6:00:00.00 100.0%    0.0696     0.0104     0.0800    0.0%      0    0.5118   29.6269    3.2158
 ```
 
 - `S_surf` is surface water, `S_grnd` is subsurface storage, and
@@ -599,8 +599,8 @@ time, progress, S_surf(m), S_grnd(m), S_total(m), Runge, ex_flux, Cn_max, h_max(
 
 ![Step 4: effect of interception and infiltration](figs/step4_hydro.png)
 
-In the hydrograph the peak discharge drops by 35 % (8,477 to 5,487 m³/s)
-and the peak arrives 15 minutes later. Interception cuts the total by 20%,
+In the hydrograph the peak discharge drops by 36 % (8,559 to 5,482 m³/s)
+and the peak arrives 17 minutes later. Interception cuts the total by 20%,
 and infiltration keeps sucking up the thinly spread hillslope water, so the
 rising limb drops substantially (to about half until the second hour). The
 volume of water passing transect 4 within the 6 hours drops by 30 %. The two
@@ -646,8 +646,8 @@ arriving water is removed from the system immediately). Running it gives:
 ```
 time, progress, S_surf(m), S_grnd(m), S_total(m), Runge, ex_flux, Cn_max, h_max(m), V_max(m/s)
   ...
-  3:00:00.00  50.0%    0.0522     0.0092     0.0615    0.1%      0    0.4618    8.9999    6.9492
-  6:00:00.00 100.0%    0.0143     0.0104     0.0247    0.0%      0    0.2439    3.1015    3.2458
+  3:00:00.00  50.0%    0.0524     0.0092     0.0616    0.1%      0    0.4613    8.9775    6.9729
+  6:00:00.00 100.0%    0.0144     0.0104     0.0248    0.0%      0    0.2447    3.1213    3.2487
 ```
 
 - S_total now decreases -- that is the water that left the system
@@ -660,7 +660,7 @@ time, progress, S_surf(m), S_grnd(m), S_total(m), Runge, ex_flux, Cn_max, h_max(
 | ![step4](figs/step5_hend_step4.png) | ![step5](figs/step5_hend.png) |
 
 The hydrographs at transects 1 to 3 are the same as in Step 4. Transect 4 is
-the same up to the peak (5,487 m³/s at 153 min) and changes on the recession
+the same up to the peak (5,482 m³/s at 153 min) and changes on the recession
 from 3 h 20 min on: in Step 4 the outlet pond had grown upstream and reached
 transect 4. The depth at probe 4 shows this well.
 

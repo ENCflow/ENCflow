@@ -5189,11 +5189,11 @@
     {
       "source": "tutorials/bmi/param.txt",
       "target": "tutorials/bmi/en/param.txt",
-      "source_sha256": "6f571039cab26dcdf70ee130d44535869119c9cbbeb0c5f721597ec27e7bf86a",
-      "target_sha256": "c0811010a95343afa582d4973e8ad2bb32c04f777a6723a67d02835d09fab809",
-      "reviewer": "Claude (Claude Code session; full-text content and lexical review, no model execution)",
+      "source_sha256": "5c4e24f436ba7c8db9ffa6e30af6656c541c96f9763d451249c4d295062a1390",
+      "target_sha256": "3cb8df99233768362936d6745bf0027df05d2f5ca904f91a1582ebbf0eb91c2e",
+      "reviewer": "Claude (Claude Code session; comment lines compared side by side; values, identifiers and active settings unchanged)",
       "method": "assistant",
-      "reviewed_on": "2026-11-18"
+      "reviewed_on": "2026-11-21"
     },
     {
       "source": "tutorials/bmi/param_norain.txt",
@@ -5225,47 +5225,47 @@
     {
       "source": "tutorials/chichibu/README.md",
       "target": "tutorials/chichibu/en/README.md",
-      "source_sha256": "ad12e8ac6e32d7c486100dae89f140964f9cb1ec0e5689506a43dfc82fe25a92",
-      "target_sha256": "5746aa6d9ec8e1d16cb965ddfcbf08ea23a7e96b4176afdebf0b39f39fa82d2f",
-      "reviewer": "Claude (Claude Code session; full-text content and lexical review, no model execution)",
+      "source_sha256": "bab1904d4a369350dd47a113121f16dc209cb91282f8d2605944724e00226857",
+      "target_sha256": "fb1bb2e71ae8e068470940edc47802058a782a335e34d566e61e70fe3c7a906d",
+      "reviewer": "Claude (Claude Code session; changed sections compared side by side with the Japanese source; numbers checked against the test runs)",
       "method": "assistant",
-      "reviewed_on": "2026-11-18"
+      "reviewed_on": "2026-11-21"
     },
     {
       "source": "tutorials/chichibu/figs/step1_hend.png",
       "target": "tutorials/chichibu/en/figs/step1_hend.png",
-      "source_sha256": "31d5947218a81f4efd48f29813ed14ed3d641cfaa09040f906de9ae424893974",
-      "target_sha256": "8c9d90e7afb4a7c11c26639902d883ce033684433100e01e2f078a4fdac9728b",
-      "reviewer": "Claude (Claude Code session; full-text content and lexical review, no model execution)",
+      "source_sha256": "a68cc6db3d41a98f779563c181aebf25e2bad732e3ff460b52e70488a3794a44",
+      "target_sha256": "574823ee4e803ee92d7b40388b85739c2633493782527b81bbf96db492b607b6",
+      "reviewer": "Claude (Claude Code session; Japanese and English figures drawn by the same script from the same results; labels checked)",
       "method": "assistant",
-      "reviewed_on": "2026-11-17"
+      "reviewed_on": "2026-11-21"
     },
     {
       "source": "tutorials/chichibu/figs/step1_hend_4nb.png",
       "target": "tutorials/chichibu/en/figs/step1_hend_4nb.png",
-      "source_sha256": "1b9c9b23a98ce23c53cf04ca3475b9973ad62978467f710cc497a92671ba54ff",
-      "target_sha256": "d1b67e125218ee14c41390473ea3ee685a2060eeaf84c02194db1aaacef6992c",
-      "reviewer": "Claude (Claude Code session; full-text content and lexical review, no model execution)",
+      "source_sha256": "b7376fa3b9da6ca491b199f33bf41428e4cdceb48a0ba34803122b4badb78415",
+      "target_sha256": "6034ee8fe4068e402a81c58b4a1a192689e1e5f6f2c0cef4db3ebca7adf02b26",
+      "reviewer": "Claude (Claude Code session; Japanese and English figures drawn by the same script from the same results; labels checked)",
       "method": "assistant",
-      "reviewed_on": "2026-11-18"
+      "reviewed_on": "2026-11-21"
     },
     {
       "source": "tutorials/chichibu/figs/step1_hend_filled.png",
       "target": "tutorials/chichibu/en/figs/step1_hend_filled.png",
-      "source_sha256": "30fec063e186079b89525a53b535ab5c2757ed9dbb909428de5540123e650f48",
-      "target_sha256": "811f93f23e1d6fb73e3a60ced035e7e4b98c5659bbef756d358346e110b65770",
-      "reviewer": "Claude (Claude Code session; full-text content and lexical review, no model execution)",
+      "source_sha256": "09660343ffa3bef0b3569af44e23fa86985c7dce14109df671a6670958c3b8b0",
+      "target_sha256": "29e3e875588532dbf6a142aa555b869b83565d26c46fccce21b86bef6dc05b44",
+      "reviewer": "Claude (Claude Code session; Japanese and English figures drawn by the same script from the same results; labels checked)",
       "method": "assistant",
-      "reviewed_on": "2026-11-18"
+      "reviewed_on": "2026-11-21"
     },
     {
       "source": "tutorials/chichibu/figs/step1_hend_raw.png",
       "target": "tutorials/chichibu/en/figs/step1_hend_raw.png",
-      "source_sha256": "866ab4451f89da05029dab203f206c535a5c3342d10f40b8c5ce0ed0f44ce212",
-      "target_sha256": "6b37792da334c43cab8f0b228942873a74d733b2044ae8b824bca4ba37a1ce9f",
-      "reviewer": "Claude (Claude Code session; full-text content and lexical review, no model execution)",
+      "source_sha256": "581862cffb4d492091af00a5840a7f0784488627c6d76b495c39cecd8a072897",
+      "target_sha256": "5802ead67c679f8bf3bfde8975c6cfc8d9ed9b86f887aef39db6a07d1a28132e",
+      "reviewer": "Claude (Claude Code session; Japanese and English figures drawn by the same script from the same results; labels checked)",
       "method": "assistant",
-      "reviewed_on": "2026-11-18"
+      "reviewed_on": "2026-11-21"
     },
     {
       "source": "tutorials/chichibu/figs/step1_z.png",
@@ -5306,11 +5306,11 @@
     {
       "source": "tutorials/chichibu/figs/step3_bed_effect.png",
       "target": "tutorials/chichibu/en/figs/step3_bed_effect.png",
-      "source_sha256": "4752423a20cc7d6d9cb1ff82845ecc9736e819d72883bd1a61f6606144167851",
-      "target_sha256": "023d401d04b0b3fd8dcb86b8dc6eec713b8e33b711080f4b45160d8349886a54",
-      "reviewer": "Claude (Claude Code session; full-text content and lexical review, no model execution)",
+      "source_sha256": "334a97f222aecbb3cd8295465590025bcbdbcf89562dc952a18edbc10dec1c11",
+      "target_sha256": "61486b0f32a8db80423aaa738016b9b5cc15cb9a55f4310e2af80a335e9a5503",
+      "reviewer": "Claude (Claude Code session; Japanese and English figures drawn by the same script from the same results; labels checked)",
       "method": "assistant",
-      "reviewed_on": "2026-11-18"
+      "reviewed_on": "2026-11-21"
     },
     {
       "source": "tutorials/chichibu/figs/step3_map.png",
@@ -5324,47 +5324,47 @@
     {
       "source": "tutorials/chichibu/figs/step3_transects.png",
       "target": "tutorials/chichibu/en/figs/step3_transects.png",
-      "source_sha256": "19535e8462db35b392b630179ff3d4a4803552c58d077a244a6aa12e4f34c606",
-      "target_sha256": "0a4a0b6d1d3124835ab5ccdc796cbaf7a9e699ea8edfb0438fa7963a9af5c4be",
-      "reviewer": "Claude (Claude Code session; full-text content and lexical review, no model execution)",
+      "source_sha256": "4483fa36d3558f09d09318df282cd2a367c086e39fb7886bbee57ca68817d150",
+      "target_sha256": "fac134c676df06988d8b73a49b6f95f3f0072c57cd5110c88dd8e7fcf60ac36f",
+      "reviewer": "Claude (Claude Code session; Japanese and English figures drawn by the same script from the same results; labels checked)",
       "method": "assistant",
-      "reviewed_on": "2026-11-18"
+      "reviewed_on": "2026-11-21"
     },
     {
       "source": "tutorials/chichibu/figs/step4_hydro.png",
       "target": "tutorials/chichibu/en/figs/step4_hydro.png",
-      "source_sha256": "aa2fa2111716d248d22ce26b7811ab84633eff399b992d137207f121a487a448",
-      "target_sha256": "4164d1bf6d1dacc5c47af6d3d79a557dd22e3d723ecc3ebef507fe02a3907976",
-      "reviewer": "Claude (Claude Code session; full-text content and lexical review, no model execution)",
+      "source_sha256": "cdf4823cdc4bedc9efe7f3bafec89134ce3960da98d5e2864b4c87b7799928e0",
+      "target_sha256": "18b4aeea06e8fa5b2980762aa021114eb15b6c0b3c90098058cb355926f91ed0",
+      "reviewer": "Claude (Claude Code session; Japanese and English figures drawn by the same script from the same results; labels checked)",
       "method": "assistant",
-      "reviewed_on": "2026-11-18"
+      "reviewed_on": "2026-11-21"
     },
     {
       "source": "tutorials/chichibu/figs/step5_hend.png",
       "target": "tutorials/chichibu/en/figs/step5_hend.png",
-      "source_sha256": "3187c3e17ed6e7ea4dfa62a31cba9cdbd07889bfc1f11fa4b26e438a8c2c29af",
-      "target_sha256": "fc1803783ea64dc5c86f77edc59e7ac69fc9aa6e42c024a708eebd55989e8ae1",
-      "reviewer": "Claude (Claude Code session; full-text content and lexical review, no model execution)",
+      "source_sha256": "472f2fee7af22463db917feafec619d85a92c9231e331dcb687f8127d1ab5af1",
+      "target_sha256": "67ae5a82d2bc73227c0cd6329bb9d7bf55d822c9535c2c2093cd29a723e5e8fb",
+      "reviewer": "Claude (Claude Code session; Japanese and English figures drawn by the same script from the same results; labels checked)",
       "method": "assistant",
-      "reviewed_on": "2026-11-18"
+      "reviewed_on": "2026-11-21"
     },
     {
       "source": "tutorials/chichibu/figs/step5_hend_step4.png",
       "target": "tutorials/chichibu/en/figs/step5_hend_step4.png",
-      "source_sha256": "2e49139b742c5db9c8616e88ed62212fe0f562c9ab8963807916e5c544d38145",
-      "target_sha256": "23c35e7c95e0b4f7c528d7255c75d2d0a053c07686ba16b54080a09036f01480",
-      "reviewer": "Claude (Claude Code session; full-text content and lexical review, no model execution)",
+      "source_sha256": "0d48d1ce19f595756e375e32ee6bc2153b16057adf53b65e4e1b5b0f8f5b9820",
+      "target_sha256": "514355788aa6d74e2ee1dd999143e8a3ba7a9a10e35788d3cb26ec2cce04768b",
+      "reviewer": "Claude (Claude Code session; Japanese and English figures drawn by the same script from the same results; labels checked)",
       "method": "assistant",
-      "reviewed_on": "2026-11-18"
+      "reviewed_on": "2026-11-21"
     },
     {
       "source": "tutorials/chichibu/figs/step5_probe.png",
       "target": "tutorials/chichibu/en/figs/step5_probe.png",
-      "source_sha256": "cf425cc852e64461aa493a6587c8b9b7d8d565ca4f2f670b6dd984df659fdb50",
-      "target_sha256": "223ffb90db6ca469e872e5fad7d75dc3b623a4a140e5ddeb5425efaa7a1ad56d",
-      "reviewer": "Claude (Claude Code session; full-text content and lexical review, no model execution)",
+      "source_sha256": "5299704a6fe6569c1573a8039739c631fde08b7f2186b172bd7d110e45e7c029",
+      "target_sha256": "a74a3232018992dcfd643208fce796d2ecac9febb4a42c2f77a260543ed9e1ad",
+      "reviewer": "Claude (Claude Code session; Japanese and English figures drawn by the same script from the same results; labels checked)",
       "method": "assistant",
-      "reviewed_on": "2026-11-18"
+      "reviewed_on": "2026-11-21"
     },
     {
       "source": "tutorials/chichibu/figs/step6_3d.png",
@@ -5459,83 +5459,83 @@
     {
       "source": "tutorials/chichibu/param_step1.txt",
       "target": "tutorials/chichibu/en/param_step1.txt",
-      "source_sha256": "63a400d12631cd241375daa1575f7117c8705c5adca47a38ca8d1efd38f46101",
-      "target_sha256": "f7b682588b8cad2dc2a83d698175c41a8932081bbe6418929f6b0c9e3fced6c3",
-      "reviewer": "Claude (Claude Code session; lateral-flux fix of the momentum-conservative advection, §68.42)",
+      "source_sha256": "5cdcec33e383fb4fcd92032bfd7825c08d231d53ad8a77f3df12b042b3d9e14d",
+      "target_sha256": "7f39b35d5695d4c90965a35f447cf01d07591ce79232f9cbced96c4dbe71fd00",
+      "reviewer": "Claude (Claude Code session; comment lines compared side by side; values, identifiers and active settings unchanged)",
       "method": "assistant",
-      "reviewed_on": "2026-11-01"
+      "reviewed_on": "2026-11-21"
     },
     {
       "source": "tutorials/chichibu/param_step2.txt",
       "target": "tutorials/chichibu/en/param_step2.txt",
-      "source_sha256": "4486ecef508ec39963dfb729dbc05a7957619988634cdad14663cafca068da00",
-      "target_sha256": "0ab180f617c2784877ce79d5c2b26395806f918c3903e4db56a6a142092b52c1",
-      "reviewer": "Claude (Claude Code session; full-text content and lexical review, no model execution)",
+      "source_sha256": "24b4e3d4263bab9af3da55724238cd2815a7a0f682427dd9ff8ed1e7af8a7f49",
+      "target_sha256": "bddbc8f785b80defaaf67703d95e67c1676902094f6ec168287c1daa4d56b556",
+      "reviewer": "Claude (Claude Code session; comment lines compared side by side; values, identifiers and active settings unchanged)",
       "method": "assistant",
-      "reviewed_on": "2026-11-18"
+      "reviewed_on": "2026-11-21"
     },
     {
       "source": "tutorials/chichibu/param_step3.txt",
       "target": "tutorials/chichibu/en/param_step3.txt",
-      "source_sha256": "c13d8bce536d5e0584b2ae1f8f00ed51e80cfe9e27da679dbe2afa82349f322f",
-      "target_sha256": "b61ad9b051a10a64ca2f91b567aeb123783adafde72cf0d0daf4b87229cca78f",
-      "reviewer": "Claude (Claude Code session; full-text content and lexical review, no model execution)",
+      "source_sha256": "3a4b627aaa46b71fd515f2881a153c0138e851bff6cb4f710825039f5d4aaeff",
+      "target_sha256": "927f0c05176b4d3b5b880c5afd51b919e24c2f8cb41320ccf59657fa3faeff62",
+      "reviewer": "Claude (Claude Code session; comment lines compared side by side; values, identifiers and active settings unchanged)",
       "method": "assistant",
-      "reviewed_on": "2026-11-18"
+      "reviewed_on": "2026-11-21"
     },
     {
       "source": "tutorials/chichibu/param_step4.txt",
       "target": "tutorials/chichibu/en/param_step4.txt",
-      "source_sha256": "b8066831c333cb31185d62c3de41ed1cb4e33032c07b33b72d3c2058b861527f",
-      "target_sha256": "8043ebe1a9886551701c64513dd9a86d02c47e819674ba36f41659cd88113268",
-      "reviewer": "Claude (Claude Code session; full-text content and lexical review, no model execution)",
+      "source_sha256": "aa9c0606df3d9d72678e3060c6133a1eb252bb5cae8cc54070865e99242740fa",
+      "target_sha256": "39ff8a876bba08929564034f52f3f8ffc2caa6d706898ca38430fab3f0d0626e",
+      "reviewer": "Claude (Claude Code session; comment lines compared side by side; values, identifiers and active settings unchanged)",
       "method": "assistant",
-      "reviewed_on": "2026-11-18"
+      "reviewed_on": "2026-11-21"
     },
     {
       "source": "tutorials/chichibu/param_step5.txt",
       "target": "tutorials/chichibu/en/param_step5.txt",
-      "source_sha256": "e36e20af5723b326af8e5d531640de250a97c4ec6cf20228545ae7c9bde50205",
-      "target_sha256": "eee3e7b967e5e1e7ddb211728125a9d492bd776d0e3fb4e12aafa624afda9eeb",
-      "reviewer": "Claude (Claude Code session; full-text content and lexical review, no model execution)",
+      "source_sha256": "9e4c256c333b461d6747ede8852e040bc6c6a420229144ceb548090ff0514d5c",
+      "target_sha256": "e93c30bad775fccc862a0d793528fcc78b979dce46492b9383528afebb51365a",
+      "reviewer": "Claude (Claude Code session; comment lines compared side by side; values, identifiers and active settings unchanged)",
       "method": "assistant",
-      "reviewed_on": "2026-11-18"
+      "reviewed_on": "2026-11-21"
     },
     {
       "source": "tutorials/chichibu/param_step6.txt",
       "target": "tutorials/chichibu/en/param_step6.txt",
-      "source_sha256": "409dfd39c005f1d6082cedae710c8ed1049afc5efbff138a09ecaaf75799bf3c",
-      "target_sha256": "d2b1e7082d37af271976dc4b3352cd3d8ca3d5c1ff4c7f90b639475bde034206",
-      "reviewer": "Claude (Claude Code session; full-text content and lexical review, no model execution)",
+      "source_sha256": "60a120d9820e4207ab8fe057fc50a8bd52000fa23f09be44db326259ba890509",
+      "target_sha256": "fc7d6c563896c373e20fb07dea54943bd7b50b135466c6b50c7e19b96efb72c3",
+      "reviewer": "Claude (Claude Code session; comment lines compared side by side; values, identifiers and active settings unchanged)",
       "method": "assistant",
-      "reviewed_on": "2026-11-18"
+      "reviewed_on": "2026-11-21"
     },
     {
       "source": "tutorials/chichibu/param_supp_100m.txt",
       "target": "tutorials/chichibu/en/param_supp_100m.txt",
-      "source_sha256": "bdc7e82290807647b05ac9760fcacb3ab8327a8af93fd7ed0ff359239fcc244f",
-      "target_sha256": "f80d85bb8320c5f8445449435fc0a3834d356c760b374a68df52c58002bf63be",
-      "reviewer": "Claude (Claude Code session; full-text content and lexical review, no model execution)",
+      "source_sha256": "f3b65585aba715c4580f717eb7c11f1427fe2dea0928779cae1e387cc8ff7e08",
+      "target_sha256": "3971ad03de0a2c14bbe1f3c88ac15907c9a065696000b911a67bce56f935364f",
+      "reviewer": "Claude (Claude Code session; comment lines compared side by side; values, identifiers and active settings unchanged)",
       "method": "assistant",
-      "reviewed_on": "2026-11-18"
+      "reviewed_on": "2026-11-21"
     },
     {
       "source": "tutorials/chichibu/param_supp_200m.txt",
       "target": "tutorials/chichibu/en/param_supp_200m.txt",
-      "source_sha256": "b2bf3ea82b2ff7a63cf89c2bcdfc7b399a3ca919318deb2338b0749744d0b932",
-      "target_sha256": "182780579aff0f322c971a5a2bea1f58cb268c0fc27388ec880c89a247f0ac8b",
-      "reviewer": "Claude (Claude Code session; full-text content and lexical review, no model execution)",
+      "source_sha256": "86944851ef19aae0e8fc3de6c254f7f2f7eaa789c55585f7dfe300f954eeb55e",
+      "target_sha256": "a6f870169819d584d0354ee63ea43c3945d385fcc66b8e4f827df803ac0fd716",
+      "reviewer": "Claude (Claude Code session; comment lines compared side by side; values, identifiers and active settings unchanged)",
       "method": "assistant",
-      "reviewed_on": "2026-11-18"
+      "reviewed_on": "2026-11-21"
     },
     {
       "source": "tutorials/chichibu/param_supp_50m.txt",
       "target": "tutorials/chichibu/en/param_supp_50m.txt",
-      "source_sha256": "ba48923a81e98e098e73222b195846161c5a690bcf35f02481bc55618184ecd6",
-      "target_sha256": "a3c0d0d80001afcefc3c9062142004553146e053688e4f47a7d41177af27c266",
-      "reviewer": "Claude (Claude Code session; full-text content and lexical review, no model execution)",
+      "source_sha256": "9ddd7f1510bbc6145bb2efb64d1ff50e57d80aeb1a3d40f33f06b86e7a433b6a",
+      "target_sha256": "851a4e82818d980085858c46f249af9a73166dd4d4bde197a50c136605716ef1",
+      "reviewer": "Claude (Claude Code session; comment lines compared side by side; values, identifiers and active settings unchanged)",
       "method": "assistant",
-      "reviewed_on": "2026-11-18"
+      "reviewed_on": "2026-11-21"
     },
     {
       "source": "tutorials/wave/README.md",

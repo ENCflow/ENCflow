@@ -53,7 +53,7 @@
 ! such group, and supplies the same rain from Python with set)
 !======================================================================
 &list_precip
-  ! type of precipitation data (0: none, 1: uniform time series)
+  ! type of precipitation data (1: uniform time series, 2: map × factor, 3: series of maps; for no rain, omit fn_precip)
   prtype = 1
   ! precipitation time series (time (min), intensity (mm/h))
   prval(:,1) =   0,   0
