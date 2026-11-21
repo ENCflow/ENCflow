@@ -57,7 +57,7 @@ PREC	= double
 FC	= gfortran
 FC_MPI	= mpifort
 R8	= -fdefault-real-8 -fdefault-double-8
-FFLAGS	= -g -fopenmp -O2 -Wall -ffpe-trap=zero,overflow -ffree-line-length-none $(RFLAG)
+FFLAGS	= -g -fopenmp -Ofast -march=native -flto=auto -Wall -ffpe-trap=zero,overflow -ffree-line-length-none $(RFLAG)
 #FFLAGS	= -g -fopenmp -Ofast -Wall -ffpe-trap=zero,overflow -ffree-line-length-none $(RFLAG) -fcheck=all -fbacktrace
 #FFLAGS	= -g -Og -fcheck=all -fbacktrace -Wall -ffpe-trap=invalid,zero,overflow -ffree-line-length-none $(RFLAG) -Wno-conversion -finit-real=snan -finit-integer=-88888888
 #LDFLAGS =

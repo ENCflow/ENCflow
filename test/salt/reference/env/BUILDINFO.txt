@@ -1,8 +1,8 @@
-date      : 2026-08-18 06:01:46
+date      : 2026-11-21 06:49:06
 host      : vm
 user      : 
 pwd       : /home/user/ENCflow/test/salt
 exe       : /home/user/ENCflow/bin/encflow
-mode      : mpi__a452c4d1_double
+mode      : serial__double
 modules   : (no modules)
-lib       : 	libgfortran.so.5 => /lib/x86_64-linux-gnu/libgfortran.so.5 (0x00007fd94fe00000)
+lib       : 	libgfortran.so.5 => /lib/x86_64-linux-gnu/libgfortran.so.5 (0x00007f4276000000)

@@ -1,8 +1,8 @@
-date      : 2026-10-21 22:18:58
+date      : 2026-11-21 06:50:03
 host      : vm
 user      : 
 pwd       : /home/user/ENCflow/test/dissol
 exe       : /home/user/ENCflow/bin/encflow
 mode      : serial__double
 modules   : (no modules)
-lib       : 	libgfortran.so.5 => /lib/x86_64-linux-gnu/libgfortran.so.5 (0x00007f4c3ac00000)
+lib       : 	libgfortran.so.5 => /lib/x86_64-linux-gnu/libgfortran.so.5 (0x00007f5b2f800000)
