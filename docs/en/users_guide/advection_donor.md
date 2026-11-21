@@ -6,7 +6,7 @@
 
 This page explains how the momentum budget of the advection term is handled
 when a narrow channel (about one cell wide) flows on a two-dimensional grid.
-It describes what `f_advection_donor` of `&list_enc` (default 3) does, why it
+It describes what `f_advection_donor` of `&list_enc` (default 4; this page explains 3, on which 4 is built) does, why it
 is needed and how it is verified. The equations and the control volumes of
 the advection term are in §4 of [Advection schemes](advection.md); the records
 of the design and the numerical experiments (for developers) are in
@@ -25,11 +25,16 @@ docs/developer.md §102 (in Japanese).
   almost no water. Without a countermeasure, that slow velocity is multiplied
   by the whole discharge of the main flow and becomes a deceleration that
   does not happen in reality (a brake that exists only in the computation).
-- The default `f_advection_donor = 3` separates the two by whether the
+- `f_advection_donor = 3` separates the two by whether the
   upstream link "really carries water or is deep", and treats only thin
   donors that carry no water as neutral. The test uses no channel mask.
-- To reproduce results computed with the default before 2026-11-09 (0), set
-  `f_advection_donor = 0` explicitly (§7).
+- The default 4 adds to 3 a rule that does not apply the slow velocity of a
+  neighbour cell that is deep but hardly flowing (a shelf onto which channel
+  water has spilled, a pool at the corner of a bend) to the whole discharge
+  of the face (the default since 2026-11-21;
+  [Advection schemes](advection.md) §4.4).
+- What to set to reproduce results computed with the default before
+  2026-11-09 (0) or with the default until 2026-11-21 (3) is in §7.
 
 ## 1. Scope of this page -- why narrow channels are a problem
 
@@ -169,7 +174,7 @@ accelerates. The velocity of the water of other links itself is not brought
 in. Because w changes continuously with the discharge and the depth, no jump
 appears at the moment of switching either.
 
-With the default `f_advection_bend = 1` the value is pulled not toward
+With `f_advection_bend` = 1 or 2 (the default is 2) the value is pulled not toward
 $`u_e`$ itself but toward $`\bar u_p`$, a value built from the velocity the
 water that actually enters the face cell would have at the width of this
 edge and at the depth it arrived with
@@ -219,7 +224,9 @@ catchment of the upper Arakawa, 200 m grid, 100 mm of rain in total (peak
 depression-filled elevation (`Chichibu_200m_filled.tif`) and the channel
 roughness set to 0.02, 0 and 3 are compared (this setup has the flat reaches
 left by depression filling, where the effect of the water film on the banks
-shows clearly).
+shows clearly; the other switches of the advection term are the defaults at
+the time of the runs, `f_advection_bend = 1`, `f_advection_lateral = 1` and
+`f_dry_head_cap = 3`).
 
 ![Difference between 0 and 3 in Chichibu](../../figs/advection_donor_chichibu_en.png)
 
@@ -241,23 +248,27 @@ reach (pond) created by depression filling, just upstream of transect 4.
   divided by 10 is less than 1 m³/s with 3, compared with 173 m³/s with 0.
   With the time step reduced from 6 s to 3 s the peak of 3 stays the same
   within 0.1 %.
-- The difference between 0 and 3 also contains the part by which the default
+- The difference between 0 and 3 also contains the part by which
   `f_advection_lateral = 1`, which works only with 3, removes the lateral-face
   braking by wet banks (§7). With 3 combined with `f_advection_lateral = 0`
   the peak is 6,339 m³/s (154 min), 17 % larger than with 0 and 24 minutes
-  earlier. The part by which the default `f_advection_bend = 1` uses the path
+  earlier. The part by which `f_advection_bend = 1` uses the path
   value for the neutral treatment of 3 (§4) is small: with
   `f_advection_bend = 0` in both, 3 gives 6,876 m³/s and 0 gives
   5,439 m³/s (+26 %).
 
 To reproduce this, in `en/param_step3.txt` of tutorials/chichibu set `fn_z`
 to `"Chichibu_200m_filled.tif"` and `rn0_rw` to 0.02, add `fn_enc = "-"` to
-`&list_sysparam`, append the following `&list_enc`, and run (for the dd
-comparison, also add `dd = 0.0001` and `dv = 0.0001` to `&list_sysparam`).
+`&list_sysparam`, append the following `&list_enc`, and run (for the run of 3
+set `f_advection_donor = 3`; for the dd comparison, also add `dd = 0.0001` and
+`dv = 0.0001` to `&list_sysparam`).
 
 ```
 &list_enc
-  f_advection_donor = 0      ! default until 2026-11-09
+  f_advection_donor = 0      ! default until 2026-11-09 (3 for the run of 3)
+  f_advection_bend = 1       ! these three lines: the defaults of the runs in this section (the defaults until 2026-11-21)
+  f_advection_lateral = 1
+  f_dry_head_cap = 3
 /
 ```
 
@@ -276,8 +287,10 @@ braking of a type known to be artificial from the checks with known answers
   to the rain inflow (theoretical value 0) was 0.2 % for every configuration in a
   grid-aligned channel; in oblique channels it was 10–40 % with 0, 4–17 % with 3
   combined with `f_advection_lateral = 0`, and −0.4 to 3.7 % with the default
-  combination (3 with `f_advection_lateral = 1`) (Figure 4). In every geometry 3
-  is the same as 0 or closer to the theoretical value than 0.
+  combination until 2026-11-21 (3 with `f_advection_lateral = 1`) (Figure 4). In
+  every geometry 3 is the same as 0 or closer to the theoretical value than 0.
+  With the default four values it is 0.2–2.0 % (the new group of
+  [test/wetbank](../../../test/wetbank/en/README.md)).
 - **Confirming that physical braking remains.** The channels of
   test/bendloss with lateral inflow (agreeing with the analytic solution of
   spatially varied flow within 1–2 %), bends and zigzags, and test/dambreak
@@ -301,7 +314,7 @@ braking of a type known to be artificial from the checks with known answers
 the direction of the one-cell-wide channel; the four groups on the right vary
 the grid spacing and the number of cells that represent the channel. The three
 bars are 0, 3 with `f_advection_lateral = 0`, and the default combination
-(3 with `f_advection_lateral = 1`).
+until 2026-11-21 (3 with `f_advection_lateral = 1`).
 
 ## 7. Usage and limits
 
@@ -313,17 +326,24 @@ The Chichibu numbers in this section were measured in the same setting as §5
   200 m grid of Chichibu becomes 1.4 % smaller when it is set to 0.05 and
   0.6 % larger when it is set to 0.2 (the peaks at transects 1–3 differ by
   0.6 % or less). Values outside 0.05–0.2 have not been checked.
-- **Reproducing earlier results.** To reproduce results computed with the
-  default before 2026-11-09 (0) (including cases whose roughness was
-  calibrated with 0), add `fn_enc = "-"` to `&list_sysparam` and set
-  `f_advection_donor = 0` explicitly in `&list_enc`.
+- **Reproducing earlier results.** Results computed with the default until
+  2026-11-21 (3) are reproduced by adding `fn_enc = "-"` to `&list_sysparam`
+  and setting the four switches `f_advection_donor = 3`,
+  `f_advection_bend = 1`, `f_advection_lateral = 1` and `f_dry_head_cap = 3`
+  in `&list_enc` (restoring only one gives a combination that is not meant to
+  be used). For results computed with the default before 2026-11-09 (0)
+  (including cases whose roughness was calibrated with 0), also set
+  `f_advection_donor = 0` and restore the defaults of the other switches
+  changed since then ([Advection schemes](advection.md) §5).
 - **Faster flow.** Compared with 0, flood waves become faster and larger, and
   the Courant number rises. A time step that ran to the end with 0 may need
   to be reduced (Chichibu on the 200 m grid with a 50 m wide subgrid channel:
   dt 6 s → 4 s). Check Cn_max on the screen. The run time is about three tenths
-  longer than with 0 (Chichibu, 200 m grid; this includes the default
+  longer than with 0 (Chichibu, 200 m grid; this includes
   `f_advection_lateral = 1`, which works only with 3. With 3 combined with
-  `f_advection_lateral = 0` it is about a tenth longer than with 0).
+  `f_advection_lateral = 0` it is about a tenth longer than with 0). The
+  default four values take a further 1.3 to 1.4 times that in runs with rain
+  ([Advection schemes](advection.md) §4.4).
 - **Lateral-face braking is handled by `f_advection_lateral`.** The velocity
   of the water entering the control volume from the side is taken from the
   parallel link beyond the face ([Advection schemes](advection.md) §4.2 and
@@ -359,7 +379,7 @@ The Chichibu numbers in this section were measured in the same setting as §5
     banks (for example a run without rain), almost no backwater from the
     junction appears.**
 
-  **The default `f_advection_lateral = 1` treats these two parts
+  **`f_advection_lateral = 1` (and the default 2) treats these two parts
   separately** ([Advection schemes](advection.md) §4.4). When the parallel
   link is a film thin compared with the water crossing the face, its velocity
   is not used (the artificial part is removed), and water entering the flow
@@ -395,7 +415,8 @@ The Chichibu numbers in this section were measured in the same setting as §5
   over-acceleration at the edge just after a bend
   ([the advection page](advection.md) §4.4) alternates with this braking, and
   they become a dip and a bump of ±1,200 m³/s per minute). In the same run with
-  the default combination (`f_advection_lateral = 1` with `f_dry_head_cap = 3`)
+  the default combination until 2026-11-21 (`f_advection_lateral = 1` with
+  `f_dry_head_cap = 3`)
   the dips before the peak do not appear, but a wobble appears in the recession
   when the flow at the pond outlet switches from a deep, slow state to a
   shallow, fast one (the limit of 1 in [the advection page](advection.md) §4.4;
@@ -411,8 +432,8 @@ The Chichibu numbers in this section were measured in the same setting as §5
 - **The velocity of a main flow entering obliquely is not used as it is.**
   3 only treats thin donors as neutral; it does not use the velocity of the
   main flow entering through a diagonal link itself as the upwind value of
-  the flow-direction face. For the neutral part, `f_advection_bend = 1` (the
-  default) uses the velocity the water entering the face cell would have at
+  the flow-direction face. For the neutral part, `f_advection_bend = 1` (and
+  the default 2) uses the velocity the water entering the face cell would have at
   the width of this edge and at the depth it arrived with, and counts the
   acceleration or deceleration for the change of depth along the path (with
   `f_advection_bend = 0` it is not counted;

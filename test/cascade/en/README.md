@@ -17,7 +17,7 @@ for deep, slow neighbouring cells (`f_advection_donor = 4`, `f_advection_bend = 
 ([The cap on the edge depth toward higher ground](../../../docs/en/users_guide/dry_head_cap.md), §4.4 of
 [Advection schemes](../../../docs/en/users_guide/advection.md), developer.md §110.29, §110.30 and §113.9).
 
-**With `f_dry_head_cap = 3` (the default) and with the combination of the four values the excess is within 5 m,
+**With `f_dry_head_cap = 3` and with the default combination of the four values the excess is within 5 m,
 and does not exceed the value on a terrain whose banks are turned into walls (5.7 m for the configurations of 3,
 8.8 m for the combination of the four values). With 2 (the default until 2026-11-16) the head exceeds it by 45 m
 when the banks are dry (recorded as a limit of 2).**

@@ -16,9 +16,9 @@ developer.md §102 and §110.25).
 
 - **The upwind donor of the flow-direction faces.** The upwind value at the inflow face is taken from the upstream link
   on the line along the channel direction, which here is a link of the bank film. `f_advection_donor = 3` in `&list_enc`
-  (the default) treats thin donors that carry almost no water as neutral.
+  (and the default 4) treats thin donors that carry almost no water as neutral.
 - **The lateral faces.** The velocity of the water entering from the side is taken from the parallel neighbouring link
-  (the bank film). `f_advection_lateral = 1` (the default) does not let a link of a film that is thin compared with the
+  (the bank film). `f_advection_lateral = 1` (and the default 2) does not let a link of a film that is thin compared with the
   entering water represent it.
 
 This case measures how much extra depth the brake gives the channel, varying the channel orientation, the grid spacing

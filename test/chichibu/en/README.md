@@ -65,7 +65,7 @@ of the collection from the hillslopes.
 | 3 | x = 29.6 km | 4682 | 1.58 |
 | 4 | 4.6 km upstream of the catchment outlet (x = 43.3 km) | 5585 | 3.17 |
 
-- The reference is the Log of the default settings (scheme 3, dynamic
+- The reference is the Log of the default settings until 2026-11-21 (scheme 3, dynamic
   opening correction, f_advection_donor = 3, f_dry_head_cap = 3, f_advection_bend = 1,
   f_advection_lateral = 1). The table and figure above are the values after the default of the
   edge-depth cap became f_dry_head_cap = 3 and the default of the advection on side faces became

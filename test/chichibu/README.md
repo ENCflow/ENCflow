@@ -56,7 +56,7 @@ python3 Fig.py    # figs/chichibu.png(引数 en で英語版を en/figs/ に)
 | 3 | x = 29.6 km | 4682 | 1.58 |
 | 4 | 流域出口の上流 4.6 km(x = 43.3 km) | 5585 | 3.17 |
 
-- reference は既定設定(スキーム 3・動的開口補正・f_advection_donor = 3・f_dry_head_cap = 3・
+- reference は 2026-11-21 までの既定設定(スキーム 3・動的開口補正・f_advection_donor = 3・f_dry_head_cap = 3・
   f_advection_bend = 1・f_advection_lateral = 1)の Log です。
   上の表と図は、2026-11-16 にエッジ水深の頭打ちの既定を f_dry_head_cap = 3、側方面の移流の既定を
   f_advection_lateral = 1 にした後の値で、それまでの値(測線 1〜4 で 1161 @ 0.85 h・2885 @ 0.98 h・

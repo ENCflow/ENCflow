@@ -220,11 +220,14 @@ make
   the channel level comes within 0.30 m below the bank ground (0.29 m in configuration 8), shallower than the
   velocity head of the component along the diagonal edge of the channel velocity of 4.0 m/s at that time
   (0.42 m).
-- The default is `f_dry_head_cap = 3` (it was 2 until 2026-11-16 and 1 until 2026-11-13). In
+- The default is `f_dry_head_cap = 4` (combined with the three values of the advection term; it was 3
+  until 2026-11-21, 2 until 2026-11-16 and 1 until 2026-11-13). In
   rain-wetted steep valleys and at run-up fronts the results differ between 1 and 2 or 3
   (developer.md §108). Where channel water starts to spill onto a bank directly ahead of the flow,
   the results differ between 2 and 3 ([test/bankspill](../../bankspill/en/README.md);
-  developer.md §110.24). Set 1 or 2 explicitly to reproduce results of the versions up to then.
+  developer.md §110.24). To reproduce results of the versions up to then, set the value of that
+  version explicitly together with the three switches of the advection term
+  ([The cap on the edge depth toward higher ground](../../../docs/en/users_guide/dry_head_cap.md) §6).
 
 ## Related documents
 

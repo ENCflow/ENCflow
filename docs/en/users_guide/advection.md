@@ -370,7 +370,7 @@ this one line of the face value only; the rest of the path is shared.
 The lateral faces use first-order upwinding: on inflow ($`q_t < 0`$) the
 velocity of the parallel neighbouring edge $`u_{t\pm}`$ (green in the control-volume figure),
 on outflow $`u_e`$ (no contribution).
-With the default `f_advection_donor = 3` the wet/dry test of the parallel edge becomes a continuous weight (§4.4, [One-cell-wide channels and the upwind donors of the advection term](advection_donor.md)).
+With `f_advection_donor` = 3 or 4 (the default is 4) the wet/dry test of the parallel edge becomes a continuous weight (§4.4, [One-cell-wide channels and the upwind donors of the advection term](advection_donor.md)).
 
 ### 4.4 Walls, dry cells and boundaries
 
@@ -382,8 +382,9 @@ With the default `f_advection_donor = 3` the wet/dry test of the parallel edge b
   cases of [test/bendloss](../../../test/bendloss/en/README.md)). The upwind
   value of such a face is therefore not taken from the wall side but built
   from the water that actually enters the face cell (next item).
-- **Upwind value on the edge just after a bend (`f_advection_bend`; default
-  1).** A flow-direction face whose donor is a wall or dry is a face that the
+- **Upwind value on the edge just after a bend (`f_advection_bend = 1`; the
+  default 2 adds to this rule the acceleration of the item "A deep neighbour
+  cell that hardly flows" below).** A flow-direction face whose donor is a wall or dry is a face that the
   flow enters by turning in from the side (the edge just after a bend of a
   one-cell-wide channel). Its upwind value is built from the water that
   actually enters the face cell (ENCflow's own treatment; developer.md §110,
@@ -505,8 +506,8 @@ With the default `f_advection_donor = 3` the wet/dry test of the parallel edge b
     `f_dry_head_cap = 2`, a smaller dip and bump remain at transect 3, and a
     one-minute dip of −401 m³/s appears at transect 2 at 42 minutes on the
     rising limb, where with 0 the growth of the discharge merely slows at the
-    same switch; for the wobble that remains with the default combination, see
-    the limits in the `f_advection_lateral` item below).
+    same switch; for the wobble that remains with the combination of the old
+    values (3, 1, 1, 3), see the limits in the `f_advection_lateral` item below).
     Inflow from sea cells is not counted in $`Q_\mathrm{in}`$, and the
     fraction of the inflow that does not come from sea cells is applied as a
     factor to the degree of pulling (a face cell fed only from the sea has
@@ -594,7 +595,8 @@ With the default `f_advection_donor = 3` the wet/dry test of the parallel edge b
   is outside the domain or invalid, that face degrades to first-order
   upwind (reading 0 would give $`r \gg 1 \to \psi = 2`$, anti-diffusion, and
   the first edge leaving a prescribed boundary would blow up; §69.9).
-- **Thin donors that carry almost no water (`f_advection_donor`, default 3).**
+- **Thin donors that carry almost no water (`f_advection_donor = 3`; the default 4 adds to this rule the weights by
+  stream of the item "A deep neighbour cell that hardly flows" below).**
   The upwind value of a flow-direction face is the MUSCL face value
   $`\bar u_k`$ of the link on line $`k`$, but only when the real flux $`Q_k`$
   that this link carries into the face cell is below $`\varepsilon`$ times
@@ -617,9 +619,11 @@ With the default `f_advection_donor = 3` the wet/dry test of the parallel edge b
   are summarized in
   [One-cell-wide channels and the upwind donors of the advection term](advection_donor.md).
   To reproduce results computed with the default before 2026-11-09 (0), set
-  `f_advection_donor = 0` explicitly. Options 1 and 2 were removed on
+  `f_advection_donor = 0` explicitly (and also restore the defaults of the other
+  switches changed since then; "Guidelines" in §5). Options 1 and 2 were removed on
   2026-11-07 (setting them stops the run).
-- **Water entering through the lateral faces (`f_advection_lateral`, default 1).**
+- **Water entering through the lateral faces (`f_advection_lateral = 1`; the default 2 adds to this rule the
+  similarity of discharge of the item "A deep neighbour cell that hardly flows" below).**
   The inflow value of a lateral face is the velocity of the parallel adjacent
   edge (the parallel link). 0 (the default until 2026-11-16) treats the face as
   neutral ($`\bar u_t = u_e`$) when the end cells of the parallel link are dry,
@@ -632,8 +636,8 @@ With the default `f_advection_donor = 3` the wet/dry test of the parallel edge b
   the direction of the main channel is counted only while the banks are wet
   (with dry banks the flow is close to a flow without loss;
   [test/tjunction](../../../test/tjunction/en/README.md)).
-  The default 1 changes three things (it takes effect only with
-  `f_advection_donor = 3`; otherwise it is the same as 0, and a message at
+  1 (and the default 2) changes three things (it takes effect only when
+  `f_advection_donor` is 3 or 4; otherwise it is the same as 0, and a message at
   start-up says so; $`\varepsilon`$ is `p_adv_donor_eps`).
   1. **Representativeness of the parallel link.** The weight of the parallel
      link is multiplied by
@@ -674,7 +678,7 @@ With the default `f_advection_donor = 3` the wet/dry test of the parallel edge b
   increase in depth caused by banks wetted by rain becomes −0.4 to 3.7 %
   (test/wetbank; 0.2–17.2 % with 0), the water surface of a junction pond stays steady and the loss
   at bends stays 0 (test/brink, test/bendloss).
-  Limits of 1: the backwater of a junction is smaller than that of the momentum
+  Limits of 1 (the values in this paragraph are from runs with the combination of the old values 3, 1, 1, 3): the backwater of a junction is smaller than that of the momentum
   theory and changes with the grid orientation, because an eight-neighbour grid
   represents a right-angle junction as a combination of perpendicular links and
   diagonal links, and the water of the diagonal links is counted as carrying
@@ -729,10 +733,11 @@ With the default `f_advection_donor = 3` the wet/dry test of the parallel edge b
   against observations). The run time is about 20 % longer than with 0 (a
   Chichibu run on the 200 m grid). To reproduce cases computed or calibrated
   with the defaults until 2026-11-16, set `f_advection_lateral = 0` and
-  `f_dry_head_cap = 2` explicitly. The construction of $`R'`$, $`\omega`$ and
+  `f_dry_head_cap = 2`, and in addition `f_advection_donor = 3` and
+  `f_advection_bend = 1`, explicitly (§5). The construction of $`R'`$, $`\omega`$ and
   $`\cos\theta`$ is ENCflow's own.
 - **A deep neighbour cell that hardly flows (`f_advection_donor = 4`, `f_advection_bend = 2`,
-  `f_advection_lateral = 2`; optional).** The three default rules above (3, 1, 1) keep the slow velocity of the cell
+  `f_advection_lateral = 2`; the default since 2026-11-21).** The three rules above (3, 1, 1; the defaults until 2026-11-21) keep the slow velocity of the cell
   on the upstream side of line $`k`$, or of the parallel link, from being used when it is a "thin film". When the
   upstream cell is deep but hardly flowing (a shelf onto which channel water has spilled, a pool at the corner of a
   bend), the slow velocity of that link is applied to the whole discharge passing the face. In a one-cell-wide
@@ -742,11 +747,15 @@ With the default `f_advection_donor = 3` the wet/dry test of the parallel edge b
   water circulates among corner cells and channel cells ([test/stairbank](../../../test/stairbank/en/README.md);
   the ups and downs of the transect discharge on the 50 m grid of the Chichibu basin in the item above have the
   same mechanism). The following three values, combined with `f_dry_head_cap = 4` of
-  [The cap on the edge depth toward higher ground](dry_head_cap.md), avoid this. **Use the four together**
-  (combinations of one or two of the values have been checked only in some of the tests; with
-  `f_advection_donor = 4` alone the backwater of a tributary-dominant right-angle junction falls to 20 % of that of
-  the momentum theory, and adding `f_dry_head_cap = 4` alone to the default rules made the ups and downs of the
-  discharge larger in one case). All of them are ENCflow's own (developer.md §112 and §113).
+  [The cap on the edge depth toward higher ground](dry_head_cap.md), avoid this (these four are the default).
+  **Use the four together.** To reproduce earlier results, set all four to the old values (3, 1, 1, 3). Combinations
+  of one or two of the values have been checked only in some of the tests (adding `f_advection_donor = 4` alone to
+  the rules of the old values makes the backwater of a tributary-dominant right-angle junction fall to 20 % of
+  that of the momentum theory, and adding `f_dry_head_cap = 4` alone made the ups and downs of the discharge larger
+  in one case; conversely, specifying only `f_dry_head_cap = 2` and `f_advection_lateral = 0` (the defaults until
+  2026-11-16) on top of the defaults makes the downstream discharge of the steep stepped channel
+  [test/cascade](../../../test/cascade/en/README.md) keep oscillating with a standard deviation of
+  600–780 m³/s). All of them are ENCflow's own (developer.md §112, §113 and §114).
   1. **Weights by stream (`f_advection_donor = 4`).** The flux $`F`$ of a flow-direction face is split into the
      streams of the links $`l`$ entering the face cell, and the velocity $`\bar u_k`$ of the link on line $`k`$ is
      applied only to the streams that link represents.
@@ -844,7 +853,7 @@ With the default `f_advection_donor = 3` the wet/dry test of the parallel edge b
        it would make a drop of the size of the velocity head just inside a stage boundary through which water
        enters, and would make a cell where the discharge is given deeper by the velocity head of its outflow.
        When these cells are used in place of a still pond, the water flows out without being charged the
-       acceleration from rest (the same as with the default). With stage-prescribed cells, the energy head of
+       acceleration from rest (the same as with the old values). With stage-prescribed cells, the energy head of
        the water that has flowed out is then higher than the prescribed level by the velocity head
        ([test/stageside](../../../test/stageside/en/README.md)).
      - In combination with `f_advection_donor = 4`, the path value of 1 is pulled toward neutral by the ratio
@@ -891,48 +900,49 @@ With the default `f_advection_donor = 3` the wet/dry test of the parallel edge b
        discharge of such a cell lacks the links that would carry what enters from outside, so it cannot be
        compared in the same way as that of an interior cell.
 
-  What has been checked (the combination of the four values; the runs and values are recorded in
-  developer.md §113):
+  What has been checked (the default four values compared with the combination of the old values 3, 1, 1, 3; the
+  runs and values are recorded in developer.md §113 and §114):
   - **A one-cell-wide oblique channel with higher cells beside it
     ([test/stairbank](../../../test/stairbank/en/README.md)).** In a channel with shelves or corner cells, the
-    depths on the rising and falling stages agree (with the default, 6.6 m and 10.4 m at the same 2,000 m³/s), the
-    maximum velocity in the domain does not exceed that of the walls-only channel (2.1 times with the default), and
-    water does not climb onto wall cells. A channel whose banks are walls only has the same depths as with the
-    default.
+    depths on the rising and falling stages agree (with the old values, 6.6 m and 10.4 m at the same 2,000 m³/s),
+    the maximum velocity in the domain does not exceed that of the walls-only channel (2.1 times with the old
+    values), and water does not climb onto wall cells. A channel whose banks are walls only has the same depths as
+    with the old values.
   - **A reach of real terrain.** In a run that gives a constant discharge to a reach cut out around transect 3 of
     the 50 m grid of the Chichibu basin, the flow is steady at every discharge from 4,000 to 10,000 m³/s (the
-    standard deviation of the discharge is at most 40 m³/s, 0.5 % of the given discharge; with the default it is
+    standard deviation of the discharge is at most 40 m³/s, 0.5 % of the given discharge; with the old values it is
     543–1,627 m³/s at 6,000 m³/s).
   - **The whole basin (the 50 m grid of the Chichibu basin, 100 mm of rain; the setup of the supplement of the
     [tutorial](../../../tutorials/chichibu/en/README.md)).** The discharge at transect 3, which goes up and down
-    with the default (the one-minute values deviate from the five-point median by up to 1,250 m³/s and reverse
+    with the old values (the one-minute values deviate from the five-point median by up to 1,250 m³/s and reverse
     direction 19 times in succession), becomes smooth (deviation at most 39 m³/s, no reversals). The peak at
     transect 3 goes from 8,954 m³/s at 72 minutes to 7,560 m³/s at 77 minutes, closer to the value of the 100 m
     grid (7,831 m³/s at 73 minutes). The peak at transect 4 downstream goes from 8,688 to 8,737 m³/s, and the
     volume of water passing the transects does not change. The maximum velocity in the domain goes from 29.5 to
-    24.3 m/s. On the 100 m grid with the same setup, the oscillation that appears at transect 4 with the default
+    24.3 m/s. On the 100 m grid with the same setup, the oscillation that appears at transect 4 with the old values
     (deviation from the five-point median of up to 921 m³/s, 16 reversals) disappears (deviation at most 4 m³/s,
     no reversals). The peak at transect 4 then becomes lower and later, from 8,639 m³/s at 134 minutes to
     7,783 m³/s at 145 minutes (the volume of water is the same). The time agrees with the 50 m grid (147 minutes),
     but the peak is 11 % lower than on the 50 m grid, and these runs cannot tell which is closer to reality.
   - **A right-angle junction ([test/tjunction](../../../test/tjunction/en/README.md)).** No energy is gained at
     the junction, and the backwater is 0.47–0.57 times that of the momentum theory (a junction along the grid axes;
-    0.57–0.62 times with the default) and 0.81–0.84 times (a junction rotated 45°; the same as with the default).
+    0.57–0.62 times with the old values) and 0.81–0.84 times (a junction rotated 45°; the same as with the old
+    values).
     The difference between wet and dry banks is below 0.01 m, and mirrored grid orientations give the same values.
   - **Non-hydrostatic runs (`f_nonhydrostatic = 1`).** The agreement of a nested child with its parent (the
     non-hydrostatic item of [test/nest_identity](../../../test/nest_identity/en/README.md); a circular mound of
-    water) holds to round-off (depth differences of 1e-13 m), as with the default. A wave on a uniform current
+    water) holds to round-off (depth differences of 1e-13 m), as with the old values. A wave on a uniform current
     in a channel whose two ends are stage-prescribed cells
-    ([test/nhcurrent](../../../test/nhcurrent/en/README.md)) gives the same result as with the default (depth
+    ([test/nhcurrent](../../../test/nhcurrent/en/README.md)) gives the same result as with the old values (depth
     differences of 0.1 mm or less).
   - **A column of cells given as a boundary and lateral Neumann sides
     ([test/stageside](../../../test/stageside/en/README.md)).** Water flowing into a channel of still water from a
     column of stage-prescribed cells, or from a column of source cells, that touches lateral Neumann sides is
-    steady and uniform alongshore, and gives the same result as with the default (differences in depth and
+    steady and uniform alongshore, and gives the same result as with the old values (differences in depth and
     velocity of 1e-6 or less).
   - **The existing checks computed with the four values.** The dam break (difference from Stoker's solution),
     uniform flow, the travel time of a long wave, the water-surface profile at a drop, the loss at a bend, and the
-    dependence of the onset of spilling onto a bank on the time step keep the accuracy they have with the default.
+    dependence of the onset of spilling onto a bank on the time step keep the accuracy they have with the old values.
     What moves is the water level at which water starts to get onto a bank
     ([test/bankcap](../../../test/bankcap/en/README.md); from 0.289 m to 0.302 m below the bank), the depth of a
     pond where two inflows merge (the pond with a dead-end bay of [test/brink](../../../test/brink/en/README.md);
@@ -941,7 +951,7 @@ With the default `f_advection_donor = 3` the wet/dry test of the parallel edge b
 
   Limits:
   - **The computation takes longer and uses more memory.** In a run where rain wets every cell it takes 1.3 to
-    1.4 times as long as with the default (on 4 threads, +32 % on the 200 m grid of the Chichibu basin and +37 % on
+    1.4 times as long as with the combination of the old values (3, 1, 1, 3) (on 4 threads, +32 % on the 200 m grid of the Chichibu basin and +37 % on
     the 100 m grid; added one at a time on the 200 m grid, `f_advection_lateral = 2` costs +11 %,
     `f_advection_donor = 4` +9 %, and `f_advection_bend = 2` and `f_dry_head_cap = 4` a few percent at most, within
     the scatter of the measurement). As for memory, specifying any of `f_advection_donor = 4`,
@@ -954,16 +964,22 @@ With the default `f_advection_donor = 3` the wet/dry test of the parallel edge b
     discharge. This is the acceleration, up to the velocity of the main stream, of water that passes slowly through
     the corner cell and returns to the channel, and the values are not those of a real flow. It is a limit of
     counting the exchange of momentum between a one-cell-wide channel and the wet cells beside it by rules for each
-    link of the grid.
+    link of the grid. On real terrain, in the pool around transect 4 on the 100 m grid of Chichibu (a reach where
+    the corner cells of a stair-stepped one-cell-wide channel go under water), the water level is 2.1–2.5 m higher
+    than in a one-cell-wide channel whose side cells are turned into walls (runs with a constant discharge of
+    7,000–9,000 m³/s), and the flood peak is 1.6 % lower. Since submerged side cells add to the flowing section,
+    the correct water level should be equal to or lower than that of the walled channel (developer.md §113.8; with
+    the combination of the old values the same pool turns into a flow that gains energy, and the water level is
+    lower by up to 4.4 m (8,000 m³/s) and 6.1 m (9,000 m³/s)).
   - **When stage-prescribed cells or sources are used in place of a still pond (a spring or an outfall), the
-    water flowing out of them is not charged the acceleration from rest** (the same as with the default). To
+    water flowing out of them is not charged the acceleration from rest** (the same as with the old values). To
     account for the acceleration of water leaving a pond, include the pond in the domain as computed water. A
     cell into which a structure (a culvert, a pump or a dam) releases water is treated like a cell with no
     inflow and is charged the acceleration from rest (the receiving cell becomes deeper by the velocity head of
     its outflow).
-  - **The depth of an oblique channel beside banks thinly wetted by rain changes by −7 to +7 % from the default
-    even with dry banks** (depending on the orientation and spacing of the grid; the ratio to the Manning
-    uniform-flow depth is 0.94–1.27, against 0.94–1.37 with the default; the configurations of
+  - **The depth of an oblique channel beside banks thinly wetted by rain changes by −7 to +7 % from the combination
+    of the old values even with dry banks** (depending on the orientation and spacing of the grid; the ratio to the
+    Manning uniform-flow depth is 0.94–1.27, against 0.94–1.37 with the old values; the configurations of
     [test/wetbank](../../../test/wetbank/en/README.md)).
   - $`\kappa = 2`$ and the forms of $`\omega`$, $`c_l`$ and $`r_l`$ are not derived from theory (changing
     $`\kappa`$ between 1 and 2 hardly changes the results).
@@ -973,7 +989,7 @@ With the default `f_advection_donor = 3` the wet/dry test of the parallel edge b
     lateral Neumann sides wherever the flow changes abruptly (at a shoreline, for example). In the
     configuration with a foreshore milder than equilibrium of [test/wfswash](../../../test/wfswash/en/README.md),
     a check of the change of a foreshore by waves, the difference between rows is 1.8e-9 m against a bed change
-    of 0.24 m (4e-16 m with the default).
+    of 0.24 m (4e-16 m with the old values).
   - The idea of using an advection term in energy-head form where the flow contracts strongly is understood to
     come from the original paper of the momentum-conservative scheme[^sd03], but this has not been checked against
     the text (unverified).
@@ -1014,7 +1030,7 @@ The essentials of the numerical experiments of developer.md §68 (2026-10).
 | Spatially varied flow with lateral inflow (depth ratio to the physical solution) | 1.7–2.0 (no momentum sink; supercritical flow turns subcritical) | about the same as 3 | 0.992 |
 | Grid dependence on real terrain (chichibu; conditioned bed, channel roughness 0.04) 200 → 100 → 50 m (peak discharge near the catchment outlet; [supplement of tutorials/chichibu](../../../tutorials/chichibu/en/README.md#result-3-the-advection-term-and-resolution-dependence)) | depends on the upwind index (0.1: −7%, then the discharge goes up and down violently at 50 m; 0.5: −16% and +3%, one to three tenths below 3; 1.0: −18% and +9%, three to five tenths below 3) | not compared under the default rules (about the same as 3 in the measurements of 2026-10) | +2% and +1% (the three grids agree near the catchment outlet; the upstream transects almost converge at 100 m and below; the transect in the gorge grows by 20% from 200 to 100 m; the 50 m grid has a limit of the discharge going up and down = §4.4) |
 | Stability | blows up on the 50 m DEM (upwind index 0.1) and in 1–2 cell incised channels | upwinding provides the stability | same |
-| Cost (measured with `f_advection_bend = 0`; with the default 1, scheme 3 takes another two to three tenths (the same treatment is added to 2); §4.4) | 1.00 | 1.19 | 1.27 |
+| Cost (measured with `f_advection_bend = 0`; with `f_advection_bend = 1`, scheme 3 takes another two to three tenths, and with the default four values a further 1.3 to 1.4 times that (the same treatment is added to 2); §4.4) | 1.00 | 1.19 | 1.27 |
 | Role | legacy; reproducing existing calibrations | fallback for 3 (coarse problems that tolerate the overshoot at the bore front) | **default**; best for bores, jumps, lateral inflow and stability (the peak discharge on real terrain changes with the grid; row above) |
 
 Sources of the numbers: the bore from [test/dambreak](../../../test/dambreak/en/README.md), the smooth flood
@@ -1029,19 +1045,23 @@ has the figures, tables and the list of derived cases).
 - Bores, hydraulic jumps, tsunami run-up and other flows with
   discontinuities: the default (3).
 - Rainfall runoff on a real DEM with a channel mask: 3 +
-  `f_opening_dynamic = 3` + `f_dry_head_cap = 3` + `f_advection_donor = 3` +
-  `f_advection_bend = 1` + `f_advection_lateral = 1` (the defaults). Roughness
-  calibrated with scheme 1 needs recalibration. To reproduce cases calibrated
-  with the defaults until 2026-11-16, `f_dry_head_cap = 2` and
-  `f_advection_lateral = 0`, set 2 and 0 explicitly (§6 of
-  [The cap on the edge depth toward higher ground](dry_head_cap.md) and
-  §4.4). To reproduce cases calibrated with the default until
-  2026-11-15, `f_advection_bend = 0`, set 0 explicitly (§4.4). To
-  reproduce cases calibrated with the default until 2026-11-13,
-  `f_dry_head_cap = 1`, set 1 explicitly (§6 of the same page). To
-  reproduce cases calibrated with the default before 2026-11-09,
-  `f_advection_donor = 0`, set 0 explicitly
-  ([One-cell-wide channels and the upwind donors of the advection term](advection_donor.md)).
+  `f_opening_dynamic = 3` + `f_dry_head_cap = 4` + `f_advection_donor = 4` +
+  `f_advection_bend = 2` + `f_advection_lateral = 2` (the defaults). Roughness
+  calibrated with scheme 1 needs recalibration. To reproduce cases computed or
+  calibrated with an earlier default, restore every default changed after that
+  date, starting from the newest (restoring only one gives a combination that
+  is not meant to be used; §4.4):
+  - The defaults until 2026-11-21: `f_advection_donor = 3`,
+    `f_advection_bend = 1`, `f_advection_lateral = 1` and `f_dry_head_cap = 3`
+    (set all four; §4.4).
+  - The defaults until 2026-11-16: of the four above, set
+    `f_advection_lateral = 0` and `f_dry_head_cap = 2` (§6 of
+    [The cap on the edge depth toward higher ground](dry_head_cap.md) and §4.4).
+  - The defaults until 2026-11-15: in addition `f_advection_bend = 0` (§4.4).
+  - The defaults until 2026-11-13: in addition `f_dry_head_cap = 1` (§6 of the
+    same page).
+  - The defaults before 2026-11-09: in addition `f_advection_donor = 0`
+    ([One-cell-wide channels and the upwind donors of the advection term](advection_donor.md)).
 - Inundation, incised terrain and dam breaks without a channel mask: the
   defaults (3 + `f_opening_dynamic = 3`; until 2026-10-18 the 2 had to be
   set explicitly, and from 2026-10-18 to 31 the default was 2). Use
@@ -1066,12 +1086,14 @@ listed in the [shallow water chapter](swflow.md).
 - `f_dry_head_cap`: the pressure term stops water from climbing onto
   ground above the water surface, but where the advection term wins, water
   can leak over at bore fronts and in incised channels. Capping the edge
-  depth toward high ground by the energy head prevents it. The default 3 caps
+  depth toward high ground by the energy head prevents it. The default 4 caps
   climbing edges (edges where the bed of the receiver is above the bed of the
   sender), whether the receiver is dry or wet, counting also the velocity head
-  of the flow entering the sending cell (the time and amount at which channel
-  water starts to spill onto a bank do not depend on the time step). 1 (the
-  default until 2026-11-13) and 2 (the default until 2026-11-16) are for
+  of the flow entering the sending cell (the rule of 3; the time and amount at
+  which channel water starts to spill onto a bank do not depend on the time
+  step), and limits the speed of that entering flow by the mean velocity of the
+  sending cell (the four values of §4.4). 1 (the default until 2026-11-13),
+  2 (the default until 2026-11-16) and 3 (the default until 2026-11-21) are for
   reproducing earlier results. The formula of the rule, the differences
   between the options and the limits are in
   [The cap on the edge depth toward higher ground](dry_head_cap.md).
@@ -1106,10 +1128,10 @@ The labels in the Basis column are explained in [How to read the basis of a defa
 |---|---:|---|---|
 | f_advection_scheme | 3 | scheme of the advection term (1: cell-centre gradient, 2: conservative + first-order upwind, 3: conservative + MUSCL) | **verification case** bore position error +1.1% in [test/dambreak](../../../test/dambreak/en/README.md), depth ratio 0.992 with lateral inflow in [test/bendloss](../../../test/bendloss/en/README.md), grid dependence on real terrain in the [supplement of tutorials/chichibu](../../../tutorials/chichibu/en/README.md#result-3-the-advection-term-and-resolution-dependence) (table above) |
 | p_adv_upwind_index | 0.5 | upwinding index of scheme 1 (0: central, 1: first-order upwind) | **empirical** halfway between central and first-order upwind. The bore lag grows with $`p`$ (§3) |
-| f_advection_donor | 3 | upwind donors (3: the upwind value is pulled toward u_e only on faces where the real flux of the line-k donor is below ε times the largest inflow link of the face cell and the donor's depth is also below ε times the face cell's depth, and the wet/dry tests of the lateral faces become a continuous weight below dd; 0: wet cells on line k (the default until 2026-11-09); 1 and 2 were removed) | **method** reduces the artificial brake when the banks of a raster channel oblique to the grid are wet (in [test/wetbank](../../../test/wetbank/en/README.md) the increase of the channel depth beyond the rain inflow drops from 10–40% with 0 to 4–17%); the lateral-inflow, vortex and wall tests stay the same as 0; the flood wave becomes faster and larger than with 0; 0 reproduces earlier results ([explanation](advection_donor.md)) |
-| p_adv_donor_eps | 0.1 | threshold ε of `f_advection_donor = 3` (used for both the real flux of the line-k donor / largest real flux of the links entering the face cell and the donor's depth / face cell's depth). With `f_advection_bend = 1` it is also the threshold for inflow / outflow of the face cell and the threshold that decides whether the cell beyond the face cell on the line of an inflow belongs to the same water body (its depth is at least ε times that of the face cell) (§4.4) | **empirical** the peak at transect 4 of the 200 m grid of Chichibu changes by −1.8% at 0.05 and by +0.8% at 0.2 (explanation §7); values outside 0.05–0.2 have not been checked ([explanation](advection_donor.md)) |
-| f_advection_bend | 1 | upwind value on a flow-direction face whose donor is a wall or dry (1: the velocity the water entering the face cell would have at the width of this edge and at the depth it arrived with; 0: the velocity u_e of the control volume itself = the default until 2026-11-15; §4.4) | **method** lets the edge just after a bend receive the momentum of the flow from upstream ([test/brink](../../../test/brink/en/README.md): in a channel whose last link before the drop is diagonal, energy head on the apron − pond goes from +9 to +29 m with 0 to −2.5 to −3.3 m; in a channel whose link at the foot of a drop is diagonal, the hydraulic jump stands at the same position as in the straight channel, while with 0 the supercritical reach disappears; a junction pond settles to a steady state). The same as 0 at a bend in uniform flow. 0 is for reproducing earlier results |
-| f_advection_lateral | 1 | treatment of water entering through the lateral faces (1: a parallel link that is a film thinner than ε times the entering water is not used, and the momentum deficit (1 − cos θ) u_e of water joining the flow along the line of the edge from another direction is counted; the opening fraction of the lateral faces of diagonal edges uses the same test; takes effect only with `f_advection_donor = 3`, otherwise the same as 0. 0: the velocity of the parallel link, neutral when it is dry = the default until 2026-11-16; §4.4) | **method** counts the junction loss regardless of the wetness of the banks and removes the artificial brake of banks wetted by rain ([test/tjunction](../../../test/tjunction/en/README.md): the backwater of a right-angle junction is 60–80 % of that of the momentum theory regardless of the wetness of the banks; with 0 it differs by 0.14–1.09 m between wet and dry banks. [test/wetbank](../../../test/wetbank/en/README.md): the increase in depth caused by banks wetted by rain is −0.4 to 3.7 %; 0.2–17.2 % with 0). The backwater of a junction is smaller than the theory and changes with the grid orientation. 0 is for reproducing earlier results |
+| f_advection_donor | 4 | upwind donors (4: in addition to 3, the flux of the face is split into the streams of the links entering the face cell, and the velocity of the line-k donor is applied only to the streams that link represents; used together with `f_advection_bend = 2`, `f_advection_lateral = 2` and `f_dry_head_cap = 4`. 3: the upwind value is pulled toward u_e only on faces where the real flux of the line-k donor is below ε times the largest inflow link of the face cell and the donor's depth is also below ε times the face cell's depth, and the wet/dry tests of the lateral faces become a continuous weight below dd (the default until 2026-11-21); 0: wet cells on line k (the default until 2026-11-09); 1 and 2 were removed; §4.4) | **method** 3 reduces the artificial brake when the banks of a raster channel oblique to the grid are wet (in [test/wetbank](../../../test/wetbank/en/README.md) the increase of the channel depth beyond the rain inflow drops from 10–40% with 0 to 4–17%); the lateral-inflow, vortex and wall tests stay the same as 0; the flood wave becomes faster and larger than with 0. 4 does not apply the slow velocity of a deep neighbour cell that hardly flows to the whole discharge of the face (in [test/stairbank](../../../test/stairbank/en/README.md) the two depths at the same discharge and the ups and downs of the discharge in an oblique channel with shelves or corner cells disappear; ENCflow's own). 0 and 3 reproduce earlier results ([explanation](advection_donor.md)) |
+| p_adv_donor_eps | 0.1 | threshold ε of `f_advection_donor` = 3 or 4 (used for both the real flux of the line-k donor / largest real flux of the links entering the face cell and the donor's depth / face cell's depth). With `f_advection_bend` = 1 or 2 it is also the threshold for inflow / outflow of the face cell and the threshold that decides whether the cell beyond the face cell on the line of an inflow belongs to the same water body (its depth is at least ε times that of the face cell). With the four values (`f_advection_donor = 4`, `f_advection_bend = 2`, `f_advection_lateral = 2`) it is also the threshold for whether the discharge being split or compared is negligible (§4.4) | **empirical** the peak at transect 4 of the 200 m grid of Chichibu changes by −1.8% at 0.05 and by +0.8% at 0.2 (explanation §7); values outside 0.05–0.2 have not been checked ([explanation](advection_donor.md)) |
+| f_advection_bend | 2 | upwind value on a flow-direction face whose donor is a wall or dry (2: in addition to 1, on the same faces the acceleration of an edge running faster than the arrival speed of the water is charged by an advection term in energy-head form. 1: the velocity the water entering the face cell would have at the width of this edge and at the depth it arrived with = the default until 2026-11-21; 0: the velocity u_e of the control volume itself = the default until 2026-11-15; §4.4) | **method** 1 lets the edge just after a bend receive the momentum of the flow from upstream ([test/brink](../../../test/brink/en/README.md): in a channel whose last link before the drop is diagonal, energy head on the apron − pond goes from +9 to +29 m with 0 to −2.5 to −3.3 m; in a channel whose link at the foot of a drop is diagonal, the hydraulic jump stands at the same position as in the straight channel, while with 0 the supercritical reach disappears; a junction pond settles to a steady state). The same as 0 at a bend in uniform flow. 2 keeps a face cell where inflows merge, and an edge carrying only part of the outflow, from accelerating beyond the energy of the water that entered ([test/stairbank](../../../test/stairbank/en/README.md); ENCflow's own). 0 and 1 are for reproducing earlier results |
+| f_advection_lateral | 2 | treatment of water entering through the lateral faces (2: in addition to 1, when the unit discharge of the parallel link exceeds twice the unit discharge, along the edge, of the cell the entering water comes from, the use of the velocity of the parallel link is reduced by that ratio. 1: a parallel link that is a film thinner than ε times the entering water is not used, and the momentum deficit (1 − cos θ) u_e of water joining the flow along the line of the edge from another direction is counted; the opening fraction of the lateral faces of diagonal edges uses the same test = the default until 2026-11-21. 1 and 2 take effect only when `f_advection_donor` is 3 or 4, otherwise the same as 0. 0: the velocity of the parallel link, neutral when it is dry = the default until 2026-11-16; §4.4) | **method** 1 counts the junction loss regardless of the wetness of the banks and removes the artificial brake of banks wetted by rain ([test/tjunction](../../../test/tjunction/en/README.md): the backwater of a right-angle junction is 60–80 % of that of the momentum theory regardless of the wetness of the banks; with 0 it differs by 0.14–1.09 m between wet and dry banks. [test/wetbank](../../../test/wetbank/en/README.md): the increase in depth caused by banks wetted by rain is −0.4 to 3.7 %; 0.2–17.2 % with 0). The backwater of a junction is smaller than the theory and changes with the grid orientation. 2 does not bring the fast velocity of the main stream running alongside into an edge passing through a corner cell or a pool ([test/stairbank](../../../test/stairbank/en/README.md); ENCflow's own). 0 and 1 are for reproducing earlier results |
 | limiter $`\psi`$ (fixed) | van Leer | flux limiter of scheme 3 | **literature value** van Leer[^vanleer79]; inside Sweby's TVD region[^sweby84] (§4.3) |
 | f_scalar_scheme | 3 | face value of the scalar transport (suspended sediment, water quality, saline layer, driftwood, building debris) (1: first-order upwind, 3: link-wise MUSCL) | **verification case** measured numerical diffusion in [test/tracer](../../../test/tracer/en/README.md) (longitudinal D 1/3–1/5, lateral Dy 1/14; §7). First order is not the default because its numerical diffusion is proportional to the grid spacing |
 

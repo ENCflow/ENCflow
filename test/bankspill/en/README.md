@@ -15,8 +15,8 @@ neighbouring cell, and the time and size of the step change with the time step. 
 that situation in two pockets.
 
 **With `f_dry_head_cap = 2` (the default until 2026-11-16), the onset of spilling into a pocket directly
-ahead of the flow (the cell on the outer side of a bend) depends on the time step. With the default
-`f_dry_head_cap = 3`, and with the combination of the four values for deep, slow neighbouring cells
+ahead of the flow (the cell on the outer side of a bend) depends on the time step. With
+`f_dry_head_cap = 3`, and with the default combination of the four values for deep, slow neighbouring cells
 (`f_advection_donor = 4`, `f_advection_bend = 2`, `f_advection_lateral = 2`, `f_dry_head_cap = 4`), it does not.**
 The test runs the same four computations with 2, with 3 and with the combination of the four values. With 3 and
 with the combination of the four values it judges that the onset does not depend on the time step, that water
@@ -169,7 +169,7 @@ sending cell; in the flow of this test (subcritical, along the channel) it gives
   (there is no theory to compare with).
 - Items 6–8 of the configurations with 2 are not judged. With 2 (the default until 2026-11-16), when a
   step in the one-minute values affects how you read the results, halve the time step and check, or
-  compute with the default `f_dry_head_cap = 3`.
+  compute with the defaults (the combination of the four values) or with `f_dry_head_cap = 3`.
 
 ## Running
 

@@ -96,7 +96,7 @@ are this case, dashed lines the regression case of test/chichibu.
 
 ## Verification
 
-- The reference is the Log of the default settings (scheme 3,
+- The reference is the Log of the default settings until 2026-11-21 (scheme 3,
   f_opening_dynamic = 3, f_advection_donor = 3, f_dry_head_cap = 3,
   f_advection_bend = 1, f_advection_lateral = 1).
 - The Logs of the serial run and of MPI (np = 1, 2, 4) agree with the reference

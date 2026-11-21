@@ -71,7 +71,7 @@
 #   構成 jt0(本流が南からまっすぐ入る T 字の合流。f_advection_bend = 0・f_advection_lateral = 0。この組み合わせの
 #   性質の記録):
 #     (22) 3 段とも、A の水深の振れ幅が RANGE_JP_DEF より大きい(この組み合わせは、この形の池では定常に
-#          落ち着かない。f_advection_lateral = 1(既定)に f_advection_bend = 0 を組み合わせると、2 段目は
+#          落ち着かない。f_advection_lateral = 1(古い値の組み合わせ)に f_advection_bend = 0 を組み合わせると、2 段目は
 #          揺れず、1・3 段目は揺れる)
 #   構成 jt1(同じ池。f_advection_bend = 1):
 #     (23) 3 段とも、池の 4 セルの水深の振れ幅が RANGE_JT 以下(定常)

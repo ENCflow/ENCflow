@@ -17,7 +17,7 @@ the sending cell. In a supercritical flow this velocity head changes greatly wit
 counts a flow entering supercritically not by its velocity head itself but by the specific energy of the
 critical flow of the same discharge (which is determined by the discharge alone). This test looks at a
 situation where that way of counting takes effect. **The discharge in the pool does not oscillate with 2, with
-the default 3, or with the combination of the four values for deep, slow neighbouring cells
+3, or with the default combination of the four values for deep, slow neighbouring cells
 (`f_advection_donor = 4`, `f_advection_bend = 2`, `f_advection_lateral = 2`, `f_dry_head_cap = 4`).**
 
 ## Setup

@@ -26,7 +26,7 @@ mobile up to the free outflow, a two-cell-periodic roughness of the bed and a
 sill of sediment form at the downstream end, and, depending on the rule of
 the cap on the edge depth of the continuity equation (`f_dry_head_cap`),
 erosion advances from the downstream end and lowers the bed of the upstream
-reach as well (with the default 3, the mean |Δz| of the upstream reach under
+reach as well (with `f_dry_head_cap = 3`, the mean |Δz| of the upstream reach under
 the capacity feed becomes 0.083 m; the shape of the downstream end, which is
 not the subject of the test, then decides the reach where the balance of the
 feed is examined). In runs where a movable bed reaches a free-outflow

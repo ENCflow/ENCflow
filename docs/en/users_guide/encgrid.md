@@ -286,9 +286,11 @@ reproducing urban inundation ([geographic information](geoinfo.md)).
 **Flux and wet/dry rules.** The updated velocity is multiplied by the edge
 depth, $`q = u_n h_e`$. On edges climbing to a cell with a higher bed, $`h_e`$
 is capped by the part of the energy head of the sender above the bed of the
-receiver, $`\eta_c + v_h - z_n`$ (`f_dry_head_cap`; the default 3 also counts,
-in the velocity head $`v_h`$, the flow entering the sending cell, and keeps
-the harmonic mean of the depths on both sides as a floor on submerged steps;
+receiver, $`\eta_c + v_h - z_n`$ (`f_dry_head_cap`; the default 4, like 3,
+also counts, in the velocity head $`v_h`$, the flow entering the sending cell
+(its speed limited from above by the mean velocity of the sending cell), and
+keeps the harmonic mean of the depths on both sides as a floor on submerged
+steps;
 1 and 2 cap, by the velocity head $`u_n^2/2g`$ of the edge itself, edges
 towards a dry cell (2 also edges towards a wet cell whose bed is above the
 water level of the sender); [The cap on the edge depth toward higher ground](dry_head_cap.md)), and an edge whose

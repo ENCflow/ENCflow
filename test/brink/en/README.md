@@ -10,8 +10,8 @@ varied flow profiles). It also checks the upwind value used on the edge right af
 momentum-conserving advection (`f_advection_bend` of `&list_enc`;
 [Advection schemes](../../../docs/en/users_guide/advection.md) §4.4; developer.md §110). When the
 channel shifts diagonally by one row just before the overfall, 0 (the default until 2026-11-15)
-gives the flow on the apron an energy head 9–29 m above that of the pond it comes from. With the
-default 1 it does not exceed it. In
+gives the flow on the apron an energy head 9–29 m above that of the pond it comes from. With 1 and
+the default 2 it does not exceed it. In
 a channel with a pond below the overfall, the supercritical flow that has dropped turns into a
 hydraulic jump inside the pond. When the channel shifts diagonally by one row at the foot of the
 overfall, the supercritical reach disappears with 0, while with 1 the jump stands at the same
@@ -45,7 +45,7 @@ the upstream flow. In a strongly accelerating reach (the outlet of a pond, just 
 its velocity rises to the balance between the surface slope and friction. In a decelerating reach
 (the foot of an overfall) the momentum of the flow that has dropped is lost.
 
-The default `f_advection_bend = 1` uses the following value in place of $`u_e`$.
+`f_advection_bend = 1` (and the default 2) uses the following value in place of $`u_e`$.
 
 ```math
 \bar u = u_e + f\left(\sigma\,\frac{f\,Q_\mathrm{in}}{W_e\,\breve h_\mathrm{in}} - u_e\right),\qquad
@@ -394,7 +394,7 @@ New group (combination of the four values; all pass):
   main stream enters straight and turns where it meets the bank, jt0, which combines 0 with
   `f_advection_lateral = 0` for the lateral faces, keeps oscillating in all three stages with a range
   of 0.51–1.47 m (period 80–115 s). The inflow is constant, so this oscillation is produced by the
-  computation. Even with the default 1 for the lateral faces, with 0 the first and third stages
+  computation. Even with 1 for the lateral faces, with 0 the first and third stages
   oscillate (ranges of 0.30 and 0.81 m; 0.00 m in the second stage). With 1 the same pond is steady
   (an oscillation of 0.01 m remains at the end of the first stage; 0.00 m in the second and third).
 - There is no theory to compare the depths of the junction pond with. What is checked is whether

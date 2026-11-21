@@ -99,23 +99,25 @@ module m_swflow_enc
                                             !   セル, 3:線 k の供給元の流量が面のセルへの
                                             !   最大の流入リンクの ε 倍未満なら u_e へ寄せ、
                                             !   側方面の乾湿判定を dd 未満で連続な重みに
-                                            !   (§102)。1(河道セル間のエッジでは河道セルのみ。
-                                            !   §68.18)と 2(流入面を全流入リンクの流量で
-                                            !   重み付け)は 2026-11-07 に廃止)
+                                            !   (§102)。list_enc の 4(既定)は、init が 3 と
+                                            !   adv_stream に直す。1(河道セル間のエッジでは
+                                            !   河道セルのみ。§68.18)と 2(流入面を全流入リンクの
+                                            !   流量で重み付け)は 2026-11-07 に廃止)
     integer :: f_advection_bend = 0           ! 供給元が壁・乾床(3 では薄い水膜も)の流向面の風上値
                                             !   (0:u_e = 中立。§68.8, 1:面のセルへ流入する水が
                                             !   この辺の幅・流入時の水深で流れたときの流速。§110)。
-                                            !   値は init が list_enc(既定 1)から写す。ここの
-                                            !   初期値 0 は init の前の値
+                                            !   値は init が list_enc から写す(既定の 2 は、1 と
+                                            !   adv_energy に直す)。ここの初期値 0 は init の前の値
     integer :: f_advection_lateral = 0        ! 側方面で横から入る水の扱い (0:平行リンクの流速(乾いて
                                             !   いれば中立), 1:平行リンクが入ってくる水に比べて薄い
                                             !   水膜なら代表させず、合流の不足分 (1 − cos θ) u_e を
                                             !   数える。斜めエッジの開口率も同じ判定。§110.25)。
-                                            !   値は init が list_enc(既定 1)から写す。ここの
-                                            !   初期値 0 は init の前の値
+                                            !   値は init が list_enc から写す(既定の 2 は、1 と
+                                            !   adv_latflux に直す)。ここの初期値 0 は init の前の値
     ! 2026-11 に足した 4 つの値(list_enc の f_advection_donor = 4・f_advection_bend = 2・f_advection_lateral = 2・
-    ! f_dry_head_cap = 4。developer.md §113)は、それぞれ 1 つ前の値の規則に、追加の規則を重ねたものである。
-    ! init が「1 つ前の値 + 下のフラグ」に直すので、上の 4 つの整数は従来の値の範囲のまま読める
+    ! f_dry_head_cap = 4。developer.md §113。2026-11-21 から既定 = §114)は、それぞれ 1 つ前の値の規則に、追加の
+    ! 規則を重ねたものである。init が「1 つ前の値 + 下のフラグ」に直すので、上の 4 つの整数は従来の値の範囲の
+    ! まま読める
     logical :: adv_stream = .false.           ! f_advection_donor = 4: 3 の規則に加えて、線 k の供給元の流速を、
                                             !   その連結が代表する流れの分だけに掛ける(流れごとの重み。stream_share)
     logical :: adv_energy = .false.           ! f_advection_bend = 2: 1 の規則に加えて、流向面の中立の分に、到着した
@@ -140,7 +142,8 @@ module m_swflow_enc
                                             !   3:登る辺(受け手の地盤が送り手の地盤より高い辺)を、
                                             !   受け手の乾湿によらず、送り手へ入ってくる流れの
                                             !   速度水頭も数えたエネルギー頭と、調和平均の下限で
-                                            !   頭打ち。cap_he_climb。§110.24)
+                                            !   頭打ち。cap_he_climb。§110.24)。list_enc の 4(既定)は、
+                                            !   init が 3 と cap_cellmean に直す
     integer :: f_bank_mode                    ! 堤防の水理モード(下の e_bank_*)
     integer :: f_diffusion_term               ! 拡散項の計算 (0:無効, 1:定数, 2:ゼロ方程式)
     logical :: have_diff = .false.            ! 拡散項を計算する(f_diffusion_term > 0、nh_break_visc > 0
@@ -152,7 +155,8 @@ module m_swflow_enc
     real :: p_adv_upwind_index != 0.0          ! upwind index of advection term
     real :: p_adv_donor_eps = 0.1             ! f_advection_donor = 3 のしきい値 ε(§102)。f_advection_bend = 1 の
                                             !   流入の割合のしきい値と、流入の線の先のセルが同じ水体かの
-                                            !   水深の比のしきい値にも使う(§110)
+                                            !   水深の比のしきい値にも使う(§110)。4 つの値の規則の、分ける元・
+                                            !   比べる元の流量が取るに足らない大きさかのしきい値にも使う(§113.9)
     real :: p_adprunge_thresh != 2.0           ! threshold of adaptive Runge-Kutta
     real :: p_diffusion_nu != 0.0              ! 拡散項の動粘性係数 (m2/s。モデル2では
                                             !   加算のバックグラウンド粘性)
@@ -1095,13 +1099,15 @@ subroutine m_swflow_enc_init(p, g, b, s)
   ! 河道が深くなる(test/wetbank。§102)ので、明示した実行は起動時に知らせる
   if (opt%f_advection_donor == 0 .and. opt%f_advection_scheme >= 2) then
     call par_info("swflow_enc: f_advection_donor = 0 (edge-line donor used as is; the default until 2026-11-09. " &
-                  //"The default 3 treats thin donors carrying little of the inflow as neutral)")
+                  //"3 and the default 4 treat thin donors carrying little of the inflow as neutral)")
   end if
+  ! 3 は 2026-11-21 までの既定(§114)。4 は、3 の規則に流れごとの重みを重ねる。3 を指定した実行は、そう知らせる
   if (opt%f_advection_donor == 3 .and. .not. opt%adv_stream .and. opt%f_advection_scheme >= 2) then
     call par_info("swflow_enc: f_advection_donor = 3 (edge-line donor ramped toward u_e when it carries " &
                   //"less than p_adv_donor_eps = "//rtoa(opt%p_adv_donor_eps)//" of the largest inflow link " &
                   //"and is shallower than p_adv_donor_eps times the face cell; " &
-                  //"side-face wet/dry tests weighted by min(1, h/dd))")
+                  //"side-face wet/dry tests weighted by min(1, h/dd); the default until 2026-11-21. " &
+                  //"The default 4 also applies the edge-line donor's velocity only to the streams it represents)")
   end if
   ! 4(§113): 3 の規則に加えて、面の流束を、面のセルへ入ってくる連結ごとの流れに分け、線 k の供給元の流速を、
   ! その連結が代表する流れの分だけに掛ける(残りは中立 = f_advection_bend の経路の値)
@@ -1131,13 +1137,15 @@ subroutine m_swflow_enc_init(p, g, b, s)
   ! 知らせる。スキーム 1 には該当する面がないので、どちらの値でも知らせない
   if (opt%f_advection_bend == 0 .and. opt%f_advection_scheme >= 2) then
     call par_info("swflow_enc: f_advection_bend = 0 (neutral u_e on faces whose edge-line donor is a wall, dry " &
-                  //"or a thin film; the default until 2026-11-15. The default 1 uses the velocity of the actual " &
+                  //"or a thin film; the default until 2026-11-15. 1 and the default 2 use the velocity of the actual " &
                   //"inflow of the face cell)")
   end if
+  ! 1 は 2026-11-21 までの既定(§114)。2 は、1 の規則にエネルギー形の加速を重ねる。1 を指定した実行は、そう知らせる
   if (opt%f_advection_bend == 1 .and. .not. opt%adv_energy .and. opt%f_advection_scheme >= 2) then
     call par_info("swflow_enc: f_advection_bend = 1 (faces whose edge-line donor is a wall, dry or a thin film " &
                   //"take the velocity the actual inflow of the face cell would have at this edge's width and " &
-                  //"the inflow depth, instead of u_e)")
+                  //"the inflow depth, instead of u_e; the default until 2026-11-21. The default 2 also charges " &
+                  //"an edge running faster than the arrival speed of that inflow in energy-head form)")
   end if
   ! 2(§113): 1 の規則に加えて、中立の分に、辺の流速が「到着した水の速さ」を上回る分の加速を、エネルギー水頭を
   ! 保存する形の移流項で数える(経路の値の項とは、大きい方)
@@ -1169,14 +1177,16 @@ subroutine m_swflow_enc_init(p, g, b, s)
   ! 0 を指定した実行は起動時に知らせる(f_advection_donor = 3 のときだけ。3 でなければ、どちらの値でも同じ)
   if (list%f_advection_lateral == 0 .and. opt%f_advection_scheme >= 2 .and. opt%f_advection_donor == 3) then
     call par_info("swflow_enc: f_advection_lateral = 0 (side faces take the velocity of the parallel link, a thin " &
-                  //"film on a wet bank included; the default until 2026-11-16. The default 1 does not use parallel " &
-                  //"links much thinner than the entering water and charges joining water its momentum deficit)")
+                  //"film on a wet bank included; the default until 2026-11-16. 1 and the default 2 do not use " &
+                  //"parallel links much thinner than the entering water and charge joining water its momentum deficit)")
   end if
+  ! 1 は 2026-11-21 までの既定(§114)。2 は、1 の規則に流量の比の規則を重ねる。1 を指定した実行は、そう知らせる
   if (opt%f_advection_lateral == 1 .and. .not. opt%adv_latflux .and. opt%f_advection_scheme >= 2) then
     call par_info("swflow_enc: f_advection_lateral = 1 (on side faces, parallel links thinner than " &
                   //"p_adv_donor_eps = "//rtoa(opt%p_adv_donor_eps)//" of the entering water are not used, and " &
                   //"water joining the flow along the edge line from another direction is charged the momentum " &
-                  //"deficit (1 - cos(theta)) u_e)")
+                  //"deficit (1 - cos(theta)) u_e; the default until 2026-11-21. The default 2 also uses a parallel " &
+                  //"link carrying more than twice the unit discharge of the entering water only in proportion)")
   end if
   ! 2(§113): 1 の規則に加えて、平行リンクの単位幅流量が、入ってくる水の出どころのセルの、辺の向きの単位幅流量の
   ! 2 倍を超えるとき、その比で、平行リンクの流速を使う度合いを下げる(速い平行リンクの運動量を持ち込まない)
@@ -1199,14 +1209,17 @@ subroutine m_swflow_enc_init(p, g, b, s)
   if (opt%f_dry_head_cap == 2) then
     call par_info("swflow_enc: f_dry_head_cap = 2 (edge depth toward dry cells, and toward wet cells whose bed is above " &
                   //"the water level of the sending cell, is capped by the energy head taken with the velocity of the " &
-                  //"edge itself; the default until 2026-11-16. The default 3 caps climbing edges with the approach " &
-                  //"flow counted)")
+                  //"edge itself; the default until 2026-11-16. 3 and the default 4 cap climbing edges with the " &
+                  //"approach flow counted)")
   end if
+  ! 3 は 2026-11-21 までの既定(§114)。4 は、3 の入ってくる流れの速さを送り手の平均流速で止める。3 を指定した
+  ! 実行は、そう知らせる
   if (opt%f_dry_head_cap == 3 .and. .not. opt%cap_cellmean) then
     call par_info("swflow_enc: f_dry_head_cap = 3 (edge depth on climbing edges, dry or wet, is capped by the energy head " &
                   //"of the sending cell above the receiving bed, with the flow approaching along the edge line counted " &
                   //"by its velocity head (a supercritical approach flow by the specific energy of the critical flow of " &
-                  //"the same discharge), and by a harmonic-mean floor for submerged steps)")
+                  //"the same discharge), and by a harmonic-mean floor for submerged steps; the default until " &
+                  //"2026-11-21. The default 4 also limits the approach speed by the mean velocity of the sending cell)")
   end if
   ! 4(§113): 3 の規則の、入ってくる流れの速さ u_a を、送り手のセルの平均の流量(s%m, s%n)の、辺の向きの成分 ÷
   ! 水深で上から止める(階段状の河道の対角の連結の流速を、そのまま速度水頭に数えない)

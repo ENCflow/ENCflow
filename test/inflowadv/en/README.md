@@ -67,7 +67,7 @@ For side and steep the inflow section crosses a band boundary at MPI np = 2 and 
 | Cap referenced to the speed of the upstream cell only (option compared) | 0.000 / 0.000 % | +0.004 m | same as the current rule | 1.061 |
 | Cap also counting the supply speed when the inflow cell is supercritical (option compared) | 0.000 / 0.000 % | +0.004 m | +0.048 / −0.269 / +2.397 m | 1.030 |
 
-The row of the current rule gives the values with the default f_opening_dynamic = 3 since 2026-10-31 and the default f_advection_bend = 1 (upwind value on the edge just after a bend) since 2026-11-15 (with f_advection_bend = 0, check 3 gives +0.064 / −0.166 / −0.178 m and check 4 gives 1.032); the other rows are the records compared on 2026-10-29 with the default 2 of that time (the current rule with 2 gives +0.004 m and +0.048 / −0.269 / −0.404 m).
+The row of the current rule gives the values with the default f_opening_dynamic = 3 since 2026-10-31 and the default f_advection_bend = 1 (upwind value on the edge just after a bend) from 2026-11-15 to 21 (with f_advection_bend = 0, check 3 gives +0.064 / −0.166 / −0.178 m and check 4 gives 1.032); the other rows are the records compared on 2026-10-29 with the default 2 of that time (the current rule with 2 gives +0.004 m and +0.048 / −0.269 / −0.404 m).
 
 With the rule of 2026-10-24 to 29, in param_feed of examples/meander (the capacity feed fixes the
 bed of the inflow cells while the outer cells beside them are scoured), the flow falling into the

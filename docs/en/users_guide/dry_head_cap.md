@@ -6,14 +6,14 @@
 
 This page explains the rule that caps, by the energy head, the depth on edges
 toward ground above the water surface (banks, the land behind them, valley
-walls). It describes what `f_dry_head_cap` of `&list_enc` (default 3)
+walls). It describes what `f_dry_head_cap` of `&list_enc` (default 4)
 prevents, how options 1, 2, 3 and 4 differ, their limits, and what to set to
 reproduce earlier results. How the edge depth is defined in the first place
 is in [ENC grid and time integration](encgrid.md), the advection schemes are
 in [Advection schemes](advection.md), and the records of the design and the
 numerical experiments (for developers) are in docs/developer.md §68.16 (1),
-§108 (2), §110.24, §110.30 and §110.32 (3), and §112.11 and §113 (4) (in
-Japanese).
+§108 (2), §110.24, §110.30 and §110.32 (3), and §112.11, §113 and §114 (4)
+(in Japanese).
 
 **Key points**
 
@@ -21,21 +21,21 @@ Japanese).
   surface, but where the advection term wins, water can leak over at bore
   fronts and in incised channels. Capping the edge depth toward high ground by
   the energy head prevents it.
-- The default 3 caps climbing edges (edges where the bed of the receiver is
-  above the bed of the sender), whether the receiver is dry or wet. The
-  velocity head also counts the flow entering the sending cell. The time and
-  amount at which channel water starts to spill onto a bank do not depend on
-  the time step.
+- 3 (the default until 2026-11-21) caps climbing edges (edges where the bed
+  of the receiver is above the bed of the sender), whether the receiver is dry
+  or wet. The velocity head also counts the flow entering the sending cell.
+  The time and amount at which channel water starts to spill onto a bank do
+  not depend on the time step.
+- The default 4 limits the speed of "the flow entering the sending cell" of 3
+  from above by the mean velocity of the sending cell. In a one-cell-wide
+  channel oblique to the grid, it keeps water from getting too early onto a
+  bank that lies ahead of a diagonal link (§4.1; use it together with the
+  three values of the advection term; the default since 2026-11-21).
 - 1 (the default until 2026-11-13) caps only while the receiver is dry, and 2
   (the default until 2026-11-16) also caps a wet receiver as long as its bed
   is above the water level of the sender. Both take the velocity head from the
   velocity of the edge itself, so the onset of spilling depends on the time
   step.
-- 4 (optional) limits the speed of "the flow entering the sending cell" of 3
-  from above by the mean velocity of the sending cell. In a one-cell-wide
-  channel oblique to the grid, it keeps water from getting too early onto a
-  bank that lies ahead of a diagonal link (§4.1; use it together with the
-  three values of the advection term).
 - To reproduce cases computed or calibrated while each was the default, set
   that value explicitly (§6).
 
@@ -60,13 +60,13 @@ are ENCflow's own.
 | 0 | none | — | 2026-10-03 |
 | 1 | edges whose receiving cell is dry | the velocity of the edge itself, $`u_n^2/2g`$ | 2026-11-13 |
 | 2 | as 1, and also edges whose receiver is wet but has its bed above the water level of the sender (with a transition at the threshold) | the same | 2026-11-16 |
-| 3 | climbing edges (the bed of the receiver above the bed of the sender), whether the receiver is dry or wet | the larger of the velocity of the edge itself and the flow entering the sending cell (for a supercritical flow, up to the specific energy of the critical flow of the same discharge) | current default |
-| 4 | the same as 3 | the same as 3, except that the speed of the entering flow is limited from above by the mean velocity of the sending cell projected on the edge (§4.1) | — (optional) |
+| 3 | climbing edges (the bed of the receiver above the bed of the sender), whether the receiver is dry or wet | the larger of the velocity of the edge itself and the flow entering the sending cell (for a supercritical flow, up to the specific energy of the critical flow of the same discharge) | 2026-11-21 |
+| 4 | the same as 3 | the same as 3, except that the speed of the entering flow is limited from above by the mean velocity of the sending cell projected on the edge (§4.1) | current default (since 2026-11-21) |
 
 1 prevents the leaks and the blow-up at bore fronts and in incised channels.
 It does not act at ordinary wet/dry fronts, where it is the same as 0.
 
-## 3. The default 3: formula and idea
+## 3. Formula and idea of 3 (the basis of the default 4)
 
 3 caps the edge depth on climbing edges (edges where the bed of the receiver
 is above the bed of the sender), whether the receiver is dry or wet, by
@@ -152,7 +152,7 @@ as with 2, water does not climb onto a bank above the water level
   example, the downstream peak falls by the amount that the step at the onset
   of spilling had added (how to reproduce earlier results is in §6).
 
-### 4.1 4: the speed of the entering flow limited by the mean velocity of the cell
+### 4.1 4 (default): the speed of the entering flow limited by the mean velocity of the cell
 
 The "speed of the entering flow" $`u_a`$ of 3 is the unit-width discharge of
 the edge one step upstream divided by the depth of the sender. The unit-width
@@ -190,8 +190,9 @@ only). The treatment is original to ENCflow (developer.md §112.11 and §113).
 
 Use 4 together with `f_advection_donor = 4`, `f_advection_bend = 2` and
 `f_advection_lateral = 2` of the advection term
-([Advection schemes](advection.md) §4.4). When 4 alone is added to the
-default rules of the advection term, there is a case where the ups and downs
+([Advection schemes](advection.md) §4.4; the default is these four). When 4
+alone is added to the rules of the old values of the advection term (3, 1,
+1), there is a case where the ups and downs
 of the discharge grow instead (in a run that steps the discharge up and down
 on a reach cut out of the 50 m grid of the Chichibu basin, the largest
 standard deviation of the discharge rises from 1,218 to 5,296 m³/s and the
@@ -255,7 +256,9 @@ of 0.02, with 2 combined with `f_advection_lateral = 0`, the defaults until
    17 minutes earlier than in a run with a time step of 1 s (time step 4 s;
    the peaks agree within 1 %).
 
-These steps do not appear with the default 3.
+These steps do not appear with 3 (for 4 as well,
+[test/bankspill](../../../test/bankspill/en/README.md) checks that the onset
+of spilling does not depend on the time step).
 
 ### 5.3 A limit of 2 (steep stepped channels)
 
@@ -272,29 +275,36 @@ film under `f_advection_lateral = 0` acts and there is no excess (24 m/s), but
 it by 22 m even with rain (44 m/s; §4.4 of
 [Advection schemes](advection.md)). With 3 the excess is within 5 m whether
 the banks are dry or wet and whatever `f_advection_lateral` is, about the same
-as on a terrain where the bank cells are turned into walls (6 m)
-([test/cascade](../../../test/cascade/en/README.md)). It appears when the
+as on a terrain where the bank cells are turned into walls (6 m). With the
+default four values the excess is also within 5 m (4.5 m; 8.8 m on the terrain
+with walled banks; [test/cascade](../../../test/cascade/en/README.md)). It appears when the
 run-up onto banks is counted by the edge's own velocity alone (a strong
 restriction), but why it does so has not been identified
 (developer.md §110.29).
 
 ## 6. Reproducing earlier results
 
+Also return the three switches of the advection term (`f_advection_donor`,
+`f_advection_bend`, `f_advection_lateral`) to the defaults of that date
+(returning only one gives a combination that is not meant to be used; §4.4
+and §5 of [Advection schemes](advection.md)).
+
 | What to reproduce | Setting | Note |
 |---|---|---|
-| Cases computed or calibrated with versions until 2026-11-16 | `f_dry_head_cap = 2` (together with `f_advection_lateral = 0`) | the treatment of side faces is in §4.4 of [Advection schemes](advection.md) |
-| Cases computed or calibrated with versions until 2026-11-13 | `f_dry_head_cap = 1` | in rain-wetted steep valleys (rainfall runoff on a real DEM) and at run-up fronts the results differ between 1 and 2 (the differences in the Chichibu regression case are in [test/chichibu](../../../test/chichibu/en/README.md)) |
+| Cases computed or calibrated with versions until 2026-11-21 | `f_dry_head_cap = 3` (together with `f_advection_donor = 3`, `f_advection_bend = 1` and `f_advection_lateral = 1`) | the three values of the advection term are in §4.4 of [Advection schemes](advection.md) |
+| Cases computed or calibrated with versions until 2026-11-16 | `f_dry_head_cap = 2` (together with `f_advection_donor = 3`, `f_advection_bend = 1` and `f_advection_lateral = 0`) | the treatment of side faces is in §4.4 of [Advection schemes](advection.md) |
+| Cases computed or calibrated with versions until 2026-11-13 | `f_dry_head_cap = 1` (together with `f_advection_donor = 3`, `f_advection_bend = 0` and `f_advection_lateral = 0`) | in rain-wetted steep valleys (rainfall runoff on a real DEM) and at run-up fronts the results differ between 1 and 2 (the differences in the Chichibu regression case are in [test/chichibu](../../../test/chichibu/en/README.md)) |
 | Cases calibrated with versions before 2026-10-03 | `f_dry_head_cap = 0` (together with `f_advection_scheme = 1` and `f_opening_dynamic = 0`) | the choice of schemes in §5 of [Advection schemes](advection.md) |
 
 ## 7. Verification cases
 
 - **[test/bankcap](../../../test/bankcap/en/README.md)** -- a flowing incised
   channel and a thinly wet bank. Channel water below the bank does not climb
-  onto it (2 and 3), and the discharge does not flip at the threshold of the
+  onto it (2, 3 and 4), and the discharge does not flip at the threshold of the
   cap. The formula of the transition of 2.
 - **[test/bankspill](../../../test/bankspill/en/README.md)** -- what happens
   when the channel level rises slowly and water starts to spill into a bank
-  pocket. The onset of spilling does not depend on the time step (3); the
+  pocket. The onset of spilling does not depend on the time step (3 and 4); the
   limit of 2 is recorded.
 - **[test/chutepool](../../../test/chutepool/en/README.md)** -- a supercritical
   flow that has fallen over a drop turns and plunges into a deep pool. The
@@ -302,7 +312,7 @@ restriction), but why it does so has not been identified
   entering flow by the specific energy of the critical flow; §4).
 - **[test/cascade](../../../test/cascade/en/README.md)** -- a steep channel
   where drops and flat reaches alternate. The head of the flow does not exceed
-  the water level at the upstream end (3); the limit of 2 is recorded (§5.3).
+  the water level at the upstream end (3 and 4); the limit of 2 is recorded (§5.3).
 - **[test/stairbank](../../../test/stairbank/en/README.md)** -- a
   one-cell-wide channel oblique to the grid and higher cells beside it. Water
   does not get onto a bank ahead of a diagonal link before the water level
@@ -321,8 +331,8 @@ restriction), but why it does so has not been identified
   continuity equation
 - [Shallow water flow computation](swflow.md) -- the list of the parameters of
   `&list_enc` and their defaults
-- docs/developer.md §68.16, §108, §110.24, §110.30, §110.32, §112.11 and
-  §113 (records of the design, prototypes and verification; in Japanese)
+- docs/developer.md §68.16, §108, §110.24, §110.30, §110.32, §112.11, §113
+  and §114 (records of the design, prototypes and verification; in Japanese)
 
 ## References
 

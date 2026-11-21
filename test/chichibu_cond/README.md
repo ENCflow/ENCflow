@@ -78,7 +78,7 @@ python3 Fig.py    # figs/chichibu_cond.png(引数 en で英語版を en/figs/ �
 
 ## 検証
 
-- reference は、既定の設定(スキーム 3・f_opening_dynamic = 3・f_advection_donor = 3・f_dry_head_cap = 3・
+- reference は、2026-11-21 までの既定の設定(スキーム 3・f_opening_dynamic = 3・f_advection_donor = 3・f_dry_head_cap = 3・
   f_advection_bend = 1・f_advection_lateral = 1)の Log です。
 - 逐次と MPI(np = 1・2・4)の Log が、reference と一致します(ULP = 1)。
 - 夜間の CI が、test/chichibu と同じく、逐次・MPI(np = 1・2・4)・`-fcheck=all` のビルドで回します。
