@@ -256,12 +256,17 @@ reach (pond) created by depression filling, just upstream of transect 4.
   value for the neutral treatment of 3 (§4) is small: with
   `f_advection_bend = 0` in both, 3 gives 6,876 m³/s and 0 gives
   5,439 m³/s (+26 %).
+- With the four values of the default (`f_advection_donor = 4`, `f_advection_bend = 2`,
+  `f_advection_lateral = 2`, `f_dry_head_cap = 4`) the peak is 6,908 m³/s (140 min), 0.7 % smaller and
+  2 minutes earlier than with the combination of 3 above (6,960 m³/s at 142 min; transects 1–3 differ
+  by 0.9 % or less). The change of the peak when dd is divided by 10 is less than 1 m³/s, and with the
+  time step of 3 s it is within 0.1 %.
 
 To reproduce this, in `en/param_step3.txt` of tutorials/chichibu set `fn_z`
 to `"Chichibu_200m_filled.tif"` and `rn0_rw` to 0.02, add `fn_enc = "-"` to
 `&list_sysparam`, append the following `&list_enc`, and run (for the run of 3
-set `f_advection_donor = 3`; for the dd comparison, also add `dd = 0.0001` and
-`dv = 0.0001` to `&list_sysparam`).
+set `f_advection_donor = 3`; for the run with the four values of the default, leave out the four lines of
+`&list_enc`; for the dd comparison, also add `dd = 0.0001` and `dv = 0.0001` to `&list_sysparam`).
 
 ```
 &list_enc
@@ -322,10 +327,12 @@ The Chichibu numbers in this section were measured in the same setting as §5
 (depression-filled elevation, channel roughness 0.02).
 
 - **The default works as is.** No setting is needed. The threshold
-  `p_adv_donor_eps` (default 0.1) is empirical. The peak at transect 4 on the
-  200 m grid of Chichibu becomes 1.4 % smaller when it is set to 0.05 and
-  0.6 % larger when it is set to 0.2 (the peaks at transects 1–3 differ by
-  0.6 % or less). Values outside 0.05–0.2 have not been checked.
+  `p_adv_donor_eps` (default 0.1) is empirical. With the four values of the
+  default, the peak at transect 4 on the 200 m grid of Chichibu becomes 0.3 %
+  smaller when it is set to 0.05 and 0.5 % larger when it is set to 0.2 (the
+  peaks at transects 1–3 differ by 0.6 % or less; with the combination 3, 1, 1, 3
+  of the defaults until 2026-11-21, 1.4 % smaller and 0.6 % larger). Values
+  outside 0.05–0.2 have not been checked.
 - **Reproducing earlier results.** Results computed with the default until
   2026-11-21 (3) are reproduced by adding `fn_enc = "-"` to `&list_sysparam`
   and setting the four switches `f_advection_donor = 3`,

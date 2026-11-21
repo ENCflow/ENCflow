@@ -113,8 +113,8 @@
     {
       "source": "docs/users_guide/advection.md",
       "target": "docs/en/users_guide/advection.md",
-      "source_sha256": "d1f16fa220a864d39dfe4c828955cbdc036afc5b3e2af5e53cc501912a713eaa",
-      "target_sha256": "3bfbd865b340a2698fca839dbaf4e4d7caaf1bcb4477b91b3694fe51f56e4506",
+      "source_sha256": "6e79041fab0df9cc74e41af9c6e2320b99714749c466c856b8e93bf49dff6cfe",
+      "target_sha256": "896cae48d026cf91a09dfe21cc855234f4caede7d2e34231b134683c7a603752",
       "reviewer": "Claude (Claude Code session; changed sections compared side by side with the Japanese source; numbers checked against the test runs)",
       "method": "assistant",
       "reviewed_on": "2026-11-21"
@@ -122,8 +122,8 @@
     {
       "source": "docs/users_guide/advection_donor.md",
       "target": "docs/en/users_guide/advection_donor.md",
-      "source_sha256": "0fbeaf08e59e44da3470b5423723480a429e500e00e1e6afb25bb52462a9c995",
-      "target_sha256": "a9bbbf6d6f63ea6e0fbea4d601a243bdba821b609bc0242b970e2d7894c59295",
+      "source_sha256": "395d4648dbb1e8259ed16530835206775752b7c7354ce4bad245270cc005c079",
+      "target_sha256": "f3b6647dac672952c0d0791facbbf9e523ff76afd79c486773586f13f0655a84",
       "reviewer": "Claude (Claude Code session; changed sections compared side by side with the Japanese source; numbers checked against the test runs)",
       "method": "assistant",
       "reviewed_on": "2026-11-21"
