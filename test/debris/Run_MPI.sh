@@ -144,4 +144,24 @@ if [ -d save_eq_serial ]; then
         echo "警告: save_eq/state.dat が逐次ビルドと不一致(同上)" >&2
     fi
 fi
+
+# 構成 9・10: 高橋・中川則(f_dbed = 3)への追加(developer.md §28.18)。設定は make_tk.py が書く
+python3 "$sdir/make_tk.py" || exit 1
+for c in $(python3 "$sdir/make_tk.py" list); do
+    rm -rf result_$c save_$c
+    mpirun -np "$NP" $MPIRUN_OPTS ./encflow_mpi p_$c.txt > Screen_$c.log 2>&1 \
+        || { echo "ERROR: p_$c.txt (np=$NP) run failed (Screen_$c.log)" >&2; exit 1; }
+    if [ -d save_${c}_serial ]; then
+        if cmp -s save_$c/state.dat save_${c}_serial/state.dat; then
+            echo "=== $c: state.dat は逐次結果とビット一致 ==="
+        else
+            echo "警告: save_$c/state.dat が逐次ビルドと不一致(同上)" >&2
+        fi
+    fi
+done
+python3 "$sdir/Check_debris_tk.py" rate save_tk_un_a save_tk_un_b || rc=1
+python3 "$sdir/Check_debris_tk.py" rate save_tk_ug_a save_tk_ug_b || rc=1
+python3 "$sdir/Check_debris_tk.py" same save_tk_sg_1 save_tk_sg_0 || rc=1
+python3 "$sdir/Check_debris_tk.py" eq save_tk_eq0 0 || rc=1
+python3 "$sdir/Check_debris_tk.py" eq save_tk_eq1 1 || rc=1
 exit $rc

@@ -4,12 +4,13 @@
 勾配 tan θ = tan30° の一様な斜面の等流(最急勾配の向き、4 近傍)で、帯の中ほどの窓(x ∈ [60, 100] m)の
 混合体の鉛直の深さ h_t = h + hs の平均を、水平の流速・鉛直の深さで書いた次の釣り合いの解析解と比べる
 (q = h_t |V| は流入の単位幅の混合体流量、C = cs/(1 + cs) は濃度、g_e = g cos²θ、c = cos θ、
-fv は 2 で 1/c⁴(掃流状は 1/c³)、1 で 1。降伏の倍率は最急勾配の向きでは 1 と 2 とも 1):
+fv は 2 で 1/c⁴(掃流状の (d/h) の 1 乗の形は 1/c³)、1 で 1。降伏の倍率は最急勾配の向きでは 1 と 2 とも 1):
   voellmy   : g_e tanθ = g_e μ + fv g_e |V|²/(ξ h_t)          → h_t³ = q² fv / (ξ (tanθ − μ))
   egashira  : g_e tanθ = g_e tanφ sC/(1+sC) (C/C*)^{1/5} + fv f_b |V|²/((1+sC) h_t)、
               f_b = 6.25 {k_f (1−C)^{5/3}/C^{2/3} + k_d (s+1)(1−e²) C^{1/3}} (d/h_t)²   → h_t⁵ = …
   stony     : g_e tanθ = g_e tanα' sC/(1+sC) + fv A'{(1−C)/C}^{2/3} (d/h_t)² |V|²/((1+sC) h_t)
   collective: g_e tanθ = g_e tanα' sC/(1+sC) + fv (d/h_t) |V|²/(0.49 h_t)
+  collective2: g_e tanθ = g_e tanα' sC/(1+sC) + fv (d/h_t)² |V|²/(0.49 h_t)(db_immexp = 2。fv は 2 で 1/c⁴)
 2 の解析解は、斜面に沿う速さと地盤に直角な厚さで書いた原式(Voellmy なら V_s² = ξ h_n (sin θ − μ cos θ))と
 同じ。判定:
   (1) 各ケースの <h_t> が解析解と TOL_ANA 以内、窓の変動係数 TOL_CV 未満、濃度が流入の値
@@ -56,6 +57,11 @@ def analytic(law, gc):
             kk = APR * ((1.0 - cc) / cc) ** (2.0 / 3.0)
         # g_e dy = fv kk d² q² / ((1+sC) h⁵)
         h = (fv * kk * mi.D50 ** 2 * q * q / ((1.0 + s * cc) * ge * dy)) ** 0.2
+    elif law == "collective2":   # 掃流状集合流動を (d/h)² で(db_immexp = 2。§28.18)
+        fv = 1.0 / c2 ** 2 if gc >= 2 else 1.0
+        dy = mi.G - TANA * sc
+        # g_e dy = fv (d/h)² (q/h)² / (0.49 h) → h⁵ = fv d² q² / (0.49 g_e dy)
+        h = (fv * mi.d50_of(law) ** 2 * q * q / (C49 * ge * dy)) ** 0.2
     else:   # collective
         fv1 = 1.0 / c2 ** 1.5 if gc >= 2 else 1.0
         dy = mi.G - TANA * sc

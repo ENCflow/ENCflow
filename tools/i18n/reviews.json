@@ -113,9 +113,9 @@
     {
       "source": "docs/users_guide.md",
       "target": "docs/en/users_guide.md",
-      "source_sha256": "c3023349da8a609bda6649e67e380a7b35db1117a328c1e95fac39aebe61af6f",
-      "target_sha256": "42cd25ae00c32329abe8a4a26dbaf157e97b1d39645a703c0733a96aa8a151ac",
-      "reviewer": "Claude (Claude Code session; the sections changed for f_dbwet = 3 (retained pore water) and gw_sat0 (initial soil-layer saturation) compared side by side with the Japanese source; numbers checked against the test runs)",
+      "source_sha256": "1b3818c7711625142588fab57ba15ee6d98bb1819dc84a7be8417485487ff712",
+      "target_sha256": "6041071afeb752a56b61c6f0ca866ccc2535b577958e6d270db30466762baeb5",
+      "reviewer": "Claude (Claude Code session; the parts changed for the Takahashi-Nakagawa additions (f_dbunsat, f_dbimm, db_immexp), the dilute-side yield statement and the test tables compared side by side with the Japanese source; numbers checked against the test runs and the two source papers)",
       "method": "assistant",
       "reviewed_on": "2026-11-22"
     },
@@ -311,9 +311,9 @@
     {
       "source": "docs/users_guide/geomorph.md",
       "target": "docs/en/users_guide/geomorph.md",
-      "source_sha256": "e29035b98854a8ccff5b9f24390557f96e045f4d7e9d421cca46fabe7e1cd33c",
-      "target_sha256": "24aaad6c3cec00cab202f74d125bd75e710cf44090d0d274b3fbcd9848ecc24e",
-      "reviewer": "Claude (Claude Code session; the sections changed for f_dbwet = 3 (retained pore water) and gw_sat0 (initial soil-layer saturation) compared side by side with the Japanese source; numbers checked against the test runs)",
+      "source_sha256": "2d30aef4d7219ffce781f4a45fd2cdc818c354f3f1703475e15715a6edc3580e",
+      "target_sha256": "9423a204a1116c3916fbc50861ff53dca7f33b32df27b2fc07c5b6aa874d6697",
+      "reviewer": "Claude (Claude Code session; the parts changed for the Takahashi-Nakagawa additions (f_dbunsat, f_dbimm, db_immexp), the dilute-side yield statement and the test tables compared side by side with the Japanese source; numbers checked against the test runs and the two source papers)",
       "method": "assistant",
       "reviewed_on": "2026-11-22"
     },
@@ -392,9 +392,9 @@
     {
       "source": "docs/users_guide/massflow.md",
       "target": "docs/en/users_guide/massflow.md",
-      "source_sha256": "358072043fa09f0b628e36c6d147a7ad4203867c5e35754d2a6057023599ccf1",
-      "target_sha256": "b8a15912e079d26dfd2cd8a8ce059e16707b2e89c9c6b8b7877ddd20742dfd9a",
-      "reviewer": "Claude (Claude Code session; the sections changed for f_dbwet = 3 (retained pore water) and gw_sat0 (initial soil-layer saturation) compared side by side with the Japanese source; numbers checked against the test runs)",
+      "source_sha256": "47ac8e5ff084adf40378276baabc6764302f19418d2518213be104fc06cdb518",
+      "target_sha256": "10c61143b43be193f70366c3a72ed117a1e4d68ad15f3f55667b3fa2c631fe04",
+      "reviewer": "Claude (Claude Code session; the parts changed for the Takahashi-Nakagawa additions (f_dbunsat, f_dbimm, db_immexp), the dilute-side yield statement and the test tables compared side by side with the Japanese source; numbers checked against the test runs and the two source papers)",
       "method": "assistant",
       "reviewed_on": "2026-11-22"
     },
@@ -437,9 +437,9 @@
     {
       "source": "docs/users_guide/params_index.md",
       "target": "docs/en/users_guide/params_index.md",
-      "source_sha256": "8dcc9dfaeaa0d9cc829895b17bbf15fced0ff35d6b68799819bc3169f064748a",
-      "target_sha256": "7f15c37539afcf4bd935f742914182205532b9dbe5d055f7910313a4f3749b6b",
-      "reviewer": "Claude (Claude Code session; the sections changed for f_dbwet = 3 (retained pore water) and gw_sat0 (initial soil-layer saturation) compared side by side with the Japanese source; numbers checked against the test runs)",
+      "source_sha256": "32be29d730db84a396d834c2aec2bf1f6bc1e8527b8bad3feb8647030a98ba6a",
+      "target_sha256": "702f160611e4a96af7259b292a422d89200388b467176368864027f85e7ee5b3",
+      "reviewer": "Claude (Claude Code session; the parts changed for the Takahashi-Nakagawa additions (f_dbunsat, f_dbimm, db_immexp), the dilute-side yield statement and the test tables compared side by side with the Japanese source; numbers checked against the test runs and the two source papers)",
       "method": "assistant",
       "reviewed_on": "2026-11-22"
     },
@@ -509,11 +509,11 @@
     {
       "source": "docs/users_guide/steep_slope.md",
       "target": "docs/en/users_guide/steep_slope.md",
-      "source_sha256": "8881d0d679bd41913a16bf91740fe5f794ad4e08d58db1a803e95d57b19c2850",
-      "target_sha256": "4fb86c56511880ae1e5f621725cba27ebb0ff576fc695821df40d6a408bffee9",
-      "reviewer": "Claude (Claude Code session; the sentence added to §4 on the effect of the default 2 through the dry/wet switch in examples/badland_storm result 1 compared against the Japanese source; the rest of the file is unchanged since the previous record)",
+      "source_sha256": "8fa8756183d5d3644b9e2800ce8f2a4a18f41f0afa057f591b8b87e3feb6ce7a",
+      "target_sha256": "ccc4ca88d568d234d9935abe5d91467f511e0f952002a2abb7b4034c03c18465",
+      "reviewer": "Claude (Claude Code session; the parts changed for the Takahashi-Nakagawa additions (f_dbunsat, f_dbimm, db_immexp), the dilute-side yield statement and the test tables compared side by side with the Japanese source; numbers checked against the test runs and the two source papers)",
       "method": "assistant",
-      "reviewed_on": "2026-11-10"
+      "reviewed_on": "2026-11-22"
     },
     {
       "source": "docs/users_guide/structure.md",
@@ -716,9 +716,9 @@
     {
       "source": "examples/List_samples/list_geomorph.txt",
       "target": "examples/List_samples/en/list_geomorph.txt",
-      "source_sha256": "4001f39f9026a50978785040feaea874ceeac1730a5073d4b7c5703912c00f9e",
-      "target_sha256": "0edbb93b33d092842d89eb68af751c91bad003ba8c819a67c86faf231f95e9d5",
-      "reviewer": "Claude (Claude Code session; the sections changed for f_dbwet = 3 (retained pore water) and gw_sat0 (initial soil-layer saturation) compared side by side with the Japanese source; numbers checked against the test runs)",
+      "source_sha256": "fd7cfaf44a814a98c06c65345786009c9159ca45adbf5fe2eb0188606f65210a",
+      "target_sha256": "6c599190f20b2008cc7c83202d195de808f8dcf67289084b6374d81f1d14e023",
+      "reviewer": "Claude (Claude Code session; the parts changed for the Takahashi-Nakagawa additions (f_dbunsat, f_dbimm, db_immexp), the dilute-side yield statement and the test tables compared side by side with the Japanese source; numbers checked against the test runs and the two source papers)",
       "method": "assistant",
       "reviewed_on": "2026-11-22"
     },
@@ -3569,11 +3569,11 @@
     {
       "source": "test/README.md",
       "target": "test/README.en.md",
-      "source_sha256": "1ad92988dd102864e22c81e7512ff097e3aea03b2bfad257b9a91b09ea5d3628",
-      "target_sha256": "897e1ddb60e84cedee3b62ac9763f4bfd43b848725df319b954e807e91cc81f8",
-      "reviewer": "Claude (Claude Code session; changed sections compared side by side with the Japanese source; numbers checked against the test runs)",
+      "source_sha256": "288fbd3ec22f9c953cb1c5ab773ae5b3c84223dc49350d9083b249ed4d880a6c",
+      "target_sha256": "16a4fe614a9fa4e5390b125bfe8500fb27a761723dc7efca05d0332b5a6e575f",
+      "reviewer": "Claude (Claude Code session; the parts changed for the Takahashi-Nakagawa additions (f_dbunsat, f_dbimm, db_immexp), the dilute-side yield statement and the test tables compared side by side with the Japanese source; numbers checked against the test runs and the two source papers)",
       "method": "assistant",
-      "reviewed_on": "2026-11-21"
+      "reviewed_on": "2026-11-22"
     },
     {
       "source": "test/avalanche/README.md",
@@ -4010,18 +4010,18 @@
     {
       "source": "test/dbslope/README.md",
       "target": "test/dbslope/en/README.md",
-      "source_sha256": "2c2784baab4c50c0ee8aa774eab755a20349211baa03f7504681703006477a0a",
-      "target_sha256": "ef3e6d98a826a923cbfb56da0a0c7b5c5f5cc64fe712bd058c57605d5af44f0c",
-      "reviewer": "Claude (Claude Code session; changed sections compared side by side with the Japanese source; numbers checked against the test runs)",
+      "source_sha256": "3b92f0ce1850293481dc0db70d5a606498b0c4779dddde7af5e4696a6685a24a",
+      "target_sha256": "cbed46eda242e7fce3917eaa08b20f53932e46d870fa891d5a2e9b0f6ab396c1",
+      "reviewer": "Claude (Claude Code session; the parts changed for the Takahashi-Nakagawa additions (f_dbunsat, f_dbimm, db_immexp), the dilute-side yield statement and the test tables compared side by side with the Japanese source; numbers checked against the test runs and the two source papers)",
       "method": "assistant",
-      "reviewed_on": "2026-11-21"
+      "reviewed_on": "2026-11-22"
     },
     {
       "source": "test/debris/README.md",
       "target": "test/debris/en/README.md",
-      "source_sha256": "0fc8e0947e27655782171ce768d18129b0e1baac7b3173b286b50ee84f754144",
-      "target_sha256": "b61bb30f57c0bcf8984d780225b6103825b885591531429a1eeaff15e59809a6",
-      "reviewer": "Claude (Claude Code session; the sections changed for f_dbwet = 3 (retained pore water) and gw_sat0 (initial soil-layer saturation) compared side by side with the Japanese source; numbers checked against the test runs)",
+      "source_sha256": "5d60525ca8031cfb7abd2bea1e3be07d53eea1ddc90b77ae5363b75f14e877e0",
+      "target_sha256": "e5bd3ad37e983020178e19ba59808a0b205f900dc66b1c6b5e2642a56c2a7438",
+      "reviewer": "Claude (Claude Code session; the parts changed for the Takahashi-Nakagawa additions (f_dbunsat, f_dbimm, db_immexp), the dilute-side yield statement and the test tables compared side by side with the Japanese source; numbers checked against the test runs and the two source papers)",
       "method": "assistant",
       "reviewed_on": "2026-11-22"
     },

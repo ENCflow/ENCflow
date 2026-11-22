@@ -2,7 +2,8 @@
 # debris: 土石流(浸食起動型)の疎通・保存則検定(逐次実行)
 #   ./Run.sh
 # 合否は Check_debris.py(固体保存・共動更新恒等・侵食/堆積の活性)と、構成 7 の
-# Check_debris_eq.py(斜面等流の平衡濃度)。
+# Check_debris_eq.py(斜面等流の平衡濃度)、構成 9・10 の Check_debris_tk.py(高橋・中川則への追加:
+# 不飽和床の侵食速度・緩い勾配の掃流状集合流動の平衡濃度)。
 # 実行後の save/ は save_serial/ にも複製する(Run_MPI.sh のバイト比較用)
 
 sdir=$(dirname "$(readlink -f "$0")")
@@ -75,6 +76,22 @@ rm -rf result_eq save_eq
 ./encflow param_eq.txt > Screen_eq.log 2>&1 || { echo "ERROR: param_eq.txt run failed" >&2; exit 1; }
 python3 "$sdir/Check_debris_eq.py" save_eq || rc=1
 rm -rf save_eq_serial && cp -r save_eq save_eq_serial
+
+# 構成 9・10: 高橋・中川則(f_dbed = 3)への追加(developer.md §28.18)。地形と初期水深は構成 7 と同じ。
+# 設定 p_tk_*.txt は make_tk.py が書く
+python3 "$sdir/make_tk.py" || exit 1
+for c in $(python3 "$sdir/make_tk.py" list); do
+    rm -rf result_$c save_$c
+    ./encflow p_$c.txt > Screen_$c.log 2>&1 || { echo "ERROR: p_$c.txt run failed (Screen_$c.log)" >&2; exit 1; }
+    rm -rf save_${c}_serial && cp -r save_$c save_${c}_serial
+done
+# 構成 9: 不飽和床の侵食速度(地下水計算なし・あり)と、飽和した河床で選択子の有無が同じ結果になること
+python3 "$sdir/Check_debris_tk.py" rate save_tk_un_a save_tk_un_b || rc=1
+python3 "$sdir/Check_debris_tk.py" rate save_tk_ug_a save_tk_ug_b || rc=1
+python3 "$sdir/Check_debris_tk.py" same save_tk_sg_1 save_tk_sg_0 || rc=1
+# 構成 10: 等流の平衡濃度(f_dbimm = 0 と 1)
+python3 "$sdir/Check_debris_tk.py" eq save_tk_eq0 0 || rc=1
+python3 "$sdir/Check_debris_tk.py" eq save_tk_eq1 1 || rc=1
 
 if [ $rc -eq 0 ]; then
     echo "=== debris verification PASS ==="

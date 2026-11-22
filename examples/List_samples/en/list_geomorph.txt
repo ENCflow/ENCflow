@@ -344,6 +344,29 @@
   db_satbed = 1.0          ! saturation of the deposit layer s_b (0-1. Used with
                            !   f_dbwet=1 (not with 2 or 3). Horadani values: 0.8 on slopes above
                            !   21 deg, 1.0 below)
+  f_dbunsat = 0            ! erosion formula for an unsaturated bed (used with
+                           !   f_dbed=3. 0: saturated-bed formula only, 1: the
+                           !   erosion of cells whose bed is unsaturated uses the
+                           !   unsaturated-bed formula of Takahashi-Nakagawa 1991
+                           !   (Shin-Sabo 44(3) eq. (10)). The bed is saturated
+                           !   when hg >= sy0.sd with the groundwater
+                           !   computation, or when db_satbed >= 1 without it)
+  db_kunsat = 0.0          ! constant K of the unsaturated-bed erosion formula.
+                           !   0 = default 0.01 (the Horadani value of that paper)
+  f_dbimm = 0              ! bedload-like collective flow on gentle slopes (used
+                           !   with f_dbed=3. 0: stony-type formulas at all
+                           !   slopes, 1: equilibrium concentration 6.7 c_inf^2 on
+                           !   gentle slopes, and the deposition of flows with
+                           !   concentrations of 0.4C* or less uses the formula of
+                           !   the collective flow (Shin-Sabo 44(3) eq. (28)))
+  db_deltdi = 0.0          ! deposition coefficient delta'_d of the bedload-like
+                           !   collective flow. Used with f_dbimm=1. 0 = default
+                           !   0.1 (the Horadani value of that paper)
+  db_immexp = 1            ! exponent n of the resistance (rho_T/0.49)(d_L/h)^n V2
+                           !   of the bedload-like collective flow of f_dbres=3
+                           !   (1: as printed in Shin-Sabo 44(3) eqs. (24)(25),
+                           !   2: the form derived from the uniform-flow law,
+                           !   eq. (3), of the same paper)
   db_mu = 0.0              ! Voellmy friction coefficient mu (dimensionless).
                            !   Used by f_dbres=4. 0 = default 0.2 (avalanches
                            !   0.1-0.3. The reduced apparent friction (H/L) of

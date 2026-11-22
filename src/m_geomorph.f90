@@ -459,6 +459,12 @@ module m_geomorph
                                      !   3:2 + 保持水 λ − sy0 の授受。§28.17)
     real :: db_lamsb = 0.0           ! λ・s_b(前計算。連行水深 = λ・s_b・|Δz|)
     real :: db_wret = 0.0            ! 保持水 w_r = λ − sy0(f_dbwet = 3。土と一緒に動く暗黙の間隙水)
+    integer :: f_dbunsat = 0         ! 不飽和床の侵食式(f_dbed = 3。0:飽和床の式だけ, 1:不飽和のセルは式(10)。§28.18)
+    real :: db_kuns = 0.0            ! 不飽和床の侵食式の K / s(前計算。s = 土粒子の水中比重)
+    logical :: db_unsat0 = .false.   ! 地下水計算なしのときの河床の状態(db_satbed < 1 なら不飽和)
+    integer :: f_dbimm = 0           ! 緩い勾配の掃流状集合流動(f_dbed = 3。0:石礫型の式を全勾配で,
+                                     !   1:平衡濃度 6.7 c∞² と掃流状集合流動の堆積速度式。§28.18)
+    real :: db_deltdi = 0.0          ! 掃流状集合流動の堆積速度係数 δ'd(f_dbimm = 1)
     integer :: f_release = 0         ! 瞬時流動化(0:無効, 1:有効 = fn_dbinit 指定)
     real :: db_reltime = 0.0         ! 流動化の発生時刻 (s)
     real :: db_relsat = 1.0          ! 崩壊土塊の飽和度(gwflow 無効時のみ使用)

@@ -10,8 +10,12 @@
 !     tanθ ≤ 0.03         : C∞ = 0(掃流域は堆積側に一本化。第3領域式は
 !                            文献照合後に追加 — debris_plan.md §1)
 !     上限 C∞ ≤ 0.9C*(C* = 1−λ)
-!   【要文献照合】閾値 0.138 / 0.03、係数 6.7、上限 0.9C* は高橋理論の
-!   慣用値。原典(Takahashi 2007 等)との照合完了までこの注記を残すこと。
+!   出典(2026-11-22 照合。debris_plan.md §1 の照合更新4): 係数 6.7 は掃流状集合流動の平衡濃度
+!   c_LS∞ = 6.7 c∞²(高橋・中川・山敷1991 京大防災研年報 34 B-2 式(12)。「従来の実験の結果に
+!   よれば」)。上限 0.9C* は同論文の「急勾配路床上では、およそ 0.9c* 程度で流れる」。閾値 0.138 は
+!   6.7 c∞² = c∞(c∞ = 1/6.7)となる勾配を s = 1.65・tanφ = 0.7 で解いた値で、文献値ではない
+!   (φ・s を変えると本来は動くが、ここでは固定している)。
+!   【要文献照合】閾値 0.03(未成熟/掃流の境界)だけは出典が確かめられていない。
 !
 !   交換速度(河床深さレート、×|V|。形は高橋(1992)系【要文献照合】):
 !     侵食(C < C∞): i_e = δe・(C∞−C)/(C*−C∞)・|V|
@@ -49,7 +53,7 @@ submodule(m_geomorph) m_geomorph_debris
   use m_fileio, only : fileio_read_matrix
   implicit none
 
-  ! 勾配領域の閾値と係数(【要文献照合】高橋理論の慣用値。原式固定で
+  ! 勾配領域の閾値と係数(出典はヘッダ。0.03 だけ【要文献照合】。原式固定で
   ! namelist にしない — developer.md §19.8 の原則2)
   real, parameter :: db_tan1 = 0.138     ! 石礫型/未成熟の境界 tanθ
   real, parameter :: db_tan2 = 0.03      ! 未成熟/掃流の境界 tanθ
@@ -59,6 +63,8 @@ submodule(m_geomorph) m_geomorph_debris
   ! 高橋・中川(1991)新砂防 44(3) の定数(原式固定。f_dbed=3)
   real, parameter :: tk_ab = 0.02        ! a_i・sinα_i(式(2)(15)の 0.02)
   real, parameter :: tk_p = 1.0 / 3.0    ! 堆積の慣性係数の定数 p(式(27)。採用値)
+  real, parameter :: tk_cbl = 0.4        ! 掃流状集合流動の濃度の上限(C <= 0.4 C*。式(3) の下。
+                                         !   m_swflow_enc の db_cbl と同じ値。f_dbimm = 1 の堆積式の切り替え)
 
   real, parameter :: rk_rhow = 1000.0    ! 水の密度 (kg/m3。岩盤侵食の駆動応力。rockinc と同じ)
 
@@ -75,6 +81,7 @@ module subroutine init_debris(gm, p, g, list)
   integer :: k
   real, parameter :: deg2rad = acos(-1.0) / 180.0
   real :: phi, wstop, d50, erest, mu, xi, tauy, sphi, sgam   ! 既定適用後の有効値(§62)
+  real :: kuns                                               ! 不飽和床の侵食式の K(§28.18)
 
   ! 既定を適用しない経路では namelist の値をそのまま持つ(従来と同値)
   wstop = list%db_wstop
@@ -247,9 +254,58 @@ module subroutine init_debris(gm, p, g, list)
   gm%db_d50v = d50
   gm%db_erest = erest
   gm%db_cmin = list%db_cmin
+  ! f_dbres = 3 の掃流状集合流動の抵抗の (d_L/h) の指数(developer.md §28.18。既定 1 = 新砂防 44(3)
+  ! 式(24)(25) の印字どおり、2 = 同論文の等流の式(3) から導く形 = 年報 34 B-2 式(31))
+  if (list%db_immexp /= 1 .and. list%db_immexp /= 2) then
+    call par_stop("list_geomorph: db_immexp must be 1 or 2")
+  end if
+  if (list%db_immexp == 2 .and. list%f_dbres /= 3) then
+    call par_stop("list_geomorph: db_immexp=2 requires f_dbres=3 (Takahashi-Nakagawa 1991)")
+  end if
   call m_swflow_enc_set_debris(gm%f_dbres, gm%db_tanphi, gm%sgrav, gm%db_vstop, &
                                gm%db_cstar, gm%db_cmin, gm%db_d50v, gm%db_erest, &
-                               gm%db_mu, gm%db_xi, gm%db_tauy, gm%f_dbcurv)
+                               gm%db_mu, gm%db_xi, gm%db_tauy, gm%f_dbcurv, list%db_immexp)
+
+  ! 高橋・中川の式の追加の選択子(developer.md §28.18。どれも f_dbed = 3 / f_dbres = 3 の中の切り替えで、
+  ! 既定では従来の経路だけを通る)
+  !   f_dbunsat = 1: 河床が不飽和のセルの侵食に、不飽和床の侵食式(新砂防 44(3) 式(10))を使う。
+  !     K = db_kunsat(既定 0.01 = 同論文の洞谷への適用値)。地下水計算なしのときは db_satbed < 1 を
+  !     不飽和と読む(同論文は洞谷の計算で、勾配 21° 以上の区間の飽和度を s_b = 0.8、それ以下を 1.0 とする)
+  !   f_dbimm = 1: 緩い勾配の掃流状集合流動の平衡濃度 6.7 c∞²(年報 34 B-2 式(12))と堆積速度式
+  !     (新砂防 式(28)。δ'd = db_deltdi、既定 0.1 = 洞谷への適用値)
+  select case (list%f_dbunsat)
+    case (0)
+      continue
+    case (1)
+      if (list%f_dbed /= 3) then
+        call par_stop("list_geomorph: f_dbunsat=1 requires f_dbed=3 (Takahashi-Nakagawa 1991)")
+      end if
+      if (list%db_satbed < 0.0 .or. list%db_satbed > 1.0) then
+        call par_stop("list_geomorph: db_satbed must be in [0, 1]")
+      end if
+      kuns = gm_param("db_kunsat", list%db_kunsat, 0.01, "")
+      if (kuns <= 0.0) call par_stop("list_geomorph: db_kunsat must be > 0")
+      gm%db_kuns = kuns / gm%sgrav
+      gm%db_unsat0 = (list%db_satbed < 1.0)
+    case default
+      call par_stop("list_geomorph: f_dbunsat must be 0(saturated-bed erosion only) or " &
+                    // "1(unsaturated-bed erosion where the bed is unsaturated)")
+  end select
+  gm%f_dbunsat = list%f_dbunsat
+  select case (list%f_dbimm)
+    case (0)
+      continue
+    case (1)
+      if (list%f_dbed /= 3) then
+        call par_stop("list_geomorph: f_dbimm=1 requires f_dbed=3 (Takahashi-Nakagawa 1991)")
+      end if
+      gm%db_deltdi = gm_param("db_deltdi", list%db_deltdi, 0.1, "")
+      if (gm%db_deltdi <= 0.0) call par_stop("list_geomorph: db_deltdi must be > 0")
+    case default
+      call par_stop("list_geomorph: f_dbimm must be 0(stony-type laws at all slopes) or " &
+                    // "1(immature debris flow on gentle slopes)")
+  end select
+  gm%f_dbimm = list%f_dbimm
 
   ! 間隙水の連行(f_dbwet。高橋・中川1991 式(5)の源泉 i{c*+(1−c*)s_b} 形)
   select case (list%f_dbwet)
@@ -388,6 +444,8 @@ module subroutine calc_debris(gm, p, g, s, dtw)
   integer :: i, j
   real :: tanth, cinf, cc, hm, fx, dzb, cap, fxg, hseq, dhw, fwh
   real :: tanthc, sinthc, vcr, fac
+  real :: cstn, sinth                         ! 石礫型の平衡濃度と流動面の勾配の sin(不飽和床の侵食式。§28.18)
+  logical :: immd                             ! 緩い勾配の掃流状集合流動の式を使うか(f_dbimm = 1。同上)
   real :: tanf, ge, taud, fr, bd, bdm, area   ! 土石流による岩盤侵食(§89.18)
   real :: gzx, gzy                            ! 同上の有効重力の地盤の勾配(§91)
   real :: wdf                                 ! 保持水の不足(f_dbwet = 3。層の平面の水深 m)
@@ -414,8 +472,10 @@ module subroutine calc_debris(gm, p, g, s, dtw)
   if (rkd .and. allocated(opt)) gcorr = (opt%f_gravity_correction > 0)
 
   ! --- パス1: 交換量の計算(時刻 n の状態のみを読む) ---
+  immd = (gm%f_dbimm == 1)
   !$omp parallel do schedule(static) private(i, j, tanth, cinf, cc, hm, fx, hseq, &
-  !$omp                                      tanthc, sinthc, vcr, fac, tanf, ge, taud, fr, gzx, gzy)
+  !$omp                                      tanthc, sinthc, vcr, fac, tanf, ge, taud, fr, gzx, gzy, &
+  !$omp                                      cstn, sinth)
   do j = dcp%js, dcp%je
     do i = g%wx(1,j), g%wx(2,j)
       gm%dbr%fx(i,j) = 0.0
@@ -477,12 +537,33 @@ module subroutine calc_debris(gm, p, g, s, dtw)
             ! 流速ベクトル方向の流動面(z+h+hs)勾配(式(26))
             tanth = slope_flow_surf(g, s, i, j)
             cinf = ceq_egashira(gm, tanth)   ! 式(11)(13)の単一粒径形(上限 0.9C*)
+            ! 緩い勾配の掃流状集合流動(f_dbimm = 1。§28.18): 平衡濃度を c_LS∞ = 6.7 c∞² に替える
+            ! (c∞ より小さくなる勾配の領域だけ。年報 34 B-2 式(12))。石礫型の c∞ は cstn に残す
+            cstn = cinf
+            if (immd) cinf = ceq_immature(cinf)
             if (cc < cinf) then
-              ! 飽和床の侵食(式(12): δe・(C∞−C)/(C*−C∞)・q_T/d_L。
-              ! 固体換算 fx = C*・i・dtw)
-              fx = gm%db_cstar * gm%db_delte * (cinf - cc) / (gm%db_cstar - cinf) &
-                   * s%vv(i,j) * hm / gm%db_d50v * dtw
+              if (bed_unsat(gm, g, s, i, j)) then
+                ! 不飽和床の侵食(f_dbunsat = 1。新砂防 44(3) 式(10)、年報 34 B-2 式(8)〜(11)):
+                !   i/√(g h) = K sin^{3/2}θ {1 − s C (tanφ/tanθ − 1)}^{1/2} (tanφ/tanθ − 1)(C∞ − C) h/d_L
+                ! 単一粒径では (tanφ/tanθ − 1) = 1/(s c∞) なので、石礫型の平衡濃度 c∞(cstn)で
+                !   i = (K/s) √(g h) sin^{3/2}θ (1 − C/c∞)^{1/2} (C∞ − C)/c∞ h/d_L
+                ! と書ける(C∞ は緩い勾配の掃流状集合流動では c_LS∞。それ以外は c∞ で (1 − C/c∞)^{3/2})。
+                ! 上限濃度 0.9C* の急勾配でも、頭打ちした c∞ をこの形のまま使う(独自の閉じ。論文は
+                ! この領域の C < 0.9C* の侵食速度を書いていない)。h は混合流動深、θ は飽和床の式と同じ
+                sinth = tanth / sqrt(1.0 + tanth**2)
+                fx = gm%db_cstar * gm%db_kuns * sqrt(p%gg * hm) * sinth * sqrt(sinth) &
+                     * sqrt(1.0 - cc / cstn) * (cinf - cc) / cstn * hm / gm%db_d50v * dtw
+              else
+                ! 飽和床の侵食(式(12): δe・(C∞−C)/(C*−C∞)・q_T/d_L。
+                ! 固体換算 fx = C*・i・dtw)
+                fx = gm%db_cstar * gm%db_delte * (cinf - cc) / (gm%db_cstar - cinf) &
+                     * s%vv(i,j) * hm / gm%db_d50v * dtw
+              end if
               fx = min(fx, s%sd(i,j) / (gm%morfac * gm%poroi))
+            else if (immd .and. cc <= tk_cbl * gm%db_cstar) then
+              ! 掃流状集合流動(C <= 0.4C*)の堆積(f_dbimm = 1。新砂防 44(3) 式(28):
+              ! δ'd・(C∞−C)/C*・q_T/d_L。慣性の係数を持たない)
+              fx = gm%db_deltdi * (cinf - cc) * s%vv(i,j) * hm / gm%db_d50v * dtw
             else
               ! 堆積(式(27): δd・(1−V/(p・vc))⁴・(C∞−C)/C*・q_T/d_L。
               ! vc は限界速度(式(15))、tanθc は限界勾配(式(16))。
@@ -507,6 +588,7 @@ module subroutine calc_debris(gm, p, g, s, dtw)
             ! 静止セルは E-D なし(レート ∝ q_T)。停止判定用の勾配は地形勾配
             tanth = slope8(gm, g, s, i, j)
             cinf = ceq_egashira(gm, tanth)
+            if (immd) cinf = ceq_immature(cinf)
             fx = 0.0
           end if
         else
@@ -1089,6 +1171,48 @@ pure function ceq_egashira(gm, tanth) result(cinf)
     cinf = db_cfrac * gm%db_cstar
   else
     cinf = min(tanth / (gm%sgrav * (gm%db_tanphi - tanth)), db_cfrac * gm%db_cstar)
+  end if
+end function
+
+
+!----------------------------------------------------------------------
+! 緩い勾配の掃流状集合流動の平衡濃度(f_dbimm = 1。developer.md §28.18)
+!   c_LS∞ = 6.7 c∞²(高橋・中川・山敷1991 京大防災研年報 34 B-2 式(12)。「従来の実験の結果に
+!   よれば」)。c_LS∞ が石礫型の平衡濃度 c∞ より小さく計算される領域(c∞ < 1/6.7)だけで使い、
+!   それ以外は c∞ のまま返す。引数は ceq_egashira の値(上限 0.9C* つき)
+!----------------------------------------------------------------------
+pure function ceq_immature(cstn) result(cinf)
+  real, intent(in) :: cstn
+  real :: cinf
+  cinf = cstn
+  if (db_immat * cstn < 1.0) cinf = db_immat * cstn**2
+end function
+
+
+!----------------------------------------------------------------------
+! 河床が不飽和か(f_dbunsat = 1 のときの侵食式の切り替え。developer.md §28.18)
+!   地下水計算あり: 地下貯留 hg が容量 sy0・sd に届いていなければ不飽和(飽和帯は土層の底から
+!     積もると読む。f_slide・側方流と同じ。届いたかどうかは容量の 1e-9 倍の余裕で判定する =
+!     授受の丸めで 1 ulp 欠けた飽和のセルを不飽和と読まない)
+!   地下水計算なし: db_satbed < 1 なら全域が不飽和(新砂防 44(3) は洞谷の計算で、勾配 21° 以上の
+!     区間の飽和度を s_b = 0.8、それ以下を 1.0 とする。2 つの式の見出しは「堆積層が不飽和である場合」
+!     「堆積層が飽和である場合」)
+!   f_dbunsat = 0 なら常に .false.(従来どおり飽和床の式だけ)
+!----------------------------------------------------------------------
+pure function bed_unsat(gm, g, s, i, j) result(unsat)
+  type(t_geomorph), intent(in) :: gm
+  type(t_geoinfo), intent(in) :: g
+  type(t_state), intent(in) :: s
+  integer, intent(in) :: i, j
+  logical :: unsat
+  real :: cap
+  unsat = .false.
+  if (gm%f_dbunsat == 0) return
+  if (s%gw_active) then
+    cap = s%sd(i,j) * g%sy0
+    unsat = (cap - s%hg(i,j)) > 1.0e-9 * cap
+  else
+    unsat = gm%db_unsat0
   end if
 end function
 

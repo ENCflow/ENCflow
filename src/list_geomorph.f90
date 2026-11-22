@@ -219,8 +219,10 @@ module list_geomorph
     real :: db_phi = 0.0             ! 土砂の内部摩擦角 (deg)。f_dbed>=1 または
                                      ! f_dbres=1,2 で必須(等価流体構成
                                      ! f_dbed=0 + f_dbres=4,5 では不使用)
-    real :: db_delte = 0.0007        ! 侵食速度係数 δe(既定は Takahashi 2007 の一般値
-                                     ! 【要文献照合】debris_plan.md §1)
+    real :: db_delte = 0.0007        ! 侵食速度係数 δe(既定 0.0007 は、高橋・中川・山敷1991
+                                     ! 京大防災研年報 34 B-2 が「従来他の実験や実際の土石流に
+                                     ! 対して用いてきた」とする値。高橋・中川1991 新砂防 44(3) の
+                                     ! 洞谷への適用値は 0.0001。debris_plan.md §1)
     real :: db_deltd = 0.05          ! 堆積速度係数 δd(Kanako 系の慣用値【要文献照合】)
     integer :: f_dbstop = 0          ! 停止条件の切替 (0:なし(E-D の ∝|V| のみ),
                                      ! 1:低速凝集 — vv<db_vstop で超過濃度を河床へ)
@@ -273,6 +275,30 @@ module list_geomorph
     real :: db_satbed = 1.0          ! 堆積層の飽和度 s_b(0〜1)。f_dbwet=1 で使用(2・3 では不使用)
                                      ! (高橋・中川1991 式(5)の記号。洞谷適用値は
                                      ! 勾配 21°以上で 0.8、以下で 1.0)
+    integer :: f_dbunsat = 0         ! 不飽和床の侵食式(f_dbed=3 で使用。0:飽和床の式だけ(従来),
+                                     ! 1:河床が不飽和のセルの侵食に、不飽和床の侵食式
+                                     ! i = K sin^{3/2}θ {1 − s C (tanφ/tanθ − 1)}^{1/2}
+                                     !     (tanφ/tanθ − 1)(C∞ − C) (h/d_L) √(g h)
+                                     ! を使う(高橋・中川1991 新砂防 44(3) 式(10)。導出は
+                                     ! 高橋・中川・山敷1991 京大防災研年報 34 B-2 式(8)〜(11))。
+                                     ! 飽和の判定: 地下水計算ありは hg >= sy0・sd(飽和帯が地表に
+                                     ! 届いている)、なしは db_satbed >= 1。developer.md §28.18)
+    real :: db_kunsat = 0.0          ! 不飽和床の侵食式の定数 K。0 = 既定 0.01(新砂防 44(3) の
+                                     ! 洞谷への適用値)
+    integer :: f_dbimm = 0           ! 緩い勾配の掃流状集合流動(f_dbed=3 で使用。0:石礫型の
+                                     ! 平衡濃度と堆積速度式を全勾配で使う(従来),
+                                     ! 1:平衡濃度を c_LS∞ = 6.7 c∞²(c∞ より小さい勾配の領域。
+                                     ! 年報 34 B-2 式(12))にし、濃度 0.4C* 以下の流れの堆積に
+                                     ! 掃流状集合流動の式 i = δ'd (c_LS∞ − C)/C* q_T/d_L
+                                     ! (新砂防 44(3) 式(28))を使う。developer.md §28.18)
+    real :: db_deltdi = 0.0          ! 掃流状集合流動の堆積速度係数 δ'd。f_dbimm=1 で使用。
+                                     ! 0 = 既定 0.1(新砂防 44(3) の洞谷への適用値)
+    integer :: db_immexp = 1         ! f_dbres=3 の掃流状集合流動(C <= 0.4C*)の抵抗
+                                     ! τ = (ρT/0.49)(d_L/h)^n V² の指数 n(1 か 2)。
+                                     ! 1(既定)= 新砂防 44(3) 式(24)(25) の印字どおり、
+                                     ! 2 = 同論文の等流の式(1)(3)(C = 0.7√g R^{5/6}/d_L)から導く形
+                                     ! (年報 34 B-2 の x 方向の式(31) と同じ。式(24)(25) の 1 乗は
+                                     ! 指数の脱落とみられる。developer.md §28.18)
     real :: db_mu = 0.0              ! Voellmy 摩擦係数 μ(無次元)。f_dbres=4 で使用。0 = 既定 0.2
                                      ! (雪崩 0.1〜0.3、岩屑なだれは体積とともに低下。
                                      ! 見かけ摩擦 H/L を直接与える — 体積依存式は
@@ -481,6 +507,8 @@ subroutine list_geomorph_read(p, list)
   real :: db_cmin
   integer :: f_dbwet
   real :: db_satbed
+  integer :: f_dbunsat, f_dbimm, db_immexp
+  real :: db_kunsat, db_deltdi
   real :: db_mu
   real :: db_xi
   real :: db_tauy
@@ -529,6 +557,7 @@ subroutine list_geomorph_read(p, list)
                            spl_lc, spl_zbase, spl_sgrad, spl_ksat, spl_diagratio, spl_strata, &
                            f_debris, db_phi, db_delte, db_deltd, f_dbstop, db_vstop, db_wstop, f_dbres, &
                            f_dbed, db_d50, db_erest, db_cmin, f_dbwet, db_satbed, &
+                           f_dbunsat, db_kunsat, f_dbimm, db_deltdi, db_immexp, &
                            db_mu, db_xi, db_tauy, f_dbcurv, &
                            fn_dbinit, db_reltime, db_relsat, &
                            f_slide, slide_c, slide_phi, slide_gamma, &
@@ -646,6 +675,11 @@ subroutine list_geomorph_read(p, list)
   db_cmin = list%db_cmin
   f_dbwet = list%f_dbwet
   db_satbed = list%db_satbed
+  f_dbunsat = list%f_dbunsat
+  db_kunsat = list%db_kunsat
+  f_dbimm = list%f_dbimm
+  db_deltdi = list%db_deltdi
+  db_immexp = list%db_immexp
   db_mu = list%db_mu
   db_xi = list%db_xi
   db_tauy = list%db_tauy
@@ -814,6 +848,11 @@ subroutine list_geomorph_read(p, list)
   list%db_cmin = db_cmin
   list%f_dbwet = f_dbwet
   list%db_satbed = db_satbed
+  list%f_dbunsat = f_dbunsat
+  list%db_kunsat = db_kunsat
+  list%f_dbimm = f_dbimm
+  list%db_deltdi = db_deltdi
+  list%db_immexp = db_immexp
   list%db_mu = db_mu
   list%db_xi = db_xi
   list%db_tauy = db_tauy

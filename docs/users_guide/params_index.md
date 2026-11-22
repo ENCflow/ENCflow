@@ -2,7 +2,7 @@
 
 [ユーザーガイド目次へ](../users_guide.md)
 
-namelist パラメータ名から章を引く索引です(アルファベット順、全 812 項目)。
+namelist パラメータ名から章を引く索引です(アルファベット順、全 817 項目)。
 この索引は list_*.f90 の namelist 宣言から機械抽出で生成されています
 (developer.md §35.1)。
 
@@ -85,8 +85,11 @@ namelist パラメータ名から章を引く索引です(アルファベット�
 | db_cmin | &list_geomorph | [土砂・地形変化](geomorph.md) |
 | db_d50 | &list_geomorph | [土砂・地形変化](geomorph.md) |
 | db_deltd | &list_geomorph | [土砂・地形変化](geomorph.md) |
+| db_deltdi | &list_geomorph | [土砂・地形変化](geomorph.md) |
 | db_delte | &list_geomorph | [土砂・地形変化](geomorph.md) |
 | db_erest | &list_geomorph | [土砂・地形変化](geomorph.md) |
+| db_immexp | &list_geomorph | [土砂・地形変化](geomorph.md) |
+| db_kunsat | &list_geomorph | [土砂・地形変化](geomorph.md) |
 | db_mu | &list_geomorph | [土砂・地形変化](geomorph.md) |
 | db_phi | &list_geomorph | [土砂・地形変化](geomorph.md) |
 | db_relsat | &list_geomorph | [土砂・地形変化](geomorph.md) |
@@ -198,8 +201,10 @@ namelist パラメータ名から章を引く索引です(アルファベット�
 | f_dam_mode | &list_struct_dam | [構造物](structure.md) |
 | f_dbcurv | &list_geomorph | [土砂・地形変化](geomorph.md) |
 | f_dbed | &list_geomorph | [土砂・地形変化](geomorph.md) |
+| f_dbimm | &list_geomorph | [土砂・地形変化](geomorph.md) |
 | f_dbres | &list_geomorph | [土砂・地形変化](geomorph.md) |
 | f_dbstop | &list_geomorph | [土砂・地形変化](geomorph.md) |
+| f_dbunsat | &list_geomorph | [土砂・地形変化](geomorph.md) |
 | f_dbwet | &list_geomorph | [土砂・地形変化](geomorph.md) |
 | f_debris | &list_geomorph | [土砂・地形変化](geomorph.md) |
 | f_diffusion_term | &list_enc | [浅水流計算](swflow.md) |

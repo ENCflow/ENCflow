@@ -107,9 +107,30 @@ for fine slurries). The Takahashi–Nakagawa law switches to the
 bedload-like collective flow $`(\rho_T/0.49)(d_L/h_t)|\mathbf{V}|^2`$ for
 $`C \le 0.4C_*`$ and to the Manning law for $`C < c_{\min}`$ (`db_cmin`,
 default 2%) or $`h_t/d \ge 30`$ (the mud-flow rule of the original paper).
-Laws 2 to 5 all degrade to the Manning law on the dilute side
-$`C < c_{\min}`$, so no yield is applied to the clear water downstream (a
-numerical closure).
+In laws 2, 3 and 4 the velocity-squared resistance degrades to the Manning law on the dilute side
+$`C < c_{\min}`$ (a numerical closure; law 5 is combined with the Manning law from the start). Laws 4
+and 5 apply no yield on the dilute side. The yield of laws 1, 2 and 3 is proportional to the
+concentration, so it vanishes in clear water ($`C \to 0`$).
+
+**Exponent of the resistance of the bedload-like collective flow (db_immexp).** By default the
+resistance of the bedload-like collective flow of the Takahashi–Nakagawa law is
+$`(\rho_T/0.49)(d_L/h_t)^{1}|\mathbf{V}|^2`$, as printed in eqs. (24) and (25) of the original
+paper[^tn91]. Putting the uniform-flow law of the collective flow in the same paper (eqs. (1) and (3):
+for a wide channel the unit-width discharge is
+$`q_T = 0.7\sqrt{g}\,h^{5/2}\sin^{1/2}\theta/d_L`$) into the balance of uniform flow
+$`\tau_b = \rho_T g h \sin\theta`$ gives $`(\rho_T/0.49)(d_L/h_t)^{2}|\mathbf{V}|^2`$. Another paper by the
+same authors[^tny91] writes the stony-type resistance in the form derived this way as well (its
+eqs. (29) and (30)), and for the collective flow its eq. (31) for the x direction has the square
+(eq. (32) for the y direction is printed with the first power). From these, the first power in
+eqs. (24) and (25) appears to be a dropped exponent. `db_immexp = 2` selects the squared form (the
+default stays 1). The difference is small
+where the flow depth is close to the grain size and grows with the flow depth. For a depth of 1 m
+and a grain size of 0.1 m, the deceleration of the first-power form is $`0.20\,|\mathbf{V}|^2/h`$,
+13 times that of the Manning law ($`n = 0.04`$), and that of the squared form is
+$`0.020\,|\mathbf{V}|^2/h`$, 1.3 times. It affects the speed and depth of flows with concentrations
+from $`c_{\min}`$ to $`0.4C_*`$ (the trailing flow of a debris flow, or the outburst flood of a
+natural dam). Verified by [test/dbslope](../../../test/dbslope/en/README.md) (the uniform flow on a
+30° slope agrees with the analytical solution within 0.01% for both forms).
 
 The Voellmy law was made for snow avalanches and is used in the same μ–ξ
 form by the avalanche model RAMMS[^christen10] and the volcanic-flow
@@ -275,7 +296,74 @@ $`\delta_d\left(1 - \dfrac{|\mathbf{V}|}{p\,v_c}\right)^4\dfrac{C_\infty - C}{C_
 ($`q_T = |\mathbf{V}| h_t`$, $`p = 1/3`$, critical speed $`v_c`$ from eq. (15)
 of the paper)[^tn91]. While the speed exceeds $`p\,v_c`$ the flow does not
 deposit and runs on by inertia, then deposits as a fan at the slope break.
-`db_d50` ($`d_L`$) is required.
+`db_d50` ($`d_L`$) is required. $`\theta`$ is the slope of the flow surface in the direction of the
+velocity vector, and the equilibrium concentration $`C_\infty`$ uses the stony-type formula at all
+slopes (f_dbimm = 1 below changes this).
+
+**Erosion of an unsaturated bed (f_dbunsat = 1).** The erosion formula above is for a deposit layer
+saturated with water (in a saturated layer, the thickness made unstable by the shear of the surface
+flow is entrained as a whole). The original paper[^tn91] gives a different formula (eq. (10)) for an
+unsaturated layer, in which only the grains exposed at the surface are entrained by the shear stress
+of the interstitial fluid of the flow (derived in eqs. (8) to (11) of [^tny91]).
+
+```math
+\frac{i}{\sqrt{g h_t}} = K \sin^{3/2}\theta
+\left\{1 - sC\left(\frac{\tan\phi}{\tan\theta} - 1\right)\right\}^{1/2}
+\left(\frac{\tan\phi}{\tan\theta} - 1\right)(C_\infty - C)\,\frac{h_t}{d_L}
+```
+
+For a single grain size $`\tan\phi/\tan\theta - 1 = 1/(s\,c_\infty)`$ ($`c_\infty`$ is the stony-type
+equilibrium concentration), so the code evaluates the same formula as
+$`i = (K/s)\sqrt{g h_t}\,\sin^{3/2}\theta\,(1 - C/c_\infty)^{1/2}\,(C_\infty - C)/c_\infty\cdot h_t/d_L`$.
+With `f_dbunsat = 1` this formula is used for the erosion of cells whose bed is unsaturated, and
+saturated cells keep the saturated-bed formula.
+
+- **Saturation test**: with the groundwater computation (`fn_gwflow`), a cell whose subsurface storage
+  has reached its capacity ($`h_g \ge s_y s_d`$; the saturated zone reaches the ground surface) is
+  saturated. Without the groundwater computation, the whole domain is unsaturated if `db_satbed`
+  (saturation of the deposit layer $`s_b`$) is below 1 and saturated if it is 1 (in its computation of
+  Horadani the original paper sets the saturation to $`s_b = 0.8`$ on reaches steeper than 21° and to
+  1.0 on the reaches below).
+- **Constant**: $`K`$ is `db_kunsat` (default 0.01, the value applied to Horadani in the original
+  paper).
+- **Steep slopes at the concentration cap**: on slopes where $`C_\infty`$ is capped at $`0.9C_*`$, the
+  capped $`c_\infty`$ is used in the form above as it is (the original paper does not give the erosion
+  rate in this range; our own closure).
+- **Size relative to the saturated-bed formula**: with the Manning law for the speed, for clear water
+  on a gentle slope the ratio is $`K\sqrt{g}\,\tan\phi\,C_*\,n/(\delta_e h^{1/6})`$. With
+  $`n = 0.04`$ it is $`5/h^{1/6}`$ for $`\delta_e = 0.0001`$ and $`0.75/h^{1/6}`$ for
+  $`\delta_e = 0.0007`$. An unsaturated bed is not necessarily harder to erode; it depends on the pair
+  of calibration values. Eroding an unsaturated bed also releases less pore water (`f_dbwet`; the flow
+  becomes denser than over a saturated bed).
+- Verified by configuration 9 of [test/debris](../../../test/debris/en/README.md) (the eroded amount
+  agrees with the value of the formula within round-off; the relative difference is 2e-8 or less).
+
+**Bedload-like collective flow on gentle slopes (f_dbimm = 1).** On slopes too gentle to sustain a
+debris flow, the flow becomes a bedload-like collective flow (immature debris flow) in which the
+grains gather near the bed, and its equilibrium concentration is
+$`c_{LS\infty} = 6.7\,c_\infty^{\,2}`$, smaller than the stony-type $`c_\infty`$ (eq. (12) of [^tny91];
+used on slopes with $`c_\infty < 1/6.7`$, where $`c_{LS\infty} < c_\infty`$; for $`\phi = 35^\circ`$ and
+$`s = 1.65`$ this is $`\tan\theta < 0.138`$, about 8° or less). The default (`f_dbimm = 0`) uses the
+stony-type $`c_\infty`$ at all slopes, so it overestimates the equilibrium concentration on gentle
+slopes by a factor of 3.2 at a slope of 0.05 and 8.4 at 0.02 (erosion comes out faster and
+deposition slower). With `f_dbimm = 1`,
+
+- the equilibrium concentration becomes $`C_\infty = 6.7\,c_\infty^{\,2}`$ in this slope range (common to
+  the erosion formulas, the deposition formulas and the stopping test);
+- the deposition of flows with a concentration of $`0.4C_*`$ or less (bedload-like collective flow; the
+  same concentration as the switch of the resistance law) uses
+  $`i = \delta'_d\,(C_\infty - C)/C_*\cdot q_T/d_L`$ without the inertia factor (eq. (28) of the original
+  paper[^tn91]). $`\delta'_d`$ is `db_deltdi` (default 0.1, the value applied to Horadani in the
+  original paper). The deposition of stony-type flows with concentrations above $`0.4C_*`$ keeps the
+  formula with the inertia factor even on gentle slopes (they run over the fan by inertia).
+
+Reference [^tny91] states that, on slopes where a bedload-like collective flow occurs, $`c_\infty`$ of
+the unsaturated-bed erosion formula is replaced by $`c_{LS\infty}`$ (below its eq. (12)). Applying the
+same replacement to $`C_\infty`$ of the saturated-bed erosion formula and of the stony-type deposition
+formula is our own interpretation, made so that there is a single equilibrium concentration. Verified
+by configuration 10 of
+[test/debris](../../../test/debris/en/README.md) (the concentration of a uniform flow agrees with the
+equilibrium concentration to 9 digits).
 
 **f_dbed = 4: velocity-proportional entrainment.** $`E = \delta_e|\mathbf{V}|`$
 (entrainment only; stopping is left to `f_dbstop`). A simple law for the
@@ -492,6 +580,9 @@ The labels in the Basis column are explained in [How to read the basis of a defa
 | f_dbed | 1 | erosion/deposition law (§3) | **method** 1: Takahashi relaxation, 2: Egashira–Ashida, 3: Takahashi–Nakagawa, 4: velocity-proportional, 0: none |
 | db_delte / db_deltd | 0.0007 / 0.05 | erosion / deposition rate coefficients | **calibration** Takahashi's general value / Kanako customary value |
 | f_dbstop / db_vstop / db_wstop | 0 / 0.05 m/s / 0.05 m/s | low-speed stopping | **numerical** vstop also serves the yield test |
+| db_immexp | 1 | exponent of (d_L/h) in the resistance of the bedload-like collective flow of the Takahashi–Nakagawa law (§2) | **method** 1: as printed in eqs. (24)(25) of the original paper[^tn91], 2: the form derived from the uniform-flow law, eq. (3), of the same paper (eq. (31) of [^tny91]) |
+| f_dbunsat / db_kunsat | 0 / 0.01 | erosion formula for an unsaturated bed / its constant K (§3; f_dbed = 3) | **method** eq. (10) of the original paper[^tn91]. **literature** K is the value applied to Horadani |
+| f_dbimm / db_deltdi | 0 / 0.1 | equilibrium concentration 6.7 c∞² and deposition formula of the bedload-like collective flow on gentle slopes / deposition coefficient δ'd (§3; f_dbed = 3) | **method** eq. (12) of [^tny91] and eq. (28) of [^tn91]. **literature** δ'd is the value applied to Horadani |
 | f_dbwet / db_satbed | 0 / 1.0 | pore-water entrainment / deposit saturation (1: entrainment, 2: with the groundwater computation, 3: 2 + retained water) | **method** total-volume continuity of Takahashi–Nakagawa[^tn91] (1). 2 exchanges pore water between the surface water and subsurface storage, and 3 adds the exchange of the retained water λ − sy0 (both own) |
 | db_reltime / db_relsat | 0 / 1.0 | release time / saturation of the failed mass (§4) | **given** |
 | slide_c / slide_phi / slide_gamma | 0 / 30° / 18 kN/m³ | strength constants of the stability test (§4) | **customary value** shallow-landslide values; c' = 0 is on the safe side |
@@ -525,10 +616,10 @@ The labels in the Basis column are explained in [How to read the basis of a defa
 
 | Case | Content | Point |
 |---|---|---|
-| [test/debris](../../../test/debris/en/README.md) | four constitutive configurations (simple, Egashira, Takahashi–Nakagawa, pore water); equilibrium concentration of uniform flow on a slope; pore water with the groundwater computation and retained water | total solid 1e-13, np = 1, 2, 4 agree; equilibrium concentration within 1e-11 of the Takahashi-type C∞; water ledger including the retained water within 1e-11 |
+| [test/debris](../../../test/debris/en/README.md) | four constitutive configurations (simple, Egashira, Takahashi–Nakagawa, pore water); equilibrium concentration of uniform flow on a slope; pore water with the groundwater computation and retained water; erosion rate of an unsaturated bed; equilibrium concentration of the bedload-like collective flow on gentle slopes | total solid 1e-13, np = 1, 2, 4 agree; equilibrium concentration within 1e-11 of the Takahashi-type C∞; water ledger including the retained water within 1e-11; eroded amount of an unsaturated bed agrees with the formula within round-off (relative difference 2e-8 or less); equilibrium concentration of the Takahashi–Nakagawa law within 1e-9 of 6.7 c∞² |
 | [test/slide](../../../test/slide/en/README.md) | fluidisation and stability test; fluidisation of a saturated soil layer and retained water | self-checks of conservation and water budget |
 | [test/volcano](../../../test/volcano/en/README.md) | Voellmy uniform flow and τ_y run-out | uniform depth agrees to 0.0% with the analytical solution (the along-slope equation with the default 2; four neighbours) |
-| [test/dbslope](../../../test/dbslope/en/README.md) | uniform flow on a 30° slope (Voellmy, Egashira, the stony type and the bedload-like collective flow of Takahashi–Nakagawa), steep-slope gravity correction 1 and 2 | for all four, within 0.03% of the analytical solutions of the along-slope equations with 2 and of the horizontal equations with 1 (ratio of the depths of 2 and 1: 1.11–1.21) |
+| [test/dbslope](../../../test/dbslope/en/README.md) | uniform flow on a 30° slope (Voellmy, Egashira, the stony type and the bedload-like collective flow of Takahashi–Nakagawa, the latter with the first and the second power of (d/h)), steep-slope gravity correction 1 and 2 | for all five, within 0.04% of the analytical solutions of the along-slope equations with 2 and of the horizontal equations with 1 (ratio of the depths of 2 and 1: 1.11–1.21) |
 | [test/curvature](../../../test/curvature/en/README.md) | steady one-dimensional test of the curvature term | thickening on the arc 1.03 times the ODE |
 | [test/dbonset](../../../test/dbonset/en/README.md) | rest and onset of motion under the yield (uniform slope 0.9, 1.1 and 1.3 times the yield slope; slope direction 0°, 22.5° and 45°; eight and four neighbours; without and with the steep-slope gravity correction) and the safety factor of the slope-stability test (same slopes; c' = 0, no groundwater) | threshold, speed and direction independent of the direction and the stencil, within 0.4% of the analytical solution of a rigid sliding block (g cos²θ with the gravity correction); safety factor independent of the direction, within 0.1% of tanφs/tanθ |
 | [test/avalanche](../../../test/avalanche/en/README.md) | avalanche (Voellmy + velocity-proportional entrainment) | grows by entrainment to about 3.4 times the released amount and stops; ledger to machine precision |
@@ -542,7 +633,8 @@ The labels in the Basis column are explained in [How to read the basis of a defa
 [^nakatani08]: Nakatani, K., Wada, T., Satofuka, Y. and Mizuyama, T. (2008): Development of "Kanako 2D (Ver.2.00)", a user-friendly one- and two-dimensional debris flow simulator equipped with a graphical user interface. *Int. J. Erosion Control Eng.*, 1(2), 62–72.
 [^morpho2dh]: Takebayashi, H.: Morpho2DH ver.2 Solver Manual. iRIC Project. (governing equations and defaults of the Egashira model)
 [^takahashi07]: Takahashi, T. (2007): *Debris Flow: Mechanics, Prediction and Countermeasures*. Taylor & Francis, Leiden. (equilibrium concentration, erosion-rate coefficient)
-[^tn91]: Takahashi, T. and Nakagawa, H. (1991): Prediction of stony debris flow induced by severe rainfall. *J. Jpn. Soc. Erosion Control Eng.*, 44(3), 12–19 (in Japanese).
+[^tn91]: Takahashi, T. and Nakagawa, H. (1991): Prediction of stony debris flow induced by severe rainfall. *J. Jpn. Soc. Erosion Control Eng.*, 44(3), 12–19 (in Japanese). (Erosion formulas (10) and (12), deposition formulas (14), (27) and (28), resistance laws (22) to (25), and the values applied to Horadani: K = 0.01, δe = 0.0001, δd = 0.5, p = 1/3, δ'd = 0.1.)
+[^tny91]: Takahashi, T., Nakagawa, H. and Yamashiki, Y. (1991): Formation and erosion of debris fan that is composed of sediment mixtures. *Annuals, Disaster Prevention Research Institute, Kyoto University*, 34 B-2, 355–372 (in Japanese). (Derivation of the unsaturated-bed erosion formula, eqs. (8) to (11); equilibrium concentration of the bedload-like collective flow, eq. (12); the cap 0.9c*; δe = 0.0007; resistance of the bedload-like collective flow, eq. (31).)
 [^egashira93]: Egashira, S. (1993): Mechanism of stopping and deposition of debris flow (2). *J. Jpn. Soc. Erosion Control Eng.*, 46(2) (in Japanese). (original form of the constitutive law and yield stress of Egashira et al. 1989)
 [^voellmy55]: Voellmy, A. (1955): Über die Zerstörungskraft von Lawinen. *Schweizerische Bauzeitung*, 73, 159–165, 212–217, 246–249, 280–285.
 [^hungr95]: Hungr, O. (1995): A model for the runout analysis of rapid flow slides, debris flows, and avalanches. *Can. Geotech. J.*, 32, 610–623. doi:10.1139/t95-063 (the form of the entrainment law from eqs. (14) and (15) of Qiao et al. 2023; the paper itself not read)
