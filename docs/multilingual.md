@@ -93,7 +93,9 @@ utils/<tool>/README.md                → utils/<tool>/en/README.md
   ラベルと出力先だけ。引数なしの動作は従来どおり)。
 - `examples/List_samples/` は注釈自体がリファレンスなので全件を対象にする。
 - `examples/<case>/` の README(現象別例題)も全件を対象にする(2026-10-23 に
-  §34.2 を改定)。param・図化スクリプト・図は共有し、コメント英訳は任意。
+  §34.2 を改定)。param と図化スクリプトは共有し、コメント英訳は任意。言語ラベルを含む図は、test と同じく
+  図化スクリプトの `en` 引数で英語ラベル版を `en/figs/` に描き、英語版 README はそれを参照する(2026-10-25。
+  developer.md §34.5)。文字を含まない図は共有する。
   `examples/benchmark/<case>/` の README も同じ扱いで、訳は各ケースの `en/` に置く。
 
 ### 表示用資産

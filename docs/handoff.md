@@ -134,8 +134,8 @@
 
 ## 完了した調査の記録(他の文書から参照されるため残す)
 
-examples/levee_breach・test/tracer の README(日英)、docs/advection_design.md、
-developer.md §68・§78 が下の 00a・00b を参照している。どちらも作業は完了済み。
+test/tracer の README(日英)と設定ファイル(param*.txt・reference/param.txt)のコメント、docs/advection_design.md §7、
+developer.md §68.36・§68.40 が下の 00a を、developer.md §78 が 00b を参照している。どちらも作業は完了済み。
 
 - [00a](handoff/00a.md) examples/levee_breach(解像堤防の破堤。2026-10-13 新設)で見つかった要確認事項
 - [00b](handoff/00b.md) スカラー輸送(advect_scalar)の数値拡散の計測と MUSCL 化(2026-10-13 完了。 developer.md §78、test/tracer)

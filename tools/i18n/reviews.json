@@ -86,9 +86,9 @@
     {
       "source": "docs/multilingual.md",
       "target": "docs/en/multilingual.md",
-      "source_sha256": "8e9c2c5f0696db5b771fdefbf20687323d845e67bd376b1ecfddd10a57dfc27d",
-      "target_sha256": "d90d9ec5fc98f9aba03f2b38e304fcd7bf23aba30102f7bb08569472add18aeb",
-      "reviewer": "Claude (Claude Code session; the out-of-scope developer documents now name handoff.md and handoff/ after handoff.md was split into an index and per-item files; both files compared)",
+      "source_sha256": "3d3ba9a9b5d47b2f1b62e04f84ed6aab2102ca8e9203babc87679050aad90903",
+      "target_sha256": "e343ce32d7a1598834b61ea4c430958055f32e0114cb41d174caab4b5e3197a2",
+      "reviewer": "Claude (Claude Code session; the examples bullet now says that figures with language labels are drawn into en/figs with the en argument (developer.md §34.5) instead of all figures being shared; both files compared)",
       "method": "assistant",
       "reviewed_on": "2026-11-22"
     },
