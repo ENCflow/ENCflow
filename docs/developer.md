@@ -142,7 +142,7 @@
 
 ### 入力と前処理
 
-- 現行: policy.md の方針 11・12。[地理情報](users_guide/geoinfo.md)・[入出力の形式](users_guide/io.md)
+- 現行: policy.md の方針 11・12。[地理情報](users_guide/geoinfo.md)・[入出力の形式](users_guide/io.md)・[座標系の管理](users_guide/coordinates.md)。GeoTIFF の入出力と座標管理(m_geotiff・m_georef)の設計・決定・検証の記録は [docs/geotiff_plan.md](geotiff_plan.md) の §8〜§10 が正本(開発記録の節は持たない)
 - 記録: [§40](developer/040.md)(土地利用からのマスク生成)・[§41](developer/041.md)(f_rntype = 2 の廃止と「物理量は直接与える」)・[§88](developer/088.md)
 
 ### ネスティング

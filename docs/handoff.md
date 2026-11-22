@@ -112,7 +112,6 @@
 - [1g](handoff/1g.md) 潮位境界 m_tide(2026-08-08 実装。仕様は developer.md §23)の残検証
 - [1h](handoff/1h.md) 計測(実座標指定 §36・フラックス測線 §24)の残項目
 - [4](handoff/4.md) 降雨遮断モジュール(m_intercept)の残検証
-- [6](handoff/6.md) 座標管理(m_georef / ESRI hdr。仕様と決定事項は docs/geotiff_plan.md §10)の残り
 - [1j](handoff/1j.md) 土石流・地滑りモデル(f_debris/f_release/f_slide。2026-08-09 実装。 developer.md §28、docs/debris_plan.md)の残作業
 - [1k](handoff/1k.md) 流木モジュール(fn_driftwood。2026-08-21 実装。developer.md §50、 docs/driftwood_plan.md)の残作業
 - [1i](handoff/1i.md) ダム・湖沼(&list_struct_dam。族の第四号。§22「ダム・湖沼への一般化」、 lake_plan.md)の残検証・第2弾
