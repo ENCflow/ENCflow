@@ -960,6 +960,20 @@ pure function slope8(gm, g, s, i, j) result(tanth)
   type(t_state), intent(in) :: s
   integer, intent(in) :: i, j
   real :: tanth
+  tanth = steep8(gm, g, s%z, i, j)
+end function
+
+
+!----------------------------------------------------------------------
+! セル中心の面 a の最急降下勾配(D∞。slope8 の本体。a は帯確保の面 = 標高 s%z や、
+! 斜面安定判定の全水頭。近傍の扱いと面の式は slope8 のヘッダ)
+!----------------------------------------------------------------------
+pure function steep8(gm, g, a, i, j) result(tanth)
+  type(t_geomorph), intent(in) :: gm
+  type(t_geoinfo), intent(in) :: g
+  real, intent(in) :: a(dcp%ish:, dcp%jsh:)
+  integer, intent(in) :: i, j
+  real :: tanth
   ! 面 = (軸方向の近傍 k1, 斜めの近傍 k2)。k は din/djn の番号(1:(−1,−1) 2:(0,−1) 3:(1,−1)
   ! 4:(−1,0) 5:(1,0) 6:(−1,1) 7:(0,1) 8:(1,1))
   integer, parameter :: fk1(1:8) = [5, 5, 4, 4, 7, 7, 2, 2]
@@ -976,7 +990,7 @@ pure function slope8(gm, g, s, i, j) result(tanth)
     jn = j + djn(k)
     if (g%x(in,jn) > 0) then
       if (g%sw(in,jn) > 0) cycle
-      zn(k) = s%z(in,jn)
+      zn(k) = a(in,jn)
       ok(k) = .true.
     else
       if (.not. bcs%have_open_bc) cycle
@@ -985,11 +999,11 @@ pure function slope8(gm, g, s, i, j) result(tanth)
       ja = min(max(jn, 1), g%ny)
       if (g%x(ia,ja) <= 0) cycle
       if (g%sw(ia,ja) > 0) cycle
-      zn(k) = s%z(ia,ja)
+      zn(k) = a(ia,ja)
       ib = 2 * ia - in
       jb = 2 * ja - jn
       if (g%x(ib,jb) > 0) then
-        if (g%sw(ib,jb) <= 0) zn(k) = 2.0 * s%z(ia,ja) - s%z(ib,jb)
+        if (g%sw(ib,jb) <= 0) zn(k) = 2.0 * a(ia,ja) - a(ib,jb)
       end if
       ok(k) = .true.
     end if
@@ -1010,17 +1024,17 @@ pure function slope8(gm, g, s, i, j) result(tanth)
     if (ok(k1) .and. ok(k2)) then
       ! 面の下り勾配のベクトル (s1, s2)(s1 は軸方向、s2 はそれに直交する向き)。向きが面の
       ! 角(0 〜 atan(d2/d1))の内なら面の勾配の大きさ、外なら面の 2 辺の向きの勾配の大きい方
-      s1 = (s%z(i,j) - zn(k1)) / d1
+      s1 = (a(i,j) - zn(k1)) / d1
       s2 = (zn(k1) - zn(k2)) / d2
       if (s2 >= 0.0 .and. s2 * d1 <= s1 * d2) then
         sl = sqrt(s1**2 + s2**2)
       else
-        sl = max(s1, (s%z(i,j) - zn(k2)) / dd)
+        sl = max(s1, (a(i,j) - zn(k2)) / dd)
       end if
     else if (ok(k1)) then
-      sl = (s%z(i,j) - zn(k1)) / d1
+      sl = (a(i,j) - zn(k1)) / d1
     else if (ok(k2)) then
-      sl = (s%z(i,j) - zn(k2)) / dd
+      sl = (a(i,j) - zn(k2)) / dd
     else
       cycle
     end if
