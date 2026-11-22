@@ -3,7 +3,7 @@
 status: Phase 0〜3 実装済み(読み書きとも実用範囲は完成。2026-08-01)。
 座標管理は §10、フェーズごとの実績と決定事項は §8・§9。
 残るのは Phase 4(BigTIFF 等。必要になってから)と、検証残
-(handoff.md 項9)。決定事項の developer.md への転記は検証完了後。
+(QGIS での目視は 2026-08-01 に確認済み。ArcGIS での確認は任意、bil+hdr の目視は handoff 6)。決定事項の developer.md への転記は検証完了後。
 
 ## 0. 結論(要約)
 
@@ -282,7 +282,7 @@ CRS は namelist の `epsg`(導入済み。既定 0=不明)で与える。
   (単精度含む)、gdalinfo が EPSG:2451/6668/6677 を正しく解決、
   出力 tif の画素が bil と全ファイルビット一致(chichibu 118 ファイル)、
   txt ケース無効時ビット一致、mode=3 の従来互換。
-  QGIS / ArcGIS での目視確認のみ残(handoff 参照)。
+  QGIS での目視は 2026-08-01 に確認済み。ArcGIS での確認は任意で未実施(handoff 6)。
 - **Phase 4(必要になってから)**: BigTIFF 読み(全国 100m 級で必須化
   する見込み)、precip 逐次読みの multi-IFD 対応、Deflate/LZW 書き、
   BigTIFF 書き。
