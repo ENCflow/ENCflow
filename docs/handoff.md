@@ -128,6 +128,7 @@
 - [1s](handoff/1s.md) 蒸発散(§27。2026-08-09 実装。旧番号 1k)の残項目
 - [1l](handoff/1l.md) 水質(負荷流出)m_wq(§30。2026-08-09 実装)の残項目
 - [1m](handoff/1m.md) 積雪・融雪 m_snow(§31。2026-08-10 実装)の残項目
+- [1n2](handoff/1n2.md) 石灰岩の溶食 f_dissol(§86。2026-10-21 実装。docs/karst_plan.md)の残項目
 - [1n](handoff/1n.md) 長期地形変動(§32。2026-08-10 実装)の残項目
 - [1o](handoff/1o.md) 海岸堤防(仮想壁面の海岸応用。§17.1。2026-08-10 実装)
 - [1p](handoff/1p.md) ParaView 可視化 utils/out2vtk(§43。2026-08-16 実装)の残項目
