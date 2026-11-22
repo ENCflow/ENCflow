@@ -58,9 +58,9 @@
     {
       "source": "docs/comparison.md",
       "target": "docs/en/comparison.md",
-      "source_sha256": "2a0dc5ef411ac441655084f2d6d406f19be1ec514bf09f32cceeab972efb0325",
-      "target_sha256": "0918f7bdd6a459316eac524204408b72046f27476369a4f44b4be4cb3d10ee23",
-      "reviewer": "Claude (Claude Code session; five references to developer.md §0 changed to policy.md (policies 2 and 5, the statement of purpose, the English gap note); both files compared)",
+      "source_sha256": "c0276e5ae6e86fe6a318fcd0be13545d10a657bc8a40dc3cc1ec959a34976492",
+      "target_sha256": "c2a40064b7cf417dad7a27142a8ccfbffc2738bafc3fbd3fdb193724e28912a9",
+      "reviewer": "Claude (Claude Code session; merge of main's RSR addition and table trimming with this branch's references to the project policy (developer.md §0 -> policy.md, five places); the combined ENCflow table row and the other four passages compared in both files)",
       "method": "assistant",
       "reviewed_on": "2026-11-22"
     },

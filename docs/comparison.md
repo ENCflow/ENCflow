@@ -14,17 +14,18 @@ buildup-washoff+積雪+長期地形変動+流木+家屋破壊・瓦礫+非静水
 
 | モデル | 開発元 | 費用 | コード | 備考 |
 |---|---|---|---|---|
-| **ENCflow** | (本プロジェクト) | 無償 | 全公開 | 基本方針は policy.md。AI エージェント向け整備を同梱(§3)。CSDMS BMI 2.0 対応(bmi-tester 合格。optional アダプタで本体は依存ゼロのまま。2026-08-29) |
+| **ENCflow** | (本プロジェクト) | 無償 | 全公開 | 基本方針は policy.md。AI エージェント向け整備を同梱(§3)。CSDMS BMI 2.0 対応(本体は依存ゼロのまま) |
 | RRI | ICHARM/土研 | 無償 | 公開(独自条件) | 著作権表示義務・商用は許可制。iRIC 版ソルバも公開 |
+| RSR(RRI on iRIC のオプション) | ICHARM/土研 | 無償 | 公開(RRI と同じ独自条件) | RRI の水理量を使い、崩壊・土石流・斜面侵食による土砂・流木の供給と、合流点間の単位河道での輸送を解く流域の土砂流出モデル |
 | iRIC (Nays2DFlood・Nays2DH 等) | iRIC 団体 | 無償 | 主要ソルバ公開 | GUI+ソルバ群の基盤 |
 | Morpho2DH | 竹林(京大防災研)/iRIC | 無償 | 非公開(iRIC 経由配布) | Morpho2D(平面2次元河床変動)+土石流・泥流。砂防堰堤等の構造物考慮 |
 | HEC-RAS 2D | 米陸軍 USACE | 無償 | 非公開 | 実務標準の一つ。流域水文は HEC-HMS が分担 |
 | LISFLOOD-FP 8 | Bristol 大 | 無償 | 公開(GPL) | サブグリッド河道・GPU |
 | CAESAR-Lisflood | 英大学系 | 無償 | 公開(GPL) | LISFLOOD-FP 水理+地形進化(時間〜千年) |
-| SFINCS | Deltares | 無償 | 公開(GPLv3。GitHub Deltares/SFINCS。Fortran) | 複合洪水(高潮・波・降雨・河川)向けの簡約浅水モデル。局所慣性方程式(移流項は任意)+サブグリッド地形+四分木格子、GPU(OpenACC)。HydroMT-SFINCS で入力を自動構築、Delft Dashboard・FloodAdapt と連携。Leijnse ら(2021)、van Ormondt ら(2025) |
+| SFINCS | Deltares | 無償 | 公開(GPLv3。Fortran) | 複合洪水(高潮・波・降雨・河川)向けの簡約浅水モデル。局所慣性方程式+サブグリッド地形+四分木格子、GPU。Leijnse ら(2021) |
 | TELEMAC-2D (+GAIA) | EDF 主導 | 無償 | 公開(GPLv3) | 非構造 FE/FV。土砂は GAIA。流域水文なし |
 | Delft3D FM | Deltares | カーネル無償 | カーネル公開(GPLv3) | GUI は無償配布だがライセンス管理あり。土砂 MOR・水質 WAQ を含む |
-| Delft3D 4(Delft3D-FLOW・WAVE ほか) | Deltares | カーネル無償 | カーネル公開(2011 年から。GPLv3) | 構造格子(曲線直交)の系統で、後継が Delft3D FM。2011 年に FLOW・MOR・WAVE のソースを公開(WAQ は後から)。WAVE の計算部は SWAN。GUI は別途入手(販売元 Deltares Systems)。Lesser ら(2004) |
+| Delft3D 4(Delft3D-FLOW・WAVE ほか) | Deltares | カーネル無償 | カーネル公開(2011 年から。GPLv3) | 構造格子(曲線直交)の系統で、後継が Delft3D FM。WAVE の計算部は SWAN。GUI は別途入手。Lesser ら(2004) |
 | MIKE 21 / MIKE SHE | DHI | 有償 | 非公開 | 統合水文(SHE)は積雪含め最も網羅的。水質は ECO Lab |
 | TUFLOW | BMT | 有償 | 非公開 | 無償デモは 10 万セル・10 分制限 |
 | Iber | UPC/GEAMA 等 | 無償 | 非公開(EULA・再配布禁止) | 水質・生息場・流木(IberWood)・GPU 版 |
@@ -33,7 +34,7 @@ buildup-washoff+積雪+長期地形変動+流木+家屋破壊・瓦礫+非静水
 | SHETRAN | Newcastle 大 | 無償 | 公開(GitHub) | 物理ベース 3D 地下水+積雪 |
 | ParFlow | CSM・LLNL・Bonn 大等 | 無償 | 公開(LGPL) | 3D 変飽和地下水(Richards)+地表流+陸面過程(CLM)の統合水文。MPI・GPU。依存多数(Hypre・HDF5・NetCDF 等) |
 | r.avaflow | Mergili & Pudasaini | 無償 | 公開(GRASS GIS モジュール) | 多相質量流(土石流・雪崩・ラハール・GLOF)。質量流どうしの連鎖に対応(v4, 2025) |
-| OpenLISEM(Hazard 版) | Jetten・Bout 等(トゥエンテ大 ITC) | 無償 | 公開(GitHub) | 分布型の降雨・浸透・流出・土壌侵食に、Pudasaini 二相流(土石流)と斜面崩壊・連行を統合(Bout ら 2018)。降雨から土砂流の発生・流下・堆積までを一続きに解ける数少ない例 |
+| OpenLISEM(Hazard 版) | Jetten・Bout 等(トゥエンテ大 ITC) | 無償 | 公開(GitHub) | 分布型の降雨流出・土壌侵食に、二相流の土石流と斜面崩壊・連行を統合(Bout ら 2018)。降雨から土砂流の堆積までを一続きに解ける数少ない例 |
 | FLO-2D | FLO-2D Software | 有償 | 非公開 | rain-on-grid の流出+泥流(O'Brien 二次式レオロジー)。実務標準。泥流の濃度は入力時系列で与える(侵食による濃度上昇は解かない) |
 | LaharFlow | Woodhouse 等(Bristol 大) | 無償(Web 版) | 非公開 | ラハール専用の浅水層モデル。河床の侵食・堆積による bulking/dilution を解く。源流束を与える(降雨流出なし) |
 | Kanako-2D / Kanako-LS | 中谷・里深・水山(砂防) | 無償 | 非公開 | 高橋系の侵食・堆積付き土石流(1D-2D)。砂防実務。上流端の土石流ハイドログラフが入力 |
@@ -45,16 +46,16 @@ buildup-washoff+積雪+長期地形変動+流木+家屋破壊・瓦礫+非静水
 | COMCOT | Cornell 大(Liu)ほか | 無償 | 開発者経由配布 | 津波の発生〜遡上(ネスト格子)。Okada 変形・時間依存変形 |
 | JAGURS | JAMSTEC・馬場ほか | 無償 | 公開(GitHub) | 津波(分散・地球の弾性応答)。並列。時間依存の海底変形 |
 | TUNAMI | 東北大 | 無償 | 開発者経由配布 | 津波の伝播・遡上の標準コードの一つ。初期水位方式 |
-| MOST(ComMIT) | NOAA PMEL(NCTR) | 無償 | 条件付き配布(ComMIT 経由。PMEL の書面許可なしの再配布は不可) | 米国の津波予報の現業モデル(Titov & Synolakis 1998)。A/B/C の 3 段の入れ子格子(一方向) |
+| MOST(ComMIT) | NOAA PMEL(NCTR) | 無償 | 条件付き配布(ComMIT 経由。無許可の再配布は不可) | 米国の津波予報の現業モデル(Titov & Synolakis 1998)。A/B/C の 3 段の入れ子格子(一方向) |
 | SWASH | TU Delft | 無償 | 公開(GPL) | 多層非静水圧の波浪・津波・沿岸 |
 | FUNWAVE-TVD | Delaware 大 | 無償 | 公開(GitHub) | Boussinesq 型波浪(ソリトン分裂・砕波) |
 | NHWAVE | Delaware 大 | 無償 | 公開(GitHub) | σ座標の 3D 非静水圧。地滑り津波の発生に実績 |
 | NEOWAVE | Hawaii 大 | — | 非公開 | 1 層非静水圧の津波モデル(ENCflow と同じ 1 層近似) |
-| XBeach | Deltares・UNESCO-IHE(現 IHE Delft)・TU Delft・Miami 大(USACE の資金) | 無償 | 公開(CSDMS の登録では LGPL) | 嵐による砂浜・砂丘・砂州島の変形(Roelvink ら 2009)。定常・サーフビート(波群)・非静水圧の 3 モードで、波・流れ・漂砂・地形変化を一体に解く |
-| SWAN | TU Delft | 無償 | 公開(GPL) | 第 3 世代のスペクトル波浪モデル(風による発達・白波砕波・非線形相互作用。Booij ら 1999)。Delft3D-WAVE の計算部で、ADCIRC とも密結合する(SWAN+ADCIRC) |
+| XBeach | Deltares・IHE Delft・TU Delft ほか | 無償 | 公開(CSDMS の登録では LGPL) | 嵐による砂浜・砂丘・砂州島の変形(Roelvink ら 2009)。定常・サーフビート・非静水圧の 3 モードで、波・流れ・漂砂・地形変化を一体に解く |
+| SWAN | TU Delft | 無償 | 公開(GPL) | 第 3 世代のスペクトル波浪モデル(Booij ら 1999)。Delft3D-WAVE の計算部で、ADCIRC とも密結合する |
 | HISWA | TU Delft | — | 未確認 | 定常・浅海の短峰波の波浪推算モデル(流れのある場を含む。Holthuijsen ら 1989)。現在の配布は確認できず |
-| SnapWave | Roelvink ら(IHE Delft・Deltares) | 無償 | 公開(GitHub。ライセンス未確認) | 定常・陰解法の高速な波浪変形(屈折・浅水変形、砕波と底面摩擦の散逸。Roelvink ら 2025)。SFINCS と結合し、XBeach の定常解法・Delft3D FM・ShorelineS でも使われる |
-| CMS(CMS-Flow・CMS-Wave) | USACE ERDC(CHL) | 無償 | 公開(GitHub erdc/cms2d。ERDC 独自の許諾) | 入り江・航路向けの沿岸モデル。CMS-Flow(浅水の流れ・土砂・地形変化)と CMS-Wave(スペクトル波浪変形)。USACE の沿岸の推奨モデルの一つ |
+| SnapWave | Roelvink ら(IHE Delft・Deltares) | 無償 | 公開(GitHub。ライセンス未確認) | 定常・陰解法の高速な波浪変形(屈折・浅水変形・砕波。Roelvink ら 2025)。SFINCS と結合し、XBeach の定常解法などでも使われる |
+| CMS(CMS-Flow・CMS-Wave) | USACE ERDC(CHL) | 無償 | 公開(ERDC 独自の許諾) | 入り江・航路向けの沿岸モデル。CMS-Flow(流れ・土砂・地形変化)と CMS-Wave(スペクトル波浪変形)。USACE の推奨モデルの一つ |
 | ADCIRC | Luettich(UNC)・Westerink(Notre Dame 大)ほか | 無償 | 公開(LGPLv3。GitHub) | 非構造三角格子の有限要素法による 2D/3D の循環モデル。米国の高潮評価で広く使われる。SWAN と密結合(SWAN+ADCIRC) |
 | VolcFlow | Clermont-Ferrand 大(Kelfoun) | 無償 | 開発者経由配布 | 火山質量流(岩屑なだれ・火砕流・溶岩)。二層版で地滑り津波 |
 | SOBEK | Deltares | 有償 | 非公開 | 1D-2D 水理+構造物(Delft3D FM Suite へ統合) |
@@ -63,15 +64,15 @@ buildup-washoff+積雪+長期地形変動+流木+家屋破壊・瓦礫+非静水
 | MODFLOW(+SWI2 / SEAWAT) | USGS | 無償 | 公開 | 3D 地下水の標準。SWI2 で鋭利界面、SEAWAT で変密度 |
 | SUTRA | USGS | 無償 | 公開 | 変密度・変飽和の地下水流動・輸送 |
 | FEFLOW | DHI | 有償 | 非公開 | 3D 地下水・熱・物質輸送(変密度) |
-| HYDRUS-1D | Šimůnek(UC Riverside)・PC-Progress ほか | 無償 | 一部公開(2009 年版の計算部のソースだけ。最新版は非公開) | 鉛直 1 次元の変飽和の水分移動(Richards)・溶質・熱の輸送(Šimůnek ら 2013)。パブリックドメインとして配布。2D/3D 版(HYDRUS 2D/3D)は有償 |
+| HYDRUS-1D | Šimůnek(UC Riverside)・PC-Progress ほか | 無償 | 一部公開(2009 年版の計算部のみ) | 鉛直 1 次元の変飽和の水分移動(Richards)・溶質・熱の輸送(Šimůnek ら 2013)。パブリックドメインとして配布。2D/3D 版は有償 |
 | MOLASSES / Q-LavHA | USF / VUB | 無償 | 公開 | 溶岩流のセルオートマトン・確率論系 |
 | MAGFLOW / LavaSIM | INGV / 日本(日高ほか) | — | 非公開(要確認) | 温度結合の溶岩流モデル |
 | LAHARZ | USGS | 無償 | 公開 | ラハールの到達範囲の経験則(GIS) |
 | Badlands / FastScape | Sydney 大 / GFZ | 無償 | 公開 | プロセス則の景観発達モデル(Landlab は CSDMS の行) |
-| DeltaRCM(pyDeltaRCM) | Liang・Voller・Paola(Minnesota 大。原版は MATLAB)/ Moodie ら(Python 版) | 無償 | 公開(pyDeltaRCM は MIT) | 簡約の河口デルタモデル(Liang ら 2015)。水と土砂の小包を重み付きのランダムウォークで運ぶ。pyDeltaRCM は Moodie ら(2021) |
+| DeltaRCM(pyDeltaRCM) | Liang ら(Minnesota 大)/ Moodie ら(Python 版) | 無償 | 公開(pyDeltaRCM は MIT) | 簡約の河口デルタモデル(Liang ら 2015)。水と土砂の小包を重み付きのランダムウォークで運ぶ |
 | CEM | Ashton(WHOI)・Murray(Duke 大) | 無償 | 公開(CSDMS。MIT) | 一線汀線モデル(Ashton ら 2001、Ashton & Murray 2006)。高角度の波による汀線の不安定(砂嘴・カスプ・岬) |
 | PISM / Elmer/Ice / OGGM | UAF・PIK / CSC / Innsbruck 大ほか | 無償 | 公開 | 氷床・氷河力学の専用モデル |
-| ROMS(ROMS-AGRIF → CROCO) | Rutgers 大・UCLA / IRD・Inria・CNRS・Ifremer・SHOM | 無償 | 公開(ROMS は MIT/X 型。CROCO 固有の入れ子部分は CeCILL-C) | 地形に沿う座標の 3 次元海洋循環モデル(Shchepetkin & McWilliams 2005)。ROMS-AGRIF は AGRIF による二方向の入れ子(Debreu ら 2012)を持ち、CROCO に引き継がれた |
+| ROMS(ROMS-AGRIF → CROCO) | Rutgers 大・UCLA / IRD ほか(CROCO) | 無償 | 公開(MIT/X 型。CROCO の入れ子部分は CeCILL-C) | 地形に沿う座標の 3 次元海洋循環モデル(Shchepetkin & McWilliams 2005)。AGRIF による二方向の入れ子を CROCO が継承 |
 | WRF | NCAR・NOAA ほか | 無償 | 公開(パブリックドメイン。GitHub) | 研究・現業予報のメソ気象モデル。一方向・二方向の入れ子 |
 
 出典(2026-08-10 確認):
@@ -138,12 +139,17 @@ Nays2DH。配布形態は同日の Web 検索の結果による(作業環境の�
 手法)と一般的な手法(被害関数の後処理、DEM・粒子法の瓦礫追跡)は配布ソフトではないので、
 本表に載せない。
 
+RSR の出典(2026-11-21 確認):
+[iRIC のソルバ紹介](https://i-ric.org/ja/solvers/rri-on-iric/) /
+[解説の RSR の章](https://v4-rri-doc.readthedocs.io/ja/jp/02/06_rsr.html) /
+[ソースと利用条件(GitHub iRICsolvers/v4_RRI)](https://github.com/iRICsolvers/v4_RRI)。
+
 ## 2. プロセスカバレッジの比較(ENCflow 現況との対比)
 
 | プロセス | ENCflow | 同等以上を持つ代表 | 備考 |
 |---|---|---|---|
-| 2D 浅水(力学波) | ○ 八近傍連結コロケート格子(ENC 格子)・適応 RK・運動量保存形の移流(Stelling & Duinmeijer 型を 8 方向に拡張、MUSCL、斜め副格子モードの側方面結合) | TELEMAC, Delft3D, HEC-RAS, TUFLOW, Iber, BASEMENT | ENC 格子は独自(Tada, 2026, doi:10.3178/hrl.25-00052)。ENC 格子上の運動量保存形移流の設計・検証は未公表(docs/advection_design.md。段波 Stoker 解に 1 %、副格子モードの減衰 test/sublattice) |
-| 高潮・津波の遡上(沿岸氾濫) | ○ 海域セル(解かない・水位を強制。境界・構造物・ネスト帯には置けず、統計からも除外)+潮位/水位時系列+乾湿処理。沖側を解くなら海底地形+f_htype=2 の「解く海」 | TELEMAC, Delft3D, ANUGA, GeoClaw, SFINCS(高潮+波+降雨+河川の複合洪水に特化。波は SnapWave の定常波解) | 沖側の発生・伝播は外部から水位で受ける(発生から解くなら断層津波の行)。高潮・河川・豪雨の複合災害を単一モデルで扱える |
+| 2D 浅水(力学波) | ○ 八近傍連結コロケート格子(ENC 格子)・適応 RK・運動量保存形の移流(Stelling & Duinmeijer 型を 8 方向に拡張) | TELEMAC, Delft3D, HEC-RAS, TUFLOW, Iber, BASEMENT | ENC 格子は独自(Tada, 2026, doi:10.3178/hrl.25-00052)。その上の運動量保存形移流の設計・検証は未公表(docs/advection_design.md) |
+| 高潮・津波の遡上(沿岸氾濫) | ○ 海域セル(解かない・水位を強制)+潮位/水位時系列+乾湿処理。沖側を解くなら海底地形+f_htype=2 の「解く海」 | TELEMAC, Delft3D, ANUGA, GeoClaw, SFINCS(複合洪水に特化) | 沖側の発生・伝播は外部から水位で受ける(発生から解くなら断層津波の行)。高潮・河川・豪雨の複合災害を単一モデルで扱える |
 | 地滑り津波(陸上崩壊の水域突入・海底地滑り) | △ 動く底層(慣性なし Voellmy・移動海底方式) | GeoClaw+地滑り源, VolcFlow, NHWAVE, r.avaflow | 発生→流下→造波→伝播→遡上を 1 方程式の底層で単一時間発展に収める。慣性は対象外の概算。近地の分散性は非静水圧補正で |
 | 断層津波の発生(海底変位の時刻歴) | ○ 規定底面運動(変位の時刻歴を増分で z へ。前処理 utils/fault2disp) | GeoClaw, COMCOT, JAGURS, TUNAMI | 時間依存の変形を増分で与えるため、地震誘発の海底地滑りと同一ランに置ける。短い変位の Kajiura 効果は非静水圧補正で |
 | 非静水圧・分散波(ソリトン分裂・undular bore・孤立波) | △ 1 層非静水圧補正(射影法。活性集合・砕波スイッチ) | SWASH, NEOWAVE, FUNWAVE, GeoClaw-Bouss | 専用モデルの精度は競わず、分散性が本質の区間だけ補正する(無効時はゼロ追加)。線形波・孤立波は 1 層理論に 1% 以内 |
@@ -152,29 +158,29 @@ Nays2DH。配布形態は同日の Web 検索の結果による(作業環境の�
 | 降雨流出・遮断・蒸発散 | ○ 樹冠・Hamon/Thornthwaite・減率 | RRI, GSSHA, MIKE SHE, SHETRAN | 水理特化勢は持たない(SFINCS は rain-on-grid+浸透(定数・CN・Green-Ampt・Horton)まで。遮断・蒸発散・地下水はない) |
 | 地下水 | ○ 2 層(土層+風化基岩層)+井戸揚水シンク+河床交換能(MODFLOW RIV 相当の上限形) | MIKE SHE, SHETRAN, GSSHA, ParFlow | 平面 2 次元で 2 層は少数派。揚水と淡塩 2 層の併用で揚水誘引の海水浸入も扱える。河川と帯水層の交換は河道マスクのセル列で表し、別の河川パッケージを持たない |
 | 鉛直不飽和浸透(Richards) | △ 共有参照柱の 1 次元 Richards(小杉式)を区画の土層厚で読み出し、出口へ直接排水(谷 2023 の VZ 流出モデル) | HYDRUS-1D(鉛直 1 次元の専用), MIKE SHE, SHETRAN, ParFlow | セルごとに鉛直格子を持たず、少数の参照柱が区画を代表する(状態は柱数×層数)。側方の遅れは解かない概算。初版は地下水(2 層)と同じ場所では併用不可 |
-| 集中型の降雨流出(貯留関数法) | △ 区画ごとのタンク S = K·q^P(木村 1961 の基本形)の流出を出口へ直接移す。出口・基底流は VZ と共通、VZ と区画を分けて同じ計算に置ける | 貯留関数法の実務の流出計算(河川計画の洪水流出)、HEC-HMS(集中型の各種流出モデル) | 遅れ時間 T_L は雨を遅らせる形で持ち、蒸発散はタンクから引く。有効雨量の分離(f1・R_sa)は降雨遮断の 2 段の遮断率で与える。2 価の貯留関数は未実装。概念モデルで K・P は流域ごとの校正量。山地の区画を集中型で、河道と氾濫原を 2D 浅水流で、同じ格子・同じ時間発展で解ける |
+| 集中型の降雨流出(貯留関数法) | △ 区画ごとのタンク S = K·q^P(木村 1961 の基本形)の流出を出口へ直接移す。VZ と区画を分けて同じ計算に置ける | 貯留関数法の実務の流出計算(河川計画の洪水流出)、HEC-HMS(集中型の各種流出モデル) | 2 価の貯留関数は未実装。概念モデルで K・P は流域ごとの校正量。山地の区画を集中型で、河道と氾濫原を 2D 浅水流で、同じ格子・同じ時間発展で解ける |
 | 海水浸入・淡塩2層 | △ 鋭利界面(SWI2 同型)+地表塩水層+地表—地下の交換の淡塩配分 | MODFLOW+SWI2/SEAWAT, SUTRA, FEFLOW | 混合・分散まで解く変密度輸送は専用領域。地表氾濫・潮位と単一時間発展で遡上海水の行き先まで追い、河川を遡上した塩水くさびが河床から帯水層へ入る経路(河口堰の有無の比較)まで同じ計算で扱える点が独自 |
 | 都市排水・管路網 | △ 管路連続体層(等価被圧連続体・8 方向通水・サーチャージ) | SWMM+2D 結合(TUFLOW, InfoWorks ICM, xpswmm) | 世界標準は地表 2D と管路 1D 網の結合。網を連続体化する独自路線で、制御構造物・幹線支配系は網モデルに譲る |
-| 土砂・地形変化(掃流・浮遊・崩壊・土石流) | ○ MORFAC 付き。崖の崩落と崖錐(f_rockfall。窓版の自由面高さ・海食崖の海への排出)も | GAIA, Delft3D-MOR, BASEMENT, CAESAR-Lisflood, Morpho2DH | 土石流を流域水文・洪水と同居させる点が異なる |
-| 河口デルタの形成(河口砂州の分岐・ローブ成長・流路の乗り換え、砂泥比による扇状と鳥趾状、流量変動と定着による分流路の安定化) | ○ 設定のみ(海は通常セル+初期水位、容量給砂+浮遊泥+細粒分の帳簿+勾配補正+安息角+定着) | DeltaRCM(簡約。ランダムウォーク), Delft3D(物理ベース 2D/3D。Edmonds & Slingerland), CAESAR-Lisflood(局所慣性+側方侵食) | 砂泥比の効果(泥が多いほど分流路が少なく細長い)は三者と同じ向き。対称性の破れは乱数でなく分岐の不安定性。運動量保存形の流れで背水と噴流を解き、流量変動・潮位・流域水文と同じ格子で結合できる点が独自。波浪は沿岸漂砂(fn_wave)と沿岸の波浪場(fn_wavefield)で扱える(examples/delta)。潮汐は fn_tide の潮位で与える(examples/delta の段 6・7。潮流が砂を往復させて作る潮汐卓越型の形は、1 km の例題では現れない)。プルームの浮力は未実装。docs/delta_plan.md |
-| 蛇行河道の発達(湾曲部の流砂方向補正・側岸侵食・安息角崩落・内岸砂州の植生定着・頸部短絡・河床の細粒分の帳簿) | ○ ラスタ上の地形変化の帰結として(河岸線をベクトルで持たない。平衡二次流。非平衡二次流は計画) | Nays2DH(iRIC)、Delft3D-MOR、BASEMENT、CAESAR-Lisflood、自己発展河岸の研究モデル(Asahi ら 2013) | 専用勢は河岸線を追跡するか曲線座標で解く。ENCflow は河岸面を隣接セル間の段差として扱い、短絡・砂州の氾濫原化は乾湿処理と地形変化の帰結として現れる。流域水文・洪水と同じ時間発展に置ける点が独自(examples/meander・meander_cutoff) |
+| 土砂・地形変化(掃流・浮遊・崩壊・土石流) | ○ MORFAC 付き。崖の崩落と崖錐(f_rockfall)も | GAIA, Delft3D-MOR, BASEMENT, CAESAR-Lisflood, Morpho2DH, RSR(流域の土砂流出) | 土石流を流域水文・洪水と同居させる点が異なる(RSR も流域水文と同居させるが、河道は合流点間の区間平均で扱う) |
+| 河口デルタの形成(砂州の分岐・流路の乗り換え・砂泥比による扇状と鳥趾状) | ○ 設定のみ(海は通常セル+初期水位、容量給砂+浮遊泥+細粒分の帳簿+勾配補正+安息角+定着) | DeltaRCM(簡約。ランダムウォーク), Delft3D(物理ベース 2D/3D), CAESAR-Lisflood | 砂泥比の効果は三者と同じ向き。対称性の破れは乱数でなく分岐の不安定性。運動量保存形の流れで背水と噴流を解き、流量変動・潮位・波浪・流域水文と同じ格子で結合できる点が独自。プルームの浮力は未実装 |
+| 蛇行河道の発達(側岸侵食・内岸砂州の植生定着・頸部短絡) | ○ ラスタ上の地形変化の帰結として(河岸線をベクトルで持たない。平衡二次流。非平衡二次流は計画) | Nays2DH(iRIC)、Delft3D-MOR、BASEMENT、CAESAR-Lisflood、自己発展河岸の研究モデル(Asahi ら 2013) | 専用勢は河岸線を追跡するか曲線座標で解く。ENCflow は河岸面を隣接セル間の段差として扱い、短絡も地形変化の帰結として現れる。流域水文・洪水と同じ時間発展に置ける点が独自 |
 | 火山流動・雪崩(岩屑なだれ・火砕流・ラハール・流れ型雪崩) | ○ 等価流体(Voellmy・一定停止応力・曲率項) | Titan2D, VolcFlow, RAMMS, r.avaflow, LAHARZ | 抵抗則は専用勢と同水準。噴火→流下→堆積→天然ダム→決壊洪水→二次泥流の連鎖を単一計算で追える点が独自。希薄系(サージ・噴煙)は対象外 |
-| 降灰後の降雨泥流(降灰 → 降雨 → 灰層の侵食・泥流化 → 堆積) | ○ 降灰厚を土層厚として与えるだけで発生源の指定なし | OpenLISEM(Hazard 版)。FLO-2D, Kanako-2D, Morpho2DH, LaharFlow, RAMMS, r.avaflow, HEC-RAS 6, LAHARZ は連鎖の一部 | 専用勢は降雨流出か土砂流の流下のどちらかで、他方は入力。同じ格子・時間ループに同居するので泥流が自然に立ち上がる。比較研究の相手は OpenLISEM |
+| 降灰後の降雨泥流(降灰 → 降雨 → 灰層の侵食・泥流化 → 堆積) | ○ 降灰厚を土層厚として与えるだけで発生源の指定なし | OpenLISEM(Hazard 版)。FLO-2D・Kanako-2D・LaharFlow・RAMMS ほかは連鎖の一部 | 専用勢は降雨流出か土砂流の流下のどちらかで、他方は入力。同じ格子・時間ループに同居するので泥流が自然に立ち上がる。比較研究の相手は OpenLISEM |
 | 溶岩流(湧き出し・停止・固化) | ○ 深さ平均 Bingham(等温、または温度 1 変数で冷えて止まる)+固化→地形化 | MOLASSES, Q-LavHA(CA・確率論), MAGFLOW, LavaSIM(温度結合), VolcFlow | 温度モードは有効放射率の放射・対流冷却と温度依存のレオロジーで、温度結合系の簡素な型(表面の殻と内部を分ける構造は持たない)。固化溶岩が地盤になり、同一ランで降雨・洪水・土砂が新地形上を流れる点が独自 |
-| 流木(発生・輸送・堆積) | △ ラスタ場の概算(材積のオイラー輸送) | iRIC 系の流木モジュール, IberWood(個別剛体追跡) | 主流は個別流木追跡で閉塞の幾何まで解く。ENCflow は到達・堆積ポテンシャルの面的評価を洪水・土石流と単一時間発展で扱う |
+| 流木(発生・輸送・堆積) | △ ラスタ場の概算(材積のオイラー輸送) | iRIC 系の流木モジュール, IberWood(個別剛体追跡), RSR(河道網のオイラー型) | 主流は個別流木追跡で閉塞の幾何まで解く。ENCflow は到達・堆積ポテンシャルの面的評価を洪水・土石流と単一時間発展で扱う |
 | 流木の閉塞(橋・透過型堰堤での集積と堰上げ、カルバートの流入口の閉塞) | △ 捕捉率を与件とするセルの台帳と、多孔質の障害物としての抵抗。セルより狭い開口は、カルバートの流量則に入れる流入口の損失 | IberWood(個別剛体追跡) | 掛かるかどうかは解かない(個別追跡は閉塞の幾何まで解く)。集積の量が流木の輸送と連成して時間発展し、堰上げと迂回氾濫を同じ計算で出す。係数は校正値で、実測との照合はまだない |
 | 家屋破壊・瓦礫(木造家屋の破壊、瓦礫の輸送・堆積) | △ ラスタ場の概算(被害関数型の破壊判定+瓦礫のオイラー輸送+空隙率の帰還) | 被害関数の後処理, DEM・粒子法の瓦礫個別追跡 | 実務標準は浸水深ベース被害関数の後処理。瓦礫の行方と流木・瓦礫による破壊力の増加を同じ時間発展で扱う点が独自 |
 | 水質(負荷流出・減衰・沈降・buildup-washoff・Kd 分配・地下水輸送・貯水池完全混合) | ○ | MIKE ECO Lab, Delft3D-WAQ, Iber-WQ, GSSHA | 無償・公開で水文+水質+水理の同居は稀。地表・地下・貯水池を跨ぐ物質収支を単一コードで閉じる |
 | 積雪・融雪 | ○ 度日法+凍土の浸透抑制 | MIKE SHE, GSSHA, SHETRAN | HEC-RAS は HMS 側 |
 | 氷河 | ○ 度日質量収支+SIA 流動+滑動+氷河侵食+雪崩再配分 | 汎用洪水モデルには皆無。精緻な氷力学は PISM, Elmer/Ice, OGGM | 洪水水理・流域水文・地形変動と氷河を併走させる構成は他に例がない |
 | 沿岸の波浪場(浅水変形・屈折・砕波・防波堤の陰) | △ 段 W1: 位相平均・代表周期 1 個・方向ビンのエネルギー平衡(2 リンク分解の風上法、非定常/準定常)。固定床で地形に作用しない | XBeach 定常モード, SnapWave(SFINCS と結合), HISWA, SWAN, CMS-Wave | 精度は専用勢と競わず、流域・河川・洪水・津波・土砂と同じ格子・同じ時間発展で動かす。過程の漂砂は段階的に(docs/wavefield_plan.md、§90)。回折・風による発達は持たない |
-| 波による流れ(セットアップ・沿岸流・戻り流れ) | △ 段 W2: 放射応力(波+ローラー)の外力、深さ平均 GLM の Stokes 輸送、波・流れの底面摩擦(1.16 u_rms)、流れの側方 Neumann 境界(wf_flow)。砕波による水平混合(Battjes 1975 型の渦動粘性 wf_break_visc。既定なし) | XBeach(GLM・ローラー), Delft3D-FLOW+WAVE, SFINCS+SnapWave, ADCIRC+SWAN | XBeach の定常モードと同じ式の系統(ローラー・GLM・摩擦)を、河川・洪水・津波の浅水流の運動方程式に直接足す。検定は Bowen のセットアップと沿岸方向の運動量の釣り合い(test/wfcurrent、§90.5) |
-| 流れによる波の変化(ドップラー効果・流れによる屈折・阻止) | △ 段 W3: 方向ビンごとのドップラーの分散関係、作用量の平衡(輸送 c_g + U・流れの勾配による屈折)、阻止(f_wf_current)。代表周期 1 個で阻止の点の反射はない | XBeach(wci), SWAN, HISWA, Delft3D-WAVE | 浅水流の流れ(河川・潮流・津波・波による沿岸流)をそのまま波に効かせ、波→流れと双方向に連成する。河口の噴流が波の遡上を止めることを分散関係の阻止として表す(fn_wave の wave_vmax のような打ち切りなし。test/wfdoppler、§90) |
-| 波による漂砂(攪拌・沿岸漂砂・浜の侵食と回復) | △ 段 W4・W5: Soulsby(1997)の波・流れのせん断による掃流砂・浮遊砂の攪拌、Euler 平均流速と波の歪度・非対称の岸向きの速度 u_a(Ruessink ら 2012)による輸送(f_wfsed)。砕波の乱れによる攪拌(XBeach の turb の形 f_wfsed_turb。既定なし)。遡上域の輸送は汀線の面の経験式(岸沖 Larson ら 2004・沿岸 Larson & Wamsley 2007、遡上高 Stockdon ら 2006。f_wfswash。既定なし。遡上そのものは解かない) | XBeach, Delft3D(FLOW+WAVE+MOR), MIKE 21 ST, CMS | 流域・河川の土砂供給と同じ格子・同じ時間発展で、波による沿岸漂砂と岸沖の輸送を加える(デルタ・河口・浜の変化)。直線海岸の沿岸漂砂は CERC と同じ桁(test/wfsed、§90) |
-| 波浪による沿岸漂砂(汀線の平滑化・砂嘴・弧状デルタ) | △ 波を解かず汀線帯の CERC 型概算(f_wave_longshore。沖波の H₀・T・方向を与件に、汀線方位の平滑化・局所勾配項・河口の流速規則。攪拌と遮蔽の精緻化は計画) | Delft3D-MOR+WAVE(SWAN)、XBeach、CEM(Ashton & Murray の一線汀線モデル) | 汀線の一線モデルと同じ CERC 則を 2 次元の地形変化の上で動かす点が独自(examples/delta の波浪ケース、§84.15)。波の伝播は上の行の波浪場(段階実装中) |
+| 波による流れ(セットアップ・沿岸流・戻り流れ) | △ 段 W2: 放射応力(波+ローラー)の外力、深さ平均 GLM の Stokes 輸送、波・流れの底面摩擦、砕波による水平混合(既定なし) | XBeach(GLM・ローラー), Delft3D-FLOW+WAVE, SFINCS+SnapWave, ADCIRC+SWAN | XBeach の定常モードと同じ式の系統を、河川・洪水・津波の浅水流の運動方程式に直接足す。検定は Bowen のセットアップと沿岸方向の運動量の釣り合い(test/wfcurrent) |
+| 流れによる波の変化(ドップラー効果・流れによる屈折・阻止) | △ 段 W3: 方向ビンごとのドップラーの分散関係と作用量の平衡、阻止(f_wf_current)。代表周期 1 個で阻止の点の反射はない | XBeach(wci), SWAN, HISWA, Delft3D-WAVE | 浅水流の流れ(河川・潮流・津波・波による沿岸流)をそのまま波に効かせ、波→流れと双方向に連成する。河口の噴流が波の遡上を止めることを分散関係の阻止として表す(test/wfdoppler) |
+| 波による漂砂(攪拌・沿岸漂砂・浜の侵食と回復) | △ 段 W4・W5: 波・流れのせん断による攪拌と、平均流と波の非対称による輸送(f_wfsed)。遡上域は汀線の経験式(既定なし。遡上そのものは解かない) | XBeach, Delft3D(FLOW+WAVE+MOR), MIKE 21 ST, CMS | 流域・河川の土砂供給と同じ格子・同じ時間発展で、波による沿岸漂砂と岸沖の輸送を加える(デルタ・河口・浜の変化)。直線海岸の沿岸漂砂は CERC と同じ桁(test/wfsed) |
+| 波浪による沿岸漂砂(汀線の平滑化・砂嘴・弧状デルタ) | △ 波を解かず汀線帯の CERC 型概算(f_wave_longshore。沖波の H₀・T・方向が与件) | Delft3D-MOR+WAVE(SWAN)、XBeach、CEM(Ashton & Murray の一線汀線モデル) | 汀線の一線モデルと同じ CERC 則を 2 次元の地形変化の上で動かす点が独自(examples/delta の波浪ケース)。波の伝播は上の行の波浪場で扱う |
 | 長期地形変動 | ○ 風化・隆起・周期強制・石灰岩の溶食(涵養比例の化学的削剥+吸込穴の集中項 = ドリーネ) | CAESAR-Lisflood, Landlab, Badlands, FastScape | 実水理駆動では CAESAR-Lisflood と並ぶ。他はプロセス則 LEM で棲み分け。溶食は管路連続体層(カルスト水文)と同一ランで動く概算で、洞窟網の幾何(speleogenesis モデル)は対象外 |
-| 山地渓流の岩盤下刻(剥離・研磨・可動層の被覆・基準面)と斜面の土層供給 | ○ 超過せん断応力の剥離+運ばれる礫の研磨、被覆は可動層の厚さの露出率と掃流砂の利用可能率、分布隆起。土層だけが動く深さ依存クリープ(creep_hstar)。土石流による岩盤侵食(混合体の準静的な駆動応力の超過形。濃い混合体が流れるセルだけ)。混合粒径は採らない(developer.md §84.10 の決定) | Landlab(SPACE = stream power + 被覆、DepthDependentDiffuser、MassWastingRunout = 崩壊土砂の流下と土層の侵食。岩盤は削らない)、研究モデル(Sklar & Dietrich 2004 の saltation–abrasion、Zhang ら 2015 のマクロ粗度、Inoue ら 2016 の 2 次元の岩盤–沖積河道、Stock & Dietrich 2006 の土石流の慣性応力則、McGuire ら 2023 の流動深と勾配の則) | LEM の多くは stream power で流れを解かない。浅水流の底面せん断と掃流砂の容量で道具と被覆を 2 次元で結合し、洪水・流域水文と同じ時間発展に置ける点が独自。土石流による岩盤侵食も、単層混合体のイベント計算の中で被覆・生成物の取り込みを侵食・堆積式と結ぶ(巨礫の前縁は分けて表さない)。急勾配の等流で τ_b が大きく出る偏り(developer.md §89.4 の 1)は f_opening_dynamic = 3 で除ける(§68.41。2026-10-31 から既定)。5 セル幅の水路で流れが格子の幅まで集まる性質(§89.4 の 3)は課題(examples/bedrock_cover、examples/mountain_valley = 斜面の風化・クリープと渓流の連成、test/dbrock、examples/debris_bedrock = 1 回の土石流の岩盤侵食と、出水との交互計算による頻度ごとの定常勾配、docs/mountain_stream_plan.md) |
-| ネスティング(多段格子) | ○ 静的ネスト(任意の深さ・比 r と r_t は任意整数)。帯 Dirichlet / Flather 放射 / スポンジ、置換は面積平均・湿潤判定・保存修正。非静水圧の φ と追加の場(土砂・水質・地下貯留等)も交換 | 津波: COMCOT, TUNAMI, MOST, JAGURS, NEOWAVE, GeoClaw(AMR), FUNWAVE-TVD。構造格子の MIKE 21 Classic, TUFLOW Classic, Delft3D 4。海洋・気象(ROMS-AGRIF, WRF) | 洪水の公開勢は非構造・四分木で局所細密化しネストを持たない。分散波の接続は JAGURS・NEOWAVE・GeoClaw-Bouss・FUNWAVE の少数派(§3) |
+| 山地渓流の岩盤下刻(剥離・研磨・可動層の被覆・基準面)と斜面の土層供給 | ○ 超過せん断応力の剥離+運ばれる礫の研磨、可動層による被覆、分布隆起。深さ依存クリープ。土石流による岩盤侵食。混合粒径は採らない | Landlab(SPACE・DepthDependentDiffuser ほか)、研究モデル(Sklar & Dietrich 2004 ほか) | LEM の多くは stream power で流れを解かない。浅水流の底面せん断と掃流砂の容量で道具と被覆を 2 次元で結合し、洪水・流域水文と同じ時間発展に置ける点が独自。数セル幅の水路で流れが格子の幅に集まる性質は課題 |
+| ネスティング(多段格子) | ○ 静的ネスト(任意の深さ・任意の整数比)。非静水圧の φ と追加の場(土砂・水質・地下貯留等)も交換 | 津波の多く(COMCOT・JAGURS・GeoClaw ほか)、構造格子の MIKE 21 Classic・TUFLOW Classic・Delft3D 4、ROMS-AGRIF・WRF | 洪水の公開勢は非構造・四分木で局所細密化しネストを持たない。分散波の接続は JAGURS・NEOWAVE・GeoClaw-Bouss・FUNWAVE の少数派(§3) |
 | 並列化 | OpenMP+MPI。ランク数によらずビット再現 | TELEMAC, Delft3D(MPI。ビット再現は保証せず)、SFINCS(OpenMP+GPU/OpenACC) | 決定的リダクションが差別化点 |
 | リスタート厳密性 | ○ モジュール私有 save 契約 | 商用勢は概ね対応 | 公開勢で徹底例は少ない |
 
@@ -223,7 +229,9 @@ users_guide の各章にある(本表には書かない)。
   変える」連鎖は、流出モデルと質量流モデルが同じ格子・同じ時間ループに
   いて初めて発生源なしに立ち上がる。公開・商用を通じて一続きに解けるのは
   OpenLISEM(Hazard 版)がほぼ唯一で、他は片方を入力として受け取る
-  (§2 のラハールの行)。
+  (§2 のラハールの行)。流域スケールの RSR(§1)も降雨流出から崩壊・土石流、
+  河道の土砂・流木の輸送までを一つの計算で扱うが、土砂は RRI で求めた水理量で
+  運ぶ構成である。
 - **ネスティング(多段格子)の位置づけ**: 津波モデルでは入れ子格子が標準装備
   (COMCOT・TUNAMI・MOST・JAGURS・NEOWAVE・GeoClaw の AMR)だが、分散波
   (非静水圧・Boussinesq)まで界面で接続するのは JAGURS(Baba ら 2015)・
