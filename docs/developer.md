@@ -3,10 +3,10 @@
 コードから読み取れない「なぜ」を記録する。形式は「決定事項+理由+落とし穴」。
 設計判断をしたら、記憶が新しいうちに記録すること。
 
-本書は目次で、§1 以降の記録の本文は節ごとに docs/developer/NNN.md に置く(NNN は節番号を
-3 桁にしたもの。§68 なら [developer/068.md](developer/068.md))。新しい節はそこにファイルを
-起こし、末尾の「全節の一覧」に 1 行足す。プロジェクト基本方針(旧 §0)は
-[policy.md](policy.md) に独立している。
+本書は開発記録の目次で、§1 以降の本文は節ごとに docs/developer/NNN.md に置く(NNN は節番号を
+3 桁にしたもの。§68 なら [developer/068.md](developer/068.md))。プロジェクト基本方針(旧 §0)は
+[policy.md](policy.md) に独立している。記録は全体を通して読むものではない。下の「テーマ別の索引」で
+「現行」から読み、経緯は必要なときだけ読む。
 
 ---
 
@@ -15,6 +15,24 @@
 基本方針(開発目的と 13 箇条)は [docs/policy.md](policy.md) にある(英訳は
 [docs/en/policy.md](en/policy.md))。「developer.md §0」「§0 方針 N」という引用は、policy.md の
 方針 N を指す。
+
+## 引用と記録のしかた
+
+- **節番号は恒久の識別子**。他の文書・ソースのコメントからは「developer.md §N」「developer.md §N.M」の形で
+  引用する(§N の本文は docs/developer/NNN.md、§N.M はその中の見出し「### N.M」)。番号は付け直さない。
+  節の中から他の節を指すときは「§N」だけでよい。
+- **節の新設**: いまの最後の番号の次の番号で docs/developer/NNN.md を起こす。1 行目は「## N. 題名(日付 …)」。
+  下の「全節の一覧」に同じ題名で 1 行足し、「テーマ別の索引」の該当するテーマの「記録」に番号を足す
+  (既定や設計を変えたら「現行」も直す)。本書に節の本文を書かない。
+- **既存の節への追記**: その節のファイルの末尾に小節(### N.M)を足す。ほかの節のファイルに書かない。
+- **大きさの目安**: 1 つの節のファイルが 200 KB を超えたら、そこへは追記せず新しい節を起こし、元の節から
+  参照する。GitHub が Markdown を表示できるのは約 500 KB までで、CI はリポジトリ内の 400 KB を超える
+  Markdown を不合格にする。
+- **検査**: tools/devdocs/check.py(CI の i18n.yml)が、目次とファイル名・見出しの一致、引用の解決、
+  Markdown の大きさを照合する。
+- **分割前の履歴**: 本書は 2026-11-22 まで 1 ファイル(約 2.8 MB)だった。分割前の最後の版はコミット
+  619cb1f の docs/developer.md で、行ごとの履歴は `git blame 619cb1f -- docs/developer.md`、変更の履歴は
+  `git log 619cb1f -- docs/developer.md` でたどる(分割の記録は [§116](developer/116.md))。
 
 ## テーマ別の索引
 
@@ -139,8 +157,8 @@
 
 ### 公開・文書・言語
 
-- 現行: docs/multilingual.md(多言語化の規約)・[§34](developer/034.md)(公開体制と言語方針)・[§35](developer/035.md)(利用者向け文書の構成)
-- 記録: [§34](developer/034.md)・[§35](developer/035.md)・[§105](developer/105.md)(浅水方程式の入門ページ)
+- 現行: docs/multilingual.md(多言語化の規約)・[§34](developer/034.md)(公開体制と言語方針)・[§35](developer/035.md)(利用者向け文書の構成)・本書の「引用と記録のしかた」と [§116](developer/116.md)(開発記録の分割と書き方)
+- 記録: [§34](developer/034.md)・[§35](developer/035.md)・[§105](developer/105.md)(浅水方程式の入門ページ)・[§116](developer/116.md)
 
 ### 例題・教材・データ
 
@@ -263,3 +281,4 @@
 - [§113](developer/113.md) 深くて遅い隣のセルの扱い: `f_advection_donor = 4`・`f_advection_bend = 2`・`f_advection_lateral = 2`・`f_dry_head_cap = 4`(2026-11-19。選択式の値として実装。既定は変えていない)
 - [§114](developer/114.md) 既定の切り替え: `f_advection_donor` 3 → 4・`f_advection_bend` 1 → 2・`f_advection_lateral` 1 → 2・`f_dry_head_cap` 3 → 4(2026-11-21。利用者の決定。挙動が変わる)
 - [§115](developer/115.md) 教材 tutorials/chichibu の単純化と、例題 examples/chichibu_flood の新設(2026-11-21。利用者の指示。計算本体は変えていない)
+- [§116](developer/116.md) developer.md の分割: 基本方針の独立(docs/policy.md)と節ごとのファイル化(2026-11-22。利用者の依頼と、推奨案での合意)
