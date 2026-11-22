@@ -31,6 +31,25 @@ INDEX = """\
 """
 SEC1 = "## 1. 一つ目\n\n本文。[式](a (b)) と [x](…) はリンクではない。\n"
 SEC2 = "## 2. 二つ目(日付)\n\n### 2.1 小節\n\n#### 2.1.1 下位\n\n### 見出しに番号のない小節\n"
+HANDOFF = """\
+# 引き継ぎ
+
+## 現在の到達点
+
+- 要約。
+
+## 未完了・検証待ち
+
+- [00a](handoff/00a.md) 一つ目の項目(日付)
+- [1b](handoff/1b.md) とても長い題名の…
+
+## 中期の道標
+
+- [中期の道標](handoff/roadmap.md)
+"""
+ITEM_A = "00a. **一つ目の項目(日付)** — 本文\n   - 箇条\n   1. 字下げした番号付きの行は項目ではない\n"
+ITEM_B = "1b. **とても長い題名の\n   続き(行をまたぐ)** — 本文\n"
+ROADMAP = "## 中期の道標\n\n- **大きな計画**: [方針](../policy.md)\n"
 
 
 def write(root: Path, name: str, body) -> None:
@@ -49,6 +68,11 @@ def repo(index=INDEX, sections=None, extra=None):
     write(root, "docs/developer/README.md", "# 本文\n")
     for name, body in (sections if sections is not None else {"001.md": SEC1, "002.md": SEC2}).items():
         write(root, f"docs/developer/{name}", body)
+    write(root, "docs/handoff.md", HANDOFF)
+    write(root, "docs/handoff/README.md", "# 本文\n")
+    write(root, "docs/handoff/00a.md", ITEM_A)
+    write(root, "docs/handoff/1b.md", ITEM_B)
+    write(root, "docs/handoff/roadmap.md", ROADMAP)
     for name, body in (extra or {}).items():
         write(root, name, body)
     return root
@@ -128,6 +152,52 @@ class SizeTests(unittest.TestCase):
         self.assertEqual(len(errors), 1)
         self.assertIn("docs/big.md", errors[0])
         self.assertTrue(any("003.md" in n for n in notes), notes)
+
+
+class HandoffTests(unittest.TestCase):
+    def test_clean_with_shortened_title(self):
+        errors, notes = check.check_handoff(repo())
+        self.assertEqual(errors, [])
+        self.assertIn("2 item file(s), 3 index entr(y/ies)", notes[0])
+        self.assertEqual(check.item_title(ITEM_B.split("\n")), "とても長い題名の 続き(行をまたぐ)")
+
+    def test_unlisted_missing_and_duplicated(self):
+        index = HANDOFF.replace("- [1b](handoff/1b.md) とても長い題名の…\n", "")
+        errors, _ = check.check_handoff(repo(extra={"docs/handoff.md": index}))
+        self.assertTrue(any("1b.md is not listed" in e for e in errors), errors)
+        index = HANDOFF + "- [00c](handoff/00c.md) ない項目\n- [00a](handoff/00a.md) 一つ目の項目(日付)\n"
+        errors, _ = check.check_handoff(repo(extra={"docs/handoff.md": index}))
+        self.assertTrue(any("00c.md does not exist" in e for e in errors), errors)
+        self.assertTrue(any("00a.md is listed 2 times" in e for e in errors), errors)
+
+    def test_title_and_link_text(self):
+        index = HANDOFF.replace("一つ目の項目(日付)", "一つ目の項目")
+        errors, _ = check.check_handoff(repo(extra={"docs/handoff.md": index}))
+        self.assertTrue(any("title of 00a differs" in e for e in errors), errors)
+        index = HANDOFF.replace("とても長い題名の…", "別の題名…")
+        errors, _ = check.check_handoff(repo(extra={"docs/handoff.md": index}))
+        self.assertTrue(any("title of 1b differs" in e for e in errors), errors)
+        index = HANDOFF.replace("[1b](handoff/1b.md)", "[1c](handoff/1b.md)")
+        errors, _ = check.check_handoff(repo(extra={"docs/handoff.md": index}))
+        self.assertTrue(any("link text must be the item number 1b" in e for e in errors), errors)
+
+    def test_items_outside_their_own_file(self):
+        errors, _ = check.check_handoff(repo(extra={
+            "docs/handoff.md": HANDOFF + "\n00d. **目次に書いた項目**\n",
+            "docs/handoff/00a.md": ITEM_A + "00e. **同じファイルの二つ目**\n",
+            "docs/handoff/roadmap.md": ROADMAP + "00f. **道標に書いた項目**\n"}))
+        self.assertTrue(any("handoff.md:" in e and "'00d.' must not be written in the index" in e for e in errors))
+        self.assertTrue(any("00a.md:4: item '00e.'" in e for e in errors), errors)
+        self.assertTrue(any("roadmap.md:4: item '00f.'" in e for e in errors), errors)
+
+    def test_bad_first_line_stray_file_and_link(self):
+        errors, _ = check.check_handoff(repo(extra={
+            "docs/handoff/1b.md": "**番号のない項目**\n",
+            "docs/handoff/figure.png": b"\x89PNG",
+            "docs/handoff/00a.md": ITEM_A + "[図](figs/none.png)\n"}))
+        self.assertTrue(any("1b.md:1: the first line must start with '1b. '" in e for e in errors), errors)
+        self.assertTrue(any("figure.png: only Markdown" in e for e in errors), errors)
+        self.assertTrue(any("missing local link: figs/none.png" in e for e in errors), errors)
 
 
 class MainTests(unittest.TestCase):

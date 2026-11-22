@@ -1,8 +1,8 @@
 #!/usr/bin/env python3
-"""開発記録(目次 docs/developer.md と節ごとの本文 docs/developer/NNN.md)の一貫性と、Markdown の大きさの検査。
-Python 標準ライブラリのみ。
+"""開発記録(目次 docs/developer.md と節ごとの本文 docs/developer/NNN.md)・作業引き継ぎメモ(目次 docs/handoff.md と
+項目ごとの本文 docs/handoff/<番号>.md)の一貫性と、Markdown の大きさの検査。Python 標準ライブラリのみ。
 
-  python3 tools/devdocs/check.py [--root DIR] [index] [cites] [size]   (省略時はすべて)
+  python3 tools/devdocs/check.py [--root DIR] [index] [cites] [size] [handoff]   (省略時はすべて)
 
 index: 目次と節のファイルを照合する。
   1. docs/developer/ には NNN.md(節番号 N を 3 桁にしたもの)と README.md だけを置く
@@ -17,7 +17,16 @@ cites: リポジトリ内の「developer.md §N」「developer.md §N.M」の引
   実在の節を指し、小節まで書いた引用はその節のファイルに見出し N.M(またはその下位の見出し)がある。
   §0 は policy.md への案内なので小節を検査しない。本ツールのディレクトリ(検査用の例を含む)は対象外。
 size: リポジトリ内の Markdown が LIMIT_KB 以下であること(GitHub が Markdown を表示できるのは約 500 KB まで)。
-  節のファイルが SOFT_KB を超えたら、新しい節を起こす目安として報告する(失敗にはしない)。
+  節・項目のファイルが SOFT_KB を超えたら、新しい節を起こす(項目を分ける)目安として報告する(失敗にはしない)。
+handoff: 作業引き継ぎメモの目次と項目のファイルを照合する。
+  1. docs/handoff/ には Markdown だけを置く。<番号>.md(番号は 00y・1l・4 の形)は 1 行目が「<番号>. 」で始まり、
+     2 行目以降に行頭の「<番号>. 」を持たない(1 ファイル 1 項目)。番号の形でないファイル(roadmap.md など)と
+     目次にも行頭の「<番号>. 」を書かない(項目は自分のファイルに起こす)
+  2. 目次の一覧に、README.md 以外の各ファイルが「- [<番号>](handoff/<番号>.md) 題名」(番号の形でないファイルは
+     「- [名前](handoff/<ファイル>)」)の形で 1 回ずつあり、リンク先が実在する
+  3. 項目の題名(1 行目の「<番号>. 」の後の太字。行をまたいでよく、改行は空白 1 つ)と目次の題名が一致する。
+     目次の題名が「…」で終わるときは、「…」の前が項目の題名の先頭と一致すればよい(長い題名の短縮)
+  4. 目次と項目のファイルの相対リンクが実在のファイルを指す
 不一致があれば行ごとに報告して終了コード 1。目次・文書を生成・変更はしない(developer.md §35.1)。
 """
 from __future__ import annotations
@@ -36,6 +45,8 @@ LIMIT_KB = 400
 SOFT_KB = 200
 SKIP_DIRS = {".git"}
 SELF_DIR = "tools/devdocs"
+HANDOFF_INDEX = "docs/handoff.md"
+HANDOFF_DIR = "docs/handoff"
 
 FILE_NAME = re.compile(r"^(\d{3})\.md$")
 SECTION_HEADING = re.compile(r"^## (\d+)\. (.+)$")
@@ -43,6 +54,9 @@ NUMBERED_SUB = re.compile(r"^#{3,6} (\d+)\.\d")
 ENTRY = re.compile(r"^- \[§(\d+)\]\(developer/(\d{3})\.md\) (.+)$")
 LINK = re.compile(r"\]\(([^)\s]+)\)")
 CITE = re.compile(r"developer\.md(?:\]\([^)]*\))?\**[\s!#/*>(（、のでは:：]{0,12}§\s*(\d+)((?:\.\d+)*)")
+ITEM_FILE = re.compile(r"^(\d{1,2}[a-z]{0,2})\.md$")
+ITEM_LINE = re.compile(r"^(\d{1,2}[a-z]{0,2})\. (.*)$")
+HANDOFF_ENTRY = re.compile(r"^- \[([^\]]+)\]\(handoff/([^)\s]+)\)(?: (.*))?$")
 
 
 def text(path: Path) -> str:
@@ -203,21 +217,101 @@ def check_size(root: Path) -> tuple[list[str], list[str]]:
         if size > LIMIT_KB * 1024:
             errors.append(f"{rel}: {size / 1024:.0f} KB exceeds {LIMIT_KB} KB "
                           f"(GitHub renders Markdown only up to about 500 KB; split the document)")
-        elif rel.startswith(SECTIONS + "/") and size > SOFT_KB * 1024:
+        elif rel.startswith((SECTIONS + "/", HANDOFF_DIR + "/")) and size > SOFT_KB * 1024:
             notes.append(f"{rel}: {size / 1024:.0f} KB is over {SOFT_KB} KB; "
-                         f"start a new section instead of appending to it")
+                         f"start a new section (or split the item) instead of appending to it")
+    return errors, notes
+
+
+def item_title(lines: list[str]) -> str:
+    """項目の題名: 1 行目の「<番号>. 」の後の太字(行をまたいでよい。改行は空白 1 つ)。太字がなければ 1 行目の残り"""
+    m = ITEM_LINE.match(lines[0]) if lines else None
+    if not m:
+        return ""
+    rest = m[2]
+    if not rest.startswith("**"):
+        return rest.strip()
+    buf, i = rest[2:], 1
+    while "**" not in buf and i < len(lines):
+        buf += " " + lines[i].strip()
+        i += 1
+    return buf.split("**", 1)[0].strip()
+
+
+def check_handoff(root: Path) -> tuple[list[str], list[str]]:
+    errors, notes = [], []
+    index, hdir = root / HANDOFF_INDEX, root / HANDOFF_DIR
+    if not index.is_file():
+        return [f"{HANDOFF_INDEX}: not found"], notes
+    if not hdir.is_dir():
+        return [f"{HANDOFF_DIR}/: not found"], notes
+    files = {p.name: p for p in sorted(hdir.iterdir()) if p.is_file()}
+    titles = {}
+    for name, path in files.items():
+        rel = path.relative_to(root).as_posix()
+        if not name.endswith(".md"):
+            errors.append(f"{rel}: only Markdown files belong here")
+            continue
+        lines = text(path).split("\n")
+        m = ITEM_FILE.match(name)
+        start = 0
+        if m:
+            first = ITEM_LINE.match(lines[0])
+            if not first or first[1] != m[1]:
+                errors.append(f"{rel}:1: the first line must start with '{m[1]}. '")
+            else:
+                titles[name] = item_title(lines)
+            start = 1
+        for no, line in enumerate(lines[start:], start + 1):
+            s = ITEM_LINE.match(line)
+            if s:
+                errors.append(f"{rel}:{no}: item '{s[1]}.' must be a file of its own ({HANDOFF_DIR}/{s[1]}.md)")
+    linked = {}
+    for no, line in enumerate(text(index).split("\n"), 1):
+        s = ITEM_LINE.match(line)
+        if s:
+            errors.append(f"{HANDOFF_INDEX}:{no}: item '{s[1]}.' must not be written in the index; "
+                          f"create {HANDOFF_DIR}/{s[1]}.md and add a line to the list")
+            continue
+        m = HANDOFF_ENTRY.match(line)
+        if not m:
+            continue
+        label, target, title = m[1], m[2], (m[3] or "")
+        linked[target] = linked.get(target, 0) + 1
+        if target not in files:
+            errors.append(f"{HANDOFF_INDEX}:{no}: {HANDOFF_DIR}/{target} does not exist")
+            continue
+        if ITEM_FILE.match(target):
+            if label != target[:-3]:
+                errors.append(f"{HANDOFF_INDEX}:{no}: the link text must be the item number {target[:-3]}")
+            full = titles.get(target)
+            short = title.endswith("…") and title[:-1] and full is not None and full.startswith(title[:-1])
+            if full is not None and title != full and not short:
+                errors.append(f"{HANDOFF_INDEX}:{no}: the title of {target[:-3]} differs from the first line of {target}")
+    for name in files:
+        if name == "README.md" or not name.endswith(".md"):
+            continue
+        if not linked.get(name):
+            errors.append(f"{HANDOFF_DIR}/{name} is not listed in {HANDOFF_INDEX}")
+        elif linked[name] > 1:
+            errors.append(f"{HANDOFF_INDEX}: {name} is listed {linked[name]} times")
+    for path in [index, *(p for n, p in files.items() if n.endswith(".md"))]:
+        errors += link_errors(root, path)
+    notes.append(f"{len(titles)} item file(s), {sum(linked.values())} index entr(y/ies)")
     return errors, notes
 
 
 def main(argv=None) -> int:
     ap = argparse.ArgumentParser(description=__doc__.split("\n")[0])
     ap.add_argument("--root", default=Path(__file__).resolve().parents[2], type=Path)
-    ap.add_argument("what", nargs="*", choices=["index", "cites", "size"], help="checks to run (default: all)")
+    ap.add_argument("what", nargs="*", choices=["index", "cites", "size", "handoff"],
+                    help="checks to run (default: all)")
     args = ap.parse_args(argv)
     root = args.root.resolve()
-    what = args.what or ["index", "cites", "size"]
+    what = args.what or ["index", "cites", "size", "handoff"]
     errors_all = []
-    for name, fn in (("index", check_index), ("cites", check_cites), ("size", check_size)):
+    for name, fn in (("index", check_index), ("cites", check_cites), ("size", check_size),
+                     ("handoff", check_handoff)):
         if name not in what:
             continue
         errors, notes = fn(root)
