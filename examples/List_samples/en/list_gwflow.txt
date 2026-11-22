@@ -87,6 +87,13 @@
   !  factor)
   dt_gwflow = 0
 
+  ! Initial saturation of the soil layer (layer 1), in [0,1] (default 0 = empty)
+  !  Sets the initial subsurface storage to gw_sat0 x sy0 x soil depth (the
+  !  water-filled fraction of the drainable pore space). Available with
+  !  Green-Ampt or the lateral model (not with the bucket). Not used when
+  !  the run starts from a saved state (f_state_restore > 0)
+  !gw_sat0 = 0.0
+
 /
 
 

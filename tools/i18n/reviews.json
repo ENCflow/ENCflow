@@ -113,11 +113,11 @@
     {
       "source": "docs/users_guide.md",
       "target": "docs/en/users_guide.md",
-      "source_sha256": "e91ea67c9fc12ff28251342dc71f982f01b215d208f8a0f4f39c3b7e33e2ec80",
-      "target_sha256": "7110f1e7291f08e310ddd07655d4453c855eab98221ce03c03c2b5a2135a03aa",
-      "reviewer": "Claude (Claude Code session; changed sections compared side by side with the Japanese source; numbers checked against the test runs)",
+      "source_sha256": "c3023349da8a609bda6649e67e380a7b35db1117a328c1e95fac39aebe61af6f",
+      "target_sha256": "42cd25ae00c32329abe8a4a26dbaf157e97b1d39645a703c0733a96aa8a151ac",
+      "reviewer": "Claude (Claude Code session; the sections changed for f_dbwet = 3 (retained pore water) and gw_sat0 (initial soil-layer saturation) compared side by side with the Japanese source; numbers checked against the test runs)",
       "method": "assistant",
-      "reviewed_on": "2026-11-21"
+      "reviewed_on": "2026-11-22"
     },
     {
       "source": "docs/users_guide/advection.md",
@@ -311,20 +311,20 @@
     {
       "source": "docs/users_guide/geomorph.md",
       "target": "docs/en/users_guide/geomorph.md",
-      "source_sha256": "aa9cc8d14e384de3ab625a1aa767398110f04dd6b71bb06f6edc3072840f6964",
-      "target_sha256": "12c8fa9ba8f8ada190f5291b68e0bbee7ce1f8cc910a63fe8cae8065cabe897d",
-      "reviewer": "Claude (Claude Code session; fn_wave section intro: link to the usage table in the wave-field chapter; both versions read side by side, anchor checked)",
+      "source_sha256": "e29035b98854a8ccff5b9f24390557f96e045f4d7e9d421cca46fabe7e1cd33c",
+      "target_sha256": "24aaad6c3cec00cab202f74d125bd75e710cf44090d0d274b3fbcd9848ecc24e",
+      "reviewer": "Claude (Claude Code session; the sections changed for f_dbwet = 3 (retained pore water) and gw_sat0 (initial soil-layer saturation) compared side by side with the Japanese source; numbers checked against the test runs)",
       "method": "assistant",
-      "reviewed_on": "2026-11-10"
+      "reviewed_on": "2026-11-22"
     },
     {
       "source": "docs/users_guide/geomorph_applications.md",
       "target": "docs/en/users_guide/geomorph_applications.md",
-      "source_sha256": "2b8ce5d676fa69cecc67c6f127f6cb1d29847249a8558daf91325b709e2f4ada",
-      "target_sha256": "19117ccf82e89a0d4bd814cdd20f23130929d00b9b73ab7812b672412f8c5214",
-      "reviewer": "Claude (Claude Code session; the culv_jam additions of the Japanese master and the English mirror compared passage by passage, numbers cross-checked)",
+      "source_sha256": "e10100eb8639147c69dc190a9626579063d8a64c458969c8f940094eac24362a",
+      "target_sha256": "9b7e8dab5871971c9be37b6a7ca5e89621ad914a88125cde8851abda5ec409c9",
+      "reviewer": "Claude (Claude Code session; the sections changed for f_dbwet = 3 (retained pore water) and gw_sat0 (initial soil-layer saturation) compared side by side with the Japanese source; numbers checked against the test runs)",
       "method": "assistant",
-      "reviewed_on": "2026-11-12"
+      "reviewed_on": "2026-11-22"
     },
     {
       "source": "docs/users_guide/glacier.md",
@@ -338,11 +338,11 @@
     {
       "source": "docs/users_guide/gwflow.md",
       "target": "docs/en/users_guide/gwflow.md",
-      "source_sha256": "0aef35b09ee20d84c04d4b79b4c04995e7285a3ab527dafe6eb69d11b140cc91",
-      "target_sha256": "769edadada025b9a72ad680980ddc97e09d942241fd65114dc50293d9b3e1a23",
-      "reviewer": "Claude (Claude Code session; one paragraph added below the note on lateral conductivity in both languages (K_sh of a single layer is an equivalent value of the model, with a link to Supplement 2 of examples/source_area); the rest unchanged since the previous record)",
+      "source_sha256": "91f1a7d7928c8cfe4c98a8c6a16622c756e249b138ecc536f4b2683ec3ee48a9",
+      "target_sha256": "77cbde7a02c81d6fd99a5b30deefca7ea52cb93e26e63fa9e50a597f2b7c1468",
+      "reviewer": "Claude (Claude Code session; the sections changed for f_dbwet = 3 (retained pore water) and gw_sat0 (initial soil-layer saturation) compared side by side with the Japanese source; numbers checked against the test runs)",
       "method": "assistant",
-      "reviewed_on": "2026-11-11"
+      "reviewed_on": "2026-11-22"
     },
     {
       "source": "docs/users_guide/gwflow_models.md",
@@ -392,9 +392,9 @@
     {
       "source": "docs/users_guide/massflow.md",
       "target": "docs/en/users_guide/massflow.md",
-      "source_sha256": "9cec64eb25d325c7fd80d7fbfa786353a63c5fa3481a72f64c45d435cc4b43aa",
-      "target_sha256": "37c7d802da5be1e11b3414da35d079f5cf3a446223503c3b9bb94d657e664a94",
-      "reviewer": "Claude (Claude Code session; the reference to developer.md §0 changed to a link to the project policy docs/policy.md (English: docs/en/policy.md); both files compared)",
+      "source_sha256": "358072043fa09f0b628e36c6d147a7ad4203867c5e35754d2a6057023599ccf1",
+      "target_sha256": "b8a15912e079d26dfd2cd8a8ce059e16707b2e89c9c6b8b7877ddd20742dfd9a",
+      "reviewer": "Claude (Claude Code session; the sections changed for f_dbwet = 3 (retained pore water) and gw_sat0 (initial soil-layer saturation) compared side by side with the Japanese source; numbers checked against the test runs)",
       "method": "assistant",
       "reviewed_on": "2026-11-22"
     },
@@ -437,11 +437,11 @@
     {
       "source": "docs/users_guide/params_index.md",
       "target": "docs/en/users_guide/params_index.md",
-      "source_sha256": "57970a558209a7b8c926d396f53cf761a2090b582b925ce2897d9dfb5b3cf8d9",
-      "target_sha256": "0c6ed512a32e27501b9229909dc80184dfd9e14b177ad699b6cff2102257452b",
-      "reviewer": "Claude (Claude Code session; full-text content and lexical review, no model execution)",
+      "source_sha256": "8dcc9dfaeaa0d9cc829895b17bbf15fced0ff35d6b68799819bc3169f064748a",
+      "target_sha256": "7f15c37539afcf4bd935f742914182205532b9dbe5d055f7910313a4f3749b6b",
+      "reviewer": "Claude (Claude Code session; the sections changed for f_dbwet = 3 (retained pore water) and gw_sat0 (initial soil-layer saturation) compared side by side with the Japanese source; numbers checked against the test runs)",
       "method": "assistant",
-      "reviewed_on": "2026-11-16"
+      "reviewed_on": "2026-11-22"
     },
     {
       "source": "docs/users_guide/passage_width.md",
@@ -716,11 +716,11 @@
     {
       "source": "examples/List_samples/list_geomorph.txt",
       "target": "examples/List_samples/en/list_geomorph.txt",
-      "source_sha256": "6366bfde929c358823b512b42b566f5621c9d48bd6342325ff0c1a9e9d0b2133",
-      "target_sha256": "81b0dd9b499ce76d5f0496610179fc6969fa8f5dff664d9ef0424c6fb4acd988",
-      "reviewer": "Claude (Claude Code session; geomorph chapter split, step 1: the six application setups moved to users_guide/geomorph_applications.md; compared the Japanese source with the English mirror for the moved text, the new pointer paragraphs and the re-targeted links; the rest of the pair is unchanged since the previous record)",
+      "source_sha256": "4001f39f9026a50978785040feaea874ceeac1730a5073d4b7c5703912c00f9e",
+      "target_sha256": "0edbb93b33d092842d89eb68af751c91bad003ba8c819a67c86faf231f95e9d5",
+      "reviewer": "Claude (Claude Code session; the sections changed for f_dbwet = 3 (retained pore water) and gw_sat0 (initial soil-layer saturation) compared side by side with the Japanese source; numbers checked against the test runs)",
       "method": "assistant",
-      "reviewed_on": "2026-11-07"
+      "reviewed_on": "2026-11-22"
     },
     {
       "source": "examples/List_samples/list_glacier.txt",
@@ -734,11 +734,11 @@
     {
       "source": "examples/List_samples/list_gwflow.txt",
       "target": "examples/List_samples/en/list_gwflow.txt",
-      "source_sha256": "1db8cc7485d6b2385926f98477150063f74445bb1299c3b63a7e98956f487d2f",
-      "target_sha256": "93a095ea146b30f2c2e045cbf87c49be802e4c21da9c5e9f14f0767ce045c945",
-      "reviewer": "Claude (Claude Code session; reviewed the text on the new default 1/3 of gw_diagratio and salt_diagratio and the values that change with it (developer.md sec. 98) in the Japanese source against the English mirror, 2026-11-05)",
+      "source_sha256": "50a62ffd46a487c6076a68f228f465ba95341012087f8d243a2952212e3a56a1",
+      "target_sha256": "ced1d0379d35c4cd95271a3b8abd2638d761261dba5264a7e8672218b5cb198d",
+      "reviewer": "Claude (Claude Code session; the sections changed for f_dbwet = 3 (retained pore water) and gw_sat0 (initial soil-layer saturation) compared side by side with the Japanese source; numbers checked against the test runs)",
       "method": "assistant",
-      "reviewed_on": "2026-11-05"
+      "reviewed_on": "2026-11-22"
     },
     {
       "source": "examples/List_samples/list_initial.txt",
@@ -4019,11 +4019,11 @@
     {
       "source": "test/debris/README.md",
       "target": "test/debris/en/README.md",
-      "source_sha256": "4b8c0edd5b48b15c1677be84a3ec722f65a512c6391a46a978186b097ef6f212",
-      "target_sha256": "1198485592dd6d87a607f9a3184de9222ae4e98bc9b47b824cda3f4c41fdf1ad",
-      "reviewer": "Claude (Claude Code session; rerun of 2026-11-10 with the current defaults: the table cells written as round-off, min dz −0.27 cm of configuration 6, the bullet with the round-off bounds and the sentence appended to the history compared line by line against the Japanese source; the rest unchanged since the previous record)",
+      "source_sha256": "0fc8e0947e27655782171ce768d18129b0e1baac7b3173b286b50ee84f754144",
+      "target_sha256": "b61bb30f57c0bcf8984d780225b6103825b885591531429a1eeaff15e59809a6",
+      "reviewer": "Claude (Claude Code session; the sections changed for f_dbwet = 3 (retained pore water) and gw_sat0 (initial soil-layer saturation) compared side by side with the Japanese source; numbers checked against the test runs)",
       "method": "assistant",
-      "reviewed_on": "2026-11-10"
+      "reviewed_on": "2026-11-22"
     },
     {
       "source": "test/debris/figs/map.png",
@@ -4748,11 +4748,11 @@
     {
       "source": "test/slide/README.md",
       "target": "test/slide/en/README.md",
-      "source_sha256": "3e78bd345643021aac080cb868515da7e9cc4574480ad5ca89e5820c8ace34e4",
-      "target_sha256": "4893243986fe2724b983ed9aad7ea196807ce6ae13121739fa212403b72f0203",
-      "reviewer": "Claude (Claude Code session; changed sections compared side by side with the Japanese source; numbers checked against the test runs)",
+      "source_sha256": "5703f5aeb0af9b17a4f5cc99b42886e3abcfef7c975aefe3ae46547f838fb0a2",
+      "target_sha256": "608c48fbe2eca470010d308e94a70c4157ccca1e3f0c6dfb7a2bca5690d75265",
+      "reviewer": "Claude (Claude Code session; the sections changed for f_dbwet = 3 (retained pore water) and gw_sat0 (initial soil-layer saturation) compared side by side with the Japanese source; numbers checked against the test runs)",
       "method": "assistant",
-      "reviewed_on": "2026-11-21"
+      "reviewed_on": "2026-11-22"
     },
     {
       "source": "test/slide/figs/fslide.png",

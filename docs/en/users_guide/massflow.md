@@ -324,6 +324,31 @@ deposition and erosion does not shift water in one direction. With
 empty while the ground rises, so deposition in a pond pushes out water equal to
 those pores.
 
+**Exchange of retained pore water (f_dbwet = 3).** `f_dbwet = 2` exchanges only the water of the
+drainable pore space (specific yield $`s_y`$). When $`s_y`$ is smaller than the porosity $`\lambda`$,
+a deposit takes the water of only part of its pores and the rest, $`(\lambda - s_y)\Delta z`$, is left on
+the surface. `f_dbwet = 3` adds, to the exchange of 2, the exchange of the **retained water**
+$`w_r = \lambda - s_y`$ that moves with the soil.
+
+- Deposition ($`\Delta z > 0`$): $`w_r\,\Delta z`$ is taken from the local surface water, and then, as
+  with 2, the added capacity is filled from the remaining surface water. If the surface water is not
+  enough the rest is taken from the subsurface storage, and what still cannot be taken is counted as a
+  shortfall and reported at the end of the run as `retained pore water shortfall`.
+- Erosion ($`\Delta z < 0`$), slope failure and instantaneous release: $`w_r|\Delta z|`$ returns to the
+  surface water. When a saturated soil layer fails, $`\lambda D`$ of water comes out together with the
+  $`s_y D`$ released from the subsurface storage, giving a mixture at concentration $`C_*`$ (with 2 only
+  $`s_y D`$ comes out, denser than $`C_*`$).
+
+The retained water is an implicit water without a state variable (the Green-Ampt moisture deficit
+$`s_y`$ implies an initial water content of $`\lambda - s_y`$). The total amount of water is conserved in
+the form $`\sum h + \sum h_g + w_r\sum(z - z_0)`$ (it grows by the shortfall, if any).
+$`s_y \le \lambda`$ is required, and with $`s_y = \lambda`$ it is the same as 2. This is our own
+simplification, verified by configuration 8 of [test/debris](../../../test/debris/en/README.md) and
+configuration 4 of [test/slide](../../../test/slide/en/README.md). In a trial in which a tributary debris
+flow dams the main river (10 m grid, $`s_y = 0.2`$, $`\lambda = 0.4`$), leaving it at 2 let the water that
+did not enter the deposit spill, and the discharge downstream right after the debris flow was 2.6 times
+that with $`s_y = \lambda`$ (developer.md §28.17).
+
 **Future work (planned): Hungr's entrainment law.** We plan to add, without
 changing the default, Hungr's empirical entrainment law[^hungr95]
 $`E = E_r\,h_t\,|\mathbf{V}|`$, mentioned in the f_dbed = 4 paragraph above, as an
@@ -467,7 +492,7 @@ The labels in the Basis column are explained in [How to read the basis of a defa
 | f_dbed | 1 | erosion/deposition law (§3) | **method** 1: Takahashi relaxation, 2: Egashira–Ashida, 3: Takahashi–Nakagawa, 4: velocity-proportional, 0: none |
 | db_delte / db_deltd | 0.0007 / 0.05 | erosion / deposition rate coefficients | **calibration** Takahashi's general value / Kanako customary value |
 | f_dbstop / db_vstop / db_wstop | 0 / 0.05 m/s / 0.05 m/s | low-speed stopping | **numerical** vstop also serves the yield test |
-| f_dbwet / db_satbed | 0 / 1.0 | pore-water entrainment / deposit saturation (1: entrainment, 2: with the groundwater computation) | **method** total-volume continuity of Takahashi–Nakagawa[^tn91] (1). 2 exchanges pore water between the surface water and subsurface storage (own) |
+| f_dbwet / db_satbed | 0 / 1.0 | pore-water entrainment / deposit saturation (1: entrainment, 2: with the groundwater computation, 3: 2 + retained water) | **method** total-volume continuity of Takahashi–Nakagawa[^tn91] (1). 2 exchanges pore water between the surface water and subsurface storage, and 3 adds the exchange of the retained water λ − sy0 (both own) |
 | db_reltime / db_relsat | 0 / 1.0 | release time / saturation of the failed mass (§4) | **given** |
 | slide_c / slide_phi / slide_gamma | 0 / 30° / 18 kN/m³ | strength constants of the stability test (§4) | **customary value** shallow-landslide values; c' = 0 is on the safe side |
 | bs_rho | 2000 kg/m³ | bulk density of the mass (§5) | **customary value** representative of saturated soil and rock debris |
@@ -500,8 +525,8 @@ The labels in the Basis column are explained in [How to read the basis of a defa
 
 | Case | Content | Point |
 |---|---|---|
-| [test/debris](../../../test/debris/en/README.md) | four constitutive configurations (simple, Egashira, Takahashi–Nakagawa, pore water); equilibrium concentration of uniform flow on a slope | total solid 1e-13, np = 1, 2, 4 agree; equilibrium concentration within 1e-11 of the Takahashi-type C∞ |
-| [test/slide](../../../test/slide/en/README.md) | fluidisation and stability test | self-checks of conservation and water budget |
+| [test/debris](../../../test/debris/en/README.md) | four constitutive configurations (simple, Egashira, Takahashi–Nakagawa, pore water); equilibrium concentration of uniform flow on a slope; pore water with the groundwater computation and retained water | total solid 1e-13, np = 1, 2, 4 agree; equilibrium concentration within 1e-11 of the Takahashi-type C∞; water ledger including the retained water within 1e-11 |
+| [test/slide](../../../test/slide/en/README.md) | fluidisation and stability test; fluidisation of a saturated soil layer and retained water | self-checks of conservation and water budget |
 | [test/volcano](../../../test/volcano/en/README.md) | Voellmy uniform flow and τ_y run-out | uniform depth agrees to 0.0% with the analytical solution (the along-slope equation with the default 2; four neighbours) |
 | [test/dbslope](../../../test/dbslope/en/README.md) | uniform flow on a 30° slope (Voellmy, Egashira, the stony type and the bedload-like collective flow of Takahashi–Nakagawa), steep-slope gravity correction 1 and 2 | for all four, within 0.03% of the analytical solutions of the along-slope equations with 2 and of the horizontal equations with 1 (ratio of the depths of 2 and 1: 1.11–1.21) |
 | [test/curvature](../../../test/curvature/en/README.md) | steady one-dimensional test of the curvature term | thickening on the arc 1.03 times the ODE |

@@ -19,7 +19,8 @@
 !   fx(hs への固体柱状量)= C*・i・dtw。可動層クランプ(侵食 ≤ sd)、
 !   浮遊量クランプ(堆積 ≤ hs)、z・sd の共動更新、gwflow 容量引き渡し、
 !   乾燥セル(h ≤ dd)の全量繰り入れは calc_suspend と同一規約。
-!   間隙水の授受は無視(suspend と同じ近似。水相は独立に保存)。
+!   間隙水の授受は既定では無視(suspend と同じ近似。水相は独立に保存)。f_dbwet で
+!   1: 飽和床の連行、2: gwflow 併用(排水可能分 sy0)、3: 2 + 保持水 λ − sy0(§28.7・§28.17)。
 !
 !   停止条件の切替(f_dbstop):
 !     0: なし(∝|V| の E-D のみ = Kanako 相当。|V|→0 で交換凍結)
@@ -275,9 +276,25 @@ module subroutine init_debris(gm, p, g, list)
         call par_stop("list_geomorph: f_dbwet=2 は gwflow(fn_gwflow)が必要です" &
                       // "(gwflow なしで間隙水を扱うなら f_dbwet=1)")
       end if
+    case (3)
+      ! 2 に保持水 w_r = λ − sy0 の授受を足す(developer.md §28.17)。2 は排水可能分 sy0 しか
+      ! 授受しないので、sy0 < λ では堆積物が間隙の一部しか水を取らず、残りが地表に余る。
+      ! 3 は土と一緒に動く保持水も授受し、堆積物は全間隙 λ の水を取る(侵食・崩壊では戻す)
+      if (len_trim(p%fn_gwflow) == 0) then
+        call par_stop("list_geomorph: f_dbwet=3 は gwflow(fn_gwflow)が必要です" &
+                      // "(gwflow なしで間隙水を扱うなら f_dbwet=1)")
+      end if
+      if (g%sy0 > (1.0 - gm%db_cstar) * (1.0 + 1.0e-12)) then
+        call par_stop("list_geomorph: f_dbwet=3 requires sy0 <= fluv_porosity " &
+                      // "(the drainable porosity cannot exceed the total porosity)")
+      end if
+      gm%db_wret = max((1.0 - gm%db_cstar) - g%sy0, 0.0)
+      if (.not. allocated(gm%dbr%wdrow)) then
+        allocate(gm%dbr%wdrow(dcp%js:dcp%je), source = 0.0_real64)
+      end if
     case default
-      call par_stop("list_geomorph: f_dbwet must be 0(ignore), 1(saturated-bed entrainment) " &
-                    // "or 2(pore water with gwflow)")
+      call par_stop("list_geomorph: f_dbwet must be 0(ignore), 1(saturated-bed entrainment), " &
+                    // "2(pore water with gwflow) or 3(2 + retained pore water)")
   end select
   gm%f_dbwet = list%f_dbwet
   gm%db_lamsb = (1.0 - gm%db_cstar) * list%db_satbed    ! λ・s_b(λ = 1−C*)
@@ -373,8 +390,9 @@ module subroutine calc_debris(gm, p, g, s, dtw)
   real :: tanthc, sinthc, vcr, fac
   real :: tanf, ge, taud, fr, bd, bdm, area   ! 土石流による岩盤侵食(§89.18)
   real :: gzx, gzy                            ! 同上の有効重力の地盤の勾配(§91)
-  real(real64) :: vd
-  logical :: rkd, gcorr
+  real :: wdf                                 ! 保持水の不足(f_dbwet = 3。層の平面の水深 m)
+  real(real64) :: vd, wd
+  logical :: rkd, gcorr, wret
 
   ! --- f_dbed=3 の流動面勾配は近傍の h・hs を読む。両者のハロは
   !     ステップ頭交換のままで、swflow が帯内を更新済み = 帯界面で
@@ -552,10 +570,12 @@ module subroutine calc_debris(gm, p, g, s, dtw)
   ! --- パス2: 適用(書き込みは自セルに閉じる) ---
   area = g%dx * g%dy
   bdm = 0.0
-  !$omp parallel do schedule(static) private(i, j, fx, dzb, cap, fxg, dhw, fwh, bd, vd) &
+  wret = (gm%f_dbwet == 3 .and. s%gw_active)   ! 保持水の授受(§28.17)
+  !$omp parallel do schedule(static) private(i, j, fx, dzb, cap, fxg, dhw, fwh, bd, vd, wd, wdf) &
   !$omp   reduction(max: bdm)
   do j = dcp%js, dcp%je
     vd = 0.0_real64
+    wd = 0.0_real64
     do i = g%wx(1,j), g%wx(2,j)
       fx = gm%dbr%fx(i,j)
       if (fx /= 0.0) then
@@ -590,7 +610,14 @@ module subroutine calc_debris(gm, p, g, s, dtw)
         !      地下へ移るだけの片方向の汲み上げになる)。水の総量は保存
         !   dhw は地下の水深(層の平面)。地表側は河道幅セルで河道の平面に
         !   載るので gw_to_h 倍で出し入れする(体積を保つ換算。§26.1)
-        if (gm%f_dbwet == 2 .and. s%gw_active) then
+        ! 保持水の授受(f_dbwet = 3。§28.17): 排水可能分(下の f_dbwet = 2 の授受)より先に、
+        ! 土と一緒に動く保持水 w_r·Δz を地表水と授受する(堆積は地表水 → hg の順に取り、
+        ! 取れなかった分は行の台帳に数える。侵食は地表水へ戻す)
+        if (wret) then
+          call retain_exchange(gm, s, i, j, dzb, wdf)
+          if (wdf > 0.0) wd = wd + real(wdf, real64)
+        end if
+        if (gm%f_dbwet >= 2 .and. s%gw_active) then
           fwh = gw_to_h(s, i, j)
           if (dzb > 0.0) then
             cap = s%sd(i,j) * g%sy0
@@ -639,6 +666,7 @@ module subroutine calc_debris(gm, p, g, s, dtw)
       end if
     end do
     if (rkd) gm%rk%vdrow(j) = gm%rk%vdrow(j) + vd * real(area, real64)
+    if (wret) gm%dbr%wdrow(j) = gm%dbr%wdrow(j) + wd * real(area, real64)
   end do
   !$omp end parallel do
   if (rkd) gm%rk%bdmax = max(gm%rk%bdmax, bdm)
@@ -713,7 +741,7 @@ subroutine slide_pass2(gm, g, s)
   type(t_geoinfo), intent(in) :: g
   type(t_state), intent(inout) :: s
   integer :: i, j
-  real :: dd, cap, fxg
+  real :: dd, cap, fxg, wdf
 
   do j = dcp%js, dcp%je
     do i = g%wx(1,j), g%wx(2,j)
@@ -724,6 +752,9 @@ subroutine slide_pass2(gm, g, s)
       s%z(i,j) = s%z(i,j) - dd
       s%sd(i,j) = 0.0                          ! 岩盤露出(堆積で再生すれば再判定)
       gm%dbr%nslide = gm%dbr%nslide + 1
+      ! 保持水 w_r・D も土と一緒に流動体へ(f_dbwet = 3。§28.17。飽和した土層なら下の hg と
+      ! 合わせて λ・D の水が出て、混合体の濃度は C* になる)
+      if (gm%f_dbwet == 3 .and. s%gw_active) call retain_exchange(gm, s, i, j, -dd, wdf)
       if (s%gw_active) then
         ! 容量 0 になった帯水の全量を地表へ(容量超過引き渡しの極限)
         cap = 0.0
@@ -766,7 +797,7 @@ module subroutine release_debris(gm, p, g, s)
   type(t_geoinfo), intent(in) :: g
   type(t_state), intent(inout) :: s
   integer :: i, j
-  real :: tprev, dd, fx, cap, fxg
+  real :: tprev, dd, fx, cap, fxg, wdf
 
   if (.not. allocated(gm%dbr%rel)) return          ! この run で発火済み
   if (gm%db_reltime > s%t) return
@@ -791,6 +822,8 @@ module subroutine release_debris(gm, p, g, s)
       s%hs(i,j) = s%hs(i,j) + fx
       s%z(i,j) = s%z(i,j) - dd
       s%sd(i,j) = s%sd(i,j) - dd
+      ! 保持水 w_r・D も土と一緒に流動体へ(f_dbwet = 3。§28.17)
+      if (gm%f_dbwet == 3 .and. s%gw_active) call retain_exchange(gm, s, i, j, -dd, wdf)
       if (s%gw_active) then
         ! 間隙水は地下水から出る(容量超過引き渡し。suspend と同じ整合)
         cap = s%sd(i,j) * g%sy0

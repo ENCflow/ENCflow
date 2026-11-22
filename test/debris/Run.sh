@@ -58,6 +58,16 @@ echo ""
 python3 "$sdir/Check_debris.py" save_gw gw || rc=1
 rm -rf save_gw_serial && cp -r save_gw save_gw_serial
 
+# 構成8: 構成6 の間隙水を f_dbwet=3(保持水の授受)にし、初期地下水 gw_sat0 を置く
+# (developer.md §28.17。水台帳は終了時の「保持水の不足」の表示を読むので、画面出力を別に取る)
+set -o pipefail
+./encflow param_gw3.txt | tee Screen_gw3.log || exit 1
+set +o pipefail
+cat Screen_gw3.log >> Screen.log
+echo ""
+python3 "$sdir/Check_debris.py" save_gw3 gw3 Screen_gw3.log || rc=1
+rm -rf save_gw3_serial && cp -r save_gw3 save_gw3_serial
+
 # 構成7: 斜面等流の平衡濃度(勾配の違う 6 本の水路。高橋型の C∞ との突合。developer.md §28.15)
 python3 "$sdir/make_eq.py" z > z_eq.txt || exit 1
 python3 "$sdir/make_eq.py" h > h_eq.txt || exit 1

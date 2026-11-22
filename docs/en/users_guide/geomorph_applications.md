@@ -144,7 +144,9 @@ pays off).
   recommended as the first-order bulking effect. With infiltration
   (`fn_gwflow`) use `f_dbwet = 2` (the water that had soaked into the eroded
   layer returns to the surface, and the capacity added by deposition is filled
-  from the local surface water). Working
+  from the local surface water). When the specific yield sy0 is given smaller
+  than the porosity, use `f_dbwet = 3` (the retained water that moves with the
+  soil is exchanged as well). Working
   example: [examples/ashfall_lahar](../../../examples/ashfall_lahar/en/README.md)
   (infiltration lowered by the ash → rainfall → mudflow → fan deposition, compared
   with before the eruption and with a check dam).

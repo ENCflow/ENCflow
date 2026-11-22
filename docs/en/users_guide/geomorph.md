@@ -538,7 +538,7 @@ debris flows, where the effective gravity is what acts; developer.md §93).
 | db_cmin | 0.02 | Lower concentration limit for applying the Egashira laminar law (f_dbres=2); below it the Manning law is used (a numerical switch, since the laminar law diverges as C->0; 0 < db_cmin < C*). The default 2% matches the mud-flow criterion of Takahashi and Nakagawa (1991) |
 | db_mu / db_xi | 0.2 / 1000 | Voellmy mu and xi (m/s²). Used by f_dbres=4. The defaults are mid-range RAMMS values (snow avalanches). Debris avalanches are smaller, mu 0.1 and xi 200-500 (recommendations below) |
 | db_tauy | 10000 | Constant retarding stress tau_y (Pa). Used by f_dbres=5. The lower side of the 5-50 kPa pyroclastic-flow applications |
-| f_dbwet / db_satbed | 0 / 1.0 | Pore-water entrainment (exchange of bed pore water with surface water on erosion/deposition; a first-order bulking effect where erosion dominates). 1 is mutually exclusive with the groundwater computation. With the groundwater computation use 2 (the capacity added by deposition is filled from the local surface water, and the pore water of the eroded layer returns from subsurface storage to the surface) |
+| f_dbwet / db_satbed | 0 / 1.0 | Pore-water entrainment (exchange of bed pore water with surface water on erosion/deposition; a first-order bulking effect where erosion dominates). 1 is mutually exclusive with the groundwater computation. With the groundwater computation use 2 (the capacity added by deposition is filled from the local surface water, and the pore water of the eroded layer returns from subsurface storage to the surface). When the specific yield sy0 is smaller than the porosity use 3 (2 plus the exchange of the retained water λ − sy0 that moves with the soil; deposits take the water of the whole pore space, and a saturated soil layer that fails becomes a mixture at concentration C*; [explanation](massflow.md#3-erosion-and-deposition-laws-f_dbed)) |
 
 The minimal input to "just run a debris flow" is `f_debris = 1` + `sd0`
 (the movable layer = erodible soil) + a source. The source is one of:
@@ -801,7 +801,8 @@ debris-flow model).
   ponded depth h >= bs_hplunge, convert hs to bulk volume hs/(1-lambda)
   and move it to the bed layer hb (the surface height conserves the
   solids; the pore fraction is buried from the water column with
-  f_dbwet=1, moves from the water column to subsurface storage with 2, or
+  f_dbwet=1, moves from the water column to subsurface storage with 2
+  (with 3 the retained water is also taken from the water column), or
   raises the surface with 0). The mixture's momentum is
   lost (the layer has no inertia). Right after plunging, the water of
   the shoreline zone is pushed offshore and dewaters temporarily, and

@@ -332,9 +332,17 @@
                            !   capacity sy0.dz added by deposition from the
                            !   local surface water, and return the pore water
                            !   sy0.|dz| of the eroded layer from hg to the
-                           !   surface. Needs gwflow)
+                           !   surface. Needs gwflow,
+                           !   3: 2 plus retained pore water - the retained water
+                           !   (lambda - sy0).dz, which moves with the soil, is
+                           !   also taken from the surface water on deposition
+                           !   and returned to it on erosion, slope failure and
+                           !   instantaneous release. Deposits take the water
+                           !   of the whole pore space lambda. Use 3 when the
+                           !   specific yield sy0 is smaller than the porosity
+                           !   lambda. Needs gwflow, sy0 <= fluv_porosity)
   db_satbed = 1.0          ! saturation of the deposit layer s_b (0-1. Used with
-                           !   f_dbwet=1 (not with 2). Horadani values: 0.8 on slopes above
+                           !   f_dbwet=1 (not with 2 or 3). Horadani values: 0.8 on slopes above
                            !   21 deg, 1.0 below)
   db_mu = 0.0              ! Voellmy friction coefficient mu (dimensionless).
                            !   Used by f_dbres=4. 0 = default 0.2 (avalanches

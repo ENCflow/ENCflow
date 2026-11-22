@@ -1,7 +1,8 @@
 #!/bin/bash
 # slide: MPI 実行(N ランク)+ 検定 + 逐次 save とのビット一致確認
 #   ./Run_MPI.sh [N](既定 2)
-# 構成1(release)・構成2(f_slide)・構成3(f_slide=2 診断)を実行・比較する
+# 構成1(release)・構成2(f_slide)・構成3(f_slide=2 診断)・構成4(保持水の授受と初期地下水。
+# 飽和・乾燥の 2 つ)を実行・比較する
 
 NP=${1:-2}
 sdir=$(dirname "$(readlink -f "$0")")
@@ -66,5 +67,26 @@ if [ -d save_fs2_serial ]; then
         echo "警告: result_fs2/Fs9999.txt が逐次ビルドと不一致(同上)" >&2
     fi
 fi
+
+# 構成4(param_wet.txt): 飽和した土層の瞬時流動化と保持水の授受(developer.md §28.17)と、
+# 同じ設定の乾いた土層(gw_sat0 = 0。設定は param_wet.txt から作る)
+sed -e "s/gw_sat0 = 1.0 /gw_sat0 = 0.0 /" -e "s/'save_wet'/'save_wetdry'/" \
+    -e "s/'result_wet'/'result_wetdry'/" param_wet.txt > param_wetdry.txt
+for c in wet wetdry; do
+    if [ $c = wet ]; then sat0=1.0; else sat0=0.0; fi
+    set -o pipefail
+    mpirun -np "$NP" $MPIRUN_OPTS ./encflow_mpi param_$c.txt | tee Screen_$c.log || exit 1
+    set +o pipefail
+    cat Screen_$c.log >> Screen.log
+    echo ""
+    python3 "$sdir/Check_slide.py" save_$c wet Screen_$c.log $sat0 || rc=1
+    if [ -d save_${c}_serial ]; then
+        if cmp -s save_$c/state.dat save_${c}_serial/state.dat; then
+            echo "=== $c: state.dat is bit-identical to the serial result ==="
+        else
+            echo "警告: save_$c/state.dat が逐次ビルドと不一致(同上)" >&2
+        fi
+    fi
+done
 
 exit $rc

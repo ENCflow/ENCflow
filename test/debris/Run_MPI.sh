@@ -115,6 +115,21 @@ if [ -d save_gw_serial ]; then
     fi
 fi
 
+# 構成8: 構成6 の間隙水を f_dbwet=3(保持水の授受)にし、初期地下水 gw_sat0 を置く(developer.md §28.17)
+set -o pipefail
+mpirun -np "$NP" $MPIRUN_OPTS ./encflow_mpi param_gw3.txt | tee Screen_gw3.log || exit 1
+set +o pipefail
+cat Screen_gw3.log >> Screen.log
+echo ""
+python3 "$sdir/Check_debris.py" save_gw3 gw3 Screen_gw3.log || rc=1
+if [ -d save_gw3_serial ]; then
+    if cmp -s save_gw3/state.dat save_gw3_serial/state.dat; then
+        echo "=== 保持水の授受と初期地下水: state.dat は逐次結果とビット一致 ==="
+    else
+        echo "警告: save_gw3/state.dat が逐次ビルドと不一致(同上)" >&2
+    fi
+fi
+
 # 構成7: 斜面等流の平衡濃度(水路は 300 行。developer.md §28.15)
 python3 "$sdir/make_eq.py" z > z_eq.txt || exit 1
 python3 "$sdir/make_eq.py" h > h_eq.txt || exit 1
