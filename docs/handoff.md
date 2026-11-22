@@ -81,7 +81,7 @@
 
 - [00x](handoff/00x.md) 河道の平坦区間(窪地処理の跡)の解消: 標準のデータと教材の作り直し・新しい utils・新しい例題 (2026-11-17。利用者の提案。developer.md §111)
 - [00z](handoff/00z.md) 既定の切り替え: `f_advection_donor` 3 → 4・`f_advection_bend` 1 → 2・`f_advection_lateral` 1 → 2・`f_dry_head_cap` 3 → 4(2026-11-21 に切り替えた。developer.md §114)の残り
-- [00y](handoff/00y.md) 移流項の設計のやり直し: 深くて遅い隣のセルの扱い(2026-11-18〜19。developer.md §111.14・§111.15・§112・§113。…
+- [00y](handoff/00y.md) 移流項の設計のやり直し: 深くて遅い隣のセルの扱い(2026-11-18〜19。developer.md §111.14・§111.15・§112・§113。4 つの値は 2026-11-21 に既定になった = §114)の残り
 - [00aa](handoff/00aa.md) 非静水圧 + MUSCL(`f_nonhydrostatic = 1`・`f_advection_scheme = 3`)で、壁ぎわの行に短い波が育つ(2026-11-20 発見。developer.md §113.9 (6)。未調査。4 つの値・既定の切り替えとは別の件 = 利用者の決定)
 - [00ab](handoff/00ab.md) 波浪場(`f_wf_current = 1`)の準定常の反復が、逆流の上で発散する(2026-11-20 発見。developer.md §113.9 (8)。未調査。今の既定でも起きる)
 - [00ac](handoff/00ac.md) 開発記録の分割の残り(2026-11-22。developer.md §116)
