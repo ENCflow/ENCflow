@@ -336,7 +336,7 @@ boundary_h と m_gwflow_pump が同じ記録場の列 6 へ積む(wq.csv の out
 | 基本方針(開発目的と 13 箇条) | docs/policy.md |
 | 設計判断の理由・経緯・実バグ | docs/developer.md(目次)→ docs/developer/NNN.md(§N の本文) |
 | 変更時の検証手順・禁止事項 | CLAUDE.md |
-| 未完了の作業・中期の道標 | docs/handoff.md |
+| 未完了の作業・中期の道標 | docs/handoff.md(目次)→ docs/handoff/<番号>.md |
 | パラメータの意味(646 項目) | docs/users_guide/params_index.md と各章 |
 | namelist の書き方の見本 | examples/List_samples/ |
 | 使い方(利用者視点) | docs/users_guide.md・tutorials/・users_guide/usecases.md(現象→機能) |

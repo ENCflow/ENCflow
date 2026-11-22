@@ -86,9 +86,9 @@
     {
       "source": "docs/multilingual.md",
       "target": "docs/en/multilingual.md",
-      "source_sha256": "09a008ebf44650e7b46869d78aa5f536a69cc4fbaa2645682e94e867c131904b",
-      "target_sha256": "618baf4287bf0cd79920121772eb323c48e735c61da3cbe40b3f88fc2d25cdd4",
-      "reviewer": "Claude (Claude Code session; scope: policy.md in scope, developer/ out of scope, the partial mirror is now §0 of the index; the English §6 gained the partial-mirror sentence that the Japanese master already had; both files compared)",
+      "source_sha256": "8e9c2c5f0696db5b771fdefbf20687323d845e67bd376b1ecfddd10a57dfc27d",
+      "target_sha256": "d90d9ec5fc98f9aba03f2b38e304fcd7bf23aba30102f7bb08569472add18aeb",
+      "reviewer": "Claude (Claude Code session; the out-of-scope developer documents now name handoff.md and handoff/ after handoff.md was split into an index and per-item files; both files compared)",
       "method": "assistant",
       "reviewed_on": "2026-11-22"
     },

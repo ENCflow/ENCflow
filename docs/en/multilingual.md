@@ -95,7 +95,7 @@ exists).
 
 - All user-facing documents in `docs/` (users_guide, install, tutorial,
   comparison, ai_guide, windows, policy and this document) are in scope.
-  Developer documents (developer.md and developer/, handoff, `*_plan.md`,
+  Developer documents (developer.md and developer/, handoff.md and handoff/, `*_plan.md`,
   `*_design.md`, channel_model.md, architecture.md, icon/) are out of scope
   (§34.2; to be reconsidered as internationalization progresses). As an
   exception, only §0 of the index developer.md (the pointer to the project

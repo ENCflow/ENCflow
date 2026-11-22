@@ -157,7 +157,7 @@
 
 ### 公開・文書・言語
 
-- 現行: docs/multilingual.md(多言語化の規約)・[§34](developer/034.md)(公開体制と言語方針)・[§35](developer/035.md)(利用者向け文書の構成)・本書の「引用と記録のしかた」と [§116](developer/116.md)(開発記録の分割と書き方)
+- 現行: docs/multilingual.md(多言語化の規約)・[§34](developer/034.md)(公開体制と言語方針)・[§35](developer/035.md)(利用者向け文書の構成)・本書の「引用と記録のしかた」と [§116](developer/116.md)(開発記録と引き継ぎメモの分割と書き方)
 - 記録: [§34](developer/034.md)・[§35](developer/035.md)・[§105](developer/105.md)(浅水方程式の入門ページ)・[§116](developer/116.md)
 
 ### 例題・教材・データ

@@ -81,7 +81,7 @@ utils/<tool>/README.md                → utils/<tool>/en/README.md
 
 - `docs/` の利用者向け文書(users_guide、install、tutorial、comparison、ai_guide、
   windows、policy、本書)は全件を対象にする。開発者向け文書(developer.md と
-  developer/、handoff、`*_plan.md`、`*_design.md`、channel_model.md、architecture.md、
+  developer/、handoff.md と handoff/、`*_plan.md`、`*_design.md`、channel_model.md、architecture.md、
   icon/)は対象外(§34.2。国際化の実態を見て再判断)。例外として目次 developer.md の
   §0(基本方針 policy.md への案内)だけは `docs/en/developer.md` に部分ミラーを置く
   (旧 URL の受け皿。冒頭に範囲を明示し、記録は `--section '## 0.'` で節単位にする。§6)。
