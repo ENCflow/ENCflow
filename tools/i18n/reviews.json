@@ -113,9 +113,9 @@
     {
       "source": "docs/users_guide.md",
       "target": "docs/en/users_guide.md",
-      "source_sha256": "1b3818c7711625142588fab57ba15ee6d98bb1819dc84a7be8417485487ff712",
-      "target_sha256": "6041071afeb752a56b61c6f0ca866ccc2535b577958e6d270db30466762baeb5",
-      "reviewer": "Claude (Claude Code session; the parts changed for the Takahashi-Nakagawa additions (f_dbunsat, f_dbimm, db_immexp), the dilute-side yield statement and the test tables compared side by side with the Japanese source; numbers checked against the test runs and the two source papers)",
+      "source_sha256": "be3895231d522bef4f3f0c33f5f0b9a9f170853b54acb967c9c826568b9090e7",
+      "target_sha256": "cf2edab578aa511fc43bd23568a360ab4587d8fcc7905c8d58d9d091a55a86ca",
+      "reviewer": "Claude (Claude Code session; the parts changed for the options of the slope-stability test (f_slide_seep, f_slide_wet, f_slide_noflow, slide_dmax) compared side by side with the Japanese source; numbers checked against the test runs)",
       "method": "assistant",
       "reviewed_on": "2026-11-22"
     },
@@ -311,9 +311,9 @@
     {
       "source": "docs/users_guide/geomorph.md",
       "target": "docs/en/users_guide/geomorph.md",
-      "source_sha256": "2d30aef4d7219ffce781f4a45fd2cdc818c354f3f1703475e15715a6edc3580e",
-      "target_sha256": "9423a204a1116c3916fbc50861ff53dca7f33b32df27b2fc07c5b6aa874d6697",
-      "reviewer": "Claude (Claude Code session; the parts changed for the Takahashi-Nakagawa additions (f_dbunsat, f_dbimm, db_immexp), the dilute-side yield statement and the test tables compared side by side with the Japanese source; numbers checked against the test runs and the two source papers)",
+      "source_sha256": "a78134a9a49227ce465541dcbdf049bd22bc8dfb05be5c210808fdff13a701e7",
+      "target_sha256": "cc184ae7f3029160418c00ed0ec2f14b1cf2d3783fe0d91a3880d5a25324846a",
+      "reviewer": "Claude (Claude Code session; the parts changed for the options of the slope-stability test (f_slide_seep, f_slide_wet, f_slide_noflow, slide_dmax) compared side by side with the Japanese source; numbers checked against the test runs)",
       "method": "assistant",
       "reviewed_on": "2026-11-22"
     },
@@ -392,9 +392,9 @@
     {
       "source": "docs/users_guide/massflow.md",
       "target": "docs/en/users_guide/massflow.md",
-      "source_sha256": "47ac8e5ff084adf40378276baabc6764302f19418d2518213be104fc06cdb518",
-      "target_sha256": "10c61143b43be193f70366c3a72ed117a1e4d68ad15f3f55667b3fa2c631fe04",
-      "reviewer": "Claude (Claude Code session; the parts changed for the Takahashi-Nakagawa additions (f_dbunsat, f_dbimm, db_immexp), the dilute-side yield statement and the test tables compared side by side with the Japanese source; numbers checked against the test runs and the two source papers)",
+      "source_sha256": "d600df1c82b62e80392fd7858b6cfd2859145b54c73b97d9ae8fb1dc5c62cfcb",
+      "target_sha256": "0f49dfd53663dd07a7bec226739be2218cd26f65cdf622dbed73b5637b4ef45a",
+      "reviewer": "Claude (Claude Code session; the parts changed for the options of the slope-stability test (f_slide_seep, f_slide_wet, f_slide_noflow, slide_dmax) compared side by side with the Japanese source; numbers checked against the test runs)",
       "method": "assistant",
       "reviewed_on": "2026-11-22"
     },
@@ -437,9 +437,9 @@
     {
       "source": "docs/users_guide/params_index.md",
       "target": "docs/en/users_guide/params_index.md",
-      "source_sha256": "32be29d730db84a396d834c2aec2bf1f6bc1e8527b8bad3feb8647030a98ba6a",
-      "target_sha256": "702f160611e4a96af7259b292a422d89200388b467176368864027f85e7ee5b3",
-      "reviewer": "Claude (Claude Code session; the parts changed for the Takahashi-Nakagawa additions (f_dbunsat, f_dbimm, db_immexp), the dilute-side yield statement and the test tables compared side by side with the Japanese source; numbers checked against the test runs and the two source papers)",
+      "source_sha256": "be3d64c5415402891752fe662ce20d864ca696912d4e91aee6139b61f9a8e165",
+      "target_sha256": "a40fc2b9bd2b617d50e921497be8e133a699cd57aafaefb76c0e236d6d43c35c",
+      "reviewer": "Claude (Claude Code session; the parts changed for the options of the slope-stability test (f_slide_seep, f_slide_wet, f_slide_noflow, slide_dmax) compared side by side with the Japanese source; numbers checked against the test runs)",
       "method": "assistant",
       "reviewed_on": "2026-11-22"
     },
@@ -716,9 +716,9 @@
     {
       "source": "examples/List_samples/list_geomorph.txt",
       "target": "examples/List_samples/en/list_geomorph.txt",
-      "source_sha256": "fd7cfaf44a814a98c06c65345786009c9159ca45adbf5fe2eb0188606f65210a",
-      "target_sha256": "6c599190f20b2008cc7c83202d195de808f8dcf67289084b6374d81f1d14e023",
-      "reviewer": "Claude (Claude Code session; the parts changed for the Takahashi-Nakagawa additions (f_dbunsat, f_dbimm, db_immexp), the dilute-side yield statement and the test tables compared side by side with the Japanese source; numbers checked against the test runs and the two source papers)",
+      "source_sha256": "582155a62a0bc66cce2f223171d78961ffc05a15d889070897b6c41a70bc4a3a",
+      "target_sha256": "9621ea023ef68c3247d01ccde757af776affe6eb5bf7333a763bf741e35f96ad",
+      "reviewer": "Claude (Claude Code session; the parts changed for the options of the slope-stability test (f_slide_seep, f_slide_wet, f_slide_noflow, slide_dmax) compared side by side with the Japanese source; numbers checked against the test runs)",
       "method": "assistant",
       "reviewed_on": "2026-11-22"
     },
@@ -3569,9 +3569,9 @@
     {
       "source": "test/README.md",
       "target": "test/README.en.md",
-      "source_sha256": "288fbd3ec22f9c953cb1c5ab773ae5b3c84223dc49350d9083b249ed4d880a6c",
-      "target_sha256": "16a4fe614a9fa4e5390b125bfe8500fb27a761723dc7efca05d0332b5a6e575f",
-      "reviewer": "Claude (Claude Code session; the parts changed for the Takahashi-Nakagawa additions (f_dbunsat, f_dbimm, db_immexp), the dilute-side yield statement and the test tables compared side by side with the Japanese source; numbers checked against the test runs and the two source papers)",
+      "source_sha256": "f64da2462e56024535ff378ae1b0fa1fcfb3720fd7215e0cf48ac960b8925ad0",
+      "target_sha256": "09773fa40dd3c4eace153f8fa2d8071b53a2fca0639867cf9543b5398fc5262a",
+      "reviewer": "Claude (Claude Code session; the parts changed for the options of the slope-stability test (f_slide_seep, f_slide_wet, f_slide_noflow, slide_dmax) compared side by side with the Japanese source; numbers checked against the test runs)",
       "method": "assistant",
       "reviewed_on": "2026-11-22"
     },
@@ -4748,9 +4748,9 @@
     {
       "source": "test/slide/README.md",
       "target": "test/slide/en/README.md",
-      "source_sha256": "5703f5aeb0af9b17a4f5cc99b42886e3abcfef7c975aefe3ae46547f838fb0a2",
-      "target_sha256": "608c48fbe2eca470010d308e94a70c4157ccca1e3f0c6dfb7a2bca5690d75265",
-      "reviewer": "Claude (Claude Code session; the sections changed for f_dbwet = 3 (retained pore water) and gw_sat0 (initial soil-layer saturation) compared side by side with the Japanese source; numbers checked against the test runs)",
+      "source_sha256": "fc1b451b289156a68ebc9bde41415557e88ae1e3d6938a9b3e51d9d9664210d6",
+      "target_sha256": "f62cae865277616298a2ee4a76f3014ccdc4025ac31ad11e8d5dac1c8ee745b9",
+      "reviewer": "Claude (Claude Code session; the parts changed for the options of the slope-stability test (f_slide_seep, f_slide_wet, f_slide_noflow, slide_dmax) compared side by side with the Japanese source; numbers checked against the test runs)",
       "method": "assistant",
       "reviewed_on": "2026-11-22"
     },

@@ -7,6 +7,10 @@
 # 構成4(param_wet.txt): 構成1 + 地下水計算 + 保持水の授受 f_dbwet=3 + 初期地下水 gw_sat0 = 1
 #   (飽和した土層の流動化。save_wet/)。同じ設定の gw_sat0 = 0(乾いた土層。保持水の不足の
 #   台帳が働く)も回す(save_wetdry/。設定は param_wet.txt から作る)
+# 構成5〜8(make_fs.py が設定 p_fs_*.txt と入力 d_fs/ を書く): 斜面安定判定の選択子
+#   f_slide_seep(浸透力を全水頭の勾配で)・slide_dmax(深さの上限)・f_slide_wet(間隙水圧の崩壊に限る)・
+#   f_slide_noflow(濃い混合体の下を判定しない)。安全率の出力を式の値と比べる(Check_slide_fs.py。
+#   developer.md §28.19)
 # 実行後の save/, save_fs/ などは *_serial/ にも複製する(Run_MPI.sh 用)
 
 sdir=$(dirname "$(readlink -f "$0")")
@@ -60,6 +64,27 @@ cat Screen_wetdry.log >> Screen.log
 echo ""
 python3 "$sdir/Check_slide.py" save_wetdry wet Screen_wetdry.log 0.0 || rc=1
 rm -rf save_wetdry_serial && cp -r save_wetdry save_wetdry_serial
+
+# 構成5〜8: 斜面安定判定の選択子(developer.md §28.19)。安全率の出力(bil)も Run_MPI.sh 用に複製する
+python3 "$sdir/make_fs.py" || exit 1
+for c in $(python3 "$sdir/make_fs.py" list); do
+    echo "--- $c"
+    ./encflow p_$c.txt > Screen_fs.log 2>&1 || { tail -5 Screen_fs.log; exit 1; }
+    cat Screen_fs.log >> Screen.log
+    rm -rf save_${c}_serial && cp -r save_$c save_${c}_serial
+    cp -f result_$c/Fs0001.bil save_${c}_serial/
+done
+echo ""
+for c in fs_u0 fs_u1 fs_g0 fs_g1 fs_l0 fs_l1 fs_d2; do
+    python3 "$sdir/Check_slide_fs.py" fs $c || rc=1
+done
+python3 "$sdir/Check_slide_fs.py" pair fs_u1 fs_u0 same || rc=1
+python3 "$sdir/Check_slide_fs.py" pair fs_g1 fs_g0 differ || rc=1
+python3 "$sdir/Check_slide_fs.py" pair fs_l1 fs_l0 differ || rc=1
+python3 "$sdir/Check_slide_fs.py" ledger fs_gdyn || rc=1
+python3 "$sdir/Check_slide_fs.py" dmax1 fs_d1 || rc=1
+python3 "$sdir/Check_slide_fs.py" wet fs_w1 fs_w0 fs_w2 || rc=1
+python3 "$sdir/Check_slide_fs.py" noflow fs_n1 fs_n0 || rc=1
 
 if [ $rc -eq 0 ]; then
     echo "=== slide verification PASS ==="

@@ -329,6 +329,11 @@ module m_geomorph
                                      !   2パス用(fx と同じ理由)
     integer :: nslide = 0            ! この run で流動化したセル数(dispose で報告)
     real :: fsmin = huge(1.0)        ! この run の Fs 最小値(ランク局所の診断)
+    real, allocatable :: hd(:,:)     ! 斜面安定判定の全水頭 (m)(ish:ieh, jsh:jeh。f_slide_seep = 1 の
+                                     !   ときだけ確保。評価のたびに作り直す作業面。§28.19)
+    integer :: nslgeo = 0            ! Fs < 1 だが間隙水圧なしでも不安定なので流動化しなかった回数
+                                     !   (f_slide_wet = 1。セル × 評価。ランク局所の診断)
+    integer :: nslflow = 0           ! 濃い混合体が載るので判定しなかった回数(f_slide_noflow = 1。同上)
     real(real64), allocatable :: wdrow(:)  ! 保持水の不足(f_dbwet = 3。堆積のとき地表水・地下貯留から
                                      !   取れなかった保持水のかさ体積 m3)の行部分和 (js:je)。
                                      !   f_dbwet = 3 のときだけ確保し、dispose が決定的な総和で報告する(§28.17)
@@ -473,6 +478,10 @@ module m_geomorph
     real :: sl_c = 0.0               ! 有効粘着力 c' (Pa)
     real :: sl_tanphi = 0.0          ! tan(せん断抵抗角 φs)
     real :: sl_gamma = 0.0           ! 飽和単位体積重量 γt (N/m3)
+    integer :: f_slide_seep = 0      ! 安全率の駆動に浸透力を全水頭の勾配で入れる(0:無効, 1:有効。§28.19)
+    integer :: f_slide_wet = 0       ! 間隙水圧がなくても Fs < 1 のセルは流動化しない(0:無効, 1:有効。同上)
+    integer :: f_slide_noflow = 0    ! 濃い混合体(C >= db_cmin)が載るセルを判定しない(0:無効, 1:有効。同上)
+    real :: sl_dmax = 0.0            ! 判定・流動化する深さの上限 (m。slide_dmax。0 = 全層。同上)
     integer :: f_wthr = 0            ! 基岩風化=土層生成(0:無効, 1:有効。§32)
     real :: wp0 = 0.0                ! 裸岩生成速度 (m/s。mm/kyr から換算)
     real :: wsdstar = 0.0            ! 生成の減衰深 sd* (m)
@@ -1867,6 +1876,15 @@ subroutine m_geomorph_dispose(gm, p, g, s)
     ! ランク局所の診断(帯内の最小 Fs と流動化セル数)
     call par_warn("geomorph: slide min Fs = " // rtoa(gm%dbr%fsmin) &
                   // ", fluidized cells = " // itoa(gm%dbr%nslide))
+    ! 選択子で流動化・判定から外した回数(セル × 評価。§28.19。ランク局所の診断)
+    if (gm%f_slide_wet == 1) then
+      call par_warn("geomorph: slide cells with Fs < 1 left to f_repose because they are unstable " &
+                    // "without pore pressure (f_slide_wet=1) = " // itoa(gm%dbr%nslgeo) // " cell-evaluations")
+    end if
+    if (gm%f_slide_noflow == 1) then
+      call par_warn("geomorph: slide cells not judged under a dense mixture (f_slide_noflow=1) = " &
+                    // itoa(gm%dbr%nslflow) // " cell-evaluations")
+    end if
   end if
   ! 保持水の不足の台帳(f_dbwet = 3。§28.17。全域の決定的な総和。確保は f_dbwet = 3 のとき =
   ! 全ランク同一なので par_sum_rows の collective 条件を満たす)。水の台帳は
@@ -1901,6 +1919,7 @@ subroutine m_geomorph_dispose(gm, p, g, s)
   if (allocated(gm%dbr%fx)) deallocate(gm%dbr%fx)
   if (allocated(gm%dbr%rel)) deallocate(gm%dbr%rel)
   if (allocated(gm%dbr%sld)) deallocate(gm%dbr%sld)
+  if (allocated(gm%dbr%hd)) deallocate(gm%dbr%hd)
   if (gm%wlw%nsm > 0) then
     ! ランク局所の診断(受け側の土層不足で捨てた固体体積。0 なら厳密保存)
     call par_warn("geomorph: wet_lw spreading: solid volume lost to bedrock floor = " &
@@ -1933,6 +1952,8 @@ subroutine m_geomorph_dispose(gm, p, g, s)
   gm%dbr%nrelclip = 0
   gm%dbr%nslide = 0
   gm%dbr%fsmin = huge(1.0)
+  gm%dbr%nslgeo = 0
+  gm%dbr%nslflow = 0
   gm%flv%nclip = 0
   gm%flv%nlim = 0
   gm%flv%vleak = 0.0

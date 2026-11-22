@@ -2,7 +2,7 @@
 # slide: MPI 実行(N ランク)+ 検定 + 逐次 save とのビット一致確認
 #   ./Run_MPI.sh [N](既定 2)
 # 構成1(release)・構成2(f_slide)・構成3(f_slide=2 診断)・構成4(保持水の授受と初期地下水。
-# 飽和・乾燥の 2 つ)を実行・比較する
+# 飽和・乾燥の 2 つ)・構成5〜8(斜面安定判定の選択子。make_fs.py の 14 ケース)を実行・比較する
 
 NP=${1:-2}
 sdir=$(dirname "$(readlink -f "$0")")
@@ -88,5 +88,39 @@ for c in wet wetdry; do
         fi
     fi
 done
+
+# 構成5〜8: 斜面安定判定の選択子(developer.md §28.19)。state.dat と、安全率の出力 Fs0001.bil
+# (判定だけのケースは state.dat が動かないので、出力そのもののランク数不変を見る)を逐次と比べる
+python3 "$sdir/make_fs.py" || exit 1
+nsame=0
+ndiff=0
+for c in $(python3 "$sdir/make_fs.py" list); do
+    echo "--- $c (np=$NP)"
+    mpirun -np "$NP" $MPIRUN_OPTS ./encflow_mpi p_$c.txt > Screen_fs.log 2>&1 || { tail -5 Screen_fs.log; exit 1; }
+    cat Screen_fs.log >> Screen.log
+    if [ -d save_${c}_serial ]; then
+        if cmp -s save_$c/state.dat save_${c}_serial/state.dat \
+           && cmp -s result_$c/Fs0001.bil save_${c}_serial/Fs0001.bil; then
+            nsame=$((nsame + 1))
+        else
+            ndiff=$((ndiff + 1))
+            echo "警告: $c の state.dat か Fs0001.bil が逐次ビルドと不一致(同上)" >&2
+        fi
+    fi
+done
+echo ""
+for c in fs_u0 fs_u1 fs_g0 fs_g1 fs_l0 fs_l1 fs_d2; do
+    python3 "$sdir/Check_slide_fs.py" fs $c || rc=1
+done
+python3 "$sdir/Check_slide_fs.py" pair fs_u1 fs_u0 same || rc=1
+python3 "$sdir/Check_slide_fs.py" pair fs_g1 fs_g0 differ || rc=1
+python3 "$sdir/Check_slide_fs.py" pair fs_l1 fs_l0 differ || rc=1
+python3 "$sdir/Check_slide_fs.py" ledger fs_gdyn || rc=1
+python3 "$sdir/Check_slide_fs.py" dmax1 fs_d1 || rc=1
+python3 "$sdir/Check_slide_fs.py" wet fs_w1 fs_w0 fs_w2 || rc=1
+python3 "$sdir/Check_slide_fs.py" noflow fs_n1 fs_n0 || rc=1
+if [ -d save_fs_u0_serial ]; then
+    echo "=== 構成5〜8: state.dat と Fs0001.bil は逐次結果とビット一致 $nsame ケース、不一致 $ndiff ケース ==="
+fi
 
 exit $rc

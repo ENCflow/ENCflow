@@ -2,7 +2,7 @@
 
 [ユーザーガイド目次へ](../users_guide.md)
 
-namelist パラメータ名から章を引く索引です(アルファベット順、全 817 項目)。
+namelist パラメータ名から章を引く索引です(アルファベット順、全 821 項目)。
 この索引は list_*.f90 の namelist 宣言から機械抽出で生成されています
 (developer.md §35.1)。
 
@@ -313,6 +313,9 @@ namelist パラメータ名から章を引く索引です(アルファベット�
 | f_sfm | &list_sfm | [貯留関数法の区画流出](sfm.md) |
 | f_sfm_rain | &list_sfm | [貯留関数法の区画流出](sfm.md) |
 | f_slide | &list_geomorph | [土砂・地形変化](geomorph.md) |
+| f_slide_noflow | &list_geomorph | [土砂・地形変化](geomorph.md) |
+| f_slide_seep | &list_geomorph | [土砂・地形変化](geomorph.md) |
+| f_slide_wet | &list_geomorph | [土砂・地形変化](geomorph.md) |
 | f_snow | &list_snow | [降雨・気象](forcing.md) |
 | f_splash | &list_geomorph | [土砂・地形変化](geomorph.md) |
 | f_state_restore | &list_sysparam | [中断と再開](restart.md) |
@@ -673,6 +676,7 @@ namelist パラメータ名から章を引く索引です(アルファベット�
 | sfm_tl_h | &list_sfm_zone | [貯留関数法の区画流出](sfm.md) |
 | sfm_tol | &list_sfm | [貯留関数法の区画流出](sfm.md) |
 | slide_c | &list_geomorph | [土砂・地形変化](geomorph.md) |
+| slide_dmax | &list_geomorph | [土砂・地形変化](geomorph.md) |
 | slide_gamma | &list_geomorph | [土砂・地形変化](geomorph.md) |
 | slide_phi | &list_geomorph | [土砂・地形変化](geomorph.md) |
 | snow_ddf | &list_snow | [降雨・気象](forcing.md) |

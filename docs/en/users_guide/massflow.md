@@ -500,6 +500,66 @@ distributed stability analyses such as SHALSTAB[^montgomery94]. The
 defaults $`\phi_s`$ = 30° and $`\gamma_t`$ = 18 kN/m³ are customary values of
 shallow-landslide analyses and $`c'`$ = 0 is on the safe side.
 
+**Options of the slope-stability test.** The formula above assumes slope-parallel seepage and the
+failure of the whole soil layer. For slopes under a lake, steps, the bed under a flowing mixture and
+thick deposits, the following options change the treatment (all are off by default, which keeps the
+formula above; developer.md §28.19).
+
+- **Seepage force from the total-head gradient (`f_slide_seep = 1`).**
+
+  ```math
+  F_s = \frac{c' + (\gamma_t d - \gamma_w h_w)\cos^2\theta\,\tan\phi_s}
+             {\cos^2\theta\,\{(\gamma_t d - \gamma_w h_w)\tan\theta + \gamma_w h_w J\}}
+  ```
+
+  $`J`$ is the steepest-descent gradient of the total head $`H = (z - s_d) + h_w`$ (per horizontal
+  distance; the same operation as the steepest slope of the topography), and in cells whose soil
+  layer is saturated up to the ground surface the depth of the surface water $`h`$ is added. $`d`$
+  is the thickness of the soil layer that is judged ($`s_d`$ unless `slide_dmax` below is given).
+  The forces on the soil skeleton are written with the submerged weight and the seepage force
+  ($`\gamma_w`$ × hydraulic gradient, taken to act along the slope); this is our own arrangement of
+  the standard balance of effective stress and seepage force on an infinite slope.
+  - On a slope with uniform soil depth and saturated thickness, $`J = \tan\theta`$ and the formula
+    equals the one above.
+  - Under still water $`J = 0`$ and $`F_s = \tan\phi_s/\tan\theta`$ ($`c' = 0`$). The formula above
+    estimates the safety factor of a saturated slope under a lake at $`(\gamma_t - \gamma_w)/\gamma_t`$
+    times this (about half), so use 1 in computations that include the ponded area of a natural dam
+    or the slopes of a reservoir.
+  - At the seepage face on the downstream side of an embankment $`J > \tan\theta`$, and the
+    instability due to seepage appears earlier than with the formula above.
+  - The groundwater computation (`fn_gwflow`) is required. The seepage force is taken to act in the
+    direction of the steepest slope, and its component normal to the slope is not included.
+- **Only failures caused by pore pressure (`f_slide_wet = 1`).** Cells in which $`F_s < 1`$ even
+  without pore pressure ($`h_w = 0`$) are not fluidised. Places that are geometrically unstable, such
+  as steps and steep faces, are left to the angle-of-repose avalanching (`f_repose`). With the default
+  (0), a cell next to the step made by a whole-layer failure fails even when dry, and failures can
+  cascade. The output of $`F_s`$ does not change.
+- **No test under a dense mixture (`f_slide_noflow = 1`).** Cells in which the concentration of the
+  mixture $`h_s/(h + h_s)`$ is `db_cmin` or more are not judged. The exchange between a flowing
+  mixture and the bed under it is left to the erosion–deposition law. With the default (0), a dense
+  mixture that cannot move may return to the bed, become saturated and be fluidised again, back and
+  forth.
+- **Upper limit of the judged and fluidised depth (`slide_dmax`).** With a value above 0, only the
+  top $`d = \min(s_d, d_{\max})`$ is judged and fluidised. The saturated thickness within it is
+  $`\max(0,\ h_w - (s_d - d))`$ (the saturated zone is read as building up from the bottom of the
+  soil layer). The default (0) is the whole layer. This avoids a thick deposit failing down to the
+  bedrock at once. The remaining layer is judged again at the next update, so it fails from the top
+  in turn while it stays saturated.
+
+**Matching the failure condition and the flow condition.** A saturated soil layer ($`h_w = s_d`$,
+$`c' = 0`$) fails when $`\tan\theta > (\gamma'/\gamma_t)\tan\phi_s`$ ($`\gamma' = \gamma_t - \gamma_w`$).
+With $`\gamma_t = \rho_w g\,(1 + sC_*)`$, $`\gamma'/\gamma_t = sC_*/(1 + sC_*)`$, which is the coefficient
+of the Coulomb yield (`f_dbres = 1`) of a mixture at the concentration $`C_*`$. Setting `slide_phi` =
+`db_phi` and `slide_gamma` = $`\rho_w g\,(1 + sC_*)`$ (19,500 N/m³ for $`\lambda = 0.4`$ and
+$`s = 1.65`$), and choosing settings in which the failed mass has the concentration $`C_*`$
+(`f_dbwet = 3` when combined with the groundwater computation), makes "saturated and $`F_s < 1`$" and
+"the mixture yields and starts to move" the same condition, so that a failed mass no longer stays in
+place and is fluidised repeatedly (our own arrangement). With `f_dbres = 3` the yield coefficient is
+$`\tan\alpha' = 0.45`$, so a failed saturated mass can move when `slide_phi` is 24.2° or more. Verified
+by configurations 5 to 8 of [test/slide](../../../test/slide/en/README.md) (the safety factor agrees
+with the formula within the precision of the single-precision output, and equals
+$`\tan\phi_s/\tan\theta`$ under still water).
+
 ## 5. Moving bed layer (f_bedslide)
 
 The failed mass is represented as a bed layer $`h_b`$ moving **within** the
@@ -586,6 +646,7 @@ The labels in the Basis column are explained in [How to read the basis of a defa
 | f_dbwet / db_satbed | 0 / 1.0 | pore-water entrainment / deposit saturation (1: entrainment, 2: with the groundwater computation, 3: 2 + retained water) | **method** total-volume continuity of Takahashi–Nakagawa[^tn91] (1). 2 exchanges pore water between the surface water and subsurface storage, and 3 adds the exchange of the retained water λ − sy0 (both own) |
 | db_reltime / db_relsat | 0 / 1.0 | release time / saturation of the failed mass (§4) | **given** |
 | slide_c / slide_phi / slide_gamma | 0 / 30° / 18 kN/m³ | strength constants of the stability test (§4) | **customary value** shallow-landslide values; c' = 0 is on the safe side |
+| f_slide_seep / f_slide_wet / f_slide_noflow / slide_dmax | 0 / 0 / 0 / 0 | options of the stability test (§4): seepage force from the total-head gradient / only failures caused by pore pressure / no test under a dense mixture / upper limit of the judged and fluidised depth (m) | **method** our own arrangement of the balance of effective stress and seepage force on an infinite slope (the default is the conventional formula) |
 | bs_rho | 2000 kg/m³ | bulk density of the mass (§5) | **customary value** representative of saturated soil and rock debris |
 | bs_mu / bs_xi | 0.15 / 500 m/s² | Voellmy μ, ξ of the layer | **verification case** calibration of the inertialess layer ([test/bedslide](../../../test/bedslide/en/README.md)) |
 | bs_vstop / bs_tstop | 0.05 m/s / 0 s | stopping speed and its duration | **numerical** 10–15 s when entering water (longer than the temporary drawdown) |
@@ -617,7 +678,7 @@ The labels in the Basis column are explained in [How to read the basis of a defa
 | Case | Content | Point |
 |---|---|---|
 | [test/debris](../../../test/debris/en/README.md) | four constitutive configurations (simple, Egashira, Takahashi–Nakagawa, pore water); equilibrium concentration of uniform flow on a slope; pore water with the groundwater computation and retained water; erosion rate of an unsaturated bed; equilibrium concentration of the bedload-like collective flow on gentle slopes | total solid 1e-13, np = 1, 2, 4 agree; equilibrium concentration within 1e-11 of the Takahashi-type C∞; water ledger including the retained water within 1e-11; eroded amount of an unsaturated bed agrees with the formula within round-off (relative difference 2e-8 or less); equilibrium concentration of the Takahashi–Nakagawa law within 1e-9 of 6.7 c∞² |
-| [test/slide](../../../test/slide/en/README.md) | fluidisation and stability test; fluidisation of a saturated soil layer and retained water | self-checks of conservation and water budget |
+| [test/slide](../../../test/slide/en/README.md) | fluidisation and stability test; fluidisation of a saturated soil layer and retained water; options of the stability test (seepage force, depth limit, pore-pressure failures only, no test under a dense mixture) | self-checks of conservation and water budget; the safety factor agrees with the formula within the precision of the single-precision output (relative 2e-6), and equals tanφs/tanθ under still water |
 | [test/volcano](../../../test/volcano/en/README.md) | Voellmy uniform flow and τ_y run-out | uniform depth agrees to 0.0% with the analytical solution (the along-slope equation with the default 2; four neighbours) |
 | [test/dbslope](../../../test/dbslope/en/README.md) | uniform flow on a 30° slope (Voellmy, Egashira, the stony type and the bedload-like collective flow of Takahashi–Nakagawa, the latter with the first and the second power of (d/h)), steep-slope gravity correction 1 and 2 | for all five, within 0.04% of the analytical solutions of the along-slope equations with 2 and of the horizontal equations with 1 (ratio of the depths of 2 and 1: 1.11–1.21) |
 | [test/curvature](../../../test/curvature/en/README.md) | steady one-dimensional test of the curvature term | thickening on the arc 1.03 times the ODE |

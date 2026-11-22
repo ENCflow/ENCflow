@@ -402,6 +402,17 @@
   !slide_c = 1000.0         ! effective cohesion c' (Pa). Default 0
   !slide_phi = 30.0         ! shear resistance angle of the soil (deg). 0 = default 30
   !slide_gamma = 18000.0    ! saturated unit weight (N/m3). 0 = default 18000
+  !f_slide_seep = 1         ! seepage force from the total-head gradient (default
+                            !   0 = slope-parallel seepage. Does not underestimate
+                            !   the safety factor of slopes under a lake. Requires
+                            !   the groundwater computation)
+  !f_slide_wet = 1          ! cells with Fs < 1 even without pore pressure are not
+                            !   fluidized (default 0. Steps etc. are left to the
+                            !   angle-of-repose avalanching f_repose)
+  !f_slide_noflow = 1       ! cells under a dense mixture (concentration >= db_cmin)
+                            !   are not judged (default 0)
+  !slide_dmax = 2.0         ! upper limit of the judged and fluidized depth (m).
+                            !   Default 0 = the whole layer
 
   ! ---- Moving bed layer (basal sliding of a landslide mass, landslide
   !      tsunami. morfac=1 required) ----

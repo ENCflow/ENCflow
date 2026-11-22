@@ -327,6 +327,22 @@ module list_geomorph
     real :: slide_c = 0.0            ! 有効粘着力 c' (Pa)。f_slide=1 で必須(0 可)
     real :: slide_phi = 0.0          ! 土のせん断抵抗角 φs (deg)。0 = 既定 30(§62)
     real :: slide_gamma = 0.0        ! 飽和単位体積重量 γt (N/m3)。0 = 既定 18000(§62)
+    integer :: f_slide_seep = 0      ! 安全率の駆動に浸透力を全水頭の勾配で入れる(0:斜面に平行な
+                                     ! 浸透を仮定(従来), 1:有効。地下水計算が要る)。
+                                     ! Fs = [c' + (γt d − γw hw) cos²θ tanφs]
+                                     !      / [cos²θ {(γt d − γw hw) tanθ + γw hw J}]
+                                     ! J は全水頭 H = (z − sd) + hw(飽和したセルは + h)の
+                                     ! 最急降下勾配。土層厚と飽和厚が一様なら J = tanθ で従来の
+                                     ! 式と同じ、静水の下では J = 0。developer.md §28.19
+    integer :: f_slide_wet = 0       ! 間隙水圧で起きる崩壊に限る(0:無効(従来), 1:間隙水圧が
+                                     ! なくても Fs < 1 のセル(段差など幾何的に不安定な所)は
+                                     ! 流動化しない。安息角崩落 f_repose に任せる)
+    integer :: f_slide_noflow = 0    ! 濃い混合体が載るセルを判定しない(0:無効(従来),
+                                     ! 1:混合体の濃度 hs/(h+hs) が db_cmin 以上のセルは判定しない。
+                                     ! 河床と流れの交換は侵食堆積式に任せる)
+    real :: slide_dmax = 0.0         ! 判定・流動化する深さの上限 (m)。0 = 全層(従来)。
+                                     ! > 0 なら上から d = min(sd, slide_dmax) だけを判定し、
+                                     ! 流動化する(飽和厚は hw_d = max(0, hw − (sd − d)))
     integer :: f_wthr = 0            ! 基岩風化=土層生成(0:無効, 1:有効。§32)
     real :: wthr_p0 = -9999.0        ! 裸岩での土層生成速度 (mm/kyr)。未指定 = 既定 50(§62)
     real :: wthr_sdstar = 0.5        ! 生成の減衰深 sd* (m)
@@ -516,8 +532,8 @@ subroutine list_geomorph_read(p, list)
   character(len=256) :: fn_dbinit
   real :: db_reltime
   real :: db_relsat
-  integer :: f_slide
-  real :: slide_c
+  integer :: f_slide, f_slide_seep, f_slide_wet, f_slide_noflow
+  real :: slide_c, slide_dmax
   real :: slide_phi
   real :: slide_gamma
   integer :: f_wthr
@@ -561,6 +577,7 @@ subroutine list_geomorph_read(p, list)
                            db_mu, db_xi, db_tauy, f_dbcurv, &
                            fn_dbinit, db_reltime, db_relsat, &
                            f_slide, slide_c, slide_phi, slide_gamma, &
+                           f_slide_seep, f_slide_wet, f_slide_noflow, slide_dmax, &
                            f_wthr, wthr_p0, wthr_sdstar, fn_wthr, f_uplift, uplift0, fn_uplift, &
                            f_rockinc, rock_kp, rock_tauc, rock_m, rock_beta, rock_hstar, fn_rock, &
                            rock_kdb, rock_taucdb, rock_mdb, &
@@ -691,6 +708,10 @@ subroutine list_geomorph_read(p, list)
   slide_c = list%slide_c
   slide_phi = list%slide_phi
   slide_gamma = list%slide_gamma
+  f_slide_seep = list%f_slide_seep
+  f_slide_wet = list%f_slide_wet
+  f_slide_noflow = list%f_slide_noflow
+  slide_dmax = list%slide_dmax
   f_wthr = list%f_wthr
   wthr_p0 = list%wthr_p0
   wthr_sdstar = list%wthr_sdstar
@@ -893,6 +914,10 @@ subroutine list_geomorph_read(p, list)
   list%slide_c = slide_c
   list%slide_phi = slide_phi
   list%slide_gamma = slide_gamma
+  list%f_slide_seep = f_slide_seep
+  list%f_slide_wet = f_slide_wet
+  list%f_slide_noflow = f_slide_noflow
+  list%slide_dmax = slide_dmax
   list%f_bedslide = f_bedslide
   list%fn_bsinit = fn_bsinit
   list%bs_reltime = bs_reltime

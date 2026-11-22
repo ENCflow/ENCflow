@@ -6,7 +6,7 @@
 
 Checks of the two triggering mechanisms of landslide-type sediment flow and
 of the treatment of pore water on mobilization (developer.md §28.1, §28.9,
-§28.17).
+§28.17, §28.19).
 
 1. **Instantaneous mobilization f_release** (`param.txt`): a collapse-depth
    distribution `fn_dbinit` is given and mobilized all at once at the
@@ -28,6 +28,11 @@ of the treatment of pore water on mobilization (developer.md §28.1, §28.9,
    subsurface storage come out together as λ·D of water, giving a mixture at
    concentration C*. The total amount of water is conserved in the form
    Σh + Σhg + w_r·Σ(z − z0).
+4. **Options of the slope stability test** (`p_fs_*.txt` written by `make_fs.py`): the safety
+   factor with the seepage force from the total-head gradient `f_slide_seep`, the upper limit of
+   the judged and mobilized depth `slide_dmax`, only failures caused by pore pressure
+   `f_slide_wet`, and no test under a dense mixture `f_slide_noflow`. On a plane slope of uniform
+   gradient, the output of the safety factor is compared with the value of the formula.
 
 Pass or fail is decided not by a reference comparison but by the
 self-checks of `Check_slide.py` (conservation, water budget, activity and
@@ -45,19 +50,59 @@ low-speed consolidation.
 | 2 fslide | `param_fs.txt` | Thin soil layer sd₀ = 0.5 m, sy = 0.3. Rainfall → Green-Ampt infiltration → `f_slide = 1`. Hazard outputs Fs9999, D9999, Dt9999, F9999 and Hs enabled | dt 0.05 s, 400 s |
 | 3 fsdiag | `param_fs2.txt` | Same as configuration 2 with `f_slide = 2` (judge only) | Same as above |
 | 4 wet | `param_wet.txt` | Configuration 1 + the groundwater computation (Green-Ampt; infiltration capacity nearly 0) + `gw_sat0 = 1` (saturated soil layer) + `f_dbwet = 3` (sy0 = 0.2, λ = 0.4, w_r = 0.2). `Run.sh` also runs the same settings with `gw_sat0 = 0` (dry soil layer; the settings file `param_wetdry.txt` is made from `param_wet.txt`) | dt 0.02 s, 10 s |
+| 5 seep | `p_fs_u0`, `_u1`, `p_fs_g0`, `_g1`, `p_fs_l0`, `_l1`, `p_fs_gdyn` | `f_slide_seep` 0 and 1 (below). Judge only (`f_slide = 2`). `p_fs_gdyn` mobilizes | dt 0.05 s, 1 s (gdyn 5 s) |
+| 6 dmax | `p_fs_d2`, `p_fs_d1` | `slide_dmax = 0.5` m. Soil depth 2 m, saturation 0.9. `_d2` is judge only, `_d1` mobilizes | 1 s |
+| 7 wet | `p_fs_w1`, `_w0`, `_w2` | `f_slide_wet` 1 and 0 (φs = 20°; Fs < 1 even when dry), and 1 with φs = 25° | 1 s |
+| 8 noflow | `p_fs_n1`, `_n0` | `f_slide_noflow` 1 and 0. `_d1` of configuration 6 with two bed updates | 2 s |
+
+The terrain of configurations 5 to 8 is a plane of uniform gradient, z = 30 − 0.30 x − 0.25 y
+(40 m × 30 m, Δx = 1 m). The steepest slope is tanθ = 0.3905 and its direction matches none of the
+eight grid directions. It also slopes in y, so neighbours are read across the band boundaries of
+MPI. The groundwater computation is Green-Ampt (infiltration capacity nearly 0), and the initial
+saturation of layer 1, `gw_sat0`, sets the saturated thickness hw = gw_sat0·sd. The bed is updated
+once per second, and the judge-only cases read the safety factor of the first update, `Fs0001`
+(bil = single-precision binary). With a plane terrain and a plane soil depth the total head
+H = (z − sd) + hw is also a plane, so its steepest-descent gradient J is known analytically and the
+safety factor can be compared directly with the value of the formula.
+
+- **Configuration 5** (`f_slide_seep`). Fs = [c′ + (γt d − γw hw) cos²θ tanφs] / [cos²θ {(γt d − γw hw) tanθ + γw hw J}].
+  - `_u0`, `_u1`: uniform soil depth (1 m), saturation 0.6. J = tanθ, so 0 and 1 give the same value
+    (the conventional formula).
+  - `_g0`, `_g1`: a plane soil depth that thickens downslope (1 + 0.08 x + 0.06 y m), saturation 0.5,
+    c′ = 2 kPa. J = 0.4405 > tanθ, and 1 is 3 % smaller than the conventional formula.
+  - `_l0`, `_l1`: soil depth 1 m, saturated. About the downstream third is a still lake (water level
+    19 m). Under the lake J = 0, so 1 gives Fs = tanφs/tanθ = 1.194 and 0 gives (γt − γw)/γt times
+    that, 0.578 (the underestimate of the conventional formula). On land both give 0.578.
+  - `_gdyn`: `_g1` with mobilization (`f_slide = 1`) for 5 s. Checks the conservation of solids and
+    water, and the agreement under MPI.
+- **Configuration 6** (`slide_dmax`). Only the top d = 0.5 m is judged. The saturated thickness within
+  it is max(0, hw − (sd − d)) = 0.3 m. With one update, `_d1` lowers the elevation by exactly 0.5 m,
+  leaves 1.5 m of soil, and releases to the surface the subsurface storage above the capacity of
+  the remaining layer (0.09 m).
+- **Configuration 7** (`f_slide_wet`). With φs = 20°, Fs = tanφs/tanθ = 0.93 < 1 even when dry
+  (geometric instability). 1 does not mobilize, and 0 mobilizes the whole layer. The saturated
+  `_w2` with φs = 25° (dry Fs = 1.19) reaches Fs = 0.58 through pore pressure, so it mobilizes even
+  with 1.
+- **Configuration 8** (`f_slide_noflow`). The first update mobilizes 0.5 m and leaves a dense
+  mixture (hs = 0.3 m) on the cell. With 1 the second update does not judge that cell, so the soil
+  depth stays 1.5 m; with 0 another 0.5 m is mobilized, leaving 1.0 m.
 
 | File | Contents |
 |---|---|
 | `Check_slide.py <save> release\|fslide\|fsdiag [result]` | release: (1) total solid, (2) co-moving update, (3) water budget Σh = λ relsat ΣD, (4) activity. fslide: (1)(2), (4) cells with sd = 0 on the slope, (5) hazard outputs min Fs9999 < 1 and D9999 ≥ H9999. fsdiag: (1) no mobilization (z, sd, hs unchanged), (2) detection of the hazardous range of Fs |
 | `Check_slide.py <save> wet <screen output> <gw_sat0>` | (1) total solid, (2) co-moving update, (3) water ledger Σh + Σhg + w_r Σ(z − z0) = gw_sat0·sy0·Σsd0 + shortfall of retained water (the shortfall is the retained water that deposition could not take from the surface water or the subsurface storage, read from the line `retained pore water shortfall` printed at the end of the run), (4) activity, (5) activity of the retained-water exchange (\|w_r Σ(z − z0)\| > 1e-6; shortfall > 0 for the dry soil layer) |
+| `make_fs.py` | Writes the inputs `d_fs/` (terrain, soil depth, initial depth of the lake) and the settings `p_fs_*.txt` of configurations 5 to 8 (Run.sh and Run_MPI.sh call it; the argument `list` prints the case names) |
+| `Check_slide_fs.py fs <case>` | Configurations 5 and 6: the safety factor of the interior cells (excluding one column at the edges; in the lake cases, cells whose 8 neighbours and themselves are all lake or all land) agrees with the formula within a relative 2e-6 (round-off of the single-precision output) |
+| `Check_slide_fs.py pair <case1> <case0> same\|differ` | Configuration 5: the safety factors of two cases are the same (within 2e-6) or differ by 2 % or more (detection power) |
+| `Check_slide_fs.py dmax1\|wet\|noflow\|ledger …` | Configuration 6: the lowering of the elevation, the soil depth, hs, hg and h agree with the exact values within 1e-12 m, and the ledgers of solids and water. Configurations 7 and 8: the soil depths described above. `ledger` checks the ledgers of solids and water (1e-9) and the activity of `_gdyn` of configuration 5 |
 | `Fig.py` | The figures `en/figs/*.png` below (`python3 Fig.py en`; `figs/*.png` are the Japanese versions) |
 
 ## Running
 
 ```bash
 make
-./Run.sh          # generate dbinit → run the 4 configurations (configuration 4 is run saturated and dry) and Check. PASS when all PASS (a few seconds)
-./Run_MPI.sh 4    # MPI. state.dat and the output files (Fs9999 etc.) are byte-identical to the serial run
+./Run.sh          # generate dbinit → run the 8 configurations (configuration 4 is run saturated and dry; configurations 5 to 8 are 14 cases) and Check. PASS when all PASS (about 10 seconds)
+./Run_MPI.sh 4    # MPI. state.dat and the output files (Fs9999, Fs0001 etc.) are byte-identical to the serial run
 python3 Fig.py en # en/figs/release.png, en/figs/fslide.png
 ```
 
@@ -95,6 +140,19 @@ judge-only mode).
 | 4 wet (saturated) | about 1e-13 or less | about 1e-13 or less | residual of the water ledger 3e-12 (initial subsurface storage 1200 m³, retained-water term 16.8 m³, shortfall 0) / collapse area min dz −0.98 m, deposition outside the area +0.30 m | PASS |
 | 4 wet (dry) | about 1e-12 or less | about 1e-13 or less | residual of the water ledger 2e-11 (retained-water term 17.9 m³, shortfall 0.18 m³) / collapse area min dz −0.84 m, deposition outside the area +0.65 m | PASS |
 
+| Case of configurations 5 to 8 | Compared quantity | Value of the formula | Difference from the computation | Verdict |
+|---|---|---|---|---|
+| 5 `_u0`, `_u1` | safety factor (1064 cells) | 0.8246 (conventional formula) | relative 2e-9. The outputs of 0 and 1 are the same | PASS |
+| 5 `_g0` | same | 0.940–1.143 (conventional formula) | relative 6e-8 | PASS |
+| 5 `_g1` | same | 0.910–1.106 (J = 0.4405) | relative 6e-8. 3.2 % smaller than `_g0` | PASS |
+| 5 `_l0` | safety factor (598 land and 364 lake cells) | land 0.5782, lake 0.5782 | relative 3e-9 | PASS |
+| 5 `_l1` | same | land 0.5782, lake 1.1941 (= tanφs/tanθ) | relative 5e-9. Under the lake, 2.07 times `_l0` | PASS |
+| 5 `_gdyn` | ledgers of solids and water | 0 | solids 2e-12, water 1e-13 (1167 mobilizations) | PASS |
+| 6 `_d2` | safety factor | 0.8246 (d = 0.5 m, saturated thickness 0.3 m) | relative 2e-9 | PASS |
+| 6 `_d1` | lowering of the elevation, soil depth, hs, hg, h | 0.5, 1.5, 0.3, 0.45, 0.09 m | 4e-15 m or less. Ledgers: solids 0, water 7e-13 | PASS |
+| 7 `_w1`, `_w0`, `_w2` | interior soil depth | 1 (unchanged), 0, 0 m | exact | PASS |
+| 8 `_n1`, `_n0` | interior soil depth, excluding two columns at the edges | 1.5, 1.0 m | exact | PASS |
+
 - The mobilization fires only once, by a time-crossing test, and does not
   fire again after a restart (§28.1). The water budget of the released
   pore water agrees to 6 digits.
@@ -119,6 +177,15 @@ judge-only mode).
   becomes a dense mixture, and on deposition some cells run short of retained
   water. Counting that shortfall (0.18 m³) in the ledger brings the residual
   back to machine precision (§28.17).
+- The lake cases of configuration 5 show numerically that the conventional formula (slope-parallel
+  seepage) estimates the safety factor of a saturated slope under still water at
+  (γt − γw)/γt = 0.48 times its value. On land (no surface water; the gradient of the total head equals
+  that of the terrain) `f_slide_seep = 1` keeps the same value as the conventional formula.
+- The edge cells of configurations 7 and 8 have a steepest slope different from the interior (the
+  neighbours outside the domain are excluded), so they are judged differently from the interior. Even
+  in `_w1` of configuration 7, the edge cells whose dry safety factor is 1 or more (68 cells) are
+  mobilized by pore pressure. In configuration 8 the slope of the second update changes next to the
+  edge cells that were not mobilized in the first, so the comparison excludes two columns at the edges.
 
 - The deposition outside the area was +0.61 m with the default 2 of 2026-10-18 to 31
   (the change of the default on 2026-10-18, f_opening_dynamic = 2; developer.md
@@ -158,4 +225,4 @@ judge-only mode).
 ## Related documents
 
 - [docs/users_guide/geomorph.md](../../../docs/en/users_guide/geomorph.md) — `fn_dbinit`, `db_reltime`, `db_relsat`, `f_slide`, hazard outputs `f_out_fs` etc.
-- developer.md §28.1 (configuration of f_release / f_slide), §28.9 (hazard outputs), §28.3–28.5 (verification records and the practice of bitwise MPI comparison) (in Japanese)
+- developer.md §28.1 (configuration of f_release / f_slide), §28.9 (hazard outputs), §28.3–28.5 (verification records and the practice of bitwise MPI comparison), §28.19 (options of the slope stability test) (in Japanese)

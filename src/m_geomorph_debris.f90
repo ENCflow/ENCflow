@@ -404,6 +404,39 @@ module subroutine init_debris(gm, p, g, list)
       allocate(gm%dbr%sld(dcp%ish:dcp%ieh, dcp%js:dcp%je), source = .false.)
     end if
   end if
+
+  ! --- 斜面安定判定の選択子(developer.md §28.19。どれも既定は従来の経路) ---
+  if (list%f_slide == 0 .and. (list%f_slide_seep /= 0 .or. list%f_slide_wet /= 0 &
+      .or. list%f_slide_noflow /= 0 .or. list%slide_dmax /= 0.0)) then
+    call par_stop("list_geomorph: f_slide_seep, f_slide_wet, f_slide_noflow and slide_dmax require " &
+                  // "f_slide = 1 or 2")
+  end if
+  select case (list%f_slide_seep)
+    case (0)
+      continue
+    case (1)
+      ! 浸透力は地下水の飽和厚から求める。地下水計算がなければ間隙水圧は 0 で、式は従来と同じになる
+      if (len_trim(p%fn_gwflow) == 0) then
+        call par_stop("list_geomorph: f_slide_seep=1 requires the groundwater computation (fn_gwflow)")
+      end if
+      if (.not. allocated(gm%dbr%hd)) then
+        allocate(gm%dbr%hd(dcp%ish:dcp%ieh, dcp%jsh:dcp%jeh), source = 0.0)
+      end if
+    case default
+      call par_stop("list_geomorph: f_slide_seep must be 0(slope-parallel seepage) or " &
+                    // "1(seepage force from the total-head gradient)")
+  end select
+  if (list%f_slide_wet /= 0 .and. list%f_slide_wet /= 1) then
+    call par_stop("list_geomorph: f_slide_wet must be 0 or 1(fluidize only failures caused by pore pressure)")
+  end if
+  if (list%f_slide_noflow /= 0 .and. list%f_slide_noflow /= 1) then
+    call par_stop("list_geomorph: f_slide_noflow must be 0 or 1(do not judge cells under a dense mixture)")
+  end if
+  if (list%slide_dmax < 0.0) call par_stop("list_geomorph: slide_dmax must be >= 0 (0 = whole soil layer)")
+  gm%f_slide_seep = list%f_slide_seep
+  gm%f_slide_wet = list%f_slide_wet
+  gm%f_slide_noflow = list%f_slide_noflow
+  gm%sl_dmax = list%slide_dmax
 end subroutine
 
 
@@ -457,10 +490,11 @@ module subroutine calc_debris(gm, p, g, s, dtw)
   !     古い(calc_fluvial の冒頭交換と同じ構図。np=2 の state.dat
   !     不一致で実検出)。ここで最新化する(判定は namelist 由来で
   !     全ランク同一 = collective 安全。z は交換済みで不要) ---
-  if (gm%f_dbed == 3) then
-    call par_halo_cell(s%h)
-    call par_halo_cell(s%hs)
-  end if
+  ! 斜面安定判定の全水頭(f_slide_seep = 1。§28.19)も近傍の h と地下貯留 hg を読むので、同じ理由で
+  ! 最新化する(hg は地下水計算が帯内を更新済み。z・sd は geomorph の末尾の交換で最新)
+  if (gm%f_dbed == 3 .or. gm%f_slide_seep == 1) call par_halo_cell(s%h)
+  if (gm%f_dbed == 3) call par_halo_cell(s%hs)
+  if (gm%f_slide_seep == 1) call par_halo_cell(s%hg)
 
   ! --- 斜面安定のパス1: Fs 評価(時刻 n の z。E-D パス2 より前に評価する
   !     ことで、勾配読みが帯内更新とハロの不整合を起こさない) ---
@@ -768,6 +802,22 @@ end subroutine
 !   近似(文書化): セル独立の無限長斜面(側方支持なし)、浅層崩壊限定、
 !   γt は湿潤・飽和一律。tanθ ≈ 0 は駆動なし = 判定対象外。
 !   γw = 1000・g(淡水の単位体積重量)
+!   選択子(developer.md §28.19。どれも既定は上の式のまま):
+!     slide_dmax > 0   : 上から d = min(sd, slide_dmax) だけを判定する。式の sd を d に、hw を
+!                        hw_d = max(0, hw − (sd − d)) に替える(飽和帯は土層の底から積もる)
+!     f_slide_seep = 1 : 駆動に浸透力を全水頭の勾配 J で入れる。土粒子の骨格に働く力を、水中重量と
+!                        浸透力(単位体積あたり γw × 動水勾配。斜面に沿う向きとみなす)で書くと
+!                          Fs = [c' + (γt・d − γw・hw)・cos²θ・tanφs]
+!                               / [cos²θ・{(γt・d − γw・hw)・tanθ + γw・hw・J}]
+!                        J は全水頭 H = (z − sd) + hw(土層が地表まで飽和したセルは + h)の最急降下
+!                        勾配(水平距離あたり。地形の tanθ と同じ D∞ の演算)。土層厚と飽和厚が
+!                        一様な斜面では J = tanθ で上の式に一致し、静水の下では J = 0 で
+!                        Fs = tanφs/tanθ(c' = 0)になる。標準的な無限長斜面の有効応力と浸透力の
+!                        つり合いを独自に整理した形
+!     f_slide_wet = 1  : Fs < 1 でも、間隙水圧なし(hw = 0)で Fs < 1 のセルは流動化しない
+!                        (段差など幾何的に不安定な所は安息角崩落 f_repose の担当)
+!     f_slide_noflow = 1: 濃い混合体(hs/(h + hs) >= db_cmin)が載るセルは判定しない
+!                        (河床と流れの交換は侵食堆積式の担当)
 !----------------------------------------------------------------------
 subroutine slide_pass1(gm, p, g, s)
   type(t_geomorph), intent(inout) :: gm
@@ -776,16 +826,24 @@ subroutine slide_pass1(gm, p, g, s)
   type(t_state), intent(inout) :: s
   integer :: i, j
   real :: tanth, cos2, w, hw, u, fs
+  real :: dj, fs0
   real :: fsmin_loc
-  logical :: dofs
+  integer :: ngeo, nflow
+  logical :: dofs, seep
   real, parameter :: rhow = 1000.0          ! 水の密度 (kg/m3。淡水)
+
+  ! 全水頭の面(f_slide_seep = 1。帯とハロの全セル。ハロの h・hg は calc_debris の冒頭で最新)
+  seep = (gm%f_slide_seep == 1)
+  if (seep) call slide_head(gm, g, s)
 
   ! Fs 分布出力(f_out_fs。§28.9)。評価のたびに自セルへ書く。
   ! 未評価セル(無効・海・岩盤・勾配なし)は -1(番兵)へ戻す
   dofs = allocated(s%fs)
   fsmin_loc = huge(1.0)
-  !$omp parallel do schedule(static) private(i, j, tanth, cos2, w, hw, u, fs) &
-  !$omp reduction(min: fsmin_loc)
+  ngeo = 0
+  nflow = 0
+  !$omp parallel do schedule(static) private(i, j, tanth, cos2, w, hw, u, fs, dj, fs0) &
+  !$omp reduction(min: fsmin_loc) reduction(+: ngeo, nflow)
   do j = dcp%js, dcp%je
     do i = g%wx(1,j), g%wx(2,j)
       gm%dbr%sld(i,j) = .false.
@@ -793,30 +851,89 @@ subroutine slide_pass1(gm, p, g, s)
       if (g%x(i,j) <= 0) cycle
       if (g%sw(i,j) > 0) cycle
       if (s%sd(i,j) <= 0.0) cycle
+      if (gm%f_slide_noflow == 1) then
+        ! 濃い混合体が載るセルは判定しない
+        if (s%hs(i,j) > 0.0) then
+          if (s%hs(i,j) >= gm%db_cmin * (max(s%h(i,j), 0.0) + s%hs(i,j))) then
+            nflow = nflow + 1
+            cycle
+          end if
+        end if
+      end if
       tanth = slope8(gm, g, s, i, j)
       if (tanth <= 1.0e-6) cycle              ! 駆動なし(Fs=∞ 扱い)
       cos2 = 1.0 / (1.0 + tanth**2)
-      w = gm%sl_gamma * s%sd(i,j)             ! 単位面積の土塊重量 (N/m2)
+      dj = s%sd(i,j)                          ! 判定する厚さ(slide_dmax > 0 なら上から d)
+      if (gm%sl_dmax > 0.0) dj = min(dj, gm%sl_dmax)
+      w = gm%sl_gamma * dj                    ! 単位面積の土塊重量 (N/m2)
       hw = 0.0
       if (s%gw_active .and. g%sy0 > 0.0) hw = min(s%hg(i,j) / g%sy0, s%sd(i,j))
+      if (gm%sl_dmax > 0.0) hw = max(0.0, hw - (s%sd(i,j) - dj))
       u = rhow * p%gg * hw                    ! γw・hw(cos²θ は下で共通に乗算)
-      fs = (gm%sl_c + (w - u) * cos2 * gm%sl_tanphi) / (w * tanth * cos2)
+      if (seep) then
+        ! 浸透力を全水頭の勾配 J で(分母は w > u >= 0・tanθ > 0 なので正)
+        fs = (gm%sl_c + (w - u) * cos2 * gm%sl_tanphi) &
+             / (((w - u) * tanth + u * steep8(gm, g, gm%dbr%hd, i, j)) * cos2)
+      else
+        fs = (gm%sl_c + (w - u) * cos2 * gm%sl_tanphi) / (w * tanth * cos2)
+      end if
       if (dofs) then
         s%fs(i,j) = fs
         if (s%fsmin(i,j) < 0.0 .or. fs < s%fsmin(i,j)) s%fsmin(i,j) = fs
       end if
       if (fs < fsmin_loc) fsmin_loc = fs
-      if (fs < 1.0) gm%dbr%sld(i,j) = .true.
+      if (fs < 1.0) then
+        if (gm%f_slide_wet == 1) then
+          ! 間隙水圧なしの安全率(u = 0)。これも 1 未満なら幾何的な不安定で、流動化しない
+          fs0 = (gm%sl_c + w * cos2 * gm%sl_tanphi) / (w * tanth * cos2)
+          if (fs0 < 1.0) then
+            ngeo = ngeo + 1
+          else
+            gm%dbr%sld(i,j) = .true.
+          end if
+        else
+          gm%dbr%sld(i,j) = .true.
+        end if
+      end if
     end do
   end do
   !$omp end parallel do
   if (fsmin_loc < gm%dbr%fsmin) gm%dbr%fsmin = fsmin_loc
+  gm%dbr%nslgeo = gm%dbr%nslgeo + ngeo
+  gm%dbr%nslflow = gm%dbr%nslflow + nflow
+end subroutine
+
+
+!----------------------------------------------------------------------
+! 斜面安定判定の全水頭の面(f_slide_seep = 1。developer.md §28.19)
+!   H = (z − sd) + hw。土層が地表まで飽和したセル(地下貯留が容量に届いている。gw_full)は
+!   地表水の水深 h を足す(側方地下水の水頭と同じ読み方)。土層のないセルは H = z + h。
+!   確保した範囲(帯とハロ)の全セルで作る(無効なセルの値は steep8 が読まない)
+!----------------------------------------------------------------------
+subroutine slide_head(gm, g, s)
+  type(t_geomorph), intent(inout) :: gm
+  type(t_geoinfo), intent(in) :: g
+  type(t_state), intent(in) :: s
+  integer :: i, j
+  real :: hw
+
+  !$omp parallel do schedule(static) private(i, j, hw)
+  do j = dcp%jsh, dcp%jeh
+    do i = dcp%ish, dcp%ieh
+      hw = 0.0
+      if (s%gw_active .and. g%sy0 > 0.0) hw = min(s%hg(i,j) / g%sy0, s%sd(i,j))
+      gm%dbr%hd(i,j) = (s%z(i,j) - s%sd(i,j)) + hw
+      if (gw_full(g, s, i, j)) gm%dbr%hd(i,j) = gm%dbr%hd(i,j) + max(s%h(i,j), 0.0)
+    end do
+  end do
+  !$omp end parallel do
 end subroutine
 
 
 !----------------------------------------------------------------------
 ! 斜面崩壊セルの全層流動化(パス2。書き込みは自セルに閉じる)
-!   転換は release_debris と同じ台帳整合の fluidize
+!   転換は release_debris と同じ台帳整合の fluidize。slide_dmax > 0 なら上から
+!   d = min(sd, slide_dmax) だけを流動化し、残った土層の容量を超える地下貯留を地表へ出す(§28.19)
 !----------------------------------------------------------------------
 subroutine slide_pass2(gm, g, s)
   type(t_geomorph), intent(inout) :: gm
@@ -830,16 +947,21 @@ subroutine slide_pass2(gm, g, s)
       if (.not. gm%dbr%sld(i,j)) cycle
       dd = s%sd(i,j)
       if (dd <= 0.0) cycle
+      if (gm%sl_dmax > 0.0 .and. gm%sl_dmax < dd) then
+        dd = gm%sl_dmax                        ! 上から slide_dmax だけ(残りは次の評価で判定)
+        s%sd(i,j) = s%sd(i,j) - dd
+      else
+        s%sd(i,j) = 0.0                        ! 岩盤露出(堆積で再生すれば再判定)
+      end if
       s%hs(i,j) = s%hs(i,j) + dd / gm%poroi   ! 固体分 (1−λ)・D
       s%z(i,j) = s%z(i,j) - dd
-      s%sd(i,j) = 0.0                          ! 岩盤露出(堆積で再生すれば再判定)
       gm%dbr%nslide = gm%dbr%nslide + 1
       ! 保持水 w_r・D も土と一緒に流動体へ(f_dbwet = 3。§28.17。飽和した土層なら下の hg と
       ! 合わせて λ・D の水が出て、混合体の濃度は C* になる)
       if (gm%f_dbwet == 3 .and. s%gw_active) call retain_exchange(gm, s, i, j, -dd, wdf)
       if (s%gw_active) then
-        ! 容量 0 になった帯水の全量を地表へ(容量超過引き渡しの極限)
-        cap = 0.0
+        ! 残った土層の容量を超える帯水を地表へ(全層なら容量 0 = 全量。容量超過引き渡し)
+        cap = s%sd(i,j) * g%sy0
         if (s%hg(i,j) > cap) then
           fxg = s%hg(i,j) - cap
           s%hg(i,j) = cap
@@ -1219,15 +1341,31 @@ pure function bed_unsat(gm, g, s, i, j) result(unsat)
   type(t_state), intent(in) :: s
   integer, intent(in) :: i, j
   logical :: unsat
-  real :: cap
   unsat = .false.
   if (gm%f_dbunsat == 0) return
   if (s%gw_active) then
-    cap = s%sd(i,j) * g%sy0
-    unsat = (cap - s%hg(i,j)) > 1.0e-9 * cap
+    unsat = .not. gw_full(g, s, i, j)
   else
     unsat = gm%db_unsat0
   end if
+end function
+
+
+!----------------------------------------------------------------------
+! 土層が地表まで飽和しているか(地下貯留 hg が容量 sy0・sd に届いている。地下水計算ありのとき)
+!   届いたかどうかは容量の 1e-9 倍の余裕で判定する(授受の丸めで 1 ulp 欠けた飽和のセルを
+!   不飽和と読まない)。土層のないセル(容量 0)は飽和とみなす。地下水計算なしは .false.
+!----------------------------------------------------------------------
+pure function gw_full(g, s, i, j) result(full)
+  type(t_geoinfo), intent(in) :: g
+  type(t_state), intent(in) :: s
+  integer, intent(in) :: i, j
+  logical :: full
+  real :: cap
+  full = .false.
+  if (.not. s%gw_active) return
+  cap = s%sd(i,j) * g%sy0
+  full = .not. ((cap - s%hg(i,j)) > 1.0e-9 * cap)
 end function
 
 
