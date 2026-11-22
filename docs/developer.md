@@ -98,12 +98,12 @@
 ### 地下水・淡塩
 
 - 現行: [地下水](users_guide/gwflow.md)・[地下水モデルの解説](users_guide/gwflow_models.md)・[淡塩2層](users_guide/salt.md)。既定値は [§64](developer/064.md)
-- 記録: [§16](developer/016.md)・[§46](developer/046.md)(管路層)・[§47](developer/047.md)(淡塩 2 層)・[§64](developer/064.md)・[§98](developer/098.md)
+- 記録: [§16](developer/016.md)・[§46](developer/046.md)(管路層)・[§47](developer/047.md)(淡塩 2 層)・[§64](developer/064.md)・[§98](developer/098.md)・[§117](developer/117.md)(1 層の側方飽和透水係数の等価な値。例題 source_area)
 
 ### 流出の指標と区画流出(土壌雨量指数・VZ・貯留関数法)
 
 - 現行: [土壌雨量指数](users_guide/swi.md)・[鉛直不飽和浸透(VZ)流出](users_guide/vz.md)・[貯留関数法の区画流出](users_guide/sfm.md)。VZ の設計の正本は docs/vz_plan.md
-- 記録: [§49](developer/049.md)・[§87](developer/087.md)・[§106](developer/106.md)(m_sfm と共通基盤 m_zonerunoff)
+- 記録: [§49](developer/049.md)・[§87](developer/087.md)・[§106](developer/106.md)(m_sfm と共通基盤 m_zonerunoff)・[§117](developer/117.md)(例題 source_area での VZ・貯留関数法との比べ)
 
 ### 土砂・地形変化
 
@@ -163,7 +163,7 @@
 ### 例題・教材・データ
 
 - 現行: examples/README.md・tutorials/
-- 記録: [§104](developer/104.md)(examples/benchmark の再構築)・[§109](developer/109.md)・[§111](developer/111.md)・[§115](developer/115.md)
+- 記録: [§104](developer/104.md)(examples/benchmark の再構築)・[§109](developer/109.md)・[§111](developer/111.md)・[§115](developer/115.md)・[§117](developer/117.md)(例題 source_area の作成と検討)
 ## 全節の一覧
 
 - [§1](developer/001.md) 実数精度の方針
@@ -282,3 +282,4 @@
 - [§114](developer/114.md) 既定の切り替え: `f_advection_donor` 3 → 4・`f_advection_bend` 1 → 2・`f_advection_lateral` 1 → 2・`f_dry_head_cap` 3 → 4(2026-11-21。利用者の決定。挙動が変わる)
 - [§115](developer/115.md) 教材 tutorials/chichibu の単純化と、例題 examples/chichibu_flood の新設(2026-11-21。利用者の指示。計算本体は変えていない)
 - [§116](developer/116.md) developer.md の分割: 基本方針の独立(docs/policy.md)と節ごとのファイル化(2026-11-22。利用者の依頼と、推奨案での合意)
+- [§117](developer/117.md) 例題 examples/source_area: 山地流域の流出寄与域の発達と縮小(2026-11-10〜16。作成と検討の経過。handoff 00q から移した)
