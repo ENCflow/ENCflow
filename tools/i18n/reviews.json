@@ -58,11 +58,11 @@
     {
       "source": "docs/comparison.md",
       "target": "docs/en/comparison.md",
-      "source_sha256": "334cba1438f609b3864725eb2dfc28f6f4d624d8bc883939fcc070c12967ae20",
-      "target_sha256": "145020b867fc0dc692d92d1943d7b6adf13de26b8740b38f6c3607183506bf35",
-      "reviewer": "Claude (Claude Code session; reference to the tutorial supplement (result 3) changed to examples/chichibu_flood (treatment of the advection term); both sides compared)",
+      "source_sha256": "8b5ba9e42ba80315a828882adb6e8866c294c5f9461ed853cd3344926af6099e",
+      "target_sha256": "69ed18790708c62de56488d3bc953dda52b7275ee30e7210da5e2c2cd366db12",
+      "reviewer": "Claude (Claude Code session; merge of the RSR addition and table trimming with the examples/chichibu_flood reference change from main; both changes checked in both files; no model execution)",
       "method": "assistant",
-      "reviewed_on": "2026-11-21"
+      "reviewed_on": "2026-11-22"
     },
     {
       "source": "docs/developer.md",
