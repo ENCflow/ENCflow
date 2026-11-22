@@ -16,6 +16,136 @@
 [docs/en/policy.md](en/policy.md))。「developer.md §0」「§0 方針 N」という引用は、policy.md の
 方針 N を指す。
 
+## テーマ別の索引
+
+テーマごとに、まず読むところ(現行)と、設計と経緯の記録を並べる。「現行」は、いまの仕様を書いた
+利用者ガイドの章と、現在の既定・設計を決めた節(小節)。経緯は必要なときだけ読めばよい。記録は
+番号順で、1 つの節が複数のテーマに出ることがある。§N.M のリンク先は §N のファイル(小節は見出しで探す)。
+
+### 規約・基盤(コードを変える前に読む)
+
+- 現行: [§1](developer/001.md)〜[§14](developer/014.md)(実数精度・単一ソース MPI・ビルド・エラー処理・is_root・文字列・状態変数の時刻と save/restore・OpenMP の決定性・コンパイラ間の差・回帰テスト・MPI 化の原則・モジュール設計・Fortran の落とし穴・性能)。要点は CLAUDE.md の「頻出の規約」にある
+- 記録: [§42](developer/042.md)(全域スケール自動配列のヒープ化)・[§71](developer/071.md)(私有状態の所有の明示)・[§83](developer/083.md)(save/restore のストリーミング)
+
+### 並列化と配列の確保範囲(帯分割・窓)
+
+- 現行: [§11](developer/011.md)(分割実装の基準)と [§79](developer/079.md)〜[§83](developer/083.md)(行窓・列の確保範囲・全域配列の窓化・入力の窓読み・save/restore)。利用者向けは [並列実行](users_guide/parallel.md)
+- 記録: [§2](developer/002.md)・[§8](developer/008.md)・[§11](developer/011.md)・[§42](developer/042.md)・[§79](developer/079.md)・[§80](developer/080.md)・[§81](developer/081.md)・[§82](developer/082.md)・[§83](developer/083.md)
+
+### 浅水流の数値: ENC 格子・時間刻み・乾湿・エッジ水深
+
+- 現行: [ENC 格子と時間積分の解説](users_guide/encgrid.md)・[クーラン数と時間刻みの決め方](users_guide/courant.md)・[時間刻みの設計方針](users_guide/timestep_policy.md)・[高い地盤へ登るエッジ水深の頭打ち](users_guide/dry_head_cap.md)。エッジ水深の頭打ちの既定 f_dry_head_cap = 4 は [§114](developer/114.md)(値の定義は [§113](developer/113.md))、上流側の決め方 f_hcap_upwind は [§95](developer/095.md)、CFL による停止 f_check_cfl = 1 は [§37](developer/037.md)
+- 記録: [§7](developer/007.md)・[§20](developer/020.md)(拡散項)・[§37](developer/037.md)・[§52](developer/052.md)(通過幅ゼロのエッジ)・[§68.7](developer/068.md)・[§68.16](developer/068.md)(頭打ちの導入)・[§68.31](developer/068.md)・[§94](developer/094.md)(負の水深を防ぐ流出の抑制)・[§95](developer/095.md)・[§108](developer/108.md)(f_dry_head_cap = 2)・[§110.24](developer/110.md)(= 3)・[§113](developer/113.md)・[§114](developer/114.md)
+
+### 通過幅(開口補正)と斜めの配分
+
+- 現行: [通過幅の調整](users_guide/passage_width.md)・[斜めの配分比 d の決め方](users_guide/diagratio.md)・[斜めエッジの流束による数値拡散](users_guide/diagonal_diffusion.md)。塞がれた開口の動的振り替えの既定 f_opening_dynamic = 3 は [§68.41](developer/068.md)
+- 記録: [§18](developer/018.md)(開口補正の導入)・[§52](developer/052.md)・[§68.10](developer/068.md)・[§68.11](developer/068.md)・[§68.13](developer/068.md)〜[§68.15](developer/068.md)・[§68.38](developer/068.md)(既定 2)・[§68.41](developer/068.md)・[§68.43](developer/068.md)〜[§68.45](developer/068.md)・[§96](developer/096.md)(拡散型プロセスの 9 点化)・[§98](developer/098.md)(地下水の層の通過幅)・[§99](developer/099.md)(氷河・溶岩流の 8 近傍化)
+
+### 移流項
+
+- 現行: [移流項のスキーム](users_guide/advection.md)・[1 セル幅の河道と移流項の風上供給元](users_guide/advection_donor.md)・[高い地盤へ登るエッジ水深の頭打ち](users_guide/dry_head_cap.md)。既定のスキーム f_advection_scheme = 3 は [§68.19](developer/068.md) の既定昇格、f_advection_donor = 4・f_advection_bend = 2・f_advection_lateral = 2・f_dry_head_cap = 4 は [§114](developer/114.md)、それぞれの値の定義は [§113](developer/113.md)
+- 記録: [§21](developer/021.md)・[§68](developer/068.md)(2026-10-01〜11-03 の改良の全体)・[§78](developer/078.md)(スカラー輸送の MUSCL)・[§102](developer/102.md)(f_advection_donor = 2, 3)・[§110](developer/110.md)(屈曲直後の辺の慣性と側方面のブレーキ)・[§111](developer/111.md)(窪地処理の平坦区間の振動)・[§112](developer/112.md)(深くて遅い隣のセルの規則の試作)・[§113](developer/113.md)・[§114](developer/114.md)
+
+### 急勾配の重力補正と斜面の勾配
+
+- 現行: [急勾配の重力補正の解説](users_guide/steep_slope.md)。既定 f_gravity_correction = 2 は [§93](developer/093.md)、混合体流動の抵抗則は [§101](developer/101.md)
+- 記録: [§91](developer/091.md)(cos²θ を勾配の大きさで)・[§92](developer/092.md)(slope8 の D∞)・[§93](developer/093.md)・[§100](developer/100.md)(= 3 の試作)・[§101](developer/101.md)
+
+### 境界条件・潮位・海域
+
+- 現行: [境界条件](users_guide/boundary.md)・[潮位・海面](users_guide/tide.md)。[§15](developer/015.md)・[§23](developer/023.md)・[§67](developer/067.md)(潮位の最小入力)
+- 記録: [§15](developer/015.md)・[§23](developer/023.md)・[§67](developer/067.md)・[§68.30](developer/068.md)(自由流出面)・[§68.35](developer/068.md)(海セルに接するエッジ)・[§68.40](developer/068.md)(区間流入の外縁セル)
+
+### 非静水圧
+
+- 現行: [非静水圧補正の解説](users_guide/nonhydrostatic.md)。設計の正本は docs/nonhydrostatic_plan.md、決定の記録は [§69](developer/069.md)
+- 記録: [§69](developer/069.md)・[§75](developer/075.md)(ネスティングでの φ の帯)
+
+### 河道
+
+- 現行: [河道](users_guide/channel.md)・[河道の解説](users_guide/channel_models.md)。設計の文書は docs/channel_model.md
+- 記録: [§18](developer/018.md)・[§26](developer/026.md)(断面形 σ)・[§38](developer/038.md)(rn0_rw)・[§68.8](developer/068.md)・[§68.9](developer/068.md)・[§68.12](developer/068.md)・[§68.24](developer/068.md)・[§68.26](developer/068.md)〜[§68.29](developer/068.md)・[§68.32](developer/068.md)・[§109](developer/109.md)(秩父の河道マスク)・[§111](developer/111.md)
+
+### 内部水理構造物・堤防・家屋
+
+- 現行: [内部水理構造物](users_guide/structure.md)・[構造物と境界の水理則の解説](users_guide/hydraulics.md)・[家屋破壊・瓦礫](users_guide/bldgdebris.md)・[家屋破壊・瓦礫モデルの解説](users_guide/bldgdebris_models.md)
+- 記録: [§17](developer/017.md)(堤防)・[§22](developer/022.md)(構造物族)・[§63](developer/063.md)(家屋破壊・瓦礫)・[§68.25](developer/068.md)(堤防天端の下限)・[§103](developer/103.md)(fn_reservoir の廃止)・[§107](developer/107.md)(家屋の抗力項の次元の修正)
+
+### 降雨・気象・蒸発散・雪氷
+
+- 現行: [降雨・気象](users_guide/forcing.md)・[降雨・気象のモデルの解説](users_guide/forcing_models.md)・[氷河](users_guide/glacier.md)。既定値は [§65](developer/065.md)・[§66](developer/066.md)
+- 記録: [§27](developer/027.md)(蒸発散)・[§29](developer/029.md)(気象強制場と暦)・[§31](developer/031.md)(積雪・融雪)・[§45](developer/045.md)(氷河)・[§65](developer/065.md)・[§66](developer/066.md)・[§88](developer/088.md)(降雨分布の時間の単位)・[§99](developer/099.md)(氷河の 8 近傍化)
+
+### 地下水・淡塩
+
+- 現行: [地下水](users_guide/gwflow.md)・[地下水モデルの解説](users_guide/gwflow_models.md)・[淡塩2層](users_guide/salt.md)。既定値は [§64](developer/064.md)
+- 記録: [§16](developer/016.md)・[§46](developer/046.md)(管路層)・[§47](developer/047.md)(淡塩 2 層)・[§64](developer/064.md)・[§98](developer/098.md)
+
+### 流出の指標と区画流出(土壌雨量指数・VZ・貯留関数法)
+
+- 現行: [土壌雨量指数](users_guide/swi.md)・[鉛直不飽和浸透(VZ)流出](users_guide/vz.md)・[貯留関数法の区画流出](users_guide/sfm.md)。VZ の設計の正本は docs/vz_plan.md
+- 記録: [§49](developer/049.md)・[§87](developer/087.md)・[§106](developer/106.md)(m_sfm と共通基盤 m_zonerunoff)
+
+### 土砂・地形変化
+
+- 現行: [土砂・地形変化](users_guide/geomorph.md)・[土砂輸送と斜面・長期地形過程の解説](users_guide/sediment.md)・[土石流・斜面崩壊・動く底層の解説](users_guide/massflow.md)・[土砂・地形変化の適用例](users_guide/geomorph_applications.md)。既定値は [§62](developer/062.md)
+- 記録: [§19](developer/019.md)・[§28](developer/028.md)(土石流・地滑り)・[§32](developer/032.md)(長期地形変動)・[§48](developer/048.md)(乾式斜面侵食)・[§61](developer/061.md)(動く底層)・[§62](developer/062.md)・[§84](developer/084.md)(蛇行・河岸侵食)・[§85](developer/085.md)(河口デルタ)・[§86](developer/086.md)(石灰岩の溶食)・[§89](developer/089.md)(山地渓流)・[§92](developer/092.md)・[§96](developer/096.md)・[§101](developer/101.md)
+
+### 流木
+
+- 現行: [流木](users_guide/driftwood.md)・[流木モデルの解説](users_guide/driftwood_models.md)
+- 記録: [§50](developer/050.md)
+
+### 溶岩流
+
+- 現行: [溶岩流](users_guide/lavaflow.md)。既定値は [§66](developer/066.md)
+- 記録: [§51](developer/051.md)・[§66](developer/066.md)・[§97](developer/097.md)(温度の移流の MUSCL)・[§99](developer/099.md)(流動の 8 近傍化)
+
+### 沿岸の波浪場
+
+- 現行: [沿岸の波浪場](users_guide/wavefield.md)・[沿岸の波浪場の解説](users_guide/wavefield_models.md)。設計の正本は docs/wavefield_plan.md
+- 記録: [§84.15](developer/084.md)(波浪による沿岸漂砂)・[§90](developer/090.md)
+
+### 規定底面運動
+
+- 現行: [規定底面運動](users_guide/bedmotion.md)・[規定底面運動の解説](users_guide/bedmotion_models.md)
+- 記録: [§70](developer/070.md)
+
+### 水質とスカラー輸送
+
+- 現行: [水質](users_guide/wq.md)・[水質モデルの解説](users_guide/wq_models.md)。スカラー輸送の既定 f_scalar_scheme = 3 は [§78](developer/078.md)、代表値の表は [§66](developer/066.md)
+- 記録: [§30](developer/030.md)・[§66](developer/066.md)・[§78](developer/078.md)
+
+### 計測・出力・可視化
+
+- 現行: [計測](users_guide/record.md)・[入出力の形式](users_guide/io.md)
+- 記録: [§24](developer/024.md)(フラックス測線の DDA 階段面)・[§25](developer/025.md)・[§33](developer/033.md)(画面・Log の表示列)・[§36](developer/036.md)(実座標指定)・[§39](developer/039.md)(貯水量の台帳 S)・[§43](developer/043.md)・[§44](developer/044.md)(out2vtk と X0000)・[§68.33](developer/068.md)
+
+### 入力と前処理
+
+- 現行: policy.md の方針 11・12。[地理情報](users_guide/geoinfo.md)・[入出力の形式](users_guide/io.md)
+- 記録: [§40](developer/040.md)(土地利用からのマスク生成)・[§41](developer/041.md)(f_rntype = 2 の廃止と「物理量は直接与える」)・[§88](developer/088.md)
+
+### ネスティング
+
+- 現行: [ネスティング(多段格子)](users_guide/nest.md)・[ネスティングの解説](users_guide/nest_models.md)。設計の正本は docs/nesting_plan.md
+- 記録: [§71](developer/071.md)・[§72](developer/072.md)・[§73](developer/073.md)・[§74](developer/074.md)・[§75](developer/075.md)
+
+### BMI(外部連携)
+
+- 現行: bmi/README.md。設計の文書は docs/bmi_plan.md
+- 記録: [§53](developer/053.md)〜[§60](developer/060.md)・[§73](developer/073.md)・[§76](developer/076.md)・[§77](developer/077.md)
+
+### 公開・文書・言語
+
+- 現行: docs/multilingual.md(多言語化の規約)・[§34](developer/034.md)(公開体制と言語方針)・[§35](developer/035.md)(利用者向け文書の構成)
+- 記録: [§34](developer/034.md)・[§35](developer/035.md)・[§105](developer/105.md)(浅水方程式の入門ページ)
+
+### 例題・教材・データ
+
+- 現行: examples/README.md・tutorials/
+- 記録: [§104](developer/104.md)(examples/benchmark の再構築)・[§109](developer/109.md)・[§111](developer/111.md)・[§115](developer/115.md)
 ## 全節の一覧
 
 - [§1](developer/001.md) 実数精度の方針
