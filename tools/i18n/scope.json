@@ -7,6 +7,10 @@
       "reason": "内部開発文書(developer.md §34.2)"
     },
     {
+      "pattern": "docs/developer/*",
+      "reason": "内部開発文書(developer.md の節ごとの本文。developer.md §34.2)"
+    },
+    {
       "pattern": "docs/handoff*.md",
       "reason": "内部開発文書(developer.md §34.2)"
     },
