@@ -392,9 +392,9 @@
     {
       "source": "docs/users_guide/massflow.md",
       "target": "docs/en/users_guide/massflow.md",
-      "source_sha256": "1945eb106ed1bdf1547938587f0e736143995d21bc768aecd263166bab54f50b",
-      "target_sha256": "90062e9f923f8a90639815496e87cddac00fd27f1b1d07a3f70d22682f35c8e5",
-      "reviewer": "Claude (Claude Code session; the parts changed for the continuous connection of the surface-water head in f_slide_seep and for the width of the saturation test compared side by side with the Japanese source; numbers checked against the test runs)",
+      "source_sha256": "318297a5becda07abcf17d690e2db90c753e9b7c90af8e34176687e01d27bbf7",
+      "target_sha256": "13a26eb64266f07cea9f5c19474a3c712d0f805e658b67bbae6b6e45e14be572",
+      "reviewer": "Claude (Claude Code session; the parts changed for reading the total head of f_slide_seep at the flow surface (h + hs), the guidance on slide_dmax relative to the grid spacing and the twin test cases compared side by side with the Japanese source; numbers checked against the test runs)",
       "method": "assistant",
       "reviewed_on": "2026-11-22"
     },
@@ -4748,9 +4748,9 @@
     {
       "source": "test/slide/README.md",
       "target": "test/slide/en/README.md",
-      "source_sha256": "cd2e3b6e3f689b3f3064d44347fd06b5d63aa4919a84081d9e5661a1ca65f7b2",
-      "target_sha256": "d82c10a1ee466246646f6232ffe80d14ad02e7b386d72f1ff9af290ab29bbe2a",
-      "reviewer": "Claude (Claude Code session; the parts changed for the continuous connection of the surface-water head in f_slide_seep and for the width of the saturation test compared side by side with the Japanese source; numbers checked against the test runs)",
+      "source_sha256": "7c56d0d3b4c1062ca642d06bbfcc0c8efc26ebd327b15bacca8e6cd5d391555e",
+      "target_sha256": "a936f789579c51bfd39b90f46a89f1ad7279a3f57ce9bedae542b3d0353a3be1",
+      "reviewer": "Claude (Claude Code session; the parts changed for reading the total head of f_slide_seep at the flow surface (h + hs), the guidance on slide_dmax relative to the grid spacing and the twin test cases compared side by side with the Japanese source; numbers checked against the test runs)",
       "method": "assistant",
       "reviewed_on": "2026-11-22"
     },

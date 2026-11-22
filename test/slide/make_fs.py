@@ -20,6 +20,11 @@ y の向きにも傾くので、MPI の帯の境界をまたいで近傍を読�
     fs_le1        : 同 1 − 1e-6(側方の地下水流の 1 回ぶんで欠ける桁)。κ = 0.999 で、湖の下の安全率は
                     静水の値 tanφs/tanθ から 0.1 % しか下がらない(容量に届いたかどうかの 2 値でつなぐと、
                     従来の式の値 = _l0 まで下がる)
+    fs_m1 / fs_m0 : 流動中の土砂が載ったセルの水頭。fs_m1 は fs_l1 の湖の下の一部(REL_I × REL_J)を、
+                    深さ REL_D だけ瞬時に流動化する(fn_dbinit、t = 1 s。f_dbwet = 3 で、崩れた層の水の
+                    全部が流れへ出る)。流動面 z + h + hs は平らなまま。fs_m0 は、同じ形にはじめから
+                    掘って清水を張ったケース。全水頭を流動面で読めば、2 つの安全率は同じになる
+                    (水深 h だけで読むと、流動化したセルの水頭が hs だけ下がって、隣のセルの J が増える)
     fs_gdyn       : fs_g1 を流動化あり(f_slide = 1)で 5 秒。保存則と MPI の一致を見る
 構成 6: 判定・流動化する深さの上限(slide_dmax)。土層厚 2 m、飽和度 0.9、slide_dmax = 0.5 m
     fs_d2         : 判定だけ。Fs が、上から 0.5 m と飽和厚 0.3 m の式の値になる
@@ -45,6 +50,7 @@ LAKE_E = 19.0                        # 湖の水位 (m。fs_l*。領域の下流
 SY0, POROSITY = 0.3, 0.4
 GAMMA = 19000.0                      # 飽和単位体積重量 γt (N/m3)
 WFULL = 1.0e-3                       # 地表水の水頭を飽和帯へつなぐ幅(容量に対する比。本体の gw_wfull と同じ値)
+REL_D, REL_I, REL_J = 0.5, (31, 35), (16, 21)   # fs_m1 で流動化する深さ (m) とセルの範囲(湖の下。水深 2 m 以上)
 DT, DTG = 0.05, 1.0
 
 CASES = {
@@ -57,6 +63,8 @@ CASES = {
     "fs_l1":   dict(sd=1.0,   sat=1.0, lake=True,  slide=2, seep=1, wet=0, noflow=0, dmax=0.0, c=0.0,    phi=25.0, nup=1),
     "fs_lq1":  dict(sd=1.0,   sat=0.99975,  lake=True, slide=2, seep=1, wet=0, noflow=0, dmax=0.0, c=0.0,  phi=25.0, nup=1),
     "fs_le1":  dict(sd=1.0,   sat=0.999999, lake=True, slide=2, seep=1, wet=0, noflow=0, dmax=0.0, c=0.0,  phi=25.0, nup=1),
+    "fs_m1":   dict(sd=1.0,   sat=1.0, lake=True,  slide=2, seep=1, wet=0, noflow=0, dmax=0.0, c=0.0,    phi=25.0, nup=2, rel=True),
+    "fs_m0":   dict(sd=1.0,   sat=1.0, lake=True,  slide=2, seep=1, wet=0, noflow=0, dmax=0.0, c=0.0,    phi=25.0, nup=1, dug=True),
     "fs_gdyn": dict(sd="g",   sat=0.5, lake=False, slide=1, seep=1, wet=0, noflow=0, dmax=0.0, c=2000.0, phi=25.0, nup=5),
     "fs_d2":   dict(sd=2.0,   sat=0.9, lake=False, slide=2, seep=0, wet=0, noflow=0, dmax=0.5, c=0.0,    phi=25.0, nup=1),
     "fs_d1":   dict(sd=2.0,   sat=0.9, lake=False, slide=1, seep=0, wet=0, noflow=0, dmax=0.5, c=0.0,    phi=25.0, nup=1),
@@ -89,6 +97,16 @@ def h_of(c, i, j):
     return max(0.0, LAKE_E - z_of(i, j)) if c["lake"] else 0.0
 
 
+def in_patch(i, j):
+    """fs_m1 で流動化し、fs_m0 ではじめから掘っておくセルか。"""
+    return REL_I[0] <= i <= REL_I[1] and REL_J[0] <= j <= REL_J[1]
+
+
+def dug(i, j):
+    """掘った深さ (m)。"""
+    return REL_D if in_patch(i, j) else 0.0
+
+
 def write_matrix(path, fn):
     with open(path, "w") as f:
         for j in range(1, NY + 1):
@@ -100,18 +118,36 @@ def write_inputs():
     write_matrix("d_fs/z.txt", z_of)
     write_matrix("d_fs/sd_g.txt", lambda i, j: sd_of({"sd": "g"}, i, j))
     write_matrix("d_fs/h_lake.txt", lambda i, j: h_of({"lake": True}, i, j))
+    # fs_m1 の崩壊深と、fs_m0 の掘った地形・土層厚・水深(水位は同じ LAKE_E)
+    write_matrix("d_fs/rel_m.txt", dug)
+    write_matrix("d_fs/z_dug.txt", lambda i, j: z_of(i, j) - dug(i, j))
+    write_matrix("d_fs/sd_dug.txt", lambda i, j: 1.0 - dug(i, j))
+    write_matrix("d_fs/h_dug.txt", lambda i, j: max(0.0, LAKE_E - (z_of(i, j) - dug(i, j))))
 
 
 def write_case(name, c):
     tt = c["nup"] * DTG
+    isdug, isrel = c.get("dug", False), c.get("rel", False)
     if c["sd"] == "g":
         sdl = "  f_sdtype = 1\n  fn_sd = 'sd_g.txt'        ! 下流へ厚くなる平面\n"
+    elif isdug:
+        sdl = f"  f_sdtype = 1\n  fn_sd = 'sd_dug.txt'      ! 1 m。掘った所は {1.0 - REL_D:g} m\n"
     else:
         sdl = f"  f_sdtype = 0\n  sd0 = {c['sd']:g}\n"
-    if c["lake"]:
+    if isdug:
+        ini = f"  f_htype = 1\n  fn_hinit = 'h_dug.txt'    ! 水位 {LAKE_E:g} m の静水(掘った所は {REL_D:g} m 深い)\n"
+    elif c["lake"]:
         ini = f"  f_htype = 1\n  fn_hinit = 'h_lake.txt'   ! 水位 {LAKE_E:g} m の静水(下流側)\n"
     else:
         ini = "  f_htype = 0\n  h0 = 0.0\n"
+    zfile = "z_dug.txt" if isdug else "z.txt"
+    znote = f"平面 z = {Z0:g} − {A:g} x − {B:g} y" + (f"。一部を {REL_D:g} m 掘る" if isdug else "")
+    rel = ""
+    if isrel:
+        rel = (f"  fn_dbinit = 'rel_m.txt'    ! 湖の下の一部を深さ {REL_D:g} m だけ流動化する\n"
+               "  db_reltime = 1.0\n")
+    if isrel or isdug:
+        rel += "  f_dbwet = 3               ! 崩れた層の水の全部(排水できる水と保持水)が流れへ出る\n"
     with open(f"p_{name}.txt", "w") as f:
         f.write(f"""!======================================================================
 ! slide: ケース {name}(make_fs.py が生成。構成 5〜8 の説明は make_fs.py の先頭)
@@ -149,7 +185,7 @@ def write_case(name, c):
   nx = {NX}
   ny = {NY}
   f_ztype = 1
-  fn_z = 'z.txt'            ! 平面 z = {Z0:g} − {A:g} x − {B:g} y
+  fn_z = '{zfile}'            ! {znote}
   f_rntype = 0
   rn0 = 0.03
 {sdl}  sy0 = {SY0:g}
@@ -177,7 +213,7 @@ def write_case(name, c):
   f_slide_wet = {c['wet']}           ! 1: 間隙水圧で起きる崩壊に限る
   f_slide_noflow = {c['noflow']}        ! 1: 濃い混合体が載るセルを判定しない
   slide_dmax = {c['dmax']:g}          ! 判定・流動化する深さの上限 (m。0 = 全層)
-  fluv_porosity = {POROSITY:g}
+{rel}  fluv_porosity = {POROSITY:g}
 /
 """)
 

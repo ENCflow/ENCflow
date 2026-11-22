@@ -497,10 +497,10 @@ module subroutine calc_debris(gm, p, g, s, dtw)
   !     古い(calc_fluvial の冒頭交換と同じ構図。np=2 の state.dat
   !     不一致で実検出)。ここで最新化する(判定は namelist 由来で
   !     全ランク同一 = collective 安全。z は交換済みで不要) ---
-  ! 斜面安定判定の全水頭(f_slide_seep = 1。§28.19)も近傍の h と地下貯留 hg を読むので、同じ理由で
-  ! 最新化する(hg は地下水計算が帯内を更新済み。z・sd は geomorph の末尾の交換で最新)
+  ! 斜面安定判定の全水頭(f_slide_seep = 1。§28.19)も近傍の流動面(h・hs)と地下貯留 hg を読むので、
+  ! 同じ理由で最新化する(hg は地下水計算が帯内を更新済み。z・sd は geomorph の末尾の交換で最新)
   if (gm%f_dbed == 3 .or. gm%f_slide_seep == 1) call par_halo_cell(s%h)
-  if (gm%f_dbed == 3) call par_halo_cell(s%hs)
+  if (gm%f_dbed == 3 .or. gm%f_slide_seep == 1) call par_halo_cell(s%hs)
   if (gm%f_slide_seep == 1) call par_halo_cell(s%hg)
 
   ! --- 斜面安定のパス1: Fs 評価(時刻 n の z。E-D パス2 より前に評価する
@@ -816,9 +816,9 @@ end subroutine
 !                        浸透力(単位体積あたり γw × 動水勾配。斜面に沿う向きとみなす)で書くと
 !                          Fs = [c' + (γt・d − γw・hw)・cos²θ・tanφs]
 !                               / [cos²θ・{(γt・d − γw・hw)・tanθ + γw・hw・J}]
-!                        J は全水頭 H = (z − sd) + hw + κ・h(κ は地表水と飽和帯のつながり。土層が
-!                        地表まで飽和したセルは 1。slide_head)の最急降下勾配(水平距離あたり。
-!                        地形の tanθ と同じ D∞ の演算)。土層厚と飽和厚が一様な斜面では J = tanθ で
+!                        J は全水頭 H = (z − sd) + hw + κ・(h + hs)(h + hs は地表の流動深、κ は地表の
+!                        水と飽和帯のつながり。土層が地表まで飽和したセルは 1。slide_head)の最急降下
+!                        勾配(水平距離あたり。地形の tanθ と同じ D∞ の演算)。土層厚と飽和厚が一様な斜面では J = tanθ で
 !                        上の式に一致し、静水の下では J = 0 で Fs = tanφs/tanθ(c' = 0)になる。
 !                        標準的な無限長斜面の有効応力と浸透力のつり合いを独自に整理した形
 !     f_slide_wet = 1  : Fs < 1 でも、間隙水圧なし(hw = 0)で Fs < 1 のセルは流動化しない
@@ -913,9 +913,13 @@ end subroutine
 
 !----------------------------------------------------------------------
 ! 斜面安定判定の全水頭の面(f_slide_seep = 1。developer.md §28.19)
-!   H = (z − sd) + hw + κ・h。κ は地表水と飽和帯のつながり(0〜1)で、地下貯留 hg が容量 sy0・sd の
-!   (1 − gw_wfull) 倍から容量までの間で 0 から 1 へ連続に変わる(独自の正則化。§28.20)。土層の
-!   ないセル(容量 0)は κ = 1(H = z + h)。
+!   H = (z − sd) + hw + κ・(h + hs)。h + hs は地表の流動深(水と流動中の土砂。流動面 z + h + hs は
+!   f_dbed = 3 の勾配と同じ読み方)。流動中の土砂が載ったセルも、間隙を満たす水の水面は流動面にある。
+!   水深 h だけで読むと、流動化したセルの水頭が hs だけ下がり、隣のセルとの間に水頭の段ができて
+!   流動化が連鎖する(§28.21)。
+!   κ は地表の水と飽和帯のつながり(0〜1)で、地下貯留 hg が容量 sy0・sd の (1 − gw_wfull) 倍から
+!   容量までの間で 0 から 1 へ連続に変わる(独自の正則化。§28.20)。土層のないセル(容量 0)は
+!   κ = 1(H = z + h + hs)。
 !   側方地下水は「容量に届いたセルだけ h を足す」と 2 値で読む。同じ読み方をここで使うと、水没した
 !   セルの貯留が 1 回の側方流ぶん(容量の 1e-7〜1e-6 倍の桁)欠けるたびに水頭が水深 h だけ下がり、
 !   隣のセルとの間に h の段差ができる(J = h/Δx。静水の下の斜面が Fs < 1 になる)。連続な κ では、
@@ -942,7 +946,7 @@ subroutine slide_head(gm, g, s)
         conn = 1.0
         if (cap > 0.0) conn = min(1.0, max(0.0, 1.0 - (cap - s%hg(i,j)) / (gw_wfull * cap)))
       end if
-      gm%dbr%hd(i,j) = (s%z(i,j) - s%sd(i,j)) + hw + conn * max(s%h(i,j), 0.0)
+      gm%dbr%hd(i,j) = (s%z(i,j) - s%sd(i,j)) + hw + conn * (max(s%h(i,j), 0.0) + max(s%hs(i,j), 0.0))
     end do
   end do
   !$omp end parallel do

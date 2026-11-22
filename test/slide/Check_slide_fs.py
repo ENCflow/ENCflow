@@ -4,6 +4,8 @@
   Check_slide_fs.py fs <case>              安全率の出力 Fs0001.bil を式の値と比べる(判定だけのケース)
   Check_slide_fs.py pair <case1> <case0>   2 つのケースの Fs が同じ(same)か、違う(differ)かを確かめる
                     <same|differ>
+  Check_slide_fs.py twin <case1> <case0>   流動中の土砂が載ったセルの水頭: 湖の下の一部を流動化した
+                                           ケースと、同じ形に掘って清水を張ったケースの Fs が同じ
   Check_slide_fs.py dmax1 <case>           slide_dmax: 更新 1 回でちょうど slide_dmax だけ流動化する
   Check_slide_fs.py wet <case1> <case0> <case2>   f_slide_wet
   Check_slide_fs.py noflow <case1> <case0>        f_slide_noflow
@@ -168,6 +170,36 @@ def check_pair(case1, case0, want):
     return 0 if ok else 1
 
 
+def check_twin(case1, case0):
+    """湖の下の一部を流動化したケース(流動中の土砂が載る)と、同じ形にはじめから掘って清水を張ったケースで、
+    安全率が同じになることを確かめる。流動面 z + h + hs は 2 つで同じ(平ら)なので、全水頭を流動面で読めば
+    湖の下は J = 0 で、安全率は地形の勾配だけで決まる。"""
+    f1, f0 = read_fs(case1), read_fs(case0)
+    st = read_state(case1)
+    worst, n, nring, nsent = 0.0, 0, 0, 0
+    for i, j in interior():
+        a, b = at(f1, i, j), at(f0, i, j)
+        if a < 0.0 or b < 0.0:
+            nsent += 0 if (a < 0.0 and b < 0.0) else 1      # 未評価(−1)は 2 つで同じセルでなければならない
+            continue
+        worst, n = max(worst, abs(a / b - 1.0)), n + 1
+        if any(mf.in_patch(p, q) for p, q in nbrs(i, j)):
+            nring += 1
+    # 流動化が起きたこと(検出力): 流動化したセルに土砂 (1 − λ) D が載り、地盤が D 下がっている
+    hs_err = max(abs(at(st["hs"], i, j) - (1.0 - mf.POROSITY) * mf.REL_D) for i, j in interior() if mf.in_patch(i, j))
+    dz_err = max(abs(mf.z_of(i, j) - at(st["z"], i, j) - mf.REL_D) for i, j in interior() if mf.in_patch(i, j))
+    surf = max(abs(at(st["z"], i, j) + at(st["h"], i, j) + at(st["hs"], i, j) - mf.LAKE_E)
+               for i, j in interior() if mf.in_patch(i, j))
+    ok1 = hs_err <= TOL_X and dz_err <= TOL_X and surf <= 1.0e-9
+    ok2 = worst <= TOL_FS and nsent == 0 and nring >= 30
+    print(f"== slide fs twin: {case1} (mobilized under the lake) vs {case0} (excavated, clear water)")
+    print(("  ok   " if ok1 else "  FAIL ") + f"{case1}: mobilized cells carry hs = (1 - lambda) D and are lowered by D "
+          f"(errors {hs_err:.1e}, {dz_err:.1e} m); flow surface z + h + hs stays at the lake level (error {surf:.1e} m)")
+    print(("  ok   " if ok2 else "  FAIL ") + f"max |Fs1/Fs0 - 1| = {worst:.1e} (limit {TOL_FS:.0e}) over {n} cells "
+          f"({nring} in or next to the mobilized cells; sentinel mismatches {nsent})")
+    return (0 if ok1 else 1) + (0 if ok2 else 1)
+
+
 def ledgers(case):
     """固体の台帳 Σhs + (1 − λ) Σ(z − z0) と、水の台帳 Σh + Σhg − Σhg0(湖は初期の水も引く)。"""
     c = mf.CASES[case]
@@ -273,6 +305,8 @@ def main():
         nfail = check_fs(sys.argv[2])
     elif mode == "pair":
         nfail = check_pair(sys.argv[2], sys.argv[3], sys.argv[4])
+    elif mode == "twin":
+        nfail = check_twin(sys.argv[2], sys.argv[3])
     elif mode == "dmax1":
         nfail = check_dmax1(sys.argv[2])
     elif mode == "wet":
@@ -282,7 +316,7 @@ def main():
     elif mode == "ledger":
         nfail = check_ledger(sys.argv[2])
     else:
-        sys.exit("usage: Check_slide_fs.py fs|pair|dmax1|wet|noflow|ledger ...")
+        sys.exit("usage: Check_slide_fs.py fs|pair|twin|dmax1|wet|noflow|ledger ...")
     print(f"=== slide {mode} check {'PASS' if nfail == 0 else f'FAIL ({nfail})'} ===")
     return 1 if nfail else 0
 

@@ -50,7 +50,7 @@ low-speed consolidation.
 | 2 fslide | `param_fs.txt` | Thin soil layer sd₀ = 0.5 m, sy = 0.3. Rainfall → Green-Ampt infiltration → `f_slide = 1`. Hazard outputs Fs9999, D9999, Dt9999, F9999 and Hs enabled | dt 0.05 s, 400 s |
 | 3 fsdiag | `param_fs2.txt` | Same as configuration 2 with `f_slide = 2` (judge only) | Same as above |
 | 4 wet | `param_wet.txt` | Configuration 1 + the groundwater computation (Green-Ampt; infiltration capacity nearly 0) + `gw_sat0 = 1` (saturated soil layer) + `f_dbwet = 3` (sy0 = 0.2, λ = 0.4, w_r = 0.2). `Run.sh` also runs the same settings with `gw_sat0 = 0` (dry soil layer; the settings file `param_wetdry.txt` is made from `param_wet.txt`) | dt 0.02 s, 10 s |
-| 5 seep | `p_fs_u0`, `_u1`, `p_fs_g0`, `_g1`, `p_fs_l0`, `_l1`, `p_fs_lq1`, `_le1`, `p_fs_gdyn` | `f_slide_seep` 0 and 1 (below). Judge only (`f_slide = 2`). `p_fs_gdyn` mobilizes | dt 0.05 s, 1 s (gdyn 5 s) |
+| 5 seep | `p_fs_u0`, `_u1`, `p_fs_g0`, `_g1`, `p_fs_l0`, `_l1`, `p_fs_lq1`, `_le1`, `p_fs_m1`, `_m0`, `p_fs_gdyn` | `f_slide_seep` 0 and 1 (below). Judge only (`f_slide = 2`). `p_fs_gdyn` mobilizes | dt 0.05 s, 1 s (gdyn 5 s) |
 | 6 dmax | `p_fs_d2`, `p_fs_d1` | `slide_dmax = 0.5` m. Soil depth 2 m, saturation 0.9. `_d2` is judge only, `_d1` mobilizes | 1 s |
 | 7 wet | `p_fs_w1`, `_w0`, `_w2` | `f_slide_wet` 1 and 0 (φs = 20°; Fs < 1 even when dry), and 1 with φs = 25° | 1 s |
 | 8 noflow | `p_fs_n1`, `_n0` | `f_slide_noflow` 1 and 0. `_d1` of configuration 6 with two bed updates | 2 s |
@@ -80,6 +80,14 @@ safety factor can be compared directly with the value of the formula.
     `_le1` has κ = 0.999 and Fs = 1.193 (0.1 % below the value for still water). An implementation
     that joins the surface water only when the capacity is reached (two-valued) drops both to the
     value of the conventional formula, 0.578.
+  - `_m1`, `_m0`: the head of cells covered by moving sediment. `_m1` instantly mobilizes 5 × 6 cells
+    under the lake of `_l1` to a depth of 0.5 m (`fn_dbinit`, t = 1 s; with `f_dbwet = 3` all the water
+    of the failed layer goes into the flow). The mobilized cells are lowered by 0.5 m and carry 0.2 m
+    of water and 0.3 m of sediment, so the flow surface z + h + hs stays at the lake level. `_m0` is
+    the same shape excavated from the start and filled with clear water. With the total head read at
+    the flow surface (H = (z − sd) + hw + κ (h + hs)), J = 0 under the lake in both, and the two
+    safety factors are the same. An implementation that reads only the water depth h lowers the head
+    of the mobilized cells by hs = 0.3 m, and the safety factor next to them differs by up to 45 %.
   - `_gdyn`: `_g1` with mobilization (`f_slide = 1`) for 5 s. Checks the conservation of solids and
     water, and the agreement under MPI.
 - **Configuration 6** (`slide_dmax`). Only the top d = 0.5 m is judged. The saturated thickness within
@@ -108,7 +116,7 @@ safety factor can be compared directly with the value of the formula.
 
 ```bash
 make
-./Run.sh          # generate dbinit → run the 8 configurations (configuration 4 is run saturated and dry; configurations 5 to 8 are 16 cases) and Check. PASS when all PASS (about 10 seconds)
+./Run.sh          # generate dbinit → run the 8 configurations (configuration 4 is run saturated and dry; configurations 5 to 8 are 18 cases) and Check. PASS when all PASS (about 10 seconds)
 ./Run_MPI.sh 4    # MPI. state.dat and the output files (Fs9999, Fs0001 etc.) are byte-identical to the serial run
 python3 Fig.py en # en/figs/release.png, en/figs/fslide.png
 ```
@@ -156,6 +164,7 @@ judge-only mode).
 | 5 `_l1` | same | land 0.5782, lake 1.1941 (= tanφs/tanθ) | relative 5e-9. Under the lake, 2.07 times `_l0` | PASS |
 | 5 `_lq1` | same | land 0.5783, lake 0.9431 (κ = 0.75, J = 0.25 tanθ) | relative 3e-8 | PASS |
 | 5 `_le1` | same | land 0.5782, lake 1.1928 (κ = 0.999) | relative 4e-8. Under the lake, 0.11 % below `_l1` | PASS |
+| 5 `_m1`, `_m0` | safety factor (1064 cells, 56 of them in or next to the mobilized cells) | the two cases are the same | the outputs are identical (relative 0). The flow surface is within 4e-15 m of the lake level | PASS |
 | 5 `_gdyn` | ledgers of solids and water | 0 | solids 2e-12, water 1e-13 (1167 mobilizations) | PASS |
 | 6 `_d2` | safety factor | 0.8246 (d = 0.5 m, saturated thickness 0.3 m) | relative 2e-9 | PASS |
 | 6 `_d1` | lowering of the elevation, soil depth, hs, hg, h | 0.5, 1.5, 0.3, 0.45, 0.09 m | 4e-15 m or less. Ledgers: solids 0, water 7e-13 | PASS |
@@ -195,6 +204,10 @@ judge-only mode).
   of a cell under a lake falls short of its capacity by about 10⁻⁶ of it in every step. A computation
   with a ponded reach needs the safety factor to be unaffected by a deficit of that size (`_le1`)
   (developer.md §28.20).
+- `_m1` and `_m0` of configuration 5 check that the head of a cell covered by moving sediment is read
+  at the flow surface. If only the water depth is read, the head of a mobilized cell drops, the
+  gradient of the total head in the neighbouring cells grows, and on a fine grid mobilization
+  propagates as a chain across a saturated slope under a lake (developer.md §28.21).
 - The edge cells of configurations 7 and 8 have a steepest slope different from the interior (the
   neighbours outside the domain are excluded), so they are judged differently from the interior. Even
   in `_w1` of configuration 7, the edge cells whose dry safety factor is 1 or more (68 cells) are

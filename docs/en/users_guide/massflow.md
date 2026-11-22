@@ -515,11 +515,13 @@ formula above; developer.md §28.19).
              {\cos^2\theta\,\{(\gamma_t d - \gamma_w h_w)\tan\theta + \gamma_w h_w J\}}
   ```
 
-  $`J`$ is the steepest-descent gradient of the total head $`H = (z - s_d) + h_w + \kappa h`$ (per
-  horizontal distance; the same operation as the steepest slope of the topography). $`\kappa`$ is
-  the connection between the surface water and the saturated zone: 1 in cells whose soil layer is
-  saturated up to the ground surface (the depth of the surface water $`h`$ is added as it is) and 0
-  in cells whose saturated zone does not reach the surface. Between 99.9 % and 100 % of the storage
+  $`J`$ is the steepest-descent gradient of the total head $`H = (z - s_d) + h_w + \kappa\,(h + h_s)`$
+  (per horizontal distance; the same operation as the steepest slope of the topography).
+  $`h + h_s`$ is the flow depth at the surface (water and moving sediment): in a cell covered by
+  moving sediment, too, the surface of the water that fills the pores is taken to be the flow
+  surface $`z + h + h_s`$. $`\kappa`$ is the connection between the water at the surface and the
+  saturated zone: 1 in cells whose soil layer is saturated up to the ground surface (the flow depth
+  is added as it is) and 0 in cells whose saturated zone does not reach the surface. Between 99.9 % and 100 % of the storage
   capacity it rises continuously from 0 to 1 (our own regularization: with a two-valued connection
   that only asks whether the capacity has been reached, the head of a cell under a lake drops by the
   water depth every time its storage falls marginally short, which creates a large $`J`$ towards
@@ -554,6 +556,15 @@ formula above; developer.md §28.19).
   soil layer). The default (0) is the whole layer. This avoids a thick deposit failing down to the
   bedrock at once. The remaining layer is judged again at the next update, so it fails from the top
   in turn while it stays saturated.
+  - **Do not make it large relative to the grid spacing.** Fluidising one cell to a depth
+    $`d_{\max}`$ leaves a step of gradient $`d_{\max}/\Delta x`$ towards its neighbours. A saturated
+    neighbouring cell fails when this step and the gradient of the total head $`J`$ give
+    $`\gamma'\,(d_{\max}/\Delta x + \tan\theta) + \gamma_w J > \gamma'\tan\phi_s`$
+    ($`\gamma' = \gamma_t - \gamma_w`$), and the fluidisation then propagates as a chain. In a
+    computation of a saturated dam 13 m high being cut by overtopping ($`\phi_s = 35^\circ`$),
+    $`d_{\max}/\Delta x = 0.3`$ did not propagate, while 0.6 propagated across the lake-side face of
+    the dam and halved the peak of the breach. About 0.3 times the grid spacing is a practical upper
+    limit.
 
 **Matching the failure condition and the flow condition.** A saturated soil layer ($`h_w = s_d`$,
 $`c' = 0`$) fails when $`\tan\theta > (\gamma'/\gamma_t)\tan\phi_s`$ ($`\gamma' = \gamma_t - \gamma_w`$).

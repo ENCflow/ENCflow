@@ -81,6 +81,7 @@ done
 python3 "$sdir/Check_slide_fs.py" pair fs_u1 fs_u0 same || rc=1
 python3 "$sdir/Check_slide_fs.py" pair fs_g1 fs_g0 differ || rc=1
 python3 "$sdir/Check_slide_fs.py" pair fs_l1 fs_l0 differ || rc=1
+python3 "$sdir/Check_slide_fs.py" twin fs_m1 fs_m0 || rc=1
 python3 "$sdir/Check_slide_fs.py" ledger fs_gdyn || rc=1
 python3 "$sdir/Check_slide_fs.py" dmax1 fs_d1 || rc=1
 python3 "$sdir/Check_slide_fs.py" wet fs_w1 fs_w0 fs_w2 || rc=1
