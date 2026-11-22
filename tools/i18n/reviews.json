@@ -95,9 +95,9 @@
     {
       "source": "docs/policy.md",
       "target": "docs/en/policy.md",
-      "source_sha256": "28b07b5b216d77089dd340efd5904ce38cec18e2bb55d50858171e984d3a8830",
-      "target_sha256": "ba10ed3bb353e816f27f301da4eacd9a0b0e5f644df5529c5bae0d51e6f498ab",
-      "reviewer": "Claude (Claude Code session; new full mirror: the project policy moved out of developer.md §0 into its own document. The body is the former §0 and its former English partial mirror, unchanged; the new title and the note on the former location and on bare § numbers compared in both files)",
+      "source_sha256": "b2fda5f38be63c5ca76444487924a8582a2744f665d1be489599e40d8f3b2bef",
+      "target_sha256": "2f2caf5cf08d762b26b973d9c6eff1fc782b612fe87f00b946d4974df1126fe4",
+      "reviewer": "Claude (Claude Code session; new exception under item 6 agreed 2026-11-22 (mixed-size bed load: grain-size classes with one exchange layer and one substrate layer, conditions (1)-(5)) added to both files; the added paragraph compared in both files, the rest unchanged)",
       "method": "assistant",
       "reviewed_on": "2026-11-22"
     },
