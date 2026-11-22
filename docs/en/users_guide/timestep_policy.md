@@ -18,8 +18,8 @@ fills the gap between them: the design decisions and their reasons.
 ## 1. What ENCflow values
 
 ENCflow puts weight on combining a variety of surface processes on the same
-computational base and experimenting with them casually (the basic policy
-in [developer.md §0](../../developer.md), in Japanese). It therefore does
+computational base and experimenting with them casually (the
+[project policy](../policy.md)). It therefore does
 not push numerical accuracy to the limit in every computation; instead it
 **confirms the accuracy the purpose needs and then balances it against
 computing speed, clarity of the settings, and ease of adding new

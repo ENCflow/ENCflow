@@ -18,7 +18,7 @@ change of waves by currents), `src/m_geomorph.f90`, `src/m_geomorph_fluvial.f90`
 `src/m_geomorph_suspend.f90` (stirring and transport), `src/m_geomorph_swash.f90` (swash-zone
 transport) and `src/m_swflow_enc*.f90` (force, wave–current friction, lateral Neumann boundaries,
 transport of suspended load). The history of the design and the comparison of alternatives are in
-docs/wavefield_plan.md, and the exception to the policy (developer.md §0-5) and the record of
+docs/wavefield_plan.md, and the exception to the policy (policy 5 of the [project policy](../policy.md)) and the record of
 decisions, implementation and verification are in developer.md §90 (in Japanese). Development was
 done in stages, so the record is written with the stage names (stage W1 = wave field, W2 = action
 on the flow, W3 = change of waves by currents, W4 and W5 = action on sediment; swash-zone transport

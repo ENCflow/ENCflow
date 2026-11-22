@@ -47,7 +47,7 @@ same in-step transport as for suspended sediment, and the exchange with
 the bed (§3) enters at the landform update. This is the level of
 Kanako[^nakatani08] and Morpho2DH[^morpho2dh]: shallow water equations
 plus a granular resistance law plus an erosion/deposition law, without a
-separate sediment layer (within the scope of developer.md §0).
+separate sediment layer (within the scope of the [project policy](../policy.md)).
 
 ![Single-layer mixture and its exchange with the bed: state of one cell, bookkeeping of the exchange, speed toward the equilibrium](../../figs/massflow_mixture_en.png)
 

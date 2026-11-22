@@ -52,9 +52,9 @@ Issues and Discussions.
 
 Start with [docs/architecture.md](docs/architecture.md) (the one-page
 map; currently in Japanese), and see
-[docs/developer.md](docs/developer.md) for design decisions and
-conventions (in Japanese; the project policy §0 is in English in
-[docs/en/developer.md](docs/en/developer.md)). The verification discipline for changes (regression
+[docs/developer.md](docs/developer.md) (the index) for design decisions and
+conventions (in Japanese), and [docs/en/policy.md](docs/en/policy.md) for the
+project policy. The verification discipline for changes (regression
 baselines, bit reproducibility) is summarized in
 [CLAUDE.md](CLAUDE.md). Local verification runs through each
 `test/<case>/Run.sh` (automatic comparison against the baselines).

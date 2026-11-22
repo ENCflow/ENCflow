@@ -23,7 +23,7 @@ site before citing.
 
 | Model | Developer | Cost | Code | Notes |
 |---|---|---|---|---|
-| **ENCflow** | (this project) | Free | Fully open | Basic policy is developer.md Sec. 0. Ships agent-oriented groundwork (Sec. 3). Implements CSDMS BMI 2.0 (core stays dependency-free) |
+| **ENCflow** | (this project) | Free | Fully open | Basic policy is policy.md. Ships agent-oriented groundwork (Sec. 3). Implements CSDMS BMI 2.0 (core stays dependency-free) |
 | RRI | ICHARM/PWRI | Free | Open (own terms) | Copyright-notice obligation; commercial use by permission. iRIC-version solver also published |
 | RSR (an option of RRI on iRIC) | ICHARM/PWRI | Free | Open (same own terms as RRI) | Basin sediment runoff model that uses the RRI hydraulics to solve the supply of sediment and driftwood by landslides, debris flows and hillslope erosion, and their transport in unit channels between confluences |
 | iRIC (Nays2DFlood, Nays2DH etc.) | iRIC organization | Free | Main solvers open | Platform of GUI + solver suite |
@@ -248,7 +248,7 @@ user's guide chapters, not in this table.
   fast, coastal lowlands (SFINCS)" and "multi-process from mountains to
   coast (ENCflow)". The quadtree, subgrid topography and GPU of SFINCS are
   elements ENCflow does not have; how far to adopt them under the
-  raster-purity policy (developer.md Sec. 0) is a medium-term question
+  raster-purity policy (policy 2 in policy.md) is a medium-term question
   (nesting is substituted by static nesting, as in Sec. 2).
 - **River-mouth deltas (versus DeltaRCM)**: DeltaRCM is a reduced-complexity
   model that routes water by random walks and places sand and mud by rules; it
@@ -331,8 +331,8 @@ user's guide chapters, not in this table.
   User-facing documentation now has a full Japanese-English mirror
   (docs/en/, the en/ of tutorials, test and examples, and more); the
   remaining English gap is only in the developer documentation
-  (developer.md etc. are Japanese-only, except for an English partial
-  mirror of the basic policy in Sec. 0).
+  (developer.md etc. are Japanese-only; the basic policy, policy.md,
+  has an English mirror).
 - **AI-agent orientation**: on top of the fully
   text-based input and output (no GUI dependency), ENCflow ships a
   documentation system that lets "phenomenon -> features -> parameters"
@@ -368,7 +368,7 @@ user's guide chapters, not in this table.
   on the same state) and with AI-agent operation (the uniform
   structure lets a machine guide the entry into an unfamiliar
   process). The statement of purpose is codified at the head of
-  developer.md Sec. 0. Note this does not mean "correct results
+  policy.md. Note this does not mean "correct results
   without expertise" — what is lowered is the barrier to trying, not
   the expertise barrier, and user-facing wording keeps to this line.
 - **Contrast with two other routes to
@@ -378,7 +378,7 @@ user's guide chapters, not in this table.
   in physical fidelity, but premised on HPC and a dependency stack
   (Hypre, HDF5, ...), and without structures, sediment, water
   quality, or the volcanic family. ENCflow's approximate route with
-  an abstracted vertical (developer.md Sec. 0, policy 5) coexists by
+  an abstracted vertical (policy 5 in policy.md) coexists by
   its laptop-first accessibility and its breadth of processes (as an
   exception, only for Tani's VZ runoff model, which deals with the
   response of vertical unsaturated infiltration itself, the Richards

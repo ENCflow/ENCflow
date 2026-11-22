@@ -80,11 +80,11 @@ utils/<tool>/README.md                → utils/<tool>/en/README.md
 しない)。
 
 - `docs/` の利用者向け文書(users_guide、install、tutorial、comparison、ai_guide、
-  windows、本書)は全件を対象にする。開発者向け文書(developer.md、handoff、
-  `*_plan.md`、`*_design.md`、channel_model.md、architecture.md、icon/)は対象外
-  (§34.2。国際化の実態を見て再判断)。例外として developer.md の §0(基本方針)
-  だけは `docs/en/developer.md` に部分ミラーを置く(2026-10-24。冒頭に範囲を明示し、
-  記録は `--section '## 0.'` で節単位にする。§6)。
+  windows、policy、本書)は全件を対象にする。開発者向け文書(developer.md と
+  developer/、handoff.md と handoff/、`*_plan.md`、`*_design.md`、channel_model.md、architecture.md、
+  icon/)は対象外(§34.2。国際化の実態を見て再判断)。例外として目次 developer.md の
+  §0(基本方針 policy.md への案内)だけは `docs/en/developer.md` に部分ミラーを置く
+  (旧 URL の受け皿。冒頭に範囲を明示し、記録は `--section '## 0.'` で節単位にする。§6)。
 - `tutorials/` は説明と注釈付き入力をセットで扱い、全件を対象にする。
 - `test/` のケース説明(README)は順次すべてを対象とする。パラメータのコメント
   英訳は、理解に役立つものから任意で整備する。README に埋め込む図は、図化
@@ -93,7 +93,9 @@ utils/<tool>/README.md                → utils/<tool>/en/README.md
   ラベルと出力先だけ。引数なしの動作は従来どおり)。
 - `examples/List_samples/` は注釈自体がリファレンスなので全件を対象にする。
 - `examples/<case>/` の README(現象別例題)も全件を対象にする(2026-10-23 に
-  §34.2 を改定)。param・図化スクリプト・図は共有し、コメント英訳は任意。
+  §34.2 を改定)。param と図化スクリプトは共有し、コメント英訳は任意。言語ラベルを含む図は、test と同じく
+  図化スクリプトの `en` 引数で英語ラベル版を `en/figs/` に描き、英語版 README はそれを参照する(2026-10-25。
+  developer.md §34.5)。文字を含まない図は共有する。
   `examples/benchmark/<case>/` の README も同じ扱いで、訳は各ケースの `en/` に置く。
 
 ### 表示用資産
@@ -166,8 +168,8 @@ namelist 名、変数名、数値、文字列値、論理値、パス、代入�
 更新できない翻訳は未確認・未更新のまま明示する。ハッシュだけを更新して完了扱いにしない。
 
 `tools/i18n/reviews.json` に原文・訳文の SHA-256、確認者、確認方法(`human` /
-`assistant`)、日付を記録する。正本の一節だけを訳した**部分ミラー**(§3 の developer.md
-§0 が唯一の例)は `record --section '<見出しの先頭>'` で記録し、原文側のハッシュと
+`assistant`)、日付を記録する。正本の一節だけを訳した**部分ミラー**(§3 の目次 developer.md
+の §0 が唯一の例)は `record --section '<見出しの先頭>'` で記録し、原文側のハッシュと
 構成の照合はその節(同じか上位の見出しの直前まで)に限る。訳文の冒頭に範囲を明示する。テキストは UTF-8、改行 CRLF を LF に正規化して
 ハッシュ化し、画像等のバイナリはバイト列をハッシュ化する。AI の確認を人間の確認と
 して記録しない。

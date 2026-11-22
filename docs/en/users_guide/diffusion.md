@@ -45,7 +45,7 @@ the term is off by default (when off no array is allocated and nothing is
 computed, so the results are bitwise identical to before).
 
 ENCflow's policy limits the horizontal processes to "the shallow water
-equations plus one-equation diffusion" (developer.md §0). This term is an
+equations plus one-equation diffusion" (policy 5 of the [project policy](../policy.md)). This term is an
 additive option superposed independently of the advection and pressure
 terms; `f_diffusion_term` alone enables it.
 

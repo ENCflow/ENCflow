@@ -538,8 +538,8 @@ range is not easy.
 ## 9. ENCflow uses the dynamic wave by default
 
 ENCflow aims to solve every flow of water on the land surface seamlessly
-in one model (the basic policy,
-[developer.md section 0](../developer.md)). The thin flow on mountain
+in one model (the
+[project policy](../policy.md)). The thin flow on mountain
 slopes, the supercritical flow of steep channels, the ponding of
 floodplains and the run-up of tsunamis appear at the same time in the
 same computation. Which approximation holds changes with place and time,

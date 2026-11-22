@@ -2,8 +2,10 @@
 
 status: Phase 0〜3 実装済み(読み書きとも実用範囲は完成。2026-08-01)。
 座標管理は §10、フェーズごとの実績と決定事項は §8・§9。
-残るのは Phase 4(BigTIFF 等。必要になってから)と、検証残
-(handoff.md 項9)。決定事項の developer.md への転記は検証完了後。
+残るのは Phase 4(BigTIFF 等。必要になってから)。検証は完了した(QGIS での目視は 2026-08-01、
+ArcGIS での目視と、出力の bil+hdr の目視は 2026-11-22 に利用者が確かめた。§8・§10)。
+決定事項と検証の記録は本書(§8〜§10)を正本とし、developer.md には転記しない。開発記録の目次
+(developer.md のテーマ別の索引の「入力と前処理」)から本書を案内する(2026-11-22。利用者の決定)。
 
 ## 0. 結論(要約)
 
@@ -282,7 +284,7 @@ CRS は namelist の `epsg`(導入済み。既定 0=不明)で与える。
   (単精度含む)、gdalinfo が EPSG:2451/6668/6677 を正しく解決、
   出力 tif の画素が bil と全ファイルビット一致(chichibu 118 ファイル)、
   txt ケース無効時ビット一致、mode=3 の従来互換。
-  QGIS / ArcGIS での目視確認のみ残(handoff 参照)。
+  QGIS での目視は 2026-08-01、ArcGIS での目視は 2026-11-22(利用者)に確認済み。
 - **Phase 4(必要になってから)**: BigTIFF 読み(全国 100m 級で必須化
   する見込み)、precip 逐次読みの multi-IFD 対応、Deflate/LZW 書き、
   BigTIFF 書き。
@@ -365,5 +367,9 @@ m_output(bil 書き出し 3 箇所に hdr 併記)、list_geoinfo(epsg)、
 m_fileio(bil 読みの型対応。hdr 解析は m_georef の georef_parse_hdr)。
 hdr の探索・読み込みは全ランクが冗長に読む(他の入力読みと同じ方式)ため
 collective の追加はない。
+
+検証(handoff 6 から移した): gfortran 逐次で、txt 入力の全出力ビット一致・bil+hdr 入力・経緯度格子の
+扱い・出力 hdr の往復を確かめた。出力の .hdr+.bil を GIS で開いた目視は、2026-11-22 に利用者が確かめた
+(GeoTIFF の出力の目視は §8)。ifx・PREC=single での確認は handoff 0c。
 
 以上。

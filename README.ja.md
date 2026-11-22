@@ -183,8 +183,8 @@ ENCflow は、深さ平均・密度一定の平面2次元の世界に意図的�
   解析解や保存則のある挙動は、基準結果との回帰とは別に、合否を自分で
   判定する検定スクリプトで確かめます。「なぜこの結果になるのか」を
   第三者が遡れる状態を保つことを、全ソース公開と並ぶ基本方針に
-  しています([docs/developer.md](docs/developer.md) §0。英訳は
-  [docs/en/developer.md](docs/en/developer.md))。
+  しています([docs/policy.md](docs/policy.md)。英訳は
+  [docs/en/policy.md](docs/en/policy.md))。
 - **プロジェクトとしての持続性** — 設計判断の理由と経緯
   ([docs/developer.md](docs/developer.md))から全体像
   ([docs/architecture.md](docs/architecture.md))までが文書化され、
@@ -224,7 +224,8 @@ OS は Linux / macOS / WSL を想定しています。詳細は
 
 開発に参加したい方・中身を知りたい方は
 [docs/architecture.md](docs/architecture.md) で全体像の案内図を、
-[docs/developer.md](docs/developer.md) で設計思想と規約の正本を、
+[docs/policy.md](docs/policy.md) で基本方針を、
+[docs/developer.md](docs/developer.md) で設計判断と規約の記録の目次を、
 [docs/comparison.md](docs/comparison.md) で他モデルとの比較を
 参照してください。
 

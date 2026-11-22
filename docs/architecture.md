@@ -1,10 +1,11 @@
 # ENCflow アーキテクチャの地図 (architecture.md)
 
 初めてこのコードベースに触れる開発者(人間・AI とも)が、最初の
-1 時間で全体像をつかむための案内図です。**設計判断の理由と経緯の
-正本は developer.md**、**変更時の検証規律は CLAUDE.md** にあり、
+1 時間で全体像をつかむための案内図です。**基本方針は policy.md**、
+**設計判断の理由と経緯の正本は開発記録**(目次 developer.md、本文は
+docs/developer/NNN.md)、**変更時の検証規律は CLAUDE.md** にあり、
 この文書は「何がどこにあり、どの順で動くか」だけを一枚にまとめます。
-記述が食い違う場合はコードと developer.md が正です。
+記述が食い違う場合はコードと開発記録が正です。
 
 ## 1. レイヤ構造(どのモジュールがどの層か)
 
@@ -332,9 +333,10 @@ boundary_h と m_gwflow_pump が同じ記録場の列 6 へ積む(wq.csv の out
 
 | 知りたいこと | 見る場所 |
 |---|---|
-| 設計判断の理由・経緯・実バグ | docs/developer.md(§0 方針 13 箇条から) |
+| 基本方針(開発目的と 13 箇条) | docs/policy.md |
+| 設計判断の理由・経緯・実バグ | docs/developer.md(目次)→ docs/developer/NNN.md(§N の本文) |
 | 変更時の検証手順・禁止事項 | CLAUDE.md |
-| 未完了の作業・中期の道標 | docs/handoff.md |
+| 未完了の作業・中期の道標 | docs/handoff.md(目次)→ docs/handoff/<番号>.md |
 | パラメータの意味(646 項目) | docs/users_guide/params_index.md と各章 |
 | namelist の書き方の見本 | examples/List_samples/ |
 | 使い方(利用者視点) | docs/users_guide.md・tutorials/・users_guide/usecases.md(現象→機能) |
