@@ -11,7 +11,7 @@
 実装は `src/m_wavefield.f90`(波浪場・流れへの作用・流れによる波の変化)、`src/m_geomorph.f90`・
 `src/m_geomorph_fluvial.f90`・`src/m_geomorph_suspend.f90`(攪拌と輸送)、`src/m_geomorph_swash.f90`
 (遡上域の輸送)、`src/m_swflow_enc*.f90`(外力・波・流れの摩擦・側方 Neumann の境界・浮遊砂の輸送)
-です。設計の経緯と代替案の比較は docs/wavefield_plan.md、方針の例外(developer.md §0-5)と決定・
+です。設計の経緯と代替案の比較は docs/wavefield_plan.md、方針の例外([基本方針](../policy.md)の方針 5)と決定・
 実装・検証の記録は developer.md §90 にあります。開発は段階に分けて行ったので、記録は段の名前で
 書かれています(段 W1 = 波浪場、W2 = 流れへの作用、W3 = 流れによる波の変化、W4・W5 = 土砂への作用。
 遡上域の輸送は §90.21)。

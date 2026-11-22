@@ -4,20 +4,20 @@
     {
       "source": "CONTRIBUTING.md",
       "target": "CONTRIBUTING.en.md",
-      "source_sha256": "83f58bbca3217008a0932ddb76ee0ba973738d0b5d20c82f7dddc411d7e5b503",
-      "target_sha256": "99d34b4c6f90d1b19a5eeaac141f53a1c7727836678e8343b00ce8e424b89b24",
-      "reviewer": "Claude (Claude Code session; full-text content and lexical review, no model execution)",
+      "source_sha256": "f48371f637300c70fb0c85a066c2996b619ca77aa2e8df035e3fe35052bdcbd3",
+      "target_sha256": "15c6516fd97c7c3080188fcdb3cd63468004598d69d17e21b0f148823ac2276d",
+      "reviewer": "Claude (Claude Code session; the policy link changed to docs/policy.md / docs/en/policy.md and developer.md described as the index; both files compared)",
       "method": "assistant",
-      "reviewed_on": "2026-10-24"
+      "reviewed_on": "2026-11-22"
     },
     {
       "source": "README.ja.md",
       "target": "README.md",
-      "source_sha256": "dbf2f89dfa8a0c2ad4521cdc2febe42f631d20b517c0e928b56bdd3e7f62b461",
-      "target_sha256": "07b33caf64ee2ce50b9dcec30f3ca201822bd02906849a23d1471284300b0002",
-      "reviewer": "Claude (Claude Code session; researchers item: user's wording (all source open, add one's own equations or processes with the help of AI) in both versions; read side by side)",
+      "source_sha256": "b1d27971c2cf3db33d7c98e72ff6382f3b49276ae58f06eeaa8a29f472a4265d",
+      "target_sha256": "cabb20ec0e561b48b9b424b0c3445c5ee428e1983e856d0883e1d3886776c47a",
+      "reviewer": "Claude (Claude Code session; links to the project policy changed from developer.md §0 and its partial mirror to docs/policy.md / docs/en/policy.md, and developer.md described as the index of the records; both files compared)",
       "method": "assistant",
-      "reviewed_on": "2026-11-10"
+      "reviewed_on": "2026-11-22"
     },
     {
       "source": "TRADEMARKS.md",
@@ -58,20 +58,20 @@
     {
       "source": "docs/comparison.md",
       "target": "docs/en/comparison.md",
-      "source_sha256": "334cba1438f609b3864725eb2dfc28f6f4d624d8bc883939fcc070c12967ae20",
-      "target_sha256": "145020b867fc0dc692d92d1943d7b6adf13de26b8740b38f6c3607183506bf35",
-      "reviewer": "Claude (Claude Code session; reference to the tutorial supplement (result 3) changed to examples/chichibu_flood (treatment of the advection term); both sides compared)",
+      "source_sha256": "2a0dc5ef411ac441655084f2d6d406f19be1ec514bf09f32cceeab972efb0325",
+      "target_sha256": "0918f7bdd6a459316eac524204408b72046f27476369a4f44b4be4cb3d10ee23",
+      "reviewer": "Claude (Claude Code session; five references to developer.md §0 changed to policy.md (policies 2 and 5, the statement of purpose, the English gap note); both files compared)",
       "method": "assistant",
-      "reviewed_on": "2026-11-21"
+      "reviewed_on": "2026-11-22"
     },
     {
       "source": "docs/developer.md",
       "target": "docs/en/developer.md",
-      "source_sha256": "d45961e94bcc07c3bb97c773c7d1d31b020557e5623b7b6a42f1c89737635d05",
-      "target_sha256": "b51acfa530be8df05618d28d6edb77f7bd3fcaaf266647b4c45c1c3a353019af",
-      "reviewer": "Claude (Claude Code session; section-scoped review of §0 after adding the practice 'state the limits' to policy 13 in both files, 2026-11-03)",
+      "source_sha256": "d898612b8e72f1de8f6f72b2ee63dc28596fddd5309fc2f9d5c2f1ff8a66564e",
+      "target_sha256": "f09b608807b4e4590f09d7ad0b1b623512ebdec13b7505d5a51c91997ac7d71e",
+      "reviewer": "Claude (Claude Code session; section-scoped review of §0, now a pointer to docs/policy.md after developer.md became the index of the per-section files; both files compared)",
       "method": "assistant",
-      "reviewed_on": "2026-11-03",
+      "reviewed_on": "2026-11-22",
       "source_section": "## 0."
     },
     {
@@ -86,11 +86,20 @@
     {
       "source": "docs/multilingual.md",
       "target": "docs/en/multilingual.md",
-      "source_sha256": "d1c0d073459b6fb085597a53007ef1336dcf67cebcb9e3288faba71f391931c7",
-      "target_sha256": "e3de9f328c2ede8c6aa0a1f966369b2ecd0e37e28d0104dcbdda93e9ba39af11",
-      "reviewer": "Claude (Claude Code session; wrote and read both versions side by side: structure, numbers, tables, links and captions)",
+      "source_sha256": "09a008ebf44650e7b46869d78aa5f536a69cc4fbaa2645682e94e867c131904b",
+      "target_sha256": "618baf4287bf0cd79920121772eb323c48e735c61da3cbe40b3f88fc2d25cdd4",
+      "reviewer": "Claude (Claude Code session; scope: policy.md in scope, developer/ out of scope, the partial mirror is now §0 of the index; the English §6 gained the partial-mirror sentence that the Japanese master already had; both files compared)",
       "method": "assistant",
-      "reviewed_on": "2026-11-10"
+      "reviewed_on": "2026-11-22"
+    },
+    {
+      "source": "docs/policy.md",
+      "target": "docs/en/policy.md",
+      "source_sha256": "28b07b5b216d77089dd340efd5904ce38cec18e2bb55d50858171e984d3a8830",
+      "target_sha256": "ba10ed3bb353e816f27f301da4eacd9a0b0e5f644df5529c5bae0d51e6f498ab",
+      "reviewer": "Claude (Claude Code session; new full mirror: the project policy moved out of developer.md §0 into its own document. The body is the former §0 and its former English partial mirror, unchanged; the new title and the note on the former location and on bare § numbers compared in both files)",
+      "method": "assistant",
+      "reviewed_on": "2026-11-22"
     },
     {
       "source": "docs/tutorial.md",
@@ -230,11 +239,11 @@
     {
       "source": "docs/users_guide/diffusion.md",
       "target": "docs/en/users_guide/diffusion.md",
-      "source_sha256": "977f8d2ae7efe9fb533fa583cea7d24a2cdd426745433eb49be228acb6a172e8",
-      "target_sha256": "c96f894b7ba6a89640a30491b535635df4645cc701fb69291da290584e579449",
-      "reviewer": "Claude (Claude Code session; reviewed the added link to the new page on numerical diffusion by diagonal-edge fluxes in the Japanese source against the English mirror, 2026-11-05)",
+      "source_sha256": "60ebebb3d1e943b72891930a2eef806ecb8168af4c27516e39b444702ffed4db",
+      "target_sha256": "8d234645a109421ccccc8b33efbab7b63a7e8cc032f05d895ccc18f9c3639039",
+      "reviewer": "Claude (Claude Code session; the reference to developer.md §0 changed to a link to the project policy docs/policy.md (English: docs/en/policy.md); both files compared)",
       "method": "assistant",
-      "reviewed_on": "2026-11-05"
+      "reviewed_on": "2026-11-22"
     },
     {
       "source": "docs/users_guide/driftwood.md",
@@ -383,11 +392,11 @@
     {
       "source": "docs/users_guide/massflow.md",
       "target": "docs/en/users_guide/massflow.md",
-      "source_sha256": "93aa80dd1b471bb796e3c5885553c4fc7f7802457e4eb9d10a1f2a84bbf4052f",
-      "target_sha256": "868ba2a4a9954c29233f43f4625eb956a9119c3f9e776f240d578e6ae3ab16f5",
-      "reviewer": "Claude (Claude Code session; added two figures (single-layer mixture and its exchange with the bed; behaviour of the resistance laws) with caption paragraphs, a pointer in the intro and in §3, and compared the Japanese source with the English mirror for the added text; the English figure versions were drawn by the same scripts with translated labels; the rest of the pair is unchanged since the previous record)",
+      "source_sha256": "9cec64eb25d325c7fd80d7fbfa786353a63c5fa3481a72f64c45d435cc4b43aa",
+      "target_sha256": "37c7d802da5be1e11b3414da35d079f5cf3a446223503c3b9bb94d657e664a94",
+      "reviewer": "Claude (Claude Code session; the reference to developer.md §0 changed to a link to the project policy docs/policy.md (English: docs/en/policy.md); both files compared)",
       "method": "assistant",
-      "reviewed_on": "2026-11-08"
+      "reviewed_on": "2026-11-22"
     },
     {
       "source": "docs/users_guide/nest.md",
@@ -491,11 +500,11 @@
     {
       "source": "docs/users_guide/shallow_water.md",
       "target": "docs/en/users_guide/shallow_water.md",
-      "source_sha256": "4ef00d1ec2522a8cb2aac70f54ca96f067d6a34ed7006221274f33b7468d94dc",
-      "target_sha256": "42400fa561526308e716f6a8ee0ebed56c5b71a2c57890ecbcd024cb1b395bea",
-      "reviewer": "Claude (Claude Code session; links to the tutorial supplement changed to examples/chichibu_flood (treatment of the advection term); roughness-0.02 ratio corrected to 2.1-2.3 to match the current results; both sides compared)",
+      "source_sha256": "f3dc9ac983382257581470efbf5f088734d875edba497bb9a26e5a26f4573f70",
+      "target_sha256": "948167fee3bbb368156c419a258855218e3d48168203ea108de3badc9f80230c",
+      "reviewer": "Claude (Claude Code session; the reference to developer.md §0 changed to a link to the project policy docs/policy.md (English: docs/en/policy.md); both files compared)",
       "method": "assistant",
-      "reviewed_on": "2026-11-21"
+      "reviewed_on": "2026-11-22"
     },
     {
       "source": "docs/users_guide/steep_slope.md",
@@ -554,11 +563,11 @@
     {
       "source": "docs/users_guide/timestep_policy.md",
       "target": "docs/en/users_guide/timestep_policy.md",
-      "source_sha256": "de5531816ac590ef2a09bd273325ab0b07a2fe8cd5b78603c508f05497389b98",
-      "target_sha256": "c7b171c7c1499d1cfc4115be73c0d60fb1f55fb2e7c97aea1fbfe1c6f7a935d0",
-      "reviewer": "Claude (Claude Code session; full-text content and lexical review, no model execution)",
+      "source_sha256": "85665350777af1305e6899d3a8efba91c7309078ac91e2f204109edd30d1cc57",
+      "target_sha256": "ad7c6e102ce461835ab808f001888abc21c6d251cb38548f9fc7c1d1d2c9120e",
+      "reviewer": "Claude (Claude Code session; the reference to developer.md §0 changed to a link to the project policy docs/policy.md (English: docs/en/policy.md); both files compared)",
       "method": "assistant",
-      "reviewed_on": "2026-10-24"
+      "reviewed_on": "2026-11-22"
     },
     {
       "source": "docs/users_guide/usecases.md",
@@ -599,11 +608,11 @@
     {
       "source": "docs/users_guide/wavefield_models.md",
       "target": "docs/en/users_guide/wavefield_models.md",
-      "source_sha256": "5a88874df881386e146b26ab4b6630a3ec6ca6c2136455e30948be02462c4f53",
-      "target_sha256": "40df3f49985ef78712e31305b5850b6e13492c394613efbca56c1f53092df6c2",
-      "reviewer": "Claude (Claude Code session; compared the added figure references and explanatory paragraphs (scheme in sec. 3, current in sec. 7.1) and the cross-references in sec. 2.4 and 4.4 in both languages; the rest is unchanged from the recorded version)",
+      "source_sha256": "b4639bb2ee75d5972f2baa89bd0d56ef83a498730060249bc1b7c413cab22aab",
+      "target_sha256": "dc51896e2b3e88de691074924258557a2c3ebfe1f3c18f4e0a21ea331f2f0be7",
+      "reviewer": "Claude (Claude Code session; the reference to developer.md §0 changed to a link to the project policy docs/policy.md (English: docs/en/policy.md); both files compared)",
       "method": "assistant",
-      "reviewed_on": "2026-11-07"
+      "reviewed_on": "2026-11-22"
     },
     {
       "source": "docs/users_guide/wq.md",

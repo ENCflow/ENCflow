@@ -235,8 +235,7 @@ belong to specialized models
   verification scripts, separately from the regression against
   reference results. Keeping the state in which a third party can trace
   "why this result" is a basic policy alongside full source disclosure
-  ([docs/developer.md](docs/developer.md) §0; English
-  translation of §0 in [docs/en/developer.md](docs/en/developer.md)).
+  ([docs/en/policy.md](docs/en/policy.md)).
 - **Sustainability as a project** — everything from the reasoning
   behind each design decision ([docs/developer.md](docs/developer.md),
   in Japanese) to the overall map
@@ -283,11 +282,11 @@ code as evidence.
 
 Developers and the curious should head to
 [docs/architecture.md](docs/architecture.md) for the one-page map of
-the architecture, [docs/developer.md](docs/developer.md) for the
-authoritative source on design philosophy and conventions (the project
-policy §0 is in English in [docs/en/developer.md](docs/en/developer.md); both in
-Japanese), and [docs/en/comparison.md](docs/en/comparison.md) for the
-comparison with other models.
+the architecture, [docs/en/policy.md](docs/en/policy.md) for the
+project policy, [docs/developer.md](docs/developer.md) for the index of
+the records of design decisions and conventions (the map and the records
+are in Japanese), and [docs/en/comparison.md](docs/en/comparison.md) for
+the comparison with other models.
 
 ## Interoperability (BMI)
 

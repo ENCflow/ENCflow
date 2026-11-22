@@ -94,10 +94,14 @@ registered as patterns in `tools/i18n/scope.json` and reported as
 exists).
 
 - All user-facing documents in `docs/` (users_guide, install, tutorial,
-  comparison, ai_guide, windows and this policy) are in scope. Developer
-  documents (developer.md, handoff, `*_plan.md`, `*_design.md`,
-  channel_model.md, architecture.md, icon/) are out of scope (§34.2; to be
-  reconsidered as internationalization progresses).
+  comparison, ai_guide, windows, policy and this document) are in scope.
+  Developer documents (developer.md and developer/, handoff, `*_plan.md`,
+  `*_design.md`, channel_model.md, architecture.md, icon/) are out of scope
+  (§34.2; to be reconsidered as internationalization progresses). As an
+  exception, only §0 of the index developer.md (the pointer to the project
+  policy, policy.md) has a partial mirror, `docs/en/developer.md` (a landing
+  place for the old URL; its head states the scope, and it is recorded per
+  section with `--section '## 0.'`; §6).
 - `tutorials/` treats explanations and annotated inputs as a pair; all are in scope.
 - The case descriptions (README) in `test/` are covered progressively, all of
   them. English comments for their parameter files are optional, starting
@@ -198,8 +202,13 @@ record the reviewed versions. Leave pending translations explicitly
 unreviewed or stale; do not update hashes alone to declare completion.
 
 `tools/i18n/reviews.json` records SHA-256 hashes of both versions, reviewer,
-method (`human` or `assistant`) and date. Hash UTF-8 text with CRLF normalized
-to LF; hash binary images as bytes. Never record an AI review as a human one.
+method (`human` or `assistant`) and date. A **partial mirror**, which translates
+only one section of the source (§0 of the index developer.md in §3 is the only
+example), is recorded with `record --section '<start of the heading>'`; the hash of
+the source and the structure check are then limited to that section (up to the
+next heading of the same or a higher level). The head of the translation states
+the scope. Hash UTF-8 text with CRLF normalized to LF; hash binary images as
+bytes. Never record an AI review as a human one.
 
 | Status | Meaning |
 |---|---|

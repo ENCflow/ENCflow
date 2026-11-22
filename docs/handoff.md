@@ -1689,7 +1689,7 @@ architecture.md。このメモは「現在進行中・未完了の項目」だ�
      main に取り込み済み。f_dbwet=2(§28.7。排水可能分の授受)も main に入った(同メモの冒頭の追記)。
      再開時は、メモを main と照合し直し、越流ケースを計算し直してから設計案を確定し、合意を得る(同メモ §7)。
 
-00c. **方針 13(説明責任。developer.md §0。2026-10-24 制定)の既存部分への遡及**
+00c. **方針 13(説明責任。policy.md。2026-10-24 制定)の既存部分への遡及**
    - 出典の棚卸し(済 2026-10-30。日英): 本文で引いた文献が参考文献の節にない箇所を機械的に
      突き合わせて埋めた(sediment: Asahi ら 2013・Hasegawa 1989・Engelund 1974・Chatanantavet &
      Parker 2009・Whipple & Tucker 2002、swflow: Ni ら 2019・Battjes 1975、vz: Rawls & Brakensiek
