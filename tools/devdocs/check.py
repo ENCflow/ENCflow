@@ -19,7 +19,7 @@ cites: リポジトリ内の「developer.md §N」「developer.md §N.M」の引
 size: リポジトリ内の Markdown が LIMIT_KB 以下であること(GitHub が Markdown を表示できるのは約 500 KB まで)。
   節・項目のファイルが SOFT_KB を超えたら、新しい節を起こす(項目を分ける)目安として報告する(失敗にはしない)。
 handoff: 作業引き継ぎメモの目次と項目のファイルを照合する。
-  1. docs/handoff/ には Markdown だけを置く。<番号>.md(番号は 00y・1l・4 の形)は 1 行目が「<番号>. 」で始まり、
+  1. docs/handoff/ には Markdown だけを置く。<番号>.md(番号は数字の後に英小文字が続く形。00y・1l・4・000 など)は 1 行目が「<番号>. 」で始まり、
      2 行目以降に行頭の「<番号>. 」を持たない(1 ファイル 1 項目)。番号の形でないファイル(roadmap.md など)と
      目次にも行頭の「<番号>. 」を書かない(項目は自分のファイルに起こす)
   2. 目次の一覧に、README.md 以外の各ファイルが「- [<番号>](handoff/<番号>.md) 題名」(番号の形でないファイルは
@@ -54,8 +54,8 @@ NUMBERED_SUB = re.compile(r"^#{3,6} (\d+)\.\d")
 ENTRY = re.compile(r"^- \[§(\d+)\]\(developer/(\d{3})\.md\) (.+)$")
 LINK = re.compile(r"\]\(([^)\s]+)\)")
 CITE = re.compile(r"developer\.md(?:\]\([^)]*\))?\**[\s!#/*>(（、のでは:：]{0,12}§\s*(\d+)((?:\.\d+)*)")
-ITEM_FILE = re.compile(r"^(\d{1,2}[a-z]{0,2})\.md$")
-ITEM_LINE = re.compile(r"^(\d{1,2}[a-z]{0,2})\. (.*)$")
+ITEM_FILE = re.compile(r"^(\d+[a-z]*)\.md$")
+ITEM_LINE = re.compile(r"^(\d+[a-z]*)\. (.*)$")
 HANDOFF_ENTRY = re.compile(r"^- \[([^\]]+)\]\(handoff/([^)\s]+)\)(?: (.*))?$")
 
 

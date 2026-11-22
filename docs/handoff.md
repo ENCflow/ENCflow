@@ -105,6 +105,7 @@
 - [00c](handoff/00c.md) 方針 13(説明責任。policy.md。2026-10-24 制定)の既存部分への遡及
 - [00d](handoff/00d.md) 河口デルタ形成の試行(2026-10-20〜21。docs/delta_plan.md)の残り
 - [00e](handoff/00e.md) 波浪による沿岸漂砂 fn_wave(2026-10-22。docs/wave_plan.md、§84.15)の残り
+- [000](handoff/000.md) 章ページから詳説ページへの内容移行(2026-10-12 完了)
 - [0d](handoff/0d.md) 領域マスク外の負荷削減(developer.md §79〜§83。旧番号 00d)の残り
 - [00](handoff/00.md) 移流項の改良(developer.md §68。設計の正本 docs/advection_design.md)の未追跡事項
 - [0](handoff/0.md) 家屋破壊・瓦礫モデル(developer.md §63。2026-10-01 実装・文献照合・ 既定値まで完了)

@@ -190,6 +190,15 @@ class HandoffTests(unittest.TestCase):
         self.assertTrue(any("00a.md:4: item '00e.'" in e for e in errors), errors)
         self.assertTrue(any("roadmap.md:4: item '00f.'" in e for e in errors), errors)
 
+    def test_three_digit_number_is_an_item(self):
+        # 番号が 3 桁の項目(000)も項目として読む。前の項目のファイルに紛れ込んだら検出する
+        errors, _ = check.check_handoff(repo(extra={"docs/handoff/00a.md": ITEM_A + "000. **三桁の項目**\n"}))
+        self.assertTrue(any("00a.md:4: item '000.'" in e for e in errors), errors)
+        index = HANDOFF + "- [000](handoff/000.md) 三桁の項目\n"
+        errors, _ = check.check_handoff(repo(extra={"docs/handoff.md": index,
+                                                    "docs/handoff/000.md": "000. **三桁の項目** — 本文\n"}))
+        self.assertEqual(errors, [])
+
     def test_bad_first_line_stray_file_and_link(self):
         errors, _ = check.check_handoff(repo(extra={
             "docs/handoff/1b.md": "**番号のない項目**\n",
