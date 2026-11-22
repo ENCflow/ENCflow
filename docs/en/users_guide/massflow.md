@@ -320,7 +320,10 @@ saturated cells keep the saturated-bed formula.
 
 - **Saturation test**: with the groundwater computation (`fn_gwflow`), a cell whose subsurface storage
   has reached its capacity ($`h_g \ge s_y s_d`$; the saturated zone reaches the ground surface) is
-  saturated. Without the groundwater computation, the whole domain is unsaturated if `db_satbed`
+  saturated. A storage within 0.1 % of the capacity counts as having reached it (the lateral
+  groundwater flow takes about a millionth of the capacity out of a cell with flow in every step;
+  the width keeps that deficit from turning a saturated bed into an unsaturated one, and its value is
+  our own). Without the groundwater computation, the whole domain is unsaturated if `db_satbed`
   (saturation of the deposit layer $`s_b`$) is below 1 and saturated if it is 1 (in its computation of
   Horadani the original paper sets the saturation to $`s_b = 0.8`$ on reaches steeper than 21° and to
   1.0 on the reaches below).
@@ -512,10 +515,16 @@ formula above; developer.md §28.19).
              {\cos^2\theta\,\{(\gamma_t d - \gamma_w h_w)\tan\theta + \gamma_w h_w J\}}
   ```
 
-  $`J`$ is the steepest-descent gradient of the total head $`H = (z - s_d) + h_w`$ (per horizontal
-  distance; the same operation as the steepest slope of the topography), and in cells whose soil
-  layer is saturated up to the ground surface the depth of the surface water $`h`$ is added. $`d`$
-  is the thickness of the soil layer that is judged ($`s_d`$ unless `slide_dmax` below is given).
+  $`J`$ is the steepest-descent gradient of the total head $`H = (z - s_d) + h_w + \kappa h`$ (per
+  horizontal distance; the same operation as the steepest slope of the topography). $`\kappa`$ is
+  the connection between the surface water and the saturated zone: 1 in cells whose soil layer is
+  saturated up to the ground surface (the depth of the surface water $`h`$ is added as it is) and 0
+  in cells whose saturated zone does not reach the surface. Between 99.9 % and 100 % of the storage
+  capacity it rises continuously from 0 to 1 (our own regularization: with a two-valued connection
+  that only asks whether the capacity has been reached, the head of a cell under a lake drops by the
+  water depth every time its storage falls marginally short, which creates a large $`J`$ towards
+  its neighbours). $`d`$ is the thickness of the soil layer that is judged ($`s_d`$ unless
+  `slide_dmax` below is given).
   The forces on the soil skeleton are written with the submerged weight and the seepage force
   ($`\gamma_w`$ × hydraulic gradient, taken to act along the slope); this is our own arrangement of
   the standard balance of effective stress and seepage force on an infinite slope.

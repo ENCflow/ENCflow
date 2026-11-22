@@ -68,6 +68,13 @@ submodule(m_geomorph) m_geomorph_debris
 
   real, parameter :: rk_rhow = 1000.0    ! 水の密度 (kg/m3。岩盤侵食の駆動応力。rockinc と同じ)
 
+  ! 土層が地表まで飽和したとみなす、地下貯留の不足の幅(容量 sy0・sd に対する比。独自。namelist に
+  ! しない)。側方の地下水流は、流れのある所の貯留を 1 回ごとに容量の K・J・Δt/(Δx・sy0) 倍(透水係数
+  ! 100 mm/h・Δt/Δx = 0.01 s/m で 1e-7〜1e-6 の桁)欠かせるので、丸めだけの余裕では足りない。
+  ! 不飽和床の侵食式の切り替え(gw_full)と、斜面安定判定の全水頭に地表水をつなぐ幅(slide_head)に
+  ! 使う(developer.md §28.20)
+  real, parameter :: gw_wfull = 1.0e-3
+
 contains
 
 !----------------------------------------------------------------------
@@ -809,11 +816,11 @@ end subroutine
 !                        浸透力(単位体積あたり γw × 動水勾配。斜面に沿う向きとみなす)で書くと
 !                          Fs = [c' + (γt・d − γw・hw)・cos²θ・tanφs]
 !                               / [cos²θ・{(γt・d − γw・hw)・tanθ + γw・hw・J}]
-!                        J は全水頭 H = (z − sd) + hw(土層が地表まで飽和したセルは + h)の最急降下
-!                        勾配(水平距離あたり。地形の tanθ と同じ D∞ の演算)。土層厚と飽和厚が
-!                        一様な斜面では J = tanθ で上の式に一致し、静水の下では J = 0 で
-!                        Fs = tanφs/tanθ(c' = 0)になる。標準的な無限長斜面の有効応力と浸透力の
-!                        つり合いを独自に整理した形
+!                        J は全水頭 H = (z − sd) + hw + κ・h(κ は地表水と飽和帯のつながり。土層が
+!                        地表まで飽和したセルは 1。slide_head)の最急降下勾配(水平距離あたり。
+!                        地形の tanθ と同じ D∞ の演算)。土層厚と飽和厚が一様な斜面では J = tanθ で
+!                        上の式に一致し、静水の下では J = 0 で Fs = tanφs/tanθ(c' = 0)になる。
+!                        標準的な無限長斜面の有効応力と浸透力のつり合いを独自に整理した形
 !     f_slide_wet = 1  : Fs < 1 でも、間隙水圧なし(hw = 0)で Fs < 1 のセルは流動化しない
 !                        (段差など幾何的に不安定な所は安息角崩落 f_repose の担当)
 !     f_slide_noflow = 1: 濃い混合体(hs/(h + hs) >= db_cmin)が載るセルは判定しない
@@ -906,8 +913,13 @@ end subroutine
 
 !----------------------------------------------------------------------
 ! 斜面安定判定の全水頭の面(f_slide_seep = 1。developer.md §28.19)
-!   H = (z − sd) + hw。土層が地表まで飽和したセル(地下貯留が容量に届いている。gw_full)は
-!   地表水の水深 h を足す(側方地下水の水頭と同じ読み方)。土層のないセルは H = z + h。
+!   H = (z − sd) + hw + κ・h。κ は地表水と飽和帯のつながり(0〜1)で、地下貯留 hg が容量 sy0・sd の
+!   (1 − gw_wfull) 倍から容量までの間で 0 から 1 へ連続に変わる(独自の正則化。§28.20)。土層の
+!   ないセル(容量 0)は κ = 1(H = z + h)。
+!   側方地下水は「容量に届いたセルだけ h を足す」と 2 値で読む。同じ読み方をここで使うと、水没した
+!   セルの貯留が 1 回の側方流ぶん(容量の 1e-7〜1e-6 倍の桁)欠けるたびに水頭が水深 h だけ下がり、
+!   隣のセルとの間に h の段差ができる(J = h/Δx。静水の下の斜面が Fs < 1 になる)。連続な κ では、
+!   同じ欠けが水頭を h × (欠け/幅) しか変えない。
 !   確保した範囲(帯とハロ)の全セルで作る(無効なセルの値は steep8 が読まない)
 !----------------------------------------------------------------------
 subroutine slide_head(gm, g, s)
@@ -915,15 +927,22 @@ subroutine slide_head(gm, g, s)
   type(t_geoinfo), intent(in) :: g
   type(t_state), intent(in) :: s
   integer :: i, j
-  real :: hw
+  real :: hw, cap, conn
 
-  !$omp parallel do schedule(static) private(i, j, hw)
+  !$omp parallel do schedule(static) private(i, j, hw, cap, conn)
   do j = dcp%jsh, dcp%jeh
     do i = dcp%ish, dcp%ieh
       hw = 0.0
       if (s%gw_active .and. g%sy0 > 0.0) hw = min(s%hg(i,j) / g%sy0, s%sd(i,j))
-      gm%dbr%hd(i,j) = (s%z(i,j) - s%sd(i,j)) + hw
-      if (gw_full(g, s, i, j)) gm%dbr%hd(i,j) = gm%dbr%hd(i,j) + max(s%h(i,j), 0.0)
+      ! 地表水とのつながり κ(容量の不足が幅 gw_wfull・cap の中で 0 → 1。容量に届けば 1。
+      ! gw_full と同じく、土層のないセルは 1、地下水計算なしは 0)
+      conn = 0.0
+      if (s%gw_active) then
+        cap = s%sd(i,j) * g%sy0
+        conn = 1.0
+        if (cap > 0.0) conn = min(1.0, max(0.0, 1.0 - (cap - s%hg(i,j)) / (gw_wfull * cap)))
+      end if
+      gm%dbr%hd(i,j) = (s%z(i,j) - s%sd(i,j)) + hw + conn * max(s%h(i,j), 0.0)
     end do
   end do
   !$omp end parallel do
@@ -1328,8 +1347,8 @@ end function
 !----------------------------------------------------------------------
 ! 河床が不飽和か(f_dbunsat = 1 のときの侵食式の切り替え。developer.md §28.18)
 !   地下水計算あり: 地下貯留 hg が容量 sy0・sd に届いていなければ不飽和(飽和帯は土層の底から
-!     積もると読む。f_slide・側方流と同じ。届いたかどうかは容量の 1e-9 倍の余裕で判定する =
-!     授受の丸めで 1 ulp 欠けた飽和のセルを不飽和と読まない)
+!     積もると読む。f_slide・側方流と同じ。容量に対する不足が gw_wfull 倍以内なら届いたとみなす。
+!     gw_full)
 !   地下水計算なし: db_satbed < 1 なら全域が不飽和(新砂防 44(3) は洞谷の計算で、勾配 21° 以上の
 !     区間の飽和度を s_b = 0.8、それ以下を 1.0 とする。2 つの式の見出しは「堆積層が不飽和である場合」
 !     「堆積層が飽和である場合」)
@@ -1353,8 +1372,9 @@ end function
 
 !----------------------------------------------------------------------
 ! 土層が地表まで飽和しているか(地下貯留 hg が容量 sy0・sd に届いている。地下水計算ありのとき)
-!   届いたかどうかは容量の 1e-9 倍の余裕で判定する(授受の丸めで 1 ulp 欠けた飽和のセルを
-!   不飽和と読まない)。土層のないセル(容量 0)は飽和とみなす。地下水計算なしは .false.
+!   容量に対する不足が gw_wfull 倍以内なら届いたとみなす(側方の地下水流が 1 回ごとに作る欠けと
+!   授受の丸めで、飽和のセルを不飽和と読まない。幅の根拠は gw_wfull の宣言と developer.md §28.20)。
+!   土層のないセル(容量 0)は飽和とみなす。地下水計算なしは .false.
 !----------------------------------------------------------------------
 pure function gw_full(g, s, i, j) result(full)
   type(t_geoinfo), intent(in) :: g
@@ -1365,7 +1385,7 @@ pure function gw_full(g, s, i, j) result(full)
   full = .false.
   if (.not. s%gw_active) return
   cap = s%sd(i,j) * g%sy0
-  full = .not. ((cap - s%hg(i,j)) > 1.0e-9 * cap)
+  full = .not. ((cap - s%hg(i,j)) > gw_wfull * cap)
 end function
 
 

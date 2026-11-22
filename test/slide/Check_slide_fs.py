@@ -11,7 +11,9 @@
 
 fs: 平面の地形 z = Z0 − A x − B y では、内部のセルの最急勾配は tanθ = √(A² + B²)(D∞ は平面で厳密)。
   土層厚 sd と飽和厚 hw = gw_sat0·sd も平面なので、全水頭 H = (z − sd) + hw の最急降下勾配 J も
-  解析的に決まる(静水の湖の下は H = z + h = 一定で J = 0)。判定する厚さ d = min(sd, slide_dmax)
+  解析的に決まる。静水の湖の下は H = (z − sd) + hw + κ h で、κ は地表水と飽和帯のつながり
+  (地下貯留が容量の (1 − WFULL) 倍から容量までの間で 0 → 1)。飽和(κ = 1)なら H = z + h = 一定で
+  J = 0、容量にわずかに届かないケース(fs_lq1・fs_le1)は J = (1 − κ) tanθ。判定する厚さ d = min(sd, slide_dmax)
   (slide_dmax = 0 は sd)、その中の飽和厚 hw_d = max(0, hw − (sd − d)) として
     従来の式        Fs = [c' + (γt d − γw hw_d) cos²θ tanφs] / (γt d tanθ cos²θ)
     f_slide_seep = 1 Fs = [c' + (γt d − γw hw_d) cos²θ tanφs] / [cos²θ {(γt d − γw hw_d) tanθ + γw hw_d J}]
@@ -97,10 +99,15 @@ def fs_formula(c, i, j, jh):
     return num / (((w - u) * tanth + u * jh) * cos2)
 
 
+def connection(c):
+    """地表水と飽和帯のつながり κ(地下貯留の容量に対する不足 1 − gw_sat0 が幅 WFULL の中で 0 → 1)。"""
+    return min(1.0, max(0.0, 1.0 - (1.0 - c["sat"]) / mf.WFULL))
+
+
 def head_grad(c, kind):
-    """全水頭の勾配 J。kind = 'land'(地表水なし)か 'lake'(静水の下)。"""
+    """全水頭の勾配 J。kind = 'land'(地表水なし)か 'lake'(静水の下。土層厚は一様)。"""
     if kind == "lake":
-        return 0.0
+        return (1.0 - connection(c)) * math.hypot(mf.A, mf.B)
     cx = mf.SDG[1] if c["sd"] == "g" else 0.0
     cy = mf.SDG[2] if c["sd"] == "g" else 0.0
     return math.hypot(mf.A + (1.0 - c["sat"]) * cx, mf.B + (1.0 - c["sat"]) * cy)
@@ -127,7 +134,8 @@ def check_fs(case):
         rng[kind] = [min(rng[kind][0], fe), max(rng[kind][1], fe)]
     nfail = 0
     print(f"== slide fs: safety factor against the formula, case {case} "
-          f"(f_slide_seep = {c['seep']}, slide_dmax = {c['dmax']:g})")
+          f"(f_slide_seep = {c['seep']}, slide_dmax = {c['dmax']:g}"
+          + (f", connection of the lake = {connection(c):g}" if c["lake"] and c["seep"] == 1 else "") + ")")
     for kind in ("land", "lake"):
         if kind == "lake" and not c["lake"]:
             continue

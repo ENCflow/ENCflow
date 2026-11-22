@@ -392,9 +392,9 @@
     {
       "source": "docs/users_guide/massflow.md",
       "target": "docs/en/users_guide/massflow.md",
-      "source_sha256": "d600df1c82b62e80392fd7858b6cfd2859145b54c73b97d9ae8fb1dc5c62cfcb",
-      "target_sha256": "0f49dfd53663dd07a7bec226739be2218cd26f65cdf622dbed73b5637b4ef45a",
-      "reviewer": "Claude (Claude Code session; the parts changed for the options of the slope-stability test (f_slide_seep, f_slide_wet, f_slide_noflow, slide_dmax) compared side by side with the Japanese source; numbers checked against the test runs)",
+      "source_sha256": "1945eb106ed1bdf1547938587f0e736143995d21bc768aecd263166bab54f50b",
+      "target_sha256": "90062e9f923f8a90639815496e87cddac00fd27f1b1d07a3f70d22682f35c8e5",
+      "reviewer": "Claude (Claude Code session; the parts changed for the continuous connection of the surface-water head in f_slide_seep and for the width of the saturation test compared side by side with the Japanese source; numbers checked against the test runs)",
       "method": "assistant",
       "reviewed_on": "2026-11-22"
     },
@@ -716,9 +716,9 @@
     {
       "source": "examples/List_samples/list_geomorph.txt",
       "target": "examples/List_samples/en/list_geomorph.txt",
-      "source_sha256": "582155a62a0bc66cce2f223171d78961ffc05a15d889070897b6c41a70bc4a3a",
-      "target_sha256": "9621ea023ef68c3247d01ccde757af776affe6eb5bf7333a763bf741e35f96ad",
-      "reviewer": "Claude (Claude Code session; the parts changed for the options of the slope-stability test (f_slide_seep, f_slide_wet, f_slide_noflow, slide_dmax) compared side by side with the Japanese source; numbers checked against the test runs)",
+      "source_sha256": "fff305dc26a0c907a2ed3ca7d082014fa44f51c555715b3bf8298d90cb0d9c54",
+      "target_sha256": "454f8e3f8588c416cc641650e3bf3963090b2404271b53e7913a29892efbb87b",
+      "reviewer": "Claude (Claude Code session; the parts changed for the continuous connection of the surface-water head in f_slide_seep and for the width of the saturation test compared side by side with the Japanese source; numbers checked against the test runs)",
       "method": "assistant",
       "reviewed_on": "2026-11-22"
     },
@@ -4748,9 +4748,9 @@
     {
       "source": "test/slide/README.md",
       "target": "test/slide/en/README.md",
-      "source_sha256": "fc1b451b289156a68ebc9bde41415557e88ae1e3d6938a9b3e51d9d9664210d6",
-      "target_sha256": "f62cae865277616298a2ee4a76f3014ccdc4025ac31ad11e8d5dac1c8ee745b9",
-      "reviewer": "Claude (Claude Code session; the parts changed for the options of the slope-stability test (f_slide_seep, f_slide_wet, f_slide_noflow, slide_dmax) compared side by side with the Japanese source; numbers checked against the test runs)",
+      "source_sha256": "cd2e3b6e3f689b3f3064d44347fd06b5d63aa4919a84081d9e5661a1ca65f7b2",
+      "target_sha256": "d82c10a1ee466246646f6232ffe80d14ad02e7b386d72f1ff9af290ab29bbe2a",
+      "reviewer": "Claude (Claude Code session; the parts changed for the continuous connection of the surface-water head in f_slide_seep and for the width of the saturation test compared side by side with the Japanese source; numbers checked against the test runs)",
       "method": "assistant",
       "reviewed_on": "2026-11-22"
     },

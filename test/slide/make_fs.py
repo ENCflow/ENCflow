@@ -14,6 +14,12 @@ y の向きにも傾くので、MPI の帯の境界をまたいで近傍を読�
                     J = 0.4405 > tanθ = 0.3905 で、1 は従来の式より小さい安全率になる
     fs_l0 / fs_l1 : 土層厚 1 m・飽和。下流側を静水の湖にする(水位 LAKE_E)。湖の下は J = 0 で、
                     1 は Fs = tanφs/tanθ、0 はその (γt − γw)/γt 倍(従来の式の過小評価)
+    fs_lq1        : fs_l1 の飽和度を 1 − 2.5e-4 に(地下貯留が容量にわずかに届かない)。地表水の水頭は、
+                    貯留が容量の (1 − WFULL) 倍から容量までの間で 0 から 1 へ連続につながる(つながり κ。
+                    ここでは 0.75)。湖の下は J = (1 − κ) tanθ
+    fs_le1        : 同 1 − 1e-6(側方の地下水流の 1 回ぶんで欠ける桁)。κ = 0.999 で、湖の下の安全率は
+                    静水の値 tanφs/tanθ から 0.1 % しか下がらない(容量に届いたかどうかの 2 値でつなぐと、
+                    従来の式の値 = _l0 まで下がる)
     fs_gdyn       : fs_g1 を流動化あり(f_slide = 1)で 5 秒。保存則と MPI の一致を見る
 構成 6: 判定・流動化する深さの上限(slide_dmax)。土層厚 2 m、飽和度 0.9、slide_dmax = 0.5 m
     fs_d2         : 判定だけ。Fs が、上から 0.5 m と飽和厚 0.3 m の式の値になる
@@ -38,6 +44,7 @@ SDG = (1.0, 0.08, 0.06)              # 土層厚の平面 sd = s0 + c x + d y(fs
 LAKE_E = 19.0                        # 湖の水位 (m。fs_l*。領域の下流側のおよそ 1/3 が湖になる)
 SY0, POROSITY = 0.3, 0.4
 GAMMA = 19000.0                      # 飽和単位体積重量 γt (N/m3)
+WFULL = 1.0e-3                       # 地表水の水頭を飽和帯へつなぐ幅(容量に対する比。本体の gw_wfull と同じ値)
 DT, DTG = 0.05, 1.0
 
 CASES = {
@@ -48,6 +55,8 @@ CASES = {
     "fs_g1":   dict(sd="g",   sat=0.5, lake=False, slide=2, seep=1, wet=0, noflow=0, dmax=0.0, c=2000.0, phi=25.0, nup=1),
     "fs_l0":   dict(sd=1.0,   sat=1.0, lake=True,  slide=2, seep=0, wet=0, noflow=0, dmax=0.0, c=0.0,    phi=25.0, nup=1),
     "fs_l1":   dict(sd=1.0,   sat=1.0, lake=True,  slide=2, seep=1, wet=0, noflow=0, dmax=0.0, c=0.0,    phi=25.0, nup=1),
+    "fs_lq1":  dict(sd=1.0,   sat=0.99975,  lake=True, slide=2, seep=1, wet=0, noflow=0, dmax=0.0, c=0.0,  phi=25.0, nup=1),
+    "fs_le1":  dict(sd=1.0,   sat=0.999999, lake=True, slide=2, seep=1, wet=0, noflow=0, dmax=0.0, c=0.0,  phi=25.0, nup=1),
     "fs_gdyn": dict(sd="g",   sat=0.5, lake=False, slide=1, seep=1, wet=0, noflow=0, dmax=0.0, c=2000.0, phi=25.0, nup=5),
     "fs_d2":   dict(sd=2.0,   sat=0.9, lake=False, slide=2, seep=0, wet=0, noflow=0, dmax=0.5, c=0.0,    phi=25.0, nup=1),
     "fs_d1":   dict(sd=2.0,   sat=0.9, lake=False, slide=1, seep=0, wet=0, noflow=0, dmax=0.5, c=0.0,    phi=25.0, nup=1),

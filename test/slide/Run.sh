@@ -75,7 +75,7 @@ for c in $(python3 "$sdir/make_fs.py" list); do
     cp -f result_$c/Fs0001.bil save_${c}_serial/
 done
 echo ""
-for c in fs_u0 fs_u1 fs_g0 fs_g1 fs_l0 fs_l1 fs_d2; do
+for c in fs_u0 fs_u1 fs_g0 fs_g1 fs_l0 fs_l1 fs_lq1 fs_le1 fs_d2; do
     python3 "$sdir/Check_slide_fs.py" fs $c || rc=1
 done
 python3 "$sdir/Check_slide_fs.py" pair fs_u1 fs_u0 same || rc=1
