@@ -15,7 +15,7 @@ supplements: [Sediment transport, hillslope and long-term processes](sediment.md
 longshore transport, weathering/uplift, bedrock incision, dissolution, MORFAC) and
 [Debris flow, slope failure and moving bed layer](massflow.md) (resistance
 laws, erosion/deposition laws, triggering, bed layer). Setups by phenomenon (tsunami deposits, river-mouth deltas, volcanic
-flows, lahars, snow avalanches, sabo facilities) are on the [applications page](geomorph_applications.md).
+flows, lahars, snow avalanches, sabo facilities, natural dams) are on the [applications page](geomorph_applications.md).
 
 | Process | Flag | Content |
 |---|---|---|
@@ -553,10 +553,10 @@ resistance law and E-D closure run as the simple debris flow of the
 defaults (f_dbed=1, f_dbres=1, phi=35 deg). When the type is known, go
 to the recommendations at the end of the chapter.
 
-**Volcanic flows, lahars, snow avalanches and sabo facilities** - the equivalent-fluid setup (debris
+**Volcanic flows, lahars, snow avalanches, sabo facilities and natural dams** - the equivalent-fluid setup (debris
 avalanches, pyroclastic flows), lahars as a mixture whose concentration changes, the reinterpretation
-for snow avalanches and the representation of sabo facilities are in [§3 volcanic flows](geomorph_applications.md#3-volcanic-flows-debris-avalanches-dense-pyroclastic-flows-lahars),
-[§4 lahars](geomorph_applications.md#4-lahars-volcanic-mudflows), [§5 snow avalanches](geomorph_applications.md#5-snow-avalanches-dense-flow) and [§6 sabo facilities](geomorph_applications.md#6-sabo-facilities-sediment-retarding-basins-check-dams) of the
+for snow avalanches, the representation of sabo facilities and the setup for the formation and breach of natural dams are in [§3 volcanic flows](geomorph_applications.md#3-volcanic-flows-debris-avalanches-dense-pyroclastic-flows-lahars),
+[§4 lahars](geomorph_applications.md#4-lahars-volcanic-mudflows), [§5 snow avalanches](geomorph_applications.md#5-snow-avalanches-dense-flow), [§6 sabo facilities](geomorph_applications.md#6-sabo-facilities-sediment-retarding-basins-check-dams) and [§7 natural dams](geomorph_applications.md#7-formation-and-breach-of-natural-dams) of the
 [applications page](geomorph_applications.md) (rough values in [Recommended values by pattern](#recommended-values-by-pattern)).
 
 **Curvature term (f_dbcurv)** - `f_dbcurv = 1` adds the centrifugal acceleration from terrain
@@ -1345,6 +1345,7 @@ When the type of phenomenon is known, start from the following
 | Debris flow (Voellmy type, with entrainment) | f_dbed=4 + f_dbres=4 | 0.11 | 450 | - | - | - | Back-analysis of one event (Cancia 2015, Qiao et al. 2023; [debris-flow supplement](massflow.md) §6). Hungr's E_r h\|V\| is the standard entrainment law in practice; with f_dbed=4, delta_e ≈ E_r × a representative flow depth (massflow.md §3) |
 | Mudflow, fine sediment flow | f_dbed=2 + f_dbres=2 | - | - | - | 0.001-0.01 | 30-35 | Egashira constitutive law. e ≈ 0.85 |
 | Lahar (volcanic mudflow) | f_dbed=1 or 2 + f_dbres=4 (fine) / 1; 3+3 when boulder-dominated | 0.05-0.1 | 500-1000 | - | 0.001-0.01 | 30-35 | Initiated by erosion of the ash layer (sd), a sediment-laden segment inflow or a breach chain. f_dbwet=1 recommended (2 with infiltration). Set dd to about 0.2 mm when starting from sheet flow on slopes. The Egashira laminar law is not usable for fine material. See [lahars](geomorph_applications.md#4-lahars-volcanic-mudflows) on the applications page and [examples/ashfall_lahar](../../../examples/ashfall_lahar/en/README.md) |
+| Formation of a natural dam and its breach by overtopping | f_dbed=3 + f_dbres=3 (f_dbimm=1, db_immexp=2) + bed load f_fluvial | - | - | - | 0.01-0.1 | 35 | Trigger with f_slide (f_slide_seep=1 because of the ponded area) or fn_dbinit; water of the failed mass with f_dbwet=3. The speed of the breach is sensitive to the lake volume, the slope of the downstream face, the grain size and the transport law on gentle reaches (with or without bed load, fluv_taufac 0.5-0.7, f_dbimm). delta_e (0.0001-0.0007) has little effect on a dam whose breach is set by the amount of sediment the flow can carry. [Natural dams in the applications](geomorph_applications.md#7-formation-and-breach-of-natural-dams); example debris_dam |
 | Simple debris flow (calibration-driven) | f_dbed=1 + f_dbres=1 | - | - | - | - | 30-35 | Calibrate the runout with delta_e and delta_d |
 | Bed change of a sand-bed river | f_fluvial (+ f_suspend) | - | - | - | 0.0003-0.001 | - | Large contribution of suspended load |
 | River-mouth delta | f_fluvial (capacity feed) + f_suspend (inflow concentration) + f_bedfines + fluv_slope + f_repose (+ f_fixation) | - | - | - | sand 0.0005; mud via susp_wf = 1e-3 m/s | 30 | Sea as ordinary cells + initial water level. A mud concentration of 0.0002-0.001 separates fan and bird-foot. morfac 100-200. examples/delta |

@@ -113,11 +113,11 @@
     {
       "source": "docs/users_guide.md",
       "target": "docs/en/users_guide.md",
-      "source_sha256": "be3895231d522bef4f3f0c33f5f0b9a9f170853b54acb967c9c826568b9090e7",
-      "target_sha256": "cf2edab578aa511fc43bd23568a360ab4587d8fcc7905c8d58d9d091a55a86ca",
-      "reviewer": "Claude (Claude Code session; the parts changed for the options of the slope-stability test (f_slide_seep, f_slide_wet, f_slide_noflow, slide_dmax) compared side by side with the Japanese source; numbers checked against the test runs)",
+      "source_sha256": "d793c6be32bd647d56c42f324d747457e948982f97e84000dc8ccdd98cef67df",
+      "target_sha256": "c180297b681edb75d6198b1da2a7207622b6f42ae34f9ad5f4fd232bac5af135",
+      "reviewer": "Claude (Claude Code session; the parts changed for the natural-dam application and the example debris_dam: applications section 7, combination with bed load, the two conditions on slide_dmax, pattern table, use cases, index and the list of examples; the English mirror was updated in the same work and both diffs were read side by side)",
       "method": "assistant",
-      "reviewed_on": "2026-11-22"
+      "reviewed_on": "2026-11-23"
     },
     {
       "source": "docs/users_guide/advection.md",
@@ -311,20 +311,20 @@
     {
       "source": "docs/users_guide/geomorph.md",
       "target": "docs/en/users_guide/geomorph.md",
-      "source_sha256": "a78134a9a49227ce465541dcbdf049bd22bc8dfb05be5c210808fdff13a701e7",
-      "target_sha256": "cc184ae7f3029160418c00ed0ec2f14b1cf2d3783fe0d91a3880d5a25324846a",
-      "reviewer": "Claude (Claude Code session; the parts changed for the options of the slope-stability test (f_slide_seep, f_slide_wet, f_slide_noflow, slide_dmax) compared side by side with the Japanese source; numbers checked against the test runs)",
+      "source_sha256": "b077eee0351479d93e3f4576cdd9c2f0231d12ae8fe4009a52d5c99023aa1d6b",
+      "target_sha256": "c34e3c3255f0c1b3af851d498fcf0bcdcf0d7982f8660efb1aab8ecdc534d59a",
+      "reviewer": "Claude (Claude Code session; the parts changed for the natural-dam application and the example debris_dam: applications section 7, combination with bed load, the two conditions on slide_dmax, pattern table, use cases, index and the list of examples; the English mirror was updated in the same work and both diffs were read side by side)",
       "method": "assistant",
-      "reviewed_on": "2026-11-22"
+      "reviewed_on": "2026-11-23"
     },
     {
       "source": "docs/users_guide/geomorph_applications.md",
       "target": "docs/en/users_guide/geomorph_applications.md",
-      "source_sha256": "e10100eb8639147c69dc190a9626579063d8a64c458969c8f940094eac24362a",
-      "target_sha256": "9b7e8dab5871971c9be37b6a7ca5e89621ad914a88125cde8851abda5ec409c9",
-      "reviewer": "Claude (Claude Code session; the sections changed for f_dbwet = 3 (retained pore water) and gw_sat0 (initial soil-layer saturation) compared side by side with the Japanese source; numbers checked against the test runs)",
+      "source_sha256": "d1fd85323bddec5d10fa75055d81cd9fed386274c394802b510ab7c1fb8a9b7b",
+      "target_sha256": "52fc5ec560dc03d28053f9cb170798f17559dee95a6dbe3f8dfdf76ca5e206f1",
+      "reviewer": "Claude (Claude Code session; the parts changed for the natural-dam application and the example debris_dam: applications section 7, combination with bed load, the two conditions on slide_dmax, pattern table, use cases, index and the list of examples; the English mirror was updated in the same work and both diffs were read side by side)",
       "method": "assistant",
-      "reviewed_on": "2026-11-22"
+      "reviewed_on": "2026-11-23"
     },
     {
       "source": "docs/users_guide/glacier.md",
@@ -392,11 +392,11 @@
     {
       "source": "docs/users_guide/massflow.md",
       "target": "docs/en/users_guide/massflow.md",
-      "source_sha256": "318297a5becda07abcf17d690e2db90c753e9b7c90af8e34176687e01d27bbf7",
-      "target_sha256": "13a26eb64266f07cea9f5c19474a3c712d0f805e658b67bbae6b6e45e14be572",
-      "reviewer": "Claude (Claude Code session; the parts changed for reading the total head of f_slide_seep at the flow surface (h + hs), the guidance on slide_dmax relative to the grid spacing and the twin test cases compared side by side with the Japanese source; numbers checked against the test runs)",
+      "source_sha256": "66a4c89da7d8ec807f0dfac05282d9be083367599161a557f7d0e173bbf0fd2c",
+      "target_sha256": "9a8aad89b6abd6c89faf85e4e89bcebdd82017b707254aeed0106b1e3cdb8080",
+      "reviewer": "Claude (Claude Code session; the parts changed for the natural-dam application and the example debris_dam: applications section 7, combination with bed load, the two conditions on slide_dmax, pattern table, use cases, index and the list of examples; the English mirror was updated in the same work and both diffs were read side by side)",
       "method": "assistant",
-      "reviewed_on": "2026-11-22"
+      "reviewed_on": "2026-11-23"
     },
     {
       "source": "docs/users_guide/nest.md",
@@ -572,11 +572,11 @@
     {
       "source": "docs/users_guide/usecases.md",
       "target": "docs/en/users_guide/usecases.md",
-      "source_sha256": "3420777ebca33fc235c8b6e8eaff1d42b486b9c396d3e0a458f9e21d19fbd5f4",
-      "target_sha256": "4dd94b1405a4b10d2d6d19a20152e8181a417b68658950e31ce1a543eda356a6",
-      "reviewer": "Claude (Claude Code session; the capture at a culvert inlet changed from all the wood to the share of the water drawn by the culvert (developer.md §50.11): the rewritten passages of the Japanese master and the English mirror compared one by one, numbers cross-checked; rest unchanged since the previous record)",
+      "source_sha256": "936192b10b83fc2245f8ae4b3df1b31c11c5902e3f60b301ebba117c4cf753a2",
+      "target_sha256": "dc2c40ef116e5df17693c0cb24a3fe333176a2a3ebbb81daa7fc05b394586bb7",
+      "reviewer": "Claude (Claude Code session; the parts changed for the natural-dam application and the example debris_dam: applications section 7, combination with bed load, the two conditions on slide_dmax, pattern table, use cases, index and the list of examples; the English mirror was updated in the same work and both diffs were read side by side)",
       "method": "assistant",
-      "reviewed_on": "2026-11-13"
+      "reviewed_on": "2026-11-23"
     },
     {
       "source": "docs/users_guide/user_routines.md",
@@ -905,11 +905,11 @@
     {
       "source": "examples/README.md",
       "target": "examples/README.en.md",
-      "source_sha256": "f55aad785cce24970defa261107b24479dc507248e701e7998793f5e7558b4af",
-      "target_sha256": "c701db488ed2151398abeefef2b4328d2ccd08d60607833908342215e2442e27",
-      "reviewer": "Claude (Claude Code session; the chichibu_flood row shortened to the length of the other rows (content about 60 characters, main features trimmed); both sides compared)",
+      "source_sha256": "d9923774d5d2c1bb755bb7f724d8714a94c23bb36ff3eb582210e0a077213998",
+      "target_sha256": "3d3268b86e8592f30a3df5ec59c171eee0176005cfca4c0d4ac803b3221b3c78",
+      "reviewer": "Claude (Claude Code session; the parts changed for the natural-dam application and the example debris_dam: applications section 7, combination with bed load, the two conditions on slide_dmax, pattern table, use cases, index and the list of examples; the English mirror was updated in the same work and both diffs were read side by side)",
       "method": "assistant",
-      "reviewed_on": "2026-11-21"
+      "reviewed_on": "2026-11-23"
     },
     {
       "source": "examples/ashfall_lahar/README.md",
@@ -1765,6 +1765,105 @@
       "reviewer": "Claude (Claude Code session; English figure drawn by the same script with the en switch from the same results of 2026-11-10; compared side by side: same plotted data and layout, labels translated)",
       "method": "assistant",
       "reviewed_on": "2026-11-10"
+    },
+    {
+      "source": "examples/debris_dam/README.md",
+      "target": "examples/debris_dam/en/README.md",
+      "source_sha256": "70aebc2980e84ae82864fcc4e07fd9889c2fc7124d6124d407b746db091afed9",
+      "target_sha256": "f644c3b0bdf6df0de4bc8da7771342924bd3b86145a6ad3857a63a9e07dbb971",
+      "reviewer": "Claude (Claude Code session; new example README assembled in both languages from paired source parts and tables generated from the same results; both versions read in full)",
+      "method": "assistant",
+      "reviewed_on": "2026-11-23"
+    },
+    {
+      "source": "examples/debris_dam/figs/breach.png",
+      "target": "examples/debris_dam/en/figs/breach.png",
+      "source_sha256": "ce352b894571a18f6bc2ed297d4778a52f176339b66b2ee89a78145400587315",
+      "target_sha256": "3853758f59f27bcf952d5db9b87a477451bf5dafb8a40c355cc6fa85fba97def",
+      "reviewer": "Claude (Claude Code session; English figure drawn by the same script with the en switch; visual check)",
+      "method": "assistant",
+      "reviewed_on": "2026-11-23"
+    },
+    {
+      "source": "examples/debris_dam/figs/breach_sum.png",
+      "target": "examples/debris_dam/en/figs/breach_sum.png",
+      "source_sha256": "6cdda6b498209194a1ba12249eb9048b903e974b162b146b423d121a9c3f5e89",
+      "target_sha256": "2fc7d643ca44006410e55b0d29defbb8fac6e4daf859cbf56a6f5704dc865197",
+      "reviewer": "Claude (Claude Code session; English figure drawn by the same script with the en switch; visual check)",
+      "method": "assistant",
+      "reviewed_on": "2026-11-23"
+    },
+    {
+      "source": "examples/debris_dam/figs/chain.png",
+      "target": "examples/debris_dam/en/figs/chain.png",
+      "source_sha256": "29147c18037648b603af02ee58e5033754694ded0d63ff216c2d98730c7f4b6d",
+      "target_sha256": "a0ac2b6de570893a7e8014c892c8ae38f7169bffbcb33a70ba45d7eeefd2012c",
+      "reviewer": "Claude (Claude Code session; English figure drawn by the same script with the en switch; visual check)",
+      "method": "assistant",
+      "reviewed_on": "2026-11-23"
+    },
+    {
+      "source": "examples/debris_dam/figs/formation.png",
+      "target": "examples/debris_dam/en/figs/formation.png",
+      "source_sha256": "ca6690c56138ee6ed66ba57aa2dc3e0eb95d79b46c5c16cce14e5e049deb3d0b",
+      "target_sha256": "1c98b1dc024a9643f21ab0f128eb93031d8207b2d0d42d2d025e15d55a2b2a49",
+      "reviewer": "Claude (Claude Code session; English figure drawn by the same script with the en switch; visual check)",
+      "method": "assistant",
+      "reviewed_on": "2026-11-23"
+    },
+    {
+      "source": "examples/debris_dam/figs/profile.png",
+      "target": "examples/debris_dam/en/figs/profile.png",
+      "source_sha256": "8e993cd03ab1b64fc5893bc53b0fddcbfdcf830a3c02e455f4f2b3700a866620",
+      "target_sha256": "70157aa9ce08efd20884b2361bbec9d6381fd4cb28175350f250eeb5134a5d1e",
+      "reviewer": "Claude (Claude Code session; English figure drawn by the same script with the en switch; visual check)",
+      "method": "assistant",
+      "reviewed_on": "2026-11-23"
+    },
+    {
+      "source": "examples/debris_dam/figs/sequence.png",
+      "target": "examples/debris_dam/en/figs/sequence.png",
+      "source_sha256": "80779374433609f4959209e39a0f26451073753f601a12296658b595ed5e2dc0",
+      "target_sha256": "1ef73a72da2815d421b9c018ac39985df47a4e83a793244fc3f244d7e79d5f08",
+      "reviewer": "Claude (Claude Code session; English figure drawn by the same script with the en switch; visual check)",
+      "method": "assistant",
+      "reviewed_on": "2026-11-23"
+    },
+    {
+      "source": "examples/debris_dam/figs/series.png",
+      "target": "examples/debris_dam/en/figs/series.png",
+      "source_sha256": "aa2f716486df2df729ecd0ba33ada51d13fe8bec08dbeb69acd5f5bfd0a691c7",
+      "target_sha256": "f00d872436c5828f5824834aa56562e53dfef93dcf8fba581040efbc3b77e81c",
+      "reviewer": "Claude (Claude Code session; English figure drawn by the same script with the en switch; visual check)",
+      "method": "assistant",
+      "reviewed_on": "2026-11-23"
+    },
+    {
+      "source": "examples/debris_dam/figs/setup.png",
+      "target": "examples/debris_dam/en/figs/setup.png",
+      "source_sha256": "dd6fbc287ad696a38c92106ccf9473752dc098b04a3f07ee7fe037882a5009ca",
+      "target_sha256": "0a43f546f912389fe72cb6bbedb0adb10d4e7287287df4d0a3c9c4dc89bab172",
+      "reviewer": "Claude (Claude Code session; English figure drawn by the same script with the en switch; visual check)",
+      "method": "assistant",
+      "reviewed_on": "2026-11-23"
+    },
+    {
+      "source": "examples/debris_dam/figs/spread.png",
+      "target": "examples/debris_dam/en/figs/spread.png",
+      "source_sha256": "1d812c5a10621aface693a2ea1434e4268add5252c34281ff54ee522386e9cfe",
+      "target_sha256": "5ff0ec9357e7712b48a8556c5f80d64df1337aee582e3c2c93ae5ac56a7ef542",
+      "reviewer": "Claude (Claude Code session; English figure drawn by the same script with the en switch; visual check)",
+      "method": "assistant",
+      "reviewed_on": "2026-11-23"
+    },
+    {
+      "source": "examples/debris_dam/figs/village.png",
+      "target": "examples/debris_dam/en/figs/village.png",
+      "source_sha256": "32dc411bcbaa59e8a24ab74a8d450006796d25b644dcc9f26cfbc3f1a1ffb898",
+      "target_sha256": "ee580eecda7ca3fcde11c397428662fc233822d2d4e14bcec4b3ce506d0b8e2f",
+      "reviewer": "Claude (Claude Code session; English figure drawn by the same script with the en switch; visual check)",
+      "method": "assistant",
+      "reviewed_on": "2026-11-23"
     },
     {
       "source": "examples/debris_fan/README.md",

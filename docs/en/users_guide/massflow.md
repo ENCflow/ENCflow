@@ -368,6 +368,36 @@ by configuration 10 of
 [test/debris](../../../test/debris/en/README.md) (the concentration of a uniform flow agrees with the
 equilibrium concentration to 9 digits).
 
+**Combination with bed load (gentle reaches).** `f_debris = 1` can be combined with bed load,
+`f_fluvial = 1`. The sediment concentration that the erosion–deposition law of Takahashi & Nakagawa can
+keep in the flow decreases with the slope (the equilibrium concentration of `f_dbimm = 1` is 0.002 at a
+slope of 0.02), and the movement of sediment after a debris flow has reached a gentle river, or the
+downstream transport of the sediment that the overflow of a natural dam has eroded, belongs to the
+bed-load regime. When the two are combined, bed load (the transport formula and the Exner equation of §3
+of the [explanation of sediment transport](sediment.md)) carries the bed material in the direction of the
+flow. The two processes act without knowing each other, and the amounts they carry are added (our own
+composition).
+
+- On slopes of roughly 0.03 to 0.14, the formula for bedload-like collective flow and the bed-load
+  formula both carry amounts of the same order, so the total is larger by what is counted twice. If
+  the bed-load formula receives the full shear stress (`fluv_taufac = 1`), a uniform-flow estimate gives a
+  total transport capacity of 2.2 times that of the Takahashi & Nakagawa law alone (`f_dbimm = 1`) at a
+  slope of 0.12, and 6 to 8 times at 0.02 (grain size 3 cm, roughness 0.04, unit discharge 1–5 m²/s;
+  Ashida–Michiue formula).
+- When the roughness of the channel (Manning's n) is larger than the grain roughness, reduce the bed load
+  by setting the effective-shear ratio `fluv_taufac` to the ratio of the grain roughness to the channel
+  roughness raised to the power 1.5. A guide for the grain roughness is $`n_0 = D^{1/6}/20.4`$ (the
+  baseline resistance of Rickenmann & Recking; "stress partition for steep gravel beds" in §3 of the
+  [explanation of sediment transport](sediment.md)), which gives about 0.6 for grain sizes of 3–7 cm and
+  n = 0.04. The total then becomes 1.4 to 1.5 times at slopes of 0.12–0.25 and 2 to 4 times at 0.02.
+- Set the bed-load grain size `fluv_d50` equal to `db_d50`.
+
+The transport capacity of gentle reaches changes several-fold depending on which formula is used down to
+which slope, and the speed of the breach of a natural dam changes accordingly.
+[examples/debris_dam](../../../examples/debris_dam/en/README.md) compares computations with and without
+bed load and with different effective-shear ratios. A formula that connects the two regimes (a
+composition without double counting) is not implemented.
+
 **f_dbed = 4: velocity-proportional entrainment.** $`E = \delta_e|\mathbf{V}|`$
 (entrainment only; stopping is left to `f_dbstop`). A simple law for the
 growth of avalanches and rock avalanches that pick up the snow or the
@@ -561,10 +591,16 @@ formula above; developer.md §28.19).
     neighbouring cell fails when this step and the gradient of the total head $`J`$ give
     $`\gamma'\,(d_{\max}/\Delta x + \tan\theta) + \gamma_w J > \gamma'\tan\phi_s`$
     ($`\gamma' = \gamma_t - \gamma_w`$), and the fluidisation then propagates as a chain. In a
-    computation of a saturated dam 13 m high being cut by overtopping ($`\phi_s = 35^\circ`$),
+    computation of a saturated dam 13 m high being cut by overtopping (the
+    [natural-dam example](../../../examples/debris_dam/en/README.md); $`\phi_s = 35^\circ`$),
     $`d_{\max}/\Delta x = 0.3`$ did not propagate, while 0.6 propagated across the lake-side face of
     the dam and halved the peak of the breach. About 0.3 times the grid spacing is a practical upper
     limit.
+  - **Do not make it shallower than the slip surface of the soil layer.** A $`d_{\max}`$ smaller than
+    the soil depth reduces the saturated thickness that enters the test and delays the failure (a
+    slope whose 3 m soil layer fails at a saturation of 0.85 does not fail until 0.93 with
+    $`d_{\max}`$ = 1.5 m). For a thick layer that saturates from its base on a fine grid, this and
+    the condition above cannot both be met.
 
 **Matching the failure condition and the flow condition.** A saturated soil layer ($`h_w = s_d`$,
 $`c' = 0`$) fails when $`\tan\theta > (\gamma'/\gamma_t)\tan\phi_s`$ ($`\gamma' = \gamma_t - \gamma_w`$).
