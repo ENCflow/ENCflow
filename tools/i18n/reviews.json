@@ -320,9 +320,9 @@
     {
       "source": "docs/users_guide/geomorph_applications.md",
       "target": "docs/en/users_guide/geomorph_applications.md",
-      "source_sha256": "d1fd85323bddec5d10fa75055d81cd9fed386274c394802b510ab7c1fb8a9b7b",
-      "target_sha256": "52fc5ec560dc03d28053f9cb170798f17559dee95a6dbe3f8dfdf76ca5e206f1",
-      "reviewer": "Claude (Claude Code session; the parts changed for the natural-dam application and the example debris_dam: applications section 7, combination with bed load, the two conditions on slide_dmax, pattern table, use cases, index and the list of examples; the English mirror was updated in the same work and both diffs were read side by side)",
+      "source_sha256": "3760635839cfd7dd54cc5570e2f2ebc248e1a4e0bc29f778d68b70920bb460dc",
+      "target_sha256": "f96f80e28fa3209479ef5d307206ac532499f84bf6a0f71e4ae2577f88460763",
+      "reviewer": "Claude (Claude Code session; the limit on narrow breaches in section 7 updated with the tilted-crest results on the 10 m and 5 m grids in both versions; both diffs read side by side)",
       "method": "assistant",
       "reviewed_on": "2026-11-23"
     },
@@ -1769,17 +1769,17 @@
     {
       "source": "examples/debris_dam/README.md",
       "target": "examples/debris_dam/en/README.md",
-      "source_sha256": "70aebc2980e84ae82864fcc4e07fd9889c2fc7124d6124d407b746db091afed9",
-      "target_sha256": "f644c3b0bdf6df0de4bc8da7771342924bd3b86145a6ad3857a63a9e07dbb971",
-      "reviewer": "Claude (Claude Code session; new example README assembled in both languages from paired source parts and tables generated from the same results; both versions read in full)",
+      "source_sha256": "cf63c08262af2da707ac50ef7cf7340ca8ef51a86bdb250b11b362a48793537a",
+      "target_sha256": "6f869be00a12056fb6212b8ad629ce3ac4e21d2ce04fc0195fa7c65356a86e03",
+      "reviewer": "Claude (Claude Code session; README re-assembled in both languages from paired source parts and tables generated from the same results after adding the tilted-crest dams and the dmax15 case; the changed passages of both versions read side by side)",
       "method": "assistant",
       "reviewed_on": "2026-11-23"
     },
     {
       "source": "examples/debris_dam/figs/breach.png",
       "target": "examples/debris_dam/en/figs/breach.png",
-      "source_sha256": "ce352b894571a18f6bc2ed297d4778a52f176339b66b2ee89a78145400587315",
-      "target_sha256": "3853758f59f27bcf952d5db9b87a477451bf5dafb8a40c355cc6fa85fba97def",
+      "source_sha256": "a9e150ae36f1560a4c92c93b1ecb76896541345b7ac8d739f4e26f304acd4a0b",
+      "target_sha256": "172b032b9bd5234371cc9bfabb762d0a193709a631c57410b0aac44805b95c06",
       "reviewer": "Claude (Claude Code session; English figure drawn by the same script with the en switch; visual check)",
       "method": "assistant",
       "reviewed_on": "2026-11-23"
@@ -1787,8 +1787,8 @@
     {
       "source": "examples/debris_dam/figs/breach_sum.png",
       "target": "examples/debris_dam/en/figs/breach_sum.png",
-      "source_sha256": "6cdda6b498209194a1ba12249eb9048b903e974b162b146b423d121a9c3f5e89",
-      "target_sha256": "2fc7d643ca44006410e55b0d29defbb8fac6e4daf859cbf56a6f5704dc865197",
+      "source_sha256": "fcf227c664a27070713f7e3adec90042391637d425c1983e3ce498755b5a2312",
+      "target_sha256": "4aaa4cd9c2736fd8974772cc6debc3430f185b2adc2b6c2b9f1cfc22e6ef1a81",
       "reviewer": "Claude (Claude Code session; English figure drawn by the same script with the en switch; visual check)",
       "method": "assistant",
       "reviewed_on": "2026-11-23"
@@ -1805,8 +1805,8 @@
     {
       "source": "examples/debris_dam/figs/formation.png",
       "target": "examples/debris_dam/en/figs/formation.png",
-      "source_sha256": "ca6690c56138ee6ed66ba57aa2dc3e0eb95d79b46c5c16cce14e5e049deb3d0b",
-      "target_sha256": "1c98b1dc024a9643f21ab0f128eb93031d8207b2d0d42d2d025e15d55a2b2a49",
+      "source_sha256": "9c6582aba70a6c504ab6ce8cc4434c3dd05d32005bd961bbaa06dca6f0000a98",
+      "target_sha256": "8d054a5d37a3da596ff5f50b0d5064ddcb491ca9130ec921293d1637e19cc965",
       "reviewer": "Claude (Claude Code session; English figure drawn by the same script with the en switch; visual check)",
       "method": "assistant",
       "reviewed_on": "2026-11-23"
@@ -1850,8 +1850,8 @@
     {
       "source": "examples/debris_dam/figs/spread.png",
       "target": "examples/debris_dam/en/figs/spread.png",
-      "source_sha256": "1d812c5a10621aface693a2ea1434e4268add5252c34281ff54ee522386e9cfe",
-      "target_sha256": "5ff0ec9357e7712b48a8556c5f80d64df1337aee582e3c2c93ae5ac56a7ef542",
+      "source_sha256": "461134ee05a7cb05cb281c461f2117c0f8a653313ada8519068333a33be6116f",
+      "target_sha256": "085bc46316ec230fec8f5491b4ab06ba4202d0253e47a36fb1d402e90e7613e8",
       "reviewer": "Claude (Claude Code session; English figure drawn by the same script with the en switch; visual check)",
       "method": "assistant",
       "reviewed_on": "2026-11-23"

@@ -370,7 +370,9 @@ that make the breach rapid).
     block the breach change with slight differences in the conditions, and the peak discharge scatters (in the
     base case of the chain of the example, seven runs with the inflow varied by ±2 % give 407–547 m³/s; a dam
     with a level crest that is overtopped over its full width changes by less than 1 % for a 1 % difference).
-    Run several computations with slightly different conditions and check the spread of the results. The
-    dependence of a narrow breach on the grid spacing has not been checked in the example.
+    Run several computations with slightly different conditions and check the spread of the results. Four runs
+    of a pre-built dam whose crest is tilted into the same shape give 347–435 m³/s on the 10 m grid and
+    299–309 m³/s on the 5 m grid (the mean on the 5 m grid is 0.80 times that on the 10 m grid). The spread becomes smaller when the grid is refined. The mean changes as well, however: the breach through a
+    narrow breach has not converged with respect to the grid spacing (check it with computations on different grids too).
   - Excavating the dam as a countermeasure cannot be combined with erosion, because
     [prescribed bed motion](bedmotion.md) does not change the soil thickness.
