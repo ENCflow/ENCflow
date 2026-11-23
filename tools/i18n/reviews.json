@@ -2264,8 +2264,8 @@
     {
       "source": "examples/levee_breach/README.md",
       "target": "examples/levee_breach/en/README.md",
-      "source_sha256": "4c134111fe71131686e811d996c6d24f201fa9eb412db7f4f67ff4f5fd24819c",
-      "target_sha256": "9619b7831be643994363ccb2fba5c1fd9fadb1b49c86b2dfdd3ed09162388394",
+      "source_sha256": "a53e2043ffe6b949ada2071441585378e6023d3b9e77189d052e5a90e0b5b769",
+      "target_sha256": "dcc168a02de2ea26e6b3262d0ab14bed6228c8520de4336cb84bc3f66ceb67e9",
       "reviewer": "Claude (Claude Code session; examples recomputed with the advection defaults of 2026-11-21: values and figures from the new results, Japanese and English compared)",
       "method": "assistant",
       "reviewed_on": "2026-11-23"
