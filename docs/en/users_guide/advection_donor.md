@@ -349,8 +349,8 @@ The Chichibu numbers in this section were measured in the same setting as §5
   longer than with 0 (Chichibu, 200 m grid; this includes
   `f_advection_lateral = 1`, which works only with 3. With 3 combined with
   `f_advection_lateral = 0` it is about a tenth longer than with 0). The
-  default four values take a further 1.3 to 1.4 times that in runs with rain
-  ([Advection schemes](advection.md) §4.4).
+  default four values take a further 1.3 to 1.6 times that in runs with rain,
+  depending on the run and the number of threads ([Advection schemes](advection.md) §4.4).
 - **Lateral-face braking is handled by `f_advection_lateral`.** The velocity
   of the water entering the control volume from the side is taken from the
   parallel link beyond the face ([Advection schemes](advection.md) §4.2 and

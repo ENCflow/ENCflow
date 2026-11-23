@@ -953,13 +953,18 @@ With `f_advection_donor` = 3 or 4 (the default is 4) the wet/dry test of the par
 
   Limits:
   - **The computation takes longer and uses more memory.** In a run where rain wets every cell it takes 1.3 to
-    1.4 times as long as with the combination of the old values (3, 1, 1, 3) (on 4 threads, +32 % on the 200 m grid of the Chichibu basin and +37 % on
-    the 100 m grid; added one at a time on the 200 m grid, `f_advection_lateral = 2` costs +11 %,
-    `f_advection_donor = 4` +9 %, and `f_advection_bend = 2` and `f_dry_head_cap = 4` a few percent at most, within
-    the scatter of the measurement). As for memory, specifying any of `f_advection_donor = 4`,
-    `f_advection_bend = 2` and `f_advection_lateral = 2` allocates a work array of 8 reals per cell (the table of
-    the discharges of the links from a cell to its 8 neighbours), and `f_advection_donor = 4` allocates a further
-    8 reals per cell (the weights kept for each face).
+    1.6 times as long as with the combination of the old values (3, 1, 1, 3). This is the range over the runs
+    measured, and the increase depends on the run (grid, terrain, size of the domain) and on the number of
+    threads (+32 % on the 200 m grid of the Chichibu basin on 1 thread and on 4 threads, +37 % on the 100 m grid
+    on 4 threads; for a mountain headwater catchment ([example source_area](../../../examples/source_area/en/README.md);
+    50 m grid, 14,000 cells) with all the rain flowing over the surface, +48 % on 1 thread and +61 % on 4 threads;
+    developer.md §113.7, §114.9). Added one at a time on the 200 m grid of the Chichibu basin (4 threads),
+    `f_advection_lateral = 2` costs +11 %, `f_advection_donor = 4` +9 %, and `f_advection_bend = 2` and
+    `f_dry_head_cap = 4` a few percent at most (within the scatter of the measurement). Against the defaults until
+    2026-11-13 (3, 0, 0, 1), the same headwater run takes 1.8 to 1.9 times as long. As for memory, specifying
+    any of `f_advection_donor = 4`, `f_advection_bend = 2` and `f_advection_lateral = 2` allocates a work array of
+    8 reals per cell (the table of the discharges of the links from a cell to its 8 neighbours), and
+    `f_advection_donor = 4` allocates a further 8 reals per cell (the weights kept for each face).
   - **The backwater caused by corner cells is less than half as large, but it remains.** In the shape with one
     corner cell open on the inside of a stair, the cell just after the stair is 1.9–4.9 m deeper than in the
     walls-only channel, and the discharge keeps oscillating with a standard deviation of 1.5–2.9 % of the given
@@ -1032,7 +1037,7 @@ The essentials of the numerical experiments of developer.md §68 (2026-10).
 | Spatially varied flow with lateral inflow (depth ratio to the physical solution) | 1.7–2.0 (no momentum sink; supercritical flow turns subcritical) | about the same as 3 | 0.992 |
 | Grid dependence on real terrain (chichibu; conditioned bed, channel roughness 0.04) 200 → 100 → 50 m (peak discharge near the catchment outlet; [examples/chichibu_flood](../../../examples/chichibu_flood/en/README.md#treatment-of-the-advection-term)) | depends on the upwind index (0.1: −7%, then the discharge goes up and down violently at 50 m; 0.5: −16% and +3%, one to three tenths below 3; 1.0: −18% and +9%, three to five tenths below 3) | not compared under the default rules (about the same as 3 in the measurements of 2026-10) | −9% and +12% (near the catchment outlet only the 100 m grid is about 10% lower = a large tributary delivers its flood differently on each grid, developer.md §113.8; the upstream transects almost converge at 100 m and below; the transect in the gorge grows by 19% from 200 to 100 m) |
 | Stability | blows up on the 50 m DEM (upwind index 0.1) and in 1–2 cell incised channels | upwinding provides the stability | same |
-| Cost (measured with `f_advection_bend = 0`; with `f_advection_bend = 1`, scheme 3 takes another two to three tenths, and with the default four values a further 1.3 to 1.4 times that (the same treatment is added to 2); §4.4) | 1.00 | 1.19 | 1.27 |
+| Cost (measured with `f_advection_bend = 0`; with `f_advection_bend = 1`, scheme 3 takes another two to three tenths, and with the default four values a further 1.3 to 1.6 times that (depending on the run and the number of threads; the same treatment is added to 2); §4.4) | 1.00 | 1.19 | 1.27 |
 | Role | legacy; reproducing existing calibrations | fallback for 3 (coarse problems that tolerate the overshoot at the bore front) | **default**; best for bores, jumps, lateral inflow and stability (the peak discharge on real terrain changes with the grid; row above) |
 
 Sources of the numbers: the bore from [test/dambreak](../../../test/dambreak/en/README.md), the smooth flood
