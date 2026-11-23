@@ -905,9 +905,9 @@
     {
       "source": "examples/README.md",
       "target": "examples/README.en.md",
-      "source_sha256": "d9923774d5d2c1bb755bb7f724d8714a94c23bb36ff3eb582210e0a077213998",
-      "target_sha256": "3d3268b86e8592f30a3df5ec59c171eee0176005cfca4c0d4ac803b3221b3c78",
-      "reviewer": "Claude (Claude Code session; the parts changed for the natural-dam application and the example debris_dam: applications section 7, combination with bed load, the two conditions on slide_dmax, pattern table, use cases, index and the list of examples; the English mirror was updated in the same work and both diffs were read side by side)",
+      "source_sha256": "4428c19914ad1fd137dd27f7a797560ec1b36381b6c880ae558ba09eb8c227f0",
+      "target_sha256": "5b4ed7561784efbce87a0d4feb8d101b5c7864b70a9b775166b95b2a2a8e48a7",
+      "reviewer": "Claude (Claude Code session; the description of debris_dam in the table shortened in both versions; both diffs read side by side)",
       "method": "assistant",
       "reviewed_on": "2026-11-23"
     },
