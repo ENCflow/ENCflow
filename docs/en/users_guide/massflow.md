@@ -585,7 +585,8 @@ formula above; developer.md §28.19).
   $`\max(0,\ h_w - (s_d - d))`$ (the saturated zone is read as building up from the bottom of the
   soil layer). The default (0) is the whole layer. This avoids a thick deposit failing down to the
   bedrock at once. The remaining layer is judged again at the next update, so it fails from the top
-  in turn while it stays saturated.
+  in turn while it stays saturated (when combined with `f_slide_noflow = 1`, see the second note
+  below).
   - **Do not make it large relative to the grid spacing.** Fluidising one cell to a depth
     $`d_{\max}`$ leaves a step of gradient $`d_{\max}/\Delta x`$ towards its neighbours. A saturated
     neighbouring cell fails when this step and the gradient of the total head $`J`$ give
@@ -596,11 +597,17 @@ formula above; developer.md §28.19).
     $`d_{\max}/\Delta x = 0.3`$ did not propagate, while 0.6 propagated across the lake-side face of
     the dam and halved the peak of the breach. About 0.3 times the grid spacing is a practical upper
     limit.
-  - **Do not make it shallower than the slip surface of the soil layer.** A $`d_{\max}`$ smaller than
-    the soil depth reduces the saturated thickness that enters the test and delays the failure (a
-    slope whose 3 m soil layer fails at a saturation of 0.85 does not fail until 0.93 with
-    $`d_{\max}`$ = 1.5 m). For a thick layer that saturates from its base on a fine grid, this and
-    the condition above cannot both be met.
+  - **Do not make it shallower than the slip surface of the layer that is to fail.** A $`d_{\max}`$
+    smaller than the soil depth reduces the saturated thickness that enters the test and delays the
+    failure (a slope whose 3 m soil layer fails at a saturation of 0.85 does not fail until 0.93 with
+    $`d_{\max}`$ = 1.5 m). In addition, when it is combined with `f_slide_noflow = 1`, the layer left
+    behind is not judged while the fluidised sediment lies on it, so only the upper layer fails and the
+    saturated lower layer stays on the slope (with $`d_{\max}`$ = 1.5 m on the failure slope of the
+    natural-dam example, 60,000 m³ of the 150,000 m³ of colluvium remain and the dam is 7 m high instead
+    of 13 m). With `f_slide_noflow = 0` the whole layer fails, but the deposited sediment is fluidised
+    again and again. When a soil layer on a slope is to fail under heavy rain, make $`d_{\max}`$ at
+    least the soil depth. For a thick layer that saturates from its base on a fine grid, this and the
+    condition above cannot both be met.
 
 **Matching the failure condition and the flow condition.** A saturated soil layer ($`h_w = s_d`$,
 $`c' = 0`$) fails when $`\tan\theta > (\gamma'/\gamma_t)\tan\phi_s`$ ($`\gamma' = \gamma_t - \gamma_w`$).

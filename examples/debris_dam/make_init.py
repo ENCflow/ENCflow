@@ -28,6 +28,9 @@
   dam      (高さ, 天端の長さ, 上流の法面勾配, 下流の法面勾配)。合流点に堤体をはじめから置き、上流を
            天端の高さまで湛水させる(決壊の条件を比べる系列。崩壊斜面の土層は置かない)。堤体は土層で、
            侵食される。
+  tilt     堤体の天端の、谷を横切る向きの勾配。0 なら天端は水平で、越流は谷の全幅で起こる。正の値を与えると、
+           天端は y = YLOW(支流の対岸の側)の幅 DAM_NOTCH を底に両側へ上がり、越流はそこに集まる(土石流が
+           つくる堤体の形)。
 
 出力(data_<地形>/):
   z.txt          地盤高 (m)
@@ -83,10 +86,16 @@ CULV_RISE = 1.5                      # 呑口・吐口の敷高(河床からの�
 
 # ---------------------------------------------------------------- 地形とケース
 DAM_H = 13.0                         # はじめから置く堤体の高さ(基本ケースの土石流がつくる堤体と同じ程度)
+DAM_TILT = 0.11                      # 天端の傾いた堤体の、谷を横切る向きの天端の勾配(基本ケースの土石流がつくる堤体は、
+                                     # 最も低い所から支流の側の谷壁の脚まで 35 m で 3.8 m 高い)
+YLOW = -15.0                         # 傾いた天端の最も低い所の中心の y (m)(支流の対岸の側。基本ケースの堤体と同じ位置)
+DAM_NOTCH = 10.0                     # 最も低い所の幅 (m)(10 m 格子で 1 セル、5 m 格子で 2 セル。高さは格子によらない)
 GEOM_DEFAULT = dict(dx=10.0,         # 格子間隔 (m)
                     sk=S0,           # 合流点の下流 XK0〜XK1 の勾配(S0 なら一様)
                     wb=WB,           # 合流点の上流 XB0〜XB1 の谷底幅(WG なら峡谷のまま)
-                    dam=None)        # はじめから置く堤体 (高さ m, 天端の長さ m, 上流の法面勾配, 下流の法面勾配)
+                    dam=None,        # はじめから置く堤体 (高さ m, 天端の長さ m, 上流の法面勾配, 下流の法面勾配)
+                    tilt=0.0)        # 堤体の天端の、谷を横切る向きの勾配(0 なら水平。y = YLOW の幅 DAM_NOTCH を底に
+                                     # 両側へ上がる)
 GEOMS = {
     "g10": dict(),
     "g5": dict(dx=5.0),
@@ -97,6 +106,8 @@ GEOMS = {
     "d12l": dict(dam=(DAM_H, 10.0, 0.12, 0.12), wb=300.0),      # 広い盆地(湛水量が大きい)
     "d12k": dict(dam=(DAM_H, 10.0, 0.12, 0.12), sk=0.10),       # 下流が急
     "d12x5": dict(dam=(DAM_H, 10.0, 0.12, 0.12), dx=5.0),       # 5 m 格子
+    "d12t": dict(dam=(DAM_H, 10.0, 0.12, 0.12), tilt=DAM_TILT),             # 天端が支流の側へ上がる(土石流の堆積の形)
+    "d12tx5": dict(dam=(DAM_H, 10.0, 0.12, 0.12), tilt=DAM_TILT, dx=5.0),   # 同、5 m 格子
 }
 DT_PER_DX = 0.01                     # 時間刻み dt = 0.01 Δx (s)
 Q_BASE = 40.0                        # 本川の流量 (m³/s)
@@ -138,6 +149,9 @@ CASES = {
     "wet2": ("g10", dict(SHORT, f_dbwet="2"), {}),                                     # 保持水を授受しない
     "slide0": ("g10", dict(SHORT, f_slide_seep="0", f_slide_wet="0", f_slide_noflow="0", slide_dmax="0.0"), {}),
     "g5": ("g5", dict(SHORT), {}),                                                     # 5 m 格子
+    # 判定・流動化する深さの上限を土層の半分にする。はじめの飽和度は、崩壊の時刻が基本ケースと同じになる値
+    # (崩れる飽和度が 0.853 → 0.927 に上がる分。崩れるまでに要る水 14 mm を同じにする)
+    "dmax15": ("g10", dict(SHORT, slide_dmax="1.5", gw_sat0="0.9035"), {}),
     # ---- 堤体をはじめから置く系列(決壊の条件)
     "dam_ref": dam_case("d12"),
     "dam_face25": dam_case("d25"),
@@ -157,6 +171,8 @@ CASES = {
     "dam_unsat0": dam_case("d12", gw_sat0="0.83", f_dbunsat="0"),
     "dam_dx5": dam_case("d12x5", slide_dmax="1.5"),          # 5 m 格子(slide_dmax は格子間隔の 0.3 倍の 1.5 m)
     "dam_dx5d3": dam_case("d12x5"),                          # 5 m 格子で slide_dmax を 3 m のままにする
+    "dam_tilt": dam_case("d12t"),                            # 天端が谷を横切る向きに傾いた堤体(細い決壊口ができる)
+    "dam_tilt_dx5": dam_case("d12tx5", slide_dmax="1.5"),    # 同、5 m 格子
 }
 QUICK = ("base", "drain", "dam_ref", "dam_face25", "dam_small", "dam_large")
 DAMS = tuple(c for c in CASES if c.startswith("dam_"))
@@ -168,7 +184,12 @@ PERT_BASE = {"base_m2": "39.2", "base_m1": "39.6", "base_eps": "40.0001", "base_
              "base_p2": "40.8"}
 PERT = {name: ("g10", {"Qin": q}, {}) for name, q in PERT_BASE.items()}
 PERT.update({"dam_ref_p1": dam_case("d12", Qin="40.4"), "dam_face25_p1": dam_case("d25", Qin="40.4")})
+PERT_TILT = {"m1": "39.6", "eps": "40.0001", "p1": "40.4"}        # 傾いた堤体の流入量の摂動(10 m と 5 m)
+PERT.update({f"dam_tilt_{k}": dam_case("d12t", Qin=q) for k, q in PERT_TILT.items()})
+PERT.update({f"dam_tilt_dx5_{k}": dam_case("d12tx5", slide_dmax="1.5", Qin=q) for k, q in PERT_TILT.items()})
 PERT_OF = dict({name: "base" for name in PERT_BASE}, dam_ref_p1="dam_ref", dam_face25_p1="dam_face25")   # もとのケース
+PERT_OF.update({f"dam_tilt_{k}": "dam_tilt" for k in PERT_TILT})
+PERT_OF.update({f"dam_tilt_dx5_{k}": "dam_tilt_dx5" for k in PERT_TILT})
 CASES.update(PERT)
 
 
@@ -232,7 +253,8 @@ def block_dam(x, y, g):
     """合流点に置く堤体の厚さ(地形の dam)。堤体の表面と地盤高の差(正の所だけ)。"""
     hd, lc, sup, sdn = g["dam"]
     top = (zf_axis(XT, g["sk"]) + hd - sup * np.clip(XT - lc / 2 - x, 0.0, None)
-           - sdn * np.clip(x - XT - lc / 2, 0.0, None))
+           - sdn * np.clip(x - XT - lc / 2, 0.0, None)
+           + g["tilt"] * np.clip(np.abs(y - YLOW) - DAM_NOTCH / 2, 0.0, None))
     return np.clip(top - terrain(x, y, g["sk"], g["wb"]), 0.0, None)
 
 

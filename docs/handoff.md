@@ -100,6 +100,7 @@
 - [00g](handoff/00g.md) examples の英語ラベル図(2026-10-25。tutorials/test と同じ方式)
 - [00r](handoff/00r.md) 貯留関数法の区画流出 fn_sfm(2026-11-11。developer.md §106)の残り
 - [00h](handoff/00h.md) 鉛直不飽和浸透(VZ)流出モデル fn_vz(2026-10-26。docs/vz_plan.md、§87)の残り
+- [00ad](handoff/00ad.md) 例題 debris_dam の、天端の傾いた堤体と dmax15 の反映(2026-11-23。作業中)
 - [00c](handoff/00c.md) 方針 13(説明責任。policy.md。2026-10-24 制定)の既存部分への遡及
 - [00d](handoff/00d.md) 河口デルタ形成の試行(2026-10-20〜21。docs/delta_plan.md)の残り
 - [00e](handoff/00e.md) 波浪による沿岸漂砂 fn_wave(2026-10-22。docs/wave_plan.md、§84.15)の残り

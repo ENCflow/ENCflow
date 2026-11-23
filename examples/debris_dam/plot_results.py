@@ -7,7 +7,8 @@
   figs/profile.png    基本ケースの本川の縦断(堤体と水面の時間変化)
   figs/chain.png      連鎖のケースの比較(基本・仮排水路・粗い土砂・流量 2 倍)
   figs/village.png    集落の最大流動深と家屋の破壊率(基本・粗い土砂・仮排水路)
-  figs/spread.png     流入量を少し変えた計算の流量(結果の幅。連鎖の基本ケースと、堤体を置く系列の 2 ケース)
+  figs/spread.png     流入量を少し変えた計算の流量(結果の幅。連鎖の基本ケース、天端が水平な堤体、天端が傾いた堤体の
+                      10 m 格子と 5 m 格子)と、天端の横断形
   figs/formation.png  堤体のできかたの比較(間隙水の扱い・斜面安定判定の選択子・格子間隔)
   figs/breach.png     堤体をはじめから置く系列の流量(湛水量・堤体の形・粒径・流入量・下流の勾配と格子・式)
   figs/breach_sum.png 同じ系列のピーク流量と立ち上がりの時間、経験式との比較
@@ -43,13 +44,13 @@ TERRAIN = ListedColormap(plt.get_cmap("gist_earth")(np.linspace(0.35, 0.95, 256)
 COL = {"water": "#1f5f8b", "dep": "#8b4a10", "mix": "#c0392b", "rain": "#4a7fb5", "crest": "#5b3a1a"}
 CHAIN = ("base", "drain", "coarse", "q80")
 TDAM = 60.0     # 堤体を置く系列で、残った堤体の高さと水位を比べる時刻(分。最も短いケースの計算時間)
-FORM = ("base", "wet0", "wet2", "slide0", "g5")
+FORM = ("base", "wet0", "wet2", "slide0", "g5", "dmax15")
 LAB = {   # ケースの呼び名
     "base": ("基本", "base"), "drain": ("仮排水路", "drain"), "coarse": ("粗い土砂(10 cm)", "coarse (10 cm)"),
     "q80": ("流量 2 倍(80 m³/s)", "double inflow (80 m³/s)"),
     "norain": ("雨なし", "no rain"), "wet0": ("間隙水を連行しない", "no pore-water entrainment"),
     "wet2": ("保持水を授受しない", "no retained water"), "slide0": ("安定判定の選択子なし", "no stability options"),
-    "g5": ("5 m 格子", "5 m grid"),
+    "g5": ("5 m 格子", "5 m grid"), "dmax15": ("slide_dmax = 1.5 m", "slide_dmax = 1.5 m"),
     "dam_ref": ("基準(法面 0.12、盆地 150 m)", "reference (faces 0.12, basin 150 m)"),
     "dam_face25": ("法面 0.25(1:4)", "faces 0.25 (1:4)"), "dam_crest40": ("法面 0.25、天端 40 m", "faces 0.25, crest 40 m"),
     "dam_small": ("湛水量 小(峡谷だけ)", "small lake (gorge only)"), "dam_large": ("湛水量 大(盆地 300 m)", "large lake (basin 300 m)"),
@@ -62,12 +63,14 @@ LAB = {   # ケースの呼び名
     "dam_unsat": ("不飽和の堤体", "unsaturated dam"), "dam_unsat0": ("不飽和の堤体、飽和床の式", "unsaturated dam, saturated-bed law"),
     "dam_dx5": ("5 m 格子(slide_dmax = 1.5 m)", "5 m grid (slide_dmax = 1.5 m)"),
     "dam_dx5d3": ("5 m 格子、slide_dmax = 3 m のまま", "5 m grid, slide_dmax kept at 3 m"),
+    "dam_tilt": ("天端が傾いた堤体(支流の側が高い)", "tilted crest (higher on the tributary side)"),
+    "dam_tilt_dx5": ("天端が傾いた堤体、5 m 格子", "tilted crest, 5 m grid"),
 }
 
 
 def lab(name):
-    """ケースの呼び名。流入量を少し変えたケース(M.PERT)は、流入量と、もとのケースからの差で呼ぶ。"""
-    if name in M.PERT:
+    """ケースの呼び名。流入量を少し変えたケース(M.PERT_OF)は、流入量と、もとのケースからの差で呼ぶ。"""
+    if name in M.PERT_OF:
         q, q0 = M.case_inflow(name), M.case_inflow(M.PERT_OF[name])
         pc = f"{(q / q0 - 1.0) * 100.0:+.5f}".rstrip("0").rstrip(".").replace("-", "−")
         return T(f"流入 {q:g} m³/s({pc} %)", f"inflow {q:g} m³/s ({pc} %)")
@@ -533,53 +536,103 @@ def fig_chain(cases):
     plt.close(fig)
 
 
-PERT_COL = {"base_m2": "#2c7bb6", "base_m1": "#74add1", "base_eps": "#7d3c98", "base_p05": "#f4a340",
-            "base_p1": "#d95f02", "base_p2": "#8b4a10"}
+PERT_COL = {"m2": "#2c7bb6", "m1": "#74add1", "eps": "#7d3c98", "p05": "#f4a340", "p1": "#d95f02", "p2": "#8b4a10"}
+
+
+def crest_section(c, k):
+    """フレーム k の、堤体の天端の位置(谷を横切る最低点が最も高い x)の横断: (y, 地盤高)。谷底と谷壁の脚の範囲。"""
+    z = c.frame("Z", k)
+    xd, zc, hd = c.dam(z)
+    i = int(np.argmin(np.abs(c.xc - xd)))
+    band = np.abs(c.yc) < M.WG / 2 + 10.0
+    o = np.argsort(c.yc[band])
+    return c.yc[band][o], z[band, i][o]
 
 
 def fig_spread(done, mets):
     """流入量を少し変えた計算(結果の幅)。連鎖の基本ケースは越流の開始にそろえて重ねる。"""
-    members = [n for n in M.PERT_BASE if n in done and mets[n]["tov"] is not None]
-    pairs = [(n, M.PERT_OF[n]) for n in M.PERT if n not in M.PERT_BASE and n in done and M.PERT_OF[n] in done]
+    def group(base):
+        return [n for n in M.PERT if M.PERT_OF[n] == base and n in done and mets[n]["tov"] is not None]
+    members = group("base")
+    pairs = [(n, M.PERT_OF[n]) for n in ("dam_ref_p1", "dam_face25_p1") if n in done and M.PERT_OF[n] in done]
     if "base" not in done or mets["base"]["tov"] is None or not (members or pairs):
         return False
-    fig, axes = plt.subplots(3, 1, figsize=(10.5, 10.6), gridspec_kw=dict(hspace=0.34))
+    fig, axes = plt.subplots(3, 2, figsize=(14.0, 11.6), gridspec_kw=dict(hspace=0.36, wspace=0.16))
+
+    def kw_of(n, base, blabel):
+        if n == base:
+            return dict(color="k", lw=2.2, zorder=5, label=blabel)
+        return dict(color=PERT_COL[n.rsplit("_", 1)[1]], lw=1.3, label=lab(n))
+
+    # (a)(b) 連鎖の基本ケース
     for n in sorted(members + ["base"], key=M.case_inflow):
         t, q2, q4, lake = done[n].hydro()
-        tov = mets[n]["tov"]
-        if n == "base":
-            kw = dict(color="k", lw=2.2, zorder=5, label=T("基本ケース(流入 40 m³/s)", "base case (inflow 40 m³/s)"))
-        else:
-            kw = dict(color=PERT_COL[n], lw=1.3, label=lab(n))
-        axes[0].plot(t - tov, q2, **kw)
-        axes[1].plot(t - tov, q4, **kw)
-    for ax, ttl in zip(axes[:2], (T("(a) 連鎖の基本ケース: 堤体の直下(x = 1100 m)の流量",
-                                    "(a) Base case of the chain: discharge just below the dam (x = 1100 m)"),
-                                  T("(b) 連鎖の基本ケース: 集落(x = 2400 m)の流量",
-                                    "(b) Base case of the chain: discharge at the village (x = 2400 m)"))):
+        kw = kw_of(n, "base", T("基本ケース(流入 40 m³/s)", "base case (inflow 40 m³/s)"))
+        axes[0, 0].plot(t - mets[n]["tov"], q2, **kw)
+        axes[0, 1].plot(t - mets[n]["tov"], q4, **kw)
+    for ax, ttl in zip(axes[0], (T("(a) 連鎖の基本ケース: 堤体の直下(x = 1100 m)の流量",
+                                   "(a) Base case of the chain: discharge just below the dam (x = 1100 m)"),
+                                 T("(b) 連鎖の基本ケース: 集落(x = 2400 m)の流量",
+                                   "(b) Base case of the chain: discharge at the village (x = 2400 m)"))):
         ax.set_xlim(-5.0, 50.0)
-        ax.set_ylim(0.0, None)
         ax.set_title(ttl, fontsize=10, loc="left")
         ax.set_xlabel(T("越流の開始からの時間 (分)", "time since the start of overtopping (min)"), fontsize=9)
-        ax.set_ylabel(T("流量 (m³/s)", "discharge (m³/s)"))
-        ax.grid(alpha=0.25)
-    axes[0].legend(fontsize=8, ncol=2, loc="upper right")
-    ax = axes[2]
+    axes[0, 0].legend(fontsize=7.5, ncol=2, loc="upper right")
+
+    # (c) 天端が水平な堤体(系列の 2 ケース)
+    ax = axes[1, 0]
     for (pn, bn), col in zip(pairs, ("#1f5f8b", "#c0392b")):
         for n, ls in ((bn, "-"), (pn, "--")):
             t, q2, q4, lake = done[n].hydro()
             ax.plot(t, q2, color=col if ls == "-" else "k", lw=2.0 if ls == "-" else 1.0, ls=ls,
                     label=f"{lab(bn)}: " + T(f"流入 {M.case_inflow(n):g} m³/s", f"inflow {M.case_inflow(n):g} m³/s"))
-    ax.set_xlim(0.0, 60.0)
-    ax.set_ylim(0.0, None)
-    ax.set_title(T("(c) 堤体をはじめから置く系列: 堤体の直下の流量(色の実線 = 流入 40 m³/s、黒の破線 = 40.4 m³/s)",
-                   "(c) Pre-built-dam series: discharge just below the dam (coloured solid = inflow 40 m³/s, black dashed = 40.4 m³/s)"),
+    ax.set_title(T("(c) 天端が水平な堤体(系列の 2 ケース): 堤体の直下の流量",
+                   "(c) Level crest (two cases of the series): discharge just below the dam"),
                  fontsize=10, loc="left")
-    ax.set_xlabel(T("時刻 (分)", "time (min)"), fontsize=9)
-    ax.set_ylabel(T("流量 (m³/s)", "discharge (m³/s)"))
-    ax.grid(alpha=0.25)
     if pairs:
-        ax.legend(fontsize=8)
+        ax.legend(fontsize=7.5)
+
+    # (d)(e) 天端が傾いた堤体(10 m 格子と 5 m 格子)
+    for ax, base, ttl in ((axes[1, 1], "dam_tilt", T("(d) 天端が傾いた堤体、10 m 格子: 堤体の直下の流量",
+                                                      "(d) Tilted crest, 10 m grid: discharge just below the dam")),
+                          (axes[2, 0], "dam_tilt_dx5", T("(e) 天端が傾いた堤体、5 m 格子: 堤体の直下の流量",
+                                                         "(e) Tilted crest, 5 m grid: discharge just below the dam"))):
+        if base in done and mets[base]["tov"] is not None:
+            for n in sorted(group(base) + [base], key=M.case_inflow):
+                t, q2, q4, lake = done[n].hydro()
+                ax.plot(t, q2, **kw_of(n, base, T("流入 40 m³/s", "inflow 40 m³/s")))
+            ax.legend(fontsize=7.5)
+        ax.set_title(ttl, fontsize=10, loc="left")
+    for ax in (axes[1, 0], axes[1, 1], axes[2, 0]):
+        ax.set_xlim(0.0, 60.0)
+        ax.set_xlabel(T("時刻 (分)", "time (min)"), fontsize=9)
+    ymax = max(a.get_ylim()[1] for a in (axes[1, 1], axes[2, 0]))
+    for ax in (axes[1, 1], axes[2, 0]):
+        ax.set_ylim(0.0, ymax)
+    for ax in axes.flat[:5]:
+        ax.set_ylim(0.0, ax.get_ylim()[1] * (1.3 if ax is axes[0, 0] else 1.0))     # (a) は凡例の分を空ける
+        ax.set_ylabel(T("流量 (m³/s)", "discharge (m³/s)"))
+        ax.grid(alpha=0.25)
+
+    # (f) 越流の前の天端の横断形
+    ax = axes[2, 1]
+    base = done["base"]
+    k = base.nearest(mets["base"]["tov"] - 2.0)[0]
+    for c, kk, kw in ((base, k, dict(color="k", lw=2.2, label=T("連鎖の基本ケース(土石流がつくった堤体)", "base case of the chain (dam built by the debris flow)"))),
+                      (done.get("dam_ref"), 0, dict(color="#1f5f8b", lw=1.6, label=T("天端が水平な堤体(dam_ref)", "level crest (dam_ref)"))),
+                      (done.get("dam_tilt"), 0, dict(color="#d95f02", lw=1.6, label=T("天端が傾いた堤体、10 m 格子", "tilted crest, 10 m grid"))),
+                      (done.get("dam_tilt_dx5"), 0, dict(color="#d95f02", lw=1.0, ls="--", label=T("天端が傾いた堤体、5 m 格子", "tilted crest, 5 m grid")))):
+        if c is not None:
+            yy, zz = crest_section(c, kk)
+            ax.step(yy, zz, where="mid", **kw)
+    ax.set_title(T("(f) 越流の前の天端の横断形(y が大きい側が支流)",
+                   "(f) Crest across the valley before overtopping (tributary on the large-y side)"),
+                 fontsize=10, loc="left")
+    ax.set_xlabel("y (m)", fontsize=9)
+    ax.set_ylabel(T("標高 (m)", "elevation (m)"))
+    ax.set_ylim(64.0, 72.0)
+    ax.grid(alpha=0.25)
+    ax.legend(fontsize=7.5, loc="upper left")
     fig.savefig(f"{FIGDIR}/spread.png", dpi=130, bbox_inches="tight")
     plt.close(fig)
     return True
@@ -620,7 +673,7 @@ def fig_formation(cases, tmin=28.0):
     fig = plt.figure(figsize=(13.0, 7.6))
     gs = fig.add_gridspec(2, len(cases), height_ratios=[1.0, 1.15], hspace=0.3, wspace=0.12)
     ax = fig.add_subplot(gs[0, :])
-    cols = ["#c0392b", "#1f5f8b", "#2e8b57", "#8b6a10", "#4d4d4d"]
+    cols = ["#c0392b", "#1f5f8b", "#2e8b57", "#8b6a10", "#4d4d4d", "#7d3c98"]
     c0 = cases[0]
     sel = (c0.xc > 650) & (c0.xc < 1200)
     ax.plot(c0.xc[sel], c0.thalweg(c0.z0)[sel], color="k", lw=1.0, label=T("元の河床", "original bed"))
@@ -658,7 +711,7 @@ def fig_formation(cases, tmin=28.0):
 # ---------------------------------------------------------------- 堤体をはじめから置く系列
 PANELS = (
     (("湛水量", "Lake volume"), ("dam_small", "dam_ref", "dam_large")),
-    (("堤体の形", "Dam shape"), ("dam_ref", "dam_face25", "dam_crest40")),
+    (("堤体の形", "Dam shape"), ("dam_ref", "dam_face25", "dam_crest40", "dam_tilt")),
     (("粒径と侵食係数", "Grain size and erosion coefficient"), ("dam_d1cm", "dam_ref", "dam_d10cm", "dam_delte")),
     (("流入量", "Inflow"), ("dam_q20", "dam_ref", "dam_q80")),
     (("下流の勾配", "Downstream slope"), ("dam_ref", "dam_steep")),
