@@ -26,6 +26,11 @@ module list_gwflow
     integer :: f_gwbed = 0           ! 河床交換能(0:なし, 1:有効。&list_gwflow_bed。
                                      ! 要 fn_rw)。無効時は資源を確保しない
     real :: dt_gwflow = 0.0          ! 地下水計算の更新時間間隔 (s)。0なら毎ステップ
+    real :: gw_sat0 = 0.0            ! 層1(土層)の初期飽和度(0〜1。既定 0 = 空)。初期の地下貯留を
+                                     ! hg = gw_sat0・sy0・sd(排水可能な間隙のうち水で満ちた割合)に
+                                     ! する。保存状態から始めるとき(f_state_restore > 0)は使わない。
+                                     ! 容量が sd・sy0 の構成(f_gwvertical=2 か f_gwlateral=1)で使う
+                                     ! (developer.md §28.17)
   end type
 
 contains
@@ -47,9 +52,10 @@ subroutine list_gwflow_read(p, list)
   integer :: f_gwfrost
   integer :: f_gwbed
   real :: dt_gwflow
+  real :: gw_sat0
 
   namelist /list_gwflow/ f_gwvertical, f_gwlateral, f_gwlayer2, f_gwconduit, &
-                         f_gwpump, f_gwfrost, f_gwbed, dt_gwflow
+                         f_gwpump, f_gwfrost, f_gwbed, dt_gwflow, gw_sat0
 
   f_gwvertical = list%f_gwvertical
   f_gwlateral = list%f_gwlateral
@@ -59,6 +65,7 @@ subroutine list_gwflow_read(p, list)
   f_gwfrost = list%f_gwfrost
   f_gwbed = list%f_gwbed
   dt_gwflow = list%dt_gwflow
+  gw_sat0 = list%gw_sat0
 
   call par_info("reading list_gwflow in " // trim(p%fn_gwflow))
   open(newunit=un, file=trim(p%fn_gwflow), status='old', action='read', iostat=ios)
@@ -75,6 +82,7 @@ subroutine list_gwflow_read(p, list)
   list%f_gwfrost = f_gwfrost
   list%f_gwbed = f_gwbed
   list%dt_gwflow = dt_gwflow
+  list%gw_sat0 = gw_sat0
 
 end subroutine
 

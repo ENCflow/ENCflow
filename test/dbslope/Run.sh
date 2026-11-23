@@ -2,8 +2,8 @@
 # dbslope: 混合体流動の抵抗則を斜面に沿って評価する f_gravity_correction = 2 の検定(developer.md §101)。
 # 逐次実行
 #   ./Run.sh
-# make_init.py が 8 ケース(Voellmy・江頭・高橋・中川の石礫型・掃流状集合流動 × f_gravity_correction 1・2。
-# 30° の斜面の等流)の入力と設定を生成し、全ケースを実行して
+# make_init.py が 10 ケース(Voellmy・江頭・高橋・中川の石礫型・掃流状集合流動〔(d/h) の 1 乗と 2 乗〕
+# × f_gravity_correction 1・2。30° の斜面の等流)の入力と設定を生成し、全ケースを実行して
 # Check_dbslope.py が判定する。reference は持たない。画面出力は Screen.log にまとめる。実行後の
 # save_<case>/ は save_<case>_serial/ にも複製する(Run_MPI.sh のバイト比較用)
 sdir=$(dirname "$(readlink -f "$0")")

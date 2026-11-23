@@ -527,7 +527,8 @@ end subroutine
 ! 混合体(hs)から底層(hb)への引き渡し(プランジ。ヘッダ参照)
 !   Δ = hs·poroi(かさ体積)。hs → 0、hb・z・sd += Δ。間隙水は f_dbwet=1 の
 !   とき水柱から埋没(h −= λ·s_b·Δ、残量でクランプ)、f_dbwet=2(gwflow 併用)の
-!   とき増えた容量 sy0·Δ を水柱から地下貯留 hg へ移す(空き容量・残量でクランプ)。e の回復は
+!   とき増えた容量 sy0·Δ を水柱から地下貯留 hg へ移す(空き容量・残量でクランプ)。
+!   f_dbwet=3 はその前に保持水 (λ − sy0)·Δ も水柱から取る(§28.17)。e の回復は
 !   m_geomorph_calc の末尾(本モジュールの契約)
 !----------------------------------------------------------------------
 subroutine plunge_cells(gm, g, s)
@@ -536,13 +537,17 @@ subroutine plunge_cells(gm, g, s)
   type(t_state), intent(inout) :: s
   integer :: i, j, k, in, jn
   real :: dd, dhw, vsum, psum1, psum2, hbq, hw, phic, phin, dphi, sl, smax, bb, sy, vb, cap, fwh
+  real :: wdf                 ! 保持水の不足(f_dbwet = 3。層の平面の水深 m。§28.17)
+  real(real64) :: wds         ! 同 行の和
 
   vsum = 0.0
   psum1 = 0.0
   psum2 = 0.0
   !$omp parallel do schedule(static) reduction(+: vsum, psum1, psum2) &
-  !$omp   private(i, j, k, in, jn, dd, dhw, hbq, hw, phic, phin, dphi, sl, smax, bb, sy, vb, cap, fwh)
+  !$omp   private(i, j, k, in, jn, dd, dhw, hbq, hw, phic, phin, dphi, sl, smax, bb, sy, vb, cap, fwh, &
+  !$omp           wdf, wds)
   do j = dcp%js, dcp%je
+    wds = 0.0_real64
     do i = g%wx(1,j), g%wx(2,j)
       if (g%x(i,j) <= 0) cycle
       if (g%sw(i,j) > 0) cycle
@@ -606,7 +611,12 @@ subroutine plunge_cells(gm, g, s)
           s%h(i,j) = s%h(i,j) + dhw
         end if
       end if
-      if (gm%f_dbwet == 2 .and. s%gw_active) then
+      ! 保持水(f_dbwet = 3。§28.17): 排水可能分より先に w_r·Δ を水柱から取る(不足は台帳へ)
+      if (gm%f_dbwet == 3 .and. s%gw_active) then
+        call retain_exchange(gm, s, i, j, dd, wdf)
+        if (wdf > 0.0) wds = wds + real(wdf, real64)
+      end if
+      if (gm%f_dbwet >= 2 .and. s%gw_active) then
         ! dhw は地下の水深(層の平面)。地表側は河道幅セルで河道の平面に載るので
         ! gw_to_h 倍で引く(体積を保つ換算。§26.1)
         fwh = gw_to_h(s, i, j)
@@ -624,6 +634,10 @@ subroutine plunge_cells(gm, g, s)
       end if
       vsum = vsum + dd
     end do
+    ! 保持水の不足の行の台帳(確保は f_dbwet = 3 のときだけ。書き手はこの行のスレッドだけ)
+    if (allocated(gm%dbr%wdrow)) then
+      gm%dbr%wdrow(j) = gm%dbr%wdrow(j) + wds * real(gm%bsl%area, real64)
+    end if
   end do
   !$omp end parallel do
   gm%bsl%vplunge = gm%bsl%vplunge + vsum * gm%bsl%area

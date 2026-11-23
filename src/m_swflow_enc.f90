@@ -266,6 +266,8 @@ module m_swflow_enc
     real :: db_xi = 0.0                       ! Voellmy 乱流係数 ξ (m/s²)(db_res=4)
     real :: db_tauy = 0.0                     ! 一定停止応力 τ_y (Pa)(db_res=5)
     integer :: db_curv = 0                    ! 曲率項の有無(f_dbcurv)
+    integer :: db_immexp = 1                  ! 高橋・中川の掃流状集合流動の抵抗の (d_L/h) の指数(1 か 2。
+                                              !   developer.md §28.18)
     real, allocatable :: acv(:,:)             ! セルの遠心加速度 a_c (m/s²)(1:nx, jsh:jeh)
     real, allocatable :: gsx(:,:), gsy(:,:)   ! セルの流動面の勾配 ∂η/∂x, ∂η/∂y(降伏の静止判定の
                                               !   接線成分。db_res>=1 のみ確保。§28.16)
@@ -1602,7 +1604,7 @@ end subroutine
 !   検証は呼び出し側(init_debris)が済ませている
 !----------------------------------------------------------------------
 subroutine m_swflow_enc_set_debris(fres, tanphi, sgrav, vstop, cstar, cmin, d50, erest, &
-                                   mu, xi, tauy, fcurv)
+                                   mu, xi, tauy, fcurv, immexp)
   integer, intent(in) :: fres
   real, intent(in) :: tanphi, sgrav, vstop
   real, intent(in) :: cstar             ! 河床の充填濃度 C* = 1−λ
@@ -1613,6 +1615,7 @@ subroutine m_swflow_enc_set_debris(fres, tanphi, sgrav, vstop, cstar, cmin, d50,
   real, intent(in) :: xi                ! Voellmy 乱流係数 ξ (m/s²)(f_dbres=4)
   real, intent(in) :: tauy              ! 一定停止応力 τ_y (Pa)(f_dbres=5)
   integer, intent(in) :: fcurv          ! 曲率項の有無(f_dbcurv。§28.10)
+  integer, intent(in) :: immexp         ! 掃流状集合流動の抵抗の (d_L/h) の指数(db_immexp。§28.18)
   call ensure_groups()                  ! swflow init より前に呼ばれる(dbr を確保)
   dbr%db_res = fres
   dbr%db_tanphi = tanphi
@@ -1627,6 +1630,7 @@ subroutine m_swflow_enc_set_debris(fres, tanphi, sgrav, vstop, cstar, cmin, d50,
   dbr%db_xi = xi
   dbr%db_tauy = tauy
   dbr%db_curv = fcurv
+  dbr%db_immexp = immexp
 end subroutine
 
 
@@ -3104,9 +3108,16 @@ subroutine calc_kth_flux(p, g, s, sx, uve0, tae0, i, j, k, in, jn, f_runge, uve1
               ! 石礫型(式(22)第2項): A'・{(1−C)/C}^{2/3}・(dL/h)²
               !   減速度 = A'ρm{...}(dL/h)²V²/(ρT h) → fbe/(rme・hte) 形
               fbe = db_apr * ((1.0 - cme) / cme)**(2.0/3.0) * (dbr%db_d50v / hte)**2
+            else if (dbr%db_immexp == 2) then
+              ! 掃流状集合流動を (dL/h)² で(db_immexp = 2。developer.md §28.18): 等流の式(1)(3)
+              ! (q_T = C h R^{2/3} sin^{1/2}θ、C = 0.7√g R^{5/6}/dL)を等流のつり合い τ = ρT g R sinθ に
+              ! 入れた τ = (ρT/0.49)(dL/h)² V²(年報 34 B-2 の x 方向の式(31) と同じ。年報の石礫型の
+              ! 式(29)(30) も同じ導き方の形)。斜面に沿う評価の倍率は石礫型と同じ r/cos³θ(fb1 は立てない)
+              fbe = rme * (dbr%db_d50v / hte)**2 / db_c49
             else
               ! 掃流状集合流動(式(24)): (ρT/0.49)(dL/h)。ρT/ρT が相殺する
               ! ため rme を fbe に含めて同じ −fbe・vve/(rme・hte) 形に載せる
+              ! (新砂防 44(3) 式(24)(25) の印字どおり 1 乗。既定)
               fbe = rme * (dbr%db_d50v / hte) / db_c49
               fb1 = .true.
             end if

@@ -1,0 +1,5 @@
+# Run.sh / Run_MPI.sh が param_wet.txt から作る設定(構成 4 の乾いた土層の変種)
+param_wetdry.txt
+# make_fs.py が書く構成 5〜8 の設定と入力
+p_fs_*.txt
+d_fs/

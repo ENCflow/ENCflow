@@ -78,7 +78,7 @@
   morfac = 1.0              ! f_debris は 1 必須
   f_debris = 1
   db_phi = 35.0             ! 内部摩擦角 (deg)
-  db_delte = 0.0007         ! 侵食係数 δe(高橋の一般値【要文献照合】)
+  db_delte = 0.0007         ! 侵食係数 δe(高橋・中川・山敷 1991 が従来用いてきたとする値。debris_plan.md §1)
   db_deltd = 0.05           ! 堆積係数 δd
   f_dbres = 1               ! クーロン+マニング合成抵抗
   f_dbstop = 1              ! 低速凝集(停止 → 河床へ固定)

@@ -219,8 +219,10 @@ module list_geomorph
     real :: db_phi = 0.0             ! 土砂の内部摩擦角 (deg)。f_dbed>=1 または
                                      ! f_dbres=1,2 で必須(等価流体構成
                                      ! f_dbed=0 + f_dbres=4,5 では不使用)
-    real :: db_delte = 0.0007        ! 侵食速度係数 δe(既定は Takahashi 2007 の一般値
-                                     ! 【要文献照合】debris_plan.md §1)
+    real :: db_delte = 0.0007        ! 侵食速度係数 δe(既定 0.0007 は、高橋・中川・山敷1991
+                                     ! 京大防災研年報 34 B-2 が「従来他の実験や実際の土石流に
+                                     ! 対して用いてきた」とする値。高橋・中川1991 新砂防 44(3) の
+                                     ! 洞谷への適用値は 0.0001。debris_plan.md §1)
     real :: db_deltd = 0.05          ! 堆積速度係数 δd(Kanako 系の慣用値【要文献照合】)
     integer :: f_dbstop = 0          ! 停止条件の切替 (0:なし(E-D の ∝|V| のみ),
                                      ! 1:低速凝集 — vv<db_vstop で超過濃度を河床へ)
@@ -263,10 +265,41 @@ module list_geomorph
                                      ! 2:gwflow 併用の間隙水 — 堆積で増えた層の容量
                                      ! (sy0・Δz)をその場の地表水で直ちに満たし、
                                      ! 侵食で削られた層の間隙水 sy0・|Δz| を地下貯留
-                                     ! から地表へ戻す(hg の範囲で)。gwflow 必須)
-    real :: db_satbed = 1.0          ! 堆積層の飽和度 s_b(0〜1)。f_dbwet=1 で使用(2 では不使用)
+                                     ! から地表へ戻す(hg の範囲で)。gwflow 必須,
+                                     ! 3:2 + 保持水 — 土と一緒に動く保持水
+                                     ! (λ − sy0)・Δz も授受する(堆積で地表水から取り、
+                                     ! 侵食・斜面崩壊・瞬時流動化で地表水へ戻す)。
+                                     ! 堆積物は全間隙 λ の水を取り、飽和した土層が
+                                     ! 崩れると濃度 C* の混合体になる。gwflow 必須、
+                                     ! sy0 <= fluv_porosity。developer.md §28.17)
+    real :: db_satbed = 1.0          ! 堆積層の飽和度 s_b(0〜1)。f_dbwet=1 で使用(2・3 では不使用)
                                      ! (高橋・中川1991 式(5)の記号。洞谷適用値は
                                      ! 勾配 21°以上で 0.8、以下で 1.0)
+    integer :: f_dbunsat = 0         ! 不飽和床の侵食式(f_dbed=3 で使用。0:飽和床の式だけ(従来),
+                                     ! 1:河床が不飽和のセルの侵食に、不飽和床の侵食式
+                                     ! i = K sin^{3/2}θ {1 − s C (tanφ/tanθ − 1)}^{1/2}
+                                     !     (tanφ/tanθ − 1)(C∞ − C) (h/d_L) √(g h)
+                                     ! を使う(高橋・中川1991 新砂防 44(3) 式(10)。導出は
+                                     ! 高橋・中川・山敷1991 京大防災研年報 34 B-2 式(8)〜(11))。
+                                     ! 飽和の判定: 地下水計算ありは hg >= sy0・sd(飽和帯が地表に
+                                     ! 届いている。容量の 0.1 % 以内の不足は届いたとみなす。§28.20)、
+                                     ! なしは db_satbed >= 1。developer.md §28.18)
+    real :: db_kunsat = 0.0          ! 不飽和床の侵食式の定数 K。0 = 既定 0.01(新砂防 44(3) の
+                                     ! 洞谷への適用値)
+    integer :: f_dbimm = 0           ! 緩い勾配の掃流状集合流動(f_dbed=3 で使用。0:石礫型の
+                                     ! 平衡濃度と堆積速度式を全勾配で使う(従来),
+                                     ! 1:平衡濃度を c_LS∞ = 6.7 c∞²(c∞ より小さい勾配の領域。
+                                     ! 年報 34 B-2 式(12))にし、濃度 0.4C* 以下の流れの堆積に
+                                     ! 掃流状集合流動の式 i = δ'd (c_LS∞ − C)/C* q_T/d_L
+                                     ! (新砂防 44(3) 式(28))を使う。developer.md §28.18)
+    real :: db_deltdi = 0.0          ! 掃流状集合流動の堆積速度係数 δ'd。f_dbimm=1 で使用。
+                                     ! 0 = 既定 0.1(新砂防 44(3) の洞谷への適用値)
+    integer :: db_immexp = 1         ! f_dbres=3 の掃流状集合流動(C <= 0.4C*)の抵抗
+                                     ! τ = (ρT/0.49)(d_L/h)^n V² の指数 n(1 か 2)。
+                                     ! 1(既定)= 新砂防 44(3) 式(24)(25) の印字どおり、
+                                     ! 2 = 同論文の等流の式(1)(3)(C = 0.7√g R^{5/6}/d_L)から導く形
+                                     ! (年報 34 B-2 の x 方向の式(31) と同じ。式(24)(25) の 1 乗は
+                                     ! 指数の脱落とみられる。developer.md §28.18)
     real :: db_mu = 0.0              ! Voellmy 摩擦係数 μ(無次元)。f_dbres=4 で使用。0 = 既定 0.2
                                      ! (雪崩 0.1〜0.3、岩屑なだれは体積とともに低下。
                                      ! 見かけ摩擦 H/L を直接与える — 体積依存式は
@@ -295,6 +328,28 @@ module list_geomorph
     real :: slide_c = 0.0            ! 有効粘着力 c' (Pa)。f_slide=1 で必須(0 可)
     real :: slide_phi = 0.0          ! 土のせん断抵抗角 φs (deg)。0 = 既定 30(§62)
     real :: slide_gamma = 0.0        ! 飽和単位体積重量 γt (N/m3)。0 = 既定 18000(§62)
+    integer :: f_slide_seep = 0      ! 安全率の駆動に浸透力を全水頭の勾配で入れる(0:斜面に平行な
+                                     ! 浸透を仮定(従来), 1:有効。地下水計算が要る)。
+                                     ! Fs = [c' + (γt d − γw hw) cos²θ tanφs]
+                                     !      / [cos²θ {(γt d − γw hw) tanθ + γw hw J}]
+                                     ! J は全水頭 H = (z − sd) + hw + κ (h + hs) の最急降下勾配
+                                     ! (h + hs は地表の流動深。κ は地表の水とのつながりで、地表まで
+                                     ! 飽和したセルは 1。地下貯留が容量の 99.9〜100 % の間で
+                                     ! 0 → 1 に連続。§28.20・§28.21)。土層厚と
+                                     ! 飽和厚が一様なら J = tanθ で従来の式と同じ、静水の下では
+                                     ! J = 0。developer.md §28.19
+    integer :: f_slide_wet = 0       ! 間隙水圧で起きる崩壊に限る(0:無効(従来), 1:間隙水圧が
+                                     ! なくても Fs < 1 のセル(段差など幾何的に不安定な所)は
+                                     ! 流動化しない。安息角崩落 f_repose に任せる)
+    integer :: f_slide_noflow = 0    ! 濃い混合体が載るセルを判定しない(0:無効(従来),
+                                     ! 1:混合体の濃度 hs/(h+hs) が db_cmin 以上のセルは判定しない。
+                                     ! 河床と流れの交換は侵食堆積式に任せる,
+                                     ! 2:1 のうち、載っている土砂(堆積に直した厚さ hs/C*)が
+                                     ! 判定する厚さ d = min(sd, slide_dmax) の半分に満たないセルは
+                                     ! 判定する。薄い膜が下の不安定な層の判定を止め続けない。§28.24)
+    real :: slide_dmax = 0.0         ! 判定・流動化する深さの上限 (m)。0 = 全層(従来)。
+                                     ! > 0 なら上から d = min(sd, slide_dmax) だけを判定し、
+                                     ! 流動化する(飽和厚は hw_d = max(0, hw − (sd − d)))
     integer :: f_wthr = 0            ! 基岩風化=土層生成(0:無効, 1:有効。§32)
     real :: wthr_p0 = -9999.0        ! 裸岩での土層生成速度 (mm/kyr)。未指定 = 既定 50(§62)
     real :: wthr_sdstar = 0.5        ! 生成の減衰深 sd* (m)
@@ -475,6 +530,8 @@ subroutine list_geomorph_read(p, list)
   real :: db_cmin
   integer :: f_dbwet
   real :: db_satbed
+  integer :: f_dbunsat, f_dbimm, db_immexp
+  real :: db_kunsat, db_deltdi
   real :: db_mu
   real :: db_xi
   real :: db_tauy
@@ -482,8 +539,8 @@ subroutine list_geomorph_read(p, list)
   character(len=256) :: fn_dbinit
   real :: db_reltime
   real :: db_relsat
-  integer :: f_slide
-  real :: slide_c
+  integer :: f_slide, f_slide_seep, f_slide_wet, f_slide_noflow
+  real :: slide_c, slide_dmax
   real :: slide_phi
   real :: slide_gamma
   integer :: f_wthr
@@ -523,9 +580,11 @@ subroutine list_geomorph_read(p, list)
                            spl_lc, spl_zbase, spl_sgrad, spl_ksat, spl_diagratio, spl_strata, &
                            f_debris, db_phi, db_delte, db_deltd, f_dbstop, db_vstop, db_wstop, f_dbres, &
                            f_dbed, db_d50, db_erest, db_cmin, f_dbwet, db_satbed, &
+                           f_dbunsat, db_kunsat, f_dbimm, db_deltdi, db_immexp, &
                            db_mu, db_xi, db_tauy, f_dbcurv, &
                            fn_dbinit, db_reltime, db_relsat, &
                            f_slide, slide_c, slide_phi, slide_gamma, &
+                           f_slide_seep, f_slide_wet, f_slide_noflow, slide_dmax, &
                            f_wthr, wthr_p0, wthr_sdstar, fn_wthr, f_uplift, uplift0, fn_uplift, &
                            f_rockinc, rock_kp, rock_tauc, rock_m, rock_beta, rock_hstar, fn_rock, &
                            rock_kdb, rock_taucdb, rock_mdb, &
@@ -640,6 +699,11 @@ subroutine list_geomorph_read(p, list)
   db_cmin = list%db_cmin
   f_dbwet = list%f_dbwet
   db_satbed = list%db_satbed
+  f_dbunsat = list%f_dbunsat
+  db_kunsat = list%db_kunsat
+  f_dbimm = list%f_dbimm
+  db_deltdi = list%db_deltdi
+  db_immexp = list%db_immexp
   db_mu = list%db_mu
   db_xi = list%db_xi
   db_tauy = list%db_tauy
@@ -651,6 +715,10 @@ subroutine list_geomorph_read(p, list)
   slide_c = list%slide_c
   slide_phi = list%slide_phi
   slide_gamma = list%slide_gamma
+  f_slide_seep = list%f_slide_seep
+  f_slide_wet = list%f_slide_wet
+  f_slide_noflow = list%f_slide_noflow
+  slide_dmax = list%slide_dmax
   f_wthr = list%f_wthr
   wthr_p0 = list%wthr_p0
   wthr_sdstar = list%wthr_sdstar
@@ -808,6 +876,11 @@ subroutine list_geomorph_read(p, list)
   list%db_cmin = db_cmin
   list%f_dbwet = f_dbwet
   list%db_satbed = db_satbed
+  list%f_dbunsat = f_dbunsat
+  list%db_kunsat = db_kunsat
+  list%f_dbimm = f_dbimm
+  list%db_deltdi = db_deltdi
+  list%db_immexp = db_immexp
   list%db_mu = db_mu
   list%db_xi = db_xi
   list%db_tauy = db_tauy
@@ -848,6 +921,10 @@ subroutine list_geomorph_read(p, list)
   list%slide_c = slide_c
   list%slide_phi = slide_phi
   list%slide_gamma = slide_gamma
+  list%f_slide_seep = f_slide_seep
+  list%f_slide_wet = f_slide_wet
+  list%f_slide_noflow = f_slide_noflow
+  list%slide_dmax = slide_dmax
   list%f_bedslide = f_bedslide
   list%fn_bsinit = fn_bsinit
   list%bs_reltime = bs_reltime

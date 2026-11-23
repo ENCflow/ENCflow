@@ -10,8 +10,18 @@
 #     (1) 固体総量保存(許容 TOL_SUM_FS: 多数回転換の丸め累積)
 #     (2) 共動更新恒等
 #     (4) 活性確認: 斜面部に sd ≈ 0(崩壊発生)のセルが存在
+#   wet モード(param_wet.txt。構成1 + 地下水計算 + f_dbwet=3 + 初期地下水 gw_sat0。
+#   developer.md §28.17):
+#     (1) 固体総量保存、(2) 共動更新恒等
+#     (3) 水台帳: |Σh + Σhg + w_r・Σ(z−z0) − gw_sat0・sy0・Σsd0 − 保持水の不足| < TOL_W
+#         (w_r = λ − sy0。保持水の不足は、堆積のとき地表水・地下貯留から取れなかった分で、
+#         画面出力の終了時の表示から読む)
+#     (4) 活性確認: 崩壊域の掘削と域外への移動
+#     (5) 保持水の授受の活性: |w_r・Σ(z−z0)| > MIN_WRET(f_dbwet=2 の台帳では閉じない)。
+#         gw_sat0 = 0(乾いた土層)の変種では、保持水の不足 > 0(不足の台帳が働く)
 #   z0 は slope_break(tanθ=0.4, 遷緩点 x=30m)と対で保守する。
 #   使い方: Check_slide.py <savedir> <release|fslide>
+#           Check_slide.py <savedir> wet <画面出力のファイル> <gw_sat0>
 import sys, struct
 
 NX, NY = 60, 20
@@ -20,6 +30,8 @@ ST, XB = 0.4, 30.0
 PORO = 0.4
 TOL_SUM, TOL_SD, TOL_W = 1.0e-9, 1.0e-10, 1.0e-9
 TOL_SUM_FS = 1.0e-8
+SY0, MIN_WRET = 0.2, 1.0e-6     # wet モード: sy0(param_wet と対)、|w_r Σdz| の下限
+SHORTFALL_KEY = "retained pore water shortfall in deposition (f_dbwet=3)"
 
 
 def read_rec(f):
@@ -57,7 +69,7 @@ def z0_of(idx):
 
 savedir, mode = sys.argv[1], sys.argv[2]
 resultdir = sys.argv[3] if len(sys.argv) > 3 else ""
-SD0 = 5.0 if mode == "release" else 0.5
+SD0 = 5.0 if mode in ("release", "wet") else 0.5
 
 
 def load_matrix(fn):
@@ -94,6 +106,37 @@ if mode == "release":
     print("(4) 活性確認    : 崩壊域 min dz = %.3f, 域外堆積 max dz = %.3e : %s"
           % (src_min, out_dep, "PASS" if ok4 else "FAIL"))
     ok = ok1 and ok2 and ok3 and ok4
+elif mode == "wet":
+    # 構成4: 飽和(または乾いた)土層の瞬時流動化と保持水の授受(崩壊域は release と同じ)
+    sat0 = float(sys.argv[4])
+    short = None
+    with open(sys.argv[3], encoding="utf-8", errors="replace") as flog:
+        for ln in flog:
+            if SHORTFALL_KEY in ln:
+                short = float(ln.split(SHORTFALL_KEY)[1].split()[0])
+    if short is None:
+        print("(3) 水台帳      : 画面出力に保持水の不足の表示がない : FAIL")
+        sys.exit(1)
+    wret = (PORO - SY0) * sum(dz)
+    hg0 = sat0 * SY0 * SD0 * ntot
+    wres = sum(h) + sum(hg) + wret - hg0 - short
+    src_min = min(dz[idx] for idx in range(ntot)
+                  if 5 <= idx % NX + 1 <= 15 and 5 <= idx // NX + 1 <= 16)
+    out_dep = max(dz[idx] for idx in range(ntot) if idx % NX + 1 >= 16)
+    ok1 = abs(solids) < TOL_SUM
+    ok2 = max_ident < TOL_SD
+    ok3 = abs(wres) < TOL_W
+    ok4 = src_min < -0.5 and out_dep > 1.0e-3
+    ok5 = abs(wret) > MIN_WRET and (short > 0.0 if sat0 == 0.0 else True)
+    print("(1) 固体総量保存: %.3e (tol %.0e) : %s" % (solids, TOL_SUM, "PASS" if ok1 else "FAIL"))
+    print("(2) 共動更新    : %.3e (tol %.0e) : %s" % (max_ident, TOL_SD, "PASS" if ok2 else "FAIL"))
+    print("(3) 水台帳      : Σh+Σhg+w_r・Σdz−hg0−不足 = %.3e (tol %.0e。hg0 = %.3f、不足 = %.3e) : %s"
+          % (wres, TOL_W, hg0, short, "PASS" if ok3 else "FAIL"))
+    print("(4) 活性確認    : 崩壊域 min dz = %.3f, 域外堆積 max dz = %.3e : %s"
+          % (src_min, out_dep, "PASS" if ok4 else "FAIL"))
+    print("(5) 保持水の授受: |w_r・Σdz| = %.3e (> %.0e)%s : %s"
+          % (abs(wret), MIN_WRET, "、不足 > 0" if sat0 == 0.0 else "", "PASS" if ok5 else "FAIL"))
+    ok = ok1 and ok2 and ok3 and ok4 and ok5
 elif mode == "fsdiag":
     # f_slide=2(判定のみ。§28.9): 流動化しない(z・sd・hs 不変)+
     # Fs9999(期間最小)が斜面部で危険(<1)を検出している

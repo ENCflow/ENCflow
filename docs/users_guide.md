@@ -76,7 +76,7 @@ ENCflow の設定と実行のリファレンスです。初めての方はまず
 - [土砂・地形変化](users_guide/geomorph.md)(&list_geomorph)— 掃流砂・浮遊砂・斜面浸食・土石流・長期地形発達・蛇行河道の発達(側岸侵食・定着・頸部短絡) <details><summary>解説(3 件)</summary>
   - [土砂輸送と斜面・長期地形過程の解説](users_guide/sediment.md) — クリープ・流砂量式・Exner・浮遊砂の E-D・斜面浸食・乾式侵食・崩落と崖錐の規則・沿岸漂砂・風化隆起・MORFAC の式と既定値の根拠(土砂・地形変化の補足)
   - [土石流・斜面崩壊・動く底層の解説](users_guide/massflow.md) — 単層混合体・5 つの抵抗則・侵食堆積則・曲率項・安全率・動く底層の式と参考にした他モデル(土砂・地形変化の補足)
-  - [土砂・地形変化の適用例](users_guide/geomorph_applications.md) — 津波堆積物・河口デルタ・火山流動・ラハール・雪崩・砂防施設の組み方
+  - [土砂・地形変化の適用例](users_guide/geomorph_applications.md) — 津波堆積物・河口デルタ・火山流動・ラハール・雪崩・砂防施設・天然ダムの組み方
   </details>
 - [流木](users_guide/driftwood.md)(&list_driftwood)— 流木化(水理的流失・侵食連行)・輸送・堆積、構造物での捕捉と集積による堰上げ(ラスタ場の概算) <details><summary>解説(1 件)</summary>
   - [流木モデルの解説](users_guide/driftwood_models.md) — 3 台帳の移送則・喫水・面積基準と材積収支・実務値の出典・既定値の根拠、構造物での捕捉の規則と集積の抵抗(流木の補足)
@@ -99,7 +99,7 @@ ENCflow の設定と実行のリファレンスです。初めての方はまず
 - [用途集](users_guide/usecases.md)— 現象名から機能の組み合わせを引く(未対応の現象も明示)
 
 **付録**
-- [全パラメータ索引](users_guide/params_index.md) — 全 811 パラメータの名前→章の逆引き
+- [全パラメータ索引](users_guide/params_index.md) — 全 821 パラメータの名前→章の逆引き
 
 ---
 

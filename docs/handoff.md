@@ -85,7 +85,8 @@
 - [00aa](handoff/00aa.md) 非静水圧 + MUSCL(`f_nonhydrostatic = 1`・`f_advection_scheme = 3`)で、壁ぎわの行に短い波が育つ(2026-11-20 発見。developer.md §113.9 (6)。未調査。4 つの値・既定の切り替えとは別の件 = 利用者の決定)
 - [00ab](handoff/00ab.md) 波浪場(`f_wf_current = 1`)の準定常の反復が、逆流の上で発散する(2026-11-20 発見。developer.md §113.9 (8)。未調査。今の既定でも起きる)
 - [00ac](handoff/00ac.md) 開発記録の分割の残り(2026-11-22。developer.md §116)
-- [00ad](handoff/00ad.md) 混合粒径(粒径階 × 交換層。方針 6 の例外。2026-11-22 合意・未実装)
+- [00ad](handoff/00ad.md) 結果のディレクトリ(dir_result)の長いパスで、プローブ・測線・集計のファイル名が 80 字で切れる(2026-11-23 発見。未修正)
+- [00ae](handoff/00ae.md) 混合粒径(粒径階 × 交換層。方針 6 の例外。2026-11-22 合意)の段階実装
 - [00w](handoff/00w.md) 移流項: 屈曲直後の辺の風上値(f_advection_bend)、濡れた谷壁の辺による側方面の減速と合流の損失(f_advection_lateral)、…
 - [00v](handoff/00v.md) 秩父の河道マスクを標高の落水線に載せ直した(2026-11-13。利用者の指摘と決定「河道マスクは、全ての解像度で 落水線ベースで。ただし、元のファイルは保存しておく」。developer.md §109)の残り
 - [00s](handoff/00s.md) 流木の集積(構造物での捕捉・集積と流れへの作用。2026-11-12 合意・第 1 段と第 2 段を実装。 developer.md §50.7・§50.8、docs/woodjam_plan.md)の残り
@@ -101,7 +102,6 @@
 - [00g](handoff/00g.md) examples の英語ラベル図(2026-10-25。tutorials/test と同じ方式)
 - [00r](handoff/00r.md) 貯留関数法の区画流出 fn_sfm(2026-11-11。developer.md §106)の残り
 - [00h](handoff/00h.md) 鉛直不飽和浸透(VZ)流出モデル fn_vz(2026-10-26。docs/vz_plan.md、§87)の残り
-- [00j](handoff/00j.md) 天然ダム例題(豪雨→斜面崩壊→天然ダム→決壊洪水)の検討(2026-10-29。docs/landslide_dam_plan.md。未合意・中断中)
 - [00c](handoff/00c.md) 方針 13(説明責任。policy.md。2026-10-24 制定)の既存部分への遡及
 - [00d](handoff/00d.md) 河口デルタ形成の試行(2026-10-20〜21。docs/delta_plan.md)の残り
 - [00e](handoff/00e.md) 波浪による沿岸漂砂 fn_wave(2026-10-22。docs/wave_plan.md、§84.15)の残り

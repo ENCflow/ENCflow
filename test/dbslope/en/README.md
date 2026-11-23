@@ -19,11 +19,12 @@ form (1),
   term of Voellmy, the laminar law of Egashira, the stony type of Takahashi and
   Nakagawa) by $`r/\cos^3\theta`$ ($`1/\cos^4\theta`$ in the direction of steepest
   descent) and the bedload-like collective flow of Takahashi and Nakagawa by
-  $`r/\cos^2\theta`$
+  $`r/\cos^2\theta`$ (the default form with the first power of (d/h); the squared form of
+  `db_immexp = 2` is multiplied by $`r/\cos^3\theta`$, like the stony type)
 
 ($`r = |\mathbf V_s|/|\mathbf V|`$). For example, uniform flow with Voellmy and 2 follows
 the along-slope equation $`V_s^2 = \xi\,h\cos\theta\,(\sin\theta - \mu\cos\theta)`$ (as in
-RAMMS). The depths of uniform flow of four resistance laws are compared with the analytic
+RAMMS). The depths of uniform flow of five resistance laws are compared with the analytic
 solutions of 2 and of 1. Pass or fail is decided by the self-check `Check_dbslope.py`,
 not by a reference comparison (the same type as test/slopefric and test/volcano).
 
@@ -34,14 +35,20 @@ not by a reference comparison (the same type as test/slopefric and test/volcano)
 | Terrain | A strip 150 m × 8 m (Δx = 1 m) of a uniform slope of gradient tan30°, descending along the x axis, surrounded by walls (`make_init.py` writes `d_slope/z.txt`) |
 | Grid | 4 neighbours (`p_diagratio = 0`; removes the nonlinearity "lowered gradient × yield" of the diagonal edges, as in test/volcano; developer.md §28.8) |
 | Flow | A constant inflow of 4 m³/s of water with sediment from the 8 cells of the west side (no exchange of sediment, `f_dbed = 0`, so the concentration stays at the inflow value). dt = 0.02 s, 90 s |
-| Cases | 4 resistance laws × `f_gravity_correction` 1 and 2, 8 cases (a name such as `stony_g2` = stony type, 2) |
+| Cases | 5 resistance laws × `f_gravity_correction` 1 and 2, 10 cases (a name such as `stony_g2` = stony type, 2) |
 
 | Resistance law | Settings | Concentration C | Unit-width mixture discharge q |
 |---|---|---:|---:|
 | voellmy | `f_dbres = 4`, μ = 0.1, ξ = 200 m/s² | 0.444 | 0.9 m²/s |
 | egashira | `f_dbres = 2`, φ = 35°, d = 0.05 m, e = 0.85 | 0.444 | 0.9 m²/s |
 | stony | `f_dbres = 3`, d = 0.05 m (stony type, C > 0.4 C*) | 0.444 | 0.9 m²/s |
-| collective | `f_dbres = 3`, d = 0.05 m (bedload-like collective flow, C ≤ 0.4 C*) | 0.200 | 0.625 m²/s |
+| collective | `f_dbres = 3`, d = 0.05 m (bedload-like collective flow, C ≤ 0.4 C*; the default `db_immexp = 1` = first power of (d/h)) | 0.200 | 0.625 m²/s |
+| collective2 | `f_dbres = 3`, `db_immexp = 2` (second power of (d/h); developer.md §28.18, in Japanese), d = 0.2 m | 0.200 | 0.625 m²/s |
+
+Only collective2 uses a grain size of 0.2 m. The squared form has a smaller resistance, and with
+0.05 m roll waves grow on the uniform flow at a Froude number of 1.9, so that the depth in the
+window fluctuates by a little over 2 % (the mean agrees with the analytic solution within 0.03 %).
+With 0.2 m the Froude number is 0.8 and the uniform flow has no fluctuation.
 
 | File | Content |
 |---|---|
@@ -57,9 +64,10 @@ Checks:
    written with the horizontal velocity and the vertical depth,
    $`g_e\tan\theta = a_y + f_v\,R(|\mathbf V|, h_t)`$ ($`g_e = g\cos^2\theta`$, $`a_y`$ the
    yield, $`R`$ the resistance proportional to the square of the velocity, $`f_v`$ equal to
-   $`1/\cos^4\theta`$ with 2 ($`1/\cos^3\theta`$ for the bedload-like collective flow) and 1 with 1),
+   $`1/\cos^4\theta`$ with 2 ($`1/\cos^3\theta`$ for the first-power form of the bedload-like collective flow) and 1 with 1),
    together with $`q = h_t|\mathbf V|`$ (solvable for $`h_t^3`$ with Voellmy, $`h_t^5`$ with
-   Egashira and the stony type, and $`h_t^4`$ with the bedload-like collective flow)
+   Egashira, the stony type and the squared form of the bedload-like collective flow, and
+   $`h_t^4`$ with its first-power form)
 2. Discriminating power: the ratio of the analytic solutions of 2 and 1 differs from 1
    by at least 5 % (the two forms can be told apart)
 
@@ -70,11 +78,11 @@ The depths are printed with four decimals (0.1 mm), so the concentration departs
 
 ```bash
 make            # links to the executables
-./Run.sh        # runs the 8 cases and judges them (about 30 seconds with 1 thread)
+./Run.sh        # runs the 10 cases and judges them (about 40 seconds with 1 thread)
 ./Run_MPI.sh 2  # MPI (if Run.sh has been run first, state.dat is compared byte by byte with the serial save)
 ```
 
-## Results (2026-11-15)
+## Results (2026-11-22)
 
 | Case | Resistance law | Value | $`\langle h_t\rangle`$ (m) | Analytic (m) | Error | Coefficient of variation | Concentration |
 |---|---|---:|---:|---:|---:|---:|---:|
@@ -86,14 +94,17 @@ make            # links to the executables
 | stony_g2 | Stony type | 2 | 0.3206 | 0.3206 | −0.00 % | 0.0002 | 0.4444 |
 | collective_g1 | Bedload-like collective flow | 1 | 0.3285 | 0.3285 | −0.00 % | 0.0000 | 0.2000 |
 | collective_g2 | Bedload-like collective flow | 2 | 0.3659 | 0.3659 | −0.01 % | 0.0000 | 0.2001 |
+| collective2_g1 | Bedload-like collective flow (second power of (d/h)) | 1 | 0.3925 | 0.3925 | −0.00 % | 0.0000 | 0.2000 |
+| collective2_g2 | Bedload-like collective flow (second power of (d/h)) | 2 | 0.4404 | 0.4404 | +0.01 % | 0.0000 | 0.2000 |
 
 Ratios of the analytic solutions of 2 and 1 (depth for the same discharge): Voellmy 1.211
-($`\cos^{-4/3}30°`$), Egashira and the stony type 1.122 ($`\cos^{-4/5}30°`$), the bedload-like collective
-flow 1.114 ($`\cos^{-3/4}30°`$).
+($`\cos^{-4/3}30°`$), Egashira, the stony type and the squared form of the bedload-like collective flow
+1.122 ($`\cos^{-4/5}30°`$), the first-power form of the bedload-like collective flow 1.114
+($`\cos^{-3/4}30°`$).
 
 ## Findings
 
-- For all four resistance laws, 2 agrees in the printed digits with the uniform flow of
+- For all five resistance laws, 2 agrees in the printed digits with the uniform flow of
   the along-slope equations and 1 with that of the horizontal equations. On the 30°
   slope the uniform flow of 2 is 11–21 % deeper than that of 1, and the velocity is lower
   by the same ratio (compared at the same depth, the slope-parallel speed of Voellmy is

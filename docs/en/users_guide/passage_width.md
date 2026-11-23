@@ -347,7 +347,7 @@ both in Japanese).
 | Same | $`\tau_b/\rho g h S`$ in the columns along the walls | 1.006 to 1.124 | 0.9999 |
 | Sheet flow (T10; slope 0.05, rain 100 mm/h) | local balance $`\tau_b/\rho g h S`$ (0° along the grid / 45° diagonal) | 1.34 to 1.38 / 1.29 to 1.34 | 0.96 to 0.99 / 0.95 to 0.99 |
 | Uniform flow in channels one and five cells wide ([test/uniflow](../../../test/uniflow/en/README.md)) | difference of depth and velocity from Manning | 1e-3 or less | 2e-4 or less |
-| Rainfall-runoff of a V-shaped catchment (v-shaped in [examples/benchmark](../../../examples/benchmark/)) | error of the outlet discharge from the theoretical value (grid 20, 10, 5 m) | 0.017, 0.027, 0.028 | 0.019, 0.020, 0.018 |
+| Rainfall-runoff of a V-shaped catchment (v-shaped in [examples/benchmark](../../../examples/benchmark/)) | error of the outlet discharge from the theoretical value (grid 20, 10, 5 m) | 0.017, 0.027, 0.028 | 0.019, 0.020, 0.017 |
 
 T9 and T10 are configurations of [test/rockinc](../../../test/rockinc/en/README.md).
 The error of the V-shaped catchment is the root-mean-square error divided by
@@ -356,7 +356,7 @@ the peak discharge.
 - 3 matches uniform flow and the local balance regardless of the slope and
   the grid orientation.
 - In the V-shaped catchment the error of 3 decreases as the grid is refined
-  (0.019 to 0.018), and the rise comes at 40 min against the theoretical
+  (0.019 to 0.017), and the rise comes at 40 min against the theoretical
   39 min (with 2 the hillslope flow is too fast, the rise comes 1 to 2 minutes
   early at 37 to 38 min, and the error grows with refinement). On the coarsest
   grid, 20 m, 2 has the smaller error: 3 is not "always closer" but "gets closer with

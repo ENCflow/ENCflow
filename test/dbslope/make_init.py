@@ -6,13 +6,16 @@
 一定の流量で流し込み、帯の中ほどの等流の深さを解析解と比べる。土砂の交換はない(f_dbed = 0。濃度は流入の
 値のまま)。
 
-抵抗則(4 つ)× f_gravity_correction(1・2)の 8 ケース:
-  voellmy   : Voellmy(f_dbres = 4。降伏 μ + 乱流項 g V²/(ξ h))
-  egashira  : 江頭の構成則(f_dbres = 2。降伏 + 層流則 f_b ∝ (d/h)²)
-  stony     : 高橋・中川の石礫型(f_dbres = 3。C > 0.4 C*。降伏 tanα' + A'{(1−C)/C}^{2/3}(d/h)²)
-  collective: 高橋・中川の掃流状集合流動(f_dbres = 3。C ≤ 0.4 C*。降伏 tanα' + (d/h)/0.49)
-2 は降伏を 1/(r cos θ) 倍(最急勾配の向きの流れでは 1)、速度の 2 乗の抵抗を r/cos³θ 倍(掃流状は
-r/cos²θ 倍。最急勾配の向きでは 1/cos⁴θ・1/cos³θ)にする。1 は水平の形のまま。
+抵抗則(5 つ)× f_gravity_correction(1・2)の 10 ケース:
+  voellmy    : Voellmy(f_dbres = 4。降伏 μ + 乱流項 g V²/(ξ h))
+  egashira   : 江頭の構成則(f_dbres = 2。降伏 + 層流則 f_b ∝ (d/h)²)
+  stony      : 高橋・中川の石礫型(f_dbres = 3。C > 0.4 C*。降伏 tanα' + A'{(1−C)/C}^{2/3}(d/h)²)
+  collective : 高橋・中川の掃流状集合流動(f_dbres = 3。C ≤ 0.4 C*。降伏 tanα' + (d/h)/0.49。
+               既定の db_immexp = 1 = 新砂防 44(3) 式(24)(25) の印字どおり)
+  collective2: 同じ掃流状集合流動を db_immexp = 2 で(降伏 tanα' + (d/h)²/0.49。同論文の等流の
+               式(3) から導く形。developer.md §28.18)
+2 は降伏を 1/(r cos θ) 倍(最急勾配の向きの流れでは 1)、速度の 2 乗の抵抗を r/cos³θ 倍(掃流状の
+(d/h) の 1 乗の形は r/cos²θ 倍。最急勾配の向きでは 1/cos⁴θ・1/cos³θ)にする。1 は水平の形のまま。
 
   python3 make_init.py        地形 d_slope/z.txt と p_<case>.txt を書く
   python3 make_init.py list   ケース名を 1 行ずつ出す
@@ -33,9 +36,19 @@ LAWS = {                             # 抵抗則: (f_dbres, 流入の hs/h 比 c
                             "  db_erest = 0.85           ! 粒子の反発係数\n"),
     "stony":      (3, 0.8,  "  db_d50 = 0.05             ! 代表粒径 d_L (m)\n"),
     "collective": (3, 0.25, "  db_d50 = 0.05             ! 代表粒径 d_L (m)\n"),
+    "collective2": (3, 0.25, "  db_d50 = 0.2              ! 代表粒径 d_L (m)。0.05 m では等流に波が立つ(下の D50_LAW)\n"
+                             "  db_immexp = 2             ! 掃流状集合流動の抵抗を (d_L/h)² で(既定は 1)\n"),
 }
 MU, XI = 0.1, 200.0
 PHI, D50, EREST = 35.0, 0.05, 0.85
+# 抵抗則ごとの代表粒径の上書き(既定は D50)。collective2 は (d/h)² の抵抗が弱く、0.05 m では
+# フルード数 1.9 の等流に転波列が育って窓の中の深さが 2 % 余り揺れる(平均は解析解と 0.03 % で合う)。
+# 0.2 m(フルード数 0.8)では安定した等流になる
+D50_LAW = {"collective2": 0.2}
+
+
+def d50_of(law):
+    return D50_LAW.get(law, D50)
 SGRAV, POROSITY = 1.65, 0.4          # 水中比重 s(既定)、空隙率 λ(C* = 1 − λ)
 GCS = (1, 2)
 

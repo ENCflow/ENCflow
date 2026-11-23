@@ -1,0 +1,83 @@
+!======================================================================
+! slide(構成4: 構成1 + 地下水計算 + 保持水の授受 f_dbwet=3 + 初期地下水 gw_sat0)
+!   構成1(瞬時流動化)を、飽和した土層(gw_sat0 = 1: hg = sy0・sd)で行う。
+!   f_dbwet=3 は、流動化で保持水 w_r・D(w_r = λ − sy0 = 0.2)を地表へ出し、地下水計算の
+!   容量超過引き渡しが排水可能分 sy0・D を出すので、崩壊土塊は λ・D の水を持って流れ出す
+!   (濃度 C* の混合体。developer.md §28.17)。流下した土砂は、堆積するときに保持水と
+!   排水可能分をその場の地表水から取る。浸透能はほぼ 0 で、地下貯留の変化は授受だけ。
+!   検定(Check_slide.py wet):
+!     (1) 固体総量保存、(2) 共動更新恒等
+!     (3) 水台帳: Σh + Σhg + w_r・Σ(z − z0) = 初期の地下貯留 + 保持水の不足
+!         (不足 = 堆積のとき地表水・地下貯留から取れなかった保持水。終了時の表示を読む)
+!     (4) 活性確認: 崩壊域の掘削と域外への土砂移動
+!     (5) 流動化で出た水: 崩壊域の外へ出た水と土砂があり、f_dbwet=2 の台帳
+!         (w_r・Σ(z − z0) を除いた和)では閉じない
+!======================================================================
+&list_sysparam
+  f_gridsystem = 0
+  f_govequation = 0
+  dt = 0.02
+  t0 = 0
+  tt = 10
+  dt_disp = 2
+  dt_file = 100
+  dt_recrd = 100
+  fn_geoinfo = '-'
+  fn_initial = '-'
+  fn_enc = '-'
+  fn_geomorph = '-'
+  fn_gwflow = '-'           ! 地下水計算(Green-Ampt。浸透能はほぼ 0)
+  dir_result = 'result_wet'
+  dir_save = 'save_wet'
+  f_state_save = 1
+  f_check_cfl = 0
+/
+
+&list_enc
+  f_gravity_correction = 2
+/
+
+&list_initial
+  f_htype = 0
+  h0 = 0.0
+/
+
+&list_geoinfo
+  lx = 60.0
+  ly = 20.0
+  nx = 60
+  ny = 20
+  f_ztype = 0
+  z0 = 0.0
+  f_user_routine = "slope_break"   ! tanθ=0.4, 遷緩点 x=30m
+  f_rntype = 0
+  rn0 = 0.03
+  sd0 = 5.0
+  sy0 = 0.2
+/
+
+&list_geomorph
+  dt_geomorph = 0.0
+  morfac = 1.0
+  f_debris = 1
+  db_phi = 30.0             ! tanφ=0.577 → C≈C* でも駆動が降伏を上回り流下する
+  f_dbres = 1
+  f_dbstop = 1
+  db_vstop = 0.05
+  db_wstop = 0.05
+  fn_dbinit = 'dbinit.txt'  ! 崩壊深分布(Run.sh が生成)
+  db_reltime = 1.0          ! t=1s に流動化(時刻指定発火の検定)
+  db_relsat = 1.0           ! (地下水計算が有効なので使われない。水は土層の間隙水から出る)
+  f_dbwet = 3               ! 地下水計算と併用する間隙水(排水可能分 sy0)+ 保持水 λ − sy0 の授受
+  fluv_porosity = 0.4
+/
+
+&list_gwflow
+  f_gwvertical = 2          ! Green-Ampt
+  gw_sat0 = 1.0             ! 層1の初期飽和度(土層は飽和: hg = sy0・sd)
+/
+
+&list_gwflow_greenampt
+  gw_ksv_mmh = 1.0e-6       ! 浸透能 (mm/h)。正の値が要るので極小値
+  gw_psif = 0.0
+/
