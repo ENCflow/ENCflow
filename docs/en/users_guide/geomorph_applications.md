@@ -144,7 +144,9 @@ pays off).
   recommended as the first-order bulking effect. With infiltration
   (`fn_gwflow`) use `f_dbwet = 2` (the water that had soaked into the eroded
   layer returns to the surface, and the capacity added by deposition is filled
-  from the local surface water). Working
+  from the local surface water). When the specific yield sy0 is given smaller
+  than the porosity, use `f_dbwet = 3` (the retained water that moves with the
+  soil is exchanged as well). Working
   example: [examples/ashfall_lahar](../../../examples/ashfall_lahar/en/README.md)
   (infiltration lowered by the ash → rainfall → mudflow → fan deposition, compared
   with before the eruption and with a check dam).
@@ -305,3 +307,74 @@ sketches, not computed results.
   ([capture and jamming at structures](driftwood.md#capture-and-jamming-at-structures-fn_dwtrap)
   in the driftwood chapter; the capture ratio is a given, and with a single grain
   size blockage by boulders cannot be represented).
+
+## 7. Formation and breach of natural dams
+
+The chain in which failed material or a debris flow blocks a river and forms a natural dam (landslide dam),
+and the water ponded upstream overtops it and becomes an outburst flood, can be connected from the source to
+the damage downstream inside one computation. Neither the shape of the dam nor the time of the breach is
+prescribed: the deposit becomes terrain and the flow erodes it. A working example is
+[examples/debris_dam](../../../examples/debris_dam/en/README.md) (rain-triggered failure → debris flow →
+natural dam → overtopping → breach → flood in a village and damage to houses; comparison of the conditions
+that make the breach rapid).
+
+- **Configuration**:
+  - Triggering: give the failure depth (`fn_dbinit`), or let the slope fail by itself from rain infiltration
+    (`f_slide = 1` with [groundwater](gwflow.md); the initial saturation of the soil layer is `gw_sat0`).
+    When the specific yield sy0 is smaller than the porosity, use `f_dbwet = 3` (the failed mass also carries
+    its retained water). With `slide_phi` = `db_phi` and `slide_gamma` = ρw g (1 + sC*), a mass that fails
+    when saturated flows out as it is ([explanation](massflow.md) §4).
+  - Debris flow and deposition: `f_debris = 1`; `f_dbed = 3` and `f_dbres = 3` for the stony type. With
+    `f_dbstop = 1` the sediment that has stopped becomes terrain (the dam).
+  - Stability test in the ponded area: the slopes under the lake and the dam are also judged, so use
+    `f_slide_seep = 1` (the default formula estimates the safety factor of a saturated slope under still
+    water at about half its value). `slide_dmax` keeps a thick deposit from failing at once (keep it
+    within about 0.3 times the grid spacing, since a larger value lets the fluidisation propagate to the
+    neighbouring cells, but not shallower than the slip surface of the layer that is to fail; §4 of the
+    [explanation](massflow.md)), `f_slide_wet = 1` stops the cascade at
+    steps, and `f_slide_noflow` skips the bed under flowing sediment (1 or 2; 2 judges the layer
+    under a thin film, and is the one to use when `slide_dmax` is shallower than the layer that is to
+    fail).
+  - Erosion by the overflow: a dam deposited by a debris flow is saturated, so the saturated-bed erosion
+    formula (coefficient `db_delte`) acts. Use `f_dbimm = 1` for the equilibrium concentration on gentle
+    slopes and bed load, `f_fluvial = 1`, for the transport on gentle reaches (effective-shear ratio
+    `fluv_taufac`; "Combination with bed load" in §3 of the [explanation](massflow.md)). `f_repose = 1`
+    handles the walls of the breach. An unsaturated dam placed as terrain (an embankment, for example) uses
+    the unsaturated-bed erosion formula with `f_dbunsat = 1`.
+  - Damage downstream: maximum flow depth D9999 and maximum force F9999; houses swept away are handled by
+    [house destruction and debris](bldgdebris.md).
+  - Countermeasures: lowering the lake level by drainage uses a culvert or a pump of
+    [structures](structure.md) (they carry water only).
+- **What sets the speed of the breach**: the discharge in excess of the inflow is roughly "the rate at which
+  the crest is lowered × the lake area" (the water balance of the lake). In the series of the example (a
+  13 m high dam, inflow 40 m³/s),
+  raising the lake volume from 180,000 to 450,000 and 810,000 m³ gives peak discharges of 211, 397 and
+  641 m³/s (5 to 16 times the inflow); steepening the downstream face from 0.12 to 0.25 gives 1,078 m³/s
+  (27 times); coarsening the grains from 3 cm to 10 cm gives 197 m³/s with the peak after 60 instead of
+  27 minutes; and inflows of 20, 40 and 80 m³/s give peaks of 321, 397 and 505 m³/s. A dam deposited by a
+  debris flow that ran into the river (downstream face 0.10; peak 10 to 14 times the inflow) breaches
+  more gently than a steep-faced dam.
+  That the dam height and the stored volume matter, that coarse material makes the breach slow and that a
+  larger inflow gives a larger peak agree with reports of cases, experiments and computations of natural
+  dams (the sources are in the README of the example).
+- **Limits**:
+  - A single grain size. Suspension of fines and hyperconcentration, and armouring by the coarse grains
+    left behind (which stops the erosion), are not represented.
+  - The choice of the transport law on gentle reaches (with or without bed load, the effective-shear ratio,
+    `f_dbimm`) changes the peak discharge by more than a factor of 2 (2.4 in the example). The grain size is a
+    calibration quantity too. For the dam of the example, an erosion coefficient `db_delte` seven times
+    smaller changes the peak by only a tenth (the breach is set by the amount of sediment the flow can
+    carry). Use the results together with empirical formulas and records.
+  - Only erosion by overtopping is represented. Progressive failure by seepage inside the dam (piping) is
+    not, and sliding failure is limited to the cell-wise infinite-slope test.
+  - The breach cannot be narrower than the grid spacing. For a dam whose crest is uneven, so that the overflow
+    concentrates in a narrow breach one to a few cells wide, the timing and volume of the wall collapses that
+    block the breach change with slight differences in the conditions, and the peak discharge scatters (in the
+    base case of the chain of the example, seven runs with the inflow varied by ±2 % give 407–547 m³/s; a dam
+    with a level crest that is overtopped over its full width changes by less than 1 % for a 1 % difference).
+    Run several computations with slightly different conditions and check the spread of the results. Four runs
+    of a pre-built dam whose crest is tilted into the same shape give 347–435 m³/s on the 10 m grid and
+    299–309 m³/s on the 5 m grid (the mean on the 5 m grid is 0.80 times that on the 10 m grid). The spread becomes smaller when the grid is refined. The mean changes as well, however: the breach through a
+    narrow breach has not converged with respect to the grid spacing (check it with computations on different grids too).
+  - Excavating the dam as a countermeasure cannot be combined with erosion, because
+    [prescribed bed motion](bedmotion.md) does not change the soil thickness.

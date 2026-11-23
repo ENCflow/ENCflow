@@ -24,6 +24,14 @@
 #         Σhg > MIN_HG(平坦部の土層は堆積物だけ。堆積で満たし侵食で放す
 #         引き渡しの下で hg = sy0・sd が常に成り立つ)
 #   を検定する。
+#   gw3 モード(構成8 = param_gw3.txt。構成6 の f_dbwet を 3 にし、斜面の土層に初期地下水
+#   gw_sat0 = 0.5 を置く。developer.md §28.17): gw モードの (1)〜(3)・(5) に加えて
+#     (4) 水台帳: |Σh + Σhg + w_r・Σdz − 降雨総量 − 初期の地下貯留 − 保持水の不足| < TOL_SUM
+#         (w_r = λ − sy0。初期の地下貯留 = gw_sat0・sy0・Σsd0。保持水の不足は、堆積のとき
+#         地表水・地下貯留から取れなかった分で、第 3 引数の画面出力の終了時の表示から読む)
+#     (6) 保持水の授受の活性: |w_r・Σdz| > MIN_WRET(f_dbwet=2 の台帳では閉じない)
+#   を検定する。
+#   使い方(gw3): Check_debris.py <savedir> gw3 <画面出力のファイル>
 #   fluv モード(構成5 = param_fluv.txt。土石流 E-D + 掃流砂): 地形を転置した
 #   斜面(20 × 60、y < 40 m で tanθ = 0.4。make_fluv.py と対)、sd0 = 2 mm に
 #   替えて (1)〜(3) を検定する((3) は斜面 y < 40 m の侵食と下流の平坦部の堆積)。
@@ -41,6 +49,8 @@ RAIN = NX * NY * (200.0 / 1000.0 / 3600.0) * 60.0   # 降雨総量 (m*cell)。pa
 SATBED = 1.0                                        # db_satbed(wet モード)
 RAIN_GW = NX * NY * (200.0 / 1000.0 / 3600.0) * 30.0  # 降雨総量 (m*cell)。param_gw と対
 SY0, I_SLOPE, MIN_HG = 0.2, 30, 1.0e-4             # gw モード: sy0、可動層のある列、Σhg の下限
+GW_SAT0, MIN_WRET = 0.5, 1.0e-6                     # gw3 モード: gw_sat0(param_gw3 と対)、|w_r Σdz| の下限
+SHORTFALL_KEY = "retained pore water shortfall in deposition (f_dbwet=3)"
 
 
 def read_rec(f):
@@ -97,8 +107,8 @@ if mode == "fluv":
 
     def upslope(idx):
         return (idx // NX + 1 - 0.5) * DX < YB
-elif mode == "gw":
-    # 構成6: 可動層は斜面(i <= I_SLOPE)だけ(sd_gw.txt と対)
+elif mode in ("gw", "gw3"):
+    # 構成6・8: 可動層は斜面(i <= I_SLOPE)だけ(sd_gw.txt と対)
     def sd0_of(idx):
         return SD0 if idx % NX + 1 <= I_SLOPE else 0.0
 with open(savedir + "/state.dat", "rb") as f:
@@ -141,11 +151,32 @@ if mode == "wet":
     print("(4) 水台帳      : sum(h)-rain+λ・s_b・sum(dz) = %.3e m*cell (tol %.0e) : %s"
           % (wres, TOL_SUM, "PASS" if ok4 else "FAIL"))
     ok = ok and ok4
-if mode == "gw":
-    wres = sum(h) + sum(hg) - RAIN_GW
-    ok4 = abs(wres) < TOL_SUM
-    print("(4) 水台帳      : sum(h)+sum(hg)-rain = %.3e m*cell (tol %.0e) : %s"
-          % (wres, TOL_SUM, "PASS" if ok4 else "FAIL"))
+if mode in ("gw", "gw3"):
+    if mode == "gw":
+        wres = sum(h) + sum(hg) - RAIN_GW
+        ok4 = abs(wres) < TOL_SUM
+        print("(4) 水台帳      : sum(h)+sum(hg)-rain = %.3e m*cell (tol %.0e) : %s"
+              % (wres, TOL_SUM, "PASS" if ok4 else "FAIL"))
+    else:
+        # 保持水の不足(m3 = m*cell。DX = 1)は終了時の表示の最後の 1 行から読む
+        short = None
+        with open(sys.argv[3], encoding="utf-8", errors="replace") as flog:
+            for ln in flog:
+                if SHORTFALL_KEY in ln:
+                    short = float(ln.split(SHORTFALL_KEY)[1].split()[0])
+        if short is None:
+            print("(4) 水台帳      : 画面出力に保持水の不足の表示がない : FAIL")
+            sys.exit(1)
+        wret = (PORO - SY0) * sum(dz)
+        hg0 = GW_SAT0 * SY0 * sum(sd0_of(idx) for idx in range(ntot))
+        wres = sum(h) + sum(hg) + wret - RAIN_GW - hg0 - short
+        ok4 = abs(wres) < TOL_SUM
+        print("(4) 水台帳      : sum(h)+sum(hg)+w_r*sum(dz)-rain-hg0-shortfall = %.3e m*cell (tol %.0e。"
+              "hg0 = %.3f、shortfall = %.3e) : %s" % (wres, TOL_SUM, hg0, short, "PASS" if ok4 else "FAIL"))
+        ok6 = abs(wret) > MIN_WRET
+        print("(6) 保持水の授受: |w_r*sum(dz)| = %.3e m*cell (> %.0e) : %s"
+              % (abs(wret), MIN_WRET, "PASS" if ok6 else "FAIL"))
+        ok = ok and ok6
     flat = [idx for idx in range(ntot) if idx % NX + 1 > I_SLOPE]
     pres = max(abs(hg[idx] - SY0 * sd[idx]) for idx in flat)
     hgf = sum(hg[idx] for idx in flat)

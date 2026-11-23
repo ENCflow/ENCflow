@@ -64,6 +64,7 @@ module m_geomorph
   ! シンボルを局所化しリンク不能(§22 の実バグと同型。swflow の sect_* と同じ対処)
   public :: gm_param
   public :: taufac_h                ! 有効掃流力の比(submodule から呼ぶため public。§89.30)
+  public :: retain_exchange         ! 保持水の授受(debris・bedslide の submodule から呼ぶため public。§28.17)
   ! wfsed_taumax・wfsed_cphi も submodule(fluvial・suspend)が呼ぶので public(gm_param と同じ理由)
   public :: wfsed_taumax, wfsed_cphi
   public :: m_geomorph_init
@@ -328,6 +329,14 @@ module m_geomorph
                                      !   2パス用(fx と同じ理由)
     integer :: nslide = 0            ! この run で流動化したセル数(dispose で報告)
     real :: fsmin = huge(1.0)        ! この run の Fs 最小値(ランク局所の診断)
+    real, allocatable :: hd(:,:)     ! 斜面安定判定の全水頭 (m)(ish:ieh, jsh:jeh。f_slide_seep = 1 の
+                                     !   ときだけ確保。評価のたびに作り直す作業面。§28.19)
+    integer :: nslgeo = 0            ! Fs < 1 だが間隙水圧なしでも不安定なので流動化しなかった回数
+                                     !   (f_slide_wet = 1。セル × 評価。ランク局所の診断)
+    integer :: nslflow = 0           ! 濃い混合体が載るので判定しなかった回数(f_slide_noflow = 1, 2。同上)
+    real(real64), allocatable :: wdrow(:)  ! 保持水の不足(f_dbwet = 3。堆積のとき地表水・地下貯留から
+                                     !   取れなかった保持水のかさ体積 m3)の行部分和 (js:je)。
+                                     !   f_dbwet = 3 のときだけ確保し、dispose が決定的な総和で報告する(§28.17)
   end type
 
   type t_splash
@@ -451,8 +460,16 @@ module m_geomorph
     real :: db_tauy = 0.0            ! 一定停止応力 τ_y (Pa)(f_dbres=5)
     integer :: f_dbcurv = 0          ! 曲率項(降伏項の垂直応力に遠心加速度を算入。
                                      !   実体は m_swflow_enc。§28.10)
-    integer :: f_dbwet = 0           ! 間隙水の連行(0:無視, 1:飽和床の連行, 2:gwflow 併用の間隙水)
+    integer :: f_dbwet = 0           ! 間隙水の連行(0:無視, 1:飽和床の連行, 2:gwflow 併用の間隙水,
+                                     !   3:2 + 保持水 λ − sy0 の授受。§28.17)
     real :: db_lamsb = 0.0           ! λ・s_b(前計算。連行水深 = λ・s_b・|Δz|)
+    real :: db_wret = 0.0            ! 保持水 w_r = λ − sy0(f_dbwet = 3。土と一緒に動く暗黙の間隙水)
+    integer :: f_dbunsat = 0         ! 不飽和床の侵食式(f_dbed = 3。0:飽和床の式だけ, 1:不飽和のセルは式(10)。§28.18)
+    real :: db_kuns = 0.0            ! 不飽和床の侵食式の K / s(前計算。s = 土粒子の水中比重)
+    logical :: db_unsat0 = .false.   ! 地下水計算なしのときの河床の状態(db_satbed < 1 なら不飽和)
+    integer :: f_dbimm = 0           ! 緩い勾配の掃流状集合流動(f_dbed = 3。0:石礫型の式を全勾配で,
+                                     !   1:平衡濃度 6.7 c∞² と掃流状集合流動の堆積速度式。§28.18)
+    real :: db_deltdi = 0.0          ! 掃流状集合流動の堆積速度係数 δ'd(f_dbimm = 1)
     integer :: f_release = 0         ! 瞬時流動化(0:無効, 1:有効 = fn_dbinit 指定)
     real :: db_reltime = 0.0         ! 流動化の発生時刻 (s)
     real :: db_relsat = 1.0          ! 崩壊土塊の飽和度(gwflow 無効時のみ使用)
@@ -461,6 +478,11 @@ module m_geomorph
     real :: sl_c = 0.0               ! 有効粘着力 c' (Pa)
     real :: sl_tanphi = 0.0          ! tan(せん断抵抗角 φs)
     real :: sl_gamma = 0.0           ! 飽和単位体積重量 γt (N/m3)
+    integer :: f_slide_seep = 0      ! 安全率の駆動に浸透力を全水頭の勾配で入れる(0:無効, 1:有効。§28.19)
+    integer :: f_slide_wet = 0       ! 間隙水圧がなくても Fs < 1 のセルは流動化しない(0:無効, 1:有効。同上)
+    integer :: f_slide_noflow = 0    ! 濃い混合体(C >= db_cmin)が載るセルを判定しない(0:無効, 1:有効,
+                                     !   2:載っている土砂が判定する層に比べて薄くないセルだけ。同上・§28.24)
+    real :: sl_dmax = 0.0            ! 判定・流動化する深さの上限 (m。slide_dmax。0 = 全層。同上)
     integer :: f_wthr = 0            ! 基岩風化=土層生成(0:無効, 1:有効。§32)
     real :: wp0 = 0.0                ! 裸岩生成速度 (m/s。mm/kyr から換算)
     real :: wsdstar = 0.0            ! 生成の減衰深 sd* (m)
@@ -922,6 +944,54 @@ pure function wfsed_cphi(ub, vb, wx, wy) result(c)
   wn = sqrt(wx * wx + wy * wy)
   if (un > 0.0 .and. wn > 0.0) c = min(abs(ub * wx + vb * wy) / (un * wn), 1.0)
 end function
+
+
+!----------------------------------------------------------------------
+! 保持水の授受(f_dbwet = 3。developer.md §28.17)
+!   土層のかさ厚の変化 dzb (m。堆積が正)に伴う保持水 w_r·dzb(w_r = λ − sy0 = gm%db_wret)を、
+!   セル (i, j) の地表水と授受する。保持水は土と一緒に動く暗黙の水で、状態量を持たない
+!   (Green-Ampt の水分不足量 Δθ = sy0 は、初期含水率 λ − sy0 を意味する)。
+!     堆積(dzb > 0): 地表水から取る。足りなければ地下貯留 hg から(乾いた土砂が層の水を吸う)、
+!                    それも足りなければ不足 def(層の平面の水深 m)を返す。呼び出し側が台帳に数える
+!     侵食(dzb < 0): 地表水へ戻す(def = 0)
+!   水深は層の平面のもので、地表側は河道幅セルで gw_to_h 倍(§26.1)、断面形 σ のセルは体積で
+!   出し入れする(§26.2)。f_dbwet = 2 の授受(排水可能分 sy0·dzb)とは別で、呼び出し側は
+!   堆積ではこちらを先に呼ぶ(保持水を先に満たし、残りの地表水で増えた容量を満たす)。
+!   書き込みは自セルに閉じる(OpenMP の行ループの中から呼べる)
+!----------------------------------------------------------------------
+subroutine retain_exchange(gm, s, i, j, dzb, def)
+  type(t_geomorph), intent(in) :: gm
+  type(t_state), intent(inout) :: s
+  integer, intent(in) :: i, j
+  real, intent(in) :: dzb
+  real, intent(out) :: def
+  real :: fwh, dwr, tk, tg
+
+  def = 0.0
+  fwh = gw_to_h(s, i, j)
+  dwr = gm%db_wret * dzb
+  if (dzb > 0.0) then
+    if (sect_cell(s, i, j)) then
+      tk = min(dwr, max(sect_vh(s, i, j, s%h(i,j)), 0.0) / fwh)
+      call sect_add_vh(s, i, j, -tk * fwh)
+    else
+      tk = min(dwr, max(s%h(i,j), 0.0) / fwh)
+      s%h(i,j) = s%h(i,j) - tk * fwh
+    end if
+    def = dwr - tk
+    if (def > 0.0) then
+      tg = min(def, max(s%hg(i,j), 0.0))
+      s%hg(i,j) = s%hg(i,j) - tg
+      def = def - tg
+    end if
+  else
+    if (sect_cell(s, i, j)) then
+      call sect_add_vh(s, i, j, -dwr * fwh)
+    else
+      s%h(i,j) = s%h(i,j) - dwr * fwh
+    end if
+  end if
+end subroutine
 
 
 !----------------------------------------------------------------------
@@ -1807,6 +1877,25 @@ subroutine m_geomorph_dispose(gm, p, g, s)
     ! ランク局所の診断(帯内の最小 Fs と流動化セル数)
     call par_warn("geomorph: slide min Fs = " // rtoa(gm%dbr%fsmin) &
                   // ", fluidized cells = " // itoa(gm%dbr%nslide))
+    ! 選択子で流動化・判定から外した回数(セル × 評価。§28.19。ランク局所の診断)
+    if (gm%f_slide_wet == 1) then
+      call par_warn("geomorph: slide cells with Fs < 1 left to f_repose because they are unstable " &
+                    // "without pore pressure (f_slide_wet=1) = " // itoa(gm%dbr%nslgeo) // " cell-evaluations")
+    end if
+    if (gm%f_slide_noflow >= 1) then
+      call par_warn("geomorph: slide cells not judged under a dense mixture (f_slide_noflow=" &
+                    // itoa(gm%f_slide_noflow) // ") = " // itoa(gm%dbr%nslflow) // " cell-evaluations")
+    end if
+  end if
+  ! 保持水の不足の台帳(f_dbwet = 3。§28.17。全域の決定的な総和。確保は f_dbwet = 3 のとき =
+  ! 全ランク同一なので par_sum_rows の collective 条件を満たす)。水の台帳は
+  ! Σh + Σhg + w_r·Σ(z − z0) = 供給した水 + この不足、の形で閉じる
+  if (allocated(gm%dbr%wdrow)) then
+    call par_sum_rows(gm%dbr%wdrow, vbout)
+    write(msg, '(a,es16.9,a)') "geomorph: retained pore water shortfall in deposition (f_dbwet=3) ", &
+                               vbout, " m3"
+    call par_info(trim(msg))
+    deallocate(gm%dbr%wdrow)
   end if
   if (gm%f_splash > 0) then
     ! ランク局所の診断(系外排出の台帳。開いた系の収支確認用)
@@ -1831,6 +1920,7 @@ subroutine m_geomorph_dispose(gm, p, g, s)
   if (allocated(gm%dbr%fx)) deallocate(gm%dbr%fx)
   if (allocated(gm%dbr%rel)) deallocate(gm%dbr%rel)
   if (allocated(gm%dbr%sld)) deallocate(gm%dbr%sld)
+  if (allocated(gm%dbr%hd)) deallocate(gm%dbr%hd)
   if (gm%wlw%nsm > 0) then
     ! ランク局所の診断(受け側の土層不足で捨てた固体体積。0 なら厳密保存)
     call par_warn("geomorph: wet_lw spreading: solid volume lost to bedrock floor = " &
@@ -1863,6 +1953,8 @@ subroutine m_geomorph_dispose(gm, p, g, s)
   gm%dbr%nrelclip = 0
   gm%dbr%nslide = 0
   gm%dbr%fsmin = huge(1.0)
+  gm%dbr%nslgeo = 0
+  gm%dbr%nslflow = 0
   gm%flv%nclip = 0
   gm%flv%nlim = 0
   gm%flv%vleak = 0.0

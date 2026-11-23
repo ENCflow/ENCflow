@@ -1,0 +1,155 @@
+!======================================================================
+! examples/debris_dam: 豪雨 → 斜面崩壊 → 土石流 → 天然ダム → 越流 → 決壊 → 下流の洪水(基本ケース)
+!   支流の谷頭の上の斜面(崩積土 3 m・15 万 m³)が、豪雨の浸透で地下水位が上がって崩れ、土石流に
+!   なって支流を下り、本川(流量 40 m³/s)をせき止める。上流の盆地に水がたまり、堤体を越えると流れが
+!   堤体を削って決壊し、下流の集落へ洪水が出る。崩壊の発生から家屋の被害までを 1 回の計算でつなぐ。
+!   入力は make(make_init.py)が data_g10/ に作る。ほかのケースの param_*.txt は、make_init.py が
+!   このファイルの行を差し替えて書く。README を参照
+!======================================================================
+&list_sysparam
+  dt = 0.1                  ! 時間刻み (s)。dt = 0.01 Δx
+  t0 = 0
+  tt = 16200                ! 270 分(崩壊 10 分、越流 200 分ごろ、決壊の洪水が下流を抜けるまで)
+  dt_disp = 600
+  dt_file = 120             ! 分布出力 2 分おき
+  dt_recrd = 10             ! 計測点・流量測線 10 秒おき
+  fn_geoinfo = '-'
+  fn_initial = '-'
+  fn_enc = '-'
+  fn_boundary = '-'
+  fn_precip = '-'
+  fn_gwflow = '-'
+  fn_geomorph = '-'
+  fn_bldgdebris = '-'
+  fn_record = '-'
+  dir_data = 'data_g10'
+  dir_result = 'result_base'
+  f_output_mode = 2         ! bil(単精度バイナリ)
+  f_out_z = 1               ! 地盤高 Z(堆積・侵食)
+  f_out_e = 1               ! 水位 E
+  f_out_hs = 1              ! 土砂柱状量 Hs(流動深 = H + Hs)
+  f_out_hg = 1              ! 地下貯留 Hg(土層の飽和の進み)
+  f_out_fs = 1              ! 斜面の安全率 Fs と期間最小 Fs9999
+  f_out_dmax = 1            ! 最大流動深 D9999
+  f_out_fmax = 1            ! 最大流体力 F9999
+  f_out_bds = 1             ! 家屋の破壊率 Bs
+  f_out_wbd = 1             ! 堆積した瓦礫 Bd
+/
+
+&list_enc
+/
+
+&list_initial
+  f_htype = 1
+  fn_hinit = 'hinit_q40.txt'   ! 初期水深: 本川の等流水深
+/
+
+&list_geoinfo
+  nx = 300
+  ny = 80
+  dx = 10
+  dy = 10
+  f_ztype = 1
+  fn_z = 'z.txt'            ! 地盤高(解析式をセル中心で標本化。make_init.py)
+  rn0 = 0.04                ! 清水域のマニングの粗度(土石流の抵抗は f_dbres の構成則)
+  f_sdtype = 1
+  fn_sd = 'sd.txt'          ! 土層厚: 崩壊斜面の崩積土 3 m。ほかは侵食されない基盤(堆積すると増える)
+  sy0 = 0.2                 ! 比湧水量(水の出入りする間隙)。空隙率 0.4 との差 0.2 は土と動く保持水
+  fn_gv = 'gv.txt'          ! 建物の空隙率(家屋のセル 0.5)
+/
+
+&list_bound_edge
+  f_bc_e = 1                ! 東辺(下流端)は自由流出
+/
+
+&list_bound_inflow          ! 西辺(上流端)の谷底 4 セルから本川の流量を入れる
+  inflow_cell(:,1,1) = 1, 64
+  inflow_cell(:,2,1) = 1, 65
+  inflow_cell(:,3,1) = 1, 66
+  inflow_cell(:,4,1) = 1, 67
+  inflow_val(:,1,1) = 0, 40
+  inflow_val(:,2,1) = 99999, 40
+/
+
+&list_precip
+  prtype = 2                ! 分布 × 倍率の時系列
+  fn_prmap = 'prmap.txt'    ! 雨域(支流の谷底と崩壊斜面が 1)
+  dt_mapunit = 60           ! 分布の値は 60 分の雨量 (= mm/h)
+  prval(1:2,1) = 0, 80      ! (分, 倍率): 80 mm/h を 60 分
+  prval(1:2,2) = 60, 80
+  prval(1:2,3) = 60.01, 0
+  prval(1:2,4) = 99999, 0
+/
+
+&list_gwflow
+  f_gwvertical = 2          ! Green-Ampt の浸透
+  f_gwlateral = 1           ! 側方の地下水流
+  dt_gwflow = 0
+  gw_sat0 = 0.83            ! 土層の初期飽和度(先行降雨で湿った斜面。飽和度 0.853 で崩れる)
+/
+&list_gwflow_greenampt
+  gw_ksv_mmh = 100          ! 飽和透水係数 (mm/h)。雨の強さより大きい(雨は全量が浸透する)
+  gw_psif = 0.0
+/
+&list_gwflow_lateral
+  gw_ksh_mmh = 100          ! 側方の透水係数 (mm/h)
+/
+
+&list_geomorph
+  dt_geomorph = 0.0         ! 毎ステップ更新
+  morfac = 1.0              ! f_debris は 1 必須
+  f_debris = 1
+  f_dbed = 3                ! 侵食・堆積: 高橋・中川 (1991)
+  f_dbres = 3               ! 抵抗則: 高橋・中川 (1991)
+  db_phi = 35.0             ! 内部摩擦角 (deg)
+  db_d50 = 0.03             ! 代表粒径 d_L (m)
+  db_delte = 0.0007         ! 飽和床の侵食係数 δe
+  db_deltd = 0.5            ! 堆積係数 δd
+  f_dbunsat = 1             ! 河床が不飽和のセルは不飽和床の侵食式(K = 0.01)
+  f_dbimm = 1               ! 緩い勾配は掃流状集合流動の平衡濃度 6.7 c∞² と堆積式
+  db_immexp = 2             ! 掃流状集合流動の抵抗を (d_L/h)² で
+  f_dbstop = 1              ! 低速で止まった土砂を河床へ戻す
+  db_vstop = 0.05
+  db_wstop = 0.05
+  f_dbwet = 3               ! 間隙水: 排水可能な水と保持水を土砂と一緒に授受する
+  fluv_porosity = 0.4       ! 空隙率 λ(C* = 0.6)
+  f_fluvial = 1             ! 掃流砂を併用する(緩い勾配の区間の土砂輸送を受け持つ)
+  f_qbform = 1              ! 流砂量式: 芦田・道上
+  fluv_d50 = 0.03           ! 掃流砂の粒径 (m)。db_d50 とそろえる
+  fluv_taufac = 0.6         ! 有効掃流力の比(粒子の粗度 0.027〜0.031 と河道の粗度 0.04 の比の 1.5 乗)
+  f_slide = 1               ! 斜面安定判定(安全率 < 1 の土層を流動化)
+  slide_c = 0.0             ! 粘着力 (Pa)
+  slide_phi = 35.0          ! せん断抵抗角 (deg)。db_phi とそろえる
+  slide_gamma = 19500.0     ! 飽和単位体積重量 (N/m3) = ρw g (1 + s C*)
+  f_slide_seep = 1          ! 浸透力を全水頭の勾配で入れる(湖の下の斜面を過小に見積もらない)
+  f_slide_wet = 1           ! 間隙水圧で起きる崩壊だけを流動化(段差は安息角崩落に任せる)
+  f_slide_noflow = 1        ! 濃い混合体が載るセルは判定しない(2 は、載っている土砂が薄いセルを判定する)
+  slide_dmax = 3.0          ! 判定・流動化する深さの上限 (m)。崩積土の厚さ(すべり面は土層の底)
+  f_repose = 1              ! 安息角崩落(決壊口の側壁)
+  repose_phi = 35.0
+/
+
+&list_bldgdebris
+  f_bdcrit = 2              ! 家屋の破壊の判定: 荷重 (h + (1+s)hs) V²
+  bd_fcrit = 1.0            ! 破壊の始まる荷重 (m3/s2)
+  bd_fcrit2 = 4.0           ! 破壊可能率が 1 になる荷重
+  bd_wdes = 1.0e-3          ! 破壊レート (m/s)
+  bd_fsink = 0.5            ! 沈む瓦礫の割合
+/
+
+&list_record                ! 計測点(本川の谷筋)と流量測線(x = 80・1100・1800・2400 m)
+  pbxytype = 0
+  pbxy(:,1) = 61, 66
+  pbxy(:,2) = 81, 66
+  pbxy(:,3) = 89, 66
+  pbxy(:,4) = 93, 66
+  pbxy(:,5) = 101, 66
+  pbxy(:,6) = 121, 66
+  pbxy(:,7) = 201, 66
+  pbxy(:,8) = 241, 66
+  flxytype = 0
+  flxy(:,1) = 9, 80, 9, 1
+  flxy(:,2) = 111, 80, 111, 1
+  flxy(:,3) = 181, 80, 181, 1
+  flxy(:,4) = 241, 80, 241, 1
+/

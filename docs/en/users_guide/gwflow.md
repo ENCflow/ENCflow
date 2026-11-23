@@ -64,11 +64,21 @@ a second layer, a conduit continuum layer, and pumping sinks if needed.
 | f_gwfrost | 0 | 1: enable infiltration suppression by frozen ground (requires air temperature, fn_meteo) |
 | f_gwbed | 0 | 1: enable the streambed exchange limit (cap on the exchange between channel cells and groundwater; requires the channel mask fn_rw) |
 | dt_gwflow | 0 | Update interval of the groundwater computation (s). 0: every step. If specified, must be at least dt (consistency is maintained through the effective time step) |
+| gw_sat0 | 0 | Initial saturation of the soil layer (layer 1), in [0,1]. Sets the initial subsurface storage to gw_sat0 × sy0 × soil depth (the water-filled fraction of the drainable pore space; 0 = empty). Available with Green-Ampt or the lateral model (not with the bucket). Not used when the run starts from a saved state ([Suspend and restart](restart.md)) |
 
 **Soil depth sd and specific yield sy0 belong to the geographic
 information side** (f_sdtype/sd0/fn_sd, sy0 in &list_geoinfo; see
 [the geographic information chapter](geoinfo.md)). They are read only
 when a model that needs soil depth (Green-Ampt or lateral) is selected.
+
+**Initial wetness of the soil layer (gw_sat0)** -- By default the soil layer starts empty (dry). To
+start from a slope wetted by antecedent rain, or from streambed deposits filled with water, give a
+uniform initial saturation with `gw_sat0` (one value for the whole domain; for a spatial distribution
+or a water table in balance with the flow, use the saved state of a spin-up run as the initial
+condition). Because the Green-Ampt infiltration capacity depends on the current storage, a wet soil
+layer starts with a lower infiltration capacity. In the slope stability check (f_slide;
+[Sediment and landform change](geomorph.md)), the initial saturated thickness acts directly as pore
+water pressure.
 
 **Typical configurations**
 

@@ -568,11 +568,11 @@ gradient is used for these reasons:
   overtopping of a 2 m wall, the results of 2 are the same as those of 1 (§3.4;
   developer.md §93).
 - **test/dbslope** (resistance laws of mixture flows; §2.3): the depth of uniform flow
-  on a strip of a 30° slope (4 neighbours) agrees within 0.03 % with the along-slope
-  equations with 2 and with the horizontal equations with 1, for all four laws
+  on a strip of a 30° slope (4 neighbours) agrees within 0.04 % with the along-slope
+  equations with 2 and with the horizontal equations with 1, for all five laws
   (Voellmy, Egashira, the stony type and the bedload-like collective flow of
-  Takahashi–Nakagawa; the ratio of the depths of 2 and 1 for the same discharge is
-  1.11–1.21).
+  Takahashi–Nakagawa, the latter in the forms with the first and the second power of
+  (d/h); the ratio of the depths of 2 and 1 for the same discharge is 1.11–1.21).
 - **test/steepwave** (the check of 3; §2.6): a lake at rest against a steep shore
   (gradient 1, slope direction 30°, 8 neighbours) stays exactly at rest with 2 and 3.
   For a small long wave crossing a steep lake bed (gradient 0.5, depth 40 → 4 m), the

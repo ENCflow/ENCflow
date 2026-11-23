@@ -15,7 +15,7 @@ supplements: [Sediment transport, hillslope and long-term processes](sediment.md
 longshore transport, weathering/uplift, bedrock incision, dissolution, MORFAC) and
 [Debris flow, slope failure and moving bed layer](massflow.md) (resistance
 laws, erosion/deposition laws, triggering, bed layer). Setups by phenomenon (tsunami deposits, river-mouth deltas, volcanic
-flows, lahars, snow avalanches, sabo facilities) are on the [applications page](geomorph_applications.md).
+flows, lahars, snow avalanches, sabo facilities, natural dams) are on the [applications page](geomorph_applications.md).
 
 | Process | Flag | Content |
 |---|---|---|
@@ -538,7 +538,10 @@ debris flows, where the effective gravity is what acts; developer.md §93).
 | db_cmin | 0.02 | Lower concentration limit for applying the Egashira laminar law (f_dbres=2); below it the Manning law is used (a numerical switch, since the laminar law diverges as C->0; 0 < db_cmin < C*). The default 2% matches the mud-flow criterion of Takahashi and Nakagawa (1991) |
 | db_mu / db_xi | 0.2 / 1000 | Voellmy mu and xi (m/s²). Used by f_dbres=4. The defaults are mid-range RAMMS values (snow avalanches). Debris avalanches are smaller, mu 0.1 and xi 200-500 (recommendations below) |
 | db_tauy | 10000 | Constant retarding stress tau_y (Pa). Used by f_dbres=5. The lower side of the 5-50 kPa pyroclastic-flow applications |
-| f_dbwet / db_satbed | 0 / 1.0 | Pore-water entrainment (exchange of bed pore water with surface water on erosion/deposition; a first-order bulking effect where erosion dominates). 1 is mutually exclusive with the groundwater computation. With the groundwater computation use 2 (the capacity added by deposition is filled from the local surface water, and the pore water of the eroded layer returns from subsurface storage to the surface) |
+| f_dbwet / db_satbed | 0 / 1.0 | Pore-water entrainment (exchange of bed pore water with surface water on erosion/deposition; a first-order bulking effect where erosion dominates). 1 is mutually exclusive with the groundwater computation. With the groundwater computation use 2 (the capacity added by deposition is filled from the local surface water, and the pore water of the eroded layer returns from subsurface storage to the surface). When the specific yield sy0 is smaller than the porosity use 3 (2 plus the exchange of the retained water λ − sy0 that moves with the soil; deposits take the water of the whole pore space, and a saturated soil layer that fails becomes a mixture at concentration C*; [explanation](massflow.md#3-erosion-and-deposition-laws-f_dbed)) |
+| f_dbunsat / db_kunsat | 0 / 0.01 | Erosion formula for an unsaturated bed (used with f_dbed=3). With 1, the erosion of cells whose bed is unsaturated uses the unsaturated-bed erosion formula of Takahashi and Nakagawa (1991) (constant K = db_kunsat). The bed is judged saturated by whether the subsurface storage has reached its capacity (with the groundwater computation) or by whether db_satbed is 1 (without it) ([explanation](massflow.md#3-erosion-and-deposition-laws-f_dbed)) |
+| f_dbimm / db_deltdi | 0 / 0.1 | Bedload-like collective flow on gentle slopes (used with f_dbed=3). With 1, the equilibrium concentration on gentle slopes (about 8° or less for φ = 35°) becomes 6.7 c∞², and the deposition of flows with concentrations of 0.4C* or less uses the formula of the bedload-like collective flow (coefficient δ'd = db_deltdi). The default 0 uses the stony-type formulas at all slopes and overestimates erosion on gentle slopes ([explanation](massflow.md#3-erosion-and-deposition-laws-f_dbed)) |
+| db_immexp | 1 | Exponent of (d_L/h) in the resistance of the bedload-like collective flow (concentration 0.4C* or less) of f_dbres=3. 1: as printed in the equations of the original paper, 2: the form derived from the uniform-flow law of the same paper (smaller resistance for flows much deeper than the grain size; [explanation](massflow.md#2-resistance-laws-f_dbres)) |
 
 The minimal input to "just run a debris flow" is `f_debris = 1` + `sd0`
 (the movable layer = erodible soil) + a source. The source is one of:
@@ -550,10 +553,10 @@ resistance law and E-D closure run as the simple debris flow of the
 defaults (f_dbed=1, f_dbres=1, phi=35 deg). When the type is known, go
 to the recommendations at the end of the chapter.
 
-**Volcanic flows, lahars, snow avalanches and sabo facilities** - the equivalent-fluid setup (debris
+**Volcanic flows, lahars, snow avalanches, sabo facilities and natural dams** - the equivalent-fluid setup (debris
 avalanches, pyroclastic flows), lahars as a mixture whose concentration changes, the reinterpretation
-for snow avalanches and the representation of sabo facilities are in [§3 volcanic flows](geomorph_applications.md#3-volcanic-flows-debris-avalanches-dense-pyroclastic-flows-lahars),
-[§4 lahars](geomorph_applications.md#4-lahars-volcanic-mudflows), [§5 snow avalanches](geomorph_applications.md#5-snow-avalanches-dense-flow) and [§6 sabo facilities](geomorph_applications.md#6-sabo-facilities-sediment-retarding-basins-check-dams) of the
+for snow avalanches, the representation of sabo facilities and the setup for the formation and breach of natural dams are in [§3 volcanic flows](geomorph_applications.md#3-volcanic-flows-debris-avalanches-dense-pyroclastic-flows-lahars),
+[§4 lahars](geomorph_applications.md#4-lahars-volcanic-mudflows), [§5 snow avalanches](geomorph_applications.md#5-snow-avalanches-dense-flow), [§6 sabo facilities](geomorph_applications.md#6-sabo-facilities-sediment-retarding-basins-check-dams) and [§7 natural dams](geomorph_applications.md#7-formation-and-breach-of-natural-dams) of the
 [applications page](geomorph_applications.md) (rough values in [Recommended values by pattern](#recommended-values-by-pattern)).
 
 **Curvature term (f_dbcurv)** - `f_dbcurv = 1` adds the centrifugal acceleration from terrain
@@ -583,6 +586,13 @@ picks up fine DEM roughness. There is no effect on straight slopes
   **judge-only** diagnostic mode (no mobilization) for producing a
   hazard map without disturbance by collapse mobilization. Both modes require
   `f_debris = 1`; other enabled terrain processes can still change the state.
+  There are four options (all off by default; formulas and uses in the
+  [explanation](massflow.md#4-triggering)): `f_slide_seep = 1` (the seepage force is taken from the
+  total-head gradient, so the safety factor of slopes under a lake is not underestimated; requires
+  the groundwater computation), `f_slide_wet = 1` (cells with Fs < 1 even without pore pressure are
+  not mobilized and are left to the angle-of-repose avalanching `f_repose`), `f_slide_noflow = 1`
+  (cells under a dense mixture are not judged; 2 judges those whose mixture is thin) and
+  `slide_dmax` (upper limit of the judged and mobilized depth, m; 0 = the whole layer).
 
 ![Behaviour of the debris-flow and slope-failure equations: Voellmy steady speed, infinite-slope safety factor](../../figs/geomorph_debris_en.png)
 
@@ -801,7 +811,8 @@ debris-flow model).
   ponded depth h >= bs_hplunge, convert hs to bulk volume hs/(1-lambda)
   and move it to the bed layer hb (the surface height conserves the
   solids; the pore fraction is buried from the water column with
-  f_dbwet=1, moves from the water column to subsurface storage with 2, or
+  f_dbwet=1, moves from the water column to subsurface storage with 2
+  (with 3 the retained water is also taken from the water column), or
   raises the surface with 0). The mixture's momentum is
   lost (the layer has no inertia). Right after plunging, the water of
   the shoreline zone is pushed offshore and dewaters temporarily, and
@@ -1334,6 +1345,7 @@ When the type of phenomenon is known, start from the following
 | Debris flow (Voellmy type, with entrainment) | f_dbed=4 + f_dbres=4 | 0.11 | 450 | - | - | - | Back-analysis of one event (Cancia 2015, Qiao et al. 2023; [debris-flow supplement](massflow.md) §6). Hungr's E_r h\|V\| is the standard entrainment law in practice; with f_dbed=4, delta_e ≈ E_r × a representative flow depth (massflow.md §3) |
 | Mudflow, fine sediment flow | f_dbed=2 + f_dbres=2 | - | - | - | 0.001-0.01 | 30-35 | Egashira constitutive law. e ≈ 0.85 |
 | Lahar (volcanic mudflow) | f_dbed=1 or 2 + f_dbres=4 (fine) / 1; 3+3 when boulder-dominated | 0.05-0.1 | 500-1000 | - | 0.001-0.01 | 30-35 | Initiated by erosion of the ash layer (sd), a sediment-laden segment inflow or a breach chain. f_dbwet=1 recommended (2 with infiltration). Set dd to about 0.2 mm when starting from sheet flow on slopes. The Egashira laminar law is not usable for fine material. See [lahars](geomorph_applications.md#4-lahars-volcanic-mudflows) on the applications page and [examples/ashfall_lahar](../../../examples/ashfall_lahar/en/README.md) |
+| Formation of a natural dam and its breach by overtopping | f_dbed=3 + f_dbres=3 (f_dbimm=1, db_immexp=2) + bed load f_fluvial | - | - | - | 0.01-0.1 | 35 | Trigger with f_slide (f_slide_seep=1 because of the ponded area) or fn_dbinit; water of the failed mass with f_dbwet=3. The speed of the breach is sensitive to the lake volume, the slope of the downstream face, the grain size and the transport law on gentle reaches (with or without bed load, fluv_taufac 0.5-0.7, f_dbimm). delta_e (0.0001-0.0007) has little effect on a dam whose breach is set by the amount of sediment the flow can carry. [Natural dams in the applications](geomorph_applications.md#7-formation-and-breach-of-natural-dams); example debris_dam |
 | Simple debris flow (calibration-driven) | f_dbed=1 + f_dbres=1 | - | - | - | - | 30-35 | Calibrate the runout with delta_e and delta_d |
 | Bed change of a sand-bed river | f_fluvial (+ f_suspend) | - | - | - | 0.0003-0.001 | - | Large contribution of suspended load |
 | River-mouth delta | f_fluvial (capacity feed) + f_suspend (inflow concentration) + f_bedfines + fluv_slope + f_repose (+ f_fixation) | - | - | - | sand 0.0005; mud via susp_wf = 1e-3 m/s | 30 | Sea as ordinary cells + initial water level. A mud concentration of 0.0002-0.001 separates fan and bird-foot. morfac 100-200. examples/delta |

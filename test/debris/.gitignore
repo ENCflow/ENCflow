@@ -1,3 +1,5 @@
 # make_eq.py が Run.sh・Run_MPI.sh で書く構成 7 の地形と初期水深(生成物)
 z_eq.txt
 h_eq.txt
+# make_tk.py が Run.sh・Run_MPI.sh で書く構成 9・10 の設定(生成物)
+p_tk_*.txt

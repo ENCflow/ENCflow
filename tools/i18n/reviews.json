@@ -113,11 +113,11 @@
     {
       "source": "docs/users_guide.md",
       "target": "docs/en/users_guide.md",
-      "source_sha256": "e91ea67c9fc12ff28251342dc71f982f01b215d208f8a0f4f39c3b7e33e2ec80",
-      "target_sha256": "7110f1e7291f08e310ddd07655d4453c855eab98221ce03c03c2b5a2135a03aa",
-      "reviewer": "Claude (Claude Code session; changed sections compared side by side with the Japanese source; numbers checked against the test runs)",
+      "source_sha256": "d793c6be32bd647d56c42f324d747457e948982f97e84000dc8ccdd98cef67df",
+      "target_sha256": "c180297b681edb75d6198b1da2a7207622b6f42ae34f9ad5f4fd232bac5af135",
+      "reviewer": "Claude (Claude Code session; the parts changed for the natural-dam application and the example debris_dam: applications section 7, combination with bed load, the two conditions on slide_dmax, pattern table, use cases, index and the list of examples; the English mirror was updated in the same work and both diffs were read side by side)",
       "method": "assistant",
-      "reviewed_on": "2026-11-21"
+      "reviewed_on": "2026-11-23"
     },
     {
       "source": "docs/users_guide/advection.md",
@@ -311,20 +311,20 @@
     {
       "source": "docs/users_guide/geomorph.md",
       "target": "docs/en/users_guide/geomorph.md",
-      "source_sha256": "aa9cc8d14e384de3ab625a1aa767398110f04dd6b71bb06f6edc3072840f6964",
-      "target_sha256": "12c8fa9ba8f8ada190f5291b68e0bbee7ce1f8cc910a63fe8cae8065cabe897d",
-      "reviewer": "Claude (Claude Code session; fn_wave section intro: link to the usage table in the wave-field chapter; both versions read side by side, anchor checked)",
+      "source_sha256": "59259feb5c421c1fc77a210f030b446669b489b225de21dc3fea6ebc19e153db",
+      "target_sha256": "7e8561dc57f2c494359d2a66f00194850fb4f6b2f37130bc1c3cba9f5cf5a5c5",
+      "reviewer": "Claude (Claude Code session; the parts changed for the option value f_slide_noflow = 2: the paragraph on the option and the two notes on slide_dmax in the mass-flow guide, the one-line mentions in the geomorphology guide and its applications section 7, and the settings sample comment; the English mirror was updated in the same work and both diffs were read side by side)",
       "method": "assistant",
-      "reviewed_on": "2026-11-10"
+      "reviewed_on": "2026-11-23"
     },
     {
       "source": "docs/users_guide/geomorph_applications.md",
       "target": "docs/en/users_guide/geomorph_applications.md",
-      "source_sha256": "2b8ce5d676fa69cecc67c6f127f6cb1d29847249a8558daf91325b709e2f4ada",
-      "target_sha256": "19117ccf82e89a0d4bd814cdd20f23130929d00b9b73ab7812b672412f8c5214",
-      "reviewer": "Claude (Claude Code session; the culv_jam additions of the Japanese master and the English mirror compared passage by passage, numbers cross-checked)",
+      "source_sha256": "0d623b8f44976402b6239d427a61893e4fe7e26db44708461b9e682280435f7d",
+      "target_sha256": "91b1cf2dce73c70e2a7d19ac58c9389b31e96fead046f8f255e85d5b43108a84",
+      "reviewer": "Claude (Claude Code session; the parts changed for the option value f_slide_noflow = 2: the paragraph on the option and the two notes on slide_dmax in the mass-flow guide, the one-line mentions in the geomorphology guide and its applications section 7, and the settings sample comment; the English mirror was updated in the same work and both diffs were read side by side)",
       "method": "assistant",
-      "reviewed_on": "2026-11-12"
+      "reviewed_on": "2026-11-23"
     },
     {
       "source": "docs/users_guide/glacier.md",
@@ -338,11 +338,11 @@
     {
       "source": "docs/users_guide/gwflow.md",
       "target": "docs/en/users_guide/gwflow.md",
-      "source_sha256": "0aef35b09ee20d84c04d4b79b4c04995e7285a3ab527dafe6eb69d11b140cc91",
-      "target_sha256": "769edadada025b9a72ad680980ddc97e09d942241fd65114dc50293d9b3e1a23",
-      "reviewer": "Claude (Claude Code session; one paragraph added below the note on lateral conductivity in both languages (K_sh of a single layer is an equivalent value of the model, with a link to Supplement 2 of examples/source_area); the rest unchanged since the previous record)",
+      "source_sha256": "91f1a7d7928c8cfe4c98a8c6a16622c756e249b138ecc536f4b2683ec3ee48a9",
+      "target_sha256": "77cbde7a02c81d6fd99a5b30deefca7ea52cb93e26e63fa9e50a597f2b7c1468",
+      "reviewer": "Claude (Claude Code session; the sections changed for f_dbwet = 3 (retained pore water) and gw_sat0 (initial soil-layer saturation) compared side by side with the Japanese source; numbers checked against the test runs)",
       "method": "assistant",
-      "reviewed_on": "2026-11-11"
+      "reviewed_on": "2026-11-22"
     },
     {
       "source": "docs/users_guide/gwflow_models.md",
@@ -392,11 +392,11 @@
     {
       "source": "docs/users_guide/massflow.md",
       "target": "docs/en/users_guide/massflow.md",
-      "source_sha256": "9cec64eb25d325c7fd80d7fbfa786353a63c5fa3481a72f64c45d435cc4b43aa",
-      "target_sha256": "37c7d802da5be1e11b3414da35d079f5cf3a446223503c3b9bb94d657e664a94",
-      "reviewer": "Claude (Claude Code session; the reference to developer.md §0 changed to a link to the project policy docs/policy.md (English: docs/en/policy.md); both files compared)",
+      "source_sha256": "f7d74faf08245d65367691697c4e7d38c56c25b7198802cdfec35bba6ffcee31",
+      "target_sha256": "a0cce1d02fe53b154dd5a01d8f41459329b144733049faee8df02adb83abfadb",
+      "reviewer": "Claude (Claude Code session; the parts changed for the option value f_slide_noflow = 2: the paragraph on the option and the two notes on slide_dmax in the mass-flow guide, the one-line mentions in the geomorphology guide and its applications section 7, and the settings sample comment; the English mirror was updated in the same work and both diffs were read side by side)",
       "method": "assistant",
-      "reviewed_on": "2026-11-22"
+      "reviewed_on": "2026-11-23"
     },
     {
       "source": "docs/users_guide/nest.md",
@@ -437,11 +437,11 @@
     {
       "source": "docs/users_guide/params_index.md",
       "target": "docs/en/users_guide/params_index.md",
-      "source_sha256": "57970a558209a7b8c926d396f53cf761a2090b582b925ce2897d9dfb5b3cf8d9",
-      "target_sha256": "0c6ed512a32e27501b9229909dc80184dfd9e14b177ad699b6cff2102257452b",
-      "reviewer": "Claude (Claude Code session; full-text content and lexical review, no model execution)",
+      "source_sha256": "be3d64c5415402891752fe662ce20d864ca696912d4e91aee6139b61f9a8e165",
+      "target_sha256": "a40fc2b9bd2b617d50e921497be8e133a699cd57aafaefb76c0e236d6d43c35c",
+      "reviewer": "Claude (Claude Code session; the parts changed for the options of the slope-stability test (f_slide_seep, f_slide_wet, f_slide_noflow, slide_dmax) compared side by side with the Japanese source; numbers checked against the test runs)",
       "method": "assistant",
-      "reviewed_on": "2026-11-16"
+      "reviewed_on": "2026-11-22"
     },
     {
       "source": "docs/users_guide/passage_width.md",
@@ -509,11 +509,11 @@
     {
       "source": "docs/users_guide/steep_slope.md",
       "target": "docs/en/users_guide/steep_slope.md",
-      "source_sha256": "8881d0d679bd41913a16bf91740fe5f794ad4e08d58db1a803e95d57b19c2850",
-      "target_sha256": "4fb86c56511880ae1e5f621725cba27ebb0ff576fc695821df40d6a408bffee9",
-      "reviewer": "Claude (Claude Code session; the sentence added to §4 on the effect of the default 2 through the dry/wet switch in examples/badland_storm result 1 compared against the Japanese source; the rest of the file is unchanged since the previous record)",
+      "source_sha256": "8fa8756183d5d3644b9e2800ce8f2a4a18f41f0afa057f591b8b87e3feb6ce7a",
+      "target_sha256": "ccc4ca88d568d234d9935abe5d91467f511e0f952002a2abb7b4034c03c18465",
+      "reviewer": "Claude (Claude Code session; the parts changed for the Takahashi-Nakagawa additions (f_dbunsat, f_dbimm, db_immexp), the dilute-side yield statement and the test tables compared side by side with the Japanese source; numbers checked against the test runs and the two source papers)",
       "method": "assistant",
-      "reviewed_on": "2026-11-10"
+      "reviewed_on": "2026-11-22"
     },
     {
       "source": "docs/users_guide/structure.md",
@@ -572,11 +572,11 @@
     {
       "source": "docs/users_guide/usecases.md",
       "target": "docs/en/users_guide/usecases.md",
-      "source_sha256": "3420777ebca33fc235c8b6e8eaff1d42b486b9c396d3e0a458f9e21d19fbd5f4",
-      "target_sha256": "4dd94b1405a4b10d2d6d19a20152e8181a417b68658950e31ce1a543eda356a6",
-      "reviewer": "Claude (Claude Code session; the capture at a culvert inlet changed from all the wood to the share of the water drawn by the culvert (developer.md §50.11): the rewritten passages of the Japanese master and the English mirror compared one by one, numbers cross-checked; rest unchanged since the previous record)",
+      "source_sha256": "936192b10b83fc2245f8ae4b3df1b31c11c5902e3f60b301ebba117c4cf753a2",
+      "target_sha256": "dc2c40ef116e5df17693c0cb24a3fe333176a2a3ebbb81daa7fc05b394586bb7",
+      "reviewer": "Claude (Claude Code session; the parts changed for the natural-dam application and the example debris_dam: applications section 7, combination with bed load, the two conditions on slide_dmax, pattern table, use cases, index and the list of examples; the English mirror was updated in the same work and both diffs were read side by side)",
       "method": "assistant",
-      "reviewed_on": "2026-11-13"
+      "reviewed_on": "2026-11-23"
     },
     {
       "source": "docs/users_guide/user_routines.md",
@@ -716,11 +716,11 @@
     {
       "source": "examples/List_samples/list_geomorph.txt",
       "target": "examples/List_samples/en/list_geomorph.txt",
-      "source_sha256": "6366bfde929c358823b512b42b566f5621c9d48bd6342325ff0c1a9e9d0b2133",
-      "target_sha256": "81b0dd9b499ce76d5f0496610179fc6969fa8f5dff664d9ef0424c6fb4acd988",
-      "reviewer": "Claude (Claude Code session; geomorph chapter split, step 1: the six application setups moved to users_guide/geomorph_applications.md; compared the Japanese source with the English mirror for the moved text, the new pointer paragraphs and the re-targeted links; the rest of the pair is unchanged since the previous record)",
+      "source_sha256": "345dd3cd63d7bd0b86321c69c8cd9b8d19f0cadb9e93aef6cbe95378ce4c0586",
+      "target_sha256": "30ce0d9c0ae96607a0acfc6e01870686ae7a58f8758052a7ffda04517354d562",
+      "reviewer": "Claude (Claude Code session; the parts changed for the option value f_slide_noflow = 2: the paragraph on the option and the two notes on slide_dmax in the mass-flow guide, the one-line mentions in the geomorphology guide and its applications section 7, and the settings sample comment; the English mirror was updated in the same work and both diffs were read side by side)",
       "method": "assistant",
-      "reviewed_on": "2026-11-07"
+      "reviewed_on": "2026-11-23"
     },
     {
       "source": "examples/List_samples/list_glacier.txt",
@@ -734,11 +734,11 @@
     {
       "source": "examples/List_samples/list_gwflow.txt",
       "target": "examples/List_samples/en/list_gwflow.txt",
-      "source_sha256": "1db8cc7485d6b2385926f98477150063f74445bb1299c3b63a7e98956f487d2f",
-      "target_sha256": "93a095ea146b30f2c2e045cbf87c49be802e4c21da9c5e9f14f0767ce045c945",
-      "reviewer": "Claude (Claude Code session; reviewed the text on the new default 1/3 of gw_diagratio and salt_diagratio and the values that change with it (developer.md sec. 98) in the Japanese source against the English mirror, 2026-11-05)",
+      "source_sha256": "50a62ffd46a487c6076a68f228f465ba95341012087f8d243a2952212e3a56a1",
+      "target_sha256": "ced1d0379d35c4cd95271a3b8abd2638d761261dba5264a7e8672218b5cb198d",
+      "reviewer": "Claude (Claude Code session; the sections changed for f_dbwet = 3 (retained pore water) and gw_sat0 (initial soil-layer saturation) compared side by side with the Japanese source; numbers checked against the test runs)",
       "method": "assistant",
-      "reviewed_on": "2026-11-05"
+      "reviewed_on": "2026-11-22"
     },
     {
       "source": "examples/List_samples/list_initial.txt",
@@ -905,11 +905,11 @@
     {
       "source": "examples/README.md",
       "target": "examples/README.en.md",
-      "source_sha256": "f55aad785cce24970defa261107b24479dc507248e701e7998793f5e7558b4af",
-      "target_sha256": "c701db488ed2151398abeefef2b4328d2ccd08d60607833908342215e2442e27",
-      "reviewer": "Claude (Claude Code session; the chichibu_flood row shortened to the length of the other rows (content about 60 characters, main features trimmed); both sides compared)",
+      "source_sha256": "d9923774d5d2c1bb755bb7f724d8714a94c23bb36ff3eb582210e0a077213998",
+      "target_sha256": "3d3268b86e8592f30a3df5ec59c171eee0176005cfca4c0d4ac803b3221b3c78",
+      "reviewer": "Claude (Claude Code session; the parts changed for the natural-dam application and the example debris_dam: applications section 7, combination with bed load, the two conditions on slide_dmax, pattern table, use cases, index and the list of examples; the English mirror was updated in the same work and both diffs were read side by side)",
       "method": "assistant",
-      "reviewed_on": "2026-11-21"
+      "reviewed_on": "2026-11-23"
     },
     {
       "source": "examples/ashfall_lahar/README.md",
@@ -1846,6 +1846,114 @@
       "reviewer": "Claude (Claude Code session; English figure drawn by the same script with the en switch from the same results of 2026-11-10; compared side by side: same plotted data and layout, labels translated)",
       "method": "assistant",
       "reviewed_on": "2026-11-10"
+    },
+    {
+      "source": "examples/debris_dam/README.md",
+      "target": "examples/debris_dam/en/README.md",
+      "source_sha256": "bf8e497a446b9758746f0c44674c7163b04e853cfd81118d665564be1362a86f",
+      "target_sha256": "c430bcce57227f437f76320ac37e103e6b0ac2f79c5b32ba78210d47aa3ca53d",
+      "reviewer": "Claude (Claude Code session; the parts changed for the five cases with f_slide_noflow = 2: settings paragraph, case table, case counts, the note on the judged depth, the new section on soil left under a thin film with tables generated from the same results in both languages, and the grid-spacing paragraph; both diffs were read side by side)",
+      "method": "assistant",
+      "reviewed_on": "2026-11-23"
+    },
+    {
+      "source": "examples/debris_dam/figs/breach.png",
+      "target": "examples/debris_dam/en/figs/breach.png",
+      "source_sha256": "a9e150ae36f1560a4c92c93b1ecb76896541345b7ac8d739f4e26f304acd4a0b",
+      "target_sha256": "172b032b9bd5234371cc9bfabb762d0a193709a631c57410b0aac44805b95c06",
+      "reviewer": "Claude (Claude Code session; English figure drawn by the same script with the en switch; visual check)",
+      "method": "assistant",
+      "reviewed_on": "2026-11-23"
+    },
+    {
+      "source": "examples/debris_dam/figs/breach_sum.png",
+      "target": "examples/debris_dam/en/figs/breach_sum.png",
+      "source_sha256": "fcf227c664a27070713f7e3adec90042391637d425c1983e3ce498755b5a2312",
+      "target_sha256": "4aaa4cd9c2736fd8974772cc6debc3430f185b2adc2b6c2b9f1cfc22e6ef1a81",
+      "reviewer": "Claude (Claude Code session; English figure drawn by the same script with the en switch; visual check)",
+      "method": "assistant",
+      "reviewed_on": "2026-11-23"
+    },
+    {
+      "source": "examples/debris_dam/figs/chain.png",
+      "target": "examples/debris_dam/en/figs/chain.png",
+      "source_sha256": "29147c18037648b603af02ee58e5033754694ded0d63ff216c2d98730c7f4b6d",
+      "target_sha256": "a0ac2b6de570893a7e8014c892c8ae38f7169bffbcb33a70ba45d7eeefd2012c",
+      "reviewer": "Claude (Claude Code session; English figure drawn by the same script with the en switch; visual check)",
+      "method": "assistant",
+      "reviewed_on": "2026-11-23"
+    },
+    {
+      "source": "examples/debris_dam/figs/film.png",
+      "target": "examples/debris_dam/en/figs/film.png",
+      "source_sha256": "6d747aa0a25570429b579ec538e4c6978ddf64f1ce3343d6a04d84890dce4474",
+      "target_sha256": "fa3a68eceba71ae0c4a60100dce1bcddd6f7922a050ac79b42522fe2b66a71d6",
+      "reviewer": "Claude (Claude Code session; English figure drawn by the same script with the en switch; visual check)",
+      "method": "assistant",
+      "reviewed_on": "2026-11-23"
+    },
+    {
+      "source": "examples/debris_dam/figs/formation.png",
+      "target": "examples/debris_dam/en/figs/formation.png",
+      "source_sha256": "9c6582aba70a6c504ab6ce8cc4434c3dd05d32005bd961bbaa06dca6f0000a98",
+      "target_sha256": "8d054a5d37a3da596ff5f50b0d5064ddcb491ca9130ec921293d1637e19cc965",
+      "reviewer": "Claude (Claude Code session; English figure drawn by the same script with the en switch; visual check)",
+      "method": "assistant",
+      "reviewed_on": "2026-11-23"
+    },
+    {
+      "source": "examples/debris_dam/figs/profile.png",
+      "target": "examples/debris_dam/en/figs/profile.png",
+      "source_sha256": "8e993cd03ab1b64fc5893bc53b0fddcbfdcf830a3c02e455f4f2b3700a866620",
+      "target_sha256": "70157aa9ce08efd20884b2361bbec9d6381fd4cb28175350f250eeb5134a5d1e",
+      "reviewer": "Claude (Claude Code session; English figure drawn by the same script with the en switch; visual check)",
+      "method": "assistant",
+      "reviewed_on": "2026-11-23"
+    },
+    {
+      "source": "examples/debris_dam/figs/sequence.png",
+      "target": "examples/debris_dam/en/figs/sequence.png",
+      "source_sha256": "80779374433609f4959209e39a0f26451073753f601a12296658b595ed5e2dc0",
+      "target_sha256": "1ef73a72da2815d421b9c018ac39985df47a4e83a793244fc3f244d7e79d5f08",
+      "reviewer": "Claude (Claude Code session; English figure drawn by the same script with the en switch; visual check)",
+      "method": "assistant",
+      "reviewed_on": "2026-11-23"
+    },
+    {
+      "source": "examples/debris_dam/figs/series.png",
+      "target": "examples/debris_dam/en/figs/series.png",
+      "source_sha256": "aa2f716486df2df729ecd0ba33ada51d13fe8bec08dbeb69acd5f5bfd0a691c7",
+      "target_sha256": "f00d872436c5828f5824834aa56562e53dfef93dcf8fba581040efbc3b77e81c",
+      "reviewer": "Claude (Claude Code session; English figure drawn by the same script with the en switch; visual check)",
+      "method": "assistant",
+      "reviewed_on": "2026-11-23"
+    },
+    {
+      "source": "examples/debris_dam/figs/setup.png",
+      "target": "examples/debris_dam/en/figs/setup.png",
+      "source_sha256": "dd6fbc287ad696a38c92106ccf9473752dc098b04a3f07ee7fe037882a5009ca",
+      "target_sha256": "0a43f546f912389fe72cb6bbedb0adb10d4e7287287df4d0a3c9c4dc89bab172",
+      "reviewer": "Claude (Claude Code session; English figure drawn by the same script with the en switch; visual check)",
+      "method": "assistant",
+      "reviewed_on": "2026-11-23"
+    },
+    {
+      "source": "examples/debris_dam/figs/spread.png",
+      "target": "examples/debris_dam/en/figs/spread.png",
+      "source_sha256": "461134ee05a7cb05cb281c461f2117c0f8a653313ada8519068333a33be6116f",
+      "target_sha256": "085bc46316ec230fec8f5491b4ab06ba4202d0253e47a36fb1d402e90e7613e8",
+      "reviewer": "Claude (Claude Code session; English figure drawn by the same script with the en switch; visual check)",
+      "method": "assistant",
+      "reviewed_on": "2026-11-23"
+    },
+    {
+      "source": "examples/debris_dam/figs/village.png",
+      "target": "examples/debris_dam/en/figs/village.png",
+      "source_sha256": "32dc411bcbaa59e8a24ab74a8d450006796d25b644dcc9f26cfbc3f1a1ffb898",
+      "target_sha256": "ee580eecda7ca3fcde11c397428662fc233822d2d4e14bcec4b3ce506d0b8e2f",
+      "reviewer": "Claude (Claude Code session; English figure drawn by the same script with the en switch; visual check)",
+      "method": "assistant",
+      "reviewed_on": "2026-11-23"
     },
     {
       "source": "examples/debris_fan/README.md",
@@ -3650,11 +3758,11 @@
     {
       "source": "test/README.md",
       "target": "test/README.en.md",
-      "source_sha256": "1ad92988dd102864e22c81e7512ff097e3aea03b2bfad257b9a91b09ea5d3628",
-      "target_sha256": "897e1ddb60e84cedee3b62ac9763f4bfd43b848725df319b954e807e91cc81f8",
-      "reviewer": "Claude (Claude Code session; changed sections compared side by side with the Japanese source; numbers checked against the test runs)",
+      "source_sha256": "f64da2462e56024535ff378ae1b0fa1fcfb3720fd7215e0cf48ac960b8925ad0",
+      "target_sha256": "09773fa40dd3c4eace153f8fa2d8071b53a2fca0639867cf9543b5398fc5262a",
+      "reviewer": "Claude (Claude Code session; the parts changed for the options of the slope-stability test (f_slide_seep, f_slide_wet, f_slide_noflow, slide_dmax) compared side by side with the Japanese source; numbers checked against the test runs)",
       "method": "assistant",
-      "reviewed_on": "2026-11-21"
+      "reviewed_on": "2026-11-22"
     },
     {
       "source": "test/avalanche/README.md",
@@ -4091,20 +4199,20 @@
     {
       "source": "test/dbslope/README.md",
       "target": "test/dbslope/en/README.md",
-      "source_sha256": "2c2784baab4c50c0ee8aa774eab755a20349211baa03f7504681703006477a0a",
-      "target_sha256": "ef3e6d98a826a923cbfb56da0a0c7b5c5f5cc64fe712bd058c57605d5af44f0c",
-      "reviewer": "Claude (Claude Code session; changed sections compared side by side with the Japanese source; numbers checked against the test runs)",
+      "source_sha256": "3b92f0ce1850293481dc0db70d5a606498b0c4779dddde7af5e4696a6685a24a",
+      "target_sha256": "cbed46eda242e7fce3917eaa08b20f53932e46d870fa891d5a2e9b0f6ab396c1",
+      "reviewer": "Claude (Claude Code session; the parts changed for the Takahashi-Nakagawa additions (f_dbunsat, f_dbimm, db_immexp), the dilute-side yield statement and the test tables compared side by side with the Japanese source; numbers checked against the test runs and the two source papers)",
       "method": "assistant",
-      "reviewed_on": "2026-11-21"
+      "reviewed_on": "2026-11-22"
     },
     {
       "source": "test/debris/README.md",
       "target": "test/debris/en/README.md",
-      "source_sha256": "4b8c0edd5b48b15c1677be84a3ec722f65a512c6391a46a978186b097ef6f212",
-      "target_sha256": "1198485592dd6d87a607f9a3184de9222ae4e98bc9b47b824cda3f4c41fdf1ad",
-      "reviewer": "Claude (Claude Code session; rerun of 2026-11-10 with the current defaults: the table cells written as round-off, min dz −0.27 cm of configuration 6, the bullet with the round-off bounds and the sentence appended to the history compared line by line against the Japanese source; the rest unchanged since the previous record)",
+      "source_sha256": "5d60525ca8031cfb7abd2bea1e3be07d53eea1ddc90b77ae5363b75f14e877e0",
+      "target_sha256": "e5bd3ad37e983020178e19ba59808a0b205f900dc66b1c6b5e2642a56c2a7438",
+      "reviewer": "Claude (Claude Code session; the parts changed for the Takahashi-Nakagawa additions (f_dbunsat, f_dbimm, db_immexp), the dilute-side yield statement and the test tables compared side by side with the Japanese source; numbers checked against the test runs and the two source papers)",
       "method": "assistant",
-      "reviewed_on": "2026-11-10"
+      "reviewed_on": "2026-11-22"
     },
     {
       "source": "test/debris/figs/map.png",
@@ -4829,11 +4937,11 @@
     {
       "source": "test/slide/README.md",
       "target": "test/slide/en/README.md",
-      "source_sha256": "3e78bd345643021aac080cb868515da7e9cc4574480ad5ca89e5820c8ace34e4",
-      "target_sha256": "4893243986fe2724b983ed9aad7ea196807ce6ae13121739fa212403b72f0203",
-      "reviewer": "Claude (Claude Code session; changed sections compared side by side with the Japanese source; numbers checked against the test runs)",
+      "source_sha256": "8df621efc676f2fe5a0c145435cf28b6bc24a122a3a6880eabe07a7e0271e63c",
+      "target_sha256": "1e287fc18740a9ba1d7647c0de94250d5ac11fac35f419fbbeaf547ef3a89aae",
+      "reviewer": "Claude (Claude Code session; the parts changed for the new test cases of f_slide_noflow = 2 in configuration 8: the option list, the case table, the description of the thin-film cases and the check table; both diffs were read side by side)",
       "method": "assistant",
-      "reviewed_on": "2026-11-21"
+      "reviewed_on": "2026-11-23"
     },
     {
       "source": "test/slide/figs/fslide.png",

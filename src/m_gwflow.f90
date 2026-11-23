@@ -46,8 +46,8 @@ module m_gwflow
   use m_gwflow_frost, only : t_frost, gwflow_frost_init, gwflow_frost_calc, gwflow_frost_dispose
   use m_gwflow_bed, only : t_gwbed, gwflow_bed_init, gwflow_bed_dispose
   use m_meteo, only : t_meteo
-  use m_parallel, only : par_stop, par_allreduce_max, dcp
-  use m_util, only : itoa
+  use m_parallel, only : par_info, par_stop, par_allreduce_max, dcp
+  use m_util, only : itoa, rtoa
   implicit none
   private
   public :: t_gwflow
@@ -160,6 +160,7 @@ subroutine m_gwflow_init(gw, p, g, s)
   type(t_list_gwflow) :: list
   logical :: needs_sd
   real :: sdmax(1)
+  integer :: i, j
 
   if (len_trim(p%fn_gwflow) == 0) return
 
@@ -326,6 +327,32 @@ subroutine m_gwflow_init(gw, p, g, s)
   ! 各モデルは init で kbed を読まないため、順序は calc より前であればよい)
   if (gw%bed_enabled) call gwflow_bed_init(gw%bed, p, g, s)
   if (associated(gw%init)) call gw%init(gw%vert, p, g, s)
+  ! 層1の初期地下水(gw_sat0。developer.md §28.17): 初期の地下貯留を hg = gw_sat0・sy0・sd に
+  ! する(陸の有効セル。海セル・無効セルには置かない)。容量が sd・sy0 の構成だけ(バケツの
+  ! 容量 gw_capacity は sd と無関係)。保存状態から始めるときは置かない(復元値が勝つ。
+  ! 上の sd の転記と同じ意味論)。Green-Ampt の累積浸透は hg そのものなので、浸透能も
+  ! 湿った土層のものから始まる。判定は namelist 由来で全ランク同一
+  if (list%gw_sat0 < 0.0 .or. list%gw_sat0 > 1.0) then
+    call par_stop("list_gwflow: gw_sat0 must be in [0,1]")
+  end if
+  if (list%gw_sat0 > 0.0) then
+    if (list%f_gwvertical == 1 .or. .not. needs_sd) then
+      call par_stop("list_gwflow: gw_sat0 requires a soil layer whose capacity is sd*sy0 " &
+                    // "(f_gwvertical=2 greenampt or f_gwlateral=1)")
+    end if
+    if (p%f_state_restore == 0) then
+      ! ゾーン2 = x/sw は全域が使える(帯行 jsh:jeh は全域の有効行。層2の gw2_sat0 と同じ)
+      do j = dcp%jsh, dcp%jeh
+        do i = dcp%ish, dcp%ieh
+          if (g%x(i,j) <= 0) cycle
+          if (g%sw(i,j) > 0) cycle
+          s%hg(i,j) = list%gw_sat0 * g%sy0 * s%sd(i,j)
+        end do
+      end do
+      call par_info("gwflow: initial storage of the soil layer set to gw_sat0 = " &
+                    // rtoa(list%gw_sat0) // " of its capacity sd*sy0")
+    end if
+  end if
   if (gw%lat_enabled) call gwflow_lateral_init(gw%lat, gw%lay1, p, g, s, gw%dts)
   if (gw%l2_enabled) call gwflow_layer2_init(gw%l2, gw%lat, p, g, s, gw%dts)
   ! 管路層は層2より後(gwc_leak_layer=2 が層2の有効化・定数を参照する)
