@@ -67,7 +67,7 @@ computational method and more.
   [Supplement](#supplement-equivalent-roughness-and-the-soil-conductivity)).
 - **Heavier rain widens the saturated area, but the equivalent roughness changes little**: with
   three times the rain, 30 mm/h, the maximum saturated area widens from 15 % to 25 %, and the
-  time for the runoff to reach nine tenths of the rain advances from 5.5 to 3.3 hours. The
+  time for the runoff to reach nine tenths of the rain advances from 5.3 to 3.3 hours. The
   roughness with the same slope lag changes from 1.7 to 1.6
   ([Rain intensity, the saturated area and the equivalent roughness](#rain-intensity-the-saturated-area-and-the-equivalent-roughness)).
 - **Fast storm runoff does not need fast water; it needs a response that travels fast**: the
@@ -305,18 +305,18 @@ cd examples/source_area
 make                      # links and inputs (make_catchment.py; a few seconds)
 make run                  # the three basic cases, one after another
 make sweep                # the 25 sweep cases, one after another
-make vz                   # the 2 soil-column cases of VZ runoff (for the supplement; a few seconds)
+make vz                   # the 2 soil-column cases of VZ runoff (for the supplement; about 1 minute)
 make sfm                  # the 2 tank cases of the storage function method (for the supplement; a few seconds)
 python3 plot_results.py   # figs/*.png and tables (argument en writes English figures to en/figs/)
 ```
 
-Rough run times (gfortran -Ofast, a 4-core machine): the process run takes 6 minutes with 3
-threads. With 1 thread and four cases side by side, the process run takes 12–18 minutes,
-vertical infiltration only 23–30 minutes and no infiltration 25–37 minutes; with rain of
-30 mm/h the process run takes 20 minutes and no infiltration 42–54 minutes (no infiltration,
+Rough run times (gfortran -Ofast, a 4-core machine): the process run takes 8 minutes with 3
+threads. With 1 thread and four cases side by side, the process run takes 15–27 minutes,
+vertical infiltration only 48–70 minutes and no infiltration 55–78 minutes; with rain of
+30 mm/h the process run takes 30 minutes and no infiltration 97–127 minutes (no infiltration,
 and vertical infiltration only once the soil is full, are heavy because water lies on every
 cell; the 30 mm/h cases take longer because of the smaller time step). To run cases side by
-side, use `make -j 4 run OMP_NUM_THREADS=1` and `make -j 4 sweep OMP_NUM_THREADS=1` (about 3
+side, use `make -j 4 run OMP_NUM_THREADS=1` and `make -j 4 sweep OMP_NUM_THREADS=1` (about 7
 hours for the 28 cases). The results do not depend on the number of threads (the process run
 with 1 thread and with 3 threads gives byte-identical transect discharge, Log and fields at
 all output times). `mechanism.png` and `setup.png` do not use computed results, so they can be
@@ -427,18 +427,18 @@ and the third hour of the second storm):
 |---:|---:|---:|---:|---:|---:|---:|
 | 2 | 0.00 | 19.6 | 2.9 | 0.4 | 0.3 | 20.0 |
 | 3 | 0.04 | 25.1 | 11.3 | 4.9 | 2.8 | 30.0 |
-| 4 | 1.88 | 27.0 | 14.0 | 12.3 | 8.7 | 39.3 |
-| 6 | 9.55 | 27.9 | 15.1 | 16.7 | 12.6 | 44.6 |
-| 12 | 9.99 | 28.0 | 15.3 | 17.0 | 12.8 | 45.1 |
-| 14 | 5.70 | 17.7 | 11.6 | 11.1 | 9.0 | 28.7 |
+| 4 | 1.90 | 27.0 | 14.0 | 12.3 | 8.7 | 39.3 |
+| 6 | 9.56 | 27.9 | 15.1 | 16.7 | 12.5 | 44.6 |
+| 12 | 9.99 | 28.0 | 15.3 | 17.0 | 12.7 | 45.0 |
+| 14 | 5.68 | 17.7 | 11.6 | 11.0 | 8.9 | 28.7 |
 | 24 | 0.57 | 7.5 | 5.3 | 3.1 | 2.8 | 10.5 |
 | 48 | 0.09 | 4.0 | 2.8 | 1.2 | 1.1 | 5.2 |
 | 50 | 0.38 | 20.6 | 5.8 | 4.0 | 3.6 | 24.7 |
-| 51 | 1.57 | 25.2 | 11.6 | 8.6 | 6.4 | 33.8 |
-| 60 | 9.99 | 28.0 | 15.3 | 17.0 | 12.8 | 45.1 |
+| 51 | 1.58 | 25.2 | 11.6 | 8.6 | 6.4 | 33.8 |
+| 60 | 9.99 | 28.0 | 15.3 | 17.0 | 12.7 | 45.0 |
 
 - **During the rain the catchment stores 45 mm**: when the runoff balances the rain, the
-  catchment holds 45 mm of water (28 mm in the soil and 17 mm on the surface, 12.8 mm of the
+  catchment holds 45 mm of water (28 mm in the soil and 17 mm on the surface, 12.7 mm of the
   latter on channel cells). When the rain stops this water comes out, and 12 hours later
   10.5 mm is left.
 - **With water running in the channels, the catchment holds 5 mm**: just before the second
@@ -466,8 +466,8 @@ Changing one setting of the process run at a time gives the following (`process_
 | surface flow as a diffusion wave | 1 | 3.8 | 9.99 | 12.0 | 0.57 | 114.9 | 15.3 |
 | surface flow as a diffusion wave | 2 | 2.8 | 9.99 | 12.0 | 0.57 | 119.9 | 15.3 |
 | lateral conductivity 36000 → 3600 mm/h | 1 | 7.5 | 8.72 | 12.2 | 1.94 | 99.0 | 42.5 |
-| lateral conductivity 36000 → 3600 mm/h | 2 | 2.5 | 8.79 | 12.2 | 1.94 | 119.9 | 42.7 |
-| lateral conductivity 36000 → 10000 mm/h | 1 | 5.5 | 9.77 | 12.0 | 1.20 | 109.5 | 26.8 |
+| lateral conductivity 36000 → 3600 mm/h | 2 | 2.5 | 8.80 | 12.2 | 1.94 | 119.9 | 42.7 |
+| lateral conductivity 36000 → 10000 mm/h | 1 | 5.5 | 9.78 | 12.0 | 1.20 | 109.5 | 26.8 |
 | lateral conductivity 36000 → 10000 mm/h | 2 | 3.0 | 9.78 | 12.0 | 1.20 | 119.9 | 26.8 |
 | lateral conductivity 36000 → 100000 mm/h | 1 | 2.8 | 9.99 | 10.7 | 0.35 | 116.8 | 10.0 |
 | lateral conductivity 36000 → 100000 mm/h | 2 | 2.5 | 9.99 | 10.7 | 0.35 | 119.7 | 10.0 |
@@ -517,7 +517,7 @@ infiltration only.
 | no infiltration | 0.3 | 1 | 1.8 | 10.00 | 5.7 | 0.12 | 119.7 | 0.71 |
 | no infiltration | 0.3 | 2 | 1.8 | 10.00 | 5.7 | 0.12 | 120.0 | 0.81 |
 | no infiltration | 0.6 | 1 | 2.3 | 10.00 | 7.8 | 0.19 | 119.5 | 0.82 |
-| no infiltration | 0.6 | 2 | 2.2 | 10.00 | 7.8 | 0.19 | 120.0 | 0.91 |
+| no infiltration | 0.6 | 2 | 2.2 | 10.00 | 7.8 | 0.19 | 120.0 | 0.90 |
 | no infiltration | 1 | 1 | 2.7 | 10.00 | 10.3 | 0.29 | 119.2 | 0.92 |
 | no infiltration | 1 | 2 | 2.5 | 10.00 | 10.3 | 0.29 | 120.0 | 0.97 |
 | no infiltration | 2 | 1 | 3.3 | 10.00 | 12.0 | 0.54 | 118.2 | 0.99 |
@@ -526,9 +526,9 @@ infiltration only.
 | no infiltration | 3 | 2 | 3.3 | 10.00 | 12.0 | 0.79 | 120.0 | 0.93 |
 | no infiltration | 5 | 1 | 4.7 | 9.84 | 12.0 | 1.31 | 114.4 | 0.72 |
 | no infiltration | 5 | 2 | 3.8 | 9.87 | 12.0 | 1.31 | 120.0 | 0.75 |
-| no infiltration | 10 | 1 | 6.0 | 7.12 | 14.2 | 2.49 | 105.7 | 0.20 |
-| no infiltration | 10 | 2 | 4.0 | 7.79 | 12.8 | 2.49 | 119.9 | 0.35 |
-| no infiltration | 30 | 1 | 17.8 | 1.85 | 30.0 | 1.62 | 56.4 | -0.29 |
+| no infiltration | 10 | 1 | 6.0 | 7.12 | 14.2 | 2.48 | 105.7 | 0.21 |
+| no infiltration | 10 | 2 | 4.0 | 7.80 | 12.8 | 2.48 | 119.9 | 0.36 |
+| no infiltration | 30 | 1 | 17.8 | 1.85 | 30.0 | 1.62 | 56.5 | -0.29 |
 | no infiltration | 30 | 2 | 0.2 | 3.73 | 20.5 | 3.56 | 118.2 | -0.05 |
 | no infiltration (diffusion wave) | 0.3 | 1 | 1.8 | 10.00 | 5.5 | 0.12 | 119.7 | 0.71 |
 | no infiltration (diffusion wave) | 0.3 | 2 | 1.8 | 10.00 | 5.7 | 0.12 | 120.0 | 0.81 |
@@ -536,7 +536,7 @@ infiltration only.
 | no infiltration (diffusion wave) | 3 | 2 | 3.3 | 10.00 | 12.0 | 0.79 | 120.0 | 0.93 |
 | no infiltration (diffusion wave) | 10 | 1 | 6.0 | 7.12 | 14.0 | 2.48 | 105.7 | 0.21 |
 | no infiltration (diffusion wave) | 10 | 2 | 3.8 | 7.79 | 12.8 | 2.48 | 119.9 | 0.36 |
-| vertical infiltration only | 0.3 | 1 | 11.8 | 7.66 | 12.8 | 0.12 | 19.7 | -0.18 |
+| vertical infiltration only | 0.3 | 1 | 11.8 | 7.71 | 12.7 | 0.12 | 19.7 | -0.18 |
 | vertical infiltration only | 0.3 | 2 | 1.8 | 10.00 | 5.7 | 0.12 | 120.0 | 0.81 |
 | vertical infiltration only | 3 | 1 | 14.8 | 1.37 | 17.5 | 0.71 | 17.1 | -0.38 |
 | vertical infiltration only | 3 | 2 | 3.3 | 10.00 | 12.0 | 0.79 | 120.0 | 0.93 |
@@ -553,33 +553,33 @@ the depth on the cells other than channel cells at the end of each storm).
 | Case | Slope roughness | Max. surface water (mm) | Mean depth at 12 h (mm) | Max. depth at 12 h (m) | Mean depth at 60 h (mm) |
 |---|---:|---:|---:|---:|---:|
 | process run | 0.3 | 17.0 | 4.5 | 0.82 | 4.5 |
-| process run | 1 | 21.5 | 9.2 | 1.21 | 9.2 |
+| process run | 1 | 21.5 | 9.2 | 1.25 | 9.2 |
 | process run (diffusion wave) | 0.3 | 16.9 | 4.5 | 0.82 | 4.5 |
 | process run (lateral 3600 mm/h) | 0.3 | 18.4 | 6.7 | 0.79 | 6.7 |
-| process run (lateral 10000 mm/h) | 0.3 | 18.2 | 5.8 | 0.82 | 5.8 |
-| process run (lateral 100000 mm/h) | 0.3 | 16.1 | 3.5 | 0.82 | 3.5 |
-| process run (soil 1 m) | 0.3 | 16.4 | 3.8 | 0.82 | 3.8 |
-| process run (lateral 3600 mm/h + layer 2) | 0.3 | 16.8 | 4.3 | 0.82 | 4.3 |
-| no infiltration | 0.3 | 23.0 | 10.6 | 0.82 | 10.6 |
-| no infiltration | 0.6 | 28.3 | 16.1 | 1.04 | 16.1 |
-| no infiltration | 1 | 34.0 | 22.1 | 1.21 | 22.1 |
-| no infiltration | 2 | 45.4 | 34.2 | 1.62 | 34.2 |
-| no infiltration | 3 | 55.0 | 44.2 | 1.92 | 44.2 |
-| no infiltration | 5 | 71.4 | 61.6 | 2.40 | 61.6 |
-| no infiltration | 10 | 101.6 | 93.2 | 2.92 | 95.2 |
+| process run (lateral 10000 mm/h) | 0.3 | 18.1 | 5.8 | 0.82 | 5.8 |
+| process run (lateral 100000 mm/h) | 0.3 | 16.0 | 3.5 | 0.81 | 3.5 |
+| process run (soil 1 m) | 0.3 | 16.3 | 3.8 | 0.82 | 3.8 |
+| process run (lateral 3600 mm/h + layer 2) | 0.3 | 16.7 | 4.3 | 0.82 | 4.3 |
+| no infiltration | 0.3 | 22.9 | 10.6 | 0.82 | 10.6 |
+| no infiltration | 0.6 | 28.2 | 16.1 | 1.07 | 16.1 |
+| no infiltration | 1 | 33.9 | 22.1 | 1.26 | 22.1 |
+| no infiltration | 2 | 45.3 | 34.2 | 1.62 | 34.2 |
+| no infiltration | 3 | 54.9 | 44.2 | 1.92 | 44.2 |
+| no infiltration | 5 | 71.3 | 61.6 | 2.40 | 61.6 |
+| no infiltration | 10 | 101.5 | 93.2 | 2.98 | 95.2 |
 | no infiltration | 30 | 160.8 | 117.8 | 0.60 | 162.5 |
 | no infiltration (diffusion wave) | 0.3 | 22.8 | 10.6 | 0.82 | 10.6 |
 | no infiltration (diffusion wave) | 3 | 54.6 | 44.2 | 1.92 | 44.2 |
-| no infiltration (diffusion wave) | 10 | 101.3 | 93.2 | 2.92 | 95.2 |
-| vertical infiltration only | 0.3 | 23.0 | 10.5 | 0.81 | 10.6 |
-| vertical infiltration only | 3 | 55.0 | 19.2 | 0.10 | 44.2 |
-| process run (rain 30 mm/h) | 0.3 | 33.4 | 10.9 | 1.65 | 11.0 |
-| no infiltration (rain 30 mm/h) | 0.3 | 42.9 | 20.5 | 1.68 | 20.5 |
-| no infiltration (rain 30 mm/h) | 1 | 64.2 | 42.7 | 1.92 | 42.7 |
-| no infiltration (rain 30 mm/h) | 3 | 104.8 | 85.4 | 3.05 | 85.4 |
+| no infiltration (diffusion wave) | 10 | 101.3 | 93.2 | 2.98 | 95.2 |
+| vertical infiltration only | 0.3 | 22.9 | 10.5 | 0.81 | 10.6 |
+| vertical infiltration only | 3 | 54.9 | 19.2 | 0.10 | 44.2 |
+| process run (rain 30 mm/h) | 0.3 | 33.2 | 10.9 | 1.73 | 10.9 |
+| no infiltration (rain 30 mm/h) | 0.3 | 42.5 | 20.5 | 1.74 | 20.5 |
+| no infiltration (rain 30 mm/h) | 1 | 63.7 | 42.7 | 1.92 | 42.7 |
+| no infiltration (rain 30 mm/h) | 3 | 104.2 | 85.4 | 3.05 | 85.4 |
 
 - **No infiltration with roughness 0.3 rises early and recedes early**: the runoff exceeds
-  1 mm/h after 1.8 hours and reaches nine tenths of the rain after 2.8 hours (3.8 and 5.5
+  1 mm/h after 1.8 hours and reaches nine tenths of the rain after 2.8 hours (3.8 and 5.3
   hours in the process run). When the rain stops it recedes within a few hours: 0.12 mm/h
   after 12 hours (0.57 mm/h in the process run). The responses to the first and the second
   storm are the same. Because the water does not pass through the soil, there is neither the
@@ -593,9 +593,9 @@ the depth on the cells other than channel cells at the end of each storm).
 - **The fitting roughness of 2 is several times the equivalent roughness used in practice**:
   roughness 2 is 7 times the slope roughness 0.3 of the process run and 2.5–5 times the
   equivalent roughness used in practice for mountains (about 0.4–0.8). Roughness 0.6, which
-  corresponds to the values used in practice, gives fits of 0.82 and 0.91, and its runoff
+  corresponds to the values used in practice, gives fits of 0.82 and 0.90, and its runoff
   comes 1.5–2 hours earlier than in the process run (above 1 mm/h after 2.3 hours and nine
-  tenths of the rain after 3.5 hours, against 3.8 and 5.5 hours). With roughness 2 the slope
+  tenths of the rain after 3.5 hours, against 3.8 and 5.3 hours). With roughness 2 the slope
   cells carry 34 mm of water on average at the end of the rain, about the same as the water
   the process run holds on the slopes (29 mm, soil and surface together). A large roughness
   delays the runoff by storing, as a layer of water on the surface, the water that the soil
@@ -616,7 +616,7 @@ the depth on the cells other than channel cells at the end of each storm).
 | Time to reach 50 % of the rain (h) | 2.5 | 2.8 | 3.3 | 4.5 | 5.5 | 7.2 | 10.8 | — |
 | Time to reach 90 % of the rain (h) | 2.8 | 3.5 | 4.3 | 6.2 | 7.5 | 10.0 | — | — |
 | Mean depth on the slopes at 12 h (mm) | 10.6 | 16.1 | 22.1 | 34.2 | 44.2 | 61.6 | 93.2 | 117.8 |
-| Depth for roughness 0.3 × (n / 0.3)^0.6 (mm) | 10.6 | 16.1 | 21.8 | 33.1 | 42.2 | 57.3 | 86.9 | 167.9 |
+| Depth for roughness 0.3 × (n / 0.3)^0.6 (mm) | 10.6 | 16.1 | 21.8 | 33.1 | 42.2 | 57.3 | 86.9 | 168.0 |
 
 Values for the first storm of the no-infiltration runs (— = not reached during the rain). The
 depth is 5–7 % above the 0.6-power relation for roughness 3–10; for roughness 30 the runoff
@@ -624,8 +624,8 @@ has not yet balanced the rain at the end of the storm, so the depth is below it.
 
 - **The rise of the process run starts later and is steeper**: with no infiltration and
   roughness 2 the runoff exceeds 1 mm/h after 3.3 hours and reaches nine tenths of the rain
-  after 6.2 hours, 2.9 hours apart. In the process run these times are 3.8 and 5.5 hours,
-  only 1.7 hours apart (1.9 mm/h at 4 h, 8.4 at 5 h, 9.6 at 6 h). The runoff of the process
+  after 6.2 hours, 2.9 hours apart. In the process run these times are 3.8 and 5.3 hours,
+  only 1.5 hours apart (1.9 mm/h at 4 h, 8.4 at 5 h, 9.6 at 6 h). The runoff of the process
   run does not appear until the saturated area has connected along the valleys and then
   grows abruptly. The runoff 12 hours after the rain is 0.54 and 0.57 mm/h; the recessions
   are almost the same.
@@ -647,7 +647,7 @@ has not yet balanced the rain at the end of the storm, so the depth is below it.
   soil, the soil of every cell fills at the same rate, and all cells saturate at the same time,
   at 10 h, when the cumulative rain reaches the capacity of 100 mm (the saturated area jumps
   from 0 to 100 %). Only the 20 mm of rain after that runs over the surface; the outlet runoff
-  exceeds 1 mm/h at 11.8 h and peaks at 7.7 mm/h at 12.8 h, after the rain has stopped (the
+  exceeds 1 mm/h at 11.8 h and peaks at 7.7 mm/h at 12.7 h, after the rain has stopped (the
   runoff in 48 hours is 20 mm, against 114.9 mm in the process run). The 100 mm that entered
   the soil does not move downslope and never comes out. In the second storm the soil is still
   full, so the response is the same as that of no infiltration with roughness 0.3 (above
@@ -676,9 +676,9 @@ The process run (black) with a lateral saturated conductivity of (a) 3600 mm/h, 
 | Lateral conductivity (mm/h) | Max. saturated area (%) | Water on the slopes at the end of the rain (mm) | Roughness that stores the same water on the surface | Time when runoff reaches 90 % of the rain (h) | Closest roughness (fit): storm 1 | storm 2 |
 |---:|---:|---:|---:|---:|---:|---:|
 | 3600 | 42.7 | 77.2 | 8.2 | — / — | 10 (0.73) | 5 (0.86) |
-| 10000 | 26.8 | 52.7 | 4.3 | 9.0 / 8.8 | 5 (0.94) | 3 (0.98) |
-| 36000 (base) | 15.3 | 29.0 | 1.6 | 5.5 / 5.3 | 2 (0.99) | 2 (0.99) |
-| 100000 | 10.0 | 18.0 | 0.7 | 4.0 / 4.0 | 1 (0.99) | 1 (0.99) |
+| 10000 | 26.8 | 52.7 | 4.3 | 8.8 / 8.8 | 5 (0.95) | 3 (0.98) |
+| 36000 (base) | 15.3 | 29.0 | 1.6 | 5.3 / 5.3 | 2 (0.99) | 2 (0.99) |
+| 100000 | 10.0 | 18.0 | 0.7 | 4.0 / 4.0 | 1 (0.99) | 1 (1.00) |
 | 3600 + layer 2 | 13.7 | 39.9 | 2.7 | 7.3 / 7.3 | 3 (0.96) | 3 (0.98) |
 
 "Water on the slopes at the end of the rain" is the sum of the soil water and the surface water
@@ -692,19 +692,19 @@ is as follows.
 
 | Process-run variant | n = 0.3 | n = 0.6 | n = 1 | n = 2 | n = 3 | n = 5 | n = 10 | n = 30 |
 |---|---:|---:|---:|---:|---:|---:|---:|---:|
-| base (soil 0.5 m, lateral 36000 mm/h, slope roughness 0.3) | 0.71 / 0.81 | 0.82 / 0.91 | 0.92 / 0.97 | 0.99 / 0.99 | 0.93 / 0.93 | 0.72 / 0.75 | 0.20 / 0.35 | -0.29 / -0.05 |
-| slope roughness 1 | 0.62 / 0.74 | 0.75 / 0.84 | 0.87 / 0.93 | 0.99 / 1.00 | 0.97 / 0.97 | 0.80 / 0.83 | 0.28 / 0.43 | -0.29 / -0.03 |
-| lateral 3600 mm/h | -1.57 / -0.41 | -1.26 / -0.16 | -0.94 / 0.08 | -0.32 / 0.46 | 0.15 / 0.68 | 0.68 / 0.86 | 0.73 / 0.72 | -0.26 / 0.12 |
-| lateral 10000 mm/h | 0.08 / 0.40 | 0.26 / 0.56 | 0.45 / 0.71 | 0.76 / 0.91 | 0.92 / 0.98 | 0.94 / 0.95 | 0.51 / 0.62 | -0.28 / 0.04 |
-| lateral 100000 mm/h | 0.90 / 0.94 | 0.97 / 0.99 | 0.99 / 0.99 | 0.91 / 0.91 | 0.79 / 0.81 | 0.55 / 0.61 | 0.06 / 0.22 | -0.30 / -0.08 |
-| soil 1 m | 0.41 / 0.64 | 0.55 / 0.76 | 0.69 / 0.86 | 0.91 / 0.98 | 0.97 / 0.99 | 0.87 / 0.87 | 0.37 / 0.49 | -0.27 / -0.01 |
-| lateral 3600 mm/h + layer 2 | 0.36 / 0.63 | 0.50 / 0.75 | 0.65 / 0.85 | 0.89 / 0.97 | 0.96 / 0.98 | 0.87 / 0.87 | 0.37 / 0.48 | -0.27 / -0.01 |
+| base (soil 0.5 m, lateral 36000 mm/h, slope roughness 0.3) | 0.71 / 0.81 | 0.82 / 0.90 | 0.92 / 0.97 | 0.99 / 0.99 | 0.93 / 0.93 | 0.72 / 0.75 | 0.21 / 0.36 | -0.29 / -0.05 |
+| slope roughness 1 | 0.62 / 0.74 | 0.75 / 0.84 | 0.87 / 0.93 | 0.99 / 1.00 | 0.97 / 0.97 | 0.80 / 0.83 | 0.29 / 0.44 | -0.29 / -0.03 |
+| lateral 3600 mm/h | -1.57 / -0.41 | -1.27 / -0.16 | -0.94 / 0.08 | -0.32 / 0.46 | 0.14 / 0.68 | 0.68 / 0.86 | 0.73 / 0.73 | -0.26 / 0.12 |
+| lateral 10000 mm/h | 0.08 / 0.40 | 0.26 / 0.56 | 0.44 / 0.70 | 0.76 / 0.91 | 0.92 / 0.98 | 0.95 / 0.95 | 0.52 / 0.62 | -0.28 / 0.04 |
+| lateral 100000 mm/h | 0.89 / 0.93 | 0.97 / 0.99 | 0.99 / 1.00 | 0.91 / 0.91 | 0.80 / 0.81 | 0.56 / 0.61 | 0.06 / 0.22 | -0.29 / -0.08 |
+| soil 1 m | 0.40 / 0.63 | 0.54 / 0.75 | 0.69 / 0.86 | 0.91 / 0.98 | 0.97 / 0.99 | 0.87 / 0.88 | 0.37 / 0.49 | -0.27 / -0.01 |
+| lateral 3600 mm/h + layer 2 | 0.36 / 0.63 | 0.50 / 0.75 | 0.65 / 0.85 | 0.89 / 0.97 | 0.96 / 0.98 | 0.87 / 0.87 | 0.37 / 0.49 | -0.27 / -0.01 |
 
 - **The less conductive the soil, the larger the fitting roughness and the worse the shape
   matches**: a smaller lateral conductivity increases the water stored in the soil and the
   saturated area, and the runoff comes later. The closest roughness rises from 1 and 1 (first
   and second storm) at 100000 mm/h to 2 and 2 at 36000, 5 and 3 at 10000 and 10 and 5 at
-  3600, and the fit falls from 0.99 and 0.99 (100000 and 36000 mm/h) to 0.73 and 0.86. In
+  3600, and the fit falls from 0.99–1.00 (100000 and 36000 mm/h) to 0.73 and 0.86. In
   every case the closest roughness is near the "roughness that stores the same water on the
   surface" (0.7, 1.6, 4.3, 8.2). In the process run with 3600 mm/h the saturated area spreads
   over 43 % of the catchment, and the runoff does not balance the rain within the 12 hours of
@@ -715,10 +715,10 @@ is as follows.
   with roughness 0.3 and 4.3 hours with roughness 1. The equivalent roughness used in practice
   for mountains (about 0.4–0.8) lies in between, and the value of the empirical flood
   concentration time for this catchment (4.7 hours) is close to that of roughness 1. The
-  process run is this fast when the lateral conductivity is 36000–100000 mm/h (5.5 and 4.0
-  hours); with 10000 mm/h it takes 9.0 hours, and with 3600 mm/h it does not reach 90 % during
+  process run is this fast when the lateral conductivity is 36000–100000 mm/h (5.3 and 4.0
+  hours); with 10000 mm/h it takes 8.8 hours, and with 3600 mm/h it does not reach 90 % during
   the 12 hours of rain. In terms of the closest roughness, the values used in practice are
-  matched by 100000 mm/h (fits of 0.97 and 0.99 for roughness 0.6 and 0.99 and 0.99 for
+  matched by 100000 mm/h (fits of 0.97 and 0.99 for roughness 0.6 and 0.99 and 1.00 for
   roughness 1), while 36000 mm/h corresponds to roughness 2, several times the values used in
   practice. The base value of 36000 mm/h is the one, within the 36000–100000 mm/h that
   bracket the value of the flood concentration time formula, that gives the wider saturated
@@ -741,7 +741,7 @@ Grey is the rain. (c) Fraction of the saturated area in the process runs.
 
 | Rain (mm/h) | Max. saturated area (%) | Time to reach 10 % of the rain (h) | 50 % (h) | 90 % (h) | Runoff in 48 h / rain (%) | Soil water at 12 h (mm) | Slope-stage lag (h) | Roughness with the same lag | Concentration-time formula (h) |
 |---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|
-| 10 | 15.3 | 3.8 / 2.8 | 4.5 / 4.0 | 5.5 / 5.3 | 96 / 100 | 28.0 | 3.3 | 1.7 | 4.7 |
+| 10 | 15.3 | 3.8 / 2.8 | 4.5 / 4.0 | 5.3 / 5.3 | 96 / 100 | 28.0 | 3.3 | 1.7 | 4.7 |
 | 30 | 25.0 | 2.2 / 1.8 | 2.7 / 2.5 | 3.3 / 3.3 | 98 / 100 | 46.0 | 2.0 | 1.6 | 3.2 |
 
 Times are measured from the start of each storm (first / second storm). The "slope-stage lag"
@@ -755,10 +755,10 @@ process run under the same rain).
 |---:|---:|---:|---:|---:|---:|---:|---:|
 | 10 | 0.3 | 2.5 | 2.8 | 10.6 | 1.1 | 1.5 | 0.71 / 0.81 |
 | 10 | 1 | 3.3 | 4.3 | 22.1 | 2.3 | 1.5 | 0.92 / 0.97 |
-| 10 | 3 | 5.5 | 7.5 | 44.2 | 4.7 | 1.6 | 0.93 / 0.93 |
+| 10 | 3 | 5.5 | 7.5 | 44.2 | 4.7 | 1.5 | 0.93 / 0.93 |
 | 30 | 0.3 | 1.5 | 1.8 | 20.5 | 0.7 | 0.9 | 0.87 / 0.90 |
 | 30 | 1 | 2.2 | 2.8 | 42.7 | 1.5 | 0.9 | 0.98 / 0.99 |
-| 30 | 3 | 3.5 | 4.8 | 85.4 | 3.0 | 1.0 | 0.94 / 0.94 |
+| 30 | 3 | 3.5 | 4.8 | 85.4 | 3.0 | 0.9 | 0.94 / 0.94 |
 
 - **The heavier the rain, the further upstream the saturated area extends**: with three times
   the rain, the maximum saturated area widens from 15.3 % to 25.0 %. The saturated area forms
@@ -768,7 +768,7 @@ process run under the same rain).
   shrinkage after the rain does not depend on the rain intensity: in both cases the saturated
   area is a little over 5 % 12 hours after the rain and 2.8 % after 36 hours.
 - **The runoff comes earlier**: the time for the runoff to reach 90 % of the rain advances from
-  5.5 to 3.3 hours, and the time to exceed 10 % of the rain on dry soil from 3.8 to 2.2 hours.
+  5.3 to 3.3 hours, and the time to exceed 10 % of the rain on dry soil from 3.8 to 2.2 hours.
   The value of the empirical flood concentration time also changes from 4.7 to 3.2 hours, and
   the process run is close to this formula under both rains. The soil water increases from 28
   to 46 mm, less than three times (in the saturated area it is capped by the soil capacity).
@@ -806,11 +806,11 @@ slope cells (the cells other than channel cells) (`stages` in `plot_results.py`)
 
 | Run | Slope stage (h) | Channel stage (h) | Total (h) | Water on the slopes at the end of the rain (mm) | Roughness with the same slope stage |
 |---|---:|---:|---:|---:|---:|
-| no infiltration n = 0.3 | 1.1 | 1.5 | 2.6 | 10.6 | — |
+| no infiltration n = 0.3 | 1.1 | 1.5 | 2.5 | 10.6 | — |
 | no infiltration n = 0.6 | 1.7 | 1.5 | 3.2 | 16.1 | — |
-| no infiltration n = 1 | 2.3 | 1.5 | 3.9 | 22.1 | — |
+| no infiltration n = 1 | 2.3 | 1.5 | 3.8 | 22.1 | — |
 | no infiltration n = 2 | 3.6 | 1.6 | 5.2 | 34.2 | — |
-| no infiltration n = 3 | 4.7 | 1.6 | 6.3 | 44.2 | — |
+| no infiltration n = 3 | 4.7 | 1.5 | 6.3 | 44.2 | — |
 | no infiltration n = 5 | 6.6 | 1.5 | 8.1 | 61.6 | — |
 | no infiltration n = 10 | 10.1 | 1.4 | 11.5 | 95.2 | — |
 | process run lateral 3600 mm/h | 8.7 | 1.4 | 10.1 | 77.3 | 7.9 |
@@ -904,8 +904,8 @@ layer 2).
 | 2 | 0.00 | 2.2 | 0.0 | 19.6 | 0.4 | 0.0 |
 | 3 | 0.00 | 8.5 | 2.3 | 24.6 | 4.8 | 0.6 |
 | 4 | 0.04 | 12.2 | 7.6 | 26.8 | 9.5 | 3.7 |
-| 6 | 6.67 | 14.2 | 12.2 | 28.3 | 13.2 | 14.6 |
-| 12 | 9.91 | 14.7 | 13.7 | 28.7 | 14.4 | 16.8 |
+| 6 | 6.69 | 14.2 | 12.3 | 28.3 | 13.2 | 14.5 |
+| 12 | 9.91 | 14.7 | 13.7 | 28.7 | 14.4 | 16.7 |
 | 24 | 0.98 | 7.2 | 6.2 | 9.1 | 6.8 | 4.3 |
 | 48 | 0.18 | 3.9 | 3.4 | 4.9 | 3.7 | 1.7 |
 
@@ -916,7 +916,7 @@ layer 2).
   (28.0 mm).
 - **The runoff comes much earlier than with the slow soil alone**: the runoff reaches 90 % of
   the rain after 7.3 hours, earlier than the single layer with 3600 mm/h (not reached during
-  the 12 hours of rain) and later than the base run (5.5 hours). The slope-stage lag is 4.8
+  the 12 hours of rain) and later than the base run (5.3 hours). The slope-stage lag is 4.8
   hours (8.7 hours for the single layer with 3600 mm/h, 3.3 hours for the base run), and the
   closest roughness is 3 for both storms (10 and 5 for the single layer with 3600 mm/h). It
   is later than the base run because, in the cells where layer 2 is full, the soil above it
@@ -1047,19 +1047,19 @@ tanks (S in mm, q in mm/h).
   that, for overland flow with Manning's law, the storage in balance with the rain is
   proportional to the 0.6th power of the runoff (an example of the view that seeks the basis
   of the storage function in overland flow is Sugiyama et al. 1997, as cited by Tani et al.
-  2026). K is taken from the 45.1 mm of water in the catchment when the process run is in
-  balance with a rain of 10 mm/h, as K = 45.1 / 10^0.6.
+  2026). K is taken from the 45.0 mm of water in the catchment when the process run is in
+  balance with a rain of 10 mm/h, as K = 45.0 / 10^0.6.
 - **Tank 2 (K = 15.6, P = 0.46)**: the K and P that pass through two states of the process run
-  (45.1 mm and 10 mm/h in balance with the rain; 5.2 mm and 0.09 mm/h just before the second
+  (45.0 mm and 10 mm/h in balance with the rain; 5.2 mm and 0.09 mm/h just before the second
   storm).
 - **Tank 3 (K = 37, P = 0.167)**: the K and P fitted to the relation between the storage (the
   water above the residual water content) and the drainage at a depth of 0.5 m of the VZ soil
   column after the rain has stopped.
 - **Tank 4 (K = 6.8, P = 0.6, lag time 1.8 hours)**: a tank that uses the lag time. The rain
   enters the tank delayed by the lag time. The lag time is set to the channel-stage lag of the
-  process run (1.8 hours). K is obtained by splitting the same storage as tank 1, 45.1 mm,
+  process run (1.8 hours). K is obtained by splitting the same storage as tank 1, 45.0 mm,
   between the water in transit during the lag time (10 mm/h × 1.8 hours = 18 mm) and the
-  tank, as K = (45.1 − 18) / 10^0.6.
+  tank, as K = (45.0 − 18) / 10^0.6.
 
 ![Runoff of the tanks of the storage function method](figs/sfm_tank.png)
 
@@ -1232,7 +1232,7 @@ depth and the water that can be stored (100 mm) are the same as in the base run.
 
 | Run | Lateral saturated conductivity (mm/h) | Effective porosity | Soil depth (m) | Time above 1 mm/h (h) | Time to reach 90 % of the rain (h) | Slope-stage lag (h) | Max. saturated area (%) | Fit to the base run |
 |---|---:|---:|---:|---:|---:|---:|---:|---:|
-| base | 36000 | 0.2 | 0.5 | 3.8 / 2.8 | 5.5 / 5.3 | 3.3 | 15.3 | — |
+| base | 36000 | 0.2 | 0.5 | 3.8 / 2.8 | 5.3 / 5.3 | 3.3 | 15.3 | — |
 | thick layer with a small porosity | 3600 | 0.02 | 5 | 3.8 / 2.8 | 5.5 / 5.5 | 3.4 | 14.7 | 1.000 / 1.000 |
 
 Times are from the start of each storm (first / second storm), and the fit is against the base
@@ -1240,7 +1240,7 @@ run.
 
 - **With a conductivity that differs by a factor of 10, the storm runoff is almost the
   same**: the runoff exceeds 1 mm/h at the same times as in the base run (3.8 and 2.8 hours),
-  and the fit to the base run is 1.000. The runoff differs by 0.69 mm/h at most, the
+  and the fit to the base run is 1.000. The runoff differs by 0.72 mm/h at most, the
   slope-stage lag is 3.4 hours (3.3 hours in the base run) and the maximum saturated area is
   14.7 % (15.3 % in the base run).
 - **The remaining difference comes from the slope of the water table**: lateral flow follows
@@ -1489,7 +1489,7 @@ water in layer 2 / specific yield).
 
 | Layer 2 | Capacity (mm) | Time above 1 mm/h (h) | Time to reach 90 % of the rain (h) | Slope-stage lag (h) | Single layer with the same lag (mm/h) | Fit to the base run | Water in layer 2 at the end of the second storm (mm) | Water-table height (m) |
 |---|---:|---:|---:|---:|---:|---:|---:|---:|
-| none (base: single layer 36000 mm/h) | — | 3.8 / 2.8 | 5.5 / 5.3 | 3.3 | 36000 | — | — | — |
+| none (base: single layer 36000 mm/h) | — | 3.8 / 2.8 | 5.3 / 5.3 | 3.3 | 36000 | — | — | — |
 | 20 m, specific yield 0.02 | 400 | 8.3 / 2.7 | 11.3 / 11.2 | 7.0 | 6400 | 0.36 / 0.73 | 70.2 | 3.5 |
 | 5 m, specific yield 0.02 | 100 | 5.2 / 2.7 | 7.3 / 7.3 | 4.8 | 16000 | 0.88 / 0.96 | 28.7 | 1.4 |
 | 20 m, specific yield 0.005 | 100 | 3.3 / 2.5 | 4.7 / 4.7 | 2.1 | 85000 | 0.97 / 0.99 | 17.7 | 3.5 |
@@ -1620,7 +1620,7 @@ is the lateral saturated conductivity of a single layer (soil depth 0.5 m, effec
   flat reaches as steps (40 % of the 9.4 km of main stem that runs on channel cells and 13 %
   of the 42.9 km channel network; the longest reach is 0.7 km), where water flows only by the
   slope of the water surface and therefore ponds. Of the 17 mm of surface water at the end of
-  the rain, 12.8 mm is on channel cells, and 70 % of that (9.0 mm) lies on the channel cells of
+  the rain, 12.7 mm is on channel cells, and 70 % of that (8.9 mm) lies on the channel cells of
   the flat steps (the 144 channel cells that have a neighbouring channel cell at the same
   elevation), 0.9 m deep on average (2.1 m at most). The nearly two hours between the
   formation of the saturated area and the moment the outlet runoff exceeds 1 mm/h, and the
@@ -1667,7 +1667,7 @@ is the lateral saturated conductivity of a single layer (soil depth 0.5 m, effec
   `make_catchment.py` follows the flow tree from each cell of the river mask down to the outlet
   and adds the cells it passes to the channels.
 - **Time step**: with dt = 3 s, Cn_max stays at or below 0.43 in all cases with rain of
-  10 mm/h. The cases with rain of 30 mm/h use dt = 2 s and stay at or below 0.44.
+  10 mm/h. The cases with rain of 30 mm/h use dt = 2 s and stay at or below 0.43.
 
 ## Starting points for sensitivity experiments
 
