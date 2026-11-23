@@ -2048,20 +2048,20 @@
     {
       "source": "examples/estuary_barrage/README.md",
       "target": "examples/estuary_barrage/en/README.md",
-      "source_sha256": "cfae5e6adc3f9e22c8b9369131f05c3ce28149967ca566a2c106bd0787ea4df7",
-      "target_sha256": "3b75645f636d3d4b3014bef198375ef53ec2a86d45f182adb989a3606c10b269",
-      "reviewer": "Claude (Claude Code session; full-text content and lexical review, no model execution)",
+      "source_sha256": "bf48471415c7b4afa46a628ba05e8c69b61991ac24f14ce49318a2f76bdca1ee",
+      "target_sha256": "9a505aae97383acfb7ec2acb9775d377c44ece91cbf4fb111d809964e01ef9a3",
+      "reviewer": "Claude (Claude Code session; examples recomputed with the advection defaults of 2026-11-21: values and figures from the new results, Japanese and English compared)",
       "method": "assistant",
-      "reviewed_on": "2026-11-09"
+      "reviewed_on": "2026-11-23"
     },
     {
       "source": "examples/estuary_barrage/figs/cross.png",
       "target": "examples/estuary_barrage/en/figs/cross.png",
-      "source_sha256": "585460e0c2e8e194c38a1ea9ba5a3890e2318b1e6fca908f088d9868db3e3a4b",
-      "target_sha256": "fc6ad9c69caa97489131883aae0d08a1196e418713f17316b31093d0b50ba911",
-      "reviewer": "Claude (Claude Code session; recomputed 2026-11-09 with the current defaults including f_advection_donor = 3: all drawn by plot_results.py (python3 plot_results.py and python3 plot_results.py en; script unchanged) from the same results of the eight cases; Japanese and English plan and series viewed, labels compared; profile and cross differ only in their data)",
+      "source_sha256": "2715ec5069673ee8776df9cfe027447b9bfa3facb245884a1f43a026af88861e",
+      "target_sha256": "c521f98c9f7e63327f67118f8181588e3912f2f34ab4419d6406b85d61bc7caa",
+      "reviewer": "Claude (Claude Code session; examples recomputed with the advection defaults of 2026-11-21: values and figures from the new results, Japanese and English compared)",
       "method": "assistant",
-      "reviewed_on": "2026-11-09"
+      "reviewed_on": "2026-11-23"
     },
     {
       "source": "examples/estuary_barrage/figs/mechanism.png",
@@ -2075,29 +2075,29 @@
     {
       "source": "examples/estuary_barrage/figs/plan.png",
       "target": "examples/estuary_barrage/en/figs/plan.png",
-      "source_sha256": "c86197736d1a2b7f184d4ad76ffbe73d2d0e608d1f6e705aa901b11891084dbf",
-      "target_sha256": "324ae0f211cf88fd55f44059fb8888b931956da475a115ff8919d631f9779ad7",
-      "reviewer": "Claude (Claude Code session; recomputed 2026-11-09 with the current defaults including f_advection_donor = 3: all drawn by plot_results.py (python3 plot_results.py and python3 plot_results.py en; script unchanged) from the same results of the eight cases; Japanese and English plan and series viewed, labels compared; profile and cross differ only in their data)",
+      "source_sha256": "c45728ac92752702e059d89d8e89003f43230543982ec5f2993c3f1c9671ca1b",
+      "target_sha256": "62061369ac5aa5aaa7e99ad5fae1087fade2c8124b3444a2196d451fc5b857b3",
+      "reviewer": "Claude (Claude Code session; examples recomputed with the advection defaults of 2026-11-21: values and figures from the new results, Japanese and English compared)",
       "method": "assistant",
-      "reviewed_on": "2026-11-09"
+      "reviewed_on": "2026-11-23"
     },
     {
       "source": "examples/estuary_barrage/figs/profile.png",
       "target": "examples/estuary_barrage/en/figs/profile.png",
-      "source_sha256": "037bda4e9bb7fe8493eb227cc6a22210e701ef02110236de19fd46025894e41b",
-      "target_sha256": "75e812672be3e2d058953d60601b2e8a4132152085ed37a92aeda9284a07d19e",
-      "reviewer": "Claude (Claude Code session; English figure drawn by the same script with the en switch from the same results of 2026-11-11 (legend without the English word, the barrage drawn as the band of its cell 0.48-0.52 km); compared side by side: same plotted data and layout, labels translated)",
+      "source_sha256": "48b5228d2c28854a2790e5aa815394b0f96bab836b3acaafca97c434a28fcf50",
+      "target_sha256": "27cae8ba3d01ae72b4865843f09cbe76859630d8c8a468d5cc0c3d1eaef72fa4",
+      "reviewer": "Claude (Claude Code session; examples recomputed with the advection defaults of 2026-11-21: values and figures from the new results, Japanese and English compared)",
       "method": "assistant",
-      "reviewed_on": "2026-11-11"
+      "reviewed_on": "2026-11-23"
     },
     {
       "source": "examples/estuary_barrage/figs/series.png",
       "target": "examples/estuary_barrage/en/figs/series.png",
-      "source_sha256": "04086eea7545aa97dc76fcc40fedfce40f2709ff5cf03e10e164ccd4ad4a2199",
-      "target_sha256": "631c7d259fdb5306a36f448851b24935fa5c6689405d4c78169a49d0f8df6ccf",
-      "reviewer": "Claude (Claude Code session; English figure drawn by the same script with the en switch from the same results of 2026-11-11 (legend without the English word, the barrage drawn as the band of its cell 0.48-0.52 km); compared side by side: same plotted data and layout, labels translated)",
+      "source_sha256": "4385e151d5e36f193ceda838b078f17053fdde840428d993f78cade564d657b8",
+      "target_sha256": "7cdf807aed6510be5ed5faf677baf5af0b32f3d5f510dc44e175e462de6fa75a",
+      "reviewer": "Claude (Claude Code session; examples recomputed with the advection defaults of 2026-11-21: values and figures from the new results, Japanese and English compared)",
       "method": "assistant",
-      "reviewed_on": "2026-11-11"
+      "reviewed_on": "2026-11-23"
     },
     {
       "source": "examples/estuary_barrage/figs/setup.png",
