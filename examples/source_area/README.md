@@ -225,7 +225,7 @@ cd examples/source_area
 make                      # リンクと入力(make_catchment.py。数秒)
 make run                  # 基本の 3 ケースを順に計算
 make sweep                # 掃引の 25 ケースを順に計算
-make vz                   # VZ 流出の土壌柱の 2 ケース(追補の比較用。数秒)
+make vz                   # VZ 流出の土壌柱の 2 ケース(追補の比較用。1 分ほど)
 make sfm                  # 貯留関数法のタンクの 2 ケース(追補の比較用。数秒)
 python3 plot_results.py   # figs/*.png と数表(引数 en で英語版を en/figs/ に)
 ```

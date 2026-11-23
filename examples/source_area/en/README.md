@@ -305,7 +305,7 @@ cd examples/source_area
 make                      # links and inputs (make_catchment.py; a few seconds)
 make run                  # the three basic cases, one after another
 make sweep                # the 25 sweep cases, one after another
-make vz                   # the 2 soil-column cases of VZ runoff (for the supplement; a few seconds)
+make vz                   # the 2 soil-column cases of VZ runoff (for the supplement; about 1 minute)
 make sfm                  # the 2 tank cases of the storage function method (for the supplement; a few seconds)
 python3 plot_results.py   # figs/*.png and tables (argument en writes English figures to en/figs/)
 ```
