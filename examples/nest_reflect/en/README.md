@@ -112,13 +112,13 @@ output is in steps of 1e-4 m (4-digit text).
 | t (s) | run | RMS in | MAX in | RMS out | MAX out |
 |---|---|---|---|---|---|
 | 2 | coarse | 2.0e-4 | 3.3e-4 | 2.2e-5 | 2.0e-4 |
-| 2 | root_r3 | 3.5e-5 | 1.0e-4 | 9.7e-6 | 1.0e-4 |
-| 2 | root_r5 | 3.5e-5 | 1.0e-4 | 9.9e-6 | 1.0e-4 |
-| 4 | coarse | 2.5e-4 | 5.8e-4 | 3.3e-5 | 4.0e-4 |
+| 2 | root_r3 | 3.5e-5 | 1.0e-4 | 9.6e-6 | 1.0e-4 |
+| 2 | root_r5 | 3.6e-5 | 1.0e-4 | 9.9e-6 | 1.0e-4 |
+| 4 | coarse | 2.5e-4 | 5.9e-4 | 3.3e-5 | 4.0e-4 |
 | 4 | root_r3 | 4.0e-5 | 1.3e-4 | 1.8e-5 | 1.4e-4 |
 | 4 | root_r5 | 1.1e-4 | 3.0e-4 | 2.0e-5 | 3.0e-4 |
 | 6 | coarse | 2.0e-4 | 2.8e-4 | 8.0e-5 | 8.9e-4 |
-| 6 | root_r3 | 7.3e-5 | 1.4e-4 | 5.7e-5 | 7.3e-4 |
+| 6 | root_r3 | 7.3e-5 | 1.4e-4 | 5.7e-5 | 7.4e-4 |
 | 6 | root_r5 | 1.4e-4 | 2.7e-4 | 7.2e-5 | 9.0e-4 |
 | 8–10 | all runs | ≈1e-4 | ≈2e-4 | ≈1e-4 | ≈1e-3 |
 
@@ -165,23 +165,23 @@ partner is the stand-alone coarse grid with the same dt = 0.05 (coarse_dt05).
 
 | t (s) | run | RMS in | MAX in | RMS out | MAX out |
 |---|---|---|---|---|---|
-| 4 | coarse_dt05 | 6.5e-4 | 1.1e-3 | 4.7e-5 | 9.1e-4 |
-| 4 | root_r3t3 | 2.9e-4 | 6.1e-4 | 5.5e-5 | 4.8e-4 |
-| 4 | root_r5t5 | 4.2e-4 | 9.0e-4 | 6.3e-5 | 5.3e-4 |
+| 4 | coarse_dt05 | 6.4e-4 | 1.1e-3 | 4.7e-5 | 9.1e-4 |
+| 4 | root_r3t3 | 2.9e-4 | 6.0e-4 | 5.5e-5 | 4.8e-4 |
+| 4 | root_r5t5 | 4.1e-4 | 9.0e-4 | 6.4e-5 | 5.3e-4 |
 | 4 | root_2lv | 3.7e-4 | 8.3e-4 | 6.4e-5 | 4.3e-4 |
 | 8 | coarse_dt05 | 3.5e-4 | 4.8e-4 | 2.7e-4 | 1.8e-3 |
 | 8 | root_r3t3 | 5.0e-4 | 6.7e-4 | 1.8e-4 | 1.4e-3 |
 | 8 | root_r5t5 | 5.5e-4 | 7.3e-4 | 1.8e-4 | 1.3e-3 |
-| 8 | root_2lv | 4.9e-4 | 6.4e-4 | 1.9e-4 | 1.4e-3 |
+| 8 | root_2lv | 4.9e-4 | 6.4e-4 | 1.9e-4 | 1.3e-3 |
 
 Residual max|Δη| inside the child (excluding the band) after the passage /
 incident amplitude (0.047 m):
 
 | t (s) | coarse_dt05 | root_r3t3 | root_r5t5 | root_r3t3_bc1 | root_2lv |
 |---|---|---|---|---|---|
-| 6 | 1.5% | 2.8% | 3.2% | 2.0% | 2.8% |
+| 6 | 1.6% | 2.8% | 3.1% | 2.0% | 2.8% |
 | 8 | 0.9% | 1.4% | 1.6% | 2.3% | 1.4% |
-| 10 | 0.6% | 1.0% | 0.9% | 1.5% | 1.1% |
+| 10 | 0.6% | 0.9% | 0.9% | 1.5% | 1.1% |
 
 - At t = 4 s the root of the nest is better than the stand-alone coarse grid
   (the child's solution is returned), and the transmitted wave outside is better
@@ -190,7 +190,7 @@ incident amplitude (0.047 m):
   1.8e-4 m against 2.4e-4 m for r3t3; dashed lines in the figure of the error
   over time). Because the parent dt was coarsened while keeping r_t = r, the
   errors are larger than the r_t = 1 results (parent dt = 1/60 s).
-- The residual after the passage is 1.5–2 times that of the stand-alone coarse
+- The residual after the passage is 1.3–2 times that of the stand-alone coarse
   grid (= the parent's time-step error itself); right after the passage the
   time-interpolated band leaves a disturbance of about 1–1.5% of the incident
   amplitude inside the child. The large parent Cn of 0.6 contributes to this; where accuracy matters,
@@ -221,11 +221,11 @@ conservation of the closed domain (100 m square × S).
 
 | Run | Volume drift max|ΔS|·A (m³) | Residual after passage / incident amplitude (t = 6 / 8 / 10 s) | Cumulative change of parent volume by replacement |
 |---|---|---|---|
-| coarse_dt05 | 0 (exact in the closed domain) | 1.5% / 0.9% / 0.6% | — |
-| root_r3t3 (fb2) | 0.14 | 2.8% / 1.4% / 1.0% | 2.4e-2 m³ |
+| coarse_dt05 | 0 (exact in the closed domain) | 1.6% / 0.9% / 0.6% | — |
+| root_r3t3 (fb2) | 0.14 | 2.8% / 1.4% / 0.9% | 2.4e-2 m³ |
 | root_r3t3_fb3 | **6.8e-4** | 1.6% / 1.7% / 1.1% | 1.5e-2 m³ (+ cumulative correction |Δh|·A 0.67 m³) |
 | root_r3t3_sp | 0.20 | 2.1% / 1.3% / 1.3% | 2.0e-1 m³ |
-| root_r3t3_bc1 | 1.23 | 2.0% / 2.3% / 1.5% | 1.23 m³ |
+| root_r3t3_bc1 | 1.22 | 2.0% / 2.3% / 1.5% | 1.23 m³ |
 
 - The conservation correction reduces the volume drift of the system to 1/200
   of fb2 (the remaining 6.8e-4 m³ is 4e-5 of the initial hump volume 15.7 m³).
@@ -233,7 +233,7 @@ conservation of the closed domain (100 m square × S).
   individually, local bumps appear on the ring while the wave is passing
   (t = 2–4 s; MAX_in 3–6e-3 m), but the residual inside the child right after
   the passage (t = 6 s) is smaller than fb2 (1.6% against 2.8%) and comparable
-  afterwards (1.7 and 1.1% against 1.4 and 1.0%). Use it when exact volume is
+  afterwards (1.7 and 1.1% against 1.4 and 0.9%). Use it when exact volume is
   required (long runs, water budgets on land).
 - The sponge reduces the residual right after the passage (t = 6 s) from 2.8%
   (fb2) to 2.1%, but since it pulls the interior towards the parent's values
@@ -275,7 +275,7 @@ over the whole child.
 | t (s) | run | RMS in | MAX in | RMS out | MAX out |
 |---|---|---|---|---|---|
 | 2 | coarse_nh | 3.7e-4 | 1.4e-3 | 7.0e-6 | 1.1e-4 |
-| 2 | root_r3_nh1 (parent's φ) | 3.1e-5 | 1.0e-4 | 4.7e-6 | 7.8e-5 |
+| 2 | root_r3_nh1 (parent's φ) | 3.2e-5 | 1.0e-4 | 4.7e-6 | 7.8e-5 |
 | 2 | root_r3_nh0 (hydrostatic band) | 6.1e-4 | 1.7e-3 | 2.4e-5 | 3.2e-4 |
 | 4 | coarse_nh | 6.6e-4 | 1.1e-3 | 7.5e-5 | 9.3e-4 |
 | 4 | root_r3_nh1 | 1.2e-4 | 5.0e-4 | 1.6e-5 | 2.8e-4 |
@@ -291,7 +291,7 @@ Child (averaged 3×3 onto the parent grid; core = excluding the outer 2 parent c
 
 | t (s) | run | RMS core | MAX core |
 |---|---|---|---|
-| 2 | child_r3_nh1 | 8.6e-6 | 6.7e-5 |
+| 2 | child_r3_nh1 | 8.9e-6 | 6.7e-5 |
 | 2 | child_r3_nh0 | 6.4e-4 | 1.8e-3 |
 | 4 | child_r3_nh1 | 8.2e-5 | 4.0e-4 |
 | 4 | child_r3_nh0 | 1.4e-3 | 3.8e-3 |
@@ -338,13 +338,13 @@ the whole footprint is usable at the same level as the core (at most 6e-4 m).
 | 2 | child_r3t3_ow2 (band) | 2.1e-3 | 1.1e-2 | 2.9e-4 | 5.0e-4 |
 | 2 | child_r3t3_ow3 (Flather) | 2.9e-4 | 6.2e-4 | 2.9e-4 | 5.0e-4 |
 | 4 | ow2 | 6.6e-4 | 8.2e-3 | 3.6e-4 | 1.0e-3 |
-| 4 | ow3 | 3.7e-4 | 8.1e-4 | 3.8e-4 | 8.1e-4 |
-| 6 | ow2 | 8.2e-4 | 3.6e-3 | 6.1e-4 | 1.4e-3 |
-| 6 | ow3 | 5.3e-4 | 1.3e-3 | 5.6e-4 | 1.3e-3 |
-| 8 | ow2 | 5.0e-4 | 1.7e-3 | 4.6e-4 | 7.8e-4 |
-| 8 | ow3 | 5.1e-4 | 7.3e-4 | 5.1e-4 | 7.3e-4 |
-| 10 | ow2 | 2.4e-4 | 7.2e-4 | 1.9e-4 | 7.2e-4 |
-| 10 | ow3 | 2.2e-4 | 5.0e-4 | 2.0e-4 | 5.0e-4 |
+| 4 | ow3 | 3.7e-4 | 8.0e-4 | 3.8e-4 | 8.0e-4 |
+| 6 | ow2 | 8.2e-4 | 3.6e-3 | 6.2e-4 | 1.4e-3 |
+| 6 | ow3 | 5.4e-4 | 1.3e-3 | 5.7e-4 | 1.3e-3 |
+| 8 | ow2 | 5.0e-4 | 1.7e-3 | 4.6e-4 | 7.7e-4 |
+| 8 | ow3 | 5.2e-4 | 7.6e-4 | 5.2e-4 | 7.6e-4 |
+| 10 | ow2 | 2.4e-4 | 7.1e-4 | 2.0e-4 | 7.1e-4 |
+| 10 | ow3 | 2.3e-4 | 4.6e-4 | 2.1e-4 | 4.6e-4 |
 
 - The error in the child's interior (core) is comparable for the two (RMS
   differs by about 10%; MAX is the same or smaller for Flather). In this example the

@@ -112,8 +112,8 @@ leading wave is 24 % lower with non-hydrostatic pressure.
 | Probe | Hydrostatic (30 s rise) max (m) / time of max (s) / min (m) | Hydrostatic (instantaneous) max (m) / time of max (s) / min (m) | Non-hydrostatic + acceleration term max (m) / time of max (s) / min (m) |
 |---|---:|---:|---:|
 | 1 Directly above the upper edge x = 120.5 km (depth 2000 m) | 1.768 / 30 / -0.912 | 2.022 / 6 / -0.922 | 1.732 / 30 / -0.882 |
-| 2 Foot of the slope x = 60.5 km | 0.896 / 450 / -0.509 | 0.918 / 432 / -0.513 | 0.712 / 462 / -0.536 |
-| 3 Coast x = 10.5 km (depth 268 m) | 1.220 / 972 / -0.897 | 1.248 / 960 / -0.906 | 0.924 / 990 / -1.003 |
+| 2 Foot of the slope x = 60.5 km | 0.896 / 450 / -0.509 | 0.918 / 432 / -0.513 | 0.712 / 462 / -0.511 |
+| 3 Coast x = 10.5 km (depth 268 m) | 1.219 / 972 / -0.841 | 1.248 / 960 / -0.849 | 0.925 / 990 / -0.884 |
 | 4 East x = 180.5 km | 0.782 / 426 / -0.410 | 0.792 / 414 / -0.417 | 0.679 / 402 / -0.527 |
 | 5 South y = 30.5 km (beyond the end of the fault) | 0.322 / 138 / -0.146 | 0.325 / 126 / -0.148 | 0.311 / 150 / -0.128 |
 
@@ -128,7 +128,7 @@ leading wave is 24 % lower with non-hydrostatic pressure.
   kH ≈ 0.4–0.8 for a depth of 2000 m, so the dispersion of the one-layer NH
   model (ω² = gHk²/(1 + k²H²/4)) disperses the wave during propagation and a
   train of undulations follows the leading wave. The leading wave height goes
-  from 0.90 to 0.71 m at the foot of the slope (−20%), from 1.22 to 0.92 m at
+  from 0.90 to 0.71 m at the foot of the slope (−20%), from 1.22 to 0.93 m at
   the coast (−24%) and from 0.78 to 0.68 m in the east (−13%). The
   contribution of the acceleration term (the one-layer approximation of the
   Kajiura filter) is 1.77 → 1.73 m directly above the source (−2%; the main
@@ -138,7 +138,7 @@ leading wave is 24 % lower with non-hydrostatic pressure.
   this size the hydrostatic (non-dispersive) model errs on the side of
   overestimating the coastal wave heights by 20–30% (long-wave dispersion is a
   known property of tsunamis in the far field and from short sources). The CG
-  iterations average 216 per step. About 27,000 cells are solved
+  iterations average 215 per step. About 27,000 cells are solved
   non-hydrostatically; the land and a 5-cell band along the open boundaries
   (nh_bc_margin) stay hydrostatic.
 - At the southern point (beyond the end of the fault) the maximum levels of the

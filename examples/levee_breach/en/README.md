@@ -159,38 +159,38 @@ downstream of the breach. Right: inundation depth at the cell in the centre of h
 
 | Case | Water into the landside | Peak flow | Minimum river discharge downstream (150-330 min) | Inundated ≥ 0.5 m | Maximum depth | Houses swept away A / B / C | Maximum depth within houses B / C | Centre of B reaches 0.5 m |
 |---|---:|---:|---:|---:|---:|---:|---:|---:|
-| Overtopping only | 0.20 million m³ | 24 m³/s | 1,136 m³/s | 0 ha | 0.29 m | 0 / 0 / 0 % | 0.16 / 0.14 m | — |
-| Breach by overtopping | 4.92 million m³ | 651 m³/s | 784 m³/s | 247 ha | 1.77 m | 69 / 0 / 0 % | 0.80 / 0.64 m | 225 min |
-| Breach 1 hour later | 2.68 million m³ | 491 m³/s | 784 m³/s | 168 ha | 1.70 m | 48 / 0 / 0 % | 0.67 / 0.52 m | 285 min |
-| Breach + secondary levee | 4.49 million m³ | 652 m³/s | 790 m³/s | 269 ha | 2.64 m | 69 / 0 / 0 % | 2.04 / 0.25 m | 223 min |
+| Overtopping only | 0.10 million m³ | 12 m³/s | 1,136 m³/s | 0 ha | 0.21 m | 0 / 0 / 0 % | 0.12 / 0.10 m | — |
+| Breach by overtopping | 4.80 million m³ | 631 m³/s | 793 m³/s | 244 ha | 1.77 m | 65 / 0 / 0 % | 0.79 / 0.63 m | 225 min |
+| Breach 1 hour later | 2.58 million m³ | 483 m³/s | 793 m³/s | 164 ha | 1.72 m | 47 / 0 / 0 % | 0.67 / 0.52 m | 285 min |
+| Breach + secondary levee | 4.38 million m³ | 632 m³/s | 800 m³/s | 267 ha | 2.62 m | 64 / 0 / 0 % | 2.03 / 0.23 m | 224 min |
 
 The upstream discharge peaks at 1,600 m³/s. "Houses swept away" is the fraction of the house
 stock of each area destroyed into debris.
 
 - **Overtopping alone does little damage**: water flowing over the low section 0.1-0.2 m
-  deep peaks at 24 m³/s, and 0.20 million m³ enters the landside. The inundation stays
-  below about 0.3 m, and no houses break.
-- **A breach makes the flood 25 times larger**: as the opening widens, the flow into the
-  landside peaks at 651 m³/s (40 % of the river discharge) and 4.92 million m³ enters. The
-  river discharge downstream of the breach has a minimum of 784 m³/s over 150-330 minutes
+  deep peaks at 12 m³/s, and 0.10 million m³ enters the landside. The inundation stays
+  below about 0.2 m, and no houses break.
+- **A breach makes the flood 50 times larger**: as the opening widens, the flow into the
+  landside peaks at 631 m³/s (40 % of the river discharge) and 4.80 million m³ enters. The
+  river discharge downstream of the breach has a minimum of 793 m³/s over 150-330 minutes
   (1,136 m³/s with overtopping only; this window includes the fall of the upstream discharge
-  from 270 minutes). Inundation of 0.5 m or more spreads over 247 ha, and houses B and C are
+  from 270 minutes). Inundation of 0.5 m or more spreads over 244 ha, and houses B and C are
   flooded 0.6-0.8 m deep.
 - **Houses are swept away only right behind the breach**: the flow out of the breach is
-  fast (up to 4.7 m/s), and 70 % of the houses in area A are swept away. The load hV² at
+  fast (up to 4.8 m/s), and two thirds of the houses in area A are swept away. The load hV² at
   which houses start to break (2 m³/s²) is exceeded only within about 260 m of the breach,
   and B and C are flooded without breaking. This matches the way the government maps the
   "zone of house collapse by flood flow" as a strip along the levee.
 - **A breach one hour later halves the flood and gives more time to evacuate**: when the
   breach starts at 240 minutes, the flood peak is nearly over; the water entering the
-  landside falls from 4.92 to 2.68 million m³ (46 % less), and the houses swept away in A
-  from 69 to 48 %. The centre of houses B reaches 0.5 m, the depth at which evacuation
+  landside falls from 4.80 to 2.58 million m³ (46 % less), and the houses swept away in A
+  from 65 to 47 %. The centre of houses B reaches 0.5 m, the depth at which evacuation
   becomes difficult, at 285 instead of 225 minutes, exactly one hour later. This is the
   effect of a levee that lengthens the time to failure even when overtopped.
 - **The secondary levee deepens the flood in front and protects what is behind**: houses B
-  in front of the secondary levee are flooded deeper, from 0.80 to 2.04 m, and houses C
-  behind it shallower, from 0.64 to 0.25 m. The water leaving downstream through the south
-  edge falls from 4.68 to 1.78 million m³. Water held in front of the secondary levee flows
+  in front of the secondary levee are flooded deeper, from 0.79 to 2.03 m, and houses C
+  behind it shallower, from 0.63 to 0.23 m. The water leaving downstream through the south
+  edge falls from 4.57 to 1.68 million m³. Water held in front of the secondary levee flows
   back into the river through the breach when the river falls (the negative flow from about
   400 minutes in the left panel).
 
@@ -216,7 +216,7 @@ stock of each area destroyed into debris.
 ## Notes
 
 - **Margin of the crest**: with a resolved levee, water rides onto the crest cells and
-  starts to flow over once the river level comes within 0.1-0.2 m of the crest (in a channel
+  starts to flow over once the river level comes within about 0.2 m of the crest (in a channel
   flowing at about 3 m/s). Give sections that should not be overtopped a crest well above
   the peak flood level (0.8 m or more in this example).
 - **Initial condition**: the normal-flow depth in the channel is given with `fn_hinit` in
@@ -236,8 +236,8 @@ stock of each area destroyed into debris.
 - `fn_bb` and `RN_HOUSE` in make_terrain.py (the mean building size and the ground roughness of the
   residential areas): the building drag acts where the water is deep, and the ground roughness where
   the flow is shallow and fast. With the floodplain roughness of 0.05 in the residential areas as
-  well (counting the building resistance twice, through the drag and the roughness), 48 % instead of
-  69 % of the houses in area A are swept away.
+  well (counting the building resistance twice, through the drag and the roughness), 45 % instead of
+  65 % of the houses in area A are swept away.
 - `J_DIKE` and `H_DIKE` in make_terrain.py (position and height of the secondary levee): if it
   is too low, the flood overtops it.
 - `S_EW` and `S_NS` (slopes of the landside): the direction and speed of the spreading flood.
@@ -329,20 +329,20 @@ initial terrain z.txt of the resolved levee; the same in both rows).
 
 | Case | Peak discharge through the opening (m³/s) / time (min) | Flood volume (10⁴ m³) | Inundated area (ha; h > 0.01 m) | Maximum inundation depth (m) | Start of inundation at the toe (min) |
 |---|---:|---:|---:|---:|---:|
-| Resolved levee + prescribed bed motion | 153 / 120 | 40.3 | 71.4 | 1.13 | 76 |
-| Virtual wall + &list_channel_breach (f_br_diag = 1) | 150 / 119 | 41.3 | 70.4 | 1.00 | 76 |
+| Resolved levee + prescribed bed motion | 138 / 120 | 36.2 | 69.4 | 1.13 | 76 |
+| Virtual wall + &list_channel_breach (f_br_diag = 1) | 137 / 109 | 38.1 | 68.6 | 0.95 | 76 |
 
 - With the resolved levee, once the levee cells drop to the floor the opening becomes
   ordinary cells and the shallow-water equations solve the flow directly (all links of the
-  8 neighbours open). The channel discharge downstream falls from 700 to 550 m³/s, and
-  150 m³/s leaves through the opening onto the landside. The minimum applied displacement
+  8 neighbours open). The channel discharge downstream falls from 700 to 560 m³/s, and
+  140 m³/s leaves through the opening onto the landside. The minimum applied displacement
   printed at the end, −3.00 m, matches "crest − floor".
 - With the virtual wall, the edges made into sites pass water by the Homma formula. With
   `f_br_diag = 1` the diagonal edges touching the sites drop to the same crest, so the
   passage width per breached cell is one cell width (normal 0.414 + diagonals 2 × 0.293), and
-  with 5 cells the discharge is 0.98 times that of the resolved levee. With `f_br_diag = 0`,
+  with 5 cells the discharge is the same as that of the resolved levee (1.00 times). With `f_br_diag = 0`,
   which lowers only the normal edges of the sites, the diagonal links between neighbouring
-  sites remain walls and the discharge stays at 0.45 times (table below). Use the
+  sites remain walls and the discharge stays at 0.49 times (table below). Use the
   virtual-wall breach for openings narrower than a cell or on coarse grids, and prescribed
   bed motion when the levee is represented with cells.
 
@@ -355,17 +355,17 @@ param_supp.txt and param_supp_vwall.txt):
 
 | Width (cells / sites) | Resolved levee Q (m³/s) | Broad-crested weir 1.7·B·H^1.5 (m³/s) | Virtual wall f_br_diag = 0 Q / ratio to resolved | f_br_diag = 1 Q / ratio to resolved |
 |---:|---:|---:|---:|---:|
-| 1 | 37.0 | 37 | 15.2 / 0.41 | 60.8 / 1.64 |
-| 2 | 74.5 | 71 | 29.9 / 0.40 | 85.9 / 1.15 |
-| 3 | 105.7 | 101 | 43.9 / 0.42 | 108.4 / 1.03 |
-| 5 | 152.8 | 162 | 69.1 / 0.45 | 149.2 / 0.98 |
+| 1 | 34.3 | 37 | 14.3 / 0.42 | 56.2 / 1.64 |
+| 2 | 64.6 | 71 | 28.6 / 0.44 | 80.0 / 1.24 |
+| 3 | 92.2 | 103 | 42.2 / 0.46 | 100.8 / 1.09 |
+| 5 | 138.1 | 162 | 67.9 / 0.49 | 137.4 / 1.00 |
 
-The resolved levee follows the broad-crested weir estimate (B = cells × dx, H = river level
-− floor ≈ 1.5-1.7 m), falling below the weir formula as the opening widens because the
-landside water level rises (153 against 162 for 5 cells). The discharge of the virtual wall
-with f_br_diag = 0 is nearly proportional to the number of sites and stays at 0.40-0.45 times
+The resolved levee gives 0.85-0.93 times the broad-crested weir estimate (B = cells × dx, H = river level
+− floor ≈ 1.5-1.7 m), falling further below the weir formula as the opening widens because the
+landside water level rises (138 against 162 for 5 cells). The discharge of the virtual wall
+with f_br_diag = 0 is nearly proportional to the number of sites and stays at 0.42-0.49 times
 that of the resolved levee (close to the passage-width share of the normal edge, 0.414);
-f_br_diag = 1 is nearly the same as the resolved levee for 3-5 cells (1.03 and 0.98 times),
+f_br_diag = 1 is nearly the same as the resolved levee for 3-5 cells (1.09 and 1.00 times),
 and too large for one cell (1.64 times) by the two diagonals at both ends (0.59 cell widths). The f_br_diag = 1 result agrees
 with a run that adds the diagonal pairs explicitly as sites (largest difference 0.35 m³/s,
 because the reference ground of the diagonal sites themselves differs by 1 cm). How the
