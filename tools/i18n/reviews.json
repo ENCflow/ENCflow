@@ -3002,47 +3002,47 @@
     {
       "source": "examples/source_area/README.md",
       "target": "examples/source_area/en/README.md",
-      "source_sha256": "04795b0c1a5b0dc0fa70def910dbcc93acad2fa48ab96a912b7350a875bd2816",
-      "target_sha256": "e350df65146207e5fa30a169e0987a8e0a1b9af07b8811a82223fcabc70b4c88",
-      "reviewer": "Claude (Claude Code session; a paragraph pointing to examples/chichibu_flood (whole-catchment flood with surface flow only) added at the end of the introduction; both sides compared)",
+      "source_sha256": "18ec1772b9b8ab58462abb0868e72209e921dfe0d6ab30c9ee8725e5f49b8ba1",
+      "target_sha256": "9f297cf735ab9076e2cb6ce33e96d33581e97a8bc265280647a1dfcb3d542f8b",
+      "reviewer": "Claude (Claude Code session; examples recomputed with the advection defaults of 2026-11-21: values and figures from the new results, Japanese and English compared)",
       "method": "assistant",
-      "reviewed_on": "2026-11-21"
+      "reviewed_on": "2026-11-23"
     },
     {
       "source": "examples/source_area/figs/compare.png",
       "target": "examples/source_area/en/figs/compare.png",
-      "source_sha256": "da8d2a39c3c1ceec32acfcf3cc2d865ef123d7d054fdeaed6e24bcde996bd6a7",
-      "target_sha256": "8bcfa657ae1b83cbc8d100f26df644ae0a1640ebd29ef199d1b1543b22ecc911",
-      "reviewer": "Claude (Claude Code session; drawn by plot_results.py from the same results with and without the en argument; the English figure was viewed for labels and overlaps)",
+      "source_sha256": "2cb0acffca4944eec3badcd63d9a6a367bd3d0cd2225ace419a80fd74292fe0d",
+      "target_sha256": "b7959ab6c396d2ba7deadcc329ac4cb0428c537945360eba1b1bddbb94871b74",
+      "reviewer": "Claude (Claude Code session; examples recomputed with the advection defaults of 2026-11-21: values and figures from the new results, Japanese and English compared)",
       "method": "assistant",
-      "reviewed_on": "2026-11-11"
+      "reviewed_on": "2026-11-23"
     },
     {
       "source": "examples/source_area/figs/equivalent.png",
       "target": "examples/source_area/en/figs/equivalent.png",
-      "source_sha256": "1055ff4887e8afb77830af7482bd607df8ca83e28a2adc80d335a6312500312d",
-      "target_sha256": "bdd11a83e3482c3aca15696fd838d54f585462a56a934a5e7e34a8f0b7c1cf53",
-      "reviewer": "Claude (Claude Code session; drawn by plot_results.py from the same results with and without the en argument; the English figure was viewed for labels and overlaps)",
+      "source_sha256": "577571ebfc5e80ee8823ed862128b45e7fc2e85b841c22ae2e58d2a33cd1139c",
+      "target_sha256": "7fa94e719df2edf09158440d5b4e19c7fc1c6d2a654fecee4294979d1d8f7390",
+      "reviewer": "Claude (Claude Code session; examples recomputed with the advection defaults of 2026-11-21: values and figures from the new results, Japanese and English compared)",
       "method": "assistant",
-      "reviewed_on": "2026-11-11"
+      "reviewed_on": "2026-11-23"
     },
     {
       "source": "examples/source_area/figs/intensity.png",
       "target": "examples/source_area/en/figs/intensity.png",
-      "source_sha256": "9a30feff797103d583474490e9e9f1e45611cf32adaa9a8bd80193efda4458fd",
-      "target_sha256": "0f4a2f5e83cc174a55fe7978728154ee6631b7b8159cdff25aa8349b3a1f947e",
-      "reviewer": "Claude (Claude Code session; drawn by plot_results.py from the same results with and without the en argument; the English figure was viewed for labels and overlaps)",
+      "source_sha256": "0eb2e8f50fda72f4aefcb70119dd86591faa2614a4afb7d0420758916adb1259",
+      "target_sha256": "896cc19598d181b48f6ccf83ce3a404e0945a8f77ad094b3cb1598bda9db62f2",
+      "reviewer": "Claude (Claude Code session; examples recomputed with the advection defaults of 2026-11-21: values and figures from the new results, Japanese and English compared)",
       "method": "assistant",
-      "reviewed_on": "2026-11-11"
+      "reviewed_on": "2026-11-23"
     },
     {
       "source": "examples/source_area/figs/layer2.png",
       "target": "examples/source_area/en/figs/layer2.png",
-      "source_sha256": "6556aebe312967f90ccfd238b6f8f5c4af72edb9dceeb17c83774552030c45b0",
-      "target_sha256": "025fccdc2c985ddea9d25f186a2a114f635aad8214d6b7fc652b2227d3655260",
-      "reviewer": "Claude (Claude Code session; drawn by plot_results.py from the same results with and without the en argument; the English figure was viewed for labels and overlaps)",
+      "source_sha256": "316fa81035832e37311606fd9c40242e886fea1d2d4ab4650099dfcc7510db05",
+      "target_sha256": "8c3e00d7ce4e9d41976e4f229e08821d46e741b466bd6be4d8d07a76f17b3285",
+      "reviewer": "Claude (Claude Code session; examples recomputed with the advection defaults of 2026-11-21: values and figures from the new results, Japanese and English compared)",
       "method": "assistant",
-      "reviewed_on": "2026-11-11"
+      "reviewed_on": "2026-11-23"
     },
     {
       "source": "examples/source_area/figs/mechanism.png",
@@ -3056,29 +3056,29 @@
     {
       "source": "examples/source_area/figs/oldwater.png",
       "target": "examples/source_area/en/figs/oldwater.png",
-      "source_sha256": "22ab8fcee8227e27989b3894dc3b5fdda049ddeda1c1544100239c81cabfa326",
-      "target_sha256": "6141da88ff5c38f5969b55ce1fd987f5361555cfdc5f40126f8094ab306b52c7",
-      "reviewer": "Claude (Claude Code session; drawn by plot_results.py from the same results with and without the en argument; both figures were viewed for labels and overlaps)",
+      "source_sha256": "0bd6ac7346ef7bad110b4a5de544589b8b26ee789a7dae90287e7292b9459bf8",
+      "target_sha256": "f670e19f5322ca298e6307e0d60e53d4324dcb92217875417fee1c7bc482dc9c",
+      "reviewer": "Claude (Claude Code session; examples recomputed with the advection defaults of 2026-11-21: values and figures from the new results, Japanese and English compared)",
       "method": "assistant",
-      "reviewed_on": "2026-11-16"
+      "reviewed_on": "2026-11-23"
     },
     {
       "source": "examples/source_area/figs/roughness.png",
       "target": "examples/source_area/en/figs/roughness.png",
-      "source_sha256": "8b2468bf969a938980f5569ac4fa29227434b952fafa2812ff73127788a9dfc1",
-      "target_sha256": "f75968367bf3188ec09788d4ba073a21be46cc00cd8e5141625801b34ff97d03",
-      "reviewer": "Claude (Claude Code session; drawn by plot_results.py from the same results with and without the en argument; the English figure was viewed for labels and overlaps)",
+      "source_sha256": "4c1fb7517fc04cbffaf23fd0acdaa5cbf2d0c181449e67275c0b510a0dc2e6ef",
+      "target_sha256": "5312a5576f510cb388770b6248daf2aacbfcdbe99bbca568cacdaea83ea12164",
+      "reviewer": "Claude (Claude Code session; examples recomputed with the advection defaults of 2026-11-21: values and figures from the new results, Japanese and English compared)",
       "method": "assistant",
-      "reviewed_on": "2026-11-11"
+      "reviewed_on": "2026-11-23"
     },
     {
       "source": "examples/source_area/figs/series.png",
       "target": "examples/source_area/en/figs/series.png",
-      "source_sha256": "2e89c00e01dcf4189bfad0d74d129afabb212bc58f14684317fb9a168dad0537",
-      "target_sha256": "1e95e686714b76b678ce36e629ecfe2f5305db114d5ec59464a9570bbba49f4f",
-      "reviewer": "Claude (Claude Code session; drawn by plot_results.py from the same results with and without the en argument; the English figure was viewed for labels and overlaps)",
+      "source_sha256": "ca2143b7a27175b79e7e66009c5217d738e36d4b11efb6c5aec46ffc877d3ed6",
+      "target_sha256": "77ec03b9fc6f3d64f000b0a3626a8b42cdd1f3825ca7f0cac9495eb7442c4b9f",
+      "reviewer": "Claude (Claude Code session; examples recomputed with the advection defaults of 2026-11-21: values and figures from the new results, Japanese and English compared)",
       "method": "assistant",
-      "reviewed_on": "2026-11-11"
+      "reviewed_on": "2026-11-23"
     },
     {
       "source": "examples/source_area/figs/setup.png",
@@ -3092,29 +3092,29 @@
     {
       "source": "examples/source_area/figs/sfm_tank.png",
       "target": "examples/source_area/en/figs/sfm_tank.png",
-      "source_sha256": "f5e5712cf50ee378b67b6422898790ddf46215095afced02d13c72b33a1621e4",
-      "target_sha256": "5500f01dc43feadcff60cf4c049a291413494d2a6fc60e3f3f7923d5c2cf955f",
-      "reviewer": "Claude (Claude Code session; redrawn by plot_results.py from the same results with and without the en argument after adding tank 4 and moving the legends below the panels; the English figure was viewed for labels and overlaps)",
+      "source_sha256": "94449b54ecec0867898290fffd3227598031c6a8cb8e5ec9a8328f4e323ca188",
+      "target_sha256": "a0abbb9426eca03a12c3fc8c044dd08c6c2a3fee054f2fb9757e1523db425791",
+      "reviewer": "Claude (Claude Code session; examples recomputed with the advection defaults of 2026-11-21: values and figures from the new results, Japanese and English compared)",
       "method": "assistant",
-      "reviewed_on": "2026-11-11"
+      "reviewed_on": "2026-11-23"
     },
     {
       "source": "examples/source_area/figs/source_area.png",
       "target": "examples/source_area/en/figs/source_area.png",
-      "source_sha256": "fb9a8956aa5b2749e7e827a55738dd2677d8bcf057c168f02a301273c32aa50a",
-      "target_sha256": "91e843843a9b7f3e932b90493d17639edc994f12b43a257328a1e8045fde940a",
-      "reviewer": "Claude (Claude Code session; drawn by plot_results.py from the same results with and without the en argument; the English figure was viewed for labels and overlaps)",
+      "source_sha256": "4baf2467ca78a1fc7404f3b8879df1d5a732b1841f30317539cb1e4a115c0d1b",
+      "target_sha256": "8a788ef77f58d5a1b9be8fc512b8335d718fb73d5fcfc39a255b5603bdbf777e",
+      "reviewer": "Claude (Claude Code session; examples recomputed with the advection defaults of 2026-11-21: values and figures from the new results, Japanese and English compared)",
       "method": "assistant",
-      "reviewed_on": "2026-11-11"
+      "reviewed_on": "2026-11-23"
     },
     {
       "source": "examples/source_area/figs/vz_column.png",
       "target": "examples/source_area/en/figs/vz_column.png",
-      "source_sha256": "303feeaa2a725dff48a53e0edc17b5ded3c1d6abd391833bfde6ab34607b7973",
-      "target_sha256": "71d08f52081df8c5f9adc5935f7b2cba3d373c9c8558ceee2d5bc41cdc4fb213",
-      "reviewer": "Claude (Claude Code session; drawn by plot_results.py from the same results with and without the en argument; the English figure was viewed for labels and overlaps)",
+      "source_sha256": "9eec7beb7c5f23fa6639a745835fad51a43e83703b5538185ee98de7d508e830",
+      "target_sha256": "a231cc21411ca278c25c0e2ba9c8bc3bef782343f243d6e456ef92611ee7efb4",
+      "reviewer": "Claude (Claude Code session; examples recomputed with the advection defaults of 2026-11-21: values and figures from the new results, Japanese and English compared)",
       "method": "assistant",
-      "reviewed_on": "2026-11-11"
+      "reviewed_on": "2026-11-23"
     },
     {
       "source": "examples/stone_forest/README.md",
