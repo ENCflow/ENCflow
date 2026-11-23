@@ -446,11 +446,11 @@
     {
       "source": "docs/users_guide/passage_width.md",
       "target": "docs/en/users_guide/passage_width.md",
-      "source_sha256": "665838501553a76bed1a13c6779db43b5a1896b15eb76abbd7ca2bac09eb8ffd",
-      "target_sha256": "e3f88edc3959a2ba43a8066959eaeee35b92fdaed20c659493d60d2dc6703b5a",
-      "reviewer": "Claude (Claude Code session; references to the chichibu supplement changed to examples/chichibu_flood, and its numbers updated to the current results (ENC 8,559, 4 neighbours 33, 2 and 72 m3/s; grid and channel-width differences); both sides compared)",
+      "source_sha256": "1521e2ee68f41a51e6286219bd5a09664abad0fa510571c49b4180ac7cbfff44",
+      "target_sha256": "1aa8141ae21e5b3df076dd4b3a2b28b1d0d7c3a830a140ac6f23c9b313e1ea1e",
+      "reviewer": "Claude (Claude Code session; values of the v-shaped benchmark updated after the example was recomputed with the 2026-11-21 advection defaults; both files compared)",
       "method": "assistant",
-      "reviewed_on": "2026-11-21"
+      "reviewed_on": "2026-11-23"
     },
     {
       "source": "docs/users_guide/record.md",
@@ -500,11 +500,11 @@
     {
       "source": "docs/users_guide/shallow_water.md",
       "target": "docs/en/users_guide/shallow_water.md",
-      "source_sha256": "f3dc9ac983382257581470efbf5f088734d875edba497bb9a26e5a26f4573f70",
-      "target_sha256": "948167fee3bbb368156c419a258855218e3d48168203ea108de3badc9f80230c",
-      "reviewer": "Claude (Claude Code session; the reference to developer.md §0 changed to a link to the project policy docs/policy.md (English: docs/en/policy.md); both files compared)",
+      "source_sha256": "24e5a520ed429a2175d61fa346782ade3ae063a612ab09b04787933b6759938d",
+      "target_sha256": "4b1172f8c53f6e41d431ab664265b808627f4a7fae20010300f3de8d86a44ec4",
+      "reviewer": "Claude (Claude Code session; values of the v-shaped benchmark updated after the example was recomputed with the 2026-11-21 advection defaults; both files compared)",
       "method": "assistant",
-      "reviewed_on": "2026-11-22"
+      "reviewed_on": "2026-11-23"
     },
     {
       "source": "docs/users_guide/steep_slope.md",
@@ -1391,11 +1391,65 @@
     {
       "source": "examples/benchmark/v-shaped/README.md",
       "target": "examples/benchmark/v-shaped/en/README.md",
-      "source_sha256": "934c395be11345daecf91c08901410d01682fe03d38e7095c9cdd31e011337f7",
-      "target_sha256": "6c4c688e0b83d902d57e6355e07bb023f222d9e933b15d997d559150ae9ca24d",
-      "reviewer": "Claude (Claude Code session; links to the shallow-water primer and the renaming of f_govequation = 1 to local inertia (note at first mention in tutorials, examples and tests): Japanese and English edited together and the changed passages compared)",
+      "source_sha256": "d36dd8fce5d1ec35855119b031142bb1a81ef83e6f8f7f35ce46d3045b10b1b6",
+      "target_sha256": "682c8ae11291d7b9bbc48013666e77bd9837da4756970f1596ba6807d420dff5",
+      "reviewer": "Claude (Claude Code session; examples recomputed with the advection defaults of 2026-11-21: values and figures from the new results, Japanese and English compared)",
       "method": "assistant",
-      "reviewed_on": "2026-11-11"
+      "reviewed_on": "2026-11-23"
+    },
+    {
+      "source": "examples/benchmark/v-shaped/figs/depths.png",
+      "target": "examples/benchmark/v-shaped/en/figs/depths.png",
+      "source_sha256": "d8e47f9401b89c960219b1986d307e83af07f1fb841b24ee1af62b0e1ae4478e",
+      "target_sha256": "67512c4eab128daf2b7cef147c1cfc47fb66d06b1cd951b5ec76d046c9caac0f",
+      "reviewer": "Claude (Claude Code session; examples recomputed with the advection defaults of 2026-11-21: values and figures from the new results, Japanese and English compared)",
+      "method": "assistant",
+      "reviewed_on": "2026-11-23"
+    },
+    {
+      "source": "examples/benchmark/v-shaped/figs/fournb.png",
+      "target": "examples/benchmark/v-shaped/en/figs/fournb.png",
+      "source_sha256": "7178c4b82becbd22ff58b61a64ed27b502dabbcb46561c3f27c0d47269e7276d",
+      "target_sha256": "f4be872e91bd62fb7d82c34d918786bd1b2b03a78d510e615fab4c9fa8e1c84f",
+      "reviewer": "Claude (Claude Code session; examples recomputed with the advection defaults of 2026-11-21: values and figures from the new results, Japanese and English compared)",
+      "method": "assistant",
+      "reviewed_on": "2026-11-23"
+    },
+    {
+      "source": "examples/benchmark/v-shaped/figs/goveq.png",
+      "target": "examples/benchmark/v-shaped/en/figs/goveq.png",
+      "source_sha256": "e3aa0c6d0713b88e522b32cbc1f7c226c088e2dbe0cf5a1dfbf898c8d4fa2a90",
+      "target_sha256": "c51bc1d70e5e121b610e541a473249f7fca990e3f3496e1421ae7612b150adf3",
+      "reviewer": "Claude (Claude Code session; examples recomputed with the advection defaults of 2026-11-21: values and figures from the new results, Japanese and English compared)",
+      "method": "assistant",
+      "reviewed_on": "2026-11-23"
+    },
+    {
+      "source": "examples/benchmark/v-shaped/figs/hydrographs.png",
+      "target": "examples/benchmark/v-shaped/en/figs/hydrographs.png",
+      "source_sha256": "138a94434ceec99651cf7ecaa5fb9a131108f1ce203525aa1926f13158cd7467",
+      "target_sha256": "e56c3b5087c0a71f6757af9aebd6828b2015c82f74328bc1b8cd422ba33b39e7",
+      "reviewer": "Claude (Claude Code session; examples recomputed with the advection defaults of 2026-11-21: values and figures from the new results, Japanese and English compared)",
+      "method": "assistant",
+      "reviewed_on": "2026-11-23"
+    },
+    {
+      "source": "examples/benchmark/v-shaped/figs/maps.png",
+      "target": "examples/benchmark/v-shaped/en/figs/maps.png",
+      "source_sha256": "fd451d6575fd8ff1dab5e31feac432fbf69f47bada938cd33936614791f0d3b9",
+      "target_sha256": "3ba716235b51de4c9c5bf3ed0e7705ba2cb19be4ab274f3740c7fd8f7799791e",
+      "reviewer": "Claude (Claude Code session; examples recomputed with the advection defaults of 2026-11-21: values and figures from the new results, Japanese and English compared)",
+      "method": "assistant",
+      "reviewed_on": "2026-11-23"
+    },
+    {
+      "source": "examples/benchmark/v-shaped/figs/subgrid.png",
+      "target": "examples/benchmark/v-shaped/en/figs/subgrid.png",
+      "source_sha256": "b4a3260674069d4f4fea9f9002f96f7e4d87230ade67d2ce6f7f48a46a17fee9",
+      "target_sha256": "f56e96a94780719d80127567da7b4131858807f1651de6e47a13828473a51417",
+      "reviewer": "Claude (Claude Code session; examples recomputed with the advection defaults of 2026-11-21: values and figures from the new results, Japanese and English compared)",
+      "method": "assistant",
+      "reviewed_on": "2026-11-23"
     },
     {
       "source": "examples/benchmark/v-valley/README.md",
