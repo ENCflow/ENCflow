@@ -2,7 +2,7 @@
 # slide: MPI 実行(N ランク)+ 検定 + 逐次 save とのビット一致確認
 #   ./Run_MPI.sh [N](既定 2)
 # 構成1(release)・構成2(f_slide)・構成3(f_slide=2 診断)・構成4(保持水の授受と初期地下水。
-# 飽和・乾燥の 2 つ)・構成5〜8(斜面安定判定の選択子。make_fs.py の 18 ケース)を実行・比較する
+# 飽和・乾燥の 2 つ)・構成5〜8(斜面安定判定の選択子。make_fs.py の 24 ケース)を実行・比較する
 
 NP=${1:-2}
 sdir=$(dirname "$(readlink -f "$0")")
@@ -120,6 +120,7 @@ python3 "$sdir/Check_slide_fs.py" ledger fs_gdyn || rc=1
 python3 "$sdir/Check_slide_fs.py" dmax1 fs_d1 || rc=1
 python3 "$sdir/Check_slide_fs.py" wet fs_w1 fs_w0 fs_w2 || rc=1
 python3 "$sdir/Check_slide_fs.py" noflow fs_n1 fs_n0 || rc=1
+python3 "$sdir/Check_slide_fs.py" film fs_n2 fs_n1 fs_f1 fs_f2 fs_f0 fs_k2 fs_k0 || rc=1
 if [ -d save_fs_u0_serial ]; then
     echo "=== 構成5〜8: state.dat と Fs0001.bil は逐次結果とビット一致 $nsame ケース、不一致 $ndiff ケース ==="
 fi

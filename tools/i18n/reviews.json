@@ -311,18 +311,18 @@
     {
       "source": "docs/users_guide/geomorph.md",
       "target": "docs/en/users_guide/geomorph.md",
-      "source_sha256": "b077eee0351479d93e3f4576cdd9c2f0231d12ae8fe4009a52d5c99023aa1d6b",
-      "target_sha256": "c34e3c3255f0c1b3af851d498fcf0bcdcf0d7982f8660efb1aab8ecdc534d59a",
-      "reviewer": "Claude (Claude Code session; the parts changed for the natural-dam application and the example debris_dam: applications section 7, combination with bed load, the two conditions on slide_dmax, pattern table, use cases, index and the list of examples; the English mirror was updated in the same work and both diffs were read side by side)",
+      "source_sha256": "59259feb5c421c1fc77a210f030b446669b489b225de21dc3fea6ebc19e153db",
+      "target_sha256": "7e8561dc57f2c494359d2a66f00194850fb4f6b2f37130bc1c3cba9f5cf5a5c5",
+      "reviewer": "Claude (Claude Code session; the parts changed for the option value f_slide_noflow = 2: the paragraph on the option and the two notes on slide_dmax in the mass-flow guide, the one-line mentions in the geomorphology guide and its applications section 7, and the settings sample comment; the English mirror was updated in the same work and both diffs were read side by side)",
       "method": "assistant",
       "reviewed_on": "2026-11-23"
     },
     {
       "source": "docs/users_guide/geomorph_applications.md",
       "target": "docs/en/users_guide/geomorph_applications.md",
-      "source_sha256": "3760635839cfd7dd54cc5570e2f2ebc248e1a4e0bc29f778d68b70920bb460dc",
-      "target_sha256": "f96f80e28fa3209479ef5d307206ac532499f84bf6a0f71e4ae2577f88460763",
-      "reviewer": "Claude (Claude Code session; the limit on narrow breaches in section 7 updated with the tilted-crest results on the 10 m and 5 m grids in both versions; both diffs read side by side)",
+      "source_sha256": "0d623b8f44976402b6239d427a61893e4fe7e26db44708461b9e682280435f7d",
+      "target_sha256": "91b1cf2dce73c70e2a7d19ac58c9389b31e96fead046f8f255e85d5b43108a84",
+      "reviewer": "Claude (Claude Code session; the parts changed for the option value f_slide_noflow = 2: the paragraph on the option and the two notes on slide_dmax in the mass-flow guide, the one-line mentions in the geomorphology guide and its applications section 7, and the settings sample comment; the English mirror was updated in the same work and both diffs were read side by side)",
       "method": "assistant",
       "reviewed_on": "2026-11-23"
     },
@@ -392,9 +392,9 @@
     {
       "source": "docs/users_guide/massflow.md",
       "target": "docs/en/users_guide/massflow.md",
-      "source_sha256": "e3b806c726f3b5c8256526cd5386c799af501544450b7c8448fe10013acc9e95",
-      "target_sha256": "efe4779bb7f8bf35ef5360f47c762f3c28fa61cb45eb6b32a65360ee7d2aae75",
-      "reviewer": "Claude (Claude Code session; the note on combining slide_dmax with f_slide_noflow = 1 added to both versions; both diffs read side by side)",
+      "source_sha256": "f7d74faf08245d65367691697c4e7d38c56c25b7198802cdfec35bba6ffcee31",
+      "target_sha256": "a0cce1d02fe53b154dd5a01d8f41459329b144733049faee8df02adb83abfadb",
+      "reviewer": "Claude (Claude Code session; the parts changed for the option value f_slide_noflow = 2: the paragraph on the option and the two notes on slide_dmax in the mass-flow guide, the one-line mentions in the geomorphology guide and its applications section 7, and the settings sample comment; the English mirror was updated in the same work and both diffs were read side by side)",
       "method": "assistant",
       "reviewed_on": "2026-11-23"
     },
@@ -716,11 +716,11 @@
     {
       "source": "examples/List_samples/list_geomorph.txt",
       "target": "examples/List_samples/en/list_geomorph.txt",
-      "source_sha256": "fff305dc26a0c907a2ed3ca7d082014fa44f51c555715b3bf8298d90cb0d9c54",
-      "target_sha256": "454f8e3f8588c416cc641650e3bf3963090b2404271b53e7913a29892efbb87b",
-      "reviewer": "Claude (Claude Code session; the parts changed for the continuous connection of the surface-water head in f_slide_seep and for the width of the saturation test compared side by side with the Japanese source; numbers checked against the test runs)",
+      "source_sha256": "345dd3cd63d7bd0b86321c69c8cd9b8d19f0cadb9e93aef6cbe95378ce4c0586",
+      "target_sha256": "30ce0d9c0ae96607a0acfc6e01870686ae7a58f8758052a7ffda04517354d562",
+      "reviewer": "Claude (Claude Code session; the parts changed for the option value f_slide_noflow = 2: the paragraph on the option and the two notes on slide_dmax in the mass-flow guide, the one-line mentions in the geomorphology guide and its applications section 7, and the settings sample comment; the English mirror was updated in the same work and both diffs were read side by side)",
       "method": "assistant",
-      "reviewed_on": "2026-11-22"
+      "reviewed_on": "2026-11-23"
     },
     {
       "source": "examples/List_samples/list_glacier.txt",
@@ -4847,11 +4847,11 @@
     {
       "source": "test/slide/README.md",
       "target": "test/slide/en/README.md",
-      "source_sha256": "7c56d0d3b4c1062ca642d06bbfcc0c8efc26ebd327b15bacca8e6cd5d391555e",
-      "target_sha256": "a936f789579c51bfd39b90f46a89f1ad7279a3f57ce9bedae542b3d0353a3be1",
-      "reviewer": "Claude (Claude Code session; the parts changed for reading the total head of f_slide_seep at the flow surface (h + hs), the guidance on slide_dmax relative to the grid spacing and the twin test cases compared side by side with the Japanese source; numbers checked against the test runs)",
+      "source_sha256": "8df621efc676f2fe5a0c145435cf28b6bc24a122a3a6880eabe07a7e0271e63c",
+      "target_sha256": "1e287fc18740a9ba1d7647c0de94250d5ac11fac35f419fbbeaf547ef3a89aae",
+      "reviewer": "Claude (Claude Code session; the parts changed for the new test cases of f_slide_noflow = 2 in configuration 8: the option list, the case table, the description of the thin-film cases and the check table; both diffs were read side by side)",
       "method": "assistant",
-      "reviewed_on": "2026-11-22"
+      "reviewed_on": "2026-11-23"
     },
     {
       "source": "test/slide/figs/fslide.png",

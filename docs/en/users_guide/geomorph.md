@@ -591,8 +591,8 @@ picks up fine DEM roughness. There is no effect on straight slopes
   total-head gradient, so the safety factor of slopes under a lake is not underestimated; requires
   the groundwater computation), `f_slide_wet = 1` (cells with Fs < 1 even without pore pressure are
   not mobilized and are left to the angle-of-repose avalanching `f_repose`), `f_slide_noflow = 1`
-  (cells under a dense mixture are not judged) and `slide_dmax` (upper limit of the judged and
-  mobilized depth, m; 0 = the whole layer).
+  (cells under a dense mixture are not judged; 2 judges those whose mixture is thin) and
+  `slide_dmax` (upper limit of the judged and mobilized depth, m; 0 = the whole layer).
 
 ![Behaviour of the debris-flow and slope-failure equations: Voellmy steady speed, infinite-slope safety factor](../../figs/geomorph_debris_en.png)
 

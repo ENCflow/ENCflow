@@ -9,6 +9,7 @@
   Check_slide_fs.py dmax1 <case>           slide_dmax: 更新 1 回でちょうど slide_dmax だけ流動化する
   Check_slide_fs.py wet <case1> <case0> <case2>   f_slide_wet
   Check_slide_fs.py noflow <case1> <case0>        f_slide_noflow
+  Check_slide_fs.py film <n2> <n1> <f1> <f2> <f0> <k2> <k0>   f_slide_noflow = 2(薄い膜の下は判定する)
   Check_slide_fs.py ledger <case>          流動化ありの保存則(固体・水)
 
 fs: 平面の地形 z = Z0 − A x − B y では、内部のセルの最急勾配は tanθ = √(A² + B²)(D∞ は平面で厳密)。
@@ -285,6 +286,39 @@ def check_noflow(case1, case0):
     return nfail
 
 
+def check_film(n2, n1, f1, f2, f0, k2, k0):
+    """f_slide_noflow = 2: 載っている土砂が、判定する厚さに比べて薄いセルは判定する(§28.24)。
+    土層厚は、流動化 1 回ごとに slide_dmax だけ減る。膜を作る流動化(film)のぶんは、堆積に戻るか
+    どうかで film だけ幅がある(n 回なら sd − film − n·dmax から sd − n·dmax)ので、回数の境は
+    隣り合う範囲の中央に置く。"""
+    nfail = 0
+    print("== slide film: f_slide_noflow = 2 keeps judging a layer under a thin film of mixture")
+    # 自分の流動化した土砂(判定する厚さと同じ量)の下は、1 と同じく判定しない
+    a, b = read_state(n1), read_state(n2)
+    ok = all(a[k] == b[k] for k in a)
+    nfail += 0 if ok else 1
+    print(("  ok   " if ok else "  FAIL ") + f"{n2} (f_slide_noflow = 2): state identical to {n1} "
+          "(the layer under its own mobilized mass is not judged)")
+
+    def band(case, times, why):
+        """内部の土層厚が、流動化 times 回ぶんの範囲にあるか。"""
+        mn, mx, dz, c = interior_sd(case, 2)
+        hi = c["sd"] - (times - 0.5) * c["dmax"] - 0.5 * c["film"]
+        lo = c["sd"] - (times + 0.5) * c["dmax"] - 0.5 * c["film"]
+        ok = lo < mn and mx < hi
+        ratio = c["film"] / c["dmax"]
+        print(("  ok   " if ok else "  FAIL ") + f"{case} (f_slide_noflow = {c['noflow']}, film / judged depth = "
+              f"{ratio:g}): interior sd = {mn:.3f}-{mx:.3f} m ({lo:g} < sd < {hi:g}: {why})")
+        return 0 if ok else 1
+
+    nfail += band(f1, 0, "not judged under the thin film, never fluidized")
+    nfail += band(f2, 1, "judged under the thin film, fluidized once, then not judged under its own mass")
+    nfail += band(f0, 2, "fluidized twice")
+    nfail += band(k2, 0, "not judged under the thick film, never fluidized")
+    nfail += band(k0, 2, "unstable when judged: fluidized twice")
+    return nfail
+
+
 def check_ledger(case):
     c = mf.CASES[case]
     st, solids, water = ledgers(case)
@@ -313,10 +347,12 @@ def main():
         nfail = check_wet(sys.argv[2], sys.argv[3], sys.argv[4])
     elif mode == "noflow":
         nfail = check_noflow(sys.argv[2], sys.argv[3])
+    elif mode == "film":
+        nfail = check_film(*sys.argv[2:9])
     elif mode == "ledger":
         nfail = check_ledger(sys.argv[2])
     else:
-        sys.exit("usage: Check_slide_fs.py fs|pair|twin|dmax1|wet|noflow|ledger ...")
+        sys.exit("usage: Check_slide_fs.py fs|pair|twin|dmax1|wet|noflow|film|ledger ...")
     print(f"=== slide {mode} check {'PASS' if nfail == 0 else f'FAIL ({nfail})'} ===")
     return 1 if nfail else 0
 

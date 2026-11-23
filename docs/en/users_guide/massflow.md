@@ -575,17 +575,27 @@ formula above; developer.md §28.19).
   as steps and steep faces, are left to the angle-of-repose avalanching (`f_repose`). With the default
   (0), a cell next to the step made by a whole-layer failure fails even when dry, and failures can
   cascade. The output of $`F_s`$ does not change.
-- **No test under a dense mixture (`f_slide_noflow = 1`).** Cells in which the concentration of the
-  mixture $`h_s/(h + h_s)`$ is `db_cmin` or more are not judged. The exchange between a flowing
-  mixture and the bed under it is left to the erosion–deposition law. With the default (0), a dense
-  mixture that cannot move may return to the bed, become saturated and be fluidised again, back and
-  forth.
+- **No test under a dense mixture (`f_slide_noflow = 1`, `2`).** With 1, cells in which the
+  concentration of the mixture $`h_s/(h + h_s)`$ is `db_cmin` or more are not judged. The exchange
+  between a flowing mixture and the bed under it is left to the erosion–deposition law. With the
+  default (0), a dense mixture that cannot move may return to the bed, become saturated and be
+  fluidised again, back and forth.
+  - **2 judges those cells whose mixture is thin.** A cell is skipped only when the sediment lying on
+    it, expressed as the thickness of the deposit it would make, $`h_s/C_*`$, is at least half the
+    judged depth $`d`$ (the ratio 0.5 is our own constant; the amount that fails hardly changes
+    between 0.25 and 0.75). 1 decides by the concentration alone, so a film a few centimetres thick
+    left behind by the flow keeps the unstable layer under it from being judged. On the failure slope
+    of the [natural-dam example](../../../examples/debris_dam/en/README.md), 1 leaves 13,000 m³ of the
+    150,000 m³ of colluvium under a film about 3 cm thick, and 2 leaves 1,000 m³ (the dam is 13.0 m
+    and 13.4 m high). Right after `slide_dmax` has fluidised the upper layer, that sediment lies on
+    the cell in the same amount as $`d`$, so the cell is not judged with 2 either; once it has flowed
+    away to less than half, the remaining layer is judged.
 - **Upper limit of the judged and fluidised depth (`slide_dmax`).** With a value above 0, only the
   top $`d = \min(s_d, d_{\max})`$ is judged and fluidised. The saturated thickness within it is
   $`\max(0,\ h_w - (s_d - d))`$ (the saturated zone is read as building up from the bottom of the
   soil layer). The default (0) is the whole layer. This avoids a thick deposit failing down to the
   bedrock at once. The remaining layer is judged again at the next update, so it fails from the top
-  in turn while it stays saturated (when combined with `f_slide_noflow = 1`, see the second note
+  in turn while it stays saturated (when combined with `f_slide_noflow`, see the second note
   below).
   - **Do not make it large relative to the grid spacing.** Fluidising one cell to a depth
     $`d_{\max}`$ leaves a step of gradient $`d_{\max}/\Delta x`$ towards its neighbours. A saturated
@@ -600,14 +610,23 @@ formula above; developer.md §28.19).
   - **Do not make it shallower than the slip surface of the layer that is to fail.** A $`d_{\max}`$
     smaller than the soil depth reduces the saturated thickness that enters the test and delays the
     failure (a slope whose 3 m soil layer fails at a saturation of 0.85 does not fail until 0.93 with
-    $`d_{\max}`$ = 1.5 m). In addition, when it is combined with `f_slide_noflow = 1`, the layer left
-    behind is not judged while the fluidised sediment lies on it, so only the upper layer fails and the
-    saturated lower layer stays on the slope (with $`d_{\max}`$ = 1.5 m on the failure slope of the
-    natural-dam example, 60,000 m³ of the 150,000 m³ of colluvium remain and the dam is 7 m high instead
-    of 13 m). With `f_slide_noflow = 0` the whole layer fails, but the deposited sediment is fluidised
-    again and again. When a soil layer on a slope is to fail under heavy rain, make $`d_{\max}`$ at
-    least the soil depth. For a thick layer that saturates from its base on a fine grid, this and the
-    condition above cannot both be met.
+    $`d_{\max}`$ = 1.5 m). The failure also takes place in two stages, the lower layer failing after
+    the upper one has flowed away, and less sediment reaches the main river. With $`d_{\max}`$ = 1.5 m
+    on the failure slope of the natural-dam example, the dam is 9 m high instead of 13 m
+    (`f_slide_noflow = 2`; more sediment stays at the foot of the slope and in the tributary valley).
+    When a soil layer on a slope is to fail under heavy rain, make $`d_{\max}`$ at least the soil
+    depth.
+  - **When it has to be shallower than the layer, combine it with `f_slide_noflow = 2`.** With
+    `f_slide_noflow = 1`, the layer left behind is not judged while the fluidised sediment lies on it
+    as a thin film, so only the upper layer fails and the saturated lower layer stays on the slope (on
+    the same slope, 60,000 m³ of the 150,000 m³ of colluvium remain and the dam is 7 m high). 2 judges
+    the cells once the film has become thin, so the lower layer fails as well (the nearly 20,000 m³
+    that remain are sediment redeposited at the foot of the slope). With `f_slide_noflow = 0` the whole
+    layer also fails, but the deposited sediment is fluidised again and again. For a thick layer that
+    saturates from its base on a fine grid (where the condition above forces $`d_{\max}`$ below the
+    soil depth), combine it with 2. On the 5 m grid of the example, the lower layer fails with this
+    combination and the dam is 7 m high (9 m with the same settings on the 10 m grid; with
+    $`d_{\max}`$ equal to the soil depth, 12 m on the 5 m grid and 13 m on the 10 m grid).
 
 **Matching the failure condition and the flow condition.** A saturated soil layer ($`h_w = s_d`$,
 $`c' = 0`$) fails when $`\tan\theta > (\gamma'/\gamma_t)\tan\phi_s`$ ($`\gamma' = \gamma_t - \gamma_w`$).
@@ -709,7 +728,7 @@ The labels in the Basis column are explained in [How to read the basis of a defa
 | f_dbwet / db_satbed | 0 / 1.0 | pore-water entrainment / deposit saturation (1: entrainment, 2: with the groundwater computation, 3: 2 + retained water) | **method** total-volume continuity of Takahashi–Nakagawa[^tn91] (1). 2 exchanges pore water between the surface water and subsurface storage, and 3 adds the exchange of the retained water λ − sy0 (both own) |
 | db_reltime / db_relsat | 0 / 1.0 | release time / saturation of the failed mass (§4) | **given** |
 | slide_c / slide_phi / slide_gamma | 0 / 30° / 18 kN/m³ | strength constants of the stability test (§4) | **customary value** shallow-landslide values; c' = 0 is on the safe side |
-| f_slide_seep / f_slide_wet / f_slide_noflow / slide_dmax | 0 / 0 / 0 / 0 | options of the stability test (§4): seepage force from the total-head gradient / only failures caused by pore pressure / no test under a dense mixture / upper limit of the judged and fluidised depth (m) | **method** our own arrangement of the balance of effective stress and seepage force on an infinite slope (the default is the conventional formula) |
+| f_slide_seep / f_slide_wet / f_slide_noflow / slide_dmax | 0 / 0 / 0 / 0 | options of the stability test (§4): seepage force from the total-head gradient / only failures caused by pore pressure / no test under a dense mixture (1; 2 judges the cells whose mixture is thin) / upper limit of the judged and fluidised depth (m) | **method** our own arrangement of the balance of effective stress and seepage force on an infinite slope (the default is the conventional formula) |
 | bs_rho | 2000 kg/m³ | bulk density of the mass (§5) | **customary value** representative of saturated soil and rock debris |
 | bs_mu / bs_xi | 0.15 / 500 m/s² | Voellmy μ, ξ of the layer | **verification case** calibration of the inertialess layer ([test/bedslide](../../../test/bedslide/en/README.md)) |
 | bs_vstop / bs_tstop | 0.05 m/s / 0 s | stopping speed and its duration | **numerical** 10–15 s when entering water (longer than the temporary drawdown) |

@@ -31,8 +31,9 @@ of the treatment of pore water on mobilization (developer.md §28.1, §28.9,
 4. **Options of the slope stability test** (`p_fs_*.txt` written by `make_fs.py`): the safety
    factor with the seepage force from the total-head gradient `f_slide_seep`, the upper limit of
    the judged and mobilized depth `slide_dmax`, only failures caused by pore pressure
-   `f_slide_wet`, and no test under a dense mixture `f_slide_noflow`. On a plane slope of uniform
-   gradient, the output of the safety factor is compared with the value of the formula.
+   `f_slide_wet`, and no test under a dense mixture `f_slide_noflow` (2 judges the cells whose
+   mixture is thin). On a plane slope of uniform gradient, the output of the safety factor is
+   compared with the value of the formula.
 
 Pass or fail is decided not by a reference comparison but by the
 self-checks of `Check_slide.py` (conservation, water budget, activity and
@@ -53,7 +54,7 @@ low-speed consolidation.
 | 5 seep | `p_fs_u0`, `_u1`, `p_fs_g0`, `_g1`, `p_fs_l0`, `_l1`, `p_fs_lq1`, `_le1`, `p_fs_m1`, `_m0`, `p_fs_gdyn` | `f_slide_seep` 0 and 1 (below). Judge only (`f_slide = 2`). `p_fs_gdyn` mobilizes | dt 0.05 s, 1 s (gdyn 5 s) |
 | 6 dmax | `p_fs_d2`, `p_fs_d1` | `slide_dmax = 0.5` m. Soil depth 2 m, saturation 0.9. `_d2` is judge only, `_d1` mobilizes | 1 s |
 | 7 wet | `p_fs_w1`, `_w0`, `_w2` | `f_slide_wet` 1 and 0 (φs = 20°; Fs < 1 even when dry), and 1 with φs = 25° | 1 s |
-| 8 noflow | `p_fs_n1`, `_n0` | `f_slide_noflow` 1 and 0. `_d1` of configuration 6 with two bed updates | 2 s |
+| 8 noflow | `p_fs_n1`, `_n0`, `_n2`, `p_fs_f1`, `_f2`, `_f0`, `p_fs_k2`, `_k0` | `f_slide_noflow` 1, 0 and 2. `_n*` are `_d1` of configuration 6 with two bed updates. `_f*` and `_k*` are an unstable layer under a thin film (below), with three updates | 2 s (3 s for `_f*` and `_k*`) |
 
 The terrain of configurations 5 to 8 is a plane of uniform gradient, z = 30 − 0.30 x − 0.25 y
 (40 m × 30 m, Δx = 1 m). The steepest slope is tanθ = 0.3905 and its direction matches none of the
@@ -100,7 +101,21 @@ safety factor can be compared directly with the value of the formula.
   with 1.
 - **Configuration 8** (`f_slide_noflow`). The first update mobilizes 0.5 m and leaves a dense
   mixture (hs = 0.3 m) on the cell. With 1 the second update does not judge that cell, so the soil
-  depth stays 1.5 m; with 0 another 0.5 m is mobilized, leaving 1.0 m.
+  depth stays 1.5 m; with 0 another 0.5 m is mobilized, leaving 1.0 m. With 2 the cell is not judged
+  either while its own mobilized mass (0.5 m as a deposit, the same amount as the judged depth) lies
+  on it, and the state is identical to 1 (`_n2`).
+  - An unstable layer under a thin film (`_f*`, `_k*`; developer.md §28.24). With a soil depth of
+    2 m and a saturation of 0.8, the saturated thickness within the top 0.5 m is 0.1 m and the layer
+    is stable at first (Fs = 1.07). Mobilizing a thin layer everywhere at the end of the first update
+    (`fn_dbinit`) brings the water table closer to the surface and makes the layer unstable
+    (Fs = 0.95 for a depth of 0.1 m, 0.70 for 0.3 m), with the mobilized soil lying on it as a film.
+    In the second update, 1 does not judge the cell and nothing is mobilized (`_f1`; soil depth 2 m).
+    With 2, a film of 0.2 times the judged depth (`_f2`) is judged and 0.5 m is mobilized, and the
+    third update does not judge the cell under its own mass (1.5 m); a film of 0.6 times (`_k2`) is
+    not judged (2 m). With 0 both are mobilized in the second and the third update (`_f0`, `_k0`;
+    1.0 m). Together they show that the ratio below which the cell is judged (the constant 0.5 in
+    the code) lies between 0.2 and 0.6. The film is soil without water, so the erosion and
+    deposition step of the second update returns it to the slope (after the judgement).
 
 | File | Contents |
 |---|---|
@@ -109,7 +124,7 @@ safety factor can be compared directly with the value of the formula.
 | `make_fs.py` | Writes the inputs `d_fs/` (terrain, soil depth, initial depth of the lake) and the settings `p_fs_*.txt` of configurations 5 to 8 (Run.sh and Run_MPI.sh call it; the argument `list` prints the case names) |
 | `Check_slide_fs.py fs <case>` | Configurations 5 and 6: the safety factor of the interior cells (excluding one column at the edges; in the lake cases, cells whose 8 neighbours and themselves are all lake or all land) agrees with the formula within a relative 2e-6 (round-off of the single-precision output) |
 | `Check_slide_fs.py pair <case1> <case0> same\|differ` | Configuration 5: the safety factors of two cases are the same (within 2e-6) or differ by 2 % or more (detection power) |
-| `Check_slide_fs.py dmax1\|wet\|noflow\|ledger …` | Configuration 6: the lowering of the elevation, the soil depth, hs, hg and h agree with the exact values within 1e-12 m, and the ledgers of solids and water. Configurations 7 and 8: the soil depths described above. `ledger` checks the ledgers of solids and water (1e-9) and the activity of `_gdyn` of configuration 5 |
+| `Check_slide_fs.py dmax1\|wet\|noflow\|film\|ledger …` | Configuration 6: the lowering of the elevation, the soil depth, hs, hg and h agree with the exact values within 1e-12 m, and the ledgers of solids and water. Configurations 7 and 8: the soil depths described above (`film` is for the thin-film cases and reads the number of mobilizations from the range of the soil depth; the state of `_n2` is identical to `_n1`). `ledger` checks the ledgers of solids and water (1e-9) and the activity of `_gdyn` of configuration 5 |
 | `Fig.py` | The figures `en/figs/*.png` below (`python3 Fig.py en`; `figs/*.png` are the Japanese versions) |
 
 ## Running
