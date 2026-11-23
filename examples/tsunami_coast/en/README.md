@@ -91,7 +91,7 @@ the plain now below sea level. (c) Travel time along the bay axis to the
 coast (bay mouth) at the long-wave speed √(gh), with the final ground
 displacement (right axis). It takes 15.9 min from the crest of the slope
 uplift and 23.3 min from the crest of the offshore uplift, close to the two
-peaks at the bay-mouth probe (15.9 and 23.9 min). Drawn from the inputs and
+peaks at the bay-mouth probe (15.8 and 23.9 min). Drawn from the inputs and
 formulas; not computed results.
 
 ## Results
@@ -117,19 +117,19 @@ appear as raised water surfaces.
 
 | Probe | With time history: arrival (min) / max / min (m) | Instantaneous displacement: arrival / max / min | Offshore fault only: arrival / max / min |
 |---|---:|---:|---:|
-| Bay head x = 9 km (depth 4 m) | 18.2 / 4.29 / -1.16 | 18.1 / 4.19 / -1.14 | 25.1 / 3.63 / -0.99 |
-| Bay mouth x = 20 km | 4.0 / 3.78 / -1.96 | 3.8 / 3.05 / -2.11 | 12.0 / 4.12 / -2.01 |
-| Coast outside the bay (north) y = 65 km | 2.7 / 2.58 / -1.89 | 2.6 / 2.61 / -1.79 | 10.1 / 2.46 / -1.15 |
-| Coast of the southern cape y = 15 km (uplifted area) | 0.5 / 2.68 / -1.98 | 0.5 / 2.73 / -1.89 | 10.1 / 2.51 / -1.17 |
-| Shelf x = 40 km | 3.3 / 2.33 / -1.35 | 3.8 / 1.66 / -1.50 | 3.8 / 3.09 / -1.05 |
+| Bay head x = 9 km (depth 4 m) | 18.2 / 3.94 / -1.11 | 18.1 / 3.86 / -1.08 | 25.1 / 3.42 / -0.99 |
+| Bay mouth x = 20 km | 4.0 / 3.65 / -1.98 | 3.8 / 2.94 / -2.09 | 12.0 / 4.06 / -2.01 |
+| Coast outside the bay (north) y = 65 km | 2.7 / 2.69 / -1.88 | 2.6 / 2.70 / -1.79 | 10.1 / 3.13 / -1.15 |
+| Coast of the southern cape y = 15 km (uplifted area) | 0.5 / 2.68 / -1.99 | 0.5 / 2.68 / -1.90 | 10.1 / 3.20 / -1.17 |
+| Shelf x = 40 km | 3.3 / 2.32 / -1.35 | 3.8 / 1.66 / -1.50 | 3.8 / 3.08 / -1.05 |
 | Above the offshore fault x = 90 km | 1.4 / 2.14 / -0.94 | 0.8 / 2.13 / -0.88 | 1.5 / 2.07 / -1.53 |
-| Land at the bay head x = 7 km (flooded by subsidence) | 27.5 / 2.76 / -0.18 | 27.4 / 2.84 / -0.18 | 38.9 / 2.50 / 0.37 |
+| Land at the bay head x = 7 km (flooded by subsidence) | 28.0 / 2.48 / -0.18 | 27.9 / 2.56 / -0.18 | 39.1 / 2.34 / 0.37 |
 
 Arrival = the time at which the change in depth exceeds 0.1 m (motion together
 with the bed does not change the depth, so only the waves and the inflow are
 picked up; at the land probe, the start of flooding). The maximum flood depth on
-the land at the bay head is 2.94 m with time history, 3.02 m instantaneous and
-2.13 m offshore only. The flooded land area is 301 / 299 / 266 km².
+the land at the bay head is 2.66 m with time history, 2.74 m instantaneous and
+1.97 m offshore only. The flooded land area is 288 / 284 / 260 km².
 
 - **With the coastal deformation included, the disturbance in the bay and on
   the coast starts 7–8 minutes earlier.** With the offshore fault only, the
@@ -145,17 +145,17 @@ the land at the bay head is 2.94 m with time history, 3.02 m instantaneous and
 - **Flooding of the subsided plain**: at the bay head the water surface first
   drops with the subsidence (−0.6 m), and its recovery by inflow from the
   surroundings becomes a positive wave as it is. The land at the bay head floods
-  from 27.5 min (38.9 min with the offshore fault only), with a maximum flood
-  depth of 2.9 m (2.1 m offshore only). The subsided land (ground 0.38 →
+  from 28.0 min (39.1 min with the offshore fault only), with a maximum flood
+  depth of 2.7 m (2.0 m offshore only). The subsided land (ground 0.38 →
   −0.18 m) lies below sea level, and water remains after the tsunami has
-  receded (level 0.72 m, depth 0.90 m at 60 min). In the offshore-only case the
-  ground stays above sea level (0.37 m), and the depth of 0.63 m (level
-  1.00 m) at 60 min is water still draining away.
+  receded (level 0.70 m, depth 0.88 m at 60 min). In the offshore-only case the
+  ground stays above sea level (0.37 m), and the depth of 0.61 m (level
+  0.98 m) at 60 min is water still draining away.
 - **Response inside the bay**: the inflow into the subsided area and the
   offshore tsunami overlap inside the bay, and the maximum level at the bay head
-  is 4.3 m (3.6 m offshore only). At the bay mouth the time-history case gives
-  3.78 m against 3.05 m for the instantaneous displacement (+24%), and on the
-  shelf 2.33 m against 1.66 m (+40%): **even a 30-second lag in the start of
+  is 3.9 m (3.4 m offshore only). At the bay mouth the time-history case gives
+  3.65 m against 2.94 m for the instantaneous displacement (+24%), and on the
+  shelf 2.32 m against 1.66 m (+40%): **even a 30-second lag in the start of
   the motion changes how the waves overlap**. This is because the phase
   difference between the waves of the deep segment (t = 0) and the shallow
   segment (t = 30 s) interferes on the shelf. The instantaneous displacement
@@ -163,8 +163,8 @@ the land at the bay head is 2.94 m with time history, 3.02 m instantaneous and
   maximum levels at the bay head, on the coast and at the cape (within 2%), but
   gives 20–30% lower levels at the bay mouth and on the shelf. Note that the
   maximum levels at the bay mouth and on the shelf are highest in the
-  offshore-only case (bay mouth 4.12 m against 3.78 m, shelf 3.09 m against
-  2.33 m). Depending on how they overlap with the waves from the coastal
+  offshore-only case (bay mouth 4.06 m against 3.65 m, shelf 3.08 m against
+  2.32 m). Depending on how they overlap with the waves from the coastal
   deformation, the crests of the offshore tsunami become lower in places, so
   including the coastal deformation does not always raise the water level.
 - The uplift of the cape (segment 3) emits a local positive wave at 0.5 min,

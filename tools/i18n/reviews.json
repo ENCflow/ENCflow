@@ -2858,20 +2858,20 @@
     {
       "source": "examples/sewer_hybrid/figs/sewer_hybrid_outfall.png",
       "target": "examples/sewer_hybrid/en/figs/sewer_hybrid_outfall.png",
-      "source_sha256": "1649516fe295514c442a57ad31318abff6ab7193e2436b7e1c29a6be7989f1f4",
-      "target_sha256": "d116494c92bf97ef90bc87e0bd786589fb016f07247aa156ced2d8ca7d9f932b",
-      "reviewer": "Claude (Claude Code session; English figure drawn by the same script with the en switch from the same results of 2026-11-10; compared side by side: same plotted data and layout, labels translated)",
+      "source_sha256": "19034eb0e111d9afd41b176d79a2232c6ca58dd6fff8ab3b9c653deb7906956d",
+      "target_sha256": "af7ab4a891fb59e992e2acaee406444926ef580ea8e4970d9cc897981de9f40f",
+      "reviewer": "Claude (Claude Code session; examples recomputed with the advection defaults of 2026-11-21: values and figures from the new results, Japanese and English compared)",
       "method": "assistant",
-      "reviewed_on": "2026-11-10"
+      "reviewed_on": "2026-11-23"
     },
     {
       "source": "examples/sewer_hybrid/figs/sewer_hybrid_result.png",
       "target": "examples/sewer_hybrid/en/figs/sewer_hybrid_result.png",
-      "source_sha256": "24d0bf57c856b5d96bc03a2e92227a020360d6607ff985ef2ace9bd8ed55c4fe",
-      "target_sha256": "ee5275242689131ae1ec65b5d054201586872c103e42dac1a204778dec50b8ce",
-      "reviewer": "Claude (Claude Code session; compared the Japanese and English figure images side by side: same plotted data and layout from the same script, only the corrected title or label styling changed, labels translated)",
+      "source_sha256": "e4a66b6c3e08c993cf8a0af901a76b850987d56cf178ba002fe85d095dc462c1",
+      "target_sha256": "7956b43aada8c8308f6a1cf88b88946dcc6b93ccf915be0f2ac0478f4cf9c548",
+      "reviewer": "Claude (Claude Code session; examples recomputed with the advection defaults of 2026-11-21: values and figures from the new results, Japanese and English compared)",
       "method": "assistant",
-      "reviewed_on": "2026-11-08"
+      "reviewed_on": "2026-11-23"
     },
     {
       "source": "examples/shield_volcano/README.md",
@@ -3164,11 +3164,11 @@
     {
       "source": "examples/timberyard/README.md",
       "target": "examples/timberyard/en/README.md",
-      "source_sha256": "39ee8e14ab03d78b7aa9eedb761df44f7a4494bb9784f749cadbffd78644deeb",
-      "target_sha256": "81c1c8fe59113b1c7e0b4af99ee40fcdf0448b1046624694a37dd93a70dacfb0",
-      "reviewer": "Claude (Claude Code session; 2026-11-13: the Japanese caption of the supplementary figure now quotes the panel title as drawn (the second quoted label); the English caption already quotes the English title; the caption paragraphs read side by side, the rest of the pair unchanged since the record of 2026-11-12)",
+      "source_sha256": "0e4eabf824c5e61c2ac31cc5a4e5e66c165d66e745f697f9977c1e1f8071eddd",
+      "target_sha256": "d4420908e988a8b306ab1f69e0d065974654ab70f483a7489b5277b5594f7cac",
+      "reviewer": "Claude (Claude Code session; examples recomputed with the advection defaults of 2026-11-21: values and figures from the new results, Japanese and English compared)",
       "method": "assistant",
-      "reviewed_on": "2026-11-13"
+      "reviewed_on": "2026-11-23"
     },
     {
       "source": "examples/timberyard/figs/laws.png",
@@ -3182,11 +3182,11 @@
     {
       "source": "examples/timberyard/figs/maps.png",
       "target": "examples/timberyard/en/figs/maps.png",
-      "source_sha256": "d67f0fc1ea96bc18f466798f9c4aba1689cde35322b9c35004de0c9869a4a2f1",
-      "target_sha256": "4b75a0858e7a533f4756ed727b570fd227752a5f65515004592493a8304bbd34",
-      "reviewer": "Claude (Claude Code session; redrawn 2026-11-12 after the building drag fix (developer.md §107) by the example's plot script, Japanese and English from the same results; both images viewed: same data and layout, labels translated)",
+      "source_sha256": "664d0fff2bba74beabfbe1f30f915595da0302c1d3933e3be5121aa9a6e41a13",
+      "target_sha256": "988f257e1093d9d917e6282c255ab6cbbe57215056b4e8578be4db794b23850f",
+      "reviewer": "Claude (Claude Code session; examples recomputed with the advection defaults of 2026-11-21: values and figures from the new results, Japanese and English compared)",
       "method": "assistant",
-      "reviewed_on": "2026-11-12"
+      "reviewed_on": "2026-11-23"
     },
     {
       "source": "examples/timberyard/figs/mechanism.png",
@@ -3200,11 +3200,11 @@
     {
       "source": "examples/timberyard/figs/series.png",
       "target": "examples/timberyard/en/figs/series.png",
-      "source_sha256": "79278fb13efd17e0bdb038be12f31c37324a1c0b7ca33406ec401784c53015bd",
-      "target_sha256": "d430eded454e8458cfd8bb84e76429825070c77ff3e708a0233ce2498c5a13fb",
-      "reviewer": "Claude (Claude Code session; redrawn 2026-11-12 after the building drag fix (developer.md §107) by the example's plot script, Japanese and English from the same results; both images viewed: same data and layout, labels translated)",
+      "source_sha256": "c93044befef063381f351eb06dd67695e9868e6fb8719b0fd891158e2e84d0ec",
+      "target_sha256": "691e184cb2d226c9a416c22a252b0b7f79655766dc918dc2abb55d7d9b8d65bf",
+      "reviewer": "Claude (Claude Code session; examples recomputed with the advection defaults of 2026-11-21: values and figures from the new results, Japanese and English compared)",
       "method": "assistant",
-      "reviewed_on": "2026-11-12"
+      "reviewed_on": "2026-11-23"
     },
     {
       "source": "examples/timberyard/figs/setup.png",
@@ -3218,11 +3218,11 @@
     {
       "source": "examples/timberyard/figs/supp.png",
       "target": "examples/timberyard/en/figs/supp.png",
-      "source_sha256": "eea950015fe9a7fe8498506d0d9e640c567dfa5b086a5cc08f69864e05f2dc77",
-      "target_sha256": "8df6077d64b973c5f3bcb81f32489d5a48afcebf2a9ef795a0d13a450376ba99",
-      "reviewer": "Claude (Claude Code session; redrawn 2026-11-13 from the results after the building drag fix (developer.md §107) by main's plot script with the two-line panel titles, Japanese and English from the same results; both images viewed: same data and layout, titles and colour-bar label translated, titles do not overlap, totals agree with the README table)",
+      "source_sha256": "d159108c086625dc8560ac477a623c5c8f90259118811459e504a9cd74477de5",
+      "target_sha256": "1c4eb9cfdcc2ab4980c74f85d21470112d6be2935e30c7a59c935c0a6cdc1043",
+      "reviewer": "Claude (Claude Code session; examples recomputed with the advection defaults of 2026-11-21: values and figures from the new results, Japanese and English compared)",
       "method": "assistant",
-      "reviewed_on": "2026-11-13"
+      "reviewed_on": "2026-11-23"
     },
     {
       "source": "examples/tower_karst/README.md",
@@ -3380,11 +3380,11 @@
     {
       "source": "examples/tsunami_coast/README.md",
       "target": "examples/tsunami_coast/en/README.md",
-      "source_sha256": "47c19fc7ade235347b4355158cc74842948550e35da75f743bd77904cec23cea",
-      "target_sha256": "be8977d27c57cd8a865aa7ef62c0083b41c57211d78cc3f98958fea67a2371ff",
-      "reviewer": "Claude (Claude Code session; recomputation of 2026-11-10: the three last-digit changes (bay-head minimum, bay-head land maximum and maximum flood depth offshore-only) compared against the Japanese source and the printed tables of plot_results.py; no model execution)",
+      "source_sha256": "eaad6a6bfe18cf3ee1267c0c9a3b5650a688f992978ec0437ee75382308d2e17",
+      "target_sha256": "2fa1095a7f172a7316d8455be6b379ded39a7f4760d8faf3bbeb25f94d513ced",
+      "reviewer": "Claude (Claude Code session; examples recomputed with the advection defaults of 2026-11-21: values and figures from the new results, Japanese and English compared)",
       "method": "assistant",
-      "reviewed_on": "2026-11-10"
+      "reviewed_on": "2026-11-23"
     },
     {
       "source": "examples/tsunami_coast/figs/deformation.png",
@@ -3407,11 +3407,11 @@
     {
       "source": "examples/tsunami_coast/figs/probes.png",
       "target": "examples/tsunami_coast/en/figs/probes.png",
-      "source_sha256": "93c5cc5ded590ba1e667f9191ecc194553cef6f308122ed085b69bee5c5a85af",
-      "target_sha256": "0986ea6ec437971530adee6b910ff3b7319a48befc5df8ce65ed3889efa4ea6c",
-      "reviewer": "Claude (Claude Code session; English figure drawn by the same script with the en switch from the same results of 2026-11-10; compared side by side: same plotted data and layout, labels translated)",
+      "source_sha256": "f6659519c3dc69dcf7fd1bc35548c2dabf4305e4459e186f97ee42900c00247e",
+      "target_sha256": "cbdc8d0684455ac7594cb2928d1546c60a23216577b20404995179d9d6be7ce9",
+      "reviewer": "Claude (Claude Code session; examples recomputed with the advection defaults of 2026-11-21: values and figures from the new results, Japanese and English compared)",
       "method": "assistant",
-      "reviewed_on": "2026-11-10"
+      "reviewed_on": "2026-11-23"
     },
     {
       "source": "examples/tsunami_coast/figs/setup.png",
@@ -3425,20 +3425,20 @@
     {
       "source": "examples/tsunami_coast/figs/snapshots.png",
       "target": "examples/tsunami_coast/en/figs/snapshots.png",
-      "source_sha256": "214ef6fa0e64e96ab70c0479fdbd6df6f5c3e379be91e75680709ff246c4e5bc",
-      "target_sha256": "94dbd89447bebd916127815388cca37c24663d4de20891d4080b5ff4ea7b2d57",
-      "reviewer": "Claude (Claude Code session; English figure drawn by the same script with the en switch from the same results of 2026-11-10; compared side by side: same plotted data and layout, labels translated)",
+      "source_sha256": "327ffa0e6e04e98f4a196f18c351ce0a03d12c6676b86c677976b9ea20bf6d68",
+      "target_sha256": "681b7bbbba726406111054d7504a14155441a1ebc744f9bb5fae57ce5c05893b",
+      "reviewer": "Claude (Claude Code session; examples recomputed with the advection defaults of 2026-11-21: values and figures from the new results, Japanese and English compared)",
       "method": "assistant",
-      "reviewed_on": "2026-11-10"
+      "reviewed_on": "2026-11-23"
     },
     {
       "source": "examples/tsunami_fault/README.md",
       "target": "examples/tsunami_fault/en/README.md",
-      "source_sha256": "27cc2ba4f3f7ca2d3f67d62893453cfe1ff7c1b454241239df656efe1e1f6151",
-      "target_sha256": "81f52cc6bd6caef9a2b322049ca67b32e2b0f3e9da3416c8a66a2f39747698c6",
-      "reviewer": "Claude (Claude Code session; corrected both versions in parallel against the local results and inputs (probe series, displacement snapshots, fill ratios, run steps), and compared the edited passages and numbers)",
+      "source_sha256": "0940bd378e810c55776d01664cd7afbb201d4c3aae05b469183a9c61c28f850e",
+      "target_sha256": "9d30b36dea3327dfc1146f0dfe7042d8d3fadc6963d119b11cddc6295a6a853f",
+      "reviewer": "Claude (Claude Code session; examples recomputed with the advection defaults of 2026-11-21: values and figures from the new results, Japanese and English compared)",
       "method": "assistant",
-      "reviewed_on": "2026-11-08"
+      "reviewed_on": "2026-11-23"
     },
     {
       "source": "examples/tsunami_fault/figs/deformation.png",
@@ -3461,20 +3461,20 @@
     {
       "source": "examples/tsunami_fault/figs/probes.png",
       "target": "examples/tsunami_fault/en/figs/probes.png",
-      "source_sha256": "1dedaef7a7cf621115637bb8622b29a468f048573aeea6ada8addb533a5fbd42",
-      "target_sha256": "861b3d0df7d1c1962cf53f5ecbf1b65fc0dc478ba06e4da097f68dad8906efcb",
-      "reviewer": "Claude (Claude Code session; compared the Japanese and English figure images side by side: same plotted data and layout from the same script and the same inputs and results (the three cases rerun with the current build), labels translated)",
+      "source_sha256": "55b97a30794ce7cbe91500fc6e5810ea4fa5abebc5dd4d92c8aa7e4a9d6e6f45",
+      "target_sha256": "2e54752f3b4f8a437909dc837a3635fced1d635a0847ce57e50bd60fc9279073",
+      "reviewer": "Claude (Claude Code session; examples recomputed with the advection defaults of 2026-11-21: values and figures from the new results, Japanese and English compared)",
       "method": "assistant",
-      "reviewed_on": "2026-11-08"
+      "reviewed_on": "2026-11-23"
     },
     {
       "source": "examples/tsunami_fault/figs/profiles.png",
       "target": "examples/tsunami_fault/en/figs/profiles.png",
-      "source_sha256": "792da8bb8ea3b2ce61b5ed38361e128c1f84918d0540d28518fa259aca6ace4c",
-      "target_sha256": "ecc3241258444eaaa2c646a8d8f9b19dc237ace0964098319aa16e0e89e82ce0",
-      "reviewer": "Claude (Claude Code session; compared the Japanese and English figure images side by side: same plotted data and layout from the same script and the same inputs and results (the three cases rerun with the current build), labels translated)",
+      "source_sha256": "8a08c792b64bcc96db734e5217544d6d708314c3bc1f7214f2d4d482d6c393ab",
+      "target_sha256": "4efff4d4a84029635e48046243a2d5312335ece7ed4a8a58a0937bb648d96845",
+      "reviewer": "Claude (Claude Code session; examples recomputed with the advection defaults of 2026-11-21: values and figures from the new results, Japanese and English compared)",
       "method": "assistant",
-      "reviewed_on": "2026-11-08"
+      "reviewed_on": "2026-11-23"
     },
     {
       "source": "examples/tsunami_fault/figs/setup.png",
@@ -3488,20 +3488,20 @@
     {
       "source": "examples/tsunami_town/README.md",
       "target": "examples/tsunami_town/en/README.md",
-      "source_sha256": "bf31f349d218f8a652ca4f5beae17af6d122bda9a992250afa566b419abc3b14",
-      "target_sha256": "56d6464baba9b21ad2378498f91a9faf72fc6644e02851faaad070afe52be4dd",
-      "reviewer": "Claude (Claude Code session; rewrite for the high-ground terrain of 2026-11-10: setup table, tsunami paragraph, results table and bullets, stripes note, limits and supplement compared sentence by sentence with the Japanese source and the printed table of plot_results.py; no model execution)",
+      "source_sha256": "76a540e6a38d3a0e8ac3cd5f62132956b90c3df4be71a6c2f9c397ffaaa90438",
+      "target_sha256": "1836ca15e6358af34107b9d8113bd030186d24305bd845140821c0caee5e942d",
+      "reviewer": "Claude (Claude Code session; examples recomputed with the advection defaults of 2026-11-21: values and figures from the new results, Japanese and English compared)",
       "method": "assistant",
-      "reviewed_on": "2026-11-10"
+      "reviewed_on": "2026-11-23"
     },
     {
       "source": "examples/tsunami_town/figs/maps.png",
       "target": "examples/tsunami_town/en/figs/maps.png",
-      "source_sha256": "eacf96c84d0490fca6452d60bc7b73acba68cf8fd6914ee59968f0245a9eaa00",
-      "target_sha256": "b2eeb992ab3c53d496c67724c6c20a3665ed74d60627442836af4969bcb8d8b8",
-      "reviewer": "Claude (Claude Code session; English figure drawn by the same script with the en switch from the same results of 2026-11-10; compared side by side: same plotted data and layout, labels translated)",
+      "source_sha256": "8b2ba8224ea0f5c390a21bd0342f0a81b7941c7068526bb61574f88072e1f23c",
+      "target_sha256": "dcc5a32cc382225df9f0088301d7c03a516c8d4b45a7eab5edb8eb1ca4184d08",
+      "reviewer": "Claude (Claude Code session; examples recomputed with the advection defaults of 2026-11-21: values and figures from the new results, Japanese and English compared)",
       "method": "assistant",
-      "reviewed_on": "2026-11-10"
+      "reviewed_on": "2026-11-23"
     },
     {
       "source": "examples/tsunami_town/figs/mechanism.png",
@@ -3515,11 +3515,11 @@
     {
       "source": "examples/tsunami_town/figs/series.png",
       "target": "examples/tsunami_town/en/figs/series.png",
-      "source_sha256": "db4b383ae284a77d21376c599ed88f49a638fa39384c7fde9f322798d846e3f8",
-      "target_sha256": "20a91c0a4ead2349b94aee062ba753adba8e892aa7b46a585461c54a94b85355",
-      "reviewer": "Claude (Claude Code session; English figure drawn by the same script with the en switch from the same results of 2026-11-10; compared side by side: same plotted data and layout, labels translated)",
+      "source_sha256": "9f74e0e5d15751c190ee525cf4550cf61f5f00b0da49316a492e708753927b42",
+      "target_sha256": "e16fa75e46147e3d15e01276c2cd47870f95ac5f7ed5416bd555a8f0ea10a35c",
+      "reviewer": "Claude (Claude Code session; examples recomputed with the advection defaults of 2026-11-21: values and figures from the new results, Japanese and English compared)",
       "method": "assistant",
-      "reviewed_on": "2026-11-10"
+      "reviewed_on": "2026-11-23"
     },
     {
       "source": "examples/tsunami_town/figs/setup.png",
@@ -3533,20 +3533,20 @@
     {
       "source": "examples/tsunami_town/figs/supp_damage.png",
       "target": "examples/tsunami_town/en/figs/supp_damage.png",
-      "source_sha256": "d2d7753333a33f2bfcd4f5189dc5d25e3246f2c299a5142bcf0fe97df8e3d139",
-      "target_sha256": "e2b156c2aa9f7863b70fa7e2679cd27082e3eab611b044e34e1cd1c77071397d",
-      "reviewer": "Claude (Claude Code session; English figure drawn by the same script with the en switch from the same results of 2026-11-10; compared side by side: same plotted data and layout, labels translated)",
+      "source_sha256": "50aad55d5f94bd6d2047e1cdc801d3b930e80d9e5b80daadb29f9fefac5eabd8",
+      "target_sha256": "e7ad9d708d5f62d12af5b01c5f959083651cc1f2f1c93891f09b1910f3e2a7b2",
+      "reviewer": "Claude (Claude Code session; examples recomputed with the advection defaults of 2026-11-21: values and figures from the new results, Japanese and English compared)",
       "method": "assistant",
-      "reviewed_on": "2026-11-10"
+      "reviewed_on": "2026-11-23"
     },
     {
       "source": "examples/tsunami_town/figs/supp_ledger.png",
       "target": "examples/tsunami_town/en/figs/supp_ledger.png",
-      "source_sha256": "b4f3f589b63d524bcde1593a1b9229a9b5e79abcc8cd6d87c9d50919af983009",
-      "target_sha256": "82012efbb407895c7bfb64ee9a77f1b910d54195d6df914c03c5c4f1cf5ba7b5",
-      "reviewer": "Claude (Claude Code session; English figure drawn by the same script with the en switch from the same results of 2026-11-10; compared side by side: same plotted data and layout, labels translated)",
+      "source_sha256": "ff86adab34d3248ce45c0888e9b332350c6336d45d29ecf1c35ccc7843b75bc3",
+      "target_sha256": "a0dd5c1a4582027bf7ebd596d8b018c65ec51926d3f8e1ff3b8c404e7ffd998b",
+      "reviewer": "Claude (Claude Code session; examples recomputed with the advection defaults of 2026-11-21: values and figures from the new results, Japanese and English compared)",
       "method": "assistant",
-      "reviewed_on": "2026-11-10"
+      "reviewed_on": "2026-11-23"
     },
     {
       "source": "examples/vz_tani2023/README.md",
