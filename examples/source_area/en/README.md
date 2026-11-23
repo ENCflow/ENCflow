@@ -310,13 +310,13 @@ make sfm                  # the 2 tank cases of the storage function method (for
 python3 plot_results.py   # figs/*.png and tables (argument en writes English figures to en/figs/)
 ```
 
-Rough run times (gfortran -Ofast, a 4-core machine): the process run takes 6 minutes with 3
-threads. With 1 thread and four cases side by side, the process run takes 12–18 minutes,
-vertical infiltration only 23–30 minutes and no infiltration 25–37 minutes; with rain of
-30 mm/h the process run takes 20 minutes and no infiltration 42–54 minutes (no infiltration,
+Rough run times (gfortran -Ofast, a 4-core machine): the process run takes 8 minutes with 3
+threads. With 1 thread and four cases side by side, the process run takes 15–27 minutes,
+vertical infiltration only 48–70 minutes and no infiltration 55–78 minutes; with rain of
+30 mm/h the process run takes 30 minutes and no infiltration 97–127 minutes (no infiltration,
 and vertical infiltration only once the soil is full, are heavy because water lies on every
 cell; the 30 mm/h cases take longer because of the smaller time step). To run cases side by
-side, use `make -j 4 run OMP_NUM_THREADS=1` and `make -j 4 sweep OMP_NUM_THREADS=1` (about 3
+side, use `make -j 4 run OMP_NUM_THREADS=1` and `make -j 4 sweep OMP_NUM_THREADS=1` (about 7
 hours for the 28 cases). The results do not depend on the number of threads (the process run
 with 1 thread and with 3 threads gives byte-identical transect discharge, Log and fields at
 all output times). `mechanism.png` and `setup.png` do not use computed results, so they can be

@@ -3002,8 +3002,8 @@
     {
       "source": "examples/source_area/README.md",
       "target": "examples/source_area/en/README.md",
-      "source_sha256": "18ec1772b9b8ab58462abb0868e72209e921dfe0d6ab30c9ee8725e5f49b8ba1",
-      "target_sha256": "9f297cf735ab9076e2cb6ce33e96d33581e97a8bc265280647a1dfcb3d542f8b",
+      "source_sha256": "6adebc9e4a235199d17660450155745e3a9f9398fd439cb391be4dc66d9a9e33",
+      "target_sha256": "9856475f87aee34e142dfc3bad074f3d81a59a64b0df4d6d69bfaf6f0d3ed05e",
       "reviewer": "Claude (Claude Code session; examples recomputed with the advection defaults of 2026-11-21: values and figures from the new results, Japanese and English compared)",
       "method": "assistant",
       "reviewed_on": "2026-11-23"
