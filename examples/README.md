@@ -50,7 +50,7 @@ python3 plot_results.py   # 図化(用意されている例題のみ)
 | [mountain_valley/](mountain_valley/) | 隆起する山地の V 字谷で、風化・クリープの斜面と岩盤下刻の渓流を同時に動かし、定常の谷の形を見る | 風化 f_wthr(fn_wthr)、深さ依存クリープ creep_hstar、流水による岩盤下刻 f_rockinc、掃流砂 f_fluvial、分布隆起 fn_uplift |
 | [debris_bedrock/](debris_bedrock/) | 渓流に流した土石流が岩盤をどこでどれだけ削るか、土石流の頻度が渓流の定常勾配をどう変えるかを見る | 土石流 f_debris(高橋・中川、クーロン + Manning)、土石流による岩盤侵食 f_rockinc の rock_kdb |
 | [debris_fan/](debris_fan/) | 斜面崩壊から始まる土石流が扇状地の住宅地に堆積する過程を、格子間隔・谷の向き・8 近傍と 4 近傍を変えて比べる | 土石流 f_debris(高橋・中川 f_dbed=3・f_dbres=3)、瞬時流動化 fn_dbinit、最大流動深 D9999・流体力 F9999、4 近傍の対照 p_diagratio |
-| [debris_dam/](debris_dam/) | 豪雨で崩れた斜面の土石流が川をせき止めて天然ダムを作り、越流で決壊して下流の集落に洪水が出るまでを一つの計算でつなぐ。決壊が急になる条件(湛水量・堤体の形・粒径・流入量など)を、実際の天然ダムの知見と突き合わせる | 斜面安定判定 f_slide(浸透力 f_slide_seep・深さの上限 slide_dmax ほか)、土石流 f_debris(高橋・中川。保持水 f_dbwet=3・不飽和床 f_dbunsat・緩い勾配 f_dbimm)+ 掃流砂 f_fluvial、Green-Ampt、家屋破壊 fn_bldgdebris、カルバート |
+| [debris_dam/](debris_dam/) | 豪雨の斜面崩壊から、土石流による天然ダムの形成、越流による決壊、下流の集落の洪水までをつなぎ、決壊が急になる条件を比べる | 斜面安定判定 f_slide(浸透力 f_slide_seep・深さの上限 slide_dmax ほか)、土石流 f_debris(高橋・中川。保持水 f_dbwet=3・不飽和床 f_dbunsat・緩い勾配 f_dbimm)+ 掃流砂 f_fluvial、Green-Ampt、家屋破壊 fn_bldgdebris、カルバート |
 | [shield_volcano/](shield_volcano/) | 断続的な噴火の溶岩流が重なって楯状火山が育つ過程と、形を決めるのが降伏応力であることを見る(補足に溶岩ドーム) | 溶岩流 fn_lavaflow(複数噴火口 lv_cell・lv_val、Bingham 降伏応力 lv_tauy、固化 lv_wsol・lv_vsol) |
 | [stratovolcano/](stratovolcano/) | 溶岩流・降灰・豪雨の侵食を 10 回繰り返して成層火山を作り、噴火の仕方と侵食で形と内部の層がどう変わるかを見る | 溶岩流 fn_lavaflow(固化した溶岩の下の土層を埋める。最後の段は温度モード f_lvtemp)、降灰は前処理、Green-Ampt、掃流砂 f_fluvial + morfac、段ごとの計算をつなぐドライバ |
 | [glacier_valley/](glacier_valley/) | 川の V 字谷に氷河を育て、6000 年の侵食が集まる場所と速さを見る。補足に侵食 10 倍の計算で凹地・湖・懸谷を見る | 氷河 fn_glacier(質量収支・雪崩 f_glava・SIA 流動 f_glflow・滑動 f_glslide・侵食 f_glero と侵食の結合長 gl_lc)、気温減率と降水の標高補正、積雪、時間加速 gl_morfac、段の間で地盤高を渡す前処理 |
