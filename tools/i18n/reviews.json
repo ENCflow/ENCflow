@@ -1769,9 +1769,9 @@
     {
       "source": "examples/debris_dam/README.md",
       "target": "examples/debris_dam/en/README.md",
-      "source_sha256": "cf63c08262af2da707ac50ef7cf7340ca8ef51a86bdb250b11b362a48793537a",
-      "target_sha256": "6f869be00a12056fb6212b8ad629ce3ac4e21d2ce04fc0195fa7c65356a86e03",
-      "reviewer": "Claude (Claude Code session; README re-assembled in both languages from paired source parts and tables generated from the same results after adding the tilted-crest dams and the dmax15 case; the changed passages of both versions read side by side)",
+      "source_sha256": "bf8e497a446b9758746f0c44674c7163b04e853cfd81118d665564be1362a86f",
+      "target_sha256": "c430bcce57227f437f76320ac37e103e6b0ac2f79c5b32ba78210d47aa3ca53d",
+      "reviewer": "Claude (Claude Code session; the parts changed for the five cases with f_slide_noflow = 2: settings paragraph, case table, case counts, the note on the judged depth, the new section on soil left under a thin film with tables generated from the same results in both languages, and the grid-spacing paragraph; both diffs were read side by side)",
       "method": "assistant",
       "reviewed_on": "2026-11-23"
     },
@@ -1798,6 +1798,15 @@
       "target": "examples/debris_dam/en/figs/chain.png",
       "source_sha256": "29147c18037648b603af02ee58e5033754694ded0d63ff216c2d98730c7f4b6d",
       "target_sha256": "a0ac2b6de570893a7e8014c892c8ae38f7169bffbcb33a70ba45d7eeefd2012c",
+      "reviewer": "Claude (Claude Code session; English figure drawn by the same script with the en switch; visual check)",
+      "method": "assistant",
+      "reviewed_on": "2026-11-23"
+    },
+    {
+      "source": "examples/debris_dam/figs/film.png",
+      "target": "examples/debris_dam/en/figs/film.png",
+      "source_sha256": "6d747aa0a25570429b579ec538e4c6978ddf64f1ce3343d6a04d84890dce4474",
+      "target_sha256": "fa3a68eceba71ae0c4a60100dce1bcddd6f7922a050ac79b42522fe2b66a71d6",
       "reviewer": "Claude (Claude Code session; English figure drawn by the same script with the en switch; visual check)",
       "method": "assistant",
       "reviewed_on": "2026-11-23"

@@ -152,6 +152,14 @@ CASES = {
     # 判定・流動化する深さの上限を土層の半分にする。はじめの飽和度は、崩壊の時刻が基本ケースと同じになる値
     # (崩れる飽和度が 0.853 → 0.927 に上がる分。崩れるまでに要る水 14 mm を同じにする)
     "dmax15": ("g10", dict(SHORT, slide_dmax="1.5", gw_sat0="0.9035"), {}),
+    # 載っている土砂が薄いセルは判定する(f_slide_noflow = 2)。基本ケースの設定のままと、深さの上限を土層の半分に
+    # したもの(10 m と 5 m)
+    "noflow2": ("g10", dict(SHORT, f_slide_noflow="2"), {}),
+    "dmax15_n2": ("g10", dict(SHORT, slide_dmax="1.5", gw_sat0="0.9035", f_slide_noflow="2"), {}),
+    "dmax15_n2_dx5": ("g5", dict(SHORT, slide_dmax="1.5", gw_sat0="0.9035", f_slide_noflow="2"), {}),
+    # 同、堤体をはじめから置く系列の 2 ケース(天端が水平で結果の安定なもの)。決壊の段階での違いを見る
+    "noflow2_ref": dam_case("d12", f_slide_noflow="2"),
+    "noflow2_face25": dam_case("d25", f_slide_noflow="2"),
     # ---- 堤体をはじめから置く系列(決壊の条件)
     "dam_ref": dam_case("d12"),
     "dam_face25": dam_case("d25"),

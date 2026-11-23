@@ -2,7 +2,7 @@
 #   make          ../../bin/ の実行ファイルへのリンクと、全ケースの入力・設定(make_init.py)を作る
 #   make quick    基本ケース・仮排水路と、堤体を置く系列の主な 4 ケースだけ計算する
 #   make dams     堤体をはじめから置く系列(決壊の条件の比較)の 20 ケースを計算する
-#   make run      30 ケースを計算する
+#   make run      35 ケースを計算する
 #   make perturb  結果の幅を見る 14 ケース(流入量だけを少し変える。基本ケース 6 本と、堤体を置く系列 8 本)を計算する
 #   make figs     図を描く(python3 plot_results.py と python3 plot_results.py en)
 #   make clean    リンクと生成物を削除する

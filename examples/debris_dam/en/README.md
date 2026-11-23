@@ -99,8 +99,8 @@ breach conditions). Bottom right: long profile of the tributary and the failure 
   mobilization brings down the neighbouring cells and the mobilization propagates (in this example it does
   at 0.6 times the grid spacing and does not at 0.3 times). The 5 m cases of the pre-built-dam series
   (`dam_dx5`, `dam_tilt_dx5`) therefore use 1.5 m. The 5 m case with the failure slope (`g5`) keeps 3 m (with
-  1.5 m only the upper half of the colluvium fails and the lower half stays on the slope; "Grid spacing" in
-  the [section below](#artefacts-of-the-model)).
+  1.5 m and `f_slide_noflow = 1`, only the upper half of the colluvium fails and the lower half stays on the
+  slope; see the [section below](#soil-left-under-a-thin-film)).
 - **Debris flow and erosion of the dam**: the stony type of Takahashi & Nakagawa (1991). Grain size 3 cm,
   internal friction angle 35°, erosion coefficient δe = 0.0007 (default; Takahashi's general value),
   deposition coefficient δd = 0.5 (the value the paper applied to Horadani). Gentle slopes use the
@@ -132,6 +132,9 @@ note "基本ケースは …", i.e. the value of the base case).
 | | `slide0` | none of the four options of the stability test | 30 min |
 | | `g5` | grid spacing 5 m | 30 min |
 | | `dmax15` | `slide_dmax` = 1.5 m (half the thickness of the colluvium; the initial saturation is set to 0.9035 so that the failure occurs at the same time) | 30 min |
+| Condition for skipping the test | `noflow2` | cells whose mixture is thin are judged (`f_slide_noflow = 2`) | 30 min |
+| | `dmax15_n2`, `dmax15_n2_dx5` | the settings of `dmax15` with `f_slide_noflow = 2` (grid spacing 10 m and 5 m) | 30 min |
+| | `noflow2_ref`, `noflow2_face25` | `dam_ref` and `dam_face25` of the pre-built-dam series with `f_slide_noflow = 2` | 60 min |
 | Spread of the results | `base_m2`, `base_m1`, `base_eps`, `base_p05`, `base_p1`, `base_p2` | only the inflow of the base case is changed to 39.2, 39.6, 40.0001, 40.2, 40.4 and 40.8 m³/s (−2 to +2 %; the initial depth stays that of 40 m³/s) | 270 min |
 | | `dam_ref_p1`, `dam_face25_p1` | only the inflow of two cases of the pre-built-dam series (level crest) is changed to 40.4 m³/s (+1 %) | 60 min |
 | | `dam_tilt_m1`, `dam_tilt_eps`, `dam_tilt_p1`; `dam_tilt_dx5_m1`, `dam_tilt_dx5_eps`, `dam_tilt_dx5_p1` | only the inflow of the tilted-crest dam (10 m and 5 m grids) is changed to 39.6, 40.0001 and 40.4 m³/s | 60 min |
@@ -142,7 +145,7 @@ note "基本ケースは …", i.e. the value of the base case).
 ```bash
 cd examples/debris_dam
 make                     # links, and the inputs and settings of all cases (make_init.py)
-make run                 # compute the 30 cases in turn
+make run                 # compute the 35 cases in turn
 make perturb             # compute the 14 cases that show the spread of the results (only the inflow is changed slightly)
 python3 plot_results.py  # figs/*.png and tables (argument en writes the English version to en/figs/; setup.png can be drawn before the computation)
 ```
@@ -383,9 +386,61 @@ Values at 28 minutes (17.5 minutes after the failure).
 - **Upper limit of the judged and mobilized depth**: With `slide_dmax` set to 1.5 m, half the thickness of the
   colluvium (`dmax15`; the initial saturation is raised to 0.9035 so that the failure occurs at the same time),
   only the upper half of the colluvium fails and the lower half (57,000 m³) stays on the slope, because the
-  layer left behind is not judged while the mobilized sediment lies on it (`f_slide_noflow = 1`). The dam is only
-  7.4 m high. A `slide_dmax` shallower than the layer that is to fail cannot be used (§4 of the
+  layer left behind is not judged while the mobilized sediment lies on it as a thin film
+  (`f_slide_noflow = 1`). The dam is only 7.4 m high. A `slide_dmax` shallower than the layer that is to fail
+  is combined with `f_slide_noflow = 2` (next section; §4 of the
   [explanation of debris flows and slope failures](../../../docs/en/users_guide/massflow.md)).
+
+### Soil left under a thin film
+
+![Soil left under a thin film](figs/film.png)
+
+(a) Long profile of the main river at 28 min. (b) Soil depth left on the failure slope.
+
+The option `f_slide_noflow`, which leaves cells under a dense mixture out of the stability test, has the
+values 1 (the setting of this example) and 2. 1 decides by the concentration of the mixture alone. 2 judges
+the cells whose mixture is thin (its thickness as a deposit is less than half the judged depth). The two
+are compared for a `slide_dmax` of 3 m (the thickness of the colluvium) and of 1.5 m.
+
+| Case | `f_slide_noflow` | `slide_dmax` (m) | Grid spacing (m) | Colluvium left on the slope (10⁴ m³) | Cells with soil left (%) | Dam height (m) | Deposit in the main river (10⁴ m³) | Deposit in the tributary (10⁴ m³) |
+|---|---|---|---|---|---|---|---|---|
+| `base` | 1 | 3 | 10 | 1.3 | 12 | 13.0 | 7.9 | 5.7 |
+| `noflow2` | 2 | 3 | 10 | 0.1 | 2 | 13.4 | 8.2 | 6.5 |
+| `dmax15` | 1 | 1.5 | 10 | 5.7 | 86 | 7.4 | 4.3 | 4.5 |
+| `dmax15_n2` | 2 | 1.5 | 10 | 1.7 | 10 | 8.8 | 6.2 | 6.9 |
+| `dmax15_n2_dx5` | 2 | 1.5 | 5 | 2.1 | 12 | 7.3 | 5.9 | 6.6 |
+
+Values at 28 min.
+
+- **1 does not judge the layer under a thin film**: while a film a few centimetres thick remains after the
+  debris flow has passed, the layer under it is not judged even if it is saturated. In the base case
+  13,000 m³ remain along the lateral edges and the foot of the colluvium (12 % of the
+  cells). The sediment lying on them is about 3 cm thick as a deposit. In `dmax15`, where `slide_dmax` is
+  half the thickness of the colluvium, the film left after the upper layer has been fluidised keeps the
+  lower layer from being judged over almost the whole slope (86 % of the cells).
+- **2 judges the cells once the film has become thin**: in `noflow2` only one row at the foot remains
+  (1,000 m³), and the dam is 0.3 m higher (13.4 m). In `dmax15_n2` the lower layer
+  fails as well. The 17,000 m³ that remain are sediment redeposited at the foot of the slope (median
+  thickness 3.3 m, thicker than the original layer; the safety factor is 1 or more).
+- **A `slide_dmax` shallower than the layer gives a lower dam**: the dam of `dmax15_n2` is 8.8 m
+  high, 4.5 m lower than in `noflow2`. The lower layer fails after the upper one has flowed away,
+  so more sediment stays at the foot of the slope and in the tributary valley (20,000 m³ in total).
+- **5 m grid**: on the 5 m grid with `slide_dmax` at 0.3 times the grid spacing, 1.5 m (`dmax15_n2_dx5`),
+  the lower layer also fails with 2 (the 21,000 m³ that remain are again a deposit at the foot of the
+  slope). The dam is 7.3 m high, 1.5 m lower than with the same settings on the 10 m grid
+  (the difference between `g5` and `base`, with a `slide_dmax` of 3 m, is 1.2 m).
+- **The difference in the breach stage is small**: replacing only `f_slide_noflow` by 2 in the two cases
+  of the pre-built dam series that have a level crest (`noflow2_ref`, `noflow2_face25`) changes the peak
+  discharge by +0.1 % and −2.2 %.
+
+| Case | `f_slide_noflow` | Peak discharge (m³/s) | Difference from 1 (%) | From the start of overtopping to the peak (min) | Peak discharge at the village (m³/s) | Dam height at 60 min (m) |
+|---|---|---|---|---|---|---|
+| `dam_ref` | 1 | 397 | — | 17.5 | 386 | 4.7 |
+| `noflow2_ref` | 2 | 397 | +0.1 | 17.7 | 385 | 5.0 |
+| `dam_face25` | 1 | 1,078 | — | 6.5 | 1,050 | 2.0 |
+| `noflow2_face25` | 2 | 1,055 | −2.2 | 6.3 | 1,013 | 1.8 |
+
+The other cases of this example are computed with 1.
 
 ## Conditions for a rapid breach (computation and real natural dams)
 
@@ -553,10 +608,11 @@ In summary, the conditions for a rapid breach that also hold for real natural da
   factor of the saturated neighbouring cells below 1; the mobilization propagates across the lake-side face and
   the sediment set in motion fills the breach. A step of 0.3 does not propagate. The dam built by the debris
   flow is 1.2 m lower on the 5 m grid ("How the dam forms" above). The 5 m case of the first half of the
-  chain (`g5`) keeps `slide_dmax` at 3 m, because with 1.5 m only the upper half of the colluvium fails and the
-  lower half stays on the slope (`dmax15` in "How the dam forms" above). With 3 m, on the other hand, the
-  mobilization propagates during the breach, as in `dam_dx5d3`. With a thick soil layer and a fine grid the two conditions cannot
-  both be met, so the chain is not computed through the breach on the 5 m grid. The breach of a dam whose
+  chain (`g5`) keeps `slide_dmax` at 3 m. With 3 m the mobilization propagates during the breach, as in
+  `dam_dx5d3`. With 1.5 m combined with `f_slide_noflow = 2` the lower layer fails as well, but the failure
+  takes place in two stages and the dam is lower than in the base case (7.3 m in `dmax15_n2_dx5`;
+  "Soil left under a thin film" above). With a thick soil layer and a fine grid no setting builds the same
+  dam as the base case, so the chain is not computed through the breach on the 5 m grid. The breach of a dam whose
   overflow concentrates in a narrow breach is compared between the 10 m and 5 m grids with the tilted-crest dam
   ("Spread of the results" above). The breach cannot be narrower than the grid spacing, so a dependence on the
   grid spacing remains. The numbers of this example are those of the 10 m grid.
@@ -653,7 +709,7 @@ width).
 
 - **Computation time**: With one thread, the base case (270 minutes) takes a little over an hour and a case
   of the pre-built-dam series 15–25 minutes (about 2 hours each for the three cases on the 5 m grid).
-  The 30 cases of `make run` take 4–5 hours when run four at a time with one thread each. The 14 cases of
+  The 35 cases of `make run` take about 5 hours when run four at a time with one thread each. The 14 cases of
   `make perturb` (six base cases, and five 10 m and three 5 m cases of the pre-built-dam series) amount to
   about the same. The output of all cases is about 4 GB (remove it with `make clean`).
 - **Reproducibility of the numbers**: The numbers of the chain cases from the overtopping onward (peak discharge,
