@@ -1544,11 +1544,11 @@
     {
       "source": "examples/catchment_metal/README.md",
       "target": "examples/catchment_metal/en/README.md",
-      "source_sha256": "0556be40e40cb81ba8120509dd01045aaa0d0db8244f8a6d7573906e3122f608",
-      "target_sha256": "f72f8f1df64bfa1330f960005f0d751f73b16333f9760e2e560562447a0a4bf2",
-      "reviewer": "Claude (Claude Code session; merge of the f_advection_donor branch into main: the branch's rerun values with the default 3 (G3 1.01 -> 0.93 kg, tank timing) replace main's wording based on the earlier results; main's corrections elsewhere (run times, settling not represented) kept; Japanese and English compared)",
+      "source_sha256": "408455f4bde040af76e91348ddb6c20f4fd922315e964aad5832cae4c3631887",
+      "target_sha256": "c4c134387a6e8858947e505d61650c46c9b8f44352d1f7d176aae0ca649c9f4d",
+      "reviewer": "Claude (Claude Code session; examples recomputed with the advection defaults of 2026-11-21: values and figures from the new results, Japanese and English compared)",
       "method": "assistant",
-      "reviewed_on": "2026-11-09"
+      "reviewed_on": "2026-11-23"
     },
     {
       "source": "examples/catchment_metal/figs/mechanism.png",
@@ -1571,74 +1571,74 @@
     {
       "source": "examples/catchment_metal/figs/step1.png",
       "target": "examples/catchment_metal/en/figs/step1.png",
-      "source_sha256": "1144a67d0e2abff9deffa8971ecf9c2b10508b669450ee345e7abaecb23ff132",
-      "target_sha256": "983a5c2c7dd442264e255bb542804d0c0be84d1594f93eaf63a5877e53fa0511",
-      "reviewer": "Claude (Claude Code session; recomputed 2026-11-09 with the current defaults including f_advection_donor = 3: all drawn by plot_results.py (python3 plot_results.py and python3 plot_results.py en; script unchanged) from the same results of the eight cases; Japanese step4, step6 and summary and English step4 and summary viewed, labels compared; the other step figures differ only in their data)",
+      "source_sha256": "ddf35729e045a82d847567486ea88322cda2fb5f9176403680a8a7756a3a065d",
+      "target_sha256": "8bde0cd0ca0724913983dd751fc0c2a28e8be017bf7574d508c9d8a4f38b76a9",
+      "reviewer": "Claude (Claude Code session; examples recomputed with the advection defaults of 2026-11-21: values and figures from the new results, Japanese and English compared)",
       "method": "assistant",
-      "reviewed_on": "2026-11-09"
+      "reviewed_on": "2026-11-23"
     },
     {
       "source": "examples/catchment_metal/figs/step2.png",
       "target": "examples/catchment_metal/en/figs/step2.png",
-      "source_sha256": "1611b16ca55154221fed65617f8cd15c172253022025ae91f59d21fbf76443be",
-      "target_sha256": "145c010c6ee6035ebf7a601c048423db2c12ca2051f66a2be63f565288c2fd28",
-      "reviewer": "Claude (Claude Code session; recomputed 2026-11-09 with the current defaults including f_advection_donor = 3: all drawn by plot_results.py (python3 plot_results.py and python3 plot_results.py en; script unchanged) from the same results of the eight cases; Japanese step4, step6 and summary and English step4 and summary viewed, labels compared; the other step figures differ only in their data)",
+      "source_sha256": "a9af8a2f610e2e1f18cb36a7100235bb03fa00daf298939bfdde9822177baf75",
+      "target_sha256": "00238796e8dc2ab0a8a8dbd34ed9fe706fa84635c8f88712b9581726bc64ee50",
+      "reviewer": "Claude (Claude Code session; examples recomputed with the advection defaults of 2026-11-21: values and figures from the new results, Japanese and English compared)",
       "method": "assistant",
-      "reviewed_on": "2026-11-09"
+      "reviewed_on": "2026-11-23"
     },
     {
       "source": "examples/catchment_metal/figs/step3.png",
       "target": "examples/catchment_metal/en/figs/step3.png",
-      "source_sha256": "a12a613d20a08fbeecd4e7ae8f92dcf17358b4b8b432be0be63726bae7b23827",
-      "target_sha256": "4072c688c1c50995fed6eb7315d0346172e9a234de4161338de4f38f1529404c",
-      "reviewer": "Claude (Claude Code session; recomputed 2026-11-09 with the current defaults including f_advection_donor = 3: all drawn by plot_results.py (python3 plot_results.py and python3 plot_results.py en; script unchanged) from the same results of the eight cases; Japanese step4, step6 and summary and English step4 and summary viewed, labels compared; the other step figures differ only in their data)",
+      "source_sha256": "e23d2168916e09259751015676428d7b919909cf1c5209ac021e10ed96178e8d",
+      "target_sha256": "ca569b589e57be74035f234309f81efc0298e0837a1b02fdad3c0f1e783a3a1c",
+      "reviewer": "Claude (Claude Code session; examples recomputed with the advection defaults of 2026-11-21: values and figures from the new results, Japanese and English compared)",
       "method": "assistant",
-      "reviewed_on": "2026-11-09"
+      "reviewed_on": "2026-11-23"
     },
     {
       "source": "examples/catchment_metal/figs/step4.png",
       "target": "examples/catchment_metal/en/figs/step4.png",
-      "source_sha256": "fad4b3ccc32b9c4388a31c1e26365d8e0396492e1b31f4c1590f643e2e346c92",
-      "target_sha256": "d3226b934184fa5c4d200dd464c2320aaf6c385b9a16f413950b3364a98f20e9",
-      "reviewer": "Claude (Claude Code session; recomputed 2026-11-09 with the current defaults including f_advection_donor = 3: all drawn by plot_results.py (python3 plot_results.py and python3 plot_results.py en; script unchanged) from the same results of the eight cases; Japanese step4, step6 and summary and English step4 and summary viewed, labels compared; the other step figures differ only in their data)",
+      "source_sha256": "e2c9b0c89b100f7be51ff469cfeccdf57647912963d720bdcb1f12c1ca14f9a7",
+      "target_sha256": "d43015a7d5f93952196aa318cdcf331deb1681ec5c275e500e080ee013f83411",
+      "reviewer": "Claude (Claude Code session; examples recomputed with the advection defaults of 2026-11-21: values and figures from the new results, Japanese and English compared)",
       "method": "assistant",
-      "reviewed_on": "2026-11-09"
+      "reviewed_on": "2026-11-23"
     },
     {
       "source": "examples/catchment_metal/figs/step5.png",
       "target": "examples/catchment_metal/en/figs/step5.png",
-      "source_sha256": "8600024a16908d863347d19fa5c986112849666b01376f6bee845486b6d03706",
-      "target_sha256": "ab2f521b3d83f29a8cf4966965c44bc8f4b671da905fdf098cc683cca32f8d1d",
-      "reviewer": "Claude (Claude Code session; recomputed 2026-11-09 with the current defaults including f_advection_donor = 3: all drawn by plot_results.py (python3 plot_results.py and python3 plot_results.py en; script unchanged) from the same results of the eight cases; Japanese step4, step6 and summary and English step4 and summary viewed, labels compared; the other step figures differ only in their data)",
+      "source_sha256": "4c28425bc8522904aaa0d1bff59200b462b7a491bcec6aeed26d1e9618dc4462",
+      "target_sha256": "4aef94b26bf94b9f019dec6217b518bff4faae7ffa916dccd60dffb97493adcc",
+      "reviewer": "Claude (Claude Code session; examples recomputed with the advection defaults of 2026-11-21: values and figures from the new results, Japanese and English compared)",
       "method": "assistant",
-      "reviewed_on": "2026-11-09"
+      "reviewed_on": "2026-11-23"
     },
     {
       "source": "examples/catchment_metal/figs/step6.png",
       "target": "examples/catchment_metal/en/figs/step6.png",
-      "source_sha256": "477d530ab70c8619484bf6c22208f6f4fd5f015afddf671d5615fc86a3729d18",
-      "target_sha256": "73eb19dece63c56362cbc9aadc722c2d1671f0b299eb808260644e063d50a202",
-      "reviewer": "Claude (Claude Code session; English figure drawn by the same script with the en switch from the same results of 2026-11-11 (the G1 line in the discharge panel and the summary axis down to 0.001 kg); compared side by side: same plotted data and layout, labels translated)",
+      "source_sha256": "8c67f5b674459ad0cc0388b022e776ec0b5f8a2f16e5a890afe348f09c64fe69",
+      "target_sha256": "8176ba02dbd3feb4e09e5c6f5791a0fb44a6daf11a0eaa40bd4a653e47c78024",
+      "reviewer": "Claude (Claude Code session; examples recomputed with the advection defaults of 2026-11-21: values and figures from the new results, Japanese and English compared)",
       "method": "assistant",
-      "reviewed_on": "2026-11-11"
+      "reviewed_on": "2026-11-23"
     },
     {
       "source": "examples/catchment_metal/figs/step6b.png",
       "target": "examples/catchment_metal/en/figs/step6b.png",
-      "source_sha256": "1256bc2d3e74e84036468cc3baf011b560e42eb04079d8f2538fbd328c4c545d",
-      "target_sha256": "d1306748d87683e9d7bd6fc0c04a1fe4fcf816ad2212008957e8c75cf302e3db",
-      "reviewer": "Claude (Claude Code session; English figure drawn by the same script with the en switch from the same results of 2026-11-11 (the G1 line in the discharge panel and the summary axis down to 0.001 kg); compared side by side: same plotted data and layout, labels translated)",
+      "source_sha256": "5495ff9b031251fb5f1ab092d884ca2c3999c9ff5b2a75d391c8bd849ca47dea",
+      "target_sha256": "453e3a27fc98465c6328c2e70827a73697720297328bc04fb0cbc5ed42909b38",
+      "reviewer": "Claude (Claude Code session; examples recomputed with the advection defaults of 2026-11-21: values and figures from the new results, Japanese and English compared)",
       "method": "assistant",
-      "reviewed_on": "2026-11-11"
+      "reviewed_on": "2026-11-23"
     },
     {
       "source": "examples/catchment_metal/figs/summary.png",
       "target": "examples/catchment_metal/en/figs/summary.png",
-      "source_sha256": "7fe60611bc258a84cf5152211bd3f8f1d293554f8e6ebfbd4c342c2407ca1834",
-      "target_sha256": "e2d09ea3933a7a9c1f1af185e60a2bc1e4e6895208591bf11ff0af622c94b528",
-      "reviewer": "Claude (Claude Code session; English figure drawn by the same script with the en switch from the same results of 2026-11-11 (the G1 line in the discharge panel and the summary axis down to 0.001 kg); compared side by side: same plotted data and layout, labels translated)",
+      "source_sha256": "5d0afcaed733ce248f35ec3263981849e00aed27e46433bb7de79e307f45738b",
+      "target_sha256": "57c3f991f2a4ebbf55f37055b3066911354366fcaee0c515295440ec5922d075",
+      "reviewer": "Claude (Claude Code session; examples recomputed with the advection defaults of 2026-11-21: values and figures from the new results, Japanese and English compared)",
       "method": "assistant",
-      "reviewed_on": "2026-11-11"
+      "reviewed_on": "2026-11-23"
     },
     {
       "source": "examples/chichibu_flood/README.md",
