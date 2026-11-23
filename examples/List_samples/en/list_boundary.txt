@@ -197,6 +197,12 @@
 !                                  the bed of the inflow cells, divided
 !                                  equally, as a source (z and soil thickness
 !                                  rise; the bed load carries it on. Sec. 84.9)
+!     inflow_qbfrac(:,n) = 0.3, 0.4, 0.3 : class composition of the feed with
+!                                  mixed grain sizes (f_bedmix=1; one value
+!                                  per class, summing to 1; multiplies the
+!                                  total of inflow_qb / fn_inflow_qb). A feed
+!                                  with f_bedmix=1 needs this or
+!                                  fn_inflow_qbmix
 !     inflow_cs_eq(n) = 0/1      : 1 = the suspended-sediment inflow
 !                                  concentration is the equilibrium
 !                                  concentration of the inflow cells times
@@ -232,6 +238,11 @@
 !                                  solid volume)"
 !     fn_inflow_qb(n) = "..."    : each line "time(min) bed-load discharge(m3/s
 !                                  solid volume)"
+!     fn_inflow_qbmix(n) = "..." : per-class feed with mixed grain sizes. Each
+!                                  line "time(min) rate of class 1  rate of
+!                                  class 2 ..." (m3/s solid volume; exclusive
+!                                  with inflow_qb, fn_inflow_qb and
+!                                  inflow_qbfrac)
 !======================================================================
 !&list_bound_inflow
 !  ! Section 1: river inflow across the west edge, j=100..102

@@ -1,0 +1,77 @@
+!======================================================================
+! bedmix: 混合粒径(f_bedmix)の検定(developer.md §84.19、docs/mixed_sediment_plan.md §6)
+!   構成 armor: 1 mm と 20 mm の 2 粒径階(割合 0.5/0.5、遮蔽なし)。粗粒は限界以下で動かず、
+!   給砂なしで上流端の表層から細粒が抜けて静的なアーマーになる(低下量 = L_a F0 / (1 − f_sub))
+!   水路の型 deep(make_init.py)。西端の区間流入は等流水深の流量、東辺は自由流出
+!======================================================================
+&list_sysparam
+  f_gridsystem = 0
+  f_govequation = 0
+  dt = 0.1
+  t0 = 0
+  tt = 600
+  dt_disp = 600
+  dt_file = 10
+  dt_recrd = 600
+  fn_geoinfo = '-'
+  fn_initial = '-'
+  fn_geomorph = '-'
+  fn_boundary = '-'
+  dir_result = 'result_armor'
+  dir_save = 'save_armor'
+  f_state_save = 1
+  f_check_cfl = 1
+  f_out_z = 1
+  f_out_h = 1
+  f_out_vv = 1
+  f_out_bmix = 1
+/
+
+&list_initial
+  f_htype = 1
+  fn_hinit = 'hinit_deep.txt'
+/
+
+&list_geoinfo
+  lx = 60.0
+  ly = 9.0
+  nx = 60
+  ny = 9
+  f_ztype = 1
+  fn_z = 'zinit_deep.txt'
+  f_rntype = 0
+  rn0 = 0.03
+  f_sdtype = 1
+  fn_sd = 'sdinit_deep.txt'
+  sy0 = 0.2
+/
+
+&list_geomorph
+  dt_geomorph = 0.0
+  morfac = 1.0
+  f_fluvial = 1
+  f_qbform = 1
+  fluv_tausc = 0.05
+  fluv_porosity = 0.4
+  fluv_sgrav = 1.65
+  fluv_dzmax = 0.005
+  fluv_bcfeed = 0
+  f_bedmix = 1
+  bmix_d = 0.001, 0.020
+  bmix_frac0 = 0.5, 0.5
+  bmix_hiding = 0
+/
+
+&list_bound_edge
+  f_bc_e = 1                ! 東辺は自由流出
+/
+&list_bound_inflow
+  inflow_cell(1:2,1,1) = 1, 3
+  inflow_cell(1:2,2,1) = 1, 4
+  inflow_cell(1:2,3,1) = 1, 5
+  inflow_cell(1:2,4,1) = 1, 6
+  inflow_cell(1:2,5,1) = 1, 7
+  inflow_val(1:2,1,1) = 0, 5.270463
+  inflow_val(1:2,2,1) = 9999, 5.270463
+  inflow_dist(1) = 0
+/

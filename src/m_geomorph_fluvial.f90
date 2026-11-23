@@ -26,7 +26,15 @@ module subroutine init_fluvial(gm, p, g, list)
   real :: d84                          ! 抵抗分割の D84(§89.30)
 
   ! --- パラメータ検証 ---
-  d50 = gm_param("fluv_d50", list%fluv_d50, 0.01, " m")   ! 砂礫床の中庸(§62)
+  if (gm%f_bedmix > 0) then
+    ! 混合粒径(§84.19)では粒径階の粒径 bmix_d を使い、fluv_d50 は使わない。代表粒径 gm%d50 は
+    ! init_bedmix が初期の交換層の領域平均の d_m に置き換える(側岸侵食則の τ* が使う)
+    d50 = 0.01
+    if (list%fluv_d50 > 0.0) call par_info("geomorph: fluv_d50 is not used with f_bedmix=1 " &
+                                           // "(the class diameters bmix_d are used)")
+  else
+    d50 = gm_param("fluv_d50", list%fluv_d50, 0.01, " m")   ! 砂礫床の中庸(§62)
+  end if
   if (d50 <= 0.0) call par_stop("list_geomorph: f_fluvial requires fluv_d50 > 0")
   if (list%fluv_tausc <= 0.0) call par_stop("list_geomorph: fluv_tausc must be > 0")
   if (list%fluv_dzmax <= 0.0) call par_stop("list_geomorph: fluv_dzmax must be > 0")
@@ -182,6 +190,12 @@ module subroutine calc_fluvial(gm, p, g, s, dts)
   ! 変えない。calc_fluvial_wfsed の注)
   if (gm%f_wfsed > 0) then
     call calc_fluvial_wfsed(gm, p, g, s, dts)
+    return
+  end if
+  ! 混合粒径(f_bedmix。§84.19)は写しの手続きで(本手続きの命令列を変えない。calc_fluvial_wfsed と
+  ! 同じ理由。docs/mixed_sediment_plan.md §4)。ループ 1 を変えるときは calc_fluvial_bmix も同じく変える
+  if (gm%f_bedmix > 0) then
+    call calc_fluvial_bmix(gm, p, g, s, dts)
     return
   end if
 

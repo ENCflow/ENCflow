@@ -468,6 +468,70 @@ multiplies the $`\tau_*`$ passed to the transport formula by this factor
   depth, a resistance-law option is a candidate, but it affects the whole flow
   and is deferred as a separate item (docs/mountain_stream_plan.md §14.6, item 8).
 
+### Mixed grain sizes (f_bedmix)
+
+The bed load is split into size classes $`k = 1..N`$ (grain size $`d_k`$, $`N`$ = 2 to 8) and the bed
+composition is kept in one exchange layer and one substrate (Hirano type[^hirano71]). Its scope is an
+exception to basic policy 6; there is no stratigraphy and no suspended load per class (the design document
+is docs/mixed_sediment_plan.md).
+
+- **State**: the exchange-layer composition $`F_k`$ (thickness $`L_e = \min(L_a, s_d)`$) and the substrate
+  composition $`f_k`$ (thickness $`s_d - L_e`$). $`s_d`$ is the soil-layer (mobile-layer) thickness and
+  moves together with $`z`$ as for a single size. The mean grain size of the exchange layer
+  $`d_m = \sum_k F_k d_k`$ is the output Dm.
+- **Transport rate**: the Shields number uses the same Manning closure and corrections as for a single size,
+  $`\tau_{*k} = n^2 V^2 / (s d_k h^{1/3})`$. The critical value includes the hiding function (modified
+  Egiazaroff[^egiazaroff65], Ashida and Michiue[^ashida72] eq. (31)): $`\tau_{*ck} = \tau_{*cm} \xi_k`$ with
+  $`\xi_k = 0.85\, d_m/d_k`$ ($`d_k/d_m < 0.4`$) and
+  $`\xi_k = \{\log_{10} 19 / \log_{10}(19 d_k/d_m)\}^2`$ ($`d_k/d_m \ge 0.4`$). The original eq. (31) is written
+  for $`\tau_{ck}/\tau_{cm}`$; $`\xi_k`$ is its dimensionless form ($`d_m/d_k`$ times it). $`\tau_{*cm}`$ is
+  fluv_tausc (default 0.05, the value Ashida and Michiue use for the mean size of a sand–gravel mixture). The rate
+  has the form of their eq. (32), $`q_k = F_k\, \Phi(\tau_{*k}, \tau_{*ck}) \sqrt{s g d_k^3}`$ ($`\Phi`$ is the
+  formula of f_qbform; taking the effective shear velocity equal to the shear velocity is the same simplification
+  as for a single size). $`F_k`$ is taken from the supplying (upwind) cell; the $`d_m`$ of the hiding function is the mean
+  of the two cells (the other cell if one side is bedrock or a fixed bed).
+- **Direction of transport**: the coefficient of the bed-slope term becomes
+  $`\gamma_k = (\mu_s \mu_k)^{-1/2} \sqrt{\tau_{*ck}/\tau_{*k}}`$ per class (the secondary-flow term is
+  common). Coarser classes move down a transverse slope more easily, which gives sorting in the direction of
+  coarse material on the outer bank and fine material on the inner bank of a bend (not tested
+  quantitatively).
+- **Exchange layer and substrate (Hirano equation)**:
+  $`(1-\lambda)[\partial (L_e F_k)/\partial t + f_{Ik}\, \partial (z - L_e)/\partial t] = -\nabla \cdot \mathbf{q}_k`$.
+  The interface composition $`f_{Ik}`$ is that of the substrate when the interface goes down and that of the
+  exchange layer when it goes up. The substrate is one uniform mixture, and deposits are mixed into it. If the
+  soil layer is thinner than the exchange layer, the exchange layer is the whole soil layer; when sediment
+  deposits on a cell with zero soil thickness, the exchange layer is made with the composition of the
+  incoming sediment.
+- **Discretization**: the single-size framework (edge fluxes → supply limiter → divergence) is applied per
+  class. The outflow through each edge is capped by the amount in the supplying exchange layer,
+  $`L_e F_k`$ (the class version of the single-size mobile-layer clamp), and the total outflow of each class
+  from a cell is scaled down so that it does not exceed $`L_e F_k`$ either (the condition that the explicit
+  scheme does not create negative fractions). The cap on bed change fluv_dzmax applies to the sum over the
+  classes. The fluxes of bank erosion and repose collapse are split into classes with the composition of the
+  supplying cell's exchange layer.
+- **Default exchange-layer thickness**: twice the $`D_{90}`$ of the initial (domain-mean) exchange-layer
+  composition. The guidance in the literature is 1 to 2 times the $`D_{90}`$ of the surface layer[^parker04]; the
+  default is its upper end (Parker 2008[^parker08] treats the factor as an order-one calibration value, and
+  Hirano[^hirano71] used 1 cm, about the largest grain size). A thicker layer is more robust against the
+  explicit-step limit and ill-posedness, and makes the armouring response slower.
+- **Limits of accuracy**: (1) the results depend on the exchange-layer thickness $`L_a`$ (an empirical,
+  numerical parameter). (2) The Hirano active-layer equations can lose hyperbolicity (become ill-posed), for
+  example when the bed degrades into a finer substrate, and oscillations are then known to grow faster as the
+  grid is refined[^ribberink87][^stecca14][^chavarrias18]. This can occur on bimodal sand–gravel beds. The
+  signs are a two-cell oscillation of the exchange-layer composition and results that change when the grid is
+  refined. (3) No more than the content of the exchange layer moves in one update, so coarse updates hold the
+  outflow back. If the end count "class supply limiter" is large, shorten dt_geomorph or thicken L_a.
+  (4) The $`d_m`$ of the hiding function is the mean of two cells, so it is smeared by one cell where the
+  composition changes abruptly. (5) The toe shear stress of the bank-erosion law is evaluated with a
+  representative size (the domain-mean $`d_m`$ of the initial exchange layer). (6) Grain-size-dependent flow
+  roughness, abrasion and suspended load per class are not treated.
+- **Verification**: [test/bedmix](../../../test/bedmix/en/README.md). With all classes set to the same size
+  the bed agrees with the single-size bed to 5e-15 m and the composition does not change; the lowering of
+  static armouring without feed agrees with $`L_a F_0/(1 - f_{\rm sub})`$ and the decay rate of the fine
+  fraction is within 0.3 % of the one-cell formula; the outflow of each class is within 0.02 % of eqs. (31)
+  and (32); the balance of each class closes to 1e-13 m³; MPI np = 1, 2, 4 are byte-identical to the serial
+  run, and a restart is bit-identical. No comparison with laboratory or field data has been made yet.
+
 ### Wave-driven longshore transport (fn_wave)
 
 Reasons and verification for the smoothing length, the shadowing by submerged bars and the river-mouth rule of [wave-driven longshore transport in the chapter](geomorph.md#wave-driven-longshore-transport-fn_wave) (the steps of one landform update and the figure are in the chapter).
@@ -1056,6 +1120,9 @@ The labels in the Basis column are explained in [How to read the basis of a defa
 | susp_beta | 1.0 | near-bed concentration factor $`\beta`$ | **method** 1 = vertically uniform approximation |
 | susp_esa | 1e-4 | coefficient of the simple form | **verification case** calibrated in [test/suspend](../../../test/suspend/en/README.md) (weak basis) |
 | f_bedfines / fines_la / fines_frac0 | 0 / required / 0 | ledger of fines in the bed (§4) | **method** two-component stock. L_a is a numerical mixing thickness (a few cm to 0.1 m); the fraction is a given |
+| f_bedmix / bmix_d / bmix_frac0 | 0 / required / required | size classes and initial exchange-layer fractions of mixed grain sizes (§3) | **given** grain-size distribution of the bed material (bed-material surveys and the like) |
+| bmix_la | twice the D90 of the initial composition | exchange-layer thickness $`L_a`$ (§3) | **literature** upper end of the guidance of 1 to 2 times the surface $`D_{90}`$[^parker04]. It also has a numerical role (robustness against ill-posedness) |
+| bmix_hiding | 1 | hiding function (§3) | **literature** modified Egiazaroff[^egiazaroff65] (Ashida and Michiue[^ashida72] eq. (31)) |
 | wash_kr / wash_kf | 0.01 / 1e-5 m/s | raindrop / sheet erosion coefficients (§5) | **empirical** values of [test/wash](../../../test/wash/en/README.md); to be calibrated |
 | wet_lw | 0 m | correlation length $`\ell_w`$ of the lateral spreading of the detachment depth (§5) | **given** 0 = off. A guide is the width of the rills (flow paths); with Δx ≤ ℓ_w/2 the gully spacing no longer depends on the grid ([test/wetlw](../../../test/wetlw/en/README.md)) |
 | spl_kr / spl_kt / spl_h | 5e-4 / 0.05 / 1 | dry-erosion coefficients and slope exponent (§6) | **empirical** medians of the tests |
@@ -1109,6 +1176,7 @@ The labels in the Basis column are explained in [How to read the basis of a defa
 | [test/fluvial](../../../test/fluvial/en/README.md) | dam break and bed change in a closed domain | total solid and co-moving update to machine precision |
 | [test/suspend](../../../test/suspend/en/README.md) | two equilibrium formulas; equilibrium and adaptation in a uniform channel | total solid 2.2e-15; equilibrium concentration within 1.5e-6 of the formula; decay rate of adaptation within 1.4e-5 of the discrete prediction |
 | [test/sedinflow](../../../test/sedinflow/en/README.md) | sediment supplied through the boundary | ledger closure ~1e-16 |
+| [test/bedmix](../../../test/bedmix/en/README.md) | mixed grain sizes (f_bedmix) | single-size limit to 5e-15 m, lowering by static armouring and decay rate of the fines (0.3 %), outflow by eqs. (31) and (32) (0.02 %), balance of each class 1e-13 m³ |
 | [test/wash](../../../test/wash/en/README.md) | rain + dam break hillslope erosion | total solid 1.7e-13 |
 | [test/splash](../../../test/splash/en/README.md) | dry erosion on a slope with a break | all digits agree with the analytical form, export ledger agrees |
 | [test/splashslide](../../../test/splashslide/en/README.md) | cohesive / loose cliff | relief growth ×1.34 / ×0.77 |
@@ -1126,7 +1194,14 @@ The labels in the Basis column are explained in [How to read the basis of a defa
 [^fernandes97]: Fernandes, N. F. and Dietrich, W. E. (1997): Hillslope evolution by diffusive processes: The timescale for equilibrium adjustments. *Water Resour. Res.*, 33, 1307–1318. (range of diffusivities)
 [^patra06]: Patra, M. and Karttunen, M. (2006): Stencils with isotropic discretization error for differential operators. *Numer. Methods Partial Differ. Equ.*, 22(4), 936–953. doi:10.1002/num.20129 (stencils whose lowest-order discretisation error is isotropic; checked against the bibliographic record and abstract. That the ENC partition rule gives d = 1/3 follows from the modified equation in developer.md §96)
 [^johnstone15]: Johnstone, S. A. and Hilley, G. E. (2015): Lithologic control on the form of soil-mantled hillslopes. *Geology*, 43(1), 83–86. doi:10.1130/G36052.1 (checked against the abstract: when transport scales with both slope and soil depth, rock type shows up in the form of soil-mantled hillslopes. The form of the equation and the doi follow the description of Landlab's DepthDependentDiffuser)
-[^ashida72]: Ashida, K. and Michiue, M. (1972): Study on hydraulic resistance and bed-load transport rate in alluvial streams. *Proc. JSCE*, 206, 59–69 (in Japanese).
+[^ashida72]: Ashida, K. and Michiue, M. (1972): Study on hydraulic resistance and bed-load transport rate in alluvial streams. *Proc. JSCE*, 206, 59–69 (in Japanese). doi:10.2208/jscej1969.1972.206_59
+[^hirano71]: Hirano, M. (1971): River-bed degradation with armoring. *Proc. JSCE*, 195, 55–65 (in Japanese; the Japanese title begins with the word "Armoring"). doi:10.2208/jscej1969.1971.195_55 (the exchange-layer concept and the continuity equations per class; uses an exchange-layer thickness of 1 cm, about the largest grain size)
+[^egiazaroff65]: Egiazaroff, I. V. (1965): Calculation of nonuniform sediment concentrations. *J. Hydraul. Div. ASCE*, 91(HY4), 225–247. doi:10.1061/JYCEAJ.0001277 (the original hiding function; ENCflow uses the modified form of Ashida and Michiue 1972, eq. (31). The original text has not been seen; the bibliographic data follow the Crossref record)
+[^parker04]: Parker, G. (2004): *1D Sediment Transport Morphodynamics with Applications to Rivers and Turbidity Currents*. e-book, Chapter 17, Aggradation and degradation of rivers transporting gravel mixtures. https://hydrolab.illinois.edu/people/parkerg/morphodynamics_e-book.htm (exchange-layer thickness $`L_a = n_a D_{s90}`$ with $`n_a`$ in the range 1 to 2; $`D_{s90}`$ is the D90 of the surface layer. The page gives no year; it is usually cited as 2004)
+[^parker08]: Parker, G. (2008): Transport of gravel and sediment mixtures. In: García, M. H. (ed.) *Sedimentation Engineering: Processes, Measurements, Modeling, and Practice*, ASCE Manuals and Reports on Engineering Practice No. 110, ch. 3, 165–251. doi:10.1061/9780784408148.ch03 ($`L_a = n_a D_{90}`$ with $`n_a`$ an order-one calibration value; checked in the author's public draft, the wording of the published version has not been checked)
+[^ribberink87]: Ribberink, J. S. (1987): *Mathematical modelling of one-dimensional morphological changes in rivers with non-uniform sediment*. Doctoral thesis, Delft University of Technology (Communications on Hydraulic and Geotechnical Engineering, Report No. 87-2). https://resolver.tudelft.nl/uuid:bdfc1519-a71d-4752-83f7-3ebf1bb890e9 (ill-posedness of the exchange-layer equations)
+[^stecca14]: Stecca, G., Siviglia, A. and Blom, A. (2014): Mathematical analysis of the Saint-Venant-Hirano model for mixed-sediment morphodynamics. *Water Resour. Res.*, 50(10), 7563–7589. doi:10.1002/2014WR015251
+[^chavarrias18]: Chavarrías, V., Stecca, G. and Blom, A. (2018): Ill-posedness in modeling mixed sediment river morphodynamics. *Adv. Water Resour.*, 114, 219–235. doi:10.1016/j.advwatres.2018.02.011
 [^mpm48]: Meyer-Peter, E. and Müller, R. (1948): Formulas for bed-load transport. *Proc. 2nd Meeting IAHSR*, Stockholm, 39–64.
 [^rickenmann11]: Rickenmann, D. and Recking, A. (2011): Evaluation of flow resistance in gravel-bed rivers through a large field data set. *Water Resour. Res.*, 47, W07538. doi:10.1029/2010WR009793 (base level resistance eq. (23); resistance partitioning and bed load eq. (32))
 [^ferguson07]: Ferguson, R. (2007): Flow resistance equations for gravel- and boulder-bed streams. *Water Resour. Res.*, 43, W05427. doi:10.1029/2006WR005422 (from the reference list and eq. (10a) of Rickenmann & Recking 2011; the paper itself not read)

@@ -3,9 +3,9 @@
 2026-11-22 起案・同日合意(方向 = 範囲を限った粒径階 × 交換層。下の §2)。段 1 の決めごとも同日に
 決めた(§10)。基本方針 6 の例外(docs/policy.md)で、決定の記録は developer.md §84.19。
 
-- **状態**: 段 1 を実装中(2026-11-23 着手)。着手の条件だった土砂関係の作業(天然ダム例題
-  examples/debris_dam。土石流・地下水の変更で m_geomorph・list_geomorph に触れていた)は 2026-11-23 に
-  main に入った。
+- **状態**: 段 1(掃流砂の粒径階・交換層・下層・給砂・側岸侵食と安息角・定着・出力・保存と検定 T1〜T7)を
+  2026-11-23 に実装した(f_bedmix。実装の記録は developer.md §119、検定は test/bedmix)。段 2・段 3 は
+  未着手(handoff 00ae)。実装で本書から変えた点は §3.5・§8 の「実装」の注と §119.2 にある。
 - 本書は設計の正本(検討メモ)。実装の決定と検証の記録は、実装の段ごとに developer.md の新しい
   節に書く。未完了の作業は handoff 00ae。
 
@@ -146,6 +146,11 @@
 - **交換層の時間刻み**: 陽解法では、1 回の更新で交換層の粒径階 k が入れ替わる割合が 1 を超えては
   いけない。(b) の制限が構造的に守り、発動回数を台帳に数える(多いときは dt_geomorph を縮めるか
   L_a を厚くする目安として表示)。
+- **実装(2026-11-23。developer.md §119.2)**: ループ 1.5 は (b) だけにし、上限は L_e F_k(この更新で
+  下層から入る分は数えない保守側)にした。Σ_k L_e F_k = L_e ≤ s_d なので (a) は (b) に含まれる。
+  ループ 1 の可動層クランプは粒径階版(エッジ単独の流出 ≤ 供給側の L_e F_k)にした。全粒径階を同じ
+  粒径にした極限(T2)で単一粒径の計算に一致させるのに要った。側岸侵食・安息角崩落の等移動度の流束は、
+  ループ 2 の前(ループ 1.4)に供給側の更新前の組成で粒径階の流束に直す。
 - メモリ(有効時のみ): セルあたり 4N(エッジ流束)+ 2N(組成)+ N(fdon_k)程度。既定の倍精度で、
   N = 8 なら 100 万セルあたり約 450 MB、N = 3 なら約 170 MB。
 
@@ -235,7 +240,7 @@
   Stecca ら 2014、Chavarrías ら 2018)。砂と礫の 2 峰性の河床(国総研の例)では起こりうる。段 1 は
   兆候の診断(格子を細かくした比較、交換層の組成の 2 セル周期の振動の監視)と文書化までとし、
   対策(L_a を厚くする、正則化)は起きたときに議論する。
-- **交換層厚への感度**: 文献の目安は D90 の 1〜2 倍(Parker 2008 など。照合待ち)で、既定はその上端の
+- **交換層厚への感度**: 文献の目安は表層の D90 の 1〜2 倍(Parker の電子書籍 第 17 章。Parker 2008 は係数を 1 程度の校正値とする。§11)で、既定はその上端の
   2 倍(§3.8)。例題で感度を示す。
 - **計算量**(有効時のみ): 掃流砂の計算とハロ交換が粒径階の数にほぼ比例して増える。dt_geomorph
   間隔の間欠実行は既存と同じ。
@@ -288,10 +293,13 @@
 
 - **段 0**(2026-11-22): 本書、方針 6 の例外(日英)、developer.md §84.19、handoff 00ae(当初 00ad で起こし、
   main で同じ番号が別の項目に使われたので 2026-11-23 に付け替えた)。
-- **段 1**(2026-11-23 着手): 粒径階の掃流砂・交換層・下層・境界と給砂・側岸侵食と
+- **段 1**(2026-11-23 実装。developer.md §119): 粒径階の掃流砂・交換層・下層・境界と給砂・側岸侵食と
   安息角・定着・出力・保存と、検定 T1〜T7、ユーザーガイド(日英)・params_index・List_samples。
   コミットは (a) 無効時ビット一致の足場(namelist・型・確保・分岐の入口)、(b) 計算、(c) 検定、
   (d) 文書に分ける(CLAUDE.md の絶対規律 4)。
+  実装(2026-11-23): (a)〜(d) を 1 つのコミットにした。機能追加をコード・検定・文書と一緒にするのが
+  リポジトリの慣行で、分けると途中のコミットが CI の文書の検査に通らず、合否の基準(無効時に全 reference と
+  ビット一致)も同じなため。等価変換・バグ修正は混ぜていないので規律 4 には当たらない(developer.md §119.2)。
 - **段 2**: 浮遊砂(最も細かい粒径階)とほかの過程の組成(§3.7)、岩盤下刻の被覆と道具。
 - **段 3**: 国総研の例題(§7)、砂分の効果を持つ表層の式(Wilcock & Crowe 2003)と、堆積時の界面の
   組成の重み(Hoey & Ferguson 1994)の検討。
@@ -307,6 +315,8 @@
 - architecture.md の設計文書の一覧に本書を加える(土砂関係の作業がこの行を変えていたので、main を取り込んだ
   2026-11-23 の後に)。
 - developer.md: 段ごとの実装の記録の新しい節。
+- (段 1 で済ませた: ユーザーガイドの geomorph.md・sediment.md・boundary.md・io.md・params_index・
+  List_samples(日英)、comparison.md(日英)、3 つの plan の注、architecture.md、developer.md §119)
 
 ## 10. 段 1 の決めごと(2026-11-22 決定)
 
@@ -333,14 +343,33 @@
 
 ## 11. 参考文献(照合の状況)
 
+段 1 で使う 7 件は 2026-11-23 に照合した(J-STAGE の記録と本文のスキャン、Crossref、TU Delft のリポジトリ、
+著者のページ。作業は補助のエージェントによる)。
+
 - 芦田和男・道上正規(1972)移動床流れの抵抗と掃流砂量に関する基礎的研究。土木学会論文報告集 206、
-  59–69。式 (31)・(32) は developer.md §19 の原典照合(2026-10-29。利用者が提供した本文)で確かめた文献に
-  ある。式の細部は実装の前に本文で確かめる。
-- 平野宗夫(1971)アーマリングをともなう河床低下について。土木学会論文報告集 195、55–65(照合待ち)。
+  59–69。doi:10.2208/jscej1969.1972.206_59。本文(スキャン)で確認: 式 (30) が Egiazaroff の原式、式 (31)
+  (p. 64)が修正形で、τci/τcm = 0.85(d_i/d_m < 0.4)、{log10 19 / log10(19 d_i/d_m)}² (d_i/d_m)
+  (d_i/d_m ≥ 0.4)、τcm/((σ−ρ) g d_m) ≒ 0.05。式 (32)(p. 65)が粒径別の流砂量
+  q_Bi / (f0(d_i) u*e d_i) = 17 τ*ei (1 − τ*ci/τ*i)(1 − u*ci/u*)。実装の ξ = τ*ci/τ*cm は式 (31) の無次元形
+  (d_m/d_i 倍)で、分岐の境界 0.4 は原典どおり対数の側にした(当初の実装は 0.85 の側。0.4 ちょうどのときだけ
+  違う。developer.md §119.2)。
+- 平野宗夫(1971)Armoring をともなう河床低下について(英題 River-bed degradation with armoring)。
+  土木学会論文報告集 195、55–65。doi:10.2208/jscej1969.1971.195_55。題の「Armoring」は原典どおりの英字
+  (二次文献には「アーマリング」「Armoring を伴う」の揺れがある)。交換層の導入は p. 61、粒径階ごとの
+  連続式 (8)〜(11) は p. 62、交換層厚 a = 1 cm(最大粒径程度)は p. 63。
 - Egiazaroff, I. V. (1965) Calculation of nonuniform sediment concentrations. Journal of the Hydraulics
-  Division, ASCE 91(HY4), 225–247(照合待ち)。
-- Parker, G. (2008) Transport of gravel and sediment mixtures. In: Garcia, M. H. (ed.) Sedimentation
-  Engineering, ASCE Manuals and Reports on Engineering Practice 110, ch. 3(交換層厚の目安。照合待ち)。
+  Division, ASCE 91(HY4), 225–247。doi:10.1061/JYCEAJ.0001277。書誌は Crossref の記録で確認(出版社の
+  ページは自動の取得を拒否)。原典の本文は未見(ENCflow が使うのは芦田・道上の修正形)。
+- Parker, G. (2008) Transport of gravel and sediment mixtures. In: García, M. H. (ed.) Sedimentation
+  Engineering: Processes, Measurements, Modeling, and Practice, ASCE Manuals and Reports on Engineering
+  Practice No. 110, ch. 3, 165–251。doi:10.1061/9780784408148.ch03。著者が公開している 2005 年の草稿の
+  §3.5.3 は「L_a = n_a D90、n_a は 1 程度で、校正が要る」で、**1〜2 という幅は書いていない**(刊行版の
+  文言・節番号は未確認。草稿の参考文献と修正 Egiazaroff の係数 0.843 は写さない)。
+- Parker, G.(2004 として引用されることが多い。ページに年の記載なし)1D Sediment Transport Morphodynamics
+  with Applications to Rivers and Turbidity Currents(電子書籍)第 17 章 Aggradation and degradation of rivers
+  transporting gravel mixtures。https://hydrolab.illinois.edu/people/parkerg/morphodynamics_e-book.htm。
+  「L_a = n_a D_s90、n_a は 1〜2 の範囲」(D_s90 は表層の D90)。交換層厚の目安「D90 の 1〜2 倍」の出典は
+  こちら(本書 §3.8・§10 の 2 の「文献の目安」)。
 - Hoey, T. B. & Ferguson, R. (1994) Numerical simulation of downstream fining by selective transport in
   gravel bed rivers: model development and illustration. Water Resources Research 30(7), 2251–2260
   (照合待ち)。
@@ -351,10 +380,14 @@
 - Wilcock, P. R. & Kenworthy, S. T. (2002) A two-fraction model for the transport of sand/gravel mixtures.
   Water Resources Research 38(10), 1194(砂・礫の 2 分画の案として比べた。developer.md §84.19。照合待ち)。
 - Ribberink, J. S. (1987) Mathematical modelling of one-dimensional morphological changes in rivers with
-  non-uniform sediment. PhD thesis, Delft University of Technology(照合待ち)。
-- Stecca, G., Siviglia, A. & Blom, A. (2014) Mathematical analysis of the Saint-Venant–Hirano model for
-  mixed-sediment morphodynamics. Water Resources Research 50, 7563–7589(照合待ち)。
+  non-uniform sediment. Doctoral thesis, Delft University of Technology(Communications on Hydraulic and
+  Geotechnical Engineering, Report No. 87-2)。https://resolver.tudelft.nl/uuid:bdfc1519-a71d-4752-83f7-3ebf1bb890e9
+  (リポジトリの記録と論文の前付けで確認)。
+- Stecca, G., Siviglia, A. & Blom, A. (2014) Mathematical analysis of the Saint-Venant-Hirano model for
+  mixed-sediment morphodynamics. Water Resources Research 50(10), 7563–7589。doi:10.1002/2014WR015251
+  (Crossref で確認。題はハイフン)。
 - Chavarrías, V., Stecca, G. & Blom, A. (2018) Ill-posedness in modeling mixed sediment river
-  morphodynamics. Advances in Water Resources 114, 219–235(照合待ち)。
+  morphodynamics. Advances in Water Resources 114, 219–235。doi:10.1016/j.advwatres.2018.02.011(Crossref で
+  確認)。
 - 小橋力也・田端幸輔・松井大生・小嶋宝・瀬﨑智之(2026)土砂供給量の減少に伴うセグメント 1 河川の
   二極化に関する実験的研究。河川技術論文集 32、277–282(例題の対象。利用者が提供した本文で確認)。

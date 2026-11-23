@@ -167,6 +167,8 @@ lists the main outputs.
 | f_out_bds | 0 | Bs | destroyed fraction of buildings 1 − remaining/initial stock (0-1; the final frame is the damage-ratio map) |
 | — (with f_bedslide) | — | Hb / Vb | moving basal-layer thickness (m) and diagnostic speed (m/s); automatic ([Sediment and landform change](geomorph.md)) |
 | f_out_fs | 0 | Fs / Fs9999 | slope safety factor Fs distribution and its period minimum (requires f_slide = 1 or 2; -1 = not evaluated; see [Sediment and landform change](geomorph.md)) |
+| — (with f_bedmix) | — | Dm | mean grain size of the exchange layer (m) (mixed grain sizes in [Sediment and landform change](geomorph.md); written automatically) |
+| f_out_bmix | 0 | Fa1_ / Fa2_ ... | exchange-layer fraction of each size class (0 to 1; the number is the class; requires f_bedmix = 1; see [Sediment and landform change](geomorph.md)) |
 | f_out_hmax | 1 | H9999 | maximum depth |
 | f_out_hmaxt | 0 | Ht9999 | time of maximum depth |
 | f_out_vvmax | 0 | V9999 | maximum velocity |
@@ -332,6 +334,7 @@ come from `FILENUMBER.csv`.
 | Subsurface storage / water table | flag | Hg (f_out_hg; also Hg2 / Hgc / Hgs / Cg) | Hg is a column-equivalent depth (m). Saturated thickness = Hg / sy0; water table ≈ ground − soil thickness + Hg / sy0 (lateral / Green-Ampt configurations; see the figure in [Groundwater](gwflow.md)) |
 | Soil thickness | automatic | Sd | only when a model that uses sd is enabled |
 | Fixation degree | automatic | Fx | 0 to 1; only with f_fixation ([Sediment and landform change](geomorph.md)) |
+| Bed composition | automatic (Fa by flag) | Dm, Fa1_... (f_out_bmix) | mean grain size of the exchange layer (m) and the fraction of each size class; only with f_bedmix ([Sediment and landform change](geomorph.md)) |
 | Cumulative bedrock incision | automatic | Ri | total plucked and abraded thickness by flowing water (m); only with f_rockinc. The bedrock surface is Z − Sd ([Sediment and landform change](geomorph.md)) |
 | Snow water equivalent | automatic | Sw | mm of water ([Snow](forcing.md)) |
 | Soil Water Index | automatic | Swi / Swi9999 / Swit9999 | mm ([Soil Water Index](swi.md)) |

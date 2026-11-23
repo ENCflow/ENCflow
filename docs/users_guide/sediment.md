@@ -360,6 +360,52 @@ $`S_{\rm red}/S = (f_0/f_{\rm tot})^{e/2}`$ を示しました。Nitsche ら[^ni
   抵抗を変える Ferguson の式[^ferguson07]を抵抗則の選択肢にすることは候補ですが、流れ
   全体に効くので別件として保留しています(docs/mountain_stream_plan.md §14.6 の 8)。
 
+### 混合粒径(f_bedmix)
+
+掃流砂を粒径階 $`k = 1..N`$(粒径 $`d_k`$、$`N`$ = 2〜8)に分け、河床の粒度を交換層 1 枚と下層 1 枚で持ちます
+(Hirano 型[^hirano71])。採る範囲は基本方針 6 の例外で、層序・粒径階ごとの浮遊砂は持ちません(設計の
+文書は docs/mixed_sediment_plan.md)。
+
+- **状態**: 交換層の組成 $`F_k`$(厚さ $`L_e = \min(L_a, s_d)`$)と下層の組成 $`f_k`$(厚さ $`s_d - L_e`$)。
+  $`s_d`$ は土層厚(可動層厚)で、$`z`$ と共動するのは単一粒径と同じです。交換層の平均粒径
+  $`d_m = \sum_k F_k d_k`$ が出力 Dm です。
+- **流砂量**: 無次元掃流力は単一粒径と同じマニング閉じ・補正で $`\tau_{*k} = n^2 V^2 / (s d_k h^{1/3})`$。
+  限界は遮蔽係数(修正 Egiazaroff[^egiazaroff65]、芦田・道上[^ashida72] 式 (31))で
+  $`\tau_{*ck} = \tau_{*cm} \xi_k`$、$`\xi_k = 0.85\, d_m/d_k`$($`d_k/d_m < 0.4`$)、
+  $`\xi_k = \{\log_{10} 19 / \log_{10}(19 d_k/d_m)\}^2`$($`d_k/d_m \ge 0.4`$)。原典の式 (31) は
+  $`\tau_{ck}/\tau_{cm}`$ で書かれていて、$`\xi_k`$ はその無次元形($`d_m/d_k`$ 倍)です。$`\tau_{*cm}`$ は fluv_tausc
+  (既定 0.05。芦田・道上が混合砂礫の平均粒径に使う値)。流砂量は同 式 (32) の形で
+  $`q_k = F_k\, \Phi(\tau_{*k}, \tau_{*ck}) \sqrt{s g d_k^3}`$($`\Phi`$ は f_qbform の式。有効摩擦速度を
+  摩擦速度と同じに取る簡略は単一粒径と同じ)。$`F_k`$ は供給側(風上)の
+  セル、遮蔽係数の $`d_m`$ は両セルの平均(片側が岩盤・固定床ならもう片側)で評価します。
+- **流砂の向き**: 河床勾配の項の係数を粒径階ごとに $`\gamma_k = (\mu_s \mu_k)^{-1/2} \sqrt{\tau_{*ck}/\tau_{*k}}`$ に
+  します(二次流の項は共通)。粗い粒径階ほど横断斜面を下りやすいので、湾曲部で外岸に粗粒、内岸に細粒が
+  集まる向きの分級が出ます(定量の検定はしていません)。
+- **交換層と下層(Hirano の式)**: $`(1-\lambda)[\partial (L_e F_k)/\partial t + f_{Ik}\, \partial (z - L_e)/\partial t] = -\nabla \cdot \mathbf{q}_k`$。
+  界面の組成 $`f_{Ik}`$ は、界面が下がるとき下層の組成、上がるとき交換層の組成です。下層は一様な混合 1 枚で、
+  積もった分を混ぜます。土層が交換層より薄いと交換層が土層全体になり、土層厚 0 のセルに積もるときは入って
+  くる土砂の組成で交換層を作ります。
+- **離散化**: 単一粒径の枠組み(エッジの流束 → 供給量制限 → 発散)を粒径階ごとに当てます。各エッジの流出は
+  供給側の交換層にある量 $`L_e F_k`$ で頭打ちにし(単一粒径の可動層クランプの粒径階版)、セルの粒径階ごとの
+  流出の合計も $`L_e F_k`$ を超えないよう縮めます(陽解法で負の組成を作らない条件)。変動上限 fluv_dzmax は
+  全粒径階の和に掛けます。側岸侵食・安息角崩落の流束は、供給側の交換層の組成で粒径階に分けます。
+- **交換層厚の既定**: 初期の交換層の(領域平均の)組成の $`D_{90}`$ の 2 倍。文献の目安は表層の $`D_{90}`$ の
+  1〜2 倍[^parker04]で、その上端です(Parker 2008[^parker08] は係数を 1 程度の校正値とし、平野[^hirano71] は最大
+  粒径程度の 1 cm を使っています)。厚いほど陽解法の制限と悪設定に強く、アーマー化の応答は遅くなります。
+- **精度の限界**: (1) 交換層厚 $`L_a`$ に結果が依存します(経験的な数値パラメータ)。(2) Hirano 型の交換層の
+  式は、細かい下層へ掘り込む条件などで双曲型でなくなり(悪設定)、格子を細かくすると振動が速く育つことが
+  知られています[^ribberink87][^stecca14][^chavarrias18]。砂と礫の 2 峰性の河床で起こりえます。兆候は、
+  交換層の組成の 2 セル周期の振動と、格子を細かくしたときの結果の変化です。(3) 1 回の更新で交換層の中身より
+  多くは動かないので、更新が粗いと流出が抑えられます。終了時の「class supply limiter」の発動回数が多ければ
+  dt_geomorph を縮めるか L_a を厚くします。(4) 遮蔽係数の $`d_m`$ は両セルの平均なので、組成が急に変わる所で
+  1 セル分なまります。(5) 側岸侵食則の脚部の掃流力は代表粒径(初期の交換層の領域平均の $`d_m`$)で
+  評価します。(6) 粒径に応じた流れの粗度、摩耗、粒径階ごとの浮遊砂は扱いません。
+- **検証**: [test/bedmix](../../test/bedmix/README.md)。全粒径階を同じ粒径にすると単一粒径の河床に 5e-15 m で
+  一致し組成が変わらない、給砂なしの静的アーマーの低下量 $`L_a F_0/(1 - f_{\rm sub})`$ に一致し、細粒の割合の
+  減衰率が 1 セルの式と 0.3 % 以内、粒径階ごとの流出が式 (31)・(32) と 0.02 % 以内、粒径階ごとの収支が
+  1e-13 m³、MPI np = 1・2・4 が逐次とバイト一致、リスタートがビット一致です。実験・現地のデータとの比較は
+  まだしていません。
+
 ### 波浪による沿岸漂砂(fn_wave)
 
 [章の波浪による沿岸漂砂](geomorph.md#波浪による沿岸漂砂fn_wave)の平滑化長・水没砂州の遮蔽・河口の規則の理由と検証です(1 回の地形更新の手順と図は章にあります)。
@@ -818,6 +864,9 @@ $`\cos\theta\,C\rho_s D^2 (u/h)^2`$ ÷ 岩の抵抗」に比例させる則を�
 | susp_beta | 1.0 | 底面濃度係数 $`\beta`$ | **方式** 1 = 鉛直一様の近似 |
 | susp_esa | 1e-4 | 簡易式の係数 | **検証ケース** [test/suspend](../../test/suspend/) の校正値(根拠は弱い) |
 | f_bedfines / fines_la / fines_frac0 | 0 / 必須 / 0 | 河床の細粒分の帳簿(§4) | **方式** 2 成分の在庫。L_a は数値的な混合厚(数 cm〜0.1 m)、割合は与件 |
+| f_bedmix / bmix_d / bmix_frac0 | 0 / 必須 / 必須 | 混合粒径の粒径階と交換層の初期の割合(§3) | **与件** 河床材料の粒度(河床材料調査など) |
+| bmix_la | 初期の組成の D90 の 2 倍 | 交換層厚 $`L_a`$(§3) | **文献値** 表層の $`D_{90}`$ の 1〜2 倍の目安[^parker04]の上端。数値的な性質も持つ(悪設定への強さ) |
+| bmix_hiding | 1 | 遮蔽係数(§3) | **文献値** 修正 Egiazaroff[^egiazaroff65](芦田・道上[^ashida72] 式 (31)) |
 | wash_kr / wash_kf | 0.01 / 1e-5 m/s | 雨滴 / 面状侵食係数(§5) | **経験値** [test/wash](../../test/wash/) の値。校正前提 |
 | wet_lw | 0 m | 剥離深の横方向拡散の相関長 $`\ell_w`$(§5) | **与件** 0 = なし。リル(流路)の幅の目安。Δx ≤ ℓ_w/2 で谷間隔が格子によらない([test/wetlw](../../test/wetlw/)) |
 | spl_kr / spl_kt / spl_h | 5e-4 / 0.05 / 1 | 乾式侵食の係数と勾配指数(§6) | **経験値** テストの中央値 |
@@ -869,6 +918,7 @@ $`\cos\theta\,C\rho_s D^2 (u/h)^2`$ ÷ 岩の抵抗」に比例させる則を�
 | [test/fluvial](../../test/fluvial/README.md) | 閉領域の段波と河床変動 | 固体総量・共動更新が機械精度 |
 | [test/suspend](../../test/suspend/README.md) | 2 つの平衡濃度式、等流の水路の平衡と適応 | 固体総量 2.2e-15、平衡濃度が式の値と 1.5e-6、適応の減衰率が離散の予測と 1.4e-5 |
 | [test/sedinflow](../../test/sedinflow/README.md) | 境界からの土砂供給 | 流入総量の台帳閉合 ~1e-16 |
+| [test/bedmix](../../test/bedmix/README.md) | 混合粒径(f_bedmix) | 単一粒径の極限に 5e-15 m、静的アーマーの低下量・細粒の減衰率(0.3 %)、式 (31)・(32) の流出(0.02 %)、粒径階ごとの収支 1e-13 m³ |
 | [test/wash](../../test/wash/README.md) | 降雨 + 段波の斜面浸食 | 固体総量 1.7e-13 |
 | [test/splash](../../test/splash/README.md) | 遷緩点斜面の乾式侵食 | 解析形に全桁一致、排出台帳一致 |
 | [test/splashslide](../../test/splashslide/README.md) | 固結 / 未固結の崖 | 起伏の成長率 ×1.34 / ×0.77 |
@@ -886,7 +936,14 @@ $`\cos\theta\,C\rho_s D^2 (u/h)^2`$ ÷ 岩の抵抗」に比例させる則を�
 [^fernandes97]: Fernandes, N. F. and Dietrich, W. E. (1997): Hillslope evolution by diffusive processes: The timescale for equilibrium adjustments. *Water Resour. Res.*, 33, 1307–1318.(拡散係数の文献域)
 [^patra06]: Patra, M. and Karttunen, M. (2006): Stencils with isotropic discretization error for differential operators. *Numer. Methods Partial Differ. Equ.*, 22(4), 936–953. doi:10.1002/num.20129(離散化誤差の最低次が等方なステンシル。書誌と要旨で確認。ENC の配分則で d = 1/3 になることは developer.md §96 の修正方程式による)
 [^johnstone15]: Johnstone, S. A. and Hilley, G. E. (2015): Lithologic control on the form of soil-mantled hillslopes. *Geology*, 43(1), 83–86. doi:10.1130/G36052.1(要旨で確認: 輸送が勾配と土層厚の両方に比例すると、岩質が土層に覆われた斜面の形に現れる。式の形と doi は Landlab の DepthDependentDiffuser の説明による)
-[^ashida72]: 芦田和男・道上正規 (1972): 移動床流れの抵抗と掃流砂量に関する基礎的研究. 土木学会論文報告集, 206, 59–69.
+[^ashida72]: 芦田和男・道上正規 (1972): 移動床流れの抵抗と掃流砂量に関する基礎的研究. 土木学会論文報告集, 206, 59–69. doi:10.2208/jscej1969.1972.206_59
+[^hirano71]: 平野宗夫 (1971): Armoring をともなう河床低下について. 土木学会論文報告集, 195, 55–65. doi:10.2208/jscej1969.1971.195_55(交換層の考え方と粒径階ごとの連続式。交換層厚には最大粒径程度の 1 cm を使う)
+[^egiazaroff65]: Egiazaroff, I. V. (1965): Calculation of nonuniform sediment concentrations. *J. Hydraul. Div. ASCE*, 91(HY4), 225–247. doi:10.1061/JYCEAJ.0001277(遮蔽係数の原式。ENCflow が使うのは芦田・道上 1972 の修正形 = 式 (31)。原典の本文は未見で、書誌は Crossref の記録による)
+[^parker04]: Parker, G. (2004): *1D Sediment Transport Morphodynamics with Applications to Rivers and Turbidity Currents*. 電子書籍, 第 17 章 Aggradation and degradation of rivers transporting gravel mixtures. https://hydrolab.illinois.edu/people/parkerg/morphodynamics_e-book.htm(交換層厚 $`L_a = n_a D_{s90}`$、$`n_a`$ は 1〜2。$`D_{s90}`$ は表層の D90。ページに公開年の記載はなく、2004 年として引用されることが多い)
+[^parker08]: Parker, G. (2008): Transport of gravel and sediment mixtures. In: García, M. H. (ed.) *Sedimentation Engineering: Processes, Measurements, Modeling, and Practice*, ASCE Manuals and Reports on Engineering Practice No. 110, ch. 3, 165–251. doi:10.1061/9780784408148.ch03($`L_a = n_a D_{90}`$ で $`n_a`$ は 1 程度の校正値。著者が公開している草稿で確認し、刊行版の文言は未確認)
+[^ribberink87]: Ribberink, J. S. (1987): *Mathematical modelling of one-dimensional morphological changes in rivers with non-uniform sediment*. 博士論文, Delft University of Technology(Communications on Hydraulic and Geotechnical Engineering, Report No. 87-2)。https://resolver.tudelft.nl/uuid:bdfc1519-a71d-4752-83f7-3ebf1bb890e9(交換層の式の悪設定)
+[^stecca14]: Stecca, G., Siviglia, A. and Blom, A. (2014): Mathematical analysis of the Saint-Venant-Hirano model for mixed-sediment morphodynamics. *Water Resour. Res.*, 50(10), 7563–7589. doi:10.1002/2014WR015251
+[^chavarrias18]: Chavarrías, V., Stecca, G. and Blom, A. (2018): Ill-posedness in modeling mixed sediment river morphodynamics. *Adv. Water Resour.*, 114, 219–235. doi:10.1016/j.advwatres.2018.02.011
 [^mpm48]: Meyer-Peter, E. and Müller, R. (1948): Formulas for bed-load transport. *Proc. 2nd Meeting IAHSR*, Stockholm, 39–64.
 [^rickenmann11]: Rickenmann, D. and Recking, A. (2011): Evaluation of flow resistance in gravel-bed rivers through a large field data set. *Water Resour. Res.*, 47, W07538. doi:10.1029/2010WR009793(基準の抵抗 式 (23)、抵抗分割と流砂量 式 (32))
 [^ferguson07]: Ferguson, R. (2007): Flow resistance equations for gravel- and boulder-bed streams. *Water Resour. Res.*, 43, W05427. doi:10.1029/2006WR005422(Rickenmann & Recking 2011 の文献表と式 (10a) による。本文は未読)

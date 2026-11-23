@@ -8,8 +8,10 @@ module list_geomorph
   private
   public :: t_list_geomorph
   public :: list_geomorph_read
+  public :: nbmixmax
 
   integer, parameter :: nspstmax = 64  ! 水平層理の表 spl_strata の最大層数
+  integer, parameter :: nbmixmax = 8   ! 混合粒径の粒径階の上限(f_bedmix。docs/mixed_sediment_plan.md §10 の 4)
 
   type t_list_geomorph
     ! --- 実行制御 ---
@@ -147,6 +149,16 @@ module list_geomorph
                                      ! 一緒に運ばれる(等移動度。浮遊砂との交換は巻き上げ・沈降だけ)
     real :: fines_la = 0.0           ! 交換層厚 L_a (m)。利用可能率 f = min(1, sf/L_a)。f_bedfines=1 で必須
     real :: fines_frac0 = 0.0        ! 初期の細粒分割合(sf = fines_frac0 × sd。0 = 粗粒のみ、1 = 細粒のみ)
+
+    integer :: f_bedmix = 0          ! 混合粒径(掃流砂の粒径階 × 交換層 1 枚・下層 1 枚。0:無効, 1:有効。
+                                     ! f_fluvial が必須。方針 6 の例外、docs/mixed_sediment_plan.md)
+    real :: bmix_d(1:nbmixmax) = -9999.0      ! 粒径階の粒径 (m。細かい順。与えた個数 N = 2〜8。番兵 -9999)
+    real :: bmix_frac0(1:nbmixmax) = -9999.0  ! 交換層の初期の割合(一様値。fn_bmix と排他)
+    character(len=256) :: fn_bmix(1:nbmixmax) = ""     ! 交換層の初期の割合の分布ファイル(粒径階ごと)
+    real :: bmix_sub0(1:nbmixmax) = -9999.0   ! 下層の初期の割合(一様値。未指定 = 交換層と同じ)
+    character(len=256) :: fn_bmixsub(1:nbmixmax) = ""  ! 下層の初期の割合の分布ファイル(粒径階ごと)
+    real :: bmix_la = 0.0            ! 交換層厚 L_a (m)。0 = 既定(初期の交換層の組成の D90 の 2 倍)
+    integer :: bmix_hiding = 1       ! 遮蔽係数(1: 修正 Egiazaroff = 芦田・道上 1972 式 (31), 0: なし)
 
     integer :: f_wfsed = 0           ! 沿岸の波浪場(fn_wavefield)による掃流砂・浮遊砂の攪拌と
                                      ! Euler 平均流速 u^E での輸送(0:無効, 1:有効。段 W4。§90)。
@@ -501,6 +513,9 @@ subroutine list_geomorph_read(p, list)
   real :: susp_esa
   integer :: f_bedfines
   real :: fines_la, fines_frac0
+  integer :: f_bedmix, bmix_hiding
+  real :: bmix_d(1:nbmixmax), bmix_frac0(1:nbmixmax), bmix_sub0(1:nbmixmax), bmix_la
+  character(len=256) :: fn_bmix(1:nbmixmax), fn_bmixsub(1:nbmixmax)
   integer :: f_wfsed
   real :: wfsed_facsk, wfsed_facas
   integer :: f_wfsed_turb
@@ -572,7 +587,9 @@ subroutine list_geomorph_read(p, list)
                            rf_bedrock, rf_bank, &
                            f_fixation, fix_tfix, fix_ctau, fix_dzreset, fix_cn, fix_tdec, fix_ctau_bank, &
                            f_suspend, f_esform, susp_d50, susp_wf, susp_tausc, &
-                           susp_beta, susp_esa, f_bedfines, fines_la, fines_frac0, f_wfsed, &
+                           susp_beta, susp_esa, f_bedfines, fines_la, fines_frac0, &
+                           f_bedmix, bmix_d, bmix_frac0, fn_bmix, bmix_sub0, fn_bmixsub, bmix_la, bmix_hiding, &
+                           f_wfsed, &
                            wfsed_facsk, wfsed_facas, f_wfsed_turb, &
                            f_wfswash, wfswash_kc, wfswash_kl, wfswash_tanbe, wfswash_phim, &
                            f_wash, wash_kr, wash_kf, wash_tausc, wet_lw, &
@@ -658,6 +675,14 @@ subroutine list_geomorph_read(p, list)
   f_bedfines = list%f_bedfines
   fines_la = list%fines_la
   fines_frac0 = list%fines_frac0
+  f_bedmix = list%f_bedmix
+  bmix_d = list%bmix_d
+  bmix_frac0 = list%bmix_frac0
+  fn_bmix = list%fn_bmix
+  bmix_sub0 = list%bmix_sub0
+  fn_bmixsub = list%fn_bmixsub
+  bmix_la = list%bmix_la
+  bmix_hiding = list%bmix_hiding
   f_wfsed = list%f_wfsed
   wfsed_facsk = list%wfsed_facsk
   wfsed_facas = list%wfsed_facas
@@ -835,6 +860,14 @@ subroutine list_geomorph_read(p, list)
   list%f_bedfines = f_bedfines
   list%fines_la = fines_la
   list%fines_frac0 = fines_frac0
+  list%f_bedmix = f_bedmix
+  list%bmix_d = bmix_d
+  list%bmix_frac0 = bmix_frac0
+  list%fn_bmix = fn_bmix
+  list%bmix_sub0 = bmix_sub0
+  list%fn_bmixsub = fn_bmixsub
+  list%bmix_la = bmix_la
+  list%bmix_hiding = bmix_hiding
   list%f_wfsed = f_wfsed
   list%wfsed_facsk = wfsed_facsk
   list%wfsed_facas = wfsed_facas

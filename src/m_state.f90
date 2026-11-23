@@ -270,6 +270,10 @@ module m_state
                                         ! なら未確保。docs/landslide_tsunami_plan.md)
     real, allocatable :: sf(:,:)        ! 河床の細粒分の厚さ (m。0 <= sf <= sd。f_bedfines。geomorph が
                                         !   確保・更新し出力 Sf。私有 save は geomorph_fines.dat。§84.10)
+    real, allocatable :: bmf(:,:,:)     ! 混合粒径の交換層の組成 (ish:ieh, jsh:jeh, 1:N。和 1。f_bedmix。
+                                        !   geomorph が確保・更新し出力 Fa<k>_(f_out_bmix)。私有 save は
+                                        !   geomorph_bedmix.dat。§84.19、docs/mixed_sediment_plan.md)
+    real, allocatable :: bmdm(:,:)      ! 混合粒径の交換層の平均粒径 d_m = Σ F_k d_k (m。f_bedmix。出力 Dm)
     real, allocatable :: fx(:,:)        ! 定着度 a ∈ [0,1](f_fixation。geomorph が確保・更新し
                                         !   出力 Fx。私有 save は geomorph_fixation.dat。§84.6)
     real, allocatable :: ht(:,:)        ! 崖錐の厚さ (m。f_rockfall。geomorph が確保・更新し
@@ -1116,6 +1120,8 @@ subroutine m_state_dispose(s, p)
   if (allocated(s%ht)) deallocate(s%ht)
   if (allocated(s%ri)) deallocate(s%ri)
   if (allocated(s%sf)) deallocate(s%sf)
+  if (allocated(s%bmf)) deallocate(s%bmf)
+  if (allocated(s%bmdm)) deallocate(s%bmdm)
   if (allocated(s%rnv)) deallocate(s%rnv)
   if (allocated(s%vb)) deallocate(s%vb)
   if (allocated(s%hd)) deallocate(s%hd)

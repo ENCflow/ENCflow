@@ -300,6 +300,53 @@ sediment param_fixsusp.txt). Restart in `geomorph_fixation.dat`. Verification:
 
 **Outputs for this section**: bed change in `Z0001...` (`f_out_z=1`; Z − Z0000 is the scour/deposition thickness). How often the cap fluv_dzmax acted is in the end warning "fluvial dzmax clip fired", the number of cells where the soil-depth supply limiter acted in "fluvial supply limiter", and the volume lost at the bedrock floor (normally zero) in "bedrock floor clip" ([Output and monitoring](#output-and-monitoring)).
 
+### Mixed grain sizes (f_bedmix)
+
+Equations, sources and limits: [supplement](sediment.md#mixed-grain-sizes-f_bedmix).
+
+Splits the bed load into a few size classes and keeps the bed composition in one exchange layer and one
+substrate (Hirano type). It is meant for situations where differences in grain size drive the result at
+first order: armouring (fines leaving the surface so that it coarsens), sand moving over nearly immobile
+gravel, cross-channel sorting in bends. Its scope is an exception to basic policy 6
+([policy.md](../policy.md)); the design document is docs/mixed_sediment_plan.md.
+
+| Parameter | Default | Meaning |
+|---|---|---|
+| f_bedmix | 0 | 1 enables it (requires f_fluvial = 1) |
+| bmix_d | (required) | Grain size of each class (m), from fine to coarse, 2 to 8 classes (equal values are allowed) |
+| bmix_frac0 / fn_bmix | (one of them required) | Initial fractions of the exchange layer: uniform values (one per class, summing to 1) or one distribution file per class (summing to 1 in each cell) |
+| bmix_sub0 / fn_bmixsub | same as the exchange layer | Initial fractions of the substrate (uniform values or distribution files) |
+| bmix_la | twice the D90 of the initial exchange-layer composition | Exchange-layer thickness L_a (m). The value in use is printed with "(default)". A note is printed if it is thinner than the coarsest class |
+| bmix_hiding | 1 | Hiding function (1: modified Egiazaroff = Ashida and Michiue, 0: none) |
+
+The minimal input to "just try mixed sizes" is `f_fluvial = 1`, `f_bedmix = 1`, `bmix_d`, `bmix_frac0`
+and the thickness of the erodible soil layer (`sd0` or `fn_sd`). The grain sizes come from `bmix_d`;
+`fluv_d50` is not used.
+
+- **Sediment feed**: an in-reach bed-load feed needs the class composition. Either add a constant
+  composition `inflow_qbfrac` to the total (`inflow_qb`, `fn_inflow_qb`) or give a series per class with
+  `fn_inflow_qbmix` ([Boundary conditions](boundary.md)). Without it the run stops at initialization (the
+  feed is given data, so there is no default). The capacity feed (`fluv_bcfeed = 1`) enters with the
+  composition of the inflow cell (the bed and the composition at the inlet stay fixed).
+- **Combinations**: it works with bank erosion and repose collapse (moved with the composition of the
+  supplying cell's exchange layer), fixation, channel width and the roughness partition (`fluv_d84` is
+  required). Linear creep and uplift move only the ground elevation and do not touch the soil layer, so
+  they can be used as they are. With suspended sediment, hillslope erosion, the fines ledger, rockfall and
+  talus, depth-dependent creep, the moving bed layer, debris flow, dry-slope erosion, weathering,
+  dissolution, bedrock incision, wave-driven transport, glaciers and lava flows the run stops at
+  initialization (how to carry the class composition through them is not decided yet).
+- **What it cannot do**: no vertical stratigraphy (the substrate is one uniform mixture), no suspended
+  load per class, no fining by abrasion, no grain-size-dependent flow roughness. The toe shear stress of
+  the bank-erosion law is evaluated with a representative size (the domain-mean d_m of the initial exchange
+  layer). The limits of accuracy (sensitivity to the exchange-layer thickness, ill-posedness) are in the
+  [supplement](sediment.md#mixed-grain-sizes-f_bedmix).
+
+**Outputs for this section**: mean grain size of the exchange layer `Dm0001...` (always) and the
+exchange-layer fraction of each class `Fa1_0001...` (`f_out_bmix = 1`; [Input/output](io.md)). Restart in
+`geomorph_bedmix.dat`. At the end the run prints the balance of each class (initial and final stock,
+in-reach feed, net outflow through open boundaries, residual) and how often the exchange-layer supply
+limiter acted. Verification: [test/bedmix](../../../test/bedmix/en/README.md).
+
 ## Suspended sediment (f_suspend)
 
 Entrainment, settling, equilibrium formulas and Rubey's formula: [supplement](sediment.md#4-suspended-sediment-f_suspend).

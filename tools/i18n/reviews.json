@@ -58,11 +58,11 @@
     {
       "source": "docs/comparison.md",
       "target": "docs/en/comparison.md",
-      "source_sha256": "c0276e5ae6e86fe6a318fcd0be13545d10a657bc8a40dc3cc1ec959a34976492",
-      "target_sha256": "c2a40064b7cf417dad7a27142a8ccfbffc2738bafc3fbd3fdb193724e28912a9",
-      "reviewer": "Claude (Claude Code session; merge of main's RSR addition and table trimming with this branch's references to the project policy (developer.md §0 -> policy.md, five places); the combined ENCflow table row and the other four passages compared in both files)",
+      "source_sha256": "f9da09a8e46a62ef17c4837e5cf7d8dc5bdc60abe356c4392ae23d936c537895",
+      "target_sha256": "63c8bd9ffbb6206d19cc1b6ce1e1c940c35776cbecbf7a569741e677d6ed6e8e",
+      "reviewer": "Claude (Claude Code session; mixed-size stage 1 (f_bedmix): new and changed sections compared side by side with the Japanese source; parameters and numbers checked against the code and the test runs)",
       "method": "assistant",
-      "reviewed_on": "2026-11-22"
+      "reviewed_on": "2026-11-23"
     },
     {
       "source": "docs/developer.md",
@@ -113,9 +113,9 @@
     {
       "source": "docs/users_guide.md",
       "target": "docs/en/users_guide.md",
-      "source_sha256": "d793c6be32bd647d56c42f324d747457e948982f97e84000dc8ccdd98cef67df",
-      "target_sha256": "c180297b681edb75d6198b1da2a7207622b6f42ae34f9ad5f4fd232bac5af135",
-      "reviewer": "Claude (Claude Code session; the parts changed for the natural-dam application and the example debris_dam: applications section 7, combination with bed load, the two conditions on slide_dmax, pattern table, use cases, index and the list of examples; the English mirror was updated in the same work and both diffs were read side by side)",
+      "source_sha256": "c5c698c1546ea9552d691c09dbaeeddf6e8b976f25cd17dc88078572d2c63a3c",
+      "target_sha256": "eb4c72eb5297a67bb99287d89487a1014dc5f4e4be2a973ac6b25f9265479a87",
+      "reviewer": "Claude (Claude Code session; mixed-size stage 1: rows added by the same script in both languages from the namelist declarations; counts and links checked by tools/params_index/check.py)",
       "method": "assistant",
       "reviewed_on": "2026-11-23"
     },
@@ -176,11 +176,11 @@
     {
       "source": "docs/users_guide/boundary.md",
       "target": "docs/en/users_guide/boundary.md",
-      "source_sha256": "ee9875956980a5ea1ded3957052a214f4a097832ad1fce2405ed45288b730670",
-      "target_sha256": "1fee72bc4f08e816ba49d7948f876babd3c69c3d5d058f09d43edb17b8d92773",
-      "reviewer": "Claude (Claude Code session; merge of the delta branch into main 373bc31: the merged Japanese source and English mirror were checked by diff to be exactly main's version plus the branch's clause that no bed load flows out through the faces of an inflow segment; main's passages on prescribed-level cells as outside water and on intakes carrying the water-quality substance, and the branch's clause, compared side by side in both languages)",
+      "source_sha256": "acb1c5fb1c1625bc5a75b112141c90b8375ff11887b0a16ee45fa7d1018fe8b6",
+      "target_sha256": "7b53264fbcd855d56f781bba71fcf0271f45c612c60a87601457161605aaa8e9",
+      "reviewer": "Claude (Claude Code session; mixed-size stage 1 (f_bedmix): new and changed sections compared side by side with the Japanese source; parameters and numbers checked against the code and the test runs)",
       "method": "assistant",
-      "reviewed_on": "2026-11-04"
+      "reviewed_on": "2026-11-23"
     },
     {
       "source": "docs/users_guide/channel.md",
@@ -311,9 +311,9 @@
     {
       "source": "docs/users_guide/geomorph.md",
       "target": "docs/en/users_guide/geomorph.md",
-      "source_sha256": "59259feb5c421c1fc77a210f030b446669b489b225de21dc3fea6ebc19e153db",
-      "target_sha256": "7e8561dc57f2c494359d2a66f00194850fb4f6b2f37130bc1c3cba9f5cf5a5c5",
-      "reviewer": "Claude (Claude Code session; the parts changed for the option value f_slide_noflow = 2: the paragraph on the option and the two notes on slide_dmax in the mass-flow guide, the one-line mentions in the geomorphology guide and its applications section 7, and the settings sample comment; the English mirror was updated in the same work and both diffs were read side by side)",
+      "source_sha256": "82937bfb9bfa472ee19127537962bcb711949d6651ffb8987ad3d30322fab7f2",
+      "target_sha256": "a6940301fd0c0c9d6c2325cd8e5887dfd148a35af46f03db253541585d7b0b03",
+      "reviewer": "Claude (Claude Code session; mixed-size stage 1 (f_bedmix): new and changed sections compared side by side with the Japanese source; parameters and numbers checked against the code and the test runs)",
       "method": "assistant",
       "reviewed_on": "2026-11-23"
     },
@@ -374,11 +374,11 @@
     {
       "source": "docs/users_guide/io.md",
       "target": "docs/en/users_guide/io.md",
-      "source_sha256": "de1a13ef1ab8d2d6ac5494c9fd8019215194e9ba45374311ca9e0cf644101c6f",
-      "target_sha256": "df3614f6a8700db0056d2f11d5bf7c2b96a9bc03d2cf942311d7e9a636063155",
-      "reviewer": "Claude (Claude Code session; the culv_jam additions of the Japanese master and the English mirror compared passage by passage, numbers cross-checked)",
+      "source_sha256": "1f006d4bfdc564ebbe670a89e485809e52d81e2617678dd578528acac310d41e",
+      "target_sha256": "22233861b5902d52bce3ef256aaad1e44fc1b824365f0565f5f9e9c8f4fa7866",
+      "reviewer": "Claude (Claude Code session; mixed-size stage 1 (f_bedmix): new and changed sections compared side by side with the Japanese source; parameters and numbers checked against the code and the test runs)",
       "method": "assistant",
-      "reviewed_on": "2026-11-12"
+      "reviewed_on": "2026-11-23"
     },
     {
       "source": "docs/users_guide/lavaflow.md",
@@ -437,11 +437,11 @@
     {
       "source": "docs/users_guide/params_index.md",
       "target": "docs/en/users_guide/params_index.md",
-      "source_sha256": "be3d64c5415402891752fe662ce20d864ca696912d4e91aee6139b61f9a8e165",
-      "target_sha256": "a40fc2b9bd2b617d50e921497be8e133a699cd57aafaefb76c0e236d6d43c35c",
-      "reviewer": "Claude (Claude Code session; the parts changed for the options of the slope-stability test (f_slide_seep, f_slide_wet, f_slide_noflow, slide_dmax) compared side by side with the Japanese source; numbers checked against the test runs)",
+      "source_sha256": "7147137628d3f51eabbda485855636dd6f589c744cdb359c39d3968a5c29b6fc",
+      "target_sha256": "8db65cf8e633a3cbd4f88b08299ab23b6d0f6da51f28ec7d4fcaf11b624cef8a",
+      "reviewer": "Claude (Claude Code session; mixed-size stage 1: rows added by the same script in both languages from the namelist declarations; counts and links checked by tools/params_index/check.py)",
       "method": "assistant",
-      "reviewed_on": "2026-11-22"
+      "reviewed_on": "2026-11-23"
     },
     {
       "source": "docs/users_guide/passage_width.md",
@@ -482,11 +482,11 @@
     {
       "source": "docs/users_guide/sediment.md",
       "target": "docs/en/users_guide/sediment.md",
-      "source_sha256": "22eb411b95f0ae66328fa0804faaec5884b674e56ae373f60e884d4e601caeb4",
-      "target_sha256": "01990feec7bce79d972280c3302f9c8d848091ca5ab8ed8e1db8a448e31ee552",
-      "reviewer": "Claude (Claude Code session; the errors cited from test/creep updated to the values with the default 9-point curvature from the rerun of 2026-11-10 (2.0e-4 m, morfac = 2 equivalence 1.0e-4 m) in both files; the rest unchanged since the previous record)",
+      "source_sha256": "27b7cf17ebc9dee91664adb9ca9633203e2c6c0f1627abe5c8160cc41d81a9c1",
+      "target_sha256": "4aa8043f0ade7bb77d93674d9137688978fb70b84e7f5d2b20284c259a74ad62",
+      "reviewer": "Claude (Claude Code session; mixed-size stage 1 (f_bedmix): new and changed sections compared side by side with the Japanese source; parameters and numbers checked against the code and the test runs)",
       "method": "assistant",
-      "reviewed_on": "2026-11-10"
+      "reviewed_on": "2026-11-23"
     },
     {
       "source": "docs/users_guide/sfm.md",
@@ -662,11 +662,11 @@
     {
       "source": "examples/List_samples/list_boundary.txt",
       "target": "examples/List_samples/en/list_boundary.txt",
-      "source_sha256": "60f9305e82da21ef6721d2dff6d7f228e629e4de5e99e3cdc3ac7dff090690a0",
-      "target_sha256": "eb0fe5d37b1315356a55365025740ebb3951d260a4c4fb06661cf8690b5890ea",
-      "reviewer": "Claude (Claude Code session; compared the Japanese and English changes for the water-quality substance carried by structures and withdrawals, 2026-11-04)",
+      "source_sha256": "da89ff5e3424d6cc151c03bcfbb00acad5d6741e3e347bcfed4f0c4339f63136",
+      "target_sha256": "d707b84b090b5fc1c4ae89ce52a4d4b61d5efb55d3fe6aae12e29d3d0eab4cd0",
+      "reviewer": "Claude (Claude Code session; mixed-size stage 1: commented examples added in both languages; values, identifiers and states checked by tools/consistency/check.py samples, comments compared side by side)",
       "method": "assistant",
-      "reviewed_on": "2026-11-04"
+      "reviewed_on": "2026-11-23"
     },
     {
       "source": "examples/List_samples/list_channel.txt",
@@ -716,9 +716,9 @@
     {
       "source": "examples/List_samples/list_geomorph.txt",
       "target": "examples/List_samples/en/list_geomorph.txt",
-      "source_sha256": "345dd3cd63d7bd0b86321c69c8cd9b8d19f0cadb9e93aef6cbe95378ce4c0586",
-      "target_sha256": "30ce0d9c0ae96607a0acfc6e01870686ae7a58f8758052a7ffda04517354d562",
-      "reviewer": "Claude (Claude Code session; the parts changed for the option value f_slide_noflow = 2: the paragraph on the option and the two notes on slide_dmax in the mass-flow guide, the one-line mentions in the geomorphology guide and its applications section 7, and the settings sample comment; the English mirror was updated in the same work and both diffs were read side by side)",
+      "source_sha256": "105106d7243ca9fbc270a470ac578a691b688ce038837c526220a7a235e37504",
+      "target_sha256": "a10c8630567968f7027d4e30df9eb774239e23759340b95031d46cafd760a642",
+      "reviewer": "Claude (Claude Code session; mixed-size stage 1: commented examples added in both languages; values, identifiers and states checked by tools/consistency/check.py samples, comments compared side by side)",
       "method": "assistant",
       "reviewed_on": "2026-11-23"
     },
@@ -851,11 +851,11 @@
     {
       "source": "examples/List_samples/list_sysparam.txt",
       "target": "examples/List_samples/en/list_sysparam.txt",
-      "source_sha256": "fbf51795f4df6485592692047d8a22802bdfe370ba4a6f8d5ea593facc559061",
-      "target_sha256": "1dd464b37024613160926d70da21b59159889395b615c13b7ee299f313e6e2a1",
-      "reviewer": "Claude (Claude Code session; storage function runoff fn_sfm (§106): Japanese and English written together, full text and changed passages compared, no model execution)",
+      "source_sha256": "0f19b2ae473e6c175200822913ea8b79d5353899e54e294252c04327ad85df1b",
+      "target_sha256": "477bcaf586ca725c4b5e76e1ac85e8b6ef51e49a458984b4fa93a0c316527806",
+      "reviewer": "Claude (Claude Code session; mixed-size stage 1: commented examples added in both languages; values, identifiers and states checked by tools/consistency/check.py samples, comments compared side by side)",
       "method": "assistant",
-      "reviewed_on": "2026-11-11"
+      "reviewed_on": "2026-11-23"
     },
     {
       "source": "examples/List_samples/list_tide.txt",
@@ -3758,11 +3758,11 @@
     {
       "source": "test/README.md",
       "target": "test/README.en.md",
-      "source_sha256": "f64da2462e56024535ff378ae1b0fa1fcfb3720fd7215e0cf48ac960b8925ad0",
-      "target_sha256": "09773fa40dd3c4eace153f8fa2d8071b53a2fca0639867cf9543b5398fc5262a",
-      "reviewer": "Claude (Claude Code session; the parts changed for the options of the slope-stability test (f_slide_seep, f_slide_wet, f_slide_noflow, slide_dmax) compared side by side with the Japanese source; numbers checked against the test runs)",
+      "source_sha256": "4e920f3fd1e71466955f113a9d8bb471b2e41b75d15bf71bebf2e6db27f81561",
+      "target_sha256": "0248f7410bd701935766f03e50bb2d9560a19f3c088e3e62c49e111fa895e0d6",
+      "reviewer": "Claude (Claude Code session; mixed-size stage 1: row for test/bedmix added in both languages and compared side by side; directory list checked by tools/consistency/check.py tests)",
       "method": "assistant",
-      "reviewed_on": "2026-11-22"
+      "reviewed_on": "2026-11-23"
     },
     {
       "source": "test/avalanche/README.md",
@@ -3817,6 +3817,15 @@
       "reviewer": "Claude (Claude Code session; full-text content and lexical review, no model execution)",
       "method": "assistant",
       "reviewed_on": "2026-10-24"
+    },
+    {
+      "source": "test/bedmix/README.md",
+      "target": "test/bedmix/en/README.md",
+      "source_sha256": "ab11f58f6995c546f53fc081fde1c1ae97890c5784d52314244851501420cab4",
+      "target_sha256": "f1c30cb3b62af6fafeceaa8f779f19071758a5a86571fbf9b685638239cef092",
+      "reviewer": "Claude (Claude Code session; new test case test/bedmix: README written in Japanese and mirrored in English, compared side by side; tolerances and numbers checked against Check_bedmix.py and the test runs)",
+      "method": "assistant",
+      "reviewed_on": "2026-11-23"
     },
     {
       "source": "test/bedslide/README.md",

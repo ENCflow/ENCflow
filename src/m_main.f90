@@ -290,7 +290,7 @@ subroutine init_instance(fn_param, align)
                                             ! wq の追加列判定に state を使う)
     call m_precip_init(pr, p, g)            ! precip を初期化
     call m_intercept_init(ic, p, g)         ! intercept を初期化(fn_intercept 指定時のみ有効)
-    call m_geomorph_init(gm, p, g, s)       ! geomorph を初期化(fn_geomorph 指定時のみ有効。
+    call m_geomorph_init(gm, p, g, s, b)    ! geomorph を初期化(fn_geomorph 指定時のみ有効。
                                             ! s%sed_active を設定するため swflow init より前)
     call m_driftwood_init(dw, p, g, b, s)   ! driftwood を初期化(fn_driftwood 指定時のみ
                                             ! 有効。s%dw_active を立てるため swflow init
