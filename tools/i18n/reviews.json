@@ -2264,11 +2264,11 @@
     {
       "source": "examples/levee_breach/README.md",
       "target": "examples/levee_breach/en/README.md",
-      "source_sha256": "119596ae1989f83b0467d09cb7d9af688c99cfa4548c72eae382492a2b03b0ca",
-      "target_sha256": "454ea4e3af04a1c5b69eae7cfae9dd319a8ff8f4c941027ea736d5bdee78ef92",
-      "reviewer": "Claude (Claude Code session; rerun 2026-11-12 after the building drag fix (developer.md §107): drag formula in the caption of the laws figure ((k C_D/2)(1 - gv)|V|/B; ratio to the ground friction 1.2 at 1 m and 3 at 2 m), result table (4 cases) and prose values (maximum velocity 4.7 m/s, times 225/285 min, depths of houses B and C); Japanese and English edited together and every changed value compared; rest unchanged since the previous record)",
+      "source_sha256": "4c134111fe71131686e811d996c6d24f201fa9eb412db7f4f67ff4f5fd24819c",
+      "target_sha256": "9619b7831be643994363ccb2fba5c1fd9fadb1b49c86b2dfdd3ed09162388394",
+      "reviewer": "Claude (Claude Code session; examples recomputed with the advection defaults of 2026-11-21: values and figures from the new results, Japanese and English compared)",
       "method": "assistant",
-      "reviewed_on": "2026-11-12"
+      "reviewed_on": "2026-11-23"
     },
     {
       "source": "examples/levee_breach/figs/laws.png",
@@ -2282,11 +2282,11 @@
     {
       "source": "examples/levee_breach/figs/maps.png",
       "target": "examples/levee_breach/en/figs/maps.png",
-      "source_sha256": "44757c12e25d2c73f07fa18afc130c1f8e86cc9718e7e7739403e808f1ca086d",
-      "target_sha256": "762750b120ad25d885b9b9929c48af78414b5940c8eaf6f4a678cc01894b9bf4",
-      "reviewer": "Claude (Claude Code session; redrawn 2026-11-12 after the building drag fix (developer.md §107) by the example's plot script, Japanese and English from the same results and inputs; both images viewed: same data and layout, labels translated)",
+      "source_sha256": "3f58f068ff135f2e894e7c6a6cf092728b3df92c6e434d8f14137d7a26367f5c",
+      "target_sha256": "796fee2e4a0bb7fd3b40306d5d7bc31c3dac2b6c79155b6bfd2a9129b48e7b74",
+      "reviewer": "Claude (Claude Code session; examples recomputed with the advection defaults of 2026-11-21: values and figures from the new results, Japanese and English compared)",
       "method": "assistant",
-      "reviewed_on": "2026-11-12"
+      "reviewed_on": "2026-11-23"
     },
     {
       "source": "examples/levee_breach/figs/mechanism.png",
@@ -2300,11 +2300,11 @@
     {
       "source": "examples/levee_breach/figs/series.png",
       "target": "examples/levee_breach/en/figs/series.png",
-      "source_sha256": "0d413d44a578fa4069d2985386e04239ab75bc333fa7ed50ddbf780811e76f81",
-      "target_sha256": "8f36a787b5d10cf84706ba0f6c9f0d2d419f46ee1e82568a1afe2383ce6c5aa3",
-      "reviewer": "Claude (Claude Code session; redrawn 2026-11-12 after the building drag fix (developer.md §107) by the example's plot script, Japanese and English from the same results and inputs; both images viewed: same data and layout, labels translated)",
+      "source_sha256": "a3f751f5e057498b5d864a55851c2d095ad821828b1fbd18e92f3e1c895500c5",
+      "target_sha256": "99e1d37bd73a8da8a80c4cfec09f2b532f408fe4a0d59fa3b5a0b7779904a7be",
+      "reviewer": "Claude (Claude Code session; examples recomputed with the advection defaults of 2026-11-21: values and figures from the new results, Japanese and English compared)",
       "method": "assistant",
-      "reviewed_on": "2026-11-12"
+      "reviewed_on": "2026-11-23"
     },
     {
       "source": "examples/levee_breach/figs/setup.png",
@@ -2318,11 +2318,11 @@
     {
       "source": "examples/levee_breach/figs/supp_inundation.png",
       "target": "examples/levee_breach/en/figs/supp_inundation.png",
-      "source_sha256": "05edfb2a7b09d927c3f8bc4ee863017b2d544c0a45170d5c84422776547bd749",
-      "target_sha256": "c645f4744e65c3b1e69ee31174c46b12c0944c6561646e2f48fd23de1038e86c",
-      "reviewer": "Claude (Claude Code session; recomputed 2026-11-10 with the default f_advection_donor = 3: drawn by the example's plot script (Japanese and English from the same results, script unchanged); Japanese and English images compared)",
+      "source_sha256": "e90930380ef9d64da2c5b1c4e9f43268a707f6df95b38e4648e8cfce628c20e2",
+      "target_sha256": "687e848ff5cc8893347719faa06a14f37f8714bfce41c1abe849aee56be9dbf3",
+      "reviewer": "Claude (Claude Code session; examples recomputed with the advection defaults of 2026-11-21: values and figures from the new results, Japanese and English compared)",
       "method": "assistant",
-      "reviewed_on": "2026-11-10"
+      "reviewed_on": "2026-11-23"
     },
     {
       "source": "examples/levee_breach/figs/supp_setup.png",
@@ -2336,11 +2336,11 @@
     {
       "source": "examples/levee_breach/figs/supp_timeseries.png",
       "target": "examples/levee_breach/en/figs/supp_timeseries.png",
-      "source_sha256": "d42fbc174706182d8eda5ecad6b8ae6243cbcf8d9b312ccfe9feb183f9c6ad62",
-      "target_sha256": "e61fcd4eec082176e40b7900c9164057c93c4694cd722504519e0ff308b52d3f",
-      "reviewer": "Claude (Claude Code session; recomputed 2026-11-10 with the default f_advection_donor = 3: drawn by the example's plot script (Japanese and English from the same results, script unchanged); Japanese and English images compared)",
+      "source_sha256": "a036c168c12f86f7f24aee366dc4417ff1c65d0aaeabb67c8da7ab01de20677e",
+      "target_sha256": "d50542b86e650ac7097341919f3196ee81c74e52ec6405844fe7a1490644329e",
+      "reviewer": "Claude (Claude Code session; examples recomputed with the advection defaults of 2026-11-21: values and figures from the new results, Japanese and English compared)",
       "method": "assistant",
-      "reviewed_on": "2026-11-10"
+      "reviewed_on": "2026-11-23"
     },
     {
       "source": "examples/meander/README.md",
