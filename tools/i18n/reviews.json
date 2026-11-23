@@ -2768,11 +2768,11 @@
     {
       "source": "examples/qanat/README.md",
       "target": "examples/qanat/en/README.md",
-      "source_sha256": "4938e4002f232838ee96785e5de45ee7fc94a1a4bdfddd0d16bacfe2778702de",
-      "target_sha256": "ee19a7fcc3be1658aa16d7800fd046b4d5de16b0a7b517c96964ea74d581e812",
-      "reviewer": "Claude (Claude Code session; values updated to reruns with the default f_advection_donor = 3: qanat flow 3.54 -> 3.60 L/s and the shares and breakdowns derived from it, the east-edge transect agreement 0.2 -> 0.5 L/s; other prose values checked against f_advection_donor = 0 controls and unchanged; Japanese and English edited together and compared)",
+      "source_sha256": "b35b6089be65fedc8c06f53431a02c53aab82d3234f57e22aaacfe5bf61a93da",
+      "target_sha256": "69af8588e9d18329a95bcfaa08fa9952d820f22bf37fcac1cdbfde08e82c82e0",
+      "reviewer": "Claude (Claude Code session; examples recomputed with the advection defaults of 2026-11-21: values and figures from the new results, Japanese and English compared)",
       "method": "assistant",
-      "reviewed_on": "2026-11-10"
+      "reviewed_on": "2026-11-23"
     },
     {
       "source": "examples/qanat/figs/laws.png",
@@ -2795,29 +2795,29 @@
     {
       "source": "examples/qanat/figs/plan.png",
       "target": "examples/qanat/en/figs/plan.png",
-      "source_sha256": "ffe56aff5eb0264e0424b1a1ed0d47ee7b670db70c83b63f66d41d78e4475eb5",
-      "target_sha256": "3e42ca9ffbff26e2ae2176b9749774fd3594316d815e513d1f6e56673626f9cd",
-      "reviewer": "Claude (Claude Code session; both drawn by the same script from the same results; compared every label and value)",
+      "source_sha256": "6d2ed2b28676bbcc040187774e2d44ee59d3968c8168c382179b5b03d7f77e64",
+      "target_sha256": "2f8413cfcc167cf1e44ee1e8e5e505197dff87854aa2f52ffca9fd9d9d6554a3",
+      "reviewer": "Claude (Claude Code session; examples recomputed with the advection defaults of 2026-11-21: values and figures from the new results, Japanese and English compared)",
       "method": "assistant",
-      "reviewed_on": "2026-11-08"
+      "reviewed_on": "2026-11-23"
     },
     {
       "source": "examples/qanat/figs/profile.png",
       "target": "examples/qanat/en/figs/profile.png",
-      "source_sha256": "090d560387d9152cbe42847da2a65f4771ff072d801c597a6c7eb3389d0431f6",
-      "target_sha256": "b65eda5105ec072c9984c1260b32545ccf0fab8333c708a1046f70ec21caa0f9",
-      "reviewer": "Claude (Claude Code session; recomputed 2026-11-10 with the default f_advection_donor = 3: drawn by the example's plot script (Japanese and English from the same results, script unchanged); Japanese and English images compared)",
+      "source_sha256": "e88429bf6de7405905f0b85b7f9930b4f00b48eb8835293289ae73cb5e033d17",
+      "target_sha256": "d797172fc62c8f7b18e5dc24a38f6b652d1372654b3bc20dee4c97150e23dd69",
+      "reviewer": "Claude (Claude Code session; examples recomputed with the advection defaults of 2026-11-21: values and figures from the new results, Japanese and English compared)",
       "method": "assistant",
-      "reviewed_on": "2026-11-10"
+      "reviewed_on": "2026-11-23"
     },
     {
       "source": "examples/qanat/figs/series.png",
       "target": "examples/qanat/en/figs/series.png",
-      "source_sha256": "39c8fa3618079df759d8424289fbf0e3b961964a29e9956d33e7cd337b838d32",
-      "target_sha256": "0ddd9cde4837b4963436419406a6b1501f852ebca97979a87006b8264c154ba9",
-      "reviewer": "Claude (Claude Code session; recomputed 2026-11-10 with the default f_advection_donor = 3: drawn by the example's plot script (Japanese and English from the same results, script unchanged); Japanese and English images compared)",
+      "source_sha256": "1f642b1ba987bb12dae01528604a8d7dc49e3c6f3933ac042f1928b024a2408c",
+      "target_sha256": "768554d9b587341c425e276c6529d9a0e5ed7f67c0ba4c0fc4d84a45c7a8b29b",
+      "reviewer": "Claude (Claude Code session; examples recomputed with the advection defaults of 2026-11-21: values and figures from the new results, Japanese and English compared)",
       "method": "assistant",
-      "reviewed_on": "2026-11-10"
+      "reviewed_on": "2026-11-23"
     },
     {
       "source": "examples/qanat/figs/setup.png",
