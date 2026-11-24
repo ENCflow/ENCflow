@@ -299,7 +299,9 @@ param_fix.txt、浮遊砂併用は param_fixsusp.txt)。再開は `geomorph_fixa
 **この節に関係する出力**: 交換層の平均粒径 `Dm0001…`(常に)、粒径階ごとの交換層の割合 `Fa1_0001…`
 (`f_out_bmix = 1`。[入出力](io.md))。再開は `geomorph_bedmix.dat`。終了時に、粒径階ごとの収支(在庫の
 初期と最終・区間流入の給砂・開境界の正味の流出・残差)と、交換層の供給量制限の発動回数を表示します。
-検証: [test/bedmix](../../test/bedmix/README.md)。
+検証: [test/bedmix](../../test/bedmix/README.md)。公開の模型実験との比較は例題
+[examples/joganji_flume](../../examples/joganji_flume/README.md)(国総研の常願寺川 1/100 移動床模型。変化の大きさは計測に
+近く、変化の場所と表層の粒度の分布は合わない)。
 
 ## 浮遊砂(f_suspend)
 
@@ -1172,7 +1174,8 @@ sd と z を下げる)、崖錐が尽きた残りを基岩に当てます(z を�
 [examples/debris_bedrock](../../examples/debris_bedrock/)(1 回の土石流の侵食の縦断分布、
 被覆・閾値の効き、清水の出水との比較)。斜面崩壊から谷を下って扇状地の住宅地に至る土石流の
 格子への依存(格子間隔 40〜2.5 m・谷の向き 0°・22.5°・45°、粗い格子での 8 近傍と 4 近傍の違い)は
-例題 [examples/debris_fan](../../examples/debris_fan/) にあります。
+例題 [examples/debris_fan](../../examples/debris_fan/) にあります。混合粒径は [test/bedmix](../../test/bedmix/)(極限・
+理論値・収支)と、公開の模型実験と比べる例題 [examples/joganji_flume](../../examples/joganji_flume/) にあります。
 
 ## 参考文献
 

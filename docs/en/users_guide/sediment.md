@@ -530,7 +530,11 @@ is docs/mixed_sediment_plan.md).
   static armouring without feed agrees with $`L_a F_0/(1 - f_{\rm sub})`$ and the decay rate of the fine
   fraction is within 0.3 % of the one-cell formula; the outflow of each class is within 0.02 % of eqs. (31)
   and (32); the balance of each class closes to 1e-13 m³; MPI np = 1, 2, 4 are byte-identical to the serial
-  run, and a restart is bit-identical. No comparison with laboratory or field data has been made yet.
+  run, and a restart is bit-identical. In a comparison with the NILIM 1/100 movable-bed model of the Joganji River
+  (case 2-1; [examples/joganji_flume](../../../examples/joganji_flume/en/README.md)), the area changed by more than 5 mm and the
+  eroded volume are close to the measurement (a single size changes too much), while the locations of the change
+  (point-by-point correlation 0.1 to 0.25) and the pattern of the surface composition do not match, and the model's
+  surface loses fines and coarsens too much.
 
 ### Wave-driven longshore transport (fn_wave)
 
@@ -1177,6 +1181,7 @@ The labels in the Basis column are explained in [How to read the basis of a defa
 | [test/suspend](../../../test/suspend/en/README.md) | two equilibrium formulas; equilibrium and adaptation in a uniform channel | total solid 2.2e-15; equilibrium concentration within 1.5e-6 of the formula; decay rate of adaptation within 1.4e-5 of the discrete prediction |
 | [test/sedinflow](../../../test/sedinflow/en/README.md) | sediment supplied through the boundary | ledger closure ~1e-16 |
 | [test/bedmix](../../../test/bedmix/en/README.md) | mixed grain sizes (f_bedmix) | single-size limit to 5e-15 m, lowering by static armouring and decay rate of the fines (0.3 %), outflow by eqs. (31) and (32) (0.02 %), balance of each class 1e-13 m³ |
+| [examples/joganji_flume](../../../examples/joganji_flume/en/README.md) | mixed grain sizes against a published model experiment (NILIM, Joganji River at 1/100, case 2-1) | area changed and eroded volume close to the measurement (a single size changes too much), correlation of the locations 0.1 to 0.25, the surface coarsens too much |
 | [test/wash](../../../test/wash/en/README.md) | rain + dam break hillslope erosion | total solid 1.7e-13 |
 | [test/splash](../../../test/splash/en/README.md) | dry erosion on a slope with a break | all digits agree with the analytical form, export ledger agrees |
 | [test/splashslide](../../../test/splashslide/en/README.md) | cohesive / loose cliff | relief growth ×1.34 / ×0.77 |

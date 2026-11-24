@@ -345,7 +345,10 @@ and the thickness of the erodible soil layer (`sd0` or `fn_sd`). The grain sizes
 exchange-layer fraction of each class `Fa1_0001...` (`f_out_bmix = 1`; [Input/output](io.md)). Restart in
 `geomorph_bedmix.dat`. At the end the run prints the balance of each class (initial and final stock,
 in-reach feed, net outflow through open boundaries, residual) and how often the exchange-layer supply
-limiter acted. Verification: [test/bedmix](../../../test/bedmix/en/README.md).
+limiter acted. Verification: [test/bedmix](../../../test/bedmix/en/README.md). A comparison with a published model
+experiment is the example [examples/joganji_flume](../../../examples/joganji_flume/en/README.md) (the NILIM 1/100
+movable-bed model of the Joganji River; the magnitude of the change is close to the measurement, the locations of the
+change and the pattern of the surface composition do not match).
 
 ## Suspended sediment (f_suspend)
 
@@ -1439,7 +1442,9 @@ the cover and the threshold, and a comparison with a clear-water flood). The gri
 dependence of a debris flow that starts from a slope failure and runs down a valley to a
 residential area on the fan (grid spacings 40-2.5 m, the valley at 0°, 22.5° and 45°, and
 how eight and four neighbours differ on coarse grids) is in the example
-[examples/debris_fan](../../../examples/debris_fan/en/README.md).
+[examples/debris_fan](../../../examples/debris_fan/en/README.md). Mixed grain sizes are covered by
+[test/bedmix](../../../test/bedmix/en/README.md) (limits, theoretical values, balances) and by the example
+[examples/joganji_flume](../../../examples/joganji_flume/en/README.md), which compares with a published model experiment.
 
 ## References
 

@@ -311,11 +311,11 @@
     {
       "source": "docs/users_guide/geomorph.md",
       "target": "docs/en/users_guide/geomorph.md",
-      "source_sha256": "82937bfb9bfa472ee19127537962bcb711949d6651ffb8987ad3d30322fab7f2",
-      "target_sha256": "a6940301fd0c0c9d6c2325cd8e5887dfd148a35af46f03db253541585d7b0b03",
-      "reviewer": "Claude (Claude Code session; mixed-size stage 1 (f_bedmix): new and changed sections compared side by side with the Japanese source; parameters and numbers checked against the code and the test runs)",
+      "source_sha256": "5d96aac24ce5fd44de77256237f01f6dfd95a2ca7a23cbf4b15f71c22fbfd18c",
+      "target_sha256": "779c9f36862c5cbd1bde9a2c4181d4b8fbd2ad7f1d75c06c27ac01863565ee5f",
+      "reviewer": "Claude (Claude Code session; the pointers to the example joganji_flume (mixed-size section, verification overview and its table row) added in the same work to the Japanese source and the English mirror; both diffs read side by side and the numbers checked against the example README)",
       "method": "assistant",
-      "reviewed_on": "2026-11-23"
+      "reviewed_on": "2026-11-24"
     },
     {
       "source": "docs/users_guide/geomorph_applications.md",
@@ -482,11 +482,11 @@
     {
       "source": "docs/users_guide/sediment.md",
       "target": "docs/en/users_guide/sediment.md",
-      "source_sha256": "27b7cf17ebc9dee91664adb9ca9633203e2c6c0f1627abe5c8160cc41d81a9c1",
-      "target_sha256": "4aa8043f0ade7bb77d93674d9137688978fb70b84e7f5d2b20284c259a74ad62",
-      "reviewer": "Claude (Claude Code session; mixed-size stage 1 (f_bedmix): new and changed sections compared side by side with the Japanese source; parameters and numbers checked against the code and the test runs)",
+      "source_sha256": "a10abfe828111ce331bbdda431cfbacacf28b9350a58bd4fb72e3fcb79f8d0af",
+      "target_sha256": "f39692dbd3d4676c3a003eb7bea706e7e5f918f5b0f91cf6b14bead12ccba2ad",
+      "reviewer": "Claude (Claude Code session; the pointers to the example joganji_flume (mixed-size section, verification overview and its table row) added in the same work to the Japanese source and the English mirror; both diffs read side by side and the numbers checked against the example README)",
       "method": "assistant",
-      "reviewed_on": "2026-11-23"
+      "reviewed_on": "2026-11-24"
     },
     {
       "source": "docs/users_guide/sfm.md",
@@ -905,11 +905,11 @@
     {
       "source": "examples/README.md",
       "target": "examples/README.en.md",
-      "source_sha256": "d9923774d5d2c1bb755bb7f724d8714a94c23bb36ff3eb582210e0a077213998",
-      "target_sha256": "3d3268b86e8592f30a3df5ec59c171eee0176005cfca4c0d4ac803b3221b3c78",
-      "reviewer": "Claude (Claude Code session; the parts changed for the natural-dam application and the example debris_dam: applications section 7, combination with bed load, the two conditions on slide_dmax, pattern table, use cases, index and the list of examples; the English mirror was updated in the same work and both diffs were read side by side)",
+      "source_sha256": "3855f238379b7ec0f2b4679aa149040396396a5bd517c0594466ee1ea68378fd",
+      "target_sha256": "b7d803892bd286e3f59700e8836f5a95d8a191f6fd02ce312fd8fb12eee28e64",
+      "reviewer": "Claude (Claude Code session; the row of the new example joganji_flume added in the same work to the list of examples in Japanese and English; both diffs read side by side)",
       "method": "assistant",
-      "reviewed_on": "2026-11-23"
+      "reviewed_on": "2026-11-24"
     },
     {
       "source": "examples/ashfall_lahar/README.md",
@@ -2269,6 +2269,69 @@
       "reviewer": "Claude (Claude Code session; English figure drawn by the same script with the en switch from the same results of 2026-11-10; compared side by side: same plotted data and layout, labels translated)",
       "method": "assistant",
       "reviewed_on": "2026-11-11"
+    },
+    {
+      "source": "examples/joganji_flume/README.md",
+      "target": "examples/joganji_flume/en/README.md",
+      "source_sha256": "15c7bc585956b07f1ef6cfe295eb3a13a8bd226cdbedd4f1288374939793f623",
+      "target_sha256": "cb9e2c501c66834e7c6afa75b78979483eb2d358feac738dad4bbd3edaf9522f",
+      "reviewer": "Claude (Claude Code session; new example written in Japanese with its English mirror in the same work; full text compared side by side (headings, tables, numbers, file and parameter names, links); numbers checked against the tables printed by plot_results.py; no model execution for this review)",
+      "method": "assistant",
+      "reviewed_on": "2026-11-24"
+    },
+    {
+      "source": "examples/joganji_flume/figs/bedchange.png",
+      "target": "examples/joganji_flume/en/figs/bedchange.png",
+      "source_sha256": "590d0ddcabb9f903e2912723a28d0b4d8faba333372ed1903a58c452e02a4238",
+      "target_sha256": "7527e5d80d61b8f068b6d7ecaf07b660607dc1ad911241764c378f3f91f71b98",
+      "reviewer": "Claude (Claude Code session; drawn by plot_results.py from the model results and the NILIM data; viewed the Japanese and English images side by side: same data, values and layout, labels translated)",
+      "method": "assistant",
+      "reviewed_on": "2026-11-24"
+    },
+    {
+      "source": "examples/joganji_flume/figs/profile.png",
+      "target": "examples/joganji_flume/en/figs/profile.png",
+      "source_sha256": "b8db6ad35d44b964a760da9653927c10edc0728933548541ae36673ffd87ca5e",
+      "target_sha256": "b73842e4659e0fd9c883adea36d7ee9a4b07ec33e1d2e80f1e3c021b4331c200",
+      "reviewer": "Claude (Claude Code session; drawn by plot_results.py from the model results and the NILIM data; viewed the Japanese and English images side by side: same data, values and layout, labels translated)",
+      "method": "assistant",
+      "reviewed_on": "2026-11-24"
+    },
+    {
+      "source": "examples/joganji_flume/figs/setup.png",
+      "target": "examples/joganji_flume/en/figs/setup.png",
+      "source_sha256": "e035ae49d3baa7ddba5e7a44766f4fa4a21d18e3d8a320e052ddf069a0240cce",
+      "target_sha256": "cb7a37b8317d3bae94c21b12a1ca451f86191e96d80f968370ac86b70e568457",
+      "reviewer": "Claude (Claude Code session; drawn by plot_results.py from the model results and the NILIM data; viewed the Japanese and English images side by side: same data, values and layout, labels translated)",
+      "method": "assistant",
+      "reviewed_on": "2026-11-24"
+    },
+    {
+      "source": "examples/joganji_flume/figs/surface.png",
+      "target": "examples/joganji_flume/en/figs/surface.png",
+      "source_sha256": "89b2160b6d03c7a508987ebaf603a9055d78ab2c65ac233689d467b380d7872e",
+      "target_sha256": "344af7e829fbf955006048b383493eb5bba1e8b13f0611f6fd9b703dc7ee58f9",
+      "reviewer": "Claude (Claude Code session; drawn by plot_results.py from the model results and the NILIM data; viewed the Japanese and English images side by side: same data, values and layout, labels translated)",
+      "method": "assistant",
+      "reviewed_on": "2026-11-24"
+    },
+    {
+      "source": "examples/joganji_flume/figs/velocity.png",
+      "target": "examples/joganji_flume/en/figs/velocity.png",
+      "source_sha256": "dc90803b7ea7f145a8d2d609a2f0476c9b743b2ceb29ad438a19753232b142cd",
+      "target_sha256": "b1e1d5bdbd0e40759a66d6402956f6244e114ba66a90a58cd630346a136c721c",
+      "reviewer": "Claude (Claude Code session; drawn by plot_results.py from the model results and the NILIM data; viewed the Japanese and English images side by side: same data, values and layout, labels translated)",
+      "method": "assistant",
+      "reviewed_on": "2026-11-24"
+    },
+    {
+      "source": "examples/joganji_flume/figs/waterlevel.png",
+      "target": "examples/joganji_flume/en/figs/waterlevel.png",
+      "source_sha256": "318788ff07d6075b43faaccb7a5cb27a9e1b580a2bad24178cbd07c903207bfb",
+      "target_sha256": "84c84049b2affe3bcb9ec687a5550039a58a1b409c9ecf0de427bc17c4efff0c",
+      "reviewer": "Claude (Claude Code session; drawn by plot_results.py from the model results and the NILIM data; viewed the Japanese and English images side by side: same data, values and layout, labels translated)",
+      "method": "assistant",
+      "reviewed_on": "2026-11-24"
     },
     {
       "source": "examples/karst/README.md",
