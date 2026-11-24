@@ -428,8 +428,8 @@
     {
       "source": "docs/users_guide/paddy.md",
       "target": "docs/en/users_guide/paddy.md",
-      "source_sha256": "d5db750cfc885d6297eea500a49f07284c57effd79cca66a2a0803b48db46c64",
-      "target_sha256": "50c8fd201f0bf698431270a094846c2d5a535d9fd918ecafa5762181299c07d3",
+      "source_sha256": "f2284d80de035b7de7e5ab200ec6191690fa200e851a3c1250efa967a5a9fe3f",
+      "target_sha256": "3eda20667bb8c9cfde17cfc42d077c35dcae90fafbfd5de67d7006ce41e6db13",
       "reviewer": "Claude (Claude Code session; full-text content and lexical review against the Japanese source; numbers checked against the test/paddy runs)",
       "method": "assistant",
       "reviewed_on": "2026-11-24"
@@ -491,11 +491,11 @@
     {
       "source": "docs/users_guide/sediment.md",
       "target": "docs/en/users_guide/sediment.md",
-      "source_sha256": "22eb411b95f0ae66328fa0804faaec5884b674e56ae373f60e884d4e601caeb4",
-      "target_sha256": "01990feec7bce79d972280c3302f9c8d848091ca5ab8ed8e1db8a448e31ee552",
-      "reviewer": "Claude (Claude Code session; the errors cited from test/creep updated to the values with the default 9-point curvature from the rerun of 2026-11-10 (2.0e-4 m, morfac = 2 equivalence 1.0e-4 m) in both files; the rest unchanged since the previous record)",
+      "source_sha256": "a212d4c8f2f02826b03543542b3e2dd597b824fdfea920aca9e2a297262d1510",
+      "target_sha256": "85bac4139967eeb505163b5fd69b8bef70c0356ee1629f1b9abd5f22d57ee4d7",
+      "reviewer": "Claude (Claude Code session; reviewed the added paddy sentences of sections 5 and 6 against the Japanese source; the rest is unchanged since the previous record)",
       "method": "assistant",
-      "reviewed_on": "2026-11-10"
+      "reviewed_on": "2026-11-24"
     },
     {
       "source": "docs/users_guide/sfm.md",
@@ -4811,8 +4811,8 @@
     {
       "source": "test/paddy/README.md",
       "target": "test/paddy/en/README.md",
-      "source_sha256": "397000da76d826363679ff8abd83f32c9ae444300dcf03b1f69fdba99c41eaf3",
-      "target_sha256": "323fcd3b5e3a90ac2e3bc67526c4d28057181e4a9cdc40fb3226f0f9499bf32f",
+      "source_sha256": "ed4bd0c38e8c8fe23868b3ca92a136fe3d01a165b3b6102aa1ed237629e1253f",
+      "target_sha256": "bdfe770cdc2e12873947335d1f38e0095e8298bc0a11e9df6fb9bceb07dbc05f",
       "reviewer": "Claude (Claude Code session; full-text content and lexical review against the Japanese source; numbers checked against the test/paddy runs)",
       "method": "assistant",
       "reviewed_on": "2026-11-24"

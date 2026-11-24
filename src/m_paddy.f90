@@ -41,7 +41,9 @@ module m_paddy
   ! 【併用】ENC のみ。ネスト(複数インスタンス)・水質・淡塩とは init で停止する。水田のセルは
   !   海・河道(rw)・境界(水位規定・区間流入)・ソース・構造物のセルと、VZ・貯留関数の区画セルに
   !   置けない(雨の回収が boundary_h の式と一致する前提)。面積率は空隙率 gv を超えない。
-  !   蒸発散はタンクから引かない(段 4)。
+  !   蒸発散はタンクから引かない(段 4)。地形変化(fn_geomorph)と併用すると、雨滴侵食(f_wash の
+  !   雨滴の項・f_splash)は水田の部分を外す(1 − a を掛ける。s%pdfr。§119.5)。流れによる侵食・
+  !   浮遊砂・掃流砂はセル全面のまま(タンクは土砂を運ばない)。
   ! ==========================================================================
   use, intrinsic :: iso_fortran_env, only : real64
   use m_sysparam, only : t_sysparam
@@ -184,6 +186,14 @@ subroutine m_paddy_init(pd, p, g, b, s, multi, vzr, sfr)
     end do
   end do
   s%pd_active = .true.
+  ! 地形変化と併用するときの雨滴侵食の面積率(§119.5): 水田の上の雨はタンク(田面の湛水)へ
+  ! 落ちるので、雨滴侵食(f_wash の雨滴の項・f_splash)に 1 − a を掛ける。地形変化がなければ確保しない
+  if (len_trim(p%fn_geomorph) > 0) then
+    allocate(s%pdfr(dcp%ish:dcp%ieh, dcp%jsh:dcp%jeh), source = 0.0)
+    s%pdfr(:,:) = pd%fr1(:,:) + pd%fr2(:,:)
+    call par_info("paddy: the rain splash erosion of geomorph (the rain term of f_wash and f_splash) " // &
+                  "is multiplied by (1 - paddy fraction)")
+  end if
 
   allocate(pd%rows(dcp%js:dcp%je, 1:nrow), source = 0.0_real64)
   pd%store0 = total_store(pd, s)

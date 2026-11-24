@@ -1,0 +1,88 @@
+!======================================================================
+! paddy: 雨滴侵食から水田の部分を外す検定 その 2(乾いた斜面の侵食 f_splash。developer.md §119.5。
+!   Check_paddy.py splash)
+!   10 × 8 セル(Δx = Δy = 10 m)の平らな閉じた箱に一様の雨 30 mm/h を 1 h。浸透能(Green-Ampt
+!   ksv = 72 mm/h)が雨を上回るので地表流は生じず、全セルが乾いたまま(f_splash は乾いたセルだけ)。
+!   水田面積率は列ごとに 0〜1(frac_mix.txt)。水田の水は水位調整板(天端 0.2 m)より下に溜まる
+!   ので地表へ出ない。侵食は雨滴の項だけ(spl_kt = 0、凹地形の増幅なし)で、平らなので
+!   勾配・曲率によらない。空隙率 0(poroi = 1)、morfac = 5(T_geo = 18000 s)。
+!   確認: 全セルで z − z0 = −(1 − a)·spl_kr·P·T_geo(相対 1e-9)
+!======================================================================
+&list_sysparam
+  f_gridsystem = 0
+  dt = 1.0
+  t0 = 0
+  tt = 3600
+  dt_disp = 600
+  dt_file = 3600
+  dt_recrd = 600
+  fn_geoinfo = '-'
+  fn_initial = '-'
+  fn_boundary = '-'
+  fn_precip = '-'
+  fn_gwflow = '-'
+  fn_geomorph = '-'
+  fn_paddy = '-'
+  dir_data = 'data_paddy'
+  dir_result = 'result_splash'
+  f_out_z = 1               ! 地盤高の出力(検定は終わりの Z を読む)
+  f_output_mode = 3         ! テキストと単精度のバイナリ(検定はバイナリ Z0001.bil を読む)
+  f_disp_debug = 1
+  f_check_cfl = 0
+/
+
+&list_initial
+  f_htype = 0
+  h0 = 0.0
+/
+
+&list_geoinfo
+  nx = 10
+  ny = 8
+  dx = 10.0
+  dy = 10.0
+  f_ztype = 0
+  z0 = 0.0
+  f_masktype = 0
+  f_rntype = 0
+  rn0 = 0.03
+  sd0 = 5.0                 ! 土層厚 (m)
+  sy0 = 0.2                 ! 比湧水量(浸透した水の貯留 0.03 m < sd0·sy0 = 1 m)
+/
+
+&list_bound_edge
+/
+
+&list_precip
+  prtype = 1
+  prval(1:2,1) = 0, 30
+  prval(1:2,2) = 9999, 30
+/
+
+&list_gwflow
+  f_gwvertical = 2          ! Green-Ampt
+  f_gwlateral = 0
+/
+
+&list_gwflow_greenampt
+  gw_ksv_mmh = 72.0         ! 雨 30 mm/h を上回る(地表流なし)
+/
+
+&list_geomorph
+  dt_geomorph = 10.0        ! 更新間隔 (s)
+  morfac = 5.0              ! T_geo = 18000 s
+  f_splash = 1
+  spl_kr = 0.003            ! 雨滴侵食の係数
+  spl_kt = 0.0              ! サブグリッドリルなし(勾配によらない)
+  spl_h = 1.0
+  spl_ca = 0.0              ! 凹地形の増幅なし
+  spl_cb = 0.0
+  fluv_porosity = 0.0       ! poroi = 1
+/
+
+&list_paddy
+  fn_pd_frac = 'frac_mix.txt'
+  pd_hlev = 0.30
+  pd_h0 = 0.0               ! 空の水田から
+  pd_board_h(1) = 0.2       ! 1 h の雨 30 mm では落水しない
+/

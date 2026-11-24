@@ -1,0 +1,76 @@
+!======================================================================
+! paddy: 雨滴侵食から水田の部分を外す検定 その 1(湿った斜面の侵食 f_wash の雨滴の項。
+!   developer.md §119.5。Check_paddy.py wash)
+!   10 × 8 セル(Δx = Δy = 10 m)の平らな閉じた箱に水深 0.05 m の水を張り、一様の雨 50 mm/h を
+!   1 h。水田面積率は列ごとに 0〜1(frac_mix.txt)。地形変化は雨滴の項だけ(wash_kr = 0.01、
+!   面状侵食 wash_kf = 0)で、浮遊砂の沈降を事実上止める(susp_wf = 1e-30)。空隙率 0(poroi = 1)、
+!   morfac = 1 なので、地盤の下がりは侵食の積算そのもの。
+!   確認: 全セルで z − z0 = −(1 − a)·wash_kr·P·T(a = 水田面積率。相対 1e-9)
+!======================================================================
+&list_sysparam
+  f_gridsystem = 0
+  dt = 2.0
+  t0 = 0
+  tt = 3600
+  dt_disp = 600
+  dt_file = 3600
+  dt_recrd = 600
+  fn_geoinfo = '-'
+  fn_initial = '-'
+  fn_boundary = '-'
+  fn_precip = '-'
+  fn_geomorph = '-'
+  fn_paddy = '-'
+  dir_data = 'data_paddy'
+  dir_result = 'result_wash'
+  f_out_z = 1               ! 地盤高の出力(検定は終わりの Z を読む)
+  f_output_mode = 3         ! テキストと単精度のバイナリ(検定はバイナリ Z0001.bil を読む)
+  f_disp_debug = 1
+  f_check_cfl = 0
+  dd = 0.0001
+  dv = 0.0001
+  vv = 0.01
+/
+
+&list_initial
+  f_htype = 0
+  h0 = 0.05                 ! 全セルが湿ったまま(f_wash は湿ったセルだけ)
+/
+
+&list_geoinfo
+  nx = 10
+  ny = 8
+  dx = 10.0
+  dy = 10.0
+  f_ztype = 0
+  z0 = 0.0
+  f_masktype = 0
+  f_rntype = 0
+  rn0 = 0.03
+  sd0 = 1.0                 ! 可動層の厚さ(侵食 0.5 mm より十分厚い)
+/
+
+&list_bound_edge
+/
+
+&list_precip
+  prtype = 1
+  prval(1:2,1) = 0, 50
+  prval(1:2,2) = 9999, 50
+/
+
+&list_geomorph
+  dt_geomorph = 0.0         ! 毎ステップ
+  morfac = 1.0
+  f_suspend = 1             ! 斜面浸食の輸送を担う(f_wash に必須)
+  susp_wf = 1.0e-30         ! 沈降を事実上止める(地盤の下がり = 侵食の積算)
+  f_wash = 1
+  wash_kr = 0.01            ! 雨滴侵食の係数
+  wash_kf = 0.0             ! 面状侵食なし(雨滴の項だけ)
+  fluv_porosity = 0.0       ! poroi = 1
+/
+
+&list_paddy
+  fn_pd_frac = 'frac_mix.txt'
+  pd_hlev = 0.30
+/

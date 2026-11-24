@@ -235,10 +235,17 @@ levee height is the remaining free storage.
 (multiple grids), water quality (`fn_wq`) or the two-layer fresh and salt water (`fn_salt`) (stops at start-up).
 Paddy cells (area fraction > 0) cannot be on sea, channel (`fn_rw`), water level boundary, inflow boundary, source or
 structure cells, nor on zone cells of [VZ](vz.md) or of the [storage function method](sfm.md). The area fraction cannot
-exceed the void ratio of buildings `fn_gv` (paddy fields and buildings are different parts of the same cell). It can be
-combined with landform change (`fn_geomorph`), but the tanks carry no sediment (the water from the outlets is clear), and
-erosion by raindrops (the raindrop term of `f_wash`, `f_splash`) is also computed on the paddy part (it hardly occurs on
-ponded paddy fields).
+exceed the void ratio of buildings `fn_gv` (paddy fields and buildings are different parts of the same cell).
+
+**Combination with landform change** (`fn_geomorph`): the rain on paddy fields falls into the tanks (the ponded water on
+the fields), so erosion by raindrops (the raindrop term of `f_wash`, `f_splash`) is computed without the paddy part (the
+erosion rate is multiplied by "1 − area fraction"; ponded water nearly stops erosion by raindrop splash[^bako2016]). The
+paddy part is excluded even when a tank is empty (ponding depth 0) (an original simplification). Limits: the tanks carry
+no sediment and the water from the outlets is clear (turbid water such as the drainage after puddling is not
+represented). Erosion by flow (the sheet erosion term of `f_wash`, entrainment of suspended sediment, bed load) is
+computed over the whole cell, so the soil of the paddy part is also eroded by the surface flow. The rain amount for
+dissolution (`f_dissol`) is not changed (the settings driven by the rain amount count the rain on the paddy part, and the
+settings driven by the infiltration do not count the percolation of paddy fields).
 
 ## Parameters and the basis of their defaults
 
@@ -298,3 +305,4 @@ The labels in the Basis column are explained in [How to read the basis of a defa
 [^minakawa2022]: Minakawa and Miyazu (2022): Transactions of the Japanese Society of Irrigation, Drainage and Rural Engineering, 90(1), I_157–I_165. doi:10.11408/jsidre.90.I_157 (in Japanese)
 [^nihei2024]: Nihei et al. (2024): *Water*, 16(2), 255. doi:10.3390/w16020255
 [^saha2023]: Saha et al. (2023): *Sustainability*, 15(8), 6604. doi:10.3390/su15086604
+[^bako2016]: Nouhou Bako et al. (2016): *Earth Surface Processes and Landforms*, 41, 1199–1210. doi:10.1002/esp.3894 (water depth and the transport of soil by raindrop splash)

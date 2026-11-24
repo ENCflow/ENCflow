@@ -45,6 +45,9 @@
 !   侵食が進んで z が下がると下の層が露出する。クリープには掛けない
 !   (クリープは地形拡散率で材料の性質ではない)。
 !
+!   田んぼダム(fn_paddy)の水田の部分(面積率 a = s%pdfr)の雨は田面の湛水(タンク)に落ちるので、
+!   E に 1 − a を掛ける(雨滴・リルとも雨が駆動する。§119.5)。
+!
 !   2パス構造(MPI 規約): eval_splash が時刻 n の z(近傍参照)から
 !   侵食深 gm%spl%fx を評価し(debris の適用より前に呼ぶ=全プロセスが
 !   時刻 n の z を見る)、apply_splash が局所適用する(debris の後)。
@@ -252,6 +255,7 @@ module subroutine eval_splash(gm, p, g, s, dts)
   real :: zn8(8), dd8(8)
   integer :: k, in, jn
   logical :: smooth
+  logical :: pdx                ! 水田の部分を外す(fn_paddy と併用。§119.5)
 
   dxi = 0.5 / g%dx
   dyi = 0.5 / g%dy
@@ -262,6 +266,7 @@ module subroutine eval_splash(gm, p, g, s, dts)
   nclip = 0
   smooth = (gm%spl%nsm > 0)
   if (smooth) call smooth_z(gm, g, s)
+  pdx = allocated(s%pdfr)
 
   !$omp parallel do schedule(static) reduction(+:nclip) &
   !$omp   private(i, j, zc, ze, zw, zn, zs, kap, sx, sy, ss, er, er0, fx, fs, kc, ke, kw, kn, ks, k, in, jn, zn8)
@@ -358,6 +363,7 @@ module subroutine eval_splash(gm, p, g, s, dts)
         end if
       end if
       er = er * s%pre(i,j)
+      if (pdx) er = er * (1.0 - s%pdfr(i,j))   ! 水田の部分の雨は田面の湛水へ(§119.5)
       if (er <= 0.0) cycle
       ! 河床変化量へ換算し、可動層(sd)と侵食上限でクランプ
       fx = er * dts * gm%poroi

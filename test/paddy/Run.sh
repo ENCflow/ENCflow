@@ -9,6 +9,8 @@
 #   param_spill.txt   強い雨で畦畔まで満ちる越流
 #   param_mix.txt     面積率・取組率・空隙率の分布と閉じた領域の水の保存(sed で作る水田なしの計算と比べる)
 #   param_dflt.txt    既定値の採用と表示、同じ値を明示した構成(sed で作る)とのビット一致
+#   param_wash.txt    雨滴侵食(f_wash の雨滴の項)に 1 − 面積率が掛かること(§119.5)
+#   param_splash.txt  乾いた斜面の侵食(f_splash)に 1 − 面積率が掛かること(§119.5)
 #   停止の確認: 河道セル・面積率 > 空隙率・取組率の範囲・水質との併用・型 0 の流出量調整板・
 #   面積率の二重指定・事前の湛水深 > 畦畔高・保存ファイルが残ったまま無効で再開
 # reference 比較は Log.txt(ULP=0)。paddy.csv は 16 桁で書くため CPU(-march=native のベクトル化)が
@@ -63,6 +65,12 @@ for f in paddy.csv Log.txt; do
     cmp -s "result_dflt/$f" "result_dflt_explicit/$f" || { echo "ERROR: result_dflt_explicit/$f differs from the defaults" >&2; exit 1; }
 done
 echo "  ok   the defaults are bit-identical to the same values given explicitly"
+
+# 雨滴侵食から水田の部分を外す(地形変化との併用。§119.5)
+run wash param_wash.txt
+python3 Check_paddy.py wash result_wash || exit 1
+run splash param_splash.txt
+python3 Check_paddy.py splash result_splash || exit 1
 
 # 保存 → 再開(6 h で保存し 12 h まで)と、連続計算(12 h)のビット一致
 rm -rf save_rs

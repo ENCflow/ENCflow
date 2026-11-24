@@ -164,6 +164,9 @@ module m_state
     real, allocatable :: hpn(:,:)   ! 通常の落水口の水田の湛水深 (m。その種類の水田面積の上。田面から)
     real, allocatable :: hpd(:,:)   ! 田んぼダムの落水口の水田の湛水深 (m。同上)
     real, allocatable :: pdv(:,:)   ! 水田のタンクの貯留 (m。セル面積基底。calcstat が S に足す)
+    real, allocatable :: pdfr(:,:)  ! 水田面積率 a (セル面積基底。帯+ハロ。地形変化 fn_geomorph と併用する
+                                    ! ときだけ m_paddy_init が確保し、雨滴侵食(f_wash の雨滴の項・f_splash)
+                                    ! に 1 − a を掛けるのに使う。§119.5)
     real :: pdmean = 0.0     ! 領域平均の水田の貯留(m)。pd_active 時のみ更新
     ! 沿岸の波浪場(fn_wavefield。§90)の診断量。確保と wv_active の設定は m_wavefield_init
     ! (有効時のみ)。状態(ビン別のエネルギー)は t_wavefield の私有で、ここは書き出しと
@@ -1108,6 +1111,7 @@ subroutine m_state_dispose(s, p)
   if (allocated(s%hpn)) deallocate(s%hpn)
   if (allocated(s%hpd)) deallocate(s%hpd)
   if (allocated(s%pdv)) deallocate(s%pdv)
+  if (allocated(s%pdfr)) deallocate(s%pdfr)
   if (allocated(s%wvh)) deallocate(s%wvh)
   if (allocated(s%wvdir)) deallocate(s%wvdir)
   if (allocated(s%wvub)) deallocate(s%wvub)

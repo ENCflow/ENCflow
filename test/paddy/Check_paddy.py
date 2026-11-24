@@ -13,7 +13,10 @@ Gauss–Legendre の求積で直接求める(モデルは表と展開)。
   python3 Check_paddy.py mix     result_mix result_mix_nopd   閉じた領域の水の保存(水田なしの同じ計算と比べる)、面積、台帳
   python3 Check_paddy.py dflt    result_dflt Screen_dflt.log   既定値の採用と表示
   python3 Check_paddy.py restart <連続の結果> <再開の結果>      保存 → 再開のビット一致
+  python3 Check_paddy.py wash    result_wash     雨滴侵食(f_wash の雨滴の項)に 1 − 面積率が掛かること
+  python3 Check_paddy.py splash  result_splash   乾いた斜面の侵食(f_splash)に 1 − 面積率が掛かること
 """
+import array
 import math
 import os
 import sys
@@ -325,6 +328,53 @@ def check_restart(cont, rest):
     ok("last Log line identical")
 
 
+def read_bil(path, nx, ny):
+    """単精度のバイナリ(m_fileio の write_bil_real: (1:nx, 1:ny) を列優先で並べた float32)"""
+    v = array.array("f")
+    with open(path, "rb") as f:
+        v.frombytes(f.read())
+    if sys.byteorder != "little":
+        v.byteswap()
+    if len(v) != nx * ny:
+        fail("%s: %d values, expected %d" % (path, len(v), nx * ny))
+    return v
+
+
+def check_erosion(res, kind):
+    """雨滴侵食から水田の部分を外す(§119.5)。地盤の下がり = −(1 − a)·k·P·T(全セル)。
+    a = 1 のセルは侵食 0(wash は沈降を止めた浮遊砂の 1e-30 程度の堆積を除く)、
+    a = 0 のセルは水田なしの式そのもの"""
+    nx, ny = 10, 8
+    with open(os.path.join("data_paddy", "frac_mix.txt")) as f:
+        rows = [[float(x) for x in line.split()] for line in f if line.strip()]
+    col = rows[0]
+    if any(r != col for r in rows) or len(col) != nx:
+        fail("frac_mix.txt is expected to vary by column only")
+    if kind == "wash":
+        k, p_mmh, t_geo = 0.01, 50.0, 3600.0         # wash_kr、雨、T(morfac = 1)
+    else:
+        k, p_mmh, t_geo = 0.003, 30.0, 3600.0 * 5.0  # spl_kr、雨、T_geo = tt·morfac
+    full = k * p_mmh / 3.6e6 * t_geo                 # 水田なしの侵食深 (m。poroi = 1)
+    z0 = read_bil(os.path.join(res, "Z0000.bil"), nx, ny)
+    z1 = read_bil(os.path.join(res, "Z0001.bil"), nx, ny)
+    emax = 0.0
+    for j in range(ny):
+        for i in range(nx):
+            a = col[i]
+            dz = z1[j * nx + i] - z0[j * nx + i]
+            if a >= 1.0:
+                if abs(dz) > 1e-12 * full:
+                    fail("%s: the all-paddy cell (%d, %d) is eroded: dz = %.3e m" % (kind, i + 1, j + 1, dz))
+                continue
+            exp = -(1.0 - a) * full
+            e = abs(dz - exp) / full
+            emax = max(emax, e)
+            if e > 1e-6:
+                fail("%s: cell (%d, %d) a = %.1f: dz = %.9e m, expected %.9e m" % (kind, i + 1, j + 1, a, dz, exp))
+    ok("%s: z − z0 = −(1 − a)·k·P·T on every cell (max error %.1e of %.3e m); no erosion where a = 1"
+       % (kind, emax, full))
+
+
 def main():
     if len(sys.argv) < 3:
         print(__doc__)
@@ -346,6 +396,8 @@ def main():
         check_dflt(sys.argv[2], sys.argv[3])
     elif cmd == "restart":
         check_restart(sys.argv[2], sys.argv[3])
+    elif cmd in ("wash", "splash"):
+        check_erosion(sys.argv[2], cmd)
     else:
         print(__doc__)
         sys.exit(2)

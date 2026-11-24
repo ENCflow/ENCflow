@@ -3,6 +3,7 @@
 #   ./Run_MPI.sh [ランク数] [-u]
 # 逐次 reference との比較は Log.txt を ULP=0。paddy.csv は同じバイナリの np=1 とバイト比較(セル単位の
 # 計算と行部分和の決定的総和なので、ランク数によらない)。閉じた領域の水の保存(param_mix.txt)、
+# 雨滴侵食から水田の部分を外す検定(param_wash.txt・param_splash.txt。地盤高も np=1 とバイト比較)、
 # 保存 → 再開(np=1 とバイト比較)、rank0 が見つける停止と帯で見つける停止(全ランク同時の par_stop)も
 # MPI で確かめる。行は 8 なので np <= 4
 sdir=$(dirname "$(readlink -f "$0")")
@@ -59,6 +60,19 @@ if [ "$np" != 1 ]; then
     variant param_mix.txt result_mix_np1 "" > "$tmp"
     run 1 mix_np1 "$tmp"
     same_as_np1 result_mix result_mix_np1 paddy.csv Log.txt Hpn9998.txt Hpd9998.txt
+fi
+
+# 雨滴侵食から水田の部分を外す(地形変化との併用。§119.5): 解析検定と np=1 とのバイト一致
+run "$np" wash param_wash.txt
+python3 Check_paddy.py wash result_wash || exit 1
+run "$np" splash param_splash.txt
+python3 Check_paddy.py splash result_splash || exit 1
+if [ "$np" != 1 ]; then
+    for t in wash splash; do
+        variant "param_$t.txt" "result_${t}_np1" "" > "$tmp"
+        run 1 "${t}_np1" "$tmp"
+        same_as_np1 "result_$t" "result_${t}_np1" Z0001.bil paddy.csv Log.txt
+    done
 fi
 
 # 保存 → 再開(np で保存・再開)と、連続計算・np=1 とのビット一致

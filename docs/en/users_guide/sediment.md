@@ -598,6 +598,9 @@ $`z`$ and $`s_d`$ co-movingly and erosion stops at $`s_d = 0`$ (exposed
 bedrock). Outside channels the entrainment $`E`$ of the suspended load and
 the $`k_f`$ term overlap conceptually; when both are used, manage the
 overlap through the calibration.
+Combined with [paddy-field dams](paddy.md) (`fn_paddy`), the rain on paddy fields falls into the paddy tanks (the ponded
+water on the fields), so the raindrop term $`k_r P`$ is multiplied by "1 − paddy area fraction" (the sheet erosion term
+stays over the whole cell).
 
 **Width scale (`wet_lw`).** Sheet erosion and entrainment are both
 proportional to $`\tau_*`$, and the positive feedback that erodes only the
@@ -636,7 +639,8 @@ the slope-dependent erosion by grain aggregates rolled by raindrops
 terrain ($`\kappa > 0`$; `spl_ca`, `spl_cb`) grows valleys. The detached
 sediment cannot be carried without flow, so it is **exported out of the
 system** (the total is reported at the end) and $`z`$, $`s_d`$ are reduced
-co-movingly. A concavity feedback without smoothing grows fastest at the
+co-movingly. Combined with [paddy-field dams](paddy.md) (`fn_paddy`), the rain on paddy fields falls into the paddy
+tanks, so $`E`$ is multiplied by "1 − paddy area fraction". A concavity feedback without smoothing grows fastest at the
 shortest wavelength (the infinite-wavenumber problem of Smith &
 Bretherton[^smith72]): with the curvature taken on the grid (`spl_lc` = 0)
 the valley spacing sticks to 2-3 grid cells (adding a diffusion term only
