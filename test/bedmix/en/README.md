@@ -25,6 +25,7 @@ width; the east edge is a free outflow (n = 0.03). make_init.py generates the in
 |---|---|---|
 | single | std, single size 3 mm, capacity feed | reference for equal |
 | equal | std, 3 classes all of 3 mm (fractions 0.2, 0.3, 0.5), exchange layer 5 m thick (thicker than the soil layer = the exchange layer is the whole column), capacity feed | the bed agrees with single (maximum difference < 1e-10 m), the composition stays at its initial value (< 1e-12), the total net outflow through the open boundary agrees with single (relative 1e-8). The equal-mobility limit |
+| single_te → equal_te | single and equal with the effective shear of Ashida and Michiue added (`f_taupart = 2`; developer.md §121) | the beds agree with each other (< 1e-10 m) and the net outflows through the open boundaries agree (relative 1e-8) and are smaller than without the effective shear (the factor (u*e/u*)³ obtained with the d_m of the classes acts the same as the single-size factor) |
 | armor | deep, 1 mm and 20 mm at 0.5 each, no hiding, no feed (the coarse class is below its threshold and does not move) | the lowering of the column at the upstream end agrees with the static-armouring value L_a F_0 / (1 − f_sub) (< 1e-6 m) and the fines there are depleted (< 1e-6); the fine fraction decreases monotonically; its decay rate is within 3 % of the rate of the one-cell formula dF/dt = −(1 − f_sub) Q F / L_a evaluated from the output hydraulics |
 | hide1 → hide2 | free, 0.5, 2 and 8 mm (0.3, 0.4, 0.3), modified Egiazaroff (default). Saved at 100 s and continued to 160 s | the volume of each class that left through the downstream open boundary in 100–160 s (ledger) is within 0.5 % of the value from Ashida and Michiue (1972) eqs. (31) and (32) with the depth, velocity and composition of the downstream cells |
 | bcfeed | std, 3 classes, capacity feed | the bed and composition of the inflow cells do not change (< 1e-12); the bed downstream moves |
@@ -33,7 +34,7 @@ width; the east edge is a free outflow (n = 0.03). make_init.py generates the in
 | rt1 → rt2 | bank split at 150 s | state.dat and geomorph_bedmix.dat bit-identical to bank |
 | nofrac | only a total feed, without a composition | stops at initialization (the feed composition is given data, so there is no default) |
 
-Typical numbers: the difference between the beds of equal and single 5e-15 m, the lowering in armor
+Typical numbers: the difference between the beds of equal and single 5e-15 m, between equal_te and single_te 4e-15 m (the outflow is 0.19 times that without the effective shear), the lowering in armor
 0.02197 m (equal to the theoretical value), decay rates 0.04934 and 0.04946 /s, the outflow ratio in hide2
 1.0002, the residual in bank about 1e-13 m³.
 

@@ -108,7 +108,7 @@
 ### 土砂・地形変化
 
 - 現行: [土砂・地形変化](users_guide/geomorph.md)・[土砂輸送と斜面・長期地形過程の解説](users_guide/sediment.md)・[土石流・斜面崩壊・動く底層の解説](users_guide/massflow.md)・[土砂・地形変化の適用例](users_guide/geomorph_applications.md)。既定値は [§62](developer/062.md)。混合粒径(f_bedmix。2026-11-22 合意、段 1 の掃流砂は 2026-11-23 に実装)の設計の正本は [docs/mixed_sediment_plan.md](mixed_sediment_plan.md)、採る範囲は policy.md 方針 6 の例外と [§84.19](developer/084.md)、実装の記録は [§119](developer/119.md)
-- 記録: [§19](developer/019.md)・[§28](developer/028.md)(土石流・地滑り)・[§32](developer/032.md)(長期地形変動)・[§48](developer/048.md)(乾式斜面侵食)・[§61](developer/061.md)(動く底層)・[§62](developer/062.md)・[§84](developer/084.md)(蛇行・河岸侵食)・[§84.19](developer/084.md)(混合粒径を範囲を限って採る)・[§119](developer/119.md)(混合粒径の段 1 の実装)・[§120](developer/120.md)(例題 joganji_flume)・[§85](developer/085.md)(河口デルタ)・[§86](developer/086.md)(石灰岩の溶食)・[§89](developer/089.md)(山地渓流)・[§92](developer/092.md)・[§96](developer/096.md)・[§101](developer/101.md)
+- 記録: [§19](developer/019.md)・[§28](developer/028.md)(土石流・地滑り)・[§32](developer/032.md)(長期地形変動)・[§48](developer/048.md)(乾式斜面侵食)・[§61](developer/061.md)(動く底層)・[§62](developer/062.md)・[§84](developer/084.md)(蛇行・河岸侵食)・[§84.19](developer/084.md)(混合粒径を範囲を限って採る)・[§119](developer/119.md)(混合粒径の段 1 の実装)・[§120](developer/120.md)(例題 joganji_flume)・[§121](developer/121.md)(芦田・道上の有効掃流力 f_taupart = 2)・[§85](developer/085.md)(河口デルタ)・[§86](developer/086.md)(石灰岩の溶食)・[§89](developer/089.md)(山地渓流)・[§92](developer/092.md)・[§96](developer/096.md)・[§101](developer/101.md)
 
 ### 流木
 
@@ -286,3 +286,4 @@
 - [§118](developer/118.md) 河道の向きが変わる場所の移流項(§110)の続き: 200 KB を超えた §110 に代わる追記先(2026-11-22 から)
 - [§119](developer/119.md) 混合粒径の段 1(f_bedmix。掃流砂の粒径階 × 交換層 1 枚・下層 1 枚)の実装(2026-11-23。§84.19 の合意と docs/mixed_sediment_plan.md §10 の決めごとに沿う。無効時はビット一致)
 - [§120](developer/120.md) 例題 examples/joganji_flume: 国総研の常願寺川 1/100 移動床模型のケース 2-1 を混合粒径で計算し、計測と比べる(2026-11-23。混合粒径の段 3 の例題の部分)
+- [§121](developer/121.md) 芦田・道上の有効掃流力(式 (11))を f_taupart = 2 として実装する(2026-11-24。§19.8 の今後の課題。既存の手続きの写しで、無効時はビット一致)

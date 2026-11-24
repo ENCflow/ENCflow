@@ -9,7 +9,10 @@ Rickenmann & Recking 2011, Nitsche et al. 2011; developer.md §89.30,
 docs/mountain_stream_plan.md §14). In uniform flow in a steep channel one cell
 wide, the steady bed-load rate is obtained from the ledger of bed load that left
 through the open eastern boundary and compared with the capacity evaluated with
-the same transport formula from the depth and velocity of the outlet cell.
+the same transport formula from the depth and velocity of the outlet cell. The
+other value of the same selector, `f_taupart = 2` (the effective shear of Ashida
+and Michiue 1972; the transport is multiplied by (u*e/u*)³ of eq. (11);
+developer.md §121), is checked in the same way.
 
 ## Setup
 
@@ -29,6 +32,10 @@ the same transport formula from the depth and velocity of the outlet cell.
 | d0 | on | 0 (= 2.2 d50 = 0.022) | 8.6 | 0.88 | default D84 |
 | d19_mpm | on | 0.19 | 1.0 | 0.22 | MPM formula |
 | excl | on + fluv_taufac = 0.5 | — | — | — | the combination stops |
+| te | effective shear (f_taupart = 2) | — | — | (u*e/u*)³ = 0.35 | eqs. (11) and (23) (h/d50 = 19) |
+| te_cap | effective shear, d50 = 0.08 m | — | — | 1 (cap) | coarse gravel where u*e of eq. (11) exceeds u* |
+| te_excl | effective shear + fluv_taufac = 0.5 | — | — | — | the combination stops |
+| te_mpm | effective shear + MPM formula | — | — | — | the combination stops (Ashida–Michiue only) |
 
 ## Checks (Check_taupart.py)
 
@@ -41,18 +48,24 @@ the same transport formula from the depth and velocity of the outlet cell.
    open-boundary face uses the hydraulics of the cell itself; the outlet cell lowers by about 3 cm in
    3000 s because of the free-outflow boundary, which does not affect the check because the h and V
    of that moment are used). The configuration below the threshold has a ledger of 0.
+   te and te_cap leave τ* unchanged and multiply the capacity by (u*e/u*)³ = min(1, h^(1/3)/(g n² D²))^(3/2),
+   D = 6.0 + 5.75 log10{h/(d50(1 + 2τ*))} (g is the default 9.8 of the executable). The check also confirms
+   that the factor of te is between 0.2 and 0.6 and that of te_cap is 1 (the cap).
 3. Without the partitioning (param.txt) the Log.txt is bit-identical to the reference (regression in
    `Run.sh`).
-4. Combining `f_taupart = 1` with `fluv_taufac ≠ 1` stops the run (Run.sh checks the return code and
-   the message).
-5. MPI (`Run_MPI.sh N`): the regression of param.txt, and the Log.txt of d19 is byte-identical to the
-   serial run (`Log_d19_serial.txt` left by `Run.sh`).
+4. Combining `f_taupart = 1` with `fluv_taufac ≠ 1`, and `f_taupart = 2` with `fluv_taufac ≠ 1` or the MPM
+   formula, stops the run (Run.sh checks the return code and the message).
+5. MPI (`Run_MPI.sh N`): the regression of param.txt, and the Log.txt of d19 and te are byte-identical to
+   the serial run (`Log_d19_serial.txt` and `Log_te_serial.txt` left by `Run.sh`).
 
 Record of 2026-11-02 (gfortran 13.3, release build): steady rate / capacity = off 1.0000, d044 0.9994,
 d19 1.0004, d0 0.9988, d19_mpm 1.0004; d76 has no bed load. np = 2 and 4 are byte-identical to the
 serial run.
 Record of 2026-11-05 (after the default became `f_gravity_correction = 2`; the τ* of the capacity includes
 the slope factor): off 0.9994, d044 0.9993, d19 0.9999, d0 0.9988, d19_mpm 0.9999; d76 has no bed load.
+Record of 2026-11-24 (after `f_taupart = 2` was added): the existing configurations give the same values as
+above, and off is bit-identical to the reference. te 0.9995 (factor 0.3514), te_cap 0.9993 (factor 1). With
+np = 2, d19 and te are both byte-identical to the serial run.
 
 ## Run
 

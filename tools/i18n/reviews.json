@@ -311,9 +311,9 @@
     {
       "source": "docs/users_guide/geomorph.md",
       "target": "docs/en/users_guide/geomorph.md",
-      "source_sha256": "5d96aac24ce5fd44de77256237f01f6dfd95a2ca7a23cbf4b15f71c22fbfd18c",
-      "target_sha256": "779c9f36862c5cbd1bde9a2c4181d4b8fbd2ad7f1d75c06c27ac01863565ee5f",
-      "reviewer": "Claude (Claude Code session; the pointers to the example joganji_flume (mixed-size section, verification overview and its table row) added in the same work to the Japanese source and the English mirror; both diffs read side by side and the numbers checked against the example README)",
+      "source_sha256": "f0f051208f993a2134ae94a03d9cc647cec2ef81627f4a45da557b82d4623e0e",
+      "target_sha256": "63d004b3575b3b2224339ff57b9d5ea4980f089ffafad804d7ef52120faab51c",
+      "reviewer": "Claude (Claude Code session; effective shear of Ashida and Michiue (f_taupart = 2): the new and changed parts (sediment.md effective-shear section and the two cross-references; the f_taupart row of geomorph.md) compared side by side with the Japanese source; formulas, numbers and parameter names checked against the code, the test results and the original paper)",
       "method": "assistant",
       "reviewed_on": "2026-11-24"
     },
@@ -482,9 +482,9 @@
     {
       "source": "docs/users_guide/sediment.md",
       "target": "docs/en/users_guide/sediment.md",
-      "source_sha256": "908019abb3d6e23b266df699452518bece1029684b56fdcd1181b14dba08f6f7",
-      "target_sha256": "f39692dbd3d4676c3a003eb7bea706e7e5f918f5b0f91cf6b14bead12ccba2ad",
-      "reviewer": "Claude (Claude Code session; link-delimiter fix only: bare URLs glued to the following Japanese text were wrapped in <> so the GFM autolink stops at the URL; checked with pandoc -f gfm before and after; the English mirror was checked and its URLs already end at a space or \").\" (wrapped the same way where changed); no other text changed)",
+      "source_sha256": "d048df58453ea9680357bdeefcbb5907c1bd76056a928532ecaccd8f19e5f6c4",
+      "target_sha256": "5bd605b758edcd465768b861919980f9b59622821ffed02147c3d32d2b83647b",
+      "reviewer": "Claude (Claude Code session; effective shear of Ashida and Michiue (f_taupart = 2): the new and changed parts (sediment.md effective-shear section and the two cross-references; the f_taupart row of geomorph.md) compared side by side with the Japanese source; formulas, numbers and parameter names checked against the code, the test results and the original paper)",
       "method": "assistant",
       "reviewed_on": "2026-11-24"
     },
@@ -716,11 +716,11 @@
     {
       "source": "examples/List_samples/list_geomorph.txt",
       "target": "examples/List_samples/en/list_geomorph.txt",
-      "source_sha256": "105106d7243ca9fbc270a470ac578a691b688ce038837c526220a7a235e37504",
-      "target_sha256": "a10c8630567968f7027d4e30df9eb774239e23759340b95031d46cafd760a642",
-      "reviewer": "Claude (Claude Code session; mixed-size stage 1: commented examples added in both languages; values, identifiers and states checked by tools/consistency/check.py samples, comments compared side by side)",
+      "source_sha256": "a5594d9960d901813ab4eaf0a18e2dadc64d782233f43e0041c2cf787204f855",
+      "target_sha256": "39b7d61e1f4d1024d57cb1ae7ca5c4a6e5013672ed4455a762e0082d46ee7331",
+      "reviewer": "Claude (Claude Code session; the f_taupart comment of the settings example changed in the same work in Japanese and English; values and the commented assignment unchanged; both diffs read side by side)",
       "method": "assistant",
-      "reviewed_on": "2026-11-23"
+      "reviewed_on": "2026-11-24"
     },
     {
       "source": "examples/List_samples/list_glacier.txt",
@@ -2273,9 +2273,9 @@
     {
       "source": "examples/joganji_flume/README.md",
       "target": "examples/joganji_flume/en/README.md",
-      "source_sha256": "8fe902cddcb1bbe1b44ce7ff479839469b4ba3e30d431123dc9c7e8734a59b95",
-      "target_sha256": "3b6ae50ab992e47f424c14683cc4016ea3332fc138bb7122762ec423799c7bfd",
-      "reviewer": "Claude (Claude Code session; link-delimiter fix only: bare URLs glued to the following Japanese text were wrapped in <> so the GFM autolink stops at the URL; checked with pandoc -f gfm before and after; the English mirror was checked and its URLs already end at a space or \").\" (wrapped the same way where changed); no other text changed)",
+      "source_sha256": "4940bfdae9b17d23ec5184f03bc3267b0efc9d72c0d8640fdfcb3a18805100a2",
+      "target_sha256": "2d3f31ba27e767dd75b588843b0732914c3168e7687a9248b935f48f81f8c066",
+      "reviewer": "Claude (Claude Code session; the shear-stress paragraph and two limit items rewritten in the same work for f_taupart = 2 in Japanese and English; both diffs read side by side; numbers checked against the trial calculation)",
       "method": "assistant",
       "reviewed_on": "2026-11-24"
     },
@@ -3821,11 +3821,11 @@
     {
       "source": "test/README.md",
       "target": "test/README.en.md",
-      "source_sha256": "4e920f3fd1e71466955f113a9d8bb471b2e41b75d15bf71bebf2e6db27f81561",
-      "target_sha256": "0248f7410bd701935766f03e50bb2d9560a19f3c088e3e62c49e111fa895e0d6",
-      "reviewer": "Claude (Claude Code session; mixed-size stage 1: row for test/bedmix added in both languages and compared side by side; directory list checked by tools/consistency/check.py tests)",
+      "source_sha256": "74501bd7d8ed570b1a2482d415ebdf0a88ecc1691d664fbd9051272322fb0990",
+      "target_sha256": "9a5fae38e4b03d2b84952043285ca52e28cdacefd98a5f1b2d5e4a2c1463a457",
+      "reviewer": "Claude (Claude Code session; the rows and items of the f_taupart = 2 checks (test index, test/taupart te configurations and record, test/bedmix single_te/equal_te) added in the same work in Japanese and English; both diffs read side by side; numbers checked against the test runs)",
       "method": "assistant",
-      "reviewed_on": "2026-11-23"
+      "reviewed_on": "2026-11-24"
     },
     {
       "source": "test/avalanche/README.md",
@@ -3884,11 +3884,11 @@
     {
       "source": "test/bedmix/README.md",
       "target": "test/bedmix/en/README.md",
-      "source_sha256": "ab11f58f6995c546f53fc081fde1c1ae97890c5784d52314244851501420cab4",
-      "target_sha256": "f1c30cb3b62af6fafeceaa8f779f19071758a5a86571fbf9b685638239cef092",
-      "reviewer": "Claude (Claude Code session; new test case test/bedmix: README written in Japanese and mirrored in English, compared side by side; tolerances and numbers checked against Check_bedmix.py and the test runs)",
+      "source_sha256": "a871d4624dd60772ee718fb22a878daa26d169ea401b483b1361773fa8feaccd",
+      "target_sha256": "b94595e33be861985db2cfd697d3b5047f82b8bfc0d8b6d1d3dad09437c63560",
+      "reviewer": "Claude (Claude Code session; the rows and items of the f_taupart = 2 checks (test index, test/taupart te configurations and record, test/bedmix single_te/equal_te) added in the same work in Japanese and English; both diffs read side by side; numbers checked against the test runs)",
       "method": "assistant",
-      "reviewed_on": "2026-11-23"
+      "reviewed_on": "2026-11-24"
     },
     {
       "source": "test/bedslide/README.md",
@@ -5207,11 +5207,11 @@
     {
       "source": "test/taupart/README.md",
       "target": "test/taupart/en/README.md",
-      "source_sha256": "c3ae3fc5ede8e1ecf43b522d5bdfef55b16bb88406d9d41aa4613021c9f75717",
-      "target_sha256": "a1114148666e6b97a2c50cb31390d16472be291dc11b7837b3b0a1fd9c4f5b07",
-      "reviewer": "Claude (Claude Code session; default f_gravity_correction = 2: the check item 2 now states that the tau* of the capacity includes the slope factor (1 + S^2)^(7/6), and the 2026-11-05 record of the ratios was added, compared with the Japanese source, rest unchanged since the previous record)",
+      "source_sha256": "c82805173f0698d222f3cce3157188254f1f17467f9a46e1b9642ca6fdb7f148",
+      "target_sha256": "ed7c0241407c766272232e321d5f648e4f7c8bca119929d16f6dc0a546eeb755",
+      "reviewer": "Claude (Claude Code session; the rows and items of the f_taupart = 2 checks (test index, test/taupart te configurations and record, test/bedmix single_te/equal_te) added in the same work in Japanese and English; both diffs read side by side; numbers checked against the test runs)",
       "method": "assistant",
-      "reviewed_on": "2026-11-05"
+      "reviewed_on": "2026-11-24"
     },
     {
       "source": "test/tide/README.md",

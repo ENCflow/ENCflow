@@ -64,6 +64,7 @@ module m_geomorph
   ! シンボルを局所化しリンク不能(§22 の実バグと同型。swflow の sect_* と同じ対処)
   public :: gm_param
   public :: taufac_h                ! 有効掃流力の比(submodule から呼ぶため public。§89.30)
+  public :: taueff_fac              ! 芦田・道上の有効掃流力の流砂量の比(submodule から呼ぶ。§121)
   public :: retain_exchange         ! 保持水の授受(debris・bedslide の submodule から呼ぶため public。§28.17)
   ! wfsed_taumax・wfsed_cphi も submodule(fluvial・suspend)が呼ぶので public(gm_param と同じ理由)
   public :: wfsed_taumax, wfsed_cphi
@@ -152,6 +153,7 @@ module m_geomorph
     real :: qbcoef = 0.0             ! 流砂量の次元化係数 sqrt(s g d50^3)
     real :: taufac = 1.0             ! 有効掃流力の比 f_τ(§84.3)
     logical :: taupart = .false.     ! 急勾配礫床の抵抗分割(§89.30。taufac_h が参照)
+    logical :: taueff = .false.      ! 芦田・道上の有効掃流力(f_taupart = 2。§121。taueff_fac を掛ける)
     real :: d84inv = 0.0             ! 1/D84 (1/m)
     real :: tpe = 0.75               ! 指数 e/2
     real :: tpc = 6.76               ! (a1/a2)^2 = (6.5/2.5)^2(Ferguson の VPE の係数の比)
@@ -877,6 +879,14 @@ module m_geomorph
       type(t_state), intent(inout) :: s
       real, intent(in) :: dts
     end subroutine
+    ! calc_fluvial_bmix の有効掃流力版(f_taupart = 2。§121。calc_fluvial_bmix の写し)
+    module subroutine calc_fluvial_bmix_te(gm, p, g, s, dts)
+      type(t_geomorph), intent(inout) :: gm
+      type(t_sysparam), intent(in) :: p
+      type(t_geoinfo), intent(in) :: g
+      type(t_state), intent(inout) :: s
+      real, intent(in) :: dts
+    end subroutine
     ! エッジ流量の適用の混合粒径版(粒径階ごとの供給量制限 → 発散 → z・sd と交換層・下層の更新)。
     ! with_classes = .true. は掃流砂(粒径階ごとの流束 bmx%qk + 等移動度の wrk%q)、.false. は崩落(wrk%q だけ)
     module subroutine apply_edge_flux_bmix(gm, g, s, dts, with_classes)
@@ -985,6 +995,31 @@ pure function taufac_h(flv, hh) result(f)
   else
     f = flv%taufac
   end if
+end function
+
+!----------------------------------------------------------------------
+! 芦田・道上 (1972) の有効掃流力(f_taupart = 2。§121)で掃流砂量に掛ける比 (u*e/u*)^3
+!   原典 式 (11): U/u*e = 6.0 + 5.75 log10{R/(d(1 + 2τ*))}(式 (7) の対数則と相当粗度
+!   ks = d(1 + 2τ*) の式 (9)。水深平均の 2 次元では R を水深 h とする)。u* はマニング閉じ
+!   (u*^2 = g n^2 U^2 / h^(1/3))なので (u*e/u*)^2 = h^(1/3) / (g n^2 D^2)、D は式 (11) の右辺。
+!   式 (23)・(32) で τ*e が入るのは先頭の τ*^(3/2) だけで、閾値の 2 因子は全 τ* のまま。
+!   よって流砂量に (u*e/u*)^3 を掛ける形になる(τ* に比を掛ける taufac_h とは別)。
+!   u*e > u* は u*e = u* で頭打ち(Upper Regime の式 (38) は u*e = u*)。h/ks が小さく D <= 0 の
+!   所も頭打ちと同じ扱い(比 1)。混合粒径は d に d_m を渡す(原典は一様砂の式。§121)
+!----------------------------------------------------------------------
+pure function taueff_fac(gg, rn, hh, taus, d) result(f)
+  real, intent(in) :: gg               ! 重力加速度 (m/s2)
+  real, intent(in) :: rn               ! マニングの粗度係数(τ* と同じ値)
+  real, intent(in) :: hh               ! 水深 (m)
+  real, intent(in) :: taus             ! 全掃流力の τ*(粒径 d で無次元化)
+  real, intent(in) :: d                ! 粒径 (m)(混合粒径は d_m)
+  real :: f, den, r
+  f = 1.0
+  if (rn <= 0.0 .or. d <= 0.0) return
+  den = 6.0 + 5.75 * log10(hh / (d * (1.0 + 2.0 * taus)))
+  if (den <= 0.0) return
+  r = hh**(1.0/3.0) / (gg * rn**2 * den**2)
+  if (r < 1.0) f = r * sqrt(r)
 end function
 
 pure function wfsed_taumax(tauc, uw, aw, cphi, z0, twc) result(tmax)

@@ -188,7 +188,8 @@ $`\tau_*`$ and $`u_*`$ in the two threshold factors. ENCflow uses the form
 with $`\tau_{*e} = \tau_*`$, which corresponds to $`u_{*e} = u_*`$ that the
 original takes for flat beds and antidunes (the upper regime). In the
 regime of ripples and dunes (the lower regime) it overestimates the
-transport (`fluv_taufac` below is a simple substitute with a fixed ratio).
+transport. The original form is `f_taupart = 2` ("Effective shear stress"
+below); `fluv_taufac` is a simple substitute with a fixed ratio.
 
 ![Bedload formulas and equilibrium concentration](../../figs/sediment_laws_en.png)
 
@@ -358,40 +359,64 @@ sand and gravel. Verification: [test/fluvial](../../../test/fluvial/en/README.md
 [test/sedinflow](../../../test/sedinflow/en/README.md) (closure of the
 sediment supplied through the boundary).
 
-**Future work (planned): the effective shear stress $`\tau_{*e}`$.** As
-noted above, the current Ashida–Michiue formula also uses the total shear
-stress $`\tau_*`$ in the leading term, so it overestimates the transport
-when Manning's n includes form drag of bedforms, bars or vegetation. We plan
-to add, without changing the default, an option that obtains $`u_{*e}`$ from
-eq. (11) of the original and replaces only the leading $`\tau_*^{3/2}`$ with
-$`\tau_{*e}^{3/2}`$ (the two threshold factors keep the total $`\tau_*`$).
+**Effective shear stress (eq. (11) of Ashida and Michiue; `f_taupart` = 2).** As noted
+above, the default Ashida–Michiue formula also uses the total shear stress $`\tau_*`$ in the
+leading term, so it overestimates the transport when Manning's n includes form drag of bedforms,
+bars or vegetation. `f_taupart = 2` obtains the effective friction velocity $`u_{*e}`$ from eq. (11)
+of the original[^ashida72] and replaces only the leading $`\tau_*^{3/2}`$ of eq. (23) (eq. (32) for
+mixed sizes) with $`\tau_{*e}^{3/2}`$. The two threshold factors keep the total $`\tau_*`$.
 
-- **Effect**: the formula then matches the original and Nays2DH and is used
-  the way the coefficient 17 was fitted. Since $`\tau_{*e}`$ depends only on
-  the velocity and the depth, the current behaviour that a cell with a higher
-  n from a roughness distribution (land use, for example) has a larger
-  $`\tau_*`$ (more transport) at the same velocity disappears (the `fix_cn` of
-  fixation evaluates the transport $`\tau_*`$ with the original n, so it is
-  not affected in the first place). The form-drag part follows the velocity,
-  depth and $`\tau_*`$ in each cell and at each time, a separation closer to
-  the original than `fluv_taufac` with its fixed ratio (which also shrinks
-  the threshold factors). No new parameter is needed.
-- **Size of the effect** (trial calculation for uniform flow): on a sand bed
-  with n about twice the grain roughness (the settings of the meander and
-  delta examples) the transport becomes 0.1–0.25 times the current value,
-  on a gravel bed 0.4–0.65 times. The existing examples were tuned for the
-  speed of morphological change without $`\tau_{*e}`$, so it will not be the
-  default (bit-identical to the current results when disabled).
-- **To be prepared in the implementation**: a cap $`\tau_{*e} \le \tau_*`$
-  (on a flat sand bed the value of eq. (11) exceeds $`\tau_*`$); protection
-  outside the range of the log law (shallow flows and mountain streams with a
-  ratio of hydraulic radius to equivalent roughness of a few or less; below
-  0.09 the denominator of eq. (11) becomes zero); exclusion with
-  `fluv_taufac`; and a check case for eq. (11). It applies only to the
-  Ashida–Michiue formula (MPM has a different correction, the ripple
-  factor).
-- **Timing**: it will be added when comparisons with Nays2DH, sand-bed rivers
-  with dunes or vegetated floodplains are taken up (developer.md §19.8).
+```math
+\frac{U}{u_{*e}} = 6.0 + 5.75\log_{10}\frac{h}{d\,(1+2\tau_*)},\qquad
+\tau_{*e} = \frac{u_{*e}^2}{s g d},\qquad
+q_b = 17\,\tau_{*e}^{3/2}\Bigl(1-\frac{\tau_{*c}}{\tau_*}\Bigr)\Bigl(1-\frac{u_{*c}}{u_*}\Bigr)\sqrt{s g d^3}
+```
+
+Eq. (11) is the log law $`U/u_{*e} = 6.0 + 5.75\log_{10}(R/k_s)`$ (eq. (7) of the original) with
+an equivalent roughness that includes the layer of moving grains, $`k_s = d(1 + \alpha\tau_*)`$ with
+$`\alpha = 2`$ (eq. (9)). The model is depth-averaged in 2D, so the hydraulic radius R is taken as
+the depth h. $`u_*`$ comes from the Manning closure ($`u_*^2 = g n^2 U^2 / h^{1/3}`$), so the transport
+is the default formula times $`(u_{*e}/u_*)^3 = \{h^{1/3}/(g n^2 D^2)\}^{3/2}`$, where D is the right-hand
+side of eq. (11). This is the same form as eq. (24) of the original.
+
+- **Cap**: where $`u_{*e}`$ exceeds $`u_*`$, $`u_{*e} = u_*`$ is used. These are places where the
+  resistance of eq. (11) is larger than the given n, that is, flat beds without form drag; the
+  original also takes $`u_{*e} = u_*`$ for flat beds and antidunes (the upper regime; eq. (38)).
+  Places where the depth is only a few times the equivalent roughness and D is zero or negative are
+  treated the same way.
+- **Mixed sizes**: d in eq. (11) is the mean size of the exchange layer $`d_m`$ (the mean of the two
+  cells of the edge), and the same $`(u_{*e}/u_*)^3`$ multiplies all size classes. The original is
+  written for uniform sand and does not say how $`u_{*e}`$ is obtained for mixtures; this is ENCflow's
+  choice, following eq. (10) of the original, which expresses the equivalent roughness by $`d_m`$.
+- **Where it applies**: the bed-load capacity (interior edges and open-boundary faces, for a single
+  size and for mixed sizes; the capacity feed follows from them). The direction coefficient γ, the
+  threshold of fixation, the bank-retreat law (an excess-shear ratio whose coefficient is set with the
+  total shear) and the equilibrium concentration of suspended load keep the total shear.
+- **Combinations**: it works only with the Ashida–Michiue formula (`f_qbform = 1`). Combining it with
+  MPM (whose original has a different correction, the ripple factor), with `fluv_taufac` ≠ 1 (a double
+  separation), with the wave-field sediment `f_wfsed` (eq. (11) does not cover the combined
+  wave–current shear) or with bedrock incision `f_rockinc` (bedrock streams are the domain of
+  `f_taupart = 1`) stops the run at initialization. No new parameter is needed.
+- **Size of the effect** (trial calculation for uniform flow): on a sand bed with n about twice the
+  grain roughness (the settings of the meander and delta examples) the transport becomes 0.1–0.25
+  times the default, on a gravel bed 0.4–0.65 times. In the shallow sand–gravel model
+  [examples/joganji_flume](../../../examples/joganji_flume/en/README.md) (depth 2–5 cm, mean size
+  1–4 mm, n = 0.035) it is 0.05–0.15 times, which cannot explain the measured sediment budget
+  ("Shear stress" in the example's README). The existing examples set the speed of morphological
+  change without $`\tau_{*e}`$, so it is not the default (bit-identical to the previous results when
+  disabled).
+- **Limits**: the bedform regime and the resistance itself are not predicted (n is an input); the
+  difference between the given n and eq. (11) is taken as form drag. Eq. (11) was built for sand beds;
+  in gravelly flows shallower than about 10 times D84 it underestimates the grain resistance
+  (overestimates the form drag) and errs on the side of a too small $`\tau_{*e}`$. The partition for
+  that range is `f_taupart = 1` (next item). The default behaviour that a cell with a higher n from a
+  roughness distribution (land use, for example) has more transport almost disappears for the leading
+  term ($`\tau_{*e}`$ is set almost by the velocity and the depth; the threshold factors keep the total
+  $`\tau_*`$).
+- **Verification**: te and te_cap of [test/taupart](../../../test/taupart/en/README.md) (in uniform flow in
+  a steep channel, the transport through the open boundary agrees with eqs. (11) and (23) within
+  ±0.5 %; the cap, the stops on the combinations and the bit-identical MPI runs). The record is
+  developer.md §121.
 
 **Flow resistance partitioning on steep gravel beds (macro-roughness;
 `f_taupart` = 1).** In gravel and boulder streams whose depth is less than
@@ -445,8 +470,8 @@ multiplies the $`\tau_*`$ passed to the transport formula by this factor
   flows over boulder beds (h/D84 = 1–3) it is 0.2–0.6, and the transport drops
   further the closer it is to the threshold.
 - **Exclusivity and caveats**: combining it with `fluv_taufac` ≠ 1 stops the
-  run (to prevent a double separation); it will also be exclusive with the
-  effective shear stress $`\tau_{*e}`$ above (future work). Rickenmann & Recking
+  run (to prevent a double separation); the effective shear stress $`\tau_{*e}`$
+  (`f_taupart = 2`) is the other value of the same selector, so the two are exclusive. Rickenmann & Recking
   caution that applied to high-concentration flows without boulders (sheet
   flow) it makes the transport implausibly small[^rickenmann11]. In thin flows
   (h/D84 < 0.5) the factor drops below 0.1 and bed load almost stops, so

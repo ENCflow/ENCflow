@@ -3,7 +3,9 @@
 #   save_*/state.dat(h, z, rsh, hg, sd, hs の順。RLE)、save_*/geomorph_bedmix.dat(粒径階の数・粒径・L_a の
 #   見出しと、交換層の組成 N 面・下層の組成 N 面。RLE)、result_*/ の出力、screen_*.log の台帳を読む。
 #     (1) equal(3 つの粒径階がすべて 3 mm、交換層厚 > 土層厚)と single(単一粒径 3 mm)の河床が一致し、
-#         組成が変わらない(等移動度の極限)。開境界の正味の流出の合計も一致する
+#         組成が変わらない(等移動度の極限)。開境界の正味の流出の合計も一致する。芦田・道上の有効掃流力
+#         (f_taupart = 2。developer.md §121)を足した equal_te と single_te も同じく一致し、開境界の流出が
+#         有効掃流力なしより小さい(粒径階の d_m で求めた係数 (u*e/u*)^3 が単一粒径の係数と同じに効く)
 #     (2) armor(1 mm と 20 mm、遮蔽なし、給砂なし、粗粒は限界以下): 上流端の列の低下量が静的アーマーの
 #         理論値 L_a F0 / (1 − f_sub) に一致し、細粒の割合が単調に減って 0 に近づく。細粒の割合の減衰率が、
 #         出力の水理量から求めた 1 セルの式 dF/dt = −(1 − f_sub) Q F / L_a の率に一致する
@@ -143,6 +145,20 @@ txt = open("screen_single.log", encoding="utf-8", errors="replace").read()
 out_s = float(re.search(r"net bed load out through open boundaries \(out - in\)\s+(\S+)", txt).group(1))
 rep("(1c) 開境界の正味の流出の合計", abs(out_e - out_s) <= 1.0e-8 * abs(out_s),
     "equal %.9e、single %.9e m3" % (out_e, out_s))
+# (1d)(1e) 芦田・道上の有効掃流力(f_taupart = 2)の equal_te と single_te
+_, z_st, _ = load_state("single_te")
+_, z_et, _ = load_state("equal_te")
+dzt = max(abs(a - b) for a, b in zip(z_st, z_et))
+movedt = max(abs(a - b) for a, b in zip(z_st, z0))
+rep("(1d) equal_te = single_te の河床", dzt < TOL_EQ and movedt > 1.0e-4,
+    "max|z_equal_te - z_single_te| = %.2e m(河床の変化 %.4f m)" % (dzt, movedt))
+ledt = ledger("equal_te")
+out_et = sum(ledt[k][3] for k in ledt)
+txt = open("screen_single_te.log", encoding="utf-8", errors="replace").read()
+out_st = float(re.search(r"net bed load out through open boundaries \(out - in\)\s+(\S+)", txt).group(1))
+rep("(1e) 有効掃流力の開境界の流出(equal_te = single_te、有効掃流力なしより小さい)",
+    abs(out_et - out_st) <= 1.0e-8 * abs(out_st) and 0.0 < out_st < 0.95 * out_s,
+    "equal_te %.9e、single_te %.9e m3(有効掃流力なしの %.3f 倍)" % (out_et, out_st, out_st / out_s))
 
 # (2) armor
 h, z, sd = load_state("armor")

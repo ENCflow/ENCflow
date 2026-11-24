@@ -14,7 +14,7 @@ for g in std deep free bank; do
 done
 python3 "$sdir/make_init.py" qbmix > qbmix.txt
 
-CASES="single equal armor bcfeed bank qbmix"
+CASES="single equal single_te equal_te armor bcfeed bank qbmix"
 set -o pipefail
 for c in $CASES hide1 hide2; do
     ./encflow param_$c.txt 2>&1 | tee screen_$c.log || exit 1

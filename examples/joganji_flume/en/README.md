@@ -110,9 +110,12 @@ measured velocities and depths at 93 min (discharge 17 L/s), the given roughness
 section; over the 40 min above 10 L/s alone this is 0.4 m³, the same order as the measured net outflow (about 0.5 m³,
 solid). A ratio of 0.3 or 0.5 gives 1/20 to 1/5 of that and cannot explain the measurement, so the given roughness is
 used as it is (ratio 1). Most of the measured net volume change comes from local changes larger than 5 mm (erosion
-1.33 m³, deposition 0.56 m³); the changes of 5 mm or less sum to −0.15 m³. ENCflow does not yet have the effective
-shear stress of Ashida and Michiue's original formula (their eq. (11)), so this choice is a simplification matched to
-the measured sediment budget.
+1.33 m³, deposition 0.56 m³); the changes of 5 mm or less sum to −0.15 m³. With the effective shear stress of Ashida
+and Michiue's original formula (their eq. (11); `f_taupart = 2`), the conditions of this model (depth 2–5 cm, mean size
+1–4 mm) give τ*e/τ* of 0.14–0.28 and a transport of 0.05–0.15 times that with the given roughness (trial calculation),
+which cannot explain the measured net outflow. The bed of this model is shallow sand and gravel, with a depth of only
+ten-odd grain sizes, and eq. (11), built for sand beds, may also err on the side of overestimating the form drag. The
+choice of this example (ratio 1) is a simplification matched to the measured sediment budget.
 
 ## Running
 
@@ -287,13 +290,13 @@ over the movable bed.
   channel. The bottom of the initial threads and the section median are kept within 3 mm on the 10 cm grid
   (compared with the original 5 cm grid points), so the mapping to the grid is not the only cause. Possible reasons
   are the grid being coarse for the width of the threads (3 to 5 cells), a roughness given uniformly over the
-  low-water channel, the missing effective shear stress, and small repose collapses that keep flattening the edges of
+  low-water channel, the effective shear stress not being used, and small repose collapses that keep flattening the edges of
   the threads (ledger); this example does not separate which of them matters.
 - **Grid**: on the 10 cm grid the narrow low-flow channels (0.3 to 1 m wide) are only 3 to 10 cells, and the mean bed
   of a cell is higher than the bottom of a narrow thread. At base flow many gauge cells are therefore dry, and water
   levels are compared only while the discharge is 5 L/s or more.
-- **Shear stress**: there is no effective shear stress, so the transport is computed with the roughness that includes
-  form drag ("Shear stress" above). The change of transport with and without bedforms is not represented.
+- **Shear stress**: the effective shear stress (`f_taupart = 2`) is not used, so the transport is computed with the
+  roughness that includes form drag ("Shear stress" above). The change of transport with and without bedforms is not represented.
 - **Feed volume**: assumed to be a bulk volume (as a solid volume the feed would be 1.67 times larger).
 - **Inlet**: the sump and high structures of the fixed bed at the upstream end are replaced by a level floor.
 - **Downstream end**: the only downstream-end condition in the original data is the water level set to "free", and
