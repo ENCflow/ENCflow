@@ -95,11 +95,12 @@ ENCflow の設定と実行のリファレンスです。初めての方はまず
 - [土壌雨量指数](users_guide/swi.md)(&list_swi)— 土砂災害警戒の実務指標(気象庁3段タンク。専用ラン)
 - [鉛直不飽和浸透(VZ)流出](users_guide/vz.md)(&list_vz / &list_vz_column / &list_vz_zone)— 山地斜面の降雨流出応答を共有参照柱の 1 次元 Richards 式から求める(谷 2023 の VZ モデル。区画の直接排水を出口セルへ)
 - [貯留関数法の区画流出](users_guide/sfm.md)(&list_sfm / &list_sfm_zone)— 区画ごとのタンク S = K·q^P(木村 1961)で降雨流出を求める(出口・基底流は VZ と同じ。VZ と区画を分けて併用可)
+- [田んぼダム](users_guide/paddy.md)(&list_paddy)— 水田の貯留と落水口の装置則(水位調整板・機能分離型・機能一体型)をセルの水田面積率のタンクで表し、取組率による流出の違いを見る
 - [計測](users_guide/record.md)(&list_record)— プローブ・フラックス測線
 - [用途集](users_guide/usecases.md)— 現象名から機能の組み合わせを引く(未対応の現象も明示)
 
 **付録**
-- [全パラメータ索引](users_guide/params_index.md) — 全 821 パラメータの名前→章の逆引き
+- [全パラメータ索引](users_guide/params_index.md) — 全 844 パラメータの名前→章の逆引き
 
 ---
 
@@ -164,6 +165,7 @@ ENCflow は地表の水の流れを計算するモデルです。必要に応じ
 | [土壌雨量指数](users_guide/swi.md) | `fn_swi` | &list_swi |
 | [鉛直不飽和浸透流出](users_guide/vz.md) | `fn_vz` | &list_vz(+ &list_vz_column / &list_vz_zone) |
 | [貯留関数法の区画流出](users_guide/sfm.md) | `fn_sfm` | &list_sfm(+ &list_sfm_zone) |
+| [田んぼダム](users_guide/paddy.md) | `fn_paddy` | &list_paddy |
 | [計測](users_guide/record.md) | `fn_record` | &list_record |
 
 書き方に迷ったら、[動く設定例（test/wave）](../test/wave/) や
@@ -278,6 +280,7 @@ ENCflow は地表の水の流れを計算するモデルです。必要に応じ
 | 降雨流出(流域水文) | [降雨・気象](users_guide/forcing.md)(+地下水) |
 | 山地斜面の降雨流出を鉛直不飽和浸透から求める(谷の VZ モデル) | [鉛直不飽和浸透(VZ)流出](users_guide/vz.md)+[降雨・気象](users_guide/forcing.md) |
 | 小流域の降雨流出を貯留関数法(S = K·q^P)で求める | [貯留関数法の区画流出](users_guide/sfm.md)+[降雨・気象](users_guide/forcing.md) |
+| 田んぼダム(水田の落水口の流出抑制)の効果 | [田んぼダム](users_guide/paddy.md)+[降雨・気象](users_guide/forcing.md) |
 | 都市の内水氾濫(下水道の排水・噴出) | [地下水](users_guide/gwflow.md)(管路連続体層)+[降雨・気象](users_guide/forcing.md) |
 | 海水浸入・塩水くさび・淡水レンズ | [淡塩2層](users_guide/salt.md)+[潮位・海面](users_guide/tide.md) |
 | 土砂輸送・土石流 | [土砂・地形変化](users_guide/geomorph.md) |

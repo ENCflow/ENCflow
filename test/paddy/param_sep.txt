@@ -1,0 +1,73 @@
+!======================================================================
+! paddy: 長方形の穴と機能分離型(Check_paddy.py sep)
+!   種類 1 = 機能一体型の長方形の穴(門型セキ。幅 0.12 m・高さ 0.05 m・下端 0.03 m、水位調整板の
+!   天端 0.29 m)、種類 2 = 機能分離型(水位調整板 0.03 m × 0.30 m と、流出量調整板の円の穴 φ50 +
+!   天端 0.20 m・幅 0.30 m の越流)。取組率 0.5、区画 500 m2、雨なし 24 h。
+!   確認: 同じ流量則の常微分方程式を独立に解いた参照解(H > 0.04 m・0.01 m の範囲)。種類 2 は
+!   はじめ 0.20 m を超えて越流が加わり、その後は穴だけになる(min の切り替えを含む)。
+!======================================================================
+&list_sysparam
+  f_gridsystem = 0
+  dt = 2.0
+  t0 = 0
+  tt = 86400
+  dt_disp = 1800
+  dt_file = 86400
+  dt_recrd = 600
+  fn_geoinfo = '-'
+  fn_initial = '-'
+  fn_boundary = '-'
+  fn_paddy = '-'
+  dir_data = 'data_paddy'
+  dir_result = 'result_sep'
+  f_disp_debug = 1
+  f_check_cfl = 0
+  dd = 0.0001
+  dv = 0.0001
+  vv = 0.01
+/
+
+&list_initial
+  f_htype = 0
+  h0 = 0.0
+/
+
+&list_geoinfo
+  nx = 10
+  ny = 8                    ! np = 4 でもランクあたり 2 行
+  dx = 10.0
+  dy = 10.0
+  f_ztype = 0
+  z0 = 0.0
+  f_masktype = 0
+  f_rntype = 0
+  rn0 = 0.03
+/
+
+&list_bound_edge
+  f_bc_w = 1                ! 四辺とも自由流出(落水した水はすぐ領域の外へ出る。地表の水深は 1 mm 未満)
+  f_bc_e = 1
+  f_bc_n = 1
+  f_bc_s = 1
+/
+
+&list_paddy
+  pd_frac = 1.0
+  pd_adopt = 0.5
+  pd_aplot = 500.0
+  pd_hlev = 0.30
+  pd_h0 = 0.25
+  pd_perc_mmd = 0.0
+  pd_dev_type(1:2) = 2, 1
+  pd_board_h(1:2) = 0.29, 0.03
+  pd_board_w(1:2) = 0.30, 0.30
+  pd_open_type(1:2) = 2, 1
+  pd_open_b(1) = 0.12
+  pd_open_e(1) = 0.05
+  pd_open_z(1:2) = 0.03, 0.0
+  pd_open_d(2) = 0.05
+  pd_plate_h(2) = 0.20
+  pd_plate_w(2) = 0.30
+  pd_cw(1:2) = 0.6, 0.6
+  pd_co(1:2) = 0.6, 0.6
+/

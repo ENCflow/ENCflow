@@ -1,0 +1,67 @@
+!======================================================================
+! paddy: 田んぼダムのサブグリッドの水田タンク(fn_paddy)の検定(developer.md §119)
+!
+!   10 × 8 セル(Δx = Δy = 10 m)の平らな格子の全セルが水田(面積率 1)。四辺は自由流出で、
+!   落水口から地表へ出た水はすぐ領域の外へ出る(地表の水深は 1 mm 未満 = 落水口は潜らない)。
+!   param.txt: 雨なし、事前の湛水深 0.25 m からの水位調整板(四角セキ。天端 0.03 m・幅 0.30 m・
+!   C = 0.6)の落水 12 h。区画 3000 m2 に落水口 1 か所。減水深 0。
+!   確認(Check_paddy.py weir): 平均湛水深 h1 = 堰の常微分方程式の厳密解
+!   (H − z)^−1/2 = (H0 − z)^−1/2 + (k/(2A)) t、k = (2/3)C√(2g)B、と、同じ陽解法の参照解。台帳の閉合。
+!======================================================================
+&list_sysparam
+  f_gridsystem = 0
+  dt = 2.0
+  t0 = 0
+  tt = 43200
+  dt_disp = 1800
+  dt_file = 43200
+  dt_recrd = 600
+  fn_geoinfo = '-'
+  fn_initial = '-'
+  fn_boundary = '-'
+  fn_paddy = '-'
+  dir_data = 'data_paddy'
+  dir_result = 'result'
+  f_disp_debug = 1
+  f_check_cfl = 0
+  dd = 0.0001
+  dv = 0.0001
+  vv = 0.01
+/
+
+&list_initial
+  f_htype = 0
+  h0 = 0.0
+/
+
+&list_geoinfo
+  nx = 10
+  ny = 8                    ! np = 4 でもランクあたり 2 行
+  dx = 10.0
+  dy = 10.0
+  f_ztype = 0
+  z0 = 0.0
+  f_masktype = 0
+  f_rntype = 0
+  rn0 = 0.03
+/
+
+&list_bound_edge
+  f_bc_w = 1                ! 四辺とも自由流出(落水した水はすぐ領域の外へ出る。地表の水深は 1 mm 未満)
+  f_bc_e = 1
+  f_bc_n = 1
+  f_bc_s = 1
+/
+
+&list_paddy
+  pd_frac = 1.0             ! 全セルが水田
+  pd_adopt = 0.0            ! 取組なし(全て通常の落水口 = 種類 1)
+  pd_aplot = 3000.0         ! 代表区画面積 (m2)
+  pd_hlev = 0.30            ! 畦畔高 (m)
+  pd_h0 = 0.25              ! 事前の湛水深 (m)
+  pd_perc_mmd = 0.0         ! 減水深なし
+  pd_dev_type(1) = 0        ! 水位調整板だけ
+  pd_board_h(1) = 0.03
+  pd_board_w(1) = 0.30
+  pd_cw(1) = 0.6
+/

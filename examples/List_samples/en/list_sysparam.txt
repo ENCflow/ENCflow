@@ -75,6 +75,7 @@
   !fn_swi = ""              ! soil water index (dedicated run; users_guide/swi.md)
   !fn_vz = ""               ! vertical unsaturated flow (VZ) runoff (users_guide/vz.md)
   !fn_sfm = ""              ! storage function runoff of zones (users_guide/sfm.md)
+  !fn_paddy = ""            ! paddy-field dams (restricting the outlets of rice paddies; users_guide/paddy.md)
   !fn_record = ""           ! measurement (probes and transects)
 
   ! ---- Distribution file formats (users_guide/io.md) ----

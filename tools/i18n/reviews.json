@@ -113,11 +113,11 @@
     {
       "source": "docs/users_guide.md",
       "target": "docs/en/users_guide.md",
-      "source_sha256": "d793c6be32bd647d56c42f324d747457e948982f97e84000dc8ccdd98cef67df",
-      "target_sha256": "c180297b681edb75d6198b1da2a7207622b6f42ae34f9ad5f4fd232bac5af135",
-      "reviewer": "Claude (Claude Code session; the parts changed for the natural-dam application and the example debris_dam: applications section 7, combination with bed load, the two conditions on slide_dmax, pattern table, use cases, index and the list of examples; the English mirror was updated in the same work and both diffs were read side by side)",
+      "source_sha256": "317638fefa40d2b5be17641775c3e96ac170355121463131912465ec6f7186aa",
+      "target_sha256": "9fc875f23102f0a38e9ab921f3cd0f462872b111301e4755cd1cd34dbe6c42b1",
+      "reviewer": "Claude (Claude Code session; changed sections compared side by side with the Japanese source; numbers checked against the test runs)",
       "method": "assistant",
-      "reviewed_on": "2026-11-23"
+      "reviewed_on": "2026-11-24"
     },
     {
       "source": "docs/users_guide/advection.md",
@@ -374,11 +374,11 @@
     {
       "source": "docs/users_guide/io.md",
       "target": "docs/en/users_guide/io.md",
-      "source_sha256": "de1a13ef1ab8d2d6ac5494c9fd8019215194e9ba45374311ca9e0cf644101c6f",
-      "target_sha256": "df3614f6a8700db0056d2f11d5bf7c2b96a9bc03d2cf942311d7e9a636063155",
-      "reviewer": "Claude (Claude Code session; the culv_jam additions of the Japanese master and the English mirror compared passage by passage, numbers cross-checked)",
+      "source_sha256": "87357dbf8a887bf96c6c03309cd59775dc2acbc6f659ff8102a7bca8629ec3ec",
+      "target_sha256": "14d9dca73b4bd85d2691ced8b850b5d56c5ccd273629cbd2d004eb7d0b773c50",
+      "reviewer": "Claude (Claude Code session; changed sections compared side by side with the Japanese source; numbers checked against the test runs)",
       "method": "assistant",
-      "reviewed_on": "2026-11-12"
+      "reviewed_on": "2026-11-24"
     },
     {
       "source": "docs/users_guide/lavaflow.md",
@@ -426,6 +426,15 @@
       "reviewed_on": "2026-11-11"
     },
     {
+      "source": "docs/users_guide/paddy.md",
+      "target": "docs/en/users_guide/paddy.md",
+      "source_sha256": "4c01c7384ab8aaccbc1b9d32d0f27840711beaffef97599958e45098f7fc1c15",
+      "target_sha256": "c2cfa70002dae8fae763c51a0366968084f50fdaae1f4fa1dbe92897daa4a2f4",
+      "reviewer": "Claude (Claude Code session; full-text content and lexical review against the Japanese source; numbers checked against the test/paddy runs)",
+      "method": "assistant",
+      "reviewed_on": "2026-11-24"
+    },
+    {
       "source": "docs/users_guide/parallel.md",
       "target": "docs/en/users_guide/parallel.md",
       "source_sha256": "315897952d16c2084d237fd36cdc02a3b327aba9449f0252ddb88e5be6753686",
@@ -437,11 +446,11 @@
     {
       "source": "docs/users_guide/params_index.md",
       "target": "docs/en/users_guide/params_index.md",
-      "source_sha256": "be3d64c5415402891752fe662ce20d864ca696912d4e91aee6139b61f9a8e165",
-      "target_sha256": "a40fc2b9bd2b617d50e921497be8e133a699cd57aafaefb76c0e236d6d43c35c",
-      "reviewer": "Claude (Claude Code session; the parts changed for the options of the slope-stability test (f_slide_seep, f_slide_wet, f_slide_noflow, slide_dmax) compared side by side with the Japanese source; numbers checked against the test runs)",
+      "source_sha256": "c0fb579d2c76814afc6938813a8790c8a583e887ffd8b139956f27ae976dcd24",
+      "target_sha256": "2dabd47c220fc58810e696d2613c333e25b9367a29550ceb82808d7f8a1f2ac8",
+      "reviewer": "Claude (Claude Code session; changed sections compared side by side with the Japanese source; numbers checked against the test runs)",
       "method": "assistant",
-      "reviewed_on": "2026-11-22"
+      "reviewed_on": "2026-11-24"
     },
     {
       "source": "docs/users_guide/passage_width.md",
@@ -527,11 +536,11 @@
     {
       "source": "docs/users_guide/swflow.md",
       "target": "docs/en/users_guide/swflow.md",
-      "source_sha256": "c589b15550b05e73159544ff78b03f95b3bc0dcfe52e2512e9241f871ef61b1b",
-      "target_sha256": "ae736e2ea95be1571e55e0c69704766b381ec14a23a819ef84bf9c56c666c8e1",
-      "reviewer": "Claude (Claude Code session; run-time statement of the default advection values rewritten as the measured range 1.3-1.6 with the source_area measurement, Japanese and English compared)",
+      "source_sha256": "293b0927d59ef0be4ea2335e11e541c36954774d65312c2a2b213139c1d89471",
+      "target_sha256": "ad4763deed4d2c461294d51e3bdf5ed1bde0c274e9c16db8783c282053c687c5",
+      "reviewer": "Claude (Claude Code session; changed sections compared side by side with the Japanese source; numbers checked against the test runs)",
       "method": "assistant",
-      "reviewed_on": "2026-11-23"
+      "reviewed_on": "2026-11-24"
     },
     {
       "source": "docs/users_guide/swi.md",
@@ -572,11 +581,11 @@
     {
       "source": "docs/users_guide/usecases.md",
       "target": "docs/en/users_guide/usecases.md",
-      "source_sha256": "936192b10b83fc2245f8ae4b3df1b31c11c5902e3f60b301ebba117c4cf753a2",
-      "target_sha256": "dc2c40ef116e5df17693c0cb24a3fe333176a2a3ebbb81daa7fc05b394586bb7",
-      "reviewer": "Claude (Claude Code session; the parts changed for the natural-dam application and the example debris_dam: applications section 7, combination with bed load, the two conditions on slide_dmax, pattern table, use cases, index and the list of examples; the English mirror was updated in the same work and both diffs were read side by side)",
+      "source_sha256": "c5b53e9702ef9309553ff991a5a29501c5fbee39f1d204882dc10946a2c5660f",
+      "target_sha256": "ab5342e898f95f294d7e194e8c2120ced1a2cf2e9f0f8cddc7e5fa5b935f9e6b",
+      "reviewer": "Claude (Claude Code session; changed sections compared side by side with the Japanese source; numbers checked against the test runs)",
       "method": "assistant",
-      "reviewed_on": "2026-11-23"
+      "reviewed_on": "2026-11-24"
     },
     {
       "source": "docs/users_guide/user_routines.md",
@@ -777,6 +786,15 @@
       "reviewed_on": "2026-10-24"
     },
     {
+      "source": "examples/List_samples/list_paddy.txt",
+      "target": "examples/List_samples/en/list_paddy.txt",
+      "source_sha256": "0605983d57580a8b74a9a55a0bfd69a675005feef4b59b1e68bab0088557ed70",
+      "target_sha256": "547dbd408d2dda33e9363eacd65e44be37daa8c2a80661fc56d384b6c5640ed0",
+      "reviewer": "Claude (Claude Code session; full-text content and lexical review against the Japanese source; numbers checked against the test/paddy runs)",
+      "method": "assistant",
+      "reviewed_on": "2026-11-24"
+    },
+    {
       "source": "examples/List_samples/list_precip.txt",
       "target": "examples/List_samples/en/list_precip.txt",
       "source_sha256": "277363028321fc2b89706471ec8a8c8df5b287de1aa80c771640eaf9f6dcc0f7",
@@ -851,11 +869,11 @@
     {
       "source": "examples/List_samples/list_sysparam.txt",
       "target": "examples/List_samples/en/list_sysparam.txt",
-      "source_sha256": "fbf51795f4df6485592692047d8a22802bdfe370ba4a6f8d5ea593facc559061",
-      "target_sha256": "1dd464b37024613160926d70da21b59159889395b615c13b7ee299f313e6e2a1",
-      "reviewer": "Claude (Claude Code session; storage function runoff fn_sfm (§106): Japanese and English written together, full text and changed passages compared, no model execution)",
+      "source_sha256": "c332b20474a19d93556e3b6721d8da765f3d7a258e6bd13f63348fcaeebb7fc9",
+      "target_sha256": "6291b68a3c791fa1dfee236a00f4f3646437d399cd73008ac2e048eab60be1f7",
+      "reviewer": "Claude (Claude Code session; changed sections compared side by side with the Japanese source; numbers checked against the test runs)",
       "method": "assistant",
-      "reviewed_on": "2026-11-11"
+      "reviewed_on": "2026-11-24"
     },
     {
       "source": "examples/List_samples/list_tide.txt",
@@ -3758,11 +3776,11 @@
     {
       "source": "test/README.md",
       "target": "test/README.en.md",
-      "source_sha256": "f64da2462e56024535ff378ae1b0fa1fcfb3720fd7215e0cf48ac960b8925ad0",
-      "target_sha256": "09773fa40dd3c4eace153f8fa2d8071b53a2fca0639867cf9543b5398fc5262a",
-      "reviewer": "Claude (Claude Code session; the parts changed for the options of the slope-stability test (f_slide_seep, f_slide_wet, f_slide_noflow, slide_dmax) compared side by side with the Japanese source; numbers checked against the test runs)",
+      "source_sha256": "03d6aa0faf9d36f0117002e6a0b6674efac183e8d7df324905802e5b4ecdb29d",
+      "target_sha256": "6819575855811a18fbdb3ce1c40e60c3280142d75658bb4ba778fc38eb0f1175",
+      "reviewer": "Claude (Claude Code session; changed sections compared side by side with the Japanese source; numbers checked against the test runs)",
       "method": "assistant",
-      "reviewed_on": "2026-11-22"
+      "reviewed_on": "2026-11-24"
     },
     {
       "source": "test/avalanche/README.md",
@@ -4789,6 +4807,15 @@
       "reviewer": "Claude (Claude Code session; full-text content and lexical review, no model execution)",
       "method": "assistant",
       "reviewed_on": "2026-10-24"
+    },
+    {
+      "source": "test/paddy/README.md",
+      "target": "test/paddy/en/README.md",
+      "source_sha256": "397000da76d826363679ff8abd83f32c9ae444300dcf03b1f69fdba99c41eaf3",
+      "target_sha256": "323fcd3b5e3a90ac2e3bc67526c4d28057181e4a9cdc40fb3226f0f9499bf32f",
+      "reviewer": "Claude (Claude Code session; full-text content and lexical review against the Japanese source; numbers checked against the test/paddy runs)",
+      "method": "assistant",
+      "reviewed_on": "2026-11-24"
     },
     {
       "source": "test/prmap/README.md",

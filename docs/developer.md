@@ -105,6 +105,11 @@
 - 現行: [土壌雨量指数](users_guide/swi.md)・[鉛直不飽和浸透(VZ)流出](users_guide/vz.md)・[貯留関数法の区画流出](users_guide/sfm.md)。VZ の設計の正本は docs/vz_plan.md
 - 記録: [§49](developer/049.md)・[§87](developer/087.md)・[§106](developer/106.md)(m_sfm と共通基盤 m_zonerunoff)・[§117](developer/117.md)(例題 source_area での VZ・貯留関数法との比べ)
 
+### 田んぼダム(水田の貯留と落水口)
+
+- 現行: [田んぼダム](users_guide/paddy.md)。設計の正本は docs/paddy_plan.md
+- 記録: [§119](developer/119.md)
+
 ### 土砂・地形変化
 
 - 現行: [土砂・地形変化](users_guide/geomorph.md)・[土砂輸送と斜面・長期地形過程の解説](users_guide/sediment.md)・[土石流・斜面崩壊・動く底層の解説](users_guide/massflow.md)・[土砂・地形変化の適用例](users_guide/geomorph_applications.md)。既定値は [§62](developer/062.md)
@@ -284,3 +289,4 @@
 - [§116](developer/116.md) developer.md の分割: 基本方針の独立(docs/policy.md)と節ごとのファイル化(2026-11-22。利用者の依頼と、推奨案での合意)
 - [§117](developer/117.md) 例題 examples/source_area: 山地流域の流出寄与域の発達と縮小(2026-11-10〜16。作成と検討の経過。handoff 00q から移した)
 - [§118](developer/118.md) 河道の向きが変わる場所の移流項(§110)の続き: 200 KB を超えた §110 に代わる追記先(2026-11-22 から)
+- [§119](developer/119.md) 田んぼダムの評価機能 m_paddy(fn_paddy): 落水口の装置則とサブグリッドの水田タンク(2026-11-24 設計合意・段 1 実装)

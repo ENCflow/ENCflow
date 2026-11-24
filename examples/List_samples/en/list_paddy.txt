@@ -1,0 +1,106 @@
+!======================================================================
+! English mirror of examples/List_samples/list_paddy.txt.
+! The Japanese file is the master copy; edit it first.
+!======================================================================
+!
+! Example of paddy-field dam settings (restricting the outlets of rice
+! paddies) &list_paddy
+!
+!   Use this file by specifying, in the system parameters &list_sysparam,
+!     fn_paddy = "list_paddy.txt"
+!   (if fn_paddy is not specified, the feature is completely inactive).
+!
+!   The rain falling on the paddy area fraction of a cell is stored in a
+!   tank for each class (1 = normal outlets without adoption, 2 = outlets of
+!   paddy-field dams) and returned to the surface by the device law of the
+!   outlet and the overflow of the levees. There is one outlet per
+!   representative plot area, and the outflow rate per unit paddy area does
+!   not depend on the grid size (users_guide/paddy.md, developer.md §119).
+!
+!   Required input: only the paddy area fraction (fn_pd_frac or pd_frac). The
+!   rest can be omitted, in which case the adopted values are shown with
+!   (default) (plot 30 a, levee 0.30 m, decrease in depth 5 mm/d, no adoption,
+!   water-level board 0.03 m x 0.30 m, separated type with phi 50 mm,
+!   coefficient 0.6)
+!
+!   Features that cannot be combined (stops when given): fn_wq, fn_salt,
+!   nesting, STG grid. Paddy cells cannot be on sea, channel, boundary,
+!   source or structure cells, nor on zone cells of VZ or of the storage
+!   function method. Flow of inundation into the paddy fields (backflow) is
+!   not represented (one way)
+!
+!   Output: paddy.csv (accumulated rain, outlet flow, overflow and decrease
+!   in depth, storage, mean ponding depth and full share of each class,
+!   residual of the balance), maps Hpn and Hpd (ponding depth of each
+!   class). The storage of the tanks is included in S (S_surf) of the Log
+!
+!======================================================================
+&list_paddy
+  ! temporary disabling (0 with fn_paddy kept makes it completely inactive)
+  f_paddy = 1
+
+  ! paddy area fraction (share of the cell area, 0-1; one of the map and the
+  ! uniform value is required). Make it from land-use data in preprocessing
+  ! (the model does not read land use)
+  fn_pd_frac = "paddy_frac.asc"
+  !pd_frac = 0.5
+
+  ! adoption ratio (share of the paddy area with paddy-field dam outlets, 0-1;
+  ! map or uniform value; default 0)
+  !fn_pd_adopt = "paddy_adopt.asc"
+  pd_adopt = 0.5
+
+  ! representative plot area (m2; paddy area per outlet; default 3000 = 30 a)
+  !pd_aplot = 3000.0
+
+  ! levee height (m above the field surface; the part above overflows to the
+  ! surface; default 0.30)
+  !pd_hlev = 0.30
+
+  ! ponding depth before the run (m above the field surface; same value for
+  ! both classes; default = the level at which each class starts to drain;
+  ! 0 = empty for mid-season drainage etc., 0.30 = full from an earlier rain)
+  !pd_h0 = 0.03
+
+  ! decrease in depth (mm/d; leaves the system and does not enter the
+  ! groundwater; default 5)
+  !pd_perc_mmd = 5.0
+
+  ! devices of the outlets (index 1 = normal outlets, 2 = paddy-field dams)
+  ! type 0: water-level board only, 1: separated type = min(weir of the
+  ! water-level board, hole + overflow of the outflow control plate),
+  ! 2: integrated type = hole + overflow of the crest of the water-level board
+  ! (default 0 for 1 and 1 for 2)
+  !pd_dev_type(1:2) = 0, 1
+
+  ! crest height (m above the field surface; default 0.03) and width (m;
+  ! default 0.30) of the water-level board
+  !pd_board_h(1:2) = 0.03, 0.03
+  !pd_board_w(1:2) = 0.30, 0.30
+
+  ! shape of the hole 1: circle, 2: rectangle, 3: triangle (V-notch); used by
+  ! types 1 and 2 (default 1)
+  !pd_open_type(2) = 1
+  ! diameter of a circle (m; default 0.05)
+  !pd_open_d(2) = 0.05
+  ! width and height of a rectangle (m; required for a rectangle; the example
+  ! is a gate-shaped notch of 12 cm x 5 cm)
+  !pd_open_b(2) = 0.12
+  !pd_open_e(2) = 0.05
+  ! angle of a triangle (degrees; default 60)
+  !pd_open_ang(2) = 60.0
+  ! height of the bottom of the hole (vertex for a triangle) (m above the
+  ! field surface; default 0)
+  !pd_open_z(2) = 0.0
+
+  ! crest height (m) and overflow width (m; default = width of the water-level
+  ! board) of the outflow control plate of the separated type. Not given = no
+  ! overflow
+  !pd_plate_h(2) = 0.20
+  !pd_plate_w(2) = 0.30
+
+  ! discharge coefficients (weirs and holes; default 0.6 = value of the
+  ! calculation program of the guide; a weir with C = 0.525 is the Honma formula)
+  !pd_cw(1:2) = 0.6, 0.6
+  !pd_co(1:2) = 0.6, 0.6
+/

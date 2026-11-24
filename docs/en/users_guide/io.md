@@ -177,6 +177,7 @@ lists the main outputs.
 | — (with fn_wq) | — | C / B | concentration of the transported substance (mg/L) and, with the buildup pool enabled, the surface buildup pool (kg/ha) ([Water Quality](wq.md); automatic; the subsurface mass pool Cg rides on f_out_hg) |
 | — (with fn_snow) | — | Sw | snow water equivalent SWE (mm) (automatic) |
 | — (with fn_swi) | — | Swi / Swi9999 / Swit9999 | Soil Water Index (mm) distribution, period maximum, and its time ([Soil Water Index](swi.md); automatic) |
+| — (with fn_paddy) | — | Hpn / Hpd | Ponding depth (m, above the field surface) of the paddy fields with normal outlets and of the paddy-field dams (only in runs with paddy fields of that class; [Paddy-field dams](paddy.md); automatic) |
 | — (always) | — | X0000 | domain mask (0: outside, 1: land, 2: sea); for visualization and checking the active domain in GIS |
 | — (when the void ratio fn_gv or a channel width is active; ENC only) | — | A0000 | effective area factor = void ratio gv × channel area fraction f_w (0–1); the factor that converts column quantities to cell averages, volumes and wet area (see "Reading cells with channel width or buildings" below). Not written with STG (f_gridsystem = 1) |
 
@@ -335,6 +336,7 @@ come from `FILENUMBER.csv`.
 | Cumulative bedrock incision | automatic | Ri | total plucked and abraded thickness by flowing water (m); only with f_rockinc. The bedrock surface is Z − Sd ([Sediment and landform change](geomorph.md)) |
 | Snow water equivalent | automatic | Sw | mm of water ([Snow](forcing.md)) |
 | Soil Water Index | automatic | Swi / Swi9999 / Swit9999 | mm ([Soil Water Index](swi.md)) |
+| Ponding depth of paddy fields (paddy-field dams) | automatic | Hpn / Hpd | m above the field surface; the ledger of the paddy fields is paddy.csv ([Paddy-field dams](paddy.md)) |
 | Sediment column / concentration / flow depth | flag or computed | Hs (f_out_hs), D9999 / Dt9999 (f_out_dmax family) | volume concentration = Hs / (H + Hs); instantaneous flow depth = H + Hs, run maximum D9999 |
 | Slope safety factor | flag | Fs / Fs9999 (f_out_fs) | −1 = not evaluated |
 | Driftwood / debris distribution and reach | flag | Hd / Wd / Wd9999 (f_out_hd, wd), Wj (f_out_wj), Bf / Bd / Bd9999 / Bs (f_out_hbd, wbd, bds) | reach = Wd9999 / Bd9999 (run maximum of moving + deposited); wood jammed at structures is Wj |

@@ -158,6 +158,13 @@ module m_state
     real, allocatable :: sfe(:,:)   ! タンクへ渡す蒸発散の要求 (m。セル面積基底。そのステップの
                                     ! m_evap の残りの要求。確保は m_sfm_init(fn_sfm と fn_evap の
                                     ! 両方が有効なときのみ)、m_sfm_evap が引いてゼロ戻し。§106.7)
+    ! 田んぼダム(水田のサブグリッドのタンク。§119)の状態と台帳。pd_active は m_paddy_init が
+    ! 立てる。確保は m_paddy_init(有効時のみ。hpn・hpd はその種類の水田がある格子だけ)
+    logical :: pd_active = .false.  ! 水田のタンクの有効化
+    real, allocatable :: hpn(:,:)   ! 通常の落水口の水田の湛水深 (m。その種類の水田面積の上。田面から)
+    real, allocatable :: hpd(:,:)   ! 田んぼダムの落水口の水田の湛水深 (m。同上)
+    real, allocatable :: pdv(:,:)   ! 水田のタンクの貯留 (m。セル面積基底。calcstat が S に足す)
+    real :: pdmean = 0.0     ! 領域平均の水田の貯留(m)。pd_active 時のみ更新
     ! 沿岸の波浪場(fn_wavefield。§90)の診断量。確保と wv_active の設定は m_wavefield_init
     ! (有効時のみ)。状態(ビン別のエネルギー)は t_wavefield の私有で、ここは書き出しと
     ! 他プロセスへの受け渡し用の導出量(帯 js..je を更新ごとに上書き)
@@ -701,6 +708,7 @@ subroutine m_state_calcstat(s, p, g)
   real(real64) :: hisum_j(dcp%js:dcp%je), hisum
   real(real64) :: vzsum_j(dcp%js:dcp%je), vzsum
   real(real64) :: sfsum_j(dcp%js:dcp%je), sfsum
+  real(real64) :: pdsum_j(dcp%js:dcp%je), pdsum
   real :: qcumf
   real :: dtpdx     ! dt / min(dx, dy)
   real :: cosdir
@@ -871,6 +879,18 @@ subroutine m_state_calcstat(s, p, g)
     call par_sum_rows(sfsum_j, sfsum)
     s%sfmean = (sfsum + s%sfstore) / s%n_valcells
   end if
+  ! 水田のタンクの貯留(§119)。VZ と同じく別ループ(無効時は何もしない)。判定 pd_active は全ランク同一
+  if (s%pd_active) then
+    pdsum_j(:) = 0.0
+    do j = dcp%js, dcp%je
+      do i = g%wx(1,j), g%wx(2,j)
+        if (g%x(i,j) == 0 .or. g%sw(i,j) > 0) cycle
+        if (s%pdv(i,j) > 0.0) pdsum_j(j) = pdsum_j(j) + s%pdv(i,j)
+      end do
+    end do
+    call par_sum_rows(pdsum_j, pdsum)
+    s%pdmean = pdsum / s%n_valcells
+  end if
   rmax = [hmax, vvmax, qqmax, cnmax]
   call par_allreduce_max(rmax)
   hmax  = rmax(1)
@@ -959,6 +979,11 @@ subroutine m_state_printstate(p, s)
     end if
     sblk(2) = sblk(2) + s%sfmean
     sblk(3) = sblk(3) + s%sfmean
+  end if
+  ! 水田のタンクの貯留は地表の水として S(S_surf)に算入(§119。無効時は既存の式に触れない別枝)
+  if (s%pd_active) then
+    sblk(1) = sblk(1) + s%pdmean
+    if (ns == 3) sblk(3) = sblk(3) + s%pdmean
   end if
 
   ! --- 保存量列の書式 ---
@@ -1080,6 +1105,9 @@ subroutine m_state_dispose(s, p)
   if (allocated(s%vzp)) deallocate(s%vzp)
   if (allocated(s%sfp)) deallocate(s%sfp)
   if (allocated(s%sfe)) deallocate(s%sfe)
+  if (allocated(s%hpn)) deallocate(s%hpn)
+  if (allocated(s%hpd)) deallocate(s%hpd)
+  if (allocated(s%pdv)) deallocate(s%pdv)
   if (allocated(s%wvh)) deallocate(s%wvh)
   if (allocated(s%wvdir)) deallocate(s%wvdir)
   if (allocated(s%wvub)) deallocate(s%wvub)
