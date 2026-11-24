@@ -341,6 +341,8 @@ module subroutine dispose_bedmix(gm, p, g, s)
   character(len=512) :: msg
 
   if (p%f_state_save > 0) call save_bedmix(gm, p, s)
+  ! 台帳の値は指数 3 桁の書式(esw.de3)。es16.9 は指数が 3 桁の値(1e-245 など)で E を落とし、表示が
+  ! 6.946728363-245 のようになって数として読めない(§123.7)
   call bmix_stock(gm, g, s, v1)
   vx = 0.0_real64
   if (gm%bmx%susp) then
@@ -351,7 +353,7 @@ module subroutine dispose_bedmix(gm, p, g, s)
     call par_sum_rows(gm%bmx%feedrow(:,kc), vf)
     call par_sum_rows(gm%bmx%voutrow(:,kc), vo)
     res = v1(kc) - (gm%bmx%v0(kc) + vf - vo)
-    write(msg, '(a,i0,a,es12.5,a,4(a,es16.9),a)') "geomorph: bed mixture ledger class ", kc, " (d = ", &
+    write(msg, '(a,i0,a,es12.5,a,4(a,es17.9e3),a)') "geomorph: bed mixture ledger class ", kc, " (d = ", &
           gm%bmx%d(kc), " m): stock", " initial ", gm%bmx%v0(kc), " final ", v1(kc), " feed ", vf, &
           " out ", vo, " m3 (solid)"
     call par_info(trim(msg))
@@ -361,21 +363,21 @@ module subroutine dispose_bedmix(gm, p, g, s)
       vrk = vrk / real(gm%wrk%ainv, real64) / real(gm%poroi, real64)
       call par_sum_rows(gm%bmx%rfsea(:,kc), vsk)
       res = res - vrk + vsk
-      write(msg, '(a,i0,a,es16.9,a,es16.9,a)') "geomorph: bed mixture ledger class ", kc, &
+      write(msg, '(a,i0,a,es17.9e3,a,es17.9e3,a)') "geomorph: bed mixture ledger class ", kc, &
             " rockfall: from bedrock ", vrk, " to sea cells ", vsk, " m3 (solid)"
       call par_info(trim(msg))
     end if
     if (gm%bmx%susp .and. kc == 1) then
       ! 浮遊砂へ出た分(巻き上げ − 沈降。河床の側の重み)を収支に含める(§122)
       res = res + vx
-      write(msg, '(a,es16.9,a)') "geomorph: bed mixture ledger class 1 to suspended load (pickup - deposition) ", &
+      write(msg, '(a,es17.9e3,a)') "geomorph: bed mixture ledger class 1 to suspended load (pickup - deposition) ", &
             vx, " m3 (solid, bed side)"
       call par_info(trim(msg))
-      write(msg, '(a,es12.5,a)') "geomorph: bed mixture ledger class 1 residual ", res, &
+      write(msg, '(a,es13.5e3,a)') "geomorph: bed mixture ledger class 1 residual ", res, &
             " m3 (final - initial - feed + out + to suspended load" // trim(merge(" - from bedrock + to sea)", &
             ")                        ", allocated(gm%bmx%rfrock)))
     else
-      write(msg, '(a,i0,a,es12.5,a)') "geomorph: bed mixture ledger class ", kc, " residual ", res, &
+      write(msg, '(a,i0,a,es13.5e3,a)') "geomorph: bed mixture ledger class ", kc, " residual ", res, &
             " m3 (final - initial - feed + out" // trim(merge(" - from bedrock + to sea)", &
             ")                        ", allocated(gm%bmx%rfrock)))
     end if
@@ -394,10 +396,10 @@ module subroutine dispose_bedmix(gm, p, g, s)
     vin = vin + vin2
     vo = vo1 + vo2 + vo4
     res = hs1 - (gm%bmx%hs0 + ves + vin - vo)
-    write(msg, '(a,5(a,es16.9),a)') "geomorph: suspended load (class 1) ledger:", " stock initial ", gm%bmx%hs0, &
+    write(msg, '(a,5(a,es17.9e3),a)') "geomorph: suspended load (class 1) ledger:", " stock initial ", gm%bmx%hs0, &
           " final ", hs1, " pickup - deposition ", ves, " in ", vin, " out ", vo, " m3 (solid)"
     call par_info(trim(msg))
-    write(msg, '(a,es12.5,a)') "geomorph: suspended load (class 1) ledger residual ", res, &
+    write(msg, '(a,es13.5e3,a)') "geomorph: suspended load (class 1) ledger residual ", res, &
           " m3 (final - initial - (pickup - deposition) - in + out)"
     call par_info(trim(msg))
   end if

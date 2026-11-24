@@ -609,7 +609,10 @@ load (the design document is docs/mixed_sediment_plan.md).
   mixture (different compositions in the exchange layer and the substrate), a ground elevation that agrees
   with the single-size run to 1e-14 m; the balance of each class closes including the production from bedrock
   and the outflow into sea cells, and the production from bedrock equals the lowering of the bedrock times
-  `rf_frac`. In a comparison with the NILIM 1/100 movable-bed model of the Joganji River
+  `rf_frac`. With the capacity feed, the bed and composition of the inflow cells stay fixed even when the
+  per-class supply limiter fires there (difference 0 and 6e-16), and with the equilibrium-concentration feed
+  of suspended sediment the class-1 fraction of the inflow cells hardly changes (0.007 in 160 s). In a
+  comparison with the NILIM 1/100 movable-bed model of the Joganji River
   (case 2-1; [examples/joganji_flume](../../../examples/joganji_flume/en/README.md)), the area changed by more than 5 mm and the
   eroded volume are close to the measurement (a single size changes too much), while the locations of the change
   (point-by-point correlation 0.1 to 0.25) and the pattern of the surface composition do not match, and the model's

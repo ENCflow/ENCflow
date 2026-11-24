@@ -482,9 +482,9 @@
     {
       "source": "docs/users_guide/sediment.md",
       "target": "docs/en/users_guide/sediment.md",
-      "source_sha256": "ce52c7bda890a14500448d4d6d72645574cc33f6f6adcbee282990c0c57ffeb4",
-      "target_sha256": "478ad7f316f9db6118887a8480a3b35bf9f0e0682e4eee70c753fabedd7fa993",
-      "reviewer": "Claude (Claude Code session; changed passages compared side by side with the Japanese source: the equilibrium-concentration feed multiplied by the class-1 fraction under mixed grain sizes, numbers checked against the test runs)",
+      "source_sha256": "913335e20b170ce204049ce51a127d427c74aa02165639ad86e058302f1e600b",
+      "target_sha256": "abdec81554566e508b491d7daf02bf86a67d5617b7245b5b63976412bba386d8",
+      "reviewer": "Claude (Claude Code session; the verification sentence of the capacity and equilibrium feeds compared side by side with the Japanese source; numbers checked against the test runs)",
       "method": "assistant",
       "reviewed_on": "2026-11-24"
     },
