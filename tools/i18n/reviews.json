@@ -3776,9 +3776,9 @@
     {
       "source": "test/README.md",
       "target": "test/README.en.md",
-      "source_sha256": "03d6aa0faf9d36f0117002e6a0b6674efac183e8d7df324905802e5b4ecdb29d",
-      "target_sha256": "6819575855811a18fbdb3ce1c40e60c3280142d75658bb4ba778fc38eb0f1175",
-      "reviewer": "Claude (Claude Code session; changed sections compared side by side with the Japanese source; numbers checked against the test runs)",
+      "source_sha256": "47bd2f3e91d264e3daee3557095c9ae4690a39b8fc79c0d929795ec66e03eeff",
+      "target_sha256": "ab21c1685e4c1f9cc11be99a63d6bf9df249209ee9062ed6ecaf797230b2005d",
+      "reviewer": "Claude (Claude Code session; reviewed the added test/bankhalo row against the Japanese source; the rest is unchanged since the previous record)",
       "method": "assistant",
       "reviewed_on": "2026-11-24"
     },
@@ -3817,6 +3817,15 @@
       "reviewer": "Claude (Claude Code session; changed sections compared side by side with the Japanese source; numbers checked against the test runs)",
       "method": "assistant",
       "reviewed_on": "2026-11-21"
+    },
+    {
+      "source": "test/bankhalo/README.md",
+      "target": "test/bankhalo/en/README.md",
+      "source_sha256": "c3b3b5264797538be6a53d85f41b6d66c0989d0d255afe56618b9ecfa42e9c06",
+      "target_sha256": "90e9e72b2a08b09d9faf761fcac8b68b933eed672ef5c297492dd0b3577414dc",
+      "reviewer": "Claude (Claude Code session; full-text content and lexical review against the Japanese source; numbers checked against the test/bankhalo runs)",
+      "method": "assistant",
+      "reviewed_on": "2026-11-24"
     },
     {
       "source": "test/bankspill/README.md",

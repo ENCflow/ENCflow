@@ -653,8 +653,8 @@ end subroutine
 !   流速(次ステップの運動量式が新しい h で更新する。運動量の保存は
 !   二次の効果として受容)。
 !   呼び出し側の契約: 自帯 js..je のセルだけを更新し、更新後に
-!   par_halo_cell(s%gv)・par_halo_cell(s%lm) を行うこと(運動量項が ±1 近傍の
-!   gv・lm を平均する)。gvnew >= gv_old のみ(第1段 = 破壊で空隙が増える
+!   par_halo_cell(s%gv)・par_halo_cell(s%lm)・par_halo_cell(s%af) を行うこと(運動量項が
+!   ±1 近傍の gv・lm を平均し、堤防の越流の追い越し上限が隣の行の af を読む。§120)。gvnew >= gv_old のみ(第1段 = 破壊で空隙が増える
 !   方向)。gvnew == gv_old は no-op
 !----------------------------------------------------------------------
 subroutine m_state_set_gv(p, s, i, j, gvnew)

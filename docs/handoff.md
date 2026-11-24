@@ -87,7 +87,6 @@
 - [00ac](handoff/00ac.md) 開発記録の分割の残り(2026-11-22。developer.md §116)
 - [00ad](handoff/00ad.md) 結果のディレクトリ(dir_result)の長いパスで、プローブ・測線・集計のファイル名が 80 字で切れる(2026-11-23 発見。未修正)
 - [00ae](handoff/00ae.md) 田んぼダムの評価機能 fn_paddy(2026-11-24 合意。docs/paddy_plan.md、developer.md §119)の残り
-- [00af](handoff/00af.md) 実効平面積率 s%af のハロの行が更新されない疑い(MPI。2026-11-24 にコードを読んで発見。未確認・未修正)
 - [00w](handoff/00w.md) 移流項: 屈曲直後の辺の風上値(f_advection_bend)、濡れた谷壁の辺による側方面の減速と合流の損失(f_advection_lateral)、…
 - [00v](handoff/00v.md) 秩父の河道マスクを標高の落水線に載せ直した(2026-11-13。利用者の指摘と決定「河道マスクは、全ての解像度で 落水線ベースで。ただし、元のファイルは保存しておく」。developer.md §109)の残り
 - [00s](handoff/00s.md) 流木の集積(構造物での捕捉・集積と流れへの作用。2026-11-12 合意・第 1 段と第 2 段を実装。 developer.md §50.7・§50.8、docs/woodjam_plan.md)の残り

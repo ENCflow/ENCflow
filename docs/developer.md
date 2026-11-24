@@ -48,7 +48,7 @@
 ### 並列化と配列の確保範囲(帯分割・窓)
 
 - 現行: [§11](developer/011.md)(分割実装の基準)と [§79](developer/079.md)〜[§83](developer/083.md)(行窓・列の確保範囲・全域配列の窓化・入力の窓読み・save/restore)。利用者向けは [並列実行](users_guide/parallel.md)
-- 記録: [§2](developer/002.md)・[§8](developer/008.md)・[§11](developer/011.md)・[§42](developer/042.md)・[§79](developer/079.md)・[§80](developer/080.md)・[§81](developer/081.md)・[§82](developer/082.md)・[§83](developer/083.md)
+- 記録: [§2](developer/002.md)・[§8](developer/008.md)・[§11](developer/011.md)・[§42](developer/042.md)・[§79](developer/079.md)・[§80](developer/080.md)・[§81](developer/081.md)・[§82](developer/082.md)・[§83](developer/083.md)・[§120](developer/120.md)(実効平面積率 af のハロ)
 
 ### 浅水流の数値: ENC 格子・時間刻み・乾湿・エッジ水深
 
@@ -83,7 +83,7 @@
 ### 河道
 
 - 現行: [河道](users_guide/channel.md)・[河道の解説](users_guide/channel_models.md)。設計の文書は docs/channel_model.md
-- 記録: [§18](developer/018.md)・[§26](developer/026.md)(断面形 σ)・[§38](developer/038.md)(rn0_rw)・[§68.8](developer/068.md)・[§68.9](developer/068.md)・[§68.12](developer/068.md)・[§68.24](developer/068.md)・[§68.26](developer/068.md)〜[§68.29](developer/068.md)・[§68.32](developer/068.md)・[§109](developer/109.md)(秩父の河道マスク)・[§111](developer/111.md)
+- 記録: [§18](developer/018.md)・[§26](developer/026.md)(断面形 σ)・[§38](developer/038.md)(rn0_rw)・[§68.8](developer/068.md)・[§68.9](developer/068.md)・[§68.12](developer/068.md)・[§68.24](developer/068.md)・[§68.26](developer/068.md)〜[§68.29](developer/068.md)・[§68.32](developer/068.md)・[§109](developer/109.md)(秩父の河道マスク)・[§111](developer/111.md)・[§120](developer/120.md)(堤防の越流の上限が読む af のハロ)
 
 ### 内部水理構造物・堤防・家屋
 
@@ -290,3 +290,4 @@
 - [§117](developer/117.md) 例題 examples/source_area: 山地流域の流出寄与域の発達と縮小(2026-11-10〜16。作成と検討の経過。handoff 00q から移した)
 - [§118](developer/118.md) 河道の向きが変わる場所の移流項(§110)の続き: 200 KB を超えた §110 に代わる追記先(2026-11-22 から)
 - [§119](developer/119.md) 田んぼダムの評価機能 m_paddy(fn_paddy): 落水口の装置則とサブグリッドの水田タンク(2026-11-24 設計合意・段 1 実装)
+- [§120](developer/120.md) 実効平面積率 af のハロの行の更新漏れ: 堤防の越流の追い越し上限が帯の境で古い値を読む(MPI の実バグ。2026-11-24 発見・修正)

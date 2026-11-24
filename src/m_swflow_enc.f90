@@ -10,7 +10,7 @@ module m_swflow_enc
   use m_parallel, only : par_info, par_stop, dcp, is_root, &
                        par_halo_cell, par_halo_edge, par_edge_merge, &
                        par_gather_edge_to, par_scatter_edge, par_allreduce_sumi, &
-                       par_gather_to, par_scatter_cell
+                       par_allreduce_maxi, par_gather_to, par_scatter_cell
   use m_sysdep_util, only : sysdep_mkdir
   use m_restart, only : restart_write_cell, restart_read_cell, restart_write_edge, &
                         restart_read_edge, restart_skip
@@ -4992,7 +4992,7 @@ subroutine m_swflow_enc_sdep_update(p, g, s)
   type(t_sysparam), intent(in) :: p
   type(t_geoinfo), intent(in) :: g
   type(t_state), intent(inout) :: s
-  integer :: i, j
+  integer :: i, j, ich
   real :: dnew, vh
   logical :: changed
   if (p%initialized) continue  ! 引数未使用の警告を抑制
@@ -5015,8 +5015,13 @@ subroutine m_swflow_enc_sdep_update(p, g, s)
     end do
   end do
   !$omp end parallel do
-  ! af(実効平面積率)は σ(h, D) を含むため更新する(帯のみ)
-  if (changed) call update_af(g, s)
+  ! af(実効平面積率)は σ(h, D) を含むため更新する。D が変わったかは全ランクで集める
+  ! (逐次は領域のどこかで変われば全セルを更新するので、それと同じにする。update_af は
+  ! ハロの行も交換する collective。§120)
+  ich = 0
+  if (changed) ich = 1
+  call par_allreduce_maxi(ich)
+  if (ich > 0) call update_af(g, s)
 end subroutine
 
 
@@ -5051,6 +5056,10 @@ subroutine update_af(g, s)
     end do
   end do
   !$omp end parallel do
+  ! ハロの行も持ち主の値にそろえる(堤防の越流の追い越し上限 cap_overshoot が、帯の境の
+  ! 堤防エッジで隣の行(ハロ)のセルの af を読む。§120)。呼ぶ条件(幅・σ・可動 gv)は
+  ! 全ランク同値なので collective の条件を満たす
+  call par_halo_cell(s%af)
 
 end subroutine
 

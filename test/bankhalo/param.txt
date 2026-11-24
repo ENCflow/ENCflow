@@ -1,0 +1,45 @@
+!======================================================================
+! bankhalo: 堤防の越流の追い越し上限が帯の境で読む実効平面積率 af(developer.md §120)
+!   20 × 16 セル(Δx = Δy = 10 m)の閉じた箱。列 i = 10 が南北に通る河道(河床 −1 m、サブグリッド幅 4 m =
+!   平面積率 0.4)で、堤防の天端は 0.5 m(堤内地 + 0.5 m)。西岸の水位 1.50 m・東岸 1.45 m から、深く潜った
+!   堤防を越えて水位がそろっていく 10 分。潜り越流の流量が水位差を追い越さないよう上限
+!   (cap_overshoot。§68.29 (C'))が効き、その上限は堤防エッジの両側のセルの af を読む。
+!   np = 2・4 では帯の境が河道を横切り、斜めの堤防エッジの隣のセルがハロの行に入る。
+!======================================================================
+&list_sysparam
+  f_gridsystem = 0
+  dt = 0.5
+  t0 = 0
+  tt = 600
+  dt_disp = 60
+  dt_file = 600
+  dt_recrd = 60
+  fn_geoinfo = '-'
+  fn_initial = '-'
+  fn_channel = '-'
+  dir_result = 'result'
+  f_disp_debug = 1
+  f_check_cfl = 0
+  f_out_e = 1
+/
+&list_initial
+  f_htype = 3               ! 水位ファイル
+  fn_hinit = 'bh_e.txt'
+/
+&list_geoinfo
+  nx = 20
+  ny = 16                   ! np = 4 でもランクあたり 4 行
+  dx = 10.0
+  dy = 10.0
+  f_ztype = 1
+  fn_z = 'bh_z.txt'
+  fn_rw = 'bh_rw.txt'
+  rn0_rw = 0.03
+  f_rntype = 0
+  rn0 = 0.03
+/
+&list_channel
+  fn_width = 'bh_w.txt'     ! サブグリッド河道幅 4 m(af = gv × 平面積率 0.4)
+  bank0 = 0.5               ! 堤防の高さ(堤内地の地盤から)
+  f_bank_datum = 1          ! 堤内地セル標高基準
+/
