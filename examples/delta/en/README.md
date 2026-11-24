@@ -703,11 +703,11 @@ deviation between realizations.
     `bmix_frac0 = 0.2, 0.5, 0.3` and `bmix_la = 0.05`. The finest size class (0.1 mm) becomes the
     suspended sediment (settling velocity from the Rubey formula) and also moves as bedload.
   - Exchange-layer thickness `bmix_la`: with the default (twice the D90 of the initial exchange layer =
-    1.6 mm), the per-class supply limiter fires in the inflow cells of the capacity feed and sand piles
-    up at the inlet (up to 8.4 m in the inflow cells in a trial run of 50 h of landform time). This is
-    because the amount of the capacity feed is set by the outflow before the limiter, and the limiter
-    cuts only the outflow. With 5 cm the limiter fires 1/28 as often and the change in the inflow cells
-    is a lowering of about 1 cm (what class 1 loses to entrainment).
+    1.6 mm), the per-class supply limiter fires often under the landform acceleration of this example
+    (morfac 100). The capacity feed enters with the outflow after the limiter, so the sand that comes in
+    is reduced as well: in a trial run of 50 h of landform time, the net deposition is less than 20 % of
+    that with 5 cm and the grid-scale roughness is 3.6 times as large. With 5 cm the limiter fires 1/26
+    as often.
   - In the fixed-feed configurations (param_baseqb.txt, param_wave.txt) the composition of the feed
     `inflow_qbfrac(1:3,1)` (e.g. `= 0.2, 0.5, 0.3`) is required. The wave-field configuration
     (param_wfsed.txt; `f_wfsed`, `f_wfswash`) cannot be combined with it.

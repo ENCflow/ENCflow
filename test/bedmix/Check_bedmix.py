@@ -16,6 +16,8 @@
 #     (3) hide2(0.5・2・8 mm、修正 Egiazaroff): 100〜160 s に下流端の開境界を出た粒径階ごとの量(台帳)が、
 #         下流端のセルの水深・流速・組成から芦田・道上(1972)式 (31)・(32) で求めた値に一致する
 #     (4) bcfeed(容量給砂): 流入セルの河床と組成が変わらない
+#     (4b) bclim(容量給砂 + 流入セルで粒径階ごとの供給量制限が働く。§123.7): 給砂は制限の後の正味流出で作るので、
+#         流入セルの河床と組成が変わらない
 #     (5) bank(動く河岸・側岸侵食・安息角崩落・合計の給砂 + 一定の組成): 粒径階ごとの収支が閉じ、給砂が
 #         合計 × 組成 × 時間に一致し、組成が 0〜1 で和が 1、河岸が動いている
 #     (6) qbmix(粒径階ごとの給砂の時系列): 台帳の給砂が時系列の積分に一致し、収支が閉じる
@@ -25,6 +27,8 @@
 #         浮遊砂の台帳(在庫・交換・系外との出入り)が閉じ、交換を河床の側と浮遊砂の側で数えた値が一致する。
 #         プローブの最後の列が交換層の平均粒径 Dm(mm)で、最初と最後の記録が組成から求めた値に一致する。
 #         水路の中央の行をサブグリッド河道幅 0.6 m にした suw でも(河道平面積率の重み)台帳が閉じ、交換の両側が一致する
+#         掃流砂の容量給砂と浮遊砂の平衡濃度給砂を与えた sueq では、平衡濃度に流入セルの交換層の粒径階 1 の割合を
+#         掛けるので(§123.7)、流入セルの粒径階 1 の割合と河床がほとんど変わらない
 #     (9) 崩落と崖錐(台地。段 2b。§123): 土層だけが崩れる形(rfs)・基岩の崩落(rfb)・海セルへの崩落(rfsea)で、
 #         混合粒径の z・sd・崖錐 ht が単一粒径と一致(崩落は粒径を選ばない)、粒径階ごとの収支が基岩からの生成と
 #         海セルへの流出を含めて閉じ、基岩からの生成が基岩の低下 × rf_frac に一致し、崖錐に深い所(下層)の組成が出る
@@ -347,6 +351,21 @@ rep("(8f) suw(河道幅 0.6 m の行)の台帳と交換の両側",
     "粒径階ごとの残差 max %.2e、浮遊砂の残差 %.2e m3、交換 %.10e / %.10e m3(粒径階 1 の初期の在庫 %.3f m3、susp は %.3f)"
     % (res8w, rs8w, ex8w, es8w, led8w[1][0], led8[1][0]))
 
+# (8g) sueq: 掃流砂の容量給砂 + 浮遊砂の平衡濃度給砂(§123.7)。平衡濃度に流入セルの交換層の粒径階 1 の割合を掛けるので、
+#      流入と河床が釣り合い、流入セルの粒径階 1 の割合と河床はほとんど変わらない(残るのは流れ始めに浮遊砂が満ちるまでの
+#      巻き上げの分。割合を掛けない以前の実装では、160 s で割合が 0.3 → 0.8、河床が 1.3 cm 上がった)
+h, z, sd = load_state("sueq")
+nc, d, la, fa, fs = load_bedmix("sueq")
+dzq = max(abs(z[idx(1, j)] - z_of("free", 1, j)) for j in range(J1, J2 + 1))
+df1q = max(abs(fa[0][idx(1, j)] - 0.3) for j in range(J1, J2 + 1))
+ledq = ledger("sueq")
+resq = max(abs(ledq[k][4]) for k in ledq)
+exq, s0q, s1q, esq, vinq, voutq, rsq = susp_ledger("sueq")
+rep("(8g) sueq 平衡濃度給砂で流入セルの粒径階 1 の割合と河床がほぼ固定", df1q < 0.02 and dzq < 1.0e-3 and vinq > 0.1
+    and resq < TOL_RES and abs(rsq) < TOL_RES,
+    "流入セルの max|dF1| = %.4f、max|dz| = %.2e m(浮遊砂の流入 %.4f m3、粒径階ごとの残差 max %.1e、浮遊砂の残差 %.1e m3)"
+    % (df1q, dzq, vinq, resq, rsq))
+
 # (9) 崩落と崖錐(台地 41 × 41。段 2b。§123)
 NM = 41 * 41
 zm0 = read_txt("zinit_mesa.txt")
@@ -474,6 +493,21 @@ dfin = max(abs(fa[k][idx(1, j)] - f0[k]) for k in range(nc) for j in range(J1, J
 moved = max(abs(z[idx(i, j)] - z_of("std", i, j)) for j in range(J1, J2 + 1) for i in range(2, NX + 1))
 rep("(4) bcfeed 流入セルの河床と組成が固定", dzin < TOL_COMP and dfin < TOL_COMP and moved > 1.0e-4,
     "max|dz| = %.2e m、max|dF| = %.2e(下流の河床の変化 %.4f m)" % (dzin, dfin, moved))
+
+# (4b) bclim: 流入セルで粒径階ごとの供給量制限が働く容量給砂(§123.7)。制限の前の流出で給砂を作ると、制限が削った
+#      分が流入セルに溜まる(以前の実装で 0.12 m)。制限の後の正味流出で作れば河床と組成は丸め誤差の範囲で固定
+h, z, sd = load_state("bclim")
+nc, d, la, fa, fs = load_bedmix("bclim")
+dzin = max(abs(z[idx(1, j)] - z_of("std", 1, j)) for j in range(J1, J2 + 1))
+dfin = max(abs(fa[k][idx(1, j)] - f0[k]) for k in range(nc) for j in range(J1, J2 + 1))
+moved = max(abs(z[idx(i, j)] - z_of("std", i, j)) for j in range(J1, J2 + 1) for i in range(2, NX + 1))
+ledl = ledger("bclim")
+resl = max(abs(ledl[k][4]) for k in ledl)
+liml = "class supply limiter" in open("screen_bclim.log", encoding="utf-8", errors="replace").read()
+rep("(4b) bclim 流入セルで制限が働いても河床と組成が固定", dzin < TOL_COMP and dfin < TOL_COMP and moved > 1.0e-3
+    and liml and resl < TOL_RES and abs(la - 0.002) < 1.0e-12,
+    "max|dz| = %.2e m、max|dF| = %.2e(下流の河床の変化 %.4f m、制限の発動 %s、max|残差| %.1e m3)"
+    % (dzin, dfin, moved, "あり" if liml else "なし", resl))
 
 # (5) bank
 led = ledger("bank")

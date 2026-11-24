@@ -545,7 +545,9 @@ load (the design document is docs/mixed_sediment_plan.md).
   transition of the split between them is not treated). The exchange with the bed is the equation of
   [§4](#4-suspended-sediment-f_suspend) with the equilibrium concentration multiplied by the exchange-layer
   fraction, $`\Delta h_s = w_f (F_1 C_{eq} - \beta C)\,\Delta t_w`$, where $`F_1`$ is the availability of
-  pickup (the same idea as the $`\min(1, s_f/L_a)`$ of the fines ledger f_bedfines; ENCflow's choice). One
+  pickup (the same idea as the $`\min(1, s_f/L_a)`$ of the fines ledger f_bedfines; ENCflow's choice). The
+  equilibrium-concentration feed of an inflow reach (`inflow_cs_eq`) is also multiplied by the $`F_1`$ of the
+  exchange layer of the inflow cell (so that the inflow is in balance with the bed). One
   pickup takes at most the class-1 content of the exchange layer, $`(1-\lambda) L_e F_1/\mathrm{morfac}`$, and
   settling at most the suspended amount. The bed change $`\Delta z = -\mathrm{morfac}\,\Delta h_s/(1-\lambda)`$
   updates the exchange layer and the substrate by the Hirano equation as an exchange of class 1 only (when
@@ -577,7 +579,7 @@ load (the design document is docs/mixed_sediment_plan.md).
   for gravel beds; for sand beds with dunes, there is a practice of relating the exchange-layer thickness
   to the dune height, as the depth mixed by passing dunes[^chavarrias19]. With a large landform acceleration
   (morfac) the per-class supply limiter fires often with the default thickness (in trial runs of the
-  examples meander, meander_cutoff and delta, 5 cm made it fire 1/10 to 1/28 as often).
+  examples meander, meander_cutoff and delta, 5 cm made it fire 1/10 to 1/26 as often).
 - **Limits of accuracy**: (1) the results depend on the exchange-layer thickness $`L_a`$ (an empirical,
   numerical parameter). (2) The Hirano active-layer equations can lose hyperbolicity (become ill-posed), for
   example when the bed degrades into a finer substrate, and oscillations are then known to grow faster as the
@@ -607,7 +609,10 @@ load (the design document is docs/mixed_sediment_plan.md).
   mixture (different compositions in the exchange layer and the substrate), a ground elevation that agrees
   with the single-size run to 1e-14 m; the balance of each class closes including the production from bedrock
   and the outflow into sea cells, and the production from bedrock equals the lowering of the bedrock times
-  `rf_frac`. In a comparison with the NILIM 1/100 movable-bed model of the Joganji River
+  `rf_frac`. With the capacity feed, the bed and composition of the inflow cells stay fixed even when the
+  per-class supply limiter fires there (difference 0 and 6e-16), and with the equilibrium-concentration feed
+  of suspended sediment the class-1 fraction of the inflow cells hardly changes (0.007 in 160 s). In a
+  comparison with the NILIM 1/100 movable-bed model of the Joganji River
   (case 2-1; [examples/joganji_flume](../../../examples/joganji_flume/en/README.md)), the area changed by more than 5 mm and the
   eroded volume are close to the measurement (a single size changes too much), while the locations of the change
   (point-by-point correlation 0.1 to 0.25) and the pattern of the surface composition do not match, and the model's

@@ -925,13 +925,15 @@ module m_geomorph
       real, intent(in) :: dts
     end subroutine
     ! エッジ流量の適用の混合粒径版(粒径階ごとの供給量制限 → 発散 → z・sd と交換層・下層の更新)。
-    ! with_classes = .true. は掃流砂(粒径階ごとの流束 bmx%qk + 等移動度の wrk%q)、.false. は崩落(wrk%q だけ)
-    module subroutine apply_edge_flux_bmix(gm, g, s, dts, with_classes)
+    ! with_classes = .true. は掃流砂(粒径階ごとの流束 bmx%qk + 等移動度の wrk%q)、.false. は崩落(wrk%q だけ)。
+    ! p は掃流砂の呼び出しだけが渡す(容量給砂を制限の後に作る。§123.7)
+    module subroutine apply_edge_flux_bmix(gm, g, s, dts, with_classes, p)
       type(t_geomorph), intent(inout) :: gm
       type(t_geoinfo), intent(in) :: g
       type(t_state), intent(inout) :: s
       real, intent(in) :: dts
       logical, intent(in) :: with_classes
+      type(t_sysparam), intent(in), optional :: p
     end subroutine
     ! 区間流入の粒径階ごとの給砂(b%qbink)を流入セルの河床へ
     module subroutine apply_bedfeed_bmix(gm, g, s, b, dts)

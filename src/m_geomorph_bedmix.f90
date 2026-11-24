@@ -20,7 +20,8 @@
 !     Hirano の交換(界面が下がるとき下層から下層の組成で、上がるとき交換層から交換層の組成で)。
 !     等移動度の流束(側岸侵食・安息角崩落)は供給側の交換層の組成で粒径階に分ける(plan §10 の 6)。
 !   給砂: 区間流入の粒径階ごとの給砂 b%qbink(apply_bedfeed_bmix)、容量給砂は流入セルの
-!     粒径階ごとの正味流出 × 倍率(feed_pass_bmix。入口の z と組成が固定)。
+!     粒径階ごとの正味流出 × 倍率(feed_pass_bmix。正味流出は粒径階ごとの供給量制限の後の量で数える
+!     = 入口の z と組成が固定。§123.7)。
 !   台帳: 粒径階ごとの在庫(初期・最終)、区間流入の給砂、開境界の正味の流出(容量給砂を負で含む)を
 !     行部分和で決定的に集計し、終了時に収支の残差を表示する。
 !   私有 save: geomorph_bedmix.dat(粒径階の数・粒径・L_a の見出しと、交換層 N 面・下層 N 面。
@@ -340,6 +341,8 @@ module subroutine dispose_bedmix(gm, p, g, s)
   character(len=512) :: msg
 
   if (p%f_state_save > 0) call save_bedmix(gm, p, s)
+  ! 台帳の値は指数 3 桁の書式(esw.de3)。es16.9 は指数が 3 桁の値(1e-245 など)で E を落とし、表示が
+  ! 6.946728363-245 のようになって数として読めない(§123.7)
   call bmix_stock(gm, g, s, v1)
   vx = 0.0_real64
   if (gm%bmx%susp) then
@@ -350,7 +353,7 @@ module subroutine dispose_bedmix(gm, p, g, s)
     call par_sum_rows(gm%bmx%feedrow(:,kc), vf)
     call par_sum_rows(gm%bmx%voutrow(:,kc), vo)
     res = v1(kc) - (gm%bmx%v0(kc) + vf - vo)
-    write(msg, '(a,i0,a,es12.5,a,4(a,es16.9),a)') "geomorph: bed mixture ledger class ", kc, " (d = ", &
+    write(msg, '(a,i0,a,es12.5,a,4(a,es17.9e3),a)') "geomorph: bed mixture ledger class ", kc, " (d = ", &
           gm%bmx%d(kc), " m): stock", " initial ", gm%bmx%v0(kc), " final ", v1(kc), " feed ", vf, &
           " out ", vo, " m3 (solid)"
     call par_info(trim(msg))
@@ -360,21 +363,21 @@ module subroutine dispose_bedmix(gm, p, g, s)
       vrk = vrk / real(gm%wrk%ainv, real64) / real(gm%poroi, real64)
       call par_sum_rows(gm%bmx%rfsea(:,kc), vsk)
       res = res - vrk + vsk
-      write(msg, '(a,i0,a,es16.9,a,es16.9,a)') "geomorph: bed mixture ledger class ", kc, &
+      write(msg, '(a,i0,a,es17.9e3,a,es17.9e3,a)') "geomorph: bed mixture ledger class ", kc, &
             " rockfall: from bedrock ", vrk, " to sea cells ", vsk, " m3 (solid)"
       call par_info(trim(msg))
     end if
     if (gm%bmx%susp .and. kc == 1) then
       ! 浮遊砂へ出た分(巻き上げ − 沈降。河床の側の重み)を収支に含める(§122)
       res = res + vx
-      write(msg, '(a,es16.9,a)') "geomorph: bed mixture ledger class 1 to suspended load (pickup - deposition) ", &
+      write(msg, '(a,es17.9e3,a)') "geomorph: bed mixture ledger class 1 to suspended load (pickup - deposition) ", &
             vx, " m3 (solid, bed side)"
       call par_info(trim(msg))
-      write(msg, '(a,es12.5,a)') "geomorph: bed mixture ledger class 1 residual ", res, &
+      write(msg, '(a,es13.5e3,a)') "geomorph: bed mixture ledger class 1 residual ", res, &
             " m3 (final - initial - feed + out + to suspended load" // trim(merge(" - from bedrock + to sea)", &
             ")                        ", allocated(gm%bmx%rfrock)))
     else
-      write(msg, '(a,i0,a,es12.5,a)') "geomorph: bed mixture ledger class ", kc, " residual ", res, &
+      write(msg, '(a,i0,a,es13.5e3,a)') "geomorph: bed mixture ledger class ", kc, " residual ", res, &
             " m3 (final - initial - feed + out" // trim(merge(" - from bedrock + to sea)", &
             ")                        ", allocated(gm%bmx%rfrock)))
     end if
@@ -393,10 +396,10 @@ module subroutine dispose_bedmix(gm, p, g, s)
     vin = vin + vin2
     vo = vo1 + vo2 + vo4
     res = hs1 - (gm%bmx%hs0 + ves + vin - vo)
-    write(msg, '(a,5(a,es16.9),a)') "geomorph: suspended load (class 1) ledger:", " stock initial ", gm%bmx%hs0, &
+    write(msg, '(a,5(a,es17.9e3),a)') "geomorph: suspended load (class 1) ledger:", " stock initial ", gm%bmx%hs0, &
           " final ", hs1, " pickup - deposition ", ves, " in ", vin, " out ", vo, " m3 (solid)"
     call par_info(trim(msg))
-    write(msg, '(a,es12.5,a)') "geomorph: suspended load (class 1) ledger residual ", res, &
+    write(msg, '(a,es13.5e3,a)') "geomorph: suspended load (class 1) ledger residual ", res, &
           " m3 (final - initial - (pickup - deposition) - in + out)"
     call par_info(trim(msg))
   end if
@@ -819,12 +822,11 @@ module subroutine calc_fluvial_bmix(gm, p, g, s, dts)
 
   ! --- 側方 Neumann の辺(粒径階ごとに内側の流束を写す) ---
   if (bcs%have_open_bc) call neumann_bed_pass_bmix(gm, g)
-  ! --- 容量給砂(粒径階ごと。流入面の供給 = 倍率 × 流入セルの粒径階の正味流出) ---
-  if (bcs%have_open_bc .and. gm%f_bcfeed > 0) call feed_pass_bmix(gm, p, g, s)
+  ! --- 容量給砂は apply_edge_flux_bmix の中で、粒径階ごとの供給量制限の後に作る(feed_pass_bmix。§123.7) ---
   ! --- 側岸侵食(等移動度の流束として wrk%q に加算。脚部の τ* は代表粒径 gm%d50) ---
   if (gm%f_berode > 0) call bank_edge_pass(gm, p, g, s, dts)
   ! --- 粒径階ごとの供給量制限 → 発散 → z・sd と交換層・下層の更新 ---
-  call apply_edge_flux_bmix(gm, g, s, dts, .true.)
+  call apply_edge_flux_bmix(gm, g, s, dts, .true., p)
 
   gm%bmx%nclip = gm%bmx%nclip + nclip
   gm%bmx%nfix = gm%bmx%nfix + nfix
@@ -1065,12 +1067,11 @@ module subroutine calc_fluvial_bmix_te(gm, p, g, s, dts)
 
   ! --- 側方 Neumann の辺(粒径階ごとに内側の流束を写す) ---
   if (bcs%have_open_bc) call neumann_bed_pass_bmix(gm, g)
-  ! --- 容量給砂(粒径階ごと。流入面の供給 = 倍率 × 流入セルの粒径階の正味流出) ---
-  if (bcs%have_open_bc .and. gm%f_bcfeed > 0) call feed_pass_bmix(gm, p, g, s)
+  ! --- 容量給砂は apply_edge_flux_bmix の中で、粒径階ごとの供給量制限の後に作る(feed_pass_bmix。§123.7) ---
   ! --- 側岸侵食(等移動度の流束として wrk%q に加算。脚部の τ* は代表粒径 gm%d50) ---
   if (gm%f_berode > 0) call bank_edge_pass(gm, p, g, s, dts)
   ! --- 粒径階ごとの供給量制限 → 発散 → z・sd と交換層・下層の更新 ---
-  call apply_edge_flux_bmix(gm, g, s, dts, .true.)
+  call apply_edge_flux_bmix(gm, g, s, dts, .true., p)
 
   gm%bmx%nclip = gm%bmx%nclip + nclip
   gm%bmx%nfix = gm%bmx%nfix + nfix
@@ -1324,12 +1325,11 @@ module subroutine calc_fluvial_bmix_tp(gm, p, g, s, dts)
 
   ! --- 側方 Neumann の辺(粒径階ごとに内側の流束を写す) ---
   if (bcs%have_open_bc) call neumann_bed_pass_bmix(gm, g)
-  ! --- 容量給砂(粒径階ごと。流入面の供給 = 倍率 × 流入セルの粒径階の正味流出) ---
-  if (bcs%have_open_bc .and. gm%f_bcfeed > 0) call feed_pass_bmix(gm, p, g, s)
+  ! --- 容量給砂は apply_edge_flux_bmix の中で、粒径階ごとの供給量制限の後に作る(feed_pass_bmix。§123.7) ---
   ! --- 側岸侵食(等移動度の流束として wrk%q に加算。脚部の τ* は代表粒径 gm%d50) ---
   if (gm%f_berode > 0) call bank_edge_pass(gm, p, g, s, dts)
   ! --- 粒径階ごとの供給量制限 → 発散 → z・sd と交換層・下層の更新 ---
-  call apply_edge_flux_bmix(gm, g, s, dts, .true.)
+  call apply_edge_flux_bmix(gm, g, s, dts, .true., p)
 
   gm%bmx%nclip = gm%bmx%nclip + nclip
   gm%bmx%nfix = gm%bmx%nfix + nfix
@@ -1371,34 +1371,44 @@ end subroutine
 
 
 !----------------------------------------------------------------------
-! 容量給砂(feed_pass の粒径階版。§84.9): 流入面の粒径階 k の供給 = 倍率 × 流入セルの k の正味流出 /
+! 容量給砂(feed_pass の粒径階版。§84.9・§123.7): 流入面の粒径階 k の供給 = 倍率 × 流入セルの k の正味流出 /
 ! 流入面の数。倍率 1 で流入セルの z と組成が固定される(f_bedfines の容量給砂と同じ考え方)。供給は
-! 開境界の流入(負の流出)として台帳 voutrow に入る
+! 開境界の流入(負の流出)として台帳 voutrow に入る。
+!   正味流出は、粒径階ごとの供給量制限の後の量(ループ 2 が実際に適用する量: 流出は自セルの縮小率 fdk、
+!   近傍からの流入は近傍の fdk、開境界からの流入は 1 を掛ける)で数える。制限の前の流出で数えると、制限は
+!   流出だけを削るので、その差が流入セルに溜まった(実検出: examples/delta を砂だけにした計算で、既定の
+!   交換層厚 1.6 mm の流入セルに 8.4 m。§123.6)。そのため apply_edge_flux_bmix の中で、ループ 1.5(fdk の
+!   ハロ交換)の後、ループ 2 の前に呼ぶ。流入面のスロットはループ 1 が 0 を書いたままで、制限には入らない。
+!   ループ 1.4 が足した等移動度の流束(側岸侵食)は除く(単一粒径の feed_pass が側岸侵食の前に数えるのと同じ。
+!   辺の書き手 = ループ 1.4 で辺を扱う前のセルで、正 = 前のセル → 後ろのセル、供給側の組成を掛けた分)。
+!   8 スロットの順に足すので、制限が働かず側岸侵食がなければ、制限の前に数えた値とビット一致する。
+!   供給が負(正味が堆積で、面から持ち出す)のときは、ループ 2 と台帳が自セルの fdk を掛けるので、その分を
+!   割っておく(fdk = 0 = 交換層にその粒径階がないときは持ち出せない)
 !----------------------------------------------------------------------
 subroutine feed_pass_bmix(gm, p, g, s)
   type(t_geomorph), intent(inout) :: gm
   type(t_sysparam), intent(in) :: p
   type(t_geoinfo), intent(in) :: g
   type(t_state), intent(in) :: s
-  integer :: i, j, k, in, jn, nin, m, im, jm, nc
+  integer :: i, j, k, in, jn, nin, m, im, jm, nc, kc, ifw, jfw, ibw, jbw
   integer :: kin(1:8)
-  real :: ue
-  real :: dvk(1:nbmixmax)
+  real :: ue, qe, qw, ff
+  real :: dvk(1:nbmixmax), qv(1:nbmixmax), fl(1:nbmixmax)
   logical :: nmn
 
   nc = gm%bmx%nc
-  !$omp parallel do schedule(static) private(i, j, k, in, jn, nin, m, kin, dvk, ue, im, jm, nmn)
+  !$omp parallel do schedule(static) private(i, j, k, in, jn, nin, m, kin, dvk, qv, fl, ue, qe, qw, ff, kc, &
+  !$omp   ifw, jfw, ibw, jbw, im, jm, nmn)
   do j = dcp%js, dcp%je
     do i = g%wx(1,j), g%wx(2,j)
       if (g%x(i,j) <= 0) cycle
       if (g%sw(i,j) > 0) cycle
       if (s%h(i,j) <= p%dd) cycle
+      ! 流入面(開いた面のうち側方 Neumann でなく、面法線流速が域内へ向くもの)
       nin = 0
-      dvk(1:nc) = 0.0
       do k = 1, 8
         in = i + din(k)
         jn = j + djn(k)
-        dvk(1:nc) = dvk(1:nc) + sign_e(k) * gm%bmx%qk(ke(k), i+die(k), j+dje(k), 1:nc)
         if (g%x(in,jn) > 0) cycle
         if (.not. bc_open_face(in, jn)) cycle
         call bc_neumann_cell(in, jn, nmn, im, jm)
@@ -1410,9 +1420,54 @@ subroutine feed_pass_bmix(gm, p, g, s)
         end if
       end do
       if (nin == 0) cycle
+      ! 制限の後の掃流砂の正味流出(正 = 流出)
+      dvk(1:nc) = 0.0
+      do k = 1, 8
+        in = i + din(k)
+        jn = j + djn(k)
+        qv(1:nc) = sign_e(k) * gm%bmx%qk(ke(k), i+die(k), j+dje(k), 1:nc)
+        do kc = 1, nc
+          if (qv(kc) > 0.0) then
+            fl(kc) = gm%bmx%fdk(i,j,kc)
+          else if (qv(kc) < 0.0 .and. g%x(in,jn) > 0) then
+            fl(kc) = gm%bmx%fdk(in,jn,kc)
+          else
+            fl(kc) = 1.0
+          end if
+        end do
+        qe = gm%wrk%q(ke(k), i+die(k), j+dje(k))
+        if (qe /= 0.0) then
+          if (k <= 4) then
+            ifw = i
+            jfw = j
+            ibw = in
+            jbw = jn
+          else
+            ifw = in
+            jfw = jn
+            ibw = i
+            jbw = j
+          end if
+          if (g%x(ifw,jfw) > 0) then
+            if (qe > 0.0) then
+              qv(1:nc) = qv(1:nc) - sign_e(k) * qe * s%bmf(ifw,jfw,1:nc)
+            else if (g%x(ibw,jbw) > 0) then
+              qv(1:nc) = qv(1:nc) - sign_e(k) * qe * s%bmf(ibw,jbw,1:nc)
+            end if
+          end if
+        end if
+        dvk(1:nc) = dvk(1:nc) + qv(1:nc) * fl(1:nc)
+      end do
       do m = 1, nin
         k = kin(m)
-        gm%bmx%qk(ke(k), i+die(k), j+dje(k), 1:nc) = sign_e(k) * (-(gm%flv%bcfac * dvk(1:nc) / nin))
+        do kc = 1, nc
+          qw = -(gm%flv%bcfac * dvk(kc) / nin)             ! 正 = 面からの流出(持ち出し)
+          if (qw > 0.0) then
+            ff = gm%bmx%fdk(i,j,kc)
+            if (ff < 1.0 .and. ff > 0.0) qw = qw / ff
+          end if
+          gm%bmx%qk(ke(k), i+die(k), j+dje(k), kc) = sign_e(k) * qw
+        end do
       end do
     end do
   end do
@@ -1429,14 +1484,17 @@ end subroutine
 !     破れる(実検出: 河岸のある構成で収支が 1e-8 m3 ずれた)
 !   ループ 1.5: 粒径階ごとの供給量制限(流出 ≤ 交換層にある量 L_e F_k)。縮小率 fdk をハロ交換して
 !     エッジの両側が同じ値を読む(反対称性 = 粒径階ごとの保存)
+!   容量給砂(掃流砂の呼び出しで p を渡したとき): 制限の後の流入セルの正味流出から流入面の供給を作る
+!     (feed_pass_bmix。§123.7)
 !   ループ 2: 発散 → z・sd の共動更新 → Hirano の交換(bmix_update)→ 地下水容量の整合(apply_edge_flux と同じ)
 !----------------------------------------------------------------------
-module subroutine apply_edge_flux_bmix(gm, g, s, dts, with_classes)
+module subroutine apply_edge_flux_bmix(gm, g, s, dts, with_classes, p)
   type(t_geomorph), intent(inout) :: gm
   type(t_geoinfo), intent(in) :: g
   type(t_state), intent(inout) :: s
   real, intent(in) :: dts
   logical, intent(in) :: with_classes
+  type(t_sysparam), intent(in), optional :: p
   integer :: i, j, k, in, jn, jt, kc, nc, istep, nlim
   real :: qe, qq, winv, cvt, le, sd0, dz, cap, fx, vc, vclip, dm
   real :: outk(1:nbmixmax), ink(1:nbmixmax), a(1:nbmixmax), fa(1:nbmixmax), fb(1:nbmixmax)
@@ -1514,6 +1572,11 @@ module subroutine apply_edge_flux_bmix(gm, g, s, dts, with_classes)
   do kc = 1, nc
     call par_halo_cell(gm%bmx%fdk(:,:,kc))
   end do
+
+  ! --- 容量給砂(制限の後の流入セルの正味流出から。§123.7) ---
+  if (with_classes .and. present(p)) then
+    if (bcs%have_open_bc .and. gm%f_bcfeed > 0) call feed_pass_bmix(gm, p, g, s)
+  end if
 
   ! --- ループ 2: 発散 → z・sd と交換層・下層の更新 ---
   !$omp parallel do schedule(static) reduction(+: vclip) &

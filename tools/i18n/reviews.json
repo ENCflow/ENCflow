@@ -176,11 +176,11 @@
     {
       "source": "docs/users_guide/boundary.md",
       "target": "docs/en/users_guide/boundary.md",
-      "source_sha256": "acb1c5fb1c1625bc5a75b112141c90b8375ff11887b0a16ee45fa7d1018fe8b6",
-      "target_sha256": "7b53264fbcd855d56f781bba71fcf0271f45c612c60a87601457161605aaa8e9",
-      "reviewer": "Claude (Claude Code session; mixed-size stage 1 (f_bedmix): new and changed sections compared side by side with the Japanese source; parameters and numbers checked against the code and the test runs)",
+      "source_sha256": "a3ec8261bf51cef925f2594266756dfb0a7f7b1080f7e90c1deb843b70c3ff9f",
+      "target_sha256": "13a17507c9ead946f9a692ac7390c43a604523d1b1a1f0e1cb0e0bcf3f455672",
+      "reviewer": "Claude (Claude Code session; changed passages compared side by side with the Japanese source: the equilibrium-concentration feed multiplied by the class-1 fraction under mixed grain sizes, numbers checked against the test runs)",
       "method": "assistant",
-      "reviewed_on": "2026-11-23"
+      "reviewed_on": "2026-11-24"
     },
     {
       "source": "docs/users_guide/channel.md",
@@ -311,9 +311,9 @@
     {
       "source": "docs/users_guide/geomorph.md",
       "target": "docs/en/users_guide/geomorph.md",
-      "source_sha256": "5450f85ac69ec7f7fa6b50f52b1112e7900b5f32f4b2b38cb262ac4f703e9e22",
-      "target_sha256": "e783f4af40a4304b74189af6757d75db9ace3acf3dbfe3b4973c7a96697eec3c",
-      "reviewer": "Claude (Claude Code session; changed sections compared side by side with the Japanese source; numbers checked against the trial runs)",
+      "source_sha256": "513c42fb126f5ab285c55e6415a61b30bb9d29c7857f42a26e91e4a72c89658f",
+      "target_sha256": "452df8a92787429b61e8c8c738f5cf0a6d422d544036d17901bfb7a93e2d2c12",
+      "reviewer": "Claude (Claude Code session; changed passages compared side by side with the Japanese source: the equilibrium-concentration feed multiplied by the class-1 fraction under mixed grain sizes, numbers checked against the test runs)",
       "method": "assistant",
       "reviewed_on": "2026-11-24"
     },
@@ -482,9 +482,9 @@
     {
       "source": "docs/users_guide/sediment.md",
       "target": "docs/en/users_guide/sediment.md",
-      "source_sha256": "918fa5736e75412580ffc979b9e8550407ad55b83450ec28d51b88f8ce424fa8",
-      "target_sha256": "c17e01e1d5f22b486532e301e56fff04468c58b7d8853cd05337672de9b60db6",
-      "reviewer": "Claude (Claude Code session; changed sections compared side by side with the Japanese source; numbers checked against the trial runs)",
+      "source_sha256": "913335e20b170ce204049ce51a127d427c74aa02165639ad86e058302f1e600b",
+      "target_sha256": "abdec81554566e508b491d7daf02bf86a67d5617b7245b5b63976412bba386d8",
+      "reviewer": "Claude (Claude Code session; the verification sentence of the capacity and equilibrium feeds compared side by side with the Japanese source; numbers checked against the test runs)",
       "method": "assistant",
       "reviewed_on": "2026-11-24"
     },
@@ -2057,9 +2057,9 @@
     {
       "source": "examples/delta/README.md",
       "target": "examples/delta/en/README.md",
-      "source_sha256": "642b08cbd28f47c639cebeb8defa084a732e771ca36e599c4a6fe4f82b602c63",
-      "target_sha256": "ae2efcb1ab26e4ab58728bb61a1374bca43e86eff8f199269aff029e336b2f63",
-      "reviewer": "Claude (Claude Code session; changed sections compared side by side with the Japanese source; numbers checked against the trial runs)",
+      "source_sha256": "a58368b4b74970aa4633f193b96386e14abf444e35f2c05c37e8dc2c9916b648",
+      "target_sha256": "9751d0823502d086b5b669f0a465cc51426b05db070d41c89c2e54283e4d0a54",
+      "reviewer": "Claude (Claude Code session; changed passages compared side by side with the Japanese source: the capacity feed built after the per-class supply limiter, numbers checked against the test and trial runs)",
       "method": "assistant",
       "reviewed_on": "2026-11-24"
     },
@@ -3884,9 +3884,9 @@
     {
       "source": "test/bedmix/README.md",
       "target": "test/bedmix/en/README.md",
-      "source_sha256": "88efe452d68e99b56d0d42b885e7366b66d8bc254efebbb6a56a181b3a3c1bc9",
-      "target_sha256": "637c1252d8b81a20ee5043da8839d8df09265cb5147881141b87e83c938f0d78",
-      "reviewer": "Claude (Claude Code session; mixed-size stage 2b (rockfall and talus carried from the top of the column with rf_frac for bedrock debris, depth-dependent creep and longshore transport with the supplying exchange-layer composition, swash deferred): the new and changed parts written in both languages in the same work and compared side by side; parameter names, messages and numbers checked against the code and the test runs)",
+      "source_sha256": "f8d2f250fcfb1d162a0a6e1d4a79911e293449c83ad29ac587da7282c696dbc9",
+      "target_sha256": "d784c988c818eb3186f81c45941bcc274fd96b0b24316aef73c70c62d7756259",
+      "reviewer": "Claude (Claude Code session; changed passages compared side by side with the Japanese source: the equilibrium-concentration feed multiplied by the class-1 fraction under mixed grain sizes, numbers checked against the test runs)",
       "method": "assistant",
       "reviewed_on": "2026-11-24"
     },

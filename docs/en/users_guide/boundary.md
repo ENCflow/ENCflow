@@ -272,7 +272,10 @@ to reduce concentration of discharge into thin water layers.
   With `inflow_cs_eq(n) = 1` the inflow concentration is instead the
   equilibrium concentration evaluated from the shear stress of the inflow
   cells times `inflow_cs_fac(n)` (default 1; equilibrium feed, exclusive
-  with cs / qs, requires f_suspend = 1).
+  with cs / qs, requires f_suspend = 1). With mixed grain sizes
+  (`f_bedmix = 1` on the geomorph side) it is also multiplied by the
+  class-1 fraction of the exchange layer of the inflow cell (as the
+  entrainment from the bed is; [mixed grain sizes](geomorph.md#mixed-grain-sizes-f_bedmix)).
 - Bed load can be fed in two ways. `inflow_qb(:,k,n) = t, Qb` (or
   `fn_inflow_qb(n)`; time (min), m3/s solid volume) adds Qb(t), divided
   equally among the inflow cells, as a source to their bed (z and soil
