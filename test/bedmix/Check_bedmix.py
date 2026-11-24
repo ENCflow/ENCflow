@@ -25,7 +25,12 @@
 #         浮遊砂の台帳(在庫・交換・系外との出入り)が閉じ、交換を河床の側と浮遊砂の側で数えた値が一致する。
 #         プローブの最後の列が交換層の平均粒径 Dm(mm)で、最初と最後の記録が組成から求めた値に一致する。
 #         水路の中央の行をサブグリッド河道幅 0.6 m にした suw でも(河道平面積率の重み)台帳が閉じ、交換の両側が一致する
-#   組成の指定のない給砂(nofrac)・浮遊砂の粒径の食い違い(su_d50)・斜面浸食との併用(su_wash)が止まること、
+#     (9) 崩落と崖錐(台地。段 2b。§123): 土層だけが崩れる形(rfs)・基岩の崩落(rfb)・海セルへの崩落(rfsea)で、
+#         混合粒径の z・sd・崖錐 ht が単一粒径と一致(崩落は粒径を選ばない)、粒径階ごとの収支が基岩からの生成と
+#         海セルへの流出を含めて閉じ、基岩からの生成が基岩の低下 × rf_frac に一致し、崖錐に深い所(下層)の組成が出る
+#     (10) 深さ依存クリープ(cr)と (11) 波浪による沿岸漂砂(ls): 混合粒径の z・sd が単一粒径と一致し、収支が閉じる
+#   組成の指定のない給砂(nofrac)・浮遊砂の粒径の食い違い(su_d50)・斜面浸食との併用(su_wash)・崩落の河岸モード
+#   との併用(rfstop_bank)・基岩の崩落で岩屑の組成がない(rfstop_frac)が止まること、
 #   リスタート往復(rt1 → rt2 と bank、surt1 → surt2 と susp)・MPI の一致は Run.sh / Run_MPI.sh が見る
 import sys, struct, os, math, re
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
@@ -105,6 +110,48 @@ def susp_ledger(tag):
                   r"in\s+(\S+) out\s+(\S+)", txt)
     r = float(re.search(r"suspended load \(class 1\) ledger residual\s+(\S+)", txt).group(1))
     return (ex,) + tuple(float(m.group(k)) for k in range(1, 6)) + (r,)
+
+
+def load_grid(tag, ntot):
+    """save_<tag>/state.dat の z・sd(格子の大きさを指定)"""
+    with open("save_%s/state.dat" % tag, "rb") as f:
+        arrs = [read_rle_array(f, ntot) for _ in range(5)]
+    return arrs[1], arrs[4]
+
+
+def load_ht(tag, ntot):
+    """save_<tag>/geomorph_rockfall.dat の崖錐の厚さ ht"""
+    with open("save_%s/geomorph_rockfall.dat" % tag, "rb") as f:
+        return read_rle_array(f, ntot)
+
+
+def load_bedmix_n(tag, ntot):
+    with open("save_%s/geomorph_bedmix.dat" % tag, "rb") as f:
+        nc = struct.unpack("<i", read_rec(f))[0]
+        read_rec(f)
+        fa = [read_rle_array(f, ntot) for _ in range(nc)]
+        fs = [read_rle_array(f, ntot) for _ in range(nc)]
+    return nc, fa, fs
+
+
+def rf_ledger(tag):
+    """screen_<tag>.log の崩落の台帳: {class: (基岩から, 海セルへ)}"""
+    txt = open("screen_%s.log" % tag, encoding="utf-8", errors="replace").read()
+    return {int(m.group(1)): (float(m.group(2)), float(m.group(3))) for m in
+            re.finditer(r"ledger class (\d+) rockfall: from bedrock\s+(\S+) to sea cells\s+(\S+)", txt)}
+
+
+def read_txt(path):
+    return [float(v) for line in open(path) for v in line.split()]
+
+
+def maxdiff(a, b):
+    return max(abs(x - y) for x, y in zip(a, b))
+
+
+def comp_dev(fa, nc, ntot):
+    return max(max(abs(sum(fa[k][n] for k in range(nc)) - 1.0), -min(fa[k][n] for k in range(nc)))
+               for n in range(ntot) if sum(fa[k][n] for k in range(nc)) > 0.0)
 
 
 def read_hs(tag):
@@ -299,6 +346,62 @@ rep("(8f) suw(河道幅 0.6 m の行)の台帳と交換の両側",
     res8w < TOL_RES and abs(rs8w) < TOL_RES and abs(ex8w - es8w) <= 1.0e-10 * abs(ex8w) and led8w[1][0] < led8[1][0] - 1.0,
     "粒径階ごとの残差 max %.2e、浮遊砂の残差 %.2e m3、交換 %.10e / %.10e m3(粒径階 1 の初期の在庫 %.3f m3、susp は %.3f)"
     % (res8w, rs8w, ex8w, es8w, led8w[1][0], led8[1][0]))
+
+# (9) 崩落と崖錐(台地 41 × 41。段 2b。§123)
+NM = 41 * 41
+zm0 = read_txt("zinit_mesa.txt")
+for lab, a, b in (("(9a) 土層だけが崩れる形", "rfs1", "rfs3"), ("(9c) 基岩の崩落", "rfb1", "rfb3"),
+                  ("(9e) 海セルへの崩落", "rfsea1", "rfsea3")):
+    za, sa = load_grid(a, NM)
+    zb, sb = load_grid(b, NM)
+    dzr, dsr, dhr = maxdiff(za, zb), maxdiff(sa, sb), maxdiff(load_ht(a, NM), load_ht(b, NM))
+    mvr = maxdiff(za, read_txt("zinit_mesa_sea.txt") if a == "rfsea1" else zm0)
+    rep(lab + ": 混合粒径の z・sd・崖錐 = 単一粒径", max(dzr, dsr, dhr) < TOL_EQ and mvr > 1.0,
+        "max|dz| %.1e、|dsd| %.1e、|dht| %.1e m(地形の変化 %.2f m)" % (dzr, dsr, dhr, mvr))
+# (9b) 土層だけが崩れる形の収支と、崖錐に下層の組成が出る(交換層厚で頭打ちにしない = 柱の深い所まで運ぶ)
+ld = ledger("rfs3")
+res9 = max(abs(ld[k][4]) for k in ld)
+z3, s3 = load_grid("rfs3", NM)
+nc9, fa9, fs9 = load_bedmix_n("rfs3", NM)
+tal = [n for n in range(NM) if z3[n] > zm0[n] + 0.1]
+f3t = sum(fa9[2][n] for n in tal) / len(tal)
+dev9 = comp_dev(fa9, nc9, NM)
+rep("(9b) rfs3 の収支・組成・崖錐の組成", res9 < TOL_RES and dev9 < TOL_COMP and f3t > 0.5,
+    "max|残差| %.1e m3、組成の誤差 %.1e、崖錐の粗粒(8 mm)の割合の平均 %.3f(交換層 0.3、下層 0.6)" % (res9, dev9, f3t))
+# (9d) 基岩の崩落: 収支(基岩からの生成を含む)、生成 = 基岩の低下 × rf_frac(台帳は表示の 10 桁なので比は 1e-9 で見る)
+ld = ledger("rfb3")
+rl = rf_ledger("rfb3")
+res9d = max(abs(ld[k][4]) for k in ld)
+z3, s3 = load_grid("rfb3", NM)
+sd0 = read_txt("sdinit_mesa_cap.txt")
+rock = sum(max(0.0, (zm0[n] - sd0[n]) - (z3[n] - s3[n])) for n in range(NM)) * (1.0 - PORO)
+gen = [rl[k][0] for k in sorted(rl)]
+rfr = [0.05, 0.15, 0.8]
+eg = max(abs(gen[k] / sum(gen) - rfr[k]) for k in range(3))
+nc9, fa9, fs9 = load_bedmix_n("rfb3", NM)
+rep("(9d) rfb3 の収支と基岩からの生成", res9d < TOL_RES and abs(sum(gen) / rock - 1.0) < 1.0e-9 and eg < 1.0e-9
+    and comp_dev(fa9, nc9, NM) < TOL_COMP,
+    "max|残差| %.1e m3、生成 %.6f / 基岩の低下 %.6f m3、組成の比の誤差 %.1e" % (res9d, sum(gen), rock, eg))
+# (9f) 海セルへの崩落の収支(海セルへの流出を含む)
+ld = ledger("rfsea3")
+rl = rf_ledger("rfsea3")
+res9f = max(abs(ld[k][4]) for k in ld)
+rep("(9f) rfsea3 の収支(海セルへの流出を含む)", res9f < TOL_RES and min(rl[k][1] for k in rl) > 0.0,
+    "max|残差| %.1e m3、海セルへ %s m3" % (res9f, " ".join("%.3f" % rl[k][1] for k in sorted(rl))))
+
+# (10) 深さ依存クリープと (11) 沿岸漂砂(段 2b。§123)
+for lab, a, b, nt, zf in (("(10) 深さ依存クリープ", "cr1", "cr3", NM, "zinit_mesa.txt"),
+                          ("(11) 沿岸漂砂", "ls1", "ls3", 80 * 40, "zinit_shore.txt")):
+    za, sa = load_grid(a, nt)
+    zb, sb = load_grid(b, nt)
+    ld = ledger(b)
+    resx = max(abs(ld[k][4]) for k in ld)
+    ncx, fax, fsx = load_bedmix_n(b, nt)
+    mvx = maxdiff(za, read_txt(zf))
+    lim = "class supply limiter" in open("screen_%s.log" % b, encoding="utf-8", errors="replace").read()
+    rep(lab + ": 混合粒径の z・sd = 単一粒径、収支", max(maxdiff(za, zb), maxdiff(sa, sb)) < TOL_EQ and mvx > 0.1
+        and resx < TOL_RES and comp_dev(fax, ncx, nt) < TOL_COMP and not lim,
+        "max|dz| %.1e、|dsd| %.1e m(地形の変化 %.3f m)、max|残差| %.1e m3" % (maxdiff(za, zb), maxdiff(sa, sb), mvx, resx))
 
 # (2) armor
 h, z, sd = load_state("armor")

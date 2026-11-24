@@ -124,6 +124,9 @@
   !rf_bank = 1              ! bank mode (slump blocks of meandering channels, section 84.17): submerged
                             !   steps do not collapse, talus is also removed by bed load, fixation raises
                             !   H_c. Pair with berode_hcover for the shielding
+  !rf_frac = 0.05, 0.15, 0.8     ! required with mixed sizes (f_bedmix) and bedrock collapse: class
+                            !   fractions of the debris from bedrock (one per class, summing to 1;
+                            !   given data, no default)
 
   ! ---- Fixation (with f_fluvial; bars exposed at low flow get fixed and
   !      resist re-erosion) ----
@@ -149,8 +152,9 @@
 
   ! ---- Mixed grain sizes (with f_fluvial. Size classes x one exchange layer and one substrate = Hirano type) ----
   ! For armouring, sand-gravel beds and cross-channel sorting. Adding f_suspend = 1 makes class 1 the
-  ! suspended load. Cannot be combined with hillslope erosion, the fines ledger, rockfall and talus,
-  ! depth-dependent creep, debris flow and others (users_guide/geomorph.md). fluv_d50 is not used
+  ! suspended load. Also works with rockfall and talus, depth-dependent creep and longshore transport
+  ! (bedrock collapse requires rf_frac). Cannot be combined with hillslope erosion, the fines ledger,
+  ! debris flow, the wave stirring and others (users_guide/geomorph.md). fluv_d50 is not used
   !f_bedmix = 1
   !bmix_d = 0.0005, 0.004, 0.02   ! grain size of each class (m), from fine to coarse, 2 to 8 (required)
   !bmix_frac0 = 0.3, 0.4, 0.3     ! initial fractions of the exchange layer (one per class, summing

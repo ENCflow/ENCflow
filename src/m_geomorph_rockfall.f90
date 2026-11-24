@@ -480,7 +480,10 @@ module subroutine calc_rockfall(gm, g, s, dts)
   gm%rf%vsea = gm%rf%vsea + vsea
 
   gm%rf%own = .true.                                   ! 自身の適用: 崖錐の収支は下で行う
-  if (gm%rf%bedrock) then
+  if (gm%f_bedmix > 0) then
+    ! 混合粒径(段 2b。§123): 柱の上から取り去った組成で運び、z・sd・ht・組成・u をまとめて更新する
+    call apply_rockfall_bmix(gm, g, s, dts)
+  else if (gm%rf%bedrock) then
     ! 基岩の崩落: 供給量制限・岩盤床クリップのない専用の適用(z・sd・ht をまとめて更新)
     call apply_bedrock(gm, g, s, dts)
   else
@@ -490,8 +493,8 @@ module subroutine calc_rockfall(gm, g, s, dts)
 
   ! --- 崖錐の収支: 発散と同じ式(風上の fdon を乗じたエッジ流量)で流出・流入を
   !     分けて集計し、流出は ht から(0 でクランプ)、流入は ht へ積む
-  !     (基岩の崩落では apply_bedrock が済ませている)---
-  if (.not. gm%rf%bedrock) then
+  !     (基岩の崩落では apply_bedrock、混合粒径では apply_rockfall_bmix が済ませている)---
+  if (.not. gm%rf%bedrock .and. gm%f_bedmix <= 0) then
   !$omp parallel do schedule(static) private(i, j, k, in, jn, qk, fd, dvi, dvo, winv)
   do j = dcp%js, dcp%je
     do i = g%wx(1,j), g%wx(2,j)

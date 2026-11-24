@@ -1,0 +1,68 @@
+!======================================================================
+! bedmix: 混合粒径(f_bedmix)の検定(developer.md §84.19、docs/mixed_sediment_plan.md §6)
+!   構成 ls3: ls1 を 0.25・0.5・1 mm の混合粒径にした構成(交換層厚 0.1 m = 1 回の流出が交換層の中身を超えない)。
+!   沿岸漂砂の式(CERC)は粒径によらないので z は ls1 と同じ(段 2b。§123)
+!======================================================================
+&list_sysparam
+  f_gridsystem = 0
+  f_govequation = 0
+  dt = 0.15
+  t0 = 0
+  tt = 600
+  dt_disp = 600
+  dt_file = 600
+  dt_recrd = 600
+  fn_geoinfo = '-'
+  fn_initial = '-'
+  fn_enc = '-'
+  fn_geomorph = '-'
+  fn_wave = '-'
+  dir_result = 'result_ls3'
+  dir_save = 'save_ls3'
+  f_state_save = 1
+  f_check_cfl = 1
+  f_out_z = 1
+/
+&list_enc
+/
+&list_initial
+  f_htype = 2               ! 水位 0 で初期化(全域が湿潤。汀線は等深線で測る)
+  e0 = 0.0
+/
+&list_geoinfo
+  lx = 200.0
+  ly = 100.0
+  nx = 80
+  ny = 40
+  f_ztype = 1
+  fn_z = 'zinit_shore.txt'
+  f_rntype = 0
+  rn0 = 0.025
+  f_sdtype = 1
+  fn_sd = 'sdinit_shore.txt'
+  sy0 = 0.2
+/
+&list_geomorph
+  dt_geomorph = 1.0
+  morfac = 5.0              ! 水理 600 s = 地形 3000 s
+  f_fluvial = 1             ! 沿岸漂砂は掃流砂の経路に乗る(静水なので掃流砂自体は動かない)
+  f_qbform = 1
+  f_bedmix = 1
+  bmix_d = 0.00025, 0.0005, 0.001        ! 粒径階(細かい順)
+  bmix_frac0 = 0.3, 0.4, 0.3          ! 交換層の初期の割合
+  bmix_sub0 = 0.2, 0.4, 0.4           ! 下層の初期の割合(交換層と違えて、深い所の組成が運ばれるのを見る)
+  bmix_la = 0.1             ! 交換層厚(1 回の流出より厚く)
+  fluv_tausc = 0.05
+  fluv_porosity = 0.4
+  fluv_sgrav = 1.65
+  fluv_dzmax = 0.05
+/
+&list_wave
+  f_wave_longshore = 1
+  wave_h0 = 0.5             ! test/wave_shore の param_low と同じ波
+  wave_t = 5.0
+  wave_dir = 110.0
+  wave_clock = 1
+  wave_lsm = 5.0
+  wave_bslp = 5.0
+/

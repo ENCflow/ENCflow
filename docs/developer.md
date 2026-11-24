@@ -107,8 +107,8 @@
 
 ### 土砂・地形変化
 
-- 現行: [土砂・地形変化](users_guide/geomorph.md)・[土砂輸送と斜面・長期地形過程の解説](users_guide/sediment.md)・[土石流・斜面崩壊・動く底層の解説](users_guide/massflow.md)・[土砂・地形変化の適用例](users_guide/geomorph_applications.md)。既定値は [§62](developer/062.md)。混合粒径(f_bedmix。2026-11-22 合意、段 1 の掃流砂は 2026-11-23、段 2a の浮遊砂の結合・プローブの Dm・組成からの D84 は 2026-11-24 に実装)の設計の正本は [docs/mixed_sediment_plan.md](mixed_sediment_plan.md)、採る範囲は policy.md 方針 6 の例外と [§84.19](developer/084.md)、実装の記録は [§119](developer/119.md)・[§122](developer/122.md)
-- 記録: [§19](developer/019.md)・[§28](developer/028.md)(土石流・地滑り)・[§32](developer/032.md)(長期地形変動)・[§48](developer/048.md)(乾式斜面侵食)・[§61](developer/061.md)(動く底層)・[§62](developer/062.md)・[§84](developer/084.md)(蛇行・河岸侵食)・[§84.19](developer/084.md)(混合粒径を範囲を限って採る)・[§119](developer/119.md)(混合粒径の段 1 の実装)・[§120](developer/120.md)(例題 joganji_flume)・[§121](developer/121.md)(芦田・道上の有効掃流力 f_taupart = 2)・[§122](developer/122.md)(混合粒径の段 2a: 浮遊砂の結合・組成からの D84)・[§85](developer/085.md)(河口デルタ)・[§86](developer/086.md)(石灰岩の溶食)・[§89](developer/089.md)(山地渓流)・[§92](developer/092.md)・[§96](developer/096.md)・[§101](developer/101.md)
+- 現行: [土砂・地形変化](users_guide/geomorph.md)・[土砂輸送と斜面・長期地形過程の解説](users_guide/sediment.md)・[土石流・斜面崩壊・動く底層の解説](users_guide/massflow.md)・[土砂・地形変化の適用例](users_guide/geomorph_applications.md)。既定値は [§62](developer/062.md)。混合粒径(f_bedmix。2026-11-22 合意、段 1 の掃流砂は 2026-11-23、段 2a の浮遊砂の結合・プローブの Dm・組成からの D84 と段 2b の崩落・クリープ・沿岸漂砂の組成は 2026-11-24 に実装)の設計の正本は [docs/mixed_sediment_plan.md](mixed_sediment_plan.md)、採る範囲は policy.md 方針 6 の例外と [§84.19](developer/084.md)、実装の記録は [§119](developer/119.md)・[§122](developer/122.md)・[§123](developer/123.md)
+- 記録: [§19](developer/019.md)・[§28](developer/028.md)(土石流・地滑り)・[§32](developer/032.md)(長期地形変動)・[§48](developer/048.md)(乾式斜面侵食)・[§61](developer/061.md)(動く底層)・[§62](developer/062.md)・[§84](developer/084.md)(蛇行・河岸侵食)・[§84.19](developer/084.md)(混合粒径を範囲を限って採る)・[§119](developer/119.md)(混合粒径の段 1 の実装)・[§120](developer/120.md)(例題 joganji_flume)・[§121](developer/121.md)(芦田・道上の有効掃流力 f_taupart = 2)・[§122](developer/122.md)(混合粒径の段 2a: 浮遊砂の結合・組成からの D84)・[§123](developer/123.md)(混合粒径の段 2b: 崩落・クリープ・沿岸漂砂)・[§85](developer/085.md)(河口デルタ)・[§86](developer/086.md)(石灰岩の溶食)・[§89](developer/089.md)(山地渓流)・[§92](developer/092.md)・[§96](developer/096.md)・[§101](developer/101.md)
 
 ### 流木
 
@@ -288,3 +288,4 @@
 - [§120](developer/120.md) 例題 examples/joganji_flume: 国総研の常願寺川 1/100 移動床模型のケース 2-1 を混合粒径で計算し、計測と比べる(2026-11-23。混合粒径の段 3 の例題の部分)
 - [§121](developer/121.md) 芦田・道上の有効掃流力(式 (11))を f_taupart = 2 として実装する(2026-11-24。§19.8 の今後の課題。既存の手続きの写しで、無効時はビット一致)
 - [§122](developer/122.md) 混合粒径の段 2a: 浮遊砂を粒径階 1 と結び、プローブに Dm の列を足し、抵抗分割の D84 を組成から求める(2026-11-24。docs/mixed_sediment_plan.md の段 2 の最初。既存の手続きの写しで、無効時はビット一致)
+- [§123](developer/123.md) 混合粒径の段 2b: 崩落と崖錐・深さ依存クリープ・沿岸漂砂を粒径階の組成で運ぶ(2026-11-24。遡上帯は前提の f_wfsed がないので見送り。無効時はビット一致)

@@ -13,7 +13,8 @@ multi-level nesting + meandering-channel development + rockfall and talus +
 wave-driven longshore transport (stage 1) + limestone dissolution (karst) +
 bedrock incision in mountain streams and depth-dependent creep + rock erosion by
 debris flows + the coastal wave field (stages W1 to W5) + mixed-size bed load
-(stage 1; linked to the suspended load in stage 2a); including the
+(stage 1; linked to the suspended load, rockfall, creep and longshore transport
+in stages 2a and 2b); including the
 2026-10-22 alignment of the sea-mask semantics (not solved, level prescribed,
 outflow to the sea leaves the ledgers) across all modules; updated
 2026-10-28).

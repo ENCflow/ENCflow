@@ -12,6 +12,11 @@
 #   python3 make_init.py qbmix > qbmix.txt          (粒径階ごとの給砂の時系列。時刻 (min) と 3 粒径階)
 #   python3 make_init.py rw > rw_suw.txt            (構成 suw の河道マスク: 水路の中央の行 J_SUB だけ 1)
 #   python3 make_init.py width > width_suw.txt      (構成 suw の河道幅: 中央の行だけ W_SUB(セル幅より狭い))
+#   python3 make_init.py mesa z|cap|seaz|sw          (段 2b の崩落・クリープの台地。test/rockfall と同じ形: 41 × 41 m の
+#                                                    平地に一辺 20 m・高さ 10 m の台地。cap = 台地の上 1 m だけの土層、
+#                                                    seaz・sw = 西側 x < 10 m を海セルにした地形とマスク)
+#   python3 make_init.py shore z|sd                  (段 2b の沿岸漂砂の海浜。test/wave_shore を小さくした形:
+#                                                    200 × 100 m、勾配 0.02、正弦波状の汀線、土層厚 10 m)
 import sys, math
 
 NX, NY, DX = 60, 9, 1.0
@@ -26,6 +31,8 @@ GEOM = {
     "bank": (0.002, 0.5, 1.0, 1.0, 1.0, N_FIX),
 }
 J_SUB, W_SUB = 5, 0.6                    # サブグリッド河道幅の行と幅 (m)(構成 suw。河道平面積率 0.6)
+MNX, MNY, MZTOP, MHALF, MCAP, MXSEA = 41, 41, 10.0, 10.0, 1.0, 10.0   # 台地(崩落・クリープ。Δx = 1 m)
+SNX, SNY, SDX, SYL, SS, SA, SL, SSD = 80, 40, 2.5, 20.0, 0.02, 6.0, 200.0, 10.0   # 海浜(沿岸漂砂)
 # 粒径階ごとの給砂の時系列(時刻 min, Qb_1, Qb_2, Qb_3 (m3/s 固体))。区間で線形補間
 QBMIX = [(0.0, 2.0e-4, 5.0e-4, 3.0e-4),
          (2.0, 4.0e-4, 1.0e-4, 0.0),
@@ -62,6 +69,36 @@ if __name__ == "__main__":
     if kind == "qbmix":
         for row in QBMIX:
             print("%.3f %.6e %.6e %.6e" % row)
+        sys.exit(0)
+    if kind == "mesa":
+        what = sys.argv[2]
+        for j in range(1, MNY + 1):
+            row = []
+            for i in range(1, MNX + 1):
+                x = (i - 0.5) - MNX / 2.0
+                y = (j - 0.5) - MNY / 2.0
+                top = abs(x) <= MHALF and abs(y) <= MHALF
+                sea = (i - 0.5) < MXSEA
+                if what == "z":
+                    row.append("%.6f" % (MZTOP if top else 0.0))
+                elif what == "cap":
+                    row.append("%.6f" % (MCAP if top else 0.0))
+                elif what == "seaz":
+                    row.append("%.6f" % (0.0 if sea else (MZTOP if top else 0.0)))
+                else:
+                    row.append("%d" % (1 if sea else 0))
+            print(" ".join(row))
+        sys.exit(0)
+    if kind == "shore":
+        what = sys.argv[2]
+        for j in range(1, SNY + 1):
+            y = (j - 0.5) * SDX
+            row = []
+            for i in range(1, SNX + 1):
+                x = (i - 0.5) * SDX
+                eta = SA * math.sin(2.0 * math.pi * x / SL)
+                row.append("%.4f" % (-SS * (y - SYL - eta) if what == "z" else SSD))
+            print(" ".join(row))
         sys.exit(0)
     if kind in ("rw", "width"):
         val = "1" if kind == "rw" else "%.3f" % W_SUB

@@ -328,15 +328,23 @@ and the thickness of the erodible soil layer (`sd0` or `fn_sd`). The grain sizes
   `fn_inflow_qbmix` ([Boundary conditions](boundary.md)). Without it the run stops at initialization (the
   feed is given data, so there is no default). The capacity feed (`fluv_bcfeed = 1`) enters with the
   composition of the inflow cell (the bed and the composition at the inlet stay fixed).
-- **Combinations**: it works with bank erosion and repose collapse (moved with the composition of the
-  supplying cell's exchange layer), fixation, channel width and the roughness partitions. For the
-  steep-gravel partition (`f_taupart = 1`) the D84 comes from the exchange-layer composition of each cell
-  unless `fluv_d84` is given, in which case that constant is used. Linear creep and uplift move only the
-  ground elevation and do not touch the soil layer, so they can be used as they are. Suspended sediment is
-  linked to class 1 (next item). With hillslope erosion, the fines ledger, the lateral spreading of the
-  detachment depth (`wet_lw`), rockfall and talus, depth-dependent creep, the moving bed layer, debris flow,
-  dry-slope erosion, weathering, dissolution, bedrock incision, wave-driven transport, glaciers and lava
-  flows the run stops at initialization (how to carry the class composition through them is not decided yet).
+- **Combinations**: it works with bank erosion, repose collapse, depth-dependent creep and wave-driven
+  longshore transport (all moved with the composition of the supplying cell's exchange layer), rockfall and
+  talus (next items), fixation, channel width and the roughness partitions. For the steep-gravel partition
+  (`f_taupart = 1`) the D84 comes from the exchange-layer composition of each cell unless `fluv_d84` is given,
+  in which case that constant is used. Linear creep and uplift move only the ground elevation and do not
+  touch the soil layer, so they can be used as they are. Suspended sediment is linked to class 1 (below).
+  With hillslope erosion, the fines ledger, the lateral spreading of the detachment depth (`wet_lw`), the
+  moving bed layer, debris flow, dry-slope erosion, weathering, dissolution, bedrock incision, the wave
+  stirring (`f_wfsed`) and the swash (`f_wfswash`), glaciers and lava flows, and with the bank mode of
+  rockfall (`rf_bank = 1`), the run stops at initialization (how to carry the class composition through them
+  is not decided yet).
+- **Rockfall and talus** (`f_rockfall`): what collapses is carried with the composition removed from the top
+  of the supplying column, in the order exchange layer → substrate → bedrock, and the receiver deposits it
+  with the incoming composition. A collapse does not select grain sizes, so unlike bed load and repose
+  collapse it is not capped by the exchange-layer thickness, and the ground elevation, soil thickness and talus
+  thickness are the same as for a single grain size. Bedrock collapse (`rf_bedrock = 1`) requires the
+  composition of the debris from bedrock, `rf_frac` (given data, like the feed composition).
 - **Suspended sediment**: adding `f_suspend = 1` makes the finest class (class 1) the suspended load.
   Class 1 also moves as bed load, and it goes back and forth between the exchange layer and the flow through
   pickup and settling. The equilibrium concentration of pickup is multiplied by the class-1 fraction F_1 of
@@ -358,7 +366,8 @@ run prints the balance of each class (initial and final stock, in-reach feed, ne
 boundaries, residual) and how often the exchange-layer supply limiter acted. With suspended sediment
 linked, the class-1 balance includes what went to the suspended load (pickup − settling), and the balance
 of the suspended load (initial and final stock, pickup − settling, inflow and outflow through open
-boundaries, residual) is printed as well. Verification: [test/bedmix](../../../test/bedmix/en/README.md). A comparison
+boundaries, residual) is printed as well. With rockfall, the balance of each class includes what was added
+from bedrock and what fell into sea cells. Verification: [test/bedmix](../../../test/bedmix/en/README.md). A comparison
 with a published model experiment is the example [examples/joganji_flume](../../../examples/joganji_flume/en/README.md) (the NILIM 1/100
 movable-bed model of the Joganji River; the magnitude of the change is close to the measurement, the locations of the
 change and the pattern of the surface composition do not match).
@@ -724,6 +733,7 @@ The figure draws the rules above with grid columns. Panel (a) shows how the free
 | rf_uc | 0 (off) | Critical undercut u_c (m) (rule 5; requires rf_fface >= 0 and spl_strata): a column at the top of the face falls once the bedrock of a weaker foot has been cut back by this depth since the last burial. The overhang width a cap can carry (tens of cm to a few m); keep it below dx |
 | rf_bedrock | 0 | Bedrock collapse. With 1, cells whose soil sd <= 0 (bedrock) can be sources too, and the supply limit (cap by sd) is not applied: the source loses z (soil and talus go first), the receiver gains the same amount in z, sd and talus ht. For bedrock below the soil that fails, such as limestone walls undercut by dissolution (examples/tower_karst) |
 | rf_bank | 0 | Bank mode (§84.17; slump blocks of meandering channels): with 1, (a) submerged steps (source ground below the receiver's water surface = pool walls) do not collapse, (b) the talus ht is also reduced by the outflow of bed load, bank erosion and avalanching (removal of the blocks; inflow does not become talus), (c) fixation f_fixation raises the critical height to H_c (1 + c_τ,b a). Shielding of bank erosion is berode_hcover |
+| rf_frac | none | Required with mixed grain sizes (f_bedmix) and bedrock collapse (rf_bedrock = 1): class fractions of the debris produced from bedrock (one per class, summing to 1). Given data, no default. Not used when only the soil layer collapses (rf_bedrock = 0) ([Mixed grain sizes](#mixed-grain-sizes-f_bedmix)) |
 
 **Bedrock and soil convention.** By default (rf_bedrock = 0) a cell with sd <= 0 is
 non-erodible bedrock, as for dry erosion, bed load and angle-of-repose avalanching,

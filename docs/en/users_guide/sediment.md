@@ -555,6 +555,20 @@ load (the design document is docs/mixed_sediment_plan.md).
   balance, checks that it and the balance of the suspended load (stock Σ h_s × gv × wfrac × A and the inflow
   and outflow through open boundaries) close separately, and counts the exchange on both the bed side and the
   suspended side to check that they agree.
+- **Other processes carried by edge fluxes**: depth-dependent creep (`creep_hstar` > 0) and wave-driven
+  longshore transport (`f_wave_longshore`) split the total flux into classes with the composition of the
+  supplying cell's exchange layer, as bank erosion and repose collapse do (equal mobility). Neither formula
+  depends on grain size, so the landform change is the same as for a single grain size as long as one outflow
+  does not exceed the content of the exchange layer. Representing the composition of the creeping soil by the
+  exchange layer is a simplification. Rockfall and talus (`f_rockfall`) are carried with the composition
+  removed from the top of the supplying column, in the order exchange layer → substrate → bedrock, and are not
+  capped by the exchange-layer thickness (a collapse does not select grain sizes; ENCflow's choice). When only
+  the soil layer collapses (`rf_bedrock = 0`) the supply is limited to the soil thickness (as for a single
+  size); with bedrock collapse (`rf_bedrock = 1`) the composition of the debris from bedrock is given by
+  `rf_frac` (given data). The receiver deposits with the incoming composition (the Hirano interface rule), and
+  the talus thickness is handled as for a single size. The balance of each class includes what bedrock added to
+  the soil layer and what fell into sea cells. The swash transport (`f_wfswash`) stays stopped, because the wave
+  stirring it requires (`f_wfsed`) is not available for mixed-size bed load yet.
 - **Default exchange-layer thickness**: twice the $`D_{90}`$ of the initial (domain-mean) exchange-layer
   composition. The guidance in the literature is 1 to 2 times the $`D_{90}`$ of the surface layer[^parker04]; the
   default is its upper end (Parker 2008[^parker08] treats the factor as an order-one calibration value, and
@@ -565,8 +579,8 @@ load (the design document is docs/mixed_sediment_plan.md).
   example when the bed degrades into a finer substrate, and oscillations are then known to grow faster as the
   grid is refined[^ribberink87][^stecca14][^chavarrias18]. This can occur on bimodal sand–gravel beds. The
   signs are a two-cell oscillation of the exchange-layer composition and results that change when the grid is
-  refined. (3) No more than the content of the exchange layer moves in one update, so coarse updates hold the
-  outflow back. If the end count "class supply limiter" is large, shorten dt_geomorph or thicken L_a.
+  refined. (3) No more than the content of the exchange layer moves in one update (also for depth-dependent
+  creep and longshore transport; not for rockfall), so coarse updates hold the outflow back. If the end count "class supply limiter" is large, shorten dt_geomorph or thicken L_a.
   (4) The $`d_m`$ of the hiding function is the mean of two cells, so it is smeared by one cell where the
   composition changes abruptly. (5) The toe shear stress of the bank-erosion law is evaluated with a
   representative size (the domain-mean $`d_m`$ of the initial exchange layer). (6) Grain-size-dependent flow
@@ -584,8 +598,12 @@ load (the design document is docs/mixed_sediment_plan.md).
   the suspended side agree (also with a row of 0.6 m channel width). Computing the D84 of the roughness
   partition from the composition agrees, in the equal-size limit, with the single-size bed for the given
   D84 to 9e-15 m, and with a 0.5, 2 and 8 mm mixture it is bit-identical in the first step to a run with
-  the D84 of the initial composition fixed, and departs from it as the composition changes. In a comparison
-  with the NILIM 1/100 movable-bed model of the Joganji River
+  the D84 of the initial composition fixed, and departs from it as the composition changes. Rockfall (soil
+  only, bedrock, into sea cells), depth-dependent creep and longshore transport give, with a 0.5, 2 and 8 mm
+  mixture (different compositions in the exchange layer and the substrate), a ground elevation that agrees
+  with the single-size run to 1e-14 m; the balance of each class closes including the production from bedrock
+  and the outflow into sea cells, and the production from bedrock equals the lowering of the bedrock times
+  `rf_frac`. In a comparison with the NILIM 1/100 movable-bed model of the Joganji River
   (case 2-1; [examples/joganji_flume](../../../examples/joganji_flume/en/README.md)), the area changed by more than 5 mm and the
   eroded volume are close to the measurement (a single size changes too much), while the locations of the change
   (point-by-point correlation 0.1 to 0.25) and the pattern of the surface composition do not match, and the model's

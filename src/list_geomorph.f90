@@ -115,6 +115,9 @@ module list_geomorph
                                      ! (供給側の地盤が受け手の水面より低い)は崩落の対象外、(b) 崖錐 ht
                                      ! は掃流砂・側岸侵食・安息角崩落の流出でも減る(崩落土塊の搬出)、
                                      ! (c) 定着(f_fixation)で H_c を H_c (1 + c_τ,b a) に上げる
+    real :: rf_frac(1:nbmixmax) = -9999.0  ! 混合粒径(f_bedmix)で基岩の崩落(rf_bedrock = 1)のとき、基岩から
+                                     ! 出る岩屑の粒径階ごとの割合(粒径階の数だけ。和 1。与件で既定なし。
+                                     ! 番兵 -9999。段 2b。developer.md §123)
     integer :: f_fixation = 0        ! 定着(0:無効, 1:有効)。乾いたセルの定着度 a が
                                      ! 1 − exp(−t/T_fix) で育ち、供給側の限界掃流力を
                                      ! τ*c (1 + c_τ a) に上げる(標高・体積には触れない)。§84.6
@@ -502,6 +505,7 @@ subroutine list_geomorph_read(p, list)
   integer :: f_rockfall
   real :: rf_hc, rf_phi, rf_relax, rf_ftalus, rf_hmin, rf_rc, rf_fface, rf_uc
   integer :: rf_bedrock, rf_bank
+  real :: rf_frac(1:nbmixmax)
   integer :: f_fixation
   real :: fix_tfix, fix_ctau, fix_dzreset, fix_cn, fix_tdec, fix_ctau_bank
   integer :: f_suspend
@@ -584,7 +588,7 @@ subroutine list_geomorph_read(p, list)
                            f_berode, berode_kb, berode_tausc, berode_m, berode_hcover, &
                            f_repose, repose_phi, repose_relax, &
                            f_rockfall, rf_hc, rf_phi, rf_relax, rf_ftalus, rf_hmin, rf_rc, rf_fface, rf_uc, &
-                           rf_bedrock, rf_bank, &
+                           rf_bedrock, rf_bank, rf_frac, &
                            f_fixation, fix_tfix, fix_ctau, fix_dzreset, fix_cn, fix_tdec, fix_ctau_bank, &
                            f_suspend, f_esform, susp_d50, susp_wf, susp_tausc, &
                            susp_beta, susp_esa, f_bedfines, fines_la, fines_frac0, &
@@ -658,6 +662,7 @@ subroutine list_geomorph_read(p, list)
   rf_uc = list%rf_uc
   rf_bedrock = list%rf_bedrock
   rf_bank = list%rf_bank
+  rf_frac = list%rf_frac
   f_fixation = list%f_fixation
   fix_tfix = list%fix_tfix
   fix_ctau = list%fix_ctau
@@ -843,6 +848,7 @@ subroutine list_geomorph_read(p, list)
   list%rf_uc = rf_uc
   list%rf_bedrock = rf_bedrock
   list%rf_bank = rf_bank
+  list%rf_frac = rf_frac
   list%f_fixation = f_fixation
   list%fix_tfix = fix_tfix
   list%fix_ctau = fix_ctau

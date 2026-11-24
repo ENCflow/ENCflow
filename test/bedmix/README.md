@@ -32,27 +32,37 @@ Manning の等流水深の単位幅流量 × 幅、東辺は自由流出(n = 0.0
 | bcfeed | std、3 粒径階、容量給砂 | 流入セルの河床と組成が変わらない(< 1e-12)、下流の河床は動く |
 | bank | bank、3 粒径階、側岸侵食・安息角崩落、合計 1e-3 m³/s の給砂 + 一定の組成 0.2・0.5・0.3 | 粒径階ごとの収支(在庫の初期と最終・給砂・開境界の正味の流出)の残差 < 1e-10 m³、給砂が合計 × 組成 × 時間に一致(相対 1e-9)、交換層・下層の組成が 0〜1 で和が 1(< 1e-12)、河岸が動いている |
 | qbmix | std、粒径階ごとの給砂の時系列(qbmix.txt) | 台帳の給砂が時系列(区分線形)の積分と 0.2 % 以内、収支が閉じる(< 1e-10 m³) |
+| rfs1 → rfs3 | 台地(test/rockfall と同じ。41 × 41 m の平地に一辺 20 m・高さ 10 m の台地)の崩落と崖錐、土層だけが崩れる形(土層厚 20 m)。単一粒径 3 mm と、0.5・2・8 mm の混合(交換層 0.3・0.4・0.3、下層 0.1・0.3・0.6)(developer.md §123) | 地盤高・土層厚・崖錐の厚さが一致(< 1e-10 m。崩落は粒径を選ばない)、粒径階ごとの収支が閉じ(< 1e-10 m³)、崖錐の粗粒(8 mm)の割合の平均が 0.5 を超える(交換層厚で頭打ちにせず、柱の深い所 = 下層の組成まで運ぶ) |
+| rfb1 → rfb3 | 台地の上 1 m だけが土層で下は基岩。基岩の崩落(`rf_bedrock = 1`)。混合は基岩から出る岩屑の組成 `rf_frac` = 0.05・0.15・0.8 | 地盤高・土層厚・崖錐の厚さが一致、収支が基岩からの生成を含めて閉じ、生成の合計が基岩の低下に一致(相対 1e-9)し、粒径階の比が `rf_frac` |
+| rfsea1 → rfsea3 | rfb の西側(x < 10 m)を海セルにした構成(台地の西壁が海に面する) | 地盤高・土層厚・崖錐の厚さが一致、収支が海セルへの流出を含めて閉じる |
+| cr1 → cr3 | 台地の縁の深さ依存クリープ(`creep_hstar` = 0.5 m、土層厚 20 m)。混合は交換層厚 5 cm | 地盤高・土層厚が一致、収支が閉じる、交換層の供給量制限が働かない |
+| ls1 → ls3 | 波浪による沿岸漂砂(test/wave_shore を 200 × 100 m に小さくした正弦波状の汀線)。混合は 0.25・0.5・1 mm、交換層厚 0.1 m | 地盤高・土層厚が一致(CERC 式は粒径によらない)、収支が閉じる、交換層の供給量制限が働かない |
 | rt1 → rt2 | bank を 150 s で分割 | state.dat と geomorph_bedmix.dat が bank とビット一致 |
 | surt1 → surt2 | susp を 80 s で分割 | state.dat と geomorph_bedmix.dat が susp とビット一致 |
+| rfrt1 → rfrt2 | rfb3 を 30 s で分割 | state.dat・geomorph_bedmix.dat・geomorph_rockfall.dat(崖錐)が rfb3 とビット一致 |
 | nofrac | 合計の給砂だけで組成の指定がない | 初期化で止まる(給砂の組成は与件なので既定を置かない) |
 | su_d50 | susp に `susp_d50` = 1 mm(粒径階 1 の 0.3 mm と違う) | 初期化で止まる |
 | su_wash | susp に斜面浸食 `f_wash = 1` | 初期化で止まる(斜面浸食の組成の運び方は未決) |
+| rfstop_bank | rfs3 に崩落の河岸モード `rf_bank = 1` | 初期化で止まる(掃流砂による崖錐の搬出は混合粒径の適用に入れていない) |
+| rfstop_frac | rfb3 から `rf_frac` を除いた構成 | 初期化で止まる(基岩から出る岩屑の組成は与件) |
 
 検定の数値は、たとえば equal と single の河床の差 5e-15 m、equal_te と single_te の河床の差 4e-15 m
 (流出は有効掃流力なしの 0.19 倍)、equal_tp と single_tp の河床の差 9e-15 m(流出は抵抗分割なしの 0.998 倍)、
 tpmix1 と tpfix1 の河床の差 0(1 ステップ)、tpmix と tpfix の差 4.5e-5 m、
 equal_su と single_su の河床の差 1e-14 m・浮遊砂の差 3e-17 m、susp の粒径階ごとの残差 7e-14 m³・浮遊砂の残差
 1e-14 m³(粒径階 1 から浮遊砂へ 0.513 m³)、プローブの Dm の差 2e-6 mm、armor の低下量 0.02197 m(理論値と同じ)、
-減衰率 0.04934 と 0.04946 /s、hide2 の流出の比 1.0002、bank の残差 1e-13 m³ 程度。
+減衰率 0.04934 と 0.04946 /s、hide2 の流出の比 1.0002、bank の残差 1e-13 m³、崩落の地盤高の差 8e-15 m・崖錐の厚さの差
+1.5e-14 m(地形の変化 4.6 m)、崖錐の粗粒の割合 0.598、基岩からの生成 147.311176 m³(= 基岩の低下)、クリープの地盤高の差
+4e-16 m(地形の変化 1.8 m)、沿岸漂砂の地盤高の差 1.3e-15 m(地形の変化 0.38 m)程度。
 
 ## 実行
 
 ```
 make
-./Run.sh            # 逐次。Check_bedmix.py + 初期化で止まる構成(nofrac・su_d50・su_wash)+ リスタートの cmp
+./Run.sh            # 逐次。Check_bedmix.py + 初期化で止まる構成(nofrac・su_d50・su_wash・rfstop_bank・rfstop_frac)+ リスタートの cmp
 ./Run_MPI.sh 2      # MPI(np=2)。逐次の save とのビット一致も確認
 ```
 
-入力 zinit_*.txt / hinit_*.txt / sdinit_*.txt / qbmix.txt / rw_suw.txt / width_suw.txt は make_init.py が
-生成する(追跡外)。
+入力 zinit_*.txt / hinit_*.txt / sdinit_*.txt / qbmix.txt / rw_suw.txt / width_suw.txt / sw_mesa_sea.txt は
+make_init.py が生成する(追跡外)。
 reference は持たず、合否は Check_bedmix.py の解析的な検定と、逐次・MPI・リスタートのビット一致で決める。

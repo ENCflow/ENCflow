@@ -58,9 +58,9 @@
     {
       "source": "docs/comparison.md",
       "target": "docs/en/comparison.md",
-      "source_sha256": "87ee7d69081f07a7d2a423e8372765c495a6db67fd1353e6ad0807e6f7464d72",
-      "target_sha256": "f162cb1c6413ca1fff3422d7c7fca1a9e0fc4bdd782a9d6d56ef267b091c3a51",
-      "reviewer": "Claude (Claude Code session; mixed-size stage 2a: the status line and the mixed-size bed-load row (link to the suspended load, and the comparison with the joganji_flume model experiment in place of \"no comparison yet\") changed in the same work in Japanese and English; both diffs read side by side)",
+      "source_sha256": "6f70d13a23c596dcc0d01a2e5a852d4c67ec5d9fdd8886e23779467af8ee6024",
+      "target_sha256": "52cf7af2fa89c0275fe376d4177de0f44e4d95061a464f1f0bbe911a6eb147de",
+      "reviewer": "Claude (Claude Code session; mixed-size stage 2b (rockfall and talus carried from the top of the column with rf_frac for bedrock debris, depth-dependent creep and longshore transport with the supplying exchange-layer composition, swash deferred): the new and changed parts written in both languages in the same work and compared side by side; parameter names, messages and numbers checked against the code and the test runs)",
       "method": "assistant",
       "reviewed_on": "2026-11-24"
     },
@@ -113,11 +113,11 @@
     {
       "source": "docs/users_guide.md",
       "target": "docs/en/users_guide.md",
-      "source_sha256": "c5c698c1546ea9552d691c09dbaeeddf6e8b976f25cd17dc88078572d2c63a3c",
-      "target_sha256": "eb4c72eb5297a67bb99287d89487a1014dc5f4e4be2a973ac6b25f9265479a87",
-      "reviewer": "Claude (Claude Code session; mixed-size stage 1: rows added by the same script in both languages from the namelist declarations; counts and links checked by tools/params_index/check.py)",
+      "source_sha256": "7bee8f1ee7af7fe585edd78cc12fba8340cf11b5300ac41ae884c4a9e101d976",
+      "target_sha256": "11e5417d9c3d25b49df1c44393457aa40b1c48d313f3ce5a737339785c0357b3",
+      "reviewer": "Claude (Claude Code session; mixed-size stage 2b (rockfall and talus carried from the top of the column with rf_frac for bedrock debris, depth-dependent creep and longshore transport with the supplying exchange-layer composition, swash deferred): the new and changed parts written in both languages in the same work and compared side by side; parameter names, messages and numbers checked against the code and the test runs)",
       "method": "assistant",
-      "reviewed_on": "2026-11-23"
+      "reviewed_on": "2026-11-24"
     },
     {
       "source": "docs/users_guide/advection.md",
@@ -311,9 +311,9 @@
     {
       "source": "docs/users_guide/geomorph.md",
       "target": "docs/en/users_guide/geomorph.md",
-      "source_sha256": "7aa86023c15c102b2c301a2b12985c6f00e5fece511399869dc62639e514556f",
-      "target_sha256": "a815fa1b5bfe38a6585fbd8402eb9d8c7d96c23bb98b18193f5faca8c1898c79",
-      "reviewer": "Claude (Claude Code session; mixed-size stage 2a (suspended load linked to class 1, Dm probe column, D84 from the composition): the new and changed parts compared side by side with the Japanese source; parameters, messages and numbers checked against the code and the test runs)",
+      "source_sha256": "fc94c474feedcdeb7aa926ce01d10e811afb6a4f040068ac073be2db223ae645",
+      "target_sha256": "3db73967bc2cc80a2fb1674d5fa1ae91ab001d3b6030f6b0b67bfcf6c46d642e",
+      "reviewer": "Claude (Claude Code session; mixed-size stage 2b (rockfall and talus carried from the top of the column with rf_frac for bedrock debris, depth-dependent creep and longshore transport with the supplying exchange-layer composition, swash deferred): the new and changed parts written in both languages in the same work and compared side by side; parameter names, messages and numbers checked against the code and the test runs)",
       "method": "assistant",
       "reviewed_on": "2026-11-24"
     },
@@ -437,11 +437,11 @@
     {
       "source": "docs/users_guide/params_index.md",
       "target": "docs/en/users_guide/params_index.md",
-      "source_sha256": "7147137628d3f51eabbda485855636dd6f589c744cdb359c39d3968a5c29b6fc",
-      "target_sha256": "8db65cf8e633a3cbd4f88b08299ab23b6d0f6da51f28ec7d4fcaf11b624cef8a",
-      "reviewer": "Claude (Claude Code session; mixed-size stage 1: rows added by the same script in both languages from the namelist declarations; counts and links checked by tools/params_index/check.py)",
+      "source_sha256": "2a9eca84346421d5a33da38958e190a16b64546ef0769bcf29c6d7481b8a764f",
+      "target_sha256": "da31ddbb4eba2b5299145df41b81a52254cb5c98a63f0b5ee051efb74ba1ffde",
+      "reviewer": "Claude (Claude Code session; mixed-size stage 2b (rockfall and talus carried from the top of the column with rf_frac for bedrock debris, depth-dependent creep and longshore transport with the supplying exchange-layer composition, swash deferred): the new and changed parts written in both languages in the same work and compared side by side; parameter names, messages and numbers checked against the code and the test runs)",
       "method": "assistant",
-      "reviewed_on": "2026-11-23"
+      "reviewed_on": "2026-11-24"
     },
     {
       "source": "docs/users_guide/passage_width.md",
@@ -482,9 +482,9 @@
     {
       "source": "docs/users_guide/sediment.md",
       "target": "docs/en/users_guide/sediment.md",
-      "source_sha256": "413d3314d9b5920b295759b434c895d8b9353e95d6b4aa028a123b54b4fb837b",
-      "target_sha256": "0d4833f736874e2e826da47ad07746f6d406eeb4ec8399e56d410e8ee8df0965",
-      "reviewer": "Claude (Claude Code session; mixed-size stage 2a (suspended load linked to class 1, Dm probe column, D84 from the composition, including the mixture check tpmix/tpfix): the new and changed parts compared side by side with the Japanese source; parameters, messages and numbers checked against the code and the test runs)",
+      "source_sha256": "ae580f65eff4c7a3c63ec35f3ae20cdfd70b7a471ae5e2e77b2fe2ab08190bd9",
+      "target_sha256": "58d39c201dbb6d6f5a3cfd00e9c8c46b08430160c012efbba1195bae4a2c607a",
+      "reviewer": "Claude (Claude Code session; mixed-size stage 2b (rockfall and talus carried from the top of the column with rf_frac for bedrock debris, depth-dependent creep and longshore transport with the supplying exchange-layer composition, swash deferred): the new and changed parts written in both languages in the same work and compared side by side; parameter names, messages and numbers checked against the code and the test runs)",
       "method": "assistant",
       "reviewed_on": "2026-11-24"
     },
@@ -716,9 +716,9 @@
     {
       "source": "examples/List_samples/list_geomorph.txt",
       "target": "examples/List_samples/en/list_geomorph.txt",
-      "source_sha256": "a7b8222e98443247be1e67f92e8a9759171eac0ae09cf8d02b2d5ecda32f028b",
-      "target_sha256": "fb40affdd43ccdb9f427e292f464af9378354328bfd6ba6d4f339ba63ac5c048",
-      "reviewer": "Claude (Claude Code session; mixed-size stage 2a: the comments of the commented examples (fluv_d84, the mixed-size block, susp_d50) changed in the same work in Japanese and English; values, identifiers and commented states unchanged (tools/consistency/check.py samples); both diffs read side by side)",
+      "source_sha256": "22ed51daa26dbfe891851c3179d190553bd6fa717ec07bbdc3b52a48d4d0f272",
+      "target_sha256": "fab8ef704a07cb3db49aff9d84a63118b6b43150b605e7427983b5ac10217e9b",
+      "reviewer": "Claude (Claude Code session; mixed-size stage 2b (rockfall and talus carried from the top of the column with rf_frac for bedrock debris, depth-dependent creep and longshore transport with the supplying exchange-layer composition, swash deferred): the new and changed parts written in both languages in the same work and compared side by side; parameter names, messages and numbers checked against the code and the test runs)",
       "method": "assistant",
       "reviewed_on": "2026-11-24"
     },
@@ -3821,9 +3821,9 @@
     {
       "source": "test/README.md",
       "target": "test/README.en.md",
-      "source_sha256": "3a4c335f7e5f2d1730cae6424658e3c3cee74fe1446f595f27fc9b7f194caf16",
-      "target_sha256": "385137ba2ea656ced62c05972a20abfec098e02717efd9e7a1ba62444b3b181b",
-      "reviewer": "Claude (Claude Code session; mixed-size stage 2a: the rows of the new configurations (single_tp/equal_tp, tpmix/tpfix, single_su/equal_su, susp, suw, surt, su_d50, su_wash), the typical numbers and the run notes added in the same work in Japanese and English; both diffs read side by side; numbers checked against the test runs)",
+      "source_sha256": "565f84723c4ba6fe7fe891a49409ee3e8ae96f7c2b7dca2ec57e305d77e17c38",
+      "target_sha256": "c594e6a24e96774c76652e77df08a55fed69980ca44d8aa82ecf5688a791650b",
+      "reviewer": "Claude (Claude Code session; mixed-size stage 2b (rockfall and talus carried from the top of the column with rf_frac for bedrock debris, depth-dependent creep and longshore transport with the supplying exchange-layer composition, swash deferred): the new and changed parts written in both languages in the same work and compared side by side; parameter names, messages and numbers checked against the code and the test runs)",
       "method": "assistant",
       "reviewed_on": "2026-11-24"
     },
@@ -3884,9 +3884,9 @@
     {
       "source": "test/bedmix/README.md",
       "target": "test/bedmix/en/README.md",
-      "source_sha256": "2c62c4419e34ac33d79039a4fa5126bbaea881958349ebb95db58adcf8f951e7",
-      "target_sha256": "e7c5bf2b9d27d91f2859044f8d8cd26e682198e79df8443d046320eaba509e5b",
-      "reviewer": "Claude (Claude Code session; mixed-size stage 2a: the rows of the new configurations (single_tp/equal_tp, tpmix/tpfix, single_su/equal_su, susp, suw, surt, su_d50, su_wash), the typical numbers and the run notes added in the same work in Japanese and English; both diffs read side by side; numbers checked against the test runs)",
+      "source_sha256": "88efe452d68e99b56d0d42b885e7366b66d8bc254efebbb6a56a181b3a3c1bc9",
+      "target_sha256": "637c1252d8b81a20ee5043da8839d8df09265cb5147881141b87e83c938f0d78",
+      "reviewer": "Claude (Claude Code session; mixed-size stage 2b (rockfall and talus carried from the top of the column with rf_frac for bedrock debris, depth-dependent creep and longshore transport with the supplying exchange-layer composition, swash deferred): the new and changed parts written in both languages in the same work and compared side by side; parameter names, messages and numbers checked against the code and the test runs)",
       "method": "assistant",
       "reviewed_on": "2026-11-24"
     },

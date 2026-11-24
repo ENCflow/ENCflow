@@ -50,7 +50,7 @@ module subroutine init_bedmix(gm, p, g, s, b, list)
   type(t_state), intent(inout) :: s
   type(t_boundary), intent(in) :: b
   type(t_list_geomorph), intent(in) :: list
-  integer :: nc, kc, ifl
+  integer :: nc, kc, ifl, nfr
   real :: fmean(1:nbmixmax), d90, la, d84
   character(len=512) :: msg
 
@@ -158,6 +158,49 @@ module subroutine init_bedmix(gm, p, g, s, b, list)
     allocate(s%hsx(dcp%js:dcp%je, 1:5), source = 0.0_real64)
     call par_info("geomorph: suspended load = class 1 (d = " // rtoa(gm%bmx%d(1)) // " m): pickup x the class-1 " &
                   // "fraction of the exchange layer, deposition into the exchange layer; class 1 also moves as bed load")
+  end if
+
+  ! --- 崩落と崖錐・深さ依存クリープ・沿岸漂砂(段 2b。§123) ---
+  if (list%f_rockfall > 0) then
+    ! 崩落は柱の上から(交換層 → 下層 → 基岩)取り去った組成で運ぶ(apply_rockfall_bmix)。河岸モードの
+    ! 崖錐の搬出(掃流砂・側岸侵食の流出で ht を減らす)は混合粒径の適用に入れていないので止める
+    if (list%rf_bank > 0) then
+      call par_stop("list_geomorph: f_bedmix=1 cannot be combined with rf_bank=1 yet (the talus removed by " &
+                    // "bed load is not tracked in the mixed-size application)")
+    end if
+    nfr = 0
+    do kc = 1, nbmixmax
+      if (list%rf_frac(kc) <= -9000.0) exit
+      nfr = nfr + 1
+    end do
+    if (list%rf_bedrock > 0) then
+      ! 基岩から出る岩屑の組成は与件(既定を置かない。給砂の組成と同じ)
+      if (nfr == 0) then
+        call par_stop("list_geomorph: f_rockfall with rf_bedrock=1 and f_bedmix=1 requires rf_frac (the class " &
+                      // "fractions of the debris from bedrock, one per class of bmix_d; given data, no default)")
+      end if
+      if (nfr /= nc) call par_stop("list_geomorph: rf_frac needs " // itoa(nc) // " values (one per class of bmix_d)")
+      if (any(list%rf_frac(1:nc) < 0.0)) call par_stop("list_geomorph: rf_frac must be >= 0")
+      if (abs(sum(list%rf_frac(1:nc)) - 1.0) > 1.0e-6) call par_stop("list_geomorph: rf_frac must sum to 1")
+      gm%bmx%rfr(1:nc) = list%rf_frac(1:nc) / sum(list%rf_frac(1:nc))
+      write(msg, '(a)') "geomorph: rockfall of bedrock produces debris of class fractions"
+      do kc = 1, nc
+        msg = trim(msg) // " " // rtoa(gm%bmx%rfr(kc))
+      end do
+      call par_info(trim(msg) // " (rf_frac)")
+    else if (nfr > 0) then
+      call par_info("geomorph: rf_frac is not used (rf_bedrock = 0: only the soil layer collapses)")
+    end if
+    allocate(gm%bmx%rfrock(dcp%js:dcp%je, 1:nc), source = 0.0_real64)
+    allocate(gm%bmx%rfsea(dcp%js:dcp%je, 1:nc), source = 0.0_real64)
+    call par_info("geomorph: rockfall and talus carry the column from the top (exchange layer, substrate, " &
+                  // "bedrock), not limited by the exchange-layer thickness")
+  end if
+  if (gm%crp%hcinv > 0.0) then
+    call par_info("geomorph: depth-dependent creep carries the composition of the supplying exchange layer")
+  end if
+  if (gm%f_wave_long > 0) then
+    call par_info("geomorph: wave-driven longshore transport carries the composition of the supplying exchange layer")
   end if
 
   ! --- 再開(私有 save) ---
@@ -292,7 +335,7 @@ module subroutine dispose_bedmix(gm, p, g, s)
   type(t_sysparam), intent(in) :: p
   type(t_geoinfo), intent(in) :: g
   type(t_state), intent(in) :: s
-  real(real64) :: v1(1:nbmixmax), vf, vo, res, vx, hs1, ves, vin, vin2, vo1, vo2, vo4
+  real(real64) :: v1(1:nbmixmax), vf, vo, res, vx, hs1, ves, vin, vin2, vo1, vo2, vo4, vrk, vsk
   integer :: kc
   character(len=512) :: msg
 
@@ -311,6 +354,16 @@ module subroutine dispose_bedmix(gm, p, g, s)
           gm%bmx%d(kc), " m): stock", " initial ", gm%bmx%v0(kc), " final ", v1(kc), " feed ", vf, &
           " out ", vo, " m3 (solid)"
     call par_info(trim(msg))
+    if (allocated(gm%bmx%rfrock)) then
+      ! 崩落(段 2b。§123): 基岩から出て土層に加わった分と、海セルへ落ちた分
+      call par_sum_rows(gm%bmx%rfrock(:,kc), vrk)
+      vrk = vrk / real(gm%wrk%ainv, real64) / real(gm%poroi, real64)
+      call par_sum_rows(gm%bmx%rfsea(:,kc), vsk)
+      res = res - vrk + vsk
+      write(msg, '(a,i0,a,es16.9,a,es16.9,a)') "geomorph: bed mixture ledger class ", kc, &
+            " rockfall: from bedrock ", vrk, " to sea cells ", vsk, " m3 (solid)"
+      call par_info(trim(msg))
+    end if
     if (gm%bmx%susp .and. kc == 1) then
       ! 浮遊砂へ出た分(巻き上げ − 沈降。河床の側の重み)を収支に含める(§122)
       res = res + vx
@@ -318,10 +371,12 @@ module subroutine dispose_bedmix(gm, p, g, s)
             vx, " m3 (solid, bed side)"
       call par_info(trim(msg))
       write(msg, '(a,es12.5,a)') "geomorph: bed mixture ledger class 1 residual ", res, &
-            " m3 (final - initial - feed + out + to suspended load)"
+            " m3 (final - initial - feed + out + to suspended load" // trim(merge(" - from bedrock + to sea)", &
+            ")                        ", allocated(gm%bmx%rfrock)))
     else
       write(msg, '(a,i0,a,es12.5,a)') "geomorph: bed mixture ledger class ", kc, " residual ", res, &
-            " m3 (final - initial - feed + out)"
+            " m3 (final - initial - feed + out" // trim(merge(" - from bedrock + to sea)", &
+            ")                        ", allocated(gm%bmx%rfrock)))
     end if
     call par_info(trim(msg))
   end do
@@ -1561,6 +1616,175 @@ module subroutine apply_edge_flux_bmix(gm, g, s, dts, with_classes)
   end do
   gm%bmx%nlimk = gm%bmx%nlimk + nlim
   gm%bmx%vclip = gm%bmx%vclip + vclip
+end subroutine
+
+
+!----------------------------------------------------------------------
+! 崩落と崖錐の適用の混合粒径版(f_rockfall と f_bedmix。段 2b。§123)。calc_rockfall の apply_edge_flux・
+! apply_bedrock と崖錐の収支の代わりに、z・sd・崖錐 ht・組成・張り出し量 u をまとめて更新する。
+!   流束(wrk%q。固体体積。calc_rockfall が崩落と崖錐の安息角の分を書く)は、供給側の柱の上から順に
+!   交換層 → 下層 → 基岩と取り去った組成で運ぶ(崩落は粒径を選ばない。掃流砂・安息角崩落と違い交換層厚で
+!   頭打ちにしない。ENCflow の選択)。基岩から出た分の組成は rf_frac(与件)。土層だけが崩れる形
+!   (rf_bedrock = 0)は供給側の流出を土層厚で頭打ちにし(apply_edge_flux の供給量制限と同じ)、基岩の崩落
+!   (rf_bedrock = 1)は頭打ちにしない(apply_bedrock と同じ)。各セルは流出(柱の上から取り去る)→ 流入
+!   (入ってきた組成で積む。Hirano の界面の規則)の順に更新する(bmix_update を 2 回)。
+!   崖錐 ht は単一粒径と同じく、流出の厚さだけ先に減らし(0 でクランプ)、流入の厚さを積む。海セルは受け手
+!   として更新しない(系外。粒径階ごとの量を台帳 rfsea に積む)。基岩から土層に加わった分は台帳 rfrock。
+!   MPI: 供給側の頭打ちの係数と流出の組成を帯で求めてハロ交換し、発散は帯で(書き手は自セルだけ)
+!----------------------------------------------------------------------
+module subroutine apply_rockfall_bmix(gm, g, s, dts)
+  type(t_geomorph), intent(inout) :: gm
+  type(t_geoinfo), intent(in) :: g
+  type(t_state), intent(inout) :: s
+  real, intent(in) :: dts
+  integer :: i, j, k, in, jn, kc, nc
+  real :: qk, dvo, dvi, winv, cvt, hout, hin, sd0, sdr, le, t1, t2, t3, w, vc, vclip, cap, fx, dm
+  real :: ink(1:nbmixmax), a(1:nbmixmax), fa(1:nbmixmax), fb(1:nbmixmax)
+  real, allocatable :: fdr(:,:)          ! 供給側の流出の頭打ちの係数(土層だけが崩れる形。帯±ハロ)
+  real, allocatable :: cmp(:,:,:)        ! 供給側から出る土砂の組成(帯±ハロ。1:nc)
+
+  nc = gm%bmx%nc
+  vclip = 0.0
+  allocate(fdr(dcp%ish:dcp%ieh, dcp%jsh:dcp%jeh), source = 1.0)
+  allocate(cmp(dcp%ish:dcp%ieh, dcp%jsh:dcp%jeh, 1:nc), source = 0.0)
+
+  ! --- ループ 1: 供給側の流出の厚さ・頭打ち・取り去る柱の組成(帯) ---
+  !$omp parallel do schedule(static) private(i, j, k, qk, dvo, winv, cvt, hout, sd0, le, t1, t2, t3)
+  do j = dcp%js, dcp%je
+    do i = g%wx(1,j), g%wx(2,j)
+      if (g%x(i,j) <= 0) cycle
+      if (g%sw(i,j) > 0) cycle
+      dvo = 0.0
+      do k = 1, 8
+        qk = sign_e(k) * gm%wrk%q(ke(k), i+die(k), j+dje(k))      ! 正 = 流出
+        if (qk > 0.0) dvo = dvo + qk
+      end do
+      if (dvo <= 0.0) cycle
+      winv = 1.0
+      if (chn%have_width) winv = 1.0 / chn%wfrac(i,j)
+      cvt = dts * gm%wrk%ainv * winv * gm%poroi             ! 流量 (m3/s) → 厚さ (m)
+      hout = dvo * cvt
+      sd0 = max(s%sd(i,j), 0.0)
+      if (.not. gm%rf%bedrock .and. hout > sd0) then
+        fdr(i,j) = sd0 / hout                              ! 土層だけが崩れる形: 土層厚で頭打ち
+        hout = sd0
+      end if
+      if (hout <= 0.0) cycle
+      le = min(gm%bmx%la, sd0)
+      t1 = min(hout, le)                                   ! 交換層から
+      t2 = min(max(hout - le, 0.0), sd0 - le)              ! 下層から
+      t3 = max(hout - sd0, 0.0)                            ! 基岩から(rf_bedrock = 1 のときだけ正)
+      cmp(i,j,1:nc) = (t1 * s%bmf(i,j,1:nc) + t2 * gm%bmx%fs(i,j,1:nc) + t3 * gm%bmx%rfr(1:nc)) / hout
+    end do
+  end do
+  !$omp end parallel do
+  call par_halo_cell(fdr)
+  do kc = 1, nc
+    call par_halo_cell(cmp(:,:,kc))
+  end do
+
+  ! --- ループ 2: 流出(柱の上から取り去る)→ 流入(積む)。z・sd・ht・組成・u・地下水と台帳 ---
+  !$omp parallel do schedule(static) reduction(+: vclip) &
+  !$omp   private(i, j, k, in, jn, kc, qk, dvo, dvi, winv, cvt, hout, hin, sd0, sdr, le, t3, w, vc, cap, fx, dm, &
+  !$omp           ink, a, fa, fb)
+  do j = dcp%js, dcp%je
+    do i = g%wx(1,j), g%wx(2,j)
+      if (g%x(i,j) <= 0) cycle
+      if (g%sw(i,j) > 0) cycle
+      dvo = 0.0
+      dvi = 0.0
+      ink(1:nc) = 0.0
+      do k = 1, 8
+        in = i + din(k)
+        jn = j + djn(k)
+        qk = sign_e(k) * gm%wrk%q(ke(k), i+die(k), j+dje(k))
+        if (qk > 0.0) then
+          dvo = dvo + qk * fdr(i,j)
+          ! 海セルへの流出は系外(台帳。粒径階ごとの固体体積)
+          if (g%x(in,jn) > 0) then
+            if (g%sw(in,jn) > 0) then
+              do kc = 1, nc
+                gm%bmx%rfsea(j,kc) = gm%bmx%rfsea(j,kc) + real(qk * fdr(i,j) * cmp(i,j,kc) * dts, real64)
+              end do
+            end if
+          end if
+        else if (qk < 0.0) then
+          if (g%x(in,jn) > 0) then
+            dvi = dvi - qk * fdr(in,jn)
+            ink(1:nc) = ink(1:nc) - qk * fdr(in,jn) * cmp(in,jn,1:nc)
+          end if
+        end if
+      end do
+      if (dvi > 0.0 .or. dvo > 0.0) then
+        winv = 1.0
+        if (chn%have_width) winv = 1.0 / chn%wfrac(i,j)
+        cvt = dts * gm%wrk%ainv * winv * gm%poroi
+        hout = dvo * cvt
+        hin = dvi * cvt
+        ink(1:nc) = ink(1:nc) * cvt
+        sd0 = max(s%sd(i,j), 0.0)
+        fa(1:nc) = s%bmf(i,j,1:nc)
+        fb(1:nc) = gm%bmx%fs(i,j,1:nc)
+        ! (a) 流出: 柱の上から hout を取り去る(土層は min(hout, sd0)、残りは基岩)
+        sdr = sd0
+        if (hout > 0.0) then
+          le = min(gm%bmx%la, sd0)
+          a(1:nc) = max(le - hout, 0.0) * fa(1:nc)          ! 交換層に残る分(深い流出なら 0 = 下層から作り直す)
+          call bmix_update(nc, gm%bmx%la, sd0, -min(hout, sd0), a, fa, fb, vc)
+          vclip = vclip + vc / gm%wrk%ainv / winv
+          sdr = sd0 - min(hout, sd0)
+          t3 = max(hout - sd0, 0.0)
+          if (t3 > 0.0) then
+            w = 1.0
+            if (allocated(gm%bmx%wf)) w = gm%bmx%wf(i,j)
+            do kc = 1, nc
+              gm%bmx%rfrock(j,kc) = gm%bmx%rfrock(j,kc) + real(t3 * gm%bmx%rfr(kc) * w, real64)
+            end do
+          end if
+        end if
+        ! (b) 流入: 入ってきた組成で積む(土層厚 0 なら流入の組成で交換層を作る)
+        if (hin > 0.0) then
+          le = min(gm%bmx%la, sdr)
+          a(1:nc) = le * fa(1:nc) + ink(1:nc)
+          call bmix_update(nc, gm%bmx%la, sdr, hin, a, fa, fb, vc)
+          vclip = vclip + vc / gm%wrk%ainv / winv
+        end if
+        s%z(i,j) = s%z(i,j) + (hin - hout)
+        s%sd(i,j) = sdr + hin
+        s%ht(i,j) = max(s%ht(i,j) - hout, 0.0) + hin
+        s%bmf(i,j,1:nc) = fa(1:nc)
+        gm%bmx%fs(i,j,1:nc) = fb(1:nc)
+        dm = 0.0
+        do kc = 1, nc
+          dm = dm + fa(kc) * gm%bmx%d(kc)
+        end do
+        s%bmdm(i,j) = dm
+        ! 浸食で地下水容量が現在の貯留を下回ったら、超過分を地表水へ渡す(apply_bedrock と同じ)
+        if (s%gw_active) then
+          cap = s%sd(i,j) * g%sy0
+          if (s%hg(i,j) > cap) then
+            fx = s%hg(i,j) - cap
+            s%hg(i,j) = cap
+            if (sect_cell(s, i, j)) then
+              call sect_add_vh(s, i, j, fx * gw_to_h(s, i, j))
+            else
+              s%h(i,j) = s%h(i,j) + fx * gw_to_h(s, i, j)
+            end if
+          end if
+        end if
+      end if
+      ! 張り出し量 u は、岩屑が到着した(埋没)か、自身が崩落中の柱なら 0 に戻す(calc_rockfall と同じ)
+      if (gm%rf%uc > 0.0) then
+        if (dvi > 0.0 .or. gm%rf%col(i,j) > 0.5) gm%rf%u(i,j) = 0.0
+      end if
+    end do
+  end do
+  !$omp end parallel do
+  gm%bmx%vclip = gm%bmx%vclip + vclip
+  do kc = 1, nc
+    call par_halo_cell(s%bmf(:,:,kc))
+  end do
+  call bmix_update_dm(gm, s)
 end subroutine
 
 

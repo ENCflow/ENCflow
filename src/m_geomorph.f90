@@ -287,6 +287,11 @@ module m_geomorph
                                      !   行部分和 (js:je) (m3。河床の在庫と同じ重み = 河道平面積率)
     real(real64), allocatable :: esrow(:)  ! 浮遊砂の側で数えた同じ交換(Σ Δhs·gv·wfrac·A)の行部分和 (js:je) (m3)
     real(real64) :: hs0 = 0.0_real64 ! 最初の更新の頭の浮遊砂の在庫(Σ hs·gv·wfrac·A。m3)
+    ! 崩落と崖錐(f_rockfall。柱の上から運ぶ。段 2b。§123)
+    real :: rfr(1:nbmixmax) = 0.0    ! 基岩から出る岩屑の組成(rf_frac。rf_bedrock = 1 のとき)
+    real(real64), allocatable :: rfrock(:,:)  ! 基岩から出て土層に加わった粒径階ごとの量の行部分和 (js:je, 1:nc)
+                                     !   (厚さ × 河道平面積率。台帳で /(ainv·poroi) して固体 m3)
+    real(real64), allocatable :: rfsea(:,:)   ! 海セルへ落ちた粒径階ごとの固体体積の行部分和 (js:je, 1:nc) (m3)
   end type
 
   type t_wave
@@ -912,6 +917,13 @@ module m_geomorph
       type(t_state), intent(inout) :: s
       real, intent(in) :: dts
     end subroutine
+    ! 崩落と崖錐の適用の混合粒径版(柱の上から交換層 → 下層 → 基岩の順に取り去った組成で運ぶ。段 2b。§123)
+    module subroutine apply_rockfall_bmix(gm, g, s, dts)
+      type(t_geomorph), intent(inout) :: gm
+      type(t_geoinfo), intent(in) :: g
+      type(t_state), intent(inout) :: s
+      real, intent(in) :: dts
+    end subroutine
     ! エッジ流量の適用の混合粒径版(粒径階ごとの供給量制限 → 発散 → z・sd と交換層・下層の更新)。
     ! with_classes = .true. は掃流砂(粒径階ごとの流束 bmx%qk + 等移動度の wrk%q)、.false. は崩落(wrk%q だけ)
     module subroutine apply_edge_flux_bmix(gm, g, s, dts, with_classes)
@@ -1509,18 +1521,18 @@ subroutine m_geomorph_init(gm, p, g, s, b)
       call par_stop("list_geomorph: f_bedmix=1 cannot be combined with wet_lw yet (the spread pickup " &
                     // "would not update the class composition)")
     end if
-    if (gm%f_rockfall > 0 .or. gm%crp%hcinv > 0.0 .or. gm%f_bedslide > 0 .or. gm%f_debris > 0 &
-        .or. gm%f_splash > 0) then
-      call par_stop("list_geomorph: f_bedmix=1 cannot be combined with f_rockfall, creep_hstar > 0, " &
-                    // "f_bedslide, f_debris or f_splash yet (stage 1 of docs/mixed_sediment_plan.md)")
+    ! 崩落と崖錐・深さ依存クリープ・沿岸漂砂は運ぶ(段 2b。§123)。動く土塊と乾式侵食はまだ止める
+    if (gm%f_bedslide > 0 .or. gm%f_debris > 0 .or. gm%f_splash > 0) then
+      call par_stop("list_geomorph: f_bedmix=1 cannot be combined with f_bedslide, f_debris or f_splash yet " &
+                    // "(docs/mixed_sediment_plan.md §3.7)")
     end if
     if (gm%f_wthr > 0 .or. gm%f_dissol > 0 .or. gm%f_rockinc > 0) then
       call par_stop("list_geomorph: f_bedmix=1 cannot be combined with f_wthr, f_dissol or f_rockinc yet " &
                     // "(stage 1 of docs/mixed_sediment_plan.md)")
     end if
-    if (gm%f_wave_long > 0 .or. gm%f_wfsed > 0 .or. gm%f_wfswash > 0) then
-      call par_stop("list_geomorph: f_bedmix=1 cannot be combined with the wave-driven transport " &
-                    // "(f_wave_longshore, f_wfsed, f_wfswash) yet")
+    if (gm%f_wfsed > 0 .or. gm%f_wfswash > 0) then
+      call par_stop("list_geomorph: f_bedmix=1 cannot be combined with f_wfsed or f_wfswash yet (the wave " &
+                    // "stirring of the bed load is not carried per class; f_wfswash requires f_wfsed)")
     end if
     if (len_trim(p%fn_glacier) > 0 .or. len_trim(p%fn_lavaflow) > 0) then
       call par_stop("list_geomorph: f_bedmix=1 cannot be combined with fn_glacier or fn_lavaflow yet " &
