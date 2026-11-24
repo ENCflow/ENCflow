@@ -19,10 +19,11 @@ changes too much (57 %, 2.1 m³). The locations of the change, however, do not m
 correlation 0.1 to 0.25): the incisions along narrow threads and the degradation of the middle reach and the
 downstream end do not appear. In the model the flow spreads over the width of the low-water channel instead of
 gathering into one thread as in the measurement. For the surface composition, the measured mean hardly changes,
-whereas the model loses fines and coarsens too much. Comparing the sensitivity configurations at 124 min, lowering the
-downstream extension to the fixed bed produces a lowering from the downstream end of the same shape as measured, and
-setting the substrate to the initial surface composition keeps the surface from coarsening at the cost of a larger bed
-change ("Sensitivity").
+whereas the model loses fines and coarsens too much. In the sensitivity configurations, lowering the downstream
+extension to the fixed bed produces a lowering from the downstream end of the same shape as measured but makes the
+downstream water level 9 cm lower than measured (the lip was close to the initial bed level), and setting the substrate
+to the initial surface composition keeps the surface from coarsening at the cost of a much too large bed change
+("Sensitivity").
 Mixing the grain sizes brings the magnitude of the change close to the measurement, but with this grid and these
 settings the formation of threads and the pattern of the surface composition are not reproduced; that is the
 conclusion of this example (candidate reasons under "What this model cannot represent and the limits of accuracy").
@@ -226,42 +227,44 @@ exchange-layer supply limiter acted in 1.3 % of the class × cell updates.
 ### Downstream-end condition and substrate composition
 
 Two configurations that each change one thing in the base configuration (mixed sizes) are computed by `make sub`
-(the cost is the same as the base configuration). Shown here are their results at 124 min (the fifth output),
-compared with the base configuration at the same time (table 6 of `plot_results.py`). The measurement is at 240 min,
-a different time, and is listed for reference.
+(the cost is the same as the base configuration). The numbers are copied from tables 1–3 and 6 of `plot_results.py`.
 
-| | I 1 to 500 | 501 to 1000 | 1001 to 1500 | 1501 to 2000 | 2001 to 2362 | surface fraction of fines |
-|---|---|---|---|---|---|---|
-| base configuration (124 min) | −97 | −57 | +23 | +19 | +92 | 45.9 % |
-| substrate = surface (`param_sub.txt`, 124 min) | −297 | −250 | +204 | +1 | +248 | 61.6 % |
-| outlet at the fixed bed (`param_outlet.txt`, 124 min) | −97 | −57 | +23 | +19 | −384 | 45.4 % |
-| measured (240 min, for reference) | +22 | −510 | −209 | +64 | −243 | 58.6 % |
+| | I 1 to 500 | 501 to 1000 | 1001 to 1500 | 1501 to 2000 | 2001 to 2362 | surface fraction of fines | correlation (whole / downstream of 17.1k) | RMSE (whole) |
+|---|---|---|---|---|---|---|---|---|
+| measured | +22 | −510 | −209 | +64 | −243 | 58.6 % | — | — |
+| base configuration | −132 | −55 | +11 | +26 | +128 | 45.1 % | 0.12 / 0.20 | 14.2 mm |
+| substrate = surface (`param_sub.txt`) | −445 | −421 | +353 | −46 | +440 | 61.0 % | 0.15 / 0.27 | 20.9 mm |
+| outlet at the fixed bed (`param_outlet.txt`) | −132 | −55 | +11 | +26 | −525 | 44.4 % | 0.18 / 0.25 | 15.6 mm |
 
-The reach columns are the net volume change of the movable bed (L, bulk); the surface fraction of fines is the mean
-over the movable bed.
+The reach columns are the net volume change of the movable bed over 240 min (L, bulk); the surface fraction of fines
+is the mean over the movable bed.
 
-- **Level of the downstream extension** (`param_outlet.txt`): with the floor of the downstream extension at the fixed
-  bed (the base of the movable layer; 9 cm lower on average across the low-water channel) instead of the initial bed
-  level of the end section, the bed lowers from the downstream end, and the reach at the downstream end (I 2001 to
-  2362) loses 0.38 m³ by 124 min (the base configuration gains 0.09 m³). The lowering reaches about 8 m upstream
-  from the end (2 m means of −26, −20, −13 and −6 mm from the end), and the four upstream reaches are within 0.1 L
-  of the base configuration. The measurement at 240 min also shows the last 8 m or so lowered in the same shape
-  (−14, −10, −7 and −6 mm), while the base configuration (0.13 m³ of deposition in the downstream reach at 240 min)
-  has no such lowering. This shows that the end of the movable bed could lower in the model, but the only
-  downstream-end condition in the original data is the water level set to "free"; the height of the overfall lip is
-  not given. The base configuration therefore uses an extension that keeps the initial bed level of the end section
-  (the side that causes no lowering from the downstream end), and the configuration lowered to the fixed bed (the
-  side with the largest lowering) is shown beside it.
+- **Level of the downstream extension** (`param_outlet.txt`): with the floor of the extension at the fixed bed (the
+  base of the movable layer; 9 cm lower on average across the low-water channel) instead of the initial bed level of
+  the end section, the reach at the downstream end (I 2001 to 2362) loses 0.52 m³ (the base configuration gains
+  0.13 m³ and the measurement loses 0.24 m³). The lowering reaches 8–10 m upstream from the end, with 2 m means of
+  −31, −25, −18 and −9 mm from the end (table 6). The measurement lowers over the same length (−14, −10, −7 and
+  −6 mm), about half as deep as this configuration. The base configuration has no such lowering (+0, +3, +3 and
+  +1 mm). The four upstream reaches are within 0.4 L of the base configuration. The correlation over the whole
+  movable bed rises because the shape of the lowering at the downstream end matches (0.12 → 0.18), but the RMSE
+  grows because the lowering is too deep (14.2 → 15.6 mm). The water level at the downstream gauge 8.4k, on the other
+  hand, has a mean error of +5 mm in the base configuration and −91 mm in this configuration (−14 mm at 9.1k, against
+  −1 mm in the base configuration). The overfall lip that controlled the water level in the model was therefore close
+  to the initial bed level. The measured lowering at the downstream end may be local scour where the flow
+  accelerates towards the lip. In the model the lip (the free-outflow edge) lies beyond the extension (fixed bed, up
+  to 0.9 m long), so this acceleration does not reach the end of the movable bed. This example uses the base
+  configuration (the extension at the initial bed level), which matches the water level.
 - **Substrate composition** (`param_sub.txt`): with the substrate set to the initial surface composition of each cell
-  instead of the assumed blend of the laid sand (37.4 % fine), the mean surface fraction of fines is 61.6 %, closer to
-  the measurement (58.6 %) than the base configuration (45.9 %). The surface of the base configuration coarsens mainly
-  because the substrate that erosion brings into the exchange layer is assumed to be the coarser blend. In exchange
-  the bed moves more easily: the reach changes keep the signs of the base configuration and grow (the erosion of the
-  two upstream reaches from 0.15 to 0.55 m³, the deposition in I 1001 to 1500 and in the downstream reach from 0.12 to
-  0.45 m³). The erosion of I 501 to 1000 reaches about half of the measured 240 min value, but I 1001 to 1500 gains
-  sediment, opposite to the measurement (a loss).
-- This comparison shows the differences between configurations at 124 min; it is not a point-by-point comparison
-  with the 240 min measurement.
+  instead of the assumed blend of the laid sand (37.4 % fine), the mean surface fraction of fines after 240 min is
+  61.0 %, closer to the measurement (58.6 %) than the base configuration (45.1 %), and the point-by-point
+  correlation rises a little (0.20 → 0.24). The surface of the base configuration coarsens mainly because the
+  substrate that erosion brings into the exchange layer is assumed to be the coarser blend. In exchange the bed moves
+  more easily and changes too much (RMSE 20.9 mm; erosion of 0.87 m³ in the two upstream reaches and deposition of
+  0.79 m³ in I 1001 to 1500 and the downstream reach). The erosion of I 501 to 1000 (0.42 m³) approaches the
+  measurement (0.51 m³), but I 1001 to 1500 gains sediment, opposite to the measurement (a loss). The substrate
+  composition of the model was not measured, so which configuration is closer to the model cannot be decided.
+- In neither configuration does the mismatch in the locations of the change go away (point-by-point correlation
+  below 0.3).
 
 ### Starting points for sensitivity experiments
 
@@ -299,10 +302,11 @@ over the movable bed.
   roughness that includes form drag ("Shear stress" above). The change of transport with and without bedforms is not represented.
 - **Feed volume**: assumed to be a bulk volume (as a solid volume the feed would be 1.67 times larger).
 - **Inlet**: the sump and high structures of the fixed bed at the upstream end are replaced by a level floor.
-- **Downstream end**: the only downstream-end condition in the original data is the water level set to "free", and
-  the height of the overfall lip is not given, so the extension is fixed at the initial bed level of the end section.
-  In the measurement the bed within about 8 m of the downstream end lowers (−14 mm on average over the last 2 m at
-  240 min), but in the base configuration it does not ("Sensitivity").
+- **Downstream end**: the only downstream-end condition in the original data is the water level set to "free". The
+  extension is fixed at the initial bed level of the end section, and with it the water level at the downstream gauge
+  matches (lowering the extension to the fixed bed makes it 9 cm lower). In the measurement the bed within 8–10 m of
+  the downstream end lowers (−14 mm on average over the last 2 m at 240 min), but in the model the lip lies beyond
+  the extension, so this lowering is not represented ("Sensitivity").
 - **Exchange layer**: the results depend on the exchange-layer thickness, and the equations can become ill-posed, for
   example where the bed degrades into a finer substrate (the [supplement](../../../docs/en/users_guide/sediment.md#mixed-grain-sizes-f_bedmix)
   of the user's guide).

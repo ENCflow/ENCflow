@@ -7,7 +7,7 @@
   figs/setup.png       初期の河床高・移動層・表層の細粒の割合と、水位計・区間流入の位置
   figs/waterlevel.png  上流端の流量と、水位計 4 か所の水位の時系列(計測と計算)
   figs/bedchange.png   240 分の河床変化 z − z0 の平面分布(計測と各構成)
-  figs/profile.png     低水路の河床変化の縦断(断面平均と最深河床)と、表層の粒径集団の割合の縦断
+  figs/profile.png     低水路の河床変化の縦断(計測と全構成)と、表層の粒径集団の割合の縦断(計測と混合粒径・下層 = 表層)
   figs/surface.png     240 分の表層の細粒(粒径集団 1)の割合の平面分布(計測と混合粒径の構成)
   figs/velocity.png    93 分の流速の大きさ(計測の点と各構成)
 
@@ -17,7 +17,7 @@
   表 3  表層の粒径集団の割合(移動床の平均)と、粒径集団 1 の割合の比較(相関・RMSE)
   表 4  画面出力の台帳(粒径階ごとの給砂・開境界の流出・在庫の変化)
   表 5  93 分の流速の大きさの比較(相関・RMSE・平均)
-  表 6  感度の構成(下層 = 表層、下流端 = 固定床高)を基本の構成と 124 分で比べる(区間の正味の変化と表層の細粒の割合)
+  表 6  下流端から 20 m の移動床の河床変化の縦断(2 m ごとの平均。下流端の延長の高さの感度)
 終わった計算の結果ディレクトリだけを扱う(9998 がないものは表と図から外す)。
 依存: numpy, matplotlib(make_init.py の写し方を使う)
 """
@@ -44,7 +44,7 @@ plt.rcParams["axes.unicode_minus"] = False
 RUNS = [("result", "混合粒径", "mixed sizes"),
         ("result_single", "単一粒径", "single size"),
         ("result_sub", "混合粒径(下層 = 表層)", "mixed (substrate = surface)"),
-        ("result_outlet", "混合粒径(下流端 = 固定床高)", "mixed (outlet at base)")]
+        ("result_outlet", "混合粒径(下流端 = 固定床高)", "mixed (outlet at fixed bed)")]
 GAUGES_FIG = ["19.2k", "16.6k", "13.3k", "9.7k"]
 REACHES = [(0, 500), (500, 1000), (1000, 1500), (1500, 2000), (2000, 2362)]
 MAP_RUNS = ["result", "result_single"]          # 河床変化・流速の平面図に描く構成(感度の構成は縦断と数表で)
@@ -188,7 +188,7 @@ def main():
     fig_profile(dz_meas, dz_model, f_meas0, f_meas, fa_model, runs, mov, dist, g)
     fig_surface(f_meas0, f_meas, fa_model, runs, mov, mask, ext)
     velocity(ras, mask, runs, ext)
-    sensitivity(g, mov, dz_meas, f_meas, area)
+    outlet_profile(dz_meas, dz_model, runs, mov, dist)
 
 
 def gauge_level(d, n, hmin=0.002):
@@ -296,6 +296,7 @@ def fig_setup(g, ext, dist, si, sdist, sname):
 
 
 def fig_waterlevel(wl, wl_model, runs):
+    runs = [(d, lab) for d, lab in runs if d in MAP_RUNS]   # 感度の構成は水位をほとんど変えない(数表は表 1)
     bc = mi.read_csv("bc_2-1.csv.gz")
     fig, axs = plt.subplots(1 + len(GAUGES_FIG), 1, figsize=(10, 9), sharex=True, constrained_layout=True,
                             gridspec_kw=dict(height_ratios=[1.2] + [1] * len(GAUGES_FIG)))
@@ -381,7 +382,7 @@ def fig_profile(dz_meas, dz_model, f_meas0, f_meas, fa_model, runs, mov, dist, g
         ax.plot(xc, 100 * binned(dist, f_meas0[k], sel, edges), lw=1.0, ls="--", color=MUTED, label=L("計測 0 分", "measured 0 min"))
         ax.plot(xc, 100 * binned(dist, f_meas[k], sel, edges), lw=1.8, color=INK, label=L("計測 240 分", "measured 240 min"))
         for d, lab in runs:
-            if d in fa_model:
+            if d in fa_model and d in SURF_RUNS:
                 ax.plot(xc, 100 * binned(dist, fa_model[d][k], sel, edges), lw=1.3, color=COLORS[d], label=lab)
         ax.set_ylabel(L("表層の割合 (%)", "surface fraction (%)"), fontsize=9)
         ax.set_title("(%s) %s" % ("bc"[k // 2], name), fontsize=10, loc="left")
@@ -401,33 +402,16 @@ def fig_profile(dz_meas, dz_model, f_meas0, f_meas, fa_model, runs, mov, dist, g
     plt.close(fig)
 
 
-def sensitivity(g, mov, dz_meas, f_meas, area, frame=4):
-    """表 6: 感度の構成を基本の構成と同じ時刻(フレーム 0004 = 124 分)で比べる(240 分までの計算がなくても比べられる)"""
-    cand = [("result", L("混合粒径(基本)", "mixed sizes (base)")),
-            ("result_sub", L("下層 = 表層", "substrate = surface")),
-            ("result_outlet", L("下流端 = 固定床高", "outlet at base")),
-            ("result_single", L("単一粒径", "single size"))]
-    rows = [(d, lab) for d, lab in cand if os.path.exists(os.path.join(HERE, d, "Z%04d.txt" % frame))]
-    if not rows:
-        return
-    print("\n表 6  感度の構成の 124 分(フレーム %04d)の比較(区間の正味の体積変化 L(かさ)と、移動床の表層の細粒の割合の平均)"
-          % frame)
-    print("%-22s" % "" + "".join("  I%4d-%4d" % (a + 1, b) for a, b in REACHES) + "   F1 (%)")
-    for d, lab in rows:
-        dz = load(d, "Z%04d.txt" % frame) - load(d, "Z0000.txt")
+def outlet_profile(dz_meas, dz_model, runs, mov, dist, nbin=10, w=2.0):
+    """表 6: 下流端から 20 m の移動床の河床変化の縦断(2 m ごとの平均、240 分)。下流端の延長の高さの感度を見る"""
+    print("\n表 6  下流端から %g m の移動床の河床変化(%g m ごとの平均、240 分、mm。左が下流端)" % (nbin * w, w))
+    print("%-22s" % "" + "".join("  %4g-%-4g" % (k * w, (k + 1) * w) for k in range(nbin)))
+    for lab, dz in [(L("計測", "measured"), dz_meas)] + [(lab, dz_model[d]) for d, lab in runs]:
         line = "%-22s" % lab[:22]
-        for a, b in REACHES:
-            s = mov & (g["ipos"] >= a) & (g["ipos"] < b)
-            line += "  %9.1f" % (1000 * dz[s].sum() * area)
-        fa = os.path.join(HERE, d, "Fa1_%04d.txt" % frame)
-        line += "   %6.1f" % (100 * np.loadtxt(fa)[mov].mean()) if os.path.exists(fa) else "        —"
+        for k in range(nbin):
+            s = mov & (dist >= k * w) & (dist < (k + 1) * w)
+            line += "  %9.1f" % (1000 * dz[s].mean())
         print(line)
-    line = "%-22s" % L("計測 240 分(参考)", "measured 240 min (ref.)")
-    for a, b in REACHES:
-        s = mov & (g["ipos"] >= a) & (g["ipos"] < b)
-        line += "  %9.1f" % (1000 * dz_meas[s].sum() * area)
-    print(line + "   %6.1f" % (100 * np.nanmean(f_meas[0][mov])))
-    print("  (計算は 124 分、計測は 240 分で時刻が違う。構成どうしの違いを見る表)")
 
 
 def velocity(ras, mask, runs, ext):
