@@ -724,7 +724,7 @@ contains
     integer, intent(in) :: ci, cj
     real :: v
     if (sct%have_sect) then
-      v = sect_v(s%h(ci,cj), sct%sdep(ci,cj))
+      v = sect_v(s%h(ci,cj), sct%sdep(ci,cj), sct%sfl(ci,cj))
     else
       v = s%h(ci,cj)
     end if
@@ -1700,7 +1700,7 @@ contains
     integer, intent(in) :: ci, cj
     real :: v
     if (sct%have_sect) then
-      v = sect_v(s%h(ci,cj), sct%sdep(ci,cj))
+      v = sect_v(s%h(ci,cj), sct%sdep(ci,cj), sct%sfl(ci,cj))
     else
       v = s%h(ci,cj)
     end if
@@ -2511,7 +2511,7 @@ contains
     integer, intent(in) :: ci, cj
     real :: v
     if (sct%have_sect) then
-      v = sect_v(s%h(ci,cj), sct%sdep(ci,cj))
+      v = sect_v(s%h(ci,cj), sct%sdep(ci,cj), sct%sfl(ci,cj))
     else
       v = s%h(ci,cj)
     end if

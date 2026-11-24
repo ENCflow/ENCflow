@@ -87,6 +87,8 @@ module m_state
                                         !   build_sdep の直後と河床変動で D を更新するとき
                                         !   (m_swflow_enc_sdep_update)に埋める導出量(save
                                         !   対象外)。σ が無効なら確保しない
+    real, allocatable :: sfl(:,:)       ! 断面形 σ の床の割合 f の写し(sdep と同時に確保。0 = 冪の形、
+                                        !   > 0 = 階段形。§26.3)
     real :: sect_m = 0.0                ! σ の形状指数の写し m(§26.2。swflow_enc が設定)
     real :: sect_mp1 = 1.0              ! m+1
     real :: sect_rmp1 = 1.0             ! 1/(m+1)
@@ -1095,6 +1097,7 @@ subroutine m_state_dispose(s, p)
   if (allocated(s%af)) deallocate(s%af)
   if (allocated(s%wfr)) deallocate(s%wfr)
   if (allocated(s%sdep)) deallocate(s%sdep)
+  if (allocated(s%sfl)) deallocate(s%sfl)
   if (allocated(s%gv)) deallocate(s%gv)
   if (allocated(s%lm)) deallocate(s%lm)
   if (allocated(s%hg)) deallocate(s%hg)
@@ -1668,10 +1671,20 @@ pure real function sect_vh(s, i, j, h) result(v)
   type(t_state), intent(in) :: s
   integer, intent(in) :: i, j
   real, intent(in) :: h
-  real :: d
+  real :: d, f
   d = s%sdep(i,j)
+  f = s%sfl(i,j)
   if (d <= 0.0) then
     v = h
+  else if (f > 0.0) then
+    ! 階段形(§26.3。sect_v と同じ式)
+    if (h >= d) then
+      v = h - d * (1.0 - f)
+    else if (h <= 0.0) then
+      v = h
+    else
+      v = f * h
+    end if
   else if (h >= d) then
     v = h - d * s%sect_mfac
   else if (h <= 0.0) then
@@ -1686,10 +1699,20 @@ pure real function sect_h_of(s, i, j, v) result(h)
   type(t_state), intent(in) :: s
   integer, intent(in) :: i, j
   real, intent(in) :: v
-  real :: d, vd
+  real :: d, vd, f
   d = s%sdep(i,j)
+  f = s%sfl(i,j)
   if (d <= 0.0) then
     h = v
+  else if (f > 0.0) then
+    ! 階段形(§26.3。sect_hinv と同じ式)
+    if (v >= d * f) then
+      h = v + d * (1.0 - f)
+    else if (v <= 0.0) then
+      h = v
+    else
+      h = v / f
+    end if
   else
     vd = d * s%sect_rmp1
     if (v >= vd) then
@@ -1722,6 +1745,8 @@ pure real function sect_sig(s, i, j, h) result(sg)
   d = s%sdep(i,j)
   if (d <= 0.0 .or. h >= d) then
     sg = 1.0
+  else if (s%sfl(i,j) > 0.0) then
+    sg = s%sfl(i,j)                     ! 階段形(§26.3)
   else if (h <= 0.0) then
     sg = sgmin
   else

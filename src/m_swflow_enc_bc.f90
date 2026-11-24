@@ -404,7 +404,7 @@ module subroutine boundary_h(p, g, b, s, sx)
       ! σ 有効時は規定水位の水深を矩形換算水深へ変換して格納する
       ! (h1 は vh 運用。非適用セルは sect_v が恒等。§26)
       if (sct%have_sect) then
-        sx%h1(i,j) = sect_v(max(b%stage(istage)%eta - s%z(i,j), 0.0), sct%sdep(i,j))
+        sx%h1(i,j) = sect_v(max(b%stage(istage)%eta - s%z(i,j), 0.0), sct%sdep(i,j), sct%sfl(i,j))
       else
         sx%h1(i,j) = max(b%stage(istage)%eta - s%z(i,j), 0.0)
       end if
@@ -788,7 +788,7 @@ module subroutine boundary_uvmn(p, g, b, s, sx)
       hc = (qwm**2 / p%gg)**(1.0 / 3.0)
       he = max(h, min(hc, inflow_hn(g, s, i, j, k, qwm)), p%dv)
       ! σ 有効時は断面積(矩形換算水深)で流速に換算する(§68.28)
-      if (sct%have_sect) he = max(sect_v(he, sct%sdep(i,j)), p%dv)
+      if (sct%have_sect) he = max(sect_v(he, sct%sdep(i,j), sct%sfl(i,j)), p%dv)
       uve1 = -qwm / he           ! 外向き正の負値=流入
       mne1 = -qwm
       sx%uv(ke(k), ie, je) = sign_e(k) * uve1
@@ -984,7 +984,7 @@ subroutine put_bc_faces(p, g, s, sx, i, j, kf, sd)
           uve1 = max(un, uc * wn)
         end if
         mne1 = uve1 * h
-        if (sct%have_sect) mne1 = uve1 * sect_v(h, sct%sdep(i,j))   ! 断面積ベース(§68.28)
+        if (sct%have_sect) mne1 = uve1 * sect_v(h, sct%sdep(i,j), sct%sfl(i,j))   ! 断面積ベース(§68.28)
       case default   ! e_bc_radiation
         ! 長波放射(津波向け): 静水(η=η_ref)ではフラックスゼロ、
         ! 水位偏差に比例して透過。負値=流入(引き波)も許す。
@@ -1013,7 +1013,7 @@ subroutine put_bc_faces(p, g, s, sx, i, j, kf, sd)
           uve1 = sqrt(p%gg / max(h, p%dv)) * (s%z(i,j) + h - eta_r) * wn
         end if
         mne1 = uve1 * h
-        if (sct%have_sect) mne1 = uve1 * sect_v(h, sct%sdep(i,j))   ! 断面積ベース(§68.28)
+        if (sct%have_sect) mne1 = uve1 * sect_v(h, sct%sdep(i,j), sct%sfl(i,j))   ! 断面積ベース(§68.28)
       end select
       ! 過大な流出の抑制(流出方向のみ。momentum の抑制と同型で、
       ! 境界面ではフラグによらず適用。河道幅有効時は境界面の通過幅係数
@@ -1025,7 +1025,7 @@ subroutine put_bc_faces(p, g, s, sx, i, j, kf, sd)
       ! 真の水深 h で判定すると σ < 1 の分だけ抜きすぎて負の水深になり、
       ! 自由流出の終端セルが発散する。§68.27)
       hv = h
-      if (sct%have_sect) hv = sect_v(h, sct%sdep(i,j))
+      if (sct%have_sect) hv = sect_v(h, sct%sdep(i,j), sct%sfl(i,j))
       if (dh > 0 .and. hv - dh <= 0) then
         cor = max(hv - p%dd, 0.0) / dh
         uve1 = uve1 * cor
@@ -1142,7 +1142,7 @@ subroutine put_neumann_face(p, g, s, sx, i, j, k, in, jn, ie, je)
       if (chn%have_fwd) dh = dh * chn%fwd(ke(k), ie, je)
       if (chn%have_width) dh = dh / chn%wfrac(im,jm)
       hv = s%h(im,jm)
-      if (sct%have_sect) hv = sect_v(hv, sct%sdep(im,jm))
+      if (sct%have_sect) hv = sect_v(hv, sct%sdep(im,jm), sct%sfl(im,jm))
       if (hv - dh <= 0) then
         cor = max(hv - p%dd, 0.0) / dh
         uve1 = uve1 * cor
@@ -1157,7 +1157,7 @@ subroutine put_neumann_face(p, g, s, sx, i, j, k, in, jn, ie, je)
   if (chn%have_fwd) dh = dh * chn%fwd(ke(k), ie, je)
   if (chn%have_width) dh = dh / chn%wfrac(i,j)
   hv = h
-  if (sct%have_sect) hv = sect_v(h, sct%sdep(i,j))
+  if (sct%have_sect) hv = sect_v(h, sct%sdep(i,j), sct%sfl(i,j))
   if (dh > 0 .and. hv - dh <= 0) then
     cor = max(hv - p%dd, 0.0) / dh
     uve1 = uve1 * cor

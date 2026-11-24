@@ -144,7 +144,7 @@ module subroutine calc_suspend(gm, p, g, s, dtw)
         cc = 0.0
         if (s%hs(i,j) > 0.0) then
           if (sct%have_sect) then
-            cc = s%hs(i,j) / sect_v(s%h(i,j), sct%sdep(i,j))
+            cc = s%hs(i,j) / sect_v(s%h(i,j), sct%sdep(i,j), sct%sfl(i,j))
           else
             cc = s%hs(i,j) / s%h(i,j)
           end if
@@ -154,7 +154,7 @@ module subroutine calc_suspend(gm, p, g, s, dtw)
         ! 交換量に σ(h) を掛ける(満杯以上・矩形では 1)。河床変動 Δz は
         ! 平面積平均のまま(§26 の近似)
         fx = gm%wf * (ceq - gm%beta * cc) * dtw
-        if (sct%have_sect) fx = fx * sect_sigma(s%h(i,j), sct%sdep(i,j))
+        if (sct%have_sect) fx = fx * sect_sigma(s%h(i,j), sct%sdep(i,j), sct%sfl(i,j))
         if (fx > 0.0) then
           ! 可動層クランプ(河床側は ×morfac・poroi で減るため換算して制限)
           fx = min(fx, s%sd(i,j) / (gm%morfac * gm%poroi))
