@@ -318,8 +318,8 @@ The files in `data_nilim/` were made by processing the following material.
 - Source: National Institute for Land and Infrastructure Management, River Division, "Archive of hydraulic model
   experiment data", experiments on the bipolarization of segment-1 rivers (fiscal 2025),
   "【河道の二極化】ケース2模型実験データ.xlsx"
-  (https://www.nilim.go.jp/lab/fbg/tech/kadounikyokukacase2.xlsx, from the technical-information page
-  https://www.nilim.go.jp/lab/fbg/tech/tech.html). Downloaded on 2026-11-22; on 2026-11-23 the file on the server
+  (<https://www.nilim.go.jp/lab/fbg/tech/kadounikyokukacase2.xlsx>, from the technical-information page
+  <https://www.nilim.go.jp/lab/fbg/tech/tech.html>). Downloaded on 2026-11-22; on 2026-11-23 the file on the server
   was confirmed to have the same size and modification date (2026-06-16).
 - Terms of use: Government of Japan Standard Terms of Use (version 2.0). Copying, processing and redistribution are
   allowed with the source stated and the processing indicated.
@@ -337,7 +337,7 @@ The files in `data_nilim/` were made by processing the following material.
 - Hirano, M. (1971): River-bed degradation with armoring. *Proc. JSCE*, 195, 55–65 (in Japanese).
   doi:10.2208/jscej1969.1971.195_55
 - Parker, G. (2004): *1D Sediment Transport Morphodynamics with Applications to Rivers and Turbidity Currents*.
-  e-book, Chapter 17. https://hydrolab.illinois.edu/people/parkerg/morphodynamics_e-book.htm
+  e-book, Chapter 17. <https://hydrolab.illinois.edu/people/parkerg/morphodynamics_e-book.htm>
 
 ## Related documents
 

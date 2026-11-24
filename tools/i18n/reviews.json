@@ -257,11 +257,11 @@
     {
       "source": "docs/users_guide/driftwood_models.md",
       "target": "docs/en/users_guide/driftwood_models.md",
-      "source_sha256": "b35f45c256f273684c7e049364e9fbba91d241f548d012f6acf21c938babfbca",
+      "source_sha256": "b6e433160674ff08b4a36137b51479d4cba3a47c887143c6e3e49f888beab31b",
       "target_sha256": "b42b01c4961c8bed4f16e6733070edc2efe057918d8671d97fbbfb172e1607ba",
-      "reviewer": "Claude (Claude Code session; the capture at a culvert inlet changed from all the wood to the share of the water drawn by the culvert (developer.md §50.11): the rewritten passages of the Japanese master and the English mirror compared one by one, numbers cross-checked; rest unchanged since the previous record)",
+      "reviewer": "Claude (Claude Code session; link-delimiter fix only: bare URLs glued to the following Japanese text were wrapped in <> so the GFM autolink stops at the URL; checked with pandoc -f gfm before and after; the English mirror was checked and its URLs already end at a space or \").\" (wrapped the same way where changed); no other text changed)",
       "method": "assistant",
-      "reviewed_on": "2026-11-13"
+      "reviewed_on": "2026-11-24"
     },
     {
       "source": "docs/users_guide/dry_head_cap.md",
@@ -482,9 +482,9 @@
     {
       "source": "docs/users_guide/sediment.md",
       "target": "docs/en/users_guide/sediment.md",
-      "source_sha256": "a10abfe828111ce331bbdda431cfbacacf28b9350a58bd4fb72e3fcb79f8d0af",
+      "source_sha256": "908019abb3d6e23b266df699452518bece1029684b56fdcd1181b14dba08f6f7",
       "target_sha256": "f39692dbd3d4676c3a003eb7bea706e7e5f918f5b0f91cf6b14bead12ccba2ad",
-      "reviewer": "Claude (Claude Code session; the pointers to the example joganji_flume (mixed-size section, verification overview and its table row) added in the same work to the Japanese source and the English mirror; both diffs read side by side and the numbers checked against the example README)",
+      "reviewer": "Claude (Claude Code session; link-delimiter fix only: bare URLs glued to the following Japanese text were wrapped in <> so the GFM autolink stops at the URL; checked with pandoc -f gfm before and after; the English mirror was checked and its URLs already end at a space or \").\" (wrapped the same way where changed); no other text changed)",
       "method": "assistant",
       "reviewed_on": "2026-11-24"
     },
@@ -2273,9 +2273,9 @@
     {
       "source": "examples/joganji_flume/README.md",
       "target": "examples/joganji_flume/en/README.md",
-      "source_sha256": "15c7bc585956b07f1ef6cfe295eb3a13a8bd226cdbedd4f1288374939793f623",
-      "target_sha256": "cb9e2c501c66834e7c6afa75b78979483eb2d358feac738dad4bbd3edaf9522f",
-      "reviewer": "Claude (Claude Code session; new example written in Japanese with its English mirror in the same work; full text compared side by side (headings, tables, numbers, file and parameter names, links); numbers checked against the tables printed by plot_results.py; no model execution for this review)",
+      "source_sha256": "8fe902cddcb1bbe1b44ce7ff479839469b4ba3e30d431123dc9c7e8734a59b95",
+      "target_sha256": "3b6ae50ab992e47f424c14683cc4016ea3332fc138bb7122762ec423799c7bfd",
+      "reviewer": "Claude (Claude Code session; link-delimiter fix only: bare URLs glued to the following Japanese text were wrapped in <> so the GFM autolink stops at the URL; checked with pandoc -f gfm before and after; the English mirror was checked and its URLs already end at a space or \").\" (wrapped the same way where changed); no other text changed)",
       "method": "assistant",
       "reviewed_on": "2026-11-24"
     },

@@ -271,7 +271,7 @@
   比べ方は developer.md §120)。下の項目は作る前の検討で、作るときに変えた点(流入部の床、掃流力の比 1、
   水位の比べ方)は §120 にある。
 - **データ**: 国土技術政策総合研究所 河川研究室の技術情報(模型実験等データアーカイブ。
-  https://www.nilim.go.jp/lab/fbg/tech/tech.html)の「セグメント１河川の二極化に関する実験」ケース 2
+  <https://www.nilim.go.jp/lab/fbg/tech/tech.html>)の「セグメント１河川の二極化に関する実験」ケース 2
   (Excel 約 118 MB)。利用規約は政府標準利用規約 2.0(CC BY 4.0 と互換)で、出典と加工した旨を書けば
   加工したデータを同梱できる。公開物は予告なく移動・削除されうるので、変換済みの入力(ラスタと時系列)を
   出典つきで同梱し、Excel からの変換スクリプト(openpyxl が要る)を置く。論文の PDF は同梱しない。
@@ -370,7 +370,7 @@
   文言・節番号は未確認。草稿の参考文献と修正 Egiazaroff の係数 0.843 は写さない)。
 - Parker, G.(2004 として引用されることが多い。ページに年の記載なし)1D Sediment Transport Morphodynamics
   with Applications to Rivers and Turbidity Currents(電子書籍)第 17 章 Aggradation and degradation of rivers
-  transporting gravel mixtures。https://hydrolab.illinois.edu/people/parkerg/morphodynamics_e-book.htm。
+  transporting gravel mixtures。<https://hydrolab.illinois.edu/people/parkerg/morphodynamics_e-book.htm>。
   「L_a = n_a D_s90、n_a は 1〜2 の範囲」(D_s90 は表層の D90)。交換層厚の目安「D90 の 1〜2 倍」の出典は
   こちら(本書 §3.8・§10 の 2 の「文献の目安」)。
 - Hoey, T. B. & Ferguson, R. (1994) Numerical simulation of downstream fining by selective transport in

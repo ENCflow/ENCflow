@@ -260,8 +260,8 @@ OMP_NUM_THREADS=2 ./encflow param_single.txt 2>&1 | tee Screen_result_single.log
 
 - 出典: 国土技術政策総合研究所 河川研究室「模型実験等データアーカイブ」セグメント１河川の二極化に関する実験
   (令和 7 年度)「【河道の二極化】ケース2模型実験データ.xlsx」
-  (https://www.nilim.go.jp/lab/fbg/tech/kadounikyokukacase2.xlsx。技術情報のページ
-  https://www.nilim.go.jp/lab/fbg/tech/tech.html から)。2026-11-22 に取得し、2026-11-23 にサーバのファイルと
+  (<https://www.nilim.go.jp/lab/fbg/tech/kadounikyokukacase2.xlsx>。技術情報のページ
+  <https://www.nilim.go.jp/lab/fbg/tech/tech.html> から)。2026-11-22 に取得し、2026-11-23 にサーバのファイルと
   大きさ・更新日(2026-06-16)が同じことを確かめました。
 - 利用条件: 政府標準利用規約(第 2.0 版)。出典を記載し、加工したことを示せば、複製・加工・再配布ができます。
 - 加工の内容: ケース 2-1 の比較に要るシート・列だけを抜き出し、列を並べ替えて CSV にし、gzip しました
@@ -276,7 +276,7 @@ OMP_NUM_THREADS=2 ./encflow param_single.txt 2>&1 | tee Screen_result_single.log
 - 平野宗夫 (1971): Armoring をともなう河床低下について. 土木学会論文報告集, 195, 55–65.
   doi:10.2208/jscej1969.1971.195_55
 - Parker, G. (2004): *1D Sediment Transport Morphodynamics with Applications to Rivers and Turbidity Currents*.
-  電子書籍, 第 17 章. https://hydrolab.illinois.edu/people/parkerg/morphodynamics_e-book.htm
+  電子書籍, 第 17 章. <https://hydrolab.illinois.edu/people/parkerg/morphodynamics_e-book.htm>
 
 ## 関連文書
 

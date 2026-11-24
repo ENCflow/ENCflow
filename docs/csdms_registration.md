@@ -10,7 +10,7 @@ plan 文書と同じ扱い)。登録が済んだら、申請内容の控えだ�
 | 項目 | 内容 |
 |---|---|
 | 版 | ENCflow v3.0.0(タグ `v3.0.0` = コミット `1aaf175`、2026-10-25 公開) |
-| Release | https://github.com/ENCflow/ENCflow/releases/tag/v3.0.0(変更点・非互換変更・既知の問題を日英で記載) |
+| Release | <https://github.com/ENCflow/ENCflow/releases/tag/v3.0.0>(変更点・非互換変更・既知の問題を日英で記載) |
 | 引用情報 | CITATION.cff(version 3.0.0 / date-released 2026-10-25) |
 | DOI | Concept DOI(全版を代表): 10.5281/zenodo.22042847(README バッジ・CITATION.cff の doi)。**v3.0.0 の版 DOI: 10.5281/zenodo.23635011**(利用者確認 2026-10-25。CITATION.cff の identifiers に記載)。申請の Code DOI には版 DOI を書く |
 
@@ -20,7 +20,7 @@ v3.0.0 と main の先頭(`ef219ce`)の差は handoff/developer.md の文書更�
 ## 2. 申請フォームの記入案(英語)
 
 CSDMS の提出手順は「ライセンスの選択 → モデル情報(質問票)の記入 →
-ソースコードまたは公開先の連絡」(https://csdms.colorado.edu/wiki/Contribute_model)。
+ソースコードまたは公開先の連絡」(<https://csdms.colorado.edu/wiki/Contribute_model>)。
 以下は質問票の主な項目に対する記入案。**項目名は過去の質問票の記憶に基づく
 (本メモ作成時はネットワーク制約で CSDMS サイトに到達できなかった)。申請時に
 実際のフォームの項目に合わせて取捨すること。**
