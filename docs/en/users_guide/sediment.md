@@ -545,7 +545,9 @@ load (the design document is docs/mixed_sediment_plan.md).
   transition of the split between them is not treated). The exchange with the bed is the equation of
   [§4](#4-suspended-sediment-f_suspend) with the equilibrium concentration multiplied by the exchange-layer
   fraction, $`\Delta h_s = w_f (F_1 C_{eq} - \beta C)\,\Delta t_w`$, where $`F_1`$ is the availability of
-  pickup (the same idea as the $`\min(1, s_f/L_a)`$ of the fines ledger f_bedfines; ENCflow's choice). One
+  pickup (the same idea as the $`\min(1, s_f/L_a)`$ of the fines ledger f_bedfines; ENCflow's choice). The
+  equilibrium-concentration feed of an inflow reach (`inflow_cs_eq`) is also multiplied by the $`F_1`$ of the
+  exchange layer of the inflow cell (so that the inflow is in balance with the bed). One
   pickup takes at most the class-1 content of the exchange layer, $`(1-\lambda) L_e F_1/\mathrm{morfac}`$, and
   settling at most the suspended amount. The bed change $`\Delta z = -\mathrm{morfac}\,\Delta h_s/(1-\lambda)`$
   updates the exchange layer and the substrate by the Hirano equation as an exchange of class 1 only (when

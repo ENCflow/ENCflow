@@ -449,7 +449,9 @@ subroutine m_boundary_makebdc(b, p, g, s, gwc)
     end if
     ! 浮遊砂の平衡濃度給砂(§84.9): 流入セルごとに、そのセルの無次元掃流力
     ! (geomorph の浮遊砂と同じマニング閉じ)から平衡濃度を評価し倍率を乗じる。
-    ! 乾いたセルは 0。係数は geomorph の init_suspend が m_sedform に登録済み
+    ! 乾いたセルは 0。係数は geomorph の init_suspend が m_sedform に登録済み。
+    ! 混合粒径(s%bmf がある)では、流入セルの交換層の粒径階 1 の割合も掛ける(河床からの巻き上げと
+    ! 同じ = 流入が流入セルの河床と釣り合う。掛けないと割合が 1 未満のとき入口に粒径階 1 が溜まる。§123.7)
     if (b%inflow(ifl)%cs_eq > 0) then
       if (.not. have_ceq) then
         call par_stop("list_bound_inflow: inflow_cs_eq=1 requires suspended sediment (f_suspend=1)")
@@ -457,6 +459,8 @@ subroutine m_boundary_makebdc(b, p, g, s, gwc)
       block
         integer :: m2, i2, j2
         real :: hh, taus
+        logical :: bmx
+        bmx = allocated(s%bmf)
         do m2 = 1, b%inflow(ifl)%ncell
           i2 = b%inflow(ifl)%cell(1,m2)
           j2 = b%inflow(ifl)%cell(2,m2)
@@ -466,6 +470,7 @@ subroutine m_boundary_makebdc(b, p, g, s, gwc)
           hh = max(s%h(i2,j2), p%dv)
           taus = g%rn(i2,j2)**2 * s%vv(i2,j2)**2 / (ceqpar%sgrav * ceqpar%d50 * hh**(1.0/3.0))
           b%csin(i2,j2) = b%inflow(ifl)%cs_fac * sed_ceq(ceqpar, taus)
+          if (bmx) b%csin(i2,j2) = b%csin(i2,j2) * s%bmf(i2,j2,1)
         end do
       end block
     end if

@@ -176,11 +176,11 @@
     {
       "source": "docs/users_guide/boundary.md",
       "target": "docs/en/users_guide/boundary.md",
-      "source_sha256": "acb1c5fb1c1625bc5a75b112141c90b8375ff11887b0a16ee45fa7d1018fe8b6",
-      "target_sha256": "7b53264fbcd855d56f781bba71fcf0271f45c612c60a87601457161605aaa8e9",
-      "reviewer": "Claude (Claude Code session; mixed-size stage 1 (f_bedmix): new and changed sections compared side by side with the Japanese source; parameters and numbers checked against the code and the test runs)",
+      "source_sha256": "a3ec8261bf51cef925f2594266756dfb0a7f7b1080f7e90c1deb843b70c3ff9f",
+      "target_sha256": "13a17507c9ead946f9a692ac7390c43a604523d1b1a1f0e1cb0e0bcf3f455672",
+      "reviewer": "Claude (Claude Code session; changed passages compared side by side with the Japanese source: the equilibrium-concentration feed multiplied by the class-1 fraction under mixed grain sizes, numbers checked against the test runs)",
       "method": "assistant",
-      "reviewed_on": "2026-11-23"
+      "reviewed_on": "2026-11-24"
     },
     {
       "source": "docs/users_guide/channel.md",
@@ -311,9 +311,9 @@
     {
       "source": "docs/users_guide/geomorph.md",
       "target": "docs/en/users_guide/geomorph.md",
-      "source_sha256": "b77eadfca794da6c8edd3f33174356d514ac747ca32c4db02a00eb9c9397c7d5",
-      "target_sha256": "3d61571e1025239f91437d518fd437f4c60495b021a52d4a2eacdd7d03c32b4c",
-      "reviewer": "Claude (Claude Code session; changed passages compared side by side with the Japanese source: the capacity feed built after the per-class supply limiter, numbers checked against the test and trial runs)",
+      "source_sha256": "513c42fb126f5ab285c55e6415a61b30bb9d29c7857f42a26e91e4a72c89658f",
+      "target_sha256": "452df8a92787429b61e8c8c738f5cf0a6d422d544036d17901bfb7a93e2d2c12",
+      "reviewer": "Claude (Claude Code session; changed passages compared side by side with the Japanese source: the equilibrium-concentration feed multiplied by the class-1 fraction under mixed grain sizes, numbers checked against the test runs)",
       "method": "assistant",
       "reviewed_on": "2026-11-24"
     },
@@ -482,9 +482,9 @@
     {
       "source": "docs/users_guide/sediment.md",
       "target": "docs/en/users_guide/sediment.md",
-      "source_sha256": "132468c39bccb5d921c3265667ba395f50b8a17cf90bcfb4337eda6a5abf1fac",
-      "target_sha256": "8285a1677e64645e36911eaf7787290559a63902e0f189dfa8214b8cd9deb2d6",
-      "reviewer": "Claude (Claude Code session; changed passages compared side by side with the Japanese source: the capacity feed built after the per-class supply limiter, numbers checked against the test and trial runs)",
+      "source_sha256": "ce52c7bda890a14500448d4d6d72645574cc33f6f6adcbee282990c0c57ffeb4",
+      "target_sha256": "478ad7f316f9db6118887a8480a3b35bf9f0e0682e4eee70c753fabedd7fa993",
+      "reviewer": "Claude (Claude Code session; changed passages compared side by side with the Japanese source: the equilibrium-concentration feed multiplied by the class-1 fraction under mixed grain sizes, numbers checked against the test runs)",
       "method": "assistant",
       "reviewed_on": "2026-11-24"
     },
@@ -3884,9 +3884,9 @@
     {
       "source": "test/bedmix/README.md",
       "target": "test/bedmix/en/README.md",
-      "source_sha256": "41e17c74ad4e8e2b05e36aa97f94964df2f5b97d6ef0fe3e85cec8e15d410406",
-      "target_sha256": "1a5b100a9bb0af6ad96170050be886225778464557eef46584caa9b551a62ac5",
-      "reviewer": "Claude (Claude Code session; changed passages compared side by side with the Japanese source: the capacity feed built after the per-class supply limiter, numbers checked against the test and trial runs)",
+      "source_sha256": "f8d2f250fcfb1d162a0a6e1d4a79911e293449c83ad29ac587da7282c696dbc9",
+      "target_sha256": "d784c988c818eb3186f81c45941bcc274fd96b0b24316aef73c70c62d7756259",
+      "reviewer": "Claude (Claude Code session; changed passages compared side by side with the Japanese source: the equilibrium-concentration feed multiplied by the class-1 fraction under mixed grain sizes, numbers checked against the test runs)",
       "method": "assistant",
       "reviewed_on": "2026-11-24"
     },

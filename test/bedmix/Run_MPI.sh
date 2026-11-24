@@ -22,7 +22,7 @@ python3 "$sdir/make_init.py" shore z > zinit_shore.txt
 python3 "$sdir/make_init.py" shore sd > sdinit_shore.txt
 
 export ENCFLOW_EXPECT_NP="$NP"
-CASES="single equal single_te equal_te single_tp equal_tp tpmix1 tpfix1 tpmix tpfix single_su equal_su susp suw armor bcfeed bclim bank qbmix rfs1 rfs3 rfb1 rfb3 rfsea1 rfsea3 cr1 cr3 ls1 ls3"
+CASES="single equal single_te equal_te single_tp equal_tp tpmix1 tpfix1 tpmix tpfix single_su equal_su susp suw sueq armor bcfeed bclim bank qbmix rfs1 rfs3 rfb1 rfb3 rfsea1 rfsea3 cr1 cr3 ls1 ls3"
 set -o pipefail
 for c in $CASES hide1 hide2; do
     mpirun -np "$NP" $MPIRUN_OPTS ./encflow_mpi param_$c.txt 2>&1 | tee screen_$c.log || exit 1

@@ -330,9 +330,8 @@ and the thickness of the erodible soil layer (`sd0` or `fn_sd`). The grain sizes
   composition of the inflow cell. The amount of the feed is set by the net outflow (of bed load) of the
   inflow cell after the per-class supply limiter, so even when the limiter fires, the bed and the
   composition at the inlet stay fixed for bed load. The equilibrium-concentration feed of suspended
-  sediment (`inflow_cs_eq`) sends in the equilibrium concentration without the class-1 fraction (the
-  entrainment in the inflow cell is multiplied by the fraction, so the inflow and the bed are not in
-  balance).
+  sediment (`inflow_cs_eq`) is multiplied by the class-1 fraction of the exchange layer of the inflow cell
+  (as the entrainment from the bed is, so the inflow is in balance with the bed of the inflow cell).
 - **Combinations**: it works with bank erosion, repose collapse, depth-dependent creep and wave-driven
   longshore transport (all moved with the composition of the supplying cell's exchange layer), rockfall and
   talus (next items), fixation, channel width and the roughness partitions. For the steep-gravel partition
