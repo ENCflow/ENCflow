@@ -1,0 +1,37 @@
+!======================================================================
+! joganji_flume: 助走計算(固定床。ケース 2-1 の通水前の基底流量の流れを作る)
+!   乾いた河床に 3 L/s を 5 分入れて満たし、5 分で基底流量 0.117 L/s(ケース 2-1 の
+!   0 分の流量)へ下げて 30 分保つ(貯留は 25 分ほどで一定になる)。最終の水深 H9998.txt を
+!   make_init.py --spinup-h で h_spinup.txt に写し、本計算の初期水深にする(make spinup)。
+!   地形は変えない(fn_geomorph なし)。
+!   格子・境界は make_init.py が書いた geoinfo.txt・boundary_spinup.txt。
+!======================================================================
+&list_sysparam
+  f_gridsystem = 0
+  f_govequation = 0
+  dt = 0.04
+  t0 = 0
+  tt = 2400
+  dt_disp = 300
+  dt_file = 3600
+  dt_recrd = 60
+  fn_geoinfo = 'geoinfo.txt'
+  fn_initial = '-'
+  fn_enc = '-'
+  fn_boundary = 'boundary_spinup.txt'
+  fn_record = 'record.txt'
+  dir_result = 'result_spinup'
+  f_state_save = 0
+  f_check_cfl = 1
+  f_out_e = 1
+/
+
+&list_enc
+  f_inflow_edge = 2         ! 区間流入の内側へ向かうエッジだけ移流項 0 + その流速のエネルギー上限
+  f_advection_scheme = 3    ! 既定の運動量保存形
+  f_opening_dynamic = 3     ! 塞がれた開口の動的振り替え(既定)
+/
+
+&list_initial
+  f_htype = 0               ! 乾いた河床から
+/

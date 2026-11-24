@@ -95,6 +95,22 @@ follows from all three of these purposes.
    the record of the decision is §90.)
 6. **Do not over-complicate the model; refine it gradually to match the information
    available.** It must run, for a start, with a simple specification of parameters.
+   (Exception agreed 2026-11-22: only for uses in which the sorting of the bed
+   material (armouring, sand passing over gravel, fining) governs the results to
+   first order, bed load may be divided into a few grain-size classes and the bed
+   gradation may be held in one exchange layer and one substrate layer (Hirano type).
+   This revises, within this scope, the decision of 2026-10-18 (§84.10: general
+   mixed-size sediment is not adopted). Conditions: (1) no vertical stratigraphy (the
+   substrate is a single uniformly mixed layer; the vertical abstraction of item 5),
+   (2) the size-specific transport formulas and hiding functions are limited to
+   formulas from the literature, (3) the suspended load keeps a single grain size (no
+   suspended load per size class), (4) sediment moved by processes other than bed
+   load is either carried with its composition preserved, or the combination is
+   stopped at initialisation, (5) zero additional memory, CPU and communication when
+   not enabled, and bit-identical results with the existing references when disabled
+   (no branch is added to the existing bed-load loops; a separate path is used). The
+   authoritative design is docs/mixed_sediment_plan.md and the record of the decision
+   is §84.19.)
 7. **Unneeded processes are "not enabled" by not creating or specifying their
    configuration file** (rather than being "disabled"). The presence or absence of
    fn_* is authoritative; a flag inside a file (f_*=0) is a convenience for temporary

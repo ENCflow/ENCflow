@@ -283,6 +283,14 @@ to reduce concentration of discharge into thin water layers.
   the geomorph side (the supply through the inflow face equals the net
   outflow of the inflow cell times `fluv_bcfeed_fac`; with factor 1 the bed
   of the inlet is fixed) and also acts on inflow-segment faces.
+- With mixed grain sizes (`f_bedmix = 1` on the geomorph side) the feed needs
+  the class composition. Give either a constant composition attached to the
+  total series, `inflow_qbfrac(:,n)` (one fraction per class, summing to 1),
+  or a per-class series `fn_inflow_qbmix(n)` (each line holds the time (min)
+  and the feed of each class in m3/s solid volume; exclusive with
+  `inflow_qb`, `fn_inflow_qb` and `inflow_qbfrac`). All segments use the same
+  number of classes. A feed without a composition stops the run at
+  initialization ([Mixed grain sizes](geomorph.md#mixed-grain-sizes-f_bedmix)).
 
 **Outputs for this section**: the transect Q just downstream equals the given discharge (a check of the distribution); the inflow peak is in Qmax of `summary.csv` ([Output and monitoring](#output-and-monitoring)).
 

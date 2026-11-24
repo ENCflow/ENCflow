@@ -298,8 +298,10 @@ x = 150〜650 m の河幅・中心の最大移動・湿潤帯の最大振幅の�
 - **二次流は平衡型**: 二次流は流線の曲率に即座に応じ、湾曲に入ってから二次流が発達する
   までの遅れ(非平衡の適応長。Struiksma ら 1985 の形で、シェジー係数 C = 50 m^1/2/s なら水深の
   10〜20 倍)を持ちません。
-- **河床の粒径は 2 成分**: 掃流砂も浮遊砂も 1 粒径ずつで、混合粒径の交換層や鉛直の層序は
-  持ちません(細粒分の帳簿は、埋もれた細粒分も巻き上げに使えるものとして扱う)。
+- **河床の粒径は 2 成分**: この例題の構成は掃流砂も浮遊砂も 1 粒径ずつで、粒径による分級や
+  アーマー化は表しません(細粒分の帳簿は、埋もれた細粒分も巻き上げに使えるものとして扱う)。
+  混合粒径(`f_bedmix`)で掃流砂を粒径階に分けられますが(「感度実験の入口」)、交換層の下は一様な
+  混合 1 枚で、鉛直の層序は持ちません。
 - **蛇行の発達の速さは実際の河川と比べていない**: 200 h で湿潤帯の振幅は 19 m から 25〜51 m に
   広がり(氾濫原に水が残る細粒分の帳簿の構成を除く)、外岸の後退・内岸の前進・河道の横移動の機構は揃いますが、一定流量では拡幅とループの拡張が
   主で、ループの成長や移動の速さを実際の河川と比べる段階には至りません。
@@ -333,6 +335,24 @@ x = 150〜650 m の河幅・中心の最大移動・湿潤帯の最大振幅の�
 - `inflow_cs_fac`・`fines_la`: 浮遊砂の平衡濃度給砂の倍率と、河床の細粒分の交換層の厚さ。
 - `sec_rmax`・`repose_phi`: 外岸の淵の深さと河岸の崩れやすさ。
 - `fluv_bcfeed_fac`: 容量給砂の倍率(0 = 無給砂、1 = 入口の河床を固定)。
+- **混合粒径**(`f_bedmix`。[混合粒径](../../docs/users_guide/geomorph.md#混合粒径f_bedmix)): 掃流砂を
+  粒径階に分けると、湾曲の横断方向の分級(粗い粒ほど横断勾配を下りやすく、外岸の淵に粗粒、内岸の
+  砂州に細粒が寄る。Parker & Andrews 1985)と、給砂のない上流の区間で河床の表面が粗くなって低下が
+  鈍るアーマー化を、出力 `Dm`(交換層の平均粒径)で調べられます。
+  - 設定の例: param.txt に `f_bedmix = 1`、`bmix_d = 0.0005, 0.001, 0.002`、
+    `bmix_frac0 = 0.25, 0.5, 0.25`、`bmix_la = 0.05` を足します(`fluv_d50` は使われません)。
+  - 交換層厚 `bmix_la`: 既定(初期の交換層の D90 の 2 倍 = 3 mm)では、この例の地形の加速
+    (morfac 50)で 1 回の地形更新の流出が交換層の中身を超えやすく、粒径階ごとの供給量制限(終了時の
+    「class supply limiter」)が多く働きます。地形時間 25 h の試しの計算では、平均粒径(1.1 mm)が
+    単一粒径(1 mm)に近いのに河床の変化が単一粒径の計算と大きく違い(相関 0.32)、格子規模の凹凸が
+    倍になります。5 cm では制限の発動が 1/16 になり、河床の変化は単一粒径の計算に近くなります
+    (相関 0.97)。砂堆のある砂床では、交換層厚を砂堆の高さに結びつける扱いがあります
+    (Chavarrías ら 2019)。厚いほど組成の応答(アーマー化)は遅くなります。
+  - 組み合わせ: 浮遊砂の構成(param_fixsusp.txt)では最も細かい粒径階が浮遊砂になります
+    (`bmix_d(1)` を `susp_d50` の 0.0002 m と同じにする)。崩落土塊の構成(param_cohesive_slump.txt。
+    河岸モード `rf_bank`)と細粒分の帳簿の構成(param_fixsuspfines.txt)とは組めず、初期化で止まります。
+  - 計算時間は単一粒径の約 1.1 倍です。計算が通り、粒径階ごとの収支が閉じることは確かめていますが、
+    分級とアーマー化の現れ方は評価していません。
 
 ## 参考文献
 
@@ -343,10 +363,15 @@ x = 150〜650 m の河幅・中心の最大移動・湿潤帯の最大振幅の�
 - Braudrick, C. A., Dietrich, W. E., Leverich, G. T. and Sklar, L. S. (2009): Experimental
   evidence for the conditions necessary to sustain meandering in coarse-bedded rivers.
   *Proc. Natl. Acad. Sci. USA*, 106(40), 16936–16941. doi:10.1073/pnas.0909417106(要旨で確認)
+- Chavarrías, V., Arkesteijn, L. and Blom, A. (2019): A well-posed alternative to the Hirano active
+  layer model for rivers with mixed-size sediment. *J. Geophys. Res. Earth Surf.*, 124(11),
+  2491–2520. doi:10.1029/2019JF005081(交換層厚と砂堆の高さの関係は §2.1)
 - Engelund, F. (1974): Flow and bed topography in channel bends. *J. Hydraul. Div. ASCE*,
   100(HY11), 1631–1648.(N* = 7 の出典として Asahi ら (2013) が引く。本文は未照合)
 - Hasegawa, K. (1989): Universal bank erosion coefficient for meandering rivers. *J. Hydraul.
   Eng.*, 115(6), 744–765.
+- Parker, G. and Andrews, E. D. (1985): Sorting of bed load sediment by flow in meander bends.
+  *Water Resour. Res.*, 21(9), 1361–1373. doi:10.1029/WR021i009p01361(要旨で確認)
 - Parker, G., Shimizu, Y., Wilkerson, G. V., Eke, E. C., Abad, J. D., Lauer, J. W., Paola, C.,
   Dietrich, W. E. and Voller, V. R. (2011): A new framework for modeling the migration of
   meandering rivers. *Earth Surf. Process. Landforms*, 36(1), 70–86.(要旨で確認)

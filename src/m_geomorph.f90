@@ -48,7 +48,7 @@ module m_geomorph
   use m_geoinfo, only : t_geoinfo, m_geoinfo_require_sd
   use m_state, only : t_state, gw_to_h, sect_cell, sect_vh, sect_add_vh
   use m_boundary, only : t_boundary        ! 区間流入の掃流砂給砂表 b%qbin(§84.9。読み取り専用)
-  use list_geomorph, only : t_list_geomorph, list_geomorph_read
+  use list_geomorph, only : t_list_geomorph, list_geomorph_read, nbmixmax
   use list_wave, only : t_list_wave, list_wave_read   ! 波浪条件(沿岸漂砂。§84.15)
   use m_parallel, only : par_info, par_warn, par_stop, dcp, par_halo_cell, &
                          par_allreduce_max, par_sum_rows
@@ -64,6 +64,8 @@ module m_geomorph
   ! シンボルを局所化しリンク不能(§22 の実バグと同型。swflow の sect_* と同じ対処)
   public :: gm_param
   public :: taufac_h                ! 有効掃流力の比(submodule から呼ぶため public。§89.30)
+  public :: taueff_fac              ! 芦田・道上の有効掃流力の流砂量の比(submodule から呼ぶ。§121)
+  public :: taupart_phi             ! 抵抗分割の係数を D84 を与えて求める(混合粒径の写しから呼ぶ。§122)
   public :: retain_exchange         ! 保持水の授受(debris・bedslide の submodule から呼ぶため public。§28.17)
   ! wfsed_taumax・wfsed_cphi も submodule(fluvial・suspend)が呼ぶので public(gm_param と同じ理由)
   public :: wfsed_taumax, wfsed_cphi
@@ -152,6 +154,9 @@ module m_geomorph
     real :: qbcoef = 0.0             ! 流砂量の次元化係数 sqrt(s g d50^3)
     real :: taufac = 1.0             ! 有効掃流力の比 f_τ(§84.3)
     logical :: taupart = .false.     ! 急勾配礫床の抵抗分割(§89.30。taufac_h が参照)
+    logical :: taueff = .false.      ! 芦田・道上の有効掃流力(f_taupart = 2。§121。taueff_fac を掛ける)
+    logical :: d84map = .false.      ! 混合粒径で抵抗分割の D84 を交換層の組成からセルごとに求める(f_taupart = 1 で
+                                     !   fluv_d84 を与えないとき。§122。d84inv は側岸侵食の脚部が使う初期の値)
     real :: d84inv = 0.0             ! 1/D84 (1/m)
     real :: tpe = 0.75               ! 指数 e/2
     real :: tpc = 6.76               ! (a1/a2)^2 = (6.5/2.5)^2(Ferguson の VPE の係数の比)
@@ -247,6 +252,46 @@ module m_geomorph
     real :: frac0 = 0.0              ! 初期の細粒分割合
     real, allocatable :: ff(:,:)     ! 流出に占める細粒分の割合(帯±ハロ。apply_edge_flux のループ 1.5 が作る)
     real :: vfree = 0.0              ! 掃流砂に同伴して動いた細粒分の固体体積 (m3。ランク局所)
+  end type
+
+  type t_bedmix
+    ! 混合粒径(f_bedmix)。掃流砂の粒径階 × 交換層 1 枚・下層 1 枚(Hirano 型)。設計の正本は
+    ! docs/mixed_sediment_plan.md、採る範囲は developer.md §84.19(方針 6 の例外)。交換層の組成は
+    ! s%bmf(出力 Fa<k>_)、交換層の平均粒径は s%bmdm(出力 Dm)。無効時は全成分が未確保・既定値のまま
+    integer :: nc = 0                ! 粒径階の数 N(2〜nbmixmax)
+    real :: d(1:nbmixmax) = 0.0      ! 粒径 (m。細かい順)
+    real :: qc(1:nbmixmax) = 0.0     ! 流砂量の次元化係数 √(s g d_k³) (m3/2/s)
+    real :: la = 0.0                 ! 交換層厚 L_a (m)
+    integer :: hiding = 1            ! 遮蔽係数(1: 修正 Egiazaroff = 芦田・道上 1972 式 (31), 0: なし)
+    real :: dref = 0.0               ! 代表粒径(初期の交換層の領域平均の d_m。側岸侵食則の τ* に使う)
+    real, allocatable :: fs(:,:,:)  ! 下層の組成 (ish:ieh, jsh:jeh, 1:nc)。私有 save。近傍は読まない
+    real, allocatable :: qk(:,:,:,:) ! 粒径階ごとのエッジ流量 (1:4, ish-1:ieh, jsh-1:jeh, 1:nc) (m3/s 固体)。
+                                     !   wrk%q と同じ格納規約(wrk%q は等移動度の流束 = 側岸侵食・崩落が使う)
+    real, allocatable :: fdk(:,:,:)  ! 粒径階ごとの供給量制限係数 (ish:ieh, jsh:jeh, 1:nc)。ハロ交換
+    real(real64), allocatable :: feedrow(:,:)  ! 区間流入の給砂と容量給砂の粒径階ごとの固体体積の
+                                     !   行部分和 (js:je, 1:nc) (m3。台帳。par_sum_rows で決定的に集計)
+    real(real64), allocatable :: voutrow(:,:)  ! 開境界を通った粒径階ごとの正味の固体体積(流出 − 流入)の
+                                     !   行部分和 (js:je, 1:nc) (m3。台帳)
+    real(real64) :: v0(1:nbmixmax) = 0.0_real64  ! 初期の在庫(固体 m3。全域。台帳の閉合の確認用。最初の更新の
+                                     !   頭で数える = 河道幅の係数 chn が swflow の init で確保された後)
+    logical :: stock0 = .false.      ! 初期の在庫を数えたか
+    real, allocatable :: wf(:,:)     ! 河道平面積率 chn%wfrac の写し(サブグリッド河道幅のときだけ。最初の更新で
+                                     !   取る。終了時の在庫を chn の解放の後でも数えられるように)
+    real :: vclip = 0.0              ! 組成の丸め・岩盤床クリップで動かした厚さ × 面積 (m3 かさ。ランク局所)
+    integer :: nlimk = 0             ! 粒径階の供給量制限の発動(セル × 粒径階。ランク局所の累計)
+    integer :: nclip = 0             ! 変動上限 dzmax の発動エッジ数(ランク局所の累計)
+    integer :: nfix = 0              ! 定着で限界を上げた流束の数(ランク局所の累計)
+    ! 浮遊砂との結合(f_suspend。粒径階 1 = 浮遊砂の粒径。段 2。§122)
+    logical :: susp = .false.        ! 粒径階 1 を浮遊砂と行き来させる
+    real(real64), allocatable :: exrow(:)  ! 河床の粒径階 1 から浮遊砂へ出た正味の固体体積(巻き上げ − 沈降)の
+                                     !   行部分和 (js:je) (m3。河床の在庫と同じ重み = 河道平面積率)
+    real(real64), allocatable :: esrow(:)  ! 浮遊砂の側で数えた同じ交換(Σ Δhs·gv·wfrac·A)の行部分和 (js:je) (m3)
+    real(real64) :: hs0 = 0.0_real64 ! 最初の更新の頭の浮遊砂の在庫(Σ hs·gv·wfrac·A。m3)
+    ! 崩落と崖錐(f_rockfall。柱の上から運ぶ。段 2b。§123)
+    real :: rfr(1:nbmixmax) = 0.0    ! 基岩から出る岩屑の組成(rf_frac。rf_bedrock = 1 のとき)
+    real(real64), allocatable :: rfrock(:,:)  ! 基岩から出て土層に加わった粒径階ごとの量の行部分和 (js:je, 1:nc)
+                                     !   (厚さ × 河道平面積率。台帳で /(ainv·poroi) して固体 m3)
+    real(real64), allocatable :: rfsea(:,:)   ! 海セルへ落ちた粒径階ごとの固体体積の行部分和 (js:je, 1:nc) (m3)
   end type
 
   type t_wave
@@ -500,6 +545,7 @@ module m_geomorph
     integer :: f_wave_long = 0       ! 波浪による沿岸漂砂(0:無効, 1:有効。fn_wave。§84.15)
     integer :: f_rockfall = 0        ! 崩落と崖錐(0:無効, 1:有効。§48.7)
     integer :: f_bedfines = 0        ! 河床の細粒分の帳簿(0:無効, 1:有効。§84.10)
+    integer :: f_bedmix = 0          ! 混合粒径(0:無効, 1:有効。§84.19、docs/mixed_sediment_plan.md)
     integer :: f_wfsed = 0           ! 波浪場による攪拌と輸送(0:無効, 1:有効。段 W4。§90)
     integer :: f_wfsed_turb = 0      ! 砕波の乱れによる攪拌(0:なし, 1:波平均の乱れ。§90)
     integer :: f_wfswash = 0         ! 遡上域の輸送(0:なし, 1:あり。§90.21)
@@ -529,6 +575,7 @@ module m_geomorph
     type(t_fixation) :: fix          ! 定着
     type(t_rockfall) :: rf           ! 崩落と崖錐
     type(t_fines) :: fin             ! 河床の細粒分の帳簿
+    type(t_bedmix) :: bmx            ! 混合粒径(粒径階 × 交換層・下層)
     type(t_dissol) :: dis            ! 石灰岩の溶食
     type(t_rockinc) :: rk            ! 流水による岩盤下刻
     type(t_wave) :: wav              ! 波浪による沿岸漂砂
@@ -823,6 +870,77 @@ module m_geomorph
       type(t_geoinfo), intent(in) :: g
       type(t_state), intent(in) :: s
     end subroutine
+    ! 混合粒径(m_geomorph_bedmix。§84.19、docs/mixed_sediment_plan.md)。無効時は呼ばない
+    module subroutine init_bedmix(gm, p, g, s, b, list)
+      type(t_geomorph), intent(inout) :: gm
+      type(t_sysparam), intent(in) :: p
+      type(t_geoinfo), intent(in) :: g
+      type(t_state), intent(inout) :: s
+      type(t_boundary), intent(in) :: b
+      type(t_list_geomorph), intent(in) :: list
+    end subroutine
+    module subroutine dispose_bedmix(gm, p, g, s)
+      type(t_geomorph), intent(inout) :: gm
+      type(t_sysparam), intent(in) :: p
+      type(t_geoinfo), intent(in) :: g
+      type(t_state), intent(in) :: s
+    end subroutine
+    ! 掃流砂の 1 ステップの混合粒径版(calc_fluvial の先頭から分ける。calc_fluvial の写し)
+    module subroutine calc_fluvial_bmix(gm, p, g, s, dts)
+      type(t_geomorph), intent(inout) :: gm
+      type(t_sysparam), intent(in) :: p
+      type(t_geoinfo), intent(in) :: g
+      type(t_state), intent(inout) :: s
+      real, intent(in) :: dts
+    end subroutine
+    ! 浮遊砂の E-D 交換の混合粒径版(f_suspend と f_bedmix。粒径階 1 と交換層の行き来。calc_suspend の写し。§122)
+    module subroutine calc_suspend_bmix(gm, p, g, s, dtw)
+      type(t_geomorph), intent(inout) :: gm
+      type(t_sysparam), intent(in) :: p
+      type(t_geoinfo), intent(in) :: g
+      type(t_state), intent(inout) :: s
+      real, intent(in) :: dtw
+    end subroutine
+    ! calc_fluvial_bmix の有効掃流力版(f_taupart = 2。§121。calc_fluvial_bmix の写し)
+    module subroutine calc_fluvial_bmix_te(gm, p, g, s, dts)
+      type(t_geomorph), intent(inout) :: gm
+      type(t_sysparam), intent(in) :: p
+      type(t_geoinfo), intent(in) :: g
+      type(t_state), intent(inout) :: s
+      real, intent(in) :: dts
+    end subroutine
+    ! calc_fluvial_bmix の抵抗分割版(f_taupart = 1 で D84 を交換層の組成から求める。§122。calc_fluvial_bmix の写し)
+    module subroutine calc_fluvial_bmix_tp(gm, p, g, s, dts)
+      type(t_geomorph), intent(inout) :: gm
+      type(t_sysparam), intent(in) :: p
+      type(t_geoinfo), intent(in) :: g
+      type(t_state), intent(inout) :: s
+      real, intent(in) :: dts
+    end subroutine
+    ! 崩落と崖錐の適用の混合粒径版(柱の上から交換層 → 下層 → 基岩の順に取り去った組成で運ぶ。段 2b。§123)
+    module subroutine apply_rockfall_bmix(gm, g, s, dts)
+      type(t_geomorph), intent(inout) :: gm
+      type(t_geoinfo), intent(in) :: g
+      type(t_state), intent(inout) :: s
+      real, intent(in) :: dts
+    end subroutine
+    ! エッジ流量の適用の混合粒径版(粒径階ごとの供給量制限 → 発散 → z・sd と交換層・下層の更新)。
+    ! with_classes = .true. は掃流砂(粒径階ごとの流束 bmx%qk + 等移動度の wrk%q)、.false. は崩落(wrk%q だけ)
+    module subroutine apply_edge_flux_bmix(gm, g, s, dts, with_classes)
+      type(t_geomorph), intent(inout) :: gm
+      type(t_geoinfo), intent(in) :: g
+      type(t_state), intent(inout) :: s
+      real, intent(in) :: dts
+      logical, intent(in) :: with_classes
+    end subroutine
+    ! 区間流入の粒径階ごとの給砂(b%qbink)を流入セルの河床へ
+    module subroutine apply_bedfeed_bmix(gm, g, s, b, dts)
+      type(t_geomorph), intent(inout) :: gm
+      type(t_geoinfo), intent(in) :: g
+      type(t_state), intent(inout) :: s
+      type(t_boundary), intent(in) :: b
+      real, intent(in) :: dts
+    end subroutine
     ! 流水による岩盤下刻(m_geomorph_rockinc。§89)
     module subroutine init_rockinc(gm, p, g, s, list)
       type(t_geomorph), intent(inout) :: gm
@@ -916,6 +1034,42 @@ pure function taufac_h(flv, hh) result(f)
   end if
 end function
 
+!----------------------------------------------------------------------
+! 抵抗分割の係数 φ(h) を、セルごとの D84 で求める(taufac_h の抵抗分割の式。混合粒径の組成からの D84 の
+!   写し calc_fluvial_bmix_tp が呼ぶ。§122)
+!----------------------------------------------------------------------
+pure function taupart_phi(flv, hh, d84) result(f)
+  type(t_fluvial), intent(in) :: flv
+  real, intent(in) :: hh, d84
+  real :: f
+  f = (1.0 + flv%tpc * (hh / d84)**(-5.0/3.0))**(-flv%tpe)
+end function
+
+!----------------------------------------------------------------------
+! 芦田・道上 (1972) の有効掃流力(f_taupart = 2。§121)で掃流砂量に掛ける比 (u*e/u*)^3
+!   原典 式 (11): U/u*e = 6.0 + 5.75 log10{R/(d(1 + 2τ*))}(式 (7) の対数則と相当粗度
+!   ks = d(1 + 2τ*) の式 (9)。水深平均の 2 次元では R を水深 h とする)。u* はマニング閉じ
+!   (u*^2 = g n^2 U^2 / h^(1/3))なので (u*e/u*)^2 = h^(1/3) / (g n^2 D^2)、D は式 (11) の右辺。
+!   式 (23)・(32) で τ*e が入るのは先頭の τ*^(3/2) だけで、閾値の 2 因子は全 τ* のまま。
+!   よって流砂量に (u*e/u*)^3 を掛ける形になる(τ* に比を掛ける taufac_h とは別)。
+!   u*e > u* は u*e = u* で頭打ち(Upper Regime の式 (38) は u*e = u*)。h/ks が小さく D <= 0 の
+!   所も頭打ちと同じ扱い(比 1)。混合粒径は d に d_m を渡す(原典は一様砂の式。§121)
+!----------------------------------------------------------------------
+pure function taueff_fac(gg, rn, hh, taus, d) result(f)
+  real, intent(in) :: gg               ! 重力加速度 (m/s2)
+  real, intent(in) :: rn               ! マニングの粗度係数(τ* と同じ値)
+  real, intent(in) :: hh               ! 水深 (m)
+  real, intent(in) :: taus             ! 全掃流力の τ*(粒径 d で無次元化)
+  real, intent(in) :: d                ! 粒径 (m)(混合粒径は d_m)
+  real :: f, den, r
+  f = 1.0
+  if (rn <= 0.0 .or. d <= 0.0) return
+  den = 6.0 + 5.75 * log10(hh / (d * (1.0 + 2.0 * taus)))
+  if (den <= 0.0) return
+  r = hh**(1.0/3.0) / (gg * rn**2 * den**2)
+  if (r < 1.0) f = r * sqrt(r)
+end function
+
 pure function wfsed_taumax(tauc, uw, aw, cphi, z0, twc) result(tmax)
   real, intent(in) :: tauc               ! 流れの τ*_c
   real, intent(in) :: uw                 ! 底面の軌道流速の振幅 u_w = √2 u_rms (m/s)
@@ -1000,11 +1154,12 @@ end subroutine
 !   g は m_geoinfo_require_sd(土層厚の遅延確保)のため inout。
 !   s は s%sd への初期値転記のため inout
 !----------------------------------------------------------------------
-subroutine m_geomorph_init(gm, p, g, s)
+subroutine m_geomorph_init(gm, p, g, s, b)
   type(t_geomorph), intent(out) :: gm
   type(t_sysparam), intent(in) :: p
   type(t_geoinfo), intent(inout) :: g
   type(t_state), intent(inout) :: s
+  type(t_boundary), intent(in) :: b         ! 区間流入の給砂の粒径階の組成の照合(混合粒径。§84.19)だけに使う
   type(t_list_geomorph) :: list
   real :: wp0                          ! wthr_p0 の有効値(既定適用後。§62)
   integer :: i, j
@@ -1019,6 +1174,13 @@ subroutine m_geomorph_init(gm, p, g, s)
     end if
     if (p%f_out_fs > 0) then
       call par_stop("list_sysparam: f_out_fs は fn_geomorph の f_slide が必要です")
+    end if
+    if (p%f_out_bmix > 0) then
+      call par_stop("list_sysparam: f_out_bmix requires the mixed-size bed (f_bedmix=1 in fn_geomorph)")
+    end if
+    if (b%nqbclass > 0) then
+      call par_stop("list_bound_inflow: inflow_qbfrac / fn_inflow_qbmix require the mixed-size bed " &
+                    // "(f_bedmix=1 in fn_geomorph)")
     end if
     return
   end if
@@ -1114,6 +1276,9 @@ subroutine m_geomorph_init(gm, p, g, s)
   if (gm%f_rockfall < 0 .or. gm%f_rockfall > 1) call par_stop("list_geomorph: f_rockfall must be 0 or 1")
   gm%f_bedfines = list%f_bedfines
   if (gm%f_bedfines < 0 .or. gm%f_bedfines > 1) call par_stop("list_geomorph: f_bedfines must be 0 or 1")
+  ! 混合粒径(§84.19)。init_fluvial が fluv_d50 の既定の表示を省くため、ここで読む(検証と確保は init_bedmix)
+  gm%f_bedmix = list%f_bedmix
+  if (gm%f_bedmix < 0 .or. gm%f_bedmix > 1) call par_stop("list_geomorph: f_bedmix must be 0 or 1")
   if (gm%f_fixation > 0 .and. gm%f_fluvial <= 0) then
     call par_stop("list_geomorph: f_fixation requires f_fluvial=1 (fixation acts on the bed-load threshold)")
   end if
@@ -1342,6 +1507,48 @@ subroutine m_geomorph_init(gm, p, g, s)
   if (gm%f_wfswash < 0 .or. gm%f_wfswash > 1) call par_stop("list_geomorph: f_wfswash must be 0 or 1")
   if (gm%f_wfswash > 0) call init_wfswash(gm, s, list)
 
+  ! 混合粒径(f_bedmix。§84.19、docs/mixed_sediment_plan.md §3.7): 段 1 は掃流砂と、側岸侵食・安息角崩落・
+  ! 定着・給砂・河道幅の組み合わせだけを扱い、粒径階の組成を運ぶ規則を決めていない過程との併用は止める。
+  ! 判定はすべて namelist 由来で全ランク同一(collective 安全)
+  if (gm%f_bedmix > 0) then
+    if (gm%f_fluvial <= 0) call par_stop("list_geomorph: f_bedmix=1 requires f_fluvial=1")
+    ! 浮遊砂(f_suspend)は粒径階 1 と結合する(段 2。§122)。斜面浸食と細粒分の帳簿はまだ止める
+    if (gm%f_wash > 0 .or. gm%f_bedfines > 0) then
+      call par_stop("list_geomorph: f_bedmix=1 cannot be combined with f_wash or f_bedfines yet " &
+                    // "(docs/mixed_sediment_plan.md §3.7)")
+    end if
+    if (list%wet_lw > 0.0) then
+      call par_stop("list_geomorph: f_bedmix=1 cannot be combined with wet_lw yet (the spread pickup " &
+                    // "would not update the class composition)")
+    end if
+    ! 崩落と崖錐・深さ依存クリープ・沿岸漂砂は運ぶ(段 2b。§123)。動く土塊と乾式侵食はまだ止める
+    if (gm%f_bedslide > 0 .or. gm%f_debris > 0 .or. gm%f_splash > 0) then
+      call par_stop("list_geomorph: f_bedmix=1 cannot be combined with f_bedslide, f_debris or f_splash yet " &
+                    // "(docs/mixed_sediment_plan.md §3.7)")
+    end if
+    if (gm%f_wthr > 0 .or. gm%f_dissol > 0 .or. gm%f_rockinc > 0) then
+      call par_stop("list_geomorph: f_bedmix=1 cannot be combined with f_wthr, f_dissol or f_rockinc yet " &
+                    // "(stage 1 of docs/mixed_sediment_plan.md)")
+    end if
+    if (gm%f_wfsed > 0 .or. gm%f_wfswash > 0) then
+      call par_stop("list_geomorph: f_bedmix=1 cannot be combined with f_wfsed or f_wfswash yet (the wave " &
+                    // "stirring of the bed load is not carried per class; f_wfswash requires f_wfsed)")
+    end if
+    if (len_trim(p%fn_glacier) > 0 .or. len_trim(p%fn_lavaflow) > 0) then
+      call par_stop("list_geomorph: f_bedmix=1 cannot be combined with fn_glacier or fn_lavaflow yet " &
+                    // "(they change the soil layer without the class composition)")
+    end if
+    call init_bedmix(gm, p, g, s, b, list)
+  else
+    if (p%f_out_bmix > 0) then
+      call par_stop("list_sysparam: f_out_bmix requires the mixed-size bed (f_bedmix=1 in fn_geomorph)")
+    end if
+    if (b%nqbclass > 0) then
+      call par_stop("list_bound_inflow: inflow_qbfrac / fn_inflow_qbmix require the mixed-size bed " &
+                    // "(f_bedmix=1 in fn_geomorph)")
+    end if
+  end if
+
   ! 浮遊砂輸送の有効化を通知(swflow_enc がステップ内で s%hs を移流する。
   ! 初期化順序: 本 init は m_swflow_init より前)。土石流(f_debris)も
   ! 同じ advect_scalar による hs 輸送を使う
@@ -1351,7 +1558,7 @@ subroutine m_geomorph_init(gm, p, g, s)
   ! その場の河床に堆積させる。そのままでは h_s が流れに凍って残る。判定は namelist 由来で
   ! 全ランク同一(collective 安全)
   if (p%f_state_restore > 0 .and. .not. s%sed_active) then
-    call deposit_restored_hs(g, s, list%fluv_porosity)
+    call deposit_restored_hs(g, s, list%fluv_porosity, gm%f_bedmix > 0)
   end if
   ! 浮遊砂の沈降速度(f_suspend のみ。m_wq の Kd 分配が粒子態の沈降に
   ! 読む — debris の hs は流動体の固相で対象外。§30.6)
@@ -1418,10 +1625,11 @@ end subroutine
 ! (固体の台帳 Σh_s + (1 − λ)Σz は不変。細粒分 sf は持たないので粗粒として扱う)。
 ! 堆積した固体の体積は行部分和(real64 → par_sum_rows = 決定的)で表示する
 !----------------------------------------------------------------------
-subroutine deposit_restored_hs(g, s, lam)
+subroutine deposit_restored_hs(g, s, lam, bmix)
   type(t_geoinfo), intent(in) :: g
   type(t_state), intent(inout) :: s
   real, intent(in) :: lam          ! 河床の空隙率 λ(fluv_porosity)
+  logical, intent(in) :: bmix      ! 混合粒径(f_bedmix)。組成を更新できないので h_s があれば止める(§122)
   integer :: i, j
   real :: dz
   real(real64) :: vtot
@@ -1429,6 +1637,21 @@ subroutine deposit_restored_hs(g, s, lam)
   character(len=32) :: buf
 
   allocate(vrow(dcp%js:dcp%je), source = 0.0_real64)
+  if (bmix) then
+    do j = dcp%js, dcp%je
+      do i = g%wx(1,j), g%wx(2,j)
+        if (g%x(i,j) <= 0) cycle
+        if (s%hs(i,j) > 0.0) vrow(j) = vrow(j) + real(s%hs(i,j), real64)
+      end do
+    end do
+    call par_sum_rows(vrow, vtot)
+    if (vtot > 0.0_real64) then
+      call par_stop("geomorph: the restored flow carries solids (hs), but this mixed-size run (f_bedmix=1) " &
+                    // "has no f_suspend to carry them (deposition without the class composition is not " &
+                    // "supported; enable f_suspend or restore a state without hs)")
+    end if
+    return
+  end if
   do j = dcp%js, dcp%je
     do i = g%wx(1,j), g%wx(2,j)
       if (g%x(i,j) <= 0) cycle
@@ -1588,7 +1811,12 @@ subroutine m_geomorph_calc(gm, p, g, s, b, it)
   end if
   ! 区間流入の掃流砂源泉(§84.9): 流入セルの河床に Qb(t) を加えてから運ぶ。
   ! 判定(表の確保)は全ランク同一 = 中のハロ交換は collective 安全
-  if (gm%f_fluvial > 0 .and. allocated(b%qbin)) call apply_bedfeed(gm, g, s, b, dts)
+  if (gm%f_bedmix > 0) then
+    ! 混合粒径(§84.19): 粒径階ごとの給砂(組成の指定は init_bedmix が必須にした)
+    if (allocated(b%qbink)) call apply_bedfeed_bmix(gm, g, s, b, dts)
+  else if (gm%f_fluvial > 0 .and. allocated(b%qbin)) then
+    call apply_bedfeed(gm, g, s, b, dts)
+  end if
   ! 流水による岩盤下刻(§89): 区間流入の給砂の後・掃流砂の前(上流から入った土砂の
   ! 被覆を先に見て、生成物を同じ更新の掃流砂で運ぶ)。セル局所で sd(研磨があれば z も)を
   ! 書き、近傍を読む calc_fluvial のために末尾でハロを交換する(判定は全ランク同一)。
@@ -1811,6 +2039,7 @@ subroutine m_geomorph_dispose(gm, p, g, s)
   if (gm%f_rockfall > 0) call dispose_rockfall(gm, p, g, s)
   ! 河床の細粒分 sf の私有 save と台帳報告(契約5)
   if (gm%f_bedfines > 0) call dispose_fines(gm, p, g, s)
+  if (gm%f_bedmix > 0) call dispose_bedmix(gm, p, g, s)
   ! 溶食の記録場の私有 save と台帳報告(契約5。§86)
   if (gm%f_dissol > 0) call dispose_dissol(gm, p, g, s)
   ! 岩盤下刻の累積下刻の私有 save と台帳報告(契約5。§89)

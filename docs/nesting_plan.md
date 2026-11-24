@@ -975,7 +975,7 @@ halo 交換は現行のまま(phi の halo は warm start と補正の前に交�
 - JAGURS: https://github.com/jagurs-admin/jagurs(`src/mod_nest.f90`,
   `doc/JAGURS-User-Guide.Jp.pdf`)。Baba et al. (2015) Pure Appl. Geophys.,
   doi:10.1007/s00024-015-1049-2。
-- COMCOT 1.7: https://github.com/chinchiliu/COMCOT(`all_grids.f90`)。
+- COMCOT 1.7: <https://github.com/chinchiliu/COMCOT>(`all_grids.f90`)。
   Wang (2009) COMCOT User Manual v1.7。
 - GeoClaw: https://github.com/clawpack/geoclaw(`src/2d/shallow/update.f90`,
   `filval.f90`)。LeVeque, George, Berger (2011) Acta Numerica;

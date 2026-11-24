@@ -112,6 +112,8 @@ module m_record
     type(t_probe), allocatable :: probe(:) ! プローブ計測の測点の情報
     integer :: nfl                         ! フラックス計測の測線の数
     type(t_flux), allocatable :: flux(:)   ! フラックス計測の測線の情報
+    logical :: pbhead = .false.            ! プローブの列の見出しを書いたか(最初の記録で書く。混合粒径の
+                                           !   Dm の列は geomorph の初期化の後でわかるため。§122)
   end type
 
 
@@ -257,11 +259,8 @@ subroutine set_probe
     write(un, '("# z(m) =,",f14.3)') r%probe(i)%z
     write(un, '("# ix =,",i7)') r%probe(i)%ixy(1)
     write(un, '("# iy =,",i7)') r%probe(i)%ixy(2)
-    if (s%wq_active) then
-      write(un, '("# t(hour), t(min), z(m), h(m), u(m/s), v(m/s), |V|(m/s), q(m2/s), hg(m), hs(m), sd(m), C(mg/L), cq(g/m2)")')
-    else
-      write(un, '("# t(hour), t(min), z(m), h(m), u(m/s), v(m/s), |V|(m/s), q(m2/s), hg(m), hs(m), sd(m)")')
-    end if
+    ! 列の見出しの行は最初の記録(m_record_probe)で書く(混合粒径の Dm の列の有無が geomorph の初期化の
+    ! 後でわかるため。それまでに書く行はないので、ファイルの中身は従来と同じ。§122)
     r%probe(i)%un = un
   end do
 end subroutine
@@ -663,17 +662,24 @@ subroutine m_record_probe(r, p, s)
   type(t_record), intent(inout) :: r
   type(t_sysparam), intent(in) :: p
   type(t_state), intent(in) :: s
-  integer :: ipb, un
+  integer :: ipb, un, nw
   integer :: ix, iy
-  real :: wk(11, r%npb)    ! 点集約バッファ: z, h, u, v, |V|, q, hg, hs, sd
-                           ! (+ wq 有効時のみ書く: C(mg/L), cq(g/m2))
+  real, allocatable :: wk(:,:)  ! 点集約バッファ: z, h, u, v, |V|, q, hg, hs, sd
+                           ! (+ wq 有効時のみ書く: C(mg/L), cq(g/m2))(+ 混合粒径のときだけ確保して書く: Dm)
   character(len=10) :: ffmt
   character(len=80) :: afmt
+  logical :: bmx
   integer, parameter :: iw_z = 1, iw_h = 2, iw_u = 3, iw_v = 4, iw_vv = 5, iw_qq = 6, &
-                        iw_hg = 7, iw_hs = 8, iw_sd = 9, iw_cc = 10, iw_cq = 11
+                        iw_hg = 7, iw_hs = 8, iw_sd = 9, iw_cc = 10, iw_cq = 11, iw_dm = 12
   if (p%initialized) continue  ! 引数未使用の警告を抑制
 
   if (r%npb <= 0) return
+
+  ! 混合粒径(f_bedmix)のときだけ、交換層の平均粒径 Dm の列を最後に足す(§122)
+  bmx = allocated(s%bmdm)
+  nw = 11
+  if (bmx) nw = 12
+  allocate(wk(nw, r%npb))
 
   ! --- 全ランク: 所有セルの値を詰めて rank0 に点集約(collective) ---
   wk = 0.0
@@ -698,12 +704,28 @@ subroutine m_record_probe(r, p, s)
         wk(iw_cc,ipb) = s%cqc(ix,iy)
         wk(iw_cq,ipb) = s%cq(ix,iy)
       end if
+      if (bmx) wk(iw_dm,ipb) = s%bmdm(ix,iy)
     end if
   end do
   call par_reduce_points(wk)
 
   ! --- 以下は従来の逐次ロジック(セル値の参照だけ wk 経由) ---
   if (.not. is_root) return
+
+  ! 列の見出し(最初の記録で 1 回。set_probe の注)
+  if (.not. r%pbhead) then
+    do ipb = 1, r%npb
+      un = r%probe(ipb)%un
+      if (s%wq_active) then
+        write(un, '(a)', advance='no') "# t(hour), t(min), z(m), h(m), u(m/s), v(m/s), |V|(m/s), q(m2/s), hg(m), hs(m), sd(m), C(mg/L), cq(g/m2)"
+      else
+        write(un, '(a)', advance='no') "# t(hour), t(min), z(m), h(m), u(m/s), v(m/s), |V|(m/s), q(m2/s), hg(m), hs(m), sd(m)"
+      end if
+      if (bmx) write(un, '(a)', advance='no') ", Dm(mm)"
+      write(un, '(a)') ""
+    end do
+    r%pbhead = .true.
+  end if
 
   do ipb = 1, r%npb
     un = r%probe(ipb)%un
@@ -739,6 +761,10 @@ subroutine m_record_probe(r, p, s)
       write(un, afmt, advance='no') wk(iw_cc,ipb)
       write(un, '(a)', advance='no') ","
       write(un, afmt, advance='no') wk(iw_cq,ipb)
+    end if
+    if (bmx) then
+      write(un, '(a)', advance='no') ","
+      write(un, afmt, advance='no') 1000.0 * wk(iw_dm,ipb)   ! mm
     end if
     write(un, *)
     if (wk(iw_qq,ipb) > r%probe(ipb)%qmax) then

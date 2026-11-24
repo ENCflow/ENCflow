@@ -149,6 +149,8 @@ H・H9999 と、常に保存する開始時の地盤高 Z0000・領域マスク 
 | f_out_bds | 0 | Bs | 家屋の破壊率 1 − 残ストック/初期ストック(0〜1。最終フレームが被害率マップ) |
 | —(f_bedslide 有効時) | — | Hb / Vb | 動く底層の厚さ (m) と速度 (m/s。診断)([土砂・地形変化](geomorph.md)の f_bedslide。自動出力) |
 | f_out_fs | 0 | Fs / Fs9999 | 斜面安全率 Fs の分布と期間最小(f_slide=1 or 2 が必要。-1 = 評価対象外。[土砂・地形変化](geomorph.md)) |
+| —(f_bedmix 有効時) | — | Dm | 交換層の平均粒径 (m)([土砂・地形変化](geomorph.md)の混合粒径。自動出力) |
+| f_out_bmix | 0 | Fa1_ / Fa2_ … | 粒径階ごとの交換層の割合(0〜1。番号は粒径階。f_bedmix=1 が必要。[土砂・地形変化](geomorph.md)) |
 | f_out_hmax | 1 | H9999 | 最大水深 |
 | f_out_hmaxt | 0 | Ht9999 | 最大水深の発生時刻 |
 | f_out_vvmax | 0 | V9999 | 最大流速 |
@@ -293,6 +295,7 @@ Z = 潮位 − hsea0)で、海の水深・海底地形ではありません([潮
 | 地下貯留・地下水位 | 指定 | Hg(f_out_hg。Hg2 / Hgc / Hgs / Cg も) | Hg は柱状換算水深 (m)。飽和帯厚 = Hg / sy0、地下水位 ≈ 地盤高 − 土層厚 + Hg / sy0(側方流動・Green-Ampt 構成。[地下水](gwflow.md)の図を参照) |
 | 土層厚 | 自動 | Sd | sd を使うモデル有効時のみ |
 | 定着度 | 自動 | Fx | 0〜1。f_fixation 有効時のみ([土砂・地形変化](geomorph.md)) |
+| 河床の粒度 | 自動(Fa は指定) | Dm、Fa1_…(f_out_bmix) | 交換層の平均粒径 (m) と粒径階ごとの割合。f_bedmix 有効時のみ([土砂・地形変化](geomorph.md)) |
 | 岩盤の累積下刻 | 自動 | Ri | 流水の剥離と研磨の合計厚 (m)。f_rockinc 有効時のみ。岩盤面は Z − Sd([土砂・地形変化](geomorph.md)) |
 | 積雪水量 | 自動 | Sw | mm 水柱([積雪・融雪](forcing.md)) |
 | 土壌雨量指数 | 自動 | Swi / Swi9999 / Swit9999 | mm([土壌雨量指数](swi.md)) |

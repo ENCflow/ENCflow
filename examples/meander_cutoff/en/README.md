@@ -326,6 +326,21 @@ thickness of fines Sf. Black = initial banks.
 - `sec_rmax`: depth of the pools in the sharp bends.
 - `morfac`: acceleration of the landform change. Lowering it makes the per-update limit
   `fluv_dzmax` fire less often.
+- **Mixed grain sizes** (`f_bedmix`; for example settings and the exchange-layer thickness see the
+  [starting points for sensitivity experiments of meander](../../meander/en/README.md#starting-points-for-sensitivity-experiments)):
+  dividing bedload into size classes lets you study, with the output `Dm` (mean grain size of the
+  exchange layer), the difference in grain size between the sediment that settles at the entrance
+  and exit of the old channel after a cutoff (bed-material load; Constantine et al. 2010) and the bed
+  of the new channel. It can be added to the configuration with a flood (param.txt) and to the
+  control without a flood (param_noflood.txt). Even with the landform acceleration of this example
+  (morfac 10), the default exchange-layer thickness (3 mm) makes the per-class supply limiter fire
+  often, and in a trial run of 5 h of landform time the change of the bed differs from the
+  single-size run (correlation 0.60). With `bmix_la = 0.05` the limiter fires 1/10 as often and the
+  result is close to the single-size run (correlation 0.999). The slump-block configurations
+  (param_slump*.txt; bank mode `rf_bank`) cannot be combined with it; the run stops at
+  initialization. It has been checked that the runs go through and that the per-class balances
+  close, but how the grain sizes in the old channel appear has not been evaluated (within the
+  computing time of this example the entrance and exit do not close completely).
 
 ## References
 

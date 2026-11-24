@@ -1,0 +1,6 @@
+! bedmix: 構成 susp(と surt1・surt2)のプローブ。混合粒径のとき最後の列に交換層の平均粒径 Dm(mm)が出ることを
+!   Check_bedmix.py の (8e) が見る(段 2。§122)
+&list_record
+  pbxy(:,1) = 30, 5
+  pbxy(:,2) = 50, 5
+/

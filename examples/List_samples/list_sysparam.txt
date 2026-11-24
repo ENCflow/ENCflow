@@ -73,6 +73,8 @@
   !f_out_h = 1              ! 水深 H(既定 on)
   f_out_e = 1               ! 水位 E
   !f_out_z = 0              ! 地盤高 Z(off でも Z0000 は常に出力)
+  !f_out_bmix = 0           ! 混合粒径の粒径階ごとの交換層の割合 Fa1_, Fa2_, …
+                            !   (fn_geomorph の f_bedmix=1 が必要。平均粒径 Dm は常に出力)
   !f_out_u = 0              ! x方向流速 u
   !f_out_v = 0              ! y方向流速 v
   !f_out_m = 0              ! x方向線流量 m

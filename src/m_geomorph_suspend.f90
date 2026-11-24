@@ -22,7 +22,17 @@ module subroutine init_suspend(gm, p, list)
   real :: d50, esa                     ! 既定適用後の有効値(§62)
 
   esa = list%susp_esa
-  d50 = gm_param("susp_d50", list%susp_d50, 0.0002, " m")   ! 細砂(§62)
+  if (list%f_bedmix > 0) then
+    ! 混合粒径(段 2。§122): 浮遊砂は最も細かい粒径階 1。粒径は d_1 で、違う値の指定は止める
+    if (list%bmix_d(1) <= 0.0) call par_stop("list_geomorph: f_bedmix=1 requires the class diameters bmix_d")
+    if (list%susp_d50 > 0.0 .and. abs(list%susp_d50 - list%bmix_d(1)) > 1.0e-6 * list%bmix_d(1)) then
+      call par_stop("list_geomorph: with f_bedmix=1 the suspended load is the finest class; susp_d50 must be " &
+                    // "omitted or equal to bmix_d(1)")
+    end if
+    d50 = gm_param("susp_d50", list%susp_d50, list%bmix_d(1), " m")   ! 粒径階 1 の粒径
+  else
+    d50 = gm_param("susp_d50", list%susp_d50, 0.0002, " m")   ! 細砂(§62)
+  end if
   if (d50 <= 0.0) call par_stop("list_geomorph: f_suspend requires susp_d50 > 0")
   if (list%susp_tausc <= 0.0) call par_stop("list_geomorph: susp_tausc must be > 0")
   if (list%susp_beta <= 0.0) call par_stop("list_geomorph: susp_beta must be > 0")
@@ -76,6 +86,11 @@ module subroutine calc_suspend(gm, p, g, s, dtw)
   logical :: spread, wsed, stk
   logical :: ssh                  ! 斜面に沿う底面せん断(f_gravity_correction = 2。§93)
 
+  ! 混合粒径(f_bedmix。段 2。§122)は写しの手続きで(粒径階 1 と交換層の行き来。本手続きの命令列を変えない)
+  if (gm%f_bedmix > 0) then
+    call calc_suspend_bmix(gm, p, g, s, dtw)
+    return
+  end if
   spread = (gm%wlw%nsm > 0)
   ! 波浪場の土砂への作用(段 W4・W5): τ* は Euler 平均流速 u^E の流れと波の最大のせん断
   wsed = (gm%f_wfsed > 0)

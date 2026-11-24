@@ -6,7 +6,9 @@
 掛ける抵抗分割(`&list_geomorph` の `f_taupart = 1`。Rickenmann & Recking 2011、
 Nitsche ら 2011。developer.md §89.30、docs/mountain_stream_plan.md §14)の検定です。
 急勾配の幅 1 セルの水路の等流で、東辺の開境界を通った掃流砂の台帳から定常の流砂量を得て、
-出口セルの水深・流速から同じ流砂量式で評価した容量と比べます。
+出口セルの水深・流速から同じ流砂量式で評価した容量と比べます。同じ選択子の `f_taupart = 2`
+(芦田・道上 1972 の有効掃流力。式 (11) の (u*e/u*)³ を流砂量に掛ける。developer.md §121)も同じ方法で
+確かめます。
 
 ## 設定
 
@@ -26,6 +28,10 @@ Nitsche ら 2011。developer.md §89.30、docs/mountain_stream_plan.md §14)の�
 | d0 | あり | 0(= 2.2 d50 = 0.022) | 8.6 | 0.88 | D84 の既定 |
 | d19_mpm | あり | 0.19 | 1.0 | 0.22 | MPM 式 |
 | excl | あり + fluv_taufac = 0.5 | — | — | — | 併用の停止 |
+| te | 有効掃流力(f_taupart = 2) | — | — | (u*e/u*)³ = 0.35 | 式 (11)・(23)(h/d50 = 19) |
+| te_cap | 有効掃流力、d50 = 0.08 m | — | — | 1(頭打ち) | 式 (11) の u*e が u* を超える粗い礫 |
+| te_excl | 有効掃流力 + fluv_taufac = 0.5 | — | — | — | 併用の停止 |
+| te_mpm | 有効掃流力 + MPM 式 | — | — | — | 併用の停止(芦田・道上式だけ) |
 
 ## 検定項目(Check_taupart.py)
 
@@ -35,15 +41,21 @@ Nitsche ら 2011。developer.md §89.30、docs/mountain_stream_plan.md §14)の�
    (τ* は既定 `f_gravity_correction = 2` の斜面の倍率 $`(1 + S^2)^{7/6}`$ を含む。developer.md §93)
    (開境界の面の容量は自セルの水理で出す。出口セルは自由流出境界の性質で 3000 s に 3 cm ほど
    下がるが、その時点の h・V を使うので判定には影響しない)。閾値未満の構成は台帳が 0。
+   te・te_cap は τ* を変えず、容量に (u*e/u*)³ = min(1, h^(1/3)/(g n² D²))^(3/2)、
+   D = 6.0 + 5.75 log10{h/(d50(1 + 2τ*))} を掛ける(g は実行ファイルの既定 9.8)。te の係数が 0.2〜0.6、
+   te_cap の係数が 1(頭打ち)であることも確かめる。
 3. 分割なし(param.txt)は reference と Log.txt がビット一致(`Run.sh` の回帰)。
-4. `f_taupart = 1` と `fluv_taufac ≠ 1` の併用は停止する(Run.sh が rc と停止の文言を見る)。
-5. MPI(`Run_MPI.sh N`): param.txt の回帰と、d19 の Log.txt が逐次(`Run.sh` が残す
-   `Log_d19_serial.txt`)とバイト一致。
+4. `f_taupart = 1` と `fluv_taufac ≠ 1`、`f_taupart = 2` と `fluv_taufac ≠ 1`・MPM 式の併用は停止する
+   (Run.sh が rc と停止の文言を見る)。
+5. MPI(`Run_MPI.sh N`): param.txt の回帰と、d19・te の Log.txt が逐次(`Run.sh` が残す
+   `Log_d19_serial.txt`・`Log_te_serial.txt`)とバイト一致。
 
 2026-11-02 の記録(gfortran 13.3、release ビルド): 定常の流砂量 / 容量 = off 1.0000、d044 0.9994、
 d19 1.0004、d0 0.9988、d19_mpm 1.0004、d76 は流砂 0。np = 2・4 とも逐次とバイト一致。
 2026-11-05 の記録(既定が `f_gravity_correction = 2` になった後。容量の τ* は斜面の倍率を含む): off 0.9994、
 d044 0.9993、d19 0.9999、d0 0.9988、d19_mpm 0.9999、d76 は流砂 0。
+2026-11-24 の記録(`f_taupart = 2` を足した後): 既存の構成は上と同じ値で、off は reference とビット一致。
+te 0.9995(係数 0.3514)、te_cap 0.9993(係数 1)。np = 2 で d19・te とも逐次とバイト一致。
 
 ## 実行
 
