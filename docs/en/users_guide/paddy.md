@@ -215,6 +215,14 @@ levee height is the remaining free storage.
 - Field studies reported that the main cause of overflow is backflow and poor drainage due to the rising water level
   of the drains[^miyazu2020]. This version restricts the outflow by the downstream water level but does not represent
   backflow, so it underestimates overflow in low-lying land with strong backwater.
+- **Cells where river or inland flood water reaches the paddy fields** (overtopping or breaching of rivers, overflow of
+  drains): the surface water does not enter the tanks and the tank water does not merge with the flood. In cells flooded
+  above the levee crest, the flood level is underestimated by up to "area fraction × ponding depth of the tank" (0.16 m
+  for an area fraction of 0.8 and a ponding depth of 0.2 m), and `Hpn` and `Hpd` keep the ponding depth stored from rain
+  alone (smaller than the actual ponding of the flooded fields). Below the levee crest, the surface water spreads over the
+  whole cell, so the inundation depth comes out smaller than the actual depth outside the paddy fields (roads, drains,
+  settlements) (the same limit as a coarse-grid run without paddy fields). Assessing low-lying land where floods reach the
+  paddy fields needs the method that resolves the plots (planned).
 - The discharge coefficients of devices vary from 0.40 to 0.88 with the product and the installation
   [^yoshikawa2009][^minakawa2022]. The default 0.6 is the value of the calculation program of the guide and is a starting
   point for calibration.
@@ -223,7 +231,10 @@ levee height is the remaining free storage.
 (multiple grids), water quality (`fn_wq`) or the two-layer fresh and salt water (`fn_salt`) (stops at start-up).
 Paddy cells (area fraction > 0) cannot be on sea, channel (`fn_rw`), water level boundary, inflow boundary, source or
 structure cells, nor on zone cells of [VZ](vz.md) or of the [storage function method](sfm.md). The area fraction cannot
-exceed the void ratio of buildings `fn_gv` (paddy fields and buildings are different parts of the same cell).
+exceed the void ratio of buildings `fn_gv` (paddy fields and buildings are different parts of the same cell). It can be
+combined with landform change (`fn_geomorph`), but the tanks carry no sediment (the water from the outlets is clear), and
+erosion by raindrops (the raindrop term of `f_wash`, `f_splash`) is also computed on the paddy part (it hardly occurs on
+ponded paddy fields).
 
 ## Parameters and the basis of their defaults
 
