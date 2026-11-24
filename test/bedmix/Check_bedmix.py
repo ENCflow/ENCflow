@@ -16,6 +16,8 @@
 #     (3) hide2(0.5・2・8 mm、修正 Egiazaroff): 100〜160 s に下流端の開境界を出た粒径階ごとの量(台帳)が、
 #         下流端のセルの水深・流速・組成から芦田・道上(1972)式 (31)・(32) で求めた値に一致する
 #     (4) bcfeed(容量給砂): 流入セルの河床と組成が変わらない
+#     (4b) bclim(容量給砂 + 流入セルで粒径階ごとの供給量制限が働く。§123.7): 給砂は制限の後の正味流出で作るので、
+#         流入セルの河床と組成が変わらない
 #     (5) bank(動く河岸・側岸侵食・安息角崩落・合計の給砂 + 一定の組成): 粒径階ごとの収支が閉じ、給砂が
 #         合計 × 組成 × 時間に一致し、組成が 0〜1 で和が 1、河岸が動いている
 #     (6) qbmix(粒径階ごとの給砂の時系列): 台帳の給砂が時系列の積分に一致し、収支が閉じる
@@ -474,6 +476,21 @@ dfin = max(abs(fa[k][idx(1, j)] - f0[k]) for k in range(nc) for j in range(J1, J
 moved = max(abs(z[idx(i, j)] - z_of("std", i, j)) for j in range(J1, J2 + 1) for i in range(2, NX + 1))
 rep("(4) bcfeed 流入セルの河床と組成が固定", dzin < TOL_COMP and dfin < TOL_COMP and moved > 1.0e-4,
     "max|dz| = %.2e m、max|dF| = %.2e(下流の河床の変化 %.4f m)" % (dzin, dfin, moved))
+
+# (4b) bclim: 流入セルで粒径階ごとの供給量制限が働く容量給砂(§123.7)。制限の前の流出で給砂を作ると、制限が削った
+#      分が流入セルに溜まる(以前の実装で 0.12 m)。制限の後の正味流出で作れば河床と組成は丸め誤差の範囲で固定
+h, z, sd = load_state("bclim")
+nc, d, la, fa, fs = load_bedmix("bclim")
+dzin = max(abs(z[idx(1, j)] - z_of("std", 1, j)) for j in range(J1, J2 + 1))
+dfin = max(abs(fa[k][idx(1, j)] - f0[k]) for k in range(nc) for j in range(J1, J2 + 1))
+moved = max(abs(z[idx(i, j)] - z_of("std", i, j)) for j in range(J1, J2 + 1) for i in range(2, NX + 1))
+ledl = ledger("bclim")
+resl = max(abs(ledl[k][4]) for k in ledl)
+liml = "class supply limiter" in open("screen_bclim.log", encoding="utf-8", errors="replace").read()
+rep("(4b) bclim 流入セルで制限が働いても河床と組成が固定", dzin < TOL_COMP and dfin < TOL_COMP and moved > 1.0e-3
+    and liml and resl < TOL_RES and abs(la - 0.002) < 1.0e-12,
+    "max|dz| = %.2e m、max|dF| = %.2e(下流の河床の変化 %.4f m、制限の発動 %s、max|残差| %.1e m3)"
+    % (dzin, dfin, moved, "あり" if liml else "なし", resl))
 
 # (5) bank
 led = ledger("bank")

@@ -577,7 +577,7 @@ load (the design document is docs/mixed_sediment_plan.md).
   for gravel beds; for sand beds with dunes, there is a practice of relating the exchange-layer thickness
   to the dune height, as the depth mixed by passing dunes[^chavarrias19]. With a large landform acceleration
   (morfac) the per-class supply limiter fires often with the default thickness (in trial runs of the
-  examples meander, meander_cutoff and delta, 5 cm made it fire 1/10 to 1/28 as often).
+  examples meander, meander_cutoff and delta, 5 cm made it fire 1/10 to 1/26 as often).
 - **Limits of accuracy**: (1) the results depend on the exchange-layer thickness $`L_a`$ (an empirical,
   numerical parameter). (2) The Hirano active-layer equations can lose hyperbolicity (become ill-posed), for
   example when the bed degrades into a finer substrate, and oscillations are then known to grow faster as the
