@@ -65,6 +65,7 @@ module m_geomorph
   public :: gm_param
   public :: taufac_h                ! 有効掃流力の比(submodule から呼ぶため public。§89.30)
   public :: taueff_fac              ! 芦田・道上の有効掃流力の流砂量の比(submodule から呼ぶ。§121)
+  public :: taupart_phi             ! 抵抗分割の係数を D84 を与えて求める(混合粒径の写しから呼ぶ。§122)
   public :: retain_exchange         ! 保持水の授受(debris・bedslide の submodule から呼ぶため public。§28.17)
   ! wfsed_taumax・wfsed_cphi も submodule(fluvial・suspend)が呼ぶので public(gm_param と同じ理由)
   public :: wfsed_taumax, wfsed_cphi
@@ -154,6 +155,8 @@ module m_geomorph
     real :: taufac = 1.0             ! 有効掃流力の比 f_τ(§84.3)
     logical :: taupart = .false.     ! 急勾配礫床の抵抗分割(§89.30。taufac_h が参照)
     logical :: taueff = .false.      ! 芦田・道上の有効掃流力(f_taupart = 2。§121。taueff_fac を掛ける)
+    logical :: d84map = .false.      ! 混合粒径で抵抗分割の D84 を交換層の組成からセルごとに求める(f_taupart = 1 で
+                                     !   fluv_d84 を与えないとき。§122。d84inv は側岸侵食の脚部が使う初期の値)
     real :: d84inv = 0.0             ! 1/D84 (1/m)
     real :: tpe = 0.75               ! 指数 e/2
     real :: tpc = 6.76               ! (a1/a2)^2 = (6.5/2.5)^2(Ferguson の VPE の係数の比)
@@ -278,6 +281,12 @@ module m_geomorph
     integer :: nlimk = 0             ! 粒径階の供給量制限の発動(セル × 粒径階。ランク局所の累計)
     integer :: nclip = 0             ! 変動上限 dzmax の発動エッジ数(ランク局所の累計)
     integer :: nfix = 0              ! 定着で限界を上げた流束の数(ランク局所の累計)
+    ! 浮遊砂との結合(f_suspend。粒径階 1 = 浮遊砂の粒径。段 2。§122)
+    logical :: susp = .false.        ! 粒径階 1 を浮遊砂と行き来させる
+    real(real64), allocatable :: exrow(:)  ! 河床の粒径階 1 から浮遊砂へ出た正味の固体体積(巻き上げ − 沈降)の
+                                     !   行部分和 (js:je) (m3。河床の在庫と同じ重み = 河道平面積率)
+    real(real64), allocatable :: esrow(:)  ! 浮遊砂の側で数えた同じ交換(Σ Δhs·gv·wfrac·A)の行部分和 (js:je) (m3)
+    real(real64) :: hs0 = 0.0_real64 ! 最初の更新の頭の浮遊砂の在庫(Σ hs·gv·wfrac·A。m3)
   end type
 
   type t_wave
@@ -879,8 +888,24 @@ module m_geomorph
       type(t_state), intent(inout) :: s
       real, intent(in) :: dts
     end subroutine
+    ! 浮遊砂の E-D 交換の混合粒径版(f_suspend と f_bedmix。粒径階 1 と交換層の行き来。calc_suspend の写し。§122)
+    module subroutine calc_suspend_bmix(gm, p, g, s, dtw)
+      type(t_geomorph), intent(inout) :: gm
+      type(t_sysparam), intent(in) :: p
+      type(t_geoinfo), intent(in) :: g
+      type(t_state), intent(inout) :: s
+      real, intent(in) :: dtw
+    end subroutine
     ! calc_fluvial_bmix の有効掃流力版(f_taupart = 2。§121。calc_fluvial_bmix の写し)
     module subroutine calc_fluvial_bmix_te(gm, p, g, s, dts)
+      type(t_geomorph), intent(inout) :: gm
+      type(t_sysparam), intent(in) :: p
+      type(t_geoinfo), intent(in) :: g
+      type(t_state), intent(inout) :: s
+      real, intent(in) :: dts
+    end subroutine
+    ! calc_fluvial_bmix の抵抗分割版(f_taupart = 1 で D84 を交換層の組成から求める。§122。calc_fluvial_bmix の写し)
+    module subroutine calc_fluvial_bmix_tp(gm, p, g, s, dts)
       type(t_geomorph), intent(inout) :: gm
       type(t_sysparam), intent(in) :: p
       type(t_geoinfo), intent(in) :: g
@@ -995,6 +1020,17 @@ pure function taufac_h(flv, hh) result(f)
   else
     f = flv%taufac
   end if
+end function
+
+!----------------------------------------------------------------------
+! 抵抗分割の係数 φ(h) を、セルごとの D84 で求める(taufac_h の抵抗分割の式。混合粒径の組成からの D84 の
+!   写し calc_fluvial_bmix_tp が呼ぶ。§122)
+!----------------------------------------------------------------------
+pure function taupart_phi(flv, hh, d84) result(f)
+  type(t_fluvial), intent(in) :: flv
+  real, intent(in) :: hh, d84
+  real :: f
+  f = (1.0 + flv%tpc * (hh / d84)**(-5.0/3.0))**(-flv%tpe)
 end function
 
 !----------------------------------------------------------------------
@@ -1464,9 +1500,14 @@ subroutine m_geomorph_init(gm, p, g, s, b)
   ! 判定はすべて namelist 由来で全ランク同一(collective 安全)
   if (gm%f_bedmix > 0) then
     if (gm%f_fluvial <= 0) call par_stop("list_geomorph: f_bedmix=1 requires f_fluvial=1")
-    if (gm%f_suspend > 0 .or. gm%f_wash > 0 .or. gm%f_bedfines > 0) then
-      call par_stop("list_geomorph: f_bedmix=1 cannot be combined with f_suspend, f_wash or f_bedfines yet " &
-                    // "(stage 1 of docs/mixed_sediment_plan.md: the suspended class is not linked)")
+    ! 浮遊砂(f_suspend)は粒径階 1 と結合する(段 2。§122)。斜面浸食と細粒分の帳簿はまだ止める
+    if (gm%f_wash > 0 .or. gm%f_bedfines > 0) then
+      call par_stop("list_geomorph: f_bedmix=1 cannot be combined with f_wash or f_bedfines yet " &
+                    // "(docs/mixed_sediment_plan.md §3.7)")
+    end if
+    if (list%wet_lw > 0.0) then
+      call par_stop("list_geomorph: f_bedmix=1 cannot be combined with wet_lw yet (the spread pickup " &
+                    // "would not update the class composition)")
     end if
     if (gm%f_rockfall > 0 .or. gm%crp%hcinv > 0.0 .or. gm%f_bedslide > 0 .or. gm%f_debris > 0 &
         .or. gm%f_splash > 0) then
@@ -1505,7 +1546,7 @@ subroutine m_geomorph_init(gm, p, g, s, b)
   ! その場の河床に堆積させる。そのままでは h_s が流れに凍って残る。判定は namelist 由来で
   ! 全ランク同一(collective 安全)
   if (p%f_state_restore > 0 .and. .not. s%sed_active) then
-    call deposit_restored_hs(g, s, list%fluv_porosity)
+    call deposit_restored_hs(g, s, list%fluv_porosity, gm%f_bedmix > 0)
   end if
   ! 浮遊砂の沈降速度(f_suspend のみ。m_wq の Kd 分配が粒子態の沈降に
   ! 読む — debris の hs は流動体の固相で対象外。§30.6)
@@ -1572,10 +1613,11 @@ end subroutine
 ! (固体の台帳 Σh_s + (1 − λ)Σz は不変。細粒分 sf は持たないので粗粒として扱う)。
 ! 堆積した固体の体積は行部分和(real64 → par_sum_rows = 決定的)で表示する
 !----------------------------------------------------------------------
-subroutine deposit_restored_hs(g, s, lam)
+subroutine deposit_restored_hs(g, s, lam, bmix)
   type(t_geoinfo), intent(in) :: g
   type(t_state), intent(inout) :: s
   real, intent(in) :: lam          ! 河床の空隙率 λ(fluv_porosity)
+  logical, intent(in) :: bmix      ! 混合粒径(f_bedmix)。組成を更新できないので h_s があれば止める(§122)
   integer :: i, j
   real :: dz
   real(real64) :: vtot
@@ -1583,6 +1625,21 @@ subroutine deposit_restored_hs(g, s, lam)
   character(len=32) :: buf
 
   allocate(vrow(dcp%js:dcp%je), source = 0.0_real64)
+  if (bmix) then
+    do j = dcp%js, dcp%je
+      do i = g%wx(1,j), g%wx(2,j)
+        if (g%x(i,j) <= 0) cycle
+        if (s%hs(i,j) > 0.0) vrow(j) = vrow(j) + real(s%hs(i,j), real64)
+      end do
+    end do
+    call par_sum_rows(vrow, vtot)
+    if (vtot > 0.0_real64) then
+      call par_stop("geomorph: the restored flow carries solids (hs), but this mixed-size run (f_bedmix=1) " &
+                    // "has no f_suspend to carry them (deposition without the class composition is not " &
+                    // "supported; enable f_suspend or restore a state without hs)")
+    end if
+    return
+  end if
   do j = dcp%js, dcp%je
     do i = g%wx(1,j), g%wx(2,j)
       if (g%x(i,j) <= 0) cycle

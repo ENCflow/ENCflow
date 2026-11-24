@@ -44,8 +44,9 @@ The two ways of representing the sea and where the sediment goes in each are sho
 In the run-up zone settling dominates as the flow decelerates, and in
 cells that dry out the entire suspended load is fixed to the bed. The
 deposit thickness is obtained as the before/after difference of z
-(f_out_z; the probe CSV also has hs and sd columns). Being single
-grain size, the scope is deposit thickness and extent - the spatial
+(f_out_z; the probe CSV also has hs and sd columns). The suspended
+load being a single grain size (even with mixed grain sizes, f_bedmix,
+only the finest class is suspended), the scope is deposit thickness and extent - the spatial
 grain-size distribution (inland fining) is not represented. hs is a
 passive scalar under the dilute assumption; high-concentration mud
 flows (density currents) are out of scope.

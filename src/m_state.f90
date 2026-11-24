@@ -274,6 +274,10 @@ module m_state
                                         !   geomorph が確保・更新し出力 Fa<k>_(f_out_bmix)。私有 save は
                                         !   geomorph_bedmix.dat。§84.19、docs/mixed_sediment_plan.md)
     real, allocatable :: bmdm(:,:)      ! 混合粒径の交換層の平均粒径 d_m = Σ F_k d_k (m。f_bedmix。出力 Dm)
+    real(real64), allocatable :: hsx(:,:) ! 混合粒径の粒径階 1 の浮遊砂 hs の系外との出入りの記録(行部分和
+                                        !   (js:je, 1:5)。列は cqx と同じ 1〜5。f_bedmix と f_suspend のとき
+                                        !   geomorph が確保し、swflow_enc が advect_scalar・stage_scalar_reset の
+                                        !   xrow に渡す。台帳だけに使う。§122)
     real, allocatable :: fx(:,:)        ! 定着度 a ∈ [0,1](f_fixation。geomorph が確保・更新し
                                         !   出力 Fx。私有 save は geomorph_fixation.dat。§84.6)
     real, allocatable :: ht(:,:)        ! 崖錐の厚さ (m。f_rockfall。geomorph が確保・更新し
@@ -1122,6 +1126,7 @@ subroutine m_state_dispose(s, p)
   if (allocated(s%sf)) deallocate(s%sf)
   if (allocated(s%bmf)) deallocate(s%bmf)
   if (allocated(s%bmdm)) deallocate(s%bmdm)
+  if (allocated(s%hsx)) deallocate(s%hsx)
   if (allocated(s%rnv)) deallocate(s%rnv)
   if (allocated(s%vb)) deallocate(s%vb)
   if (allocated(s%hd)) deallocate(s%hd)

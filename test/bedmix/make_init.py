@@ -10,6 +10,8 @@
 #     bank : std と同じで、河岸の高さを 1 m にして河岸も動く床(土層厚 1 m。側岸侵食・安息角崩落)
 #   python3 make_init.py z <型> > zinit_<型>.txt   (h、sd も同様)
 #   python3 make_init.py qbmix > qbmix.txt          (粒径階ごとの給砂の時系列。時刻 (min) と 3 粒径階)
+#   python3 make_init.py rw > rw_suw.txt            (構成 suw の河道マスク: 水路の中央の行 J_SUB だけ 1)
+#   python3 make_init.py width > width_suw.txt      (構成 suw の河道幅: 中央の行だけ W_SUB(セル幅より狭い))
 import sys, math
 
 NX, NY, DX = 60, 9, 1.0
@@ -23,6 +25,7 @@ GEOM = {
     "free": (0.002, 0.5, 2.0, 1.0, 0.0, 0),
     "bank": (0.002, 0.5, 1.0, 1.0, 1.0, N_FIX),
 }
+J_SUB, W_SUB = 5, 0.6                    # サブグリッド河道幅の行と幅 (m)(構成 suw。河道平面積率 0.6)
 # 粒径階ごとの給砂の時系列(時刻 min, Qb_1, Qb_2, Qb_3 (m3/s 固体))。区間で線形補間
 QBMIX = [(0.0, 2.0e-4, 5.0e-4, 3.0e-4),
          (2.0, 4.0e-4, 1.0e-4, 0.0),
@@ -59,6 +62,11 @@ if __name__ == "__main__":
     if kind == "qbmix":
         for row in QBMIX:
             print("%.3f %.6e %.6e %.6e" % row)
+        sys.exit(0)
+    if kind in ("rw", "width"):
+        val = "1" if kind == "rw" else "%.3f" % W_SUB
+        for j in range(1, NY + 1):
+            print(" ".join(val if j == J_SUB else "0" for i in range(1, NX + 1)))
         sys.exit(0)
     if kind == "q":
         print("%.6f" % (q_unit(sys.argv[2]) * W))

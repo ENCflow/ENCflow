@@ -98,12 +98,20 @@ module subroutine init_fluvial(gm, p, g, list)
     if (list%taupart_e <= 0.0 .or. list%taupart_e > 2.0) call par_stop("list_geomorph: taupart_e must be in (0,2]")
     d84 = list%fluv_d84
     if (d84 < 0.0) call par_stop("list_geomorph: fluv_d84 must be >= 0 (0 = 2.2 x fluv_d50)")
-    if (d84 == 0.0) d84 = 2.2 * d50
+    if (gm%f_bedmix > 0 .and. d84 == 0.0) then
+      ! 混合粒径: D84 は交換層の組成からセルごとに求める(側岸侵食の脚部の値と表示は init_bedmix。§122)
+      gm%flv%d84map = .true.
+      d84 = 2.2 * d50
+    else if (d84 == 0.0) then
+      d84 = 2.2 * d50
+    end if
     gm%flv%d84inv = 1.0 / d84
     gm%flv%tpe = 0.5 * list%taupart_e
     gm%flv%tpc = (6.5 / 2.5)**2
-    call par_info("geomorph: resistance partition on: tau* x (1 + 6.76 (h/D84)^(-5/3))^(-e/2), D84 = " &
-                  // rtoa(d84) // " m, e = " // rtoa(list%taupart_e))
+    if (.not. gm%flv%d84map) then
+      call par_info("geomorph: resistance partition on: tau* x (1 + 6.76 (h/D84)^(-5/3))^(-e/2), D84 = " &
+                    // rtoa(d84) // " m, e = " // rtoa(list%taupart_e))
+    end if
   end if
   if (list%fluv_slope < 0 .or. list%fluv_slope > 1) then
     call par_stop("list_geomorph: fluv_slope must be 0 or 1")
@@ -217,12 +225,14 @@ module subroutine calc_fluvial(gm, p, g, s, dts)
   end if
   ! 混合粒径(f_bedmix。§84.19)は写しの手続きで(本手続きの命令列を変えない。calc_fluvial_wfsed と
   ! 同じ理由。docs/mixed_sediment_plan.md §4)。ループ 1 を変えるときは calc_fluvial_bmix・calc_fluvial_te・
-  ! calc_fluvial_bmix_te も同じく変える
+  ! calc_fluvial_bmix_te・calc_fluvial_bmix_tp も同じく変える
   ! 芦田・道上の有効掃流力(f_taupart = 2。§121)も写しの手続きで(ループの中に分岐を足すと、-Ofast の
   ! ベクトル化と結合の変化で無効時の結果が最終桁で変わることを確かめた。§121.3)
   if (gm%f_bedmix > 0) then
     if (gm%flv%taueff) then
       call calc_fluvial_bmix_te(gm, p, g, s, dts)
+    else if (gm%flv%d84map) then
+      call calc_fluvial_bmix_tp(gm, p, g, s, dts)     ! 組成からの D84 の抵抗分割(§122)
     else
       call calc_fluvial_bmix(gm, p, g, s, dts)
     end if

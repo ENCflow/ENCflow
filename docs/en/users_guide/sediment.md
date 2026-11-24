@@ -450,7 +450,13 @@ multiplies the $`\tau_*`$ passed to the transport formula by this factor
   and the MPM formula (Nitsche et al. note that the ratio by which reducing the
   slope lowers the transport is nearly the same for different formulas).
   $`D_{84}`$ is given by `fluv_d84` (m); 0 (default) uses $`2.2\,D_{50}`$ (the median
-  ratio Rickenmann & Recking used to fill missing data). The exponent $`e`$ is
+  ratio Rickenmann & Recking used to fill missing data). With mixed grain sizes
+  (f_bedmix) and no `fluv_d84`, the $`D_{84}`$ of the exchange-layer composition is computed
+  for each cell (the cumulative fraction is taken to reach $`F_1 + \dots + F_k`$ at the size of
+  class k, and the two classes around 0.84 are interpolated linearly in the logarithm of the
+  size). The edge value is the mean of the two cells, as for the $`d_m`$ of the hiding function,
+  and the bank toe uses a constant, the $`D_{84}`$ of the domain-mean initial exchange-layer
+  composition. The exponent $`e`$ is
   `taupart_e` (default 1.5, the value of Nitsche et al.; Rickenmann & Recking
   give 1.33–2). The form that reduces by the ratio of the base level resistance
   to the Manning n, $`(n_0/n)^{e}`$ ($`1/n_0 = 20.4/D_{84}^{1/6}`$), is not used:
@@ -497,8 +503,8 @@ multiplies the $`\tau_*`$ passed to the transport formula by this factor
 
 The bed load is split into size classes $`k = 1..N`$ (grain size $`d_k`$, $`N`$ = 2 to 8) and the bed
 composition is kept in one exchange layer and one substrate (Hirano type[^hirano71]). Its scope is an
-exception to basic policy 6; there is no stratigraphy and no suspended load per class (the design document
-is docs/mixed_sediment_plan.md).
+exception to basic policy 6; there is no stratigraphy, and only the finest class is linked to the suspended
+load (the design document is docs/mixed_sediment_plan.md).
 
 - **State**: the exchange-layer composition $`F_k`$ (thickness $`L_e = \min(L_a, s_d)`$) and the substrate
   composition $`f_k`$ (thickness $`s_d - L_e`$). $`s_d`$ is the soil-layer (mobile-layer) thickness and
@@ -534,6 +540,21 @@ is docs/mixed_sediment_plan.md).
   scheme does not create negative fractions). The cap on bed change fluv_dzmax applies to the sum over the
   classes. The fluxes of bank erosion and repose collapse are split into classes with the composition of the
   supplying cell's exchange layer.
+- **Link to the suspended load** (`f_suspend = 1`): class 1 (size $`d_1`$ = susp_d50) becomes the suspended
+  load and also moves as bed load (bed load and suspended load are added as separate modes of transport; the
+  transition of the split between them is not treated). The exchange with the bed is the equation of
+  [§4](#4-suspended-sediment-f_suspend) with the equilibrium concentration multiplied by the exchange-layer
+  fraction, $`\Delta h_s = w_f (F_1 C_{eq} - \beta C)\,\Delta t_w`$, where $`F_1`$ is the availability of
+  pickup (the same idea as the $`\min(1, s_f/L_a)`$ of the fines ledger f_bedfines; ENCflow's choice). One
+  pickup takes at most the class-1 content of the exchange layer, $`(1-\lambda) L_e F_1/\mathrm{morfac}`$, and
+  settling at most the suspended amount. The bed change $`\Delta z = -\mathrm{morfac}\,\Delta h_s/(1-\lambda)`$
+  updates the exchange layer and the substrate by the Hirano equation as an exchange of class 1 only (when
+  pickup lowers the interface the substrate composition comes in; when settling raises it, it rises with the
+  exchange-layer composition). What is left suspended on a cell that dries also goes into class 1 of the
+  exchange layer. The ledger puts what went to the suspended load (pickup − settling) into the class-1 bed
+  balance, checks that it and the balance of the suspended load (stock Σ h_s × gv × wfrac × A and the inflow
+  and outflow through open boundaries) close separately, and counts the exchange on both the bed side and the
+  suspended side to check that they agree.
 - **Default exchange-layer thickness**: twice the $`D_{90}`$ of the initial (domain-mean) exchange-layer
   composition. The guidance in the literature is 1 to 2 times the $`D_{90}`$ of the surface layer[^parker04]; the
   default is its upper end (Parker 2008[^parker08] treats the factor as an order-one calibration value, and
@@ -549,13 +570,22 @@ is docs/mixed_sediment_plan.md).
   (4) The $`d_m`$ of the hiding function is the mean of two cells, so it is smeared by one cell where the
   composition changes abruptly. (5) The toe shear stress of the bank-erosion law is evaluated with a
   representative size (the domain-mean $`d_m`$ of the initial exchange layer). (6) Grain-size-dependent flow
-  roughness, abrasion and suspended load per class are not treated.
+  roughness and abrasion are not treated. Only class 1 is suspended (classes 2 and above are not), and the
+  bed load and the suspended load of class 1 are added.
 - **Verification**: [test/bedmix](../../../test/bedmix/en/README.md). With all classes set to the same size
   the bed agrees with the single-size bed to 5e-15 m and the composition does not change; the lowering of
   static armouring without feed agrees with $`L_a F_0/(1 - f_{\rm sub})`$ and the decay rate of the fine
   fraction is within 0.3 % of the one-cell formula; the outflow of each class is within 0.02 % of eqs. (31)
   and (32); the balance of each class closes to 1e-13 m³; MPI np = 1, 2, 4 are byte-identical to the serial
-  run, and a restart is bit-identical. In a comparison with the NILIM 1/100 movable-bed model of the Joganji River
+  run, and a restart is bit-identical. With the suspended load linked, setting all classes to the same size
+  with the composition 1, 0, 0 gives a bed and a suspended load that agree with single-size bed load plus
+  suspended load to 1e-14 m and 3e-17 m; the class-1 balance (including what went to the suspended load)
+  closes to 7e-14 m³ and the suspended balance to 1e-14 m³, and the exchange counted on the bed side and on
+  the suspended side agree (also with a row of 0.6 m channel width). Computing the D84 of the roughness
+  partition from the composition agrees, in the equal-size limit, with the single-size bed for the given
+  D84 to 9e-15 m, and with a 0.5, 2 and 8 mm mixture it is bit-identical in the first step to a run with
+  the D84 of the initial composition fixed, and departs from it as the composition changes. In a comparison
+  with the NILIM 1/100 movable-bed model of the Joganji River
   (case 2-1; [examples/joganji_flume](../../../examples/joganji_flume/en/README.md)), the area changed by more than 5 mm and the
   eroded volume are close to the measurement (a single size changes too much), while the locations of the change
   (point-by-point correlation 0.1 to 0.25) and the pattern of the surface composition do not match, and the model's
@@ -658,6 +688,9 @@ form, which has no published value, calibrated in
 [test/suspend](../../../test/suspend/en/README.md) (**empirical**).
 Verification: the same test, total solid conserved to 2.2e-15 with both
 equilibrium formulas.
+With mixed grain sizes (f_bedmix), `susp_d50` is the size of class 1 and
+pickup is multiplied by the class-1 fraction of the exchange layer
+([mixed grain sizes in §3](#mixed-grain-sizes-f_bedmix)).
 
 ![Adaptation length of suspended sediment: distance to approach the equilibrium, L = q/(β w_f)](../../figs/sediment_adapt_en.png)
 

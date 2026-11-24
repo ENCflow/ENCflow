@@ -58,11 +58,11 @@
     {
       "source": "docs/comparison.md",
       "target": "docs/en/comparison.md",
-      "source_sha256": "f9da09a8e46a62ef17c4837e5cf7d8dc5bdc60abe356c4392ae23d936c537895",
-      "target_sha256": "63c8bd9ffbb6206d19cc1b6ce1e1c940c35776cbecbf7a569741e677d6ed6e8e",
-      "reviewer": "Claude (Claude Code session; mixed-size stage 1 (f_bedmix): new and changed sections compared side by side with the Japanese source; parameters and numbers checked against the code and the test runs)",
+      "source_sha256": "87ee7d69081f07a7d2a423e8372765c495a6db67fd1353e6ad0807e6f7464d72",
+      "target_sha256": "f162cb1c6413ca1fff3422d7c7fca1a9e0fc4bdd782a9d6d56ef267b091c3a51",
+      "reviewer": "Claude (Claude Code session; mixed-size stage 2a: the status line and the mixed-size bed-load row (link to the suspended load, and the comparison with the joganji_flume model experiment in place of \"no comparison yet\") changed in the same work in Japanese and English; both diffs read side by side)",
       "method": "assistant",
-      "reviewed_on": "2026-11-23"
+      "reviewed_on": "2026-11-24"
     },
     {
       "source": "docs/developer.md",
@@ -311,20 +311,20 @@
     {
       "source": "docs/users_guide/geomorph.md",
       "target": "docs/en/users_guide/geomorph.md",
-      "source_sha256": "f0f051208f993a2134ae94a03d9cc647cec2ef81627f4a45da557b82d4623e0e",
-      "target_sha256": "63d004b3575b3b2224339ff57b9d5ea4980f089ffafad804d7ef52120faab51c",
-      "reviewer": "Claude (Claude Code session; effective shear of Ashida and Michiue (f_taupart = 2): the new and changed parts (sediment.md effective-shear section and the two cross-references; the f_taupart row of geomorph.md) compared side by side with the Japanese source; formulas, numbers and parameter names checked against the code, the test results and the original paper)",
+      "source_sha256": "7aa86023c15c102b2c301a2b12985c6f00e5fece511399869dc62639e514556f",
+      "target_sha256": "a815fa1b5bfe38a6585fbd8402eb9d8c7d96c23bb98b18193f5faca8c1898c79",
+      "reviewer": "Claude (Claude Code session; mixed-size stage 2a (suspended load linked to class 1, Dm probe column, D84 from the composition): the new and changed parts compared side by side with the Japanese source; parameters, messages and numbers checked against the code and the test runs)",
       "method": "assistant",
       "reviewed_on": "2026-11-24"
     },
     {
       "source": "docs/users_guide/geomorph_applications.md",
       "target": "docs/en/users_guide/geomorph_applications.md",
-      "source_sha256": "0d623b8f44976402b6239d427a61893e4fe7e26db44708461b9e682280435f7d",
-      "target_sha256": "91b1cf2dce73c70e2a7d19ac58c9389b31e96fead046f8f255e85d5b43108a84",
-      "reviewer": "Claude (Claude Code session; the parts changed for the option value f_slide_noflow = 2: the paragraph on the option and the two notes on slide_dmax in the mass-flow guide, the one-line mentions in the geomorphology guide and its applications section 7, and the settings sample comment; the English mirror was updated in the same work and both diffs were read side by side)",
+      "source_sha256": "5b9775b8213e110f0fa43af876b997bc3559d2ef98ad6b9577bbfdbab7d0d28a",
+      "target_sha256": "ee80644c0e585d6da0f8d5cd5df922ad328d6ce69163e8fb18ecd7c4a3021453",
+      "reviewer": "Claude (Claude Code session; mixed-size stage 2a (suspended load linked to class 1, Dm probe column, D84 from the composition): the new and changed parts compared side by side with the Japanese source; parameters, messages and numbers checked against the code and the test runs)",
       "method": "assistant",
-      "reviewed_on": "2026-11-23"
+      "reviewed_on": "2026-11-24"
     },
     {
       "source": "docs/users_guide/glacier.md",
@@ -455,20 +455,20 @@
     {
       "source": "docs/users_guide/record.md",
       "target": "docs/en/users_guide/record.md",
-      "source_sha256": "77acdc67671cb2028dc8d05f435a5e0061c4d30d5edc8dbe5346b80eb6f93866",
-      "target_sha256": "8abefcb78a60109003849a849a23d0d321ab856d5a2f36157e7819ad5adff70c",
-      "reviewer": "Claude (Claude Code session; reviewed the changed sections (test/fluxline entry and the note on transect ends) of the Japanese source against the English mirror, 2026-10-30)",
+      "source_sha256": "86e2a0393735f8bb32abea24cb0bcfd812e7b99ddfc0491c8c39395f4c8d00ad",
+      "target_sha256": "366a7e10cf629474cc09303b755daee01ca6aa55723caeb2d71f5e63d59b706b",
+      "reviewer": "Claude (Claude Code session; mixed-size stage 2a (suspended load linked to class 1, Dm probe column, D84 from the composition): the new and changed parts compared side by side with the Japanese source; parameters, messages and numbers checked against the code and the test runs)",
       "method": "assistant",
-      "reviewed_on": "2026-10-30"
+      "reviewed_on": "2026-11-24"
     },
     {
       "source": "docs/users_guide/restart.md",
       "target": "docs/en/users_guide/restart.md",
-      "source_sha256": "a3f8a45d3e3cb382c6e84fe8efa1c800ff8c99f7ce9eed4cf33f64eea4424293",
-      "target_sha256": "a6e218fe92436adcd9f2c85e3221745a8f2b008b25e8e6d3fad9cf5fdbb8f3d8",
-      "reviewer": "Claude (Claude Code session; full-text content and lexical review, no model execution)",
+      "source_sha256": "516a79046727f0c709f2ab992b7648d33c859251304e89a05143c4dbaf679313",
+      "target_sha256": "fa9298f5c2070b053886c659aed50bcbf688d5d5440f800646bed2382da7237f",
+      "reviewer": "Claude (Claude Code session; mixed-size stage 2a: one sentence on the stop for restored h_s under f_bedmix added to the paragraph on restored h_s in Japanese and English in the same work; both diffs read side by side; message checked against the code)",
       "method": "assistant",
-      "reviewed_on": "2026-10-27"
+      "reviewed_on": "2026-11-24"
     },
     {
       "source": "docs/users_guide/salt.md",
@@ -482,9 +482,9 @@
     {
       "source": "docs/users_guide/sediment.md",
       "target": "docs/en/users_guide/sediment.md",
-      "source_sha256": "d048df58453ea9680357bdeefcbb5907c1bd76056a928532ecaccd8f19e5f6c4",
-      "target_sha256": "5bd605b758edcd465768b861919980f9b59622821ffed02147c3d32d2b83647b",
-      "reviewer": "Claude (Claude Code session; effective shear of Ashida and Michiue (f_taupart = 2): the new and changed parts (sediment.md effective-shear section and the two cross-references; the f_taupart row of geomorph.md) compared side by side with the Japanese source; formulas, numbers and parameter names checked against the code, the test results and the original paper)",
+      "source_sha256": "413d3314d9b5920b295759b434c895d8b9353e95d6b4aa028a123b54b4fb837b",
+      "target_sha256": "0d4833f736874e2e826da47ad07746f6d406eeb4ec8399e56d410e8ee8df0965",
+      "reviewer": "Claude (Claude Code session; mixed-size stage 2a (suspended load linked to class 1, Dm probe column, D84 from the composition, including the mixture check tpmix/tpfix): the new and changed parts compared side by side with the Japanese source; parameters, messages and numbers checked against the code and the test runs)",
       "method": "assistant",
       "reviewed_on": "2026-11-24"
     },
@@ -716,9 +716,9 @@
     {
       "source": "examples/List_samples/list_geomorph.txt",
       "target": "examples/List_samples/en/list_geomorph.txt",
-      "source_sha256": "a5594d9960d901813ab4eaf0a18e2dadc64d782233f43e0041c2cf787204f855",
-      "target_sha256": "39b7d61e1f4d1024d57cb1ae7ca5c4a6e5013672ed4455a762e0082d46ee7331",
-      "reviewer": "Claude (Claude Code session; the f_taupart comment of the settings example changed in the same work in Japanese and English; values and the commented assignment unchanged; both diffs read side by side)",
+      "source_sha256": "a7b8222e98443247be1e67f92e8a9759171eac0ae09cf8d02b2d5ecda32f028b",
+      "target_sha256": "fb40affdd43ccdb9f427e292f464af9378354328bfd6ba6d4f339ba63ac5c048",
+      "reviewer": "Claude (Claude Code session; mixed-size stage 2a: the comments of the commented examples (fluv_d84, the mixed-size block, susp_d50) changed in the same work in Japanese and English; values, identifiers and commented states unchanged (tools/consistency/check.py samples); both diffs read side by side)",
       "method": "assistant",
       "reviewed_on": "2026-11-24"
     },
@@ -3821,9 +3821,9 @@
     {
       "source": "test/README.md",
       "target": "test/README.en.md",
-      "source_sha256": "74501bd7d8ed570b1a2482d415ebdf0a88ecc1691d664fbd9051272322fb0990",
-      "target_sha256": "9a5fae38e4b03d2b84952043285ca52e28cdacefd98a5f1b2d5e4a2c1463a457",
-      "reviewer": "Claude (Claude Code session; the rows and items of the f_taupart = 2 checks (test index, test/taupart te configurations and record, test/bedmix single_te/equal_te) added in the same work in Japanese and English; both diffs read side by side; numbers checked against the test runs)",
+      "source_sha256": "3a4c335f7e5f2d1730cae6424658e3c3cee74fe1446f595f27fc9b7f194caf16",
+      "target_sha256": "385137ba2ea656ced62c05972a20abfec098e02717efd9e7a1ba62444b3b181b",
+      "reviewer": "Claude (Claude Code session; mixed-size stage 2a: the rows of the new configurations (single_tp/equal_tp, tpmix/tpfix, single_su/equal_su, susp, suw, surt, su_d50, su_wash), the typical numbers and the run notes added in the same work in Japanese and English; both diffs read side by side; numbers checked against the test runs)",
       "method": "assistant",
       "reviewed_on": "2026-11-24"
     },
@@ -3884,9 +3884,9 @@
     {
       "source": "test/bedmix/README.md",
       "target": "test/bedmix/en/README.md",
-      "source_sha256": "a871d4624dd60772ee718fb22a878daa26d169ea401b483b1361773fa8feaccd",
-      "target_sha256": "b94595e33be861985db2cfd697d3b5047f82b8bfc0d8b6d1d3dad09437c63560",
-      "reviewer": "Claude (Claude Code session; the rows and items of the f_taupart = 2 checks (test index, test/taupart te configurations and record, test/bedmix single_te/equal_te) added in the same work in Japanese and English; both diffs read side by side; numbers checked against the test runs)",
+      "source_sha256": "2c62c4419e34ac33d79039a4fa5126bbaea881958349ebb95db58adcf8f951e7",
+      "target_sha256": "e7c5bf2b9d27d91f2859044f8d8cd26e682198e79df8443d046320eaba509e5b",
+      "reviewer": "Claude (Claude Code session; mixed-size stage 2a: the rows of the new configurations (single_tp/equal_tp, tpmix/tpfix, single_su/equal_su, susp, suw, surt, su_d50, su_wash), the typical numbers and the run notes added in the same work in Japanese and English; both diffs read side by side; numbers checked against the test runs)",
       "method": "assistant",
       "reviewed_on": "2026-11-24"
     },

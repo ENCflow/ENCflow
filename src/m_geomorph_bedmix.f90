@@ -31,6 +31,8 @@ submodule(m_geomorph) m_geomorph_bedmix
                          par_allreduce_maxi
   use m_swflow_enc, only : chn, bcs, bc_open_face, bc_neumann_cell, bc_inflow_nooutflow, &
                           slope_shear_on, slope_shear_factor, slope_shear_factor_e
+  use m_swflow_enc, only : sct, sect_v, sect_sigma          ! 浮遊砂の σ 断面の濃度解釈(§26。段 2 の結合)
+  use m_sedform, only : sed_ceq_itakura                      ! 浮遊砂の平衡濃度(板倉・岸。§84.9)
   use m_restart, only : restart_write_cell, restart_read_cell
   use m_sysdep_util, only : sysdep_mkdir
   use m_util, only : itoa, rtoa
@@ -49,7 +51,7 @@ module subroutine init_bedmix(gm, p, g, s, b, list)
   type(t_boundary), intent(in) :: b
   type(t_list_geomorph), intent(in) :: list
   integer :: nc, kc, ifl
-  real :: fmean(1:nbmixmax), d90, la
+  real :: fmean(1:nbmixmax), d90, la, d84
   character(len=512) :: msg
 
   ! --- 粒径階(与えた個数 N = 2〜nbmixmax。細かい順。同じ値も許す = 検定の単一粒径の極限) ---
@@ -77,11 +79,6 @@ module subroutine init_bedmix(gm, p, g, s, b, list)
     call par_stop("list_geomorph: bmix_hiding must be 1 (modified Egiazaroff) or 0 (none)")
   end if
   gm%bmx%hiding = list%bmix_hiding
-  ! 急勾配礫床の抵抗分割の D84 は、段 1 では粒径階から求めない(plan §3.7)
-  if (list%f_taupart == 1 .and. list%fluv_d84 <= 0.0) then
-    call par_stop("list_geomorph: f_taupart=1 with f_bedmix=1 requires fluv_d84 > 0 " &
-                  // "(the D84 is not derived from the grain-size classes)")
-  end if
 
   ! --- 状態(有効時のみ確保) ---
   allocate(s%bmf(dcp%ish:dcp%ieh, dcp%jsh:dcp%jeh, 1:nc), source = 0.0)
@@ -119,6 +116,16 @@ module subroutine init_bedmix(gm, p, g, s, b, list)
                   // rtoa(gm%bmx%d(nc)) // " m")
   end if
   gm%bmx%la = la
+  ! 急勾配礫床の抵抗分割の D84(f_taupart = 1 で fluv_d84 を与えないとき。段 2。§122): 掃流砂は交換層の組成から
+  ! セルごとに求める(calc_fluvial_bmix_tp)。単一粒径と共用の側岸侵食の脚部は、初期の交換層の領域平均の
+  ! 組成の D84 の一定値を使う
+  if (gm%flv%d84map) then
+    d84 = bmix_dpct(nc, gm%bmx%d, fmean, 0.84)
+    gm%flv%d84inv = 1.0 / d84
+    call par_info("geomorph: resistance partition on: tau* x (1 + 6.76 (h/D84)^(-5/3))^(-e/2), D84 from the " &
+                  // "exchange-layer composition of each cell (bank toe: " // rtoa(d84) // " m of the initial " &
+                  // "mean composition), e = " // rtoa(list%taupart_e))
+  end if
   ! 代表粒径(側岸侵食則の脚部の τ* が使う。段 1 は初期の交換層の領域平均の d_m。plan §3.7)
   gm%d50 = gm%bmx%dref
   gm%flv%qbcoef = sqrt(gm%sgrav * p%gg * gm%d50**3)
@@ -141,6 +148,16 @@ module subroutine init_bedmix(gm, p, g, s, b, list)
   if (b%nqbclass > 0 .and. b%nqbclass /= nc) then
     call par_stop("list_bound_inflow: the bed-load feed has " // itoa(b%nqbclass) // " grain-size classes, " &
                   // "but bmix_d has " // itoa(nc))
+  end if
+
+  ! --- 浮遊砂との結合(f_suspend。粒径階 1 = 浮遊砂。段 2。§122) ---
+  if (gm%f_suspend > 0) then
+    gm%bmx%susp = .true.
+    allocate(gm%bmx%exrow(dcp%js:dcp%je), source = 0.0_real64)
+    allocate(gm%bmx%esrow(dcp%js:dcp%je), source = 0.0_real64)
+    allocate(s%hsx(dcp%js:dcp%je, 1:5), source = 0.0_real64)
+    call par_info("geomorph: suspended load = class 1 (d = " // rtoa(gm%bmx%d(1)) // " m): pickup x the class-1 " &
+                  // "fraction of the exchange layer, deposition into the exchange layer; class 1 also moves as bed load")
   end if
 
   ! --- 再開(私有 save) ---
@@ -275,12 +292,17 @@ module subroutine dispose_bedmix(gm, p, g, s)
   type(t_sysparam), intent(in) :: p
   type(t_geoinfo), intent(in) :: g
   type(t_state), intent(in) :: s
-  real(real64) :: v1(1:nbmixmax), vf, vo, res
+  real(real64) :: v1(1:nbmixmax), vf, vo, res, vx, hs1, ves, vin, vin2, vo1, vo2, vo4
   integer :: kc
   character(len=512) :: msg
 
   if (p%f_state_save > 0) call save_bedmix(gm, p, s)
   call bmix_stock(gm, g, s, v1)
+  vx = 0.0_real64
+  if (gm%bmx%susp) then
+    call par_sum_rows(gm%bmx%exrow, vx)
+    vx = vx / real(gm%wrk%ainv, real64) / real(gm%poroi, real64)
+  end if
   do kc = 1, gm%bmx%nc
     call par_sum_rows(gm%bmx%feedrow(:,kc), vf)
     call par_sum_rows(gm%bmx%voutrow(:,kc), vo)
@@ -289,10 +311,40 @@ module subroutine dispose_bedmix(gm, p, g, s)
           gm%bmx%d(kc), " m): stock", " initial ", gm%bmx%v0(kc), " final ", v1(kc), " feed ", vf, &
           " out ", vo, " m3 (solid)"
     call par_info(trim(msg))
-    write(msg, '(a,i0,a,es12.5,a)') "geomorph: bed mixture ledger class ", kc, " residual ", res, &
-          " m3 (final - initial - feed + out)"
+    if (gm%bmx%susp .and. kc == 1) then
+      ! 浮遊砂へ出た分(巻き上げ − 沈降。河床の側の重み)を収支に含める(§122)
+      res = res + vx
+      write(msg, '(a,es16.9,a)') "geomorph: bed mixture ledger class 1 to suspended load (pickup - deposition) ", &
+            vx, " m3 (solid, bed side)"
+      call par_info(trim(msg))
+      write(msg, '(a,es12.5,a)') "geomorph: bed mixture ledger class 1 residual ", res, &
+            " m3 (final - initial - feed + out + to suspended load)"
+    else
+      write(msg, '(a,i0,a,es12.5,a)') "geomorph: bed mixture ledger class ", kc, " residual ", res, &
+            " m3 (final - initial - feed + out)"
+    end if
     call par_info(trim(msg))
   end do
+  ! 浮遊砂(粒径階 1)の台帳: 在庫 Σ hs·gv·wfrac·A、浮遊砂の側で数えた交換、系外との出入り(advect_scalar・
+  ! 水位規定セルの記録場 s%hsx)。巻き上げと沈降の河床の側と浮遊砂の側は morfac = 1 で一致する(§122)
+  if (gm%bmx%susp) then
+    call bmix_hs_stock(gm, g, s, hs1)
+    call par_sum_rows(gm%bmx%esrow, ves)
+    call par_sum_rows(s%hsx(:,3), vin)
+    call par_sum_rows(s%hsx(:,5), vin2)
+    call par_sum_rows(s%hsx(:,1), vo1)
+    call par_sum_rows(s%hsx(:,2), vo2)
+    call par_sum_rows(s%hsx(:,4), vo4)
+    vin = vin + vin2
+    vo = vo1 + vo2 + vo4
+    res = hs1 - (gm%bmx%hs0 + ves + vin - vo)
+    write(msg, '(a,5(a,es16.9),a)') "geomorph: suspended load (class 1) ledger:", " stock initial ", gm%bmx%hs0, &
+          " final ", hs1, " pickup - deposition ", ves, " in ", vin, " out ", vo, " m3 (solid)"
+    call par_info(trim(msg))
+    write(msg, '(a,es12.5,a)') "geomorph: suspended load (class 1) ledger residual ", res, &
+          " m3 (final - initial - (pickup - deposition) - in + out)"
+    call par_info(trim(msg))
+  end if
   ! ランク局所の診断
   if (gm%bmx%nlimk > 0) then
     call par_warn("geomorph: bed mixture class supply limiter (exchange layer) fired in " // itoa(gm%bmx%nlimk) &
@@ -317,10 +369,44 @@ end subroutine
 subroutine bmix_first_step(gm, g, s)
   type(t_geomorph), intent(inout) :: gm
   type(t_geoinfo), intent(in) :: g
-  type(t_state), intent(in) :: s
+  type(t_state), intent(inout) :: s
   if (chn%have_width) allocate(gm%bmx%wf, source = chn%wfrac)
   call bmix_stock(gm, g, s, gm%bmx%v0)
   gm%bmx%stock0 = .true.
+  ! 浮遊砂の在庫(段 2。§122): ここから系外との出入りを数え直す(それまでの輸送の分は在庫に含まれる)
+  if (gm%bmx%susp) then
+    call bmix_hs_stock(gm, g, s, gm%bmx%hs0)
+    s%hsx(:,:) = 0.0_real64
+  end if
+end subroutine
+
+
+!----------------------------------------------------------------------
+! 浮遊砂(粒径階 1)の在庫 Σ hs·gv·wfrac·A(固体 m3。全域。決定的な総和。advect_scalar の記録場と同じ重み)
+!----------------------------------------------------------------------
+subroutine bmix_hs_stock(gm, g, s, v)
+  type(t_geomorph), intent(in) :: gm
+  type(t_geoinfo), intent(in) :: g
+  type(t_state), intent(in) :: s
+  real(real64), intent(out) :: v
+  real(real64), allocatable :: rows(:)
+  integer :: i, j
+  real :: w
+
+  allocate(rows(dcp%js:dcp%je), source = 0.0_real64)
+  !$omp parallel do schedule(static) private(i, j, w)
+  do j = dcp%js, dcp%je
+    do i = g%wx(1,j), g%wx(2,j)
+      if (g%x(i,j) <= 0) cycle
+      if (g%sw(i,j) > 0) cycle
+      w = 1.0
+      if (allocated(gm%bmx%wf)) w = gm%bmx%wf(i,j)
+      rows(j) = rows(j) + real(s%hs(i,j), real64) * real(s%gv(i,j), real64) * real(w, real64)
+    end do
+  end do
+  !$omp end parallel do
+  call par_sum_rows(rows, v)
+  v = v * real(g%dx, real64) * real(g%dy, real64)
 end subroutine
 
 
@@ -937,6 +1023,265 @@ end subroutine
 
 
 !----------------------------------------------------------------------
+! calc_fluvial_bmix の写し: 急勾配礫床の抵抗分割の D84 を交換層の組成から求める(f_taupart = 1 で fluv_d84 を
+!   与えないとき。段 2。§122)。ステップの頭にセルごとの D84(bmix_dpct)を帯±ハロで作り、エッジの値は d_m と
+!   同じく両セルの平均(片側の土層厚が 0 ならもう片側)、開境界の面は自セルの値で φ(h/D84) を掛ける
+!   (taufac_h の代わりに taupart_phi)。calc_fluvial_bmix との違いは D84 の場を作る数行と base の 2 か所だけ。
+!   有効掃流力の写し calc_fluvial_bmix_te とは選択子(f_taupart = 1 と 2)が排他なので分けた(1 つの写しに
+!   同居させると、-Ofast のコード生成が変わって有効掃流力の結果が最終桁で変わった。§122.2)。
+!   calc_fluvial_bmix のループ 1 を変えるときは、ここも同じく変える
+!----------------------------------------------------------------------
+module subroutine calc_fluvial_bmix_tp(gm, p, g, s, dts)
+  type(t_geomorph), intent(inout) :: gm
+  type(t_sysparam), intent(in) :: p
+  type(t_geoinfo), intent(in) :: g
+  type(t_state), intent(inout) :: s
+  real, intent(in) :: dts
+  integer :: i, j, k, in, jn, jt, kc, nc, iu, ju
+  real :: ue, vve, hhe, rne, base, taus, tsc, tsce, qbs, gq, sdze, winvd, afx, dze, capk
+  real :: dxv, dyv, dirp0, dirp, ubar, vbar, re, gam, dme, d84e
+  real :: gqk(1:nbmixmax)
+  real, allocatable :: d84c(:,:)        ! セルごとの D84(帯±ハロ)
+  integer :: nclip, nfix
+  logical :: okc, okbank, ssh
+
+  nc = gm%bmx%nc
+  nclip = 0
+  nfix = 0
+  ssh = slope_shear_on()
+  if (.not. gm%bmx%stock0) call bmix_first_step(gm, g, s)
+
+  ! --- ステップ頭のハロ交換(calc_fluvial と同じ理由) ---
+  call par_halo_cell(s%h)
+  call par_halo_cell(s%u)
+  call par_halo_cell(s%v)
+  call par_halo_cell(s%vv)
+  if (gm%flv%f_sec) then
+    call eval_secflow_bmix(gm, p, g, s)
+    call par_halo_cell(gm%flv%rsec)
+  end if
+  ! 交換層の平均粒径(帯±ハロ。組成のハロは前回の適用・給砂の末尾で交換済み)
+  call bmix_update_dm(gm, s)
+  ! セルごとの D84(帯±ハロ。組成のハロは交換済みなので通信は要らない。§122)
+  allocate(d84c(dcp%ish:dcp%ieh, dcp%jsh:dcp%jeh))
+  !$omp parallel do schedule(static) private(i, j)
+  do j = dcp%jsh, dcp%jeh
+    do i = dcp%ish, dcp%ieh
+      d84c(i,j) = bmix_dpct(nc, gm%bmx%d, s%bmf(i,j,1:nc), 0.84)
+    end do
+  end do
+  !$omp end parallel do
+
+  ! --- ループ1: エッジの粒径階ごとの掃流砂フラックス(各成分の書き手は一意) ---
+  jt = min(dcp%je + 1, dcp%jeh)
+  !$omp parallel do schedule(static) reduction(+: nclip, nfix) &
+  !$omp   private(i, j, k, in, jn, kc, iu, ju, okc, okbank, ue, vve, hhe, rne, base, taus, tsc, tsce, &
+  !$omp           qbs, gq, sdze, winvd, afx, dxv, dyv, dirp0, dirp, ubar, vbar, re, gam, dme, d84e, gqk, dze, capk)
+  do j = dcp%js, jt
+    do i = g%wx(1,j), g%wx(2,j)
+      if (g%x(i,j) <= 0) cycle
+      okc = (g%sw(i,j) <= 0)
+      do k = 1, 4
+        in = i + din(k)
+        jn = j + djn(k)
+        gqk(1:nc) = 0.0
+        if (okc .and. g%x(in,jn) > 0) then
+          if (g%sw(in,jn) <= 0) then
+            okbank = .true.
+            if (g%bank_active) then
+              okbank = ((g%rw(i,j) > 0) .eqv. (g%rw(in,jn) > 0))
+            end if
+            vve = (s%vv(i,j) + s%vv(in,jn)) / 2
+            hhe = (s%h(i,j) + s%h(in,jn)) / 2
+            if (okbank .and. vve > 0.0 .and. hhe > p%dd) then
+              ue = (s%u(i,j) + s%u(in,jn)) / 2 * gm%flv%ex(k) &
+                 + (s%v(i,j) + s%v(in,jn)) / 2 * gm%flv%ey(k)
+              hhe = max(hhe, p%dv)
+              rne = (g%rn(i,j) + g%rn(in,jn)) / 2
+              ! 粒径によらない部分(τ*_k = base / d_k。calc_fluvial と同じ閉じと補正)
+              ! 抵抗分割の D84 はセルごとの組成からの値(d_m と同じ平均の取り方。§122)
+              if (s%sd(i,j) <= 0.0) then
+                d84e = d84c(in,jn)
+              else if (s%sd(in,jn) <= 0.0) then
+                d84e = d84c(i,j)
+              else
+                d84e = 0.5 * (d84c(i,j) + d84c(in,jn))
+              end if
+              base = taupart_phi(gm%flv, hhe, d84e) * rne**2 * vve**2 / (gm%sgrav * hhe**(1.0/3.0))
+              if (ssh) base = base * slope_shear_factor_e(g, s, i, j, in, jn)
+              ! 遮蔽係数の d_m は両セルの平均。片側の土層厚が 0(岩盤・固定床)ならもう片側(plan §3.2)
+              if (s%sd(i,j) <= 0.0) then
+                dme = s%bmdm(in,jn)
+              else if (s%sd(in,jn) <= 0.0) then
+                dme = s%bmdm(i,j)
+              else
+                dme = 0.5 * (s%bmdm(i,j) + s%bmdm(in,jn))
+              end if
+              ! 向きの補正のうち粒径階によらない部分(t̂ + r n̂ の射影)
+              if (gm%flv%f_dir) then
+                ubar = (s%u(i,j) + s%u(in,jn)) / 2
+                vbar = (s%v(i,j) + s%v(in,jn)) / 2
+                dxv = ubar / vve
+                dyv = vbar / vve
+                if (gm%flv%f_sec) then
+                  re = (gm%flv%rsec(i,j) + gm%flv%rsec(in,jn)) / 2
+                  dxv = dxv - re * vbar / vve
+                  dyv = dyv + re * ubar / vve
+                end if
+                dirp0 = dxv * gm%flv%ex(k) + dyv * gm%flv%ey(k)
+              else
+                dirp0 = ue / vve
+              end if
+              sdze = 0.0
+              do kc = 1, nc
+                taus = base / gm%bmx%d(kc)
+                tsc = gm%tausc * bmix_xi(gm%bmx%hiding, gm%bmx%d(kc) / dme)
+                if (taus <= tsc) cycle
+                dirp = dirp0
+                if (gm%flv%f_dir .and. gm%flv%f_slope) then
+                  gam = gm%flv%gcoef * sqrt(tsc / taus)
+                  dirp = dirp - gam * (s%z(in,jn) - s%z(i,j)) * gm%flv%rdist(k)
+                end if
+                if (dirp == 0.0) cycle
+                qbs = bmix_qbs(gm%f_qbform, taus, tsc)
+                gq = qbs * gm%bmx%qc(kc) * dirp * gm%flv%wl(k)
+                ! 河岸面の遮断(§84.2)と供給側(風上)
+                if (gq > 0.0) then
+                  if (s%h(i,j) <= p%dd .or. s%z(in,jn) >= s%z(i,j) + s%h(i,j)) gq = 0.0
+                  iu = i
+                  ju = j
+                else
+                  if (s%h(in,jn) <= p%dd .or. s%z(i,j) >= s%z(in,jn) + s%h(in,jn)) gq = 0.0
+                  iu = in
+                  ju = jn
+                end if
+                if (gq == 0.0) cycle
+                ! 利用可能率 = 供給側の交換層の粒径階の割合(芦田・道上 式 (32) の p_i)
+                gq = gq * s%bmf(iu,ju,kc)
+                ! 定着(§84.6): 供給側の定着度で粒径階の限界を τ*c,k (1 + c_τ a) に上げる
+                if (gm%f_fixation > 0 .and. gq /= 0.0) then
+                  afx = s%fx(iu,ju)
+                  if (afx > 0.0) then
+                    tsce = tsc * (1.0 + gm%fix%ctau * afx)
+                    if (taus <= tsce) then
+                      gq = 0.0
+                    else
+                      gq = gq * (bmix_qbs(gm%f_qbform, taus, tsce) / qbs)
+                    end if
+                    nfix = nfix + 1
+                  end if
+                end if
+                ! 通過幅係数と動的振り替えの表(水と同じ。calc_fluvial と同じ)
+                if (chn%have_frw) gq = gq * chn%frw(k, i+die(k), j+dje(k))
+                if (chn%have_fwd) gq = gq * chn%fwd(k, i+die(k), j+dje(k))
+                ! 可動層クランプ(calc_fluvial と同じ。粒径階版): 供給側の交換層にある粒径階 k の量
+                ! L_e F_k を超える流出をこのエッジ単独で起こさない(複数エッジの同時流出の超過は
+                ! apply_edge_flux_bmix の粒径階ごとの供給量制限が受ける)
+                winvd = 1.0
+                if (chn%have_width) winvd = 1.0 / chn%wfrac(iu,ju)
+                dze = abs(gq) * dts * gm%wrk%ainv * winvd * gm%poroi
+                capk = min(gm%bmx%la, max(s%sd(iu,ju), 0.0)) * s%bmf(iu,ju,kc)
+                if (capk <= 0.0) then
+                  gq = 0.0
+                  dze = 0.0
+                else if (dze > capk) then
+                  gq = gq * (capk / dze)
+                  dze = capk
+                end if
+                sdze = sdze + dze
+                gqk(kc) = gq
+              end do
+              ! 変動上限(全粒径階の和で。流量段階のクリップ = 保存則は保つ)
+              if (sdze > gm%dzmax) then
+                gqk(1:nc) = gqk(1:nc) * (gm%dzmax / sdze)
+                nclip = nclip + 1
+              end if
+            end if
+          end if
+        end if
+        gm%bmx%qk(k, i+die(k), j+dje(k), 1:nc) = gqk(1:nc)
+        gm%wrk%q(k, i+die(k), j+dje(k)) = 0.0          ! 等移動度の流束(側岸侵食が足す)
+      end do
+
+      ! --- 開境界面(流出は自セルの組成で容量輸送。流入は 0 を書き、容量給砂は feed_pass_bmix) ---
+      if (bcs%have_open_bc .and. okc) then
+        do k = 1, 8
+          in = i + din(k)
+          jn = j + djn(k)
+          if (g%x(in,jn) > 0) cycle
+          if (.not. bc_open_face(in, jn)) cycle
+          gqk(1:nc) = 0.0
+          vve = s%vv(i,j)
+          hhe = s%h(i,j)
+          if (vve > 0.0 .and. hhe > p%dd) then
+            ue = s%u(i,j) * gm%flv%ex(k) + s%v(i,j) * gm%flv%ey(k)   ! 正 = 域外へ
+            if (ue > 0.0 .and. .not. bc_inflow_nooutflow(i, j, in, jn)) then
+              hhe = max(hhe, p%dv)
+              rne = g%rn(i,j)
+              base = taupart_phi(gm%flv, hhe, d84c(i,j)) * rne**2 * vve**2 / (gm%sgrav * hhe**(1.0/3.0))   ! §122
+              if (ssh) base = base * slope_shear_factor(g, s, i, j)
+              dme = s%bmdm(i,j)
+              winvd = 1.0
+              if (chn%have_width) winvd = 1.0 / chn%wfrac(i,j)
+              sdze = 0.0
+              do kc = 1, nc
+                taus = base / gm%bmx%d(kc)
+                tsc = gm%tausc * bmix_xi(gm%bmx%hiding, gm%bmx%d(kc) / dme)
+                if (taus <= tsc) cycle
+                qbs = bmix_qbs(gm%f_qbform, taus, tsc)
+                gq = qbs * gm%bmx%qc(kc) * (ue / vve) * gm%flv%wl(k) * s%bmf(i,j,kc)
+                if (gm%f_fixation > 0 .and. gq > 0.0) then
+                  afx = s%fx(i,j)
+                  if (afx > 0.0) then
+                    tsce = tsc * (1.0 + gm%fix%ctau * afx)
+                    if (taus <= tsce) then
+                      gq = 0.0
+                    else
+                      gq = gq * (bmix_qbs(gm%f_qbform, taus, tsce) / qbs)
+                    end if
+                    nfix = nfix + 1
+                  end if
+                end if
+                ! 流出: 供給側 = 自セルの可動層クランプ(粒径階版)
+                dze = abs(gq) * dts * gm%wrk%ainv * winvd * gm%poroi
+                capk = min(gm%bmx%la, max(s%sd(i,j), 0.0)) * s%bmf(i,j,kc)
+                if (dze > capk) then
+                  gq = gq * (max(capk, 0.0) / dze)
+                  dze = max(capk, 0.0)
+                end if
+                sdze = sdze + dze
+                gqk(kc) = gq
+              end do
+              if (sdze > gm%dzmax) then
+                gqk(1:nc) = gqk(1:nc) * (gm%dzmax / sdze)
+                nclip = nclip + 1
+              end if
+            end if
+          end if
+          ! 格納は所有者正準の向き(calc_fluvial と同じ)
+          gm%bmx%qk(ke(k), i+die(k), j+dje(k), 1:nc) = sign_e(k) * gqk(1:nc)
+          gm%wrk%q(ke(k), i+die(k), j+dje(k)) = 0.0
+        end do
+      end if
+    end do
+  end do
+  !$omp end parallel do
+
+  ! --- 側方 Neumann の辺(粒径階ごとに内側の流束を写す) ---
+  if (bcs%have_open_bc) call neumann_bed_pass_bmix(gm, g)
+  ! --- 容量給砂(粒径階ごと。流入面の供給 = 倍率 × 流入セルの粒径階の正味流出) ---
+  if (bcs%have_open_bc .and. gm%f_bcfeed > 0) call feed_pass_bmix(gm, p, g, s)
+  ! --- 側岸侵食(等移動度の流束として wrk%q に加算。脚部の τ* は代表粒径 gm%d50) ---
+  if (gm%f_berode > 0) call bank_edge_pass(gm, p, g, s, dts)
+  ! --- 粒径階ごとの供給量制限 → 発散 → z・sd と交換層・下層の更新 ---
+  call apply_edge_flux_bmix(gm, g, s, dts, .true.)
+
+  gm%bmx%nclip = gm%bmx%nclip + nclip
+  gm%bmx%nfix = gm%bmx%nfix + nfix
+end subroutine
+
+
+!----------------------------------------------------------------------
 ! 側方 Neumann の辺(neumann_bed_pass の粒径階版)
 !----------------------------------------------------------------------
 subroutine neumann_bed_pass_bmix(gm, g)
@@ -1274,6 +1619,141 @@ module subroutine apply_bedfeed_bmix(gm, g, s, b, dts)
   do kc = 1, nc
     call par_halo_cell(s%bmf(:,:,kc))
   end do
+end subroutine
+
+
+!----------------------------------------------------------------------
+! 浮遊砂の E-D 交換の混合粒径版(f_suspend と f_bedmix。段 2。§122。calc_suspend の写し)
+!   浮遊砂 hs は最も細かい粒径階 1(susp_d50 = d_1)。平衡濃度に交換層の粒径階 1 の割合 F_1 を掛け
+!   (利用可能率。f_bedfines の min(1, sf/L_a) と同じ考え方)、1 回の巻き上げは交換層にある粒径階 1 の量
+!   L_e F_1 まで(掃流砂の粒径階ごとの供給量制限と同じ)。沈降と乾いたセルへの繰り入れは交換層の粒径階 1 に
+!   入る(Hirano の界面の規則。bmix_update)。粒径階 1 は掃流砂としても動く(別の輸送形態として足し合わせる)。
+!   台帳は交換を河床の側(exrow。在庫と同じ重み)と浮遊砂の側(esrow。Σ Δhs·gv·wfrac·A)の両方で数える。
+!   z・sd の更新と地下水の容量の整合は calc_suspend と同じ。calc_suspend の浸食・沈降の式を変えるときは
+!   こちらも同じく変える(波浪場の攪拌・剥離深の拡散・細粒分の帳簿は混合粒径と併用停止なので写していない)
+!----------------------------------------------------------------------
+module subroutine calc_suspend_bmix(gm, p, g, s, dtw)
+  type(t_geomorph), intent(inout) :: gm
+  type(t_sysparam), intent(in) :: p
+  type(t_geoinfo), intent(in) :: g
+  type(t_state), intent(inout) :: s
+  real, intent(in) :: dtw       ! 水柱側の実効時間刻み(morfac を含まない)
+  integer :: i, j, kc, nc
+  real :: hh, taus, ceq, cc, fx, dzb, cap, fxg, afx, tsce, le, sd0, vc, w, wfh, dm, vclip
+  real :: a(1:nbmixmax), fa(1:nbmixmax), fb(1:nbmixmax)
+  real(real64) :: acell8
+  logical :: ssh                  ! 斜面に沿う底面せん断(f_gravity_correction = 2。§93)
+
+  nc = gm%bmx%nc
+  if (.not. gm%bmx%stock0) call bmix_first_step(gm, g, s)
+  ssh = slope_shear_on()
+  acell8 = real(g%dx, real64) * real(g%dy, real64)
+  vclip = 0.0
+  !$omp parallel do schedule(static) reduction(+: vclip) &
+  !$omp   private(i, j, kc, hh, taus, ceq, cc, fx, dzb, cap, fxg, afx, tsce, le, sd0, vc, w, wfh, dm, a, fa, fb)
+  do j = dcp%js, dcp%je
+    do i = g%wx(1,j), g%wx(2,j)
+      if (g%x(i,j) <= 0) cycle
+      if (g%sw(i,j) > 0) cycle
+      sd0 = s%sd(i,j)
+      le = min(gm%bmx%la, max(sd0, 0.0))
+      if (s%h(i,j) <= p%dd) then
+        ! 乾燥セル: 浮遊分を全量河床へ(交換層の粒径階 1 に入る)
+        if (s%hs(i,j) <= 0.0) cycle
+        fx = -s%hs(i,j)
+      else
+        ! 平衡濃度(粒径 d_1。浸食レート E = wf・ceq に相当する濃度換算)
+        hh = max(s%h(i,j), p%dv)
+        taus = g%rn(i,j)**2 * s%vv(i,j)**2 / (gm%sgrav * gm%sd50 * hh**(1.0/3.0))
+        if (ssh) taus = taus * slope_shear_factor(g, s, i, j)   ! 斜面に沿うせん断(§93)
+        ceq = 0.0
+        if (gm%f_esform == 1) then
+          if (taus > gm%stausc) ceq = gm%esa * (taus / gm%stausc - 1.0)
+        else
+          ceq = sed_ceq_itakura(gm%sgrav, p%gg, gm%sd50, gm%wf, taus)
+        end if
+        ! 定着(§84.8): calc_suspend と同じ
+        if (gm%f_fixation > 0 .and. ceq > 0.0) then
+          afx = s%fx(i,j)
+          if (afx > 0.0) then
+            if (gm%f_esform == 1) then
+              tsce = gm%stausc * (1.0 + gm%fix%ctau * afx)
+              ceq = 0.0
+              if (taus > tsce) ceq = gm%esa * (taus / tsce - 1.0)
+            else
+              ceq = ceq / (1.0 + gm%fix%ctau * afx)
+            end if
+          end if
+        end if
+        ! 利用可能率 = 交換層の粒径階 1 の割合 F_1(§122)
+        ceq = ceq * s%bmf(i,j,1)
+        cc = 0.0
+        if (s%hs(i,j) > 0.0) then
+          if (sct%have_sect) then
+            cc = s%hs(i,j) / sect_v(s%h(i,j), sct%sdep(i,j))
+          else
+            cc = s%hs(i,j) / s%h(i,j)
+          end if
+        end if
+        fx = gm%wf * (ceq - gm%beta * cc) * dtw
+        if (sct%have_sect) fx = fx * sect_sigma(s%h(i,j), sct%sdep(i,j))
+        if (fx > 0.0) then
+          ! 交換層にある粒径階 1 の量まで(河床側は ×morfac・poroi で減るため換算して制限)
+          fx = min(fx, le * s%bmf(i,j,1) / (gm%morfac * gm%poroi))
+        else
+          fx = max(fx, -max(s%hs(i,j), 0.0))    ! 沈降は浮遊量まで
+        end if
+        if (fx == 0.0) cycle
+      end if
+      s%hs(i,j) = s%hs(i,j) + fx
+      dzb = -fx * gm%morfac * gm%poroi
+      if (dzb < -max(sd0, 0.0)) dzb = -max(sd0, 0.0)
+      ! Hirano の交換(粒径階 1 だけが出入りする)
+      a(1:nc) = le * s%bmf(i,j,1:nc)
+      a(1) = a(1) + dzb
+      fa(1:nc) = s%bmf(i,j,1:nc)
+      fb(1:nc) = gm%bmx%fs(i,j,1:nc)
+      call bmix_update(nc, gm%bmx%la, sd0, dzb, a, fa, fb, vc)
+      s%bmf(i,j,1:nc) = fa(1:nc)
+      gm%bmx%fs(i,j,1:nc) = fb(1:nc)
+      dm = 0.0
+      do kc = 1, nc
+        dm = dm + fa(kc) * gm%bmx%d(kc)
+      end do
+      s%bmdm(i,j) = dm
+      ! 共動更新(z と sd が同じ Δz で動く。calc_suspend と同じ)
+      s%z(i,j) = s%z(i,j) + dzb
+      s%sd(i,j) = s%sd(i,j) + dzb
+      ! 台帳: 河床の側(在庫と同じ重み = 河道平面積率)と浮遊砂の側(gv·wfrac·A)
+      w = 1.0
+      if (allocated(gm%bmx%wf)) w = gm%bmx%wf(i,j)
+      vclip = vclip + vc * w / gm%wrk%ainv
+      gm%bmx%exrow(j) = gm%bmx%exrow(j) - real(dzb * w, real64)
+      wfh = 1.0
+      if (chn%have_width) wfh = chn%wfrac(i,j)
+      gm%bmx%esrow(j) = gm%bmx%esrow(j) + real(fx, real64) * real(s%gv(i,j), real64) * real(wfh, real64) * acell8
+      ! 浸食で地下水容量が現在の貯留を下回ったら、超過分を地表水へ渡す(calc_suspend と同じ)
+      if (s%gw_active) then
+        cap = s%sd(i,j) * g%sy0
+        if (s%hg(i,j) > cap) then
+          fxg = s%hg(i,j) - cap
+          s%hg(i,j) = cap
+          if (sect_cell(s, i, j)) then
+            call sect_add_vh(s, i, j, fxg * gw_to_h(s, i, j))
+          else
+            s%h(i,j) = s%h(i,j) + fxg * gw_to_h(s, i, j)
+          end if
+        end if
+      end if
+    end do
+  end do
+  !$omp end parallel do
+  gm%bmx%vclip = gm%bmx%vclip + vclip
+  ! 次の掃流砂の更新が近傍の組成を読むので、交換層の組成と d_m をハロまで揃える
+  do kc = 1, nc
+    call par_halo_cell(s%bmf(:,:,kc))
+  end do
+  call bmix_update_dm(gm, s)
 end subroutine
 
 
