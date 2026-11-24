@@ -438,6 +438,9 @@ $`S_{\rm red}/S = (f_0/f_{\rm tot})^{e/2}`$ を示しました。Nitsche ら[^ni
 - **交換層厚の既定**: 初期の交換層の(領域平均の)組成の $`D_{90}`$ の 2 倍。文献の目安は表層の $`D_{90}`$ の
   1〜2 倍[^parker04]で、その上端です(Parker 2008[^parker08] は係数を 1 程度の校正値とし、平野[^hirano71] は最大
   粒径程度の 1 cm を使っています)。厚いほど陽解法の制限と悪設定に強く、アーマー化の応答は遅くなります。
+  これらは礫床の目安で、砂堆のある砂床では、砂堆の通過で混ざる深さとして交換層厚を砂堆の高さに結びつける
+  扱いがあります[^chavarrias19]。地形の加速(morfac)が大きいと既定の厚さでは粒径階ごとの供給量制限が多く
+  働きます(examples の meander・meander_cutoff・delta の試しの計算では 5 cm にして発動が 1/10〜1/28)。
 - **精度の限界**: (1) 交換層厚 $`L_a`$ に結果が依存します(経験的な数値パラメータ)。(2) Hirano 型の交換層の
   式は、細かい下層へ掘り込む条件などで双曲型でなくなり(悪設定)、格子を細かくすると振動が速く育つことが
   知られています[^ribberink87][^stecca14][^chavarrias18]。砂と礫の 2 峰性の河床で起こりえます。兆候は、
@@ -1004,6 +1007,7 @@ $`\cos\theta\,C\rho_s D^2 (u/h)^2`$ ÷ 岩の抵抗」に比例させる則を�
 [^ribberink87]: Ribberink, J. S. (1987): *Mathematical modelling of one-dimensional morphological changes in rivers with non-uniform sediment*. 博士論文, Delft University of Technology(Communications on Hydraulic and Geotechnical Engineering, Report No. 87-2)。<https://resolver.tudelft.nl/uuid:bdfc1519-a71d-4752-83f7-3ebf1bb890e9>(交換層の式の悪設定)
 [^stecca14]: Stecca, G., Siviglia, A. and Blom, A. (2014): Mathematical analysis of the Saint-Venant-Hirano model for mixed-sediment morphodynamics. *Water Resour. Res.*, 50(10), 7563–7589. doi:10.1002/2014WR015251
 [^chavarrias18]: Chavarrías, V., Stecca, G. and Blom, A. (2018): Ill-posedness in modeling mixed sediment river morphodynamics. *Adv. Water Resour.*, 114, 219–235. doi:10.1016/j.advwatres.2018.02.011
+[^chavarrias19]: Chavarrías, V., Arkesteijn, L. and Blom, A. (2019): A well-posed alternative to the Hirano active layer model for rivers with mixed-size sediment. *J. Geophys. Res. Earth Surf.*, 124(11), 2491–2520. doi:10.1029/2019JF005081(§2.1: 交換層厚は河床の高さの変動の確率密度の大部分(例えば 95 %)を覆う幅で、砂堆を解かないモデルでは砂堆の高さに結びつく)
 [^mpm48]: Meyer-Peter, E. and Müller, R. (1948): Formulas for bed-load transport. *Proc. 2nd Meeting IAHSR*, Stockholm, 39–64.
 [^rickenmann11]: Rickenmann, D. and Recking, A. (2011): Evaluation of flow resistance in gravel-bed rivers through a large field data set. *Water Resour. Res.*, 47, W07538. doi:10.1029/2010WR009793(基準の抵抗 式 (23)、抵抗分割と流砂量 式 (32))
 [^ferguson07]: Ferguson, R. (2007): Flow resistance equations for gravel- and boulder-bed streams. *Water Resour. Res.*, 43, W05427. doi:10.1029/2006WR005422(Rickenmann & Recking 2011 の文献表と式 (10a) による。本文は未読)

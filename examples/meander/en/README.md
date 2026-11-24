@@ -363,9 +363,12 @@ reads them from the ledgers in the screen output.)
   the streamline curvature, without the lag with which it develops after entering a bend (the
   non-equilibrium adaptation length; in the form of Struiksma et al. 1985, about 10–20 times the
   depth for a Chézy coefficient C = 50 m^1/2/s).
-- **Two grain components in the bed**: bedload and suspended sediment have one grain size each,
-  with no mixed-size exchange layer and no vertical stratigraphy (the ledger of fines treats
-  buried fines as available for entrainment too).
+- **Two grain components in the bed**: in the configurations of this example bedload and suspended
+  sediment have one grain size each, and sorting by grain size and armouring are not represented
+  (the ledger of fines treats buried fines as available for entrainment too). The mixed-size bed
+  (`f_bedmix`) can divide bedload into size classes ("Starting points for sensitivity experiments"),
+  but below the exchange layer there is a single uniformly mixed layer with no vertical
+  stratigraphy.
 - **The speed of meander development is not compared with real rivers**: in 200 h the amplitude of
   the wet belt grows from 19 m to 25–51 m (except the configuration with the ledger of fines,
   where water remains on the floodplain) and the mechanisms of outer-bank retreat, inner-bank
@@ -413,6 +416,32 @@ reads them from the ledgers in the screen output.)
   collapse.
 - `fluv_bcfeed_fac`: factor of the capacity feed (0 = no feed, 1 = the bed at the inlet held
   fixed).
+- **Mixed grain sizes** (`f_bedmix`; [mixed grain sizes](../../../docs/en/users_guide/geomorph.md#mixed-grain-sizes-f_bedmix)):
+  dividing bedload into size classes lets you study, with the output `Dm` (mean grain size of the
+  exchange layer), the lateral sorting in the bends (coarser grains go down the transverse slope more
+  easily, so coarse grains gather in the pools at the outer banks and fine grains on the bars at the
+  inner banks; Parker & Andrews 1985) and armouring, in which the bed surface of the upstream reach
+  without feed coarsens and the lowering slows down.
+  - Example settings: add `f_bedmix = 1`, `bmix_d = 0.0005, 0.001, 0.002`,
+    `bmix_frac0 = 0.25, 0.5, 0.25` and `bmix_la = 0.05` to param.txt (`fluv_d50` is then not used).
+  - Exchange-layer thickness `bmix_la`: with the default (twice the D90 of the initial exchange
+    layer = 3 mm), the landform acceleration of this example (morfac 50) makes the outflow in one
+    landform update easily exceed the content of the exchange layer, and the per-class supply
+    limiter ("class supply limiter" at the end of the run) fires often. In a trial run of 25 h of
+    landform time, the change of the bed differs widely from the single-size run although the mean
+    grain size (1.1 mm) is close to the single size (1 mm) (correlation 0.32), and the grid-scale
+    roughness doubles. With 5 cm the limiter fires 1/16 as often and the change of the bed is close
+    to the single-size run (correlation 0.97). For sand beds with dunes, there is a practice of
+    relating the exchange-layer thickness to the dune height (Chavarrías et al. 2019). The thicker
+    the layer, the slower the response of the composition (armouring).
+  - Combinations: in the suspended-sediment configuration (param_fixsusp.txt) the finest size class
+    becomes the suspended sediment (set `bmix_d(1)` equal to `susp_d50`, 0.0002 m). The slump-block
+    configuration (param_cohesive_slump.txt; bank mode `rf_bank`) and the configuration with the
+    ledger of fines (param_fixsuspfines.txt) cannot be combined with it; the run stops at
+    initialisation.
+  - The computing time is about 1.1 times that of the single size. It has been checked that the
+    runs go through and that the per-class balances close, but how the sorting and armouring appear
+    has not been evaluated.
 
 ## References
 
@@ -424,11 +453,18 @@ reads them from the ledgers in the screen output.)
   evidence for the conditions necessary to sustain meandering in coarse-bedded rivers.
   *Proc. Natl. Acad. Sci. USA*, 106(40), 16936–16941. doi:10.1073/pnas.0909417106 (checked
   against the abstract)
+- Chavarrías, V., Arkesteijn, L. and Blom, A. (2019): A well-posed alternative to the Hirano active
+  layer model for rivers with mixed-size sediment. *J. Geophys. Res. Earth Surf.*, 124(11),
+  2491–2520. doi:10.1029/2019JF005081 (the relation between the exchange-layer thickness and the
+  dune height is in §2.1)
 - Engelund, F. (1974): Flow and bed topography in channel bends. *J. Hydraul. Div. ASCE*,
   100(HY11), 1631–1648. (Cited by Asahi et al. (2013) as the source of N* = 7; the text itself
   has not been checked)
 - Hasegawa, K. (1989): Universal bank erosion coefficient for meandering rivers. *J. Hydraul.
   Eng.*, 115(6), 744–765.
+- Parker, G. and Andrews, E. D. (1985): Sorting of bed load sediment by flow in meander bends.
+  *Water Resour. Res.*, 21(9), 1361–1373. doi:10.1029/WR021i009p01361 (checked against the
+  abstract)
 - Parker, G., Shimizu, Y., Wilkerson, G. V., Eke, E. C., Abad, J. D., Lauer, J. W., Paola, C.,
   Dietrich, W. E. and Voller, V. R. (2011): A new framework for modeling the migration of
   meandering rivers. *Earth Surf. Process. Landforms*, 36(1), 70–86. (checked against the

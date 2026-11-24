@@ -327,7 +327,16 @@ and the thickness of the erodible soil layer (`sd0` or `fn_sd`). The grain sizes
   composition `inflow_qbfrac` to the total (`inflow_qb`, `fn_inflow_qb`) or give a series per class with
   `fn_inflow_qbmix` ([Boundary conditions](boundary.md)). Without it the run stops at initialization (the
   feed is given data, so there is no default). The capacity feed (`fluv_bcfeed = 1`) enters with the
-  composition of the inflow cell (the bed and the composition at the inlet stay fixed).
+  composition of the inflow cell (for bed load, the bed and the composition at the inlet stay fixed).
+  The amount of the feed, however, is set by the outflow before the per-class supply limiter, and the
+  limiter cuts only the outflow, so when the limiter fires in an inflow cell the difference piles up at
+  the inlet (likely with a thin exchange layer; check the "class supply limiter" at the end of the run
+  and the ground elevation at the inlet, and thicken `bmix_la`. In a trial run of
+  [examples/delta](../../../examples/delta/en/README.md#entry-points-for-sensitivity-experiments), up to
+  8.4 m piled up in the inflow cells with the default of 1.6 mm, and nothing with 5 cm). The
+  equilibrium-concentration feed of suspended sediment (`inflow_cs_eq`) sends in the equilibrium
+  concentration without the class-1 fraction (the entrainment in the inflow cell is multiplied by the
+  fraction, so the inflow and the bed are not in balance).
 - **Combinations**: it works with bank erosion, repose collapse, depth-dependent creep and wave-driven
   longshore transport (all moved with the composition of the supplying cell's exchange layer), rockfall and
   talus (next items), fixation, channel width and the roughness partitions. For the steep-gravel partition

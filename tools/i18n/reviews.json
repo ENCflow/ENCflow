@@ -311,9 +311,9 @@
     {
       "source": "docs/users_guide/geomorph.md",
       "target": "docs/en/users_guide/geomorph.md",
-      "source_sha256": "fc94c474feedcdeb7aa926ce01d10e811afb6a4f040068ac073be2db223ae645",
-      "target_sha256": "3db73967bc2cc80a2fb1674d5fa1ae91ab001d3b6030f6b0b67bfcf6c46d642e",
-      "reviewer": "Claude (Claude Code session; mixed-size stage 2b (rockfall and talus carried from the top of the column with rf_frac for bedrock debris, depth-dependent creep and longshore transport with the supplying exchange-layer composition, swash deferred): the new and changed parts written in both languages in the same work and compared side by side; parameter names, messages and numbers checked against the code and the test runs)",
+      "source_sha256": "5450f85ac69ec7f7fa6b50f52b1112e7900b5f32f4b2b38cb262ac4f703e9e22",
+      "target_sha256": "e783f4af40a4304b74189af6757d75db9ace3acf3dbfe3b4973c7a96697eec3c",
+      "reviewer": "Claude (Claude Code session; changed sections compared side by side with the Japanese source; numbers checked against the trial runs)",
       "method": "assistant",
       "reviewed_on": "2026-11-24"
     },
@@ -482,9 +482,9 @@
     {
       "source": "docs/users_guide/sediment.md",
       "target": "docs/en/users_guide/sediment.md",
-      "source_sha256": "ae580f65eff4c7a3c63ec35f3ae20cdfd70b7a471ae5e2e77b2fe2ab08190bd9",
-      "target_sha256": "58d39c201dbb6d6f5a3cfd00e9c8c46b08430160c012efbba1195bae4a2c607a",
-      "reviewer": "Claude (Claude Code session; mixed-size stage 2b (rockfall and talus carried from the top of the column with rf_frac for bedrock debris, depth-dependent creep and longshore transport with the supplying exchange-layer composition, swash deferred): the new and changed parts written in both languages in the same work and compared side by side; parameter names, messages and numbers checked against the code and the test runs)",
+      "source_sha256": "918fa5736e75412580ffc979b9e8550407ad55b83450ec28d51b88f8ce424fa8",
+      "target_sha256": "c17e01e1d5f22b486532e301e56fff04468c58b7d8853cd05337672de9b60db6",
+      "reviewer": "Claude (Claude Code session; changed sections compared side by side with the Japanese source; numbers checked against the trial runs)",
       "method": "assistant",
       "reviewed_on": "2026-11-24"
     },
@@ -1850,11 +1850,11 @@
     {
       "source": "examples/debris_dam/README.md",
       "target": "examples/debris_dam/en/README.md",
-      "source_sha256": "bf8e497a446b9758746f0c44674c7163b04e853cfd81118d665564be1362a86f",
-      "target_sha256": "c430bcce57227f437f76320ac37e103e6b0ac2f79c5b32ba78210d47aa3ca53d",
-      "reviewer": "Claude (Claude Code session; the parts changed for the five cases with f_slide_noflow = 2: settings paragraph, case table, case counts, the note on the judged depth, the new section on soil left under a thin film with tables generated from the same results in both languages, and the grid-spacing paragraph; both diffs were read side by side)",
+      "source_sha256": "b0784253c4d063ff9ce1a285be7783cf7aaed54cfcd6628c2bf9cf938da25120",
+      "target_sha256": "1e14da94108f7d0f7dfda63e0eb7701eec653b01172b73d6e3193d10d299d0d6",
+      "reviewer": "Claude (Claude Code session; changed sections compared side by side with the Japanese source; numbers checked against the trial runs)",
       "method": "assistant",
-      "reviewed_on": "2026-11-23"
+      "reviewed_on": "2026-11-24"
     },
     {
       "source": "examples/debris_dam/figs/breach.png",
@@ -2057,11 +2057,11 @@
     {
       "source": "examples/delta/README.md",
       "target": "examples/delta/en/README.md",
-      "source_sha256": "3cd98112b16dcb8d8d81685070a1af1437a914a99a4530a3fcc63f55d1da92a7",
-      "target_sha256": "f3bec0f3b9f43418561d61fab9c27a2506a7e788bcffda8f081d9bd9bd9c4946",
-      "reviewer": "Claude (Claude Code session; corrected both versions in parallel against the inputs, scripts and committed figures, and compared the edited passages and numbers)",
+      "source_sha256": "642b08cbd28f47c639cebeb8defa084a732e771ca36e599c4a6fe4f82b602c63",
+      "target_sha256": "ae2efcb1ab26e4ab58728bb61a1374bca43e86eff8f199269aff029e336b2f63",
+      "reviewer": "Claude (Claude Code session; changed sections compared side by side with the Japanese source; numbers checked against the trial runs)",
       "method": "assistant",
-      "reviewed_on": "2026-11-08"
+      "reviewed_on": "2026-11-24"
     },
     {
       "source": "examples/delta/figs/mechanism.png",
@@ -2597,11 +2597,11 @@
     {
       "source": "examples/meander/README.md",
       "target": "examples/meander/en/README.md",
-      "source_sha256": "9ae34d4df1b104c0c73be7b3e96d70ce99de3a6f3d4e36f4181bfe37c3d599c0",
-      "target_sha256": "0686e42166336b4129e4af8be4ae099f61ffd5fe02e57cb05a2105886f875667",
-      "reviewer": "Claude (Claude Code session; merge of the f_advection_donor branch into main: the branch's rerun values with main's qualification 'the most of the constant-discharge configurations' (the claim 'largest width of all configurations' dropped, as the fines ledger case reaches 93.1 m) and main's corrected caption of the metrics figure; Japanese and English compared)",
+      "source_sha256": "7ff6d738f2023068100da78871b5222b8d05e84c1846f63cf91814617988568f",
+      "target_sha256": "fde546345f08e136f9a547374218f4e07d935063242534aa386f6dedcda7dae5",
+      "reviewer": "Claude (Claude Code session; changed sections compared side by side with the Japanese source; numbers checked against the trial runs)",
       "method": "assistant",
-      "reviewed_on": "2026-11-09"
+      "reviewed_on": "2026-11-24"
     },
     {
       "source": "examples/meander/figs/feed.png",
@@ -2669,11 +2669,11 @@
     {
       "source": "examples/meander_cutoff/README.md",
       "target": "examples/meander_cutoff/en/README.md",
-      "source_sha256": "797995adf11a3901fd8436fb7f7882fc825fbfa5b74c0e8a552324d567374ce7",
-      "target_sha256": "6a910da45fd8a68591cd7a6df41f8b5ed8ade6a9e05ea56a1d30fdb2ef87c7b6",
-      "reviewer": "Claude (Claude Code session; merge of the f_advection_donor branch into main: the branch's rerun values kept with main's corrected caption of the setup figure (narrowest land 22 m between the limbs and between the loops); Japanese and English compared)",
+      "source_sha256": "24fdc2290f0dbab6425f23bfa254b80b95a6c6212e280f91f4426cae8f2d2d15",
+      "target_sha256": "3321d1cb24224b4b08fbff34caf89305b6a00e0899a40ca704c7a21915e9cea7",
+      "reviewer": "Claude (Claude Code session; changed sections compared side by side with the Japanese source; numbers checked against the trial runs)",
       "method": "assistant",
-      "reviewed_on": "2026-11-09"
+      "reviewed_on": "2026-11-24"
     },
     {
       "source": "examples/meander_cutoff/figs/final_slump_fines.png",

@@ -573,7 +573,11 @@ load (the design document is docs/mixed_sediment_plan.md).
   composition. The guidance in the literature is 1 to 2 times the $`D_{90}`$ of the surface layer[^parker04]; the
   default is its upper end (Parker 2008[^parker08] treats the factor as an order-one calibration value, and
   Hirano[^hirano71] used 1 cm, about the largest grain size). A thicker layer is more robust against the
-  explicit-step limit and ill-posedness, and makes the armouring response slower.
+  explicit-step limit and ill-posedness, and makes the armouring response slower. These are guidelines
+  for gravel beds; for sand beds with dunes, there is a practice of relating the exchange-layer thickness
+  to the dune height, as the depth mixed by passing dunes[^chavarrias19]. With a large landform acceleration
+  (morfac) the per-class supply limiter fires often with the default thickness (in trial runs of the
+  examples meander, meander_cutoff and delta, 5 cm made it fire 1/10 to 1/28 as often).
 - **Limits of accuracy**: (1) the results depend on the exchange-layer thickness $`L_a`$ (an empirical,
   numerical parameter). (2) The Hirano active-layer equations can lose hyperbolicity (become ill-posed), for
   example when the bed degrades into a finer substrate, and oscillations are then known to grow faster as the
@@ -1283,6 +1287,7 @@ The labels in the Basis column are explained in [How to read the basis of a defa
 [^ribberink87]: Ribberink, J. S. (1987): *Mathematical modelling of one-dimensional morphological changes in rivers with non-uniform sediment*. Doctoral thesis, Delft University of Technology (Communications on Hydraulic and Geotechnical Engineering, Report No. 87-2). https://resolver.tudelft.nl/uuid:bdfc1519-a71d-4752-83f7-3ebf1bb890e9 (ill-posedness of the exchange-layer equations)
 [^stecca14]: Stecca, G., Siviglia, A. and Blom, A. (2014): Mathematical analysis of the Saint-Venant-Hirano model for mixed-sediment morphodynamics. *Water Resour. Res.*, 50(10), 7563–7589. doi:10.1002/2014WR015251
 [^chavarrias18]: Chavarrías, V., Stecca, G. and Blom, A. (2018): Ill-posedness in modeling mixed sediment river morphodynamics. *Adv. Water Resour.*, 114, 219–235. doi:10.1016/j.advwatres.2018.02.011
+[^chavarrias19]: Chavarrías, V., Arkesteijn, L. and Blom, A. (2019): A well-posed alternative to the Hirano active layer model for rivers with mixed-size sediment. *J. Geophys. Res. Earth Surf.*, 124(11), 2491–2520. doi:10.1029/2019JF005081 (§2.1: the active layer thickness is the range covering most (e.g. 95 %) of the probability density of the bed elevation, and in a model that does not resolve bedforms it is related to the bedform height)
 [^mpm48]: Meyer-Peter, E. and Müller, R. (1948): Formulas for bed-load transport. *Proc. 2nd Meeting IAHSR*, Stockholm, 39–64.
 [^rickenmann11]: Rickenmann, D. and Recking, A. (2011): Evaluation of flow resistance in gravel-bed rivers through a large field data set. *Water Resour. Res.*, 47, W07538. doi:10.1029/2010WR009793 (base level resistance eq. (23); resistance partitioning and bed load eq. (32))
 [^ferguson07]: Ferguson, R. (2007): Flow resistance equations for gravel- and boulder-bed streams. *Water Resour. Res.*, 43, W05427. doi:10.1029/2006WR005422 (from the reference list and eq. (10a) of Rickenmann & Recking 2011; the paper itself not read)

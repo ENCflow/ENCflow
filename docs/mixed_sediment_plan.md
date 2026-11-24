@@ -387,7 +387,16 @@
   gravel bed rivers: model development and illustration. Water Resources Research 30(7), 2251–2260
   (照合待ち)。
 - Parker, G. & Andrews, E. D. (1985) Sorting of bed load sediment by flow in meander bends. Water
-  Resources Research 21(9), 1361–1373(照合待ち)。
+  Resources Research 21(9), 1361–1373。doi:10.1029/WR021i009p01361。書誌と要旨を USGS の出版物のページで
+  確認(粒径階ごとの連続式と湾曲の流れの簡単な扱いによる平衡の分級で、湾曲の頂点の近くで粗粒の位置が内岸から
+  外岸へ移る)。本文は未見(examples/meander の README は要旨で確認として引く)。
+- Chavarrías, V., Arkesteijn, L. & Blom, A. (2019) A well-posed alternative to the Hirano active layer model for
+  rivers with mixed-size sediment. Journal of Geophysical Research: Earth Surface 124(11), 2491–2520。
+  doi:10.1029/2019JF005081。本文(TU Delft のリポジトリの公開版)の §2.1 で確認: 交換層厚は河床の高さの確率密度の
+  大部分(例えば 95 %。Blom 2008、Ribberink 1987)を覆う幅で、砂堆を解かないモデルでは砂堆の高さに結びつく。
+  序論では、交換層厚は表層の代表粒径(Petts ら 1989、Rahuel ら 1989)か河床形態の寸法(Armanini & di Silvio
+  1988、Deigaard & Fredsøe 1978)に結びつけるのが普通とする。「砂堆の高さの半分」のような係数は書いていない
+  (sediment.md の交換層厚の既定の項と examples/meander の README が引く)。
 - Wilcock, P. R. & Crowe, J. C. (2003) Surface-based transport model for mixed-size sediment. Journal of
   Hydraulic Engineering 129(2), 120–128(段 3 の候補。照合待ち)。
 - Wilcock, P. R. & Kenworthy, S. T. (2002) A two-fraction model for the transport of sand/gravel mixtures.
