@@ -428,8 +428,8 @@
     {
       "source": "docs/users_guide/paddy.md",
       "target": "docs/en/users_guide/paddy.md",
-      "source_sha256": "a08946823ab853da1a1c74f0ee0400a9efd546b451c5dcf85eaf9502505989da",
-      "target_sha256": "915608fbebd15cb7cedcef74efc91f41f1e98490dd3003b9a4003b4f5d671481",
+      "source_sha256": "d5db750cfc885d6297eea500a49f07284c57effd79cca66a2a0803b48db46c64",
+      "target_sha256": "50c8fd201f0bf698431270a094846c2d5a535d9fd918ecafa5762181299c07d3",
       "reviewer": "Claude (Claude Code session; full-text content and lexical review against the Japanese source; numbers checked against the test/paddy runs)",
       "method": "assistant",
       "reviewed_on": "2026-11-24"

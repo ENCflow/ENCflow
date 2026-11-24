@@ -133,7 +133,7 @@ Q_f = C\int_{z_o}^{\min(H,\ z_o + \text{height})} b(y)\sqrt{2g\,(H - y)}\,dy
 This form also holds at low heads where only part of the hole is under water[^yoshikawa2010][^miyazu2012]; when H
 is well above the height of the hole it approaches $`C\,a\sqrt{2g\,(H - \text{centre of the hole})}`$[^maff2026].
 When the water depth downstream is above the bottom of the hole, the smaller of $`Q_f`$ and the submerged formula
-$`Q_s = C\,A_w\sqrt{2g\,(H - h_D)}`$ ($`A_w`$ is the area of the hole below H)[^miyazu2012][^miyazu2020] is taken (the
+$`Q_s = C\,A_w\sqrt{2g\,(H - h_D)}`$ ($`A_w`$ is the area of the hole below H)[^miyazu2012] is taken (the
 same idea as joining the three flows of a culvert by the smaller one; [Explanation of hydraulic
 laws](hydraulics.md) §2; our own construction).
 
@@ -213,8 +213,12 @@ levee height is the remaining free storage.
   paddy-field dams become full in a long rain the effect disappears; tests of commercial devices reported almost no
   effect for rain above 450 mm in 3 days[^minakawa2022].
 - Field studies reported that the main cause of overflow is backflow and poor drainage due to the rising water level
-  of the drains[^miyazu2020]. This version restricts the outflow by the downstream water level but does not represent
-  backflow, so it underestimates overflow in low-lying land with strong backwater.
+  of the drains. In a computation of Kameda-gō, Niigata (41 % paddy), over 90 % of the overflowing paddy fields were caused
+  by high water levels in the drains, and at 200 mm/d of rain 89 % of the overflow was backflow from the drains[^sato2021].
+  This version restricts the outflow by the downstream water level but does not represent backflow, so it underestimates
+  overflow in low-lying land with strong backwater.
+- In a basin, the effect has been reported to be largest for a rain of 268 mm/d (about once in 120 years) and to become
+  smaller for stronger rain as more paddy fields overflow their levees[^miyazu2020].
 - **Cells where river or inland flood water reaches the paddy fields** (overtopping or breaching of rivers, overflow of
   drains): the surface water does not enter the tanks and the tank water does not merge with the flood. In cells flooded
   above the levee crest, the flood level is underestimated by up to "area fraction × ponding depth of the tank" (0.16 m
@@ -289,7 +293,8 @@ The labels in the Basis column are explained in [How to read the basis of a defa
 [^yoshikawa2009]: Yoshikawa, Nagao and Misawa (2009): Transactions of the Japanese Society of Irrigation, Drainage and Rural Engineering, 77(3), 263–271. doi:10.11408/jsidre.77.263 (in Japanese)
 [^yoshikawa2010]: Yoshikawa, Koide and Misawa (2010): same journal, 78(4), 273–279. doi:10.11408/jsidre.78.273 (in Japanese)
 [^miyazu2012]: Miyazu et al. (2012): same journal, 80(6), 479–488. doi:10.11408/jsidre.80.479 (in Japanese)
-[^miyazu2020]: Miyazu et al. (2020): Journal of JSCE, Ser. B1 (Hydraulic Engineering), 76(2), I_805–I_810. doi:10.2208/jscejhe.76.2_I_805 (in Japanese)
+[^miyazu2020]: Miyazu et al. (2020): Journal of JSCE, Ser. B1 (Hydraulic Engineering), 76(2), I_805–I_810. doi:10.2208/jscejhe.76.2_I_805 (in Japanese; conditions under which the effect of paddy-field dams becomes smaller, in a basin in Tochigi)
+[^sato2021]: Sato et al. (2021): Journal of JSCE, Ser. B1 (Hydraulic Engineering), 77(2), I_439–I_444. doi:10.2208/jscejhe.77.2_I_439 (in Japanese; causes of the overflow of paddy fields in Kameda-gō)
 [^minakawa2022]: Minakawa and Miyazu (2022): Transactions of the Japanese Society of Irrigation, Drainage and Rural Engineering, 90(1), I_157–I_165. doi:10.11408/jsidre.90.I_157 (in Japanese)
 [^nihei2024]: Nihei et al. (2024): *Water*, 16(2), 255. doi:10.3390/w16020255
 [^saha2023]: Saha et al. (2023): *Sustainability*, 15(8), 6604. doi:10.3390/su15086604
