@@ -11,8 +11,12 @@
 #   param_dflt.txt    既定値の採用と表示、同じ値を明示した構成(sed で作る)とのビット一致
 #   param_wash.txt    雨滴侵食(f_wash の雨滴の項)に 1 − 面積率が掛かること(§119.5)
 #   param_splash.txt  乾いた斜面の侵食(f_splash)に 1 − 面積率が掛かること(§119.5)
+#   param_tw_*.txt    双方向(二室化。f_pd_exchange = 1。§119.6): 落水口からの逆流(参照解)、畦畔を越える浸水での
+#                     瞬時の満水と二重計上がないこと、外水の流入での水の保存、浸水が引いた後の落水。tw_drain は sed で
+#                     6 h で保存 → 再開(連続計算とビット一致)
 #   停止の確認: 河道セル・面積率 > 空隙率・取組率の範囲・水質との併用・型 0 の流出量調整板・
-#   面積率の二重指定・事前の湛水深 > 畦畔高・保存ファイルが残ったまま無効で再開
+#   面積率の二重指定・事前の湛水深 > 畦畔高・保存ファイルが残ったまま無効で再開、双方向の水田でない面積の割合
+#   < 0.05・ため池のセル・浮遊砂・非静水圧との併用・保存時とやり取りの方式が違う再開
 # reference 比較は Log.txt(ULP=0)。paddy.csv は 16 桁で書くため CPU(-march=native のベクトル化)が
 # 違うと最終桁が変わりうる(test/vzcol・sfzone と同じ理由)。CSV の内容は Check_paddy.py で確かめる。
 sdir=$(dirname "$(readlink -f "$0")")
@@ -59,7 +63,7 @@ python3 Check_paddy.py mix result_mix result_mix_nopd || exit 1
 # 既定値と、同じ値を明示した構成とのビット一致
 run dflt param_dflt.txt
 python3 Check_paddy.py dflt result_dflt Screen_dflt.log || exit 1
-variant param_dflt.txt result_dflt_explicit "s/^  pd_frac = 1.0$/  pd_frac = 1.0\n  pd_adopt = 0.0\n  pd_aplot = 3000.0\n  pd_hlev = 0.30\n  pd_h0 = 0.03\n  pd_perc_mmd = 5.0\n  pd_dev_type(1) = 0\n  pd_board_h(1) = 0.03\n  pd_board_w(1) = 0.30\n  pd_cw(1) = 0.6/" > "$tmp"
+variant param_dflt.txt result_dflt_explicit "s/^  pd_frac = 1.0$/  pd_frac = 1.0\n  f_pd_exchange = 0\n  pd_adopt = 0.0\n  pd_aplot = 3000.0\n  pd_hlev = 0.30\n  pd_h0 = 0.03\n  pd_perc_mmd = 5.0\n  pd_dev_type(1) = 0\n  pd_board_h(1) = 0.03\n  pd_board_w(1) = 0.30\n  pd_cw(1) = 0.6/" > "$tmp"
 run dflt_explicit "$tmp"
 for f in paddy.csv Log.txt; do
     cmp -s "result_dflt/$f" "result_dflt_explicit/$f" || { echo "ERROR: result_dflt_explicit/$f differs from the defaults" >&2; exit 1; }
@@ -71,6 +75,21 @@ run wash param_wash.txt
 python3 Check_paddy.py wash result_wash || exit 1
 run splash param_splash.txt
 python3 Check_paddy.py splash result_splash || exit 1
+
+# 双方向(二室化。§119.6)
+for t in tw_back tw_fill tw_flood tw_drain; do
+    run $t param_$t.txt
+    python3 Check_paddy.py $t result_$t || exit 1
+done
+# 双方向の保存 → 再開(6 h で保存し 12 h まで)と連続計算(tw_drain の 12 h)のビット一致
+rm -rf save_tw
+variant param_tw_drain.txt result_tw_save "s/^  tt = 43200$/  tt = 21600/;s|^  dir_result = 'result_tw_save'|&\n  dir_save = 'save_tw'\n  f_state_save = 1|" > "$tmp"
+run tw_save "$tmp"
+variant param_tw_drain.txt result_tw_restart "s|^  dir_result = 'result_tw_restart'|&\n  dir_save = 'save_tw'\n  f_state_restore = 1|" > "$tmp"
+run tw_restart "$tmp"
+python3 Check_paddy.py restart result_tw_drain result_tw_restart || exit 1
+variant param_tw_drain.txt result_tw_mode "s|^  dir_result = 'result_tw_mode'|&\n  dir_save = 'save_tw'\n  f_state_restore = 1|;s|^  f_pd_exchange = 1 .*|  f_pd_exchange = 0|" > "$tmp"
+expect_stop tw_mode "$tmp" "f_pd_exchange differs from the saved state"
 
 # 保存 → 再開(6 h で保存し 12 h まで)と、連続計算(12 h)のビット一致
 rm -rf save_rs
@@ -100,5 +119,14 @@ variant param_mix.txt result_twofrac "s|^  fn_pd_frac = 'frac_mix.txt'|&\n  pd_f
 expect_stop twofrac "$tmp" "specify only one of fn_pd_frac and pd_frac"
 variant param.txt result_h0big "s/^  pd_h0 = 0.25 /  pd_h0 = 0.35 /" > "$tmp"
 expect_stop h0big "$tmp" "pd_h0 must satisfy 0 <= pd_h0 <= pd_hlev"
+variant param_tw_flood.txt result_tw_smin "s/'frac_tw.txt'/'frac_mix.txt'/" > "$tmp"
+expect_stop tw_smin "$tmp" "the non-paddy fraction 1 - a/gv of a paddy cell is below"
+variant param_tw_back.txt result_tw_pond "s|^  f_masktype = 0|&\n  fn_rscap = 'rscap_one.txt'|" > "$tmp"
+expect_stop tw_pond "$tmp" "a paddy cell is a pond cell"
+variant param_wash.txt result_tw_sed "s|^  pd_hlev = 0.30|&\n  f_pd_exchange = 1|" > "$tmp"
+expect_stop tw_sed "$tmp" "cannot be combined with suspended sediment"
+variant param_tw_back.txt result_tw_nh "s|^  fn_paddy = '-'|&\n  fn_enc = '-'|" > "$tmp"
+printf "\n&list_enc\n  f_nonhydrostatic = 1\n/\n" >> "$tmp"
+expect_stop tw_nh "$tmp" "cannot be combined with the non-hydrostatic correction"
 
 echo "=== paddy verification PASS ==="

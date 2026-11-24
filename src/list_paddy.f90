@@ -27,6 +27,8 @@ module list_paddy
     real :: pd_hlev = -9999.0                       ! 畦畔高 (m。田面から)
     real :: pd_h0 = -9999.0                         ! 事前の湛水深 (m。未指定 = 種類ごとの流れ始める高さ)
     real :: pd_perc_mmd = -9999.0                   ! 減水深 (mm/d。系外へ)
+    integer :: f_pd_exchange = -9999                ! 地表と水田の水のやり取り 0: 片方向(雨だけ)、
+                                                    !   1: 双方向(二室化。未指定 = 0。developer.md §119.6)
     integer :: pd_dev_type(1:pd_nclass) = -9999     ! 装置の型 0: 水位調整板だけ, 1: 機能分離型, 2: 機能一体型
     real :: pd_board_h(1:pd_nclass) = -9999.0       ! 水位調整板の天端の高さ (m。田面から)
     real :: pd_board_w(1:pd_nclass) = -9999.0       ! 水位調整板の幅(堰幅) (m)
@@ -57,6 +59,7 @@ subroutine list_paddy_read(p, list)
   integer :: f_paddy
   character(len=maxpathlen) :: fn_pd_frac, fn_pd_adopt
   real :: pd_frac, pd_adopt, pd_aplot, pd_hlev, pd_h0, pd_perc_mmd
+  integer :: f_pd_exchange
   integer :: pd_dev_type(1:pd_nclass), pd_open_type(1:pd_nclass)
   real :: pd_board_h(1:pd_nclass), pd_board_w(1:pd_nclass)
   real :: pd_open_d(1:pd_nclass), pd_open_b(1:pd_nclass), pd_open_e(1:pd_nclass)
@@ -65,7 +68,7 @@ subroutine list_paddy_read(p, list)
   real :: pd_cw(1:pd_nclass), pd_co(1:pd_nclass)
 
   namelist /list_paddy/ f_paddy, fn_pd_frac, pd_frac, fn_pd_adopt, pd_adopt, pd_aplot, pd_hlev, pd_h0, &
-                        pd_perc_mmd, pd_dev_type, pd_board_h, pd_board_w, pd_open_type, pd_open_d, pd_open_b, &
+                        pd_perc_mmd, f_pd_exchange, pd_dev_type, pd_board_h, pd_board_w, pd_open_type, pd_open_d, pd_open_b, &
                         pd_open_e, pd_open_ang, pd_open_z, pd_plate_h, pd_plate_w, pd_cw, pd_co
 
   f_paddy = list%f_paddy
@@ -77,6 +80,7 @@ subroutine list_paddy_read(p, list)
   pd_hlev = list%pd_hlev
   pd_h0 = list%pd_h0
   pd_perc_mmd = list%pd_perc_mmd
+  f_pd_exchange = list%f_pd_exchange
   pd_dev_type = list%pd_dev_type
   pd_board_h = list%pd_board_h
   pd_board_w = list%pd_board_w
@@ -107,6 +111,7 @@ subroutine list_paddy_read(p, list)
   list%pd_hlev = pd_hlev
   list%pd_h0 = pd_h0
   list%pd_perc_mmd = pd_perc_mmd
+  list%f_pd_exchange = f_pd_exchange
   list%pd_dev_type = pd_dev_type
   list%pd_board_h = pd_board_h
   list%pd_board_w = pd_board_w

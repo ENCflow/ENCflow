@@ -66,6 +66,14 @@
   ! groundwater; default 5)
   !pd_perc_mmd = 5.0
 
+  ! exchange of water between the surface and the paddy fields (default 0)
+  !   0: one-way (only the rain on the paddy fields goes into the tanks)
+  !   1: two-way (river and inland flood water also enters the paddy fields
+  !      through the outlets and over the levees; below the levee crest only
+  !      the non-paddy area stores and conveys the surface water; the non-paddy
+  !      share 1 - a/gv must be at least 0.05)
+  !f_pd_exchange = 0
+
   ! devices of the outlets (index 1 = normal outlets, 2 = paddy-field dams)
   ! type 0: water-level board only, 1: separated type = min(weir of the
   ! water-level board, hole + overflow of the outflow control plate),

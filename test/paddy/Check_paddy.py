@@ -15,6 +15,10 @@ Gauss–Legendre の求積で直接求める(モデルは表と展開)。
   python3 Check_paddy.py restart <連続の結果> <再開の結果>      保存 → 再開のビット一致
   python3 Check_paddy.py wash    result_wash     雨滴侵食(f_wash の雨滴の項)に 1 − 面積率が掛かること
   python3 Check_paddy.py splash  result_splash   乾いた斜面の侵食(f_splash)に 1 − 面積率が掛かること
+  python3 Check_paddy.py tw_back  result_tw_back   双方向: 落水口からの逆流(同じ陽解法の参照解)と S の保存
+  python3 Check_paddy.py tw_fill  result_tw_fill   双方向: 畦畔を越える浸水での瞬時の満水と、二重計上がないこと
+  python3 Check_paddy.py tw_flood result_tw_flood  双方向: 外水の流入での水の保存、満水
+  python3 Check_paddy.py tw_drain result_tw_drain  双方向: 浸水が引いた後の落水
 """
 import array
 import math
@@ -302,7 +306,8 @@ def check_dflt(res, screen):
             "paddy: pd_perc_mmd = 5.0000 mm/d (default)", "paddy: pd_adopt = 0.0000 (default)",
             "paddy: pd_dev_type(1) = 0 (default)", "paddy: pd_board_h(1) = 0.0300 m (default)",
             "paddy: pd_board_w(1) = 0.3000 m (default)", "paddy: pd_cw(1) = 0.6000 (default)",
-            "paddy: initial ponding depth of class 1 = 0.300000E-1 m (default"]
+            "paddy: initial ponding depth of class 1 = 0.300000E-1 m (default",
+            "paddy: f_pd_exchange = 0 (default)"]
     for s in need:
         if s not in text:
             fail("default not shown: " + s)
@@ -375,6 +380,137 @@ def check_erosion(res, kind):
        % (kind, emax, full))
 
 
+# ---------------------------------------------------------------- 双方向(二室化。§119.6)
+def tw_wq(k, z, h, hd):
+    """水位調整板の堰(モデルの weir_q と dev_q の型 0 と同じ。h ≤ z か hd ≥ h なら 0、h2/h1 > 2/3 で潜り)"""
+    if h <= z or hd >= h:
+        return 0.0
+    h1 = h - z
+    h2 = max(hd - z, 0.0)
+    if h2 >= h1:
+        return 0.0
+    q = k * h1 * math.sqrt(h1)
+    if h2 > h1 * (2.0 / 3.0):
+        r = h2 / h1
+        q *= 1.5 * math.sqrt(3.0) * r * math.sqrt(max(1.0 - r, 0.0))
+    return q
+
+
+def log_s(res):
+    return [v for _, v in read_log(os.path.join(res, "Log.txt"))]
+
+
+def check_tw_back(res):
+    """落水口からの逆流: 階段形の断面(畦畔より下は水田でない面積の割合 f)・両向きの装置則・上限を、モデルと
+    同じ順で 1 区画について解いた参照解と、台帳の湛水深を比べる"""
+    rows = read_csv(os.path.join(res, "paddy.csv"))
+    a, gv, hlev, area = 0.6, 1.0, 0.30, 300.0
+    c, b, zb = 0.6, 0.30, 0.03
+    f = 1.0 - a / gv
+    k = (2.0 / 3.0) * c * math.sqrt(2 * G) * b
+
+    def v_of(h):
+        return h - hlev * (1.0 - f) if h >= hlev else (h if h <= 0.0 else f * h)
+
+    def h_of(v):
+        return v + hlev * (1.0 - f) if v >= hlev * f else (v if v <= 0.0 else v / f)
+
+    h, tk = 0.15, 0.0
+    ref = {}
+    for n in range(1, int(round(rows[-1]["time(s)"] / DT)) + 1):
+        vh = max(v_of(h), 0.0)
+        hd = h_of(vh)
+        r = a / (gv * (1.0 if hd >= hlev else f))
+        q = 0.0
+        if hd < hlev:
+            if tk >= hd:
+                q = min(tw_wq(k, zb, tk, hd) * DT / area, max(tk - zb, 0.0), 0.5 * (tk - hd) / (1.0 + r))
+            else:
+                q = -min(tw_wq(k, zb, hd, tk) * DT / area, 0.5 * (hd - tk) / (1.0 + r))
+        tk -= q
+        vh = max(vh + a * q / gv, 0.0)
+        h = h_of(vh)
+        if n % 300 == 0:
+            ref[n * DT] = tk
+    compare(rows, "h1(mm)", ref, 0.001, 1e-9, "two-way backflow through the outlet vs explicit reference")
+    s = log_s(res)
+    if max(abs(x - s[0]) for x in s) > 1e-12 * s[0]:
+        fail("S (surface + paddy tanks) is not conserved in the closed box")
+    ok("S conserved (%.12f m); final ponding depth %.6f m = equilibrium 0.06 m" % (s[0], rows[-1]["h1(mm)"] / 1e3))
+    if abs(rows[-1]["h1(mm)"] / 1e3 - 0.06) > 1e-6:
+        fail("the levels do not even out at 0.06 m")
+    if not rows[-1]["inflow(m3)"] > 0.0:
+        fail("no inflow through the outlets is recorded")
+    check_ledger(rows)
+
+
+def check_tw_fill(res):
+    """瞬時の満水: 湛水深 = 畦畔高、地表の水深 = 0.5 − 0.6 × (0.30 − 0.03) = 0.338 m、S = 地表の水深(二重計上なし)"""
+    rows = read_csv(os.path.join(res, "paddy.csv"))
+    last = rows[-1]
+    if abs(last["h1(mm)"] - 300.0) > 1e-9:
+        fail("the paddy fields are not filled to the levee crest: %.12f mm" % last["h1(mm)"])
+    exp_fill = 0.6 * 8000.0 * (0.30 - 0.03)
+    if abs(last["levee_in(m3)"] - exp_fill) > 1e-9 * exp_fill:
+        fail("levee inflow %.9f m3, expected %.9f m3" % (last["levee_in(m3)"], exp_fill))
+    if last["inflow(m3)"] != 0.0:
+        fail("the outlets exchange water while the surface is above the levee crest")
+    hv = read_bil(os.path.join(res, "H0001.bil"), 10, 8)
+    hexp = 0.50 - 0.6 * (0.30 - 0.03)
+    e = max(abs(x - hexp) for x in hv)
+    if e > 1e-6:
+        fail("surface depth differs from %.6f m by %.3e m" % (hexp, e))
+    s = log_s(res)[-1]
+    if abs(s - hexp) > 1e-12:
+        fail("S = %.15f m differs from the depth of the merged water %.15f m (double counting?)" % (s, hexp))
+    ok("filled to the levee crest instantly (levee inflow %.3f m3); surface depth %.6f m; S = depth of the "
+       "merged water (no double counting)" % (last["levee_in(m3)"], hexp))
+    check_ledger(rows)
+
+
+def check_tw_flood(res):
+    """外水の流入: S の増分 + 減水深 = 流し込んだ外水(1.0 m3/s × 7200 s / 8000 m2)、満水、台帳"""
+    rows = read_csv(os.path.join(res, "paddy.csv"))
+    s = read_log(os.path.join(res, "Log.txt"))
+    t_end = s[-1][0]
+    area = 8000.0
+    vin = 1.0 * t_end / area
+    perc = rows[-1]["perc(m3)"] / area
+    d = (s[-1][1] - s[0][1]) + perc - vin
+    if abs(d) > 1e-9 * vin:
+        fail("water balance: increase of S + percolation - inflow = %.3e m" % d)
+    ok("water balance: increase of S (surface + paddy tanks) + percolation = inflow %.6f m (diff %.1e m)" % (vin, d))
+    last = rows[-1]
+    if not (last["levee_in(m3)"] > 0.0 and last["inflow(m3)"] > 0.0):
+        fail("no inflow over the levees or through the outlets is recorded")
+    if not (last["full1(-)"] > 0.999 and last["full2(-)"] > 0.999):
+        fail("not all paddy fields are full at the end (%.4f, %.4f)" % (last["full1(-)"], last["full2(-)"]))
+    if last["spill(m3)"] != 0.0:
+        fail("spill recorded while the flood stays above the levee crest (%.3e m3)" % last["spill(m3)"])
+    ok("flood water entered through the outlets (%.1f m3) and over the levees (%.1f m3); all paddy fields full"
+       % (last["inflow(m3)"], last["levee_in(m3)"]))
+    check_ledger(rows)
+
+
+def check_tw_drain(res):
+    """浸水が引いた後: 湛水深 ≤ 畦畔高、通常の落水口のほうが速く抜け、流入はなく、台帳が閉じる"""
+    rows = read_csv(os.path.join(res, "paddy.csv"))
+    for r in rows:
+        if r["h1(mm)"] > 300.0 + 1e-9 or r["h2(mm)"] > 300.0 + 1e-9:
+            fail("ponding depth above the levee crest at t = %.0f s" % r["time(s)"])
+    h1 = [r["h1(mm)"] for r in rows]
+    h2 = [r["h2(mm)"] for r in rows]
+    if any(h1[i + 1] > h1[i] + 1e-9 for i in range(len(h1) - 1)) or any(h2[i + 1] > h2[i] + 1e-9 for i in range(len(h2) - 1)):
+        fail("the ponding depth rises while the flood recedes")
+    if not (h1[-1] < 150.0 and h2[-1] > h1[-1] and h2[-1] < 300.0):
+        fail("unexpected drainage: normal %.1f mm, paddy dam %.1f mm after %.0f h" % (h1[-1], h2[-1], rows[-1]["time(s)"] / 3600))
+    if rows[-1]["inflow(m3)"] != 0.0 or rows[-1]["levee_in(m3)"] != 0.0:
+        fail("inflow into the paddy fields while the flood recedes")
+    ok("ponding depth <= levee crest and falling; after %.0f h normal outlets %.1f mm, paddy dams %.1f mm"
+       % (rows[-1]["time(s)"] / 3600, h1[-1], h2[-1]))
+    check_ledger(rows)
+
+
 def main():
     if len(sys.argv) < 3:
         print(__doc__)
@@ -398,6 +534,14 @@ def main():
         check_restart(sys.argv[2], sys.argv[3])
     elif cmd in ("wash", "splash"):
         check_erosion(sys.argv[2], cmd)
+    elif cmd == "tw_back":
+        check_tw_back(sys.argv[2])
+    elif cmd == "tw_fill":
+        check_tw_fill(sys.argv[2])
+    elif cmd == "tw_flood":
+        check_tw_flood(sys.argv[2])
+    elif cmd == "tw_drain":
+        check_tw_drain(sys.argv[2])
     else:
         print(__doc__)
         sys.exit(2)

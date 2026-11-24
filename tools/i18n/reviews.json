@@ -113,9 +113,9 @@
     {
       "source": "docs/users_guide.md",
       "target": "docs/en/users_guide.md",
-      "source_sha256": "317638fefa40d2b5be17641775c3e96ac170355121463131912465ec6f7186aa",
-      "target_sha256": "9fc875f23102f0a38e9ab921f3cd0f462872b111301e4755cd1cd34dbe6c42b1",
-      "reviewer": "Claude (Claude Code session; changed sections compared side by side with the Japanese source; numbers checked against the test runs)",
+      "source_sha256": "954cd515a289c22a5d89e1acdd0578829a542ef058c8fdf905a831d38ff12183",
+      "target_sha256": "8b4232f71772be7ed1c5fc72baf695dd091b9be55e9932847667d53d77f6f4d5",
+      "reviewer": "Claude (Claude Code session; reviewed the changed entries (the f_pd_exchange row and the parameter count 845) against the Japanese source; the rest is unchanged since the previous record)",
       "method": "assistant",
       "reviewed_on": "2026-11-24"
     },
@@ -428,8 +428,8 @@
     {
       "source": "docs/users_guide/paddy.md",
       "target": "docs/en/users_guide/paddy.md",
-      "source_sha256": "f2284d80de035b7de7e5ab200ec6191690fa200e851a3c1250efa967a5a9fe3f",
-      "target_sha256": "3eda20667bb8c9cfde17cfc42d077c35dcae90fafbfd5de67d7006ce41e6db13",
+      "source_sha256": "ebe240b1f0f4c2be1a4bf2f81bdef6fa3846daf229d9032314104ebb7fecc958",
+      "target_sha256": "b4a86cbb033dd032dfd64646e957201864be57258ff06c089287941b852a9937",
       "reviewer": "Claude (Claude Code session; full-text content and lexical review against the Japanese source; numbers checked against the test/paddy runs)",
       "method": "assistant",
       "reviewed_on": "2026-11-24"
@@ -446,9 +446,9 @@
     {
       "source": "docs/users_guide/params_index.md",
       "target": "docs/en/users_guide/params_index.md",
-      "source_sha256": "c0fb579d2c76814afc6938813a8790c8a583e887ffd8b139956f27ae976dcd24",
-      "target_sha256": "2dabd47c220fc58810e696d2613c333e25b9367a29550ceb82808d7f8a1f2ac8",
-      "reviewer": "Claude (Claude Code session; changed sections compared side by side with the Japanese source; numbers checked against the test runs)",
+      "source_sha256": "c47b44217dad65f5078d501841ea0b7ca0da0836bb0560d5c5cb64707f9ddf05",
+      "target_sha256": "4987fc8b5268b3aec4eab19604c871ff42f1b273ede6ee0db305c6326f52da79",
+      "reviewer": "Claude (Claude Code session; reviewed the changed entries (the f_pd_exchange row and the parameter count 845) against the Japanese source; the rest is unchanged since the previous record)",
       "method": "assistant",
       "reviewed_on": "2026-11-24"
     },
@@ -788,8 +788,8 @@
     {
       "source": "examples/List_samples/list_paddy.txt",
       "target": "examples/List_samples/en/list_paddy.txt",
-      "source_sha256": "0605983d57580a8b74a9a55a0bfd69a675005feef4b59b1e68bab0088557ed70",
-      "target_sha256": "547dbd408d2dda33e9363eacd65e44be37daa8c2a80661fc56d384b6c5640ed0",
+      "source_sha256": "3b5cb1db960798a776c0bbb77f14979a08a0304db91b3aa5f1764ae27509f3c5",
+      "target_sha256": "11a2756296c11ae7fe393cb389a44650cd1c5b8649c3c946546e2308afd446b4",
       "reviewer": "Claude (Claude Code session; full-text content and lexical review against the Japanese source; numbers checked against the test/paddy runs)",
       "method": "assistant",
       "reviewed_on": "2026-11-24"
@@ -4820,8 +4820,8 @@
     {
       "source": "test/paddy/README.md",
       "target": "test/paddy/en/README.md",
-      "source_sha256": "ed4bd0c38e8c8fe23868b3ca92a136fe3d01a165b3b6102aa1ed237629e1253f",
-      "target_sha256": "bdfe770cdc2e12873947335d1f38e0095e8298bc0a11e9df6fb9bceb07dbc05f",
+      "source_sha256": "101159fc309cd386150d620ad906cd900e34226f59236044242a449f6fbd4b62",
+      "target_sha256": "6d88bdfe90c4e305259ebc135e145ec2b17988418b338b5512b41f87e22bdc12",
       "reviewer": "Claude (Claude Code session; full-text content and lexical review against the Japanese source; numbers checked against the test/paddy runs)",
       "method": "assistant",
       "reviewed_on": "2026-11-24"

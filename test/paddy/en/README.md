@@ -15,7 +15,7 @@ differential equations.
 | Item | Value |
 |---|---|
 | Domain and grid | 10 × 8 cells (Δx = Δy = 10 m), flat ground (z = 0). Two rows per rank even with np = 4 |
-| Boundaries | free outflow on all four sides (the drained water leaves the domain at once; the surface water depth is below 1.5 cm and the outlets are not submerged). param_mix.txt, param_wash.txt and param_splash.txt have walls on all four sides |
+| Boundaries | free outflow on all four sides (the drained water leaves the domain at once; the surface water depth is below 1.5 cm and the outlets are not submerged). param_mix.txt, param_wash.txt, param_splash.txt, param_tw_back.txt, param_tw_fill.txt and param_tw_flood.txt have walls on all four sides |
 | Paddy fields | every cell is a paddy field (area fraction 1). param_mix.txt has maps that change the area fraction, adoption ratio and void ratio by column |
 | Time | dt = 2 s, ledger every 600 s |
 
@@ -30,19 +30,24 @@ differential equations.
 | `param_dflt.txt` | minimal input with the paddy area fraction only | `dflt`: defaults adopted and shown (no defaults shown for an absent class). Run.sh also checks bit identity with the same values given explicitly |
 | `param_wash.txt` | combination with landform change, part 1: a box with walls on all four sides filled with water 0.05 m deep, 50 mm/h for 1 h. Only the raindrop term of hillslope erosion on wet cells (`wash_kr` = 0.01, no sheet erosion, settling of the suspended sediment practically stopped). The area fraction is the same map by column as param_mix.txt | `wash`: on every cell, lowering of the ground = (1 − area fraction) × raindrop erosion coefficient × rain × time (the rain on the paddy part falls into the ponded water on the fields; developer.md §119.5). No erosion on cells with area fraction 1 |
 | `param_splash.txt` | combination with landform change, part 2: a box where the infiltration capacity (Green-Ampt 72 mm/h) exceeds the rain of 30 mm/h and every cell stays dry, with only the raindrop term of dry-slope erosion (`spl_kr` = 0.003, morfac = 5) | `splash`: on every cell, lowering of the ground = (1 − area fraction) × `spl_kr` × rain × time × morfac |
+| `param_tw_back.txt` | two-way mode (`f_pd_exchange = 1`), part 1: a box with walls on all four sides, area fraction 0.6 in every cell. Surface water depth 0.15 m (below the levees), empty paddy fields. Water of the drains flows back into the paddy fields over the water-level board for 4 h | `tw_back`: ponding depth = reference solution of the same explicit scheme (step-shaped cross-section, device law in both directions, caps), conservation of S, equilibrium level 0.06 m |
+| `param_tw_fill.txt` | two-way mode, part 2: surface water depth 0.50 m (above the levees), ponding depth 0.03 m | `tw_fill`: in the first step the water above the levees fills the paddy fields (ponding depth = levee height, surface water depth 0.338 m, inflow over the levees 1296 m³), S = depth of the merged water (no double counting) |
+| `param_tw_flood.txt` | two-way mode, part 3: maps of area fraction 0–0.9 (frac_tw.txt) and adoption ratio, flood water of 1.0 m³/s for 2 h from a cell in the west column | `tw_flood`: increase of S + decrease in depth = flood water let in, inflow through the outlets and over the levees, all paddy fields full at the end |
+| `param_tw_drain.txt` | two-way mode, part 4: from surface water depth 0.50 m and full paddy fields, the flood recedes through free outflow on all four sides for 12 h (adoption ratio 0.5) | `tw_drain`: ponding depth ≤ levee height and falling, normal outlets drain faster. Run.sh also checks bit identity between save at 6 h → restart and a continuous run |
 
 In addition, `Run.sh` checks bit identity between a run saved at 6 h and restarted to 12 h and a continuous run
 (`restart`), and the following stops: paddy fields on a channel cell, area fraction > void ratio, adoption ratio out
 of range, combination with water quality (fn_wq), outflow control plate given for type 0, area fraction given both as a
-map and as a uniform value, ponding depth before the run > levee height, and restart with the feature disabled while the
-saved file remains.
+map and as a uniform value, ponding depth before the run > levee height, restart with the feature disabled while the
+saved file remains, and in the two-way mode a non-paddy share below 0.05, a pond cell, combination with suspended sediment
+or the non-hydrostatic correction, and restart with a different exchange mode from the saved state.
 
 | File | Contents |
 |---|---|
 | `Run.sh` | compares Log.txt of param.txt with the reference (ULP = 0) → checks of each setting, save → restart and stops |
-| `Run_MPI.sh [np]` | the same comparison with MPI (ULP = 0 against the serial reference), byte identity of paddy.csv, maps and paddy.dat with np = 1, conservation in the closed domain, the two checks of raindrop erosion (the ground elevation also byte-identical with np = 1), stops found by rank 0 and in the bands |
+| `Run_MPI.sh [np]` | the same comparison with MPI (ULP = 0 against the serial reference), byte identity of paddy.csv, maps and paddy.dat with np = 1, conservation in the closed domain, the two checks of raindrop erosion (the ground elevation also byte-identical with np = 1), the three checks of the two-way mode (paddy.csv, Log, depth and ponding depth byte-identical with np = 1), stops found by rank 0 and in the bands |
 | `Check_paddy.py` | checks (Python standard library only) |
-| `data_paddy/` | maps for param_mix.txt and for the checks of stops |
+| `data_paddy/` | maps for param_mix.txt and param_tw_flood.txt and for the checks of stops |
 
 ## Results (2026-11-24; gfortran 13.3, -Ofast, 4 threads)
 
@@ -59,6 +64,8 @@ saved file remains.
 | water conservation in the closed domain | 6.7×10⁻¹⁵ m | 1×10⁻¹² m |
 | raindrop erosion (wet slopes) vs (1 − area fraction) × analytic solution | 4.7×10⁻⁸ | 1×10⁻⁶ |
 | raindrop erosion (dry slopes) vs (1 − area fraction) × analytic solution | 2.7×10⁻⁸ | 1×10⁻⁶ |
+| two-way: backflow through the outlets vs reference solution | 8.9×10⁻¹⁶ | 1×10⁻⁹ |
+| two-way: water conservation with incoming flood water | 8.3×10⁻¹⁴ m | 1×10⁻⁹ of 0.9 m |
 
 The difference from the exact solutions is the time-step error of the explicit scheme (dt = 2 s; the time scale of the
 ponding depth is hours). The difference for raindrop erosion is the rounding when the ground elevation is written as a

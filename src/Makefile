@@ -175,7 +175,7 @@ m_sfm.o: m_sysparam.o m_geoinfo.o m_state.o m_boundary.o list_sfm.o m_zonerunoff
 	m_sysdep_util.o m_util.o $(PAR_OBJ)
 list_sfm.o: m_sysparam.o $(PAR_OBJ)
 m_paddy.o: m_sysparam.o m_geoinfo.o m_state.o m_boundary.o list_paddy.o m_zonerunoff.o \
-	m_fileio.o m_restart.o m_sysdep_util.o m_util.o $(PAR_OBJ)
+	m_fileio.o m_restart.o m_sysdep_util.o m_util.o m_swflow_enc.o $(PAR_OBJ)
 list_paddy.o: m_sysparam.o $(PAR_OBJ)
 m_wavefield.o: m_sysparam.o m_geoinfo.o m_state.o m_swflow_enc.o list_wavefield.o \
 	m_restart.o m_sysdep_util.o m_util.o $(PAR_OBJ)

@@ -1,0 +1,59 @@
+!======================================================================
+! paddy: 双方向(二室化。f_pd_exchange = 1。developer.md §119.6)その 2: 畦畔を越える浸水での瞬時の満水
+!   10 × 8 セル(Δx = Δy = 10 m)の平らな閉じた箱。全セルが水田面積率 0.6(水田でない面積の割合 0.4)。
+!   地表の水深 0.50 m(畦畔高 0.30 m より上)、水田の湛水深 0.03 m。最初のステップで畦畔より上の水が水田を
+!   満たし(湛水深 0.30 m)、地表の水深は 0.50 − 0.6 × (0.30 − 0.03) = 0.338 m になる。その後は畦畔の上で一体の水。
+!   確認(Check_paddy.py tw_fill): 湛水深 = 畦畔高、地表の水深 = 0.338 m、S(地表 + 水田)= 地表の水深
+!   (水田が満ちて水位が畦畔より上ならセルの水はセル全面の水深で数えられる = 二重計上なし)
+!======================================================================
+&list_sysparam
+  f_gridsystem = 0
+  dt = 2.0
+  t0 = 0
+  tt = 600
+  dt_disp = 1800
+  dt_file = 600
+  dt_recrd = 600
+  fn_geoinfo = '-'
+  fn_initial = '-'
+  fn_boundary = '-'
+  fn_paddy = '-'
+  dir_data = 'data_paddy'
+  dir_result = 'result_tw_fill'
+  f_disp_debug = 1
+  f_output_mode = 3         ! テキストと単精度のバイナリ(検定は H0001.bil を読む)
+  f_check_cfl = 0
+  dd = 0.0001
+  dv = 0.0001
+  vv = 0.01
+/
+&list_initial
+  f_htype = 0
+  h0 = 0.50
+/
+&list_geoinfo
+  nx = 10
+  ny = 8
+  dx = 10.0
+  dy = 10.0
+  f_ztype = 0
+  z0 = 0.0
+  f_masktype = 0
+  f_rntype = 0
+  rn0 = 0.03
+/
+&list_bound_edge
+/
+&list_paddy
+  pd_frac = 0.6
+  pd_adopt = 0.0
+  pd_aplot = 300.0
+  pd_hlev = 0.30
+  pd_h0 = 0.03
+  pd_perc_mmd = 0.0
+  f_pd_exchange = 1         ! 双方向(二室化)
+  pd_dev_type(1) = 0
+  pd_board_h(1) = 0.03
+  pd_board_w(1) = 0.30
+  pd_cw(1) = 0.6
+/

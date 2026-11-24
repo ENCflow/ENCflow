@@ -18,8 +18,15 @@ module m_paddy
   !     (3) 越流: hp_c が畦畔高を超えた分を地表へ(瞬時。手引きの計算プログラムと同じ扱い)
   !     (4) 減水深: perc·dt を系外へ(台帳に記録)
   !     (5) 地表へ: s%h に Σ a_c·(dv + 越流)/gv を足し、e = z + h を回復する
-  !   片方向(段 1): 浸水が水田に入る流れ(逆流・外からの越流)は表さない(h_D ≥ hp_c なら流出 0)。
-  !   双方向化には連続式の開いた面積の割合が要る(paddy_plan.md §6)。
+  !   片方向(段 1。f_pd_exchange = 0): 浸水が水田に入る流れ(逆流・外からの越流)は表さない(h_D ≥ hp_c なら流出 0)。
+  ! 【双方向(二室化。f_pd_exchange = 1。paddy_plan.md §13、developer.md §119.6)】水田のセルの地表の水を
+  !   河道断面形 σ の仕組み(§26.3)で階段形の断面にする: 畦畔の高さ h_lev より下は水田でない面積の割合
+  !   s = 1 − a/gv(道路・排水路・畦畔)だけが貯めて流し、上はセル全面。タンクは畦畔より下の水田の水を持ち、
+  !   畦畔より上の水は地表が持つので、水田が満ちて水位が畦畔より上ならセルの水 = gv·A·(η − z)(二重計上なし)。
+  !   1 ステップ: (1) 雨の回収(矩形換算水深 vh で引く)、(2) 落水口は両向き(水位の高い側を上流として装置則。
+  !   湛水が低ければ排水路の水が逆流する。独自の簡略化)、(3) 畦畔: タンクが畦畔高を超えた分は地表へ、地表の
+  !   水位が畦畔を越えたら畦畔より上の水で満ちていない水田を瞬時に満たす(足りなければ空きの比で分ける)、
+  !   (4) 減水深。地表の水位が畦畔高以上のときは落水口のやり取りをしない(水田は (3) で満ちる)。
   ! 【装置則】(paddy_plan.md §5)落水口 1 か所の流量 Q (m3/s)。H = 湛水深、h_D = 下流の水深。
   !   堰(天端 z、幅 B): 本間公式の形を流量係数 C で一般化(C = 0.525 で本間公式 0.35・0.91。
   !     独自の一般化)。h1 = H − z、h2 = max(h_D − z, 0)。自由 (2/3)C√(2g)B h1^1.5、
@@ -41,14 +48,16 @@ module m_paddy
   ! 【併用】ENC のみ。ネスト(複数インスタンス)・水質・淡塩とは init で停止する。水田のセルは
   !   海・河道(rw)・境界(水位規定・区間流入)・ソース・構造物のセルと、VZ・貯留関数の区画セルに
   !   置けない(雨の回収が boundary_h の式と一致する前提)。面積率は空隙率 gv を超えない。
-  !   蒸発散はタンクから引かない(段 4)。地形変化(fn_geomorph)と併用すると、雨滴侵食(f_wash の
+  !   蒸発散はタンクから引かない(段 4)。双方向は、家屋破壊の空隙率の帰還・浮遊砂・非静水圧と併用できず、
+  !   水田のセルをため池のセルに置けず、s ≥ 0.05 が要る(init で停止)。地形変化(fn_geomorph)と併用すると、雨滴侵食(f_wash の
   !   雨滴の項・f_splash)は水田の部分を外す(1 − a を掛ける。s%pdfr。§119.5)。流れによる侵食・
   !   浮遊砂・掃流砂はセル全面のまま(タンクは土砂を運ばない)。
   ! ==========================================================================
   use, intrinsic :: iso_fortran_env, only : real64
   use m_sysparam, only : t_sysparam
   use m_geoinfo, only : t_geoinfo
-  use m_state, only : t_state
+  use m_state, only : t_state, sect_vh, sect_h_of, sect_sig
+  use m_swflow_enc, only : m_swflow_enc_set_step_sect, m_swflow_enc_nh_active
   use m_boundary, only : t_boundary
   use m_zonerunoff, only : t_zonerunoff
   use list_paddy, only : t_list_paddy, list_paddy_read, pd_nclass
@@ -66,8 +75,9 @@ module m_paddy
   public :: m_paddy_record
   public :: m_paddy_dispose
 
-  integer, parameter :: save_version = 2026112401 ! paddy.dat の形式の版(形式を決めた日 2026-11-24)
-  integer, parameter :: nrow = 5                   ! 台帳の行部分和の列数
+  integer, parameter :: save_version = 2026112402 ! paddy.dat の形式の版(2026-11-24 に双方向の印を足した)
+  integer, parameter :: nrow = 7                   ! 台帳の行部分和の列数
+  real, parameter :: pd_smin = 0.05                ! 双方向の水田のセルの、水田でない面積の割合の下限(独自の目安)
   real(real64), parameter :: pi8 = 3.14159265358979323846_real64
 
   !-------------------------------------------
@@ -109,6 +119,7 @@ module m_paddy
     logical :: have(1:pd_nclass) = .false.     ! 種類ごとにその水田があるか(全ランク同値)
     type(t_pddev) :: dev(1:pd_nclass)          ! 種類ごとの落水口の装置
     type(t_gtab) :: gt                         ! 円の穴の積分の表(円の穴を使うときだけ)
+    integer :: exch = 0                        ! 地表と水田のやり取り 0: 片方向、1: 双方向(二室化)
     real :: aplot = 0.0                        ! 代表区画面積 (m2)
     real :: hlev = 0.0                         ! 畦畔高 (m)
     real :: perc = 0.0                         ! 減水深 (m/s)
@@ -116,7 +127,8 @@ module m_paddy
     real, allocatable :: fr1(:,:), fr2(:,:)    ! 種類ごとの面積率(セル面積基底。帯+ハロ)
     real(real64) :: area(1:pd_nclass) = 0.0_real64  ! 種類ごとの水田面積 (m2。全ランク同値)
     real(real64), allocatable :: rows(:,:)     ! (js:je, 1:nrow) 行ごとの量 (m3): 1 雨の回収・2 落水・
-                                               !   3 越流・4 減水深(累積)、5 直近のステップの地表への量
+                                               !   3 越流・4 減水深(累積)、5 直近のステップの地表への量(正味)、
+                                               !   6 落水口からの流入・7 畦畔を越えた流入(累積。双方向だけ)
     real(real64) :: store0 = 0.0_real64        ! 計算開始(再開)時の貯留 (m3。全ランク同値)
     real(real64) :: dxdy = 0.0_real64          ! セル面積 (m2)
     integer :: un_csv = 0                      ! CSV 装置番号(rank0)
@@ -161,6 +173,7 @@ subroutine m_paddy_init(pd, p, g, b, s, multi, vzr, sfr)
   call setup_scalars(pd, list)
   call setup_maps(pd, p, g, b, s, list, vzr, sfr)
   call setup_devices(pd, p, list)
+  if (pd%exch == 1) call setup_twoway(pd, g, s)
 
   ! 状態(その種類の水田がある格子だけ確保)と S の台帳の貯留
   allocate(s%pdv(dcp%ish:dcp%ieh, dcp%jsh:dcp%jeh), source = 0.0)
@@ -218,6 +231,10 @@ subroutine m_paddy_calc(pd, p, g, s)
   real(real64) :: rr(1:nrow)
 
   if (.not. pd%enabled) return
+  if (pd%exch == 1) then
+    call calc_twoway(pd, p, g, s)
+    return
+  end if
   dt = p%dt
   !$omp parallel do schedule(dynamic) private(i, j, a, rain, hd, dsur, f, dv, sp, pc, st, rr)
   do j = dcp%js, dcp%je
@@ -319,7 +336,7 @@ subroutine m_paddy_record(pd, p, g, s)
     fu(k) = fu(k) * pd%dxdy
   end do
   if (.not. is_root) return
-  res = (st(1) + st(2)) - pd%store0 - (tot(1) - tot(2) - tot(3) - tot(4))
+  res = (st(1) + st(2)) - pd%store0 - (tot(1) - tot(2) - tot(3) - tot(4)) - (tot(6) + tot(7))
   do k = 1, 2
     hm(k) = 0.0_real64
     ff(k) = 0.0_real64
@@ -328,9 +345,9 @@ subroutine m_paddy_record(pd, p, g, s)
       ff(k) = fu(k) / pd%area(k)
     end if
   end do
-  write(pd%un_csv, '(f0.2,14(",",es23.15))') s%t, &
+  write(pd%un_csv, '(f0.2,16(",",es23.15))') s%t, &
         es_out([pd%area(1), pd%area(2), tot(1), tot(2), tot(3), tot(4), st(1), st(2), res, &
-                tot(5) / real(p%dt, real64), hm(1), hm(2), ff(1), ff(2)])
+                tot(5) / real(p%dt, real64), hm(1), hm(2), ff(1), ff(2), tot(6), tot(7)])
   flush(pd%un_csv)
 end subroutine
 
@@ -359,6 +376,204 @@ end subroutine
 !======================================================================
 !========================= PRIVATE ROUTINES ===========================
 !======================================================================
+
+!----------------------------------------------------------------------
+! 毎ステップ(双方向。f_pd_exchange = 1。§119.6): 地表の水は σ の階段形の断面(畦畔の高さより下は水田でない
+! 面積の割合 1 − a/gv、上はセル全面)で、タンクと落水口(両向き)・畦畔(瞬時)で水をやり取りする。地表の水の
+! 足し引きは矩形換算水深 vh で行う(§26.2)。セル単位で帯の中だけ(ハロ交換なし)
+!----------------------------------------------------------------------
+subroutine calc_twoway(pd, p, g, s)
+  type(t_paddy), intent(inout) :: pd
+  type(t_sysparam), intent(in) :: p
+  type(t_geoinfo), intent(in) :: g
+  type(t_state), intent(inout) :: s
+  integer :: i, j, c
+  real :: dt, a, rain, gv, vh, vh0, hd, r, q, sp, pc, fill, wv, dtot, phi, vcrest
+  real :: f(1:pd_nclass), tk(1:pd_nclass), qd(1:pd_nclass)
+  real(real64) :: rr(1:nrow)
+
+  dt = p%dt
+  !$omp parallel do schedule(dynamic) private(i, j, c, a, rain, gv, vh, vh0, hd, r, q, sp, pc, fill, wv, &
+  !$omp                                        dtot, phi, vcrest, f, tk, qd, rr)
+  do j = dcp%js, dcp%je
+    rr(:) = 0.0_real64
+    do i = g%wx(1,j), g%wx(2,j)
+      f(:) = 0.0
+      tk(:) = 0.0
+      if (pd%have(1)) then
+        f(1) = pd%fr1(i,j)
+        tk(1) = s%hpn(i,j)
+      end if
+      if (pd%have(2)) then
+        f(2) = pd%fr2(i,j)
+        tk(2) = s%hpd(i,j)
+      end if
+      a = f(1) + f(2)
+      if (a <= 0.0) cycle
+      gv = s%gv(i,j)
+      rain = s%pre(i,j) * dt
+      ! (1) 雨の回収(boundary_h が vh に足した雨のうち水田の上の分)と、タンクへの雨
+      vh = max(sect_vh(s, i, j, s%h(i,j)) - a * rain / gv, 0.0)
+      vh0 = vh
+      hd = sect_h_of(s, i, j, vh)
+      do c = 1, pd_nclass
+        if (f(c) > 0.0) tk(c) = tk(c) + rain
+      end do
+      ! (2) 落水口(両向き。水位の高い側を上流として装置則を使う)。種類ごとにステップの初めの水位から求め、
+      !     陽解法の上限は両側の貯留(タンク、地表 gv·σ(h))で水位差の半分(全水田の面積で数える)
+      r = a / (gv * sect_sig(s, i, j, hd))
+      do c = 1, pd_nclass
+        qd(c) = 0.0
+        if (f(c) <= 0.0) cycle
+        if (hd >= pd%hlev) cycle     ! 地表の水位が畦畔以上: 水田は畦畔を越える流入(下の (3))で満ちる
+        if (tk(c) >= hd) then
+          q = dev_q(pd%dev(c), pd%gt, tk(c), hd) * dt / pd%aplot
+          q = min(q, max(tk(c) - pd%dev(c)%zlow, 0.0), 0.5 * (tk(c) - hd) / (1.0 + r))
+          qd(c) = q
+          rr(2) = rr(2) + real(f(c) * q, real64)
+        else
+          q = dev_q(pd%dev(c), pd%gt, hd, tk(c)) * dt / pd%aplot
+          q = min(q, 0.5 * (hd - tk(c)) / (1.0 + r))
+          qd(c) = -q
+          rr(6) = rr(6) + real(f(c) * q, real64)
+        end if
+      end do
+      do c = 1, pd_nclass
+        if (f(c) <= 0.0) cycle
+        tk(c) = tk(c) - qd(c)
+        vh = vh + f(c) * qd(c) / gv
+      end do
+      vh = max(vh, 0.0)
+      ! (3) 畦畔: タンクが畦畔高を超えた分は地表へ。地表の水位が畦畔を越えたら、畦畔より上の地表の水で
+      !     満ちていない水田を瞬時に満たす(足りなければ空きの比で分ける。越流の長さは持たない)
+      do c = 1, pd_nclass
+        if (f(c) <= 0.0) cycle
+        if (tk(c) > pd%hlev) then
+          sp = tk(c) - pd%hlev
+          tk(c) = pd%hlev
+          vh = vh + f(c) * sp / gv
+          rr(3) = rr(3) + real(f(c) * sp, real64)
+        end if
+      end do
+      hd = sect_h_of(s, i, j, vh)
+      if (hd > pd%hlev) then
+        vcrest = sect_vh(s, i, j, pd%hlev)
+        wv = gv * (vh - vcrest)                       ! 畦畔より上の地表の水(セル面積基底)
+        dtot = 0.0
+        do c = 1, pd_nclass
+          if (f(c) > 0.0) dtot = dtot + f(c) * (pd%hlev - tk(c))
+        end do
+        if (dtot > 0.0 .and. wv > 0.0) then
+          phi = min(1.0, wv / dtot)
+          do c = 1, pd_nclass
+            if (f(c) <= 0.0) cycle
+            fill = phi * (pd%hlev - tk(c))
+            if (phi >= 1.0) then
+              tk(c) = pd%hlev
+            else
+              tk(c) = tk(c) + fill
+            end if
+            vh = vh - f(c) * fill / gv
+            rr(7) = rr(7) + real(f(c) * fill, real64)
+          end do
+          vh = max(vh, 0.0)
+        end if
+      end if
+      ! (4) 減水深
+      do c = 1, pd_nclass
+        if (f(c) <= 0.0) cycle
+        pc = min(pd%perc * dt, tk(c))
+        tk(c) = tk(c) - pc
+        rr(4) = rr(4) + real(f(c) * pc, real64)
+      end do
+      rr(1) = rr(1) + real(a * rain, real64)
+      rr(5) = rr(5) + real(gv * (vh - vh0), real64)
+      ! 地表へ(e の回復。契約 2)と状態
+      s%h(i,j) = sect_h_of(s, i, j, vh)
+      s%e(i,j) = s%z(i,j) + s%h(i,j)
+      if (pd%have(1)) s%hpn(i,j) = tk(1)
+      if (pd%have(2)) s%hpd(i,j) = tk(2)
+      s%pdv(i,j) = f(1) * tk(1) + f(2) * tk(2)
+    end do
+    pd%rows(j,1:4) = pd%rows(j,1:4) + rr(1:4) * pd%dxdy
+    pd%rows(j,5) = rr(5) * pd%dxdy
+    pd%rows(j,6:7) = pd%rows(j,6:7) + rr(6:7) * pd%dxdy
+  end do
+  !$omp end parallel do
+end subroutine
+
+
+!----------------------------------------------------------------------
+! 双方向(二室化。f_pd_exchange = 1。§119.6)の検査と、水田のセルの階段形の断面の登録(collective)
+!----------------------------------------------------------------------
+subroutine setup_twoway(pd, g, s)
+  type(t_paddy), intent(in) :: pd
+  type(t_geoinfo), intent(in) :: g
+  type(t_state), intent(inout) :: s
+  real, allocatable :: dst(:,:), fst(:,:)
+  integer :: i, j, k, nbad, ib, jb, key
+  real :: fa
+  character(len=256) :: msg
+  character(len=32) :: sval
+
+  ! 全ランク同値の判定
+  if (s%gv_active) call par_stop("list_paddy: f_pd_exchange=1 cannot be combined with the feedback of building " &
+      //"destruction on the void ratio (fn_bldgdebris): the non-paddy fraction 1 - a/gv of a cell would change")
+  if (s%sed_active) call par_stop("list_paddy: f_pd_exchange=1 cannot be combined with suspended sediment " &
+      //"(f_suspend / f_debris of fn_geomorph) yet: the sediment carried into the paddy tanks is not handled")
+  if (m_swflow_enc_nh_active()) call par_stop("list_paddy: f_pd_exchange=1 cannot be combined with the " &
+      //"non-hydrostatic correction (f_nonhydrostatic=1): cells with a cross-section shape stay hydrostatic")
+  ! 帯で: ため池のセルと、水田でない面積の割合の下限(誤りの種類とセルを 1 つの整数にまとめて全ランクの最大)
+  nbad = 0
+  ib = 0
+  jb = 0
+  key = 0
+  do j = dcp%js, dcp%je
+    do i = g%wx(1,j), g%wx(2,j)
+      fa = pd%fr1(i,j) + pd%fr2(i,j)
+      if (fa <= 0.0) cycle
+      k = 0
+      if (1.0 - fa / s%gv(i,j) < pd_smin) k = 1
+      if (g%rscap(i,j) > 0.0) k = 2
+      if (k > nbad) then
+        nbad = k
+        ib = i
+        jb = j
+      end if
+    end do
+  end do
+  if (nbad > 0) key = nbad * (g%nx * g%ny) + (jb - 1) * g%nx + (ib - 1)
+  call par_allreduce_maxi(key)
+  if (key > 0) then
+    nbad = key / (g%nx * g%ny)
+    ib = mod(key, g%nx * g%ny)
+    jb = ib / g%nx + 1
+    ib = mod(ib, g%nx) + 1
+    if (nbad == 2) then
+      msg = "paddy: f_pd_exchange=1: a paddy cell is a pond cell (rscap > 0; the pond takes the surface water " &
+            //"on the void basis)"
+    else
+      write(sval, '(f4.2)') pd_smin
+      msg = "paddy: f_pd_exchange=1: the non-paddy fraction 1 - a/gv of a paddy cell is below "//trim(sval) &
+            //" (leave room for levees, farm roads and drains)"
+    end if
+    call par_stop(trim(msg)//" (e.g. at ("//itoa(ib)//","//itoa(jb)//"))")
+  end if
+  ! 階段形の断面: 遷移深さ D = 畦畔高、床の割合 = 1 − a/gv(帯 + ハロ)
+  allocate(dst(dcp%ish:dcp%ieh, dcp%jsh:dcp%jeh), fst(dcp%ish:dcp%ieh, dcp%jsh:dcp%jeh), source = 0.0)
+  do j = dcp%jsh, dcp%jeh
+    do i = dcp%ish, dcp%ieh
+      fa = pd%fr1(i,j) + pd%fr2(i,j)
+      if (fa <= 0.0) cycle
+      dst(i,j) = pd%hlev
+      fst(i,j) = 1.0 - fa / s%gv(i,j)
+    end do
+  end do
+  call m_swflow_enc_set_step_sect(g, s, dst, fst)
+  call par_info("paddy: two-way exchange (f_pd_exchange = 1): below the levee crest the surface water of a paddy " &
+                //"cell is stored and flows in the non-paddy part (1 - a/gv), above it in the whole cell")
+end subroutine
+
 
 !----------------------------------------------------------------------
 ! 1 つのタンクの 1 ステップ(雨を足した後の落水・越流・減水深)
@@ -586,6 +801,17 @@ subroutine setup_scalars(pd, list)
     if (.not. (list%pd_h0 >= 0.0 .and. list%pd_h0 <= pd%hlev)) then
       call par_stop("list_paddy: pd_h0 must satisfy 0 <= pd_h0 <= pd_hlev (m)")
     end if
+  end if
+  if (list%f_pd_exchange <= -9998) then
+    pd%exch = 0
+    call par_info("paddy: f_pd_exchange = 0 (default)")
+  else
+    pd%exch = list%f_pd_exchange
+    call par_info("paddy: f_pd_exchange = "//itoa(pd%exch))
+  end if
+  if (pd%exch < 0 .or. pd%exch > 1) then
+    call par_stop("list_paddy: f_pd_exchange must be 0(one-way: rain only) or 1(two-way: flood water also " &
+                  //"enters the paddy fields): "//itoa(pd%exch))
   end if
 end subroutine
 
@@ -1031,7 +1257,8 @@ subroutine open_csv(pd, p)
   if (.not. is_root) return
   open(newunit=pd%un_csv, file=trim(p%dir_result)//"/paddy.csv", status='replace')
   write(pd%un_csv, '(a)') "time(s),area1(m2),area2(m2),rain(m3),outflow(m3),spill(m3),perc(m3),store1(m3)," // &
-                          "store2(m3),residual(m3),qsurf(m3/s),h1(mm),h2(mm),full1(-),full2(-)"
+                          "store2(m3),residual(m3),qsurf(m3/s),h1(mm),h2(mm),full1(-),full2(-)," // &
+                          "inflow(m3),levee_in(m3)"
 end subroutine
 
 
@@ -1047,7 +1274,7 @@ subroutine save_state(pd, p, s)
   if (is_root) then
     call sysdep_mkdir(p%dir_save)
     open(newunit=un, file=trim(p%dir_save)//'/paddy.dat', form='unformatted', status='replace')
-    write(un) save_version, dcp%nx_g, dcp%ny_g, merge(1, 0, pd%have(1)), merge(1, 0, pd%have(2))
+    write(un) save_version, dcp%nx_g, dcp%ny_g, merge(1, 0, pd%have(1)), merge(1, 0, pd%have(2)), pd%exch
   end if
   if (pd%have(1)) call restart_write_cell(un, s%hpn)
   if (pd%have(2)) call restart_write_cell(un, s%hpd)
@@ -1064,7 +1291,7 @@ subroutine restore_state(pd, p, s)
   type(t_state), intent(inout) :: s
   character(:), allocatable :: fname
   logical :: found
-  integer :: un, hd(1:5)
+  integer :: un, hd(1:6)
   fname = trim(p%dir_save)//'/paddy.dat'
   inquire(file=fname, exist=found)
   if (.not. found) call par_stop("paddy: state file not found (was fn_paddy enabled when saving): "//fname)
@@ -1079,6 +1306,7 @@ subroutine restore_state(pd, p, s)
   call par_allreduce_maxi(hd(3))
   call par_allreduce_maxi(hd(4))
   call par_allreduce_maxi(hd(5))
+  call par_allreduce_maxi(hd(6))
   if (hd(1) /= save_version) then
     call par_stop("paddy: state file format version "//itoa(hd(1))//" does not match the version this " &
                   //"executable reads ("//itoa(save_version)//"): "//fname)
@@ -1086,6 +1314,10 @@ subroutine restore_state(pd, p, s)
   if (hd(2) /= dcp%nx_g .or. hd(3) /= dcp%ny_g .or. ((hd(4) > 0) .neqv. pd%have(1)) .or. &
       ((hd(5) > 0) .neqv. pd%have(2))) then
     call par_stop("paddy: the grid or the classes of paddy fields differ from the saved state "//fname)
+  end if
+  if (hd(6) /= pd%exch) then
+    call par_stop("paddy: f_pd_exchange differs from the saved state (the surface water of paddy cells is " &
+                  //"stored differently in one-way and two-way runs): "//fname)
   end if
   if (pd%have(1)) call restart_read_cell(un, s%hpn)
   if (pd%have(2)) call restart_read_cell(un, s%hpd)

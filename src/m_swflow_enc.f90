@@ -47,6 +47,7 @@ module m_swflow_enc
   public :: sct                                ! m_geomorph の浮遊砂 E-D が読む(have_sect, sdep。§26)
   public :: m_swflow_enc_post            ! ステップ末尾の u,v 正規化パス(§26)
   public :: m_swflow_enc_sdep_update     ! 河床変動後の σ 遷移深さ D の更新(§26)
+  public :: m_swflow_enc_set_step_sect   ! 階段形の断面の登録(水田の二室化。m_paddy が呼ぶ。§26.3・§119.6)
   public :: m_swflow_enc_edge_flux             ! 測線計測のエッジ流量の観測口(opt%have_edge_flux と対)
   public :: m_swflow_enc_nest_export, m_swflow_enc_nest_import   ! ネスティングのエッジ量の窓・帯(nesting_plan §3.5)
   public :: e_bc_wall                          ! m_nest が子の外縁条件(壁)を検査するため
@@ -5050,6 +5051,47 @@ subroutine m_swflow_enc_sdep_update(p, g, s)
   if (changed) ich = 1
   call par_allreduce_maxi(ich)
   if (ich > 0) call update_af(g, s)
+end subroutine
+
+
+!----------------------------------------------------------------------
+! 階段形の断面の登録(水田の二室化。§26.3・§119.6)
+!   dstep > 0 のセルを、遷移深さ D = dstep・床の割合 f = fstep の σ のセル(h < D で σ = f、h ≥ D で 1)に
+!   する。m_paddy_init が swflow の init の後に 1 度だけ呼ぶ(collective: update_af がハロを交換する)。
+!   河道の σ(冪の形)と同じ配列に載せる(水田のセルは河道セルに置けないので重ならない)。D は河床変動に
+!   追従しない(天端の記録 screst を持たない = m_swflow_enc_sdep_update の対象外)。真の水深 s%h はそのまま
+!   (水位として読み替え、矩形換算水深 vh は次の連続式の頭で作る)
+!----------------------------------------------------------------------
+subroutine m_swflow_enc_set_step_sect(g, s, dstep, fstep)
+  type(t_geoinfo), intent(in) :: g
+  type(t_state), intent(inout) :: s
+  real, intent(in) :: dstep(dcp%ish:, dcp%jsh:)   ! 遷移深さ D (m。0 = 登録しない)
+  real, intent(in) :: fstep(dcp%ish:, dcp%jsh:)   ! 床の割合 f (0 < f < 1)
+  integer :: i, j
+  if (.not. sct%have_sect) then
+    ! 河道の σ がない計算: 配列をここで作る(冪の形の定数は既定の m = 0 のまま。河道のセルはない)
+    allocate(sct%sdep(dcp%ish:dcp%ieh, dcp%jsh:dcp%jeh), source = 0.0)
+    allocate(sct%sfl(dcp%ish:dcp%ieh, dcp%jsh:dcp%jeh), source = 0.0)
+    allocate(sct%screst(dcp%ish:dcp%ieh, dcp%jsh:dcp%jeh), source = screst_none)
+    sct%have_sect = .true.
+    s%sect_m = sct%sect_m
+    s%sect_mp1 = sct%sect_mp1
+    s%sect_rmp1 = sct%sect_rmp1
+    s%sect_mfac = sct%sect_mfac
+  end if
+  do j = dcp%jsh, dcp%jeh
+    do i = dcp%ish, dcp%ieh
+      if (dstep(i,j) <= 0.0) cycle
+      sct%sdep(i,j) = dstep(i,j)
+      sct%sfl(i,j) = fstep(i,j)
+      sct%screst(i,j) = screst_none
+    end do
+  end do
+  if (allocated(s%sdep)) deallocate(s%sdep)
+  allocate(s%sdep(dcp%ish:dcp%ieh, dcp%jsh:dcp%jeh), source = sct%sdep)
+  if (allocated(s%sfl)) deallocate(s%sfl)
+  allocate(s%sfl(dcp%ish:dcp%ieh, dcp%jsh:dcp%jeh), source = sct%sfl)
+  call update_af(g, s)
 end subroutine
 
 

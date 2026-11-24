@@ -13,8 +13,12 @@ made into paddy-field dams), the type of device and the ponding before the rain.
 
 The current version represents the paddy fields in a cell as **subgrid tanks** (see
 [How it works](#how-it-works) below). The same formulas can be used from basin models of 100–200 m to
-drainage districts of 20–50 m. Resolving each plot on a grid of 5–10 m, with the levees as virtual walls and
-the outlets as notches in them, is planned (design in docs/paddy_plan.md §7).
+drainage districts of 20–50 m. The exchange with the surface water can be chosen from two modes. The default
+**one-way** mode puts only the rain on the paddy fields into the tanks; the **two-way** mode (`f_pd_exchange = 1`)
+also lets river and inland flood water enter the paddy fields through the outlets and over the levees (see
+[Relation to the surface water](#relation-to-the-surface-water-one-way-and-two-way) below). Resolving each plot on a
+grid of 5–10 m, with the levees as virtual walls and the outlets as notches in them, is planned (design in
+docs/paddy_plan.md §7).
 
 - **Paddy tanks**: tanks that receive the rain falling on the paddy area fraction a of a cell. The paddy
   fields are split by the adoption ratio into "paddy fields with normal outlets" (class 1) and "paddy-field
@@ -22,7 +26,8 @@ the outlets as notches in them, is planned (design in docs/paddy_plan.md §7).
 - **Outlets**: one outlet for each representative plot area A_plot. Its discharge is given by the device law
   from the ponding depth and the water depth downstream (on the surface of the cell). The discharge goes to
   the surface water of the cell and flows with the shallow water flow.
-- **Levees**: ponding above the levee height overflows at once to the surface.
+- **Levees**: ponding above the levee height overflows at once to the surface. In the two-way mode, the paddy
+  fields fill at once when the surface water level rises above the levees.
 
 The history and the decisions of the design are in developer.md §119, and the study and the list of
 references are in docs/paddy_plan.md.
@@ -39,6 +44,7 @@ Give `fn_paddy` in `&list_sysparam` (`"-"` for the same parameter file). The set
   !pd_hlev = 0.30                 ! levee height (m; default 0.30)
   !pd_dev_type(2) = 1             ! device type of the paddy-field dams (default 1 = separated type)
   !pd_open_d(2) = 0.05            ! diameter of the hole of the outflow control plate (m; default 0.05)
+  !f_pd_exchange = 1              ! two-way: flood water also enters the paddy fields (default 0 = one-way, rain only)
 /
 ```
 
@@ -64,6 +70,7 @@ giving `pd_adopt`.
 | Water level of the main drain of a district (20–50 m) | main drain as a channel mask with a subgrid width, paddy fields by the area fraction | discharge on the flux lines and water level at the probes of the main drain, ponding depth `Hpd` |
 | Comparing devices | change `pd_dev_type(2)` and the size of the hole | rate of the outflow (outlet flow and overflow) `qsurf` and storage in `paddy.csv` |
 | Comparing the state before the rain | `pd_h0` (0 = empty for mid-season drainage, 0.03 = normal ponding, 0.30 = full from an earlier rain) | same as above |
+| River and inland flooding (coarse grids) | `f_pd_exchange = 1`; overtopping or breaching of rivers and backwater of drains given through channels and boundaries | inundation depth `H`, the inflows inflow and levee_in in `paddy.csv`, `Hpn` and `Hpd` |
 
 ## How it works
 
@@ -150,16 +157,42 @@ restriction), and the hole restricts it once the discharge exceeds what the hole
 hole restricts from the start of the rain. Integrated types with a triangular notch (V-notch weir) or a
 rectangular notch (gate-shaped weir) are given by the hole shapes `pd_open_type` = 3 and 2 of type 2.
 
-### Relation to the surface water (one way)
+### Relation to the surface water (one way and two way)
 
-The water depth downstream of the outlet is the surface water depth of the cell. When the surface water rises,
-the outlet becomes submerged and the outflow decreases; when the surface water level reaches the ponding
-depth, the outflow stops. **Flow in the opposite direction (inundation entering the paddy fields through the
-outlets or over the levees) is not represented.** The surface water covers the whole cell while a tank sits on
-the paddy area only, so making the exchange two-way would count the storage twice when the two levels become
-equal (for paddy fields with area fraction 0.8 and levees of 0.3 m under inundation, the inundation depth would
-be underestimated by about 0.24 m). For targets where inundation entering the paddy fields matters in low-lying
-land, read [Scope and restrictions](#scope-and-restrictions) below.
+**One-way (default; `f_pd_exchange = 0`)**: the water depth downstream of the outlet is the surface water depth of
+the cell. When the surface water rises, the outlet becomes submerged and the outflow decreases; when the surface
+water level reaches the ponding depth, the outflow stops. **Flow in the opposite direction (inundation entering the
+paddy fields through the outlets or over the levees) is not represented.** The surface water is spread over the whole
+cell, so making the exchange two-way in this form would count the storage twice when the two levels become equal (for
+paddy fields with area fraction 0.8 and levees of 0.3 m under inundation, the inundation depth would be underestimated
+by about 0.24 m). Use the two-way mode for targets where inundation enters the paddy fields.
+
+**Two-way (`f_pd_exchange = 1`)**: the surface water of a paddy cell is treated as a **step-shaped cross-section** with
+the same mechanism as the channel cross-section shape σ (developer.md §119.6; design in docs/paddy_plan.md §13).
+
+- Below the levee crest: only the non-paddy area (roads, drains, levees; the share 1 − a/gv of the open area of the
+  cell) stores and conveys the water.
+- Above the levee crest: the whole cell stores and conveys the water.
+- The water of the paddy fields below the levee crest is held by the tanks. When the paddy fields are full and the
+  level is above the levees, the water of the cell equals "open area × depth", without counting it twice.
+
+Exchange between the surface and the tanks (one step):
+
+1. **Rain**: as in the one-way mode, the rain on the paddy fields goes into the tanks.
+2. **Outlets (both directions)**: the device law is applied with the higher side as upstream. When the level of the
+   drains (surface) is above the ponding, water flows back from the drains into the paddy fields through the outlets
+   (using the same law regardless of the direction of the device is an original simplification). While the surface
+   water level is at or above the levee crest, the outlets exchange nothing (the paddy fields fill in step 3).
+3. **Levees**: ponding above the levee height overflows to the surface. When the surface water level rises above the
+   levees, the surface water above the crest fills the paddy fields that are not full at once (shared in proportion to
+   the free storage if it is not enough).
+4. **Decrease in depth**: as in the one-way mode.
+
+Resulting behaviour: incoming flood water first fills the roads and drains (surface), and the paddy fields fill when
+the level rises above the levees (detention). After all paddy fields are full, the flood spreads as inundation over the
+whole cell. When the level falls below the levees, the paddy fields keep water up to the levee height and drain slowly
+through the outlets (restricted by the hole for paddy-field dams). Results also differ from the one-way mode under rain
+alone, because the surface water gathers on the non-paddy area, becomes deeper and submerges the outlets more easily.
 
 ### Time step
 
@@ -167,14 +200,17 @@ The tanks are explicit and use the same step $`\Delta t`$ as the shallow water f
 over the time it takes the ponding depth to change by a few cm (minutes to hours), which is much longer than the
 step of the shallow water flow (seconds), so it does not limit the step. The water moved in one step is capped
 by the storage above the level at which the outlet starts to drain and by the amount that fills half the
-difference of the levels to the downstream (to prevent overshoot of the explicit scheme).
+difference of the levels to the downstream (to prevent overshoot of the explicit scheme). In the two-way mode too,
+storage and conveyance change in the same proportion, so the speed of gravity waves does not change and the time step
+is not limited further.
 
 ## Output and checks
 
 | Output | Contents |
 |---|---|
 | `Hpn0001…`, `Hpd0001…` | ponding depth (m, above the field surface) of the paddy fields with normal outlets and of the paddy-field dams. Written automatically only in runs that have paddy fields of that class. 0 in cells without paddy fields |
-| `paddy.csv` (every `dt_record`) | time(s), area1 and area2 (paddy area of each class, m²), rain (accumulated rain on the paddy fields, m³), outflow (accumulated outlet flow), spill (accumulated levee overflow), perc (accumulated decrease in depth), store1 and store2 (storage of each class, m³), residual (change of storage − (rain − outflow − spill − perc)), qsurf (rate moved to the surface in the last step, m³/s), h1 and h2 (mean ponding depth of each class, mm), full1 and full2 (share of the paddy area filled to the levee height) |
+| `paddy.csv` (every `dt_record`) | time(s), area1 and area2 (paddy area of each class, m²), rain (accumulated rain on the paddy fields, m³), outflow (accumulated outlet flow), spill (accumulated levee overflow), perc (accumulated decrease in depth), store1 and store2 (storage of each class, m³), residual (change of storage − (rain + inflow − outflow − spill − perc)), qsurf (net rate moved to the surface in the last step, m³/s; can be negative in the two-way mode), h1 and h2 (mean ponding depth of each class, mm), full1 and full2 (share of the paddy area filled to the levee height), inflow (accumulated inflow into the paddy fields through the outlets; two-way only), levee_in (accumulated inflow over the levees; two-way only) |
+| `H` (paddy cells in the two-way mode) | surface water depth (above the field surface): the depth on the non-paddy area while the level is below the levee crest, and the inundation depth over the whole cell above it |
 | S (S_surf) in the Log | surface water plus the storage of the paddy tanks (domain mean, m) |
 
 The accumulated values in `paddy.csv` start at the beginning of the run (at the restart when restarted). The
@@ -193,7 +229,8 @@ levee height is the remaining free storage.
 
 - Breaching, leakage or collapse of levees, and clogging or removal of the control plates (given only as scenarios
   by changing the device type and the adoption ratio).
-- Flow of inundation into the paddy fields (see [Relation to the surface water](#relation-to-the-surface-water-one-way) above).
+- Flow of inundation into the paddy fields in the one-way mode (use the two-way mode; see
+  [Relation to the surface water](#relation-to-the-surface-water-one-way-and-two-way) above).
 - Growth of the rice and judgement of submergence damage (up to giving the ponding depth and its duration),
   irrigation intake and distribution, and changes of water management in time such as mid-season drainage (the
   devices do not change during a run).
@@ -215,18 +252,25 @@ levee height is the remaining free storage.
 - Field studies reported that the main cause of overflow is backflow and poor drainage due to the rising water level
   of the drains. In a computation of Kameda-gō, Niigata (41 % paddy), over 90 % of the overflowing paddy fields were caused
   by high water levels in the drains, and at 200 mm/d of rain 89 % of the overflow was backflow from the drains[^sato2021].
-  This version restricts the outflow by the downstream water level but does not represent backflow, so it underestimates
-  overflow in low-lying land with strong backwater.
+  The one-way mode restricts the outflow by the downstream water level but does not represent backflow, so it
+  underestimates overflow in low-lying land with strong backwater. The two-way mode represents backflow through the
+  outlets.
 - In a basin, the effect has been reported to be largest for a rain of 268 mm/d (about once in 120 years) and to become
   smaller for stronger rain as more paddy fields overflow their levees[^miyazu2020].
-- **Cells where river or inland flood water reaches the paddy fields** (overtopping or breaching of rivers, overflow of
+- **Cells where river or inland flood water reaches the paddy fields (one-way mode)** (overtopping or breaching of rivers, overflow of
   drains): the surface water does not enter the tanks and the tank water does not merge with the flood. In cells flooded
   above the levee crest, the flood level is underestimated by up to "area fraction × ponding depth of the tank" (0.16 m
   for an area fraction of 0.8 and a ponding depth of 0.2 m), and `Hpn` and `Hpd` keep the ponding depth stored from rain
   alone (smaller than the actual ponding of the flooded fields). Below the levee crest, the surface water spreads over the
   whole cell, so the inundation depth comes out smaller than the actual depth outside the paddy fields (roads, drains,
-  settlements) (the same limit as a coarse-grid run without paddy fields). Assessing low-lying land where floods reach the
-  paddy fields needs the method that resolves the plots (planned).
+  settlements) (the same limit as a coarse-grid run without paddy fields). Use the two-way mode (`f_pd_exchange = 1`) to
+  assess floods that reach the paddy fields.
+- **Limits of the two-way mode**: inflow over the levees is treated as instantaneous, without an overflow length. A
+  rough estimate gives 4–12 minutes to fill a 100 m cell (80 % paddy) with an overflow depth of 5–10 cm, shorter than
+  the time scale of a flood, but for shallow overflow lasting long the paddy fields fill too early. Below the levee
+  crest, water flows only on the non-paddy area (the layout of drains and roads between the plots is not represented).
+  Sediment and solutes carried into the paddy fields by the flood are not represented (it cannot be combined with
+  suspended sediment or water quality).
 - The discharge coefficients of devices vary from 0.40 to 0.88 with the product and the installation
   [^yoshikawa2009][^minakawa2022]. The default 0.6 is the value of the calculation program of the guide and is a starting
   point for calibration.
@@ -235,7 +279,11 @@ levee height is the remaining free storage.
 (multiple grids), water quality (`fn_wq`) or the two-layer fresh and salt water (`fn_salt`) (stops at start-up).
 Paddy cells (area fraction > 0) cannot be on sea, channel (`fn_rw`), water level boundary, inflow boundary, source or
 structure cells, nor on zone cells of [VZ](vz.md) or of the [storage function method](sfm.md). The area fraction cannot
-exceed the void ratio of buildings `fn_gv` (paddy fields and buildings are different parts of the same cell).
+exceed the void ratio of buildings `fn_gv` (paddy fields and buildings are different parts of the same cell). The
+two-way mode cannot be combined with the feedback of building destruction on the void ratio (`fn_bldgdebris`),
+suspended sediment (`f_suspend`, `f_debris`) or the non-hydrostatic correction (`f_nonhydrostatic = 1`); paddy cells
+cannot be pond cells (`fn_rscap`); and the non-paddy share 1 − a/gv must be at least 0.05 (for levees, farm roads and
+drains) (stops at start-up). A state saved in the one-way mode cannot be restarted in the two-way mode, nor the reverse.
 
 **Combination with landform change** (`fn_geomorph`): the rain on paddy fields falls into the tanks (the ponded water on
 the fields), so erosion by raindrops (the raindrop term of `f_wash`, `f_splash`) is computed without the paddy part (the
@@ -264,6 +312,7 @@ The labels in the Basis column are explained in [How to read the basis of a defa
 | pd_hlev | 0.30 m | levee height (above the field surface) | **Literature** levees of about 30 cm in the guide[^maff2026][^maffplan] |
 | pd_h0 | level at which the outlet starts to drain | ponding depth before the run (above the field surface; same value for both classes) | **Given** the default is normal ponding (height of the water-level board) |
 | pd_perc_mmd | 5 mm/d | decrease in depth (leaves the system) | **Literature** default of the calculation program of the guide[^maff2026] |
+| f_pd_exchange | 0 | exchange of water between the surface and the paddy fields (0: one-way = rain only, 1: two-way = flood water also enters the paddy fields through the outlets and over the levees) | **Method** the two-way mode is an original construction (docs/paddy_plan.md §13, developer.md §119.6) |
 | pd_dev_type(c) | 0 / 1 | device type (0: water-level board only, 1: separated type, 2: integrated type) | **Option** class 1 = normal outlet, 2 = separated type[^maff2026] |
 | pd_board_h(c) | 0.03 m | crest height of the water-level board (above the field surface) | **Literature** default of the calculation program[^maff2026][^minakawa2022] |
 | pd_board_w(c) | 0.30 m | width of the water-level board (weir width) | **Literature** example of the guide[^maff2026] |
@@ -291,7 +340,7 @@ The labels in the Basis column are explained in [How to read the basis of a defa
 
 | Case | Contents | Key points |
 |---|---|---|
-| [test/paddy](../../../test/paddy/en/README.md) | drainage, equilibrium, overflow, maps, save → restore of a plot | weir and V-notch against exact solutions (error of the explicit scheme ≤ 1.3×10⁻⁴), circular and rectangular holes and the separated type against independently solved reference solutions (within 3×10⁻⁸ relative), water conservation in a closed domain (7×10⁻¹⁵ m), bit-identical for np = 1, 2, 4 |
+| [test/paddy](../../../test/paddy/en/README.md) | drainage, equilibrium, overflow, maps, save → restore of a plot, two-way mode | weir and V-notch against exact solutions (error of the explicit scheme ≤ 1.3×10⁻⁴), circular and rectangular holes and the separated type against independently solved reference solutions (within 3×10⁻⁸ relative), water conservation in a closed domain (7×10⁻¹⁵ m). In the two-way mode, backflow through the outlets against a reference solution (9×10⁻¹⁶ relative), no double counting when filled over the levees, water conservation with incoming flood water (8×10⁻¹⁴ m). Bit-identical for np = 1, 2, 4 |
 
 ## References
 

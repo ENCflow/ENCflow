@@ -1,0 +1,59 @@
+!======================================================================
+! paddy: 双方向(二室化。f_pd_exchange = 1。developer.md §119.6)その 3: 外水の流入と水の保存
+!   10 × 8 セル(Δx = Δy = 10 m)の平らな閉じた箱。水田面積率は列ごとに 0〜0.9(frac_tw.txt。西端と東端の列は
+!   水田なし)、取組率も列ごと(adopt_mix.txt)。西端の列のセル (1, 4) から外水 1.0 m3/s を 2 h 流し込む
+!   (計 7200 m3 = 領域の平均で 0.9 m)。外水は水田でない面積を伝わり、水位が畦畔を越えると水田を満たし、
+!   全面の浸水になる。雨なし、減水深 5 mm/d(既定)。
+!   確認(Check_paddy.py tw_flood): S の増分(地表 + 水田)+ 減水深 = 流し込んだ外水(領域の平均)、台帳の閉合、
+!   畦畔を越えた流入 > 0、終わりに全ての水田が満ちている
+!======================================================================
+&list_sysparam
+  f_gridsystem = 0
+  dt = 1.0
+  t0 = 0
+  tt = 7200
+  dt_disp = 600
+  dt_file = 7200
+  dt_recrd = 600
+  fn_geoinfo = '-'
+  fn_initial = '-'
+  fn_boundary = '-'
+  fn_paddy = '-'
+  dir_data = 'data_paddy'
+  dir_result = 'result_tw_flood'
+  f_disp_debug = 1
+  f_check_cfl = 0
+  dd = 0.0001
+  dv = 0.0001
+  vv = 0.01
+/
+&list_initial
+  f_htype = 0
+  h0 = 0.0
+/
+&list_geoinfo
+  nx = 10
+  ny = 8
+  dx = 10.0
+  dy = 10.0
+  f_ztype = 0
+  z0 = 0.0
+  f_masktype = 0
+  f_rntype = 0
+  rn0 = 0.03
+/
+&list_bound_edge
+/
+&list_bound_inflow
+  inflow_cell(:,1,1) = 1, 4
+  inflow_val(:,1,1) = 0, 1.0
+  inflow_val(:,2,1) = 9999, 1.0
+  inflow_dist(1) = 0
+/
+&list_paddy
+  fn_pd_frac = 'frac_tw.txt'
+  fn_pd_adopt = 'adopt_mix.txt'
+  pd_hlev = 0.30
+  pd_aplot = 300.0
+  f_pd_exchange = 1         ! 双方向(二室化)
+/
