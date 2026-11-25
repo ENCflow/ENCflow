@@ -25,7 +25,7 @@
 
 | ファイル | 内容 |
 |---|---|
-| `Run.sh` | Log.txt・wq.csv を reference と比較(ULP = 0)→ `Check_damwq.py closure` → `uniform` |
+| `Run.sh` | Log.txt・wq.csv を reference と比較(ULP = 1。reference を作ったマシンと CPU の違うマシンでは、Log.txt の S の最終桁が 1 つ変わるため。同じマシンでは `ULP=0 ./Run.sh` でビット比較できる)→ `Check_damwq.py closure` → `uniform` |
 | `Check_damwq.py closure\|uniform` | 台帳の閉合(相対 1e-6)と各経路の活性 / 最終 C 場の湿潤セルが 100 ± 0.1 |
 | `Fig.py` | 下の図 `figs/damwq.png` |
 
