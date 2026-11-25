@@ -92,14 +92,14 @@ def main():
     # ---- 表 1: 水位 ----
     wl = mi.read_csv("wl_2-1.csv.gz")
     gauges = list(dict.fromkeys(wl["gauge"]))
-    print("表 1  水位の誤差(計算 − 計測。5 分平均のうち流量 %g L/s 以上の時間。計算は水位計を中心とする 3 × 3 セルの"
-          "濡れたセルの平均。mm)" % QMIN)
+    print("表 1  水位の誤差(計算 − 計測。5 分平均のうち流量 %g L/s 以上の時間。計算は水位計を中心とする 3 × 3 セルのうち"
+          "元の格子の内側(下流端の延長を除く。掛かるのは 8.4k だけ)の濡れたセルの平均。mm)" % QMIN)
     print("%-8s" % "gauge" + "".join("%22s" % r[1][:20] for r in runs))
     wl_model = {}
     for d, lab in runs:
         wl_model[d] = {}
         for n, gname in enumerate(gauges):
-            wl_model[d][gname] = gauge_level(d, n)
+            wl_model[d][gname] = gauge_level(d, n, inside=A >= 0)
     for gname in gauges:
         sel = wl["gauge"] == gname
         tm, lv = wl["t_min"][sel], wl["level"][sel]
@@ -193,11 +193,17 @@ def main():
     outlet_profile(dz_meas, dz_model, runs, mov, dist)
 
 
-def gauge_level(d, n, hmin=0.002):
-    """水位計 n(0 始まり)の 3 × 3 セルのうち、水深 hmin 以上のセルの水位 z + h の平均(濡れたセルがなければ nan)"""
+def gauge_level(d, n, hmin=0.002, inside=None):
+    """水位計 n(0 始まり)の 3 × 3 セルのうち、水深 hmin 以上のセルの水位 z + h の平均(濡れたセルがなければ nan)。
+    inside(セルの真偽の配列)を与えると、その外のセル(下流端の延長。模型にない部分で、高さが構成ごとに違う)を除く"""
     zs, hs = [], []
     for k in range(9):
-        t, z, h = read_probe(os.path.join(HERE, d, "probes", "probe%04d.csv" % (9 * n + k + 1)), both=True)
+        path = os.path.join(HERE, d, "probes", "probe%04d.csv" % (9 * n + k + 1))
+        if inside is not None:
+            ix, iy = probe_cell(path)
+            if not inside[iy - 1, ix - 1]:
+                continue
+        t, z, h = read_probe(path, both=True)
         zs.append(z)
         hs.append(h)
     z, h = np.array(zs), np.array(hs)
@@ -205,6 +211,20 @@ def gauge_level(d, n, hmin=0.002):
     cnt = wet.sum(0)
     e = np.where(cnt > 0, np.where(wet, z + h, 0.0).sum(0) / np.maximum(cnt, 1), np.nan)
     return t, e
+
+
+def probe_cell(path):
+    """プローブの CSV の # 行のセル番号 (ix, iy)(1 始まり)"""
+    ix = iy = None
+    with open(path) as f:
+        for line in f:
+            if not line.startswith("#"):
+                break
+            if line.startswith("# ix"):
+                ix = int(line.split(",")[1])
+            elif line.startswith("# iy"):
+                iy = int(line.split(",")[1])
+    return ix, iy
 
 
 def read_probe(path, both=False):

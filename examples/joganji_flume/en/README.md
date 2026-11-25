@@ -18,12 +18,16 @@ changed by more than 5 mm (40 %) and in the eroded volume (1.2 m³; measured 41 
 changes too much (57 %, 2.1 m³). The locations of the change, however, do not match the measurement (point-by-point
 correlation 0.1 to 0.25): the incisions along narrow threads and the degradation of the middle reach and the
 downstream end do not appear. In the model the flow spreads over the width of the low-water channel instead of
-gathering into one thread as in the measurement. For the surface composition, the measured mean hardly changes,
-whereas the model loses fines and coarsens too much. In the sensitivity configurations, lowering the downstream
-extension to the fixed bed produces a lowering from the downstream end of the same shape as measured but makes the
-downstream water level 9 cm lower than measured (the lip was close to the initial bed level), and setting the substrate
-to the initial surface composition keeps the surface from coarsening at the cost of a much too large bed change
-("Sensitivity").
+gathering into one thread as in the measurement. The measured velocity (the surface velocity from PIV) times the
+modelled depth gives only six tenths of the discharge of a section, so the model sends too much water through
+shallow places. Changing the grid, the advection, the roughness map or adding a horizontal eddy viscosity (a turbulence
+model) does not narrow this gap ("Velocity").
+For the surface composition, the measured mean hardly changes, whereas the model loses fines and coarsens too much.
+In the sensitivity configurations, lowering the downstream extension to the fixed bed produces a lowering from the
+downstream end of the same shape as measured, but about twice as deep, and the water level upstream drops as well.
+The downstream end of the scale model is a fixed-bed section with a drop beyond it, so the lip lies at the initial
+bed level of the end section. Setting the substrate to the initial surface composition keeps the surface from
+coarsening at the cost of a much too large bed change ("Sensitivity").
 Mixing the grain sizes brings the magnitude of the change close to the measurement, but with this grid and these
 settings the formation of threads and the pattern of the surface composition are not reproduced; that is the
 conclusion of this example (candidate reasons under "What this model cannot represent and the limits of accuracy").
@@ -150,6 +154,9 @@ The numbers are copied from the tables printed by `python3 plot_results.py` (tab
 
 ![Upstream discharge and water levels at four gauges](figs/waterlevel.png)
 
+The modelled water level is the mean over the wet cells among the 3 × 3 cells centred on a gauge. Only for 8.4k,
+which stands on the downstream end section, six of the 3 × 3 cells fall on the downstream extension (a part that is
+not in the scale model), so it is compared over the remaining three cells.
 Compared as 5-min means over the time with a discharge of 5 L/s or more (148 min in total), the median RMSE over 20
 gauges (17.7k is left out because the cells around the gauge do not get wet) is 11.6 mm (4 to 45 mm) with mixed sizes
 and 13.0 mm (5 to 42 mm) with a single size, and the mean errors are +3.6 mm and +5.5 mm. With depths of 2 to 5 cm
@@ -210,10 +217,34 @@ and (c) of the profile figure), while the model's exchange-layer composition cha
 
 ![Speed at 93 min](figs/velocity.png)
 
-Over the 25 000 points where the measurement exceeds 0.05 m/s, the mean speed is the same, 0.29 m/s (mixed sizes),
-0.27 m/s (single size) and 0.27 m/s (measured), but the point-by-point correlation is 0.30 and 0.22. In the
-measurement the fast flow gathers into one thread; in the model it spreads over the width of the low-water channel.
-The measurement may be a surface velocity, but the original data do not describe the method.
+The measured velocity is the surface velocity obtained by PIV analysis of the images from the cameras on the ceiling
+(a note in the original data; "outside the analysis range" marks places where no water flows, and those points are
+left out of the comparison). Over the 25 000 points where the measurement exceeds 0.05 m/s (table 5), the mean speed
+is the same, 0.29 m/s (mixed sizes), 0.27 m/s (single size) and 0.27 m/s (measured), but the point-by-point
+correlation is 0.30 and 0.22. In the measurement the fast flow gathers into one thread; in the model it spreads over
+the width of the low-water channel.
+
+- **Spread**: the coefficient of variation of the measured speed is 0.78, nearly three times that of the model
+  (0.28). 39 % of the measured points (16 000) are 0.05 m/s or slower, and there the model has 1–3 cm of water
+  (median 1.8 cm) flowing at 0.24 m/s (table 5b).
+- **Discharge balance**: the measured velocity times the modelled depth, summed over a section, gives only 60 % of
+  the modelled discharge (median over the sections). Four tenths of the modelled discharge pass through points where
+  the measurement is 0.05 m/s or slower (22 %) or where no water flows (19 %) (table 5b). Since the surface velocity
+  is faster than the depth average, the actual flow, if the measured velocity is right, was gathered into threads
+  narrower and deeper than in the model. PIV may also read low in shallow water (72.8 % of the points next to a point
+  without flow are 0.05 m/s or slower, against 26.5 % of the points three or more columns inside; table 5). How much
+  each contributes is not known.
+- **Slowness beyond a resistance law**: slowing the model to the measured speed at the slow points, with the modelled
+  depth and slope, needs a Manning coefficient of 0.3 (median). The resistance estimated from the grain size and the
+  relative depth (the equation of Ferguson 2007; the D84 of the exchange layer is 3 mm in the median, and the ratio of
+  depth to it is 6) is 0.02–0.03, a tenth of that (developer.md §120.8).
+- **Checks on the model side**: with the measured 240-min bed as a fixed bed and 17 L/s, the coefficient of variation
+  of the modelled speed is 0.28 (correlation with the measurement 0.36), and it changes little on a 5 cm grid (0.29),
+  with first-order upwind advection (0.28) or with a roughness map varying with the relative depth (0.33). A
+  horizontal eddy viscosity (a turbulence model; the zero-equation model, `f_diffusion_term = 2`) acts to even out the
+  fast and slow places, and the coefficient of variation falls from 0.284 to 0.283 with α = 0.068 and to 0.275 with
+  α = 0.8 (developer.md §120.8). The modelled speed in shallow water follows Manning's equation with a nearly uniform
+  slope.
 
 ### Ledgers
 
@@ -247,13 +278,17 @@ is the mean over the movable bed.
   −6 mm), about half as deep as this configuration. The base configuration has no such lowering (+0, +3, +3 and
   +1 mm). The four upstream reaches are within 0.4 L of the base configuration. The correlation over the whole
   movable bed rises because the shape of the lowering at the downstream end matches (0.12 → 0.18), but the RMSE
-  grows because the lowering is too deep (14.2 → 15.6 mm). The water level at the downstream gauge 8.4k, on the other
-  hand, has a mean error of +5 mm in the base configuration and −91 mm in this configuration (−14 mm at 9.1k, against
-  −1 mm in the base configuration). The overfall lip that controlled the water level in the model was therefore close
-  to the initial bed level. The measured lowering at the downstream end may be local scour where the flow
-  accelerates towards the lip. In the model the lip (the free-outflow edge) lies beyond the extension (fixed bed, up
-  to 0.9 m long), so this acceleration does not reach the end of the movable bed. This example uses the base
-  configuration (the extension at the initial bed level), which matches the water level.
+  grows because the lowering is too deep (14.2 → 15.6 mm). The water level at gauge 9.1k, 7 m upstream from the
+  downstream end, has a mean error of −1 mm in the base configuration and −14 mm in this configuration (8.4k on the
+  downstream end section cannot be compared: its cells inside the original grid become the lip of the drop to the
+  extension, with less than 2 mm of water). The downstream end of the scale model is a section with little long-term
+  bed change (Tomitate bridge) made a fixed bed, with a drop to the settling basin over which the water falls freely
+  (Kobashi et al. 2026). The lip lies at the initial bed level of the end section, so this configuration, with the
+  extension lowered to the fixed bed, puts the lip lower than in the scale model. The measured lowering at the
+  downstream end may be local scour where the flow accelerates towards the lip. In the model the lip (the
+  free-outflow edge) lies beyond the extension (fixed bed, up to 0.9 m long), so this acceleration does not reach
+  the end of the movable bed. This example uses the base configuration (the extension at the initial bed level), whose
+  lip height matches the scale model.
 - **Substrate composition** (`param_sub.txt`): with the substrate set to the initial surface composition of each cell
   instead of the assumed blend of the laid sand (37.4 % fine), the mean surface fraction of fines after 240 min is
   61.0 %, closer to the measurement (58.6 %) than the base configuration (45.1 %), and the point-by-point
@@ -290,11 +325,16 @@ is the mean over the movable bed.
   surface composition depends strongly on the assumed substrate composition ("Sensitivity").
 - **Concentration of the flow into threads**: in the measurement the flow at high discharge gathers into one thread a
   few tens of centimetres wide, which incises, while in the model it spreads over the width of the low-water
-  channel. The bottom of the initial threads and the section median are kept within 3 mm on the 10 cm grid
-  (compared with the original 5 cm grid points), so the mapping to the grid is not the only cause. Possible reasons
-  are the grid being coarse for the width of the threads (3 to 5 cells), a roughness given uniformly over the
-  low-water channel, the effective shear stress not being used, and small repose collapses that keep flattening the edges of
-  the threads (ledger); this example does not separate which of them matters.
+  channel. Even on the measured 240-min bed as a fixed bed the modelled flow does not gather, and a 5 cm grid,
+  first-order upwind advection, a roughness map varying with the relative depth and a horizontal eddy viscosity all
+  have little effect ("Velocity"), so neither the threads not incising in the model nor the coarse grid is the only
+  cause. The measured speed at the slow points is slower than the grain resistance can explain at the modelled depth:
+  either the actual depth was shallower than in the model (the water did not spread into shallow places), or PIV
+  reads low in shallow water, or both. The water-level errors (RMSE about 12 mm) are not small enough to tell apart a
+  difference of about 1 cm in depth in shallow places. Because the flow does not gather, the incision of the threads
+  and the measured degradation of the middle reach do not appear either. Not using the effective shear stress and the
+  small repose collapses that keep flattening the edges of the threads (ledger) are candidates acting on the
+  development of the bed, which this example does not separate.
 - **Grid**: on the 10 cm grid the narrow low-flow channels (0.3 to 1 m wide) are only 3 to 10 cells, and the mean bed
   of a cell is higher than the bottom of a narrow thread. At base flow many gauge cells are therefore dry, and water
   levels are compared only while the discharge is 5 L/s or more.
@@ -302,17 +342,20 @@ is the mean over the movable bed.
   roughness that includes form drag ("Shear stress" above). The change of transport with and without bedforms is not represented.
 - **Feed volume**: assumed to be a bulk volume (as a solid volume the feed would be 1.67 times larger).
 - **Inlet**: the sump and high structures of the fixed bed at the upstream end are replaced by a level floor.
-- **Downstream end**: the only downstream-end condition in the original data is the water level set to "free". The
-  extension is fixed at the initial bed level of the end section, and with it the water level at the downstream gauge
-  matches (lowering the extension to the fixed bed makes it 9 cm lower). In the measurement the bed within 8–10 m of
-  the downstream end lowers (−14 mm on average over the last 2 m at 240 min), but in the model the lip lies beyond
-  the extension, so this lowering is not represented ("Sensitivity").
+- **Downstream end**: the water level at the downstream end is set to "free" in the original data, and the downstream
+  end section of the scale model is a fixed bed with a drop to the settling basin over which the water falls freely
+  (Kobashi et al. 2026). The model fixes the extension at the initial bed level of the end section (the height of the
+  lip) and puts the free-outflow edge beyond the extension (up to 0.9 m long). In the measurement the bed within
+  8–10 m of the downstream end lowers (−14 mm on average over the last 2 m at 240 min), but in the model the
+  acceleration towards the lip does not reach the end of the movable bed, so this lowering is not represented
+  ("Sensitivity").
 - **Exchange layer**: the results depend on the exchange-layer thickness, and the equations can become ill-posed, for
   example where the bed degrades into a finer substrate (the [supplement](../../../docs/en/users_guide/sediment.md#mixed-grain-sizes-f_bedmix)
   of the user's guide).
-- **Measured surface composition**: the measurement is the apparent fraction at the surface, which is defined
-  differently from the mean composition of the model's exchange layer (about 1 cm thick). The measured map shows
-  straight lines at the boundaries of the sections it was assembled from, and in the map at 240 min the fraction
+- **Measured surface composition**: the measurement is the apparent fraction at the surface from image analysis (the
+  note in the original data says its accuracy varies from place to place), which is defined differently from the
+  mean composition of the model's exchange layer (about 1 cm thick). The measured map shows straight lines at the
+  boundaries of the sections it was assembled from, and in the map at 240 min the fraction
   changes as a block over whole sections in places (for example x = 52 to 60 m), so a point-by-point comparison
   means little.
 - **Bipolarization**: the subject of the paper (narrowing of the low-water channel and a single thread) is a change
@@ -339,6 +382,11 @@ The files in `data_nilim/` were made by processing the following material.
 - Kobashi, R., Tabata, K., Matsui, D., Kojima, T. and Sezaki, T. (2026): 土砂供給量の減少に伴うセグメント 1 河川の
   二極化に関する実験的研究 (an experimental study on the bipolarization of a segment-1 river with a reduced sediment
   supply; title translated here). *Advances in River Engineering* (河川技術論文集), 32, 277–282 (in Japanese).
+  doi:10.11532/river.32.0_277
+- Ferguson, R. (2007): Flow resistance equations for gravel- and boulder-bed streams. *Water Resour. Res.*, 43,
+  W05427. doi:10.1029/2006WR005422 (the form of the equation and the coefficients a1 = 6.5 and a2 = 2.5 are the same
+  as in the [supplement](../../../docs/en/users_guide/sediment.md#3-bedload-f_fluvial) of the user's guide; the paper
+  itself was not read)
 - Ashida, K. and Michiue, M. (1972): Study on hydraulic resistance and bed-load transport rate in alluvial streams.
   *Proc. JSCE*, 206, 59–69 (in Japanese). doi:10.2208/jscej1969.1972.206_59
 - Hirano, M. (1971): River-bed degradation with armoring. *Proc. JSCE*, 195, 55–65 (in Japanese).

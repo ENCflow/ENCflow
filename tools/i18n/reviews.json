@@ -2273,11 +2273,11 @@
     {
       "source": "examples/joganji_flume/README.md",
       "target": "examples/joganji_flume/en/README.md",
-      "source_sha256": "f24de42bf1d2cfaedb4e77fdecb7d8dd142f4007f7ebf078b84ae7c1ba1faa0b",
-      "target_sha256": "cd924138cee6c27ad18fb6bbe4e1b264cbe7bba53095146babeba77b5fba134a",
-      "reviewer": "Claude (Claude Code session; the sensitivity section rewritten for the 240 min results (table, outlet level with the water-level evidence, substrate composition), the summary sentence and the downstream-end limit, in Japanese and English in the same work; both read side by side; numbers checked against the tables printed by plot_results.py)",
+      "source_sha256": "ae81a87812d218ac3a117879b1aa00f7844513192b41a6feee5f7aaae201efa4",
+      "target_sha256": "367ed598eb2f417d76d1ddac86855775a6c989bcd70fa12bf50c1ca50ba68d0c",
+      "reviewer": "Claude (Claude Code session; the velocity section rewritten with the PIV method from the original data and the diagnosis (spread, discharge balance, resistance, model-side checks including the eddy viscosity), the summary, the water-level note on 8.4k, the outlet sensitivity bullet (9.1k and the paper's description of the downstream end), the limits on thread concentration, downstream end and measured surface composition, and two references, in Japanese and English in the same work; both read side by side; numbers checked against the tables printed by plot_results.py and the diagnostic runs recorded in developer.md 120.8)",
       "method": "assistant",
-      "reviewed_on": "2026-11-24"
+      "reviewed_on": "2026-11-25"
     },
     {
       "source": "examples/joganji_flume/figs/bedchange.png",
