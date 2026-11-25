@@ -2975,8 +2975,8 @@
     {
       "source": "examples/paddy_dam/README.md",
       "target": "examples/paddy_dam/en/README.md",
-      "source_sha256": "367a111f32e5436bdde63d3e203e190de924708f06940b69acdcfbd14bea8705",
-      "target_sha256": "babbf9ea528b478cf802cd487d9eb87069cbeb66b5ec2ff911f37612640d80bc",
+      "source_sha256": "bf9559149437f5a6f1c5a8958be46359fa241f5dc2174a4572379a3b71b23c74",
+      "target_sha256": "15c1298981da9c90b7f45a5a9a1601071739d98071837262eb861fe385c493af",
       "reviewer": "Claude (Claude Code session; full-text content and lexical review, no model execution)",
       "method": "assistant",
       "reviewed_on": "2026-11-25"

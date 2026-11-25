@@ -287,9 +287,10 @@ def fig_series():
 
 
 # ---------------------------------------------------------------- 結果 2: 同じ条件の表現 B と表現 A
-REPS = [("B10_%s", REP_B, C1),
-        ("A30_%s", T("%s・片方向" % REP_A, "%s, one-way" % REP_A), C2),
-        ("A30_%s2", T("%s・双方向" % REP_A, "%s, two-way" % REP_A), C3)]
+# 表現ごとに色を分け(表現 B = 青、表現 A = オレンジ)、表現 A のやり取りは線種で(片方向 = 破線、双方向 = 実線)
+REPS = [("B10_%s", REP_B, C1, "-"),
+        ("A30_%s", T("%s・片方向" % REP_A, "%s, one-way" % REP_A), C2, "--"),
+        ("A30_%s2", T("%s・双方向" % REP_A, "%s, two-way" % REP_A), C2, "-")]
 
 
 def fig_scale():
@@ -298,14 +299,14 @@ def fig_scale():
         return
     fig, axs = plt.subplots(2, 2, figsize=(9.8, 6.8), sharex=True, sharey="row")
     for col, g in enumerate(groups):
-        for fmt, rname, color in REPS:
+        for fmt, rname, color, ls in REPS:
             c = fmt % g
             if not have(c):
                 continue
             t, z, h = probe(c, 1)
-            axs[0, col].plot(t, h, color=color, lw=2, label=rname)
+            axs[0, col].plot(t, h, color=color, ls=ls, lw=2, label=rname)
             tp, hm = mean_depth(paddy(c))
-            axs[1, col].plot(tp, hm, color=color, lw=2, label=rname)
+            axs[1, col].plot(tp, hm, color=color, ls=ls, lw=2, label=rname)
         axs[0, col].set_title(T("(%d) 集落の浸水深 — %s" % (col + 1, SCEN[g]), "(%d) settlement depth — %s" % (col + 1, SCEN[g])),
                               fontsize=9, loc="left", color=INK)
         axs[1, col].set_title(T("(%d) 水田の平均水深 — %s" % (col + 3, SCEN[g]),
@@ -369,7 +370,7 @@ def table():
             "inflow over the levees m³ |"))
     print("|---|---|---:|---:|---:|---:|---:|---:|")
     for g in ["N", "D"]:
-        for fmt, rname, _ in REPS:
+        for fmt, rname, _, _ in REPS:
             c = fmt % g
             if not have(c):
                 continue
@@ -380,6 +381,28 @@ def table():
                 back, levin = "%.0f" % p["inflow(m3)"][-1], "%.0f" % p["levee_in(m3)"][-1]
             print("| %s | %s | %.2f(%.1f h) | %s | %.2f | %.0f | %s | %s |"
                   % (g, rname, hx, tx, dur, lv, hm, back, levin))
+    # 表 3(結果 2 の仕組み): 48 h までの雨と水田に入った水。地区全体の雨は雨の段の積分 × 面積
+    tr, rr = rain_series()
+    vrain = sum(rr[k] * (tr[k + 1] - tr[k]) for k in range(len(tr) - 1)) / 1000.0 * (NX * DX) * (NY * DX)
+    print()
+    print(T("表 3(48 h までの水の行き先 m³。地区に降った雨 %.0f m³)" % vrain,
+            "Table 3 (where the water went up to 48 h, m³; rain on the district %.0f m³)" % vrain))
+    print(T("| 落水口 | 表現 | 水田の上に降った雨 | 水田でない所に降った雨 | 水田への流入(逆流 + 畦畔を越えた流入) | 水田に入った水の計 |",
+            "| Outlets | Representation | rain on the paddy fields | rain elsewhere | inflow into the paddy fields (backflow + over the levees) | total water into the paddy fields |"))
+    print("|---|---|---:|---:|---:|---:|")
+    for g in ["N", "D"]:
+        for fmt, rname, _, _ in REPS:
+            c = fmt % g
+            if not have(c):
+                continue
+            p = paddy(c)
+            r = p["rain(m3)"][-1]
+            if c.startswith("A30") and not c.endswith("2"):
+                inf, inf_s = 0.0, "—"
+            else:
+                inf = p["inflow(m3)"][-1] + p["levee_in(m3)"][-1]
+                inf_s = "%.0f" % inf
+            print("| %s | %s | %.0f | %.0f | %s | %.0f |" % (g, rname, r, vrain - r, inf_s, r + inf))
 
 
 if __name__ == "__main__":

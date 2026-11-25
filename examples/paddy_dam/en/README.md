@@ -127,7 +127,7 @@ and a trailing 2 for the two-way mode. The results are written to `result_<name>
 cd examples/paddy_dam
 make            # links and inputs (make_district.py writes the 10 m and 30 m inputs to data/)
 make run        # computes the 8 cases in turn (on a 4-core machine, representation A about 2 min per case, B 10–20 min)
-make figs       # figs/*.png, en/figs/*.png and the two tables (standard output)
+make figs       # figs/*.png, en/figs/*.png and the three tables (standard output)
 ```
 
 ## Result 1: effect of paddy-field dams (representation B, Δx = 10 m)
@@ -204,9 +204,18 @@ Table 2 (representation B and representation A under the same conditions)
 | D | representation A (Δx = 30 m), one-way | 0.08(16.0 h) | 0 | 0.27 | 191 | — | — |
 | D | representation A (Δx = 30 m), two-way | 0.16(15.2 h) | 6 | 0.35 | 194 | 413 | 0 |
 
-Representation A in the one-way mode lets no surface water into the paddy fields, hence "—". The inflow over the levees
-of representation B includes the rain on the farm roads and the upland entering the neighbouring plots (representation A
-has no such path).
+Representation A in the one-way mode lets no surface water into the paddy fields, hence "—".
+
+Table 3 (where the water went up to 48 h, m³; rain on the district 125,194 m³)
+
+| Outlets | Representation | rain on the paddy fields | rain elsewhere | inflow into the paddy fields (backflow + over the levees) | total water into the paddy fields |
+|---|---|---:|---:|---:|---:|
+| N | representation B (Δx = 10 m) | 94422 | 30772 | 23374 | 117796 |
+| N | representation A (Δx = 30 m), one-way | 90900 | 34294 | — | 90900 |
+| N | representation A (Δx = 30 m), two-way | 90900 | 34294 | 14161 | 105061 |
+| D | representation B (Δx = 10 m) | 94422 | 30772 | 10707 | 105129 |
+| D | representation A (Δx = 30 m), one-way | 90900 | 34294 | — | 90900 |
+| D | representation A (Δx = 30 m), two-way | 90900 | 34294 | 413 | 91313 |
 
 - **Normal outlets (N)**: representation A in the two-way mode (settlement 0.54 m) is close to representation B
   (0.51 m), and representation A in the one-way mode (0.44 m) comes out smaller. In the one-way mode the surface water
@@ -217,14 +226,45 @@ has no such path).
   representation B. The mean water depth of the paddy fields is also close to representation B in the two-way mode
   (maximum 143 mm and 135 mm), while in the one-way mode it falls soon after the rain.
 - **Paddy-field dams (D)**: the settlement was not flooded with representation B, but it was flooded with representation
-  A in both modes of exchange (one-way 0.08 m, two-way 0.16 m). The difference comes from two flow paths that
-  representation A does not represent. One is the storage of the small drains: representation B has the small drains as
-  channels 10 m wide, which can store about 14,000 m³ below the field surfaces (5–10 times the actual width of 1–2 m),
-  while representation A has no small drains, and the paddy water flows over the surface of the cells to the branch and
-  main drains. The other is where the rain on the farm roads and the upland goes: in representation B part of it (about
-  11,000 m³) enters the neighbouring plots and is stored behind the paddy-field dams, while in representation A it flows
-  to the drains. A real district lies in between, and whether paddy-field dams prevent the flooding of the settlement is
-  sensitive to how the drains and roads are represented.
+  A in both modes of exchange (one-way 0.08 m, two-way 0.16 m). The main cause of the difference is the amount of water
+  that enters the paddy fields (Table 3). In representation B, besides the rain on the paddy fields, part of the rain on
+  the farm roads and the upland, which are higher than the plots (11,000 m³, 9 % of the rain on the district), flowed
+  over the ground into the neighbouring plots and was stored behind the paddy-field dams. In representation A, the rain
+  on the non-paddy part of a cell becomes surface water, and there is no path from it into the paddy tanks of the same
+  cell (a tank receives only the rain on the paddy part, plus, in the two-way mode, the backflow through the outlets and
+  the inflow over the levees). Even though the share of the paddy area is matched by the area fraction, where the rain on
+  the farm roads goes (into the paddy fields or to the drains) differs between the two representations. In addition, the
+  cap of the paddy area fraction (0.95) makes the non-paddy area 1.7 ha larger than in representation B, and its rain of
+  3,500 m³ also goes to the surface. Together, representation A sends about 14,000 m³ more water to the drains than
+  representation B, and the water level of the main drain rose above the ground of the settlement. The width of the small
+  drains matters little in D: at 15 h, when the water level of the drains was highest, the small drains of representation
+  B held 1,800 m³. In this district, whether paddy-field dams prevent the flooding of the settlement is sensitive to how
+  the path of the rain on the farm roads and the upland is represented.
+
+## Hints for using representation A on coarse grids
+
+From result 2, here are points to watch when inputs of representation A are made by coarsening high-resolution land use
+and terrain.
+
+- **Give the paddy area fraction as the storage area**: give the share of the area of the field surfaces of the plots
+  (without levees and ditches). The cap of 0.95 in this example keeps the non-paddy share at 0.05 or more for the two-way
+  mode; it reduced the paddy fields of the cells made only of plots by 5 % and sent the rain on that part (3,500 m³ in
+  Table 3) to the drains. The one-way mode needs no cap.
+- **Check the area that drains into the paddy fields**: tracing where the rain flows on the high-resolution terrain shows
+  which parts of the farm roads, levees and upland drain into paddy fields rather than into drains. Representation A
+  gives a paddy tank only the rain on the paddy area, so where this area is large it overestimates the water sent to the
+  drains and underestimates the effect of paddy-field dams (9 % of the rain on the district in this example). To see the
+  range of the influence, compare a run with this area added to the paddy area fraction and a run without it. Adding it
+  also enlarges the storage area of the paddy fields, so it serves as a bound on the side that overstates the effect of
+  paddy-field dams. ENCflow currently has no input that gives the area whose rain the paddy fields receive separately from
+  their storage area (a candidate for extension).
+- **Check the storage of the drains**: representation A does not represent the small drains, so where the drains fill up
+  (N in this example) it can give high water levels in the drains. Before coarsening, compare the capacity of the small
+  drains (length × width × depth) with the total rain and the capacity of the pumping station.
+- **Solve a representative part with representation B and compare**: solve part of the district with representation B
+  (5–10 m) and the same part with representation A, compare the water entering the paddy fields (rain, inflow and
+  levee_in of `paddy.csv`) and the water levels of the drains, and choose how to give the inputs above. This example is
+  an instance of that procedure.
 
 ## Limitations and accuracy
 
@@ -242,7 +282,8 @@ has no such path).
 **Representation A (Δx = 30 m)**
 
 - The small drains and farm roads are not represented, and the paddy water goes to the surface of its own cell and flows
-  over the surface to the channel cells.
+  over the surface to the channel cells. The rain on the non-paddy part of a cell does not enter the paddy tanks (there is
+  no path from the farm roads into the paddy fields).
 - With the paddy area fraction capped at 0.95, the paddy area is 4 % smaller than in representation B.
 - In the one-way mode the water of the drains does not return to the paddy fields, and in the two-way mode the inflow over
   the levees is instantaneous (without an overflow length).
@@ -250,8 +291,11 @@ has no such path).
 **Representation B (Δx = 10 m)**
 
 - The small drains (actually 1–2 m wide) become channels as wide as a cell (10 m), so their storage and conveyance come
-  out large (about 14,000 m³ below the field surfaces in this district). The water levels of the drains come out low in
-  all cases, and whether paddy-field dams prevent the flooding of the settlement is sensitive to this storage (result 2).
+  out large (a capacity of 14,000 m³ below the field surfaces). In N, where the drains fill up, 14,000 m³ was in the small
+  drains at 24 h (1/5 to 1/10 of that with the actual width), so the water levels of the drains and the inundation of the
+  settlement may come out low. In D, where the water levels of the drains stay low, the small drains held 1,800 m³ at
+  15 h and the influence is small. A comparison with the small drains at their actual width (channel cells with a
+  subgrid width) has not been made.
 - A plot width of 3 cells is the lower limit for representation B, and the slope of the water surface within a plot is
   represented only coarsely.
 
