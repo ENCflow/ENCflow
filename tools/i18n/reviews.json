@@ -905,9 +905,9 @@
     {
       "source": "examples/README.md",
       "target": "examples/README.en.md",
-      "source_sha256": "bbe15891f9734d59b62bf234ad1f996aae3710e61f41ccb7e62567483244d2da",
-      "target_sha256": "14e5cc998554347d845fc3be7f9d31e21b57c39acc0961054ae622897af65eaf",
-      "reviewer": "Claude (Claude Code session; merge of main into the snow_avalanche branch: the rows and process-chain items of tsunami_meander and coastal_compound_flood are as recorded on main, and the new row and process-chain item of snow_avalanche were compared side by side with the Japanese source)",
+      "source_sha256": "0bb4dec44a5909ad43253924954f33893ea0c408ba3b16b95c51bca6967915a1",
+      "target_sha256": "c87c3c5ad86a554e6bb36bdaafd5cf46e32d48689399304fb7fc31b238e8fd64",
+      "reviewer": "Claude (Claude Code session; the feature list of the snow_avalanche row (f_dbmom=1, db_hent, f_dbed=5 added) compared side by side with the Japanese source; the other rows are as recorded before)",
       "method": "assistant",
       "reviewed_on": "2026-11-25"
     },
@@ -3245,17 +3245,17 @@
     {
       "source": "examples/snow_avalanche/README.md",
       "target": "examples/snow_avalanche/en/README.md",
-      "source_sha256": "8daac354ce9e3e70321a5895caf51d380896348a753f7a6bedca2a6fe5dfa75c",
-      "target_sha256": "dbc5b92b61575f083ea111bd5a4881df000aced98e085fca10e193430453d801",
-      "reviewer": "Claude (Claude Code session; new example written and translated in the same session: structure, tables and numbers compared with the Japanese source; numbers checked against the example runs)",
+      "source_sha256": "cd49c450de14151129166f7529b4241d81b69a699b30261e4fb3dc5f43ae0acf",
+      "target_sha256": "aab9ff6453d3d77947f433a847857413c30dc7c621ebf61b9f4c0476a4fe500b",
+      "reviewer": "Claude (Claude Code session; rewritten for the base case with the momentum switch and the new entrainment options: structure (212 elements) and all 181 numeric table cells compared with the Japanese source; numbers checked against the example runs)",
       "method": "assistant",
       "reviewed_on": "2026-11-25"
     },
     {
       "source": "examples/snow_avalanche/figs/dam.png",
       "target": "examples/snow_avalanche/en/figs/dam.png",
-      "source_sha256": "8c023f7d6299230d7abc98e63b533f3603fb23de1da8c3fb430146fa3311e080",
-      "target_sha256": "8ad28fd8ae0bf6ff7273822627047b36c2b11995f4a866c26204aac4ec4585e4",
+      "source_sha256": "b8b1c5a8052b6b676c1912eb4035cf54e4868d43ac049e70e16bd3f79a232f42",
+      "target_sha256": "38594d170ace7575182644035249edc168fe3ea23117da8339fa1ca71886b5db",
       "reviewer": "Claude (Claude Code session; Japanese and English figures drawn by the same plot_results.py from the same results; labels checked)",
       "method": "assistant",
       "reviewed_on": "2026-11-25"
@@ -3263,8 +3263,8 @@
     {
       "source": "examples/snow_avalanche/figs/entrain.png",
       "target": "examples/snow_avalanche/en/figs/entrain.png",
-      "source_sha256": "86d1ad0fb74b7524cad1500a1b43d78a44d4008d3c17d605e38ad4c68143095e",
-      "target_sha256": "9754aa596b2a6162217d845885eedc8967032d7dbe7f15c1b730787a36c185c7",
+      "source_sha256": "4cd4d6a4444bc13df4001983db81235c03ac1daae43af06b6d9e68250f22a1a1",
+      "target_sha256": "6b9d27b807f41abb488e9130dd6c4d0450704673177073dc6c484b8cfe4339cd",
       "reviewer": "Claude (Claude Code session; Japanese and English figures drawn by the same plot_results.py from the same results; labels checked)",
       "method": "assistant",
       "reviewed_on": "2026-11-25"
@@ -3272,8 +3272,8 @@
     {
       "source": "examples/snow_avalanche/figs/flow.png",
       "target": "examples/snow_avalanche/en/figs/flow.png",
-      "source_sha256": "49f7c1d927130f26eb5456919ce8134b22182c92f4541f5ee772a5b9499fe268",
-      "target_sha256": "7d0c3d07b5f8c2c2b3ed44c714446031bcffb387ebff427116f274c50bbef0c6",
+      "source_sha256": "7561980a6a9f64cc2adcc1d72e0da806a17b3b99c4ef85b2623c11e1bac98729",
+      "target_sha256": "dc7af577e3de119be44ca8ce557353aae6a746ceecff2044641b318caa2a185e",
       "reviewer": "Claude (Claude Code session; Japanese and English figures drawn by the same plot_results.py from the same results; labels checked)",
       "method": "assistant",
       "reviewed_on": "2026-11-25"
@@ -3281,8 +3281,8 @@
     {
       "source": "examples/snow_avalanche/figs/grid.png",
       "target": "examples/snow_avalanche/en/figs/grid.png",
-      "source_sha256": "24c823e0d75bef90552b140a8986bdfe9f6834286f1a57f748ebba2e036a9c3c",
-      "target_sha256": "974abbd52fa9a270b69a013ceb83e28a390b0577db77bdc85b6ac31cafcd5cf2",
+      "source_sha256": "9311c9a35b9378bac88b532a5841a0f773c17b1e3a346f4781a72b1f7269ea0e",
+      "target_sha256": "c23ec4d0544ee1328f37b19c7a20841c64079ee34bae974126d0f8c42b9eefd9",
       "reviewer": "Claude (Claude Code session; Japanese and English figures drawn by the same plot_results.py from the same results; labels checked)",
       "method": "assistant",
       "reviewed_on": "2026-11-25"
@@ -3290,8 +3290,8 @@
     {
       "source": "examples/snow_avalanche/figs/limits.png",
       "target": "examples/snow_avalanche/en/figs/limits.png",
-      "source_sha256": "d4f43a3f53e449c22553a74a0b0048e1ad2af174e816f5ee1c5c25d6a0dbf2fd",
-      "target_sha256": "1dcecda0cbba83536b37730a90939365c1be6ae5b4e9a7b596efee9f9cbc76de",
+      "source_sha256": "8414bd1d6e53e5c0d8b4fcfb7b4542d9482c095936c4f4dc71ba53fbf0aee934",
+      "target_sha256": "d9a173b8d61e20f727f8c1f3ae89975c175e05d8a945d895c3802bef42cc0325",
       "reviewer": "Claude (Claude Code session; Japanese and English figures drawn by the same plot_results.py from the same results; labels checked)",
       "method": "assistant",
       "reviewed_on": "2026-11-25"
@@ -3308,8 +3308,8 @@
     {
       "source": "examples/snow_avalanche/figs/runout.png",
       "target": "examples/snow_avalanche/en/figs/runout.png",
-      "source_sha256": "d69ef62276c132dfc13c9fe9754e8898ccf8b5f92e9baf328d68b216c8c1c0f7",
-      "target_sha256": "f9ad619b58fea585c3bbf69169d4b625d98b150a06b66921aeeff1e90f4fc136",
+      "source_sha256": "97a5a44548200e366c2de2a8796d48b7dcfcc8742d654ec6bf07c2ca255534a0",
+      "target_sha256": "867af5a4a2eae205384247633fda0e83d483916aca9438207ade68466a2c0703",
       "reviewer": "Claude (Claude Code session; Japanese and English figures drawn by the same plot_results.py from the same results; labels checked)",
       "method": "assistant",
       "reviewed_on": "2026-11-25"

@@ -558,10 +558,17 @@ def fig_entrain():
     ax.set_ylim(0, None)
     ax.legend(fontsize=8, frameon=False)
     ax.set_title(T("(a) 流れている雪の量", "(a) volume of flowing snow"), fontsize=9.5, loc="left")
+    nomom = [(get(nm), col) for nm, col in (("nomom", COL["base"]), ("deep_nomom", COL["deep"])) if have(nm)]
     ax = fig.add_subplot(sub[1])
     for c in cs:
         st = c.stats()
         ax.plot(st["t"], np.maximum.accumulate(st["front"]), color=COL[c.name], lw=1.6)
+    for c, col in nomom:
+        st = c.stats()
+        ax.plot(st["t"], np.maximum.accumulate(st["front"]), color=col, lw=1.0, ls=":")
+    if nomom:
+        ax.legend(handles=[Line2D([], [], color="k", lw=1.0, ls=":", label=T("運動量を数えない(f_dbmom = 0)", "momentum not counted (f_dbmom = 0)"))],
+                  fontsize=7.5, frameon=False, loc="lower right")
     ax.axhline(M.S_A, color="k", lw=0.7, ls=":")
     ax.text(118, M.S_A + 12, T("扇頂", "fan apex"), fontsize=8)
     ax.set_xlim(0, 120)
@@ -574,13 +581,19 @@ def fig_entrain():
         sv, vv, dv = along_axis(c)
         ax.plot(sv, vv, color=COL[c.name], lw=1.6)
         ax.plot(sv, dv, color=COL[c.name], lw=1.0, ls="--")
+    for c, col in nomom:
+        sv, vv, dv = along_axis(c)
+        ax.plot(sv, vv, color=col, lw=1.0, ls=":")
     ax.axvline(M.S_A, color="k", lw=0.7, ls=":")
     ax.set_xlim(0, 1400)
     ax.set_ylim(0, None)
     ax.set_xlabel("s (m)")
     ax.set_ylabel(T("最大流速 (m/s)・最大流動深 (m)", "maximum speed (m/s), maximum depth (m)"))
-    ax.legend(handles=[Line2D([], [], color="k", lw=1.6, label=T("最大流速", "maximum speed")),
-                       Line2D([], [], color="k", lw=1.0, ls="--", label=T("最大流動深", "maximum depth"))], fontsize=8, frameon=False)
+    hd = [Line2D([], [], color="k", lw=1.6, label=T("最大流速", "maximum speed")),
+          Line2D([], [], color="k", lw=1.0, ls="--", label=T("最大流動深", "maximum depth"))]
+    if nomom:
+        hd.append(Line2D([], [], color="k", lw=1.0, ls=":", label=T("最大流速(f_dbmom = 0)", "maximum speed (f_dbmom = 0)")))
+    ax.legend(handles=hd, fontsize=7, frameon=False, loc="lower left", bbox_to_anchor=(0.2, 0.36))
     ax.set_title(T("(c) 横断の最大値の縦断", "(c) cross-sectional maxima along the path"), fontsize=9.5, loc="left")
     save(fig, "entrain.png")
 
@@ -736,7 +749,9 @@ def fig_limits():
     fig = plt.figure(figsize=(11.5, 8.8))
     gsl = fig.add_gridspec(3, 1, left=0.055, right=0.6, top=0.955, bottom=0.065, hspace=0.1)
     gs = fig.add_gridspec(3, 1, left=0.68, right=0.985, top=0.955, bottom=0.065, hspace=0.5)
-    rows = (("allsnow_dd3", "1 mm"), ("allsnow", "0.1 mm"), ("allsnow_dd5", "0.01 mm"))
+    rows = (("allsnow", T("速度比例・下限なし", "velocity-proportional, no minimum depth")),
+            ("allsnow_t", T("速度比例・連行する流動深の下限 0.3 m", "velocity-proportional, minimum depth 0.3 m")),
+            ("allsnow_h", T("Hungr の則(E_r = 0.01 /m)", "Hungr's law (E_r = 0.01 /m)")))
     for i, (nm, lab) in enumerate(rows):
         ax = fig.add_subplot(gsl[i, 0])
         if have(nm):
@@ -744,29 +759,33 @@ def fig_limits():
             base_map(ax, c, ylim=(-M.W / 2, M.W / 2))
             depth_map(ax, c, c.D)
             st = c.stats()
-            panel_label(ax, T(f"限界水深 {lab}: 流れた雪は発生の {st['peak'] / st['rel']:.1f} 倍",
-                              f"threshold depth {lab}: flowing volume {st['peak'] / st['rel']:.1f} × the release"), "lower left")
+            panel_label(ax, T(f"{lab}: 雪崩は発生の {(st['rel'] + st['ent']) / st['rel']:.1f} 倍",
+                              f"{lab}: avalanche {(st['rel'] + st['ent']) / st['rel']:.1f} × the release"), "lower left")
         ax.set_ylabel("n (m)")
         if i < 2:
             ax.set_xticklabels([])
         else:
             ax.set_xlabel("s (m)")
         if i == 0:
-            ax.set_title(T("(a) 扇頂より上の全面に雪 0.5 m を置いた計算の最大流動深", "(a) maximum flow depth with 0.5 m of snow everywhere above the apex"), fontsize=9.5, loc="left")
+            ax.set_title(T("(a) 扇頂より上の全面に雪 0.5 m を置いた計算の最大流動深(限界水深 0.1 mm)",
+                           "(a) maximum flow depth with 0.5 m of snow everywhere above the apex (threshold depth 0.1 mm)"), fontsize=9.5, loc="left")
     # (b) 限界水深と流れた雪の量
     ax = fig.add_subplot(gs[0, 0])
     dds = (1e-3, 1e-4, 1e-5)
-    for nms, col, lab in ((("dd3", "base", "dd5"), "#1f5f8b", T("走路の雪の帯(基本)", "track snow band (base)")),
-                          (("allsnow_dd3", "allsnow", "allsnow_dd5"), "#c0392b", T("全面に雪 0.5 m", "0.5 m of snow everywhere"))):
-        xy = [(d, get(nm).stats()["peak"] / get(nm).stats()["rel"]) for d, nm in zip(dds, nms) if have(nm)]
+    grow = lambda nm: (get(nm).stats()["rel"] + get(nm).stats()["ent"]) / get(nm).stats()["rel"]
+    for nms, col, mk, lab in ((("dd3", "base", "dd5"), "#1f5f8b", "o", T("走路の雪の帯(基本)", "track snow band (base)")),
+                              (("allsnow_dd3", "allsnow", "allsnow_dd5"), "#c0392b", "o", T("全面の雪: 速度比例・下限なし", "everywhere: no minimum")),
+                              (("allsnow_t_dd3", "allsnow_t", "allsnow_t_dd5"), "#d08c00", "s", T("全面の雪: 下限 0.3 m", "everywhere: minimum 0.3 m")),
+                              (("allsnow_h_dd3", "allsnow_h", "allsnow_h_dd5"), "#2b8a3e", "^", T("全面の雪: Hungr の則", "everywhere: Hungr's law"))):
+        xy = [(d, grow(nm)) for d, nm in zip(dds, nms) if have(nm)]
         if xy:
-            ax.plot(*zip(*xy), "o-", color=col, lw=1.4, label=lab)
+            ax.plot(*zip(*xy), mk + "-", color=col, lw=1.4, ms=5, label=lab)
     ax.set_xscale("log")
     ax.set_xlim(3e-3, 3e-6)
     ax.set_ylim(0, None)
     ax.set_xlabel(T("限界水深 dd (m)", "threshold depth dd (m)"))
-    ax.set_ylabel(T("流れた雪の最大量 / 発生量", "peak flowing volume / release"))
-    ax.legend(fontsize=8, frameon=False)
+    ax.set_ylabel(T("(発生量 + 連行量)/ 発生量", "(release + entrained) / release"))
+    ax.legend(fontsize=7, frameon=False)
     ax.set_title(T("(b) 限界水深と雪崩の大きさ", "(b) threshold depth and avalanche size"), fontsize=9.5, loc="left")
     # (c) 時間刻みへの依存(限界水深 1 mm と 0.1 mm)
     ax = fig.add_subplot(gs[1, 0])
@@ -798,9 +817,9 @@ def fig_limits():
     ax.set_xlabel(T("時間 (s)", "time (s)"))
     ax.set_ylabel(T("水平の流速 (m/s)", "horizontal speed (m/s)"))
     ax.legend(handles=[Line2D([], [], color="#7a7a7a", lw=1.4, label=T("連行なし", "no entrainment")),
-                       Line2D([], [], color="#1f5f8b", lw=1.4, label=T("連行あり(ENCflow の扱い)", "with entrainment (as in ENCflow)")),
-                       Line2D([], [], color="#1f5f8b", lw=1.4, ls="--", label=T("連行あり(運動量を保存する扱い)", "with entrainment (momentum-conserving)"))],
-              fontsize=7.5, frameon=False, loc="lower right")
+                       Line2D([], [], color="#1f5f8b", lw=1.4, label=T("連行あり・運動量を数えない(f_dbmom = 0)", "entrainment, momentum not counted (f_dbmom = 0)")),
+                       Line2D([], [], color="#1f5f8b", lw=1.4, ls="--", label=T("連行あり・運動量を数える(f_dbmom = 1)", "entrainment, momentum counted (f_dbmom = 1)"))],
+              fontsize=7, frameon=False, loc="upper left")
     ax.set_title(T("(d) 一様な斜面で一斉に動き出す雪の速さ", "(d) sheet released on a uniform slope"), fontsize=9.5, loc="left")
     save(fig, "limits.png")
 
@@ -808,7 +827,7 @@ def fig_limits():
 def sheet_ode(h0, mu, xi, de, inertia, slope=0.5, tmax=10.0, dt=1.0e-3):
     """一様な斜面で一斉に動き出す一様な厚さの雪(勾配なし)の水平流速 u と厚さ h。
     du/dt = g cos²θ (tanθ − μ) − g u²/(ξ h cos²θ) [− u (dh/dt)/h]、dh/dt = δe u。
-    最後の項は連行した雪を加速する運動量で、ENCflow は持たない(流速を変数に解き、連行は厚さだけを増やす)。"""
+    最後の項は連行した雪を静止から加速する運動量で、f_dbmom = 1 が数える(0 は数えない)。"""
     c2 = 1.0 / (1.0 + slope ** 2)
     t, u, h = 0.0, 0.0, h0
     tt, uu, hh = [], [], []

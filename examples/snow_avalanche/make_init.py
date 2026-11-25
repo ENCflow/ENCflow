@@ -163,6 +163,17 @@ CASES = {
     "allsnow": case(track=0.5, allsnow=True),
     "allsnow_dd3": case(track=0.5, allsnow=True, dd="0.001"),
     "allsnow_dd5": case(track=0.5, allsnow=True, dd="0.00001"),
+    # 連行した雪の運動量を数えない(f_dbmom = 0)
+    "nomom": case(f_dbmom="0"),
+    "deep_nomom": case(track=2.0, f_dbmom="0"),
+    # Hungr の連行則(f_dbed = 5)と、連行する流動深の下限(db_hent)
+    "hungr": case(f_dbed="5", db_er="0.01"),
+    "allsnow_h": case(track=0.5, allsnow=True, f_dbed="5", db_er="0.01"),
+    "allsnow_h_dd3": case(track=0.5, allsnow=True, f_dbed="5", db_er="0.01", dd="0.001"),
+    "allsnow_h_dd5": case(track=0.5, allsnow=True, f_dbed="5", db_er="0.01", dd="0.00001"),
+    "allsnow_t": case(track=0.5, allsnow=True, db_hent="0.3"),
+    "allsnow_t_dd3": case(track=0.5, allsnow=True, db_hent="0.3", dd="0.001"),
+    "allsnow_t_dd5": case(track=0.5, allsnow=True, db_hent="0.3", dd="0.00001"),
 }
 BASE = "base"
 MAIN = ("nosnow", "base", "deep", "dam", "deep_dam")
