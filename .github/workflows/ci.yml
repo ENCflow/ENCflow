@@ -1,6 +1,7 @@
 # ENCflow CI: ビルド+回帰テスト(基準 Log とのビット/ULP 照合)
 #   高速な 31 ケースを毎 push で回す(chichibu は実行時間の都合で対象外。
-#   ローカルで test/chichibu/Run.sh を実行すること)。prmap・wfswash・gwlateral・gwtani・stg・vshaped・
+#   ローカルで test/chichibu/Run.sh を実行すること。test/paddy も実行時間の都合で、夜間の nightly.yml だけで
+#   回す。developer.md §119.16)。prmap・wfswash・gwlateral・gwtani・stg・vshaped・
 #   bldgdrag・driftwood・bankcap・brink・bankspill・chutepool・cascade・tjunction・stairbank・stageside・bankhalo は reference を持たない検定型(Check_*.py・再開と並列のバイト比較。Run.sh の
 #   終了コードで判定。stg は STG 格子の動作確認で、MPI の 2 ランクでは初期化で止まることを確かめる。
 #   vshaped は V 字流域の降雨流出の運動学的波の理論解との比較。bldgdrag は家屋の抗力項を含む等流の
