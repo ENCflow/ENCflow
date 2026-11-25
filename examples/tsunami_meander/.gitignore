@@ -1,0 +1,13 @@
+result_*/
+Screen_*.log
+encflow
+encflow_mpi
+__pycache__/
+wrk_*
+mask_*.txt
+z_*.txt
+e_*.txt
+geoinfo_*.txt
+initial_*.txt
+record_*.txt
+probes_*.csv

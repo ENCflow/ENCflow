@@ -419,11 +419,11 @@
     {
       "source": "docs/users_guide/nonhydrostatic.md",
       "target": "docs/en/users_guide/nonhydrostatic.md",
-      "source_sha256": "72cd544325afc950ea581794778a64dbe873ec9102c5079de3ca682f949c6905",
-      "target_sha256": "3bf4c76f1aac2183955b6ee028ec11ca03e30c8ce506d4c516b0a3c007cc18e6",
-      "reviewer": "Claude (Claude Code session; links to the shallow-water primer and the renaming of f_govequation = 1 to local inertia (note at first mention in tutorials, examples and tests): Japanese and English edited together and the changed passages compared)",
+      "source_sha256": "d252ed46168c768287fe483c63e30472a4390fcb4b8b5bc13bb164fe589d35b3",
+      "target_sha256": "f59a6ac012447acd1b83b612966e33ee774a0711cd78f546a492a4592f4e660d",
+      "reviewer": "Claude (Claude Code session; the two bullets added to section 8 (bores and the breaking switch; cells next to a side wall) and the related-example entry for examples/tsunami_meander, written in Japanese and English in the same work; the changed passages read side by side)",
       "method": "assistant",
-      "reviewed_on": "2026-11-11"
+      "reviewed_on": "2026-11-25"
     },
     {
       "source": "docs/users_guide/parallel.md",
@@ -572,9 +572,9 @@
     {
       "source": "docs/users_guide/usecases.md",
       "target": "docs/en/users_guide/usecases.md",
-      "source_sha256": "83b6e94035468affc296db8e8636b82b9c70020b56f6a3c2032202b23f59d9d6",
-      "target_sha256": "8b4b1b551acfbbe27482639218998766ff94c119b6699c7c602c58be7a5de915",
-      "reviewer": "Claude (Claude Code session; passages added for examples/coastal_compound_flood compared side by side with the Japanese source; the rest is unchanged since the previous record)",
+      "source_sha256": "c4348b0d3756f6e3d0f434512bee8cb3af7486ab03fcd33dd9b2f48247932974",
+      "target_sha256": "cd7d8559b71fe5e051b3d9a14468ae714ff8c45f94df6da3660ce6f386cd6918",
+      "reviewer": "Claude (Claude Code session; merge of main (examples/tsunami_meander) into the branch of examples/coastal_compound_flood: the merged pair is the union of two changes that were each compared and recorded on their own branch; checked that both languages contain both additions at the same positions)",
       "method": "assistant",
       "reviewed_on": "2026-11-25"
     },
@@ -905,9 +905,9 @@
     {
       "source": "examples/README.md",
       "target": "examples/README.en.md",
-      "source_sha256": "0baf23e861973b3afbdcc3b4b0338d539b30d786b27bf0beda972d4dfcd51c6b",
-      "target_sha256": "aa86127a4a205abb3d805e2f0bdeb989981807a404db3e2eda39311777dff587",
-      "reviewer": "Claude (Claude Code session; passages added for examples/coastal_compound_flood compared side by side with the Japanese source; the rest is unchanged since the previous record)",
+      "source_sha256": "6a3f1202d887f6d47942d8eb03ebf90666476d6080d99e76a7ab74b314b42a02",
+      "target_sha256": "c81a2f45a2a3aa7bdbaf0a0fded758822e4072d3d10e6b96ff6083c8518890d8",
+      "reviewer": "Claude (Claude Code session; merge of main (examples/tsunami_meander) into the branch of examples/coastal_compound_flood: the merged pair is the union of two changes that were each compared and recorded on their own branch; checked that both languages contain both additions at the same positions)",
       "method": "assistant",
       "reviewed_on": "2026-11-25"
     },
@@ -3808,6 +3808,69 @@
       "reviewer": "Claude (Claude Code session; compared the Japanese and English figure images side by side: same plotted data and layout from the same script, only the corrected title or label styling changed, labels translated)",
       "method": "assistant",
       "reviewed_on": "2026-11-08"
+    },
+    {
+      "source": "examples/tsunami_meander/README.md",
+      "target": "examples/tsunami_meander/en/README.md",
+      "source_sha256": "c503b48b322271c1ecf39261cd0bdb53a643ac4db0a0ee1e3667884f36209812",
+      "target_sha256": "13f8ece423f55ab896cc0fc0e7721c3ea50585e093aaa1a0f5717cd3bb4db5e3",
+      "reviewer": "Claude (Claude Code session; new example written in Japanese and English in the same work; both files read side by side in full after the last edit; numbers checked against the tables printed by plot_results.py)",
+      "method": "assistant",
+      "reviewed_on": "2026-11-25"
+    },
+    {
+      "source": "examples/tsunami_meander/figs/breaking.png",
+      "target": "examples/tsunami_meander/en/figs/breaking.png",
+      "source_sha256": "2f499c3e3507ce53de88ecab90edcee3906ec9933d0a8de7292d0e4853e27085",
+      "target_sha256": "c11b9b6e47cb79937014d1d8372543556c16d9c25ace5f2223dc3728ee2fbb32",
+      "reviewer": "Claude (Claude Code session; drawn by plot_results.py from the same model results and the digitized measurements, Japanese and English with the en switch; viewed the two images side by side: same data, values and layout, labels translated)",
+      "method": "assistant",
+      "reviewed_on": "2026-11-25"
+    },
+    {
+      "source": "examples/tsunami_meander/figs/firstwave.png",
+      "target": "examples/tsunami_meander/en/figs/firstwave.png",
+      "source_sha256": "43d63822c8f2289c1ca5648c392e2238ecea72acca813abf40f4d0f12b485fce",
+      "target_sha256": "5872f5597229a912ba423aa4a43ce60748a9daf6116c3f3d9ecc22f759057bd2",
+      "reviewer": "Claude (Claude Code session; drawn by plot_results.py from the same model results and the digitized measurements, Japanese and English with the en switch; viewed the two images side by side: same data, values and layout, labels translated)",
+      "method": "assistant",
+      "reviewed_on": "2026-11-25"
+    },
+    {
+      "source": "examples/tsunami_meander/figs/sens.png",
+      "target": "examples/tsunami_meander/en/figs/sens.png",
+      "source_sha256": "1486e79af29020f37cc97428b63af8a6b5eff94feda76f85ae944874df392339",
+      "target_sha256": "d3a911ca6a1592aac83f354cbe034c776cbf93bd841810c9e23acda6671e7f56",
+      "reviewer": "Claude (Claude Code session; drawn by plot_results.py from the same model results and the digitized measurements, Japanese and English with the en switch; viewed the two images side by side: same data, values and layout, labels translated)",
+      "method": "assistant",
+      "reviewed_on": "2026-11-25"
+    },
+    {
+      "source": "examples/tsunami_meander/figs/setup.png",
+      "target": "examples/tsunami_meander/en/figs/setup.png",
+      "source_sha256": "8003131846b23bbcdc9401f02f01fe6a7b9b8f105f3f89caa76001ec00e7bdf5",
+      "target_sha256": "f16562c0c3dc7a84ca0f6097beadbd9267d77dfc1b814616dedd9575de561393",
+      "reviewer": "Claude (Claude Code session; drawn by plot_results.py from the same model results and the digitized measurements, Japanese and English with the en switch; viewed the two images side by side: same data, values and layout, labels translated)",
+      "method": "assistant",
+      "reviewed_on": "2026-11-25"
+    },
+    {
+      "source": "examples/tsunami_meander/figs/surface.png",
+      "target": "examples/tsunami_meander/en/figs/surface.png",
+      "source_sha256": "cd3e073e9509fdede10db684efebf52a1eca8ca2817656fcf5ff6ee4d9370953",
+      "target_sha256": "8e4dfdb162ff2199ef242209ebec74f6b0bdf5e6daf0d6c490b977631e0e9152",
+      "reviewer": "Claude (Claude Code session; drawn by plot_results.py from the same model results and the digitized measurements, Japanese and English with the en switch; viewed the two images side by side: same data, values and layout, labels translated)",
+      "method": "assistant",
+      "reviewed_on": "2026-11-25"
+    },
+    {
+      "source": "examples/tsunami_meander/figs/undular.png",
+      "target": "examples/tsunami_meander/en/figs/undular.png",
+      "source_sha256": "5623f6486032c3bafac0642a011026dbf97c575dd288aa9904f35360defa63dc",
+      "target_sha256": "1abfd012b2d4fd2381bceb382a647e5cf7975a919337b3da46efca0e89d23842",
+      "reviewer": "Claude (Claude Code session; drawn by plot_results.py from the same model results and the digitized measurements, Japanese and English with the en switch; viewed the two images side by side: same data, values and layout, labels translated)",
+      "method": "assistant",
+      "reviewed_on": "2026-11-25"
     },
     {
       "source": "examples/tsunami_town/README.md",

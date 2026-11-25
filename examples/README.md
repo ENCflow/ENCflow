@@ -34,6 +34,7 @@ python3 plot_results.py   # 図化(用意されている例題のみ)
 | [landslide_tsunami/](landslide_tsunami/) | 陸上崩壊・海底地滑り・土石流が水域に突入して起こす津波の発生と伝播を、4 パターンと非静水圧版で比べる | 動く底層 f_bedslide、非静水圧補正 |
 | [tsunami_fault/](tsunami_fault/) | 断層パラメータから海底変位を作って津波を起こし、静水圧・瞬時変位・非静水圧の違いと座標指定を比べる | 規定底面運動 fn_bedmotion、utils/fault2disp |
 | [tsunami_coast/](tsunami_coast/) | 断層運動による沿岸の沈降・隆起と沖からの津波の到達の時間差が、沈降した湾奥平野の浸水をどう変えるかを見る | 規定底面運動 fn_bedmotion |
+| [tsunami_meander/](tsunami_meander/) | 蛇行水路を進む段波の水理実験(小林ら 2019・2021。河川を遡上する津波の模型)を静水圧と 1 層非静水圧で計算し、岸沿いの波高を計測と比べる。砕波段波は静水圧で合い、波状段波は 2 つの計算が計測を挟むことと、モデルで表せないことを確かめる | 領域マスク(格子の階段の側壁)、初期水位の分布 fn_hinit、非静水圧補正 f_nonhydrostatic、プローブ |
 | [levee_breach/](levee_breach/) | 洪水が堤防の低い所を越水して破堤し、堤内地の氾濫で家屋が押し流される過程と、二線堤の効果を見る | 規定底面運動 fn_bedmotion(解像堤防の破堤)、家屋破壊 fn_bldgdebris(流体力判定)、建物空隙率 fn_gv、河道の破堤 &list_channel_breach(補足) |
 | [estuary_barrage/](estuary_barrage/) | 感潮河川を遡上する塩水くさびと、河床から周辺の帯水層への塩水侵入に、河口堰の有無が与える影響を見る | 淡塩2層 fn_salt(地表の塩水層・地下の塩水 zone・交換の淡塩配分 f_salt_exch)、潮位、Green-Ampt、地下水の側方流、河床交換能 f_gwbed |
 | [nest_reflect/](nest_reflect/) | 比 3・5 の双方向ネスト格子の界面をガウス波が横切るときの誤差と反射率を、一様細格子と比べて確かめる | ネスティング fn_nest(docs/users_guide/nest.md) |
@@ -79,6 +80,7 @@ ENCflow の特徴である「複数プロセスを 1 つの計算で連鎖させ
 - 溶岩流 → 灰の埋没 → 降灰 → 豪雨の侵食 → 麓への再堆積 の繰り返し → 成層火山: [stratovolcano/](stratovolcano/)。
 - 降雪 → 氷化 → 氷河の流動・滑動 → 氷河侵食 → (長い時間では)閉じた凹地と湖・懸谷の段、侵食による氷河の短縮: [glacier_valley/](glacier_valley/)。
 - 断層 → 津波 → 浸水: [tsunami_fault/](tsunami_fault/)、[tsunami_coast/](tsunami_coast/)。
+- ゲート急開の段波 → 蛇行水路の伝播 → 外岸の波高(水理実験の計測との比較。静水圧と非静水圧の使い分け): [tsunami_meander/](tsunami_meander/)。
 - 斜面崩壊 → 水域突入 → 津波: [landslide_tsunami/](landslide_tsunami/)。
 - 洪水 → 越水 → 破堤 → 氾濫 → 家屋の流失(二線堤で止める): [levee_breach/](levee_breach/)。
 - 潮汐 → 塩水くさびの遡上 → 河床からの浸透 → 岸の地盤の塩水化(河口堰で遮断): [estuary_barrage/](estuary_barrage/)。
