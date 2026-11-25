@@ -24,10 +24,12 @@ shallow places. Changing the grid, the advection, the roughness map or adding a 
 model) does not narrow this gap ("Velocity").
 For the surface composition, the measured mean hardly changes, whereas the model loses fines and coarsens too much.
 In the sensitivity configurations, lowering the downstream extension to the fixed bed produces a lowering from the
-downstream end of the same shape as measured, but about twice as deep, and the water level upstream drops as well.
-The downstream end of the scale model is a fixed-bed section with a drop beyond it, so the lip lies at the initial
-bed level of the end section. Setting the substrate to the initial surface composition keeps the surface from
-coarsening at the cost of a much too large bed change ("Sensitivity").
+downstream end of the same shape as measured, but about twice as deep, and the water level 7 m upstream from the
+downstream end falls below the measurement as time goes on. Placing a sill and a drop at the end of the movable bed,
+after the shape of the scale model's downstream end (a drop beyond a fixed-bed section), only gives local scour at
+the end (−5 mm on average over the last 2 m), not the measured lowering over 8–10 m. Setting the substrate to the
+initial surface composition keeps the surface from coarsening at the cost of a much too large bed change
+("Sensitivity").
 Mixing the grain sizes brings the magnitude of the change close to the measurement, but with this grid and these
 settings the formation of threads and the pattern of the surface composition are not reproduced; that is the
 conclusion of this example (candidate reasons under "What this model cannot represent and the limits of accuracy").
@@ -79,7 +81,9 @@ index cell of the rows I = 999 reads "固定床" (fixed bed); it is read as 999.
   0.9 m) reach the east and west edges of the grid, where the inflow segment and the free outflow can be placed; the
   bed elevation of the end section is copied horizontally. The inflow segment is the 28 cells of the east edge across
   the low-water channel at the upstream end (discharge split by conveyance, `inflow_dist = 2`); the west edge is a
-  free outflow.
+  free outflow. The level of the downstream extension is the height of the lip. The level of the fixed bed at the
+  scale model's downstream end is not in the original data, so it is assumed to be the initial bed level of the end
+  section ("Sensitivity").
 - **Inlet**: in the fixed bed from the upstream end to the start of the movable bed (about 2.6 m), the width of the
   low-water channel is replaced by a level floor at the median bed elevation of the first movable section
   (2.247 m). The inlet of the original data has a sump and a trench (deepest 1.49 m) and high structures that exist
@@ -257,8 +261,8 @@ exchange-layer supply limiter acted in 1.3 % of the class × cell updates.
 
 ### Downstream-end condition and substrate composition
 
-Two configurations that each change one thing in the base configuration (mixed sizes) are computed by `make sub`
-(the cost is the same as the base configuration). The numbers are copied from tables 1–3 and 6 of `plot_results.py`.
+Three configurations that each change one thing in the base configuration (mixed sizes) are computed by `make sub`
+(the cost is the same as the base configuration). The numbers are copied from tables 1–4 and 6 of `plot_results.py`.
 
 | | I 1 to 500 | 501 to 1000 | 1001 to 1500 | 1501 to 2000 | 2001 to 2362 | surface fraction of fines | correlation (whole / downstream of 17.1k) | RMSE (whole) |
 |---|---|---|---|---|---|---|---|---|
@@ -266,6 +270,7 @@ Two configurations that each change one thing in the base configuration (mixed s
 | base configuration | −132 | −55 | +11 | +26 | +128 | 45.1 % | 0.12 / 0.20 | 14.2 mm |
 | substrate = surface (`param_sub.txt`) | −445 | −421 | +353 | −46 | +440 | 61.0 % | 0.15 / 0.27 | 20.9 mm |
 | outlet at the fixed bed (`param_outlet.txt`) | −132 | −55 | +11 | +26 | −525 | 44.4 % | 0.18 / 0.25 | 15.6 mm |
+| outlet sill and drop (`param_sill.txt`) | −132 | −55 | +13 | +24 | +85 | 44.9 % | 0.12 / 0.20 | 14.2 mm |
 
 The reach columns are the net volume change of the movable bed over 240 min (L, bulk); the surface fraction of fines
 is the mean over the movable bed.
@@ -279,16 +284,32 @@ is the mean over the movable bed.
   +1 mm). The four upstream reaches are within 0.4 L of the base configuration. The correlation over the whole
   movable bed rises because the shape of the lowering at the downstream end matches (0.12 → 0.18), but the RMSE
   grows because the lowering is too deep (14.2 → 15.6 mm). The water level at gauge 9.1k, 7 m upstream from the
-  downstream end, has a mean error of −1 mm in the base configuration and −14 mm in this configuration (8.4k on the
-  downstream end section cannot be compared: its cells inside the original grid become the lip of the drop to the
-  extension, with less than 2 mm of water). The downstream end of the scale model is a section with little long-term
-  bed change (Tomitate bridge) made a fixed bed, with a drop to the settling basin over which the water falls freely
-  (Kobashi et al. 2026). The lip lies at the initial bed level of the end section, so this configuration, with the
-  extension lowered to the fixed bed, puts the lip lower than in the scale model. The measured lowering at the
-  downstream end may be local scour where the flow accelerates towards the lip. In the model the lip (the
-  free-outflow edge) lies beyond the extension (fixed bed, up to 0.9 m long), so this acceleration does not reach
-  the end of the movable bed. This example uses the base configuration (the extension at the initial bed level), whose
-  lip height matches the scale model.
+  downstream end, falls as the lowering moves upstream: its mean error against the measurement is −1, −9, −20 and
+  −25 mm in successive 60 min periods. The base configuration gives −1, −2, −1 and +1 mm, and the measured water level
+  shows no such fall (8.4k on the downstream end section cannot be compared: its cells inside the original grid become
+  the lip of the drop to the extension, with less than 2 mm of water).
+- **Outlet sill and drop** (`param_sill.txt`): the downstream end of the scale model is a section with little
+  long-term bed change (Tomitate bridge) made a fixed bed, with a drop to the settling basin over which the water falls
+  freely (Kobashi et al. 2026). In the base configuration the free-outflow edge (the lip) lies beyond the extension
+  (fixed bed, up to 0.9 m long), so the acceleration towards the lip does not reach the end of the movable bed. This
+  configuration keeps the one cell of the extension next to the inside of the original grid as a sill at the initial
+  bed level of the end section and lowers the cells beyond it by 10 cm, so that the flow accelerates from the end of
+  the movable bed towards the drop (the lip height is the same as in the base configuration). The scour is local to
+  the end of the movable bed: −18 mm on average within 0.3 m of the end (deepest 9 cm; the movable layer is about
+  10 cm thick), and 2 m means of −5, +2, +3 and +1 mm (table 6). The four upstream reaches are within 3 L of the base
+  configuration, and the measured lowering over 8–10 m does not appear. The sediment outflow is 31 L (solid; 6.8 L in
+  the base configuration; table 4), and the increase comes from the scour at the end. The water level at 9.1k is the
+  same as in the base configuration (mean error −1 mm); at 8.4k on the end section the water surface falls towards
+  the drop, so the level is below the measurement (mean error −6 mm; +5 mm in the base configuration, with the
+  measurement in between).
+- **Reading of the lowering at the downstream end**: in the measurement, the bed of the low-water channel within 7 m
+  of the downstream end lowers over nearly the whole width (−6 to −14 mm as the median of each section). A lip at
+  the end of the movable bed gives only local scour, and a lowered lip gives a lowering of the same length but too
+  deep, with the water level at 9.1k drifting away from the measurement. The level of the fixed bed at the scale
+  model's downstream end is not in the original data (the most downstream section of the original data, 8.4k, is
+  itself movable bed and lowers by 13 mm on average across the low-water channel in 240 min). The water levels show
+  no sign of a much lower lip, so this example uses the base configuration, with the lip at the initial bed level of
+  the end section. These configurations do not reveal the cause of the measured lowering.
 - **Substrate composition** (`param_sub.txt`): with the substrate set to the initial surface composition of each cell
   instead of the assumed blend of the laid sand (37.4 % fine), the mean surface fraction of fines after 240 min is
   61.0 %, closer to the measurement (58.6 %) than the base configuration (45.1 %), and the point-by-point
@@ -298,7 +319,7 @@ is the mean over the movable bed.
   0.79 m³ in I 1001 to 1500 and the downstream reach). The erosion of I 501 to 1000 (0.42 m³) approaches the
   measurement (0.51 m³), but I 1001 to 1500 gains sediment, opposite to the measurement (a loss). The substrate
   composition of the model was not measured, so which configuration is closer to the model cannot be decided.
-- In neither configuration does the mismatch in the locations of the change go away (point-by-point correlation
+- In none of the configurations does the mismatch in the locations of the change go away (point-by-point correlation
   below 0.3).
 
 ### Starting points for sensitivity experiments
@@ -342,13 +363,14 @@ is the mean over the movable bed.
   roughness that includes form drag ("Shear stress" above). The change of transport with and without bedforms is not represented.
 - **Feed volume**: assumed to be a bulk volume (as a solid volume the feed would be 1.67 times larger).
 - **Inlet**: the sump and high structures of the fixed bed at the upstream end are replaced by a level floor.
-- **Downstream end**: the water level at the downstream end is set to "free" in the original data, and the downstream
-  end section of the scale model is a fixed bed with a drop to the settling basin over which the water falls freely
-  (Kobashi et al. 2026). The model fixes the extension at the initial bed level of the end section (the height of the
-  lip) and puts the free-outflow edge beyond the extension (up to 0.9 m long). In the measurement the bed within
-  8–10 m of the downstream end lowers (−14 mm on average over the last 2 m at 240 min), but in the model the
-  acceleration towards the lip does not reach the end of the movable bed, so this lowering is not represented
-  ("Sensitivity").
+- **Downstream end**: the water level at the downstream end is set to "free" in the original data, and the scale
+  model's downstream end lets the water fall freely from a fixed-bed section over a drop to the settling basin
+  (Kobashi et al. 2026), but the level of that fixed bed is not in the original data. The model assumes the lip at the
+  initial bed level of the end section and puts the free-outflow edge beyond the extension (up to 0.9 m long). In the
+  measurement the bed of the low-water channel within 8–10 m of the downstream end lowers over nearly the whole width
+  (−14 mm on average over the last 2 m at 240 min), but the model does not give this. A lip at the end of the movable
+  bed gives only local scour at the end, and lowering the lip to the fixed bed gives the lowering but too deep, with
+  the water level upstream falling below the measurement ("Sensitivity").
 - **Exchange layer**: the results depend on the exchange-layer thickness, and the equations can become ill-posed, for
   example where the bed degrades into a finer substrate (the [supplement](../../../docs/en/users_guide/sediment.md#mixed-grain-sizes-f_bedmix)
   of the user's guide).

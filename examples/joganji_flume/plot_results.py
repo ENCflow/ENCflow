@@ -51,6 +51,8 @@ GAUGES_FIG = ["19.2k", "16.6k", "13.3k", "9.7k"]
 REACHES = [(0, 500), (500, 1000), (1000, 1500), (1500, 2000), (2000, 2362)]
 MAP_RUNS = ["result", "result_single"]          # 河床変化・流速の平面図に描く構成(感度の構成は縦断と数表で)
 SURF_RUNS = ["result", "result_sub"]            # 表層の粒度の平面図に描く構成
+END_RUNS = ["result_outlet", "result_sill"]     # 下流端だけを変えた構成(縦断の図では上流で基本の構成と重なるので、
+                                                # 破線で基本の構成の下に描く)
 QMIN = 5.0                      # 水位の比較に使う流量の下限 (L/s)。基底流量では水位計の多くが干上がる
 I_CMP = 650                     # 17.1k(I = 651)。これより上流は計測の河床変化が厳密に 0 の点が多い(README)
 BC = mi.read_csv("bc_2-1.csv.gz")
@@ -387,16 +389,19 @@ def fig_profile(dz_meas, dz_model, f_meas0, f_meas, fa_model, runs, mov, dist, g
     axs[0].axhline(0, color=MUTED, lw=0.8)
     axs[0].plot(xc, 1000 * binned(dist, dz_meas, sel, edges), lw=1.8, color=INK, label=L("計測", "measured"))
     for d, lab in runs:
-        axs[0].plot(xc, 1000 * binned(dist, dz_model[d], sel, edges), lw=1.3, color=COLORS[d], label=lab)
+        axs[0].plot(xc, 1000 * binned(dist, dz_model[d], sel, edges), lw=1.3, color=COLORS[d], label=lab,
+                    ls="--" if d in END_RUNS else "-", zorder=1.8 if d in END_RUNS else (2.5 if d == "result" else 2))
     axs[0].set_ylabel(L("河床変化 (mm)", "bed change (mm)"), fontsize=9)
     ylo, yhi = -40.0, 20.0
     axs[0].set_ylim(ylo, yhi)
+    done = set()        # 枠の外の値の注記は位置と値ごとに 1 つ(同じ値の線が重なるときは最初に描いた線の色)
     for line in axs[0].get_lines():
         yv = np.asarray(line.get_ydata(), dtype=float)
         xv = np.asarray(line.get_xdata(), dtype=float)
         if yv.size == xc.size:
             for xx, yy in zip(xv, yv):
-                if np.isfinite(yy) and yy < ylo:
+                if np.isfinite(yy) and yy < ylo and (xx, round(yy)) not in done:
+                    done.add((xx, round(yy)))
                     axs[0].annotate("%.0f" % yy, (xx, ylo), xytext=(0, 4), textcoords="offset points", ha="center",
                                     fontsize=7, color=line.get_color())
     axs[0].set_title(L("(a) 低水路の移動床の河床変化(縦断 2 m ごとの平均)", "(a) bed change of the movable low-water channel (2 m bins)"), fontsize=10, loc="left")

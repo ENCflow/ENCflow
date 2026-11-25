@@ -2,7 +2,7 @@
 #   make         ../../bin/ の実行ファイルへのリンクと入力(make_init.py が data_nilim/ から 10 cm 格子の入力を作る)
 #   make spinup  助走計算(固定床、基底流量)と、その最終水深の初期水深 h_spinup.txt への写し
 #   make run     ケース 2-1 の 240 分を混合粒径と単一粒径で計算する(順に。並べて回すなら README の手順)
-#   make sub     感度の 2 構成(下層の組成を表層と同じ、下流端の延長を固定床高)の混合粒径の計算
+#   make sub     感度の 3 構成(下層の組成を表層と同じ、下流端の延長を固定床高、下流端を敷と段落ち)の混合粒径の計算
 #   make figs    図と数表(plot_results.py。日英)
 #   make clean   リンクと生成物を削除する(data_nilim/ は残す)
 # data_nilim/ は国総研の Excel から extract_nilim.py で抜き出したもの(openpyxl が要るのはその抜き出しだけ。README)
@@ -10,7 +10,8 @@
 TOPDIR	= ../..
 BINDIR	= $(TOPDIR)/bin
 SRCDIR	= $(TOPDIR)/src
-INPUTS	= z.txt mask.txt rn.txt sd.txt fa1.txt fa2.txt fa3.txt geoinfo.txt geoinfo_outlet.txt z_outlet.txt boundary.txt boundary_single.txt \
+INPUTS	= z.txt mask.txt rn.txt sd.txt fa1.txt fa2.txt fa3.txt geoinfo.txt geoinfo_outlet.txt z_outlet.txt geoinfo_sill.txt z_sill.txt \
+	  boundary.txt boundary_single.txt \
 	  boundary_spinup.txt inflow_cells.txt inflow_q.txt inflow_qbmix.txt inflow_qb.txt inflow_q_spinup.txt record.txt grid_info.txt
 
 all: links inputs
@@ -42,6 +43,7 @@ run: all
 sub: all
 	./encflow param_sub.txt 2>&1 | tee Screen_result_sub.log
 	./encflow param_outlet.txt 2>&1 | tee Screen_result_outlet.log
+	./encflow param_sill.txt 2>&1 | tee Screen_result_sill.log
 
 figs:
 	python3 plot_results.py
@@ -51,6 +53,6 @@ install: all
 
 clean:
 	rm -rf result result_* __pycache__
-	rm -f encflow encflow_mpi Screen_*.log h_spinup.txt $(INPUTS)
+	rm -f encflow encflow_mpi Screen_*.log h_spinup.txt h_outlet.txt h_sill.txt $(INPUTS)
 
 .PHONY: all links inputs spinup run sub figs install clean
