@@ -69,7 +69,7 @@ A uses it aggregated by 3 × 3 cells (30 m).
 
 ## The two representations
 
-![The district and the two representations](figs/district.png)
+![The district and the two representations](figs/representations.png)
 
 (1) The district as solved by representation A (Δx = 30 m). The white lines are the boundaries of the 30 m cells; the
 shade of green is the paddy area fraction, blue the channel cells (branch and main drains) and orange the settlement. The

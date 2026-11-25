@@ -4,7 +4,7 @@
 同じ地区を 2 つの表現で解いた結果を描く。表現 B(Δx = 10 m。区画を解像。ケース B10_*)と表現 A(Δx = 30 m。
 サブグリッドの水田タンク。ケース A30_*)。
 
-  figs/district.png  地区と 2 つの表現(入力だけ。計算結果を使わない): 表現 A の地区、表現 B の地区、表現 B の拡大
+  figs/representations.png  地区と 2 つの表現(入力だけ。計算結果を使わない): 表現 A の地区、表現 B の地区、表現 B の拡大
   figs/maps.png      結果 1: 表現 B の最大水深(N と D)
   figs/series.png    結果 1: 表現 B の雨、集落の浸水深、排水機場の前の水位、区画の平均水深(N・D・Du・Dd)
   figs/scale.png     結果 2: 同じ条件の表現 B と表現 A(片方向・双方向)の比べ(集落の浸水深と水田の平均水深)
@@ -203,7 +203,7 @@ def fig_district():
     axes_map(ax, T("(3) %s の北西の拡大((2) の破線の枠)。\n緑の線 = 畦畔、矢印 = 落水口と向き" % REP_B,
                    "(3) %s, north-west corner (dashed box in (2)).\ngreen = levees, arrow = outlet and direction" % REP_B))
     fig.tight_layout()
-    fig.savefig(os.path.join(FIGDIR, "district.png"), dpi=130, bbox_inches="tight")
+    fig.savefig(os.path.join(FIGDIR, "representations.png"), dpi=130, bbox_inches="tight")
     plt.close(fig)
 
 
