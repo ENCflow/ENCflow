@@ -194,13 +194,15 @@ district, the rain, the pumping station and the devices of the outlets are the s
 - **One-way** and **two-way**: representation A as in the table of "The two representations" above. The paddy area
   fraction is the share of the plot area (capped at 0.99).
 - **Two-way, catchment fraction**: the two-way mode with the area of the farm roads and upland whose rain flows into the
-  plots (hatched in panel (2) of the district figure) given as the catchment fraction `fn_pd_catch`. `make_district.py`
-  traces the rain of each 10 m cell that is neither a plot nor a drain by dividing it equally among the lower neighbouring
-  cells (a plot cell counts at the height of its levee crest), aggregates the share that reaches a plot (5.1 ha) over the
-  30 m cell where the rain falls, and adds the 0.01 of levees cut from the paddy area fraction by the cap (0.34 ha), giving
-  the catchment fraction `catch30.txt` (5.5 ha). The model shares the rain of the catchment among the paddy fields of the
-  3 × 3 cells centred on the cell where it falls, in proportion to their area. The area of the paddy tanks (45.3 ha) and
-  the number of outlets are the same as in the one-way and two-way modes.
+  plots (hatched in panel (2) of the district figure) given as the catchment fraction `fn_pd_catch`. The area of the
+  paddy tanks (45.3 ha) and the number of outlets are the same as in the one-way and two-way modes.
+  - `make_district.py` traces the rain of each 10 m cell that is neither a plot nor a drain by dividing it equally among
+    the lower neighbouring cells (a plot cell counts at the height of its levee crest), and aggregates the share that
+    reaches a plot (5.1 ha) over the 30 m cell where the rain falls.
+  - Adding the 0.01 of levees cut from the paddy area fraction by the cap (0.34 ha) gives the catchment fraction
+    `catch30.txt` (5.5 ha).
+  - The model shares the rain of the catchment among the paddy fields of the 3 × 3 cells centred on the cell where it
+    falls, in proportion to their area.
 
 ![Representation B and representation A under the same conditions](figs/scale.png)
 
@@ -238,71 +240,75 @@ Table 3 (where the water went up to 48 h, m³; rain on the district 125,194 m³)
 | D | representation A (Δx = 30 m), two-way | 45.3 | 93718 | — | 31476 | 570 | 94287 |
 | D | representation A (Δx = 30 m), two-way, catchment fraction | 45.3 | 93718 | 11328 | 20148 | 180 | 105225 |
 
-- **Normal outlets (N)**: representation A in the two-way mode (settlement 0.52 m) and in the two-way mode with the
-  catchment fraction (0.52 m) are close to representation B (0.51 m), and the one-way mode (0.44 m) comes out smaller. In the
-  one-way mode the surface water also spreads and is stored over the paddy part of the cells, so the flood level is
-  underestimated ("Limits of accuracy" in the user guide chapter [Paddy-field dams](../../../docs/en/users_guide/paddy.md)).
-  The two-way mode keeps the surface water below the levee crest on the non-paddy area only and also represents the water
-  of the drains returning into the paddy fields through the outlets (backflow 13,000 m³; 11,000 m³ in representation B),
-  so it comes close to representation B.
+- **Normal outlets (N)**: the two-way mode (settlement 0.52 m) and the two-way mode with the catchment fraction (0.52 m)
+  are close to representation B (0.51 m), and the one-way mode (0.44 m) comes out smaller.
+  - In the one-way mode the surface water also spreads and is stored over the paddy part of the cells, so the flood level
+    is underestimated ("Limits of accuracy" in the user guide chapter
+    [Paddy-field dams](../../../docs/en/users_guide/paddy.md)).
+  - The two-way mode keeps the surface water below the levee crest on the non-paddy area only and also represents the
+    water of the drains returning into the paddy fields through the outlets (backflow 13,000 m³; 11,000 m³ in
+    representation B).
 - **Paddy-field dams (D)**: the settlement is not flooded with representation B (maximum level at the pumping station
   −0.09 m, 0.28 m below the ground of the settlement, 0.185 m). Representation A in the two-way mode flooded it by 0.07 m
-  (maximum level 0.25 m). The main cause of the difference is the amount of water that enters the paddy fields (Table 3).
-  In representation B, besides the rain on the paddy fields, the rain on the farm roads and the upland, which are higher
-  than the plots (11,000 m³, 9 % of the rain on the district), entered the plots over the levees and was stored behind
-  the paddy-field dams. In representation A, the rain on the non-paddy part of a cell becomes surface water, and there is
-  no path from it into the paddy tanks. With the catchment fraction, that rain (11,000 m³, including the levees cut by the
-  cap) enters the tanks of the surrounding cells, the water entering the paddy fields (105,000 m³) and the maximum mean
-  depth of the paddy fields (216 mm; 210 mm in representation B) come close to representation B, and the settlement is not
-  flooded. Even in the outer columns and rows where a plot (30 m × 100 m) straddles the boundary of 30 m cells, the rain of
-  the catchment is shared with the paddy fields of the surrounding cells, so the tanks hardly overflow (119 m³ of overflow
-  by 15 h; 81 m³ in representation B). The maximum level (−0.16 m) comes out 0.07 m lower than in representation B: in
-  representation A more of the water outside the paddy fields (such as the water released by the outlets) stays on the
-  surface of the paddy cells and reaches the drains later, so less water is in the drains at the peak (water in the branch
-  and main drains at 15 h 6,000 m³; 6,600 m³ in representation B; developer.md §119.14 and §119.15).
-- **The one-way mode stays dry in D by cancellation**: representation A in the one-way mode did not flood the settlement
-  in D either (0.006 m), but its maximum level is 0.18 m, leaving only 0.004 m to the ground of the settlement. It stays
-  dry although it lets the least water into the paddy fields of the three ways (93,700 m³) because the one-way mode
-  spreads the surface water (such as the water from the outlets) thinly over the whole of the paddy cells (the area of the
-  paddy part is used twice, by the tank and by the surface). At 15 h, 10,000 m³ stays over the paddy cells, flowing
-  slowly (in the two-way mode it gathers on the non-paddy part and flows fast: 3,500 m³), which delays its arrival at the
-  drains. This retention happens to make up for the missing path of the rain from the farm roads into the plots, but it is
-  a cancellation of errors of different origins.
+  (maximum level 0.25 m).
+  - **The main cause of the difference is the water entering the paddy fields** (Table 3). In representation B, the rain
+    on the farm roads and the upland, which are higher than the plots (11,000 m³, 9 % of the rain on the district),
+    enters the plots over the levees and is stored behind the paddy-field dams. In representation A, the rain on the
+    non-paddy part of a cell becomes surface water and has no path into the paddy tanks.
+  - **The catchment fraction brings representation A close to representation B.** That rain (11,000 m³) enters the tanks
+    of the surrounding cells, the water entering the paddy fields becomes 105,000 m³ (also 105,000 m³ in representation
+    B), the maximum mean depth of the paddy fields 216 mm (210 mm in representation B), and the settlement is not flooded.
+    Even where a plot straddles the boundary of 30 m cells, the tanks hardly overflow (119 m³ of overflow by 15 h; 81 m³
+    in representation B).
+  - **The maximum level comes out 0.07 m lower than in representation B** (−0.16 m). In representation A, more of the
+    water such as that released by the outlets stays on the surface of the paddy cells and reaches the drains later
+    (water in the branch and main drains at 15 h 6,000 m³; 6,600 m³ in representation B; developer.md §119.14 and
+    §119.15).
+- **The one-way mode stays dry in D by cancellation**: the one-way mode did not flood the settlement in D either
+  (0.006 m), but its maximum level is 0.18 m, leaving only 0.004 m to the ground of the settlement.
+  - It lets the least water into the paddy fields of the three ways (93,700 m³) and still stays dry, because the one-way
+    mode spreads the water such as that from the outlets thinly over the whole of the paddy cells (the area of the paddy
+    part is used twice, by the tank and by the surface).
+  - At 15 h, 10,000 m³ stays over the paddy cells, flowing slowly (in the two-way mode it flows fast over the non-paddy
+    part: 3,500 m³), which delays its arrival at the drains. This retention makes up for the missing path of the rain
+    from the farm roads into the plots, but it is a cancellation of errors of different origins.
 - **The decision is near a threshold**: in D, the settlement floods only when the water level of the drains rises above
-  its ground, and the maximum levels of representation A in this district (one-way and two-way without the catchment
-  fraction) lie around that ground. A difference of a few thousand m³ of water entering the paddy fields therefore decides
-  whether it floods. For example, capping the paddy area fraction at 0.95 in `make_district.py` (1.4 ha less paddy,
-  3,000 m³ less rain on the paddy fields) gives a settlement depth of 0.16 m in the two-way mode and 0.08 m in the one-way
-  mode.
+  its ground. The maximum levels of representation A in the one-way and two-way modes (without the catchment fraction)
+  lie around that ground.
+  - A difference of a few thousand m³ of water entering the paddy fields therefore decides whether it floods. For
+    example, capping the paddy area fraction at 0.95 in `make_district.py` (1.4 ha less paddy, 3,000 m³ less rain on the
+    paddy fields) gives a settlement depth of 0.16 m in the two-way mode and 0.08 m in the one-way mode.
 
 ## Hints for using representation A on coarse grids
 
 From result 2, here are hints for making inputs of representation A by coarsening high-resolution land use and terrain.
 
 - **Use the two-way mode with the catchment fraction**: give the area of farm roads, levees and upland whose rain flows
-  into the paddy fields as the catchment fraction `fn_pd_catch` (its rain goes into the tanks of the surrounding 3 × 3 cells
-  without changing the tank area or the number of outlets). In this example, this came closest to representation B in D
-  (the water entering the paddy fields differs by 0.1 %) and gave the same result as the two-way mode in N. With
-  high-resolution terrain and a plot map, it can be made by the same procedure as `catchment()` in `make_district.py`
-  (trace the rain of each cell that is neither a plot nor a drain by dividing it equally among the lower neighbouring
-  cells, and count the share that reaches a plot in the coarse cell where the rain falls). Where rain divides to both
-  sides, as on a farm road between paddy fields and a drain, following the single steepest descent underestimates the rain
-  entering the paddy fields. The rain is divided equally because the flow falling from farm roads and upland higher than
-  the plots and drains is set by the depth on top, not by how deep the receiving side is. Dividing in proportion to the
-  slope sends more to the deeper drain: in this example 90 % of the rain on the east farm road would go to the branch
-  drain, and the catchment would be 4.6 ha. The 5.1 ha from the equal division is about the water that entered the plots
-  over the levees in representation B (10,700 m³ ÷ 207 mm of rain = 5.2 ha). The procedure is simple and does not solve
-  shallow water flow, and the rain of the catchment enters the tanks without travel time. A catchment on cells without
-  paddy fields cannot be represented (0.002 ha in this example). When the area fraction is given as the field surfaces
-  (without the levees), include the area of the levees in the catchment fraction, and multiply a catchment that
-  infiltrates (fields, upland) by a runoff coefficient. The 0.01 left by the cap (0.99) on cells made only of paddy fields
-  is also levees, so include it in the catchment fraction (`catch30.txt` of this example does).
+  into the paddy fields as the catchment fraction `fn_pd_catch`. In this example this came closest to representation B
+  in D (the water entering the paddy fields differs by 0.1 %) and gave the same result as the two-way mode in N.
+  - **What it does**: the rain goes into the tanks of the surrounding 3 × 3 cells; the tank area and the number of
+    outlets do not change.
+  - **How to make it**: the same procedure as `catchment()` in `make_district.py` (it needs high-resolution terrain and a
+    plot map). Trace the rain of each cell that is neither a plot nor a drain by dividing it equally among the lower
+    neighbouring cells, and count the share that reaches a plot in the coarse cell where the rain falls.
+  - **Why equal division**: the flow falling from farm roads and upland higher than the plots does not depend on how
+    deep the receiving side is. Following the single steepest descent or dividing by the slope sends much of the rain on
+    a farm road between paddy fields and a drain to the drain (90 % on the east farm road of this example; a catchment of
+    4.6 ha). The 5.1 ha from the equal division is about the water that entered the plots over the levees in
+    representation B (10,700 m³, 5.2 ha worth of the 207 mm of rain).
+  - **Levees**: when the area fraction is given as the field surfaces (without the levees), include the levees as well.
+    The 0.01 cut by the cap (0.99) is also levees (`catch30.txt` of this example includes it).
+  - **Catchment that infiltrates** (fields, upland): multiply its area by a runoff coefficient.
+  - **Limits**: the procedure is simple and does not solve shallow water flow, and the rain of the catchment enters the
+    tanks without travel time. A catchment on cells without paddy fields cannot be represented (0.002 ha in this
+    example).
 - **The catchment fraction does not bring the one-way mode closer**: with the catchment fraction in the one-way mode, the
   maximum level in D drops to −0.40 m, far below representation B (−0.09 m), and the settlement depth in N stays 0.44 m
-  (0.51 m in representation B). The one-way mode spreads and retains the surface water over the paddy part as well
-  (result 2), and putting the rain of the catchment into the tanks on top of that overestimates the effect of paddy-field
-  dams. Use the two-way mode to evaluate flooding (add `fn_pd_catch = 'catch30.txt'` to `param_A30_N.txt` and
-  `param_A30_D.txt` to check this).
+  (0.51 m in representation B).
+  - The one-way mode spreads and retains the surface water over the paddy part as well (result 2), and putting the rain
+    of the catchment into the tanks on top of that overestimates the effect of paddy-field dams. Use the two-way mode to
+    evaluate flooding.
+  - Add `fn_pd_catch = 'catch30.txt'` to `param_A30_N.txt` and `param_A30_D.txt` to check this.
 - **Give the paddy area fraction as the share of field surfaces, with a small cap**: the fraction is the share of the
   field surfaces of the plots (without levees and ditches). The two-way mode needs a non-paddy share of at least 0.01, so
   cells made only of plots are capped at 0.99. Where the flood decision is near a threshold, a difference of a few
