@@ -1,0 +1,28 @@
+!======================================================================
+! tsunami_meander: 直線水路の波状段波を静水圧で計算する
+!   小林ら (2019・2021) の実験水路(直線、幅 0.40 m、勾配 0。上流端は壁)。
+!   ゲートの上流に水深 0.285 m、下流に 0.147 m の静水を置き、t = 0 にゲートが開いたとして(初期水位の段差)、
+!   波状段波(段波のフルード数 1.32)を進ませる。静水圧(浅水流方程式)の計算で、段波は不連続のまま進む。
+!   格子(2 cm)・地形・初期水位・プローブは make_init.py が書いた
+!   geoinfo_str.txt・initial_str_ub.txt・record_str.txt。
+!   計測との比較と図は plot_results.py(README)。dir_result = result_str_h
+!======================================================================
+&list_sysparam
+  dt = 0.002                ! 時間刻み (s)。クーラン数 0.2〜0.3
+  tt = 6.5                  ! 計算終了時刻 (s)。段波は下流端に届かない
+  dt_disp = 0.5             ! 画面・Log の表示間隔 (s)
+  dt_file = 0.5             ! 分布(水位)の出力間隔 (s)
+  dt_recrd = 0.01           ! プローブの出力間隔 (s)
+  fn_geoinfo = 'geoinfo_str.txt'
+  fn_initial = 'initial_str_ub.txt'
+  fn_enc = '-'
+  fn_record = 'record_str.txt'
+  dir_result = 'result_str_h'
+  f_out_h = 0               ! 水深の分布は出さない
+  f_out_e = 1               ! 水位の分布(水面の形の図に使う)
+  f_disp_vv = 1             ! 画面に最大流速を出す
+/
+
+&list_enc
+  f_hcap_upwind = 2         ! エッジ水深を上流側の水深にする(段波の先端の 1 セル幅の跳ねを抑える)
+/
