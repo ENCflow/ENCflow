@@ -1,0 +1,644 @@
+# snow_avalanche — a dense snow avalanche down a gully: entrainment of the track snow and a deflecting dam on the fan
+
+> English mirror of examples/snow_avalanche/README.md. The Japanese file is the master copy.
+
+[日本語](../README.md)
+
+This example computes, on a schematic terrain, a slab avalanche released on a steep slope that runs
+down a gully (the track), grows by taking up the snow on the gully floor, spreads over the fan at the
+gully mouth (the runout zone) and stops. It does not use a dedicated avalanche model: the containers of
+the sediment-flow model (the Voellmy resistance law and entrainment proportional to the speed) are read
+as snow ([snow avalanches on the applications page of sediment and landform change](../../../docs/en/users_guide/geomorph_applications.md#5-snow-avalanches-dense-flow)).
+There are two aims. (1) For the same released volume, how much larger the avalanche becomes and how far
+it reaches, depending on the amount of snow on the track (a band on the gully floor, 0, 1 or 2 m thick).
+(2) How a deflecting dam on the fan (an earth dam given as terrain) changes the direction of the flow
+and the place of the deposit, and what happens when the avalanche is large. The example also checks the
+choice of the friction coefficients, the dependence on the grid spacing, on the direction of the gully
+on the grid and on the time step, and the limits of this setup (how the entrainable snow is given, the
+threshold depth, and entrainment and momentum). The terrain, the amounts of snow and the friction
+coefficients are schematic values chosen to make the phenomena visible, and do not reproduce a
+particular avalanche.
+
+**What this example shows**
+
+- **An avalanche that takes up the track snow keeps its speed and runs farther**: when 17,000 m³ of
+  snow on the gully floor (1 m thick on the axis) is added to the released 17,000 m³, the flowing snow
+  becomes 2.0 times as large, the speed at the gully mouth goes from 20 to 27 m/s, the tip of the
+  deposit moves 60 m farther (s = 1,178 → 1,238 m), and the deposit area on the fan becomes 2.0 times
+  as large. With 2 m of snow on the gully floor the figures are 3.0 times, 32 m/s and 90 m farther. The
+  maximum speed reached in the upper gully (about 30 m/s) does not depend on the amount of track snow.
+- **The runout falls within the scatter of an empirical relation**: the sight angle from the top of the
+  starting zone to the tip of the deposit is 23.2 to 24.3°, within the scatter of the statistics of 206
+  avalanche paths in Norway (the α–β relation; 22.2° ± 2.3° for this terrain). With the friction
+  coefficients of other rows of the RAMMS table it is 21.5° (the values for a large avalanche on an open
+  slope) to 25.1° (the values for a medium avalanche in a gully).
+- **The deflecting dam deflects, but a large avalanche overtops it**: a deflecting dam 18 → 10 m high
+  deflects the avalanche of the base case to the left, and no snow reaches the 32 houses the dam protects
+  (without the dam, snow at least 0.5 m deep reaches 12 houses). The avalanche with 2 m of snow on the
+  gully floor overtops the crest over the first 200 m of the dam and reaches 4 houses. The deflected
+  flow gathers along the dam and runs 40 m farther than without the dam.
+- **Give the entrainable snow over a chosen area**: the entrainment law has no threshold, so all snow
+  the flow touches is taken. Snow placed in the band on the gully floor is taken up in exactly the
+  amount that was placed. If snow is placed over the whole slope, the thin snow at the margins of the
+  flow spreads sideways while taking up snow, and the size of the avalanche ends up being set by a
+  numerical threshold (the threshold depth): 2.5 to 14 times the released volume.
+- **Exchange the carrier together with the snow, and lower the threshold depth**: in this model, which
+  carries the depth of flowing snow as the sum of the surface water h and the sediment column hs,
+  exchanging h in the same proportion as the snow (`f_dbwet = 1`, `db_satbed = db_relsat`) and lowering
+  the threshold depth `dd` to 0.1 mm makes the deposit smooth and the results independent of the time
+  step.
+
+## What happens in real avalanches
+
+- **Starting zone, track and runout zone**: an avalanche path is divided into the starting zone, where
+  the snowpack fails and starts to move, the track, down which the snow flows, and the runout zone,
+  where the snow stops and is deposited (MLIT, Technical Criteria for River Works). Avalanches are
+  likely on slopes of 30° or more, and slopes of 35 to 45° are regarded as the most dangerous
+  (MLIT 2006). The track is usually 15 to 30° steep and the runout zone gentler than 15°
+  (Schweizer et al. 2021).
+- **Flowing and powder avalanches**: by their motion, avalanches are classified into the "flowing
+  type", which runs with almost no snow cloud, the "powder type", which raises a high snow cloud, and
+  the "mixed type" of both (classification of the Japanese Society of Snow and Ice). The flowing type
+  (dense flow) is 1 to 3 m deep (much deeper where it is channelled) with a density of about 300 kg/m³
+  (Jóhannesson et al. 2009); the speed is 14 to 56 m/s (50 to 200 km/h) for large dry-snow avalanches
+  and 6 to 28 m/s (20 to 100 km/h) for wet-snow avalanches (Schweizer et al. 2021).
+- **Uptake of the track snow (entrainment)**: avalanches grow by taking up the snow on the track. In
+  measurements of 18 avalanches at test sites in Switzerland and Italy, the deposited mass was on
+  average 4.6 times the released mass (1 to 12 times). The uptake took place mainly at the front
+  (ploughing; up to 350 kg m⁻² s⁻¹), the depth taken up along the path was on average 0.6 times the
+  fracture depth, and the amount taken up was governed by the available snow and the structure of the
+  snow cover, with the topography and the size of the avalanche secondary. The front speed did not
+  depend on where the snow came from, and for the same speed a larger mass runs farther
+  (Sovilla et al. 2006).
+- **Empirical rules for the runout**: from the longest known runouts of 206 avalanche paths in Norway,
+  the sight angle α (the mean slope from the top of the starting zone to the tip of the deposit) is
+  given by α = 0.96 β − 1.4° (standard deviation 2.3°), where β is the mean slope from the top of the
+  starting zone to the point where the path slope is 10° (Bakkehøi et al. 1983). The longest runouts
+  are known for paths with more than a hundred years of local tradition or records, so the relation is
+  a guide to the runout of rare, large avalanches. In Japan, a sight angle of 18° for surface-layer
+  avalanches and 24° for full-depth avalanches is used as a guide to the area they can reach
+  (Takahashi's 18-degree rule; MLIT 2006).
+- **Avalanche computations and friction coefficients**: computations of flowing avalanches widely use
+  the law of Voellmy (1955), which expresses the basal friction as the sum of a term proportional to
+  the normal stress (coefficient μ) and a term proportional to the square of the speed (coefficient ξ).
+  RAMMS, the model of Swiss practice, gives μ and ξ in a table by avalanche size, return period,
+  altitude and terrain class (open slope, channelled, gully, flat): the larger the avalanche, the
+  smaller μ and the larger ξ, and in gullies μ is larger and ξ smaller (μ = 0.14 to 0.47,
+  ξ = 900 to 4,000 m/s²; Bartelt & Christen 2026). The values of the Swiss guidelines on which this
+  table is based were determined with computations that do not consider the uptake of track snow
+  (Christen et al. 2002).
+- **Deflecting dams**: the protective works placed in the track and the runout zone are stopping works
+  that halt the avalanche, braking works that weaken it and deflecting works that change its direction
+  (MLIT, Technical Criteria for River Works). The height of a deflecting dam is determined from two
+  requirements: the avalanche must not pass over the dam while still a fast (supercritical) flow, and
+  the dam must be higher than the flow depth downstream of the shock that forms in front of it
+  (Jóhannesson et al. 2009). At Flateyri, Iceland, two deflecting dams 15 to 20 m high and about 600 m
+  long were built after the avalanche disaster of 1995 (20 fatalities). The avalanches of 1999 and 2000
+  (each more than 100,000 m³) ran up 12 to 13 m on the dams and were deflected; they gathered into a
+  stream 20 to 80 m wide along the dam, and their runout is estimated to have increased by more than
+  100 m (Jóhannesson 2001). In the two avalanches of January 2020 (240,000 and 315,000 m³) the dense
+  core was deflected, but the fluidized front (about a tenth of the mass) overflowed the dams
+  (Jóhannesson et al. 2024; Hákonardóttir et al. 2024).
+
+## Mechanisms needed for the reproduction
+
+![Reading as snow, the Voellmy law and entrainment](figs/mechanism.png)
+
+(a) How the containers of the sediment-flow model are read. The elevation z is the snow surface, the
+soil depth sd is the entrainable snow, and z − sd is the surface that is not eroded (the ground and old
+snow). The depth of flowing snow is carried as the sum of the surface water h (the carrier) and the
+sediment column hs (the solids). (b) The steady speed of the Voellmy law (speed along the slope,
+V² = ξ h cos θ (sin θ − μ cos θ)). The flow stops where the slope is gentler than μ (14°), and the speed
+is proportional to the square root of the depth. The bars at the bottom are the slope ranges of the
+starting zone, the gully and the fan of this example. (c) The entrainment rate expressed as mass. The
+dashed line is the observed upper bound of frontal ploughing (Sovilla et al. 2006). These are a sketch
+and plots of formulas, not computed results.
+
+| Real phenomenon | Representation in ENCflow | Settings |
+|---|---|---|
+| The snowpack fails over an area and starts to move | The starting zone and the fracture depth are given as a distribution, and the snow of the fracture depth is moved to flowing snow at the start of the run (release is not predicted) | `fn_dbinit`, `db_reltime = 0` |
+| Resistance of the dense snow flow | The Voellmy law: an apparent friction μ (which sets the slope at which the flow stops) and a resistance proportional to the square of the speed, g V²/(ξ h) (which limits the speed) | `f_dbres = 4`, `db_mu`, `db_xi` |
+| Growth by taking up the track snow | The thickness of the entrainable snow is given as the soil depth; the snow surface is lowered at a rate δe \|V\| proportional to the flow speed and the snow is added to the flow. It stops when the layer is used up | `fn_sd`, `f_dbed = 4`, `db_delte` |
+| Stopping and deposition on gentle ground | Stopped snow (speed below 0.05 m/s) is fixed to the snow surface. The deposit raises the snow surface and becomes entrainable snow | `f_dbstop = 1`, `db_vstop`, `db_wstop` |
+| Depth of flowing snow | The sum of the surface water h and the sediment column hs. h is a carrier that takes a tenth of the snow depth and is put in and taken out in the same proportion as the snow at release, entrainment and stopping | `fluv_porosity = 0.1`, `f_dbwet = 1`, `db_satbed = db_relsat = 1` |
+| Thin snow also flows | The threshold depth is lowered to 0.1 mm (the snow in a cell whose carrier falls below the threshold depth is fixed on the spot) | `dd = 0.0001` |
+| Gravity and friction on steep slopes | The correction of gravity for the slope. The Voellmy law is evaluated with the speed along the slope and the depth normal to the ground | `f_gravity_correction = 2` (default) |
+| Deflecting dam | The dam body is added to the terrain and its soil depth is set to 0 (not eroded) | `fn_z`, `fn_sd` (made by `make_init.py`) |
+| Gully direction and the grid | The terrain, the snow and the starting zone are given by formulas in coordinates along the gully and sampled at the cell centres of each grid (no interpolation). The eight neighbours of the ENC grid | `make_init.py` |
+
+**Accounting for the depth of flowing snow (the carrier).** This model carries the flow as a mixture of
+the surface water h and the sediment column hs (the solid volume as a thickness), and treats a cell
+whose surface water h falls below the threshold depth `dd` as dry (no discharge is computed and the
+remaining hs is fixed to the terrain on the spot). For avalanches, h + hs is read as the depth of
+flowing snow and h as "the carrier that takes the share λ (`fluv_porosity`) of the snow depth". With
+`f_dbwet = 1` and `db_satbed = db_relsat = 1`, the fracture depth D becomes hs = (1 − λ)D and h = λD at
+release, the thickness eroded enters the flow in the same proportion at entrainment, and stopped snow
+takes the same share of h with it, so h : hs = λ : (1 − λ) holds everywhere in the flow and h + hs
+increases (decreases) by exactly the thickness by which the snow surface is lowered (raised). The
+threshold for a "dry cell" in terms of snow depth is dd/λ, that is 1 mm for `dd = 0.1 mm` and λ = 0.1.
+The density does not appear in the equations (the driving force and the resistance are both in
+acceleration form), so the depth is "the depth of the snow counted at one constant density". What
+happens without this combination is described under "The carrier and the threshold depth" below.
+
+## Geometry and settings
+
+![Setup](figs/setup.png)
+
+(a) The schematic terrain (coordinates s and n along the gully). Red = starting zone, blue = track snow
+band, brown = deflecting dam, white squares = houses. (b) The profile along the gully axis and the
+empirical runout rules (the β point, the tip by the α–β relation with the range of its standard
+deviation, and the position of the 18° sight angle). (c) The domains for gully directions of 0°, 22.5°
+and 45° on the grid (the same terrain is placed rotated relative to the grid). (d) to (f) Cross-sections
+(vertically exaggerated). The light blue in (e) is the snow of the case with 2 m on the axis.
+
+- **Domain**: a rectangle 1,800 m along the gully and 640 m across. Outside this rectangle is outside
+  the domain. When the gully is rotated relative to the grid, the edge of the rectangle becomes a
+  staircase on the grid.
+- **Profile**: the slope of the gully axis decreases linearly from 0.78 (38°) at the upper end to 0.05
+  (3°) 1,400 m farther on (a parabola), followed by a valley floor with a slope of 0.05. The drop from
+  the upper end to the downstream end is 601 m.
+- **Cross-section**: the upper part (s < 220 m) is a shallow bowl (a paraboloid with a half-width of
+  150 m and a rim 30 m high), the middle part a V-shaped gully with a rounded floor (wall slope 0.6,
+  rim 35 m high), and the bowl changes into the gully over s = 220 to 420 m. Beyond the gully mouth (the
+  fan apex, s = 950 m, slope 16°) lies a conical fan whose apex is a line segment of the width of the
+  mouth, 40 m. The mountain ends at the line of the mouth with a 35° scarp.
+- **Starting zone**: a rounded rectangle (140 m × 130 m) in the upper bowl (s = 80 to 220 m, slope 34
+  to 37°). The fracture depth is uniform and is normalized on each grid so that the volume is 17,000 m³
+  (1.00 m on the 5 m grid).
+- **Track snow**: entrainable snow is placed in a band 40 m wide along the gully axis (s = 300 to
+  950 m). It is thickest on the axis, with a parabolic cross-section that falls to 0 at the edges
+  (representing new snow and drift snow collected on the gully floor). The base case has 1 m on the axis
+  (17,500 m³; 0.67 m on average over the band); the other cases have 0 m and 2 m (34,900 m³). No
+  entrainable snow is placed outside the band or on the fan.
+- **Friction coefficients**: μ = 0.25, ξ = 1,750 m/s²: the values of the RAMMS table for a medium
+  avalanche (25,000 to 60,000 m³), channelled terrain, altitudes above 1,500 m and a return period of
+  300 years. The same values are used over the whole domain.
+- **Entrainment coefficient**: δe = 0.05. The snow surface is lowered at the rate δe |V|, so 1 m of snow
+  is taken up while the flow travels 1/δe = 20 m (at any speed). For snow of 200 kg/m³ and a speed of
+  35 m/s this gives 350 kg m⁻² s⁻¹, the order of the observed upper bound of frontal ploughing.
+- **Deflecting dam**: an earth dam that runs 325 m from the foot of the mountain on the right bank of
+  the gully mouth (s = 950 m, n = −50 m) at 23° to the gully axis (ending at s = 1,250 m, n = 75 m).
+  The dam is 18 m high at its upstream end and 10 m at its downstream end (lowered linearly), with a
+  crest 5 m wide and side slopes of 1 : 1.5. The dam body is added to the terrain and is not eroded.
+- **Houses**: the positions of 32 houses 30 m apart on the right-bank side of the dam (s = 1,100 to
+  1,310 m, n = −110 to −20 m; `houses.txt`). They are not used in the computation (the houses do not
+  obstruct the flow); the maximum flow depth and the maximum speed are read at them when plotting.
+- **Time step and output**: dt = 0.005Δx (0.025 s for 5 m; the maximum Courant number is about 0.2).
+  The run covers 4 minutes, with distributions written every 5 seconds (bil).
+
+| Case | Track snow (thickness on the axis) | Deflecting dam | Other differences |
+|---|---|---|---|
+| `nosnow` | none | no | |
+| `base` (`param.txt`) | 1 m | no | |
+| `deep` | 2 m | no | |
+| `dam` | 1 m | yes | |
+| `deep_dam` | 2 m | yes | |
+| `mu155`, `mu340` | 1 m | no | friction coefficients μ = 0.155, ξ = 3,000 m/s² and μ = 0.34, ξ = 1,350 m/s² |
+| `dx10`, `dx2p5` | 1 m | no | grid spacing 10 m and 2.5 m |
+| `r22p5`, `r45` | 1 m | no | gully direction on the grid 22.5° and 45° |
+| `dt2`, `dthalf` | 1 m | no | time step 0.05 s and 0.0125 s |
+| `dd3`, `dd3_dthalf`, `dd5` | 1 m | no | threshold depth 1 mm (time steps 0.025 s and 0.0125 s) and 0.01 mm |
+| `allsnow`, `allsnow_dd3`, `allsnow_dd5` | 0.5 m everywhere above the apex | no | threshold depth 0.1 mm, 1 mm and 0.01 mm |
+
+`param.txt` (the base case) is the annotated template; `make_init.py` writes the `param_<case>.txt` of
+the other cases by replacing only the lines for the grid, the time step, the input and output, and the
+differences in the table. The grid is 5 m (46,000 active cells); the 10 m grid has 12,000 cells and
+the 2.5 m grid 180,000.
+
+## How to run
+
+```bash
+cd examples/snow_avalanche
+make                     # links, and the inputs and settings of all 19 cases (make_init.py)
+make run                 # the 5 cases of the main text (nosnow, base, deep, dam, deep_dam): about 6 minutes on 4 threads
+make extra               # the 14 supplementary cases: about 40 minutes on 4 threads (the one 2.5 m case takes half)
+python3 plot_results.py  # figs/*.png and tables (with the argument en, the English version in en/figs/; the explanatory figures setup and mechanism need no results)
+```
+
+A single case is `./encflow param.txt` (the base case; about one minute). The output of all cases is
+about 1.1 GB (`make clean` removes it). The plotting script draws only the figures whose cases have
+been computed.
+
+## Results
+
+### How the avalanche flows (base case)
+
+![Flow of the base case](figs/flow.png)
+
+The base case: the depth of flowing snow (10 to 70 s after release), the maximum flow depth, and the
+change of the snow surface after 4 minutes (red = lowered by the release and entrainment, blue =
+deposit).
+
+- **From the starting zone into the gully (0 to 20 s)**: the 1 m of snow accelerates while converging
+  to the centre of the bowl and gathers into a flow about 45 m wide at the entrance of the gully
+  (s = 420 m). Just inside the gully (s = 500 m, slope 27°) the speed reaches its maximum of 30 m/s and
+  the flow depth reaches 10 m.
+- **Down the gully, with entrainment (20 to 35 s)**: the front runs down the gully at 28 m/s and takes
+  up the snow of the gully floor as it passes (all of the 17,500 m³ of the band). The flowing snow
+  reaches 34,000 m³ (2.0 times the release) at 35 s. In the gully the maximum flow depth is 8.7 to 10 m
+  and the maximum speed 27 to 30 m/s.
+- **Stopping on the fan (35 to 70 s)**: the front reaches the gully mouth at 33 s (flow depth 9.9 m,
+  27 m/s), decelerates while spreading to both sides on the fan, and stops on reaching the tip of the
+  deposit (s = 1,238 m, 288 m from the apex) at 60 s. The volume of flowing snow falls to half at 70 s
+  and below 5 % of its maximum at 140 s. The 450 m³ (1.3 %) still flowing after 4 minutes is thin snow
+  left on the upper fan, where the slope is steeper than μ, and in the gully.
+- **Deposit**: the deposit on the fan is a tongue 240 m long, from 50 m below the apex to the tip, and
+  215 m wide, with an area of 39,000 m² (thickness of 0.1 m or more), a maximum thickness of 1.76 m
+  (160 m from the apex) and a volume of 33,600 m³. What is left in the gully and the bowl is 360 m³
+  (thin deposits at the margins of the flow).
+
+### What the track snow changes
+
+![Track snow of 0, 1 and 2 m](figs/entrain.png)
+
+Top rows: the maximum flow depth and the change of the snow surface (from the left: no track snow, 1 m,
+2 m). Bottom row: (a) the volume of flowing snow, (b) the position of the front (the most downstream
+position with a flow depth of 0.1 m or more), (c) the cross-sectional maximum of the speed (solid) and
+of the flow depth (dashed) along the path.
+
+| | No track snow | 1 m (base) | 2 m |
+|---|---:|---:|---:|
+| Entrainable snow on the track (10³ m³) | 0 | 17.5 | 34.9 |
+| Peak volume of flowing snow (10³ m³) | 16.9 | 34.1 | 51.6 |
+| Ratio to the released volume (17,000 m³) | 1.0 | 2.0 | 3.0 |
+| Arrival at the gully mouth (s) | 37 | 33 | 32 |
+| Maximum flow depth at the gully mouth (m) | 5.0 | 9.9 | 13.1 |
+| Maximum speed at the gully mouth (m/s) | 20 | 27 | 32 |
+| Tip of the deposit, s (m) | 1,178 | 1,238 | 1,268 |
+| Sight angle α (°) | 24.3 | 23.6 | 23.2 |
+| Deposit area on the fan (10³ m²) | 19.9 | 39.2 | 52.6 |
+| Maximum deposit thickness on the fan (m) | 1.70 | 1.76 | 2.15 |
+| Width of the deposit on the fan (m) | 135 | 215 | 255 |
+
+(The maximum speed is read from the maximum speed V9999 of the cells whose maximum flow depth is 0.5 m
+or more. The area, the tip and the width of the deposit are for a thickness of 0.1 m or more.)
+
+- **The amount taken up is set by the amount of snow placed**: in every case the flow takes up all the
+  snow of the band. At the entrainment rate δe |V|, 1 m of snow is gone while the flow travels 20 m, so
+  the snow of the band is used up while the body of the avalanche (200 to 300 m long) passes. In the
+  observations too, it is the available snow that governs the amount taken up (Sovilla et al. 2006).
+- **The speed in the upper gully does not change; the speed at the mouth does**: the speed up to the
+  entrance of the gully (30 m/s at most) is the same in the three cases. The flow that takes up no snow
+  becomes thinner on its way down the gully (flow depth 7 → 5 m) and slows to 20 m/s. The flows that
+  take up snow keep their depth (the speed of the Voellmy law is proportional to the square root of the
+  depth) and leave the gully at 27 to 32 m/s.
+- **A larger avalanche runs farther and wider**: the tip of the deposit moves 60 m farther with 1 m of
+  track snow and 90 m with 2 m, and the deposit area becomes 2.0 and 2.6 times as large. The maximum
+  thickness changes little (1.7 to 2.2 m); the additional snow goes into spreading sideways and
+  forwards.
+
+### Runout: the empirical rules and the friction coefficients
+
+![Runout](figs/runout.png)
+
+(a) The position of the tip of the deposit. The green line and band are the tip by the α–β relation and
+the range of its standard deviation, the white circle is the β point, and the purple triangle is the
+position of the 18° sight angle. (b) The sight angle α.
+
+The β point of this terrain (10° slope) is at s = 1,158 m with β = 24.6°; the sight angle of the α–β
+relation is 22.2° ± 2.3° (a tip at s = 1,347 m, with a range of 1,164 to 1,537 m), and the position of
+the 18° sight angle is s = 1,732 m.
+
+| | μ | ξ (m/s²) | Class in the RAMMS table | Maximum speed at the gully mouth (m/s) | Tip of the deposit, s (m) | Sight angle α (°) |
+|---|---:|---:|---|---:|---:|---:|
+| `mu155` | 0.155 | 3,000 | large, open slope, 300 years | 37 | 1,398 | 21.5 |
+| `base` | 0.25 | 1,750 | medium, channelled, 300 years | 27 | 1,238 | 23.6 |
+| `mu340` | 0.34 | 1,350 | medium, gully, 30 years | 20 | 1,118 | 25.1 |
+
+(All are the values for altitudes above 1,500 m. The track snow is 1 m.)
+
+- **The amount of track snow changes the angle by 1°, the friction coefficients by 3.6°**: the sight
+  angle goes from 24.3 to 23.2° for 0 to 2 m of track snow, and from 21.5 to 25.1° when the friction
+  coefficients are changed from one end of the table to the other. The runout is set first of all by
+  the friction coefficients.
+- **Relation to the empirical rules**: the three cases with the base friction coefficients and `mu155`
+  fall within the standard-deviation range of the α–β relation (19.9 to 24.5°), and the gully values
+  (`mu340`) stop outside it (short of it). The α–β relation is a statistic of the longest known
+  runouts, so it is a guide for rare, large avalanches. No case reaches the position of the 18° sight
+  angle. The empirical rules are a check that the computed results are not off by a large factor; they
+  do not replace the calibration of the friction coefficients.
+- **The table values and entrainment**: the guideline values behind the table were determined with
+  computations that take up no snow. Using the same values in a computation with entrainment makes the
+  avalanche larger and longer-running for the same released volume (the difference between `nosnow` and
+  `base`).
+
+### Deflecting dam
+
+![Deflecting dam](figs/dam.png)
+
+Top: the maximum flow depth; bottom: the deposit thickness. From the left: base (no dam), base +
+deflecting dam, 2 m of track snow (no dam), 2 m of snow + deflecting dam. Brown line = edge of the dam
+body; squares = houses (red = maximum flow depth of 0.5 m or more in the top row, deposit of 0.5 m or
+more in the bottom row).
+
+| | Base | Base + dam | 2 m of snow | 2 m of snow + dam |
+|---|---:|---:|---:|---:|
+| Houses reached by snow with a maximum flow depth of 0.5 m or more (out of 32) | 12 | 0 | 20 | 4 |
+| Houses buried by 0.5 m or more | 11 | 0 | 19 | 0 |
+| Largest maximum flow depth at the houses (m) | 2.4 | 0 | 3.5 | 1.0 |
+| Largest maximum speed at the houses (m/s) | 14 | 0 | 17 | 12 |
+| Snow that entered the right-bank side of the dam line (m³) | 15,800 | 110 | 27,600 | 1,980 |
+| Distance of the tip of the deposit from the apex (m) | 288 | 327 | 318 | 354 |
+| Maximum deposit thickness (m) | 1.8 | 5.5 | 2.2 | 5.7 |
+
+- **The base avalanche is deflected**: the flow leaving the gully (flow depth 9.9 m, 27 m/s) runs up the
+  upstream face of the dam, becomes a flow along the dam and turns to the left. The snow on the face
+  reaches the crest (16 to 15 m high) between 50 and 150 m from the upstream end, but only 110 m³
+  (0.3 % of the flowing snow) falls to the right-bank side, and it does not reach the houses.
+- **The avalanche with 2 m of snow overtops**: the flow leaving the gully is deeper and faster (13.1 m,
+  32 m/s), so it overtops the crest over the first 200 m (a maximum flow depth of 4.0 m on the crest),
+  1,980 m³ (4 % of the flowing snow) falls to the right-bank side, and snow 0.5 to 1.0 m deep moving
+  at 12 m/s reaches the 4 houses behind the dam. The snow that overtops spreads thinly and does not
+  form a deposit that buries a house by 0.5 m or more.
+- **The deflected flow gathers and runs farther**: the flow along the dam deposits up to 5.5 m in front
+  of the dam, passes the end of the dam and reaches 327 m from the apex (39 m farther than without the
+  dam). In the avalanches at Flateyri too, the flow along the dam gathered into a narrow stream and its
+  runout increased (Jóhannesson 2001). A deflecting dam is a structure that changes where the avalanche
+  goes.
+- **Relation to the design formulas**: the flow that hits the dam has, at the gully mouth in the
+  computation without the dam, a speed of 27 m/s and a flow depth of 9.9 m on the axis and 5.6 m on
+  average over a width of 50 m (32 m/s, 13.1 m and 7.6 m with 2 m of snow). With the mean flow depth,
+  the formulas of Jóhannesson et al. (2009) give a flow depth of 15 m downstream of the shock in front
+  of a dam with a deflecting angle of 23° (21 m with 2 m of snow), and a height of 7 m (10 m) to
+  prevent supercritical overflow. The height the snow climbs on the dam face in the computation (per
+  50 m from the upstream end: 14, 17, 16 and 8 m in the base case; 17, 19, 18 and 15 m with 2 m of
+  snow) is about the same as the shock depth, and exceeds the dam height (17, 16, 15 and 14 m over the
+  same reaches) slightly in the base case and clearly with 2 m of snow. With the flow depth on the
+  axis, the shock depth is 22 m (30 m): the estimate depends on which depth is used for a narrow, deep
+  flow. In real avalanches a fluidized front can overflow a dam ahead of the dense core (Flateyri in
+  2020), which a depth-averaged model cannot represent. The dam height of this computation is not a
+  basis for design.
+
+### Grid spacing, gully direction and time step
+
+![Grid spacing, gully direction and time step](figs/grid.png)
+
+The contours of a 0.5 m deposit on the fan (solid) and of a maximum flow depth of 0.5 m (dashed),
+overlaid (coordinates along the gully). (a) Grid spacing, (b) gully direction on the grid, (c) time
+step.
+
+| | 10 m grid | 5 m (base) | 2.5 m | gully direction 22.5° | 45° | time step 0.05 s | 0.0125 s |
+|---|---:|---:|---:|---:|---:|---:|---:|
+| Peak volume of flowing snow (10³ m³) | 34.4 | 34.1 | 34.0 | 34.0 | 34.1 | 34.3 | 33.8 |
+| Front speed (mean over 20 to 30 s; m/s) | 24.0 | 27.5 | 25.8 | 26.1 | 30.4 | 28.0 | 27.0 |
+| Arrival at the gully mouth (s) | 35.2 | 33.4 | 34.9 | 33.5 | 30.6 | 33.4 | 33.4 |
+| Maximum speed in the gully (m/s) | 28.2 | 29.6 | 33.3 | 31.1 | 34.1 | 31.6 | 29.5 |
+| Maximum flow depth in the gully (m) | 9.4 | 10.0 | 9.8 | 9.4 | 7.2 | 10.6 | 9.4 |
+| Tip of the deposit, s (m) | 1,225 | 1,238 | 1,246 | 1,252 | 1,246 | 1,238 | 1,238 |
+| Deposit area on the fan (10³ m²) | 35.9 | 39.2 | 43.4 | 38.0 | 33.6 | 39.2 | 39.2 |
+| Maximum deposit thickness (m) | 1.84 | 1.76 | 1.72 | 1.73 | 2.17 | 1.78 | 1.74 |
+| Width of the deposit (m) | 200 | 215 | 232 | 196 | 170 | 215 | 210 |
+
+(The time step of the cases with a different grid spacing or direction is 0.005Δx. "In the gully" is s = 500 to 900 m.)
+
+- **Time step**: changing the time step by a factor of 0.5 to 2 leaves the tip of the deposit at the same
+  position and the area within 0.2 %. The front speed changes by ±2 %, and the maximum speed in the gully is
+  7 % larger with twice the time step.
+- **Grid spacing**: the tip of the deposit is 12.5 m shorter on the 10 m grid and 9 m farther on the 2.5 m
+  grid. The deposit area increases by 9 % and 11 % each time the grid spacing is halved and has not converged
+  (a Voellmy fluid spreads thin on the fan, and the position of the 0.1 m margin moves with the fineness of
+  the grid). The maximum thickness stays at 1.7 to 1.8 m. The maximum speed in the gully is 12 % larger at
+  2.5 m. This is because a fast core appears over the deep part on the gully axis (the speed of the Voellmy
+  law is proportional to the square root of the depth and there is no resistance that couples neighbouring
+  flow sideways, so the finer the cross-section is represented, the faster the core); the front speed and the
+  arrival at the gully mouth do not move in one direction with the grid spacing (24.0, 27.5 and 25.8 m/s;
+  35.2, 33.4 and 34.9 s).
+- **Gully direction**: at 22.5° the tip of the deposit is 14 m farther, the area 3 % smaller and the width
+  9 % narrower. At 45° the flow in the gully is faster and thinner (maximum speed +15 %, maximum flow depth
+  −28 %, front speed +11 %, arrival at the gully mouth 2.8 s earlier), and the deposit on the fan is 21 %
+  narrower, 23 % thicker at its maximum and 14 % smaller in area. The results on the 5 m grid change with the
+  gully direction as much as, or more than, with the grid spacing. The mechanism has not been examined.
+- **How to read the results**: the tip of the deposit stays within ±15 m (±0.2° in the sight angle) across
+  the grid spacings, gully directions and time steps, well below the differences due to the amount of track
+  snow and the friction coefficients (60 to 280 m). Read the area and the width of the deposit, and the speed
+  and the flow depth in the gully, as values with a range of 10 to 30 %.
+
+## How the entrainable snow is given, and the carrier and threshold depth (limits of this setup)
+
+![Threshold depth and snow everywhere](figs/limits.png)
+
+(a) The maximum flow depth of the computations with 0.5 m of entrainable snow everywhere above the apex
+(from the top: threshold depths of 1 mm, 0.1 mm and 0.01 mm). (b) The threshold depth and the peak
+volume of flowing snow (as a ratio to the released volume). (c) The time step and the deposit area on
+the fan (base case; threshold depths of 1 mm and 0.1 mm). (d) The speed of snow released at once on a
+uniform slope (solutions of an ordinary differential equation: without entrainment, with entrainment,
+and with the momentum needed to accelerate the entrained snow).
+
+### Give the entrainable snow over a chosen area
+
+The entrainment law E = δe |V| has no threshold on the flow depth or the snow strength. Snow that the
+flow touches is taken up at 1 m of thickness per 20 m of travel, however thin the flow is. In the main
+computations the entrainable snow is placed in the band on the gully floor that the flow covers, so the
+amount taken up is set by the amount placed. If 0.5 m of snow is placed everywhere above the apex
+(`allsnow`; 296,000 m³ of snow placed), the thin snow that leaves the margin of the flow for a
+neighbouring cell takes up the snow of that cell and becomes a thick flow; this repeats, and the area
+where snow is taken up spreads from the starting zone in the shape of a wedge (panel (a)).
+
+| Threshold depth | Entrained snow (10³ m³) | Peak volume of flowing snow (ratio to the release) | Width over which snow was taken up (s = 500 m / 900 m) |
+|---|---:|---:|---|
+| 1 mm | 28 | 2.5 | 70 m / 60 m |
+| 0.1 mm | 185 | 10.9 | 470 m / 640 m (the full width of the domain) |
+| 0.01 mm | 231 | 14.1 | 640 m / 640 m |
+
+- **What stops the spreading is a numerical threshold**: with a threshold depth of 1 mm, the thin snow
+  at the margins is fixed by the dry-cell rule (next section) and the spreading stops; only the snow
+  over the width the flow passed is taken up. At 0.1 mm or less the spreading covers the full width of
+  the mountain and the avalanche becomes 11 to 14 times the released volume. None of these values can
+  be called correct, because what sets the spreading is a numerical threshold and not a property of the
+  snow. The computation with the snow in the band does not change between threshold depths of 0.1 mm
+  and 0.01 mm (panel (b)).
+- **Give the entrainable snow with a chosen area and thickness**: what limits the area of uptake in
+  real avalanches is the strength of the snow cover (only weak layers are taken up) and the depth of
+  the flow, but this entrainment law has neither. The developers of RAMMS, which uses an entrainment
+  law proportional to the speed, also write that if the avalanche spreads too widely, too much mass is
+  entrained (Christen et al. 2008). Decide the area and the thickness of the snow that may be taken up,
+  give them as input, and show how they were placed together with the results.
+
+### The carrier and the threshold depth
+
+The typical avalanche setup of the user guide puts in a small amount of carrier water at release only
+(`db_relsat = 0.1 to 0.15`, no `f_dbwet`). The test with a 30 m track
+([test/avalanche](../../../test/avalanche/en/README.md)) uses this setup. For a long track and an
+avalanche that grows a lot by entrainment, add the following two.
+
+- **Exchange the carrier together with the snow** (`f_dbwet = 1`, `db_satbed = db_relsat`): with the
+  carrier put in at release only, the carrier thins as entrainment adds snow, and more cells have their
+  carrier fall below the threshold depth and their snow fixed. In a trial on a slope 1.4 km long (growth
+  by 4.4 times through entrainment), the threshold thickness of the snow that gets fixed rose from 6 cm
+  to 26 cm, snow 1 to 3 m thick was left at the margins of a track of 27°, and the deposit became rough
+  from cell to cell (developer.md §126.2).
+- **Lower the threshold depth** (`dd = 0.0001`): snow that enters a dry cell is fixed on the spot unless
+  the inflow of one step brings the carrier above the threshold depth. At the default of 1 mm (1 cm in
+  terms of snow depth), whether the front can advance into a new cell changes with the time step, and
+  the results depend on the time step (panel (c)).
+
+| Threshold depth | Time step (s) | Peak volume of flowing snow (ratio to the release) | Tip of the deposit, s (m) | Deposit area on the fan (10³ m²) | Snow left in the gully and the bowl (m³) |
+|---|---:|---:|---:|---:|---:|
+| 1 mm | 0.025 | 1.83 | 1,218 | 32.1 | 3,550 |
+| 1 mm | 0.0125 | 1.61 | 1,203 | 21.1 | 6,980 |
+| 0.1 mm | 0.05 | 2.02 | 1,238 | 39.2 | 180 |
+| 0.1 mm (base) | 0.025 | 2.01 | 1,238 | 39.2 | 360 |
+| 0.1 mm | 0.0125 | 1.99 | 1,238 | 39.2 | 690 |
+| 0.01 mm | 0.025 | 2.03 | 1,238 | 38.7 | 30 |
+
+With a threshold depth of 1 mm, 10 to 20 % of the flowing snow is left in the gully and the bowl, and
+halving the time step reduces the deposit area on the fan by 34 %. At 0.1 mm the area differs by 0.2 %
+or less when the time step is changed by a factor of 0.5 to 2, and by 1 % from 0.01 mm. Increasing the
+share of the carrier, `fluv_porosity`, has the same effect (the threshold is dd/`fluv_porosity`).
+
+### Entrained snow does not decelerate the flow
+
+The momentum equation is solved for the velocity, and entrainment only adds to the depth of flowing
+snow. Snow that is taken up joins at the local flow velocity and the flow does not decelerate. In a
+treatment that counts the momentum needed to accelerate the entrained snow, the uptake is a deceleration
+of the flow (u E/h for a speed u, a depth h and a rate E at which the depth grows). Panel (d) is the
+speed of 0.5 m of snow released at once on a uniform slope of 0.5 (solutions of an ordinary differential
+equation; the friction coefficients are those of the base case). Without entrainment it is 11.0 m/s
+after 10 s; when the snow below keeps being taken up with δe = 0.02, the treatment of ENCflow gives
+15.0 m/s, faster by as much as the flow has thickened, and the momentum-conserving treatment 9.4 m/s. A
+computation of the same form with ENCflow (μ = 0.2, ξ = 1,500 m/s²) agrees with the solution of the
+former form within 0.4 % (developer.md §126.5).
+
+In the main computations the snow of the band is used up while the front passes, so the difference
+arises while the front is taking up snow. The speed of the front as it runs down the gully taking up
+snow, and the speed at the gully mouth (27 to 32 m/s), should be read as larger than with a
+momentum-conserving treatment. The early entrainment formulation of RAMMS did not include the momentum
+loss due to the uptake either (Christen et al. 2008).
+
+## What this model cannot represent (differences from real phenomena)
+
+- **Release**: the position, extent, fracture depth and time of the release are given. The failure of a
+  weak layer in the snowpack and the prediction of release from the weather are out of scope (there is
+  no coupling from the snow water equivalent of the snow module either; to use it, convert it to a snow
+  thickness in preprocessing).
+- **Powder avalanches and the fluidized front**: snow suspended in the air (the powder component, the
+  fluidized layer) is outside the depth-averaged shallow-water flow. At deflecting dams and houses,
+  these can overflow the dam and arrive ahead of the dense flow.
+- **Change of snow density**: the flowing snow and the deposit are counted as thicknesses at the same
+  density as the snow of the snow surface. The deposit of a real dry-snow avalanche is compacted to 2
+  to 3 times the density of the original snow cover (Sovilla et al. 2001). The thickness and the area
+  of the deposit include that difference.
+- **Cohesion of snow and the shape of the deposit**: the Voellmy law is a cohesionless fluid, so the
+  flow spreads thin and wide on the fan and the deposit concentrates at the front. In computations with
+  cohesion the runout is shorter and the lateral spreading smaller (Bartelt et al. 2015). The thick
+  deposits with steep margins and the levees seen in wet-snow avalanches are not represented.
+- **Distribution of the friction coefficients**: μ and ξ are one pair for the whole domain. They cannot
+  be varied with terrain class, altitude and forest as in RAMMS. Differences in the flow due to snow
+  temperature and water content can only be given through the values of μ and ξ.
+- **Threshold and momentum of entrainment**: entrainment takes up the snow the flow touches regardless
+  of the snow strength and the flow depth. The momentum needed to accelerate the entrained snow is not
+  counted (the two sections above).
+- **Terrain curvature**: the increase and decrease of friction by the centrifugal force (`f_dbcurv`) is
+  not included.
+- **Deflecting dam**: the dam is terrain, and its faces are represented on the 5 m grid. The splashing
+  and jumping of the flow that hits the dam are not represented. The forces on the dam and the houses
+  (impact pressures) are not output. As a guide, ρV² can be read from the maximum speed V (with a
+  flowing-snow density ρ of 300 kg/m³, at most 60 kPa at the houses in the base case and 82 kPa with
+  2 m of snow), but this is a depth-averaged value of a thick flow and not a value for the design of
+  structures.
+- **Houses and forest**: the houses do not obstruct the flow and are not destroyed. The suppression of
+  release and the deceleration by forest are not included.
+
+## Notes
+
+- **Conservation**: the sum of the flowing snow and the change of the snow surface
+  (Σ(h + hs) + Σ(z − z0)) closes within ±0.1 m³ in all cases (the rounding of the single-precision
+  output). The snow does not reach the edge of the domain.
+- **How the maximum speed is read**: the velocity output keeps values in cells that the snow has left
+  and that are dry. The maximum speed is read from V9999 in the cells whose maximum flow depth D9999 is
+  0.5 m or more.
+- **Time to stop**: a Voellmy fluid keeps moving slowly where the surface slope exceeds μ. The snow
+  still flowing after 4 minutes is 1 to 3 % of the flowing snow with the base friction coefficients,
+  10 % for `mu340`, and 6 to 8 % in the cases with the deflecting dam (the margin of the thick deposit
+  in front of the dam). The deposit indicators do not include the flowing snow.
+- **Entrained snow volume**: it is counted from the lowering of the snow surface at its lowest in the
+  outputs every 5 seconds.
+- **Time of the front position**: the front is read from the outputs every 5 seconds and interpolated
+  linearly between them.
+- **Stopping coefficients**: the speed below which the snow is regarded as stopped, `db_vstop`, and the
+  fixing rate, `db_wstop`, are numerical closures, not literature values.
+
+## Starting points for sensitivity tests
+
+- `db_mu`, `db_xi` (`param.txt`): the friction coefficients. The runout changes strongly with μ and the
+  speed on the track with ξ.
+- `SNOW_TRACK`, `W_E`, `S_E0` (`make_init.py`): the thickness of the track snow, and the half-width and
+  the start of the band.
+- `V_REL`, `S_C`, `A_S`, `A_N` (`make_init.py`): the released volume and the position and size of the
+  starting zone.
+- `DAM_A`, `DAM_B`, `DAM_H` (`make_init.py`): the position, direction and height of the deflecting dam.
+  Raising the dam, changing its direction or moving its upstream end downstream changes the amount that
+  overtops and where the deflected flow goes.
+- `db_delte` (`param.txt`): the entrainment coefficient. As long as the snow of the band is used up, the
+  results hardly change.
+- `f_dbcurv = 1` (`param.txt`): includes the increase and decrease of friction by the terrain
+  curvature.
+- `S_TOP`, `S_END`, `L_P`, `S_A` (`make_init.py`): the slopes of the profile and the position of the
+  gully mouth.
+
+## Related documents
+
+- [Snow avalanches on the applications page of sediment and landform change](../../../docs/en/users_guide/geomorph_applications.md#5-snow-avalanches-dense-flow) — the table of how the containers are read, and the typical setup
+- [Debris flow, slope failure and moving bed layer](../../../docs/en/users_guide/massflow.md) — the formulas of the Voellmy law (§2) and entrainment (§3)
+- [Steep-slope gravity correction](../../../docs/en/users_guide/steep_slope.md) — the evaluation of the resistance along the slope
+- [test/avalanche](../../../test/avalanche/en/README.md) — the conservation test of entrainment and stopping; [test/volcano](../../../test/volcano/en/README.md) —
+  the analytic solution of the steady flow of the Voellmy law
+- [debris_fan](../../debris_fan/en/README.md) — a debris flow on a terrain of the same form (dependence on the grid spacing and orientation)
+
+## References
+
+- Voellmy, A. (1955): Über die Zerstörungskraft von Lawinen. *Schweizerische Bauzeitung*, 73, 159–165,
+  212–217, 246–249, 280–285. (the resistance law)
+- Bartelt, P. and Christen, M. (2026): *Snow Avalanche Dynamics with RAMMS::Avalanche* (RAMMS::Avalanche
+  user manual). RAMMS AG. <https://ramms.ch/manuals/RAMMS_AVAL_Manual.pdf> (the form of the friction
+  law; the table of friction coefficients in the appendix = "RAMMS::Avalanche Friction Parameters", SLF, 2011)
+- Christen, M., Bartelt, P. and Gruber, U. (2002): *AVAL-1D User Manual*. SLF, Davos.
+  <https://www.slf.ch/fileadmin/user_upload/SLF/Services_Produkte/Software_Apps/AVAL1D/AVAL-1D_1.2_User_manual.pdf>
+  (the guideline friction coefficients were determined with computations that do not consider the uptake of track snow)
+- Christen, M., Bartelt, P., Kowalski, J. and Stoffel, L. (2008): Calculation of dense snow avalanches in
+  three-dimensional terrain with the numerical simulation program RAMMS. *Proc. International Snow Science
+  Workshop, Whistler*, 709–716. (entrainment proportional to the speed, excessive uptake when the avalanche
+  spreads too widely, and no momentum loss from the uptake)
+- Sovilla, B., Burlando, P. and Bartelt, P. (2006): Field experiments and numerical modeling of mass
+  entrainment in snow avalanches. *J. Geophys. Res.*, 111, F03007. doi:10.1029/2005JF000391
+- Sovilla, B., Sommavilla, F. and Tomaselli, A. (2001): Measurements of mass balance in dense snow avalanche
+  events. *Ann. Glaciol.*, 32, 230–236. (the density of the deposit is 2 to 3 times that of the original snow cover)
+- Bakkehøi, S., Domaas, U. and Lied, K. (1983): Calculation of snow avalanche runout distance. *Ann. Glaciol.*,
+  4, 24–29. (α = 0.96β − 1.4°, standard deviation 2.3°, 206 paths; the sign is missing in print, and the next reference quotes it with the sign)
+- Lied, K. and Toppe, R. (1989): Calculation of maximum snow-avalanche run-out distance by use of digital
+  terrain models. *Ann. Glaciol.*, 13, 164–169.
+- Lied, K. and Bakkehøi, S. (1980): Empirical calculations of snow-avalanche run-out distance based on
+  topographic parameters. *J. Glaciol.*, 26(94), 165–177. (the definitions of α and β, and the paths covered)
+- Jóhannesson, T., Gauer, P., Issler, P. and Lied, K. (eds.) (2009): *The design of avalanche protection
+  dams. Recent practical and theoretical developments*. European Commission, EUR 23339.
+  doi:10.2777/12871 (how the height of a deflecting dam is determined = Eqs. (5.9) to (5.11); the depth and
+  density of dense flow; the processes a depth-averaged formulation cannot represent)
+- Jóhannesson, T. (2001): Run-up of two avalanches on the deflecting dams at Flateyri, northwestern Iceland.
+  *Ann. Glaciol.*, 32, 350–354.
+- Jóhannesson, T., Grímsdóttir, H., Hákonardóttir, K. M., Brynjólfsson, S., Hilmarsson, Ó. and Jarosch, A. H.
+  (2024): Lessons from several avalanches impacting avalanche protective structures in Iceland in January
+  2020 and March 2023. *Proc. International Snow Science Workshop, Tromsø*, 820–827.
+- Hákonardóttir, K. M., Lárusson, R., Kristjánsson, Á. and Pétursson, G. (2024): Loading on structures from
+  fluidized avalanche fronts overflowing deflecting dams at Flateyri, Iceland, January 2020. *Proc. International
+  Snow Science Workshop, Tromsø*, 932–939.
+- Bartelt, P., Vera Valero, C., Feistl, T., Christen, M., Bühler, Y. and Buser, O. (2015): Modelling cohesion
+  in snow avalanche flow. *J. Glaciol.*, 61(229), 837–850.
+- Schweizer, J., Bartelt, P. and van Herwijnen, A. (2021): Snow avalanches. In: Haeberli, W. and Whiteman, C.
+  (eds.), *Snow and Ice-Related Hazards, Risks, and Disasters*, 2nd ed., Elsevier, Chapter 12. (speeds, and the
+  slopes of the track and the runout zone)
+- MLIT (Ministry of Land, Infrastructure, Transport and Tourism), Sabo Department (2006): 雪崩についての解説
+  (An explanation of avalanches; in Japanese). <https://www.mlit.go.jp/common/001018269.pdf>
+  (slopes prone to release, the sight angles of 18° and 24°)
+- MLIT: 河川砂防技術基準 計画編 (Technical Criteria for River Works, Planning; in Japanese), Basic Planning,
+  Chapter 3 (starting zone, track and runout zone)
+  <https://www.mlit.go.jp/river/shishin_guideline/gijutsu/gijutsukijunn/keikaku/pdf/3_g.pdf>, and Facility
+  Layout Planning, Chapter 3, Section 9 (prevention works and protective works; stopping, braking and deflecting works)
+  <https://www.mlit.go.jp/river/shishin_guideline/gijutsu/gijutsukijunn/keikaku/pdf/3-3-2_g.pdf>
+- Japanese Society of Snow and Ice (1998): 日本雪氷学会積雪・雪崩分類 (The JSSI classification of snow cover
+  and avalanches; in Japanese). *Seppyo*, 60, 419–436. (flowing, powder and mixed types)
+
+The content of Japanese Society of Snow and Ice (1998) was checked in a doctoral thesis that quotes the
+classification (Nakamura 2023, Hokkaido University), not against the original. Schweizer et al. (2021) was
+read in the authors' public version and Sovilla et al. (2006) in the version of the institutional
+repository. The original reference for the sight angles of 18° and 24° (Takahashi 1960, *Seppyo* 22(1))
+has not been read.

@@ -311,20 +311,20 @@
     {
       "source": "docs/users_guide/geomorph.md",
       "target": "docs/en/users_guide/geomorph.md",
-      "source_sha256": "513c42fb126f5ab285c55e6415a61b30bb9d29c7857f42a26e91e4a72c89658f",
-      "target_sha256": "452df8a92787429b61e8c8c738f5cf0a6d422d544036d17901bfb7a93e2d2c12",
-      "reviewer": "Claude (Claude Code session; changed passages compared side by side with the Japanese source: the equilibrium-concentration feed multiplied by the class-1 fraction under mixed grain sizes, numbers checked against the test runs)",
+      "source_sha256": "baff2e41378d1bb85cb057e768df1562c626ff2be07fd0ca15223820e8d61f30",
+      "target_sha256": "5eb0cdf42abaeb7f35c98d78338111955f2ddb1066211140bdfe32fd94ac7753",
+      "reviewer": "Claude (Claude Code session; the part changed for the example snow_avalanche: the link added to the list of verified cases and examples, compared side by side with the Japanese source)",
       "method": "assistant",
-      "reviewed_on": "2026-11-24"
+      "reviewed_on": "2026-11-25"
     },
     {
       "source": "docs/users_guide/geomorph_applications.md",
       "target": "docs/en/users_guide/geomorph_applications.md",
-      "source_sha256": "5b9775b8213e110f0fa43af876b997bc3559d2ef98ad6b9577bbfdbab7d0d28a",
-      "target_sha256": "ee80644c0e585d6da0f8d5cd5df922ad328d6ce69163e8fb18ecd7c4a3021453",
-      "reviewer": "Claude (Claude Code session; mixed-size stage 2a (suspended load linked to class 1, Dm probe column, D84 from the composition): the new and changed parts compared side by side with the Japanese source; parameters, messages and numbers checked against the code and the test runs)",
+      "source_sha256": "ce33d051c9b8eda60900239f28130e7cc90fc94da01af253ce660e9ffa2fffd0",
+      "target_sha256": "2afc50e9fe42f270494701d9c2d0bf1f03572c6667a0541d14768bb5eeda5b63",
+      "reviewer": "Claude (Claude Code session; the parts changed for the example snow_avalanche in section 5 (snow avalanches): the new item on exchanging the carrier with the snow (f_dbwet = 1, db_satbed = db_relsat, threshold depth dd), limits (5) to (7) and the link to the example, compared side by side with the Japanese source)",
       "method": "assistant",
-      "reviewed_on": "2026-11-24"
+      "reviewed_on": "2026-11-25"
     },
     {
       "source": "docs/users_guide/glacier.md",
@@ -392,11 +392,11 @@
     {
       "source": "docs/users_guide/massflow.md",
       "target": "docs/en/users_guide/massflow.md",
-      "source_sha256": "f7d74faf08245d65367691697c4e7d38c56c25b7198802cdfec35bba6ffcee31",
-      "target_sha256": "a0cce1d02fe53b154dd5a01d8f41459329b144733049faee8df02adb83abfadb",
-      "reviewer": "Claude (Claude Code session; the parts changed for the option value f_slide_noflow = 2: the paragraph on the option and the two notes on slide_dmax in the mass-flow guide, the one-line mentions in the geomorphology guide and its applications section 7, and the settings sample comment; the English mirror was updated in the same work and both diffs were read side by side)",
+      "source_sha256": "edb8e1b001f1d094a10ac79f244dee65865fa3a594dfe8dcdc33e3a0f12b3787",
+      "target_sha256": "91bd3a3779b7631944e84275138de53f38da5502f8085921a5978c95a3b74ecf",
+      "reviewer": "Claude (Claude Code session; the parts changed for the example snow_avalanche: the new paragraph on the accuracy limits of the velocity-proportional entrainment (developer record section 126.5) and the new row of the table of verification cases, compared side by side with the Japanese source)",
       "method": "assistant",
-      "reviewed_on": "2026-11-23"
+      "reviewed_on": "2026-11-25"
     },
     {
       "source": "docs/users_guide/nest.md",
@@ -572,9 +572,9 @@
     {
       "source": "docs/users_guide/usecases.md",
       "target": "docs/en/users_guide/usecases.md",
-      "source_sha256": "c4348b0d3756f6e3d0f434512bee8cb3af7486ab03fcd33dd9b2f48247932974",
-      "target_sha256": "cd7d8559b71fe5e051b3d9a14468ae714ff8c45f94df6da3660ce6f386cd6918",
-      "reviewer": "Claude (Claude Code session; merge of main (examples/tsunami_meander) into the branch of examples/coastal_compound_flood: the merged pair is the union of two changes that were each compared and recorded on their own branch; checked that both languages contain both additions at the same positions)",
+      "source_sha256": "3acc1e60fde3d7c4e1e430dd03c8b80ddb4180ce1dfb6ecd16711925f57eb3dd",
+      "target_sha256": "b5a30c7f755e8b8e0979dd4f1edf88f67683813d493b5f74d08f91c996d14bd4",
+      "reviewer": "Claude (Claude Code session; merge of main into the snow_avalanche branch: the rows changed on main (tsunami_meander, coastal_compound_flood) are as recorded there, and the example link in the snow-avalanche row was compared side by side with the Japanese source)",
       "method": "assistant",
       "reviewed_on": "2026-11-25"
     },
@@ -905,9 +905,9 @@
     {
       "source": "examples/README.md",
       "target": "examples/README.en.md",
-      "source_sha256": "6a3f1202d887f6d47942d8eb03ebf90666476d6080d99e76a7ab74b314b42a02",
-      "target_sha256": "c81a2f45a2a3aa7bdbaf0a0fded758822e4072d3d10e6b96ff6083c8518890d8",
-      "reviewer": "Claude (Claude Code session; merge of main (examples/tsunami_meander) into the branch of examples/coastal_compound_flood: the merged pair is the union of two changes that were each compared and recorded on their own branch; checked that both languages contain both additions at the same positions)",
+      "source_sha256": "bbe15891f9734d59b62bf234ad1f996aae3710e61f41ccb7e62567483244d2da",
+      "target_sha256": "14e5cc998554347d845fc3be7f9d31e21b57c39acc0961054ae622897af65eaf",
+      "reviewer": "Claude (Claude Code session; merge of main into the snow_avalanche branch: the rows and process-chain items of tsunami_meander and coastal_compound_flood are as recorded on main, and the new row and process-chain item of snow_avalanche were compared side by side with the Japanese source)",
       "method": "assistant",
       "reviewed_on": "2026-11-25"
     },
@@ -3241,6 +3241,87 @@
       "reviewer": "Claude (Claude Code session; English figure drawn by the same script with the en switch from the same results of 2026-11-10; compared side by side: same plotted data, labels translated; the vertical exaggeration in the dome profile label is computed from each figure's own axes, about 6.4 in Japanese and 6.5 in English)",
       "method": "assistant",
       "reviewed_on": "2026-11-10"
+    },
+    {
+      "source": "examples/snow_avalanche/README.md",
+      "target": "examples/snow_avalanche/en/README.md",
+      "source_sha256": "8daac354ce9e3e70321a5895caf51d380896348a753f7a6bedca2a6fe5dfa75c",
+      "target_sha256": "dbc5b92b61575f083ea111bd5a4881df000aced98e085fca10e193430453d801",
+      "reviewer": "Claude (Claude Code session; new example written and translated in the same session: structure, tables and numbers compared with the Japanese source; numbers checked against the example runs)",
+      "method": "assistant",
+      "reviewed_on": "2026-11-25"
+    },
+    {
+      "source": "examples/snow_avalanche/figs/dam.png",
+      "target": "examples/snow_avalanche/en/figs/dam.png",
+      "source_sha256": "8c023f7d6299230d7abc98e63b533f3603fb23de1da8c3fb430146fa3311e080",
+      "target_sha256": "8ad28fd8ae0bf6ff7273822627047b36c2b11995f4a866c26204aac4ec4585e4",
+      "reviewer": "Claude (Claude Code session; Japanese and English figures drawn by the same plot_results.py from the same results; labels checked)",
+      "method": "assistant",
+      "reviewed_on": "2026-11-25"
+    },
+    {
+      "source": "examples/snow_avalanche/figs/entrain.png",
+      "target": "examples/snow_avalanche/en/figs/entrain.png",
+      "source_sha256": "86d1ad0fb74b7524cad1500a1b43d78a44d4008d3c17d605e38ad4c68143095e",
+      "target_sha256": "9754aa596b2a6162217d845885eedc8967032d7dbe7f15c1b730787a36c185c7",
+      "reviewer": "Claude (Claude Code session; Japanese and English figures drawn by the same plot_results.py from the same results; labels checked)",
+      "method": "assistant",
+      "reviewed_on": "2026-11-25"
+    },
+    {
+      "source": "examples/snow_avalanche/figs/flow.png",
+      "target": "examples/snow_avalanche/en/figs/flow.png",
+      "source_sha256": "49f7c1d927130f26eb5456919ce8134b22182c92f4541f5ee772a5b9499fe268",
+      "target_sha256": "7d0c3d07b5f8c2c2b3ed44c714446031bcffb387ebff427116f274c50bbef0c6",
+      "reviewer": "Claude (Claude Code session; Japanese and English figures drawn by the same plot_results.py from the same results; labels checked)",
+      "method": "assistant",
+      "reviewed_on": "2026-11-25"
+    },
+    {
+      "source": "examples/snow_avalanche/figs/grid.png",
+      "target": "examples/snow_avalanche/en/figs/grid.png",
+      "source_sha256": "24c823e0d75bef90552b140a8986bdfe9f6834286f1a57f748ebba2e036a9c3c",
+      "target_sha256": "974abbd52fa9a270b69a013ceb83e28a390b0577db77bdc85b6ac31cafcd5cf2",
+      "reviewer": "Claude (Claude Code session; Japanese and English figures drawn by the same plot_results.py from the same results; labels checked)",
+      "method": "assistant",
+      "reviewed_on": "2026-11-25"
+    },
+    {
+      "source": "examples/snow_avalanche/figs/limits.png",
+      "target": "examples/snow_avalanche/en/figs/limits.png",
+      "source_sha256": "d4f43a3f53e449c22553a74a0b0048e1ad2af174e816f5ee1c5c25d6a0dbf2fd",
+      "target_sha256": "1dcecda0cbba83536b37730a90939365c1be6ae5b4e9a7b596efee9f9cbc76de",
+      "reviewer": "Claude (Claude Code session; Japanese and English figures drawn by the same plot_results.py from the same results; labels checked)",
+      "method": "assistant",
+      "reviewed_on": "2026-11-25"
+    },
+    {
+      "source": "examples/snow_avalanche/figs/mechanism.png",
+      "target": "examples/snow_avalanche/en/figs/mechanism.png",
+      "source_sha256": "a73b91b1edc512b8c3aeb721cef6a77d813ad8a276e11e1b41c218c57d516437",
+      "target_sha256": "8cc858613a4411b9514fbd9fb935cc0b532e24769502cc77ed857fef0e2017a0",
+      "reviewer": "Claude (Claude Code session; Japanese and English figures drawn by the same plot_results.py from the same results; labels checked)",
+      "method": "assistant",
+      "reviewed_on": "2026-11-25"
+    },
+    {
+      "source": "examples/snow_avalanche/figs/runout.png",
+      "target": "examples/snow_avalanche/en/figs/runout.png",
+      "source_sha256": "d69ef62276c132dfc13c9fe9754e8898ccf8b5f92e9baf328d68b216c8c1c0f7",
+      "target_sha256": "f9ad619b58fea585c3bbf69169d4b625d98b150a06b66921aeeff1e90f4fc136",
+      "reviewer": "Claude (Claude Code session; Japanese and English figures drawn by the same plot_results.py from the same results; labels checked)",
+      "method": "assistant",
+      "reviewed_on": "2026-11-25"
+    },
+    {
+      "source": "examples/snow_avalanche/figs/setup.png",
+      "target": "examples/snow_avalanche/en/figs/setup.png",
+      "source_sha256": "b486142a65befe7199cc696242229d77f9b6f615bde97c1958bfdcc37ee9d690",
+      "target_sha256": "2d7084c113ea620c45bac7d01ef41582dd454f90f904bb9147c8fb2dd198a66a",
+      "reviewer": "Claude (Claude Code session; Japanese and English figures drawn by the same plot_results.py from the same results; labels checked)",
+      "method": "assistant",
+      "reviewed_on": "2026-11-25"
     },
     {
       "source": "examples/source_area/README.md",

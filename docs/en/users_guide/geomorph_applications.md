@@ -232,6 +232,20 @@ snow is fixed into the terrain by f_dbstop. Panel (b) summarizes the setup below
   carrier fluid, and that water remains and drains after the avalanche
   stops (a minor artifact if the amount is small). Steep terrain, so
   keeping `f_gravity_correction` above 0 is recommended (the default is 2).
+- **Exchange the carrier together with the snow (long paths, or runs that grow a lot by entrainment)**: the
+  setup above flows on the carrier water put in at release only, so the carrier thins as entrainment adds
+  solids. A cell whose surface water h falls below the threshold depth `dd`
+  ([shallow-water flow](swflow.md); default 1 mm) is treated as dry and the flowing snow in it is fixed to the
+  terrain on the spot, so the thinner the carrier, the thicker the snow that gets fixed (with
+  `fluv_porosity = 0.1` and `db_relsat = 0.15`, snow thinner than 6 cm at release and thinner than 26 cm once
+  the avalanche has grown 4.4 times). Snow at the margins and the tail of the flow is left on the steep path
+  and the deposit becomes rough from cell to cell. Combining `f_dbwet = 1` with `db_satbed = db_relsat` gives
+  entrained snow the same share of carrier and lets stopped snow take its carrier with it, so the share is
+  kept and no water is left after the avalanche stops (with `db_satbed = db_relsat = 1`, h + hs is the depth
+  of flowing snow). Lower `dd` to about 0.1 mm as well (the threshold in terms of snow depth is
+  dd/`fluv_porosity`; at 1 mm the inflow needed for the front to advance into a new cell changes with the time
+  step, and the results depend on the time step). The numbers for each setting are in the worked example
+  [examples/snow_avalanche](../../../examples/snow_avalanche/en/README.md).
 - **What it cannot do (honest limits)**: (1) powder-snow
   avalanches are out of scope (an air suspension - outside the
   shallow-water approximation), (2) release is not predicted (the
@@ -241,13 +255,26 @@ snow is fixed into the terrain by f_dbstop. Panel (b) summarizes the setup below
   density; use the flowing-snow density of 200-400 kg/m³ for avalanche
   impact pressures), (4) no automatic coupling with the snow (SWE)
   module (to chain from a winter snowpack run, convert SWE to sd in
-  preprocessing).
+  preprocessing), (5) the entrainment law E = δe·|V| has no threshold, so all snow the flow touches is taken
+  regardless of the flow depth or the snow strength (give the entrainable snow sd over a chosen area, such as
+  a band along the gully floor; if it is placed over the whole slope, the thin snow at the margins of the flow
+  spreads sideways while taking up snow, and the size of the avalanche ends up being set by the threshold
+  depth `dd`), (6) the momentum needed to accelerate the entrained snow is not counted (the velocity is the
+  solved variable and entrainment only adds depth, so a flow that advances while taking up snow comes out
+  faster than with a momentum-conserving treatment), (7) the friction coefficients μ and ξ are one pair for
+  the whole domain (the tables of operational models, which vary them with terrain class and altitude, cannot
+  be used as they are). The numbers for (5) to (7) are in the example
+  [examples/snow_avalanche](../../../examples/snow_avalanche/en/README.md).
 - A verified example is [test/avalanche](../../../test/avalanche/en/README.md)
   (release → growth to 1.5x by entrainment → stopping on the flat;
   solid ledger at machine precision). The Voellmy steady uniform-flow
   analytic benchmark (0.04% agreement) is continuously tested in
   [test/volcano](../../../test/volcano/en/README.md) configuration 1 (the same
-  resistance law). Comparison with observed avalanche runouts has not
+  resistance law). A worked example is
+  [examples/snow_avalanche](../../../examples/snow_avalanche/en/README.md) (an avalanche down a gully: how the
+  amount of snow on the track changes its size and runout, a comparison of the runout with an empirical
+  relation, a deflecting dam on the fan, and the dependence on the grid and the time step). Comparison with
+  observed avalanche runouts has not
   been done. The "avalanche redistribution" in the glacier module is a
   slow slope redistribution of snow for accumulation - a different
   thing from the dynamic avalanche flow described here.

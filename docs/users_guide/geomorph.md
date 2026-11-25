@@ -1179,7 +1179,7 @@ sd と z を下げる)、崖錐が尽きた残りを基岩に当てます(z を�
 [test/creep](../../test/creep/)(解析解ベンチマーク)、
 [test/fluvial](../../test/fluvial/)、[test/bankface](../../test/bankface/)(河岸面の遮断・供給量制限)、[test/bendsed](../../test/bendsed/)(湾曲部の流砂方向補正)、[test/berode](../../test/berode/)(側岸侵食)、[test/repose](../../test/repose/)(安息角崩落)、例題 [examples/meander](../../examples/meander/)・[examples/meander_cutoff](../../examples/meander_cutoff/)(蛇行河道の変形と頸部短絡)、[test/suspend](../../test/suspend/)、
 [test/wash](../../test/wash/)、[test/debris](../../test/debris/)、
-[test/slide](../../test/slide/)、[test/avalanche](../../test/avalanche/)、
+[test/slide](../../test/slide/)、[test/avalanche](../../test/avalanche/)と例題 [examples/snow_avalanche](../../examples/snow_avalanche/)(沢を下る雪崩の走路の雪の連行と誘導堤)、
 [test/sedinflow](../../test/sedinflow/)(境界土砂供給)、
 [test/bedslide](../../test/bedslide/)(動く底層: 速度の解析解・45° 回転
 斜面の格子依存検出・斜面→湖の突入と造波)、
