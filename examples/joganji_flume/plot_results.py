@@ -16,7 +16,8 @@
   表 2  移動床の河床変化の比較(相関・RMSE・BSS、区間ごとの正味の体積変化)
   表 3  表層の粒径集団の割合(移動床の平均)と、粒径集団 1 の割合の比較(相関・RMSE)
   表 4  画面出力の台帳(粒径階ごとの給砂・開境界の流出・在庫の変化)
-  表 5  93 分の流速の大きさの比較(相関・RMSE・平均)
+  表 5  93 分の流速の大きさの比較(相関・RMSE・平均・変動係数)と、計測の遅い点(0.05 m/s 以下)の割合
+  表 5b 93 分の断面の流量の釣り合い(計測の流速 × 計算の水深 / 計算の流量)と、計算の流量が通る所の計測の流速
   表 6  下流端から 20 m の移動床の河床変化の縦断(2 m ごとの平均。下流端の延長の高さの感度)
 終わった計算の結果ディレクトリだけを扱う(9998 がないものは表と図から外す)。
 依存: numpy, matplotlib(make_init.py の写し方を使う)
@@ -416,28 +417,114 @@ def outlet_profile(dz_meas, dz_model, runs, mov, dist, nbin=10, w=2.0):
         print(line)
 
 
+def piv_lattice(ras):
+    """計測の流速の点の格子(I 1〜2363 × 計測のある J の 32 列)。元のシートの「解析範囲外」(水が流れていない所)の点は
+    vel_2-1.csv.gz にないので、格子の点のうち値のない点をそれとみなす。縦断方向の単位ベクトルは I の差分、横断の幅は
+    隣の列の点との距離の半分ずつ"""
+    vel = mi.read_csv("vel_2-1.csv.gz")
+    gr = mi.read_csv("grid.csv.gz")
+    js = np.unique(vel["J"].astype(int))
+    ni = int(gr["I"].max())
+    xy = np.full((ni, len(js), 2), np.nan)
+    gi, gj = gr["I"].astype(int), gr["J"].astype(int)
+    on = np.isin(gj, js)
+    xy[gi[on] - 1, np.searchsorted(js, gj[on]), 0] = gr["x"][on]
+    xy[gi[on] - 1, np.searchsorted(js, gj[on]), 1] = gr["y"][on]
+    uv = np.full((ni, len(js), 2), np.nan)
+    vi, vk = vel["I"].astype(int) - 1, np.searchsorted(js, vel["J"].astype(int))
+    uv[vi, vk, 0], uv[vi, vk, 1] = vel["u"], vel["v"]
+    t = np.empty_like(xy)
+    t[1:-1] = xy[2:] - xy[:-2]
+    t[0], t[-1] = xy[1] - xy[0], xy[-1] - xy[-2]
+    t /= np.hypot(t[..., 0], t[..., 1])[..., None]
+    dd = np.hypot(*(xy[:, 1:] - xy[:, :-1]).transpose(2, 0, 1))
+    w = np.zeros(xy.shape[:2])
+    w[:, :-1] += 0.5 * dd
+    w[:, 1:] += 0.5 * dd
+    ix = np.floor((xy[..., 0] - ras.x0) / ras.dx).astype(int)
+    iy = np.floor((ras.y1 - xy[..., 1]) / ras.dx).astype(int)
+    return dict(valid=np.isfinite(uv[..., 0]), spd=np.hypot(uv[..., 0], uv[..., 1]),
+                ua=uv[..., 0] * t[..., 0] + uv[..., 1] * t[..., 1], t=t, w=w,
+                ix=np.clip(ix, 0, ras.nx - 1), iy=np.clip(iy, 0, ras.ny - 1))
+
+
+def piv_edge_distance(valid):
+    """横断方向に最も近い範囲外の点(格子の端を含む)までの列の数(隣が範囲外なら 1)"""
+    ni, nj = valid.shape
+    dist = np.zeros((ni, nj), int)
+    for k in range(nj):
+        dk = np.zeros(ni, int)
+        for s in range(1, nj + 1):
+            hit = np.zeros(ni, bool)
+            for kk in (k - s, k + s):
+                if 0 <= kk < nj:
+                    hit |= ~valid[:, kk]
+                else:
+                    hit[:] = True
+            dk = np.where((dk == 0) & hit, s, dk)
+            if (dk > 0).all():
+                break
+        dist[:, k] = dk
+    return np.where(valid, dist, 0)
+
+
 def velocity(ras, mask, runs, ext):
-    """表 5 と figs/velocity.png: 93 分(フレーム 0003)の流速の大きさを計測の点と比べる"""
+    """表 5・5b と figs/velocity.png: 93 分(フレーム 0003)の流速の大きさを計測の点と比べる。計測は天井のカメラの画像の
+    PIV 解析から求めた水面の流速(元のシートの注記)"""
     vel = mi.read_csv("vel_2-1.csv.gz")
     sm = np.hypot(vel["u"], vel["v"])
     ix = np.floor((vel["x"] - ras.x0) / ras.dx).astype(int)
     iy = np.floor((ras.y1 - vel["y"]) / ras.dx).astype(int)
     ok = (ix >= 0) & (ix < ras.nx) & (iy >= 0) & (iy < ras.ny)
-    print("\n表 5  93 分の流速の大きさ(計測の点を含むセル。計測 > 0.05 m/s かつ計算の水深 >= 2 mm の点)")
-    print("%-22s %8s %8s %9s %9s %7s" % ("", "points", "corr", "RMSE", "mean", "meas."))
+    print("\n表 5  93 分の流速の大きさ(計測の点を含むセル。計測 > 0.05 m/s かつ計算の水深 >= 2 mm の点。cv は変動係数)")
+    print("%-22s %8s %8s %9s %9s %7s %7s %7s" % ("", "points", "corr", "RMSE", "mean", "meas.", "cv", "meas.cv"))
     spd = {}
+    model = {}
     for d, lab in runs:
         f = [os.path.join(HERE, d, n % 3) for n in ("u%04d.txt", "v%04d.txt", "H%04d.txt")]
         if not all(os.path.exists(p) for p in f):
             continue
         u, v, h = (np.loadtxt(p) for p in f)
         s = np.hypot(u, v)
+        model[d] = (lab, u, v, h)
         spd[d] = np.where(h >= 0.002, s, np.nan)
         sel = ok.copy()
         sel[ok] &= (sm[ok] > 0.05) & (h[iy[ok], ix[ok]] >= 0.002)
         a, b = s[iy[sel], ix[sel]], sm[sel]
-        print("%-22s %8d %8.3f %7.3fm/s %7.3fm/s %7.3f" % (lab[:22], sel.sum(), np.corrcoef(a, b)[0, 1],
-                                                         np.sqrt(((a - b) ** 2).mean()), a.mean(), b.mean()))
+        print("%-22s %8d %8.3f %7.3fm/s %7.3fm/s %7.3f %7.3f %7.3f" % (
+            lab[:22], sel.sum(), np.corrcoef(a, b)[0, 1], np.sqrt(((a - b) ** 2).mean()), a.mean(), b.mean(),
+            a.std() / a.mean(), b.std() / b.mean()))
+    # 計測の遅い点(0.05 m/s 以下)の割合と、流れている範囲の縁からの距離
+    pl = piv_lattice(ras)
+    va = pl["valid"]
+    ed = piv_edge_distance(va)
+    slow = va & (pl["spd"] <= 0.05)
+    print("計測の点 %d のうち 0.05 m/s 以下 %.1f %%(最小 %.3f m/s)。横の隣が範囲外の点(%.1f %%)では %.1f %%、"
+          "3 列以上内側の点では %.1f %%" % (va.sum(), 100 * slow.sum() / va.sum(), pl["spd"][va].min(),
+                                           100 * (va & (ed == 1)).sum() / va.sum(),
+                                           100 * slow[ed == 1].sum() / (va & (ed == 1)).sum(),
+                                           100 * slow[ed >= 3].sum() / (va & (ed >= 3)).sum()))
+    print("\n表 5b  93 分の断面の流量の釣り合い(計測の点の格子で足す。縦断方向の成分 × 計算の水深 × 横断の幅)")
+    print("%-22s %9s %9s %9s %9s %9s %9s %9s %9s" % ("", "sections", "PIV/calc", "via out", "via<=.05", "via<=.2",
+                                                    "via>.2", "h(<=.05)", "V(<=.05)"))
+    for d, (lab, u, v, h) in model.items():
+        hh = h[pl["iy"], pl["ix"]]
+        ua = u[pl["iy"], pl["ix"]] * pl["t"][..., 0] + v[pl["iy"], pl["ix"]] * pl["t"][..., 1]
+        qc = np.nan_to_num(hh * ua * pl["w"])
+        qp = np.where(va, np.nan_to_num(hh * pl["ua"] * pl["w"]), 0.0)
+        qs = qc.sum(axis=1)
+        sec = (qs > 0.005) & (va.sum(axis=1) >= 5)          # 計算の流量 5 L/s 超、計測の点 5 以上の断面
+        ratio = np.median(qp.sum(axis=1)[sec] / qs[sec])
+        tot = qc[sec].sum()
+        share = [qc[sec][c[sec]].sum() / tot for c in (~va, slow, va & (pl["spd"] > 0.05) & (pl["spd"] <= 0.2),
+                                                       va & (pl["spd"] > 0.2))]
+        wet = slow & (hh >= 0.002)
+        sp = np.hypot(u, v)[pl["iy"], pl["ix"]]
+        print("%-22s %9d %9.2f %9.2f %9.2f %9.2f %9.2f %8.1fmm %7.3fm/s" % (lab[:22], sec.sum(), ratio, *share,
+                                                                    1000 * np.median(hh[wet]), sp[wet].mean()))
+    print("(PIV/calc: 計測の流速 × 計算の水深の断面の流量 / 計算の流量 の断面の中央値。via: 計算の流量のうち、計測で範囲外・"
+          "0.05 m/s 以下・0.05〜0.2・0.2 超の点を通る割合。h・V(<=.05): 計測が 0.05 m/s 以下の点の計算の水深の中央値と"
+          "流速の平均(計算の水深 >= 2 mm の点))")
     spd = {d: s for d, s in spd.items() if d in MAP_RUNS}
     if not spd:
         return
