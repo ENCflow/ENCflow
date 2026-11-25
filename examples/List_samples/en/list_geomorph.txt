@@ -67,11 +67,15 @@
   !fluv_taufac = 1.0        ! effective shear-stress ratio f_tau (tau* passed to the
                             !   transport formula = f_tau x tau* of the total
                             !   resistance. 1 = no separation)
-  !f_taupart = 1            ! resistance partitioning on steep gravel beds (1: multiply
-                            !   the tau* of the transport formula by the relative-depth
-                            !   factor of h/D84. Rickenmann & Recking 2011, Nitsche et al.
-                            !   2011. Exclusive with fluv_taufac /= 1)
-  !fluv_d84 = 0.0           ! D84 of the partitioning (m). 0 = 2.2 x fluv_d50
+  !f_taupart = 1            ! resistance partition of bed load (1: steep gravel beds;
+                            !   multiply the tau* of the transport formula by the
+                            !   relative-depth factor of h/D84. Rickenmann & Recking 2011,
+                            !   Nitsche et al. 2011. 2: effective shear of Ashida and
+                            !   Michiue 1972; multiply the transport by (u*e/u*)^3 of
+                            !   eq. (11). Only with f_qbform = 1. Exclusive with
+                            !   fluv_taufac /= 1)
+  !fluv_d84 = 0.0           ! D84 of the partitioning (m). 0 = 2.2 x fluv_d50 (with mixed sizes,
+                            !   from the exchange-layer composition of each cell)
   !taupart_e = 1.5          ! exponent e of the partitioning (default 1.5. Nitsche et al. 2011)
   !fluv_slope = 1           ! bed-slope correction of the bed-load direction
                             !   (1: Hasegawa type gamma*grad z)
@@ -120,6 +124,9 @@
   !rf_bank = 1              ! bank mode (slump blocks of meandering channels, section 84.17): submerged
                             !   steps do not collapse, talus is also removed by bed load, fixation raises
                             !   H_c. Pair with berode_hcover for the shielding
+  !rf_frac = 0.05, 0.15, 0.8     ! required with mixed sizes (f_bedmix) and bedrock collapse: class
+                            !   fractions of the debris from bedrock (one per class, summing to 1;
+                            !   given data, no default)
 
   ! ---- Fixation (with f_fluvial; bars exposed at low flow get fixed and
   !      resist re-erosion) ----
@@ -143,12 +150,31 @@
                             !   banks (roots bind the surface layer but hardly resist the
                             !   scour at the bank toe)
 
+  ! ---- Mixed grain sizes (with f_fluvial. Size classes x one exchange layer and one substrate = Hirano type) ----
+  ! For armouring, sand-gravel beds and cross-channel sorting. Adding f_suspend = 1 makes class 1 the
+  ! suspended load. Also works with rockfall and talus, depth-dependent creep and longshore transport
+  ! (bedrock collapse requires rf_frac). Cannot be combined with hillslope erosion, the fines ledger,
+  ! debris flow, the wave stirring and others (users_guide/geomorph.md). fluv_d50 is not used
+  !f_bedmix = 1
+  !bmix_d = 0.0005, 0.004, 0.02   ! grain size of each class (m), from fine to coarse, 2 to 8 (required)
+  !bmix_frac0 = 0.3, 0.4, 0.3     ! initial fractions of the exchange layer (one per class, summing
+                            !   to 1). This or fn_bmix is required
+  !fn_bmix = "fa1.txt", "fa2.txt", "fa3.txt"   ! the same as distribution files (one per class,
+                            !   summing to 1 in each cell)
+  !bmix_sub0 = 0.2, 0.4, 0.4      ! initial fractions of the substrate (unset = same as the exchange
+                            !   layer). Distributions with fn_bmixsub
+  !bmix_la = 0.04           ! exchange-layer thickness L_a (m). 0 = default (twice the D90 of the
+                            !   initial exchange-layer composition)
+  !bmix_hiding = 1          ! hiding function (1: modified Egiazaroff = Ashida and Michiue = default,
+                            !   0: none)
+
   ! ---- Suspended sediment (advection + entrainment and settling) ----
   !f_suspend = 1
   !f_esform = 1             ! equilibrium concentration formula (1: linear in
                             !   excess shear stress (simple), 2: Itakura-Kishi)
   !susp_d50 = 0.0001        ! representative grain size (m). 0 = default 0.0002
-                            !   (fine sand)
+                            !   (fine sand). With mixed sizes, leave it out or give the first
+                            !   bmix_d (default = the first bmix_d)
   !susp_wf = 0.0            ! settling velocity (m/s). 0: derived from d50 by
                             !   the Rubey formula
   !susp_tausc = 0.05        ! critical dimensionless shear stress for suspension

@@ -272,7 +272,10 @@ to reduce concentration of discharge into thin water layers.
   With `inflow_cs_eq(n) = 1` the inflow concentration is instead the
   equilibrium concentration evaluated from the shear stress of the inflow
   cells times `inflow_cs_fac(n)` (default 1; equilibrium feed, exclusive
-  with cs / qs, requires f_suspend = 1).
+  with cs / qs, requires f_suspend = 1). With mixed grain sizes
+  (`f_bedmix = 1` on the geomorph side) it is also multiplied by the
+  class-1 fraction of the exchange layer of the inflow cell (as the
+  entrainment from the bed is; [mixed grain sizes](geomorph.md#mixed-grain-sizes-f_bedmix)).
 - Bed load can be fed in two ways. `inflow_qb(:,k,n) = t, Qb` (or
   `fn_inflow_qb(n)`; time (min), m3/s solid volume) adds Qb(t), divided
   equally among the inflow cells, as a source to their bed (z and soil
@@ -283,6 +286,14 @@ to reduce concentration of discharge into thin water layers.
   the geomorph side (the supply through the inflow face equals the net
   outflow of the inflow cell times `fluv_bcfeed_fac`; with factor 1 the bed
   of the inlet is fixed) and also acts on inflow-segment faces.
+- With mixed grain sizes (`f_bedmix = 1` on the geomorph side) the feed needs
+  the class composition. Give either a constant composition attached to the
+  total series, `inflow_qbfrac(:,n)` (one fraction per class, summing to 1),
+  or a per-class series `fn_inflow_qbmix(n)` (each line holds the time (min)
+  and the feed of each class in m3/s solid volume; exclusive with
+  `inflow_qb`, `fn_inflow_qb` and `inflow_qbfrac`). All segments use the same
+  number of classes. A feed without a composition stops the run at
+  initialization ([Mixed grain sizes](geomorph.md#mixed-grain-sizes-f_bedmix)).
 
 **Outputs for this section**: the transect Q just downstream equals the given discharge (a check of the distribution); the inflow peak is in Qmax of `summary.csv` ([Output and monitoring](#output-and-monitoring)).
 

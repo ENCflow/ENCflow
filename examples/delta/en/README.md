@@ -568,8 +568,10 @@ Arranged as in the figure of stage 6. Except while the river water fills the cha
   threshold and rate of resuspension (`susp_tausc`, `susp_esa`). Flocculation, consolidation and
   the strength that the cohesion of mud gives to banks are not represented directly. These values
   are calibration parameters.
-- **Grain sizes**: the sediment consists of only two kinds, sand of one grain size (bedload) and one
-  kind of mud (suspended load).
+- **Grain sizes**: the sediment of this example consists of only two kinds, sand of one grain size
+  (bedload) and one kind of mud (suspended load). A range of sand grain sizes can be given with the
+  mixed-size bed (`f_bedmix`), but it cannot be combined with mud (the ledger of fines `f_bedfines`),
+  so the delta then consists of sand only ("Entry points for sensitivity experiments").
 - **Vegetation**: a phenomenological treatment by a single quantity, the degree of fixation (the time
   to grow, the time to weaken when submerged, and how much the erosion threshold and the roughness
   rise). The species, height and density of the vegetation are not represented, and the resistance
@@ -688,6 +690,30 @@ deviation between realizations.
 
 - Ratio of sand to mud → `inflow_cs` (the counterpart of f_sand in DeltaRCM).
 - Settling and resuspension of mud → `susp_wf`, `susp_tausc`, `susp_esa`.
+- Range of sand grain sizes → the mixed-size bed `f_bedmix` ([mixed grain sizes](../../../docs/en/users_guide/geomorph.md#mixed-grain-sizes-f_bedmix)).
+  Dividing the sand into size classes lets you study the sorting in which coarse sand settles near the
+  river mouth and fine sand offshore (output `Dm`), and how the grading of the incoming sand acts on the
+  shape of the delta (in the numerical experiments of Caldwell & Edmonds 2014, the spread and skewness
+  of the grain-size distribution have little effect, and a larger grain size on the coarse side, D84,
+  gives semicircular deltas with more distributaries). It cannot be combined with mud (the ledger of
+  fines `f_bedfines`), so the delta consists of sand only.
+  - Example settings (from param.txt): remove the mud settings (`f_bedfines`, `fines_la`,
+    `fines_frac0`, `susp_d50`, `susp_wf`, `susp_tausc`, `susp_esa`), set `f_esform = 2` (Itakura–Kishi)
+    and the mud inflow `inflow_cs` to 0, and add `f_bedmix = 1`, `bmix_d = 0.0001, 0.0005, 0.001`,
+    `bmix_frac0 = 0.2, 0.5, 0.3` and `bmix_la = 0.05`. The finest size class (0.1 mm) becomes the
+    suspended sediment (settling velocity from the Rubey formula) and also moves as bedload.
+  - Exchange-layer thickness `bmix_la`: with the default (twice the D90 of the initial exchange layer =
+    1.6 mm), the per-class supply limiter fires often under the landform acceleration of this example
+    (morfac 100). The capacity feed enters with the outflow after the limiter, so the sand that comes in
+    is reduced as well: in a trial run of 50 h of landform time, the net deposition is less than 20 % of
+    that with 5 cm and the grid-scale roughness is 3.6 times as large. With 5 cm the limiter fires 1/26
+    as often.
+  - In the fixed-feed configurations (param_baseqb.txt, param_wave.txt) the composition of the feed
+    `inflow_qbfrac(1:3,1)` (e.g. `= 0.2, 0.5, 0.3`) is required. The wave-field configuration
+    (param_wfsed.txt; `f_wfsed`, `f_wfswash`) cannot be combined with it.
+  - It has been checked that the runs go through and that the per-class balances and the balance of the
+    suspended sediment close, but how the sorting and the shape of the delta respond has not been
+    evaluated.
 - Stability of the distributaries → `fix_tfix`, `fix_ctau`, `fix_tdec` (about the duration of a
   flood), `fix_ctau_bank`, the period of floods and low flows (`inflow_val`).
 - Secondary flow → `f_secflow = 1`, `sec_nstar = 7` (the values of examples/meander).

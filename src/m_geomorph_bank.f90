@@ -258,7 +258,12 @@ module subroutine calc_repose(gm, g, s, dts)
   gm%bnk%nrclip = gm%bnk%nrclip + nrclip
   gm%bnk%vrep = gm%bnk%vrep + vrep
 
-  call apply_edge_flux(gm, g, s, dts)
+  if (gm%f_bedmix > 0) then
+    ! 混合粒径(§84.19): 崩落の流束を供給側の交換層の組成で粒径階に分けて適用する(等移動度)
+    call apply_edge_flux_bmix(gm, g, s, dts, .false.)
+  else
+    call apply_edge_flux(gm, g, s, dts)
+  end if
 end subroutine
 
 end submodule

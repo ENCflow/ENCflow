@@ -1,0 +1,62 @@
+!======================================================================
+! joganji_flume: param.txt の下流端の延長(固定床)を、端の断面に接する 1 セルの敷(端の断面の初期の河床高)と、
+!   その先の段(敷より 10 cm 低い固定床)にした計算(下流端の条件への感度)。param.txt では外縁の自由流出
+!   (限界流の段落ち)が延長(最長 0.9 m)の先にあり、流れが移動床の端で加速しない。この構成は段落ちを敷の
+!   直後に置き、水位を決める高さ(初期の河床高)は param.txt と同じに保つ。格子は geoinfo_sill.txt
+!   (z_sill.txt。make_init.py の SILL_DROP)、初期水深は h_sill.txt(下げた段だけ乾いた状態から)。
+!   ほかの設定は param.txt と同じ。dir_result = result_sill
+!======================================================================
+&list_sysparam
+  f_gridsystem = 0
+  f_govequation = 0
+  dt = 0.04
+  t0 = 0
+  tt = 14400
+  dt_disp = 600
+  dt_file = 1860            ! 31 分ごと(93 分 = 流速の計測時点を含む)と終了時(9998)
+  dt_recrd = 30
+  fn_geoinfo = 'geoinfo_sill.txt'
+  fn_initial = '-'
+  fn_enc = '-'
+  fn_geomorph = '-'
+  fn_boundary = 'boundary.txt'
+  fn_record = 'record.txt'
+  dir_result = 'result_sill'
+  f_state_save = 0
+  f_check_cfl = 1
+  f_out_z = 1
+  f_out_e = 1
+  f_out_u = 1
+  f_out_v = 1
+  f_out_bmix = 1
+/
+
+&list_enc
+  f_inflow_edge = 2         ! 区間流入の内側へ向かうエッジだけ移流項 0 + その流速のエネルギー上限
+  f_advection_scheme = 3    ! 既定の運動量保存形
+  f_opening_dynamic = 3     ! 塞がれた開口の動的振り替え(既定)
+/
+
+&list_initial
+  f_htype = 1
+  fn_hinit = 'h_sill.txt'    ! 助走計算の最終水深(下げた段は乾いた状態から)
+/
+
+&list_geomorph
+  dt_geomorph = 0.24        ! 地形更新は 0.24 s ごと(水理 6 ステップに 1 回)
+  morfac = 1.0              ! 実験の時間そのまま
+  f_fluvial = 1
+  f_qbform = 1              ! 芦田・道上
+  fluv_tausc = 0.05         ! 混合砂礫の平均粒径の限界無次元掃流力(芦田・道上)
+  fluv_porosity = 0.4
+  fluv_sgrav = 1.65
+  fluv_taufac = 1.0         ! 有効掃流力の比(1 = 全粗度の掃流力のまま)
+  fluv_slope = 1            ! 河床勾配項
+  f_secflow = 1             ! 平衡二次流項
+  f_repose = 1              ! 安息角崩落(非粘着性の河岸)
+  repose_phi = 32.0
+  f_bedmix = 1              ! 混合粒径
+  bmix_d = 0.00057, 0.0030, 0.0066            ! 粒径集団 1〜3 の D50 (m)
+  fn_bmix = 'fa1.txt', 'fa2.txt', 'fa3.txt'   ! 初期の表層の割合(計測。make_init.py)
+  bmix_sub0 = 0.374, 0.414, 0.212             ! 下層 = 敷き均した混合砂の配合(仮定。README)
+/

@@ -670,7 +670,11 @@ width).
 
 - **Range of grain sizes**: The sediment has a single grain size. The material of real natural dams is
   widely graded: fine grains are suspended and carried at high concentrations, and coarse grains stay
-  behind and cover the bed (armouring), which slows the erosion. Neither is represented.
+  behind and cover the bed (armouring), which slows the erosion. Neither is represented. The
+  mixed-size bed of ENCflow (`f_bedmix`; [mixed grain sizes](../../../docs/en/users_guide/geomorph.md#mixed-grain-sizes-f_bedmix))
+  handles the range of grain sizes of bed load and armouring, but it cannot be combined with the debris
+  flow model (`f_debris`) that carries the collapse, the debris flow and the erosion of the dam in this
+  example; the run stops at initialisation.
 - **Sediment transport on gentle reaches**: The Takahashi & Nakagawa law (bedload-like collective flow) and
   a bed-load formula are added together. There is no formula connecting the two regimes, and on slopes of
   0.03–0.14 some transport is counted twice. The choice of the laws changes the peak discharge by a factor

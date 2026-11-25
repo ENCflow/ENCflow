@@ -1562,7 +1562,16 @@ subroutine m_swflow_enc_calc(p, g, b, s, ierror)
   ! 区間流入に濃度時系列があるときは境界流入濃度テーブルを渡す。波浪場が土砂に
   ! 作用するなら Euler 平均流速(GLM の wf_flow = 2)と岸向きの速度 u_a で運ぶ(§90)
   if (s%sed_active) then
-    if (allocated(b%csin)) then
+    if (allocated(s%hsx)) then
+      ! 混合粒径の粒径階 1 の浮遊砂の台帳(§122): 系外との出入りを記録場に積む呼び出し(c1 の更新は不変)
+      if (allocated(b%csin)) then
+        call advect_scalar(p, g, s, sx_mod, s%hs, sx_mod%hs1, cbin=b%csin, &
+                           eul=(s%wv_sed .and. (allocated(s%wvus) .or. allocated(s%wvua))), xrow=s%hsx)
+      else
+        call advect_scalar(p, g, s, sx_mod, s%hs, sx_mod%hs1, &
+                           eul=(s%wv_sed .and. (allocated(s%wvus) .or. allocated(s%wvua))), xrow=s%hsx)
+      end if
+    else if (allocated(b%csin)) then
       call advect_scalar(p, g, s, sx_mod, s%hs, sx_mod%hs1, cbin=b%csin, &
                          eul=(s%wv_sed .and. (allocated(s%wvus) .or. allocated(s%wvua))))
     else
@@ -1624,14 +1633,26 @@ contains
     logical, intent(in) :: h_is_vh
     integer, intent(in) :: jlo, jhi
     if (h_is_vh) then
-      if (s%sed_active) call stage_scalar_reset(g, b, s%gv, sx_mod%hs1, hh, h_is_vh, jlo, jhi, .false.)
+      if (s%sed_active) then
+        if (allocated(s%hsx)) then      ! 混合粒径の粒径階 1 の台帳(§122)
+          call stage_scalar_reset(g, b, s%gv, sx_mod%hs1, hh, h_is_vh, jlo, jhi, .false., s%hsx)
+        else
+          call stage_scalar_reset(g, b, s%gv, sx_mod%hs1, hh, h_is_vh, jlo, jhi, .false.)
+        end if
+      end if
       if (s%wq_active) call stage_scalar_reset(g, b, s%gv, sx_mod%cq1, hh, h_is_vh, jlo, jhi, .true., &
                                                s%cqx)
       if (s%salt_active) call stage_scalar_reset(g, b, s%gv, sx_mod%hss1, hh, h_is_vh, jlo, jhi, .false.)
       if (s%dw_active) call stage_scalar_reset(g, b, s%gv, sx_mod%hd1, hh, h_is_vh, jlo, jhi, .false.)
       if (s%bd_active) call stage_scalar_reset(g, b, s%gv, sx_mod%hbd1, hh, h_is_vh, jlo, jhi, .false.)
     else
-      if (s%sed_active) call stage_scalar_reset(g, b, s%gv, s%hs, hh, h_is_vh, jlo, jhi, .false.)
+      if (s%sed_active) then
+        if (allocated(s%hsx)) then      ! 混合粒径の粒径階 1 の台帳(§122)
+          call stage_scalar_reset(g, b, s%gv, s%hs, hh, h_is_vh, jlo, jhi, .false., s%hsx)
+        else
+          call stage_scalar_reset(g, b, s%gv, s%hs, hh, h_is_vh, jlo, jhi, .false.)
+        end if
+      end if
       if (s%wq_active) call stage_scalar_reset(g, b, s%gv, s%cq, hh, h_is_vh, jlo, jhi, .true., s%cqx)
       if (s%salt_active) call stage_scalar_reset(g, b, s%gv, s%hss, hh, h_is_vh, jlo, jhi, .false.)
       if (s%dw_active) call stage_scalar_reset(g, b, s%gv, s%hd, hh, h_is_vh, jlo, jhi, .false.)

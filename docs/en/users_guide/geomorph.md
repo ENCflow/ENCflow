@@ -196,8 +196,8 @@ Riverbed erosion and deposition by a bedload transport formula.
 | fluv_bcfeed_fac | 1.0 | Factor of the capacity feed. 0 = no feed, 1 = fixed inlet. Values between reduce the inlet degradation but not proportionally (give a partial supply with inflow_qb) |
 | fluv_diagratio | 2/(2+sqrt(2)) | Diagonal partitioning (normally no need to change) |
 | fluv_taufac | 1.0 | Effective shear-stress ratio f_τ (the τ* passed to the transport formula = f_τ × τ* of the total resistance; a simple separation of form drag by dunes or vegetation. 1 = no separation) |
-| f_taupart | 0 | Flow resistance partitioning on steep gravel beds. 1: multiply the τ* passed to the transport formula by the relative-depth factor φ(h) = {1 + 6.76 (h/D84)^(−5/3)}^(−e/2) (Rickenmann & Recking 2011, Nitsche et al. 2011; [explanation](sediment.md) §3). It applies everywhere the bed-load capacity is used (including the toe of bank erosion and the cover capacity of bedrock incision), not to the plucking stress τ_b. Exclusive with fluv_taufac ≠ 1 (the run stops) |
-| fluv_d84 | 0.0 | D84 of the partitioning (m). 0 = 2.2 × fluv_d50 |
+| f_taupart | 0 | Choice of the resistance partition of bed load (exclusive with fluv_taufac ≠ 1; the run stops). 1: flow resistance partitioning on steep gravel beds. Multiply the τ* passed to the transport formula by the relative-depth factor φ(h) = {1 + 6.76 (h/D84)^(−5/3)}^(−e/2) (Rickenmann & Recking 2011, Nitsche et al. 2011; [explanation](sediment.md) §3). It applies everywhere the bed-load capacity is used (including the toe of bank erosion and the cover capacity of bedrock incision), not to the plucking stress τ_b. 2: effective shear stress of Ashida and Michiue (1972; eq. (11)). τ* is unchanged and the bed-load capacity is multiplied by (u*e/u*)³ (U/u*e = 6.0 + 5.75 log10{h/(d(1 + 2τ*))}; the two threshold factors keep the total τ*; capped at u*e = u*; d_m as d for mixed sizes; [explanation](sediment.md) §3). It applies to the bed-load capacity (single size and mixed sizes), not to the bank-retreat law or suspended load. Only with f_qbform = 1, and also exclusive with f_wfsed and f_rockinc (the run stops) |
+| fluv_d84 | 0.0 | D84 of the partitioning (m). 0 = 2.2 × fluv_d50 (with mixed grain sizes, from the exchange-layer composition of each cell) |
 | taupart_e | 1.5 | Exponent e of the partitioning. **Literature value** (1.5 of Nitsche et al. 2011; Rickenmann & Recking 2011 give 1.33–2) |
 | fluv_slope | 0 | Bed-slope correction of the bed-load direction. 1: Hasegawa type (q⃗ = q_b(t̂ − γ∇z), γ = √(τ*c/(μs μk τ*))) |
 | fluv_mus / fluv_muk | 1.0 / 0.45 | Static and kinetic friction coefficients μs, μk. **Literature values** (Asahi et al. 2013[^asahi13] eq. (22), after Hasegawa 1984; Hasegawa 1989[^hasegawa89] uses μk = 0.7 as an estimate; the bedrock–alluvial model of Inoue et al. 2016 uses μs = μk = 0.7, whose product 0.49 gives nearly the same γ as the defaults). See the note below |
@@ -300,6 +300,82 @@ sediment param_fixsusp.txt). Restart in `geomorph_fixation.dat`. Verification:
 
 **Outputs for this section**: bed change in `Z0001...` (`f_out_z=1`; Z − Z0000 is the scour/deposition thickness). How often the cap fluv_dzmax acted is in the end warning "fluvial dzmax clip fired", the number of cells where the soil-depth supply limiter acted in "fluvial supply limiter", and the volume lost at the bedrock floor (normally zero) in "bedrock floor clip" ([Output and monitoring](#output-and-monitoring)).
 
+### Mixed grain sizes (f_bedmix)
+
+Equations, sources and limits: [supplement](sediment.md#mixed-grain-sizes-f_bedmix).
+
+Splits the bed load into a few size classes and keeps the bed composition in one exchange layer and one
+substrate (Hirano type). It is meant for situations where differences in grain size drive the result at
+first order: armouring (fines leaving the surface so that it coarsens), sand moving over nearly immobile
+gravel, cross-channel sorting in bends. Its scope is an exception to basic policy 6
+([policy.md](../policy.md)); the design document is docs/mixed_sediment_plan.md.
+
+| Parameter | Default | Meaning |
+|---|---|---|
+| f_bedmix | 0 | 1 enables it (requires f_fluvial = 1) |
+| bmix_d | (required) | Grain size of each class (m), from fine to coarse, 2 to 8 classes (equal values are allowed) |
+| bmix_frac0 / fn_bmix | (one of them required) | Initial fractions of the exchange layer: uniform values (one per class, summing to 1) or one distribution file per class (summing to 1 in each cell) |
+| bmix_sub0 / fn_bmixsub | same as the exchange layer | Initial fractions of the substrate (uniform values or distribution files) |
+| bmix_la | twice the D90 of the initial exchange-layer composition | Exchange-layer thickness L_a (m). The value in use is printed with "(default)". A note is printed if it is thinner than the coarsest class |
+| bmix_hiding | 1 | Hiding function (1: modified Egiazaroff = Ashida and Michiue, 0: none) |
+
+The minimal input to "just try mixed sizes" is `f_fluvial = 1`, `f_bedmix = 1`, `bmix_d`, `bmix_frac0`
+and the thickness of the erodible soil layer (`sd0` or `fn_sd`). The grain sizes come from `bmix_d`;
+`fluv_d50` is not used.
+
+- **Sediment feed**: an in-reach bed-load feed needs the class composition. Either add a constant
+  composition `inflow_qbfrac` to the total (`inflow_qb`, `fn_inflow_qb`) or give a series per class with
+  `fn_inflow_qbmix` ([Boundary conditions](boundary.md)). Without it the run stops at initialization (the
+  feed is given data, so there is no default). The capacity feed (`fluv_bcfeed = 1`) enters with the
+  composition of the inflow cell. The amount of the feed is set by the net outflow (of bed load) of the
+  inflow cell after the per-class supply limiter, so even when the limiter fires, the bed and the
+  composition at the inlet stay fixed for bed load. The equilibrium-concentration feed of suspended
+  sediment (`inflow_cs_eq`) is multiplied by the class-1 fraction of the exchange layer of the inflow cell
+  (as the entrainment from the bed is, so the inflow is in balance with the bed of the inflow cell).
+- **Combinations**: it works with bank erosion, repose collapse, depth-dependent creep and wave-driven
+  longshore transport (all moved with the composition of the supplying cell's exchange layer), rockfall and
+  talus (next items), fixation, channel width and the roughness partitions. For the steep-gravel partition
+  (`f_taupart = 1`) the D84 comes from the exchange-layer composition of each cell unless `fluv_d84` is given,
+  in which case that constant is used. Linear creep and uplift move only the ground elevation and do not
+  touch the soil layer, so they can be used as they are. Suspended sediment is linked to class 1 (below).
+  With hillslope erosion, the fines ledger, the lateral spreading of the detachment depth (`wet_lw`), the
+  moving bed layer, debris flow, dry-slope erosion, weathering, dissolution, bedrock incision, the wave
+  stirring (`f_wfsed`) and the swash (`f_wfswash`), glaciers and lava flows, and with the bank mode of
+  rockfall (`rf_bank = 1`), the run stops at initialization (how to carry the class composition through them
+  is not decided yet).
+- **Rockfall and talus** (`f_rockfall`): what collapses is carried with the composition removed from the top
+  of the supplying column, in the order exchange layer → substrate → bedrock, and the receiver deposits it
+  with the incoming composition. A collapse does not select grain sizes, so unlike bed load and repose
+  collapse it is not capped by the exchange-layer thickness, and the ground elevation, soil thickness and talus
+  thickness are the same as for a single grain size. Bedrock collapse (`rf_bedrock = 1`) requires the
+  composition of the debris from bedrock, `rf_frac` (given data, like the feed composition).
+- **Suspended sediment**: adding `f_suspend = 1` makes the finest class (class 1) the suspended load.
+  Class 1 also moves as bed load, and it goes back and forth between the exchange layer and the flow through
+  pickup and settling. The equilibrium concentration of pickup is multiplied by the class-1 fraction F_1 of
+  the exchange layer (a bed with little class 1 releases correspondingly little), and one pickup takes at most
+  the class-1 content of the exchange layer. What settles, and what is left on a cell that dries, goes into
+  class 1 of the exchange layer. Leave `susp_d50` out or set it equal to the first `bmix_d` (if left out,
+  d_1 is printed with "(default)"; a different value stops the run at initialization). The other parameters
+  (equilibrium concentration, settling velocity and so on) are the same as for a single grain size.
+- **What it cannot do**: no vertical stratigraphy (the substrate is one uniform mixture), no suspension of
+  classes 2 and above (only class 1 becomes suspended load), no fining by abrasion, no grain-size-dependent
+  flow roughness. The toe shear stress of the bank-erosion law is evaluated with a representative size (the
+  domain-mean d_m of the initial exchange layer). The limits of accuracy (sensitivity to the exchange-layer
+  thickness, ill-posedness) are in the [supplement](sediment.md#mixed-grain-sizes-f_bedmix).
+
+**Outputs for this section**: mean grain size of the exchange layer `Dm0001...` (always), the
+exchange-layer fraction of each class `Fa1_0001...` (`f_out_bmix = 1`; [Input/output](io.md)) and the last
+probe column Dm (mm) ([Flux Transects and Probes](record.md)). Restart in `geomorph_bedmix.dat`. At the end the
+run prints the balance of each class (initial and final stock, in-reach feed, net outflow through open
+boundaries, residual) and how often the exchange-layer supply limiter acted. With suspended sediment
+linked, the class-1 balance includes what went to the suspended load (pickup − settling), and the balance
+of the suspended load (initial and final stock, pickup − settling, inflow and outflow through open
+boundaries, residual) is printed as well. With rockfall, the balance of each class includes what was added
+from bedrock and what fell into sea cells. Verification: [test/bedmix](../../../test/bedmix/en/README.md). A comparison
+with a published model experiment is the example [examples/joganji_flume](../../../examples/joganji_flume/en/README.md) (the NILIM 1/100
+movable-bed model of the Joganji River; the magnitude of the change is close to the measurement, the locations of the
+change and the pattern of the surface composition do not match).
+
 ## Suspended sediment (f_suspend)
 
 Entrainment, settling, equilibrium formulas and Rubey's formula: [supplement](sediment.md#4-suspended-sediment-f_suspend).
@@ -316,7 +392,7 @@ exchange with the bed is reduced in proportion to the width.
 | Parameter | Default | Meaning |
 |---|---|---|
 | f_esform | 1 | Equilibrium concentration formula. 1: linear excess shear (simple), 2: Itakura-Kishi |
-| susp_d50 | 0.0002 | Representative grain size (m). The default is fine sand (representative of suspended load) |
+| susp_d50 | 0.0002 | Representative grain size (m). The default is fine sand (representative of suspended load). With mixed grain sizes, the size of class 1 (if left out, the first bmix_d; [Mixed grain sizes](#mixed-grain-sizes-f_bedmix)) |
 | susp_wf | 0 | Settling velocity (m/s). If 0, derived from d50 by the Rubey formula |
 | susp_tausc | 0.05 | Critical dimensionless shear stress for suspension |
 | susp_beta | 1.0 | Near-bed concentration coefficient for settling |
@@ -661,6 +737,7 @@ The figure draws the rules above with grid columns. Panel (a) shows how the free
 | rf_uc | 0 (off) | Critical undercut u_c (m) (rule 5; requires rf_fface >= 0 and spl_strata): a column at the top of the face falls once the bedrock of a weaker foot has been cut back by this depth since the last burial. The overhang width a cap can carry (tens of cm to a few m); keep it below dx |
 | rf_bedrock | 0 | Bedrock collapse. With 1, cells whose soil sd <= 0 (bedrock) can be sources too, and the supply limit (cap by sd) is not applied: the source loses z (soil and talus go first), the receiver gains the same amount in z, sd and talus ht. For bedrock below the soil that fails, such as limestone walls undercut by dissolution (examples/tower_karst) |
 | rf_bank | 0 | Bank mode (§84.17; slump blocks of meandering channels): with 1, (a) submerged steps (source ground below the receiver's water surface = pool walls) do not collapse, (b) the talus ht is also reduced by the outflow of bed load, bank erosion and avalanching (removal of the blocks; inflow does not become talus), (c) fixation f_fixation raises the critical height to H_c (1 + c_τ,b a). Shielding of bank erosion is berode_hcover |
+| rf_frac | none | Required with mixed grain sizes (f_bedmix) and bedrock collapse (rf_bedrock = 1): class fractions of the debris produced from bedrock (one per class, summing to 1). Given data, no default. Not used when only the soil layer collapses (rf_bedrock = 0) ([Mixed grain sizes](#mixed-grain-sizes-f_bedmix)) |
 
 **Bedrock and soil convention.** By default (rf_bedrock = 0) a cell with sd <= 0 is
 non-erodible bedrock, as for dry erosion, bed load and angle-of-repose avalanching,
@@ -1148,8 +1225,10 @@ process that carries the solids of the flow h_s (`f_suspend`, `f_debris`), the
 initialization deposits them on the bed in place (z and sd rise by h_s/(1 − λ),
 h_s = 0; the solid ledger is unchanged; there are no fines, so they count as
 coarse). The deposited solid volume is printed as "the restored flow carried solids
-(hs) ... deposited ... m3 (solid)". Configurations without landform change (no
-`fn_geomorph`) behave as before, and h_s stays in the flow. A worked example of the
+(hs) ... deposited ... m3 (solid)". A mixed-size configuration (`f_bedmix`) cannot
+decide the composition of what would be deposited, so it stops at initialization (with
+`f_suspend` enabled, h_s stays in the flow as class 1). Configurations without landform
+change (no `fn_geomorph`) behave as before, and h_s stays in the flow. A worked example of the
 alternating runs is the supplement (long-term chain) of
 [examples/debris_bedrock](../../../examples/debris_bedrock/en/README.md) (`Run_chain.sh`
 alternates floods and debris flows and writes values from the save after each stage;
@@ -1364,7 +1443,7 @@ Verified test cases exist per process:
 [test/creep](../../../test/creep/en/README.md) (analytical-solution benchmark),
 [test/fluvial](../../../test/fluvial/en/README.md), [test/bankface](../../../test/bankface/en/README.md) (bank-face blocking and supply limiter), [test/bendsed](../../../test/bendsed/en/README.md) (bed-load direction correction in a bend), [test/berode](../../../test/berode/en/README.md) (bank erosion), [test/repose](../../../test/repose/en/README.md) (angle-of-repose avalanching), the examples [examples/meander](../../../examples/meander/en/README.md) and [examples/meander_cutoff](../../../examples/meander_cutoff/en/README.md) (deformation of a meandering channel and a neck cutoff), [test/suspend](../../../test/suspend/en/README.md),
 [test/wash](../../../test/wash/en/README.md), [test/debris](../../../test/debris/en/README.md),
-[test/slide](../../../test/slide/en/README.md), [test/avalanche](../../../test/avalanche/en/README.md),
+[test/slide](../../../test/slide/en/README.md), [test/avalanche](../../../test/avalanche/en/README.md) and the example [examples/snow_avalanche](../../../examples/snow_avalanche/en/README.md) (entrainment of track snow by an avalanche down a gully, and a deflecting dam),
 [test/sedinflow](../../../test/sedinflow/en/README.md) (boundary sediment supply),
 [test/bedslide](../../../test/bedslide/en/README.md) (moving bed layer: analytic
 velocity, grid-dependence detection on a 45-degree slope, plunge into a
@@ -1392,7 +1471,9 @@ the cover and the threshold, and a comparison with a clear-water flood). The gri
 dependence of a debris flow that starts from a slope failure and runs down a valley to a
 residential area on the fan (grid spacings 40-2.5 m, the valley at 0°, 22.5° and 45°, and
 how eight and four neighbours differ on coarse grids) is in the example
-[examples/debris_fan](../../../examples/debris_fan/en/README.md).
+[examples/debris_fan](../../../examples/debris_fan/en/README.md). Mixed grain sizes are covered by
+[test/bedmix](../../../test/bedmix/en/README.md) (limits, theoretical values, balances) and by the example
+[examples/joganji_flume](../../../examples/joganji_flume/en/README.md), which compares with a published model experiment.
 
 ## References
 

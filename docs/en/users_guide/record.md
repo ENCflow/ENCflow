@@ -46,7 +46,10 @@ Output is one file per point, e.g. `result/probes/probe0001.csv`. Columns are
 time (hour/min), ground elevation z, depth h, velocities u, v, |V|,
 **discharge per unit width q (m²/s)**, subsurface storage hg, suspended
 sediment hs, and soil depth sd. Water quality adds concentration C (mg/L)
-and surface load cq (g/m²). The cell value q differs from the total discharge
+and surface load cq (g/m²). A mixed-size bed (f_bedmix) adds the mean grain
+size of the exchange layer Dm (mm) as the last column (after the water-quality
+columns, if any; [Sediment and landform change](geomorph.md#mixed-grain-sizes-f_bedmix)).
+The cell value q differs from the total discharge
 Q (m³/s) crossing a transect.
 A probe may also be placed on a sea cell of the sea mask (fn_sw), but there
 z is tide − hsea0 (changing with the tide), h is hsea0 (constant) and u, v

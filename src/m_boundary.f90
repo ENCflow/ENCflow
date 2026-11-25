@@ -39,6 +39,7 @@ module m_boundary
   use m_sedform, only : ceqpar, have_ceq, sed_ceq   ! 区間流入の平衡濃度給砂(§84.9)
   use list_boundary, only : t_list_boundary, list_boundary_read, &
                             nbsrcmax, nsrccmax, nsrcvmax
+  use list_geomorph, only : nbmixmax         ! 混合粒径の粒径階の上限(区間流入の給砂の粒径階。§84.19)
   use m_gwflow_conduit, only : t_gwcond      ! 機場の管路取水が参照する管路層の状態(型のみ)
   implicit none
   private
@@ -147,6 +148,13 @@ module m_boundary
     integer :: nqbval = 0                  ! 流入の掃流砂流砂量の時系列データ数(0=指定なし。§84.9)
     real, allocatable :: qbval(:,:)        ! 掃流砂流砂量時系列 (1:2, 1:nqbval) (s, m3/s 固体体積)
     real :: qb = 0.0                       ! 現時刻の掃流砂流砂量 (m3/s 固体体積)
+    ! 混合粒径(geomorph の f_bedmix。developer.md §84.19、docs/mixed_sediment_plan.md §3.6)の給砂の粒径階:
+    ! 粒径階ごとの時系列(fn_inflow_qbmix)か、合計 qbval の一定の組成(inflow_qbfrac)
+    integer :: nqbmval = 0                 ! 粒径階ごとの時系列のデータ数(0 = 指定なし)
+    real, allocatable :: qbmval(:,:)       ! 粒径階ごとの時系列 (1:1+nc, 1:nqbmval) (s, m3/s 固体体積 × nc)
+    integer :: kqbm = 1                    ! 粒径階ごとの時系列の内挿の区間の控え(時刻は単調に進む)
+    integer :: nqbfrac = 0                 ! 合計の組成の粒径階の数(0 = 指定なし)
+    real :: qbfrac(1:nbmixmax) = 0.0       ! 合計の組成(和 1)
     integer :: cs_eq = 0                   ! 浮遊砂の平衡濃度給砂(1: 流入濃度 = cs_fac × 流入セルの平衡濃度)
     real :: cs_fac = 1.0                   ! 平衡濃度給砂の倍率
   end type
@@ -244,6 +252,9 @@ module m_boundary
                                            !   mg/L。m_wq が確保・毎ステップ更新。§30)
     real, allocatable :: qbin(:,:)         ! 区間流入の掃流砂流砂量のセル別テーブル (m3/s 固体体積。
                                            !   指定区間が 1 つでもあれば確保。geomorph が河床源泉として読む。§84.9)
+    integer :: nqbclass = 0                ! 区間流入の給砂の粒径階の数(混合粒径。0 = 粒径階の指定なし。§84.19)
+    real, allocatable :: qbink(:,:,:)      ! 粒径階ごとの給砂のセル別テーブル (ish:ieh, jsh:jeh, 1:nqbclass)
+                                           !   (m3/s 固体体積。geomorph の混合粒径が河床源泉として読む)
     real, allocatable :: csin(:,:)         ! 境界流入濃度のセル別テーブル (m3/m3)。
                                            !   濃度指定のある区間が1つでもあれば確保し、
                                            !   makebdc が毎ステップ現時刻値を書く。
@@ -438,7 +449,9 @@ subroutine m_boundary_makebdc(b, p, g, s, gwc)
     end if
     ! 浮遊砂の平衡濃度給砂(§84.9): 流入セルごとに、そのセルの無次元掃流力
     ! (geomorph の浮遊砂と同じマニング閉じ)から平衡濃度を評価し倍率を乗じる。
-    ! 乾いたセルは 0。係数は geomorph の init_suspend が m_sedform に登録済み
+    ! 乾いたセルは 0。係数は geomorph の init_suspend が m_sedform に登録済み。
+    ! 混合粒径(s%bmf がある)では、流入セルの交換層の粒径階 1 の割合も掛ける(河床からの巻き上げと
+    ! 同じ = 流入が流入セルの河床と釣り合う。掛けないと割合が 1 未満のとき入口に粒径階 1 が溜まる。§123.7)
     if (b%inflow(ifl)%cs_eq > 0) then
       if (.not. have_ceq) then
         call par_stop("list_bound_inflow: inflow_cs_eq=1 requires suspended sediment (f_suspend=1)")
@@ -446,6 +459,8 @@ subroutine m_boundary_makebdc(b, p, g, s, gwc)
       block
         integer :: m2, i2, j2
         real :: hh, taus
+        logical :: bmx
+        bmx = allocated(s%bmf)
         do m2 = 1, b%inflow(ifl)%ncell
           i2 = b%inflow(ifl)%cell(1,m2)
           j2 = b%inflow(ifl)%cell(2,m2)
@@ -455,6 +470,7 @@ subroutine m_boundary_makebdc(b, p, g, s, gwc)
           hh = max(s%h(i2,j2), p%dv)
           taus = g%rn(i2,j2)**2 * s%vv(i2,j2)**2 / (ceqpar%sgrav * ceqpar%d50 * hh**(1.0/3.0))
           b%csin(i2,j2) = b%inflow(ifl)%cs_fac * sed_ceq(ceqpar, taus)
+          if (bmx) b%csin(i2,j2) = b%csin(i2,j2) * s%bmf(i2,j2,1)
         end do
       end block
     end if
@@ -468,6 +484,27 @@ subroutine m_boundary_makebdc(b, p, g, s, gwc)
           j2 = b%inflow(ifl)%cell(2,m2)
           if (j2 >= dcp%js .and. j2 <= dcp%je) then
             b%qbin(i2,j2) = b%inflow(ifl)%qb / b%inflow(ifl)%ncell
+          end if
+        end do
+      end block
+    end if
+    ! 混合粒径の粒径階ごとの給砂(§84.19): 区間の Qb_k(t) をセル数で等分した源泉表(自帯の行のみ)
+    if (b%inflow(ifl)%nqbmval > 0 .or. b%inflow(ifl)%nqbfrac > 0) then
+      block
+        integer :: m2, i2, j2, nc
+        real :: qk(1:nbmixmax)
+        nc = b%nqbclass
+        if (b%inflow(ifl)%nqbmval > 0) then
+          call interp_series_multi(b%inflow(ifl)%qbmval, b%inflow(ifl)%nqbmval, nc, s%t, &
+                                   b%inflow(ifl)%kqbm, qk)
+        else
+          qk(1:nc) = b%inflow(ifl)%qb * b%inflow(ifl)%qbfrac(1:nc)   ! qb は上の区間の合計の内挿
+        end if
+        do m2 = 1, b%inflow(ifl)%ncell
+          i2 = b%inflow(ifl)%cell(1,m2)
+          j2 = b%inflow(ifl)%cell(2,m2)
+          if (j2 >= dcp%js .and. j2 <= dcp%je) then
+            b%qbink(i2,j2,1:nc) = qk(1:nc) / b%inflow(ifl)%ncell
           end if
         end do
       end block
@@ -640,6 +677,7 @@ subroutine m_boundary_dispose(b)
   end if
   if (allocated(b%csin)) deallocate(b%csin)
   if (allocated(b%qbin)) deallocate(b%qbin)
+  if (allocated(b%qbink)) deallocate(b%qbink)
   if (allocated(b%cqin)) deallocate(b%cqin)
   if (allocated(b%struct)) then
     ! ダム CSV を閉じる(開いているのは rank0 のみ)
@@ -1113,6 +1151,56 @@ subroutine init_inflow(b, p, g, list)
                       //" must be >= 0")
       end if
     end do
+    !--- 混合粒径の給砂の粒径階(§84.19): 合計の組成 inflow_qbfrac か、粒径階ごとの時系列
+    !    fn_inflow_qbmix。どちらを使うかの検証(f_bedmix では必須)は geomorph の init_bedmix ---
+    block
+      integer :: nfr, ncol
+      nfr = 0
+      do k = 1, nbmixmax
+        if (list%inflow_qbfrac(k,ifl) <= -9000.0) exit
+        nfr = nfr + 1
+      end do
+      if (nfr > 0) then
+        if (b%inflow(ifl)%nqbval <= 0) then
+          call par_stop("list_bound_inflow: inflow_qbfrac of segment "//itoa(ifl) &
+                        //" gives the composition of the total bed-load feed; it requires inflow_qb or fn_inflow_qb")
+        end if
+        if (any(list%inflow_qbfrac(1:nfr,ifl) < 0.0)) then
+          call par_stop("list_bound_inflow: inflow_qbfrac of segment "//itoa(ifl)//" must be >= 0")
+        end if
+        if (abs(sum(list%inflow_qbfrac(1:nfr,ifl)) - 1.0) > 1.0e-6) then
+          call par_stop("list_bound_inflow: inflow_qbfrac of segment "//itoa(ifl)//" must sum to 1")
+        end if
+        b%inflow(ifl)%nqbfrac = nfr
+        b%inflow(ifl)%qbfrac(1:nfr) = list%inflow_qbfrac(1:nfr,ifl)
+      end if
+      if (len_trim(list%fn_inflow_qbmix(ifl)) > 0) then
+        if (b%inflow(ifl)%nqbval > 0 .or. nfr > 0) then
+          call par_stop("list_bound_inflow: fn_inflow_qbmix of segment "//itoa(ifl) &
+                        //" excludes inflow_qb, fn_inflow_qb and inflow_qbfrac (give either the per-class series" &
+                        //" or the total with its composition)")
+        end if
+        call read_series_multi(trim(p%dir_data)//"/"//trim(list%fn_inflow_qbmix(ifl)), ncol, &
+                               b%inflow(ifl)%nqbmval, b%inflow(ifl)%qbmval)
+        nfr = ncol - 1
+        if (nfr > nbmixmax) then
+          call par_stop("list_bound_inflow: fn_inflow_qbmix of segment "//itoa(ifl)//" has more than " &
+                        //itoa(nbmixmax)//" classes")
+        end if
+        if (any(b%inflow(ifl)%qbmval(2:ncol,1:b%inflow(ifl)%nqbmval) < 0.0)) then
+          call par_stop("list_bound_inflow: the per-class bed-load feed (fn_inflow_qbmix) of segment " &
+                        //itoa(ifl)//" must be >= 0")
+        end if
+      end if
+      if (nfr > 0) then
+        if (b%nqbclass == 0) then
+          b%nqbclass = nfr
+        else if (b%nqbclass /= nfr) then
+          call par_stop("list_bound_inflow: the number of grain-size classes of the bed-load feed differs " &
+                        //"between segments (segment "//itoa(ifl)//")")
+        end if
+      end if
+    end block
     b%inflow(ifl)%cs_eq = list%inflow_cs_eq(ifl)
     b%inflow(ifl)%cs_fac = list%inflow_cs_fac(ifl)
     if (b%inflow(ifl)%cs_eq < 0 .or. b%inflow(ifl)%cs_eq > 1) then
@@ -1202,6 +1290,8 @@ subroutine init_inflow(b, p, g, list)
       exit
     end if
   end do
+  !--- 混合粒径の粒径階ごとの給砂のセル別テーブル(粒径階の指定が 1 区間でもあれば確保。§84.19) ---
+  if (b%nqbclass > 0) allocate(b%qbink(dcp%ish:dcp%ieh, dcp%jsh:dcp%jeh, 1:b%nqbclass), source = 0.0)
 
 end subroutine
 
@@ -1269,6 +1359,110 @@ end subroutine
 ! 時系列 val(1,:)=時刻(s), val(2,:)=値 を時刻 t で線形補間する
 ! (範囲外は端の値を保持)
 !----------------------------------------------------------------------
+!----------------------------------------------------------------------
+! 多列の時系列ファイルを読む(混合粒径の粒径階ごとの給砂 fn_inflow_qbmix。§84.19)
+!   1 行に「時刻 (min) 値_1 … 値_N」(空白・タブ・カンマ区切り)。空行は飛ばす。行を文字列で読んで
+!   値の数を数え、全行で同じ数(3 以上)でなければ止める(リスト入力は、値が足りない行では黙って
+!   次の行を読み、余った値は捨てるため、列の数を確かめずには読まない)。時刻は秒に換算する
+!----------------------------------------------------------------------
+subroutine read_series_multi(fname, ncol, nval, val)
+  character(len=*), intent(in) :: fname
+  integer, intent(out) :: ncol, nval
+  real, allocatable, intent(out) :: val(:,:)
+  integer :: un, ios, n, k, nt
+  character(len=4096) :: line
+
+  open(newunit=un, file=fname, status='old', action='read', iostat=ios)
+  if (ios /= 0) call par_stop("boundary: cannot open time series file "//fname)
+  n = 0
+  ncol = 0
+  do
+    read(un, '(a)', iostat=ios) line
+    if (ios < 0) exit
+    if (ios > 0) call par_stop("boundary: cannot read "//fname)
+    nt = count_tokens(line)
+    if (nt == 0) cycle
+    if (ncol == 0) ncol = nt
+    if (nt /= ncol) then
+      call par_stop("boundary: "//fname//": every line must have the same number of values (line " &
+                    //itoa(n + 1)//" has "//itoa(nt)//", the first has "//itoa(ncol)//")")
+    end if
+    n = n + 1
+  end do
+  if (n == 0 .or. ncol < 3) then
+    call par_stop("boundary: "//fname//" needs lines of the time (min) and the values of 2 or more classes")
+  end if
+  rewind(un)
+  allocate(val(1:ncol,1:n))
+  k = 0
+  do
+    read(un, '(a)', iostat=ios) line
+    if (ios < 0) exit
+    if (count_tokens(line) == 0) cycle
+    k = k + 1
+    read(line, *, iostat=ios) val(1:ncol,k)
+    if (ios /= 0) call par_stop("boundary: "//fname//": cannot read the values of line "//itoa(k))
+    val(1,k) = val(1,k) * 60                 ! 分を秒に換算
+  end do
+  close(un)
+  nval = n
+end subroutine
+
+
+!----------------------------------------------------------------------
+! 文字列の値の数(空白・タブ・カンマで区切る)
+!----------------------------------------------------------------------
+pure function count_tokens(line) result(n)
+  character(len=*), intent(in) :: line
+  integer :: n, i
+  logical :: inw
+  n = 0
+  inw = .false.
+  do i = 1, len_trim(line)
+    if (line(i:i) == ' ' .or. line(i:i) == achar(9) .or. line(i:i) == ',') then
+      inw = .false.
+    else if (.not. inw) then
+      n = n + 1
+      inw = .true.
+    end if
+  end do
+end function
+
+
+!----------------------------------------------------------------------
+! 多列の時系列の線形内挿(1 列目が時刻 s、2〜nc+1 列が値)。kc は前回の区間の控え(時刻が単調に
+! 進むときに先頭から探し直さない。戻ったときは先頭から探す)
+!----------------------------------------------------------------------
+subroutine interp_series_multi(val, n, nc, t, kc, q)
+  real, intent(in) :: val(:,:)
+  integer, intent(in) :: n, nc
+  real, intent(in) :: t
+  integer, intent(inout) :: kc
+  real, intent(out) :: q(:)
+  integer :: k
+  real :: w
+
+  if (t <= val(1,1)) then
+    q(1:nc) = val(2:nc+1,1)
+    kc = 1
+    return
+  end if
+  if (t > val(1,n)) then
+    q(1:nc) = val(2:nc+1,n)
+    return
+  end if
+  if (kc < 2 .or. kc > n) kc = 2
+  if (val(1,kc-1) > t) kc = 2
+  do k = kc, n
+    if (t < val(1,k)) exit
+  end do
+  k = min(k, n)
+  kc = k
+  w = (t - val(1,k-1)) / (val(1,k) - val(1,k-1))
+  q(1:nc) = val(2:nc+1,k-1) + w * (val(2:nc+1,k) - val(2:nc+1,k-1))
+end subroutine
+
+
 function interp_series(val, n, t) result(q)
   real, intent(in) :: val(:,:)
   integer, intent(in) :: n

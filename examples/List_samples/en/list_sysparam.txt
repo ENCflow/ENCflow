@@ -88,6 +88,9 @@
   f_out_e = 1               ! water level E
   !f_out_z = 0              ! ground elevation Z (Z0000 is always output even
                             !   when off)
+  !f_out_bmix = 0           ! exchange-layer fraction of each size class with mixed
+                            !   grain sizes, Fa1_, Fa2_, ... (needs f_bedmix=1 in
+                            !   fn_geomorph; the mean size Dm is always written)
   !f_out_u = 0              ! velocity u in x
   !f_out_v = 0              ! velocity v in y
   !f_out_m = 0              ! line discharge m in x

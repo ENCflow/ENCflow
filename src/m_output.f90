@@ -197,6 +197,18 @@ subroutine output_state(o, p, g, s, k)
   if (allocated(s%ht)) call output_matrix(o, p, g, "Ht", s%ht, k)
   ! 河床の細粒分の厚さ (m。f_bedfines 有効時のみ。§84.10)
   if (allocated(s%sf)) call output_matrix(o, p, g, "Sf", s%sf, k)
+  ! 混合粒径の交換層の平均粒径 (m。f_bedmix 有効時のみ)と粒径階の割合(f_out_bmix = 1 のとき。§84.19)
+  if (allocated(s%bmdm)) call output_matrix(o, p, g, "Dm", s%bmdm, k)
+  if (p%f_out_bmix > 0 .and. allocated(s%bmf)) then
+    block
+      integer :: kc
+      character(len=8) :: nm
+      do kc = 1, size(s%bmf, 3)
+        write(nm, '(a,i0,a)') "Fa", kc, "_"
+        call output_matrix(o, p, g, trim(nm), s%bmf(:,:,kc), k)
+      end do
+    end block
+  end if
   ! 流水による岩盤の累積下刻 (m。f_rockinc 有効時のみ。§89)
   if (allocated(s%ri)) call output_matrix(o, p, g, "Ri", s%ri, k)
   ! 土層厚 (m。sd を実際に使うモデルの有効時のみ = require_sd 済み。§32)

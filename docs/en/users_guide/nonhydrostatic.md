@@ -451,6 +451,22 @@ water level directly above the deposit.
   bores, `f_nh_breaking = 1` + `f_hcap_upwind = 2` (+ `nh_break_visc = 1.44`).
   `f_nh_slope = 1` for abrupt bathymetry, `f_nh_bottom = 1` for the near
   field of landslide tsunamis.
+- **Bores (dam break, sudden gate opening, the front of a tsunami running up a river)**: the breaking switch replaces
+  the place where it acts with a hydrostatic bore. The front of a hydrostatic bore keeps meeting the surface-slope
+  criterion, so once the switch acts it does not release. Starting from a step in the initial water level, it acts at
+  the start of the computation and the result equals the hydrostatic run. Starting from a smooth water surface, the
+  front becomes a hydrostatic bore and loses its wave train from the moment the slope of the front face of the first
+  wave of the undular bore exceeds the criterion. A state in which the first wave breaks while the wave train is kept
+  (a weakly breaking undular bore) cannot be represented. A run without the switch has no breaking dissipation, and
+  the first wave is too high where the first wave starts to break (bore Froude number above about 1.3). In a
+  comparison with flume experiments in meandering channels (an undular bore of Froude number 1.32) the first wave in
+  the straight flume was 1.1 to 1.9 times the measured one, and the measurements fell between the hydrostatic run and
+  the non-hydrostatic run without the switch
+  ([examples/tsunami_meander](../../../examples/tsunami_meander/en/README.md)).
+- **Cells next to a side wall**: in the cell next to a wall of the domain mask and in the cell beside it, the wave
+  crests of the non-hydrostatic run are lower than at the centre of the channel (8 % and 3 % for the undular bore in
+  the straight flume of the same example; the difference is about 1 % in the hydrostatic run). Allow for this when
+  reading wave heights along a bank.
 - **Restrictions**: cannot be combined with debris flow (`f_debris`). The
   private NH state is not saved (restart is a cold start; breaking criterion
   1 has no history for one step after restoring).
@@ -508,6 +524,10 @@ in the READMEs):
 - [examples/nest_reflect](../../../examples/nest_reflect/en/README.md) -- non-hydrostatic parent and child grids;
   the default of holding the parent's $`\phi`$ in the band (`nest_nh = 1`)
   against making the band hydrostatic.
+- [examples/tsunami_meander](../../../examples/tsunami_meander/en/README.md) -- flume experiments of bores in
+  meandering channels (Kobayashi et al. 2019, 2021) computed with the hydrostatic and the non-hydrostatic model and
+  compared with the measured wave heights along the banks; shows the overestimated first wave of the undular bore
+  and that, for a bore, the breaking switch does not release once it acts and leaves a hydrostatic bore.
 
 ## 9. Models and literature the implementation drew on
 

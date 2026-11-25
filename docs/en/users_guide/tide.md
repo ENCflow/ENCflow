@@ -258,6 +258,7 @@ The labels in the Basis column are explained in [How to read the basis of a defa
   flooding). Worked examples of the format:
   [examples/List_samples/list_tide.txt](../../../examples/List_samples/en/list_tide.txt).
 - Coupling tide with a conduit outfall and pumping station: [test/coastal_drain](../../../test/coastal_drain/en/README.md).
+- A town that floods because the outfall is closed and stormwater cannot leave, although the surge does not overtop the seawall: [examples/coastal_compound_flood](../../../examples/coastal_compound_flood/en/README.md).
 - Storm-surge timber transport and deposition setup: [examples/timberyard](../../../examples/timberyard/en/README.md).
 
 ## References

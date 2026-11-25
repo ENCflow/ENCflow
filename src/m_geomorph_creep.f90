@@ -195,7 +195,12 @@ subroutine calc_creep_soil(gm, g, s, dts)
   !$omp end parallel do
 
   ! --- 供給量制限 → 発散 → z と sd の共動更新(掃流砂と共有の適用経路) ---
-  call apply_edge_flux(gm, g, s, dts)
+  if (gm%f_bedmix > 0) then
+    ! 混合粒径(段 2b。§123): 供給側の交換層の組成で粒径階に分けて適用する(等移動度。安息角崩落と同じ)
+    call apply_edge_flux_bmix(gm, g, s, dts, .false.)
+  else
+    call apply_edge_flux(gm, g, s, dts)
+  end if
 end subroutine
 
 

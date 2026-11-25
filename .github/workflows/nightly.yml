@@ -4,8 +4,9 @@
 #     full-serial : release 逐次で reference 全 24 ケース(chichibu・chichibu_cond 含む)
 #                   +トップレベル make(utils の追随漏れ検出。developer.md §10)
 #     full-mpi    : release MPI np=1,2,4 で逐次 reference と照合
-#                   (sewer_wq は Run スクリプト側で RTOL=1e-5。developer.md §10。
-#                    wfcurrent・wfsed は ULP=1・RTOL=1e-6。developer.md §90.18)
+#                   (sewer_wq は Run スクリプト側で RTOL=1e-5、damwq は ULP=1。developer.md §10。
+#                    wfcurrent・wfsed は ULP=1・RTOL=1e-6。developer.md §90.18。
+#                    どれも、ランナーの CPU が reference を作ったマシンと違うときの最終桁の差)
 #     debug-fcheck: -Og -fcheck=all ビルドで全ケースを実行し、
 #                   debug 逐次 reference と MPI np=2 のビット一致を検査
 #                   (確保範囲・FPE の実行時検査。developer.md §10)
@@ -57,7 +58,9 @@ jobs:
     # reference の生成環境(開発 VM の gfortran 13)に合わせて固定。ubuntu-latest は 2026-11-05 に
     # ubuntu-26.04(gfortran 15)へ切り替わり、vzcol が 1 量子で不一致になった(developer.md §10)
     runs-on: ubuntu-24.04
-    timeout-minutes: 60
+    # np=1 は回帰テストだけで約 58 分かかる(1 プロセス・1 スレッド。2026-11-22 の実行はジョブ全体で
+    # 59 分 41 秒、11-21 と 11-24 は 60 分で打ち切られた)。np=2・4 は 33〜45 分。制限は 90 分(developer.md §10)
+    timeout-minutes: 90
     strategy:
       fail-fast: false
       matrix:
@@ -126,14 +129,17 @@ jobs:
           -fdefault-real-8 -fdefault-double-8 -Wno-conversion
           -finit-real=snan -finit-integer=-88888888"
       # 逐次と MPI は同一フラグ・同一ソースなので一致するはず(実測では
-      # 全ケース identical)。RTOL=0 を明示して、release 用に RTOL を持つ
-      # ケース(sewer_wq)でもここではビット一致(ULP=0)を要求する
+      # 全ケース identical)。RTOL=0 と ULP=0 を明示して、release 用に許容を持つ
+      # ケース(sewer_wq の RTOL、damwq・wfcurrent・wfsed の ULP=${ULP:-1})でも
+      # ここではビット一致を要求する(ULP を無条件に 1 にするケース = wave・tide・
+      # chichibu・chichibu_cond は、Run スクリプトが上書きするので従来どおり)
       - name: MPI np=2 under -fcheck=all, compare vs debug serial
         run: |
           set -e
           export OMP_NUM_THREADS=1
           export OMPI_MCA_rmaps_base_oversubscribe=1
           export RTOL=0
+          export ULP=0
           for c in $REF_CASES; do
             echo "===== test/$c (debug np=2) ====="
             (cd "test/$c" && ./Run_MPI.sh 2)

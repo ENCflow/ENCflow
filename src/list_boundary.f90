@@ -11,6 +11,7 @@ module list_boundary
   ! par_stop で書式移行を案内する(黙って無視しない)
   use m_sysparam, only : t_sysparam
   use m_parallel, only : par_info, par_stop
+  use list_geomorph, only : nbmixmax     ! 混合粒径の粒径階の上限(inflow_qbfrac の大きさ)
   implicit none
   private
 
@@ -70,6 +71,12 @@ module list_boundary
     character(len=maxpathlen) :: fn_inflow_cs(1:nbsrcmax) = ""    ! 濃度時系列ファイル名
     character(len=maxpathlen) :: fn_inflow_qs(1:nbsrcmax) = ""    ! 流砂量時系列ファイル名
     character(len=maxpathlen) :: fn_inflow_qb(1:nbsrcmax) = ""    ! 掃流砂流砂量時系列ファイル名
+    ! 混合粒径(geomorph の f_bedmix。docs/mixed_sediment_plan.md §3.6)の給砂の組成。f_bedmix のときは
+    ! どちらかが必須(与件なので既定を置かない)
+    real :: inflow_qbfrac(1:nbmixmax,1:nbsrcmax) = -9999.0         ! inflow_qb・fn_inflow_qb の合計の粒径階の
+                                                                   !   割合(一定。和が 1。番兵 -9999)
+    character(len=maxpathlen) :: fn_inflow_qbmix(1:nbsrcmax) = "" ! 粒径階ごとの掃流砂流砂量時系列ファイル名
+                                                                   !   (1 行に時刻 (min) と Qb_1〜Qb_N。inflow_qb と排他)
   end type
 
   ! namelist 読み込み用の静的作業配列(スタックに置かないための措置。
@@ -237,12 +244,15 @@ subroutine read_inflow(un, list)
   character(len=maxpathlen) :: fn_inflow_cs(1:nbsrcmax)
   character(len=maxpathlen) :: fn_inflow_qs(1:nbsrcmax)
   character(len=maxpathlen) :: fn_inflow_qb(1:nbsrcmax)
+  real :: inflow_qbfrac(1:nbmixmax,1:nbsrcmax)
+  character(len=maxpathlen) :: fn_inflow_qbmix(1:nbsrcmax)
   integer :: ios
   character(len=1024) :: iom
   namelist /list_bound_inflow/ inflow_cell, inflow_val, inflow_dist, &
                                fn_inflow_cell, fn_inflow_val, &
                                inflow_cs, fn_inflow_cs, inflow_qs, fn_inflow_qs, &
-                               inflow_qb, fn_inflow_qb, inflow_cs_eq, inflow_cs_fac
+                               inflow_qb, fn_inflow_qb, inflow_cs_eq, inflow_cs_fac, &
+                               inflow_qbfrac, fn_inflow_qbmix
 
   inflow_cell = -9999
   inflow_val = -9999
@@ -257,6 +267,8 @@ subroutine read_inflow(un, list)
   fn_inflow_cs = list%fn_inflow_cs
   fn_inflow_qs = list%fn_inflow_qs
   fn_inflow_qb = list%fn_inflow_qb
+  inflow_qbfrac = list%inflow_qbfrac
+  fn_inflow_qbmix = list%fn_inflow_qbmix
 
   rewind(un)
   read(un, nml=list_bound_inflow, iostat=ios, iomsg=iom)
@@ -277,6 +289,8 @@ subroutine read_inflow(un, list)
   list%fn_inflow_cs = fn_inflow_cs
   list%fn_inflow_qs = fn_inflow_qs
   list%fn_inflow_qb = fn_inflow_qb
+  list%inflow_qbfrac = inflow_qbfrac
+  list%fn_inflow_qbmix = fn_inflow_qbmix
 
 end subroutine
 
