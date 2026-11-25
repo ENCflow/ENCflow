@@ -246,6 +246,19 @@ snow is fixed into the terrain by f_dbstop. Panel (b) summarizes the setup below
   dd/`fluv_porosity`; at 1 mm the inflow needed for the front to advance into a new cell changes with the time
   step, and the results depend on the time step). The numbers for each setting are in the worked example
   [examples/snow_avalanche](../../../examples/snow_avalanche/en/README.md).
+- **Momentum of the entrained snow, and entrainment by thin flow**: by default the entrained snow joins the flow
+  at the local flow velocity. With `f_dbmom = 1` the part needed to accelerate the resting snow to the flow
+  velocity is taken from the flow (the treatment of SamosAT and AvaFrame; see section 3 of the
+  [explanation](massflow.md)). Use 1 for avalanches that grow much by taking up the snow on their track (with
+  0, an avalanche that takes up snow comes out so fast that it arrives several seconds earlier than one that
+  takes up none). The entrainment law `f_dbed = 4` takes all snow the flow touches regardless of the flow depth,
+  so in a computation that places the entrainable snow sd over a wide part of the slope, give the minimum flow
+  depth for entrainment `db_hent` (0.3 to 0.4 m, the equivalent of a snow yield stress of 300 Pa, is a guide) or
+  use Hungr's law `f_dbed = 5` (`db_er`), whose entrainment rate is also proportional to the flow depth. With
+  neither and with snow placed everywhere, the thin snow at the margins of the flow spreads sideways while
+  taking up snow, and the size of the avalanche ends up being set by the threshold depth `dd`. If the snow is
+  placed over a chosen area, such as a band along the gully floor, the amount taken up is set by the amount
+  placed even without the minimum.
 - **What it cannot do (honest limits)**: (1) powder-snow
   avalanches are out of scope (an air suspension - outside the
   shallow-water approximation), (2) release is not predicted (the
@@ -255,19 +268,20 @@ snow is fixed into the terrain by f_dbstop. Panel (b) summarizes the setup below
   density; use the flowing-snow density of 200-400 kg/m³ for avalanche
   impact pressures), (4) no automatic coupling with the snow (SWE)
   module (to chain from a winter snowpack run, convert SWE to sd in
-  preprocessing), (5) the entrainment law E = δe·|V| has no threshold, so all snow the flow touches is taken
-  regardless of the flow depth or the snow strength (give the entrainable snow sd over a chosen area, such as
-  a band along the gully floor; if it is placed over the whole slope, the thin snow at the margins of the flow
-  spreads sideways while taking up snow, and the size of the avalanche ends up being set by the threshold
-  depth `dd`), (6) the momentum needed to accelerate the entrained snow is not counted (the velocity is the
-  solved variable and entrainment only adds depth, so a flow that advances while taking up snow comes out
-  faster than with a momentum-conserving treatment), (7) the friction coefficients μ and ξ are one pair for
-  the whole domain (the tables of operational models, which vary them with terrain class and altitude, cannot
-  be used as they are). The numbers for (5) to (7) are in the example
+  preprocessing), (5) the friction coefficients μ and ξ are one pair for the whole domain (the tables of
+  operational models, which vary them with terrain class and altitude, cannot be used as they are), (6) the
+  shape of the head of the flow in a gully (maximum flow depth, maximum speed, arrival time) changes with the
+  orientation of the gully to the grid and with the grid spacing (the Voellmy law has no stress across the
+  flow, so the grid sets the width of the fast core along the thalweg). For a flow that takes up no snow and
+  in computations with `f_dbmom = 0` it changes by 10 to 30 % and does not converge when the grid is refined;
+  for a flow that takes up snow with `f_dbmom = 1` it stays at about 10 %. The flow upstream of the head and
+  the tip of the deposit hardly change. The numbers for (5) and (6) are in the example
   [examples/snow_avalanche](../../../examples/snow_avalanche/en/README.md).
 - A verified example is [test/avalanche](../../../test/avalanche/en/README.md)
-  (release → growth to 1.5x by entrainment → stopping on the flat;
-  solid ledger at machine precision). The Voellmy steady uniform-flow
+  (release → entrained solids grow to 1.81 times the released solids → stopping on the flat;
+  solid ledger at machine precision; for a sheet released at once on a uniform slope, the velocity and flow
+  depth with the velocity-proportional law, Hungr's law, the minimum flow depth, and with and without the
+  momentum switch are within 0.5 % of the solutions of the ordinary differential equations). The Voellmy steady uniform-flow
   analytic benchmark (0.04% agreement) is continuously tested in
   [test/volcano](../../../test/volcano/en/README.md) configuration 1 (the same
   resistance law). A worked example is

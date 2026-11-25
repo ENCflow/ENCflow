@@ -48,9 +48,11 @@
 !   sd で被覆を厳密に積分し(rock_cover_inc)、生成物を 1:1 で sd に足す(z は不変)。
 !======================================================================
 submodule(m_geomorph) m_geomorph_debris
-  use m_parallel, only : par_stop, dcp, par_halo_cell
+  use m_parallel, only : par_stop, dcp, par_halo_cell, is_root
   use m_swflow_enc, only : m_swflow_enc_set_debris, opt, bcs, bc_open_face, zdiff_minmod
   use m_fileio, only : fileio_read_matrix
+  use m_restart, only : restart_write_cell, restart_read_cell
+  use m_sysdep_util, only : sysdep_mkdir
   implicit none
 
   ! 勾配領域の閾値と係数(出典はヘッダ。0.03 だけ【要文献照合】。原式固定で
@@ -118,7 +120,7 @@ module subroutine init_debris(gm, p, g, list)
                     // "(internal friction angle of sediment is usually 30-40 deg)")
     end if
   end if
-  if (list%f_dbed >= 1) then
+  if (list%f_dbed >= 1 .and. list%f_dbed <= 4) then       ! 5(Hungr の則)は δe を使わない
     if (list%db_delte <= 0.0) call par_stop("list_geomorph: db_delte must be > 0")
   end if
   if (list%f_dbed >= 1 .and. list%f_dbed <= 3) then
@@ -172,11 +174,40 @@ module subroutine init_debris(gm, p, g, list)
         call par_stop("list_geomorph: db_cmin must be in (0, C*)")
       end if
       gm%f_dbed = list%f_dbed
+    case (5)            ! Hungr の連行則(E = E_r・h_t・|V|。developer.md §127)
+      if (list%db_cmin <= 0.0 .or. list%db_cmin >= gm%db_cstar) then
+        call par_stop("list_geomorph: db_cmin must be in (0, C*)")
+      end if
+      if (list%db_er <= 0.0) then
+        call par_stop("list_geomorph: f_dbed=5 (Hungr's entrainment law) requires db_er > 0 (growth rate, 1/m)")
+      end if
+      gm%f_dbed = list%f_dbed
     case default
       call par_stop("list_geomorph: f_dbed must be 0(no exchange), 1(simplified)," &
-                    // " 2(Egashira-Ashida), 3(Takahashi-Nakagawa 1991)" &
-                    // " or 4(velocity-proportional entrainment)")
+                    // " 2(Egashira-Ashida), 3(Takahashi-Nakagawa 1991)," &
+                    // " 4(velocity-proportional entrainment) or 5(Hungr's entrainment law)")
   end select
+  ! 連行則の追加の選択子(developer.md §127。どれも既定は従来のまま)
+  !   db_er   : Hungr の則の成長率 E_r(f_dbed = 5 だけが使う)
+  !   db_hent : 連行する流動深の下限(f_dbed = 4・5。ほかの式で指定されたら止める)
+  !   f_dbmom : 侵食・連行で加わる質量を静止から加速する分を数える(f_dbed = 1〜5。配列の確保は init_debris_state)
+  gm%db_er = list%db_er
+  if (list%db_hent < 0.0) call par_stop("list_geomorph: db_hent must be >= 0")
+  if (list%db_hent > 0.0 .and. list%f_dbed /= 4 .and. list%f_dbed /= 5) then
+    call par_stop("list_geomorph: db_hent (minimum flow depth for entrainment) is for f_dbed=4 or 5")
+  end if
+  gm%db_hent = list%db_hent
+  select case (list%f_dbmom)
+    case (0)
+    case (1)
+      if (list%f_dbed == 0) then
+        call par_stop("list_geomorph: f_dbmom=1 needs an exchange law (f_dbed=1..5); f_dbed=0 has no entrainment")
+      end if
+    case default
+      call par_stop("list_geomorph: f_dbmom must be 0(entrained mass joins at the flow velocity) " &
+                    // "or 1(accelerated from rest)")
+  end select
+  gm%f_dbmom = list%f_dbmom
 
   ! 抵抗則(実体は m_swflow_enc。パラメータをここで検証して渡す。
   ! 初期化順序: geomorph init は swflow init より前 — m_main 参照)
@@ -498,6 +529,9 @@ module subroutine calc_debris(gm, p, g, s, dtw)
   real :: wdf                                 ! 保持水の不足(f_dbwet = 3。層の平面の水深 m)
   real(real64) :: vd, wd
   logical :: rkd, gcorr, wret
+  logical :: hent                             ! 連行する流動深の下限があるか(db_hent > 0。§127)
+  logical :: mom                              ! 加わる質量の運動量を数えるか(f_dbmom = 1。§127)
+  real :: m0                                  ! 交換の前の流動体の質量(水の厚さに換算。h + (1 + s) hs)
 
   ! --- f_dbed=3 の流動面勾配は近傍の h・hs を読む。両者のハロは
   !     ステップ頭交換のままで、swflow が帯内を更新済み = 帯界面で
@@ -521,6 +555,7 @@ module subroutine calc_debris(gm, p, g, s, dtw)
 
   ! --- パス1: 交換量の計算(時刻 n の状態のみを読む) ---
   immd = (gm%f_dbimm == 1)
+  hent = (gm%db_hent > 0.0)
   !$omp parallel do schedule(static) private(i, j, tanth, cinf, cc, hm, fx, hseq, &
   !$omp                                      tanthc, sinthc, vcr, fac, tanf, ge, taud, fr, gzx, gzy, &
   !$omp                                      cstn, sinth)
@@ -557,6 +592,23 @@ module subroutine calc_debris(gm, p, g, s, dtw)
             fx = gm%db_cstar * gm%db_delte * s%vv(i,j) * dtw
             ! 可動層クランプ(連行可能層 = sd。雪崩では雪の厚さ)
             fx = min(fx, s%sd(i,j) / (gm%morfac * gm%poroi))
+            ! 連行する流動深の下限(db_hent > 0 のときだけ。§127)
+            if (hent) then
+              if (hm < gm%db_hent) fx = 0.0
+            end if
+          end if
+        else if (gm%f_dbed == 5) then
+          ! Hungr の連行則(E = E_r・h_t・|V|。河床の低下速度が流動深と流速に比例する。Hungr 1995・
+          ! McDougall & Hungr 2005 の DAN3D の形。§127)。連行だけで堆積はなく、停止・堆積は f_dbstop、
+          ! 連行可能層は sd、密な流動体(C >= db_cmin)だけが連行するのは 4 と同じ
+          fx = 0.0
+          cinf = 0.0
+          if (s%vv(i,j) > 0.0 .and. cc >= gm%db_cmin) then
+            fx = gm%db_cstar * gm%db_er * hm * s%vv(i,j) * dtw
+            fx = min(fx, s%sd(i,j) / (gm%morfac * gm%poroi))
+            if (hent) then
+              if (hm < gm%db_hent) fx = 0.0
+            end if
           end if
         else if (gm%f_dbed == 2) then
           ! 江頭・芦田(1992): E = |V|・C*・tan(θ−θe)(流向の河床勾配。
@@ -701,13 +753,16 @@ module subroutine calc_debris(gm, p, g, s, dtw)
   area = g%dx * g%dy
   bdm = 0.0
   wret = (gm%f_dbwet == 3 .and. s%gw_active)   ! 保持水の授受(§28.17)
-  !$omp parallel do schedule(static) private(i, j, fx, dzb, cap, fxg, dhw, fwh, bd, vd, wd, wdf) &
+  mom = (gm%f_dbmom == 1)                      ! 加わる質量の運動量(§127)
+  !$omp parallel do schedule(static) private(i, j, fx, dzb, cap, fxg, dhw, fwh, bd, vd, wd, wdf, m0) &
   !$omp   reduction(max: bdm)
   do j = dcp%js, dcp%je
     vd = 0.0_real64
     wd = 0.0_real64
     do i = g%wx(1,j), g%wx(2,j)
       fx = gm%dbr%fx(i,j)
+      ! 交換の前の流動体の質量(f_dbmom = 1 のときだけ。水の厚さに換算した h + (1 + s) hs)
+      if (mom) m0 = s%h(i,j) + (1.0 + gm%sgrav) * max(s%hs(i,j), 0.0)
       if (fx /= 0.0) then
         s%hs(i,j) = s%hs(i,j) + fx
         ! 共動更新(z と sd が同じ Δz で動く → 帯水層底 (z - sd) は不変)
@@ -781,6 +836,17 @@ module subroutine calc_debris(gm, p, g, s, dtw)
               s%h(i,j) = s%h(i,j) + fxg * gw_to_h(s, i, j)   ! 河道の平面へ(§26.1)
             end if
           end if
+        end if
+      end if
+      ! 侵食・連行で加わった質量の相対的な増加率 ṁ/m(f_dbmom = 1。§127)。加わった質量は、固体 (1 + s) fx と、
+      ! 一緒に地表へ出た間隙水(f_dbwet = 1〜3 の授受の正味)で、交換の前後の質量の差で数える。次のステップの
+      ! 運動方程式が、辺の両セルの平均を半陰の抵抗に足す(静止していた質量を流速まで加速する分の減速
+      ! −u ṁ/m。u ← u m/(m + Δm) に当たる)。堆積(fx < 0)は流速を変えない(運動量を持って出ていく)
+      if (mom) then
+        s%dbmr(i,j) = 0.0
+        if (fx > 0.0) then
+          s%dbmr(i,j) = max(s%h(i,j) + (1.0 + gm%sgrav) * max(s%hs(i,j), 0.0) - m0, 0.0) &
+                        / (max(m0, p%dd) * dtw)
         end if
       end if
       ! 土石流による岩盤侵食(§89.18): E-D の適用後の自セルの sd で被覆を厳密に積分し、
@@ -1435,5 +1501,69 @@ pure function ceq_debris(gm, tanth) result(cinf)
     cinf = min(db_immat * cinfd**2, cmax)               ! 未成熟
   end if
 end function
+
+
+!----------------------------------------------------------------------
+! 侵食・連行で加わる質量の増加率 s%dbmr(f_dbmom = 1。developer.md §127)
+!   確保は帯 + ハロ(辺の両セルを読む。ハロはステップ頭に m_swflow_enc が交換する)。値は calc_debris が
+!   毎ステップ書き、次のステップの運動方程式が読むので、リスタートをまたいで同じ結果にするために
+!   私有ファイル geomorph_debris.dat に保存する(契約5。§7。書き並びは restore と同時に更新)
+!----------------------------------------------------------------------
+module subroutine init_debris_state(gm, p, g, s)
+  type(t_geomorph), intent(inout) :: gm
+  type(t_sysparam), intent(in) :: p
+  type(t_geoinfo), intent(in) :: g
+  type(t_state), intent(inout) :: s
+  if (gm%f_dbmom /= 1) return
+  if (.not. allocated(s%dbmr)) allocate(s%dbmr(dcp%ish:dcp%ieh, dcp%jsh:dcp%jeh), source = 0.0)
+  if (p%f_state_restore > 0) call restore_debris(p, g, s)
+end subroutine
+
+
+module subroutine dispose_debris(gm, p, g, s)
+  type(t_geomorph), intent(in) :: gm
+  type(t_sysparam), intent(in) :: p
+  type(t_geoinfo), intent(in) :: g
+  type(t_state), intent(in) :: s
+  if (gm%f_dbmom /= 1) return
+  if (p%f_state_save > 0) call save_debris(p, g, s)
+end subroutine
+
+
+subroutine save_debris(p, g, s)
+  type(t_sysparam), intent(in) :: p
+  type(t_geoinfo), intent(in) :: g
+  type(t_state), intent(in) :: s
+  integer :: un
+  if (g%initialized) continue  ! 引数未使用の警告を抑制
+  un = -1
+  if (is_root) then
+    call sysdep_mkdir(p%dir_save)
+    open(newunit=un, file=trim(p%dir_save)//'/geomorph_debris.dat', form='unformatted', status='replace')
+  end if
+  call restart_write_cell(un, s%dbmr)
+  if (is_root) close(un)
+end subroutine
+
+
+subroutine restore_debris(p, g, s)
+  type(t_sysparam), intent(in) :: p
+  type(t_geoinfo), intent(in) :: g
+  type(t_state), intent(inout) :: s
+  character(:), allocatable :: fname
+  logical :: found
+  integer :: un
+  if (g%initialized) continue  ! 引数未使用の警告を抑制
+  fname = trim(p%dir_save)//'/geomorph_debris.dat'
+  inquire(file=fname, exist=found)
+  if (.not. found) then
+    call par_stop("geomorph: debris state file not found (was f_dbmom = 1 when saving): " // fname)
+  end if
+  un = -1
+  if (is_root) open(newunit=un, file=fname, form='unformatted', status='old')
+  call restart_read_cell(un, s%dbmr)
+  if (is_root) close(un)
+end subroutine
+
 
 end submodule

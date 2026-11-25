@@ -263,7 +263,26 @@ module list_geomorph
                                      ! 慣性係数付き堆積。レートは δe/δd・q_T/d_L,
                                      ! 4:速度比例連行 E = δe・|V| — 雪崩・岩屑なだれの
                                      ! 走路連行(連行のみ。堆積は f_dbstop。連行可能層は
-                                     ! sd(雪崩では雪の厚さ)。C >= db_cmin のセルのみ))
+                                     ! sd(雪崩では雪の厚さ)。C >= db_cmin のセルのみ),
+                                     ! 5:Hungr の連行則 E = E_r・h_t・|V|(Hungr 1995・
+                                     ! McDougall & Hungr 2005 の DAN3D の形。E_r = db_er。
+                                     ! h_t = h + hs。そのほかの扱いは 4 と同じ。
+                                     ! developer.md §127))
+    real :: db_er = 0.0              ! Hungr の連行則の成長率 E_r (1/m)。f_dbed=5 で使用
+                                     ! (> 0 必須。1 m 進むごとの体積の増加率。連行域に
+                                     ! 入る体積 V0 と出る体積 Vf、連行域の長さ L から
+                                     ! ln(Vf/V0)/L と見積もる)
+    real :: db_hent = 0.0            ! 連行する流動深の下限 (m)。f_dbed=4・5 で使用。
+                                     ! h_t = h + hs がこれ未満のセルは連行しない
+                                     ! (0 = 下限なし = 従来。流れの縁の薄い流れが
+                                     ! 連行可能な層を取り込んで広がるのを止める。雪の
+                                     ! 降伏応力 τ_c の流動深への換算 τ_c/(ρ g μ cosθ) が
+                                     ! 目安。独自の簡略化。developer.md §127)
+    integer :: f_dbmom = 0           ! 侵食・連行で加わる質量の運動量 (0:加わる質量は
+                                     ! その場の流速を持って加わる(従来),
+                                     ! 1:静止から加速する分を流れから引く — 質量の
+                                     ! 相対的な増加率 ṁ/m を半陰の抵抗に足す
+                                     ! (u ← u・m/(m + Δm)。f_dbed=1〜5。developer.md §127))
     real :: db_d50 = 0.0             ! 代表粒径 (m)。f_dbres=2,3 / f_dbed=3 で使用。0 = 既定 0.05
     real :: db_erest = 0.0           ! 粒子の反発係数 e(0〜1)。f_dbres=2 で使用。0 = 既定 0.85
                                      ! (材料固有値。文献に既定値なし)
@@ -544,6 +563,8 @@ subroutine list_geomorph_read(p, list)
   real :: db_wstop
   integer :: f_dbres
   integer :: f_dbed
+  real :: db_er, db_hent
+  integer :: f_dbmom
   real :: db_d50
   real :: db_erest
   real :: db_cmin
@@ -601,6 +622,7 @@ subroutine list_geomorph_read(p, list)
                            spl_lc, spl_zbase, spl_sgrad, spl_ksat, spl_diagratio, spl_strata, &
                            f_debris, db_phi, db_delte, db_deltd, f_dbstop, db_vstop, db_wstop, f_dbres, &
                            f_dbed, db_d50, db_erest, db_cmin, f_dbwet, db_satbed, &
+                           db_er, db_hent, f_dbmom, &
                            f_dbunsat, db_kunsat, f_dbimm, db_deltdi, db_immexp, &
                            db_mu, db_xi, db_tauy, f_dbcurv, &
                            fn_dbinit, db_reltime, db_relsat, &
@@ -724,6 +746,9 @@ subroutine list_geomorph_read(p, list)
   db_wstop = list%db_wstop
   f_dbres = list%f_dbres
   f_dbed = list%f_dbed
+  db_er = list%db_er
+  db_hent = list%db_hent
+  f_dbmom = list%f_dbmom
   db_d50 = list%db_d50
   db_erest = list%db_erest
   db_cmin = list%db_cmin
@@ -910,6 +935,9 @@ subroutine list_geomorph_read(p, list)
   list%db_wstop = db_wstop
   list%f_dbres = f_dbres
   list%f_dbed = f_dbed
+  list%db_er = db_er
+  list%db_hent = db_hent
+  list%f_dbmom = f_dbmom
   list%db_d50 = db_d50
   list%db_erest = db_erest
   list%db_cmin = db_cmin

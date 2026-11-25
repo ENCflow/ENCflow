@@ -58,11 +58,11 @@
     {
       "source": "docs/comparison.md",
       "target": "docs/en/comparison.md",
-      "source_sha256": "6f70d13a23c596dcc0d01a2e5a852d4c67ec5d9fdd8886e23779467af8ee6024",
-      "target_sha256": "52cf7af2fa89c0275fe376d4177de0f44e4d95061a464f1f0bbe911a6eb147de",
-      "reviewer": "Claude (Claude Code session; mixed-size stage 2b (rockfall and talus carried from the top of the column with rf_frac for bedrock debris, depth-dependent creep and longshore transport with the supplying exchange-layer composition, swash deferred): the new and changed parts written in both languages in the same work and compared side by side; parameter names, messages and numbers checked against the code and the test runs)",
+      "source_sha256": "c1fea572d2bb55ebca7b913227473baf5ccbd8cf929d98afe5ffaac5e3117210",
+      "target_sha256": "356039d99771aff6f03bf41107c5209acad2f9fc6407f59e04feecce0d198a08",
+      "reviewer": "Claude (Claude Code session; the row of volcanic flows and snow avalanches (path entrainment by the velocity-proportional or the Hungr law, momentum of the entrained mass) compared side by side with the Japanese source; the other rows are as recorded before)",
       "method": "assistant",
-      "reviewed_on": "2026-11-24"
+      "reviewed_on": "2026-11-25"
     },
     {
       "source": "docs/developer.md",
@@ -113,11 +113,11 @@
     {
       "source": "docs/users_guide.md",
       "target": "docs/en/users_guide.md",
-      "source_sha256": "7bee8f1ee7af7fe585edd78cc12fba8340cf11b5300ac41ae884c4a9e101d976",
-      "target_sha256": "11e5417d9c3d25b49df1c44393457aa40b1c48d313f3ce5a737339785c0357b3",
-      "reviewer": "Claude (Claude Code session; mixed-size stage 2b (rockfall and talus carried from the top of the column with rf_frac for bedrock debris, depth-dependent creep and longshore transport with the supplying exchange-layer composition, swash deferred): the new and changed parts written in both languages in the same work and compared side by side; parameter names, messages and numbers checked against the code and the test runs)",
+      "source_sha256": "2bad81202b194de01f8e38186f915cce005b7dfae7f6f133712aa136328e8618",
+      "target_sha256": "ccdfe05762e682f2f2a5bfad3d265ffef21850ed79935cde4ed0debf02109e50",
+      "reviewer": "Claude (Claude Code session; the changed line: the number of entries of the parameter index, 833 to 836)",
       "method": "assistant",
-      "reviewed_on": "2026-11-24"
+      "reviewed_on": "2026-11-25"
     },
     {
       "source": "docs/users_guide/advection.md",
@@ -311,18 +311,18 @@
     {
       "source": "docs/users_guide/geomorph.md",
       "target": "docs/en/users_guide/geomorph.md",
-      "source_sha256": "baff2e41378d1bb85cb057e768df1562c626ff2be07fd0ca15223820e8d61f30",
-      "target_sha256": "5eb0cdf42abaeb7f35c98d78338111955f2ddb1066211140bdfe32fd94ac7753",
-      "reviewer": "Claude (Claude Code session; the part changed for the example snow_avalanche: the link added to the list of verified cases and examples, compared side by side with the Japanese source)",
+      "source_sha256": "e1c0744a79e59947fb47eb144af9e461311cc4cbe0f9ffcd1653888c3ab2537d",
+      "target_sha256": "77b8820efe778f285812309896d60ecfef8ff6db8fe2a261731a43b2e0791918",
+      "reviewer": "Claude (Claude Code session; the parts changed for the entrainment-law options: the f_dbed and db_delte rows and the new rows db_er, db_hent and f_dbmom of the debris-flow parameter table, compared side by side with the Japanese source)",
       "method": "assistant",
       "reviewed_on": "2026-11-25"
     },
     {
       "source": "docs/users_guide/geomorph_applications.md",
       "target": "docs/en/users_guide/geomorph_applications.md",
-      "source_sha256": "ce33d051c9b8eda60900239f28130e7cc90fc94da01af253ce660e9ffa2fffd0",
-      "target_sha256": "2afc50e9fe42f270494701d9c2d0bf1f03572c6667a0541d14768bb5eeda5b63",
-      "reviewer": "Claude (Claude Code session; the parts changed for the example snow_avalanche in section 5 (snow avalanches): the new item on exchanging the carrier with the snow (f_dbwet = 1, db_satbed = db_relsat, threshold depth dd), limits (5) to (7) and the link to the example, compared side by side with the Japanese source)",
+      "source_sha256": "e14bc7d10cdbeb1ca8f3e2e9779972e88c8300525b412a13099c572888e28c01",
+      "target_sha256": "f9e21d5613da0a1abecd493d3e864c55abf5430e80d60c48a80365e5290adb5a",
+      "reviewer": "Claude (Claude Code session; the parts changed in section 5 (snow avalanches) for the entrainment-law options: the new item on the momentum of the entrained snow and entrainment by thin flow, limits (5) and (6), and the verified-example item, compared side by side with the Japanese source)",
       "method": "assistant",
       "reviewed_on": "2026-11-25"
     },
@@ -392,9 +392,9 @@
     {
       "source": "docs/users_guide/massflow.md",
       "target": "docs/en/users_guide/massflow.md",
-      "source_sha256": "edb8e1b001f1d094a10ac79f244dee65865fa3a594dfe8dcdc33e3a0f12b3787",
-      "target_sha256": "91bd3a3779b7631944e84275138de53f38da5502f8085921a5978c95a3b74ecf",
-      "reviewer": "Claude (Claude Code session; the parts changed for the example snow_avalanche: the new paragraph on the accuracy limits of the velocity-proportional entrainment (developer record section 126.5) and the new row of the table of verification cases, compared side by side with the Japanese source)",
+      "source_sha256": "d6e6faa44249b624b2aba8b6051105e87eb6f69074c3f3a84c0f3ef84d409b5e",
+      "target_sha256": "a147d39ac851cf88406599328790ae7bc0d2974c161b3b32f8370660615522de",
+      "reviewer": "Claude (Claude Code session; entrainment-law improvement (f_dbed = 5 Hungr law, db_hent, f_dbmom): section 3, the parameter table, the verification table rows of test/avalanche and examples/snow_avalanche and the references written in both languages in the same work and compared side by side; parameter names and numbers checked against the code and the test and example runs)",
       "method": "assistant",
       "reviewed_on": "2026-11-25"
     },
@@ -437,11 +437,11 @@
     {
       "source": "docs/users_guide/params_index.md",
       "target": "docs/en/users_guide/params_index.md",
-      "source_sha256": "2a9eca84346421d5a33da38958e190a16b64546ef0769bcf29c6d7481b8a764f",
-      "target_sha256": "da31ddbb4eba2b5299145df41b81a52254cb5c98a63f0b5ee051efb74ba1ffde",
-      "reviewer": "Claude (Claude Code session; mixed-size stage 2b (rockfall and talus carried from the top of the column with rf_frac for bedrock debris, depth-dependent creep and longshore transport with the supplying exchange-layer composition, swash deferred): the new and changed parts written in both languages in the same work and compared side by side; parameter names, messages and numbers checked against the code and the test runs)",
+      "source_sha256": "9942d43cc5a466b02c4560b3c9934285551d5969229c4fcc22668b2f5b646191",
+      "target_sha256": "09b693aa69086fdc3c685754c90bd5772bc28f20b2f865098cef35a1d8411baf",
+      "reviewer": "Claude (Claude Code session; three rows added (db_er, db_hent, f_dbmom) and the entry count; rows and count compared)",
       "method": "assistant",
-      "reviewed_on": "2026-11-24"
+      "reviewed_on": "2026-11-25"
     },
     {
       "source": "docs/users_guide/passage_width.md",
@@ -572,9 +572,9 @@
     {
       "source": "docs/users_guide/usecases.md",
       "target": "docs/en/users_guide/usecases.md",
-      "source_sha256": "3acc1e60fde3d7c4e1e430dd03c8b80ddb4180ce1dfb6ecd16711925f57eb3dd",
-      "target_sha256": "b5a30c7f755e8b8e0979dd4f1edf88f67683813d493b5f74d08f91c996d14bd4",
-      "reviewer": "Claude (Claude Code session; merge of main into the snow_avalanche branch: the rows changed on main (tsunami_meander, coastal_compound_flood) are as recorded there, and the example link in the snow-avalanche row was compared side by side with the Japanese source)",
+      "source_sha256": "022b6e1088b40971b5b32dacf7cc534ebeef07b9476cb965fffff41e08f42d5f",
+      "target_sha256": "e6783602a5e995e29158b964c52892ce8fdb86bd1cf8b02874b1c01b7f15f857",
+      "reviewer": "Claude (Claude Code session; the changed cell of the snow-avalanche row (f_dbmom, db_hent, f_dbed = 5), compared side by side with the Japanese source)",
       "method": "assistant",
       "reviewed_on": "2026-11-25"
     },
@@ -716,11 +716,11 @@
     {
       "source": "examples/List_samples/list_geomorph.txt",
       "target": "examples/List_samples/en/list_geomorph.txt",
-      "source_sha256": "22ed51daa26dbfe891851c3179d190553bd6fa717ec07bbdc3b52a48d4d0f272",
-      "target_sha256": "fab8ef704a07cb3db49aff9d84a63118b6b43150b605e7427983b5ac10217e9b",
-      "reviewer": "Claude (Claude Code session; mixed-size stage 2b (rockfall and talus carried from the top of the column with rf_frac for bedrock debris, depth-dependent creep and longshore transport with the supplying exchange-layer composition, swash deferred): the new and changed parts written in both languages in the same work and compared side by side; parameter names, messages and numbers checked against the code and the test runs)",
+      "source_sha256": "9cac8bcd6ff3f151e46077978f562504b66b36b3469e4f31fcba51dec7c31da5",
+      "target_sha256": "fc768ed33071de2a91d65690e0e3f8fc1368a4bf660a3a445b3ae4f4baf112d3",
+      "reviewer": "Claude (Claude Code session; the changed comment of f_dbed and db_delte and the new lines db_er, db_hent and f_dbmom: values and identifiers identical, comments compared with the Japanese source)",
       "method": "assistant",
-      "reviewed_on": "2026-11-24"
+      "reviewed_on": "2026-11-25"
     },
     {
       "source": "examples/List_samples/list_glacier.txt",
@@ -4046,11 +4046,11 @@
     {
       "source": "test/avalanche/README.md",
       "target": "test/avalanche/en/README.md",
-      "source_sha256": "ccda3da1b329812f846c02a4c2cf34906f61c0909ee20ef87394994c62d98ab1",
-      "target_sha256": "e564789353b490af640377c74b00fea4ccb72720fc73f340019fa67dfcd81c82",
-      "reviewer": "Claude (Claude Code session; changed sections compared side by side with the Japanese source; numbers checked against the test runs)",
+      "source_sha256": "61d6c477e923e4fca66d8bc434214414d8ce571944dfe211b9b1f9677e8355f1",
+      "target_sha256": "29709a1749f127bd924dad454d0da012b816254bd564999105d284ff36618763",
+      "reviewer": "Claude (Claude Code session; the parts added for configurations 2 to 5 (sheet on a uniform slope): the configuration subsection, the run comments, the results subsection and the related-documents line; tables and numbers compared with the Japanese source)",
       "method": "assistant",
-      "reviewed_on": "2026-11-21"
+      "reviewed_on": "2026-11-25"
     },
     {
       "source": "test/avalanche/figs/avalanche.png",

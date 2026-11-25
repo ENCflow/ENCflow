@@ -34,12 +34,49 @@ of the snow.
 | `Check_avalanche.py <save>` | (1) solid ledger \|Σhs + (1 − λ)Σ(z − z₀)\| < 1e-9, (2) co-update max\|(sd − sd₀) − (z − z₀)\| < 1e-10, (3) entrainment activity: min(sd − sd₀) < −0.05 m on the path (outside the release area), (4) growth: entrained solid / released solid > 0.2, (5) stopping: remaining Σhs / (released + entrained) < 0.3 |
 | `Fig.py` | The figure `en/figs/avalanche.png` below (`python3 Fig.py en`; `figs/avalanche.png` is the Japanese version) |
 
+The tables above are configuration 1 (`param.txt`).
+
+### Configurations 2 to 5: a sheet released at once on a uniform slope (momentum of the entrained snow, Hungr's law, minimum flow depth for entrainment)
+
+These configurations compare the options of the entrainment law (developer.md §127) with the solutions of
+ordinary differential equations in time only. Over the whole of a uniform slope of S = 0.5 (600 m × 40 m,
+Δx = 2 m), a layer of snow D = 0.5 m thick starts to move at t = 0 and takes up the snow below (3 m thick).
+Nothing varies along the flow, so the velocity u (horizontal) and the flow depth h_t = h + hs (vertical) at
+the centre of the domain follow
+
+```text
+du/dt   = g cos²θ (S − μ) − g u² / (ξ h_t cos²θ) − [when f_dbmom = 1] u E / h_t
+dh_t/dt = E
+```
+
+(cos²θ = 1/(1 + S²); the form of the slope-parallel resistance of `f_gravity_correction = 2`; our own
+arrangement). E is the lowering rate of the snow surface: δe u for the velocity-proportional law and
+E_r h_t u for Hungr's law. The last term is the acceleration of the entrained snow from rest to the flow
+velocity. The carrier is exchanged together with the snow (`f_dbwet = 1`, `db_satbed = db_relsat = 1`), and
+stopping and deposition are switched off (`f_dbstop = 0`) because the flow depth is compared with the
+solution. μ = 0.2, ξ = 1500 m/s², dt = 0.005 s, 8 s.
+
+| Configuration | Settings file | Entrainment | Momentum of the entrained snow |
+|---|---|---|---|
+| 2 | `param_sh0.txt` | velocity-proportional, δe = 0.02 | not counted (`f_dbmom = 0`, the default) |
+| 3 | `param_shm.txt` | same | counted (`f_dbmom = 1`) |
+| 4 | `param_shh.txt` | Hungr's law (`f_dbed = 5`, `db_er` = 0.02 /m) | counted |
+| 5 | `param_sht.txt` | velocity-proportional + minimum flow depth for entrainment `db_hent` = 0.6 m (the flow depth is 0.5 m, so nothing is entrained) | counted |
+
+`param_shm1.txt` and `param_shm2.txt` save configuration 3 at 4 s and restore it. `Run.sh` checks that the
+final save (state.dat, swflow_enc.dat and geomorph_debris.dat, the private file of `f_dbmom = 1`) is
+bit-identical to the uninterrupted run. The inputs are written by `make_init.py sheet`. `Check_sheet.py`
+judges (a) u and h_t after 8 s within 1 % of the solution, (b) the solid ledger Σhs + (1 − λ)Σ(z − z₀) below
+1e-9 of the initial snow, (c) the volume growth of configuration 4, ln(h_t/D)/E_r, within 1 % of the distance
+travelled in the solution, and (d) no entrainment in the central part of configuration 5 (the remaining snow
+stays 3 m thick).
+
 ## Running
 
 ```bash
 make
-./Run.sh          # generate dbinit → run → Check (1 s)
-./Run_MPI.sh 4    # MPI; state.dat is byte-identical to the serial run
+./Run.sh          # generate the inputs → run (configurations 1 to 5 and the restart pair) → Check (about 10 s)
+./Run_MPI.sh 4    # MPI; the saves are byte-identical to the serial run
 python3 Fig.py en # en/figs/avalanche.png
 ```
 
@@ -118,8 +155,28 @@ snow is still flowing (remaining hs).
   1.77, and restoring f_dry_head_cap to 3 keeps 1.81. The table, the values in the text and the figures
   are from this computation.
 
+### Configurations 2 to 5 (uniform slope)
+
+| Configuration | Velocity after 8 s (m/s), computed / solution | Flow depth (m), computed / solution | Result |
+|---|---|---|---|
+| 2 velocity-proportional, momentum not counted | 14.260 / 14.301 | 1.752 / 1.759 | PASS |
+| 3 velocity-proportional, momentum counted | 9.309 / 9.328 | 1.433 / 1.438 | PASS |
+| 4 Hungr's law, momentum counted | 8.819 / 8.828 | 1.293 / 1.299 | PASS |
+| 5 minimum flow depth (no entrainment) | 10.989 / 11.001 | 0.500 / 0.500 | PASS |
+
+- The default (configuration 2) agrees with the solution without the term that accelerates the mass. Counting
+  the acceleration of the entrained snow from rest (configuration 3) lowers the velocity after 8 s from 14.3
+  to 9.3 m/s, in agreement with the momentum-conserving solution.
+- In configuration 4, ln(h_t/D)/E_r is 47.52 m, in agreement with the distance travelled in the solution,
+  47.73 m (the flow depth grows as D exp(E_r x) with the distance travelled x).
+- The solid ledger is below 1e-14 of the initial snow, and the snow depth in the central part of
+  configuration 5 does not change.
+- In the restart pair of configuration 3 the three save files are bit-identical to the uninterrupted run. The
+  saves of the MPI runs (np = 1, 2, 4; strict-math -O2 builds) are byte-identical to the serial run in all
+  configurations.
+
 ## Related documents
 
 - [docs/users_guide/geomorph.md](../../../docs/en/users_guide/geomorph.md) — setup pattern for (dense-flow) avalanches, customary ranges of μ/ξ, table of reinterpretations
-- developer.md §28.8 (equivalent-fluid mode, velocity-proportional entrainment f_dbed=4, design decisions for the avalanche application)
+- developer.md §28.8 (equivalent-fluid mode, velocity-proportional entrainment f_dbed=4, design decisions for the avalanche application), §127 (Hungr's law f_dbed=5, minimum flow depth for entrainment db_hent, momentum of the entrained mass f_dbmom)
 - [test/volcano](../../volcano/en/README.md) (analytical solution of Voellmy uniform flow), [test/slide](../../slide/en/README.md) (instantaneous fluidization)

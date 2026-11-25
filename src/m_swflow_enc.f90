@@ -1440,6 +1440,8 @@ subroutine m_swflow_enc_calc(p, g, b, s, ierror)
   if (s%dw_active) call par_halo_cell(s%hd)
   ! 集積流木(辺の抗力項が両側のセルの値を読む。捕捉による更新は前ステップの m_driftwood。§50.7)
   if (s%dw_jam) call par_halo_cell(s%wj)
+  ! 侵食・連行で加わる質量の増加率(辺の抵抗が両側のセルの値を読む。更新は前ステップの calc_debris。§127)
+  if (allocated(s%dbmr)) call par_halo_cell(s%dbmr)
   if (s%bd_active) call par_halo_cell(s%hbd)
   ! 地表塩水層厚(同上。§47)
   if (s%salt_active) call par_halo_cell(s%hss)
@@ -2994,6 +2996,7 @@ subroutine calc_kth_flux(p, g, s, sx, uve0, tae0, i, j, k, in, jn, f_runge, uve1
   real :: fyf, fvf, fv1f          ! 斜面に沿う混合体流動の抵抗の倍率(降伏・速度の 2 乗・掃流状集合流動。§101)
   logical :: fb1                  ! 速度の 2 乗の抵抗が (d/h)^1 の形(高橋・中川の掃流状集合流動。§101)
   real :: gpr                     ! 3 の降伏の垂直応力と停止判定の接線方向の駆動の倍率 g′/g_e(§100。それ以外は 1)
+  real :: emr                     ! 侵食・連行で加わる質量の相対的な増加率 ṁ/m の両セルの平均 (1/s。f_dbmom = 1。§127)
   ! 波→流れ(段 W2。s%wv_flow > 0 のときだけ使う。§90)
   real :: wfe                     ! 辺の外力の成分 F_k/ρ (m2/s2。中心から近傍が正)
   real :: use_                    ! 辺の Stokes 輸送の成分 u^S_k (m/s。wv_flow = 2)
@@ -3074,7 +3077,11 @@ subroutine calc_kth_flux(p, g, s, sx, uve0, tae0, i, j, k, in, jn, f_runge, uve1
   hte = 0.0
   rme = 1.0
   fb1 = .false.
+  emr = 0.0
   if (have_db) then
+    ! 侵食・連行で加わった質量を静止から加速する分(f_dbmom = 1。§127): 前のステップの calc_debris が書いた
+    ! ṁ/m の両セルの平均。半陰の抵抗に足すので、u ← u/(1 + ṁ/m·Δt) = u·m/(m + Δm) になる
+    if (allocated(s%dbmr)) emr = 0.5 * (s%dbmr(i,j) + s%dbmr(in,jn))
     hsc = max(s%hs(i,j), 0.0)
     hsn = max(s%hs(in,jn), 0.0)
     hse = (hsc + hsn) / 2
@@ -3271,6 +3278,9 @@ subroutine calc_kth_flux(p, g, s, sx, uve0, tae0, i, j, k, in, jn, f_runge, uve1
     ! 土石流の降伏抵抗(db_res>=1)
     !   速度非依存の降伏減速度 a_y を半陰解法に合成(÷|V| で次元を合わせる)
     if (aye > 0.0) tfe = tfe - aye / max(vve, p%vv)
+
+    ! 侵食・連行で加わった質量の加速(f_dbmom = 1。§127)
+    if (emr > 0.0) tfe = tfe - emr
 
     ! 波・流れの摩擦(wv_flow = 2): マニング則の摩擦の速さを vve から vvw へ差し替える
     ! (家屋の抗力・降伏の項は流れの速さ vve のまま)
