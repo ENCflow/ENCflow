@@ -2273,9 +2273,9 @@
     {
       "source": "examples/joganji_flume/README.md",
       "target": "examples/joganji_flume/en/README.md",
-      "source_sha256": "ade04b953bddd49f5929fff8f47ce2a117f39d9308cafa4f9e33cc828ca11e61",
-      "target_sha256": "bfc7dad0098208685f5e93e6b54f109d9aafebc8d0fb4b43579a8a7122ec116e",
-      "reviewer": "Claude (Claude Code session; added the outlet sill-and-drop sensitivity run (param_sill.txt) to the sensitivity table and bullets, rewrote the downstream-end reading (lip height as an assumption; 9.1k water level in 60 min periods) in the summary, setup and limitations; compared the Japanese master and the English mirror passage by passage)",
+      "source_sha256": "a43205910c44f0a2e06d7ea26c20c61317cbdeb61c022856206bfdda0493e849",
+      "target_sha256": "ac86ba71920f3217f2677061a0b902aeba6fee4258de4b2d8ca7075528538a76",
+      "reviewer": "Claude (Claude Code session; added the morphodynamic sensitivity runs to 124 min (no repose collapse, fluv_muk = 0.7) as a new sensitivity subsection with a table, rewrote the ledger reading of repose collapse, removed the repose_phi hypothesis from the starting points, rewrote the flow-concentration limitation, added Asahi et al. 2013 and Hasegawa 1989 to the references and one sentence to the summary; compared the Japanese master and the English mirror passage by passage)",
       "method": "assistant",
       "reviewed_on": "2026-11-25"
     },

@@ -21,7 +21,8 @@ downstream end do not appear. In the model the flow spreads over the width of th
 gathering into one thread as in the measurement. The measured velocity (the surface velocity from PIV) times the
 modelled depth gives only six tenths of the discharge of a section, so the model sends too much water through
 shallow places. Changing the grid, the advection, the roughness map or adding a horizontal eddy viscosity (a turbulence
-model) does not narrow this gap ("Velocity").
+model) does not narrow this gap ("Velocity"). On the side of the bed, switching off repose collapse or weakening the
+bed-slope term that turns the transport hardly changes the concentration of the flow ("Sensitivity").
 For the surface composition, the measured mean hardly changes, whereas the model loses fines and coarsens too much.
 In the sensitivity configurations, lowering the downstream extension to the fixed bed produces a lowering from the
 downstream end of the same shape as measured, but about twice as deep, and the water level 7 m upstream from the
@@ -254,7 +255,10 @@ the width of the low-water channel.
 
 The per-class balance of the mixed-size run closes to a residual of 1e-13 m³ over 240 min (stock 23 m³). Repose
 collapse moved 25.4 m³ with mixed sizes and 17.2 m³ with a single size (bulk, summed over edge updates), an order of
-magnitude more than the bed change, as small collapses (about 5 cm³ on average) that go on all the time. The
+magnitude more than the bed change, as small collapses (about 5 cm³ on average) that go on all the time. Collapse
+acts only on edges steeper than 32° to the neighbouring cell. Such edges are a few dozen of the about 70 000 edges of
+the movable bed, most of them within 26 m of the upstream end of the movable bed. The transport cuts them and they
+collapse, over and over at the same places, so this volume does not measure the bed change ("Sensitivity"). The
 exchange-layer supply limiter acted in 1.3 % of the class × cell updates.
 
 ## Sensitivity
@@ -322,6 +326,47 @@ is the mean over the movable bed.
 - In none of the configurations does the mismatch in the locations of the change go away (point-by-point correlation
   below 0.3).
 
+### Repose collapse and the bed-slope term (124 min)
+
+Two configurations that each change one thing in the base configuration are computed to 124 min, which covers the
+main flood and the velocity measurement at 93 min (in a copy of `param.txt`, set `f_repose = 1` to 0 or add
+`fluv_muk = 0.7`, and set `tt = 7440` and another `dir_result`). The measured bed is the one at 240 min, so the table
+is for comparing the configurations with each other.
+
+| | std of the bed change | thread depth | correlation (whole / downstream of 17.1k) | flow concentration (93 min) | velocity correlation / CV (93 min) |
+|---|---|---|---|---|---|
+| measured (240 min) | 8.9 mm | −31.2 mm | — | — | — / 0.778 |
+| base configuration | 11.1 mm | −32.3 mm | 0.132 / 0.207 | 0.529 | 0.303 / 0.278 |
+| no repose collapse (`f_repose = 0`) | 11.0 mm | −32.7 mm | 0.135 / 0.205 | 0.530 | 0.290 / 0.280 |
+| `fluv_muk = 0.7` | 11.2 mm | −33.0 mm | 0.125 / 0.197 | 0.535 | 0.309 / 0.281 |
+
+The std of the bed change, the correlation and the thread depth are for the movable cells of the low-water channel
+at 124 min. The thread depth is the mean, over 1-m reaches along the channel, of the 5th percentile of the bed
+relative to the reach median (−29.5 mm at the start). The flow concentration is the share of the discharge carried
+by the 20 % of the low-water-channel cells with the largest unit discharge, and the velocity columns are from
+table 5. The water levels (0 to 124 min) of the three configurations agree within 0.4 mm at the 20 gauges that can
+be compared.
+
+- **No repose collapse**: collapse acts only on edges steeper than 32° to the neighbouring cell, which on the 10 cm
+  grid is a height difference of 62.5 mm between neighbours. At 124 min the 99th percentile of the slope of the edges
+  between neighbouring cells of the movable bed is 18° in the base configuration and 19° without collapse, and 15°
+  for the measured 240-min bed copied onto the grid. The incision of the threads (1 to 3 cm) makes no steep edges on
+  this grid, so switching collapse off changes the bed of the low-water channel little (the reach volumes agree with
+  the base configuration within 2 L). About 90 % of the cells that differ by more than 5 mm (3 %) are within 26 m of
+  the upstream end of the movable bed, where steep edges exist from the start. The largest difference is in the first
+  cells of the movable bed, up to 16 cm above the level floor that replaces the inlet ("How the inputs are made"):
+  with collapse they fall and are scoured down to the fixed bed; without it they stay dry. The other is the scour
+  hole just below Kamidaki grade-control sill 1, which without collapse becomes deeper and reaches the bottom of the
+  movable layer by 124 min (−205 mm; −155 mm in the base configuration, and the measured 240-min bed has no such
+  hole).
+- **`fluv_muk = 0.7`**: raising the kinetic friction coefficient of the term that turns the transport by the
+  transverse bed slope ([bedload](../../../docs/en/users_guide/geomorph.md#bedload-f_fluvial) in the user's guide) from
+  the default 0.45 (Asahi et al. 2013) to 0.7, the value Hasegawa (1989) uses for an estimate, weakens the term to
+  0.80 times. Apart from slightly deeper threads and a slightly higher concentration, the results are nearly the same
+  as the base configuration.
+- Neither configuration changes the flow concentration or the velocity distribution much, so they are not computed
+  to 240 min.
+
 ### Starting points for sensitivity experiments
 
 - `fluv_taufac` (the effective shear ratio): 0.3 or 0.5 brings the estimated transport down to 1/20 to 1/5
@@ -331,8 +376,6 @@ is the mean over the movable bed.
   surface composition.
 - `bmix_sub0` (the substrate composition; when not given, the same as the exchange layer): `param_sub.txt` above is
   the configuration that leaves it out.
-- `repose_phi` (the angle of repose, 32°): the ledgers show small collapses going on all the time, which may smooth
-  the edges of the threads.
 - Roughness (`rn.txt`; `make_init.py` copies the values of the original data): the uniform 0.035 of the low-water
   channel includes form drag.
 - `python3 make_init.py --dx 0.05`: a 5 cm grid, on which a thread spans 6 to 10 cells (halve `dt`; about 8 times
@@ -353,9 +396,10 @@ is the mean over the movable bed.
   either the actual depth was shallower than in the model (the water did not spread into shallow places), or PIV
   reads low in shallow water, or both. The water-level errors (RMSE about 12 mm) are not small enough to tell apart a
   difference of about 1 cm in depth in shallow places. Because the flow does not gather, the incision of the threads
-  and the measured degradation of the middle reach do not appear either. Not using the effective shear stress and the
-  small repose collapses that keep flattening the edges of the threads (ledger) are candidates acting on the
-  development of the bed, which this example does not separate.
+  and the measured degradation of the middle reach do not appear either. Switching off repose collapse or weakening
+  the bed-slope term changes the concentration of the flow little up to 124 min ("Sensitivity"). The effective shear
+  stress (`f_taupart = 2`) is not computed, because the estimate makes the transport too small to explain the
+  measured budget ("Shear stress").
 - **Grid**: on the 10 cm grid the narrow low-flow channels (0.3 to 1 m wide) are only 3 to 10 cells, and the mean bed
   of a cell is higher than the bottom of a narrow thread. At base flow many gauge cells are therefore dry, and water
   levels are compared only while the discharge is 5 L/s or more.
@@ -415,6 +459,10 @@ The files in `data_nilim/` were made by processing the following material.
   doi:10.2208/jscej1969.1971.195_55
 - Parker, G. (2004): *1D Sediment Transport Morphodynamics with Applications to Rivers and Turbidity Currents*.
   e-book, Chapter 17. <https://hydrolab.illinois.edu/people/parkerg/morphodynamics_e-book.htm>
+- Asahi, K., Shimizu, Y., Nelson, J. and Parker, G. (2013): Numerical simulation of river meandering with
+  self-evolving banks. *J. Geophys. Res. Earth Surf.*, 118(4), 2208–2229 (μs = 1.0 and μk = 0.45 of eq. (22)).
+- Hasegawa, K. (1989): Universal bank erosion coefficient for meandering rivers. *J. Hydraul. Eng.*, 115(6),
+  744–765 (μs = 1.0 and μk = 0.7 for the order-of-magnitude estimate).
 
 ## Related documents
 
