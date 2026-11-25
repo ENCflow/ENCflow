@@ -162,6 +162,11 @@ the same cell) puts that rain into the tanks as well.
   (without the levees), include the area of the levees in c.
 - The rain sent into the paddy fields does not infiltrate or evaporate on the way. For a catchment that infiltrates (fields,
   upland), give its area multiplied by a runoff coefficient as c.
+- The tanks are per cell, so where a plot straddles the boundary of coarse cells, the rain of the catchment gathers in the
+  tank of a cell with a small paddy fraction (containing only part of a plot and farm roads or upland), which then
+  overflows easily (the spreading of water within a plot is not represented). In D of the example
+  [paddy_dam](../../../examples/paddy_dam/en/README.md), this was the largest factor in the difference from the
+  computation that resolves the plots (developer.md §119.14).
 - With water quality, the substance of the rain on the catchment also enters the pools of the tanks in the same proportion
   as the water. The "1 − area fraction" applied to raindrop erosion does not include c (raindrops also hit the catchment).
 - 0 ≤ c, a + c ≤ the void ratio gv, and c > 0 only on cells with paddy fields (a > 0) (otherwise the run stops at

@@ -250,11 +250,16 @@ Table 3 (where the water went up to 48 h, m³; rain on the district 125,194 m³)
   the paddy-field dams. In representation A, the rain on the non-paddy part of a cell becomes surface water, and there is
   no path from it into the paddy tanks of the same cell. With the catchment fraction, that rain (9,090 m³) enters the
   tanks (water into the paddy fields 103,000 m³; 105,000 m³ in representation B), the maximum mean depth of the paddy
-  fields is 206 mm (210 mm in representation B), and with a maximum level of 0.10 m the settlement was not flooded. Likely
-  factors in the remaining difference (0.2 m in the maximum level) are 2,000 m³ less water entering the paddy fields (the
-  paddy area is 0.3 ha smaller because of the cap, and the rain of the traced catchment, 9,090 m³, is less than the inflow
-  over the levees of representation B, 10,707 m³) and the different representation of the drains (channel cells of 30 m
-  versus branch, main and small drains solved at 10 m); how much each contributes has not been separated.
+  fields is 206 mm (210 mm in representation B), and with a maximum level of 0.10 m the settlement was not flooded.
+  Separating the remaining difference (0.2 m in the maximum level; the trial runs of developer.md §119.14), the largest part
+  is overflow. In the outer columns and rows where a plot (30 m × 100 m) straddles the boundary of 30 m cells, only one
+  column of the plot shares a cell with farm roads and upland, and the tank of that cell receives 2–9 times the rain on the
+  paddy fields and overflows (2,831 m³ of overflow by 15 h; in representation B the road water spreads over the whole plot,
+  81 m³). Removing this concentration lowers the maximum level by about 0.17 m. Next is the shortage of water entering
+  the paddy fields: restoring the rain on the paddy area cut by the cap (0.34 ha) and on the east and south farm roads,
+  which the tracing sends one way only (in shallow water flow it divides between the paddy fields and the drains), lowers
+  it by about 0.09 m. In the opposite direction, more of the water outside the paddy fields stays on the surface of the
+  paddy cells in representation A and reaches the drains later, which lowers the peak level by about 0.07 m.
 - **The one-way mode stays dry in D by cancellation**: representation A in the one-way mode did not flood the settlement
   in D either (0.006 m), but its maximum level is 0.18 m, leaving only 0.004 m to the ground of the settlement. It stays
   dry although it lets the least water into the paddy fields of the three ways (93,700 m³) because the one-way mode
@@ -282,7 +287,13 @@ From result 2, here are hints for making inputs of representation A by coarsenin
   and does not represent the division of shallow water flow, and the rain of the catchment enters the tanks without
   travel time. A catchment on cells without paddy fields cannot be represented (none in this example). When the area
   fraction is given as the field surfaces (without the levees), include the area of the levees in the catchment fraction,
-  and multiply a catchment that infiltrates (fields, upland) by a runoff coefficient.
+  and multiply a catchment that infiltrates (fields, upland) by a runoff coefficient. The 0.01 left by the cap (0.99) on
+  cells made only of paddy fields is also levees, so include it in the catchment fraction (`catch30.txt` of this example
+  does not; including it lowers the maximum level in D by 0.03 m). Where rain divides to both sides, as on a farm road
+  between paddy fields and a drain, tracing it one way only underestimates the rain entering the paddy fields. On a cell with
+  a small paddy fraction (containing only part of a plot) and a large catchment fraction, the rain gathers in the tank of
+  that cell, which then overflows easily (the spreading of water over a plot that straddles cells is not represented; the
+  largest factor in the difference of D in result 2).
 - **The one-way mode helps only partly**: with the catchment fraction in the one-way mode, the maximum level in D becomes
   −0.11 m, close to representation B (−0.09 m), but the settlement depth in N stays 0.44 m (0.51 m in representation B).
   The one-way mode spreads and retains the surface water over the paddy part as well (result 2), so use the two-way mode
