@@ -169,6 +169,15 @@ module m_state
     real, allocatable :: pdfr(:,:)  ! 水田面積率 a (セル面積基底。帯+ハロ。地形変化 fn_geomorph と併用する
                                     ! ときだけ m_paddy_init が確保し、雨滴侵食(f_wash の雨滴の項・f_splash)
                                     ! に 1 − a を掛けるのに使う。§119.5)
+    ! 水質(fn_wq)と併用するときの水田の物質(段 4a。docs/paddy_plan.md §16.1、developer.md §119.10)。
+    ! 確保は m_paddy_init(水質が有効なときだけ)。cpn・cpd・pdfa はタンク(表現 A)のその種類の水田がある
+    ! 格子だけ、fmpd は A・B とも
+    real, allocatable :: cpn(:,:)   ! 通常の落水口の水田のタンクの物質 (g/m2。セル面積基底 = ため池の crs と同じ)
+    real, allocatable :: cpd(:,:)   ! 田んぼダムの落水口の水田のタンクの物質 (g/m2。同上)
+    real, allocatable :: pdfa(:,:,:) ! 種類ごとの水田面積率 (ish:ieh, jsh:jeh, 1:2。m_wq が水田の上の雨の物質を
+                                    ! タンクへ入れるのに使う)
+    real, allocatable :: fmpd(:,:)  ! 減水深で系外へ出た物質 (g/m2。セル面積基底。m_paddy が足し、m_wq が
+                                    ! 台帳に積んでゼロに戻す。fxr と同じ契約)
     real :: pdmean = 0.0     ! 領域平均の水田の貯留(m)。pd_active 時のみ更新
     ! 沿岸の波浪場(fn_wavefield。§90)の診断量。確保と wv_active の設定は m_wavefield_init
     ! (有効時のみ)。状態(ビン別のエネルギー)は t_wavefield の私有で、ここは書き出しと
@@ -1115,6 +1124,10 @@ subroutine m_state_dispose(s, p)
   if (allocated(s%hpd)) deallocate(s%hpd)
   if (allocated(s%pdv)) deallocate(s%pdv)
   if (allocated(s%pdfr)) deallocate(s%pdfr)
+  if (allocated(s%cpn)) deallocate(s%cpn)
+  if (allocated(s%cpd)) deallocate(s%cpd)
+  if (allocated(s%pdfa)) deallocate(s%pdfa)
+  if (allocated(s%fmpd)) deallocate(s%fmpd)
   if (allocated(s%wvh)) deallocate(s%wvh)
   if (allocated(s%wvdir)) deallocate(s%wvdir)
   if (allocated(s%wvub)) deallocate(s%wvub)

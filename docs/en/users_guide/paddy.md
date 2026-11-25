@@ -257,6 +257,31 @@ Outside the plots (farm roads, drains, settlements) it is the usual shallow wate
 channel mask with a subgrid width, but an outlet cannot point to a channel cell with a river bank (it would coincide with
 the wall of the bank).
 
+### Combination with water quality (fn_wq)
+
+When [water quality](wq.md) (`fn_wq`) is enabled, the water of the paddy fields also carries the substance (developer.md
+§119.10; design in docs/paddy_plan.md §16.1). The substance is the single substance of the water quality chapter, and its
+decay and settling coefficients are used as they are. There is no substance model specific to paddy fields (fertilizer,
+turbid water from puddling, leaching of pesticides, etc.); it is a generic form that does not fix the kind of substance.
+
+- **Tanks of A**: each class of tank has a pool of the substance, and the tank is fully mixed (concentration = mass of
+  the pool / volume of the tank water). The substance moves in the same proportion as the water (the same treatment as
+  intakes and pumps).
+  - The substance of the rain on the paddy fields (concentration in the rain `wq_rain_conc`) goes into the pools of the
+    tanks, and only the substance of the rain on the non-paddy part goes to the surface.
+  - Outlet flow and levee overflow go to the surface at the tank concentration, and the decrease in depth leaves the
+    system at the tank concentration.
+  - In the two-way mode, water flowing back through the outlets and water filling the paddy fields over the levees enter
+    the tanks at the surface concentration.
+  - First-order decay (`wq_thalf`, `wq_k20`) also acts on the pools, and single-phase settling (`wq_vs`) is applied
+    divided by the ponding depth of the tank.
+- **Plots of B**: the plot water is surface water, so rain, advection, decay and settling are as in the water quality
+  chapter. Only the decrease in depth takes the substance out of the system together with the water of the plot cells,
+  at the surface concentration.
+- **Concentration of the ponding before the rain**: `pd_wq_c0` (mg/L; default 0). In A it is the concentration of the
+  initial water of the tanks, in B the concentration of the water added to the plot cells (filled up to `pd_h0`). The
+  concentration of the initial surface water is `wq_c0` of water quality.
+
 ### Time step
 
 The tanks are explicit and use the same step $`\Delta t`$ as the shallow water flow. The outlet discharge changes
@@ -277,10 +302,18 @@ most half the difference of the levels of the two sides in one step (to prevent 
 | `paddy.csv` (every `dt_record`) | time(s), area1 and area2 (paddy area of each class, m²), rain (accumulated rain on the paddy fields, m³), outflow (accumulated outlet flow), spill (accumulated levee overflow), perc (accumulated decrease in depth), store1 and store2 (storage of each class, m³), residual (change of storage − (rain + inflow − outflow − spill − perc)), qsurf (net rate moved to the surface in the last step, m³/s; can be negative in the two-way mode), h1 and h2 (mean ponding depth of each class, mm), full1 and full2 (share of the paddy area filled to the levee height), inflow (accumulated inflow into the paddy fields through the outlets; two-way only), levee_in (accumulated inflow over the levees; two-way only) |
 | `H` (paddy cells in the two-way mode) | surface water depth (above the field surface): the depth on the non-paddy area while the level is below the levee crest, and the inundation depth over the whole cell above it |
 | S (S_surf) in the Log | surface water plus the storage of the paddy tanks (domain mean, m) |
+| c1 and c2 in `paddy.csv` (only with water quality) | mean concentration of the paddy water of each class (mg/L; total mass / total water). A: the tanks; B: the water of the plot cells |
+| mass_paddy_g and out_paddy_perc_g in `wq.csv` (only in runs with paddy-field dams; the last 2 columns) | current mass of the pools of the tanks of A (g; 0 for B, whose plot water is counted in the surface `mass_surface_g`), accumulated substance that left the system with the decrease in depth (g) |
 
 The accumulated values in `paddy.csv` start at the beginning of the run (at the restart when restarted). The
 ponding depths of the paddy tanks are saved with the state (`f_state_save`) in the private file `paddy.dat` and
-carried over on restart ([interruption and restart](restart.md)).
+carried over on restart ([interruption and restart](restart.md)). With water quality, the pools of the tanks are saved
+as well (a restart with water quality enabled differently from the saved state stops).
+
+**Reading the water quality balance**: add `mass_paddy_g` to the mass of the whole system in `wq.csv` and
+`out_paddy_perc_g` to the removals out of the system, and the balance of "Tips for reading and checking" in the
+[water quality](wq.md) chapter closes. The decay in the pools of the tanks is in `decay_g`, and the settling in
+`settle_g`. Transfers between the surface and the tanks are internal and have no columns.
 
 **Output of B**: the ponding depth of the plots is the water depth `H` itself (`Hpn` and `Hpd` are not written; S in the Log
 is the surface water with no tanks added). `paddy.csv` has the same columns with these meanings: area1 and area2 (plot area
@@ -344,8 +377,9 @@ levee height is the remaining free storage.
   rough estimate gives 4–12 minutes to fill a 100 m cell (80 % paddy) with an overflow depth of 5–10 cm, shorter than
   the time scale of a flood, but for shallow overflow lasting long the paddy fields fill too early. Below the levee
   crest, water flows only on the non-paddy area (the layout of drains and roads between the plots is not represented).
-  Sediment and solutes carried into the paddy fields by the flood are not represented (it cannot be combined with
-  suspended sediment or water quality).
+  Sediment carried into the paddy fields by the flood is not represented (it cannot be combined with suspended
+  sediment). Solutes are carried when it is combined with water quality ([Combination with water quality](#combination-with-water-quality-fn_wq)
+  above).
 - The discharge coefficients of devices vary from 0.40 to 0.88 with the product and the installation
   [^yoshikawa2009][^minakawa2022]. The default 0.6 is the value of the calculation program of the guide and is a starting
   point for calibration.
@@ -363,12 +397,12 @@ levee height is the remaining free storage.
 - The evapotranspiration of the plot water is treated as part of the decrease in depth, so B cannot be combined with
   evapotranspiration (`fn_evap`) or groundwater (`fn_gwflow`). It cannot be combined with landform change (`fn_geomorph`;
   bed load is not yet kept from crossing the levees) or the non-hydrostatic correction (`f_nonhydrostatic = 1`) either
-  (stops at start-up). Water quality (`fn_wq`) cannot be combined, as for A.
+  (stops at start-up).
 - Plot cells cannot be on the outermost rows and columns of the grid, next to sea cells or seaside cells (`fn_seaside`),
   nor on pond cells (`fn_rscap`) (stops at start-up). Plot numbers are integers from 0 to 16 777 215.
 
 **Restrictions on combinations**: only the ENC grid system (`f_gridsystem = 0`). It cannot be combined with nesting
-(multiple grids), water quality (`fn_wq`) or the two-layer fresh and salt water (`fn_salt`) (stops at start-up).
+(multiple grids) or the two-layer fresh and salt water (`fn_salt`) (stops at start-up).
 Paddy cells (area fraction > 0) cannot be on sea, channel (`fn_rw`), water level boundary, inflow boundary, source or
 structure cells, nor on zone cells of [VZ](vz.md) or of the [storage function method](sfm.md). The area fraction cannot
 exceed the void ratio of buildings `fn_gv` (paddy fields and buildings are different parts of the same cell). The
@@ -387,6 +421,28 @@ computed over the whole cell, so the soil of the paddy part is also eroded by th
 dissolution (`f_dissol`) is not changed (the settings driven by the rain amount count the rain on the paddy part, and the
 settings driven by the infiltration do not count the percolation of paddy fields).
 
+**Limits of the combination with water quality** (`fn_wq`; [Combination with water quality](#combination-with-water-quality-fn_wq) above)
+
+- The tanks of A are fully mixed, and the exchange of the substance with the soil of the field surface and the rice
+  plants (adsorption, release, resuspension) is not represented. High concentrations after puddling or fertilizing are
+  given only as the concentration of the ponding before the rain, `pd_wq_c0`.
+- The substance that settles in the tanks of A (`wq_vs`) is removed from the pools and does not go into the surface
+  accumulation pool (`f_wq_settle = 1`). Two-phase partitioning (`wq_kd`) is not treated in the tanks and does not settle
+  there (the particulate part leaves with the outlet flow like the dissolved part).
+- In the one-way mode of A, floods do not enter the paddy fields, so the substance of the flood does not enter the tanks
+  either (use the two-way mode).
+- The substance of the rain on the paddy fields enters the tanks after the water of the step has been moved. The
+  concentration of the outlet flow of that step comes out lower by the share of the rain water (an error of the time
+  splitting of one step).
+- When an initial water depth and the initial concentration of water quality `wq_c0` are given to paddy cells of the
+  two-way mode, the initial mass of water quality is set as `wq_c0` × depth (a rectangular conversion). Below the levee
+  crest the water is only on the non-paddy area, so the initial surface concentration becomes `wq_c0` divided by
+  1 − a/gv (a known simplification of the initial concentration of water quality).
+- No evapotranspiration is taken from the tanks (see "What cannot be represented" above), so concentration by
+  evaporation is not represented.
+- Maps of the tank concentrations are not written (only the class means c1 and c2 in `paddy.csv`; the concentration map
+  `C` is of the surface water).
+
 ## Parameters and the basis of their defaults
 
 The labels in the Basis column are explained in [How to read the basis of a default](../users_guide.md#how-to-read-the-basis-of-a-default).
@@ -404,6 +460,7 @@ The labels in the Basis column are explained in [How to read the basis of a defa
 | pd_hlev | 0.30 m | levee height (above the field surface) | **Literature** levees of about 30 cm in the guide[^maff2026][^maffplan] |
 | pd_h0 | level at which the outlet starts to drain | ponding depth before the run (above the field surface; same value for both classes; in B the plot cells are filled to this depth) | **Given** the default is normal ponding (height of the water-level board) |
 | pd_perc_mmd | 5 mm/d | decrease in depth (leaves the system) | **Literature** default of the calculation program of the guide[^maff2026] |
+| pd_wq_c0 | 0 mg/L | concentration of the substance in the ponding before the rain (only with water quality `fn_wq`; A: initial water of the tanks, B: water added to the plot cells) | **Given** |
 | f_pd_exchange | 0 | exchange of water between the surface and the paddy fields (0: one-way = rain only, 1: two-way = flood water also enters the paddy fields through the outlets and over the levees; A only) | **Method** the two-way mode is an original construction (docs/paddy_plan.md §13, developer.md §119.6) |
 | fn_pd_plot | — | map of plot numbers (representation B; 0 = not a paddy field, integers 1–16 777 215) | **Given** giving it selects B (exclusive with the area fraction) |
 | fn_pd_outlet | — | map of the directions of the outlets (B; 1–8 on the outlet cells, 0 elsewhere) | **Given** default: no outlets |
@@ -435,7 +492,7 @@ The labels in the Basis column are explained in [How to read the basis of a defa
 
 | Case | Contents | Key points |
 |---|---|---|
-| [test/paddy](../../../test/paddy/en/README.md) | drainage, equilibrium, overflow, maps, save → restore of a plot, two-way mode, resolved plots (B) | weir and V-notch against exact solutions (error of the explicit scheme ≤ 1.3×10⁻⁴), circular and rectangular holes and the separated type against independently solved reference solutions (within 3×10⁻⁸ relative), water conservation in a closed domain (7×10⁻¹⁵ m). In the two-way mode, backflow through the outlets against a reference solution (9×10⁻¹⁶ relative), no double counting when filled over the levees, water conservation with incoming flood water (8×10⁻¹⁴ m). In B, the drainage of a plot of 3000 m² against the exact solution (weir, 8.7×10⁻⁴ relative) and a reference solution (hole, 2×10⁻⁷ relative), plots without outlets keep their water at the levees and checkerboard corners, and water conservation and levelling out with levee overflow, backflow through an outlet and inflow over the levees. Bit-identical for np = 1, 2, 4 |
+| [test/paddy](../../../test/paddy/en/README.md) | drainage, equilibrium, overflow, maps, save → restore of a plot, two-way mode, resolved plots (B), combination with water quality | weir and V-notch against exact solutions (error of the explicit scheme ≤ 1.3×10⁻⁴), circular and rectangular holes and the separated type against independently solved reference solutions (within 3×10⁻⁸ relative), water conservation in a closed domain (7×10⁻¹⁵ m). In the two-way mode, backflow through the outlets against a reference solution (9×10⁻¹⁶ relative), no double counting when filled over the levees, water conservation with incoming flood water (8×10⁻¹⁴ m). In B, the drainage of a plot of 3000 m² against the exact solution (weir, 8.7×10⁻⁴ relative) and a reference solution (hole, 2×10⁻⁷ relative), plots without outlets keep their water at the levees and checkerboard corners, and water conservation and levelling out with levee overflow, backflow through an outlet and inflow over the levees. For water quality, first-order decay of the tank concentration against the exact solution (4×10⁻¹³ relative), the concentration of the water entering by backflow equal to the surface concentration, and the mass balance of wq.csv closing to the digits of the output (5×10⁻⁸ relative). Bit-identical for np = 1, 2, 4 |
 | [examples/paddy_dam](../../../examples/paddy_dam/en/README.md) | heavy rain on a lowland drainage district that can drain only through a pumping station (inland flooding) | with the plots resolved on a 10 m grid (B), compares the inundation of a settlement with normal outlets and with paddy-field dams (all, the upstream half, the downstream half), and with the same district solved by A on a 30 m grid (one-way and two-way) |
 
 ## References

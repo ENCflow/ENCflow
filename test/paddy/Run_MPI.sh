@@ -6,6 +6,8 @@
 # 雨滴侵食から水田の部分を外す検定(param_wash.txt・param_splash.txt。地盤高も np=1 とバイト比較)、
 # 双方向(二室化)の検定(param_tw_back・tw_flood・tw_drain。np=1 とバイト比較)、
 # 区画の解像(表現 B。§119.8。param_b_*.txt。区画・落水口・市松の角が帯の境にかかる。np=1 とバイト比較)、
+# 水質と併用するタンクのプールと区画の解像の減水深の持ち出し(param_wq_a・wq_tw・wq_b。np=1 とバイト比較)と
+# その保存 → 再開、
 # 保存 → 再開(np=1 とバイト比較)、rank0 が見つける停止と帯で見つける停止(全ランク同時の par_stop)も
 # MPI で確かめる。行は 8 なので np <= 4
 sdir=$(dirname "$(readlink -f "$0")")
@@ -101,6 +103,26 @@ for t in b_drain b_tight b_over b_back b_ext b_bank b_chain; do
         same_as_np1 "result_$t" "result_${t}_np1" paddy.csv Log.txt H9998.txt
     fi
 done
+
+# 水質(§119.10): 解析検定と np=1 とのバイト一致(タンクのプールと減水深の持ち出しの記録)
+for t in wq_a wq_tw wq_b; do
+    run "$np" $t param_$t.txt
+    python3 Check_paddy.py $t result_$t || exit 1
+    if [ "$np" != 1 ]; then
+        variant "param_$t.txt" "result_${t}_np1" "" > "$tmp"
+        run 1 "${t}_np1" "$tmp"
+        same_as_np1 "result_$t" "result_${t}_np1" paddy.csv Log.txt wq.csv
+    fi
+done
+
+# 水質のプールの保存 → 再開(np で保存・再開。帯ごとのプールを m_restart で集めて配る)と、連続計算(上の wq_a)の
+# ビット一致
+rm -rf save_wq
+variant param_wq_a.txt result_wq_save "s/^  tt = 43200$/  tt = 21600/;s|^  dir_result = 'result_wq_save'|&\n  dir_save = 'save_wq'\n  f_state_save = 1|" > "$tmp"
+run "$np" wq_save "$tmp"
+variant param_wq_a.txt result_wq_restart "s|^  dir_result = 'result_wq_restart'|&\n  dir_save = 'save_wq'\n  f_state_restore = 1|" > "$tmp"
+run "$np" wq_restart "$tmp"
+python3 Check_paddy.py restart_wq result_wq_a result_wq_restart || exit 1
 
 # 保存 → 再開(np で保存・再開)と、連続計算・np=1 とのビット一致
 rm -rf save_rs save_rs1

@@ -73,6 +73,11 @@
   ! groundwater; default 5)
   !pd_perc_mmd = 5.0
 
+  ! concentration of the substance in the ponding before the run (mg/L; only
+  ! with water quality fn_wq; A: initial water of the tanks, B: water added to
+  ! the plot cells; default 0)
+  !pd_wq_c0 = 0.0
+
   ! exchange of water between the surface and the paddy fields (default 0)
   !   0: one-way (only the rain on the paddy fields goes into the tanks)
   !   1: two-way (river and inland flood water also enters the paddy fields

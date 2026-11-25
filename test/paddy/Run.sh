@@ -18,9 +18,12 @@
 #                     穴の参照解)、畦畔・市松の角の水密、畦畔の越流と閉じた領域の水の保存、落水口からの逆流、畦畔を
 #                     越える外からの流入、畦畔と河川堤防が重なるエッジ、区画から区画への落水口(田越し)。b_back は sed で
 #                     6 h で保存 → 再開(連続計算とビット一致)
-#   停止の確認: 河道セル・面積率 > 空隙率・取組率の範囲・水質との併用・型 0 の流出量調整板・
+#   param_wq_*.txt    水質(fn_wq。§119.10): タンクの濃度の一次減衰(厳密解)、雨の物質、双方向の逆流で入る水の
+#                     濃度、区画の解像の減水深の持ち出し(wq.csv の質量の収支)。wq_a は sed で 6 h で保存 → 再開
+#   停止の確認: 河道セル・面積率 > 空隙率・取組率の範囲・型 0 の流出量調整板・
 #   面積率の二重指定・事前の湛水深 > 畦畔高・保存ファイルが残ったまま無効で再開、双方向の水田でない面積の割合
-#   < 0.05・ため池のセル・浮遊砂・非静水圧との併用・保存時とやり取りの方式が違う再開、B の入力の誤り(外周の
+#   < 0.05・ため池のセル・浮遊砂・非静水圧との併用・保存時とやり取りの方式が違う再開・保存時と水質の有無が違う
+#   再開、B の入力の誤り(外周の
 #   区画のセル・同じ区画や区画でないセルの落水口・区画の中で違う種類・整数でない区画番号・天端より高い先・
 #   向かい合う落水口)と A だけの入力との併用、B と非静水圧、保存時と表現が違う再開
 # reference 比較は Log.txt(ULP=0)。paddy.csv は 16 桁で書くため CPU(-march=native のベクトル化)が
@@ -113,6 +116,21 @@ python3 Check_paddy.py restart_b result_b_back result_b_restart || exit 1
 variant param_b_back.txt result_b_mode "s|^  dir_result = 'result_b_mode'|&\n  dir_save = 'save_b'\n  f_state_restore = 1|;s|^  fn_pd_plot = .*|  pd_frac = 0.5|;/^  fn_pd_outlet = /d" > "$tmp"
 expect_stop b_mode "$tmp" "the representation of the paddy fields differs from the saved state"
 
+# 水質(fn_wq。§119.10): タンクのプール(A の片方向・双方向)と区画の解像(B)の減水深の持ち出し
+for t in wq_a wq_rain wq_tw wq_b; do
+    run $t param_$t.txt
+    python3 Check_paddy.py $t result_$t || exit 1
+done
+# 水質のプールの保存 → 再開(6 h で保存し 12 h まで)と連続計算(wq_a の 12 h)の一致。水質を外した再開は停止
+rm -rf save_wq
+variant param_wq_a.txt result_wq_save "s/^  tt = 43200$/  tt = 21600/;s|^  dir_result = 'result_wq_save'|&\n  dir_save = 'save_wq'\n  f_state_save = 1|" > "$tmp"
+run wq_save "$tmp"
+variant param_wq_a.txt result_wq_restart "s|^  dir_result = 'result_wq_restart'|&\n  dir_save = 'save_wq'\n  f_state_restore = 1|" > "$tmp"
+run wq_restart "$tmp"
+python3 Check_paddy.py restart_wq result_wq_a result_wq_restart || exit 1
+variant param.txt result_wq_mode "s|^  dir_result = 'result_wq_mode'|&\n  dir_save = 'save_wq'\n  f_state_restore = 1|;s/^  pd_perc_mmd = 0.0 .*/  pd_perc_mmd = 5.0/" > "$tmp"
+expect_stop wq_mode "$tmp" "water quality (fn_wq) differs from the saved state"
+
 # 保存 → 再開(6 h で保存し 12 h まで)と、連続計算(12 h)のビット一致
 rm -rf save_rs
 variant param_steady.txt result_rs_cont "s/^  tt = 172800$/  tt = 43200/" > "$tmp"
@@ -132,9 +150,6 @@ variant param_mix.txt result_overgv "s/'frac_mix.txt'/'frac_over_gv.txt'/" > "$t
 expect_stop overgv "$tmp" "exceeds the void ratio gv"
 variant param_mix.txt result_adoptbad "s/'adopt_mix.txt'/'adopt_bad.txt'/" > "$tmp"
 expect_stop adoptbad "$tmp" "the adoption ratio must satisfy 0 <= r <= 1"
-variant param.txt result_wq "s|^  fn_paddy = '-'|&\n  fn_wq = '-'|" > "$tmp"
-printf "\n&list_wq\n/\n" >> "$tmp"          # 水質の初期化を通る最小の入力(空のグループ)
-expect_stop wq "$tmp" "fn_paddy cannot be combined with fn_wq"
 variant param.txt result_plate0 "s|^  pd_cw(1) = 0.6|&\n  pd_plate_h(1) = 0.2|" > "$tmp"
 expect_stop plate0 "$tmp" "are for the separated type"
 variant param_mix.txt result_twofrac "s|^  fn_pd_frac = 'frac_mix.txt'|&\n  pd_frac = 0.5|" > "$tmp"

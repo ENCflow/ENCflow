@@ -1,0 +1,62 @@
+!======================================================================
+! paddy: 水質(fn_wq)と双方向(二室化)の落水口からの逆流(Check_paddy.py wq_tw。developer.md §119.10)
+!
+!   param_tw_back.txt(四辺が壁の箱、面積率 0.6、地表の水深 0.15 m、水田は空。排水路の水が水田へ逆流する 4 h)に、
+!   地表の水の初めの濃度 5 mg/L を足す(減衰なし)。
+!   確認: 水田に入った水の濃度 = 5 mg/L(c1)、閉じた箱の質量の保存(地表 + タンク = 初めの質量)。
+!======================================================================
+&list_sysparam
+  f_gridsystem = 0
+  dt = 2.0
+  t0 = 0
+  tt = 14400
+  dt_disp = 1800
+  dt_file = 14400
+  dt_recrd = 600
+  fn_geoinfo = '-'
+  fn_initial = '-'
+  fn_boundary = '-'
+  fn_paddy = '-'
+  fn_wq = '-'
+  dir_data = 'data_paddy'
+  dir_result = 'result_wq_tw'
+  f_disp_debug = 1
+  f_check_cfl = 0
+  dd = 0.0001
+  dv = 0.0001
+  vv = 0.01
+/
+&list_initial
+  f_htype = 0
+  h0 = 0.15
+/
+&list_geoinfo
+  nx = 10
+  ny = 8
+  dx = 10.0
+  dy = 10.0
+  f_ztype = 0
+  z0 = 0.0
+  f_masktype = 0
+  f_rntype = 0
+  rn0 = 0.03
+/
+&list_bound_edge
+/
+&list_paddy
+  pd_frac = 0.6
+  pd_adopt = 0.0
+  pd_aplot = 300.0
+  pd_hlev = 0.30
+  pd_h0 = 0.0
+  pd_perc_mmd = 0.0
+  f_pd_exchange = 1         ! 双方向(二室化)
+  pd_dev_type(1) = 0
+  pd_board_h(1) = 0.03
+  pd_board_w(1) = 0.30
+  pd_cw(1) = 0.6
+/
+
+&list_wq
+  wq_c0 = 5.0               ! 地表の水の初めの濃度 (mg/L)
+/

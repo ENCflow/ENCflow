@@ -113,8 +113,8 @@
     {
       "source": "docs/users_guide.md",
       "target": "docs/en/users_guide.md",
-      "source_sha256": "b4910bad9e25571d6a8b6115bbadeeb381e1b37be0fa83146a69271d13a18e68",
-      "target_sha256": "c648d9d2a6fe4a15b3dc456b071f1daee3bf9a1eaa94806b45eb2746b927f644",
+      "source_sha256": "446d35793215484f4591098e4ee7662482cebe71f4e52a942e543cc6ff6a3e2b",
+      "target_sha256": "77ef6cc0845c42bbf9e4d235e32013bd47c290d922905780a71f3d4fb7d24c72",
       "reviewer": "Claude (Claude Code session; full-text content and lexical review, no model execution)",
       "method": "assistant",
       "reviewed_on": "2026-11-25"
@@ -428,8 +428,8 @@
     {
       "source": "docs/users_guide/paddy.md",
       "target": "docs/en/users_guide/paddy.md",
-      "source_sha256": "e22a9832f4091a856d2e5f1d66ab6402ce55c14346c0d45553d2a837398c80fd",
-      "target_sha256": "1e6be93f1a64380b9750de85e39a700da3b31c55f5d5932e25002f4103f32f03",
+      "source_sha256": "92dfa034982d054b8d5d198365059945275e3c84d252c5529f36601a33d41d48",
+      "target_sha256": "53d813d490d68d9d6fe32458427aa38a9bcac5f61d4c322e8bd388f805681b40",
       "reviewer": "Claude (Claude Code session; full-text content and lexical review, no model execution)",
       "method": "assistant",
       "reviewed_on": "2026-11-25"
@@ -446,8 +446,8 @@
     {
       "source": "docs/users_guide/params_index.md",
       "target": "docs/en/users_guide/params_index.md",
-      "source_sha256": "1d261ed98f5171fd9c30c721cf4d92c2ade9d0a70db785c5a2f5d51560dc0774",
-      "target_sha256": "bdee169d15e29bcf902e716927bea24c0ff2e1621ef0a486fa73a4761c1d9df1",
+      "source_sha256": "2af450596583d4275dcc3ef909bcc64ae08201018c95fb174c96dde7835741ed",
+      "target_sha256": "00df75d119f65b50b72683ee2fb40c4231619685a2f795b03a8ff0818be58ee2",
       "reviewer": "Claude (Claude Code session; full-text content and lexical review, no model execution)",
       "method": "assistant",
       "reviewed_on": "2026-11-25"
@@ -626,11 +626,11 @@
     {
       "source": "docs/users_guide/wq.md",
       "target": "docs/en/users_guide/wq.md",
-      "source_sha256": "d6d5ff7e1c43ecea3951ed2530fba4636cf34c902c6b62274c3adf65d88fa381",
-      "target_sha256": "0afd26b632359a8b21d25331a257420f6153d040a835e652c4faf3989a04b0cb",
-      "reviewer": "Claude (Claude Code session; compared the Japanese and English changes for the water-quality substance carried by structures and withdrawals, 2026-11-04)",
+      "source_sha256": "9f360ff2d3f809ff792e50681dc6e7407409e90fb11b15a5f641be2afaaad6b8",
+      "target_sha256": "88bf0dcb3cc4fa6b26bd179f0e56f471bca45df2e1ee3954d0b0770bc4c29be4",
+      "reviewer": "Claude (Claude Code session; full-text content and lexical review, no model execution)",
       "method": "assistant",
-      "reviewed_on": "2026-11-04"
+      "reviewed_on": "2026-11-25"
     },
     {
       "source": "docs/users_guide/wq_models.md",
@@ -788,8 +788,8 @@
     {
       "source": "examples/List_samples/list_paddy.txt",
       "target": "examples/List_samples/en/list_paddy.txt",
-      "source_sha256": "c0db73ad6e54163b4aec5c25e2c3b863ce991430e8007a4d763de739638d1b38",
-      "target_sha256": "b746e6c66e2c0eb1ac68c96c822899cbb6f5aef3ece574e18c989c100c2b421f",
+      "source_sha256": "46538f871090f51ecc14674600aa738a2990ffa6fc9e70273e03ad6c45a25f74",
+      "target_sha256": "85ffd3131a7ed3cd4b4491a70f4c1dc5c1956eb71286e4d36f186ad9e41a8224",
       "reviewer": "Claude (Claude Code session; full-text content and lexical review, no model execution)",
       "method": "assistant",
       "reviewed_on": "2026-11-25"
@@ -4829,8 +4829,8 @@
     {
       "source": "test/paddy/README.md",
       "target": "test/paddy/en/README.md",
-      "source_sha256": "85172a30543edff4a5c7d0319861f863a2573b0042dc29b5958d29e8a6e256d3",
-      "target_sha256": "1d95deb7aa7ea31125d11d1113d3863f4fce66ec3b658da598d99e951c0444dc",
+      "source_sha256": "a65a512e8afe20660ca2024d33fcdd08f71d0e96d11ac113da3b76a64388d6c7",
+      "target_sha256": "a2a7bd804a924151c0382f91f7c606934bfdfd07aa2bfbb67e93b6d8ab16e3e8",
       "reviewer": "Claude (Claude Code session; full-text content and lexical review, no model execution)",
       "method": "assistant",
       "reviewed_on": "2026-11-25"

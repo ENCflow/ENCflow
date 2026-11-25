@@ -57,6 +57,12 @@ module m_wq
   !           同率移動で質量を同伴してセル別プール s%crs へ移す(§30.7。
   !           fxg と同型の契約)。満水後のあふれ水は吸収されないため
   !           プールは蓄積・減衰のみのシンク(蒸発は純水のみ = 連携不要)
+  !   水田:   田んぼダム(fn_paddy)のタンク(表現 A)は種類ごとの物質のプール s%cpn・s%cpd(セル面積基底)を
+  !           持つ。水と物質の出入り(落水・越流・双方向の流入・減水深)は水を動かす m_paddy が同じ割合で動かし
+  !           (取水・ポンプと同じ契約。§30.10)、本モジュールは水田の上の雨の物質をプールへ入れ(s%pdfa)、
+  !           プールに減衰・沈降を掛け、減水深で系外へ出た物質(s%fmpd。m_paddy が記録)を台帳に積む。
+  !           区画の解像(表現 B)の区画の水は地表の水のまま(減水深の持ち出しだけ同じ記録)。
+  !           docs/paddy_plan.md §16.1、developer.md §119.10
   !   蒸発:   純水のみが抜けるため質量は残留(濃縮)= 物理的に正しい。
   !           コード上の連携は不要
   !   save:   s%cq と cg をモジュール私有ファイル wq.dat で保存(§7 の
@@ -174,10 +180,12 @@ module m_wq
     integer :: ndam = 0
     type(t_wqdam), allocatable :: dam(:)
     logical :: have_rs = .false.            ! ため池(rscap)同伴の有効(§30.7)
+    logical :: have_pd = .false.            ! 田んぼダム(fn_paddy)の指定あり = wq.csv に水田の 2 列を足す
+                                            !   (§119.10。指定のない計算の wq.csv の形は変えない)
     real(real64) :: dam_decay = 0.0_real64  ! ダムプールの減衰消失の累積 (g。全ランク
                                             !   同値 = 台帳へは rank0 の出力時に加算)
     ! 診断(行部分和 real64。累積 m3 でなく質量 g)
-    real(real64), allocatable :: vrow(:,:)  ! (js:je, 1:21) 1=点源 2=面源 3=浸透(→cg)
+    real(real64), allocatable :: vrow(:,:)  ! (js:je, 1:22) 1=点源 2=面源 3=浸透(→cg)
                                             !   4=ダム捕捉 5=減衰消失 6=沈降
                                             !   7=分布面源 8=降雨沈着 9=蓄積(→bp)
                                             !   10=洗い出し(bp→cq) 13=湧出還元(cg→cq)
@@ -189,6 +197,7 @@ module m_wq
                                             !   21=取水で系外へ持ち出した量(吐口のない
                                             !   ポンプ・域外分水・内部ソースの吸い込み・
                                             !   井戸揚水。s%cqx から。§30.10)
+                                            !   22=水田の減水深で系外へ(s%fmpd から。§119.10)
     integer :: un = 0                       ! CSV 装置番号(rank0。open(newunit=) は負値。§22)
   end type
 
@@ -356,7 +365,7 @@ subroutine m_wq_init(wq, p, g, b, s)
   ! --- リスタート ---
   if (p%f_state_restore > 0) call restore_state(wq, p, g, s)
 
-  allocate(wq%vrow(dcp%js:dcp%je, 1:21), source = 0.0_real64)
+  allocate(wq%vrow(dcp%js:dcp%je, 1:22), source = 0.0_real64)
   ! 系外との出入りの記録場(swflow_enc の輸送カーネルと水位規定セルの置き直しが
   ! 行部分和で書き、m_wq_calc が台帳へ移してゼロ戻し。fxg と同型の契約。§30.9。
   ! 列 6 は取水で系外へ持ち出した量。boundary_h と m_gwflow_pump が書く。§30.10)
@@ -367,14 +376,24 @@ subroutine m_wq_init(wq, p, g, b, s)
 
   ! --- 診断 CSV(rank0。累積はラン先頭からの積算 = restore でリセット) ---
   !     系外との出入りの列(out_sea_g 以降)は末尾に追加した(§30.9。既存の
-  !     列の位置は変えない)。out_intake_g は §30.10 で最後に追加した
+  !     列の位置は変えない)。out_intake_g は §30.10 で、水田の 2 列(タンクのプールの質量・減水深の
+  !     持ち出し)は §119.10 で最後に追加した(田んぼダム fn_paddy を指定した計算だけ)
+  wq%have_pd = len_trim(p%fn_paddy) > 0
   if (is_root) then
     open(newunit=wq%un, file=trim(p%dir_result)//"/wq.csv", status='replace')
-    write(wq%un, '(a)') "time_s,in_point_g,in_area_g,in_map_g,in_rain_g,in_gwc_g," &
-                        //"in_bldup_g,wash_g,to_gw_g,seep_g,to_gwc_g,to_dam_g,rel_dam_g," &
-                        //"to_rs_g,decay_g,settle_g,mass_surface_g,mass_gw_g,mass_pool_g," &
-                        //"mass_dam_g,mass_rs_g,out_sea_g,out_edge_g,in_edge_g,out_stage_g," &
-                        //"in_stage_g,out_intake_g"
+    if (wq%have_pd) then
+      write(wq%un, '(a)') "time_s,in_point_g,in_area_g,in_map_g,in_rain_g,in_gwc_g," &
+                          //"in_bldup_g,wash_g,to_gw_g,seep_g,to_gwc_g,to_dam_g,rel_dam_g," &
+                          //"to_rs_g,decay_g,settle_g,mass_surface_g,mass_gw_g,mass_pool_g," &
+                          //"mass_dam_g,mass_rs_g,out_sea_g,out_edge_g,in_edge_g,out_stage_g," &
+                          //"in_stage_g,out_intake_g,mass_paddy_g,out_paddy_perc_g"
+    else
+      write(wq%un, '(a)') "time_s,in_point_g,in_area_g,in_map_g,in_rain_g,in_gwc_g," &
+                          //"in_bldup_g,wash_g,to_gw_g,seep_g,to_gwc_g,to_dam_g,rel_dam_g," &
+                          //"to_rs_g,decay_g,settle_g,mass_surface_g,mass_gw_g,mass_pool_g," &
+                          //"mass_dam_g,mass_rs_g,out_sea_g,out_edge_g,in_edge_g,out_stage_g," &
+                          //"in_stage_g,out_intake_g"
+    end if
   end if
 
   s%wq_active = .true.
@@ -969,7 +988,7 @@ subroutine m_wq_calc(wq, p, g, b, s, gwc, it)
   type(t_gwcond), intent(in) :: gwc    ! 管路層の状態(wq_gwc_conc の有効性検査。m_gwflow が所有)
   integer, intent(in) :: it
   integer :: i, j, k, m, nd, lk
-  real :: w, rate, fx, fp
+  real :: w, rate, fx, fp, a1, a2
   real(real64) :: acell, w8, m8
   real(real64) :: drow(dcp%js:dcp%je)
   real(real64) :: vout(wq%ndam), vrun(wq%ndam)
@@ -1086,6 +1105,20 @@ subroutine m_wq_calc(wq, p, g, b, s, gwc, it)
     !$omp end parallel do
   end if
 
+  ! (2p) 水田の減水深の持ち出し(§119.10): m_paddy が減水深に同伴させて系外へ出した物質 fmpd
+  !      (セル面積基底)を台帳に積んでゼロに戻す(fxr と同じ契約)
+  if (allocated(s%fmpd)) then
+    !$omp parallel do schedule(static) private(i, j)
+    do j = dcp%js, dcp%je
+      do i = g%wx(1,j), g%wx(2,j)
+        if (s%fmpd(i,j) == 0.0) cycle
+        wq%vrow(j,22) = wq%vrow(j,22) + real(s%fmpd(i,j), real64) * acell
+        s%fmpd(i,j) = 0.0
+      end do
+    end do
+    !$omp end parallel do
+  end if
+
   ! (2b) 管路連続体層との交換同伴(供給側固定濃度近似。fxci/fxco は
   !      conduit が記録 = fxg と同じ契約。消費後ゼロ戻し)
   if (wq%gwc_conc >= 0.0) then
@@ -1197,7 +1230,7 @@ subroutine m_wq_calc(wq, p, g, b, s, gwc, it)
       rate = wq%rain%q0
     end if
     if (rate > 0.0) then
-      !$omp parallel do schedule(static) private(i, j, w)
+      !$omp parallel do schedule(static) private(i, j, w, a1, a2)
       do j = dcp%js, dcp%je
         do i = g%wx(1,j), g%wx(2,j)
           if (g%sw(i,j) > 0) cycle
@@ -1205,6 +1238,17 @@ subroutine m_wq_calc(wq, p, g, b, s, gwc, it)
           if (s%pre(i,j) <= 0.0) cycle
           ! セルの質量 = 濃度×雨量×面積。柱状量へは実効面積で除す
           w = rate * s%pre(i,j) * p%dt * real(acell) / real(mass_of(g, s, i, j, 1.0))
+          if (allocated(s%pdfa)) then
+            ! 田んぼダムのタンク(表現 A)のあるセル: 水田の上の雨の物質はタンクのプールへ(セル面積基底。
+            ! 水は m_paddy が地表から回収してタンクに入れている。§119.10)
+            a1 = s%pdfa(i,j,1)
+            a2 = s%pdfa(i,j,2)
+            if (a1 + a2 > 0.0) then
+              w = w * (1.0 - a1 - a2)
+              if (allocated(s%cpn)) s%cpn(i,j) = s%cpn(i,j) + rate * s%pre(i,j) * p%dt * a1
+              if (allocated(s%cpd)) s%cpd(i,j) = s%cpd(i,j) + rate * s%pre(i,j) * p%dt * a2
+            end if
+          end if
           s%cq(i,j) = s%cq(i,j) + w
           wq%vrow(j,8) = wq%vrow(j,8) &
                          + real(rate, real64) * real(s%pre(i,j), real64) &
@@ -1381,6 +1425,39 @@ subroutine m_wq_calc(wq, p, g, b, s, gwc, it)
               wq%vrow(j,5) = wq%vrow(j,5) + real(w, real64) * acell
             end if
           end if
+          ! 田んぼダムのタンクのプール(セル面積基底。§119.10)
+          if (allocated(s%cpn)) then
+            if (s%cpn(i,j) > 0.0) then
+              w = s%cpn(i,j) * (1.0 - wq%fdec)
+              s%cpn(i,j) = s%cpn(i,j) - w
+              wq%vrow(j,5) = wq%vrow(j,5) + real(w, real64) * acell
+            end if
+          end if
+          if (allocated(s%cpd)) then
+            if (s%cpd(i,j) > 0.0) then
+              w = s%cpd(i,j) * (1.0 - wq%fdec)
+              s%cpd(i,j) = s%cpd(i,j) - w
+              wq%vrow(j,5) = wq%vrow(j,5) + real(w, real64) * acell
+            end if
+          end if
+        end if
+        ! 田んぼダムのタンクのプールの沈降(wq_vs だけ。湛水深で割る。沈んだ物質は田面に残り、台帳の
+        ! settle に数える。wq_kd の二相分配はタンクの中では扱わない。§119.10)
+        if (wq%vs > 0.0 .and. wq%kdsi <= 0.0) then
+          if (allocated(s%cpn)) then
+            if (s%cpn(i,j) > 0.0 .and. s%hpn(i,j) > p%dd) then
+              w = s%cpn(i,j) * min(wq%vs * p%dt / s%hpn(i,j), 1.0)
+              s%cpn(i,j) = s%cpn(i,j) - w
+              wq%vrow(j,6) = wq%vrow(j,6) + real(w, real64) * acell
+            end if
+          end if
+          if (allocated(s%cpd)) then
+            if (s%cpd(i,j) > 0.0 .and. s%hpd(i,j) > p%dd) then
+              w = s%cpd(i,j) * min(wq%vs * p%dt / s%hpd(i,j), 1.0)
+              s%cpd(i,j) = s%cpd(i,j) - w
+              wq%vrow(j,6) = wq%vrow(j,6) + real(w, real64) * acell
+            end if
+          end if
         end if
         if ((wq%vs > 0.0 .or. wq%kdsi > 0.0) .and. s%cq(i,j) > 0.0) then
           fx = swflow_vh(i, j, s%h(i,j))
@@ -1534,21 +1611,22 @@ subroutine m_wq_record(wq, p, g, s)
   type(t_sysparam), intent(in) :: p
   type(t_geoinfo), intent(in) :: g
   type(t_state), intent(in) :: s
-  real(real64) :: v(1:21), msur, mgw, mpool, mdam, mrs, acell
+  real(real64) :: v(1:22), msur, mgw, mpool, mdam, mrs, mpd, acell
   real(real64) :: rows(dcp%js:dcp%je), rows2(dcp%js:dcp%je), rows3(dcp%js:dcp%je)
-  real(real64) :: rows4(dcp%js:dcp%je)
+  real(real64) :: rows4(dcp%js:dcp%je), rows5(dcp%js:dcp%je)
   integer :: i, j, k
   if (p%initialized) continue  ! 引数未使用の警告を抑制
   if (.not. wq%enabled) return
 
   acell = real(g%dx, real64) * real(g%dy, real64)
-  do k = 1, 21
+  do k = 1, 22
     call par_sum_rows(wq%vrow(:,k), v(k))
   end do
   rows(:) = 0.0_real64
   rows2(:) = 0.0_real64
   rows3(:) = 0.0_real64
   rows4(:) = 0.0_real64
+  rows5(:) = 0.0_real64
   do j = dcp%js, dcp%je
     do i = g%wx(1,j), g%wx(2,j)
       if (g%x(i,j) <= 0) cycle
@@ -1559,12 +1637,16 @@ subroutine m_wq_record(wq, p, g, s)
       if (wq%have_pool) rows3(j) = rows3(j) + real(s%bp(i,j), real64) * acell
       ! crs も幾何面積基底(§30.7)
       if (wq%have_rs) rows4(j) = rows4(j) + real(s%crs(i,j), real64) * acell
+      ! 田んぼダムのタンクのプール(セル面積基底。§119.10)
+      if (allocated(s%cpn)) rows5(j) = rows5(j) + real(s%cpn(i,j), real64) * acell
+      if (allocated(s%cpd)) rows5(j) = rows5(j) + real(s%cpd(i,j), real64) * acell
     end do
   end do
   call par_sum_rows(rows, msur)
   call par_sum_rows(rows2, mgw)
   call par_sum_rows(rows3, mpool)
   call par_sum_rows(rows4, mrs)
+  call par_sum_rows(rows5, mpd)
   ! ダムプールの現在質量(M は全ランク同値 = 集計不要)と減衰の別置台帳
   mdam = 0.0_real64
   do k = 1, wq%ndam
@@ -1572,11 +1654,19 @@ subroutine m_wq_record(wq, p, g, s)
   end do
 
   if (is_root .and. wq%un /= 0) then
-    write(wq%un, '(f0.2,26(",",es15.7))') s%t, es_out([v(1), v(2), v(7), v(8), v(11), v(9), &
-                                          v(10), v(3), v(13), v(12), v(4), v(14), v(15), &
-                                          v(5) + wq%dam_decay, v(6), &
-                                          msur, mgw, mpool, mdam, mrs, &
-                                          v(16), v(17), v(18), v(19), v(20), v(21)])
+    if (wq%have_pd) then
+      write(wq%un, '(f0.2,28(",",es15.7))') s%t, es_out([v(1), v(2), v(7), v(8), v(11), v(9), &
+                                            v(10), v(3), v(13), v(12), v(4), v(14), v(15), &
+                                            v(5) + wq%dam_decay, v(6), &
+                                            msur, mgw, mpool, mdam, mrs, &
+                                            v(16), v(17), v(18), v(19), v(20), v(21), mpd, v(22)])
+    else
+      write(wq%un, '(f0.2,26(",",es15.7))') s%t, es_out([v(1), v(2), v(7), v(8), v(11), v(9), &
+                                            v(10), v(3), v(13), v(12), v(4), v(14), v(15), &
+                                            v(5) + wq%dam_decay, v(6), &
+                                            msur, mgw, mpool, mdam, mrs, &
+                                            v(16), v(17), v(18), v(19), v(20), v(21)])
+    end if
     flush(wq%un)
   end if
 end subroutine

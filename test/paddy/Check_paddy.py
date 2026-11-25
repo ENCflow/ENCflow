@@ -27,6 +27,11 @@ Gauss–Legendre の求積で直接求める(モデルは表と展開)。
   python3 Check_paddy.py b_bank   result_b_bank    区画の解像(B): 畦畔と河川堤防が重なるエッジは天端の大きい方
   python3 Check_paddy.py b_chain  result_b_chain   区画の解像(B): 区画から区画への落水口(田越し)、水深がそろうこと、保存
   python3 Check_paddy.py restart_b <連続の結果> <再開の結果>    区画の解像(B)の保存 → 再開のビット一致
+  python3 Check_paddy.py wq_a     result_wq_a      水質: タンクの濃度の一次減衰(厳密解)と質量の収支
+  python3 Check_paddy.py wq_rain  result_wq_rain   水質: 雨の物質でタンクの濃度が雨の濃度へ近づくことと質量の収支
+  python3 Check_paddy.py wq_tw    result_wq_tw     水質: 双方向の逆流で水田に入る水の濃度と閉じた箱の質量の保存
+  python3 Check_paddy.py wq_b     result_wq_b      水質: 区画の解像(B)の減水深の持ち出しを含む質量の収支
+  python3 Check_paddy.py restart_wq <連続の結果> <再開の結果>   水質のプールの保存 → 再開のビット一致
 """
 import array
 import math
@@ -723,6 +728,94 @@ def check_b_chain(res):
     check_ledger(rows)
 
 
+# ---------------------------------------------------------------- 水質(§119.10)
+def wq_closure(res, m0=None, tol=1e-6):
+    """wq.csv の質量の収支: 貯留(地表・タンク)+ 出 − 入 が一定(= 初めの質量 m0)。wq.csv は有効数字 8 桁
+    (es15.7)なので、許容は初めの質量か入力の累積の大きい方に対して相対 1e-6"""
+    rows = read_csv(os.path.join(res, "wq.csv"))
+    ins = ("in_point_g", "in_area_g", "in_map_g", "in_rain_g", "in_gwc_g", "in_bldup_g", "in_edge_g", "in_stage_g")
+    outs = ("decay_g", "settle_g", "out_sea_g", "out_edge_g", "out_stage_g", "out_intake_g", "out_paddy_perc_g")
+    vals = []
+    for r in rows:
+        stores = r["mass_surface_g"] + r["mass_paddy_g"]
+        vals.append(stores + sum(r[k] for k in outs) - sum(r[k] for k in ins))
+    ref = m0 if m0 is not None else vals[0]
+    scale = max(abs(ref), max(sum(r[k] for k in ins) for r in rows), 1e-30)
+    worst = max(abs(v - ref) for v in vals) / scale
+    if worst > tol:
+        fail("wq mass balance: stores + outputs - inputs drifts by %.3e (relative to %.6g g)" % (worst, ref))
+    ok("wq mass balance closes (stores + outputs - inputs = %.6f g, max relative drift %.1e)" % (ref, worst))
+    return rows
+
+
+def check_wq_a(res):
+    """事前の湛水 10 mg/L・半減期 6 h: タンクの濃度 = 10 × 2^(−t/6 h)(落水・減水深は濃度を変えない)"""
+    rows = read_csv(os.path.join(res, "paddy.csv"))
+    worst = 0.0
+    for r in rows:
+        ex = 10.0 * 2.0 ** (-r["time(s)"] / 21600.0)
+        worst = max(worst, abs(r["c1(mg/L)"] - ex) / ex)
+    if worst > 1e-9:
+        fail("tank concentration vs 10 x 2^(-t/6h): relative difference %.3e" % worst)
+    ok("tank concentration = 10 x 2^(-t/6 h) (%d records, max relative difference %.1e)" % (len(rows), worst))
+    m0 = 10.0 * 0.25 * 8000.0
+    w = wq_closure(res, m0)
+    last = w[-1]
+    if not (last["out_edge_g"] > 0.0 and last["out_paddy_perc_g"] > 0.0 and last["decay_g"] > 0.0):
+        fail("expected outflow over the open edges, percolation and decay of the substance")
+    ok("substance left by the open edges %.1f g, with percolation %.1f g, decayed %.1f g"
+       % (last["out_edge_g"], last["out_paddy_perc_g"], last["decay_g"]))
+
+
+def check_wq_rain(res):
+    """雨 2 mg/L、事前の湛水 0: タンクの濃度は 2 へ単調に近づく(通常の落水口は 48 h で相対 1e-3 以内)"""
+    rows = read_csv(os.path.join(res, "paddy.csv"))
+    for key in ("c1(mg/L)", "c2(mg/L)"):
+        cs = [r[key] for r in rows]
+        if any(cs[k + 1] < cs[k] - 1e-12 for k in range(len(cs) - 1)):
+            fail("%s does not increase monotonically" % key)
+        if max(cs) > 2.0 * (1.0 + 1e-3):
+            fail("%s exceeds the rain concentration: %.9f" % (key, max(cs)))
+    c1 = rows[-1]["c1(mg/L)"]
+    if abs(c1 - 2.0) > 2.0e-3:
+        fail("normal outlets: tank concentration %.9f is not within 1e-3 of the rain concentration 2" % c1)
+    ok("tank concentrations rise monotonically toward 2 mg/L (after 48 h: normal %.6f, paddy dam %.6f mg/L)"
+       % (c1, rows[-1]["c2(mg/L)"]))
+    wq_closure(res, 0.0)           # 事前の湛水も地表も初めは 0 g(雨の物質だけが入る)
+
+
+def check_wq_tw(res):
+    """双方向の逆流: 地表の水だけが水田に入るので、タンクの濃度 = 地表の初めの濃度(初めの地表の質量 / 地表の水の
+    量。畦畔より下の水は水田でない面積だけにあるので (1 − 0.6) × 0.15 × 8000 m3)。閉じた箱の質量は一定。
+    初めの地表の質量は m_wq が wq_c0 × h(矩形の換算)で置くので、初めの濃度は wq_c0 × h / vh = 12.5 mg/L に
+    なる(水質の初期濃度の既知の簡略化。ユーザーガイドの田んぼダムの章「水質との併用」)。検定はこの換算に
+    よらないよう、初めの質量から濃度を求める"""
+    w = read_csv(os.path.join(res, "wq.csv"))
+    m0 = w[0]["mass_surface_g"]
+    c0 = m0 / ((1.0 - 0.6) * 0.15 * 8000.0)
+    rows = read_csv(os.path.join(res, "paddy.csv"))
+    c1 = rows[-1]["c1(mg/L)"]
+    if not rows[-1]["inflow(m3)"] > 0.0:
+        fail("no backflow into the paddy tanks")
+    if abs(c1 - c0) > 1.0e-6 * c0:
+        fail("tank concentration %.12f differs from the initial surface concentration %.12f mg/L" % (c1, c0))
+    ok("water entering the paddy tanks by backflow carries the surface concentration (tank %.9f, surface %.9f mg/L)"
+       % (c1, c0))
+    wq_closure(res, m0)
+
+
+def check_wq_b(res):
+    """B: 区画の事前の湛水 10 mg/L・雨 2 mg/L・減水深の持ち出し: 閉じた領域の質量の収支、区画の水の濃度は 2〜10"""
+    rows = read_csv(os.path.join(res, "paddy.csv"))
+    for r in rows:
+        if not (2.0 - 1e-9 <= r["c1(mg/L)"] <= 10.0 + 1e-9):
+            fail("plot water concentration %.9f outside 2..10 mg/L at t = %.0f s" % (r["c1(mg/L)"], r["time(s)"]))
+    ok("plot water concentration stays within 2..10 mg/L (end %.4f mg/L)" % rows[-1]["c1(mg/L)"])
+    w = wq_closure(res, 10.0 * 0.28 * 2500.0)
+    if not w[-1]["out_paddy_perc_g"] > 0.0:
+        fail("no substance left with the percolation")
+
+
 def main():
     if len(sys.argv) < 3:
         print(__doc__)
@@ -746,6 +839,13 @@ def main():
         check_restart(sys.argv[2], sys.argv[3])
     elif cmd == "restart_b":
         check_restart(sys.argv[2], sys.argv[3], files=("H9998.txt",))
+    elif cmd == "restart_wq":
+        check_restart(sys.argv[2], sys.argv[3], files=("H9998.txt", "Hpn9998.txt", "C9998.txt"))
+        a = read_csv(os.path.join(sys.argv[2], "paddy.csv"))[-1]["c1(mg/L)"]
+        b = read_csv(os.path.join(sys.argv[3], "paddy.csv"))[-1]["c1(mg/L)"]
+        if a != b:
+            fail("tank concentration at the end differs: %.17g vs %.17g" % (a, b))
+        ok("tank concentration at the end identical (%.12f mg/L)" % a)
     elif cmd == "b_drain":
         check_b_drain(sys.argv[2])
     elif cmd == "b_tight":
@@ -760,6 +860,14 @@ def main():
         check_b_bank(sys.argv[2])
     elif cmd == "b_chain":
         check_b_chain(sys.argv[2])
+    elif cmd == "wq_a":
+        check_wq_a(sys.argv[2])
+    elif cmd == "wq_rain":
+        check_wq_rain(sys.argv[2])
+    elif cmd == "wq_tw":
+        check_wq_tw(sys.argv[2])
+    elif cmd == "wq_b":
+        check_wq_b(sys.argv[2])
     elif cmd in ("wash", "splash"):
         check_erosion(sys.argv[2], cmd)
     elif cmd == "tw_back":

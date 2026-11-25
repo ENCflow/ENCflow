@@ -53,7 +53,13 @@ module m_paddy
   !   ごと。全ランク同値を rank0 が書く)は雨の回収・落水・越流・減水深の累積(計算開始・再開から)、
   !   種類ごとの貯留・平均湛水深・満水の面積の割合と収支の残差。分布 Hpn・Hpd は m_output が書く。
   !   保存・復元は私有ファイル paddy.dat(契約 5。湛水深の 2 面)。
-  ! 【併用】ENC のみ。ネスト(複数インスタンス)・水質・淡塩とは init で停止する。水田のセルは
+  ! 【水質(fn_wq。段 4a。paddy_plan.md §16.1、developer.md §119.10)】A のタンクは種類ごとの物質のプール
+  !   s%cpn・s%cpd(セル面積基底 g/m2)を持ち、本モジュールが水と同じ割合で物質を動かす(落水・越流はタンクの
+  !   濃度で地表の cq へ、双方向の流入は地表の濃度でタンクへ、減水深はタンクの濃度で系外へ = s%fmpd に記録)。
+  !   水田の上の雨の物質は m_wq がプールへ直接入れる(s%pdfa。m_wq は本モジュールの後に雨の物質を足すので、
+  !   雨の回収は水だけを動かす)。減衰・沈降は m_wq。B は区画の水が地表の水なので、減水深に同伴する物質だけを
+  !   動かす(s%fmpd)。事前の湛水の濃度は pd_wq_c0(既定 0)
+  ! 【併用】ENC のみ。ネスト(複数インスタンス)・淡塩とは init で停止する。水田のセルは
   !   海・河道(rw)・境界(水位規定・区間流入)・ソース・構造物のセルと、VZ・貯留関数の区画セルに
   !   置けない(雨の回収が boundary_h の式と一致する前提)。面積率は空隙率 gv を超えない。
   !   蒸発散はタンクから引かない(段 4)。B は、A の制限に加えて、地形変化・蒸発散・地下水・
@@ -87,7 +93,8 @@ module m_paddy
   public :: m_paddy_record
   public :: m_paddy_dispose
 
-  integer, parameter :: save_version = 2026112501 ! paddy.dat の形式の版(2026-11-25 に表現の印を足した)
+  integer, parameter :: save_version = 2026112502 ! paddy.dat の形式の版(2026-11-25 に表現の印と、水質の
+                                                   !   タンクのプールを足した)
   integer, parameter :: nrow = 7                   ! 台帳の行部分和の列数
   real, parameter :: pd_smin = 0.05                ! 双方向の水田のセルの、水田でない面積の割合の下限(独自の目安)
   integer, parameter :: pid_max = 16777215         ! 区画番号の上限(単精度の実数で正確に読める 2^24 − 1)
@@ -106,6 +113,8 @@ module m_paddy
     type(t_gtab) :: gt                         ! 円の穴の積分の表(円の穴を使うときだけ)
     integer :: exch = 0                        ! 地表と水田のやり取り 0: 片方向、1: 双方向(二室化)
     integer :: rep = 0                         ! 表現 0: A(サブグリッドのタンク)、1: B(区画の解像)
+    logical :: wq = .false.                    ! 水質(fn_wq)と併用する(物質のプールと減水深の持ち出し)
+    real :: c0 = 0.0                           ! 事前の湛水の物質の濃度 (mg/L = g/m3)
     real :: aplot = 0.0                        ! 代表区画面積 (m2)
     real :: hlev = 0.0                         ! 畦畔高 (m)
     real :: perc = 0.0                         ! 減水深 (m/s)
@@ -172,6 +181,16 @@ subroutine m_paddy_init(pd, p, g, b, s, multi, vzr, sfr)
   allocate(s%pdv(dcp%ish:dcp%ieh, dcp%jsh:dcp%jeh), source = 0.0)
   if (pd%have(1)) allocate(s%hpn(dcp%ish:dcp%ieh, dcp%jsh:dcp%jeh), source = 0.0)
   if (pd%have(2)) allocate(s%hpd(dcp%ish:dcp%ieh, dcp%jsh:dcp%jeh), source = 0.0)
+  ! 水質と併用するときのタンクの物質のプール(§119.10。水田の上の雨の物質を m_wq がプールへ入れるための
+  ! 種類ごとの面積率と、減水深の持ち出しの記録)
+  call setup_wq(pd, list, s)
+  if (pd%wq) then
+    allocate(s%pdfa(dcp%ish:dcp%ieh, dcp%jsh:dcp%jeh, 1:2), source = 0.0)
+    s%pdfa(:,:,1) = pd%fr1(:,:)
+    s%pdfa(:,:,2) = pd%fr2(:,:)
+    if (pd%have(1)) allocate(s%cpn(dcp%ish:dcp%ieh, dcp%jsh:dcp%jeh), source = 0.0)
+    if (pd%have(2)) allocate(s%cpd(dcp%ish:dcp%ieh, dcp%jsh:dcp%jeh), source = 0.0)
+  end if
   if (p%f_state_restore > 0) then
     call restore_state(pd, p, s)
   else
@@ -185,6 +204,11 @@ subroutine m_paddy_init(pd, p, g, b, s, multi, vzr, sfr)
         end if
       end do
     end do
+    ! 事前の湛水の物質(濃度 pd_wq_c0 × 湛水 × 面積率。セル面積基底)
+    if (pd%wq) then
+      if (pd%have(1)) s%cpn(:,:) = pd%c0 * s%hpn(:,:) * pd%fr1(:,:)
+      if (pd%have(2)) s%cpd(:,:) = pd%c0 * s%hpd(:,:) * pd%fr2(:,:)
+    end if
   end if
   do j = dcp%jsh, dcp%jeh
     do i = dcp%ish, dcp%ieh
@@ -220,7 +244,7 @@ subroutine m_paddy_calc(pd, p, g, s)
   type(t_geoinfo), intent(in) :: g
   type(t_state), intent(inout) :: s
   integer :: i, j
-  real :: dt, a, rain, hd, dsur, f, dv, sp, pc, st
+  real :: dt, a, rain, hd, dsur, f, dv, sp, pc, st, hb, msur
   real(real64) :: rr(1:nrow)
 
   if (.not. pd%enabled) return
@@ -233,7 +257,7 @@ subroutine m_paddy_calc(pd, p, g, s)
     return
   end if
   dt = p%dt
-  !$omp parallel do schedule(dynamic) private(i, j, a, rain, hd, dsur, f, dv, sp, pc, st, rr)
+  !$omp parallel do schedule(dynamic) private(i, j, a, rain, hd, dsur, f, dv, sp, pc, st, rr, hb, msur)
   do j = dcp%js, dcp%je
     rr(:) = 0.0_real64
     do i = g%wx(1,j), g%wx(2,j)
@@ -245,11 +269,14 @@ subroutine m_paddy_calc(pd, p, g, s)
       hd = max(s%h(i,j), 0.0)
       dsur = 0.0
       st = 0.0
+      msur = 0.0
       ! (2)〜(4) 種類ごとのタンク
       if (pd%have(1)) then
         f = pd%fr1(i,j)
         if (f > 0.0) then
+          hb = s%hpn(i,j)
           call tank_step(pd, pd%dev(1), s%hpn(i,j), a / s%gv(i,j), rain, hd, dt, dv, sp, pc)
+          if (pd%wq) call pool_move(s%cpn(i,j), hb + rain, dv, sp, pc, msur, s%fmpd(i,j))
           dsur = dsur + f * (dv + sp)
           st = st + f * s%hpn(i,j)
           rr(2) = rr(2) + real(f * dv, real64)
@@ -260,7 +287,9 @@ subroutine m_paddy_calc(pd, p, g, s)
       if (pd%have(2)) then
         f = pd%fr2(i,j)
         if (f > 0.0) then
+          hb = s%hpd(i,j)
           call tank_step(pd, pd%dev(2), s%hpd(i,j), a / s%gv(i,j), rain, hd, dt, dv, sp, pc)
+          if (pd%wq) call pool_move(s%cpd(i,j), hb + rain, dv, sp, pc, msur, s%fmpd(i,j))
           dsur = dsur + f * (dv + sp)
           st = st + f * s%hpd(i,j)
           rr(2) = rr(2) + real(f * dv, real64)
@@ -274,6 +303,7 @@ subroutine m_paddy_calc(pd, p, g, s)
       s%h(i,j) = s%h(i,j) + dsur / s%gv(i,j)
       s%e(i,j) = s%z(i,j) + s%h(i,j)
       s%pdv(i,j) = st
+      if (pd%wq) s%cq(i,j) = s%cq(i,j) + msur / s%gv(i,j)   ! タンクから出た物質(cq は h と同じ基底)
     end do
     pd%rows(j,1:4) = pd%rows(j,1:4) + rr(1:4) * pd%dxdy
     pd%rows(j,5) = rr(5) * pd%dxdy
@@ -294,7 +324,7 @@ subroutine m_paddy_record(pd, p, g, s)
   type(t_sysparam), intent(in) :: p
   type(t_geoinfo), intent(in) :: g
   type(t_state), intent(in) :: s
-  real(real64) :: tot(1:nrow), st(1:2), fu(1:2), res, hm(1:2), ff(1:2)
+  real(real64) :: tot(1:nrow), st(1:2), fu(1:2), res, hm(1:2), ff(1:2), cm(1:2), cw(1:2), cc(1:2)
   real(real64), allocatable :: r1(:), srow(:,:)
   real :: hfull
   integer :: i, j, k
@@ -334,6 +364,18 @@ subroutine m_paddy_record(pd, p, g, s)
     call par_sum_rows(r1, fu(k))
     fu(k) = fu(k) * pd%dxdy
   end do
+  ! 水質と併用するときの種類ごとの水田の水の平均濃度 (mg/L = g/m3。物質の総量 / 水の総量。§119.10)
+  if (pd%wq) then
+    call wq_rows(pd, g, s, srow)
+    do k = 1, 2
+      r1(:) = srow(:,k)
+      call par_sum_rows(r1, cm(k))
+      r1(:) = srow(:,k+2)
+      call par_sum_rows(r1, cw(k))
+      cc(k) = 0.0_real64
+      if (cw(k) > 0.0_real64) cc(k) = cm(k) / cw(k)
+    end do
+  end if
   if (.not. is_root) return
   res = (st(1) + st(2)) - pd%store0 - (tot(1) - tot(2) - tot(3) - tot(4)) - (tot(6) + tot(7))
   do k = 1, 2
@@ -344,10 +386,49 @@ subroutine m_paddy_record(pd, p, g, s)
       ff(k) = fu(k) / pd%area(k)
     end if
   end do
-  write(pd%un_csv, '(f0.2,16(",",es23.15))') s%t, &
-        es_out([pd%area(1), pd%area(2), tot(1), tot(2), tot(3), tot(4), st(1), st(2), res, &
-                tot(5) / real(p%dt, real64), hm(1), hm(2), ff(1), ff(2), tot(6), tot(7)])
+  if (pd%wq) then
+    write(pd%un_csv, '(f0.2,18(",",es23.15))') s%t, &
+          es_out([pd%area(1), pd%area(2), tot(1), tot(2), tot(3), tot(4), st(1), st(2), res, &
+                  tot(5) / real(p%dt, real64), hm(1), hm(2), ff(1), ff(2), tot(6), tot(7), cc(1), cc(2)])
+  else
+    write(pd%un_csv, '(f0.2,16(",",es23.15))') s%t, &
+          es_out([pd%area(1), pd%area(2), tot(1), tot(2), tot(3), tot(4), st(1), st(2), res, &
+                  tot(5) / real(p%dt, real64), hm(1), hm(2), ff(1), ff(2), tot(6), tot(7)])
+  end if
   flush(pd%un_csv)
+end subroutine
+
+
+!----------------------------------------------------------------------
+! 水質の行部分和(§119.10): 種類ごとの物質(列 1・2)と水(列 3・4)。セル面積基底。A はタンクのプールと
+! タンクの水、B は区画のセルの地表の物質(cq × gv)と水(gv × h)
+!----------------------------------------------------------------------
+subroutine wq_rows(pd, g, s, srow)
+  type(t_paddy), intent(in) :: pd
+  type(t_geoinfo), intent(in) :: g
+  type(t_state), intent(in) :: s
+  real(real64), intent(inout) :: srow(dcp%js:, 1:)
+  integer :: i, j, c
+  srow(:,:) = 0.0_real64
+  do j = dcp%js, dcp%je
+    do i = g%wx(1,j), g%wx(2,j)
+      if (pd%rep == 1) then
+        c = chn%pcl(i,j)
+        if (c <= 0) cycle
+        srow(j,c) = srow(j,c) + real(s%cq(i,j) * s%gv(i,j), real64)
+        srow(j,c+2) = srow(j,c+2) + real(s%gv(i,j) * s%h(i,j), real64)
+      else
+        if (pd%have(1)) then
+          srow(j,1) = srow(j,1) + real(s%cpn(i,j), real64)
+          srow(j,3) = srow(j,3) + real(pd%fr1(i,j) * s%hpn(i,j), real64)
+        end if
+        if (pd%have(2)) then
+          srow(j,2) = srow(j,2) + real(s%cpd(i,j), real64)
+          srow(j,4) = srow(j,4) + real(pd%fr2(i,j) * s%hpd(i,j), real64)
+        end if
+      end if
+    end do
+  end do
 end subroutine
 
 
@@ -389,11 +470,12 @@ subroutine calc_twoway(pd, p, g, s)
   integer :: i, j, c
   real :: dt, a, rain, gv, vh, vh0, hd, r, q, sp, pc, fill, wv, dtot, phi, vcrest
   real :: f(1:pd_nclass), tk(1:pd_nclass), qd(1:pd_nclass)
+  real :: cqv, pl(1:pd_nclass), w                ! 水質: 地表の物質(cq の基底)、タンクのプール(セル面積基底)
   real(real64) :: rr(1:nrow)
 
   dt = p%dt
   !$omp parallel do schedule(dynamic) private(i, j, c, a, rain, gv, vh, vh0, hd, r, q, sp, pc, fill, wv, &
-  !$omp                                        dtot, phi, vcrest, f, tk, qd, rr)
+  !$omp                                        dtot, phi, vcrest, f, tk, qd, rr, cqv, pl, w)
   do j = dcp%js, dcp%je
     rr(:) = 0.0_real64
     do i = g%wx(1,j), g%wx(2,j)
@@ -418,6 +500,13 @@ subroutine calc_twoway(pd, p, g, s)
       do c = 1, pd_nclass
         if (f(c) > 0.0) tk(c) = tk(c) + rain
       end do
+      ! 水質(§119.10): 地表の物質とタンクのプールを水と同じ順に動かす(水田の上の雨の物質は m_wq がプールへ)
+      if (pd%wq) then
+        cqv = s%cq(i,j)
+        pl(:) = 0.0
+        if (pd%have(1)) pl(1) = s%cpn(i,j)
+        if (pd%have(2)) pl(2) = s%cpd(i,j)
+      end if
       ! (2) 落水口(両向き。水位の高い側を上流として装置則を使う)。種類ごとにステップの初めの水位から求め、
       !     陽解法の上限は両側の貯留(タンク、地表 gv·σ(h))で水位差の半分(全水田の面積で数える)
       r = a / (gv * sect_sig(s, i, j, hd))
@@ -439,6 +528,17 @@ subroutine calc_twoway(pd, p, g, s)
       end do
       do c = 1, pd_nclass
         if (f(c) <= 0.0) cycle
+        if (pd%wq) then
+          if (qd(c) > 0.0) then                          ! タンク → 地表(タンクの濃度)
+            w = pl(c) * min(qd(c) / tk(c), 1.0)
+            pl(c) = pl(c) - w
+            cqv = cqv + w / gv
+          else if (qd(c) < 0.0 .and. vh > 0.0) then       ! 地表 → タンク(地表の濃度)
+            w = cqv * min(-f(c) * qd(c) / gv / vh, 1.0)
+            cqv = cqv - w
+            pl(c) = pl(c) + w * gv
+          end if
+        end if
         tk(c) = tk(c) - qd(c)
         vh = vh + f(c) * qd(c) / gv
       end do
@@ -449,6 +549,11 @@ subroutine calc_twoway(pd, p, g, s)
         if (f(c) <= 0.0) cycle
         if (tk(c) > pd%hlev) then
           sp = tk(c) - pd%hlev
+          if (pd%wq) then                                ! 越流(タンクの濃度で地表へ)
+            w = pl(c) * min(sp / tk(c), 1.0)
+            pl(c) = pl(c) - w
+            cqv = cqv + w / gv
+          end if
           tk(c) = pd%hlev
           vh = vh + f(c) * sp / gv
           rr(3) = rr(3) + real(f(c) * sp, real64)
@@ -467,6 +572,11 @@ subroutine calc_twoway(pd, p, g, s)
           do c = 1, pd_nclass
             if (f(c) <= 0.0) cycle
             fill = phi * (pd%hlev - tk(c))
+            if (pd%wq .and. vh > 0.0) then               ! 畦畔を越える満水(地表の濃度でタンクへ)
+              w = cqv * min(f(c) * fill / gv / vh, 1.0)
+              cqv = cqv - w
+              pl(c) = pl(c) + w * gv
+            end if
             if (phi >= 1.0) then
               tk(c) = pd%hlev
             else
@@ -482,6 +592,11 @@ subroutine calc_twoway(pd, p, g, s)
       do c = 1, pd_nclass
         if (f(c) <= 0.0) cycle
         pc = min(pd%perc * dt, tk(c))
+        if (pd%wq .and. pc > 0.0) then                   ! タンクの濃度で系外へ
+          w = pl(c) * min(pc / tk(c), 1.0)
+          pl(c) = pl(c) - w
+          s%fmpd(i,j) = s%fmpd(i,j) + w
+        end if
         tk(c) = tk(c) - pc
         rr(4) = rr(4) + real(f(c) * pc, real64)
       end do
@@ -493,6 +608,11 @@ subroutine calc_twoway(pd, p, g, s)
       if (pd%have(1)) s%hpn(i,j) = tk(1)
       if (pd%have(2)) s%hpd(i,j) = tk(2)
       s%pdv(i,j) = f(1) * tk(1) + f(2) * tk(2)
+      if (pd%wq) then
+        s%cq(i,j) = cqv
+        if (pd%have(1)) s%cpn(i,j) = pl(1)
+        if (pd%have(2)) s%cpd(i,j) = pl(2)
+      end if
     end do
     pd%rows(j,1:4) = pd%rows(j,1:4) + rr(1:4) * pd%dxdy
     pd%rows(j,5) = rr(5) * pd%dxdy
@@ -625,6 +745,7 @@ subroutine init_plots(pd, p, g, b, s, list, vzr, sfr)
       //"non-hydrostatic correction (f_nonhydrostatic=1): the levee walls are not excluded from it")
   call setup_plots(pd, p, g, b, list, vzr, sfr, pid, pod, pcl)
   call setup_devices(pd, p, list)
+  call setup_wq(pd, list, s)
   call m_swflow_enc_set_plot_walls(g, pid, pod, pcl, pd%hlev, pd%dev, pd%gt)
   deallocate(pid, pod, pcl)
   if (p%f_state_restore > 0) then
@@ -636,6 +757,8 @@ subroutine init_plots(pd, p, g, b, s, list, vzr, sfr)
         c = chn%pcl(i,j)
         if (c <= 0) cycle
         if (s%h(i,j) < pd%h0(c)) then
+          ! 足した水の物質(濃度 pd_wq_c0。cq は h と同じ基底の柱状量。§119.10)
+          if (pd%wq) s%cq(i,j) = s%cq(i,j) + pd%c0 * (pd%h0(c) - s%h(i,j))
           s%h(i,j) = pd%h0(c)
           s%e(i,j) = s%z(i,j) + s%h(i,j)
         end if
@@ -1039,11 +1162,11 @@ subroutine calc_plots(pd, p, g, s)
   type(t_geoinfo), intent(in) :: g
   type(t_state), intent(inout) :: s
   integer :: i, j, k, in, jn, ipl
-  real :: dt, q, pc
+  real :: dt, q, pc, w
   real(real64) :: rr(1:nrow)
 
   dt = p%dt
-  !$omp parallel do schedule(dynamic) private(i, j, k, in, jn, ipl, q, pc, rr)
+  !$omp parallel do schedule(dynamic) private(i, j, k, in, jn, ipl, q, pc, w, rr)
   do j = dcp%js, dcp%je
     rr(:) = 0.0_real64
     do i = g%wx(1,j), g%wx(2,j)
@@ -1074,6 +1197,14 @@ subroutine calc_plots(pd, p, g, s)
       ! 雨(boundary_h が足した区画のセルの雨)と減水深(系外へ)
       rr(1) = rr(1) + real(s%pre(i,j) * dt, real64) * pd%dxdy
       pc = min(pd%perc * dt, max(s%h(i,j), 0.0))
+      if (pd%wq .and. pc > 0.0) then
+        ! 減水深に同伴する物質(地表の濃度で系外へ。セル面積基底で記録。§119.10)
+        if (s%cq(i,j) > 0.0) then
+          w = s%cq(i,j) * min(pc / s%h(i,j), 1.0)
+          s%cq(i,j) = s%cq(i,j) - w
+          s%fmpd(i,j) = s%fmpd(i,j) + w * s%gv(i,j)
+        end if
+      end if
       s%h(i,j) = s%h(i,j) - pc
       s%e(i,j) = s%z(i,j) + s%h(i,j)
       rr(4) = rr(4) + real(s%gv(i,j) * pc, real64) * pd%dxdy
@@ -1130,12 +1261,59 @@ end function
 
 
 !----------------------------------------------------------------------
+! 水質(fn_wq)と併用するかの設定(§119.10): 有効なら事前の湛水の濃度 pd_wq_c0 を読み、減水深で系外へ出る
+! 物質の記録 s%fmpd を確保する(A のタンクのプールは呼び出し側が確保する)
+!----------------------------------------------------------------------
+subroutine setup_wq(pd, list, s)
+  type(t_paddy), intent(inout) :: pd
+  type(t_list_paddy), intent(in) :: list
+  type(t_state), intent(inout) :: s
+  if (.not. s%wq_active) then
+    if (list%pd_wq_c0 > -9998.0) call par_info("paddy: pd_wq_c0 is not used (fn_wq is not enabled)")
+    return
+  end if
+  pd%wq = .true.
+  pd%c0 = param_default("paddy", "pd_wq_c0", list%pd_wq_c0, 0.0, " mg/L", unset = -9999.0)
+  if (.not. (pd%c0 >= 0.0)) call par_stop("list_paddy: pd_wq_c0 must be >= 0 (mg/L)")
+  allocate(s%fmpd(dcp%ish:dcp%ieh, dcp%jsh:dcp%jeh), source = 0.0)
+  if (pd%rep == 0) then
+    call par_info("paddy: water quality (fn_wq): the paddy tanks carry the substance in well-mixed pools")
+  else
+    call par_info("paddy: water quality (fn_wq): the percolation of the plot water carries the substance")
+  end if
+end subroutine
+
+
+!----------------------------------------------------------------------
+! タンクのプールの物質の移動(片方向。§119.10): 雨を足した後の湛水深 h1 から落水 dv・越流 sp が出て、
+! 残りから減水深 pc が出る。プール(セル面積基底)からタンクの濃度で、地表へ出る量を msur に、系外へ出る
+! 量を fm に足す(水田の上の雨の物質は m_wq が後でプールに入れる)
+!----------------------------------------------------------------------
+pure subroutine pool_move(pool, h1, dv, sp, pc, msur, fm)
+  real, intent(inout) :: pool, msur, fm
+  real, intent(in) :: h1, dv, sp, pc
+  real :: w, h2
+  if (pool <= 0.0 .or. h1 <= 0.0) return
+  if (dv + sp > 0.0) then
+    w = pool * min((dv + sp) / h1, 1.0)
+    pool = pool - w
+    msur = msur + w
+  end if
+  h2 = h1 - dv - sp
+  if (pc > 0.0 .and. h2 > 0.0) then
+    w = pool * min(pc / h2, 1.0)
+    pool = pool - w
+    fm = fm + w
+  end if
+end subroutine
+
+
+!----------------------------------------------------------------------
 ! 初版で併用できない機能・実行形態を停止する
 !----------------------------------------------------------------------
 subroutine check_combinations(p, multi)
   type(t_sysparam), intent(in) :: p
   logical, intent(in) :: multi
-  call no_combo(p%fn_wq, "fn_wq", "the paddy tanks do not carry solutes yet")
   call no_combo(p%fn_salt, "fn_salt", "the paddy tanks do not interact with the saltwater layers")
   call no_combo(p%fn_nest, "fn_nest", "nesting is not supported by fn_paddy yet")
   if (multi) call par_stop("list_paddy: multiple instances (nesting) are not supported by fn_paddy yet")
@@ -1656,9 +1834,15 @@ subroutine open_csv(pd, p)
   type(t_sysparam), intent(in) :: p
   if (.not. is_root) return
   open(newunit=pd%un_csv, file=trim(p%dir_result)//"/paddy.csv", status='replace')
-  write(pd%un_csv, '(a)') "time(s),area1(m2),area2(m2),rain(m3),outflow(m3),spill(m3),perc(m3),store1(m3)," // &
-                          "store2(m3),residual(m3),qsurf(m3/s),h1(mm),h2(mm),full1(-),full2(-)," // &
-                          "inflow(m3),levee_in(m3)"
+  if (pd%wq) then
+    write(pd%un_csv, '(a)') "time(s),area1(m2),area2(m2),rain(m3),outflow(m3),spill(m3),perc(m3),store1(m3)," // &
+                            "store2(m3),residual(m3),qsurf(m3/s),h1(mm),h2(mm),full1(-),full2(-)," // &
+                            "inflow(m3),levee_in(m3),c1(mg/L),c2(mg/L)"
+  else
+    write(pd%un_csv, '(a)') "time(s),area1(m2),area2(m2),rain(m3),outflow(m3),spill(m3),perc(m3),store1(m3)," // &
+                            "store2(m3),residual(m3),qsurf(m3/s),h1(mm),h2(mm),full1(-),full2(-)," // &
+                            "inflow(m3),levee_in(m3)"
+  end if
 end subroutine
 
 
@@ -1674,12 +1858,18 @@ subroutine save_state(pd, p, s)
   if (is_root) then
     call sysdep_mkdir(p%dir_save)
     open(newunit=un, file=trim(p%dir_save)//'/paddy.dat', form='unformatted', status='replace')
-    write(un) save_version, dcp%nx_g, dcp%ny_g, merge(1, 0, pd%have(1)), merge(1, 0, pd%have(2)), pd%exch, pd%rep
+    write(un) save_version, dcp%nx_g, dcp%ny_g, merge(1, 0, pd%have(1)), merge(1, 0, pd%have(2)), pd%exch, &
+              pd%rep, merge(1, 0, pd%wq)
   end if
-  ! 湛水深はタンク(A)だけ。B の区画の水は浅水流の h(state.dat)にあり、ここはヘッダ(表現の印)だけ
+  ! 湛水深はタンク(A)だけ。B の区画の水は浅水流の h(state.dat)にあり、ここはヘッダ(表現の印)だけ。
+  ! 水質と併用する A はタンクのプールの物質も(§119.10。地表の物質は wq.dat)
   if (pd%rep == 0) then
     if (pd%have(1)) call restart_write_cell(un, s%hpn)
     if (pd%have(2)) call restart_write_cell(un, s%hpd)
+    if (pd%wq) then
+      if (pd%have(1)) call restart_write_cell(un, s%cpn)
+      if (pd%have(2)) call restart_write_cell(un, s%cpd)
+    end if
   end if
   if (is_root) close(un)
 end subroutine
@@ -1694,7 +1884,7 @@ subroutine restore_state(pd, p, s)
   type(t_state), intent(inout) :: s
   character(:), allocatable :: fname
   logical :: found
-  integer :: un, hd(1:7)
+  integer :: un, hd(1:8)
   fname = trim(p%dir_save)//'/paddy.dat'
   inquire(file=fname, exist=found)
   if (.not. found) call par_stop("paddy: state file not found (was fn_paddy enabled when saving): "//fname)
@@ -1711,6 +1901,7 @@ subroutine restore_state(pd, p, s)
   call par_allreduce_maxi(hd(5))
   call par_allreduce_maxi(hd(6))
   call par_allreduce_maxi(hd(7))
+  call par_allreduce_maxi(hd(8))
   if (hd(1) /= save_version) then
     call par_stop("paddy: state file format version "//itoa(hd(1))//" does not match the version this " &
                   //"executable reads ("//itoa(save_version)//"): "//fname)
@@ -1727,9 +1918,17 @@ subroutine restore_state(pd, p, s)
     call par_stop("paddy: f_pd_exchange differs from the saved state (the surface water of paddy cells is " &
                   //"stored differently in one-way and two-way runs): "//fname)
   end if
+  if ((hd(8) > 0) .neqv. pd%wq) then
+    call par_stop("paddy: water quality (fn_wq) differs from the saved state (the paddy tanks carry the " &
+                  //"substance only with fn_wq): "//fname)
+  end if
   if (pd%rep == 0) then
     if (pd%have(1)) call restart_read_cell(un, s%hpn)
     if (pd%have(2)) call restart_read_cell(un, s%hpd)
+    if (pd%wq) then
+      if (pd%have(1)) call restart_read_cell(un, s%cpn)
+      if (pd%have(2)) call restart_read_cell(un, s%cpd)
+    end if
   end if
   if (is_root) close(un)
 end subroutine
