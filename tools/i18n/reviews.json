@@ -4829,8 +4829,8 @@
     {
       "source": "test/paddy/README.md",
       "target": "test/paddy/en/README.md",
-      "source_sha256": "55d91fdc533b88acc11eae84f3c3e0e879a3dbfe59e8819f32c90a00b82e1eba",
-      "target_sha256": "bae293f570b4cee86cf60069f3f35aa56d5e6ade0700bbd341623cb38470b6e9",
+      "source_sha256": "5be2a3e06f7e59fe339b5d0d72baa362cb832bd225509cd747a719092590daf5",
+      "target_sha256": "7de85aacbf1db760deef02f800f37d4a8e8d428d12ad27fa3c1a957bf92d3d8a",
       "reviewer": "Claude (Claude Code session; full-text content and lexical review, no model execution)",
       "method": "assistant",
       "reviewed_on": "2026-11-25"

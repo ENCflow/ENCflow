@@ -119,8 +119,7 @@ single-precision binaries of the ponding depth. The difference for raindrop eros
 is the rounding when the ground elevation is written as a single-precision binary. MPI np = 1, 2, 4 agree with the serial reference with ULP = 0, and paddy.csv is byte-identical
 with np = 1. With -Og -fcheck=all all checks also pass, and np = 2 is bit-identical with the serial run.
 
-The reference (Log.txt) was placed provisionally on the basis of the analytic checks passing. It is confirmed by a
-human visual check (handoff 00ae).
+The reference (Log.txt) is confirmed by the analytic checks passing and the user's check (2026-11-25).
 
 ## What this case does not check
 

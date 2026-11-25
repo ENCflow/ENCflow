@@ -110,7 +110,7 @@
 逐次 reference に ULP = 0、paddy.csv は np = 1 とバイト一致。-Og -fcheck=all でも全検定が合格し、np = 2 は
 逐次とビット一致しました。
 
-reference(Log.txt)は、解析検定の合格を根拠に暫定で置いたものです。人間の目視確認で確定します(handoff 00ae)。
+reference(Log.txt)は、解析検定の合格と利用者の確認で確定しています(2026-11-25)。
 
 ## このケースで確かめていないこと
 
