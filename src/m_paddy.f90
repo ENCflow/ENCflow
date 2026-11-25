@@ -99,7 +99,8 @@ module m_paddy
   integer, parameter :: save_version = 2026112503 ! paddy.dat の形式の版(2026-11-25 に表現の印、水質の
                                                    !   タンクのプール、浮遊砂の堆積の記録を足した)
   integer, parameter :: nrow = 8                   ! 台帳の行部分和の列数(8 = タンクへ入った浮遊砂の堆積。§119.11)
-  real, parameter :: pd_smin = 0.05                ! 双方向の水田のセルの、水田でない面積の割合の下限(独自の目安)
+  real, parameter :: pd_smin = 0.01                ! 双方向の水田のセルの、水田でない面積の割合の下限(落水口の水の
+                                                   !   行き場を残す独自の目安。§119.12)
   integer, parameter :: pid_max = 16777215         ! 区画番号の上限(単精度の実数で正確に読める 2^24 − 1)
   integer, parameter :: din8(1:8) = [-1, 0, 1, -1, 1, -1, 0, 1]   ! 8 近傍の向き(浅水流と同じ並び)
   integer, parameter :: djn8(1:8) = [-1, -1, -1, 0, 0, 1, 1, 1]

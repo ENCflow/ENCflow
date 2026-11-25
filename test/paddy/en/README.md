@@ -55,7 +55,7 @@ In addition, `Run.sh` checks bit identity between a run saved at 6 h and restart
 (`restart`), and the following stops: paddy fields on a channel cell, area fraction > void ratio, adoption ratio out
 of range, outflow control plate given for type 0, area fraction given both as a
 map and as a uniform value, ponding depth before the run > levee height, restart with the feature disabled while the
-saved file remains, and in the two-way mode a non-paddy share below 0.05, a pond cell, combination with debris flows
+saved file remains, and in the two-way mode a non-paddy share below 0.01, a pond cell, combination with debris flows
 or the non-hydrostatic correction, restart with a different exchange mode from the saved state, and restart with
 suspended sediment enabled differently from the saved state; and for the resolved
 plots, input errors (a plot cell on the outer rows and columns, an outlet pointing to the same plot or given on a cell that

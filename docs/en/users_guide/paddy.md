@@ -408,8 +408,8 @@ structure cells, nor on zone cells of [VZ](vz.md) or of the [storage function me
 exceed the void ratio of buildings `fn_gv` (paddy fields and buildings are different parts of the same cell). The
 two-way mode cannot be combined with the feedback of building destruction on the void ratio (`fn_bldgdebris`),
 debris flows (`f_debris`) or the non-hydrostatic correction (`f_nonhydrostatic = 1`); paddy cells
-cannot be pond cells (`fn_rscap`); and the non-paddy share 1 − a/gv must be at least 0.05 (for levees, farm roads and
-drains) (stops at start-up). A state saved in the one-way mode cannot be restarted in the two-way mode, nor the reverse.
+cannot be pond cells (`fn_rscap`); and the non-paddy share 1 − a/gv must be at least 0.01 (a place for the water from
+the outlets) (stops at start-up). A state saved in the one-way mode cannot be restarted in the two-way mode, nor the reverse.
 
 **Combination with landform change** (`fn_geomorph`): the rain on paddy fields falls into the tanks (the ponded water on
 the fields), so erosion by raindrops (the raindrop term of `f_wash`, `f_splash`) is computed without the paddy part (the
