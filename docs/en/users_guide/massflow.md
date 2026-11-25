@@ -431,7 +431,7 @@ entrainment only add $`h_s`$, so the momentum needed to accelerate the entrained
 $`-\mathbf{V}E/h_t`$, with $`E`$ the rate at which the flow depth grows) is not counted. For a 0.5 m layer
 released at once on a uniform slope of 0.5 and taking up the layer below with $`\delta_e = 0.02`$ (μ = 0.2,
 ξ = 1500 m/s²), the velocity after 8 s is 14.3 m/s, larger than the 9.3 m/s of the solution of the
-momentum-conserving ordinary differential equation (developer.md §124.5). Erosion with f_dbed = 1 to 3 is
+momentum-conserving ordinary differential equation (developer.md §126.5). Erosion with f_dbed = 1 to 3 is
 treated in the same way, but the difference is small because the erosion rate is small compared with the flow
 depth.
 

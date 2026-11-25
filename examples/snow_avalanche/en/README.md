@@ -466,7 +466,7 @@ avalanche that grows a lot by entrainment, add the following two.
   carrier fall below the threshold depth and their snow fixed. In a trial on a slope 1.4 km long (growth
   by 4.4 times through entrainment), the threshold thickness of the snow that gets fixed rose from 6 cm
   to 26 cm, snow 1 to 3 m thick was left at the margins of a track of 27°, and the deposit became rough
-  from cell to cell (developer.md §124.2).
+  from cell to cell (developer.md §126.2).
 - **Lower the threshold depth** (`dd = 0.0001`): snow that enters a dry cell is fixed on the spot unless
   the inflow of one step brings the carrier above the threshold depth. At the default of 1 mm (1 cm in
   terms of snow depth), whether the front can advance into a new cell changes with the time step, and
@@ -497,7 +497,7 @@ equation; the friction coefficients are those of the base case). Without entrain
 after 10 s; when the snow below keeps being taken up with δe = 0.02, the treatment of ENCflow gives
 15.0 m/s, faster by as much as the flow has thickened, and the momentum-conserving treatment 9.4 m/s. A
 computation of the same form with ENCflow (μ = 0.2, ξ = 1,500 m/s²) agrees with the solution of the
-former form within 0.4 % (developer.md §124.5).
+former form within 0.4 % (developer.md §126.5).
 
 In the main computations the snow of the band is used up while the front passes, so the difference
 arises while the front is taking up snow. The speed of the front as it runs down the gully taking up
